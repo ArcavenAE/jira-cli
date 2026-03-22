@@ -1235,7 +1235,7 @@ Run: `cargo build`
 - [ ] **Step 2: Test `jr team list`**
 
 Run: `./target/debug/jr team list`
-Expected: Table showing teams from yourorg.atlassian.net.
+Expected: Table showing teams from your configured Jira instance.
 
 - [ ] **Step 3: Test `jr team list --output json`**
 

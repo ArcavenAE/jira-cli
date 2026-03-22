@@ -207,4 +207,4 @@ JQL `ORDER BY` clause was being joined with `AND`, producing invalid JQL like `"
 
 - **Unit tests**: cache TTL logic (expired/valid/missing), team name resolution via partial match, `build_fallback_jql` (already added)
 - **Integration tests**: wiremock mocks for Teams REST API, `/_edge/tenant_info`, GraphQL orgId query
-- **Manual**: live test against yourorg.atlassian.net
+- **Manual**: live test against configured Jira instance
