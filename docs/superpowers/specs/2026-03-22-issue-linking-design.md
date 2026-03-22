@@ -57,17 +57,19 @@ jr issue link FOO-1 FOO-2 --type "relates to"
 jr issue link FOO-1 FOO-2                      # defaults to "Relates"
 ```
 
-Calls `POST /rest/api/3/issueLink` with:
+Reading as "FOO-1 blocks FOO-2". Calls `POST /rest/api/3/issueLink` with:
 
 ```json
 {
-  "outwardIssue": {"key": "FOO-1"},
-  "inwardIssue": {"key": "FOO-2"},
+  "inwardIssue": {"key": "FOO-1"},
+  "outwardIssue": {"key": "FOO-2"},
   "type": {"name": "Blocks"}
 }
 ```
 
-**Validated response:** HTTP 200, returns `{"id": "10000", "key": "10000", "self": "..."}`.
+In Jira's link model, `inwardIssue` is the source of the action and `outwardIssue` is the target. So for "Blocks": inward = the issue that blocks, outward = the issue that is blocked.
+
+**Response:** HTTP 201 Created with no response body. Use `post_no_content` (same pattern as `transition_issue`).
 
 **Idempotent:** Before creating, fetch existing links on the outward issue and check if a link of the same type to the inward issue already exists. If so, exit 0 with "already linked" message.
 
@@ -262,7 +264,6 @@ pub struct ParentIssue {
 Add to `IssueFields`:
 ```rust
     pub parent: Option<ParentIssue>,
-    #[serde(default)]
     pub issuelinks: Option<Vec<IssueLink>>,
 ```
 
@@ -275,6 +276,7 @@ Add to `IssueFields`:
 | Ambiguous link type match | Prompt to select (or error listing matches in `--no-input`) |
 | Link already exists | Exit 0: "FOO-1 already blocks FOO-2" |
 | No link to remove | Exit 0: "No link found between FOO-1 and FOO-2" |
+| Self-linking | Client-side error before API call: "Cannot link an issue to itself." |
 | Permission denied | Surface Jira's 401/403 error |
 
 ## Output Formats
@@ -294,7 +296,8 @@ All commands support `--output json`:
 | `src/cli/issue.rs` | Add handlers for link/unlink/link-types, wire parent into create/edit, update view |
 | `src/api/jira/mod.rs` | Add `pub mod links;` |
 | `src/api/jira/links.rs` | New — create_issue_link, delete_issue_link, list_link_types |
-| `src/api/jira/issues.rs` | Add `issuelinks,parent` to field requests |
+| `src/api/client.rs` | Add `pub async fn delete(&self, path: &str) -> Result<()>` method |
+| `src/api/jira/issues.rs` | Add `issuelinks,parent` to `get_issue()` field request only (not `search_issues`) |
 | `src/types/jira/issue.rs` | Add IssueLink, LinkedIssue, IssueLinkType, ParentIssue types, add fields to IssueFields |
 | `tests/issue_commands.rs` | Add integration tests for link creation and link type listing |
 | `tests/common/fixtures.rs` | Add link-related fixtures |
