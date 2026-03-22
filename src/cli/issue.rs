@@ -121,6 +121,9 @@ pub async fn handle(
         IssueCommand::Assign { .. } => handle_assign(command, output_format, client).await,
         IssueCommand::Comment { .. } => handle_comment(command, output_format, client).await,
         IssueCommand::Open { .. } => handle_open(command, client).await,
+        IssueCommand::Link { .. } | IssueCommand::Unlink { .. } | IssueCommand::LinkTypes => {
+            todo!("issue linking commands not yet implemented")
+        }
     }
 }
 
@@ -386,6 +389,7 @@ async fn handle_create(
         team,
         points,
         markdown,
+        parent: _,
     } = command
     else {
         unreachable!()
@@ -502,6 +506,7 @@ async fn handle_edit(
         team,
         points,
         no_points,
+        parent: _,
     } = command
     else {
         unreachable!()
