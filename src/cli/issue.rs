@@ -350,6 +350,66 @@ async fn handle_view(
                 ],
             ];
 
+            rows.push(vec![
+                "Parent".into(),
+                issue
+                    .fields
+                    .parent
+                    .as_ref()
+                    .map(|p| {
+                        let summary = p
+                            .fields
+                            .as_ref()
+                            .and_then(|f| f.summary.as_deref())
+                            .unwrap_or("");
+                        format!("{} ({})", p.key, summary)
+                    })
+                    .unwrap_or_else(|| "(none)".into()),
+            ]);
+
+            let links_display = issue
+                .fields
+                .issuelinks
+                .as_ref()
+                .filter(|links| !links.is_empty())
+                .map(|links| {
+                    links
+                        .iter()
+                        .map(|link| {
+                            if let Some(ref outward) = link.outward_issue {
+                                let desc = link
+                                    .link_type
+                                    .outward
+                                    .as_deref()
+                                    .unwrap_or(&link.link_type.name);
+                                let summary = outward
+                                    .fields
+                                    .as_ref()
+                                    .and_then(|f| f.summary.as_deref())
+                                    .unwrap_or("");
+                                format!("{} {} ({})", desc, outward.key, summary)
+                            } else if let Some(ref inward) = link.inward_issue {
+                                let desc = link
+                                    .link_type
+                                    .inward
+                                    .as_deref()
+                                    .unwrap_or(&link.link_type.name);
+                                let summary = inward
+                                    .fields
+                                    .as_ref()
+                                    .and_then(|f| f.summary.as_deref())
+                                    .unwrap_or("");
+                                format!("{} {} ({})", desc, inward.key, summary)
+                            } else {
+                                link.link_type.name.clone()
+                            }
+                        })
+                        .collect::<Vec<_>>()
+                        .join("\n")
+                })
+                .unwrap_or_else(|| "(none)".into());
+            rows.push(vec!["Links".into(), links_display]);
+
             if let Some(field_id) = sp_field_id {
                 let points_display = issue
                     .fields
