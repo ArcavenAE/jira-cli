@@ -4,6 +4,7 @@ use crate::adf;
 use crate::api::client::JiraClient;
 use crate::cli::{IssueCommand, OutputFormat};
 use crate::config::Config;
+use crate::error::JrError;
 use crate::output;
 
 use super::format;
@@ -73,7 +74,7 @@ pub(super) async fn handle_list(
                                 project_key.as_deref(),
                                 status.as_deref(),
                                 resolved_team.as_ref(),
-                            ),
+                            )?,
                         }
                     } else {
                         // Kanban: show open issues
@@ -97,14 +98,14 @@ pub(super) async fn handle_list(
                     project_key.as_deref(),
                     status.as_deref(),
                     resolved_team.as_ref(),
-                ),
+                )?,
             }
         } else {
             build_fallback_jql(
                 project_key.as_deref(),
                 status.as_deref(),
                 resolved_team.as_ref(),
-            )
+            )?
         }
     };
 
@@ -129,7 +130,15 @@ fn build_fallback_jql(
     project_key: Option<&str>,
     status: Option<&str>,
     resolved_team: Option<&(String, String)>,
-) -> String {
+) -> Result<String> {
+    if project_key.is_none() && status.is_none() && resolved_team.is_none() {
+        return Err(JrError::UserError(
+            "No project or filters specified. Use --project KEY, --status STATUS, or --team NAME. \
+             You can also set a default project in .jr.toml or run \"jr init\"."
+                .into(),
+        )
+        .into());
+    }
     let mut parts: Vec<String> = Vec::new();
     if let Some(pk) = project_key {
         parts.push(format!("project = \"{}\"", pk));
@@ -141,7 +150,7 @@ fn build_fallback_jql(
         parts.push(format!("{} = \"{}\"", field_id, team_uuid));
     }
     let where_clause = parts.join(" AND ");
-    format!("{} ORDER BY updated DESC", where_clause)
+    Ok(format!("{} ORDER BY updated DESC", where_clause))
 }
 
 // ── View ──────────────────────────────────────────────────────────────
@@ -316,7 +325,7 @@ mod tests {
 
     #[test]
     fn fallback_jql_order_by_not_joined_with_and() {
-        let jql = build_fallback_jql(Some("PROJ"), None, None);
+        let jql = build_fallback_jql(Some("PROJ"), None, None).unwrap();
         assert!(
             !jql.contains("AND ORDER BY"),
             "ORDER BY must not be joined with AND: {jql}"
@@ -327,7 +336,7 @@ mod tests {
     #[test]
     fn fallback_jql_with_team_has_valid_order_by() {
         let team = ("customfield_10001".to_string(), "uuid-123".to_string());
-        let jql = build_fallback_jql(Some("PROJ"), None, Some(&team));
+        let jql = build_fallback_jql(Some("PROJ"), None, Some(&team)).unwrap();
         assert!(
             !jql.contains("AND ORDER BY"),
             "ORDER BY must not be joined with AND: {jql}"
@@ -339,7 +348,7 @@ mod tests {
     #[test]
     fn fallback_jql_with_all_filters() {
         let team = ("customfield_10001".to_string(), "uuid-456".to_string());
-        let jql = build_fallback_jql(Some("PROJ"), Some("In Progress"), Some(&team));
+        let jql = build_fallback_jql(Some("PROJ"), Some("In Progress"), Some(&team)).unwrap();
         assert!(
             !jql.contains("AND ORDER BY"),
             "ORDER BY must not be joined with AND: {jql}"
@@ -351,14 +360,27 @@ mod tests {
     }
 
     #[test]
-    fn fallback_jql_no_filters_still_has_order_by() {
-        let jql = build_fallback_jql(None, None, None);
-        assert_eq!(jql, " ORDER BY updated DESC");
+    fn fallback_jql_errors_when_no_filters() {
+        let result = build_fallback_jql(None, None, None);
+        assert!(result.is_err(), "Expected error for unbounded query");
+        let err_msg = result.unwrap_err().to_string();
+        assert!(
+            err_msg.contains("--project"),
+            "Error should mention --project: {err_msg}"
+        );
+        assert!(
+            err_msg.contains(".jr.toml"),
+            "Error should mention .jr.toml: {err_msg}"
+        );
+        assert!(
+            err_msg.contains("jr init"),
+            "Error should mention jr init: {err_msg}"
+        );
     }
 
     #[test]
     fn fallback_jql_with_status_only() {
-        let jql = build_fallback_jql(None, Some("Done"), None);
+        let jql = build_fallback_jql(None, Some("Done"), None).unwrap();
         assert_eq!(jql, "status = \"Done\" ORDER BY updated DESC");
     }
 }
