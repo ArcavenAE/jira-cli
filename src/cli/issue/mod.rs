@@ -1,3 +1,8 @@
+mod format;
+mod helpers;
+
+pub use format::{format_issue_row, format_issue_rows_public, format_points, issue_table_headers};
+
 use anyhow::{Result, bail};
 use serde_json::json;
 
@@ -7,76 +12,6 @@ use crate::cli::{IssueCommand, OutputFormat};
 use crate::config::Config;
 use crate::output;
 use crate::partial_match::{self, MatchResult};
-use crate::types::jira::Issue;
-
-/// Format issue rows for table output.
-pub fn format_issue_rows_public(issues: &[Issue]) -> Vec<Vec<String>> {
-    issues
-        .iter()
-        .map(|issue| format_issue_row(issue, None))
-        .collect()
-}
-
-/// Build a single table row for an issue, optionally including story points.
-pub fn format_issue_row(issue: &Issue, sp_field_id: Option<&str>) -> Vec<String> {
-    let col_count = if sp_field_id.is_some() { 7 } else { 6 };
-    let mut row = Vec::with_capacity(col_count);
-    row.push(issue.key.clone());
-    row.push(
-        issue
-            .fields
-            .issue_type
-            .as_ref()
-            .map(|t| t.name.clone())
-            .unwrap_or_default(),
-    );
-    row.push(
-        issue
-            .fields
-            .status
-            .as_ref()
-            .map(|s| s.name.clone())
-            .unwrap_or_default(),
-    );
-    row.push(
-        issue
-            .fields
-            .priority
-            .as_ref()
-            .map(|p| p.name.clone())
-            .unwrap_or_default(),
-    );
-    if let Some(field_id) = sp_field_id {
-        row.push(
-            issue
-                .fields
-                .story_points(field_id)
-                .map(format_points)
-                .unwrap_or_else(|| "-".into()),
-        );
-    }
-    row.push(
-        issue
-            .fields
-            .assignee
-            .as_ref()
-            .map(|a| a.display_name.clone())
-            .unwrap_or_else(|| "Unassigned".into()),
-    );
-    row.push(issue.fields.summary.clone());
-    row
-}
-
-/// Headers matching `format_issue_row` output.
-pub fn issue_table_headers(show_points: bool) -> Vec<&'static str> {
-    if show_points {
-        vec![
-            "Key", "Type", "Status", "Priority", "Points", "Assignee", "Summary",
-        ]
-    } else {
-        vec!["Key", "Type", "Status", "Priority", "Assignee", "Summary"]
-    }
-}
 
 /// Handle all issue subcommands.
 pub async fn handle(
@@ -154,7 +89,7 @@ async fn handle_list(
     let extra: Vec<&str> = sp_field_id.iter().copied().collect();
     // Resolve team name to (field_id, uuid) before building JQL
     let resolved_team = if let Some(ref team_name) = team {
-        Some(resolve_team_field(config, client, team_name, no_input).await?)
+        Some(helpers::resolve_team_field(config, client, team_name, no_input).await?)
     } else {
         None
     };
@@ -233,11 +168,11 @@ async fn handle_list(
     let effective_sp = if show_points { sp_field_id } else { None };
     let rows: Vec<Vec<String>> = issues
         .iter()
-        .map(|issue| format_issue_row(issue, effective_sp))
+        .map(|issue| format::format_issue_row(issue, effective_sp))
         .collect();
     output::print_output(
         output_format,
-        &issue_table_headers(effective_sp.is_some()),
+        &format::issue_table_headers(effective_sp.is_some()),
         &rows,
         &issues,
     )?;
@@ -416,7 +351,7 @@ async fn handle_view(
                 let points_display = issue
                     .fields
                     .story_points(field_id)
-                    .map(format_points)
+                    .map(format::format_points)
                     .unwrap_or_else(|| "(none)".into());
                 rows.push(vec!["Points".into(), points_display]);
             }
@@ -464,7 +399,7 @@ async fn handle_create(
             if no_input {
                 None
             } else {
-                prompt_input("Project key").ok()
+                helpers::prompt_input("Project key").ok()
             }
         })
         .ok_or_else(|| {
@@ -477,7 +412,7 @@ async fn handle_create(
             if no_input {
                 None
             } else {
-                prompt_input("Issue type (e.g., Task, Bug, Story)").ok()
+                helpers::prompt_input("Issue type (e.g., Task, Bug, Story)").ok()
             }
         })
         .ok_or_else(|| anyhow::anyhow!("Issue type is required. Use --type"))?;
@@ -488,7 +423,7 @@ async fn handle_create(
             if no_input {
                 None
             } else {
-                prompt_input("Summary").ok()
+                helpers::prompt_input("Summary").ok()
             }
         })
         .ok_or_else(|| anyhow::anyhow!("Summary is required. Use --summary"))?;
@@ -527,12 +462,13 @@ async fn handle_create(
     }
 
     if let Some(ref team_name) = team {
-        let (field_id, team_id) = resolve_team_field(config, client, team_name, no_input).await?;
+        let (field_id, team_id) =
+            helpers::resolve_team_field(config, client, team_name, no_input).await?;
         fields[&field_id] = json!(team_id);
     }
 
     if let Some(pts) = points {
-        let field_id = resolve_story_points_field_id(config)?;
+        let field_id = helpers::resolve_story_points_field_id(config)?;
         fields[&field_id] = json!(pts);
     }
 
@@ -597,19 +533,20 @@ async fn handle_edit(
     }
 
     if let Some(ref team_name) = team {
-        let (field_id, team_id) = resolve_team_field(config, client, team_name, no_input).await?;
+        let (field_id, team_id) =
+            helpers::resolve_team_field(config, client, team_name, no_input).await?;
         fields[&field_id] = json!(team_id);
         has_updates = true;
     }
 
     if let Some(pts) = points {
-        let field_id = resolve_story_points_field_id(config)?;
+        let field_id = helpers::resolve_story_points_field_id(config)?;
         fields[&field_id] = json!(pts);
         has_updates = true;
     }
 
     if no_points {
-        let field_id = resolve_story_points_field_id(config)?;
+        let field_id = helpers::resolve_story_points_field_id(config)?;
         fields[&field_id] = json!(null);
         has_updates = true;
     }
@@ -727,7 +664,7 @@ async fn handle_move(
                 eprintln!("  {}. {} -> {}", i + 1, t.name, to_name);
             }
 
-            prompt_input("Select transition (name or number)")?
+            helpers::prompt_input("Select transition (name or number)")?
         }
     };
 
@@ -788,7 +725,7 @@ async fn handle_move(
                 for (i, m) in matches.iter().enumerate() {
                     eprintln!("  {}. {}", i + 1, m);
                 }
-                let choice = prompt_input("Select (number)")?;
+                let choice = helpers::prompt_input("Select (number)")?;
                 let idx: usize = choice
                     .parse()
                     .map_err(|_| anyhow::anyhow!("Invalid selection"))?;
@@ -1254,104 +1191,6 @@ async fn handle_unlink(
     Ok(())
 }
 
-// ── Helpers ───────────────────────────────────────────────────────────
-
-async fn resolve_team_field(
-    config: &Config,
-    client: &JiraClient,
-    team_name: &str,
-    no_input: bool,
-) -> Result<(String, String)> {
-    // 1. Resolve team_field_id
-    let field_id = if let Some(id) = &config.global.fields.team_field_id {
-        id.clone()
-    } else {
-        client
-            .find_team_field_id()
-            .await?
-            .ok_or_else(|| {
-                anyhow::anyhow!(
-                    "No \"Team\" field found on this Jira instance. This instance may not have the Team field configured."
-                )
-            })?
-    };
-
-    // 2. Load teams from cache (or fetch if missing/expired)
-    let teams = match crate::cache::read_team_cache()? {
-        Some(cached) => cached.teams,
-        None => crate::cli::team::fetch_and_cache_teams(config, client).await?,
-    };
-
-    // 3. Partial match
-    let team_names: Vec<String> = teams.iter().map(|t| t.name.clone()).collect();
-    match crate::partial_match::partial_match(team_name, &team_names) {
-        crate::partial_match::MatchResult::Exact(matched_name) => {
-            let team = teams
-                .iter()
-                .find(|t| t.name == matched_name)
-                .expect("matched name must exist in teams");
-            Ok((field_id, team.id.clone()))
-        }
-        crate::partial_match::MatchResult::Ambiguous(matches) => {
-            if no_input {
-                let quoted: Vec<String> = matches.iter().map(|m| format!("\"{}\"", m)).collect();
-                anyhow::bail!(
-                    "Multiple teams match \"{}\": {}. Use a more specific name.",
-                    team_name,
-                    quoted.join(", ")
-                );
-            }
-            let selection = dialoguer::Select::new()
-                .with_prompt(format!("Multiple teams match \"{team_name}\""))
-                .items(&matches)
-                .interact()?;
-            let selected_name = &matches[selection];
-            let team = teams
-                .iter()
-                .find(|t| &t.name == selected_name)
-                .expect("selected name must exist in teams");
-            Ok((field_id, team.id.clone()))
-        }
-        crate::partial_match::MatchResult::None(_) => {
-            anyhow::bail!(
-                "No team matching \"{}\". Run \"jr team list --refresh\" to update.",
-                team_name
-            );
-        }
-    }
-}
-
-pub fn format_points(value: f64) -> String {
-    if !value.is_finite() {
-        return "-".to_string();
-    }
-    if value.fract() == 0.0 {
-        format!("{}", value as i64)
-    } else {
-        format!("{}", value)
-    }
-}
-
-fn resolve_story_points_field_id(config: &Config) -> Result<String> {
-    config
-        .global
-        .fields
-        .story_points_field_id
-        .clone()
-        .ok_or_else(|| {
-            anyhow::anyhow!(
-                "Story points field not configured. Run \"jr init\" or set story_points_field_id under [fields] in ~/.config/jr/config.toml"
-            )
-        })
-}
-
-fn prompt_input(prompt: &str) -> Result<String> {
-    let input: String = dialoguer::Input::new()
-        .with_prompt(prompt)
-        .interact_text()?;
-    Ok(input)
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -1402,25 +1241,5 @@ mod tests {
     fn fallback_jql_with_status_only() {
         let jql = build_fallback_jql(None, Some("Done"), None);
         assert_eq!(jql, "status = \"Done\" ORDER BY updated DESC");
-    }
-
-    #[test]
-    fn format_points_whole_number() {
-        assert_eq!(format_points(5.0), "5");
-        assert_eq!(format_points(13.0), "13");
-        assert_eq!(format_points(0.0), "0");
-    }
-
-    #[test]
-    fn format_points_decimal() {
-        assert_eq!(format_points(3.5), "3.5");
-        assert_eq!(format_points(0.5), "0.5");
-    }
-
-    #[test]
-    fn format_points_non_finite() {
-        assert_eq!(format_points(f64::NAN), "-");
-        assert_eq!(format_points(f64::INFINITY), "-");
-        assert_eq!(format_points(f64::NEG_INFINITY), "-");
     }
 }
