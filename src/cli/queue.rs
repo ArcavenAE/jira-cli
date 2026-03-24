@@ -157,3 +157,73 @@ async fn resolve_queue_by_name(
         .into()),
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::types::jsm::Queue;
+
+    fn make_queue(id: &str, name: &str) -> Queue {
+        Queue {
+            id: id.into(),
+            name: name.into(),
+            jql: None,
+            fields: None,
+            issue_count: None,
+        }
+    }
+
+    fn find_queue_id(name: &str, queues: &[Queue]) -> Result<String, String> {
+        let names: Vec<String> = queues.iter().map(|q| q.name.clone()).collect();
+        match crate::partial_match::partial_match(name, &names) {
+            crate::partial_match::MatchResult::Exact(matched_name) => {
+                let matching: Vec<&Queue> =
+                    queues.iter().filter(|q| q.name == matched_name).collect();
+                if matching.len() > 1 {
+                    Err(format!("duplicate: {}", matching.len()))
+                } else {
+                    Ok(matching[0].id.clone())
+                }
+            }
+            crate::partial_match::MatchResult::Ambiguous(m) => {
+                Err(format!("ambiguous: {}", m.len()))
+            }
+            crate::partial_match::MatchResult::None(_) => Err("none".into()),
+        }
+    }
+
+    #[test]
+    fn exact_match() {
+        let queues = vec![make_queue("10", "Triage"), make_queue("20", "In Progress")];
+        assert_eq!(find_queue_id("Triage", &queues).unwrap(), "10");
+    }
+
+    #[test]
+    fn partial_match() {
+        let queues = vec![make_queue("10", "Triage"), make_queue("20", "In Progress")];
+        assert_eq!(find_queue_id("tri", &queues).unwrap(), "10");
+    }
+
+    #[test]
+    fn ambiguous_match() {
+        let queues = vec![
+            make_queue("10", "Escalated - Client"),
+            make_queue("20", "Escalated - External"),
+        ];
+        let err = find_queue_id("esc", &queues).unwrap_err();
+        assert!(err.starts_with("ambiguous"));
+    }
+
+    #[test]
+    fn no_match() {
+        let queues = vec![make_queue("10", "Triage")];
+        let err = find_queue_id("nonexistent", &queues).unwrap_err();
+        assert_eq!(err, "none");
+    }
+
+    #[test]
+    fn duplicate_names() {
+        let queues = vec![make_queue("10", "Triage"), make_queue("20", "Triage")];
+        let err = find_queue_id("Triage", &queues).unwrap_err();
+        assert!(err.starts_with("duplicate"));
+    }
+}
