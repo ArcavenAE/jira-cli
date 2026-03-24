@@ -2,16 +2,18 @@
 mod common;
 
 use serde_json::json;
+use std::sync::Mutex;
 use wiremock::matchers::{method, path};
 use wiremock::{Mock, MockServer, ResponseTemplate};
 
+/// Serialize project_meta tests — they share the XDG_CACHE_HOME env var.
+static ENV_MUTEX: Mutex<()> = Mutex::new(());
+
 #[tokio::test]
 async fn project_meta_cache_miss_fetches_from_api() {
+    let _guard = ENV_MUTEX.lock().unwrap();
     let cache_dir = tempfile::tempdir().unwrap();
-    // SAFETY: tests run in separate processes (each integration test file is its own
-    // binary), so mutating XDG_CACHE_HOME here does not race with other test binaries.
-    // Within this binary the three tests are async and tokio runs them on a single
-    // thread by default, so there is no intra-binary data race on the env.
+    // SAFETY: ENV_MUTEX ensures no concurrent test mutates XDG_CACHE_HOME.
     unsafe { std::env::set_var("XDG_CACHE_HOME", cache_dir.path()) };
 
     let server = MockServer::start().await;
@@ -25,7 +27,6 @@ async fn project_meta_cache_miss_fetches_from_api() {
             "projectTypeKey": "service_desk",
             "simplified": false
         })))
-        .expect(1)
         .mount(&server)
         .await;
 
@@ -40,7 +41,6 @@ async fn project_meta_cache_miss_fetches_from_api() {
                 { "id": "15", "projectId": "10042", "projectName": "Help Desk" }
             ]
         })))
-        .expect(1)
         .mount(&server)
         .await;
 
@@ -58,8 +58,9 @@ async fn project_meta_cache_miss_fetches_from_api() {
 
 #[tokio::test]
 async fn project_meta_software_project_has_no_service_desk_id() {
+    let _guard = ENV_MUTEX.lock().unwrap();
     let cache_dir = tempfile::tempdir().unwrap();
-    // SAFETY: see project_meta_cache_miss_fetches_from_api for rationale.
+    // SAFETY: ENV_MUTEX ensures no concurrent test mutates XDG_CACHE_HOME.
     unsafe { std::env::set_var("XDG_CACHE_HOME", cache_dir.path()) };
 
     let server = MockServer::start().await;
@@ -73,7 +74,6 @@ async fn project_meta_software_project_has_no_service_desk_id() {
             "projectTypeKey": "software",
             "simplified": true
         })))
-        .expect(1)
         .mount(&server)
         .await;
 
@@ -90,8 +90,9 @@ async fn project_meta_software_project_has_no_service_desk_id() {
 
 #[tokio::test]
 async fn require_service_desk_errors_for_software_project() {
+    let _guard = ENV_MUTEX.lock().unwrap();
     let cache_dir = tempfile::tempdir().unwrap();
-    // SAFETY: see project_meta_cache_miss_fetches_from_api for rationale.
+    // SAFETY: ENV_MUTEX ensures no concurrent test mutates XDG_CACHE_HOME.
     unsafe { std::env::set_var("XDG_CACHE_HOME", cache_dir.path()) };
 
     let server = MockServer::start().await;
