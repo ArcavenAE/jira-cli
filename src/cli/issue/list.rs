@@ -189,6 +189,59 @@ fn build_fallback_jql(
     Ok(format!("{} ORDER BY updated DESC", where_clause))
 }
 
+// ── Comments ─────────────────────────────────────────────────────────
+
+fn format_comment_date(iso: &str) -> String {
+    chrono::DateTime::parse_from_rfc3339(iso)
+        .or_else(|_| chrono::DateTime::parse_from_str(iso, "%Y-%m-%dT%H:%M:%S%.3f%z"))
+        .map(|dt| dt.format("%Y-%m-%d %H:%M").to_string())
+        .unwrap_or_else(|_| iso.to_string())
+}
+
+fn format_comment_row(
+    author_name: Option<&str>,
+    created: Option<&str>,
+    body_text: Option<&str>,
+) -> Vec<String> {
+    vec![
+        author_name.unwrap_or("(unknown)").to_string(),
+        created
+            .map(format_comment_date)
+            .unwrap_or_else(|| "-".into()),
+        body_text.unwrap_or("(no content)").to_string(),
+    ]
+}
+
+pub(super) async fn handle_comments(
+    key: &str,
+    limit: Option<u32>,
+    output_format: &OutputFormat,
+    client: &JiraClient,
+) -> Result<()> {
+    let comments = client.list_comments(key, limit).await?;
+
+    match output_format {
+        OutputFormat::Json => {
+            output::print_output(output_format, &["Author", "Date", "Body"], &[], &comments)?;
+        }
+        OutputFormat::Table => {
+            let rows: Vec<Vec<String>> = comments
+                .iter()
+                .map(|c| {
+                    let author = c.author.as_ref().map(|a| a.display_name.as_str());
+                    let created = c.created.as_deref();
+                    let body_text = c.body.as_ref().map(adf::adf_to_text);
+                    format_comment_row(author, created, body_text.as_deref())
+                })
+                .collect();
+
+            output::print_output(output_format, &["Author", "Date", "Body"], &rows, &comments)?;
+        }
+    }
+
+    Ok(())
+}
+
 // ── View ──────────────────────────────────────────────────────────────
 
 pub(super) async fn handle_view(
@@ -447,5 +500,38 @@ mod tests {
             jql.contains(r#"status = "In \"Progress""#),
             "Status with quotes should be escaped: {jql}"
         );
+    }
+
+    #[test]
+    fn format_comment_date_rfc3339() {
+        assert_eq!(
+            format_comment_date("2026-03-20T14:32:00+00:00"),
+            "2026-03-20 14:32"
+        );
+    }
+
+    #[test]
+    fn format_comment_date_jira_offset_no_colon() {
+        assert_eq!(
+            format_comment_date("2026-03-20T14:32:00.000+0000"),
+            "2026-03-20 14:32"
+        );
+    }
+
+    #[test]
+    fn format_comment_date_malformed_returns_raw() {
+        assert_eq!(format_comment_date("not-a-date"), "not-a-date");
+    }
+
+    #[test]
+    fn format_comment_row_missing_author() {
+        let row = format_comment_row(None, Some("2026-03-20T14:32:00+00:00"), None);
+        assert_eq!(row[0], "(unknown)");
+    }
+
+    #[test]
+    fn format_comment_row_missing_body() {
+        let row = format_comment_row(Some("Jane Smith"), Some("2026-03-20T14:32:00+00:00"), None);
+        assert_eq!(row[2], "(no content)");
     }
 }

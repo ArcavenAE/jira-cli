@@ -233,6 +233,14 @@ pub enum IssueCommand {
         #[arg(long)]
         stdin: bool,
     },
+    /// List comments on an issue
+    Comments {
+        /// Issue key (e.g., FOO-123)
+        key: String,
+        /// Maximum number of comments to return
+        #[arg(long)]
+        limit: Option<u32>,
+    },
     /// Open issue in browser
     Open {
         /// Issue key

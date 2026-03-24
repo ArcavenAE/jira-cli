@@ -63,6 +63,9 @@ pub async fn handle(
         IssueCommand::Comment { .. } => {
             workflow::handle_comment(command, output_format, client).await
         }
+        IssueCommand::Comments { key, limit } => {
+            list::handle_comments(&key, limit, output_format, client).await
+        }
         IssueCommand::Open { .. } => workflow::handle_open(command, client).await,
         IssueCommand::Link { .. } => {
             links::handle_link(command, output_format, client, no_input).await

@@ -2,8 +2,8 @@ use serde::Deserialize;
 
 /// Offset-based pagination used by most Jira REST API endpoints.
 ///
-/// Different endpoints return items under different keys (`values`, `issues`, `worklogs`),
-/// so all three are optional — callers use `items()` to get whichever is populated.
+/// Different endpoints return items under different keys (`values`, `issues`, `worklogs`,
+/// `comments`), so all four are optional — callers use `items()` to get whichever is populated.
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct OffsetPage<T> {
@@ -16,6 +16,9 @@ pub struct OffsetPage<T> {
     /// Items returned under the "worklogs" key (worklog endpoints).
     #[serde(default)]
     pub worklogs: Option<Vec<T>>,
+    /// Items returned under the "comments" key (comment endpoints).
+    #[serde(default)]
+    pub comments: Option<Vec<T>>,
     /// The index of the first item returned in this page.
     #[serde(default)]
     pub start_at: u32,
@@ -29,7 +32,7 @@ pub struct OffsetPage<T> {
 
 impl<T> OffsetPage<T> {
     /// Returns a reference to whichever item list is populated, preferring
-    /// `values` > `issues` > `worklogs`. Returns an empty slice if none are set.
+    /// `values` > `issues` > `worklogs` > `comments`. Returns an empty slice if none are set.
     pub fn items(&self) -> &[T] {
         if let Some(ref v) = self.values {
             return v;
@@ -38,6 +41,9 @@ impl<T> OffsetPage<T> {
             return v;
         }
         if let Some(ref v) = self.worklogs {
+            return v;
+        }
+        if let Some(ref v) = self.comments {
             return v;
         }
         &[]
@@ -82,6 +88,7 @@ mod tests {
             values: Some(vec!["a".into(), "b".into()]),
             issues: None,
             worklogs: None,
+            comments: None,
             start_at: 0,
             max_results: 2,
             total: 5,
@@ -96,6 +103,7 @@ mod tests {
             values: Some(vec!["a".into()]),
             issues: None,
             worklogs: None,
+            comments: None,
             start_at: 4,
             max_results: 2,
             total: 5,
@@ -109,11 +117,37 @@ mod tests {
             values: None,
             issues: Some(vec!["issue-1".into()]),
             worklogs: None,
+            comments: None,
             start_at: 0,
             max_results: 50,
             total: 1,
         };
         assert_eq!(page.items(), &["issue-1".to_string()]);
+    }
+
+    #[test]
+    fn test_offset_page_items_from_comments() {
+        let page: OffsetPage<String> = OffsetPage {
+            values: None,
+            issues: None,
+            worklogs: None,
+            comments: None,
+            start_at: 0,
+            max_results: 50,
+            total: 1,
+        };
+        assert!(page.items().is_empty());
+
+        let page_with_comments: OffsetPage<String> = OffsetPage {
+            values: None,
+            issues: None,
+            worklogs: None,
+            comments: Some(vec!["comment-1".into()]),
+            start_at: 0,
+            max_results: 50,
+            total: 1,
+        };
+        assert_eq!(page_with_comments.items(), &["comment-1".to_string()]);
     }
 
     #[test]
