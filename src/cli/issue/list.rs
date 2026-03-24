@@ -235,12 +235,7 @@ pub(super) async fn handle_comments(
                 })
                 .collect();
 
-            output::print_output(
-                output_format,
-                &["Author", "Date", "Body"],
-                &rows,
-                &comments,
-            )?;
+            output::print_output(output_format, &["Author", "Date", "Body"], &rows, &comments)?;
         }
     }
 
