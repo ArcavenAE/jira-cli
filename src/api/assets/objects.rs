@@ -90,13 +90,14 @@ pub async fn resolve_object_key(
         return Ok(key_or_id.to_string());
     }
 
-    // Escape quotes and backslashes to prevent AQL injection
+    // Escape quotes and backslashes to prevent AQL injection.
+    // AQL uses "Key" (not "objectKey") to match the object key field.
     let escaped = key_or_id.replace('\\', "\\\\").replace('"', "\\\"");
 
     let results = client
         .search_assets(
             workspace_id,
-            &format!("objectKey = \"{}\"", escaped),
+            &format!("Key = \"{}\"", escaped),
             Some(1),
             false,
         )
