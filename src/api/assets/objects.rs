@@ -7,6 +7,10 @@ use crate::types::assets::AssetObject;
 
 impl JiraClient {
     /// Search assets via AQL with auto-pagination.
+    ///
+    /// The `aql` parameter is passed to the API verbatim — callers must ensure
+    /// the query is trusted input. For user-supplied object keys interpolated
+    /// into AQL, use `resolve_object_key()` which escapes special characters.
     pub async fn search_assets(
         &self,
         workspace_id: &str,
@@ -78,14 +82,21 @@ pub async fn resolve_object_key(
     workspace_id: &str,
     key_or_id: &str,
 ) -> Result<String> {
+    if key_or_id.is_empty() {
+        return Err(JrError::UserError("Object key or ID cannot be empty.".into()).into());
+    }
+
     if key_or_id.chars().all(|c| c.is_ascii_digit()) {
         return Ok(key_or_id.to_string());
     }
 
+    // Escape quotes and backslashes to prevent AQL injection
+    let escaped = key_or_id.replace('\\', "\\\\").replace('"', "\\\"");
+
     let results = client
         .search_assets(
             workspace_id,
-            &format!("objectKey = \"{}\"", key_or_id),
+            &format!("objectKey = \"{}\"", escaped),
             Some(1),
             false,
         )
@@ -116,7 +127,17 @@ mod tests {
     }
 
     #[test]
-    fn empty_string_is_numeric() {
+    fn empty_string_is_numeric_but_rejected_by_resolve() {
+        // Empty string passes chars().all() vacuously, but resolve_object_key
+        // has an explicit empty check that rejects it before the numeric check.
         assert!("".chars().all(|c| c.is_ascii_digit()));
+    }
+
+    #[test]
+    fn aql_escaping() {
+        let input = r#"OBJ-1" OR objectType = "Server"#;
+        let escaped = input.replace('\\', "\\\\").replace('"', "\\\"");
+        let query = format!("objectKey = \"{}\"", escaped);
+        assert_eq!(query, r#"objectKey = "OBJ-1\" OR objectType = \"Server""#);
     }
 }

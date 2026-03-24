@@ -59,10 +59,12 @@ impl JiraClient {
 
         let client = Client::builder().timeout(Duration::from_secs(30)).build()?;
 
-        let assets_base_url =
-            config.global.instance.cloud_id.as_ref().map(|cloud_id| {
-                format!("https://api.atlassian.com/ex/jira/{}/jsm/assets", cloud_id)
-            });
+        let assets_base_url = config.global.instance.cloud_id.as_ref().map(|cloud_id| {
+            format!(
+                "https://api.atlassian.com/ex/jira/{}/jsm/assets",
+                urlencoding::encode(cloud_id)
+            )
+        });
 
         Ok(Self {
             client,
