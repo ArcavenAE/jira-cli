@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Default, Deserialize, Serialize)]
 pub struct AssetObject {
     pub id: String,
     pub label: String,
@@ -14,7 +14,7 @@ pub struct AssetObject {
     pub attributes: Vec<AssetAttribute>,
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Default, Deserialize, Serialize)]
 pub struct ObjectType {
     pub id: String,
     pub name: String,
