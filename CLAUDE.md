@@ -11,7 +11,14 @@ src/
 ├── main.rs              # Entry point, tokio runtime, clap dispatch, Ctrl+C handling
 ├── cli/                 # Clap derive definitions + command handlers
 │   ├── mod.rs           # CLI enums, global flags (--output, --project, --no-input, --no-color)
-│   ├── issue.rs         # issue list/view/create/edit/move/transitions/assign/comment/open/link/unlink/link-types
+│   ├── issue/           # issue commands (split by operation theme)
+│   │   ├── mod.rs       # dispatch + re-exports
+│   │   ├── format.rs    # row formatting, headers, points display
+│   │   ├── list.rs      # list + view + comments (read operations)
+│   │   ├── create.rs    # create + edit (field-building)
+│   │   ├── workflow.rs  # move + transitions + assign + comment + open
+│   │   ├── links.rs     # link + unlink + link-types
+│   │   └── helpers.rs   # team/points resolution, prompts
 │   ├── board.rs         # board list/view
 │   ├── sprint.rs        # sprint list/current (scrum-only, errors on kanban)
 │   ├── worklog.rs       # worklog add/list
@@ -25,7 +32,7 @@ src/
 │   ├── pagination.rs    # Offset-based (most endpoints) + cursor-based (JQL search)
 │   ├── rate_limit.rs    # Retry-After parsing
 │   └── jira/            # Jira-specific API call implementations (one file per resource)
-│       ├── issues.rs    # search, get, create, edit
+│       ├── issues.rs    # search, get, create, edit, list comments
 │       ├── boards.rs    # list boards, get board config
 │       ├── sprints.rs   # list sprints, get sprint issues
 │       ├── fields.rs    # list fields, story points field discovery

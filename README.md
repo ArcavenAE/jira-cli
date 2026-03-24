@@ -4,7 +4,19 @@ A fast, agent-friendly CLI for Jira Cloud, written in Rust. Built for both human
 
 ## Install
 
-### From source (available now)
+### One-liner (macOS, Linux)
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/Zious11/jira-cli/main/install.sh | sh
+```
+
+To install a specific version:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/Zious11/jira-cli/main/install.sh | sh -s -- v0.3.0
+```
+
+### From source
 
 ```bash
 brew install rust   # if you don't have Rust installed
@@ -21,9 +33,6 @@ brew install zious11/tap/jr
 
 # Crates.io (planned)
 cargo install jr-cli
-
-# Install script (planned)
-curl -fsSL https://raw.githubusercontent.com/Zious11/jira-cli/main/install.sh | sh
 ```
 
 ## Quick Start
@@ -73,6 +82,7 @@ jr issue comment KEY-123 "Deployed to staging"
 | `jr issue transitions KEY` | List available transitions |
 | `jr issue assign KEY` | Assign to self (or `--to USER`, `--unassign`) |
 | `jr issue comment KEY "msg"` | Add a comment (`--stdin`, `--file`, `--markdown`) |
+| `jr issue comments KEY` | List comments (`--limit N`) |
 | `jr issue open KEY` | Open in browser (`--url-only` for scripts) |
 | `jr issue link KEY1 KEY2` | Link two issues (`--type blocks`, defaults to Relates) |
 | `jr issue unlink KEY1 KEY2` | Remove link(s) between issues (`--type` to filter) |
