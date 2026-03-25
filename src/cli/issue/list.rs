@@ -9,6 +9,7 @@ use crate::cli::{IssueCommand, OutputFormat};
 use crate::config::Config;
 use crate::error::JrError;
 use crate::output;
+use crate::types::assets::LinkedAsset;
 use crate::types::assets::linked::format_linked_assets;
 
 use super::format;
@@ -30,14 +31,14 @@ pub(super) async fn handle_list(
         team,
         limit,
         points: show_points,
-        assets: _show_assets,
+        assets: show_assets,
     } = command
     else {
         unreachable!()
     };
 
     let sp_field_id = config.global.fields.story_points_field_id.as_deref();
-    let extra: Vec<&str> = sp_field_id.iter().copied().collect();
+    let mut extra: Vec<&str> = sp_field_id.iter().copied().collect();
     // Resolve team name to (field_id, uuid) before building JQL
     let resolved_team = if let Some(ref team_name) = team {
         Some(helpers::resolve_team_field(config, client, team_name, no_input).await?)
@@ -126,19 +127,47 @@ pub(super) async fn handle_list(
         }
     };
 
+    let cmdb_field_ids = if show_assets {
+        let ids = get_or_fetch_cmdb_field_ids(client).await.unwrap_or_default();
+        if ids.is_empty() {
+            eprintln!(
+                "warning: --assets ignored. No Assets custom fields found on this Jira instance."
+            );
+        }
+        ids
+    } else {
+        Vec::new()
+    };
+    for f in &cmdb_field_ids {
+        extra.push(f.as_str());
+    }
+
     let issues = client.search_issues(&effective_jql, limit, &extra).await?;
 
     let effective_sp = resolve_show_points(show_points, sp_field_id);
+    let show_assets_col = show_assets && !cmdb_field_ids.is_empty();
+    let mut issue_assets: Vec<Vec<LinkedAsset>> = Vec::new();
+    if show_assets_col {
+        for issue in &issues {
+            let mut linked = extract_linked_assets(&issue.fields.extra, &cmdb_field_ids);
+            enrich_assets(client, &mut linked).await;
+            issue_assets.push(linked);
+        }
+    }
     let rows: Vec<Vec<String>> = issues
         .iter()
-        .map(|issue| format::format_issue_row(issue, effective_sp))
+        .enumerate()
+        .map(|(i, issue)| {
+            let assets = if show_assets_col {
+                Some(issue_assets[i].as_slice())
+            } else {
+                None
+            };
+            format::format_issue_row(issue, effective_sp, assets)
+        })
         .collect();
-    output::print_output(
-        output_format,
-        &format::issue_table_headers(effective_sp.is_some()),
-        &rows,
-        &issues,
-    )?;
+    let headers = format::issue_table_headers(effective_sp.is_some(), show_assets_col);
+    output::print_output(output_format, &headers, &rows, &issues)?;
 
     Ok(())
 }
