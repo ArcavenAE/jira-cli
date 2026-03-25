@@ -78,6 +78,8 @@ Edge case with `--jql`: `--open` composes freely. If user's `--jql` already has 
 
 No new files, no new modules, no new API calls.
 
+Additionally, the unbounded query guard error message (`list.rs:151`) must be updated to include `--open` in the list of available flags.
+
 ## Testing
 
 Unit tests in `src/cli/issue/list.rs`:
