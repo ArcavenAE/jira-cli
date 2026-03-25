@@ -107,7 +107,10 @@ async fn test_search_issues_with_story_points() {
         result.issues[0].fields.story_points("customfield_10031"),
         Some(5.0)
     );
-    assert_eq!(result.issues[1].fields.story_points("customfield_10031"), None);
+    assert_eq!(
+        result.issues[1].fields.story_points("customfield_10031"),
+        None
+    );
     assert!(!result.has_more);
 }
 
@@ -236,9 +239,11 @@ async fn test_search_issues_no_more_results() {
     Mock::given(method("POST"))
         .and(path("/rest/api/3/search/jql"))
         .respond_with(ResponseTemplate::new(200).set_body_json(
-            common::fixtures::issue_search_response(vec![
-                common::fixtures::issue_response("FOO-1", "Test issue", "To Do"),
-            ]),
+            common::fixtures::issue_search_response(vec![common::fixtures::issue_response(
+                "FOO-1",
+                "Test issue",
+                "To Do",
+            )]),
         ))
         .mount(&server)
         .await;
