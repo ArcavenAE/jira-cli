@@ -443,7 +443,7 @@ async fn test_search_issues_jql_with_project_scope() {
     let server = MockServer::start().await;
 
     // The mock only matches if the POST body contains the expected composed JQL
-    let expected_jql = r#"project = "PROJ" AND priority = Highest ORDER BY updated DESC"#;
+    let expected_jql = r#"project = "PROJ" AND (priority = Highest) ORDER BY updated DESC"#;
     Mock::given(method("POST"))
         .and(path("/rest/api/3/search/jql"))
         .and(body_partial_json(serde_json::json!({

@@ -29,7 +29,7 @@ fn build_jql_base_parts(jql: &str, project_key: Option<&str>) -> (Vec<String>, &
         parts.push(format!("project = \"{}\"", crate::jql::escape_value(pk)));
     }
     if !stripped.is_empty() {
-        parts.push(stripped.to_string());
+        parts.push(format!("({})", stripped));
     }
 
     (parts, "updated DESC")
@@ -781,7 +781,7 @@ mod tests {
             parts,
             vec![
                 "project = \"PROJ\"".to_string(),
-                "priority = Highest".to_string(),
+                "(priority = Highest)".to_string(),
             ]
         );
         assert_eq!(order_by, "updated DESC");
@@ -790,7 +790,7 @@ mod tests {
     #[test]
     fn build_jql_base_parts_jql_without_project() {
         let (parts, order_by) = build_jql_base_parts("priority = Highest", None);
-        assert_eq!(parts, vec!["priority = Highest".to_string()]);
+        assert_eq!(parts, vec!["(priority = Highest)".to_string()]);
         assert_eq!(order_by, "updated DESC");
     }
 
@@ -802,7 +802,21 @@ mod tests {
             parts,
             vec![
                 "project = \"PROJ\"".to_string(),
-                "priority = Highest".to_string(),
+                "(priority = Highest)".to_string(),
+            ]
+        );
+        assert_eq!(order_by, "updated DESC");
+    }
+
+    #[test]
+    fn build_jql_base_parts_jql_or_with_project_preserves_scope() {
+        let (parts, order_by) =
+            build_jql_base_parts("priority = Highest OR status = Done", Some("PROJ"));
+        assert_eq!(
+            parts,
+            vec![
+                "project = \"PROJ\"".to_string(),
+                "(priority = Highest OR status = Done)".to_string(),
             ]
         );
         assert_eq!(order_by, "updated DESC");
