@@ -12,7 +12,7 @@ pub fn escape_value(s: &str) -> String {
 /// The approximate-count endpoint only needs the WHERE clause. ORDER BY is
 /// meaningless for a count and may cause issues with bounded-JQL validation.
 pub fn strip_order_by(jql: &str) -> &str {
-    let upper = jql.to_uppercase();
+    let upper = jql.to_ascii_uppercase();
     if let Some(pos) = upper.find(" ORDER BY") {
         jql[..pos].trim_end()
     } else {

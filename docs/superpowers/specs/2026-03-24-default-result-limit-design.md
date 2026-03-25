@@ -10,7 +10,7 @@
 
 ## Architecture
 
-The feature touches three layers: CLI argument parsing, the API search method's return type, and a new lightweight API call for approximate counts. No new files are introduced — all changes fit within existing modules.
+The feature touches three layers: CLI argument parsing, the API search method's return type, and a new lightweight API call for approximate counts. No new code files or modules are introduced — all runtime changes fit within existing modules.
 
 **Precedent:** GitHub CLI (`gh issue list`) defaults to 30 results with `-L/--limit` to override. It has no `--all` flag and no truncation message. We improve on this by adding both `--all` and a truncation hint with approximate total count.
 
