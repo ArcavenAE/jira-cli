@@ -33,7 +33,7 @@ Clap automatically rejects `--all --limit 50` with a clear error message.
 ### Default Limit Constant
 
 ```rust
-const DEFAULT_LIMIT: u32 = 25;
+const DEFAULT_LIMIT: u32 = 30;
 ```
 
 ### Effective Limit Resolution
@@ -48,7 +48,7 @@ let effective_limit = if all {
 
 | User input | `effective_limit` | Behavior |
 |------------|-------------------|----------|
-| (nothing) | `Some(25)` | Default 25 results |
+| (nothing) | `Some(30)` | Default 30 results |
 | `--limit 50` | `Some(50)` | Explicit 50 results |
 | `--all` | `None` | Unlimited (current behavior) |
 | `--all --limit 50` | N/A | Clap rejects with conflict error |
@@ -97,6 +97,8 @@ struct ApproximateCountResponse {
 }
 ```
 
+**JQL preparation:** Strip `ORDER BY` clauses from the JQL before passing to `approximate_count()` — ordering is meaningless for a count query and the endpoint requires bounded JQL. A simple `jql.split(" ORDER BY").next()` or regex suffices.
+
 **Endpoint details (validated via Perplexity):**
 - `POST /rest/api/3/search/approximate-count`
 - Request: `{"jql": "project = PROJ"}`
@@ -128,7 +130,7 @@ Only when **all three conditions** are met:
 ### Message Format
 
 ```
-Showing 25 of ~1,234 results. Use --limit or --all to see more.
+Showing 30 of ~1,234 results. Use --limit or --all to see more.
 ```
 
 The tilde (`~`) indicates the count is approximate.
@@ -138,7 +140,7 @@ The tilde (`~`) indicates the count is approximate.
 If `approximate_count()` fails (network error, unexpected 403, etc.), fall back to a message without the total:
 
 ```
-Showing 25 results. Use --limit or --all to see more.
+Showing 30 results. Use --limit or --all to see more.
 ```
 
 ### Why stderr
@@ -171,7 +173,7 @@ Degrade gracefully — show hint without total. Never fail the command because o
 
 ### JQL Matches Exactly the Limit
 
-e.g., 25 issues exist, limit is 25. The API may return `has_more: false` if all fit in one page, or `has_more: true` if pagination boundaries don't align perfectly. Either way the behavior is correct: no false truncation messages (if `has_more: false`), or a harmless hint (if `has_more: true` and count returns ~25).
+e.g., 30 issues exist, limit is 30. The API may return `has_more: false` if all fit in one page, or `has_more: true` if pagination boundaries don't align perfectly. Either way the behavior is correct: no false truncation messages (if `has_more: false`), or a harmless hint (if `has_more: true` and count returns ~30).
 
 ---
 
@@ -207,12 +209,12 @@ e.g., 25 issues exist, limit is 25. The API may return `has_more: false` if all 
 ### Unit Tests
 
 - `ApproximateCountResponse` deserializes `{"count": 36}` and `{"count": 0}` correctly
-- Default limit logic: no flags → `Some(25)`, `--limit 50` → `Some(50)`, `--all` → `None`
+- Default limit logic: no flags → `Some(30)`, `--limit 50` → `Some(50)`, `--all` → `None`
 - `SearchResult` propagates `has_more` correctly
 
 ### Integration Tests (wiremock)
 
-- Search returns 25 results + `has_more: true` → approximate count endpoint called → stderr contains truncation message with `~` total
+- Search returns 30 results + `has_more: true` → approximate count endpoint called → stderr contains truncation message with `~` total
 - Search returns 10 results + `has_more: false` → approximate count endpoint **not** called → stderr is empty
 - `--all` flag → search called with no limit → no truncation message
 - `--limit 50` → respects explicit limit → truncation message if more exist
@@ -237,3 +239,6 @@ e.g., 25 issues exist, limit is 25. The API may return `has_more: false` if all 
 | Cursor-based JQL endpoint does NOT return `total` field | Perplexity (Atlassian developer docs) |
 | Truncation messages should go to stderr for composability | Perplexity (CLI best practices) |
 | Clap `conflicts_with` is bi-directional, auto-generates error | Perplexity (clap docs + Rust users forum) |
+| `approximate-count` requires bounded JQL, ORDER BY may be unnecessary | Perplexity (Atlassian API docs) |
+| Default 30 matches `gh` precedent for developer CLI tools | Perplexity (GitHub CLI docs + CLI conventions) |
+| `nextPageToken` is null/absent when total equals maxResults (no false has_more) | Perplexity (Atlassian developer community) |
