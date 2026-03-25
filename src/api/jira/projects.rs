@@ -58,7 +58,7 @@ impl JiraClient {
             let page: OffsetPage<ProjectSummary> = self.get(&path).await?;
             let has_more = page.has_more();
             let next = page.next_start();
-            all_projects.extend(page.items().to_vec());
+            all_projects.extend(page.values.unwrap_or_default());
 
             // If caller specified a limit, stop after one page
             if max_results.is_some() || !has_more {

@@ -134,30 +134,13 @@ pub async fn list_projects(
 
 ## Error Message Enhancement
 
-### Approach
-
-A helper function that suggests valid projects when an invalid key is encountered. Located in `src/cli/project.rs` (not `issue/helpers.rs`) because it's used by multiple modules (`project.rs`, `create.rs`, `queue.rs`) and belongs with the project command logic:
-
-```rust
-pub async fn suggest_projects(
-    client: &JiraClient,
-    invalid_key: &str,
-) -> String
-```
-
-- Fetches projects via `list_projects(None, Some(50))`
-- Uses existing `partial_match` on project keys to find close matches
-- Returns a suggestion string: `Did you mean "FOO"? Run "jr project list" to see available projects.`
-- If no close match: `Run "jr project list" to see available projects.`
-- If the API call fails (e.g., network error), returns just the generic hint — never masks the original error
+Static `Run "jr project list" to see available projects.` hints are appended to error messages where project keys are missing or invalid. This avoids the complexity of dynamic project matching (which would require parsing Jira's error responses to distinguish project-specific 404s from other failures) while still guiding users to the discovery command.
 
 ### Touchpoints
 
-The enhancement applies where invalid project keys produce errors:
-
-1. **`src/cli/project.rs`** — `"No project specified"` error gets the `jr project list` hint (static string, no API call needed)
-2. **`src/cli/issue/create.rs`** — project key passed to API; on 404, append suggestion via `suggest_projects`
-3. **`src/cli/queue.rs`** — project key used for service desk lookup; on error, append suggestion via `suggest_projects`
+1. **`src/cli/project.rs`** — `"No project specified"` error includes `jr project list` hint
+2. **`src/cli/issue/create.rs`** — `"Project key is required"` error includes `jr project list` hint
+3. **`src/cli/queue.rs`** — `"No project configured"` error includes `jr project list` hint
 
 The issue list command (`src/cli/issue/list.rs`) doesn't hard-fail on invalid projects — it passes the key into JQL and Jira returns empty results. No enhancement needed there.
 
@@ -167,21 +150,15 @@ The issue list command (`src/cli/issue/list.rs`) doesn't hard-fail on invalid pr
 |------|--------|
 | `src/types/jira/project.rs` | Add `ProjectSummary`, `ProjectLead` types |
 | `src/api/jira/projects.rs` | Add `list_projects` method using `OffsetPage<ProjectSummary>` |
-| `src/cli/mod.rs` | Add `List` variant to `ProjectCommand` with `--type` and `--limit` |
-| `src/cli/project.rs` | Add `handle_list` handler, `suggest_projects` helper, enhance "No project specified" error |
-| `src/cli/issue/create.rs` | Append project suggestion on 404 errors |
-| `src/cli/queue.rs` | Append project suggestion on service desk lookup errors |
+| `src/cli/mod.rs` | Add `List` variant to `ProjectCommand` with `--type`, `--limit`, `--all` |
+| `src/cli/project.rs` | Add `handle_list` handler, enhance "No project specified" error |
+| `src/cli/issue/create.rs` | Enhance "Project key is required" error with `jr project list` hint |
+| `src/cli/queue.rs` | Enhance "No project configured" error with `jr project list` hint |
 | `README.md` | Add `jr project list` to command table and quick start |
 
 No new runtime modules or API endpoints beyond the single `/project/search` call.
 
 ## Testing
-
-### Unit Tests
-
-In `src/cli/project.rs`:
-- `suggest_projects_close_match` — returns `Did you mean "FOO"?` suggestion
-- `suggest_projects_no_match` — returns generic `Run "jr project list"` hint
 
 ### Integration Tests
 
