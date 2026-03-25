@@ -99,8 +99,6 @@ fn is_me_keyword(input: &str) -> bool {
 /// - Any other value → search users API, filter active, disambiguate via partial_match
 ///
 /// Returns the JQL value to use (either `"currentUser()"` or an unquoted accountId).
-// Callers (--assignee/--reporter flags) are wired up in Task 4.
-#[expect(dead_code, reason = "callers wired up in Task 4 (--assignee/--reporter flags)")]
 pub(super) async fn resolve_user(
     client: &JiraClient,
     name: &str,
