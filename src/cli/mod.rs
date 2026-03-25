@@ -166,6 +166,9 @@ pub enum IssueCommand {
         /// Show story points column
         #[arg(long)]
         points: bool,
+        /// Show linked assets column
+        #[arg(long)]
+        assets: bool,
     },
     /// Create a new issue
     Create {
@@ -314,6 +317,11 @@ pub enum IssueCommand {
     },
     /// List available link types
     LinkTypes,
+    /// Show assets linked to an issue
+    Assets {
+        /// Issue key (e.g., FOO-123)
+        key: String,
+    },
 }
 
 #[derive(Subcommand)]

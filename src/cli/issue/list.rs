@@ -1,11 +1,16 @@
 use anyhow::Result;
 
 use crate::adf;
+use crate::api::assets::linked::{
+    enrich_assets, extract_linked_assets, get_or_fetch_cmdb_field_ids,
+};
 use crate::api::client::JiraClient;
 use crate::cli::{IssueCommand, OutputFormat};
 use crate::config::Config;
 use crate::error::JrError;
 use crate::output;
+use crate::types::assets::LinkedAsset;
+use crate::types::assets::linked::format_linked_assets;
 
 use super::format;
 use super::helpers;
@@ -26,13 +31,14 @@ pub(super) async fn handle_list(
         team,
         limit,
         points: show_points,
+        assets: show_assets,
     } = command
     else {
         unreachable!()
     };
 
     let sp_field_id = config.global.fields.story_points_field_id.as_deref();
-    let extra: Vec<&str> = sp_field_id.iter().copied().collect();
+    let mut extra: Vec<&str> = sp_field_id.iter().copied().collect();
     // Resolve team name to (field_id, uuid) before building JQL
     let resolved_team = if let Some(ref team_name) = team {
         Some(helpers::resolve_team_field(config, client, team_name, no_input).await?)
@@ -121,19 +127,108 @@ pub(super) async fn handle_list(
         }
     };
 
+    let cmdb_field_ids = if show_assets {
+        let ids = get_or_fetch_cmdb_field_ids(client)
+            .await
+            .unwrap_or_default();
+        if ids.is_empty() {
+            eprintln!(
+                "warning: --assets ignored. No Assets custom fields found on this Jira instance."
+            );
+        }
+        ids
+    } else {
+        Vec::new()
+    };
+    for f in &cmdb_field_ids {
+        extra.push(f.as_str());
+    }
+
     let issues = client.search_issues(&effective_jql, limit, &extra).await?;
 
     let effective_sp = resolve_show_points(show_points, sp_field_id);
+    let show_assets_col = show_assets && !cmdb_field_ids.is_empty();
+    let mut issue_assets: Vec<Vec<LinkedAsset>> = Vec::new();
+    if show_assets_col {
+        // Extract linked assets for all issues first.
+        for issue in &issues {
+            issue_assets.push(extract_linked_assets(&issue.fields.extra, &cmdb_field_ids));
+        }
+
+        // Collect unique (workspace_id, object_id) pairs that need enrichment,
+        // then resolve them all in one batch to avoid redundant API calls.
+        use std::collections::HashMap as StdHashMap;
+        let mut to_enrich: StdHashMap<(String, String), ()> = StdHashMap::new();
+        let mut enrich_indices: Vec<(usize, usize)> = Vec::new(); // (issue_idx, asset_idx)
+
+        for (i, assets) in issue_assets.iter().enumerate() {
+            for (j, asset) in assets.iter().enumerate() {
+                if asset.id.is_some() && asset.key.is_none() && asset.name.is_none() {
+                    let wid = asset.workspace_id.clone().unwrap_or_default();
+                    let oid = asset.id.clone().unwrap();
+                    let key = (wid, oid);
+                    to_enrich.entry(key.clone()).or_insert(());
+                    enrich_indices.push((i, j));
+                }
+            }
+        }
+
+        if !to_enrich.is_empty() {
+            // Get workspace ID for assets that don't carry their own.
+            let fallback_wid = crate::api::assets::workspace::get_or_fetch_workspace_id(client)
+                .await
+                .ok();
+
+            let futures: Vec<_> = to_enrich
+                .keys()
+                .map(|(wid, oid)| {
+                    let wid = if wid.is_empty() {
+                        fallback_wid.clone().unwrap_or_default()
+                    } else {
+                        wid.clone()
+                    };
+                    let oid = oid.clone();
+                    async move {
+                        let result = client.get_asset(&wid, &oid, false).await;
+                        (oid, result)
+                    }
+                })
+                .collect();
+
+            let results = futures::future::join_all(futures).await;
+            let mut resolved: StdHashMap<String, (String, String, String)> = StdHashMap::new();
+            for (oid, result) in results {
+                if let Ok(obj) = result {
+                    resolved.insert(oid, (obj.object_key, obj.label, obj.object_type.name));
+                }
+            }
+
+            // Apply enrichment back to assets.
+            for (i, j) in &enrich_indices {
+                if let Some(oid) = &issue_assets[*i][*j].id.clone() {
+                    if let Some((key, name, asset_type)) = resolved.get(oid) {
+                        issue_assets[*i][*j].key = Some(key.clone());
+                        issue_assets[*i][*j].name = Some(name.clone());
+                        issue_assets[*i][*j].asset_type = Some(asset_type.clone());
+                    }
+                }
+            }
+        }
+    }
     let rows: Vec<Vec<String>> = issues
         .iter()
-        .map(|issue| format::format_issue_row(issue, effective_sp))
+        .enumerate()
+        .map(|(i, issue)| {
+            let assets = if show_assets_col {
+                Some(issue_assets[i].as_slice())
+            } else {
+                None
+            };
+            format::format_issue_row(issue, effective_sp, assets)
+        })
         .collect();
-    output::print_output(
-        output_format,
-        &format::issue_table_headers(effective_sp.is_some()),
-        &rows,
-        &issues,
-    )?;
+    let headers = format::issue_table_headers(effective_sp.is_some(), show_assets_col);
+    output::print_output(output_format, &headers, &rows, &issues)?;
 
     Ok(())
 }
@@ -255,7 +350,13 @@ pub(super) async fn handle_view(
     };
 
     let sp_field_id = config.global.fields.story_points_field_id.as_deref();
-    let extra: Vec<&str> = sp_field_id.iter().copied().collect();
+    let cmdb_field_ids = get_or_fetch_cmdb_field_ids(client)
+        .await
+        .unwrap_or_default();
+    let mut extra: Vec<&str> = sp_field_id.iter().copied().collect();
+    for f in &cmdb_field_ids {
+        extra.push(f.as_str());
+    }
     let issue = client.get_issue(&key, &extra).await?;
 
     match output_format {
@@ -389,6 +490,17 @@ pub(super) async fn handle_view(
                 })
                 .unwrap_or_else(|| "(none)".into());
             rows.push(vec!["Links".into(), links_display]);
+
+            if !cmdb_field_ids.is_empty() {
+                let mut linked = extract_linked_assets(&issue.fields.extra, &cmdb_field_ids);
+                enrich_assets(client, &mut linked).await;
+                let display = if linked.is_empty() {
+                    "(none)".into()
+                } else {
+                    format_linked_assets(&linked)
+                };
+                rows.push(vec!["Assets".into(), display]);
+            }
 
             if let Some(field_id) = sp_field_id {
                 let points_display = issue

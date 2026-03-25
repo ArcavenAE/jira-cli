@@ -150,11 +150,11 @@ async fn handle_current(
 
             let rows: Vec<Vec<String>> = issues
                 .iter()
-                .map(|issue| super::issue::format_issue_row(issue, sp_field_id))
+                .map(|issue| super::issue::format_issue_row(issue, sp_field_id, None))
                 .collect();
             output::print_output(
                 output_format,
-                &super::issue::issue_table_headers(sp_field_id.is_some()),
+                &super::issue::issue_table_headers(sp_field_id.is_some(), false),
                 &rows,
                 &issues,
             )?;
