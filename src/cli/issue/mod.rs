@@ -1,3 +1,4 @@
+mod assets;
 mod create;
 mod format;
 mod helpers;
@@ -74,5 +75,8 @@ pub async fn handle(
             links::handle_unlink(command, output_format, client, no_input).await
         }
         IssueCommand::LinkTypes => links::handle_link_types(output_format, client).await,
+        IssueCommand::Assets { key } => {
+            assets::handle_issue_assets(&key, output_format, client).await
+        }
     }
 }

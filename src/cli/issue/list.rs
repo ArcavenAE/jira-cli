@@ -26,6 +26,7 @@ pub(super) async fn handle_list(
         team,
         limit,
         points: show_points,
+        assets: _show_assets,
     } = command
     else {
         unreachable!()
