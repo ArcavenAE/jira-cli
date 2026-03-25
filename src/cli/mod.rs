@@ -163,6 +163,9 @@ pub enum IssueCommand {
         /// Maximum number of results
         #[arg(long)]
         limit: Option<u32>,
+        /// Fetch all results (no default limit)
+        #[arg(long, conflicts_with = "limit")]
+        all: bool,
         /// Show story points column
         #[arg(long)]
         points: bool,

@@ -30,12 +30,15 @@ pub(super) async fn handle_list(
         status,
         team,
         limit,
+        all,
         points: show_points,
         assets: show_assets,
     } = command
     else {
         unreachable!()
     };
+
+    let effective_limit = resolve_effective_limit(limit, all);
 
     let sp_field_id = config.global.fields.story_points_field_id.as_deref();
     let mut extra: Vec<&str> = sp_field_id.iter().copied().collect();
@@ -144,7 +147,11 @@ pub(super) async fn handle_list(
         extra.push(f.as_str());
     }
 
-    let issues = client.search_issues(&effective_jql, limit, &extra).await?;
+    let search_result = client
+        .search_issues(&effective_jql, effective_limit, &extra)
+        .await?;
+    let has_more = search_result.has_more;
+    let issues = search_result.issues;
 
     let effective_sp = resolve_show_points(show_points, sp_field_id);
     let show_assets_col = show_assets && !cmdb_field_ids.is_empty();
@@ -230,7 +237,37 @@ pub(super) async fn handle_list(
     let headers = format::issue_table_headers(effective_sp.is_some(), show_assets_col);
     output::print_output(output_format, &headers, &rows, &issues)?;
 
+    if has_more && !all {
+        let count_jql = crate::jql::strip_order_by(&effective_jql);
+        match client.approximate_count(count_jql).await {
+            Ok(total) if total > 0 => {
+                eprintln!(
+                    "Showing {} of ~{} results. Use --limit or --all to see more.",
+                    issues.len(),
+                    total
+                );
+            }
+            Ok(_) | Err(_) => {
+                eprintln!(
+                    "Showing {} results. Use --limit or --all to see more.",
+                    issues.len()
+                );
+            }
+        }
+    }
+
     Ok(())
+}
+
+const DEFAULT_LIMIT: u32 = 30;
+
+/// Resolve the effective limit from CLI flags.
+fn resolve_effective_limit(limit: Option<u32>, all: bool) -> Option<u32> {
+    if all {
+        None
+    } else {
+        Some(limit.unwrap_or(DEFAULT_LIMIT))
+    }
 }
 
 /// Resolve whether to show story points. Returns the field ID if points should
@@ -645,5 +682,20 @@ mod tests {
     fn format_comment_row_missing_body() {
         let row = format_comment_row(Some("Jane Smith"), Some("2026-03-20T14:32:00+00:00"), None);
         assert_eq!(row[2], "(no content)");
+    }
+
+    #[test]
+    fn effective_limit_defaults_to_30() {
+        assert_eq!(resolve_effective_limit(None, false), Some(30));
+    }
+
+    #[test]
+    fn effective_limit_respects_explicit_limit() {
+        assert_eq!(resolve_effective_limit(Some(50), false), Some(50));
+    }
+
+    #[test]
+    fn effective_limit_all_returns_none() {
+        assert_eq!(resolve_effective_limit(None, true), None);
     }
 }

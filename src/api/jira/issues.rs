@@ -2,7 +2,19 @@ use crate::api::client::JiraClient;
 use crate::api::pagination::{CursorPage, OffsetPage};
 use crate::types::jira::{Comment, CreateIssueResponse, Issue, TransitionsResponse};
 use anyhow::Result;
+use serde::Deserialize;
 use serde_json::Value;
+
+/// Result of a paginated issue search, including whether more results exist.
+pub struct SearchResult {
+    pub issues: Vec<Issue>,
+    pub has_more: bool,
+}
+
+#[derive(Deserialize)]
+struct ApproximateCountResponse {
+    count: u64,
+}
 
 impl JiraClient {
     /// Search issues using JQL with cursor-based pagination.
@@ -11,7 +23,7 @@ impl JiraClient {
         jql: &str,
         limit: Option<u32>,
         extra_fields: &[&str],
-    ) -> Result<Vec<Issue>> {
+    ) -> Result<SearchResult> {
         let max_per_page = limit.unwrap_or(50).min(100);
         let mut all_issues: Vec<Issue> = Vec::new();
         let mut next_page_token: Option<String> = None;
@@ -27,6 +39,8 @@ impl JiraClient {
         ];
         fields.extend_from_slice(extra_fields);
 
+        let mut more_available = false;
+
         loop {
             let mut body = serde_json::json!({
                 "jql": jql,
@@ -40,25 +54,41 @@ impl JiraClient {
 
             let page: CursorPage<Issue> = self.post("/rest/api/3/search/jql", &body).await?;
 
-            let has_more = page.has_more();
+            let page_has_more = page.has_more();
             let token = page.next_page_token.clone();
             all_issues.extend(page.issues);
 
             if let Some(max) = limit {
                 if all_issues.len() >= max as usize {
+                    more_available = all_issues.len() > max as usize || page_has_more;
                     all_issues.truncate(max as usize);
                     break;
                 }
             }
 
-            if !has_more {
+            if !page_has_more {
                 break;
             }
 
             next_page_token = token;
         }
 
-        Ok(all_issues)
+        Ok(SearchResult {
+            issues: all_issues,
+            has_more: more_available,
+        })
+    }
+
+    /// Get an approximate count of issues matching a JQL query.
+    ///
+    /// Uses the dedicated count endpoint which is lightweight (no issue data fetched).
+    /// The JQL should not include ORDER BY — use `jql::strip_order_by()` before calling.
+    pub async fn approximate_count(&self, jql: &str) -> Result<u64> {
+        let body = serde_json::json!({ "jql": jql });
+        let resp: ApproximateCountResponse = self
+            .post("/rest/api/3/search/approximate-count", &body)
+            .await?;
+        Ok(resp.count)
     }
 
     /// Get a single issue by key.
@@ -157,5 +187,42 @@ impl JiraClient {
             start_at = next;
         }
         Ok(all)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn search_result_has_more_false_when_no_truncation() {
+        let result = SearchResult {
+            issues: vec![],
+            has_more: false,
+        };
+        assert!(!result.has_more);
+    }
+
+    #[test]
+    fn search_result_has_more_true_when_truncated() {
+        let result = SearchResult {
+            issues: vec![],
+            has_more: true,
+        };
+        assert!(result.has_more);
+    }
+
+    #[test]
+    fn approximate_count_response_deserializes() {
+        let json = r#"{"count": 1234}"#;
+        let resp: ApproximateCountResponse = serde_json::from_str(json).unwrap();
+        assert_eq!(resp.count, 1234);
+    }
+
+    #[test]
+    fn approximate_count_response_zero() {
+        let json = r#"{"count": 0}"#;
+        let resp: ApproximateCountResponse = serde_json::from_str(json).unwrap();
+        assert_eq!(resp.count, 0);
     }
 }
