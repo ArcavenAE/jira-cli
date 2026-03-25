@@ -126,7 +126,10 @@ pub(super) async fn resolve_user(
     }
 
     // Multiple matches — disambiguate
-    let display_names: Vec<String> = active_users.iter().map(|u| u.display_name.clone()).collect();
+    let display_names: Vec<String> = active_users
+        .iter()
+        .map(|u| u.display_name.clone())
+        .collect();
     match crate::partial_match::partial_match(name, &display_names) {
         crate::partial_match::MatchResult::Exact(matched_name) => {
             let user = active_users

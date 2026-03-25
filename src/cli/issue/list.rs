@@ -72,11 +72,7 @@ pub(super) async fn handle_list(
 
     // Build pre-formatted team clause for build_filter_clauses
     let team_clause = resolved_team.as_ref().map(|(field_id, team_uuid)| {
-        format!(
-            "{} = \"{}\"",
-            field_id,
-            crate::jql::escape_value(team_uuid)
-        )
+        format!("{} = \"{}\"", field_id, crate::jql::escape_value(team_uuid))
     });
 
     // Build filter clauses from all flag values
@@ -121,10 +117,7 @@ pub(super) async fn handle_list(
                         // Kanban: statusCategory != Done, no implicit assignee
                         let mut parts = Vec::new();
                         if let Some(ref pk) = project_key {
-                            parts.push(format!(
-                                "project = \"{}\"",
-                                crate::jql::escape_value(pk)
-                            ));
+                            parts.push(format!("project = \"{}\"", crate::jql::escape_value(pk)));
                         }
                         parts.push("statusCategory != Done".into());
                         (parts, "rank ASC")
@@ -133,10 +126,7 @@ pub(super) async fn handle_list(
                 Err(_) => {
                     let mut parts = Vec::new();
                     if let Some(ref pk) = project_key {
-                        parts.push(format!(
-                            "project = \"{}\"",
-                            crate::jql::escape_value(pk)
-                        ));
+                        parts.push(format!("project = \"{}\"", crate::jql::escape_value(pk)));
                     }
                     (parts, "updated DESC")
                 }
@@ -144,10 +134,7 @@ pub(super) async fn handle_list(
         } else {
             let mut parts = Vec::new();
             if let Some(ref pk) = project_key {
-                parts.push(format!(
-                    "project = \"{}\"",
-                    crate::jql::escape_value(pk)
-                ));
+                parts.push(format!("project = \"{}\"", crate::jql::escape_value(pk)));
             }
             (parts, "updated DESC")
         }
@@ -667,25 +654,13 @@ mod tests {
 
     #[test]
     fn build_jql_parts_assignee_me() {
-        let parts = build_filter_clauses(
-            Some("currentUser()"),
-            None,
-            None,
-            None,
-            None,
-        );
+        let parts = build_filter_clauses(Some("currentUser()"), None, None, None, None);
         assert_eq!(parts, vec!["assignee = currentUser()"]);
     }
 
     #[test]
     fn build_jql_parts_reporter_account_id() {
-        let parts = build_filter_clauses(
-            None,
-            Some("5b10ac8d82e05b22cc7d4ef5"),
-            None,
-            None,
-            None,
-        );
+        let parts = build_filter_clauses(None, Some("5b10ac8d82e05b22cc7d4ef5"), None, None, None);
         assert_eq!(parts, vec!["reporter = 5b10ac8d82e05b22cc7d4ef5"]);
     }
 
