@@ -22,7 +22,9 @@ impl JiraClient {
         } else if let Some(values) = raw.get("values") {
             serde_json::from_value(values.clone())?
         } else {
-            Vec::new()
+            anyhow::bail!(
+                "Unexpected response from user search API. Expected a JSON array or object with \"values\" key."
+            );
         };
         Ok(users)
     }

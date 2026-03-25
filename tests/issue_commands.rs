@@ -392,3 +392,48 @@ async fn test_search_users_multiple() {
     let users = client.search_users("Jane").await.unwrap();
     assert_eq!(users.len(), 3);
 }
+
+#[tokio::test]
+async fn test_search_users_paginated_response() {
+    let server = MockServer::start().await;
+    // Test the paginated { "values": [...] } response shape
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/user/search"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
+            "total": 1,
+            "values": [
+                {
+                    "accountId": "acc-paged",
+                    "displayName": "Paged User",
+                    "emailAddress": "paged@test.com",
+                    "active": true
+                }
+            ]
+        })))
+        .mount(&server)
+        .await;
+
+    let client =
+        jr::api::client::JiraClient::new_for_test(server.uri(), "Basic dGVzdDp0ZXN0".to_string());
+    let users = client.search_users("Paged").await.unwrap();
+    assert_eq!(users.len(), 1);
+    assert_eq!(users[0].account_id, "acc-paged");
+    assert_eq!(users[0].display_name, "Paged User");
+}
+
+#[tokio::test]
+async fn test_search_users_unrecognized_response_errors() {
+    let server = MockServer::start().await;
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/user/search"))
+        .respond_with(
+            ResponseTemplate::new(200).set_body_json(serde_json::json!({"error": "unexpected"})),
+        )
+        .mount(&server)
+        .await;
+
+    let client =
+        jr::api::client::JiraClient::new_for_test(server.uri(), "Basic dGVzdDp0ZXN0".to_string());
+    let result = client.search_users("Test").await;
+    assert!(result.is_err());
+}

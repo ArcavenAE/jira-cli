@@ -86,8 +86,9 @@ pub(super) async fn handle_list(
 
     // Build base JQL + order by
     let (base_parts, order_by): (Vec<String>, &str) = if let Some(raw_jql) = jql {
-        // --jql provided: use as base, filter clauses will be appended
-        (vec![raw_jql], "updated DESC")
+        // --jql provided: strip any existing ORDER BY to avoid duplicate clauses
+        let stripped = crate::jql::strip_order_by(&raw_jql);
+        (vec![stripped.to_string()], "updated DESC")
     } else {
         let board_id = config.project.board_id;
         let project_key = config.project_key(project_override);
@@ -147,7 +148,7 @@ pub(super) async fn handle_list(
     // Guard against unbounded query
     if all_parts.is_empty() {
         return Err(JrError::UserError(
-            "No project or filters specified. Use --project, --assignee, --reporter, --status, --team, or --recent. \
+            "No project or filters specified. Use --project, --assignee, --reporter, --status, --team, --recent, or --jql. \
              You can also set a default project in .jr.toml or run \"jr init\"."
                 .into(),
         )
@@ -700,5 +701,11 @@ mod tests {
         all_parts.extend(filter);
         let jql = all_parts.join(" AND ");
         assert_eq!(jql, r#"type = Bug AND status = "Done""#);
+    }
+
+    #[test]
+    fn build_jql_parts_status_escaping() {
+        let parts = build_filter_clauses(None, None, Some(r#"He said "hi" \o/"#), None, None);
+        assert_eq!(parts, vec![r#"status = "He said \"hi\" \\o/""#.to_string()]);
     }
 }
