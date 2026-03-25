@@ -130,7 +130,7 @@ Only when **all three conditions** are met:
 ### Message Format
 
 ```
-Showing 30 of ~1,234 results. Use --limit or --all to see more.
+Showing 30 of ~1234 results. Use --limit or --all to see more.
 ```
 
 The tilde (`~`) indicates the count is approximate.
