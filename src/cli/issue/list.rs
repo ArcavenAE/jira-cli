@@ -667,7 +667,14 @@ mod tests {
 
     #[test]
     fn build_jql_parts_reporter_account_id() {
-        let parts = build_filter_clauses(None, Some("5b10ac8d82e05b22cc7d4ef5"), None, None, None, false);
+        let parts = build_filter_clauses(
+            None,
+            Some("5b10ac8d82e05b22cc7d4ef5"),
+            None,
+            None,
+            None,
+            false,
+        );
         assert_eq!(parts, vec!["reporter = 5b10ac8d82e05b22cc7d4ef5"]);
     }
 
@@ -712,7 +719,8 @@ mod tests {
 
     #[test]
     fn build_jql_parts_status_escaping() {
-        let parts = build_filter_clauses(None, None, Some(r#"He said "hi" \o/"#), None, None, false);
+        let parts =
+            build_filter_clauses(None, None, Some(r#"He said "hi" \o/"#), None, None, false);
         assert_eq!(parts, vec![r#"status = "He said \"hi\" \\o/""#.to_string()]);
     }
 
