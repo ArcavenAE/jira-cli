@@ -6,7 +6,7 @@ pub struct Project {
     pub name: String,
 }
 
-#[derive(Debug, Clone, Deserialize, Serialize)]
+#[derive(Debug, Clone, Default, Deserialize, Serialize)]
 pub struct ProjectSummary {
     pub key: String,
     pub name: String,
@@ -15,7 +15,7 @@ pub struct ProjectSummary {
     pub lead: Option<ProjectLead>,
 }
 
-#[derive(Debug, Clone, Deserialize, Serialize)]
+#[derive(Debug, Clone, Default, Deserialize, Serialize)]
 pub struct ProjectLead {
     #[serde(rename = "displayName")]
     pub display_name: String,
