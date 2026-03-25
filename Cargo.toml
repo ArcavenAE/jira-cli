@@ -30,6 +30,7 @@ tokio = { version = "1", features = ["full"] }
 toml = "1"
 base64 = "0.22"
 chrono = { version = "0.4", features = ["serde"] }
+futures = { version = "0.3", default-features = false, features = ["async-await"] }
 urlencoding = "2"
 
 [dev-dependencies]
