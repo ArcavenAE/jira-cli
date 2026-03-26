@@ -31,7 +31,7 @@ jobs:
       - name: Fetch upstream
         run: |
           git remote add upstream https://github.com/Zious11/jira-cli.git
-          git fetch upstream ${{ matrix.branch }}
+          git fetch upstream ${{ matrix.branch }} --tags
 
       - name: Check if sync needed
         id: check
@@ -109,4 +109,6 @@ jobs:
 
       - name: Push
         if: steps.merge.outputs.result == 'success'
-        run: git push origin ${{ matrix.branch }}
+        run: |
+          git push origin ${{ matrix.branch }}
+          git push origin --tags
