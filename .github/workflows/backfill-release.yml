@@ -129,7 +129,7 @@ jobs:
     steps:
       - uses: actions/checkout@v6
         with:
-          ref: ${{ inputs.tag }}
+          ref: develop  # need packaging scripts from develop, not the old tag
 
       - name: Extract version
         id: meta
