@@ -1,8 +1,11 @@
 # Sign, Notarize & Publish — Apple code signing + Homebrew tap
 #
-# Two channels:
-#   develop push  → alpha (pre-release, jr-a formula, builds from source)
-#   v* tag        → stable (signs existing release binaries, jr formula)
+# Five channels:
+#   develop push  → alpha    (jr-a formula, builds from source)
+#   v*-dev.*      → dev      (jr-d formula, signs release binaries)
+#   v*-beta.*     → beta     (jr-b formula, signs release binaries)
+#   v*-rc.*       → rc       (jr-rc formula, signs release binaries)
+#   v*.*.* (no -) → stable   (jr formula, signs release binaries)
 #
 # Isolated: gracefully skips if SIGNING_ENABLED != 'true' or secrets are missing.
 # Safe to merge upstream — all steps are gated on fork-only conditions.
@@ -170,10 +173,14 @@ jobs:
         run: |
           TAG="${{ steps.meta.outputs.tag }}"
           gh release create "$TAG" \
-            --title "Alpha $TAG" \
-            --notes "Automated alpha release from develop branch.
+            --title "jr-a $TAG" \
+            --notes "$(cat <<'NOTES'
+          **Channel:** alpha (develop branch)
+          **Binary:** \`brew install arcavenae/tap/jr-a\` or download below
           **Commit:** ${{ github.sha }}
-          **Signed:** Yes (Apple Developer ID)" \
+          **Signed:** Apple Developer ID (notarized)
+          NOTES
+          )" \
             --prerelease \
             jr-a-darwin-arm64 \
             jr-a-darwin-amd64 \
@@ -245,6 +252,7 @@ jobs:
     outputs:
       version: ${{ steps.meta.outputs.version }}
       tag: ${{ steps.meta.outputs.tag }}
+      channel: ${{ steps.meta.outputs.channel }}
     steps:
       - uses: actions/checkout@v6
 
@@ -255,7 +263,20 @@ jobs:
           VERSION="${TAG#v}"
           echo "tag=$TAG" >> "$GITHUB_OUTPUT"
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
-          echo "Stable release: $TAG (version $VERSION)"
+
+          # Determine channel and formula from tag suffix
+          if [[ "$TAG" == *-dev.* ]]; then
+            echo "channel=dev" >> "$GITHUB_OUTPUT"
+          elif [[ "$TAG" == *-rc.* ]]; then
+            echo "channel=rc" >> "$GITHUB_OUTPUT"
+          elif [[ "$TAG" == *-beta.* ]]; then
+            echo "channel=b" >> "$GITHUB_OUTPUT"
+          elif [[ "$TAG" == *-* ]]; then
+            echo "channel=unknown" >> "$GITHUB_OUTPUT"
+          else
+            echo "channel=stable" >> "$GITHUB_OUTPUT"
+          fi
+          echo "Release: $TAG (version $VERSION)"
 
       - name: Download release binaries
         env:
@@ -363,9 +384,11 @@ jobs:
         run: security delete-keychain build.keychain || true
 
   stable-homebrew:
-    name: Stable Update Homebrew Tap
+    name: Update Homebrew Tap
     needs: stable-sign
-    if: needs.stable-sign.result == 'success'
+    if: >-
+      needs.stable-sign.result == 'success'
+      && needs.stable-sign.outputs.channel != 'unknown'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
@@ -378,12 +401,23 @@ jobs:
           gh release download "$TAG" --pattern "jr-darwin-arm64" --dir .
           gh release download "$TAG" --pattern "jr-darwin-amd64" --dir .
 
-      - name: Update stable formula
+      - name: Update formula for channel
         env:
           HOMEBREW_TAP_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
         run: |
+          set -euo pipefail
           VERSION="${{ needs.stable-sign.outputs.version }}"
           TAG="${{ needs.stable-sign.outputs.tag }}"
+          CHANNEL="${{ needs.stable-sign.outputs.channel }}"
+
+          # Map channel to formula name
+          case "$CHANNEL" in
+            stable) FORMULA="jr" ;;
+            dev)    FORMULA="jr-d" ;;
+            rc)     FORMULA="jr-rc" ;;
+            b)      FORMULA="jr-b" ;;
+            *)      echo "Unknown channel: $CHANNEL, skipping"; exit 0 ;;
+          esac
 
           SHA256_ARM64=$(shasum -a 256 jr-darwin-arm64 | cut -d' ' -f1)
           SHA256_AMD64=$(shasum -a 256 jr-darwin-amd64 | cut -d' ' -f1)
@@ -392,16 +426,16 @@ jobs:
           cd homebrew-tap-repo
 
           mkdir -p Formula
-          cp ../Formula/jr.rb Formula/jr.rb
+          cp "../Formula/${FORMULA}.rb" "Formula/${FORMULA}.rb"
 
-          sed -i "s/VERSION_PLACEHOLDER/$VERSION/g" Formula/jr.rb
-          sed -i "s/TAG_PLACEHOLDER/$TAG/g" Formula/jr.rb
-          sed -i "s/SHA256_ARM64_PLACEHOLDER/$SHA256_ARM64/g" Formula/jr.rb
-          sed -i "s/SHA256_AMD64_PLACEHOLDER/$SHA256_AMD64/g" Formula/jr.rb
+          sed -i "s/VERSION_PLACEHOLDER/$VERSION/g" "Formula/${FORMULA}.rb"
+          sed -i "s/TAG_PLACEHOLDER/$TAG/g" "Formula/${FORMULA}.rb"
+          sed -i "s/SHA256_ARM64_PLACEHOLDER/$SHA256_ARM64/g" "Formula/${FORMULA}.rb"
+          sed -i "s/SHA256_AMD64_PLACEHOLDER/$SHA256_AMD64/g" "Formula/${FORMULA}.rb"
 
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add Formula/jr.rb
+          git add "Formula/${FORMULA}.rb"
           git diff --cached --quiet && echo "No changes to commit" && exit 0
-          git commit -m "Update jr to $VERSION"
+          git commit -m "Update ${FORMULA} to $VERSION"
           git push
