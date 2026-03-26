@@ -248,7 +248,8 @@ pub async fn handle(
     output_format: &OutputFormat,
 ) -> Result<()> {
     let board_override = match &command {
-        SprintCommand::List { board } | SprintCommand::Current { board } => *board,
+        SprintCommand::List { board } => *board,
+        SprintCommand::Current { board } => *board,
     };
 
     let board_id = config.board_id(board_override).ok_or_else(|| {
@@ -278,7 +279,7 @@ pub async fn handle(
 }
 ```
 
-Note: This extracts `board` from the variant once at the top using an or-pattern, then uses `{ .. }` in the dispatch match to ignore the already-consumed field. This avoids duplicating the board_id resolution in each arm.
+Note: This extracts `board` from each variant at the top using separate match arms, then uses `{ .. }` in the dispatch match to ignore the already-consumed field. This avoids duplicating the board_id resolution in each dispatch arm.
 
 - [ ] **Step 6: Run all tests**
 
