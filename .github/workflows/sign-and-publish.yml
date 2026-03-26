@@ -73,14 +73,17 @@ jobs:
         id: meta
         run: |
           DATE=$(date -u +%Y%m%d)
-          # Count existing alpha releases today to get sequence number
-          EXISTING=$(gh release list --limit 50 --json tagName -q "[.[] | select(.tagName | startswith(\"alpha-${DATE}\"))] | length" 2>/dev/null || echo "0")
+          # Count existing tags today (more reliable than releases)
+          EXISTING=$(git ls-remote --tags origin "refs/tags/alpha-${DATE}.*" | wc -l | tr -d ' ')
           SEQ=$((EXISTING + 1))
           TAG="alpha-${DATE}.${SEQ}"
           VERSION="${TAG}"
           echo "tag=$TAG" >> "$GITHUB_OUTPUT"
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
           echo "Alpha release: $TAG"
+
+          # Clean up any stale release/tag with the same name
+          gh release delete "$TAG" --cleanup-tag --yes 2>/dev/null || true
         env:
           GH_TOKEN: ${{ github.token }}
 
