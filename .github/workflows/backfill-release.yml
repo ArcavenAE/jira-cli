@@ -18,6 +18,11 @@ on:
         required: false
         type: boolean
         default: false
+      update_homebrew:
+        description: 'Update Homebrew tap formula (only for latest stable)'
+        required: false
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -249,12 +254,12 @@ jobs:
   homebrew:
     name: Update Homebrew Tap
     needs: sign
-    if: needs.sign.result == 'success'
+    if: needs.sign.result == 'success' && inputs.update_homebrew == true
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
         with:
-          ref: ${{ inputs.tag }}
+          ref: develop  # need Formula/jr.rb template from develop
 
       - name: Download signed binaries from release
         env:
