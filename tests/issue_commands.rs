@@ -514,13 +514,15 @@ async fn get_issue_includes_standard_fields() {
     assert_eq!(versions[0].released, Some(false));
     assert_eq!(versions[0].release_date.as_deref(), Some("2026-04-01"));
 
-    // Verify JSON serialization includes the new fields
+    // Verify JSON serialization includes the new fields at the expected paths
     let json_str = serde_json::to_string(&issue).unwrap();
-    assert!(json_str.contains("\"created\""));
-    assert!(json_str.contains("\"reporter\""));
-    assert!(json_str.contains("\"resolution\""));
-    assert!(json_str.contains("\"components\""));
-    assert!(json_str.contains("\"fixVersions\""));
+    let value: serde_json::Value = serde_json::from_str(&json_str).unwrap();
+
+    assert!(value["fields"]["created"].is_string());
+    assert!(value["fields"]["reporter"].is_object());
+    assert!(value["fields"]["resolution"].is_object());
+    assert!(value["fields"]["components"].is_array());
+    assert!(value["fields"]["fixVersions"].is_array());
 }
 
 #[tokio::test]

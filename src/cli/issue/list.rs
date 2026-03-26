@@ -511,7 +511,7 @@ pub(super) async fn handle_view(
                         .created
                         .as_deref()
                         .map(format_comment_date)
-                        .unwrap_or_default(),
+                        .unwrap_or_else(|| "-".into()),
                 ],
                 vec![
                     "Updated".into(),
@@ -520,7 +520,7 @@ pub(super) async fn handle_view(
                         .updated
                         .as_deref()
                         .map(format_comment_date)
-                        .unwrap_or_default(),
+                        .unwrap_or_else(|| "-".into()),
                 ],
                 vec![
                     "Project".into(),
