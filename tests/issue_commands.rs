@@ -443,13 +443,9 @@ async fn get_issue_includes_standard_fields() {
     let server = MockServer::start().await;
     Mock::given(method("GET"))
         .and(path("/rest/api/3/issue/FOO-42"))
-        .respond_with(
-            ResponseTemplate::new(200)
-                .set_body_json(common::fixtures::issue_response_with_standard_fields(
-                    "FOO-42",
-                    "Test with all fields",
-                )),
-        )
+        .respond_with(ResponseTemplate::new(200).set_body_json(
+            common::fixtures::issue_response_with_standard_fields("FOO-42", "Test with all fields"),
+        ))
         .mount(&server)
         .await;
 
