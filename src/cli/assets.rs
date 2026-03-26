@@ -91,13 +91,26 @@ async fn handle_view(
     client: &JiraClient,
 ) -> Result<()> {
     let object_id = objects::resolve_object_key(client, workspace_id, key).await?;
-    let object = client
-        .get_asset(workspace_id, &object_id, attributes)
-        .await?;
+    let object = client.get_asset(workspace_id, &object_id, false).await?;
 
     match output_format {
         OutputFormat::Json => {
-            println!("{}", output::render_json(&object)?);
+            if attributes {
+                let mut attrs = client
+                    .get_object_attributes(workspace_id, &object_id)
+                    .await?;
+                // JSON: filter system and hidden only (keep label for programmatic consumers)
+                attrs
+                    .retain(|a| !a.object_type_attribute.system && !a.object_type_attribute.hidden);
+                attrs.sort_by_key(|a| a.object_type_attribute.position);
+                let combined = serde_json::json!({
+                    "object": object,
+                    "attributes": attrs,
+                });
+                println!("{}", serde_json::to_string_pretty(&combined)?);
+            } else {
+                println!("{}", output::render_json(&object)?);
+            }
         }
         OutputFormat::Table => {
             let mut rows = vec![
@@ -115,27 +128,38 @@ async fn handle_view(
 
             println!("{}", output::render_table(&["Field", "Value"], &rows));
 
-            if attributes && !object.attributes.is_empty() {
-                println!();
-                let attr_rows: Vec<Vec<String>> = object
-                    .attributes
-                    .iter()
-                    .flat_map(|attr| {
-                        attr.values.iter().map(move |v| {
-                            vec![
-                                attr.object_type_attribute_id.clone(),
-                                v.display_value
-                                    .clone()
-                                    .or_else(|| v.value.clone())
-                                    .unwrap_or_default(),
-                            ]
+            if attributes {
+                let mut attrs = client
+                    .get_object_attributes(workspace_id, &object_id)
+                    .await?;
+                attrs.retain(|a| {
+                    !a.object_type_attribute.system
+                        && !a.object_type_attribute.hidden
+                        && !a.object_type_attribute.label
+                });
+                attrs.sort_by_key(|a| a.object_type_attribute.position);
+
+                if !attrs.is_empty() {
+                    println!();
+                    let attr_rows: Vec<Vec<String>> = attrs
+                        .iter()
+                        .flat_map(|attr| {
+                            attr.values.iter().map(move |v| {
+                                vec![
+                                    attr.object_type_attribute.name.clone(),
+                                    v.display_value
+                                        .clone()
+                                        .or_else(|| v.value.clone())
+                                        .unwrap_or_default(),
+                                ]
+                            })
                         })
-                    })
-                    .collect();
-                println!(
-                    "{}",
-                    output::render_table(&["Attribute ID", "Value"], &attr_rows)
-                );
+                        .collect();
+                    println!(
+                        "{}",
+                        output::render_table(&["Attribute", "Value"], &attr_rows)
+                    );
+                }
             }
         }
     }
