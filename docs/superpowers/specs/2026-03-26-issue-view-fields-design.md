@@ -40,8 +40,8 @@ From the Jira REST API v3:
 - **`created`** / **`updated`** — ISO 8601 strings (e.g., `"2026-03-20T14:32:00.000+0000"`)
 - **`reporter`** — Simplified User object with `accountId`, `displayName`, `active`. Same shape as `assignee`. The existing `User` type handles this — `emailAddress: Option<String>` naturally handles its absence. Note: `User.account_id` and `display_name` are non-optional `String` fields. The Jira API always returns these for valid users; deleted/deactivated users still retain their `accountId` and `displayName`. If the reporter field itself is absent, the `Option<User>` wrapper handles it.
 - **`resolution`** — Object with `name` when resolved (e.g., `{"name": "Fixed"}`), `null` when unresolved
-- **`components`** — Array of objects with `name` (e.g., `[{"name": "Backend"}]`). Typically an array (even when empty `[]`), but may be `null` or absent depending on project configuration and issue screens. Typed as `Option<Vec<Component>>` with `#[serde(default)]` to handle all three cases: absent → `None`, `null` → `None`, `[]` → `Some(vec![])`.
-- **`fixVersions`** — Array of version objects with `name`, `released`, `releaseDate`. Same `Option<Vec<>>` + `#[serde(default)]` pattern as `components` for the same reasons.
+- **`components`** — Array of objects with `name` (e.g., `[{"name": "Backend"}]`). Typically an array (even when empty `[]`), but may be `null` or absent depending on project configuration and issue screens. Typed as `Option<Vec<Component>>` with `#[serde(default)]` to handle all three cases: absent → `None` (via `#[serde(default)]`, needed because of `#[serde(flatten)]` on `extra`), `null` → `None` (via `Option<T>` natively), `[]` → `Some(vec![])` (via `Option<Vec<T>>` natively).
+- **`fixVersions`** — Array of version objects with `name`, `released`, `releaseDate`. Same `Option<Vec<>>` + `#[serde(default)]` pattern as `components` — `#[serde(default)]` handles the absent-key case, `Option` handles `null` natively.
 
 ## Fix
 
@@ -136,37 +136,53 @@ let mut fields = vec![
 
 ### 4. Table View (`src/cli/issue/list.rs` — `handle_view`)
 
-Add 3 rows after the Assignee row, before Project:
+Insert Reporter, Created, Updated rows between Assignee and Project. The existing `handle_view` builds the initial `rows` vec with Key, Summary, Type, Status, Priority, Assignee, Project, Labels in one block. Restructure this block so the 3 new rows appear after Assignee and before Project:
 
 ```rust
-rows.push(vec![
-    "Reporter".into(),
-    issue
-        .fields
-        .reporter
-        .as_ref()
-        .map(|r| r.display_name.clone())
-        .unwrap_or_else(|| "Unassigned".into()),
-]);
-rows.push(vec![
-    "Created".into(),
-    issue
-        .fields
-        .created
-        .as_deref()
-        .map(format_comment_date)
-        .unwrap_or_default(),
-]);
-rows.push(vec![
-    "Updated".into(),
-    issue
-        .fields
-        .updated
-        .as_deref()
-        .map(format_comment_date)
-        .unwrap_or_default(),
-]);
+let mut rows = vec![
+    vec!["Key".into(), issue.key.clone()],
+    vec!["Summary".into(), issue.fields.summary.clone()],
+    vec!["Type".into(), /* ... existing ... */],
+    vec!["Status".into(), /* ... existing ... */],
+    vec!["Priority".into(), /* ... existing ... */],
+    vec![
+        "Assignee".into(),
+        /* ... existing ... */
+    ],
+    // ── NEW: Reporter, Created, Updated ──
+    vec![
+        "Reporter".into(),
+        issue
+            .fields
+            .reporter
+            .as_ref()
+            .map(|r| r.display_name.clone())
+            .unwrap_or_else(|| "Unassigned".into()),
+    ],
+    vec![
+        "Created".into(),
+        issue
+            .fields
+            .created
+            .as_deref()
+            .map(format_comment_date)
+            .unwrap_or_default(),
+    ],
+    vec![
+        "Updated".into(),
+        issue
+            .fields
+            .updated
+            .as_deref()
+            .map(format_comment_date)
+            .unwrap_or_default(),
+    ],
+    vec!["Project".into(), /* ... existing ... */],
+    vec!["Labels".into(), /* ... existing ... */],
+];
 ```
+
+The `/* ... existing ... */` placeholders represent the current formatting logic — no changes to the existing field rendering, just repositioning within the vec initialization.
 
 The existing `format_comment_date()` function (private, defined in the same file `list.rs`) already handles Jira's ISO 8601 format and produces `YYYY-MM-DD HH:MM` output — reused here. No visibility change needed since `handle_view` is in the same module.
 
