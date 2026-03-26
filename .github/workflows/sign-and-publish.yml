@@ -155,6 +155,12 @@ jobs:
             xcrun stapler staple "$ARTIFACT"
           done
 
+      - name: Generate checksums
+        run: |
+          for f in jr-a-darwin-arm64 jr-a-darwin-amd64 jr-a-arm64.pkg jr-a-amd64.pkg jr-a-arm64.dmg jr-a-amd64.dmg; do
+            shasum -a 256 "$f" > "${f}.sha256"
+          done
+
       - name: Create alpha release
         env:
           GH_TOKEN: ${{ github.token }}
@@ -171,7 +177,8 @@ jobs:
             jr-a-arm64.pkg \
             jr-a-amd64.pkg \
             jr-a-arm64.dmg \
-            jr-a-amd64.dmg
+            jr-a-amd64.dmg \
+            jr-a-*.sha256
 
       - name: Cleanup keychain
         if: always()
@@ -327,6 +334,12 @@ jobs:
             xcrun stapler staple "$ARTIFACT"
           done
 
+      - name: Generate checksums
+        run: |
+          for f in jr-darwin-arm64 jr-darwin-amd64 jr-arm64.pkg jr-amd64.pkg jr-arm64.dmg jr-amd64.dmg; do
+            shasum -a 256 "$f" > "${f}.sha256"
+          done
+
       - name: Upload signed artifacts to release
         env:
           GH_TOKEN: ${{ github.token }}
@@ -339,6 +352,7 @@ jobs:
             jr-amd64.pkg \
             jr-arm64.dmg \
             jr-amd64.dmg \
+            jr-*.sha256 \
             --clobber
 
       - name: Cleanup keychain
