@@ -354,10 +354,7 @@ pub enum ProjectCommand {
         all: bool,
     },
     /// Show valid issue types, priorities, and statuses
-    Fields {
-        /// Project key (uses configured project if omitted)
-        project: Option<String>,
-    },
+    Fields,
 }
 
 #[derive(Subcommand)]

@@ -18,8 +18,8 @@ pub async fn handle(
             limit,
             all,
         } => handle_list(client, output_format, project_type.as_deref(), limit, all).await,
-        ProjectCommand::Fields { project } => {
-            handle_fields(project, config, client, output_format, project_override).await
+        ProjectCommand::Fields => {
+            handle_fields(config, client, output_format, project_override).await
         }
     }
 }
@@ -58,19 +58,14 @@ async fn handle_list(
 }
 
 async fn handle_fields(
-    project: Option<String>,
     config: &Config,
     client: &JiraClient,
     output_format: &OutputFormat,
     project_override: Option<&str>,
 ) -> Result<()> {
-    let project_key = project
-        .or_else(|| config.project_key(project_override))
-        .ok_or_else(|| {
-            anyhow::anyhow!(
-                "No project specified. Run \"jr project list\" to see available projects."
-            )
-        })?;
+    let project_key = config.project_key(project_override).ok_or_else(|| {
+        anyhow::anyhow!("No project specified. Run \"jr project list\" to see available projects.")
+    })?;
 
     let issue_types = client.get_project_issue_types(&project_key).await?;
     let priorities = client.get_priorities().await?;
