@@ -14,7 +14,7 @@ pub async fn handle(
 ) -> Result<()> {
     match command {
         BoardCommand::List => handle_list(client, output_format).await,
-        BoardCommand::View => handle_view(config, client, output_format).await,
+        BoardCommand::View { board } => handle_view(config, client, output_format, board).await,
     }
 }
 
@@ -31,13 +31,28 @@ async fn handle_list(client: &JiraClient, output_format: &OutputFormat) -> Resul
     Ok(())
 }
 
+/// Build JQL for kanban board view: all non-Done issues, ordered by rank.
+fn build_kanban_jql(project_key: Option<&str>) -> String {
+    let mut parts: Vec<String> = Vec::new();
+    if let Some(pk) = project_key {
+        parts.push(format!("project = \"{}\"", crate::jql::escape_value(pk)));
+    }
+    parts.push("statusCategory != Done".into());
+    let where_clause = parts.join(" AND ");
+    format!("{where_clause} ORDER BY rank ASC")
+}
+
 async fn handle_view(
     config: &Config,
     client: &JiraClient,
     output_format: &OutputFormat,
+    board_override: Option<u64>,
 ) -> Result<()> {
-    let board_id = config.project.board_id.ok_or_else(|| {
-        anyhow::anyhow!("No board_id configured. Set board_id in .jr.toml or run \"jr init\".")
+    let board_id = config.board_id(board_override).ok_or_else(|| {
+        anyhow::anyhow!(
+            "No board configured. Use --board <ID> or set board_id in .jr.toml.\n\
+             Run \"jr board list\" to see available boards."
+        )
     })?;
 
     let board_config = client.get_board_config(board_id).await?;
@@ -59,13 +74,7 @@ async fn handle_view(
                 "warning: no project configured for board. Showing issues across all projects. Set project in .jr.toml to scope results."
             );
         }
-        let mut jql_parts: Vec<String> = Vec::new();
-        if let Some(ref pk) = project_key {
-            jql_parts.push(format!("project = \"{}\"", crate::jql::escape_value(pk)));
-        }
-        jql_parts.push("statusCategory != Done".into());
-        jql_parts.push("ORDER BY rank ASC".into());
-        let jql = jql_parts.join(" AND ");
+        let jql = build_kanban_jql(project_key.as_deref());
         client.search_issues(&jql, None, &[]).await?.issues
     };
 
@@ -79,4 +88,33 @@ async fn handle_view(
     )?;
 
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn build_kanban_jql_with_project() {
+        let jql = build_kanban_jql(Some("FOO"));
+        assert_eq!(
+            jql,
+            "project = \"FOO\" AND statusCategory != Done ORDER BY rank ASC"
+        );
+    }
+
+    #[test]
+    fn build_kanban_jql_without_project() {
+        let jql = build_kanban_jql(None);
+        assert_eq!(jql, "statusCategory != Done ORDER BY rank ASC");
+    }
+
+    #[test]
+    fn build_kanban_jql_escapes_special_characters() {
+        let jql = build_kanban_jql(Some("FOO\"BAR"));
+        assert_eq!(
+            jql,
+            "project = \"FOO\\\"BAR\" AND statusCategory != Done ORDER BY rank ASC"
+        );
+    }
 }

@@ -71,6 +71,8 @@ let where_clause = jql_parts.join(" AND ");
 let jql = format!("{where_clause} ORDER BY rank ASC");
 ```
 
+Note: In the final implementation, this logic was extracted into a helper function `fn build_kanban_jql(project_key: Option<&str>) -> String` for testability, and `handle_view` calls that helper. The inline example above illustrates the core JQL construction logic.
+
 ## Files Changed
 
 | File | Change |
