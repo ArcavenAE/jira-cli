@@ -31,6 +31,17 @@ async fn handle_list(client: &JiraClient, output_format: &OutputFormat) -> Resul
     Ok(())
 }
 
+/// Build JQL for kanban board view: all non-Done issues, ordered by rank.
+fn build_kanban_jql(project_key: Option<&str>) -> String {
+    let mut parts: Vec<String> = Vec::new();
+    if let Some(pk) = project_key {
+        parts.push(format!("project = \"{}\"", crate::jql::escape_value(pk)));
+    }
+    parts.push("statusCategory != Done".into());
+    let where_clause = parts.join(" AND ");
+    format!("{where_clause} ORDER BY rank ASC")
+}
+
 async fn handle_view(
     config: &Config,
     client: &JiraClient,
@@ -59,13 +70,7 @@ async fn handle_view(
                 "warning: no project configured for board. Showing issues across all projects. Set project in .jr.toml to scope results."
             );
         }
-        let mut jql_parts: Vec<String> = Vec::new();
-        if let Some(ref pk) = project_key {
-            jql_parts.push(format!("project = \"{}\"", crate::jql::escape_value(pk)));
-        }
-        jql_parts.push("statusCategory != Done".into());
-        jql_parts.push("ORDER BY rank ASC".into());
-        let jql = jql_parts.join(" AND ");
+        let jql = build_kanban_jql(project_key.as_deref());
         client.search_issues(&jql, None, &[]).await?.issues
     };
 
@@ -79,4 +84,33 @@ async fn handle_view(
     )?;
 
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn build_kanban_jql_with_project() {
+        let jql = build_kanban_jql(Some("FOO"));
+        assert_eq!(
+            jql,
+            "project = \"FOO\" AND statusCategory != Done ORDER BY rank ASC"
+        );
+    }
+
+    #[test]
+    fn build_kanban_jql_without_project() {
+        let jql = build_kanban_jql(None);
+        assert_eq!(jql, "statusCategory != Done ORDER BY rank ASC");
+    }
+
+    #[test]
+    fn build_kanban_jql_escapes_special_characters() {
+        let jql = build_kanban_jql(Some("FOO\"BAR"));
+        assert_eq!(
+            jql,
+            "project = \"FOO\\\"BAR\" AND statusCategory != Done ORDER BY rank ASC"
+        );
+    }
 }
