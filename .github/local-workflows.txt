@@ -1,0 +1,6 @@
+# Local-only workflows — protected during upstream sync.
+# Files listed here will never be overwritten by upstream merges.
+# One path per line, relative to repo root.
+# Comments (#) and blank lines are ignored.
+.github/workflows/sign-and-publish.yml
+.github/workflows/sync-upstream.yml
