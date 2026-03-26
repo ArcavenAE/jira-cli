@@ -30,36 +30,33 @@ jr board view --board 382
 
 `jr board list` is unaffected — it lists all boards and does not need a board ID.
 
-## Approach: Shared `BoardArgs` Struct with Tuple Variants
+## Approach: Per-Subcommand Struct Variants
 
-Use a shared `clap::Args` struct to centralize the `--board` field definition, following clap 4's idiomatic `flatten`/tuple-variant pattern for args shared across multiple subcommands.
-
-### Shared args struct
-
-```rust
-#[derive(Args)]
-pub struct BoardArgs {
-    /// Board ID (overrides board_id in .jr.toml)
-    #[arg(long)]
-    pub board: Option<u64>,
-}
-```
+Convert the three unit variants that need a board ID to struct variants with an inline `board: Option<u64>` field. This matches the existing codebase pattern (e.g., `IssueCommand::List`, `IssueCommand::Create`) and is unambiguously supported by clap 4's derive API.
 
 ### Enum changes
 
-**`SprintCommand`** — convert both unit variants to tuple variants:
+**`SprintCommand`** — convert both unit variants to struct variants:
 
 ```rust
 #[derive(Subcommand)]
 pub enum SprintCommand {
     /// List sprints
-    List(BoardArgs),
+    List {
+        /// Board ID (overrides board_id in .jr.toml)
+        #[arg(long)]
+        board: Option<u64>,
+    },
     /// Show current sprint issues
-    Current(BoardArgs),
+    Current {
+        /// Board ID (overrides board_id in .jr.toml)
+        #[arg(long)]
+        board: Option<u64>,
+    },
 }
 ```
 
-**`BoardCommand`** — convert `View` to tuple variant; `List` stays unit:
+**`BoardCommand`** — convert `View` to struct variant; `List` stays unit:
 
 ```rust
 #[derive(Subcommand)]
@@ -67,7 +64,11 @@ pub enum BoardCommand {
     /// List boards
     List,
     /// View current board issues
-    View(BoardArgs),
+    View {
+        /// Board ID (overrides board_id in .jr.toml)
+        #[arg(long)]
+        board: Option<u64>,
+    },
 }
 ```
 
@@ -83,16 +84,16 @@ pub fn board_id(&self, cli_override: Option<u64>) -> Option<u64> {
 
 ### Handler changes
 
-**`sprint.rs`:** Extract `board` from each tuple variant, pass to `config.board_id()`:
+**`sprint.rs`:** Extract `board` from each struct variant, pass to `config.board_id()`:
 
 ```rust
 match command {
-    SprintCommand::List(args) => {
-        let board_id = resolve_board_id(config, args.board)?;
+    SprintCommand::List { board } => {
+        let board_id = config.board_id(board).ok_or_else(|| /* error */)?;
         // ...
     }
-    SprintCommand::Current(args) => {
-        let board_id = resolve_board_id(config, args.board)?;
+    SprintCommand::Current { board } => {
+        let board_id = config.board_id(board).ok_or_else(|| /* error */)?;
         // ...
     }
 }
@@ -100,13 +101,13 @@ match command {
 
 The scrum-board guard (`get_board_config` + type check) remains unchanged — it still runs after board_id resolution.
 
-**`board.rs`:** Extract `board` from `View` tuple variant:
+**`board.rs`:** Extract `board` from `View` struct variant:
 
 ```rust
 match command {
     BoardCommand::List => handle_list(client, output_format).await,
-    BoardCommand::View(args) => {
-        handle_view(config, client, output_format, args.board).await
+    BoardCommand::View { board } => {
+        handle_view(config, client, output_format, board).await
     }
 }
 ```
@@ -130,9 +131,9 @@ Run "jr board list" to see available boards.
 
 | File | Change |
 |------|--------|
-| `src/cli/mod.rs` | Add `BoardArgs` struct; convert 3 variants to tuple variants |
-| `src/cli/sprint.rs` | Extract `args.board` from variants, use `config.board_id()` |
-| `src/cli/board.rs` | Extract `args.board` from `View`, use `config.board_id()` |
+| `src/cli/mod.rs` | Convert 3 unit variants to struct variants with `board: Option<u64>` |
+| `src/cli/sprint.rs` | Extract `board` from variants, use `config.board_id()` |
+| `src/cli/board.rs` | Extract `board` from `View`, use `config.board_id()` |
 | `src/config.rs` | Add `board_id()` method |
 | `src/main.rs` | No change — dispatch already passes `config` |
 
