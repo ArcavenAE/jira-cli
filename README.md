@@ -120,7 +120,7 @@ jr issue comment KEY-123 "Deployed to staging"
 | `jr assets tickets <key>`       | Show Jira issues connected to an asset         |
 | `jr team list` | List available teams (`--refresh` to force update) |
 | `jr project list` | List accessible projects (`--type`, `--limit`/`--all`) |
-| `jr project fields FOO` | Show valid issue types and priorities |
+| `jr project fields --project FOO` | Show valid issue types, priorities, and statuses |
 | `jr completion bash\|zsh\|fish` | Generate shell completions |
 
 ## Global Flags
