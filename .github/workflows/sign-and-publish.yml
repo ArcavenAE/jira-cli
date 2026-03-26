@@ -379,6 +379,40 @@ jobs:
             jr-*.sha256 \
             --clobber
 
+      - name: Update release title and notes
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG="${{ steps.meta.outputs.tag }}"
+          CHANNEL="${{ steps.meta.outputs.channel }}"
+
+          # Map channel to formula name
+          case "$CHANNEL" in
+            stable) FORMULA="jr" ;;
+            dev)    FORMULA="jr-d" ;;
+            rc)     FORMULA="jr-rc" ;;
+            b)      FORMULA="jr-b" ;;
+            *)      FORMULA="jr" ;;
+          esac
+
+          # Get existing release notes
+          EXISTING_NOTES=$(gh release view "$TAG" --json body --jq '.body')
+
+          # Append signing info
+          NOTES=$(cat <<ENOTES
+          ${EXISTING_NOTES}
+
+          ---
+          **Channel:** ${CHANNEL}
+          **Binary:** \`brew install arcavenae/tap/${FORMULA}\` or download below
+          **Signed:** Apple Developer ID (notarized)
+          ENOTES
+          )
+
+          gh release edit "$TAG" \
+            --title "${FORMULA} ${TAG}" \
+            --notes "$NOTES"
+
       - name: Cleanup keychain
         if: always()
         run: security delete-keychain build.keychain || true
