@@ -3,6 +3,7 @@ use anyhow::{Result, bail};
 use crate::api::client::JiraClient;
 use crate::cli::{BoardCommand, OutputFormat};
 use crate::config::Config;
+use crate::error::JrError;
 use crate::output;
 
 /// Handle all board subcommands.
@@ -49,9 +50,10 @@ async fn handle_view(
     board_override: Option<u64>,
 ) -> Result<()> {
     let board_id = config.board_id(board_override).ok_or_else(|| {
-        anyhow::anyhow!(
+        JrError::ConfigError(
             "No board configured. Use --board <ID> or set board_id in .jr.toml.\n\
              Run \"jr board list\" to see available boards."
+                .into(),
         )
     })?;
 
@@ -116,5 +118,21 @@ mod tests {
             jql,
             "project = \"FOO\\\"BAR\" AND statusCategory != Done ORDER BY rank ASC"
         );
+    }
+
+    #[test]
+    fn missing_board_id_returns_config_error() {
+        let result: Option<u64> = None;
+        let err = result
+            .ok_or_else(|| {
+                crate::error::JrError::ConfigError(
+                    "No board configured. Use --board <ID> or set board_id in .jr.toml.\n\
+                     Run \"jr board list\" to see available boards."
+                        .into(),
+                )
+            })
+            .unwrap_err();
+        assert_eq!(err.exit_code(), 78);
+        assert!(err.to_string().contains("No board configured"));
     }
 }
