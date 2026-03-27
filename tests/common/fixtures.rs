@@ -260,6 +260,47 @@ pub fn project_statuses_response() -> Value {
     ])
 }
 
+/// Board configuration response.
+pub fn board_config_response(board_type: &str) -> Value {
+    json!({
+        "id": 382,
+        "name": "Test Board",
+        "type": board_type
+    })
+}
+
+/// Sprint list response (offset-paginated).
+pub fn sprint_list_response(sprints: Vec<Value>) -> Value {
+    let total = sprints.len() as u32;
+    json!({
+        "startAt": 0,
+        "maxResults": 50,
+        "total": total,
+        "values": sprints
+    })
+}
+
+/// Single sprint object.
+pub fn sprint(id: u64, name: &str, state: &str) -> Value {
+    json!({
+        "id": id,
+        "name": name,
+        "state": state,
+        "startDate": "2026-03-20T00:00:00.000Z",
+        "endDate": "2026-04-03T00:00:00.000Z"
+    })
+}
+
+/// Sprint issues response (offset-paginated).
+pub fn sprint_issues_response(issues: Vec<Value>, total: u32) -> Value {
+    json!({
+        "startAt": 0,
+        "maxResults": 50,
+        "total": total,
+        "issues": issues
+    })
+}
+
 pub fn issue_response_with_standard_fields(key: &str, summary: &str) -> Value {
     json!({
         "key": key,
