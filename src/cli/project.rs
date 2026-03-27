@@ -3,6 +3,7 @@ use anyhow::Result;
 use crate::api::client::JiraClient;
 use crate::cli::{OutputFormat, ProjectCommand};
 use crate::config::Config;
+use crate::error::JrError;
 use crate::output;
 
 pub async fn handle(
@@ -64,9 +65,10 @@ async fn handle_fields(
     project_override: Option<&str>,
 ) -> Result<()> {
     let project_key = config.project_key(project_override).ok_or_else(|| {
-        anyhow::anyhow!(
+        JrError::UserError(
             "No project specified. Use --project <KEY> or configure a default project in .jr.toml. \
              Run \"jr project list\" to see available projects."
+                .into(),
         )
     })?;
 

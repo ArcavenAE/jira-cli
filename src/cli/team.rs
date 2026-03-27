@@ -82,10 +82,9 @@ pub async fn resolve_org_id(config: &Config, client: &JiraClient) -> Result<Stri
     }
 
     // Extract hostname from instance URL
-    let url =
-        config.global.instance.url.as_ref().ok_or_else(|| {
-            JrError::ConfigError("No Jira instance configured. Run \"jr init\" first.".into())
-        })?;
+    let url = config.global.instance.url.as_ref().ok_or_else(|| {
+        JrError::ConfigError("No Jira instance configured. Run \"jr init\" first.".into())
+    })?;
     let hostname = url
         .trim_start_matches("https://")
         .trim_start_matches("http://")

@@ -34,9 +34,7 @@ impl JiraClient {
             .url
             .as_ref()
             .ok_or_else(|| {
-                JrError::ConfigError(
-                    "No Jira instance configured. Run \"jr init\" first.".into(),
-                )
+                JrError::ConfigError("No Jira instance configured. Run \"jr init\" first.".into())
             })?
             .trim_end_matches('/')
             .to_string();

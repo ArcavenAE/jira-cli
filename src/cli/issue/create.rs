@@ -5,6 +5,7 @@ use crate::adf;
 use crate::api::client::JiraClient;
 use crate::cli::{IssueCommand, OutputFormat};
 use crate::config::Config;
+use crate::error::JrError;
 use crate::output;
 
 use super::helpers;
@@ -45,9 +46,10 @@ pub(super) async fn handle_create(
             }
         })
         .ok_or_else(|| {
-            anyhow::anyhow!(
+            JrError::UserError(
                 "Project key is required. Use --project or configure .jr.toml. \
                  Run \"jr project list\" to see available projects."
+                    .into(),
             )
         })?;
 
@@ -60,7 +62,7 @@ pub(super) async fn handle_create(
                 helpers::prompt_input("Issue type (e.g., Task, Bug, Story)").ok()
             }
         })
-        .ok_or_else(|| anyhow::anyhow!("Issue type is required. Use --type"))?;
+        .ok_or_else(|| JrError::UserError("Issue type is required. Use --type".into()))?;
 
     // Resolve summary
     let summary_text = summary
@@ -71,7 +73,7 @@ pub(super) async fn handle_create(
                 helpers::prompt_input("Summary").ok()
             }
         })
-        .ok_or_else(|| anyhow::anyhow!("Summary is required. Use --summary"))?;
+        .ok_or_else(|| JrError::UserError("Summary is required. Use --summary".into()))?;
 
     // Resolve description
     let desc_text = if description_stdin {
