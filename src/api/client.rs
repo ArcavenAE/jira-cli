@@ -33,7 +33,11 @@ impl JiraClient {
             .instance
             .url
             .as_ref()
-            .ok_or_else(|| anyhow::anyhow!("No Jira instance configured. Run \"jr init\" first."))?
+            .ok_or_else(|| {
+                JrError::ConfigError(
+                    "No Jira instance configured. Run \"jr init\" first.".into(),
+                )
+            })?
             .trim_end_matches('/')
             .to_string();
         let auth_method = config

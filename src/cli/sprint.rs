@@ -3,6 +3,7 @@ use anyhow::{Result, bail};
 use crate::api::client::JiraClient;
 use crate::cli::{OutputFormat, SprintCommand};
 use crate::config::Config;
+use crate::error::JrError;
 use crate::output;
 use crate::types::jira::Issue;
 
@@ -19,9 +20,10 @@ pub async fn handle(
     };
 
     let board_id = config.board_id(board_override).ok_or_else(|| {
-        anyhow::anyhow!(
+        JrError::ConfigError(
             "No board configured. Use --board <ID> or set board_id in .jr.toml.\n\
              Run \"jr board list\" to see available boards."
+                .into(),
         )
     })?;
 

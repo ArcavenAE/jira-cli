@@ -5,6 +5,8 @@ use figment::{
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 
+use crate::error::JrError;
+
 #[derive(Debug, Deserialize, Serialize, Default)]
 pub struct FieldsConfig {
     pub team_field_id: Option<String>,
@@ -95,7 +97,7 @@ impl Config {
         }
 
         let url = self.global.instance.url.as_ref().ok_or_else(|| {
-            anyhow::anyhow!("No Jira instance configured. Run \"jr init\" first.")
+            JrError::ConfigError("No Jira instance configured. Run \"jr init\" first.".into())
         })?;
 
         if let Some(cloud_id) = &self.global.instance.cloud_id {
