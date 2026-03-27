@@ -15,7 +15,9 @@ pub async fn handle(
 ) -> Result<()> {
     match command {
         BoardCommand::List => handle_list(client, output_format).await,
-        BoardCommand::View { board } => handle_view(config, client, output_format, board).await,
+        BoardCommand::View { board, limit, all } => {
+            handle_view(config, client, output_format, board, limit, all).await
+        }
     }
 }
 
@@ -48,7 +50,11 @@ async fn handle_view(
     client: &JiraClient,
     output_format: &OutputFormat,
     board_override: Option<u64>,
+    limit: Option<u32>,
+    all: bool,
 ) -> Result<()> {
+    let effective_limit = crate::cli::resolve_effective_limit(limit, all);
+
     let board_id = config.board_id(board_override).ok_or_else(|| {
         JrError::ConfigError(
             "No board configured. Use --board <ID> or set board_id in .jr.toml.\n\
@@ -60,14 +66,17 @@ async fn handle_view(
     let board_config = client.get_board_config(board_id).await?;
     let board_type = board_config.board_type.to_lowercase();
 
-    let issues = if board_type == "scrum" {
+    let (issues, has_more) = if board_type == "scrum" {
         // For scrum boards, fetch the active sprint's issues
         let sprints = client.list_sprints(board_id, Some("active")).await?;
         if sprints.is_empty() {
             bail!("No active sprint found for board {}.", board_id);
         }
         let sprint = &sprints[0];
-        client.get_sprint_issues(sprint.id, None, &[]).await?
+        let result = client
+            .get_sprint_issues(sprint.id, None, effective_limit, &[])
+            .await?;
+        (result.issues, result.has_more)
     } else {
         // Kanban: search for issues not in Done status category
         let project_key = config.project_key(None);
@@ -77,7 +86,8 @@ async fn handle_view(
             );
         }
         let jql = build_kanban_jql(project_key.as_deref());
-        client.search_issues(&jql, None, &[]).await?.issues
+        let result = client.search_issues(&jql, effective_limit, &[]).await?;
+        (result.issues, result.has_more)
     };
 
     let rows = super::issue::format_issue_rows_public(&issues);
@@ -88,6 +98,36 @@ async fn handle_view(
         &rows,
         &issues,
     )?;
+
+    if has_more && !all {
+        if board_type != "scrum" {
+            // Kanban: try to get approximate total via JQL count
+            let project_key = config.project_key(None);
+            let jql = build_kanban_jql(project_key.as_deref());
+            let count_jql = crate::jql::strip_order_by(&jql);
+            match client.approximate_count(count_jql).await {
+                Ok(total) if total > 0 => {
+                    eprintln!(
+                        "Showing {} of ~{} results. Use --limit or --all to see more.",
+                        issues.len(),
+                        total
+                    );
+                }
+                Ok(_) | Err(_) => {
+                    eprintln!(
+                        "Showing {} results. Use --limit or --all to see more.",
+                        issues.len()
+                    );
+                }
+            }
+        } else {
+            // Scrum: no reliable total count from Agile API
+            eprintln!(
+                "Showing {} results. Use --limit or --all to see more.",
+                issues.len()
+            );
+        }
+    }
 
     Ok(())
 }
