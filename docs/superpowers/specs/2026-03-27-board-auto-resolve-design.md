@@ -32,7 +32,20 @@ jr board list [--project PROJ] [--type scrum|kanban]
 | Flag | Type | Default | Description |
 |------|------|---------|-------------|
 | `--project` | global flag | from config | Filter boards by project key (existing global flag, now threaded through) |
-| `--type` | `Option<String>` | none | Filter boards by type, constrained to `scrum` or `kanban` via clap `value_parser` |
+| `--type` | `Option<String>` | none | Filter boards by type (`scrum` or `kanban`), validated string via `PossibleValuesParser` (matches `--type` on `project list`) |
+
+`BoardCommand::List` changes from a unit variant to a struct variant:
+
+```rust
+/// List boards
+List {
+    /// Filter by board type
+    #[arg(long = "type", value_parser = clap::builder::PossibleValuesParser::new(["scrum", "kanban"]))]
+    board_type: Option<String>,
+},
+```
+
+This matches how `--type` works on `ProjectCommand::List` (validated `Option<String>`, not a dedicated enum).
 
 **No new flags on `sprint list/current` or `board view`.** They already accept `--board`. Auto-resolve uses the existing `--project` global flag + `.jr.toml` config fallback.
 
@@ -86,10 +99,10 @@ pub struct BoardLocation {
 
 ### Auto-Resolve Helper
 
-New `pub(crate)` function in `src/cli/board.rs`:
+New `pub` function in `src/cli/board.rs` (matching the existing `pub` convention for cross-module functions in `src/cli/`):
 
 ```rust
-pub(crate) async fn resolve_board_id(
+pub async fn resolve_board_id(
     config: &Config,
     client: &JiraClient,
     board_override: Option<u64>,
@@ -105,11 +118,11 @@ pub(crate) async fn resolve_board_id(
 3. Auto-discover via API:
    - Get project key from `config.project_key(project_override)` — if none available, return a `ConfigError` suggesting `--board`, `board_id` in config, or `--project`
    - Call `client.list_boards(Some(project_key), type_filter)` where `type_filter` is `Some("scrum")` when `require_scrum` is true, `None` otherwise
-   - If exactly 1 board → print hint to stderr (`Using board 42 — My Board (scrum)`), return its ID
+   - If exactly 1 board → print hint to stderr (`Using board 42 - My Board (scrum)`), return its ID
    - If 0 boards → return error with project key and suggestion to check board list
    - If 2+ boards → return error listing candidate boards with IDs and names
 
-**Why in `board.rs`?** The function is board-resolution logic. `sprint.rs` imports it as `crate::cli::board::resolve_board_id`. Keeps the helper close to where boards are managed, consistent with `resolve_effective_limit` living in `cli/mod.rs` near the limit-related logic.
+**Why in `board.rs`?** The function is board-resolution logic — it calls `list_boards`, formats board-related errors, and manages the auto-resolve flow. `sprint.rs` imports it as `crate::cli::board::resolve_board_id`. Keeping the helper where boards are managed follows the "code lives where its concept lives" principle.
 
 ### Error Messages
 
@@ -118,7 +131,8 @@ pub(crate) async fn resolve_board_id(
 | No `--board`, no config, no project key | `No board configured and no project specified. Use --board <ID>, set board_id in .jr.toml, or specify --project to auto-discover.` | 78 |
 | 0 boards found (sprint) | `No scrum boards found for project PROJ. Verify the project key is correct, then try "jr board list --project PROJ".` | 1 |
 | 0 boards found (board view) | `No boards found for project PROJ. Verify the project key is correct, then try "jr board list --project PROJ".` | 1 |
-| 2+ boards found | `Multiple scrum boards found for project PROJ:\n  42  My Board\n  99  Other Board\nUse --board <ID> to select one, or set board_id in .jr.toml.` | 1 |
+| 2+ boards found (`require_scrum=true`) | `Multiple scrum boards found for project PROJ:\n  42  My Board\n  99  Other Board\nUse --board <ID> to select one, or set board_id in .jr.toml.` | 1 |
+| 2+ boards found (`require_scrum=false`) | `Multiple boards found for project PROJ:\n  42  scrum  My Board\n  99  kanban Other Board\nUse --board <ID> to select one, or set board_id in .jr.toml.` | 1 |
 | Explicit `--board` is kanban (sprint) | Unchanged: `Sprint commands are only available for scrum boards. Board 42 is a kanban board.` | 1 |
 
 ### Stderr Hint on Auto-Select
@@ -126,7 +140,7 @@ pub(crate) async fn resolve_board_id(
 When auto-resolve picks a board, print to stderr:
 
 ```
-Using board 42 — My Board (scrum)
+Using board 42 - My Board (scrum)
 ```
 
 This uses stderr (not stdout) so it doesn't pollute `--output json` or piped output. Matches the existing pattern of `eprintln!` for hints (truncation hints, kanban project warnings).
@@ -146,8 +160,8 @@ This uses stderr (not stdout) so it doesn't pollute `--output json` or piped out
 
 | Function | Change |
 |----------|--------|
-| `handle` | Gains `project_override`, passes to `handle_view` and `handle_list` |
-| `handle_list` | Gains `project_override` and `board_type_filter: Option<&str>`, passes both to `client.list_boards()` |
+| `handle` | Gains `project_override`, destructures `BoardCommand::List { board_type }` and passes `project_override` + `board_type.as_deref()` to `handle_list` |
+| `handle_list` | Gains `project_override: Option<&str>` and `board_type_filter: Option<&str>`, passes both to `client.list_boards()`. Output gains a "Project" column showing `location.project_key` (useful when listing boards across projects). |
 | `handle_view` | Replaces `config.board_id()` block with `resolve_board_id(config, client, board, project_override, false)` |
 
 **Sprint handler changes:**
@@ -165,11 +179,14 @@ This uses stderr (not stdout) so it doesn't pollute `--output json` or piped out
 - `list_boards()` gains `project_key` and `board_type` parameters
 - `Board` struct gains `location: Option<BoardLocation>` field
 - New `BoardLocation` struct in `types/jira/board.rs`
-- New `resolve_board_id()` helper in `cli/board.rs`
+- New `resolve_board_id()` helper in `cli/board.rs` (`pub` visibility)
+- `board list` output gains a "Project" column
 - `BoardCommand::List` gains `board_type` field with clap `value_parser`
 - `main.rs` threads `cli.project` to board and sprint handlers
 - Both `board::handle` and `sprint::handle` gain `project_override` parameter
 - Error messages updated for missing board scenarios
+
+**Note on pagination:** The existing `OffsetPage` struct computes `has_more()` from `start_at + max_results < total`, while the Agile API also returns an `isLast` field that is currently ignored. This is a pre-existing concern, not introduced by this feature. With project filtering, results are typically 1-3 boards (single page), so pagination edge cases are unlikely in practice.
 
 ## What Doesn't Change
 
@@ -181,6 +198,12 @@ This uses stderr (not stdout) so it doesn't pollute `--output json` or piped out
 - Any command other than board and sprint
 
 ## Testing
+
+### Test Fixtures
+
+Add to `tests/common/fixtures.rs`:
+- `board_response(id, name, board_type, project_key)` — single board with location
+- `board_list_response(boards)` — paginated board list wrapper
 
 ### Unit Tests
 
@@ -202,5 +225,5 @@ Using wiremock to mock Jira API responses:
 
 - `build_kanban_jql` tests: unchanged
 - `compute_sprint_summary` tests: unchanged
-- `board_commands.rs` integration tests (from PR #73): `list_boards()` call in `handle_list` gains `None, None` params — trivial update
-- `missing_board_id_returns_config_error` unit test: replaced by `resolve_board_id` integration tests
+- `board_commands.rs` integration tests: if PR #73 has been merged, the existing tests need `list_boards()` calls updated to pass `None, None` params. If PR #73 has not been merged, create the test file as part of this feature's test suite.
+- `missing_board_id_returns_config_error` unit test in `board.rs`: replaced by `resolve_board_id` integration tests
