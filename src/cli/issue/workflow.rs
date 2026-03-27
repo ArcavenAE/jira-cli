@@ -4,6 +4,7 @@ use serde_json::json;
 use crate::adf;
 use crate::api::client::JiraClient;
 use crate::cli::{IssueCommand, OutputFormat};
+use crate::error::JrError;
 use crate::output;
 use crate::partial_match::{self, MatchResult};
 
@@ -118,9 +119,9 @@ pub(super) async fn handle_move(
                 let choice = helpers::prompt_input("Select (number)")?;
                 let idx: usize = choice
                     .parse()
-                    .map_err(|_| anyhow::anyhow!("Invalid selection"))?;
+                    .map_err(|_| JrError::UserError("Invalid selection".into()))?;
                 if idx < 1 || idx > matches.len() {
-                    bail!("Selection out of range");
+                    return Err(JrError::UserError("Selection out of range".into()).into());
                 }
                 transitions
                     .iter()

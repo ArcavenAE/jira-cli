@@ -2,6 +2,7 @@ use anyhow::Result;
 
 use crate::api::client::JiraClient;
 use crate::config::Config;
+use crate::error::JrError;
 
 pub(super) async fn resolve_team_field(
     config: &Config,
@@ -17,8 +18,8 @@ pub(super) async fn resolve_team_field(
             .find_team_field_id()
             .await?
             .ok_or_else(|| {
-                anyhow::anyhow!(
-                    "No \"Team\" field found on this Jira instance. This instance may not have the Team field configured."
+                JrError::ConfigError(
+                    "No \"Team\" field found on this Jira instance. This instance may not have the Team field configured.".into(),
                 )
             })?
     };
@@ -69,16 +70,16 @@ pub(super) async fn resolve_team_field(
 }
 
 pub(super) fn resolve_story_points_field_id(config: &Config) -> Result<String> {
-    config
+    Ok(config
         .global
         .fields
         .story_points_field_id
         .clone()
         .ok_or_else(|| {
-            anyhow::anyhow!(
-                "Story points field not configured. Run \"jr init\" or set story_points_field_id under [fields] in ~/.config/jr/config.toml"
+            JrError::ConfigError(
+                "Story points field not configured. Run \"jr init\" or set story_points_field_id under [fields] in ~/.config/jr/config.toml".into(),
             )
-        })
+        })?)
 }
 
 pub(super) fn prompt_input(prompt: &str) -> Result<String> {
