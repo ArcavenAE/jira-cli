@@ -301,6 +301,28 @@ pub fn sprint_issues_response(issues: Vec<Value>, total: u32) -> Value {
     })
 }
 
+pub fn board_response(id: u64, name: &str, board_type: &str, project_key: &str) -> Value {
+    json!({
+        "id": id,
+        "name": name,
+        "type": board_type,
+        "location": {
+            "projectKey": project_key,
+            "projectName": format!("{} Project", project_key)
+        }
+    })
+}
+
+pub fn board_list_response(boards: Vec<Value>) -> Value {
+    let total = boards.len() as u32;
+    json!({
+        "values": boards,
+        "startAt": 0,
+        "maxResults": 50,
+        "total": total
+    })
+}
+
 pub fn issue_response_with_standard_fields(key: &str, summary: &str) -> Value {
     json!({
         "key": key,
