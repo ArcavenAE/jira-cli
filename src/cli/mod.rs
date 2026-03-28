@@ -360,7 +360,11 @@ pub enum ProjectCommand {
 #[derive(Subcommand)]
 pub enum BoardCommand {
     /// List boards
-    List,
+    List {
+        /// Filter by board type
+        #[arg(long = "type", value_parser = clap::builder::PossibleValuesParser::new(["scrum", "kanban"]))]
+        board_type: Option<String>,
+    },
     /// View current board issues
     View {
         /// Board ID (overrides board_id in .jr.toml)

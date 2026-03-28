@@ -3,7 +3,6 @@ use anyhow::{Result, bail};
 use crate::api::client::JiraClient;
 use crate::cli::{OutputFormat, SprintCommand};
 use crate::config::Config;
-use crate::error::JrError;
 use crate::output;
 use crate::types::jira::Issue;
 
@@ -13,21 +12,20 @@ pub async fn handle(
     config: &Config,
     client: &JiraClient,
     output_format: &OutputFormat,
+    project_override: Option<&str>,
 ) -> Result<()> {
     let board_override = match &command {
         SprintCommand::List { board } => *board,
         SprintCommand::Current { board } => *board,
     };
 
-    let board_id = config.board_id(board_override).ok_or_else(|| {
-        JrError::ConfigError(
-            "No board configured. Use --board <ID> or set board_id in .jr.toml.\n\
-             Run \"jr board list\" to see available boards."
-                .into(),
-        )
-    })?;
+    let board_id =
+        crate::cli::board::resolve_board_id(config, client, board_override, project_override, true)
+            .await?;
 
-    // Guard: sprints only make sense for scrum boards
+    // Guard: sprints only make sense for scrum boards.
+    // When resolve_board_id auto-discovers (step 3), it already filters to scrum.
+    // This guard catches the case where --board or config provides a kanban board directly.
     let board_config = client.get_board_config(board_id).await?;
     let board_type = board_config.board_type.to_lowercase();
     if board_type != "scrum" {

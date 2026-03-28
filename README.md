@@ -57,6 +57,9 @@ jr auth login --oauth
 # View your current sprint/board issues
 jr issue list --project FOO
 
+# Sprint list (auto-discovers scrum board for project)
+jr sprint list --project FOO
+
 # My assigned tickets
 jr issue list --assignee me
 
@@ -107,9 +110,9 @@ jr issue comment KEY-123 "Deployed to staging"
 | `jr issue unlink KEY1 KEY2` | Remove link(s) between issues (`--type` to filter) |
 | `jr issue link-types` | List available link types |
 | `jr issue assets KEY`          | Show assets linked to an issue                |
-| `jr board list` | List boards |
+| `jr board list` | List boards (`--project`, `--type scrum\|kanban`) |
 | `jr board view --board 42` | Show current board issues (`--board` or config, `--limit`/`--all`) |
-| `jr sprint list --board 42` | List sprints (`--board` or config, scrum only) |
+| `jr sprint list --board 42` | List sprints (`--board` or config or auto-discover, scrum only) |
 | `jr sprint current --board 42` | Show current sprint issues (with points summary) |
 | `jr worklog add KEY 2h` | Log time (`1h30m`, `1d`, `1w`) |
 | `jr worklog list KEY` | List worklogs |
