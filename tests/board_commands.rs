@@ -18,28 +18,6 @@ fn make_issues(count: usize) -> Vec<serde_json::Value> {
         .collect()
 }
 
-fn board_response(id: u64, name: &str, board_type: &str, project_key: &str) -> serde_json::Value {
-    serde_json::json!({
-        "id": id,
-        "name": name,
-        "type": board_type,
-        "location": {
-            "projectKey": project_key,
-            "projectName": format!("{} Project", project_key)
-        }
-    })
-}
-
-fn board_list_response(boards: Vec<serde_json::Value>) -> serde_json::Value {
-    let total = boards.len() as u32;
-    serde_json::json!({
-        "values": boards,
-        "startAt": 0,
-        "maxResults": 50,
-        "total": total
-    })
-}
-
 // --- Board view --limit tests (from PR #73) ---
 
 #[tokio::test]
@@ -136,11 +114,11 @@ async fn list_boards_with_project_and_type_filter() {
         .and(path("/rest/agile/1.0/board"))
         .and(query_param("projectKeyOrId", "PROJ"))
         .and(query_param("type", "scrum"))
-        .respond_with(
-            ResponseTemplate::new(200).set_body_json(board_list_response(vec![board_response(
+        .respond_with(ResponseTemplate::new(200).set_body_json(
+            common::fixtures::board_list_response(vec![common::fixtures::board_response(
                 42, "My Board", "scrum", "PROJ",
-            )])),
-        )
+            )]),
+        ))
         .mount(&server)
         .await;
 
@@ -160,12 +138,12 @@ async fn list_boards_without_filters() {
     let server = MockServer::start().await;
     Mock::given(method("GET"))
         .and(path("/rest/agile/1.0/board"))
-        .respond_with(
-            ResponseTemplate::new(200).set_body_json(board_list_response(vec![
-                board_response(1, "Board A", "scrum", "FOO"),
-                board_response(2, "Board B", "kanban", "BAR"),
-            ])),
-        )
+        .respond_with(ResponseTemplate::new(200).set_body_json(
+            common::fixtures::board_list_response(vec![
+                common::fixtures::board_response(1, "Board A", "scrum", "FOO"),
+                common::fixtures::board_response(2, "Board B", "kanban", "BAR"),
+            ]),
+        ))
         .mount(&server)
         .await;
 
@@ -181,7 +159,9 @@ async fn list_boards_empty_result() {
     Mock::given(method("GET"))
         .and(path("/rest/agile/1.0/board"))
         .and(query_param("projectKeyOrId", "NOPE"))
-        .respond_with(ResponseTemplate::new(200).set_body_json(board_list_response(vec![])))
+        .respond_with(
+            ResponseTemplate::new(200).set_body_json(common::fixtures::board_list_response(vec![])),
+        )
         .mount(&server)
         .await;
 
@@ -200,14 +180,14 @@ async fn resolve_board_auto_discovers_single_scrum_board() {
         .and(path("/rest/agile/1.0/board"))
         .and(query_param("projectKeyOrId", "PROJ"))
         .and(query_param("type", "scrum"))
-        .respond_with(
-            ResponseTemplate::new(200).set_body_json(board_list_response(vec![board_response(
+        .respond_with(ResponseTemplate::new(200).set_body_json(
+            common::fixtures::board_list_response(vec![common::fixtures::board_response(
                 42,
                 "PROJ Scrum Board",
                 "scrum",
                 "PROJ",
-            )])),
-        )
+            )]),
+        ))
         .mount(&server)
         .await;
 
@@ -229,12 +209,12 @@ async fn resolve_board_errors_on_multiple_boards() {
         .and(path("/rest/agile/1.0/board"))
         .and(query_param("projectKeyOrId", "PROJ"))
         .and(query_param("type", "scrum"))
-        .respond_with(
-            ResponseTemplate::new(200).set_body_json(board_list_response(vec![
-                board_response(42, "Board A", "scrum", "PROJ"),
-                board_response(99, "Board B", "scrum", "PROJ"),
-            ])),
-        )
+        .respond_with(ResponseTemplate::new(200).set_body_json(
+            common::fixtures::board_list_response(vec![
+                common::fixtures::board_response(42, "Board A", "scrum", "PROJ"),
+                common::fixtures::board_response(99, "Board B", "scrum", "PROJ"),
+            ]),
+        ))
         .mount(&server)
         .await;
 
@@ -259,7 +239,9 @@ async fn resolve_board_errors_on_no_boards() {
         .and(path("/rest/agile/1.0/board"))
         .and(query_param("projectKeyOrId", "NOPE"))
         .and(query_param("type", "scrum"))
-        .respond_with(ResponseTemplate::new(200).set_body_json(board_list_response(vec![])))
+        .respond_with(
+            ResponseTemplate::new(200).set_body_json(common::fixtures::board_list_response(vec![])),
+        )
         .mount(&server)
         .await;
 
