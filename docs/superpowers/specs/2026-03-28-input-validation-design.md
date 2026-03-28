@@ -83,8 +83,7 @@ Extracts and deduplicates status names from the project-scoped response. Uses a 
 **Partial matching:**
 
 Reuse the existing `crate::partial_match::partial_match()` function (already used by `issue move` for transitions and `queue view` for queue names). It takes `(input: &str, candidates: &[String])` and returns a `MatchResult` enum:
-- `MatchResult::Exact(String)` — exact case-insensitive match
-- `MatchResult::Single(String)` — single substring match
+- `MatchResult::Exact(String)` — exact or single substring match
 - `MatchResult::Ambiguous(Vec<String>)` — multiple matches
 - `MatchResult::None(Vec<String>)` — no match (contains all candidates for error messages)
 
@@ -92,7 +91,7 @@ The caller constructs error messages from the `MatchResult` variants, following 
 
 **Validation placement in `handle_list`:**
 
-The validation must run BEFORE `build_filter_clauses()` is called (currently line 98), because the resolved status name needs to reach `build_filter_clauses`. Insert the validation block between the team clause construction (line 95) and the `build_filter_clauses` call (line 98). Use a separate `resolved_status` variable rather than mutating the destructured `status`:
+The validation must run BEFORE `build_filter_clauses()` is called (currently line 98), because the resolved status name needs to reach `build_filter_clauses`. The validation also requires `project_key`, which is currently resolved at line 108. Reorder: move `let project_key = config.project_key(project_override);` up from line 108 to after the team clause (line 95), then insert validation, then call `build_filter_clauses`. Use a separate `resolved_status` variable rather than mutating the destructured `status`:
 
 ```rust
 // After team_clause (line 95), before build_filter_clauses (line 98):
@@ -129,8 +128,7 @@ let resolved_status: Option<String> = if let Some(ref status_input) = status {
     };
 
     match crate::partial_match::partial_match(status_input, &valid_statuses) {
-        crate::partial_match::MatchResult::Exact(name)
-        | crate::partial_match::MatchResult::Single(name) => Some(name),
+        crate::partial_match::MatchResult::Exact(name) => Some(name),
         crate::partial_match::MatchResult::Ambiguous(matches) => {
             return Err(JrError::UserError(format!(
                 "Ambiguous status \"{}\". Matches: {}",
@@ -221,6 +219,7 @@ When only `--status` is set (no `--project`):
 - New `extract_unique_status_names()` helper in `src/cli/issue/list.rs`
 - `handle_list` in `list.rs` gains validation blocks before `build_filter_clauses`
 - New `resolved_status` variable replaces raw `status` in `build_filter_clauses` call
+- `project_key` resolution moves up from line 108 to before validation block
 - `build_filter_clauses` call moves after validation (receives resolved status name)
 
 ## What Doesn't Change
