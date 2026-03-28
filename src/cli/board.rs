@@ -106,7 +106,16 @@ pub async fn handle(
             .await
         }
         BoardCommand::View { board, limit, all } => {
-            handle_view(config, client, output_format, board, limit, all, project_override).await
+            handle_view(
+                config,
+                client,
+                output_format,
+                board,
+                limit,
+                all,
+                project_override,
+            )
+            .await
         }
     }
 }

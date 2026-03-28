@@ -23,10 +23,10 @@ impl JiraClient {
                 start_at, max_results
             );
             if let Some(pk) = project_key {
-                path.push_str(&format!("&projectKeyOrId={pk}"));
+                path.push_str(&format!("&projectKeyOrId={}", urlencoding::encode(pk)));
             }
             if let Some(bt) = board_type {
-                path.push_str(&format!("&type={bt}"));
+                path.push_str(&format!("&type={}", urlencoding::encode(bt)));
             }
             let page: OffsetPage<Board> = self.get(&path).await?;
             let has_more = page.has_more();
