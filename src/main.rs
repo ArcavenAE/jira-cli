@@ -126,12 +126,26 @@ async fn run(cli: Cli) -> anyhow::Result<()> {
             cli::Command::Board { command } => {
                 let config = config::Config::load()?;
                 let client = api::client::JiraClient::from_config(&config, cli.verbose)?;
-                cli::board::handle(command, &config, &client, &cli.output).await
+                cli::board::handle(
+                    command,
+                    &config,
+                    &client,
+                    &cli.output,
+                    cli.project.as_deref(),
+                )
+                .await
             }
             cli::Command::Sprint { command } => {
                 let config = config::Config::load()?;
                 let client = api::client::JiraClient::from_config(&config, cli.verbose)?;
-                cli::sprint::handle(command, &config, &client, &cli.output).await
+                cli::sprint::handle(
+                    command,
+                    &config,
+                    &client,
+                    &cli.output,
+                    cli.project.as_deref(),
+                )
+                .await
             }
             cli::Command::Worklog { command } => {
                 let config = config::Config::load()?;

@@ -190,3 +190,121 @@ async fn list_boards_empty_result() {
     let boards = client.list_boards(Some("NOPE"), None).await.unwrap();
     assert!(boards.is_empty());
 }
+
+#[tokio::test]
+async fn resolve_board_auto_discovers_single_scrum_board() {
+    let server = MockServer::start().await;
+
+    // list_boards filtered by project+scrum returns 1 board
+    Mock::given(method("GET"))
+        .and(path("/rest/agile/1.0/board"))
+        .and(query_param("projectKeyOrId", "PROJ"))
+        .and(query_param("type", "scrum"))
+        .respond_with(
+            ResponseTemplate::new(200).set_body_json(board_list_response(vec![board_response(
+                42,
+                "PROJ Scrum Board",
+                "scrum",
+                "PROJ",
+            )])),
+        )
+        .mount(&server)
+        .await;
+
+    let client =
+        jr::api::client::JiraClient::new_for_test(server.uri(), "Basic dGVzdDp0ZXN0".to_string());
+    let config = jr::config::Config::default();
+
+    let board_id = jr::cli::board::resolve_board_id(&config, &client, None, Some("PROJ"), true)
+        .await
+        .unwrap();
+    assert_eq!(board_id, 42);
+}
+
+#[tokio::test]
+async fn resolve_board_errors_on_multiple_boards() {
+    let server = MockServer::start().await;
+
+    Mock::given(method("GET"))
+        .and(path("/rest/agile/1.0/board"))
+        .and(query_param("projectKeyOrId", "PROJ"))
+        .and(query_param("type", "scrum"))
+        .respond_with(
+            ResponseTemplate::new(200).set_body_json(board_list_response(vec![
+                board_response(42, "Board A", "scrum", "PROJ"),
+                board_response(99, "Board B", "scrum", "PROJ"),
+            ])),
+        )
+        .mount(&server)
+        .await;
+
+    let client =
+        jr::api::client::JiraClient::new_for_test(server.uri(), "Basic dGVzdDp0ZXN0".to_string());
+    let config = jr::config::Config::default();
+
+    let err = jr::cli::board::resolve_board_id(&config, &client, None, Some("PROJ"), true)
+        .await
+        .unwrap_err();
+    let msg = err.to_string();
+    assert!(msg.contains("Multiple scrum boards"), "got: {msg}");
+    assert!(msg.contains("42"), "should list board ID 42, got: {msg}");
+    assert!(msg.contains("99"), "should list board ID 99, got: {msg}");
+}
+
+#[tokio::test]
+async fn resolve_board_errors_on_no_boards() {
+    let server = MockServer::start().await;
+
+    Mock::given(method("GET"))
+        .and(path("/rest/agile/1.0/board"))
+        .and(query_param("projectKeyOrId", "NOPE"))
+        .and(query_param("type", "scrum"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(board_list_response(vec![])))
+        .mount(&server)
+        .await;
+
+    let client =
+        jr::api::client::JiraClient::new_for_test(server.uri(), "Basic dGVzdDp0ZXN0".to_string());
+    let config = jr::config::Config::default();
+
+    let err = jr::cli::board::resolve_board_id(&config, &client, None, Some("NOPE"), true)
+        .await
+        .unwrap_err();
+    let msg = err.to_string();
+    assert!(msg.contains("No scrum boards found"), "got: {msg}");
+    assert!(
+        msg.contains("NOPE"),
+        "should mention project key, got: {msg}"
+    );
+}
+
+#[tokio::test]
+async fn resolve_board_uses_explicit_board_override() {
+    let server = MockServer::start().await;
+    let client =
+        jr::api::client::JiraClient::new_for_test(server.uri(), "Basic dGVzdDp0ZXN0".to_string());
+    let config = jr::config::Config::default();
+
+    let board_id = jr::cli::board::resolve_board_id(&config, &client, Some(42), None, true)
+        .await
+        .unwrap();
+    assert_eq!(board_id, 42);
+}
+
+#[tokio::test]
+async fn resolve_board_errors_without_project_or_board() {
+    let server = MockServer::start().await;
+    let client =
+        jr::api::client::JiraClient::new_for_test(server.uri(), "Basic dGVzdDp0ZXN0".to_string());
+    let config = jr::config::Config::default();
+
+    let err = jr::cli::board::resolve_board_id(&config, &client, None, None, true)
+        .await
+        .unwrap_err();
+    let msg = err.to_string();
+    assert!(msg.contains("No board configured"), "got: {msg}");
+    assert!(
+        msg.contains("--project"),
+        "should suggest --project, got: {msg}"
+    );
+}
