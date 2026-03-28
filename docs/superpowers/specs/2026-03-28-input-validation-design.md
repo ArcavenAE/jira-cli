@@ -34,10 +34,12 @@ After resolving `project_key` (line 108 in `list.rs`) and before building JQL:
 ```rust
 if let Some(ref pk) = project_key {
     if !client.project_exists(pk).await? {
-        bail!(
-            "Project \"{}\" not found. Run \"jr project list\" to see available projects.",
-            pk
-        );
+        return Err(JrError::UserError(
+            format!(
+                "Project \"{}\" not found. Run \"jr project list\" to see available projects.",
+                pk
+            )
+        ).into());
     }
 }
 ```
@@ -47,7 +49,7 @@ if let Some(ref pk) = project_key {
 Project "NONEXISTENT" not found. Run "jr project list" to see available projects.
 ```
 
-Exit code 1 (anyhow::bail, same as other runtime errors).
+Exit code 64 via `JrError::UserError` — consistent with how `handle_list` already treats bad user input (e.g., `validate_duration` on line 67 uses `JrError::UserError`).
 
 ### Status Validation
 
@@ -62,13 +64,13 @@ Exit code 1 (anyhow::bail, same as other runtime errors).
 
 **When `--project` is NOT set:** The global endpoint returns a flat array of `StatusDetails` with `name` fields. No deduplication needed.
 
-**New API method in `src/api/jira/projects.rs`:**
+**New API method in `src/api/jira/statuses.rs`** (new file — `GET /rest/api/3/status` is a global endpoint, not project-scoped, so it gets its own file following the one-file-per-resource convention):
 
 ```rust
 pub async fn get_all_statuses(&self) -> Result<Vec<String>>
 ```
 
-Calls `GET /rest/api/3/status`, returns a flat list of unique status names.
+Calls `GET /rest/api/3/status` (not paginated — returns all statuses for active workflows), extracts unique status names, returns as a flat `Vec<String>`.
 
 **New helper in `src/cli/issue/list.rs`:**
 
@@ -80,25 +82,44 @@ Extracts and deduplicates status names from the project-scoped response. Uses a 
 
 **Partial matching:**
 
-Reuse the existing `crate::partial_match::find_match()` function (already used by `issue move` for transitions and `queue view` for queue names). It handles:
-- Exact match (case-insensitive) → use it
-- Single substring match → use it
-- Multiple matches → error listing matches
-- No match → error listing valid values
+Reuse the existing `crate::partial_match::partial_match()` function (already used by `issue move` for transitions and `queue view` for queue names). It takes `(input: &str, candidates: &[String])` and returns a `MatchResult` enum:
+- `MatchResult::Exact(String)` — exact case-insensitive match
+- `MatchResult::Single(String)` — single substring match
+- `MatchResult::Ambiguous(Vec<String>)` — multiple matches
+- `MatchResult::None(Vec<String>)` — no match (contains all candidates for error messages)
 
-The matched status name replaces the user's input in JQL, ensuring correct casing.
+The caller constructs error messages from the `MatchResult` variants, following the same pattern used in `workflow.rs` and `helpers.rs`.
 
-**Validation logic in `handle_list`:**
+**Validation placement in `handle_list`:**
+
+The validation must run BEFORE `build_filter_clauses()` is called (currently line 98), because the resolved status name needs to reach `build_filter_clauses`. Insert the validation block between the team clause construction (line 95) and the `build_filter_clauses` call (line 98). Use a separate `resolved_status` variable rather than mutating the destructured `status`:
 
 ```rust
-if let Some(ref status_input) = status {
+// After team_clause (line 95), before build_filter_clauses (line 98):
+
+// Validate --project exists
+if let Some(ref pk) = project_key {
+    // Skip if --status is set (project will be validated via statuses endpoint below)
+    if status.is_none() && !client.project_exists(pk).await? {
+        return Err(JrError::UserError(format!(
+            "Project \"{}\" not found. Run \"jr project list\" to see available projects.",
+            pk
+        )).into());
+    }
+}
+
+// Validate --status and resolve to exact name
+let resolved_status: Option<String> = if let Some(ref status_input) = status {
     let valid_statuses = if let Some(ref pk) = project_key {
         // Project-scoped: also validates project existence (404 = not found)
         match client.get_project_statuses(pk).await {
             Ok(issue_types) => extract_unique_status_names(&issue_types),
             Err(e) => {
                 if let Some(JrError::ApiError { status: 404, .. }) = e.downcast_ref::<JrError>() {
-                    bail!("Project \"{}\" not found. ...", pk);
+                    return Err(JrError::UserError(format!(
+                        "Project \"{}\" not found. Run \"jr project list\" to see available projects.",
+                        pk
+                    )).into());
                 }
                 return Err(e);
             }
@@ -107,23 +128,58 @@ if let Some(ref status_input) = status {
         client.get_all_statuses().await?
     };
 
-    let status_names: Vec<&str> = valid_statuses.iter().map(|s| s.as_str()).collect();
-    let matched = crate::partial_match::find_match(status_input, &status_names)
-        .map_err(|e| anyhow::anyhow!("{}", e))?;
-    // Replace status with matched name for JQL
-    status = Some(matched.to_string());
-}
+    match crate::partial_match::partial_match(status_input, &valid_statuses) {
+        crate::partial_match::MatchResult::Exact(name)
+        | crate::partial_match::MatchResult::Single(name) => Some(name),
+        crate::partial_match::MatchResult::Ambiguous(matches) => {
+            return Err(JrError::UserError(format!(
+                "Ambiguous status \"{}\". Matches: {}",
+                status_input,
+                matches.join(", ")
+            )).into());
+        }
+        crate::partial_match::MatchResult::None(all) => {
+            let available = all.join(", ");
+            let scope = if project_key.is_some() {
+                format!(" for project {}", project_key.as_ref().unwrap())
+            } else {
+                String::new()
+            };
+            return Err(JrError::UserError(format!(
+                "No status matching \"{}\"{scope}. Available: {available}",
+                status_input,
+            )).into());
+        }
+    }
+} else {
+    None
+};
+
+// Use resolved_status in build_filter_clauses instead of status
+let filter_parts = build_filter_clauses(
+    assignee_jql.as_deref(),
+    reporter_jql.as_deref(),
+    resolved_status.as_deref(),  // <-- resolved name, not raw input
+    team_clause.as_deref(),
+    recent.as_deref(),
+    open,
+);
 ```
 
-**Error messages (from `partial_match::find_match`):**
+This approach:
+- Uses a new `resolved_status` variable instead of mutating the destructured `status`
+- Moves `build_filter_clauses` after validation (passes `resolved_status` instead of `status`)
+- Uses `JrError::UserError` for exit code 64
+- Constructs error messages from `MatchResult` variants (matching the pattern in `workflow.rs`)
+- Passes `&[String]` to `partial_match()` (correct type)
+
+**Error messages (constructed by the caller from `MatchResult` variants):**
 
 | Scenario | Message |
 |----------|---------|
-| No match (with project) | `No match for "Nonexistant". Available: Done, In Progress, To Do` |
-| No match (no project) | Same format, but from global list |
-| Ambiguous | `Ambiguous match for "in": In Progress, In Review` |
-
-These messages come from the existing `partial_match` module. The "Available:" list is already sorted and formatted.
+| No match (with project) | `No status matching "Nonexistant" for project PROJ. Available: Done, In Progress, To Do` |
+| No match (no project) | `No status matching "Nonexistant". Available: Done, In Progress, To Do, ...` |
+| Ambiguous | `Ambiguous status "in". Matches: In Progress, In Review` |
 
 ### Combined Flow
 
@@ -161,14 +217,15 @@ When only `--status` is set (no `--project`):
 ## What Changes
 
 - New `project_exists()` method in `src/api/jira/projects.rs`
-- New `get_all_statuses()` method in `src/api/jira/projects.rs`
+- New `get_all_statuses()` method in `src/api/jira/statuses.rs` (new file)
 - New `extract_unique_status_names()` helper in `src/cli/issue/list.rs`
-- `handle_list` in `list.rs` gains validation blocks before JQL construction
-- `status` variable becomes mutable (to replace with matched name)
+- `handle_list` in `list.rs` gains validation blocks before `build_filter_clauses`
+- New `resolved_status` variable replaces raw `status` in `build_filter_clauses` call
+- `build_filter_clauses` call moves after validation (receives resolved status name)
 
 ## What Doesn't Change
 
-- JQL construction logic (`build_jql_base_parts`, `build_filter_clauses`)
+- JQL construction logic (`build_jql_base_parts`, `build_filter_clauses` — function unchanged, only call site moves after validation)
 - Output formatting
 - Exit codes for other error scenarios
 - Any command other than `issue list`
