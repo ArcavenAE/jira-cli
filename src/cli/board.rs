@@ -22,7 +22,7 @@ pub async fn handle(
 }
 
 async fn handle_list(client: &JiraClient, output_format: &OutputFormat) -> Result<()> {
-    let boards = client.list_boards().await?;
+    let boards = client.list_boards(None, None).await?;
 
     let rows: Vec<Vec<String>> = boards
         .iter()
