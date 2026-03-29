@@ -94,7 +94,7 @@ if has_more && !all {
 }
 ```
 
-The hint uses the same wording as `board view`'s scrum path. No approximate total count is available — the Agile API sprint issues endpoint does not return a `total` field, only `isLast`.
+The hint uses the same wording as `board view`'s scrum path. While the Agile API sprint issues endpoint returns a `total` field (used by `OffsetPage.has_more()` for pagination), the hint only reports how many issues were fetched — not the full sprint total — since the purpose of `--limit` is to avoid fetching everything.
 
 ### Sprint Points Summary on Limited Results
 

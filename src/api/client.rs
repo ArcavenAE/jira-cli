@@ -28,22 +28,16 @@ impl JiraClient {
     /// from the system keychain.
     pub fn from_config(config: &Config, verbose: bool) -> anyhow::Result<Self> {
         let base_url = config.base_url()?;
-        let instance_url = if std::env::var("JR_BASE_URL").is_ok() {
-            // When JR_BASE_URL overrides, use it for instance_url too (tests have no config)
+        let instance_url = if let Some(url) = config.global.instance.url.as_ref() {
+            url.trim_end_matches('/').to_string()
+        } else if std::env::var("JR_BASE_URL").is_ok() {
+            // When JR_BASE_URL overrides and no instance URL is configured, use base_url (tests).
             base_url.clone()
         } else {
-            config
-                .global
-                .instance
-                .url
-                .as_ref()
-                .ok_or_else(|| {
-                    JrError::ConfigError(
-                        "No Jira instance configured. Run \"jr init\" first.".into(),
-                    )
-                })?
-                .trim_end_matches('/')
-                .to_string()
+            return Err(JrError::ConfigError(
+                "No Jira instance configured. Run \"jr init\" first.".into(),
+            )
+            .into());
         };
         let auth_method = config
             .global
