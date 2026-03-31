@@ -1,5 +1,5 @@
 class JrRc < Formula
-  desc "Fast, keyboard-driven Jira CLI with offline support and fuzzy search (release candidate channel)"
+  desc "Fast, keyboard-driven Jira CLI with offline support and fuzzy search (rc ch)"
   homepage "https://github.com/arcavenae/jira-cli"
   version "VERSION_PLACEHOLDER"
   license "MIT"
