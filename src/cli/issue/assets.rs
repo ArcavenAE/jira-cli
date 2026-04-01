@@ -1,7 +1,8 @@
 use anyhow::Result;
 
 use crate::api::assets::linked::{
-    enrich_assets, extract_linked_assets, get_or_fetch_cmdb_field_ids,
+    cmdb_field_ids as extract_cmdb_ids, enrich_assets, extract_linked_assets,
+    get_or_fetch_cmdb_fields,
 };
 use crate::api::client::JiraClient;
 use crate::cli::OutputFormat;
@@ -13,9 +14,10 @@ pub(super) async fn handle_issue_assets(
     output_format: &OutputFormat,
     client: &JiraClient,
 ) -> Result<()> {
-    let cmdb_field_ids = get_or_fetch_cmdb_field_ids(client).await?;
+    let cmdb_fields = get_or_fetch_cmdb_fields(client).await?;
+    let cmdb_field_id_list = extract_cmdb_ids(&cmdb_fields);
 
-    if cmdb_field_ids.is_empty() {
+    if cmdb_field_id_list.is_empty() {
         return Err(JrError::UserError(
             "No Assets custom fields found on this Jira instance. \
              Assets requires Jira Service Management Premium or Enterprise."
@@ -24,9 +26,9 @@ pub(super) async fn handle_issue_assets(
         .into());
     }
 
-    let extra_fields: Vec<&str> = cmdb_field_ids.iter().map(|s| s.as_str()).collect();
+    let extra_fields: Vec<&str> = cmdb_field_id_list.iter().map(|s| s.as_str()).collect();
     let issue = client.get_issue(key, &extra_fields).await?;
-    let mut assets = extract_linked_assets(&issue.fields.extra, &cmdb_field_ids);
+    let mut assets = extract_linked_assets(&issue.fields.extra, &cmdb_field_id_list);
 
     if assets.is_empty() {
         eprintln!("No assets linked to {}.", key);
