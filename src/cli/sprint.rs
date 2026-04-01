@@ -67,6 +67,7 @@ async fn resolve_scrum_board(
 
 const MAX_SPRINT_ISSUES: usize = 50;
 
+/// Add issues to a sprint by sprint ID or the current active sprint.
 async fn handle_add(
     sprint: Option<u64>,
     current: bool,
@@ -102,7 +103,7 @@ async fn handle_add(
         OutputFormat::Json => {
             println!(
                 "{}",
-                serde_json::to_string_pretty(&json!({
+                output::render_json(&json!({
                     "sprint_id": sprint_id,
                     "issues": issues,
                     "added": true
@@ -121,6 +122,7 @@ async fn handle_add(
     Ok(())
 }
 
+/// Remove issues from all sprints, moving them to the backlog.
 async fn handle_remove(
     issues: Vec<String>,
     output_format: &OutputFormat,
@@ -140,7 +142,7 @@ async fn handle_remove(
         OutputFormat::Json => {
             println!(
                 "{}",
-                serde_json::to_string_pretty(&json!({
+                output::render_json(&json!({
                     "issues": issues,
                     "removed": true
                 }))?
