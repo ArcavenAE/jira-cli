@@ -87,11 +87,7 @@ impl JiraClient {
 
     /// Add issues to a sprint. Max 50 issues per call.
     /// POST /rest/agile/1.0/sprint/{sprintId}/issue → 204 No Content
-    pub async fn add_issues_to_sprint(
-        &self,
-        sprint_id: u64,
-        issues: &[String],
-    ) -> Result<()> {
+    pub async fn add_issues_to_sprint(&self, sprint_id: u64, issues: &[String]) -> Result<()> {
         let path = format!("/rest/agile/1.0/sprint/{}/issue", sprint_id);
         let body = serde_json::json!({ "issues": issues });
         self.post_no_content(&path, &body).await

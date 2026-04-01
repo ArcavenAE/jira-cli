@@ -32,10 +32,33 @@ pub async fn handle(
             issues,
             board,
         } => {
-            handle_add(sprint, current, board, issues, config, client, output_format, project_override)
-                .await
+            if issues.len() > MAX_SPRINT_ISSUES {
+                bail!(
+                    "Too many issues (got {}). Maximum is {} per operation.",
+                    issues.len(),
+                    MAX_SPRINT_ISSUES
+                );
+            }
+            let sprint_id = if current {
+                let board_id = resolve_scrum_board(config, client, board, project_override).await?;
+                let sprints = client.list_sprints(board_id, Some("active")).await?;
+                if sprints.is_empty() {
+                    bail!("No active sprint found for board {}.", board_id);
+                }
+                sprints[0].id
+            } else {
+                sprint.expect("clap enforces --sprint when --current is absent")
+            };
+            handle_add(sprint_id, issues, output_format, client).await
         }
         SprintCommand::Remove { issues } => {
+            if issues.len() > MAX_SPRINT_ISSUES {
+                bail!(
+                    "Too many issues (got {}). Maximum is {} per operation.",
+                    issues.len(),
+                    MAX_SPRINT_ISSUES
+                );
+            }
             handle_remove(issues, output_format, client).await
         }
     }
@@ -49,8 +72,7 @@ async fn resolve_scrum_board(
     project_override: Option<&str>,
 ) -> Result<u64> {
     let board_id =
-        crate::cli::board::resolve_board_id(config, client, board, project_override, true)
-            .await?;
+        crate::cli::board::resolve_board_id(config, client, board, project_override, true).await?;
 
     let board_config = client.get_board_config(board_id).await?;
     let board_type = board_config.board_type.to_lowercase();
@@ -67,36 +89,13 @@ async fn resolve_scrum_board(
 
 const MAX_SPRINT_ISSUES: usize = 50;
 
-/// Add issues to a sprint by sprint ID or the current active sprint.
+/// Add issues to a sprint.
 async fn handle_add(
-    sprint: Option<u64>,
-    current: bool,
-    board: Option<u64>,
+    sprint_id: u64,
     issues: Vec<String>,
-    config: &Config,
-    client: &JiraClient,
     output_format: &OutputFormat,
-    project_override: Option<&str>,
+    client: &JiraClient,
 ) -> Result<()> {
-    if issues.len() > MAX_SPRINT_ISSUES {
-        bail!(
-            "Too many issues (got {}). Maximum is {} per operation.",
-            issues.len(),
-            MAX_SPRINT_ISSUES
-        );
-    }
-
-    let sprint_id = if current {
-        let board_id = resolve_scrum_board(config, client, board, project_override).await?;
-        let sprints = client.list_sprints(board_id, Some("active")).await?;
-        if sprints.is_empty() {
-            bail!("No active sprint found for board {}.", board_id);
-        }
-        sprints[0].id
-    } else {
-        sprint.expect("clap enforces --sprint when --current is absent")
-    };
-
     client.add_issues_to_sprint(sprint_id, &issues).await?;
 
     match output_format {
@@ -128,14 +127,6 @@ async fn handle_remove(
     output_format: &OutputFormat,
     client: &JiraClient,
 ) -> Result<()> {
-    if issues.len() > MAX_SPRINT_ISSUES {
-        bail!(
-            "Too many issues (got {}). Maximum is {} per operation.",
-            issues.len(),
-            MAX_SPRINT_ISSUES
-        );
-    }
-
     client.move_issues_to_backlog(&issues).await?;
 
     match output_format {

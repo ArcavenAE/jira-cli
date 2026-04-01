@@ -247,7 +247,11 @@ async fn sprint_add_with_sprint_id() {
         .output()
         .unwrap();
 
-    assert!(output.status.success(), "Expected success, got: {:?}", output);
+    assert!(
+        output.status.success(),
+        "Expected success, got: {:?}",
+        output
+    );
     let stdout = String::from_utf8_lossy(&output.stdout);
     assert!(
         stdout.contains("Added 2 issue(s) to sprint 100"),
@@ -271,13 +275,16 @@ async fn sprint_add_json_output() {
         .env("JR_BASE_URL", server.uri())
         .env("JR_AUTH_HEADER", "Basic dGVzdDp0ZXN0")
         .args([
-            "--output", "json",
-            "sprint", "add", "--sprint", "200", "BAR-1",
+            "--output", "json", "sprint", "add", "--sprint", "200", "BAR-1",
         ])
         .output()
         .unwrap();
 
-    assert!(output.status.success(), "Expected success, got: {:?}", output);
+    assert!(
+        output.status.success(),
+        "Expected success, got: {:?}",
+        output
+    );
     let stdout = String::from_utf8_lossy(&output.stdout);
     let parsed: serde_json::Value = serde_json::from_str(&stdout).expect("valid JSON");
     assert_eq!(parsed["sprint_id"], 200);
@@ -304,7 +311,11 @@ async fn sprint_remove_moves_to_backlog() {
         .output()
         .unwrap();
 
-    assert!(output.status.success(), "Expected success, got: {:?}", output);
+    assert!(
+        output.status.success(),
+        "Expected success, got: {:?}",
+        output
+    );
     let stdout = String::from_utf8_lossy(&output.stdout);
     assert!(
         stdout.contains("Moved 2 issue(s) to backlog"),
@@ -327,14 +338,15 @@ async fn sprint_remove_json_output() {
         .unwrap()
         .env("JR_BASE_URL", server.uri())
         .env("JR_AUTH_HEADER", "Basic dGVzdDp0ZXN0")
-        .args([
-            "--output", "json",
-            "sprint", "remove", "QUX-5",
-        ])
+        .args(["--output", "json", "sprint", "remove", "QUX-5"])
         .output()
         .unwrap();
 
-    assert!(output.status.success(), "Expected success, got: {:?}", output);
+    assert!(
+        output.status.success(),
+        "Expected success, got: {:?}",
+        output
+    );
     let stdout = String::from_utf8_lossy(&output.stdout);
     let parsed: serde_json::Value = serde_json::from_str(&stdout).expect("valid JSON");
     assert_eq!(parsed["issues"], serde_json::json!(["QUX-5"]));
@@ -363,7 +375,11 @@ async fn sprint_add_with_current_flag() {
         .output()
         .unwrap();
 
-    assert!(output.status.success(), "Expected success, got: {:?}", output);
+    assert!(
+        output.status.success(),
+        "Expected success, got: {:?}",
+        output
+    );
     let stdout = String::from_utf8_lossy(&output.stdout);
     assert!(
         stdout.contains("Added 2 issue(s) to sprint 100"),
