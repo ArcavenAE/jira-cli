@@ -97,6 +97,22 @@ fn parse_cmdb_value(value: &Value) -> Option<LinkedAsset> {
     })
 }
 
+/// Extract linked assets grouped by CMDB field, returning (field_name, assets) pairs.
+/// Skips fields that have no linked assets on the issue.
+pub fn extract_linked_assets_per_field(
+    extra: &HashMap<String, Value>,
+    cmdb_fields: &[(String, String)],
+) -> Vec<(String, Vec<LinkedAsset>)> {
+    let mut result = Vec::new();
+    for (field_id, field_name) in cmdb_fields {
+        let assets = extract_linked_assets(extra, &[field_id.clone()]);
+        if !assets.is_empty() {
+            result.push((field_name.clone(), assets));
+        }
+    }
+    result
+}
+
 /// Enrich assets that only have IDs by fetching from the Assets API.
 pub async fn enrich_assets(client: &JiraClient, assets: &mut [LinkedAsset]) {
     // Only enrich assets that have an ID but are missing key/name.
@@ -295,5 +311,70 @@ mod tests {
         let assets = extract_linked_assets(&extra, &["customfield_10191".into()]);
         assert_eq!(assets.len(), 1);
         assert_eq!(assets[0].id.as_deref(), Some("88"));
+    }
+
+    #[test]
+    fn extract_per_field_single_field() {
+        let mut extra = HashMap::new();
+        extra.insert(
+            "customfield_10191".into(),
+            json!([{"label": "Acme Corp", "objectKey": "OBJ-1"}]),
+        );
+        let cmdb_fields = vec![
+            ("customfield_10191".to_string(), "Client".to_string()),
+        ];
+        let result = extract_linked_assets_per_field(&extra, &cmdb_fields);
+        assert_eq!(result.len(), 1);
+        assert_eq!(result[0].0, "Client");
+        assert_eq!(result[0].1.len(), 1);
+        assert_eq!(result[0].1[0].key.as_deref(), Some("OBJ-1"));
+    }
+
+    #[test]
+    fn extract_per_field_multiple_fields() {
+        let mut extra = HashMap::new();
+        extra.insert(
+            "customfield_10191".into(),
+            json!([{"label": "Acme Corp", "objectKey": "OBJ-1"}]),
+        );
+        extra.insert(
+            "customfield_10245".into(),
+            json!([{"label": "Email Server", "objectKey": "SRV-42"}]),
+        );
+        let cmdb_fields = vec![
+            ("customfield_10191".to_string(), "Client".to_string()),
+            ("customfield_10245".to_string(), "Affected Service".to_string()),
+        ];
+        let result = extract_linked_assets_per_field(&extra, &cmdb_fields);
+        assert_eq!(result.len(), 2);
+        assert_eq!(result[0].0, "Client");
+        assert_eq!(result[1].0, "Affected Service");
+    }
+
+    #[test]
+    fn extract_per_field_skips_empty() {
+        let mut extra = HashMap::new();
+        extra.insert("customfield_10191".into(), json!(null));
+        extra.insert(
+            "customfield_10245".into(),
+            json!([{"label": "Email Server", "objectKey": "SRV-42"}]),
+        );
+        let cmdb_fields = vec![
+            ("customfield_10191".to_string(), "Client".to_string()),
+            ("customfield_10245".to_string(), "Affected Service".to_string()),
+        ];
+        let result = extract_linked_assets_per_field(&extra, &cmdb_fields);
+        assert_eq!(result.len(), 1);
+        assert_eq!(result[0].0, "Affected Service");
+    }
+
+    #[test]
+    fn extract_per_field_missing_field() {
+        let extra = HashMap::new();
+        let cmdb_fields = vec![
+            ("customfield_10191".to_string(), "Client".to_string()),
+        ];
+        let result = extract_linked_assets_per_field(&extra, &cmdb_fields);
+        assert!(result.is_empty());
     }
 }
