@@ -94,10 +94,8 @@ included by default).
 
 ## Testing
 
-- **Unit test**: Verify flag inversion logic (no_attributes=false triggers fetch)
+- **Integration test**: API-layer simulation verifying JSON filter excludes system and hidden attributes
 - **CLI smoke test**: `assets view --help` shows `--no-attributes`, not `--attributes`
-- **Integration test**: Update existing mocks to verify default behavior includes attributes
-- **Integration test**: Verify `--no-attributes` produces minimal output
 
 ## Not in scope
 

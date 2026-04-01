@@ -416,7 +416,7 @@ async fn get_object_attributes_returns_named_attributes() {
 }
 
 #[tokio::test]
-async fn get_object_attributes_filters_system_and_hidden() {
+async fn cli_json_filter_excludes_system_and_hidden_attributes() {
     let server = MockServer::start().await;
 
     Mock::given(method("GET"))
