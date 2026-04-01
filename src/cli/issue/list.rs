@@ -3,7 +3,7 @@ use anyhow::Result;
 use crate::adf;
 use crate::api::assets::linked::{
     cmdb_field_ids, enrich_assets, enrich_json_assets, extract_linked_assets,
-    extract_linked_assets_per_field, get_or_fetch_cmdb_fields,
+    get_or_fetch_cmdb_fields,
 };
 use crate::api::client::JiraClient;
 use crate::cli::{IssueCommand, OutputFormat, resolve_effective_limit};
@@ -575,26 +575,36 @@ pub(super) async fn handle_view(
     }
     let mut issue = client.get_issue(&key, &extra).await?;
 
-    // Extract and enrich assets per-field (shared by both JSON and table paths)
-    let per_field_assets = if !cmdb_fields.is_empty() {
-        let per_field = extract_linked_assets_per_field(&issue.fields.extra, &cmdb_fields);
+    // Extract and enrich assets per-field (shared by both JSON and table paths).
+    // Iterate cmdb_fields directly so we always have (field_id, field_name) together —
+    // avoids any name-based reverse lookups that could break with duplicate field names.
+    let per_field_enriched: Vec<(String, String, Vec<LinkedAsset>)> = if !cmdb_fields.is_empty() {
+        // Extract per-field, keeping both ID and name
+        let mut per_field: Vec<(String, String, Vec<LinkedAsset>)> = Vec::new();
+        for (field_id, field_name) in &cmdb_fields {
+            let assets = extract_linked_assets(&issue.fields.extra, std::slice::from_ref(field_id));
+            if !assets.is_empty() {
+                per_field.push((field_id.clone(), field_name.clone(), assets));
+            }
+        }
+
         // Collect all assets for batch enrichment
         let mut all_assets: Vec<LinkedAsset> = per_field
             .iter()
-            .flat_map(|(_, assets)| assets.clone())
+            .flat_map(|(_, _, assets)| assets.clone())
             .collect();
         enrich_assets(client, &mut all_assets).await;
 
-        // Redistribute enriched assets back to per-field structure
-        let mut enriched_per_field = Vec::new();
+        // Redistribute enriched assets back
+        let mut enriched = Vec::new();
         let mut offset = 0;
-        for (field_name, original_assets) in &per_field {
+        for (field_id, field_name, original_assets) in &per_field {
             let count = original_assets.len();
-            let enriched = all_assets[offset..offset + count].to_vec();
+            let assets = all_assets[offset..offset + count].to_vec();
             offset += count;
-            enriched_per_field.push((field_name.clone(), enriched));
+            enriched.push((field_id.clone(), field_name.clone(), assets));
         }
-        enriched_per_field
+        enriched
     } else {
         Vec::new()
     };
@@ -602,15 +612,10 @@ pub(super) async fn handle_view(
     match output_format {
         OutputFormat::Json => {
             // Inject enriched data back into JSON before printing
-            if !per_field_assets.is_empty() {
-                let per_field_by_id: Vec<(String, Vec<LinkedAsset>)> = cmdb_fields
+            if !per_field_enriched.is_empty() {
+                let per_field_by_id: Vec<(String, Vec<LinkedAsset>)> = per_field_enriched
                     .iter()
-                    .filter_map(|(id, name)| {
-                        per_field_assets
-                            .iter()
-                            .find(|(n, _)| n == name)
-                            .map(|(_, assets)| (id.clone(), assets.clone()))
-                    })
+                    .map(|(id, _, assets)| (id.clone(), assets.clone()))
                     .collect();
                 enrich_json_assets(&mut issue.fields.extra, &per_field_by_id);
             }
@@ -772,7 +777,7 @@ pub(super) async fn handle_view(
             rows.push(vec!["Links".into(), links_display]);
 
             // Per-field asset rows (replaces the old single "Assets" row)
-            for (field_name, assets) in &per_field_assets {
+            for (_, field_name, assets) in &per_field_enriched {
                 let display = format_linked_assets(assets);
                 rows.push(vec![field_name.clone(), display]);
             }
