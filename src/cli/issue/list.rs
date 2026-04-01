@@ -2,7 +2,7 @@ use anyhow::Result;
 
 use crate::adf;
 use crate::api::assets::linked::{
-    enrich_assets, extract_linked_assets, get_or_fetch_cmdb_field_ids,
+    cmdb_field_ids, enrich_assets, extract_linked_assets, get_or_fetch_cmdb_fields,
 };
 use crate::api::client::JiraClient;
 use crate::cli::{IssueCommand, OutputFormat, resolve_effective_limit};
@@ -258,20 +258,21 @@ pub(super) async fn handle_list(
     let where_clause = all_parts.join(" AND ");
     let effective_jql = format!("{where_clause} ORDER BY {order_by}");
 
-    let cmdb_field_ids = if show_assets {
-        let ids = get_or_fetch_cmdb_field_ids(client)
+    let cmdb_fields = if show_assets {
+        let fields = get_or_fetch_cmdb_fields(client)
             .await
             .unwrap_or_default();
-        if ids.is_empty() {
+        if fields.is_empty() {
             eprintln!(
                 "warning: --assets ignored. No Assets custom fields found on this Jira instance."
             );
         }
-        ids
+        fields
     } else {
         Vec::new()
     };
-    for f in &cmdb_field_ids {
+    let cmdb_field_id_list = cmdb_field_ids(&cmdb_fields);
+    for f in &cmdb_field_id_list {
         extra.push(f.as_str());
     }
 
@@ -282,12 +283,12 @@ pub(super) async fn handle_list(
     let issues = search_result.issues;
 
     let effective_sp = resolve_show_points(show_points, sp_field_id);
-    let show_assets_col = show_assets && !cmdb_field_ids.is_empty();
+    let show_assets_col = show_assets && !cmdb_field_id_list.is_empty();
     let mut issue_assets: Vec<Vec<LinkedAsset>> = Vec::new();
     if show_assets_col {
         // Extract linked assets for all issues first.
         for issue in &issues {
-            issue_assets.push(extract_linked_assets(&issue.fields.extra, &cmdb_field_ids));
+            issue_assets.push(extract_linked_assets(&issue.fields.extra, &cmdb_field_id_list));
         }
 
         // Collect unique (workspace_id, object_id) pairs that need enrichment,
@@ -504,11 +505,12 @@ pub(super) async fn handle_view(
     };
 
     let sp_field_id = config.global.fields.story_points_field_id.as_deref();
-    let cmdb_field_ids = get_or_fetch_cmdb_field_ids(client)
+    let cmdb_fields = get_or_fetch_cmdb_fields(client)
         .await
         .unwrap_or_default();
+    let cmdb_field_id_list = cmdb_field_ids(&cmdb_fields);
     let mut extra: Vec<&str> = sp_field_id.iter().copied().collect();
-    for f in &cmdb_field_ids {
+    for f in &cmdb_field_id_list {
         extra.push(f.as_str());
     }
     let issue = client.get_issue(&key, &extra).await?;
@@ -672,8 +674,8 @@ pub(super) async fn handle_view(
                 .unwrap_or_else(|| "(none)".into());
             rows.push(vec!["Links".into(), links_display]);
 
-            if !cmdb_field_ids.is_empty() {
-                let mut linked = extract_linked_assets(&issue.fields.extra, &cmdb_field_ids);
+            if !cmdb_field_id_list.is_empty() {
+                let mut linked = extract_linked_assets(&issue.fields.extra, &cmdb_field_id_list);
                 enrich_assets(client, &mut linked).await;
                 let display = if linked.is_empty() {
                     "(none)".into()

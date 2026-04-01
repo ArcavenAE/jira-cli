@@ -8,15 +8,20 @@ use crate::api::client::JiraClient;
 use crate::cache;
 use crate::types::assets::LinkedAsset;
 
-/// Get CMDB field IDs, using cache when available.
-pub async fn get_or_fetch_cmdb_field_ids(client: &JiraClient) -> Result<Vec<String>> {
+/// Get CMDB fields (id, name pairs), using cache when available.
+pub async fn get_or_fetch_cmdb_fields(client: &JiraClient) -> Result<Vec<(String, String)>> {
     if let Some(cached) = cache::read_cmdb_fields_cache()? {
-        return Ok(cached.field_ids);
+        return Ok(cached.fields);
     }
 
-    let field_ids = client.find_cmdb_field_ids().await?;
-    let _ = cache::write_cmdb_fields_cache(&field_ids);
-    Ok(field_ids)
+    let fields = client.find_cmdb_field_ids().await?;
+    let _ = cache::write_cmdb_fields_cache(&fields);
+    Ok(fields)
+}
+
+/// Convenience: extract just the field IDs from CMDB fields.
+pub fn cmdb_field_ids(fields: &[(String, String)]) -> Vec<String> {
+    fields.iter().map(|(id, _)| id.clone()).collect()
 }
 
 /// Extract linked assets from issue extra fields using discovered CMDB field IDs.
