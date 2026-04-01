@@ -20,14 +20,14 @@ src/
 │   │   ├── links.rs     # link + unlink + link-types
 │   │   ├── helpers.rs   # team/points resolution, user resolution, prompts
 │   │   └── assets.rs    # linked assets (issue→asset lookup)
-│   ├── assets.rs        # assets search/view/tickets (with --open/--status client-side filtering)
+│   ├── assets.rs        # assets search/view/tickets (--open/--status client-side filtering)
 │   ├── board.rs         # board list/view
 │   ├── sprint.rs        # sprint list/current (scrum-only, errors on kanban)
 │   ├── worklog.rs       # worklog add/list
 │   ├── team.rs          # team list (with cache + lazy org discovery)
 │   ├── auth.rs          # auth login (API token default, --oauth for OAuth 2.0), auth status
 │   ├── init.rs          # Interactive setup (prefetches org metadata + team cache + story points field)
-│   ├── project.rs       # project fields (issue types, priorities, statuses, asset custom fields)
+│   ├── project.rs       # project fields (types, priorities, statuses, CMDB fields)
 │   └── queue.rs         # queue list/view (JSM service desks)
 ├── api/
 │   ├── client.rs        # JiraClient — HTTP methods, auth headers, rate limit retry, 429/401 handling
@@ -36,14 +36,15 @@ src/
 │   ├── rate_limit.rs    # Retry-After parsing
 │   ├── assets/          # Assets/CMDB API call implementations
 │   │   ├── workspace.rs     # workspace ID discovery + cache
-│   │   ├── linked.rs        # CMDB field discovery cache, adaptive parsing, enrichment, per-field extraction, JSON enrichment
+│   │   ├── linked.rs        # CMDB field discovery, asset extraction/enrichment (per-field + JSON)
 │   │   ├── objects.rs       # AQL search, get object, resolve key
 │   │   └── tickets.rs       # connected tickets
 │   └── jira/            # Jira-specific API call implementations (one file per resource)
 │       ├── issues.rs    # search, get, create, edit, list comments
 │       ├── boards.rs    # list boards, get board config
 │       ├── sprints.rs   # list sprints, get sprint issues
-│       ├── fields.rs    # list fields, story points field discovery, CMDB field discovery (id+name pairs)
+│       ├── fields.rs    # list fields, story points + CMDB field discovery
+│       ├── statuses.rs  # get all statuses (global, not project-scoped)
 │       ├── links.rs     # create/delete issue links, list link types
 │       ├── teams.rs     # org metadata (GraphQL), list teams
 │       ├── worklogs.rs  # add/list worklogs
@@ -60,7 +61,8 @@ src/
 ├── output.rs            # Table (comfy-table) and JSON formatting
 ├── adf.rs               # Atlassian Document Format: text→ADF, markdown→ADF, ADF→text
 ├── duration.rs          # Worklog duration parser (2h, 1h30m, 1d, 1w)
-├── jql.rs               # JQL utilities: escape_value, strip_order_by, validate_duration, validate_asset_key, build_asset_clause
+├── lib.rs               # Crate root (re-exports for integration tests)
+├── jql.rs               # JQL utilities: escaping, validation, asset clause builder
 ├── partial_match.rs     # Case-insensitive substring matching with disambiguation
 └── error.rs             # JrError enum with exit codes (0/1/2/64/78/130)
 ```
@@ -107,11 +109,7 @@ See `docs/adr/` for detailed rationale:
 
 - **v1 design spec:** `docs/superpowers/specs/2026-03-21-jr-jira-cli-design.md`
 - **v1 implementation plan:** `docs/superpowers/plans/2026-03-21-jr-implementation.md`
-- **Feature specs (post-v1):** `docs/specs/{feature-name}.md`
-- **Team assignment spec:** `docs/specs/team-assignment.md`
-- **Asset filter spec:** `docs/specs/issue-list-asset-filter.md`
-- **Asset field resolution spec:** `docs/specs/resolve-asset-custom-fields.md`
-- **Asset tickets filtering spec:** `docs/specs/assets-tickets-status-filter.md`
+- **Feature specs (post-v1):** `docs/specs/` — one spec per feature, read before implementing
 
 When adding a new feature:
 1. Read this file
@@ -119,6 +117,13 @@ When adding a new feature:
 3. Read relevant ADRs
 4. Create a feature spec in `docs/specs/` before implementing
 5. Follow TDD — write tests first
+
+## Gotchas
+
+- **Cache format changes:** `~/.cache/jr/cmdb_fields.json` stores `(id, name)` tuples. Old format (ID-only) causes deserialization failure, handled as cache miss. If you change cache structs, old caches auto-expire (7-day TTL) or fail gracefully.
+- **`list.rs` is large (~970 lines):** Contains both `handle_list` and `handle_view` plus all JQL composition logic. If modifying, read the full function you're changing — context matters.
+- **`aqlFunction()` not `assetsQuery()`:** The Jira Assets JQL function is `aqlFunction()`. It requires the human-readable field **name**, not `cf[ID]` or `customfield_NNNNN`. AQL attribute for object key is `Key` (not `objectKey` — that's the JSON field name).
+- **Status category colors are fixed:** `green` = Done, `yellow` = In Progress, `blue-gray` = To Do. These mappings are hardcoded in Jira Cloud across all instances. Used by `--open` filtering.
 
 ## AI Agent Notes
 
