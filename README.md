@@ -9,6 +9,17 @@
 
 A fast, agent-friendly CLI for Jira Cloud, written in Rust. Built for both humans and AI agents — commands support structured JSON output, actionable error messages with suggested next steps, and `--no-input` mode for fully non-interactive automation.
 
+## Why jr?
+
+- **Fast** — native Rust binary, no JVM or Node runtime
+- **Agent-friendly** — structured JSON output, non-interactive mode, idempotent operations, actionable error messages with exit codes
+- **Smart defaults** — auto-discovers scrum boards, story points fields, and CMDB asset fields during `jr init`
+- **Composable filters** — chain `--assignee`, `--status`, `--team`, `--asset`, `--open`, `--recent` on `issue list`
+- **Assets/CMDB support** — search assets, view linked tickets, filter by asset on issues, enriched JSON output
+- **Partial matching** — type `jr issue move KEY "prog"` and it matches "In Progress"
+- **JSM queues** — list and view JSM service desk queues
+- **Shell completions** — bash, zsh, fish
+
 ## Install
 
 ### One-liner (macOS, Linux)
@@ -72,6 +83,12 @@ jr issue list --assignee me --open
 # Issues in a specific status
 jr issue list --project FOO --status "In Progress"
 
+# Issues linked to a specific asset
+jr issue list --project FOO --asset CUST-5 --open
+
+# Open tickets for an asset (quick lookup)
+jr assets tickets CUST-5 --open
+
 # Discover available projects
 jr project list
 
@@ -99,8 +116,8 @@ jr issue comment KEY-123 "Deployed to staging"
 | `jr auth login` | Authenticate with API token (default) or `--oauth` for OAuth 2.0 |
 | `jr auth status` | Show authentication status |
 | `jr me` | Show current user info |
-| `jr issue list` | List issues (`--assignee`, `--reporter`, `--recent`, `--status`, `--open`, `--team`, `--jql`, `--limit`/`--all`, `--points`, `--assets`) |
-| `jr issue view KEY` | View issue details (includes story points, linked assets) |
+| `jr issue list` | List issues (`--assignee`, `--reporter`, `--recent`, `--status`, `--open`, `--team`, `--asset KEY`, `--jql`, `--limit`/`--all`, `--points`, `--assets`) |
+| `jr issue view KEY` | View issue details (per-field asset rows, enriched JSON, story points) |
 | `jr issue create` | Create an issue (`--team`, `--points`) |
 | `jr issue edit KEY` | Edit issue fields (`--team`, `--points`, `--no-points`) |
 | `jr issue move KEY [STATUS]` | Transition issue (partial match on status name) |
@@ -123,10 +140,10 @@ jr issue comment KEY-123 "Deployed to staging"
 | `jr queue view <name>`           | View issues in a queue (partial name match)    |
 | `jr assets search <AQL>`        | Search assets via AQL query                    |
 | `jr assets view <key>`          | View asset details (key or numeric ID)         |
-| `jr assets tickets <key>`       | Show Jira issues connected to an asset         |
+| `jr assets tickets <key>`       | Show Jira issues connected to an asset (`--open`, `--status`, `--limit`) |
 | `jr team list` | List available teams (`--refresh` to force update) |
 | `jr project list` | List accessible projects (`--type`, `--limit`/`--all`) |
-| `jr project fields --project FOO` | Show valid issue types, priorities, and statuses |
+| `jr project fields --project FOO` | Show valid issue types, priorities, statuses, and asset custom fields |
 | `jr completion bash\|zsh\|fish` | Generate shell completions |
 
 ## Global Flags
@@ -180,7 +197,7 @@ board_id = 42
 - `--stdin` flag on comment/create reads content from pipes
 - `--url-only` prints URLs instead of opening a browser
 - State-changing commands are idempotent (exit 0 if already in target state)
-- Exit codes: 0=success, 1=error, 2=auth, 64=usage, 78=config, 130=interrupted
+- Structured exit codes (see [Exit Codes](#exit-codes) table)
 
 ```bash
 # AI agent workflow example
@@ -189,6 +206,30 @@ jr issue move KEY-123 "In Progress"          # Start work
 echo "Fixed the bug" | jr issue comment KEY-123 --stdin  # Add comment
 jr issue move KEY-123 "Done"                 # Complete
 ```
+
+## Shell Completions
+
+```bash
+# Bash (add to ~/.bashrc)
+eval "$(jr completion bash)"
+
+# Zsh (add to ~/.zshrc)
+eval "$(jr completion zsh)"
+
+# Fish (add to ~/.config/fish/config.fish)
+jr completion fish | source
+```
+
+## Exit Codes
+
+| Code | Meaning |
+|------|---------|
+| 0 | Success |
+| 1 | General error |
+| 2 | Authentication error |
+| 64 | Usage error (bad arguments) |
+| 78 | Configuration error |
+| 130 | Interrupted (Ctrl+C) |
 
 ## License
 
