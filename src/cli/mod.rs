@@ -417,6 +417,27 @@ pub enum SprintCommand {
         #[arg(long, conflicts_with = "limit")]
         all: bool,
     },
+    /// Add issues to a sprint
+    Add {
+        /// Sprint ID (from `jr sprint list`)
+        #[arg(long, required_unless_present = "current")]
+        sprint: Option<u64>,
+        /// Use the active sprint instead of specifying an ID
+        #[arg(long, conflicts_with = "sprint")]
+        current: bool,
+        /// Issue keys to add (e.g. FOO-1 FOO-2)
+        #[arg(required = true, num_args = 1..)]
+        issues: Vec<String>,
+        /// Board ID (used with --current to resolve the active sprint)
+        #[arg(long)]
+        board: Option<u64>,
+    },
+    /// Remove issues from sprint (moves to backlog)
+    Remove {
+        /// Issue keys to remove (e.g. FOO-1 FOO-2)
+        #[arg(required = true, num_args = 1..)]
+        issues: Vec<String>,
+    },
 }
 
 #[derive(Subcommand)]
