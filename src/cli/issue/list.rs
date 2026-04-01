@@ -310,7 +310,7 @@ pub(super) async fn handle_list(
         .search_issues(&effective_jql, effective_limit, &extra)
         .await?;
     let has_more = search_result.has_more;
-    let issues = search_result.issues;
+    let mut issues = search_result.issues;
 
     let effective_sp = resolve_show_points(show_points, sp_field_id);
     let show_assets_col = show_assets && !cmdb_field_id_list.is_empty();
@@ -384,6 +384,29 @@ pub(super) async fn handle_list(
             }
         }
     }
+
+    // For JSON output with --assets, inject enriched data back into issue JSON
+    if show_assets_col && matches!(output_format, OutputFormat::Json) {
+        for (i, issue) in issues.iter_mut().enumerate() {
+            if issue_assets[i].is_empty() {
+                continue;
+            }
+            // Build per-field-id enrichment: re-extract per field to get grouping,
+            // then match by position to enriched issue_assets[i]
+            let mut per_field_by_id: Vec<(String, Vec<LinkedAsset>)> = Vec::new();
+            let mut offset = 0;
+            for field_id in &cmdb_field_id_list {
+                let count = extract_linked_assets(&issue.fields.extra, &[field_id.clone()]).len();
+                if count > 0 && offset + count <= issue_assets[i].len() {
+                    let enriched = issue_assets[i][offset..offset + count].to_vec();
+                    per_field_by_id.push((field_id.clone(), enriched));
+                }
+                offset += count;
+            }
+            enrich_json_assets(&mut issue.fields.extra, &per_field_by_id);
+        }
+    }
+
     let rows: Vec<Vec<String>> = issues
         .iter()
         .enumerate()
