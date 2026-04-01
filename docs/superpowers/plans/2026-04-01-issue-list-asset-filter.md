@@ -559,7 +559,7 @@ fn build_asset_clause_single_field() {
     let clause = build_asset_clause("CUST-5", &fields);
     assert_eq!(
         clause,
-        r#""Client" IN aqlFunction("objectKey = \"CUST-5\"")"#
+        r#""Client" IN aqlFunction("Key = \"CUST-5\"")"#
     );
 }
 
@@ -572,7 +572,7 @@ fn build_asset_clause_multiple_fields() {
     let clause = build_asset_clause("SRV-42", &fields);
     assert_eq!(
         clause,
-        r#"("Client" IN aqlFunction("objectKey = \"SRV-42\"") OR "Server" IN aqlFunction("objectKey = \"SRV-42\""))"#
+        r#"("Client" IN aqlFunction("Key = \"SRV-42\"") OR "Server" IN aqlFunction("Key = \"SRV-42\""))"#
     );
 }
 
@@ -582,7 +582,7 @@ fn build_asset_clause_field_name_with_quotes() {
     let clause = build_asset_clause("OBJ-1", &fields);
     assert_eq!(
         clause,
-        r#""My \"Assets\"" IN aqlFunction("objectKey = \"OBJ-1\"")"#
+        r#""My \"Assets\"" IN aqlFunction("Key = \"OBJ-1\"")"#
     );
 }
 ```
@@ -606,7 +606,7 @@ pub fn build_asset_clause(asset_key: &str, cmdb_fields: &[(String, String)]) -> 
         .iter()
         .map(|(_, name)| {
             format!(
-                "\"{}\" IN aqlFunction(\"objectKey = \\\"{}\\\"\")",
+                "\"{}\" IN aqlFunction(\"Key = \\\"{}\\\"\")",
                 escape_value(name),
                 escape_value(asset_key),
             )
@@ -916,14 +916,14 @@ fn build_jql_parts_all_filters_with_open() {
 ```rust
 #[test]
 fn build_jql_parts_asset_clause() {
-    let clause = r#""Client" IN aqlFunction("objectKey = \"CUST-5\"")"#;
+    let clause = r#""Client" IN aqlFunction("Key = \"CUST-5\"")"#;
     let parts = build_filter_clauses(None, None, None, None, None, false, Some(clause));
     assert_eq!(parts, vec![clause.to_string()]);
 }
 
 #[test]
 fn build_jql_parts_asset_with_assignee() {
-    let clause = r#""Client" IN aqlFunction("objectKey = \"CUST-5\"")"#;
+    let clause = r#""Client" IN aqlFunction("Key = \"CUST-5\"")"#;
     let parts = build_filter_clauses(
         Some("currentUser()"),
         None,

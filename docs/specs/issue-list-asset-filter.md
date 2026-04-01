@@ -38,7 +38,7 @@ Supported operators: `IS`, `IS NOT`, `IN`, `NOT IN`.
 ### Single CMDB Field (Common Case)
 
 ```
-"Client" IN aqlFunction("objectKey = \"CUST-5\"")
+"Client" IN aqlFunction("Key = \"CUST-5\"")
 ```
 
 ### Multiple CMDB Fields
@@ -46,7 +46,7 @@ Supported operators: `IS`, `IS NOT`, `IN`, `NOT IN`.
 When the instance has multiple Assets custom fields (e.g., "Client" and "Server"), OR them:
 
 ```
-("Client" IN aqlFunction("objectKey = \"CUST-5\"") OR "Server" IN aqlFunction("objectKey = \"CUST-5\""))
+("Client" IN aqlFunction("Key = \"CUST-5\"") OR "Server" IN aqlFunction("Key = \"CUST-5\""))
 ```
 
 ### Escaping
@@ -56,9 +56,9 @@ When the instance has multiple Assets custom fields (e.g., "Client" and "Server"
 
 ```rust
 // Per CMDB field, build:
-//   "Client" IN aqlFunction("objectKey = \"CUST-5\"")
+//   "Client" IN aqlFunction("Key = \"CUST-5\"")
 format!(
-    "\"{}\" IN aqlFunction(\"objectKey = \\\"{}\\\"\")",
+    "\"{}\" IN aqlFunction(\"Key = \\\"{}\\\"\")",
     escape_value(&field_name),
     escape_value(&asset_key),
 )
@@ -143,7 +143,7 @@ When `--asset` is used, automatically enable the `--assets` display column witho
 
 - `aqlFunction()` requires the human-readable field **name**, not `cf[ID]` or `customfield_NNNNN` (Atlassian support docs, community confirmed)
 - `aqlFunction()` composes with other JQL clauses via `AND` (confirmed)
-- AQL attribute for object key is **`objectKey`**, not `Key` — e.g., `objectKey = "CUST-5"` (confirmed via AQL API docs and response schema)
+- AQL attribute for object key is **`Key`** (a reserved AQL keyword) — e.g., `Key = "CUST-5"`. Note: `objectKey` is the JSON field name in REST API responses, but `Key` is the AQL query attribute (confirmed via Atlassian AQL docs)
 - Asset object keys follow `SCHEMA-NUMBER` format (confirmed)
 - Empty AQL results produce empty JQL results, not errors (confirmed)
 - Available on JSM Premium, Standard, and Enterprise plans (confirmed)
