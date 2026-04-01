@@ -80,9 +80,12 @@ async fn handle_view(
         }
     };
 
+    // Apply default limit consistent with other commands (issue list, board view, sprint current)
+    let effective_limit = limit.or(Some(crate::cli::DEFAULT_LIMIT));
+
     // Step 1: Fetch issue keys from the queue (preserves queue membership and ordering)
     let keys = client
-        .get_queue_issue_keys(service_desk_id, &queue_id, limit)
+        .get_queue_issue_keys(service_desk_id, &queue_id, effective_limit)
         .await?;
 
     if keys.is_empty() {
@@ -93,8 +96,6 @@ async fn handle_view(
     }
 
     // Step 2: Batch-fetch full issues via search API.
-    // Note: very large queues (500+ issues) may exceed the JQL string length limit.
-    // The --limit flag (default 50) keeps this well within bounds in practice.
     let jql = build_key_in_jql(&keys);
     let search_result = client
         .search_issues(&jql, Some(keys.len() as u32), &[])
