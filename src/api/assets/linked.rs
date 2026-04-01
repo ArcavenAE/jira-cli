@@ -113,39 +113,54 @@ pub fn extract_linked_assets_per_field(
     result
 }
 
+/// Inject enriched fields into a single JSON object from a `LinkedAsset`.
+fn inject_asset_fields(obj: &mut serde_json::Map<String, Value>, asset: &LinkedAsset) {
+    if let Some(ref key) = asset.key {
+        obj.insert("objectKey".to_string(), Value::String(key.clone()));
+    }
+    if let Some(ref name) = asset.name {
+        obj.insert("label".to_string(), Value::String(name.clone()));
+    }
+    if let Some(ref asset_type) = asset.asset_type {
+        obj.insert("objectType".to_string(), Value::String(asset_type.clone()));
+    }
+}
+
 /// Inject enriched asset data back into the issue's `fields.extra` HashMap.
 ///
 /// For each CMDB field, matches enriched `LinkedAsset` entries by position to the
-/// original JSON array elements and injects `objectKey`, `label`, and `objectType`
+/// original JSON elements and injects `objectKey`, `label`, and `objectType`
 /// as additional fields (additive, does not remove existing fields).
+///
+/// Handles both array-shaped fields (`[{...}, {...}]`) and single-object fields (`{...}`).
 pub fn enrich_json_assets(
     extra: &mut HashMap<String, Value>,
     per_field: &[(String, Vec<LinkedAsset>)],
 ) {
     for (field_id, assets) in per_field {
+        if assets.is_empty() {
+            continue;
+        }
         let Some(value) = extra.get_mut(field_id) else {
             continue;
         };
-        let Some(arr) = value.as_array_mut() else {
-            continue;
-        };
 
-        for (i, asset) in assets.iter().enumerate() {
-            if i >= arr.len() {
-                break;
+        // Array shape: match assets by position
+        if let Some(arr) = value.as_array_mut() {
+            for (i, asset) in assets.iter().enumerate() {
+                if i >= arr.len() {
+                    break;
+                }
+                if let Some(obj) = arr[i].as_object_mut() {
+                    inject_asset_fields(obj, asset);
+                }
             }
-            let Some(obj) = arr[i].as_object_mut() else {
-                continue;
-            };
-            if let Some(ref key) = asset.key {
-                obj.insert("objectKey".to_string(), Value::String(key.clone()));
-            }
-            if let Some(ref name) = asset.name {
-                obj.insert("label".to_string(), Value::String(name.clone()));
-            }
-            if let Some(ref asset_type) = asset.asset_type {
-                obj.insert("objectType".to_string(), Value::String(asset_type.clone()));
-            }
+            continue;
+        }
+
+        // Single-object shape: enrich with first asset
+        if let Some(obj) = value.as_object_mut() {
+            inject_asset_fields(obj, &assets[0]);
         }
     }
 }
@@ -508,5 +523,34 @@ mod tests {
         let arr = extra["customfield_10191"].as_array().unwrap();
         assert_eq!(arr[0]["objectKey"], "OBJ-88");
         assert!(arr[1].get("objectKey").is_none());
+    }
+
+    #[test]
+    fn enrich_json_single_object_shape() {
+        let mut extra = HashMap::new();
+        extra.insert(
+            "customfield_10191".to_string(),
+            json!({"objectId": "88", "workspaceId": "ws-1"}),
+        );
+
+        let per_field = vec![(
+            "customfield_10191".to_string(),
+            vec![LinkedAsset {
+                id: Some("88".into()),
+                workspace_id: Some("ws-1".into()),
+                key: Some("OBJ-88".into()),
+                name: Some("Acme Corp".into()),
+                asset_type: Some("Client".into()),
+            }],
+        )];
+
+        enrich_json_assets(&mut extra, &per_field);
+
+        let obj = extra["customfield_10191"].as_object().unwrap();
+        assert_eq!(obj["objectId"], "88");
+        assert_eq!(obj["workspaceId"], "ws-1");
+        assert_eq!(obj["objectKey"], "OBJ-88");
+        assert_eq!(obj["label"], "Acme Corp");
+        assert_eq!(obj["objectType"], "Client");
     }
 }
