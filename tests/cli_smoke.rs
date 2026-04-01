@@ -77,3 +77,13 @@ fn test_queue_list_help() {
         .success()
         .stdout(predicate::str::contains("List queues"));
 }
+
+#[test]
+fn test_assets_view_help() {
+    Command::cargo_bin("jr")
+        .unwrap()
+        .args(["assets", "view", "--help"])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("--no-attributes"));
+}
