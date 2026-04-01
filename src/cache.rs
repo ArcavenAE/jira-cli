@@ -151,7 +151,7 @@ pub fn write_workspace_cache(workspace_id: &str) -> Result<()> {
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct CmdbFieldsCache {
-    pub field_ids: Vec<String>,
+    pub fields: Vec<(String, String)>,
     pub fetched_at: DateTime<Utc>,
 }
 
@@ -162,7 +162,10 @@ pub fn read_cmdb_fields_cache() -> Result<Option<CmdbFieldsCache>> {
     }
 
     let content = std::fs::read_to_string(&path)?;
-    let cache: CmdbFieldsCache = serde_json::from_str(&content)?;
+    let cache: CmdbFieldsCache = match serde_json::from_str(&content) {
+        Ok(c) => c,
+        Err(_) => return Ok(None),
+    };
 
     let age = Utc::now() - cache.fetched_at;
     if age.num_days() >= CACHE_TTL_DAYS {
@@ -172,12 +175,12 @@ pub fn read_cmdb_fields_cache() -> Result<Option<CmdbFieldsCache>> {
     Ok(Some(cache))
 }
 
-pub fn write_cmdb_fields_cache(field_ids: &[String]) -> Result<()> {
+pub fn write_cmdb_fields_cache(fields: &[(String, String)]) -> Result<()> {
     let dir = cache_dir();
     std::fs::create_dir_all(&dir)?;
 
     let cache = CmdbFieldsCache {
-        field_ids: field_ids.to_vec(),
+        fields: fields.to_vec(),
         fetched_at: Utc::now(),
     };
 
@@ -401,13 +404,19 @@ mod tests {
     #[test]
     fn write_then_read_cmdb_fields_cache() {
         with_temp_cache(|| {
-            write_cmdb_fields_cache(&["customfield_10191".into(), "customfield_10245".into()])
-                .unwrap();
+            write_cmdb_fields_cache(&[
+                ("customfield_10191".into(), "Client".into()),
+                ("customfield_10245".into(), "Hardware".into()),
+            ])
+            .unwrap();
 
             let cache = read_cmdb_fields_cache().unwrap().expect("should exist");
             assert_eq!(
-                cache.field_ids,
-                vec!["customfield_10191", "customfield_10245"]
+                cache.fields,
+                vec![
+                    ("customfield_10191".to_string(), "Client".to_string()),
+                    ("customfield_10245".to_string(), "Hardware".to_string()),
+                ]
             );
         });
     }
@@ -416,7 +425,7 @@ mod tests {
     fn expired_cmdb_fields_cache_returns_none() {
         with_temp_cache(|| {
             let expired = CmdbFieldsCache {
-                field_ids: vec!["customfield_10191".into()],
+                fields: vec![("customfield_10191".into(), "Client".into())],
                 fetched_at: Utc::now() - chrono::Duration::days(8),
             };
             let dir = cache_dir();
