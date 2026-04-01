@@ -268,6 +268,7 @@ async fn handle_tickets(
         .get_connected_tickets(workspace_id, &object_id)
         .await?;
 
+    let has_filter = open || status.is_some();
     let filtered = filter_tickets(resp.tickets, open, status.as_deref())?;
 
     let tickets: Vec<_> = match limit {
@@ -277,7 +278,19 @@ async fn handle_tickets(
 
     match output_format {
         OutputFormat::Json => {
-            println!("{}", output::render_json(&tickets)?);
+            if has_filter {
+                // Filtered: return bare array (allTicketsQuery no longer represents what's shown)
+                println!("{}", output::render_json(&tickets)?);
+            } else {
+                // Unfiltered: preserve full response envelope for backward compatibility
+                println!(
+                    "{}",
+                    output::render_json(&crate::types::assets::ConnectedTicketsResponse {
+                        tickets,
+                        all_tickets_query: resp.all_tickets_query,
+                    })?
+                );
+            }
         }
         OutputFormat::Table => {
             let rows: Vec<Vec<String>> = tickets
