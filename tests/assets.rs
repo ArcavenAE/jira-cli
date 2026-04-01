@@ -414,3 +414,92 @@ async fn get_object_attributes_returns_named_attributes() {
         Some("New York, NY")
     );
 }
+
+#[tokio::test]
+async fn cli_json_filter_excludes_system_and_hidden_attributes() {
+    let server = MockServer::start().await;
+
+    Mock::given(method("GET"))
+        .and(path("/jsm/assets/workspace/ws-123/v1/object/88/attributes"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(json!([
+            {
+                "id": "637",
+                "objectTypeAttributeId": "134",
+                "objectTypeAttribute": {
+                    "id": "134",
+                    "name": "Key",
+                    "system": true,
+                    "hidden": false,
+                    "label": false,
+                    "position": 0
+                },
+                "objectAttributeValues": [
+                    { "value": "OBJ-88", "displayValue": "OBJ-88" }
+                ]
+            },
+            {
+                "id": "640",
+                "objectTypeAttributeId": "135",
+                "objectTypeAttribute": {
+                    "id": "135",
+                    "name": "Name",
+                    "system": false,
+                    "hidden": false,
+                    "label": true,
+                    "position": 1
+                },
+                "objectAttributeValues": [
+                    { "value": "Acme Corp", "displayValue": "Acme Corp" }
+                ]
+            },
+            {
+                "id": "641",
+                "objectTypeAttributeId": "140",
+                "objectTypeAttribute": {
+                    "id": "140",
+                    "name": "Location",
+                    "system": false,
+                    "hidden": false,
+                    "label": false,
+                    "position": 5
+                },
+                "objectAttributeValues": [
+                    { "value": "New York, NY", "displayValue": "New York, NY" }
+                ]
+            },
+            {
+                "id": "642",
+                "objectTypeAttributeId": "141",
+                "objectTypeAttribute": {
+                    "id": "141",
+                    "name": "Internal Notes",
+                    "system": false,
+                    "hidden": true,
+                    "label": false,
+                    "position": 6
+                },
+                "objectAttributeValues": [
+                    { "value": "secret", "displayValue": "secret" }
+                ]
+            }
+        ])))
+        .mount(&server)
+        .await;
+
+    let client =
+        jr::api::client::JiraClient::new_for_test(server.uri(), "Basic dGVzdDp0ZXN0".into());
+    let mut attrs = client.get_object_attributes("ws-123", "88").await.unwrap();
+
+    // Apply the same filter used by handle_view for JSON output
+    attrs.retain(|a| !a.object_type_attribute.system && !a.object_type_attribute.hidden);
+    attrs.sort_by_key(|a| a.object_type_attribute.position);
+
+    // System (Key) and hidden (Internal Notes) are excluded
+    assert_eq!(attrs.len(), 2);
+    assert_eq!(attrs[0].object_type_attribute.name, "Name");
+    assert_eq!(attrs[1].object_type_attribute.name, "Location");
+    assert_eq!(
+        attrs[1].values[0].display_value.as_deref(),
+        Some("New York, NY")
+    );
+}

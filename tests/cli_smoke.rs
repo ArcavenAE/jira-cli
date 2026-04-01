@@ -77,3 +77,57 @@ fn test_queue_list_help() {
         .success()
         .stdout(predicate::str::contains("List queues"));
 }
+
+#[test]
+fn test_assets_view_help() {
+    Command::cargo_bin("jr")
+        .unwrap()
+        .args(["assets", "view", "--help"])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("--no-attributes"));
+}
+
+#[test]
+fn test_sprint_add_help() {
+    Command::cargo_bin("jr")
+        .unwrap()
+        .args(["sprint", "add", "--help"])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Add issues to a sprint"))
+        .stdout(predicate::str::contains("--sprint"))
+        .stdout(predicate::str::contains("--current"))
+        .stdout(predicate::str::contains("--board"));
+}
+
+#[test]
+fn test_sprint_remove_help() {
+    Command::cargo_bin("jr")
+        .unwrap()
+        .args(["sprint", "remove", "--help"])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Remove issues from sprint"))
+        .stdout(predicate::str::contains("ISSUES"));
+}
+
+#[test]
+fn test_sprint_add_sprint_and_current_conflict() {
+    Command::cargo_bin("jr")
+        .unwrap()
+        .args(["sprint", "add", "--sprint", "100", "--current", "FOO-1"])
+        .assert()
+        .failure()
+        .stderr(predicate::str::contains("cannot be used with"));
+}
+
+#[test]
+fn test_sprint_add_requires_sprint_or_current() {
+    Command::cargo_bin("jr")
+        .unwrap()
+        .args(["sprint", "add", "FOO-1"])
+        .assert()
+        .failure()
+        .stderr(predicate::str::contains("--sprint"));
+}
