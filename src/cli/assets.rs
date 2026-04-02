@@ -854,4 +854,64 @@ mod tests {
         let result = filter_tickets(tickets, false, None).unwrap();
         assert_eq!(result.len(), 2);
     }
+
+    use crate::types::assets::{DefaultType, ObjectTypeAttributeDef, ReferenceObjectType};
+
+    fn make_attr_def(
+        default_type: Option<DefaultType>,
+        reference_object_type: Option<ReferenceObjectType>,
+    ) -> ObjectTypeAttributeDef {
+        ObjectTypeAttributeDef {
+            id: "1".into(),
+            name: "test".into(),
+            system: false,
+            hidden: false,
+            label: false,
+            position: 0,
+            default_type,
+            reference_type: None,
+            reference_object_type,
+            minimum_cardinality: 0,
+            maximum_cardinality: 1,
+            editable: true,
+            description: None,
+            options: None,
+        }
+    }
+
+    #[test]
+    fn format_attr_type_default_type() {
+        let attr = make_attr_def(
+            Some(DefaultType { id: 0, name: "Text".into() }),
+            None,
+        );
+        assert_eq!(super::format_attribute_type(&attr), "Text");
+    }
+
+    #[test]
+    fn format_attr_type_reference() {
+        let attr = make_attr_def(
+            None,
+            Some(ReferenceObjectType { id: "122".into(), name: "Service".into() }),
+        );
+        assert_eq!(
+            super::format_attribute_type(&attr),
+            "Reference \u{2192} Service"
+        );
+    }
+
+    #[test]
+    fn format_attr_type_unknown() {
+        let attr = make_attr_def(None, None);
+        assert_eq!(super::format_attribute_type(&attr), "Unknown");
+    }
+
+    #[test]
+    fn format_attr_type_default_takes_precedence() {
+        let attr = make_attr_def(
+            Some(DefaultType { id: 0, name: "Text".into() }),
+            Some(ReferenceObjectType { id: "1".into(), name: "Svc".into() }),
+        );
+        assert_eq!(super::format_attribute_type(&attr), "Text");
+    }
 }
