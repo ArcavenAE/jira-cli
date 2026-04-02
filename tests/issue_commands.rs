@@ -1079,7 +1079,7 @@ async fn test_create_issue_with_assignee_me() {
 async fn test_create_issue_without_assignee() {
     let server = MockServer::start().await;
 
-    // Mock create issue — NO multiProjectSearch mock (test fails if it's called)
+    // No multiProjectSearch mock registered — this test only exercises create.
     Mock::given(method("POST"))
         .and(path("/rest/api/3/issue"))
         .respond_with(
@@ -1116,7 +1116,7 @@ async fn test_create_issue_assignee_not_found() {
         .mount(&server)
         .await;
 
-    // NO create mock — test fails if create is attempted
+    // Only testing that the API returns an empty list — no create call is made.
 
     let client =
         jr::api::client::JiraClient::new_for_test(server.uri(), "Basic dGVzdDp0ZXN0".to_string());

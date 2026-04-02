@@ -258,6 +258,9 @@ pub(super) async fn resolve_assignee_by_project(
         return Ok((me.account_id, me.display_name));
     }
 
+    // The multiProjectSearch endpoint returns only users eligible for assignment,
+    // which should exclude deactivated users. No client-side active filter needed
+    // (consistent with resolve_assignee for issue-scoped search).
     let users = client
         .search_assignable_users_by_project(name, project_key)
         .await?;

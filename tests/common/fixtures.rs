@@ -396,7 +396,8 @@ pub fn issue_response_with_labels_parent_links(key: &str, summary: &str) -> Valu
 }
 
 /// Multi-project assignable user search response — flat array of User objects.
-/// Same format as `user_search_response` but used for the multiProjectSearch endpoint.
+/// Simpler than `user_search_response`: takes (account_id, display_name) pairs
+/// and always sets active=true. No email field generated.
 pub fn multi_project_user_search_response(users: Vec<(&str, &str)>) -> Value {
     let user_objects: Vec<Value> = users
         .into_iter()
