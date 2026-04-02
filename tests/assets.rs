@@ -950,3 +950,435 @@ async fn search_attributes_table_shows_inline_values() {
         "Should not have Created column, got: {stdout}"
     );
 }
+
+#[tokio::test]
+async fn list_object_schemas_returns_schemas() {
+    let server = MockServer::start().await;
+
+    Mock::given(method("GET"))
+        .and(path("/jsm/assets/workspace/ws-123/v1/objectschema/list"))
+        .and(query_param("startAt", "0"))
+        .and(query_param("maxResults", "25"))
+        .and(query_param("includeCounts", "true"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(json!({
+            "startAt": 0,
+            "maxResults": 25,
+            "total": 2,
+            "isLast": true,
+            "values": [
+                {
+                    "id": "6",
+                    "name": "ITSM",
+                    "objectSchemaKey": "ITSM",
+                    "status": "Ok",
+                    "objectCount": 95,
+                    "objectTypeCount": 34
+                },
+                {
+                    "id": "1",
+                    "name": "Human Resources",
+                    "objectSchemaKey": "HR",
+                    "description": "HR schema",
+                    "status": "Ok",
+                    "objectCount": 1023,
+                    "objectTypeCount": 14
+                }
+            ]
+        })))
+        .mount(&server)
+        .await;
+
+    let client =
+        jr::api::client::JiraClient::new_for_test(server.uri(), "Basic dGVzdDp0ZXN0".into());
+    let schemas = client.list_object_schemas("ws-123").await.unwrap();
+    assert_eq!(schemas.len(), 2);
+    assert_eq!(schemas[0].name, "ITSM");
+    assert_eq!(schemas[0].object_schema_key, "ITSM");
+    assert_eq!(schemas[0].object_type_count, 34);
+    assert_eq!(schemas[1].name, "Human Resources");
+    assert_eq!(schemas[1].description.as_deref(), Some("HR schema"));
+}
+
+#[tokio::test]
+async fn list_object_types_returns_flat_array() {
+    let server = MockServer::start().await;
+
+    Mock::given(method("GET"))
+        .and(path(
+            "/jsm/assets/workspace/ws-123/v1/objectschema/6/objecttypes/flat",
+        ))
+        .and(query_param("includeObjectCounts", "true"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(json!([
+            {
+                "id": "19",
+                "name": "Employee",
+                "position": 0,
+                "objectCount": 42,
+                "objectSchemaId": "6",
+                "inherited": false,
+                "abstractObjectType": false
+            },
+            {
+                "id": "23",
+                "name": "Office",
+                "description": "Physical office or site.",
+                "position": 2,
+                "objectCount": 5,
+                "objectSchemaId": "6",
+                "inherited": false,
+                "abstractObjectType": false
+            }
+        ])))
+        .mount(&server)
+        .await;
+
+    let client =
+        jr::api::client::JiraClient::new_for_test(server.uri(), "Basic dGVzdDp0ZXN0".into());
+    let types = client.list_object_types("ws-123", "6").await.unwrap();
+    assert_eq!(types.len(), 2);
+    assert_eq!(types[0].name, "Employee");
+    assert_eq!(types[0].object_count, 42);
+    assert_eq!(types[1].name, "Office");
+    assert_eq!(
+        types[1].description.as_deref(),
+        Some("Physical office or site.")
+    );
+}
+
+#[tokio::test]
+async fn schemas_json_lists_all_schemas() {
+    let server = MockServer::start().await;
+
+    Mock::given(method("GET"))
+        .and(path("/jsm/assets/workspace/ws-123/v1/objectschema/list"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(json!({
+            "startAt": 0,
+            "maxResults": 25,
+            "total": 2,
+            "isLast": true,
+            "values": [
+                {
+                    "id": "6",
+                    "name": "ITSM",
+                    "objectSchemaKey": "ITSM",
+                    "status": "Ok",
+                    "objectCount": 95,
+                    "objectTypeCount": 34
+                },
+                {
+                    "id": "1",
+                    "name": "Human Resources",
+                    "objectSchemaKey": "HR",
+                    "status": "Ok",
+                    "objectCount": 1023,
+                    "objectTypeCount": 14
+                }
+            ]
+        })))
+        .mount(&server)
+        .await;
+
+    Mock::given(method("GET"))
+        .and(path("/rest/servicedeskapi/assets/workspace"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(json!({
+            "size": 1,
+            "start": 0,
+            "limit": 50,
+            "isLastPage": true,
+            "values": [{ "workspaceId": "ws-123" }]
+        })))
+        .mount(&server)
+        .await;
+
+    let cache_dir = tempfile::tempdir().unwrap();
+    let _guard = set_cache_dir(cache_dir.path()).await;
+
+    let output = assert_cmd::Command::cargo_bin("jr")
+        .unwrap()
+        .env("JR_BASE_URL", server.uri())
+        .env("JR_AUTH_HEADER", "Basic dGVzdDp0ZXN0")
+        .args(["assets", "schemas", "--output", "json"])
+        .output()
+        .unwrap();
+
+    assert!(
+        output.status.success(),
+        "stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let json: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
+    let arr = json.as_array().unwrap();
+    assert_eq!(arr.len(), 2);
+    assert_eq!(arr[0]["name"], "ITSM");
+    assert_eq!(arr[0]["objectSchemaKey"], "ITSM");
+    assert_eq!(arr[1]["name"], "Human Resources");
+}
+
+#[tokio::test]
+async fn types_json_lists_all_types() {
+    let server = MockServer::start().await;
+
+    Mock::given(method("GET"))
+        .and(path("/rest/servicedeskapi/assets/workspace"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(json!({
+            "size": 1,
+            "start": 0,
+            "limit": 50,
+            "isLastPage": true,
+            "values": [{ "workspaceId": "ws-123" }]
+        })))
+        .mount(&server)
+        .await;
+
+    Mock::given(method("GET"))
+        .and(path("/jsm/assets/workspace/ws-123/v1/objectschema/list"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(json!({
+            "startAt": 0,
+            "maxResults": 25,
+            "total": 1,
+            "isLast": true,
+            "values": [{
+                "id": "6",
+                "name": "ITSM",
+                "objectSchemaKey": "ITSM",
+                "status": "Ok",
+                "objectCount": 95,
+                "objectTypeCount": 2
+            }]
+        })))
+        .mount(&server)
+        .await;
+
+    Mock::given(method("GET"))
+        .and(path(
+            "/jsm/assets/workspace/ws-123/v1/objectschema/6/objecttypes/flat",
+        ))
+        .respond_with(ResponseTemplate::new(200).set_body_json(json!([
+            {
+                "id": "19",
+                "name": "Employee",
+                "position": 0,
+                "objectCount": 42,
+                "objectSchemaId": "6",
+                "inherited": false,
+                "abstractObjectType": false
+            },
+            {
+                "id": "23",
+                "name": "Office",
+                "description": "Physical office.",
+                "position": 2,
+                "objectCount": 5,
+                "objectSchemaId": "6",
+                "inherited": false,
+                "abstractObjectType": false
+            }
+        ])))
+        .mount(&server)
+        .await;
+
+    let cache_dir = tempfile::tempdir().unwrap();
+    let _guard = set_cache_dir(cache_dir.path()).await;
+
+    let output = assert_cmd::Command::cargo_bin("jr")
+        .unwrap()
+        .env("JR_BASE_URL", server.uri())
+        .env("JR_AUTH_HEADER", "Basic dGVzdDp0ZXN0")
+        .args(["assets", "types", "--output", "json"])
+        .output()
+        .unwrap();
+
+    assert!(
+        output.status.success(),
+        "stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let json: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
+    let arr = json.as_array().unwrap();
+    assert_eq!(arr.len(), 2);
+    assert_eq!(arr[0]["name"], "Employee");
+    assert_eq!(arr[0]["schemaName"], "ITSM");
+    assert_eq!(arr[1]["name"], "Office");
+}
+
+#[tokio::test]
+async fn schema_json_shows_attributes() {
+    let server = MockServer::start().await;
+
+    Mock::given(method("GET"))
+        .and(path("/rest/servicedeskapi/assets/workspace"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(json!({
+            "size": 1, "start": 0, "limit": 50, "isLastPage": true,
+            "values": [{ "workspaceId": "ws-123" }]
+        })))
+        .mount(&server)
+        .await;
+
+    Mock::given(method("GET"))
+        .and(path("/jsm/assets/workspace/ws-123/v1/objectschema/list"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(json!({
+            "startAt": 0, "maxResults": 25, "total": 1, "isLast": true,
+            "values": [{
+                "id": "6", "name": "ITSM", "objectSchemaKey": "ITSM",
+                "status": "Ok", "objectCount": 95, "objectTypeCount": 2
+            }]
+        })))
+        .mount(&server)
+        .await;
+
+    Mock::given(method("GET"))
+        .and(path(
+            "/jsm/assets/workspace/ws-123/v1/objectschema/6/objecttypes/flat",
+        ))
+        .respond_with(ResponseTemplate::new(200).set_body_json(json!([
+            {
+                "id": "23", "name": "Office", "position": 2,
+                "objectCount": 5, "objectSchemaId": "6",
+                "inherited": false, "abstractObjectType": false
+            }
+        ])))
+        .mount(&server)
+        .await;
+
+    Mock::given(method("GET"))
+        .and(path(
+            "/jsm/assets/workspace/ws-123/v1/objecttype/23/attributes",
+        ))
+        .respond_with(ResponseTemplate::new(200).set_body_json(json!([
+            {
+                "id": "134", "name": "Key", "system": true, "hidden": false,
+                "label": false, "position": 0,
+                "defaultType": { "id": 0, "name": "Text" },
+                "minimumCardinality": 1, "maximumCardinality": 1, "editable": false
+            },
+            {
+                "id": "135", "name": "Name", "system": false, "hidden": false,
+                "label": true, "position": 1,
+                "defaultType": { "id": 0, "name": "Text" },
+                "minimumCardinality": 1, "maximumCardinality": 1, "editable": true,
+                "description": "The name of the object"
+            },
+            {
+                "id": "869", "name": "Service relationships", "system": false,
+                "hidden": false, "label": false, "position": 6,
+                "referenceType": { "id": "36", "name": "Depends on" },
+                "referenceObjectType": { "id": "122", "name": "Service" },
+                "minimumCardinality": 0, "maximumCardinality": -1, "editable": true
+            }
+        ])))
+        .mount(&server)
+        .await;
+
+    let cache_dir = tempfile::tempdir().unwrap();
+    let _guard = set_cache_dir(cache_dir.path()).await;
+
+    let output = assert_cmd::Command::cargo_bin("jr")
+        .unwrap()
+        .env("JR_BASE_URL", server.uri())
+        .env("JR_AUTH_HEADER", "Basic dGVzdDp0ZXN0")
+        .args(["assets", "schema", "Office", "--output", "json"])
+        .output()
+        .unwrap();
+
+    assert!(
+        output.status.success(),
+        "stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let json: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
+    let arr = json.as_array().unwrap();
+    assert_eq!(arr.len(), 3);
+    assert_eq!(arr[0]["name"], "Key");
+    assert_eq!(arr[0]["system"], true);
+    assert_eq!(arr[2]["name"], "Service relationships");
+    assert!(arr[2].get("referenceObjectType").is_some());
+}
+
+#[tokio::test]
+async fn schema_table_filters_system_attrs() {
+    let server = MockServer::start().await;
+
+    Mock::given(method("GET"))
+        .and(path("/rest/servicedeskapi/assets/workspace"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(json!({
+            "size": 1, "start": 0, "limit": 50, "isLastPage": true,
+            "values": [{ "workspaceId": "ws-123" }]
+        })))
+        .mount(&server)
+        .await;
+
+    Mock::given(method("GET"))
+        .and(path("/jsm/assets/workspace/ws-123/v1/objectschema/list"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(json!({
+            "startAt": 0, "maxResults": 25, "total": 1, "isLast": true,
+            "values": [{
+                "id": "6", "name": "ITSM", "objectSchemaKey": "ITSM",
+                "status": "Ok", "objectCount": 95, "objectTypeCount": 1
+            }]
+        })))
+        .mount(&server)
+        .await;
+
+    Mock::given(method("GET"))
+        .and(path(
+            "/jsm/assets/workspace/ws-123/v1/objectschema/6/objecttypes/flat",
+        ))
+        .respond_with(ResponseTemplate::new(200).set_body_json(json!([
+            {
+                "id": "23", "name": "Office", "position": 2,
+                "objectCount": 5, "objectSchemaId": "6",
+                "inherited": false, "abstractObjectType": false
+            }
+        ])))
+        .mount(&server)
+        .await;
+
+    Mock::given(method("GET"))
+        .and(path(
+            "/jsm/assets/workspace/ws-123/v1/objecttype/23/attributes",
+        ))
+        .respond_with(ResponseTemplate::new(200).set_body_json(json!([
+            {
+                "id": "134", "name": "Key", "system": true, "hidden": false,
+                "label": false, "position": 0,
+                "defaultType": { "id": 0, "name": "Text" },
+                "minimumCardinality": 1, "editable": false
+            },
+            {
+                "id": "135", "name": "Name", "system": false, "hidden": false,
+                "label": true, "position": 1,
+                "defaultType": { "id": 0, "name": "Text" },
+                "minimumCardinality": 1, "editable": true
+            },
+            {
+                "id": "136", "name": "Created", "system": true, "hidden": false,
+                "label": false, "position": 2,
+                "defaultType": { "id": 6, "name": "DateTime" },
+                "minimumCardinality": 1, "editable": false
+            }
+        ])))
+        .mount(&server)
+        .await;
+
+    let cache_dir = tempfile::tempdir().unwrap();
+    let _guard = set_cache_dir(cache_dir.path()).await;
+
+    let output = assert_cmd::Command::cargo_bin("jr")
+        .unwrap()
+        .env("JR_BASE_URL", server.uri())
+        .env("JR_AUTH_HEADER", "Basic dGVzdDp0ZXN0")
+        .args(["assets", "schema", "Office"])
+        .output()
+        .unwrap();
+
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    assert!(
+        output.status.success(),
+        "stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    assert!(stdout.contains("Object Type: Office"));
+    assert!(stdout.contains("Name"));
+    // System attrs "Key" and "Created" should be filtered out
+    assert!(!stdout.contains("Created"));
+}
