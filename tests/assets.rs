@@ -950,3 +950,99 @@ async fn search_attributes_table_shows_inline_values() {
         "Should not have Created column, got: {stdout}"
     );
 }
+
+#[tokio::test]
+async fn list_object_schemas_returns_schemas() {
+    let server = MockServer::start().await;
+
+    Mock::given(method("GET"))
+        .and(path(
+            "/jsm/assets/workspace/ws-123/v1/objectschema/list",
+        ))
+        .and(query_param("startAt", "0"))
+        .and(query_param("maxResults", "25"))
+        .and(query_param("includeCounts", "true"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(json!({
+            "startAt": 0,
+            "maxResults": 25,
+            "total": 2,
+            "isLast": true,
+            "values": [
+                {
+                    "id": "6",
+                    "name": "ITSM",
+                    "objectSchemaKey": "ITSM",
+                    "status": "Ok",
+                    "objectCount": 95,
+                    "objectTypeCount": 34
+                },
+                {
+                    "id": "1",
+                    "name": "Human Resources",
+                    "objectSchemaKey": "HR",
+                    "description": "HR schema",
+                    "status": "Ok",
+                    "objectCount": 1023,
+                    "objectTypeCount": 14
+                }
+            ]
+        })))
+        .mount(&server)
+        .await;
+
+    let client =
+        jr::api::client::JiraClient::new_for_test(server.uri(), "Basic dGVzdDp0ZXN0".into());
+    let schemas = client.list_object_schemas("ws-123").await.unwrap();
+    assert_eq!(schemas.len(), 2);
+    assert_eq!(schemas[0].name, "ITSM");
+    assert_eq!(schemas[0].object_schema_key, "ITSM");
+    assert_eq!(schemas[0].object_type_count, 34);
+    assert_eq!(schemas[1].name, "Human Resources");
+    assert_eq!(schemas[1].description.as_deref(), Some("HR schema"));
+}
+
+#[tokio::test]
+async fn list_object_types_returns_flat_array() {
+    let server = MockServer::start().await;
+
+    Mock::given(method("GET"))
+        .and(path(
+            "/jsm/assets/workspace/ws-123/v1/objectschema/6/objecttypes/flat",
+        ))
+        .and(query_param("includeObjectCounts", "true"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(json!([
+            {
+                "id": "19",
+                "name": "Employee",
+                "position": 0,
+                "objectCount": 42,
+                "objectSchemaId": "6",
+                "inherited": false,
+                "abstractObjectType": false
+            },
+            {
+                "id": "23",
+                "name": "Office",
+                "description": "Physical office or site.",
+                "position": 2,
+                "objectCount": 5,
+                "objectSchemaId": "6",
+                "inherited": false,
+                "abstractObjectType": false
+            }
+        ])))
+        .mount(&server)
+        .await;
+
+    let client =
+        jr::api::client::JiraClient::new_for_test(server.uri(), "Basic dGVzdDp0ZXN0".into());
+    let types = client.list_object_types("ws-123", "6").await.unwrap();
+    assert_eq!(types.len(), 2);
+    assert_eq!(types[0].name, "Employee");
+    assert_eq!(types[0].object_count, 42);
+    assert_eq!(types[1].name, "Office");
+    assert_eq!(
+        types[1].description.as_deref(),
+        Some("Physical office or site.")
+    );
+}

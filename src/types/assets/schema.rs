@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 
 /// Object schema from GET /objectschema/list.
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Default, Deserialize, Serialize)]
 pub struct ObjectSchema {
     pub id: String,
     pub name: String,
