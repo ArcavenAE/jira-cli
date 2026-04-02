@@ -272,12 +272,16 @@ mod tests {
     static ENV_MUTEX: Mutex<()> = Mutex::new(());
 
     fn with_temp_cache<F: FnOnce()>(f: F) {
-        let _guard = ENV_MUTEX.lock().unwrap();
+        let guard = ENV_MUTEX.lock().unwrap_or_else(|e| e.into_inner());
         let dir = TempDir::new().unwrap();
         // SAFETY: test holds ENV_MUTEX, so no concurrent env access.
         unsafe { std::env::set_var("XDG_CACHE_HOME", dir.path()) };
-        f();
+        let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(f));
         unsafe { std::env::remove_var("XDG_CACHE_HOME") };
+        drop(guard);
+        if let Err(e) = result {
+            std::panic::resume_unwind(e);
+        }
     }
 
     #[test]
@@ -631,6 +635,60 @@ mod tests {
 
             let result = read_object_type_attr_cache("23").unwrap();
             assert!(result.is_none(), "corrupt cache should return None");
+        });
+    }
+
+    #[test]
+    fn corrupt_team_cache_returns_none() {
+        with_temp_cache(|| {
+            let dir = cache_dir();
+            std::fs::create_dir_all(&dir).unwrap();
+
+            // Garbage data
+            std::fs::write(dir.join("teams.json"), "not json").unwrap();
+            let result = read_team_cache().unwrap();
+            assert!(result.is_none(), "garbage data should return None");
+
+            // Valid JSON, wrong shape
+            std::fs::write(dir.join("teams.json"), r#"{"unexpected": true}"#).unwrap();
+            let result = read_team_cache().unwrap();
+            assert!(result.is_none(), "wrong-shape JSON should return None");
+        });
+    }
+
+    #[test]
+    fn corrupt_workspace_cache_returns_none() {
+        with_temp_cache(|| {
+            let dir = cache_dir();
+            std::fs::create_dir_all(&dir).unwrap();
+
+            // Garbage data
+            std::fs::write(dir.join("workspace.json"), "not json").unwrap();
+            let result = read_workspace_cache().unwrap();
+            assert!(result.is_none(), "garbage data should return None");
+
+            // Valid JSON, wrong shape
+            std::fs::write(dir.join("workspace.json"), r#"{"unexpected": true}"#).unwrap();
+            let result = read_workspace_cache().unwrap();
+            assert!(result.is_none(), "wrong-shape JSON should return None");
+        });
+    }
+
+    #[test]
+    fn corrupt_project_meta_returns_none() {
+        with_temp_cache(|| {
+            let dir = cache_dir();
+            std::fs::create_dir_all(&dir).unwrap();
+
+            // Garbage data
+            std::fs::write(dir.join("project_meta.json"), "not json").unwrap();
+            let result = read_project_meta("ANY").unwrap();
+            assert!(result.is_none(), "garbage data should return None");
+
+            // Valid JSON, wrong shape
+            std::fs::write(dir.join("project_meta.json"), r#"{"unexpected": true}"#).unwrap();
+            let result = read_project_meta("ANY").unwrap();
+            assert!(result.is_none(), "wrong-shape JSON should return None");
         });
     }
 }
