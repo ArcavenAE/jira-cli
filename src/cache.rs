@@ -1,19 +1,17 @@
 use anyhow::Result;
 use chrono::{DateTime, Utc};
-use serde::{de::DeserializeOwned, Deserialize, Serialize};
+use serde::{Deserialize, Serialize, de::DeserializeOwned};
 use std::collections::HashMap;
 use std::path::PathBuf;
 
 const CACHE_TTL_DAYS: i64 = 7;
 
 /// Implemented by cache structs that carry a timestamp for TTL checks.
-#[allow(dead_code)]
 pub(crate) trait Expiring {
     fn fetched_at(&self) -> DateTime<Utc>;
 }
 
 /// Read a whole-file cache. Returns `Ok(None)` on missing, expired, or corrupt files.
-#[allow(dead_code)]
 fn read_cache<T: DeserializeOwned + Expiring>(filename: &str) -> Result<Option<T>> {
     let path = cache_dir().join(filename);
     if !path.exists() {
@@ -31,7 +29,6 @@ fn read_cache<T: DeserializeOwned + Expiring>(filename: &str) -> Result<Option<T
 }
 
 /// Write a whole-file cache. Creates the cache directory if needed.
-#[allow(dead_code)]
 fn write_cache<T: Serialize>(filename: &str, data: &T) -> Result<()> {
     let dir = cache_dir();
     std::fs::create_dir_all(&dir)?;
@@ -52,6 +49,12 @@ pub struct TeamCache {
     pub teams: Vec<CachedTeam>,
 }
 
+impl Expiring for TeamCache {
+    fn fetched_at(&self) -> DateTime<Utc> {
+        self.fetched_at
+    }
+}
+
 pub fn cache_dir() -> PathBuf {
     if let Ok(xdg) = std::env::var("XDG_CACHE_HOME") {
         PathBuf::from(xdg).join("jr")
@@ -64,34 +67,17 @@ pub fn cache_dir() -> PathBuf {
 }
 
 pub fn read_team_cache() -> Result<Option<TeamCache>> {
-    let path = cache_dir().join("teams.json");
-    if !path.exists() {
-        return Ok(None);
-    }
-
-    let content = std::fs::read_to_string(&path)?;
-    let cache: TeamCache = serde_json::from_str(&content)?;
-
-    let age = Utc::now() - cache.fetched_at;
-    if age.num_days() >= CACHE_TTL_DAYS {
-        return Ok(None);
-    }
-
-    Ok(Some(cache))
+    read_cache("teams.json")
 }
 
 pub fn write_team_cache(teams: &[CachedTeam]) -> Result<()> {
-    let dir = cache_dir();
-    std::fs::create_dir_all(&dir)?;
-
-    let cache = TeamCache {
-        fetched_at: Utc::now(),
-        teams: teams.to_vec(),
-    };
-
-    let content = serde_json::to_string_pretty(&cache)?;
-    std::fs::write(dir.join("teams.json"), content)?;
-    Ok(())
+    write_cache(
+        "teams.json",
+        &TeamCache {
+            fetched_at: Utc::now(),
+            teams: teams.to_vec(),
+        },
+    )
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -110,7 +96,10 @@ pub fn read_project_meta(project_key: &str) -> Result<Option<ProjectMeta>> {
     }
 
     let content = std::fs::read_to_string(&path)?;
-    let map: HashMap<String, ProjectMeta> = serde_json::from_str(&content)?;
+    let map: HashMap<String, ProjectMeta> = match serde_json::from_str(&content) {
+        Ok(m) => m,
+        Err(_) => return Ok(None),
+    };
 
     match map.get(project_key) {
         Some(meta) => {
@@ -152,35 +141,24 @@ pub struct WorkspaceCache {
     pub fetched_at: DateTime<Utc>,
 }
 
+impl Expiring for WorkspaceCache {
+    fn fetched_at(&self) -> DateTime<Utc> {
+        self.fetched_at
+    }
+}
+
 pub fn read_workspace_cache() -> Result<Option<WorkspaceCache>> {
-    let path = cache_dir().join("workspace.json");
-    if !path.exists() {
-        return Ok(None);
-    }
-
-    let content = std::fs::read_to_string(&path)?;
-    let cache: WorkspaceCache = serde_json::from_str(&content)?;
-
-    let age = Utc::now() - cache.fetched_at;
-    if age.num_days() >= CACHE_TTL_DAYS {
-        return Ok(None);
-    }
-
-    Ok(Some(cache))
+    read_cache("workspace.json")
 }
 
 pub fn write_workspace_cache(workspace_id: &str) -> Result<()> {
-    let dir = cache_dir();
-    std::fs::create_dir_all(&dir)?;
-
-    let cache = WorkspaceCache {
-        workspace_id: workspace_id.to_string(),
-        fetched_at: Utc::now(),
-    };
-
-    let content = serde_json::to_string_pretty(&cache)?;
-    std::fs::write(dir.join("workspace.json"), content)?;
-    Ok(())
+    write_cache(
+        "workspace.json",
+        &WorkspaceCache {
+            workspace_id: workspace_id.to_string(),
+            fetched_at: Utc::now(),
+        },
+    )
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -189,38 +167,24 @@ pub struct CmdbFieldsCache {
     pub fetched_at: DateTime<Utc>,
 }
 
+impl Expiring for CmdbFieldsCache {
+    fn fetched_at(&self) -> DateTime<Utc> {
+        self.fetched_at
+    }
+}
+
 pub fn read_cmdb_fields_cache() -> Result<Option<CmdbFieldsCache>> {
-    let path = cache_dir().join("cmdb_fields.json");
-    if !path.exists() {
-        return Ok(None);
-    }
-
-    let content = std::fs::read_to_string(&path)?;
-    let cache: CmdbFieldsCache = match serde_json::from_str(&content) {
-        Ok(c) => c,
-        Err(_) => return Ok(None),
-    };
-
-    let age = Utc::now() - cache.fetched_at;
-    if age.num_days() >= CACHE_TTL_DAYS {
-        return Ok(None);
-    }
-
-    Ok(Some(cache))
+    read_cache("cmdb_fields.json")
 }
 
 pub fn write_cmdb_fields_cache(fields: &[(String, String)]) -> Result<()> {
-    let dir = cache_dir();
-    std::fs::create_dir_all(&dir)?;
-
-    let cache = CmdbFieldsCache {
-        fields: fields.to_vec(),
-        fetched_at: Utc::now(),
-    };
-
-    let content = serde_json::to_string_pretty(&cache)?;
-    std::fs::write(dir.join("cmdb_fields.json"), content)?;
-    Ok(())
+    write_cache(
+        "cmdb_fields.json",
+        &CmdbFieldsCache {
+            fields: fields.to_vec(),
+            fetched_at: Utc::now(),
+        },
+    )
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
