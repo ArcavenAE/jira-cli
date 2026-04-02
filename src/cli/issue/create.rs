@@ -30,6 +30,7 @@ pub(super) async fn handle_create(
         points,
         markdown,
         parent,
+        to,
     } = command
     else {
         unreachable!()
@@ -121,6 +122,13 @@ pub(super) async fn handle_create(
 
     if let Some(ref parent_key) = parent {
         fields["parent"] = json!({"key": parent_key});
+    }
+
+    if let Some(ref user_query) = to {
+        let (account_id, _display_name) =
+            helpers::resolve_assignee_by_project(client, user_query, &project_key, no_input)
+                .await?;
+        fields["assignee"] = json!({"id": account_id});
     }
 
     let response = client.create_issue(fields).await?;

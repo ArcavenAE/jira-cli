@@ -245,6 +245,9 @@ pub enum IssueCommand {
         /// Parent issue key (e.g., for subtasks or stories under epics)
         #[arg(long)]
         parent: Option<String>,
+        /// Assign to user (name/email, or "me" for self)
+        #[arg(long)]
+        to: Option<String>,
     },
     /// View issue details
     View {
