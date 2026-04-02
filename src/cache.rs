@@ -1,10 +1,44 @@
 use anyhow::Result;
 use chrono::{DateTime, Utc};
-use serde::{Deserialize, Serialize};
+use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::PathBuf;
 
 const CACHE_TTL_DAYS: i64 = 7;
+
+/// Implemented by cache structs that carry a timestamp for TTL checks.
+#[allow(dead_code)]
+pub(crate) trait Expiring {
+    fn fetched_at(&self) -> DateTime<Utc>;
+}
+
+/// Read a whole-file cache. Returns `Ok(None)` on missing, expired, or corrupt files.
+#[allow(dead_code)]
+fn read_cache<T: DeserializeOwned + Expiring>(filename: &str) -> Result<Option<T>> {
+    let path = cache_dir().join(filename);
+    if !path.exists() {
+        return Ok(None);
+    }
+    let content = std::fs::read_to_string(&path)?;
+    let cache: T = match serde_json::from_str(&content) {
+        Ok(c) => c,
+        Err(_) => return Ok(None),
+    };
+    if (Utc::now() - cache.fetched_at()).num_days() >= CACHE_TTL_DAYS {
+        return Ok(None);
+    }
+    Ok(Some(cache))
+}
+
+/// Write a whole-file cache. Creates the cache directory if needed.
+#[allow(dead_code)]
+fn write_cache<T: Serialize>(filename: &str, data: &T) -> Result<()> {
+    let dir = cache_dir();
+    std::fs::create_dir_all(&dir)?;
+    let content = serde_json::to_string_pretty(data)?;
+    std::fs::write(dir.join(filename), content)?;
+    Ok(())
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CachedTeam {
