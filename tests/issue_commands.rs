@@ -1,7 +1,7 @@
 #[allow(dead_code)]
 mod common;
 
-use wiremock::matchers::{body_partial_json, method, path};
+use wiremock::matchers::{body_partial_json, method, path, query_param};
 use wiremock::{Mock, MockServer, ResponseTemplate};
 
 #[tokio::test]
@@ -680,6 +680,8 @@ async fn test_search_assignable_users_single() {
     let server = MockServer::start().await;
     Mock::given(method("GET"))
         .and(path("/rest/api/3/user/assignable/search"))
+        .and(query_param("query", "Jane"))
+        .and(query_param("issueKey", "FOO-1"))
         .respond_with(ResponseTemplate::new(200).set_body_json(
             common::fixtures::user_search_response(vec![("acc-assign-1", "Jane Doe", true)]),
         ))
@@ -702,6 +704,8 @@ async fn test_search_assignable_users_empty() {
     let server = MockServer::start().await;
     Mock::given(method("GET"))
         .and(path("/rest/api/3/user/assignable/search"))
+        .and(query_param("query", "Nobody"))
+        .and(query_param("issueKey", "FOO-1"))
         .respond_with(
             ResponseTemplate::new(200)
                 .set_body_json(common::fixtures::user_search_response(vec![])),
@@ -723,6 +727,8 @@ async fn test_search_assignable_users_paginated_response() {
     let server = MockServer::start().await;
     Mock::given(method("GET"))
         .and(path("/rest/api/3/user/assignable/search"))
+        .and(query_param("query", "Paged"))
+        .and(query_param("issueKey", "FOO-1"))
         .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
             "total": 1,
             "values": [

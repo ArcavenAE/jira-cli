@@ -253,6 +253,7 @@ pub(super) async fn handle_assign(
                         serde_json::to_string_pretty(&json!({
                             "key": key,
                             "assignee": display_name,
+                            "assignee_account_id": account_id,
                             "changed": false
                         }))?
                     );
@@ -277,6 +278,7 @@ pub(super) async fn handle_assign(
                 serde_json::to_string_pretty(&json!({
                     "key": key,
                     "assignee": display_name,
+                    "assignee_account_id": account_id,
                     "changed": true
                 }))?
             );
