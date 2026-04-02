@@ -35,14 +35,18 @@ The existing `partial_match` function already handles priority correctly:
 
 No changes to `partial_match` are needed.
 
-### Ambiguity when multiple transitions share a status name
+### Ambiguity handling
 
-If two transitions lead to the same status (e.g., "Reopen" → "Open" and "Restart" → "Open"), and the user types "Open", both transitions match via status name. This is treated as ambiguous:
+Ambiguity arises when user input partially matches multiple candidates in the unified pool. For example, typing `"Re"` when transitions include `"Reopen"` and `"Review"`.
 
-- **Interactive mode:** Show disambiguation prompt listing the matching transitions.
+Note: If two transitions lead to the same status (e.g., "Reopen" → "Open" and "Restart" → "Open"), deduplication means `"Open"` only appears once in the pool (mapped to the first transition). Typing `"Open"` is an exact match, not ambiguous. This is acceptable — both transitions reach the same status. If the user needs a specific transition's post-functions, they can type the transition name directly.
+
+When ambiguity does occur:
+
+- **Interactive mode:** Show disambiguation prompt listing the matching candidates.
 - **`--no-input` mode:** Error with the list of matches.
 
-This is consistent with existing ambiguous-transition-name handling and is correct because different transitions to the same status may have different post-functions/side effects.
+This is consistent with existing ambiguous-transition-name handling.
 
 ### Idempotency check
 
