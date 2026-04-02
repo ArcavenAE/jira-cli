@@ -54,9 +54,7 @@ pub async fn handle(
             )
             .await
         }
-        AssetsCommand::Schemas => {
-            handle_schemas(&workspace_id, output_format, client).await
-        }
+        AssetsCommand::Schemas => handle_schemas(&workspace_id, output_format, client).await,
         AssetsCommand::Types { schema } => {
             handle_types(&workspace_id, schema, output_format, client).await
         }
@@ -453,9 +451,7 @@ fn resolve_schema<'a>(
     // Partial match on name
     let names: Vec<String> = schemas.iter().map(|s| s.name.clone()).collect();
     match partial_match::partial_match(input, &names) {
-        MatchResult::Exact(name) => {
-            Ok(schemas.iter().find(|s| s.name == name).unwrap())
-        }
+        MatchResult::Exact(name) => Ok(schemas.iter().find(|s| s.name == name).unwrap()),
         MatchResult::Ambiguous(matches) => Err(JrError::UserError(format!(
             "Ambiguous schema \"{}\". Matches: {}",
             input,
@@ -514,9 +510,7 @@ async fn handle_types(
 ) -> Result<()> {
     let schemas = client.list_object_schemas(workspace_id).await?;
     if schemas.is_empty() {
-        return Err(
-            JrError::UserError("No asset schemas found in this workspace.".into()).into(),
-        );
+        return Err(JrError::UserError("No asset schemas found in this workspace.".into()).into());
     }
 
     let target_schemas: Vec<&crate::types::assets::ObjectSchema> = match &schema_filter {
@@ -532,9 +526,7 @@ async fn handle_types(
 
     let mut all_types = Vec::new();
     for schema in &target_schemas {
-        let types = client
-            .list_object_types(workspace_id, &schema.id)
-            .await?;
+        let types = client.list_object_types(workspace_id, &schema.id).await?;
         all_types.extend(types);
     }
 
@@ -545,9 +537,7 @@ async fn handle_types(
             for t in &all_types {
                 let mut val = serde_json::to_value(t)?;
                 if let Some(map) = val.as_object_mut() {
-                    let schema_name = schema_names
-                        .get(t.object_schema_id.as_str())
-                        .unwrap_or(&"");
+                    let schema_name = schema_names.get(t.object_schema_id.as_str()).unwrap_or(&"");
                     map.insert(
                         "schemaName".to_string(),
                         serde_json::Value::String(schema_name.to_string()),
@@ -568,9 +558,7 @@ async fn handle_types(
                         t.id.clone(),
                         t.name.clone(),
                         schema_name.to_string(),
-                        t.description
-                            .clone()
-                            .unwrap_or_else(|| "\u{2014}".into()),
+                        t.description.clone().unwrap_or_else(|| "\u{2014}".into()),
                         t.object_count.to_string(),
                     ]
                 })
@@ -607,9 +595,7 @@ async fn handle_schema(
 ) -> Result<()> {
     let schemas = client.list_object_schemas(workspace_id).await?;
     if schemas.is_empty() {
-        return Err(
-            JrError::UserError("No asset schemas found in this workspace.".into()).into(),
-        );
+        return Err(JrError::UserError("No asset schemas found in this workspace.".into()).into());
     }
 
     let target_schemas: Vec<&crate::types::assets::ObjectSchema> = match &schema_filter {
@@ -620,9 +606,7 @@ async fn handle_schema(
     // Collect all object types with their schema name
     let mut candidates: Vec<(crate::types::assets::ObjectTypeEntry, String)> = Vec::new();
     for schema in &target_schemas {
-        let types = client
-            .list_object_types(workspace_id, &schema.id)
-            .await?;
+        let types = client.list_object_types(workspace_id, &schema.id).await?;
         for t in types {
             candidates.push((t, schema.name.clone()));
         }
@@ -687,10 +671,8 @@ async fn handle_schema(
                 matched_type.name, schema_name
             );
 
-            let mut visible: Vec<&crate::types::assets::ObjectTypeAttributeDef> = attrs
-                .iter()
-                .filter(|a| !a.system && !a.hidden)
-                .collect();
+            let mut visible: Vec<&crate::types::assets::ObjectTypeAttributeDef> =
+                attrs.iter().filter(|a| !a.system && !a.hidden).collect();
             visible.sort_by_key(|a| a.position);
 
             let rows: Vec<Vec<String>> = visible
@@ -705,7 +687,11 @@ async fn handle_schema(
                         } else {
                             "No".into()
                         },
-                        if a.editable { "Yes".into() } else { "No".into() },
+                        if a.editable {
+                            "Yes".into()
+                        } else {
+                            "No".into()
+                        },
                     ]
                 })
                 .collect();
@@ -715,10 +701,7 @@ async fn handle_schema(
             } else {
                 println!(
                     "{}",
-                    output::render_table(
-                        &["Pos", "Name", "Type", "Required", "Editable"],
-                        &rows
-                    )
+                    output::render_table(&["Pos", "Name", "Type", "Required", "Editable"], &rows)
                 );
             }
         }
@@ -882,7 +865,10 @@ mod tests {
     #[test]
     fn format_attr_type_default_type() {
         let attr = make_attr_def(
-            Some(DefaultType { id: 0, name: "Text".into() }),
+            Some(DefaultType {
+                id: 0,
+                name: "Text".into(),
+            }),
             None,
         );
         assert_eq!(super::format_attribute_type(&attr), "Text");
@@ -892,7 +878,10 @@ mod tests {
     fn format_attr_type_reference() {
         let attr = make_attr_def(
             None,
-            Some(ReferenceObjectType { id: "122".into(), name: "Service".into() }),
+            Some(ReferenceObjectType {
+                id: "122".into(),
+                name: "Service".into(),
+            }),
         );
         assert_eq!(
             super::format_attribute_type(&attr),
@@ -909,8 +898,14 @@ mod tests {
     #[test]
     fn format_attr_type_default_takes_precedence() {
         let attr = make_attr_def(
-            Some(DefaultType { id: 0, name: "Text".into() }),
-            Some(ReferenceObjectType { id: "1".into(), name: "Svc".into() }),
+            Some(DefaultType {
+                id: 0,
+                name: "Text".into(),
+            }),
+            Some(ReferenceObjectType {
+                id: "1".into(),
+                name: "Svc".into(),
+            }),
         );
         assert_eq!(super::format_attribute_type(&attr), "Text");
     }

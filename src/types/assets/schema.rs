@@ -107,7 +107,10 @@ mod tests {
             "abstractObjectType": false
         }"#;
         let entry: ObjectTypeEntry = serde_json::from_str(json).unwrap();
-        assert_eq!(entry.description.as_deref(), Some("Physical office or site."));
+        assert_eq!(
+            entry.description.as_deref(),
+            Some("Physical office or site.")
+        );
         assert_eq!(entry.position, 2);
     }
 }

@@ -6,10 +6,7 @@ use crate::types::assets::{ObjectSchema, ObjectTypeEntry};
 
 impl JiraClient {
     /// List all object schemas in the workspace with auto-pagination.
-    pub async fn list_object_schemas(
-        &self,
-        workspace_id: &str,
-    ) -> Result<Vec<ObjectSchema>> {
+    pub async fn list_object_schemas(&self, workspace_id: &str) -> Result<Vec<ObjectSchema>> {
         let mut all = Vec::new();
         let mut start_at = 0u32;
         let page_size = 25u32;
@@ -19,8 +16,7 @@ impl JiraClient {
                 "objectschema/list?startAt={}&maxResults={}&includeCounts=true",
                 start_at, page_size
             );
-            let page: AssetsPage<ObjectSchema> =
-                self.get_assets(workspace_id, &path).await?;
+            let page: AssetsPage<ObjectSchema> = self.get_assets(workspace_id, &path).await?;
             let has_more = page.has_more();
             let next = page.next_start();
             all.extend(page.values);

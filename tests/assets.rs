@@ -956,9 +956,7 @@ async fn list_object_schemas_returns_schemas() {
     let server = MockServer::start().await;
 
     Mock::given(method("GET"))
-        .and(path(
-            "/jsm/assets/workspace/ws-123/v1/objectschema/list",
-        ))
+        .and(path("/jsm/assets/workspace/ws-123/v1/objectschema/list"))
         .and(query_param("startAt", "0"))
         .and(query_param("maxResults", "25"))
         .and(query_param("includeCounts", "true"))
@@ -1052,9 +1050,7 @@ async fn schemas_json_lists_all_schemas() {
     let server = MockServer::start().await;
 
     Mock::given(method("GET"))
-        .and(path(
-            "/jsm/assets/workspace/ws-123/v1/objectschema/list",
-        ))
+        .and(path("/jsm/assets/workspace/ws-123/v1/objectschema/list"))
         .respond_with(ResponseTemplate::new(200).set_body_json(json!({
             "startAt": 0,
             "maxResults": 25,
@@ -1104,7 +1100,11 @@ async fn schemas_json_lists_all_schemas() {
         .output()
         .unwrap();
 
-    assert!(output.status.success(), "stderr: {}", String::from_utf8_lossy(&output.stderr));
+    assert!(
+        output.status.success(),
+        "stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
     let json: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
     let arr = json.as_array().unwrap();
     assert_eq!(arr.len(), 2);
@@ -1130,9 +1130,7 @@ async fn types_json_lists_all_types() {
         .await;
 
     Mock::given(method("GET"))
-        .and(path(
-            "/jsm/assets/workspace/ws-123/v1/objectschema/list",
-        ))
+        .and(path("/jsm/assets/workspace/ws-123/v1/objectschema/list"))
         .respond_with(ResponseTemplate::new(200).set_body_json(json!({
             "startAt": 0,
             "maxResults": 25,
@@ -1188,7 +1186,11 @@ async fn types_json_lists_all_types() {
         .output()
         .unwrap();
 
-    assert!(output.status.success(), "stderr: {}", String::from_utf8_lossy(&output.stderr));
+    assert!(
+        output.status.success(),
+        "stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
     let json: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
     let arr = json.as_array().unwrap();
     assert_eq!(arr.len(), 2);
@@ -1207,7 +1209,8 @@ async fn schema_json_shows_attributes() {
             "size": 1, "start": 0, "limit": 50, "isLastPage": true,
             "values": [{ "workspaceId": "ws-123" }]
         })))
-        .mount(&server).await;
+        .mount(&server)
+        .await;
 
     Mock::given(method("GET"))
         .and(path("/jsm/assets/workspace/ws-123/v1/objectschema/list"))
@@ -1218,10 +1221,13 @@ async fn schema_json_shows_attributes() {
                 "status": "Ok", "objectCount": 95, "objectTypeCount": 2
             }]
         })))
-        .mount(&server).await;
+        .mount(&server)
+        .await;
 
     Mock::given(method("GET"))
-        .and(path("/jsm/assets/workspace/ws-123/v1/objectschema/6/objecttypes/flat"))
+        .and(path(
+            "/jsm/assets/workspace/ws-123/v1/objectschema/6/objecttypes/flat",
+        ))
         .respond_with(ResponseTemplate::new(200).set_body_json(json!([
             {
                 "id": "23", "name": "Office", "position": 2,
@@ -1229,10 +1235,13 @@ async fn schema_json_shows_attributes() {
                 "inherited": false, "abstractObjectType": false
             }
         ])))
-        .mount(&server).await;
+        .mount(&server)
+        .await;
 
     Mock::given(method("GET"))
-        .and(path("/jsm/assets/workspace/ws-123/v1/objecttype/23/attributes"))
+        .and(path(
+            "/jsm/assets/workspace/ws-123/v1/objecttype/23/attributes",
+        ))
         .respond_with(ResponseTemplate::new(200).set_body_json(json!([
             {
                 "id": "134", "name": "Key", "system": true, "hidden": false,
@@ -1255,7 +1264,8 @@ async fn schema_json_shows_attributes() {
                 "minimumCardinality": 0, "maximumCardinality": -1, "editable": true
             }
         ])))
-        .mount(&server).await;
+        .mount(&server)
+        .await;
 
     let _guard = set_cache_dir(&tempfile::tempdir().unwrap().keep()).await;
 
@@ -1267,7 +1277,11 @@ async fn schema_json_shows_attributes() {
         .output()
         .unwrap();
 
-    assert!(output.status.success(), "stderr: {}", String::from_utf8_lossy(&output.stderr));
+    assert!(
+        output.status.success(),
+        "stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
     let json: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
     let arr = json.as_array().unwrap();
     assert_eq!(arr.len(), 3);
@@ -1287,7 +1301,8 @@ async fn schema_table_filters_system_attrs() {
             "size": 1, "start": 0, "limit": 50, "isLastPage": true,
             "values": [{ "workspaceId": "ws-123" }]
         })))
-        .mount(&server).await;
+        .mount(&server)
+        .await;
 
     Mock::given(method("GET"))
         .and(path("/jsm/assets/workspace/ws-123/v1/objectschema/list"))
@@ -1298,10 +1313,13 @@ async fn schema_table_filters_system_attrs() {
                 "status": "Ok", "objectCount": 95, "objectTypeCount": 1
             }]
         })))
-        .mount(&server).await;
+        .mount(&server)
+        .await;
 
     Mock::given(method("GET"))
-        .and(path("/jsm/assets/workspace/ws-123/v1/objectschema/6/objecttypes/flat"))
+        .and(path(
+            "/jsm/assets/workspace/ws-123/v1/objectschema/6/objecttypes/flat",
+        ))
         .respond_with(ResponseTemplate::new(200).set_body_json(json!([
             {
                 "id": "23", "name": "Office", "position": 2,
@@ -1309,10 +1327,13 @@ async fn schema_table_filters_system_attrs() {
                 "inherited": false, "abstractObjectType": false
             }
         ])))
-        .mount(&server).await;
+        .mount(&server)
+        .await;
 
     Mock::given(method("GET"))
-        .and(path("/jsm/assets/workspace/ws-123/v1/objecttype/23/attributes"))
+        .and(path(
+            "/jsm/assets/workspace/ws-123/v1/objecttype/23/attributes",
+        ))
         .respond_with(ResponseTemplate::new(200).set_body_json(json!([
             {
                 "id": "134", "name": "Key", "system": true, "hidden": false,
@@ -1333,7 +1354,8 @@ async fn schema_table_filters_system_attrs() {
                 "minimumCardinality": 1, "editable": false
             }
         ])))
-        .mount(&server).await;
+        .mount(&server)
+        .await;
 
     let _guard = set_cache_dir(&tempfile::tempdir().unwrap().keep()).await;
 
@@ -1346,7 +1368,11 @@ async fn schema_table_filters_system_attrs() {
         .unwrap();
 
     let stdout = String::from_utf8_lossy(&output.stdout);
-    assert!(output.status.success(), "stderr: {}", String::from_utf8_lossy(&output.stderr));
+    assert!(
+        output.status.success(),
+        "stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
     assert!(stdout.contains("Object Type: Office"));
     assert!(stdout.contains("Name"));
     // System attrs "Key" and "Created" should be filtered out

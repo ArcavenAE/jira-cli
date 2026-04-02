@@ -143,6 +143,9 @@ jr issue comment KEY-123 "Deployed to staging"
 | `jr assets search <AQL>`        | Search assets via AQL query (`--attributes` resolves names) |
 | `jr assets view <key>`          | View asset details (key or numeric ID)         |
 | `jr assets tickets <key>`       | Show Jira issues connected to an asset (`--open`, `--status`, `--limit`) |
+| `jr assets schemas`             | List object schemas in the workspace           |
+| `jr assets types [--schema]`    | List object types (all or filtered by schema)  |
+| `jr assets schema <TYPE>`       | Show attributes for an object type (partial match) |
 | `jr team list` | List available teams (`--refresh` to force update) |
 | `jr project list` | List accessible projects (`--type`, `--limit`/`--all`) |
 | `jr project fields --project FOO` | Show valid issue types, priorities, statuses, and asset custom fields |
