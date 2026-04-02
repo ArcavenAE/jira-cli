@@ -587,14 +587,143 @@ async fn handle_types(
     Ok(())
 }
 
+/// Format the Type column for an attribute definition.
+fn format_attribute_type(attr: &crate::types::assets::ObjectTypeAttributeDef) -> String {
+    if let Some(ref dt) = attr.default_type {
+        return dt.name.clone();
+    }
+    if let Some(ref rot) = attr.reference_object_type {
+        return format!("Reference \u{2192} {}", rot.name);
+    }
+    "Unknown".to_string()
+}
+
 async fn handle_schema(
-    _workspace_id: &str,
-    _name: &str,
-    _schema: Option<String>,
-    _output_format: &OutputFormat,
-    _client: &JiraClient,
+    workspace_id: &str,
+    type_name: &str,
+    schema_filter: Option<String>,
+    output_format: &OutputFormat,
+    client: &JiraClient,
 ) -> Result<()> {
-    todo!("handle_schema")
+    let schemas = client.list_object_schemas(workspace_id).await?;
+    if schemas.is_empty() {
+        return Err(
+            JrError::UserError("No asset schemas found in this workspace.".into()).into(),
+        );
+    }
+
+    let target_schemas: Vec<&crate::types::assets::ObjectSchema> = match &schema_filter {
+        Some(input) => vec![resolve_schema(input, &schemas)?],
+        None => schemas.iter().collect(),
+    };
+
+    // Collect all object types with their schema name
+    let mut candidates: Vec<(crate::types::assets::ObjectTypeEntry, String)> = Vec::new();
+    for schema in &target_schemas {
+        let types = client
+            .list_object_types(workspace_id, &schema.id)
+            .await?;
+        for t in types {
+            candidates.push((t, schema.name.clone()));
+        }
+    }
+
+    if candidates.is_empty() {
+        return Err(JrError::UserError(
+            "No object types found. Run \"jr assets schemas\" to verify your workspace has schemas."
+                .into(),
+        )
+        .into());
+    }
+
+    // Partial match on type name
+    let type_names: Vec<String> = candidates.iter().map(|(t, _)| t.name.clone()).collect();
+    let matched_name = match partial_match::partial_match(type_name, &type_names) {
+        MatchResult::Exact(name) => name,
+        MatchResult::Ambiguous(matches) => {
+            // Include schema name for disambiguation
+            let labeled: Vec<String> = matches
+                .iter()
+                .filter_map(|m| {
+                    candidates
+                        .iter()
+                        .find(|(t, _)| t.name == *m)
+                        .map(|(t, s)| format!("{} ({})", t.name, s))
+                })
+                .collect();
+            return Err(JrError::UserError(format!(
+                "Ambiguous type \"{}\". Matches: {}. Use --schema to narrow results.",
+                type_name,
+                labeled.join(", ")
+            ))
+            .into());
+        }
+        MatchResult::None(_) => {
+            return Err(JrError::UserError(format!(
+                "No object type matching \"{}\". Run \"jr assets types\" to see available types.",
+                type_name
+            ))
+            .into());
+        }
+    };
+
+    let (matched_type, schema_name) = candidates
+        .iter()
+        .find(|(t, _)| t.name == matched_name)
+        .unwrap();
+
+    // Fetch attributes
+    let attrs = client
+        .get_object_type_attributes(workspace_id, &matched_type.id)
+        .await?;
+
+    match output_format {
+        OutputFormat::Json => {
+            println!("{}", output::render_json(&attrs)?);
+        }
+        OutputFormat::Table => {
+            println!(
+                "Object Type: {} (Schema: {})\n",
+                matched_type.name, schema_name
+            );
+
+            let mut visible: Vec<&crate::types::assets::ObjectTypeAttributeDef> = attrs
+                .iter()
+                .filter(|a| !a.system && !a.hidden)
+                .collect();
+            visible.sort_by_key(|a| a.position);
+
+            let rows: Vec<Vec<String>> = visible
+                .iter()
+                .map(|a| {
+                    vec![
+                        a.position.to_string(),
+                        a.name.clone(),
+                        format_attribute_type(a),
+                        if a.minimum_cardinality >= 1 {
+                            "Yes".into()
+                        } else {
+                            "No".into()
+                        },
+                        if a.editable { "Yes".into() } else { "No".into() },
+                    ]
+                })
+                .collect();
+
+            if rows.is_empty() {
+                println!("No user-defined attributes.");
+            } else {
+                println!(
+                    "{}",
+                    output::render_table(
+                        &["Pos", "Name", "Type", "Required", "Editable"],
+                        &rows
+                    )
+                );
+            }
+        }
+    }
+    Ok(())
 }
 
 #[cfg(test)]
