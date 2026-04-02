@@ -32,7 +32,7 @@ Response fields per schema entry:
 
 ### `GET /objectschema/{id}/objecttypes/flat`
 
-Returns a **bare JSON array** (no pagination envelope). Each entry contains:
+Returns a **bare JSON array** (no pagination envelope). Pass `includeObjectCounts=true` to populate `objectCount`. Each entry contains:
 - `id`, `name`, `description` (optional), `position`, `objectCount`, `objectSchemaId`
 - `inherited`, `abstractObjectType`, `parentObjectTypeInherited`
 
