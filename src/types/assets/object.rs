@@ -64,6 +64,41 @@ pub struct ObjectTypeAttributeDef {
     pub label: bool,
     #[serde(default)]
     pub position: i32,
+    #[serde(rename = "defaultType")]
+    pub default_type: Option<DefaultType>,
+    #[serde(rename = "referenceType")]
+    pub reference_type: Option<ReferenceType>,
+    #[serde(rename = "referenceObjectType")]
+    pub reference_object_type: Option<ReferenceObjectType>,
+    #[serde(rename = "minimumCardinality", default)]
+    pub minimum_cardinality: i32,
+    #[serde(rename = "maximumCardinality", default)]
+    pub maximum_cardinality: i32,
+    #[serde(default)]
+    pub editable: bool,
+    pub description: Option<String>,
+    pub options: Option<String>,
+}
+
+/// Attribute data type (e.g., Text, DateTime, Select).
+#[derive(Debug, Deserialize, Serialize)]
+pub struct DefaultType {
+    pub id: i32,
+    pub name: String,
+}
+
+/// Reference link type (e.g., "Depends on", "References").
+#[derive(Debug, Deserialize, Serialize)]
+pub struct ReferenceType {
+    pub id: String,
+    pub name: String,
+}
+
+/// Target object type for a reference attribute (e.g., "Service", "Employee").
+#[derive(Debug, Deserialize, Serialize)]
+pub struct ReferenceObjectType {
+    pub id: String,
+    pub name: String,
 }
 
 #[cfg(test)]
@@ -189,5 +224,106 @@ mod tests {
             attr.values[0].display_value.as_deref(),
             Some("16/Feb/21 8:04 PM")
         );
+    }
+
+    #[test]
+    fn deserialize_attribute_def_with_default_type() {
+        let json = r#"{
+            "id": "135",
+            "name": "Name",
+            "system": false,
+            "hidden": false,
+            "label": true,
+            "position": 1,
+            "defaultType": { "id": 0, "name": "Text" },
+            "minimumCardinality": 1,
+            "maximumCardinality": 1,
+            "editable": true,
+            "description": "The name of the object"
+        }"#;
+        let def: ObjectTypeAttributeDef = serde_json::from_str(json).unwrap();
+        assert_eq!(def.name, "Name");
+        assert!(def.label);
+        let dt = def.default_type.unwrap();
+        assert_eq!(dt.id, 0);
+        assert_eq!(dt.name, "Text");
+        assert_eq!(def.minimum_cardinality, 1);
+        assert!(def.editable);
+        assert_eq!(def.description.as_deref(), Some("The name of the object"));
+        assert!(def.reference_type.is_none());
+        assert!(def.reference_object_type.is_none());
+    }
+
+    #[test]
+    fn deserialize_attribute_def_with_reference() {
+        let json = r#"{
+            "id": "869",
+            "name": "Service relationships",
+            "system": false,
+            "hidden": false,
+            "label": false,
+            "position": 6,
+            "referenceType": { "id": "36", "name": "Depends on" },
+            "referenceObjectTypeId": "122",
+            "referenceObjectType": { "id": "122", "name": "Service" },
+            "minimumCardinality": 0,
+            "maximumCardinality": -1,
+            "editable": true
+        }"#;
+        let def: ObjectTypeAttributeDef = serde_json::from_str(json).unwrap();
+        assert_eq!(def.name, "Service relationships");
+        assert!(def.default_type.is_none());
+        let rt = def.reference_type.unwrap();
+        assert_eq!(rt.name, "Depends on");
+        let rot = def.reference_object_type.unwrap();
+        assert_eq!(rot.name, "Service");
+        assert_eq!(def.minimum_cardinality, 0);
+        assert_eq!(def.maximum_cardinality, -1);
+    }
+
+    #[test]
+    fn deserialize_attribute_def_select_with_options() {
+        let json = r#"{
+            "id": "868",
+            "name": "Tier",
+            "system": false,
+            "hidden": false,
+            "label": false,
+            "position": 5,
+            "defaultType": { "id": 10, "name": "Select" },
+            "minimumCardinality": 1,
+            "maximumCardinality": 1,
+            "editable": true,
+            "options": "Tier 1,Tier 2,Tier 3"
+        }"#;
+        let def: ObjectTypeAttributeDef = serde_json::from_str(json).unwrap();
+        let dt = def.default_type.unwrap();
+        assert_eq!(dt.name, "Select");
+        assert_eq!(def.options.as_deref(), Some("Tier 1,Tier 2,Tier 3"));
+        assert_eq!(def.minimum_cardinality, 1);
+    }
+
+    #[test]
+    fn deserialize_attribute_def_backward_compat() {
+        // Existing JSON without the new fields — must still deserialize
+        let json = r#"{
+            "id": "134",
+            "name": "Key",
+            "system": true,
+            "hidden": false,
+            "label": false,
+            "position": 0
+        }"#;
+        let def: ObjectTypeAttributeDef = serde_json::from_str(json).unwrap();
+        assert_eq!(def.id, "134");
+        assert!(def.system);
+        assert!(def.default_type.is_none());
+        assert!(def.reference_type.is_none());
+        assert!(def.reference_object_type.is_none());
+        assert_eq!(def.minimum_cardinality, 0);
+        assert_eq!(def.maximum_cardinality, 0);
+        assert!(!def.editable);
+        assert!(def.description.is_none());
+        assert!(def.options.is_none());
     }
 }
