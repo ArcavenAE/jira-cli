@@ -189,7 +189,7 @@ pub(super) async fn resolve_assignee(
 
     if users.is_empty() {
         anyhow::bail!(
-            "No assignable user matching \"{}\" on issue {}. The user may not exist or may lack permission for this project.",
+            "No assignable user matching \"{}\" on issue {}. The user may not exist or may lack permission for this project. Try a different name or check spelling.",
             name,
             issue_key,
         );
