@@ -34,8 +34,8 @@ pub async fn handle(
             )
             .await
         }
-        AssetsCommand::View { key, attributes } => {
-            handle_view(&workspace_id, &key, attributes, output_format, client).await
+        AssetsCommand::View { key, no_attributes } => {
+            handle_view(&workspace_id, &key, no_attributes, output_format, client).await
         }
         AssetsCommand::Tickets {
             key,
@@ -205,7 +205,7 @@ fn format_inline_attributes(
 async fn handle_view(
     workspace_id: &str,
     key: &str,
-    attributes: bool,
+    no_attributes: bool,
     output_format: &OutputFormat,
     client: &JiraClient,
 ) -> Result<()> {
@@ -214,7 +214,7 @@ async fn handle_view(
 
     match output_format {
         OutputFormat::Json => {
-            if attributes {
+            if !no_attributes {
                 let mut attrs = client
                     .get_object_attributes(workspace_id, &object_id)
                     .await?;
@@ -249,7 +249,7 @@ async fn handle_view(
 
             println!("{}", output::render_table(&["Field", "Value"], &rows));
 
-            if attributes {
+            if !no_attributes {
                 let mut attrs = client
                     .get_object_attributes(workspace_id, &object_id)
                     .await?;

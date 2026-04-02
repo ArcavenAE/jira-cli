@@ -121,9 +121,9 @@ pub enum AssetsCommand {
     View {
         /// Object key (e.g. OBJ-1) or numeric ID
         key: String,
-        /// Include object attributes in output
+        /// Omit object attributes from output
         #[arg(long)]
-        attributes: bool,
+        no_attributes: bool,
     },
     /// Show Jira issues connected to an asset
     Tickets {
@@ -416,6 +416,27 @@ pub enum SprintCommand {
         /// Fetch all results (no default limit)
         #[arg(long, conflicts_with = "limit")]
         all: bool,
+    },
+    /// Add issues to a sprint
+    Add {
+        /// Sprint ID (from `jr sprint list`)
+        #[arg(long, required_unless_present = "current")]
+        sprint: Option<u64>,
+        /// Use the active sprint instead of specifying an ID
+        #[arg(long, conflicts_with = "sprint")]
+        current: bool,
+        /// Issue keys to add (e.g. FOO-1 FOO-2)
+        #[arg(required = true, num_args = 1..)]
+        issues: Vec<String>,
+        /// Board ID (used with --current to resolve the active sprint)
+        #[arg(long)]
+        board: Option<u64>,
+    },
+    /// Remove issues from sprint (moves to backlog)
+    Remove {
+        /// Issue keys to remove (e.g. FOO-1 FOO-2)
+        #[arg(required = true, num_args = 1..)]
+        issues: Vec<String>,
     },
 }
 

@@ -84,6 +84,22 @@ impl JiraClient {
             has_more: result_has_more,
         })
     }
+
+    /// Add issues to a sprint. Max 50 issues per call.
+    /// POST /rest/agile/1.0/sprint/{sprintId}/issue → 204 No Content
+    pub async fn add_issues_to_sprint(&self, sprint_id: u64, issues: &[String]) -> Result<()> {
+        let path = format!("/rest/agile/1.0/sprint/{}/issue", sprint_id);
+        let body = serde_json::json!({ "issues": issues });
+        self.post_no_content(&path, &body).await
+    }
+
+    /// Move issues to the backlog (removes from all sprints). Max 50 issues per call.
+    /// POST /rest/agile/1.0/backlog/issue → 204 No Content
+    pub async fn move_issues_to_backlog(&self, issues: &[String]) -> Result<()> {
+        let path = "/rest/agile/1.0/backlog/issue";
+        let body = serde_json::json!({ "issues": issues });
+        self.post_no_content(path, &body).await
+    }
 }
 
 /// Result of fetching sprint issues with optional limit.
