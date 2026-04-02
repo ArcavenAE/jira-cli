@@ -52,7 +52,7 @@ impl JiraClient {
         Ok(users)
     }
 
-    /// Search for users assignable to issues in one or more projects.
+    /// Search for users assignable to issues in a project.
     ///
     /// Uses the `/user/assignable/multiProjectSearch` endpoint with a single project key.
     /// Useful when no specific issue key is available (e.g., during issue creation).
