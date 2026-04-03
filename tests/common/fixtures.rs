@@ -42,6 +42,18 @@ pub fn transitions_response(transitions: Vec<(&str, &str)>) -> Value {
     })
 }
 
+/// Transitions response with target status names.
+/// Each tuple is (transition_id, transition_name, target_status_name).
+pub fn transitions_response_with_status(transitions: Vec<(&str, &str, &str)>) -> Value {
+    json!({
+        "transitions": transitions.iter().map(|(id, name, status_name)| json!({
+            "id": id,
+            "name": name,
+            "to": {"name": status_name}
+        })).collect::<Vec<_>>()
+    })
+}
+
 pub fn error_response(messages: &[&str]) -> Value {
     json!({ "errorMessages": messages })
 }
@@ -392,5 +404,31 @@ pub fn issue_response_with_labels_parent_links(key: &str, summary: &str) -> Valu
                 }
             ]
         }
+    })
+}
+
+/// Multi-project assignable user search response — flat array of User objects.
+/// Simpler than `user_search_response`: takes (account_id, display_name) pairs
+/// and always sets active=true. No email field generated.
+pub fn multi_project_user_search_response(users: Vec<(&str, &str)>) -> Value {
+    let user_objects: Vec<Value> = users
+        .into_iter()
+        .map(|(account_id, display_name)| {
+            json!({
+                "accountId": account_id,
+                "displayName": display_name,
+                "active": true,
+            })
+        })
+        .collect();
+    json!(user_objects)
+}
+
+/// Create issue response.
+pub fn create_issue_response(key: &str) -> Value {
+    json!({
+        "id": "10001",
+        "key": key,
+        "self": format!("https://test.atlassian.net/rest/api/3/issue/{}", key)
     })
 }

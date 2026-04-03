@@ -51,4 +51,52 @@ impl JiraClient {
         };
         Ok(users)
     }
+
+    /// Search for users assignable to issues in a project.
+    ///
+    /// Uses the `/user/assignable/multiProjectSearch` endpoint with a single project key.
+    /// Useful when no specific issue key is available (e.g., during issue creation).
+    pub async fn search_assignable_users_by_project(
+        &self,
+        query: &str,
+        project_key: &str,
+    ) -> Result<Vec<User>> {
+        let path = format!(
+            "/rest/api/3/user/assignable/multiProjectSearch?query={}&projectKeys={}",
+            urlencoding::encode(query),
+            urlencoding::encode(project_key),
+        );
+        let raw: serde_json::Value = self.get(&path).await?;
+        let users: Vec<User> = if raw.is_array() {
+            serde_json::from_value(raw)?
+        } else if let Some(values) = raw.get("values") {
+            serde_json::from_value(values.clone())?
+        } else {
+            anyhow::bail!(
+                "Unexpected response from assignable user search API. Expected a JSON array or object with \"values\" key."
+            );
+        };
+        Ok(users)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::types::jira::User;
+
+    #[test]
+    fn multi_project_search_response_deserializes() {
+        let json = r#"[
+            {"accountId": "abc123", "displayName": "Alice", "active": true},
+            {"accountId": "def456", "displayName": "Bob", "emailAddress": "bob@test.com"}
+        ]"#;
+        let users: Vec<User> = serde_json::from_str(json).unwrap();
+        assert_eq!(users.len(), 2);
+        assert_eq!(users[0].account_id, "abc123");
+        assert_eq!(users[0].display_name, "Alice");
+        assert_eq!(users[0].active, Some(true));
+        assert_eq!(users[1].account_id, "def456");
+        assert_eq!(users[1].email_address.as_deref(), Some("bob@test.com"));
+        assert_eq!(users[1].active, None);
+    }
 }
