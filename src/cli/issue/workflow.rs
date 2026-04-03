@@ -96,10 +96,34 @@ pub(super) async fn handle_move(
     let selected_transition = if let Some(t) = selected_transition {
         t
     } else {
-        // Use partial matching on transition names
-        let transition_names: Vec<String> = transitions.iter().map(|t| t.name.clone()).collect();
-        match partial_match::partial_match(&target_status, &transition_names) {
-            MatchResult::Exact(name) => transitions.iter().find(|t| t.name == name).unwrap(),
+        // Build unified candidate pool: transition names + target status names.
+        // Each candidate maps to its transition index.
+        let mut candidates: Vec<(String, usize)> = Vec::new();
+        let mut seen: std::collections::HashSet<String> = std::collections::HashSet::new();
+        for (i, t) in transitions.iter().enumerate() {
+            let t_lower = t.name.to_lowercase();
+            if seen.insert(t_lower) {
+                candidates.push((t.name.clone(), i));
+            }
+            if let Some(ref status) = t.to {
+                let s_lower = status.name.to_lowercase();
+                if seen.insert(s_lower) {
+                    candidates.push((status.name.clone(), i));
+                }
+            }
+        }
+
+        let candidate_names: Vec<String> =
+            candidates.iter().map(|(name, _)| name.clone()).collect();
+        match partial_match::partial_match(&target_status, &candidate_names) {
+            MatchResult::Exact(name) => {
+                let idx = candidates
+                    .iter()
+                    .find(|(n, _)| n == &name)
+                    .map(|(_, i)| *i)
+                    .unwrap();
+                &transitions[idx]
+            }
             MatchResult::Ambiguous(matches) => {
                 if no_input {
                     bail!(
@@ -123,16 +147,26 @@ pub(super) async fn handle_move(
                 if idx < 1 || idx > matches.len() {
                     return Err(JrError::UserError("Selection out of range".into()).into());
                 }
-                transitions
+                let selected_name = &matches[idx - 1];
+                let tidx = candidates
                     .iter()
-                    .find(|t| t.name == matches[idx - 1])
-                    .unwrap()
+                    .find(|(n, _)| n == selected_name)
+                    .map(|(_, i)| *i)
+                    .unwrap();
+                &transitions[tidx]
             }
-            MatchResult::None(all) => {
+            MatchResult::None(_) => {
+                let labels: Vec<String> = transitions
+                    .iter()
+                    .map(|t| match t.to.as_ref() {
+                        Some(status) => format!("{} (→ {})", t.name, status.name),
+                        None => t.name.clone(),
+                    })
+                    .collect();
                 bail!(
                     "No transition matching \"{}\". Available: {}",
                     target_status,
-                    all.join(", ")
+                    labels.join(", ")
                 );
             }
         }
