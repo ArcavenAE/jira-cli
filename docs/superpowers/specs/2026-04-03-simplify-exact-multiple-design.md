@@ -21,7 +21,7 @@ Validated with Perplexity: simplifying to `ExactMultiple(String)` aligns with Ru
 Two changes, one PR:
 
 1. **Simplify variant** — `ExactMultiple(Vec<String>)` to `ExactMultiple(String)` (#127)
-2. **Replace silent take-first arms** — 6 arms updated: 1 with `unreachable!()` (code-enforced dedup), 5 with graceful fallback (treat like `Exact`) (#126)
+2. **Replace silent take-first arms** — all 6 arms use graceful fallback (treat `ExactMultiple` like `Exact`) for consistency (#126)
 
 Plus cleanup of one dead code path in `queue.rs`.
 
@@ -53,15 +53,7 @@ n if n > 1 => return MatchResult::ExactMultiple(exact_matches.into_iter().next()
 
 ### Change 2: Replace 6 silent take-first arms
 
-One site uses `unreachable!()` because its dedup is case-insensitive (matching `partial_match`'s behavior). The other 5 use graceful fallback (treat `ExactMultiple` like `Exact`) because their dedup is case-sensitive — if Jira ever returns case-variant duplicates, `ExactMultiple` could fire.
-
-**`unreachable!()` (code-enforced, case-insensitive dedup):**
-
-| File | Line | Dedup mechanism |
-|------|------|-----------------|
-| `src/cli/issue/workflow.rs` | ~143 | `HashSet` with `to_lowercase()` keys |
-
-**Graceful fallback (case-sensitive dedup or API guarantee only):**
+All 6 sites use graceful fallback — treat `ExactMultiple` like `Exact` (take the representative name). Although `workflow.rs` has code-enforced case-insensitive dedup making `ExactMultiple` provably unreachable there, we use the same pattern everywhere for consistency and readability.
 
 ```rust
 // Treat like Exact — take the representative name
@@ -70,6 +62,7 @@ MatchResult::ExactMultiple(name) => name,
 
 | File | Line | Dedup mechanism |
 |------|------|-----------------|
+| `src/cli/issue/workflow.rs` | ~143 | `HashSet` with `to_lowercase()` keys (case-insensitive) |
 | `src/cli/issue/list.rs` | ~181 | `HashSet` / `sort()+dedup()` (case-sensitive) |
 | `src/cli/issue/links.rs` | ~64 | Link types unique per Jira API (no code dedup) |
 | `src/cli/issue/links.rs` | ~136 | Link types unique per Jira API (no code dedup) |

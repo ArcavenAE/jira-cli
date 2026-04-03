@@ -140,8 +140,19 @@ pub(super) async fn handle_move(
                     })?;
                 &transitions[idx]
             }
-            MatchResult::ExactMultiple(_) => {
-                unreachable!("ExactMultiple should not occur: candidates are deduplicated")
+            // Case-insensitive dedup upstream; treat like Exact if case-variant duplicates slip through
+            MatchResult::ExactMultiple(name) => {
+                let idx = candidates
+                    .iter()
+                    .find(|(n, _)| n == &name)
+                    .map(|(_, i)| *i)
+                    .ok_or_else(|| {
+                        anyhow::anyhow!(
+                            "Internal error: matched candidate \"{}\" not found. Please report this as a bug.",
+                            name
+                        )
+                    })?;
+                &transitions[idx]
             }
             MatchResult::Ambiguous(matches) => {
                 if no_input {
