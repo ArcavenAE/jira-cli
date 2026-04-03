@@ -331,10 +331,8 @@ fn filter_tickets(
 
         let matched = match partial_match::partial_match(status_input, &status_names) {
             MatchResult::Exact(name) => name,
-            MatchResult::ExactMultiple(names) => {
-                // Duplicate status names not expected; take first
-                names.into_iter().next().unwrap()
-            }
+            // Case-sensitive dedup upstream; treat like Exact if case-variant duplicates slip through
+            MatchResult::ExactMultiple(name) => name,
             MatchResult::Ambiguous(matches) => {
                 return Err(JrError::UserError(format!(
                     "Ambiguous status \"{}\". Matches: {}",
@@ -456,10 +454,11 @@ fn resolve_schema<'a>(
     let names: Vec<String> = schemas.iter().map(|s| s.name.clone()).collect();
     match partial_match::partial_match(input, &names) {
         MatchResult::Exact(name) => Ok(schemas.iter().find(|s| s.name == name).unwrap()),
-        MatchResult::ExactMultiple(names) => {
+        MatchResult::ExactMultiple(_) => {
+            let input_lower = input.to_lowercase();
             let duplicates: Vec<String> = schemas
                 .iter()
-                .filter(|s| names.contains(&s.name))
+                .filter(|s| s.name.to_lowercase() == input_lower)
                 .map(|s| format!("{} (id: {})", s.name, s.id))
                 .collect();
             Err(JrError::UserError(format!(
@@ -665,10 +664,8 @@ async fn handle_schema(
     deduped_names.dedup();
     let matched_name = match partial_match::partial_match(type_name, &deduped_names) {
         MatchResult::Exact(name) => name,
-        MatchResult::ExactMultiple(names) => {
-            // Duplicate type names not expected after dedup; take first
-            names.into_iter().next().unwrap()
-        }
+        // Case-sensitive dedup upstream; treat like Exact if case-variant duplicates slip through
+        MatchResult::ExactMultiple(name) => name,
         MatchResult::Ambiguous(matches) => {
             return Err(ambiguous_type_error(type_name, &matches, &candidates).into());
         }
@@ -953,5 +950,100 @@ mod tests {
             }),
         );
         assert_eq!(super::format_attribute_type(&attr), "Text");
+    }
+
+    // ── resolve_schema tests ─────────────────────────────────────
+
+    fn make_schema(id: &str, name: &str) -> crate::types::assets::ObjectSchema {
+        crate::types::assets::ObjectSchema {
+            id: id.into(),
+            name: name.into(),
+            object_schema_key: format!("KEY{}", id),
+            description: None,
+            object_count: 0,
+            object_type_count: 0,
+        }
+    }
+
+    #[test]
+    fn resolve_schema_exact_id_match() {
+        let schemas = vec![make_schema("10", "ITSM"), make_schema("20", "HR")];
+        let result = super::resolve_schema("10", &schemas).unwrap();
+        assert_eq!(result.id, "10");
+        assert_eq!(result.name, "ITSM");
+    }
+
+    #[test]
+    fn resolve_schema_exact_name_match() {
+        let schemas = vec![make_schema("10", "ITSM"), make_schema("20", "HR")];
+        let result = super::resolve_schema("ITSM", &schemas).unwrap();
+        assert_eq!(result.id, "10");
+    }
+
+    #[test]
+    fn resolve_schema_case_insensitive_name_match() {
+        let schemas = vec![make_schema("10", "ITSM"), make_schema("20", "HR")];
+        let result = super::resolve_schema("itsm", &schemas).unwrap();
+        assert_eq!(result.id, "10");
+    }
+
+    #[test]
+    fn resolve_schema_partial_name_match() {
+        let schemas = vec![make_schema("10", "ITSM Assets"), make_schema("20", "HR")];
+        let result = super::resolve_schema("itsm", &schemas).unwrap();
+        assert_eq!(result.id, "10");
+    }
+
+    #[test]
+    fn resolve_schema_no_match() {
+        let schemas = vec![make_schema("10", "ITSM"), make_schema("20", "HR")];
+        let err = super::resolve_schema("Finance", &schemas).unwrap_err();
+        let msg = err.to_string();
+        assert!(msg.contains("No schema matching"), "got: {msg}");
+        assert!(msg.contains("Finance"), "got: {msg}");
+    }
+
+    #[test]
+    fn resolve_schema_ambiguous_match() {
+        let schemas = vec![
+            make_schema("10", "IT Assets"),
+            make_schema("20", "IT Services"),
+        ];
+        let err = super::resolve_schema("IT", &schemas).unwrap_err();
+        let msg = err.to_string();
+        assert!(msg.contains("Ambiguous"), "got: {msg}");
+    }
+
+    #[test]
+    fn resolve_schema_duplicate_names_returns_error_with_ids() {
+        let schemas = vec![make_schema("10", "Assets"), make_schema("20", "Assets")];
+        let err = super::resolve_schema("Assets", &schemas).unwrap_err();
+        let msg = err.to_string();
+        assert!(msg.contains("Multiple schemas"), "got: {msg}");
+        assert!(msg.contains("id: 10"), "should list first ID, got: {msg}");
+        assert!(msg.contains("id: 20"), "should list second ID, got: {msg}");
+        assert!(
+            msg.contains("Use the schema ID instead"),
+            "should suggest using ID, got: {msg}"
+        );
+    }
+
+    #[test]
+    fn resolve_schema_duplicate_names_case_insensitive() {
+        let schemas = vec![make_schema("10", "Assets"), make_schema("20", "assets")];
+        let err = super::resolve_schema("assets", &schemas).unwrap_err();
+        let msg = err.to_string();
+        assert!(msg.contains("Multiple schemas"), "got: {msg}");
+        assert!(msg.contains("id: 10"), "should list first ID, got: {msg}");
+        assert!(msg.contains("id: 20"), "should list second ID, got: {msg}");
+    }
+
+    #[test]
+    fn resolve_schema_id_takes_priority_over_name() {
+        // Schema ID "HR" matches exactly, even though name "ITSM" doesn't
+        let schemas = vec![make_schema("HR", "ITSM"), make_schema("20", "HR")];
+        let result = super::resolve_schema("HR", &schemas).unwrap();
+        assert_eq!(result.id, "HR");
+        assert_eq!(result.name, "ITSM");
     }
 }

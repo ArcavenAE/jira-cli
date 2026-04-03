@@ -61,10 +61,8 @@ pub(super) async fn handle_link(
     let type_names: Vec<String> = link_types.iter().map(|lt| lt.name.clone()).collect();
     let resolved_name = match partial_match::partial_match(&link_type_name, &type_names) {
         MatchResult::Exact(name) => name,
-        MatchResult::ExactMultiple(names) => {
-            // Duplicate link type names not expected; take first
-            names.into_iter().next().unwrap()
-        }
+        // Link types are unique per Jira API; treat like Exact if duplicates ever occur
+        MatchResult::ExactMultiple(name) => name,
         MatchResult::Ambiguous(matches) => {
             if no_input {
                 bail!(
@@ -133,10 +131,8 @@ pub(super) async fn handle_unlink(
         let type_names: Vec<String> = link_types.iter().map(|lt| lt.name.clone()).collect();
         let resolved = match partial_match::partial_match(type_name, &type_names) {
             MatchResult::Exact(name) => name,
-            MatchResult::ExactMultiple(names) => {
-                // Duplicate link type names not expected; take first
-                names.into_iter().next().unwrap()
-            }
+            // Link types are unique per Jira API; treat like Exact if duplicates ever occur
+            MatchResult::ExactMultiple(name) => name,
             MatchResult::Ambiguous(matches) => {
                 if no_input {
                     bail!(
