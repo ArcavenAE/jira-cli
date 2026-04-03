@@ -62,12 +62,14 @@ pub(super) async fn handle_move(
     // Idempotent: if already in target status, exit 0.
     // Check both direct match and whether the input is a transition name whose
     // target status matches the current status.
-    let already_in_target = current_status.to_lowercase() == target_status.to_lowercase()
+    let current_lower = current_status.to_lowercase();
+    let target_lower = target_status.to_lowercase();
+    let already_in_target = current_lower == target_lower
         || transitions.iter().any(|t| {
-            t.name.to_lowercase() == target_status.to_lowercase()
+            t.name.to_lowercase() == target_lower
                 && t.to
                     .as_ref()
-                    .is_some_and(|s| s.name.to_lowercase() == current_status.to_lowercase())
+                    .is_some_and(|s| s.name.to_lowercase() == current_lower)
         });
     if already_in_target {
         match output_format {

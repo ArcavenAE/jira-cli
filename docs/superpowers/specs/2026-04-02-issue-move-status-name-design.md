@@ -50,7 +50,11 @@ This is consistent with existing ambiguous-transition-name handling.
 
 ### Idempotency check
 
-The existing idempotency check compares user input against the issue's current status name (case-insensitive). This already works for both transition names and status names — if the issue is in "Completed" and the user types `"Completed"`, the early-return fires before matching is attempted. No change needed.
+The previous idempotency check compared user input only against the issue's current status name (case-insensitive). That correctly handled status-name input — e.g., if the issue is already in `"Completed"` and the user types `"Completed"`, the early-return fires before matching is attempted.
+
+However, once `jr issue move` accepts both transition names and target status names, idempotency should also apply when the user types a transition name whose target status is the issue's current status. For example, if transition `"Complete"` leads to `"Completed"` and the issue is already in `"Completed"`, typing `"Complete"` should be treated as a no-op rather than attempting the transition.
+
+Implementation change: treat user input as idempotent if either (a) the raw input matches the current status name, or (b) the input matches a transition whose `to.name` matches the current status name (case-insensitive). This preserves the existing early-return for status names and extends the same behavior to equivalent transition-name input.
 
 ### Error message improvement
 
@@ -96,12 +100,13 @@ None needed — `partial_match` is already well-tested. The logic change is in c
 1. **Match by transition name** (existing behavior preserved): `"In Progress"` matches transition name directly.
 2. **Match by status name** (new behavior): `"Completed"` matches target status name when transition name is `"Complete"`.
 3. **Deduplication**: When transition name equals status name (e.g., `"Done"` → `"Done"`), no duplicate candidates — single match.
-4. **Ambiguous status name**: Two transitions leading to same status — treated as ambiguous in `--no-input` mode.
+4. **Shared target status name**: Two transitions leading to the same status produce one deduplicated status-name candidate, so an exact status-name match is not ambiguous solely for that reason.
 5. **Error message format**: No match → error shows `"Name (→ Status)"` format.
 6. **Idempotent with status name input**: Issue already in target status → exit 0 with "already in status" message.
+7. **Idempotent with transition name input**: Issue already in target status, user types transition name → exit 0 with "already in status" message.
 
 ## API Validation
 
 - **`to` field always present:** Confirmed by Jira Cloud REST API docs and Perplexity. Every transition has a target status object with `name`, `id`, `self`, and `description` fields.
-- **Multiple transitions to same status:** Confirmed possible. Different transitions may have different post-functions. Treating as ambiguous is correct.
+- **Multiple transitions to same status:** Confirmed possible. Different transitions may have different post-functions. Under this design, the shared status-name candidate is deduplicated, so an exact status-name match is not ambiguous solely because multiple transitions reach that status.
 - **Default workflows:** Transition names match status names in 3 of 4 transitions (`To Do`, `In Progress`, `Done`). The 4th (`Create` → `To Do`) is an INITIAL transition. Deduplication makes this a no-op for default workflow users.
