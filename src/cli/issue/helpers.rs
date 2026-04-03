@@ -179,9 +179,14 @@ pub(super) async fn resolve_user(
             if no_input {
                 let lines: Vec<String> = duplicates
                     .iter()
-                    .map(|u| {
-                        let label = u.email_address.as_deref().unwrap_or(&u.account_id);
-                        format!("  {} ({})", u.display_name, label)
+                    .map(|u| match &u.email_address {
+                        Some(email) => format!(
+                            "  {} ({}, account: {})",
+                            u.display_name, email, u.account_id
+                        ),
+                        None => {
+                            format!("  {} (account: {})", u.display_name, u.account_id)
+                        }
                     })
                     .collect();
                 anyhow::bail!(
@@ -288,9 +293,14 @@ pub(super) async fn resolve_assignee(
             if no_input {
                 let lines: Vec<String> = duplicates
                     .iter()
-                    .map(|u| {
-                        let label = u.email_address.as_deref().unwrap_or(&u.account_id);
-                        format!("  {} ({})", u.display_name, label)
+                    .map(|u| match &u.email_address {
+                        Some(email) => format!(
+                            "  {} ({}, account: {})",
+                            u.display_name, email, u.account_id
+                        ),
+                        None => {
+                            format!("  {} (account: {})", u.display_name, u.account_id)
+                        }
                     })
                     .collect();
                 anyhow::bail!(
@@ -410,9 +420,14 @@ pub(super) async fn resolve_assignee_by_project(
             if no_input {
                 let lines: Vec<String> = duplicates
                     .iter()
-                    .map(|u| {
-                        let label = u.email_address.as_deref().unwrap_or(&u.account_id);
-                        format!("  {} ({})", u.display_name, label)
+                    .map(|u| match &u.email_address {
+                        Some(email) => format!(
+                            "  {} ({}, account: {})",
+                            u.display_name, email, u.account_id
+                        ),
+                        None => {
+                            format!("  {} (account: {})", u.display_name, u.account_id)
+                        }
                     })
                     .collect();
                 anyhow::bail!(

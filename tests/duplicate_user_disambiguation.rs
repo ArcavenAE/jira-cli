@@ -59,6 +59,10 @@ async fn issue_list_assignee_duplicate_names_no_input_errors() {
         "Should list second user's email, got: {stderr}"
     );
     assert!(
+        stderr.contains("acc-john-1") && stderr.contains("acc-john-2"),
+        "Should list accountIds for both users, got: {stderr}"
+    );
+    assert!(
         stderr.contains("John Smith"),
         "Should mention the duplicate name, got: {stderr}"
     );
@@ -120,6 +124,10 @@ async fn issue_assign_duplicate_names_no_input_errors() {
     assert!(
         stderr.contains("john2@other.org"),
         "Should list second user's email, got: {stderr}"
+    );
+    assert!(
+        stderr.contains("acc-john-1") && stderr.contains("acc-john-2"),
+        "Should list accountIds for both users, got: {stderr}"
     );
 }
 

@@ -38,7 +38,7 @@ pub enum MatchResult {
 }
 ```
 
-`ExactMultiple` contains all candidates that matched exactly (case-insensitive). The vec is never empty and always has length >= 2. Names in the vec are the original (not lowercased) candidate strings. Since all matched the same input exactly, they will all be identical strings (e.g., `["John Smith", "John Smith"]`).
+`ExactMultiple` contains all candidates that matched exactly (case-insensitive). The vec is never empty and always has length >= 2. Names in the vec are the original (not lowercased) candidate strings, so entries may differ in casing even though they all match the same input exactly under case-insensitive comparison (e.g., `["John Smith", "john smith"]`). Callers must not assume the strings in this vec are byte-for-byte identical.
 
 ### Change 2: Update `partial_match()` logic
 
