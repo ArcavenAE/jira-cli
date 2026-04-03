@@ -231,7 +231,8 @@ pub(super) async fn handle_list(
                                 let sprint = &sprints[0];
                                 (vec![format!("sprint = {}", sprint.id)], "rank ASC")
                             }
-                            _ => {
+                            Ok(_) => {
+                                // No active sprint — fall back to project-scoped JQL
                                 let mut parts = Vec::new();
                                 if let Some(ref pk) = project_key {
                                     parts.push(format!(
@@ -240,6 +241,13 @@ pub(super) async fn handle_list(
                                     ));
                                 }
                                 (parts, "updated DESC")
+                            }
+                            Err(e) => {
+                                return Err(e.context(format!(
+                                    "Failed to list sprints for board {}. \
+                                     Use --jql to query directly.",
+                                    bid
+                                )));
                             }
                         }
                     } else {
@@ -267,7 +275,7 @@ pub(super) async fn handle_list(
                     }
                     return Err(e.context(format!(
                         "Failed to fetch config for board {}. \
-                         Remove board_id from .jr.toml or use --jql to query directly",
+                         Remove board_id from .jr.toml or use --jql to query directly.",
                         bid
                     )));
                 }
