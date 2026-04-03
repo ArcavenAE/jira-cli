@@ -67,6 +67,12 @@ async fn issue_list_board_config_404_reports_error() {
         stderr.contains("--jql"),
         "Should suggest --jql as alternative, got: {stderr}"
     );
+    assert_eq!(
+        output.status.code(),
+        Some(64),
+        "Board-not-found should exit with UserError code 64, got: {:?}",
+        output.status.code()
+    );
 }
 
 #[tokio::test]
@@ -114,6 +120,12 @@ async fn issue_list_board_config_server_error_propagates() {
     assert!(
         stderr.contains("--jql"),
         "Should suggest --jql as alternative, got: {stderr}"
+    );
+    assert_eq!(
+        output.status.code(),
+        Some(1),
+        "Server error should exit with code 1, got: {:?}",
+        output.status.code()
     );
 }
 
@@ -172,6 +184,12 @@ async fn issue_list_sprint_error_propagates() {
     assert!(
         stderr.contains("--jql"),
         "Should suggest --jql as alternative, got: {stderr}"
+    );
+    assert_eq!(
+        output.status.code(),
+        Some(1),
+        "Sprint list error should exit with code 1, got: {:?}",
+        output.status.code()
     );
 }
 
