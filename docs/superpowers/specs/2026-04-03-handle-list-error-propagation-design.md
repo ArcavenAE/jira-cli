@@ -65,6 +65,12 @@ Error: Failed to list sprints for board 42. Use --jql to query directly.
 Caused by: 500 Internal Server Error
 ```
 
+## Edge cases
+
+- **Board type changed after config written:** If a board was scrum when `board_id` was configured but later changed to kanban, `get_board_config` succeeds and returns the new type. The code already reads `board_type` from the response and branches on it, so it will correctly take the kanban path. No sprint call is made. This is handled without changes.
+- **Board in trash:** Returns 404, handled by the board config 404 path.
+- **Permissions revoked after config written:** Returns 404 (per JRACLOUD-97947), handled by the board config 404 path.
+
 ## Testing
 
 1. **Unit test: board config 404** — Mock `get_board_config` returning `JrError::ApiError { status: 404, .. }`. Verify error message contains board ID and suggests removing `board_id` from config.
