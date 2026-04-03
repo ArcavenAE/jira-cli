@@ -59,8 +59,17 @@ pub(super) async fn handle_move(
         }
     };
 
-    // Idempotent: if already in target status, exit 0
-    if current_status.to_lowercase() == target_status.to_lowercase() {
+    // Idempotent: if already in target status, exit 0.
+    // Check both direct match and whether the input is a transition name whose
+    // target status matches the current status.
+    let already_in_target = current_status.to_lowercase() == target_status.to_lowercase()
+        || transitions.iter().any(|t| {
+            t.name.to_lowercase() == target_status.to_lowercase()
+                && t.to
+                    .as_ref()
+                    .is_some_and(|s| s.name.to_lowercase() == current_status.to_lowercase())
+        });
+    if already_in_target {
         match output_format {
             OutputFormat::Json => {
                 println!(
@@ -121,7 +130,12 @@ pub(super) async fn handle_move(
                     .iter()
                     .find(|(n, _)| n == &name)
                     .map(|(_, i)| *i)
-                    .unwrap();
+                    .ok_or_else(|| {
+                        anyhow::anyhow!(
+                            "Internal error: matched candidate \"{}\" not found. Please report this as a bug.",
+                            name
+                        )
+                    })?;
                 &transitions[idx]
             }
             MatchResult::Ambiguous(matches) => {
@@ -152,7 +166,12 @@ pub(super) async fn handle_move(
                     .iter()
                     .find(|(n, _)| n == selected_name)
                     .map(|(_, i)| *i)
-                    .unwrap();
+                    .ok_or_else(|| {
+                        anyhow::anyhow!(
+                            "Internal error: selected candidate \"{}\" not found. Please report this as a bug.",
+                            selected_name
+                        )
+                    })?;
                 &transitions[tidx]
             }
             MatchResult::None(_) => {

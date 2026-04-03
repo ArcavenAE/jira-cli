@@ -1463,3 +1463,59 @@ async fn test_move_idempotent_with_status_name() {
         "Expected idempotent message in stdout: {stdout}"
     );
 }
+
+#[tokio::test]
+async fn test_move_idempotent_with_transition_name() {
+    let server = MockServer::start().await;
+
+    // Transition "Complete" leads to status "Completed"
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/issue/FOO-1/transitions"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(
+            common::fixtures::transitions_response_with_status(vec![(
+                "21",
+                "Complete",
+                "Completed",
+            )]),
+        ))
+        .mount(&server)
+        .await;
+
+    // Issue is already in "Completed" — user types transition name "Complete"
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/issue/FOO-1"))
+        .respond_with(
+            ResponseTemplate::new(200).set_body_json(common::fixtures::issue_response(
+                "FOO-1",
+                "Test issue",
+                "Completed",
+            )),
+        )
+        .mount(&server)
+        .await;
+
+    // No POST mock — should not transition
+
+    let output = assert_cmd::Command::cargo_bin("jr")
+        .unwrap()
+        .env("JR_BASE_URL", server.uri())
+        .env("JR_AUTH_HEADER", "Basic dGVzdDp0ZXN0")
+        .arg("--no-input")
+        .arg("issue")
+        .arg("move")
+        .arg("FOO-1")
+        .arg("Complete")
+        .output()
+        .unwrap();
+
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    assert!(
+        output.status.success(),
+        "Expected success (idempotent via transition name), stderr: {stderr}"
+    );
+    assert!(
+        stdout.contains("already in status"),
+        "Expected idempotent message in stdout: {stdout}"
+    );
+}
