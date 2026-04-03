@@ -178,9 +178,8 @@ pub(super) async fn handle_list(
 
         match partial_match::partial_match(status_input, &valid_statuses) {
             MatchResult::Exact(name) => Some(name),
-            MatchResult::ExactMultiple(names) => {
-                // Duplicate status names not expected; take first
-                Some(names.into_iter().next().unwrap())
+            MatchResult::ExactMultiple(_) => {
+                unreachable!("ExactMultiple should not occur: statuses are unique")
             }
             MatchResult::Ambiguous(matches) => {
                 return Err(JrError::UserError(format!(

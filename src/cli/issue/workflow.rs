@@ -140,20 +140,8 @@ pub(super) async fn handle_move(
                     })?;
                 &transitions[idx]
             }
-            MatchResult::ExactMultiple(names) => {
-                // Duplicate transition names not expected; take first
-                let name = names.into_iter().next().unwrap();
-                let idx = candidates
-                    .iter()
-                    .find(|(n, _)| *n == name)
-                    .map(|(_, i)| *i)
-                    .ok_or_else(|| {
-                        anyhow::anyhow!(
-                            "Internal error: matched candidate \"{}\" not found. Please report this as a bug.",
-                            name
-                        )
-                    })?;
-                &transitions[idx]
+            MatchResult::ExactMultiple(_) => {
+                unreachable!("ExactMultiple should not occur: candidates are deduplicated")
             }
             MatchResult::Ambiguous(matches) => {
                 if no_input {
