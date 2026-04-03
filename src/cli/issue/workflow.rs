@@ -140,12 +140,11 @@ pub(super) async fn handle_move(
                     })?;
                 &transitions[idx]
             }
-            MatchResult::ExactMultiple(names) => {
-                // Duplicate transition names not expected; take first
-                let name = names.into_iter().next().unwrap();
+            // Case-insensitive dedup upstream; treat like Exact if case-variant duplicates slip through
+            MatchResult::ExactMultiple(name) => {
                 let idx = candidates
                     .iter()
-                    .find(|(n, _)| *n == name)
+                    .find(|(n, _)| n == &name)
                     .map(|(_, i)| *i)
                     .ok_or_else(|| {
                         anyhow::anyhow!(
