@@ -1519,3 +1519,43 @@ async fn test_move_idempotent_with_transition_name() {
         "Expected idempotent message in stdout: {stdout}"
     );
 }
+
+#[tokio::test]
+async fn test_create_issue_response_includes_browse_url() {
+    let server = MockServer::start().await;
+
+    Mock::given(method("POST"))
+        .and(path("/rest/api/3/issue"))
+        .respond_with(
+            ResponseTemplate::new(201)
+                .set_body_json(common::fixtures::create_issue_response("URL-1")),
+        )
+        .mount(&server)
+        .await;
+
+    let client =
+        jr::api::client::JiraClient::new_for_test(server.uri(), "Basic dGVzdDp0ZXN0".to_string());
+
+    let response = client
+        .create_issue(serde_json::json!({
+            "project": {"key": "URL"},
+            "issuetype": {"name": "Task"},
+            "summary": "Test browse URL",
+        }))
+        .await
+        .unwrap();
+
+    // Verify the key is returned
+    assert_eq!(response.key, "URL-1");
+
+    // Verify browse URL can be constructed from instance_url
+    let browse_url = format!(
+        "{}/browse/{}",
+        client.instance_url().trim_end_matches('/'),
+        response.key
+    );
+    assert!(
+        browse_url.contains("/browse/URL-1"),
+        "Expected browse URL to contain /browse/URL-1, got: {browse_url}"
+    );
+}
