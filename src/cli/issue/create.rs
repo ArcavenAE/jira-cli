@@ -133,12 +133,21 @@ pub(super) async fn handle_create(
 
     let response = client.create_issue(fields).await?;
 
+    let browse_url = format!(
+        "{}/browse/{}",
+        client.instance_url().trim_end_matches('/'),
+        response.key
+    );
+
     match output_format {
         OutputFormat::Json => {
-            println!("{}", serde_json::to_string_pretty(&response)?);
+            let mut json_response = serde_json::to_value(&response)?;
+            json_response["url"] = json!(browse_url);
+            println!("{}", serde_json::to_string_pretty(&json_response)?);
         }
         OutputFormat::Table => {
             output::print_success(&format!("Created issue {}", response.key));
+            println!("{}", browse_url);
         }
     }
 

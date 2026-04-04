@@ -29,6 +29,18 @@ impl LinkedAsset {
             },
         }
     }
+
+    /// Name-only display for list tables: "Acme Corp", "OBJ-1", or "#12345 (run `jr init` to resolve asset names)".
+    pub fn display_name_only(&self) -> String {
+        self.name
+            .as_deref()
+            .or(self.key.as_deref())
+            .map(|s| s.to_string())
+            .unwrap_or_else(|| match &self.id {
+                Some(id) => format!("#{} (run \"jr init\" to resolve asset names)", id),
+                None => "(unknown)".into(),
+            })
+    }
 }
 
 /// Format a list of linked assets for display in a table cell.
@@ -47,8 +59,8 @@ pub fn format_linked_assets(assets: &[LinkedAsset]) -> String {
 pub fn format_linked_assets_short(assets: &[LinkedAsset]) -> String {
     match assets.len() {
         0 => "-".into(),
-        1 => assets[0].display(),
-        n => format!("{} (+{} more)", assets[0].display(), n - 1),
+        1 => assets[0].display_name_only(),
+        n => format!("{} (+{} more)", assets[0].display_name_only(), n - 1),
     }
 }
 
@@ -103,6 +115,52 @@ mod tests {
     }
 
     #[test]
+    fn display_name_only_key_and_name() {
+        let a = LinkedAsset {
+            key: Some("OBJ-1".into()),
+            name: Some("Acme Corp".into()),
+            ..Default::default()
+        };
+        assert_eq!(a.display_name_only(), "Acme Corp");
+    }
+
+    #[test]
+    fn display_name_only_name_only() {
+        let a = LinkedAsset {
+            name: Some("Acme Corp".into()),
+            ..Default::default()
+        };
+        assert_eq!(a.display_name_only(), "Acme Corp");
+    }
+
+    #[test]
+    fn display_name_only_key_fallback() {
+        let a = LinkedAsset {
+            key: Some("OBJ-1".into()),
+            ..Default::default()
+        };
+        assert_eq!(a.display_name_only(), "OBJ-1");
+    }
+
+    #[test]
+    fn display_name_only_id_fallback() {
+        let a = LinkedAsset {
+            id: Some("12345".into()),
+            ..Default::default()
+        };
+        assert_eq!(
+            a.display_name_only(),
+            "#12345 (run \"jr init\" to resolve asset names)"
+        );
+    }
+
+    #[test]
+    fn display_name_only_nothing() {
+        let a = LinkedAsset::default();
+        assert_eq!(a.display_name_only(), "(unknown)");
+    }
+
+    #[test]
     fn format_empty_list() {
         assert_eq!(format_linked_assets(&[]), "(none)");
     }
@@ -149,7 +207,7 @@ mod tests {
             name: Some("Acme".into()),
             ..Default::default()
         }];
-        assert_eq!(format_linked_assets_short(&assets), "OBJ-1 (Acme)");
+        assert_eq!(format_linked_assets_short(&assets), "Acme");
     }
 
     #[test]
@@ -169,10 +227,7 @@ mod tests {
                 ..Default::default()
             },
         ];
-        assert_eq!(
-            format_linked_assets_short(&assets),
-            "OBJ-1 (Acme) (+2 more)"
-        );
+        assert_eq!(format_linked_assets_short(&assets), "Acme (+2 more)");
     }
 
     #[test]
