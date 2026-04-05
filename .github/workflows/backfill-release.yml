@@ -25,7 +25,7 @@ on:
         default: false
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   # ---------------------------------------------------------------------------
@@ -50,6 +50,7 @@ jobs:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
           ref: ${{ inputs.tag }}
+          persist-credentials: false
 
       - name: Install Rust
         uses: dtolnay/rust-toolchain@29eef336d9b2848a0b548edc03f92a220660cdb8 # stable
@@ -93,6 +94,8 @@ jobs:
   release:
     name: Create Release
     needs: build
+    permissions:
+      contents: write
     runs-on: ubuntu-latest
     steps:
       - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
@@ -127,6 +130,8 @@ jobs:
     name: Sign & Notarize
     needs: release
     if: inputs.skip_signing == false && vars.SIGNING_ENABLED == 'true'
+    permissions:
+      contents: write
     environment: release
     runs-on: macos-latest
     outputs:
@@ -135,6 +140,7 @@ jobs:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
           ref: develop  # need packaging scripts from develop, not the old tag
+          persist-credentials: false
 
       - name: Extract version
         id: meta
@@ -255,11 +261,14 @@ jobs:
     name: Update Homebrew Tap
     needs: sign
     if: needs.sign.result == 'success' && inputs.update_homebrew == true
+    permissions:
+      contents: write
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
           ref: develop  # need Formula/jr.rb template from develop
+          persist-credentials: false
 
       - name: Download signed binaries from release
         env:

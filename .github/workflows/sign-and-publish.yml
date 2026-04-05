@@ -19,7 +19,7 @@ on:
     types: [completed]
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   # ---------------------------------------------------------------------------
@@ -38,6 +38,8 @@ jobs:
             arch: amd64
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          persist-credentials: false
 
       - name: Install Rust
         uses: dtolnay/rust-toolchain@29eef336d9b2848a0b548edc03f92a220660cdb8 # stable
@@ -64,6 +66,8 @@ jobs:
     name: Alpha Sign & Notarize
     needs: alpha-build
     if: needs.alpha-build.result == 'success'
+    permissions:
+      contents: write
     environment: release
     runs-on: macos-latest
     outputs:
@@ -71,6 +75,8 @@ jobs:
       tag: ${{ steps.meta.outputs.tag }}
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          persist-credentials: false
 
       - name: Generate alpha version
         id: meta
@@ -198,9 +204,13 @@ jobs:
     name: Alpha Update Homebrew Tap
     needs: alpha-sign
     if: needs.alpha-sign.result == 'success'
+    permissions:
+      contents: write
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          persist-credentials: false
 
       - name: Download signed binaries from release
         env:
@@ -247,6 +257,8 @@ jobs:
       github.event_name == 'workflow_run'
       && github.event.workflow_run.conclusion == 'success'
       && vars.SIGNING_ENABLED == 'true'
+    permissions:
+      contents: write
     environment: release
     runs-on: macos-latest
     outputs:
@@ -255,6 +267,8 @@ jobs:
       channel: ${{ steps.meta.outputs.channel }}
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          persist-credentials: false
 
       - name: Extract release metadata
         id: meta
@@ -423,9 +437,13 @@ jobs:
     if: >-
       needs.stable-sign.result == 'success'
       && needs.stable-sign.outputs.channel != 'unknown'
+    permissions:
+      contents: write
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          persist-credentials: false
 
       - name: Download signed binaries from release
         env:
