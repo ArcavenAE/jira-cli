@@ -30,11 +30,11 @@ pub(crate) fn assign_unchanged_response(key: &str, display_name: &str, account_i
 }
 
 /// JSON response for `issue assign --unassign`.
-pub(crate) fn unassign_response(key: &str) -> Value {
+pub(crate) fn unassign_response(key: &str, changed: bool) -> Value {
     json!({
         "key": key,
         "assignee": null,
-        "changed": true
+        "changed": changed
     })
 }
 
@@ -91,7 +91,12 @@ mod tests {
 
     #[test]
     fn test_unassign() {
-        assert_json_snapshot!(unassign_response("TEST-1"));
+        assert_json_snapshot!(unassign_response("TEST-1", true));
+    }
+
+    #[test]
+    fn test_unassign_unchanged() {
+        assert_json_snapshot!(unassign_response("TEST-1", false));
     }
 
     #[test]

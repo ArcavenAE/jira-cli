@@ -139,6 +139,19 @@ async fn test_handler_assign_self() {
 async fn test_handler_assign_unassign() {
     let server = MockServer::start().await;
 
+    // Mock GET issue — currently assigned (so unassign proceeds)
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/issue/HDL-4"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(
+            common::fixtures::issue_response_with_assignee(
+                "HDL-4",
+                "Unassign test",
+                Some(("someone-123", "Someone")),
+            ),
+        ))
+        .mount(&server)
+        .await;
+
     // Mock PUT assignee with null (unassign)
     Mock::given(method("PUT"))
         .and(path("/rest/api/3/issue/HDL-4/assignee"))
@@ -460,4 +473,132 @@ async fn test_handler_assign_idempotent_with_name_search() {
         .stdout(predicate::str::contains(
             "\"assignee_account_id\": \"acc-jane-456\"",
         ));
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn test_handler_unassign_idempotent() {
+    let server = MockServer::start().await;
+
+    // Mock GET issue — already unassigned (assignee is null)
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/issue/HDL-8"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(
+            common::fixtures::issue_response_with_assignee("HDL-8", "Already unassigned", None),
+        ))
+        .mount(&server)
+        .await;
+
+    // PUT assignee should NOT be called — already unassigned
+    Mock::given(method("PUT"))
+        .and(path("/rest/api/3/issue/HDL-8/assignee"))
+        .respond_with(ResponseTemplate::new(204))
+        .expect(0)
+        .mount(&server)
+        .await;
+
+    jr_cmd(&server.uri())
+        .args(["issue", "assign", "HDL-8", "--unassign"])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("\"changed\": false"))
+        .stdout(predicate::str::contains("\"key\": \"HDL-8\""))
+        .stdout(predicate::str::contains("\"assignee\": null"));
+}
+
+#[tokio::test]
+async fn test_handler_list_created_after() {
+    let server = MockServer::start().await;
+
+    // Project existence check
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/project/PROJ"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
+            "key": "PROJ",
+            "id": "10000",
+            "name": "Test Project"
+        })))
+        .mount(&server)
+        .await;
+
+    // The search endpoint should receive JQL with the date clause
+    Mock::given(method("POST"))
+        .and(path("/rest/api/3/search/jql"))
+        .and(body_partial_json(serde_json::json!({
+            "jql": "project = \"PROJ\" AND created >= \"2026-03-18\" ORDER BY updated DESC"
+        })))
+        .respond_with(ResponseTemplate::new(200).set_body_json(
+            common::fixtures::issue_search_response(vec![common::fixtures::issue_response(
+                "PROJ-1",
+                "Test issue",
+                "To Do",
+            )]),
+        ))
+        .expect(1)
+        .mount(&server)
+        .await;
+
+    Command::cargo_bin("jr")
+        .unwrap()
+        .env("JR_BASE_URL", server.uri())
+        .env("JR_AUTH_HEADER", "Basic dGVzdDp0ZXN0")
+        .args([
+            "issue",
+            "list",
+            "--project",
+            "PROJ",
+            "--created-after",
+            "2026-03-18",
+            "--no-input",
+        ])
+        .assert()
+        .success();
+}
+
+#[tokio::test]
+async fn test_handler_list_created_before() {
+    let server = MockServer::start().await;
+
+    // Project existence check
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/project/PROJ"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
+            "key": "PROJ",
+            "id": "10000",
+            "name": "Test Project"
+        })))
+        .mount(&server)
+        .await;
+
+    // --created-before 2026-03-18 should produce created < "2026-03-19" (next day)
+    Mock::given(method("POST"))
+        .and(path("/rest/api/3/search/jql"))
+        .and(body_partial_json(serde_json::json!({
+            "jql": "project = \"PROJ\" AND created < \"2026-03-19\" ORDER BY updated DESC"
+        })))
+        .respond_with(ResponseTemplate::new(200).set_body_json(
+            common::fixtures::issue_search_response(vec![common::fixtures::issue_response(
+                "PROJ-1",
+                "Test issue",
+                "To Do",
+            )]),
+        ))
+        .expect(1)
+        .mount(&server)
+        .await;
+
+    Command::cargo_bin("jr")
+        .unwrap()
+        .env("JR_BASE_URL", server.uri())
+        .env("JR_AUTH_HEADER", "Basic dGVzdDp0ZXN0")
+        .args([
+            "issue",
+            "list",
+            "--project",
+            "PROJ",
+            "--created-before",
+            "2026-03-18",
+            "--no-input",
+        ])
+        .assert()
+        .success();
 }

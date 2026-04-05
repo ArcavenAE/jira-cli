@@ -286,12 +286,29 @@ pub(super) async fn handle_assign(
     };
 
     if unassign {
+        // Idempotent: check if already unassigned
+        let issue = client.get_issue(&key, &[]).await?;
+        if issue.fields.assignee.is_none() {
+            match output_format {
+                OutputFormat::Json => {
+                    println!(
+                        "{}",
+                        serde_json::to_string_pretty(&json_output::unassign_response(&key, false))?
+                    );
+                }
+                OutputFormat::Table => {
+                    output::print_success(&format!("{} is already unassigned", key));
+                }
+            }
+            return Ok(());
+        }
+
         client.assign_issue(&key, None).await?;
         match output_format {
             OutputFormat::Json => {
                 println!(
                     "{}",
-                    serde_json::to_string_pretty(&json_output::unassign_response(&key))?
+                    serde_json::to_string_pretty(&json_output::unassign_response(&key, true))?
                 );
             }
             OutputFormat::Table => {
