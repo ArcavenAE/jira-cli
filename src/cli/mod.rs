@@ -312,13 +312,13 @@ pub enum IssueCommand {
         /// Issue key
         key: String,
         /// Assign to this user (name/email, or "me" for self; omit to assign to self)
-        #[arg(long, conflicts_with = "account_id")]
+        #[arg(long, conflicts_with_all = ["account_id", "unassign"])]
         to: Option<String>,
         /// Assign to this Jira accountId directly (bypasses name search)
         #[arg(long, conflicts_with_all = ["to", "unassign"])]
         account_id: Option<String>,
         /// Remove assignee
-        #[arg(long)]
+        #[arg(long, conflicts_with_all = ["to", "account_id"])]
         unassign: bool,
     },
     /// Add a comment
