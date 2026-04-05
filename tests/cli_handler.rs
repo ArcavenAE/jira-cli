@@ -20,7 +20,7 @@ fn jr_cmd(server_uri: &str) -> Command {
     cmd
 }
 
-#[tokio::test(flavor = "multi_thread")]
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
 async fn test_handler_assign_with_account_id() {
     let server = MockServer::start().await;
 
@@ -55,7 +55,7 @@ async fn test_handler_assign_with_account_id() {
         ));
 }
 
-#[tokio::test(flavor = "multi_thread")]
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
 async fn test_handler_assign_with_to_name_search() {
     let server = MockServer::start().await;
 
@@ -97,7 +97,7 @@ async fn test_handler_assign_with_to_name_search() {
         .stdout(predicate::str::contains("\"changed\": true"));
 }
 
-#[tokio::test(flavor = "multi_thread")]
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
 async fn test_handler_assign_self() {
     let server = MockServer::start().await;
 
@@ -135,7 +135,7 @@ async fn test_handler_assign_self() {
         .stdout(predicate::str::contains("\"changed\": true"));
 }
 
-#[tokio::test(flavor = "multi_thread")]
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
 async fn test_handler_assign_unassign() {
     let server = MockServer::start().await;
 
@@ -157,7 +157,7 @@ async fn test_handler_assign_unassign() {
         .stdout(predicate::str::contains("\"changed\": true"));
 }
 
-#[tokio::test(flavor = "multi_thread")]
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
 async fn test_handler_assign_idempotent() {
     let server = MockServer::start().await;
 
@@ -189,7 +189,7 @@ async fn test_handler_assign_idempotent() {
         .stdout(predicate::str::contains("\"changed\": false"));
 }
 
-#[tokio::test(flavor = "multi_thread")]
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
 async fn test_handler_create_with_account_id() {
     let server = MockServer::start().await;
 
@@ -230,7 +230,7 @@ async fn test_handler_create_with_account_id() {
         .stdout(predicate::str::contains("/browse/HDL-100"));
 }
 
-#[tokio::test(flavor = "multi_thread")]
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
 async fn test_handler_create_with_to_name_search() {
     let server = MockServer::start().await;
 
@@ -284,7 +284,7 @@ async fn test_handler_create_with_to_name_search() {
         .stdout(predicate::str::contains("\"key\": \"HDL-101\""));
 }
 
-#[tokio::test(flavor = "multi_thread")]
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
 async fn test_handler_create_basic() {
     let server = MockServer::start().await;
 
