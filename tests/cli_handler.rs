@@ -178,3 +178,135 @@ async fn test_handler_assign_idempotent() {
         .success()
         .stdout(predicate::str::contains("\"changed\": false"));
 }
+
+#[tokio::test(flavor = "multi_thread")]
+async fn test_handler_create_with_account_id() {
+    let server = MockServer::start().await;
+
+    // Mock POST create issue
+    Mock::given(method("POST"))
+        .and(path("/rest/api/3/issue"))
+        .and(body_partial_json(serde_json::json!({
+            "fields": {
+                "project": {"key": "HDL"},
+                "issuetype": {"name": "Task"},
+                "summary": "Created via handler",
+                "assignee": {"accountId": "direct-create-789"}
+            }
+        })))
+        .respond_with(
+            ResponseTemplate::new(201)
+                .set_body_json(common::fixtures::create_issue_response("HDL-100")),
+        )
+        .mount(&server)
+        .await;
+
+    jr_cmd(&server.uri())
+        .args([
+            "issue",
+            "create",
+            "-p",
+            "HDL",
+            "-t",
+            "Task",
+            "-s",
+            "Created via handler",
+            "--account-id",
+            "direct-create-789",
+        ])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("\"key\": \"HDL-100\""));
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn test_handler_create_with_to_name_search() {
+    let server = MockServer::start().await;
+
+    // Mock multi-project assignable user search
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/user/assignable/multiProjectSearch"))
+        .and(query_param("query", "Bob"))
+        .and(query_param("projectKeys", "HDL"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(
+            common::fixtures::multi_project_user_search_response(vec![(
+                "acc-bob-555",
+                "Bob Smith",
+            )]),
+        ))
+        .mount(&server)
+        .await;
+
+    // Mock POST create issue — verify assignee uses accountId
+    Mock::given(method("POST"))
+        .and(path("/rest/api/3/issue"))
+        .and(body_partial_json(serde_json::json!({
+            "fields": {
+                "project": {"key": "HDL"},
+                "issuetype": {"name": "Bug"},
+                "summary": "Created with --to",
+                "assignee": {"accountId": "acc-bob-555"}
+            }
+        })))
+        .respond_with(
+            ResponseTemplate::new(201)
+                .set_body_json(common::fixtures::create_issue_response("HDL-101")),
+        )
+        .mount(&server)
+        .await;
+
+    jr_cmd(&server.uri())
+        .args([
+            "issue",
+            "create",
+            "-p",
+            "HDL",
+            "-t",
+            "Bug",
+            "-s",
+            "Created with --to",
+            "--to",
+            "Bob",
+        ])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("\"key\": \"HDL-101\""));
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn test_handler_create_basic() {
+    let server = MockServer::start().await;
+
+    // Mock POST create issue — no assignee field
+    Mock::given(method("POST"))
+        .and(path("/rest/api/3/issue"))
+        .and(body_partial_json(serde_json::json!({
+            "fields": {
+                "project": {"key": "HDL"},
+                "issuetype": {"name": "Task"},
+                "summary": "Basic create"
+            }
+        })))
+        .respond_with(
+            ResponseTemplate::new(201)
+                .set_body_json(common::fixtures::create_issue_response("HDL-102")),
+        )
+        .mount(&server)
+        .await;
+
+    jr_cmd(&server.uri())
+        .args([
+            "issue",
+            "create",
+            "-p",
+            "HDL",
+            "-t",
+            "Task",
+            "-s",
+            "Basic create",
+        ])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("\"key\": \"HDL-102\""))
+        .stdout(predicate::str::contains("\"url\":"));
+}
