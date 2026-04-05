@@ -329,7 +329,7 @@ async fn test_handler_assign_to_me() {
     // This test covers the explicit `--to me` keyword path (resolve_assignee → is_me_keyword).
     // test_handler_assign_self covers the no-flag default path (handler calls get_myself directly).
 
-    // Mock GET myself — the "me" keyword resolves via get_myself()
+    // Mock GET myself — resolve_assignee() detects "me" keyword via is_me_keyword() and calls get_myself()
     Mock::given(method("GET"))
         .and(path("/rest/api/3/myself"))
         .respond_with(ResponseTemplate::new(200).set_body_json(common::fixtures::user_response()))
@@ -371,14 +371,14 @@ async fn test_handler_assign_to_me() {
 async fn test_handler_create_to_me() {
     let server = MockServer::start().await;
 
-    // Mock GET myself — the "me" keyword resolves via get_myself()
+    // Mock GET myself — resolve_assignee_by_project() detects "me" keyword via is_me_keyword() and calls get_myself()
     Mock::given(method("GET"))
         .and(path("/rest/api/3/myself"))
         .respond_with(ResponseTemplate::new(200).set_body_json(common::fixtures::user_response()))
         .mount(&server)
         .await;
 
-    // Mock POST create issue — verify assignee uses accountId from get_myself()
+    // Mock POST create issue — verify "me" keyword resolves to accountId via get_myself()
     Mock::given(method("POST"))
         .and(path("/rest/api/3/issue"))
         .and(body_partial_json(serde_json::json!({
@@ -455,5 +455,9 @@ async fn test_handler_assign_idempotent_with_name_search() {
         .args(["issue", "assign", "HDL-7", "--to", "Jane"])
         .assert()
         .success()
-        .stdout(predicate::str::contains("\"changed\": false"));
+        .stdout(predicate::str::contains("\"changed\": false"))
+        .stdout(predicate::str::contains("\"key\": \"HDL-7\""))
+        .stdout(predicate::str::contains(
+            "\"assignee_account_id\": \"acc-jane-456\"",
+        ));
 }
