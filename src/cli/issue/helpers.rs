@@ -118,7 +118,7 @@ pub(super) fn prompt_input(prompt: &str) -> Result<String> {
     let input: String = dialoguer::Input::new()
         .with_prompt(prompt)
         .interact_text()
-        .context("failed to read user input")?;
+        .with_context(|| format!("failed to read {}", prompt))?;
     Ok(input)
 }
 
