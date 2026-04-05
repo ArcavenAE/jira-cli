@@ -1675,11 +1675,16 @@ async fn test_assign_issue_invalid_account_id_returns_error() {
     let result = client.assign_issue("ERR-1", Some("bogus-account-id")).await;
 
     let err = result.unwrap_err();
-    let msg = err.to_string();
+
+    // Verify correct error variant and status code structurally
     assert!(
-        msg.contains("404"),
-        "Expected status 404 in error, got: {msg}"
+        err.downcast_ref::<jr::error::JrError>()
+            .is_some_and(|e| matches!(e, jr::error::JrError::ApiError { status: 404, .. })),
+        "Expected JrError::ApiError with status 404, got: {err}"
     );
+
+    // Verify Jira error message was extracted from the JSON body
+    let msg = err.to_string();
     assert!(
         msg.contains("does not exist"),
         "Expected Jira error message in error, got: {msg}"
