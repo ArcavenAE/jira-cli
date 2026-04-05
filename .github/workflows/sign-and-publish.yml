@@ -1,0 +1,493 @@
+# Sign, Notarize & Publish — Apple code signing + Homebrew tap
+#
+# Five channels:
+#   develop push  → alpha    (jr-a formula, builds from source)
+#   v*-dev.*      → dev      (jr-d formula, signs release binaries)
+#   v*-beta.*     → beta     (jr-b formula, signs release binaries)
+#   v*-rc.*       → rc       (jr-rc formula, signs release binaries)
+#   v*.*.* (no -) → stable   (jr formula, signs release binaries)
+#
+# Isolated: gracefully skips if SIGNING_ENABLED != 'true' or secrets are missing.
+# Safe to merge upstream — all steps are gated on fork-only conditions.
+name: Sign & Publish
+
+on:
+  push:
+    branches: [develop]
+  workflow_run:
+    workflows: ["Release"]
+    types: [completed]
+
+permissions:
+  contents: read
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # Alpha channel — build + sign on every develop push
+  # ---------------------------------------------------------------------------
+  alpha-build:
+    name: Alpha Build macOS
+    if: github.event_name == 'push' && vars.SIGNING_ENABLED == 'true'
+    runs-on: macos-latest
+    strategy:
+      matrix:
+        include:
+          - target: aarch64-apple-darwin
+            arch: arm64
+          - target: x86_64-apple-darwin
+            arch: amd64
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          persist-credentials: false
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@29eef336d9b2848a0b548edc03f92a220660cdb8 # stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - uses: Swatinem/rust-cache@c19371144df3bb44fab255c43d04cbc2ab54d1c4 # v2
+        with:
+          key: ${{ matrix.target }}
+
+      - name: Build
+        run: cargo build --release --target ${{ matrix.target }}
+
+      - name: Rename binary
+        run: cp target/${{ matrix.target }}/release/jr jr-a-darwin-${{ matrix.arch }}
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7
+        with:
+          name: alpha-${{ matrix.arch }}
+          path: jr-a-darwin-${{ matrix.arch }}
+
+  alpha-sign:
+    name: Alpha Sign & Notarize
+    needs: alpha-build
+    if: needs.alpha-build.result == 'success'
+    permissions:
+      contents: write
+    environment: release
+    runs-on: macos-latest
+    outputs:
+      version: ${{ steps.meta.outputs.version }}
+      tag: ${{ steps.meta.outputs.tag }}
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          persist-credentials: false
+
+      - name: Generate alpha version
+        id: meta
+        run: |
+          DATE=$(date -u +%Y%m%d)
+          # Count existing tags today (more reliable than releases)
+          EXISTING=$(git ls-remote --tags origin "refs/tags/alpha-${DATE}.*" | wc -l | tr -d ' ')
+          SEQ=$((EXISTING + 1))
+          TAG="alpha-${DATE}.${SEQ}"
+          VERSION="${TAG}"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "Alpha release: $TAG"
+
+          # Clean up any stale release/tag with the same name
+          gh release delete "$TAG" --cleanup-tag --yes 2>/dev/null || true
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+      - name: Download alpha binaries
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          merge-multiple: true
+
+      - name: Import certificates
+        env:
+          APPLE_CERTIFICATE_P12: ${{ secrets.APPLE_CERTIFICATE_P12 }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          APPLE_INSTALLER_CERTIFICATE_P12: ${{ secrets.APPLE_INSTALLER_CERTIFICATE_P12 }}
+          APPLE_INSTALLER_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_INSTALLER_CERTIFICATE_PASSWORD }}
+        run: |
+          security create-keychain -p "" build.keychain
+          security default-keychain -s build.keychain
+          security unlock-keychain -p "" build.keychain
+
+          echo "$APPLE_CERTIFICATE_P12" | base64 --decode > cert.p12
+          security import cert.p12 -k build.keychain -P "$APPLE_CERTIFICATE_PASSWORD" -T /usr/bin/codesign
+          rm cert.p12
+
+          echo "$APPLE_INSTALLER_CERTIFICATE_P12" | base64 --decode > installer-cert.p12
+          security import installer-cert.p12 -k build.keychain -P "$APPLE_INSTALLER_CERTIFICATE_PASSWORD" -T /usr/bin/pkgbuild -T /usr/bin/productbuild -T /usr/bin/productsign
+          rm installer-cert.p12
+
+          curl -sfo /tmp/DeveloperIDG2CA.cer https://www.apple.com/certificateauthority/DeveloperIDG2CA.cer
+          security add-certificates -k build.keychain /tmp/DeveloperIDG2CA.cer
+          rm /tmp/DeveloperIDG2CA.cer
+
+          security set-key-partition-list -S apple-tool:,apple: -s -k "" build.keychain
+
+      - name: Sign binaries
+        env:
+          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+        run: |
+          codesign --force --options runtime --sign "$APPLE_SIGNING_IDENTITY" --timestamp jr-a-darwin-arm64
+          codesign --force --options runtime --sign "$APPLE_SIGNING_IDENTITY" --timestamp jr-a-darwin-amd64
+          codesign --verify --deep --strict jr-a-darwin-arm64
+          codesign --verify --deep --strict jr-a-darwin-amd64
+
+      - name: Build packaging artifacts
+        env:
+          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+          APPLE_INSTALLER_IDENTITY: ${{ secrets.APPLE_INSTALLER_IDENTITY }}
+        run: |
+          VERSION="${{ steps.meta.outputs.version }}"
+          chmod +x scripts/create-app.sh scripts/create-dmg.sh scripts/create-pkg.sh
+
+          for arch in arm64 amd64; do
+            ./scripts/create-app.sh "jr-a-darwin-${arch}" "$VERSION" .
+            codesign --force --deep --options runtime --sign "$APPLE_SIGNING_IDENTITY" --timestamp Jr.app
+            ./scripts/create-dmg.sh Jr.app "$VERSION" "jr-a-${arch}.dmg"
+            ./scripts/create-pkg.sh "jr-a-darwin-${arch}" "$VERSION" "$APPLE_INSTALLER_IDENTITY" "jr-a-${arch}.pkg"
+            rm -rf Jr.app
+          done
+
+      - name: Notarize
+        env:
+          APPLE_NOTARIZATION_APPLE_ID: ${{ secrets.APPLE_NOTARIZATION_APPLE_ID }}
+          APPLE_NOTARIZATION_PASSWORD: ${{ secrets.APPLE_NOTARIZATION_PASSWORD }}
+          APPLE_NOTARIZATION_TEAM_ID: ${{ secrets.APPLE_NOTARIZATION_TEAM_ID }}
+        run: |
+          for ARTIFACT in jr-a-arm64.pkg jr-a-amd64.pkg jr-a-arm64.dmg jr-a-amd64.dmg; do
+            echo "Notarizing $ARTIFACT..."
+            xcrun notarytool submit "$ARTIFACT" \
+              --apple-id "$APPLE_NOTARIZATION_APPLE_ID" \
+              --password "$APPLE_NOTARIZATION_PASSWORD" \
+              --team-id "$APPLE_NOTARIZATION_TEAM_ID" \
+              --wait --timeout 14400
+            xcrun stapler staple "$ARTIFACT"
+          done
+
+      - name: Generate checksums
+        run: |
+          for f in jr-a-darwin-arm64 jr-a-darwin-amd64 jr-a-arm64.pkg jr-a-amd64.pkg jr-a-arm64.dmg jr-a-amd64.dmg; do
+            shasum -a 256 "$f" > "${f}.sha256"
+          done
+
+      - name: Create alpha release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG="${{ steps.meta.outputs.tag }}"
+          gh release create "$TAG" \
+            --title "jr-a $TAG" \
+            --notes "$(cat <<'NOTES'
+          **Channel:** alpha (develop branch)
+          **Binary:** \`brew install arcavenae/tap/jr-a\` or download below
+          **Commit:** ${{ github.sha }}
+          **Signed:** Apple Developer ID (notarized)
+          NOTES
+          )" \
+            --prerelease \
+            jr-a-darwin-arm64 \
+            jr-a-darwin-amd64 \
+            jr-a-arm64.pkg \
+            jr-a-amd64.pkg \
+            jr-a-arm64.dmg \
+            jr-a-amd64.dmg \
+            jr-a-*.sha256
+
+      - name: Cleanup keychain
+        if: always()
+        run: security delete-keychain build.keychain || true
+
+  alpha-homebrew:
+    name: Alpha Update Homebrew Tap
+    needs: alpha-sign
+    if: needs.alpha-sign.result == 'success'
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          persist-credentials: false
+
+      - name: Download signed binaries from release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG="${{ needs.alpha-sign.outputs.tag }}"
+          gh release download "$TAG" --pattern "jr-a-darwin-arm64" --dir .
+          gh release download "$TAG" --pattern "jr-a-darwin-amd64" --dir .
+
+      - name: Update alpha formula
+        env:
+          HOMEBREW_TAP_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+        run: |
+          VERSION="${{ needs.alpha-sign.outputs.version }}"
+          TAG="${{ needs.alpha-sign.outputs.tag }}"
+
+          SHA256_ARM64=$(shasum -a 256 jr-a-darwin-arm64 | cut -d' ' -f1)
+          SHA256_AMD64=$(shasum -a 256 jr-a-darwin-amd64 | cut -d' ' -f1)
+
+          git clone "https://x-access-token:${HOMEBREW_TAP_TOKEN}@github.com/arcavenae/homebrew-tap.git" homebrew-tap-repo
+          cd homebrew-tap-repo
+
+          mkdir -p Formula
+          cp ../Formula/jr-a.rb Formula/jr-a.rb
+
+          sed -i "s/VERSION_PLACEHOLDER/$VERSION/g" Formula/jr-a.rb
+          sed -i "s/TAG_PLACEHOLDER/$TAG/g" Formula/jr-a.rb
+          sed -i "s/SHA256_ARM64_PLACEHOLDER/$SHA256_ARM64/g" Formula/jr-a.rb
+          sed -i "s/SHA256_AMD64_PLACEHOLDER/$SHA256_AMD64/g" Formula/jr-a.rb
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add Formula/jr-a.rb
+          git diff --cached --quiet && echo "No changes to commit" && exit 0
+          git commit -m "Update jr-a (alpha) to $VERSION"
+          git push
+
+  # ---------------------------------------------------------------------------
+  # Stable channel — sign release binaries after Release workflow
+  # ---------------------------------------------------------------------------
+  stable-sign:
+    name: Stable Sign & Notarize
+    if: >-
+      github.event_name == 'workflow_run'
+      && github.event.workflow_run.conclusion == 'success'
+      && vars.SIGNING_ENABLED == 'true'
+    permissions:
+      contents: write
+    environment: release
+    runs-on: macos-latest
+    outputs:
+      version: ${{ steps.meta.outputs.version }}
+      tag: ${{ steps.meta.outputs.tag }}
+      channel: ${{ steps.meta.outputs.channel }}
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          persist-credentials: false
+
+      - name: Extract release metadata
+        id: meta
+        run: |
+          TAG="${{ github.event.workflow_run.head_branch }}"
+          VERSION="${TAG#v}"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+          # Determine channel and formula from tag suffix
+          if [[ "$TAG" == *-dev.* ]]; then
+            echo "channel=dev" >> "$GITHUB_OUTPUT"
+          elif [[ "$TAG" == *-rc.* ]]; then
+            echo "channel=rc" >> "$GITHUB_OUTPUT"
+          elif [[ "$TAG" == *-beta.* ]]; then
+            echo "channel=b" >> "$GITHUB_OUTPUT"
+          elif [[ "$TAG" == *-* ]]; then
+            echo "channel=unknown" >> "$GITHUB_OUTPUT"
+          else
+            echo "channel=stable" >> "$GITHUB_OUTPUT"
+          fi
+          echo "Release: $TAG (version $VERSION)"
+
+      - name: Download release binaries
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG="${{ steps.meta.outputs.tag }}"
+          for target in x86_64-apple-darwin aarch64-apple-darwin; do
+            ASSET="jr-${TAG}-${target}.tar.gz"
+            echo "Downloading $ASSET..."
+            gh release download "$TAG" --pattern "$ASSET" --dir .
+            tar xzf "$ASSET"
+            mv jr "jr-darwin-$(echo $target | sed 's/x86_64.*/amd64/;s/aarch64.*/arm64/')"
+            rm "$ASSET"
+          done
+
+      - name: Import certificates
+        env:
+          APPLE_CERTIFICATE_P12: ${{ secrets.APPLE_CERTIFICATE_P12 }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          APPLE_INSTALLER_CERTIFICATE_P12: ${{ secrets.APPLE_INSTALLER_CERTIFICATE_P12 }}
+          APPLE_INSTALLER_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_INSTALLER_CERTIFICATE_PASSWORD }}
+        run: |
+          security create-keychain -p "" build.keychain
+          security default-keychain -s build.keychain
+          security unlock-keychain -p "" build.keychain
+
+          echo "$APPLE_CERTIFICATE_P12" | base64 --decode > cert.p12
+          security import cert.p12 -k build.keychain -P "$APPLE_CERTIFICATE_PASSWORD" -T /usr/bin/codesign
+          rm cert.p12
+
+          echo "$APPLE_INSTALLER_CERTIFICATE_P12" | base64 --decode > installer-cert.p12
+          security import installer-cert.p12 -k build.keychain -P "$APPLE_INSTALLER_CERTIFICATE_PASSWORD" -T /usr/bin/pkgbuild -T /usr/bin/productbuild -T /usr/bin/productsign
+          rm installer-cert.p12
+
+          curl -sfo /tmp/DeveloperIDG2CA.cer https://www.apple.com/certificateauthority/DeveloperIDG2CA.cer
+          security add-certificates -k build.keychain /tmp/DeveloperIDG2CA.cer
+          rm /tmp/DeveloperIDG2CA.cer
+
+          security set-key-partition-list -S apple-tool:,apple: -s -k "" build.keychain
+
+      - name: Sign binaries
+        env:
+          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+        run: |
+          codesign --force --options runtime --sign "$APPLE_SIGNING_IDENTITY" --timestamp jr-darwin-arm64
+          codesign --force --options runtime --sign "$APPLE_SIGNING_IDENTITY" --timestamp jr-darwin-amd64
+          codesign --verify --deep --strict jr-darwin-arm64
+          codesign --verify --deep --strict jr-darwin-amd64
+
+      - name: Build packaging artifacts
+        env:
+          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+          APPLE_INSTALLER_IDENTITY: ${{ secrets.APPLE_INSTALLER_IDENTITY }}
+        run: |
+          VERSION="${{ steps.meta.outputs.version }}"
+          chmod +x scripts/create-app.sh scripts/create-dmg.sh scripts/create-pkg.sh
+
+          for arch in arm64 amd64; do
+            ./scripts/create-app.sh "jr-darwin-${arch}" "$VERSION" .
+            codesign --force --deep --options runtime --sign "$APPLE_SIGNING_IDENTITY" --timestamp Jr.app
+            ./scripts/create-dmg.sh Jr.app "$VERSION" "jr-${arch}.dmg"
+            ./scripts/create-pkg.sh "jr-darwin-${arch}" "$VERSION" "$APPLE_INSTALLER_IDENTITY" "jr-${arch}.pkg"
+            rm -rf Jr.app
+          done
+
+      - name: Notarize
+        env:
+          APPLE_NOTARIZATION_APPLE_ID: ${{ secrets.APPLE_NOTARIZATION_APPLE_ID }}
+          APPLE_NOTARIZATION_PASSWORD: ${{ secrets.APPLE_NOTARIZATION_PASSWORD }}
+          APPLE_NOTARIZATION_TEAM_ID: ${{ secrets.APPLE_NOTARIZATION_TEAM_ID }}
+        run: |
+          for ARTIFACT in jr-arm64.pkg jr-amd64.pkg jr-arm64.dmg jr-amd64.dmg; do
+            echo "Notarizing $ARTIFACT..."
+            xcrun notarytool submit "$ARTIFACT" \
+              --apple-id "$APPLE_NOTARIZATION_APPLE_ID" \
+              --password "$APPLE_NOTARIZATION_PASSWORD" \
+              --team-id "$APPLE_NOTARIZATION_TEAM_ID" \
+              --wait --timeout 14400
+            xcrun stapler staple "$ARTIFACT"
+          done
+
+      - name: Generate checksums
+        run: |
+          for f in jr-darwin-arm64 jr-darwin-amd64 jr-arm64.pkg jr-amd64.pkg jr-arm64.dmg jr-amd64.dmg; do
+            shasum -a 256 "$f" > "${f}.sha256"
+          done
+
+      - name: Upload signed artifacts to release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG="${{ steps.meta.outputs.tag }}"
+          gh release upload "$TAG" \
+            jr-darwin-arm64 \
+            jr-darwin-amd64 \
+            jr-arm64.pkg \
+            jr-amd64.pkg \
+            jr-arm64.dmg \
+            jr-amd64.dmg \
+            jr-*.sha256 \
+            --clobber
+
+      - name: Update release title and notes
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG="${{ steps.meta.outputs.tag }}"
+          CHANNEL="${{ steps.meta.outputs.channel }}"
+
+          # Map channel to formula name
+          case "$CHANNEL" in
+            stable) FORMULA="jr" ;;
+            dev)    FORMULA="jr-d" ;;
+            rc)     FORMULA="jr-rc" ;;
+            b)      FORMULA="jr-b" ;;
+            *)      FORMULA="jr" ;;
+          esac
+
+          # Get existing release notes
+          EXISTING_NOTES=$(gh release view "$TAG" --json body --jq '.body')
+
+          # Append signing info
+          NOTES=$(cat <<ENOTES
+          ${EXISTING_NOTES}
+
+          ---
+          **Channel:** ${CHANNEL}
+          **Binary:** \`brew install arcavenae/tap/${FORMULA}\` or download below
+          **Signed:** Apple Developer ID (notarized)
+          ENOTES
+          )
+
+          gh release edit "$TAG" \
+            --title "${FORMULA} ${TAG}" \
+            --notes "$NOTES"
+
+      - name: Cleanup keychain
+        if: always()
+        run: security delete-keychain build.keychain || true
+
+  stable-homebrew:
+    name: Update Homebrew Tap
+    needs: stable-sign
+    if: >-
+      needs.stable-sign.result == 'success'
+      && needs.stable-sign.outputs.channel != 'unknown'
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          persist-credentials: false
+
+      - name: Download signed binaries from release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG="${{ needs.stable-sign.outputs.tag }}"
+          gh release download "$TAG" --pattern "jr-darwin-arm64" --dir .
+          gh release download "$TAG" --pattern "jr-darwin-amd64" --dir .
+
+      - name: Update formula for channel
+        env:
+          HOMEBREW_TAP_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+        run: |
+          set -euo pipefail
+          VERSION="${{ needs.stable-sign.outputs.version }}"
+          TAG="${{ needs.stable-sign.outputs.tag }}"
+          CHANNEL="${{ needs.stable-sign.outputs.channel }}"
+
+          # Map channel to formula name
+          case "$CHANNEL" in
+            stable) FORMULA="jr" ;;
+            dev)    FORMULA="jr-d" ;;
+            rc)     FORMULA="jr-rc" ;;
+            b)      FORMULA="jr-b" ;;
+            *)      echo "Unknown channel: $CHANNEL, skipping"; exit 0 ;;
+          esac
+
+          SHA256_ARM64=$(shasum -a 256 jr-darwin-arm64 | cut -d' ' -f1)
+          SHA256_AMD64=$(shasum -a 256 jr-darwin-amd64 | cut -d' ' -f1)
+
+          git clone "https://x-access-token:${HOMEBREW_TAP_TOKEN}@github.com/arcavenae/homebrew-tap.git" homebrew-tap-repo
+          cd homebrew-tap-repo
+
+          mkdir -p Formula
+          cp "../Formula/${FORMULA}.rb" "Formula/${FORMULA}.rb"
+
+          sed -i "s/VERSION_PLACEHOLDER/$VERSION/g" "Formula/${FORMULA}.rb"
+          sed -i "s/TAG_PLACEHOLDER/$TAG/g" "Formula/${FORMULA}.rb"
+          sed -i "s/SHA256_ARM64_PLACEHOLDER/$SHA256_ARM64/g" "Formula/${FORMULA}.rb"
+          sed -i "s/SHA256_AMD64_PLACEHOLDER/$SHA256_AMD64/g" "Formula/${FORMULA}.rb"
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add "Formula/${FORMULA}.rb"
+          git diff --cached --quiet && echo "No changes to commit" && exit 0
+          git commit -m "Update ${FORMULA} to $VERSION"
+          git push

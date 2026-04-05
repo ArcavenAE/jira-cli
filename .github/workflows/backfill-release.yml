@@ -1,0 +1,307 @@
+# Backfill Release — build, release, sign, and publish for an existing tag.
+#
+# Use this to create full signed releases for tags that existed before
+# the signing pipeline was in place. Trigger once per tag via workflow_dispatch.
+#
+# LOCAL-ONLY: listed in .github/local-workflows.txt, not from upstream.
+name: Backfill Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Git tag to build and release (e.g. v0.3.0)'
+        required: true
+        type: string
+      skip_signing:
+        description: 'Skip signing and just create the unsigned release'
+        required: false
+        type: boolean
+        default: false
+      update_homebrew:
+        description: 'Update Homebrew tap formula (only for latest stable)'
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # Build — same targets as release.yml
+  # ---------------------------------------------------------------------------
+  build:
+    name: Build ${{ matrix.target }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - target: x86_64-apple-darwin
+            os: macos-latest
+          - target: aarch64-apple-darwin
+            os: macos-latest
+          - target: x86_64-unknown-linux-gnu
+            os: ubuntu-latest
+          - target: aarch64-unknown-linux-gnu
+            os: ubuntu-latest
+            use_cross: true
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          ref: ${{ inputs.tag }}
+          persist-credentials: false
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@29eef336d9b2848a0b548edc03f92a220660cdb8 # stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - name: Install cross
+        if: matrix.use_cross
+        run: cargo install cross --git https://github.com/cross-rs/cross
+
+      - name: Build
+        run: |
+          if [ "${{ matrix.use_cross }}" = "true" ]; then
+            cross build --release --target ${{ matrix.target }}
+          else
+            cargo build --release --target ${{ matrix.target }}
+          fi
+
+      - name: Package
+        run: |
+          cd target/${{ matrix.target }}/release
+          tar czf ../../../jr-${{ inputs.tag }}-${{ matrix.target }}.tar.gz jr
+          cd ../../..
+          if command -v sha256sum &>/dev/null; then
+            sha256sum jr-${{ inputs.tag }}-${{ matrix.target }}.tar.gz > jr-${{ inputs.tag }}-${{ matrix.target }}.tar.gz.sha256
+          else
+            shasum -a 256 jr-${{ inputs.tag }}-${{ matrix.target }}.tar.gz > jr-${{ inputs.tag }}-${{ matrix.target }}.tar.gz.sha256
+          fi
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7
+        with:
+          name: jr-${{ matrix.target }}
+          path: |
+            jr-*.tar.gz
+            jr-*.sha256
+
+  # ---------------------------------------------------------------------------
+  # Release — create or update GitHub Release with unsigned binaries
+  # ---------------------------------------------------------------------------
+  release:
+    name: Create Release
+    needs: build
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          merge-multiple: true
+
+      - name: Create or update GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG="${{ inputs.tag }}"
+          PRERELEASE=""
+          if [[ "$TAG" == *-* ]]; then
+            PRERELEASE="--prerelease"
+          fi
+
+          # Delete existing release if present (keeps the tag)
+          gh release delete "$TAG" --yes --repo "${{ github.repository }}" 2>/dev/null || true
+
+          gh release create "$TAG" \
+            --repo "${{ github.repository }}" \
+            --title "$TAG" \
+            --generate-notes \
+            $PRERELEASE \
+            jr-*.tar.gz \
+            jr-*.sha256
+
+  # ---------------------------------------------------------------------------
+  # Sign — same as sign-and-publish.yml stable channel
+  # ---------------------------------------------------------------------------
+  sign:
+    name: Sign & Notarize
+    needs: release
+    if: inputs.skip_signing == false && vars.SIGNING_ENABLED == 'true'
+    permissions:
+      contents: write
+    environment: release
+    runs-on: macos-latest
+    outputs:
+      version: ${{ steps.meta.outputs.version }}
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          ref: develop  # need packaging scripts from develop, not the old tag
+          persist-credentials: false
+
+      - name: Extract version
+        id: meta
+        run: |
+          TAG="${{ inputs.tag }}"
+          VERSION="${TAG#v}"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Download release binaries
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG="${{ inputs.tag }}"
+          for target in x86_64-apple-darwin aarch64-apple-darwin; do
+            ASSET="jr-${TAG}-${target}.tar.gz"
+            echo "Downloading $ASSET..."
+            gh release download "$TAG" --pattern "$ASSET" --dir .
+            tar xzf "$ASSET"
+            mv jr "jr-darwin-$(echo $target | sed 's/x86_64.*/amd64/;s/aarch64.*/arm64/')"
+            rm "$ASSET"
+          done
+
+      - name: Import certificates
+        env:
+          APPLE_CERTIFICATE_P12: ${{ secrets.APPLE_CERTIFICATE_P12 }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          APPLE_INSTALLER_CERTIFICATE_P12: ${{ secrets.APPLE_INSTALLER_CERTIFICATE_P12 }}
+          APPLE_INSTALLER_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_INSTALLER_CERTIFICATE_PASSWORD }}
+        run: |
+          security create-keychain -p "" build.keychain
+          security default-keychain -s build.keychain
+          security unlock-keychain -p "" build.keychain
+
+          echo "$APPLE_CERTIFICATE_P12" | base64 --decode > cert.p12
+          security import cert.p12 -k build.keychain -P "$APPLE_CERTIFICATE_PASSWORD" -T /usr/bin/codesign
+          rm cert.p12
+
+          echo "$APPLE_INSTALLER_CERTIFICATE_P12" | base64 --decode > installer-cert.p12
+          security import installer-cert.p12 -k build.keychain -P "$APPLE_INSTALLER_CERTIFICATE_PASSWORD" -T /usr/bin/pkgbuild -T /usr/bin/productbuild -T /usr/bin/productsign
+          rm installer-cert.p12
+
+          curl -sfo /tmp/DeveloperIDG2CA.cer https://www.apple.com/certificateauthority/DeveloperIDG2CA.cer
+          security add-certificates -k build.keychain /tmp/DeveloperIDG2CA.cer
+          rm /tmp/DeveloperIDG2CA.cer
+
+          security set-key-partition-list -S apple-tool:,apple: -s -k "" build.keychain
+
+      - name: Sign binaries
+        env:
+          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+        run: |
+          codesign --force --options runtime --sign "$APPLE_SIGNING_IDENTITY" --timestamp jr-darwin-arm64
+          codesign --force --options runtime --sign "$APPLE_SIGNING_IDENTITY" --timestamp jr-darwin-amd64
+          codesign --verify --deep --strict jr-darwin-arm64
+          codesign --verify --deep --strict jr-darwin-amd64
+
+      - name: Build packaging artifacts
+        env:
+          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+          APPLE_INSTALLER_IDENTITY: ${{ secrets.APPLE_INSTALLER_IDENTITY }}
+        run: |
+          VERSION="${{ steps.meta.outputs.version }}"
+          chmod +x scripts/create-app.sh scripts/create-dmg.sh scripts/create-pkg.sh
+
+          for arch in arm64 amd64; do
+            ./scripts/create-app.sh "jr-darwin-${arch}" "$VERSION" .
+            codesign --force --deep --options runtime --sign "$APPLE_SIGNING_IDENTITY" --timestamp Jr.app
+            ./scripts/create-dmg.sh Jr.app "$VERSION" "jr-${arch}.dmg"
+            ./scripts/create-pkg.sh "jr-darwin-${arch}" "$VERSION" "$APPLE_INSTALLER_IDENTITY" "jr-${arch}.pkg"
+            rm -rf Jr.app
+          done
+
+      - name: Notarize
+        env:
+          APPLE_NOTARIZATION_APPLE_ID: ${{ secrets.APPLE_NOTARIZATION_APPLE_ID }}
+          APPLE_NOTARIZATION_PASSWORD: ${{ secrets.APPLE_NOTARIZATION_PASSWORD }}
+          APPLE_NOTARIZATION_TEAM_ID: ${{ secrets.APPLE_NOTARIZATION_TEAM_ID }}
+        run: |
+          for ARTIFACT in jr-arm64.pkg jr-amd64.pkg jr-arm64.dmg jr-amd64.dmg; do
+            echo "Notarizing $ARTIFACT..."
+            xcrun notarytool submit "$ARTIFACT" \
+              --apple-id "$APPLE_NOTARIZATION_APPLE_ID" \
+              --password "$APPLE_NOTARIZATION_PASSWORD" \
+              --team-id "$APPLE_NOTARIZATION_TEAM_ID" \
+              --wait --timeout 14400
+            xcrun stapler staple "$ARTIFACT"
+          done
+
+      - name: Generate checksums
+        run: |
+          for f in jr-darwin-arm64 jr-darwin-amd64 jr-arm64.pkg jr-amd64.pkg jr-arm64.dmg jr-amd64.dmg; do
+            shasum -a 256 "$f" > "${f}.sha256"
+          done
+
+      - name: Upload signed artifacts to release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG="${{ inputs.tag }}"
+          gh release upload "$TAG" \
+            jr-darwin-arm64 \
+            jr-darwin-amd64 \
+            jr-arm64.pkg \
+            jr-amd64.pkg \
+            jr-arm64.dmg \
+            jr-amd64.dmg \
+            jr-*.sha256 \
+            --clobber
+
+      - name: Cleanup keychain
+        if: always()
+        run: security delete-keychain build.keychain || true
+
+  # ---------------------------------------------------------------------------
+  # Homebrew — update stable tap formula
+  # ---------------------------------------------------------------------------
+  homebrew:
+    name: Update Homebrew Tap
+    needs: sign
+    if: needs.sign.result == 'success' && inputs.update_homebrew == true
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          ref: develop  # need Formula/jr.rb template from develop
+          persist-credentials: false
+
+      - name: Download signed binaries from release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG="${{ inputs.tag }}"
+          gh release download "$TAG" --pattern "jr-darwin-arm64" --dir .
+          gh release download "$TAG" --pattern "jr-darwin-amd64" --dir .
+
+      - name: Update stable formula
+        env:
+          HOMEBREW_TAP_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+        run: |
+          VERSION="${{ needs.sign.outputs.version }}"
+          TAG="${{ inputs.tag }}"
+
+          SHA256_ARM64=$(shasum -a 256 jr-darwin-arm64 | cut -d' ' -f1)
+          SHA256_AMD64=$(shasum -a 256 jr-darwin-amd64 | cut -d' ' -f1)
+
+          git clone "https://x-access-token:${HOMEBREW_TAP_TOKEN}@github.com/arcavenae/homebrew-tap.git" homebrew-tap-repo
+          cd homebrew-tap-repo
+
+          mkdir -p Formula
+          cp ../Formula/jr.rb Formula/jr.rb
+
+          sed -i "s/VERSION_PLACEHOLDER/$VERSION/g" Formula/jr.rb
+          sed -i "s/TAG_PLACEHOLDER/$TAG/g" Formula/jr.rb
+          sed -i "s/SHA256_ARM64_PLACEHOLDER/$SHA256_ARM64/g" Formula/jr.rb
+          sed -i "s/SHA256_AMD64_PLACEHOLDER/$SHA256_AMD64/g" Formula/jr.rb
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add Formula/jr.rb
+          git diff --cached --quiet && echo "No changes to commit" && exit 0
+          git commit -m "Update jr to $VERSION"
+          git push
