@@ -2,6 +2,7 @@ mod assets;
 mod create;
 mod format;
 mod helpers;
+mod json_output;
 mod links;
 mod list;
 mod workflow;

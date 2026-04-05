@@ -87,6 +87,23 @@ async fn resolve_scrum_board(
     Ok(board_id)
 }
 
+/// JSON response for `sprint add`.
+fn sprint_add_response(sprint_id: u64, issues: &[String]) -> serde_json::Value {
+    json!({
+        "sprint_id": sprint_id,
+        "issues": issues,
+        "added": true
+    })
+}
+
+/// JSON response for `sprint remove`.
+fn sprint_remove_response(issues: &[String]) -> serde_json::Value {
+    json!({
+        "issues": issues,
+        "removed": true
+    })
+}
+
 const MAX_SPRINT_ISSUES: usize = 50;
 
 /// Add issues to a sprint.
@@ -102,11 +119,7 @@ async fn handle_add(
         OutputFormat::Json => {
             println!(
                 "{}",
-                output::render_json(&json!({
-                    "sprint_id": sprint_id,
-                    "issues": issues,
-                    "added": true
-                }))?
+                output::render_json(&sprint_add_response(sprint_id, &issues))?
             );
         }
         OutputFormat::Table => {
@@ -131,13 +144,7 @@ async fn handle_remove(
 
     match output_format {
         OutputFormat::Json => {
-            println!(
-                "{}",
-                output::render_json(&json!({
-                    "issues": issues,
-                    "removed": true
-                }))?
-            );
+            println!("{}", output::render_json(&sprint_remove_response(&issues))?);
         }
         OutputFormat::Table => {
             output::print_success(&format!("Moved {} issue(s) to backlog", issues.len()));
@@ -363,5 +370,21 @@ mod tests {
         assert_eq!(total, 0.0);
         assert_eq!(completed, 0.0);
         assert_eq!(unestimated, 0);
+    }
+
+    #[test]
+    fn test_sprint_add_response() {
+        insta::assert_json_snapshot!(sprint_add_response(
+            100,
+            &["TEST-1".to_string(), "TEST-2".to_string()]
+        ));
+    }
+
+    #[test]
+    fn test_sprint_remove_response() {
+        insta::assert_json_snapshot!(sprint_remove_response(&[
+            "TEST-1".to_string(),
+            "TEST-2".to_string()
+        ]));
     }
 }

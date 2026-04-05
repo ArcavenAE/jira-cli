@@ -185,6 +185,16 @@ fn test_assign_to_and_account_id_conflict() {
 }
 
 #[test]
+fn test_assign_to_and_unassign_conflict() {
+    Command::cargo_bin("jr")
+        .unwrap()
+        .args(["issue", "assign", "FOO-1", "--to", "Jane", "--unassign"])
+        .assert()
+        .failure()
+        .stderr(predicate::str::contains("cannot be used with"));
+}
+
+#[test]
 fn test_assign_account_id_and_unassign_conflict() {
     Command::cargo_bin("jr")
         .unwrap()
