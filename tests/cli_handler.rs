@@ -139,6 +139,19 @@ async fn test_handler_assign_self() {
 async fn test_handler_assign_unassign() {
     let server = MockServer::start().await;
 
+    // Mock GET issue — currently assigned (so unassign proceeds)
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/issue/HDL-4"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(
+            common::fixtures::issue_response_with_assignee(
+                "HDL-4",
+                "Unassign test",
+                Some(("someone-123", "Someone")),
+            ),
+        ))
+        .mount(&server)
+        .await;
+
     // Mock PUT assignee with null (unassign)
     Mock::given(method("PUT"))
         .and(path("/rest/api/3/issue/HDL-4/assignee"))
@@ -460,4 +473,34 @@ async fn test_handler_assign_idempotent_with_name_search() {
         .stdout(predicate::str::contains(
             "\"assignee_account_id\": \"acc-jane-456\"",
         ));
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn test_handler_unassign_idempotent() {
+    let server = MockServer::start().await;
+
+    // Mock GET issue — already unassigned (assignee is null)
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/issue/HDL-8"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(
+            common::fixtures::issue_response_with_assignee("HDL-8", "Already unassigned", None),
+        ))
+        .mount(&server)
+        .await;
+
+    // PUT assignee should NOT be called — already unassigned
+    Mock::given(method("PUT"))
+        .and(path("/rest/api/3/issue/HDL-8/assignee"))
+        .respond_with(ResponseTemplate::new(204))
+        .expect(0)
+        .mount(&server)
+        .await;
+
+    jr_cmd(&server.uri())
+        .args(["issue", "assign", "HDL-8", "--unassign"])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("\"changed\": false"))
+        .stdout(predicate::str::contains("\"key\": \"HDL-8\""))
+        .stdout(predicate::str::contains("\"assignee\": null"));
 }
