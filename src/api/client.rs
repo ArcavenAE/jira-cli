@@ -244,7 +244,7 @@ impl JiraClient {
                     body
                 }
             }
-            Err(_) => "Unknown error".to_string(),
+            Err(e) => format!("Could not read error response: {e}"),
         };
 
         JrError::ApiError { status, message }.into()
