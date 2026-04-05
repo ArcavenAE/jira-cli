@@ -3,6 +3,7 @@ use anyhow::Result;
 use crate::api::client::JiraClient;
 use crate::config::Config;
 use crate::error::JrError;
+use crate::types::jira::User;
 
 pub(super) async fn resolve_team_field(
     config: &Config,
@@ -123,55 +124,45 @@ fn is_me_keyword(input: &str) -> bool {
     input.eq_ignore_ascii_case("me")
 }
 
-/// Resolve a user flag value to a JQL fragment.
+// ── Shared user disambiguation ──────────────────────────────────────
+
+/// Disambiguate a list of users by display name using partial matching.
 ///
-/// - `"me"` (case-insensitive) → `"currentUser()"` (no API call)
-/// - Any other value → search users API, filter active, disambiguate via partial_match
+/// Handles: empty list, single result, exact match, duplicate display names,
+/// ambiguous substring match, and no match. In interactive mode, prompts the
+/// user to choose when ambiguous.
 ///
-/// Returns the JQL value to use (either `"currentUser()"` or an unquoted accountId).
-pub(super) async fn resolve_user(
-    client: &JiraClient,
+/// Returns `(account_id, display_name)` of the selected user.
+fn disambiguate_user(
+    users: &[User],
     name: &str,
     no_input: bool,
-) -> Result<String> {
-    if is_me_keyword(name) {
-        return Ok("currentUser()".to_string());
+    empty_msg: &str,
+    none_msg: &str,
+) -> Result<(String, String)> {
+    if users.is_empty() {
+        anyhow::bail!("{}", empty_msg);
     }
 
-    let users = client.search_users(name).await?;
-    let active_users: Vec<_> = users
-        .into_iter()
-        .filter(|u| u.active == Some(true))
-        .collect();
-
-    if active_users.is_empty() {
-        anyhow::bail!(
-            "No active user found matching \"{}\". The user may be deactivated.",
-            name
-        );
+    if users.len() == 1 {
+        return Ok((users[0].account_id.clone(), users[0].display_name.clone()));
     }
 
-    if active_users.len() == 1 {
-        return Ok(active_users[0].account_id.clone());
-    }
-
-    // Multiple matches — disambiguate
-    let display_names: Vec<String> = active_users
-        .iter()
-        .map(|u| u.display_name.clone())
-        .collect();
+    let display_names: Vec<String> = users.iter().map(|u| u.display_name.clone()).collect();
     match crate::partial_match::partial_match(name, &display_names) {
         crate::partial_match::MatchResult::Exact(matched_name) => {
-            let idx = active_users
+            let idx = users
                 .iter()
                 .position(|u| u.display_name == matched_name)
-                .expect("matched name must exist in active_users");
-            Ok(active_users[idx].account_id.clone())
+                .expect("matched name must exist in users");
+            Ok((
+                users[idx].account_id.clone(),
+                users[idx].display_name.clone(),
+            ))
         }
         crate::partial_match::MatchResult::ExactMultiple(_) => {
-            // Multiple users share the same display name — disambiguate
             let name_lower = name.to_lowercase();
-            let duplicates: Vec<&crate::types::jira::User> = active_users
+            let duplicates: Vec<&User> = users
                 .iter()
                 .filter(|u| u.display_name.to_lowercase() == name_lower)
                 .collect();
@@ -196,7 +187,6 @@ pub(super) async fn resolve_user(
                 );
             }
 
-            // Interactive: show disambiguation prompt with email or accountId
             let labels: Vec<String> = duplicates
                 .iter()
                 .map(|u| match &u.email_address {
@@ -208,7 +198,10 @@ pub(super) async fn resolve_user(
                 .with_prompt(format!("Multiple users named \"{}\"", name))
                 .items(&labels)
                 .interact()?;
-            Ok(duplicates[selection].account_id.clone())
+            Ok((
+                duplicates[selection].account_id.clone(),
+                duplicates[selection].display_name.clone(),
+            ))
         }
         crate::partial_match::MatchResult::Ambiguous(matches) => {
             if no_input {
@@ -223,19 +216,58 @@ pub(super) async fn resolve_user(
                 .items(&matches)
                 .interact()?;
             let selected_name = &matches[selection];
-            let idx = active_users
+            let idx = users
                 .iter()
                 .position(|u| u.display_name == *selected_name)
-                .expect("selected name must exist in active_users");
-            Ok(active_users[idx].account_id.clone())
+                .expect("selected name must exist in users");
+            Ok((
+                users[idx].account_id.clone(),
+                users[idx].display_name.clone(),
+            ))
         }
-        crate::partial_match::MatchResult::None(_) => {
-            anyhow::bail!(
-                "No active user found matching \"{}\". The user may be deactivated.",
-                name
-            );
+        crate::partial_match::MatchResult::None(all_names) => {
+            anyhow::bail!("{} Found: {}", none_msg, all_names.join(", "));
         }
     }
+}
+
+// ── Public resolve functions ─────────────────────────────────────────
+
+/// Resolve a user flag value to a JQL fragment.
+///
+/// - `"me"` (case-insensitive) → `"currentUser()"` (no API call)
+/// - Any other value → search users API, filter active, disambiguate via partial_match
+///
+/// Returns the JQL value to use (either `"currentUser()"` or an unquoted accountId).
+pub(super) async fn resolve_user(
+    client: &JiraClient,
+    name: &str,
+    no_input: bool,
+) -> Result<String> {
+    if is_me_keyword(name) {
+        return Ok("currentUser()".to_string());
+    }
+
+    let users = client.search_users(name).await?;
+    let active_users: Vec<_> = users
+        .into_iter()
+        .filter(|u| u.active == Some(true))
+        .collect();
+
+    let (account_id, _) = disambiguate_user(
+        &active_users,
+        name,
+        no_input,
+        &format!(
+            "No active user found matching \"{}\". The user may be deactivated.",
+            name
+        ),
+        &format!(
+            "No active user found matching \"{}\".",
+            name
+        ),
+    )?;
+    Ok(account_id)
 }
 
 /// Resolve a user flag value to an (account_id, display_name) tuple for assignment.
@@ -258,105 +290,19 @@ pub(super) async fn resolve_assignee(
 
     let users = client.search_assignable_users(name, issue_key).await?;
 
-    if users.is_empty() {
-        anyhow::bail!(
+    disambiguate_user(
+        &users,
+        name,
+        no_input,
+        &format!(
             "No assignable user matching \"{}\" on issue {}. The user may not exist or may lack permission for this project. Try a different name or check spelling.",
-            name,
-            issue_key,
-        );
-    }
-
-    if users.len() == 1 {
-        return Ok((users[0].account_id.clone(), users[0].display_name.clone()));
-    }
-
-    // Multiple matches — disambiguate
-    let display_names: Vec<String> = users.iter().map(|u| u.display_name.clone()).collect();
-    match crate::partial_match::partial_match(name, &display_names) {
-        crate::partial_match::MatchResult::Exact(matched_name) => {
-            let idx = users
-                .iter()
-                .position(|u| u.display_name == matched_name)
-                .expect("matched name must exist in users");
-            Ok((
-                users[idx].account_id.clone(),
-                users[idx].display_name.clone(),
-            ))
-        }
-        crate::partial_match::MatchResult::ExactMultiple(_) => {
-            let name_lower = name.to_lowercase();
-            let duplicates: Vec<&crate::types::jira::User> = users
-                .iter()
-                .filter(|u| u.display_name.to_lowercase() == name_lower)
-                .collect();
-
-            if no_input {
-                let lines: Vec<String> = duplicates
-                    .iter()
-                    .map(|u| match &u.email_address {
-                        Some(email) => format!(
-                            "  {} ({}, account: {})",
-                            u.display_name, email, u.account_id
-                        ),
-                        None => {
-                            format!("  {} (account: {})", u.display_name, u.account_id)
-                        }
-                    })
-                    .collect();
-                anyhow::bail!(
-                    "Multiple users named \"{}\" found:\n{}\nSpecify the accountId directly or use a more specific name.",
-                    name,
-                    lines.join("\n")
-                );
-            }
-
-            let labels: Vec<String> = duplicates
-                .iter()
-                .map(|u| match &u.email_address {
-                    Some(email) => format!("{} ({})", u.display_name, email),
-                    None => format!("{} ({})", u.display_name, u.account_id),
-                })
-                .collect();
-            let selection = dialoguer::Select::new()
-                .with_prompt(format!("Multiple users named \"{}\"", name))
-                .items(&labels)
-                .interact()?;
-            Ok((
-                duplicates[selection].account_id.clone(),
-                duplicates[selection].display_name.clone(),
-            ))
-        }
-        crate::partial_match::MatchResult::Ambiguous(matches) => {
-            if no_input {
-                anyhow::bail!(
-                    "Multiple users match \"{}\": {}. Use a more specific name.",
-                    name,
-                    matches.join(", ")
-                );
-            }
-            let selection = dialoguer::Select::new()
-                .with_prompt(format!("Multiple users match \"{name}\""))
-                .items(&matches)
-                .interact()?;
-            let selected_name = &matches[selection];
-            let idx = users
-                .iter()
-                .position(|u| u.display_name == *selected_name)
-                .expect("selected name must exist in users");
-            Ok((
-                users[idx].account_id.clone(),
-                users[idx].display_name.clone(),
-            ))
-        }
-        crate::partial_match::MatchResult::None(all_names) => {
-            anyhow::bail!(
-                "No assignable user with a name matching \"{}\" on issue {}. Found: {}",
-                name,
-                issue_key,
-                all_names.join(", "),
-            );
-        }
-    }
+            name, issue_key,
+        ),
+        &format!(
+            "No assignable user with a name matching \"{}\" on issue {}.",
+            name, issue_key,
+        ),
+    )
 }
 
 /// Resolve a user flag value to an (account_id, display_name) tuple for assignment by project.
@@ -378,112 +324,23 @@ pub(super) async fn resolve_assignee_by_project(
         return Ok((me.account_id, me.display_name));
     }
 
-    // The multiProjectSearch endpoint returns only users eligible for assignment,
-    // which should exclude deactivated users. No client-side active filter needed
-    // (consistent with resolve_assignee for issue-scoped search).
     let users = client
         .search_assignable_users_by_project(name, project_key)
         .await?;
 
-    if users.is_empty() {
-        anyhow::bail!(
+    disambiguate_user(
+        &users,
+        name,
+        no_input,
+        &format!(
             "No assignable user matching \"{}\" in project {}. The user may not exist or may lack permission for this project. Try a different name or check spelling.",
-            name,
-            project_key,
-        );
-    }
-
-    if users.len() == 1 {
-        return Ok((users[0].account_id.clone(), users[0].display_name.clone()));
-    }
-
-    // Multiple matches — disambiguate
-    let display_names: Vec<String> = users.iter().map(|u| u.display_name.clone()).collect();
-    match crate::partial_match::partial_match(name, &display_names) {
-        crate::partial_match::MatchResult::Exact(matched_name) => {
-            let idx = users
-                .iter()
-                .position(|u| u.display_name == matched_name)
-                .expect("matched name must exist in users");
-            Ok((
-                users[idx].account_id.clone(),
-                users[idx].display_name.clone(),
-            ))
-        }
-        crate::partial_match::MatchResult::ExactMultiple(_) => {
-            let name_lower = name.to_lowercase();
-            let duplicates: Vec<&crate::types::jira::User> = users
-                .iter()
-                .filter(|u| u.display_name.to_lowercase() == name_lower)
-                .collect();
-
-            if no_input {
-                let lines: Vec<String> = duplicates
-                    .iter()
-                    .map(|u| match &u.email_address {
-                        Some(email) => format!(
-                            "  {} ({}, account: {})",
-                            u.display_name, email, u.account_id
-                        ),
-                        None => {
-                            format!("  {} (account: {})", u.display_name, u.account_id)
-                        }
-                    })
-                    .collect();
-                anyhow::bail!(
-                    "Multiple users named \"{}\" found:\n{}\nSpecify the accountId directly or use a more specific name.",
-                    name,
-                    lines.join("\n")
-                );
-            }
-
-            let labels: Vec<String> = duplicates
-                .iter()
-                .map(|u| match &u.email_address {
-                    Some(email) => format!("{} ({})", u.display_name, email),
-                    None => format!("{} ({})", u.display_name, u.account_id),
-                })
-                .collect();
-            let selection = dialoguer::Select::new()
-                .with_prompt(format!("Multiple users named \"{}\"", name))
-                .items(&labels)
-                .interact()?;
-            Ok((
-                duplicates[selection].account_id.clone(),
-                duplicates[selection].display_name.clone(),
-            ))
-        }
-        crate::partial_match::MatchResult::Ambiguous(matches) => {
-            if no_input {
-                anyhow::bail!(
-                    "Multiple users match \"{}\": {}. Use a more specific name.",
-                    name,
-                    matches.join(", ")
-                );
-            }
-            let selection = dialoguer::Select::new()
-                .with_prompt(format!("Multiple users match \"{name}\""))
-                .items(&matches)
-                .interact()?;
-            let selected_name = &matches[selection];
-            let idx = users
-                .iter()
-                .position(|u| u.display_name == *selected_name)
-                .expect("selected name must exist in users");
-            Ok((
-                users[idx].account_id.clone(),
-                users[idx].display_name.clone(),
-            ))
-        }
-        crate::partial_match::MatchResult::None(all_names) => {
-            anyhow::bail!(
-                "No assignable user with a name matching \"{}\" in project {}. Found: {}",
-                name,
-                project_key,
-                all_names.join(", "),
-            );
-        }
-    }
+            name, project_key,
+        ),
+        &format!(
+            "No assignable user with a name matching \"{}\" in project {}.",
+            name, project_key,
+        ),
+    )
 }
 
 #[cfg(test)]
