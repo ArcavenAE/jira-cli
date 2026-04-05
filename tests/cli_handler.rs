@@ -48,7 +48,11 @@ async fn test_handler_assign_with_account_id() {
         .assert()
         .success()
         .stdout(predicate::str::contains("\"changed\": true"))
-        .stdout(predicate::str::contains("\"key\": \"HDL-1\""));
+        .stdout(predicate::str::contains("\"key\": \"HDL-1\""))
+        .stdout(predicate::str::contains("\"assignee\": \"direct-id-001\""))
+        .stdout(predicate::str::contains(
+            "\"assignee_account_id\": \"direct-id-001\"",
+        ));
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -170,7 +174,13 @@ async fn test_handler_assign_idempotent() {
         .mount(&server)
         .await;
 
-    // No PUT mock — should not be called
+    // PUT assignee should NOT be called — explicitly expect 0 requests
+    Mock::given(method("PUT"))
+        .and(path("/rest/api/3/issue/HDL-5/assignee"))
+        .respond_with(ResponseTemplate::new(204))
+        .expect(0)
+        .mount(&server)
+        .await;
 
     jr_cmd(&server.uri())
         .args(["issue", "assign", "HDL-5", "--account-id", "direct-id-001"])
@@ -216,7 +226,8 @@ async fn test_handler_create_with_account_id() {
         ])
         .assert()
         .success()
-        .stdout(predicate::str::contains("\"key\": \"HDL-100\""));
+        .stdout(predicate::str::contains("\"key\": \"HDL-100\""))
+        .stdout(predicate::str::contains("/browse/HDL-100"));
 }
 
 #[tokio::test(flavor = "multi_thread")]
