@@ -12,6 +12,7 @@ use crate::error::JrError;
 use crate::output;
 use crate::types::assets::LinkedAsset;
 use crate::types::assets::linked::format_linked_assets;
+use crate::types::jira::issue::Comment;
 
 use super::format;
 use super::helpers;
@@ -94,12 +95,7 @@ pub(super) async fn handle_list(
         crate::jql::validate_duration(d).map_err(JrError::UserError)?;
     }
 
-    // Validate --asset key format early
-    if let Some(ref key) = asset_key {
-        crate::jql::validate_asset_key(key).map_err(JrError::UserError)?;
-    }
-
-    // Validate date filter flags early
+    // Validate date filter flags early (before any network calls)
     let created_after_date = if let Some(ref d) = created_after {
         Some(crate::jql::validate_date(d).map_err(JrError::UserError)?)
     } else {
@@ -132,6 +128,13 @@ pub(super) async fn handle_list(
         let next_day = d + chrono::Days::new(1);
         format!("updated < \"{}\"", next_day)
     });
+
+    // Resolve --asset: key passthrough or name → key via AQL search
+    let asset_key = if let Some(raw) = asset_key {
+        Some(helpers::resolve_asset(client, &raw, no_input).await?)
+    } else {
+        None
+    };
 
     // Resolve --assignee and --reporter to JQL values
     let assignee_jql = if let Some(ref name) = assignee {
@@ -607,6 +610,22 @@ fn format_comment_row(
     ]
 }
 
+/// Extract the internal/external visibility from a comment's `sd.public.comment` property.
+/// Returns `Some("Internal")` or `Some("External")` if the property exists, `None` otherwise.
+fn comment_visibility(comment: &Comment) -> Option<&'static str> {
+    comment
+        .properties
+        .iter()
+        .find(|p| p.key == "sd.public.comment")
+        .map(|p| {
+            if p.value.get("internal") == Some(&serde_json::Value::Bool(true)) {
+                "Internal"
+            } else {
+                "External"
+            }
+        })
+}
+
 pub(super) async fn handle_comments(
     key: &str,
     limit: Option<u32>,
@@ -615,22 +634,43 @@ pub(super) async fn handle_comments(
 ) -> Result<()> {
     let comments = client.list_comments(key, limit).await?;
 
+    // Show Visibility column only if any comment has sd.public.comment property
+    let has_visibility = comments.iter().any(|c| comment_visibility(c).is_some());
+
     match output_format {
         OutputFormat::Json => {
-            output::print_output(output_format, &["Author", "Date", "Body"], &[], &comments)?;
+            output::print_output(output_format, &[], &[], &comments)?;
         }
         OutputFormat::Table => {
-            let rows: Vec<Vec<String>> = comments
-                .iter()
-                .map(|c| {
-                    let author = c.author.as_ref().map(|a| a.display_name.as_str());
-                    let created = c.created.as_deref();
-                    let body_text = c.body.as_ref().map(adf::adf_to_text);
-                    format_comment_row(author, created, body_text.as_deref())
-                })
-                .collect();
+            let (headers, rows) = if has_visibility {
+                let rows: Vec<Vec<String>> = comments
+                    .iter()
+                    .map(|c| {
+                        let author = c.author.as_ref().map(|a| a.display_name.as_str());
+                        let created = c.created.as_deref();
+                        let body_text = c.body.as_ref().map(adf::adf_to_text);
+                        let visibility = comment_visibility(c).unwrap_or("External");
+                        let mut row = format_comment_row(author, created, body_text.as_deref());
+                        // Insert Visibility before Body (index 2)
+                        row.insert(2, visibility.to_string());
+                        row
+                    })
+                    .collect();
+                (vec!["Author", "Date", "Visibility", "Body"], rows)
+            } else {
+                let rows: Vec<Vec<String>> = comments
+                    .iter()
+                    .map(|c| {
+                        let author = c.author.as_ref().map(|a| a.display_name.as_str());
+                        let created = c.created.as_deref();
+                        let body_text = c.body.as_ref().map(adf::adf_to_text);
+                        format_comment_row(author, created, body_text.as_deref())
+                    })
+                    .collect();
+                (vec!["Author", "Date", "Body"], rows)
+            };
 
-            output::print_output(output_format, &["Author", "Date", "Body"], &rows, &comments)?;
+            output::print_output(output_format, &headers, &rows, &comments)?;
         }
     }
 

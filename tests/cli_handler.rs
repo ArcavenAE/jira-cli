@@ -602,3 +602,394 @@ async fn test_handler_list_created_before() {
         .assert()
         .success();
 }
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn test_handler_list_asset_name_resolves_to_key() {
+    let server = MockServer::start().await;
+    let cache_dir = tempfile::tempdir().unwrap();
+
+    // 1. Workspace discovery
+    Mock::given(method("GET"))
+        .and(path("/rest/servicedeskapi/assets/workspace"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
+            "size": 1,
+            "start": 0,
+            "limit": 50,
+            "isLastPage": true,
+            "values": [{ "workspaceId": "ws-123" }]
+        })))
+        .mount(&server)
+        .await;
+
+    // 2. AQL search — returns single match
+    Mock::given(method("POST"))
+        .and(path("/jsm/assets/workspace/ws-123/v1/object/aql"))
+        .and(query_param("includeAttributes", "false"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
+            "startAt": 0,
+            "maxResults": 25,
+            "total": 1,
+            "isLast": true,
+            "values": [{
+                "id": "70",
+                "label": "Acme Corp",
+                "objectKey": "OBJ-70",
+                "objectType": { "id": "13", "name": "Client" }
+            }]
+        })))
+        .mount(&server)
+        .await;
+
+    // 3. CMDB fields discovery
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/field"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!([
+            {
+                "id": "customfield_10191",
+                "name": "Client",
+                "custom": true,
+                "schema": {
+                    "type": "any",
+                    "custom": "com.atlassian.jira.plugins.cmdb:cmdb-object-cftype",
+                    "customId": 10191
+                }
+            }
+        ])))
+        .mount(&server)
+        .await;
+
+    // 4. Project check
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/project/PROJ"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
+            "key": "PROJ",
+            "id": "10000",
+            "name": "Test Project"
+        })))
+        .mount(&server)
+        .await;
+
+    // 5. Issue search — verify JQL uses resolved key OBJ-70
+    Mock::given(method("POST"))
+        .and(path("/rest/api/3/search/jql"))
+        .and(body_partial_json(serde_json::json!({
+            "jql": "project = \"PROJ\" AND \"Client\" IN aqlFunction(\"Key = \\\"OBJ-70\\\"\") ORDER BY updated DESC"
+        })))
+        .respond_with(ResponseTemplate::new(200).set_body_json(
+            common::fixtures::issue_search_response(vec![common::fixtures::issue_response(
+                "PROJ-1",
+                "Test issue",
+                "To Do",
+            )]),
+        ))
+        .expect(1)
+        .mount(&server)
+        .await;
+
+    Command::cargo_bin("jr")
+        .unwrap()
+        .env("JR_BASE_URL", server.uri())
+        .env("JR_AUTH_HEADER", "Basic dGVzdDp0ZXN0")
+        .env("XDG_CACHE_HOME", cache_dir.path())
+        .args([
+            "issue",
+            "list",
+            "--project",
+            "PROJ",
+            "--asset",
+            "Acme",
+            "--no-input",
+        ])
+        .assert()
+        .success();
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn test_handler_list_asset_name_no_match_errors() {
+    let server = MockServer::start().await;
+    let cache_dir = tempfile::tempdir().unwrap();
+
+    // 1. Workspace discovery
+    Mock::given(method("GET"))
+        .and(path("/rest/servicedeskapi/assets/workspace"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
+            "size": 1,
+            "start": 0,
+            "limit": 50,
+            "isLastPage": true,
+            "values": [{ "workspaceId": "ws-123" }]
+        })))
+        .mount(&server)
+        .await;
+
+    // 2. AQL search — returns zero matches
+    Mock::given(method("POST"))
+        .and(path("/jsm/assets/workspace/ws-123/v1/object/aql"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
+            "startAt": 0,
+            "maxResults": 25,
+            "total": 0,
+            "isLast": true,
+            "values": []
+        })))
+        .mount(&server)
+        .await;
+
+    Command::cargo_bin("jr")
+        .unwrap()
+        .env("JR_BASE_URL", server.uri())
+        .env("JR_AUTH_HEADER", "Basic dGVzdDp0ZXN0")
+        .env("XDG_CACHE_HOME", cache_dir.path())
+        .args([
+            "issue",
+            "list",
+            "--project",
+            "PROJ",
+            "--asset",
+            "Nonexistent",
+            "--no-input",
+        ])
+        .assert()
+        .failure()
+        .stderr(predicate::str::contains(
+            "No assets matching \"Nonexistent\" found",
+        ));
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn test_handler_list_asset_key_passthrough_skips_assets_api() {
+    let server = MockServer::start().await;
+    let cache_dir = tempfile::tempdir().unwrap();
+
+    // Direct asset keys should NOT trigger workspace discovery
+    Mock::given(method("GET"))
+        .and(path("/rest/servicedeskapi/assets/workspace"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
+            "size": 1, "start": 0, "limit": 50, "isLastPage": true,
+            "values": [{ "workspaceId": "ws-123" }]
+        })))
+        .expect(0)
+        .mount(&server)
+        .await;
+
+    // Direct asset keys should NOT trigger AQL search
+    Mock::given(method("POST"))
+        .and(path("/jsm/assets/workspace/ws-123/v1/object/aql"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
+            "startAt": 0, "maxResults": 25, "total": 0, "isLast": true, "values": []
+        })))
+        .expect(0)
+        .mount(&server)
+        .await;
+
+    // CMDB fields discovery (still needed for build_asset_clause)
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/field"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!([
+            {
+                "id": "customfield_10191",
+                "name": "Client",
+                "custom": true,
+                "schema": {
+                    "type": "any",
+                    "custom": "com.atlassian.jira.plugins.cmdb:cmdb-object-cftype",
+                    "customId": 10191
+                }
+            }
+        ])))
+        .mount(&server)
+        .await;
+
+    // Project check
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/project/PROJ"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
+            "key": "PROJ", "id": "10000", "name": "Test Project"
+        })))
+        .mount(&server)
+        .await;
+
+    // Issue search — verify JQL uses provided key OBJ-18 directly
+    Mock::given(method("POST"))
+        .and(path("/rest/api/3/search/jql"))
+        .and(body_partial_json(serde_json::json!({
+            "jql": "project = \"PROJ\" AND \"Client\" IN aqlFunction(\"Key = \\\"OBJ-18\\\"\") ORDER BY updated DESC"
+        })))
+        .respond_with(ResponseTemplate::new(200).set_body_json(
+            common::fixtures::issue_search_response(vec![common::fixtures::issue_response(
+                "PROJ-1", "Test issue", "To Do",
+            )]),
+        ))
+        .expect(1)
+        .mount(&server)
+        .await;
+
+    Command::cargo_bin("jr")
+        .unwrap()
+        .env("JR_BASE_URL", server.uri())
+        .env("JR_AUTH_HEADER", "Basic dGVzdDp0ZXN0")
+        .env("XDG_CACHE_HOME", cache_dir.path())
+        .args([
+            "issue",
+            "list",
+            "--project",
+            "PROJ",
+            "--asset",
+            "OBJ-18",
+            "--no-input",
+        ])
+        .assert()
+        .success();
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn test_handler_comment_internal_flag_adds_property() {
+    let server = MockServer::start().await;
+
+    Mock::given(method("POST"))
+        .and(path("/rest/api/3/issue/HELP-42/comment"))
+        .and(body_partial_json(serde_json::json!({
+            "properties": [{
+                "key": "sd.public.comment",
+                "value": { "internal": true }
+            }]
+        })))
+        .respond_with(ResponseTemplate::new(201).set_body_json(serde_json::json!({
+            "id": "10001",
+            "created": "2026-04-05T12:00:00.000+0000"
+        })))
+        .expect(1)
+        .mount(&server)
+        .await;
+
+    Command::cargo_bin("jr")
+        .unwrap()
+        .env("JR_BASE_URL", server.uri())
+        .env("JR_AUTH_HEADER", "Basic dGVzdDp0ZXN0")
+        .args([
+            "issue",
+            "comment",
+            "HELP-42",
+            "Internal note",
+            "--internal",
+            "--no-input",
+        ])
+        .assert()
+        .success();
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn test_handler_comment_without_internal_omits_property() {
+    let server = MockServer::start().await;
+
+    Mock::given(method("POST"))
+        .and(path("/rest/api/3/issue/HELP-42/comment"))
+        .respond_with(ResponseTemplate::new(201).set_body_json(serde_json::json!({
+            "id": "10002",
+            "created": "2026-04-05T12:00:00.000+0000"
+        })))
+        .expect(1)
+        .named("comment without internal")
+        .mount(&server)
+        .await;
+
+    Command::cargo_bin("jr")
+        .unwrap()
+        .env("JR_BASE_URL", server.uri())
+        .env("JR_AUTH_HEADER", "Basic dGVzdDp0ZXN0")
+        .args(["issue", "comment", "HELP-42", "External note", "--no-input"])
+        .assert()
+        .success();
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn test_handler_comments_shows_visibility_column_for_jsm() {
+    let server = MockServer::start().await;
+
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/issue/HELP-42/comment"))
+        .and(query_param("expand", "properties"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
+            "comments": [
+                {
+                    "id": "10001",
+                    "author": { "accountId": "abc", "displayName": "Agent", "active": true },
+                    "body": { "type": "doc", "version": 1, "content": [{ "type": "paragraph", "content": [{ "type": "text", "text": "Agent investigation notes" }] }] },
+                    "created": "2026-04-05T10:00:00.000+0000",
+                    "properties": [{"key": "sd.public.comment", "value": {"internal": true}}]
+                },
+                {
+                    "id": "10002",
+                    "author": { "accountId": "def", "displayName": "Agent", "active": true },
+                    "body": { "type": "doc", "version": 1, "content": [{ "type": "paragraph", "content": [{ "type": "text", "text": "Customer reply" }] }] },
+                    "created": "2026-04-05T11:00:00.000+0000",
+                    "properties": [{"key": "sd.public.comment", "value": {"internal": false}}]
+                }
+            ],
+            "startAt": 0,
+            "maxResults": 100,
+            "total": 2
+        })))
+        .mount(&server)
+        .await;
+
+    Command::cargo_bin("jr")
+        .unwrap()
+        .env("JR_BASE_URL", server.uri())
+        .env("JR_AUTH_HEADER", "Basic dGVzdDp0ZXN0")
+        .args(["issue", "comments", "HELP-42", "--no-input"])
+        .assert()
+        .success()
+        .stdout(predicates::prelude::predicate::str::contains("Visibility"))
+        .stdout(predicates::prelude::predicate::str::contains("Internal"))
+        .stdout(predicates::prelude::predicate::str::contains("External"));
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn test_handler_comments_hides_visibility_column_for_non_jsm() {
+    let server = MockServer::start().await;
+
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/issue/DEV-99/comment"))
+        .and(query_param("expand", "properties"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
+            "comments": [
+                {
+                    "id": "10001",
+                    "author": { "accountId": "abc", "displayName": "Dev", "active": true },
+                    "body": { "type": "doc", "version": 1, "content": [{ "type": "paragraph", "content": [{ "type": "text", "text": "Fixed in commit abc123" }] }] },
+                    "created": "2026-04-05T10:00:00.000+0000",
+                    "properties": []
+                }
+            ],
+            "startAt": 0,
+            "maxResults": 100,
+            "total": 1
+        })))
+        .mount(&server)
+        .await;
+
+    let output = Command::cargo_bin("jr")
+        .unwrap()
+        .env("JR_BASE_URL", server.uri())
+        .env("JR_AUTH_HEADER", "Basic dGVzdDp0ZXN0")
+        .args(["issue", "comments", "DEV-99", "--no-input"])
+        .output()
+        .unwrap();
+
+    assert!(
+        output.status.success(),
+        "Expected success, stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    assert!(
+        !stdout.contains("Visibility"),
+        "Non-JSM comments should not show Visibility column, got: {stdout}"
+    );
+    assert!(
+        !stdout.contains("Internal"),
+        "Non-JSM comments should not show Internal, got: {stdout}"
+    );
+}

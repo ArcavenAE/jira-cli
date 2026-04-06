@@ -144,12 +144,20 @@ pub struct TransitionsResponse {
     pub transitions: Vec<Transition>,
 }
 
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct EntityProperty {
+    pub key: String,
+    pub value: Value,
+}
+
 #[derive(Debug, Clone, Default, Deserialize, Serialize)]
 pub struct Comment {
     pub id: Option<String>,
     pub body: Option<Value>,
     pub author: Option<User>,
     pub created: Option<String>,
+    #[serde(default)]
+    pub properties: Vec<EntityProperty>,
 }
 
 #[derive(Debug, Deserialize, Serialize)]
@@ -383,5 +391,41 @@ mod tests {
         assert_eq!(v.name, "v1.0");
         assert!(v.released.is_none());
         assert!(v.release_date.is_none());
+    }
+
+    #[test]
+    fn comment_deserialize_with_properties() {
+        let json = json!({
+            "id": "10001",
+            "body": null,
+            "properties": [
+                {"key": "sd.public.comment", "value": {"internal": true}}
+            ]
+        });
+        let comment: Comment = serde_json::from_value(json).unwrap();
+        assert_eq!(comment.properties.len(), 1);
+        assert_eq!(comment.properties[0].key, "sd.public.comment");
+        assert_eq!(comment.properties[0].value["internal"], true);
+    }
+
+    #[test]
+    fn comment_deserialize_without_properties() {
+        let json = json!({
+            "id": "10002",
+            "body": null
+        });
+        let comment: Comment = serde_json::from_value(json).unwrap();
+        assert!(comment.properties.is_empty());
+    }
+
+    #[test]
+    fn comment_deserialize_empty_properties() {
+        let json = json!({
+            "id": "10003",
+            "body": null,
+            "properties": []
+        });
+        let comment: Comment = serde_json::from_value(json).unwrap();
+        assert!(comment.properties.is_empty());
     }
 }
