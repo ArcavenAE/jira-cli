@@ -661,10 +661,7 @@ pub(super) async fn handle_comments(
                         row
                     })
                     .collect();
-                (
-                    vec!["Author", "Date", "Visibility", "Body"],
-                    rows,
-                )
+                (vec!["Author", "Date", "Visibility", "Body"], rows)
             } else {
                 let rows: Vec<Vec<String>> = comments
                     .iter()
