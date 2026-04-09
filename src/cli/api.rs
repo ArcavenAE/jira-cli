@@ -141,8 +141,8 @@ pub async fn handle_api(
     //    duplicate Content-Type when the user supplies their own.
     let mut req = client.request(method.into(), &normalized_path).build()?;
 
-    if let Some(ref body_str) = body {
-        *req.body_mut() = Some(body_str.clone().into());
+    if let Some(body_str) = body {
+        *req.body_mut() = Some(body_str.into());
         req.headers_mut()
             .insert(CONTENT_TYPE, HeaderValue::from_static("application/json"));
     }
@@ -168,8 +168,6 @@ pub async fn handle_api(
         Err(JrError::NotAuthenticated.into())
     } else {
         let message = extract_error_message(&body_bytes);
-        // Print a human error summary to stderr
-        crate::output::print_error(&format!("{message} (HTTP {})", status.as_u16()));
         Err(JrError::ApiError {
             status: status.as_u16(),
             message,
