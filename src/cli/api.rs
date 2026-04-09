@@ -9,6 +9,7 @@ use anyhow::Result;
 use clap::ValueEnum;
 use reqwest::Method;
 use reqwest::header::{HeaderName, HeaderValue};
+use std::io::Read;
 
 #[derive(Copy, Clone, PartialEq, Eq, Debug, ValueEnum)]
 pub enum HttpMethod {
@@ -79,6 +80,35 @@ pub fn parse_header(raw: &str) -> Result<(HeaderName, HeaderValue)> {
         .map_err(|e| JrError::UserError(format!("Invalid header value '{value}': {e}")))?;
 
     Ok((name, value))
+}
+
+/// Resolve the `--data` argument into an actual request body.
+/// - `None` → `None`
+/// - `Some("@-")` → read from `stdin` parameter
+/// - `Some("@filename")` → read from file
+/// - `Some(inline)` → use as-is
+///
+/// Validates that the resulting body is valid JSON.
+pub fn resolve_body<R: Read>(arg: Option<&str>, mut stdin: R) -> Result<Option<String>> {
+    let body = match arg {
+        None => return Ok(None),
+        Some("@-") => {
+            let mut buf = String::new();
+            stdin.read_to_string(&mut buf)?;
+            buf
+        }
+        Some(s) if s.starts_with('@') => {
+            let path = &s[1..];
+            std::fs::read_to_string(path)?
+        }
+        Some(s) => s.to_string(),
+    };
+
+    // Validate JSON — Jira REST API always uses JSON, catch typos before network
+    serde_json::from_str::<serde_json::Value>(&body)
+        .map_err(|e| JrError::UserError(format!("Request body is not valid JSON: {e}")))?;
+
+    Ok(Some(body))
 }
 
 #[cfg(test)]
@@ -161,5 +191,55 @@ mod tests {
         assert!(err.to_string().contains("Authorization"));
         let err = parse_header("AUTHORIZATION: Bearer foo").unwrap_err();
         assert!(err.to_string().contains("Authorization"));
+    }
+
+    use std::io::Cursor;
+
+    #[test]
+    fn test_resolve_body_none() {
+        let stdin: Cursor<&[u8]> = Cursor::new(b"");
+        let result = resolve_body(None, stdin).unwrap();
+        assert_eq!(result, None);
+    }
+
+    #[test]
+    fn test_resolve_body_inline_json() {
+        let stdin: Cursor<&[u8]> = Cursor::new(b"");
+        let result = resolve_body(Some(r#"{"a":1}"#), stdin).unwrap();
+        assert_eq!(result, Some(r#"{"a":1}"#.to_string()));
+    }
+
+    #[test]
+    fn test_resolve_body_invalid_json_errors() {
+        let stdin: Cursor<&[u8]> = Cursor::new(b"");
+        let err = resolve_body(Some("not json"), stdin).unwrap_err();
+        assert!(err.to_string().contains("Request body is not valid JSON"));
+    }
+
+    #[test]
+    fn test_resolve_body_at_file_reads_contents() {
+        let tmp = tempfile::NamedTempFile::new().unwrap();
+        std::fs::write(tmp.path(), r#"{"from":"file"}"#).unwrap();
+        let arg = format!("@{}", tmp.path().display());
+
+        let stdin: Cursor<&[u8]> = Cursor::new(b"");
+        let result = resolve_body(Some(&arg), stdin).unwrap();
+        assert_eq!(result, Some(r#"{"from":"file"}"#.to_string()));
+    }
+
+    #[test]
+    fn test_resolve_body_at_file_not_found() {
+        let stdin: Cursor<&[u8]> = Cursor::new(b"");
+        let err = resolve_body(Some("@/nonexistent/path/to/file.json"), stdin).unwrap_err();
+        // Propagated std::io::Error
+        assert!(err.to_string().to_lowercase().contains("no such file"));
+    }
+
+    #[test]
+    fn test_resolve_body_at_dash_reads_stdin() {
+        let stdin_content = br#"{"from":"stdin"}"#;
+        let stdin = Cursor::new(&stdin_content[..]);
+        let result = resolve_body(Some("@-"), stdin).unwrap();
+        assert_eq!(result, Some(r#"{"from":"stdin"}"#.to_string()));
     }
 }
