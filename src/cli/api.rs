@@ -4,13 +4,13 @@
 //! stored credentials, modeled on `gh api`. Supports method override,
 //! request body (inline / file / stdin), and custom headers.
 
-use crate::api::client::JiraClient;
+use crate::api::client::{JiraClient, extract_error_message};
 use crate::error::JrError;
 use anyhow::Result;
 use clap::ValueEnum;
 use reqwest::Method;
-use reqwest::header::{HeaderName, HeaderValue};
-use std::io::Read;
+use reqwest::header::{CONTENT_TYPE, HeaderName, HeaderValue};
+use std::io::{Read, Write};
 
 #[derive(Copy, Clone, PartialEq, Eq, Debug, ValueEnum)]
 pub enum HttpMethod {
@@ -117,14 +117,65 @@ pub fn resolve_body<R: Read>(arg: Option<&str>, mut stdin: R) -> Result<Option<S
 /// Takes the parsed CLI arguments, performs validation, builds an HTTP request,
 /// sends it via `JiraClient::send_raw`, and prints the response body to stdout.
 pub async fn handle_api(
-    _path: String,
-    _method: HttpMethod,
-    _data: Option<String>,
-    _header: Vec<String>,
-    _client: &JiraClient,
+    path: String,
+    method: HttpMethod,
+    data: Option<String>,
+    header: Vec<String>,
+    client: &JiraClient,
 ) -> Result<()> {
-    // Implemented in Task 7
-    Ok(())
+    // 1. Normalize the path
+    let normalized_path = normalize_path(&path)?;
+
+    // 2. Resolve the body (reads real stdin in production)
+    let body = resolve_body(data.as_deref(), std::io::stdin().lock())?;
+
+    // 3. Parse custom headers (rejects Authorization)
+    let custom_headers: Vec<(HeaderName, HeaderValue)> = header
+        .iter()
+        .map(|h| parse_header(h))
+        .collect::<Result<Vec<_>>>()?;
+
+    // 4. Build the request using the shared client helper, then .build() to get
+    //    a concrete Request we can modify via headers_mut().insert().
+    //    This avoids RequestBuilder::header()'s append semantics which would
+    //    duplicate Content-Type when the user supplies their own.
+    let mut req = client.request(method.into(), &normalized_path).build()?;
+
+    if let Some(ref body_str) = body {
+        *req.body_mut() = Some(body_str.clone().into());
+        req.headers_mut()
+            .insert(CONTENT_TYPE, HeaderValue::from_static("application/json"));
+    }
+
+    for (name, value) in custom_headers {
+        req.headers_mut().insert(name, value);
+    }
+
+    // 5. Send via send_raw — preserves non-2xx responses
+    let response = client.send_raw(req).await?;
+    let status = response.status();
+    let body_bytes = response.bytes().await?;
+
+    // 6. Print response body to stdout (raw bytes, no reformatting).
+    //    Matches gh api behavior: no trailing newline added — preserves
+    //    exact server bytes for file redirection.
+    std::io::stdout().write_all(&body_bytes)?;
+
+    // 7. Handle status code
+    if status.is_success() {
+        Ok(())
+    } else if status.as_u16() == 401 {
+        Err(JrError::NotAuthenticated.into())
+    } else {
+        let message = extract_error_message(&body_bytes);
+        // Print a human error summary to stderr
+        crate::output::print_error(&format!("{message} (HTTP {})", status.as_u16()));
+        Err(JrError::ApiError {
+            status: status.as_u16(),
+            message,
+        }
+        .into())
+    }
 }
 
 #[cfg(test)]
