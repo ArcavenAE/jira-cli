@@ -215,6 +215,58 @@ impl JiraClient {
         unreachable!("retry loop should always return or set last_response");
     }
 
+    /// Send a pre-built request without parsing non-2xx responses into errors.
+    /// Retries 429 up to MAX_RETRIES times. Returns the raw Response for ANY status.
+    ///
+    /// Used by `jr api` (the raw passthrough command) where the caller needs
+    /// the full response body regardless of HTTP status. Auth header is already
+    /// set on the request by `client.request()`.
+    pub async fn send_raw(&self, request: reqwest::Request) -> anyhow::Result<Response> {
+        let mut last_response: Option<Response> = None;
+
+        for attempt in 0..=MAX_RETRIES {
+            let req = request
+                .try_clone()
+                .expect("request should be cloneable (no streaming body)");
+
+            if self.verbose {
+                eprintln!("[verbose] {} {}", req.method(), req.url());
+            }
+
+            let response = match self.client.execute(req).await {
+                Ok(r) => r,
+                Err(e) => {
+                    let url = e
+                        .url()
+                        .map(|u| u.host_str().unwrap_or("unknown").to_string())
+                        .unwrap_or_else(|| "unknown".to_string());
+                    return Err(JrError::NetworkError(url).into());
+                }
+            };
+
+            if response.status() == StatusCode::TOO_MANY_REQUESTS && attempt < MAX_RETRIES {
+                let rate_info = RateLimitInfo::from_headers(response.headers());
+                let delay = rate_info.retry_after_secs.unwrap_or(DEFAULT_RETRY_SECS);
+                if self.verbose {
+                    eprintln!(
+                        "[verbose] Rate limited (429). Retrying in {delay}s (attempt {}/{})",
+                        attempt + 1,
+                        MAX_RETRIES
+                    );
+                }
+                tokio::time::sleep(Duration::from_secs(delay)).await;
+                last_response = Some(response);
+                continue;
+            }
+
+            // Return the response for ANY status (including 4xx/5xx) — no error parsing
+            return Ok(response);
+        }
+
+        // Exhausted retries — return the last 429 response to the caller
+        Ok(last_response.expect("retry loop always sets last_response on 429"))
+    }
+
     /// Parse an error response into a `JrError`.
     async fn parse_error(response: Response) -> anyhow::Error {
         let status = response.status().as_u16();
