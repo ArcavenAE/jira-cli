@@ -223,27 +223,8 @@ impl JiraClient {
             return JrError::NotAuthenticated.into();
         }
 
-        // Try to extract errorMessages from the JSON body
-        let message = match response.text().await {
-            Ok(body) => {
-                if let Ok(json) = serde_json::from_str::<serde_json::Value>(&body) {
-                    // Jira returns { "errorMessages": ["..."] } or { "message": "..." }
-                    if let Some(msgs) = json.get("errorMessages").and_then(|v| v.as_array()) {
-                        let messages: Vec<&str> = msgs.iter().filter_map(|m| m.as_str()).collect();
-                        if !messages.is_empty() {
-                            messages.join("; ")
-                        } else {
-                            body
-                        }
-                    } else if let Some(msg) = json.get("message").and_then(|v| v.as_str()) {
-                        msg.to_string()
-                    } else {
-                        body
-                    }
-                } else {
-                    body
-                }
-            }
+        let message = match response.bytes().await {
+            Ok(body) => extract_error_message(&body),
             Err(e) => format!("Could not read error response: {e}"),
         };
 
@@ -337,4 +318,30 @@ impl JiraClient {
             .request(method, &url)
             .header("Authorization", &self.auth_header)
     }
+}
+
+/// Extract a human-readable error message from a Jira error response body.
+/// Matches the behavior of the old `parse_error` body handling:
+/// 1. Try `errorMessages` array → join with "; "
+/// 2. Try `message` string
+/// 3. Fall back to the raw body string
+pub fn extract_error_message(body: &[u8]) -> String {
+    let body_str = match std::str::from_utf8(body) {
+        Ok(s) => s,
+        Err(_) => return String::from_utf8_lossy(body).into_owned(),
+    };
+
+    if let Ok(json) = serde_json::from_str::<serde_json::Value>(body_str) {
+        if let Some(msgs) = json.get("errorMessages").and_then(|v| v.as_array()) {
+            let messages: Vec<&str> = msgs.iter().filter_map(|m| m.as_str()).collect();
+            if !messages.is_empty() {
+                return messages.join("; ");
+            }
+        }
+        if let Some(msg) = json.get("message").and_then(|v| v.as_str()) {
+            return msg.to_string();
+        }
+    }
+
+    body_str.to_string()
 }

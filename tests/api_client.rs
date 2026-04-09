@@ -1,4 +1,5 @@
 use jr::api::client::JiraClient;
+use jr::api::client::extract_error_message;
 use serde::Deserialize;
 use wiremock::matchers::{header, method, path};
 use wiremock::{Mock, MockServer, ResponseTemplate};
@@ -92,4 +93,47 @@ async fn test_401_returns_not_authenticated() {
         err_string.contains("Not authenticated"),
         "Expected 'Not authenticated' in error, got: {err_string}"
     );
+}
+
+#[test]
+fn test_extract_error_message_from_error_messages_array() {
+    let body =
+        br#"{"errorMessages":["Issue does not exist","Or you lack permission"],"errors":{}}"#;
+    let result = extract_error_message(body);
+    assert_eq!(result, "Issue does not exist; Or you lack permission");
+}
+
+#[test]
+fn test_extract_error_message_from_message_field() {
+    let body = br#"{"message":"Property with key not found"}"#;
+    let result = extract_error_message(body);
+    assert_eq!(result, "Property with key not found");
+}
+
+#[test]
+fn test_extract_error_message_prefers_error_messages_over_message() {
+    let body = br#"{"errorMessages":["first"],"message":"second"}"#;
+    let result = extract_error_message(body);
+    assert_eq!(result, "first");
+}
+
+#[test]
+fn test_extract_error_message_empty_error_messages_falls_back_to_body() {
+    let body = br#"{"errorMessages":[]}"#;
+    let result = extract_error_message(body);
+    assert_eq!(result, r#"{"errorMessages":[]}"#);
+}
+
+#[test]
+fn test_extract_error_message_plain_text_body() {
+    let body = b"Internal Server Error";
+    let result = extract_error_message(body);
+    assert_eq!(result, "Internal Server Error");
+}
+
+#[test]
+fn test_extract_error_message_empty_body() {
+    let body = b"";
+    let result = extract_error_message(body);
+    assert_eq!(result, "");
 }
