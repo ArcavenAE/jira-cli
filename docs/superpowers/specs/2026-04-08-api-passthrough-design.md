@@ -62,7 +62,7 @@ jr api /rest/api/3/myself | jq .accountId
 - **No placeholder magic** (unlike `gh api`'s `{owner}/{repo}`) — `jr` has no equivalent "current repo" notion; users pass literal paths.
 - **No `--output` flag** — `jr api` always returns raw JSON from the server. The global `--output` flag is ignored by this command.
 - **No built-in `--jq`, `--paginate`, `--field`** — users pipe to `jq` or handle pagination via URL query params. More composable, follows Unix philosophy, smaller surface area.
-- **Path normalization:** if the path does not start with `/`, prepend one. Absolute URLs (starting with `http://` or `https://`) are rejected with `BadInput` — the instance URL comes from config.
+- **Path normalization:** if the path does not start with `/`, prepend one. Absolute URLs (starting with `http://` or `https://`) are rejected with `UserError` — the instance URL comes from config.
 - **`@file` / `@-` curl conventions** for body input. A filename literally starting with `@` requires `./` prefix (documented footgun, identical to curl).
 
 ## Architecture
@@ -110,7 +110,7 @@ Small enough to stay in one file.
 
 1. **Parse args** — clap derives method, path, data, header list.
 2. **Normalize path** (`normalize_path`):
-   - If starts with `http://` or `https://` → `JrError::BadInput` ("Use a path like /rest/api/3/... — do not include the instance URL")
+   - If starts with `http://` or `https://` → `JrError::UserError` ("Use a path like /rest/api/3/... — do not include the instance URL")
    - If starts with `/` → use as-is
    - Otherwise → prepend `/`
 3. **Resolve body** (`resolve_body`):
@@ -118,8 +118,8 @@ Small enough to stay in one file.
    - `Some("@-")` → read entire stdin into a `String`
    - `Some("@filename")` → read entire file into a `String`
    - `Some(inline)` → use as-is
-4. **Validate body is JSON** if present — `serde_json::from_str::<Value>(&body)`. On parse error, `JrError::BadInput("Request body is not valid JSON: {err}")`.
-5. **Parse headers** (`parse_header`): split each `-H` value on the **first** `:`, trim whitespace on both sides. Empty key or missing `:` → `JrError::BadInput("Header must be in 'Key: Value' format")`. Reject any user-supplied `Authorization` header (case-insensitive match) → `JrError::BadInput("Cannot override the Authorization header — auth is managed by jr")`. This prevents accidental credential leakage via `--verbose` output and ensures the escape hatch always uses the stored credentials.
+4. **Validate body is JSON** if present — `serde_json::from_str::<Value>(&body)`. On parse error, `JrError::UserError("Request body is not valid JSON: {err}")`.
+5. **Parse headers** (`parse_header`): split each `-H` value on the **first** `:`, trim whitespace on both sides. Empty key or missing `:` → `JrError::UserError("Header must be in 'Key: Value' format")`. Reject any user-supplied `Authorization` header (case-insensitive match) → `JrError::UserError("Cannot override the Authorization header — auth is managed by jr")`. This prevents accidental credential leakage via `--verbose` output and ensures the escape hatch always uses the stored credentials.
 6. **Build request:**
    - Start with `client.request(method, &path)` — returns a `RequestBuilder` with URL and auth header set
    - `.build()?` to get a concrete `reqwest::Request`
@@ -138,10 +138,12 @@ Small enough to stay in one file.
 |----------|-----------|--------|
 | 2xx response | 0 | success |
 | 4xx/5xx response | 1 | `JrError::ApiError` |
-| 401 response | 1 | `JrError::NotAuthenticated` |
-| Invalid path, bad JSON body, bad header format | 64 | `JrError::BadInput` |
-| File read error (`@file`) | 66 | `JrError::InputError` |
+| 401 response | 2 | `JrError::NotAuthenticated` |
+| Invalid path, bad JSON body, bad header format | 64 | `JrError::UserError` |
+| File read error (`@file`) | 1 | `JrError::Io` (propagated via `?`) |
 | Network error | 1 | `JrError::NetworkError` |
+
+Note: exit codes are derived from the `impl JrError::exit_code()` at `src/error.rs:34`. `UserError` → 64; `NotAuthenticated` → 2; all other variants → 1.
 
 ### Stdout/Stderr Split
 
@@ -222,8 +224,8 @@ pub async fn send_raw(&self, request: reqwest::Request) -> anyhow::Result<reqwes
 | Header missing `:` | `Header must be in 'Key: Value' format (got: <value>)` | 64 |
 | Header key is empty | `Header key cannot be empty` | 64 |
 | User-supplied `Authorization` header | `Cannot override the Authorization header — auth is managed by jr` | 64 |
-| `@file` does not exist | `Cannot read body file <path>: <os error>` | 66 |
-| 401 response | `Not authenticated. Run 'jr auth login' to refresh your credentials.` | 1 |
+| `@file` does not exist | Propagated from `std::fs::read_to_string` (`No such file or directory`) | 1 |
+| 401 response | `Not authenticated. Run "jr auth login" to connect.` | 2 |
 | Other HTTP error | `Error: <errorMessages or message> (HTTP <status>)` on stderr, body on stdout | 1 |
 
 ## Testing
@@ -234,18 +236,18 @@ pub async fn send_raw(&self, request: reqwest::Request) -> anyhow::Result<reqwes
 |------|------------------|
 | `test_normalize_path_with_slash` | `/rest/api/3/myself` → unchanged |
 | `test_normalize_path_without_slash` | `rest/api/3/myself` → `/rest/api/3/myself` |
-| `test_normalize_path_rejects_http_url` | `http://site.atlassian.net/foo` → `BadInput` |
-| `test_normalize_path_rejects_https_url` | `https://site.atlassian.net/foo` → `BadInput` |
+| `test_normalize_path_rejects_http_url` | `http://site.atlassian.net/foo` → `UserError` |
+| `test_normalize_path_rejects_https_url` | `https://site.atlassian.net/foo` → `UserError` |
 | `test_parse_header_valid` | `"X-Foo: bar"` → `("X-Foo", "bar")` |
-| `test_parse_header_no_colon` | `"X-Foo bar"` → `BadInput` |
-| `test_parse_header_empty_key` | `": bar"` → `BadInput` |
+| `test_parse_header_no_colon` | `"X-Foo bar"` → `UserError` |
+| `test_parse_header_empty_key` | `": bar"` → `UserError` |
 | `test_parse_header_trims_whitespace` | `"X-Foo:   bar  "` → `("X-Foo", "bar")` |
 | `test_parse_header_value_with_colon` | `"X-Request-Id: abc:def"` → `("X-Request-Id", "abc:def")` (first-colon split) |
-| `test_parse_header_rejects_authorization` | `"Authorization: Bearer foo"` → `BadInput` |
-| `test_parse_header_rejects_authorization_case_insensitive` | `"authorization: Bearer foo"` → `BadInput` |
+| `test_parse_header_rejects_authorization` | `"Authorization: Bearer foo"` → `UserError` |
+| `test_parse_header_rejects_authorization_case_insensitive` | `"authorization: Bearer foo"` → `UserError` |
 | `test_resolve_body_none` | `None` → `Ok(None)` |
 | `test_resolve_body_inline_json` | `Some("{\"a\":1}")` → `Ok(Some("{\"a\":1}"))` |
-| `test_resolve_body_invalid_json` | `Some("not json")` → `BadInput` |
+| `test_resolve_body_invalid_json` | `Some("not json")` → `UserError` |
 | `test_resolve_body_at_file` | `Some("@/tmp/test.json")` reads the file contents |
 | `test_resolve_body_at_file_not_found` | `Some("@/no/such/file")` → `InputError` |
 | `test_resolve_body_at_dash_reads_stdin` | `Some("@-")` with injected `Cursor` → body matches Cursor content |
@@ -302,7 +304,7 @@ All JSON is synthetic. No real project keys, org IDs, account IDs, or instance U
 ## Caveats
 
 - **Header append footgun:** `reqwest::RequestBuilder::header()` appends rather than replaces. The implementation must build the `Request` via `.build()` and manipulate `req.headers_mut()` directly with `insert()`. The exactly-one-header test enforces this invariant.
-- **Auth header cannot be overridden:** User-supplied `-H Authorization: ...` is rejected with a `BadInput` error. Auth is managed by `jr` via `client.request()`, and explicit rejection prevents accidental credential leakage via `--verbose` output.
+- **Auth header cannot be overridden:** User-supplied `-H Authorization: ...` is rejected with a `UserError` error. Auth is managed by `jr` via `client.request()`, and explicit rejection prevents accidental credential leakage via `--verbose` output.
 - **Body size:** The entire body is read into memory before sending. Not suitable for very large payloads (multi-MB uploads) — but Jira's standard API is not typically used for large payloads.
 - **Streaming responses:** `jr api` reads the entire response into memory before printing. Fine for JSON payloads; not suitable for streaming endpoints (Jira has none in practice).
 - **`@` prefix in filenames:** A filename literally starting with `@` must be passed as `./@file.json` to avoid being interpreted as a nested reference. Matches curl's behavior.
