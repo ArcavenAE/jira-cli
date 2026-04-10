@@ -60,7 +60,7 @@ jr api /rest/api/3/myself | jq .accountId
 ### Design Choices
 
 - **No placeholder magic** (unlike `gh api`'s `{owner}/{repo}`) — `jr` has no equivalent "current repo" notion; users pass literal paths.
-- **No `--output` flag** — `jr api` always returns raw JSON from the server. The global `--output` flag is ignored by this command.
+- **Stdout is always raw** — `jr api` prints the server's response body to stdout verbatim, regardless of the global `--output` flag. However, stderr error formatting (on non-2xx responses) still follows `--output` — when `--output json` is set, errors appear as `{"error":"...","code":N}` on stderr, consistent with all other `jr` commands.
 - **No built-in `--jq`, `--paginate`, `--field`** — users pipe to `jq` or handle pagination via URL query params. More composable, follows Unix philosophy, smaller surface area.
 - **Path normalization:** if the path does not start with `/`, prepend one. Absolute URLs (starting with `http://` or `https://`) are rejected with `UserError` — the instance URL comes from config.
 - **`@file` / `@-` curl conventions** for body input. A filename literally starting with `@` requires `./` prefix (documented footgun, identical to curl).
