@@ -119,10 +119,54 @@ fn test_extract_error_message_prefers_error_messages_over_message() {
 }
 
 #[test]
-fn test_extract_error_message_empty_error_messages_falls_back_to_body() {
-    let body = br#"{"errorMessages":[]}"#;
+fn test_extract_error_message_empty_error_messages_falls_back_to_errors_object() {
+    let body = br#"{"errorMessages":[],"errors":{"summary":"You must specify a summary"}}"#;
     let result = extract_error_message(body);
-    assert_eq!(result, r#"{"errorMessages":[]}"#);
+    assert_eq!(result, "summary: You must specify a summary");
+}
+
+#[test]
+fn test_extract_error_message_errors_object_multiple_fields() {
+    let body =
+        br#"{"errorMessages":[],"errors":{"summary":"is required","priority":"is required"}}"#;
+    let result = extract_error_message(body);
+    assert_eq!(result, "priority: is required; summary: is required");
+}
+
+#[test]
+fn test_extract_error_message_errors_object_empty_falls_through() {
+    let body = br#"{"errorMessages":[],"errors":{}}"#;
+    let result = extract_error_message(body);
+    // Empty errors object, no message field → raw body fallback
+    assert_eq!(result, r#"{"errorMessages":[],"errors":{}}"#);
+}
+
+#[test]
+fn test_extract_error_message_errors_object_nested_value() {
+    let body = br#"{"errorMessages":[],"errors":{"customfield_10001":{"messages":["invalid"]}}}"#;
+    let result = extract_error_message(body);
+    assert_eq!(result, r#"customfield_10001: {"messages":["invalid"]}"#);
+}
+
+#[test]
+fn test_extract_error_message_errors_object_mixed_values() {
+    let body = br#"{"errorMessages":[],"errors":{"summary":"is required","components":["a","b"]}}"#;
+    let result = extract_error_message(body);
+    assert!(
+        result.contains("summary: is required"),
+        "expected 'summary: is required' in '{result}'"
+    );
+    assert!(
+        result.contains(r#"components: ["a","b"]"#),
+        "expected serialized array in '{result}'"
+    );
+}
+
+#[test]
+fn test_extract_error_message_error_message_singular() {
+    let body = br#"{"errorMessage":"Cannot find issue"}"#;
+    let result = extract_error_message(body);
+    assert_eq!(result, "Cannot find issue");
 }
 
 #[test]
@@ -136,7 +180,7 @@ fn test_extract_error_message_plain_text_body() {
 fn test_extract_error_message_empty_body() {
     let body = b"";
     let result = extract_error_message(body);
-    assert_eq!(result, "");
+    assert_eq!(result, "<empty response body>");
 }
 
 #[tokio::test]
