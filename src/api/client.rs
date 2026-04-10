@@ -407,7 +407,13 @@ pub fn extract_error_message(body: &[u8]) -> String {
             if !errors.is_empty() {
                 let mut pairs: Vec<String> = errors
                     .iter()
-                    .filter_map(|(k, v)| v.as_str().map(|s| format!("{k}: {s}")))
+                    .map(|(k, v)| {
+                        if let Some(s) = v.as_str() {
+                            format!("{k}: {s}")
+                        } else {
+                            format!("{k}: {v}")
+                        }
+                    })
                     .collect();
                 pairs.sort();
                 return pairs.join("; ");

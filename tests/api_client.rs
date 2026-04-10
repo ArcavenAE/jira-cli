@@ -150,6 +150,27 @@ fn test_extract_error_message_errors_object_empty_falls_through() {
 }
 
 #[test]
+fn test_extract_error_message_errors_object_nested_value() {
+    let body = br#"{"errorMessages":[],"errors":{"customfield_10001":{"messages":["invalid"]}}}"#;
+    let result = extract_error_message(body);
+    assert_eq!(result, r#"customfield_10001: {"messages":["invalid"]}"#);
+}
+
+#[test]
+fn test_extract_error_message_errors_object_mixed_values() {
+    let body = br#"{"errorMessages":[],"errors":{"summary":"is required","components":["a","b"]}}"#;
+    let result = extract_error_message(body);
+    assert!(
+        result.contains("summary: is required"),
+        "expected 'summary: is required' in '{result}'"
+    );
+    assert!(
+        result.contains(r#"components: ["a","b"]"#),
+        "expected serialized array in '{result}'"
+    );
+}
+
+#[test]
 fn test_extract_error_message_error_message_singular() {
     let body = br#"{"errorMessage":"Cannot find issue"}"#;
     let result = extract_error_message(body);
