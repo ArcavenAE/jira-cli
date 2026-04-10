@@ -1309,3 +1309,29 @@ async fn test_handler_api_stdout_byte_exact() {
         // Byte-exact: no trailing newline, no pretty-printing
         .stdout(predicate::eq(exact_body));
 }
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn test_handler_api_output_json_flag_ignored() {
+    let server = MockServer::start().await;
+
+    let raw_body = r#"{"accountId":"abc-123"}"#;
+
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/myself"))
+        .respond_with(ResponseTemplate::new(200).set_body_string(raw_body))
+        .expect(1)
+        .mount(&server)
+        .await;
+
+    // Pass --output json globally — jr api should still return raw body, not wrapped
+    let mut cmd = Command::cargo_bin("jr").unwrap();
+    cmd.env("JR_BASE_URL", server.uri())
+        .env("JR_AUTH_HEADER", "Basic dGVzdDp0ZXN0")
+        .arg("--no-input")
+        .arg("--output")
+        .arg("json")
+        .args(["api", "/rest/api/3/myself"])
+        .assert()
+        .success()
+        .stdout(predicate::eq(raw_body));
+}

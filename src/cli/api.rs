@@ -39,6 +39,9 @@ impl From<HttpMethod> for Method {
 /// - Reject absolute URLs (starting with `http://` or `https://`)
 pub fn normalize_path(raw: &str) -> Result<String> {
     let trimmed = raw.trim();
+    if trimmed.is_empty() {
+        return Err(JrError::UserError("API path cannot be empty".into()).into());
+    }
     let lower = trimmed.to_ascii_lowercase();
     if lower.starts_with("http://") || lower.starts_with("https://") {
         return Err(JrError::UserError(
@@ -217,6 +220,18 @@ mod tests {
     fn test_normalize_path_rejects_mixed_case_http() {
         let err = normalize_path("Http://site.atlassian.net/foo").unwrap_err();
         assert!(err.to_string().contains("do not include the instance URL"));
+    }
+
+    #[test]
+    fn test_normalize_path_rejects_empty() {
+        let err = normalize_path("").unwrap_err();
+        assert!(err.to_string().contains("cannot be empty"));
+    }
+
+    #[test]
+    fn test_normalize_path_rejects_whitespace_only() {
+        let err = normalize_path("   ").unwrap_err();
+        assert!(err.to_string().contains("cannot be empty"));
     }
 
     #[test]
