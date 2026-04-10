@@ -215,6 +215,63 @@ impl JiraClient {
         unreachable!("retry loop should always return or set last_response");
     }
 
+    /// Send a pre-built request without parsing non-2xx responses into errors.
+    ///
+    /// Retries 429 up to MAX_RETRIES times using `Retry-After`. Returns the raw
+    /// `Response` for ANY HTTP status (2xx, 4xx, 5xx), including after exhausting
+    /// 429 retries — callers MUST check `response.status()` to detect errors.
+    /// Network-level failures are still returned as `Err(JrError::NetworkError)`.
+    ///
+    /// Used by `jr api` (the raw passthrough command) where the caller needs the
+    /// full response body regardless of HTTP status. Auth header is already set
+    /// on the request by `client.request()`.
+    pub async fn send_raw(&self, request: reqwest::Request) -> anyhow::Result<Response> {
+        for attempt in 0..=MAX_RETRIES {
+            let req = request.try_clone().ok_or_else(|| {
+                anyhow::anyhow!(
+                    "request cannot be retried because it is not cloneable \
+                     (for example, it may use a streaming body)"
+                )
+            })?;
+
+            if self.verbose {
+                eprintln!("[verbose] {} {}", req.method(), req.url());
+            }
+
+            let response = match self.client.execute(req).await {
+                Ok(r) => r,
+                Err(e) => {
+                    let url = e
+                        .url()
+                        .map(|u| u.host_str().unwrap_or("unknown").to_string())
+                        .unwrap_or_else(|| "unknown".to_string());
+                    return Err(JrError::NetworkError(url).into());
+                }
+            };
+
+            if response.status() == StatusCode::TOO_MANY_REQUESTS && attempt < MAX_RETRIES {
+                let rate_info = RateLimitInfo::from_headers(response.headers());
+                let delay = rate_info.retry_after_secs.unwrap_or(DEFAULT_RETRY_SECS);
+                if self.verbose {
+                    eprintln!(
+                        "[verbose] Rate limited (429). Retrying in {delay}s (attempt {}/{})",
+                        attempt + 1,
+                        MAX_RETRIES
+                    );
+                }
+                // Drop the 429 response before sleeping so its body isn't held open
+                drop(response);
+                tokio::time::sleep(Duration::from_secs(delay)).await;
+                continue;
+            }
+
+            // Return the response for ANY status (including 4xx/5xx) — no error parsing
+            return Ok(response);
+        }
+
+        unreachable!("loop iterates 0..=MAX_RETRIES; final iteration returns")
+    }
+
     /// Parse an error response into a `JrError`.
     async fn parse_error(response: Response) -> anyhow::Error {
         let status = response.status().as_u16();
@@ -223,27 +280,8 @@ impl JiraClient {
             return JrError::NotAuthenticated.into();
         }
 
-        // Try to extract errorMessages from the JSON body
-        let message = match response.text().await {
-            Ok(body) => {
-                if let Ok(json) = serde_json::from_str::<serde_json::Value>(&body) {
-                    // Jira returns { "errorMessages": ["..."] } or { "message": "..." }
-                    if let Some(msgs) = json.get("errorMessages").and_then(|v| v.as_array()) {
-                        let messages: Vec<&str> = msgs.iter().filter_map(|m| m.as_str()).collect();
-                        if !messages.is_empty() {
-                            messages.join("; ")
-                        } else {
-                            body
-                        }
-                    } else if let Some(msg) = json.get("message").and_then(|v| v.as_str()) {
-                        msg.to_string()
-                    } else {
-                        body
-                    }
-                } else {
-                    body
-                }
-            }
+        let message = match response.bytes().await {
+            Ok(body) => extract_error_message(&body),
             Err(e) => format!("Could not read error response: {e}"),
         };
 
@@ -337,4 +375,36 @@ impl JiraClient {
             .request(method, &url)
             .header("Authorization", &self.auth_header)
     }
+}
+
+/// Extract a human-readable error message from a Jira error response body.
+///
+/// Precedence:
+/// 1. Non-empty `errorMessages` array → joined with "; "
+/// 2. `message` string field
+/// 3. Raw body as a string (fallback)
+///
+/// Note: Jira's common validation error format
+/// `{"errorMessages":[],"errors":{"field":"msg"}}` is not parsed — it falls
+/// through to the raw body. Expanding `errors` object support is tracked
+/// as a follow-up enhancement.
+pub fn extract_error_message(body: &[u8]) -> String {
+    let body_str = match std::str::from_utf8(body) {
+        Ok(s) => s,
+        Err(_) => return String::from_utf8_lossy(body).into_owned(),
+    };
+
+    if let Ok(json) = serde_json::from_str::<serde_json::Value>(body_str) {
+        if let Some(msgs) = json.get("errorMessages").and_then(|v| v.as_array()) {
+            let messages: Vec<&str> = msgs.iter().filter_map(|m| m.as_str()).collect();
+            if !messages.is_empty() {
+                return messages.join("; ");
+            }
+        }
+        if let Some(msg) = json.get("message").and_then(|v| v.as_str()) {
+            return msg.to_string();
+        }
+    }
+
+    body_str.to_string()
 }
