@@ -286,10 +286,10 @@ assert_eq!(content_type_count, 1);
 | `test_send_raw_returns_response_for_404` | `send_raw` returns `Response` (NOT an error) for 404 — critical for raw passthrough |
 | `test_send_raw_retries_429` | `send_raw` retries 429 with `Retry-After`, then returns 200 response |
 | `test_send_raw_returns_response_after_exhausted_429` | After `MAX_RETRIES` 429s, returns the 429 `Response` (caller decides what to do) |
-| `test_extract_error_message_from_error_messages` | `{"errorMessages":["foo","bar"]}` → `"foo; bar"` |
+| `test_extract_error_message_from_error_messages_array` | `{"errorMessages":["foo","bar"]}` → `"foo; bar"` |
 | `test_extract_error_message_from_message_field` | `{"message":"foo"}` → `"foo"` |
-| `test_extract_error_message_from_plain_text` | `"not json"` → `"not json"` (fallback) |
-| `test_extract_error_message_from_empty_body` | `""` → `"<empty response body>"` |
+| `test_extract_error_message_plain_text_body` | `"not json"` → `"not json"` (fallback) |
+| `test_extract_error_message_empty_body` | `""` → `"<empty response body>"` |
 
 ### Stdin Testing Approach
 
