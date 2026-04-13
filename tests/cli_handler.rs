@@ -1335,3 +1335,48 @@ async fn test_handler_api_output_json_flag_ignored() {
         .success()
         .stdout(predicate::eq(raw_body));
 }
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn test_api_warns_on_429_retry_exhaustion() {
+    let server = MockServer::start().await;
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/myself"))
+        .respond_with(
+            ResponseTemplate::new(429)
+                .insert_header("Retry-After", "0")
+                .set_body_string(r#"{"errorMessages":["Rate limit exceeded"]}"#),
+        )
+        .expect(4) // initial + 3 retries (MAX_RETRIES)
+        .mount(&server)
+        .await;
+
+    jr_api_cmd(&server.uri())
+        .args(["api", "/rest/api/3/myself"])
+        .assert()
+        .failure()
+        .stderr(predicate::str::contains("warning: rate limited by Jira"))
+        .stderr(predicate::str::contains("3 retries"))
+        .stderr(predicate::str::contains("Wait a moment and try again"));
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn test_send_warns_on_429_retry_exhaustion() {
+    let server = MockServer::start().await;
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/issue/FAKE-1"))
+        .respond_with(
+            ResponseTemplate::new(429)
+                .insert_header("Retry-After", "0")
+                .set_body_string(r#"{"errorMessages":["Rate limit exceeded"]}"#),
+        )
+        .expect(4) // initial + 3 retries (MAX_RETRIES)
+        .mount(&server)
+        .await;
+
+    jr_cmd(&server.uri())
+        .args(["issue", "view", "FAKE-1"])
+        .assert()
+        .failure()
+        .stderr(predicate::str::contains("warning: rate limited by Jira"))
+        .stderr(predicate::str::contains("3 retries"));
+}
