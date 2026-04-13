@@ -1355,5 +1355,6 @@ async fn test_api_warns_on_429_retry_exhaustion() {
         .assert()
         .failure()
         .stderr(predicate::str::contains("warning: rate limited by Jira"))
-        .stderr(predicate::str::contains("3 retries"));
+        .stderr(predicate::str::contains("3 retries"))
+        .stderr(predicate::str::contains("Wait a moment and try again"));
 }
