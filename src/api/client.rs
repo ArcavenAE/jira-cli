@@ -265,6 +265,11 @@ impl JiraClient {
                 continue;
             }
 
+            // Warn the user if we exhausted retries on a 429
+            if response.status() == StatusCode::TOO_MANY_REQUESTS {
+                eprintln!("warning: rate limited by Jira — gave up after {MAX_RETRIES} retries");
+            }
+
             // Return the response for ANY status (including 4xx/5xx) — no error parsing
             return Ok(response);
         }
