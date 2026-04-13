@@ -199,7 +199,14 @@ impl JiraClient {
                 continue;
             }
 
-            // For non-429 errors, parse and return the error
+            // Warn the user if we exhausted retries on a 429
+            if response.status() == StatusCode::TOO_MANY_REQUESTS {
+                eprintln!(
+                    "warning: rate limited by Jira — gave up after {MAX_RETRIES} retries. Wait a moment and try again."
+                );
+            }
+
+            // Parse and return any error response (including 429 after exhausting retries)
             if response.status().is_client_error() || response.status().is_server_error() {
                 return Err(Self::parse_error(response).await);
             }
@@ -263,6 +270,13 @@ impl JiraClient {
                 drop(response);
                 tokio::time::sleep(Duration::from_secs(delay)).await;
                 continue;
+            }
+
+            // Warn the user if we exhausted retries on a 429
+            if response.status() == StatusCode::TOO_MANY_REQUESTS {
+                eprintln!(
+                    "warning: rate limited by Jira — gave up after {MAX_RETRIES} retries. Wait a moment and try again."
+                );
             }
 
             // Return the response for ANY status (including 4xx/5xx) — no error parsing
