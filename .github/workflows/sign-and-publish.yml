@@ -51,7 +51,55 @@ jobs:
           key: ${{ matrix.target }}
 
       - name: Build
+        env:
+          JR_BUILD_OAUTH_CLIENT_ID: ${{ secrets.OAUTH_CLIENT_ID }}
+          JR_BUILD_OAUTH_CLIENT_SECRET: ${{ secrets.OAUTH_CLIENT_SECRET }}
         run: cargo build --release --target ${{ matrix.target }}
+
+      - name: Verify embedded OAuth app present
+        env:
+          # Skip on forks / when secrets aren't configured — the build still
+          # produced a valid (unbranded BYO) binary in that case.
+          HAS_EMBED_SECRETS: ${{ (secrets.OAUTH_CLIENT_ID != '' && secrets.OAUTH_CLIENT_SECRET != '') && 'yes' || 'no' }}
+        run: |
+          if [ "$HAS_EMBED_SECRETS" != "yes" ]; then
+            echo "Skipping embedded-creds smoke: OAUTH_CLIENT_ID/_SECRET not configured."
+            exit 0
+          fi
+          BIN="target/${{ matrix.target }}/release/jr"
+          NATIVE_TRIPLE="$(rustc -vV | sed -n 's/host: //p')"
+          if [ "${{ matrix.target }}" != "$NATIVE_TRIPLE" ]; then
+            echo "Skipping embedded-creds smoke for non-native target ${{ matrix.target }}"
+            exit 0
+          fi
+          export XDG_CONFIG_HOME="$HOME/.config"
+          export JR_PROFILE=__alpha_smoke
+          export JR_SERVICE_NAME=jr-alpha-smoke-$$
+          mkdir -p "$HOME/.config/jr"
+          cat > "$HOME/.config/jr/config.toml" <<EOF
+          default_profile = "__alpha_smoke"
+          [profiles.__alpha_smoke]
+          url = "https://example.atlassian.net"
+          auth_method = "oauth"
+          EOF
+          OUT="$($BIN auth status 2>&1 || true)"
+          echo "$OUT"
+          echo "$OUT" | grep -q "OAuth app: *embedded" \
+            || { echo "alpha binary missing embedded OAuth credentials"; exit 1; }
+          EMBEDDED_OAUTH_RS="$(find target/${{ matrix.target }}/release/build -path '*/out/embedded_oauth.rs' -print -quit)"
+          if [ -z "$EMBEDDED_OAUTH_RS" ]; then
+            echo "embedded_oauth.rs not found at expected build output path"
+            exit 1
+          fi
+          if grep -q 'EMBEDDED_ID: Option<&str> = None' "$EMBEDDED_OAUTH_RS"; then
+            echo "embedded_oauth.rs has EMBEDDED_ID = None — build.rs did not see JR_BUILD_OAUTH_CLIENT_ID"
+            exit 1
+          fi
+          if grep -q 'EMBEDDED_SECRET_XOR: Option<&\[u8\]> = None' "$EMBEDDED_OAUTH_RS"; then
+            echo "embedded_oauth.rs has EMBEDDED_SECRET_XOR = None — build.rs did not see JR_BUILD_OAUTH_CLIENT_SECRET"
+            exit 1
+          fi
+          echo "embedded_oauth.rs at $EMBEDDED_OAUTH_RS has populated constants"
 
       - name: Rename binary
         run: cp target/${{ matrix.target }}/release/jr jr-a-darwin-${{ matrix.arch }}
