@@ -166,3 +166,29 @@ Phase 1d adversary Pass 1 + fixes. Adversarial review produced 30 findings (4C/1
 | state-manager | Stage + commit 23 files; update STATE.md + burst-log | factory-artifacts e00d01e (fixes), + state commit (this) |
 
 ---
+
+## Burst 7 (2026-05-04)
+
+**Agents dispatched:** adversary (fresh-context), state-manager
+**Files touched:** .factory/cycles/cycle-001/adversarial-reviews/adv-p1-pass2.md, .factory/STATE.md, .factory/cycles/cycle-001/burst-log.md
+**Versions bumped:** (none)
+
+### Summary
+
+Adversary Pass 2 complete. 15 findings (0 CRITICAL / 6 HIGH / 6 MEDIUM / 3 LOW). Pass 1=30 → Pass 2=15. Trend favorable. Convergence counter 0/3 (need 3 consecutive clean passes; Pass 2 still has 6 HIGH requiring fixes before Pass 3).
+
+Key HIGH findings:
+- ADV-P2-001: extract_error_message 3-way contradiction across 4 docs (error-taxonomy 6 vs 7 level header/body; BC-7.3.001 vs BC-7.3.005 empty-body; BC-INDEX wrong quote)
+- ADV-P2-002: ≥11 of 48 holdout BC anchors incorrect after rebuild
+- ADV-P2-003: NFR-R-NEW-1 referenced in 4 places but missing from NFR catalog
+- ADV-P2-004: NFR-S-E severity — LOW (nfr-catalog) vs CRITICAL (cicd-setup) vs absent (risk-register)
+- ADV-P2-005: NFR catalog count disagrees 4 ways (45 / 44 / 43 / 40)
+- ADV-P2-006: DTU assessment cites 47 holdouts vs canonical 48
+
+### Details
+
+| Agent | Task | Output |
+|-------|------|--------|
+| adversary | Phase 1d adversarial spec review Pass 2 (fresh-context) | adv-p1-pass2.md (15 findings; 0C/6H/6M/3L) |
+| state-manager | Persist Pass 2 findings; update STATE.md convergence + checkpoint; commit | factory-artifacts (this commit) |
+

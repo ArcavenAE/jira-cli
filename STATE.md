@@ -61,7 +61,7 @@ Goal 1c: **Harden v0.5 + feature delivery** — formalize existing codebase with
 | pre-pipeline: Setup | complete | 2026-05-04 | 2026-05-04 | env-preflight | |
 | 0: Codebase Ingestion | **COMPLETE** | 2026-05-04 | 2026-05-04 | Phase A + B + B.5 + B.6 + C + gate APPROVED | |
 | 1: Spec Crystallization | **entry** | 2026-05-04 | | DEC-004 pending (scope choice) | |
-| 1d: Adversarial Spec Review | **Pass 1 COMPLETE** | 2026-05-04 | | Pass 2 next | 30→? (Pass 1: 30 findings; 29 addressed, 1 deferred) |
+| 1d: Adversarial Spec Review | **Pass 2 COMPLETE** | 2026-05-04 | | Pass 3 next (after fixes) | 30→15 (Pass 1: 30; Pass 2: 15; 0 CRITICAL) |
 | 2: Story Decomposition | not-started | | | | |
 | 2-adv: Adversarial Story Review | not-started | | | | |
 | 3: TDD Implementation | not-started | | | | |
@@ -121,7 +121,7 @@ Goal 1c: **Harden v0.5 + feature delivery** — formalize existing codebase with
 ## Convergence Trackers
 
 ### Phase 1d — Adversarial Spec Review
-_Pass 1 complete. Pass 2 next._
+_Pass 2 complete. Fixes needed before Pass 3._
 
 ```yaml
 convergence_trajectory:
@@ -131,6 +131,11 @@ convergence_trajectory:
     addressed: 29
     deferred: 1
     delta: null
+  - pass: 2
+    findings: 15
+    severity: "0C/6H/6M/3L"
+    delta: -15
+    trend: FAVORABLE
 ```
 
 ### Phase 2-adv — Adversarial Story Review
@@ -161,8 +166,8 @@ convergence_trajectory: []
 | Field | Value |
 |-------|-------|
 | **Date** | 2026-05-04 |
-| **Position** | Phase 1 ACTIVE — Phase 1d adversary Pass 1 COMPLETE (30 findings; 29 addressed, 1 deferred). factory-artifacts HEAD e00d01e (Pass 1 fixes). BC-INDEX rebuilt. 3 SD-NNN security decisions created. Next action: dispatch adversary Pass 2 (/vsdd-factory:phase-1d-adversarial-spec-review Pass 2). |
-| **Convergence counter** | 1 of 3 |
+| **Position** | Phase 1 ACTIVE — Phase 1d adversary Pass 2 COMPLETE (15 findings; 0 CRITICAL). Trend favorable (30→15). HIGH: extract_error_message 3-way contradiction; ≥11 holdout anchor errors; NFR-R-NEW-1 orphan; NFR-S-E severity disagreement; NFR catalog 4-way count drift; DTU holdout count off-by-one. Next action: route fixes to product-owner + architect, then Pass 3. |
+| **Convergence counter** | 0 of 3 (clean passes needed; Pass 2 had 6 HIGH) |
 
 ## Historical Content
 
