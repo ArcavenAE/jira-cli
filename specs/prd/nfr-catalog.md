@@ -189,7 +189,7 @@ All four MUST-FIX items (NFR-R-D, NFR-R-A, NFR-R-B, NFR-R-E) have been crystalli
 | NFR-SCA-3 | Scalability | LOW | DOCUMENT-AS-IS | — |
 
 **Phase 3 routing summary:**
-- FIX-IN-PHASE-3: 9 (1 CRITICAL, 5 HIGH, 0 MEDIUM, 3 LOW)
+- FIX-IN-PHASE-3: 9 (1 CRITICAL, 5 HIGH, 2 MEDIUM, 1 LOW)
 - SECURITY-DECIDE: 3 (1 HIGH, 2 MEDIUM)
 - POLICY-DECISION: 3 (3 MEDIUM)
 - DOCUMENT-AS-IS: 15 (LOW or MEDIUM, includes NFR-R-NEW-1)

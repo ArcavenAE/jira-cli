@@ -21,7 +21,7 @@
 | [component-graph.md](component-graph.md) | Mermaid module dependency graph (Pass 1 R1+R2 verified, acyclic DAG) |
 | [state-machines.md](state-machines.md) | 5 definitive state machines with Mermaid diagrams, transition tables, source pins |
 | [cross-cutting.md](cross-cutting.md) | Error handling, output discipline, rate limit, pagination, ADF, JQL, partial_match |
-| [risk-register.md](risk-register.md) | 26 architectural risks (12 R1-NEW + 14 broad-pass) by severity |
+| [risk-register.md](risk-register.md) | 27 architectural risks (12 R1-NEW + 14 broad-pass + 1 reclassified-from-Pass-2) by severity |
 | [adr-index.md](adr-index.md) | ADR-0001..0012 table with harmonization notes |
 | [adr/](adr/) | New ADRs: 0007..0012 |
 | [dtu-assessment.md](dtu-assessment.md) | DTU assessment (DTU_REQUIRED: false — pure local/OS execution) |
@@ -65,7 +65,7 @@ Source ADRs (0001–0006) live in `.reference/jira-cli/docs/adr/`. New ADRs (000
 
 | Bug ID | BC Anchor | NFR | Severity | ADR | Fix Scope |
 |--------|-----------|-----|----------|-----|-----------|
-| Multi-profile fields | BC-6.3.001 | NFR-R-D | CRITICAL | ADR-0007 | Add `Config::field_id()` accessor; update 12+ sites |
+| Multi-profile fields | BC-6.3.001 | NFR-R-D | CRITICAL | ADR-0007 | Add `Config::field_id()` accessor; update 14 sites |
 | list_worklogs pagination | BC-X.5.002 | NFR-R-A | HIGH | ADR-0010 | Refactor to `paginate_offset` loop (~10 LOC) |
 | handle_open URL | BC-3.4.001 | NFR-R-B | HIGH | ADR-0009 | One-line: `base_url()` → `instance_url()` |
 | Asset HashMap key | BC-4.3.001 | NFR-R-E | HIGH | ADR-0008 | Change key type at 3 sites (~5 LOC) |

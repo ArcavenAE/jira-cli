@@ -59,7 +59,7 @@ Setup uses:
 **Action**: `jr --no-input auth refresh`
 **Expected**: exit 64; stderr contains `no URL configured`, `jr auth login`, `--url`. Stderr does NOT contain `panic`.
 **Why hidden**: Pre-fix behavior was to clear creds then prompt for email — destructive misleading recovery.
-**BC refs**: BC-1.6.046
+**BC refs**: BC-1.1.011
 
 ---
 
@@ -68,7 +68,7 @@ Setup uses:
 **Action**: `jr auth login --oauth --client-id X --client-secret Y --no-input`
 **Expected**: exit 78; stderr contains `toml` or `parse`; file bytes are unchanged.
 **Why hidden**: Pre-fix bug silently overwrote with defaults — destroyed user settings.
-**BC refs**: BC-6.1.002
+**BC refs**: BC-1.1.012
 **Source**: `tests/auth_login_config_errors.rs:18-97`
 
 ---
@@ -133,7 +133,7 @@ Setup uses:
 **Action**: any command that triggers post (e.g., `issue create`).
 **Expected**: exit 2; stderr contains `Insufficient token scope`, `write:jira-work`, `OAuth 2.0`, `github.com/Zious11/jira-cli/issues/185`.
 **Why hidden**: A future tightening of the substring match would silently break this.
-**BC refs**: BC-1.6.044, BC-X.1.007
+**BC refs**: BC-1.6.042, BC-X.3.005
 **Source**: `tests/api_client.rs:99-255`
 
 ---
