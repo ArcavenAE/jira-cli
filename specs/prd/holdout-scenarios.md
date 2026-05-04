@@ -226,7 +226,7 @@ Setup uses:
 **Action**: 4 separate API calls.
 **Expected**: First two → InsufficientScope (exit 2); third → NotAuthenticated (exit 2); fourth → ApiError 403 (exit 1).
 **Why hidden**: Pin against three independent regressions: drop `to_ascii_lowercase`, broaden status gate, tighten substring.
-**BC refs**: BC-1.6.043, BC-1.6.044
+**BC refs**: BC-1.6.043, BC-1.6.044, BC-1.6.045
 
 ---
 

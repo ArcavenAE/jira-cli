@@ -42,13 +42,13 @@ the gap between current code and these contracts.
 | [bc-6-config-cache.md](bc-6-config-cache.md) | Configuration & Cache | BC-6.*.* (38) | BC-901..911 + BC-1001..1016 + BC-6.3.001 (NFR-R-D) |
 | [bc-7-output-render.md](bc-7-output-render.md) | Output Rendering | BC-7.*.* (80) | BC-1101..1118 + BC-1104..1118 (snapshots) + ADF (54) |
 | [cross-cutting.md](cross-cutting.md) | Cross-cutting | BC-X.*.* (130) | BC-601..606 + BC-701..709 + BC-801..808 + BC-1082..1103 + BC-1201..1214 + BC-1401..1411 + Worklogs/Teams/Users/Projects |
-| [nfr-catalog.md](nfr-catalog.md) | NFR Catalog | 44 NFRs | Pass 4 R4 (1C/4H/16M/22L + NFR-R-NEW-2) |
+| [nfr-catalog.md](nfr-catalog.md) | NFR Catalog | 42 NFRs | Pass 4 R4 + ADV-P3-007 (1C/6H/15M/20L); reconciled per ADV-P2-005 + ADV-P3-004 |
 | [error-taxonomy.md](error-taxonomy.md) | Error taxonomy | 11 variants | BC-1204 + exit code table |
 | [edge-case-catalog.md](edge-case-catalog.md) | Edge cases | cross-cutting | Pass 3 §5 untested gaps |
 | [holdout-scenarios.md](holdout-scenarios.md) | Holdout scenarios | 48 | H-001..H-047 + H-NEW-MP-001 |
 | [BC-INDEX.md](BC-INDEX.md) | Master BC index | 541 | All BCs with traceability |
 
-**Total BCs in PRD:** 541 (540 imported + 1 formalized from NFR-R-D draft)
+**Total BCs in PRD:** 542 (540 imported + 2 formalized: BC-6.3.001 from NFR-R-D draft + BC-6.2.015 profile-fence)
 
 ---
 
@@ -91,7 +91,7 @@ These four BCs describe the CORRECT (post-fix) behavior. Phase 3 must turn them 
 
 | L3 BC ID | NFR ID | Severity | Short description | L3 File |
 |----------|--------|----------|-------------------|---------|
-| BC-6.3.001 | NFR-R-D | **CRITICAL** | Per-profile `story_points_field_id`/`team_field_id` survive `Config::save_global()` round-trip; all 11 hot-path read sites use `active_profile()` not `global.fields.*` | [bc-6-config-cache.md](bc-6-config-cache.md) |
+| BC-6.3.001 | NFR-R-D | **CRITICAL** | Per-profile `story_points_field_id`/`team_field_id` survive `Config::save_global()` round-trip; all 14 hot-path read sites use `active_profile()` not `global.fields.*` | [bc-6-config-cache.md](bc-6-config-cache.md) |
 | BC-X.5.002 | NFR-R-A | **HIGH** | `list_worklogs` paginates until all worklogs fetched; no silent truncation at first page | [cross-cutting.md](cross-cutting.md) |
 | BC-3.4.001 | NFR-R-B | **HIGH** | `handle_open` composes `<instance_url>/browse/<key>` using `client.instance_url()` not `client.base_url()` | [bc-3-issue-write.md](bc-3-issue-write.md) |
 | BC-4.3.001 | NFR-R-E | **HIGH** | Asset enrichment `resolved` HashMap is keyed by `(workspace_id, oid)` not `oid` alone; no cross-workspace overwrite | [bc-4-assets-cmdb.md](bc-4-assets-cmdb.md) |
@@ -102,7 +102,7 @@ These four BCs describe the CORRECT (post-fix) behavior. Phase 3 must turn them 
 
 | File | Consumer | Contents |
 |------|----------|----------|
-| [nfr-catalog.md](nfr-catalog.md) | Architect, Phase 3 | 44 NFR gaps (1C/4H/16M/22L); severity, recommendation, Phase 3 routing |
+| [nfr-catalog.md](nfr-catalog.md) | Architect, Phase 3 | 42 NFR gaps (1C/6H/15M/20L); severity, recommendation, Phase 3 routing |
 | [error-taxonomy.md](error-taxonomy.md) | Implementer, Test-writer | 11 JrError variants × exit codes; 6-level `extract_error_message` chain |
 | [edge-case-catalog.md](edge-case-catalog.md) | Test-writer, Holdout-evaluator | Cross-cutting edge cases; untested behavior gaps from Pass 3 §5 |
 | [holdout-scenarios.md](holdout-scenarios.md) | Holdout-evaluator | 48 holdout scenarios (H-001..H-047 + H-NEW-MP-001) |

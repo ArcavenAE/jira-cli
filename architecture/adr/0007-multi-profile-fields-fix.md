@@ -5,11 +5,11 @@ Accepted
 
 ## Context
 
-A CRITICAL correctness bug was discovered during Phase 1 brownfield analysis (NFR-R-D, BC-6.3.001): all 12+ handler sites that read `story_points_field_id` and `team_field_id` read from `config.global.fields.*` — the legacy flat config structure — even after multi-profile support was introduced. The per-profile `ProfileConfig.story_points_field_id` and `ProfileConfig.team_field_id` fields are written correctly by `jr init` and `jr auth login`, but are never read by any handler.
+A CRITICAL correctness bug was discovered during Phase 1 brownfield analysis (NFR-R-D, BC-6.3.001): all 14 handler sites that read `story_points_field_id` and `team_field_id` read from `config.global.fields.*` — the legacy flat config structure — even after multi-profile support was introduced. The per-profile `ProfileConfig.story_points_field_id` and `ProfileConfig.team_field_id` fields are written correctly by `jr init` and `jr auth login`, but are never read by any handler.
 
 **Impact:** In a sandbox-vs-production multi-profile setup, the custom field IDs from whichever profile was configured first persist globally. The second profile silently uses the wrong `customfield_NNNNN` IDs when listing issues with story points or team columns. This is not a UI issue — it causes the wrong data to appear in issue lists and sprint views.
 
-**12+ affected sites (Pass 4 R1):**
+**14 affected sites (Pass 4 R1 + Pass 3 table):**
 - `src/cli/issue/list.rs:147-148`
 - `src/cli/sprint.rs:232-233`
 - `src/cli/board.rs:192-193`
@@ -18,19 +18,21 @@ A CRITICAL correctness bug was discovered during Phase 1 brownfield analysis (NF
 
 **Two options were considered:**
 
-**Option A (Recommended):** Add a `Config::field_id(FieldKind, profile)` accessor that reads from `active_profile()` first, falling back to `global.fields` for migration compatibility. Route all 12+ sites through this accessor. Add an integration test in `tests/auth_profiles.rs` to enforce per-profile isolation.
+**Option A (Recommended):** Add a `Config::field_id(FieldKind, profile)` accessor that reads from `active_profile()` exclusively (NO fallback to `global.fields` — fallback rejected, see below). Route all 14 hot-path read sites through it; raise `ConfigError` if profile lacks the field IDs. Add an integration test in `tests/auth_profiles.rs` to enforce per-profile isolation.
+
+**Rejected sub-option (fallback):** An earlier draft of Option A included "falling back to `global.fields` for migration compatibility." This was struck because `Config::save_global()` drops the `[fields]` block from disk via `#[serde(default, skip_serializing)]`; the fallback target does not exist post-save, making fallback a silent no-op at best and misleading at worst.
 
 **Option B:** Keep the current behavior, document it as a known limitation, and defer until v2. A profile-aware workaround would require users to run `jr init` once per profile switch.
 
 ## Decision
 
-Use **Option A**: add a single `Config::field_id(FieldKind, profile)` accessor and update all 12+ call sites.
+Use **Option A**: add a single `Config::field_id(FieldKind, profile)` accessor and update all 14 call sites.
 
 ## Rationale
 
-- The per-profile `ProfileConfig` fields already exist and are correctly populated by `jr init`. The bug is exclusively on the read side — 12+ sites that bypass the per-profile path.
-- A single accessor centralizes the read logic, including the legacy fallback, in one place. Future additions are automatically correct.
-- The fix surface is well-defined: replace `config.global.fields.story_points_field_id` and `config.global.fields.team_field_id` reads with `config.field_id(FieldKind::StoryPoints, &config.active_profile_name)` and `config.field_id(FieldKind::Team, &config.active_profile_name)` at all 12+ sites.
+- The per-profile `ProfileConfig` fields already exist and are correctly populated by `jr init`. The bug is exclusively on the read side — 14 sites that bypass the per-profile path.
+- A single accessor centralizes the read logic (no fallback — fallback rejected; see §Context) in one place. Future additions are automatically correct.
+- The fix surface is well-defined: replace `config.global.fields.story_points_field_id` and `config.global.fields.team_field_id` reads with `config.field_id(FieldKind::StoryPoints, &config.active_profile_name)` and `config.field_id(FieldKind::Team, &config.active_profile_name)` at all 14 sites.
 - Option B is not viable: CLAUDE.md explicitly states cross-profile leakage is "a correctness bug, not a UX issue." A CRITICAL-severity correctness bug cannot be deferred.
 
 ## Consequences

@@ -33,21 +33,24 @@
 
 This function (`api/client.rs:448-490`) is the load-bearing error message extractor for all API errors. Users see its output for every `JrError::ApiError`.
 
-**Canonical source of truth:** PRD `error-taxonomy.md §2` (corrected by CONV-ABS-004 — empty body is FIRST, not last).
+**Canonical source of truth:** PRD `error-taxonomy.md §2`. Architecture does not duplicate the table to prevent divergence (Pass 3 audit ADV-P3-003 detected divergence at Priority 1, 4, and 6; single-sourcing in PRD effective 2026-05-04).
 
-```
-Priority 1 (HIGHEST): response body is empty → return None; caller uses status-code-derived message
-Priority 2: response["errorMessages"] — array; join non-empty elements with ";"
-Priority 3: response["errors"] — object; "field: msg" pairs (alphabetically sorted; non-string values JSON-serialized)
-Priority 4: response["errors"][field]["messages"] — nested messages array; first element
-Priority 5: response["message"] — single string (most REST v3 error shape)
-Priority 6: response["errorDescription"] — singular form (alt field name, JSM/OAuth error shape)
-Priority 7 (FALLBACK): raw response body via from_utf8_lossy — if none of the above match
-```
+| Priority | Condition | Behavior |
+|---|---|---|
+| 1 (HIGHEST) | Response body byte length == 0 | Return literal string `"<empty response body>"` (early return; no UTF-8 or JSON parsing) |
+| 2 | Body bytes are non-UTF-8 | Return `String::from_utf8_lossy(body)` with Unicode replacement chars (early return) |
+| 3 | Body is JSON with `errorMessages` array having ≥1 string element | Return elements joined with `"; "` |
+| 4 | Body is JSON with non-empty `errors` object | Return `"field: value"` pairs alphabetically sorted, joined with `"; "`; non-string values use `serde_json::Value` display |
+| 5 | Body is JSON with top-level `message` string field | Return the string value as-is |
+| 6 | Body is JSON with top-level `errorMessage` string field (JSM endpoints) | Return the string value as-is |
+| 7 (FALLBACK) | Body is non-JSON OR JSON with no recognized fields matched above | Return raw body string (valid UTF-8 already confirmed at step 2) |
+
+**Key invariants (from PRD error-taxonomy.md §2):**
+- Step 1 returns a STRING not None. No status-code-derived substitution.
+- `errors.field.messages[]` (nested messages array) is NOT a recognized level.
+- `errorDescription` is NOT a recognized field. Only `errorMessage` (singular) is supported.
 
 Every error message a user sees from `JrError::ApiError` is shaped by this chain. Phase 3 tests must exercise all 7 levels.
-
-**Key invariant:** Empty body check is FIRST — prevents treating `{}` or `""` as an error message source.
 
 ---
 

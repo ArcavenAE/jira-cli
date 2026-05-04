@@ -295,9 +295,9 @@ Multi-profile fields — MUST-FIX (6.3).
 #### BC-6.3.001: Per-profile `story_points_field_id` and `team_field_id` survive `Config::save_global()` and are read by ALL hot-path read sites [MUST-FIX: NFR-R-D — CRITICAL]
 
 **Confidence**: HIGH
-**Source**: Multiple sites (BUG: 11 hot-path read sites use `config.global.fields.*`)
+**Source**: Multiple sites (BUG: 14 hot-path read sites use `config.global.fields.*`)
 
-> **MUST-FIX (CRITICAL — NFR-R-D):** Current code has 11 hot-path read sites still reading
+> **MUST-FIX (CRITICAL — NFR-R-D):** Current code has 14 hot-path read sites still reading
 > from `config.global.fields.story_points_field_id` / `config.global.fields.team_field_id`
 > (the legacy `[fields]` block). After ANY `Config::save_global()` call (e.g., `jr auth login`,
 > `jr auth switch`, `jr init`), the `[fields]` block is dropped from disk (due to

@@ -1,7 +1,7 @@
 ---
 context: nfr-catalog
 title: "NFR Catalog — Pass 4 Convergence"
-total_nfrs: 41  # 40 individually-enumerated rows + 1 new (NFR-R-NEW-1 Retry-After unbounded); ADV-P2-003/005
+total_nfrs: 42  # 41 + NFR-S-F (cargo-deny supply chain) added ADV-P3-007
 last_updated: 2026-05-04
 source_pass: 4
 trace: |
@@ -12,9 +12,9 @@ trace: |
 
 # NFR Catalog — jira-cli Pass 4 Convergence
 
-41 individually-enumerated NFR rows. Pass 4 produced: broad (23) + R1 deepening (+18) + NFR-R-E re-promotion (0 net) + R4 NEW-2 (+1) = 42 entries then reconciled to 40 summary rows + NFR-R-NEW-1 added by ADV-P2-003 = 41 total. NFR-S-E severity promoted from LOW to HIGH per ADV-P2-004.
+42 individually-enumerated NFR rows. Pass 4 produced: broad (23) + R1 deepening (+18) + NFR-R-E re-promotion (0 net) + R4 NEW-2 (+1) = 42 entries then reconciled to 40 summary rows + NFR-R-NEW-1 added by ADV-P2-003 = 41 total. NFR-S-E severity promoted from LOW to HIGH per ADV-P2-004. NFR-S-F (cargo-deny supply chain) added per ADV-P3-007 = 42 total.
 
-**Severity totals: 1 CRITICAL / 5 HIGH / 15 MEDIUM / 20 LOW = 41 total**
+**Severity totals: 1 CRITICAL / 6 HIGH / 15 MEDIUM / 20 LOW = 42 total**
 
 All four MUST-FIX items (NFR-R-D, NFR-R-A, NFR-R-B, NFR-R-E) have been crystallized as behavioral contracts in the L3 PRD:
 - NFR-R-D → BC-6.3.001 (multi-profile fields bug)
@@ -30,7 +30,7 @@ All four MUST-FIX items (NFR-R-D, NFR-R-A, NFR-R-B, NFR-R-E) have been crystalli
 
 | ID | Description | Severity | Site | Phase 3 Routing | BC Anchor |
 |---|---|---|---|---|---|
-| **NFR-R-D** | Multi-profile fields bug: all field reads use `config.global.fields.*` path; per-profile `story_points_field_id`/`team_field_id` in `ProfileConfig` are never read by handlers. Cross-profile correctness failure — sandbox vs prod custom-field IDs silently disagree. | CRITICAL | `src/cli/issue/list.rs:147-148`, `src/cli/sprint.rs:232-233`, `src/cli/board.rs:192-193`, `src/cli/issue/create.rs:128,277,283` (12+ sites total) | **FIX-IN-PHASE-3**: Add `Config::field_id(FieldKind, profile)` accessor; replace all 12+ `config.global.fields.*` reads; add integration test in `tests/auth_profiles.rs` | BC-6.3.001 |
+| **NFR-R-D** | Multi-profile fields bug: all field reads use `config.global.fields.*` path; per-profile `story_points_field_id`/`team_field_id` in `ProfileConfig` are never read by handlers. Cross-profile correctness failure — sandbox vs prod custom-field IDs silently disagree. | CRITICAL | `src/cli/issue/list.rs:147-148`, `src/cli/issue/view.rs:28-29`, `src/cli/issue/helpers.rs:43,194,200,209`, `src/cli/sprint.rs:232-233`, `src/cli/board.rs:192`, `src/cli/issue/create.rs:128,277,283` (14 sites total) | **FIX-IN-PHASE-3**: Add `Config::field_id(FieldKind, profile)` accessor; replace all 14 `config.global.fields.*` reads; add integration test in `tests/auth_profiles.rs` | BC-6.3.001 |
 
 ### HIGH
 
@@ -46,7 +46,7 @@ All four MUST-FIX items (NFR-R-D, NFR-R-A, NFR-R-B, NFR-R-E) have been crystalli
 |---|---|---|---|---|
 | **NFR-R-C** | Worklog duration uses hardcoded `8h/day, 5d/week` constants. Jira instances can configure these via `/rest/api/3/configuration/timetracking`. Silent wrong-answer for 7.5h or 4-day setups. | MEDIUM | `src/cli/worklog.rs:32` | **FIX-IN-PHASE-3**: Fetch + cache timetracking config from Jira instance (7-day TTL); fall back to 8/5 on miss |
 | **NFR-R-F** | `get_changelog` anti-loop guard present (breaks if nextPage URL == current URL). `search_issues` cursor loop has no analogous guard against cursor == cursor regression. | MEDIUM | `src/api/jira/issues.rs:222-230` | **DOCUMENT-AS-IS**: Add similar guard to `search_issues`; document pattern |
-| **NFR-R-NEW-1** | `Retry-After` header has no upper-bound cap in current code. `Retry-After: 86400` causes the retry loop to sleep for 24 hours with no user escape (other than Ctrl+C). BC-X.4.009 proposes `MAX_RETRY_AFTER_SECS = 60` cap as Phase 3 fix. Current behavior: any valid u64 value is honored as-is. | LOW | `src/api/rate_limit.rs:14-19` | **DOCUMENT-AS-IS**: Document current no-cap behavior in CLAUDE.md. Phase 3 fix: BC-X.4.009 (`MAX_RETRY_AFTER_SECS = 60` cap). H-027 pins current gap. |
+| **NFR-R-NEW-1** | `Retry-After` header has no upper-bound cap in current code. `Retry-After: 86400` causes the retry loop to sleep for 24 hours with no user escape (other than Ctrl+C). BC-X.4.009 proposes `MAX_RETRY_AFTER_SECS = 60` cap as Phase 3 fix. Current behavior: any valid u64 value is honored as-is. **Severity LOW (ADV-P3-009 reviewed, retained):** Single-user CLI — user can Ctrl+C at any time; not a service-grade SLA concern. Atlassian does not send multi-hour `Retry-After` values in practice. | LOW | `src/api/rate_limit.rs:14-19` | **DOCUMENT-AS-IS**: Document current no-cap behavior in CLAUDE.md. Phase 3 fix: BC-X.4.009 (`MAX_RETRY_AFTER_SECS = 60` cap). H-027 pins current gap. |
 | **NFR-R-NEW-2** | `parse_duration` silently wraps on multiplicative overflow for pathological inputs (e.g., `99999999999999w`). Release builds have `panic=abort` which disables debug overflow checks — silent wrapped value sent to Jira API. | LOW | `src/duration.rs:29-32` | **DOCUMENT-AS-IS**: Use `checked_mul`; bail with "duration too large" error. ~5 LOC fix. Acceptable for v1. |
 
 ### LOW
@@ -64,6 +64,7 @@ All four MUST-FIX items (NFR-R-D, NFR-R-A, NFR-R-B, NFR-R-E) have been crystalli
 | ID | Description | Severity | Site | Phase 3 Routing |
 |---|---|---|---|---|
 | **NFR-S-B** | `JR_AUTH_HEADER` env var read unconditionally in production binary (`client.rs:64-66`). Any process inheriting that env-var bypasses keychain auth. Privilege escalation risk in CI/CD environments where env vars leak between jobs. | HIGH | `src/api/client.rs:64-66` | **SECURITY-DECIDE**: Option (a) `#[cfg(test)]` gate; OR (b) require simultaneous `JR_BASE_URL` set (lowest-risk migration). Policy decision required. |
+| **NFR-S-F** | Supply-chain: `cargo-deny` is wired in CI but `multiple-versions = "warn"` policy means version dupes don't fail the build. No SBOM published. 332 transitive Cargo deps for an OAuth-handling CLI. Cross-ref: risk register R-H6. | HIGH | `.cargo/deny.toml`, `.github/workflows/ci.yml` | **FIX-IN-PHASE-3**: Enforce `multiple-versions = "deny"` in `deny.toml`; publish SBOM via `cargo cyclonedx`. See R-H6 in risk-register.md. |
 | **NFR-S-E** | GitHub Actions workflows use floating action tags (e.g., `actions/checkout@v4`) instead of pinned SHA digests. A compromised tag could inject malicious code into the build/release pipeline without detection — specifically, the OAuth client secret injected at build time (`JR_BUILD_OAUTH_CLIENT_ID`/`_SECRET`) could be exfiltrated. CI/CD integrity gap. | HIGH | `.github/workflows/` | **FIX-IN-PHASE-3**: Pin all `uses: <action>@<tag>` lines to `uses: <action>@<sha256-digest>` (e.g., `actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683`). Use `pin-github-action` or Dependabot to automate. Severity promoted from LOW to HIGH per ADV-P2-004 (rare event but OAuth client secret exposure if exploited). |
 
 ### MEDIUM
@@ -169,6 +170,7 @@ All four MUST-FIX items (NFR-R-D, NFR-R-A, NFR-R-B, NFR-R-E) have been crystalli
 | NFR-R-NEW-2 | Reliability | LOW | DOCUMENT-AS-IS | — |
 | NFR-S-D | Security | LOW | DOCUMENT-AS-IS | — |
 | NFR-S-E | Security | HIGH | FIX-IN-PHASE-3 | — |
+| NFR-S-F | Security | HIGH | FIX-IN-PHASE-3 | — |
 | NFR-O-C | Observability | LOW | DOCUMENT-AS-IS | — |
 | NFR-O-E | Observability | LOW | DEFER | — |
 | NFR-O-G | Observability | LOW | DOCUMENT-AS-IS | — |
@@ -187,12 +189,12 @@ All four MUST-FIX items (NFR-R-D, NFR-R-A, NFR-R-B, NFR-R-E) have been crystalli
 | NFR-SCA-3 | Scalability | LOW | DOCUMENT-AS-IS | — |
 
 **Phase 3 routing summary:**
-- FIX-IN-PHASE-3: 8 (1 CRITICAL, 4 HIGH, 0 MEDIUM, 3 LOW)
+- FIX-IN-PHASE-3: 9 (1 CRITICAL, 5 HIGH, 0 MEDIUM, 3 LOW)
 - SECURITY-DECIDE: 3 (1 HIGH, 2 MEDIUM)
 - POLICY-DECISION: 3 (3 MEDIUM)
 - DOCUMENT-AS-IS: 15 (LOW or MEDIUM, includes NFR-R-NEW-1)
 - DEFER: 17 (MEDIUM and LOW)
 
-**Total: 41** (40 enumerated summary rows + 1 new NFR-R-NEW-1 added per ADV-P2-003. NFR-S-E severity promoted LOW→HIGH per ADV-P2-004.)
+**Total: 42** (41 enumerated rows + NFR-S-F added per ADV-P3-007. NFR-S-E severity promoted LOW→HIGH per ADV-P2-004.)
 
-**Counting clarification** (ADV-P2-005 reconciliation): The NFR Summary Table contains 41 individually-enumerated rows. Severity breakdown: 1 CRITICAL / 5 HIGH / 15 MEDIUM / 20 LOW = 41. This is the canonical count. Prior counting clarifications referencing 39 rows, 44 cumulative, or 45 total were inconsistent; this count supersedes them. Every row in the Summary Table represents a distinct NFR concern in the dimension body tables above. No phantom rows exist.
+**Counting clarification** (ADV-P2-005 + ADV-P3-007 reconciliation): The NFR Summary Table contains 42 individually-enumerated rows. Severity breakdown: 1 CRITICAL / 6 HIGH / 15 MEDIUM / 20 LOW = 42. This is the canonical count. Prior counting clarifications referencing 39 rows, 41, 44 cumulative, or 45 total were inconsistent; this count supersedes them. Every row in the Summary Table represents a distinct NFR concern in the dimension body tables above. No phantom rows exist.

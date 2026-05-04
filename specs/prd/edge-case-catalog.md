@@ -38,17 +38,17 @@ Categories:
 ### EC-AUTH-002: `auth remove` active profile guard
 **Boundary**: User attempts to remove the currently active profile.
 **Expected**: Exit 64; error `"cannot remove active profile"`; config file unchanged.
-**Status**: Covered by BC-1.2.015; holdout H-016.
+**Status**: Covered by BC-1.1.006; holdout H-016.
 
 ### EC-AUTH-003: Legacy `[instance]` config auto-migration idempotency
 **Boundary**: Legacy config loaded twice (or after a previous migration).
 **Expected**: Second load produces byte-identical on-disk file. No double-migration side effects.
-**Status**: Covered by BC-6.1.003; holdout H-011.
+**Status**: Covered by BC-6.1.002; holdout H-011.
 
 ### EC-AUTH-004: Malformed TOML does NOT overwrite config
 **Boundary**: Config file contains malformed TOML; any `jr` command invoked.
 **Expected**: Exit 78; stderr contains parse error; config file bytes unchanged.
-**Status**: Covered by BC-6.1.002; holdout H-005.
+**Status**: Covered by BC-1.1.012; holdout H-005.
 
 ### EC-AUTH-005: Non-default profile never inherits legacy keychain keys
 **Boundary**: Profile name is NOT `"default"`; legacy flat keychain keys exist.
