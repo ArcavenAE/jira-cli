@@ -17,7 +17,7 @@ Inputs: Phase A (7 broad files), Phase B (17+ deepening rounds across passes 0-5
 
 **Three numbered consequential findings:**
 
-1. **Four MUST-FIX correctness bugs are spec-frozen with byte-verified citations.** NFR-R-D (CRITICAL — multi-profile fields silent regression; 12+ read sites of `config.global.fields.*` ignore per-profile `ProfileConfig.{story_points,team}_field_id`), NFR-R-A (HIGH — `list_worklogs` non-paginated at `src/api/jira/worklogs.rs:25-30`), NFR-R-B (HIGH — `handle_open` uses `client.base_url()` not `instance_url()` at `src/cli/issue/workflow.rs:636`, broken for OAuth profiles), NFR-R-E (HIGH — multi-workspace asset HashMap mis-attribution at `src/cli/issue/list.rs:440,446,449,456`). All four have BC anchors in the 540-BC catalog and were re-verified at byte-level by Pass 4 R4 + Phase B.6 extraction validation.
+1. **Four MUST-FIX correctness bugs are spec-frozen with byte-verified citations.** NFR-R-D (CRITICAL — multi-profile fields silent regression; 12+ read sites of `config.global.fields.*` ignore per-profile `ProfileConfig.{story_points,team}_field_id`), NFR-R-A (HIGH — `list_worklogs` non-paginated at `src/api/jira/worklogs.rs:25-30`), NFR-R-B (HIGH — `handle_open` uses `client.base_url()` not `instance_url()` at `src/cli/issue/workflow.rs:636`, broken for OAuth profiles), NFR-R-E (HIGH — multi-workspace asset HashMap mis-attribution at `src/cli/issue/list.rs:440,446,449,456`). All four have BC anchors in the 540-BC catalog and were re-verified at byte-level by Pass 4 R4 + Phase B.6 extraction validation (NFR-R-D BC drafted as part of Phase 0 → 1 closeout — see §5.2 and Lessons P0).
 
 2. **Multi-profile correctness is encoded in signatures, not types.** Three soft-fence boundaries enforce per-profile isolation: every cache reader/writer takes `profile: &str` first (universal across `cache.rs`, 100% conformance per Pass 5 R1); keychain has shared-vs-namespaced key namespaces with `default`-only legacy migration (BC-1153..1158); profile resolution has a deterministic flag > env > config > "default" precedence threaded as a parameter, never via env-var seam (BC-007 verified by `tests/auth_profiles.rs`). Combined with the ADR-0006 build-time XOR-obfuscated embedded OAuth app (per-build random key, fixed callback port 53682, TOCTOU-closed listener binding via `RedirectUriStrategyRequest::bind() → ResolvedRedirect`), the project encodes more correctness in signatures than in compile-time fences. The remaining gap is type-level: a `Profile(String)` newtype or `Cache<P>` phantom-type would compile-time-enforce what is currently signature discipline.
 
@@ -42,9 +42,9 @@ Total deepening rounds executed: 17 (2+2+7+4+4+2 minus broad). Total CONV-ABS re
 
 ### §2.1 Tech stack
 
-- **Language/edition/MSRV:** Rust 2024 edition; MSRV 1.85 (`rust-toolchain.toml`); single crate (lib + bin); 23,334 src/ LOC + 16,958 tests/ LOC + 137 build.rs LOC = 40,429 total Rust LOC.
+- **Language/edition/MSRV:** Rust 2024 edition; MSRV 1.85 (`rust-toolchain.toml`); single crate (lib + bin); 23,334 src/ LOC + 16,958 tests/ LOC + 125 build.rs LOC = 40,417 total Rust LOC.
 - **Crate composition:** `jr` library + `jr` binary; binary entrypoint at `src/main.rs`; library re-exports at `src/lib.rs:1-12` (11 `pub mod` + 1 `pub(crate) mod observability`).
-- **Build profile (release):** `panic = "abort"`, `lto = "fat"`, `strip = true`, `codegen-units = 1` (Cargo.toml).
+- **Build profile (release):** `panic = "abort"`, `lto = "thin"`, `strip = true`, `codegen-units = 1` (Cargo.toml).
 - **Direct runtime deps (23, corrected from broad-pass 24 by Pass 0 R1 CONV-ABS-12):** `tokio` (full features), `clap` (derive + cargo + env + wrap_help), `clap_complete`, `serde`, `serde_json`, `toml`, `figment`, `directories`, `keyring`, `reqwest` (rustls-tls), `rustls`, `urlencoding`, `chrono`, `comfy-table`, `colored`, `inquire`, `anyhow`, `thiserror`, `open`, `webbrowser`, `tracing`, `tracing-subscriber`, `futures`. Confirmed by `awk '/^\[dependencies\]/{f=1; next} /^\[/{f=0} f && /^[a-zA-Z]/' Cargo.toml | wc -l` → 23.
 - **Transitive deps (Cargo.lock):** 332 packages.
 - **Dev deps (6):** `wiremock`, `assert_cmd`, `predicates`, `tempfile`, `proptest`, `insta`.
@@ -191,6 +191,7 @@ The five state machines that materially drive the system are:
 | 20 | Browse URL bug | 2 | 0 | 0 | 2 |
 | 21 | OAuth state machine | 9 | 1 | 0 | 10 |
 | **Totals** | | **475** | **59** | **6** | **540** |
+| _(note)_ | _Per-row sum = 646; aggregate = 540. Difference because some BCs span multiple subject areas and are counted once in the aggregate but appear in multiple rows above._ | | | | |
 
 ### §3.2 Top 30 most consequential BCs (security, idempotency, error handling, multi-profile correctness)
 
