@@ -116,3 +116,33 @@ Brownfield ingest (Phase 0) is COMPLETE. Phase 0 → Phase 1 human approval gate
 | state-manager | Commit Phase B.5/B.6/C artifacts; update STATE.md to Phase 0 complete | factory-artifacts (this commit) |
 
 ---
+
+## Burst 5 (2026-05-04)
+
+**Agents dispatched:** state-manager ×2, codebase-analyzer ×3
+**Files touched:** semport/jira-cli/jira-cli-pre-vsdd-plans-spot-check.md, semport/jira-cli/jira-cli-bc-nfr-r-d-draft.md, semport/jira-cli/jira-cli-pre-vsdd-harmonization-plan.md, semport/jira-cli/jira-cli-pre-gate-consistency-audit.md, .factory/STATE.md, .factory/cycles/cycle-001/burst-log.md
+**Versions bumped:** (none)
+
+### Summary
+
+Phase 0 gate closeout. Human approved Phase 0 → Phase 1 transition. Gate-resolution artifacts produced and committed (d1a30f1):
+
+- Q1: 5/5 sampled pre-VSDD plans confirmed DELIVERED. Directory-wide SUPERSEDE confirmed for `docs/superpowers/plans/`.
+- Q2: NFR-R-D BC draft produced — 11 production read sites in 5 files. Smoking-gun at config.rs:142-149. Holdout H-NEW-MP-001 proposed. Draft ready for Phase 1 PRD formalization.
+- Q4: 78-doc harmonization plan complete — 74 DELIVERED-AS-DESIGNED, 2 DELIVERED-DIVERGENT, 1 ARCHAEOLOGICAL, 0 PARTIAL/UNDELIVERED. 74 specs become BC validation inputs. v1 design imports as historical with annotated supersessions (OAuth → ADR-0006; Global config → multi-profile-auth; Project Structure → Pass 0 inventory).
+- Q5: synthesis fixes committed earlier as d8ca198 (5 consistency repairs to Phase C synthesis).
+
+DEC-001/DEC-002/DEC-003 resolved. DEC-004 added (streamlined vs full Phase 1 scope). Phase 0 COMPLETE. Phase 1 entry pending DEC-004 human decision.
+
+### Details
+
+| Agent | Task | Output |
+|-------|------|--------|
+| codebase-analyzer | Q1 — spot-check 5 pre-VSDD plans | semport/jira-cli/jira-cli-pre-vsdd-plans-spot-check.md |
+| codebase-analyzer | Q2 — BC draft for NFR-R-D (multi-profile fields regression) | semport/jira-cli/jira-cli-bc-nfr-r-d-draft.md |
+| codebase-analyzer | Q4 — harmonization plan for 78 docs | semport/jira-cli/jira-cli-pre-vsdd-harmonization-plan.md |
+| codebase-analyzer | Pre-gate consistency audit (produced Q5 fixes) | semport/jira-cli/jira-cli-pre-gate-consistency-audit.md |
+| state-manager | Commit closeout artifacts | factory-artifacts d1a30f1 |
+| state-manager | Update STATE.md — Phase 0 COMPLETE, Phase 1 entry, DEC-001-004 | factory-artifacts (commit 2, pending) |
+
+---

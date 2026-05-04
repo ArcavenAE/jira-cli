@@ -5,13 +5,13 @@ version: "2.0"
 status: active
 producer: state-manager
 timestamp: 2026-05-04T00:00:00
-phase: phase-0-complete-awaiting-phase-1-gate
+phase: phase-1-spec-crystallization-entry
 inputs: []
 input-hash: "[live-state]"
 traces_to: ""
 project: jira-cli
 mode: BROWNFIELD
-current_step: "phase-0-phase-1-approval-gate"
+current_step: "phase-1-entry-dec-004-pending"
 current_cycle: "cycle-001"
 dtu_required: false
 activation_head: "dea166471e22eff55974d7675593469b37048c5f"
@@ -45,10 +45,10 @@ activation_version: "v0.5.0-dev.7"
 | **Target Workspace** | develop → main |
 | **Started** | 2026-05-04 |
 | **Last Updated** | 2026-05-04 |
-| **Current Phase** | Phase 0 → Phase 1 approval gate (awaiting human) |
-| **Next Phase** | phase-1-spec-crystallization |
+| **Current Phase** | Phase 1 — Spec Crystallization (entry; DEC-004 pending) |
+| **Next Phase** | phase-1-spec-crystallization (active) |
 | **Activation HEAD** | dea166471e22eff55974d7675593469b37048c5f (v0.5.0-dev.7) |
-| **factory-artifacts SHA** | db84fe6 (Phase 0 complete — B.5 + B.6 + C) |
+| **factory-artifacts SHA** | d1a30f1 (Phase 0 COMPLETE; closeout artifacts committed) |
 
 ## Pipeline Goal
 
@@ -59,8 +59,8 @@ Goal 1c: **Harden v0.5 + feature delivery** — formalize existing codebase with
 | Phase | Status | Started | Completed | Gate | Finding Progression |
 |-------|--------|---------|-----------|------|---------------------|
 | pre-pipeline: Setup | complete | 2026-05-04 | 2026-05-04 | env-preflight | |
-| 0: Codebase Ingestion | complete | 2026-05-04 | 2026-05-04 | Phase A + B + B.5 + B.6 + C complete | |
-| 1: Spec Crystallization | not-started | | | | |
+| 0: Codebase Ingestion | **COMPLETE** | 2026-05-04 | 2026-05-04 | Phase A + B + B.5 + B.6 + C + gate APPROVED | |
+| 1: Spec Crystallization | **entry** | 2026-05-04 | | DEC-004 pending (scope choice) | |
 | 1d: Adversarial Spec Review | not-started | | | | |
 | 2: Story Decomposition | not-started | | | | |
 | 2-adv: Adversarial Story Review | not-started | | | | |
@@ -77,27 +77,25 @@ Goal 1c: **Harden v0.5 + feature delivery** — formalize existing codebase with
 
 | Step | Agent | Status | Output |
 |------|-------|--------|--------|
-| Seed initial STATE.md | state-manager | complete | .factory/STATE.md |
-| Env preflight | dx-engineer | complete | (completed) |
-| Phase A brownfield ingest (×7 passes) | codebase-analyzer | complete | semport/jira-cli/ 7 files |
-| Phase B convergence deepening (×20 rounds, 6 passes) | codebase-analyzer | complete | semport/jira-cli/ 21 deep-round files; SHA 257bdd7 |
-| Phase B.5 coverage audit | codebase-analyzer | complete | semport/jira-cli/jira-cli-coverage-audit.md |
 | Phase B.6 extraction validation | codebase-analyzer | complete | semport/jira-cli/jira-cli-extraction-validation.md |
 | Phase C final synthesis | codebase-analyzer | complete | semport/jira-cli/jira-cli-pass-8-deep-synthesis.md (750 lines) |
+| Q5 synthesis fixes | codebase-analyzer | complete | committed d8ca198 |
+| Phase 0 gate closeout (Q1/Q2/Q4) | codebase-analyzer + state-manager | complete | 4 semport artifacts; commit d1a30f1 |
+| Phase 1 entry | state-manager | in-progress | DEC-004 scope choice pending |
 
 ## Pending Decisions
 
 | ID | Decision | Options | Due | Decided By |
 |----|----------|---------|-----|------------|
-| DEC-001 | Pre-VSDD docs treatment (`docs/superpowers/specs/`, `docs/superpowers/plans/`, `docs/specs/`, `docs/adr/`) — harmonize vs reference-only vs supersede | harmonize-into-specs / reference-only / supersede | Phase 0 → Phase 1 gate | orchestrator + human |
-| DEC-002 | Pre-VSDD docs treatment — Pass 6 §7.5 recommends HARMONIZE: absorb existing docs as living spec inputs, flag conflicts for resolution. Decide at Phase 0 → Phase 1 gate. | HARMONIZE (recommended) / reference-only / supersede | Phase 0 → Phase 1 gate | human |
-| DEC-003 | VSDD spec must address 4 MUST-FIX bugs surfaced by ingestion (handle_open OAuth, list_worklogs truncation, hardcoded 8h/5d, multi-workspace HashMap, multi-profile fields CRITICAL). Decide at Phase 0→1 gate: fix in Phase 3 implementation or carry as known issues. | fix-in-phase-3 / known-issues | Phase 0 → Phase 1 gate | orchestrator + human |
+| DEC-004 | Phase 1 spec crystallization scope: full pipeline (market intel → L2 → L3 → architecture → DTU → CI/CD → adversarial) vs streamlined brownfield-Phase-1 (skip market intel for shipped product; skip DTU since no third-party clone need; harmonize existing ADRs/specs into L2/L3). Recommended: streamlined. | full / streamlined (recommended) | Phase 1 start | orchestrator + human |
 
 ## Decisions Log
 
 | ID | Decision | Rationale | Phase | Date | Made By |
 |----|----------|-----------|-------|------|---------|
-| | | | | | |
+| DEC-001 | Pre-VSDD docs treatment: RESOLVED — HARMONIZE per Q4 (74 specs become BC validation inputs; 1 archaeological excluded; 2 divergent need reconciliation; v1 design imported as historical with annotated supersessions on 3 sections; 75 plans SUPERSEDE) | Q4 harmonization plan confirmed 74 DELIVERED-AS-DESIGNED, 0 PARTIAL/UNDELIVERED. Plans dir cleanly SUPERSEDE. | Phase 0 | 2026-05-04 | human |
+| DEC-002 | Pre-VSDD docs at Phase 0→1 gate: RESOLVED — see DEC-001 | Consolidated into DEC-001 outcome | Phase 0 | 2026-05-04 | human |
+| DEC-003 | 5 MUST-FIX bugs treatment: PARTIALLY RESOLVED — NFR-R-D has draft BC (11 read sites in 5 files; holdout H-NEW-MP-001 proposed). 4 P0 bugs route to Phase 3 (decompose-stories) for fix-in-phase-3 treatment. | Draft BC ready for Phase 1 PRD formalization. | Phase 0 | 2026-05-04 | orchestrator + human |
 
 ## Skip Log
 
@@ -156,7 +154,7 @@ convergence_trajectory: []
 | Field | Value |
 |-------|-------|
 | **Date** | 2026-05-04 |
-| **Position** | phase-0 COMPLETE; Phase A (7 passes, SHA 0380885); Phase B (21 deep-round files, SHA 257bdd7, all 6 passes NITPICK); Phase B.5 PASS (no blind spots, 2 MEDIUM doc-surface optional items); Phase B.6 PASS (96.7% behavioral accuracy, 29/30 confirmed, 0 hallucinations); Phase C complete (750 lines, Lessons P0=4/P1=8/P2=6/P3=5); Awaiting human approval at Phase 0 → Phase 1 gate. DEC-001/DEC-002/DEC-003 pending human decision. |
+| **Position** | Phase 0 COMPLETE — gate APPROVED by human. Phase 1 entry. DEC-001/DEC-002/DEC-003 RESOLVED (see Decisions Log). DEC-004 pending (streamlined vs full Phase 1 scope). factory-artifacts HEAD d1a30f1. Key ingestion findings: 540 BCs, 47 holdouts, 44 NFR gaps (1 CRITICAL multi-profile), 74 spec inputs for BC validation, 75 plans SUPERSEDE. Next action: human decides DEC-004, then /vsdd-factory:phase-1-spec-crystallization. |
 | **Convergence counter** | 0 of 3 |
 
 ## Historical Content
