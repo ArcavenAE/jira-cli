@@ -89,3 +89,30 @@ Key findings cataloged:
 | state-manager | Commit Phase B artifacts + STATE.md update | factory-artifacts 257bdd7 |
 
 ---
+
+## Burst 4 (2026-05-04)
+
+**Agents dispatched:** codebase-analyzer (B.5, B.6, C), state-manager
+**Files touched:** semport/jira-cli/jira-cli-coverage-audit.md, semport/jira-cli/jira-cli-extraction-validation.md, semport/jira-cli/jira-cli-pass-8-deep-synthesis.md, .factory/STATE.md, .factory/cycles/cycle-001/burst-log.md
+**Versions bumped:** (none)
+
+### Summary
+
+Phase B.5 coverage audit: PASS — no implementation-surface blind spots. 2 MEDIUM optional doc-surface items flagged (README + install.sh), non-blocking.
+
+Phase B.6 extraction validation: PASS — 96.7% behavioral accuracy (29/30 confirmed, 1 inaccurate, 0 hallucinated). 0 phantom modules / dependencies / BCs. 2 minor metric annotation deltas (off-by-one NFR count summary; mermaid count annotation).
+
+Phase C final synthesis: complete — 750 lines. Lessons section: P0=4, P1=8, P2=6, P3=5. Downstream skill recommendations: /create-brief, /create-domain-spec (READY), /create-prd, /decompose-stories (~22 stories / 3 waves), /create-architecture. Pre-VSDD docs treatment: HARMONIZE (per Pass 6 §7.5, updated).
+
+Brownfield ingest (Phase 0) is COMPLETE. Phase 0 → Phase 1 human approval gate is next.
+
+### Details
+
+| Agent | Task | Output |
+|-------|------|--------|
+| codebase-analyzer | Phase B.5 — Coverage audit | semport/jira-cli/jira-cli-coverage-audit.md |
+| codebase-analyzer | Phase B.6 — Extraction validation | semport/jira-cli/jira-cli-extraction-validation.md |
+| codebase-analyzer | Phase C — Final synthesis | semport/jira-cli/jira-cli-pass-8-deep-synthesis.md (750 lines) |
+| state-manager | Commit Phase B.5/B.6/C artifacts; update STATE.md to Phase 0 complete | factory-artifacts (this commit) |
+
+---

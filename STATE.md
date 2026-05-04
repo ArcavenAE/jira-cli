@@ -5,13 +5,13 @@ version: "2.0"
 status: active
 producer: state-manager
 timestamp: 2026-05-04T00:00:00
-phase: phase-0-codebase-ingestion
+phase: phase-0-complete-awaiting-phase-1-gate
 inputs: []
 input-hash: "[live-state]"
 traces_to: ""
 project: jira-cli
 mode: BROWNFIELD
-current_step: "phase-0-phase-b5-coverage-audit"
+current_step: "phase-0-phase-1-approval-gate"
 current_cycle: "cycle-001"
 dtu_required: false
 activation_head: "dea166471e22eff55974d7675593469b37048c5f"
@@ -45,10 +45,10 @@ activation_version: "v0.5.0-dev.7"
 | **Target Workspace** | develop → main |
 | **Started** | 2026-05-04 |
 | **Last Updated** | 2026-05-04 |
-| **Current Phase** | phase-0-codebase-ingestion (Phase B.5 coverage audit) |
+| **Current Phase** | Phase 0 → Phase 1 approval gate (awaiting human) |
 | **Next Phase** | phase-1-spec-crystallization |
 | **Activation HEAD** | dea166471e22eff55974d7675593469b37048c5f (v0.5.0-dev.7) |
-| **factory-artifacts SHA** | 257bdd7 (Phase B complete) |
+| **factory-artifacts SHA** | db84fe6 (Phase 0 complete — B.5 + B.6 + C) |
 
 ## Pipeline Goal
 
@@ -59,7 +59,7 @@ Goal 1c: **Harden v0.5 + feature delivery** — formalize existing codebase with
 | Phase | Status | Started | Completed | Gate | Finding Progression |
 |-------|--------|---------|-----------|------|---------------------|
 | pre-pipeline: Setup | complete | 2026-05-04 | 2026-05-04 | env-preflight | |
-| 0: Codebase Ingestion | in-progress | 2026-05-04 | | Phase A complete; Phase B complete; B.5 in-progress | |
+| 0: Codebase Ingestion | complete | 2026-05-04 | 2026-05-04 | Phase A + B + B.5 + B.6 + C complete | |
 | 1: Spec Crystallization | not-started | | | | |
 | 1d: Adversarial Spec Review | not-started | | | | |
 | 2: Story Decomposition | not-started | | | | |
@@ -81,7 +81,9 @@ Goal 1c: **Harden v0.5 + feature delivery** — formalize existing codebase with
 | Env preflight | dx-engineer | complete | (completed) |
 | Phase A brownfield ingest (×7 passes) | codebase-analyzer | complete | semport/jira-cli/ 7 files |
 | Phase B convergence deepening (×20 rounds, 6 passes) | codebase-analyzer | complete | semport/jira-cli/ 21 deep-round files; SHA 257bdd7 |
-| Phase B.5 coverage audit | codebase-analyzer | in-progress | |
+| Phase B.5 coverage audit | codebase-analyzer | complete | semport/jira-cli/jira-cli-coverage-audit.md |
+| Phase B.6 extraction validation | codebase-analyzer | complete | semport/jira-cli/jira-cli-extraction-validation.md |
+| Phase C final synthesis | codebase-analyzer | complete | semport/jira-cli/jira-cli-pass-8-deep-synthesis.md (750 lines) |
 
 ## Pending Decisions
 
@@ -154,7 +156,7 @@ convergence_trajectory: []
 | Field | Value |
 |-------|-------|
 | **Date** | 2026-05-04 |
-| **Position** | phase-0; Phase A complete (7 passes, committed 0380885); Phase B complete (21 deep-round files, committed 257bdd7, all 6 passes NITPICK); Phase B.5 coverage audit in-progress; DEC-002 + DEC-003 pending human decision |
+| **Position** | phase-0 COMPLETE; Phase A (7 passes, SHA 0380885); Phase B (21 deep-round files, SHA 257bdd7, all 6 passes NITPICK); Phase B.5 PASS (no blind spots, 2 MEDIUM doc-surface optional items); Phase B.6 PASS (96.7% behavioral accuracy, 29/30 confirmed, 0 hallucinations); Phase C complete (750 lines, Lessons P0=4/P1=8/P2=6/P3=5); Awaiting human approval at Phase 0 → Phase 1 gate. DEC-001/DEC-002/DEC-003 pending human decision. |
 | **Convergence counter** | 0 of 3 |
 
 ## Historical Content
