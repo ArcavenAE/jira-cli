@@ -559,3 +559,24 @@ Pre-Pass-16 body sweep across all 8 bc-*.md files:
 | state-manager | Body sweep drift: bc-1 "5 subdomains" → "6 subdomains" (1.6 added) | specs/prd/bc-1-auth-identity.md |
 | state-manager | Update STATE.md (counter 1/3 → 0/3, trajectory, checkpoint, steps); burst-log; commit | factory-artifacts |
 
+---
+
+## Burst 22 (2026-05-04)
+
+**Agents dispatched:** state-manager, adversary
+**Files touched:** cycles/cycle-001/adversarial-reviews/adv-p1-pass16.md, STATE.md, cycles/cycle-001/burst-log.md
+**Versions bumped:** (none)
+
+### Summary
+
+Burst 22 — Pass 16 (state-manager + adversary): CLEAN-PASS. Counter 0/3 → 1/3. bc-*.md body sweep effective. 2 more consecutive clean passes needed.
+
+No findings. CANONICAL-COUNTS.md arithmetic verified (541 grand total, 309 bodied + 232 range-collapsed); risk register 1+6+8+11=26 match header; cross-cutting 7-module / 6-invariant-table anchors correct; 4 MUST-FIX P0 BCs traceable across risk-register and ADR-0007..0010; 6 holdout BC anchors spot-checked — all resolve.
+
+### Details
+
+| Agent | Task | Output |
+|-------|------|--------|
+| adversary | Phase 1d adversarial spec review Pass 16 (CLEAN-PASS) | adv-p1-pass16.md (0 findings) |
+| state-manager | Persist Pass 16 CLEAN-PASS; update STATE.md convergence counter 0/3 → 1/3; burst-log; commit | factory-artifacts (this commit) |
+

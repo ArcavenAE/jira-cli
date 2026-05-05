@@ -49,7 +49,7 @@ Goal 1c: **Harden v0.5 + feature delivery** — formalize existing codebase with
 | pre-pipeline: Setup | complete | 2026-05-04 | 2026-05-04 | env-preflight | |
 | 0: Codebase Ingestion | **COMPLETE** | 2026-05-04 | 2026-05-04 | Phase A + B + B.5 + B.6 + C + gate APPROVED | |
 | 1: Spec Crystallization | **entry** | 2026-05-04 | | DEC-004 pending (scope choice) | |
-| 1d: Adversarial Spec Review | **Pass 15: 2 findings FIXED; counter 0/3; Pass 16 next** | 2026-05-04 | | Pass 16 dispatching | 30→15→9→5→10→5→4→3→4→0→2→0→3→0→**2** (P15: regress; counter 0/3) |
+| 1d: Adversarial Spec Review | **Pass 16: CLEAN-PASS; counter 1/3; Pass 17 next** | 2026-05-04 | | Pass 17 dispatching | 30→15→9→5→10→5→4→3→4→0→2→0→3→0→2→**0** (P16: clean; counter 1/3) |
 | 2: Story Decomposition | not-started | | | | |
 | 2-adv: Adversarial Story Review | not-started | | | | |
 | 3: TDD Implementation | not-started | | | | |
@@ -65,12 +65,11 @@ Goal 1c: **Harden v0.5 + feature delivery** — formalize existing codebase with
 
 | Step | Agent | Status | Output |
 |------|-------|--------|--------|
-| Phase 1d adversary Pass 9 + fixes | state-manager | complete | adv-p1-pass9.md; 4 FIXED; trajectory →4; plateau in 3-5 range; 0/3 |
-| Phase 1d adversary Pass 10 (state-manager + adversary) | state-manager | complete | adv-p1-pass10.md; CLEAN-PASS; trajectory →0; counter 1/3 |
 | Phase 1d adversary Pass 12 (state-manager + adversary) | state-manager | complete | adv-p1-pass12.md; CLEAN-PASS; trajectory →0; counter 1/3; Pass 11 regression healed |
 | Phase 1d adversary Pass 13 + fixes + 4-sweep audit | state-manager | complete | adv-p1-pass13.md; 3 MEDIUM FIXED; BC=541; CANONICAL-COUNTS.md; trajectory →3; counter 0/3 |
 | Phase 1d adversary Pass 14 (CLEAN-PASS) | state-manager | complete | adv-p1-pass14.md; 0 findings; CANONICAL-COUNTS adoption healed P13 regression; counter 0/3 → 1/3 |
 | Phase 1d Pass 15 + fixes + bc-*.md body sweep | state-manager | complete | adv-p1-pass15.md; 2 FIXED (ADV-P15-001 bc-3 "40"→"48", ADV-P15-002 enumeration 8→7); bc-1 sweep drift fixed; counter 1/3 → 0/3 |
+| Phase 1d adversary Pass 16 (CLEAN-PASS) | state-manager | complete | adv-p1-pass16.md; 0 findings; bc-*.md body sweep effective; counter 0/3 → 1/3 |
 
 ## Pending Decisions
 
@@ -109,7 +108,7 @@ Goal 1c: **Harden v0.5 + feature delivery** — formalize existing codebase with
 ## Convergence Trackers
 
 ### Phase 1d — Adversarial Spec Review
-_Pass 15: 2 findings (1H/1M) FIXED. Counter 1/3 → 0/3 (regression). bc-*.md body sweep: bc-1 drift fixed; bc-2..7 + cross-cutting CLEAN. Trajectory 30→15→9→5→10→5→4→3→4→0→2→0→3→0→2. Pass 16 next._
+_Pass 16: CLEAN-PASS. Counter 0/3 → 1/3. bc-*.md body sweep prevented Pass 14-style regression. Trajectory 30→15→9→5→10→5→4→3→4→0→2→0→3→0→2→0. Pass 17 next (target 2/3)._
 
 ```yaml
 convergence_trajectory:
@@ -144,6 +143,16 @@ convergence_trajectory:
     clean_pass: false
     clean_pass_count: "0/3"
     note: "bc-3 body 'Total:40'→'48 individually-bodied'; bc-3 subdomain 8→7; bc-1 sweep drift fixed (5→6 subdomains)"
+  - pass: 16
+    findings: 0
+    severity: "CLEAN-PASS"
+    addressed: 0
+    delta: -2
+    trend: CONVERGING
+    fixes_committed: false
+    clean_pass: true
+    clean_pass_count: "1/3"
+    note: "bc-*.md body sweep effective; CANONICAL-COUNTS adoption stable; MUST-FIX P0 register integrity holding"
 ```
 
 ### Phase 2-adv — Adversarial Story Review
@@ -174,8 +183,8 @@ convergence_trajectory: []
 | Field | Value |
 |-------|-------|
 | **Date** | 2026-05-04 |
-| **Position** | Phase 1 ACTIVE — Phase 1d adversary Pass 15: 2 findings (1H/1M) FIXED. Counter reset 1/3 → 0/3 (regression). Trajectory 30→15→9→5→10→5→4→3→4→0→2→0→3→0→2. bc-*.md body sweep complete: bc-1 drift fixed (5→6 subdomains), bc-2..7+cross-cutting CLEAN. Manifest: 541 BCs / 41 NFRs / 48 holdouts / 26 risks. Pass 16 next. |
-| **Convergence counter** | 0 of 3 (Pass 15 regressed; 3 consecutive clean passes required) |
+| **Position** | Phase 1 ACTIVE — Phase 1d adversary Pass 16: CLEAN-PASS. Counter 0/3 → 1/3. Trajectory 30→15→9→5→10→5→4→3→4→0→2→0→3→0→2→0. bc-*.md body sweep effective: prevented regression. Manifest: 541 BCs / 41 NFRs / 48 holdouts / 26 risks. Pass 17 next (target 2/3). |
+| **Convergence counter** | 1 of 3 (Pass 16 clean; 2 more consecutive clean passes required) |
 
 ## Historical Content
 
