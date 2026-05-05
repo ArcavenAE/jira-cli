@@ -14,7 +14,7 @@ trace: |
 # BC-3 — Issue Write
 
 77 behavioral contracts across 7 subdomains: Assign (3.1), Move/Transition (3.2),
-Create (3.3), Edit (3.4), Open (3.4-bug-fix), Comment (3.5), Links (3.6), Remote links (3.7).
+Create (3.3), Edit+Open (3.4), Comment (3.5), Links (3.6), Remote links (3.7).
 
 ---
 
@@ -480,4 +480,4 @@ URL is composed as `format!("{}/browse/{}", client.instance_url(), key)`. `clien
 
 Sources: `src/cli/issue/snapshots/jr__cli__issue__json_output__tests__*.snap`; BC-1104..BC-1112 (R4)
 
-## Total BCs in this file: 40 (representative; BC-INDEX.md carries all 77)
+## Total BCs in this file: 48 individually-bodied (cumulative 77 incl. range-collapsed; see BC-INDEX.md)

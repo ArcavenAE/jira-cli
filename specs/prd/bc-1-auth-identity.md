@@ -14,8 +14,8 @@ trace: |
 
 # BC-1 — Auth & Identity
 
-57 behavioral contracts across 5 subdomains: OAuth flow (1.1), Profile management (1.2),
-Embedded OAuth app (1.3), Token keychain (1.4), OAuth state machine (1.5).
+57 behavioral contracts across 6 subdomains: OAuth flow (1.1), Profile management (1.2),
+Embedded OAuth app (1.3), Token keychain (1.4), OAuth state machine (1.5), Auth error handling (1.6).
 
 ---
 
