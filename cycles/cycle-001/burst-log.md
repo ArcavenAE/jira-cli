@@ -311,3 +311,26 @@ Final count manifest: 542 BCs / 42 NFRs / 48 holdouts / 27 risks.
 | state-manager | Write adv-p1-pass5.md; commit fixes (826bd67) | factory-artifacts |
 | state-manager | Update STATE.md Phase Progress, Convergence Tracker, Session Checkpoint, burst-log | factory-artifacts (this commit) |
 
+## Burst 12 (2026-05-04)
+
+**Agents dispatched:** state-manager
+**Files touched:** cycles/cycle-001/adversarial-reviews/adv-p1-pass6.md, architecture/cross-cutting.md, specs/prd/nfr-catalog.md, architecture/risk-register.md, architecture/README.md, STATE.md, cycles/cycle-001/burst-log.md
+**Versions bumped:** (none)
+
+### Summary
+
+Pass 6 adversarial review (5 findings: 0C/1H/3M/1L) persisted and all 5 fixed. Trajectory: 30→15→9→5→10→5 (recovery from Pass 5 regression). Convergence counter still 0/3 — Pass 7 dispatches next.
+
+HIGH: ADV-P6-001 — MatchResult enum corrected in arch cross-cutting.md (Exact/ExactMultiple/Ambiguous/None; removed fabricated `Unique` variant; added `ExactMultiple` per source partial_match.rs).
+
+MEDIUM: ADV-P6-002 — 7-step extract_error_message table removed from arch cross-cutting.md (single-source now PRD error-taxonomy.md §2). ADV-P6-003 — NFR-R-NEW-1/2 moved from ### MEDIUM section to ### LOW in nfr-catalog.md (severity already LOW; section was incorrect). ADV-P6-004 — R-H3 demoted from HIGH to MEDIUM (matches NFR-S-C severity; `--verbose` is opt-in, user-controlled); HIGH 7→6, MEDIUM 8→9, total 27 unchanged; ID renumbered R-M0 (traceability note added), former R-H4..H7 renumbered R-H3..H6.
+
+LOW: ADV-P6-005 — arch README risk arithmetic corrected to match risk-register.md preamble (11 R1-NEW + 14 broad-pass + 1 R1-NEW reclassified to CRITICAL + 1 Pass-2 ADV-P2-004 addition).
+
+### Details
+
+| Agent | Task | Output |
+|-------|------|--------|
+| state-manager | Write adv-p1-pass6.md; apply 5 fixes across 4 spec/arch files | factory-artifacts |
+| state-manager | Update STATE.md Phase Progress, Convergence Tracker, Session Checkpoint, burst-log | factory-artifacts (this commit) |
+

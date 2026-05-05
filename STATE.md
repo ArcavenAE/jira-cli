@@ -49,7 +49,7 @@ Goal 1c: **Harden v0.5 + feature delivery** — formalize existing codebase with
 | pre-pipeline: Setup | complete | 2026-05-04 | 2026-05-04 | env-preflight | |
 | 0: Codebase Ingestion | **COMPLETE** | 2026-05-04 | 2026-05-04 | Phase A + B + B.5 + B.6 + C + gate APPROVED | |
 | 1: Spec Crystallization | **entry** | 2026-05-04 | | DEC-004 pending (scope choice) | |
-| 1d: Adversarial Spec Review | **Pass 5 fixes COMPLETE; Pass 6 next** | 2026-05-04 | | Pass 6 dispatching | 30→15→9→5→10 (REGRESSION; P5: 10; 2C/3H/4M/1L; 0/3 clean passes) |
+| 1d: Adversarial Spec Review | **Pass 6 fixes COMPLETE; Pass 7 next** | 2026-05-04 | | Pass 7 dispatching | 30→15→9→5→10→5 (P6: 0C/1H/3M/1L; 0/3 clean passes) |
 | 2: Story Decomposition | not-started | | | | |
 | 2-adv: Adversarial Story Review | not-started | | | | |
 | 3: TDD Implementation | not-started | | | | |
@@ -65,10 +65,10 @@ Goal 1c: **Harden v0.5 + feature delivery** — formalize existing codebase with
 
 | Step | Agent | Status | Output |
 |------|-------|--------|--------|
-| Phase 1d adversary Pass 2 fixes | product-owner + architect | complete | 13 files; 12/15 findings fixed; 3 deferred/no-action; convergence 0/3 |
 | Phase 1d adversary Pass 3 + fixes | state-manager | complete | adv-p1-pass3.md written; 8 fixed + 1 documented; 69741c3 |
 | Phase 1d adversary Pass 4 + fixes | state-manager | complete | adv-p1-pass4.md written; 5 FIXED (4M+1L); holdout anchors + arch README + NFR arithmetic |
 | Phase 1d adversary Pass 5 + sweep | product-owner + architect | complete | adv-p1-pass5.md written; 10 cited FIXED + 4 sweep additionals; REGRESSION from 5→10; anchor-table gap found; 826bd67 |
+| Phase 1d adversary Pass 6 + fixes | state-manager | complete | adv-p1-pass6.md written; 5 findings all FIXED; trajectory 30→15→9→5→10→5; 0/3 clean passes |
 
 ## Pending Decisions
 
@@ -107,7 +107,7 @@ Goal 1c: **Harden v0.5 + feature delivery** — formalize existing codebase with
 ## Convergence Trackers
 
 ### Phase 1d — Adversarial Spec Review
-_Pass 5 fixes + sweep complete. REGRESSION (5→10). Cause: anchor-table propagation gap in supplements. Pass 6 dispatching._
+_Pass 6 fixes complete. Trajectory 30→15→9→5→10→5. Counter 0/3. Pass 7 next._
 
 ```yaml
 convergence_trajectory:
@@ -151,6 +151,13 @@ convergence_trajectory:
     cause: "anchor-table propagation gap in supplements (Competitive Differentiators, edge-case-catalog)"
     fixes_committed: true
     commit: "826bd67"
+  - pass: 6
+    findings: 5
+    severity: "0C/1H/3M/1L"
+    addressed: 5
+    delta: -5
+    trend: FAVORABLE
+    fixes_committed: true
 ```
 
 ### Phase 2-adv — Adversarial Story Review
@@ -181,8 +188,8 @@ convergence_trajectory: []
 | Field | Value |
 |-------|-------|
 | **Date** | 2026-05-04 |
-| **Position** | Phase 1 ACTIVE — Phase 1d adversary Pass 5 fixes + comprehensive sweep COMPLETE (10 cited + 4 sweep additionals fixed). REGRESSION: trajectory 30→15→9→5→10. Cause: anchor-table propagation gap in supplements not covered by prior passes. Final manifest: 542 BCs / 42 NFRs / 48 holdouts / 27 risks. Pass 6 dispatching. |
-| **Convergence counter** | 0 of 3 (clean passes needed; Pass 6 next) |
+| **Position** | Phase 1 ACTIVE — Phase 1d adversary Pass 6 fixes COMPLETE (5 findings, all fixed). Trajectory 30→15→9→5→10→5. Manifest: 542 BCs / 42 NFRs / 48 holdouts / 27 risks (HIGH 7→6, MEDIUM 8→9 after R-H3 demotion). Pass 7 dispatching. |
+| **Convergence counter** | 0 of 3 (clean passes needed; Pass 7 next) |
 
 ## Historical Content
 
