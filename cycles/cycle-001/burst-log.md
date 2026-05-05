@@ -466,3 +466,37 @@ Pass 11 fixes verified propagated cleanly: tracing dep claim consistent across C
 | adversary | Phase 1d adversarial spec review Pass 12 (CLEAN-PASS) | adv-p1-pass12.md (0 findings) |
 | state-manager | Persist Pass 12 CLEAN-PASS; update STATE.md convergence counter 0/3 → 1/3; burst-log; commit | factory-artifacts (this commit) |
 
+---
+
+## Burst 19 (2026-05-04)
+
+**Agents dispatched:** product-owner, architect, state-manager
+**Files touched:** specs/prd/BC-INDEX.md, specs/prd/README.md, specs/prd/nfr-catalog.md, architecture/risk-register.md, architecture/README.md, specs/prd/CANONICAL-COUNTS.md (new), cycles/cycle-001/adversarial-reviews/adv-p1-pass13.md (new), STATE.md, cycles/cycle-001/burst-log.md
+**Versions bumped:** (none)
+
+### Summary
+
+Burst 19 — Pass 13 + comprehensive pre-Pass-14 sweep (product-owner + architect): 3 MEDIUM findings all fixed; 4-sweep audit completed; BC count canonicalized to 541; CANONICAL-COUNTS.md created as single source of truth. Counter 1/3 → 0/3 (regression). Pass 14 next.
+
+Pass 13 fixes:
+- ADV-P13-001: BC grand total 542 → 541 — BC-X.4.009 was double-counted in BC-INDEX:648 footnote; corrected across PRD README + BC-INDEX.
+- ADV-P13-002: NFR-O-G stale LOC updated 970 → 1,083 in nfr-catalog.md.
+- ADV-P13-003: cicd-setup.md dangling path ref in risk-register.md corrected to ../cicd-setup.md; entry added to arch README Document Map.
+
+Comprehensive 4-sweep audit:
+- Sweep 1 (counts): definitional_count grep confirms sum=541; NFR=41; holdouts=48; risks=26.
+- Sweep 2 (paths): no other broken refs found.
+- Sweep 3 (source-line, 10 samples): zero drift.
+- Sweep 4 (severity/routing): all 7 HIGH/CRIT NFRs match risk register rows.
+
+CANONICAL-COUNTS.md created with shell-verifiable counts for future passes.
+
+### Details
+
+| Agent | Task | Output |
+|-------|------|--------|
+| adversary | Phase 1d adversarial spec review Pass 13 | adv-p1-pass13.md (3 MEDIUM findings) |
+| product-owner | Fix ADV-P13-001 (BC count 542→541), ADV-P13-002 (NFR-O-G LOC 970→1,083); 4-sweep audit; create CANONICAL-COUNTS.md | specs/prd/BC-INDEX.md, specs/prd/README.md, specs/prd/nfr-catalog.md, specs/prd/CANONICAL-COUNTS.md |
+| architect | Fix ADV-P13-003 (cicd-setup.md path refs in risk-register + arch README) | architecture/risk-register.md, architecture/README.md |
+| state-manager | Persist Pass 13 findings; update STATE.md (counter 0/3, trajectory, checkpoint, steps); burst-log; commit | factory-artifacts |
+
