@@ -2,7 +2,7 @@
 context: bc-x
 title: "Cross-cutting (HTTP client, Runtime, Users, Teams, Worklogs, Projects, Queues, JQL, Partial-match)"
 total_bcs: 130   # cumulative claim (incl. range-collapsed); definitional_count below is individually-bodied headings
-definitional_count: 63   # count of `#### BC-` headings in this file
+definitional_count: 64   # count of `#### BC-` headings in this file (corrected at ADV-P7-003)
 last_updated: 2026-05-04
 source_pass: 3
 trace: |

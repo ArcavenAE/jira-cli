@@ -13,7 +13,7 @@ sections:
   - bc-6-config-cache.md (39 BCs cumulative; 29 individually-bodied)
   - bc-7-output-render.md (80 BCs cumulative; 34 individually-bodied)
   - cross-cutting.md (130 BCs cumulative; 64 individually-bodied)
-  - nfr-catalog.md (42 NFR items, not counted in BC total)
+  - nfr-catalog.md (41 NFR items, not counted in BC total; NFR-O-K merged into NFR-S-D per ADV-P7-002)
 ---
 
 # BC Master Index — jira-cli L3 PRD

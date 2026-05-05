@@ -1,7 +1,7 @@
 ---
 context: nfr-catalog
 title: "NFR Catalog — Pass 4 Convergence"
-total_nfrs: 42  # 41 + NFR-S-F (cargo-deny supply chain) added ADV-P3-007
+total_nfrs: 41  # 42 − NFR-O-K (merged into NFR-S-D at ADV-P7-002)
 last_updated: 2026-05-04
 source_pass: 4
 trace: |
@@ -14,7 +14,7 @@ trace: |
 
 42 individually-enumerated NFR rows. Pass 4 produced: broad (23) + R1 deepening (+18) + NFR-R-E re-promotion (0 net) + R4 NEW-2 (+1) = 42 entries then reconciled to 40 summary rows + NFR-R-NEW-1 added by ADV-P2-003 = 41 total. NFR-S-E severity promoted from LOW to HIGH per ADV-P2-004. NFR-S-F (cargo-deny supply chain) added per ADV-P3-007 = 42 total.
 
-**Severity totals: 1 CRITICAL / 6 HIGH / 15 MEDIUM / 20 LOW = 42 total**
+**Severity totals: 1 CRITICAL / 6 HIGH / 15 MEDIUM / 19 LOW = 41 total** (NFR-O-K merged into NFR-S-D at ADV-P7-002)
 
 All four MUST-FIX items (NFR-R-D, NFR-R-A, NFR-R-B, NFR-R-E) have been crystallized as behavioral contracts in the L3 PRD:
 - NFR-R-D → BC-6.3.001 (multi-profile fields bug)
@@ -77,7 +77,7 @@ All four MUST-FIX items (NFR-R-D, NFR-R-A, NFR-R-B, NFR-R-E) have been crystalli
 
 | ID | Description | Severity | Site | Phase 3 Routing |
 |---|---|---|---|---|
-| **NFR-S-D** | Profile name validation regex does not distinguish length (>64) from charset violation — same error message for both. LOW impact. | LOW | `src/config.rs:113-140` | **DOCUMENT-AS-IS**: Improve error message precision. 2 LOC fix. |
+| **NFR-S-D** | Profile name validation regex does not distinguish length (>64) from charset violation — same error message for both. LOW impact. (formerly tracked separately as NFR-O-K — merged at adversary Pass 7) | LOW | `src/config.rs:113-140` | **DOCUMENT-AS-IS**: Improve error message precision. 2 LOC fix. |
 
 ---
 
@@ -107,7 +107,6 @@ All four MUST-FIX items (NFR-R-D, NFR-R-A, NFR-R-B, NFR-R-E) have been crystalli
 | **NFR-O-G** | `cli/issue/list.rs` is 970 LOC (post-split); `view.rs` and `comments.rs` are already split out per `docs/specs/list-rs-split.md`. CLAUDE.md still describes undivided `list.rs`. | LOW | `CLAUDE.md` | **DOCUMENT-AS-IS**: CLAUDE.md update covers this (NFR-O-L fix). |
 | **NFR-O-H** | `JR_RUN_OAUTH_INTEGRATION` env-var gates 1 ignored test but not documented in CLAUDE.md "AI Agent Notes". | LOW | `CLAUDE.md` | **FIX-IN-PHASE-3**: Add alongside `JR_RUN_KEYRING_TESTS`. |
 | **NFR-O-I** | `ADF::to_text` silently drops mention/emoji/inlineCard/media nodes (`_` fall-through at `adf.rs:531-540`). Documented in source as deliberate per issue #202. | LOW | `src/adf.rs:531-540` | **DEFER**: Render `@<displayName>` for mentions; `:emoji:` for emojis; `[<title>](url)` for inlineCard. Medium-effort. |
-| **NFR-O-K** | Profile name validation error message doesn't distinguish length (>64 chars) from charset violation. | LOW | `src/config.rs:113-140` | **DOCUMENT-AS-IS**: 2 LOC fix acceptable for v1. |
 | **NFR-O-N** | `5 auth subcommands` lack JSON output paths (mentioned in NFR-O-F); also no `--output json` test coverage for `auth status` with multiple profiles. | LOW | `src/cli/auth.rs` | **DEFER**: Cover in auth JSON shape work (NFR-O-F). |
 | **NFR-O-P** | No API version field in JSON output. Downstream parsers cannot detect schema changes. | LOW | `src/output.rs` | **DEFER**: Consider `"_meta": {"version": "1"}` envelope for v2. |
 | **NFR-O-R** | `eprintln!` for human hints and `println!` for data are implicit contracts; no typed channel enum. 5 categorical profiles (Pure/Read-only/Mixed/Symmetric/no-log-facade) emerge by code-review only. | LOW | 24 CLI handler files | **DOCUMENT-AS-IS**: Document the 5 profiles in a source comment or CLAUDE.md. |
@@ -175,7 +174,6 @@ All four MUST-FIX items (NFR-R-D, NFR-R-A, NFR-R-B, NFR-R-E) have been crystalli
 | NFR-O-G | Observability | LOW | DOCUMENT-AS-IS | — |
 | NFR-O-H | Observability | LOW | FIX-IN-PHASE-3 | — |
 | NFR-O-I | Observability | LOW | DEFER | — |
-| NFR-O-K | Observability | LOW | DOCUMENT-AS-IS | — |
 | NFR-O-N | Observability | LOW | DEFER | — |
 | NFR-O-P | Observability | LOW | DEFER | — |
 | NFR-O-R | Observability | LOW | DOCUMENT-AS-IS | — |
@@ -191,9 +189,9 @@ All four MUST-FIX items (NFR-R-D, NFR-R-A, NFR-R-B, NFR-R-E) have been crystalli
 - FIX-IN-PHASE-3: 10 (1 CRITICAL, 5 HIGH, 2 MEDIUM, 2 LOW — includes NFR-R-NEW-1)
 - SECURITY-DECIDE: 3 (1 HIGH, 2 MEDIUM)
 - POLICY-DECISION: 3 (3 MEDIUM)
-- DOCUMENT-AS-IS: 14 (LOW or MEDIUM; NFR-R-NEW-1 moved to FIX-IN-PHASE-3)
+- DOCUMENT-AS-IS: 13 (LOW or MEDIUM; NFR-R-NEW-1 moved to FIX-IN-PHASE-3; NFR-O-K merged into NFR-S-D at Pass 7)
 - DEFER: 17 (MEDIUM and LOW)
 
-**Total: 42** (41 enumerated rows + NFR-S-F added per ADV-P3-007. NFR-S-E severity promoted LOW→HIGH per ADV-P2-004.)
+**Total: 41** (42 rows − NFR-O-K merged into NFR-S-D at adversary Pass 7. NFR-S-F added per ADV-P3-007. NFR-S-E severity promoted LOW→HIGH per ADV-P2-004.)
 
-**Counting clarification** (ADV-P2-005 + ADV-P3-007 reconciliation): The NFR Summary Table contains 42 individually-enumerated rows. Severity breakdown: 1 CRITICAL / 6 HIGH / 15 MEDIUM / 20 LOW = 42. This is the canonical count. Prior counting clarifications referencing 39 rows, 41, 44 cumulative, or 45 total were inconsistent; this count supersedes them. Every row in the Summary Table represents a distinct NFR concern in the dimension body tables above. No phantom rows exist.
+**Counting clarification** (ADV-P2-005 + ADV-P3-007 + ADV-P7-002 reconciliation): The NFR Summary Table contains 41 individually-enumerated rows. Severity breakdown: 1 CRITICAL / 6 HIGH / 15 MEDIUM / 19 LOW = 41. This is the canonical count. NFR-O-K was a duplicate of NFR-S-D (same site src/config.rs:113-140, same routing DOCUMENT-AS-IS, same fix) and was merged at adversary Pass 7. Prior counting clarifications referencing 39 rows, 41, 42, 44 cumulative, or 45 total were inconsistent; this count supersedes them. Every row in the Summary Table represents a distinct NFR concern in the dimension body tables above. No phantom rows exist.

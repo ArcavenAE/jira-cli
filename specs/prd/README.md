@@ -42,7 +42,7 @@ the gap between current code and these contracts.
 | [bc-6-config-cache.md](bc-6-config-cache.md) | Configuration & Cache | BC-6.*.* (39) | BC-901..911 + BC-1001..1016 + BC-6.3.001 (NFR-R-D) + BC-6.2.015 (profile-fence) |
 | [bc-7-output-render.md](bc-7-output-render.md) | Output Rendering | BC-7.*.* (80) | BC-1101..1118 + BC-1104..1118 (snapshots) + ADF (54) |
 | [cross-cutting.md](cross-cutting.md) | Cross-cutting | BC-X.*.* (130) | BC-601..606 + BC-701..709 + BC-801..808 + BC-1082..1103 + BC-1201..1214 + BC-1401..1411 + Worklogs/Teams/Users/Projects |
-| [nfr-catalog.md](nfr-catalog.md) | NFR Catalog | 42 NFRs | Pass 4 R4 + ADV-P3-007 (1C/6H/15M/20L); reconciled per ADV-P2-005 + ADV-P3-004 |
+| [nfr-catalog.md](nfr-catalog.md) | NFR Catalog | 41 NFRs | Pass 4 R4 + ADV-P3-007 (1C/6H/15M/19L); NFR-O-K merged into NFR-S-D per ADV-P7-002 |
 | [error-taxonomy.md](error-taxonomy.md) | Error taxonomy | 11 variants | BC-1204 + exit code table |
 | [edge-case-catalog.md](edge-case-catalog.md) | Edge cases | cross-cutting | Pass 3 §5 untested gaps |
 | [holdout-scenarios.md](holdout-scenarios.md) | Holdout scenarios | 48 | H-001..H-047 + H-NEW-MP-001 |
@@ -102,7 +102,7 @@ These four BCs describe the CORRECT (post-fix) behavior. Phase 3 must turn them 
 
 | File | Consumer | Contents |
 |------|----------|----------|
-| [nfr-catalog.md](nfr-catalog.md) | Architect, Phase 3 | 42 NFR gaps (1C/6H/15M/20L); severity, recommendation, Phase 3 routing |
+| [nfr-catalog.md](nfr-catalog.md) | Architect, Phase 3 | 41 NFR gaps (1C/6H/15M/19L); severity, recommendation, Phase 3 routing |
 | [error-taxonomy.md](error-taxonomy.md) | Implementer, Test-writer | 11 JrError variants × exit codes; 7-level `extract_error_message` chain |
 | [edge-case-catalog.md](edge-case-catalog.md) | Test-writer, Holdout-evaluator | Cross-cutting edge cases; untested behavior gaps from Pass 3 §5 |
 | [holdout-scenarios.md](holdout-scenarios.md) | Holdout-evaluator | 48 holdout scenarios (H-001..H-047 + H-NEW-MP-001) |
