@@ -359,3 +359,26 @@ ADV-P7-004 FIXED: arch cross-cutting.md MatchResult::ExactMultiple description r
 | state-manager | Write adv-p1-pass7.md; apply 3 real fixes + 1 sweep | factory-artifacts |
 | state-manager | Update STATE.md Position, Convergence counter, burst-log | factory-artifacts (this commit) |
 
+## Burst 14 (2026-05-04)
+
+**Agents dispatched:** state-manager
+**Files touched:** cycles/cycle-001/adversarial-reviews/adv-p1-pass8.md, specs/prd/nfr-catalog.md, architecture/adr-index.md, architecture/risk-register.md, architecture/README.md, STATE.md, cycles/cycle-001/burst-log.md
+**Versions bumped:** (none)
+
+### Summary
+
+Pass 8 adversarial review (3 findings: 0C/1H/2M/0L) persisted and all 3 FIXED. Trajectory: 30→15→9→5→10→5→4→3. Convergence counter still 0/3 — Pass 9 dispatches next.
+
+ADV-P8-001 FIXED (HIGH): nfr-catalog.md routing summary DEFER count corrected 17→12. Sum now 10+3+3+13+12=41 (reconciles to NFR total).
+
+ADV-P8-002 FIXED (MEDIUM): adr-index.md ADR-0009 architecture section anchor corrected §R-H4→§R-H3. R-H3 is handle_open (ADR-0009); R-H4 is list_worklogs (ADR-0010).
+
+ADV-P8-003 FIXED (MEDIUM): R-M3 (Retry-After MEDIUM) merged into R-L11 (Retry-After LOW) — duplicate concern. NFR-SCA-1 authoritative severity is LOW. Risk totals: MEDIUM 9→8, total 27→26. Architecture README updated 27→26. R-L11 annotated with merger note.
+
+### Details
+
+| Agent | Task | Output |
+|-------|------|--------|
+| state-manager | Write adv-p1-pass8.md; apply 3 fixes across 4 arch/spec files | factory-artifacts |
+| state-manager | Update STATE.md Phase Progress, Convergence Tracker, Session Checkpoint, burst-log | factory-artifacts (this commit) |
+
