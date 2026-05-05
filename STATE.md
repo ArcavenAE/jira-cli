@@ -49,7 +49,7 @@ Goal 1c: **Harden v0.5 + feature delivery** — formalize existing codebase with
 | pre-pipeline: Setup | complete | 2026-05-04 | 2026-05-04 | env-preflight | |
 | 0: Codebase Ingestion | **COMPLETE** | 2026-05-04 | 2026-05-04 | Phase A + B + B.5 + B.6 + C + gate APPROVED | |
 | 1: Spec Crystallization | **entry** | 2026-05-04 | | DEC-004 pending (scope choice) | |
-| 1d: Adversarial Spec Review | **Pass 11 FINDINGS (2); counter REGRESSED 0/3; Pass 12 next** | 2026-05-04 | | Pass 12 dispatching | 30→15→9→5→10→5→4→3→4→0→**2** (P11: 1H/1M FIXED; counter 0/3) |
+| 1d: Adversarial Spec Review | **Pass 12 CLEAN-PASS; counter 1/3; Pass 13 next** | 2026-05-04 | | Pass 13 dispatching | 30→15→9→5→10→5→4→3→4→0→2→**0** (P12: CLEAN; counter 1/3) |
 | 2: Story Decomposition | not-started | | | | |
 | 2-adv: Adversarial Story Review | not-started | | | | |
 | 3: TDD Implementation | not-started | | | | |
@@ -69,7 +69,7 @@ Goal 1c: **Harden v0.5 + feature delivery** — formalize existing codebase with
 | Phase 1d adversary Pass 8 + fixes | state-manager | complete | adv-p1-pass8.md; 3 FIXED; trajectory →3; risks 27→26 (R-M3→R-L11) |
 | Phase 1d adversary Pass 9 + fixes | state-manager | complete | adv-p1-pass9.md; 4 FIXED; trajectory →4; plateau in 3-5 range; 0/3 |
 | Phase 1d adversary Pass 10 (state-manager + adversary) | state-manager | complete | adv-p1-pass10.md; CLEAN-PASS; trajectory →0; counter 1/3 |
-| Phase 1d adversary Pass 11 + fixes | state-manager | complete | adv-p1-pass11.md; 2 FIXED (1H/1M); trajectory →2; counter REGRESSED 0/3 |
+| Phase 1d adversary Pass 12 (state-manager + adversary) | state-manager | complete | adv-p1-pass12.md; CLEAN-PASS; trajectory →0; counter 1/3; Pass 11 regression healed |
 
 ## Pending Decisions
 
@@ -108,7 +108,7 @@ Goal 1c: **Harden v0.5 + feature delivery** — formalize existing codebase with
 ## Convergence Trackers
 
 ### Phase 1d — Adversarial Spec Review
-_Pass 11: 2 findings (1H/1M), all fixed. Counter REGRESSED 1/3 → 0/3. Trajectory 30→15→9→5→10→5→4→3→4→0→2. Pass 12 next._
+_Pass 12: CLEAN-PASS (0 findings). Counter 0/3 → 1/3. Pass 11 regression healed. Trajectory 30→15→9→5→10→5→4→3→4→0→2→0. 2 more consecutive clean passes required. Pass 13 next._
 
 ```yaml
 convergence_trajectory:
@@ -159,6 +159,15 @@ convergence_trajectory:
     fixes_committed: true
     clean_pass: false
     clean_pass_count: "0/3"
+  - pass: 12
+    findings: 0
+    severity: "CLEAN-PASS"
+    addressed: 0
+    delta: -2
+    trend: CONVERGING
+    fixes_committed: true
+    clean_pass: true
+    clean_pass_count: "1/3"
 ```
 
 ### Phase 2-adv — Adversarial Story Review
@@ -189,8 +198,8 @@ convergence_trajectory: []
 | Field | Value |
 |-------|-------|
 | **Date** | 2026-05-04 |
-| **Position** | Phase 1 ACTIVE — Phase 1d adversary Pass 11 FINDINGS (2: 1H/1M, all fixed). Counter REGRESSED 1/3 → 0/3. Trajectory 30→15→9→5→10→5→4→3→4→0→2. Manifest: 542 BCs / 41 NFRs / 48 holdouts / 26 risks. Pass 12 next (reset counter grind). |
-| **Convergence counter** | 0 of 3 (clean passes needed; Pass 12 next) |
+| **Position** | Phase 1 ACTIVE — Phase 1d adversary Pass 12 CLEAN-PASS. Counter 1/3. Pass 11 regression healed. Trajectory 30→15→9→5→10→5→4→3→4→0→2→0. Manifest: 542 BCs / 41 NFRs / 48 holdouts / 26 risks. Pass 13 next (need 2 more consecutive clean). |
+| **Convergence counter** | 1 of 3 (clean passes; Pass 13 next) |
 
 ## Historical Content
 

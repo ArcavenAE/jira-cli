@@ -447,3 +447,22 @@ MEDIUM: ADV-P11-002 — L2 state-machines.md + arch state-machines.md cache coun
 | state-manager | Write adv-p1-pass11.md; apply 4 edits across 4 spec/arch files | factory-artifacts |
 | state-manager | Update STATE.md Phase Progress, Convergence Tracker, Session Checkpoint, burst-log | factory-artifacts (this commit) |
 
+## Burst 18 (2026-05-04)
+
+**Agents dispatched:** state-manager, adversary
+**Files touched:** cycles/cycle-001/adversarial-reviews/adv-p1-pass12.md, STATE.md, cycles/cycle-001/burst-log.md
+**Versions bumped:** (none)
+
+### Summary
+
+Burst 18 — Pass 12 (state-manager + adversary): CLEAN-PASS. Counter 0/3 → 1/3. Pass 11 regression healed; 2 more consecutive clean required.
+
+Pass 11 fixes verified propagated cleanly: tracing dep claim consistent across Cargo.toml/L2/PRD/arch (all 4 docs); cache count = 6 distinct (hybrid breakdown) consistent across L2 + arch state-machines.md. No new findings. BC totals 542, holdouts 48, NFR 41 all reconcile. Pass 13 dispatches next.
+
+### Details
+
+| Agent | Task | Output |
+|-------|------|--------|
+| adversary | Phase 1d adversarial spec review Pass 12 (CLEAN-PASS) | adv-p1-pass12.md (0 findings) |
+| state-manager | Persist Pass 12 CLEAN-PASS; update STATE.md convergence counter 0/3 → 1/3; burst-log; commit | factory-artifacts (this commit) |
+
