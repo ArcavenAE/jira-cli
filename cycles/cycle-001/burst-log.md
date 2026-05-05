@@ -382,3 +382,28 @@ ADV-P8-003 FIXED (MEDIUM): R-M3 (Retry-After MEDIUM) merged into R-L11 (Retry-Af
 | state-manager | Write adv-p1-pass8.md; apply 3 fixes across 4 arch/spec files | factory-artifacts |
 | state-manager | Update STATE.md Phase Progress, Convergence Tracker, Session Checkpoint, burst-log | factory-artifacts (this commit) |
 
+## Burst 15 (2026-05-04)
+
+**Agents dispatched:** state-manager
+**Files touched:** cycles/cycle-001/adversarial-reviews/adv-p1-pass9.md, architecture/risk-register.md, specs/prd/nfr-catalog.md, architecture/cross-cutting.md, STATE.md, cycles/cycle-001/burst-log.md
+**Versions bumped:** (none)
+
+### Summary
+
+Pass 9 adversarial review (4 findings: 0C/0H/4M/0L) persisted and all 4 FIXED. Trajectory: 30→15→9→5→10→5→4→3→4 (plateau in 3-5 range). Convergence counter still 0/3 — small-blast-radius drift in summary arithmetic and cross-doc anchors.
+
+ADV-P9-001 FIXED (MEDIUM): risk-register.md Risk Summary action breakdown recounted from body. HIGH: 5×FIX/1×SEC-DECIDE (was 4/2); MEDIUM: 4×DEFER/1×DOC/1×FIX/2×SEC (was 3/2/1/2); LOW: 8×DOC/2×DEFER/1×POLICY (was 7/3/1).
+
+ADV-P9-002 FIXED (MEDIUM): NFR-S-F site path corrected from `.cargo/deny.toml` to `deny.toml` (file lives at project root, not in `.cargo/`). Cross-ref `.github/workflows/ci.yml` retained.
+
+ADV-P9-003 FIXED (MEDIUM): NFR-S-F cross-ref corrected R-H6 → R-H5 in nfr-catalog.md. R-H5 is supply-chain (NFR-S-F); R-H6 is SHA-pinning (NFR-S-E).
+
+ADV-P9-004 FIXED (MEDIUM): arch cross-cutting.md MatchResult::Ambiguous description corrected — "one or more items contain the needle substring (single substring hit is also `Ambiguous` — fail-closed design)". Prior text "multiple items" was factually wrong per partial_match.rs:39-42.
+
+### Details
+
+| Agent | Task | Output |
+|-------|------|--------|
+| state-manager | Write adv-p1-pass9.md; apply 4 fixes across 3 spec/arch files | factory-artifacts |
+| state-manager | Update STATE.md Phase Progress, Convergence Tracker, Session Checkpoint, burst-log | factory-artifacts (this commit) |
+

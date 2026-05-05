@@ -49,7 +49,7 @@ Goal 1c: **Harden v0.5 + feature delivery** — formalize existing codebase with
 | pre-pipeline: Setup | complete | 2026-05-04 | 2026-05-04 | env-preflight | |
 | 0: Codebase Ingestion | **COMPLETE** | 2026-05-04 | 2026-05-04 | Phase A + B + B.5 + B.6 + C + gate APPROVED | |
 | 1: Spec Crystallization | **entry** | 2026-05-04 | | DEC-004 pending (scope choice) | |
-| 1d: Adversarial Spec Review | **Pass 8 fixes COMPLETE; Pass 9 next** | 2026-05-04 | | Pass 9 dispatching | 30→15→9→5→10→5→4→3 (P8: 0C/1H/2M/0L; 0/3 clean passes) |
+| 1d: Adversarial Spec Review | **Pass 9 fixes COMPLETE; Pass 10 next** | 2026-05-04 | | Pass 10 dispatching | 30→15→9→5→10→5→4→3→4 (P9: 0C/0H/4M/0L; 0/3 clean passes) |
 | 2: Story Decomposition | not-started | | | | |
 | 2-adv: Adversarial Story Review | not-started | | | | |
 | 3: TDD Implementation | not-started | | | | |
@@ -65,9 +65,9 @@ Goal 1c: **Harden v0.5 + feature delivery** — formalize existing codebase with
 
 | Step | Agent | Status | Output |
 |------|-------|--------|--------|
-| Phase 1d adversary Pass 6 + fixes | state-manager | complete | adv-p1-pass6.md; 5 FIXED; trajectory →5; 0/3 |
 | Phase 1d adversary Pass 7 + fixes | state-manager | complete | adv-p1-pass7.md; 4 FIXED; trajectory →4; NFR-O-K merged (42→41) |
 | Phase 1d adversary Pass 8 + fixes | state-manager | complete | adv-p1-pass8.md; 3 FIXED; trajectory →3; risks 27→26 (R-M3→R-L11) |
+| Phase 1d adversary Pass 9 + fixes | state-manager | complete | adv-p1-pass9.md; 4 FIXED; trajectory →4; plateau in 3-5 range; 0/3 |
 
 ## Pending Decisions
 
@@ -106,7 +106,7 @@ Goal 1c: **Harden v0.5 + feature delivery** — formalize existing codebase with
 ## Convergence Trackers
 
 ### Phase 1d — Adversarial Spec Review
-_Pass 8 fixes complete. Trajectory 30→15→9→5→10→5→4→3. Counter 0/3. Pass 9 next._
+_Pass 9 fixes complete. Trajectory 30→15→9→5→10→5→4→3→4. Counter 0/3. Pass 10 next._
 
 ```yaml
 convergence_trajectory:
@@ -131,6 +131,13 @@ convergence_trajectory:
     addressed: 3
     delta: -1
     trend: FAVORABLE
+    fixes_committed: true
+  - pass: 9
+    findings: 4
+    severity: "0C/0H/4M/0L"
+    addressed: 4
+    delta: +1
+    trend: PLATEAU
     fixes_committed: true
 ```
 
@@ -162,8 +169,8 @@ convergence_trajectory: []
 | Field | Value |
 |-------|-------|
 | **Date** | 2026-05-04 |
-| **Position** | Phase 1 ACTIVE — Phase 1d adversary Pass 8 fixes COMPLETE (3 findings, all fixed). Trajectory 30→15→9→5→10→5→4→3. Manifest: 542 BCs / 41 NFRs / 48 holdouts / 26 risks. R-M3 merged into R-L11 (27→26); NFR routing DEFER 17→12 (sum 41 ✓). Pass 9 next. |
-| **Convergence counter** | 0 of 3 (clean passes needed; Pass 9 next) |
+| **Position** | Phase 1 ACTIVE — Phase 1d adversary Pass 9 fixes COMPLETE (4 findings, all fixed). Trajectory 30→15→9→5→10→5→4→3→4 (plateau). Manifest: 542 BCs / 41 NFRs / 48 holdouts / 26 risks. Drift concentrates in summary arithmetic and cross-doc anchors. Pass 10 next. |
+| **Convergence counter** | 0 of 3 (clean passes needed; Pass 10 next) |
 
 ## Historical Content
 
