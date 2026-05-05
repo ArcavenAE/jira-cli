@@ -33,17 +33,7 @@
 
 This function (`api/client.rs:448-490`) is the load-bearing error message extractor for all API errors. Users see its output for every `JrError::ApiError`.
 
-**Canonical source of truth:** PRD `error-taxonomy.md §2`. Architecture does not duplicate the table to prevent divergence (Pass 3 audit ADV-P3-003 detected divergence at Priority 1, 4, and 6; single-sourcing in PRD effective 2026-05-04).
-
-| Priority | Condition | Behavior |
-|---|---|---|
-| 1 (HIGHEST) | Response body byte length == 0 | Return literal string `"<empty response body>"` (early return; no UTF-8 or JSON parsing) |
-| 2 | Body bytes are non-UTF-8 | Return `String::from_utf8_lossy(body)` with Unicode replacement chars (early return) |
-| 3 | Body is JSON with `errorMessages` array having ≥1 string element | Return elements joined with `"; "` |
-| 4 | Body is JSON with non-empty `errors` object | Return `"field: value"` pairs alphabetically sorted, joined with `"; "`; non-string values use `serde_json::Value` display |
-| 5 | Body is JSON with top-level `message` string field | Return the string value as-is |
-| 6 | Body is JSON with top-level `errorMessage` string field (JSM endpoints) | Return the string value as-is |
-| 7 (FALLBACK) | Body is non-JSON OR JSON with no recognized fields matched above | Return raw body string (valid UTF-8 already confirmed at step 2) |
+**Canonical source:** see PRD `error-taxonomy.md §2` for the 7-step precedence chain table. Architecture does not duplicate to prevent divergence.
 
 **Key invariants (from PRD error-taxonomy.md §2):**
 - Step 1 returns a STRING not None. No status-code-derived substitution.
@@ -153,11 +143,13 @@ Used by: issue create/edit (`--description-stdin`, `--markdown`), `comment add`,
 Case-insensitive substring matching with explicit disambiguation semantics.
 
 ```
-MatchResult::Exact(T)        — exactly one item whose name matches exactly
-MatchResult::Unique(T)       — exactly one item whose name contains the needle
-MatchResult::Ambiguous(Vec)  — multiple items contain the needle
-MatchResult::None            — no items match
+MatchResult::Exact(String)          — exactly one item whose name matches exactly (case-insensitive)
+MatchResult::ExactMultiple(String)  — multiple items whose names match exactly; used for disambiguation
+MatchResult::Ambiguous(Vec<String>) — multiple items contain the needle substring
+MatchResult::None(Vec<String>)      — no items match; Vec contains the search candidates for error display
 ```
+
+**Source:** `src/partial_match.rs:1-13` (canonical); see PRD `error-taxonomy.md §5`.
 
 **Fail-closed contract:** on `Ambiguous`, commands refuse the operation with exit 64 (`UserError`) and list the candidates. Never guess. Under `--no-input`, disambiguation prompt is suppressed and the `Ambiguous` result is an immediate error.
 

@@ -1,9 +1,9 @@
 # Risk Register — jr (jira-cli)
 
 **traces_to:** README.md
-**Source:** Pass 1 R1 §5 (26 risks) + R2 §7 (1 severity escalation) + Pass 2 ADV-P2-004 (1 new HIGH)
+**Source:** Pass 1 R1 §5 (26 risks) + R2 §7 (1 severity escalation) + Pass 2 ADV-P2-004 (1 new HIGH) + Pass 6 ADV-P6-004 (R-H3 demoted HIGH→MEDIUM)
 **Total risks:** 27 (11 R1-NEW + 14 broad-pass + 1 R1-NEW reclassified to CRITICAL + 1 Pass-2 addition)
-**Severity distribution:** 1 CRITICAL / 7 HIGH / 8 MEDIUM / 11 LOW
+**Severity distribution:** 1 CRITICAL / 6 HIGH / 9 MEDIUM / 11 LOW
 
 > **Numbering note:** R1-NEW-10 (multi-profile fields silent regression, NFR-R-D) was elevated from MEDIUM to CRITICAL during Pass 4 R1 analysis and appears as R-C1 in the CRITICAL block below. The R1-NEW label is not repeated in the numbered sequence; the CRITICAL block carries it. Effective R1-NEW count in the MEDIUM/HIGH rows is 11 (NEW-1 through NEW-9, NEW-11, NEW-12).
 
@@ -17,24 +17,24 @@
 
 ---
 
-## HIGH (7)
+## HIGH (6)
 
 | # | Risk | NFR | BC Anchor | ADR | Phase 3 Action |
 |---|------|-----|-----------|-----|----------------|
 | **R-H1** (R1-NEW-1) | Multi-workspace asset HashMap mis-attribution: Pass 2 dedup key is `(wid, oid)` (correct), but Pass 2 result map is keyed by `oid` alone (`cli/issue/list.rs:446`). Second insertion silently wins on `oid` collision across workspaces. Single-workspace tenants unaffected. | NFR-R-E | BC-4.3.001 | ADR-0008 | FIX-IN-PHASE-3: Change key type to `(String, String)` at 3 sites |
 | **R-H2** (R1-NEW-2) | `JR_AUTH_HEADER` env-var honored in production binary with no `#[cfg(test)]` gate (`api/client.rs:64-66`). Any process inheriting this env var bypasses keychain auth entirely. Privilege escalation risk in CI/CD environments. | NFR-S-B | — | — | SECURITY-DECIDE: Option (a) `#[cfg(test)]` gate; Option (b) require simultaneous `JR_BASE_URL` |
-| **R-H3** (R1-NEW-3) | `--verbose` dumps full HTTP request bodies including user-typed content (comments, summaries, descriptions, accountIds, emails). Authorization header is NOT logged, but body is. Users piping `2>log.txt` for debugging leak payload bytes. | NFR-S-C | — | — | SECURITY-DECIDE: Add `redact_body()` helper; or default verbose to header-only with `--verbose-bodies` opt-in |
-| **R-H4** (R1-NEW-7) | `handle_open` uses `client.base_url()` not `instance_url()` (`workflow.rs:636`). For OAuth profiles, `base_url()` returns `https://api.atlassian.com/ex/jira/<cloud_id>` — browser opens 404. One-line fix. | NFR-R-B | BC-3.4.001 | ADR-0009 | FIX-IN-PHASE-3: `base_url()` → `instance_url()` |
-| **R-H5** (R1-NEW-8) | `list_worklogs` non-paginated: fetches `OffsetPage<Worklog>` and returns `.items().to_vec()` — no loop. Silent data loss past page 1 for issues with >50 worklogs. | NFR-R-A | BC-X.5.002 | ADR-0010 | FIX-IN-PHASE-3: Refactor to `paginate_offset` loop |
-| **R-H6** | Supply-chain: 332 transitive Cargo deps for an OAuth-handling CLI. `cargo-deny` is wired in CI but `multiple-versions = "warn"` policy means version dupes don't fail the build. No SBOM published. | NFR-S-F | — | — | FIX-IN-PHASE-3: Enforce `multiple-versions = "deny"` in `deny.toml`; publish SBOM. See NFR-S-F in nfr-catalog.md. |
-| **R-H7** (ADV-P2-004) | GitHub Actions floating-tag SHA pinning (NFR-S-E): all 8 action references in `ci.yml` + `release.yml` use mutable version tags (`@v6`, `@v2`, `@v7`, etc.) rather than full commit SHAs. A force-pushed tag can redirect to attacker-controlled code in the same pipeline that injects `JR_BUILD_OAUTH_CLIENT_ID`/`JR_BUILD_OAUTH_CLIENT_SECRET`. Rare event (requires tag-force-push on upstream action repos) but high impact (direct OAuth client secret exposure). Severity rebased to HIGH per Pass-2 ADV-P2-004 reconciliation (was CRITICAL in cicd-setup.md GAP-1). | NFR-S-E | — | — | FIX-IN-PHASE-3: Pin all 8 action references to full commit SHA in `ci.yml` + `release.yml`; enable dependabot github-actions ecosystem to keep SHAs current. See cicd-setup.md GAP-1. |
+| **R-H3** (R1-NEW-7) | `handle_open` uses `client.base_url()` not `instance_url()` (`workflow.rs:636`). For OAuth profiles, `base_url()` returns `https://api.atlassian.com/ex/jira/<cloud_id>` — browser opens 404. One-line fix. | NFR-R-B | BC-3.4.001 | ADR-0009 | FIX-IN-PHASE-3: `base_url()` → `instance_url()` |
+| **R-H4** (R1-NEW-8) | `list_worklogs` non-paginated: fetches `OffsetPage<Worklog>` and returns `.items().to_vec()` — no loop. Silent data loss past page 1 for issues with >50 worklogs. | NFR-R-A | BC-X.5.002 | ADR-0010 | FIX-IN-PHASE-3: Refactor to `paginate_offset` loop |
+| **R-H5** | Supply-chain: 332 transitive Cargo deps for an OAuth-handling CLI. `cargo-deny` is wired in CI but `multiple-versions = "warn"` policy means version dupes don't fail the build. No SBOM published. | NFR-S-F | — | — | FIX-IN-PHASE-3: Enforce `multiple-versions = "deny"` in `deny.toml`; publish SBOM. See NFR-S-F in nfr-catalog.md. |
+| **R-H6** (ADV-P2-004) | GitHub Actions floating-tag SHA pinning (NFR-S-E): all 8 action references in `ci.yml` + `release.yml` use mutable version tags (`@v6`, `@v2`, `@v7`, etc.) rather than full commit SHAs. A force-pushed tag can redirect to attacker-controlled code in the same pipeline that injects `JR_BUILD_OAUTH_CLIENT_ID`/`JR_BUILD_OAUTH_CLIENT_SECRET`. Rare event (requires tag-force-push on upstream action repos) but high impact (direct OAuth client secret exposure). Severity rebased to HIGH per Pass-2 ADV-P2-004 reconciliation (was CRITICAL in cicd-setup.md GAP-1). | NFR-S-E | — | — | FIX-IN-PHASE-3: Pin all 8 action references to full commit SHA in `ci.yml` + `release.yml`; enable dependabot github-actions ecosystem to keep SHAs current. See cicd-setup.md GAP-1. |
 
 ---
 
-## MEDIUM (8)
+## MEDIUM (9)
 
 | # | Risk | NFR | Phase 3 Action |
 |---|------|-----|----------------|
+| **R-M0** (R1-NEW-3; formerly R-H3 — reclassified MEDIUM per ADV-P6-004) | `--verbose` dumps full HTTP request bodies including user-typed content (comments, summaries, descriptions, accountIds, emails). Authorization header is NOT logged, but body is. Users piping `2>log.txt` for debugging leak payload bytes. **MEDIUM rationale:** `--verbose` is opt-in; Auth header already redacted; PII exposure is user-controlled. Matches NFR-S-C (MEDIUM). ID R-H3 retained in pass-6 notes for traceability; canonical ID here is R-M0. | NFR-S-C | SECURITY-DECIDE: Add `redact_body()` helper; or default verbose to header-only with `--verbose-bodies` opt-in |
 | **R-M1** (R1-NEW-4) | OAuth flow uses NO PKCE (NEW-INV-178). `build_authorize_url` sends no `code_challenge`. `exchange_code_for_token` sends no `code_verifier`. RFC 8252 recommends PKCE for native apps. ADR-0006 accepts the confidential-client model with embedded secret; PKCE is an addendum question. | NFR-S-A | SECURITY-DECIDE: Add RFC 7636 PKCE (~30 LOC). Cross-reference ADR-0006 addendum. |
 | **R-M2** (R1-NEW-5) | `accessible_resources` first-result-wins (`api/auth.rs:666-668`). No `--site` flag, no count, no disambiguation. User with multiple cloud sites may silently authenticate to the wrong one. | NFR-O-S | DEFER: Add `--cloud-id <ID>` flag + interactive prompt or `--no-input` error. P1 priority. |
 | **R-M3** (R1-NEW-6) | `Retry-After` parser supports only integer seconds (RFC 7231 §7.1.3 also permits HTTP-date format). HTTP-date `Retry-After` silently falls through to `DEFAULT_RETRY_SECS = 1` — fast-retry against rate-limited server. | NFR-SCA-1 | DOCUMENT-AS-IS: Add HTTP-date fallback via `chrono` when/if observed in production. |
@@ -69,8 +69,8 @@
 | Severity | Count | Top action |
 |----------|------:|-----------|
 | CRITICAL | 1 | FIX-IN-PHASE-3 (NFR-R-D multi-profile fields) |
-| HIGH | 7 | 4× FIX-IN-PHASE-3, 2× SECURITY-DECIDE, 1× DOCUMENT-AS-IS |
-| MEDIUM | 8 | 2× DEFER, 2× DOCUMENT-AS-IS, 1× FIX-IN-PHASE-3, 1× SECURITY-DECIDE, 2× mixed |
+| HIGH | 6 | 4× FIX-IN-PHASE-3, 2× SECURITY-DECIDE |
+| MEDIUM | 9 | 3× DEFER, 2× DOCUMENT-AS-IS, 1× FIX-IN-PHASE-3, 2× SECURITY-DECIDE, 1× mixed |
 | LOW | 11 | 7× DOCUMENT-AS-IS, 3× DEFER, 1× POLICY-DECISION |
 | **Total** | **27** | |
 
