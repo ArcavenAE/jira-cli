@@ -500,3 +500,24 @@ CANONICAL-COUNTS.md created with shell-verifiable counts for future passes.
 | architect | Fix ADV-P13-003 (cicd-setup.md path refs in risk-register + arch README) | architecture/risk-register.md, architecture/README.md |
 | state-manager | Persist Pass 13 findings; update STATE.md (counter 0/3, trajectory, checkpoint, steps); burst-log; commit | factory-artifacts |
 
+---
+
+## Burst 20 (2026-05-04)
+
+**Agents dispatched:** state-manager, adversary
+**Files touched:** cycles/cycle-001/adversarial-reviews/adv-p1-pass14.md, STATE.md, cycles/cycle-001/burst-log.md
+**Versions bumped:** (none)
+
+### Summary
+
+Burst 20 — Pass 14 (state-manager + adversary): CLEAN-PASS. Counter 0/3 → 1/3. CANONICAL-COUNTS.md prevents count drift. 2 more clean passes needed.
+
+No substantive findings. 2 nitpicks honestly demoted to LOW (holdout Group 1 label inaccuracy; L2 README "12+" vs canonical "14" — non-contradictory). 4/4 source-truth spot checks exact. CANONICAL-COUNTS = 541 BCs / 41 NFRs / 48 holdouts / 26 risks stable across all docs.
+
+### Details
+
+| Agent | Task | Output |
+|-------|------|--------|
+| adversary | Phase 1d adversarial spec review Pass 14 (CLEAN-PASS) | adv-p1-pass14.md (0 findings) |
+| state-manager | Persist Pass 14 CLEAN-PASS; update STATE.md convergence counter 0/3 → 1/3; burst-log; commit | factory-artifacts (this commit) |
+
