@@ -32,7 +32,7 @@ will write the L3 PRD (Burst 2) against this spec.**
 | [bc-06-config-cache.md](bc-06-config-cache.md) | Configuration & Cache | 22 | 26 |
 | [bc-07-output-render.md](bc-07-output-render.md) | Output Rendering & Error | 16 | 18 |
 | [cross-cutting.md](cross-cutting.md) | Cross-cutting utilities | 12 | 18 |
-| [state-machines.md](state-machines.md) | 5 state machines | — | — |
+| [state-machines.md](state-machines.md) | 5 canonical + 1 bonus state machines | — | — |
 
 **Total entities:** ~146 (across 7 BCs + cross-cutting; reconciles to Pass 2 catalog of ~78 row-level entities + value objects + enums + cross-cutting utilities)
 

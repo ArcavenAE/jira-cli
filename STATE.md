@@ -49,7 +49,7 @@ Goal 1c: **Harden v0.5 + feature delivery** — formalize existing codebase with
 | pre-pipeline: Setup | complete | 2026-05-04 | 2026-05-04 | env-preflight | |
 | 0: Codebase Ingestion | **COMPLETE** | 2026-05-04 | 2026-05-04 | Phase A + B + B.5 + B.6 + C + gate APPROVED | |
 | 1: Spec Crystallization | **entry** | 2026-05-04 | | DEC-004 pending (scope choice) | |
-| 1d: Adversarial Spec Review | **Pass 24: 5 findings FIXED (0C/0H/1M/4L); P23 verified+sweep clean; severity down; counter 0/3; Pass 25 next** | 2026-05-04 | | Awaiting orchestrator strategy decision | 30→15→9→5→10→5→4→3→4→0→2→0→3→0→2→0→3→0→3→5→3→4→5→5→**5** (P24: 0C/0H/1M/4L; BC-2.1.006 12→13; nfr line 15 =41; L2 SM count 5+bonus; SM-3 source align 395-463; JiaClient typo) |
+| 1d: Adversarial Spec Review | **Pass 25: 2 findings FIXED (0C/0H/1M/1L); convergence inflection; counter 0/3; Pass 26 next (predict CLEAN-PASS)** | 2026-05-04 | | Awaiting orchestrator strategy decision | 30→15→9→5→10→5→4→3→4→0→2→0→3→0→2→0→3→0→3→5→3→4→5→5→5→**2** (P25: 0C/0H/1M/1L; BC-INDEX:141 12→13 sibling; README SM canonical+bonus) |
 | 2: Story Decomposition | not-started | | | | |
 | 2-adv: Adversarial Story Review | not-started | | | | |
 | 3: TDD Implementation | not-started | | | | |
@@ -69,6 +69,7 @@ Goal 1c: **Harden v0.5 + feature delivery** — formalize existing codebase with
 | Phase 1d Pass 22 + fixes | state-manager | complete | adv-p1-pass22.md; 5 FIXED (0C/0H/4M/1L); P21 propagation gaps swept (H-044 BC range, L2 54→51, mermaid 6→7); H-027 reframe as parsing test; CANONICAL-COUNTS MEDIUM pruned |
 | Phase 1d Pass 23 + fixes | state-manager | complete | adv-p1-pass23.md; 5 FIXED (0C/1H/3M/1L); L2 6→7-level chain (P22 propagation); 17→18 API files; H-017 fixture; Group 1+2 headers |
 | Phase 1d Pass 24 + fixes | state-manager | complete | adv-p1-pass24.md; 5 FIXED (0C/0H/1M/4L); severity-down trend; BC-2.1.006 12→13; nfr 42→41; L2 SM count; SM-3 source align; JiaClient typo |
+| Phase 1d Pass 25 + fixes | state-manager | complete | adv-p1-pass25.md; 2 FIXED (0C/0H/1M/1L); BC-INDEX:141 12→13 (P24 sibling); README SM canonical+bonus; trajectory ...→5→5→2; convergence inflection |
 
 ## Pending Decisions
 
@@ -108,7 +109,7 @@ Goal 1c: **Harden v0.5 + feature delivery** — formalize existing codebase with
 ## Convergence Trackers
 
 ### Phase 1d — Adversarial Spec Review
-_Pass 24: 5 findings (0C/0H/1M/4L), all FIXED. Counter 0/3 (no advance). P23 fixes 5/5 verified + downstream sweep clean. Severity distribution dramatic shift (4M/1L → 1M/4L); adversary self-notes spec approaching floor. DRIFT-001: third recurrence of count-claim drift; S-7.01 codification due before Phase 2. Convergence asymptotic. Trajectory 30→15→9→5→10→5→4→3→4→0→2→0→3→0→2→0→3→0→3→5→3→4→5→5→5._
+_Pass 25: 2 findings (0C/0H/1M/1L), all FIXED. Counter 0/3 (no advance). Convergence inflection — descent from 5 to 2. Both findings are P24 sibling-propagation residuals (BC-INDEX:141 + README SM count). 7/7 BC source-line citations verified accurate. Adversary predicts CLEAN-PASS Pass 26. Trajectory 30→15→9→5→10→5→4→3→4→0→2→0→3→0→2→0→3→0→3→5→3→4→5→5→5→2._
 
 ```yaml
 convergence_trajectory:
@@ -164,6 +165,16 @@ convergence_trajectory:
     clean_pass: false
     clean_pass_count: "0/3"
     note: "Severity distribution dramatic shift (4M/1L → 1M/4L). Adversary self-notes spec approaching floor. P23 verified clean + downstream sweep clean. Findings: BC-2.1.006 12→13, nfr line 15 = 41, SM count 5+1 bonus, SM-3 source pin align, JiaClient typo. Predict CLEAN-PASS pass 25-26."
+  - pass: 25
+    findings: 2
+    severity: "0C/0H/1M/1L"
+    addressed: 2
+    delta: -3
+    trend: CONVERGING
+    fixes_committed: true
+    clean_pass: false
+    clean_pass_count: "0/3"
+    note: "Convergence inflection. Only 2 findings (down from 5). Both partial-fix regression patterns (P24 BC-INDEX sibling not swept). 7 BC source-line citations verified accurate. Adversary predicts CLEAN-PASS Pass 26."
 ```
 
 ### Phase 2-adv — Adversarial Story Review
@@ -194,8 +205,8 @@ convergence_trajectory: []
 | Field | Value |
 |-------|-------|
 | **Date** | 2026-05-04 |
-| **Position** | Phase 1 ACTIVE — Phase 1d adversary Pass 24: 5 findings (0C/0H/1M/4L), all FIXED. P23 fixes 5/5 verified + downstream sweep clean. Counter 0/3 (no advance). Trajectory 30→15→9→5→10→5→4→3→4→0→2→0→3→0→2→0→3→0→3→5→3→4→5→5→5. Manifest: 541 BCs / 41 NFRs / 48 holdouts / 26 risks. Severity distribution dramatic shift (4M/1L → 1M/4L); spec approaching floor; DRIFT-001: third recurrence of count-claim drift, S-7.01 codification due before Phase 2; Pass 25 next. |
-| **Convergence counter** | 0 of 3 (no advance; Pass 24 delta 0 from Pass 23; SEVERITY-DOWN trend; asymptotic regime) |
+| **Position** | Phase 1 ACTIVE — Phase 1d adversary Pass 25: 2 findings (0C/0H/1M/1L), all FIXED. Convergence inflection — descent from 5 to 2. Both findings are P24 sibling-propagation residuals. Counter 0/3 (no advance). Trajectory 30→15→9→5→10→5→4→3→4→0→2→0→3→0→2→0→3→0→3→5→3→4→5→5→5→2. Manifest: 541 BCs / 41 NFRs / 48 holdouts / 26 risks. Adversary predicts CLEAN-PASS Pass 26. |
+| **Convergence counter** | 0 of 3 (no advance; Pass 25 delta -3; CONVERGING trend; adversary predicts CLEAN-PASS Pass 26) |
 
 ## Historical Content
 

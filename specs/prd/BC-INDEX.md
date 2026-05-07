@@ -138,7 +138,7 @@ R1/R4 prefix = deepening round that introduced it.
 | BC-2.1.003 | Scrum board with active sprint → JQL `sprint = <id> ORDER BY rank ASC` | BC-126 (R1) | src/cli/issue/list.rs:278-282 | HIGH |
 | BC-2.1.004 | Kanban board → `project = "X" AND statusCategory != Done ORDER BY rank ASC` | BC-127 (R1) | src/cli/issue/list.rs:302-310 | HIGH |
 | BC-2.1.005 | No board_id → `project = "X" ORDER BY updated DESC` | BC-128 (R1) | src/cli/issue/list.rs:331-338 | HIGH |
-| BC-2.1.006 | No project AND no filters AND no `--jql` → exit 64 listing all 12 filter sources | BC-129 (R1) | src/cli/issue/list.rs:344-351 | HIGH |
+| BC-2.1.006 | No project AND no filters AND no `--jql` → exit 64 listing all 13 filter sources | BC-129 (R1) | src/cli/issue/list.rs:344-351 | HIGH |
 | BC-2.1.007 | `build_filter_clauses` emits in stable order: assignee, reporter, status, open, team, recent, asset, date filters | BC-130 (R1); BC-1093 (R4) | src/cli/issue/list.rs:613-649 | HIGH |
 | BC-2.1.008 | `--recent <duration>` validated by `jql::validate_duration`; combined units rejected | BC-131 (R1) | src/cli/issue/list.rs:90-92 | HIGH |
 | BC-2.1.009 | `--created-after/before` and `--updated-after/before` validated via `jql::validate_date` BEFORE any HTTP | BC-132 (R1) | src/cli/issue/list.rs:95-114 | HIGH |
