@@ -36,7 +36,7 @@ activation_version: "v0.5.0-dev.7"
 | **Current Phase** | Phase 2 — Story Decomposition (active) |
 | **Next Phase** | phase-3-tdd-implementation |
 | **Activation HEAD** | dea166471e22eff55974d7675593469b37048c5f (v0.5.0-dev.7) |
-| **factory-artifacts SHA** | (update after commit) |
+| **factory-artifacts SHA** | 0b01262 (Phase 1 gate APPROVE; phase-1-converged tag) |
 
 ## Pipeline Goal
 
