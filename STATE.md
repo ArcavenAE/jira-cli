@@ -5,13 +5,13 @@ version: "2.0"
 status: active
 producer: state-manager
 timestamp: 2026-05-04T00:00:00
-phase: phase-2-story-decomposition-active
+phase: phase-2-adv-pending
 inputs: []
 input-hash: "[live-state]"
 traces_to: ""
 project: jira-cli
 mode: BROWNFIELD
-current_step: "phase-2-story-decomposition-start"
+current_step: "phase-2-adv-not-started"
 current_cycle: "cycle-001"
 dtu_required: false
 activation_head: "dea166471e22eff55974d7675593469b37048c5f"
@@ -33,7 +33,7 @@ activation_version: "v0.5.0-dev.7"
 | **Target Workspace** | develop → main |
 | **Started** | 2026-05-04 |
 | **Last Updated** | 2026-05-06 |
-| **Current Phase** | Phase 2 — Story Decomposition (active) |
+| **Current Phase** | Phase 2-adv — Adversarial Story Review (pending) |
 | **Next Phase** | phase-3-tdd-implementation |
 | **Activation HEAD** | dea166471e22eff55974d7675593469b37048c5f (v0.5.0-dev.7) |
 | **factory-artifacts SHA** | 0b01262 (Phase 1 gate APPROVE; phase-1-converged tag) |
@@ -51,8 +51,8 @@ Goal 1c: **Harden v0.5 + feature delivery** — formalize existing codebase with
 | 1: Spec Crystallization | **COMPLETE** | 2026-05-04 | 2026-05-04 | PASSED — DEC-006 (SD-001=C), DEC-007 (SD-002=A), DEC-008 (SD-003=B), gate APPROVE | |
 | 1d: Adversarial Spec Review | **COMPLETE** — **3/3 CONVERGED** at Pass 28 after 28 passes (5 counter resets, 3 consecutive clean P26-P27-P28) | 2026-05-04 | 2026-05-04 | 3/3 FULL CONVERGENCE | 30→15→9→5→10→5→4→3→4→0→2→0→3→0→2→0→3→0→3→5→3→4→5→5→5→2→0→0→0 |
 | 1-gate-prep: Consistency Validation + Drift Items | **COMPLETE** | 2026-05-06 | 2026-05-04 | DEC-006/007/008 resolved; ADR-0013 created | CV: 4H/1M; CV-001/003/005 FIXED; CV-002 resolved (SD-001=C/SD-002=A/SD-003=B); CV-004 DRIFT-002 resolved post-SD-002 |
-| 2: Story Decomposition | **active** | 2026-05-04 | | Wave 0 + Wave 1 created (15 stories); Wave 2 pending | |
-| 2-adv: Adversarial Story Review | not-started | | | | |
+| 2: Story Decomposition | **complete** (story creation phase) | 2026-05-04 | 2026-05-06 | 30 stories created (W0:7 + W1:8 + W2:7 + W3:8); Phase 2-adv pending | |
+| 2-adv: Adversarial Story Review | **pending** | | | 3 consecutive CLEAN-PASS required | |
 | 3: TDD Implementation | not-started | | | | |
 | 3-adv: Wave Adversarial Reviews | not-started | | | | |
 | 4: Holdout Evaluation | not-started | | | | |
@@ -66,10 +66,11 @@ Goal 1c: **Harden v0.5 + feature delivery** — formalize existing codebase with
 
 | Step | Agent | Status | Output |
 |------|-------|--------|--------|
-| Phase 1→2 gate prep: consistency-validation + 3 mechanical fixes | state-manager + consistency-validator | complete | CV-001/003/005 FIXED; CV-002 (SD-001/002/003) human decisions pending (DEC-006/007/008); CV-004 deferred (DRIFT-002); risk total 26→28 (R-L12/R-L13 added) |
-| Phase 1→2 gate: SD resolution + ADR-0013 + transition | state-manager | complete | 3 SDs RESOLVED, ADR-0013 created, ADR total 12→13, DEC-006/007/008 resolved, DEC-009 logged, DRIFT-002 resolved, phase=phase-2-story-decomposition-active |
 | Phase 2 Burst 1 — STORY-INDEX + WAVE-PLAN + Wave 0 (7 stories) | story-writer | complete | 7 stories: 4 MUST-FIX bug fixes + S-0.05 #[cfg(test)] gate + S-0.06 --verbose-bodies + S-0.07 H-NEW-AUTH-002 holdout |
 | Phase 2 Burst 2 — Wave 1 (8 stories) | story-writer | complete | NFR-S-E/F/O-A infra + R-L12/R-L13 CI gaps + OAuth/rate-limit/keychain holdout regression pins |
+| Phase 2 Burst 3 — Wave 2 (7 stories) | story-writer | complete | MEDIUM NFRs + BC-2/3/4/5/7 holdout regression suites |
+| Phase 2 Burst 4 — Wave 3 (8 stories) | story-writer | complete | LOW NFRs + DEFER + DRIFT-001 codification + cleanup; STORY-INDEX v1.3.0; total=30 |
+| Phase 2-adv — adversarial story review | adversary | not-started | 3-clean-pass convergence loop pending |
 
 ## Decisions Log
 
@@ -161,8 +162,8 @@ convergence_trajectory: []
 | Field | Value |
 |-------|-------|
 | **Date** | 2026-05-06 |
-| **Position** | Phase 2 — Story Decomposition ACTIVE. Wave 0 (7 stories) + Wave 1 (8 stories) complete; 15 total stories. STORY-INDEX v1.1.0. Next: Wave 2 decomposition (MEDIUM NFRs + BC-2/3/4/5 holdout coverage). |
-| **Convergence counter** | 3 of 3 (FULL CONVERGENCE; Phase 1d COMPLETE; Phase 1 COMPLETE; Phase 2 ACTIVE — Wave 0 + Wave 1 done) |
+| **Position** | Phase 2 story creation COMPLETE. 30 stories total: W0:7 + W1:8 + W2:7 + W3:8. STORY-INDEX v1.3.0, status=complete-pending-adv-review. WAVE-PLAN.md path-correct. Next: Phase 2-adv adversarial story review (3-clean-pass convergence loop). |
+| **Convergence counter** | 3 of 3 (FULL CONVERGENCE; Phase 1d COMPLETE; Phase 1 COMPLETE; Phase 2 story creation COMPLETE — Phase 2-adv pending) |
 
 ## Historical Content
 
