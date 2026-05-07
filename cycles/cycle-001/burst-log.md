@@ -647,3 +647,42 @@ ADV-P2-S2-004 FIXED (LOW): STORY-INDEX H-017 row mis-anchored to BC-X.8.003 (pro
 | state-manager | ADV-P2-S2-004: STORY-INDEX H-017 BC-X.8.003 → BC-4.1.002 | stories/STORY-INDEX.md |
 | state-manager | Update STATE.md (pass 2 convergence, trajectory 14→5, checkpoint, steps); burst-log; commit | factory-artifacts |
 
+---
+
+## Burst: Phase 3 Wave 0 COMPLETE (2026-05-07)
+
+**Agents dispatched:** devops-engineer (PRs #289-#294), state-manager (S-0.07 spec-only)
+**Files touched:** (source code via PRs on develop; factory artifacts via state-manager direct) .factory/specs/prd/holdout-scenarios.md, .factory/sprint-state.yaml, .factory/stories/WAVE-PLAN.md, .factory/STATE.md, .factory/cycles/cycle-001/lessons.md
+**PRs merged to develop:** #289 (S-0.01), #290 (S-0.02), #291 (S-0.03), #292 (S-0.04), #293 (S-0.05), #294 (S-0.06)
+
+### Wave 0 Delivery Summary
+
+All 7 Wave 0 stories complete. 6 via PRs to develop; 1 (S-0.07) spec-only on factory-artifacts:
+
+| Story | Type | PR | develop SHA | Holdouts |
+|-------|------|----|-------------|---------|
+| S-0.01 | MUST-FIX | #289 | b7b9c9c | H-046 MUST-PASS |
+| S-0.02 | MUST-FIX | #290 | a84e063 | H-045 MUST-PASS |
+| S-0.03 | MUST-FIX | #291 | cb2c612 | H-036 MUST-PASS |
+| S-0.04 | MUST-FIX | #292 | dbbea12 | H-NEW-MP-001 MUST-PASS |
+| S-0.05 | SD-implementation | #293 | d907504 | H-NEW-AUTH-002 (gated) |
+| S-0.06 | SD-implementation | #294 | 06ecd6a | H-NEW-VERBOSE-001/002 MUST-PASS |
+| S-0.07 | holdout | factory-artifacts direct | (no develop PR) | H-NEW-AUTH-002 formalized |
+
+### S-0.07 Delivery Details
+
+- H-NEW-AUTH-002 appended to holdout-scenarios.md (v1.1.1, total_holdouts=51)
+- Group 8 added: "SD-002 Release Binary Auth Gate"
+- sprint-state.yaml: S-0.07 → completed; wave_0_progress: 7/7 COMPLETE; wave_1: active
+- WAVE-PLAN.md: Wave 0 COMPLETE, Wave 1 ACTIVE (v1.2.0)
+- STATE.md: compacted Phase 3 row; session checkpoint updated; wave_0 archived
+
+### Wave 0 Metrics
+
+- 6 PRs merged to develop (#289-#294)
+- 1 spec-only delivery on factory-artifacts (S-0.07)
+- Total deferred findings: 5 (R1-001, R1-002, S-0.03-S1, S-0.05-F1/F2/F3, S-0.05-DEV resolved)
+- Tests added: ~40 new (issue_open + worklog_commands + issue_list_assets + multi_profile_fields + auth_header_release_gate + verbose_bodies + 2 cli_handler rewrites)
+- 0 production regressions; subprocess test compat preserved through Option B canonization
+- 3 new lessons learned (PR deviations tracking; dispatcher block pattern; clippy version skew)
+

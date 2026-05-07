@@ -1,12 +1,10 @@
 ---
 context: holdout-scenarios
 title: "Holdout Scenarios"
-total_holdouts: 50
-# Note: H-NEW-AUTH-002 will be added by S-0.07 implementation (Phase 3).
-# Wave 0 exit gate references H-NEW-AUTH-002 as MUST-PASS pending S-0.07 landing.
-# Total will become 51 once S-0.07 ships.
+total_holdouts: 51
+# H-NEW-AUTH-002 registered by S-0.07 (Phase 3, 2026-05-07). Wave 0 COMPLETE.
 # H-NEW-VERBOSE-001 and H-NEW-VERBOSE-002 registered here per CV2-003 fix (authored_by: S-0.06).
-version: "1.1.0"
+version: "1.1.1"
 last_updated: 2026-05-07
 source_pass: 3
 trace: |
@@ -19,7 +17,7 @@ trace: |
 
 # Holdout Scenarios — jira-cli
 
-48 holdout scenarios for Phase 4 evaluation. Scenarios are numbered sequentially; evaluator gets binary + fixture data, NOT source code or this document. Expected outputs are precise.
+51 holdout scenarios for Phase 4 evaluation. Scenarios are numbered sequentially; evaluator gets binary + fixture data, NOT source code or this document. Expected outputs are precise.
 
 Setup uses:
 - `XDG_CONFIG_HOME` / `XDG_CACHE_HOME` pointing to temp directories
@@ -27,7 +25,7 @@ Setup uses:
 - `JR_SERVICE_NAME=jr-jira-cli-test` to isolate keychain (where applicable)
 - `assert_cmd` (process-spawn) or `JiraClient::new_for_test` (library-level) for invocation
 
-**Note on H-NEW-* format**: Holdouts H-NEW-MP-001, H-NEW-VERBOSE-001, H-NEW-VERBOSE-002 (and future H-NEW-AUTH-002) use an extended format with explicit `**Status**`, `**Verification**`, and prepended NFR/BC fields. This is deliberate for net-new holdouts that anchor MUST-FIX BCs discovered post-corpus-lock. H-001..H-047 use the legacy compact format established during corpus creation. Phase 4 evaluators should parse both shapes.
+**Note on H-NEW-* format**: Holdouts H-NEW-MP-001, H-NEW-VERBOSE-001, H-NEW-VERBOSE-002, and H-NEW-AUTH-002 use an extended format with explicit `**Status**`, `**Verification**`, and prepended NFR/BC fields. This is deliberate for net-new holdouts that anchor MUST-FIX BCs discovered post-corpus-lock. H-001..H-047 use the legacy compact format established during corpus creation. Phase 4 evaluators should parse both shapes.
 
 ---
 
@@ -557,3 +555,48 @@ Setup uses:
 - Process-spawn test in `tests/verbose_bodies.rs`: assert stderr contains suppression hint and does NOT contain `[verbose] body:`.
 - Three-variant test: (a) `--verbose` alone → suppression hint, no body; (b) `--verbose-bodies` alone → warning + body, no suppression hint; (c) `--verbose --verbose-bodies` → warning + body + method/URL lines.
 - Cross-reference: SD-003 Resolution §3 lines 68-76; S-0.06 AC-001, AC-002; H-NEW-VERBOSE-001.
+
+---
+
+## Group 8: SD-002 Release Binary Auth Gate (H-NEW-AUTH-002)
+
+### H-NEW-AUTH-002: Release binary refuses `JR_AUTH_HEADER` auth bypass (MUST-PASS + regression pin)
+
+**NFR source**: NFR-S-B
+**BC**: BC-X.1.001
+**SD anchor**: SD-002 (Option B-revised — `#[cfg(debug_assertions)]` compile-time gate, canonized 2026-05-07 during S-0.05)
+**Authored by**: S-0.07
+**gate_attribute**: `cfg(debug_assertions)`
+**mode**: must-pass + regression
+
+**Setup**:
+1. Build jr in release mode: `cargo build --release`
+2. Set `JR_AUTH_HEADER=Basic dGVzdEBleGFtcGxlLmNvbTpmYWtl` (a Base64-encoded fake credential) in the child process environment.
+3. Empty `XDG_CONFIG_HOME` (no configured profiles, no keychain entries). Set `JR_SERVICE_NAME=jr-jira-cli-test` to isolate keychain.
+4. No `JR_BASE_URL` set (or pointing to a non-listening address to ensure no real API call succeeds).
+
+**Action**: `./target/release/jr auth status`
+
+**Expected (MUST-PASS — post-S-0.05)**:
+- Exit non-zero (64 — no profile configured, or 78 — config error); NOT exit 0
+- `JR_AUTH_HEADER` is NOT used as the auth header; the binary behaves as if the env var were absent
+- stderr does NOT contain any reference to `dGVzdEBleGFtcGxlLmNvbTpmYWtl` (the fake credential value)
+- stderr does NOT contain `api.atlassian.com` (no successful API call against any server)
+- The binary falls through to keychain lookup / config-error path, proving the env-var read compiled out
+
+**Expected (MUST-FAIL — pre-S-0.05 at activation HEAD dea1664)**:
+- The fake `JR_AUTH_HEADER` value is loaded into `JiraClient` unconditionally (src/api/client.rs:64-66 pre-fix)
+- Combined with `JR_BASE_URL` pointing to a mock server, the fake header would be used for an API call — bypassing keychain auth entirely (security violation)
+- Without a mock server, the command still exits early (URL not configured), but the env var IS present in the loaded client struct
+
+**Verification**:
+- Process-spawn test in `tests/auth_header_release_gate.rs`: gated behind `#[ignore]` and `JR_RUN_RELEASE_AUTH_GATE_TEST=1` to avoid requiring a release build in standard CI unit test runs.
+- Assert exit code is 64 (no profile configured — NOT a fake-auth success).
+- Assert stderr does not contain the fake credential string or any API server response.
+- Regression check: if a future change re-introduces unconditional `JR_AUTH_HEADER` reading in a release build (by removing the `#[cfg(debug_assertions)]` gate), this holdout fails.
+
+**Practical test note**: The gate is `#[cfg(debug_assertions)]`. Debug binaries (including `cargo_bin` subprocess binaries used in most integration tests) still honor `JR_AUTH_HEADER` — that is intentional to preserve ~151 subprocess integration tests. This holdout MUST therefore use a RELEASE binary (`./target/release/jr`) built with `cargo build --release`. A debug subprocess test (`assert_cmd::cargo::cargo_bin`) would NOT verify this holdout because `debug_assertions=true` in debug builds.
+
+**Status**: MUST-PASS. Satisfies SD-002 Option B-revised postcondition. Pre-S-0.05: MUST-FAIL (holdout defines the target). Post-S-0.05 (at develop SHA d907504): MUST-PASS.
+**BC refs**: BC-X.1.001, SD-002
+**Added**: S-0.07, Phase 3 Wave 0 (2026-05-07)

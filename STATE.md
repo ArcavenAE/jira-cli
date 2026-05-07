@@ -11,7 +11,7 @@ input-hash: "[live-state]"
 traces_to: ""
 project: jira-cli
 mode: BROWNFIELD
-current_step: "phase-3-wave-0-S-0.07-start"
+current_step: "phase-3-wave-1-start"
 current_cycle: "cycle-001"
 dtu_required: false
 phase_2_status: APPROVED
@@ -36,9 +36,9 @@ activation_version: "v0.5.0-dev.7"
 | **Language** | Rust |
 | **Target Workspace** | develop → main |
 | **Started** | 2026-05-04 |
-| **Last Updated** | 2026-05-07 |
-| **Current Phase** | Phase 3 — TDD Implementation **IN PROGRESS** (Wave 0 active; S-0.01 MERGED; S-0.02 MERGED; S-0.03 MERGED; S-0.04 MERGED; S-0.05 MERGED; S-0.06 MERGED; active: S-0.07) |
-| **Next Phase** | phase-3-wave-0 delivery |
+| **Last Updated** | 2026-05-07 (S-0.07 delivery; Wave 0 COMPLETE) |
+| **Current Phase** | Phase 3 — TDD Implementation **IN PROGRESS** (Wave 0 COMPLETE 7/7; Wave 1 ACTIVE — 8 stories, HIGH-priority NFR infra) |
+| **Next Phase** | Phase 3 Wave 1 delivery |
 | **Activation HEAD** | dea166471e22eff55974d7675593469b37048c5f (v0.5.0-dev.7) |
 | **factory-artifacts SHA** | 0b01262 (Phase 1 gate APPROVE; phase-1-converged tag) |
 
@@ -58,7 +58,7 @@ Goal 1c: **Harden v0.5 + feature delivery** — formalize existing codebase with
 | 2: Story Decomposition | **complete** (story creation phase) | 2026-05-04 | 2026-05-06 | 31 stories created (W0:7 + W1:8 + W2:7 + W3:9); Phase 2-adv pending | |
 | 2-adv: Adversarial Story Review | **CONVERGED** — Pass 13 CLEAN-PASS; Counter 3/3 | 2026-05-06 | 2026-05-07 | 3/3 FULL CONVERGENCE | 14→5→5→5→4→5→4→4→4→1→0→1→0 |
 | Phase 2 gate | **APPROVED** (2026-05-07) — 31 stories locked, ready for TDD | — | 2026-05-07 | APPROVED by human | — |
-| 3: TDD Implementation | **IN_PROGRESS** — Wave 0 active (6/7) | 2026-05-07 | | | S-0.01 MERGED at b7b9c9c (PR #289; BC-3.4.001; H-046 MUST-PASS). S-0.02 MERGED at a84e063 (PR #290; BC-X.5.002; H-045 MUST-PASS). S-0.03 MERGED at cb2c612 — PR #291; BC-4.3.001 satisfied; H-036 MUST-PASS active. S-0.04 MERGED at dbbea12 — PR #292; BC-6.3.001 satisfied; H-NEW-MP-001 MUST-PASS active. S-0.05 MERGED at d907504 — PR #293; SD-002 satisfied via Option B (cfg(debug_assertions)). Manual merge by user (dispatcher block). SD-002 canonization: factory-artifacts commit 68d09c0. S-0.06 MERGED at 06ecd6a — PR #294; SD-003 satisfied; H-NEW-VERBOSE-001 + H-NEW-VERBOSE-002 holdouts MUST-PASS active. BREAKING CHANGE documented in CHANGELOG.md. 1 deviation accepted (2 pre-existing cli_handler tests rewritten for SD-003 contract). Manual merge by user (dispatcher block recurrence #2). Phase 3 Wave 0 progress: 6/7 — S-0.07 is the final Wave 0 story. |
+| 3: TDD Implementation | **IN_PROGRESS** — Wave 0 COMPLETE (7/7); Wave 1 ACTIVE | 2026-05-07 | | | Wave 0: COMPLETE — 7/7 stories merged via PRs #289-#294 + S-0.07 spec-only. H-045, H-046, H-036, H-NEW-MP-001, H-NEW-VERBOSE-001/002 MUST-PASS active; H-NEW-AUTH-002 formalized (v1.1.1, total_holdouts=51). Full burst log: `cycles/cycle-001/burst-log.md`. Wave 1: 8 stories active (CI/CD pinning, OAuth/rate-limit/keychain holdout suites, regression pins). |
 | 3-adv: Wave Adversarial Reviews | not-started | | | | |
 | 4: Holdout Evaluation | not-started | | | | |
 | 5: Adversarial Refinement | not-started | | | | |
@@ -72,9 +72,9 @@ Goal 1c: **Harden v0.5 + feature delivery** — formalize existing codebase with
 | Step | Agent | Status | Output |
 |------|-------|--------|--------|
 | S-0.04 MERGED — BC-6.3.001 satisfied | devops-engineer + review | complete | PR #292 squash-merged to develop at dbbea12 (2026-05-07) via admin bypass; 7/7 CI green; H-NEW-MP-001 MUST-PASS active; 2-cycle review APPROVE (cycle 1: Deviation 1 cache.rs fallback REVERTED per CLAUDE.md); security CLEAN; 0 deferred findings |
-| S-0.05 MERGED — SD-002 cfg(debug_assertions) gate | devops-engineer + user | complete | PR #293 squash-merged to develop at d907504 (2026-05-07T19:03:31Z) by user (manual via gh CLI — dispatcher blocked programmatic admin merge); 7/7 CI green (Rust 1.95 clippy fix c82832c required); 1-cycle review APPROVE; security CLEAN; 3 nits deferred (S-0.05-F1/F2/F3). SD-002 canonization: factory-artifacts 68d09c0 |
-| S-0.06 MERGED — SD-003 satisfied | devops-engineer + user | complete | PR #294 squash-merged to develop at 06ecd6a (2026-05-07T20:06:59Z) by user (manual via gh CLI — dispatcher block recurrence #2); 7/7 CI green; SD-003 satisfied; H-NEW-VERBOSE-001 + H-NEW-VERBOSE-002 holdouts MUST-PASS; 1-cycle review APPROVE; 1 deviation accepted (2 cli_handler tests rewritten for SD-003 contract); BREAKING CHANGE in CHANGELOG.md |
-| S-0.07 START — Wave 0 active (6/7) | state-manager | active | Final Wave 0 story: formalize H-NEW-AUTH-002 holdout for SD-002 release-binary gate. Worktree being created. Next: test-writer for Red Gate. |
+| S-0.06 MERGED — SD-003 satisfied | devops-engineer + user | complete | PR #294 squash-merged to develop at 06ecd6a (2026-05-07T20:06:59Z) by user (manual via gh CLI); 7/7 CI green; H-NEW-VERBOSE-001/002 MUST-PASS; BREAKING CHANGE in CHANGELOG.md |
+| S-0.07 DELIVERED — H-NEW-AUTH-002 formalized | state-manager | complete | Spec-only; factory-artifacts direct (no PR to develop). holdout-scenarios.md v1.1.1, total_holdouts=51. SD-002 Option B postcondition satisfied. |
+| WAVE 0 COMPLETE — 7/7 stories merged | state-manager | complete | 2026-05-07. PRs #289-#294 + S-0.07 spec-only. Wave 1 ACTIVE (8 stories — S-1.01..S-1.08). Next: S-1.01 (Pin GitHub Actions SHAs, NFR-S-E). |
 
 ## Decisions Log
 
@@ -83,11 +83,11 @@ Goal 1c: **Harden v0.5 + feature delivery** — formalize existing codebase with
 | DEC-001 | Pre-VSDD docs treatment: RESOLVED — HARMONIZE per Q4 (74 specs become BC validation inputs; 1 archaeological excluded; 2 divergent need reconciliation; v1 design imported as historical with annotated supersessions on 3 sections; 75 plans SUPERSEDE) | Q4 harmonization plan confirmed 74 DELIVERED-AS-DESIGNED, 0 PARTIAL/UNDELIVERED. Plans dir cleanly SUPERSEDE. | Phase 0 | 2026-05-04 | human |
 | DEC-002 | Pre-VSDD docs at Phase 0→1 gate: RESOLVED — see DEC-001 | Consolidated into DEC-001 outcome | Phase 0 | 2026-05-04 | human |
 | DEC-003 | 5 MUST-FIX bugs treatment: PARTIALLY RESOLVED — NFR-R-D has draft BC (14 read sites in 6 files; holdout H-NEW-MP-001 proposed). 4 P0 bugs route to Phase 3 (decompose-stories) for fix-in-phase-3 treatment. | Draft BC ready for Phase 1 PRD formalization. | Phase 0 | 2026-05-04 | orchestrator + human |
-| DEC-005 | Phase 1d Adversarial Spec Review converged 3/3 at Pass 28 | 28 total passes (25 SUBSTANTIVE + 3 consecutive CLEAN-PASS). 80+ findings addressed across rotating lens axes. Trajectory shows healthy descent. Spec corpus locked: 541 BCs, 41 NFRs, 48 holdouts, 26 risks, 12 ADRs, 3 SD. | Phase 1d | 2026-05-04 | orchestrator + adversary |
+| DEC-005 | Phase 1d Adversarial Spec Review converged 3/3 at Pass 28 | 28 total passes (25 SUBSTANTIVE + 3 consecutive CLEAN-PASS). 80+ findings addressed across rotating lens axes. Trajectory shows healthy descent. Spec corpus locked at convergence: 541 BCs, 41 NFRs, 48 holdouts, 26 risks, 12 ADRs, 3 SD. Post-convergence additions: +3 holdouts (H-NEW-VERBOSE-001/002, H-NEW-AUTH-002) → 51 total. | Phase 1d | 2026-05-04 | orchestrator + adversary |
 | DEC-006 | SD-001 = Option C — PKCE deferred with ADR-0013 | Atlassian Cloud doesn't publicly support PKCE; Options A/B technically infeasible. Threat model documented with mitigations. Reactivation trigger set. | Phase 1→2 gate | 2026-05-04 | human + perplexity research |
 | DEC-007 | SD-002 = Option A (`#[cfg(test)]`) at gate; canonized to Option B-revised (`#[cfg(debug_assertions)]`) during S-0.05 implementation (2026-05-07) | ~151 subprocess tests use `cargo_bin("jr").env("JR_AUTH_HEADER", ...)` — subprocess binary has no cfg(test); `#[cfg(debug_assertions)]` achieves identical release-binary security. See SD-002 canonization. | Phase 1→2 gate / S-0.05 | 2026-05-04 / 2026-05-07 | human + perplexity research / implementer |
 | DEC-008 | SD-003 = Option B — header-only `--verbose` default + opt-in `--verbose-bodies` with PII warning | Strongest default security; mitigates AI-agent context capture (EDPB Apr 2025). Breaking change for v0.6. | Phase 1→2 gate | 2026-05-04 | human + perplexity research |
-| DEC-009 | Phase 1 → Phase 2 gate APPROVED | All pending decisions resolved (DEC-006/007/008). Spec corpus locked: 541 BCs / 41 NFRs / 48 holdouts / 28 risks / 13 ADRs / 3 SDs. | Phase 1→2 gate | 2026-05-04 | human |
+| DEC-009 | Phase 1 → Phase 2 gate APPROVED | All pending decisions resolved (DEC-006/007/008). Spec corpus locked at gate: 541 BCs / 41 NFRs / 48 holdouts / 28 risks / 13 ADRs / 3 SDs. Wave 0 additions brought holdouts to 51 (H-NEW-VERBOSE-001/002 + H-NEW-AUTH-002). | Phase 1→2 gate | 2026-05-04 | human |
 
 ## Skip Log
 
@@ -134,44 +134,6 @@ _**3/3 FULLY CONVERGED** at Pass 28 (2026-05-04). 28 passes total: 25 SUBSTANTIV
 ### Phase 2-adv — Adversarial Story Review
 _**3/3 FULLY CONVERGED** at Pass 13 (2026-05-07). 13 passes: 10 SUBSTANTIVE + 3 consecutive CLEAN-PASS (P11-P12-P13). Trajectory: 14→5→5→5→4→5→4→4→4→1→0→1→0. Full per-pass details: `cycles/cycle-001/convergence-trajectory.md`._
 
-```yaml
-phase-2-adv-convergence:
-  # Passes 1-7 archived to cycles/cycle-001/convergence-trajectory.md
-  # Trajectory: 14→5→5→5→4→5→4→4→4→1→0→1→0
-  - pass: 8
-    findings: 4
-    severity: "0C/1H/1M/2L"
-    clean_pass: false
-    clean_pass_count: "0/3"
-  - pass: 9
-    findings: 4
-    severity: "0C/2H/2M/0L"
-    clean_pass: false
-    clean_pass_count: "0/3"
-  - pass: 10
-    findings: 1
-    severity: "0C/0H/1M/0L"
-    clean_pass: false
-    clean_pass_count: "0/3"
-  - pass: 11
-    findings: 0
-    severity: "CLEAN-PASS"
-    clean_pass: true
-    clean_pass_count: "1/3"
-  - pass: 12
-    findings: 1
-    severity: "0C/0H/1M/0L"
-    clean_pass: true
-    clean_pass_count: "2/3"
-    strict_binary: "CLEAN-PASS (sub-threshold)"
-  - pass: 13
-    findings: 0
-    severity: "CLEAN-PASS"
-    clean_pass: true
-    clean_pass_count: "3/3"
-    phase_status: "FULL CONVERGENCE"
-```
-
 ### Phase 3-adv — Wave Adversarial Reviews (per-story + wave)
 _Not started._
 
@@ -185,7 +147,7 @@ _Not started._
 | Field | Value |
 |-------|-------|
 | **Date** | 2026-05-07 |
-| **Position** | S-0.06 merged by user (PR #294, develop SHA 06ecd6a, 2026-05-07T20:06:59Z). SD-003 satisfied; H-NEW-VERBOSE-001 + H-NEW-VERBOSE-002 holdouts MUST-PASS active. 7/7 CI green; review APPROVE; BREAKING CHANGE in CHANGELOG.md; 1 deviation accepted (cli_handler test rewrites). Dispatcher blocked programmatic admin merge again (recurrence #2 of Lesson 2) — user merged manually via gh CLI. Wave 0 progress: 6/7. Active story: S-0.07 (final Wave 0 — formalize H-NEW-AUTH-002 holdout for SD-002 release-binary gate). Worktree being created. Next: test-writer for Red Gate. Deferred: R1-001, R1-002, S-0.03-S1, S-0.05-F1, S-0.05-F2 (TO_VERIFY), S-0.05-F3. |
+| **Position** | WAVE 0 COMPLETE (7/7). S-0.07 delivered spec-only on factory-artifacts (H-NEW-AUTH-002 formalized in holdout-scenarios.md v1.1.1, total_holdouts=51). Active phase: Phase 3, Wave 1 ACTIVE. Next story: S-1.01 (Pin GitHub Actions SHAs, NFR-S-E, effort small). Active wave: 1 (8 stories: S-1.01..S-1.08 — CI/CD pinning, OAuth/rate-limit/keychain holdout suites, regression pins; all unblocked). Open deferred: R1-001, R1-002, S-0.03-S1, S-0.05-F1, S-0.05-F2 (TO_VERIFY), S-0.05-F3. Wave 0 holdouts active: H-045, H-046, H-036, H-NEW-MP-001, H-NEW-VERBOSE-001/002; H-NEW-AUTH-002 gated behind JR_RUN_RELEASE_AUTH_GATE_TEST=1. |
 | **Convergence counter** | 3/3 CONVERGED (Phase 2-adv; Pass 13 CLEAN-PASS — final trajectory: 14→5→5→5→4→5→4→4→4→1→0→1→0) |
 
 ## Historical Content

@@ -2,8 +2,10 @@
 document_type: wave-plan
 phase: phase-2-story-decomposition
 producer: story-writer
-version: "1.1.1"
+version: "1.2.0"
 last_updated: 2026-05-07
+wave_0_status: COMPLETE
+wave_1_status: ACTIVE
 activation_head: dea1664
 ---
 
@@ -13,7 +15,7 @@ Rationale for wave sizing, ordering, and exit gates.
 
 ---
 
-## Wave 0: MUST-FIX + Security (7 stories)
+## Wave 0: MUST-FIX + Security (7 stories) — **COMPLETE** (2026-05-07)
 
 ### Why Wave 0 exists
 
@@ -48,7 +50,7 @@ Recommended parallel groups:
 
 ---
 
-## Wave 1 — HIGH-priority security posture, supply-chain hardening, structured logging, regression pinning (8 stories)
+## Wave 1 — HIGH-priority security posture, supply-chain hardening, structured logging, regression pinning (8 stories) — **ACTIVE**
 
 | Story | Title | BC/NFR Anchors | Depends on | Status | Effort |
 |-------|-------|---------------|------------|--------|--------|

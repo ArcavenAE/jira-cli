@@ -46,3 +46,19 @@ _(none yet)_
 | 1 | Require "Deviations" section in all Phase 3 PR bodies; reviewer must explicitly accept or reject each deviation | Phase 3 fix-PR delivery (vsdd-factory:fix-pr-delivery) | proposed |
 | 2 | When pr-manager returns dispatcher-blocked status on merge, orchestrator MUST present clear option list (manual merge vs UI approval) and ScheduleWakeup polling rather than retrying | S-7.02 codification register | proposed |
 | 3 | Quality gate command in story templates must be the EXACT CI command; consider pinning rustup toolchain to match CI | Story-writer template (vsdd-factory:create-story) | proposed |
+
+---
+
+## Wave 0 Retrospective (2026-05-07)
+
+Wave 0 COMPLETE. 7/7 stories delivered. Final metrics:
+
+- **Stories**: 7 total — 4 MUST-FIX bugs (S-0.01..S-0.04) + 2 security decisions (S-0.05 SD-002, S-0.06 SD-003) + 1 spec-only holdout (S-0.07)
+- **PRs**: 6 merged to develop (#289-#294); 1 spec-only on factory-artifacts direct (S-0.07)
+- **Tests added**: ~40 new tests (issue_open OAuth URL, worklog pagination, multi-workspace HashMap, multi-profile fields, auth_header_release_gate, verbose_bodies, 2 cli_handler rewrites)
+- **Holdouts activated**: H-045, H-046, H-036, H-NEW-MP-001, H-NEW-VERBOSE-001, H-NEW-VERBOSE-002 (all MUST-PASS); H-NEW-AUTH-002 formalized (gated behind JR_RUN_RELEASE_AUTH_GATE_TEST=1)
+- **Deferred findings**: 5 open (R1-001, R1-002, S-0.03-S1, S-0.05-F1/F2/F3); S-0.05-DEV resolved in-session
+- **Production regressions**: 0; ~151 subprocess integration tests preserved via cfg(debug_assertions) canonization
+- **Pattern identified**: Admin merge dispatcher blocks required manual gh CLI invocation for PRs #293 and #294 — recurrence confirmed (Lesson 2). Codification candidate escalated to Wave 1 planning.
+
+_Recorded: S-0.07 delivery, 2026-05-07_

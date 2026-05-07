@@ -1,1 +1,1 @@
-{"status":"pass","timestamp":"2026-05-07T18:33:05Z","command":"cd /Users/zious/Documents/GITHUB/jira-cli/.worktrees/S-0.05-jr-auth-header-cfg-test-gate && cargo test --test auth_header_release_gate -- --nocapture --test-threads=1 2>&1 | tail -30"}
+{"status":"pass","timestamp":"2026-05-07T20:11:09Z","command":"cd /Users/zious/Documents/GITHUB/jira-cli/.worktrees/S-0.07-formalize-h-new-auth-002-holdout && cargo test 2>&1 | grep \"^test result\" | awk -F'[. ]' '{passed += $4; ignored += $8} END {print \"Total passed:\", passed, \"Total ignored:\", ignored}'"}
