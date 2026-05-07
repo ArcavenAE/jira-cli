@@ -111,18 +111,32 @@ wave_0:
 
 wave_0_exit_gate: "PASSED — All 4 MUST-FIX stories green; SD-002 and SD-003 implemented; H-NEW-AUTH-002 and H-NEW-VERBOSE-001/002 holdouts registered. 7/7 stories complete. 2026-05-07."
 
+wave_1_progress: "1/8"
+
 wave_1:
   status: active
   unblocked_at: 2026-05-07
   stories:
-    - { id: S-1.01, title: "SHA-pinned CI/CD workflow", status: blocked }
-    - { id: S-1.02, title: "OAuth token lifecycle holdout suite", status: blocked }
-    - { id: S-1.03, title: "Rate-limit retry holdout suite", status: blocked }
-    - { id: S-1.04, title: "Keychain error-path holdout suite", status: blocked }
-    - { id: S-1.05, title: "CI/CD config NFR-S-E tests", status: blocked }
-    - { id: S-1.06, title: "Regression pin suite (Phase 3 entry gate)", status: blocked }
-    - { id: S-1.07, title: "Multi-profile field isolation regression", status: blocked }
-    - { id: S-1.08, title: "Retry-After integration tests", status: blocked }
+    - id: S-1.01
+      title: "SHA-pinned CI/CD workflow"
+      status: completed
+      pr: 295
+      merge_sha: adae3c518f8e7693f1d3a8b3a616b71f87ae2b0b
+      merged_at: 2026-05-07T22:12:45Z
+      merged_via: "gh pr merge --squash (no --admin needed; dispatcher allowed)"
+      notes: "20 uses: lines pinned (15 ci.yml + 5 release.yml); 10 distinct action+tag combinations resolved. 7/7 CI green; review APPROVE 1 cycle; 0 deferred findings. NOTABLE: dispatcher allowed clean merge — no admin bypass needed (contrast with Wave 0 PRs #293/#294 which required manual user merge)."
+    - id: S-1.02
+      title: "cargo-deny supply-chain audit"
+      status: active
+      depends_on: []
+      bc_anchors: []
+      nfr_anchors: [NFR-S-F]
+    - { id: S-1.03, title: "tracing/observability wire-up", status: pending }
+    - { id: S-1.04, title: "CI job timeouts", status: pending }
+    - { id: S-1.05, title: "GitHub secret scanning", status: pending }
+    - { id: S-1.06, title: "OAuth flow holdout suite", status: pending }
+    - { id: S-1.07, title: "Rate-limit holdout suite", status: pending }
+    - { id: S-1.08, title: "Keychain round-trip holdout", status: pending }
 
 wave_2:
   status: blocked

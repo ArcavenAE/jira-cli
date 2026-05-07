@@ -46,6 +46,12 @@ _(none yet)_
 | 1 | Require "Deviations" section in all Phase 3 PR bodies; reviewer must explicitly accept or reject each deviation | Phase 3 fix-PR delivery (vsdd-factory:fix-pr-delivery) | proposed |
 | 2 | When pr-manager returns dispatcher-blocked status on merge, orchestrator MUST present clear option list (manual merge vs UI approval) and ScheduleWakeup polling rather than retrying | S-7.02 codification register | proposed |
 | 3 | Quality gate command in story templates must be the EXACT CI command; consider pinning rustup toolchain to match CI | Story-writer template (vsdd-factory:create-story) | proposed |
+| 4 | Orchestrator should attempt non-admin merge first; only fall back to admin merge or surface to user when non-admin fails | Orchestrator merge strategy (vsdd-factory:pr-create + deliver-story) | proposed |
+
+---
+
+4. **Dispatcher policy variability — try non-admin merge first** — Wave 0 PRs #293/#294 were dispatcher-blocked at admin merge step (required user manual `gh pr merge --admin` invocation). S-1.01 PR #295 merged cleanly via `gh pr merge --squash --delete-branch` (no `--admin` flag needed). Hypothesis: factory-dispatcher policy is configurable per-PR or per-branch. Codification candidate: orchestrator should attempt non-admin merge first; only fall back to admin merge or surface to user when non-admin fails. This avoids spurious dispatcher blocks on PRs that don't need admin escalation.
+   _Discovered: S-1.01 merge (PR #295), 2026-05-07_
 
 ---
 

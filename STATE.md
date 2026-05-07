@@ -11,7 +11,7 @@ input-hash: "[live-state]"
 traces_to: ""
 project: jira-cli
 mode: BROWNFIELD
-current_step: "phase-3-wave-1-start"
+current_step: "phase-3-wave-1-S-1.02-start"
 current_cycle: "cycle-001"
 dtu_required: false
 phase_2_status: APPROVED
@@ -36,8 +36,8 @@ activation_version: "v0.5.0-dev.7"
 | **Language** | Rust |
 | **Target Workspace** | develop → main |
 | **Started** | 2026-05-04 |
-| **Last Updated** | 2026-05-07 (S-0.07 delivery; Wave 0 COMPLETE) |
-| **Current Phase** | Phase 3 — TDD Implementation **IN PROGRESS** (Wave 0 COMPLETE 7/7; Wave 1 ACTIVE — 8 stories, HIGH-priority NFR infra) |
+| **Last Updated** | 2026-05-07 (S-1.01 MERGED via PR #295; Wave 1 progress 1/8) |
+| **Current Phase** | Phase 3 — TDD Implementation **IN PROGRESS** (Wave 0 COMPLETE 7/7; Wave 1 ACTIVE — 8 stories, 1/8 done; next: S-1.02 cargo-deny supply-chain audit) |
 | **Next Phase** | Phase 3 Wave 1 delivery |
 | **Activation HEAD** | dea166471e22eff55974d7675593469b37048c5f (v0.5.0-dev.7) |
 | **factory-artifacts SHA** | 0b01262 (Phase 1 gate APPROVE; phase-1-converged tag) |
@@ -58,7 +58,7 @@ Goal 1c: **Harden v0.5 + feature delivery** — formalize existing codebase with
 | 2: Story Decomposition | **complete** (story creation phase) | 2026-05-04 | 2026-05-06 | 31 stories created (W0:7 + W1:8 + W2:7 + W3:9); Phase 2-adv pending | |
 | 2-adv: Adversarial Story Review | **CONVERGED** — Pass 13 CLEAN-PASS; Counter 3/3 | 2026-05-06 | 2026-05-07 | 3/3 FULL CONVERGENCE | 14→5→5→5→4→5→4→4→4→1→0→1→0 |
 | Phase 2 gate | **APPROVED** (2026-05-07) — 31 stories locked, ready for TDD | — | 2026-05-07 | APPROVED by human | — |
-| 3: TDD Implementation | **IN_PROGRESS** — Wave 0 COMPLETE (7/7); Wave 1 ACTIVE | 2026-05-07 | | | Wave 0: COMPLETE — 7/7 stories merged via PRs #289-#294 + S-0.07 spec-only. H-045, H-046, H-036, H-NEW-MP-001, H-NEW-VERBOSE-001/002 MUST-PASS active; H-NEW-AUTH-002 formalized (v1.1.1, total_holdouts=51). Full burst log: `cycles/cycle-001/burst-log.md`. Wave 1: 8 stories active (CI/CD pinning, OAuth/rate-limit/keychain holdout suites, regression pins). |
+| 3: TDD Implementation | **IN_PROGRESS** — Wave 0 COMPLETE (7/7); Wave 1 progress 1/8 | 2026-05-07 | | | Wave 0: COMPLETE — 7/7 stories via PRs #289-#294 + S-0.07 spec-only. Wave 1: S-1.01 MERGED at adae3c5 — PR #295; 20 GitHub Actions pinned to SHAs; 7/7 CI green; review APPROVE 1 cycle; 0 deferred. NOTABLE: dispatcher allowed merge cleanly (Wave 0 #293-#294 pattern broke; Wave 1 unblocked). Active: S-1.02 (cargo-deny). Phase 3 Wave 1 progress: 1/8. |
 | 3-adv: Wave Adversarial Reviews | not-started | | | | |
 | 4: Holdout Evaluation | not-started | | | | |
 | 5: Adversarial Refinement | not-started | | | | |
@@ -71,10 +71,10 @@ Goal 1c: **Harden v0.5 + feature delivery** — formalize existing codebase with
 
 | Step | Agent | Status | Output |
 |------|-------|--------|--------|
-| S-0.04 MERGED — BC-6.3.001 satisfied | devops-engineer + review | complete | PR #292 squash-merged to develop at dbbea12 (2026-05-07) via admin bypass; 7/7 CI green; H-NEW-MP-001 MUST-PASS active; 2-cycle review APPROVE (cycle 1: Deviation 1 cache.rs fallback REVERTED per CLAUDE.md); security CLEAN; 0 deferred findings |
-| S-0.06 MERGED — SD-003 satisfied | devops-engineer + user | complete | PR #294 squash-merged to develop at 06ecd6a (2026-05-07T20:06:59Z) by user (manual via gh CLI); 7/7 CI green; H-NEW-VERBOSE-001/002 MUST-PASS; BREAKING CHANGE in CHANGELOG.md |
 | S-0.07 DELIVERED — H-NEW-AUTH-002 formalized | state-manager | complete | Spec-only; factory-artifacts direct (no PR to develop). holdout-scenarios.md v1.1.1, total_holdouts=51. SD-002 Option B postcondition satisfied. |
-| WAVE 0 COMPLETE — 7/7 stories merged | state-manager | complete | 2026-05-07. PRs #289-#294 + S-0.07 spec-only. Wave 1 ACTIVE (8 stories — S-1.01..S-1.08). Next: S-1.01 (Pin GitHub Actions SHAs, NFR-S-E). |
+| WAVE 0 COMPLETE — 7/7 stories merged | state-manager | complete | 2026-05-07. PRs #289-#294 + S-0.07 spec-only. Wave 1 ACTIVE (8 stories — S-1.01..S-1.08). |
+| S-1.01 MERGED — 20 GitHub Actions SHAs pinned | devops-engineer | complete | PR #295 squash-merged to develop at adae3c5 (2026-05-07T22:12:45Z); dispatcher allowed clean merge (no --admin needed); 7/7 CI green; review APPROVE 1 cycle; 0 deferred. Wave 1: 1/8. |
+| S-1.02 START — cargo-deny supply-chain audit | orchestrator | active | NFR-S-F anchor. No Wave 1 deps. Next: implement deny.toml + CI integration. |
 
 ## Decisions Log
 
@@ -147,7 +147,7 @@ _Not started._
 | Field | Value |
 |-------|-------|
 | **Date** | 2026-05-07 |
-| **Position** | WAVE 0 COMPLETE (7/7). S-0.07 delivered spec-only on factory-artifacts (H-NEW-AUTH-002 formalized in holdout-scenarios.md v1.1.1, total_holdouts=51). Active phase: Phase 3, Wave 1 ACTIVE. Next story: S-1.01 (Pin GitHub Actions SHAs, NFR-S-E, effort small). Active wave: 1 (8 stories: S-1.01..S-1.08 — CI/CD pinning, OAuth/rate-limit/keychain holdout suites, regression pins; all unblocked). Open deferred: R1-001, R1-002, S-0.03-S1, S-0.05-F1, S-0.05-F2 (TO_VERIFY), S-0.05-F3. Wave 0 holdouts active: H-045, H-046, H-036, H-NEW-MP-001, H-NEW-VERBOSE-001/002; H-NEW-AUTH-002 gated behind JR_RUN_RELEASE_AUTH_GATE_TEST=1. |
+| **Position** | S-1.01 merged (PR #295 at adae3c5). Wave 1 progress: 1/8. Active story: S-1.02 (cargo-deny supply-chain audit, NFR-S-F, effort small). Worktree for S-1.02 being created. Next: implementer for deny.toml + CI integration (or test-writer for Red Gate if facade needed). Open deferred: R1-001, R1-002, S-0.03-S1, S-0.05-F1, S-0.05-F2 (TO_VERIFY), S-0.05-F3. Wave 0 holdouts active: H-045, H-046, H-036, H-NEW-MP-001, H-NEW-VERBOSE-001/002; H-NEW-AUTH-002 gated behind JR_RUN_RELEASE_AUTH_GATE_TEST=1. NOTABLE: Lesson 4 captured — dispatcher policy variable per-PR; try non-admin merge first. |
 | **Convergence counter** | 3/3 CONVERGED (Phase 2-adv; Pass 13 CLEAN-PASS — final trajectory: 14→5→5→5→4→5→4→4→4→1→0→1→0) |
 
 ## Historical Content
