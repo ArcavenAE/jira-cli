@@ -31,10 +31,24 @@ traces_to: STATE.md
 | 12 | 2026-05-04 | 0 | 0 | 0 | 0 | 0 | 1/3 | CLEAN-PASS |
 | 13 | 2026-05-04 | 3 | 0 | 0 | 3 | 0 | 0/3 | REGRESSION |
 | 14 | 2026-05-04 | 0 | 0 | 0 | 0 | 0 | 1/3 | CLEAN-PASS |
+| 15 | 2026-05-04 | 2 | 0 | 1 | 1 | 0 | 0/3 | REGRESSION |
+| 16 | 2026-05-04 | 0 | 0 | 0 | 0 | 0 | 1/3 | CLEAN-PASS |
+| 17 | 2026-05-04 | 3 | 0 | 1 | 2 | 0 | 0/3 | REGRESSION |
+| 18 | 2026-05-04 | 3 | 0 | 0 | 2 | 1 | 0/3 | PLATEAU |
+| 19 | 2026-05-04 | 5 | 1 | 1 | 3 | 0 | 0/3 | REGRESSION |
+| 20 | 2026-05-04 | 3 | 0 | 1 | 2 | 0 | 0/3 | CONVERGING |
+| 21 | 2026-05-04 | 4 | 0 | 0 | 3 | 1 | 0/3 | PLATEAU |
+| 22 | 2026-05-04 | 5 | 0 | 0 | 4 | 1 | 0/3 | PLATEAU |
+| 23 | 2026-05-04 | 5 | 0 | 1 | 3 | 1 | 0/3 | PLATEAU |
+| 24 | 2026-05-04 | 5 | 0 | 0 | 4 | 1 | 0/3 | PLATEAU |
+| 25 | 2026-05-04 | 2 | 0 | 0 | 2 | 0 | 0/3 | CONVERGING |
+| 26 | 2026-05-04 | 0 | 0 | 0 | 0 | 0 | 1/3 | CLEAN-PASS |
+| 27 | 2026-05-04 | 0 | 0 | 0 | 0 | 0 | 2/3 | CLEAN-PASS |
+| 28 | 2026-05-04 | 0 | 0 | 0 | 0 | 0 | 3/3 | FULL CONVERGENCE |
 
 ## Trajectory Shorthand
 
-`30→15→9→5→10→5→4→3→4→0→2→0→3→0`
+`30→15→9→5→10→5→4→3→4→0→2→0→3→0→2→0→3→0→3→5→3→4→5→5→5→2→0→0→0` — **CONVERGED** at Pass 28 (2026-05-04)
 
 ## Per-Pass Details
 
@@ -222,8 +236,12 @@ BC-INDEX:630 line-440 sync; arch BC-4 map adds cli/assets.rs; H-046 fixture mech
 | 7 | 2026-05-06 | 4 | 0 | 1 | 2 | 1 | 0/3 | ASYMPTOTIC |
 | 8 | 2026-05-06 | 4 | 0 | 1 | 1 | 2 | 0/3 | ASYMPTOTIC |
 | 9 | 2026-05-06 | 4 | 0 | 2 | 2 | 0 | 0/3 | ASYMPTOTIC |
+| 10 | 2026-05-07 | 1 | 0 | 0 | 1 | 0 | 0/3 | CONVERGING |
+| 11 | 2026-05-07 | 0 | 0 | 0 | 0 | 0 | 1/3 | CLEAN-PASS |
+| 12 | 2026-05-07 | 1 | 0 | 0 | 1 | 0 | 2/3 | CLEAN-PASS |
+| 13 | 2026-05-07 | 0 | 0 | 0 | 0 | 0 | 3/3 | FULL CONVERGENCE |
 
-**Trajectory:** 14→5→5→5→4→5→4→4→4
+**Trajectory:** 14→5→5→5→4→5→4→4→4→1→0→1→0 — **CONVERGED** (Pass 13, 2026-05-07)
 
 ### Pass 1 (2026-05-06)
 
@@ -303,3 +321,41 @@ HIGH: H-009 row mis-anchor in Pre-existing Test Coverage (sibling-sweep miss fro
 **Convergence counter:** 0 of 3
 
 All 4 findings = DRIFT-003 sibling-propagation recurrences. P8 NFR-S-B→S-E body propagation miss (HIGH): S-1.05 body + AC-001 + AC-005 + STORY-INDEX:88 exit gate updated. S-2.01 frontmatter 10 BCs vs index 4 (HIGH): BC-2.1.013 removed (single-owner with S-2.02); STORY-INDEX:107 reconciled to 9 BCs. S-0.07 fabricated BC paraphrase (MED): bc_anchors cleared, AC-001 trace retargeted to SD-002 resolution. WAVE-PLAN drift (MED): S-1.07 +BC-X.1.005, S-1.08 +BC-1.4.025, S-2.07 effort small→medium. Trajectory 14→5→5→5→4→5→4→4→4.
+
+---
+
+### Pass 10 (2026-05-07)
+
+**Findings:** 1 (0C/0H/1M/0L)
+**Convergence counter:** 0 of 3
+
+Strong convergence signal: trajectory dropped 4→1. Pass 9 fixes 7/7 verified clean. Single finding: S-1.08 depends_on drift (DRIFT-003 recurrence; over-declared mirror of S-1.06; `depends_on: [S-0.05]` removed from S-1.08 frontmatter + WAVE-PLAN synced). Pass 11 target: CLEAN-PASS.
+
+---
+
+### Pass 11 (2026-05-07)
+
+**Findings:** 0 — CLEAN-PASS
+**Convergence counter:** 1 of 3
+
+FIRST CLEAN-PASS after 10 SUBSTANTIVE passes. Trajectory 14→5→5→5→4→5→4→4→4→1→0. P10 fix verified across 4 surfaces (S-1.08 frontmatter, body, WAVE-PLAN, STORY-INDEX). 2 carry-forward observations (JiaClient cosmetic typo, story-id manifest gap) tagged but below threshold.
+
+---
+
+### Pass 12 (2026-05-07)
+
+**Findings:** 1 (0C/0H/1M/0L) — CLEAN-PASS (sub-threshold)
+**Convergence counter:** 2 of 3 (strict-binary: CLEAN-PASS; 1 finding < 3-finding threshold)
+
+Single finding ADV-P2-S12-001 (MEDIUM): S-1.08 body line 274 "Depends on S-0.05" — DRIFT-003 recurrence (body propagation miss from P10 partial-fix). RESOLVED this burst by story-writer. Trajectory 14→5→5→5→4→5→4→4→4→1→0→1. 1 more consecutive CLEAN-PASS needed for 3/3 convergence.
+
+---
+
+### Pass 13 (2026-05-07)
+
+**Findings:** 0 — CLEAN-PASS — FULL CONVERGENCE
+**Convergence counter:** 3 of 3
+
+CONVERGED. 0 substantive findings. OBS-13-1 RESOLVED (JiaClient typo global sweep; S-0.05:62/206, S-1.06:165 — 0 remaining). OBS-13-2 RESOLVED (Story Manifest table added to STORY-INDEX v1.4.1, 31 rows; version bumped to 1.4.1→1.4.2 after CV2-002 fix). ADV-P2-S12-001 body fix verified not regressed. 8 lens axes all clean. Final trajectory: 14→5→5→5→4→5→4→4→4→1→0→1→0.
+
+**Phase 2-adv: 3/3 FULL CONVERGENCE achieved 2026-05-07.**

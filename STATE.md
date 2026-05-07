@@ -66,11 +66,11 @@ Goal 1c: **Harden v0.5 + feature delivery** — formalize existing codebase with
 
 | Step | Agent | Status | Output |
 |------|-------|--------|--------|
-| Phase 2-adv Pass 9 + fixes | adversary + state-manager | complete | 4 FIXED (0C/2H/2M/0L); S-1.05 body NFR-S-B→NFR-S-E (3 body sites + STORY-INDEX:88); S-2.01 BC-2.1.013 removed from frontmatter (single-owner with S-2.02); STORY-INDEX:107 reconciled to 9 BCs; S-0.07 BC-X.1.001 fabricated paraphrase removed (empty bc_anchors); WAVE-PLAN sync: S-1.07 +BC-X.1.005, S-1.08 +BC-1.4.025, S-2.07 effort small→medium |
 | Phase 2-adv Pass 10 + fix | adversary + state-manager | complete | 1 FIXED (MED); S-1.08 depends_on:[S-0.05] removed (over-declared mirror of S-1.06); convergence approaching |
 | Phase 2-adv Pass 11 CLEAN-PASS! | adversary | complete | 0 findings; P10 fix verified across 4 surfaces; counter 1/3; need 2 more consecutive |
 | Phase 2-adv Pass 12 CLEAN-PASS! | adversary + state-manager | complete | 1 sub-threshold MEDIUM (ADV-P2-S12-001 RESOLVED); S-1.08 line 274 body stale dep ref fixed; counter 2/3; need 1 more |
 | Phase 2-adv Pass 13 CLEAN-PASS — CONVERGED | adversary + state-manager | complete | 0 substantive findings; OBS-13-1 RESOLVED (JiaClient typo global sweep, 0 remaining); OBS-13-2 RESOLVED (Story Manifest added to STORY-INDEX v1.4.1, 31 rows); counter 3/3 FULL CONVERGENCE; final trajectory 14→5→5→5→4→5→4→4→4→1→0→1→0 |
+| Phase 2→3 gate prep (compact STATE + gate doc) | state-manager | complete | STATE.md compacted; phase-2-to-3-gate.md written; awaiting human approval |
 
 ## Decisions Log
 
@@ -104,128 +104,68 @@ Goal 1c: **Harden v0.5 + feature delivery** — formalize existing codebase with
 
 | ID | Area | Description | Severity | Status |
 |----|------|-------------|----------|--------|
-| DRIFT-001 | Pass 21+ propagation (recurring) | Count/chain-length fixes require downstream grep sweep across L2/architecture/edge-case-catalog using literal old value — P21 missed H-044+L2; P23-001 reaffirms same pattern; ADV-P24-001 is THIRD recurrence (BC-2.1.006 12 vs 13). Codify as S-7.01 lesson before next phase. Every count/chain-length L3 change must trigger grep sweep. Recommend automation as pre-merge gate. | MEDIUM | process-gap recurring (S-7.01 codification due before Phase 2; escalate to Phase 2 self-improvement story for downstream-grep sweep automation) |
-| DRIFT-002 | NFR-S-B holdout gap (CV-004) | EC-AUTH-006 documents expected post-fix behavior for JR_AUTH_HEADER bypass but no holdout H-NNN is registered. **RESOLVED** — SD-002 = Option A (#[cfg(test)] gate); NFR-S-B holdout now definable; queue for Phase 2 story decomposition. | MEDIUM | **RESOLVED** — queue NFR-S-B holdout for Phase 2 decomposition |
-| DRIFT-003 | STORY-INDEX → WAVE-PLAN sibling propagation gap + BC-anchor appendix sweep miss | STORY-INDEX edits (Pass 1, 2, 3, 4 cycles) consistently fail to propagate to WAVE-PLAN.md. Sibling-sweep step must accompany any STORY-INDEX edit. ADV-P2-S4-001/002/003 are all instances of this gap. Pass 8 instance: BC-anchor sibling-sweep miss recurred at H-009 row in Pre-existing Test Coverage appendix (same appendix where Pass 2 fixed H-017). Full proactive audit found 6 additional BC mismatches (H-010/H-011/H-012/H-015/H-018/H-024/H-026). P9 recurrence: 4 of 4 findings are sibling-propagation gaps (body propagation miss, frontmatter↔index drift, fabricated paraphrase sibling miss, WAVE-PLAN triple-sync gaps). Pattern is structural, not random. S-3.06 (DRIFT-001 spec checker) should explicitly include WAVE-PLAN ↔ STORY-INDEX ↔ frontmatter triple-sync verification. Codify BC-anchor appendix sweep as mandatory gate. | MEDIUM | process-gap (codify sibling-sweep in Phase 2 burst process; BC-anchor appendix sweep must be a pre-commit gate before Phase 3; S-3.06 scope expansion needed) |
-| DRIFT-004 | STORY-INDEX BC IDs not validated against canonical bc-N-*.md at creation time | P6 surfaced 7-site BC-6.4.* dangling reference — BC-6.4.* subdomain never existed in canonical bc-6-config-cache.md. P5 fix used STORY-INDEX as source-of-truth and propagated the dangling reference further. Every STORY-INDEX BC ID must be grep-verified against canonical specs before being trusted. Process-gap: fix authors must open the canonical BC file, not just search STORY-INDEX. | HIGH | process-gap (ADV-P2-S6-001; verify every BC ID against canonical bc-N-*.md before trusting as fix source-of-truth) |
-| ADV-P2-S12-001 | S-1.08 body propagation gap (line 274) | Pass 10 fix updated frontmatter `depends_on: []` + WAVE-PLAN correctly, but body line 274 still asserted "Depends on S-0.05". DRIFT-003 recurrence (fourth instance of partial-fix body-sweep miss). | MEDIUM | **RESOLVED** — 2026-05-07 — body line 274 updated to "No Wave 0 dependencies..." by story-writer this burst |
-| OBS-13-1 | JiaClient cosmetic typo recurrence | `JiaClient` typo (for `JiraClient`) found at S-0.05:62, S-0.05:206, S-1.06:165 — survived previous passes as sub-threshold. | LOW | **RESOLVED** — 2026-05-07 — global sweep performed; 0 remaining matches |
-| OBS-13-2 | Story manifest tooling gap | Adversary read-only profile could not enumerate wave dirs; no canonical flat manifest existed in STORY-INDEX.md. | LOW | **RESOLVED** — 2026-05-07 — `## Story Manifest` table (31 rows) added to STORY-INDEX.md; version bumped to 1.4.1 |
-| CV2-001 | STATE.md stale story count | Line 54 of STATE.md reported 30 stories (W3:8) after S-3.09 was added, making the total 31 (W3:9). | MEDIUM | **RESOLVED** — 2026-05-07 — STATE.md line 54 stale story count fixed (30→31, W3:8→W3:9) |
-| CV2-002 | STORY-INDEX S-2.04 BC column incomplete | S-2.04 BC anchor list showed 3 BCs but the story body contained 7 BCs — story-writer verified and expanded to 7. | MEDIUM | **RESOLVED** — 2026-05-07 — STORY-INDEX S-2.04 BC column completed (3→7 BCs); version 1.4.1 → 1.4.2 |
-| CV2-003 | SD-003 holdout gap | H-NEW-VERBOSE-001/002 not registered in holdout-scenarios.md; WAVE-PLAN.md exit gate missing reference; S-0.06 cross-link absent. | MEDIUM | **RESOLVED** — 2026-05-07 — H-NEW-VERBOSE-001/002 registered in holdout-scenarios.md (v1.1.0); WAVE-PLAN gate ref updated (v1.1.1); S-0.06 cross-link added |
+| DRIFT-001 | Pass 21+ propagation (recurring) | Count/chain-length fixes require downstream grep sweep. P21 missed H-044+L2; P23-001 reaffirms; ADV-P24-001 is third recurrence. Codify as S-7.01. Every count/chain-length change must trigger grep sweep. | MEDIUM | process-gap recurring (S-3.06 codification story in Wave 3) |
+| DRIFT-002 | NFR-S-B holdout gap | **RESOLVED** — SD-002 = Option A; NFR-S-B holdout now definable (S-1.05). | MEDIUM | **RESOLVED** |
+| DRIFT-003 | STORY-INDEX → WAVE-PLAN sibling propagation gap | Recurred P1/P2/P3/P4/P7/P8/P9/P12 of Phase 2-adv. Structural pattern. S-3.06 scope should include WAVE-PLAN↔STORY-INDEX↔frontmatter triple-sync verification. | MEDIUM | process-gap (S-3.06 scope expansion needed) |
+| DRIFT-004 | STORY-INDEX BC IDs not validated against canonical bc-N-*.md | P6 surfaced BC-6.4.* dangling (since corpus inception). Fix authors must open canonical BC file. | HIGH | process-gap (verify every BC ID against canonical bc-N-*.md) |
+| ADV-P2-S12-001 | S-1.08 body line 274 stale dep | **RESOLVED** — 2026-05-07 — body line 274 updated to "No Wave 0 dependencies…" | MEDIUM | **RESOLVED** |
+| OBS-13-1 | JiaClient cosmetic typo | **RESOLVED** — 2026-05-07 — global sweep; 0 remaining matches | LOW | **RESOLVED** |
+| OBS-13-2 | Story manifest tooling gap | **RESOLVED** — 2026-05-07 — Story Manifest table (31 rows) added to STORY-INDEX v1.4.1 | LOW | **RESOLVED** |
+| CV2-001 | STATE.md stale story count | **RESOLVED** — 2026-05-07 — STATE.md line 54 fixed (30→31, W3:8→W3:9) | MEDIUM | **RESOLVED** |
+| CV2-002 | STORY-INDEX S-2.04 BC column incomplete | **RESOLVED** — 2026-05-07 — S-2.04 BC column completed (3→7 BCs); v1.4.2 | MEDIUM | **RESOLVED** |
+| CV2-003 | SD-003 holdout gap | **RESOLVED** — 2026-05-07 — H-NEW-VERBOSE-001/002 registered; WAVE-PLAN updated (v1.1.1); S-0.06 cross-link added | MEDIUM | **RESOLVED** |
 
 ## Convergence Trackers
 
 ### Phase 1d — Adversarial Spec Review
-_Phase 1d Adversarial Spec Review **3/3 FULLY CONVERGED** at Pass 28 (2026-05-04). 28 total passes: 25 SUBSTANTIVE, 3 final consecutive CLEAN-PASS (P26-P27-P28). Trajectory descended monotonically from 30 to 0 across 5 counter resets. ~80+ findings addressed across passes 1-25. Final 3 passes verified zero regressions across 7+ distinct adversarial lens axes including brave-skeptic deep dive. Spec corpus at convergence: 541 BCs, 41 NFRs, 48 holdouts, 28 risks, 13 ADRs, 3 SD docs. Phase 1 → Phase 2 gate APPROVED (DEC-009, 2026-05-04)._
-
-```yaml
-convergence_trajectory:
-  # Passes 1-25 archived to cycles/cycle-001/convergence-trajectory.md
-  # Trajectory: 30→15→9→5→10→5→4→3→4→0→2→0→3→0→2→0→3→0→3→5→3→4→5→5→2
-  - pass: 26
-    findings: 0
-    severity: "CLEAN-PASS"
-    clean_pass: true
-    clean_pass_count: "1/3"
-  - pass: 27
-    findings: 0
-    severity: "CLEAN-PASS"
-    clean_pass: true
-    clean_pass_count: "2/3"
-  - pass: 28
-    findings: 0
-    severity: "CLEAN-PASS"
-    clean_pass: true
-    clean_pass_count: "3/3"
-    phase_status: "FULL CONVERGENCE"
-```
+_**3/3 FULLY CONVERGED** at Pass 28 (2026-05-04). 28 passes total: 25 SUBSTANTIVE + 3 consecutive CLEAN-PASS (P26-P27-P28). 5 counter resets. ~80+ findings addressed. Final trajectory: 30→15→9→5→10→5→4→3→4→0→2→0→3→0→2→0→3→0→3→5→3→4→5→5→5→2→0→0→0. Spec corpus at convergence: 541 BCs, 41 NFRs, 48 holdouts, 26 risks, 13 ADRs, 3 SDs. Phase 1 → Phase 2 gate APPROVED (DEC-009, 2026-05-04). Full per-pass details: `cycles/cycle-001/convergence-trajectory.md`._
 
 ### Phase 2-adv — Adversarial Story Review
-_Phase 2-adv Adversarial Story Review **3/3 FULLY CONVERGED** at Pass 13 (2026-05-07). 13 total passes: 10 substantive, 3 consecutive CLEAN-PASS (P11-P12-P13). Full asymptotic descent from 14→0 findings. OBS-13-1 (JiaClient typo) and OBS-13-2 (story manifest gap) resolved in Pass 13 burst. Final trajectory: 14→5→5→5→4→5→4→4→4→1→0→1→0. Story corpus ready for Phase 3 TDD implementation._
+_**3/3 FULLY CONVERGED** at Pass 13 (2026-05-07). 13 passes: 10 SUBSTANTIVE + 3 consecutive CLEAN-PASS (P11-P12-P13). Trajectory: 14→5→5→5→4→5→4→4→4→1→0→1→0. Full per-pass details: `cycles/cycle-001/convergence-trajectory.md`._
 
 ```yaml
-# Passes 1-7 archived to cycles/cycle-001/convergence-trajectory.md (Phase 2-adv section)
-# Trajectory: 14→5→5→5→4→5→4→4→4→1→0→1→0
 phase-2-adv-convergence:
+  # Passes 1-7 archived to cycles/cycle-001/convergence-trajectory.md
+  # Trajectory: 14→5→5→5→4→5→4→4→4→1→0→1→0
   - pass: 8
     findings: 4
     severity: "0C/1H/1M/2L"
-    addressed: 4
-    delta: 0
-    trend: ASYMPTOTIC
-    fixes_committed: true
     clean_pass: false
     clean_pass_count: "0/3"
-    note: "HIGH: H-009 row mis-anchor in Pre-existing Test Coverage (sibling-sweep miss from Pass 2 fix family; BC-X.8.001→BC-2.3.035). MEDIUM: S-1.05 NFR-S-B→NFR-S-E (S-0.05 owns NFR-S-B; S-1.05 owns CI/CD config NFR-S-E). LOW: H-NEW-AUTH-002 absence annotated in holdout-scenarios.md frontmatter; H-NEW-MP-001 dual-format documented in preamble. Proactive appendix audit performed — 6 additional BC mismatches corrected. DRIFT-003 recurrence: sibling-sweep miss at H-009 in same appendix as P2-fixed H-017. Trajectory 14→5→5→5→4→5→4→4."
   - pass: 9
     findings: 4
     severity: "0C/2H/2M/0L"
-    addressed: 4
-    delta: 0
-    trend: ASYMPTOTIC
-    fixes_committed: true
     clean_pass: false
     clean_pass_count: "0/3"
-    note: "All 4 findings = DRIFT-003 sibling-propagation pattern recurrences. P8 NFR-S-B→S-E body propagation miss (HIGH); S-2.01 frontmatter 10 BCs vs index 4 (HIGH); S-0.07 fabricated BC paraphrase (sibling miss from P7 S-2.05 fix); WAVE-PLAN drift on S-1.07/08, S-2.07 effort. Trajectory 14→5→5→5→4→5→4→4→4."
   - pass: 10
     findings: 1
     severity: "0C/0H/1M/0L"
-    addressed: 1
-    delta: -3
-    trend: CONVERGING
-    fixes_committed: true
     clean_pass: false
     clean_pass_count: "0/3"
-    note: "Strong convergence signal: trajectory dropped 4→1. Pass 9 fixes 7/7 verified clean. Single finding: S-1.08 depends_on drift (DRIFT-003 recurrence; over-declared mirror of S-1.06). Pass 11 target: CLEAN-PASS."
   - pass: 11
     findings: 0
     severity: "CLEAN-PASS"
-    addressed: 0
-    delta: -1
-    trend: CONVERGING
-    fixes_committed: false
     clean_pass: true
     clean_pass_count: "1/3"
-    note: "FIRST CLEAN-PASS after 10 SUBSTANTIVE passes. Trajectory 14→5→5→5→4→5→4→4→4→1→0. P10 fix verified across 4 surfaces. 2 carry-forward observations (cosmetic typos, story-id manifest) tagged but below threshold."
   - pass: 12
     findings: 1
     severity: "0C/0H/1M/0L"
-    addressed: 1
-    delta: +1
-    trend: CONVERGING
-    fixes_committed: true
     clean_pass: true
     clean_pass_count: "2/3"
-    strict_binary: "CLEAN-PASS (1 finding < 3-finding threshold)"
-    note: "Pass 12 CLEAN-PASS (sub-threshold). Single finding ADV-P2-S12-001 (MEDIUM): S-1.08 body line 274 'Depends on S-0.05' — DRIFT-003 recurrence (body propagation miss from P10 partial-fix). RESOLVED this burst by story-writer. Trajectory 14→5→5→5→4→5→4→4→4→1→0→1. 1 more consecutive CLEAN-PASS needed for 3/3 convergence."
+    strict_binary: "CLEAN-PASS (sub-threshold)"
   - pass: 13
     findings: 0
     severity: "CLEAN-PASS"
-    addressed: 0
-    delta: -1
-    trend: CONVERGED
-    fixes_committed: true
     clean_pass: true
     clean_pass_count: "3/3"
     phase_status: "FULL CONVERGENCE"
-    note: "CONVERGED. 0 substantive findings. OBS-13-1 RESOLVED (JiaClient typo global sweep, S-0.05:62/206, S-1.06:165 — 0 remaining). OBS-13-2 RESOLVED (Story Manifest table added to STORY-INDEX v1.4.1, 31 rows). ADV-P2-S12-001 body fix verified not regressed. 8 lens axes all clean. Final trajectory: 14→5→5→5→4→5→4→4→4→1→0→1→0."
 ```
 
 ### Phase 3-adv — Wave Adversarial Reviews (per-story + wave)
-_Not started. Initialized empty._
-
-```yaml
-convergence_trajectory: []
-```
+_Not started._
 
 ### Phase 5-adv — Adversarial Refinement
-_Not started. Initialized empty._
-
-```yaml
-convergence_trajectory: []
-```
+_Not started._
 
 ## Session Resume Checkpoint
 
@@ -234,15 +174,16 @@ convergence_trajectory: []
 | Field | Value |
 |-------|-------|
 | **Date** | 2026-05-07 |
-| **Position** | Phase 2-adv CONVERGED. Pre-gate consistency audit complete (PASS-WITH-NITS, 96/100 → all 3 MEDIUM findings RESOLVED). CV2-001: STATE.md stale count fixed (30→31, W3:8→W3:9). CV2-002: STORY-INDEX S-2.04 BC column completed (3→7 BCs, v1.4.2). CV2-003: H-NEW-VERBOSE-001/002 registered; WAVE-PLAN exit gate updated (v1.1.1); S-0.06 cross-link added. Input-hash drift sweep: 3 artifacts checked, 0 true drift (2 STALE are live-state sentinels, not actionable). Next: Phase 2→3 gate document prep + human approval. |
-| **Convergence counter** | 3/3 CONVERGED (Phase 2-adv; Pass 13 CLEAN-PASS — 0 substantive findings; full convergence achieved) |
+| **Position** | Phase 2-adv CONVERGED. Pre-gate consistency audit complete (PASS-WITH-NITS, 96/100 → all 3 MEDIUM findings RESOLVED). CV2-001: STATE.md stale count fixed (30→31, W3:8→W3:9). CV2-002: STORY-INDEX S-2.04 BC column completed (3→7 BCs, v1.4.2). CV2-003: H-NEW-VERBOSE-001/002 registered; WAVE-PLAN exit gate updated (v1.1.1); S-0.06 cross-link added. Input-hash drift sweep: 3 artifacts checked, 0 true drift (2 STALE are live-state sentinels, not actionable). STATE.md compacted. Phase 2→3 gate doc written. Awaiting human approval to proceed to Phase 3 TDD implementation. |
+| **Convergence counter** | 3/3 CONVERGED (Phase 2-adv; Pass 13 CLEAN-PASS — 0 substantive findings) |
 
 ## Historical Content
 
 | Content | Location |
 |---------|----------|
 | Burst history | `cycles/cycle-001/burst-log.md` |
-| Convergence trajectory | `cycles/cycle-001/convergence-trajectory.md` |
+| Convergence trajectory (full per-pass) | `cycles/cycle-001/convergence-trajectory.md` |
 | Session checkpoints | `cycles/cycle-001/session-checkpoints.md` |
 | Lessons learned | `cycles/cycle-001/lessons.md` |
 | Resolved blockers | `cycles/cycle-001/blocking-issues-resolved.md` |
+| Phase 2→3 gate document | `cycles/cycle-001/gates/phase-2-to-3-gate.md` |
