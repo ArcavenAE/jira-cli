@@ -2,8 +2,8 @@
 document_type: wave-plan
 phase: phase-2-story-decomposition
 producer: story-writer
-version: "1.0.0"
-last_updated: 2026-05-06
+version: "1.1.0"
+last_updated: 2026-05-04
 activation_head: dea1664
 ---
 
@@ -48,55 +48,60 @@ Recommended parallel groups:
 
 ---
 
-## Wave 1: High-Priority Features (TBD — next burst)
+## Wave 1 — HIGH-priority security posture, supply-chain hardening, structured logging, regression pinning (8 stories)
 
-Wave 1 covers HIGH-priority capability gaps and NFR-anchored BCs that do not represent existing bugs but represent missing or suboptimal behavior for existing users:
+| Story | Title | BC/NFR Anchors | Depends on | Status | Effort |
+|-------|-------|---------------|------------|--------|--------|
+| S-1.01 | Pin GitHub Actions SHAs | NFR-S-E, R-H6 | — | draft | small |
+| S-1.02 | cargo-deny supply-chain audit | NFR-S-F | — | draft | small |
+| S-1.03 | tracing/observability wire-up | NFR-O-A | S-0.06 | draft | medium |
+| S-1.04 | CI job timeouts | R-L12 | — | draft | xsmall |
+| S-1.05 | GitHub secret scanning | NFR-S-B, R-L13 | — | draft | small |
+| S-1.06 | OAuth flow holdout suite | BC-1.1.001/002, H-001..H-006, H-022, H-029 | — | draft | medium |
+| S-1.07 | Rate-limit holdout suite | BC-X.4.002, H-013, H-027 | — | draft | small |
+| S-1.08 | Keychain round-trip holdout | BC-1.4.027, H-016 | — | draft | small |
 
-- BC-1.x: OAuth multi-site disambiguation (when ADR-0013 PKCE is ready — depends on Wave 0 SD-002 being merged)
-- BC-2.x, BC-3.x: Issue read/write improvements anchored to HIGH NFRs
-- BC-5.x: Sprint/board improvements
-- BC-6.x: Config improvements (beyond the MUST-FIX already in Wave 0)
-- BC-7.x: Output rendering improvements
+**Wave 1 parallel groups:** {S-1.01, S-1.02, S-1.04, S-1.05} CI infra (parallel); {S-1.03} blocked by S-0.06; {S-1.06, S-1.07, S-1.08} regression pins (parallel).
 
-Wave 1 stories will be decomposed in Phase 2 Burst 2 by walking the BC-INDEX against:
-- `nfr-catalog.md` for P0/P1 NFRs not yet covered
-- `edge-case-catalog.md` for HIGH-severity edge cases
-- H-001..H-047 for MUST-PASS holdouts not already covered by Wave 0
-
-### Wave 1 exit gate
-
-- All Wave 1 MUST-PASS holdouts green
-- NFR-S-B and NFR-S-C satisfied (carried from Wave 0)
-- Performance NFRs NFR-P-* baseline met
+**Exit gate:** All 8 Wave 1 stories merged + holdouts written + SHA pinning + cargo-deny + tracing layer landed.
 
 ---
 
-## Wave 2: Medium Priority (TBD)
+## Wave 2 — MEDIUM-priority NFRs requiring code work + BC holdout regression suites (7 stories)
 
-Wave 2 covers MEDIUM-priority capabilities: secondary issue-write improvements, assets schema improvements, JSM queue improvements, worklog UX improvements.
+| Story | Title | BC/NFR Anchors | Depends on | Status | Effort |
+|-------|-------|---------------|------------|--------|--------|
+| S-2.01 | BC-2 issue-read holdout suite (incl. H-021) | BC-2.1.*, H-030..H-035, H-021 | — | draft | medium |
+| S-2.02 | BC-3 issue-write holdout suite | BC-3.*, H-007, H-008, H-014 | — | draft | medium |
+| S-2.03 | BC-4 asset enrichment holdout suite | BC-4.*, H-037, H-038, H-039 | (S-0.03 recommended first) | draft | medium |
+| S-2.04 | BC-5 boards/sprints holdout suite | BC-5.*, H-040..H-044 | — | draft | medium |
+| S-2.05 | CLAUDE.md documentation update | NFR-O-L/M/O/V/R, NFR-R-F | — | draft | small |
+| S-2.06 | Worklog duration config + CMDB cache tuple | NFR-R-C, BC-X.5.009, BC-6.2.013 | — | draft | medium |
+| S-2.07 | JSON output policy + test naming | NFR-O-F/J/W, H-020 | — | draft | small |
 
-Stories decomposed in Phase 2 Burst 3.
+**Wave 2 parallel groups:** {S-2.01, S-2.02, S-2.03, S-2.04} BC holdout suites (parallel); {S-2.05, S-2.07} doc/policy (parallel); {S-2.06} new endpoint + cache.
 
-### Wave 2 exit gate
-
-- All Wave 2 story-level acceptance criteria passing
-- No P0/P1 NFR violations introduced
+**Exit gate:** All 7 Wave 2 stories merged + BC-2/3/4/5/7 regression suites in place + CLAUDE.md updated.
 
 ---
 
-## Wave 3: Low Priority / Deferred (TBD)
+## Wave 3 — LOW-priority + DEFER + DRIFT codification + cleanup (9 stories)
 
-Wave 3 covers:
+| Story | Title | BC/NFR Anchors | Depends on | Status | Effort |
+|-------|-------|---------------|------------|--------|--------|
+| S-3.01 | Refactor src/cli/auth.rs shard split (1,998 LOC) | NFR-O-D, R-M6 | — | draft | medium |
+| S-3.02 | Refactor src/cli/assets.rs shard split (1,055 LOC) | NFR-O-D | — | draft | medium |
+| S-3.03 | refresh_oauth_token investigation | NFR-O-B | — | draft | small |
+| S-3.04 | Multi-cloudId disambiguation | NFR-O-S, BC-1.5.038, H-047 | — | draft | medium |
+| S-3.05 | Asset enrichment concurrency cap | NFR-P-NEW-1 | — | draft | small |
+| S-3.06 | Spec numeric-claim checker (DRIFT-001) | DRIFT-001 process-gap | — | draft | small |
+| S-3.07 | LOW NFR code cleanup (4 parts bundled) | NFR-R-NEW-1/2, ... | — | draft | medium |
+| S-3.08 | LOW NFR DOCUMENT-AS-IS | 15 LOW NFRs | — | draft | small |
+| S-3.09 | PKCE deferral formal record | NFR-S-A, ADR-0013, SD-001 | — | draft | xsmall |
 
-- **PKCE OAUTH** (ADR-0013 deferred, SD-001 DEFERRED): when team is ready to implement PKCE, Wave 3 provides the story
-- **NFR-O-S** (multi-site OAuth `--cloud-id` flag): H-047 currently pinned as KNOWN-GAP; Wave 3 flips it to MUST-FAIL
-- MEDIUM/LOW edge cases from `edge-case-catalog.md`
-- Deferred NFRs (LOW priority)
-- `--verbose-bodies` migration aid tooling (if needed post-SD-003 breaking change)
+**Wave 3 parallel groups:** {S-3.01, S-3.02} refactors (parallel); {S-3.03, S-3.04, S-3.05} feature/investigation (parallel); {S-3.06, S-3.07, S-3.08, S-3.09} cleanup/doc (parallel).
 
-### Wave 3 exit gate
-
-Per-story acceptance criteria passing. No v0.5 release dependency.
+**Exit gate:** Phase 3 starts upon Wave 0 + Wave 1 + Wave 2 exit. Wave 3 stories merge during steady-state v0.6 cycle.
 
 ---
 

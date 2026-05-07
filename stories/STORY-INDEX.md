@@ -216,7 +216,7 @@ gaps that are not blocking for v0.5 but should be tracked.
 | GAP-H-003 | H-011 | BC-6.1.001 | `tests/migration_legacy.rs:94,146` | Migration + idempotency well covered by existing tests. No story anchor needed. | v0.5 (no action needed) |
 | GAP-H-004 | H-012 | BC-1.1.001 | `tests/api_client.rs:100,184,219` | Auth dispatch on scope mismatch tested at unit level. Coverage adequate. | v0.5 (no action needed) |
 | GAP-H-005 | H-015 | BC-X.6.001 | `tests/cli_smoke.rs:263` | Clap mutual exclusion tested. No story anchor needed. | v0.5 (no action needed) |
-| GAP-H-006 | H-017 | BC-X.8.003 | `src/jql.rs:278-308` (unit tests) | JQL asset clause tested at unit level in the source file. No integration test gap. | v0.5 (no action needed) |
+| GAP-H-006 | H-017 | BC-4.1.002 | `src/jql.rs:278-308` (unit tests) | JQL asset clause tested at unit level in the source file. No integration test gap. | v0.5 (no action needed) |
 | GAP-H-007 | H-019 | BC-6.4.001 | `src/config.rs:759,769` (unit tests) | Profile name validation tested at unit level. Adequate coverage. | v0.5 (no action needed) |
 | GAP-H-008 | H-025 | BC-6.2.014 | None found | Cache write atomicity (temp file + rename) has no test pin at activation HEAD. The behavior exists in `src/cache.rs` but is untested. Adding a test is safe but non-critical — atomic rename is well-established OS behavior. | v0.6 (low priority — document in S-2.06 or create S-4.NN if needed) |
 | GAP-H-009 | H-026 | BC-X.1.003 | `tests/api_client.rs:310` | `extract_error_message` mixed-values path tested. Pre-existing coverage adequate; no story anchor needed. | v0.5 (no action needed) |
