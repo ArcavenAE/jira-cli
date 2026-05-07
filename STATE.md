@@ -11,7 +11,7 @@ input-hash: "[live-state]"
 traces_to: ""
 project: jira-cli
 mode: BROWNFIELD
-current_step: "phase-2-adv-pass-10-complete"
+current_step: "phase-2-adv-pass-11-clean-pass"
 current_cycle: "cycle-001"
 dtu_required: false
 activation_head: "dea166471e22eff55974d7675593469b37048c5f"
@@ -33,7 +33,7 @@ activation_version: "v0.5.0-dev.7"
 | **Target Workspace** | develop → main |
 | **Started** | 2026-05-04 |
 | **Last Updated** | 2026-05-06 |
-| **Current Phase** | Phase 2-adv — Adversarial Story Review (active; Pass 10 complete; 0/3) |
+| **Current Phase** | Phase 2-adv — Adversarial Story Review (active; Pass 11 CLEAN-PASS; 1/3) |
 | **Next Phase** | phase-3-tdd-implementation |
 | **Activation HEAD** | dea166471e22eff55974d7675593469b37048c5f (v0.5.0-dev.7) |
 | **factory-artifacts SHA** | 0b01262 (Phase 1 gate APPROVE; phase-1-converged tag) |
@@ -52,7 +52,7 @@ Goal 1c: **Harden v0.5 + feature delivery** — formalize existing codebase with
 | 1d: Adversarial Spec Review | **COMPLETE** — **3/3 CONVERGED** at Pass 28 after 28 passes (5 counter resets, 3 consecutive clean P26-P27-P28) | 2026-05-04 | 2026-05-04 | 3/3 FULL CONVERGENCE | 30→15→9→5→10→5→4→3→4→0→2→0→3→0→2→0→3→0→3→5→3→4→5→5→5→2→0→0→0 |
 | 1-gate-prep: Consistency Validation + Drift Items | **COMPLETE** | 2026-05-06 | 2026-05-04 | DEC-006/007/008 resolved; ADR-0013 created | CV: 4H/1M; CV-001/003/005 FIXED; CV-002 resolved (SD-001=C/SD-002=A/SD-003=B); CV-004 DRIFT-002 resolved post-SD-002 |
 | 2: Story Decomposition | **complete** (story creation phase) | 2026-05-04 | 2026-05-06 | 30 stories created (W0:7 + W1:8 + W2:7 + W3:8); Phase 2-adv pending | |
-| 2-adv: Adversarial Story Review | **active** — Pass 10 COMPLETE (1 finding FIXED; -3 delta; convergence approaching) | 2026-05-06 | | 3 consecutive CLEAN-PASS required | 14→5→5→5→4→5→4→4→4→1 |
+| 2-adv: Adversarial Story Review | **active** — Pass 11 CLEAN-PASS! Counter 1/3 | 2026-05-06 | | Need 2 more consecutive CLEAN-PASS for 3/3 convergence | 14→5→5→5→4→5→4→4→4→1→0 |
 | 3: TDD Implementation | not-started | | | | |
 | 3-adv: Wave Adversarial Reviews | not-started | | | | |
 | 4: Holdout Evaluation | not-started | | | | |
@@ -70,6 +70,7 @@ Goal 1c: **Harden v0.5 + feature delivery** — formalize existing codebase with
 | Phase 2-adv Pass 8 + fixes + appendix audit | adversary + state-manager | complete | 4 FIXED (1H/1M/2L); H-009 BC fix; S-1.05 NFR-S-B→NFR-S-E; H-NEW-AUTH-002 annotated; H-NEW-MP-001 format documented; full appendix audit (6 additional BC mismatches fixed: H-010/H-011/H-012/H-015/H-018/H-024/H-026 + Gap Register sync) |
 | Phase 2-adv Pass 9 + fixes | adversary + state-manager | complete | 4 FIXED (0C/2H/2M/0L); S-1.05 body NFR-S-B→NFR-S-E (3 body sites + STORY-INDEX:88); S-2.01 BC-2.1.013 removed from frontmatter (single-owner with S-2.02); STORY-INDEX:107 reconciled to 9 BCs; S-0.07 BC-X.1.001 fabricated paraphrase removed (empty bc_anchors); WAVE-PLAN sync: S-1.07 +BC-X.1.005, S-1.08 +BC-1.4.025, S-2.07 effort small→medium |
 | Phase 2-adv Pass 10 + fix | adversary + state-manager | complete | 1 FIXED (MED); S-1.08 depends_on:[S-0.05] removed (over-declared mirror of S-1.06); convergence approaching |
+| Phase 2-adv Pass 11 CLEAN-PASS! | adversary | complete | 0 findings; P10 fix verified across 4 surfaces; counter 1/3; need 2 more consecutive |
 
 ## Decisions Log
 
@@ -136,11 +137,11 @@ convergence_trajectory:
 ```
 
 ### Phase 2-adv — Adversarial Story Review
-_Pass 10 SUBSTANTIVE (1 finding FIXED; -3 delta; convergence approaching). Counter 0/3. Pass 11 target: CLEAN-PASS._
+_Pass 11 CLEAN-PASS achieved (counter 1/3). 10 substantive passes preceded with full asymptotic descent. Need 2 more consecutive CLEAN-PASS for 3/3 convergence._
 
 ```yaml
 # Passes 1-7 archived to cycles/cycle-001/convergence-trajectory.md (Phase 2-adv section)
-# Trajectory: 14→5→5→5→4→5→4→4→4→1
+# Trajectory: 14→5→5→5→4→5→4→4→4→1→0
 phase-2-adv-convergence:
   - pass: 8
     findings: 4
@@ -172,6 +173,16 @@ phase-2-adv-convergence:
     clean_pass: false
     clean_pass_count: "0/3"
     note: "Strong convergence signal: trajectory dropped 4→1. Pass 9 fixes 7/7 verified clean. Single finding: S-1.08 depends_on drift (DRIFT-003 recurrence; over-declared mirror of S-1.06). Pass 11 target: CLEAN-PASS."
+  - pass: 11
+    findings: 0
+    severity: "CLEAN-PASS"
+    addressed: 0
+    delta: -1
+    trend: CONVERGING
+    fixes_committed: false
+    clean_pass: true
+    clean_pass_count: "1/3"
+    note: "FIRST CLEAN-PASS after 10 SUBSTANTIVE passes. Trajectory 14→5→5→5→4→5→4→4→4→1→0. P10 fix verified across 4 surfaces. 2 carry-forward observations (cosmetic typos, story-id manifest) tagged but below threshold."
 ```
 
 ### Phase 3-adv — Wave Adversarial Reviews (per-story + wave)
@@ -195,8 +206,8 @@ convergence_trajectory: []
 | Field | Value |
 |-------|-------|
 | **Date** | 2026-05-06 |
-| **Position** | Phase 2-adv Pass 10 COMPLETE. 1 finding FIXED (0C/0H/1M/0L). ADV-P2-S10-001: S-1.08 depends_on:[S-0.05] removed — over-declared mirror of S-1.06; keychain layout test does not technically need #[cfg(test)] gate as prereq. Pass 9 fixes 7/7 verified clean. DRIFT-003 recurrence noted (Pass 10 = 4th recurrence). Strong convergence signal: 4→1 drop. Trajectory 14→5→5→5→4→5→4→4→4→1. Counter 0/3. Next: Phase 2-adv Pass 11 (target: CLEAN-PASS). |
-| **Convergence counter** | 0/3 (Phase 2-adv; Pass 10 SUBSTANTIVE — -3 delta; 1 finding FIXED; Pass 11 pending; target CLEAN-PASS) |
+| **Position** | Phase 2-adv Pass 11 CLEAN-PASS. 0 findings. P10 fix (S-1.08 depends_on) verified across all 4 surfaces. Counter advances 0/3 → 1/3. Trajectory 14→5→5→5→4→5→4→4→4→1→0. 2 carry-forward observations (cosmetic typos OBS-1, story-id manifest OBS-2) below threshold. Next: Phase 2-adv Pass 12 (target: CLEAN-PASS, counter 2/3). |
+| **Convergence counter** | 1/3 (Phase 2-adv; Pass 11 CLEAN-PASS — first clean pass after 10 substantive passes; need 2 more consecutive for 3/3) |
 
 ## Historical Content
 
