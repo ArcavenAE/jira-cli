@@ -1,3 +1,103 @@
+# Red Gate Log — S-1.03 (NFR-O-A)
+
+**Date:** 2026-05-07
+**Story:** S-1.03 — Add tracing crate + wire structured logging to client.rs and auth.rs
+**Test file:** `tests/observability.rs`
+**Branch:** `feat/S-1.03-tracing-observability`
+
+## Summary
+
+10 tests written. 7 FAIL (source-inspection Red Gate). 3 PASS (vacuous guards
+correct pre-fix; structural post-fix guards). Red Gate verified.
+
+## Approach
+
+Option A (source-grep): all tests read source files via `std::fs::read_to_string`.
+No `tracing` types are imported into the test file. The test binary compiles today
+without the tracing dep. This is the correct approach for infrastructure stories
+where the dep is not yet present.
+
+## Test Results (pre-fix)
+
+```
+running 10 tests
+test test_s_1_03_lib_rs_does_not_init_subscriber ... ok
+test test_s_1_03_main_initializes_tracing_subscriber ... FAILED
+test test_s_1_03_observability_rs_does_not_init_subscriber ... ok
+test test_s_1_03_cargo_toml_has_tracing_dep ... FAILED
+test test_s_1_03_cargo_toml_has_tracing_subscriber_dep ... FAILED
+test test_s_1_03_main_uses_env_filter ... FAILED
+test test_s_1_03_client_uses_tracing_debug ... FAILED
+test test_s_1_03_auth_has_tracing_entry_points ... FAILED
+test test_s_1_03_client_no_verbose_request_eprintln ... FAILED
+test test_s_1_03_auth_no_client_secret_in_tracing_fields ... ok
+
+test result: FAILED. 3 passed; 7 failed; 0 ignored; 0 measured; 0 filtered out
+```
+
+## Failure Analysis
+
+| Test | Failure Mode | AC |
+|------|-------------|-----|
+| `test_s_1_03_cargo_toml_has_tracing_dep` | `tracing = ` not found in Cargo.toml [dependencies] | AC-001 |
+| `test_s_1_03_cargo_toml_has_tracing_subscriber_dep` | `tracing-subscriber` not found in Cargo.toml; `env-filter` feature absent | AC-001 |
+| `test_s_1_03_main_initializes_tracing_subscriber` | `tracing_subscriber::` not found in src/main.rs | AC-002 |
+| `test_s_1_03_main_uses_env_filter` | `EnvFilter`, `with_max_level`, `with_env_filter` all absent from main.rs | AC-002 |
+| `test_s_1_03_client_uses_tracing_debug` | `tracing::debug!` and `tracing::trace!` absent from client.rs | AC-003 |
+| `test_s_1_03_client_no_verbose_request_eprintln` | 2 `eprintln!("[verbose]` with method/rate-limit content still present in client.rs | AC-003 |
+| `test_s_1_03_auth_has_tracing_entry_points` | `tracing::info!` / `tracing::debug!` absent from auth.rs | AC-005 |
+
+## Vacuous Pass Analysis
+
+| Test | Why it passes pre-fix | Structural purpose |
+|------|----------------------|--------------------|
+| `test_s_1_03_lib_rs_does_not_init_subscriber` | lib.rs has no tracing at all | Guards against double-init if implementer adds subscriber to lib |
+| `test_s_1_03_auth_no_client_secret_in_tracing_fields` | auth.rs has no tracing calls to contain secret leaks | Guards against secret-leak post-fix |
+| `test_s_1_03_observability_rs_does_not_init_subscriber` | observability.rs has no subscriber init | Guards against subscriber creeping into the helper module |
+
+## AC-004 Delegation
+
+SD-003 regression (AC-004) is fully verified by `tests/verbose_bodies.rs` (6 tests
+from S-0.06). No new tests are written here for AC-004 — the existing suite
+enforces the contract. The implementer must not break those 6 tests.
+
+## Lib Baseline
+
+```
+test result: ok. 600 passed; 0 failed; 10 ignored; 0 measured; 0 filtered out
+```
+
+Baseline preserved. Zero regressions.
+
+## Hand-off to Implementer
+
+All 7 behavioral tests fail for the right reason (assertion errors on absent source
+patterns, not build errors). To make each test pass:
+
+1. Add to `Cargo.toml` [dependencies]:
+   ```toml
+   tracing = "0.1"
+   tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+   ```
+2. Add subscriber init to `src/main.rs` after CLI parse, before dispatch:
+   ```rust
+   let log_level = if cli.verbose_bodies { tracing::Level::TRACE }
+                   else if cli.verbose { tracing::Level::DEBUG }
+                   else { tracing::Level::WARN };
+   tracing_subscriber::fmt().with_max_level(log_level).with_writer(std::io::stderr).init();
+   ```
+3. Replace `eprintln!("[verbose] {} {}", r.method(), r.url())` and the rate-limit
+   eprintln! in `src/api/client.rs` with `tracing::debug!` structured events.
+4. Add `tracing::info!` or `tracing::debug!` at `oauth_login`, token exchange,
+   and `refresh_oauth_token` entry points in `src/api/auth.rs`.
+5. Do NOT add `.init()` to `src/lib.rs` or `src/observability.rs`.
+6. Do NOT log `client_secret`, `access_token` values, or `refresh_token` values
+   in tracing field lists in `src/api/auth.rs`.
+
+Post-fix, `cargo test --all-features` must pass including the 6 verbose_bodies tests.
+
+---
+
 # Red Gate Log — S-0.05 (SD-002)
 
 **Date:** 2026-05-07

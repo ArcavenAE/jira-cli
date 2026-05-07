@@ -1,7 +1,7 @@
 # sprint-state.yaml
 # Phase 3 TDD Implementation — Wave-based story delivery state
 # Initialized: 2026-05-07
-# Updated: 2026-05-07
+# Updated: 2026-05-07 (S-1.03 MERGED; S-1.04 active; Wave 1 progress 3/8)
 
 active_wave: 1
 wave_0_progress: "7/7 — WAVE 0 COMPLETE"  # All stories merged/delivered: S-0.01..S-0.06 via PRs #289-#294; S-0.07 spec-only via factory-artifacts direct
@@ -111,7 +111,7 @@ wave_0:
 
 wave_0_exit_gate: "PASSED — All 4 MUST-FIX stories green; SD-002 and SD-003 implemented; H-NEW-AUTH-002 and H-NEW-VERBOSE-001/002 holdouts registered. 7/7 stories complete. 2026-05-07."
 
-wave_1_progress: "2/8"
+wave_1_progress: "3/8"
 
 wave_1:
   status: active
@@ -136,8 +136,20 @@ wave_1:
       bc_anchors: []
       nfr_anchors: [NFR-S-F]
       notes: "4 deny.toml settings tightened to 'deny' + 22 [[bans.skip]] entries documented with rationale. NFR-S-F satisfied. 7/7 CI green; review APPROVE 1 cycle; 0 blocking; 1 deferred (S-1.02-DEFER: 12 of 22 skip entries upstream-blocked — figment toml 1.x + jni thiserror 2.x + windows-sys 0.6x). Lesson 4 pattern confirmed: Wave 1 non-admin squash-merge."
-    - { id: S-1.03, title: "tracing/observability wire-up", status: active }
-    - { id: S-1.04, title: "CI job timeouts", status: pending }
+    - id: S-1.03
+      title: "tracing/observability wire-up"
+      status: completed
+      pr: 297
+      merge_sha: 2d641120b21477f79fae0c32a20649ba278d8635
+      merged_at: 2026-05-07
+      merged_via: "gh pr merge --squash --delete-branch"
+      depends_on: []
+      bc_anchors: []
+      nfr_anchors: [NFR-O-A]
+      notes: "tracing 0.1.41 + tracing-subscriber 0.3.19 wired into main.rs/client.rs/auth.rs. NFR-O-A satisfied; SD-003 contract preserved via variable-extraction trick (6 --verbose-bodies regression tests green). 10 new observability tests + 6 SD-003 + 600 lib + integration all green. 7/7 CI; review APPROVE 1 cycle (1 SHOULD-FIX docstring fix applied as commit 06c2252). 1 deferred (S-1.03-DEFER): body-tracing migration → Wave 2."
+    - id: S-1.04
+      title: "CI job timeouts"
+      status: active
     - { id: S-1.05, title: "GitHub secret scanning", status: pending }
     - { id: S-1.06, title: "OAuth flow holdout suite", status: pending }
     - { id: S-1.07, title: "Rate-limit holdout suite", status: pending }
