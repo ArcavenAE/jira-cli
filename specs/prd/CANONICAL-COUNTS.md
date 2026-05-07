@@ -143,11 +143,12 @@ Note: R-M3 was merged into R-L11 at Pass 8 (net -1). R-L12 and R-L13 added at Ph
 
 ## ADRs
 
-**Canonical ADR count: 12** (ADR-0001..ADR-0012)
+**Canonical ADR count: 13** (ADR-0001..ADR-0013)
 
 - ADR-0001..0006: source in `.reference/jira-cli/docs/adr/`
-- ADR-0007..0012: in `.factory/architecture/adr/`
+- ADR-0007..0013: in `.factory/architecture/adr/`
 - ADR-0002: Superseded by ADR-0006 (still counted — superseded is a valid status)
+- ADR-0013: PKCE deferral for OAuth 2.0 authorization code flow (Phase 1→2 gate, 2026-05-04)
 
 Verification: count rows in adr-index.md Summary Table (both `[ADR-NNNN]` link rows and plain `ADR-NNNN` rows).
 

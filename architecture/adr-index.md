@@ -2,7 +2,7 @@
 
 **traces_to:** README.md
 **Source ADRs (0001–0006):** `.reference/jira-cli/docs/adr/`
-**New ADRs (0007–0012):** `.factory/architecture/adr/`
+**New ADRs (0007–0013):** `.factory/architecture/adr/`
 
 ---
 
@@ -22,6 +22,7 @@
 | [ADR-0010](adr/0010-list-worklogs-pagination.md) | list_worklogs Pagination Fix | **Accepted** | cross-cutting.md §4 |
 | [ADR-0011](adr/0011-type-level-profile-fence.md) | Type-Level Profile Fence (Newtype) | **Deferred** | risk-register.md §R-L1 |
 | [ADR-0012](adr/0012-shard-rule.md) | Module Shard Rule Codification | **Accepted** | risk-register.md §R-M5 |
+| [ADR-0013](adr/0013-pkce-deferral.md) | PKCE Deferral for OAuth 2.0 Authorization Code Flow | **Accepted** | security-decisions/SD-001-pkce.md |
 
 ---
 

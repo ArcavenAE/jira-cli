@@ -1,8 +1,8 @@
 # SD-002: JR_AUTH_HEADER Production Gating
 
-**Status:** PENDING
+**Status:** RESOLVED
 **Owner:** Phase 3 SECURITY-DECIDE
-**Deadline:** Phase 1 → 2 gate (decision required before Phase 2 story decomposition begins)
+**Deadline:** Resolved at Phase 1 → 2 gate (2026-05-04)
 **References:** NFR-S-B (nfr-catalog.md), R-H2 (risk-register.md), `src/api/client.rs:64-66`
 
 ---
@@ -39,8 +39,38 @@
 |------|----------|-----------|
 | TBD  | PENDING  | Awaiting Phase 3 security review |
 | **Decide-by** | **Phase 1 → 2 gate** | Required before Phase 2 story decomposition begins (ADV-P2-009) |
+| 2026-05-04 | Option A — `#[cfg(test)]` compile-time gate | Categorical security guarantee — code excluded from release binary. Test migration cost bounded (most tests use `JiraClient::new_for_test` already). Rust 1.80+ check-cfg validates conditional-compilation specs. |
 
 ---
+
+## Resolution
+
+**Chosen option:** A (`#[cfg(test)]` compile-time gate)
+
+**Rationale:** Research conducted at gate approval (perplexity deep_research, 2026-05-06) showed `#[cfg(test)]` provides the categorically strongest security posture for this anti-pattern: the env-var read is excluded from release-mode compiled binaries entirely, eliminating runtime exploitation vectors. Industry CLIs (gh, glab, aws, gcloud, az) all expose env vars in production with documented precedence; choosing Option A means jr is more secure than industry standard, not just matching it. The "lost debug escape hatch" trade-off is acceptable because `--profile` flag + `auth login` provide the documented power-user path; bare env-var debug is not a documented use case for jr.
+
+**Phase 3 implementation requirements:**
+1. Audit `tests/` for any test using bare `JR_AUTH_HEADER` env var (vs. `new_for_test` constructor) — likely 0 because canonical fixture uses `new_for_test`
+2. Migrate any survivors to `JiraClient::new_for_test(base_url, auth_header)` constructor
+3. Wrap `src/api/client.rs:64-66` env-var read in `#[cfg(test)]`:
+```rust
+#[cfg(test)]
+{
+    if let Ok(header) = std::env::var("JR_AUTH_HEADER") {
+        return Ok(header);
+    }
+}
+```
+4. Add a `#[cfg(not(test))]` integration test that builds in release mode and asserts `JR_AUTH_HEADER` is NOT honored:
+```rust
+#[test]
+fn jr_auth_header_not_honored_in_release_build() {
+    // verify cfg!(test) is false in release-mode integration test
+    // ... actual implementation depends on test harness
+}
+```
+
+**Resolves DRIFT-002** — NFR-S-B holdout becomes definable now that fix path is fixed; queue for Phase 2 story decomposition.
 
 ## Resolution Requirement
 

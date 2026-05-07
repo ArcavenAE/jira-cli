@@ -1,8 +1,8 @@
 # SD-001: PKCE Adoption Decision
 
-**Status:** PENDING
+**Status:** RESOLVED
 **Owner:** Phase 3 SECURITY-DECIDE
-**Deadline:** Phase 1 → 2 gate (decision required before Phase 2 story decomposition begins)
+**Deadline:** Resolved at Phase 1 → 2 gate (2026-05-04)
 **References:** ADR-0006, NFR-S-A (nfr-catalog.md), NEW-INV-178, BC-1.5.036, R-M1 (risk-register.md)
 
 ---
@@ -48,8 +48,25 @@ RFC 8252 §8.1 recommends PKCE for native apps regardless of confidential-client
 |------|----------|-----------|
 | TBD  | PENDING  | Awaiting Phase 3 security review and Atlassian API verification |
 | **Decide-by** | **Phase 1 → 2 gate** | Required before Phase 2 story decomposition begins (ADV-P2-009) |
+| 2026-05-04 | Option C — defer with documented mitigation | Atlassian Cloud OAuth 2.0 (3LO) does not publicly support PKCE as of 2026-05 (perplexity research; Atlassian Developer Console exposes no PKCE controls; community confirms internal feature flag, not public). Options A and B are technically infeasible, not just suboptimal. Defer with ADR-0013 documenting threat model + reactivation trigger. |
 
 ---
+
+## Resolution
+
+**Chosen option:** C (defer with documented mitigation)
+
+**Rationale:** Research conducted at gate approval (perplexity deep_research, 2026-05-06) confirmed Atlassian Jira Cloud OAuth 2.0 (3LO) endpoint does NOT publicly support PKCE. Developer Console has no PKCE configuration. Community evidence indicates Atlassian has internal feature-flag PKCE capability that is not exposed in the public API. Option A (PKCE + client_secret simultaneously) is infeasible because Atlassian's `/oauth/token` does not document or expose PKCE parameter handling. Option B (public-client PKCE-only) is infeasible because Developer Console requires `client_secret` registration; no public-client flow exists.
+
+**ADR:** Created ADR-0013 documenting threat model, mitigation, and reactivation trigger.
+
+**Reactivation trigger:** When Atlassian announces public PKCE support for 3LO Jira Cloud (monitor developer.atlassian.com changelog), re-open SD-001 and re-evaluate Options A/B.
+
+**Threat-model summary:**
+- Code-interception attack on `127.0.0.1:53682` requires malicious app on same host winning OS first-listener race
+- macOS/Linux first-listener-wins semantics + jr binding listener BEFORE launching browser substantially mitigate this
+- Embedded `client_secret` (XOR-obfuscated per ADR-0006) is not a strong secret but adds friction to extraction
+- Residual risk acceptable for v0.5 hardening; tracked for v0.6+ when Atlassian PKCE lands
 
 ## Resolution Requirement
 
