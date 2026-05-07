@@ -59,7 +59,7 @@ except S-1.03 (depends on S-0.06) and S-1.06 (depends on S-0.05 — OAuth holdou
 benefits from S-0.05's `#[cfg(test)]` gate landing first). Can otherwise be implemented in parallel groups.
 
 Parallel group A: S-1.01, S-1.02, S-1.04, S-1.05 (CI/CD hardening, no code deps)
-Parallel group B: S-1.06, S-1.07, S-1.08 (holdout test suites, each independent)
+Parallel group B: S-1.07, S-1.08 (independent holdout suites); S-1.06 starts after S-0.05 merges
 Sequential: S-1.03 after S-0.06 merges (tracing depends on --verbose-bodies flag)
 
 | Story ID | Title | NFR/BC Anchors | Holdout Anchors | Status | Est. Effort |
@@ -148,7 +148,7 @@ Note: S-3.08 depends on S-2.05 merging first (CLAUDE.md conflict risk).
 | S-3.04 | Multi-cloudId --cloud-id flag + prompt | NFR-O-S, BC-1.5.038, BC-1.1.007, BC-1.5.031 | H-047 | draft | medium |
 | S-3.05 | Asset enrichment join_all → buffer_unordered(8) | NFR-P-NEW-1, BC-4.3.002, BC-X.1.005 | H-038 | draft | small |
 | S-3.06 | Pre-merge spec numeric claim checker (DRIFT-001) | — | — | draft | small |
-| S-3.07 | LOW NFR code fixes: Retry-After cap, overflow guard, profile name error, anti-loop | NFR-R-NEW-1, NFR-R-NEW-2, NFR-S-D, NFR-R-F, BC-X.4.009, BC-X.9.002 | H-027 | draft | small |
+| S-3.07 | LOW NFR code fixes: Retry-After cap, overflow guard, profile name error, anti-loop | NFR-R-NEW-1, NFR-R-NEW-2, NFR-S-D, NFR-R-F, BC-X.4.009, BC-X.9.002, BC-6.1.004 | H-027 | draft | small |
 | S-3.08 | DOCUMENT-AS-IS LOW NFR closures: source comments + CLAUDE.md additions | NFR-R-G, NFR-O-C/E/G/H/I/N/P/R/T/U/X, NFR-SCA-1/2/3 | — | draft | small |
 | S-3.09 | Formally record PKCE deferral (SD-001 → DEFER; ADR-0013) | NFR-S-A, BC-1.5.036 | — | draft | xsmall |
 
@@ -199,7 +199,7 @@ into the story's test file if the story creates a new file for that BC area.
 | H-015 | BC-X.6.001 (--all + --limit clap mutual exclusion) | `tests/cli_smoke.rs` | 263 | (no story anchor — gap, see below) |
 | H-017 | BC-4.1.002 (AQL clause uses field NAME + capital Key) | `src/jql.rs` | 278–308 | (no story anchor — gap, see below) |
 | H-018 | BC-X.5.005 / BC-X.9.002 (parse_duration combined units vs validate_duration) | `src/duration.rs::tests::test_complex` | 90 | S-2.06 |
-| H-019 | BC-6.4.001 (validate_profile_name rejects reserved/invalid names) | `src/config.rs` | 759, 769 | (no story anchor — gap, see below) |
+| H-019 | BC-6.1.004 (validate_profile_name rejects reserved/invalid names) | `src/config.rs` | 759, 769 | (no story anchor — gap, see below) |
 | H-021 | BC-2.1.007 (--status ambiguous short-circuit, no JQL fired) | `tests/issue_list_errors.rs` | 369 | S-2.01 (AC-007) |
 | H-023 | BC-2.1.012 (--asset substring ambiguous rejection) | `tests/assets.rs` | 1485, 1553 | S-2.01 (via BC-2.1.012 in bc_anchors) |
 | H-024 | BC-4.2.006 (assets schema --type substring ambiguous) | `tests/assets.rs` | 1696 | S-2.03 |
@@ -218,7 +218,7 @@ gaps that are not blocking for v0.5 but should be tracked.
 | GAP-H-004 | H-012 | BC-1.1.001 | `tests/api_client.rs:100,184,219` | Auth dispatch on scope mismatch tested at unit level. Coverage adequate. | v0.5 (no action needed) |
 | GAP-H-005 | H-015 | BC-X.6.001 | `tests/cli_smoke.rs:263` | Clap mutual exclusion tested. No story anchor needed. | v0.5 (no action needed) |
 | GAP-H-006 | H-017 | BC-4.1.002 | `src/jql.rs:278-308` (unit tests) | JQL asset clause tested at unit level in the source file. No integration test gap. | v0.5 (no action needed) |
-| GAP-H-007 | H-019 | BC-6.4.001 | `src/config.rs:759,769` (unit tests) | Profile name validation tested at unit level. Adequate coverage. | v0.5 (no action needed) |
+| GAP-H-007 | H-019 | BC-6.1.004 | `src/config.rs:759,769` (unit tests) | Profile name validation tested at unit level. Adequate coverage. | v0.5 (no action needed) |
 | GAP-H-008 | H-025 | BC-6.2.014 | None found | Cache write atomicity (temp file + rename) has no test pin at activation HEAD. The behavior exists in `src/cache.rs` but is untested. Adding a test is safe but non-critical — atomic rename is well-established OS behavior. | v0.6 (low priority — document in S-2.06 or create S-4.NN if needed) |
 | GAP-H-009 | H-026 | BC-X.1.003 | `tests/api_client.rs:310` | `extract_error_message` mixed-values path tested. Pre-existing coverage adequate; no story anchor needed. | v0.5 (no action needed) |
-| GAP-H-010 | H-028 | BC-6.4.002 | None found | Hand-edited config with `foo:bar` profile key (config-file-load boundary) has no specific test. `JR_PROFILE` env var and `--profile` flag validation are tested (H-019), but the config-file load path rejecting invalid profile keys is a distinct code path not yet covered. | v0.6 (add to S-3.06 scope or create S-4.NN for config boundary tests) |
+| GAP-H-010 | H-028 | BC-6.1.005 | None found | Hand-edited config with `foo:bar` profile key (config-file-load boundary) has no specific test. `JR_PROFILE` env var and `--profile` flag validation are tested (H-019), but the config-file load path rejecting invalid profile keys is a distinct code path not yet covered. | v0.6 (add to S-3.06 scope or create S-4.NN for config boundary tests) |
