@@ -450,6 +450,7 @@ Setup uses:
 
 ### H-046: `jr issue open FOO-1` uses instance URL, not API gateway URL (MUST-FIX pin)
 **Setup**: OAuth profile with `cloudId = "my-cloud-123"`. `client.base_url()` = `https://api.atlassian.com/ex/jira/my-cloud-123`. `client.instance_url()` = `https://mycompany.atlassian.net`.
+**Fixture**: Use `JiraClient::new_for_test(base_url, auth_header)` constructor with OAuth-mode `Bearer` auth header. Wiremock at `JR_BASE_URL` simulates `https://api.atlassian.com/ex/jira/my-cloud-123`. Cross-reference H-029 for embedded OAuth login fixture pattern.
 **Action**: `jr issue open FOO-1 --url-only` (print without opening browser)
 **Expected (FIXED behavior)**: stdout contains `https://mycompany.atlassian.net/browse/FOO-1`. Does NOT contain `api.atlassian.com`.
 **Status**: MUST-FIX (NFR-R-B). Current code fails this holdout for OAuth profiles.

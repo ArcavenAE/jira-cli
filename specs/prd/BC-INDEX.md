@@ -627,7 +627,7 @@ R1/R4 prefix = deepening round that introduced it.
 | **BC-6.3.001** | NFR-R-D | CRITICAL | 14 sites `config.global.fields.*` | FIX-IN-PHASE-3 |
 | **BC-X.5.002** | NFR-R-A | HIGH | `src/api/jira/worklogs.rs:25-30` | FIX-IN-PHASE-3 |
 | **BC-3.4.001** | NFR-R-B | HIGH | `src/cli/issue/workflow.rs:636` | FIX-IN-PHASE-3 |
-| **BC-4.3.001** | NFR-R-E | HIGH | `src/cli/issue/list.rs:446,449,456` | FIX-IN-PHASE-3 |
+| **BC-4.3.001** | NFR-R-E | HIGH | `src/cli/issue/list.rs:440,446,449,456` | FIX-IN-PHASE-3 |
 
 ---
 

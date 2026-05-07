@@ -85,7 +85,7 @@ Source ADRs (0001–0006) live in `.reference/jira-cli/docs/adr/`. New ADRs (000
 | BC-1.* Auth & Identity | `cli/auth.rs`, `api/auth.rs`, `api/auth_embedded.rs` |
 | BC-2.* Issue Read | `cli/issue/list.rs`, `cli/issue/view.rs`, `cli/issue/comments.rs`, `cli/issue/changelog.rs`, `cli/issue/format.rs` |
 | BC-3.* Issue Write | `cli/issue/create.rs`, `cli/issue/workflow.rs`, `cli/issue/links.rs`, `cli/issue/helpers.rs`, `cli/issue/json_output.rs` |
-| BC-4.* Assets & CMDB | `cli/issue/assets.rs`, `api/assets/linked.rs`, `api/assets/objects.rs`, `api/assets/workspace.rs`, `api/assets/schemas.rs`, `api/assets/tickets.rs` |
+| BC-4.* Assets & CMDB | `cli/assets.rs`, `cli/issue/assets.rs`, `api/assets/linked.rs`, `api/assets/objects.rs`, `api/assets/workspace.rs`, `api/assets/schemas.rs`, `api/assets/tickets.rs` |
 | BC-5.* Boards & Sprints | `cli/board.rs`, `cli/sprint.rs`, `api/jira/boards.rs`, `api/jira/sprints.rs` |
 | BC-6.* Config & Cache | `config.rs`, `cache.rs` |
 | BC-7.* Output Rendering | `output.rs`, `adf.rs`, `cli/issue/format.rs`, `cli/issue/json_output.rs` |
