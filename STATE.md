@@ -11,7 +11,7 @@ input-hash: "[live-state]"
 traces_to: ""
 project: jira-cli
 mode: BROWNFIELD
-current_step: "phase-3-wave-0-S-0.05-start"
+current_step: "phase-3-wave-0-S-0.06-start"
 current_cycle: "cycle-001"
 dtu_required: false
 phase_2_status: APPROVED
@@ -37,7 +37,7 @@ activation_version: "v0.5.0-dev.7"
 | **Target Workspace** | develop → main |
 | **Started** | 2026-05-04 |
 | **Last Updated** | 2026-05-07 |
-| **Current Phase** | Phase 3 — TDD Implementation **IN PROGRESS** (Wave 0 active; S-0.01 MERGED; S-0.02 MERGED; S-0.03 MERGED; S-0.04 MERGED; active: S-0.05) |
+| **Current Phase** | Phase 3 — TDD Implementation **IN PROGRESS** (Wave 0 active; S-0.01 MERGED; S-0.02 MERGED; S-0.03 MERGED; S-0.04 MERGED; S-0.05 MERGED; active: S-0.06) |
 | **Next Phase** | phase-3-wave-0 delivery |
 | **Activation HEAD** | dea166471e22eff55974d7675593469b37048c5f (v0.5.0-dev.7) |
 | **factory-artifacts SHA** | 0b01262 (Phase 1 gate APPROVE; phase-1-converged tag) |
@@ -58,7 +58,7 @@ Goal 1c: **Harden v0.5 + feature delivery** — formalize existing codebase with
 | 2: Story Decomposition | **complete** (story creation phase) | 2026-05-04 | 2026-05-06 | 31 stories created (W0:7 + W1:8 + W2:7 + W3:9); Phase 2-adv pending | |
 | 2-adv: Adversarial Story Review | **CONVERGED** — Pass 13 CLEAN-PASS; Counter 3/3 | 2026-05-06 | 2026-05-07 | 3/3 FULL CONVERGENCE | 14→5→5→5→4→5→4→4→4→1→0→1→0 |
 | Phase 2 gate | **APPROVED** (2026-05-07) — 31 stories locked, ready for TDD | — | 2026-05-07 | APPROVED by human | — |
-| 3: TDD Implementation | **IN_PROGRESS** — Wave 0 active (4/7) | 2026-05-07 | | | S-0.01 MERGED at b7b9c9c (PR #289; BC-3.4.001; H-046 MUST-PASS). S-0.02 MERGED at a84e063 (PR #290; BC-X.5.002; H-045 MUST-PASS). S-0.03 MERGED at cb2c612 — PR #291; BC-4.3.001 satisfied; H-036 MUST-PASS active. S-0.04 MERGED at dbbea12 — PR #292; BC-6.3.001 satisfied; H-NEW-MP-001 MUST-PASS active. 2-cycle review APPROVE (cycle 1: 1 blocking — Deviation 1 cache.rs fallback REVERTED per CLAUDE.md cross-profile leakage rule); security CLEAN. 14 field-read sites + 2 error strings migrated. Phase 3 Wave 0 progress: 4/7. |
+| 3: TDD Implementation | **IN_PROGRESS** — Wave 0 active (5/7) | 2026-05-07 | | | S-0.01 MERGED at b7b9c9c (PR #289; BC-3.4.001; H-046 MUST-PASS). S-0.02 MERGED at a84e063 (PR #290; BC-X.5.002; H-045 MUST-PASS). S-0.03 MERGED at cb2c612 — PR #291; BC-4.3.001 satisfied; H-036 MUST-PASS active. S-0.04 MERGED at dbbea12 — PR #292; BC-6.3.001 satisfied; H-NEW-MP-001 MUST-PASS active. S-0.05 MERGED at d907504 — PR #293; SD-002 satisfied via Option B (cfg(debug_assertions)); release-binary verified clean (strings target/release/jr \| grep -c JR_AUTH_HEADER == 0). 1-cycle review APPROVE; 3 nits logged (F1/F2/F3). Rust 1.95 clippy fix required mid-PR. Manual merge by user (dispatcher block). SD-002 canonization: factory-artifacts commit 68d09c0. Phase 3 Wave 0 progress: 5/7. |
 | 3-adv: Wave Adversarial Reviews | not-started | | | | |
 | 4: Holdout Evaluation | not-started | | | | |
 | 5: Adversarial Refinement | not-started | | | | |
@@ -71,10 +71,10 @@ Goal 1c: **Harden v0.5 + feature delivery** — formalize existing codebase with
 
 | Step | Agent | Status | Output |
 |------|-------|--------|--------|
-| S-0.02 MERGED — BC-X.5.002 satisfied | devops-engineer + review | complete | PR #290 squash-merged to develop at a84e063 (2026-05-07); 7/7 CI green; H-045 MUST-PASS active; 2-cycle review (SHOULD-FIX: OffsetPage::has_more()/next_start() helpers); 0 deferred findings |
 | S-0.03 MERGED — BC-4.3.001 satisfied | devops-engineer + review | complete | PR #291 squash-merged to develop at cb2c612 (2026-05-07T17:28:03Z) via admin bypass; 7/7 CI green; H-036 MUST-PASS active; 1-cycle review APPROVE; security CLEAN; 1 deferred (S-0.03-S1: fallback_wid path test gap) |
-| S-0.04 MERGED — BC-6.3.001 satisfied | devops-engineer + review | **complete** | PR #292 squash-merged to develop at dbbea12 (2026-05-07) via admin bypass; 7/7 CI green; H-NEW-MP-001 MUST-PASS active; 2-cycle review APPROVE (cycle 1: Deviation 1 cache.rs fallback REVERTED per CLAUDE.md); security CLEAN; 0 deferred findings |
-| S-0.05 START — Wave 0 active (4/7) | state-manager | **active** | SD-002 #[cfg(debug_assertions)] compile-time gate for JR_AUTH_HEADER (canonized from #[cfg(test)] — 151 subprocess tests preserved); worktree being created; next: implementer for Green Gate |
+| S-0.04 MERGED — BC-6.3.001 satisfied | devops-engineer + review | complete | PR #292 squash-merged to develop at dbbea12 (2026-05-07) via admin bypass; 7/7 CI green; H-NEW-MP-001 MUST-PASS active; 2-cycle review APPROVE (cycle 1: Deviation 1 cache.rs fallback REVERTED per CLAUDE.md); security CLEAN; 0 deferred findings |
+| S-0.05 MERGED — SD-002 cfg(debug_assertions) gate | devops-engineer + user | complete | PR #293 squash-merged to develop at d907504 (2026-05-07T19:03:31Z) by user (manual via gh CLI — dispatcher blocked programmatic admin merge); 7/7 CI green (Rust 1.95 clippy fix c82832c required); 1-cycle review APPROVE; security CLEAN; 3 nits deferred (S-0.05-F1/F2/F3). SD-002 canonization: factory-artifacts 68d09c0 |
+| S-0.06 START — Wave 0 active (5/7) | state-manager | active | SD-003 --verbose-bodies flag + PII warning; next: test-writer for Red Gate |
 
 ## Decisions Log
 
@@ -122,6 +122,9 @@ Goal 1c: **Harden v0.5 + feature delivery** — formalize existing codebase with
 | R1-002 | Stale doc comment in workflow.rs handle_open | DEFERRED — 2026-05-07 — referenced "base URL" pre-fix; one-line text fix. Target: assign to next implementer touching workflow.rs. | LOW | DEFERRED |
 | S-0.03-S1 | Missing integration test for effective_wid fallback path at list.rs:464-470 | DEFERRED — 2026-05-07 — raw_wid empty → fallback_wid lookup branch has no integration test. Logic correct; coverage gap. Target: bundle into next list.rs/CMDB-related touch (likely Wave 2 issue-list test suite expansion S-2.01/S-2.02) OR add as a follow-up small story in the CMDB epic. | LOW | DEFERRED |
 | S-0.05-DEV | SD-002 doc-vs-code drift (gate canonization) | **RESOLVED** — 2026-05-07 — SD-002 canonized to Option B-revised (`#[cfg(debug_assertions)]`) during S-0.05 implementation. 151-subprocess-test compatibility preserved. Threat model mitigation equivalent to Option A original. Doc updates: SD-002.md (Resolution, Options, Decision Log, version 1.0.1) + S-0.05 (Context, BC, ACs, Implementation Notes, Compliance Rules) + S-0.07 (Context, AC-004, holdout spec SD field) + STATE.md (DEC-007, Current Phase Steps). | MEDIUM | **RESOLVED** |
+| S-0.05-F1 | Cosmetic typo "JiaClient" → "JiraClient" in test doc comment line 153 of tests/auth_header_release_gate.rs | DEFERRED — 2026-05-07 — Target: bundle into next test-doc cleanup or absorbed by S-0.07 since that story authors related holdouts. | LOW | DEFERRED |
+| S-0.05-F2 | Stale doc comment in renamed test (likely fixed in clippy-fix commit c82832c) | TO_VERIFY — 2026-05-07 — Verify in next read; close if resolved. | LOW | TO_VERIFY |
+| S-0.05-F3 | load_auth_from_keychain could comment that _refresh token is intentionally discarded (matches pre-existing behavior) | DEFERRED — 2026-05-07 — Cosmetic doc improvement. Target: next src/api/client.rs touch. | LOW | DEFERRED |
 
 ## Convergence Trackers
 
@@ -182,7 +185,7 @@ _Not started._
 | Field | Value |
 |-------|-------|
 | **Date** | 2026-05-07 |
-| **Position** | S-0.04 merged via admin bypass (PR #292, develop SHA dbbea12, 2026-05-07). BC-6.3.001 satisfied; H-NEW-MP-001 MUST-PASS active. Deferred: R1-001, R1-002, S-0.03-S1. Wave 0 progress: 4/7. Active story: S-0.05 (SD-002 implementation: gate JR_AUTH_HEADER behind #[cfg(debug_assertions)] — canonized from #[cfg(test)]; Red Gate VERIFIED; 151 subprocess tests preserved). Next: implementer for Green Gate. SD-002 doc canonization complete (S-0.05-DEV RESOLVED). |
+| **Position** | S-0.05 merged by user (PR #293, develop SHA d907504, 2026-05-07T19:03:31Z). SD-002 satisfied via Option B (cfg(debug_assertions)); release-binary verified clean. 7/7 CI green; 1-cycle review APPROVE; 3 nits deferred (F1/F2/F3). Dispatcher blocked programmatic admin merge — user merged manually via gh CLI. Wave 0 progress: 5/7. Active story: S-0.06 (SD-003: --verbose-bodies flag + PII warning). Worktree being created. Next: test-writer for Red Gate. Deferred: R1-001, R1-002, S-0.03-S1, S-0.05-F1, S-0.05-F2 (TO_VERIFY), S-0.05-F3. |
 | **Convergence counter** | 3/3 CONVERGED (Phase 2-adv; Pass 13 CLEAN-PASS — final trajectory: 14→5→5→5→4→5→4→4→4→1→0→1→0) |
 
 ## Historical Content
