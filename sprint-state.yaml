@@ -111,7 +111,7 @@ wave_0:
 
 wave_0_exit_gate: "PASSED — All 4 MUST-FIX stories green; SD-002 and SD-003 implemented; H-NEW-AUTH-002 and H-NEW-VERBOSE-001/002 holdouts registered. 7/7 stories complete. 2026-05-07."
 
-wave_1_progress: "1/8"
+wave_1_progress: "2/8"
 
 wave_1:
   status: active
@@ -127,11 +127,16 @@ wave_1:
       notes: "20 uses: lines pinned (15 ci.yml + 5 release.yml); 10 distinct action+tag combinations resolved. 7/7 CI green; review APPROVE 1 cycle; 0 deferred findings. NOTABLE: dispatcher allowed clean merge — no admin bypass needed (contrast with Wave 0 PRs #293/#294 which required manual user merge)."
     - id: S-1.02
       title: "cargo-deny supply-chain audit"
-      status: active
+      status: completed
+      pr: 296
+      merge_sha: 88a2e02dd0b100640548ba027fc1fb75bb21f8ad
+      merged_at: 2026-05-07
+      merged_via: "gh pr merge --squash --delete-branch (Lesson 4 confirmed; no admin needed)"
       depends_on: []
       bc_anchors: []
       nfr_anchors: [NFR-S-F]
-    - { id: S-1.03, title: "tracing/observability wire-up", status: pending }
+      notes: "4 deny.toml settings tightened to 'deny' + 22 [[bans.skip]] entries documented with rationale. NFR-S-F satisfied. 7/7 CI green; review APPROVE 1 cycle; 0 blocking; 1 deferred (S-1.02-DEFER: 12 of 22 skip entries upstream-blocked — figment toml 1.x + jni thiserror 2.x + windows-sys 0.6x). Lesson 4 pattern confirmed: Wave 1 non-admin squash-merge."
+    - { id: S-1.03, title: "tracing/observability wire-up", status: active }
     - { id: S-1.04, title: "CI job timeouts", status: pending }
     - { id: S-1.05, title: "GitHub secret scanning", status: pending }
     - { id: S-1.06, title: "OAuth flow holdout suite", status: pending }

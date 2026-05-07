@@ -52,6 +52,7 @@ _(none yet)_
 
 4. **Dispatcher policy variability — try non-admin merge first** — Wave 0 PRs #293/#294 were dispatcher-blocked at admin merge step (required user manual `gh pr merge --admin` invocation). S-1.01 PR #295 merged cleanly via `gh pr merge --squash --delete-branch` (no `--admin` flag needed). Hypothesis: factory-dispatcher policy is configurable per-PR or per-branch. Codification candidate: orchestrator should attempt non-admin merge first; only fall back to admin merge or surface to user when non-admin fails. This avoids spurious dispatcher blocks on PRs that don't need admin escalation.
    _Discovered: S-1.01 merge (PR #295), 2026-05-07_
+   **Confirmed at S-1.02 (PR #296 merged 2026-05-07).** Wave 1 PRs use clean non-admin squash-merge. Pattern: Wave 0 #289-#294 needed `--admin` (or manual user gh CLI); Wave 1 #295/#296 don't. Codification stable; ready for promotion to orchestrator skill update.
 
 ---
 
