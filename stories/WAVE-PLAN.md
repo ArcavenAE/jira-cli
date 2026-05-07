@@ -90,12 +90,12 @@ Recommended parallel groups:
 | Story | Title | BC/NFR Anchors | Depends on | Status | Effort |
 |-------|-------|---------------|------------|--------|--------|
 | S-3.01 | Refactor src/cli/auth.rs shard split (1,998 LOC) | NFR-O-D, R-M6 | — | draft | medium |
-| S-3.02 | Refactor src/cli/assets.rs shard split (1,055 LOC) | NFR-O-D | — | draft | medium |
-| S-3.03 | refresh_oauth_token investigation | NFR-O-B | — | draft | small |
-| S-3.04 | Multi-cloudId disambiguation | NFR-O-S, BC-1.5.038, H-047 | — | draft | medium |
+| S-3.02 | Refactor src/cli/assets.rs shard split (1,055 LOC) | NFR-O-D | — | draft | small |
+| S-3.03 | refresh_oauth_token investigation | NFR-O-B | — | draft | medium |
+| S-3.04 | Multi-cloudId disambiguation | NFR-O-S, BC-1.5.038, BC-1.1.007, BC-1.5.031, H-047 | — | draft | medium |
 | S-3.05 | Asset enrichment concurrency cap | NFR-P-NEW-1 | — | draft | small |
 | S-3.06 | Spec numeric-claim checker (DRIFT-001) | DRIFT-001 process-gap | — | draft | small |
-| S-3.07 | LOW NFR code cleanup (4 parts bundled) | NFR-R-NEW-1/2, ... | — | draft | medium |
+| S-3.07 | LOW NFR code cleanup (4 parts bundled) | NFR-R-NEW-1/2, ... | — | draft | small |
 | S-3.08 | LOW NFR DOCUMENT-AS-IS | 15 LOW NFRs | — | draft | small |
 | S-3.09 | PKCE deferral formal record | NFR-S-A, ADR-0013, SD-001 | — | draft | xsmall |
 
