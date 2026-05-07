@@ -609,3 +609,41 @@ ADV-P17-003 FIXED (MEDIUM): L2 bc_count frontmatter synced to L3 total_bcs for 3
 | state-manager | CANONICAL-COUNTS.md L2↔L3 alignment table added | specs/prd/CANONICAL-COUNTS.md |
 | state-manager | Update STATE.md (counter 1/3 → 0/3, trajectory, checkpoint, steps); burst-log; commit | factory-artifacts |
 
+## Burst 24 (2026-05-06) — Phase 2 Burst 1 archived (STATE.md 5-row overflow)
+
+**Agents dispatched:** (archive operation only)
+**Archived step:** "Phase 2 Burst 1 — STORY-INDEX + WAVE-PLAN + Wave 0 (7 stories) | story-writer | complete | 7 stories: 4 MUST-FIX bug fixes + S-0.05 #[cfg(test)] gate + S-0.06 --verbose-bodies + S-0.07 H-NEW-AUTH-002 holdout"
+
+### Summary
+
+Oldest row dropped from STATE.md Current Phase Steps to maintain 5-row limit per content routing rules.
+
+## Burst 25 (2026-05-06) — Phase 2-adv Pass 2 + fixes
+
+**Agents dispatched:** adversary, state-manager
+**Files touched:** cycles/cycle-001/adversarial-reviews/adv-p2-pass2.md, stories/wave-2/S-2.02-bc-3-issue-write-holdout-suite.md, stories/wave-2/S-2.06-worklog-duration-and-cmdb-cache-tuple.md, stories/STORY-INDEX.md, STATE.md, cycles/cycle-001/burst-log.md
+**Versions bumped:** (none)
+
+### Summary
+
+Pass 2: 5 findings (0C/0H/3M/1L), all FIXED. Trajectory 14→5. Severity dropping. Counter 0/3.
+
+ADV-P2-S2-001 FIXED (MED): S-2.02 AC-003 parenthetical still cited "H-021 is covered in S-1.06" — P1 sibling-text propagation gap. Updated to "H-021 is covered in S-2.01 AC-007" with correct BC differentiation (BC-2.1.013 vs BC-2.1.007).
+
+ADV-P2-S2-002 FIXED (MED): STORY-INDEX H-018 row mis-anchored to BC-X.9.001 (JQL escape proptest). Corrected to BC-X.5.005 / BC-X.9.002 with test_complex at line 90.
+
+ADV-P2-S2-003 FIXED (MED): STORY-INDEX S-2.06 row and S-2.06 frontmatter/body mis-anchored to BC-X.9.001 (JQL escape). Corrected to BC-X.5.009 across frontmatter bc_anchors, body Behavioral Contracts label, and all 4 AC trace-to annotations.
+
+ADV-P2-S2-004 FIXED (LOW): STORY-INDEX H-017 row mis-anchored to BC-X.8.003 (project-meta cache). Corrected to BC-4.1.002 (AQL clause uses field NAME + capital Key).
+
+### Details
+
+| Agent | Task | Output |
+|-------|------|--------|
+| state-manager | Persist adv-p2-pass2.md (5 findings: 0C/0H/3M/1L) | cycles/cycle-001/adversarial-reviews/adv-p2-pass2.md |
+| state-manager | ADV-P2-S2-001: S-2.02 AC-003 H-021 ref S-1.06 → S-2.01 AC-007 | stories/wave-2/S-2.02-bc-3-issue-write-holdout-suite.md |
+| state-manager | ADV-P2-S2-002: STORY-INDEX H-018 BC-X.9.001 → BC-X.5.005/X.9.002, line 90 | stories/STORY-INDEX.md |
+| state-manager | ADV-P2-S2-003: STORY-INDEX S-2.06 + S-2.06 story BC-X.9.001 → BC-X.5.009 (frontmatter + body label + 4 AC traces) | stories/STORY-INDEX.md, stories/wave-2/S-2.06-worklog-duration-and-cmdb-cache-tuple.md |
+| state-manager | ADV-P2-S2-004: STORY-INDEX H-017 BC-X.8.003 → BC-4.1.002 | stories/STORY-INDEX.md |
+| state-manager | Update STATE.md (pass 2 convergence, trajectory 14→5, checkpoint, steps); burst-log; commit | factory-artifacts |
+

@@ -11,7 +11,7 @@ input-hash: "[live-state]"
 traces_to: ""
 project: jira-cli
 mode: BROWNFIELD
-current_step: "phase-2-adv-pass-2-pending"
+current_step: "phase-2-adv-pass-3-pending"
 current_cycle: "cycle-001"
 dtu_required: false
 activation_head: "dea166471e22eff55974d7675593469b37048c5f"
@@ -33,7 +33,7 @@ activation_version: "v0.5.0-dev.7"
 | **Target Workspace** | develop → main |
 | **Started** | 2026-05-04 |
 | **Last Updated** | 2026-05-06 |
-| **Current Phase** | Phase 2-adv — Adversarial Story Review (active; Pass 1 complete; 0/3) |
+| **Current Phase** | Phase 2-adv — Adversarial Story Review (active; Pass 2 complete; 0/3) |
 | **Next Phase** | phase-3-tdd-implementation |
 | **Activation HEAD** | dea166471e22eff55974d7675593469b37048c5f (v0.5.0-dev.7) |
 | **factory-artifacts SHA** | 0b01262 (Phase 1 gate APPROVE; phase-1-converged tag) |
@@ -52,7 +52,7 @@ Goal 1c: **Harden v0.5 + feature delivery** — formalize existing codebase with
 | 1d: Adversarial Spec Review | **COMPLETE** — **3/3 CONVERGED** at Pass 28 after 28 passes (5 counter resets, 3 consecutive clean P26-P27-P28) | 2026-05-04 | 2026-05-04 | 3/3 FULL CONVERGENCE | 30→15→9→5→10→5→4→3→4→0→2→0→3→0→2→0→3→0→3→5→3→4→5→5→5→2→0→0→0 |
 | 1-gate-prep: Consistency Validation + Drift Items | **COMPLETE** | 2026-05-06 | 2026-05-04 | DEC-006/007/008 resolved; ADR-0013 created | CV: 4H/1M; CV-001/003/005 FIXED; CV-002 resolved (SD-001=C/SD-002=A/SD-003=B); CV-004 DRIFT-002 resolved post-SD-002 |
 | 2: Story Decomposition | **complete** (story creation phase) | 2026-05-04 | 2026-05-06 | 30 stories created (W0:7 + W1:8 + W2:7 + W3:8); Phase 2-adv pending | |
-| 2-adv: Adversarial Story Review | **active** — Pass 1 COMPLETE (14 findings FIXED) | 2026-05-06 | | 3 consecutive CLEAN-PASS required | 14→… |
+| 2-adv: Adversarial Story Review | **active** — Pass 2 COMPLETE (5 findings FIXED) | 2026-05-06 | | 3 consecutive CLEAN-PASS required | 14→5 |
 | 3: TDD Implementation | not-started | | | | |
 | 3-adv: Wave Adversarial Reviews | not-started | | | | |
 | 4: Holdout Evaluation | not-started | | | | |
@@ -66,11 +66,11 @@ Goal 1c: **Harden v0.5 + feature delivery** — formalize existing codebase with
 
 | Step | Agent | Status | Output |
 |------|-------|--------|--------|
-| Phase 2 Burst 1 — STORY-INDEX + WAVE-PLAN + Wave 0 (7 stories) | story-writer | complete | 7 stories: 4 MUST-FIX bug fixes + S-0.05 #[cfg(test)] gate + S-0.06 --verbose-bodies + S-0.07 H-NEW-AUTH-002 holdout |
 | Phase 2 Burst 2 — Wave 1 (8 stories) | story-writer | complete | NFR-S-E/F/O-A infra + R-L12/R-L13 CI gaps + OAuth/rate-limit/keychain holdout regression pins |
 | Phase 2 Burst 3 — Wave 2 (7 stories) | story-writer | complete | MEDIUM NFRs + BC-2/3/4/5/7 holdout regression suites |
 | Phase 2 Burst 4 — Wave 3 (8 stories) | story-writer | complete | LOW NFRs + DEFER + DRIFT-001 codification + cleanup; STORY-INDEX v1.3.0; total=30 |
 | Phase 2-adv Pass 1 + fixes | adversary + story-writer + state-manager | complete | 14 findings FIXED; S-3.09 added; STORY-INDEX v1.4.0; 31 stories total |
+| Phase 2-adv Pass 2 + fixes | adversary + state-manager | complete | 5 FIXED (0C/0H/3M/1L); S-2.02 H-021 propagation; 3 BC mis-anchorings in appendix; counter 0/3 |
 
 ## Decisions Log
 
@@ -135,7 +135,7 @@ convergence_trajectory:
 ```
 
 ### Phase 2-adv — Adversarial Story Review
-_Pass 1 SUBSTANTIVE (14 findings, all FIXED). Counter 0/3. Pass 2 pending._
+_Pass 2 SUBSTANTIVE (5 findings, all FIXED). Counter 0/3. Pass 3 pending._
 
 ```yaml
 phase-2-adv-convergence:
@@ -149,6 +149,16 @@ phase-2-adv-convergence:
     clean_pass: false
     clean_pass_count: "0/3"
     note: "Pass 1: 2 CRITICAL mis-anchorings (S-3.01 file, S-1.06 holdout claim). 5 HIGH (holdout coverage gaps, NFR-S-A orphan). 5 MEDIUM (BC mis-anchor S-3.04, frontmatter schema, refresh_oauth_token signature, sizing). All FIXED. New story S-3.09 added. STORY-INDEX v1.4.0, 31 stories total."
+  - pass: 2
+    findings: 5
+    severity: "0C/0H/3M/1L"
+    addressed: 5
+    delta: -9
+    trend: CONVERGING
+    fixes_committed: true
+    clean_pass: false
+    clean_pass_count: "0/3"
+    note: "Severity dropping (CRITICAL/HIGH→MED/LOW). Trajectory 14→5. P1 fixes 7/10 verified clean; 1/10 partial (sibling-text propagation gap S-2.02→H-021). 3 BC mis-anchorings in Pre-existing Test Coverage appendix (P1-introduced content). Trend converging."
 ```
 
 ### Phase 3-adv — Wave Adversarial Reviews (per-story + wave)
@@ -172,8 +182,8 @@ convergence_trajectory: []
 | Field | Value |
 |-------|-------|
 | **Date** | 2026-05-06 |
-| **Position** | Phase 2-adv Pass 1 COMPLETE. 14 findings FIXED. S-3.09 added (PKCE deferral). STORY-INDEX v1.4.0, 31 stories total (W0:7 + W1:8 + W2:7 + W3:9). Counter 0/3 clean passes. Next: Phase 2-adv Pass 2. |
-| **Convergence counter** | 0/3 (Phase 2-adv; Pass 1 SUBSTANTIVE — 14 findings FIXED; Pass 2 pending) |
+| **Position** | Phase 2-adv Pass 2 COMPLETE. 5 findings FIXED (0C/0H/3M/1L). S-2.02 H-021 stale ref fixed; 3 BC mis-anchorings in Pre-existing Test Coverage appendix fixed. Trajectory 14→5. Counter 0/3 clean passes. Next: Phase 2-adv Pass 3. |
+| **Convergence counter** | 0/3 (Phase 2-adv; Pass 2 SUBSTANTIVE — 5 findings FIXED; Pass 3 pending) |
 
 ## Historical Content
 

@@ -108,7 +108,7 @@ Note: S-2.03's S-0.03 dependency was demoted to a recommended merge order (no lo
 | S-2.03 | BC-4 assets/CMDB holdout suite | BC-4.2.001, BC-4.3.002, BC-4.2.006 | H-037, H-038, H-039 | draft | small |
 | S-2.04 | BC-5/7 boards, sprints, ADF holdout suite | BC-5.2.001, BC-5.2.005, BC-7.2.001 | H-040..H-044 | draft | medium |
 | S-2.05 | CLAUDE.md documentation update | NFR-O-L, NFR-O-M, NFR-O-O, NFR-O-V, NFR-R-F | — | draft | small |
-| S-2.06 | Worklog duration config + CMDB cache tuple | NFR-R-C, BC-X.9.001, BC-6.2.013 | — | draft | medium |
+| S-2.06 | Worklog duration config + CMDB cache tuple | NFR-R-C, BC-X.5.009, BC-6.2.013 | — | draft | medium |
 | S-2.07 | JSON output policy + test naming convention | NFR-O-F, NFR-O-J, NFR-O-W | H-020 | draft | medium |
 
 Wave 2 story files: `stories/wave-2/S-2.NN-*.md`
@@ -196,8 +196,8 @@ into the story's test file if the story creates a new file for that BC area.
 | H-011 | BC-6.1.001 (legacy config migration + idempotency) | `tests/migration_legacy.rs` | 94, 146 | (no story anchor — gap, see below) |
 | H-012 | BC-1.1.001 (auth method dispatch on scope mismatch) | `tests/api_client.rs` | 100, 184, 219 | (no story anchor — gap, see below) |
 | H-015 | BC-X.6.001 (--all + --limit clap mutual exclusion) | `tests/cli_smoke.rs` | 263 | (no story anchor — gap, see below) |
-| H-017 | BC-X.8.003 (build_asset_clause JQL correctness) | `src/jql.rs` | 278–308 | (no story anchor — gap, see below) |
-| H-018 | BC-X.9.001 (parse_duration combined units: 1h30m) | `src/duration.rs` | 92 | S-2.06 |
+| H-017 | BC-4.1.002 (AQL clause uses field NAME + capital Key) | `src/jql.rs` | 278–308 | (no story anchor — gap, see below) |
+| H-018 | BC-X.5.005 / BC-X.9.002 (parse_duration combined units vs validate_duration) | `src/duration.rs::tests::test_complex` | 90 | S-2.06 |
 | H-019 | BC-6.4.001 (validate_profile_name rejects reserved/invalid names) | `src/config.rs` | 759, 769 | (no story anchor — gap, see below) |
 | H-021 | BC-2.1.007 (--status ambiguous short-circuit, no JQL fired) | `tests/issue_list_errors.rs` | 369 | S-2.01 (AC-007) |
 | H-023 | BC-2.1.012 (--asset substring ambiguous rejection) | `tests/assets.rs` | 1485, 1553 | S-2.01 (via BC-2.1.012 in bc_anchors) |
