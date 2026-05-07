@@ -11,7 +11,7 @@ input-hash: "[live-state]"
 traces_to: ""
 project: jira-cli
 mode: BROWNFIELD
-current_step: "phase-2-adv-pass-7-pending"
+current_step: "phase-2-adv-pass-7-complete"
 current_cycle: "cycle-001"
 dtu_required: false
 activation_head: "dea166471e22eff55974d7675593469b37048c5f"
@@ -33,7 +33,7 @@ activation_version: "v0.5.0-dev.7"
 | **Target Workspace** | develop → main |
 | **Started** | 2026-05-04 |
 | **Last Updated** | 2026-05-06 |
-| **Current Phase** | Phase 2-adv — Adversarial Story Review (active; Pass 6 complete; 0/3) |
+| **Current Phase** | Phase 2-adv — Adversarial Story Review (active; Pass 7 complete; 0/3) |
 | **Next Phase** | phase-3-tdd-implementation |
 | **Activation HEAD** | dea166471e22eff55974d7675593469b37048c5f (v0.5.0-dev.7) |
 | **factory-artifacts SHA** | 0b01262 (Phase 1 gate APPROVE; phase-1-converged tag) |
@@ -52,7 +52,7 @@ Goal 1c: **Harden v0.5 + feature delivery** — formalize existing codebase with
 | 1d: Adversarial Spec Review | **COMPLETE** — **3/3 CONVERGED** at Pass 28 after 28 passes (5 counter resets, 3 consecutive clean P26-P27-P28) | 2026-05-04 | 2026-05-04 | 3/3 FULL CONVERGENCE | 30→15→9→5→10→5→4→3→4→0→2→0→3→0→2→0→3→0→3→5→3→4→5→5→5→2→0→0→0 |
 | 1-gate-prep: Consistency Validation + Drift Items | **COMPLETE** | 2026-05-06 | 2026-05-04 | DEC-006/007/008 resolved; ADR-0013 created | CV: 4H/1M; CV-001/003/005 FIXED; CV-002 resolved (SD-001=C/SD-002=A/SD-003=B); CV-004 DRIFT-002 resolved post-SD-002 |
 | 2: Story Decomposition | **complete** (story creation phase) | 2026-05-04 | 2026-05-06 | 30 stories created (W0:7 + W1:8 + W2:7 + W3:8); Phase 2-adv pending | |
-| 2-adv: Adversarial Story Review | **active** — Pass 6 COMPLETE (5 findings FIXED; REGRESSION +1) | 2026-05-06 | | 3 consecutive CLEAN-PASS required | 14→5→5→5→4→5 |
+| 2-adv: Adversarial Story Review | **active** — Pass 7 COMPLETE (4 findings FIXED; -1 delta) | 2026-05-06 | | 3 consecutive CLEAN-PASS required | 14→5→5→5→4→5→4 |
 | 3: TDD Implementation | not-started | | | | |
 | 3-adv: Wave Adversarial Reviews | not-started | | | | |
 | 4: Holdout Evaluation | not-started | | | | |
@@ -66,11 +66,11 @@ Goal 1c: **Harden v0.5 + feature delivery** — formalize existing codebase with
 
 | Step | Agent | Status | Output |
 |------|-------|--------|--------|
-| Phase 2-adv Pass 2 + fixes | adversary + state-manager | complete | 5 FIXED (0C/0H/3M/1L); S-2.02 H-021 propagation; 3 BC mis-anchorings in appendix; counter 0/3 |
 | Phase 2-adv Pass 3 + fixes | adversary + state-manager | complete | 5 FIXED (0C/1H/3M/1L); WAVE-PLAN v1.1.0 (Wave 1/2/3 concrete tables); GAP-H-006 BC fix; S-2.07 H-020; S-1.06 H-008 OoS; S-2.06 AC-005 precision |
 | Phase 2-adv Pass 4 + fixes | adversary + state-manager | complete | 5 FIXED (0C/0H/4M/1L); WAVE-PLAN ↔ STORY-INDEX sibling sync (P-001/002/003); S-0.01 Test Plan decisive (Option 1 constructor); S-0.02 OffsetPage accessors deterministic (pub fields); DRIFT-003 added |
 | Phase 2-adv Pass 5 + fixes | adversary + state-manager | complete | 4 FIXED (0C/1H/1M/2L); S-3.07 BC anchors + AC-006/007 trace BC-1.1.007→BC-6.4.001; S-3.05 Holdout Strategy added (H-038 regression pin); S-1.06 depends_on:S-0.05 propagated to WAVE-PLAN+STORY-INDEX; STORY-INDEX:163 exit gate cites AC-002/AC-006 |
 | Phase 2-adv Pass 6 + fixes | adversary + state-manager | complete | 5 FIXED (1C/1H/2M/1L); BC-6.4.* → BC-6.1.* (7 sites); BC-2.1.001 mis-anchor removed from S-3.07; STORY-INDEX:151 sync; S-3.04:237 AC pair; STORY-INDEX:62 prose; DRIFT-004 added |
+| Phase 2-adv Pass 7 + fixes | adversary + state-manager | complete | 4 FIXED (0C/1H/2M/1L); R-M5→R-M2 in S-3.04 (semantic mis-anchor); STORY-INDEX:108 BC-2.1.013 added (DRIFT-003 recurrence); S-2.05 BC-6.1.001 removed (fabricated anchor; doc-only traces NFRs directly); S-1.06 ADR-0013 annotated (forward-ref) |
 
 ## Decisions Log
 
@@ -137,7 +137,7 @@ convergence_trajectory:
 ```
 
 ### Phase 2-adv — Adversarial Story Review
-_Pass 6 SUBSTANTIVE (5 findings, all FIXED; REGRESSION +1 from P5). Counter 0/3. Pass 7 pending._
+_Pass 7 SUBSTANTIVE (4 findings, all FIXED; -1 delta from P6). Counter 0/3. Pass 8 pending._
 
 ```yaml
 phase-2-adv-convergence:
@@ -201,6 +201,16 @@ phase-2-adv-convergence:
     clean_pass: false
     clean_pass_count: "0/3"
     note: "CRITICAL discovery: BC-6.4.* dangling in STORY-INDEX (since corpus inception, propagated by P5 fix). Fresh-context BC catalog walk surfaced this. Replaced 7 sites with BC-6.1.004/BC-6.1.005. BC-2.1.001 mis-anchor removed from S-3.07 (anti-loop guard now NFR-R-F-anchored only). 4 P5 propagation gaps caught + fixed. DRIFT-004 added."
+  - pass: 7
+    findings: 4
+    severity: "0C/1H/2M/1L"
+    addressed: 4
+    delta: -1
+    trend: ASYMPTOTIC
+    fixes_committed: true
+    clean_pass: false
+    clean_pass_count: "0/3"
+    note: "P6 fixes 5/5 verified clean. DRIFT-004 deep BC sweep CLEAN. New finding classes: risk_anchors semantic mis-anchor (R-M5→R-M2 in S-3.04); fabricated BC anchor (S-2.05 BC-6.1.001 stretched paraphrase, removed); STORY-INDEX:108 BC-2.1.013 propagation gap (DRIFT-003 recurrence); S-1.06 ADR-0013 forward-ref annotated. Trajectory 14→5→5→5→4→5→4."
 ```
 
 ### Phase 3-adv — Wave Adversarial Reviews (per-story + wave)
@@ -224,8 +234,8 @@ convergence_trajectory: []
 | Field | Value |
 |-------|-------|
 | **Date** | 2026-05-06 |
-| **Position** | Phase 2-adv Pass 6 COMPLETE. 5 findings FIXED (1C/1H/2M/1L). CRITICAL: BC-6.4.* dangling refs replaced with BC-6.1.004/BC-6.1.005 at 7 sites (S-3.07 frontmatter/body/AC traces; STORY-INDEX:202,221,224). BC-2.1.001 mis-anchor removed from S-3.07 — anti-loop guard is NFR-R-F DOCUMENT-AS-IS only. STORY-INDEX:151 S-3.07 BC list synced (BC-6.1.004 added). S-3.04:237 H-047 flip cites AC-002+AC-006. STORY-INDEX:62 S-1.06 dep reflected. DRIFT-004 added. Trajectory 14→5→5→5→4→5. Counter 0/3. Next: Phase 2-adv Pass 7. |
-| **Convergence counter** | 0/3 (Phase 2-adv; Pass 6 SUBSTANTIVE — REGRESSION +1; 5 findings FIXED; Pass 7 pending) |
+| **Position** | Phase 2-adv Pass 7 COMPLETE. 4 findings FIXED (0C/1H/2M/1L). S-3.04 risk_anchors R-M5→R-M2 (semantic mis-anchor on multi-cloudId fix). STORY-INDEX:108 BC-2.1.013 added (S-2.02 frontmatter↔index sync; DRIFT-003 recurrence). S-2.05 BC-6.1.001 fabricated anchor removed — doc-only story traces NFRs directly (DOCUMENT-AS-IS routing). S-1.06 ADR-0013 forward-ref annotated (file exists at gate transition; Decision Log entry awaits S-3.09). P6 fixes 5/5 verified clean. DRIFT-004 deep BC sweep CLEAN. Trajectory 14→5→5→5→4→5→4. Counter 0/3. Next: Phase 2-adv Pass 8. |
+| **Convergence counter** | 0/3 (Phase 2-adv; Pass 7 SUBSTANTIVE — -1 delta; 4 findings FIXED; Pass 8 pending) |
 
 ## Historical Content
 
