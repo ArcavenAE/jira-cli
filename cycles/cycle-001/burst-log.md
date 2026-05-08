@@ -1031,7 +1031,7 @@ Gate status: PENDING. Orchestrator dispatches Phase 3-adv next.
 **develop SHA at gate open:** ca22be0 (S-2.07 merge, pre-gate)
 **develop SHA at gate close:** 6cb9994 (post-WV2-SEC-01 PR #310)
 **factory-artifacts SHA at gate open:** 7fd17bf (Fix-PR B)
-**factory-artifacts SHA at gate close:** PLACEHOLDER_SHA (this commit)
+**factory-artifacts SHA at gate close:** b92ee5d (this commit)
 
 ### Gate Sequence Summary
 
@@ -1047,7 +1047,7 @@ Gate status: PENDING. Orchestrator dispatches Phase 3-adv next.
 | Fix-PR B (NFR sweep) | spec-steward | nfr-catalog.md; 11 NFRs RESOLVED | factory-artifacts `7fd17bf` |
 | WV2-SEC-01 fix | implementer + pr-manager | PR #310 squash-merged at `6cb9994` | develop `6cb9994` |
 | Consistency pass-02 | consistency-validator | DRIFT-FOUND, GATE-PASSES; 3 new minor drift items | factory-artifacts `8ae5511` |
-| Gate-close state update | state-manager | BC-INDEX/CANONICAL-COUNTS count fixup; WV2-SEC-01 RESOLVED notation; STATE.md/sprint-state finalized | factory-artifacts PLACEHOLDER_SHA (this commit) |
+| Gate-close state update | state-manager | BC-INDEX/CANONICAL-COUNTS count fixup; WV2-SEC-01 RESOLVED notation; STATE.md/sprint-state finalized | factory-artifacts b92ee5d (this commit) |
 
 ### Fix-PR Summary
 
@@ -1080,7 +1080,7 @@ Gate status: PENDING. Orchestrator dispatches Phase 3-adv next.
 ### Gate Close State
 
 - develop: `6cb9994` — post-WV2-SEC-01 (PR #310); 1109 pass / 0 fail / 13 ignored (adding 1 new test from PR #310)
-- factory-artifacts: PLACEHOLDER_SHA (this commit)
+- factory-artifacts: b92ee5d (this commit)
 - Phase 3 progress (corrected): **22/31 (71%)** (Wave 0:7 + Wave 1:8 + Wave 2:7 = 22 of original 31 stories)
 - Wave 3 scope: 10 stories (S-3.01..S-3.10), status `blocked` → unblocked by Wave 2 gate closure
 - Next: Wave 3 first-story scoping and story-writer dispatch

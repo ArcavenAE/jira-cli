@@ -36,7 +36,7 @@ activation_version: "v0.5.0-dev.7"
 | **Language** | Rust |
 | **Target Workspace** | develop → main |
 | **Started** | 2026-05-04 |
-| **Last Updated** | 2026-05-08 (Wave 2 INTEGRATION GATE CLOSED — verdict: GATE-PASSES per consistency pass-02. develop @ 6cb9994; factory-artifacts @ PLACEHOLDER_SHA; ready for Wave 3 start) |
+| **Last Updated** | 2026-05-08 (Wave 2 INTEGRATION GATE CLOSED — verdict: GATE-PASSES per consistency pass-02. develop @ 6cb9994; factory-artifacts @ b92ee5d; ready for Wave 3 start) |
 | **Current Phase** | Phase 3 — TDD Implementation **IN PROGRESS** — Wave 2 GATE CLOSED. Wave 0 COMPLETE 7/7; Wave 1 COMPLETE 8/8; Wave 2 COMPLETE 7/7 + gate PASSED; Wave 3: 10 stories ready (incl. S-3.10 from S-2.06 follow-up). |
 | **Next Phase** | Wave 3 — 10 stories (S-3.01..S-3.10) |
 | **Activation HEAD** | dea166471e22eff55974d7675593469b37048c5f (v0.5.0-dev.7) |
@@ -75,7 +75,7 @@ Goal 1c: **Harden v0.5 + feature delivery** — formalize existing codebase with
 | S-2.05 MERGED — CLAUDE.md doc update | devops-engineer | complete | PR #307 squash-merged to develop at 7f004ca (2026-05-08); doc-only — 6 NFRs DOCUMENT-AS-IS + bonus NFR-O-H; 51/0 insertions; 8/8 CI green; APPROVE 1 cycle; 0 blocking; 1 LOW deferred (S-2.05-DEFER-01). Wave 2: 5/7. Phase 3: 21/31 (68%). |
 | S-2.06 MERGED — Worklog timeSpent passthrough + CMDB cache pin | devops-engineer | complete | PR #308 squash-merged to develop at c8f15d8 (2026-05-08); v2.0.0 pivot after Perplexity verification BLOCKED v1; production code change (NOT holdout-only); `parse_duration_validate` validator + `timeSpent` string passthrough resolves NFR-R-C without admin endpoint or cache; 6/6 ACs; 8/8 CI; APPROVE 1 cycle; 0 blocking; 3 LOW deferred (calculator preservation + 2 reviewer nits). Wave 2: 6/7. Phase 3: 22/31 (71%). |
 | S-2.07 MERGED — Auth JSON + verb-aligned policy + test naming | devops-engineer | complete | PR #309 squash-merged to develop at ca22be0 (2026-05-08); v2.0.0 pivot after Perplexity verification (DEC-011); 4 auth subcommands now emit JSON; auth refresh asymmetric shape preserved; AC-003 already-passed by main.rs wrapper; 7 commits → squash; +6 tests (4 snapshots + 2 refresh regression-pin); 8/8 CI; APPROVE 1 cycle; 0 blocking; 2 LOW deferred (S-2.07-DEFER-01/02). **Wave 2 COMPLETE 7/7.** Phase 3: 23/31 (74%). |
-| Wave 2 INTEGRATION GATE — CLOSED | orchestrator + reviewers | complete | 5 gate reviewers + 4 fix-PRs landed across 24h. Pass-02 verdict: GATE-PASSES. develop @ 6cb9994; factory-artifacts @ PLACEHOLDER_SHA. 2 deferred test-docstring follow-ups; all spec/anchor BLOCKERs RESOLVED. |
+| Wave 2 INTEGRATION GATE — CLOSED | orchestrator + reviewers | complete | 5 gate reviewers + 4 fix-PRs landed across 24h. Pass-02 verdict: GATE-PASSES. develop @ 6cb9994; factory-artifacts @ b92ee5d. 2 deferred test-docstring follow-ups; all spec/anchor BLOCKERs RESOLVED. |
 | Wave 3 START — pre-flight check | orchestrator | active | 10 stories: S-3.01..S-3.10. Pre-flight: confirm all Wave 2 deferred items tracked in Drift Items (WV2-FIX-A-FOLLOWUP-01/02 + S-2.04-DOC-01 + S-2.05-DEFER-01 + S-2.06-DEFER-01 + still-open consistency items WV2-CV-03/WV2-CV-11/WV2-CV-12). Wave 3 first story candidate: TBD (story-writer planning). |
 
 ## Decisions Log
@@ -182,7 +182,7 @@ _Not started._
 | Field | Value |
 |-------|-------|
 | **Date** | 2026-05-08 |
-| **Position** | **Wave 2 INTEGRATION GATE CLOSED — verdict: GATE-PASSES** (consistency pass-02 `8ae5511`). All 4 BLOCKING findings RESOLVED via Fix-PR A `28b0f35` + Fix-PR B `7fd17bf` + WV2-SEC-01 PR #310 `6cb9994`. 2 develop-side test docstring re-anchorings deferred (WV2-FIX-A-FOLLOWUP-01/02). 3 minor count-rollup drift items (P2-CV-01/02/03) addressed inline in this gate-close commit. Phase 3 progress: **22/31 (71%)** — count audited and corrected (7+8+7=22; prior 23 was off-by-one). develop @ 6cb9994; factory-artifacts @ PLACEHOLDER_SHA. **Next: Wave 3 first-story scoping** (story-writer dispatch with Wave 3 backlog: S-3.01..S-3.10). |
+| **Position** | **Wave 2 INTEGRATION GATE CLOSED — verdict: GATE-PASSES** (consistency pass-02 `8ae5511`). All 4 BLOCKING findings RESOLVED via Fix-PR A `28b0f35` + Fix-PR B `7fd17bf` + WV2-SEC-01 PR #310 `6cb9994`. 2 develop-side test docstring re-anchorings deferred (WV2-FIX-A-FOLLOWUP-01/02). 3 minor count-rollup drift items (P2-CV-01/02/03) addressed inline in this gate-close commit. Phase 3 progress: **22/31 (71%)** — count audited and corrected (7+8+7=22; prior 23 was off-by-one). develop @ 6cb9994; factory-artifacts @ b92ee5d. **Next: Wave 3 first-story scoping** (story-writer dispatch with Wave 3 backlog: S-3.01..S-3.10). |
 | **Convergence counter** | 3/3 CONVERGED Phase 2-adv; Phase 3-adv: Wave 2 gate CLOSED (adversary pass-01 `ded2210` + consistency pass-01 `4918e6e` + pass-02 `8ae5511`) |
 
 ## Historical Content
