@@ -1,7 +1,7 @@
 # sprint-state.yaml
 # Phase 3 TDD Implementation — Wave-based story delivery state
 # Initialized: 2026-05-07
-# Updated: 2026-05-08 (S-2.05 MERGED via PR #307 at 7f004ca; S-2.06 active; Wave 2 progress 5/7 merged)
+# Updated: 2026-05-08 (S-2.06 MERGED via PR #308 at c8f15d8; S-2.07 active (LAST Wave 2 story); Wave 2 progress 6/7 merged)
 
 active_wave: 2
 wave_0_progress: "7/7 — WAVE 0 COMPLETE"  # All stories merged/delivered: S-0.01..S-0.06 via PRs #289-#294; S-0.07 spec-only via factory-artifacts direct
@@ -114,7 +114,7 @@ wave_0_exit_gate: "PASSED — All 4 MUST-FIX stories green; SD-002 and SD-003 im
 wave_1_progress: "8/8 — WAVE 1 COMPLETE"
 wave_1_exit_gate: "PASSED — All 8 Wave 1 stories merged via PRs #295-#302. 0 regressions; ~50 new tests; 5 deferred items + 1 PENDING_MANUAL. 2026-05-08."
 
-wave_2_progress: "5/7 — S-2.01..S-2.05 MERGED"
+wave_2_progress: "6/7 — S-2.01..S-2.06 MERGED"
 
 wave_1:
   status: active
@@ -252,9 +252,37 @@ wave_2:
       deviation_note: "Doc-only story; no test-writer or demo-recorder phase. PR body is the evidence (embedded grep checks). No demo-evidence directory created."
       notes: "Documentation-only delivery. 6 NFRs resolved as DOCUMENT-AS-IS (NFR-O-L/M/O/O/V/R + bonus NFR-O-H). Source comments added to search_users_all, search_assignable_users_by_project_all (users.rs) and get_changelog, search_issues, filter_tickets (issues.rs) using function names per Architecture Compliance Rules. CLAUDE.md updated with orphan module descriptions. 51 insertions / 0 deletions. Cargo.toml/Cargo.lock unchanged. 1 LOW deferred: S-2.05-DEFER-01 (pre-existing list.rs description text stale after S-2.05 adds view.rs + comments.rs sibling modules). Worktree cleanup complete."
     - id: S-2.06
-      title: "Worklog duration config + CMDB cache tuple"
+      title: "Worklog timeSpent server-side parsing + CMDB cache tuple pin"
+      type: production-code-change
+      status: completed
+      pr: 308
+      merge_sha: c8f15d8
+      merged_at: 2026-05-08
+      merged_via: "gh pr merge --squash --delete-branch"
+      feature_branch_commits: [b3d2500, 3d5a6ca, 15f509c, a5b64a2, 1d88d07]
+      bc_anchors: [BC-X.5.009, BC-6.2.013]
+      nfr_anchors: [NFR-R-C]
+      holdout_anchors: []
+      files_modified:
+        - "tests/worklog_duration_holdouts.rs (+589, NEW) — 6 holdout-style tests (AC-001..AC-006)"
+        - "src/duration.rs (+76) — added parse_duration_validate; old parse_duration preserved with SUPERSEDED-BY comment (format_duration proptest still uses it)"
+        - "src/api/jira/worklogs.rs (+8, -4) — add_worklog signature time_spent_seconds:u64 → time_spent:&str; POST body timeSpentSeconds(number) → timeSpent(string)"
+        - "src/cli/worklog.rs (+3, -3) — handle_add calls parse_duration_validate(&duration)? then passes &duration verbatim to add_worklog"
+        - "tests/worklog_commands.rs (+1, -1) — call-site update for new signature: 7200u64 → '2h'"
+        - "tests/common/fixtures.rs — extended for S-2.06 fixtures"
+        - "docs/demo-evidence/S-2.06/ — evidence-report.md, combined-transcript.txt, AC-003-invalid-duration-rejected.tape/.gif/.webm"
+      ci_result: "8/8 SUCCESS (Format, Clippy, Test ubuntu, Test macos, MSRV 1.85.0, Deny, Coverage, Secret Scan gitleaks)"
+      review_result: "APPROVE 1 cycle; 0 blocking findings; 2 nits non-blocking (3 LOW deferred)"
+      spec_pivot: "v1.0.0 BLOCKED 2026-05-08 by Perplexity verification — wrong endpoint (/configuration/timetracking returns provider config only), wrong field names (workingHoursPerDay/workingDaysPerWeek), wrong types (f64 not u32), admin-only endpoint. User chose Option 1: timeSpent string passthrough. v2.0.0 spec at factory-artifacts 37a4be6. Verification report at .factory/research/S-2.06-jira-timetracking-verification.md."
+      wire_change: "timeSpentSeconds(number) → timeSpent(string). Invisible to end users; CORRECT on all Jira instances (server applies own workingHoursPerDay/workingDaysPerWeek config)."
+      deferred:
+        - "S-2.06-DEFER-01 (LOW): parse_duration calculator preserved with SUPERSEDED-BY comment; delete when format_duration proptest is removed/refactored."
+        - "S-2.06-DEFER-02 (LOW): AC-003 stderr OR-chain is lenient — passes on any one of Nw/Nd/Nh/Nm; could require all four."
+        - "S-2.06-DEFER-03 (LOW): src/duration.rs:65 !found_any guard slightly defensive but logically sound. No action needed."
+      notes: "FIRST Wave 2 production-code change (all prior Wave 2 stories were regression-pin or doc-only). True Red Gate at b3d2500 (AC-001/002/003 FAIL; AC-004 COMPILE-ERROR gated with #[cfg(any())]; AC-005/006 PASS — inverted pin). Green Gate at a5b64a2: 6/6 pass, 0 regressions. 5-commit TDD chain: Red Gate (b3d2500) → impl (3d5a6ca) → un-gate AC-004 (15f509c) → fixup (a5b64a2) → demo evidence (1d88d07)."
+    - id: S-2.07
+      title: "JSON output policy + test naming convention"
       status: active
-    - { id: S-2.07, title: "JSON output policy + test naming convention", status: pending }
 
 wave_3:
   status: blocked

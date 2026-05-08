@@ -419,3 +419,95 @@ Comments only. Zero behavioral change. No function signatures altered. No contro
 | ID | Description | Severity |
 |----|-------------|----------|
 | S-2.05-DEFER-01 | CLAUDE.md `list.rs` description text reads 'list + view + comments' but `view.rs` and `comments.rs` are now separately documented sibling modules after S-2.05. Pre-existing text; not introduced by S-2.05. Target: bundle into next small CLAUDE.md cleanup PR. | LOW |
+
+---
+
+# Red Gate Log — S-2.06 (Worklog timeSpent server-side parsing + CMDB cache tuple pin)
+
+**Date:** 2026-05-08
+**Story:** S-2.06 (v2.0.0) — Worklog timeSpent string passthrough + CMDB cache tuple format pin
+**Test file:** `tests/worklog_duration_holdouts.rs` (589 lines, new)
+**Commits:** b3d2500 (Red Gate tests), 3d5a6ca (impl), 15f509c (un-gate AC-004), a5b64a2 (fixup), 1d88d07 (demo evidence)
+**Squash-merge SHA:** c8f15d8 (PR #308 to develop)
+**Branch:** deleted post-merge
+
+## Summary
+
+UNLIKE all prior Wave 2 stories (which were regression-pin / inverted Red Gate / documentation-only), S-2.06 has a TRUE Red Gate. Tests at b3d2500 FAIL for behavioral reasons before any production code is written, and pass GREEN only after implementation at a5b64a2.
+
+6 tests written across AC-001..AC-006. State at Red Gate (b3d2500 — BEFORE Step 4):
+- AC-001: FAIL (behavioral)
+- AC-002: FAIL (behavioral)
+- AC-003: FAIL (behavioral)
+- AC-004: COMPILE-ERROR Red Gate
+- AC-005: PASS (inverted pin)
+- AC-006: PASS (inverted pin)
+
+State at Green Gate (a5b64a2 — AFTER Step 4): 6/6 PASS.
+
+## Red Gate State (b3d2500 — BEFORE implementation)
+
+| Test | State at b3d2500 | Failure Mode | AC |
+|------|-----------------|-------------|-----|
+| AC-001: add_worklog sends timeSpent string | FAIL | Assertion error — POST body had `{"timespentseconds":28800}` (old path); test expected `"timeSpent": "1d"` string key in body | AC-001 |
+| AC-002: space-separated compound duration accepted | FAIL | `parse_duration` (old) rejected `"2d 3h 30m"` — spaces unsupported; command exited non-zero before reaching network | AC-002 |
+| AC-003: invalid duration rejected with exit 64 + Nw/Nd/Nh/Nm hint | FAIL | Exit code was `Some(1)` not `Some(64)`; stderr message read "Use w, d, h, or m" (old single-char hint) not new `Nw Nd Nh Nm` multi-char hint | AC-003 |
+| AC-004: parse_duration_validate function exists | COMPILE-ERROR | Gated with `#[cfg(any())]` because `parse_duration_validate` did not exist in `src/duration.rs`; tagged `// RED-GATE-COMPILE: replaced by implementer` | AC-004 |
+| AC-005: CMDB cache graceful degradation (Part A) | PASS | Inverted pin — existing CMDB graceful-degradation behavior already correct at activation HEAD | AC-005 |
+| AC-006: CMDB cache format regression pin (Part B) | PASS | Inverted pin — cache tuple format already correct at activation HEAD | AC-006 |
+
+### Failure Analysis — AC-001
+
+`add_worklog` in `src/api/jira/worklogs.rs` was computing `time_spent_seconds: u64 = parse_duration(&duration)? * 60` and sending `{"timespentseconds": <number>}` in the POST body. Test expected the new `timeSpent` string key. Correct FAIL for behavioral reason — the implementation had NOT changed yet.
+
+### Failure Analysis — AC-002
+
+`parse_duration` in `src/duration.rs` parsed single-unit and adjacent multi-unit formats (e.g., `1d2h`) but did not accept space-separated components (e.g., `"2d 3h 30m"`). The new `parse_duration_validate` explicitly handles space-separated tokens. Correct FAIL — old function did not exist, new function not yet written.
+
+### Failure Analysis — AC-003
+
+Old error path in `handle_add` used `parse_duration(&duration)` which returned a generic duration-parse error with exit code 1 and message "Use w, d, h, or m". New spec requires `parse_duration_validate` to return exit code 64 (usage error) and a hint using the multi-character unit names `Nw Nd Nh Nm`. Correct FAIL — old path not yet replaced.
+
+### Failure Analysis — AC-004 (COMPILE-ERROR Red Gate)
+
+`parse_duration_validate` was not yet defined in `src/duration.rs`. The test was gated with `#[cfg(any())]` to avoid a compile error that would prevent the other tests from running. This is the canonical compile-error Red Gate pattern: the compile guard lets the test exist in the file and be visible to future editors, but suppresses compilation until the function is defined. The implementer removed the `#[cfg(any())]` gate in a SEPARATE commit (15f509c) after `parse_duration_validate` was defined in 3d5a6ca.
+
+### Passing Tests — AC-005 / AC-006 (Inverted Pin)
+
+AC-005 and AC-006 pin CMDB cache graceful-degradation behavior (Part B of the story scope). This behavior was already correct at activation HEAD. Tests PASS on first run because they are regression-pin guards, not TDD drivers — the same inverted-Red-Gate framing as all prior Wave 2 test-only stories, applied here to the CMDB half of a hybrid story.
+
+## Green Gate State (a5b64a2 — AFTER implementation)
+
+All 6 ACs pass. Full test suite: 614 unit + integration suites; 13 ignored (pre-existing keyring-gated); 0 regressions.
+
+| Test | State at a5b64a2 | Notes |
+|------|----------------|-------|
+| AC-001: add_worklog sends timeSpent string | PASS | POST body now `{"timeSpent": "1d"}` |
+| AC-002: space-separated compound duration accepted | PASS | `parse_duration_validate("2d 3h 30m")` returns Ok(()) |
+| AC-003: invalid duration rejected with exit 64 + hint | PASS | Exit code 64; stderr contains `Nw`, `Nd`, `Nh`, `Nm` |
+| AC-004: parse_duration_validate function exists | PASS | `#[cfg(any())]` gate removed in 15f509c after 3d5a6ca defined the function |
+| AC-005: CMDB cache graceful degradation | PASS | Inverted pin holds |
+| AC-006: CMDB cache format regression pin | PASS | Inverted pin holds |
+
+## TDD Discipline Preserved
+
+- Tests committed BEFORE production code (b3d2500 precedes 3d5a6ca chronologically).
+- Implementer made minimal targeted changes per AC — no scope creep.
+- Un-gating of AC-004 happened in a SEPARATE commit (15f509c) after `parse_duration_validate` was confirmed defined in 3d5a6ca. This preserves the commit-level audit trail.
+- Old `parse_duration` calculator preserved in `src/duration.rs` with `SUPERSEDED-BY: parse_duration_validate (S-2.06); kept only for format_duration round-trip proptest` comment. `format_duration` round-trip proptest still calls it — this is intentional and documented.
+
+## Lib/Integration Baseline
+
+```
+test result: ok. 614 passed; 0 failed; 13 ignored; 0 measured; 0 filtered out
+```
+
+(13 ignored = pre-existing keyring-gated tests behind `#[ignore]`; 0 regressions)
+
+## Deferred
+
+| ID | Description | Severity |
+|----|-------------|----------|
+| S-2.06-DEFER-01 | src/duration.rs::parse_duration calculator preserved with SUPERSEDED-BY comment because format_duration round-trip proptest still uses it. Target: future cleanup story. | LOW |
+| S-2.06-DEFER-02 | AC-003 stderr OR-chain assertion is lenient (passes on any one of Nw/Nd/Nh/Nm). Could be tightened to require all four substrings. Reviewer nit. | LOW |
+| S-2.06-DEFER-03 | src/duration.rs:65 !found_any guard reachability is constrained by prior guards — logically sound but slightly defensive. Reviewer nit; no action needed. | LOW |

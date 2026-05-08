@@ -813,4 +813,61 @@ Wave 2: 5/7 merged (S-2.01, S-2.02, S-2.03, S-2.04, S-2.05). Phase 3 progress: 2
 |----|-------------|----------|
 | S-2.05-DEFER-01 | CLAUDE.md `list.rs` description still reads 'list + view + comments (read operations, unified JQL composition)'. After S-2.05, `view.rs` and `comments.rs` are now separately documented sibling modules. Pre-existing text; out of scope for S-2.05. Target: bundle into a future small CLAUDE.md cleanup PR. | LOW |
 
+---
+
+## Burst: S-2.06 DELIVERED — Worklog timeSpent server-side parsing + CMDB cache tuple pin (2026-05-08)
+
+**Story:** S-2.06 (v2.0.0 — pivoted from v1.0.0 after Perplexity verification 2026-05-08)
+**Agents dispatched:** research-agent (Perplexity) → story-writer (v2.0.0 pivot) → devops-engineer (worktree) → test-writer (Red Gate) → implementer (Green Gate) → demo-recorder → devops-engineer (push + pr-manager) → devops-engineer (worktree cleanup) → state-manager
+**Files touched (develop):** `tests/worklog_duration_holdouts.rs` (+589, NEW), `src/duration.rs` (+76), `src/api/jira/worklogs.rs` (+8, -4), `src/cli/worklog.rs` (+3, -3), `tests/worklog_commands.rs` (+1, -1), `tests/common/fixtures.rs` (extended), `docs/demo-evidence/S-2.06/` (evidence-report.md, combined-transcript.txt, AC-003-invalid-duration-rejected.tape/.gif/.webm)
+**Commits (feature branch):** b3d2500 (Red Gate tests), 3d5a6ca (impl: parse_duration_validate + timeSpent passthrough), 15f509c (un-gate AC-004), a5b64a2 (fixup worklog_commands test + fmt), 1d88d07 (demo evidence)
+**Squash-merge SHA:** c8f15d8 (PR #308 squash-merged to develop, 2026-05-08)
+**Files touched (factory):** STATE.md, sprint-state.yaml, stories/STORY-INDEX.md, cycles/cycle-001/burst-log.md, cycles/cycle-001/implementation/red-gate-log.md
+
+### Pivot Narrative (v1.0.0 → v2.0.0)
+
+v1.0.0 of this story proposed fetching Jira's timetracking configuration via `/configuration/timetracking` to normalize `timeSpentSeconds` into a per-instance-correct integer. Research-agent (Perplexity) verified the approach on 2026-05-08 and found four blocking problems: the endpoint returns provider configuration, not hours-per-day or days-per-week settings; the field names in the Jira REST API docs are `workingHoursPerDay`/`workingDaysPerWeek`, not the names in the v1 spec; the field types are float64, not u32; and the endpoint is admin-only (v1 spec assumed non-admin). User chose **Option 1: timeSpent string passthrough** — pass the raw duration string (e.g., `"2h"`, `"1d"`, `"2d 3h 30m"`) directly as the `timeSpent` field, letting Jira's server parse it against its own instance config. This matches the `ankitpokhrel/jira-cli` pattern and eliminates the admin endpoint and cache dependencies entirely. v2.0.0 spec written by story-writer and committed to factory-artifacts at 37a4be6. Verification report at `.factory/research/S-2.06-jira-timetracking-verification.md`.
+
+### Summary
+
+S-2.06 (v2.0.0) delivered and merged via PR #308 to develop at squash SHA c8f15d8. This is the FIRST Wave 2 story with a production code change (all prior Wave 2 stories were regression-pin holdout suites or documentation-only). The story resolves NFR-R-C — the pre-existing hardcoded 8h/5d assumption in `add_worklog` — by switching the POST body from `{"timeSpentSeconds": <computed number>}` to `{"timeSpent": "<raw string>"}`. Jira's server applies its own `workingHoursPerDay`/`workingDaysPerWeek` instance configuration at parse time, making the behaviour correct on all Jira instances without any admin-level API call.
+
+Wire-protocol change: `timeSpentSeconds` (number) → `timeSpent` (string). Invisible to end users; visible to anyone proxying requests. End-user impact: inputs previously computed incorrectly on customized Jira instances (e.g., 7.5h/day, 4-day week) now resolve correctly. AC-002 makes `"2d 3h 30m"` (space-separated compound) valid input — strict superset of prior accepted formats, no regression.
+
+True Red Gate at b3d2500: AC-001/002/003 FAIL for behavioral reasons; AC-004 COMPILE-ERROR (gated with `#[cfg(any())]` because `parse_duration_validate` not yet defined); AC-005/006 PASS (inverted pin — CMDB graceful-degradation already correct). Green Gate at a5b64a2: 6/6 pass, 0 regressions across 614 unit + integration suites.
+
+8/8 CI green. Review: APPROVE, 1 cycle, 0 blocking findings, 2 nits non-blocking → 3 LOW deferred items. Worktree and local/remote branch fully cleaned up.
+
+Wave 2: 6/7 merged (S-2.01, S-2.02, S-2.03, S-2.04, S-2.05, S-2.06). Phase 3 progress: 22/31 (71%). Active story: S-2.07 (LAST Wave 2 story).
+
+### Delivery Details
+
+| Agent | Task | Output |
+|-------|------|--------|
+| research-agent (Perplexity) | Verify Jira timetracking API — endpoint correctness, field names, types, auth | Verification report: .factory/research/S-2.06-jira-timetracking-verification.md; v1.0.0 BLOCKED |
+| story-writer | Write v2.0.0 spec (Option 1 pivot: timeSpent string passthrough) | .factory/stories/wave-2/S-2.06-... updated; committed to factory-artifacts 37a4be6 |
+| devops-engineer | Create worktree + test-writer dispatch | Worktree for S-2.06 feature branch |
+| test-writer | Write 6 Red Gate tests (AC-001..AC-006) | b3d2500 (tests/worklog_duration_holdouts.rs, +589); AC-001/002/003 FAIL; AC-004 compile-error gated; AC-005/006 PASS (inverted pin) |
+| implementer | add parse_duration_validate + timeSpent passthrough; un-gate AC-004; fixup | 3d5a6ca (impl), 15f509c (un-gate AC-004), a5b64a2 (worklog_commands test update + fmt fix); all 6 ACs green |
+| demo-recorder | Record demo evidence for AC-003 (invalid duration rejection) | 1d88d07; docs/demo-evidence/S-2.06/ (evidence-report.md, combined-transcript.txt, AC-003-invalid-duration-rejected.tape/.gif/.webm) |
+| devops-engineer | Push branch, create PR #308, request review, merge --squash --delete-branch | c8f15d8 squash-merge SHA on develop; remote branch deleted |
+| devops-engineer | Worktree cleanup | Worktree removed; local branch deleted |
+| state-manager | Update STATE.md, sprint-state.yaml, STORY-INDEX.md, burst-log.md, red-gate-log.md; commit factory-artifacts | This commit |
+
+### BCs and NFR Resolved
+
+| Anchor | Resolution |
+|--------|-----------|
+| BC-X.5.009 | RESOLVED — add_worklog POST body uses timeSpent string; server parses per instance config |
+| BC-6.2.013 | RESOLVED — CMDB cache tuple format pinned (AC-005/AC-006 regression pin; no change needed) |
+| NFR-R-C | RESOLVED — timeSpent string passthrough eliminates hardcoded 8h/5d assumption |
+
+### Deferred
+
+| ID | Description | Severity |
+|----|-------------|----------|
+| S-2.06-DEFER-01 | src/duration.rs::parse_duration calculator preserved with SUPERSEDED-BY comment because format_duration round-trip proptest still uses it. If format_duration is later removed/refactored, the calculator can be deleted. Target: future cleanup story. | LOW |
+| S-2.06-DEFER-02 | tests/worklog_duration_holdouts.rs AC-003 stderr OR-chain assertion is lenient (passes if any one of Nw/Nd/Nh/Nm appears). Could be tightened to require all four substrings. Target: future test cleanup. | LOW |
+| S-2.06-DEFER-03 | src/duration.rs:65 !found_any guard reachability is constrained by prior guards — logically sound but slightly defensive. No action needed. | LOW |
+
 
