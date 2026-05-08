@@ -69,3 +69,25 @@ Wave 0 COMPLETE. 7/7 stories delivered. Final metrics:
 - **Pattern identified**: Admin merge dispatcher blocks required manual gh CLI invocation for PRs #293 and #294 — recurrence confirmed (Lesson 2). Codification candidate escalated to Wave 1 planning.
 
 _Recorded: S-0.07 delivery, 2026-05-07_
+
+---
+
+5. **Regression-pin discipline provides cheap forward-looking insurance** — Wave 1 holdout suites (S-1.06, S-1.07, S-1.08) each pinned existing behavior before implementing net-new coverage. All tests passed on current develop at time of authoring, confirming no regressions were already present. Writing regression tests while the code is fresh in mind is cheap; catching a future regression they prevent is very cheap. Codification candidate: story template for holdout suites should include explicit AC "all tests pass on HEAD at time of authoring" as merge prerequisite.
+   _Discovered: S-1.06/S-1.07/S-1.08, 2026-05-08_
+
+---
+
+## Wave 1 Retrospective (2026-05-08)
+
+Wave 1 COMPLETE. 8 stories delivered (3 facade CI/config + 1 strict observability + 4 strict regression-pin). PRs #295-#302.
+
+- **Mean time-per-story**: ~30-60 min from start to merge (smaller stories faster; S-1.06 OAuth suite took longer due to test breadth)
+- **Implementer deviation catch**: S-0.04 cache.rs scope-creep was surfaced and reverted before merge — PR-body Deviations section pattern validated across the full Wave 0→1 arc
+- **Mid-PR clippy fix**: S-1.03 required a SHOULD-FIX docstring commit (06c2252) due to Rust 1.95 vs local toolchain skew — Lesson 3 applies here; exact CI flag set should be matched locally
+- **Dispatcher pattern**: Wave 1 PRs #295-#302 all merged cleanly via non-admin squash-merge (no admin bypass needed) — Lesson 4 confirmed and stable for Wave 2
+- **0 production regressions** across 614 lib + integration tests
+- **5 deferred items + 1 PENDING_MANUAL**: manageable; none blocking Wave 2
+
+Lesson 5 candidate: regression-pin discipline — writing tests that pass on current code provides forward-looking insurance against future regressions; cheap to author when code is fresh in mind.
+
+_Recorded: Wave 1 COMPLETE, 2026-05-08_

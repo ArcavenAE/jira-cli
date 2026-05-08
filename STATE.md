@@ -11,7 +11,7 @@ input-hash: "[live-state]"
 traces_to: ""
 project: jira-cli
 mode: BROWNFIELD
-current_step: "phase-3-wave-1-S-1.08-start"
+current_step: "phase-3-wave-2-S-2.01-start"
 current_cycle: "cycle-001"
 dtu_required: false
 phase_2_status: APPROVED
@@ -36,9 +36,9 @@ activation_version: "v0.5.0-dev.7"
 | **Language** | Rust |
 | **Target Workspace** | develop → main |
 | **Started** | 2026-05-04 |
-| **Last Updated** | 2026-05-08 (S-1.07 MERGED via PR #301; Wave 1 progress 7/8) |
-| **Current Phase** | Phase 3 — TDD Implementation **IN PROGRESS** (Wave 0 COMPLETE 7/7; Wave 1 ACTIVE — 8 stories, 7/8 done; active: S-1.08 keychain round-trip holdout — final Wave 1 story) |
-| **Next Phase** | Phase 3 Wave 1 delivery |
+| **Last Updated** | 2026-05-08 (WAVE 1 COMPLETE — S-1.08 MERGED via PR #302; Wave 2 ACTIVE — S-2.01) |
+| **Current Phase** | Phase 3 — TDD Implementation **IN PROGRESS** (Wave 0 COMPLETE 7/7; Wave 1 COMPLETE 8/8 via PRs #295-#302; Wave 2 ACTIVE — 7 MEDIUM stories; active: S-2.01 issue-read holdout suite) |
+| **Next Phase** | Phase 3 Wave 2 delivery |
 | **Activation HEAD** | dea166471e22eff55974d7675593469b37048c5f (v0.5.0-dev.7) |
 | **factory-artifacts SHA** | 0b01262 (Phase 1 gate APPROVE; phase-1-converged tag) |
 
@@ -58,7 +58,7 @@ Goal 1c: **Harden v0.5 + feature delivery** — formalize existing codebase with
 | 2: Story Decomposition | **complete** (story creation phase) | 2026-05-04 | 2026-05-06 | 31 stories created (W0:7 + W1:8 + W2:7 + W3:9); Phase 2-adv pending | |
 | 2-adv: Adversarial Story Review | **CONVERGED** — Pass 13 CLEAN-PASS; Counter 3/3 | 2026-05-06 | 2026-05-07 | 3/3 FULL CONVERGENCE | 14→5→5→5→4→5→4→4→4→1→0→1→0 |
 | Phase 2 gate | **APPROVED** (2026-05-07) — 31 stories locked, ready for TDD | — | 2026-05-07 | APPROVED by human | — |
-| 3: TDD Implementation | **IN_PROGRESS** — Wave 0 COMPLETE (7/7); Wave 1 progress 7/8 | 2026-05-07 | | | Wave 0: COMPLETE — 7/7 stories via PRs #289-#294 + S-0.07 spec-only. Wave 1: S-1.01 MERGED at adae3c5 — PR #295; 20 GitHub Actions pinned to SHAs; 0 deferred. S-1.02 MERGED at 88a2e02 — PR #296; deny.toml tightened (4 settings to "deny", 22 skip entries documented); NFR-S-F satisfied; 7/7 CI green; review APPROVE 1 cycle; 1 deferred (S-1.02-DEFER: dedupe tracking). S-1.03 MERGED at 2d64112 — PR #297; tracing crate + tracing-subscriber wired in main.rs/client.rs/auth.rs; NFR-O-A satisfied; SD-003 contract preserved; 7/7 CI green; review APPROVE 1 cycle (1 SHOULD-FIX docstring fix applied as 06c2252); 1 deferred (S-1.03-DEFER body-tracing → Wave 2). S-1.04 MERGED at e0ea180 — PR #298; 8 timeout-minutes added across ci.yml (6) + release.yml (2); R-L12 satisfied; 7/7 CI green; review APPROVE 0 blocking; 3 deferred (DEFER-01/02/03). S-1.05 MERGED at da4c5275 — PR #299; gitleaks/gitleaks-action@ff98106e (v2.3.9) added as security CI job (PR-only, 10m timeout, contents:read); .gitleaks.toml allowlist; 8/8 CI green; review 2 cycles APPROVE (1 SHOULD-FIX: removed blanket tests/.* allowlist); 2 deferred (DEFER-01 Node.js 24 deadline, AC-001 pending manual repo Settings toggle). S-1.06 MERGED at f49af67 — PR #300; 11 regression-pin tests for OAuth flow (H-001..H-006, H-022, H-029); all pass on current develop (no regressions discovered); 8/8 CI green; review APPROVE 1 cycle; 0 deferred. S-1.07 MERGED at 5813059 — PR #301; 6 rate-limit regression tests (H-013, H-027); KNOWN-GAP at AC-002 flips when S-3.07 NFR-R-NEW-1 lands; 8/8 CI; review APPROVE 1 cycle. Phase 3 Wave 1 progress: 7/8 (final story next). |
+| 3: TDD Implementation | **IN_PROGRESS** — Wave 0 COMPLETE (7/7); **WAVE 1 COMPLETE (8/8)** via PRs #295-#302; Wave 2 ACTIVE — S-2.01 active | 2026-05-07 | | | Wave 0: COMPLETE — 7/7 stories via PRs #289-#294 + S-0.07 spec-only. Wave 1: COMPLETE — 8/8 stories via PRs #295-#302 (2026-05-08); 0 production regressions; ~50 new tests; 5 deferred + 1 PENDING_MANUAL (S-1.05-AC-001). Full Wave 1 narrative: `cycles/cycle-001/wave-1-summary.md`. Wave 2: ACTIVE — 7 MEDIUM holdout-suite stories (issue-read/write, board/sprint, assets, config, worklog, doc-as-tested). Phase 3 progress: 16/31 (~52%). |
 | 3-adv: Wave Adversarial Reviews | not-started | | | | |
 | 4: Holdout Evaluation | not-started | | | | |
 | 5: Adversarial Refinement | not-started | | | | |
@@ -71,11 +71,11 @@ Goal 1c: **Harden v0.5 + feature delivery** — formalize existing codebase with
 
 | Step | Agent | Status | Output |
 |------|-------|--------|--------|
-| S-1.04 MERGED — CI job timeouts | devops-engineer | complete | PR #298 squash-merged to develop at e0ea180 (2026-05-07); 8 timeout-minutes added (6 ci.yml + 2 release.yml); R-L12 satisfied; 7/7 CI green; APPROVE 0 blocking; 3 deferred (DEFER-01/02/03). Wave 1: 4/8. |
-| S-1.05 MERGED — GitHub secret scanning | devops-engineer | complete | PR #299 squash-merged to develop at da4c5275 (2026-05-08); gitleaks/gitleaks-action@ff98106e (v2.3.9) PR-only CI job (10m timeout, contents:read); .gitleaks.toml allowlist; 8/8 CI green; review 2 cycles APPROVE (1 SHOULD-FIX: blanket tests/.* allowlist removed); 2 deferred (S-1.05-DEFER-01 Node.js 24 deadline Jun 2026, S-1.05-AC-001 PENDING_MANUAL repo Settings → Secret scanning). Wave 1: 5/8. |
-| S-1.06 MERGED — OAuth flow holdout suite | devops-engineer | complete | PR #300 squash-merged to develop at f49af67 (2026-05-08); 11 regression-pin tests for H-001..H-006, H-022, H-029; all pass on current develop (no regressions discovered); 8/8 CI green; review APPROVE 1 cycle; 0 deferred findings. Wave 1: 6/8. |
-| S-1.07 MERGED — Rate-limit holdout suite | devops-engineer | complete | PR #301 squash-merged to develop at 5813059 (2026-05-08); 6 regression-pin tests for H-013 (send_raw 429) + H-027 (Retry-After parsing); KNOWN-GAP at AC-002 flips when S-3.07 NFR-R-NEW-1 lands; 8/8 CI green; review APPROVE 1 cycle; 0 deferred. Wave 1: 7/8. |
-| S-1.08 START — Keychain round-trip holdout | orchestrator | active | Final Wave 1 story. Active: implementer or test-writer. Wave 1 completes on S-1.08 merge. |
+| S-1.06 MERGED — OAuth flow holdout suite | devops-engineer | complete | PR #300 squash-merged to develop at f49af67 (2026-05-08); 11 regression-pin tests for H-001..H-006, H-022, H-029; 8/8 CI green; review APPROVE 1 cycle; 0 deferred. Wave 1: 6/8. |
+| S-1.07 MERGED — Rate-limit holdout suite | devops-engineer | complete | PR #301 squash-merged to develop at 5813059 (2026-05-08); 6 regression-pin tests for H-013 + H-027; KNOWN-GAP at AC-002 flips when S-3.07 lands; 8/8 CI green; review APPROVE 1 cycle; 0 deferred. Wave 1: 7/8. |
+| S-1.08 MERGED — Keychain round-trip holdout | devops-engineer | complete | PR #302 squash-merged to develop at ab19783 (2026-05-08); 17 regression-pin tests (14 lib + 3 integration) for keychain layout holdout suite; 8/8 CI green; review APPROVE 1 cycle; 0 deferred. **WAVE 1 COMPLETE — 8/8.** |
+| WAVE 1 COMPLETE | state-manager | complete | Wave 1 COMPLETE 2026-05-08. 8/8 stories via PRs #295-#302. 0 regressions; ~50 new tests; 5 deferred + 1 PENDING_MANUAL. Narrative archived to `cycles/cycle-001/wave-1-summary.md`. |
+| S-2.01 START — Issue-read holdout suite | orchestrator | active | Wave 2 ACTIVE. S-2.01 worktree at `.worktrees/S-2.01-bc-2-issue-read-holdout-suite/` branch `test/bc-2-issue-read-holdout-suite`. Phase 3 progress: 16/31 (~52%). |
 
 ## Decisions Log
 
@@ -155,7 +155,7 @@ _Not started._
 | Field | Value |
 |-------|-------|
 | **Date** | 2026-05-08 |
-| **Position** | S-1.07 merged (PR #301 at 5813059). Wave 1 progress: 7/8 (87.5%). Active story: S-1.08 (keychain round-trip holdout — final Wave 1 story). Wave 1 will complete on S-1.08 merge. Open deferred: R1-001, R1-002, S-0.03-S1, S-0.05-F1, S-0.05-F2 (TO_VERIFY), S-0.05-F3, S-1.02-DEFER, S-1.03-DEFER (body-tracing → Wave 2), S-1.04-DEFER-01/02/03, S-1.05-DEFER-01 (Node.js 24 deadline Jun 2026). Manual user action still pending: AC-001 repo Settings → Code security → Secret scanning. Wave 0 holdouts active: H-045, H-046, H-036, H-NEW-MP-001, H-NEW-VERBOSE-001/002; H-NEW-AUTH-002 gated behind JR_RUN_RELEASE_AUTH_GATE_TEST=1. |
+| **Position** | WAVE 1 COMPLETE — S-1.08 merged (PR #302 at ab19783). 8/8 stories via PRs #295-#302. 0 production regressions; ~50 new tests. Wave 2 ACTIVE — S-2.01 (issue-read holdout suite) in progress at `.worktrees/S-2.01-bc-2-issue-read-holdout-suite/` on branch `test/bc-2-issue-read-holdout-suite`. Phase 3 progress: 16/31 (~52%). Open deferred: R1-001, R1-002, S-0.03-S1, S-0.05-F1, S-0.05-F2 (TO_VERIFY), S-0.05-F3, S-1.02-DEFER, S-1.03-DEFER, S-1.04-DEFER-01/02/03, S-1.05-DEFER-01 (Node.js 24 Jun 2026). Manual user action pending: S-1.05-AC-001 repo Settings → Code security → Secret scanning. |
 | **Convergence counter** | 3/3 CONVERGED (Phase 2-adv; Pass 13 CLEAN-PASS — final trajectory: 14→5→5→5→4→5→4→4→4→1→0→1→0) |
 
 ## Historical Content

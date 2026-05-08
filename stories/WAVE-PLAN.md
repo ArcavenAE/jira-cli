@@ -2,10 +2,11 @@
 document_type: wave-plan
 phase: phase-2-story-decomposition
 producer: story-writer
-version: "1.2.0"
-last_updated: 2026-05-07
+version: "1.3.0"
+last_updated: 2026-05-08
 wave_0_status: COMPLETE
-wave_1_status: ACTIVE
+wave_1_status: COMPLETE
+wave_2_status: ACTIVE
 activation_head: dea1664
 ---
 
@@ -50,18 +51,18 @@ Recommended parallel groups:
 
 ---
 
-## Wave 1 — HIGH-priority security posture, supply-chain hardening, structured logging, regression pinning (8 stories) — **ACTIVE**
+## Wave 1 — HIGH-priority security posture, supply-chain hardening, structured logging, regression pinning (8 stories) — **COMPLETE** (2026-05-08)
 
 | Story | Title | BC/NFR Anchors | Depends on | Status | Effort |
 |-------|-------|---------------|------------|--------|--------|
-| S-1.01 | Pin GitHub Actions SHAs | NFR-S-E, R-H6 | — | draft | small |
-| S-1.02 | cargo-deny supply-chain audit | NFR-S-F | — | draft | small |
-| S-1.03 | tracing/observability wire-up | NFR-O-A | S-0.06 | draft | medium |
-| S-1.04 | CI job timeouts | R-L12 | — | draft | xsmall |
-| S-1.05 | GitHub secret scanning | NFR-S-E, R-L13 | — | draft | small |
-| S-1.06 | OAuth flow holdout suite | BC-1.1.001/002, H-001..H-006, H-022, H-029 | S-0.05 | draft | medium |
-| S-1.07 | Rate-limit holdout suite | BC-X.1.005, BC-X.4.002, H-013, H-027 | — | draft | small |
-| S-1.08 | Keychain round-trip holdout | BC-1.4.027, BC-1.4.025, H-016 | — | draft | small |
+| S-1.01 | Pin GitHub Actions SHAs | NFR-S-E, R-H6 | — | merged (#295) | small |
+| S-1.02 | cargo-deny supply-chain audit | NFR-S-F | — | merged (#296) | small |
+| S-1.03 | tracing/observability wire-up | NFR-O-A | S-0.06 | merged (#297) | medium |
+| S-1.04 | CI job timeouts | R-L12 | — | merged (#298) | xsmall |
+| S-1.05 | GitHub secret scanning | NFR-S-E, R-L13 | — | merged (#299) | small |
+| S-1.06 | OAuth flow holdout suite | BC-1.1.001/002, H-001..H-006, H-022, H-029 | S-0.05 | merged (#300) | medium |
+| S-1.07 | Rate-limit holdout suite | BC-X.1.005, BC-X.4.002, H-013, H-027 | — | merged (#301) | small |
+| S-1.08 | Keychain round-trip holdout | BC-1.4.027, BC-1.4.025, H-016 | — | merged (#302) | small |
 
 **Wave 1 parallel groups:** {S-1.01, S-1.02, S-1.04, S-1.05} CI infra (parallel); {S-1.03} blocked by S-0.06; {S-1.07, S-1.08} regression pins (parallel); {S-1.06} OAuth holdout suite (depends on S-0.05 — start after S-0.05 merges).
 
@@ -69,7 +70,7 @@ Recommended parallel groups:
 
 ---
 
-## Wave 2 — MEDIUM-priority NFRs requiring code work + BC holdout regression suites (7 stories)
+## Wave 2 — MEDIUM-priority NFRs requiring code work + BC holdout regression suites (7 stories) — **ACTIVE**
 
 | Story | Title | BC/NFR Anchors | Depends on | Status | Effort |
 |-------|-------|---------------|------------|--------|--------|
