@@ -234,3 +234,16 @@ The key security invariants for this wave are confirmed:
 - Test fixtures use clearly fake tokens isolated via XDG sandboxing
 - Duration injection is fully blocked by character-allowlist validation before JSON serialization
 - `JR_AUTH_HEADER` bypass is correctly restricted to debug builds (unchanged)
+
+---
+
+### Post-Gate Resolution Postscript (2026-05-08)
+
+**WV2-SEC-01 — RESOLVED — 2026-05-08 — develop @ 6cb9994 (PR #310)**
+
+The MEDIUM finding WV2-SEC-01 was addressed by PR #310 (squash-merged to develop at `6cb9994`) on the same day as the gate review. Implementation:
+- `pub(crate) const MAX_DURATION_INPUT_LEN: usize = 64` defined at `src/duration.rs:5,11`
+- `parse_duration_validate` now returns `Err(JrError::UserError(...))` if `input.len() > MAX_DURATION_INPUT_LEN` (guard at `src/duration.rs:22-25`)
+- 2 regression-pin tests added: `test_parse_duration_validate_rejects_input_longer_than_max` and `test_parse_duration_validate_accepts_input_at_max_boundary` (at `src/duration.rs:206-231`)
+
+The fix matches the proposed mitigation exactly. Verified by consistency-validator pass-02 (factory-artifacts `8ae5511`). The remaining findings (WV2-SEC-02/03/04/05) are unchanged in status from the original review.

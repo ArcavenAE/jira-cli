@@ -1021,3 +1021,68 @@ Per `per-story-delivery.md` Wave Integration Gate protocol (max 10 cycles):
 
 Gate status: PENDING. Orchestrator dispatches Phase 3-adv next.
 
+---
+
+## Burst: WAVE 2 INTEGRATION GATE — CLOSED (2026-05-08)
+
+**Date:** 2026-05-08
+**Wave:** Wave 2 (S-2.01 through S-2.07)
+**Gate:** Wave 2 Integration Gate — CLOSED with verdict GATE-PASSES
+**develop SHA at gate open:** ca22be0 (S-2.07 merge, pre-gate)
+**develop SHA at gate close:** 6cb9994 (post-WV2-SEC-01 PR #310)
+**factory-artifacts SHA at gate open:** 7fd17bf (Fix-PR B)
+**factory-artifacts SHA at gate close:** PLACEHOLDER_SHA (this commit)
+
+### Gate Sequence Summary
+
+| Step | Agent | Output | Commit |
+|------|-------|--------|--------|
+| (a) Test suite | orchestrator (Bash) | 1108 pass / 0 fail / 13 ignored on develop @ ca22be0 | n/a |
+| (b) Adversary pass-01 | adversary | 12 findings (3 BLOCKING + 5 CONCERN + 4 NIT) | factory-artifacts `ded2210` |
+| (c) Code-reviewer | code-reviewer | 11 findings (0 critical/high) | factory-artifacts `c6e798c` |
+| (d) Security-reviewer | security-reviewer | LOW-RISK; 1 MEDIUM (WV2-SEC-01) + 2 LOW + 2 INFO | factory-artifacts `1c5201f` |
+| (e) Consistency pass-01 | consistency-validator | 12 findings (1 BLOCKING + 7 DRIFT + 4 NIT) | factory-artifacts `4918e6e` |
+| Decision research | research-agent | D1=A, D2=separate, D3=defer, D4=C | factory-artifacts (research doc only) |
+| Fix-PR A (anchor sweep) | spec-steward | 8 files; new BC-7.4.013-016; DEC-012 | factory-artifacts `28b0f35` |
+| Fix-PR B (NFR sweep) | spec-steward | nfr-catalog.md; 11 NFRs RESOLVED | factory-artifacts `7fd17bf` |
+| WV2-SEC-01 fix | implementer + pr-manager | PR #310 squash-merged at `6cb9994` | develop `6cb9994` |
+| Consistency pass-02 | consistency-validator | DRIFT-FOUND, GATE-PASSES; 3 new minor drift items | factory-artifacts `8ae5511` |
+| Gate-close state update | state-manager | BC-INDEX/CANONICAL-COUNTS count fixup; WV2-SEC-01 RESOLVED notation; STATE.md/sprint-state finalized | factory-artifacts PLACEHOLDER_SHA (this commit) |
+
+### Fix-PR Summary
+
+| Fix-PR | Agent | Files Changed | SHA | Key Changes |
+|--------|-------|---------------|-----|-------------|
+| Fix-PR A (anchor sweep) | spec-steward | 8 files | `28b0f35` | BC-7.3.004→BC-7.1.001 re-anchor in S-2.07 spec; BC-6.2.013→BC-6.2.006 in S-2.06; 4 new BCs (BC-7.4.013-016) created in bc-7-output-render.md; DEC-012 logged; WV2-CV-01/02/07 resolved |
+| Fix-PR B (NFR sweep) | spec-steward | nfr-catalog.md | `7fd17bf` | 11 NFRs marked RESOLVED in routing table + Summary Table; WV2-CV-08 resolved |
+| WV2-SEC-01 | implementer + pr-manager | src/duration.rs | `6cb9994` | MAX_DURATION_INPUT_LEN=64 guard + 2 regression-pin tests (PR #310) |
+| Pass-02 consistency review | consistency-validator | (review doc only) | `8ae5511` | Verified all 4 BLOCKING resolved; found P2-CV-01/02/03 (minor count propagation) |
+
+### Inline Drift Fixes (this commit — no additional PR)
+
+| Finding | Fix Applied | Files |
+|---------|------------|-------|
+| P2-CV-01 | BC-INDEX.md body Section 7 header (80→84, 34→38) + summary table row (80→84, 34→38) + totals (541→545, 309→313) | .factory/specs/prd/BC-INDEX.md |
+| P2-CV-02 | CANONICAL-COUNTS.md bc-7 rows (34→38, 80→84) + grand total (541→545, 309→313) + last_verified updated | .factory/specs/prd/CANONICAL-COUNTS.md |
+| P2-CV-03 | WV2-SEC-01 RESOLVED postscript added to security review doc; WV2-SEC-01 row added to STATE.md Drift Items | .factory/cycles/cycle-001/security-reviews/wave-2-gate-security-review-pass-01.md; .factory/STATE.md |
+| WV2-CV-05 | Phase 3 progress count corrected 23/31 (74%) → 22/31 (71%). Arithmetic: Wave 0(7)+Wave 1(8)+Wave 2(7)=22. Prior 23 was off-by-one. | .factory/STATE.md (Session Resume Checkpoint, Phase 3 row, Phase Progress) |
+
+### Deferred Items (wave 2 gate close — not blocking)
+
+| ID | Description | Target |
+|----|-------------|--------|
+| WV2-FIX-A-FOLLOWUP-01 | 11 auth test docstrings cite BC-7.3.004 (need develop-side PR to re-anchor to BC-7.4.013-016) | Next develop touch or Wave 3 doc-cleanup PR |
+| WV2-FIX-A-FOLLOWUP-02 | 2 worklog test names embed bc_6_2_013 (need develop-side rename to bc_6_2_006) | Next develop touch or Wave 3 doc-cleanup PR |
+| WV2-CV-03 | STORY-INDEX Wave 0/1 rows (15 stories) still show `draft` | Wave 3 doc-cleanup or S-3.06 sweep |
+| WV2-CV-11 | H-018 BC field has `(post-S-2.06 v2.0.0)` non-standard annotation | S-3.10 delivery or Wave 3 cleanup |
+| WV2-CV-12 | STATE.md S-0.05-F2 drift item shows `TO_VERIFY` without resolution target | Wave 3 dev touch |
+
+### Gate Close State
+
+- develop: `6cb9994` — post-WV2-SEC-01 (PR #310); 1109 pass / 0 fail / 13 ignored (adding 1 new test from PR #310)
+- factory-artifacts: PLACEHOLDER_SHA (this commit)
+- Phase 3 progress (corrected): **22/31 (71%)** (Wave 0:7 + Wave 1:8 + Wave 2:7 = 22 of original 31 stories)
+- Wave 3 scope: 10 stories (S-3.01..S-3.10), status `blocked` → unblocked by Wave 2 gate closure
+- Next: Wave 3 first-story scoping and story-writer dispatch
+
+

@@ -2,7 +2,7 @@
 document_type: canonical-counts
 product: jr (jira-cli)
 generated: "2026-05-04"
-last_verified: "Pass 17 fixes (ADV-P17-003 L2 bc_count sync)"
+last_verified: "Wave 2 gate close 2026-05-08 (P2-CV-02 fix; +4 BC-7.4.013-016 via Fix-PR A)"
 ---
 
 # Canonical Counts — jr (jira-cli) L3 PRD
@@ -25,9 +25,9 @@ re-run to verify. Disputes go here first.
 | bc-4-assets-cmdb.md | 22 | 22 | YES |
 | bc-5-boards-sprints.md | 17 | 17 | YES |
 | bc-6-config-cache.md | 29 | 29 | YES |
-| bc-7-output-render.md | 34 | 34 | YES |
+| bc-7-output-render.md | 38 | 38 | YES |
 | cross-cutting.md | 64 | 64 | YES |
-| **Total individually-bodied** | **309** | — | — |
+| **Total individually-bodied** | **313** | — | — |
 
 Verification command:
 ```bash
@@ -46,17 +46,17 @@ done
 | bc-4-assets-cmdb.md | 32 |
 | bc-5-boards-sprints.md | 35 |
 | bc-6-config-cache.md | 39 |
-| bc-7-output-render.md | 80 |
+| bc-7-output-render.md | 84 |
 | cross-cutting.md | 130 |
-| **Sum** | **541** |
+| **Sum** | **545** |
 
 ### Grand total
 
-**Canonical grand total: 541**
+**Canonical grand total: 545** (+4 BC-7.4.013-016 added 2026-05-08 via Fix-PR A `28b0f35`)
 
 Breakdown:
-- 541 = sum of per-file `total_bcs` values
-- 309 of 541 are individually-bodied (have a `#### BC-` heading)
+- 545 = sum of per-file `total_bcs` values
+- 313 of 545 are individually-bodied (have a `#### BC-` heading)
 - 232 are range-collapsed (counted in cumulative claim, no individual heading)
 - BC-X.4.009 (ADV-P1-029) is a `#### BC-` heading in cross-cutting.md; it is
   included in cross-cutting's `total_bcs: 130` and in the 541 sum.
@@ -82,7 +82,7 @@ bc_count in L2 represents the same cumulative claim (individually-bodied + range
 | bc-04-assets-cmdb.md | 32 | bc-4-assets-cmdb.md | 32 | YES (was 44) |
 | bc-05-boards-sprints.md | 35 | bc-5-boards-sprints.md | 35 | YES |
 | bc-06-config-cache.md | 39 | bc-6-config-cache.md | 39 | YES (was 38) |
-| bc-07-output-render.md | 80 | bc-7-output-render.md | 80 | YES (was 126) |
+| bc-07-output-render.md | 84 | bc-7-output-render.md | 84 | YES (+4 BC-7.4.013-016 added 2026-05-08) |
 
 Note: bc-01/02/03/05 were already aligned pre-Pass 17. bc-04/06/07 corrected at Pass 17.
 

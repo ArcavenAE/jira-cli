@@ -1,9 +1,10 @@
 # sprint-state.yaml
 # Phase 3 TDD Implementation — Wave-based story delivery state
 # Initialized: 2026-05-07
-# Updated: 2026-05-08 (S-2.07 MERGED via PR #309 at ca22be0; **Wave 2 COMPLETE 7/7**; ready for integration gate)
+# Updated: 2026-05-08 (Wave 2 INTEGRATION GATE CLOSED; verdict GATE-PASSES per consistency pass-02 8ae5511; ready for Wave 3 start)
 
-active_wave: "2 (closing) | gate pending"
+active_wave: "3"
+wave_2_gate_status: "CLOSED — 2026-05-08 — verdict GATE-PASSES (consistency pass-02 8ae5511)"
 wave_0_progress: "7/7 — WAVE 0 COMPLETE"  # All stories merged/delivered: S-0.01..S-0.06 via PRs #289-#294; S-0.07 spec-only via factory-artifacts direct
 
 attack_order_wave_0:
@@ -327,3 +328,4 @@ wave_3:
     - { id: S-3.07, title: "Auth error-path holdout", status: blocked }
     - { id: S-3.08, title: "Doc-as-is pass", status: blocked }
     - { id: S-3.09, title: "ADR-0013 PKCE monitoring task", status: blocked }
+    - { id: S-3.10, title: "Rewrite format_roundtrip proptest + delete deprecated parse_duration calculator + retire H-018", status: blocked } # Added during Wave 2 as S-2.06 DEFER-01 follow-up

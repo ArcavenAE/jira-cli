@@ -432,7 +432,7 @@ R1/R4 prefix = deepening round that introduced it.
 
 ---
 
-## Section 7: Output Rendering (bc-7-output-render.md) — 80 BCs cumulative; 34 individually-bodied
+## Section 7: Output Rendering (bc-7-output-render.md) — 84 BCs cumulative; 38 individually-bodied
 
 ### 7.1 Table / JSON Output (5 BCs: BC-7.1.001..005)
 
@@ -645,13 +645,13 @@ R1/R4 prefix = deepening round that introduced it.
 | 4: Assets & CMDB | 32 | 22 |
 | 5: Boards & Sprints | 35 | 17 |
 | 6: Config & Cache | 39 | 29 |
-| 7: Output Rendering | 80 | 34 |
+| 7: Output Rendering | 84 | 38 |
 | X: Cross-Cutting | 130 | 64 |
-| **Total** | **541** | **309** |
+| **Total** | **545** | **313** |
 
-**Note**: BC-X.4.009 (ADV-P1-029) is included in cross-cutting's `total_bcs: 130` and in the 541 sum above — it was assigned a `#### BC-` heading in cross-cutting.md at ADV-P1-029 (Pass 10 fix). Canonical total is **541**.
+**Note**: BC-X.4.009 (ADV-P1-029) is included in cross-cutting's `total_bcs: 130` and in the 541 sum above — it was assigned a `#### BC-` heading in cross-cutting.md at ADV-P1-029 (Pass 10 fix). Canonical total is **545** (+4 BC-7.4.013-016 added 2026-05-08 via Fix-PR A).
 
-Cumulative total (541) ≠ individually-bodied count (309). The difference (232) comprises range-collapsed BCs that exist in the cumulative claim but are not individually headlined in body files. This is by design — range-collapsed BCs trace to Pass 3 source material but were not individually expanded. The 4 MUST-FIX BCs are included in the individually-bodied count.
+Cumulative total (545) ≠ individually-bodied count (313). The difference (232) comprises range-collapsed BCs that exist in the cumulative claim but are not individually headlined in body files. This is by design — range-collapsed BCs trace to Pass 3 source material but were not individually expanded. The 4 MUST-FIX BCs are included in the individually-bodied count.
 
 ---
 

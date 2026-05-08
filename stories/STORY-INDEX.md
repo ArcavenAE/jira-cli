@@ -2,7 +2,7 @@
 document_type: story-index
 phase: phase-2-story-decomposition
 producer: story-writer
-version: "1.4.10"
+version: "1.4.11"
 total_stories: 33
 total_waves: 4
 status: complete-pending-adv-review
@@ -39,13 +39,13 @@ All Wave 0 stories are CRITICAL or HIGH priority. No v0.5 release without green 
 
 | Story ID | Title | BC Anchors | Holdout Anchors | Status | Est. Effort |
 |----------|-------|------------|-----------------|--------|-------------|
-| S-0.01 | Fix `handle_open` OAuth instance URL | BC-3.4.001 | H-046 | draft | small |
-| S-0.02 | Paginate `list_worklogs` | BC-X.5.002 | H-045 | draft | small |
-| S-0.03 | Multi-workspace asset HashMap composite key | BC-4.3.001 | H-036 | draft | small |
-| S-0.04 | Multi-profile fields active-profile migration | BC-6.3.001 | H-NEW-MP-001 | draft | medium |
-| S-0.05 | Gate `JR_AUTH_HEADER` behind `#[cfg(debug_assertions)]` (canonized from `#[cfg(test)]`) | SD-002 / NFR-S-B | H-NEW-AUTH-002 | draft | small |
-| S-0.06 | Add `--verbose-bodies` flag + PII warning | SD-003 / NFR-S-C | (new holdout per SD-003) | draft | small |
-| S-0.07 | Formalize holdout H-NEW-AUTH-002 in spec | SD-002 (docs) | H-NEW-AUTH-002 | draft | xsmall |
+| S-0.01 | Fix `handle_open` OAuth instance URL | BC-3.4.001 | H-046 | merged (PR #289 / b7b9c9c) | small |
+| S-0.02 | Paginate `list_worklogs` | BC-X.5.002 | H-045 | merged (PR #290 / a84e063) | small |
+| S-0.03 | Multi-workspace asset HashMap composite key | BC-4.3.001 | H-036 | merged (PR #291 / cb2c612) | small |
+| S-0.04 | Multi-profile fields active-profile migration | BC-6.3.001 | H-NEW-MP-001 | merged (PR #292 / dbbea12) | medium |
+| S-0.05 | Gate `JR_AUTH_HEADER` behind `#[cfg(debug_assertions)]` (canonized from `#[cfg(test)]`) | SD-002 / NFR-S-B | H-NEW-AUTH-002 | merged (PR #293 / d907504) | small |
+| S-0.06 | Add `--verbose-bodies` flag + PII warning | SD-003 / NFR-S-C | (new holdout per SD-003) | merged (PR #294 / 06ecd6a) | small |
+| S-0.07 | Formalize holdout H-NEW-AUTH-002 in spec | SD-002 (docs) | H-NEW-AUTH-002 | merged (factory-artifacts direct / spec-only) | xsmall |
 
 Wave 0 story files: `stories/wave-0/S-0.NN-*.md`
 
@@ -64,14 +64,14 @@ Sequential: S-1.03 after S-0.06 merges (tracing depends on --verbose-bodies flag
 
 | Story ID | Title | NFR/BC Anchors | Holdout Anchors | Status | Est. Effort |
 |----------|-------|----------------|-----------------|--------|-------------|
-| S-1.01 | Pin GitHub Actions to full commit SHAs | NFR-S-E, R-H6 | — | draft | small |
-| S-1.02 | cargo-deny supply chain hardening | NFR-S-F | — | draft | small |
-| S-1.03 | Add tracing + wire structured logging | NFR-O-A | — | draft | medium |
-| S-1.04 | Add timeout-minutes to all CI/CD jobs | R-L12 | — | draft | xsmall |
-| S-1.05 | GitHub secret scanning + gitleaks CI | NFR-S-E, R-L13 | — | draft | small |
-| S-1.06 | OAuth flow holdout suite | BC-1.1.001, BC-1.1.002 | H-001..H-006, H-022, H-029 | draft | medium |
-| S-1.07 | Rate-limit holdout suite | BC-X.1.005, BC-X.4.002 | H-013, H-027 | draft | small |
-| S-1.08 | Keychain per-profile layout holdout | BC-1.4.027, BC-1.4.025 | H-016 | draft | small |
+| S-1.01 | Pin GitHub Actions to full commit SHAs | NFR-S-E, R-H6 | — | merged (PR #295 / adae3c5) | small |
+| S-1.02 | cargo-deny supply chain hardening | NFR-S-F | — | merged (PR #296 / 88a2e02) | small |
+| S-1.03 | Add tracing + wire structured logging | NFR-O-A | — | merged (PR #297 / 2d64112) | medium |
+| S-1.04 | Add timeout-minutes to all CI/CD jobs | R-L12 | — | merged (PR #298 / e0ea180) | xsmall |
+| S-1.05 | GitHub secret scanning + gitleaks CI | NFR-S-E, R-L13 | — | merged (PR #299 / da4c527) | small |
+| S-1.06 | OAuth flow holdout suite | BC-1.1.001, BC-1.1.002 | H-001..H-006, H-022, H-029 | merged (PR #300 / f49af67) | medium |
+| S-1.07 | Rate-limit holdout suite | BC-X.1.005, BC-X.4.002 | H-013, H-027 | merged (PR #301 / 5813059) | small |
+| S-1.08 | Keychain per-profile layout holdout | BC-1.4.027, BC-1.4.025 | H-016 | merged (PR #302 / ab19783) | small |
 
 Wave 1 story files: `stories/wave-1/S-1.NN-*.md`
 

@@ -4,14 +4,14 @@ level: ops
 version: "2.0"
 status: active
 producer: state-manager
-timestamp: 2026-05-08T22:00:00
+timestamp: 2026-05-08T23:59:00
 phase: phase-3-tdd-implementation
 inputs: []
 input-hash: "[live-state]"
 traces_to: ""
 project: jira-cli
 mode: BROWNFIELD
-current_step: "phase-3-wave-2-gate-fixpr-a-applied"
+current_step: "phase-3-wave-2-gate-CLOSED"
 current_cycle: "cycle-001"
 dtu_required: false
 phase_2_status: APPROVED
@@ -36,9 +36,9 @@ activation_version: "v0.5.0-dev.7"
 | **Language** | Rust |
 | **Target Workspace** | develop → main |
 | **Started** | 2026-05-04 |
-| **Last Updated** | 2026-05-08 (S-2.07 MERGED via PR #309 at ca22be0; **Wave 2 COMPLETE 7/7**; ready for Wave 2 integration gate); Fix-PR A spec-anchor sweep applied (WV2-ADV-01, WV2-ADV-03, WV2-CV-01/-02/-07; 2 develop-side follow-ups deferred) |
-| **Current Phase** | Phase 3 — TDD Implementation **IN PROGRESS** (Wave 0 COMPLETE 7/7; Wave 1 COMPLETE 8/8; **Wave 2 COMPLETE 7/7**; next: Wave 2 integration gate (wave-level adversarial review + holdout re-evaluation per per-story-delivery.md), then Wave 3 — 10 stories) |
-| **Next Phase** | Wave 2 Integration Gate |
+| **Last Updated** | 2026-05-08 (Wave 2 INTEGRATION GATE CLOSED — verdict: GATE-PASSES per consistency pass-02. develop @ 6cb9994; factory-artifacts @ PLACEHOLDER_SHA; ready for Wave 3 start) |
+| **Current Phase** | Phase 3 — TDD Implementation **IN PROGRESS** — Wave 2 GATE CLOSED. Wave 0 COMPLETE 7/7; Wave 1 COMPLETE 8/8; Wave 2 COMPLETE 7/7 + gate PASSED; Wave 3: 10 stories ready (incl. S-3.10 from S-2.06 follow-up). |
+| **Next Phase** | Wave 3 — 10 stories (S-3.01..S-3.10) |
 | **Activation HEAD** | dea166471e22eff55974d7675593469b37048c5f (v0.5.0-dev.7) |
 | **factory-artifacts SHA** | 0b01262 (Phase 1 gate APPROVE; phase-1-converged tag) |
 
@@ -58,8 +58,8 @@ Goal 1c: **Harden v0.5 + feature delivery** — formalize existing codebase with
 | 2: Story Decomposition | **complete** (story creation phase) | 2026-05-04 | 2026-05-06 | 31 stories created (W0:7 + W1:8 + W2:7 + W3:9); Phase 2-adv pending | |
 | 2-adv: Adversarial Story Review | **CONVERGED** — Pass 13 CLEAN-PASS; Counter 3/3 | 2026-05-06 | 2026-05-07 | 3/3 FULL CONVERGENCE | 14→5→5→5→4→5→4→4→4→1→0→1→0 |
 | Phase 2 gate | **APPROVED** (2026-05-07) — 31 stories locked, ready for TDD | — | 2026-05-07 | APPROVED by human | — |
-| 3: TDD Implementation | **IN_PROGRESS** — Wave 0 COMPLETE (7/7); **WAVE 1 COMPLETE (8/8)** via PRs #295-#302; **Wave 2 COMPLETE (7/7)** via PRs #303-#309 | 2026-05-07 | | | Wave 0: COMPLETE — 7/7 via PRs #289-#294 + S-0.07 spec-only. Wave 1: COMPLETE — 8/8 via PRs #295-#302; 0 regressions; ~50 new tests; 5 deferred + 1 PENDING_MANUAL (S-1.05-AC-001 now RESOLVED). Wave 2: COMPLETE 7/7 — S-2.01 MERGED at f6516f8 (PR #303); S-2.02 MERGED at 7528960 (PR #304); S-2.03 MERGED at e9c2ba8 (PR #305); S-2.04 MERGED at ada9126 (PR #306); S-2.05 MERGED at 7f004ca (PR #307); S-2.06 MERGED at c8f15d8 (PR #308; FIRST Wave 2 production-code change; v2.0.0 pivot after Perplexity verification BLOCKED v1; 5 commits; 6/6 ACs; NFR-R-C resolved by `timeSpent` string passthrough; 8/8 CI; APPROVE 1 cycle; 3 LOW deferred S-2.06-DEFER-01/02/03). S-2.07 MERGED at ca22be0 (PR #309; v2.0.0 pivot — auth --output json for 4 subcommands + verb-aligned JSON policy doc + test naming convention; preserved auth refresh asymmetric shape; AC-003 already-passed by main.rs wrapper (DEFER-01); 8/8 CI; APPROVE 1 cycle; 0 blocking; 2 LOW deferred). **Wave 2 COMPLETE 7/7** (PRs #303-#309). Phase 3 progress: 23/31 (74%) — next: Wave 2 integration gate. |
-| 3-adv: Wave Adversarial Reviews | **PENDING — Wave 2 ready for integration gate** | | | | |
+| 3: TDD Implementation | **IN_PROGRESS** — Wave 0 COMPLETE (7/7); **WAVE 1 COMPLETE (8/8)** via PRs #295-#302; **Wave 2 COMPLETE (7/7)** via PRs #303-#309 + Wave 2 integration gate CLOSED 2026-05-08 | 2026-05-07 | | | Wave 0: COMPLETE — 7/7 via PRs #289-#294 + S-0.07 spec-only. Wave 1: COMPLETE — 8/8 via PRs #295-#302; 0 regressions; ~50 new tests; 5 deferred + 1 PENDING_MANUAL (S-1.05-AC-001 now RESOLVED). Wave 2: COMPLETE 7/7 — S-2.01..S-2.07 MERGED (PRs #303-#309). Wave 2 integration gate CLOSED 2026-05-08 (5 reviewers + 4 fix-PRs landed). Phase 3 progress: **22/31 (71%)** — original scope; +1 develop-side security fix (WV2-SEC-01 PR #310 / 6cb9994); +1 Wave 3 story added (S-3.10) yielding 33-story expanded backlog. |
+| 3-adv: Wave Adversarial Reviews | **WAVE 2 GATE CLOSED 2026-05-08** | 2026-05-08 | 2026-05-08 | GATE-PASSES (consistency pass-02 `8ae5511`) | adversary pass-01 (12 findings: 3 BLOCKING + 5 CONCERN + 4 NIT); code-reviewer (0 critical/high); security-reviewer (LOW-RISK; 1 MEDIUM resolved); consistency pass-01 (12 findings: 1 BLOCKING + 7 DRIFT + 4 NIT) → 4 fix-PRs (Fix-PR A spec-anchor `28b0f35`; Fix-PR B nfr-catalog `7fd17bf`; WV2-SEC-01 PR #310 `6cb9994`; pass-02 consistency `8ae5511`) → consistency pass-02 verdict GATE-PASSES. 3 minor drift items addressed inline in this commit (P2-CV-01/02/03 count-rollups). 2 deferred follow-ups for develop-side test docstring re-anchoring (WV2-FIX-A-FOLLOWUP-01/02). Wave 3 cleared for start. |
 | 4: Holdout Evaluation | not-started | | | | |
 | 5: Adversarial Refinement | not-started | | | | |
 | 6: Formal Hardening | not-started | | | | |
@@ -75,7 +75,8 @@ Goal 1c: **Harden v0.5 + feature delivery** — formalize existing codebase with
 | S-2.05 MERGED — CLAUDE.md doc update | devops-engineer | complete | PR #307 squash-merged to develop at 7f004ca (2026-05-08); doc-only — 6 NFRs DOCUMENT-AS-IS + bonus NFR-O-H; 51/0 insertions; 8/8 CI green; APPROVE 1 cycle; 0 blocking; 1 LOW deferred (S-2.05-DEFER-01). Wave 2: 5/7. Phase 3: 21/31 (68%). |
 | S-2.06 MERGED — Worklog timeSpent passthrough + CMDB cache pin | devops-engineer | complete | PR #308 squash-merged to develop at c8f15d8 (2026-05-08); v2.0.0 pivot after Perplexity verification BLOCKED v1; production code change (NOT holdout-only); `parse_duration_validate` validator + `timeSpent` string passthrough resolves NFR-R-C without admin endpoint or cache; 6/6 ACs; 8/8 CI; APPROVE 1 cycle; 0 blocking; 3 LOW deferred (calculator preservation + 2 reviewer nits). Wave 2: 6/7. Phase 3: 22/31 (71%). |
 | S-2.07 MERGED — Auth JSON + verb-aligned policy + test naming | devops-engineer | complete | PR #309 squash-merged to develop at ca22be0 (2026-05-08); v2.0.0 pivot after Perplexity verification (DEC-011); 4 auth subcommands now emit JSON; auth refresh asymmetric shape preserved; AC-003 already-passed by main.rs wrapper; 7 commits → squash; +6 tests (4 snapshots + 2 refresh regression-pin); 8/8 CI; APPROVE 1 cycle; 0 blocking; 2 LOW deferred (S-2.07-DEFER-01/02). **Wave 2 COMPLETE 7/7.** Phase 3: 23/31 (74%). |
-| Wave 2 INTEGRATION GATE — START | orchestrator | active | All 7 Wave 2 stories merged. Next: full test suite on merged develop, adversarial review of combined wave diff (fresh context, different model), holdout re-evaluation, code-reviewer constructive review, security review, consistency-validator. Per per-story-delivery.md Wave Integration Gate (max 10 cycles). |
+| Wave 2 INTEGRATION GATE — CLOSED | orchestrator + reviewers | complete | 5 gate reviewers + 4 fix-PRs landed across 24h. Pass-02 verdict: GATE-PASSES. develop @ 6cb9994; factory-artifacts @ PLACEHOLDER_SHA. 2 deferred test-docstring follow-ups; all spec/anchor BLOCKERs RESOLVED. |
+| Wave 3 START — pre-flight check | orchestrator | active | 10 stories: S-3.01..S-3.10. Pre-flight: confirm all Wave 2 deferred items tracked in Drift Items (WV2-FIX-A-FOLLOWUP-01/02 + S-2.04-DOC-01 + S-2.05-DEFER-01 + S-2.06-DEFER-01 + still-open consistency items WV2-CV-03/WV2-CV-11/WV2-CV-12). Wave 3 first story candidate: TBD (story-writer planning). |
 
 ## Decisions Log
 
@@ -153,7 +154,12 @@ Goal 1c: **Harden v0.5 + feature delivery** — formalize existing codebase with
 | WV2-ADV-03 | S-2.06 spec + 2 holdout test names | BC-6.2.013 mis-anchor in S-2.06 Part B. Story spec re-anchored to BC-6.2.006 (Fix-PR A). Develop-side test name rename deferred as WV2-FIX-A-FOLLOWUP-02. | BLOCKING | **RESOLVED — 2026-05-08 — Fix-PR A** (spec portion resolved; test function names deferred as FOLLOWUP-02) |
 | WV2-CV-01 | .factory/specs/prd/cross-cutting.md:316 | BC-X.5.005 H1 heading named deprecated 3-arg calculator. Updated to reflect post-S-2.06 dual-function situation (validator is production path). | BLOCKING | **RESOLVED — 2026-05-08 — Fix-PR A** |
 | WV2-CV-02 | .factory/stories/WAVE-PLAN.md | Wave 2 status was ACTIVE/draft; Wave 3 showed 9 stories without S-3.10; S-2.06→S-3.10 dependency missing. | DRIFT | **RESOLVED — 2026-05-08 — Fix-PR A** |
+| WV2-CV-03 | .factory/stories/STORY-INDEX.md | Wave 0/1 rows (15 stories, S-0.01..S-1.08) still show `draft` status. These waves are fully merged; status is a display-only cosmetic gap. | DRIFT | DEFERRED — Wave 3 doc-cleanup PR or S-3.06 sweep. |
+| WV2-CV-05 | .factory/STATE.md | Phase 3 progress count audit: Wave 0 (7) + Wave 1 (8) + Wave 2 (7) = 22. STATE.md previously claimed 23/31 (74%). Off-by-one confirmed; corrected to **22/31 (71%)** in this commit. | DRIFT | **RESOLVED — 2026-05-08 — Wave 2 gate-close commit** (count corrected throughout STATE.md) |
 | WV2-CV-07 | .factory/stories/STORY-INDEX.md + STATE.md | S-2.02 SHA typo 75289600 → 7528960 in STATE.md. | DRIFT | **RESOLVED — 2026-05-08 — Fix-PR A** |
+| WV2-CV-11 | .factory/specs/prd/holdout-scenarios.md:195 | H-018 BC field has `(post-S-2.06 v2.0.0)` non-standard annotation. | NIT | DEFERRED — bundle into S-3.10 delivery or Wave 3 doc-cleanup. |
+| WV2-CV-12 | .factory/STATE.md | S-0.05-F2 drift item shows `TO_VERIFY` without resolution target. | NIT | DEFERRED — verify and close in Wave 3 dev touch or doc-cleanup PR. |
+| WV2-SEC-01 | src/duration.rs::parse_duration_validate | Wave 2 integration-gate security finding (CWE-400 uncontrolled resource consumption). parse_duration_validate reflected unbounded user input into error messages. Added MAX_DURATION_INPUT_LEN = 64 byte cap + 2 regression-pin tests. Not exploitable; defense-in-depth. | MEDIUM | **RESOLVED — 2026-05-08 — develop @ 6cb9994 (PR #310)** |
 
 ## Convergence Trackers
 
@@ -176,8 +182,8 @@ _Not started._
 | Field | Value |
 |-------|-------|
 | **Date** | 2026-05-08 |
-| **Position** | **Wave 2 COMPLETE 7/7** — S-2.07 merged (PR #309 at ca22be0). All Wave 2 stories on develop (PRs #303-#309). Total Phase 3 progress: 23/31 (74%). Next phase: **Wave 2 integration gate** — full test suite, adversarial review of wave diff, holdout re-evaluation, code review, security review, consistency check (per per-story-delivery.md, max 10 cycles). After gate passes, Wave 3 starts (10 stories incl. new S-3.10 follow-up to S-2.06's pivot). |
-| **Convergence counter** | 3/3 CONVERGED Phase 2-adv; Phase 3-adv (wave-level) not yet started — about to begin |
+| **Position** | **Wave 2 INTEGRATION GATE CLOSED — verdict: GATE-PASSES** (consistency pass-02 `8ae5511`). All 4 BLOCKING findings RESOLVED via Fix-PR A `28b0f35` + Fix-PR B `7fd17bf` + WV2-SEC-01 PR #310 `6cb9994`. 2 develop-side test docstring re-anchorings deferred (WV2-FIX-A-FOLLOWUP-01/02). 3 minor count-rollup drift items (P2-CV-01/02/03) addressed inline in this gate-close commit. Phase 3 progress: **22/31 (71%)** — count audited and corrected (7+8+7=22; prior 23 was off-by-one). develop @ 6cb9994; factory-artifacts @ PLACEHOLDER_SHA. **Next: Wave 3 first-story scoping** (story-writer dispatch with Wave 3 backlog: S-3.01..S-3.10). |
+| **Convergence counter** | 3/3 CONVERGED Phase 2-adv; Phase 3-adv: Wave 2 gate CLOSED (adversary pass-01 `ded2210` + consistency pass-01 `4918e6e` + pass-02 `8ae5511`) |
 
 ## Historical Content
 
