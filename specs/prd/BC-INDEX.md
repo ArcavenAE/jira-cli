@@ -1,7 +1,7 @@
 ---
 context: bc-index
 title: "BC Master Index"
-total_bcs: 541  # cumulative claim (incl. range-collapsed) — see preamble below
+total_bcs: 545  # cumulative claim (incl. range-collapsed) — see preamble below; +4 added 2026-05-08 (BC-7.4.013-016, Fix-PR A)
 last_updated: 2026-05-04
 source_pass: 3
 sections:
@@ -11,7 +11,7 @@ sections:
   - bc-4-assets-cmdb.md (32 BCs cumulative; 22 individually-bodied)
   - bc-5-boards-sprints.md (35 BCs cumulative; 17 individually-bodied)
   - bc-6-config-cache.md (39 BCs cumulative; 29 individually-bodied)
-  - bc-7-output-render.md (80 BCs cumulative; 34 individually-bodied)
+  - bc-7-output-render.md (84 BCs cumulative; 38 individually-bodied)
   - cross-cutting.md (130 BCs cumulative; 64 individually-bodied)
   - nfr-catalog.md (41 NFR items, not counted in BC total; NFR-O-K merged into NFR-S-D per ADV-P7-002)
 ---
@@ -469,7 +469,7 @@ R1/R4 prefix = deepening round that introduced it.
 | BC-7.3.008 | stderr must NEVER contain `panic` | BC-1205 | 16+ tests | HIGH |
 | BC-7.3.009 | Internal errors prefix with `Internal error:` | BC-1213 | src/error.rs:30-36 | MEDIUM |
 
-### 7.4 JSON Output Shapes (12 BCs: BC-7.4.001..012)
+### 7.4 JSON Output Shapes (16 BCs: BC-7.4.001..016)
 
 | L3 BC ID | Summary | Pass 3 BC ID | Source | Confidence |
 |---|---|---|---|---|
@@ -485,6 +485,10 @@ R1/R4 prefix = deepening round that introduced it.
 | BC-7.4.010 | sprint remove → `{"issues": [...], "removed": true}` — NO sprint_id | BC-1114 (R4) | src/cli/snapshots/ | HIGH |
 | BC-7.4.011 | auth list table → 4 cols: NAME, URL, AUTH, STATUS; active prefix `* ` (asterisk-space) | BC-1115 (R4) | src/cli/snapshots/ | HIGH |
 | BC-7.4.012 | `user view` hidden email → table shows em-dash `—`; JSON output shows explicit `null` | BC-1132j, BC-1132k (R4) | tests/user_commands.rs | HIGH |
+| BC-7.4.013 | `auth login --output json` emits `{"profile": <name>, "action": "login", "ok": true}` to stdout on success | bc-7-output-render.md (BC-7.4.013 section) | src/cli/auth.rs::handle_login (JSON branch); src/cli/auth.rs::auth_json_response | HIGH |
+| BC-7.4.014 | `auth switch --output json` emits `{"profile": <name>, "action": "switch", "ok": true}` to stdout on success | bc-7-output-render.md (BC-7.4.014 section) | src/cli/auth.rs::handle_switch (JSON branch); auth_json_response | HIGH |
+| BC-7.4.015 | `auth logout --output json` emits `{"profile": <name>, "action": "logout", "ok": true}` to stdout on success | bc-7-output-render.md (BC-7.4.015 section) | src/cli/auth.rs::handle_logout (JSON branch); auth_json_response | HIGH |
+| BC-7.4.016 | `auth remove --output json` emits `{"profile": <name>, "action": "remove", "ok": true}` to stdout on success | bc-7-output-render.md (BC-7.4.016 section) | src/cli/auth.rs::handle_remove (JSON branch); auth_json_response | HIGH |
 
 ### 7.5 Observability (3 BCs: BC-7.5.001..003)
 

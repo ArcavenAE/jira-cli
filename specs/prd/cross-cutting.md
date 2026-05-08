@@ -313,7 +313,7 @@ JQL utilities (X.9), Partial-match (X.10), Build-time (X.11).
 
 ---
 
-#### BC-X.5.005: `parse_duration("1w2d3h30m", 8, 5)` accepts combined units; returns total seconds
+#### BC-X.5.005: `parse_duration_validate("1w2d3h30m")` accepts combined units (validator); `parse_duration("1w2d3h30m", 8, 5)` calculator preserved deprecated for `format_duration` round-trip proptest
 
 **Confidence**: HIGH
 **Source**: `src/duration.rs::tests::test_complex`

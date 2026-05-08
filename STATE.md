@@ -4,14 +4,14 @@ level: ops
 version: "2.0"
 status: active
 producer: state-manager
-timestamp: 2026-05-08T20:00:00
+timestamp: 2026-05-08T22:00:00
 phase: phase-3-tdd-implementation
 inputs: []
 input-hash: "[live-state]"
 traces_to: ""
 project: jira-cli
 mode: BROWNFIELD
-current_step: "phase-3-wave-2-integration-gate"
+current_step: "phase-3-wave-2-gate-fixpr-a-applied"
 current_cycle: "cycle-001"
 dtu_required: false
 phase_2_status: APPROVED
@@ -36,7 +36,7 @@ activation_version: "v0.5.0-dev.7"
 | **Language** | Rust |
 | **Target Workspace** | develop → main |
 | **Started** | 2026-05-04 |
-| **Last Updated** | 2026-05-08 (S-2.07 MERGED via PR #309 at ca22be0; **Wave 2 COMPLETE 7/7**; ready for Wave 2 integration gate) |
+| **Last Updated** | 2026-05-08 (S-2.07 MERGED via PR #309 at ca22be0; **Wave 2 COMPLETE 7/7**; ready for Wave 2 integration gate); Fix-PR A spec-anchor sweep applied (WV2-ADV-01, WV2-ADV-03, WV2-CV-01/-02/-07; 2 develop-side follow-ups deferred) |
 | **Current Phase** | Phase 3 — TDD Implementation **IN PROGRESS** (Wave 0 COMPLETE 7/7; Wave 1 COMPLETE 8/8; **Wave 2 COMPLETE 7/7**; next: Wave 2 integration gate (wave-level adversarial review + holdout re-evaluation per per-story-delivery.md), then Wave 3 — 10 stories) |
 | **Next Phase** | Wave 2 Integration Gate |
 | **Activation HEAD** | dea166471e22eff55974d7675593469b37048c5f (v0.5.0-dev.7) |
@@ -58,7 +58,7 @@ Goal 1c: **Harden v0.5 + feature delivery** — formalize existing codebase with
 | 2: Story Decomposition | **complete** (story creation phase) | 2026-05-04 | 2026-05-06 | 31 stories created (W0:7 + W1:8 + W2:7 + W3:9); Phase 2-adv pending | |
 | 2-adv: Adversarial Story Review | **CONVERGED** — Pass 13 CLEAN-PASS; Counter 3/3 | 2026-05-06 | 2026-05-07 | 3/3 FULL CONVERGENCE | 14→5→5→5→4→5→4→4→4→1→0→1→0 |
 | Phase 2 gate | **APPROVED** (2026-05-07) — 31 stories locked, ready for TDD | — | 2026-05-07 | APPROVED by human | — |
-| 3: TDD Implementation | **IN_PROGRESS** — Wave 0 COMPLETE (7/7); **WAVE 1 COMPLETE (8/8)** via PRs #295-#302; **Wave 2 COMPLETE (7/7)** via PRs #303-#309 | 2026-05-07 | | | Wave 0: COMPLETE — 7/7 via PRs #289-#294 + S-0.07 spec-only. Wave 1: COMPLETE — 8/8 via PRs #295-#302; 0 regressions; ~50 new tests; 5 deferred + 1 PENDING_MANUAL (S-1.05-AC-001 now RESOLVED). Wave 2: COMPLETE 7/7 — S-2.01 MERGED at f6516f8 (PR #303); S-2.02 MERGED at 75289600 (PR #304); S-2.03 MERGED at e9c2ba8 (PR #305); S-2.04 MERGED at ada9126 (PR #306); S-2.05 MERGED at 7f004ca (PR #307); S-2.06 MERGED at c8f15d8 (PR #308; FIRST Wave 2 production-code change; v2.0.0 pivot after Perplexity verification BLOCKED v1; 5 commits; 6/6 ACs; NFR-R-C resolved by `timeSpent` string passthrough; 8/8 CI; APPROVE 1 cycle; 3 LOW deferred S-2.06-DEFER-01/02/03). S-2.07 MERGED at ca22be0 (PR #309; v2.0.0 pivot — auth --output json for 4 subcommands + verb-aligned JSON policy doc + test naming convention; preserved auth refresh asymmetric shape; AC-003 already-passed by main.rs wrapper (DEFER-01); 8/8 CI; APPROVE 1 cycle; 0 blocking; 2 LOW deferred). **Wave 2 COMPLETE 7/7** (PRs #303-#309). Phase 3 progress: 23/31 (74%) — next: Wave 2 integration gate. |
+| 3: TDD Implementation | **IN_PROGRESS** — Wave 0 COMPLETE (7/7); **WAVE 1 COMPLETE (8/8)** via PRs #295-#302; **Wave 2 COMPLETE (7/7)** via PRs #303-#309 | 2026-05-07 | | | Wave 0: COMPLETE — 7/7 via PRs #289-#294 + S-0.07 spec-only. Wave 1: COMPLETE — 8/8 via PRs #295-#302; 0 regressions; ~50 new tests; 5 deferred + 1 PENDING_MANUAL (S-1.05-AC-001 now RESOLVED). Wave 2: COMPLETE 7/7 — S-2.01 MERGED at f6516f8 (PR #303); S-2.02 MERGED at 7528960 (PR #304); S-2.03 MERGED at e9c2ba8 (PR #305); S-2.04 MERGED at ada9126 (PR #306); S-2.05 MERGED at 7f004ca (PR #307); S-2.06 MERGED at c8f15d8 (PR #308; FIRST Wave 2 production-code change; v2.0.0 pivot after Perplexity verification BLOCKED v1; 5 commits; 6/6 ACs; NFR-R-C resolved by `timeSpent` string passthrough; 8/8 CI; APPROVE 1 cycle; 3 LOW deferred S-2.06-DEFER-01/02/03). S-2.07 MERGED at ca22be0 (PR #309; v2.0.0 pivot — auth --output json for 4 subcommands + verb-aligned JSON policy doc + test naming convention; preserved auth refresh asymmetric shape; AC-003 already-passed by main.rs wrapper (DEFER-01); 8/8 CI; APPROVE 1 cycle; 0 blocking; 2 LOW deferred). **Wave 2 COMPLETE 7/7** (PRs #303-#309). Phase 3 progress: 23/31 (74%) — next: Wave 2 integration gate. |
 | 3-adv: Wave Adversarial Reviews | **PENDING — Wave 2 ready for integration gate** | | | | |
 | 4: Holdout Evaluation | not-started | | | | |
 | 5: Adversarial Refinement | not-started | | | | |
@@ -91,6 +91,7 @@ Goal 1c: **Harden v0.5 + feature delivery** — formalize existing codebase with
 | DEC-009 | Phase 1 → Phase 2 gate APPROVED | All pending decisions resolved (DEC-006/007/008). Spec corpus locked at gate: 541 BCs / 41 NFRs / 48 holdouts / 28 risks / 13 ADRs / 3 SDs. Wave 0 additions brought holdouts to 51 (H-NEW-VERBOSE-001/002 + H-NEW-AUTH-002). | Phase 1→2 gate | 2026-05-04 | human |
 | DEC-010 | S-2.06 spec pivot to timeSpent string passthrough (Option 1) | Perplexity verification on 2026-05-08 found v1.0.0 spec had wrong endpoint (/configuration/timetracking returns provider, not hours/days), wrong field names (workingHoursPerDay/workingDaysPerWeek not hoursPerDay/daysPerWeek), wrong types (f64 not u32), and wrong auth assumption (admin-only endpoint). User chose Option 1 (string passthrough — matches ankitpokhrel/jira-cli pattern; eliminates admin endpoint and cache entirely). v2.0.0 spec at .factory/stories/wave-2/S-2.06-... committed at factory-artifacts 37a4be6. Verification report at .factory/research/S-2.06-jira-timetracking-verification.md. | Phase 3 / Wave 2 | 2026-05-08 | human + research-agent (Perplexity) |
 | DEC-011 | S-2.07 spec pivot to v2.0.0 (Option A: apply 3 corrections) | Perplexity-driven verification on 2026-05-08 found 3 concrete errors in v1: (a) AC-002 wiremock premise structurally untestable — `jr auth refresh` re-runs full OAuth 3LO flow via login_oauth, never hits a refresh-token API; (b) NFR-O-F's prescribed `{profile, action, ok}` shape conflicted with already-shipped `refresh_success_payload` shape `{status, auth_method, next_step}` — v2 keeps both with documented asymmetry (refresh triggers re-auth, not state mutation); (c) AC-005 `transitioned` vs `changed` ambiguity resolved as `changed` (verified at src/cli/issue/json_output.rs:4-10) — also closes S-2.02-DEFER. AC-006 reframed to extend the existing 11-test insta snapshot suite at src/cli/issue/json_output.rs:84-149. Verification report at .factory/research/S-2.07-json-policy-and-conventions-research.md. | Phase 3 / Wave 2 | 2026-05-08 | human + research-agent (Perplexity + WebSearch + WebFetch) |
+| DEC-012 | BC-7.3.004 mis-anchor repair: Option A (4 new sub-BCs) | Per .factory/research/wave-2-gate-decisions-research.md, Option A re-anchors S-2.07 ACs to BC-7.1.001 + creates 4 new sub-BCs (BC-7.4.013-016) for the auth JSON shapes. Justification: BC-7.4 already houses 12 per-shape JSON pins; Google AIP-162 prefers extending topical sections over inventing new top-level IDs; per-shape pins have lower future-churn risk than one shared abstract contract. Develop-side test docstring re-anchoring deferred to a future touch. | Phase 3 Wave 2 gate | 2026-05-08 | human (final say) + research-agent |
 
 ## Skip Log
 
@@ -146,6 +147,13 @@ Goal 1c: **Harden v0.5 + feature delivery** — formalize existing codebase with
 | S-2.06-DEFER-03 | src/duration.rs:65 | !found_any guard reachability is constrained by prior guards — logically sound but slightly defensive. No action needed. | LOW | DEFERRED — 2026-05-08 |
 | S-2.07-DEFER-01 | src/main.rs (existing global error wrapper) | AC-003 (auth subcommand JSON error path) was already satisfied by main.rs's existing --output json error wrapper — propagated JrError values get `{"error","code"}` to stderr. Documented in docs/specs/json-output-shapes.md as already-working. No action needed. | LOW | DEFERRED — 2026-05-08 |
 | S-2.07-DEFER-02 | src/cli/auth.rs::mod tests | Pre-existing refresh_payload_pins_token_shape and refresh_payload_pins_oauth_shape tests cover much of AC-002's ground. New tests test_refresh_success_payload_emits_status_refreshed_for_token_flow and _for_oauth_flow are intentionally additive (more specific assertions). No action; intentional overlap. | LOW | DEFERRED — 2026-05-08 |
+| WV2-FIX-A-FOLLOWUP-01 | tests/auth_output_json.rs + src/cli/auth.rs::mod tests | 11 test docstrings cite BC-7.3.004 — needs develop-side fix-PR to re-anchor to BC-7.4.013-016 / BC-7.3.005. SHA range src/cli/auth.rs:2126,2156,2198,2210,2222,2234 + tests/auth_output_json.rs:99,141,184,235,298. | LOW | DEFERRED — bundle into next develop touch (e.g., S-3.11 if created, or fold into a Wave 3 doc-cleanup PR). |
+| WV2-FIX-A-FOLLOWUP-02 | tests/worklog_duration_holdouts.rs:467,524 | 2 test names embed bc_6_2_013 in their function name — needs develop-side rename to bc_6_2_006. Test names are not load-bearing for runtime; load-bearing for traceability searches. | LOW | DEFERRED — bundle into next develop touch. |
+| WV2-ADV-01 | S-2.07 spec + 11 test docstrings | BC-7.3.004 semantic mis-anchor in S-2.07 spec. Story spec re-anchored to BC-7.1.001 + BC-7.4.013-016 (Fix-PR A). Develop-side test docstring re-anchoring deferred as WV2-FIX-A-FOLLOWUP-01. | BLOCKING | **RESOLVED — 2026-05-08 — Fix-PR A** (spec portion resolved; test docstrings deferred as FOLLOWUP-01) |
+| WV2-ADV-03 | S-2.06 spec + 2 holdout test names | BC-6.2.013 mis-anchor in S-2.06 Part B. Story spec re-anchored to BC-6.2.006 (Fix-PR A). Develop-side test name rename deferred as WV2-FIX-A-FOLLOWUP-02. | BLOCKING | **RESOLVED — 2026-05-08 — Fix-PR A** (spec portion resolved; test function names deferred as FOLLOWUP-02) |
+| WV2-CV-01 | .factory/specs/prd/cross-cutting.md:316 | BC-X.5.005 H1 heading named deprecated 3-arg calculator. Updated to reflect post-S-2.06 dual-function situation (validator is production path). | BLOCKING | **RESOLVED — 2026-05-08 — Fix-PR A** |
+| WV2-CV-02 | .factory/stories/WAVE-PLAN.md | Wave 2 status was ACTIVE/draft; Wave 3 showed 9 stories without S-3.10; S-2.06→S-3.10 dependency missing. | DRIFT | **RESOLVED — 2026-05-08 — Fix-PR A** |
+| WV2-CV-07 | .factory/stories/STORY-INDEX.md + STATE.md | S-2.02 SHA typo 75289600 → 7528960 in STATE.md. | DRIFT | **RESOLVED — 2026-05-08 — Fix-PR A** |
 
 ## Convergence Trackers
 

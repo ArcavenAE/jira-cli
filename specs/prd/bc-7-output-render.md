@@ -1,9 +1,9 @@
 ---
 context: bc-7
 title: "Output Rendering & Error"
-total_bcs: 80   # cumulative claim (incl. range-collapsed); definitional_count below is individually-bodied headings
-definitional_count: 34   # count of `#### BC-` headings in this file
-last_updated: 2026-05-04
+total_bcs: 84   # cumulative claim (incl. range-collapsed); definitional_count below is individually-bodied headings; +4 added 2026-05-08 (BC-7.4.013-016, Fix-PR A)
+definitional_count: 38   # count of `#### BC-` headings in this file
+last_updated: 2026-05-08
 source_pass: 3
 trace: |
   - L2: .factory/specs/domain-spec/bc-07-output-render.md
@@ -13,8 +13,8 @@ trace: |
 
 # BC-7 — Output Rendering & Error
 
-80 behavioral contracts across 5 subdomains: Table/JSON output (7.1), ADF rendering (7.2),
-Error display (7.3), JSON output shapes (7.4), Observability (7.5).
+84 behavioral contracts across 5 subdomains: Table/JSON output (7.1), ADF rendering (7.2),
+Error display (7.3), JSON output shapes (7.4), Observability (7.5). (+4 BC-7.4.013-016 added 2026-05-08 by Fix-PR A for auth JSON shapes.)
 
 ---
 
@@ -268,6 +268,78 @@ All snapshots from `src/cli/issue/snapshots/` and `src/cli/snapshots/`. Keys are
 #### BC-7.4.012: `user view` hidden email → table shows em-dash `—`; JSON output shows explicit `null` (privacy boundary)
 **Source**: `tests/user_commands.rs` BC-1132j/k
 **Trace**: Pass 3 BC-1132j, BC-1132k (R4)
+
+#### BC-7.4.013: `auth login --output json` emits `{"profile": <name>, "action": "login", "ok": true}` to stdout on success
+
+**Confidence**: HIGH
+**Source**: `src/cli/auth.rs::handle_login` (JSON branch); `src/cli/auth.rs::auth_json_response`
+**Subject**: JSON output shape — auth login
+**Behavior**: When `--output json` is set and `jr auth login` completes successfully, stdout receives exactly the JSON object `{"action": "login", "ok": true, "profile": "<profile-name>"}` (keys sorted alphabetically in insta output). The `profile` field reflects the profile name that was logged in. No other output is written to stdout. Human-readable success text is suppressed when `--output json` is active.
+
+```json
+{"action": "login", "ok": true, "profile": "<name>"}
+```
+
+Field types: `profile` is `string`, `action` is `string` literal `"login"`, `ok` is `bool` literal `true`.
+**Production code**: `src/cli/auth.rs::handle_login` (JSON branch); helper `auth_json_response(profile_name, "login")`
+**Snapshot test**: `src/cli/snapshots/jr__cli__auth__tests__auth_login_json_shape.snap`
+**Trace**: S-2.07 v2.0.0 (BC-7.4.013, added 2026-05-08 by Fix-PR A)
+
+---
+
+#### BC-7.4.014: `auth switch --output json` emits `{"profile": <name>, "action": "switch", "ok": true}` to stdout on success
+
+**Confidence**: HIGH
+**Source**: `src/cli/auth.rs::handle_switch` (JSON branch); `src/cli/auth.rs::auth_json_response`
+**Subject**: JSON output shape — auth switch
+**Behavior**: When `--output json` is set and `jr auth switch <profile>` completes successfully, stdout receives exactly the JSON object `{"action": "switch", "ok": true, "profile": "<profile-name>"}` (keys sorted alphabetically). The `profile` field reflects the profile switched to. Human-readable success text is suppressed when `--output json` is active.
+
+```json
+{"action": "switch", "ok": true, "profile": "<name>"}
+```
+
+Field types: `profile` is `string`, `action` is `string` literal `"switch"`, `ok` is `bool` literal `true`.
+**Production code**: `src/cli/auth.rs::handle_switch` (JSON branch); helper `auth_json_response(profile_name, "switch")`
+**Snapshot test**: `src/cli/snapshots/jr__cli__auth__tests__auth_switch_json_shape.snap`
+**Trace**: S-2.07 v2.0.0 (BC-7.4.014, added 2026-05-08 by Fix-PR A)
+
+---
+
+#### BC-7.4.015: `auth logout --output json` emits `{"profile": <name>, "action": "logout", "ok": true}` to stdout on success
+
+**Confidence**: HIGH
+**Source**: `src/cli/auth.rs::handle_logout` (JSON branch); `src/cli/auth.rs::auth_json_response`
+**Subject**: JSON output shape — auth logout
+**Behavior**: When `--output json` is set and `jr auth logout` completes successfully, stdout receives exactly the JSON object `{"action": "logout", "ok": true, "profile": "<profile-name>"}` (keys sorted alphabetically). The `profile` field reflects the profile logged out. Human-readable success text is suppressed when `--output json` is active.
+
+```json
+{"action": "logout", "ok": true, "profile": "<name>"}
+```
+
+Field types: `profile` is `string`, `action` is `string` literal `"logout"`, `ok` is `bool` literal `true`.
+**Production code**: `src/cli/auth.rs::handle_logout` (JSON branch); helper `auth_json_response(profile_name, "logout")`
+**Snapshot test**: `src/cli/snapshots/jr__cli__auth__tests__auth_logout_json_shape.snap`
+**Trace**: S-2.07 v2.0.0 (BC-7.4.015, added 2026-05-08 by Fix-PR A)
+
+---
+
+#### BC-7.4.016: `auth remove --output json` emits `{"profile": <name>, "action": "remove", "ok": true}` to stdout on success
+
+**Confidence**: HIGH
+**Source**: `src/cli/auth.rs::handle_remove` (JSON branch); `src/cli/auth.rs::auth_json_response`
+**Subject**: JSON output shape — auth remove
+**Behavior**: When `--output json` is set and `jr auth remove <profile>` completes successfully, stdout receives exactly the JSON object `{"action": "remove", "ok": true, "profile": "<profile-name>"}` (keys sorted alphabetically). The `profile` field reflects the profile removed. Human-readable success text is suppressed when `--output json` is active.
+
+```json
+{"action": "remove", "ok": true, "profile": "<name>"}
+```
+
+Field types: `profile` is `string`, `action` is `string` literal `"remove"`, `ok` is `bool` literal `true`.
+**Production code**: `src/cli/auth.rs::handle_remove` (JSON branch); helper `auth_json_response(profile_name, "remove")`
+**Snapshot test**: `src/cli/snapshots/jr__cli__auth__tests__auth_remove_json_shape.snap`
+**Trace**: S-2.07 v2.0.0 (BC-7.4.016, added 2026-05-08 by Fix-PR A)
+
+---
 
 ### 7.5 Observability
 

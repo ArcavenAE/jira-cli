@@ -2,11 +2,11 @@
 document_type: wave-plan
 phase: phase-2-story-decomposition
 producer: story-writer
-version: "1.3.0"
+version: "1.4.0"
 last_updated: 2026-05-08
 wave_0_status: COMPLETE
 wave_1_status: COMPLETE
-wave_2_status: ACTIVE
+wave_2_status: COMPLETE
 activation_head: dea1664
 ---
 
@@ -70,17 +70,17 @@ Recommended parallel groups:
 
 ---
 
-## Wave 2 — MEDIUM-priority NFRs requiring code work + BC holdout regression suites (7 stories) — **ACTIVE**
+## Wave 2 — MEDIUM-priority NFRs requiring code work + BC holdout regression suites (7 stories) — **COMPLETE** (2026-05-08)
 
 | Story | Title | BC/NFR Anchors | Depends on | Status | Effort |
 |-------|-------|---------------|------------|--------|--------|
-| S-2.01 | BC-2 issue-read holdout suite (incl. H-021) | BC-2.1.*, H-030..H-035, H-021 | — | draft | medium |
-| S-2.02 | BC-3 issue-write holdout suite | BC-3.*, H-007, H-008, H-014 | — | draft | medium |
-| S-2.03 | BC-4 asset enrichment holdout suite | BC-4.*, H-037, H-038, H-039 | (S-0.03 recommended first) | draft | medium |
-| S-2.04 | BC-5 boards/sprints holdout suite | BC-5.*, H-040..H-044 | — | draft | medium |
-| S-2.05 | CLAUDE.md documentation update | NFR-O-L/M/O/V/R, NFR-R-F | — | draft | small |
-| S-2.06 | Worklog duration config + CMDB cache tuple | NFR-R-C, BC-X.5.009, BC-6.2.013 | — | draft | medium |
-| S-2.07 | JSON output policy + test naming | NFR-O-F/J/W, H-020 | — | draft | medium |
+| S-2.01 | BC-2 issue-read holdout suite (incl. H-021) | BC-2.1.*, H-030..H-035, H-021 | — | merged (#303) | medium |
+| S-2.02 | BC-3 issue-write holdout suite | BC-3.*, H-007, H-008, H-014 | — | merged (#304) | medium |
+| S-2.03 | BC-4 asset enrichment holdout suite | BC-4.*, H-037, H-038, H-039 | (S-0.03 recommended first) | merged (#305) | medium |
+| S-2.04 | BC-5 boards/sprints holdout suite | BC-5.*, H-040..H-044 | — | merged (#306) | medium |
+| S-2.05 | CLAUDE.md documentation update | NFR-O-L/M/O/V/R, NFR-R-F | — | merged (#307) | small |
+| S-2.06 | Worklog duration config + CMDB cache tuple | NFR-R-C, BC-X.5.009, BC-6.2.006 | — | merged (#308) | small |
+| S-2.07 | JSON output policy + test naming | BC-7.1.001, BC-7.4.013-016, BC-7.3.005, NFR-O-F/J/W, H-020 | — | merged (#309) | small |
 
 **Wave 2 parallel groups:** {S-2.01, S-2.02, S-2.03, S-2.04} BC holdout suites (parallel); {S-2.05, S-2.07} doc/policy (parallel); {S-2.06} new endpoint + cache.
 
@@ -88,7 +88,7 @@ Recommended parallel groups:
 
 ---
 
-## Wave 3 — LOW-priority + DEFER + DRIFT codification + cleanup (9 stories)
+## Wave 3 — LOW-priority + DEFER + DRIFT codification + cleanup (10 stories)
 
 | Story | Title | BC/NFR Anchors | Depends on | Status | Effort |
 |-------|-------|---------------|------------|--------|--------|
@@ -101,8 +101,10 @@ Recommended parallel groups:
 | S-3.07 | LOW NFR code cleanup (4 parts bundled) | NFR-R-NEW-1/2, ... | — | draft | small |
 | S-3.08 | LOW NFR DOCUMENT-AS-IS | 15 LOW NFRs | — | draft | small |
 | S-3.09 | PKCE deferral formal record | NFR-S-A, ADR-0013, SD-001 | — | draft | xsmall |
+| S-3.10 | Rewrite format_roundtrip proptest + delete deprecated 3-arg parse_duration calculator + retire H-018 | BC-X.5.005 | S-2.06 | draft | small |
 
-**Wave 3 parallel groups:** {S-3.01, S-3.02} refactors (parallel); {S-3.03, S-3.04, S-3.05} feature/investigation (parallel); {S-3.06, S-3.07, S-3.08, S-3.09} cleanup/doc (parallel).
+**Wave 3 parallel groups:** {S-3.01, S-3.02} refactors (parallel); {S-3.03, S-3.04, S-3.05} feature/investigation (parallel); {S-3.06, S-3.07, S-3.08, S-3.09, S-3.10} cleanup/doc (parallel).
+Note: S-3.10 depends on S-2.06 (S-2.06 deprecated the 3-arg calculator; S-3.10 deletes it and rewrites the proptest that depends on it).
 
 **Exit gate:** Phase 3 starts upon Wave 0 + Wave 1 + Wave 2 exit. Wave 3 stories merge during steady-state v0.6 cycle.
 
@@ -119,3 +121,7 @@ Recommended parallel groups:
 4. **Breaking changes isolated**: S-0.06 (SD-003 `--verbose-bodies`) is isolated as its own story with `breaking_change: true` so it can be tracked in release notes separately.
 
 5. **Spec-first**: S-0.07 formalizes the H-NEW-AUTH-002 holdout in `holdout-scenarios.md` so Phase 4 evaluation has a concrete spec to evaluate against. This is a doc/fixture story, not a code story.
+
+---
+
+_Last updated: 2026-05-08 (Wave 2 close + S-3.10 addition; Fix-PR A spec-anchor sweep applied)_
