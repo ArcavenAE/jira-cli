@@ -65,15 +65,33 @@
 
 ---
 
+---
+
+## AUTO-REFRESH RISKS — S-3.03 (5)
+
+Added 2026-05-08 from S-3.03 v2.0.0 design verification
+(`.factory/research/S-3.03-v2-design-verification.md`). These risks are specific
+to the auto-refresh OAuth implementation (Wave 3, S-3.03).
+
+| # | Risk | Severity | Source Story | Phase 3 Action |
+|---|------|----------|-------------|----------------|
+| **R-NEW-AR-1** | **Stale-token retry storm:** N concurrent `JiraClient::send()` callers all see 401, first caller refreshes, waiters use the cached in-memory `RefreshState.last_access_token` to retry. If `RefreshState` is not updated atomically before waiters are released, waiters retry with the old (still-expired) token — causing a second wave of 401s and a retry storm. | MEDIUM | S-3.03 | FIX-IN-PHASE-3 (S-3.03 AC-009): waiters read `RefreshState.last_access_token` from in-memory state AFTER the inner `tokio::sync::Mutex` is released; state is updated atomically before release. Keychain is NOT re-read in the hot path. |
+| **R-NEW-AR-2** | **Deadlock from nested mutex:** If the outer `std::sync::Mutex<HashMap>` is accidentally held across an `.await` (e.g., a future contributor moves the `inner.lock().await` inside the outer guard), the outer `std::sync::Mutex` blocks the tokio executor — other tasks cannot proceed, causing a deadlock. | LOW | S-3.03 | FIX-IN-PHASE-3 (S-3.03 arch compliance rule): outer `StdMutex` is held ONLY for HashMap `entry()`/`clone()` and MUST be dropped before `.await`. Enforced by code review and lint (`must_not_suspend` on the outer guard if stabilized). |
+| **R-NEW-AR-3** | **Auto-refresh masks non-expiry 401s:** Blanket-401 trigger fires on revoked tokens, scope reductions, tenant deletion, and 2FA step-up — not just expired access tokens. In these cases the refresh attempt will fail with `invalid_grant` (4xx), surfacing `NotAuthenticated`. The masking effect is one wasted HTTP call before surfacing a clear error, not a silent failure. | LOW | S-3.03 | DOCUMENT-AS-IS: Acceptable trade-off against locale-fragile substring-match. The refresh fails fast (no loop) and surfaces a clear `NotAuthenticated` hint. One wasted HTTP call per non-expiry 401 is the known cost of blanket-401 triggering. |
+| **R-NEW-AR-4** | **Inter-process refresh race:** Two concurrent `jr` processes sharing a profile both see an expired access token, both attempt refresh. Process A succeeds (rotates the refresh token). Process B then sends the now-rotated (stale) refresh token to Atlassian and receives `invalid_grant`. Without post-hoc reconcile, Process B surfaces `NotAuthenticated` even though auth is fine (Process A refreshed successfully). | MEDIUM | S-3.03 | FIX-IN-PHASE-3 (S-3.03 AC-010): on `invalid_grant` failure, re-read keychain's `<profile>:oauth-refresh-token`; if it differs from the token just sent, retry the ORIGINAL API call with the keychain's new `<profile>:oauth-access-token`. ~15 LOC, no new dependency. |
+| **R-NEW-AR-5** | **Persist-failure wedge:** Refresh exchange with Atlassian succeeds (new tokens issued), but `store_oauth_tokens` fails (disk-full, keychain timeout, macOS Security framework error). If in-memory `RefreshState` is updated BEFORE persist, the process holds a valid access token in memory but the keychain still has the old, now-rotated refresh token. On next process start, the old refresh token is invalid; user gets `invalid_grant` permanently until re-auth. | LOW | S-3.03 | FIX-IN-PHASE-3 (S-3.03 AC-011): persist-before-publish ordering — `store_oauth_tokens` must complete successfully BEFORE `RefreshState.last_result` is updated. If persist fails, surface the error to the caller; `RefreshState` remains `Err`; next call retries refresh (which will fail with `invalid_grant`), and the user receives a clear re-auth prompt. |
+
+---
+
 ## Risk Summary
 
 | Severity | Count | Top action |
 |----------|------:|-----------|
 | CRITICAL | 1 | FIX-IN-PHASE-3 (NFR-R-D multi-profile fields) |
 | HIGH | 6 | 5× FIX-IN-PHASE-3, 1× SECURITY-DECIDE |
-| MEDIUM | 8 | 4× DEFER, 1× DOCUMENT-AS-IS, 1× FIX-IN-PHASE-3, 2× SECURITY-DECIDE (R-M3 merged into R-L11 at Pass 8) |
-| LOW | 13 | 10× DOCUMENT-AS-IS/FIX-IN-PHASE-3, 2× DEFER, 1× POLICY-DECISION (R-L12 + R-L13 added at CV-003) |
-| **Total** | **28** | |
+| MEDIUM | 10 | 4× DEFER, 1× DOCUMENT-AS-IS, 1× FIX-IN-PHASE-3, 2× SECURITY-DECIDE, 2× S-3.03 auto-refresh (R-M3 merged into R-L11 at Pass 8) |
+| LOW | 16 | 10× DOCUMENT-AS-IS/FIX-IN-PHASE-3, 2× DEFER, 1× POLICY-DECISION, 3× S-3.03 auto-refresh (R-L12 + R-L13 added at CV-003) |
+| **Total** | **33** | |
 
 ---
 
