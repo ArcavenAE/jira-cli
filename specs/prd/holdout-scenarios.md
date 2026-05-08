@@ -190,12 +190,15 @@ Setup uses:
 
 ---
 
-### H-018: `parse_duration` vs `validate_duration` — different acceptance for combined units
+### H-018: Duration validator accepts combined units
 **Setup**: none.
-**Action**: invoke `duration::parse_duration("1w2d3h30m", 8, 5)` and `jql::validate_duration("4w2d")`.
-**Expected**: parse_duration → Ok(seconds = 1×5×8×3600 + 2×8×3600 + 3×3600 + 30×60). validate_duration → Err.
+**BC**: BC-X.5.005 (post-S-2.06 v2.0.0)
+**Difficulty**: easy
+**Action**: invoke `duration::parse_duration_validate("1w2d3h30m")` and `jql::validate_duration("4w2d")`.
+**Expected**: `parse_duration_validate("1w2d3h30m")` → `Ok(())` (syntactic acceptance only — Jira computes the seconds total server-side using its configured working-hours-per-day; see S-2.06 v2.0.0 / DEC-010 / `.factory/research/S-2.06-jira-timetracking-verification.md`). `jql::validate_duration("4w2d")` → `Err`.
 **Why hidden**: Two parsers with overlapping syntax but DIFFERENT acceptance — easy to confuse.
-**BC refs**: BC-X.9.002, BC-X.9.003
+**BC refs**: BC-X.5.005
+**Note (2026-05-08)**: H-018 was REPLACED in place (Option 2) per `.factory/research/H-018-holdout-strategy-research.md` after the production contract changed in S-2.06 v2.0.0. The old Expected clause asserted the deprecated calculator's seconds total — now an internal-only function preserved for the `format_roundtrip` proptest. A follow-up Wave 3 story (S-3.10 — see `.factory/stories/wave-3/S-3.10-rewrite-format-roundtrip-proptest-delete-deprecated-parse-duration.md`) will retire the proptest dependency and the deprecated function; H-018 will then be deleted entirely.
 
 ---
 

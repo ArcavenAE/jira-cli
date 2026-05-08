@@ -2,8 +2,8 @@
 document_type: story-index
 phase: phase-2-story-decomposition
 producer: story-writer
-version: "1.4.8"
-total_stories: 31
+version: "1.4.9"
+total_stories: 32
 total_waves: 4
 status: complete-pending-adv-review
 last_updated: 2026-05-08
@@ -24,9 +24,9 @@ Phase 1 converged at adversary Pass 28. Gate approved 2026-05-04.
 | 0 | MUST-FIX bugs + SD-002/SD-003 security + H-NEW-AUTH-002 holdout | 7 | ~5-6 dev-days | All H-MUST-FAIL holdouts become MUST-PASS; no regression on H-001..H-047 |
 | 1 | High-priority security posture, supply-chain hardening, structured logging, regression holdouts | 8 | ~6-7 dev-days | NFR-S-E/F gate; wave-0 holdouts green; H-001..H-006 MUST-PASS |
 | 2 | Medium-priority NFRs, BC-2/3/4/5 holdout suites, JSON output policy, documentation | 7 | ~5-6 dev-days | NFR-P-* gate; H-030..H-044 MUST-PASS |
-| 3 | Low priority + deferred (DEFER NFRs, shard splits, process codification, DOCUMENT-AS-IS) | 9 | ~5-7 dev-days | Per-story gates; no v0.5 blocking |
+| 3 | Low priority + deferred (DEFER NFRs, shard splits, process codification, DOCUMENT-AS-IS) | 10 | ~5-7 dev-days | Per-story gates; no v0.5 blocking |
 
-**Final totals: 31 stories across 4 waves.** Wave 0: 7, Wave 1: 8, Wave 2: 7, Wave 3: 9.
+**Final totals: 32 stories across 4 waves.** Wave 0: 7, Wave 1: 8, Wave 2: 7, Wave 3: 10.
 
 Story file naming: `stories/wave-W/S-W.NN-short-slug.md`
 Story ID convention: `S-W.NN` (e.g., `S-0.01`, `S-1.03`)
@@ -151,6 +151,7 @@ Note: S-3.08 depends on S-2.05 merging first (CLAUDE.md conflict risk).
 | S-3.07 | LOW NFR code fixes: Retry-After cap, overflow guard, profile name error, anti-loop | NFR-R-NEW-1, NFR-R-NEW-2, NFR-S-D, NFR-R-F, BC-X.4.009, BC-X.9.002, BC-6.1.004 | H-027 | draft | small |
 | S-3.08 | DOCUMENT-AS-IS LOW NFR closures: source comments + CLAUDE.md additions | NFR-R-G, NFR-O-C/E/G/H/I/N/P/R/T/U/X, NFR-SCA-1/2/3 | — | draft | small |
 | S-3.09 | Formally record PKCE deferral (SD-001 → DEFER; ADR-0013) | NFR-S-A, BC-1.5.036 | — | draft | xsmall |
+| S-3.10 | Rewrite format_roundtrip proptest + delete deprecated 3-arg parse_duration calculator + retire H-018 | BC-X.5.005 | H-018 (to delete) | draft | small | <!-- follows S-2.06 (depends_on); Option 4 follow-up per .factory/research/H-018-holdout-strategy-research.md --> |
 
 Wave 3 story files: `stories/wave-3/S-3.NN-*.md`
 
@@ -166,6 +167,7 @@ All of the following must be true before Phase 2 is considered fully complete:
 - S-3.07: H-027 updated from KNOWN-GAP to MUST-PASS; `parse_duration("99999999999999w")` returns Err
 - S-3.08: `cargo clippy -- -D warnings` exits 0; all 15 DOCUMENT-AS-IS LOW NFRs have a paper trail
 - S-3.09: NFR-S-A routing column in nfr-catalog.md reads `DEFER (per ADR-0013)`; ADR-0013 has Reactivation section
+- S-3.10: `rg -n "parse_duration\b" --type rust src/` returns only `parse_duration_validate` hits; H-018 physically deleted from holdout-scenarios.md; total_holdouts updated 51→50; `cargo test --all-targets` green
 
 ---
 
@@ -280,3 +282,4 @@ Total rows: 31 (matches `total_stories: 31` in frontmatter).
 | S-3.07 | 3 | /Users/zious/Documents/GITHUB/jira-cli/.factory/stories/wave-3/S-3.07-low-nfr-code-cleanup.md |
 | S-3.08 | 3 | /Users/zious/Documents/GITHUB/jira-cli/.factory/stories/wave-3/S-3.08-low-nfr-document-as-is.md |
 | S-3.09 | 3 | /Users/zious/Documents/GITHUB/jira-cli/.factory/stories/wave-3/S-3.09-pkce-decision-deferred.md |
+| S-3.10 | 3 | /Users/zious/Documents/GITHUB/jira-cli/.factory/stories/wave-3/S-3.10-rewrite-format-roundtrip-proptest-delete-deprecated-parse-duration.md |
