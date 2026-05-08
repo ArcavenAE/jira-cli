@@ -81,7 +81,7 @@ Setup uses:
 ### H-006: `issue move FOO-1 "In Progress"` is idempotent when already in target
 **Setup**: wiremock returns `GET /issue/FOO-1` with `status.name = "In Progress"`. Mock POST transitions with `expect(0)`.
 **Action**: `jr issue move FOO-1 "In Progress" --output json`
-**Expected**: exit 0; stdout JSON has `"transitioned": false`. POST mock not invoked.
+**Expected**: exit 0; stdout JSON has `"changed": false`. POST mock not invoked. (v2026-05-08: corrected from `"transitioned"` to `"changed"` per S-2.07 v2.0.0; canonical at src/cli/issue/json_output.rs:4-10)
 **Why hidden**: Idempotency is invisible in success-only tests.
 **BC refs**: BC-3.2.001
 

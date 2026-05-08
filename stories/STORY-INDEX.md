@@ -2,7 +2,7 @@
 document_type: story-index
 phase: phase-2-story-decomposition
 producer: story-writer
-version: "1.4.7"
+version: "1.4.8"
 total_stories: 31
 total_waves: 4
 status: complete-pending-adv-review
@@ -110,7 +110,7 @@ Note: S-2.03's S-0.03 dependency was demoted to a recommended merge order (no lo
 | S-2.04 | BC-5/7 boards, sprints, ADF holdout suite | BC-5.2.001, BC-5.2.005, BC-5.2.007, BC-5.2.008, BC-5.3.001, BC-5.3.002, BC-7.2.001 | H-040..H-044 | merged (PR #306 / ada9126) | medium |
 | S-2.05 | CLAUDE.md documentation update | NFR-O-L, NFR-O-M, NFR-O-O, NFR-O-V, NFR-O-R, NFR-R-F | — | merged (PR #307 / 7f004ca) | small |
 | S-2.06 | Worklog timeSpent server-side parsing + CMDB cache tuple pin | NFR-R-C, BC-X.5.009, BC-6.2.013 | — | merged (PR #308 / c8f15d8) | small | <!-- v2.0.0 2026-05-08: pivot from admin-only timetracking config fetch to timeSpent string passthrough; see .factory/research/S-2.06-jira-timetracking-verification.md --> |
-| S-2.07 | JSON output policy + test naming convention | NFR-O-F, NFR-O-J, NFR-O-W | H-020 | draft | medium |
+| S-2.07 | Auth --output json (4 subcommands) + verb-aligned JSON policy + test naming | NFR-O-F, NFR-O-J, NFR-O-W | H-020 | draft | small | <!-- v2.0.0 2026-05-08; see .factory/research/S-2.07-json-policy-and-conventions-research.md --> |
 
 Wave 2 story files: `stories/wave-2/S-2.NN-*.md`
 
