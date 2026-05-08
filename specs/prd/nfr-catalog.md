@@ -44,7 +44,7 @@ All four MUST-FIX items (NFR-R-D, NFR-R-A, NFR-R-B, NFR-R-E) have been crystalli
 
 | ID | Description | Severity | Site | Phase 3 Routing |
 |---|---|---|---|---|
-| **NFR-R-C** | Worklog duration uses hardcoded `8h/day, 5d/week` constants. Jira instances can configure these via `/rest/api/3/configuration/timetracking`. Silent wrong-answer for 7.5h or 4-day setups. | MEDIUM | `src/cli/worklog.rs:32` | **FIX-IN-PHASE-3**: Fetch + cache timetracking config from Jira instance (7-day TTL); fall back to 8/5 on miss |
+| **NFR-R-C** | Worklog duration constants no longer apply. Worklog POST sends `timeSpent` (string) and Jira's server applies its configured `workingHoursPerDay`/`workingDaysPerWeek`. Resolves silent wrong-answer on customized instances. | MEDIUM | `src/cli/worklog.rs` + `src/api/jira/worklogs.rs` | **RESOLVED — 2026-05-08 — S-2.06 v2.0.0 (PR #308 / c8f15d8) via Option 1 (timeSpent string passthrough; matches `ankitpokhrel/jira-cli` pattern). Original FIX-IN-PHASE-3 plan (admin-only `/rest/api/3/configuration/timetracking` endpoint fetch) was BLOCKED by Perplexity verification 2026-05-08; see DEC-010 and `.factory/research/S-2.06-jira-timetracking-verification.md`.** |
 | **NFR-R-F** | `get_changelog` anti-loop guard present (breaks if nextPage URL == current URL). `search_issues` cursor loop has no analogous guard against cursor == cursor regression. | MEDIUM | `src/api/jira/issues.rs:222-230` | **DOCUMENT-AS-IS**: Add similar guard to `search_issues`; document pattern |
 ### LOW
 
@@ -148,7 +148,7 @@ All four MUST-FIX items (NFR-R-D, NFR-R-A, NFR-R-B, NFR-R-E) have been crystalli
 | NFR-R-B | Reliability | HIGH | FIX-IN-PHASE-3 | BC-3.4.001 |
 | NFR-R-E | Reliability | HIGH | FIX-IN-PHASE-3 | BC-4.3.001 |
 | NFR-S-B | Security | HIGH | SECURITY-DECIDE | — |
-| NFR-R-C | Reliability | MEDIUM | FIX-IN-PHASE-3 | — |
+| NFR-R-C | Reliability | MEDIUM | RESOLVED (2026-05-08, S-2.06 v2.0.0, PR #308 / c8f15d8) | — |
 | NFR-R-F | Reliability | MEDIUM | DOCUMENT-AS-IS | — |
 | NFR-S-A | Security | MEDIUM | SECURITY-DECIDE | — |
 | NFR-S-C | Security | MEDIUM | SECURITY-DECIDE | — |

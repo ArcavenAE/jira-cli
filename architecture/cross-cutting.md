@@ -161,7 +161,7 @@ Property tests cover this module (`proptest`).
 
 Parses worklog duration strings: `2h`, `1h30m`, `1d`, `1w`, etc. Converts to seconds using hardcoded constants: 8h/day, 5d/week.
 
-**NFR-R-C gap (MEDIUM):** Jira instances can configure different day/week lengths via `/rest/api/3/configuration/timetracking`. The hardcoded constants silently produce wrong values for non-standard configurations (7.5h/day, 4-day weeks).
+**NFR-R-C gap (MEDIUM, RESOLVED 2026-05-08):** Previously, `worklog add` hardcoded 8h/5d constants, silently producing wrong values for non-standard configurations (7.5h/day, 4-day weeks). Resolved by S-2.06 v2.0.0 (PR #308 / c8f15d8 / DEC-010) — worklog POST now sends `timeSpent` (string); Jira's server applies its configured working-hours. The original FIX-IN-PHASE-3 plan (fetching `/rest/api/3/configuration/timetracking`) was blocked by Perplexity verification — that endpoint requires Administer-Jira permission and 403s for most users.
 
 **NFR-R-NEW-2 gap (LOW):** `parse_duration` silently wraps on multiplicative overflow for pathological inputs (e.g., `99999999999999w`) in release builds (`panic=abort` disables debug overflow checks). Fix: use `checked_mul`; bail with "duration too large" error.
 

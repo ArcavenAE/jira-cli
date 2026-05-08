@@ -83,7 +83,7 @@ Covers the write side of the Issue domain: `jr issue create`, `edit`, `move`, `a
 | `issue resolutions` | Cache-first, `GET /rest/api/3/resolution` | Yes (read-only) | 7-day TTL. `--refresh` forces re-fetch. |
 | `sprint add <issue...>` | `POST /rest/agile/1.0/sprint/<id>/issue` | No (API behavior) | Cap: 50 issues/call. |
 | `sprint remove <issue...>` | `POST /rest/agile/1.0/board/<id>/backlog` | Yes (API layer) | Cap: 50 issues/call. |
-| `worklog add <key> <duration>` | `POST /rest/api/3/issue/<key>/worklog` | No | Duration parsed via `duration::parse_duration(dur, 8, 5)` — hardcoded 8h/day, 5d/week (NFR-R-C). |
+| `worklog add <key> <duration>` | `POST /rest/api/3/issue/<key>/worklog` | No | Duration string forwarded to Jira as `timeSpent`; server-side parsing per Jira's `workingHoursPerDay`/`workingDaysPerWeek`. (Resolved S-2.06 v2.0.0 — was hardcoded 8h/5d before; see DEC-010.) |
 
 ---
 
@@ -99,7 +99,7 @@ Covers the write side of the Issue domain: `jr issue create`, `edit`, `move`, `a
 | INV-WRITE-006 | Comment `--internal` adds `{key:"sd.public.comment", value:{internal:true}}` to `properties[]`. On non-JSM projects, Jira silently ignores the property — no error. | `api/jira/issues.rs:181-198`, NEW-INV-257 (per Pass 8 §2.2 BC#10) |
 | INV-WRITE-007 | `issue unlink` without `--type` filter removes ALL links between k1 and k2. With `--type`, removes only matching-type links. Re-running on already-unlinked is a no-op (filter empties out). | `cli/issue/links.rs`, Pass 2 §2b.1 |
 | INV-WRITE-008 | `sprint add`/`sprint remove` cap at `MAX_SPRINT_ISSUES = 50` per call. Exceeding this count errors with an explicit message before any API call. | `cli/sprint.rs:35-41,55-61,107` |
-| INV-WRITE-009 | `worklog add` hardcodes `8h/day, 5d/week` as duration parsing parameters (`parse_duration(dur, 8, 5)`). Jira instance time-tracking settings are ignored. This is NFR-R-C (MEDIUM). | `cli/worklog.rs:32` |
+| INV-WRITE-009 | ~~`worklog add` hardcodes `8h/day, 5d/week` as duration parsing parameters (`parse_duration(dur, 8, 5)`). Jira instance time-tracking settings are ignored. This is NFR-R-C (MEDIUM).~~ **RESOLVED 2026-05-08 — S-2.06 v2.0.0 — `worklog add` now sends `timeSpent` string; Jira server applies its own working-hours config. See DEC-010.** | `cli/worklog.rs::handle_add` + `src/api/jira/worklogs.rs::add_worklog` |
 | INV-WRITE-010 | `list_worklogs` fetches only one `OffsetPage<Worklog>` and returns `.items().to_vec()`. `total`/`start_at`/`max_results` silently discarded. Silent truncation at 50 worklogs. This is NFR-R-A (HIGH). | `api/jira/worklogs.rs:25-30` |
 | INV-WRITE-011 | Resolutions without an `id` are dropped on cache write, with a stderr count warning. `CachedResolution.id` is non-optional. | `cli/issue/workflow.rs:117-133` |
 | INV-WRITE-012 | `issue create` ADF conversion path: plain text → ADF via `adf::text_to_adf`; `--markdown` → ADF via `adf::markdown_to_adf`. Both paths produce ADF JSON consumed by Jira. | `cli/issue/create.rs` |

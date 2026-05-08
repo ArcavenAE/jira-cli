@@ -318,7 +318,7 @@ JQL utilities (X.9), Partial-match (X.10), Build-time (X.11).
 **Confidence**: HIGH
 **Source**: `src/duration.rs::tests::test_complex`
 **Subject**: Duration
-**Behavior**: Distinguished from JQL `validate_duration` which rejects combined units. Used for worklog add.
+**Behavior**: Distinguished from JQL `validate_duration` which rejects combined units. Used for worklog add. (post-S-2.06 v2.0.0: validator path; old calculator preserved with SUPERSEDED-BY comment — `parse_duration_validate("1w2d3h30m")` is the production path; calculator `parse_duration(s, 8, 5)` is deprecated, retained only for `format_duration` round-trip proptest.)
 **Trace**: Pass 3 BC-505
 
 ---
@@ -347,12 +347,12 @@ JQL utilities (X.9), Partial-match (X.10), Build-time (X.11).
 
 ---
 
-#### BC-X.5.009: `worklog add` hardcodes 8h/day, 5d/week (`parse_duration(dur, 8, 5)` at `cli/worklog.rs:32`)
+#### BC-X.5.009: `worklog add` forwards the user-supplied duration string to Jira as `timeSpent`
 
 **Confidence**: HIGH
-**Source**: `src/cli/worklog.rs:32`
+**Source**: `src/cli/worklog.rs::handle_add` + `src/api/jira/worklogs.rs::add_worklog` + `src/duration.rs::parse_duration_validate`
 **Subject**: Duration
-**Behavior**: NFR-R-C (MEDIUM): ignores Jira instance time-tracking settings. DOCUMENT-AS-IS for v1.
+**Behavior**: `worklog add` forwards the user-supplied duration string to Jira as `timeSpent`. Jira's server applies its configured `workingHoursPerDay`/`workingDaysPerWeek`. `parse_duration_validate` is a client-side syntax validator only (no arithmetic). Resolves NFR-R-C silent-wrong-answer on customized instances. RESOLVED via S-2.06 v2.0.0 (PR #308 / c8f15d8 / DEC-010 / Option 1 pivot).
 **Trace**: Pass 3 BC-1014 (R4)
 
 ---

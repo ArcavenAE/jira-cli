@@ -554,11 +554,11 @@ R1/R4 prefix = deepening round that introduced it.
 | **BC-X.5.002** | **`client.list_worklogs(key)` paginates via `/issue/<key>/worklog` [MUST-FIX: NFR-R-A — HIGH]** | BC-502; NFR-R-A | src/api/jira/worklogs.rs:25-30 | HIGH |
 | BC-X.5.003 | `worklog list` 5xx → exit 1 + `API error (500)` | BC-503 | tests/worklog_commands.rs:55-93 | HIGH |
 | BC-X.5.004 | `worklog list` 401 → exit 2 + `Not authenticated` + `jr auth login` | BC-504 | tests/worklog_commands.rs:95-120 | HIGH |
-| BC-X.5.005 | `parse_duration("1w2d3h30m", 8, 5)` accepts combined units; returns total seconds | BC-505 | src/duration.rs::tests | HIGH |
+| BC-X.5.005 | Calculator (deprecated post-S-2.06 v2.0.0; kept only for `format_duration` round-trip proptest) AND validator `parse_duration_validate("1w2d3h30m")` accept combined units. Validator is the production path; old calculator has no production caller. See `src/duration.rs` and DEC-010. | BC-505 | src/duration.rs::tests | HIGH |
 | BC-X.5.006 | `parse_duration` is case-insensitive (input lowercased first) | BC-506 | src/duration.rs:6 | HIGH |
 | BC-X.5.007 | `parse_duration("")` errors `Duration cannot be empty` | BC-507 | src/duration.rs:7-9 | HIGH |
 | BC-X.5.008 | `parse_duration("5")` errors `Number without unit` | BC-508 | src/duration.rs:38-42 | HIGH |
-| BC-X.5.009 | `worklog add` hardcodes 8h/day, 5d/week (`parse_duration(dur, 8, 5)` at `cli/worklog.rs:32`) | BC-1014 (R4) | src/cli/worklog.rs:32 | HIGH |
+| BC-X.5.009 | `worklog add` forwards the user-supplied duration string to Jira as `timeSpent`. Jira's server applies its configured `workingHoursPerDay`/`workingDaysPerWeek`. `parse_duration_validate` is a client-side syntax validator only (no arithmetic). Resolves NFR-R-C silent-wrong-answer on customized instances. **RESOLVED — S-2.06 (PR #308 / c8f15d8)** | BC-1014 (R4) | src/cli/worklog.rs::handle_add + src/api/jira/worklogs.rs::add_worklog + src/duration.rs::parse_duration_validate | HIGH |
 | BC-X.5.010 | Duration proptest: `valid_single_units_always_parse`; `combined_units_always_parse`; `garbage_input_never_panics`; `format_roundtrip` | BC-1099..BC-1102 (R4) | src/duration.rs:128-157 | HIGH |
 
 ### X.6 Teams (4 BCs: BC-X.6.001..004)

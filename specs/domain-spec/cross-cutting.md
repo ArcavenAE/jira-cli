@@ -57,7 +57,8 @@ Modules: `jql.rs`, `duration.rs`, `partial_match.rs`, `observability.rs`, `api/c
 
 ### Entities / Value Objects
 
-- **`parse_duration(input: &str, hours_per_day: u64, days_per_week: u64) -> Result<u64>`**: returns total seconds. Accepts combined units `1w2d3h30m`. Case-insensitive (input is lowercased first). Units: `w`/`d`/`h`/`m` only. Configurable hours/day and days/week (callers currently hardcode `8, 5`).
+- **`parse_duration_validate(input: &str) -> Result<(), JrError>`**: production path (S-2.06 v2.0.0). Accepts combined units `1w2d3h30m`, also accepts space-separated `2d 3h 30m`. No arithmetic performed — syntactic validation only. Case-insensitive. Units: `w`/`d`/`h`/`m` only.
+- **`parse_duration(input: &str, hours_per_day: u64, days_per_week: u64) -> Result<u64>`**: DEPRECATED post-S-2.06 v2.0.0; kept only for `format_duration` round-trip proptest. No production caller. Returns total seconds. Accepts combined units `1w2d3h30m`. Case-insensitive (input is lowercased first). Callers previously hardcoded `8, 5`.
 - **`format_duration(seconds: u64) -> String`**: inverse. Returns `"30m"`, `"2h"`, or `"1h30m"` only — never weeks/days (format collapses to hours+minutes).
 
 ### Invariants

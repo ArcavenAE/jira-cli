@@ -152,7 +152,7 @@ Categories:
 
 ### EC-JQL-003: `parse_duration` accepts combined units
 **Boundary**: `jr worklog add PROJ-1 1w2d3h30m` (combined units in worklog context).
-**Expected**: `parse_duration("1w2d3h30m", 8, 5)` → Ok(seconds).
+**Expected**: `parse_duration_validate("1w2d3h30m")` → `Ok(())`. (post-S-2.06 v2.0.0; calculator deprecated — `parse_duration(s, 8, 5)` is preserved only for `format_duration` round-trip proptest.)
 **Status**: Covered by BC-X.9.002; holdout H-018.
 
 ### EC-JQL-004: Date validator runs before HTTP
