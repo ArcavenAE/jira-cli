@@ -1112,3 +1112,9 @@ Gate status: PENDING. Orchestrator dispatches Phase 3-adv next.
 | Step | Agent | Status | Output |
 |------|-------|--------|--------|
 | S-2.07 MERGED — Auth JSON + verb-aligned policy + test naming | devops-engineer | complete | PR #309 squash-merged to develop at ca22be0 (2026-05-08); v2.0.0 pivot after Perplexity verification (DEC-011); 4 auth subcommands now emit JSON; auth refresh asymmetric shape preserved; AC-003 already-passed by main.rs wrapper; 7 commits → squash; +6 tests (4 snapshots + 2 refresh regression-pin); 8/8 CI; APPROVE 1 cycle; 0 blocking; 2 LOW deferred (S-2.07-DEFER-01/02). **Wave 2 COMPLETE 7/7.** Phase 3: 22/31 (71%). |
+
+## Archived Step: S-3.10 MERGED (archived from STATE.md Current Phase Steps on 2026-05-09)
+
+| Step | Agent | Status | Output |
+|------|-------|--------|--------|
+| S-3.10 MERGED — format_roundtrip rewrite + parse_duration calculator deletion | deliver-story (full chain) | complete | PR #313 squash-merged to develop at f492e59 (2026-05-09). 117 LOC removed; 9 ACs delivered; 8/8 CI green; APPROVE 1 cycle; 0 blocking; demo evidence at docs/demo-evidence/S-3.10/. Spec changes at factory-artifacts@4250e2c. Wave 3: 1/10. **Unblocks S-3.07** (AC-NEW-B sequencing gate satisfied on develop). |

@@ -70,7 +70,7 @@ All four MUST-FIX items (NFR-R-D, NFR-R-A, NFR-R-B, NFR-R-E) have been crystalli
 
 | ID | Description | Severity | Site | Phase 3 Routing |
 |---|---|---|---|---|
-| **NFR-S-A** | PKCE not implemented in OAuth flow. `build_authorize_url` sends no `code_challenge`/`code_challenge_method`. `exchange_code_for_token` sends no `code_verifier`. RFC 8252 recommends PKCE for native apps regardless of confidential-client status. | MEDIUM | `src/api/auth.rs:608-616` | **SECURITY-DECIDE**: Add RFC 7636 PKCE (~30 LOC). Cross-reference ADR-0006. |
+| **NFR-S-A** | PKCE not implemented in OAuth flow. `build_authorize_url` sends no `code_challenge`/`code_challenge_method`. `exchange_code_for_token` sends no `code_verifier`. RFC 8252 recommends PKCE for native apps regardless of confidential-client status. | MEDIUM | `src/api/auth.rs:608-616` | **DEFER (per ADR-0013)**: SD-001 closed Option C (defer with documented mitigation, 2026-05-04); reactivation when Atlassian publishes PKCE support for OAuth 2.0 3LO. See ADR-0013 + SD-001. |
 | **NFR-S-C** | `--verbose` logs full request body via `String::from_utf8_lossy`. Account IDs, ADF comment text, summaries, descriptions all flow through. Authorization header NOT logged (only path). PII leakage to AI-agent transcripts and incident logs. | MEDIUM | `src/api/client.rs:200-203,274-278` | **SECURITY-DECIDE**: Add `redact_body()` helper in `observability.rs`; or default verbose to header-only with `--verbose-bodies` opt-in. |
 
 ### LOW
@@ -150,7 +150,7 @@ All four MUST-FIX items (NFR-R-D, NFR-R-A, NFR-R-B, NFR-R-E) have been crystalli
 | NFR-S-B | Security | HIGH | SECURITY-DECIDE | — |
 | NFR-R-C | Reliability | MEDIUM | RESOLVED (2026-05-08, S-2.06 v2.0.0, PR #308 / c8f15d8) | — |
 | NFR-R-F | Reliability | MEDIUM | DOCUMENT-AS-IS-FIXED (S-2.05 comment + S-3.07 v2 guard + JRACLOUD-94632 warning) | — |
-| NFR-S-A | Security | MEDIUM | SECURITY-DECIDE | — |
+| NFR-S-A | Security | MEDIUM | DEFER (per ADR-0013) | — |
 | NFR-S-C | Security | MEDIUM | SECURITY-DECIDE | — |
 | NFR-O-A | Observability | MEDIUM | DEFER | — |
 | NFR-O-B | Observability | MEDIUM | DEFER | — |
@@ -188,11 +188,11 @@ All four MUST-FIX items (NFR-R-D, NFR-R-A, NFR-R-B, NFR-R-E) have been crystalli
 - RESOLVED: 11 (NFR-R-C via S-2.06; NFR-R-F/NFR-O-H/NFR-O-L/NFR-O-M/NFR-O-O/NFR-O-R/NFR-O-V via S-2.05; NFR-O-F/NFR-O-J/NFR-O-W via S-2.07)
 - COMPLETE: 1 (1 LOW: NFR-R-NEW-1 via S-3.07 — MAX_RETRY_AFTER_SECS=60 cap delivered)
 - FIX-IN-PHASE-3: 6 (1 CRITICAL: NFR-R-D; 5 HIGH: NFR-R-A, NFR-R-B, NFR-R-E, NFR-S-E, NFR-S-F)
-- SECURITY-DECIDE: 3 (1 HIGH: NFR-S-B; 2 MEDIUM: NFR-S-A, NFR-S-C)
+- SECURITY-DECIDE: 2 (1 HIGH: NFR-S-B; 1 MEDIUM: NFR-S-C)
 - POLICY-DECISION: 0 (all 3 closed by Wave 2: NFR-O-F, NFR-O-J, NFR-O-W)
 - DOCUMENT-AS-IS: 7 (LOW or MEDIUM; NFR-R-NEW-1 moved to FIX-IN-PHASE-3 then COMPLETE via S-3.07; NFR-O-K merged into NFR-S-D at Pass 7; 5 items swept to RESOLVED by Wave 2; NFR-R-NEW-2 removed S-3.07 v2.0.0; NFR-R-F reclassified to DOCUMENT-AS-IS-FIXED)
 - DOCUMENT-AS-IS-FIXED: 1 (NFR-R-F — S-2.05 KNOWN-GAP comment + S-3.07 v2 real guard added in src/api/jira/issues.rs + JRACLOUD-94632 warning)
-- DEFER: 12 (MEDIUM and LOW)
+- DEFER: 13 (MEDIUM and LOW; +NFR-S-A via S-3.09 2026-05-09)
 
 **Total: 40** (42 rows − NFR-O-K merged into NFR-S-D at adversary Pass 7 − NFR-R-NEW-2 removed at S-3.07 v2.0.0 2026-05-08. NFR-S-F added per ADV-P3-007. NFR-S-E severity promoted LOW→HIGH per ADV-P2-004.)
 

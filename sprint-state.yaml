@@ -369,7 +369,18 @@ wave_3:
       risk_anchors: [R-NEW-S307-1]
       notes: "v2.0.0 delivery (3 parts: A Retry-After cap reframe, C profile name precision, D JRACLOUD-94632 elevated anti-loop). Part B was conditionally dropped per DEC-014 — confirmed via AC-NEW-B sequencing gate (S-3.10 already deleted 3-arg parse_duration; rg on develop returns only validator). Develop deltas: src/api/rate_limit.rs (+13 lines, MAX_RETRY_AFTER_SECS const), src/api/client.rs (+34/-2, cap guard in send/send_raw), src/config.rs (+9/-2, precise error messages + 2 inline tests +72), src/api/jira/issues.rs (+24/-9, anti-loop guard + JRACLOUD-94632 stderr warning), tests/rate_limit_cap_tests.rs (+186 NEW), tests/rate_limit_cap_ac003.rs (+25 NEW), Cargo.toml (tokio dev-dep gains test-util feature for tokio::test(start_paused=true) — although ac_001 ultimately uses wall-clock timeout per implementer judgment due to tokio+wiremock incompatibility). factory-artifacts companion at d8dcf7a: H-027 KNOWN-GAP→MUST-PASS; NFR-R-NEW-1 routing FIX-IN-PHASE-3→COMPLETE; NFR-R-F description updated. 6 demos in docs/demo-evidence/S-3.07/. Wave 3: 3/10. Phase 3: 25/31 (81%)."
     - { id: S-3.08, title: "Consolidated DOCUMENT-AS-IS LOW NFRs: source comments and CLAUDE.md additions", status: blocked }
-    - { id: S-3.09, title: "Formally record PKCE deferral (SD-001 → DEFER; ADR-0013)", status: blocked }
+    - id: S-3.09
+      title: "Formally record PKCE deferral (SD-001 → DEFER; ADR-0013)"
+      status: completed
+      pr: null
+      merge_sha: PLACEHOLDER_SHA
+      merged_at: 2026-05-09
+      merged_via: "factory-artifacts direct commit (doc-only facade story; no source code; no PR to develop)"
+      depends_on: []
+      bc_anchors: [BC-1.5.036]
+      nfr_anchors: [NFR-S-A]
+      holdout_anchors: []
+      notes: "Doc-only facade story. NFR-S-A routing column in nfr-catalog.md flipped from SECURITY-DECIDE to DEFER (per ADR-0013) at 3 occurrences (detail row line 73, summary table line 153, count summary line 191) + DEFER count incremented (line 195). ADR-0013 (Reactivation Trigger + SD-001 cross-ref) and SD-001 (RESOLVED with Option C selected) verified pre-satisfied — no edits to either file. Status `blocked` was a stale label; story has empty depends_on. Reactivation when Atlassian publishes PKCE support for OAuth 2.0 3LO; monitoring URLs pinned in ADR-0013. Phase 3 progress: 27/31 (87%). Wave 3: 5/10."
     - id: S-3.10
       title: "Rewrite format_roundtrip proptest + delete deprecated 3-arg parse_duration calculator + retire H-018"
       status: completed
