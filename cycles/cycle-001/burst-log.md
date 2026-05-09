@@ -1124,3 +1124,9 @@ Gate status: PENDING. Orchestrator dispatches Phase 3-adv next.
 | Step | Agent | Status | Output |
 |------|-------|--------|--------|
 | S-3.06 MERGED — DRIFT-001 spec count checker | deliver-story (full chain) | complete | PR #314 squash-merged to develop at 01ba293 (2026-05-09). Facade-mode story: shell script (61 LOC) + CLAUDE.md addition + lessons-codification.md (factory-artifacts@4194611). 5/5 ACs delivered; 8/8 CI green; APPROVE 1 cycle; 0 blocking; 0 security findings. Demo evidence at docs/demo-evidence/S-3.06/. Wave 3: 2/10. |
+
+## Archived Step: S-3.07 MERGED (archived from STATE.md Current Phase Steps on 2026-05-09)
+
+| Step | Agent | Status | Output |
+|------|-------|--------|--------|
+| S-3.07 MERGED — Retry-After cap + profile name precision + JRACLOUD-94632 anti-loop | deliver-story (full chain) | complete | PR #315 squash-merged to develop at 6bce18c (2026-05-09). v2.0.0 (3 parts A/C/D; Part B conditionally dropped). 5 commits + companion factory-artifacts@d8dcf7a (H-027 + NFR routing flips). 8/8 CI green; APPROVE 1 cycle; 0 security findings. 6/7 ACs new behavior + AC-NEW-B sequencing gate satisfied (S-3.10 dependency confirmed on develop). Demo evidence at docs/demo-evidence/S-3.07/. Wave 3: 3/10. Phase 3 progress: 25/31 (81%). |
