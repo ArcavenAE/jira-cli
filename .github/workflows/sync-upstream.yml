@@ -7,7 +7,8 @@ on:
 
 permissions:
   contents: write
-  issues: write
+  # No issues:write — fork has has_issues:false; we report conflicts via
+  # GITHUB_STEP_SUMMARY + exit 1 instead. See "Report unresolved conflict".
 
 jobs:
   sync:
@@ -89,29 +90,35 @@ jobs:
             echo "result=success" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Open issue on unresolved conflict
+      - name: Report unresolved conflict
         if: steps.merge.outputs.result == 'conflict'
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh issue create \
-            --title "Upstream sync conflict on ${{ matrix.branch }}" \
-            --body "$(cat <<'EOF'
-          Automated upstream sync hit merge conflicts in non-protected files.
-
-          **Branch:** `${{ matrix.branch }}`
-          **Conflicted files:** `${{ steps.merge.outputs.files }}`
-
-          To resolve manually:
-          ```sh
-          git fetch upstream
-          git checkout ${{ matrix.branch }}
-          git merge upstream/${{ matrix.branch }}
-          # resolve conflicts
-          git push
-          ```
-          EOF
-          )"
+          {
+            echo "# :warning: Upstream sync conflict on \`${{ matrix.branch }}\`"
+            echo
+            echo "Automated upstream sync hit merge conflicts in non-protected files."
+            echo
+            echo "**Branch:** \`${{ matrix.branch }}\`"
+            echo "**Conflicted files:** \`${{ steps.merge.outputs.files }}\`"
+            echo
+            echo "## Resolve manually"
+            echo '```sh'
+            echo 'git fetch upstream'
+            echo 'git checkout ${{ matrix.branch }}'
+            echo 'git merge upstream/${{ matrix.branch }}'
+            echo '# resolve conflicts (cherry-pick upstream improvements,'
+            echo '# keep fork hardening; do NOT add to local-workflows.txt)'
+            echo 'git push'
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+          # Exit non-zero so the run fails visibly in the Actions tab
+          # and Mike's notifications fire. We do NOT call gh issue create:
+          # the fork has has_issues:false (Issues feature disabled), and
+          # the repo's default_workflow_permissions is "read", so the
+          # GITHUB_TOKEN can't create issues here even with permissions:
+          # issues:write declared. The job summary above is the durable
+          # signal; the run failure is the alert.
+          exit 1
 
       - name: Push branch
         if: steps.merge.outputs.result == 'success'
