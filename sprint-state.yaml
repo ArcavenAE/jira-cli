@@ -368,7 +368,18 @@ wave_3:
       holdout_anchors: [H-027]
       risk_anchors: [R-NEW-S307-1]
       notes: "v2.0.0 delivery (3 parts: A Retry-After cap reframe, C profile name precision, D JRACLOUD-94632 elevated anti-loop). Part B was conditionally dropped per DEC-014 — confirmed via AC-NEW-B sequencing gate (S-3.10 already deleted 3-arg parse_duration; rg on develop returns only validator). Develop deltas: src/api/rate_limit.rs (+13 lines, MAX_RETRY_AFTER_SECS const), src/api/client.rs (+34/-2, cap guard in send/send_raw), src/config.rs (+9/-2, precise error messages + 2 inline tests +72), src/api/jira/issues.rs (+24/-9, anti-loop guard + JRACLOUD-94632 stderr warning), tests/rate_limit_cap_tests.rs (+186 NEW), tests/rate_limit_cap_ac003.rs (+25 NEW), Cargo.toml (tokio dev-dep gains test-util feature for tokio::test(start_paused=true) — although ac_001 ultimately uses wall-clock timeout per implementer judgment due to tokio+wiremock incompatibility). factory-artifacts companion at d8dcf7a: H-027 KNOWN-GAP→MUST-PASS; NFR-R-NEW-1 routing FIX-IN-PHASE-3→COMPLETE; NFR-R-F description updated. 6 demos in docs/demo-evidence/S-3.07/. Wave 3: 3/10. Phase 3: 25/31 (81%)."
-    - { id: S-3.08, title: "Consolidated DOCUMENT-AS-IS LOW NFRs: source comments and CLAUDE.md additions", status: blocked }
+    - id: S-3.08
+      title: "Consolidated DOCUMENT-AS-IS LOW NFRs: source comments and CLAUDE.md additions"
+      status: completed
+      pr: 317
+      merge_sha: fba47ad
+      merged_at: 2026-05-09
+      merged_via: "gh pr merge --squash --admin --delete-branch (admin per session precedent)"
+      depends_on: [S-2.05]
+      bc_anchors: []
+      nfr_anchors: [NFR-R-G, NFR-O-C, NFR-O-G, NFR-O-I, NFR-O-N, NFR-O-P, NFR-O-T, NFR-O-U, NFR-O-X, NFR-SCA-1, NFR-SCA-3]
+      holdout_anchors: []
+      notes: "Facade-mode story (small). 5 source comments + 6 CLAUDE.md entries closed 11 LOW NFRs (7 → DOCUMENT-AS-IS-COMPLETE, 4 → DEFER-DOCUMENTED). Pre-implementation audit caught 2 already-RESOLVED items (NFR-O-H, NFR-O-R via S-2.05); 2 stay pure-DEFER (NFR-O-E, NFR-SCA-2). Verified canonical wording for NFR-O-T (JRACLOUD-67570 disclaimer) and NFR-O-I (canonical ADF render hints — mention.attrs.text, emoji.attrs.text|shortName, inlineCard.attrs.url xor data, media [media] placeholder) sourced to developer.atlassian.com retrieved 2026-05-08 (.factory/research/S-3.08-wave3-verification.md). 6 docs commits + 1 demo commit. PR #317 squash-merged with admin bypass. 8/8 CI green; APPROVE 1 cycle; 0 security findings. Phase 3 progress: 28/31 (90%). Wave 3: 6/10."
     - id: S-3.09
       title: "Formally record PKCE deferral (SD-001 → DEFER; ADR-0013)"
       status: completed

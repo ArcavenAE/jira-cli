@@ -1118,3 +1118,9 @@ Gate status: PENDING. Orchestrator dispatches Phase 3-adv next.
 | Step | Agent | Status | Output |
 |------|-------|--------|--------|
 | S-3.10 MERGED — format_roundtrip rewrite + parse_duration calculator deletion | deliver-story (full chain) | complete | PR #313 squash-merged to develop at f492e59 (2026-05-09). 117 LOC removed; 9 ACs delivered; 8/8 CI green; APPROVE 1 cycle; 0 blocking; demo evidence at docs/demo-evidence/S-3.10/. Spec changes at factory-artifacts@4250e2c. Wave 3: 1/10. **Unblocks S-3.07** (AC-NEW-B sequencing gate satisfied on develop). |
+
+## Archived Step: S-3.06 MERGED (archived from STATE.md Current Phase Steps on 2026-05-09)
+
+| Step | Agent | Status | Output |
+|------|-------|--------|--------|
+| S-3.06 MERGED — DRIFT-001 spec count checker | deliver-story (full chain) | complete | PR #314 squash-merged to develop at 01ba293 (2026-05-09). Facade-mode story: shell script (61 LOC) + CLAUDE.md addition + lessons-codification.md (factory-artifacts@4194611). 5/5 ACs delivered; 8/8 CI green; APPROVE 1 cycle; 0 blocking; 0 security findings. Demo evidence at docs/demo-evidence/S-3.06/. Wave 3: 2/10. |

@@ -2,9 +2,9 @@
 context: nfr-catalog
 title: "NFR Catalog — Pass 4 Convergence"
 total_nfrs: 40  # 42 − NFR-O-K (merged into NFR-S-D at ADV-P7-002) − NFR-R-NEW-2 (removed S-3.07 v2.0.0: Part B dropped; S-3.10 deletes target function)
-last_updated: 2026-05-08
+last_updated: 2026-05-09
 source_pass: 4
-revision_note: "2026-05-08 — Wave 2 closure swept 10 additional NFRs to RESOLVED (NFR-O-F/J/L/M/O/W/H/R/V via S-2.05/S-2.07; NFR-R-F via S-2.05). Per WV2-ADV-02, the body table and Summary Table required catch-up updates that the per-story state-manager dispatches missed."
+revision_note: "2026-05-09 — S-3.08 (PR #317 / fba47ad) closed 11 LOW NFRs: 7 flipped DOCUMENT-AS-IS → DOCUMENT-AS-IS-COMPLETE (source comments + CLAUDE.md entries); 4 flipped DEFER → DEFER-DOCUMENTED (CLAUDE.md entries noting v2 deferral). Two new status types introduced: DOCUMENT-AS-IS-COMPLETE (closure mechanism committed) and DEFER-DOCUMENTED (deferral explicitly surfaced in CLAUDE.md). Pre-impl audit confirmed NFR-O-H and NFR-O-R already RESOLVED via S-2.05; NFR-O-E and NFR-SCA-2 remain pure-DEFER with no action. Prior revision (2026-05-08): Wave 2 closure swept 10 additional NFRs to RESOLVED (NFR-O-F/J/L/M/O/W/H/R/V via S-2.05/S-2.07; NFR-R-F via S-2.05)."
 trace: |
   - L2: .factory/specs/domain-spec/
   - Source: .factory/semport/jira-cli/jira-cli-pass-4-deep-r4.md §2,§3,§4
@@ -51,7 +51,7 @@ All four MUST-FIX items (NFR-R-D, NFR-R-A, NFR-R-B, NFR-R-E) have been crystalli
 
 | ID | Description | Severity | Site | Phase 3 Routing |
 |---|---|---|---|---|
-| **NFR-R-G** | Non-atomic cache writes: `cache.rs:36-43` uses direct `std::fs::write` — no temp-file + atomic rename. Crash/SIGKILL between start and end leaves indeterminate file state. Self-healing via deserialization-failure → cache-miss. | LOW | `src/cache.rs:36-43` | **DOCUMENT-AS-IS**: Self-healing already; LOW for single-user CLI. Optional: use temp-file + rename pattern. |
+| **NFR-R-G** | Non-atomic cache writes: `cache.rs:36-43` uses direct `std::fs::write` — no temp-file + atomic rename. Crash/SIGKILL between start and end leaves indeterminate file state. Self-healing via deserialization-failure → cache-miss. | LOW | `src/cache.rs:36-43` | **DOCUMENT-AS-IS-COMPLETE (S-3.08 / PR #317)**: NFR-R-G self-healing-cache rationale comment added at `src/cache.rs:37`. |
 | **NFR-R-NEW-1** | `Retry-After` header has no upper-bound cap in current code. `Retry-After: 86400` causes the retry loop to sleep for 24 hours with no user escape (other than Ctrl+C). BC-X.4.009 proposes `MAX_RETRY_AFTER_SECS = 60` cap as Phase 3 fix. Current behavior: any valid u64 value is honored as-is. **Severity LOW (ADV-P3-009 reviewed, retained; section corrected ADV-P6-003):** Single-user CLI — user can Ctrl+C at any time; not a service-grade SLA concern. Atlassian does not send multi-hour `Retry-After` values in practice. | LOW | `src/api/rate_limit.rs:14-19` | **COMPLETE (S-3.07)**: MAX_RETRY_AFTER_SECS=60 cap added in src/api/rate_limit.rs; reality-aligned warning per Atlassian's typical 1425-3089s Retry-After ceiling (verified .factory/research/S-3.07-wave3-verification.md). H-027 status flipped KNOWN-GAP → MUST-PASS. |
 
 ---
@@ -102,18 +102,18 @@ All four MUST-FIX items (NFR-R-D, NFR-R-A, NFR-R-B, NFR-R-E) have been crystalli
 
 | ID | Description | Severity | Site | Phase 3 Routing |
 |---|---|---|---|---|
-| **NFR-O-C** | No `--dry-run` flag on state-changing commands. Already documented as out-of-scope in v1 design spec. | LOW | `src/cli/issue/workflow.rs` | **DOCUMENT-AS-IS**: Retain out-of-scope status. |
+| **NFR-O-C** | No `--dry-run` flag on state-changing commands. Already documented as out-of-scope in v1 design spec. | LOW | `src/cli/issue/workflow.rs` | **DOCUMENT-AS-IS-COMPLETE (S-3.08 / PR #317)**: `--dry-run` out-of-scope rationale documented at `CLAUDE.md:108`. |
 | **NFR-O-E** | No progress indicator for long-running operations (asset enrichment, team list with many pages). | LOW | `src/cli/assets.rs`, `src/cli/team.rs` | **DEFER**: Consider for v2 UX pass. |
-| **NFR-O-G** | `cli/issue/list.rs` is 1,083 LOC (post-split via `docs/specs/list-rs-split.md`; spec target was ≤750 but actual landed at 1,083 — see `component-graph.md` and risk-register R-M5). `view.rs` and `comments.rs` are already split out. CLAUDE.md still describes undivided `list.rs`. | LOW | `CLAUDE.md` | **DOCUMENT-AS-IS**: CLAUDE.md update covers this (NFR-O-L fix). |
+| **NFR-O-G** | `cli/issue/list.rs` is 1,083 LOC (post-split via `docs/specs/list-rs-split.md`; spec target was ≤750 but actual landed at 1,083 — see `component-graph.md` and risk-register R-M5). `view.rs` and `comments.rs` are already split out. CLAUDE.md still describes undivided `list.rs`. | LOW | `CLAUDE.md` | **DOCUMENT-AS-IS-COMPLETE (S-3.08 / PR #317)**: "Known Size Deviations" subsection added to `CLAUDE.md:79` documenting `cli/issue/list.rs` 1,083 LOC vs ≤750 spec target. |
 | **NFR-O-H** | `JR_RUN_OAUTH_INTEGRATION` env-var gates 1 ignored test but not documented in CLAUDE.md "AI Agent Notes". | LOW | `CLAUDE.md` | **RESOLVED — 2026-05-08 — S-2.05 (PR #307 / 7f004ca) via `JR_RUN_OAUTH_INTEGRATION` bullet added to CLAUDE.md "AI Agent Notes" alongside `JR_RUN_KEYRING_TESTS`. Original FIX-IN-PHASE-3 plan executed.** |
-| **NFR-O-I** | `ADF::to_text` silently drops mention/emoji/inlineCard/media nodes (`_` fall-through at `adf.rs:531-540`). Documented in source as deliberate per issue #202. | LOW | `src/adf.rs:531-540` | **DEFER**: Render attrs.text (includes "@") for mentions; attrs.text (unicode glyph) or attrs.shortName fallback for emoji; attrs.url for inlineCard (title not guaranteed; url XOR data); "[media]" placeholder for media (fileName not on node). Medium-effort. |
-| **NFR-O-N** | `5 auth subcommands` lack JSON output paths (mentioned in NFR-O-F); also no `--output json` test coverage for `auth status` with multiple profiles. | LOW | `src/cli/auth.rs` | **DEFER**: Cover in auth JSON shape work (NFR-O-F). |
-| **NFR-O-P** | No API version field in JSON output. Downstream parsers cannot detect schema changes. | LOW | `src/output.rs` | **DEFER**: Consider `"_meta": {"version": "1"}` envelope for v2. |
+| **NFR-O-I** | `ADF::to_text` silently drops mention/emoji/inlineCard/media nodes (`_` fall-through at `adf.rs:531-540`). Documented in source as deliberate per issue #202. | LOW | `src/adf.rs:531-540` | **DOCUMENT-AS-IS-COMPLETE (S-3.08 / PR #317)**: canonical ADF render hints (mention/emoji/inlineCard/media) added at `src/adf.rs:532`, sourced to developer.atlassian.com (retrieved 2026-05-08, see `.factory/research/S-3.08-wave3-verification.md` Claim 2). Note: physical implementation of the rendering is still future work (issue #202); the source comment captures the verified canonical strategy so the next implementer doesn't need to re-research. |
+| **NFR-O-N** | `5 auth subcommands` lack JSON output paths (mentioned in NFR-O-F); also no `--output json` test coverage for `auth status` with multiple profiles. | LOW | `src/cli/auth.rs` | **DEFER-DOCUMENTED (S-3.08 / PR #317)**: documented at `CLAUDE.md:111` (`auth status --output json` multi-profile gap; planned alongside future `auth list --output json`). |
+| **NFR-O-P** | No API version field in JSON output. Downstream parsers cannot detect schema changes. | LOW | `src/output.rs` | **DEFER-DOCUMENTED (S-3.08 / PR #317)**: documented at `CLAUDE.md:112` (no `_meta:{version:N}` envelope; consider for v2). |
 | **NFR-O-R** | `eprintln!` for human hints and `println!` for data are implicit contracts; no typed channel enum. 5 categorical profiles (Pure/Read-only/Mixed/Symmetric/no-log-facade) emerge by code-review only. | LOW | 24 CLI handler files | **RESOLVED — 2026-05-08 — S-2.05 (PR #307 / 7f004ca) via Output channels subsection added to CLAUDE.md documenting the 5 output profiles. Original DOCUMENT-AS-IS plan executed.** |
-| **NFR-O-T** | `worklog list` default page size undocumented (currently whatever `OffsetPage` returns from Atlassian default). | LOW | `src/api/jira/worklogs.rs` | **DOCUMENT-AS-IS**: After NFR-R-A fix, document max-results parameter. |
-| **NFR-O-U** | `sprint list` does not show sprint start/end dates in table output. Present in API response. | LOW | `src/cli/sprint.rs` | **DEFER**: UX pass v2. |
+| **NFR-O-T** | `worklog list` default page size undocumented (currently whatever `OffsetPage` returns from Atlassian default). | LOW | `src/api/jira/worklogs.rs` | **DOCUMENT-AS-IS-COMPLETE (S-3.08 / PR #317)**: NFR-O-T worklog pagination JRACLOUD-67570 disclaimer added at `src/api/jira/worklogs.rs:34`. |
+| **NFR-O-U** | `sprint list` does not show sprint start/end dates in table output. Present in API response. | LOW | `src/cli/sprint.rs` | **DEFER-DOCUMENTED (S-3.08 / PR #317)**: documented at `CLAUDE.md:110` (`sprint list` omits start/end dates; deferred UX pass v2). |
 | **NFR-O-V** | `board view` truncation hint emitted to stderr (consistent with `issue list`/`sprint current`). Not documented. | LOW | `src/cli/board.rs` | **RESOLVED — 2026-05-08 — S-2.05 (PR #307 / 7f004ca) via `board view` stderr truncation hint added to CLAUDE.md convention list. Original DOCUMENT-AS-IS plan executed.** |
-| **NFR-O-X** | No `jr version --output json` path (exists only as human-readable). | LOW | `src/main.rs` | **DEFER**: Low priority. |
+| **NFR-O-X** | No `jr version --output json` path (exists only as human-readable). | LOW | `src/main.rs` | **DEFER-DOCUMENTED (S-3.08 / PR #317)**: documented at `CLAUDE.md:109` (`jr version --output json` deferred). |
 
 ---
 
@@ -133,9 +133,9 @@ All four MUST-FIX items (NFR-R-D, NFR-R-A, NFR-R-B, NFR-R-E) have been crystalli
 
 | ID | Description | Severity | Site | Phase 3 Routing |
 |---|---|---|---|---|
-| **NFR-SCA-1** | Retry-After parsing accepts integer only; HTTP-date format (`Mon, 04 May 2026 00:00:00 GMT`) silently falls through to `DEFAULT_RETRY_SECS = 1`. Atlassian sends integers in practice. | LOW | `src/api/rate_limit.rs:14-19` | **DOCUMENT-AS-IS**: Add HTTP-date fallback via `chrono` when/if observed in production. |
+| **NFR-SCA-1** | Retry-After parsing accepts integer only; HTTP-date format (`Mon, 04 May 2026 00:00:00 GMT`) silently falls through to `DEFAULT_RETRY_SECS = 1`. Atlassian sends integers in practice. | LOW | `src/api/rate_limit.rs:14-19` | **DOCUMENT-AS-IS-COMPLETE (S-3.08 / PR #317)**: NFR-SCA-1 Retry-After integer-only rationale added at `src/api/rate_limit.rs:25`. |
 | **NFR-SCA-2** | Soft-fence per-profile cache isolation: convention is "every cache fn takes `profile: &str` first" (100% conformance) but no compile-time enforcement. Future contributor could add profile-unaware reader. | LOW | `src/cache.rs` | **DEFER**: Introduce `Profile(String)` newtype to enforce at compile time. P1 priority. |
-| **NFR-SCA-3** | `validate_asset_key` accepts ASCII alphanumeric prefix + `-` + ASCII digit suffix only. Unicode object keys would be rejected. Not a current use case. | LOW | `src/jql.rs:39-54` | **DOCUMENT-AS-IS**: Constraint is by design; AQL attribute names are ASCII. |
+| **NFR-SCA-3** | `validate_asset_key` accepts ASCII alphanumeric prefix + `-` + ASCII digit suffix only. Unicode object keys would be rejected. Not a current use case. | LOW | `src/jql.rs:39-54` | **DOCUMENT-AS-IS-COMPLETE (S-3.08 / PR #317)**: NFR-SCA-3 ASCII-only validate_asset_key rationale added at `src/jql.rs:39`. |
 
 ---
 
@@ -163,36 +163,38 @@ All four MUST-FIX items (NFR-R-D, NFR-R-A, NFR-R-B, NFR-R-E) have been crystalli
 | NFR-O-S | Observability | MEDIUM | DEFER | — |
 | NFR-O-W | Observability | MEDIUM | RESOLVED (2026-05-08, S-2.07, PR #309 / ca22be0) | — |
 | NFR-P-NEW-1 | Performance | MEDIUM | DEFER | — |
-| NFR-R-G | Reliability | LOW | DOCUMENT-AS-IS | — |
+| NFR-R-G | Reliability | LOW | DOCUMENT-AS-IS-COMPLETE (S-3.08, PR #317) | — |
 | NFR-R-NEW-1 | Reliability | LOW | COMPLETE (S-3.07) | BC-X.4.009 |
 | NFR-S-D | Security | LOW | DOCUMENT-AS-IS | — |
 | NFR-S-E | Security | HIGH | FIX-IN-PHASE-3 | — |
 | NFR-S-F | Security | HIGH | FIX-IN-PHASE-3 | — |
-| NFR-O-C | Observability | LOW | DOCUMENT-AS-IS | — |
+| NFR-O-C | Observability | LOW | DOCUMENT-AS-IS-COMPLETE (S-3.08, PR #317) | — |
 | NFR-O-E | Observability | LOW | DEFER | — |
-| NFR-O-G | Observability | LOW | DOCUMENT-AS-IS | — |
+| NFR-O-G | Observability | LOW | DOCUMENT-AS-IS-COMPLETE (S-3.08, PR #317) | — |
 | NFR-O-H | Observability | LOW | RESOLVED (2026-05-08, S-2.05, PR #307 / 7f004ca) | — |
-| NFR-O-I | Observability | LOW | DEFER | — |
-| NFR-O-N | Observability | LOW | DEFER | — |
-| NFR-O-P | Observability | LOW | DEFER | — |
+| NFR-O-I | Observability | LOW | DOCUMENT-AS-IS-COMPLETE (S-3.08, PR #317) | — |
+| NFR-O-N | Observability | LOW | DEFER-DOCUMENTED (S-3.08, PR #317) | — |
+| NFR-O-P | Observability | LOW | DEFER-DOCUMENTED (S-3.08, PR #317) | — |
 | NFR-O-R | Observability | LOW | RESOLVED (2026-05-08, S-2.05, PR #307 / 7f004ca) | — |
-| NFR-O-T | Observability | LOW | DOCUMENT-AS-IS | — |
-| NFR-O-U | Observability | LOW | DEFER | — |
+| NFR-O-T | Observability | LOW | DOCUMENT-AS-IS-COMPLETE (S-3.08, PR #317) | — |
+| NFR-O-U | Observability | LOW | DEFER-DOCUMENTED (S-3.08, PR #317) | — |
 | NFR-O-V | Observability | LOW | RESOLVED (2026-05-08, S-2.05, PR #307 / 7f004ca) | — |
-| NFR-O-X | Observability | LOW | DEFER | — |
-| NFR-SCA-1 | Scalability | LOW | DOCUMENT-AS-IS | — |
+| NFR-O-X | Observability | LOW | DEFER-DOCUMENTED (S-3.08, PR #317) | — |
+| NFR-SCA-1 | Scalability | LOW | DOCUMENT-AS-IS-COMPLETE (S-3.08, PR #317) | — |
 | NFR-SCA-2 | Scalability | LOW | DEFER | — |
-| NFR-SCA-3 | Scalability | LOW | DOCUMENT-AS-IS | — |
+| NFR-SCA-3 | Scalability | LOW | DOCUMENT-AS-IS-COMPLETE (S-3.08, PR #317) | — |
 
-**Phase 3 routing summary (post Wave 2 closure, 2026-05-08; updated S-3.07 v2.0.0):**
-- RESOLVED: 11 (NFR-R-C via S-2.06; NFR-R-F/NFR-O-H/NFR-O-L/NFR-O-M/NFR-O-O/NFR-O-R/NFR-O-V via S-2.05; NFR-O-F/NFR-O-J/NFR-O-W via S-2.07)
+**Phase 3 routing summary (post Wave 2 closure, 2026-05-08; updated S-3.08 PR #317 / fba47ad, 2026-05-09):**
+- RESOLVED: 10 (NFR-R-C via S-2.06; NFR-O-H/NFR-O-L/NFR-O-M/NFR-O-O/NFR-O-R/NFR-O-V via S-2.05; NFR-O-F/NFR-O-J/NFR-O-W via S-2.07)
 - COMPLETE: 1 (1 LOW: NFR-R-NEW-1 via S-3.07 — MAX_RETRY_AFTER_SECS=60 cap delivered)
 - FIX-IN-PHASE-3: 6 (1 CRITICAL: NFR-R-D; 5 HIGH: NFR-R-A, NFR-R-B, NFR-R-E, NFR-S-E, NFR-S-F)
 - SECURITY-DECIDE: 2 (1 HIGH: NFR-S-B; 1 MEDIUM: NFR-S-C)
 - POLICY-DECISION: 0 (all 3 closed by Wave 2: NFR-O-F, NFR-O-J, NFR-O-W)
-- DOCUMENT-AS-IS: 7 (LOW or MEDIUM; NFR-R-NEW-1 moved to FIX-IN-PHASE-3 then COMPLETE via S-3.07; NFR-O-K merged into NFR-S-D at Pass 7; 5 items swept to RESOLVED by Wave 2; NFR-R-NEW-2 removed S-3.07 v2.0.0; NFR-R-F reclassified to DOCUMENT-AS-IS-FIXED)
+- DOCUMENT-AS-IS: 1 (NFR-S-D — LOW; improve error message precision, 2 LOC)
+- DOCUMENT-AS-IS-COMPLETE: 7 (S-3.08 / PR #317 / 2026-05-09; all LOW: NFR-R-G via cache.rs:37; NFR-O-C via CLAUDE.md:108; NFR-O-G via CLAUDE.md:79; NFR-O-I via adf.rs:532; NFR-O-T via worklogs.rs:34; NFR-SCA-1 via rate_limit.rs:25; NFR-SCA-3 via jql.rs:39)
 - DOCUMENT-AS-IS-FIXED: 1 (NFR-R-F — S-2.05 KNOWN-GAP comment + S-3.07 v2 real guard added in src/api/jira/issues.rs + JRACLOUD-94632 warning)
-- DEFER: 13 (MEDIUM and LOW; +NFR-S-A via S-3.09 2026-05-09)
+- DEFER-DOCUMENTED: 4 (S-3.08 / PR #317 / 2026-05-09; all LOW: NFR-O-N via CLAUDE.md:111; NFR-O-P via CLAUDE.md:112; NFR-O-U via CLAUDE.md:110; NFR-O-X via CLAUDE.md:109 — underlying gaps deferred to v2, CLAUDE.md entry surfaces the deferral explicitly)
+- DEFER: 9 (MEDIUM and LOW: NFR-O-A/B/D/S via DEFER; NFR-P-NEW-1 via DEFER; NFR-O-E/NFR-SCA-2 via pure-acknowledgment DEFER; NFR-S-A via DEFER per ADR-0013 / S-3.09 2026-05-09)
 
 **Total: 40** (42 rows − NFR-O-K merged into NFR-S-D at adversary Pass 7 − NFR-R-NEW-2 removed at S-3.07 v2.0.0 2026-05-08. NFR-S-F added per ADV-P3-007. NFR-S-E severity promoted LOW→HIGH per ADV-P2-004.)
 
