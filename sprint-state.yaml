@@ -344,7 +344,7 @@ wave_3:
         AC-004 verified: lessons-codification.md exists with all 6 required sections.
         AC-005 verified: CLAUDE.md AI Agent Notes references the script.
         Phase 3 progress: 24/31 (77%). Wave 3: 2/10."
-    - { id: S-3.07, title: "Consolidated LOW NFR code fixes: Retry-After cap, parse_duration overflow, profile name error, anti-loop guard", status: blocked }
+    - { id: S-3.07, title: "Consolidated LOW NFR code fixes: Retry-After cap, parse_duration overflow, profile name error, anti-loop guard", status: pending }
     - { id: S-3.08, title: "Consolidated DOCUMENT-AS-IS LOW NFRs: source comments and CLAUDE.md additions", status: blocked }
     - { id: S-3.09, title: "Formally record PKCE deferral (SD-001 → DEFER; ADR-0013)", status: blocked }
     - id: S-3.10
