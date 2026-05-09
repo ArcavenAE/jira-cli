@@ -46,13 +46,13 @@ All four MUST-FIX items (NFR-R-D, NFR-R-A, NFR-R-B, NFR-R-E) have been crystalli
 | ID | Description | Severity | Site | Phase 3 Routing |
 |---|---|---|---|---|
 | **NFR-R-C** | Worklog duration constants no longer apply. Worklog POST sends `timeSpent` (string) and Jira's server applies its configured `workingHoursPerDay`/`workingDaysPerWeek`. Resolves silent wrong-answer on customized instances. | MEDIUM | `src/cli/worklog.rs` + `src/api/jira/worklogs.rs` | **RESOLVED — 2026-05-08 — S-2.06 v2.0.0 (PR #308 / c8f15d8) via Option 1 (timeSpent string passthrough; matches `ankitpokhrel/jira-cli` pattern). Original FIX-IN-PHASE-3 plan (admin-only `/rest/api/3/configuration/timetracking` endpoint fetch) was BLOCKED by Perplexity verification 2026-05-08; see DEC-010 and `.factory/research/S-2.06-jira-timetracking-verification.md`.** |
-| **NFR-R-F** | `get_changelog` anti-loop guard present (breaks if nextPage URL == current URL). `search_issues` cursor loop has no analogous guard against cursor == cursor regression. `/rest/api/3/search/jql` returning the same `nextPageToken` twice is a confirmed Jira Cloud bug (JRACLOUD-94632, JRACLOUD-92049, JRACLOUD-85546; also `atlassian/atlassian-mcp-server#118`, `ankitpokhrel/jira-cli#898`). | MEDIUM | `src/api/jira/issues.rs:59-65` (KNOWN-GAP comment; guard pending S-3.07) | **DOCUMENT-AS-IS-FIXED — 2026-05-08 — S-2.05 (PR #307 / 7f004ca) added KNOWN-GAP comment; S-3.07 v2.0.0 (Phase 3) delivers the real defensive guard + stderr warning citing JRACLOUD-94632 (AC-008, AC-NEW-D). Elevated from "defensive gap" to "confirmed bug response" per Perplexity verification 2026-05-08 (DEC-014).** |
+| **NFR-R-F** | `get_changelog` anti-loop guard present (breaks if nextPage URL == current URL). `search_issues` cursor loop has no analogous guard against cursor == cursor regression. `/rest/api/3/search/jql` returning the same `nextPageToken` twice is a confirmed Jira Cloud bug (JRACLOUD-94632, JRACLOUD-92049, JRACLOUD-85546; also `atlassian/atlassian-mcp-server#118`, `ankitpokhrel/jira-cli#898`). | MEDIUM | `src/api/jira/issues.rs:59-65` (KNOWN-GAP comment; guard pending S-3.07) | **DOCUMENT-AS-IS-FIXED (S-3.07)**: real defensive guard added in src/api/jira/issues.rs (cursor-loop pattern mirroring get_changelog) + stderr warning citing JRACLOUD-94632/92049/85546 (also referenced in atlassian/atlassian-mcp-server#118 and ankitpokhrel/jira-cli#898). Confirmed Jira Cloud bug — verified .factory/research/S-3.07-wave3-verification.md. |
 ### LOW
 
 | ID | Description | Severity | Site | Phase 3 Routing |
 |---|---|---|---|---|
 | **NFR-R-G** | Non-atomic cache writes: `cache.rs:36-43` uses direct `std::fs::write` — no temp-file + atomic rename. Crash/SIGKILL between start and end leaves indeterminate file state. Self-healing via deserialization-failure → cache-miss. | LOW | `src/cache.rs:36-43` | **DOCUMENT-AS-IS**: Self-healing already; LOW for single-user CLI. Optional: use temp-file + rename pattern. |
-| **NFR-R-NEW-1** | `Retry-After` header has no upper-bound cap in current code. `Retry-After: 86400` causes the retry loop to sleep for 24 hours with no user escape (other than Ctrl+C). BC-X.4.009 proposes `MAX_RETRY_AFTER_SECS = 60` cap as Phase 3 fix. Current behavior: any valid u64 value is honored as-is. **Severity LOW (ADV-P3-009 reviewed, retained; section corrected ADV-P6-003):** Single-user CLI — user can Ctrl+C at any time; not a service-grade SLA concern. Atlassian does not send multi-hour `Retry-After` values in practice. | LOW | `src/api/rate_limit.rs:14-19` | **FIX-IN-PHASE-3**: Implement `MAX_RETRY_AFTER_SECS = 60` cap per BC-X.4.009. Print warning and abort retry when cap exceeded. H-027 pins current gap (to be updated when fix lands). |
+| **NFR-R-NEW-1** | `Retry-After` header has no upper-bound cap in current code. `Retry-After: 86400` causes the retry loop to sleep for 24 hours with no user escape (other than Ctrl+C). BC-X.4.009 proposes `MAX_RETRY_AFTER_SECS = 60` cap as Phase 3 fix. Current behavior: any valid u64 value is honored as-is. **Severity LOW (ADV-P3-009 reviewed, retained; section corrected ADV-P6-003):** Single-user CLI — user can Ctrl+C at any time; not a service-grade SLA concern. Atlassian does not send multi-hour `Retry-After` values in practice. | LOW | `src/api/rate_limit.rs:14-19` | **COMPLETE (S-3.07)**: MAX_RETRY_AFTER_SECS=60 cap added in src/api/rate_limit.rs; reality-aligned warning per Atlassian's typical 1425-3089s Retry-After ceiling (verified .factory/research/S-3.07-wave3-verification.md). H-027 status flipped KNOWN-GAP → MUST-PASS. |
 
 ---
 
@@ -164,7 +164,7 @@ All four MUST-FIX items (NFR-R-D, NFR-R-A, NFR-R-B, NFR-R-E) have been crystalli
 | NFR-O-W | Observability | MEDIUM | RESOLVED (2026-05-08, S-2.07, PR #309 / ca22be0) | — |
 | NFR-P-NEW-1 | Performance | MEDIUM | DEFER | — |
 | NFR-R-G | Reliability | LOW | DOCUMENT-AS-IS | — |
-| NFR-R-NEW-1 | Reliability | LOW | FIX-IN-PHASE-3 | BC-X.4.009 (proposed fix) |
+| NFR-R-NEW-1 | Reliability | LOW | COMPLETE (S-3.07) | BC-X.4.009 |
 | NFR-S-D | Security | LOW | DOCUMENT-AS-IS | — |
 | NFR-S-E | Security | HIGH | FIX-IN-PHASE-3 | — |
 | NFR-S-F | Security | HIGH | FIX-IN-PHASE-3 | — |
@@ -184,13 +184,14 @@ All four MUST-FIX items (NFR-R-D, NFR-R-A, NFR-R-B, NFR-R-E) have been crystalli
 | NFR-SCA-2 | Scalability | LOW | DEFER | — |
 | NFR-SCA-3 | Scalability | LOW | DOCUMENT-AS-IS | — |
 
-**Phase 3 routing summary (post Wave 2 closure, 2026-05-08):**
+**Phase 3 routing summary (post Wave 2 closure, 2026-05-08; updated S-3.07 v2.0.0):**
 - RESOLVED: 11 (NFR-R-C via S-2.06; NFR-R-F/NFR-O-H/NFR-O-L/NFR-O-M/NFR-O-O/NFR-O-R/NFR-O-V via S-2.05; NFR-O-F/NFR-O-J/NFR-O-W via S-2.07)
-- FIX-IN-PHASE-3: 7 (1 CRITICAL: NFR-R-D; 5 HIGH: NFR-R-A, NFR-R-B, NFR-R-E, NFR-S-E, NFR-S-F; 1 LOW: NFR-R-NEW-1)
+- COMPLETE: 1 (1 LOW: NFR-R-NEW-1 via S-3.07 — MAX_RETRY_AFTER_SECS=60 cap delivered)
+- FIX-IN-PHASE-3: 6 (1 CRITICAL: NFR-R-D; 5 HIGH: NFR-R-A, NFR-R-B, NFR-R-E, NFR-S-E, NFR-S-F)
 - SECURITY-DECIDE: 3 (1 HIGH: NFR-S-B; 2 MEDIUM: NFR-S-A, NFR-S-C)
 - POLICY-DECISION: 0 (all 3 closed by Wave 2: NFR-O-F, NFR-O-J, NFR-O-W)
-- DOCUMENT-AS-IS: 7 (LOW or MEDIUM; NFR-R-NEW-1 moved to FIX-IN-PHASE-3; NFR-O-K merged into NFR-S-D at Pass 7; 5 items swept to RESOLVED by Wave 2; NFR-R-NEW-2 removed S-3.07 v2.0.0; NFR-R-F reclassified to DOCUMENT-AS-IS-FIXED)
-- DOCUMENT-AS-IS-FIXED: 1 (NFR-R-F — S-2.05 KNOWN-GAP comment + S-3.07 v2 real guard + JRACLOUD-94632 warning)
+- DOCUMENT-AS-IS: 7 (LOW or MEDIUM; NFR-R-NEW-1 moved to FIX-IN-PHASE-3 then COMPLETE via S-3.07; NFR-O-K merged into NFR-S-D at Pass 7; 5 items swept to RESOLVED by Wave 2; NFR-R-NEW-2 removed S-3.07 v2.0.0; NFR-R-F reclassified to DOCUMENT-AS-IS-FIXED)
+- DOCUMENT-AS-IS-FIXED: 1 (NFR-R-F — S-2.05 KNOWN-GAP comment + S-3.07 v2 real guard added in src/api/jira/issues.rs + JRACLOUD-94632 warning)
 - DEFER: 12 (MEDIUM and LOW)
 
 **Total: 40** (42 rows − NFR-O-K merged into NFR-S-D at adversary Pass 7 − NFR-R-NEW-2 removed at S-3.07 v2.0.0 2026-05-08. NFR-S-F added per ADV-P3-007. NFR-S-E severity promoted LOW→HIGH per ADV-P2-004.)

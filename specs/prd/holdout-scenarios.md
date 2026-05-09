@@ -267,7 +267,8 @@ Setup uses:
 ### H-027: `Retry-After: 86400` (24h) — parsed value preserved without upper bound (KNOWN-GAP pin)
 **Setup**: Construct a `http::HeaderMap` containing `Retry-After: 86400`. Call `RateLimitInfo::from_headers(&headers)` directly (unit test — no Wiremock, no process spawn, no real-time clock dependency).
 **Action**: Assert `rate_limit_info.retry_after_secs == 86400`.
-**Expected**: Parsing succeeds; the literal value 86400 is preserved without clamping or truncation. No upper bound applied. Test passes against current code (KNOWN-GAP: current code has no cap).
+**Expected**: With the MAX_RETRY_AFTER_SECS cap (S-3.07), `RateLimitInfo::from_headers` (or its replacement after S-3.07) returns an "abort" signal when retry_after_secs exceeds 60. The literal value 86400 is parsed without overflow but the abort signal is honored — no 24-hour sleep occurs. Test passes against post-S-3.07 code.
+**Status**: MUST-PASS (S-3.07 added MAX_RETRY_AFTER_SECS=60 cap; verified by AC-001 + AC-002 + AC-003 in tests/rate_limit_cap_tests.rs and tests/rate_limit_cap_ac003.rs)
 **Why hidden**: Pin Pass 4 §7.1.3 NFR gap as an explicit holdout against silent fixes that add an upper bound cap. Reframed from retry-loop test (ADV-P22-004: Mock::expect(2) + 5s window were internally contradictory with an 86400s delay).
 **BC refs**: BC-X.4.002 (current behavior pinned — no cap); BC-X.4.009 (future MUST-FAIL when MAX_RETRY_AFTER_SECS=60 cap is implemented — flip assertion to `retry_after_secs == 60`)
 
