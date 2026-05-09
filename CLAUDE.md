@@ -74,6 +74,10 @@ src/
 
 Product-namespaced `api/jira/` and `types/jira/` so future Confluence/JSM/Assets support adds sibling directories.
 
+## Known Size Deviations
+
+- `cli/issue/list.rs`: 1,083 LOC post-split (target was ≤750 per `docs/specs/list-rs-split.md`; spec target not achieved but split was partial — `view.rs` and `comments.rs` already extracted). NFR-O-G: DOCUMENT-AS-IS-COMPLETE (S-3.08).
+
 ## Build & Test
 
 ```bash
@@ -101,6 +105,11 @@ cargo deny check                     # License + vulnerability audit
 - **No lint suppression without refactoring.** If clippy warns (e.g., `too_many_arguments`), refactor to fix the root cause — don't add `#[allow]`. If refactoring is impractical, ask the user before suppressing and include a justification comment.
 - **Default to fixing code, not tests.** When a test fails, assume the test is correct and fix the implementation using idiomatic Rust. Only modify a test when requirements have changed — not to accommodate non-idiomatic code or lint workarounds.
 - **Test naming:** New tests use `test_<verb>_<subject>_<expected_outcome>` (e.g., `test_auth_switch_returns_json_ok`). Existing tests with no-prefix names are NOT renamed; this convention applies to new tests only. See `docs/specs/test-naming-convention.md`.
+- `--dry-run` is intentionally out-of-scope per v1 design spec (NFR-O-C: DOCUMENT-AS-IS).
+- `jr version --output json` is not implemented (NFR-O-X: deferred to v2; consider for `release-notes` automation).
+- `sprint list` table omits start/end dates (NFR-O-U: deferred UX pass v2; available in API response).
+- `auth status --output json` covers single-profile JSON; multi-profile listing has no JSON path (NFR-O-N: deferred; planned alongside future `auth list --output json` extension).
+- JSON output has no `_meta: {version: N}` envelope (NFR-O-P: deliberate for v0.5; consider for v2 to enable downstream-parser schema-drift detection).
 
 ### Output channels
 
@@ -210,3 +219,6 @@ When adding a new feature:
 - OAuth integration tests in `tests/oauth_embedded_login.rs` are gated behind `JR_RUN_OAUTH_INTEGRATION=1` + `#[ignore]`. The test is currently `unimplemented!()` — it requires a wiremock base-URL override in `oauth_login` before a real assertion can be written. CI does not run it; the embedded-creds smoke test in `release.yml` covers the binary-level check instead.
 - All interactive prompts have non-interactive flag equivalents for AI agent usage
 - `--output json` on write operations returns structured data (e.g., `{"key": "FOO-123"}`)
+- Run `scripts/check-spec-counts.sh` after any edit to .factory/specs/prd/ BC files,
+  nfr-catalog.md, or holdout-scenarios.md. Exits 0 if frontmatter counts match body counts.
+  Exits 1 with specific mismatch details if drift is detected (DRIFT-001 mitigation).
