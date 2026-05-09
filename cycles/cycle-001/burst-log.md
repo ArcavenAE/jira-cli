@@ -1136,3 +1136,9 @@ Gate status: PENDING. Orchestrator dispatches Phase 3-adv next.
 | Step | Agent | Status | Output |
 |------|-------|--------|--------|
 | S-3.05 MERGED — asset enrichment concurrency cap | deliver-story (full chain) | complete | PR #316 squash-merged to develop at 10e1db4 (2026-05-09). buffer_unordered(8) replaces join_all at 2 sites; new MAX_CONCURRENT_ASSET_FETCHES const. 4/4 ACs delivered (AC-002 timing-based per wiremock 0.6.5 constraint). 8/8 CI green; APPROVE 1 cycle; 0 security findings; 0 new deps. Demo evidence at docs/demo-evidence/S-3.05/. Wave 3: 4/10. Phase 3 progress: 26/31 (84%). |
+
+## Archived Step: S-3.09 CLOSED (archived from STATE.md Current Phase Steps on 2026-05-09)
+
+| Step | Agent | Status | Output |
+|------|-------|--------|--------|
+| S-3.09 CLOSED — PKCE deferral formally recorded | state-manager | complete | factory-artifacts direct commit (doc-only facade). NFR-S-A routing flip SECURITY-DECIDE → DEFER (per ADR-0013) at 3 occurrences in nfr-catalog.md + DEFER count increment. ADR-0013 + SD-001 verified pre-satisfied (no edits). No develop-branch impact. STORY-INDEX + sprint-state + STATE.md synced atomically. Wave 3: 5/10. Phase 3: 27/31 (87%). |

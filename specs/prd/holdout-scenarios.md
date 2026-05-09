@@ -457,12 +457,13 @@ Setup uses:
 
 ---
 
-### H-047: `accessible_resources` first-result-wins for multi-site OAuth — pin as KNOWN GAP
-**Setup**: OAuth mock returns two cloud resources: `[{id: "cloud-A", name: "Company A"}, {id: "cloud-B", name: "Company B"}]`.
+### H-047: `accessible_resources` multi-cloudId disambiguation — MUST-PASS (elevated from KNOWN-GAP)
+**Setup**: OAuth mock returns two cloud resources: `[{id: "cloud-A", name: "Company A", url: "https://company-a.atlassian.net"}, {id: "cloud-B", name: "Company B", url: "https://company-b.atlassian.net"}]`.
 **Action**: `jr auth login --oauth --client-id X --client-secret Y --no-input`
-**Expected**: Authenticated to `cloud-A` (first result wins). No disambiguation or error.
-**Purpose**: Pin the known-gap behavior; when NFR-O-S is fixed (add `--cloud-id` flag), this holdout becomes a MUST-FAIL that drives the fix.
-**BC refs**: BC-1.5.038
+**Expected**: exit 64; stderr contains an actionable listing of available cloud-ids (with name, URL, and cloudId for each org); user is instructed to re-run with `--cloud-id <id>`.
+**Purpose**: NFR-O-S fulfilled. Disambiguates multi-org OAuth login. --cloud-id flag selects a specific org non-interactively; dialoguer::Select prompt activates on TTY without --no-input; --no-input + multi-org exits 64 with actionable listing.
+**Status**: MUST-PASS (S-3.04 added --cloud-id flag + dialoguer::Select prompt + --no-input exit-64; elevated KNOWN-GAP → MUST-PASS by PR #320 / b6ab77c, 2026-05-09. Multi-cloudId disambiguation now implemented: --cloud-id flag for non-interactive scripts; dialoguer::Select prompt for TTY; exit 64 + actionable error for --no-input + multi-org. AC-006 of S-3.04 was the integration test that validates this closure.)
+**BC refs**: BC-1.5.038, BC-1.1.007, BC-1.5.031
 
 ---
 

@@ -344,7 +344,20 @@ wave_3:
       holdout_anchors: [H-037, H-038]
       notes: "Pure refactor (small). cli/assets.rs (1,055 LOC) split into cli/assets/{mod.rs (65), search.rs (158), view.rs (91), tickets.rs (285), schemas.rs (490)} — all <600 LOC cap (AC-003 PASS, max 490). Zero behavioral changes; zero new tests; zero new deps; Cargo.lock unchanged. 612/612 unit tests pass; H-037/H-038/H-039 holdouts intact. --open filter (color_name != 'green') survived in tickets.rs:27,169. 6 refactor commits + 1 fmt fix + 1 demo commit (2f20052..c057ffd). PR #318 squash-merged with admin bypass. 8/8 CI green; APPROVE 1 cycle; 0 security findings (security-reviewer: pure structural move, 0 new attack surface). Phase 3 progress: 29/31 (94%). Wave 3: 7/10."
     - { id: S-3.03, title: "Investigate and wire (or document removal of) refresh_oauth_token", status: blocked }
-    - { id: S-3.04, title: "Multi-cloudId disambiguation: --cloud-id flag + prompt for ambiguous orgs", status: blocked }
+    - id: S-3.04
+      title: "Multi-cloudId disambiguation: --cloud-id flag + prompt for ambiguous orgs"
+      status: completed
+      pr: 320
+      merge_sha: b6ab77c
+      merged_at: 2026-05-09
+      merged_via: "gh pr merge --squash --admin --delete-branch (admin per session precedent)"
+      depends_on: []
+      bc_anchors: [BC-1.5.038, BC-1.1.007, BC-1.5.031]
+      nfr_anchors: [NFR-O-S]
+      holdout_anchors: [H-047]
+      risk_anchors: [R-M2]
+      adr_refs: [ADR-0006]
+      notes: "Real feature (medium). Closes H-047 KNOWN-GAP → MUST-PASS. accessible_resources first-result-wins replaced with len-match disambiguation: 0 → NotAuthenticated, 1 → unchanged, >1 → cloud_id_override OR --no-input err exit 64 OR dialoguer::Select prompt. All disambiguation output renders name + URL + cloudId (UX refinement from verification report). 3 commits + 1 fmt fix + 1 demo commit (7c83907..1075dd9). 12 new integration tests in tests/multi_cloudid_disambiguation.rs (11 fail-then-pass + 1 callback-URL regression-pin). 612/612 lib tests pass (no regression). 8/8 CI green; APPROVE 1 cycle (0 blocking; 1 non-blocking suggestion re --cloud-id on refresh, deferred per scope; 1 nit re error variant naming). Test seams: JR_OAUTH_TOKEN_URL, JR_ACCESSIBLE_RESOURCES_URL, JR_OAUTH_CODE (test-only env vars; production paths bit-identical to pre-PR). Non-TTY stdin fallback (1-based numeric index parsing) for interactive path. BC-1.5.031 invariant preserved: callback URL still http://127.0.0.1:53682/callback (regression-pin test asserts). Stable-vs-nightly rustfmt divergence required follow-up commit 1075dd9. Phase 3 progress: 31/31 (100%). Wave 3: 9/10."
     - id: S-3.05
       title: "Cap asset enrichment join_all concurrency with buffer_unordered(8)"
       status: completed

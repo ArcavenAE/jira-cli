@@ -145,7 +145,7 @@ Note: S-3.08 depends on S-2.05 merging first (CLAUDE.md conflict risk).
 | S-3.01 | Shard-split src/cli/auth.rs (1,998 LOC) | NFR-O-D, BC-1.1.001, BC-1.4.027, BC-7.4.013, BC-7.4.014, BC-7.4.015, BC-7.4.016 | — | completed (PR #319 / b20cfee) | medium |
 | S-3.02 | Shard-split src/cli/assets.rs (1,055 LOC) | NFR-O-D, BC-4.2.001, BC-4.2.006 | H-037, H-038 | completed (PR #318 / 68092af) | small |
 | S-3.03 | Investigate + wire refresh_oauth_token | NFR-O-B, BC-1.1.002, BC-1.4.027 | — | draft | medium |
-| S-3.04 | Multi-cloudId --cloud-id flag + prompt | NFR-O-S, BC-1.5.038, BC-1.1.007, BC-1.5.031 | H-047 | draft | medium |
+| S-3.04 | Multi-cloudId --cloud-id flag + prompt | NFR-O-S, BC-1.5.038, BC-1.1.007, BC-1.5.031 | H-047 | completed (PR #320 / b6ab77c) | medium |
 | S-3.05 | Asset enrichment join_all → buffer_unordered(8) | NFR-P-NEW-1, BC-4.3.002, BC-X.1.005 | H-038 | completed (PR #316 / 10e1db4) | small |
 | S-3.06 | Pre-merge spec numeric claim checker (DRIFT-001) | — | — | completed (PR #314 / 01ba293) | small |
 | S-3.07 | LOW NFR code fixes (Retry-After cap, profile name precision) + /rest/api/3/search/jql anti-loop guard for confirmed JRACLOUD-94632 bug | BC-X.4.009, BC-6.1.004, NFR-R-NEW-1, NFR-S-D, NFR-R-F | H-027 | completed (PR #315 / 6bce18c) | small |
