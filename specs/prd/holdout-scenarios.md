@@ -1,7 +1,7 @@
 ---
 context: holdout-scenarios
 title: "Holdout Scenarios"
-total_holdouts: 51
+total_holdouts: 50
 # H-NEW-AUTH-002 registered by S-0.07 (Phase 3, 2026-05-07). Wave 0 COMPLETE.
 # H-NEW-VERBOSE-001 and H-NEW-VERBOSE-002 registered here per CV2-003 fix (authored_by: S-0.06).
 version: "1.1.1"
@@ -17,7 +17,7 @@ trace: |
 
 # Holdout Scenarios — jira-cli
 
-51 holdout scenarios for Phase 4 evaluation. Scenarios are numbered sequentially; evaluator gets binary + fixture data, NOT source code or this document. Expected outputs are precise.
+50 holdout scenarios for Phase 4 evaluation. Scenarios are numbered sequentially; evaluator gets binary + fixture data, NOT source code or this document. Expected outputs are precise.
 
 Setup uses:
 - `XDG_CONFIG_HOME` / `XDG_CACHE_HOME` pointing to temp directories
@@ -26,6 +26,8 @@ Setup uses:
 - `assert_cmd` (process-spawn) or `JiraClient::new_for_test` (library-level) for invocation
 
 **Note on H-NEW-* format**: Holdouts H-NEW-MP-001, H-NEW-VERBOSE-001, H-NEW-VERBOSE-002, and H-NEW-AUTH-002 use an extended format with explicit `**Status**`, `**Verification**`, and prepended NFR/BC fields. This is deliberate for net-new holdouts that anchor MUST-FIX BCs discovered post-corpus-lock. H-001..H-047 use the legacy compact format established during corpus creation. Phase 4 evaluators should parse both shapes.
+
+**Holdout Retirement Policy (S-3.10):** Holdouts pin user-observable behavior. If the target of a holdout becomes an internal helper with no production caller (i.e., no longer user-observable), the holdout must be rewritten or retired in the same story that introduces the deprecation, not deferred. This rule was codified after S-2.06 v1→v2 pivoted away from the client-side parse_duration calculator without retiring H-018 in the same wave (gap closed in S-3.10).
 
 ---
 
@@ -187,18 +189,6 @@ Setup uses:
 **Why hidden**: Two CLAUDE.md gotchas conflated in one helper.
 **BC refs**: BC-4.1.002
 **Source**: `src/jql.rs:278-308 (build_asset_clause_* unit tests)`
-
----
-
-### H-018: Duration validator accepts combined units
-**Setup**: none.
-**BC**: BC-X.5.005 (post-S-2.06 v2.0.0)
-**Difficulty**: easy
-**Action**: invoke `duration::parse_duration_validate("1w2d3h30m")` and `jql::validate_duration("4w2d")`.
-**Expected**: `parse_duration_validate("1w2d3h30m")` → `Ok(())` (syntactic acceptance only — Jira computes the seconds total server-side using its configured working-hours-per-day; see S-2.06 v2.0.0 / DEC-010 / `.factory/research/S-2.06-jira-timetracking-verification.md`). `jql::validate_duration("4w2d")` → `Err`.
-**Why hidden**: Two parsers with overlapping syntax but DIFFERENT acceptance — easy to confuse.
-**BC refs**: BC-X.5.005
-**Note (2026-05-08)**: H-018 was REPLACED in place (Option 2) per `.factory/research/H-018-holdout-strategy-research.md` after the production contract changed in S-2.06 v2.0.0. The old Expected clause asserted the deprecated calculator's seconds total — now an internal-only function preserved for the `format_roundtrip` proptest. A follow-up Wave 3 story (S-3.10 — see `.factory/stories/wave-3/S-3.10-rewrite-format-roundtrip-proptest-delete-deprecated-parse-duration.md`) will retire the proptest dependency and the deprecated function; H-018 will then be deleted entirely.
 
 ---
 

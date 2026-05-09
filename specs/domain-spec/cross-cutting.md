@@ -58,16 +58,17 @@ Modules: `jql.rs`, `duration.rs`, `partial_match.rs`, `observability.rs`, `api/c
 ### Entities / Value Objects
 
 - **`parse_duration_validate(input: &str) -> Result<(), JrError>`**: production path (S-2.06 v2.0.0). Accepts combined units `1w2d3h30m`, also accepts space-separated `2d 3h 30m`. No arithmetic performed — syntactic validation only. Case-insensitive. Units: `w`/`d`/`h`/`m` only.
-- **`parse_duration(input: &str, hours_per_day: u64, days_per_week: u64) -> Result<u64>`**: DEPRECATED post-S-2.06 v2.0.0; kept only for `format_duration` round-trip proptest. No production caller. Returns total seconds. Accepts combined units `1w2d3h30m`. Case-insensitive (input is lowercased first). Callers previously hardcoded `8, 5`.
 - **`format_duration(seconds: u64) -> String`**: inverse. Returns `"30m"`, `"2h"`, or `"1h30m"` only — never weeks/days (format collapses to hours+minutes).
+
+Note: the 3-arg `parse_duration(input, hours_per_day, days_per_week) -> Result<u64>` calculator was deleted in S-3.10. It had no production caller after S-2.06 v2.0.0 (when `worklog add` switched to server-side `timeSpent` passthrough) and was retained only for the `format_duration` round-trip proptest. That proptest has been rewritten in S-3.10 to use `format_duration` directly without the calculator.
 
 ### Invariants
 
 | ID | Invariant | Source |
 |----|----------|--------|
-| INV-DUR-001 | `parse_duration` accepts combined units (`1w2d3h30m`), unlike `validate_duration` which rejects them. This is the critical syntax divergence. | `duration.rs:5-49`, Pass 2 INV-6 |
-| INV-DUR-002 | `parse_duration` is case-insensitive (input lowercased). `validate_duration` is case-sensitive. A JQL validation pass does NOT imply successful duration parse and vice versa. | `duration.rs:5-49`, `jql.rs:16-33` |
-| INV-DUR-003 | `parse_duration` u64 overflow potential for pathological inputs like `99999999999999w`. In release builds (`panic = "abort"`), overflow wraps. No `checked_mul`. NFR-R-NEW-2 (LOW). | `duration.rs:29-32` |
+| INV-DUR-001 | ~~`parse_duration` accepts combined units (`1w2d3h30m`), unlike `validate_duration` which rejects them.~~ **DELETED S-3.10**: `parse_duration` calculator removed. `parse_duration_validate` (production path) accepts combined units; `validate_duration` (JQL) rejects them. This syntax divergence between the two surviving functions remains invariant. | `duration.rs`, `jql.rs:16-33` |
+| INV-DUR-002 | ~~`parse_duration` is case-insensitive (input lowercased). `validate_duration` is case-sensitive.~~ **DELETED S-3.10**: `parse_duration` calculator removed. `parse_duration_validate` is case-insensitive; `validate_duration` is case-sensitive. A JQL validation pass does NOT imply worklog duration validity and vice versa. | `duration.rs`, `jql.rs:16-33` |
+| INV-DUR-003 | ~~`parse_duration` u64 overflow potential for pathological inputs.~~ **DELETED S-3.10**: `parse_duration` calculator removed; overflow risk eliminated. | — |
 | INV-DUR-004 | `format_duration` never returns weeks or days — always collapses to hours+minutes. Round-trip is NOT identity for week/day inputs. Property-tested for never-panics and round-trip consistency. | `duration.rs` |
 
 ---

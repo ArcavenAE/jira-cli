@@ -313,12 +313,12 @@ JQL utilities (X.9), Partial-match (X.10), Build-time (X.11).
 
 ---
 
-#### BC-X.5.005: `parse_duration_validate("1w2d3h30m")` accepts combined units (validator); `parse_duration("1w2d3h30m", 8, 5)` calculator preserved deprecated for `format_duration` round-trip proptest
+#### BC-X.5.005: `parse_duration_validate("1w2d3h30m")` accepts combined units (validator — production path only)
 
 **Confidence**: HIGH
 **Source**: `src/duration.rs::tests::test_complex`
 **Subject**: Duration
-**Behavior**: Distinguished from JQL `validate_duration` which rejects combined units. Used for worklog add. (post-S-2.06 v2.0.0: validator path; old calculator preserved with SUPERSEDED-BY comment — `parse_duration_validate("1w2d3h30m")` is the production path; calculator `parse_duration(s, 8, 5)` is deprecated, retained only for `format_duration` round-trip proptest.)
+**Behavior**: Distinguished from JQL `validate_duration` which rejects combined units. Used for worklog add. `parse_duration_validate("1w2d3h30m")` is the sole production path. Note: the 3-arg `parse_duration(s, hours_per_day, days_per_week)` calculator was deleted in S-3.10 — it had no production caller after S-2.06 v2.0.0 and was retained only for the `format_duration` round-trip proptest, which has been rewritten to not depend on it.
 **Trace**: Pass 3 BC-505
 
 ---

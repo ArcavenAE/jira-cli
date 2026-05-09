@@ -558,7 +558,7 @@ R1/R4 prefix = deepening round that introduced it.
 | **BC-X.5.002** | **`client.list_worklogs(key)` paginates via `/issue/<key>/worklog` [MUST-FIX: NFR-R-A — HIGH]** | BC-502; NFR-R-A | src/api/jira/worklogs.rs:25-30 | HIGH |
 | BC-X.5.003 | `worklog list` 5xx → exit 1 + `API error (500)` | BC-503 | tests/worklog_commands.rs:55-93 | HIGH |
 | BC-X.5.004 | `worklog list` 401 → exit 2 + `Not authenticated` + `jr auth login` | BC-504 | tests/worklog_commands.rs:95-120 | HIGH |
-| BC-X.5.005 | Calculator (deprecated post-S-2.06 v2.0.0; kept only for `format_duration` round-trip proptest) AND validator `parse_duration_validate("1w2d3h30m")` accept combined units. Validator is the production path; old calculator has no production caller. See `src/duration.rs` and DEC-010. | BC-505 | src/duration.rs::tests | HIGH |
+| BC-X.5.005 | Validator `parse_duration_validate("1w2d3h30m")` accepts combined units — production path only. Note: the 3-arg parse_duration calculator was deleted in S-3.10 (was used only by tests post-S-2.06). See `src/duration.rs` and DEC-010. | BC-505 | src/duration.rs::tests | HIGH |
 | BC-X.5.006 | `parse_duration` is case-insensitive (input lowercased first) | BC-506 | src/duration.rs:6 | HIGH |
 | BC-X.5.007 | `parse_duration("")` errors `Duration cannot be empty` | BC-507 | src/duration.rs:7-9 | HIGH |
 | BC-X.5.008 | `parse_duration("5")` errors `Number without unit` | BC-508 | src/duration.rs:38-42 | HIGH |
