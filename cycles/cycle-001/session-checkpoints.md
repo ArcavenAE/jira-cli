@@ -17,6 +17,30 @@ Superseded checkpoints are archived here when STATE.md is updated with a newer o
 
 ---
 
+## Checkpoint archived 2026-05-11 (PR #352 CONVERGED, awaiting human merge)
+
+_Was the active checkpoint after PR #352 Round 2 returned 0 new comments. Superseded when PR #352 merged and PR #353 opened._
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-05-11 |
+| **Position** | **PR #352 CONVERGED (Round 2 returned 0 new comments at 2026-05-11T15:25:48Z), awaiting human merge.** Branch: chore/docs-cleanup-337-341-347 @ f42bfa5. PR state: OPEN, MERGEABLE/CLEAN, 8/8 CI green, 3/3 threads resolved (from R1), 0 new R2 comments. Closes #337+#341+#347 on merge. Convergence trajectory: 3→0. Next action: merge PR #352 (human merge required). 15 audit-followups remain after #337+#341+#347 close on merge: #331, #332, #333, #334, #335, #336, #338, #340, #342, #343, #345, #346, #350. |
+| **Convergence counter** | 3/3 CONVERGED Phase 2-adv; Phase 3-adv: Wave 2 gate CLOSED; Feature Mode #110-pr2 F5 CONVERGED (12→5→0→0→0); PR #351 MERGED (2→1→0 / rebase / 0); PR #352 CONVERGED Round 2 (3→0) |
+
+---
+
+## Checkpoint archived 2026-05-11 (PR #351 paused mid-round-2)
+
+_Was the active checkpoint from Wave 3 CLOSED (2026-05-09). Superseded when PR #351 mid-session pause state was recorded._
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-05-09 |
+| **Position** | **WAVE 3 CLOSED — 10/10 stories complete**. Final story S-3.03 v2 MERGED at PR #321 / 597dd23. All Wave 3 stories: S-3.10 (proptest rewrite + parse_duration deletion) + S-3.06 (spec-counts script) + S-3.07 (rate-limit cap + JRACLOUD-94632) + S-3.05 (asset enrichment concurrency cap) + S-3.09 (PKCE deferral closure) + S-3.08 (DOCUMENT-AS-IS LOW NFR closures) + S-3.02 (cli/assets shard split) + S-3.01 (cli/auth shard split) + S-3.04 (multi-cloudId disambiguation) + S-3.03 v2 (auto-refresh + single-flight). Phase 3 progress: **32/32 (100% v2 scope)**. develop @ 811fbc7 (v0.5.0-dev.9 bump PR #322; underlying Wave 3 closure code at 597dd23 / S-3.03 v2); factory-artifacts @ this commit. Notable Wave 3 deliverables: closed 11 LOW NFRs (S-3.08); closed H-018 + H-027 + H-047 KNOWN-GAP→MUST-PASS; resolved DRIFT-001 codification; refactored 1,055 + 2,245 LOC into 14 module files; verified canonical wording for 4 NFR docs against Atlassian sources (Perplexity-driven). 6 PRs merged (#313-#321) + 1 factory-only closure (S-3.09). |
+| **Convergence counter** | 3/3 CONVERGED Phase 2-adv; Phase 3-adv: Wave 2 gate CLOSED (adversary pass-01 `ded2210` + consistency pass-01 `4918e6e` + pass-02 `8ae5511`) |
+
+---
+
 ## Checkpoint archived 2026-05-08 (Wave 1 COMPLETE update)
 
 _Was the active checkpoint when S-1.08 state-manager dispatch ran._

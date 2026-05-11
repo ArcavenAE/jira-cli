@@ -1248,3 +1248,71 @@ not a reason to continue. PR #352 is CONVERGED at 3→0 over 2 rounds.
 | Confirm OPEN/MERGEABLE/CLEAN | orchestrator | PR state verified; 8/8 CI green unchanged since f42bfa5 |
 | Factory state update | state-manager | STATE.md + burst-log.md + pr-352-docs-cleanup convergence record |
 | Copilot re-requested | orchestrator | ~2026-05-11T15:23:30Z; awaiting Round 2 |
+
+---
+
+## Burst: PR #352 Merged (2026-05-11)
+
+**Date:** 2026-05-11T15:36:10Z
+**Agents:** orchestrator (human merge)
+**Input files touched:** none (human action)
+**Output commits:** develop @ 57cc0ae (squash merge of chore/docs-cleanup-337-341-347)
+**factory-artifacts commit:** included in PR #353 open burst below
+
+### Summary
+
+PR #352 (chore/docs-cleanup-337-341-347 @ f42bfa5) was squash-merged to develop at
+57cc0ae by human. Closes GitHub issues #337, #341, and #347. Develop fast-forwarded
+3216ec2→57cc0ae. This completes the docs-cleanup audit theme.
+
+| Step | Agent | Output |
+|------|-------|--------|
+| Human merges PR #352 | GitHub (human) | develop @ 57cc0ae; closes #337+#341+#347 |
+
+**Outcome:** PR #352 MERGED. Develop at 57cc0ae. 12 audit-followups remain after #338 closes.
+
+---
+
+## Burst: PR #353 (#338 consolidate BULK_MAX_KEYS) Open + Implementation (2026-05-11)
+
+**Date:** 2026-05-11
+**Agents:** orchestrator + state-manager
+**Branch:** refactor/bulk-max-keys-338
+**Head commit:** 3b98a3d
+**Input files touched (read):** src/cli/issue/create.rs, src/cli/issue/workflow.rs (verify premise)
+**Output files changed:** src/api/jira/bulk.rs (+9), src/cli/issue/create.rs (-3 net), src/cli/issue/workflow.rs (-2 net)
+**factory-artifacts commit:** this commit
+
+### Summary
+
+Premise verified via `grep -rE "BULK_(MOVE_)?MAX_KEYS"`: two duplicate `usize = 1000`
+constants existed — `BULK_MAX_KEYS` in src/cli/issue/create.rs and `BULK_MOVE_MAX_KEYS`
+in src/cli/issue/workflow.rs — both representing the same Atlassian per-call cap.
+
+Trivial-changes path selected per validated-feature-lifecycle skill: no design decisions,
+no external API claims, no new user-visible behavior. Skipped brainstorm/spec/plan phases;
+kept implementation + review + PR + Copilot validation.
+
+Worktree created off develop @ 57cc0ae (post-#352 merge tip). Canonical constant
+`pub const BULK_MAX_KEYS: usize = 1000` added to src/api/jira/bulk.rs. Both CLI handlers
+updated to remove local constant definitions and import the canonical one. Net change:
++14/-9 lines across 3 files. No behavioral change — same numeric limit at same call sites.
+
+Local CI-equivalent passed: cargo fmt --check, cargo clippy --all-targets -- -D warnings,
+cargo test (613 unit + 38 bulk integration + all other suites). Commit 3b98a3d pushed.
+PR #353 created. Copilot review requested.
+
+| Step | Agent | Output |
+|------|-------|--------|
+| Read existing constants (verify premise) | orchestrator | `grep -rE "BULK_(MOVE_)?MAX_KEYS"` confirmed 2 duplicate usize=1000 constants |
+| Create worktree off develop @ 57cc0ae | orchestrator | `.worktrees/issue-338-consolidate-bulk-max` |
+| Add pub const BULK_MAX_KEYS to src/api/jira/bulk.rs | orchestrator | +9 lines |
+| Remove local const + add import in create.rs | orchestrator | -3 lines net |
+| Remove local const + rename refs + add import in workflow.rs | orchestrator | -2 lines net |
+| Local cargo fmt + clippy + test | orchestrator | All green; 613 unit + 38 bulk integration |
+| Commit 3b98a3d + push refactor/bulk-max-keys-338 | orchestrator | 3b98a3d on refactor/bulk-max-keys-338 |
+| Create PR #353 (closes #338) | orchestrator | https://github.com/Zious11/jira-cli/pull/353 |
+| Request Copilot review | orchestrator | Review requested on 3b98a3d |
+| Factory state update | state-manager | STATE.md session checkpoint + phase progress + convergence tracker; burst-log.md new entries |
+
+**Outcome:** PR #353 OPEN. Awaiting CI green + Copilot Round 1. Trivial-changes path — no adversarial review needed.
