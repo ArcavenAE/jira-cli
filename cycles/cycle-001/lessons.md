@@ -165,3 +165,20 @@ commit). Codify: orchestrator must dispatch state-manager LAST in every burst pe
 orchestrator constraint, including bursts driven by validated-feature-lifecycle.
 
 _Discovered: PR #348 documentation remediation, 2026-05-11_
+
+---
+
+## 2026-05-11 — Standing rule: Perplexity-validate every Copilot review
+
+### [codified] Always validate Copilot findings with Perplexity BEFORE acting
+
+User-issued rule (2026-05-11, during PR #351 round 1). For each Copilot inline
+comment: identify the external-fact claim (stdlib semantics, crate behavior,
+API shape, language feature), run `mcp__perplexity__search` with a targeted
+query, then act based on validation. Examples from this cycle:
+- PR #348 round 2 C1 (claimed compile error): Copilot WRONG — CI was green.
+- PR #351 round 1 C1 (`is_err()` semantics): Copilot CORRECT — `Ok("1")` is canonical.
+- PR #351 round 1 C2 (COMPLETED not in OpenAPI): Copilot CORRECT.
+- PR #351 round 2 C1 (panic too macOS-specific): Copilot CORRECT — keyring crate is cross-platform.
+
+Codified in MEMORY.md as `feedback_perplexity_copilot_reviews.md` for cross-session durability.
