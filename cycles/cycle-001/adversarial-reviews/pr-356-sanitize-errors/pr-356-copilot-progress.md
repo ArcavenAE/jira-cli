@@ -2,9 +2,9 @@
 document_type: copilot-convergence-record
 pr: 356
 branch: chore/sanitize-errors-334
-head_sha: cdc4c64
+head_sha: e6262dd
 closes_issues: ["#334"]
-rounds: 7
+rounds: 8
 status: in-progress
 review_round_1_id: ""
 review_round_1_submitted: 2026-05-11T17:49:49Z
@@ -17,19 +17,21 @@ review_round_6_id: "4266560193"
 review_round_6_submitted: 2026-05-11T19:00:25Z
 review_round_7_id: "4266726028"
 review_round_7_submitted: 2026-05-11T19:23:31Z
+review_round_8_id: "4266853645"
+review_round_8_submitted: 2026-05-11T19:41:09Z
 pr_state: OPEN
-threads_total: 17
-threads_resolved: 17
-trajectory: "4→1→2→2→3→2→3→?"
+threads_total: 19
+threads_resolved: 19
+trajectory: "4→1→2→2→3→2→3→2→?"
 ---
 
 # PR #356 Copilot Convergence Record — IN PROGRESS
 
 **PR:** https://github.com/Zious11/jira-cli/pull/356
 **Branch:** chore/sanitize-errors-334
-**Current tip SHA:** cdc4c64
+**Current tip SHA:** e6262dd
 **Closes:** #334 on merge
-**Trajectory so far:** 4→1→2→2→3→2→3→? (Round 8 pending)
+**Trajectory so far:** 4→1→2→2→3→2→3→2→? (Round 9 pending)
 
 ## Summary
 
@@ -38,8 +40,8 @@ PR #356 implements CWE-117 defense at the `extract_error_message` public boundar
 from Atlassian error message strings before stderr emission, preventing terminal injection
 (log forging, ANSI escape injection) via hostile or proxy-injected error payloads.
 
-Seven Copilot rounds have been completed with a total of 17/17 threads resolved. CI is in-flight
-on cdc4c64. Round 8 is pending.
+Eight Copilot rounds have been completed with a total of 19/19 threads resolved. CI is in-flight
+on e6262dd. Round 9 is pending.
 
 **Process gaps noted:** R2 and R3 Perplexity-validation were SKIPPED on the rationalization
 that the claims were "empirically verifiable from code." Per DEC-018, this was incorrect — all
@@ -49,8 +51,8 @@ Perplexity before fixing. See Lesson codification below.
 
 **Process improvement (R5+):** Starting from R5, the state-manager is dispatched IN REAL TIME
 after each fix commit, rather than retroactively in batch. Per codified Lesson 2 ("Skipping
-state-manager between Copilot rounds creates audit-trail debt"), R5 → R6 → R7 are THREE
-consecutive in-cycle dispatches — the audit-trail discipline is now habit.
+state-manager between Copilot rounds creates audit-trail debt"), R5 → R6 → R7 → R8 are FOUR
+consecutive in-cycle dispatches — the audit-trail discipline is consistent habit.
 
 ## Round 1 (2026-05-11T17:49:49Z)
 
@@ -374,11 +376,61 @@ MAX_ERROR_ENTRY_LEN..." instead of cycle references.
 **Process note:** Third consecutive in-cycle state-manager dispatch per codified Lesson 2.
 R5 → R6 → R7 all dispatched state-manager in real time. The discipline is now habit.
 
+## Round 8 (2026-05-11T19:41:09Z)
+
+**Review ID:** 4266853645
+**Inline comments:** 2
+**Both valid**
+
+### Finding 1 — Errors-map memory amplification (same class as R5 errorMessages)
+
+The errors-map extraction path used `.iter().map(...).collect()` then sorted then joined — the
+same unbounded entry-count allocation pattern that R5 fixed for errorMessages. A hostile response
+with 1M keys would force ~100 MB allocation before the join output is consumed.
+
+**Validation (Perplexity per Lesson 1 / DEC-018):** RE-CITED OWASP A06/AP11 — Lesson 1 allows
+re-citing prior validation for same-class findings. R5 confirmed this threat class (unbounded
+entry-count allocation) for errorMessages; the errors-map path uses an identical pattern. Same
+threat class, same mitigation category, prior validation stands.
+
+**Fix:** Bounded entry count to `MAX_ERROR_PAIRS = 256` via `errors.iter().take(MAX_ERROR_PAIRS)`.
+Added streaming join with upfront marker reservation mirroring the errorMessages path. Tracks both
+`join_truncated` AND `pairs_truncated` states; marker text reflects active truncation condition.
+Total memory: O(256 KiB) intermediate, O(4 KiB) output.
+
+### Finding 2 — MAX_SANITIZED_OUTPUT_LEN doc inaccuracy
+
+Doc comment said "still leaving room for the marker via reserved headroom inside
+sanitize_for_stderr" — but the R4 restructure changed the implementation to retroactive trim.
+The comment described the pre-R4 approach, not the current one.
+
+**Validation (Perplexity per Lesson 1):** NO EXTERNAL CLAIM — purely doc accuracy. Lesson 1
+wording requires "at least one external-claim aspect" to warrant Perplexity. A comment
+describing a code mechanism has no such aspect. Skip is per-spec, not a rationalization.
+
+**Fix:** Reworded doc to accurately describe the retroactive-trim approach: "after writing, the
+buffer is trimmed at a UTF-8 boundary if it exceeds the cap, then the truncation marker is
+appended."
+
+**Fix commit:** e6262dd (+46 -7 lines)
+**Threads:** 19/19 resolved after e6262dd push (2 new R8 threads)
+
+**Test results at e6262dd:**
+- 22 sanitize unit tests pass
+- 26 api_client integration tests pass
+- Full cargo test: 60 suites, 0 failures (parallel-execution flake in unrelated
+  multi_cloudid_disambiguation test passed on single-threaded retry)
+- cargo fmt --check + cargo clippy --all-targets -- -D warnings clean
+- CI in-flight on e6262dd
+
+**Process note:** Fourth consecutive in-cycle state-manager dispatch per codified Lesson 2.
+R5 → R6 → R7 → R8 all dispatched state-manager in real time. The discipline is consistent habit.
+
 ---
 
 ## Trajectory Analysis
 
-**Pattern so far:** 4→1→2→2→3→2→3 — all non-zero rounds addressed real findings.
+**Pattern so far:** 4→1→2→2→3→2→3→2 — all non-zero rounds addressed real findings.
 
 - R1: 4 findings (doc accuracy, loop allocation, clean-path allocation, missing length cap).
   Perplexity confirmed CWE-117 + OWASP length-capping guidance.
@@ -396,26 +448,29 @@ R5 → R6 → R7 all dispatched state-manager in real time. The discipline is no
 - R7: 3 findings (terminology "strip" vs "escape" in docstring; stale round annotations in
   inline comments × 2). Perplexity CONFIRMED OWASP terminology for Finding 1; Findings 2+3
   no external claim (Perplexity skipped per Lesson 1 wording). No behavior change.
+- R8: 2 findings (errors-map memory amplification — same class as R5; doc inaccuracy on
+  MAX_SANITIZED_OUTPUT_LEN retroactive-trim description). Perplexity re-cited OWASP A06/AP11
+  for Finding 1 (same class, Lesson 1 re-cite allowance). Finding 2 no external claim
+  (Perplexity skipped per Lesson 1 wording).
 
-**Assessment:** R7 surfaced documentation quality issues only — no correctness or behavior
-changes. The implementation's output-size guarantees, memory budget (O(MAX_SANITIZED_OUTPUT_LEN)),
-and all size invariants (debug_assert! guards) remain intact. Terminology now matches
-implementation semantics. Inline comments and test annotations are stable for post-merge
-readability. R8 may find 0 findings or further annotation polish. Perplexity-validation
-consistent through R5 + R6 + R7 per DEC-018/Lesson 1 — including correct application of the
-"no external claim" exemption for R7 Findings 2+3.
+**Assessment:** R8 surfaced one real memory-amplification security finding (errors-map path was
+missing the entry-count bound analogous to the R5 errorMessages fix) and one doc accuracy issue.
+The errors-map path is now bounded: O(256 KiB) intermediate, O(4 KiB) output.
+Perplexity-validation consistent through R5 + R6 + R7 + R8 per DEC-018/Lesson 1 — including
+correct application of the "no external claim" exemption and "same-class re-cite" allowance.
+R9 pending.
 
 ## CI Status
 
-**Head SHA:** cdc4c64
-**CI result:** in-flight (poller b8m8umhla watching)
+**Head SHA:** e6262dd
+**CI result:** in-flight
 
 ## Current PR State
 
 | Field | Value |
 |-------|-------|
 | **State** | OPEN |
-| **Threads** | 17 created; 17/17 resolved |
-| **R8** | Pending |
-| **CI on cdc4c64** | in-flight |
+| **Threads** | 19 created; 19/19 resolved |
+| **R9** | Pending |
+| **CI on e6262dd** | in-flight |
 | **Closes** | #334 on merge |

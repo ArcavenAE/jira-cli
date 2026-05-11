@@ -1926,3 +1926,42 @@ PR #356 Copilot Round 7 (2026-05-11T19:23:31Z, review id 4266726028) returned 3 
 | implementer | Reword docstring ("strip" → "escape" + "keeping byte information visible to operator"); clean 6 inline comment sites; reword test annotations to describe pinned behavior | src/api/client.rs cdc4c64 |
 | orchestrator | Commit cdc4c64; push; request R8 | 17/17 threads resolved; CI in-flight; R8 requested |
 | state-manager | Third consecutive in-cycle dispatch per Lesson 2 — discipline is now habit | STATE.md, burst-log.md, pr-356-copilot-progress.md updated |
+
+---
+
+## Burst N+10 (2026-05-11): PR #356 Copilot Round 8 — Errors-Map Memory Bound + Doc Accuracy, fix commit e6262dd
+
+**Agents dispatched:** orchestrator, implementer, state-manager
+**Files touched:** src/api/client.rs (errors-map extraction bounded to MAX_ERROR_PAIRS=256 via `.iter().take(...)`; streaming join with upfront marker reservation; MAX_SANITIZED_OUTPUT_LEN doc reworded to describe retroactive-trim approach accurately)
+**Versions bumped:** (none)
+
+### Summary
+
+PR #356 Copilot Round 8 (2026-05-11T19:41:09Z, review id 4266853645) returned 2 inline findings. Both valid. Fix commit e6262dd (+46 -7 lines).
+
+**Process note: FOURTH consecutive in-cycle state-manager dispatch per codified Lesson 2.** R5 → R6 → R7 → R8 all dispatched state-manager in real time. The discipline is consistent habit.
+
+**Perplexity-validation per Lesson 1 / DEC-018:**
+- Finding 1 (errors-map memory amplification): RE-CITED OWASP A06/AP11 per Lesson 1 allowance for same-class findings already validated this cycle. R5 confirmed the same threat class (unbounded entry-count allocation pattern) for errorMessages; errors-map uses an identical `.iter().map(...).collect()` pattern with no entry-count bound. Same threat, same mitigation category, same prior validation still applies.
+- Finding 2 (doc inaccuracy on MAX_SANITIZED_OUTPUT_LEN): NO EXTERNAL CLAIM — purely doc accuracy. Lesson 1 wording requires "at least one external-claim aspect" to warrant Perplexity. A comment describing a code mechanism has no such aspect. Skip is per-spec, not a rationalization.
+
+**Findings:**
+
+1. Errors-map memory amplification: The errors-map extraction path used `.iter().map(...).collect()` then sorted then joined — same unbounded entry-count pattern that R5 fixed for errorMessages. A hostile response with 1M keys would force ~100 MB allocation.
+   - Threat class: OWASP A06:2021 Resource Exhaustion / AP11 (same as R5). Memory bounded to O(256 KiB) intermediate, O(4 KiB) output after fix.
+   - Fix: Bounded entry count to `MAX_ERROR_PAIRS = 256` via `errors.iter().take(MAX_ERROR_PAIRS)`. Added streaming join with upfront marker reservation mirroring the errorMessages path. Tracks both `join_truncated` AND `pairs_truncated` states; marker reflects the active truncation condition.
+
+2. MAX_SANITIZED_OUTPUT_LEN doc inaccuracy: Doc comment said "still leaving room for the marker via reserved headroom inside sanitize_for_stderr" — but the implementation uses retroactive trim, not reserved headroom. R4 restructured the implementation to retroactive trim, but the doc comment wasn't updated to match.
+   - No external claim; Perplexity skipped per Lesson 1 wording.
+   - Fix: Reworded doc to accurately describe the retroactive-trim approach: "after writing, the buffer is trimmed at a UTF-8 boundary if it exceeds the cap, then the truncation marker is appended."
+
+**Test results at e6262dd:** 22 sanitize unit tests pass; 26 api_client integration tests pass; full cargo test 60 suites 0 failures (parallel-execution flake in unrelated multi_cloudid_disambiguation test passed on single-threaded retry); cargo fmt --check + cargo clippy --all-targets -- -D warnings clean. CI in-flight on e6262dd.
+
+### Details
+
+| Agent | Task | Output |
+|-------|------|--------|
+| orchestrator | Triage 2 Copilot R8 findings; Perplexity re-cited OWASP A06/AP11 for #1 (same class as R5); Finding 2 no external claim (Perplexity skipped per Lesson 1) | Both confirmed valid; fix plan approved |
+| implementer | Bound errors-map to MAX_ERROR_PAIRS=256 with streaming join + upfront marker reservation; reword MAX_SANITIZED_OUTPUT_LEN doc | src/api/client.rs e6262dd (+46 -7) |
+| orchestrator | Commit e6262dd; push; request R9 | 19/19 threads resolved; CI in-flight; R9 requested |
+| state-manager | Fourth consecutive in-cycle dispatch per Lesson 2 — consistent habit | STATE.md, burst-log.md, pr-356-copilot-progress.md updated |
