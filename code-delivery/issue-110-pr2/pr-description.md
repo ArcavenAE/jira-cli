@@ -1,3 +1,5 @@
+<!-- MERGED 2026-05-11 at e480ff2 (squash-merge to develop; closes #110) -->
+
 ## Summary
 
 Completes issue #110 (`Feature: bulk operations via JQL or multiple keys`). Part 1 (PR #325,
