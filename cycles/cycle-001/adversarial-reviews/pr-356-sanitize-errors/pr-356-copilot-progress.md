@@ -2,9 +2,9 @@
 document_type: copilot-convergence-record
 pr: 356
 branch: chore/sanitize-errors-334
-head_sha: 2ecc18c
+head_sha: 6832967
 closes_issues: ["#334"]
-rounds: 11
+rounds: 12
 status: in-progress
 review_round_1_id: ""
 review_round_1_submitted: 2026-05-11T17:49:49Z
@@ -29,18 +29,20 @@ review_round_10_submitted: 2026-05-11T23:07:46Z
 pr_state: OPEN
 review_round_11_id: "4268102135"
 review_round_11_submitted: 2026-05-11T23:27:03Z
-threads_total: 25
-threads_resolved: 25
-trajectory: "4→1→2→2→3→2→3→2→2→1→1"
+review_round_12_id: "4268158285"
+review_round_12_submitted: 2026-05-11T23:39:52Z
+threads_total: 27
+threads_resolved: 27
+trajectory: "4→1→2→2→3→2→3→2→2→1→1→2"
 ---
 
 # PR #356 Copilot Convergence Record — IN PROGRESS
 
 **PR:** https://github.com/Zious11/jira-cli/pull/356
 **Branch:** chore/sanitize-errors-334
-**Current tip SHA:** 2ecc18c
+**Current tip SHA:** 6832967
 **Closes:** #334 on merge
-**Trajectory so far:** 4→1→2→2→3→2→3→2→2→1→1 (Round 12 pending)
+**Trajectory so far:** 4→1→2→2→3→2→3→2→2→1→1→2 (Round 13 pending)
 
 ## Summary
 
@@ -49,11 +51,14 @@ PR #356 implements CWE-117 defense at the `extract_error_message` public boundar
 from Atlassian error message strings before stderr emission, preventing terminal injection
 (log forging, ANSI escape injection) via hostile or proxy-injected error payloads.
 
-Eleven Copilot rounds have been completed with a total of 25/25 threads resolved. CI is 8/8
-green on 2ecc18c. Round 12 is pending.
+Twelve Copilot rounds have been completed with a total of 27/27 threads resolved. CI is 8/8
+green on 6832967. Round 13 is pending.
 
-**Convergence plateau:** Finding count has been 1 for two consecutive rounds (R10, R11). If R12
-returns 0 new findings, this triggers the Phase 8 stop condition and PR #356 is ready for merge.
+**Trajectory note:** R12 ticked back to 2 (trajectory now 4→1→2→2→3→2→3→2→2→1→1→2). Both R12
+findings are non-overlapping with R11's INPUT-DOM class: contract-level (std::io::Write violation)
+and UX-level (non-UTF8 marker under-reporting). Not a regression — Copilot is exploring different
+correctness categories. R13 will be the telltale: 0-1 findings would confirm convergence is on
+track. Expect 2-4 more rounds before stop condition.
 
 **Process gaps noted:** R2 and R3 Perplexity-validation were SKIPPED on the rationalization
 that the claims were "empirically verifiable from code." Per DEC-018, this was incorrect — all
@@ -625,9 +630,75 @@ stop condition (zero-new-comment round). R12 pending.
 
 ---
 
+## Round 12 (2026-05-11T23:39:52Z)
+
+**Review ID:** 4268158285
+**Comment IDs:** 3222800383 (line null), 3222800411 (line null)
+**Inline comments:** 2
+**Both valid (contract violation + UX accuracy)**
+
+### Finding 1 — `Bounded::write` violated `std::io::Write` contract
+
+`Bounded::write` returned `Err(WriteZero)` after writing a prefix into `buf`, contradicting
+the `std::io::Write` contract which mandates "If an error is returned then no bytes in the
+buffer were written." The prior implementation partially wrote bytes AND returned an error —
+a protocol violation that could cause serde_json's streaming serializer to produce inconsistent
+output state.
+
+**Validation (Perplexity per DEC-018):** CONFIRMED — `std::io::Write` contract is unambiguous.
+Partial write + error is a well-documented protocol violation. The correct behavior for bounded
+writers is: on remaining == 0, return Err(WriteZero) immediately (nothing written); on partial
+fit, append the prefix, set overflowed, return Ok(buf.len()) so the caller believes all bytes
+were consumed and stops retrying.
+
+**Fix:** `Bounded::write` now returns `Err(WriteZero)` ONLY when `remaining == 0` at call entry.
+For partial writes: appends only the bytes that fit, sets `overflowed = true`, returns
+`Ok(buf.len())`. On the subsequent call `remaining == 0` fires immediately and returns `Err(WriteZero)`,
+stopping serde_json cleanly.
+
+### Finding 2 — Non-UTF8 fallback marker under-reported true body size
+
+The non-UTF8 fallback path used `cap_entry` on the `from_utf8_lossy` output. `cap_entry`'s
+marker reported the post-pre-cap lossy string length (max ~4096 bytes), NOT the actual
+`body.len()`. For hostile or flood inputs (e.g., 1 MB non-UTF8 body), the marker
+`[...truncated; original 4096 bytes]` silently under-reported the true size — operators saw
+no signal that the body was unusually large.
+
+**Validation (Perplexity per DEC-018):** CONFIRMED — accurate body-size reporting is required
+for operator diagnostics; using the post-cap length hides true input size for hostile/flood
+inputs. Custom marker with `body.len()` is the correct approach.
+
+**Fix:** Bypass `cap_entry` in the non-UTF8 path. Build a custom marker:
+`[...truncated, {body.len()} bytes total, non-UTF8 body]` using the true original byte count.
+Explicitly flags the non-UTF8 source for disambiguation from normal JSON truncation markers.
+
+**Threads resolved:** PRRT_kwDORs-xfc6BQI52 and PRRT_kwDORs-xfc6BQI6M
+**Replies posted:** 3222826557, 3222826602
+
+**Fix commit:** 6832967 ("chore(security): Write contract compliance + accurate non-UTF8 marker (PR #356 R12)")
+**Threads:** 27/27 resolved (2 new R12 threads resolved; cumulative)
+
+**Test results at 6832967:**
+- 3 new unit tests: partial-write produces marker, 5 MB body marker reports true size, small non-UTF8 skips marker
+- 36 sanitize unit tests total (3 new from R12)
+- 667 cargo test total: 667 passed, 0 failed, 10 ignored
+- cargo fmt --check + cargo clippy --all-targets -- -D warnings clean
+- CI: 8/8 green
+
+**Process note:** Eighth consecutive in-cycle state-manager dispatch per codified Lesson 2.
+R5 → R6 → R7 → R8 → R9 → R10 → R11 → R12 all dispatched state-manager in real time. The
+discipline is fully embedded.
+
+**Trajectory note:** R12 ticked back to 2 findings (trajectory ...→1→1→2). Both findings are
+non-overlapping with R11's INPUT-DOM class (contract-level + UX-level vs DOM-allocation). Not
+a regression — Copilot is exploring different correctness categories. R13 pending. If R13
+returns 0-1, convergence is on track. Expect 2-4 more rounds before stop condition.
+
+---
+
 ## Trajectory Analysis
 
-**Pattern so far:** 4→1→2→2→3→2→3→2→2→1→1 — all non-zero rounds addressed real findings.
+**Pattern so far:** 4→1→2→2→3→2→3→2→2→1→1→2 — all non-zero rounds addressed real findings.
 
 - R1: 4 findings (doc accuracy, loop allocation, clean-path allocation, missing length cap).
   Perplexity confirmed CWE-117 + OWASP length-capping guidance.
@@ -669,18 +740,28 @@ stop condition (zero-new-comment round). R12 pending.
   bodies >16 KiB skip JSON parse entirely and fall back to byte-bounded raw-body path. 3 new tests
   (skips-parse-for-huge-body, allows-normal-body, threshold-pinned); 33 sanitize tests total;
   664 cargo test green. 1 thread resolved (3222756019 → PRRT_kwDORs-xfc6BQA9s); reply 3222775607.
-  25/25 threads resolved. CI 8/8 green on 2ecc18c. R12 pending.
+  25/25 threads resolved. CI 8/8 green on 2ecc18c.
+- R12 (4268158285 @ 23:39:52Z, comments 3222800383 + 3222800411): 2 findings (Bounded::write
+  violated std::io::Write contract — returned Err(WriteZero) after writing partial bytes,
+  contradicting "no bytes written on error" mandate; non-UTF8 fallback marker used cap_entry
+  lossy-string length max ~4096 bytes instead of true body.len(), silently under-reporting
+  large/hostile bodies). Both Perplexity CONFIRMED. Fix: Bounded::write returns Err(WriteZero)
+  only when remaining==0 at entry; partial writes: append prefix, set overflowed, return
+  Ok(buf.len()); non-UTF8 path: bypass cap_entry, build custom marker
+  `[...truncated, {body.len()} bytes total, non-UTF8 body]`. 3 new tests (partial-write marker,
+  5MB body true size, small non-UTF8 skips marker); 36 sanitize tests total; 667 cargo test green.
+  2 threads resolved (PRRT_kwDORs-xfc6BQI52 + PRRT_kwDORs-xfc6BQI6M); replies 3222826557 +
+  3222826602. 27/27 threads resolved. CI 8/8 green on 6832967. R13 pending.
 
-**Assessment:** R11 surfaced 1 INPUT-side memory-amplification gap: serde_json::from_str materializes
-a full Value DOM before any extraction or truncation, creating a 2-3x allocation attack surface entirely
-invisible to the OUTPUT caps delivered in R5-R10. The fix closes this with a byte-level gate (zero
-allocation attack surface). Trajectory now 4→1→2→2→3→2→3→2→2→1→1 — plateaued at 1 finding for
-2 consecutive rounds (R10, R11). Strong converging signal toward the Phase 8 stop condition
-(0-new-comment round). R12 pending — if R12 = 0 new findings, PR #356 is ready for merge.
+**Assessment:** R12 ticked back to 2 findings. Both are non-overlapping with R11's INPUT-DOM class:
+contract-level (std::io::Write violation in Bounded::write) and UX-level (non-UTF8 marker
+under-reporting body size). This is not a regression — Copilot is exploring different correctness
+categories. Trajectory now 4→1→2→2→3→2→3→2→2→1→1→2. R13 is the telltale: if R13 returns 0-1,
+convergence is on track. Expect 2-4 more rounds before stop condition. R13 pending.
 
 ## CI Status
 
-**Head SHA:** 2ecc18c
+**Head SHA:** 6832967
 **CI result:** 8/8 green
 
 ## Current PR State
@@ -688,7 +769,7 @@ allocation attack surface). Trajectory now 4→1→2→2→3→2→3→2→2→1
 | Field | Value |
 |-------|-------|
 | **State** | OPEN |
-| **Threads** | 25 created; 25/25 resolved |
-| **R12** | Pending — trajectory plateaued at 1 for 2 rounds (R10, R11); R12=0 triggers stop condition |
-| **CI on 2ecc18c** | 8/8 green |
+| **Threads** | 27 created; 27/27 resolved |
+| **R13** | Pending — R12 ticked to 2 (non-overlapping categories from R11); R13=0 would trigger stop condition |
+| **CI on 6832967** | 8/8 green |
 | **Closes** | #334 on merge |

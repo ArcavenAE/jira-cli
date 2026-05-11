@@ -2081,3 +2081,46 @@ Fix: byte-level size gate via new constant `MAX_PARSE_BODY_LEN = 16 * 1024`. Bod
 | implementer | Add MAX_PARSE_BODY_LEN = 16 * 1024 constant; gate `serde_json::from_str` call behind byte-length check in `extract_error_message_raw`; bodies >16 KiB fall back to byte-bounded raw-body path; 3 new unit tests | src/api/client.rs 2ecc18c |
 | orchestrator | Resolve thread PRRT_kwDORs-xfc6BQA9s; post reply 3222775607; commit 2ecc18c; push; verify CI 8/8 green | 25/25 threads resolved; CI green; R12 pending |
 | state-manager | Seventh consecutive in-cycle dispatch per Lesson 2 — discipline is consistent habit | STATE.md, burst-log.md, pr-356-copilot-progress.md updated |
+
+---
+
+## Burst: PR #356 Copilot R12 (2026-05-11T23:43Z)
+
+**Agents dispatched:** orchestrator, implementer, state-manager
+**Files touched:** src/api/client.rs
+**Versions bumped:** (none — chore/sanitize-errors-334 branch)
+**Commit:** 6832967 ("chore(security): Write contract compliance + accurate non-UTF8 marker (PR #356 R12)")
+**CI result:** 8/8 green on 6832967
+
+### Summary
+
+Two new Copilot findings from R12 (review 4268158285 @ 2026-05-11T23:39:52Z). Both Perplexity-validated.
+
+**Finding 1 — `Bounded::write` violated `std::io::Write` contract (comment 3222800383):**
+The `Bounded` writer's `write` method returned `Err(WriteZero)` when the byte limit was hit but `buf` still had unwritten bytes. The `std::io::Write` contract mandates: "If an error is returned then no bytes in the buffer were written." The prior implementation was writing a prefix into the buffer AND returning `Err(WriteZero)`, contradicting the contract. This could confuse serde_json's streaming serializer — if serde_json interpreted the error as a hard I/O failure it might produce inconsistent state.
+
+Fix: return `Err(WriteZero)` ONLY when `remaining == 0` at the start of the call (nothing to write). For partial writes: append only the prefix that fits, set `overflowed = true`, and return `Ok(buf.len())` (the full input length, per the contract's "partial write is OK" allowance). On the subsequent call, `remaining == 0` fires immediately and returns `Err(WriteZero)`, stopping serde_json. This closes the contract violation while preserving the truncation semantics.
+
+**Finding 2 — non-UTF8 fallback marker under-reported true body size (comment 3222800411):**
+The non-UTF8 fallback path used `cap_entry` on a `from_utf8_lossy`-produced string. The `cap_entry` marker reported the post-pre-cap lossy string length (max ~4096 bytes), NOT the actual body length. For hostile or flood inputs (e.g., 1 MB non-UTF8 body), the marker `[...truncated; original 4096 bytes]` silently under-reported the true size — operators saw no signal that the body was large.
+
+Fix: bypass `cap_entry` and build a custom marker: `[...truncated, {original_len} bytes total, non-UTF8 body]` where `original_len` is `body.len()` (the true byte count before any pre-capping). This provides accurate operator visibility into body size and explicitly flags the non-UTF8 source for disambiguation from normal JSON truncation.
+
+2 R12 threads resolved (PRRT_kwDORs-xfc6BQI52, PRRT_kwDORs-xfc6BQI6M). All 27/27 threads now resolved (0 unresolved). Replies 3222826557 and 3222826602 posted.
+
+3 new unit tests: partial-write produces marker, 5 MB body marker reports true size, small non-UTF8 body skips marker. Total sanitize tests now 36; full cargo test: 667 passed, 0 failed, 10 ignored.
+
+**Trajectory note:** R12 ticked back up to 2 findings (trajectory 4→1→2→2→3→2→3→2→2→1→1→2). Both findings are distinct from R11's INPUT-DOM class (contract-level + UX-level vs DOM-allocation). Not a regression — Copilot is exploring different correctness categories. Expect 2-4 more rounds. R13 will be the telltale: if R13 returns 0-1, convergence is on track. R13 pending.
+
+**Perplexity-validation per DEC-018:**
+- Finding 1 (std::io::Write contract violation): CONFIRMED — `std::io::Write` contract mandates "no bytes written if error returned." The prior partial-write + error combination violated this. Perplexity-validated as a legitimate contract violation with real risk of confusing downstream callers.
+- Finding 2 (non-UTF8 marker under-reporting): CONFIRMED — accurate body-size reporting is required for operator diagnostics; using the post-cap length silently hides the true input size for hostile/flood inputs. Custom marker with `body.len()` is the correct approach.
+
+### Details
+
+| Agent | Task | Output |
+|-------|------|--------|
+| orchestrator | Triage 2 Copilot R12 findings (comments 3222800383, 3222800411 @ 23:39:52Z); Perplexity CONFIRMED both as legitimate (Write contract violation + non-UTF8 marker under-reporting) | Both confirmed valid; fix plan approved |
+| implementer | Fix Bounded::write to return Err(WriteZero) only on remaining==0; on partial write: append prefix, set overflowed, return Ok(buf.len()); build custom non-UTF8 marker using body.len(); 3 new unit tests | src/api/client.rs 6832967 |
+| orchestrator | Resolve threads PRRT_kwDORs-xfc6BQI52 + PRRT_kwDORs-xfc6BQI6M; post replies 3222826557 + 3222826602; commit 6832967; push; verify CI 8/8 green | 27/27 threads resolved; CI green; R13 pending |
+| state-manager | Eighth consecutive in-cycle dispatch per Lesson 2 — discipline is consistent habit | STATE.md, burst-log.md, pr-356-copilot-progress.md updated |
