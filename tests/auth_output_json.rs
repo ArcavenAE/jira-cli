@@ -313,8 +313,28 @@ fn test_auth_switch_unknown_profile_returns_json_error() {
 ///
 /// RED-GATE: FAILS on develop because `handle_login` does NOT check
 /// `--output json`.
+///
+/// Gated behind `JR_RUN_KEYRING_TESTS=1` because `login_token` writes to the
+/// keychain; a second run without clearing the keychain entry fails with
+/// "The specified item already exists in the keychain." Linux CI may also
+/// lack a secret-service backend entirely.
 #[test]
+#[ignore = "requires keyring backend; set JR_RUN_KEYRING_TESTS=1 to run"]
 fn test_auth_login_emits_json_when_output_json_set() {
+    match std::env::var("JR_RUN_KEYRING_TESTS").as_deref() {
+        Ok("1") => {} // run
+        Ok(other) => panic!(
+            "JR_RUN_KEYRING_TESTS must be \"1\" to run this test; got {other:?}. \
+             This test writes to the system keyring (macOS Keychain / Linux Secret \
+             Service / Windows Credential Manager)."
+        ),
+        Err(_) => panic!(
+            "JR_RUN_KEYRING_TESTS=1 is required to run this test (writes to the system \
+             keyring — macOS Keychain / Linux Secret Service / Windows Credential \
+             Manager). The test is gated behind #[ignore]; running --include-ignored \
+             without the env opt-in is a misuse."
+        ),
+    }
     let config_dir = TempDir::new().unwrap();
     let cache_dir = TempDir::new().unwrap();
     let cwd_dir = TempDir::new().unwrap();
