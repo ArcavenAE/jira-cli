@@ -182,3 +182,20 @@ query, then act based on validation. Examples from this cycle:
 - PR #351 round 2 C1 (panic too macOS-specific): Copilot CORRECT — keyring crate is cross-platform.
 
 Codified in MEMORY.md as `feedback_perplexity_copilot_reviews.md` for cross-session durability.
+
+### [codified] Long-lived PRs incur develop-drift; CI merge-result builds catch it
+
+PR #351 was branched off `origin/develop` at `f6487ab` BEFORE PR #348 merged.
+PR #348 added `failure_reason: Option<String>` to `BulkOperationProgress` post-branch.
+Local builds on the stale worktree passed (struct hadn't gained the field there);
+CI builds the merge-result and caught the missing field initializer in the
+`progress_with_status` test helper. Resolution: rebase onto current develop + add
+the missing field. Force-push with `--force-with-lease`. Perplexity-validation then
+confirmed the fix was correct and the post-rebase Copilot re-request returned 0 new
+comments, demonstrating that fix quality held through a force-push.
+
+Future practice: rebase long-lived PRs onto develop proactively when a sibling PR
+with overlapping files merges, OR trust CI's merge-result builds to catch the
+divergence (worked here).
+
+_Discovered: PR #351 post-rebase CI failure + fix, 2026-05-11_
