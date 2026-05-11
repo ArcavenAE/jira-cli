@@ -2,9 +2,9 @@
 document_type: copilot-convergence-record
 pr: 356
 branch: chore/sanitize-errors-334
-head_sha: 59a0a12
+head_sha: cdc4c64
 closes_issues: ["#334"]
-rounds: 6
+rounds: 7
 status: in-progress
 review_round_1_id: ""
 review_round_1_submitted: 2026-05-11T17:49:49Z
@@ -15,19 +15,21 @@ review_round_5_id: "4266436155"
 review_round_5_submitted: 2026-05-11T18:45:11Z
 review_round_6_id: "4266560193"
 review_round_6_submitted: 2026-05-11T19:00:25Z
+review_round_7_id: "4266726028"
+review_round_7_submitted: 2026-05-11T19:23:31Z
 pr_state: OPEN
-threads_total: 14
-threads_resolved: 14
-trajectory: "4→1→2→2→3→2→?"
+threads_total: 17
+threads_resolved: 17
+trajectory: "4→1→2→2→3→2→3→?"
 ---
 
 # PR #356 Copilot Convergence Record — IN PROGRESS
 
 **PR:** https://github.com/Zious11/jira-cli/pull/356
 **Branch:** chore/sanitize-errors-334
-**Current tip SHA:** 59a0a12
+**Current tip SHA:** cdc4c64
 **Closes:** #334 on merge
-**Trajectory so far:** 4→1→2→2→3→2→? (Round 7 pending)
+**Trajectory so far:** 4→1→2→2→3→2→3→? (Round 8 pending)
 
 ## Summary
 
@@ -36,8 +38,8 @@ PR #356 implements CWE-117 defense at the `extract_error_message` public boundar
 from Atlassian error message strings before stderr emission, preventing terminal injection
 (log forging, ANSI escape injection) via hostile or proxy-injected error payloads.
 
-Six Copilot rounds have been completed with a total of 14/14 threads resolved. CI is in-flight
-on 59a0a12. Round 7 is pending.
+Seven Copilot rounds have been completed with a total of 17/17 threads resolved. CI is in-flight
+on cdc4c64. Round 8 is pending.
 
 **Process gaps noted:** R2 and R3 Perplexity-validation were SKIPPED on the rationalization
 that the claims were "empirically verifiable from code." Per DEC-018, this was incorrect — all
@@ -47,8 +49,8 @@ Perplexity before fixing. See Lesson codification below.
 
 **Process improvement (R5+):** Starting from R5, the state-manager is dispatched IN REAL TIME
 after each fix commit, rather than retroactively in batch. Per codified Lesson 2 ("Skipping
-state-manager between Copilot rounds creates audit-trail debt"), R6 is the SECOND consecutive
-in-cycle dispatch — the audit-trail discipline is now consistent.
+state-manager between Copilot rounds creates audit-trail debt"), R5 → R6 → R7 are THREE
+consecutive in-cycle dispatches — the audit-trail discipline is now habit.
 
 ## Round 1 (2026-05-11T17:49:49Z)
 
@@ -309,11 +311,74 @@ NOT `out.len()`. New marker format: `[...truncated; original M bytes]`. This:
 **Process note:** Second consecutive in-cycle state-manager dispatch per codified Lesson 2.
 Audit-trail discipline now consistent.
 
+## Round 7 (2026-05-11T19:23:31Z)
+
+**Review ID:** 4266726028
+**Inline comments:** 3
+**All valid (documentation/annotation quality — no behavior change)**
+
+### Finding 1 — Terminology: "strip" vs "escape" in docstring
+
+`extract_error_message` docstring claimed the function "strips ASCII control chars" but the
+implementation escapes them as visible `\xNN` literals (non-destructive, reversible
+transformation preserving byte information). "Strip" implies irreversible deletion;
+"escape" is the correct term for `\xNN` substitution.
+
+**Validation (Perplexity per Lesson 1 / DEC-018):** CONFIRMED — OWASP/security-sanitization
+terminology clearly distinguishes the two:
+- "strip" = irreversible deletion (e.g., removing `<script>` tags from HTML)
+- "escape" = reversible representation transformation (e.g., `&lt;` encoding, `\xNN` substitution)
+- "neutralize" can mean either depending on context; "escape" is unambiguously correct here.
+Citations: https://blog.presidentbeef.com/blog/2020/01/14/injection-prevention-sanitizing-vs-escaping/
+and https://cheatsheetseries.owasp.org/cheatsheets/Cross_Site_Scripting_Prevention_Cheat_Sheet.html
+
+**Fix:** Reworded docstring to "escapes ASCII control chars from server-supplied content as
+visible `\xNN` literals before they reach stderr ... while keeping the byte information
+visible to the operator." Terminology now matches implementation.
+
+### Finding 2 — Stale round annotations in inline comments
+
+Several inline comments referenced "PR #356 R6 fix", "(R6 fix)", or "R[N] finding on PR #356"
+— useful during iteration but stale post-merge. A future maintainer would need to reconstruct
+the cycle history to understand these references.
+
+**Validation (Perplexity per Lesson 1):** NO EXTERNAL CLAIM — purely project-internal
+annotation cleanup. Lesson 1 wording addresses "at least one external-claim aspect"; findings
+with no external claim do not require Perplexity. Skip is per-spec, not a rationalization.
+
+**Fix:** Cleaned 6 comment sites — replaced round-specific annotations with stable descriptions.
+Stable references retained: CWE-117, constant names, "issue #334" (closure persists via PR title).
+
+### Finding 3 — Stale PR/round references in test annotations
+
+Test comments like "Regression pin for the Copilot R2 finding on PR #356" don't decode for a
+future reader without cycle history. The same annotation-cleanup concern as Finding 2, applied
+to the test file.
+
+**Validation (Perplexity per Lesson 1):** NO EXTERNAL CLAIM — same rationale as Finding 2.
+Perplexity skipped per Lesson 1 wording.
+
+**Fix:** Already addressed by the Finding 2 fix (overlapping cleanup scope). Test annotations
+now describe the behavior being pinned: "Regression pin: inputs slightly larger than
+MAX_ERROR_ENTRY_LEN..." instead of cycle references.
+
+**Fix commit:** cdc4c64 (+33 -31 lines)
+**Threads:** 17/17 resolved (cumulative) after cdc4c64 push (3 new R7 threads)
+
+**Test results at cdc4c64:**
+- 22 sanitize unit tests pass (no behavior change — all changes are doc/comment)
+- Full cargo test: 60 suites, 0 failures
+- cargo fmt --check + cargo clippy --all-targets -- -D warnings clean
+- CI in-flight on cdc4c64
+
+**Process note:** Third consecutive in-cycle state-manager dispatch per codified Lesson 2.
+R5 → R6 → R7 all dispatched state-manager in real time. The discipline is now habit.
+
 ---
 
 ## Trajectory Analysis
 
-**Pattern so far:** 4→1→2→2→3→2 — all non-zero rounds addressed real findings.
+**Pattern so far:** 4→1→2→2→3→2→3 — all non-zero rounds addressed real findings.
 
 - R1: 4 findings (doc accuracy, loop allocation, clean-path allocation, missing length cap).
   Perplexity confirmed CWE-117 + OWASP length-capping guidance.
@@ -328,23 +393,29 @@ Audit-trail discipline now consistent.
 - R6: 2 findings (streaming join marker overflow + sanitize over-reporting retained bytes).
   Perplexity CONFIRMED upfront marker reservation as standard pattern; byte-count reporting
   must reflect final emitted length, not pre-trim value.
+- R7: 3 findings (terminology "strip" vs "escape" in docstring; stale round annotations in
+  inline comments × 2). Perplexity CONFIRMED OWASP terminology for Finding 1; Findings 2+3
+  no external claim (Perplexity skipped per Lesson 1 wording). No behavior change.
 
-**Assessment:** R6 surfaced 2 correctness/invariant issues in the streaming join and truncation
-marker. All output-size guarantees are now mathematically tight. R7 may find 0 findings or minor
-edge cases. Memory budget is O(MAX_SANITIZED_OUTPUT_LEN) end-to-end; all size invariants have
-debug_assert! guards. Perplexity-validation consistent through R5 + R6 per DEC-018/Lesson 1.
+**Assessment:** R7 surfaced documentation quality issues only — no correctness or behavior
+changes. The implementation's output-size guarantees, memory budget (O(MAX_SANITIZED_OUTPUT_LEN)),
+and all size invariants (debug_assert! guards) remain intact. Terminology now matches
+implementation semantics. Inline comments and test annotations are stable for post-merge
+readability. R8 may find 0 findings or further annotation polish. Perplexity-validation
+consistent through R5 + R6 + R7 per DEC-018/Lesson 1 — including correct application of the
+"no external claim" exemption for R7 Findings 2+3.
 
 ## CI Status
 
-**Head SHA:** 59a0a12
-**CI result:** in-flight (poller b9qh1hpfc watching)
+**Head SHA:** cdc4c64
+**CI result:** in-flight (poller b8m8umhla watching)
 
 ## Current PR State
 
 | Field | Value |
 |-------|-------|
 | **State** | OPEN |
-| **Threads** | 14 created; 14/14 resolved |
-| **R7** | Pending |
-| **CI on 59a0a12** | in-flight |
+| **Threads** | 17 created; 17/17 resolved |
+| **R8** | Pending |
+| **CI on cdc4c64** | in-flight |
 | **Closes** | #334 on merge |

@@ -1883,3 +1883,46 @@ PR #356 Copilot Round 6 (2026-05-11T19:00:25Z, review id 4266560193) returned 2 
 | implementer | Upfront JOIN_MARKER budget reservation; marker text references only original_len; debug_assert!; regression test | src/api/client.rs 59a0a12 |
 | orchestrator | Commit 59a0a12; push; request R7 | 14/14 threads resolved; CI in-flight; R7 requested |
 | state-manager | Second consecutive in-cycle dispatch (Lesson 2 compliance now consistent) | STATE.md, burst-log.md, pr-356-copilot-progress.md updated |
+
+---
+
+## Burst N+9 (2026-05-11): PR #356 Copilot Round 7 — Terminology + Annotation Cleanup, fix commit cdc4c64
+
+**Agents dispatched:** orchestrator, implementer, state-manager
+**Files touched:** src/api/client.rs (docstring terminology fix: "strip" → "escape"; 6 inline comment sites cleaned of stale round references; test annotations reworded to describe pinned behavior)
+**Versions bumped:** (none)
+
+### Summary
+
+PR #356 Copilot Round 7 (2026-05-11T19:23:31Z, review id 4266726028) returned 3 inline findings. All valid. All are documentation/annotation quality issues — no behavior change. Fix commit cdc4c64 (+33 -31 lines).
+
+**Perplexity-validation per Lesson 1 / DEC-018:**
+- Finding 1 (terminology "strip" vs "escape"): CONFIRMED — OWASP/security-sanitization terminology distinguishes "strip" (irreversible deletion) from "escape" (reversible representation transformation). The code performs `\xNN` substitution, which is "escape" not "strip." Citations: https://blog.presidentbeef.com/blog/2020/01/14/injection-prevention-sanitizing-vs-escaping/ + https://cheatsheetseries.owasp.org/cheatsheets/Cross_Site_Scripting_Prevention_Cheat_Sheet.html
+- Findings 2 + 3 (stale round annotations): NO EXTERNAL CLAIM — purely project-internal annotation cleanup. Lesson 1 wording addresses "at least one external-claim aspect"; findings with no external claim do not require Perplexity. Skip is per-spec, not a rationalization.
+
+**Process note: THIRD consecutive in-cycle state-manager dispatch per codified Lesson 2.** R5 → R6 → R7 all dispatched state-manager in real time. The discipline is now habit; future PRs in this cycle should retain this pattern.
+
+**Findings:**
+
+1. Terminology "strip" vs "escape": `extract_error_message` docstring said "strips ASCII control chars" but the implementation escapes them as visible `\xNN` literals (non-destructive, reversible). "Strip" implies deletion; "escape" is the correct term.
+   - Perplexity CONFIRMED OWASP terminology distinction.
+   - Fix: Reworded docstring to "escapes ASCII control chars from server-supplied content as visible `\xNN` literals before they reach stderr ... while keeping the byte information visible to the operator."
+
+2. Stale round annotations in inline comments: Several comments referenced "PR #356 R6 fix", "(R6 fix)", or "R[N] finding on PR #356" — useful during iteration but stale post-merge.
+   - No external claim; Perplexity skipped per Lesson 1 wording.
+   - Fix: Cleaned 6 comment sites — replaced round-specific annotations with stable descriptions. Stable references retained: CWE-117, constant names, "issue #334."
+
+3. Stale PR/round references in test annotations: Test comments like "Regression pin for the Copilot R2 finding on PR #356" don't decode for a future reader without cycle history.
+   - No external claim; Perplexity skipped per Lesson 1 wording.
+   - Fix: Addressed by Finding 2 fix (overlapping cleanup). Test annotations now describe pinned behavior: "Regression pin: inputs slightly larger than MAX_ERROR_ENTRY_LEN..." instead of cycle references.
+
+**Test results at cdc4c64:** 22 sanitize unit tests pass (no behavior change — all changes are doc/comment); 60 test suites, 0 failures; cargo fmt --check + cargo clippy --all-targets -- -D warnings clean. CI in-flight on cdc4c64.
+
+### Details
+
+| Agent | Task | Output |
+|-------|------|--------|
+| orchestrator | Triage 3 Copilot R7 findings; Perplexity CONFIRMED OWASP terminology for Finding 1; Findings 2+3 no external claim (Perplexity skipped per Lesson 1) | All 3 findings confirmed valid; fix plan approved |
+| implementer | Reword docstring ("strip" → "escape" + "keeping byte information visible to operator"); clean 6 inline comment sites; reword test annotations to describe pinned behavior | src/api/client.rs cdc4c64 |
+| orchestrator | Commit cdc4c64; push; request R8 | 17/17 threads resolved; CI in-flight; R8 requested |
+| state-manager | Third consecutive in-cycle dispatch per Lesson 2 — discipline is now habit | STATE.md, burst-log.md, pr-356-copilot-progress.md updated |
