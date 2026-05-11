@@ -272,3 +272,44 @@ EXCEPT when consolidating distinct-named constants of the same type — run Perp
 _Discovered: PR #353 post-hoc Perplexity validation, 2026-05-11_
 _Tagged: [process-gap] — refines the trivial-changes path in validated-feature-lifecycle_
 _Status: [candidate] — flagged for human review before promotion to codified rule_
+
+---
+
+## 2026-05-11 — PR #354 R1→R2 Isomorphic-Pattern Gap
+
+### [candidate] When documenting one instance of an isomorphic pattern, check all other instances before pushing
+
+PR #354 documented the `labels` dry-run-vs-POST shape divergence (issue #342). The R1 fix
+rewrote the wording of the docstring to remove a self-contradiction. However, the NOTE covered
+only `labels`, even though the same dry-run-vs-POST divergence pattern also applies to
+`priority` and `issueType` in the same code block. Copilot Round 2 caught this.
+
+The cost of R2 (one extra review round) could have been avoided by applying a pre-push
+breadth check: "I am documenting a pattern in one field — are there sibling fields in the
+same builder with the same pattern?" In this case, the builder (the dry-run JSON block in
+`handle_edit`) handles `labels`, `priority`, and `issueType` in adjacent lines, all using
+bare-string representations that diverge from the POST body's wrapped shapes. A single
+visual scan of the surrounding builder code (~20 lines) would have surfaced the other two.
+
+**Rule for future docs-only PRs that document a divergence or pattern in one instance:**
+Before pushing, scan the surrounding code block (or function) for sibling fields that
+follow the same pattern. If found, extend the documentation to cover all instances
+uniformly. The cost of broader coverage is a few extra doc lines; the cost of false
+completeness is a Copilot round (or worse, misleading documentation that persists undetected).
+
+This rule applies especially when:
+- The documented pattern is about a shape divergence between two code paths (e.g., dry-run
+  vs POST body, serialization vs deserialization, display vs storage)
+- The builder handles multiple fields of the same conceptual type in adjacent code
+- The divergence is caused by a systemic design choice (e.g., "best-guess pending sandbox
+  verification") rather than a field-specific quirk
+
+**Validated instance (PR #354, 2026-05-11):**
+R1 fix covered labels. R2 caught that priority + issueType have the identical dry-run-vs-POST
+pattern. The R2→R3 fix (+30 -17 lines) resolved the scope gap with no behavioral change.
+Reinforces the iterate-until-clean discipline: a doc fix can itself introduce false
+completeness that the next review round surfaces.
+
+_Discovered: PR #354 Copilot Round 2, 2026-05-11_
+_Tagged: [process-gap] — refines pre-push review for docs-only PRs that document patterns_
+_Status: [candidate] — flagged for human review before promotion to codified rule_

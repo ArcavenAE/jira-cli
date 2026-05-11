@@ -1439,3 +1439,55 @@ Copilot review requested (poller bb3qub9yc). Remote CI in-flight (poller beij5gw
 **Outcome:** PR #354 OPEN. Awaiting CI green + Copilot Round 1. Docs-only — no adversarial review needed.
 
 **Outcome:** PR #353 CONVERGED Round 1 (0 inline comments). Perplexity-validated. Awaiting human merge (closes #338).
+
+---
+
+## Burst N+4 (2026-05-11) — PR #354 Copilot R1+R2+R3 Convergence
+
+**Agents dispatched:** orchestrator (Copilot rounds), state-manager
+**Files touched:** src/cli/issue/create.rs (b835438: +reword; 0644b1d: +30/-17), .factory/STATE.md, .factory/cycles/cycle-001/burst-log.md, .factory/cycles/cycle-001/adversarial-reviews/pr-354-labels-shape-doc/pr-354-copilot-convergence.md (new), .factory/cycles/cycle-001/lessons.md
+**Versions bumped:** (none)
+
+### Summary
+
+PR #354 converged through 3 Copilot review rounds (trajectory 1→1→0). The change documents
+the dry-run vs POST shape divergence for `labels`, `priority`, and `issueType` in
+src/cli/issue/create.rs.
+
+**Round 1** (review id 4265225515, ~15:58:50Z): 1 inline comment. Finding: the docstring
+at `handle_edit_bulk_labels` used "canonical" in the NOTE heading while admitting the shape
+is "still-unverified, pending #331" — a self-contradiction. Fix (b835438): reworded so
+"canonical" appears only in future-state phrasing ("Once #331 confirms the canonical wire
+shape…"). Thread resolved.
+
+**Round 2** (review id 4265308298, 16:05:45Z): 1 inline comment. Finding: the R1 NOTE
+covered only the `labels` divergence, but the same dry-run-vs-POST pattern applies to
+`priority` (bare string vs `{"name": ...}`) and `issueType` (bare string vs
+`{"issuetype": {"name": ...}}`). Documenting only labels implies false completeness.
+Validation: local file verification confirmed all three fields; SCHEMA NOTES in
+`bulk.rs::BulkEditRequest` confirms priority and issueType are also best-guesses pending
+#331. Triage: Fix now (doc accuracy in changed code). Fix (0644b1d): expanded NOTE to
+cover all three fields uniformly; added parallel cross-reference on `handle_edit_bulk_fields`.
++30 -17 lines. Thread resolved. Copilot value-add — genuine scope gap caught.
+
+**Round 3** (review id 4265361087, 16:12:31Z): 0 inline comments. Phase 8 stop condition
+met. Convergence declared.
+
+CI on 0644b1d: 8/8 green (settled 16:10:18Z). All 2 threads resolved (2/2).
+
+| Step | Agent | Output |
+|------|-------|--------|
+| Copilot Round 1 (review 4265225515) — 1 inline finding | Copilot | R1 self-contradiction: "canonical" vs "unverified" |
+| Local file verification of R1 finding | orchestrator | Confirmed — fix warranted |
+| Fix b835438: reword docstring, remove contradictory "canonical" | orchestrator | b835438 on docs/labels-shape-divergence-342 |
+| Resolve R1 thread via GraphQL | orchestrator | R1 thread resolved |
+| Request Copilot Round 2 | orchestrator | Round 2 dispatched |
+| Copilot Round 2 (review 4265308298) — 1 inline finding | Copilot | R2 scope-narrowness: labels-only NOTE implies false completeness |
+| Local file verification of R2 finding (all 3 fields) | orchestrator | Confirmed: priority + issueType have same divergence pattern |
+| Fix 0644b1d: expand NOTE to cover labels + priority + issueType; add parallel note on handle_edit_bulk_fields | orchestrator | 0644b1d (+30/-17) on docs/labels-shape-divergence-342 |
+| Resolve R2 thread via GraphQL | orchestrator | R2 thread resolved |
+| Request Copilot Round 3 | orchestrator | Round 3 dispatched |
+| Copilot Round 3 (review 4265361087) — 0 inline findings | Copilot | Phase 8 stop condition met — CONVERGED |
+| Factory state update | state-manager | STATE.md + burst-log + convergence record + lessons |
+
+**Outcome:** PR #354 CONVERGED Round 3 (1→1→0). CI 8/8 green (0644b1d). 2/2 threads resolved. Awaiting human merge (closes #342). 11 audit-followups remain after #342 merges: #331, #332, #333, #334, #335, #336, #340, #343, #345, #346, #350.
