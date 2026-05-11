@@ -36,8 +36,8 @@ activation_version: "v0.5.0-dev.7"
 | **Language** | Rust |
 | **Target Workspace** | develop → main |
 | **Started** | 2026-05-04 |
-| **Last Updated** | 2026-05-11 — PR #351 MERGED @ 3216ec2 (closes #339+#344). PR #352 (chore/docs-cleanup-337-341-347 @ f42bfa5) Round 1 CONVERGED (3→0), 3/3 threads resolved, CI green, Copilot re-requested, awaiting Round 2. 15 audit-followups remain (#331-#350 excl #339+#344). |
-| **Current Phase** | Phase 3 — TDD Implementation **IN PROGRESS** — Wave 3 CLOSED (10/10). Feature Mode #110-pr2 COMPLETE. PR #352 OPEN (chore/docs-cleanup-337-341-347 @ f42bfa5; 8/8 CI green; Round 1 CONVERGED 3→0; Copilot re-requested, awaiting Round 2). |
+| **Last Updated** | 2026-05-11 — PR #352 (chore/docs-cleanup-337-341-347 @ f42bfa5) CONVERGED (Round 2: 0 new comments at 2026-05-11T15:25:48Z); OPEN/MERGEABLE/CLEAN; 8/8 CI green; awaiting human merge. Closes #337+#341+#347 on merge. 15 audit-followups remain (#331-#350 excl #339+#344). |
+| **Current Phase** | Phase 3 — TDD Implementation **IN PROGRESS** — Wave 3 CLOSED (10/10). Feature Mode #110-pr2 COMPLETE. PR #352 OPEN (chore/docs-cleanup-337-341-347 @ f42bfa5; 8/8 CI green; CONVERGED Round 2 3→0; awaiting human merge). |
 | **Next Phase** | Wave 3 — 10 stories (S-3.01..S-3.10) |
 | **Activation HEAD** | dea166471e22eff55974d7675593469b37048c5f (v0.5.0-dev.7) |
 | **factory-artifacts SHA** | 0b01262 (Phase 1 gate APPROVE; phase-1-converged tag) |
@@ -62,7 +62,7 @@ Goal 1c: **Harden v0.5 + feature delivery** — formalize existing codebase with
 | 3-adv: Wave Adversarial Reviews | **WAVE 2 GATE CLOSED 2026-05-08** | 2026-05-08 | 2026-05-08 | GATE-PASSES (consistency pass-02 `8ae5511`) | adversary pass-01 (12 findings: 3 BLOCKING + 5 CONCERN + 4 NIT); code-reviewer (0 critical/high); security-reviewer (LOW-RISK; 1 MEDIUM resolved); consistency pass-01 (12 findings: 1 BLOCKING + 7 DRIFT + 4 NIT) → 4 fix-PRs (Fix-PR A spec-anchor `28b0f35`; Fix-PR B nfr-catalog `7fd17bf`; WV2-SEC-01 PR #310 `6cb9994`; pass-02 consistency `8ae5511`) → consistency pass-02 verdict GATE-PASSES. 3 minor drift items addressed inline in this commit (P2-CV-01/02/03 count-rollups). 2 deferred follow-ups for develop-side test docstring re-anchoring (WV2-FIX-A-FOLLOWUP-01/02). Wave 3 cleared for start. |
 | 3-feature-#110-pr2 | **COMPLETE** — PR #348 MERGED 2026-05-11 @ e480ff2; closes #110 | 2026-05-10 | 2026-05-11 | F5 CONVERGED + F6 PASS + F7 PASS-WITH-FOLLOWUPS | 12→5→0→0→0 |
 | 3-feature-test-hygiene | **MERGED** — PR #351 squash-merged @ 3216ec2 (2026-05-11T15:15:10Z); closes #339+#344; issue #347 deferred to PR #352 | 2026-05-11 | 2026-05-11 | MERGED | 2→1→0 / rebase / 0 |
-| 3-feature-docs-cleanup | **IN PROGRESS** — PR #352 (chore/docs-cleanup-337-341-347 @ f42bfa5; closes #337+#341+#347); Round 1 CONVERGED (3→0); 3/3 threads resolved; CI green; Copilot re-requested; awaiting Round 2 | 2026-05-11 | — | Round 1 CONVERGED (3→0) | 3→0 |
+| 3-feature-docs-cleanup | **CONVERGED, awaiting human merge** — PR #352 (chore/docs-cleanup-337-341-347 @ f42bfa5; closes #337+#341+#347); Round 2 returned 0 new comments (2026-05-11T15:25:48Z); OPEN/MERGEABLE/CLEAN; 8/8 CI green | 2026-05-11 | 2026-05-11 | CONVERGED (Round 2 clean) | 3→0 |
 | 4: Holdout Evaluation | not-started | | | | |
 | 5: Adversarial Refinement | not-started | | | | |
 | 6: Formal Hardening | not-started | | | | |
@@ -177,7 +177,7 @@ _**3/3 FULLY CONVERGED** at Pass 28 (2026-05-04). 28 passes total: 25 SUBSTANTIV
 _**3/3 FULLY CONVERGED** at Pass 13 (2026-05-07). 13 passes: 10 SUBSTANTIVE + 3 consecutive CLEAN-PASS (P11-P12-P13). Trajectory: 14→5→5→5→4→5→4→4→4→1→0→1→0. Full per-pass details: `cycles/cycle-001/convergence-trajectory.md`._
 
 ### Phase 3-adv — Wave Adversarial Reviews (per-story + wave)
-_Wave gate: not started. Feature Mode #110-pr2: **F5 CONVERGED** 12→5→0→0→0 (Pass 5, 2026-05-10). F6: SECURITY PASS (→#334). F7: PASS-WITH-FOLLOWUPS (5/5; →#347). 10 Copilot rounds: 27/27 resolved. PR #348 MERGED 2026-05-11 @ e480ff2 (closes #110). **PR #351 MERGED 2026-05-11 @ 3216ec2** (closes #339+#344); issue #347 deferred to PR #352. **PR #352 (chore/docs-cleanup-337-341-347 @ f42bfa5) Round 1 CONVERGED (3→0)**: 3 inline comments (CLAUDE.md gotcha error + src/cli/mod.rs grammar + tests/issue_bulk_pr2.rs comment) all valid, all fixed in one micro-commit; 3/3 threads resolved; 8/8 CI green on f42bfa5 (settled 2026-05-11T15:23:08Z); Copilot re-requested 2026-05-11T15:23:30Z; awaiting Round 2. 15 audit-followups remain (#331, #332, #333, #334, #335, #336, #338, #340, #342, #343, #345, #346, #350 + #337+#341 pending close-on-merge of #352). Full records: `cycles/cycle-001/adversarial-reviews/issue-110-pr2/`._
+_Wave gate: not started. Feature Mode #110-pr2: **F5 CONVERGED** 12→5→0→0→0 (Pass 5, 2026-05-10). F6: SECURITY PASS (→#334). F7: PASS-WITH-FOLLOWUPS (5/5; →#347). 10 Copilot rounds: 27/27 resolved. PR #348 MERGED 2026-05-11 @ e480ff2 (closes #110). **PR #351 MERGED 2026-05-11 @ 3216ec2** (closes #339+#344); issue #347 deferred to PR #352. **PR #352 CONVERGED Round 2 (3→0)**: R1 fixes in f42bfa5 (CLAUDE.md gotcha + src/cli/mod.rs grammar + tests/issue_bulk_pr2.rs comment — all valid local-consistency); R2 clean (review id 4265005419, 0 inline comments, 2026-05-11T15:25:48Z). 3/3 R1 threads resolved; OPEN/MERGEABLE/CLEAN; awaiting human merge. 15 audit-followups remain (#331, #332, #333, #334, #335, #336, #338, #340, #342, #343, #345, #346, #350 + #337+#341 pending close-on-merge of #352). Full records: `cycles/cycle-001/adversarial-reviews/issue-110-pr2/` + `cycles/cycle-001/adversarial-reviews/pr-352-docs-cleanup/`._
 
 ### Phase 5-adv — Adversarial Refinement
 _Not started._
@@ -188,8 +188,8 @@ _Not started._
 | Field | Value |
 |-------|-------|
 | **Date** | 2026-05-11 |
-| **Position** | **PR #351 MERGED; PR #352 Round 1 CONVERGED, awaiting Round 2.** PR #351 (chore/test-hygiene-339-344-347) merged at `3216ec2` (2026-05-11T15:15:10Z); closes #339 + #344; develop fast-forwarded e480ff2→3216ec2; worktree `.worktrees/test-hygiene` removed; local branch `chore/test-hygiene-round2-rebase` deleted. PR #352 (chore/docs-cleanup-337-341-347) at `f42bfa5`; closes #337+#341+#347; Round 1 (3 comments all valid, all fixed in micro-commit `docs(bulk): address Copilot review on PR #352`); 3/3 threads resolved (PRRT_kwDORs-xfc6BIW9e, PRRT_kwDORs-xfc6BIW-y, PRRT_kwDORs-xfc6BIW_R); 8/8 CI green; Copilot re-requested ~2026-05-11T15:23:30Z. **Next action: await PR #352 Round 2 Copilot review.** 15 audit-followups remain: #331, #332, #333, #334, #335, #336, #338, #340, #342, #343, #345, #346, #350 + #337+#341 pending close-on-merge of #352. |
-| **Convergence counter** | 3/3 CONVERGED Phase 2-adv; Phase 3-adv: Wave 2 gate CLOSED; Feature Mode #110-pr2 F5 CONVERGED (12→5→0→0→0); PR #351 MERGED (2→1→0 / rebase / 0); PR #352 Round 1 CONVERGED (3→0) |
+| **Position** | **PR #352 CONVERGED (Round 2 returned 0 new comments at 2026-05-11T15:25:48Z), awaiting human merge.** Branch: chore/docs-cleanup-337-341-347 @ f42bfa5. PR state: OPEN, MERGEABLE/CLEAN, 8/8 CI green, 3/3 threads resolved (from R1), 0 new R2 comments. Closes #337+#341+#347 on merge. Convergence trajectory: 3→0 (R1: 3 valid local-consistency findings all fixed in f42bfa5; R2 clean). **Next action: merge PR #352 (human merge required).** 15 audit-followups remain after #337+#341+#347 close on merge: #331, #332, #333, #334, #335, #336, #338, #340, #342, #343, #345, #346, #350. |
+| **Convergence counter** | 3/3 CONVERGED Phase 2-adv; Phase 3-adv: Wave 2 gate CLOSED; Feature Mode #110-pr2 F5 CONVERGED (12→5→0→0→0); PR #351 MERGED (2→1→0 / rebase / 0); PR #352 CONVERGED Round 2 (3→0) |
 
 ## Historical Content
 

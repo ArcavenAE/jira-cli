@@ -1212,4 +1212,39 @@ Lesson codified in lessons.md.
 | PR #352 Round 1 push | orchestrator | f42bfa5; 8/8 CI green |
 | Review threads resolved | orchestrator (GraphQL) | 3/3 resolved; {total:3, resolved:3, unresolved:0} |
 | Copilot reply corrected | orchestrator | Comment 3220057819 PATCH'd via `jq -Rs + --input -` |
+| Re-request Copilot review for Round 2 | orchestrator | Re-requested ~2026-05-11T15:23:30Z on head f42bfa5 |
+| Wait for Round 2 review | orchestrator | Polled for review id > 3220034401 |
+| Verify Round 2 review body | orchestrator | review id 4265005419 (2026-05-11T15:25:48Z): "Copilot reviewed 3 out of 3 changed files in this pull request and generated no new comments." |
+| Verify 0 inline comments in Round 2 | orchestrator | `gh api .../pulls/352/comments --jq '.[] | select(.user.login == "Copilot" and .id > 3220034401)'` returned empty |
+| Confirm Phase 8 stop condition met | orchestrator | Overview comment only (no file-level findings) — stop condition explicitly satisfied |
+
+**Outcome:** PR #352 CONVERGED. Final trajectory: 3→0 (R1: 3 valid local-consistency fixes; R2: clean). OPEN/MERGEABLE/CLEAN; awaiting human merge. Closes #337+#341+#347 on merge.
+
+---
+
+## Burst: PR #352 Round 2 Convergence (2026-05-11)
+
+**Date:** 2026-05-11T15:23:30Z–15:25:48Z
+**Agents:** orchestrator (no sub-agent dispatch)
+**Input files touched:** none (read-only verification)
+**Output commits:** none on develop; factory-artifacts state update only
+**factory-artifacts commit:** this commit
+
+### Summary
+
+Round 2 Copilot review on PR #352 (chore/docs-cleanup-337-341-347) returned 0 new
+inline comments. Review id 4265005419 submitted at 2026-05-11T15:25:48Z with body:
+"Copilot reviewed 3 out of 3 changed files in this pull request and generated no new
+comments." Verified via `gh api` that no Copilot inline comments exist with id >
+3220034401 (the last Round 1 comment id).
+
+Phase 8 stop condition confirmed: overview comment alone (no file-level findings) is
+not a reason to continue. PR #352 is CONVERGED at 3→0 over 2 rounds.
+
+| Step | Agent | Output |
+|------|-------|--------|
+| Await Round 2 review | orchestrator | review id 4265005419 received 2026-05-11T15:25:48Z |
+| Confirm 0 inline findings | orchestrator | Empty result from inline comment filter — no new R2 comments |
+| Confirm OPEN/MERGEABLE/CLEAN | orchestrator | PR state verified; 8/8 CI green unchanged since f42bfa5 |
+| Factory state update | state-manager | STATE.md + burst-log.md + pr-352-docs-cleanup convergence record |
 | Copilot re-requested | orchestrator | ~2026-05-11T15:23:30Z; awaiting Round 2 |
