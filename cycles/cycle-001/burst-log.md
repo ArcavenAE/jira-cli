@@ -1964,4 +1964,43 @@ PR #356 Copilot Round 8 (2026-05-11T19:41:09Z, review id 4266853645) returned 2 
 | orchestrator | Triage 2 Copilot R8 findings; Perplexity re-cited OWASP A06/AP11 for #1 (same class as R5); Finding 2 no external claim (Perplexity skipped per Lesson 1) | Both confirmed valid; fix plan approved |
 | implementer | Bound errors-map to MAX_ERROR_PAIRS=256 with streaming join + upfront marker reservation; reword MAX_SANITIZED_OUTPUT_LEN doc | src/api/client.rs e6262dd (+46 -7) |
 | orchestrator | Commit e6262dd; push; request R9 | 19/19 threads resolved; CI in-flight; R9 requested |
+
+---
+
+## Burst N+11 (2026-05-11): PR #356 Copilot Round 9 — Key-Amplification Cap + Bounded Value Serialization, fix commit 85f0dd4
+
+**Agents dispatched:** orchestrator, implementer, state-manager
+**Files touched:** src/api/client.rs (key wrapped in cap_entry before format!; new serialize_value_bounded helper using serde_json::to_writer with byte-limited Write impl)
+**Versions bumped:** (none)
+
+### Summary
+
+PR #356 Copilot Round 9 (review 4266950826 @ 2026-05-11T19:55:57Z) returned 2 new inline findings from R9b, both Perplexity-validated as legitimate memory-amplification gaps. Fix commit 85f0dd4 pushed at 2026-05-11T15:13:09-0500. CI 8/8 green on 85f0dd4.
+
+R9a (review 4266853645 @ 19:41:09Z) and R9c (comments @ 20:08:56-57Z) re-raised already-addressed concerns from prior rounds; 4 replies posted explaining prior resolutions. 4 R9b/R9c threads resolved; all 23 threads now resolved (0 unresolved).
+
+**Process note: FIFTH consecutive in-cycle state-manager dispatch per codified Lesson 2.** R5 → R6 → R7 → R8 → R9 all dispatched state-manager in real time. The discipline is fully embedded.
+
+**Perplexity-validation per DEC-018:**
+- Finding 1 (key-amplification in format!("{k}: {v}")): CONFIRMED — large server-controlled keys (e.g., 1 MB) could amplify intermediate allocation even with the R8 entry-count cap. Keys are now wrapped in cap_entry(k) before the format! call. Perplexity validated this as a legitimate memory-amplification gap.
+- Finding 2 (non-string errors values via v.to_string()): CONFIRMED — v.to_string() called full JSON serialization (materializing the entire value) before cap_entry truncated the result; deeply nested or huge values could force GB-scale allocations. New serialize_value_bounded(v, MAX_ERROR_ENTRY_LEN) helper uses serde_json::to_writer with a byte-limited Write impl returning WriteZero on overflow. Perplexity validated as a legitimate gap.
+
+**Findings (R9b — review 4266950826):**
+
+1. Key-amplification gap: `format!("{k}: {v}")` used the raw key `k` without any cap. With the R8 entry-count cap of MAX_ERROR_PAIRS=256, a server could still send 256 entries each with a 1 MB key — the intermediate format! allocation reaches 256 MB before the final join truncates. Fix: wrap key in `cap_entry(k)` before format!.
+
+2. Non-string value serialization before cap: `v.to_string()` on a serde_json Value materializes the entire JSON subtree as a String before cap_entry truncates. A single deeply nested or large value forces a full allocation. Fix: new `serialize_value_bounded(v, MAX_ERROR_ENTRY_LEN)` helper writes to a WriteZeroOnOverflow adapter that returns WriteZero once the limit is hit, limiting output to MAX_ERROR_ENTRY_LEN bytes.
+
+**R9a / R9c re-raised concerns:**
+- R9a and R9c surfaced comments re-raising concerns that were already fully addressed in prior rounds (R5-R8). Four reply comments posted: 3221850022, 3221850177, 3221850294, 3221850424 (R9a/R9b) and 3222673033, 3222673079 (R9c). These explained the timing (R9a pre-dated 85f0dd4; R9c was mid-round) and prior resolutions.
+
+**Test results at 85f0dd4:** 5 new unit tests pinning serialize_value_bounded contract; 27 sanitize unit tests total; 658 cargo test total green. Parallel-execution flake (test_interactive_render_shows_name_url_and_id in multi_cloudid_disambiguation) passes single-threaded — unrelated to this change.
+
+### Details
+
+| Agent | Task | Output |
+|-------|------|--------|
+| orchestrator | Triage R9b 2 findings; Perplexity CONFIRMED both as legitimate memory-amplification gaps | Both confirmed valid; fix plan approved |
+| implementer | Wrap key in cap_entry(k) before format!; implement serialize_value_bounded with WriteZeroOnOverflow adapter; 5 new unit tests | src/api/client.rs 85f0dd4 |
+| orchestrator | Post 6 reply comments on R9a/R9b/R9c threads explaining prior resolutions; commit 85f0dd4; push; verify CI 8/8 green | 23/23 threads resolved; CI green; R10 pending |
 | state-manager | Fourth consecutive in-cycle dispatch per Lesson 2 — consistent habit | STATE.md, burst-log.md, pr-356-copilot-progress.md updated |

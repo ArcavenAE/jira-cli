@@ -2,9 +2,9 @@
 document_type: copilot-convergence-record
 pr: 356
 branch: chore/sanitize-errors-334
-head_sha: e6262dd
+head_sha: 85f0dd4
 closes_issues: ["#334"]
-rounds: 8
+rounds: 9
 status: in-progress
 review_round_1_id: ""
 review_round_1_submitted: 2026-05-11T17:49:49Z
@@ -19,29 +19,34 @@ review_round_7_id: "4266726028"
 review_round_7_submitted: 2026-05-11T19:23:31Z
 review_round_8_id: "4266853645"
 review_round_8_submitted: 2026-05-11T19:41:09Z
+review_round_9a_id: "4266853645"
+review_round_9a_submitted: 2026-05-11T19:41:09Z
+review_round_9b_id: "4266950826"
+review_round_9b_submitted: 2026-05-11T19:55:57Z
+review_round_9c_submitted: 2026-05-11T20:08:56Z
 pr_state: OPEN
-threads_total: 19
-threads_resolved: 19
-trajectory: "4→1→2→2→3→2→3→2→?"
+threads_total: 23
+threads_resolved: 23
+trajectory: "4→1→2→2→3→2→3→2→2"
 ---
 
 # PR #356 Copilot Convergence Record — IN PROGRESS
 
 **PR:** https://github.com/Zious11/jira-cli/pull/356
 **Branch:** chore/sanitize-errors-334
-**Current tip SHA:** e6262dd
+**Current tip SHA:** 85f0dd4
 **Closes:** #334 on merge
-**Trajectory so far:** 4→1→2→2→3→2→3→2→? (Round 9 pending)
+**Trajectory so far:** 4→1→2→2→3→2→3→2→2 (Round 10 pending)
 
 ## Summary
 
 PR #356 implements CWE-117 defense at the `extract_error_message` public boundary in
-`src/api/client.rs`. The fix adds `sanitize_for_stderr` which strips ASCII control characters
+`src/api/client.rs`. The fix adds `sanitize_for_stderr` which escapes ASCII control characters
 from Atlassian error message strings before stderr emission, preventing terminal injection
 (log forging, ANSI escape injection) via hostile or proxy-injected error payloads.
 
-Eight Copilot rounds have been completed with a total of 19/19 threads resolved. CI is in-flight
-on e6262dd. Round 9 is pending.
+Nine Copilot rounds have been completed with a total of 23/23 threads resolved. CI is 8/8 green
+on 85f0dd4. Round 10 is pending.
 
 **Process gaps noted:** R2 and R3 Perplexity-validation were SKIPPED on the rationalization
 that the claims were "empirically verifiable from code." Per DEC-018, this was incorrect — all
@@ -428,9 +433,73 @@ R5 → R6 → R7 → R8 all dispatched state-manager in real time. The disciplin
 
 ---
 
+## Round 9 (2026-05-11T19:55:57Z — R9b)
+
+**Review ID (R9b):** 4266950826
+**R9a review ID:** 4266853645 (pre-dates 85f0dd4 — re-raised prior concerns)
+**R9c:** inline comments @ 2026-05-11T20:08:56Z and 20:08:57Z (re-raised prior concerns)
+**New inline findings (R9b):** 2
+**Both valid (memory-amplification gaps)**
+
+### Finding 1 — Key-amplification in format!("{k}: {v}")
+
+Server-controlled key `k` was used raw in `format!("{k}: {v}")`. With the R8 entry-count cap of
+MAX_ERROR_PAIRS=256, a hostile server could send 256 entries each with a 1 MB key — intermediate
+format! allocation reaches 256 MB before the final join truncates. The R8 entry-count cap was
+necessary but not sufficient; key size was a separate uncapped dimension.
+
+**Validation (Perplexity per DEC-018):** CONFIRMED — legitimate memory-amplification gap.
+Keys are server-controlled and should be treated with the same cap discipline as values.
+
+**Fix:** Wrap key in `cap_entry(k)` before `format!`. Key is now bounded to MAX_ERROR_ENTRY_LEN
+(1024 bytes) before any allocation in the format! call.
+
+### Finding 2 — Non-string errors values: v.to_string() materializes before cap
+
+`v.to_string()` called on a `serde_json::Value` performs full JSON serialization — the entire
+subtree is materialized as a String before `cap_entry` truncates the result. A single deeply
+nested or large value (e.g., a 512 MB nested JSON array) forces a full allocation.
+
+**Validation (Perplexity per DEC-018):** CONFIRMED — legitimate memory-amplification gap.
+`serde_json::to_string()` / `.to_string()` on Value always allocates the full output regardless
+of downstream truncation. The bounded-writer pattern prevents this.
+
+**Fix:** New helper `serialize_value_bounded(v, MAX_ERROR_ENTRY_LEN)` uses
+`serde_json::to_writer` with a `WriteZeroOnOverflow` adapter that returns `WriteZero` once the
+byte limit is hit. Output is bounded to MAX_ERROR_ENTRY_LEN bytes without materializing the
+full value.
+
+### R9a / R9c Re-Raised Concerns (already addressed)
+
+R9a (review 4266853645 @ 19:41:09Z) pre-dated commit 85f0dd4 and re-raised concerns addressed
+in prior rounds. R9c (inline comments @ 20:08:56-57Z) similarly re-raised prior round concerns
+mid-cycle. These were not new findings.
+
+**Replies posted:**
+- 3221850022, 3221850177, 3221850294, 3221850424 (R9a/R9b threads)
+- 3222673033, 3222673079 (R9c threads)
+
+**Total R9 threads created:** 4 (all R9b/R9c); all resolved after 85f0dd4 push.
+**Cumulative threads:** 23 created; 23/23 resolved.
+
+**Fix commit:** 85f0dd4 (pushed 2026-05-11T15:13:09-0500)
+**CI result:** 8/8 green on 85f0dd4
+
+**Test results at 85f0dd4:**
+- 5 new unit tests pinning serialize_value_bounded contract
+- 27 sanitize unit tests total
+- 658 cargo test total green
+- Parallel-execution flake: test_interactive_render_shows_name_url_and_id in multi_cloudid_disambiguation — passes single-threaded; unrelated to this change
+- cargo fmt --check + cargo clippy --all-targets -- -D warnings clean
+
+**Process note:** Fifth consecutive in-cycle state-manager dispatch per codified Lesson 2.
+R5 → R6 → R7 → R8 → R9 all dispatched state-manager in real time. The discipline is fully embedded.
+
+---
+
 ## Trajectory Analysis
 
-**Pattern so far:** 4→1→2→2→3→2→3→2 — all non-zero rounds addressed real findings.
+**Pattern so far:** 4→1→2→2→3→2→3→2→2 — all non-zero rounds addressed real findings.
 
 - R1: 4 findings (doc accuracy, loop allocation, clean-path allocation, missing length cap).
   Perplexity confirmed CWE-117 + OWASP length-capping guidance.
@@ -452,25 +521,31 @@ R5 → R6 → R7 → R8 all dispatched state-manager in real time. The disciplin
   MAX_SANITIZED_OUTPUT_LEN retroactive-trim description). Perplexity re-cited OWASP A06/AP11
   for Finding 1 (same class, Lesson 1 re-cite allowance). Finding 2 no external claim
   (Perplexity skipped per Lesson 1 wording).
+- R9 (R9b — 4266950826 @ 19:55:57Z): 2 findings (key-amplification: server-controlled key k
+  uncapped in format!("{k}: {v}"); non-string value v.to_string() materializes full serialization
+  before cap). Both Perplexity CONFIRMED as legitimate memory-amplification gaps. Fix: cap_entry(k)
+  wraps key; serialize_value_bounded new helper uses serde_json::to_writer + WriteZeroOnOverflow.
+  5 new unit tests; 27 sanitize tests total; 658 cargo test green; CI 8/8 green on 85f0dd4.
+  R9a + R9c re-raised prior concerns — 6 replies posted. 23/23 threads resolved. R10 pending.
 
-**Assessment:** R8 surfaced one real memory-amplification security finding (errors-map path was
-missing the entry-count bound analogous to the R5 errorMessages fix) and one doc accuracy issue.
-The errors-map path is now bounded: O(256 KiB) intermediate, O(4 KiB) output.
-Perplexity-validation consistent through R5 + R6 + R7 + R8 per DEC-018/Lesson 1 — including
-correct application of the "no external claim" exemption and "same-class re-cite" allowance.
-R9 pending.
+**Assessment:** R9 surfaced two real memory-amplification gaps: the R8 entry-count cap was
+necessary but not sufficient — key length and non-string value serialization were uncapped
+orthogonal dimensions. Both gaps are now closed: keys bounded via cap_entry, values bounded
+via serialize_value_bounded (WriteZeroOnOverflow adapter). R9a and R9c re-raised prior round
+concerns; all explained and resolved via replies. Perplexity-validation consistent through
+R5–R9 per DEC-018/Lesson 1. R10 pending.
 
 ## CI Status
 
-**Head SHA:** e6262dd
-**CI result:** in-flight
+**Head SHA:** 85f0dd4
+**CI result:** 8/8 green
 
 ## Current PR State
 
 | Field | Value |
 |-------|-------|
 | **State** | OPEN |
-| **Threads** | 19 created; 19/19 resolved |
-| **R9** | Pending |
-| **CI on e6262dd** | in-flight |
+| **Threads** | 23 created; 23/23 resolved |
+| **R10** | Pending |
+| **CI on 85f0dd4** | 8/8 green |
 | **Closes** | #334 on merge |
