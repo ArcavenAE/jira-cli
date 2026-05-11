@@ -108,3 +108,60 @@ S-2.01 and S-2.02 merged. S-2.03 active. Running metrics:
 - **S-1.05-AC-001 RESOLVED**: user enabled secret_scanning + push_protection on Zious11/jira-cli (2026-05-08)
 - **1 deferred item**: S-2.02-DEFER (transitioned vs changed JSON field name — BC-3.2.001 spec vs actual code; test pinned to actual implementation)
 - **Lesson 6 candidate**: API-hiccup fallback to direct gh CLI validated for regression-pin stories with no source code changes
+
+---
+
+## 2026-05-11 — Lessons from PR #348 (issue #110 part 2)
+
+### [codified] Copilot finds data-loss class bugs that all 3 VSDD fresh-context reviewers miss
+
+Round 5 of Copilot review surfaced: `jr issue edit FOO-1 FOO-2 --label add:foo --summary "X"` silently
+drops `--summary` because the dispatch routes to `handle_edit_bulk_labels` if `!labels.is_empty()`
+without checking for concurrent non-label fields. None of the prior reviewers caught this:
+- pr-review-toolkit:code-reviewer (1 pass with full context)
+- zclaude:security-reviewer (1 pass focused on attack surface)
+- vsdd-factory:adversary x 5 fresh-context passes (3 consecutive CLEAN to declare F5 convergence)
+
+Adversary prompts should explicitly include "silently-dropped flag combinations" and "dispatch
+branches that ignore subsequent flags" as review axes. Filed as a self-improvement to the
+adversarial-review SKILL.md checklist.
+
+_Discovered: PR #348 Copilot round 5, 2026-05-10_
+
+### [codified] clap `requires` interacts unreliably with `conflicts_with`
+
+When `--max requires = "jql"` is paired with `jql conflicts_with = "keys"`, clap elides the
+`requires` constraint when positional `keys` are present. The user passing
+`jr issue edit FOO-1 --max 100 --label add:foo` slipped past clap's parse-time check.
+
+Robust pattern: handler-level validation with explicit `JrError::UserError`. The existing
+round-5 `--label` + non-label-field guard already uses this pattern. Codify as a CLAUDE.md
+gotcha so future clap work doesn't repeat the assumption.
+
+_Discovered: PR #348 Copilot round 8, 2026-05-10_
+
+### [codified] Schema-best-guess + loose `body_string_contains` matchers + deferred empirical verification
+
+PR1 (#325) and PR2 (#348) both ship best-guess Atlassian Bulk API shapes for `priority`,
+`issueType`, and `labels`. Tests use `body_string_contains(...)` (loose substring) instead of
+`body_partial_json(...)` (structural) so the wrong shape passes tests but fails on a real Jira
+tenant. Empirical verification is deferred to a sandbox-required follow-up issue (#331).
+
+Pattern is acceptable when documented as "deferred-pending-sandbox" with the follow-up issue
+linked from the SCHEMA NOTES comment, the BulkEditRequest type doc, and the PR description.
+Codify the pattern: SCHEMA NOTES → loose matchers → follow-up issue → PR-description disclaimer.
+
+_Discovered: PR #348 F5 adversarial pass 1 (ADV-P5-PR2-010), 2026-05-10_
+
+### [codified] validated-feature-lifecycle skill bypasses VSDD `.factory/` documentation
+
+Both PR1 (#325) and the early phase of PR2 (#348) went through the `validated-feature-lifecycle`
+skill which writes only `.factory/code-delivery/issue-NNN/{pr-description.md, review-findings.md}`
+and skips the per-cycle adversarial/security/consistency review evidence and lessons codification.
+
+The PR2 mid-flight pivot to VSDD Feature Mode (F1-F7) corrected the agent dispatch (specialist
+agents with TDD discipline) but the on-disk audit trail had to be remediated retroactively (this
+commit). Codify: orchestrator must dispatch state-manager LAST in every burst per existing
+orchestrator constraint, including bursts driven by validated-feature-lifecycle.
+
+_Discovered: PR #348 documentation remediation, 2026-05-11_
