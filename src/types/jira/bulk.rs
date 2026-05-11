@@ -2,13 +2,32 @@ use std::collections::HashMap;
 
 /// Request body for POST /rest/api/3/bulk/issues/fields (bulk field edit).
 ///
-/// CONFIRMED from OpenAPI JSON (2026-05-09):
+/// CONFIRMED from OpenAPI JSON (2026-05-09) + Perplexity verification (2026-05-10, PR2):
 ///   - selectedIssueIdsOrKeys: string[], required, max 1000
-///   - editedFieldsInput: object, required (schema partially truncated in HTML docs)
+///   - selectedActions: string[], required — list of field names being edited.
+///     Without this, the API returns 400. Examples: ["summary"], ["labels"],
+///     ["summary","priority","labels"]. The values mirror the keys used inside
+///     `editedFieldsInput`. The bulk endpoint's canonical casing for the issuetype key
+///     is unverified — the legacy single-key path uses lowercase "issuetype", which is
+///     preserved here for consistency. See #331.
+///   - editedFieldsInput: object, required (schema partially truncated in HTML docs).
+///     Per Perplexity verification, the canonical 2025 production shape uses:
+///     summary → plain string OR `{"value": "..."}` (sources differ).
+///     priority → `{"priorityId": <int>}` per docs; we currently ship `{"name": "..."}`
+///     as a best-guess and may receive 400 from real Jira tenants.
+///     issueType → `{"issueTypeId": "..."}` per docs (camelCase key); we currently
+///     ship `{"issuetype": {"name": "..."}}` (lowercase, name) as a best-guess.
+///     labels → `{"labelsFields": [{"fieldId":"labels","labels":[...],
+///     "bulkEditMultiSelectFieldOption":"ADD|REMOVE"}]}` per docs; we currently ship
+///     the simpler `{"labels": ...}` shapes (single object for ADD-only/REMOVE-only,
+///     array for ADD+REMOVE coalesced) as a best-guess.
+///     Empirical verification against a live Jira sandbox + name→ID resolution
+///     (priorities + issue types per project) is tracked at issue #331.
 #[derive(serde::Serialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct BulkEditRequest {
     pub selected_issue_ids_or_keys: Vec<String>,
+    pub selected_actions: Vec<String>,
     pub edited_fields_input: serde_json::Value,
 }
 
@@ -36,9 +55,19 @@ pub struct BulkSubmitResponse {
 
 /// Response from GET /rest/api/3/bulk/queue/{taskId} (poll task status).
 ///
-/// CONFIRMED terminal status values from OpenAPI JSON:
-///   ENQUEUED | RUNNING | COMPLETE | FAILED | CANCEL_REQUESTED | CANCELLED | DEAD
-///   NOTE: "COMPLETE" not "COMPLETED" per OpenAPI; empirical verify pending.
+/// Status values from OpenAPI JSON (verified Perplexity 2026-05-10):
+///
+/// - **Non-terminal** (continue polling): ENQUEUED, RUNNING, CANCEL_REQUESTED.
+///   CANCEL_REQUESTED transitions to CANCELLED once cancellation completes.
+/// - **Terminal** (polling stops): COMPLETE, FAILED, CANCELLED, DEAD.
+///
+/// NOTE: "COMPLETE" not "COMPLETED" per OpenAPI; `is_terminal()` accepts both
+/// for empirical safety. Live API verification deferred to #331.
+///
+/// `failure_reason`: present on FAILED responses per Atlassian docs (Perplexity
+///   verification 2026-05-10, PR2 audit follow-up). Treated as `Option<String>` because
+///   the OpenAPI spec is partially undocumented on this field — older API versions or
+///   alternate failure shapes may omit it.
 #[derive(serde::Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct BulkOperationProgress {
@@ -49,6 +78,10 @@ pub struct BulkOperationProgress {
     pub processed_accessible_issues: Vec<String>,
     #[serde(default)]
     pub failed_accessible_issues: HashMap<String, BulkActionError>,
+    /// Human-readable failure reason from Atlassian when status is FAILED.
+    /// `#[serde(default)]` so absence doesn't break deserialization on older API versions.
+    #[serde(default)]
+    pub failure_reason: Option<String>,
     #[serde(default)]
     pub progress_percent: Option<i64>,
     #[serde(default)]

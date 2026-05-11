@@ -386,9 +386,25 @@ pub enum IssueCommand {
     },
     /// Edit issue fields
     Edit {
-        /// One or more issue keys (e.g., FOO-1 FOO-2 FOO-3)
-        #[arg(required = true, num_args = 1..=1001)]
+        /// Issue keys (positional; omit when using --jql). Mutually exclusive with --jql.
+        /// Up to 1000 keys per call (Atlassian Bulk API limit).
+        #[arg(num_args = 0..=1001, conflicts_with = "jql")]
         keys: Vec<String>,
+        /// JQL query to select issues for bulk edit. Mutually exclusive with positional keys.
+        #[arg(long, conflicts_with = "keys")]
+        jql: Option<String>,
+        /// Maximum number of issues to match via --jql (default 50, hard ceiling 1000).
+        /// Requires --jql; cannot be used with positional keys. If the JQL match count
+        /// exceeds this value, the command errors without mutating.
+        #[arg(long, value_parser = clap::value_parser!(u32).range(1..=1000))]
+        max: Option<u32>,
+        /// Skip the interactive confirmation prompt for large JQL match sets.
+        #[arg(long)]
+        yes: bool,
+        /// Preview the planned changes without making any HTTP mutations.
+        /// For --jql, the search IS executed (read-only); for positional keys, no HTTP calls.
+        #[arg(long)]
+        dry_run: bool,
         /// New summary
         #[arg(long)]
         summary: Option<String>,
