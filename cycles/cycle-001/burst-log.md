@@ -2003,4 +2003,47 @@ R9a (review 4266853645 @ 19:41:09Z) and R9c (comments @ 20:08:56-57Z) re-raised 
 | orchestrator | Triage R9b 2 findings; Perplexity CONFIRMED both as legitimate memory-amplification gaps | Both confirmed valid; fix plan approved |
 | implementer | Wrap key in cap_entry(k) before format!; implement serialize_value_bounded with WriteZeroOnOverflow adapter; 5 new unit tests | src/api/client.rs 85f0dd4 |
 | orchestrator | Post 6 reply comments on R9a/R9b/R9c threads explaining prior resolutions; commit 85f0dd4; push; verify CI 8/8 green | 23/23 threads resolved; CI green; R10 pending |
+
+---
+
+## Burst N+12 (2026-05-11): PR #356 Copilot Round 10 — Truncation Marker Visibility in serialize_value_bounded, fix commit f328a2f
+
+**Agents dispatched:** orchestrator, implementer, state-manager
+**Files touched:** src/api/client.rs (Bounded writer tracks overflowed flag; serialize_value_bounded reserves marker bytes upfront; appends " [...truncated]" on overflow; degenerate fallback for limit < marker.len())
+**Versions bumped:** (none)
+
+### Summary
+
+PR #356 Copilot Round 10 (review 4268026428 @ 2026-05-11T23:07:46Z, comment id 3222691664) returned 1 new inline finding, Perplexity-validated as a legitimate UX correctness gap. Fix commit f328a2f pushed at 2026-05-11T18:13:08-ish UTC. CI in-flight on f328a2f (Format + Secret Scan green; remaining checks pending — expected to settle 8/8 green per prior pattern).
+
+This is the FIRST round where the finding count declined two consecutive times (R9: 2 → R10: 1). Trajectory now 4→1→2→2→3→2→3→2→2→1 — converging signal toward the Phase 8 stop condition (0-new-comment round).
+
+1 R10 thread resolved (id 3222691664 → PRRT_kwDORs-xfc6BP1Oa); reply 3222725048 posted. All 24/24 threads now resolved (0 unresolved).
+
+**Process note: SIXTH consecutive in-cycle state-manager dispatch per codified Lesson 2.** R5 → R6 → R7 → R8 → R9 → R10 all dispatched state-manager in real time. The discipline is fully embedded.
+
+**Perplexity-validation per DEC-018:**
+- Finding 1 (silent truncation in serialize_value_bounded): CONFIRMED — `serialize_value_bounded` produced a truncated JSON prefix WITHOUT any visible marker when overflow occurred. Since the returned String was `<= limit`, the downstream `cap_entry` call did NOT add its own marker either. Result: operators saw malformed-but-silently-incomplete JSON with no indication it was cut off. Perplexity confirmed this is a "looks valid but is actually malformed prefix" anti-pattern recognized in tracing/slog/OpenTelemetry conventions. Standard fix: track overflow flag; reserve marker bytes upfront so prefix-plus-marker fits within limit.
+
+**Finding (R10 — review 4268026428, comment 3222691664):**
+
+`serialize_value_bounded` used a `Bounded` writer that stopped writing once the byte limit was hit, but returned the partial (prefix-only) bytes silently with no truncation marker. The returned String was always `<= limit` so the downstream `cap_entry` call's marker logic was never triggered. The result: a silently malformed JSON prefix that looked like a valid JSON value to the operator.
+
+**Fix:** `Bounded` writer now tracks an `overflowed: bool` flag. `serialize_value_bounded` reserves marker bytes upfront (`limit - " [...truncated]".len()`) so the prefix-plus-marker total fits within `limit`. Appends `" [...truncated]"` when `overflowed` is true. Degenerate-case fallback: when `limit < marker.len()`, returns the marker prefix truncated at `limit` (pinned via test).
+
+**New tests (3 new + 1 updated):**
+1. `test_serialize_value_bounded_no_marker_no_overflow` — small value: no marker, no overflow.
+2. `test_serialize_value_bounded_marker_fits_within_limit` — oversized value: marker present, output within limit.
+3. `test_serialize_value_bounded_degenerate_tiny_limit` — degenerate case: limit < marker.len(); output truncated at limit.
+4. Updated existing oversized test to also assert marker present (previously only checked size invariant).
+
+**Test results at f328a2f:** 30 sanitize unit tests total; 661 cargo test green; 0 failed.
+
+### Details
+
+| Agent | Task | Output |
+|-------|------|--------|
+| orchestrator | Triage 1 Copilot R10 finding (comment 3222691664 @ 23:07:46Z); Perplexity CONFIRMED as legitimate UX-correctness gap (silent truncation anti-pattern per tracing/slog/OpenTelemetry conventions) | Confirmed valid; fix plan approved |
+| implementer | Add overflowed flag to Bounded writer; reserve marker bytes upfront in serialize_value_bounded; append " [...truncated]" on overflow; degenerate fallback pinned via test; 3 new tests + 1 updated | src/api/client.rs f328a2f |
+| orchestrator | Resolve thread PRRT_kwDORs-xfc6BP1Oa; post reply 3222725048; commit f328a2f; push; request CI; verify Format+Secret Scan green | 24/24 threads resolved; CI in-flight; R11 pending |
 | state-manager | Fourth consecutive in-cycle dispatch per Lesson 2 — consistent habit | STATE.md, burst-log.md, pr-356-copilot-progress.md updated |

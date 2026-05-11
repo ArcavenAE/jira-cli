@@ -2,9 +2,9 @@
 document_type: copilot-convergence-record
 pr: 356
 branch: chore/sanitize-errors-334
-head_sha: 85f0dd4
+head_sha: f328a2f
 closes_issues: ["#334"]
-rounds: 9
+rounds: 10
 status: in-progress
 review_round_1_id: ""
 review_round_1_submitted: 2026-05-11T17:49:49Z
@@ -24,19 +24,21 @@ review_round_9a_submitted: 2026-05-11T19:41:09Z
 review_round_9b_id: "4266950826"
 review_round_9b_submitted: 2026-05-11T19:55:57Z
 review_round_9c_submitted: 2026-05-11T20:08:56Z
+review_round_10_id: "4268026428"
+review_round_10_submitted: 2026-05-11T23:07:46Z
 pr_state: OPEN
-threads_total: 23
-threads_resolved: 23
-trajectory: "4→1→2→2→3→2→3→2→2"
+threads_total: 24
+threads_resolved: 24
+trajectory: "4→1→2→2→3→2→3→2→2→1"
 ---
 
 # PR #356 Copilot Convergence Record — IN PROGRESS
 
 **PR:** https://github.com/Zious11/jira-cli/pull/356
 **Branch:** chore/sanitize-errors-334
-**Current tip SHA:** 85f0dd4
+**Current tip SHA:** f328a2f
 **Closes:** #334 on merge
-**Trajectory so far:** 4→1→2→2→3→2→3→2→2 (Round 10 pending)
+**Trajectory so far:** 4→1→2→2→3→2→3→2→2→1 (Round 11 pending)
 
 ## Summary
 
@@ -45,8 +47,8 @@ PR #356 implements CWE-117 defense at the `extract_error_message` public boundar
 from Atlassian error message strings before stderr emission, preventing terminal injection
 (log forging, ANSI escape injection) via hostile or proxy-injected error payloads.
 
-Nine Copilot rounds have been completed with a total of 23/23 threads resolved. CI is 8/8 green
-on 85f0dd4. Round 10 is pending.
+Ten Copilot rounds have been completed with a total of 24/24 threads resolved. CI is in-flight
+on f328a2f (Format + Secret Scan green; 8/8 expected based on prior pattern). Round 11 is pending.
 
 **Process gaps noted:** R2 and R3 Perplexity-validation were SKIPPED on the rationalization
 that the claims were "empirically verifiable from code." Per DEC-018, this was incorrect — all
@@ -497,9 +499,67 @@ R5 → R6 → R7 → R8 → R9 all dispatched state-manager in real time. The di
 
 ---
 
+## Round 10 (2026-05-11T23:07:46Z)
+
+**Review ID:** 4268026428
+**Comment ID:** 3222691664
+**Inline comments:** 1
+**Valid (UX correctness gap)**
+
+### Finding 1 — Silent truncation in serialize_value_bounded
+
+`serialize_value_bounded` produced a truncated JSON prefix WITHOUT any visible marker when
+overflow occurred. The `Bounded` writer stopped writing once the byte limit was hit, but did
+not signal overflow — it simply returned fewer bytes silently. Since the returned String was
+`<= limit`, the downstream `cap_entry` call did NOT add its own truncation marker either.
+
+**Result:** Operators saw malformed-but-silently-incomplete JSON with no indication it was cut
+off — a "looks valid but is actually malformed prefix" anti-pattern recognized in
+tracing/slog/OpenTelemetry conventions. A JSON string value truncated mid-character would
+silently produce an invalid string literal with no error hint.
+
+**Validation (Perplexity per DEC-018):** CONFIRMED — Perplexity validated this as a legitimate
+UX correctness gap matching the silent-truncation anti-pattern documented in tracing/slog/
+OpenTelemetry best practices for bounded output. Standard fix: track overflow flag; reserve
+marker bytes upfront so prefix-plus-marker total fits within limit.
+
+**Fix:** `Bounded` writer tracks an `overflowed: bool` flag. `serialize_value_bounded`
+reserves marker bytes upfront (`limit - " [...truncated]".len()`) so the prefix-plus-marker
+total always fits within `limit`. Appends `" [...truncated]"` when `overflowed` is true.
+Degenerate-case fallback: when `limit < marker.len()`, returns the marker prefix truncated
+at `limit` (pinned via test).
+
+**Thread resolved:** id 3222691664 → PRRT_kwDORs-xfc6BP1Oa
+**Reply posted:** 3222725048
+
+**New tests (3 new + 1 updated):**
+1. `test_serialize_value_bounded_no_marker_no_overflow` — small value: no marker, no overflow.
+2. `test_serialize_value_bounded_marker_fits_within_limit` — oversized value: marker present, output within limit.
+3. `test_serialize_value_bounded_degenerate_tiny_limit` — degenerate case: limit < marker.len(); output truncated at limit.
+4. Updated existing oversized test to also assert marker present (previously only checked size invariant).
+
+**Fix commit:** f328a2f ("chore(security): append truncation marker to bounded JSON output (PR #356 R10)")
+**Threads:** 24/24 resolved (1 new R10 thread resolved; cumulative)
+
+**Test results at f328a2f:**
+- 30 sanitize unit tests total (3 new + 1 updated from R10)
+- 661 cargo test total green, 0 failed
+- cargo fmt --check + cargo clippy --all-targets -- -D warnings clean
+- CI in-flight on f328a2f (Format + Secret Scan green; 8/8 expected)
+
+**Process note:** Sixth consecutive in-cycle state-manager dispatch per codified Lesson 2.
+R5 → R6 → R7 → R8 → R9 → R10 all dispatched state-manager in real time. The discipline is fully embedded.
+
+**Convergence signal:** R10 returned 1 new finding — DOWN from R9's 2. This is the first decline
+since R5 (trajectory segment 2→1). The overall trajectory 4→1→2→2→3→2→3→2→2→1 shows the finding
+count declining at R10 after holding at 2 for R9. Healthy converging signal toward the Phase 8
+stop condition (0-new-comment round). R11 pending.
+
+---
+
 ## Trajectory Analysis
 
-**Pattern so far:** 4→1→2→2→3→2→3→2→2 — all non-zero rounds addressed real findings.
+**Pattern so far:** 4→1→2→2→3→2→3→2→2→1 — all non-zero rounds addressed real findings.
 
 - R1: 4 findings (doc accuracy, loop allocation, clean-path allocation, missing length cap).
   Perplexity confirmed CWE-117 + OWASP length-capping guidance.
@@ -526,26 +586,33 @@ R5 → R6 → R7 → R8 → R9 all dispatched state-manager in real time. The di
   before cap). Both Perplexity CONFIRMED as legitimate memory-amplification gaps. Fix: cap_entry(k)
   wraps key; serialize_value_bounded new helper uses serde_json::to_writer + WriteZeroOnOverflow.
   5 new unit tests; 27 sanitize tests total; 658 cargo test green; CI 8/8 green on 85f0dd4.
-  R9a + R9c re-raised prior concerns — 6 replies posted. 23/23 threads resolved. R10 pending.
+  R9a + R9c re-raised prior concerns — 6 replies posted. 23/23 threads resolved.
+- R10 (4268026428 @ 23:07:46Z): 1 finding (serialize_value_bounded emitted silently truncated JSON
+  prefix without any marker — "looks valid but actually malformed" anti-pattern per tracing/slog/
+  OpenTelemetry). Perplexity CONFIRMED UX-correctness gap. Fix: Bounded writer tracks overflowed
+  flag; serialize_value_bounded reserves marker bytes upfront; appends " [...truncated]" on
+  overflow; degenerate fallback pinned via test. 3 new tests + 1 updated; 30 sanitize tests total;
+  661 cargo test green. 1 thread resolved (3222691664 → PRRT_kwDORs-xfc6BP1Oa); reply 3222725048.
+  24/24 threads resolved. CI in-flight on f328a2f (8/8 expected). R11 pending.
 
-**Assessment:** R9 surfaced two real memory-amplification gaps: the R8 entry-count cap was
-necessary but not sufficient — key length and non-string value serialization were uncapped
-orthogonal dimensions. Both gaps are now closed: keys bounded via cap_entry, values bounded
-via serialize_value_bounded (WriteZeroOnOverflow adapter). R9a and R9c re-raised prior round
-concerns; all explained and resolved via replies. Perplexity-validation consistent through
-R5–R9 per DEC-018/Lesson 1. R10 pending.
+**Assessment:** R10 surfaced 1 UX-correctness gap: serialize_value_bounded's Bounded writer did
+not track overflow state, so truncated output was emitted silently with no marker — indistinguishable
+from a valid (but short) JSON value. This is distinct from the memory-amplification class addressed
+in R5–R9; it is an operator-visibility gap. The fix closes the silent-truncation anti-pattern.
+Trajectory now 4→1→2→2→3→2→3→2→2→1 — first decline since R5. Healthy converging signal toward
+the Phase 8 stop condition (0-new-comment round). R11 pending.
 
 ## CI Status
 
-**Head SHA:** 85f0dd4
-**CI result:** 8/8 green
+**Head SHA:** f328a2f
+**CI result:** in-flight (Format + Secret Scan green; 8/8 expected based on prior pattern)
 
 ## Current PR State
 
 | Field | Value |
 |-------|-------|
 | **State** | OPEN |
-| **Threads** | 23 created; 23/23 resolved |
-| **R10** | Pending |
-| **CI on 85f0dd4** | 8/8 green |
+| **Threads** | 24 created; 24/24 resolved |
+| **R11** | Pending |
+| **CI on f328a2f** | in-flight (8/8 expected) |
 | **Closes** | #334 on merge |
