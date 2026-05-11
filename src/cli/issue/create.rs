@@ -5,6 +5,7 @@ use std::time::Duration;
 use crate::adf;
 use crate::api::assets::linked::get_or_fetch_cmdb_fields;
 use crate::api::client::JiraClient;
+use crate::api::jira::bulk::BULK_MAX_KEYS;
 use crate::cli::{IssueCommand, OutputFormat};
 use crate::config::Config;
 use crate::error::JrError;
@@ -12,9 +13,6 @@ use crate::output;
 
 use super::helpers;
 use super::json_output;
-
-/// Maximum number of keys allowed in a single bulk edit call (Atlassian API limit).
-const BULK_MAX_KEYS: usize = 1000;
 
 /// Number of issues above which a `--jql`-driven bulk edit requires explicit
 /// `--yes` (or `--no-input` implicit-yes) to proceed. Below this threshold the
@@ -485,6 +483,28 @@ pub(super) async fn handle_edit(
                     planned.insert("priority".into(), json!(p));
                 }
                 if !labels.is_empty() {
+                    // NOTE: This entire dry-run preview block (labels here, plus
+                    // `priority` and `issueType` below) emits INTENTIONALLY simplified
+                    // shapes that DO NOT match the POST body shapes sent to Atlassian:
+                    //   - `labels`: dry-run emits `[{"action": "ADD", "name": "foo"}]`
+                    //     (flat array). POST body emits
+                    //     `{"labelsAction": "ADD", "labels": [{"name": "foo"}]}` (nested,
+                    //     or an array of those objects when ADD+REMOVE coalesce).
+                    //   - `priority`: dry-run emits a bare string. POST body wraps as
+                    //     `{"name": "..."}` (best-guess; Atlassian docs document
+                    //     `{"priorityId": <int>}`).
+                    //   - `issueType`: dry-run emits a bare string. POST body wraps as
+                    //     `{"issuetype": {"name": "..."}}` (best-guess; Atlassian docs
+                    //     document `{"issueTypeId": "..."}`).
+                    // The dry-run JSON is a human-and-tool-friendly preview, NOT a
+                    // byte-for-byte snapshot of the wire request. Rationale: all three
+                    // POST shapes are best-guesses pending #331 empirical verification.
+                    // Locking dry-run consumers to unverified canonical Atlassian
+                    // shapes now would force a second breaking change once #331
+                    // confirms the true shapes. Once #331 verifies the wire shapes and
+                    // #345 extracts pure builders, this dry-run builder can be unified
+                    // with `handle_edit_bulk_labels` / `handle_edit_bulk_fields` to
+                    // emit byte-identical JSON.
                     let label_entries: Vec<serde_json::Value> = labels
                         .iter()
                         .map(|l| {
@@ -785,6 +805,14 @@ pub(super) async fn handle_edit(
 ///
 /// Supports 1..=1000 keys. `labels` is a list of "add:NAME" / "remove:NAME" / "NAME" strings.
 ///
+/// NOTE: The `--dry-run --output json` `plannedChanges.labels` shape (built in the
+/// dry-run block of `handle_edit` above) is a SIMPLIFIED preview using `{action, name}`
+/// pairs in a flat array, NOT a byte-for-byte snapshot of the POST body built here.
+/// Dry-run is a human-and-tool-friendly diff; the POST body below is the current
+/// best-guess Atlassian shape (still unverified, pending #331). Once #331 confirms
+/// the canonical wire shape and #345 extracts a pure builder, the two paths can
+/// converge.
+///
 /// editedFieldsInput shape (best-guess pending #331 empirical verification):
 /// - When BOTH ADD and REMOVE labels are present, coalesced into ONE bulk POST
 ///   with an array of operations:
@@ -885,6 +913,14 @@ async fn handle_edit_bulk_labels(
 /// Route non-label multi-key edits through the Atlassian Bulk Fields API.
 ///
 /// Supports 2..=1000 keys with --summary, --priority, --type.
+///
+/// NOTE: The `--dry-run --output json` `plannedChanges` block emits SIMPLIFIED
+/// previews for these same fields (bare strings for `priority` and `issueType`,
+/// see the dry-run builder in `handle_edit` above) that do NOT match the POST
+/// body shapes built here. Dry-run is a human-and-tool-friendly diff; the POST
+/// body shapes here are the current best-guess (still unverified, pending #331).
+/// Once #331 confirms the canonical wire shapes and the bulk builders are
+/// extracted into pure functions, the two paths can converge.
 ///
 /// editedFieldsInput shape (best-guess — unverified against live API):
 /// ```json

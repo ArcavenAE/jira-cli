@@ -207,6 +207,14 @@ When adding a new feature:
   use `std::sync::Mutex` for the inner mutex — `tokio::sync::Mutex` is mandatory because
   it does NOT poison on panic, which is the correct semantic for refresh (a panicked
   refresh should not permanently break the coordinator). Source: S-3.03 v2 spec.
+- **Bulk transitions are not idempotent.** Single-key `move` exits 0 if the issue is
+  already in the target status. Multi-key `move KEY1 KEY2 ... STATUS` (legacy positional
+  form) and `move KEY1 KEY2 ... --to STATUS` issue the transition unconditionally for
+  every key. For workflows that reject same-status transitions, expect per-key 400
+  errors in the bulk response. To pre-filter, list candidate keys first with
+  `jr issue list --jql "<query> AND status != \"<target>\"" --output json` and pass
+  them as positional args. The `--jql` selection form is on `edit` only — `move` does
+  not accept `--jql`.
 
 ## AI Agent Notes
 
