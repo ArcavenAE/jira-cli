@@ -1149,8 +1149,67 @@ Gate status: PENDING. Orchestrator dispatches Phase 3-adv next.
 |------|-------|--------|--------|
 | S-3.08 MERGED — DOCUMENT-AS-IS LOW NFR closures (5 source + 6 CLAUDE entries) | deliver-story (full chain) | complete | PR #317 squash-merged to develop at fba47ad (2026-05-09). 6 docs commits + 1 demo commit (40c205c → c48bbc8). +36 LOC across 6 files (5 .rs + CLAUDE.md). 5/5 ACs delivered; 8/8 CI green; APPROVE 1 cycle; 0 security findings; 0 new deps. Verified canonical wording for NFR-O-T + NFR-O-I (Atlassian docs retrieved 2026-05-08). Companion factory-artifacts commit @ 79afb49 (catalog routing flips: 7 → DOCUMENT-AS-IS-COMPLETE, 4 → DEFER-DOCUMENTED). Demo evidence at docs/demo-evidence/S-3.08/. Wave 3: 6/10. Phase 3 progress: 28/31 (90%). |
 
+## Archived Step: S-3.01 MERGED (archived from STATE.md Current Phase Steps on 2026-05-11)
+
+| Step | Agent | Status | Output |
+|------|-------|--------|--------|
+| S-3.01 MERGED — cli/auth.rs shard-split (9 production files + tests/) | deliver-story (full chain) | complete | PR #319 squash-merged to develop at b20cfee (2026-05-09). 10 refactor micro-commits + 1 demo commit (857e7e6..f029ba3). Pure refactor: 2,245 LOC single-file split into 9 production modules (mod 121 / login 366 / keychain 256 / refresh 144 / status 140 / remove 129 / list 70 / switch 51 / logout 50) + consolidated tests/mod.rs (997 — excluded from AC-004 production-cap). Max prod shard 366 LOC < 800 cap. 6/6 ACs delivered (4 spec + 2 bonus); 8/8 CI green; APPROVE 1 cycle; 0 security findings; Cargo.lock unchanged. AC-002 over-satisfied: ZERO direct keyring::Entry in cli/auth/* (all keychain access delegates to api/auth.rs). AuthFlow → pub(crate) for cross-shard dispatch. Demo evidence at docs/demo-evidence/S-3.01/. Wave 3: 8/10. Phase 3 progress: 30/31 (97%). |
+
+## Archived Step: S-3.04 MERGED (archived from STATE.md Current Phase Steps on 2026-05-11)
+
+| Step | Agent | Status | Output |
+|------|-------|--------|--------|
+| S-3.04 MERGED — multi-cloudId disambiguation + H-047 elevation | deliver-story (full chain) | complete | PR #320 squash-merged to develop at b6ab77c (2026-05-09). 5 commits (7c83907 test-writer + bfbda6a feat + b84c940 demos + 1075dd9 fmt-fix + post-merge state sync). Real feature (medium): closes H-047 KNOWN-GAP via --cloud-id flag + dialoguer::Select prompt + --no-input exit-64 with actionable listing. All disambiguation output renders name + URL + cloudId. 8/8 ACs delivered (6 spec + 2 bonus); 12 new integration tests; 12/12 + 612/612 = no regression; 8/8 CI green; APPROVE 1 cycle; 0 security findings; Cargo.lock unchanged. BC-1.5.031 invariant preserved (callback URL fixed at 127.0.0.1:53682/callback; regression-pin test asserts). Test seams JR_OAUTH_TOKEN_URL/ACCESSIBLE_RESOURCES_URL/OAUTH_CODE added (test-only). Demo evidence at docs/demo-evidence/S-3.04/. Wave 3: 9/10. Phase 3 progress: 31/31 (100% original scope). |
+
 ## Archived Step: S-3.02 MERGED (archived from STATE.md Current Phase Steps on 2026-05-09)
 
 | Step | Agent | Status | Output |
 |------|-------|--------|--------|
 | S-3.02 MERGED — cli/assets.rs shard-split (5 module files) | deliver-story (full chain) | complete | PR #318 squash-merged to develop at 68092af (2026-05-09). 6 refactor commits + 1 demo commit (2f20052..c057ffd). Pure refactor: 1,055 LOC single-file split into 5 modules (mod 65 / search 158 / view 91 / tickets 285 / schemas 490 — all <600 LOC cap). 5/5 ACs delivered; 8/8 CI green; APPROVE 1 cycle; 0 security findings; Cargo.lock unchanged. 612/612 unit tests + H-037/H-038/H-039 holdouts intact. --open filter (color_name != "green") survived in tickets.rs. Demo evidence at docs/demo-evidence/S-3.02/. Wave 3: 7/10. Phase 3 progress: 29/31 (94%). |
+
+---
+
+## Burst: PR #351 MERGED + PR #352 Round 1 Triage/Apply/Push/Reply/Resolve/Re-request (2026-05-11)
+
+**Date:** 2026-05-11T15:15:10Z–15:23:30Z
+**Agents:** orchestrator + direct edits (no sub-agent dispatch)
+**Input files touched:** CLAUDE.md (L211 gotcha), src/cli/mod.rs (L401 comment), tests/issue_bulk_pr2.rs (L554 inline comment)
+**Output commits:** develop @ 3216ec2 (PR #351 merge), develop @ f42bfa5 (PR #352 Round 1 fix micro-commit)
+**factory-artifacts commit:** this commit
+
+### Summary
+
+PR #351 (chore/test-hygiene-339-344-347) was merged by GitHub at 3216ec2
+(2026-05-11T15:15:10Z), closing issues #339 and #344. Develop fast-forwarded
+e480ff2→3216ec2. Local worktree `.worktrees/test-hygiene` removed; local branch
+`chore/test-hygiene-round2-rebase` deleted; remote branch auto-deleted on merge.
+Issue #347 deferred to PR #352.
+
+PR #352 (chore/docs-cleanup-337-341-347) received Copilot Round 1 at
+2026-05-11T15:17:14Z (3 inline comments, pre-round head 05c12cd). All 3 were valid
+local-consistency findings; all fixed in one micro-commit
+`docs(bulk): address Copilot review on PR #352` → head f42bfa5. Validation
+strategy: local file verification (no Perplexity needed — all 3 claims were
+internal-consistency questions about the repo's own files, not external API behavior).
+Pre-push CI-equivalent: `cargo fmt --check` + `cargo clippy --all-targets -- -D warnings` +
+`cargo test` (612 unit + 38 bulk + all suites) all green. Remote CI settled 8/8 green at
+2026-05-11T15:23:08Z. Three review threads resolved via GraphQL `resolveReviewThread`
+mutation (PRRT_kwDORs-xfc6BIW9e, PRRT_kwDORs-xfc6BIW-y, PRRT_kwDORs-xfc6BIW_R);
+post-resolve verification: {total:3, resolved:3, unresolved:0}. Copilot re-requested
+~2026-05-11T15:23:30Z. Round 1 convergence: 3→0 (one round, all valid, all fixed).
+
+A Copilot reply for comment 3220034266 was initially posted with a missing `jr issue move`
+token (shell expanded backticks inside `-f body="..."` before gh saw the argument).
+Corrected via PATCH using `printf '%s' '...' | jq -Rs '{body: .}' | gh api --input -`.
+Lesson codified in lessons.md.
+
+| Step | Agent | Output |
+|------|-------|--------|
+| PR #351 merged by GitHub | GitHub | develop @ 3216ec2; closes #339+#344 |
+| Worktree + branch cleanup | orchestrator | `.worktrees/test-hygiene` removed; `chore/test-hygiene-round2-rebase` branch deleted |
+| PR #352 Round 1 triage | orchestrator + direct edits | 3 findings triaged; all valid; validation strategy: local file verification |
+| PR #352 Round 1 fixes | direct edits | CLAUDE.md L211 + src/cli/mod.rs L401 + tests/issue_bulk_pr2.rs L554 |
+| PR #352 Round 1 push | orchestrator | f42bfa5; 8/8 CI green |
+| Review threads resolved | orchestrator (GraphQL) | 3/3 resolved; {total:3, resolved:3, unresolved:0} |
+| Copilot reply corrected | orchestrator | Comment 3220057819 PATCH'd via `jq -Rs + --input -` |
+| Copilot re-requested | orchestrator | ~2026-05-11T15:23:30Z; awaiting Round 2 |

@@ -199,3 +199,37 @@ with overlapping files merges, OR trust CI's merge-result builds to catch the
 divergence (worked here).
 
 _Discovered: PR #351 post-rebase CI failure + fix, 2026-05-11_
+
+---
+
+## 2026-05-11 — PR #352 Round 1 Copilot reply tooling
+
+### [codified] Shell expands backticks inside `gh api -f body` arguments — use `jq -Rs` with `--input -` instead
+
+When replying to Copilot threads via `gh api`, using `-f body="... \`jr issue move\` ..."` is
+unsafe even with escaped backticks. The shell evaluates command-substitution sequences before gh
+sees the argument. In this case the shell tried to execute `jr issue move`, which exited with
+a missing-arguments error; the reply was posted with the substitution slot replaced by the empty
+string, producing a subtly wrong reply ("Verified — only accepts positional keys + --to ...").
+
+**Failure example:**
+```bash
+gh api -X POST repos/.../pulls/352/comments/3220034266/replies \
+  -f body="... \`jr issue move\` ..."
+# Result: backtick expansion fires; reply posted without "jr issue move" token
+```
+
+**Fix applied:** PATCH the comment to correct the text using `printf` + `jq -Rs`:
+```bash
+printf '%s' '... `jr issue move` ...' \
+  | jq -Rs '{body: .}' \
+  | gh api -X PATCH repos/.../pulls/352/comments/3220057819 --input -
+```
+
+**Rule for all future Copilot reply rounds:** Always use
+`printf '%s' '<body text>' | jq -Rs '{body: .}' | gh api -X POST <endpoint> --input -`
+when the reply body may contain shell metacharacters (backticks, dollar signs, single quotes).
+Never use `-f body="..."` with backticks in the value, even escaped — bash's
+command-substitution evaluation happens before gh sees the argument.
+
+_Discovered: PR #352 Round 1 Copilot reply, 2026-05-11_
