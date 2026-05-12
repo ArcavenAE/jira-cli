@@ -2760,3 +2760,31 @@ Trajectory: 1 finding → R2 pending.
 **Outcome:** PR #358 R1 recorded in all factory artifacts. R2 pending.
 
 **Outcome:** PR #358 OPEN state recorded. 7 audit-followups remain: #333, #336, #340, #343, #345, #346, #350. Copilot R1 requested; next dispatch at R1 results.
+
+---
+
+## Burst 59 (2026-05-12) — PR #358 R2 COMPLETE: tolerant closing-brace detection
+
+**Agents dispatched:** state-manager
+**Files touched:** .factory/STATE.md, .factory/cycles/cycle-001/burst-log.md, .factory/cycles/cycle-001/adversarial-reviews/pr-358-edit-field-categorization-test/pr-358-copilot-progress.md
+**Versions bumped:** (none)
+
+### Summary
+
+PR #358 Round 2 complete. Copilot review 4268937977 returned 1 finding (comment 3223535825): the closing-brace detection in `extract_edit_field_names` used an exact string match `"    },"` — formatting-fragile under three real-world variants: (a) last enum variant `}` with no trailing comma, (b) `},  // comment` trailing inline comment, (c) trailing whitespace after brace/comma.
+
+Fix commit c708211 (`chore(test): tolerate formatting variants in extract_edit_field_names matcher`): introduced an `is_matching_closing_brace` closure that accepts any line at the same indentation depth whose non-whitespace content is `}` optionally followed by `,` and/or whitespace/comment characters. 3 new unit tests added (no_trailing_comma, trailing_comment, trailing_whitespace) exercising synthetic source variants directly through the matcher.
+
+1/1 threads resolved (thread PRRT_kwDORs-xfc6BSMuX). Reply posted (comment 3223556249). CI 8/8 green on c708211. cargo test 1252 passed (+3 new), 0 failed. R3 pending.
+
+Trajectory: 1 → 1 → R3 pending. Quality pattern: steady at 1 finding per round; findings are robustness improvements (ordering determinism, formatting fragility), not security or correctness defects.
+
+### Details
+
+| Agent | Task | Output |
+|-------|------|--------|
+| state-manager | Update STATE.md: Last Updated, Current Phase, Phase Progress row (R2 complete, head c708211, trajectory 1→1→R3), Current Phase Steps (archive oldest row; add R2 row), Phase 3-adv convergence tracker, Session Resume Checkpoint | STATE.md |
+| state-manager | Update pr-358-copilot-progress.md: fill R2 round entry (review ID, 1 finding, fix commit, thread resolution, trajectory) | pr-358-edit-field-categorization-test/pr-358-copilot-progress.md |
+| state-manager | Append this burst entry | burst-log.md |
+
+**Outcome:** PR #358 R2 recorded in all factory artifacts. R3 pending.

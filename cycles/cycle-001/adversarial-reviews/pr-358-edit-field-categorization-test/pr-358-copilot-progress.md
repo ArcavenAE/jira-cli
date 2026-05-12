@@ -7,7 +7,7 @@ producer: state-manager
 pr: 358
 issue: 343
 branch: chore/edit-field-categorization-test-343
-head_sha: 9ca690e
+head_sha: c708211
 created: 2026-05-12
 ---
 
@@ -78,6 +78,39 @@ produce nondeterministic field orderings in CI output.
 `std::collections` semantics (HashSet vs BTreeSet ordering), a well-established language
 fact not requiring external API or library validation.
 
+### Round 2 — R2 COMPLETE 2026-05-12
+
+| Field | Value |
+|-------|-------|
+| Status | COMPLETE |
+| Requested at | 2026-05-12 |
+| Review ID | 4268937977 |
+| Findings | 1 |
+| Perplexity validations | n/a (test mechanics only; Lesson 1 boundary — no external behavior to validate) |
+| Fix commits | c708211 (chore(test): tolerate formatting variants in extract_edit_field_names matcher) |
+| Threads resolved | 1/1 — PRRT_kwDORs-xfc6BSMuX |
+| Reply comment ID | 3223556249 |
+| CI on fix commit | 8/8 green |
+| Trajectory | 1→1→R3 |
+
+**Finding C1** (comment 3223535825): `extract_edit_field_names` closing-brace detection used
+the exact string `"    },"` — formatting-fragile under three real-world source variants:
+(a) last enum variant `}` with no trailing comma, (b) `},  // comment` trailing inline
+comment, (c) trailing whitespace after the brace or comma.
+
+**Fix:** Introduced `is_matching_closing_brace` closure that accepts any line at the same
+indentation depth whose trimmed content starts with `}` and is optionally followed by `,`
+and/or whitespace/comment. Three new unit tests added to exercise the closure:
+- `test_extract_edit_field_names_no_trailing_comma` — last-variant brace without comma
+- `test_extract_edit_field_names_trailing_comment` — `},  // comment` form
+- `test_extract_edit_field_names_trailing_whitespace` — brace with trailing spaces
+
+All 4 original #343 tests still pass. Full cargo test: 1252 passed (+3), 0 failed.
+
+**Perplexity validation:** skipped per Lesson 1 boundary — finding concerns string-matching
+logic in a test helper, a Rust code-quality issue not requiring external API or library
+validation.
+
 ---
 
 ## Trajectory
@@ -85,7 +118,8 @@ fact not requiring external API or library validation.
 | Round | Findings | Delta | Notes |
 |-------|----------|-------|-------|
 | R1 | 1 | — | Review 4268914353; BTreeSet fix 9ca690e; 1/1 threads resolved; CI 8/8 green |
-| R2 | pending | — | Pending |
+| R2 | 1 | 0 | Review 4268937977; tolerant brace matcher c708211; 3 new edge-case tests; 1/1 threads resolved; CI 8/8 green |
+| R3 | pending | — | Pending |
 
 ---
 
