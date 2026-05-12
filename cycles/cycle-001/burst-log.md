@@ -2509,3 +2509,105 @@ addendum captured in lessons.md.
 | state-manager | Retroactive state update — PR #357 opened, PR #356 MERGED noted, Lessons 1+2 recurrence captured | STATE.md, burst-log.md, lessons.md, pr-357-copilot-progress.md |
 
 **Outcome:** PR #357 OPEN @ cb3e8a3 (closes #335). Copilot R1 requested. CI in-flight. 8 audit-followups remain after #335 closes: #331, #333, #336, #340, #343, #345, #346, #350.
+
+---
+
+## Burst: PR #357 R1 COMPLETE — 3 findings resolved (2026-05-12)
+
+**Date:** 2026-05-12 (~02:26–02:35 UTC)
+**Agents:** orchestrator (implementer), state-manager
+**Branch:** chore/release-gate-jr-base-url-335
+**Head at R1 open:** cb3e8a3
+**Fix commit:** 144aaff ("chore(security): gate Config::base_url JR_BASE_URL read + add regression tests (PR #357 R1)")
+**PR:** #357 — https://github.com/Zious11/jira-cli/pull/357
+**Copilot review:** 4268736728 @ 2026-05-12T02:26:30Z
+**Files touched (develop):** src/config.rs (+#[cfg(debug_assertions)] gate on Config::base_url JR_BASE_URL read), tests/base_url_release_gate.rs (new, 4 tests), CLAUDE.md (two-site gating doc correction)
+**factory-artifacts commit:** this commit
+
+### Summary
+
+Copilot R1 review (3 findings, all Perplexity-validated as legitimate):
+
+**Finding 1 — CRITICAL (comment 3223330261):**
+`Config::base_url()` at `src/config.rs:357` also read `JR_BASE_URL` unconditionally. The
+initial fix (cb3e8a3) gated only the secondary read site in `src/api/client.rs` (the
+`JiraClient::new` base-URL override). The primary read site in `Config::base_url()` was
+missed — an attacker environment with `JR_BASE_URL=http://attacker.example/` would still
+route all requests through the config layer.
+
+Root cause: grep of `JR_BASE_URL` across `src/` was not performed before pushing. The
+mental model conflated "the env-var read I edited" with "all places the env var is read."
+
+**Fix:** Applied `#[cfg(debug_assertions)]` gate to `Config::base_url()`, returning
+`None` in release builds. Now both read sites are gated.
+
+**Finding 2 — MEDIUM (comment 3223330280):**
+Missing regression test mirroring `tests/auth_header_release_gate.rs`. Created
+`tests/base_url_release_gate.rs` with 4 tests (all named `test_335_*`):
+- `test_335_base_url_gate_source_present_in_config_rs` — source-level grep pin
+- `test_335_base_url_gate_source_present_in_client_rs` — source-level grep pin (both sites)
+- `test_335_base_url_gate_compile_time_evidence` — compile-time gate evidence
+- `test_335_new_for_test_bypasses_env_var_resolution` — regression guard for test helper
+
+**Finding 3 — LOW (comment 3223330291):**
+CLAUDE.md "AI Agent Notes" section claimed release ignores `JR_BASE_URL` but only one site
+was gated at cb3e8a3. Updated to reflect two-site gating and reference the new regression
+test file.
+
+### Perplexity Validation
+
+All 3 findings validated before acting per DEC-018:
+- Finding 1: confirmed that `Config::base_url()` reading JR_BASE_URL creates a token-leak
+  vector identical to the client.rs path; two-site gating required.
+- Finding 2: confirmed regression test pattern (source-level grep pins) is idiomatic for
+  compile-time gate verification; `auth_header_release_gate.rs` is the established prior art.
+- Finding 3: confirmed CLAUDE.md accuracy is load-bearing for AI agent sessions that read
+  it as context (false claim would cause agents to skip the gate in future work).
+
+### Process Note — Surface Area vs Approach
+
+New sub-lesson codified from this round:
+
+**"Perplexity validates the APPROACH; grep validates the SURFACE AREA. Both are required
+for security-sensitive env-var gating. Always grep before claiming closure."**
+
+In this case: Perplexity confirmed `#[cfg(debug_assertions)]` is the correct approach. But
+`grep -rn JR_BASE_URL src/` would have revealed the Config::base_url() read site BEFORE
+pushing cb3e8a3. That grep was not run. Copilot caught it in one round.
+
+The sub-lesson is appended under Lesson 1 in `cycles/cycle-001/lessons.md`.
+
+### Results
+
+| Metric | cb3e8a3 (before R1) | 144aaff (after R1) |
+|--------|---------------------|--------------------|
+| cargo test | 1244 passed | 1248 passed (+4 test_335_*) |
+| cargo fmt --check | PASS | PASS |
+| cargo clippy debug | PASS | PASS |
+| cargo clippy --release | PASS | PASS |
+| JR_BASE_URL read sites gated | 1 of 2 | 2 of 2 |
+| Copilot threads resolved | 0 | 3/3 |
+| CI (8 checks) | green | green |
+
+### Thread Dispositions
+
+| Thread ID | Comment | Finding | Status |
+|-----------|---------|---------|--------|
+| PRRT_kwDORs-xfc6BRm7j | 3223330261 | Config::base_url() CRITICAL | Resolved — reply 3223391764 |
+| PRRT_kwDORs-xfc6BRm7q | 3223330280 | Missing regression test | Resolved — reply 3223391824 |
+| PRRT_kwDORs-xfc6BRm7w | 3223330291 | CLAUDE.md doc inaccuracy | Resolved — reply 3223391863 |
+
+### Details
+
+| Agent | Task | Output |
+|-------|------|--------|
+| orchestrator | Triage R1 review (id 4268736728 @ 02:26:30Z); Perplexity-validate all 3 findings | All 3 confirmed legitimate |
+| orchestrator | Fix Finding 1: gate Config::base_url() JR_BASE_URL read with #[cfg(debug_assertions)] | src/config.rs patched |
+| orchestrator | Fix Finding 2: create tests/base_url_release_gate.rs with 4 test_335_* tests | New test file; 1248 passed |
+| orchestrator | Fix Finding 3: update CLAUDE.md to reflect two-site gating | CLAUDE.md updated |
+| orchestrator | Push fix commit 144aaff; confirm CI 8/8 green | develop @ 144aaff |
+| orchestrator | Resolve 3 threads; post replies 3223391764, 3223391824, 3223391863 | 3/3 threads resolved |
+| orchestrator | Request Copilot R2 | R2 pending |
+| state-manager | Update STATE.md, burst-log.md, lessons.md, pr-357-copilot-progress.md | This commit |
+
+**Outcome:** PR #357 R1 COMPLETE @ 144aaff. 3/3 R1 threads resolved. CI 8/8 green. Two-site JR_BASE_URL gating confirmed. R2 requested.

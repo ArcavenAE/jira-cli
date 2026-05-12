@@ -64,16 +64,54 @@ Lessons 1+2 recurrence, now codified).
 
 ## Copilot Round Log
 
-### Round 1 — REQUESTED (2026-05-12)
+### Round 1 — COMPLETE (2026-05-12)
 
 | Field | Value |
 |-------|-------|
-| **Status** | Requested |
-| **Head** | cb3e8a3 |
-| **Requested at** | 2026-05-12 |
-| **Review ID** | pending |
-| **Findings** | pending |
-| **Perplexity validation** | pending (will run per DEC-018 before acting on any finding) |
+| **Status** | COMPLETE — 3/3 findings resolved |
+| **Head at review** | cb3e8a3 |
+| **Fix commit** | 144aaff |
+| **Review ID** | 4268736728 |
+| **Review posted** | 2026-05-12T02:26:30Z |
+| **Fix pushed** | 2026-05-12 ~02:35 UTC |
+| **Threads resolved** | 3/3 (PRRT_kwDORs-xfc6BRm7j, PRRT_kwDORs-xfc6BRm7q, PRRT_kwDORs-xfc6BRm7w) |
+| **Replies posted** | 3223391764, 3223391824, 3223391863 |
+| **CI result** | 8/8 green on 144aaff |
+| **Perplexity validation** | All 3 findings validated per DEC-018 before acting |
+
+#### R1 Findings
+
+**Finding 1 — CRITICAL (comment 3223330261)**
+
+| Field | Value |
+|-------|-------|
+| **Thread** | PRRT_kwDORs-xfc6BRm7j |
+| **File** | src/config.rs:357 |
+| **Severity** | CRITICAL |
+| **Perplexity** | CONFIRMED — Config::base_url() reading JR_BASE_URL is an identical token-leak vector to the client.rs path; two-site gating required |
+| **Fix** | Applied `#[cfg(debug_assertions)]` gate to `Config::base_url()`, returning `None` in release builds |
+| **Root cause** | grep of `JR_BASE_URL` across `src/` was not run before pushing; mental model conflated "the read I edited" with "all read sites" |
+| **Status** | RESOLVED — reply 3223391764 |
+
+**Finding 2 — MEDIUM (comment 3223330280)**
+
+| Field | Value |
+|-------|-------|
+| **Thread** | PRRT_kwDORs-xfc6BRm7q |
+| **Issue** | No regression test mirroring `tests/auth_header_release_gate.rs` for the JR_BASE_URL gate |
+| **Perplexity** | CONFIRMED — source-level grep pin pattern is idiomatic for compile-time gate verification; `auth_header_release_gate.rs` is the established prior art in this codebase |
+| **Fix** | Created `tests/base_url_release_gate.rs` with 4 tests (all `test_335_*`): source-level grep pin for config.rs, source-level grep pin for client.rs, compile-time evidence, new_for_test regression guard |
+| **Status** | RESOLVED — reply 3223391824 |
+
+**Finding 3 — LOW (comment 3223330291)**
+
+| Field | Value |
+|-------|-------|
+| **Thread** | PRRT_kwDORs-xfc6BRm7w |
+| **Issue** | CLAUDE.md "AI Agent Notes" claimed release ignores JR_BASE_URL, but only one of two sites was gated at cb3e8a3 — inaccurate and potentially misleading for future agent sessions |
+| **Perplexity** | CONFIRMED — CLAUDE.md accuracy is load-bearing for AI agent sessions that read it as context; false claim would cause agents to skip the gate in future security work |
+| **Fix** | Updated CLAUDE.md to explicitly document two-site gating (Config::base_url() + JiraClient::new) and reference tests/base_url_release_gate.rs |
+| **Status** | RESOLVED — reply 3223391863 |
 
 ---
 
@@ -81,7 +119,8 @@ Lessons 1+2 recurrence, now codified).
 
 | Round | Findings | Delta | Perplexity | Fix SHA | Notes |
 |-------|----------|-------|------------|---------|-------|
-| R1 | pending | — | pending | — | Requested 2026-05-12 |
+| R1 | 3 | — | ALL 3 validated | 144aaff | CRITICAL primary read site missed; regression tests added; doc corrected; 3/3 resolved; CI green |
+| R2 | pending | — | pending | — | Requested 2026-05-12 |
 
 ## Process Notes
 

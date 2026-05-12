@@ -520,3 +520,53 @@ visiting GitHub. A missing PR-creation entry leaves a gap regardless of diff siz
 
 _Discovered: PR #357 retroactive dispatch, 2026-05-12_
 _Tagged: [codified] — addendum to Lesson 2; extends the per-Copilot-round rule to include the PR creation event itself_
+
+---
+
+## 2026-05-12 — PR #357 R1 Process Gap
+
+### [codified] Lesson 1 sub-lesson: "Perplexity validates the APPROACH; grep validates the SURFACE AREA"
+
+**Context:** PR #357 (issue #335) implemented `#[cfg(debug_assertions)]` gating on
+`JR_BASE_URL` in `src/api/client.rs`. The approach was Perplexity-validated (retroactively,
+per the Lesson 1 addendum above) and confirmed correct: `#[cfg(debug_assertions)]` is the
+idiomatic compile-time gate; `cargo build --release` reliably disables it; Cargo.toml has no
+`debug-assertions = true` override.
+
+**The gap:** The approach was correct. The surface area was incomplete. `JR_BASE_URL` is read
+in TWO places in the codebase:
+
+1. `src/api/client.rs` — `JiraClient::new` base-URL override (the read site that was edited)
+2. `src/config.rs:357` — `Config::base_url()` (the primary read site, missed entirely)
+
+A `grep -rn JR_BASE_URL src/` before pushing cb3e8a3 would have revealed both sites.
+That grep was not run. Copilot caught the missed site in R1 (comment 3223330261, CRITICAL).
+
+**Concrete failure sequence:**
+1. Identified the env-var read in `src/api/client.rs` — the one that was touched in
+   the original SD-002 gating work for `JR_AUTH_HEADER`.
+2. Applied the gate to that one site.
+3. Perplexity confirmed `#[cfg(debug_assertions)]` is correct — approach validated.
+4. Pushed cb3e8a3 without grepping for other read sites.
+5. Copilot R1 caught `src/config.rs:357` — token-leak vector remained open.
+
+**Rule:** For security-sensitive env-var gating, the workflow is:
+1. **Perplexity**: validate the compile-time gate APPROACH (idiomatic? correct gate for this
+   use case? Cargo.toml clean? Prior art?).
+2. **grep**: validate the SURFACE AREA — `grep -rn <VAR_NAME> src/` to find ALL read sites
+   before claiming the gate is complete.
+3. Apply the gate to every read site found in step 2.
+4. Re-run grep to confirm no sites remain ungated.
+
+**Generalization:** This sub-lesson applies beyond env-var gating. Any security fix that
+addresses "how X is done" (the approach) must also audit "everywhere X is done" (the surface
+area). Perplexity can validate the approach; only a codebase-wide search validates the
+surface area.
+
+**Concrete example:** PR #357 R1 — gated one of two `JR_BASE_URL` read sites; Copilot
+caught the second in one round. Fix cost: 1 extra Copilot round + additional test file.
+Prevention cost: 1 `grep -rn JR_BASE_URL src/` command before pushing.
+
+_Discovered: PR #357 R1 Copilot finding 3223330261 (CRITICAL), 2026-05-12_
+_Tagged: [codified] — sub-lesson under Lesson 1 / DEC-018; "Perplexity validates APPROACH; grep validates SURFACE AREA"_
+_Scope: all security-sensitive env-var gating; generalizes to any "fix how X is done → audit everywhere X is done" class_
