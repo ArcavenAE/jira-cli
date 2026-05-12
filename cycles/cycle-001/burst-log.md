@@ -2706,3 +2706,29 @@ All 8 synthesis items completed:
 7 audit-followups remain: #333, #336, #340, #343, #345, #346, #350.
 
 **Outcome:** PR #357 CONVERGED @ 144aaff. Phase 8 stop condition hit (R2: 0 inline comments). Next action: awaiting human merge approval to close #335.
+
+---
+
+## Burst 57 (2026-05-12) — PR #358 OPEN: edit-field-categorization-test (#343)
+
+**Agents dispatched:** state-manager
+**Files touched:** .factory/STATE.md, .factory/cycles/cycle-001/burst-log.md, .factory/cycles/cycle-001/adversarial-reviews/pr-358-edit-field-categorization-test/pr-358-copilot-progress.md (created)
+**Versions bumped:** (none)
+
+### Summary
+
+PR #358 opened on branch chore/edit-field-categorization-test-343 @ 29608b8. Closes issue #343 (audit-followup from F5 adversarial review of #110 part 2). Change is test-only: adds test_343_every_edit_field_is_categorized in src/cli/issue/create.rs::tests module. Helper extract_edit_field_names parses src/cli/mod.rs via include_str! to enumerate IssueCommand::Edit fields. Three hand-maintained sets: SELECTORS (5), BULK_SUPPORTED (4), REJECTED_IN_BULK (8) — total 17, matching the variant count. Assertions verify union completeness, pairwise disjoint, and non-empty. 255 lines added; zero source-code paths touched.
+
+Process notes: Perplexity skipped (test mechanics only; no external behavior to validate per Lesson 1 boundary). Grep validated: the 8 fields in REJECTED_IN_BULK confirmed to match actual rejection list in handle_edit (lines 426–465). Doc-fallout lesson not applicable (test-only; no doc files reference field categorization). cargo test 1249 passed; cargo fmt --check + cargo clippy --all-targets -- -D warnings clean.
+
+State-manager dispatched at PR open per Lesson 2 (state-manager at PR open / each Copilot round / merge).
+
+### Details
+
+| Agent | Task | Output |
+|-------|------|--------|
+| state-manager | Update STATE.md: Last Updated, Current Phase, Phase Progress row (new IN_PROGRESS row), Current Phase Steps (new PR #358 row), Phase 3-adv convergence tracker, Session Resume Checkpoint | STATE.md |
+| state-manager | Create pr-358-copilot-progress.md: initial entry, R1 requested status | pr-358-edit-field-categorization-test/pr-358-copilot-progress.md |
+| state-manager | Append this burst entry | burst-log.md |
+
+**Outcome:** PR #358 OPEN state recorded. 7 audit-followups remain: #333, #336, #340, #343, #345, #346, #350. Copilot R1 requested; next dispatch at R1 results.
