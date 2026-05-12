@@ -2165,3 +2165,41 @@ No new tests (comment-only change); 36 sanitize tests still pass; full cargo tes
 | implementer | Search-and-replace across 6 comment locations in src/api/client.rs; no behavior change | src/api/client.rs bcc2db4 |
 | orchestrator | Resolve thread PRRT_kwDORs-xfc6BQQan; post reply 3222883003; commit bcc2db4; push; verify CI 8/8 green | 28/28 threads resolved; CI green; R14 pending |
 | state-manager | Ninth consecutive in-cycle dispatch per Lesson 2 — discipline is consistent habit | STATE.md, burst-log.md, pr-356-copilot-progress.md updated |
+
+---
+
+## PR #356 Copilot R14 Fix Burst (2026-05-12T00:14 UTC)
+
+**Agents dispatched:** orchestrator, implementer, state-manager
+**Files touched:** src/api/client.rs (sanitize_for_stderr + tests), .factory/STATE.md, .factory/cycles/cycle-001/burst-log.md, .factory/cycles/cycle-001/adversarial-reviews/pr-356-sanitize-errors/pr-356-copilot-progress.md
+**Versions bumped:** (none — chore/security hardening only)
+**Commit:** d4a07c8 ("chore(security): escape Unicode C1 controls in sanitize_for_stderr (PR #356 R14)")
+**CI:** 8/8 green on d4a07c8
+
+### Summary
+
+1 finding from Copilot R14 (review 4268270089 @ 2026-05-12T00:10:42Z, comment id 3222898738). Perplexity-validated as legitimate defense-in-depth hardening:
+
+**Finding (Unicode C1 control escape gap):** `sanitize_for_stderr` used `is_ascii_control()` to identify control characters, which covers only C0 controls (U+0000..U+001F) and DEL (U+007F), but misses Unicode C1 controls U+0080..U+009F. The C1 range includes CSI (U+009B, Control Sequence Introducer) and NEL (U+0085, Next Line) — characters that legacy/embedded/non-UTF8 terminals can interpret as control sequences, enabling the same terminal injection threat class as C0.
+
+Modern UTF-8 terminals silently drop C1 bytes as invalid continuation bytes (not a current exploitation vector in mainstream environments), but the defense-in-depth rationale holds for legacy/embedded terminal contexts. The finding is correctly categorized as defense-in-depth hardening, consistent with the overall PR #356 security posture.
+
+**Fix:** Switch `is_ascii_control()` to `char::is_control()` in `sanitize_for_stderr`, which covers both C0 (U+0000..U+001F + DEL U+007F) and C1 (U+0080..U+009F). Branch on `c.is_ascii()` for escape format: ASCII controls keep `\xNN` (4 bytes); C1 controls use `\u{NNNN}` (8 bytes). Fast-path scan changed from byte-level `bytes().any(|b| b.is_ascii_control())` to char-level `chars().any(|c| c.is_control())` — required because byte-level scanning cannot distinguish C1 control code-point bytes from valid 2-byte UTF-8 continuation bytes. The 4x expansion budget (4 KiB cap) comfortably absorbs the 8-byte `\u{NNNN}` escapes for C1 characters.
+
+3 new unit tests added: CSI escape (U+009B → `\u{009b}`), NEL escape (U+0085 → `\u{0085}`), anti-regression for non-control Unicode above ASCII (U+00C0 LATIN CAPITAL LETTER A WITH GRAVE — must pass through unescaped). Total sanitize tests now 39; full cargo test: 670 passed, 0 failed, 10 ignored.
+
+1 R14 thread resolved (PRRT_kwDORs-xfc6BQamK). All 29 threads now resolved (0 unresolved). Reply 3222921647 posted.
+
+**Trajectory:** 4→1→2→2→3→2→3→2→2→1→1→2→1→1 — two consecutive 1-finding rounds (R13, R14). Finding category remains defense-in-depth / documentation-quality rather than security-defense gaps. R15 may be the convergence round (0 new findings = Phase 8 stop condition).
+
+**Perplexity-validation per DEC-018:**
+- Finding (C1 control escape gap): CONFIRMED — `char::is_control()` covers C0 + C1; `is_ascii_control()` misses C1. Defense-in-depth rationale validated for legacy/embedded terminal contexts. C1 `\u{NNNN}` format is the standard Rust Unicode escape format.
+
+### Details
+
+| Agent | Task | Output |
+|-------|------|--------|
+| orchestrator | Triage 1 Copilot R14 finding (comment 3222898738 @ 00:10:42Z); Perplexity CONFIRMED C1 gap is legitimate defense-in-depth hardening; fix plan approved | Confirmed valid |
+| implementer | Switch `is_ascii_control()` to `char::is_control()`; branch on `c.is_ascii()` for `\xNN` vs `\u{NNNN}` format; fix fast-path scan to char-level; add 3 new unit tests | src/api/client.rs d4a07c8 |
+| orchestrator | Resolve thread PRRT_kwDORs-xfc6BQamK; post reply 3222921647; commit d4a07c8; push; verify CI 8/8 green | 29/29 threads resolved; CI green; R15 pending |
+| state-manager | Tenth consecutive in-cycle dispatch per Lesson 2 — discipline is consistent habit | STATE.md, burst-log.md, pr-356-copilot-progress.md updated |

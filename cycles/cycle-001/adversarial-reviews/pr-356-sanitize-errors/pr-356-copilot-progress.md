@@ -2,9 +2,9 @@
 document_type: copilot-convergence-record
 pr: 356
 branch: chore/sanitize-errors-334
-head_sha: bcc2db4
+head_sha: d4a07c8
 closes_issues: ["#334"]
-rounds: 13
+rounds: 14
 status: in-progress
 review_round_1_id: ""
 review_round_1_submitted: 2026-05-11T17:49:49Z
@@ -33,18 +33,20 @@ review_round_12_id: "4268158285"
 review_round_12_submitted: 2026-05-11T23:39:52Z
 review_round_13_id: "4268206656"
 review_round_13_submitted: 2026-05-11T23:52:40Z
-threads_total: 28
-threads_resolved: 28
-trajectory: "4→1→2→2→3→2→3→2→2→1→1→2→1"
+review_round_14_id: "4268270089"
+review_round_14_submitted: 2026-05-12T00:10:42Z
+threads_total: 29
+threads_resolved: 29
+trajectory: "4→1→2→2→3→2→3→2→2→1→1→2→1→1"
 ---
 
 # PR #356 Copilot Convergence Record — IN PROGRESS
 
 **PR:** https://github.com/Zious11/jira-cli/pull/356
 **Branch:** chore/sanitize-errors-334
-**Current tip SHA:** bcc2db4
+**Current tip SHA:** d4a07c8
 **Closes:** #334 on merge
-**Trajectory so far:** 4→1→2→2→3→2→3→2→2→1→1→2→1 (Round 14 pending)
+**Trajectory so far:** 4→1→2→2→3→2→3→2→2→1→1→2→1→1 (Round 15 pending)
 
 ## Summary
 
@@ -53,14 +55,15 @@ PR #356 implements CWE-117 defense at the `extract_error_message` public boundar
 from Atlassian error message strings before stderr emission, preventing terminal injection
 (log forging, ANSI escape injection) via hostile or proxy-injected error payloads.
 
-Thirteen Copilot rounds have been completed with a total of 28/28 threads resolved. CI is 8/8
-green on bcc2db4. Round 14 is pending.
+Fourteen Copilot rounds have been completed with a total of 29/29 threads resolved. CI is 8/8
+green on d4a07c8. Round 15 is pending.
 
-**Trajectory note:** R13 back down to 1 (trajectory now 4→1→2→2→3→2→3→2→2→1→1→2→1). The R13
-finding is documentation-quality (OWASP label inaccuracy), not a security-defense gap. This
-category shift is a strong convergence signal: the security defenses themselves are converged;
-Copilot is now exploring incidental quality issues. Phase 8 stop condition (0-new-comment round)
-is likely 1-2 rounds away.
+**Trajectory note:** Two consecutive 1-finding rounds (R13, R14) — trajectory now 4→1→2→2→3→2→3→2→2→1→1→2→1→1.
+R14's finding (Unicode C1 control escape gap) is defense-in-depth hardening for legacy/embedded
+terminals, not a security-defense gap against current mainstream threats. This continues the
+qualitative convergence signal from R13: the core security defenses are converged; Copilot is
+exploring edge-case hardening. Phase 8 stop condition (0-new-comment round) is likely with R15
+or R16. Findings have shifted from memory-safety to defense-in-depth hardening category.
 
 **Process gaps noted:** R2 and R3 Perplexity-validation were SKIPPED on the rationalization
 that the claims were "empirically verifiable from code." Per DEC-018, this was incorrect — all
@@ -760,9 +763,76 @@ round) is likely 1-2 rounds away.
 
 ---
 
+## Round 14 (2026-05-12T00:10:42Z)
+
+**Review ID:** 4268270089
+**Comment ID:** 3222898738
+**Inline comments:** 1
+**Valid (defense-in-depth hardening — Unicode C1 control escape gap)**
+
+### Finding 1 — Unicode C1 controls not escaped by `is_ascii_control()`
+
+`sanitize_for_stderr` used `c.is_ascii_control()` to detect control characters that needed
+escaping. `is_ascii_control()` covers only C0 controls (U+0000..U+001F) and DEL (U+007F) —
+it does not cover Unicode C1 controls U+0080..U+009F. The C1 range includes:
+
+- **CSI (U+009B)** — Control Sequence Introducer (same function as ESC+`[` in terminal escape
+  sequences; used by ANSI/VT100 terminals to begin escape sequences such as cursor movement
+  and color codes)
+- **NEL (U+0085)** — Next Line (newline-equivalent in some terminal/text processing contexts)
+- Other C1 controls: PAD, HOP, BPH, NBH, IND, HTS, HTJ, VTS, PLD, PLU, RI, SS2, SS3, DCS,
+  PU1, PU2, STS, CCH, MW, SPA, EPA, SOS, SGCI, SCI, OSC, PM, APC, ST
+
+In modern UTF-8 terminals, C1 code points encoded as 2-byte UTF-8 sequences (0xC2 + 0x80..0x9F)
+are typically rejected as invalid sequences for terminals that expect ISO 8859-1 encoding, or
+dropped as invalid continuation bytes in strict UTF-8 mode. This means C1 controls are NOT a
+current exploitation vector in mainstream terminal environments. However, legacy terminals
+(VT220, xterm in ISO mode), embedded systems, and non-UTF8 terminal emulators can interpret
+C1 sequences directly, enabling the same terminal injection threat class as C0.
+
+**Validation (Perplexity per DEC-018):** CONFIRMED — `char::is_control()` in Rust covers both
+C0 and C1 ranges. The defense-in-depth rationale for escaping C1 controls is valid: the threat
+exists in legacy/embedded terminal contexts even if not exploitable in mainstream UTF-8 terminals.
+Rust's `char::is_control()` is the standard idiom for comprehensive control-character detection.
+
+**Fix:**
+- Switch `sanitize_for_stderr`'s control detection from `c.is_ascii_control()` to `c.is_control()`
+- Branch on `c.is_ascii()` for escape format: ASCII controls (C0 + DEL) use `\xNN` (4 bytes, unchanged); C1 controls use `\u{NNNN}` (8 bytes)
+- Fast-path scan changed from byte-level `bytes().any(|b| b.is_ascii_control())` to char-level `chars().any(|c| c.is_control())` — necessary because byte-level scan cannot distinguish C1 control code-point bytes from valid 2-byte UTF-8 continuation bytes
+- The 4 KiB sanitized output cap comfortably absorbs the 8-byte `\u{NNNN}` escapes (worst case: 4 KiB cap / 8 bytes per C1 escape = 512 C1 controls, still within budget)
+
+**3 new unit tests:**
+1. `test_sanitize_csi_escape` — U+009B (CSI) → `\u{009b}` in output
+2. `test_sanitize_nel_escape` — U+0085 (NEL) → `\u{0085}` in output
+3. `test_sanitize_non_control_unicode_above_ascii_passes_through` — U+00C0 (LATIN CAPITAL LETTER A WITH GRAVE) must pass through unescaped (anti-regression: non-control Unicode above ASCII must not be touched)
+
+**Thread resolved:** PRRT_kwDORs-xfc6BQamK
+**Reply posted:** 3222921647
+
+**Fix commit:** d4a07c8 ("chore(security): escape Unicode C1 controls in sanitize_for_stderr (PR #356 R14)")
+**Threads:** 29/29 resolved (1 new R14 thread resolved; cumulative)
+
+**Test results at d4a07c8:**
+- 39 sanitize unit tests total (3 new from R14)
+- 670 cargo test total: 670 passed, 0 failed, 10 ignored
+- cargo fmt --check + cargo clippy --all-targets -- -D warnings clean
+- CI: 8/8 green
+
+**Process note:** Tenth consecutive in-cycle state-manager dispatch per Lesson 2.
+R5 → R6 → R7 → R8 → R9 → R10 → R11 → R12 → R13 → R14 all dispatched state-manager in real time.
+The discipline is fully embedded — 10 rounds in.
+
+**Convergence signal:** R14 returned 1 finding — same as R13 (trajectory segment ...→1→1→2→1→1).
+Two consecutive 1-finding rounds (R13, R14) with findings in the defense-in-depth / documentation
+category (not security-defense gaps). Security defenses have been converged since R12; Copilot
+is now exploring edge-case hardening and label correctness. Phase 8 stop condition (0-new-comment
+round) is the likely outcome for R15 or R16.
+
+---
+
 ## Trajectory Analysis
 
-**Pattern so far:** 4→1→2→2→3→2→3→2→2→1→1→2→1 — all non-zero rounds addressed real findings.
+**Pattern so far:** 4→1→2→2→3→2→3→2→2→1→1→2→1→1 — all non-zero rounds addressed real findings.
 
 - R1: 4 findings (doc accuracy, loop allocation, clean-path allocation, missing length cap).
   Perplexity confirmed CWE-117 + OWASP length-capping guidance.
@@ -822,17 +892,26 @@ round) is likely 1-2 rounds away.
   labels are OWASP API4:2023 (Unrestricted Resource Consumption) / CWE-770 (Allocation of
   Resources Without Limits or Throttling)). Perplexity CONFIRMED. Fix: mechanical search-and-replace
   at 6 comment locations; no behavior change; no new tests. 1 thread resolved (PRRT_kwDORs-xfc6BQQan);
-  reply 3222883003. 28/28 threads resolved. CI 8/8 green on bcc2db4. R14 pending.
+  reply 3222883003. 28/28 threads resolved. CI 8/8 green on bcc2db4.
+- R14 (4268270089 @ 00:10:42Z, comment 3222898738): 1 finding (Unicode C1 controls U+0080..U+009F
+  not escaped — `is_ascii_control()` only covers C0 + DEL; C1 includes CSI U+009B and NEL U+0085
+  which legacy/embedded terminals can interpret as control sequences). Perplexity CONFIRMED
+  defense-in-depth rationale valid. Fix: switch to `char::is_control()`; branch on `c.is_ascii()`
+  for `\xNN` vs `\u{NNNN}` format; fast-path scan changed to char-level. 3 new tests (CSI escape,
+  NEL escape, anti-regression non-control Unicode above ASCII); 39 sanitize tests total;
+  670 cargo test green. 1 thread resolved (PRRT_kwDORs-xfc6BQamK); reply 3222921647.
+  29/29 threads resolved. CI 8/8 green on d4a07c8. R15 pending.
 
-**Assessment:** R13 back down to 1 finding (trajectory now 4→1→2→2→3→2→3→2→2→1→1→2→1). More
-importantly, the finding category shifted from security-defense gaps (R5–R12) to documentation
-quality (R13 OWASP label correctness). This qualitative shift is a strong convergence signal:
-the security defenses are converged; Copilot is now exploring incidental quality issues. Phase 8
-stop condition (0-new-comment round) is likely 1-2 rounds away. R14 pending.
+**Assessment:** R14 returned 1 finding — same as R13 (trajectory now 4→1→2→2→3→2→3→2→2→1→1→2→1→1).
+Two consecutive 1-finding rounds with findings in the defense-in-depth / documentation category
+(not security-defense gaps). The security defenses (memory amplification, Write contract, DOM
+allocation, C0 escaping) are converged; Copilot is now exploring edge-case hardening (C1 controls)
+and label correctness. Phase 8 stop condition (0-new-comment round) is the likely outcome for
+R15 or R16. Finding category has shifted from memory-safety to defense-in-depth hardening.
 
 ## CI Status
 
-**Head SHA:** bcc2db4
+**Head SHA:** d4a07c8
 **CI result:** 8/8 green
 
 ## Current PR State
@@ -840,7 +919,7 @@ stop condition (0-new-comment round) is likely 1-2 rounds away. R14 pending.
 | Field | Value |
 |-------|-------|
 | **State** | OPEN |
-| **Threads** | 28 created; 28/28 resolved |
-| **R14** | Pending — R13 returned 1 doc-quality finding (OWASP label correction); convergence signal: security defenses converged, Copilot exploring incidental quality; Phase 8 stop condition likely 1-2 rounds away |
-| **CI on bcc2db4** | 8/8 green |
+| **Threads** | 29 created; 29/29 resolved |
+| **R15** | Pending — R14 returned 1 defense-in-depth finding (C1 control escape); 2 consecutive 1-finding rounds (R13, R14); convergence signal: security defenses converged, findings now defense-in-depth / label quality; Phase 8 stop condition (0-new-comment round) likely R15 or R16 |
+| **CI on d4a07c8** | 8/8 green |
 | **Closes** | #334 on merge |
