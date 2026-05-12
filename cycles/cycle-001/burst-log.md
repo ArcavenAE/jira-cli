@@ -2861,3 +2861,51 @@ Trajectory: 1 → 1 → 2 → 1-FP → R5 pending.
 | state-manager | Append "empirical-first when Copilot's claim is counterintuitive" lesson to lessons.md | lessons.md |
 
 **Outcome:** PR #358 R4 recorded in all factory artifacts. First false-positive captured with full evidence. R5 pending.
+
+---
+
+## Burst 62 (2026-05-12) — PR #358 R5 CONVERGED: Phase 8 stop condition met
+
+**Agents dispatched:** state-manager
+**Files touched:** .factory/STATE.md, .factory/cycles/cycle-001/burst-log.md, .factory/cycles/cycle-001/adversarial-reviews/pr-358-edit-field-categorization-test/pr-358-copilot-progress.md, .factory/cycles/cycle-001/convergence-trajectory.md
+**Versions bumped:** (none)
+**Head SHA:** 925da89 (unchanged from R3; R4 was false-positive no-op; R5 is stop condition)
+
+### Summary
+
+PR #358 Round 5 complete. Phase 8 stop condition met. PR #358 is CONVERGED.
+
+**R5 review details:**
+- Review ID: 4269053836
+- Timestamp: 2026-05-12T04:11:09Z
+- Body: "Copilot reviewed 1 out of 1 changed files in this pull request and generated no new comments."
+- Inline comments: 0
+- Phase 8 stop condition: MET
+
+**Cycle summary — PR #358 (5 rounds):**
+- R1 (review 4268914353): 1 finding — HashSet ordering nondeterministic. Fix 9ca690e: all sets → BTreeSet.
+- R2 (review 4268937977): 1 finding — exact `"    },"` closing-brace match fragile. Fix c708211: tolerant is_matching_closing_brace closure + 3 edge-case tests.
+- R3 (fix commit 925da89): 2 findings (doc-fallout from R2) — strategy doc stale; dead-code space-check. Fixed in same commit; 2/2 threads resolved.
+- R4 (review 4269011038): 1 finding — **FALSE-POSITIVE**. Copilot claimed `include_str!("../mod.rs")` reads the wrong file. Empirical probe (27619 bytes, `pub mod api;`) + Perplexity confirmed path is correct. Reply with evidence; thread resolved not-applicable. No code change. FIRST false-positive in 30+ rounds this session.
+- R5 (review 4269053836): 0 findings. Phase 8 stop condition met. **CONVERGED.**
+
+**Trajectory:** 1 → 1 → 2 → 1-FP → 0
+
+**Final state:** head 925da89; CI 8/8 green; cargo test 1252 passed; 5/5 threads resolved; mergeable CLEAN. Awaiting human merge.
+
+**Notable patterns:**
+- **Second fastest convergence in cycle-001** (5 rounds vs PR #357's 2 rounds — fastest; both much faster than PR #356's 19 rounds).
+- **First explicit false-positive marker** (1-FP) in trajectory notation — new convergence pattern this cycle. The 1-FP round had no code change and no trajectory regression; it is classified separately from a real finding.
+- **DEC-018 empirical-first discipline validated**: without the probe + Perplexity check, the "fix" would have changed a correct path (`../mod.rs` = `src/cli/mod.rs`) to a broken one (`../../mod.rs` = `src/mod.rs`, non-existent).
+
+### Details
+
+| Agent | Task | Output |
+|-------|------|--------|
+| state-manager | Update STATE.md: Last Updated (R5 converged), Current Phase (PR #358 CONVERGED awaiting merge), Phase Progress row (CONVERGED), Current Phase Steps (add R5 row), Phase 3-adv convergence tracker (R5 stop), Session Resume Checkpoint | STATE.md |
+| state-manager | Update pr-358-copilot-progress.md: fill R5 round entry (review ID, 0 findings, stop condition, final cycle summary), update frontmatter status → converged | pr-358-edit-field-categorization-test/pr-358-copilot-progress.md |
+| state-manager | Append PR #358 trajectory section to convergence-trajectory.md with comparative analysis vs PR #356 (19r) and PR #357 (2r); note false-positive pattern | convergence-trajectory.md |
+| state-manager | Confirm empirical-first lesson is present in lessons.md (added in Burst 61; no new lesson needed for R5) | lessons.md |
+| state-manager | Append this burst entry | burst-log.md |
+
+**Outcome:** PR #358 cycle COMPLETE. Converged at R5. Awaiting human merge. Audit-followup count remains 7 until #343 closes on merge.

@@ -396,3 +396,54 @@ CONVERGED. 0 substantive findings. OBS-13-1 RESOLVED (JiaClient typo global swee
 5. **No regression accumulation:** PR #356 had regressions at R5, R8, R11, R14, R17 (5 regression rounds); PR #357 had zero — the fix was correct on the first attempt once the surface area was complete.
 
 **Lesson validated:** Pre-fixing the doc-fallout class (updating docs atomically with behavior) eliminates an entire category of subsequent review rounds. PR #357 is the first confirmed successful application of the doc-fallout lesson codified during PR #356 R19.
+
+---
+
+## Phase 3-adv — PR #358 Copilot Review (chore/edit-field-categorization-test-343)
+
+### PR #358 Trajectory Summary
+
+| Round | Date | Findings | Delta | Fix SHA | Notes |
+|-------|------|----------|-------|---------|-------|
+| R1 | 2026-05-12 | 1 | — | 9ca690e | Review 4268914353. HashSet ordering nondeterministic — doc claimed "alphabetically-stable HashSet"; iteration order is hash-seed-dependent. Fix: all set types switched to BTreeSet (return type, accumulator, caller-side sets, union). Perplexity: skipped (Lesson 1 boundary — Rust std::collections semantics). 1/1 threads resolved (PRRT_kwDORs-xfc6BSISi). CI 8/8 green. cargo test 1249 passed. |
+| R2 | 2026-05-12 | 1 | 0 | c708211 | Review 4268937977. Closing-brace detection used exact `"    },"` string — fragile under last-variant `}`, `},  // comment`, trailing whitespace. Fix: is_matching_closing_brace closure (trim_start + tolerant content check); 3 new edge-case unit tests (+3 tests: no_trailing_comma, trailing_comment, trailing_whitespace). Perplexity: skipped (Lesson 1 boundary — string-matching logic in test helper). 1/1 threads resolved (PRRT_kwDORs-xfc6BSMuX). CI 8/8 green. cargo test 1252 passed. |
+| R3 | 2026-05-12 | 2 | +1 | 925da89 | Doc-fallout from R2 tolerant-matcher commit. Finding C1: strategy doc still described pre-R2 "8-space indent + `},` exact close" behavior — updated to describe trim_start + byte-positioning mechanism. Finding C2: dead-code `rest.starts_with(' ')` in is_matching_closing_brace — after strip_prefix('}') succeeds, rest never starts with space; removed. Perplexity: skipped (Lesson 1 boundary — internal test helper doc accuracy). 2/2 threads resolved (PRRT_kwDORs-xfc6BSS3f, PRRT_kwDORs-xfc6BSS3r). CI 8/8 green. cargo test 1252 passed. |
+| R4 | 2026-05-12 | 1-FP | — | none | Review 4269011038. **FALSE-POSITIVE.** Copilot claimed `include_str!("../mod.rs")` from src/cli/issue/create.rs reads src/cli/issue/mod.rs (wrong file). Empirical probe: 27619 bytes, first lines `pub mod api;` — that is src/cli/mod.rs (27619 bytes), NOT src/cli/issue/mod.rs (3056 bytes). Perplexity: confirmed Rust `include_str!` paths relative to source file directory; from src/cli/issue/create.rs `..` → src/cli/ → `../mod.rs` = src/cli/mod.rs. Head unchanged (925da89). Reply 3223625559 with evidence. Thread PRRT_kwDORs-xfc6BSYVx resolved not-applicable. CI 8/8 green. cargo test 1252 passed. FIRST false-positive in 30+ rounds this session. |
+| R5 | 2026-05-12 | 0 | -1 | — | Review 4269053836 @ 2026-05-12T04:11:09Z. "Copilot reviewed 1 out of 1 changed files in this pull request and generated no new comments." **PHASE 8 STOP CONDITION HIT. PR #358 CONVERGED.** |
+
+**Trajectory shorthand:** `1→1→2→1-FP→0` — **CONVERGED** at R5 (2026-05-12) / awaiting human merge
+
+**Initial commit:** 29608b8 (initial 17-field categorization test; 255 lines added; zero source touched)
+**Fix commit 1:** 9ca690e (R1: HashSet → BTreeSet)
+**Fix commit 2:** c708211 (R2: tolerant closing-brace matcher + 3 edge-case tests)
+**Fix commit 3:** 925da89 (R3: strategy doc + dead-code cleanup; doc-fallout from R2)
+**R4:** no commit (false-positive refuted with empirical evidence)
+**R5:** stop condition — no commit
+**Head at convergence:** 925da89
+
+### Comparative Analysis: PR #358 vs PR #357 vs PR #356
+
+| Metric | PR #356 (sanitize-errors-334) | PR #357 (release-gate-jr-base-url-335) | PR #358 (edit-field-categorization-343) |
+|--------|-------------------------------|----------------------------------------|------------------------------------------|
+| Rounds | 19 | 2 | 5 |
+| Fix commits | Many | 1 | 3 |
+| Total findings | 36 | 3 | 5 real + 1 FP = 6 nominal |
+| Trajectory | 4→1→2→2→3→2→3→2→2→1→1→2→1→1→2→3→1→1→0 | 3→0 | 1→1→2→1-FP→0 |
+| Doc-fallout cluster? | Yes — R14→R18 (4 rounds, 7 findings from Unicode C1 change) | No — lesson applied at R1 fix | Partial — R3 (1 round, 2 findings from R2 matcher change) |
+| False-positive? | No | No | Yes — R4 (FIRST in session, 30+ rounds) |
+| Rank (fastest convergence) | Slowest in cycle-001 | Fastest in cycle-001 | Second fastest |
+| Scope | Broad behavioral change (escape encoding) | Single security gate (8-line diff, 2 read sites) | Test-only PR (zero source touched) |
+
+**Key observations for PR #358:**
+
+1. **Test-only scope keeps finding density low.** All 5 real findings were about test mechanics (BTreeSet ordering, brace-matching fragility, doc accuracy) — none required Perplexity validation under Lesson 1 boundary (no external API, library, or language behavior involved beyond well-established Rust std::collections and include_str! semantics). This is the expected pattern for test-only PRs.
+
+2. **R2 produced a doc-fallout sub-cluster at R3 despite the lesson being codified.** The narration-style comments (Strategy:, Logic:) describing the old brace-matching behavior were ~15 lines above the changed closure — close enough to be in scope, far enough to be skipped without a deliberate grep. The sub-lesson ("grep narration-style comments before pushing behavior-expanding commits") was codified in lessons.md during Burst 60. PR #358 R3 is the second doc-fallout cluster in 2 days (first: PR #356 R14-R18; second: PR #358 R2→R3). Prevention cost for R3: one `grep -n "Strategy:\|Logic:" src/cli/issue/create.rs` before pushing c708211.
+
+3. **First trajectory with an explicit false-positive marker (1-FP).** The R4 false-positive produced a round with 0 code change and 0 trajectory regression. It is recorded as `1-FP` to distinguish it from a real finding of weight 1 — the count reflects Copilot's claimed findings, not validated real findings. The FP was caught by DEC-018 empirical-first discipline; without it, the "fix" (`../../mod.rs`) would have broken the working test.
+
+4. **Counterfactual cost of missing the false-positive:** Changing `../mod.rs` to `../../mod.rs` from `src/cli/issue/create.rs` would resolve to `src/mod.rs` — a file that does not exist. The test would have failed to compile, requiring a revert commit, a new Copilot round, and likely CI investigation. Estimated cost: 2+ additional rounds. Actual cost of false-positive identification: 1 probe test + 1 Perplexity query + 1 reply comment.
+
+5. **Fastest-ever convergence comparison:** PR #357 (2 rounds) remains the fastest in cycle-001. PR #358 (5 rounds) is second fastest. The distribution is heavily bimodal: PR #356 (19 rounds) is an outlier caused by a broad behavioral change with repeated doc-fallout accumulation. PRs that are scoped to a single mechanism (security gate, test helper, docs-only) converge in 2-5 rounds consistently.
+
+**Pattern for test-only PRs:** Based on PRs #353 (0 rounds of adversarial), #354 (2 rounds docs-only), #358 (5 rounds — test mechanics): test-only PRs tend toward fast convergence but are NOT immune to doc-fallout. When test code contains narration-style comments describing implementation strategy (Strategy:, Logic:, Algorithm:), those comments must be audited the same way as production doc comments when the behavior they describe changes.
