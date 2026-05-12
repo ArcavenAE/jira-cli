@@ -673,3 +673,72 @@ _Discovered: PR #358 R3 post-analysis, 2026-05-12_
 _Tagged: [codified] — sub-lesson under the doc-fallout cluster lesson; second occurrence in 2 days_
 _Scope: any commit that changes behavior in a function with narration-style (Strategy:/Logic:/etc.) prose comments_
 _Root-cause: changed code and its narration were in different visual paragraphs; no pre-push narration grep was run_
+
+---
+
+## 2026-05-12 — PR #358 R4: First Copilot False-Positive in Session
+
+### [codified] Empirical-first when Copilot's claim seems counterintuitive — pushing back with evidence is part of the discipline, not a deviation from it
+
+**Context:** PR #358 Round 4 was the **first Copilot false-positive in 30+ rounds in this session.**
+Copilot review 4269011038, comment 3223599553 claimed that `include_str!("../mod.rs")` in
+`src/cli/issue/create.rs` reads `src/cli/issue/mod.rs` (the "wrong" file), asserting the meta-test
+would fail to find the `Edit` enum variant and panic.
+
+**Why the claim was counterintuitive:** The test has been passing with 0 failures since its introduction
+in this PR. If the path were wrong and the file were `src/cli/issue/mod.rs`, the test would fail
+immediately because that file contains no `IssueCommand::Edit` variant definition. The claim
+contradicted observable CI behavior.
+
+**Empirical verification:** A temporary probe test was added that printed the byte length and first 5
+lines of `include_str!("../mod.rs")`. Result: **27619 bytes**, first lines `pub mod api;`, `pub mod
+assets;`, etc. — that is `src/cli/mod.rs` (27619 bytes), NOT `src/cli/issue/mod.rs` (3056 bytes).
+
+**Perplexity cross-check:** Confirmed the Rust Reference defines `include_str!` paths as relative to
+the filesystem directory of the source file. From `src/cli/issue/create.rs`, `..` resolves to
+`src/cli/`, so `../mod.rs` = `src/cli/mod.rs`. Unambiguous.
+
+**Counterfactual (without verification):** Acting on Copilot's claim would have changed
+`../mod.rs` to `../../mod.rs`, which from `src/cli/issue/create.rs` resolves to
+`src/cli/../../mod.rs` = `src/mod.rs` — a file that does not exist. The "fix" would have **broken**
+the working test.
+
+**Prevention protocol:**
+
+1. **Probe first for path/file-content claims.** If Copilot asserts that a path resolves to file X,
+   write a minimal probe (print byte count + first N lines of `include_str!` or similar) and run it
+   before any code change. The probe is cheap (add one `#[test]`, `cargo test probe`, remove it);
+   the cost of acting on a wrong claim is at minimum a broken test.
+
+2. **Perplexity for language-reference semantics.** For claims about Rust's path resolution,
+   module system, or stdlib behavior, run a Perplexity query targeting the official Rust Reference
+   or The Rust Book. These are stable, well-documented semantics.
+
+3. **Apply both when the claim is counterintuitive.** A claim is "counterintuitive" when it
+   contradicts observable behavior (e.g., passing CI) or a firmly held language understanding.
+   In that case, apply both the empirical probe AND the Perplexity cross-check before deciding
+   whether to act, push back, or escalate.
+
+4. **Pushing back with evidence is part of the discipline.** DEC-018 ("always validate Copilot
+   reviews with Perplexity or empirical verification") exists to prevent wrong fixes as much as
+   to confirm correct ones. Resolving a thread as "not-applicable" with a documented evidence
+   trail (byte count, file name, reference citation) is the correct outcome for a false-positive.
+   It is not a deviation from DEC-018 — it is its successful application.
+
+**Meta-rule:** The empirical-first / Perplexity-validate discipline is equally important for
+catching false-positives as it is for catching real bugs. The 30 prior rounds in this session
+where Copilot was correct are evidence of signal quality; they are not a reason to lower the
+verification bar. Maintain the bar uniformly.
+
+**Concrete example (PR #358 R4, 2026-05-12):**
+- Copilot claimed: `include_str!("../mod.rs")` reads `src/cli/issue/mod.rs`
+- Empirical probe: 27619 bytes, starts `pub mod api;` → this is `src/cli/mod.rs`
+- Perplexity: `include_str!` paths relative to source file's directory; `..` from
+  `src/cli/issue/create.rs` = `src/cli/` → `../mod.rs` = `src/cli/mod.rs`
+- Action: reply with proof, resolve thread as not-applicable, no code change
+- Avoided: changing a correct path to a broken one
+
+_Discovered: PR #358 R4, 2026-05-12 — first false-positive in 30+ Copilot rounds this session_
+_Tagged: [codified] — new lesson; captures the empirical-first pattern for false-positives_
+_Scope: all Copilot review rounds where the claim seems counterintuitive or contradicts observable behavior_
+_Prevention: probe test + Perplexity reference check + reply with evidence + resolve as not-applicable_

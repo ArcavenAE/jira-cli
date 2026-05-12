@@ -2823,3 +2823,41 @@ Trajectory: 1 → 1 → 2 → R4 pending.
 | state-manager | Append sub-lesson to lessons.md (doc-fallout cluster sub-lesson: grep narration-style comments before behavior-expanding commits) | lessons.md |
 
 **Outcome:** PR #358 R3 recorded in all factory artifacts. R4 pending.
+
+---
+
+## Burst 61 (2026-05-12) — PR #358 R4 COMPLETE: FIRST FALSE-POSITIVE in session (no code change)
+
+**Agents dispatched:** state-manager
+**Files touched:** .factory/STATE.md, .factory/cycles/cycle-001/burst-log.md, .factory/cycles/cycle-001/adversarial-reviews/pr-358-edit-field-categorization-test/pr-358-copilot-progress.md, .factory/cycles/cycle-001/lessons.md
+**Versions bumped:** (none)
+**Head SHA:** 925da89 (UNCHANGED — no code commit; finding was invalid)
+
+### Summary
+
+PR #358 Round 4 complete. This is the **first Copilot false-positive in 30+ rounds in this session.** Head SHA remains 925da89 — no fix commit was made because the finding was invalid.
+
+Copilot review 4269011038 returned 1 finding (comment 3223599553): `include_str!("../mod.rs")` in `src/cli/issue/create.rs` was claimed to read `src/cli/issue/mod.rs` (the "wrong" file). The severity implication was that the meta-test would fail to find the `Edit` enum variant and panic.
+
+**Empirical verification (per DEC-018 discipline):** A temporary probe test was added that printed the `include_str!("../mod.rs")` byte length and first 5 lines. Result: 27619 bytes, first lines `pub mod api;`, `pub mod assets;`, etc. That is `src/cli/mod.rs` (27619 bytes) — **not** `src/cli/issue/mod.rs` (3056 bytes).
+
+**Perplexity cross-check:** Confirmed Rust `include_str!` reference semantics — paths are relative to the filesystem directory containing the source file. From `src/cli/issue/create.rs`, `..` resolves to `src/cli/`, so `../mod.rs` = `src/cli/mod.rs`. Path is correct.
+
+**Resolution:** Reply 3223625559 posted to Copilot thread with empirical proof (byte count + first lines) and Rust reference semantics confirmation. Thread PRRT_kwDORs-xfc6BSYVx resolved as not-applicable.
+
+The temporary probe test was removed before the final test run. All 4 original #343 tests still pass. cargo test 1252 passed. CI 8/8 green on 925da89.
+
+**Without empirical verification**, the "fix" would have changed `../mod.rs` to `../../mod.rs`, which would actually be the wrong path (breaking the test), since `../mod.rs` already correctly resolves to `src/cli/mod.rs`.
+
+Trajectory: 1 → 1 → 2 → 1-FP → R5 pending.
+
+### Details
+
+| Agent | Task | Output |
+|-------|------|--------|
+| state-manager | Update STATE.md: Last Updated, Current Phase, Phase Progress row (R4 complete — 1 FALSE-POSITIVE, no head change, trajectory 1→1→2→1-FP→R5), Current Phase Steps (add R4 row), Phase 3-adv convergence tracker, Session Resume Checkpoint | STATE.md |
+| state-manager | Update pr-358-copilot-progress.md: fill R4 round entry (review ID, 1 false-positive finding, no fix commit, thread resolved as not-applicable, trajectory) | pr-358-edit-field-categorization-test/pr-358-copilot-progress.md |
+| state-manager | Append this burst entry | burst-log.md |
+| state-manager | Append "empirical-first when Copilot's claim is counterintuitive" lesson to lessons.md | lessons.md |
+
+**Outcome:** PR #358 R4 recorded in all factory artifacts. First false-positive captured with full evidence. R5 pending.

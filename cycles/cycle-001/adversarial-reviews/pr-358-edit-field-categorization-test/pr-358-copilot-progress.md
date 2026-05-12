@@ -7,7 +7,7 @@ producer: state-manager
 pr: 358
 issue: 343
 branch: chore/edit-field-categorization-test-343
-head_sha: 925da89
+head_sha: 925da89  # UNCHANGED after R4 (false-positive — no fix commit)
 created: 2026-05-12
 ---
 
@@ -159,6 +159,53 @@ closure, and were not audited together with it. Sub-lesson added to lessons.md:
 accuracy for internal test helper logic; no external API, library, or language behavior
 to validate.
 
+### Round 4 — R4 COMPLETE 2026-05-12 — **FALSE-POSITIVE (no code change)**
+
+| Field | Value |
+|-------|-------|
+| Status | COMPLETE — FALSE-POSITIVE |
+| Requested at | 2026-05-12 |
+| Review ID | 4269011038 |
+| Findings | 1 (FALSE-POSITIVE) |
+| Fix commits | none — finding was invalid |
+| Head SHA | 925da89 (UNCHANGED) |
+| Perplexity validations | YES — confirmed Rust `include_str!` path resolution semantics |
+| Threads resolved | 1/1 — PRRT_kwDORs-xfc6BSYVx (resolved as not-applicable) |
+| Reply comment ID | 3223625559 |
+| CI on head | 8/8 green on 925da89 |
+| Trajectory | 1→1→2→1-FP→R5 |
+
+**Finding C1** (comment 3223599553 / thread PRRT_kwDORs-xfc6BSYVx): **FALSE-POSITIVE.**
+Copilot claimed `include_str!("../mod.rs")` in `src/cli/issue/create.rs` reads
+`src/cli/issue/mod.rs` (the "wrong" file), asserting the meta-test would fail to find
+the `Edit` enum and panic.
+
+**Empirical verification:** A temporary probe test was added that printed the byte length
+and first 5 lines of `include_str!("../mod.rs")`. Result: **27619 bytes**, first lines
+`pub mod api;`, `pub mod assets;`, etc. That is `src/cli/mod.rs` (27619 bytes) — NOT
+`src/cli/issue/mod.rs` (3056 bytes). The path is correct.
+
+**Perplexity cross-check:** Confirmed Rust `include_str!` reference semantics:
+paths are relative to the filesystem directory containing the source file.
+From `src/cli/issue/create.rs`, `..` resolves to `src/cli/`, so `../mod.rs` =
+`src/cli/mod.rs`. This is unambiguous per the Rust Reference and The Rust Book.
+
+**Fix (none required):** The path is correct. No code change was made. The temporary
+probe test was removed before the final test run. All 4 original #343 tests still pass.
+cargo test 1252 passed, 0 failed.
+
+**Counterfactual (without empirical verification):** The "fix" would have changed
+`../mod.rs` to `../../mod.rs`, which from `src/cli/issue/create.rs` would resolve to
+`src/cli/../../mod.rs` = `src/mod.rs` (does not exist), breaking the test.
+
+**Reply:** Posted comment 3223625559 with empirical evidence (byte count + first 5 lines)
+and Rust reference semantics confirmation. Thread resolved as not-applicable.
+
+**Process note:** This is the **first Copilot false-positive in 30+ rounds in this session.**
+DEC-018 (always validate Copilot reviews with Perplexity or empirical verification before
+acting) caught it. New lesson captured in lessons.md: "Empirical-first when Copilot's
+claim seems counterintuitive."
+
 ---
 
 ## Trajectory
@@ -168,7 +215,8 @@ to validate.
 | R1 | 1 | — | Review 4268914353; BTreeSet fix 9ca690e; 1/1 threads resolved; CI 8/8 green |
 | R2 | 1 | 0 | Review 4268937977; tolerant brace matcher c708211; 3 new edge-case tests; 1/1 threads resolved; CI 8/8 green |
 | R3 | 2 | +1 | Fix commit 925da89; 2 doc-fallout findings from R2 tolerant-matcher (stale strategy doc + dead-code space-check); 2/2 threads resolved; CI 8/8 green |
-| R4 | pending | — | Pending |
+| R4 | 1-FP | — | Review 4269011038; **FALSE-POSITIVE** — no fix commit; thread PRRT_kwDORs-xfc6BSYVx resolved as not-applicable; reply 3223625559; CI 8/8 green on 925da89 (head unchanged) |
+| R5 | pending | — | Pending |
 
 ---
 
