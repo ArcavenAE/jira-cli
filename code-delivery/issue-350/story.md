@@ -21,7 +21,7 @@ files_modified:
   - .factory/specs/prd/bc-2-issue-read.md (add BC-2.6.050)
   - .factory/specs/prd/BC-INDEX.md (frontmatter total_bcs bump)
 test_files:
-  - tests/search_issue_keys.rs (new wiremock integration test, 11 cases — 10 library tokio + 1 subprocess)
+  - tests/search_issue_keys.rs (new wiremock integration test, 12 cases — 11 library tokio + 1 subprocess)
   - tests/issue_bulk_pr2.rs (add caller-level truncation-regression test alongside existing test_jql_* cases)
 breaking_change: false
 producer: orchestrator
@@ -157,6 +157,13 @@ rustdoc:
 **AC-007** (release-gate). `cargo test`, `cargo clippy -- -D warnings`,
 `cargo fmt --check`, and `scripts/check-spec-counts.sh` all pass.
 
+**AC-008** (traces to BC-2.6.050 §5). Integration test
+`tests/search_issue_keys.rs::test_search_issue_keys_clamps_max_results_to_100_per_page`:
+calls `search_issue_keys` with `limit = Some(200)` (above the 100 clamp),
+then captures the request via `MockServer::received_requests().await` and
+asserts `body["maxResults"] == 100`. A mutation removing `.min(100)` would
+cause the assertion to fail with `maxResults == 200`. *(Added adv-pass-07 F-01.)*
+
 ## Implementation Sketch
 
 ```rust
@@ -275,7 +282,7 @@ let effective_keys: Vec<String> = if let Some(ref jql_str) = jql {
 
 ## Tasks (TDD order)
 
-1. **Red.** Write the 11 failing tests in `tests/search_issue_keys.rs` (AC-001..AC-004 + happy path + edge cases). Confirm all 11 fail with a clear "no such method" / "unresolved import" error before any impl lands.
+1. **Red.** Write the 12 failing tests in `tests/search_issue_keys.rs` (AC-001..AC-005 + happy path + edge cases + BC-2.6.050 §5 clamp). Confirm all 12 fail with a clear "no such method" / "unresolved import" error before any impl lands.
 2. **Red.** Write the failing caller-level test `test_handle_edit_jql_truncation_error_still_triggers_after_migration` in `tests/issue_bulk_pr2.rs` (alongside the existing `test_jql_*` cases). It will currently pass because the migration hasn't happened — convert it to a regression-pin asserting the post-migration behavior.
 3. **Green.** Add `KeySearchResult` struct with derives + `IssueKeyRow` private helper + `search_issue_keys` method body in `src/api/jira/issues.rs`. Tests 1–10 now pass.
 4. **Green.** Migrate the caller in `src/cli/issue/create.rs:374-409`. Regression test from step 2 passes.
@@ -311,7 +318,7 @@ let effective_keys: Vec<String> = if let Some(ref jql_str) = jql {
 
 ## Risk / Notes
 
-- **Inconclusive `fields{}` echo.** Some sources suggested Jira may echo `key` inside `fields: {"key": "..."}` for `fields: ["key"]` requests. No empirical capture in published docs. Deserialization reads only the top-level `key` — if Jira ever inverts this, tests 2/3/8 fail loudly with empty-string keys. See public spec Validated API Facts §6.
+- **Inconclusive `fields{}` echo.** Some sources suggested Jira may echo `key` inside `fields: {"key": "..."}` for `fields: ["key"]` requests. No empirical capture in published docs. Deserialization reads only the top-level `key` — if Jira ever inverts this, tests 2/3/8 fail loudly with a serde "missing field `key`" deserialization error (NOT empty-string keys — IssueKeyRow.key has no #[serde(default)]). See public spec Validated API Facts §6.
 - **JRACLOUD-94632 stderr text overclaims "server bug".** Live-data drift (JRACLOUD-95368) can also trigger the guard. Inherited verbatim by design §4; tightened in a follow-up PR. Not blocking.
 - **`has_more` semantic drift risk.** A future caller could assume `has_more` reflects API state; rustdoc + AC-004 test pin the caller-side-truncation-only contract.
 - **Refactor preservation.** Migration at create.rs:386 must preserve ALL existing error-message text exactly: "matched 0 issues" and "matched at least N issues" remain unchanged.
