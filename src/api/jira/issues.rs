@@ -34,9 +34,67 @@ pub struct SearchResult {
     pub has_more: bool,
 }
 
+/// Result of a keys-only paginated issue search.
+///
+/// Parallel to [`SearchResult`]. The field name `keys` mirrors the `issues`
+/// field name on `SearchResult` (domain-named, not generic `items`) per the
+/// Rust SDK precedent surveyed in
+/// `.factory/research/issue-350-search-issue-keys-design.md`.
+///
+/// `has_more` is set to `true` in two cases:
+///
+/// 1. **Caller limit hit:** the caller supplied a `limit` and upstream still
+///    had rows available beyond that limit.
+/// 2. **JRACLOUD-94632 guard abort:** the anti-loop guard fired (upstream
+///    returned the same `nextPageToken` twice), pagination was aborted with
+///    a stderr warning, and results may be incomplete due to a server bug.
+///
+/// Pure cursor exhaustion (no limit set, upstream returns `isLast: true`)
+/// always returns `has_more = false`. Callers that need completeness
+/// guarantees should treat `has_more = true` as "results may be truncated"
+/// regardless of whether a `limit` was supplied.
+///
+/// Traces to BC-2.6.050.
+#[derive(Debug, Clone, PartialEq)]
+pub struct KeySearchResult {
+    pub keys: Vec<String>,
+    pub has_more: bool,
+}
+
 #[derive(Deserialize)]
 struct ApproximateCountResponse {
     count: u64,
+}
+
+/// Minimal deserialization target for `search_issue_keys`.
+///
+/// Reads ONLY the top-level `key` field per issue. Atlassian guarantees
+/// `key` is at the top level regardless of the request body's `fields`
+/// value; the `fields` map itself is intentionally not deserialized here
+/// to keep the payload contract narrow.
+///
+/// Does NOT use `#[serde(deny_unknown_fields)]` — Atlassian routinely
+/// adds top-level response fields and the SDK convention is to ignore
+/// unknowns silently.
+///
+/// `Default` is required here, but NOT for the fundamental reason one might
+/// assume: `Vec<T>::default()` returns `vec![]` for ANY `T`, so the runtime
+/// semantics of `#[serde(default)]` on `CursorPage::issues: Vec<T>` do NOT
+/// actually require `T: Default`.
+///
+/// The requirement comes from serde-derive's CONSERVATIVE bound-inference
+/// algorithm: when `#[serde(default)]` appears on a field of type `Vec<T>`,
+/// the generated `Deserialize` impl adds `T: Default` to its where-clause
+/// regardless of whether the bound is logically necessary. Removing `Default`
+/// from `IssueKeyRow` produces:
+///   error[E0277]: the trait bound `IssueKeyRow: Default` is not satisfied
+///   required for `CursorPage<IssueKeyRow>` to implement `DeserializeOwned`
+/// This is a known serde-derive limitation (conservative macro bounds), not a
+/// fundamental requirement of `Vec` or serde's runtime logic. The `Default`
+/// value is never used at runtime.
+#[derive(Deserialize, Default)]
+struct IssueKeyRow {
+    key: String,
 }
 
 impl JiraClient {
@@ -97,6 +155,8 @@ impl JiraClient {
             // GUARD: detect repeated cursor token (next == prev) → abort + warn.
             // NFR-R-F: prevents infinite loop when server returns the same
             // nextPageToken twice (confirmed upstream bug JRACLOUD-94632).
+            // Stderr-literal pin: tests/rate_limit_cap_tests.rs::ac_008_and_ac_new_d_search_jql_cursor_loop_terminates_with_jracloud_warning
+            // Do NOT change the literal "JRACLOUD-94632" without updating that test.
             if next_cursor.is_some() && next_cursor == prev_cursor {
                 eprintln!(
                     "[jr] WARNING: Atlassian /rest/api/3/search/jql returned the same \
@@ -112,6 +172,111 @@ impl JiraClient {
 
         Ok(SearchResult {
             issues: all_issues,
+            has_more: more_available,
+        })
+    }
+
+    /// Search issues using JQL and return ONLY the matching issue keys.
+    ///
+    /// Lightweight variant of [`Self::search_issues`] — requests
+    /// `fields: ["key"]` in the POST body and deserializes only the
+    /// top-level `key`, avoiding the ~10 KB-per-issue payload that
+    /// `BASE_ISSUE_FIELDS` incurs.
+    ///
+    /// Use this when the caller only needs keys (e.g., JQL-driven
+    /// bulk-edit selection at `cli/issue/create.rs::handle_edit`). For
+    /// body-bearing reads use [`Self::search_issues`].
+    ///
+    /// `has_more` is set to `true` in two cases: (1) the caller's `limit`
+    /// was hit AND upstream still had rows available, or (2) the
+    /// JRACLOUD-94632 anti-loop guard fired (upstream returned the same
+    /// `nextPageToken` twice), aborting pagination early with a stderr
+    /// warning. Pure cursor exhaustion returns `has_more = false`. See
+    /// [`KeySearchResult`] for the full contract.
+    ///
+    /// The per-page clamp `.min(100)` is a conservative client-side choice
+    /// for parity with `search_issues`; Atlassian docs note that id/key-only
+    /// requests can return more rows per page than full-body requests.
+    ///
+    /// Traces to BC-2.6.050.
+    pub async fn search_issue_keys(
+        &self,
+        jql: &str,
+        limit: Option<u32>,
+    ) -> Result<KeySearchResult> {
+        let max_per_page = limit.unwrap_or(50).min(100);
+        let mut all_keys: Vec<String> = Vec::new();
+        let mut next_page_token: Option<String> = None;
+
+        let mut more_available = false;
+
+        // Anti-loop guard: Jira Cloud /rest/api/3/search/jql intermittently returns
+        // the same nextPageToken twice, causing infinite pagination loops. This is a
+        // confirmed upstream bug — JRACLOUD-94632, JRACLOUD-92049, JRACLOUD-85546
+        // (also reported in atlassian/atlassian-mcp-server#118 and
+        // ankitpokhrel/jira-cli#898). Mirrors the guard in `search_issues`.
+        let mut prev_cursor: Option<String> = None;
+
+        loop {
+            let mut body = serde_json::json!({
+                "jql": jql,
+                "maxResults": max_per_page,
+                "fields": ["key"]
+            });
+
+            if let Some(ref token) = next_page_token {
+                body["nextPageToken"] = serde_json::json!(token);
+            }
+
+            let page: CursorPage<IssueKeyRow> = self.post("/rest/api/3/search/jql", &body).await?;
+
+            let page_has_more = page.has_more();
+            let next_cursor = page.next_page_token.clone();
+            all_keys.extend(page.issues.into_iter().map(|r| r.key));
+
+            if let Some(max) = limit {
+                if all_keys.len() >= max as usize {
+                    // `all_keys.len() > max` handles the Apr 2025 regression
+                    // (JRACLOUD-95368) where the server overshoots maxResults AND
+                    // sets isLast:true — the overshoot proves more data existed.
+                    // `page_has_more` handles the normal "server said more pages" case.
+                    // Do NOT simplify to `page_has_more` alone — that would miss the
+                    // regression scenario.
+                    more_available = all_keys.len() > max as usize || page_has_more;
+                    all_keys.truncate(max as usize);
+                    break;
+                }
+            }
+
+            if !page_has_more {
+                break;
+            }
+
+            // GUARD: detect repeated cursor token (next == prev) → abort + warn.
+            // Mirrors the JRACLOUD-94632 guard block in search_issues above — same prev/next cursor check, same stderr warning text.
+            // Stderr-literal pin: tests/search_issue_keys.rs::test_search_issue_keys_stderr_emits_jracloud_94632_literal
+            // Do NOT change the literal "JRACLOUD-94632" without updating that test.
+            if next_cursor.is_some() && next_cursor == prev_cursor {
+                eprintln!(
+                    "[jr] WARNING: Atlassian /rest/api/3/search/jql returned the same \
+                     nextPageToken twice — aborting pagination loop. Some results may \
+                     be missing. Upstream bug: JRACLOUD-94632."
+                );
+                // Guard-aborted: signal incomplete results via has_more=true so callers
+                // can distinguish "clean exhaustion" from "server-bug abort". Atlassian's
+                // API guarantees non-overlapping pages even when the cursor token repeats
+                // (JRACLOUD-94632 is a cursor metadata bug, not a duplicate-data bug), so
+                // all_keys collected so far are unique — but the result set is incomplete.
+                more_available = true;
+                break;
+            }
+
+            prev_cursor = next_cursor.clone();
+            next_page_token = next_cursor;
+        }
+
+        Ok(KeySearchResult {
+            keys: all_keys,
             has_more: more_available,
         })
     }
