@@ -21,7 +21,7 @@ files_modified:
   - .factory/specs/prd/bc-2-issue-read.md (add BC-2.6.050)
   - .factory/specs/prd/BC-INDEX.md (frontmatter total_bcs bump)
 test_files:
-  - tests/search_issue_keys.rs (new wiremock integration test, 10 cases)
+  - tests/search_issue_keys.rs (new wiremock integration test, 11 cases — 10 library tokio + 1 subprocess)
   - tests/issue_bulk_pr2.rs (add caller-level truncation-regression test alongside existing test_jql_* cases)
 breaking_change: false
 producer: orchestrator
@@ -127,7 +127,7 @@ contract.
 added to `tests/issue_bulk_pr2.rs` (alongside the existing `test_jql_*`
 cases), named
 `test_handle_edit_jql_truncation_error_still_triggers_after_migration`:
-runs `jr issue edit --jql '<q>' --max 5 --add-label foo` with wiremock
+runs `jr issue edit --jql '<q>' --max 5 --label add:foo` with wiremock
 returning 7 keys; asserts the existing "JQL matched at least 6 issues,
 which exceeds --max 5" error path still fires after the migration. Existing
 `test_jql_default_max_50_caps_matched_issues`,
@@ -270,7 +270,7 @@ let effective_keys: Vec<String> = if let Some(ref jql_str) = jql {
 
 ## Tasks (TDD order)
 
-1. **Red.** Write the 10 failing tests in `tests/search_issue_keys.rs` (AC-001..AC-004 + happy path + edge cases). Confirm all 10 fail with a clear "no such method" / "unresolved import" error before any impl lands.
+1. **Red.** Write the 11 failing tests in `tests/search_issue_keys.rs` (AC-001..AC-004 + happy path + edge cases). Confirm all 11 fail with a clear "no such method" / "unresolved import" error before any impl lands.
 2. **Red.** Write the failing caller-level test `test_handle_edit_jql_truncation_error_still_triggers_after_migration` in `tests/edit_bulk_jql.rs` (or the sibling that hosts existing JQL bulk-edit tests). It will currently pass because the migration hasn't happened — convert it to a regression-pin asserting the post-migration behavior.
 3. **Green.** Add `KeySearchResult` struct with derives + `IssueKeyRow` private helper + `search_issue_keys` method body in `src/api/jira/issues.rs`. Tests 1–10 now pass.
 4. **Green.** Migrate the caller in `src/cli/issue/create.rs:374-409`. Regression test from step 2 passes.
