@@ -177,6 +177,7 @@ Goal 1c: **Harden v0.5 + feature delivery** — formalize existing codebase with
 | WV2-CV-11 | .factory/specs/prd/holdout-scenarios.md:195 | H-018 BC field has `(post-S-2.06 v2.0.0)` non-standard annotation. | NIT | DEFERRED — bundle into S-3.10 delivery or Wave 3 doc-cleanup. |
 | WV2-CV-12 | .factory/STATE.md | S-0.05-F2 drift item shows `TO_VERIFY` without resolution target. | NIT | DEFERRED — verify and close in Wave 3 dev touch or doc-cleanup PR. |
 | WV2-SEC-01 | src/duration.rs::parse_duration_validate | Wave 2 integration-gate security finding (CWE-400 uncontrolled resource consumption). parse_duration_validate reflected unbounded user input into error messages. Added MAX_DURATION_INPUT_LEN = 64 byte cap + 2 regression-pin tests. Not exploitable; defense-in-depth. | MEDIUM | **RESOLVED — 2026-05-08 — develop @ 6cb9994 (PR #310)** |
+| DRIFT-005 | Post-Copilot doc-fallout sweep | Codified pattern: when Copilot review introduces contract refinements, BC body / story AC / public spec rustdoc do not auto-propagate. Caught post-merge on PR #362 (search_issue_keys has_more guard-abort branch). Mitigation = new Phase 8 step (validated-feature-lifecycle). Documented in `.factory/sidecar-learning.md` 2026-05-13. | LOW | process-gap codified (apply on next PR) |
 
 ## Convergence Trackers
 

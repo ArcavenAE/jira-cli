@@ -25,7 +25,7 @@ test_files:
   - tests/issue_bulk_pr2.rs (add caller-level truncation-regression test alongside existing test_jql_* cases)
 breaking_change: false
 producer: orchestrator
-version: "1.0.0"
+version: "1.0.1"
 last_updated: 2026-05-13
 depends_on: []
 blocks: []
@@ -117,16 +117,23 @@ pagination contract:
 4. `test_search_issue_keys_401_mid_pagination_propagates` — HTTP 401 on
    page 2 returns `Err`, not a partial-success.
 
-**AC-004** (traces to BC-2.6.050 §4). Integration tests
-`test_search_issue_keys_truncates_at_limit_and_sets_has_more`
-(`limit = Some(2)`, server returns 3 → `keys.len() == 2`, `has_more == true`),
-`test_search_issue_keys_returns_empty_for_no_matches`
-(server returns `{"issues": []}` → `keys.is_empty()`, `has_more == false`),
-and `test_search_issue_keys_apr2025_regression_bound` (server returns 500
-rows for `maxResults = 10`, caller `limit = Some(10)` → exactly 10 returned,
-`has_more == true`; defense-in-depth against the Atlassian Apr 2025
-`maxResults` regression). Pins the `has_more` semantics and local-truncate
-contract.
+**AC-004** (traces to BC-2.6.050 §4). Integration tests pinning has_more
+semantics under all triggering conditions:
+1. `test_search_issue_keys_truncates_at_limit_and_sets_has_more`
+   (`limit = Some(2)`, server returns 3 → `keys.len() == 2`, `has_more == true`)
+   — caller-side truncation branch.
+2. `test_search_issue_keys_returns_empty_for_no_matches`
+   (server returns `{"issues": []}` → `keys.is_empty()`, `has_more == false`)
+   — empty-set branch.
+3. `test_search_issue_keys_apr2025_regression_bound` (server returns 500 rows
+   for `maxResults = 10`, caller `limit = Some(10)` → exactly 10 returned,
+   `has_more == true`) — Apr 2025 server-overrun defense-in-depth.
+4. `test_search_issue_keys_repeated_cursor_aborts_with_warning` (JRACLOUD-94632
+   guard fires; loop aborts; `assert!(result.has_more)`) — guard-abort
+   branch (added during Copilot R1 fix per PR #362 to signal possible data
+   loss to callers).
+
+Pins the `has_more` semantics under all four triggering conditions.
 
 **AC-005** (traces to regression invariant). Caller-level integration test
 added to `tests/issue_bulk_pr2.rs` (alongside the existing `test_jql_*`

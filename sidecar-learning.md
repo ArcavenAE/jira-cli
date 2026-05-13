@@ -211,3 +211,44 @@ Session-end markers for the VSDD factory. Run /session-review to synthesize.
 - Session ended at 2026-05-13T14:05:10Z (awaiting /session-review)
 - Session ended at 2026-05-13T14:39:12Z (awaiting /session-review)
 - Session ended at 2026-05-13T14:53:45Z (awaiting /session-review)
+- Session ended at 2026-05-13T17:22:37Z (awaiting /session-review)
+- Session ended at 2026-05-13T17:46:16Z (awaiting /session-review)
+- Session ended at 2026-05-13T17:55:08Z (awaiting /session-review)
+
+## 2026-05-13 — Post-Copilot doc-fallout sweep (codified pattern)
+
+**Trigger:** Detected on PR #362 (issue #350 — search_issue_keys) post-merge audit.
+
+**Pattern:** When Copilot review introduces behavioral fixes that refine a behavioral contract (BC), the fixes can propagate to:
+- Code rustdoc ✓ (Copilot R2 typically asks for this in a follow-up round)
+- BC body in L3 PRD ✗ (not auto-checked)
+- Story AC list ✗ (not auto-checked)
+- Public spec rustdoc snippets ✗ (not auto-checked)
+
+The R1 fix at commit `2e32195` set `has_more=true` on the JRACLOUD-94632 guard-abort branch. R2 picked up the rustdoc "iff" contradiction and updated `KeySearchResult.has_more` rustdoc accordingly. But BC-2.6.050 §4 body, Story AC-004, and the public spec's rustdoc snippet remained on the single-trigger wording. Caught only by the post-merge "did we document this?" check, after F5 had already CONVERGED.
+
+**Root cause:** F5 adversarial review converged BEFORE Copilot review began. No adversarial pass examined the post-Copilot diff for BC/AC/spec alignment. Validated-feature-lifecycle Phase 8 covers Copilot iteration but doesn't include a doc-fallout sweep.
+
+**Codified mitigation:** Add a new step at the end of validated-feature-lifecycle Phase 8 (and the orchestrator's per-story-delivery flow): **"Post-Copilot doc-fallout sweep"**.
+
+Step contents:
+1. After Copilot CONVERGED, list every commit in the Copilot fix cycle (e.g., `git log <merge-base>..HEAD --oneline --grep='Copilot\|R[0-9]'`).
+2. For each commit, scan the diff for:
+   - New or changed `has_more` / `Result` semantics
+   - New or changed error variants
+   - New or changed exit codes
+   - New or changed public types or method signatures
+   - New or changed `eprintln!` / stderr literal text
+3. For each non-cosmetic change, verify:
+   - The BC body in L3 PRD reflects it
+   - The story's AC list includes a pinned test
+   - The public spec's rustdoc snippet / risk note / test description matches
+4. If any gap, file an immediate fix-up commit BEFORE handing the PR back for merge approval.
+
+**Reference applications:**
+- This pattern was first hit (caught post-merge) on PR #362 (issue #350) — see this entry.
+- Prior partial-fix-propagation pattern (DRIFT-001) is conceptually adjacent — both are propagation discipline.
+
+**Codification target:** Update the validated-feature-lifecycle skill (.claude/skills/validated-feature-lifecycle/SKILL.md if applicable, or the orchestrator's per-story-delivery.md reference) to add the doc-fallout sweep as Phase 8 step 6. Cross-reference DEC-018 (Perplexity-validate Copilot findings) and this entry.
+
+**Status:** Pattern identified; codification pending. Next PR (#361 or other) should exercise this sweep proactively as a forcing function.
