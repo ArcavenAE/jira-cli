@@ -1,12 +1,12 @@
 ---
 context: bc-index
 title: "BC Master Index"
-total_bcs: 545  # cumulative claim (incl. range-collapsed) — see preamble below; +4 added 2026-05-08 (BC-7.4.013-016, Fix-PR A)
+total_bcs: 546  # cumulative claim (incl. range-collapsed) — see preamble below; +4 added 2026-05-08 (BC-7.4.013-016, Fix-PR A); +1 added 2026-05-13 (BC-2.6.050, issue #350)
 last_updated: 2026-05-04
 source_pass: 3
 sections:
   - bc-1-auth-identity.md (57 BCs cumulative; 46 individually-bodied)
-  - bc-2-issue-read.md (91 BCs cumulative; 49 individually-bodied)
+  - bc-2-issue-read.md (91 BCs cumulative; 50 individually-bodied)
   - bc-3-issue-write.md (77 BCs cumulative; 48 individually-bodied)
   - bc-4-assets-cmdb.md (32 BCs cumulative; 22 individually-bodied)
   - bc-5-boards-sprints.md (35 BCs cumulative; 17 individually-bodied)
@@ -127,7 +127,7 @@ R1/R4 prefix = deepening round that introduced it.
 
 ---
 
-## Section 2: Issue Read (bc-2-issue-read.md) — 91 BCs cumulative; 49 individually-bodied
+## Section 2: Issue Read (bc-2-issue-read.md) — 91 BCs cumulative; 50 individually-bodied
 
 ### 2.1 JQL Composition (17 BCs: BC-2.1.001..017)
 
@@ -640,18 +640,18 @@ R1/R4 prefix = deepening round that introduced it.
 | Section | BC Count (cumulative) | Individually-bodied |
 |---|---|---|
 | 1: Auth & Identity | 57 | 46 |
-| 2: Issue Read | 91 | 49 |
+| 2: Issue Read | 91 | 50 |
 | 3: Issue Write | 77 | 48 |
 | 4: Assets & CMDB | 32 | 22 |
 | 5: Boards & Sprints | 35 | 17 |
 | 6: Config & Cache | 39 | 29 |
 | 7: Output Rendering | 84 | 38 |
 | X: Cross-Cutting | 130 | 64 |
-| **Total** | **545** | **313** |
+| **Total** | **546** | **314** |
 
-**Note**: BC-X.4.009 (ADV-P1-029) is included in cross-cutting's `total_bcs: 130` and in the 541 sum above — it was assigned a `#### BC-` heading in cross-cutting.md at ADV-P1-029 (Pass 10 fix). Canonical total is **545** (+4 BC-7.4.013-016 added 2026-05-08 via Fix-PR A).
+**Note**: BC-X.4.009 (ADV-P1-029) is included in cross-cutting's `total_bcs: 130` and in the 541 sum above — it was assigned a `#### BC-` heading in cross-cutting.md at ADV-P1-029 (Pass 10 fix). Canonical total is **546** (+4 BC-7.4.013-016 added 2026-05-08 via Fix-PR A; +1 BC-2.6.050 added 2026-05-13 via issue #350).
 
-Cumulative total (545) ≠ individually-bodied count (313). The difference (232) comprises range-collapsed BCs that exist in the cumulative claim but are not individually headlined in body files. This is by design — range-collapsed BCs trace to Pass 3 source material but were not individually expanded. The 4 MUST-FIX BCs are included in the individually-bodied count.
+Cumulative total (546) ≠ individually-bodied count (314). The difference (232) comprises range-collapsed BCs that exist in the cumulative claim but are not individually headlined in body files. This is by design — range-collapsed BCs trace to Pass 3 source material but were not individually expanded. The 4 MUST-FIX BCs are included in the individually-bodied count.
 
 ---
 
