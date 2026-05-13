@@ -2,7 +2,7 @@
 context: bc-index
 title: "BC Master Index"
 total_bcs: 546  # cumulative claim (incl. range-collapsed) — see preamble below; +4 added 2026-05-08 (BC-7.4.013-016, Fix-PR A); +1 added 2026-05-13 (BC-2.6.050, issue #350)
-last_updated: 2026-05-04
+last_updated: 2026-05-13
 source_pass: 3
 sections:
   - bc-1-auth-identity.md (57 BCs cumulative; 46 individually-bodied)
@@ -200,13 +200,14 @@ R1/R4 prefix = deepening round that introduced it.
 | BC-2.5.045 | `issue changelog --reverse` reverses chronological order | BC-121 | src/cli/issue/changelog.rs | MEDIUM |
 | BC-2.5.046 | Changelog JSON output snapshot pins full shape including nullable `fromString`/`toString` | BC-1118 (R4) | tests/snapshots/issue_changelog | HIGH |
 
-### 2.6 API Layer (3 BCs: BC-2.6.047..049)
+### 2.6 API Layer (4 BCs: BC-2.6.047..050)
 
 | L3 BC ID | Summary | Pass 3 BC ID | Source | Confidence |
 |---|---|---|---|---|
 | BC-2.6.047 | `client.search_issues` with story-points extra field: deserializes `Some(5.0)` for issue with field, `None` without | BC-1041 (R4) | tests/issue_commands.rs:130-166 | HIGH |
 | BC-2.6.048 | `client.find_story_points_field_id()` returns fields with name == "Story Points" from `/rest/api/3/field` | BC-1042 (R4) | tests/issue_commands.rs:168-186 | HIGH |
 | BC-2.6.049 | `search_users` accepts FOUR distinct response shapes (bare array, paginated, empty, error) | BC-1051 (R4) | tests/issue_commands.rs:388-490 | HIGH |
+| BC-2.6.050 | `client.search_issue_keys(jql, limit)` posts `/rest/api/3/search/jql` with body `fields: ["key"]` and returns `KeySearchResult { keys, has_more }` | — (issue #350) | tests/search_issue_keys.rs | HIGH |
 
 ---
 
