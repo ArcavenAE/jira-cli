@@ -2943,3 +2943,40 @@ PR #358 merged to develop by human. Issue #343 closed at 2026-05-12T12:55:58Z. W
 | state-manager | Append this burst entry | burst-log.md |
 
 **Outcome:** PR #358 MERGED. #343 CLOSED. All of PRs #351–#358 now merged. 6 audit-followups remain in queue.
+
+---
+
+## Burst — 2026-05-14 (State backfill: PRs #363–#366 + cycle #365 open)
+
+**Agents dispatched:** state-manager
+**Files touched:** .factory/STATE.md, .factory/cycles/cycle-001/burst-log.md
+**Versions bumped:** (none)
+
+### Archived Current Phase Steps (pre-backfill rows)
+
+| Step | Agent | Status | Output |
+|------|-------|--------|--------|
+| Post-#362 audit detected doc-fallout | orchestrator | complete | BC-2.6.050 §4 contract refinement from Copilot R1 (commit 2e32195) didn't propagate from code rustdoc → BC body / story AC / public spec snippet. Caught post-merge by "did we document this?" check. |
+
+### Summary
+
+Backfill: PR #363 MERGED @ 3acd07f already recorded. Added two previously unlogged deliveries:
+- PR #364 MERGED @ b8a87c5 (citation rebind JRACLOUD-94632 → JRACLOUD-95368; closes #361)
+- PR #366 MERGED @ ad6b979 (CLAUDE.md codification of JRACLOUD-95368 + citation-validation discipline; closes #364 follow-up)
+
+New cycle opened: 3-feature-search-issue-keys-dedupe-365 (F0-pre; F1 next).
+
+Last Updated bumped to 2026-05-14. Session Resume Checkpoint updated. Convergence tracker updated for PRs #364 + #366.
+
+### Details
+
+| Agent | Task | Output |
+|-------|------|--------|
+| state-manager | Backfill Phase Progress rows for PRs #364 + #366 | STATE.md |
+| state-manager | Open new cycle row for issue #365 | STATE.md |
+| state-manager | Bump Last Updated, Current Phase metadata | STATE.md |
+| state-manager | Update Current Phase Steps (archive oldest row here; refresh with post-#363 steps) | STATE.md + burst-log.md |
+| state-manager | Update Session Resume Checkpoint | STATE.md |
+| state-manager | Update Phase 3-adv Convergence Tracker | STATE.md |
+
+**Outcome:** STATE.md reflects PRs #363, #364, #366 MERGED + issue #365 cycle IN_PROGRESS. 3 audit-followups remain (#340, #345, #346). #361 closed by PR #364.
