@@ -25,9 +25,9 @@ Sources reviewed for this spec: `.factory/research/issue-350-search-issue-keys-d
 
 **Out of scope:**
 
-- Changing the public signature or behavior of `search_issues` — purely additive.
+- Changing the public signature or behavior of `search_issues` — purely additive at the time this spec was written. **Note (issue #361 follow-up, 2026-05-13):** under Copilot review on PR #364, `search_issues` was later updated to set `SearchResult.has_more = true` on repeated-cursor guard abort (matching the `KeySearchResult` contract this spec introduced). The signature is unchanged, but `has_more` will now report `true` in cases where it previously silently reported `false`. The three CLI readers (`cli/issue/list.rs`, `cli/board.rs`, `cli/sprint.rs`) consume this for truncation hints and will display the existing "Showing N of M" hint correctly on guard abort. No CLI flag, JSON shape, or error changes.
 - Lifting the `.min(100)` per-page clamp; kept for hardening parity even though Atlassian docs say id/key-only requests can return more rows per page (see Validated API Facts §3).
-- Tightening the JRACLOUD-94632 stderr warning text (the existing warning overclaims "server bug" when live-data drift is also a legitimate trigger per JRACLOUD-95368). Filed as a separate follow-up issue.
+- Tightening the repeated-cursor stderr warning text (the original warning overclaimed "server bug" by citing JRACLOUD-94632 even though live-data drift per JRACLOUD-95368 is also a legitimate trigger). **Resolved by issue #361:** follow-up research showed all three originally-cited tickets (JRACLOUD-94632 / -92049 / -85546) cover unrelated `/search/jql` defects; the warning was rebound to JRACLOUD-95368 ("nextPageToken pagination is not snapshot-stable under live mutation"), and the Atlassian-KB `key ASC` ORDER BY tie-breaker mitigation was added inline.
 - Migrating other `search_issues` callers (`list.rs`, `view.rs`, `assets.rs`) — they consume the body fields. No keys-only callers exist elsewhere today.
 - Adding a `JrError` variant — error surface is identical to `search_issues` (`anyhow::Result` from `self.post(...)`).
 - Using `has_more` at the migrated caller. The existing `+1` lookahead + `matched_keys.len() > effective_max` truncation-error path is preserved verbatim; `has_more` is exposed for future callers.
@@ -40,7 +40,7 @@ From the official Atlassian REST API v3 documentation (`api-group-issue-search`)
 2. **Top-level `key` is always present** in each issue object regardless of the `fields` value. The minimal response per row is approximately `{"id":"...", "key":"...", "self":"..."}` plus a possibly-empty `fields: {}` body.
 3. **`maxResults` is not API-capped at 100.** Atlassian explicitly documents that "the greatest number of items returned per page is achieved when requesting id or key only." The existing `.min(100)` clamp in `search_issues` is a conservative *client-side* choice. This spec keeps `.min(100)` for parity; lifting it is a separate decision.
 4. **Pagination on `/search/jql` is cursor-only**: response carries `nextPageToken` (no `startAt`, no `total`). Same as `search_issues`.
-5. **The `nextPageToken` repeated-cursor bug is endpoint-level, not fields-level.** [JRACLOUD-94632](https://jira.atlassian.com/browse/JRACLOUD-94632), [JRACLOUD-92049](https://jira.atlassian.com/browse/JRACLOUD-92049), [JRACLOUD-85546](https://jira.atlassian.com/browse/JRACLOUD-85546) all apply to keys-only requests just as they do to full-body requests. The existing anti-loop guard in `search_issues` (the "GUARD: detect repeated cursor token" block) MUST be mirrored verbatim.
+5. **The `nextPageToken` repeated-cursor symptom is endpoint-level, not fields-level.** The mechanism documented in [JRACLOUD-95368](https://jira.atlassian.com/browse/JRACLOUD-95368) ("nextPageToken pagination is not snapshot-stable under live mutation") applies to keys-only requests just as to full-body requests. The existing anti-loop guard in `search_issues` (the "GUARD: detect repeated cursor token" block) MUST be mirrored verbatim. **Note (issue #361 follow-up, 2026-05-13):** this paragraph originally cited [JRACLOUD-94632](https://jira.atlassian.com/browse/JRACLOUD-94632), [JRACLOUD-92049](https://jira.atlassian.com/browse/JRACLOUD-92049), and [JRACLOUD-85546](https://jira.atlassian.com/browse/JRACLOUD-85546) as the evidence; subsequent research showed those three tickets cover unrelated `/search/jql` defects (initial-`nextPageToken=null` rejection; `startAt` offset behavior; missing `nextPage` field on `/field/search` respectively). The conclusion — that the guard must be mirrored at the endpoint level — stands; only the cited evidence changed.
 6. **Inconclusive — `fields{}` body echo.** Some Perplexity sources suggested Jira may echo `key` inside `fields: {"key": "..."}` for `fields: ["key"]` requests. No empirical capture in published docs. Mitigation: deserialize only the top-level `key`. If Jira ever inverts this, the deserialization fails loudly rather than silently returning empty strings.
 7. **April 2025 regression.** [community.developer.atlassian.com thread 88287](https://community.developer.atlassian.com/t/post-rest-api-3-search-jql-does-not-respect-maxresults-param/88287) reports a window where `maxResults` was disrespected and up to 10 000 issues were returned. Worth a regression-pinning test that the local truncate to `limit` still holds.
 
@@ -70,15 +70,38 @@ Alternatives considered and rejected:
 /// `has_more` is set to `true` in two cases:
 ///
 /// 1. **Caller limit hit:** the caller supplied a `limit` and upstream still
-///    had rows available beyond that limit.
-/// 2. **JRACLOUD-94632 guard abort:** the anti-loop guard fired (upstream
-///    returned the same `nextPageToken` twice), pagination was aborted with
-///    a stderr warning, and results may be incomplete due to a server bug.
+///    had rows available beyond that limit. No guard-induced duplicates in
+///    this case (within-page dedupe is the server's responsibility — Jira
+///    does not document an explicit uniqueness guarantee, but does not
+///    typically emit within-page duplicates absent live mutation).
+/// 2. **Repeated-cursor guard abort:** the anti-loop guard fired (upstream
+///    returned the same `nextPageToken` twice — typically live-data drift
+///    per JRACLOUD-95368, "nextPageToken pagination is not snapshot-stable
+///    under live mutation"), pagination was aborted with a stderr warning,
+///    and the result set may be **incomplete AND may contain duplicate
+///    keys**. `search_issue_keys` does not dedupe; under live-data drift the
+///    server may have emitted the same key on multiple pages before the
+///    cursor repeated. Callers that need strict uniqueness should re-issue
+///    with `key ASC` as a stable secondary sort in the ORDER BY (append
+///    `, key ASC` to an existing sort, or use `ORDER BY key ASC` if none —
+///    JQL allows only one ORDER BY clause) — Atlassian's KB mitigation —
+///    or dedupe locally.
 ///
-/// Pure cursor exhaustion (no limit set, upstream returns `isLast: true`)
-/// always returns `has_more = false`. Callers that need completeness
-/// guarantees should treat `has_more = true` as "results may be truncated"
-/// regardless of whether a `limit` was supplied.
+/// When `limit` is set, callers cannot distinguish case 1 from case 2 from
+/// `has_more` alone — the stderr warning fires only in case 2. When `limit`
+/// is `None`, case 1 cannot trigger, so `has_more = true` unambiguously
+/// signals case 2 (repeated-cursor guard abort). Today's sole caller
+/// (`handle_edit::effective_keys` in `cli/issue/create.rs`) requests
+/// `limit = effective_max + 1` and treats `keys.len() > effective_max` as a
+/// truncation error. **This is NOT dup-tolerant**: a single drift-induced
+/// duplicate inflates `keys.len()` by 1 and can spuriously trip the
+/// truncation error when the true unique-key count is at the limit. Bulk
+/// edits also do not dedupe — the same issue could receive the same field
+/// edit twice (idempotent at the Jira API for most fields, but wasteful).
+/// Both effects are user-visible-but-safe; not blocking. Future callers
+/// that need a richer signal should track the deferred follow-up
+/// (`feat(search): dedupe keys on JRACLOUD-95368 repeated-cursor guard abort`)
+/// to surface "incomplete-and-possibly-duplicated" via the type system.
 ///
 /// Traces to BC-2.6.050.
 #[derive(Debug, Clone, PartialEq)]
@@ -163,7 +186,7 @@ Logic mirrors the body of `search_issues` exactly, with two type substitutions: 
 
 - `maxResults` clamped to `.min(100)` (parity with `search_issues`, see Validated API Facts §3).
 - `next_page_token` advance + `is_last` termination identical.
-- **JRACLOUD-94632 anti-loop guard verbatim**: track `prev_cursor`; on `next_cursor == prev_cursor`, abort with the same stderr warning text (citing the upstream bug ID so users have a copy-pasteable search term). The warning text is inherited as-is in this PR; tightening (per addendum §Q4) is a separate follow-up.
+- **Repeated-cursor anti-loop guard verbatim**: track `prev_cursor`; on `next_cursor == prev_cursor`, abort with the same stderr warning text (citing the Atlassian ticket ID so users have a copy-pasteable search term). The warning text was inherited as-is from the original `search_issues` guard at the time this spec was written; the citation was later tightened by issue #361 (which rebound `JRACLOUD-94632` → `JRACLOUD-95368` after research showed the original ticket cited a different defect) — see Out of Scope above and Risks below.
 - Local truncation: if `limit` is set and `keys.len() >= limit`, set `has_more = true` and truncate to `limit`.
 
 ### Caller migration
@@ -195,7 +218,7 @@ The `+1` lookahead is preserved so the exact-count error message is unchanged. T
 ### Doc and spec fallout
 
 - **CLAUDE.md** — one-line update to the `src/api/jira/issues.rs` blurb (currently "search, get, create, edit, list comments") to note `search_issue_keys` exists alongside `search_issues`.
-- **`.factory/specs/prd/bc-2-issue-read.md`** — add BC-2.6.050 in subdomain 2.6 (API layer), after BC-2.6.049. Suggested text: *"`client.search_issue_keys(jql, limit)` posts `/rest/api/3/search/jql` with body `fields: ["key"]` and deserializes only the top-level `key` field; returns `KeySearchResult { keys, has_more }` where `has_more` is `true` on caller-side truncation OR JRACLOUD-94632 guard abort, and `false` on pure cursor exhaustion."* Also bump the file's frontmatter `definitional_count` from 49 → 50.
+- **`.factory/specs/prd/bc-2-issue-read.md`** — add BC-2.6.050 in subdomain 2.6 (API layer), after BC-2.6.049. Suggested text: *"`client.search_issue_keys(jql, limit)` posts `/rest/api/3/search/jql` with body `fields: ["key"]` and deserializes only the top-level `key` field; returns `KeySearchResult { keys, has_more }` where `has_more` is `true` on caller-side truncation OR repeated-cursor guard abort (typically JRACLOUD-95368 live-data drift), and `false` on pure cursor exhaustion."* Also bump the file's frontmatter `definitional_count` from 49 → 50.
 - **`.factory/specs/prd/BC-INDEX.md`** — bump frontmatter `total_bcs` from 545 → 546 AND update the `sections:` line for `bc-2-issue-read.md` from `49 individually-bodied` → `50 individually-bodied`. Both counts must stay aligned with each other and with `bc-2-issue-read.md`'s `definitional_count`.
 - **`scripts/check-spec-counts.sh`** — run as a verification (exit 0 required) before committing the spec changes. The script enforces frontmatter ↔ body count alignment per DRIFT-001 mitigation.
 
@@ -215,8 +238,9 @@ Wiremock-rs 0.6.5 against a test-only `JiraClient`. **Important matcher note:** 
 8. `test_search_issue_keys_returns_empty_for_no_matches` — server returns `{"issues": [], "isLast": true}`; asserts `keys.is_empty()` and `has_more == false`. *(Added per addendum §Q6.)*
 9. `test_search_issue_keys_401_mid_pagination_propagates` — page 1 returns 200 with `nextPageToken`, page 2 returns 401; asserts the second `?` propagates and the method returns `Err`. Pins error-propagation contract across page boundaries (and validates interaction with the S-3.03 v2 auto-refresh path: refresh fires once, retry observes the original failure on the test seam). *(Added per addendum §Q6.)*
 10. `test_search_issue_keys_malformed_json_returns_error` — page 1 returns 200 with corrupted body `{"issues": [{"key": ` (incomplete JSON); asserts `Err` propagates from serde. *(Added per addendum §Q6.)*
-11. `test_search_issue_keys_stderr_emits_jracloud_94632_literal` — *(subprocess test)* — spawns `jr issue edit --jql ... --dry-run` against a stuck-cursor mock; captures stderr and asserts it contains the literal `"JRACLOUD-94632"`. Pairs with test 4 to satisfy AC-003's stderr-literal arm — library tests cannot capture `eprintln!` from inside the same process. *(Added during pass-01 F-02 fix.)*
+11. `test_search_issue_keys_stderr_emits_jracloud_95368_literal` — *(subprocess test)* — spawns `jr issue edit --jql ... --dry-run` against a stuck-cursor mock; captures stderr and asserts it contains the literal `"JRACLOUD-95368"`. Pairs with test 4 to satisfy AC-003's stderr-literal arm — library tests cannot capture `eprintln!` from inside the same process. *(Added during pass-01 F-02 fix; literal rebound from `"JRACLOUD-94632"` to `"JRACLOUD-95368"` under issue #361.)*
 12. `test_search_issue_keys_clamps_max_results_to_100_per_page` — caller passes `limit = Some(200)` (> 100); the `.min(100)` clamp must reduce `maxResults` to 100 in the request body. Verified by capturing the request via `MockServer::received_requests()` and asserting `body["maxResults"] == 100`. Pins BC-2.6.050 §5. *(Added during pass-07 F-01 fix.)*
+13. `test_search_issue_keys_repeated_cursor_abort_does_not_dedupe` — page 1 returns `["X-1"]` with `nextPageToken: "loop"`, page 2 returns `["X-1", "X-2"]` with the same `nextPageToken: "loop"` (simulating live-data drift mid-pagination); asserts `keys == ["X-1", "X-1", "X-2"]` and `has_more == true`. Pins the **no-dedupe contract** under JRACLOUD-95368 abort. *(Added by issue #361; if a future PR adds in-function dedupe, this test must be updated in lockstep with the caller-migration plan.)*
 
 ### Caller-level integration test (`tests/issue_bulk_pr2.rs`)
 
@@ -229,21 +253,26 @@ None required. The new method is a thin wrapper over the HTTP surface; its seman
 ## Risks and Mitigations
 
 - **Inconclusive: `fields{}` echo (Validated API Facts §6).** Mitigated by reading only top-level `key`. If Jira ever inverts this, tests 2/3/8 fail loudly with a serde "missing field `key`" deserialization error (NOT empty-string keys — IssueKeyRow.key has no #[serde(default)]).
-- **JRACLOUD-94632 false positives (addendum §Q4).** The inherited warning text overclaims "server bug" but is correct ~95 % of the time; live-data-drift false positives exist (JRACLOUD-95368). This PR inherits the existing text verbatim and files a separate follow-up to tighten the wording. Not blocking.
-- **`has_more` semantic drift.** `has_more = true` has two distinct truthy triggers: caller-side truncation (limit hit) OR JRACLOUD-94632 guard abort (incomplete results due to server bug). If a future caller assumes only one trigger is possible, they could mis-paginate or miss the guard-abort signal. Mitigated by explicit rustdoc on the struct (two numbered cases) + test 5 pinning the truncation contract + test 4 pinning the guard-abort path.
+- **JRACLOUD-94632 false positives (addendum §Q4).** The inherited warning text overclaimed "server bug" but the symptom-to-ticket mapping turned out to be even worse than the addendum noted: follow-up research under issue #361 (2026-05-13) showed JRACLOUD-94632 / -92049 / -85546 all cover *different* `/search/jql` defects — none of them describes "the server returns the same `nextPageToken` twice". The only correctly-attributed public source is **JRACLOUD-95368** ("nextPageToken pagination is not snapshot-stable under live mutation"), plus Atlassian's [KB article on inconsistent paginated JQL results](https://support.atlassian.com/jira/kb/inconsistent-paginated-api-search-result-while-using-jql/) which prescribes the `ORDER BY key ASC` mitigation. The warning text was rebound accordingly. Resolved.
+- **Accepted trade-off: JRACLOUD-95368 names "duplicates/skips", not "repeated `nextPageToken`" specifically.** Per `.factory/research/issue-361-jra95368-scope.md` §3 (local, gitignored), the ticket's public Description enumerates duplicates and skips as symptoms; cursor-repetition is one inferential step from the same root-cause class ("snapshot instability under live mutation"). The user-visible warning cites only JRACLOUD-95368 (with `Likely cause:` hedging) rather than the longer "see Atlassian KB on inconsistent paginated JQL results" form. Reasoning: a user reading JRACLOUD-95368 will find the same root-cause story even if the cursor-repetition symptom is not literally enumerated, and the warning already names the actionable ORDER BY mitigation inline. The internal comment blocks (`src/api/jira/issues.rs` around lines 132-160 and 230-244) document the inferential step explicitly. Not blocking.
+- **Possible duplicate keys on guard-abort under live-data drift (new finding from #361 research).** Because JRACLOUD-95368 is the typical cause, `search_issue_keys` *may* return duplicate keys in the abort path (live mutation can produce the same key on two pages before the cursor repeats). `search_issue_keys` does NOT dedupe today; the post-abort rustdoc and inline comment now warn callers explicitly and recommend `ORDER BY key ASC` as the upstream prevention. A separate follow-up issue (#365) tracks in-function dedupe. **Not blocking, but user-visible-but-safe** — the existing single caller (`handle_edit::effective_keys`) has two affected paths: (a) the `+1` lookahead truncation check (`keys.len() > effective_max`) is NOT dup-tolerant — a drift-induced duplicate inflates `keys.len()` by 1 and can spuriously trip the "exceeds --max" error when the true unique-key count is exactly at the limit; (b) bulk-edit calls would apply the same field edit to the same key twice. Both are safe: (a) is a recoverable user-visible error (re-run with `ORDER BY key ASC`), (b) is idempotent at the Jira API for most fields (labels server-side dedupe; assignee/priority/etc are point-set operations). An earlier draft of this PR called this "dup-tolerant by construction" — that overclaim was retracted under Copilot review on PR #364.
+- **`has_more` semantic drift.** `has_more = true` has two distinct truthy triggers: caller-side truncation (limit hit) OR repeated-cursor guard abort (incomplete results due to live-data drift per JRACLOUD-95368). If a future caller assumes only one trigger is possible, they could mis-paginate or miss the guard-abort signal. Mitigated by explicit rustdoc on the struct (two numbered cases) + test 5 pinning the truncation contract + test 4 pinning the guard-abort path.
 - **Length-strict array enforcement on `fields`.** `wiremock::body_partial_json` is subset-matching, so the strictness assertion lives in the test body (`received_requests()` + `assert_eq!`), not in the matcher. The addendum §Q3 claim that `body_partial_json` was length-strict is retracted in this spec — see Tests §1 note. A negative `.expect(0)` mock is not needed because the explicit `assert_eq!` is stronger.
 
 ## Backwards Compatibility
 
 No public API or CLI behavior change for any consumer who does not call the new method:
 
-- `search_issues(jql, limit, extra_fields)` — signature and semantics unchanged.
-- `jr issue list --jql ...` — uses `search_issues`; unchanged.
+- `search_issues(jql, limit, extra_fields)` — signature unchanged. Semantics unchanged at spec-write time, but **PR #364 (issue #361 follow-up)** added one carve-out: `SearchResult.has_more` is now set to `true` on repeated-cursor guard abort (was silently `false`), matching the `KeySearchResult` contract this spec introduced. Three CLI readers (`cli/issue/list.rs`, `cli/board.rs`, `cli/sprint.rs`) will display the existing "Showing N of M" truncation hint in that case where they previously silently reported a complete result. No CLI flag, JSON shape, or error changes; see the Out-of-Scope bullet above for the full rationale.
+- `jr issue list --jql ...` — uses `search_issues`. Unchanged at spec-write time, with one corner-case carve-out under PR #364: in the rare repeated-cursor guard-abort scenario (`/rest/api/3/search/jql` returning the same `nextPageToken` twice — typically JRACLOUD-95368 live-data drift), the truncation hint at `cli/issue/list.rs` (the `has_more && !all` branch) will now print "Showing N of M, use --all to see more" where it previously silently reported a complete result. The new hint is correct behavior; no flag, JSON shape, or exit-code change.
+- `jr board view` — uses `search_issues` for the kanban path. Same corner-case carve-out as `jr issue list` above (the `has_more` consumer at `cli/board.rs:206/216` will display the existing truncation hint on guard abort).
+- `jr sprint current` — uses `get_sprint_issues` for the active-sprint path. **Not** affected by the `search_issues` carve-out (it consumes `OffsetPage`, not the `/search/jql` cursor). The `has_more` consumer at `cli/sprint.rs:245` is unchanged.
 - `jr issue view <key>` — uses `get_issue`; unchanged.
-- `jr issue edit --jql ... --max N` — was: full-body fetch for selection. **Now**: keys-only fetch for selection. Same external behavior (same error messages, same truncation logic), faster wire path.
+- `jr issue edit --jql ... --max N` — was: full-body fetch for selection. **Now**: keys-only fetch for selection. Same external behavior (same error messages, same truncation logic), faster wire path. The `KeySearchResult.has_more` semantics described in the Out-of-Scope section apply: under guard abort, `effective_keys` may include duplicates that spuriously trip the `--max` truncation error or generate redundant bulk-edit calls (both safe-but-user-visible; tracked in #365).
 
 ## Out of Scope / Follow-ups
 
-- **Follow-up issue (file at same time as this PR):** `chore(search): tighten JRACLOUD-94632 stderr warning — repeated cursors can be live-data drift, not just server bug`. References JRACLOUD-95368.
+- ~~**Follow-up issue (file at same time as this PR):** `chore(search): tighten JRACLOUD-94632 stderr warning — repeated cursors can be live-data drift, not just server bug`. References JRACLOUD-95368.~~ **CLOSED by #361 (2026-05-13).** Follow-up research showed all three originally-cited Atlassian tickets (94632, 92049, 85546) cover unrelated defects; the warning was rebound to JRACLOUD-95368 + Atlassian KB `ORDER BY key ASC` mitigation.
+- **New follow-up (deferred):** `feat(search): dedupe keys on repeated-cursor guard abort` — under JRACLOUD-95368 live-data drift, the abort path may have already collected duplicate keys in earlier pages. Not blocking for the existing single caller (`handle_edit` truncates via `+1` lookahead) but worth addressing before a second caller appears.
 - Lifting the `.min(100)` per-page clamp for keys-only requests, if benchmarks ever justify it.
 - A second keys-only caller — none exists today. If one appears, no API change needed.

@@ -28,7 +28,35 @@ const BASE_ISSUE_FIELDS: &[&str] = &[
     "issuelinks",
 ];
 
-/// Result of a paginated issue search, including whether more results exist.
+/// Result of a paginated issue search, including a flag indicating whether
+/// the result set may be incomplete (caller-limit truncation OR
+/// repeated-cursor guard abort).
+///
+/// `has_more` is set to `true` in two cases (parallel to [`KeySearchResult`]):
+///
+/// 1. **Caller limit hit:** the caller supplied a `limit` and upstream still
+///    had rows available beyond that limit. No guard-induced duplicates in
+///    this case.
+/// 2. **Repeated-cursor guard abort:** the anti-loop guard fired (upstream
+///    returned the same `nextPageToken` twice — typically live-data drift
+///    per JRACLOUD-95368), pagination was aborted with a stderr warning,
+///    and the result set may be **incomplete AND may contain duplicate
+///    issues**. `search_issues` does not dedupe; under live-data drift the
+///    server may have emitted the same issue on multiple pages before the
+///    cursor repeated. Callers that need strict uniqueness should re-issue
+///    with `key ASC` as a stable secondary sort in the ORDER BY (append
+///    `, key ASC` to an existing sort, or use `ORDER BY key ASC` if none —
+///    JQL allows only one ORDER BY clause) — Atlassian's KB mitigation —
+///    or dedupe locally.
+///
+/// Pure cursor exhaustion (no limit set, upstream returns no
+/// `nextPageToken` — `CursorPage::has_more()` checks `next_page_token.is_some()`,
+/// not the protocol-level `isLast` field which this client does not
+/// deserialize) always returns `has_more = false`. When `limit` is set,
+/// callers cannot distinguish case 1 from case 2 from `has_more` alone —
+/// the stderr warning fires only in case 2. When `limit` is `None`, case 1
+/// cannot trigger, so `has_more = true` unambiguously signals case 2
+/// (repeated-cursor guard abort).
 pub struct SearchResult {
     pub issues: Vec<Issue>,
     pub has_more: bool,
@@ -44,13 +72,43 @@ pub struct SearchResult {
 /// `has_more` is set to `true` in two cases:
 ///
 /// 1. **Caller limit hit:** the caller supplied a `limit` and upstream still
-///    had rows available beyond that limit.
-/// 2. **JRACLOUD-94632 guard abort:** the anti-loop guard fired (upstream
-///    returned the same `nextPageToken` twice), pagination was aborted with
-///    a stderr warning, and results may be incomplete due to a server bug.
+///    had rows available beyond that limit. No guard-induced duplicates in
+///    this case (within-page dedupe is the server's responsibility — Jira
+///    does not document an explicit uniqueness guarantee, but does not
+///    typically emit within-page duplicates absent live mutation).
+/// 2. **Repeated-cursor guard abort:** the anti-loop guard fired (upstream
+///    returned the same `nextPageToken` twice — typically live-data drift
+///    per JRACLOUD-95368, "nextPageToken pagination is not snapshot-stable
+///    under live mutation"), pagination was aborted with a stderr warning,
+///    and the result set may be **incomplete AND may contain duplicate
+///    keys**. `search_issue_keys` does not dedupe; under live-data drift the
+///    server may have emitted the same key on multiple pages before the
+///    cursor repeated. Callers that need strict uniqueness should re-issue
+///    with `key ASC` as a stable secondary sort in the ORDER BY (append
+///    `, key ASC` to an existing sort, or use `ORDER BY key ASC` if none —
+///    JQL allows only one ORDER BY clause) — Atlassian's KB mitigation —
+///    or dedupe locally.
 ///
-/// Pure cursor exhaustion (no limit set, upstream returns `isLast: true`)
-/// always returns `has_more = false`. Callers that need completeness
+/// When `limit` is set, callers cannot distinguish case 1 from case 2 from
+/// `has_more` alone — the stderr warning fires only in case 2. When `limit`
+/// is `None`, case 1 cannot trigger, so `has_more = true` unambiguously
+/// signals case 2 (repeated-cursor guard abort). Today's sole caller
+/// (`handle_edit::effective_keys` in `cli/issue/create.rs`) requests
+/// `limit = effective_max + 1` and treats `keys.len() > effective_max` as a
+/// truncation error. **This is NOT dup-tolerant**: a single drift-induced
+/// duplicate inflates `keys.len()` by 1 and can spuriously trip the
+/// truncation error when the true unique-key count is at the limit. Bulk
+/// edits also do not dedupe — the same issue could receive the same field
+/// edit twice (idempotent at the Jira API for most fields, but wasteful).
+/// Both effects are user-visible-but-safe; not blocking. Future callers
+/// that need a richer signal should track the deferred follow-up
+/// (`feat(search): dedupe keys on JRACLOUD-95368 repeated-cursor guard abort`)
+/// to surface "incomplete-and-possibly-duplicated" via the type system.
+///
+/// Pure cursor exhaustion (no limit set, upstream returns no
+/// `nextPageToken` — `CursorPage::has_more()` checks `next_page_token.is_some()`,
+/// not the protocol-level `isLast` field which this client does not
+/// deserialize) always returns `has_more = false`. Callers that need completeness
 /// guarantees should treat `has_more = true` as "results may be truncated"
 /// regardless of whether a `limit` was supplied.
 ///
@@ -114,13 +172,28 @@ impl JiraClient {
 
         let mut more_available = false;
 
-        // Anti-loop guard: Jira Cloud /rest/api/3/search/jql intermittently returns
-        // the same nextPageToken twice, causing infinite pagination loops. This is a
-        // confirmed upstream bug — JRACLOUD-94632, JRACLOUD-92049, JRACLOUD-85546
-        // (also reported in atlassian/atlassian-mcp-server#118 and
-        // ankitpokhrel/jira-cli#898). Mirrors anti-loop pattern from get_changelog
-        // (lines 222-230). When the guard fires, we emit a stderr warning citing
-        // JRACLOUD-94632 so users have a search term.
+        // Anti-loop guard: protect against Jira Cloud /rest/api/3/search/jql
+        // returning the same nextPageToken twice, which would otherwise cause
+        // an infinite pagination loop. The documented root cause class —
+        // "snapshot instability under live mutation" — is described in
+        // Atlassian's KB on inconsistent paginated JQL search results, with
+        // related ticket JRACLOUD-95368 ("nextPageToken pagination is not
+        // snapshot-stable under live mutation"). `nextPageToken` encodes a
+        // position in the live result set rather than a snapshot, so drift in
+        // the underlying data can land the server on a previously emitted
+        // offset. JRACLOUD-95368's public Description names duplicates/skips
+        // as the documented symptoms; cursor-repetition is one inferential
+        // step (same root cause class, observed differently). The recommended
+        // caller-side mitigation per Atlassian KB is a stable secondary sort —
+        // append `, key ASC` to an existing ORDER BY, or use `ORDER BY key ASC`
+        // if none (JQL allows only one ORDER BY clause). Symptoms have also been reported anecdotally
+        // in atlassian/atlassian-mcp-server#118 and ankitpokhrel/jira-cli#898.
+        // Follows the same defensive intent as the "did pagination advance?"
+        // guard in `get_changelog` (which uses `next <= start_at` on
+        // offset-based pagination); here the equivalent is `next_cursor ==
+        // prev_cursor` on cursor-based pagination. When the guard fires we
+        // emit a stderr warning citing JRACLOUD-95368 so users have a search
+        // term and an actionable mitigation.
         let mut prev_cursor: Option<String> = None;
 
         loop {
@@ -153,16 +226,30 @@ impl JiraClient {
             }
 
             // GUARD: detect repeated cursor token (next == prev) → abort + warn.
-            // NFR-R-F: prevents infinite loop when server returns the same
-            // nextPageToken twice (confirmed upstream bug JRACLOUD-94632).
+            // NFR-R-F: prevents infinite loop when the server returns the same
+            // nextPageToken twice (typically JRACLOUD-95368 live-data drift).
             // Stderr-literal pin: tests/rate_limit_cap_tests.rs::ac_008_and_ac_new_d_search_jql_cursor_loop_terminates_with_jracloud_warning
-            // Do NOT change the literal "JRACLOUD-94632" without updating that test.
+            // Do NOT change the literal "JRACLOUD-95368" without updating that test.
             if next_cursor.is_some() && next_cursor == prev_cursor {
                 eprintln!(
                     "[jr] WARNING: Atlassian /rest/api/3/search/jql returned the same \
-                     nextPageToken twice — aborting pagination loop. Some results may \
-                     be missing. Upstream bug: JRACLOUD-94632."
+                     nextPageToken twice — aborting pagination to prevent an infinite \
+                     loop. Some results may be missing. Likely cause: live data \
+                     mutation between page fetches (snapshot-instability, \
+                     JRACLOUD-95368). Mitigation: end your JQL with `key ASC` in the \
+                     ORDER BY (append `, key ASC` to an existing sort, or use \
+                     `ORDER BY key ASC` if none)."
                 );
+                // Guard-aborted: signal incomplete results via has_more=true so
+                // callers can distinguish "clean exhaustion" from
+                // "repeated-cursor abort". Matches the `KeySearchResult`
+                // contract for symmetry; otherwise `SearchResult.has_more`
+                // would silently be `false` despite the explicit
+                // "Some results may be missing" warning above. Note: under
+                // JRACLOUD-95368 (live-data drift, the typical cause), earlier
+                // pages MAY contain issues that the server would emit again
+                // after the cursor repeats — `search_issues` does not dedupe.
+                more_available = true;
                 break;
             }
 
@@ -188,11 +275,18 @@ impl JiraClient {
     /// body-bearing reads use [`Self::search_issues`].
     ///
     /// `has_more` is set to `true` in two cases: (1) the caller's `limit`
-    /// was hit AND upstream still had rows available, or (2) the
-    /// JRACLOUD-94632 anti-loop guard fired (upstream returned the same
-    /// `nextPageToken` twice), aborting pagination early with a stderr
-    /// warning. Pure cursor exhaustion returns `has_more = false`. See
-    /// [`KeySearchResult`] for the full contract.
+    /// was hit AND upstream still had rows available (no guard-induced
+    /// duplicates), or (2) the repeated-cursor anti-loop guard fired
+    /// (upstream returned the
+    /// same `nextPageToken` twice — typically live-data drift per
+    /// JRACLOUD-95368), aborting pagination early with a stderr warning
+    /// (**keys may be incomplete AND may contain duplicates** — this
+    /// function does NOT dedupe; callers needing uniqueness should re-issue
+    /// with `key ASC` as a stable secondary sort in the ORDER BY (append
+    /// `, key ASC` to an existing sort, or use `ORDER BY key ASC` if none —
+    /// JQL allows only one ORDER BY clause), or dedupe locally). Pure cursor exhaustion
+    /// returns `has_more = false`. See [`KeySearchResult`] for the full
+    /// contract including the caller-dedup analysis.
     ///
     /// The per-page clamp `.min(100)` is a conservative client-side choice
     /// for parity with `search_issues`; Atlassian docs note that id/key-only
@@ -210,11 +304,12 @@ impl JiraClient {
 
         let mut more_available = false;
 
-        // Anti-loop guard: Jira Cloud /rest/api/3/search/jql intermittently returns
-        // the same nextPageToken twice, causing infinite pagination loops. This is a
-        // confirmed upstream bug — JRACLOUD-94632, JRACLOUD-92049, JRACLOUD-85546
-        // (also reported in atlassian/atlassian-mcp-server#118 and
-        // ankitpokhrel/jira-cli#898). Mirrors the guard in `search_issues`.
+        // Anti-loop guard: protect against Jira Cloud /rest/api/3/search/jql
+        // returning the same nextPageToken twice (typically JRACLOUD-95368
+        // live-data drift — `nextPageToken` encodes a non-snapshot position so
+        // mutations between page fetches can land the server on a previously
+        // emitted offset). Mirrors the guard in `search_issues` above — see
+        // there for the full root-cause discussion and citations.
         let mut prev_cursor: Option<String> = None;
 
         loop {
@@ -237,8 +332,10 @@ impl JiraClient {
             if let Some(max) = limit {
                 if all_keys.len() >= max as usize {
                     // `all_keys.len() > max` handles the Apr 2025 regression
-                    // (JRACLOUD-95368) where the server overshoots maxResults AND
-                    // sets isLast:true — the overshoot proves more data existed.
+                    // (community.developer.atlassian.com thread 88287; see Validated
+                    // API Facts §7 in docs/specs/2026-05-13-search-issue-keys.md)
+                    // where the server overshoots maxResults AND sets isLast:true —
+                    // the overshoot proves more data existed.
                     // `page_has_more` handles the normal "server said more pages" case.
                     // Do NOT simplify to `page_has_more` alone — that would miss the
                     // regression scenario.
@@ -253,20 +350,27 @@ impl JiraClient {
             }
 
             // GUARD: detect repeated cursor token (next == prev) → abort + warn.
-            // Mirrors the JRACLOUD-94632 guard block in search_issues above — same prev/next cursor check, same stderr warning text.
-            // Stderr-literal pin: tests/search_issue_keys.rs::test_search_issue_keys_stderr_emits_jracloud_94632_literal
-            // Do NOT change the literal "JRACLOUD-94632" without updating that test.
+            // Mirrors the repeated-cursor guard block in search_issues above — same prev/next cursor check, same stderr warning text.
+            // Stderr-literal pin: tests/search_issue_keys.rs::test_search_issue_keys_stderr_emits_jracloud_95368_literal
+            // Do NOT change the literal "JRACLOUD-95368" without updating that test.
             if next_cursor.is_some() && next_cursor == prev_cursor {
                 eprintln!(
                     "[jr] WARNING: Atlassian /rest/api/3/search/jql returned the same \
-                     nextPageToken twice — aborting pagination loop. Some results may \
-                     be missing. Upstream bug: JRACLOUD-94632."
+                     nextPageToken twice — aborting pagination to prevent an infinite \
+                     loop. Some results may be missing. Likely cause: live data \
+                     mutation between page fetches (snapshot-instability, \
+                     JRACLOUD-95368). Mitigation: end your JQL with `key ASC` in the \
+                     ORDER BY (append `, key ASC` to an existing sort, or use \
+                     `ORDER BY key ASC` if none)."
                 );
                 // Guard-aborted: signal incomplete results via has_more=true so callers
-                // can distinguish "clean exhaustion" from "server-bug abort". Atlassian's
-                // API guarantees non-overlapping pages even when the cursor token repeats
-                // (JRACLOUD-94632 is a cursor metadata bug, not a duplicate-data bug), so
-                // all_keys collected so far are unique — but the result set is incomplete.
+                // can distinguish "clean exhaustion" from "repeated-cursor abort". Note:
+                // under JRACLOUD-95368 (live-data drift, the typical cause), earlier
+                // pages MAY contain keys that the server would emit again after the
+                // cursor repeats — this function does NOT dedupe. Callers needing
+                // strict uniqueness should re-issue with `key ASC` as a stable
+                // secondary sort (append `, key ASC` to an existing ORDER BY, or
+                // use `ORDER BY key ASC` if none) or dedupe locally.
                 more_available = true;
                 break;
             }
