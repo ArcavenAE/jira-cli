@@ -9,7 +9,15 @@
 //! - AC-003 (MAX_RETRY_AFTER_SECS constant exists): compile-time import check
 //! - AC-006, AC-007 (profile name message precision): INLINE in src/config.rs::tests — not here
 //! - AC-008 (cursor loop terminates): subprocess test via assert_cmd
-//! - AC-NEW-D (stderr contains JRACLOUD-94632): subprocess test via assert_cmd
+//! - AC-NEW-D (stderr contains JRACLOUD-95368): subprocess test via assert_cmd
+//!
+//! Citation history: AC-NEW-D originally asserted on the literal "JRACLOUD-94632",
+//! which was rebound to "JRACLOUD-95368" by issue #361 after research (2026-05-13)
+//! showed JRACLOUD-94632 covers an unrelated /search/jql defect (initial-request
+//! `nextPageToken=null` rejection, resolved Jun 2025). JRACLOUD-95368
+//! ("nextPageToken pagination is not snapshot-stable under live mutation") is the
+//! correctly-attributed root-cause ticket for the repeated-cursor symptom this
+//! guard catches.
 
 #[allow(dead_code)]
 mod common;
@@ -196,7 +204,7 @@ async fn ac_002_retry_after_within_cap_retries() {
 }
 
 // ---------------------------------------------------------------------------
-// AC-008 + AC-NEW-D: cursor loop terminates + stderr contains "JRACLOUD-94632"
+// AC-008 + AC-NEW-D: cursor loop terminates + stderr contains "JRACLOUD-95368"
 //
 // NFR-R-F (DOCUMENT-AS-IS-FIXED routing).
 //
@@ -205,32 +213,33 @@ async fn ac_002_retry_after_within_cap_retries() {
 // `nextPageToken` on every response. Pre-implementation: the loop runs
 // indefinitely; we set a 15-second assert_cmd timeout so the test FAILS with
 // "timed out" rather than hanging CI forever. Post-implementation: the guard
-// breaks the loop within 2 iterations, emits the JRACLOUD-94632 warning to
+// breaks the loop within 2 iterations, emits the JRACLOUD-95368 warning to
 // stderr, and the command exits within ~1 second.
 //
 // The test asserts BOTH:
 //   (a) AC-008: command completes (loop terminates) — implied by timeout not firing
-//   (b) AC-NEW-D: stderr contains literal "JRACLOUD-94632"
+//   (b) AC-NEW-D: stderr contains literal "JRACLOUD-95368"
 // ---------------------------------------------------------------------------
 
 /// NFR-R-F postcondition (AC-008 + AC-NEW-D): when `/rest/api/3/search/jql` returns
-/// the same `nextPageToken` twice (simulating confirmed JRACLOUD-94632 bug), the
-/// `search_issues` cursor loop MUST:
+/// the same `nextPageToken` twice (the repeated-cursor symptom of JRACLOUD-95368
+/// live-data drift), the `search_issues` cursor loop MUST:
 ///   1. Terminate (not infinite-loop) — verified by 15s assert_cmd timeout
-///   2. Emit a stderr warning containing `"JRACLOUD-94632"` — AC-NEW-D
+///   2. Emit a stderr warning containing `"JRACLOUD-95368"` — AC-NEW-D
 ///
 /// Pre-implementation Red Gate: ASSERTION ERROR — the loop runs indefinitely against
 /// the stuck-cursor mock. The assert_cmd 15-second timeout fires, causing `output()`
 /// to return an error, which panics the test with "command timed out".
 ///
-/// Post-implementation: guard breaks within 2 iterations, JRACLOUD-94632 appears
+/// Post-implementation: guard breaks within 2 iterations, JRACLOUD-95368 appears
 /// in stderr, command exits promptly.
 #[tokio::test]
 async fn ac_008_and_ac_new_d_search_jql_cursor_loop_terminates_with_jracloud_warning() {
     let server = MockServer::start().await;
 
     // Mount a mock that ALWAYS returns the same nextPageToken on every POST.
-    // This simulates the JRACLOUD-94632 bug: the server never advances the cursor.
+    // This simulates the JRACLOUD-95368 symptom: live-data drift between page
+    // fetches causes the server to land on a previously-emitted cursor offset.
     // Without the anti-loop guard, search_issues loops indefinitely here.
     let stuck_response = serde_json::json!({
         "issues": [
@@ -294,22 +303,101 @@ async fn ac_008_and_ac_new_d_search_jql_cursor_loop_terminates_with_jracloud_war
     assert!(
         output.is_ok(),
         "AC-008 (NFR-R-F): `jr issue list` must terminate within 15s when \
-         /rest/api/3/search/jql returns a stuck cursor (JRACLOUD-94632 bug). \
-         Pre-implementation: loop runs indefinitely, command times out. \
-         Post-implementation: anti-loop guard breaks within 2 iterations."
+         /rest/api/3/search/jql returns a stuck cursor (JRACLOUD-95368 \
+         repeated-cursor symptom). Pre-implementation: loop runs indefinitely, \
+         command times out. Post-implementation: anti-loop guard breaks within \
+         2 iterations."
     );
 
     let output = output.unwrap();
     let stderr = String::from_utf8_lossy(&output.stderr);
 
-    // AC-NEW-D: stderr must contain the literal bug tracker reference.
+    // AC-NEW-D: stderr must contain the literal Atlassian ticket reference.
     // Pre-implementation: stderr is empty (no warning emitted). Assertion fails.
-    // Post-implementation: guard emits warning containing "JRACLOUD-94632".
+    // Post-implementation: guard emits warning containing "JRACLOUD-95368".
     assert!(
-        stderr.contains("JRACLOUD-94632"),
-        "AC-NEW-D (NFR-R-F): stderr must contain 'JRACLOUD-94632' when the anti-loop \
-         guard fires. This gives users a copy-pasteable search term for the upstream \
-         Atlassian bug tracker. Pre-implementation: no warning emitted. \
-         Got stderr: {stderr}"
+        stderr.contains("JRACLOUD-95368"),
+        "AC-NEW-D (NFR-R-F): stderr must contain 'JRACLOUD-95368' when the anti-loop \
+         guard fires. This gives users a copy-pasteable search term for the \
+         snapshot-instability root cause documented in the upstream Atlassian \
+         tracker. Pre-implementation: no warning emitted. Got stderr: {stderr}"
+    );
+}
+
+// ---------------------------------------------------------------------------
+// search_issues guard-abort has_more=true contract pin (Copilot review on PR #364).
+//
+// Library-level companion to the subprocess `ac_008_...` test above: directly
+// calls `client.search_issues(...)` against a stuck-cursor mock and asserts
+// `SearchResult.has_more == true` after the guard fires. Matches the parallel
+// `KeySearchResult` contract — both result types now signal incompleteness
+// via `has_more = true` on repeated-cursor abort, instead of silently
+// returning `has_more = false` despite the explicit "Some results may be
+// missing" warning.
+//
+// Three CLI readers consume `SearchResult.has_more` for truncation hints:
+// `cli/issue/list.rs`, `cli/board.rs`, `cli/sprint.rs`. With this contract,
+// they will correctly display the "Showing N of M, use --all to see more"
+// hint on guard-abort instead of misleading the user that the result set is
+// complete.
+// ---------------------------------------------------------------------------
+
+#[tokio::test]
+async fn test_search_issues_repeated_cursor_abort_sets_has_more_true() {
+    let server = MockServer::start().await;
+
+    let stuck_response = serde_json::json!({
+        "issues": [
+            {
+                "key": "TEST-1",
+                "fields": {
+                    "summary": "Test issue",
+                    "status": {"name": "To Do"},
+                    "issuetype": {"name": "Task"},
+                    "priority": {"name": "Medium"},
+                    "assignee": null,
+                    "reporter": null,
+                    "project": {"key": "TEST"},
+                    "description": null,
+                    "created": "2026-01-01T00:00:00.000+0000",
+                    "updated": "2026-01-01T00:00:00.000+0000",
+                    "resolution": null,
+                    "components": [],
+                    "fixVersions": [],
+                    "labels": [],
+                    "parent": null,
+                    "issuelinks": []
+                }
+            }
+        ],
+        "nextPageToken": "stuck-loop"
+    });
+
+    Mock::given(method("POST"))
+        .and(path("/rest/api/3/search/jql"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(&stuck_response))
+        // Exactly 2 hits: page 1 establishes prev_cursor, page 2 repeats it
+        // and triggers the guard before a 3rd request would be sent.
+        .expect(2)
+        .mount(&server)
+        .await;
+
+    let client = JiraClient::new_for_test(server.uri(), "Basic dGVzdDp0ZXN0".to_string());
+    let result = client
+        .search_issues("project = TEST", None, &[])
+        .await
+        .expect("guard must abort gracefully");
+
+    // Contract pin: guard-abort sets has_more=true (matches KeySearchResult).
+    // Pre-fix (Copilot review): has_more was silently false.
+    assert!(
+        result.has_more,
+        "search_issues MUST set has_more=true on repeated-cursor guard abort \
+         to match KeySearchResult and honour the explicit 'Some results may be \
+         missing' stderr warning. Pre-fix: has_more was false."
+    );
+    assert!(
+        !result.issues.is_empty(),
+        "guard-abort must preserve page 1's issues; loop is broken before runaway"
     );
 }
