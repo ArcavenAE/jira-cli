@@ -89,7 +89,7 @@ Team column parity (5.3), API layer (5.4).
 #### BC-5.2.004: `MAX_SPRINT_ISSUES = 50` caps `sprint add` and `sprint remove`
 
 **Confidence**: MEDIUM
-**Source**: `src/cli/sprint.rs:35-41, 55-61, 107`; 6 inline tests
+**Source**: `src/cli/sprint.rs:35-41, 55-61, 107`; inline unit tests
 **Subject**: Boards & Sprints
 **Behavior**: At most 50 issues processed per sprint operation.
 **Trace**: Pass 3 BC-405
@@ -173,7 +173,7 @@ Team column parity (5.3), API layer (5.4).
 #### BC-5.4.001: `IssueFields::team_id` accepts string-UUID; rejects non-string id (object form without `id` key)
 
 **Confidence**: HIGH
-**Source**: `src/types/jira/issue.rs:101-131`; 9 tests in `issue.rs::tests`; `tests/team_object_shape.rs`
+**Source**: `src/types/jira/issue.rs:101-131`; tests in `issue.rs::tests`; `tests/team_object_shape.rs`
 **Subject**: Boards & Sprints
 **Behavior**: String UUID → deserialized. Object `{id: "<uuid>"}` → deserialized (object form). Non-string id without proper structure → `None` or Err.
 **Trace**: Pass 3 BC-606

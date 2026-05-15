@@ -182,7 +182,7 @@ Note: The function doc comment inside client.rs lists precedence as "1. errorMes
 #### BC-7.3.006: `JrError::exit_code()` mapping
 
 **Confidence**: HIGH
-**Source**: `src/error.rs:51-62`; 8 inline tests
+**Source**: `src/error.rs:51-62`; inline tests
 **Subject**: Output rendering
 **Behavior**: See error-taxonomy.md for full table. Key codes: NotAuthenticated=2, InsufficientScope=2, ConfigError=78, UserError=64, Interrupted=130, NetworkError=1, ApiError=1, Json=1, Http=1, Other=1, Success=0.
 **Trace**: Pass 3 BC-1204
