@@ -897,3 +897,30 @@ consider at next F1d dispatch for a BC-touching feature.
 _Discovered: #365 F1d round-2 convergence retrospective, 2026-05-15_
 _Tagged: [codified] — observation; suggests greppable pre-pass invariant checks (check-spec-counts + caller-list grep) to front-load mechanical fixes before F1d dispatch_
 _Scope: F1d convergence for features that add BCs or new public API functions with caller lists_
+
+---
+
+## 2026-05-15 — Cycle 3-feature-search-issue-keys-dedupe-365 Close Summary
+
+### L-365-summary [codified] Cycle 3-feature-search-issue-keys-dedupe-365 closed at PR #367 / e193c16 — full VSDD lifecycle in single cycle
+
+**Cycle closed:** PR #367 MERGED @ e193c16 (squash, 2026-05-15T17:51:09Z; closes #365).
+
+**Overall trajectory:** F1d 17 passes (most in cycle-001 history) → F5 4 passes CONVERGED → F6 5 Copilot rounds CONVERGED → MERGED.
+
+**Notable shape:**
+
+- **F1d longest convergence in cycle-001 (17 passes, 2 rounds):** Driven by genuine spec-quality findings — no adversary noise. Round 1 (P1-P11): itertools::unique() consecutive-only behavior misrepresented; repeated caller-list errors; BC anchor cross-references missing. Round 2 (P12-P17): mid-cycle scope expansion (user approved extending dedupe symmetrically to `search_issues` — DP-4 reversal); caller-list factual errors; BC-2.6.051 creation required; BC count propagation BLOCKING at P14 requiring 4-file index sweep; product-owner BC scope violation caught via git status and reverted. L-365-4 codifies pre-pass greppable invariant checks as a front-loading strategy.
+
+- **F5 (4 passes): clean convergence but missed performance issue:** Adversary 3-clean + code-reviewer CONVERGENCE_REACHED + security LOW-RISK APPROVE. The 3-reviewer panel did not flag the O(N²) `Vec::retain` + per-iteration HashSet rebuild pattern. L-365-1 codifies this as an observation: F5 coverage axes do not currently include algorithmic complexity for collection-processing loops.
+
+- **F6 (5 Copilot rounds): R2 caught real algorithmic improvement:** Round 2 identified the O(N²) issue and proposed the incremental external `seen_keys: HashSet` pattern (O(N)). This is the first instance in cycle-001 where F6 surfaced a substantive correctness-class improvement that the full F5 panel missed. Rounds 3-4 consumed by doc cascade from the R2 algorithmic refactor — L-365-3 codifies the algorithmic refactor doc cascade anti-pattern and the grep-sweep prevention rule. Round 5 clean.
+
+**Lessons codified this cycle:** L-365-1 (F5 missed O(N²)), L-365-2 (F1 product-owner BC boundary violation), L-365-3 (algorithmic refactor doc cascade), L-365-4 (long F1d convergence — greppable pre-pass checks).
+
+**Drift items produced:** PG-365-1 (BC Trace stale-count pattern), PG-365-2 (F1d adversary citation-verification scope — engine-level), DRIFT-006 (F5 multi-axis review gap for complexity issues).
+
+**Process validation:** VSDD Feature Mode F1-F7 worked as designed for a 2-function feature with cross-cutting BC implications. The full audit trail (spec, BC catalog updates, adversarial reviews, Copilot rounds, lessons) is preserved in `.factory/cycles/cycle-001/adversarial-reviews/issue-365-search-issue-keys-dedupe/`.
+
+_Recorded: cycle 3-feature-search-issue-keys-dedupe-365 close, 2026-05-15T17:51:09Z_
+_Tagged: [codified] — cycle summary; applied lessons L-365-1..L-365-4 for future reference_
