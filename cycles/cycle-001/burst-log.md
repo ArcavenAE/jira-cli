@@ -3024,3 +3024,49 @@ edits during F1d) reverted by orchestrator and reframed in v0.1.12 (P14 mid-pass
 spec v0.1.0→v0.1.12). F1-gate round-2 awaiting human approval. 2 new drift items
 (PG-365-1, PG-365-2) recorded with explicit targets per S-7.02 deferral-with-target
 requirement.
+
+---
+
+## Archived from STATE.md Current Phase Steps (displaced by F7 burst — 2026-05-15)
+
+_The following rows were archived from Current Phase Steps to keep the table at ≤5 rows._
+
+| Step | Agent | Status | Output |
+|------|-------|--------|--------|
+| Cycle #365 opened (search_issue_keys dedupe) | orchestrator | complete | Issue #365 — implement in-function dedupe on all exit paths. Carved out by PR #364. F0-pre state recorded. F1 complete (research + spec). |
+| State backfill committed (2026-05-14) | state-manager | complete | STATE.md: +3 Phase Progress rows (PRs #364, #366, cycle #365); Last Updated + Current Phase metadata bumped; Session Resume Checkpoint replaced; Convergence Tracker updated. |
+
+---
+
+## Burst F7-prep-365 (2026-05-15) — Cycle #365 Pre-Merge Artifact Persistence
+
+**Agents dispatched:** state-manager
+**Files touched:** .factory/STATE.md, .factory/cycles/cycle-001/burst-log.md, .factory/cycles/cycle-001/lessons.md
+**Versions bumped:** (none)
+
+### Summary
+
+F7 cycle-close preparation for cycle `3-feature-search-issue-keys-dedupe-365`. PR #367 is OPEN
+(CI 8/8 green, Copilot R5=0 inline) and awaiting human merge. Pre-merge tasks: STATE.md Phase
+Progress row updated to "F6 CONVERGED — PR #367 OPEN, CI 8/8 green, Copilot R5=0 inline,
+awaiting merge". Full F1d + F5 + F6 trajectory recorded. 4 lessons codified (L-365-1..L-365-4).
+DRIFT-006 added (F5 multi-axis review missed O(N²) algorithmic complexity issue). Session Resume
+Checkpoint updated. Full cycle close (with merged-state row) deferred to post-merge.
+
+### Details
+
+| Agent | Task | Output |
+|-------|------|--------|
+| state-manager | Update STATE.md Phase Progress row (#365) to F6 CONVERGED / PR #367 OPEN status | STATE.md |
+| state-manager | Add F5 + F6 trajectory details to Phase Progress Finding Progression column | STATE.md |
+| state-manager | Update Current Phase Steps (add F5+F6 row + F7 prep row; archive 2 displaced rows to burst-log) | STATE.md + burst-log.md |
+| state-manager | Update Convergence Tracker (#365) with F5 + F6 phases, R2 algorithmic improvement note, DRIFT-006 reference | STATE.md |
+| state-manager | Add DRIFT-006 to Drift Items (F5 multi-axis review gap) | STATE.md |
+| state-manager | Update Session Resume Checkpoint to F7 cycle-close prep COMPLETE position | STATE.md |
+| state-manager | Update Last Updated to 2026-05-15 / F7 cycle-close prep summary | STATE.md |
+| state-manager | Codify 4 lessons (L-365-1..L-365-4) in cycles/cycle-001/lessons.md | lessons.md |
+| state-manager | Archive 2 displaced Current Phase Steps rows to burst-log.md | burst-log.md |
+
+**Outcome:** Pre-merge cycle artifacts persisted. STATE.md reflects F6 CONVERGED state.
+4 lessons on record. DRIFT-006 tracking the F5 multi-axis review gap. Cycle stays in
+"F6 CONVERGED — awaiting merge" state until human merges PR #367.

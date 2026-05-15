@@ -742,3 +742,158 @@ _Discovered: PR #358 R4, 2026-05-12 — first false-positive in 30+ Copilot roun
 _Tagged: [codified] — new lesson; captures the empirical-first pattern for false-positives_
 _Scope: all Copilot review rounds where the claim seems counterintuitive or contradicts observable behavior_
 _Prevention: probe test + Perplexity reference check + reply with evidence + resolve as not-applicable_
+
+---
+
+## 2026-05-15 — PR #367 / Issue #365 (search_issue_keys + search_issues dedupe) F7 Pre-Merge Lessons
+
+### L-365-1 [codified] F5 multi-axis review panel missed O(N²) algorithmic complexity issue; Copilot caught it
+
+**Context:** PR #367 (issue #365, in-function dedupe for `search_issue_keys` + `search_issues`)
+passed F5 with 3 adversarial CLEAN passes + code-reviewer CONVERGENCE_REACHED + security
+LOW-RISK APPROVE — a full multi-axis review. None of the F5 reviewers flagged an O(N²)
+algorithmic pattern: `Vec::retain` called with a per-iteration `HashSet::contains` check that
+rebuilt the seen-keys set incrementally, but the retain call itself iterated over the entire
+retained vec on each invocation. Net effect: O(N²) time in the worst case for large result sets.
+
+Copilot Round 2 (F6) caught this. The fix was to maintain an external `seen_keys: HashSet`
+that is built incrementally and tested with `.insert()` (returns false if already present),
+replacing the retain-based pattern entirely. This is an O(N) algorithm.
+
+**Why F5 missed it:** Adversarial review (including code-reviewer axis) focuses on
+correctness, security, and BC conformance. Algorithmic complexity is a distinct review axis
+that is not explicitly covered by the current F5 multi-axis reviewer lineup. The code was
+functionally correct; only the time complexity was suboptimal.
+
+**Lesson:** F5 should consider adding a performance/complexity-axis reviewer for any feature
+that introduces collection-processing loops (filter, dedupe, sort, accumulate patterns) over
+potentially large datasets (API response pages of N=1000+). Alternatively, trust Copilot to
+catch this class of issue downstream rather than block at F5. The downstream catch worked
+here with no production consequence (PR not yet merged when caught).
+
+**Observation vs. rule:** This is codified as an observation, not an engine-level rule change.
+No engine change required at this time. File as DRIFT-006 for orchestrator to consider at
+next F5 dispatch design discussion.
+
+_Discovered: PR #367 Copilot Round 2, 2026-05-15_
+_Tagged: [codified] — observation; no engine-level rule change at this time_
+_Related: DRIFT-006 (F5 multi-axis review missed O(N²) issue in PR #367)_
+
+---
+
+### L-365-2 [codified] F1 product-owner phase boundary violation — BC files are F3's job, not F1's
+
+**Context:** During F1d Round 2 (Pass 14), the product-owner dispatched under the F1 phase
+directly edited `.factory/specs/prd/` BC files — adding BC-2.6.051 and updating the BC count.
+This is outside the F1-phase scope boundary: F1 produces specs (`.factory/specs/`), research
+(`.factory/research/`), and holdout scenarios — NOT BC catalog files. BC files belong to the
+F3 implementer phase, which formalizes BCs as part of TDD delivery.
+
+The violation was caught during orchestrator review of `git status`, which showed modified
+`.factory/specs/prd/` files in the product-owner worktree. The fix was `git restore` on the
+modified BC files, and the product-owner was asked to forward the BC-anchor recommendation
+as a free-text observation in the spec (for F3 to act on), rather than editing the BC catalog
+directly.
+
+**Why it happened:** The F1 product-owner spec for #365 explicitly mentioned BC anchoring
+requirements (new BC-2.6.051 needed for `search_issues` dedupe guarantee). The product-owner
+agent interpreted this as permission to create the BC directly.
+
+**Lesson:** Future product-owner dispatches should include an explicit constraint when the
+spec touches BC catalog requirements: "DO NOT touch `.factory/specs/prd/` — BC catalog
+updates are F3's job. Record BC anchor requirements in the feature spec as a free-text
+observation (e.g., 'F3 should create BC-2.6.051 for...')." This prevents the boundary
+violation before it occurs rather than catching it in git status.
+
+**Systemic reinforcement:** "F1 phase produces specs/research artifacts only; BC files belong
+to F3 implementer." This is an existing engine constraint that was not communicated clearly
+enough in the product-owner dispatch prompt for this cycle.
+
+_Discovered: #365 F1d Round 2 Pass 14 — product-owner BC file scope violation caught via git status, 2026-05-15_
+_Tagged: [codified] — engine-level prompt constraint for future product-owner dispatches when spec mentions BC anchoring_
+
+---
+
+### L-365-3 [codified] Cascade doc-fallout from algorithmic refactor — grep sweep all OLD mechanism terminology immediately
+
+**Context:** Copilot Round 2 (F6) replaced the O(N²) `Vec::retain` + per-iteration HashSet
+rebuild pattern with an incremental external `seen_keys: HashSet` in both `search_issue_keys`
+and `search_issues`. This was the correct algorithmic fix. However, references to the old
+mechanism ("retain", "HashSet retain", "Vec::retain") existed in multiple locations:
+- Test doc comments describing the retain-based strategy
+- CLAUDE.md inline notes referencing the old approach
+- The feature spec (`docs/specs/`) still describing the old algorithm
+- Inline `//` comments in the implementation describing the strategy
+
+Copilot Rounds 3 and 4 were consumed almost entirely by documentation cascade from this
+single algorithmic change. Each round surfaced 1-3 stale references that the previous
+round's fix had missed.
+
+**Lesson (inverse of "documentation must lead implementation"):** When an algorithmic refactor
+lands — particularly one that replaces a named mechanism (`retain`, `HashSet contains`, `Vec::dedup`)
+with a different named mechanism (`seen.insert()`, incremental accumulation) — immediately
+perform a project-wide grep sweep for ALL occurrences of the OLD mechanism's terminology:
+
+```bash
+grep -rn "retain\|per.iteration\|HashSet::contains\|dedup" \
+  src/ tests/ docs/ CLAUDE.md --include="*.rs" --include="*.md"
+```
+
+Update every reference in the SAME commit as the algorithmic change, or in a single follow-up
+commit before requesting the next review round. Do NOT rely on the reviewer to find them
+one at a time — this is the cascade anti-pattern that consumed 2 Copilot rounds.
+
+**Naming:** "Algorithmic refactor doc cascade" — when renaming/replacing an algorithm produces
+a wave of stale references to the old algorithm's name, idiom, or characteristic code pattern.
+Preventable by a pre-request grep sweep using the OLD terminology as the search target.
+
+**Quantified cost:** 2 extra Copilot rounds (R3: doc cascade; R4: remaining cascade) for a
+refactor where all behavioral findings were resolved in R2. Prevention cost: 1 grep command
++ update-in-lockstep before R3 request.
+
+_Discovered: PR #367 Copilot Rounds 3-4 pattern analysis, 2026-05-15_
+_Tagged: [codified] — algorithmic refactor doc cascade; inverse of doc-fallout cluster lesson (PR #356 R14-R18)_
+_Rule: when an algorithmic refactor lands, immediately grep the OLD mechanism's terminology project-wide and update all references in the same commit or a single follow-up before the next review round_
+
+---
+
+### L-365-4 [codified] Long F1d convergence (17 passes) driven by genuine spec-quality findings — pattern works, consider early cross-file invariant checks
+
+**Context:** Issue #365 F1d convergence required 17 total passes across 2 rounds — the longest
+F1d convergence in cycle-001 (previous longest: #350 at 11 passes). The 17 passes were
+attributable to:
+- Round 1 (P1-P11, 11 passes): itertools::unique() consecutive-only behavior misrepresented in
+  spec; repeated caller-list errors; BC anchor cross-references missing.
+- Round 2 (P12-P17, 6 passes): scope expansion to `search_issues`; caller-list factual errors
+  (P13); BC-2.6.051 semantic anchoring required a new BC (P13); BC count propagation BLOCKING
+  (P14 — count not propagated to ARCH-INDEX + BC-INDEX); product-owner scope-violation required
+  revert (P14). Pass P15 was first CLEAN after revert; P16 had 2 NITs; P17 was fully CLEAN.
+
+**Assessment:** No adversary noise was observed — every pass surfaced substantive spec-quality
+findings. The 17-pass trajectory reflects genuine spec complexity: a 2-function feature with
+cross-cutting BC implications (3 BC files affected), a scope expansion mid-round, and a BC
+count propagation requirement that requires updating 4+ index files.
+
+**Lesson:** The F1d pattern works correctly for this class of feature. However, consider
+two front-loading strategies to reduce pass count:
+
+1. **Greppable invariant pre-check before Pass 1:** For features that add or modify BCs,
+   run the check-spec-counts script (`scripts/check-spec-counts.sh`) BEFORE dispatching
+   the adversary. A count propagation error (like the P14 BLOCKING finding) would be caught
+   before consuming a pass.
+
+2. **Caller-list verification by grep before Pass 1:** For features that add new API functions,
+   verify the caller-list section of the spec against actual callers via
+   `grep -rn "<function_name>" src/` before F1d dispatch. Caller-list errors recurred across
+   P1, P5, and P13 — all were greppable without adversary intervention.
+
+These are "cheap pre-pass checks" that the orchestrator or product-owner can run to eliminate
+a class of greppable invariant violations before F1d begins, potentially front-loading 3-5
+passes worth of mechanical fixes into a pre-pass sweep.
+
+**No engine-level rule change at this time.** Observation codified for the orchestrator to
+consider at next F1d dispatch for a BC-touching feature.
+
+_Discovered: #365 F1d round-2 convergence retrospective, 2026-05-15_
+_Tagged: [codified] — observation; suggests greppable pre-pass invariant checks (check-spec-counts + caller-list grep) to front-load mechanical fixes before F1d dispatch_
+_Scope: F1d convergence for features that add BCs or new public API functions with caller lists_

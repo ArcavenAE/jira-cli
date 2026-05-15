@@ -36,7 +36,7 @@ activation_version: "v0.5.0-dev.7"
 | **Language** | Rust |
 | **Target Workspace** | develop → main |
 | **Started** | 2026-05-04 |
-| **Last Updated** | 2026-05-15 — **F1d ROUND-2 CONVERGED for #365** (search_issue_keys + search_issues dedupe; 17 total passes across 2 rounds; spec v0.1.0→v0.1.12; 3/3 CLEAN at P15-P17). Per-pass files (P12-P17) + CONVERGENCE.md update committed to factory-artifacts. 2 drift items added (PG-365-1, PG-365-2). F1-gate round-2 (human approval) next. |
+| **Last Updated** | 2026-05-15 — **F7 cycle-close prep for #365** (pre-merge artifact persistence + lessons codification). STATE.md Phase Progress row updated to "F6 CONVERGED — PR #367 OPEN, CI 8/8 green, Copilot R5=0 inline, awaiting merge". 4 lessons codified (L-365-1..L-365-4). DRIFT-006 added (F5 multi-axis review missed O(N²) issue). |
 | **Current Phase** | Phase 3 — TDD Implementation **IN PROGRESS** — Wave 3 CLOSED (10/10). Feature Mode #110-pr2 COMPLETE. PRs #355–#364, #366 MERGED. **3 audit-followups remain: #340, #345, #346** (#331 sandbox-blocked deferred; #333 closed by PR #360; #350 closed by PR #362; #361 closed by PR #364). **Active cycle: #365 (search_issue_keys dedupe).** |
 | **Next Phase** | Wave 3 — 10 stories (S-3.01..S-3.10) |
 | **Activation HEAD** | dea166471e22eff55974d7675593469b37048c5f (v0.5.0-dev.7) |
@@ -74,7 +74,7 @@ Goal 1c: **Harden v0.5 + feature delivery** — formalize existing codebase with
 | 3-feature-search-issue-keys-350-spec-followup | **MERGED** — PR #363 MERGED @ 3acd07f (squash: "docs(spec): backport has_more guard-abort trigger to public spec rustdoc snippet (PR #362 follow-up)"; 8/8 CI green; Copilot R1=0 findings; closes post-merge doc-fallout gap detected on PR #362) | 2026-05-13 | 2026-05-13 | MERGED | R1=0 |
 | 3-feature-search-warning-citation-rebind-361 | **MERGED** — PR #364 MERGED @ b8a87c5 (squash: "chore(search): rebind repeated-cursor warning to JRACLOUD-95368 (closes #361) (#364)"; rebinds JRACLOUD-94632 citation to JRACLOUD-95368; fixes has_more asymmetry in search_issues; adds test_search_issue_keys_repeated_cursor_abort_does_not_dedupe; updates spec with citation + per-CLI carve-out bullets; 11+ Copilot rounds; closes #361) | 2026-05-14 | 2026-05-14 | MERGED | F5 CONVERGED ~10 Copilot rounds →0 |
 | 3-feature-claude-md-doc-followup-364 | **MERGED** — PR #366 MERGED @ ad6b979 (squash: "docs(claude-md): codify JRACLOUD-95368 attribution + citation-validation discipline (PR #364 follow-up) (#366)"; adds Gotcha entry for JRACLOUD-95368 + has_more carve-outs + no-dedupe note + ORDER BY tie-breaker; adds AI Agent Note for citation discipline; Copilot R1=0 findings) | 2026-05-14 | 2026-05-14 | MERGED | R1=0 |
-| 3-feature-search-issue-keys-dedupe-365 | **F1d ROUND-2 CONVERGED** — 3/3 CLEAN at pass 17 (17 total passes across 2 rounds; spec v0.1.0→v0.1.12). Round 1: P1-P11 CONVERGED at v0.1.8. Round 2 (scope expansion: search_issues symmetric dedupe): P12-P17 CONVERGED at v0.1.12. Awaiting F1-gate round-2 (human approval). Closes #365. | 2026-05-14 | | F1d ROUND-2 CONVERGED — awaiting F1-gate (round 2) | R1: 0/4/2→0/0/2→0/1/3→0/2/2→0/1/1→0/2/5→0/1/4→0/1/2→0→0→0 \| R2: 0/0/3→0/6/0→1B/2/0→0→0/0/2→0 |
+| 3-feature-search-issue-keys-dedupe-365 | **F6 CONVERGED — PR #367 OPEN, CI 8/8 green, Copilot R5=0 inline, awaiting merge** — F1d: 17 passes, spec v0.1.0→v0.1.12 CONVERGED. F5: 4 passes, adversary 3-clean + code-reviewer CONVERGENCE_REACHED + security LOW-RISK APPROVE. F6: 5 Copilot rounds (4 substantive + 1 clean). Notable: R2 caught O(N²)→O(N) algorithmic improvement (incremental external `seen_keys` HashSet) that F5 missed; R3-R4 cascade doc cleanup from algorithmic refactor; R5 clean. Closes #365. | 2026-05-14 | | F6 CONVERGED — PR #367 open, awaiting human merge | F1d R1: 0/4/2→…→0→0→0 (11p) \| F1d R2: 0/0/3→0/6/0→1B/2/0→0→0/0/2→0 (6p) \| F5: →→→clean×3 \| F6: 5R→clean |
 | 4: Holdout Evaluation | not-started | | | | |
 | 5: Adversarial Refinement | not-started | | | | |
 | 6: Formal Hardening | not-started | | | | |
@@ -86,11 +86,11 @@ Goal 1c: **Harden v0.5 + feature delivery** — formalize existing codebase with
 
 | Step | Agent | Status | Output |
 |------|-------|--------|--------|
-| Cycle #365 opened (search_issue_keys dedupe) | orchestrator | complete | Issue #365 — implement in-function dedupe on all exit paths. Carved out by PR #364. F0-pre state recorded. F1 complete (research + spec). |
-| State backfill committed (2026-05-14) | state-manager | complete | STATE.md: +3 Phase Progress rows (PRs #364, #366, cycle #365); Last Updated + Current Phase metadata bumped; Session Resume Checkpoint replaced; Convergence Tracker updated. |
 | F1d adversarial spec convergence R1 — #365 | adversary | complete | 3/3 CLEAN at pass 11 (11 total passes, 6 counter resets, spec v0.1.0 → v0.1.8). Per-pass + convergence files written to cycles/cycle-001/adversarial-reviews/issue-365-search-issue-keys-dedupe/. 2 process-gap flags (PG-365-1 BC trace stale-count; PG-365-2 F1d citation scope). |
 | #365 scope expansion approved (search_issues symmetric dedupe) | human | complete | User approved extending dedupe to search_issues. Spec bumped v0.1.8 → v0.1.9. F1d counter reset 3/3 → 0/3. Round 2 begins. |
 | F1d adversarial spec convergence R2 — #365 | adversary | complete | 6 passes (P12-P17). 3/3 CLEAN at P15-P16-P17 at spec v0.1.12. Key finds: caller-list errors (P13), BC mis-anchoring → BC-2.6.051 (P13), BC count propagation BLOCKING (P14), product-owner scope violation reverted (P14). Per-pass files P12-P17 + CONVERGENCE.md updated. Drift items PG-365-1/PG-365-2 recorded. |
+| F5 + F6 adversarial convergence — #365 | adversary + Copilot | complete | F5: 4 passes CONVERGED (adversary 3-clean, code-reviewer CONVERGENCE_REACHED, security LOW-RISK APPROVE). F6: 5 Copilot rounds — R2 caught O(N²)→O(N) algorithmic improvement (incremental external `seen_keys` HashSet), R3-R4 cascade doc cleanup, R5 clean. PR #367 OPEN, CI 8/8 green, Copilot R5=0 inline. |
+| F7 cycle-close prep — #365 | state-manager | complete | STATE.md Phase Progress row updated to F6 CONVERGED/PR #367 OPEN. 4 lessons codified (L-365-1..L-365-4). DRIFT-006 added. Factory commit pending. |
 
 ## Decisions Log
 
@@ -184,6 +184,7 @@ Goal 1c: **Harden v0.5 + feature delivery** — formalize existing codebase with
 | DRIFT-005 | Post-Copilot doc-fallout sweep | Codified pattern: when Copilot review introduces contract refinements, BC body / story AC / public spec rustdoc do not auto-propagate. Caught post-merge on PR #362 (search_issue_keys has_more guard-abort branch). Mitigation = new Phase 8 step (validated-feature-lifecycle). Documented in `.factory/sidecar-learning.md` 2026-05-13. | LOW | process-gap codified (apply on next PR) |
 | PG-365-1 | BC Trace field stale-test-count pattern | BC body Trace fields cite test counts that drift as tests are added. First caught at P4 of #365 F1d (BC-2.6.050 Trace field stale before this feature). Parallel to DRIFT-001/DRIFT-004. Requires a dedicated BC catalog maintenance sweep to fix systematically. Owner: TBD. | LOW | DRIFT — explicit target: next BC catalog sweep / BC-2 maintenance pass |
 | PG-365-2 | F1d adversary citation-verification scope (engine-level) | F1d adversary was asked to validate research-agent citations (itertools::unique() consecutive-only claim) without WebFetch access. Scope boundary unclear in engine. Correct scope: F1d adversary accepts research-agent output as verified ground truth; adversary's citation check is "does the spec provide a citable reference?" not "is the reference correct?". Not solvable from jira-cli. | LOW | DRIFT (engine-level) — action: add clarification to FACTORY.md or adversarial-review SKILL.md in dark-factory engine repo. File separate issue in engine repo or include in next engine maintenance pass. |
+| DRIFT-006 | F5 multi-axis review missed O(N²) algorithmic complexity issue (PR #367) | F5 adversary (3-clean) + code-reviewer (CONVERGENCE_REACHED) + security (LOW-RISK APPROVE) all passed without flagging the O(N²) `Vec::retain` + per-iteration HashSet rebuild in `search_issue_keys` / `search_issues`. Copilot R2 caught it. Consider adding a performance/complexity-axis reviewer in future F5 phases. See L-365-1. | LOW | process-gap — Owner: orchestrator. Target: next F5 dispatch design discussion. |
 
 ## Convergence Trackers
 
@@ -202,10 +203,13 @@ _Wave gate: not started. Feature Mode #110-pr2: **F5 CONVERGED** 12→5→0→0�
 
 **Issue #365 follow-up (CLAUDE.md citation-validation discipline) MERGED 2026-05-14** — PR #366 @ ad6b979. Branch `docs/claude-md-jracloud-95368-followup`. Copilot R1=0. Adds CLAUDE.md Gotcha for JRACLOUD-95368 + AI Agent Note for external-tracker citation discipline.
 
-**Issue #365 (search_issue_keys + search_issues in-function dedupe) F1d ROUND-2 CONVERGED 2026-05-15** — 17 total passes across 2 rounds; 8 total counter resets; spec v0.1.0→v0.1.12.
-- Round 1: P1-P11, 6 resets, CONVERGED at v0.1.8 (3/3 CLEAN P9-P10-P11). Trajectory: 0/4/2→0/0/2→0/1/3→0/2/2→0/1/1→0/2/5→0/1/4→0/1/2→0→0→0.
-- Round 2: P12-P17, 2 resets, CONVERGED at v0.1.12 (3/3 CLEAN P15-P16-P17). Trajectory: CLEAN(P12)→0/6/0(P13)→1B/2/0(P14)→CLEAN(P15)→CLEAN/2NIT(P16)→CLEAN(P17). Key themes: caller-list factual errors, BC-2.6.051 semantic anchoring, BC count propagation BLOCKING, product-owner scope-violation reverted. Drift items: PG-365-1 (BC Trace stale-count), PG-365-2 (F1d citation-verification scope, engine-level).
-Full record: `.factory/cycles/cycle-001/adversarial-reviews/issue-365-search-issue-keys-dedupe/CONVERGENCE.md`. F1-gate (round 2) awaiting human approval.
+**Issue #365 (search_issue_keys + search_issues in-function dedupe) F6 CONVERGED 2026-05-15** — 17 F1d passes (2 rounds) + F5 CONVERGED (4 passes) + F6 5 Copilot rounds → PR #367 OPEN, CI 8/8 green, Copilot R5=0, awaiting human merge.
+- F1d Round 1: P1-P11, 6 resets, CONVERGED at v0.1.8 (3/3 CLEAN P9-P10-P11). Trajectory: 0/4/2→0/0/2→0/1/3→0/2/2→0/1/1→0/2/5→0/1/4→0/1/2→0→0→0.
+- F1d Round 2: P12-P17, 2 resets, CONVERGED at v0.1.12 (3/3 CLEAN P15-P16-P17). Trajectory: CLEAN(P12)→0/6/0(P13)→1B/2/0(P14)→CLEAN(P15)→CLEAN/2NIT(P16)→CLEAN(P17).
+- F5: adversary 3-clean + code-reviewer CONVERGENCE_REACHED + security LOW-RISK APPROVE (4 passes total).
+- F6: R1 (substantive) → R2 (O(N²)→O(N) algorithmic improvement caught) → R3 (cascade doc cleanup) → R4 (remaining doc cascade) → R5 (0 inline, CLEAN). Trajectory: substantive→algorithmic-improvement→doc-cascade×2→clean.
+- Notable: F6 R2 caught O(N²) complexity issue (Vec::retain + per-iteration HashSet rebuild replaced with incremental external `seen_keys` HashSet) that F5 3-reviewer panel missed. See L-365-1. Drift items: PG-365-1 (BC Trace stale-count), PG-365-2 (F1d citation-verification scope, engine-level). DRIFT-006 added for F5 multi-axis review gap.
+Full record: `.factory/cycles/cycle-001/adversarial-reviews/issue-365-search-issue-keys-dedupe/CONVERGENCE.md`. Cycle stays open pending PR #367 merge.
 
 ### Phase 5-adv — Adversarial Refinement
 _Not started._
@@ -216,8 +220,8 @@ _Not started._
 | Field | Value |
 |-------|-------|
 | **Date** | 2026-05-15 |
-| **Position** | **F1d ROUND-2 CONVERGED for #365** (search_issue_keys + search_issues dedupe; spec v0.1.12; 17 total passes, 3/3 CLEAN at P15-P16-P17). Develop HEAD = ad6b979 (unchanged — no new PRs merged). **Active cycle: #365** — F1-gate round-2 (human approval) next. **3 audit-followups remain: #340, #345, #346**. 2 new drift items: PG-365-1 (BC Trace stale-count pattern) + PG-365-2 (F1d citation-scope, engine-level). |
-| **Convergence counter** | #365 F1d R2: 3/3 CLEAN at pass 17 (P15/P16/P17). Spec v0.1.12 locked. |
+| **Position** | **F7 cycle-close prep COMPLETE for #365** (pre-merge artifact persistence + lessons codification done). PR #367 OPEN — CI 8/8 green, Copilot R5=0 inline. Develop HEAD = ad6b979 (unchanged — PR #367 not yet merged). **Active cycle: #365** — awaiting human merge of PR #367 to complete cycle close. **3 audit-followups remain: #340, #345, #346**. 4 lessons codified (L-365-1..L-365-4). DRIFT-006 added. |
+| **Convergence counter** | #365 F6: 5 Copilot rounds CONVERGED (R5=0 inline). PR #367 open, CI 8/8 green. |
 
 ## Historical Content
 
