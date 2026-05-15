@@ -4,7 +4,7 @@ level: ops
 version: "2.0"
 status: active
 producer: state-manager
-timestamp: 2026-05-15T00:00:00
+timestamp: 2026-05-15T19:49:41
 phase: phase-3-tdd-implementation
 inputs: []
 input-hash: "[live-state]"
@@ -36,8 +36,8 @@ activation_version: "v0.5.0-dev.7"
 | **Language** | Rust |
 | **Target Workspace** | develop → main |
 | **Started** | 2026-05-04 |
-| **Last Updated** | 2026-05-15 — **PR #367 MERGED @ e193c16** (squash; closes #365; cycle 3-feature-search-issue-keys-dedupe-365 CLOSED). Full F1-F7 lifecycle CONVERGED in single cycle. F1d: 17 passes; F5: 4 passes; F6: 5 Copilot rounds. 4 lessons codified (L-365-1..L-365-4) + L-365-summary appended. DRIFT-006 recorded. Factory commits pushed. |
-| **Current Phase** | Phase 3 — TDD Implementation **IN PROGRESS** — Wave 3 CLOSED (10/10). Feature Mode #110-pr2 COMPLETE. PRs #355–#364, #366–#367 MERGED. **3 audit-followups remain: #340, #345, #346** (#331 sandbox-blocked deferred; #333 closed by PR #360; #350 closed by PR #362; #361 closed by PR #364; #365 closed by PR #367). No active cycle. |
+| **Last Updated** | 2026-05-15 — **PR #369 MERGED @ 6ca9587** (squash; resolves PG-365-1 Drift Item from cycle #365; 7 Copilot rounds, 9 valid findings). DRIFT-007 added. L-PG365-1-process codified. Factory commits pushed. |
+| **Current Phase** | Phase 3 — TDD Implementation **IN PROGRESS** — Wave 3 CLOSED (10/10). Feature Mode #110-pr2 COMPLETE. PRs #355–#364, #366–#367, #369 MERGED. **3 audit-followups remain: #340, #345, #346** (#331 sandbox-blocked deferred; #333 closed by PR #360; #350 closed by PR #362; #361 closed by PR #364; #365 closed by PR #367; PG-365-1 closed by PR #369). No active cycle. |
 | **Next Phase** | Wave 3 — 10 stories (S-3.01..S-3.10) |
 | **Activation HEAD** | dea166471e22eff55974d7675593469b37048c5f (v0.5.0-dev.7) |
 | **factory-artifacts SHA** | 0b01262 (Phase 1 gate APPROVE; phase-1-converged tag) |
@@ -75,6 +75,7 @@ Goal 1c: **Harden v0.5 + feature delivery** — formalize existing codebase with
 | 3-feature-search-warning-citation-rebind-361 | **MERGED** — PR #364 MERGED @ b8a87c5 (squash: "chore(search): rebind repeated-cursor warning to JRACLOUD-95368 (closes #361) (#364)"; rebinds JRACLOUD-94632 citation to JRACLOUD-95368; fixes has_more asymmetry in search_issues; adds test_search_issue_keys_repeated_cursor_abort_does_not_dedupe; updates spec with citation + per-CLI carve-out bullets; 11+ Copilot rounds; closes #361) | 2026-05-14 | 2026-05-14 | MERGED | F5 CONVERGED ~10 Copilot rounds →0 |
 | 3-feature-claude-md-doc-followup-364 | **MERGED** — PR #366 MERGED @ ad6b979 (squash: "docs(claude-md): codify JRACLOUD-95368 attribution + citation-validation discipline (PR #364 follow-up) (#366)"; adds Gotcha entry for JRACLOUD-95368 + has_more carve-outs + no-dedupe note + ORDER BY tie-breaker; adds AI Agent Note for citation discipline; Copilot R1=0 findings) | 2026-05-14 | 2026-05-14 | MERGED | R1=0 |
 | 3-feature-search-issue-keys-dedupe-365 | **MERGED — PR #367 @ e193c16 (squash); closes #365; full F1-F7 lifecycle CONVERGED in single cycle** — F1d: 17 passes (R1: P1-P11 CONVERGED v0.1.8; R2: P12-P17 CONVERGED v0.1.12). F5: 4 passes (adversary 3-clean + code-reviewer CONVERGENCE_REACHED + security LOW-RISK APPROVE). F6: 5 Copilot rounds (R2 O(N²)→O(N) algorithmic fix; R3-R4 doc cascade; R5 clean). Merged 2026-05-15T17:51:09Z. | 2026-05-14 | 2026-05-15 | MERGED @ e193c16 | F1d R1: 0/4/2→…→0→0→0 (11p) \| F1d R2: 0/0/3→0/6/0→1B/2/0→0→0/0/2→0 (6p) \| F5: →→→clean×3 \| F6: 5R→clean |
+| 3-chore-pg365-1-bc-trace-cleanup | **MERGED** — PR #369 @ 6ca9587 (squash); resolves PG-365-1 Drift Item from cycle #365 | 2026-05-15 | 2026-05-15 | MERGED — 7 Copilot rounds, 9 valid findings | R1=1 R2=1 R3=1 R4=1 R5=3 R6=2 R7=0 |
 | 4: Holdout Evaluation | not-started | | | | |
 | 5: Adversarial Refinement | not-started | | | | |
 | 6: Formal Hardening | not-started | | | | |
@@ -90,6 +91,7 @@ Goal 1c: **Harden v0.5 + feature delivery** — formalize existing codebase with
 | F5 + F6 adversarial convergence — #365 | adversary + Copilot | complete | F5: 4 passes CONVERGED (adversary 3-clean, code-reviewer CONVERGENCE_REACHED, security LOW-RISK APPROVE). F6: 5 Copilot rounds — R2 caught O(N²)→O(N) algorithmic improvement (incremental external `seen_keys` HashSet), R3-R4 cascade doc cleanup, R5 clean. PR #367 OPEN, CI 8/8 green, Copilot R5=0 inline. |
 | F7 cycle-close prep — #365 | state-manager | complete | STATE.md Phase Progress row updated to F6 CONVERGED/PR #367 OPEN. 4 lessons codified (L-365-1..L-365-4). DRIFT-006 added. Factory commit pending. |
 | PR #367 MERGED @ e193c16 (2026-05-15T17:51:09Z) — cycle 3-feature-search-issue-keys-dedupe-365 CLOSED | state-manager | complete | Phase Progress row updated to MERGED. Session checkpoint updated. L-365-summary appended to lessons.md. Factory commits pushed to origin/factory-artifacts. |
+| PR #369 MERGED @ 6ca9587 — PG-365-1 RESOLVED. Single-pass F5 review missed Source-field coverage (Copilot R4 caught it) — see lesson L-PG365-1-process. 7 Copilot rounds, 9 valid findings. DRIFT-007 added. | state-manager | complete | Phase Progress row added. Lesson L-PG365-1-process codified in lessons.md. DRIFT-007 recorded in Drift Items. Session checkpoint updated. |
 
 ## Decisions Log
 
@@ -181,9 +183,10 @@ Goal 1c: **Harden v0.5 + feature delivery** — formalize existing codebase with
 | WV2-CV-12 | .factory/STATE.md | S-0.05-F2 drift item shows `TO_VERIFY` without resolution target. | NIT | DEFERRED — verify and close in Wave 3 dev touch or doc-cleanup PR. |
 | WV2-SEC-01 | src/duration.rs::parse_duration_validate | Wave 2 integration-gate security finding (CWE-400 uncontrolled resource consumption). parse_duration_validate reflected unbounded user input into error messages. Added MAX_DURATION_INPUT_LEN = 64 byte cap + 2 regression-pin tests. Not exploitable; defense-in-depth. | MEDIUM | **RESOLVED — 2026-05-08 — develop @ 6cb9994 (PR #310)** |
 | DRIFT-005 | Post-Copilot doc-fallout sweep | Codified pattern: when Copilot review introduces contract refinements, BC body / story AC / public spec rustdoc do not auto-propagate. Caught post-merge on PR #362 (search_issue_keys has_more guard-abort branch). Mitigation = new Phase 8 step (validated-feature-lifecycle). Documented in `.factory/sidecar-learning.md` 2026-05-13. | LOW | process-gap codified (apply on next PR) |
-| PG-365-1 | BC Trace field stale-test-count pattern | BC body Trace fields cite test counts that drift as tests are added. First caught at P4 of #365 F1d (BC-2.6.050 Trace field stale before this feature). Parallel to DRIFT-001/DRIFT-004. Requires a dedicated BC catalog maintenance sweep to fix systematically. Owner: TBD. | LOW | DRIFT — explicit target: next BC catalog sweep / BC-2 maintenance pass |
+| PG-365-1 | BC Trace field stale-test-count pattern | BC body Trace fields cite test counts that drift as tests are added. First caught at P4 of #365 F1d (BC-2.6.050 Trace field stale before this feature). Parallel to DRIFT-001/DRIFT-004. Eliminated numeric counts across bc-2, bc-3, bc-5, bc-7 (9 sites); CI guard `scripts/check-bc-no-numeric-test-counts.sh` added; `spec-guard` CI job wired in ci.yml. | LOW | **RESOLVED — PR #369 @ 6ca9587 (2026-05-15)** |
 | PG-365-2 | F1d adversary citation-verification scope (engine-level) | F1d adversary was asked to validate research-agent citations (itertools::unique() consecutive-only claim) without WebFetch access. Scope boundary unclear in engine. Correct scope: F1d adversary accepts research-agent output as verified ground truth; adversary's citation check is "does the spec provide a citable reference?" not "is the reference correct?". Not solvable from jira-cli. | LOW | DRIFT (engine-level) — action: add clarification to FACTORY.md or adversarial-review SKILL.md in dark-factory engine repo. File separate issue in engine repo or include in next engine maintenance pass. |
 | DRIFT-006 | F5 multi-axis review missed O(N²) algorithmic complexity issue (PR #367) | F5 adversary (3-clean) + code-reviewer (CONVERGENCE_REACHED) + security (LOW-RISK APPROVE) all passed without flagging the O(N²) `Vec::retain` + per-iteration HashSet rebuild in `search_issue_keys` / `search_issues`. Copilot R2 caught it. Consider adding a performance/complexity-axis reviewer in future F5 phases. See L-365-1. | LOW | process-gap — Owner: orchestrator. Target: next F5 dispatch design discussion. |
+| DRIFT-007 | Chore-mode workflow not formalized — ad-hoc shortcuts produce predictable defects | PR #369 (PG-365-1) treated as "trivial" change: no F1 spec, no F2 story, no F3 red gate, no F5 multi-axis convergence, no 3-clean discipline. Result: 7 Copilot rounds with 9 valid findings, including R4 catching the same Source-field coverage gap the orchestrator's single adversary pass had explicitly deferred as NIT-2. Either apply full VSDD always OR formalize `workflows/maintenance.lobster` chore-mode workflow with explicit-but-reduced checklist. See L-PG365-1-process in lessons.md. | LOW | process-gap — Owner: orchestrator. Target: next chore PR / next planning discussion. |
 
 ## Convergence Trackers
 
@@ -219,8 +222,8 @@ _Not started._
 | Field | Value |
 |-------|-------|
 | **Date** | 2026-05-15 |
-| **Position** | **Cycle 3-feature-search-issue-keys-dedupe-365 CLOSED** — PR #367 MERGED @ e193c16 (2026-05-15T17:51:09Z, squash merge by Zious11; closes #365). Develop HEAD = e193c16. No active cycle. **3 audit-followups remain: #340, #345, #346** (#331 sandbox-blocked deferred). 4 lessons codified (L-365-1..L-365-4) + L-365-summary cycle summary appended. DRIFT-006 recorded. Factory commits pushed to origin/factory-artifacts. Worktree `.worktrees/search-dedupe-365` still present — pending devops-engineer cleanup. |
-| **Convergence counter** | Cycle #365 fully CONVERGED: F1d 17 passes → F5 4 passes → F6 5 Copilot rounds → MERGED. No active convergence cycle. |
+| **Position** | **PG-365-1 RESOLVED** — PR #369 MERGED @ 6ca9587 (2026-05-15T19:49:41Z, squash merge by Zious11). Chore: eliminated numeric test counts from BC Trace + Source fields across bc-2, bc-3, bc-5, bc-7 (9 sites); added `scripts/check-bc-no-numeric-test-counts.sh` CI guard; wired `spec-guard` CI job in ci.yml (also brings `check-spec-counts.sh` into CI for DRIFT-001). Develop HEAD = 6ca9587. No active cycle. **3 audit-followups remain: #340, #345, #346** (#331 sandbox-blocked deferred). L-PG365-1-process codified. DRIFT-007 added. Factory commits to be pushed. |
+| **Convergence counter** | No active convergence cycle. PR #369 (PG-365-1 chore): 7 Copilot rounds → R7=0 → MERGED. |
 
 ## Historical Content
 

@@ -924,3 +924,29 @@ _Scope: F1d convergence for features that add BCs or new public API functions wi
 
 _Recorded: cycle 3-feature-search-issue-keys-dedupe-365 close, 2026-05-15T17:51:09Z_
 _Tagged: [codified] — cycle summary; applied lessons L-365-1..L-365-4 for future reference_
+
+---
+
+## 2026-05-15 — PR #369 / PG-365-1 Chore Process Post-Mortem
+
+### L-PG365-1-process [codified] "Trivial change" rationalization bypasses VSDD discipline and produces predictable downstream defects
+
+**Context:** PR #369 (PG-365-1 chore) was treated as a "trivial" change and shortcut to single-pass adversary + pr-manager — no F1 spec, no F2 story, no F3 red gate, no F5 multi-axis convergence, no F1d/F5 3-clean discipline.
+
+**Result:** 7 Copilot rounds with 9 valid findings, including R4 catching the same `Source:` field coverage gap that the orchestrator's single adversary pass had explicitly deferred as NIT-2. The "trivial change" rationalization led to defects landing at Copilot rather than at F5.
+
+**Root cause:** The orchestrator's MANDATORY STEPS list (Phase 1d / Phase 5 3-clean adversarial convergence) does not have a "trivial" exemption. When it was informally granted one, the predictable outcome was a multi-round Copilot session that reproduced the exact defects that F5 adversarial convergence was designed to surface.
+
+**Specific failure sequence (R4):**
+- Orchestrator's single adversary pass identified the Source-field numeric-count coverage gap but categorized it as NIT-2 ("acceptable to defer").
+- PR was opened with that gap present.
+- Copilot R4 re-surfaced it as a valid finding — 4 rounds of context accumulation later.
+- The NIT-2 categorization on the adversary side vs. a real finding on the Copilot side is an inconsistency that 3-clean adversarial convergence would have resolved before the PR opened.
+
+**Lesson:** Apply VSDD process to ALL PRs regardless of perceived size, OR formally codify a `workflows/maintenance.lobster` chore-mode workflow with explicit-but-reduced-but-still-mandatory checklist. The current ad-hoc shortcut pattern produces predictable round-2-through-N defects in F6 that should have been caught at F5 or earlier. Tracked in DRIFT-007.
+
+**Quantified cost of shortcut:** 7 Copilot rounds with 9 valid findings vs. an estimated 1-2 Copilot rounds if F5 3-clean had been applied (extrapolating from PR #357 which converged in 2 rounds after a thorough F5 pass). The shortcut saved an estimated 1-2 adversarial passes but cost 5-6 extra Copilot rounds — net negative.
+
+_Discovered: PR #369 post-merge retrospective, 2026-05-15T19:49:41Z_
+_Tagged: [codified] — chore-PR process failure; VSDD "trivial" exemption anti-pattern_
+_Related: DRIFT-007 (chore-mode workflow not formalized)_
