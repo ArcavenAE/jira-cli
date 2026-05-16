@@ -158,6 +158,36 @@ The discriminator is exercised in future cycles, not this one.
 - YAML parse (ruby): PASS
 - `cargo mutants --list --in-diff $DIFF_FILE`: verified locally; 0 for docs-only diff
 
+## Adversary Pass 3 Fixes (applied 2026-05-16)
+
+### CONCERN findings addressed
+
+- **F1 (CONCERN):** `docs/specs/cargo-mutants-policy.md` was self-contradictory.
+  Lines 20-21 and 128 claimed CI used `--file` belt-and-suspenders scope enforcement,
+  but Pass 2 removed `--file` in favour of `examine_globs` only (lines 108-110 correctly
+  reflected the post-Pass-2 state). Removed the stale claims; policy doc is now
+  internally consistent.
+
+- **F2 (CONCERN):** Eliminated POL-11 false-green vector. The previous Check step
+  re-invoked `cargo mutants --list --in-diff "${DIFF_FILE}"` to compute
+  `expected_mutants`. If `git diff`, the `cargo mutants` binary, or `--list` mode
+  silently failed, `expected_mutants=0` would bypass the harness-health gate — the same
+  failure mode as the Run step. Replaced with a direct `outcomes.json` existence check:
+  if `mutants.out/outcomes.json` is absent, the harness did not complete — CI now fails
+  loudly. If it exists with `total_outcomes == 0`, the diff produced no mutants (clean
+  PR — exit 0). Otherwise enforce the 90% kill-rate gate. The `cargo mutants --list`
+  re-invocation is removed entirely.
+
+### Verification
+
+- cargo fmt --check: PASS
+- cargo clippy --all-targets -- -D warnings: PASS
+- cargo test: PASS (all tests green)
+- YAML parse (ruby): PASS
+- `grep -n '\-\-file' docs/specs/cargo-mutants-policy.md`: 3 lines, all legitimate
+  (line 21 = new corrected claim "no --file CLI flags"; line 109 = local-invocation
+  note; line 116 = single-file inspection example command)
+
 ## Worktree Commits
 1. chore(S-346): add .gitignore + .cargo/mutants.toml config (3c35bdc)
 2. chore(S-346): add mutants CI job (PR-only, --in-diff, scoped) (68466f5)
@@ -167,3 +197,4 @@ The discriminator is exercised in future cycles, not this one.
 6. fix(S-346): suppress grep -c exit-1 on empty files under bash -eo pipefail (7ec38ef)
 7. chore(S-346): re-capture baseline evidence (Pass 1 F6+F7) — partial run (73be70b)
 8. ci(S-346): adversary Pass 2 BLOCKERs + CONCERNs — 90% gate, dead-diagnostic-step fix, timeout arithmetic, mktemp safety (1b0bd3e)
+9. ci(S-346): adversary Pass 3 fixes — policy.md --file dedupe + harness-health gate (no shared-failure false-green) (315f16b)
