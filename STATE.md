@@ -36,7 +36,7 @@ activation_version: "v0.5.0-dev.7"
 | **Language** | Rust |
 | **Target Workspace** | develop → main |
 | **Started** | 2026-05-04 |
-| **Last Updated** | 2026-05-16 — Started F1 for #345 (audit-followup #2 of 2). Scope: REFACTOR-ONLY — extract label-coalesce pure fn + proptest; BC-3.4.006 extension in-place. |
+| **Last Updated** | 2026-05-16 — F3 done (S-345 committed @ 2e26acd); F4 worktree+TDD dispatch in flight. |
 | **Current Phase** | Phase 3 — TDD Implementation **IN PROGRESS** — Wave 3 CLOSED (10/10). Feature Mode #110-pr2 COMPLETE. PRs #355–#364, #366–#367, #369–#370 MERGED. **2 audit-followups remain: #345, #346** (#331 sandbox-blocked deferred; #333 closed by PR #360; #340 closed by PR #370; #350 closed by PR #362; #361 closed by PR #364; #365 closed by PR #367; PG-365-1 closed by PR #369). No active cycle. |
 | **Next Phase** | Wave 3 — 10 stories (S-3.01..S-3.10) |
 | **Activation HEAD** | dea166471e22eff55974d7675593469b37048c5f (v0.5.0-dev.7) |
@@ -77,7 +77,7 @@ Goal 1c: **Harden v0.5 + feature delivery** — formalize existing codebase with
 | 3-feature-search-issue-keys-dedupe-365 | **MERGED — PR #367 @ e193c16 (squash); closes #365; full F1-F7 lifecycle CONVERGED in single cycle** — F1d: 17 passes (R1: P1-P11 CONVERGED v0.1.8; R2: P12-P17 CONVERGED v0.1.12). F5: 4 passes (adversary 3-clean + code-reviewer CONVERGENCE_REACHED + security LOW-RISK APPROVE). F6: 5 Copilot rounds (R2 O(N²)→O(N) algorithmic fix; R3-R4 doc cascade; R5 clean). Merged 2026-05-15T17:51:09Z. | 2026-05-14 | 2026-05-15 | MERGED @ e193c16 | F1d R1: 0/4/2→…→0→0→0 (11p) \| F1d R2: 0/0/3→0/6/0→1B/2/0→0→0/0/2→0 (6p) \| F5: →→→clean×3 \| F6: 5R→clean |
 | 3-chore-pg365-1-bc-trace-cleanup | **MERGED** — PR #369 @ 6ca9587 (squash); resolves PG-365-1 Drift Item from cycle #365 | 2026-05-15 | 2026-05-15 | MERGED — 7 Copilot rounds, 9 valid findings | R1=1 R2=1 R3=1 R4=1 R5=3 R6=2 R7=0 |
 | 3-feature-340-bulk-poll-task-id-pin | **MERGED** — PR #370 @ 394dc25 (squash); closes #340; F1-F7 full cycle CONVERGED in single delivery | 2026-05-15 | 2026-05-16 | MERGED — 5 adv passes (0/0 trajectory), 3 CLEAN; Copilot R1=0; CI 9/9 green | 8→5→3-obs→7→4 (BLOCKER+CONCERN: 0 every pass) |
-| 3-feature-345-label-coalesce-extract | F1 COMPLETE — TRIVIAL scope; REFACTOR-ONLY; BC-3.4.006 in-place extension | 2026-05-16 | — | F1 orchestrator-approved (delta-analysis-345.md) | — |
+| 3-feature-345-label-coalesce-extract | F1+F2+F3 COMPLETE — F4 dispatch ready | 2026-05-16 | — | F1 orchestrator-approved (delta-analysis-345.md) | — |
 | 4: Holdout Evaluation | not-started | | | | |
 | 5: Adversarial Refinement | not-started | | | | |
 | 6: Formal Hardening | not-started | | | | |
