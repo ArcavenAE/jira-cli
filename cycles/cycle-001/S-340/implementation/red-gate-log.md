@@ -88,3 +88,53 @@ Red Gate equivalent: MUTATION-PASSED.
 - Next step: adversarial review (F5) and PR creation (F7).
 - Options (a) and (b) from issue #340 (size-scaling, const-bump) are deferred to
   separate enhancement issues per F1 delta analysis.
+
+---
+
+## Pass 1 Nit Fixes — Re-Verification (2026-05-15)
+
+### Changes applied (worktree commit `49f6303`)
+
+Two adversary Pass 1 NIT findings applied to `tests/bulk_deadline_propagation.rs`:
+
+**Finding 1 — Citation precision:**
+- Before: `// at src/api/jira/bulk.rs:412.`
+- After: `// at src/api/jira/bulk.rs:408-417 (return site of JrError::DeadlineExceeded).`
+- Rationale: single-line citation is brittle under whitespace reflow; line range covers
+  the entire `if Instant::now() >= deadline { return Err(...) }` block.
+
+**Finding 2 — Assertion scope tightening:**
+- Before: `assert!(stderr.contains(task_id), ...)`
+- After: `assert!(stderr.contains(&expected_fragment), ...)` where
+  `expected_fragment = format!("[deadline:bulk-outer] Bulk task {task_id} did not")`
+- Rationale: bare `task_id` substring match would pass if task_id appeared anywhere in
+  stderr (e.g., a future `--verbose` GET URL log). Full fragment match proves task_id
+  is interpolated INSIDE the `[deadline:bulk-outer]` message specifically.
+
+### Mutation re-verification
+
+Same mutation as original Red Gate: `{task_id}` → `<redacted>` in `src/api/jira/bulk.rs:412`.
+
+**Tightened assertion failure (FAIL as expected):**
+```
+thread 'test_333_b1_bulk_running_storm_respects_deadline_via_outer_clamp' panicked at tests/bulk_deadline_propagation.rs:393:5:
+BC-3.4.009 VIOLATION: expected stderr to contain the deadline-message fragment
+"[deadline:bulk-outer] Bulk task task-333-b1-running-storm did not" (proves task_id
+is interpolated inside the [deadline:bulk-outer] message, not coincidentally elsewhere
+in stderr — e.g., a --verbose request URL log). Got stderr:
+Error: Deadline exceeded: [deadline:bulk-outer] Bulk task <redacted> did not complete within 30s timeout. Check Jira for task status.
+```
+
+Mutation reverted. `git diff src/api/jira/bulk.rs` confirmed empty.
+
+**Post-revert test run:** PASS (2 tests, 0 failures).
+
+### Full suite verification
+
+| Check | Result |
+|-------|--------|
+| `cargo fmt --check` | PASS |
+| `cargo clippy --all-targets -- -D warnings` | PASS |
+| `cargo test --test bulk_deadline_propagation` | PASS (2/2) |
+
+Red Gate equivalent for Pass 1 nits: MUTATION-PASSED (re-verified).
