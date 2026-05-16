@@ -350,12 +350,51 @@ URL is composed as `format!("{}/browse/{}", client.instance_url(), key)`. `clien
 
 ---
 
-#### BC-3.4.006: `issue edit --label add:foo --label remove:bar` interprets prefix and merges with existing
+#### BC-3.4.006: `issue edit --label add:foo --label remove:bar` interprets prefix and emits correct JSON wire shape
 
-**Confidence**: MEDIUM
-**Source**: `tests/issue_create_json.rs`
+**Confidence**: HIGH
+**Source**: `tests/issue_create_json.rs`; `tests/issue_bulk.rs`; `tests/issue_bulk_pr2.rs`; `src/cli/issue/create.rs::build_labels_edited_fields`; `src/cli/issue/create.rs` inline `#[cfg(test)] mod proptests`
 **Behavior**: `add:` and `remove:` prefixes adjust existing labels; bare label replaces.
-**Trace**: Pass 3 BC-213
+The label JSON builder (`build_labels_edited_fields`) produces one of two wire shapes
+depending on whether adds, removes, or both are present:
+
+- **Object-form** (single-action — only ADD, or only REMOVE):
+  ```json
+  {"labels": {"labelsAction": "ADD", "labels": [{"name": "foo"}]}}
+  ```
+  or
+  ```json
+  {"labels": {"labelsAction": "REMOVE", "labels": [{"name": "bar"}]}}
+  ```
+
+- **Array-form** (both ADD and REMOVE present — coalesced into a single bulk POST):
+  ```json
+  {"labels": [
+    {"labelsAction": "ADD",    "labels": [{"name": "foo"}]},
+    {"labelsAction": "REMOVE", "labels": [{"name": "bar"}]}
+  ]}
+  ```
+
+**Invariants**:
+1. The ADD entry appears in the output if and only if `adds` is non-empty.
+2. The REMOVE entry appears in the output if and only if `removes` is non-empty.
+3. The caller bails on empty inputs — at least one of ADD or REMOVE is always present when `build_labels_edited_fields` is invoked.
+4. When both ADD and REMOVE entries are present, array-form is used and the ADD entry precedes the REMOVE entry.
+5. When exactly one action is present, object-form (not array-form) is used.
+
+**Schema note**: This BC pins the wire shape as currently emitted by the code. Whether
+the array-form (`[{labelsAction: "ADD", ...}, {labelsAction: "REMOVE", ...}]`) is what
+Atlassian's bulk API formally accepts is a separate correctness concern tracked in issue
+#331. Future schema-validation work (issue #331) may require updating this BC if the
+canonical shape differs.
+
+**Confidence rationale**: Confidence bumped MEDIUM → HIGH by issue #345 (S-345), which
+extracts `build_labels_edited_fields` as a named pure function and adds an inline proptest
+(`#[cfg(test)] mod proptests` in `src/cli/issue/create.rs`) covering both shapes and all
+four invariants. The proptest follows the pattern established by `src/jql.rs`,
+`src/duration.rs`, and `src/partial_match.rs`.
+
+**Trace**: Pass 3 BC-213; issue #345; S-345
 
 ---
 

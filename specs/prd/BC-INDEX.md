@@ -268,7 +268,7 @@ R1/R4 prefix = deepening round that introduced it.
 | BC-3.4.003 | `issue edit` PUTs `/rest/api/3/issue/<key>` with ADF description; accepts 204 | BC-1055 (R4) | tests/issue_commands.rs:609-645 | HIGH |
 | BC-3.4.004 | `issue edit` with `markdown_to_adf("**bold text**")` → ADF marks `[{type: "strong"}]` on wire | BC-1056 (R4) | tests/issue_commands.rs:647-687 | HIGH |
 | BC-3.4.005 | `issue edit` with multiple fields sends both in body simultaneously | BC-1057 (R4) | tests/issue_commands.rs:689-727 | HIGH |
-| BC-3.4.006 | `issue edit --label add:foo --label remove:bar` interprets prefix and merges with existing | BC-213 | tests/issue_create_json.rs | MEDIUM |
+| BC-3.4.006 | `issue edit --label add:foo --label remove:bar` interprets prefix and emits correct JSON wire shape | BC-213; issue #345; S-345 | tests/issue_create_json.rs; tests/issue_bulk.rs; tests/issue_bulk_pr2.rs; src/cli/issue/create.rs::build_labels_edited_fields; src/cli/issue/create.rs inline proptests | HIGH |
 | BC-3.4.007 | `--description` and `--description-stdin` clap conflict | BC-214 | tests/cli_smoke.rs:34-48 | HIGH |
 | BC-3.4.008 | `--points X` and `--no-points` clap conflict | BC-215 | tests/cli_smoke.rs:280-287 | HIGH |
 | BC-3.4.009 | `await_bulk_task` timeout error MUST include `task_id` literal in stderr message | — (issue #340) | tests/bulk_deadline_propagation.rs; src/api/jira/bulk.rs | HIGH |
