@@ -22,7 +22,7 @@ files_modified:
 test_files: []
 breaking_change: false
 producer: story-writer
-version: "1.0.3"
+version: "1.0.4"
 last_updated: 2026-05-16
 depends_on:
   - S-340     # S-340 is the immediate predecessor in the audit-followup cluster; bulk.rs is the primary mutation target
@@ -118,8 +118,11 @@ kill-rate on first baseline run.
 **AC-2** — `.cargo/mutants.toml` exists containing at minimum:
 - `timeout_multiplier = 3.0` — prevents false "unviable" results on the async bulk
   code paths where mutations of `.await` chains can cause test timeouts.
-- Explicit `--file` scope for the three designated files so local `cargo mutants`
-  invocations without flags match CI behavior by default.
+- `examine_globs` TOML key lists the three designated files so local `cargo mutants`
+  invocations without flags match CI behavior by default. (Note: `examine_globs` is the
+  TOML config primitive in `.cargo/mutants.toml`; the equivalent CLI form would be
+  `--file <path>` repeated, but the config-file form is preferred for parity between
+  local and CI runs.)
 - Kill-rate threshold NOT set in `.cargo/mutants.toml`; it belongs in the CI YAML step.
 
 Note: cargo-mutants v27 reads configuration from `.cargo/mutants.toml`, not `.mutants.toml`
