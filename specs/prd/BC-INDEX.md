@@ -1,13 +1,13 @@
 ---
 context: bc-index
 title: "BC Master Index"
-total_bcs: 547  # cumulative claim (incl. range-collapsed) — see preamble below; +4 added 2026-05-08 (BC-7.4.013-016, Fix-PR A); +1 added 2026-05-13 (BC-2.6.050, issue #350); +1 added 2026-05-14 (BC-2.6.051, issue #365)
-last_updated: 2026-05-13
+total_bcs: 548  # cumulative claim (incl. range-collapsed) — see preamble below; +4 added 2026-05-08 (BC-7.4.013-016, Fix-PR A); +1 added 2026-05-13 (BC-2.6.050, issue #350); +1 added 2026-05-14 (BC-2.6.051, issue #365); +1 added 2026-05-15 (BC-3.4.009, issue #340 F2)
+last_updated: 2026-05-15
 source_pass: 3
 sections:
   - bc-1-auth-identity.md (57 BCs cumulative; 46 individually-bodied)
   - bc-2-issue-read.md (93 BCs cumulative; 51 individually-bodied)
-  - bc-3-issue-write.md (77 BCs cumulative; 48 individually-bodied)
+  - bc-3-issue-write.md (78 BCs cumulative; 49 individually-bodied)
   - bc-4-assets-cmdb.md (32 BCs cumulative; 22 individually-bodied)
   - bc-5-boards-sprints.md (35 BCs cumulative; 17 individually-bodied)
   - bc-6-config-cache.md (39 BCs cumulative; 29 individually-bodied)
@@ -212,7 +212,7 @@ R1/R4 prefix = deepening round that introduced it.
 
 ---
 
-## Section 3: Issue Write (bc-3-issue-write.md) — 77 BCs cumulative; 48 individually-bodied
+## Section 3: Issue Write (bc-3-issue-write.md) — 78 BCs cumulative; 49 individually-bodied
 
 ### 3.1 Assign (9 BCs: BC-3.1.001..009)
 
@@ -259,7 +259,7 @@ R1/R4 prefix = deepening round that introduced it.
 | BC-3.3.008 | `issue create --markdown -d '...'` converts markdown to ADF before POST | BC-212 | tests/issue_create_json.rs | MEDIUM |
 | BC-3.3.009 | `create_issue` browse URL uses `client.instance_url()` (NOT `client.base_url()`) | BC-1076 (R4) | tests/issue_commands.rs:1606-1644 | HIGH |
 
-### 3.4 Edit and Open (8 BCs: BC-3.4.001..008)
+### 3.4 Edit and Open (9 BCs: BC-3.4.001..009)
 
 | L3 BC ID | Summary | Pass 3 BC ID | Source | Confidence |
 |---|---|---|---|---|
@@ -271,6 +271,7 @@ R1/R4 prefix = deepening round that introduced it.
 | BC-3.4.006 | `issue edit --label add:foo --label remove:bar` interprets prefix and merges with existing | BC-213 | tests/issue_create_json.rs | MEDIUM |
 | BC-3.4.007 | `--description` and `--description-stdin` clap conflict | BC-214 | tests/cli_smoke.rs:34-48 | HIGH |
 | BC-3.4.008 | `--points X` and `--no-points` clap conflict | BC-215 | tests/cli_smoke.rs:280-287 | HIGH |
+| BC-3.4.009 | `await_bulk_task` timeout error MUST include `task_id` literal in stderr message | — (issue #340) | tests/bulk_deadline_propagation.rs; src/api/jira/bulk.rs | HIGH |
 
 ### 3.5 Comments (1 BC: BC-3.5.001)
 

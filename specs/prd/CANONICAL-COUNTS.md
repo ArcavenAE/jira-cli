@@ -2,7 +2,7 @@
 document_type: canonical-counts
 product: jr (jira-cli)
 generated: "2026-05-04"
-last_verified: "Wave 2 gate close 2026-05-08 (P2-CV-02 fix; +4 BC-7.4.013-016 via Fix-PR A)"
+last_verified: "2026-05-15 (F2 spec evolution issue #340; +1 BC-3.4.009)"
 ---
 
 # Canonical Counts — jr (jira-cli) L3 PRD
@@ -21,13 +21,13 @@ re-run to verify. Disputes go here first.
 |------|------------------------|----------------------------------|--------|
 | bc-1-auth-identity.md | 46 | 46 | YES |
 | bc-2-issue-read.md | 50 | 50 | YES |
-| bc-3-issue-write.md | 48 | 48 | YES |
+| bc-3-issue-write.md | 49 | 49 | YES |
 | bc-4-assets-cmdb.md | 22 | 22 | YES |
 | bc-5-boards-sprints.md | 17 | 17 | YES |
 | bc-6-config-cache.md | 29 | 29 | YES |
 | bc-7-output-render.md | 38 | 38 | YES |
 | cross-cutting.md | 64 | 64 | YES |
-| **Total individually-bodied** | **314** | — | — |
+| **Total individually-bodied** | **315** | — | — |
 
 Verification command:
 ```bash
@@ -42,21 +42,21 @@ done
 |------|------------------------|
 | bc-1-auth-identity.md | 57 |
 | bc-2-issue-read.md | 92 |
-| bc-3-issue-write.md | 77 |
+| bc-3-issue-write.md | 78 |
 | bc-4-assets-cmdb.md | 32 |
 | bc-5-boards-sprints.md | 35 |
 | bc-6-config-cache.md | 39 |
 | bc-7-output-render.md | 84 |
 | cross-cutting.md | 130 |
-| **Sum** | **546** |
+| **Sum** | **547** |
 
 ### Grand total
 
-**Canonical grand total: 546** (+4 BC-7.4.013-016 added 2026-05-08 via Fix-PR A `28b0f35`; +1 BC-2.6.050 added 2026-05-13 via issue #350)
+**Canonical grand total: 547** (+4 BC-7.4.013-016 added 2026-05-08 via Fix-PR A `28b0f35`; +1 BC-2.6.050 added 2026-05-13 via issue #350; +1 BC-3.4.009 added 2026-05-15 via issue #340 F2)
 
 Breakdown:
-- 546 = sum of per-file `total_bcs` values
-- 314 of 546 are individually-bodied (have a `#### BC-` heading)
+- 547 = sum of per-file `total_bcs` values
+- 315 of 547 are individually-bodied (have a `#### BC-` heading)
 - 232 are range-collapsed (counted in cumulative claim, no individual heading)
 - BC-X.4.009 (ADV-P1-029) is a `#### BC-` heading in cross-cutting.md; it is
   included in cross-cutting's `total_bcs: 130` and in the 541 sum.
@@ -78,7 +78,7 @@ bc_count in L2 represents the same cumulative claim (individually-bodied + range
 |---------|----------------------------|---------|--------------|----------|
 | bc-01-auth-identity.md | 57 | bc-1-auth-identity.md | 57 | YES |
 | bc-02-issue-read.md | 92 | bc-2-issue-read.md | 92 | YES |
-| bc-03-issue-write.md | 77 | bc-3-issue-write.md | 77 | YES |
+| bc-03-issue-write.md | 77 | bc-3-issue-write.md | 78 | PENDING (L2 bc_count not yet bumped; F2 added BC-3.4.009 2026-05-15) |
 | bc-04-assets-cmdb.md | 32 | bc-4-assets-cmdb.md | 32 | YES (was 44) |
 | bc-05-boards-sprints.md | 35 | bc-5-boards-sprints.md | 35 | YES |
 | bc-06-config-cache.md | 39 | bc-6-config-cache.md | 39 | YES (was 38) |

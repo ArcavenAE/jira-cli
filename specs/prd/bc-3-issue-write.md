@@ -1,19 +1,20 @@
 ---
 context: bc-3
 title: "Issue Write (create/edit/move/assign/comment/link/open/remote-link)"
-total_bcs: 77   # cumulative claim (incl. range-collapsed); definitional_count below is individually-bodied headings
-definitional_count: 48   # count of `#### BC-` headings in this file
-last_updated: 2026-05-04
+total_bcs: 78   # cumulative claim (incl. range-collapsed); definitional_count below is individually-bodied headings
+definitional_count: 49   # count of `#### BC-` headings in this file
+last_updated: 2026-05-15
 source_pass: 3
 trace: |
   - L2: .factory/specs/domain-spec/bc-03-issue-write.md
   - Source broad: .factory/semport/jira-cli/jira-cli-pass-3-behavioral-contracts.md §2.3
   - Source R4: .factory/semport/jira-cli/jira-cli-pass-3-deep-r4.md §3.1
+  - F2 addition (2026-05-15): BC-3.4.009 — bulk-poll timeout task_id contract (issue #340)
 ---
 
 # BC-3 — Issue Write
 
-77 behavioral contracts across 7 subdomains: Assign (3.1), Move/Transition (3.2),
+78 behavioral contracts across 7 subdomains: Assign (3.1), Move/Transition (3.2),
 Create (3.3), Edit+Open (3.4), Comment (3.5), Links (3.6), Remote links (3.7).
 
 ---
@@ -374,6 +375,29 @@ URL is composed as `format!("{}/browse/{}", client.instance_url(), key)`. `clien
 
 ---
 
+#### BC-3.4.009: `await_bulk_task` timeout error MUST include `task_id` literal in stderr message
+
+**Confidence**: HIGH
+**Source**: issue #340 + PR #360; `src/api/jira/bulk.rs:408-417`; `tests/bulk_deadline_propagation.rs`
+**Subject**: Issue write (bulk edit path)
+**Behavior**: When `await_bulk_task(task_id, timeout)` exhausts its deadline without the
+bulk task completing, the `JrError::DeadlineExceeded` error message emitted to stderr MUST
+contain the literal value of `task_id`. The message format is:
+`"[deadline:bulk-outer] Bulk task <task_id> did not complete within <N>s timeout. Check Jira for task status."`
+This allows the user to recover manually by inspecting the task directly at
+`jr api /rest/api/3/bulk/queue/<task_id>`. The site tag `[deadline:bulk-outer]` is
+included to distinguish this site from inner-loop deadline sites.
+**Effects**: Exit code 124 (`JrError::DeadlineExceeded`). Stderr contains the `task_id` value.
+**Invariants**: The `task_id` value in the message MUST match the `taskId` returned by the
+initial bulk POST response. It MUST pass `validate_task_id` before insertion (CWE-117
+log-injection guard — audited in PR #355).
+**VP Extension**: Extends `BC-bulk.poll.deadline-bounded` (issue-333 working label) —
+adds the requirement that `task_id` appears in the stderr output in addition to the
+existing wall-clock bound and `"deadline"` substring assertions.
+**Trace**: issue #340 AC #1; `src/api/jira/bulk.rs::await_bulk_task_inner`
+
+---
+
 ### 3.5 Comments
 
 #### BC-3.5.001: `issue comment <key> --internal` adds `sd.public.comment` property
@@ -481,4 +505,4 @@ URL is composed as `format!("{}/browse/{}", client.instance_url(), key)`. `clien
 
 Sources: `src/cli/issue/snapshots/jr__cli__issue__json_output__tests__*.snap`; BC-1104..BC-1112 (R4)
 
-## Total BCs in this file: 48 individually-bodied (cumulative 77 incl. range-collapsed; see BC-INDEX.md)
+## Total BCs in this file: 49 individually-bodied (cumulative 78 incl. range-collapsed; see BC-INDEX.md)
