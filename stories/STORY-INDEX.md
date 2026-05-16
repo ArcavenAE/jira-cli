@@ -3,7 +3,7 @@ document_type: story-index
 phase: phase-2-story-decomposition
 producer: story-writer
 version: "1.4.11"
-total_stories: 33
+total_stories: 34
 total_waves: 4
 status: complete-pending-adv-review
 last_updated: 2026-05-09
@@ -25,8 +25,9 @@ Phase 1 converged at adversary Pass 28. Gate approved 2026-05-04.
 | 1 | High-priority security posture, supply-chain hardening, structured logging, regression holdouts | 8 | ~6-7 dev-days | NFR-S-E/F gate; wave-0 holdouts green; H-001..H-006 MUST-PASS |
 | 2 | Medium-priority NFRs, BC-2/3/4/5 holdout suites, JSON output policy, documentation | 7 | ~5-6 dev-days | NFR-P-* gate; H-030..H-044 MUST-PASS |
 | 3 | Low priority + deferred (DEFER NFRs, shard splits, process codification, DOCUMENT-AS-IS) | 10 | ~5-7 dev-days | Per-story gates; no v0.5 blocking |
+| feature-followup | Audit-followup test pins for shipped features (S-333, #340) | 1 | ~0.5 dev-days | cargo test green; per-story BC gates |
 
-**Final totals: 33 stories across 4 waves.** Wave 0: 7, Wave 1: 8, Wave 2: 7, Wave 3: 10 (+S-3.10 added during Wave 2 as S-2.06 DEFER-01 follow-up). Wave 2: **7/7 COMPLETE** (PRs #303-#309; 2026-05-08).
+**Final totals: 34 stories across 4 waves + feature-followup group.** Wave 0: 7, Wave 1: 8, Wave 2: 7, Wave 3: 10 (+S-3.10 added during Wave 2 as S-2.06 DEFER-01 follow-up). Wave 2: **7/7 COMPLETE** (PRs #303-#309; 2026-05-08). Feature-followup: 1 (S-340 — issue #340 task_id pin; 2026-05-15).
 
 Story file naming: `stories/wave-W/S-W.NN-short-slug.md`
 Story ID convention: `S-W.NN` (e.g., `S-0.01`, `S-1.03`)
@@ -171,6 +172,19 @@ All of the following must be true before Phase 2 is considered fully complete:
 
 ---
 
+## Feature Followup — Audit-followup Test Pins (Added 2026-05-15)
+
+Feature-followup stories pin behavioral contracts for production code already shipped.
+They have `wave: feature-followup` in frontmatter and live under `.factory/code-delivery/<issue>/story.md`.
+
+| Story ID | Title | BC Anchors | Holdout Anchors | Status | Est. Effort |
+|----------|-------|------------|-----------------|--------|-------------|
+| S-340 | Pin task_id-in-bulk-poll-timeout-message contract with regression test | BC-3.4.009 | — | draft (issue #340) | small |
+
+Feature-followup story files: `.factory/code-delivery/issue-NNN/story.md`
+
+---
+
 ## Cross-Reference Convention
 
 Each story frontmatter uses:
@@ -230,7 +244,7 @@ gaps that are not blocking for v0.5 but should be tracked.
 ## Story Manifest
 
 Complete mapping of every `story_id` to its absolute file path. Generated 2026-05-07; updated 2026-05-08 (S-3.10 added).
-Total rows: 33 (matches `total_stories: 33` in frontmatter).
+Total rows: 34 (matches `total_stories: 34` in frontmatter). Updated 2026-05-15 (S-340 added).
 
 ### Wave 0
 
@@ -283,3 +297,9 @@ Total rows: 33 (matches `total_stories: 33` in frontmatter).
 | S-3.08 | 3 | /Users/zious/Documents/GITHUB/jira-cli/.factory/stories/wave-3/S-3.08-low-nfr-document-as-is.md |
 | S-3.09 | 3 | /Users/zious/Documents/GITHUB/jira-cli/.factory/stories/wave-3/S-3.09-pkce-decision-deferred.md |
 | S-3.10 | 3 | /Users/zious/Documents/GITHUB/jira-cli/.factory/stories/wave-3/S-3.10-rewrite-format-roundtrip-proptest-delete-deprecated-parse-duration.md |
+
+### Feature Followup
+
+| story_id | wave | file_path |
+|----------|------|-----------|
+| S-340 | feature-followup | /Users/zious/Documents/GITHUB/jira-cli/.factory/code-delivery/issue-340/story.md |
