@@ -198,3 +198,14 @@ Mutation reverted. `git diff src/api/jira/bulk.rs` confirmed empty.
 | `cargo test --test bulk_deadline_propagation` | PASS (2/2) |
 
 Red Gate equivalent for Pass 2 nits: MUTATION-PASSED (re-verified).
+
+---
+
+## Cycle Close-out (2026-05-16)
+
+- PR #370 squash-merged to develop at SHA 394dc25
+- 5 adversary passes; 3 consecutive CLEAN (Pass 3, 4, 5); trajectory 8→5→3-obs→7→4 (BLOCKER+CONCERN: 0 every pass)
+- Copilot Review Round 1: 0 inline comments
+- CI: 9/9 green
+- Issue #340 CLOSED via PR's `Closes #340` footer
+- Cycle CLOSED — S-340 deliverable.

@@ -3,7 +3,7 @@ document_type: story
 story_id: "S-340"
 title: "Pin task_id-in-bulk-poll-timeout-message contract with regression test"
 wave: feature-followup
-status: ready
+status: completed
 priority: low
 estimated_effort: small
 tdd_mode: strict
@@ -19,8 +19,8 @@ test_files:
   - tests/bulk_deadline_propagation.rs (extend test_333_b1_bulk_running_storm_respects_deadline_via_outer_clamp with task_id assertion)
 breaking_change: false
 producer: story-writer
-version: "1.0.1"
-last_updated: 2026-05-15
+version: "1.1.0"
+last_updated: 2026-05-16
 depends_on:
   - S-333
 blocks: []

@@ -179,7 +179,7 @@ They have `wave: feature-followup` in frontmatter and live under `.factory/code-
 
 | Story ID | Title | BC Anchors | Holdout Anchors | Status | Est. Effort |
 |----------|-------|------------|-----------------|--------|-------------|
-| S-340 | Pin task_id-in-bulk-poll-timeout-message contract with regression test | BC-3.4.009 | — | ready (issue #340) | small |
+| S-340 | Pin task_id-in-bulk-poll-timeout-message contract with regression test | BC-3.4.009 | — | MERGED — PR #370 @ 394dc25 (2026-05-16) | small |
 
 Feature-followup story files: `.factory/code-delivery/issue-NNN/story.md`
 

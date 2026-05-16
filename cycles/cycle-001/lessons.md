@@ -950,3 +950,32 @@ _Tagged: [codified] — cycle summary; applied lessons L-365-1..L-365-4 for futu
 _Discovered: PR #369 post-merge retrospective, 2026-05-15T19:49:41Z_
 _Tagged: [codified] — chore-PR process failure; VSDD "trivial" exemption anti-pattern_
 _Related: DRIFT-007 (chore-mode workflow not formalized)_
+
+---
+
+## 2026-05-16 — S-340 Cycle Close-out Lessons
+
+### L-S340-1 [novel-pg] Mutation-Red-Gate substitution pattern
+
+When a story pins behavior that production code ALREADY satisfies (regression-pin / green-on-first-run), standard Red Gate (test fails before implementation) cannot be naturally achieved. The S-340 cycle substituted a mutation-based Red Gate: deliberately break the production behavior, confirm the test fails with the expected assertion, revert, confirm tests pass.
+
+- First occurrence in cycle-001. Logged as [novel-pg] only.
+- Codify into per-story-delivery / test-writer prompt if seen again.
+- Reference: `.factory/cycles/cycle-001/S-340/implementation/red-gate-log.md`
+
+_Discovered: S-340 F3 delivery, 2026-05-15_
+_Tagged: [novel-pg] — first occurrence; monitor for recurrence before promoting to codified rule_
+
+---
+
+### L-S340-2 [novel-pg] Machine-enforced red-gate verification for regression-pin stories
+
+Pass 1 adversary `[process-gap]` finding: mutation-Red-Gate pattern was applied but not documented as a process pattern in the story or red-gate-log. Pass 4 adversary `[process-gap]` finding: red-gate verification for regression-pin stories should be machine-enforced (e.g., script that applies the mutation, runs the test, and confirms failure) rather than manually described in log prose.
+
+Both are first occurrences in cycle-001. Logged as [novel-pg] only. Do NOT file follow-up issues for first-occurrence process-gaps; revisit if they recur in a future cycle.
+
+- First occurrence in cycle-001. Logged as [novel-pg] only.
+- Reference: `.factory/cycles/cycle-001/S-340/implementation/red-gate-log.md`
+
+_Discovered: S-340 F5 adversary passes 1 and 4, 2026-05-15_
+_Tagged: [novel-pg] — first occurrence; monitor for recurrence before promoting to codified rule_
