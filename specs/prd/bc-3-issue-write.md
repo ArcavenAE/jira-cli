@@ -391,7 +391,7 @@ canonical shape differs.
 **Confidence rationale**: Confidence bumped MEDIUM → HIGH by issue #345 (S-345), which
 extracts `build_labels_edited_fields` as a named pure function and adds an inline proptest
 (`#[cfg(test)] mod build_labels_proptests` in `src/cli/issue/create.rs`) covering both shapes and all
-four invariants. The proptest follows the pattern established by `src/jql.rs`,
+five invariants. The proptest follows the pattern established by `src/jql.rs`,
 `src/duration.rs`, and `src/partial_match.rs`.
 
 **Trace**: Pass 3 BC-213; issue #345; S-345
