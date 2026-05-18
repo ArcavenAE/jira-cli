@@ -1068,3 +1068,50 @@ Each adversary pass that changed the CI YAML (kill-rate formula, diff generation
 
 _Discovered: S-346 F5 adversary convergence retrospective, 2026-05-16_
 _Tagged: [novel-pg] — first occurrence; monitor for recurrence before promoting to codified rule_
+
+---
+
+## L-288-04: Validate adversarial findings against actual risk profile before mechanizing them [process]
+
+**Date:** 2026-05-18
+**Cycle:** 3-feature-jsm-request-types-288 (F1d pass-01 → F3 scope simplification)
+**Tag:** [codified] [process-gap]
+
+### What happened
+
+F1d pass-01 finding F10 (CONCERN) flagged the OAuth scope-addition "Developer Console coordination" as a HIGH-risk release gate with no enforced mechanism. The product-owner remediation added a PR-template release-gate clause to BC-1.3.023 requiring `.github/PULL_REQUEST_TEMPLATE.md` creation in S-288-pr3-scope. The next 9 adversarial passes accepted this without challenge; F1d converged 3/3.
+
+During F3 human approval gate, the user questioned the PR-template mechanism. The orchestrator dispatched the research-agent to validate the actual risk profile (`.factory/research/issue-288-oauth-scope-coordination.md`):
+
+- Failure mode is **loud and immediate** (`invalid_scope` redirect, not silent corruption)
+- `jr` has one maintainer = one Atlassian Developer Console admin = no team-coordination problem
+- Existing code comment at `src/api/auth.rs:46-51` + pin test already mitigate the implementer-visible failure
+- Atlassian auto-handles the user-facing re-consent prompt
+- Real-world precedent (`cli/cli`, ankitpokhrel/jira-cli) shows scope changes are infrequent (≤2/year) and don't warrant per-PR ceremony
+
+Verdict: the F1d-added PR-template mechanism was disproportionate. BC-1.3.023 was simplified to "maintainer coordination" + existing code comment + CLAUDE.md note + CHANGELOG re-consent entry. S-288-pr3-scope was dropped; work absorbed into S-288-pr4-dispatch. 1 story removed; 1 PR cycle saved.
+
+### Lesson
+
+**Adversarial findings that propose NEW PROCESS MECHANISMS (PR templates, CI hooks, release gates) should be validated against actual failure-mode severity and existing safeguards before being mechanized in BC bodies.** The convergence loop optimizes for "no findings remain"; it does NOT optimize for "no over-engineering remains." A finding can be technically valid (a coordination risk DOES exist) while the proposed mechanism is disproportionate.
+
+Pattern to watch for: adversary finding asserts a HIGH-risk condition, recommends a NEW process mechanism, and the remediation adds the mechanism without questioning whether existing safeguards already cover the failure path or whether the mechanism's friction outweighs the avoided risk.
+
+### Application going forward
+
+- Future cycles: when an adversary CONCERN proposes new process artifacts (CI jobs, PR templates, release-gate scripts, mandatory checklist items), the remediating agent (or orchestrator) should explicitly:
+  1. Identify the failure mode and its detection signal (loud vs silent, immediate vs delayed)
+  2. Inventory existing safeguards (doc comments, regression tests, runtime checks)
+  3. Quantify mechanism overhead (per-PR friction, maintainer time, infrastructure cost)
+  4. Use research-agent for external validation if the failure-mode framing depends on assumptions about external systems
+  5. Only mechanize if existing safeguards are demonstrably insufficient AND mechanism overhead is proportional
+
+- Orchestrator: when an adversary CONCERN proposes a new process mechanism, consider dispatching research-agent to validate the failure-mode framing BEFORE accepting the remediation
+- BC authoring: distinguish "behavioral contracts" (what the code MUST do) from "process contracts" (what humans MUST do around the code). The latter belong in CONTRIBUTING.md / RELEASING.md / CLAUDE.md, not in BC bodies — BCs are testable in CI; process contracts are not
+
+### Status
+
+[codified] — this lesson is recorded and will inform future adversarial-remediation cycles. Suggests a `vsdd-factory:adversarial-review` skill enhancement: when a CONCERN finding proposes a new process mechanism, prompt the orchestrator to validate before accepting the remediation.
+
+_Discovered: #288 F3 human approval gate → research-agent validation, 2026-05-18_
+_Tagged: [codified] [process-gap] — first occurrence; applicable to all future adversarial-remediation cycles_

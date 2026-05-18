@@ -3,10 +3,10 @@ document_type: story-index
 phase: phase-2-story-decomposition
 producer: story-writer
 version: "1.4.12"
-total_stories: 36
+total_stories: 39
 total_waves: 4
 status: complete-pending-adv-review
-last_updated: 2026-05-16
+last_updated: 2026-05-18
 activation_head: dea1664
 ---
 
@@ -187,6 +187,31 @@ Feature-followup story files: `.factory/code-delivery/issue-NNN/story.md`
 
 ---
 
+## Cycle 3 — Feature: JSM Request Types (Issue #288)
+
+Feature cycle 3 implements JSM request type support: `jr requesttype list/fields` discovery
+commands and `jr issue create --request-type` dispatch to `POST /rest/servicedeskapi/request`.
+
+Decomposed into 3 stories across 3 waves (pr3-scope dropped 2026-05-18; scope absorbed into pr4).
+Dependency graph and BC traceability matrix live at
+`.factory/code-delivery/issue-288-pr1-api/dependency-graph.md`.
+
+| Story ID | Title | BC Anchors | Holdout Anchors | Status | Est. Effort | Wave |
+|----------|-------|------------|-----------------|--------|-------------|------|
+| issue-288-pr1-api | JSM request submission API client + types (no CLI surface) | BC-3.8.001 (partial), BC-X.12.001, BC-X.12.005, BC-X.12.008 | — | ready-for-implementation | medium (3 SP) | 1 |
+| issue-288-pr2-cli | jr requesttype list/fields discovery commands + cache | BC-X.12.001..008, BC-X.8.004 | H-NEW-JSM-RT-002 (partial), H-NEW-JSM-RT-005 | ready-for-implementation | medium (3 SP) | 2 |
+| issue-288-pr4-dispatch | jr issue create --request-type dispatch fork + OAuth scope addition | BC-3.8.001..010, BC-3.3.001, BC-1.3.023, BC-X.3.005 | H-NEW-JSM-RT-001..004 | ready-for-implementation | large (5 SP) | 3 |
+
+Cycle 3 story files: `.factory/code-delivery/issue-288-pr{1,2,4}-*/story.md`
+
+Wave 1: issue-288-pr1-api (sole Wave 1 story; pr3-scope dropped)
+Wave 2: issue-288-pr2-cli (depends on pr1)
+Wave 3: issue-288-pr4-dispatch (depends on pr1, pr2; absorbs OAuth scope addition from former pr3-scope)
+
+Total cycle SP: 11 (was 11 with 4 stories at 3+3+1+4; now 11 with 3 stories at 3+3+5).
+
+---
+
 ## Cross-Reference Convention
 
 Each story frontmatter uses:
@@ -246,7 +271,7 @@ gaps that are not blocking for v0.5 but should be tracked.
 ## Story Manifest
 
 Complete mapping of every `story_id` to its absolute file path. Generated 2026-05-07; updated 2026-05-08 (S-3.10 added).
-Total rows: 36 (matches `total_stories: 36` in frontmatter). Updated 2026-05-15 (S-340 added). Updated 2026-05-16 (S-345 added). Updated 2026-05-16 (S-346 added).
+Total rows: 39 (matches `total_stories: 39` in frontmatter). Updated 2026-05-15 (S-340 added). Updated 2026-05-16 (S-345 added). Updated 2026-05-16 (S-346 added). Updated 2026-05-18 (issue-288-pr1..pr4 added). Updated 2026-05-18 (issue-288-pr3-scope dropped; 40→39).
 
 ### Wave 0
 
@@ -307,3 +332,6 @@ Total rows: 36 (matches `total_stories: 36` in frontmatter). Updated 2026-05-15 
 | S-340 | feature-followup | /Users/zious/Documents/GITHUB/jira-cli/.factory/code-delivery/issue-340/story.md |
 | S-345 | feature-followup | /Users/zious/Documents/GITHUB/jira-cli/.factory/code-delivery/issue-345/story.md |
 | S-346 | feature-followup | /Users/zious/Documents/GITHUB/jira-cli/.factory/code-delivery/issue-346/story.md |
+| issue-288-pr1-api | cycle-3-wave-1 | /Users/zious/Documents/GITHUB/jira-cli/.factory/code-delivery/issue-288-pr1-api/story.md |
+| issue-288-pr2-cli | cycle-3-wave-2 | /Users/zious/Documents/GITHUB/jira-cli/.factory/code-delivery/issue-288-pr2-cli/story.md |
+| issue-288-pr4-dispatch | cycle-3-wave-3 | /Users/zious/Documents/GITHUB/jira-cli/.factory/code-delivery/issue-288-pr4-dispatch/story.md |

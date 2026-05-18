@@ -20,6 +20,12 @@ Counts updated across BC-INDEX.md and CANONICAL-COUNTS.md.
 
 ---
 
+## Post-F1d Scope Simplification (2026-05-18, post-CONVERGENCE)
+
+Following F1d convergence, external research (`.factory/research/issue-288-oauth-scope-coordination.md`) validated that the F1d-pass-01-added PR-template release-gate mechanism in BC-1.3.023 was disproportionate to the actual risk profile (which is bounded: loud-and-immediate failure mode, sole-admin solo flow, existing code comment + pin test, Atlassian-handled user-facing re-consent). The BC was simplified to use the existing code comment + a CLAUDE.md release-checklist note + a CHANGELOG re-consent notice convention. The S-288-pr3-scope story has been dropped; scope addition absorbs into S-288-pr4-dispatch. Updated wave plan: 3 waves, 3 stories, ~10 SP. Codified as lesson L-288-04 in `cycles/cycle-001/lessons.md`.
+
+---
+
 ## New BCs
 
 ### BC-3.8.001..010 — JSM Request Create (bc-3-issue-write.md)
@@ -127,6 +133,8 @@ The following Open Questions from the original F2 delta have been resolved via P
 3. **RESOLVED — BC-X.12.001 cross-cutting vs. bc-3**: The `jr requesttype` commands are placed in cross-cutting (X.12) rather than bc-3, consistent with the BA input rationale (discovery commands parallel `jr project` and `jr queue`). This grouping is stable. Closed at F2 authoring; confirmed by adversary passes 01–04.
 
 4. **RESOLVED — CANONICAL-COUNTS.md total discrepancy**: Updated at F1d adversary pass-01 — CANONICAL-COUNTS now shows 566 as canonical total. BC-INDEX.md header updated to match. No residual discrepancy.
+
+5. **BC-1.3.023 release-gate simplification** — research validated PR template was over-engineering; mechanism simplified to existing code comment + CLAUDE.md maintainer note + CHANGELOG re-consent notice (2026-05-18 post-F1d-CONVERGENCE).
 
 ---
 
