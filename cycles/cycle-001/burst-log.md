@@ -3070,3 +3070,17 @@ Checkpoint updated. Full cycle close (with merged-state row) deferred to post-me
 **Outcome:** Pre-merge cycle artifacts persisted. STATE.md reflects F6 CONVERGED state.
 4 lessons on record. DRIFT-006 tracking the F5 multi-axis review gap. Cycle stays in
 "F6 CONVERGED — awaiting merge" state until human merges PR #367.
+
+---
+
+## Burst: F1d pass-08 FIRST CLEAN-PASS — #288 (2026-05-18)
+
+Archived Current Phase Steps rows displaced by 5-row window enforcement.
+
+### Archived Rows (displaced by pass-08 addition)
+
+| Step | Agent | Status | Output |
+|------|-------|--------|--------|
+| PR #370/#371/#373 MERGED — S-340/S-345/S-346 cycle-001 CLOSED. Audit-followup cluster 0 remaining. Follow-up #372 filed. | state-manager | complete | Phase Progress rows updated; lessons codified; DRIFT-007 added. Archived to burst-log.md 2026-05-18. |
+| F1d adversarial spec review pass-01 — #288 | adversary | complete | 13 findings (4B/6C/3N). Product-owner remediated all BLOCKING+CONCERN in same burst; F13 [process-gap] deferred to DRIFT-008. Spec at +18 BCs (+10 in BC-3.8.*, +8 in BC-X.12.*), 54 holdouts, BC-2.6.051 propagation fix to CANONICAL-COUNTS. |
+| F1d adversarial spec review pass-02 — #288 | adversary | complete | All 13 pass-01 findings ADDRESSED. 7 net-new (0B/3C/4N): remediation propagation drift in prd-delta count tables (F14), CANONICAL-COUNTS internal prose (F15), fields cache spec gap (F16), plus NITs. Product-owner remediated all in same burst. Counter 0/3. Pass-03 pending. |
