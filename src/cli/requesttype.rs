@@ -232,13 +232,21 @@ async fn resolve_request_type_id(
                 .join(", ")
         ))
         .into()),
-        MatchResult::None(_) => Err(JrError::UserError(format!(
-            "Request type \"{name}\" not found. \
-             Run `jr requesttype list --project {project_key}` to see all request types, \
-             or delete the cache file at ~/.cache/jr/v1/{profile}/request_types_{service_desk_id}.json \
-             if a recent admin change is suspected."
-        ))
-        .into()),
+        MatchResult::None(_) => {
+            // Derive the actual cache path from cache_dir() so the hint is
+            // accurate across XDG_CACHE_HOME overrides, macOS, and Windows
+            // (addresses Copilot review finding: hardcoded ~/.cache path).
+            let cache_path =
+                cache::cache_dir(profile).join(format!("request_types_{service_desk_id}.json"));
+            Err(JrError::UserError(format!(
+                "Request type \"{name}\" not found. \
+                 Run `jr requesttype list --project {project_key}` to see all request types, \
+                 or delete the cache file at {} \
+                 if a recent admin change is suspected.",
+                cache_path.display()
+            ))
+            .into())
+        }
     }
 }
 

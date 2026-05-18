@@ -959,16 +959,20 @@ async fn test_requesttype_fields_not_found_error_includes_cache_deletion_hint() 
         "Old drift wording must not appear; got: {stderr}"
     );
 
-    // BC-X.12.008 §Stale-cache window: cache-deletion prefix (profile name is dynamic).
+    // BC-X.12.008 §Stale-cache window: cache-deletion hint uses the actual cache path.
+    // The path is now derived dynamically from cache::cache_dir(profile) so it respects
+    // XDG_CACHE_HOME, macOS, and Windows conventions (Copilot review fix — hardcoded
+    // ~/.cache/jr/v1/ prefix replaced). Assert the structural parts that are stable:
     assert!(
-        stderr.contains("or delete the cache file at ~/.cache/jr/v1/"),
-        "BC-X.12.008: stderr must contain cache-deletion prefix; got: {stderr}"
+        stderr.contains("or delete the cache file at "),
+        "BC-X.12.008: stderr must contain 'or delete the cache file at'; got: {stderr}"
     );
 
     // BC-X.12.008 §Stale-cache window: filename suffix with the service desk ID "10".
+    // The prefix is XDG_CACHE_HOME-relative; the suffix is stable across all platforms.
     assert!(
-        stderr.contains("/request_types_10.json"),
-        "BC-X.12.008: stderr must contain '/request_types_10.json' (sid=10 from fixture); got: {stderr}"
+        stderr.contains("request_types_10.json"),
+        "BC-X.12.008: stderr must contain 'request_types_10.json' (sid=10 from fixture); got: {stderr}"
     );
 
     // BC-X.12.008 §Stale-cache window: full closing phrase.

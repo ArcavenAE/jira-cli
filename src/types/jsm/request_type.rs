@@ -8,11 +8,15 @@ use serde::{Deserialize, Serialize};
 
 /// A JSM request type associated with a service desk.
 ///
-/// `Default` is required by `ServiceDeskPage<RequestType>` deserialization
-/// (the page generic bounds `T: Default` through serde's derive chain). No
-/// direct caller uses `RequestType::default()`. Default-constructed values
-/// have an empty `id` which corrupts cache filenames — do not persist a
-/// default-constructed `RequestType` to the request-type cache.
+/// `Default` is derived for uniform consistency with sibling types in this
+/// module (`RequestTypeField`, `RequestTypeFieldsResponse`, etc.) and for
+/// use in test helpers that construct partial structs via field syntax.
+/// `ServiceDeskPage<RequestType>` does NOT require `T: Default` — the
+/// `#[serde(default)]` on `values: Vec<T>` requires only `Default for Vec<T>`,
+/// which is always satisfied. No direct production caller uses
+/// `RequestType::default()`. Default-constructed values have an empty `id`
+/// which corrupts cache filenames — do not persist a default-constructed
+/// `RequestType` to the request-type cache.
 #[derive(Debug, Clone, Default, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct RequestType {
