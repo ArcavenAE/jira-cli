@@ -15,7 +15,12 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        branch: [main, develop]
+        # main + develop: fork authors local CI/release commits on top of
+        # upstream, so the merge logic + protected-files handling applies.
+        # factory-artifacts: upstream-only content (spec snapshots feeding
+        # ci.yml's spec-guard job). Fork has no local edits; merge is
+        # always a fast-forward.
+        branch: [main, develop, factory-artifacts]
       fail-fast: false
     steps:
       - name: Harden the runner (Audit all outbound calls)
