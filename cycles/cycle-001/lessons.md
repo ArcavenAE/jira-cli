@@ -1114,4 +1114,36 @@ Pattern to watch for: adversary finding asserts a HIGH-risk condition, recommend
 [codified] — this lesson is recorded and will inform future adversarial-remediation cycles. Suggests a `vsdd-factory:adversarial-review` skill enhancement: when a CONCERN finding proposes a new process mechanism, prompt the orchestrator to validate before accepting the remediation.
 
 _Discovered: #288 F3 human approval gate → research-agent validation, 2026-05-18_
+
+---
+
+## L-288-pr1-01: Copilot catches what local-adversary misses on test-quality dimensions [codified]
+
+**Date:** 2026-05-18
+**Cycle:** 3-feature-jsm-request-types-288 (F4 pr1-api delivery)
+**Tag:** [codified] [novel-pg]
+
+### What happened
+
+Per-story adversarial review for S-288-pr1-api converged at 3/3 CLEAN (0B/0C/3N) with NITs flagged as acceptable. PR was opened with all 10 CI checks green and pr-reviewer APPROVE. Copilot then ran 6 rounds and found:
+- POST body shape was not asserted in AC-001 test (mock matched method+path only)
+- `searchQuery` absence test was self-documented as soft (already flagged as F-03 NIT by per-story adversary — but adversary accepted as "non-blocker"; Copilot insisted on tightening with `query_param_is_missing`)
+- `visible: bool` field in JSM API response was silently dropped by `RequestTypeField` struct (adversary verified 14 struct fields but did not cross-reference against full API response shape)
+- AC-005 in evidence report cited the wrong test for `RequestTypeField` coverage (story.md had this drift; adversary did not catch)
+- Doc-comment phrasing accuracy ("no data is lost" was over-stating reality)
+- Positive searchQuery test omitted pagination param matchers (would match a request with searchQuery + extra params)
+
+### Lesson
+
+**Per-story adversary catches structural/semantic defects; Copilot catches test-precision defects.** The adversary verified the diff was internally consistent and matched the BCs/ACs — but it accepted F-03 ("AC-003 negative-test softness, self-documented") as a NIT rather than a fix-required CONCERN. Copilot didn't accept that — it required `query_param_is_missing`. Similarly, Copilot caught the missing `visible` field by reading the actual Atlassian API response shape (not just the test fixtures).
+
+Pattern: when an adversarial NIT is "self-documented imperfection" (test author admits the test has a known weakness), a fresh-context Copilot pass will frequently insist on tightening it. Future cycles should treat self-documented test weaknesses as CONCERN-class, not NIT-class.
+
+### Application going forward
+
+- Per-story adversary should treat `// note: this test cannot strictly enforce X` comments in test code as a CONCERN finding (test author has documented an incompleteness), not a NIT — and ask whether the incompleteness should be fixed before merge or filed as a follow-up
+- For new struct definitions, the adversary should cross-reference against ACTUAL API response shape (e.g., grep for all fields in the swagger/example responses) rather than just verifying the struct compiles and round-trips
+- AC-trace fields in evidence reports / story files should be sanity-checked against the test names that ACTUALLY cover each AC — Copilot caught one drift here that 3 adversarial passes missed
+
+_Discovered: S-288-pr1-api F4 delivery + 6 Copilot rounds → convergence, 2026-05-18_
 _Tagged: [codified] [process-gap] — first occurrence; applicable to all future adversarial-remediation cycles_
