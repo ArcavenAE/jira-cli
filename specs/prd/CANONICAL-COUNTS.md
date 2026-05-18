@@ -52,7 +52,7 @@ done
 
 ### Grand total
 
-**Canonical grand total: 566** (+4 BC-7.4.013-016 added 2026-05-08 via Fix-PR A `28b0f35`; +1 BC-2.6.050 added 2026-05-13 via issue #350; +1 BC-2.6.051 added 2026-05-14 via issue #365; +1 BC-3.4.009 added 2026-05-15 via issue #340 F2; +17 BC-3.8.001..009 + BC-X.12.001..008 added 2026-05-18 via issue #288 F2; +1 BC-3.8.010 added 2026-05-18 via issue #288 F1d pass-01)
+**Canonical grand total: 566** (+4 BC-7.4.013-016 added 2026-05-08 via Fix-PR A `28b0f35`; +1 BC-2.6.050 added 2026-05-13 via issue #350; +1 BC-2.6.051 added 2026-05-14 via issue #365; +1 BC-3.4.009 added 2026-05-15 via issue #340 F2; +18 BC-3.8.001..010 + BC-X.12.001..008 added 2026-05-18 via issue #288 F2+F1d)
 
 _Note: BC-INDEX.md `total_bcs` header will be updated to 566 to match this file. CANONICAL-COUNTS.md carries the per-file sum as the primary source of truth. (+2 since F2: +1 BC-2 definitional corrected 50→51; +1 BC-3.8.010 added at F1d pass-01 2026-05-18)_
 
@@ -116,7 +116,7 @@ grep -c '^### H-' .factory/specs/prd/holdout-scenarios.md
 
 Expected: 55 (H-001..H-047 + H-NEW-MP-001 + H-NEW-VERBOSE-001 + H-NEW-VERBOSE-002 + H-NEW-AUTH-002 + H-NEW-JSM-RT-001 + H-NEW-JSM-RT-002 + H-NEW-JSM-RT-003 + H-NEW-JSM-RT-004 + H-NEW-JSM-RT-005)
 
-_Note: holdout-scenarios.md frontmatter `total_holdouts: 54` counts all holdout entries including ones without `### H-` headings; the grep count of `### H-` headings is 54 because H-NEW-* holdouts use the extended format. The frontmatter count (54) is authoritative._
+_Note: holdout-scenarios.md frontmatter `total_holdouts: 55` counts all holdout entries including ones without `### H-` headings; the grep count of `### H-` headings is 55 because H-NEW-* holdouts use the extended format. The frontmatter count (55) is authoritative._
 
 ---
 

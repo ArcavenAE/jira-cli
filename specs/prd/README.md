@@ -36,19 +36,19 @@ the gap between current code and these contracts.
 |------|----------------|--------|--------------|
 | [bc-1-auth-identity.md](bc-1-auth-identity.md) | Auth & Identity | BC-1.*.* (57) | BC-001..024 + BC-025..035 + BC-1140..1178 |
 | [bc-2-issue-read.md](bc-2-issue-read.md) | Issue Read | BC-2.*.* (91) | BC-101..124 + BC-125..150 + BC-1036..1055 |
-| [bc-3-issue-write.md](bc-3-issue-write.md) | Issue Write | BC-3.*.* (77) | BC-201..225 + BC-1056..1081 |
+| [bc-3-issue-write.md](bc-3-issue-write.md) | Issue Write | BC-3.*.* (88) | BC-201..225 + BC-1056..1081 + BC-3.8.001..010 |
 | [bc-4-assets-cmdb.md](bc-4-assets-cmdb.md) | Assets & CMDB | BC-4.*.* (32) | BC-301..315 + BC-316..324 + BC-1136..1137 |
 | [bc-5-boards-sprints.md](bc-5-boards-sprints.md) | Boards & Sprints | BC-5.*.* (35) | BC-401..410 + BC-1138 |
 | [bc-6-config-cache.md](bc-6-config-cache.md) | Configuration & Cache | BC-6.*.* (39) | BC-901..911 + BC-1001..1016 + BC-6.3.001 (NFR-R-D) + BC-6.2.015 (profile-fence) |
 | [bc-7-output-render.md](bc-7-output-render.md) | Output Rendering | BC-7.*.* (80) | BC-1101..1118 + BC-1104..1118 (snapshots) + ADF (54) |
-| [cross-cutting.md](cross-cutting.md) | Cross-cutting | BC-X.*.* (130) | BC-601..606 + BC-701..709 + BC-801..808 + BC-1082..1103 + BC-1201..1214 + BC-1401..1411 + Worklogs/Teams/Users/Projects |
+| [cross-cutting.md](cross-cutting.md) | Cross-cutting | BC-X.*.* (138) | BC-601..606 + BC-701..709 + BC-801..808 + BC-1082..1103 + BC-1201..1214 + BC-1401..1411 + Worklogs/Teams/Users/Projects + BC-X.12.001..008 |
 | [nfr-catalog.md](nfr-catalog.md) | NFR Catalog | 41 NFRs | Pass 4 R4 + ADV-P3-007 (1C/6H/15M/19L); NFR-O-K merged into NFR-S-D per ADV-P7-002 |
 | [error-taxonomy.md](error-taxonomy.md) | Error taxonomy | 11 variants | BC-1204 + exit code table |
 | [edge-case-catalog.md](edge-case-catalog.md) | Edge cases | cross-cutting | Pass 3 §5 untested gaps |
-| [holdout-scenarios.md](holdout-scenarios.md) | Holdout scenarios | 48 | H-001..H-047 + H-NEW-MP-001 |
-| [BC-INDEX.md](BC-INDEX.md) | Master BC index | 541 | All BCs with traceability |
+| [holdout-scenarios.md](holdout-scenarios.md) | Holdout scenarios | 55 | H-001..H-047 + H-NEW-MP-001 + H-NEW-VERBOSE-001/002 + H-NEW-AUTH-002 + H-NEW-JSM-RT-001..005 |
+| [BC-INDEX.md](BC-INDEX.md) | Master BC index | 566 | All BCs with traceability |
 
-**Total BCs in PRD:** 541 (538 imported range-collapsed + 3 formalized: BC-6.3.001 from NFR-R-D draft + BC-6.2.015 profile-fence + BC-X.4.009 from ADV-P1-029; BC-X.4.009 is included in cross-cutting total_bcs=130 — no separate +1 adjustment needed)
+**Total BCs in PRD:** 566 (538 imported range-collapsed + 3 formalized: BC-6.3.001 from NFR-R-D draft + BC-6.2.015 profile-fence + BC-X.4.009 from ADV-P1-029; +4 BC-7.4.013-016; +2 BC-2.6.050-051; +1 BC-3.4.009; +18 BC-3.8.001..010 + BC-X.12.001..008)
 
 ---
 

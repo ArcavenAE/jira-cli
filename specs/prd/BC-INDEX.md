@@ -1,7 +1,7 @@
 ---
 context: bc-index
 title: "BC Master Index"
-total_bcs: 566  # cumulative claim (incl. range-collapsed) — see preamble below; +4 added 2026-05-08 (BC-7.4.013-016, Fix-PR A); +1 added 2026-05-13 (BC-2.6.050, issue #350); +1 added 2026-05-14 (BC-2.6.051, issue #365); +1 added 2026-05-15 (BC-3.4.009, issue #340 F2); +17 added 2026-05-18 (BC-3.8.001..009 + BC-X.12.001..008, issue #288 F2); +1 added 2026-05-18 (BC-3.8.010, issue #288 F1d pass-01); BC-1.3.023, BC-3.3.001, BC-X.8.004 modified
+total_bcs: 566  # cumulative claim (incl. range-collapsed) — see preamble below; +4 added 2026-05-08 (BC-7.4.013-016, Fix-PR A); +1 added 2026-05-13 (BC-2.6.050, issue #350); +1 added 2026-05-14 (BC-2.6.051, issue #365); +1 added 2026-05-15 (BC-3.4.009, issue #340 F2); +18 added 2026-05-18 (BC-3.8.001..010 + BC-X.12.001..008, issue #288 F2+F1d); BC-1.3.023, BC-3.3.001, BC-X.8.004 modified
 last_updated: 2026-05-18
 source_pass: 3
 sections:
@@ -518,7 +518,7 @@ R1/R4 prefix = deepening round that introduced it.
 
 ---
 
-## Section X: Cross-Cutting Utilities (cross-cutting.md) — 130 BCs cumulative; 64 individually-bodied
+## Section X: Cross-Cutting Utilities (cross-cutting.md) — 138 BCs cumulative; 72 individually-bodied
 
 ### X.1 HTTP Client (10 BCs: BC-X.1.001..010)
 
@@ -610,7 +610,7 @@ R1/R4 prefix = deepening round that introduced it.
 | BC-X.8.001 | `project_exists(key)` → true on 200; false on 404 | BC-801 | tests/input_validation.rs:9-42 | HIGH |
 | BC-X.8.002 | `get_project_statuses(key)` → 404 → `JrError::ApiError{status: 404}` | BC-802 | tests/input_validation.rs:233-253 | HIGH |
 | BC-X.8.003 | `get_or_fetch_project_meta(client, key)` caches by project key with 7d TTL | BC-804 | tests/project_meta.rs:24-67 | HIGH |
-| BC-X.8.004 | `require_service_desk` errors for software project: "Jira Software project" + "Queue commands require" | BC-805 | tests/project_meta.rs:99-126 | HIGH |
+| BC-X.8.004 | `require_service_desk` errors for software project: "Jira Software project" + caller-supplied call-site label | BC-805 | tests/project_meta.rs:99-126 | HIGH |
 | BC-X.8.005 | `list_projects` paginates via `startAt`; filter via `typeKey` query param | BC-1133d, BC-1133e (R4) | tests/project_commands.rs:1-323 | HIGH |
 
 ### X.9 JQL Utilities (4 BCs: BC-X.9.001..004)
@@ -680,7 +680,7 @@ R1/R4 prefix = deepening round that introduced it.
 | X: Cross-Cutting | 138 | 72 |
 | **Total** | **566** | **334** |
 
-**Note**: BC-X.4.009 (ADV-P1-029) is included in cross-cutting's `total_bcs` and in the sum above. Canonical total is **566** (+4 BC-7.4.013-016 added 2026-05-08 via Fix-PR A; +1 BC-2.6.050 added 2026-05-13 via issue #350; +1 BC-2.6.051 added 2026-05-14 via issue #365; +1 BC-3.4.009 added 2026-05-15 via issue #340 F2; +17 BC-3.8.001..009 + BC-X.12.001..008 added 2026-05-18 via issue #288 F2; +1 BC-3.8.010 added 2026-05-18 via issue #288 F1d pass-01).
+**Note**: BC-X.4.009 (ADV-P1-029) is included in cross-cutting's `total_bcs` and in the sum above. Canonical total is **566** (+4 BC-7.4.013-016 added 2026-05-08 via Fix-PR A; +1 BC-2.6.050 added 2026-05-13 via issue #350; +1 BC-2.6.051 added 2026-05-14 via issue #365; +1 BC-3.4.009 added 2026-05-15 via issue #340 F2; +18 BC-3.8.001..010 + BC-X.12.001..008 added 2026-05-18 via issue #288 F2+F1d).
 
 Cumulative total (566) ≠ individually-bodied count (334). The difference (232) comprises range-collapsed BCs that exist in the cumulative claim but are not individually headlined in body files. This is by design — range-collapsed BCs trace to Pass 3 source material but were not individually expanded. The 4 MUST-FIX BCs are included in the individually-bodied count.
 

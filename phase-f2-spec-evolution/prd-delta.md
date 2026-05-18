@@ -22,7 +22,7 @@ Counts updated across BC-INDEX.md and CANONICAL-COUNTS.md.
 
 ## New BCs
 
-### BC-3.8.001..009 — JSM Request Create (bc-3-issue-write.md)
+### BC-3.8.001..010 — JSM Request Create (bc-3-issue-write.md)
 
 | BC ID | Summary |
 |-------|---------|
@@ -63,13 +63,15 @@ Counts updated across BC-INDEX.md and CANONICAL-COUNTS.md.
 
 ## New Holdout Scenarios
 
-Group 9 added to holdout-scenarios.md (50 → 54):
+Group 9 added to holdout-scenarios.md (50 → 55):
 
 | ID | Title | BCs |
 |----|-------|-----|
 | H-NEW-JSM-RT-001 | JSM request creation routes to servicedeskapi; `expect(0)` on platform endpoint | BC-3.8.001, BC-3.8.002, BC-3.8.008 |
 | H-NEW-JSM-RT-002 | `issue create --request-type` on software project exits 64 clean, zero POST | BC-3.8.002, BC-X.8.004 |
 | H-NEW-JSM-RT-003 | 401 scope-mismatch surfaces `write:servicedesk-request` in recovery hint | BC-3.8.009, BC-X.3.005, BC-1.6.042, BC-1.3.023 |
+| H-NEW-JSM-RT-004 | `--type` flag ignored with stderr warning when `--request-type` is set | BC-3.8.010, BC-3.8.001 |
+| H-NEW-JSM-RT-005 | `jr requesttype fields` uses cache on second call — no extra HTTP | BC-X.12.005, BC-X.12.008 |
 
 ---
 
@@ -98,7 +100,7 @@ Group 9 added to holdout-scenarios.md (50 → 54):
 
 | File | Change Type | Lines (approx) |
 |------|-------------|-----------------|
-| `.factory/specs/prd/bc-3-issue-write.md` | Frontmatter updated; BC-3.3.001 body modified (routing clause); BC-3.8.001..009 section added; footer updated | BC-3.8 section: ~180 new lines |
+| `.factory/specs/prd/bc-3-issue-write.md` | Frontmatter updated; BC-3.3.001 body modified (routing clause); BC-3.8.001..010 section added; footer updated | BC-3.8 section: ~180 new lines |
 | `.factory/specs/prd/cross-cutting.md` | Frontmatter updated; BC-X.12.001..008 section added before Key Invariants | ~130 new lines |
 | `.factory/specs/prd/bc-1-auth-identity.md` | BC-1.3.023 body updated (scope expansion, Developer Console note, update marker) | ~10 lines modified |
 | `.factory/specs/prd/BC-INDEX.md` | Frontmatter counts; section 1.3 BC-1.3.023 title; section 3 header; BC-3.3.001 title; new 3.8 subsection; new X.12 subsection; coverage stats table | ~30 lines modified/added |

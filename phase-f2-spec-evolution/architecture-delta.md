@@ -97,13 +97,22 @@ graph TD
 
 ### Cache Key Prefix
 
-New cache key family: `v1/<profile>/request_types_<serviceDeskId>.json`
+Two new cache key families (per BC-X.12.008 and H-NEW-JSM-RT-005):
+
+**Family 1 — Request Type List:** `v1/<profile>/request_types_<serviceDeskId>.json`
 
 - TTL: 7 days (identical to all other caches)
 - Struct: `RequestTypeCache { fetched_at, service_desk_id, request_types: Vec<CachedRequestType> }`
 - Pattern: identical to `teams.json` (read_team_cache / write_team_cache)
 - Multi-profile invariant preserved: `read_request_type_cache(profile, service_desk_id)` takes both params
 - Per-serviceDeskId keying (not per-project) because one profile can have multiple service desks
+
+**Family 2 — Request Type Fields:** `v1/<profile>/request_type_fields_<serviceDeskId>_<requestTypeId>.json`
+
+- TTL: 7 days (same as Family 1)
+- Struct: `RequestTypeFieldsCache { fetched_at, service_desk_id, request_type_id, fields_response: CachedFieldsResponse }`
+- Pattern: identical to Family 1; keyed by `(profile, serviceDeskId, requestTypeId)` because field schemas differ per request type
+- Pinned by H-NEW-JSM-RT-005: second call to `jr requesttype fields` must NOT issue a second HTTP call to the fields endpoint (expect(1) on wiremock)
 
 ### OAuth Scope — Release Coordination Flag
 

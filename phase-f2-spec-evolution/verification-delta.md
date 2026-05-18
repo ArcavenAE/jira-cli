@@ -58,7 +58,7 @@ Property-level correctness on this project is anchored by:
   enforcing a 90% kill-rate on PR-diff scope (see `docs/specs/cargo-mutants-policy.md`).
 
 This F2 verification delta therefore catalogues proptest and mutation
-coverage to be produced in F6, scoped to the 17 new BCs (BC-3.8.001..009 +
+coverage to be produced in F6, scoped to the 18 new BCs (BC-3.8.001..010 +
 BC-X.12.001..008) and the two modified BCs (BC-1.3.023, BC-3.3.001). No
 "VP" artifacts are minted; F6 hardening enforces the catalogue below
 against the in-tree code.
@@ -184,6 +184,10 @@ will mock a paginated response and assert all values are returned.
   pattern-reuse), `cli/requesttype.rs` (partial-match reuse),
   `types/jsm/request_type.rs` (serde-derive; runtime errors not
   silent-regression risks).
+- **BC-3.8.010 (--type ignored with warning):** integration-test-only — no proptest
+  candidate. The behavior is a stderr warning side-effect with no pure-function
+  property to fuzz; it is fully covered by H-NEW-JSM-RT-004 and the integration
+  test `tests/issue_create_jsm.rs::type_flag_ignored_with_warning_when_request_type_set`.
 
 ---
 

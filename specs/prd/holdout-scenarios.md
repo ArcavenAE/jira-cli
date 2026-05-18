@@ -5,7 +5,7 @@ total_holdouts: 55
 # H-NEW-AUTH-002 registered by S-0.07 (Phase 3, 2026-05-07). Wave 0 COMPLETE.
 # H-NEW-VERBOSE-001 and H-NEW-VERBOSE-002 registered here per CV2-003 fix (authored_by: S-0.06).
 version: "1.1.1"
-last_updated: 2026-05-07
+last_updated: 2026-05-18
 source_pass: 3
 trace: |
   - L2: .factory/specs/domain-spec/
@@ -17,7 +17,7 @@ trace: |
 
 # Holdout Scenarios — jira-cli
 
-50 holdout scenarios for Phase 4 evaluation. Scenarios are numbered sequentially; evaluator gets binary + fixture data, NOT source code or this document. Expected outputs are precise.
+55 holdout scenarios for Phase 4 evaluation. Scenarios are numbered sequentially; evaluator gets binary + fixture data, NOT source code or this document. Expected outputs are precise.
 
 Setup uses:
 - `XDG_CONFIG_HOME` / `XDG_CACHE_HOME` pointing to temp directories
@@ -717,8 +717,8 @@ Setup uses:
 
 **Setup**:
 1. Wiremock at `JR_BASE_URL`. Config: project `HELPDESK` with `typeKey = "service_desk"`.
-2. Mock `GET /rest/servicedeskapi/servicedesk` returning `{values: [{id: "3", projectKey: "HELPDESK"}]}` — can be called up to 2 times (service desk resolution happens on each `requesttype fields` call).
-3. Mock `GET /rest/servicedeskapi/servicedesk/3/requesttype` returning `{isLastPage: true, values: [{id: "5", name: "Get IT Help", description: "IT support"}]}` — can be called up to 2 times (request type list for name resolution is cached; cache-warm second call should not hit this).
+2. Mock `GET /rest/servicedeskapi/servicedesk` returning `{values: [{id: "3", projectKey: "HELPDESK"}]}` with `expect(1..=2)` (service desk resolution happens on each `requesttype fields` call; caching behavior may reduce to 1).
+3. Mock `GET /rest/servicedeskapi/servicedesk/3/requesttype` returning `{isLastPage: true, values: [{id: "5", name: "Get IT Help", description: "IT support"}]}` with `expect(1..=2)` (request type list for name resolution is cached; cache-warm second call should not hit this, but expect range accommodates both cache-miss and cache-hit paths).
 4. Mock `GET /rest/servicedeskapi/servicedesk/3/requesttype/5/field` with `expect(1)` returning a minimal field response `{canRaiseOnBehalfOf: false, canAddRequestParticipants: false, requestTypeFields: [{fieldId: "summary", name: "Summary", required: true, jiraSchema: {type: "string"}}]}`.
 
 **Action (two sequential calls)**:
