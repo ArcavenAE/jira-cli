@@ -197,9 +197,11 @@ Used at exactly 2 call sites (Pass 1 R2 verified):
 RequestTypeCache { fetched_at: DateTime<Utc>, service_desk_id: String, request_types: Vec<CachedRequestType> }
 ```
 
-Cache file path: `v1/<profile>/request_types_<serviceDeskId>.json` (7-day TTL).
+Two cache file paths in this family (7-day TTL each):
+- `v1/<profile>/request_types_<serviceDeskId>.json` — list of request types per service desk (BC-X.12.008)
+- `v1/<profile>/request_type_fields_<serviceDeskId>_<requestTypeId>.json` — field metadata per request type (BC-X.12.005)
 
-**Key design:** `serviceDeskId` is embedded in the filename (not the profile directory name) because a single profile can interact with multiple service desks. This is the same per-resource-id keying pattern used by `object_type_attrs.json` (which is per-schema). The multi-profile boundary invariant is preserved: `read_request_type_cache(profile, service_desk_id)` takes both parameters.
+**Key design:** `serviceDeskId` (and `requestTypeId` for the fields cache) is embedded in the filename (not the profile directory name) because a single profile can interact with multiple service desks and request types. This is the same per-resource-id keying pattern used by `object_type_attrs.json` (which is per-schema). The multi-profile boundary invariant is preserved: cache read/write functions take `(profile, service_desk_id)` or `(profile, service_desk_id, request_type_id)` as parameters.
 
 Pattern is identical to `read_team_cache` / `write_team_cache`. Cache miss (file absent, expired, or corrupt JSON) triggers a live fetch — self-healing, no user-visible error.
 

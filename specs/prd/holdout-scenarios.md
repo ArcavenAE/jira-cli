@@ -1,7 +1,7 @@
 ---
 context: holdout-scenarios
 title: "Holdout Scenarios"
-total_holdouts: 54
+total_holdouts: 55
 # H-NEW-AUTH-002 registered by S-0.07 (Phase 3, 2026-05-07). Wave 0 COMPLETE.
 # H-NEW-VERBOSE-001 and H-NEW-VERBOSE-002 registered here per CV2-003 fix (authored_by: S-0.06).
 version: "1.1.1"
@@ -706,3 +706,30 @@ Setup uses:
 **Why hidden**: The `--type` flag interaction at the JSM dispatch site is not visible from the JSON output alone — only the stderr line and mock body inspection reveal whether `--type` was silently dropped or incorrectly forwarded. A regression where `--type` causes an error (rather than a warning) or where the warning is omitted would be invisible without this pin.
 
 **Status**: MUST-PASS. Pins BC-3.8.010 (--type ignored with warning).
+
+---
+
+### H-NEW-JSM-RT-005: `jr requesttype fields` uses cache on second call — no extra HTTP (SHOULD-PASS)
+
+**NFR source**: BC-X.12.005
+**BC**: BC-X.12.005, BC-X.12.008
+**Authored by**: F1d adversary pass-02 (2026-05-18)
+
+**Setup**:
+1. Wiremock at `JR_BASE_URL`. Config: project `HELPDESK` with `typeKey = "service_desk"`.
+2. Mock `GET /rest/servicedeskapi/servicedesk` returning `{values: [{id: "3", projectKey: "HELPDESK"}]}` — can be called up to 2 times (service desk resolution happens on each `requesttype fields` call).
+3. Mock `GET /rest/servicedeskapi/servicedesk/3/requesttype` returning `{isLastPage: true, values: [{id: "5", name: "Get IT Help", description: "IT support"}]}` — can be called up to 2 times (request type list for name resolution is cached; cache-warm second call should not hit this).
+4. Mock `GET /rest/servicedeskapi/servicedesk/3/requesttype/5/field` with `expect(1)` returning a minimal field response `{canRaiseOnBehalfOf: false, canAddRequestParticipants: false, requestTypeFields: [{fieldId: "summary", name: "Summary", required: true, jiraSchema: {type: "string"}}]}`.
+
+**Action (two sequential calls)**:
+1. `jr requesttype fields "Get IT Help" --project HELPDESK --no-input`
+2. `jr requesttype fields "Get IT Help" --project HELPDESK --no-input`
+
+**Expected (SHOULD-PASS)**:
+- Both calls exit 0
+- `GET /rest/servicedeskapi/servicedesk/3/requesttype/5/field` is called exactly once across both runs (expect(1) satisfied) — second call uses the per-request-type fields cache
+- Both calls produce identical stdout output (table with "Summary", required=YES)
+
+**Why hidden**: The per-request-type fields cache (`request_type_fields_<sid>_<rtId>.json`) is a separate cache layer from the request-type list cache. A regression where the fields cache is not populated or not read on the second call would result in two HTTP calls — visible only via wiremock `expect(1)` assertion failure.
+
+**Status**: SHOULD-PASS. Pins BC-X.12.005 §Caching (fields cache hit/miss behavior).

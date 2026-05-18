@@ -15,7 +15,7 @@ JSM request type support: `jr issue create --request-type` + `jr requesttype lis
 
 ## Summary
 
-17 new BCs minted (F2) + 1 new BC (F1d: BC-3.8.010) = 18 total new BCs. 2 existing BCs modified (F2) + 6 existing BCs modified (F1d) = 8 total modified BCs. 3 holdout scenarios added (F2) + 1 holdout added (F1d: H-NEW-JSM-RT-004) = 4 total new holdouts.
+17 new BCs minted (F2) + 1 new BC (F1d: BC-3.8.010) = 18 total new BCs. 2 existing BCs modified (F2) + 6 existing BCs modified (F1d) = 8 total modified BCs. 3 holdout scenarios added (F2) + 1 holdout added (F1d: H-NEW-JSM-RT-004) + 1 holdout added (F1d pass-02: H-NEW-JSM-RT-005) = 5 total new holdouts.
 Counts updated across BC-INDEX.md and CANONICAL-COUNTS.md.
 
 ---
@@ -63,7 +63,7 @@ Counts updated across BC-INDEX.md and CANONICAL-COUNTS.md.
 
 ## New Holdout Scenarios
 
-Group 9 added to holdout-scenarios.md (50 → 53):
+Group 9 added to holdout-scenarios.md (50 → 54):
 
 | ID | Title | BCs |
 |----|-------|-----|
@@ -77,20 +77,20 @@ Group 9 added to holdout-scenarios.md (50 → 53):
 
 | File | Field | Before | After |
 |------|-------|--------|-------|
-| bc-3-issue-write.md | `total_bcs` | 78 | 87 |
-| bc-3-issue-write.md | `definitional_count` | 49 | 58 |
+| bc-3-issue-write.md | `total_bcs` | 78 | 88 |
+| bc-3-issue-write.md | `definitional_count` | 49 | 59 |
 | cross-cutting.md | `total_bcs` | 130 | 138 |
 | cross-cutting.md | `definitional_count` | 64 | 72 |
-| BC-INDEX.md | `total_bcs` | 548 | 565 |
-| BC-INDEX.md | bc-3 section | 78 cumulative; 49 bodied | 87 cumulative; 58 bodied |
+| BC-INDEX.md | `total_bcs` | 548 | 566 |
+| BC-INDEX.md | bc-3 section | 78 cumulative; 49 bodied | 88 cumulative; 59 bodied |
 | BC-INDEX.md | cross-cutting section | 130 cumulative; 64 bodied | 138 cumulative; 72 bodied |
-| CANONICAL-COUNTS.md | bc-3 definitional | 49 | 58 |
+| CANONICAL-COUNTS.md | bc-3 definitional | 49 | 59 |
 | CANONICAL-COUNTS.md | cross-cutting definitional | 64 | 72 |
-| CANONICAL-COUNTS.md | total individually-bodied | 315 | 332 |
-| CANONICAL-COUNTS.md | bc-3 total_bcs | 78 | 87 |
+| CANONICAL-COUNTS.md | total individually-bodied | 315 | 334 |
+| CANONICAL-COUNTS.md | bc-3 total_bcs | 78 | 88 |
 | CANONICAL-COUNTS.md | cross-cutting total_bcs | 130 | 138 |
-| CANONICAL-COUNTS.md | grand total sum | 547 | 564 |
-| holdout-scenarios.md | `total_holdouts` | 50 | 53 |
+| CANONICAL-COUNTS.md | grand total sum | 547 | 566 |
+| holdout-scenarios.md | `total_holdouts` | 50 | 55 |
 
 ---
 
@@ -135,11 +135,27 @@ In addition to the F2 modifications above:
 | BC-3.8.002 | bc-3-issue-write.md | Errors field: call-site-specific error message required (NOT "Queue commands require…"). |
 | BC-3.8.007 | bc-3-issue-write.md | Labels wire shape hardened to plain string array; priority JSDSERVER-4564 caveat added; Confidence MEDIUM→HIGH. |
 | BC-3.8.009 | bc-3-issue-write.md | Regex `[a-zA-Z0-9]{24}` removed; pass-through behavior specified; Errors field references corrected (BC-X.3.005 + BC-1.6.042 + H-NEW-JSM-RT-003). |
-| BC-3.8.010 | bc-3-issue-write.md | NEW: `--type` ignored with stderr warning when `--request-type` is set. |
+| BC-3.8.010 | bc-3-issue-write.md | NEW (F1d): `--type` ignored with stderr warning when `--request-type` is set. Warning fires on success path only (after flag parsing + request-type resolution); early-exit paths (BC-3.8.005, BC-3.8.003) do not require warning. |
 | BC-X.8.004 | cross-cutting.md | "Queue commands require…" string made caller-supplied; call-site-specific error messages specified for each invocation site. |
 | BC-X.12.003 | cross-cutting.md | Non-JSM error message updated to call-site-specific form (mirrors BC-X.8.004 change). |
 | BC-X.12.008 | cross-cutting.md | Stale-cache window, manual recovery path, and cache-not-found error message added. |
 | BC-1.3.023 | bc-1-auth-identity.md | Release gate enforcement added (PR template checklist; story S-288-C). |
+
+---
+
+## Validated (F1d adversary pass-02, 2026-05-18)
+
+Propagation fixes applied in pass-02:
+- BC-X.12.005 Caching section hoisted from BC-X.12.008 "Fields cache note" into BC-X.12.005 body (F16)
+- BC-X.12.008 "Fields cache note" replaced with canonical reference to BC-X.12.005 §Caching (F16)
+- BC-X.8.004 implementation contract appended (call-site `&'static str` parameter convention) (F18)
+- BC-3.8.010 warning semantics clarified: fires on success path only; early-exit paths exempt (F19)
+- ADR-0014 `related` frontmatter expanded to include BC-3.8.010 + BC-1.3.023 (F20)
+- Holdout H-NEW-JSM-RT-005 added (cache hit pin for `jr requesttype fields`) (F16)
+- Architecture cross-cutting.md §10.1 updated to list `request_type_fields_<sid>_<rtId>.json` (F16)
+- prd-delta.md count tables updated to reflect final F1d totals (F14)
+- CANONICAL-COUNTS.md stale breakdown prose removed/replaced (F15)
+- bc-1-auth-identity.md `last_updated` bumped (F17)
 
 ---
 

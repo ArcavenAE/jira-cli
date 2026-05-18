@@ -36,7 +36,7 @@ activation_version: "v0.5.0-dev.7"
 | **Language** | Rust |
 | **Target Workspace** | develop → main |
 | **Started** | 2026-05-04 |
-| **Last Updated** | 2026-05-18 — F2 spec delta + F1d pass-01 complete for issue #288 JSM request types. 13 findings (4B/6C/3N); all BLOCKING+CONCERN remediated in-burst. BC count 548→566, holdouts 50→54. DRIFT-008 added. |
+| **Last Updated** | 2026-05-18 — F1d pass-02 complete for #288. 0B/3C/4N; all 7 net-new remediated in-burst. DRIFT-009 added. BC 566, holdouts 55. |
 | **Current Phase** | Phase 3 — TDD Implementation **IN PROGRESS** — Wave 3 CLOSED (10/10). Feature Mode #110-pr2 COMPLETE. PRs #355–#364, #366–#367, #369–#373 MERGED. **0 audit-followups remain** (#331 sandbox-blocked deferred; #333 closed by PR #360; #340 closed by PR #370; #345 closed by PR #371; #346 closed by PR #373; #350 closed by PR #362; #361 closed by PR #364; #365 closed by PR #367; PG-365-1 closed by PR #369). No active cycle. |
 | **Next Phase** | Wave 3 — 10 stories (S-3.01..S-3.10) |
 | **Activation HEAD** | dea166471e22eff55974d7675593469b37048c5f (v0.5.0-dev.7) |
@@ -79,7 +79,7 @@ Goal 1c: **Harden v0.5 + feature delivery** — formalize existing codebase with
 | 3-feature-340-bulk-poll-task-id-pin | **MERGED** — PR #370 @ 394dc25 (squash); closes #340; F1-F7 full cycle CONVERGED in single delivery | 2026-05-15 | 2026-05-16 | MERGED — 5 adv passes (0/0 trajectory), 3 CLEAN; Copilot R1=0; CI 9/9 green | 8→5→3-obs→7→4 (BLOCKER+CONCERN: 0 every pass) |
 | 3-feature-345-label-coalesce-extract | **MERGED** — PR #371 @ bb352ea (squash, admin); closes #345; F1-F7 full cycle CONVERGED | 2026-05-16 | 2026-05-16 | MERGED — 6 adv passes (3 CLEAN); 3 Copilot cycles + 1 convergence batch; 17 threads resolved; CI 9/9 green | 0/1/6 → 0/2/3 → 0/2/2 → 0/0/0 → 0/0/0 → 0/0/0 (3 consecutive CLEAN) |
 | 3-feature-346-cargo-mutants-ci | **MERGED** — PR #373 @ d909e65 (2026-05-16); closes #346. 8 adv passes, 5 fix rounds, 3 CLEAN; trajectory 0/6/14→2/6/4→0/3/3→0/2/4→2/3/3(1 REFUTED)→0/0/3→0/0/0→0/0/0. Copilot R1=APPROVE; CI 10/10 green. Follow-up #372 filed for partial-baseline completion. | 2026-05-16 | 2026-05-16 | MERGED — 3 CLEAN convergence | 0/6/14→2/6/4→0/3/3→0/2/4→2/3/3→0/0/3→0/0/0→0/0/0 |
-| 3-feature-jsm-request-types-288 | **IN_PROGRESS** — F2 spec evolution + F1d pass-01 fixes applied; pass-02 pending | 2026-05-18 | | F1d 1 pass so far | 4B/6C/3N → pending pass-02 |
+| 3-feature-jsm-request-types-288 | **IN_PROGRESS** — F1d 2 passes; all pass-01 findings ADDRESSED; 7 net-new (0B/3C/4N) remediated; pass-03 pending | 2026-05-18 | | F1d 2 passes | 4B/6C/3N → 0B/3C/4N |
 | 4: Holdout Evaluation | not-started | | | | |
 | 5: Adversarial Refinement | not-started | | | | |
 | 6: Formal Hardening | not-started | | | | |
@@ -93,6 +93,7 @@ Goal 1c: **Harden v0.5 + feature delivery** — formalize existing codebase with
 |------|-------|--------|--------|
 | PR #370/#371/#373 MERGED — S-340/S-345/S-346 cycle-001 CLOSED. Audit-followup cluster 0 remaining. Follow-up #372 filed. | state-manager | complete | Phase Progress rows updated; lessons codified; DRIFT-007 added. Archived to burst-log.md 2026-05-18. |
 | F1d adversarial spec review pass-01 — #288 | adversary | complete | 13 findings (4B/6C/3N). Product-owner remediated all BLOCKING+CONCERN in same burst; F13 [process-gap] deferred to DRIFT-008. Spec at +18 BCs (+10 in BC-3.8.*, +8 in BC-X.12.*), 54 holdouts, BC-2.6.051 propagation fix to CANONICAL-COUNTS. |
+| F1d adversarial spec review pass-02 — #288 | adversary | complete | All 13 pass-01 findings ADDRESSED. 7 net-new (0B/3C/4N): remediation propagation drift in prd-delta count tables (F14), CANONICAL-COUNTS internal prose (F15), fields cache spec gap (F16), plus NITs. Product-owner remediated all in same burst. Counter 0/3. Pass-03 pending. |
 
 ## Decisions Log
 
@@ -189,6 +190,7 @@ Goal 1c: **Harden v0.5 + feature delivery** — formalize existing codebase with
 | DRIFT-006 | F5 multi-axis review missed O(N²) algorithmic complexity issue (PR #367) | F5 adversary (3-clean) + code-reviewer (CONVERGENCE_REACHED) + security (LOW-RISK APPROVE) all passed without flagging the O(N²) `Vec::retain` + per-iteration HashSet rebuild in `search_issue_keys` / `search_issues`. Copilot R2 caught it. Consider adding a performance/complexity-axis reviewer in future F5 phases. See L-365-1. | LOW | process-gap — Owner: orchestrator. Target: next F5 dispatch design discussion. |
 | DRIFT-007 | Chore-mode workflow not formalized — ad-hoc shortcuts produce predictable defects | PR #369 (PG-365-1) treated as "trivial" change: no F1 spec, no F2 story, no F3 red gate, no F5 multi-axis convergence, no 3-clean discipline. Result: 7 Copilot rounds with 9 valid findings, including R4 catching the same Source-field coverage gap the orchestrator's single adversary pass had explicitly deferred as NIT-2. Either apply full VSDD always OR formalize `workflows/maintenance.lobster` chore-mode workflow with explicit-but-reduced checklist. See L-PG365-1-process in lessons.md. | LOW | process-gap — Owner: orchestrator. Target: next chore PR / next planning discussion. |
 | DRIFT-008 | [process-gap] check-spec-counts.sh does not validate cross-document arithmetic (CANONICAL-COUNTS vs BC-INDEX vs per-file frontmatter sums). #288 F2 surfaced bc-2-issue-read.md frontmatter (51) vs CANONICAL-COUNTS (50) drift that pre-existed since #365. Target release: v0.6. Justification for deferral: requires script change, not blocking #288 ship; F13 from #288 pass-01 adversary. | LOW | process-gap — Owner: orchestrator. Target: v0.6 / scripts/ change on develop branch. |
+| DRIFT-009 | [process-gap] L2 domain-spec bc-02 (bc_count: 92) and bc-03 (bc_count: 77) frontmatter not bumped after L3 PRD additions (L3 bc-2=93, bc-3=88). PENDING annotation in CANONICAL-COUNTS L2/L3 alignment table has accumulated across multiple deltas (#350 BC-2.6.050, #365 BC-2.6.051, #340 BC-3.4.009, #288 BC-3.8.001..010). Target release: v0.6. Justification: requires L2 propagation policy decision; not blocking #288 ship; tracked as pass-02 product-owner net-new question for adversary pass-03 surface. | LOW | process-gap — Owner: orchestrator. Target: v0.6 / L2 propagation policy decision. |
 
 ## Convergence Trackers
 
@@ -224,8 +226,8 @@ _Not started._
 | Field | Value |
 |-------|-------|
 | **Date** | 2026-05-18 |
-| **Position** | **#288 F1d pass-01 COMPLETE** — F2 spec delta written (BC 548→566, holdouts 50→54, ADR-0014 added). F1d pass-01: 13 findings (4B/6C/3N); all BLOCKING+CONCERN remediated in-burst (BC-3.8.010 added, regex removed, error strings fixed, BC-X.12.008 stale-window documented, BC-1.3.023 release gate added). DRIFT-008 added. Develop HEAD = d909e65. Next: factory commit push → F1d pass-02. |
-| **Convergence counter** | #288 F1d: 1 pass. 1 FINDINGS-PRESENT (pass-01). 0 consecutive CLEAN. Counter: 0/3. Next: pass-02 pending. |
+| **Position** | **#288 F1d pass-02 COMPLETE** — Pass-01: 13 findings all ADDRESSED. Pass-02: 7 net-new (0B/3C/4N) all remediated in-burst (prd-delta count tables refreshed, CANONICAL-COUNTS prose updated 547→566/315→334/541→232, BC-X.12.005 caching subsection added, BC-X.12.008 redundant footnote → cross-ref, BC-X.8.004 &'static str contract, BC-3.8.010 warning success-path clarified, ADR-0014 related[] updated, H-NEW-JSM-RT-005 added → holdouts 55). DRIFT-009 added. Develop HEAD = d909e65. Next: F1d pass-03. |
+| **Convergence counter** | #288 F1d: 2 passes. 2 FINDINGS-PRESENT. 0 consecutive CLEAN. Counter: 0/3 (reset by CONCERN findings in pass-02). Next: pass-03 pending. |
 
 ## Historical Content
 

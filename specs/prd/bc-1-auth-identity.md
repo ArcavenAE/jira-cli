@@ -3,7 +3,7 @@ context: bc-1
 title: "Auth & Identity"
 total_bcs: 57   # cumulative claim (incl. range-collapsed); definitional_count below is individually-bodied headings
 definitional_count: 46   # count of `#### BC-` headings in this file
-last_updated: 2026-05-04
+last_updated: 2026-05-18
 source_pass: 3
 trace: |
   - L2: .factory/specs/domain-spec/bc-01-auth-identity.md

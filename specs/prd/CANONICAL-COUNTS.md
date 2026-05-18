@@ -57,19 +57,14 @@ done
 _Note: BC-INDEX.md `total_bcs` header will be updated to 566 to match this file. CANONICAL-COUNTS.md carries the per-file sum as the primary source of truth. (+2 since F2: +1 BC-2 definitional corrected 50→51; +1 BC-3.8.010 added at F1d pass-01 2026-05-18)_
 
 Breakdown:
-- 547 = sum of per-file `total_bcs` values
-- 315 of 547 are individually-bodied (have a `#### BC-` heading)
+- 566 = sum of per-file `total_bcs` values (canonical; see per-file table above)
+- 334 of 566 are individually-bodied (have a `#### BC-` heading)
 - 232 are range-collapsed (counted in cumulative claim, no individual heading)
 - BC-X.4.009 (ADV-P1-029) is a `#### BC-` heading in cross-cutting.md; it is
-  included in cross-cutting's `total_bcs: 130` and in the 541 sum.
-  It does NOT add +1 beyond the 541.
+  included in cross-cutting's `total_bcs: 138` and in the 566 sum.
+  It does NOT add +1 beyond the 566.
 
-**History of the 542 confusion:**
-- Pass 10 added BC-X.4.009 as a new `#### BC-` heading in cross-cutting.md
-- cross-cutting.md `total_bcs` was correctly updated to 130 (including BC-X.4.009)
-- The 541 sum already includes this
-- BC-INDEX.md and README.md incorrectly added another +1 claiming 542
-- Pass 13 fix: corrected all 542 claims to 541
+_Historical note (archived): Passes 10-13 involved a 541/542 count confusion around BC-X.4.009. All 542 claims were corrected to 541 at Pass 13. Subsequent additions (BC-7.4.013-016, BC-2.6.050-051, BC-3.4.009, BC-3.8.001-010, BC-X.12.001-008) brought the total to 566. See git history for the full audit trail._
 
 ### L2 domain-spec bc_count vs L3 total_bcs alignment (ADV-P17-003)
 
@@ -79,8 +74,8 @@ bc_count in L2 represents the same cumulative claim (individually-bodied + range
 | L2 File | L2 bc_count (after P17 fix) | L3 File | L3 total_bcs | Aligned? |
 |---------|----------------------------|---------|--------------|----------|
 | bc-01-auth-identity.md | 57 | bc-1-auth-identity.md | 57 | YES |
-| bc-02-issue-read.md | 92 | bc-2-issue-read.md | 92 | YES |
-| bc-03-issue-write.md | 77 | bc-3-issue-write.md | 78 | PENDING (L2 bc_count not yet bumped; F2 added BC-3.4.009 2026-05-15) |
+| bc-02-issue-read.md | 92 | bc-2-issue-read.md | 93 | PENDING (L2 bc_count not yet bumped; L3 +1 BC-2.6.051 added 2026-05-14) |
+| bc-03-issue-write.md | 77 | bc-3-issue-write.md | 88 | PENDING (L2 bc_count not yet bumped; L3 +1 BC-3.4.009 2026-05-15; +10 BC-3.8.001-010 2026-05-18) |
 | bc-04-assets-cmdb.md | 32 | bc-4-assets-cmdb.md | 32 | YES (was 44) |
 | bc-05-boards-sprints.md | 35 | bc-5-boards-sprints.md | 35 | YES |
 | bc-06-config-cache.md | 39 | bc-6-config-cache.md | 39 | YES (was 38) |
@@ -112,14 +107,14 @@ Note: NFR-O-K was merged into NFR-S-D at adversary Pass 7 (no net change). NFR-S
 
 ## Holdout Scenarios
 
-**Canonical holdout total: 54**
+**Canonical holdout total: 55**
 
 Verification command:
 ```bash
 grep -c '^### H-' .factory/specs/prd/holdout-scenarios.md
 ```
 
-Expected: 54 (H-001..H-047 + H-NEW-MP-001 + H-NEW-VERBOSE-001 + H-NEW-VERBOSE-002 + H-NEW-AUTH-002 + H-NEW-JSM-RT-001 + H-NEW-JSM-RT-002 + H-NEW-JSM-RT-003 + H-NEW-JSM-RT-004)
+Expected: 55 (H-001..H-047 + H-NEW-MP-001 + H-NEW-VERBOSE-001 + H-NEW-VERBOSE-002 + H-NEW-AUTH-002 + H-NEW-JSM-RT-001 + H-NEW-JSM-RT-002 + H-NEW-JSM-RT-003 + H-NEW-JSM-RT-004 + H-NEW-JSM-RT-005)
 
 _Note: holdout-scenarios.md frontmatter `total_holdouts: 54` counts all holdout entries including ones without `### H-` headings; the grep count of `### H-` headings is 54 because H-NEW-* holdouts use the extended format. The frontmatter count (54) is authoritative._
 
