@@ -677,6 +677,16 @@ async fn test_requesttype_fields_ambiguous_exits_64_with_hint() {
         !stderr.contains("Use `jr requesttype list"),
         "Old 'Use' verb form must not appear after BC alignment to 'Run'; got: {stderr}"
     );
+    // BC-X.12.006 verbatim suffix pin: hint MUST say "to see all request types".
+    // Regression guard for pass-01's "available types" / "current types" drift.
+    assert!(
+        stderr.contains("to see all request types"),
+        "BC-X.12.006: ambiguous hint must use verbatim 'to see all request types'; got: {stderr}"
+    );
+    assert!(
+        !stderr.contains("to see available types") && !stderr.contains("to see current types"),
+        "Old drift wording (available/current types) must not appear; got: {stderr}"
+    );
     // The hint MUST use the canonical single-word `requesttype` subcommand
     // (pinned via `#[command(name = "requesttype")]` in `cli/mod.rs`). The kebab-case
     // form `request-type` is not a valid subcommand and would mis-direct users.
@@ -750,10 +760,14 @@ async fn test_requesttype_fields_not_found_error_includes_cache_deletion_hint() 
         "BC-X.12.008: stderr must contain not-found phrase; got: {stderr}"
     );
 
-    // BC-X.12.006 / BC-X.12.008: Run hint with "current types" wording.
+    // BC-X.12.006/008: not-found hint must use verbatim "to see all request types".
     assert!(
-        stderr.contains("Run `jr requesttype list --project HELP`"),
-        "BC-X.12.008: stderr must contain 'Run `jr requesttype list --project HELP`'; got: {stderr}"
+        stderr.contains("Run `jr requesttype list --project HELP` to see all request types"),
+        "BC-X.12.006/008: not-found hint must use verbatim 'to see all request types'; got: {stderr}"
+    );
+    assert!(
+        !stderr.contains("to see available types") && !stderr.contains("to see current types"),
+        "Old drift wording must not appear; got: {stderr}"
     );
 
     // BC-X.12.008 §Stale-cache window: cache-deletion prefix (profile name is dynamic).
@@ -853,17 +867,19 @@ async fn test_requesttype_fields_output_json_shape() {
         obj.contains_key("canAddRequestParticipants"),
         "Expected 'canAddRequestParticipants' key in fields JSON output, got: {parsed}"
     );
-    // The story normalizes requestTypeFields → fields in the CLI output.
-    // Accept either "fields" (normalized) or "requestTypeFields" (raw API camelCase).
+    // BC-X.12.007 + AC-007: handler MUST emit JSON key `fields` (not the raw
+    // API camelCase `requestTypeFields`). Pinned strictly — no `.or_else()`
+    // escape hatch — to catch regressions to the raw-API shape.
     let field_arr = obj
         .get("fields")
-        .or_else(|| obj.get("requestTypeFields"))
         .and_then(Value::as_array)
-        .unwrap_or_else(|| {
-            panic!(
-                "Expected 'fields' or 'requestTypeFields' as array in JSON output, got: {parsed}"
-            )
-        });
+        .expect("Expected JSON object with `fields` array per BC-X.12.007");
+
+    // Negative-space pin: raw API key must NOT appear (regression guard).
+    assert!(
+        obj.get("requestTypeFields").is_none(),
+        "JSON output must use BC-mandated key `fields`, not raw API key `requestTypeFields`"
+    );
 
     assert!(
         !field_arr.is_empty(),
