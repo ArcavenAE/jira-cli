@@ -19,3 +19,10 @@ Thumbs.db
 # VSDD Factory
 .factory/
 .reference/
+
+# Proptest persisted regression seeds (local cache, never commit)
+proptest-regressions/
+
+# cargo-mutants artifacts (local mutation test runs) — see docs/specs/cargo-mutants-policy.md
+mutants.out/
+mutants.out.old/
