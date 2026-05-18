@@ -2,8 +2,8 @@
 
 **traces_to:** README.md
 **Source:** Pass 1 R1 §5 (26 risks) + R2 §7 (1 severity escalation) + Pass 2 ADV-P2-004 (1 new HIGH) + Pass 6 ADV-P6-004 (R-H3 demoted HIGH→MEDIUM) + Pass 8 ADV-P8-003 (R-M3 merged into R-L11 — Retry-After duplicate)
-**Total risks:** 34 (11 R1-NEW + 14 broad-pass + 1 R1-NEW reclassified to CRITICAL + 1 Pass-2 addition; R-M3 merged into R-L11 at Pass 8; R-L12 + R-L13 added at CV-003 gate prep; 5 auto-refresh risks added S-3.03 v2; 1 search/jql anti-loop risk added S-3.07 v2)
-**Severity distribution:** 1 CRITICAL / 6 HIGH / 8 MEDIUM / 13 LOW (base) + 2 MEDIUM + 3 LOW (S-3.03) + 1 LOW (S-3.07) = 1 CRITICAL / 6 HIGH / 10 MEDIUM / 17 LOW
+**Total risks:** 36 (28 baseline + 5 added for S-3.03 v2 auto-refresh; 1 added for S-3.07 v2 search/jql anti-loop; 2 added for issue #288: R-H288-1 HIGH + R-M288-1 MEDIUM)
+**Severity distribution:** 1 CRITICAL / 7 HIGH / 11 MEDIUM / 17 LOW
 
 > **Numbering note:** R1-NEW-10 (multi-profile fields silent regression, NFR-R-D) was elevated from MEDIUM to CRITICAL during Pass 4 R1 analysis and appears as R-C1 in the CRITICAL block below. The R1-NEW label is not repeated in the numbered sequence; the CRITICAL block carries it. Effective R1-NEW count in the MEDIUM/HIGH rows is 11 (NEW-1 through NEW-9, NEW-11, NEW-12).
 
