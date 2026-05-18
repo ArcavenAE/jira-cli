@@ -36,7 +36,7 @@ activation_version: "v0.5.0-dev.7"
 | **Language** | Rust |
 | **Target Workspace** | develop → main |
 | **Started** | 2026-05-04 |
-| **Last Updated** | PR #373 MERGED @ d909e65 (2026-05-16) — closes #346. Audit-followup cluster now 0 remaining (all 3 cleared: #340/#345/#346). Follow-up #372 filed for partial-baseline completion. |
+| **Last Updated** | 2026-05-18 — F2 spec delta + F1d pass-01 complete for issue #288 JSM request types. 13 findings (4B/6C/3N); all BLOCKING+CONCERN remediated in-burst. BC count 548→566, holdouts 50→54. DRIFT-008 added. |
 | **Current Phase** | Phase 3 — TDD Implementation **IN PROGRESS** — Wave 3 CLOSED (10/10). Feature Mode #110-pr2 COMPLETE. PRs #355–#364, #366–#367, #369–#373 MERGED. **0 audit-followups remain** (#331 sandbox-blocked deferred; #333 closed by PR #360; #340 closed by PR #370; #345 closed by PR #371; #346 closed by PR #373; #350 closed by PR #362; #361 closed by PR #364; #365 closed by PR #367; PG-365-1 closed by PR #369). No active cycle. |
 | **Next Phase** | Wave 3 — 10 stories (S-3.01..S-3.10) |
 | **Activation HEAD** | dea166471e22eff55974d7675593469b37048c5f (v0.5.0-dev.7) |
@@ -79,6 +79,7 @@ Goal 1c: **Harden v0.5 + feature delivery** — formalize existing codebase with
 | 3-feature-340-bulk-poll-task-id-pin | **MERGED** — PR #370 @ 394dc25 (squash); closes #340; F1-F7 full cycle CONVERGED in single delivery | 2026-05-15 | 2026-05-16 | MERGED — 5 adv passes (0/0 trajectory), 3 CLEAN; Copilot R1=0; CI 9/9 green | 8→5→3-obs→7→4 (BLOCKER+CONCERN: 0 every pass) |
 | 3-feature-345-label-coalesce-extract | **MERGED** — PR #371 @ bb352ea (squash, admin); closes #345; F1-F7 full cycle CONVERGED | 2026-05-16 | 2026-05-16 | MERGED — 6 adv passes (3 CLEAN); 3 Copilot cycles + 1 convergence batch; 17 threads resolved; CI 9/9 green | 0/1/6 → 0/2/3 → 0/2/2 → 0/0/0 → 0/0/0 → 0/0/0 (3 consecutive CLEAN) |
 | 3-feature-346-cargo-mutants-ci | **MERGED** — PR #373 @ d909e65 (2026-05-16); closes #346. 8 adv passes, 5 fix rounds, 3 CLEAN; trajectory 0/6/14→2/6/4→0/3/3→0/2/4→2/3/3(1 REFUTED)→0/0/3→0/0/0→0/0/0. Copilot R1=APPROVE; CI 10/10 green. Follow-up #372 filed for partial-baseline completion. | 2026-05-16 | 2026-05-16 | MERGED — 3 CLEAN convergence | 0/6/14→2/6/4→0/3/3→0/2/4→2/3/3→0/0/3→0/0/0→0/0/0 |
+| 3-feature-jsm-request-types-288 | **IN_PROGRESS** — F2 spec evolution + F1d pass-01 fixes applied; pass-02 pending | 2026-05-18 | | F1d 1 pass so far | 4B/6C/3N → pending pass-02 |
 | 4: Holdout Evaluation | not-started | | | | |
 | 5: Adversarial Refinement | not-started | | | | |
 | 6: Formal Hardening | not-started | | | | |
@@ -90,14 +91,8 @@ Goal 1c: **Harden v0.5 + feature delivery** — formalize existing codebase with
 
 | Step | Agent | Status | Output |
 |------|-------|--------|--------|
-| F1d adversarial spec convergence R2 — #365 | adversary | complete | 6 passes (P12-P17). 3/3 CLEAN at P15-P16-P17 at spec v0.1.12. Key finds: caller-list errors (P13), BC mis-anchoring → BC-2.6.051 (P13), BC count propagation BLOCKING (P14), product-owner scope violation reverted (P14). Per-pass files P12-P17 + CONVERGENCE.md updated. Drift items PG-365-1/PG-365-2 recorded. |
-| F5 + F6 adversarial convergence — #365 | adversary + Copilot | complete | F5: 4 passes CONVERGED (adversary 3-clean, code-reviewer CONVERGENCE_REACHED, security LOW-RISK APPROVE). F6: 5 Copilot rounds — R2 caught O(N²)→O(N) algorithmic improvement (incremental external `seen_keys` HashSet), R3-R4 cascade doc cleanup, R5 clean. PR #367 OPEN, CI 8/8 green, Copilot R5=0 inline. |
-| F7 cycle-close prep — #365 | state-manager | complete | STATE.md Phase Progress row updated to F6 CONVERGED/PR #367 OPEN. 4 lessons codified (L-365-1..L-365-4). DRIFT-006 added. Factory commit pending. |
-| PR #367 MERGED @ e193c16 (2026-05-15T17:51:09Z) — cycle 3-feature-search-issue-keys-dedupe-365 CLOSED | state-manager | complete | Phase Progress row updated to MERGED. Session checkpoint updated. L-365-summary appended to lessons.md. Factory commits pushed to origin/factory-artifacts. |
-| PR #369 MERGED @ 6ca9587 — PG-365-1 RESOLVED. Single-pass F5 review missed Source-field coverage (Copilot R4 caught it) — see lesson L-PG365-1-process. 7 Copilot rounds, 9 valid findings. DRIFT-007 added. | state-manager | complete | Phase Progress row added. Lesson L-PG365-1-process codified in lessons.md. DRIFT-007 recorded in Drift Items. Session checkpoint updated. |
-| PR #370 MERGED @ 394dc25 — S-340 cycle-001 CLOSED. 5 adv passes, 3 CLEAN (P3/P4/P5); trajectory 8→5→3-obs→7→4. Copilot R1=0; CI 9/9 green. Issue #340 CLOSED. 2 audit-followups remain: #345, #346. | state-manager | complete | story.md status→completed v1.1.0; STORY-INDEX S-340→MERGED; cycle-001/S-340/red-gate-log.md cycle close-out appended; lessons.md mutation-Red-Gate [novel-pg] + machine-enforced red-gate [novel-pg] codified. |
-| PR #371 MERGED @ bb352ea — S-345 cycle-001 CLOSED. 6 adv passes, 3 CLEAN (P4/P5/P6); trajectory 0/1/6→0/2/3→0/2/2→0/0/0→0/0/0→0/0/0. 3 Copilot cycles + convergence batch (9420f1b); 17 threads resolved via GraphQL. Merge --admin (author self-approve restriction). CI 9/9 green. Issue #345 CLOSED. 1 audit-followup remains: #346. | state-manager | complete | story.md status→completed v1.1.0; STORY-INDEX S-345→MERGED; red-gate-log.md cycle close-out appended; lessons.md evidence-staleness + proptest-filter_map [novel-pg] codified. |
-| PR #373 MERGED @ d909e65 — S-346 cycle-001 CLOSED. 8 adv passes, 5 fix rounds, 3 CLEAN (P6/P7/P8); trajectory 0/6/14→2/6/4→0/3/3→0/2/4→2/3/3(1 REFUTED)→0/0/3→0/0/0→0/0/0. Copilot R1=APPROVE (2 non-blocking). CI 10/10 green including new mutants job. Issue #346 CLOSED. Follow-up #372 filed. Audit-followup cluster now 0 remaining. | state-manager | complete | story.md status→completed v1.1.0; STORY-INDEX S-346→MERGED; red-gate-log.md cycle close-out appended; lessons.md adversary-schema-refutation + CI-infra-doc-drift [novel-pg] codified. |
+| PR #370/#371/#373 MERGED — S-340/S-345/S-346 cycle-001 CLOSED. Audit-followup cluster 0 remaining. Follow-up #372 filed. | state-manager | complete | Phase Progress rows updated; lessons codified; DRIFT-007 added. Archived to burst-log.md 2026-05-18. |
+| F1d adversarial spec review pass-01 — #288 | adversary | complete | 13 findings (4B/6C/3N). Product-owner remediated all BLOCKING+CONCERN in same burst; F13 [process-gap] deferred to DRIFT-008. Spec at +18 BCs (+10 in BC-3.8.*, +8 in BC-X.12.*), 54 holdouts, BC-2.6.051 propagation fix to CANONICAL-COUNTS. |
 
 ## Decisions Log
 
@@ -193,6 +188,7 @@ Goal 1c: **Harden v0.5 + feature delivery** — formalize existing codebase with
 | PG-365-2 | F1d adversary citation-verification scope (engine-level) | F1d adversary was asked to validate research-agent citations (itertools::unique() consecutive-only claim) without WebFetch access. Scope boundary unclear in engine. Correct scope: F1d adversary accepts research-agent output as verified ground truth; adversary's citation check is "does the spec provide a citable reference?" not "is the reference correct?". Not solvable from jira-cli. | LOW | DRIFT (engine-level) — action: add clarification to FACTORY.md or adversarial-review SKILL.md in dark-factory engine repo. File separate issue in engine repo or include in next engine maintenance pass. |
 | DRIFT-006 | F5 multi-axis review missed O(N²) algorithmic complexity issue (PR #367) | F5 adversary (3-clean) + code-reviewer (CONVERGENCE_REACHED) + security (LOW-RISK APPROVE) all passed without flagging the O(N²) `Vec::retain` + per-iteration HashSet rebuild in `search_issue_keys` / `search_issues`. Copilot R2 caught it. Consider adding a performance/complexity-axis reviewer in future F5 phases. See L-365-1. | LOW | process-gap — Owner: orchestrator. Target: next F5 dispatch design discussion. |
 | DRIFT-007 | Chore-mode workflow not formalized — ad-hoc shortcuts produce predictable defects | PR #369 (PG-365-1) treated as "trivial" change: no F1 spec, no F2 story, no F3 red gate, no F5 multi-axis convergence, no 3-clean discipline. Result: 7 Copilot rounds with 9 valid findings, including R4 catching the same Source-field coverage gap the orchestrator's single adversary pass had explicitly deferred as NIT-2. Either apply full VSDD always OR formalize `workflows/maintenance.lobster` chore-mode workflow with explicit-but-reduced checklist. See L-PG365-1-process in lessons.md. | LOW | process-gap — Owner: orchestrator. Target: next chore PR / next planning discussion. |
+| DRIFT-008 | [process-gap] check-spec-counts.sh does not validate cross-document arithmetic (CANONICAL-COUNTS vs BC-INDEX vs per-file frontmatter sums). #288 F2 surfaced bc-2-issue-read.md frontmatter (51) vs CANONICAL-COUNTS (50) drift that pre-existed since #365. Target release: v0.6. Justification for deferral: requires script change, not blocking #288 ship; F13 from #288 pass-01 adversary. | LOW | process-gap — Owner: orchestrator. Target: v0.6 / scripts/ change on develop branch. |
 
 ## Convergence Trackers
 
@@ -227,9 +223,9 @@ _Not started._
 <!-- Keep ONLY the latest checkpoint. Archive prior checkpoints to cycles/cycle-001/session-checkpoints.md. -->
 | Field | Value |
 |-------|-------|
-| **Date** | 2026-05-16 |
-| **Position** | **S-346 MERGED** — PR #373 MERGED @ d909e65 (squash, 2026-05-16, closes #346). Audit-followup cluster: **ALL 3 CLEARED** (#340/#345/#346). 0 audit-followups remain (#331 sandbox-blocked deferred). Develop HEAD = d909e65. No active cycle. Lessons codified: adversary-schema-refutation [novel-pg], CI-infra-doc-drift [novel-pg]. Follow-up #372 filed for partial mutation baseline completion. |
-| **Convergence counter** | No active convergence cycle. PR #373 (S-346): 8 adv passes (3 CLEAN P6/P7/P8); Copilot R1=APPROVE → MERGED. Trajectory: 0/6/14→2/6/4→0/3/3→0/2/4→2/3/3(1R)→0/0/3→0/0/0→0/0/0. |
+| **Date** | 2026-05-18 |
+| **Position** | **#288 F1d pass-01 COMPLETE** — F2 spec delta written (BC 548→566, holdouts 50→54, ADR-0014 added). F1d pass-01: 13 findings (4B/6C/3N); all BLOCKING+CONCERN remediated in-burst (BC-3.8.010 added, regex removed, error strings fixed, BC-X.12.008 stale-window documented, BC-1.3.023 release gate added). DRIFT-008 added. Develop HEAD = d909e65. Next: factory commit push → F1d pass-02. |
+| **Convergence counter** | #288 F1d: 1 pass. 1 FINDINGS-PRESENT (pass-01). 0 consecutive CLEAN. Counter: 0/3. Next: pass-02 pending. |
 
 ## Historical Content
 

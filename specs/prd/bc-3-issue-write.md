@@ -1,21 +1,24 @@
 ---
 context: bc-3
 title: "Issue Write (create/edit/move/assign/comment/link/open/remote-link)"
-total_bcs: 78   # cumulative claim (incl. range-collapsed); definitional_count below is individually-bodied headings
-definitional_count: 49   # count of `#### BC-` headings in this file
-last_updated: 2026-05-15
+total_bcs: 88   # cumulative claim (incl. range-collapsed); definitional_count below is individually-bodied headings
+definitional_count: 59   # count of `#### BC-` headings in this file
+last_updated: 2026-05-18
 source_pass: 3
 trace: |
   - L2: .factory/specs/domain-spec/bc-03-issue-write.md
   - Source broad: .factory/semport/jira-cli/jira-cli-pass-3-behavioral-contracts.md §2.3
   - Source R4: .factory/semport/jira-cli/jira-cli-pass-3-deep-r4.md §3.1
   - F2 addition (2026-05-15): BC-3.4.009 — bulk-poll timeout task_id contract (issue #340)
+  - F2 addition (2026-05-18): BC-3.8.001..009 — JSM request submission (issue #288)
+  - F1d addition (2026-05-18): BC-3.8.010 — --type ignored with warning when --request-type is set (issue #288 adversary pass-01)
 ---
 
 # BC-3 — Issue Write
 
-78 behavioral contracts across 7 subdomains: Assign (3.1), Move/Transition (3.2),
-Create (3.3), Edit+Open (3.4), Comment (3.5), Links (3.6), Remote links (3.7).
+88 behavioral contracts across 8 subdomains: Assign (3.1), Move/Transition (3.2),
+Create (3.3), Edit+Open (3.4), Comment (3.5), Links (3.6), Remote links (3.7),
+JSM Request Create (3.8).
 
 ---
 
@@ -226,6 +229,10 @@ Create (3.3), Edit+Open (3.4), Comment (3.5), Links (3.6), Remote links (3.7).
 **Source**: `tests/issue_create_json.rs` (integration tests covering create body shape, field combinations, and JSON output)
 **Subject**: Issue write
 **Behavior**: Body includes summary, project, issuetype, optional priority, labels, description (ADF), team UUID, story points. Output JSON: `{"key": "FOO-123"}`.
+
+> **[UPDATED 2026-05-18 issue #288]** The platform endpoint behavior described above applies ONLY when `--request-type` is absent. When `--request-type` is present, dispatch is to `POST /rest/servicedeskapi/request` instead (see BC-3.8.001). The core platform-create contract is otherwise unchanged — the existing platform path is unmodified in behavior.
+> **Previous (pre-#288):** This BC stated unconditionally that `issue create` always POSTs to `/rest/api/3/issue`. After #288 that invariant becomes conditional: platform endpoint when `--request-type` absent; JSM endpoint when `--request-type` present.
+
 **Trace**: Pass 3 BC-211
 
 ---
@@ -535,6 +542,154 @@ existing wall-clock bound and `"deadline"` substring assertions.
 
 ---
 
+## BC-3.8: JSM Request Submission
+
+10 behavioral contracts covering `jr issue create --request-type` dispatch to the JSM service desk API.
+All BCs in this section require the `--request-type` flag to be set; the platform path (BC-3.3.001) is
+entirely unchanged when `--request-type` is absent.
+
+---
+
+#### BC-3.8.001: `issue create --request-type <NAME|ID>` dispatches to `POST /rest/servicedeskapi/request`; platform path unchanged when flag absent
+
+**Confidence**: HIGH
+**Subject**: Issue write (JSM path)
+**Behavior**: When `--request-type` is present, `handle_create` dispatches to `JiraClient::create_jsm_request` which POSTs to `/rest/servicedeskapi/request`. Body: `{serviceDeskId (string), requestTypeId (string), requestFieldValues (map), isAdfRequest (bool)}`. Response 201 includes `issueKey`. Output JSON (both table and `--output json`): `{"key": "<issueKey>"}` — identical shape to platform create. When `--request-type` is absent, the `POST /rest/servicedeskapi/request` endpoint is not called (validated by `expect(0)` mock pattern).
+**Inputs**: `--request-type <NAME|ID>`, `--project <KEY>` (or active profile), `--summary <text>`
+**Outputs/Effects**: HTTP POST to `/rest/servicedeskapi/request`; stdout `{"key": "HELP-42"}` on success; exit 0.
+**Errors**: Non-JSM project (via `require_service_desk`) → exit 64 before any HTTP; see BC-3.8.002. 401 scope error → BC-3.8.009.
+**Trace**: `tests/issue_create_jsm.rs` (integration tests — dispatch path, routing guard); `src/cli/issue/create.rs` (conditional dispatch branch)
+**Source**: API-verified: `POST /rest/servicedeskapi/request` returns 201 with `{issueId, issueKey, currentStatus, _links}`
+**Confidence**: HIGH
+
+---
+
+#### BC-3.8.002: JSM body uses `requestFieldValues` map; `serviceDeskId` resolved via `require_service_desk` from `--project`
+
+**Confidence**: HIGH
+**Subject**: Issue write (JSM path)
+**Behavior**: Before POSTing, `handle_create` calls `require_service_desk(client, project_key)` to resolve the numeric `serviceDeskId` string. The JSM request body uses `requestFieldValues` (a `Map<String, serde_json::Value>`) for all field values, NOT the platform `fields` map. `serviceDeskId` is a required top-level field (string, NOT integer). If `--project` is absent and no active-profile project is configured, exits 64 with actionable message before any HTTP.
+**Inputs**: `--project <KEY>` (or config active project); resolved `serviceDeskId`
+**Outputs/Effects**: Body shape: `{serviceDeskId: "3", requestTypeId: "5", requestFieldValues: {...}}`. `serviceDeskId` is the string representation of the integer ID returned by the service desk list API.
+**Errors**: Non-JSM project → `require_service_desk` returns `JrError::UserError`; exit 64; no HTTP to servicedeskapi. Error message MUST be call-site-specific: 'Project "<KEY>" is a <type> project. `--request-type` requires a Jira Service Management project. Run "jr project list" to find a JSM project.' (NOT the legacy "Queue commands require…" string from BC-X.8.004 — that string is reserved for queue commands only; see BC-3.8.002 and BC-X.8.004 [UPDATED 2026-05-18 issue #288].) No project configured → exit 64 with "project is required for JSM request creation" hint.
+**Trace**: `tests/issue_create_jsm.rs` (service desk ID resolution, non-JSM project error path); `src/api/jsm/servicedesks.rs::require_service_desk`
+**Source**: API-verified: `serviceDeskId` is a required string in request body
+**Confidence**: HIGH
+
+---
+
+#### BC-3.8.003: `--request-type <NAME>` resolved via partial-match (case-insensitive); errors clean on Ambiguous, ExactMultiple, None with `jr requesttype list` hint
+
+**Confidence**: HIGH
+**Subject**: Issue write (JSM path)
+**Behavior**: When `--request-type` is a non-numeric string, the handler fetches (or cache-hits) the service desk's request type list, then calls `partial_match(input, &names)`. `MatchResult::Exact(id)` → proceeds. `MatchResult::Ambiguous` or `MatchResult::ExactMultiple` → exits 64 with "Ambiguous request type" + candidate names + hint "Use `jr requesttype list --project <KEY>` to see all request types". `MatchResult::None` → exits 64 with "Request type not found" + hint. In `--no-input` mode, ambiguous partial match exits 64 cleanly (does NOT prompt).
+**Inputs**: `--request-type <NAME>` (string, non-numeric); service desk request type list (API or cache)
+**Outputs/Effects**: Resolved `requestTypeId` string passed into JSM request body.
+**Errors**: Ambiguous → exit 64; None → exit 64; both with actionable hint. Zero HTTP to `POST /rest/servicedeskapi/request` on error paths.
+**Trace**: `tests/issue_create_jsm.rs` (name-not-found path, ambiguous-match path); `src/partial_match.rs`; `src/cli/requesttype.rs`
+**Source**: Follows `partial_match` pattern established by `jr issue move` and `jr queue`
+**Confidence**: HIGH
+
+---
+
+#### BC-3.8.004: `--request-type <ID>` (numeric string) bypasses name resolution
+
+**Confidence**: HIGH
+**Subject**: Issue write (JSM path)
+**Behavior**: When `--request-type` value is parseable as a non-negative integer (e.g., `"5"`, `"12"`), the value is used directly as `requestTypeId` without fetching or querying the request type list. No partial-match is performed. No cache read for this path. The numeric string is passed verbatim as `requestTypeId` in the JSM request body.
+**Inputs**: `--request-type <ID>` where ID parses as `u64`
+**Outputs/Effects**: Body includes `requestTypeId: "<numeric-string>"`; no GET to request type list endpoint.
+**Errors**: If the API rejects the ID (e.g., 400 "invalid request type"), standard API error path applies (exit 1 + message).
+**Trace**: `tests/issue_create_jsm.rs` (numeric-ID bypass path)
+**Source**: Consistent with `jr queue view <ID>` numeric-bypass pattern
+**Confidence**: HIGH
+
+---
+
+#### BC-3.8.005: `--summary` → `requestFieldValues.summary` (required by JSM API)
+
+**Confidence**: HIGH
+**Subject**: Issue write (JSM path)
+**Behavior**: The `--summary` flag value is placed in `requestFieldValues["summary"]` as a JSON string. The JSM API requires `summary` in `requestFieldValues` (not as a top-level field). If `--summary` is absent and `--no-input` is set, exits 64 with "summary is required" — mirrors existing platform required-summary behavior. Interactive mode (TTY, no `--no-input`) may prompt for summary.
+**Inputs**: `--summary <text>`
+**Outputs/Effects**: `requestFieldValues["summary"] = "<text>"` in body.
+**Errors**: Missing `--summary` + `--no-input` → exit 64 "summary is required for JSM request submission".
+**Trace**: `tests/issue_create_jsm.rs` (summary field mapping); body shape assertions
+**Source**: API-verified: `summary` is a required field in `requestFieldValues` for most request types
+**Confidence**: HIGH
+
+---
+
+#### BC-3.8.006: `--description` → `requestFieldValues.description`; `--markdown` triggers ADF; plain text uses `text_to_adf` + `isAdfRequest: true`
+
+**Confidence**: HIGH
+**Subject**: Issue write (JSM path)
+**Behavior**: When description is provided, `isAdfRequest: true` is always set in the request body (both plain-text and markdown paths use ADF). Plain-text description (`--description "text"` without `--markdown`) is converted via `text_to_adf("text")` and placed in `requestFieldValues["description"]`. Markdown description (`--description "**bold**" --markdown`) is converted via `markdown_to_adf("**bold**")` and placed in `requestFieldValues["description"]`. When description is absent, `requestFieldValues["description"]` is omitted (NOT null) and `isAdfRequest` may be omitted or set to false. The ADF utilities are the same `src/adf.rs` functions used by the platform create path.
+**Inputs**: `--description <text>` (optional), `--markdown` (flag)
+**Outputs/Effects**: `requestFieldValues["description"] = <ADF-doc-object>` when description present; `isAdfRequest: true` in body when description present.
+**Errors**: `--description` and `--description-stdin` clap conflict (inherits from platform create).
+**Trace**: `tests/issue_create_jsm.rs` (description ADF conversion); `src/adf.rs` unit tests
+**Source**: API-verified: `isAdfRequest: true` enables ADF for rich-text fields
+**Confidence**: HIGH
+
+---
+
+#### BC-3.8.007: `--priority <NAME>`, `--label <X>` (repeatable) → `requestFieldValues.priority` / `requestFieldValues.labels`
+
+**Confidence**: HIGH
+**Subject**: Issue write (JSM path)
+**Behavior**: `--priority <NAME>` maps to `requestFieldValues["priority"] = {"name": "<NAME>"}` (same object shape as platform priority; consistent with existing `jr issue create` platform behavior). `--label <X>` (repeatable) maps to `requestFieldValues["labels"] = ["<X1>", "<X2>", ...]` as a JSON array of plain strings — NOT `[{"name": "foo"}]`. These are system-field name mappings (using the field's logical name, not `customfield_NNNNN`). If the request type does not include these fields, the JSM API ignores or rejects them; no client-side validation of which fields are valid for a given request type is performed (validation is server-side).
+**Inputs**: `--priority <NAME>` (optional), `--label <X>` (optional, repeatable)
+**Outputs/Effects**: Corresponding entries in `requestFieldValues` map when flags are set.
+**Errors**: Unsupported field for request type → API 400; handled as standard API error (exit 1 + message).
+**Trace**: `tests/issue_create_jsm.rs` (priority and label mapping); body shape assertions
+**Source**: Atlassian docs confirm `labels` wire shape is a plain string array `["alpha","beta"]` for both `POST /rest/api/3/issue` and `POST /rest/servicedeskapi/request` `requestFieldValues` (https://developer.atlassian.com/cloud/jira/platform/rest/v3/api-group-labels/). Priority wire shape `{"name": "<NAME>"}` is consistent with current `jr` platform-create code. Caveat: JSDSERVER-4564 documents that JSM may silently ignore `requestFieldValues.priority` if the request type schema does not include priority — implementation MUST NOT assume the field surfaces in the response.
+**Confidence**: HIGH
+
+---
+
+#### BC-3.8.008: `--field NAME=VALUE` (repeatable) maps NAME → `requestFieldValues`; `customfield_NNNNN` literal bypasses lookup; only first `=` splits key; empty value allowed; duplicate NAME → last wins
+
+**Confidence**: HIGH
+**Subject**: Issue write (JSM path)
+**Behavior**: Each `--field NAME=VALUE` pair is parsed by splitting on the FIRST `=` only (value may contain `=`). The resulting `(name, value)` is inserted into `requestFieldValues` with `name` as the JSON key and `value` as a JSON string. If `NAME` begins with `customfield_` followed by digits (e.g., `customfield_10200`), it is used as-is as the key (no lookup). Otherwise, `NAME` is used as-is as the key (logical field name). Empty value (`--field "fieldname="`) is valid and inserts an empty string. Duplicate `NAME` entries → last occurrence wins (map semantics). `--field` entries are merged with `--summary`, `--description`, `--priority`, `--label` entries in `requestFieldValues`; `--field summary=X` overrides `--summary X` (last-wins on the map key).
+**Inputs**: `--field NAME=VALUE` (optional, repeatable)
+**Outputs/Effects**: Each pair inserted into `requestFieldValues`; merged with other field sources.
+**Errors**: Missing `=` in `--field` value → exit 64 "invalid field format: expected NAME=VALUE".
+**Trace**: `tests/issue_create_jsm.rs` (field mapping, first-equals split, duplicate-key, empty-value); body shape assertions
+**Source**: Consistent with `--field` conventions; split-on-first-equals is standard CLI convention
+**Confidence**: HIGH
+
+---
+
+#### BC-3.8.009: `--on-behalf-of <accountId>` → `raiseOnBehalfOf`; value passed through as-is; invalid accountIds rejected server-side
+
+**Confidence**: HIGH
+**Subject**: Issue write (JSM path)
+**Behavior**: When `--on-behalf-of <accountId>` is set, the value is placed as `raiseOnBehalfOf: "<accountId>"` in the JSM request body top level (NOT inside `requestFieldValues`). When absent, `raiseOnBehalfOf` is omitted from the body entirely (NOT null). `--on-behalf-of` accepts the raw value as-is and passes through to JSM API as `raiseOnBehalfOf` field. No client-side regex format validation is performed — this matches `--account-id` pass-through behavior (see BC-3.1.001); client-side format validation would false-negative legacy accountIds (Atlassian accountIds are not documented as a fixed format; migrated accountIds may use colon-separated forms like `557058:abc...`). Invalid accountIds are rejected server-side by JSM with a 400 — surface that error with a hint to use `jr user search <query>` to look up accountIds. No email-to-accountId lookup is performed (consistent with `--account-id` convention elsewhere in `jr`).
+**Inputs**: `--on-behalf-of <accountId>` (optional)
+**Outputs/Effects**: `raiseOnBehalfOf: "<accountId>"` in body when set; omitted when absent.
+**Errors**: JSM 400 on invalid accountId → exit 1 with API error message + hint "Use `jr user search <query>` to look up accountIds". Scope error for `write:servicedesk-request` → BC-X.3.005 (InsufficientScope dispatch) + BC-1.6.042 (401 substring match) + H-NEW-JSM-RT-003 (regression pin).
+**Trace**: `tests/issue_create_jsm.rs` (raiseOnBehalfOf injection, absence omission); `src/cli/issue/create.rs`
+**Source**: BC-3.1.001 (`issue assign --account-id` pass-through precedent); BC-X.3.005 (server-rejected accountId error path). Pass-through behavior is the documented Atlassian recommendation; client-side format validation would false-negative legacy accountIds.
+**Confidence**: HIGH
+
+---
+
+#### BC-3.8.010: `--type` is IGNORED with stderr warning when `--request-type` is set
+
+**Confidence**: HIGH
+**Subject**: Issue write (JSM path)
+**Behavior**: When `--request-type` is present, the `--type` flag (if also supplied) is silently ignored at the JSM-dispatch site EXCEPT for emitting a single stderr line: "warning: --type is ignored when --request-type is set; request type encodes the issue type". Exit code unchanged (still 0 on success, or 64/1/2 on applicable error paths). JSON output shape is unchanged from BC-3.8.001. The warning is emitted unconditionally when both flags are present, regardless of `--no-input` or `--output json`.
+**Inputs**: `--request-type <X>` AND `--type <Y>` (both set simultaneously)
+**Outputs/Effects**: Same JSM POST behavior as BC-3.8.001 with the `--type` value unused. One stderr line emitted: "warning: --type is ignored when --request-type is set; request type encodes the issue type". No change to stdout JSON shape. No change to exit code.
+**Errors**: None — this is a warning path, not an error path. The presence of `--type` alongside `--request-type` is not an error.
+**Trace**: `tests/issue_create_jsm.rs` (warning_on_type_with_request_type integration test)
+**Source**: ADR-0014 §"Dispatch fork: --type interaction" — `--type` is meaningless in the JSM path because `requestTypeId` encodes the issue type server-side; emitting a warning rather than erroring preserves backward compatibility for scripts that habitually pass `--type`.
+**Confidence**: HIGH
+
+---
+
 ## JSON Output Shape Contracts (all confirmed by insta snapshots)
 
 | Operation | JSON shape | Key field note |
@@ -552,4 +707,6 @@ existing wall-clock bound and `"deadline"` substring assertions.
 
 Sources: `src/cli/issue/snapshots/jr__cli__issue__json_output__tests__*.snap`; BC-1104..BC-1112 (R4)
 
-## Total BCs in this file: 49 individually-bodied (cumulative 78 incl. range-collapsed; see BC-INDEX.md)
+## Total BCs in this file: 59 individually-bodied (cumulative 88 incl. range-collapsed; see BC-INDEX.md)
+
+_Last updated 2026-05-18: +9 BCs (BC-3.8.001..009, issue #288 F2); BC-3.3.001 modified to add conditional routing clause. +1 BC (BC-3.8.010, issue #288 F1d adversary pass-01); BC-3.8.002 Errors updated (call-site-specific message); BC-3.8.007 Confidence HIGH + labels wire shape hardened + priority JSDSERVER-4564 caveat; BC-3.8.009 regex removed (pass-through behavior); BC-3.8 section header range updated to 001..010._

@@ -184,3 +184,46 @@ Used at exactly 2 call sites (Pass 1 R2 verified):
 **Pattern:** each call site has a `static LOGGED: AtomicBool = AtomicBool::new(false)`. On first parse failure, logs `[verbose] parse failure at {site}: "{iso}"` to stderr. Subsequent failures at the same site are silent. Prevents log flooding for chronic parse failures.
 
 **No tracing crate.** No structured logging. All diagnostic output is `--verbose`-gated `eprintln!`. NFR-O-A (MEDIUM, DEFERRED) tracks adoption of the `tracing` crate. `tracing` is NOT currently a dependency (verified Cargo.toml:14-37). Source uses inline `eprintln!` and `static AtomicBool` flags via `observability.rs`. Phase 3 adoption requires `cargo add tracing tracing-subscriber` + subscriber init in `main.rs`.
+
+---
+
+## 10. Issue #288 Cross-Cutting Notes (JSM Request Type Support)
+
+### 10.1 New Cache Key Family
+
+`src/cache.rs` gains one new struct and two functions:
+
+```
+RequestTypeCache { fetched_at: DateTime<Utc>, service_desk_id: String, request_types: Vec<CachedRequestType> }
+```
+
+Cache file path: `v1/<profile>/request_types_<serviceDeskId>.json` (7-day TTL).
+
+**Key design:** `serviceDeskId` is embedded in the filename (not the profile directory name) because a single profile can interact with multiple service desks. This is the same per-resource-id keying pattern used by `object_type_attrs.json` (which is per-schema). The multi-profile boundary invariant is preserved: `read_request_type_cache(profile, service_desk_id)` takes both parameters.
+
+Pattern is identical to `read_team_cache` / `write_team_cache`. Cache miss (file absent, expired, or corrupt JSON) triggers a live fetch — self-healing, no user-visible error.
+
+### 10.2 OAuth Scope Addition — Release Coordination Flag
+
+`DEFAULT_OAUTH_SCOPES` in `src/api/auth.rs` gains `write:servicedesk-request`. This is a release-coordination dependency:
+
+- The constant must match the `jr` Atlassian Developer Console app registration exactly.
+- If the scope is added to code but NOT registered in the Developer Console before release, every new OAuth login and token refresh will fail with `invalid_scope`.
+- CI cannot detect Developer Console drift — the pinning test `default_oauth_scopes_pins_the_full_set_with_offline_access` detects code-side drift only.
+- **Required pre-merge gate for S-288-C / S-288-D:** manual staging validation that `jr auth login --oauth` succeeds with the new scope registered.
+
+Story S-288-C is the explicit "OAuth scope gate" story and acts as a release-gate blocker for S-288-D (dispatch fork implementation).
+
+### 10.3 Dispatch Fork Pattern in `handle_create`
+
+The `--request-type` flag introduces a conditional dispatch fork in `src/cli/issue/create.rs::handle_create`. Cross-cutting invariants that apply to BOTH branches:
+
+- `--output json` emits `{"key": "KEY"}` — no branch-specific envelope
+- `--no-input` suppresses all prompts; ambiguous partial-name resolution is `JrError::UserError(exit 64)` in both branches
+- `--project` resolution occurs before the fork gate (shared)
+- ADF description building is available in both branches via `markdown_to_adf` / `text_to_adf`
+- `JR_BASE_URL` test-seam applies to both branches (both use `JiraClient`)
+
+**`--type` flag interaction:** when `--request-type` is set, `--type` (issue type) is meaningless on the JSM portal path (request types encode the type). Implementation MUST emit a stderr warning and ignore `--type` rather than erroring, to avoid breaking automation pipelines that always pass `--type`. This is a F5 adversarial review check item.
+
+Decision rationale: ADR-0014.

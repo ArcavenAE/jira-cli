@@ -28,7 +28,7 @@ L1  cli/ (clap derive)
 
 L2  cli handlers (I/O: HTTP, stdin, stdout/stderr, cache, config)
       ├── cli/issue/{list,view,comments,changelog,create,workflow,links,assets,format,helpers,json_output}.rs
-      ├── cli/{auth,assets,board,sprint,worklog,team,user,queue,project,init,api}.rs
+      ├── cli/{auth,assets,board,sprint,worklog,team,user,queue,project,init,api,requesttype}.rs  ← requesttype new in #288
 
 L3  api/ (HTTP plumbing — bifurcated into two paths; see below)
       ├── api/client.rs (490 LOC) — JiraClient; 11 public HTTP methods
@@ -37,9 +37,9 @@ L3  api/ (HTTP plumbing — bifurcated into two paths; see below)
       ├── api/pagination.rs (374 LOC) — 4 pagination shapes
       └── api/rate_limit.rs (56 LOC) — Retry-After integer parser
 
-L4  api resource impls (impl JiraClient blocks, 18 files)
+L4  api resource impls (impl JiraClient blocks, 20 files post-#288)
       ├── api/jira/{issues,boards,sprints,fields,statuses,links,teams,worklogs,projects,users,resolutions}.rs
-      ├── api/jsm/{queues,servicedesks}.rs
+      ├── api/jsm/{queues,servicedesks,requests,request_types}.rs   ← requests + request_types new in #288
       └── api/assets/{linked,objects,workspace,schemas,tickets}.rs
 
 L5  types/ (pure Serde structs, no I/O, no imports from L0-L4)
@@ -84,6 +84,7 @@ The raw passthrough exists solely for `jr api` — the `curl`-style HTTP escape 
   cmdb_fields.json
   object_type_attrs.json
   resolutions.json
+  request_types_<serviceDeskId>.json   ← new in #288 (7-day TTL, keyed per serviceDeskId)
 
 OS Keychain (jr-jira-cli)
   Shared (account-level, flat keys):
@@ -107,7 +108,7 @@ Build-time artifacts (CI release only):
 |----------|-----|-------------|
 | `https://<site>.atlassian.net/rest/api/3/*` | Jira Core REST v3 | API token or OAuth bearer |
 | `https://<site>.atlassian.net/rest/agile/1.0/*` | Agile REST (boards, sprints) | same |
-| `https://<site>.atlassian.net/rest/servicedeskapi/*` | JSM REST (queues, service desks, asset workspace) | same |
+| `https://<site>.atlassian.net/rest/servicedeskapi/*` | JSM REST (queues, service desks, asset workspace, request creation, request type discovery) | same |
 | `https://<site>.atlassian.net/gateway/api/graphql` | GraphQL (ADR-0005: `tenantContexts` + `hostNames`) | same |
 | `https://<site>.atlassian.net/gateway/api/public/teams/v1/*` | Teams API | same |
 | `https://api.atlassian.com/ex/jira/<cloud_id>/*` | OAuth-proxied Jira API | OAuth bearer only |
@@ -120,6 +121,28 @@ Build-time artifacts (CI release only):
 - Embedded app: `127.0.0.1:53682` (fixed, literal IPv4 — ADR-0006)
 - BYO app: `127.0.0.1:0` (ephemeral port)
 Both bindings are TOCTOU-closed via `ResolvedRedirect` private-field pattern.
+
+---
+
+## JSM Issue Creation Path (Issue #288 Delta)
+
+`jr issue create` supports two mutually exclusive creation paths, selected by the presence of `--request-type`:
+
+| Signal | Path | API endpoint | Auth scope required |
+|--------|------|-------------|---------------------|
+| `--request-type` absent | Platform path (unchanged) | `POST /rest/api/3/issue` | existing scopes |
+| `--request-type NAME\|ID` present | JSM portal path (new) | `POST /rest/servicedeskapi/request` | `write:servicedesk-request` (new in #288) |
+
+The dispatch fork gate is `request_type.is_some()` inside `handle_create`. Both branches emit `{"key": "KEY"}` JSON output (BC-3.3.001 / BC-3.8.001). The platform path is the regression baseline — all existing integration tests (issue_create_json.rs, issue_commands.rs, issue_write_holdouts.rs) guard against unintentional platform-path changes.
+
+**JSM portal path flow:**
+1. Resolve `serviceDeskId` via `require_service_desk` (reuses `api/jsm/servicedesks.rs`, unmodified)
+2. Resolve `requestTypeId` via partial-name match against cached/fetched request type list (`api/jsm/request_types.rs`)
+3. Build `requestFieldValues` map from `--field NAME=VALUE` pairs
+4. POST to `POST /rest/servicedeskapi/request`; extract `issueKey` from response envelope
+5. Emit `{"key": "KEY"}` — same output struct as platform path
+
+Decision rationale: ADR-0014.
 
 ---
 

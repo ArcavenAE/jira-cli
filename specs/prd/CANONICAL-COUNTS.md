@@ -2,7 +2,7 @@
 document_type: canonical-counts
 product: jr (jira-cli)
 generated: "2026-05-04"
-last_verified: "2026-05-15 (F2 spec evolution issue #340; +1 BC-3.4.009)"
+last_verified: "2026-05-18 (F1d adversary pass-01 issue #288; +1 BC-3.8.010; bc-2 definitional corrected 50→51)"
 ---
 
 # Canonical Counts — jr (jira-cli) L3 PRD
@@ -20,14 +20,14 @@ re-run to verify. Disputes go here first.
 | File | Actual `#### BC-` count | Frontmatter `definitional_count` | Match? |
 |------|------------------------|----------------------------------|--------|
 | bc-1-auth-identity.md | 46 | 46 | YES |
-| bc-2-issue-read.md | 50 | 50 | YES |
-| bc-3-issue-write.md | 49 | 49 | YES |
+| bc-2-issue-read.md | 51 | 51 | YES |
+| bc-3-issue-write.md | 59 | 59 | YES |
 | bc-4-assets-cmdb.md | 22 | 22 | YES |
 | bc-5-boards-sprints.md | 17 | 17 | YES |
 | bc-6-config-cache.md | 29 | 29 | YES |
 | bc-7-output-render.md | 38 | 38 | YES |
-| cross-cutting.md | 64 | 64 | YES |
-| **Total individually-bodied** | **315** | — | — |
+| cross-cutting.md | 72 | 72 | YES |
+| **Total individually-bodied** | **334** | — | — |
 
 Verification command:
 ```bash
@@ -41,18 +41,20 @@ done
 | File | Frontmatter `total_bcs` |
 |------|------------------------|
 | bc-1-auth-identity.md | 57 |
-| bc-2-issue-read.md | 92 |
-| bc-3-issue-write.md | 78 |
+| bc-2-issue-read.md | 93 |
+| bc-3-issue-write.md | 88 |
 | bc-4-assets-cmdb.md | 32 |
 | bc-5-boards-sprints.md | 35 |
 | bc-6-config-cache.md | 39 |
 | bc-7-output-render.md | 84 |
-| cross-cutting.md | 130 |
-| **Sum** | **547** |
+| cross-cutting.md | 138 |
+| **Sum** | **566** |
 
 ### Grand total
 
-**Canonical grand total: 547** (+4 BC-7.4.013-016 added 2026-05-08 via Fix-PR A `28b0f35`; +1 BC-2.6.050 added 2026-05-13 via issue #350; +1 BC-3.4.009 added 2026-05-15 via issue #340 F2)
+**Canonical grand total: 566** (+4 BC-7.4.013-016 added 2026-05-08 via Fix-PR A `28b0f35`; +1 BC-2.6.050 added 2026-05-13 via issue #350; +1 BC-2.6.051 added 2026-05-14 via issue #365; +1 BC-3.4.009 added 2026-05-15 via issue #340 F2; +17 BC-3.8.001..009 + BC-X.12.001..008 added 2026-05-18 via issue #288 F2; +1 BC-3.8.010 added 2026-05-18 via issue #288 F1d pass-01)
+
+_Note: BC-INDEX.md `total_bcs` header will be updated to 566 to match this file. CANONICAL-COUNTS.md carries the per-file sum as the primary source of truth. (+2 since F2: +1 BC-2 definitional corrected 50→51; +1 BC-3.8.010 added at F1d pass-01 2026-05-18)_
 
 Breakdown:
 - 547 = sum of per-file `total_bcs` values
@@ -110,14 +112,16 @@ Note: NFR-O-K was merged into NFR-S-D at adversary Pass 7 (no net change). NFR-S
 
 ## Holdout Scenarios
 
-**Canonical holdout total: 48**
+**Canonical holdout total: 54**
 
 Verification command:
 ```bash
 grep -c '^### H-' .factory/specs/prd/holdout-scenarios.md
 ```
 
-Expected: 48 (H-001..H-047 + H-NEW-MP-001)
+Expected: 54 (H-001..H-047 + H-NEW-MP-001 + H-NEW-VERBOSE-001 + H-NEW-VERBOSE-002 + H-NEW-AUTH-002 + H-NEW-JSM-RT-001 + H-NEW-JSM-RT-002 + H-NEW-JSM-RT-003 + H-NEW-JSM-RT-004)
+
+_Note: holdout-scenarios.md frontmatter `total_holdouts: 54` counts all holdout entries including ones without `### H-` headings; the grep count of `### H-` headings is 54 because H-NEW-* holdouts use the extended format. The frontmatter count (54) is authoritative._
 
 ---
 

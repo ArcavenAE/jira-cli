@@ -1,0 +1,15 @@
+src/api/jsm/requests.rs
+src/api/jsm/request_types.rs
+src/cli/requesttype.rs
+src/types/jsm/request_type.rs
+tests/issue_create_jsm.rs
+tests/requesttype_commands.rs
+src/api/jsm/mod.rs
+src/types/jsm/mod.rs
+src/cli/mod.rs
+src/cli/issue/create.rs
+src/api/auth.rs
+src/cli/auth/tests/mod.rs
+src/cache.rs
+src/main.rs
+CLAUDE.md

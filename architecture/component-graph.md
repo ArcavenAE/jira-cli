@@ -51,6 +51,13 @@ graph TD
 
     cli_board["cli::board (L2)\n334 LOC"] --> boards_impl
     cli_sprint["cli::sprint (L2)\n438 LOC"] --> sprints_impl
+    cli_requesttype["cli::requesttype (L2)\n[#288 NEW]"] --> request_types_impl
+    cli_requesttype --> servicedesks_impl
+    cli_requesttype --> cache
+    cli_requesttype --> partial_match
+    cli_issue_create["create.rs (dispatch fork)\n[#288 MODIFIED]"] --> requests_impl
+    cli_issue_create --> request_types_impl
+    cli_issue_create --> servicedesks_impl
 
     cli_issue_assets --> assets_linked["api::assets::linked\n557 LOC"]
     cli_issue_list --> assets_linked
@@ -88,10 +95,12 @@ graph TD
     subgraph api_jsm["api::jsm::* (L4)"]
         servicedesks_impl["servicedesks.rs"]
         queues_impl["queues.rs"]
+        requests_impl["requests.rs [#288 NEW]"]
+        request_types_impl["request_types.rs [#288 NEW]"]
     end
     api_jsm --> api_client
     api_jsm --> api_pagination
-    api_jsm --> types_jsm["types::jsm::* (L5)"]
+    api_jsm --> types_jsm["types::jsm::* (L5)\n(queue, servicedesk,\nrequest_type [#288 NEW])"]
 
     subgraph api_assets_grp["api::assets::* (L4 — 5 files)"]
         assets_linked
@@ -165,3 +174,31 @@ flowchart LR
 | L4 resource impls | L3 client, L5 types, L6 (cache, error) | L2 |
 | L5 types | serde, std | everything in crate |
 | L6 utilities | std, libcrates | L0-L4 (no upward deps) |
+
+---
+
+## Issue #288 Delta — DAG Verification
+
+**Delta edges introduced (4 new modules, 3 new handler edges):**
+
+```
+cli::requesttype (L2) → api::jsm::request_types (L4)    [NEW — L2 → L4 via L3 client; valid]
+cli::requesttype (L2) → api::jsm::servicedesks (L4)     [NEW — reuses existing module]
+cli::requesttype (L2) → cache (L6)                      [NEW — same pattern as cli::queue]
+cli::requesttype (L2) → partial_match (L6)              [NEW — same pattern as cli::queue]
+cli::issue::create (L2) → api::jsm::requests (L4)       [NEW — conditional branch only]
+cli::issue::create (L2) → api::jsm::request_types (L4)  [NEW — for request type resolution]
+cli::issue::create (L2) → api::jsm::servicedesks (L4)   [NEW — for service desk resolution]
+api::jsm::requests (L4) → api::client (L3)              [NEW — same pattern as all L4 impls]
+api::jsm::requests (L4) → types::jsm::* (L5)            [NEW — same pattern as all L4 impls]
+api::jsm::request_types (L4) → api::client (L3)         [NEW — same pattern]
+api::jsm::request_types (L4) → api::pagination (L3)     [NEW — isLastPage pagination]
+api::jsm::request_types (L4) → types::jsm::* (L5)       [NEW — new request_type.rs type]
+types::jsm::request_type (L5) → serde, std              [NEW — pure serde struct, no upward deps]
+```
+
+**Cycle check:** All new edges follow existing layer direction (L2 → L4 → L3 → L6, L4 → L5). No upward edges (L4/L5/L6 → L2). No new L6 → L3/L4 edges. DAG remains acyclic.
+
+**Cross-check with purity boundary:** `api::jsm::requests` and `api::jsm::request_types` are I/O-effectful (HTTP), same boundary class as `api::jsm::queues`. `types::jsm::request_type` is pure (serde structs, no I/O). `cli::requesttype` is effectful (HTTP + cache + stdin). All consistent with the existing purity boundary map in `system-overview.md §Purity Boundary`.
+
+Source: ADR-0014 (2026-05-18).

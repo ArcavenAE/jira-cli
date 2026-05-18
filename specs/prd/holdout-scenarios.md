@@ -1,7 +1,7 @@
 ---
 context: holdout-scenarios
 title: "Holdout Scenarios"
-total_holdouts: 50
+total_holdouts: 54
 # H-NEW-AUTH-002 registered by S-0.07 (Phase 3, 2026-05-07). Wave 0 COMPLETE.
 # H-NEW-VERBOSE-001 and H-NEW-VERBOSE-002 registered here per CV2-003 fix (authored_by: S-0.06).
 version: "1.1.1"
@@ -595,3 +595,114 @@ Setup uses:
 **Status**: MUST-PASS. Satisfies SD-002 Option B-revised postcondition. Pre-S-0.05: MUST-FAIL (holdout defines the target). Post-S-0.05 (at develop SHA d907504): MUST-PASS.
 **BC refs**: BC-X.1.001, SD-002
 **Added**: S-0.07, Phase 3 Wave 0 (2026-05-07)
+
+---
+
+## Group 9: JSM Request Types (issue #288)
+
+### H-NEW-JSM-RT-001: JSM request creation via `issue create --request-type` routes to servicedeskapi endpoint (MUST-PASS)
+
+**NFR source**: BC-3.8.001, BC-3.8.002
+**BC**: BC-3.8.001, BC-3.8.002, BC-3.8.008
+**Authored by**: F2 spec evolution (2026-05-18)
+
+**Setup**:
+1. Wiremock at `JR_BASE_URL`. Config: project `HELPDESK` with `typeKey = "service_desk"`.
+2. Mock `GET /rest/servicedeskapi/servicedesk` returning `{values: [{id: "3", projectKey: "HELPDESK"}]}`.
+3. Mock `GET /rest/servicedeskapi/servicedesk/3/requesttype` returning `{isLastPage: true, values: [{id: "5", name: "Get IT Help", description: "IT support"}]}`.
+4. Mock `POST /rest/servicedeskapi/request` with `expect(1)` returning 201 `{issueId: "10042", issueKey: "HELP-42", currentStatus: {status: "Waiting for support"}, _links: {web: {href: "https://example.atlassian.net/browse/HELP-42"}}}`.
+5. Mock `POST /rest/api/3/issue` with `expect(0)` (platform create must NOT be called).
+
+**Action**: `jr issue create --project HELPDESK --request-type "Get IT Help" --summary "VPN broken" --no-input --output json`
+
+**Expected (MUST-PASS)**:
+- exit 0
+- stdout JSON: `{"key": "HELP-42"}`
+- `POST /rest/servicedeskapi/request` called exactly once (expect(1) satisfied)
+- POST body contains: `"requestTypeId": "5"` AND `"serviceDeskId": "3"` AND `"requestFieldValues"` containing `"summary": "VPN broken"`
+- `POST /rest/api/3/issue` NOT called (expect(0) satisfied)
+- `--output json` payload: v1 emits minimal `{"key": "HELP-42"}` only; `.url` field from `_links.web.href` is NOT surfaced in v1 (browse URL exposure is deferred). Mock setup retains `_links` field for API fidelity but implementation does not map it to output. This assertion locks the v1 behavior (mirrors BC-3.8.001 output shape).
+
+**Why hidden**: The routing branch decision between platform and JSM endpoints is invisible from output alone — mock call counts are required to pin which endpoint was invoked. A naive implementation could POST to both or route to the wrong one while still returning a key-shaped response.
+
+**Status**: MUST-PASS. Core routing invariant for BC-3.8.001.
+
+---
+
+### H-NEW-JSM-RT-002: `issue create --request-type` on software project errors clean with JSM hint, zero POST (MUST-PASS)
+
+**NFR source**: BC-3.8.002, BC-X.8.004
+**BC**: BC-3.8.002, BC-X.8.004, BC-3.3.001 (modified — platform path NOT exercised)
+**Authored by**: F2 spec evolution (2026-05-18); F1d adversary pass-01 (2026-05-18 — BC-3.3.001 annotation added)
+
+**Setup**:
+1. Wiremock at `JR_BASE_URL`. Config: project `PROJ` with `typeKey = "software"`.
+2. Mock `GET /rest/servicedeskapi/servicedesk` returning `{values: []}` or returning project meta indicating software type (no service desk entry for PROJ).
+3. Mock `POST /rest/servicedeskapi/request` with `expect(0)`.
+4. Mock `POST /rest/api/3/issue` with `expect(0)`.
+
+**Action**: `jr issue create --project PROJ --request-type "Get IT Help" --summary "VPN broken" --no-input`
+
+**Expected (MUST-PASS)**:
+- exit 64
+- stderr contains `Jira Software project` AND actionable suggestion referencing JSM or queue commands
+- `POST /rest/servicedeskapi/request` NOT called (expect(0) satisfied)
+- `POST /rest/api/3/issue` NOT called (expect(0) satisfied)
+
+**Why hidden**: The `require_service_desk` gate is a client-side check before any HTTP. Its correct invocation for `issue create --request-type` is invisible without mock-call verification. A regression where the dispatch branch bypasses the service-desk check would allow the JSM POST to attempt on a non-JSM project (returning an API error instead of a clean exit-64).
+
+**Status**: MUST-PASS. Guards BC-3.8.002's non-JSM project fail-fast behavior.
+
+---
+
+### H-NEW-JSM-RT-003: `issue create --request-type` 401 with scope-mismatch surfaces `write:servicedesk-request` recovery hint (MUST-PASS)
+
+**NFR source**: BC-3.8.009, BC-X.3.005, BC-1.6.042
+**BC**: BC-3.8.009, BC-X.3.005, BC-1.6.042, BC-1.3.023
+**Authored by**: F2 spec evolution (2026-05-18)
+
+**Setup**:
+1. Wiremock at `JR_BASE_URL`. Config: project `HELPDESK` with `typeKey = "service_desk"`.
+2. Mock `GET /rest/servicedeskapi/servicedesk` returning service desk ID `"3"` for HELPDESK.
+3. Mock `GET /rest/servicedeskapi/servicedesk/3/requesttype` returning request type `{id: "5", name: "Get IT Help"}`.
+4. Mock `POST /rest/servicedeskapi/request` returning 401 with body `{"message": "Unauthorized; scope does not match"}`.
+
+**Action**: `jr issue create --project HELPDESK --request-type "Get IT Help" --summary "VPN broken" --no-input`
+
+**Expected (MUST-PASS)**:
+- exit 2
+- stderr contains `Insufficient token scope`
+- stderr contains `write:servicedesk-request`
+- stderr contains an OAuth re-authorization hint (e.g., references to `jr auth refresh` or `jr auth login`)
+- Mirrors H-012 behavior for the new write scope
+
+**Why hidden**: The 401-scope-mismatch dispatch (BC-X.3.005) must pick up the new `write:servicedesk-request` scope name in its hint text. Without an explicit test, a copy-paste of the existing hint that names only `write:jira-work` would be invisible to users — they would see a generic scope error with no actionable path specific to the new permission.
+
+**Status**: MUST-PASS. Verifies that BC-1.3.023's `write:servicedesk-request` addition is surfaced in the user-facing error recovery path.
+
+---
+
+### H-NEW-JSM-RT-004: `--type` flag ignored with stderr warning when `--request-type` is set (MUST-PASS)
+
+**NFR source**: BC-3.8.010
+**BC**: BC-3.8.010, BC-3.8.001
+**Authored by**: F1d adversary pass-01 (2026-05-18)
+
+**Setup**:
+1. Wiremock at `JR_BASE_URL`. Config: project `HELPDESK` with `typeKey = "service_desk"`.
+2. Mock `GET /rest/servicedeskapi/servicedesk` returning `{values: [{id: "3", projectKey: "HELPDESK"}]}`.
+3. Mock `GET /rest/servicedeskapi/servicedesk/3/requesttype` returning `{isLastPage: true, values: [{id: "5", name: "Get IT Help", description: "IT support"}]}`.
+4. Mock `POST /rest/servicedeskapi/request` with `expect(1)` returning 201 `{issueId: "10042", issueKey: "HELP-42", currentStatus: {status: "Waiting for support"}}`.
+
+**Action**: `jr issue create --project HELPDESK --request-type "Get IT Help" --type Bug --summary "foo" --no-input --output json`
+
+**Expected (MUST-PASS)**:
+- exit 0
+- stdout JSON: `{"key": "HELP-42"}`
+- stderr contains: `warning: --type is ignored when --request-type is set; request type encodes the issue type`
+- `POST /rest/servicedeskapi/request` called exactly once (expect(1) satisfied)
+- `--type Bug` value does NOT appear in the POST body (request type field uses resolved requestTypeId "5", not platform issue-type label)
+
+**Why hidden**: The `--type` flag interaction at the JSM dispatch site is not visible from the JSON output alone — only the stderr line and mock body inspection reveal whether `--type` was silently dropped or incorrectly forwarded. A regression where `--type` causes an error (rather than a warning) or where the warning is omitted would be invisible without this pin.
+
+**Status**: MUST-PASS. Pins BC-3.8.010 (--type ignored with warning).

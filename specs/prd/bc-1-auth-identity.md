@@ -261,14 +261,21 @@ Embedded OAuth app (1.3), Token keychain (1.4), OAuth state machine (1.5), Auth 
 
 ---
 
-#### BC-1.3.023: DEFAULT_OAUTH_SCOPES includes `offline_access`, CMDB scopes, and `write:jira-work`
+#### BC-1.3.023: DEFAULT_OAUTH_SCOPES includes `offline_access`, CMDB scopes, `write:jira-work`, and `write:servicedesk-request`
 
 **Confidence**: HIGH
-**Source**: `src/api/auth.rs:34-63`
+**Source**: `src/api/auth.rs:34-63` (line 59 is the concat! literal site)
 **Subject**: Auth & Identity
-**Behavior**: Scope string: `read:jira-work write:jira-work read:jira-user read:servicedesk-request read:cmdb-object:jira read:cmdb-schema:jira offline_access`. Regression test asserts no double spaces.
-**Effects**: Embedded `jr` app must be registered with exactly this scope set in Developer Console.
-**Trace**: Pass 3 BC-035 (R1)
+**Behavior**: DEFAULT_OAUTH_SCOPES is: `read:jira-work write:jira-work read:jira-user read:servicedesk-request write:servicedesk-request read:cmdb-object:jira read:cmdb-schema:jira offline_access`. The embedded `jr` OAuth app's Developer Console registration MUST include `write:servicedesk-request` or the authorize call will reject with `invalid_scope` for all new OAuth logins and token refreshes. The pinning test `default_oauth_scopes_pins_the_full_set_with_offline_access` in `src/cli/auth/tests/mod.rs` MUST be kept in lockstep with `auth.rs:59` — it must be updated in the same commit as any change to the scope constant. Regression test asserts no double spaces and the full exact scope string.
+**Effects**: Scope addition affects every OAuth-authenticated user on next token refresh or new login. CI cannot catch a Developer Console registration mismatch — manual staging validation is required before release when this constant is modified.
+
+**Release gate**: Any PR modifying `DEFAULT_OAUTH_SCOPES` MUST include a PR-template checklist item: `[ ] Scope set is registered in Atlassian Developer Console for embedded jr OAuth app on staging (paste screenshot or test login transcript URL).` This is enforced via PR template `.github/PULL_REQUEST_TEMPLATE.md` (to be added in the implementing story S-288-C). A `release-gate-oauth-scope-staged` CI job is a nice-to-have but NOT required in v1; the manual checklist is the contract.
+
+> **[UPDATED 2026-05-18 issue #288]** `write:servicedesk-request` added to enable `jr issue create --request-type` JSM submission (BC-3.8.001).
+> - **Previous (pre-#288):** Scope string was `read:jira-work write:jira-work read:jira-user read:servicedesk-request read:cmdb-object:jira read:cmdb-schema:jira offline_access` (no `write:servicedesk-request`).
+
+**Trace**: Pass 3 BC-035 (R1); issue #288 F2 (2026-05-18); issue #288 F1d adversary pass-01 (2026-05-18 — release gate enforcement added)
+**Trace**: PR template gate in `.github/PULL_REQUEST_TEMPLATE.md` (to be added in S-288-C)
 
 ---
 

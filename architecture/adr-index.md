@@ -23,6 +23,7 @@
 | [ADR-0011](adr/0011-type-level-profile-fence.md) | Type-Level Profile Fence (Newtype) | **Deferred** | risk-register.md §R-L1 |
 | [ADR-0012](adr/0012-shard-rule.md) | Module Shard Rule Codification | **Accepted** | risk-register.md §R-M5 |
 | [ADR-0013](adr/0013-pkce-deferral.md) | PKCE Deferral for OAuth 2.0 Authorization Code Flow | **Accepted** | security-decisions/SD-001-pkce.md |
+| [ADR-0014](adr/0014-jsm-request-create-dispatch-fork.md) | JSM Request Creation Dispatch Fork in `jr issue create` | **Accepted** | component-graph.md §api_jsm, cross-cutting.md §10 |
 
 ---
 

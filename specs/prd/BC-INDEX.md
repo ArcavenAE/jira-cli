@@ -1,18 +1,18 @@
 ---
 context: bc-index
 title: "BC Master Index"
-total_bcs: 548  # cumulative claim (incl. range-collapsed) — see preamble below; +4 added 2026-05-08 (BC-7.4.013-016, Fix-PR A); +1 added 2026-05-13 (BC-2.6.050, issue #350); +1 added 2026-05-14 (BC-2.6.051, issue #365); +1 added 2026-05-15 (BC-3.4.009, issue #340 F2)
-last_updated: 2026-05-15
+total_bcs: 566  # cumulative claim (incl. range-collapsed) — see preamble below; +4 added 2026-05-08 (BC-7.4.013-016, Fix-PR A); +1 added 2026-05-13 (BC-2.6.050, issue #350); +1 added 2026-05-14 (BC-2.6.051, issue #365); +1 added 2026-05-15 (BC-3.4.009, issue #340 F2); +17 added 2026-05-18 (BC-3.8.001..009 + BC-X.12.001..008, issue #288 F2); +1 added 2026-05-18 (BC-3.8.010, issue #288 F1d pass-01); BC-1.3.023, BC-3.3.001, BC-X.8.004 modified
+last_updated: 2026-05-18
 source_pass: 3
 sections:
   - bc-1-auth-identity.md (57 BCs cumulative; 46 individually-bodied)
   - bc-2-issue-read.md (93 BCs cumulative; 51 individually-bodied)
-  - bc-3-issue-write.md (78 BCs cumulative; 49 individually-bodied)
+  - bc-3-issue-write.md (88 BCs cumulative; 59 individually-bodied)
   - bc-4-assets-cmdb.md (32 BCs cumulative; 22 individually-bodied)
   - bc-5-boards-sprints.md (35 BCs cumulative; 17 individually-bodied)
   - bc-6-config-cache.md (39 BCs cumulative; 29 individually-bodied)
   - bc-7-output-render.md (84 BCs cumulative; 38 individually-bodied)
-  - cross-cutting.md (130 BCs cumulative; 64 individually-bodied)
+  - cross-cutting.md (138 BCs cumulative; 72 individually-bodied)
   - nfr-catalog.md (41 NFR items, not counted in BC total; NFR-O-K merged into NFR-S-D per ADV-P7-002)
 ---
 
@@ -85,7 +85,7 @@ R1/R4 prefix = deepening round that introduced it.
 | BC-1.3.020 | Build with empty XOR inputs → `embedded_oauth_app()` returns None | BC-020 | src/api/auth_embedded.rs:100-106 | HIGH | Auth & Identity |
 | BC-1.3.021 | `embedded_oauth_app_present()` checks presence without decoding | BC-021; BC-022-R (R1) | src/api/auth_embedded.rs:132-136 | HIGH | Auth & Identity |
 | BC-1.3.022 | `OAuthAppSource` resolution chain: Flag > Env > Keychain > Embedded > Prompt > None | BC-022-R | src/api/auth_embedded.rs:46-57 | HIGH | Auth & Identity |
-| BC-1.3.023 | DEFAULT_OAUTH_SCOPES includes `offline_access`, CMDB scopes, and `write:jira-work` | BC-035 (R1) | src/api/auth.rs:34-63 | HIGH | Auth & Identity |
+| BC-1.3.023 | DEFAULT_OAUTH_SCOPES includes `offline_access`, CMDB scopes, `write:jira-work`, and `write:servicedesk-request` [UPDATED 2026-05-18 issue #288] | BC-035 (R1) | src/api/auth.rs:34-63 (line 59) | HIGH | Auth & Identity |
 | BC-1.3.024 | Embedded OAuth integration test is `#[ignore]`-gated and stubs `unimplemented!()` | BC-028 (R1) | tests/oauth_embedded_login.rs:13-32 | HIGH | Auth & Identity |
 
 ### 1.4 Token Keychain Layout (6 BCs: BC-1.4.025..030)
@@ -212,7 +212,7 @@ R1/R4 prefix = deepening round that introduced it.
 
 ---
 
-## Section 3: Issue Write (bc-3-issue-write.md) — 78 BCs cumulative; 49 individually-bodied
+## Section 3: Issue Write (bc-3-issue-write.md) — 88 BCs cumulative; 59 individually-bodied
 
 ### 3.1 Assign (9 BCs: BC-3.1.001..009)
 
@@ -249,7 +249,7 @@ R1/R4 prefix = deepening round that introduced it.
 
 | L3 BC ID | Summary | Pass 3 BC ID | Source | Confidence |
 |---|---|---|---|---|
-| BC-3.3.001 | `issue create` POSTs `/rest/api/3/issue` returning `{"key": "FOO-123"}` | BC-211 | tests/issue_create_json.rs | HIGH |
+| BC-3.3.001 | `issue create` POSTs `/rest/api/3/issue` returning `{"key": "FOO-123"}` (platform path; when `--request-type` absent — see BC-3.8.001) [UPDATED 2026-05-18 issue #288] | BC-211 | tests/issue_create_json.rs | HIGH |
 | BC-3.3.002 | `issue create` with assignee — uses `search_assignable_users_by_project` (multiProjectSearch) | BC-1064 (R4) | tests/issue_commands.rs:1024-1082 | HIGH |
 | BC-3.3.003 | `issue create --to me` uses `get_myself()` (no search HTTP) | BC-1065 (R4) | tests/issue_commands.rs:1084-1127 | HIGH |
 | BC-3.3.004 | `issue create` WITHOUT assignee — body has `{project, issuetype, summary}` ONLY (no assignee key) | BC-1066 (R4) | tests/issue_commands.rs:1129-1154 | HIGH |
@@ -297,6 +297,21 @@ R1/R4 prefix = deepening round that introduced it.
 | BC-3.7.002 | `issue remote-link` defaults `--title` to URL when omitted | BC-223; BC-1127 (R4) | tests/issue_remote_link.rs:87-147 | HIGH |
 | BC-3.7.003 | `issue remote-link --url not-a-url` → exit 64 + `"--url"` + `"not a valid url"`; ZERO HTTP | BC-1130 (R4) | tests/issue_remote_link.rs:259-301 | HIGH |
 | BC-3.7.004 | `issue remote-link --url ftp://example.com` → exit 64 + `"http or https"` + `"ftp"` | BC-1131 (R4) | tests/issue_remote_link.rs:309-348 | HIGH |
+
+### 3.8 JSM Request Create (10 BCs: BC-3.8.001..010) [Added 2026-05-18 issue #288; BC-3.8.010 added F1d pass-01]
+
+| L3 BC ID | Summary | Pass 3 BC ID | Source | Confidence |
+|---|---|---|---|---|
+| BC-3.8.001 | `issue create --request-type <NAME\|ID>` dispatches to `POST /rest/servicedeskapi/request`; platform path unchanged when flag absent | — (issue #288 F2) | tests/issue_create_jsm.rs; src/cli/issue/create.rs | HIGH |
+| BC-3.8.002 | JSM body uses `requestFieldValues` map; `serviceDeskId` resolved via `require_service_desk` from `--project`; non-JSM project error message is call-site-specific | — (issue #288 F2) | tests/issue_create_jsm.rs; src/api/jsm/servicedesks.rs | HIGH |
+| BC-3.8.003 | `--request-type <NAME>` resolved via partial-match (case-insensitive); errors clean on Ambiguous, ExactMultiple, None with `jr requesttype list` hint | — (issue #288 F2) | tests/issue_create_jsm.rs; src/partial_match.rs | HIGH |
+| BC-3.8.004 | `--request-type <ID>` (numeric string) bypasses name resolution | — (issue #288 F2) | tests/issue_create_jsm.rs | HIGH |
+| BC-3.8.005 | `--summary` maps to `requestFieldValues.summary` (required by JSM API; mirrors platform required-summary) | — (issue #288 F2) | tests/issue_create_jsm.rs | HIGH |
+| BC-3.8.006 | `--description` maps to `requestFieldValues.description`; `--markdown` triggers `markdown_to_adf` + `isAdfRequest: true` | — (issue #288 F2) | tests/issue_create_jsm.rs; src/adf.rs | HIGH |
+| BC-3.8.007 | `--priority <NAME>`, `--label <X>` (repeatable) map to `requestFieldValues.priority` / `requestFieldValues.labels` (labels = plain string array; JSDSERVER-4564 caveat for priority) | — (issue #288 F2; F1d: hardened) | tests/issue_create_jsm.rs | HIGH |
+| BC-3.8.008 | `--field NAME=VALUE` (repeatable) maps to `requestFieldValues`; first `=` splits; `customfield_NNNNN` bypasses lookup; duplicate NAME last-wins | — (issue #288 F2) | tests/issue_create_jsm.rs | HIGH |
+| BC-3.8.009 | `--on-behalf-of <accountId>` maps to `raiseOnBehalfOf`; value passed through as-is (no client-side format validation); invalid accountIds rejected server-side | — (issue #288 F2; F1d: regex removed) | tests/issue_create_jsm.rs | HIGH |
+| BC-3.8.010 | `--type` is IGNORED with stderr warning when `--request-type` is set; request type encodes the issue type | — (issue #288 F1d pass-01) | tests/issue_create_jsm.rs | HIGH |
 
 ---
 
@@ -625,6 +640,19 @@ R1/R4 prefix = deepening round that introduced it.
 | BC-X.11.004 | Unset build vars → `EMBEDDED_*` constants are `None`; BYO/prompt path proceeds | BC-1304 | build.rs; src/api/auth_embedded.rs::tests | HIGH |
 | BC-X.11.005 | `proptest-regressions/jql.txt` pinned regression seed for `escape_value("")` | BC-1103 (R4) | proptest-regressions/jql.txt | HIGH |
 
+### X.12 JSM Request Types (8 BCs: BC-X.12.001..008) [Added 2026-05-18 issue #288]
+
+| L3 BC ID | Summary | Pass 3 BC ID | Source | Confidence |
+|---|---|---|---|---|
+| BC-X.12.001 | `jr requesttype list` lists request types for the active project's service desk | — (issue #288 F2) | tests/requesttype_commands.rs; src/cli/requesttype.rs; src/api/jsm/request_types.rs | HIGH |
+| BC-X.12.002 | `--search <QUERY>` filters via JSM `searchQuery` server-side param (name or description match) | — (issue #288 F2) | tests/requesttype_commands.rs | HIGH |
+| BC-X.12.003 | `--project <KEY>` overrides active profile; `require_service_desk` errors clean on non-JSM project | — (issue #288 F2) | tests/requesttype_commands.rs; src/api/jsm/servicedesks.rs | HIGH |
+| BC-X.12.004 | `--output json` returns `[{id, name, description, helpText, issueTypeId, groupIds}, ...]`; default table shows Name + Description | — (issue #288 F2) | tests/requesttype_commands.rs | HIGH |
+| BC-X.12.005 | `jr requesttype fields <NAME\|ID>` lists fields for a request type via `GET .../requesttype/<rtId>/field` | — (issue #288 F2) | tests/requesttype_commands.rs; src/cli/requesttype.rs; src/api/jsm/request_types.rs | HIGH |
+| BC-X.12.006 | Partial-name resolution for `<NAME\|ID>` uses `partial_match`; ambiguity errors with disambiguation hint | — (issue #288 F2) | tests/requesttype_commands.rs; src/partial_match.rs | HIGH |
+| BC-X.12.007 | `--output json` for `requesttype fields` returns `{canRaiseOnBehalfOf, canAddRequestParticipants, fields: [{fieldId, name, required, jiraSchema, ...}]}`; table shows Field, Required, Type | — (issue #288 F2) | tests/requesttype_commands.rs | HIGH |
+| BC-X.12.008 | Request types cached per `(profile, serviceDeskId)` with 7-day TTL; cache key: `v1/<profile>/request_types_<service_desk_id>.json`; miss self-heals | — (issue #288 F2) | tests/requesttype_commands.rs; src/cache.rs | HIGH |
+
 ---
 
 ## MUST-FIX Register (4 items)
@@ -644,17 +672,17 @@ R1/R4 prefix = deepening round that introduced it.
 |---|---|---|
 | 1: Auth & Identity | 57 | 46 |
 | 2: Issue Read | 93 | 51 |
-| 3: Issue Write | 77 | 48 |
+| 3: Issue Write | 88 | 59 |
 | 4: Assets & CMDB | 32 | 22 |
 | 5: Boards & Sprints | 35 | 17 |
 | 6: Config & Cache | 39 | 29 |
 | 7: Output Rendering | 84 | 38 |
-| X: Cross-Cutting | 130 | 64 |
-| **Total** | **547** | **315** |
+| X: Cross-Cutting | 138 | 72 |
+| **Total** | **566** | **334** |
 
-**Note**: BC-X.4.009 (ADV-P1-029) is included in cross-cutting's `total_bcs: 130` and in the 541 sum above — it was assigned a `#### BC-` heading in cross-cutting.md at ADV-P1-029 (Pass 10 fix). Canonical total is **547** (+4 BC-7.4.013-016 added 2026-05-08 via Fix-PR A; +1 BC-2.6.050 added 2026-05-13 via issue #350; +1 BC-2.6.051 added 2026-05-14 via issue #365).
+**Note**: BC-X.4.009 (ADV-P1-029) is included in cross-cutting's `total_bcs` and in the sum above. Canonical total is **566** (+4 BC-7.4.013-016 added 2026-05-08 via Fix-PR A; +1 BC-2.6.050 added 2026-05-13 via issue #350; +1 BC-2.6.051 added 2026-05-14 via issue #365; +1 BC-3.4.009 added 2026-05-15 via issue #340 F2; +17 BC-3.8.001..009 + BC-X.12.001..008 added 2026-05-18 via issue #288 F2; +1 BC-3.8.010 added 2026-05-18 via issue #288 F1d pass-01).
 
-Cumulative total (547) ≠ individually-bodied count (315). The difference (232) comprises range-collapsed BCs that exist in the cumulative claim but are not individually headlined in body files. This is by design — range-collapsed BCs trace to Pass 3 source material but were not individually expanded. The 4 MUST-FIX BCs are included in the individually-bodied count.
+Cumulative total (566) ≠ individually-bodied count (334). The difference (232) comprises range-collapsed BCs that exist in the cumulative claim but are not individually headlined in body files. This is by design — range-collapsed BCs trace to Pass 3 source material but were not individually expanded. The 4 MUST-FIX BCs are included in the individually-bodied count.
 
 ---
 

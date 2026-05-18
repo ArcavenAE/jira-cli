@@ -1,22 +1,23 @@
 ---
 context: bc-x
-title: "Cross-cutting (HTTP client, Runtime, Users, Teams, Worklogs, Projects, Queues, JQL, Partial-match)"
-total_bcs: 130   # cumulative claim (incl. range-collapsed); definitional_count below is individually-bodied headings
-definitional_count: 64   # count of `#### BC-` headings in this file (corrected at ADV-P7-003)
-last_updated: 2026-05-04
+title: "Cross-cutting (HTTP client, Runtime, Users, Teams, Worklogs, Projects, Queues, JQL, Partial-match, JSM Request Types)"
+total_bcs: 138   # cumulative claim (incl. range-collapsed); definitional_count below is individually-bodied headings
+definitional_count: 72   # count of `#### BC-` headings in this file
+last_updated: 2026-05-18
 source_pass: 3
 trace: |
   - L2: .factory/specs/domain-spec/cross-cutting.md
   - Source broad: .factory/semport/jira-cli/jira-cli-pass-3-behavioral-contracts.md §2.6-2.15
   - Source R1: .factory/semport/jira-cli/jira-cli-pass-3-deep-r1.md §3.6-3.8
   - Source R4: .factory/semport/jira-cli/jira-cli-pass-3-deep-r4.md §3.2-3.4
+  - F2 addition (2026-05-18): BC-X.12.001..008 — JSM request type discovery (issue #288)
 ---
 
 # BC-X — Cross-cutting
 
-130 behavioral contracts covering: HTTP client (X.1), Pagination (X.2), Error handling (X.3),
+138 behavioral contracts covering: HTTP client (X.1), Pagination (X.2), Error handling (X.3),
 Rate limiting (X.4), Worklogs & duration (X.5), Teams (X.6), Users (X.7), Projects & Queues (X.8),
-JQL utilities (X.9), Partial-match (X.10), Build-time (X.11).
+JQL utilities (X.9), Partial-match (X.10), Build-time (X.11), JSM Request Types (X.12).
 
 ---
 
@@ -481,11 +482,13 @@ JQL utilities (X.9), Partial-match (X.10), Build-time (X.11).
 
 ---
 
-#### BC-X.8.004: `require_service_desk` errors for software project: "Jira Software project" + "Queue commands require"
+#### BC-X.8.004: `require_service_desk` errors for software project: "Jira Software project" + queue-command-specific error message
 
 **Confidence**: HIGH
 **Source**: `tests/project_meta.rs:99-126`
 **Trace**: Pass 3 BC-805
+
+> **[UPDATED 2026-05-18 issue #288]** The literal "Queue commands require…" error string is removed from `src/api/jsm/servicedesks.rs::require_service_desk` and replaced by a caller-supplied context label. BC-X.8.004 now defines the queue-command-specific message only: 'Project "<KEY>" is a <type> project. Queue commands (`jr queue`) require a Jira Service Management project. Run "jr project list" to find a JSM project.' For the `jr issue create --request-type` call site, the error message is: 'Project "<KEY>" is a <type> project. `--request-type` requires a Jira Service Management project. Run "jr project list" to find a JSM project.' (see BC-3.8.002). For `jr requesttype list/fields` call sites: 'Project "<KEY>" is a <type> project. `jr requesttype` commands require a Jira Service Management project. Run "jr project list" to find a JSM project.' (see BC-X.12.003). Previous version of this BC required only the common prefix "Jira Software project" — the call-site-specific suffix is now part of the contract.
 
 ---
 
@@ -601,6 +604,128 @@ JQL utilities (X.9), Partial-match (X.10), Build-time (X.11).
 **Confidence**: HIGH
 **Source**: `proptest-regressions/jql.txt`
 **Trace**: Pass 3 BC-1103 (R4)
+
+---
+
+## BC-X.12: JSM Request Type Discovery
+
+8 behavioral contracts covering `jr requesttype list` and `jr requesttype fields` subcommands,
+backed by the service desk requesttype API. These are discovery commands used before
+`jr issue create --request-type` to identify valid request types and their required fields.
+
+---
+
+#### BC-X.12.001: `jr requesttype list` lists request types for the active project's service desk
+
+**Confidence**: HIGH
+**Subject**: JSM request type discovery
+**Behavior**: `jr requesttype list --project <KEY>` calls `GET /rest/servicedeskapi/servicedesk/<id>/requesttype` (paginated via `isLastPage`). Default table output shows columns: ID, Name, Description. Returns all request types for the resolved service desk. Uses `require_service_desk(client, key)` to resolve the `serviceDeskId` before calling the list endpoint.
+**Inputs**: `--project <KEY>` (required; uses active-profile project if absent and profile has one configured)
+**Outputs/Effects**: stdout table (Name + Description columns by default); exit 0 on success.
+**Errors**: No project configured and no `--project` flag → exit 64 "project is required". Non-JSM project → exit 64 via `require_service_desk` (BC-X.8.004).
+**Trace**: `tests/requesttype_commands.rs` (list command, table output); `src/cli/requesttype.rs`; `src/api/jsm/request_types.rs`
+**Source**: API-verified: `GET /rest/servicedeskapi/servicedesk/{id}/requesttype` returns `{start, limit, isLastPage, values}`
+**Confidence**: HIGH
+
+---
+
+#### BC-X.12.002: `--search <QUERY>` filters via JSM `searchQuery` parameter (name or description partial match)
+
+**Confidence**: HIGH
+**Subject**: JSM request type discovery
+**Behavior**: When `--search <QUERY>` is set, the `searchQuery` query parameter is appended to `GET /rest/servicedeskapi/servicedesk/<id>/requesttype?searchQuery=<QUERY>`. Filtering is server-side (Atlassian API). No client-side secondary filtering is applied. If `--search` returns an empty `values` array, the command exits 0 with an empty table (NOT an error). The `searchQuery` parameter supports name and description substring matching as defined by the Atlassian API.
+**Inputs**: `--search <QUERY>` (optional)
+**Outputs/Effects**: Filtered request type list; may be empty table on no match.
+**Errors**: API error (5xx) → exit 1 + "API error (N)". 401 → exit 2 + `jr auth login`.
+**Trace**: `tests/requesttype_commands.rs` (search parameter propagation, empty-result path)
+**Source**: API-verified: `searchQuery` is a supported query param on the list endpoint
+**Confidence**: HIGH
+
+---
+
+#### BC-X.12.003: `--project <KEY>` overrides active profile; `require_service_desk` errors clean on non-JSM project with call-site-specific message
+
+**Confidence**: HIGH
+**Subject**: JSM request type discovery
+**Behavior**: `--project <KEY>` takes precedence over any project configured in the active profile (same precedence rule as all other project-flag uses). The flag is the non-interactive mechanism for specifying the target project. `require_service_desk` returns a typed error for non-JSM (software) projects — the command exits 64 with a call-site-specific error message (NOT the legacy "Queue commands require…" string). Error message MUST be: 'Project "<KEY>" is a <type> project. `jr requesttype` commands require a Jira Service Management project. Run "jr project list" to find a JSM project.' Zero HTTP calls to the requesttype endpoint are made.
+**Inputs**: `--project <KEY>` (overrides profile-level project config)
+**Outputs/Effects**: Project-scoped service desk ID resolved before any requesttype API call.
+**Errors**: Non-JSM project → exit 64 + call-site-specific message (see above); NO requesttype HTTP. Software project check fires before the list request.
+**Trace**: `tests/requesttype_commands.rs` (non-JSM project exit-64 path); `src/api/jsm/servicedesks.rs::require_service_desk`
+**Source**: Reuses `require_service_desk` established for `jr queue`; caller-supplied context label per BC-X.8.004 [UPDATED 2026-05-18 issue #288]
+**Confidence**: HIGH
+
+---
+
+#### BC-X.12.004: `--output json` returns structured JSON array; default table shows Name + Description columns
+
+**Confidence**: HIGH
+**Subject**: JSM request type discovery
+**Behavior**: `jr requesttype list --output json` returns a JSON array to stdout: `[{id: "<str>", name: "<str>", description: "<str>", helpText: "<str>"|null, issueTypeId: "<str>"|null, groupIds: ["<str>", ...]}, ...]`. Each element uses the fields returned by the Atlassian API; `null` for absent optional fields. Table output (default) shows Name + Description columns only; ID is not shown in table mode. Truncation hint ("Showing N of M") goes to stderr when applicable.
+**Inputs**: `--output json` (optional flag)
+**Outputs/Effects**: stdout JSON array on `--output json`; stdout table on default.
+**Errors**: Empty list returns `[]` (JSON) or empty table; NOT an error condition.
+**Trace**: `tests/requesttype_commands.rs` (JSON output shape, table output shape); body deserialization tests
+**Source**: API-verified: response values include `id`, `name`, `description`, `helpText`, `issueTypeId`, `groupIds`
+**Confidence**: HIGH
+
+---
+
+#### BC-X.12.005: `jr requesttype fields <NAME|ID>` lists fields for a request type
+
+**Confidence**: HIGH
+**Subject**: JSM request type discovery
+**Behavior**: `jr requesttype fields <NAME|ID> --project <KEY>` resolves the request type (by name or numeric ID, same logic as BC-X.12.006 below), then calls `GET /rest/servicedeskapi/servicedesk/<id>/requesttype/<rtId>/field`. Returns metadata about each field: `fieldId`, `name`, `required` (bool), `jiraSchema` (system/custom type info), and optionally `defaultValues` and `validValues`. Default table output shows columns: Field Name, Required (YES/NO), Type.
+**Inputs**: `<NAME|ID>` positional argument (required); `--project <KEY>` (required or from profile)
+**Outputs/Effects**: stdout table with field metadata; exit 0 on success.
+**Errors**: Request type not found → exit 64 via `partial_match` (BC-X.12.006). Non-JSM project → exit 64 via `require_service_desk`.
+**Trace**: `tests/requesttype_commands.rs` (fields command, required/optional field rendering); `src/cli/requesttype.rs`; `src/api/jsm/request_types.rs`
+**Source**: API-verified: `GET .../requesttype/{rtId}/field` returns `{canRaiseOnBehalfOf, canAddRequestParticipants, requestTypeFields[{fieldId, name, description?, required, defaultValues?, validValues?, jiraSchema{system|custom|customId|type}, visible}]}`
+**Confidence**: HIGH
+
+---
+
+#### BC-X.12.006: Partial-name resolution for `<NAME|ID>` uses `partial_match`; ambiguity errors with disambiguation hint
+
+**Confidence**: HIGH
+**Subject**: JSM request type discovery
+**Behavior**: When `<NAME|ID>` is a non-numeric string, the handler fetches (or cache-hits) the request type list, extracts names, and calls `partial_match(input, &names)`. `MatchResult::Exact(id)` → proceeds. `MatchResult::Ambiguous` → exits 64 with "Ambiguous request type" + all candidate names listed in stderr + hint "Use `jr requesttype list --project <KEY>` to see all request types". `MatchResult::None` → exits 64 with "Request type not found: <input>" + same hint. `MatchResult::ExactMultiple(name)` (case-variant duplicates) → treated as Exact, proceeds. In `--no-input` mode, ambiguous result exits 64 cleanly without prompting.
+**Inputs**: `<NAME|ID>` positional (non-numeric → name resolution; numeric → bypass as in BC-3.8.004)
+**Outputs/Effects**: Resolved `requestTypeId` integer used for the field fetch call.
+**Errors**: Ambiguous → exit 64; None → exit 64; both without firing the field GET.
+**Trace**: `tests/requesttype_commands.rs` (partial-match disambiguation, not-found, numeric bypass); `src/partial_match.rs`
+**Source**: Follows `partial_match` pattern established by `jr queue` and `jr issue move`
+**Confidence**: HIGH
+
+---
+
+#### BC-X.12.007: `--output json` for `jr requesttype fields` returns structured JSON with `required` bool per field; default table shows Field, Required, Type
+
+**Confidence**: HIGH
+**Subject**: JSM request type discovery
+**Behavior**: `jr requesttype fields <NAME|ID> --output json --project <KEY>` returns a JSON object to stdout: `{canRaiseOnBehalfOf: bool, canAddRequestParticipants: bool, fields: [{fieldId: "<str>", name: "<str>", required: bool, jiraSchema: {type: "<str>", ...}, defaultValues?: [...], validValues?: [...]}]}`. The `required` field is a boolean (true = must be provided by submitter). Default table output shows: Field (name column), Required (YES/NO), Type (from `jiraSchema.type`).
+**Inputs**: `--output json` (optional flag)
+**Outputs/Effects**: stdout JSON object on `--output json`; stdout table on default.
+**Errors**: API error (5xx) → exit 1. 401 → exit 2.
+**Trace**: `tests/requesttype_commands.rs` (JSON output shape, required flag rendering)
+**Source**: API-verified: `requestTypeFields[].required` is a boolean field in the API response
+**Confidence**: HIGH
+
+---
+
+#### BC-X.12.008: Request types cached per `(profile, serviceDeskId)` with 7-day TTL; cache miss self-heals; cache key: `v1/<profile>/request_types_<service_desk_id>.json`
+
+**Confidence**: HIGH
+**Subject**: JSM request type discovery
+**Behavior**: On `requesttype list` or name-resolution calls, the handler first checks `read_request_type_cache(profile, service_desk_id)`. Cache hit (valid, within 7-day TTL) → returns cached `Vec<RequestType>` without HTTP. Cache miss (absent, expired, or corrupt JSON) → fetches from API, writes to `write_request_type_cache(profile, service_desk_id, types)`, then proceeds. Cache file path: `~/.cache/jr/v1/<profile>/request_types_<service_desk_id>.json`. The `<service_desk_id>` in the filename is the numeric service desk ID as a string. Cache is keyed per `(profile, serviceDeskId)` to respect multi-profile isolation invariant (different profiles may have different service desks). Corrupt cache file is treated as a miss (self-heals).
+**Inputs**: profile name (active profile), serviceDeskId (resolved by `require_service_desk`)
+**Outputs/Effects**: Cache write on miss; cache read on hit (no HTTP). Cache TTL = 7 days (matching all other `jr` caches).
+**Errors**: Cache write failure is non-fatal (logged to stderr as hint; does not abort the command). Cache corruption is non-fatal (treated as miss).
+**Stale-cache window**: Up to 7 days. If a Jira admin renames a request type or modifies its required fields, users will see stale data for up to 7 days. No `--refresh` or `--no-cache` flag is provided in this delta (deferred). Recovery path: users may force a refresh by deleting `~/.cache/jr/v1/<profile>/request_types_<service_desk_id>.json` manually. Cache miss on `partial_match::None` does NOT auto-retry with cache-bypass; the error message MUST hint at manual cache deletion: 'Request type "<NAME>" not found. Run `jr requesttype list` to see current types, or delete the cache file at ~/.cache/jr/v1/<profile>/request_types_<service_desk_id>.json if a recent admin change is suspected.'
+**Fields cache note**: BC-X.12.005 (fields) is cached under the same pattern but per-request-type: `v1/<profile>/request_type_fields_<service_desk_id>_<request_type_id>.json` (7d TTL, same recovery hint applies).
+**Trace**: `tests/requesttype_commands.rs` (cache hit: second call fires no HTTP); `src/cache.rs` (RequestTypeCache struct); `src/api/jsm/request_types.rs`
+**Source**: Follows `teams.json` cache pattern; 7-day TTL matches all other caches in `src/cache.rs`
+**Confidence**: HIGH
 
 ---
 

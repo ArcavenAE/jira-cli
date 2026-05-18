@@ -95,15 +95,28 @@ Added 2026-05-08 from S-3.07 v2.0.0 design verification
 
 ---
 
+---
+
+## ISSUE #288 RISKS — JSM Request Type Support (2)
+
+Added 2026-05-18 from F1 delta-analysis-288.md and F2 architecture delta.
+
+| # | Risk | Severity | Source Story | Phase 4 Action |
+|---|------|----------|-------------|----------------|
+| **R-H288-1** | **Developer Console scope coordination:** `write:servicedesk-request` added to `DEFAULT_OAUTH_SCOPES` in code may not be registered in the Atlassian Developer Console for the `jr` embedded OAuth app before release. If the console registration lags, every new OAuth login and refresh will fail with `invalid_scope` for all users — not just JSM users. CI cannot detect this mismatch; the pinning test `default_oauth_scopes_pins_the_full_set_with_offline_access` catches code-side drift only. Manual staging validation is required before merge to `develop`. | HIGH | S-288-C | FIX-BEFORE-MERGE: Register `write:servicedesk-request` in Atlassian Developer Console for the embedded `jr` OAuth app; validate with `jr auth login --oauth` in staging before S-288-D merges to `develop`. Add PR checklist item. |
+| **R-M288-1** | **`--request-type` dispatch fork regression on platform path:** `handle_create` is already 1,601 LOC. The new `--request-type` branch must not alter the code path for calls that omit `--request-type`. Any accidental early-return, moved variable binding, or changed default for existing flags would silently break the platform path. Existing integration tests (`tests/issue_create_json.rs`, `tests/issue_commands.rs`, `tests/issue_write_holdouts.rs`) are the regression guards. | MEDIUM | S-288-D | FIX-IN-PHASE-4: Implement dispatch fork as a late-binding branch (after all shared resolution completes); run full integration test suite before opening PR; do not modify existing tests to make them pass. |
+
+---
+
 ## Risk Summary
 
 | Severity | Count | Top action |
 |----------|------:|-----------|
 | CRITICAL | 1 | FIX-IN-PHASE-3 (NFR-R-D multi-profile fields) |
-| HIGH | 6 | 5× FIX-IN-PHASE-3, 1× SECURITY-DECIDE |
-| MEDIUM | 10 | 4× DEFER, 1× DOCUMENT-AS-IS, 1× FIX-IN-PHASE-3, 2× SECURITY-DECIDE, 2× S-3.03 auto-refresh (R-M3 merged into R-L11 at Pass 8) |
+| HIGH | 7 | 5× FIX-IN-PHASE-3, 1× SECURITY-DECIDE, 1× FIX-BEFORE-MERGE (#288 scope coordination) |
+| MEDIUM | 11 | 4× DEFER, 1× DOCUMENT-AS-IS, 1× FIX-IN-PHASE-3, 2× SECURITY-DECIDE, 2× S-3.03 auto-refresh, 1× FIX-IN-PHASE-4 (#288 dispatch fork) |
 | LOW | 17 | 10× DOCUMENT-AS-IS/FIX-IN-PHASE-3, 2× DEFER, 1× POLICY-DECISION, 3× S-3.03 auto-refresh (R-L12 + R-L13 added at CV-003), 1× S-3.07 anti-loop (R-NEW-S307-1) |
-| **Total** | **34** | |
+| **Total** | **36** | |
 
 ---
 
