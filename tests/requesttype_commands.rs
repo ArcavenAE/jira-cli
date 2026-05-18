@@ -587,7 +587,7 @@ async fn test_requesttype_fields_resolves_name_and_returns_table() {
         "BC-X.12.005: Field Name column must contain the `name` field value, got: {stdout}"
     );
     assert!(
-        !stdout.contains("\nsummary"),
+        !stdout.contains("│ summary"),
         "BC-X.12.005: field_id (`summary`) must not leak into Field Name column; got: {stdout}"
     );
     // M-4: BC-X.12.005: columns MUST be exactly Field Name, Required, Type (verbatim headers).
@@ -1399,10 +1399,17 @@ async fn test_requesttype_fields_numeric_id_bypasses_list_resolution() {
         "BC-X.12.005: third column header must be 'Type'; got: {stdout}"
     );
 
-    // Assertion 3: at least one fixture field name must appear in the output.
+    // Assertion 3: both fixture field names must appear in the output.
+    // M-2 (adversary pass-07): split accept-either OR into separate asserts
+    // per L-288-pr1-01. Fixture emits BOTH; impl iterates all fields; a
+    // regression dropping one row must fail.
     assert!(
-        stdout.contains("What do you need?") || stdout.contains("Nominee"),
-        "Expected at least one fixture field name in stdout table; got: {stdout}"
+        stdout.contains("What do you need?"),
+        "BC-X.12.005: required-field name 'What do you need?' must appear; got: {stdout}"
+    );
+    assert!(
+        stdout.contains("Nominee"),
+        "BC-X.12.005: optional-field name 'Nominee' must appear; got: {stdout}"
     );
 
     // Assertion 4: the .expect(0) on the list mock is enforced implicitly by
@@ -1475,5 +1482,56 @@ async fn test_requesttype_list_uses_profile_project_when_no_flag() {
         2,
         "Expected 2 request types (HELP project used from profile), got {}",
         arr.len()
+    );
+}
+
+/// AC-011 (negative path) + S-288-pr2: when no `--project` flag is given
+/// AND the active profile has no `project` field, `jr requesttype list`
+/// exits 64 with an actionable hint pointing to `jr init` and `--project`.
+/// Regression guard for the `config.project_key(project_override).ok_or_else(...)`
+/// short-circuit in `cli/requesttype.rs:27-33`. No HTTP mocks — the error
+/// fires before any network call.
+#[test]
+fn test_requesttype_list_errors_when_no_project_flag_or_profile_project() {
+    let config_dir = tempfile::tempdir().unwrap();
+    let cache_dir = tempfile::tempdir().unwrap();
+
+    // Write a config with a profile but NO `project` field.
+    let dir = config_dir.path().join("jr");
+    std::fs::create_dir_all(&dir).unwrap();
+    std::fs::write(
+        dir.join("config.toml"),
+        r#"default_profile = "default"
+[profiles.default]
+url = "https://example.atlassian.net"
+auth_method = "api_token"
+"#,
+    )
+    .unwrap();
+
+    let output = Command::cargo_bin("jr")
+        .unwrap()
+        .env("XDG_CONFIG_HOME", config_dir.path())
+        .env("XDG_CACHE_HOME", cache_dir.path())
+        .env("JR_AUTH_HEADER", "Basic dGVzdDp0ZXN0")
+        .args(["requesttype", "list", "--no-input"])
+        .output()
+        .unwrap();
+
+    let stderr = String::from_utf8_lossy(&output.stderr);
+
+    assert_eq!(
+        output.status.code(),
+        Some(64),
+        "Expected exit 64 (no project configured), got {:?}. stderr: {stderr}",
+        output.status.code()
+    );
+    assert!(
+        stderr.contains("No project configured"),
+        "Expected 'No project configured' in stderr; got: {stderr}"
+    );
+    assert!(
+        stderr.contains("Run \"jr init\" or pass --project"),
+        "Expected 'Run \"jr init\" or pass --project' actionable hint; got: {stderr}"
     );
 }
