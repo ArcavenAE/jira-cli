@@ -1292,6 +1292,97 @@ async fn test_requesttype_fields_cache_hit_no_second_http() {
     // MockServer drops — if the endpoint was called twice, the test panics here.
 }
 
+// ─── M-2: numeric-bypass path skips list endpoint ───────────────────────────
+
+/// M-2 (adversary pass-04) + BC-X.12.005/BC-X.12.006: when `<NAME|ID>` is all
+/// ASCII digits, the handler treats it as a numeric request type ID and skips
+/// `partial_match` resolution + the list endpoint call. Regression guard for
+/// any mutation that breaks the `name_or_id.chars().all(is_ascii_digit)`
+/// short-circuit in `resolve_request_type_id` (cli/requesttype.rs).
+#[tokio::test]
+async fn test_requesttype_fields_numeric_id_bypasses_list_resolution() {
+    let server = MockServer::start().await;
+    let cache_dir = tempfile::tempdir().unwrap();
+    let config_dir = tempfile::tempdir().unwrap();
+    write_minimal_config(config_dir.path(), &server.uri());
+
+    mount_project_meta_help(&server).await;
+    mount_service_desk_list(&server).await;
+
+    // Fields endpoint at the numeric path — must fire exactly once.
+    // The numeric argument "11002" is routed directly here without going through the
+    // request types list endpoint.
+    Mock::given(method("GET"))
+        .and(path(
+            "/rest/servicedeskapi/servicedesk/10/requesttype/11002/field",
+        ))
+        .respond_with(ResponseTemplate::new(200).set_body_json(fields_response_body()))
+        .expect(1)
+        .mount(&server)
+        .await;
+
+    // List endpoint must NEVER be called — numeric bypass skips resolution.
+    // wiremock panics on server drop if this mock is matched even once.
+    Mock::given(method("GET"))
+        .and(path("/rest/servicedeskapi/servicedesk/10/requesttype"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(two_request_types_body()))
+        .expect(0)
+        .mount(&server)
+        .await;
+
+    let output = Command::cargo_bin("jr")
+        .unwrap()
+        .env("JR_BASE_URL", server.uri())
+        .env("JR_AUTH_HEADER", "Basic dGVzdDp0ZXN0")
+        .env("XDG_CACHE_HOME", cache_dir.path())
+        .env("XDG_CONFIG_HOME", config_dir.path())
+        .args([
+            "requesttype",
+            "fields",
+            "11002",
+            "--project",
+            "HELP",
+            "--no-input",
+        ])
+        .output()
+        .unwrap();
+
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    let stderr = String::from_utf8_lossy(&output.stderr);
+
+    // Assertion 1: exit 0.
+    assert!(
+        output.status.success(),
+        "Expected exit 0 for numeric ID bypass, got {:?}. stderr: {stderr}",
+        output.status.code()
+    );
+
+    // Assertion 2: BC-X.12.005 column headers must appear in the table.
+    assert!(
+        stdout.contains("Field Name"),
+        "BC-X.12.005: first column header must be 'Field Name'; got: {stdout}"
+    );
+    assert!(
+        stdout.contains("Required"),
+        "BC-X.12.005: second column header must be 'Required'; got: {stdout}"
+    );
+    assert!(
+        stdout.contains("Type"),
+        "BC-X.12.005: third column header must be 'Type'; got: {stdout}"
+    );
+
+    // Assertion 3: at least one fixture field name must appear in the output.
+    assert!(
+        stdout.contains("What do you need?") || stdout.contains("Nominee"),
+        "Expected at least one fixture field name in stdout table; got: {stdout}"
+    );
+
+    // Assertion 4: the .expect(0) on the list mock is enforced implicitly by
+    // wiremock on server drop — if the list endpoint was called, the test panics
+    // here with an unmet expectation. This is the regression guard for mutations
+    // that break the `chars().all(is_ascii_digit)` predicate in requesttype.rs.
+}
+
 // ─── AC-011: uses profile project when no --project flag ─────────────────────
 
 /// AC-011: When no `--project` flag is given but the active profile has a project
