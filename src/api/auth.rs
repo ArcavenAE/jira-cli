@@ -58,7 +58,7 @@ fn oauth_refresh_key(profile: &str) -> String {
 // no double spaces appear.
 pub const DEFAULT_OAUTH_SCOPES: &str = concat!(
     "read:jira-work write:jira-work read:jira-user ",
-    "read:servicedesk-request ",
+    "read:servicedesk-request write:servicedesk-request ",
     "read:cmdb-object:jira read:cmdb-schema:jira ",
     "offline_access",
 );
