@@ -192,3 +192,9 @@ open.
 - [2026-05-19] Created — F1 consolidated from impact-boundary.md (architect) +
   affected-artifacts.md (business-analyst). Status: approved. No adversarial passes
   conducted yet (simple mechanical mirror; pre-F2 validation is the next gate).
+
+---
+
+## Post-F2 reconciliation [2026-05-19]
+
+F1 estimated `bc-3 definitional_count: 59 → 61` (+2). Actual landed at `59 → 62` (+3) because BC-3.8.011 was added by issue #288 F1d pass-01 (which closed between this F1 analysis and the F2 spec evolution). The +1 from BC-3.8.011 is unrelated to issue #383 scope; the +2 from BC-3.8.012/013 matches the F1 plan.

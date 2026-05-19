@@ -1,8 +1,8 @@
 ---
 context: bc-3
 title: "Issue Write (create/edit/move/assign/comment/link/open/remote-link)"
-total_bcs: 89   # cumulative claim (incl. range-collapsed); definitional_count below is individually-bodied headings
-definitional_count: 60   # count of `#### BC-` headings in this file
+total_bcs: 91   # cumulative claim (incl. range-collapsed); definitional_count below is individually-bodied headings
+definitional_count: 62   # count of `#### BC-` headings in this file
 last_updated: 2026-05-19
 source_pass: 3
 trace: |
@@ -13,13 +13,18 @@ trace: |
   - F2 addition (2026-05-18): BC-3.8.001..010 — JSM request submission (issue #288 F2 added 001..009; F1d pass-01 added BC-3.8.010 to close --type interaction)
   - F1d addition (2026-05-18): BC-3.8.010 — --type ignored with warning when --request-type is set (issue #288 adversary pass-01)
   - F1d addition (2026-05-19): BC-3.8.011 — platform-only flags emit stderr warnings on JSM path (issue #288 adversary-pass-01 C-02); H-01 BC-3.8.003 verb aligned "Use"→"Run"
+  - F2 addition (2026-05-19): BC-3.8.012..013 — inverse warning symmetry: --field and --on-behalf-of silent-drop on platform path (issue #383)
 ---
 
 # BC-3 — Issue Write
 
-89 behavioral contracts across 8 subdomains: Assign (3.1), Move/Transition (3.2),
+91 behavioral contracts across 8 subdomains: Assign (3.1), Move/Transition (3.2),
 Create (3.3), Edit+Open (3.4), Comment (3.5), Links (3.6), Remote links (3.7),
-JSM Request Create (3.8).
+JSM Request Create + Platform-Path Inverse Warnings (3.8).
+
+Note: subdomain 3.8 currently uses `## BC-3.8:` heading depth while subdomains
+3.1..3.7 use `### 3.N <name>`. Heading-depth harmonization is deferred to a future
+cleanup (see followup-tracking: MEDIUM #1 from issue #383 F2 adversary pass-05).
 
 ---
 
@@ -231,7 +236,7 @@ JSM Request Create (3.8).
 **Subject**: Issue write
 **Behavior**: Body includes summary, project, issuetype, optional priority, labels, description (ADF), team UUID, story points. Output JSON: `{"key": "FOO-123"}`.
 
-> **[UPDATED 2026-05-18 issue #288]** The platform endpoint behavior described above applies ONLY when `--request-type` is absent. When `--request-type` is present, dispatch is to `POST /rest/servicedeskapi/request` instead (see BC-3.8.001). The core platform-create contract is otherwise unchanged — the existing platform path is unmodified in behavior.
+> **[UPDATED 2026-05-18 issue #288; amended 2026-05-19 issue #383]** The platform endpoint behavior described above applies ONLY when `--request-type` is absent. When `--request-type` is present, dispatch is to `POST /rest/servicedeskapi/request` instead (see BC-3.8.001). The POST body, JSON response, and exit code on the platform path are unchanged by these additions; however, when `--field` or `--on-behalf-of` are supplied without `--request-type`, the platform path now emits stderr warnings (see BC-3.8.012, BC-3.8.013) — so the platform path is not fully unmodified in observable behavior post-#383.
 > **Previous (pre-#288):** This BC stated unconditionally that `issue create` always POSTs to `/rest/api/3/issue`. After #288 that invariant becomes conditional: platform endpoint when `--request-type` absent; JSM endpoint when `--request-type` present.
 
 **Trace**: Pass 3 BC-211
@@ -543,15 +548,20 @@ existing wall-clock bound and `"deadline"` substring assertions.
 
 ---
 
-## BC-3.8: JSM Request Submission
+## BC-3.8: JSM Request Create + Platform-Path Inverse Warnings
 
-11 behavioral contracts covering `jr issue create --request-type` dispatch to the JSM service desk API.
-All BCs in this section require the `--request-type` flag to be set; the platform path (BC-3.3.001) is
-entirely unchanged when `--request-type` is absent.
+13 behavioral contracts covering: (a) `jr issue create --request-type` dispatch to the JSM service desk API
+(BC-3.8.001..009), (b) forward-direction cross-flag warnings when platform-only flags are passed alongside
+`--request-type` (BC-3.8.010..011), and (c) inverse-direction cross-flag warnings when JSM-only flags are
+passed on the platform path (BC-3.8.012..013).
+BCs 001..011 require `--request-type` to be set. The platform path (BC-3.3.001) — its POST body,
+JSON response, and exit code — is unchanged when `--request-type` is absent. BCs 012..013 add
+inverse-direction stderr warnings on the platform path (when `--field` / `--on-behalf-of` are
+passed without `--request-type`) without altering POST behavior, response, or exit code.
 
 ---
 
-#### BC-3.8.001: `issue create --request-type <NAME|ID>` dispatches to `POST /rest/servicedeskapi/request`; platform path unchanged when flag absent
+#### BC-3.8.001: `issue create --request-type <NAME|ID>` dispatches to `POST /rest/servicedeskapi/request`; platform POST body, JSON response, and exit code unchanged when `--request-type` absent
 
 **Confidence**: HIGH
 **Subject**: Issue write (JSM path)
@@ -730,6 +740,118 @@ the JSM dispatch path.
 
 ---
 
+#### BC-3.8.012: `--field` on platform path emits stderr warning (idempotent per flag NAME)
+
+**Confidence**: HIGH
+**Subject**: Issue write (platform path cross-flag interaction)
+**Behavior**: When `jr issue create` is invoked WITHOUT `--request-type` but WITH one or
+more `--field NAME=VALUE` flags, the handler MUST emit ONE warning line to stderr
+(NOT stdout, NOT in `--output json` data) BEFORE the platform POST is issued. The
+warning fires ONCE per logical flag NAME — mirroring BC-3.8.011's idempotent semantic.
+Passing `--field` multiple times (e.g., `--field A=1 --field A=2`, or
+`--field A=1 --field B=2`) emits exactly one warning total; the warning is per-flag-NAME
+(`--field`), not per-NAME-VALUE pair. The platform path then runs to completion as if
+`--field` was not supplied. Exit code is unchanged (0 on success). Stdout output
+(e.g., `{"key": "FOO-123"}`) is unchanged.
+
+Verbatim warning string (emitted once, regardless of how many `--field` occurrences):
+`"warning: --field is ignored on the platform create path; it only applies with --request-type (JSM service-desk requests). To pass custom fields to a JSM request type, also supply --request-type."`
+
+Inverse symmetry to BC-3.8.008: `--field` is accepted and meaningful on the JSM path
+(maps to `requestFieldValues`); on the platform path it has no effect and MUST warn.
+The warning fires regardless of `--no-input` or `--output json` settings. If the command
+early-exits before the POST (e.g., missing required field), the warning need not fire.
+
+When `--field` is absent (clap default: empty Vec), NO warning is emitted — i.e., the
+stderr stream from a plain platform-path invocation is byte-identical to pre-issue-#383
+behavior.
+
+Platform path does NOT parse `--field NAME=VALUE` strings (only detects presence of
+the flag). A malformed `--field` (e.g., `--field bare-name-no-equals`) on the platform
+path still triggers the one warning and is then discarded; no exit-64 error fires.
+Format validation per BC-3.8.008 applies only on the JSM path.
+
+Cross-reference: BC-3.8.012 and BC-3.8.013 fire independently when both `--field` and
+`--on-behalf-of` are present without `--request-type`; both warnings appear on stderr
+(each collapsed per its own idempotency rule).
+
+**Inputs**: `--field NAME=VALUE` (one or more) WITHOUT `--request-type`
+**Outputs/Effects**: ONE stderr warning line (regardless of how many `--field` flags);
+platform POST proceeds normally with the `--field` values discarded; stdout and exit
+code unchanged.
+**Errors**: None — this is a warning path, not an error path.
+**Trace**: `tests/issue_create_jsm.rs` (integration tests covering platform-path inverse-warning
+for `--field`). Test placement: current Trace cites the existing JSM test file; F3
+story-writer may choose to (a) keep tests in `issue_create_jsm.rs` (extending the file's
+scope) or (b) split into a new test file for cleaner perimeter. That decision is deferred
+to F3.
+**Source**: Issue #383 F1 delta analysis; structurally mirrors BC-3.8.010 (Inputs/Outputs
+sub-fields), semantically mirrors BC-3.8.011 (warn-and-continue pattern, idempotent per
+logical flag NAME); inverse symmetry to BC-3.8.008 / BC-3.8.009. Note: wording expanded
+from F1 proposal (`"warning: --field is ignored without --request-type; use --request-type
+to submit a JSM request with custom fields"`) to clarify the "platform create path" vs JSM
+dispatch distinction explicitly, per F2 review.
+**Confidence**: HIGH
+
+[NEW 2026-05-19 issue #383 F2] Added to close the platform-path inverse-warning symmetry
+gap identified in F1 delta analysis: `--field` is silently dropped on platform path with
+no user feedback.
+
+---
+
+#### BC-3.8.013: `--on-behalf-of` on platform path emits stderr warning
+
+**Confidence**: HIGH
+**Subject**: Issue write (platform path cross-flag interaction)
+**Behavior**: When `jr issue create` is invoked WITHOUT `--request-type` but WITH
+`--on-behalf-of <ACCOUNT_ID>`, the handler MUST emit ONE warning line to stderr
+(NOT stdout, NOT in `--output json` data) BEFORE the platform POST is issued. The
+platform path then runs to completion as if `--on-behalf-of` was not supplied. Exit
+code is unchanged (0 on success). Stdout output (e.g., `{"key": "FOO-123"}`) is
+unchanged. Because `--on-behalf-of` is `Option<String>` and can only appear once on
+the command line, idempotency does not alter the observable behavior — one occurrence
+emits one warning, matching BC-3.8.011's per-logical-flag-NAME rule.
+
+Verbatim warning string:
+`"warning: --on-behalf-of is ignored on the platform create path; it only applies with --request-type (JSM service-desk requests). To raise a request on behalf of another user, also supply --request-type."`
+
+Inverse symmetry to BC-3.8.009: `--on-behalf-of` is accepted and meaningful on the
+JSM path (maps to `raiseOnBehalfOf`); on the platform path it has no effect and MUST
+warn. The warning fires regardless of `--no-input` or `--output json` settings. If the
+command early-exits before the POST (e.g., missing required field), the warning need
+not fire.
+
+When `--on-behalf-of` is absent (clap default: None), NO warning is emitted — i.e.,
+the stderr stream from a plain platform-path invocation is byte-identical to
+pre-issue-#383 behavior.
+
+Cross-reference: BC-3.8.012 and BC-3.8.013 fire independently when both `--field` and
+`--on-behalf-of` are present without `--request-type`; both warnings appear on stderr
+(each collapsed per its own idempotency rule).
+
+**Inputs**: `--on-behalf-of <ACCOUNT_ID>` WITHOUT `--request-type`
+**Outputs/Effects**: ONE stderr warning line; platform POST proceeds normally with
+`--on-behalf-of` discarded; stdout and exit code unchanged.
+**Errors**: None — this is a warning path, not an error path.
+**Trace**: `tests/issue_create_jsm.rs` (integration tests covering platform-path inverse-warning
+for `--on-behalf-of`). Test placement: current Trace cites the existing JSM test file;
+F3 story-writer may choose to (a) keep tests in `issue_create_jsm.rs` (extending the
+file's scope) or (b) split into a new test file for cleaner perimeter. That decision is
+deferred to F3.
+**Source**: Issue #383 F1 delta analysis; structurally mirrors BC-3.8.010 (Inputs/Outputs
+sub-fields), semantically mirrors BC-3.8.011 (warn-and-continue pattern, idempotent per
+logical flag NAME); inverse symmetry to BC-3.8.008 / BC-3.8.009. Note: wording expanded
+from F1 proposal (`"warning: --on-behalf-of is ignored without --request-type; use
+--request-type to submit a JSM request on behalf of another user"`) to clarify the
+"platform create path" vs JSM dispatch distinction explicitly, per F2 review.
+**Confidence**: HIGH
+
+[NEW 2026-05-19 issue #383 F2] Added to close the platform-path inverse-warning symmetry
+gap identified in F1 delta analysis: `--on-behalf-of` is silently dropped on platform
+path with no user feedback.
+
+---
+
 ## JSON Output Shape Contracts (all confirmed by insta snapshots)
 
 | Operation | JSON shape | Key field note |
@@ -747,6 +869,6 @@ the JSM dispatch path.
 
 Sources: `src/cli/issue/snapshots/jr__cli__issue__json_output__tests__*.snap`; BC-1104..BC-1112 (R4)
 
-## Total BCs in this file: 59 individually-bodied (cumulative 88 incl. range-collapsed; see BC-INDEX.md)
+## Total BCs in this file: 62 individually-bodied (cumulative 91 incl. range-collapsed; see BC-INDEX.md)
 
-_Last updated 2026-05-18: +10 BCs total (BC-3.8.001..010, issue #288): 9 added in F2 delta; 1 added in F1d adversary pass-01 to close the `--type` interaction risk. BC-3.3.001 modified to add conditional routing clause. BC-3.8.002 Errors updated (call-site-specific message); BC-3.8.007 Confidence HIGH + labels wire shape hardened + priority JSDSERVER-4564 caveat; BC-3.8.009 regex removed (pass-through behavior); BC-3.8 section header range updated to 001..010._
+_Last updated 2026-05-19: +3 BCs (BC-3.8.011..013): BC-3.8.011 added in F1d adversary-pass-01 (issue #288 C-02); BC-3.8.012..013 added in F2 delta (issue #383) to close platform-path inverse-warning symmetry gap. BC-3.8 section header range updated to 001..013._

@@ -36,8 +36,8 @@ activation_version: "v0.5.0-dev.7"
 | **Language** | Rust |
 | **Target Workspace** | develop → main |
 | **Started** | 2026-05-04 |
-| **Last Updated** | 2026-05-19 — Issue #383 F1 COMPLETE. Pre-F2 validation pending. |
-| **Current Phase** | Phase 3 — TDD Implementation **IN PROGRESS** — Wave 3 CLOSED (10/10). Feature Mode #110-pr2 COMPLETE. PRs #355–#364, #366–#367, #369–#373 MERGED. **0 audit-followups remain** (#331 sandbox-blocked deferred; #333 closed by PR #360; #340 closed by PR #370; #345 closed by PR #371; #346 closed by PR #373; #350 closed by PR #362; #361 closed by PR #364; #365 closed by PR #367; PG-365-1 closed by PR #369). No active cycle. **#383 F1 → pre-F2 validation pending.** |
+| **Last Updated** | 2026-05-19 — Issue #383 F2 CONVERGED (11 adversary passes). F3 dispatch pending. |
+| **Current Phase** | Phase 3 — TDD Implementation **IN PROGRESS** — Wave 3 CLOSED (10/10). Feature Mode #110-pr2 COMPLETE. PRs #355–#364, #366–#367, #369–#373 MERGED. **0 audit-followups remain** (#331 sandbox-blocked deferred; #333 closed by PR #360; #340 closed by PR #370; #345 closed by PR #371; #346 closed by PR #373; #350 closed by PR #362; #361 closed by PR #364; #365 closed by PR #367; PG-365-1 closed by PR #369). No active cycle. **#383 F2 CONVERGED → F3 story decomposition pending.** |
 | **Next Phase** | Wave 3 — 10 stories (S-3.01..S-3.10) |
 | **Activation HEAD** | dea166471e22eff55974d7675593469b37048c5f (v0.5.0-dev.7) |
 | **factory-artifacts SHA** | 0b01262 (Phase 1 gate APPROVE; phase-1-converged tag) |

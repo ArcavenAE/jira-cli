@@ -1,13 +1,13 @@
 ---
 context: bc-index
 title: "BC Master Index"
-total_bcs: 566  # cumulative claim (incl. range-collapsed) — see preamble below; +4 added 2026-05-08 (BC-7.4.013-016, Fix-PR A); +1 added 2026-05-13 (BC-2.6.050, issue #350); +1 added 2026-05-14 (BC-2.6.051, issue #365); +1 added 2026-05-15 (BC-3.4.009, issue #340 F2); +18 added 2026-05-18 (BC-3.8.001..010 + BC-X.12.001..008, issue #288 F2+F1d); BC-1.3.023, BC-3.3.001, BC-X.8.004 modified
-last_updated: 2026-05-18
+total_bcs: 569  # cumulative claim (incl. range-collapsed) — see preamble below; +4 added 2026-05-08 (BC-7.4.013-016, Fix-PR A); +1 added 2026-05-13 (BC-2.6.050, issue #350); +1 added 2026-05-14 (BC-2.6.051, issue #365); +1 added 2026-05-15 (BC-3.4.009, issue #340 F2); +18 added 2026-05-18 (BC-3.8.001..010 + BC-X.12.001..008, issue #288 F2+F1d); +3 added 2026-05-19 (BC-3.8.011..013, issue #288 F1d + issue #383 F2); BC-1.3.023, BC-3.3.001, BC-X.8.004 modified
+last_updated: 2026-05-19
 source_pass: 3
 sections:
   - bc-1-auth-identity.md (57 BCs cumulative; 46 individually-bodied)
   - bc-2-issue-read.md (93 BCs cumulative; 51 individually-bodied)
-  - bc-3-issue-write.md (88 BCs cumulative; 59 individually-bodied)
+  - bc-3-issue-write.md (91 BCs cumulative; 62 individually-bodied)
   - bc-4-assets-cmdb.md (32 BCs cumulative; 22 individually-bodied)
   - bc-5-boards-sprints.md (35 BCs cumulative; 17 individually-bodied)
   - bc-6-config-cache.md (39 BCs cumulative; 29 individually-bodied)
@@ -212,7 +212,7 @@ R1/R4 prefix = deepening round that introduced it.
 
 ---
 
-## Section 3: Issue Write (bc-3-issue-write.md) — 88 BCs cumulative; 59 individually-bodied
+## Section 3: Issue Write (bc-3-issue-write.md) — 91 BCs cumulative; 62 individually-bodied
 
 ### 3.1 Assign (9 BCs: BC-3.1.001..009)
 
@@ -249,7 +249,7 @@ R1/R4 prefix = deepening round that introduced it.
 
 | L3 BC ID | Summary | Pass 3 BC ID | Source | Confidence |
 |---|---|---|---|---|
-| BC-3.3.001 | `issue create` POSTs `/rest/api/3/issue` returning `{"key": "FOO-123"}` (platform path; when `--request-type` absent — see BC-3.8.001) [UPDATED 2026-05-18 issue #288] | BC-211 | tests/issue_create_json.rs | HIGH |
+| BC-3.3.001 | `issue create` POSTs `/rest/api/3/issue` returning `{"key": "FOO-123"}` (platform path; when `--request-type` absent — see BC-3.8.001) [UPDATED 2026-05-18 issue #288; amended 2026-05-19 issue #383 (stderr now carries BC-3.8.012/013 warnings on platform path)] | BC-211 | tests/issue_create_json.rs | HIGH |
 | BC-3.3.002 | `issue create` with assignee — uses `search_assignable_users_by_project` (multiProjectSearch) | BC-1064 (R4) | tests/issue_commands.rs:1024-1082 | HIGH |
 | BC-3.3.003 | `issue create --to me` uses `get_myself()` (no search HTTP) | BC-1065 (R4) | tests/issue_commands.rs:1084-1127 | HIGH |
 | BC-3.3.004 | `issue create` WITHOUT assignee — body has `{project, issuetype, summary}` ONLY (no assignee key) | BC-1066 (R4) | tests/issue_commands.rs:1129-1154 | HIGH |
@@ -298,11 +298,11 @@ R1/R4 prefix = deepening round that introduced it.
 | BC-3.7.003 | `issue remote-link --url not-a-url` → exit 64 + `"--url"` + `"not a valid url"`; ZERO HTTP | BC-1130 (R4) | tests/issue_remote_link.rs:259-301 | HIGH |
 | BC-3.7.004 | `issue remote-link --url ftp://example.com` → exit 64 + `"http or https"` + `"ftp"` | BC-1131 (R4) | tests/issue_remote_link.rs:309-348 | HIGH |
 
-### 3.8 JSM Request Create (10 BCs: BC-3.8.001..010) [Added 2026-05-18 issue #288; BC-3.8.010 added F1d pass-01]
+### 3.8 JSM Request Create + Platform-Path Inverse Warnings (13 BCs: BC-3.8.001..013) [Added 2026-05-18 issue #288; BC-3.8.010 added F1d pass-01; BC-3.8.011 added F1d pass-01; BC-3.8.012..013 added 2026-05-19 issue #383 F2]
 
 | L3 BC ID | Summary | Pass 3 BC ID | Source | Confidence |
 |---|---|---|---|---|
-| BC-3.8.001 | `issue create --request-type <NAME\|ID>` dispatches to `POST /rest/servicedeskapi/request`; platform path unchanged when flag absent | — (issue #288 F2) | tests/issue_create_jsm.rs; src/cli/issue/create.rs | HIGH |
+| BC-3.8.001 | `issue create --request-type <NAME\|ID>` dispatches to `POST /rest/servicedeskapi/request`; platform POST body / JSON response / exit code unchanged when `--request-type` absent; stderr may carry BC-3.8.012/013 warnings | — (issue #288 F2) | tests/issue_create_jsm.rs; src/cli/issue/create.rs | HIGH |
 | BC-3.8.002 | JSM body uses `requestFieldValues` map; `serviceDeskId` resolved via `require_service_desk` from `--project`; non-JSM project error message is call-site-specific | — (issue #288 F2) | tests/issue_create_jsm.rs; src/api/jsm/servicedesks.rs | HIGH |
 | BC-3.8.003 | `--request-type <NAME>` resolved via partial-match (case-insensitive); errors clean on Ambiguous, ExactMultiple, None with `jr requesttype list` hint | — (issue #288 F2) | tests/issue_create_jsm.rs; src/partial_match.rs | HIGH |
 | BC-3.8.004 | `--request-type <ID>` (numeric string) bypasses name resolution | — (issue #288 F2) | tests/issue_create_jsm.rs | HIGH |
@@ -312,6 +312,9 @@ R1/R4 prefix = deepening round that introduced it.
 | BC-3.8.008 | `--field NAME=VALUE` (repeatable) maps to `requestFieldValues`; first `=` splits; `customfield_NNNNN` bypasses lookup; duplicate NAME last-wins | — (issue #288 F2) | tests/issue_create_jsm.rs | HIGH |
 | BC-3.8.009 | `--on-behalf-of <accountId>` maps to `raiseOnBehalfOf`; value passed through as-is (no client-side format validation); invalid accountIds rejected server-side | — (issue #288 F2; F1d: regex removed) | tests/issue_create_jsm.rs | HIGH |
 | BC-3.8.010 | `--type` is IGNORED with stderr warning when `--request-type` is set; request type encodes the issue type | — (issue #288 F1d pass-01) | tests/issue_create_jsm.rs | HIGH |
+| BC-3.8.011 | Platform-only flags (`--team`, `--points`, `--parent`, `--to`, `--account-id`) ignored on JSM path each emit one stderr warning; dispatch continues | — (issue #288 F1d pass-01 C-02) | tests/issue_create_jsm.rs | HIGH |
+| BC-3.8.012 | `--field` on platform path (without `--request-type`) emits one stderr warning (idempotent per flag NAME — one warning total regardless of occurrences); platform POST proceeds unchanged | — (issue #383 F2) | tests/issue_create_jsm.rs | HIGH |
+| BC-3.8.013 | `--on-behalf-of` on platform path (without `--request-type`) emits one stderr warning; platform POST proceeds unchanged | — (issue #383 F2) | tests/issue_create_jsm.rs | HIGH |
 
 ---
 
@@ -672,17 +675,17 @@ R1/R4 prefix = deepening round that introduced it.
 |---|---|---|
 | 1: Auth & Identity | 57 | 46 |
 | 2: Issue Read | 93 | 51 |
-| 3: Issue Write | 88 | 59 |
+| 3: Issue Write | 91 | 62 |
 | 4: Assets & CMDB | 32 | 22 |
 | 5: Boards & Sprints | 35 | 17 |
 | 6: Config & Cache | 39 | 29 |
 | 7: Output Rendering | 84 | 38 |
 | X: Cross-Cutting | 138 | 72 |
-| **Total** | **566** | **334** |
+| **Total** | **569** | **337** |
 
-**Note**: BC-X.4.009 (ADV-P1-029) is included in cross-cutting's `total_bcs` and in the sum above. Canonical total is **566** (+4 BC-7.4.013-016 added 2026-05-08 via Fix-PR A; +1 BC-2.6.050 added 2026-05-13 via issue #350; +1 BC-2.6.051 added 2026-05-14 via issue #365; +1 BC-3.4.009 added 2026-05-15 via issue #340 F2; +18 BC-3.8.001..010 + BC-X.12.001..008 added 2026-05-18 via issue #288 F2+F1d).
+**Note**: BC-X.4.009 (ADV-P1-029) is included in cross-cutting's `total_bcs` and in the sum above. Canonical total is **569** (+4 BC-7.4.013-016 added 2026-05-08 via Fix-PR A; +1 BC-2.6.050 added 2026-05-13 via issue #350; +1 BC-2.6.051 added 2026-05-14 via issue #365; +1 BC-3.4.009 added 2026-05-15 via issue #340 F2; +18 BC-3.8.001..010 + BC-X.12.001..008 added 2026-05-18 via issue #288 F2+F1d; +3 BC-3.8.011..013 added 2026-05-19 via issue #288 F1d + issue #383 F2).
 
-Cumulative total (566) ≠ individually-bodied count (334). The difference (232) comprises range-collapsed BCs that exist in the cumulative claim but are not individually headlined in body files. This is by design — range-collapsed BCs trace to Pass 3 source material but were not individually expanded. The 4 MUST-FIX BCs are included in the individually-bodied count.
+Cumulative total (569) ≠ individually-bodied count (337). The difference (232) comprises range-collapsed BCs that exist in the cumulative claim but are not individually headlined in body files. This is by design — range-collapsed BCs trace to Pass 3 source material but were not individually expanded. The 4 MUST-FIX BCs are included in the individually-bodied count.
 
 ---
 
