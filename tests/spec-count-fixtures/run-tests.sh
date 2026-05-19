@@ -31,13 +31,17 @@ SCRIPT="scripts/check-bc-cumulative-counts.sh"
 PASS=0
 FAIL=0
 
+# Total expected fixtures — updated here whenever a fixture directory is added/removed
+# (mirrors the run() call count below; kept as a single source of truth for the guard-absent message)
+TOTAL=7
+
 # Guard-absent check: fail clearly rather than with a cryptic bash error
 if [ ! -f "$SCRIPT" ]; then
   echo "ERROR: guard script not found at $SCRIPT"
   echo "       This is the expected Red Gate state — the guard has not been implemented yet."
   echo "       Run the fixture tests again after scripts/check-bc-cumulative-counts.sh is created."
   echo ""
-  echo "Results: 0 passed, 7 failed (guard absent)"
+  echo "Results: 0 passed, $TOTAL failed (guard absent)"
   exit 1
 fi
 
