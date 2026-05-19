@@ -1019,6 +1019,17 @@ async fn test_jsm_create_field_missing_equals_exits_64() {
     mount_service_desk_list(&server).await;
     mount_request_type_list(&server).await;
 
+    // M-02 (adversary pass-02-retry): regression guard — `--field nokvinthis`
+    // must exit 64 BEFORE the POST is attempted. A future refactor moving
+    // parse_field_kv after create_jsm_request would silently pass without
+    // this guard (exit-64 would still come from JSM 5xx fallback).
+    Mock::given(method("POST"))
+        .and(path("/rest/servicedeskapi/request"))
+        .respond_with(ResponseTemplate::new(201))
+        .expect(0)
+        .mount(&server)
+        .await;
+
     let output = Command::cargo_bin("jr")
         .unwrap()
         .env("JR_BASE_URL", server.uri())
@@ -2080,4 +2091,171 @@ async fn test_jsm_create_field_summary_overrides_summary_flag() {
         output.status.code()
     );
     // The .expect(1) on the body_partial_json mock enforces the override semantics on server drop.
+}
+
+// ─── M-03: --markdown + --description on JSM path produces ADF ───────────────
+
+/// M-03 (adversary pass-02-retry) + BC-3.8.006: `--markdown` with `--description`
+/// on JSM path produces an ADF document (`isAdfRequest: true`, description.type ==
+/// "doc"). Pins the markdown_to_adf path through JsmRequestBuilder::build()
+/// lines 94-104. Regression guard for any change that drops the markdown branch.
+///
+/// The body_partial_json matcher verifies `isAdfRequest: true` and that
+/// `requestFieldValues.description` is an ADF doc object. The POST body is also
+/// inspected via received_requests to assert at least one text node carries a
+/// "strong" mark (from the `**bold**` input), confirming markdown_to_adf ran.
+#[tokio::test]
+async fn test_jsm_create_markdown_description_yields_adf_with_strong_marks() {
+    let server = MockServer::start().await;
+    let cache_dir = tempfile::tempdir().unwrap();
+    let config_dir = tempfile::tempdir().unwrap();
+    write_minimal_config(config_dir.path(), &server.uri());
+
+    mount_project_meta_help(&server).await;
+    mount_service_desk_list(&server).await;
+    mount_request_types_password_reset(&server).await;
+
+    // Match: body has isAdfRequest: true AND description is an ADF doc object.
+    Mock::given(method("POST"))
+        .and(path("/rest/servicedeskapi/request"))
+        .and(body_partial_json(json!({
+            "isAdfRequest": true,
+            "requestFieldValues": {
+                "description": {
+                    "type": "doc",
+                    "version": 1
+                }
+            }
+        })))
+        .respond_with(ResponseTemplate::new(201).set_body_json(json!({"issueKey": "HELP-1"})))
+        .expect(1)
+        .mount(&server)
+        .await;
+
+    let output = Command::cargo_bin("jr")
+        .unwrap()
+        .env("JR_BASE_URL", server.uri())
+        .env("JR_AUTH_HEADER", "Basic dGVzdDp0ZXN0")
+        .env("XDG_CACHE_HOME", cache_dir.path())
+        .env("XDG_CONFIG_HOME", config_dir.path())
+        .args([
+            "issue",
+            "create",
+            "--project",
+            "HELP",
+            "--request-type",
+            "Password Reset",
+            "--summary",
+            "Reset",
+            "--description",
+            "**bold** text with `code`",
+            "--markdown",
+            "--no-input",
+        ])
+        .output()
+        .unwrap();
+
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(
+        output.status.success(),
+        "M-03 / BC-3.8.006: expected exit 0, got {:?}. stderr: {stderr}",
+        output.status.code()
+    );
+
+    // Inspect the actual POST body to verify markdown_to_adf produced a "strong" mark.
+    // This distinguishes markdown_to_adf (produces marks) from text_to_adf (plain text).
+    let requests = server.received_requests().await.expect("requests recorded");
+    let jsm_post = requests
+        .iter()
+        .find(|r| r.url.path() == "/rest/servicedeskapi/request" && r.method.as_str() == "POST")
+        .expect("M-03: JSM POST must have been made");
+
+    let body: Value =
+        serde_json::from_slice(&jsm_post.body).expect("M-03: POST body must be valid JSON");
+
+    let desc = body
+        .get("requestFieldValues")
+        .and_then(|rfv| rfv.get("description"))
+        .expect("M-03 / BC-3.8.006: requestFieldValues.description must be present");
+
+    // Walk content to find any text node with a "strong" mark — produced by **bold**.
+    fn has_strong_mark(node: &Value) -> bool {
+        if let Some(marks) = node.get("marks").and_then(Value::as_array) {
+            if marks
+                .iter()
+                .any(|m| m.get("type").and_then(Value::as_str) == Some("strong"))
+            {
+                return true;
+            }
+        }
+        if let Some(children) = node.get("content").and_then(Value::as_array) {
+            return children.iter().any(has_strong_mark);
+        }
+        false
+    }
+
+    assert!(
+        has_strong_mark(desc),
+        "M-03 / BC-3.8.006: description ADF must contain a node with mark type 'strong' \
+         (from **bold** input via markdown_to_adf); got description: {desc}"
+    );
+    // The .expect(1) on the body_partial_json mock enforces isAdfRequest + doc shape on server drop.
+}
+
+// ─── M-01 sanity: --markdown without --description exits 64 on JSM path ───────
+
+/// M-01 (adversary pass-02-retry) + platform-parity: `--markdown` without
+/// `--description` or `--description-stdin` on the JSM path errors with the
+/// same verbatim message as the platform path (mirrors lines 333-343 of
+/// handle_create). Regression guard for the validation block added in
+/// handle_jsm_create at b35bc1a.
+///
+/// No HTTP mocks are mounted — the validation fires before any HTTP is made.
+/// If a future refactor moves the validation after HTTP, the test will fail
+/// because wiremock has no matching mock (returns 404 → JSM error that does
+/// not contain the expected message).
+#[tokio::test]
+async fn test_jsm_create_markdown_without_description_exits_64_with_platform_message() {
+    let server = MockServer::start().await;
+    let cache_dir = tempfile::tempdir().unwrap();
+    let config_dir = tempfile::tempdir().unwrap();
+    write_minimal_config(config_dir.path(), &server.uri());
+
+    // No HTTP mocks mounted — the validation fires before any HTTP is made.
+    // If a future refactor moves the validation after HTTP, the test will
+    // fail because wiremock has no matching mock (returns 404 → JSM error).
+
+    let output = Command::cargo_bin("jr")
+        .unwrap()
+        .env("JR_BASE_URL", server.uri())
+        .env("JR_AUTH_HEADER", "Basic dGVzdDp0ZXN0")
+        .env("XDG_CACHE_HOME", cache_dir.path())
+        .env("XDG_CONFIG_HOME", config_dir.path())
+        .args([
+            "issue",
+            "create",
+            "--project",
+            "HELP",
+            "--request-type",
+            "Password Reset",
+            "--summary",
+            "Reset",
+            "--markdown", // No --description, no --description-stdin
+            "--no-input",
+        ])
+        .output()
+        .unwrap();
+
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert_eq!(
+        output.status.code(),
+        Some(64),
+        "M-01 / BC-3.8.006: expected exit 64 for --markdown without --description; stderr: {stderr}"
+    );
+    // Verbatim match against the platform path's error text (verify against
+    // create.rs lines 333-343 if this assertion drifts).
+    assert!(
+        stderr.contains("--markdown requires --description or --description-stdin to take effect"),
+        "M-01 / BC-3.8.006: expected platform-parity validation message; got: {stderr}"
+    );
 }
