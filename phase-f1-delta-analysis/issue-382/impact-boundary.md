@@ -55,23 +55,37 @@ Tests that assert specific text in `InsufficientScope`'s Display output:
 
 | # | File | Test Function | Line(s) | Pins `write:jira-work`? | Needs Update? |
 |---|------|---------------|---------|------------------------|---------------|
-| T-1 | `src/error.rs` | `insufficient_scope_display_includes_workarounds` | 170–186 | YES (line 180) | **YES** |
-| T-2 | `tests/api_client.rs` | `test_401_scope_mismatch_returns_insufficient_scope` | 100–144 | YES (line 136) | **YES** |
-| T-3 | `tests/oauth_flow_holdouts.rs` | `test_s_1_06_h_022_scope_mismatch_lowercase_dispatches_insufficient_scope` | 418–444 | No — pins `"Insufficient token scope"` only | No |
-| T-4 | `tests/oauth_flow_holdouts.rs` | `test_s_1_06_h_022_scope_mismatch_mixed_case_dispatches_insufficient_scope` | 450–479 | No — pins `"Insufficient token scope"` only | No |
-| T-5 | `tests/oauth_flow_holdouts.rs` | `test_s_1_06_h_022_non_scope_401_and_403_do_not_dispatch_insufficient_scope` | 486–557 | No — negation tests only | No |
-| T-6 | `tests/issue_create_jsm.rs` | `test_jsm_create_oauth_scope_mismatch_401_surfaces_write_servicedesk_request_hint` | 1522–1583 | No — pins `write:servicedesk-request` hint injected at C-3 | No |
-| T-7 | `tests/api_client.rs` | `test_401_without_scope_mismatch_falls_through_to_not_authenticated` | 146–181 | No — negation test | No |
-| T-8 | `tests/api_client.rs` | `test_401_scope_mismatch_matches_case_insensitively` | 183–216 | No — pins `"Insufficient token scope"` only | No |
-| T-9 | `tests/api_client.rs` | `test_non_401_with_scope_substring_does_not_dispatch_to_insufficient_scope` | 218–255 | No — negation test | No |
+| T-1 | `src/error.rs` | `insufficient_scope_exit_code` | 129–137 (construction at **131**) | No — only asserts `exit_code() == 2` | **YES** — needs `required_scope: None` when variant gains second field (option a) |
+| T-2 | `src/error.rs` | `insufficient_scope_display_includes_workarounds` | 170–186 (construction at **171**) | YES (line 180) | **YES** — assertion must be updated + `required_scope: None` needed |
+| T-3 | `tests/api_client.rs` | `test_401_scope_mismatch_returns_insufficient_scope` | 100–144 | YES (line 136) | **YES** — assertion at line 136 must be updated |
+| T-4 | `tests/oauth_flow_holdouts.rs` | `test_s_1_06_h_022_scope_mismatch_lowercase_dispatches_insufficient_scope` | 418–444 | No — pins `"Insufficient token scope"` only | No |
+| T-5 | `tests/oauth_flow_holdouts.rs` | `test_s_1_06_h_022_scope_mismatch_mixed_case_dispatches_insufficient_scope` | 450–479 | No — pins `"Insufficient token scope"` only | No |
+| T-6 | `tests/oauth_flow_holdouts.rs` | `test_s_1_06_h_022_non_scope_401_and_403_do_not_dispatch_insufficient_scope` | 486–557 | No — negation tests only | No |
+| T-7 | `tests/issue_create_jsm.rs` | `test_jsm_create_oauth_scope_mismatch_401_surfaces_write_servicedesk_request_hint` | 1522–1583 | No — pins `write:servicedesk-request` hint injected at C-3 | No |
+| T-8 | `tests/api_client.rs` | `test_401_without_scope_mismatch_falls_through_to_not_authenticated` | 146–181 | No — negation test | No |
+| T-9 | `tests/api_client.rs` | `test_401_scope_mismatch_matches_case_insensitively` | 183–216 | No — pins `"Insufficient token scope"` only | No |
+| T-10 | `tests/api_client.rs` | `test_non_401_with_scope_substring_does_not_dispatch_to_insufficient_scope` | 218–255 | No — negation test | No |
 
-Only T-1 and T-2 pin the `write:jira-work` literal and will need updating.
+T-1, T-2, and T-3 require updates. T-1 and T-2 are both construction sites in `src/error.rs` that need `required_scope: None` added when the variant signature widens under option (a): **2 test construction-call updates needed in `src/error.rs`** (lines 131 + 171), plus 1 Display assertion update in `tests/api_client.rs` (line 136).
 
 ---
 
 ## 5. External Dependencies / Re-exports
 
 `src/lib.rs` re-exports `pub mod error` (line 7), making `jr::error::JrError` visible to integration tests. The integration tests reference `JrError` by string-matching Display output, not by importing the type directly (no `use jr::error::JrError` found in test files). The variant's public `message: String` field is accessed only in `create.rs` (M-2). As long as the field name does not change, no integration test import paths break.
+
+---
+
+## 5b. Dependent Doc/Spec Surfaces (verify-only)
+
+These spec and doc files reference `InsufficientScope` behavior or BC-1.6.042. They are **verify-only** — no edits required under option (a) parameterization, but they must be checked after implementation to confirm they remain accurate.
+
+| File | Location | Reference | Verify Action |
+|------|----------|-----------|---------------|
+| `.factory/specs/prd/edge-case-catalog.md` | Line 78 | `Covered by BC-1.6.042; holdout H-012` | Confirm BC-1.6.042 coverage assertion remains accurate post-fix; no text change needed |
+| `.factory/specs/prd/BC-INDEX.md` | Line 122 | Source cell for BC-1.6.042 cites `tests/api_client.rs:99-144` | Confirm line reference remains accurate; no text change needed |
+| `.factory/specs/prd/holdout-scenarios.md` | Lines 138–145 | H-012 — `InsufficientScope` scope-mismatch holdout | Passes under option (a) design; verify-only |
+| `.factory/specs/prd/holdout-scenarios.md` | Lines 658–682 | H-NEW-JSM-RT-003 — JSM OAuth scope hint holdout | Passes under option (a) design; verify-only |
 
 ---
 
@@ -111,3 +125,11 @@ Option (a) is narrower, requires fewer changes, and directly addresses the issue
 | `tests/api_client.rs` | Update `test_401_scope_mismatch_returns_insufficient_scope` assertion at line 136 |
 
 All other files: no change.
+
+---
+
+## Change Log
+
+- [REVISED 2026-05-19 per F1d adversary-pass-01 F-01 + F-03]
+  - F-01: Added `src/error.rs:131` (`insufficient_scope_exit_code` test) as a second construction-site in the test sites table (T-1). Updated summary to state "2 test construction-call updates needed in `src/error.rs` (lines 131 + 171)". Prior version enumerated only line 171.
+  - F-03: Added section 5b "Dependent Doc/Spec Surfaces (verify-only)" enumerating `edge-case-catalog.md:78` (BC-1.6.042 reference), `BC-INDEX.md:122` (source cell), and `holdout-scenarios.md` lines 138–145 (H-012) and 658–682 (H-NEW-JSM-RT-003). All four entries are verify-only; no text changes to those files required under option (a).

@@ -91,7 +91,7 @@ Two important notes from the Atlassian docs:
 **Recommended construction-site mapping for F2:**
 
 - `client.rs:700` blanket-401 early-exit: pass `required_scope: None`. The dispatch happens BEFORE the call site is known to the central `send()` method; conservatively show the historical `write:jira-work` workaround. This preserves today's behavior for the platform-write path (covered by tests T-1 and T-2 in F1 impact report).
-- `client.rs:969` parse_error helper: same — pass `None`. Same reasoning: parse_error is endpoint-agnostic.
+- `client.rs:969` parse_error helper: same — pass `None`. `parse_error` has access to `response.url().path()` (signature `async fn parse_error(response: Response) -> anyhow::Error` at `src/api/client.rs:957`), but we choose not to thread endpoint inference for now — the path-based mapping is fragile (URL substring matching), maintenance-heavy (every new endpoint needs a lookup-table entry), and the `None`-fallback preserves existing behavior cheaply. See open-question (d) in `delta-analysis.md` for the explicit deferral.
 - `create.rs:1983` JSM re-wrap: pass `Some("write:servicedesk-request".to_string())`. C-3 already knows it's the JSM path and already enriches the message — the new field carries the same information into Display in a structured way.
 
 Future opportunity (out of scope for #382): if more call sites want to inject endpoint-specific hints, the same pattern (match arm on `JrError::InsufficientScope` to re-wrap with the correct `required_scope`) can be reused per call site without modifying `send()` / `parse_error()` — keeps the central client free of endpoint-knowledge.
@@ -147,10 +147,11 @@ Future opportunity (out of scope for #382): if more call sites want to inject en
 - **`tests/oauth_flow_holdouts.rs` AC-005 tests** (T-3, T-4, T-5 in F1 report) pin only `"Insufficient token scope"` prefix and negation properties — no `write:jira-work` literal. **No change needed.**
 - **`tests/issue_create_jsm.rs:1522` C-01 test** (T-6 in F1 report) pins `write:servicedesk-request`, `jr auth refresh`, `jr auth login`. Under Option (a), construction site C-3 passes `Some("write:servicedesk-request")`, Display includes that scope name, and the assertion passes. The C-3 site's existing enriched message (`format!("{message} (jr issue create --request-type requires the write:servicedesk-request OAuth scope. ...)")`) can remain unchanged — the new `required_scope` field provides Display-level reinforcement, not a replacement for the enriched message string. **No change needed unless F2 chooses to simplify by relying solely on `required_scope` (in which case T-6 still passes because the Display includes the scope name).**
 
-**Verdict:** **CONFIRMS** architect's recommendation, with one refinement. The two tests flagged in F1 (T-1 and T-2) do NOT both need assertion updates — only T-1 needs a construction-call update (adding the new `required_scope: None` field). T-2 is unaffected because it triggers the error through a mock HTTP response, not direct construction. The architect's F1 impact-boundary table line 23 (T-2 = "**MODIFIED** — assertion must be updated") **overstates** the required change. Under the recommended fallback design (`None` renders `"write:jira-work"`), T-2's assertion still passes byte-for-byte.
+**Verdict:** **CONFIRMS** architect's recommendation, with one refinement. The two tests flagged in F1 (T-1 and T-2) do NOT both need assertion updates — two construction-call updates are needed in `src/error.rs` tests module: line 131 (`insufficient_scope_exit_code`) and line 171 (`insufficient_scope_display_includes_workarounds`). Both add `required_scope: None`. T-2 (`tests/api_client.rs:100`) is unaffected because it triggers the error through a mock HTTP response, not direct construction. The architect's F1 impact-boundary table line 23 (T-2 = "**MODIFIED** — assertion must be updated") **overstates** the required change. Under the recommended fallback design (`None` renders `"write:jira-work"`), T-2's assertion still passes byte-for-byte.
 
 **Action if REFUTES/REFINES:** F2 should narrow the test-change scope to:
-- **T-1 (`src/error.rs:170`):** add `required_scope: None` to the construction call on line 171-173. Assertion text unchanged.
+- **T-1 (`src/error.rs:170` `insufficient_scope_display_includes_workarounds`):** add `required_scope: None` to the construction call on line 171-173. Assertion text unchanged.
+- **T-1b (`src/error.rs:131` `insufficient_scope_exit_code`):** add `required_scope: None` to the construction call on line 131. This test also constructs `JrError::InsufficientScope { message: "..." .into() }` and will fail to compile when the variant signature widens. Assertion text unchanged.
 - **T-2 (`tests/api_client.rs:100`):** **NO CHANGE.** Behavior preserved by `None`→`write:jira-work` fallback.
 - **NEW unit test** required per issue #382 AC-3 ("New unit test pins the new structured Display behavior"). Recommended: `insufficient_scope_display_uses_required_scope_when_some` — constructs with `required_scope: Some("write:servicedesk-request".into())`, asserts Display contains `write:servicedesk-request` and does NOT contain `write:jira-work`. Pins the new branch.
 
@@ -188,7 +189,7 @@ The `None` cases preserve today's `"write:jira-work"` Display text via fallback 
 
 ### Refinement 3 — narrowed test-change scope (Q-5)
 
-F2 must correct the F1 impact-boundary entry for T-2 (`tests/api_client.rs:100` `test_401_scope_mismatch_returns_insufficient_scope`). Under the recommended fallback design, this test does NOT require an assertion update — it passes unmodified because `None` renders the historical literal. Only T-1 (`src/error.rs:170`) requires a construction-call update (adding the new field with `None`), and a new unit test must be added per issue AC-3 to pin the `Some` branch.
+F2 must correct the F1 impact-boundary entry for T-2 (`tests/api_client.rs:100` `test_401_scope_mismatch_returns_insufficient_scope`). Under the recommended fallback design, this test does NOT require an assertion update — it passes unmodified because `None` renders the historical literal. Two construction-call updates needed in `src/error.rs` tests module: line 131 (`insufficient_scope_exit_code`) and line 171 (`insufficient_scope_display_includes_workarounds`). Both add `required_scope: None`. Assertion text unchanged in both. A new unit test must be added per issue AC-3 to pin the `Some` branch.
 
 ### F2 / F4 inputs ready
 
@@ -234,3 +235,7 @@ No PIVOT is required. No architectural change is required. The change remains a 
 - [cli/cli issue #9117](https://github.com/cli/cli/issues/9117) — gh CLI desired-pattern format for missing-scope hints: scope name + actionable recovery command
 - [cli/cli issue #2845](https://github.com/cli/cli/issues/2845) — gh CLI scope-hint background
 - [Atlassian community: "scope does not match" with servicedeskapi](https://community.atlassian.com/forums/Jira-Service-Management/Getting-quot-401-scope-does-not-match-quot-with-servicedeskapi/qaq-p/3144480) — context on JSM 401 scope-mismatch (client_credentials caveat not relevant to jr's user-flow OAuth)
+
+---
+
+[REVISED 2026-05-19 per F1d adversary-pass-01 F-01 + F-05]

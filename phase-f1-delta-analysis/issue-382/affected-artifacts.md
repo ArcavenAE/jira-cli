@@ -29,7 +29,7 @@ accurate at the call-site.
 
 | BC ID | Title / Key Behavior | Classification | Reason |
 |---|---|---|---|
-| BC-1.6.042 | 401 + `scope does not match` body → InsufficientScope with 5 required substrings (including `write:jira-work`) | **MODIFY** | The 5-substring requirement hardcodes `write:jira-work`. If the refactor makes the scope name dynamic, the BC must be updated to describe the new contract: the Display must contain a scope-name field that equals the runtime-resolved scope, not always `write:jira-work`. |
+| BC-1.6.042 | 401 + `scope does not match` body → InsufficientScope with 5 required substrings; scope name resolved at construction site (runtime-parameterized via `required_scope: Option<String>`) | **MODIFY** (option-a parameterize in-place; see `po-decision-bc-parameterization.md`) | PO decision (adversary-pass-01): parameterize BC-1.6.042 in-place. Behavior line updated to replace the hardcoded `write:jira-work` assertion with a parameterized-field contract (`None` falls back to `write:jira-work`; `Some("write:servicedesk-request")` for JSM path). No BC split, no new ID, no BC-INDEX or CANONICAL-COUNTS change. |
 | BC-X.3.005 | 401 + scope-mismatch → InsufficientScope; 403 NOT dispatched | **UNCHANGED** | The dispatch logic (401 status gate + substring match) is not being changed. Only the Display output changes. |
 | BC-1.3.023 | DEFAULT_OAUTH_SCOPES includes `write:jira-work` and `write:servicedesk-request` | **UNCHANGED** | Scope constant itself is not changing. However, this BC is the root motivation: having two required scopes exposed why the hardcoded hint is stale. No modification needed — it already documents both scopes. |
 | BC-1.6.043 | 401 without scope-mismatch substring → NotAuthenticated, NOT InsufficientScope | **UNCHANGED** | Dispatch boundary unaffected. |
@@ -41,7 +41,7 @@ accurate at the call-site.
 
 | New BC ID (proposed) | Description | Rationale |
 |---|---|---|
-| BC-1.6.047 (proposed) | InsufficientScope Display surfaces the runtime-resolved scope name, not a hardcoded `write:jira-work` literal | New behavioral contract introduced by this refactor. Required because BC-1.6.042 must be split: the 5-substring contract is used by the generic (non-JSM) path, and BC-1.6.047 would pin the structured/dynamic field contract. Alternatively, BC-1.6.042 can be modified in place to replace the literal assertion with a parameterized one. **Decision deferred to F2 spec evolution.** |
+| BC-1.6.047 (candidate — WITHDRAWN) | ~~InsufficientScope Display surfaces the runtime-resolved scope name, not a hardcoded `write:jira-work` literal~~ | **Not needed.** PO decision (adversary-pass-01 F-02): option (a) parameterize BC-1.6.042 in-place. Both paths (`write:jira-work` fallback + `write:servicedesk-request` JSM) are instantiations of one parameterized behavior. Splitting into two BCs overstates the distinction and inflates BC count. BC-INDEX, CANONICAL-COUNTS.md, and story bodies require no changes. See `po-decision-bc-parameterization.md`. |
 
 ---
 
@@ -182,14 +182,27 @@ is a scope violation and must be flagged in review.
 | `.factory/specs/prd/cross-cutting.md` | BC-X.3.005 dispatch logic unchanged |
 | `.factory/specs/prd/bc-1-auth-identity.md` | Only BC-1.6.042 needs modification (see Section 1); 1.6.043-045 and 1.3.023 are unchanged |
 
+### Docs/Index Surfaces Verified Unchanged
+
+These files reference `InsufficientScope` behavior or BC-1.6.042 but require no edits under option (a) parameterization. They are verify-only surfaces — implementation must confirm each reference remains accurate after the change lands.
+
+| File | Reference / Location | Why Unchanged | Verify Action |
+|------|----------------------|---------------|---------------|
+| `CLAUDE.md` (Gotchas section) | No test-seam env-var or hidden behavior introduced by this change | No new `JR_*` env-var, no architectural edge case, no dispatch behavior change — Gotchas section has nothing to add | Confirm no `JR_*` or behavioral gotcha was introduced during F4 |
+| `.factory/specs/prd/BC-INDEX.md` (line 122) | Source cell for BC-1.6.042 cites `tests/api_client.rs:99-144` | BC count is stable under option (a); BC-1.6.042 ID and title are unchanged; the Source cell citation remains accurate because T-2 (`tests/api_client.rs:100-144`) still passes unmodified (None-fallback preserves the `write:jira-work` assertion byte-for-byte) | Confirm `tests/api_client.rs:99-144` citation still resolves to the correct test after F4 changes |
+| `.factory/specs/prd/CANONICAL-COUNTS.md` | BC cumulative count (57 in bc-1) | No new BC added (BC-1.6.047 candidate withdrawn); count is stable | Confirm count unchanged post-F4 |
+| `.factory/specs/prd/edge-case-catalog.md` (line 78) | `Covered by BC-1.6.042; holdout H-012` | BC-1.6.042 still covers this edge case under parameterization; the coverage assertion remains accurate | Confirm edge-case description still aligns with updated BC-1.6.042 Behavior line |
+| `.factory/specs/prd/holdout-scenarios.md` (lines 138–145, H-012) | `InsufficientScope` scope-mismatch holdout; asserts `write:jira-work` substring | Under option (a), the `None`→`write:jira-work` fallback path preserves the assertion; H-012 passes unmodified | Run H-012 in validation; confirm `write:jira-work` still present in Display for None path |
+| `.factory/specs/prd/holdout-scenarios.md` (lines 658–682, H-NEW-JSM-RT-003) | JSM OAuth scope hint holdout; asserts `write:servicedesk-request` in stderr | Satisfied at call-site injection (C-3 in `create.rs`); `required_scope: Some("write:servicedesk-request")` on C-3 reinforces this; holdout passes | Run H-NEW-JSM-RT-003 in validation; confirm `write:servicedesk-request` still present |
+
 ---
 
 ## 9. Summary
 
 | Attribute | Value |
 |---|---|
-| BCs to MODIFY | BC-1.6.042 |
-| BCs NEW (proposed) | BC-1.6.047 (or fold into BC-1.6.042 update; decide in F2) |
+| BCs to MODIFY | BC-1.6.042 (option-a parameterize in-place; see `po-decision-bc-parameterization.md`) |
+| BCs NEW | None — BC-1.6.047 candidate withdrawn (PO decision, adversary-pass-01 F-02) |
 | BCs UNCHANGED | BC-X.3.005, BC-1.3.023, BC-1.6.043, BC-1.6.044, BC-1.6.045, BC-3.8.009 |
 | VPs touched | H-012 (update required), H-NEW-JSM-RT-003 (verify only) |
 | Regression-risk-zone stories | S-1.06, issue-288-pr4-dispatch |
@@ -198,3 +211,13 @@ is a scope violation and must be flagged in review.
 | Trivial / Standard | STANDARD |
 | Feature type | backend |
 | Architect impact | Single module + 2 call-sites; no architecture change |
+
+---
+
+## Change Log
+
+- [REVISED 2026-05-19 per F1d adversary-pass-01 F-02 + F-04 + F-06 + F-07]
+  - F-02: BC-1.6.047 candidate withdrawn. BC-1.6.042 classification updated to "MODIFY (option-a parameterize in-place; see po-decision-bc-parameterization.md)". PO decision confirms single-BC-in-place is correct; no BC-INDEX or CANONICAL-COUNTS change.
+  - F-04: Added `edge-case-catalog.md:78` to "Docs/Index Surfaces Verified Unchanged" — references BC-1.6.042; coverage assertion remains accurate under parameterization (verify-only).
+  - F-06: Added `BC-INDEX.md:122` Source cell to "Docs/Index Surfaces Verified Unchanged" — Source cell cites `tests/api_client.rs:99-144` which passes unmodified under option (a) None-fallback; no second-test citation required at this time.
+  - F-07: Added `CLAUDE.md` Gotchas section to "Docs/Index Surfaces Verified Unchanged" — no new test-seam env-var or hidden behavior introduced by this change; Gotchas section requires no update.
