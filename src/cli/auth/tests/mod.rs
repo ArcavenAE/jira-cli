@@ -339,6 +339,7 @@ fn default_oauth_scopes_pins_the_full_set_with_offline_access() {
         "write:jira-work",
         "read:jira-user",
         "read:servicedesk-request",
+        "write:servicedesk-request",
         "read:cmdb-object:jira",
         "read:cmdb-schema:jira",
         "offline_access",
@@ -352,7 +353,7 @@ fn default_oauth_scopes_pins_the_full_set_with_offline_access() {
     // would still satisfy the per-scope check above, so pin the full
     // expected set.
     let expected = "read:jira-work write:jira-work read:jira-user \
-                        read:servicedesk-request \
+                        read:servicedesk-request write:servicedesk-request \
                         read:cmdb-object:jira read:cmdb-schema:jira \
                         offline_access";
     let normalize = |s: &str| s.split_whitespace().collect::<Vec<_>>().join(" ");
