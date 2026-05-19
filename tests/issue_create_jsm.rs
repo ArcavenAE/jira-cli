@@ -2617,7 +2617,9 @@ async fn test_platform_create_field_idempotent_one_warning_per_logical_flag() {
         output.status.code()
     );
     assert_eq!(
-        stderr.matches("warning: --field is ignored on the platform create path").count(),
+        stderr
+            .matches("warning: --field is ignored on the platform create path")
+            .count(),
         1,
         "BC-3.8.012 / AC-5: warning must appear EXACTLY ONCE regardless of --field count; got: {stderr}"
     );
@@ -2739,7 +2741,9 @@ async fn test_platform_create_malformed_field_one_warning_no_exit_64() {
         output.status.code()
     );
     assert_eq!(
-        stderr.matches("warning: --field is ignored on the platform create path").count(),
+        stderr
+            .matches("warning: --field is ignored on the platform create path")
+            .count(),
         1,
         "BC-3.8.012 / AC-7: warning must appear EXACTLY ONCE for malformed --field; got: {stderr}"
     );
