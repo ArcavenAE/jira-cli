@@ -36,7 +36,7 @@ activation_version: "v0.5.0-dev.7"
 | **Language** | Rust |
 | **Target Workspace** | develop → main |
 | **Started** | 2026-05-04 |
-| **Last Updated** | 2026-05-19 — Issue #288 epic FULLY CLOSED. Retrospective audit PASS (0 REFUTED, 11 CONFIRMED). 4 follow-ups filed (#382-#385). F5/F6/F7 closeout waived. Lesson L-288-pr4-06 codified. |
+| **Last Updated** | 2026-05-19 — Post-#288 housekeeping: docs/demo-evidence removal (PR #386 @ acdf212); BC-3.8.011 Trace fix on factory-artifacts (28e4603); history rewrite tracked as #387. |
 | **Current Phase** | Phase 3 — TDD Implementation **IN PROGRESS** — Wave 3 CLOSED (10/10). Feature Mode #110-pr2 COMPLETE. PRs #355–#364, #366–#367, #369–#373 MERGED. **0 audit-followups remain** (#331 sandbox-blocked deferred; #333 closed by PR #360; #340 closed by PR #370; #345 closed by PR #371; #346 closed by PR #373; #350 closed by PR #362; #361 closed by PR #364; #365 closed by PR #367; PG-365-1 closed by PR #369). No active cycle. |
 | **Next Phase** | Wave 3 — 10 stories (S-3.01..S-3.10) |
 | **Activation HEAD** | dea166471e22eff55974d7675593469b37048c5f (v0.5.0-dev.7) |
@@ -258,8 +258,34 @@ _Not started._
 | Field | Value |
 |-------|-------|
 | **Date** | 2026-05-19 |
-| **Position** | **Issue #288 FULLY CLOSED — Retrospective Audit PASS** — All 3 waves merged: PR #379 (Wave 1) @ 0f219eb, PR #380 (Wave 2) @ 9d0b72c, PR #381 (Wave 3) @ 95232555. develop pulled to 9523255. Retrospective audit (research-agent 2026-05-19): 0 REFUTED, 11 CONFIRMED, 1 PARTIAL no-action, 1 INCONCLUSIVE filed. 4 follow-up issues filed: #382 (M-03), #383 (O-01), #384 (O-08-01+O-08-05), #385 (O-08-02/04/06/07). F5/F6/F7 closeout waived per audit PASS. Lessons L-288-pr4-01..06 codified. No active cycle. Next: new feature selection or Wave 4 planning. |
+| **Position** | **Post-#288 housekeeping complete** — PR #386 MERGED (acdf212) on develop: docs/demo-evidence/ removed, 505 files deleted, ~85 MB freed at HEAD, .gitignore updated. BC-3.8.011 Trace fix pushed to factory-artifacts (28e4603): unblocked Spec Guards CI for all future PRs. Issue #387 filed (LOW) to track git history rewrite (deferred — requires force-push to protected branches). Open backlog issues: #210, #331, #372, #382, #383, #384, #385, #387. No active cycle. Next: new feature selection or Wave 4 planning. |
 | **Convergence counter** | #288 epic CLOSED. pr4-dispatch adv: 9 passes (1 invalid + 1 retry + 7 substantive), 3/3 CLEAN (passes 07/08/09). Retrospective audit: PASS. No open convergence gate. |
+
+## Post-Cycle Housekeeping (2026-05-19)
+
+Events after issue #288 epic closeout (factory-artifacts @ 7dbbfed):
+
+- **BC-3.8.011 Trace numeric-count drift fixed** — commit `28e4603` on factory-artifacts (pushed to origin). Title: `fix(spec): remove numeric test count from BC-3.8.011 Trace (PG-365-1)`. File: `.factory/specs/prd/bc-3-issue-write.md:723`. Replaced "(5 new warning-emission tests, one per flag)" with "(per-flag warning-emission integration tests, one assertion per platform-only flag)". Caught by Spec Guards CI on PR #386; pre-existing drift introduced by PR #381 (issue #288 pr4). **This fix unblocked Spec Guards CI for all future PRs against develop.**
+
+- **PR #386 MERGED to develop** — merge commit `acdf212` (2026-05-19T15:07:31Z). Title: `chore: remove docs/demo-evidence/ and gitignore future demos`. Branch: `chore/remove-demo-evidence` (deleted post-merge). Scope: 505 files deleted, ~85 MB freed at HEAD (not from git history — see #387). Changes: removed docs/demo-evidence/ tree (35 story directories); added docs/demo-evidence/ to .gitignore; fixed broken cargo-mutants-policy.md reference. CI: 10/10 green (after Spec Guards rerun via 28e4603 fix above). Copilot review N/A (exceeded 300-file limit).
+
+- **Issue #387 FILED** — history rewrite tracking. URL: https://github.com/Zious11/jira-cli/issues/387. Title: `chore: rewrite git history to remove docs/demo-evidence/ blobs (deferred from #386)`. Severity: LOW (housekeeping). Tracks destructive history rewrite to reclaim ~80 MB from `.git/objects/`. Full prerequisites + blast-radius analysis included in issue body (force-push to protected branches required, all clones invalidated, SHA citations dangle). Current repo size ~105 MB; deferred pending explicit approval for protected-branch force-push.
+
+- **Process improvement note (PG-365-1 discipline):** Any PR touching `.factory/specs/prd/*.md` BC files should run `scripts/check-bc-no-numeric-test-counts.sh` locally before creating the PR. Would have caught the BC-3.8.011 Trace drift at PR #381 time instead of CI failure on PR #386. Add to pre-PR-creation checklist for BC file edits.
+
+## Open Issues Tracker (post-#288)
+
+| Issue | Title | Status | Priority | Notes |
+|-------|-------|--------|----------|-------|
+| #210 | (backlog) | OPEN | — | |
+| #331 | Sandbox-blocked defer | OPEN | DEFERRED | Requires sandbox access |
+| #372 | cargo-mutants partial baseline | OPEN | LOW | Follow-up from #346 |
+| #382 | M-03: JrError::InsufficientScope stale text | OPEN | MEDIUM | |
+| #383 | O-01: platform-path flag symmetry | OPEN | LOW | |
+| #384 | O-08-01+O-08-05 UX polish | OPEN | LOW | |
+| #385 | O-08-02/04/06/07 UX polish | OPEN | LOW | |
+| #386 | docs/demo-evidence removal | **MERGED** @ acdf212 | — | 505 files, ~85 MB freed at HEAD |
+| #387 | git history rewrite for demo-evidence blobs | OPEN | LOW | Deferred; force-push needed |
 
 ## Historical Content
 
