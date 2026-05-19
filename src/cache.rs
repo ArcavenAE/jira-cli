@@ -356,6 +356,157 @@ pub fn write_object_type_attr_cache(
     Ok(())
 }
 
+/// Cached list of request types for a (profile, serviceDeskId) pair.
+/// 7-day TTL. Cache file: ~/.cache/jr/v1/<profile>/request_types_<service_desk_id>.json
+#[derive(Debug, Serialize, Deserialize)]
+pub(crate) struct RequestTypeCache {
+    types: Vec<crate::types::jsm::RequestType>,
+    fetched_at: DateTime<Utc>,
+}
+
+impl Expiring for RequestTypeCache {
+    fn fetched_at(&self) -> DateTime<Utc> {
+        self.fetched_at
+    }
+}
+
+pub fn read_request_type_cache(
+    profile: &str,
+    service_desk_id: &str,
+) -> Result<Option<Vec<crate::types::jsm::RequestType>>> {
+    debug_assert!(
+        service_desk_id
+            .chars()
+            .all(|c| c.is_ascii_alphanumeric() || c == '-'),
+        "service_desk_id contains unsafe characters for filename: {service_desk_id:?}"
+    );
+    let filename = format!("request_types_{service_desk_id}.json");
+    Ok(read_cache::<RequestTypeCache>(profile, &filename)?.map(|c| c.types))
+}
+
+/// Write the request-type list to cache.
+///
+/// **Best-effort writer**: a `write_cache` failure (disk full, permission error)
+/// is logged to stderr but does NOT propagate as an error. The contract is that
+/// cache hygiene must never break a successful API call — at worst the next
+/// invocation pays a cache miss.
+///
+/// (Diverges from `write_team_cache` / `write_workspace_cache` etc. which
+/// propagate via `?`. Justified because the request-type cache is the first
+/// cache where a write failure could leak a confusing exit code into a
+/// scripted pipeline like `jr requesttype list --output json | jq ...`.)
+pub fn write_request_type_cache(
+    profile: &str,
+    service_desk_id: &str,
+    types: &[crate::types::jsm::RequestType],
+) -> Result<()> {
+    debug_assert!(
+        service_desk_id
+            .chars()
+            .all(|c| c.is_ascii_alphanumeric() || c == '-'),
+        "service_desk_id contains unsafe characters for filename: {service_desk_id:?}"
+    );
+    let filename = format!("request_types_{service_desk_id}.json");
+    let result = write_cache(
+        profile,
+        &filename,
+        &RequestTypeCache {
+            types: types.to_vec(),
+            fetched_at: Utc::now(),
+        },
+    );
+    if let Err(e) = result {
+        eprintln!("warning: failed to write request type cache: {e}");
+    }
+    Ok(())
+}
+
+/// Cached fields for a specific request type within a service desk.
+/// 7-day TTL. Cache file: ~/.cache/jr/v1/<profile>/request_type_fields_<service_desk_id>_<request_type_id>.json
+#[derive(Debug, Serialize, Deserialize)]
+pub(crate) struct RequestTypeFieldsCache {
+    response: crate::types::jsm::RequestTypeFieldsResponse,
+    fetched_at: DateTime<Utc>,
+}
+
+impl Expiring for RequestTypeFieldsCache {
+    fn fetched_at(&self) -> DateTime<Utc> {
+        self.fetched_at
+    }
+}
+
+pub fn read_request_type_fields_cache(
+    profile: &str,
+    service_desk_id: &str,
+    request_type_id: &str,
+) -> Result<Option<crate::types::jsm::RequestTypeFieldsResponse>> {
+    debug_assert!(
+        service_desk_id
+            .chars()
+            .all(|c| c.is_ascii_alphanumeric() || c == '-'),
+        "service_desk_id contains unsafe characters for filename: {service_desk_id:?}"
+    );
+    debug_assert!(
+        request_type_id
+            .chars()
+            .all(|c| c.is_ascii_alphanumeric() || c == '-'),
+        "request_type_id contains unsafe characters for filename: {request_type_id:?}"
+    );
+    let filename = format!("request_type_fields_{service_desk_id}_{request_type_id}.json");
+    Ok(read_cache::<RequestTypeFieldsCache>(profile, &filename)?.map(|c| c.response))
+}
+
+/// Write the request-type fields response to cache.
+///
+/// **Best-effort writer**: a `write_cache` failure (disk full, permission error)
+/// is logged to stderr but does NOT propagate as an error. The contract is that
+/// cache hygiene must never break a successful API call — at worst the next
+/// invocation pays a cache miss.
+///
+/// (Diverges from `write_team_cache` / `write_workspace_cache` etc. which
+/// propagate via `?`. Justified because the request-type cache is the first
+/// cache where a write failure could leak a confusing exit code into a
+/// scripted pipeline like `jr requesttype fields <NAME> --output json | jq ...`.)
+pub fn write_request_type_fields_cache(
+    profile: &str,
+    service_desk_id: &str,
+    request_type_id: &str,
+    response: &crate::types::jsm::RequestTypeFieldsResponse,
+) -> Result<()> {
+    // SAFETY: JSM service desk IDs and request type IDs are documented as
+    // numeric strings (verified via Atlassian REST API v3 schema). The filename
+    // uses `_` as the delimiter; ambiguity would only arise if either ID
+    // contained `_`, which the Atlassian schema does not permit. If Atlassian
+    // ever changes IDs to non-numeric strings, switch to a structural delimiter
+    // (e.g., urlencoding both components) and bump the cache root to `v2/`.
+    // Charset constraint enforced by debug_assert! above (in debug builds).
+    debug_assert!(
+        service_desk_id
+            .chars()
+            .all(|c| c.is_ascii_alphanumeric() || c == '-'),
+        "service_desk_id contains unsafe characters for filename: {service_desk_id:?}"
+    );
+    debug_assert!(
+        request_type_id
+            .chars()
+            .all(|c| c.is_ascii_alphanumeric() || c == '-'),
+        "request_type_id contains unsafe characters for filename: {request_type_id:?}"
+    );
+    let filename = format!("request_type_fields_{service_desk_id}_{request_type_id}.json");
+    let result = write_cache(
+        profile,
+        &filename,
+        &RequestTypeFieldsCache {
+            response: response.clone(),
+            fetched_at: Utc::now(),
+        },
+    );
+    if let Err(e) = result {
+        eprintln!("warning: failed to write request type fields cache: {e}");
+    }
+    Ok(())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -897,6 +1048,200 @@ mod resolution_cache_tests {
         with_temp_cache(|| {
             let loaded = read_resolutions_cache("default").unwrap();
             assert!(loaded.is_none());
+        });
+    }
+}
+
+/// M-5 (adv-01): Cross-profile isolation unit tests for the new request-type
+/// and request-type-fields caches.
+///
+/// POLICY multi-profile-cache (CRITICAL) requires direct unit test coverage for
+/// every cache family. These mirror `cross_profile_isolation_team_cache` exactly,
+/// using the new `(profile, serviceDeskId)` and `(profile, sid, rtId)` keys.
+#[cfg(test)]
+mod request_type_cache_tests {
+    use super::tests::with_temp_cache;
+    use super::*;
+
+    fn make_request_type(id: &str, name: &str) -> crate::types::jsm::RequestType {
+        crate::types::jsm::RequestType {
+            id: id.to_string(),
+            name: name.to_string(),
+            description: None,
+            help_text: None,
+            issue_type_id: None,
+            group_ids: vec![],
+        }
+    }
+
+    fn make_fields_response(field_name: &str) -> crate::types::jsm::RequestTypeFieldsResponse {
+        crate::types::jsm::RequestTypeFieldsResponse {
+            can_raise_on_behalf_of: true,
+            can_add_request_participants: false,
+            request_type_fields: vec![crate::types::jsm::RequestTypeField {
+                field_id: "summary".to_string(),
+                name: field_name.to_string(),
+                description: None,
+                required: true,
+                visible: true,
+                default_values: None,
+                valid_values: None,
+                jira_schema: serde_json::json!({"type": "string", "system": "summary"}),
+            }],
+        }
+    }
+
+    /// M-5 test 1: `request_type_cache` is isolated per profile.
+    ///
+    /// Both profiles write to the same service desk ID "10". Reads must return
+    /// the data written for that profile only — not the other profile's data.
+    /// Also verifies that the on-disk paths are distinct.
+    #[test]
+    fn test_request_type_cache_cross_profile_isolation() {
+        with_temp_cache(|| {
+            let prod_types = vec![make_request_type("1", "Prod RT")];
+            let sandbox_types = vec![make_request_type("2", "Sandbox RT")];
+
+            write_request_type_cache("prod", "10", &prod_types).unwrap();
+            write_request_type_cache("sandbox", "10", &sandbox_types).unwrap();
+
+            // Prod profile reads prod data.
+            let prod_read = read_request_type_cache("prod", "10")
+                .unwrap()
+                .expect("prod cache must exist");
+            assert_eq!(
+                prod_read[0].name, "Prod RT",
+                "prod profile must return 'Prod RT', not sandbox data"
+            );
+
+            // Sandbox profile reads sandbox data.
+            let sandbox_read = read_request_type_cache("sandbox", "10")
+                .unwrap()
+                .expect("sandbox cache must exist");
+            assert_eq!(
+                sandbox_read[0].name, "Sandbox RT",
+                "sandbox profile must return 'Sandbox RT', not prod data"
+            );
+
+            // Verify on-disk paths are distinct.
+            let prod_path = cache_dir("prod").join("request_types_10.json");
+            let sandbox_path = cache_dir("sandbox").join("request_types_10.json");
+            assert!(
+                prod_path.exists(),
+                "prod cache file must exist at {prod_path:?}"
+            );
+            assert!(
+                sandbox_path.exists(),
+                "sandbox cache file must exist at {sandbox_path:?}"
+            );
+            assert_ne!(
+                prod_path, sandbox_path,
+                "prod and sandbox cache paths must be distinct"
+            );
+        });
+    }
+
+    /// M-5 test 2: `request_type_fields_cache` is isolated per profile.
+    ///
+    /// Both profiles write fields for the same (sid="10", rtId="200"). Reads
+    /// must return the field data written for that profile only.
+    #[test]
+    fn test_request_type_fields_cache_cross_profile_isolation() {
+        with_temp_cache(|| {
+            let prod_fields = make_fields_response("Prod Field Name");
+            let sandbox_fields = make_fields_response("Sandbox Field Name");
+
+            write_request_type_fields_cache("prod", "10", "200", &prod_fields).unwrap();
+            write_request_type_fields_cache("sandbox", "10", "200", &sandbox_fields).unwrap();
+
+            // Prod profile reads prod fields.
+            let prod_read = read_request_type_fields_cache("prod", "10", "200")
+                .unwrap()
+                .expect("prod fields cache must exist");
+            assert_eq!(
+                prod_read.request_type_fields[0].name, "Prod Field Name",
+                "prod profile must return 'Prod Field Name', not sandbox data"
+            );
+
+            // Sandbox profile reads sandbox fields.
+            let sandbox_read = read_request_type_fields_cache("sandbox", "10", "200")
+                .unwrap()
+                .expect("sandbox fields cache must exist");
+            assert_eq!(
+                sandbox_read.request_type_fields[0].name, "Sandbox Field Name",
+                "sandbox profile must return 'Sandbox Field Name', not prod data"
+            );
+
+            // Verify on-disk paths are distinct.
+            let prod_path = cache_dir("prod").join("request_type_fields_10_200.json");
+            let sandbox_path = cache_dir("sandbox").join("request_type_fields_10_200.json");
+            assert!(
+                prod_path.exists(),
+                "prod fields cache file must exist at {prod_path:?}"
+            );
+            assert!(
+                sandbox_path.exists(),
+                "sandbox fields cache file must exist at {sandbox_path:?}"
+            );
+            assert_ne!(
+                prod_path, sandbox_path,
+                "prod and sandbox fields cache paths must be distinct"
+            );
+        });
+    }
+
+    /// M-2 corrupt-cache regression test 1: corrupt `request_types_<sid>.json`
+    /// must self-heal as a cache miss (Ok(None)), NOT propagate an error.
+    ///
+    /// Mirrors `corrupt_team_cache_returns_none` and `corrupt_workspace_cache_returns_none`
+    /// in the parent `tests` module. Establishes sibling-coverage parity for the two new
+    /// S-288-pr2 cache families (M-2 axis from adversary pass-03).
+    ///
+    /// Traces: adversary pass-03 M-2, S-7.01 sibling-coverage
+    #[test]
+    fn test_corrupt_request_type_cache_returns_none_self_heals() {
+        with_temp_cache(|| {
+            let dir = cache_dir("test");
+            std::fs::create_dir_all(&dir).unwrap();
+
+            // Write malformed JSON bytes to the cache file for service desk "10".
+            std::fs::write(dir.join("request_types_10.json"), b"not valid json{").unwrap();
+
+            // Must return Ok(None) — corrupt cache must self-heal as a miss, not Err.
+            let result = read_request_type_cache("test", "10").unwrap();
+            assert!(
+                result.is_none(),
+                "corrupt request_types cache must self-heal as Ok(None), not propagate an error"
+            );
+        });
+    }
+
+    /// M-2 corrupt-cache regression test 2: corrupt `request_type_fields_<sid>_<rtid>.json`
+    /// must self-heal as a cache miss (Ok(None)), NOT propagate an error.
+    ///
+    /// Mirrors the request_type_cache corruption test above and the sibling team/workspace
+    /// corrupt-cache tests. Establishes sibling-coverage parity for the fields cache family.
+    ///
+    /// Traces: adversary pass-03 M-2, S-7.01 sibling-coverage
+    #[test]
+    fn test_corrupt_request_type_fields_cache_returns_none_self_heals() {
+        with_temp_cache(|| {
+            let dir = cache_dir("test");
+            std::fs::create_dir_all(&dir).unwrap();
+
+            // Write malformed JSON bytes to the fields cache file for (sid="10", rtId="200").
+            std::fs::write(
+                dir.join("request_type_fields_10_200.json"),
+                b"not valid json{",
+            )
+            .unwrap();
+
+            // Must return Ok(None) — corrupt cache must self-heal as a miss, not Err.
+            let result = read_request_type_fields_cache("test", "10", "200").unwrap();
+            assert!(
+                result.is_none(),
+                "corrupt request_type_fields cache must self-heal as Ok(None), not propagate an error"
+            );
         });
     }
 }
