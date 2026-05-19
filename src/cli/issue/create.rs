@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use anyhow::{Result, bail};
 use serde_json::json;
 
@@ -5,6 +7,10 @@ use crate::adf;
 use crate::api::assets::linked::get_or_fetch_cmdb_fields;
 use crate::api::client::JiraClient;
 use crate::api::jira::bulk::{BULK_MAX_KEYS, resolve_bulk_await_timeout};
+#[allow(unused_imports)] // TODO(S-288-pr4 Step 4): remove after implementing handle_jsm_create
+use crate::api::jsm::servicedesks;
+#[allow(unused_imports)] // TODO(S-288-pr4 Step 4): remove after implementing handle_jsm_create
+use crate::cache;
 use crate::cli::{IssueCommand, OutputFormat};
 use crate::config::Config;
 use crate::error::JrError;
@@ -44,10 +50,37 @@ pub(super) async fn handle_create(
         parent,
         to,
         account_id,
+        request_type,
+        field: field_pairs,
+        on_behalf_of,
     } = command
     else {
         unreachable!()
     };
+
+    // Dispatch fork: when --request-type is set, route to JSM path.
+    // Platform path (when flag absent) is structurally unchanged. (BC-3.8.001, BC-3.3.001)
+    if request_type.is_some() {
+        return handle_jsm_create(
+            client,
+            config,
+            output_format,
+            project,
+            project_override,
+            no_input,
+            request_type,
+            issue_type,
+            summary,
+            description,
+            description_stdin,
+            priority,
+            labels,
+            markdown,
+            on_behalf_of,
+            field_pairs,
+        )
+        .await;
+    }
 
     // Resolve project key
     let project_key = project
@@ -1598,4 +1631,69 @@ mod build_labels_proptests {
             }
         }
     }
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// S-288-pr4-dispatch stubs — Step 2 (Stub Architect)
+// Bodies are todo!() per Red Gate discipline. Step 4 (Implementer) fills them.
+// ────────────────────────────────────────────────────────────────────────────
+
+/// Parse `--field NAME=VALUE` pairs into a `HashMap<String, String>`.
+///
+/// Splitting rule (BC-3.8.008): the FIRST `=` in each pair separates name from
+/// value. Any subsequent `=` characters are part of the value. Duplicate keys
+/// use the last value provided (last-wins). A pair without `=` is a user error
+/// (exit 64 via [`JrError::UserError`]).
+///
+/// # Errors
+///
+/// Returns `JrError::UserError` if any pair is missing `=`.
+///
+/// # TODO(S-288-pr4 Step 4): implement
+#[allow(unused_variables)] // TODO(S-288-pr4 Step 4): remove after implementing
+#[allow(dead_code)] // TODO(S-288-pr4 Step 4): remove after implementing — called by Step 3 tests
+pub(crate) fn parse_field_kv(pairs: &[String]) -> Result<HashMap<String, String>, JrError> {
+    todo!("S-288-pr4 Step 4")
+}
+
+/// Orchestrate a JSM customer-request creation.
+///
+/// Called by [`handle_create`] when `--request-type` is present. Never called
+/// when `--request-type` is absent (platform path is the fall-through).
+///
+/// Steps (BC-3.8.001..010):
+/// 1. Resolve the service desk ID via [`servicedesks::require_service_desk`]
+///    with label `` "`jr issue create --request-type` requires" ``.
+/// 2. Resolve `request_type_arg`: if all-digits → use as-is (numeric bypass,
+///    BC-3.8.004); else → read cache / fetch via `list_request_types` /
+///    `partial_match`. Ambiguous or missing → exit 64.
+/// 3. Build `requestFieldValues` from `--summary`, `--description` (ADF),
+///    `--priority`, `--label`, `--field` via [`parse_field_kv`].
+/// 4. If `--type` is also set → emit stderr warning (BC-3.8.010). Do NOT error.
+/// 5. Build body via [`crate::api::jsm::requests::build_jsm_request_body`].
+/// 6. POST via [`JiraClient::create_jsm_request`].
+/// 7. Emit `{"key": "<issue_key>"}` on stdout (`--output json` shape per AC-015).
+///
+/// # TODO(S-288-pr4 Step 4): implement
+#[allow(clippy::too_many_arguments)] // TODO(S-288-pr4 Step 4): remove after implementing
+#[allow(unused_variables)] // TODO(S-288-pr4 Step 4): remove after implementing
+async fn handle_jsm_create(
+    client: &JiraClient,
+    config: &Config,
+    output_format: &OutputFormat,
+    project: Option<String>,
+    project_override: Option<&str>,
+    no_input: bool,
+    request_type: Option<String>,
+    issue_type: Option<String>,
+    summary: Option<String>,
+    description: Option<String>,
+    description_stdin: bool,
+    priority: Option<String>,
+    labels: Vec<String>,
+    markdown: bool,
+    on_behalf_of: Option<String>,
+    field_pairs: Vec<String>,
+) -> Result<()> {
+    todo!("S-288-pr4 Step 4")
 }
