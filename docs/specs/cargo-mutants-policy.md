@@ -13,9 +13,12 @@ high line coverage but untested assertion strength at the time of the F6 review.
 ## Scope
 
 `cargo-mutants` runs against:
-- `src/cli/issue/create.rs` — `handle_edit_bulk_labels`, `handle_edit_bulk_fields`
+- `src/cli/issue/create.rs` — `handle_edit_bulk_labels`, `handle_edit_bulk_fields`, `handle_jsm_create`, `parse_field_kv`
 - `src/api/jira/bulk.rs` — `await_bulk_task`, polling loop, deadline propagation
 - `src/types/jira/bulk.rs` — serde structs for bulk API responses
+- `src/api/jsm/requests.rs` — `JsmRequestBuilder::build` (JSM POST body construction) (added S-288-pr4)
+- `src/api/jsm/request_types.rs` — `list_request_types`, `get_request_type_fields` (added S-288-pr4)
+- `src/cli/requesttype.rs` — `handle_list`, `handle_fields`, `resolve_request_type_id` (added S-288-pr4)
 
 Configured in `.cargo/mutants.toml::examine_globs`. The CI job relies on this
 configuration alone (no `--file` CLI flags) for scope enforcement; `--in-diff` further
@@ -75,8 +78,8 @@ When the baseline reveals surviving mutants below 90%:
 1. **Whitelist clearly-defensive mutants** per the convention above with justification comments.
 2. **File one follow-up GitHub issue per uncovered-region cluster** (not per individual
    mutant). Title pattern: `chore(mutants): close surviving-mutant gap in <module> — N mutants`
-3. **Track deferred follow-ups** in `docs/demo-evidence/S-346/deferred-followups.md` with
-   issue numbers, links, and surviving mutant descriptions.
+3. **Track deferred follow-ups** via GitHub issues labeled `audit-followup` with
+   issue numbers, links, and surviving mutant descriptions in the issue body.
 4. **Subsequent PRs** incrementally close the gap by tightening assertions, adding
    targeted test cases, or whitelisting genuinely unkillable mutants.
 

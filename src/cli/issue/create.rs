@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use anyhow::{Result, bail};
 use serde_json::json;
 
@@ -5,10 +7,14 @@ use crate::adf;
 use crate::api::assets::linked::get_or_fetch_cmdb_fields;
 use crate::api::client::JiraClient;
 use crate::api::jira::bulk::{BULK_MAX_KEYS, resolve_bulk_await_timeout};
+use crate::api::jsm::requests::JsmRequestBuilder;
+use crate::api::jsm::servicedesks;
+use crate::cache;
 use crate::cli::{IssueCommand, OutputFormat};
 use crate::config::Config;
 use crate::error::JrError;
 use crate::output;
+use crate::partial_match::{self, MatchResult};
 
 use super::helpers;
 use super::json_output;
@@ -44,10 +50,72 @@ pub(super) async fn handle_create(
         parent,
         to,
         account_id,
+        request_type,
+        field: field_pairs,
+        on_behalf_of,
     } = command
     else {
         unreachable!()
     };
+
+    // Dispatch fork: when --request-type is set, route to JSM path.
+    // Platform path (when flag absent) is structurally unchanged. (BC-3.8.001, BC-3.3.001)
+    if request_type.is_some() {
+        // Emit stderr warnings for platform-only flags that are silently ignored on the
+        // JSM path (BC-3.8.010, BC-3.8.011). Warnings fire BEFORE dispatch so they appear
+        // even if dispatch errors out later (e.g., missing summary, bad request type).
+        if issue_type.is_some() {
+            eprintln!(
+                "warning: --type is ignored when --request-type is set; request type encodes the issue type"
+            );
+        }
+        if team.is_some() {
+            eprintln!(
+                "warning: --team is ignored when --request-type is set; teams are managed by the request type's workflow"
+            );
+        }
+        if points.is_some() {
+            eprintln!(
+                "warning: --points is ignored when --request-type is set; story points are not part of JSM request schema"
+            );
+        }
+        if parent.is_some() {
+            eprintln!(
+                "warning: --parent is ignored when --request-type is set; JSM requests cannot be sub-tasks"
+            );
+        }
+        if to.is_some() {
+            eprintln!(
+                "warning: --to is ignored when --request-type is set; use --on-behalf-of to set the requester"
+            );
+        }
+        if account_id.is_some() {
+            eprintln!(
+                "warning: --account-id is ignored when --request-type is set; use --on-behalf-of to set the requester"
+            );
+        }
+
+        return handle_jsm_create(
+            client,
+            config,
+            output_format,
+            project_override,
+            no_input,
+            JsmCreateArgs {
+                project,
+                request_type,
+                summary,
+                description,
+                description_stdin,
+                priority,
+                labels,
+                markdown,
+                on_behalf_of,
+                field_pairs,
+            },
+        )
+        .await;
+    }
 
     // Resolve project key
     let project_key = project
@@ -1596,6 +1664,417 @@ mod build_labels_proptests {
                 // Both empty: filtered by prop_assume!; unreachable.
                 (true, true) => unreachable!("filtered by prop_assume! above"),
             }
+        }
+    }
+}
+
+/// Proptest properties for `parse_field_kv` (AC-013, BC-3.8.008).
+///
+/// Properties A.1–A.4 cover the four invariants stated in the verification delta.
+#[cfg(test)]
+mod parse_field_kv_proptests {
+    use super::parse_field_kv;
+    use proptest::prelude::*;
+
+    proptest! {
+        /// A.1 (BC-3.8.008): first `=` is the delimiter; subsequent `=` chars
+        /// are part of the value. For any valid NAME and VALUE (which may contain
+        /// `=` chars), round-tripping through parse_field_kv preserves the value.
+        #[test]
+        fn prop_parse_field_kv_first_equals_split(
+            name in "[a-z][a-z0-9_]{0,19}",
+            value_prefix in "[a-z]{1,10}",
+            value_suffix in "[=a-z0-9]{0,10}",
+        ) {
+            let pair = format!("{name}={value_prefix}={value_suffix}");
+            let pairs = vec![pair];
+            let result = parse_field_kv(&pairs)
+                .unwrap_or_else(|e| panic!("A.1: parse_field_kv must succeed for valid pair; got error: {e:?}"));
+            let expected_value = format!("{value_prefix}={value_suffix}");
+            prop_assert_eq!(
+                result.get(&name).map(String::as_str),
+                Some(expected_value.as_str()),
+                "A.1: BC-3.8.008 first-equals split must yield full value after first '='"
+            );
+        }
+
+        /// A.2 (BC-3.8.008): empty value is allowed. `key=` produces `{"key": ""}`.
+        #[test]
+        fn prop_parse_field_kv_empty_value_allowed(
+            name in "[a-z][a-z0-9_]{0,19}",
+        ) {
+            let pair = format!("{name}=");
+            let pairs = vec![pair];
+            let result = parse_field_kv(&pairs)
+                .unwrap_or_else(|e| panic!("A.2: parse_field_kv must accept 'name=' (empty value); got error: {e:?}"));
+            prop_assert_eq!(
+                result.get(&name).map(String::as_str),
+                Some(""),
+                "A.2: BC-3.8.008 empty value after '=' must be accepted and preserved"
+            );
+        }
+
+        /// A.3 (BC-3.8.008): duplicate key — last value wins.
+        /// Two pairs with the same key must result in only the second value.
+        #[test]
+        fn prop_parse_field_kv_last_value_wins_on_duplicates(
+            name in "[a-z][a-z0-9_]{0,19}",
+            first_val in "[a-z]{1,10}",
+            last_val in "[a-z]{1,10}",
+        ) {
+            let pairs = vec![
+                format!("{name}={first_val}"),
+                format!("{name}={last_val}"),
+            ];
+            let result = parse_field_kv(&pairs)
+                .unwrap_or_else(|e| panic!("A.3: parse_field_kv must succeed for duplicate key pairs; got error: {e:?}"));
+            prop_assert_eq!(
+                result.get(&name).map(String::as_str),
+                Some(last_val.as_str()),
+                "A.3: BC-3.8.008 duplicate key: last value must win"
+            );
+            prop_assert_eq!(
+                result.len(),
+                1,
+                "A.3: BC-3.8.008 duplicate keys must collapse to one entry"
+            );
+        }
+
+        /// A.4 (BC-3.8.008): no panic on arbitrary input — any string that
+        /// contains at least one `=` must parse without panic (may return Ok or Err).
+        #[test]
+        fn prop_parse_field_kv_no_panic_on_arbitrary_input(
+            raw in ".{0,80}",
+        ) {
+            // The function contract: no panic for any input.
+            // Ok or Err is both acceptable; only panics are forbidden.
+            let pairs = vec![raw];
+            let _ = parse_field_kv(&pairs); // must not panic
+        }
+    }
+}
+
+/// Parse `--field NAME=VALUE` pairs into a `HashMap<String, String>`.
+///
+/// Splitting rule (BC-3.8.008): the FIRST `=` in each pair separates name from
+/// value. Any subsequent `=` characters are part of the value. Duplicate keys
+/// use the last value provided (last-wins). A pair without `=` is a user error
+/// (exit 64 via [`JrError::UserError`]).
+///
+/// # Errors
+///
+/// Returns `JrError::UserError` if any pair is missing `=`.
+pub(crate) fn parse_field_kv(pairs: &[String]) -> Result<HashMap<String, String>, JrError> {
+    let mut map = HashMap::new();
+    for pair in pairs {
+        let Some(eq_pos) = pair.find('=') else {
+            return Err(JrError::UserError(format!(
+                "--field \"{pair}\" is not a valid NAME=VALUE pair: missing '='. \
+                 Use --field NAME=VALUE (e.g., --field customfield_10200=foo)."
+            )));
+        };
+        let key = pair[..eq_pos].to_string();
+        let value = pair[eq_pos + 1..].to_string();
+        // Last-wins for duplicate keys (BC-3.8.008).
+        map.insert(key, value);
+    }
+    Ok(map)
+}
+
+/// Argument bundle for `handle_jsm_create`.
+///
+/// Reduces argument count on `handle_jsm_create` to satisfy `clippy::too_many_arguments`
+/// (CLAUDE.md policy: refactor rather than `#[allow]`).
+///
+/// # Field policy
+///
+/// `IssueCommand::Create` carries 16+ flags. The JSM dispatch path uses a subset.
+/// Each `Create` flag falls into one of three categories:
+///
+/// **Pass-through to JSM (included in this struct):**
+/// - `project`, `request_type`, `summary`, `description`, `description_stdin`,
+///   `priority`, `labels`, `markdown`, `on_behalf_of`, `field_pairs`
+///
+/// **Ignored with stderr warning (handled BEFORE dispatch in `handle_create`,
+/// per BC-3.8.010 + BC-3.8.011):**
+/// - `issue_type` (`--type`): JSM request types replace it
+/// - `team` (`--team`): not in JSM request schema
+/// - `points` (`--points`): not in JSM request schema
+/// - `parent` (`--parent`): JSM requests cannot be sub-tasks
+/// - `to` (`--to`): superseded by `--on-behalf-of` (raiseOnBehalfOf)
+/// - `account_id` (`--account-id`): superseded by `--on-behalf-of`
+///
+/// **No-op on JSM (silently dropped):**
+/// - (none currently — every Create flag is either passed or warned)
+///
+/// When adding a new `Create` flag, decide which category it belongs to and add it
+/// to this list to keep future maintainers from re-discovering the matrix.
+struct JsmCreateArgs {
+    project: Option<String>,
+    request_type: Option<String>,
+    summary: Option<String>,
+    description: Option<String>,
+    description_stdin: bool,
+    priority: Option<String>,
+    labels: Vec<String>,
+    markdown: bool,
+    on_behalf_of: Option<String>,
+    field_pairs: Vec<String>,
+}
+
+/// Orchestrate a JSM customer-request creation.
+///
+/// Called by [`handle_create`] when `--request-type` is present. Never called
+/// when `--request-type` is absent (platform path is the fall-through).
+///
+/// Steps (BC-3.8.001..010):
+/// 1. Resolve the service desk ID via [`servicedesks::require_service_desk`]
+///    with label `` "`jr issue create --request-type` requires" ``.
+/// 2. Resolve `request_type_arg`: if all-digits → use as-is (numeric bypass,
+///    BC-3.8.004); else → read cache / fetch via `list_request_types` /
+///    `partial_match`. Ambiguous or missing → exit 64.
+/// 3. Build `requestFieldValues` from `--summary`, `--description` (ADF),
+///    `--priority`, `--label`, `--field` via [`parse_field_kv`].
+/// 4. If `--type` is also set → emit stderr warning (BC-3.8.010). Do NOT error.
+/// 5. Build body via [`JsmRequestBuilder`].
+/// 6. POST via [`JiraClient::create_jsm_request`].
+/// 7. Emit `{"key": "<issue_key>"}` on stdout (`--output json` shape per AC-015).
+async fn handle_jsm_create(
+    client: &JiraClient,
+    config: &Config,
+    output_format: &OutputFormat,
+    project_override: Option<&str>,
+    no_input: bool,
+    args: JsmCreateArgs,
+) -> Result<()> {
+    let JsmCreateArgs {
+        project,
+        request_type,
+        summary,
+        description,
+        description_stdin,
+        priority,
+        labels,
+        markdown,
+        on_behalf_of,
+        field_pairs,
+    } = args;
+
+    // Resolve the request_type arg — we know it's Some because this function is only
+    // called when request_type.is_some().
+    let request_type_arg = request_type.expect("handle_jsm_create called without --request-type");
+
+    // Resolve project key (BC-3.8.001).
+    let project_key = project
+        .or_else(|| config.project_key(project_override))
+        .or_else(|| {
+            if no_input {
+                None
+            } else {
+                helpers::prompt_input("Project key").ok()
+            }
+        })
+        .ok_or_else(|| JrError::UserError("project is required for JSM request creation".into()))?;
+
+    // M-01 (adversary pass-02-retry) + platform-path parity: --markdown requires
+    // a description source on the JSM path, just like the platform path.
+    if markdown && description.is_none() && !description_stdin {
+        return Err(JrError::UserError(
+            "--markdown requires --description or --description-stdin to take effect. \
+             Pass a description alongside --markdown, or omit --markdown."
+                .into(),
+        )
+        .into());
+    }
+
+    // Resolve service desk ID — errors with BC-X.8.004 message for non-JSM projects
+    // (BC-3.8.002). Call-site label "`jr issue create --request-type` requires".
+    let service_desk_id = servicedesks::require_service_desk(
+        client,
+        &project_key,
+        "`jr issue create --request-type` requires",
+    )
+    .await?;
+
+    let profile = &config.active_profile_name;
+
+    // Resolve request type ID (BC-3.8.003, BC-3.8.004).
+    let request_type_id =
+        if !request_type_arg.is_empty() && request_type_arg.chars().all(|c| c.is_ascii_digit()) {
+            // Numeric bypass — use directly without list endpoint call (BC-3.8.004).
+            request_type_arg.clone()
+        } else {
+            // Name resolution: cache → API → partial_match (BC-3.8.003).
+            resolve_jsm_request_type_id(
+                &request_type_arg,
+                &service_desk_id,
+                &project_key,
+                profile,
+                client,
+            )
+            .await?
+        };
+
+    // Resolve summary (BC-3.8.005).
+    let summary_text = summary
+        .or_else(|| {
+            if no_input {
+                None
+            } else {
+                helpers::prompt_input("Summary").ok()
+            }
+        })
+        .ok_or_else(|| {
+            JrError::UserError(
+                "summary is required for JSM request submission. Use --summary.".into(),
+            )
+        })?;
+
+    // Resolve description. spawn_blocking isolates the blocking stdin read from the
+    // tokio runtime so later async work isn't starved while waiting on piped input.
+    let desc_text = if description_stdin {
+        let buf = tokio::task::spawn_blocking(|| {
+            let mut buf = String::new();
+            std::io::Read::read_to_string(&mut std::io::stdin(), &mut buf)?;
+            Ok::<_, std::io::Error>(buf)
+        })
+        .await??;
+        Some(buf)
+    } else {
+        description
+    };
+
+    // Parse --field NAME=VALUE pairs (BC-3.8.008).
+    let extra_fields = parse_field_kv(&field_pairs)?;
+
+    // Build the POST body (BC-3.8.005..009).
+    let body = JsmRequestBuilder {
+        service_desk_id: &service_desk_id,
+        request_type_id: &request_type_id,
+        summary: &summary_text,
+        description: desc_text.as_deref(),
+        markdown,
+        priority: priority.as_deref(),
+        labels: &labels,
+        on_behalf_of: on_behalf_of.as_deref(),
+        extra_fields: &extra_fields,
+    }
+    .build();
+
+    // POST to /rest/servicedeskapi/request (BC-3.8.001).
+    // On 401: surface a scope-mismatch hint pointing at write:servicedesk-request
+    // (BC-1.3.023, BC-X.3.005, H-NEW-JSM-RT-003).
+    // Both Basic-auth 401 (`NotAuthenticated`) and OAuth scope-mismatch 401
+    // (`InsufficientScope`) must produce the write:servicedesk-request hint (C-01).
+    let created =
+        client
+            .create_jsm_request(body)
+            .await
+            .map_err(|e| match e.downcast::<JrError>() {
+                Ok(JrError::NotAuthenticated { .. }) => {
+                    anyhow::anyhow!(JrError::NotAuthenticated {
+                        hint: "The `write:servicedesk-request` OAuth scope may be missing. \
+                       Run `jr auth refresh` or `jr auth login` to re-consent with \
+                       the updated scope."
+                            .to_string(),
+                    })
+                }
+                Ok(JrError::InsufficientScope { message }) => {
+                    anyhow::anyhow!(JrError::InsufficientScope {
+                        message: format!(
+                            "{message} (`jr issue create --request-type` requires the \
+                         `write:servicedesk-request` OAuth scope. \
+                         Run `jr auth refresh` to refresh, or `jr auth login` to re-authorize \
+                         with updated scopes.)"
+                        ),
+                    })
+                }
+                Ok(other) => anyhow::anyhow!(other),
+                Err(other) => other,
+            })?;
+
+    // Emit output (AC-015, BC-3.8.001).
+    let issue_key = &created.issue_key;
+    match output_format {
+        OutputFormat::Json => {
+            println!("{}", serde_json::json!({"key": issue_key}));
+        }
+        OutputFormat::Table => {
+            output::print_success(&format!("Created request {issue_key}"));
+        }
+    }
+
+    Ok(())
+}
+
+/// Resolve a request type name to its ID for the JSM create path.
+///
+/// Mirrors `cli/requesttype.rs::resolve_request_type_id` — cache → fetch → `partial_match`.
+async fn resolve_jsm_request_type_id(
+    name: &str,
+    service_desk_id: &str,
+    project_key: &str,
+    profile: &str,
+    client: &JiraClient,
+) -> Result<String> {
+    let types = match cache::read_request_type_cache(profile, service_desk_id)? {
+        Some(cached) => cached,
+        None => {
+            let fetched = client.list_request_types(service_desk_id, None).await?;
+            // `write_request_type_cache` is a best-effort writer per CLAUDE.md gotcha —
+            // it swallows IO errors via eprintln and returns Ok(()). Use `let _` to make
+            // the no-propagation intent explicit (the `?` would be dead code).
+            let _ = cache::write_request_type_cache(profile, service_desk_id, &fetched);
+            fetched
+        }
+    };
+
+    let names: Vec<String> = types.iter().map(|t| t.name.clone()).collect();
+
+    match partial_match::partial_match(name, &names) {
+        MatchResult::Exact(matched_name) => {
+            let id = types
+                .iter()
+                .find(|t| t.name == matched_name)
+                .map(|t| t.id.clone())
+                .expect("partial_match::Exact match must exist in types");
+            Ok(id)
+        }
+        MatchResult::ExactMultiple(matched_name) => {
+            let matched_lower = matched_name.to_lowercase();
+            let ids: Vec<String> = types
+                .iter()
+                .filter(|t| t.name.to_lowercase() == matched_lower)
+                .map(|t| t.id.clone())
+                .collect();
+            Err(JrError::UserError(format!(
+                "Multiple request types named \"{matched_name}\" found (IDs: {}). \
+                 Pass the numeric ID directly.",
+                ids.join(", ")
+            ))
+            .into())
+        }
+        MatchResult::Ambiguous(matches) => Err(JrError::UserError(format!(
+            "Ambiguous request type \"{name}\" matches: {}. \
+             Run `jr requesttype list --project {project_key}` to see all request types.",
+            matches
+                .iter()
+                .map(|m| format!("\"{m}\""))
+                .collect::<Vec<_>>()
+                .join(", ")
+        ))
+        .into()),
+        MatchResult::None(_) => {
+            let cache_path =
+                cache::cache_dir(profile).join(format!("request_types_{service_desk_id}.json"));
+            Err(JrError::UserError(format!(
+                "Request type \"{name}\" not found. \
+                 Run `jr requesttype list --project {project_key}` to see all request types, \
+                 or delete the cache file at {} \
+                 if a recent admin change is suspected.",
+                cache_path.display()
+            ))
+            .into())
         }
     }
 }

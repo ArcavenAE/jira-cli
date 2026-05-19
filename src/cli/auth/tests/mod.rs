@@ -339,6 +339,7 @@ fn default_oauth_scopes_pins_the_full_set_with_offline_access() {
         "write:jira-work",
         "read:jira-user",
         "read:servicedesk-request",
+        "write:servicedesk-request",
         "read:cmdb-object:jira",
         "read:cmdb-schema:jira",
         "offline_access",
@@ -352,7 +353,7 @@ fn default_oauth_scopes_pins_the_full_set_with_offline_access() {
     // would still satisfy the per-scope check above, so pin the full
     // expected set.
     let expected = "read:jira-work write:jira-work read:jira-user \
-                        read:servicedesk-request \
+                        read:servicedesk-request write:servicedesk-request \
                         read:cmdb-object:jira read:cmdb-schema:jira \
                         offline_access";
     let normalize = |s: &str| s.split_whitespace().collect::<Vec<_>>().join(" ");
@@ -752,6 +753,26 @@ fn resolve_oauth_app_credentials_partial_env_secret_errors() {
     let msg = format!("{err:#}");
     assert!(msg.contains("JR_OAUTH_CLIENT_ID"), "got: {msg}");
     assert!(msg.contains("JR_OAUTH_CLIENT_SECRET"), "got: {msg}");
+}
+
+/// AC-016 (BC-1.3.023): `write:servicedesk-request` must be present in
+/// `DEFAULT_OAUTH_SCOPES` so JSM request creation works for OAuth users.
+///
+/// RED GATE: This test FAILS until Step 4 adds the scope literal to
+/// `DEFAULT_OAUTH_SCOPES` in `src/api/auth.rs`.
+///
+/// The existing `default_oauth_scopes_pins_the_full_set_with_offline_access`
+/// test also covers the full set and will fail independently once the scope
+/// is added without updating the expected string there.
+#[test]
+fn test_default_oauth_scopes_include_servicedesk_request() {
+    assert!(
+        crate::api::auth::DEFAULT_OAUTH_SCOPES
+            .split_whitespace()
+            .any(|s| s == "write:servicedesk-request"),
+        "BC-1.3.023: DEFAULT_OAUTH_SCOPES must include write:servicedesk-request for JSM dispatch; got: {:?}",
+        crate::api::auth::DEFAULT_OAUTH_SCOPES
+    );
 }
 
 /// `jr` deliberately does NOT reject mixed classic+granular scopes,

@@ -385,6 +385,20 @@ pub enum IssueCommand {
         /// Assign to this Jira accountId directly (bypasses name search)
         #[arg(long, conflicts_with = "to")]
         account_id: Option<String>,
+        /// JSM request type (name or numeric ID). When set, dispatches to
+        /// POST /rest/servicedeskapi/request instead of POST /rest/api/3/issue.
+        /// The project must be a Jira Service Management project.
+        #[arg(long = "request-type")]
+        request_type: Option<String>,
+        /// Additional request field values as NAME=VALUE pairs (repeatable).
+        /// The first '=' splits; subsequent '=' characters are part of the value.
+        /// Duplicate keys use the last value provided. Applies to JSM requests only.
+        #[arg(long = "field", action = clap::ArgAction::Append)]
+        field: Vec<String>,
+        /// Raise the JSM request on behalf of this accountId (JSM requests only).
+        /// Maps to the top-level `raiseOnBehalfOf` field in the request body.
+        #[arg(long = "on-behalf-of")]
+        on_behalf_of: Option<String>,
     },
     /// View issue details
     View {
