@@ -36,7 +36,7 @@ activation_version: "v0.5.0-dev.7"
 | **Language** | Rust |
 | **Target Workspace** | develop → main |
 | **Started** | 2026-05-04 |
-| **Last Updated** | 2026-05-19 — Issue #383 DELIVERED (PR #390 @ 25f7211). Platform-path inverse warnings BC-3.8.012/013. |
+| **Last Updated** | 2026-05-19 — Issue #383 DELIVERED (PR #390 @ 25f7211). Platform-path inverse warnings BC-3.8.012/013. — 3 #383 deferred items resolved (#391, #392 filed; DEFER-383-2 dropped per validation). |
 | **Current Phase** | Phase 3 — TDD Implementation **IN PROGRESS** — Wave 3 CLOSED (10/10). Feature Mode #110-pr2 COMPLETE. PRs #355–#364, #366–#367, #369–#373 MERGED. **0 audit-followups remain** (#331 sandbox-blocked deferred; #333 closed by PR #360; #340 closed by PR #370; #345 closed by PR #371; #346 closed by PR #373; #350 closed by PR #362; #361 closed by PR #364; #365 closed by PR #367; PG-365-1 closed by PR #369). No active cycle. **#383 DELIVERED PR #390 @ 25f7211 (2026-05-19). 3 DEFER items filed (pending GH issues — see Drift Items).** |
 | **Next Phase** | Wave 3 — 10 stories (S-3.01..S-3.10) |
 | **Activation HEAD** | dea166471e22eff55974d7675593469b37048c5f (v0.5.0-dev.7) |
@@ -216,9 +216,10 @@ Goal 1c: **Harden v0.5 + feature delivery** — formalize existing codebase with
 | S-288-pr2-PG-1f | [process-gap] "No accept-either" assertion rule (no `||` in positive assertions) has no automated grep-lint — L-288-pr1-01 recurred 4× despite being codified. Target: grep `tests/` for `\|\|` and `.or_else(` in new test code on every adversary pass; report as MEDIUM. | LOW | DEFER → post-S-288 self-improvement epic. Not a content defect; process-gap codification. Per S-7.02 cycle-closing-checklist. |
 | S-288-pr2-PG-1g | [process-gap] CLAUDE.md `call_site_label` canonical-phrases list can drift from actual production callers — no `scripts/check-claudemd-callsite-labels.sh` checker exists. Target: create checker script. | LOW | DEFER → post-S-288 self-improvement epic. Not a content defect; process-gap codification. Per S-7.02 cycle-closing-checklist. |
 | S-382-FLAKE-01 | tests/multi_cloudid_disambiguation.rs keychain contention — macOS keychain "specified item already exists" error from concurrent test execution. Reproduces on develop without S-382 changes; pre-existing flake unrelated to #382. | LOW | PRE-EXISTING (unrelated to #382). Target: future test-infrastructure cleanup — gate keychain tests behind JR_RUN_KEYRING_TESTS=1 + #[ignore] per existing CLAUDE.md convention, or add per-test keychain namespacing. |
-| DEFER-383-1 | docs-cleanup — Subdomain heading depth `## BC-3.8:` vs `### 3.N` harmonization in `bc-3-issue-write.md`. Pre-existing from #288; requires file-wide TOC restructure; out of #383 scope. | LOW | DEFERRED — Target: future docs-cleanup pass / GH issue. **NOTE: needs GH issue filed — pending human authorization (gh issue create was auto-classifier-blocked during #383 cycle).** |
-| DEFER-383-2 | docs-cleanup — CANONICAL-COUNTS.md line-5 change-attribution wording — cosmetic only, arithmetic correct. | LOW | DEFERRED — Target: future docs-cleanup pass / GH issue. **NOTE: needs GH issue filed — pending human authorization.** |
-| DEFER-383-3 | process-gap — `scripts/check-spec-counts.sh` validates only `definitional_count`, not cumulative `total_bcs`. Extension would catch Section-header drift at CI time. Would have prevented ~80% of the 11 F2 adversary passes on #383. | LOW | DEFERRED — Target: GH issue (process-gap). **NOTE: needs GH issue filed — pending human authorization.** |
+| DEFER-383-1 | docs-cleanup — Subdomain heading depth `## BC-3.8:` vs `### 3.N` harmonization in `bc-3-issue-write.md`. Pre-existing from #288; requires file-wide TOC restructure; out of #383 scope. | LOW | **FILED #391 (2026-05-19)** — `docs: harmonize bc-3 subdomain 3.8 heading to ### N.M format` |
+| DEFER-383-2 | docs-cleanup — CANONICAL-COUNTS.md line-5 change-attribution wording — cosmetic only, arithmetic correct. | LOW | **DROPPED — premise refuted by validation; attribution already present at CANONICAL-COUNTS.md:55/57. Filing would create a 3rd sync point.** Research: `.factory/research/issue-383-deferred-followups-validation.md` |
+| DEFER-383-3 | process-gap — `scripts/check-spec-counts.sh` validates only `definitional_count`, not cumulative `total_bcs`. Extension would catch Section-header drift at CI time. Would have prevented ~80% of the 11 F2 adversary passes on #383. | LOW | **FILED #392 (2026-05-19)** — `ci: extend spec-count guard to validate cumulative total_bcs + BC-INDEX section headers`; body includes PENDING-row carve-out revision + bc-2 93-vs-92 live-drift example surfaced during validation |
+| DRIFT-BC2-PROSE | docs — `bc-2-issue-read.md` frontmatter `total_bcs: 93` (line 4) vs body preamble "92 behavioral contracts" (line 17). 1-line prose drift unrelated to #383; surfaced by validation-agent during DEFER-383-3 research. | LOW | CANDIDATE — quick direct fix OR covered by #392 guard once built. Do NOT fix inline; track here. |
 
 ## Convergence Trackers
 
@@ -264,7 +265,7 @@ _Not started._
 | Field | Value |
 |-------|-------|
 | **Date** | 2026-05-19 |
-| **Position** | **Issue #383 DELIVERED** — PR #390 MERGED @ 25f7211 (2026-05-19). Issue #383 auto-closed. S-383 F3 story: platform-path inverse warnings BC-3.8.012/013. F2 CONVERGED 11 adversary passes (3/3 CLEAN). F4 per-story adversary 3/3 CLEAN. Copilot 0 inline. CI 10/10 GREEN. pr-reviewer APPROVE 1 cycle. Lessons L-383-01..04 codified at .factory/code-delivery/S-383/lessons.md. 3 DEFER items logged (DEFER-383-1/2/3 — need GH issues). Remaining open backlog: #210, #331, #372, #384, #385, #387. No active cycle. Next: new feature selection or Wave 4 planning. |
+| **Position** | **Issue #383 DELIVERED** — PR #390 MERGED @ 25f7211 (2026-05-19). Issue #383 auto-closed. S-383 F3 story: platform-path inverse warnings BC-3.8.012/013. F2 CONVERGED 11 adversary passes (3/3 CLEAN). F4 per-story adversary 3/3 CLEAN. Copilot 0 inline. CI 10/10 GREEN. pr-reviewer APPROVE 1 cycle. Lessons L-383-01..04 codified at .factory/code-delivery/S-383/lessons.md. 3 DEFER items RESOLVED (DEFER-383-1 → #391 filed; DEFER-383-2 → dropped per validation; DEFER-383-3 → #392 filed). Remaining open backlog: #210, #331, #372, #384, #385, #387, #391, #392. No active cycle. Next: new feature selection or Wave 4 planning. |
 | **Convergence counter** | #383 CLOSED. F2 adv: 11 passes, 3/3 CLEAN (passes 09/10/11). F4 adv: 3 passes, 3/3 CLEAN. No open convergence gate. |
 
 ## Post-Cycle Housekeeping (2026-05-19)
@@ -294,6 +295,8 @@ Events after issue #288 epic closeout (factory-artifacts @ 7dbbfed):
 | #387 | git history rewrite for demo-evidence blobs | OPEN | LOW | Deferred; force-push needed |
 | #389 | S-382: JrError::InsufficientScope required_scope refactor | **MERGED** @ b1c863e (2026-05-19T18:40:25Z) | — | PR merged; issue #382 auto-closed |
 | #390 | S-383: platform-path inverse warnings (--field/--on-behalf-of) | **MERGED** @ 25f7211 (2026-05-19) | — | PR merged; issue #383 auto-closed |
+| #391 | docs: harmonize bc-3 subdomain 3.8 heading to ### N.M format | OPEN | LOW | tech-debt / docs-cleanup; DEFER-383-1 resolved |
+| #392 | ci: extend spec-count guard to validate cumulative total_bcs + BC-INDEX section headers | OPEN | LOW | tech-debt / process-gap; DEFER-383-3 resolved; body includes PENDING-row carve-out + bc-2 93-vs-92 live-drift example |
 
 ## Historical Content
 
