@@ -45,6 +45,11 @@ for f in "$FACTORY"/bc-*.md "$FACTORY"/cross-cutting.md; do
     ERRORS=$((ERRORS+1))
     continue
   fi
+  if ! [[ "$surface_a" =~ ^[0-9]+$ ]]; then
+    echo "ERROR: $basename_f: total_bcs frontmatter did not parse to an integer (got: '$surface_a') — frontmatter value may be corrupted"
+    ERRORS=$((ERRORS+1))
+    continue
+  fi
   TOTAL_SUM=$((TOTAL_SUM + surface_a))
 
   # Surface B: BC-INDEX.md ## Section N: header cumulative count
@@ -138,6 +143,9 @@ done
 surface_e=$(grep '^total_bcs:' "$BC_INDEX" | awk '{print $2}')
 if [ -z "$surface_e" ]; then
   echo "ERROR: BC-INDEX.md: total_bcs frontmatter not found"
+  ERRORS=$((ERRORS+1))
+elif ! [[ "$surface_e" =~ ^[0-9]+$ ]]; then
+  echo "ERROR: $BC_INDEX: total_bcs frontmatter did not parse to an integer (got: '$surface_e') — frontmatter value may be corrupted"
   ERRORS=$((ERRORS+1))
 elif [ "$surface_e" != "$TOTAL_SUM" ]; then
   echo "ERROR: BC-INDEX.md frontmatter total_bcs=$surface_e but computed sum of per-file total_bcs=$TOTAL_SUM"
