@@ -1633,6 +1633,104 @@ mod build_labels_proptests {
     }
 }
 
+/// Proptest properties for `parse_field_kv` (AC-013, BC-3.8.008).
+///
+/// Properties A.1–A.4 cover the four invariants stated in the verification delta.
+///
+/// RED GATE: All four properties FAIL (with `todo!()` panic) until Step 4
+/// implements `parse_field_kv`. They are placed here so `cargo test --lib`
+/// exercises them on every run.
+#[cfg(test)]
+mod parse_field_kv_proptests {
+    use super::parse_field_kv;
+    use proptest::prelude::*;
+
+    proptest! {
+        /// A.1 (BC-3.8.008): first `=` is the delimiter; subsequent `=` chars
+        /// are part of the value. For any valid NAME and VALUE (which may contain
+        /// `=` chars), round-tripping through parse_field_kv preserves the value.
+        ///
+        /// RED GATE: FAILS with todo!() until Step 4.
+        #[test]
+        fn prop_parse_field_kv_first_equals_split(
+            name in "[a-z][a-z0-9_]{0,19}",
+            value_prefix in "[a-z]{1,10}",
+            value_suffix in "[=a-z0-9]{0,10}",
+        ) {
+            let pair = format!("{name}={value_prefix}={value_suffix}");
+            let pairs = vec![pair];
+            let result = parse_field_kv(&pairs)
+                .unwrap_or_else(|e| panic!("A.1: parse_field_kv must succeed for valid pair; got error: {e:?}"));
+            let expected_value = format!("{value_prefix}={value_suffix}");
+            prop_assert_eq!(
+                result.get(&name).map(String::as_str),
+                Some(expected_value.as_str()),
+                "A.1: BC-3.8.008 first-equals split must yield full value after first '='"
+            );
+        }
+
+        /// A.2 (BC-3.8.008): empty value is allowed. `key=` produces `{"key": ""}`.
+        ///
+        /// RED GATE: FAILS with todo!() until Step 4.
+        #[test]
+        fn prop_parse_field_kv_empty_value_allowed(
+            name in "[a-z][a-z0-9_]{0,19}",
+        ) {
+            let pair = format!("{name}=");
+            let pairs = vec![pair];
+            let result = parse_field_kv(&pairs)
+                .unwrap_or_else(|e| panic!("A.2: parse_field_kv must accept 'name=' (empty value); got error: {e:?}"));
+            prop_assert_eq!(
+                result.get(&name).map(String::as_str),
+                Some(""),
+                "A.2: BC-3.8.008 empty value after '=' must be accepted and preserved"
+            );
+        }
+
+        /// A.3 (BC-3.8.008): duplicate key — last value wins.
+        /// Two pairs with the same key must result in only the second value.
+        ///
+        /// RED GATE: FAILS with todo!() until Step 4.
+        #[test]
+        fn prop_parse_field_kv_last_value_wins_on_duplicates(
+            name in "[a-z][a-z0-9_]{0,19}",
+            first_val in "[a-z]{1,10}",
+            last_val in "[a-z]{1,10}",
+        ) {
+            let pairs = vec![
+                format!("{name}={first_val}"),
+                format!("{name}={last_val}"),
+            ];
+            let result = parse_field_kv(&pairs)
+                .unwrap_or_else(|e| panic!("A.3: parse_field_kv must succeed for duplicate key pairs; got error: {e:?}"));
+            prop_assert_eq!(
+                result.get(&name).map(String::as_str),
+                Some(last_val.as_str()),
+                "A.3: BC-3.8.008 duplicate key: last value must win"
+            );
+            prop_assert_eq!(
+                result.len(),
+                1,
+                "A.3: BC-3.8.008 duplicate keys must collapse to one entry"
+            );
+        }
+
+        /// A.4 (BC-3.8.008): no panic on arbitrary input — any string that
+        /// contains at least one `=` must parse without panic (may return Ok or Err).
+        ///
+        /// RED GATE: FAILS with todo!() until Step 4.
+        #[test]
+        fn prop_parse_field_kv_no_panic_on_arbitrary_input(
+            raw in ".{0,80}",
+        ) {
+            // The function contract: no panic for any input.
+            // Ok or Err is both acceptable; only panics are forbidden.
+            let pairs = vec![raw];
+            let _ = parse_field_kv(&pairs); // must not panic
+        }
+    }
+}
+
 // ────────────────────────────────────────────────────────────────────────────
 // S-288-pr4-dispatch stubs — Step 2 (Stub Architect)
 // Bodies are todo!() per Red Gate discipline. Step 4 (Implementer) fills them.
