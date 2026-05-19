@@ -37,9 +37,19 @@ tests/spec-count-fixtures/
   bc-drift-decoy-prose-ok/              — all count surfaces agree (bc-1: 10, bc-2: 20, total: 30),
     .factory/specs/prd/                   but bc-2-issue-read.md body contains a DECOY line after a
                                           `## ` heading: "999 behavioral contracts covering some
-                                          subsection ...". The guard truncates at the first `## `
-                                          heading (via `sed '/^## /q'`) so it reads only the correct
-                                          preamble (20) and never the decoy (999). → guard exits 0
+                                          subsection ...". The guard's `sed '/^## /q'` truncation
+                                          excludes body lines, so it reads only the correct preamble
+                                          (20) and exits 0.
+                                          NOTE: because the correct preamble (line 12) is always
+                                          file-order-first and `grep -m1` short-circuits on the
+                                          first match, a bare `grep -m1 'behavioral contracts'`
+                                          WITHOUT the `sed` truncation would also return 20 — the
+                                          body decoy at line 124 is unreachable regardless. This
+                                          fixture therefore confirms the intended exit-0 behavior on
+                                          a decoy-containing file and documents the `sed` truncation
+                                          as defensive code, but cannot, by construction, fail a
+                                          `-m1`-based regression where the preamble-first file
+                                          convention holds. → guard exits 0
 ```
 
 ## Fixture design principles

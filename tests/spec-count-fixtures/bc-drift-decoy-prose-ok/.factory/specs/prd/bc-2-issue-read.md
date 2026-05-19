@@ -123,6 +123,10 @@ source_pass: 3
 
 999 behavioral contracts covering some subsection of issue-read behavior at the
 cross-cutting level — this line is a DECOY for the body-decoy-prose fixture.
-The guard truncates at the first `## ` heading and never reads this line.
-A regression that reverted the `sed '/^## /q'` truncation to a bare whole-file
-grep would incorrectly pick up this line and flag a mismatch, catching the regression.
+The guard's `sed '/^## /q'` truncation excludes this line; only the preamble
+(line 12: "20 behavioral contracts") is passed to grep. NOTE: because the
+preamble is file-order-first and grep uses `-m1`, even a bare grep without the
+sed truncation would short-circuit on line 12 and never reach this decoy at
+line 124. The sed truncation is correct defensive code, but this file's
+preamble-first layout means the decoy is structurally unreachable by -m1
+regardless of whether sed is present.
