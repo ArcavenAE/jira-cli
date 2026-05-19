@@ -27,6 +27,16 @@ set -euo pipefail
 FACTORY=".factory/specs/prd"
 BC_INDEX="$FACTORY/BC-INDEX.md"
 CANONICAL="$FACTORY/CANONICAL-COUNTS.md"
+
+if [ ! -f "$BC_INDEX" ]; then
+  echo "ERROR: BC index not found at $BC_INDEX — cannot verify cumulative counts"
+  exit 1
+fi
+if [ ! -f "$CANONICAL" ]; then
+  echo "ERROR: canonical counts file not found at $CANONICAL — cannot verify cumulative counts"
+  exit 1
+fi
+
 ERRORS=0
 FILE_COUNT=0
 TOTAL_SUM=0
@@ -39,7 +49,7 @@ for f in "$FACTORY"/bc-*.md "$FACTORY"/cross-cutting.md; do
   FILE_COUNT=$((FILE_COUNT+1))
 
   # Surface A: frontmatter total_bcs:
-  surface_a=$(grep '^total_bcs:' "$f" | awk '{print $2}')
+  surface_a=$(grep '^total_bcs:' "$f" | awk '{print $2}' || true)
   if [ -z "$surface_a" ]; then
     echo "ERROR: $basename_f: total_bcs frontmatter not found"
     ERRORS=$((ERRORS+1))
@@ -147,7 +157,7 @@ done
 # ── Grand-total surface checks ───────────────────────────────────────────────
 
 # Surface E: BC-INDEX.md frontmatter total_bcs:
-surface_e=$(grep '^total_bcs:' "$BC_INDEX" | awk '{print $2}')
+surface_e=$(grep '^total_bcs:' "$BC_INDEX" | awk '{print $2}' || true)
 if [ -z "$surface_e" ]; then
   echo "ERROR: BC-INDEX.md: total_bcs frontmatter not found"
   ERRORS=$((ERRORS+1))
