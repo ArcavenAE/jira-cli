@@ -3,10 +3,10 @@ document_type: story-index
 phase: phase-2-story-decomposition
 producer: story-writer
 version: "1.4.12"
-total_stories: 40
+total_stories: 41
 total_waves: 4
 status: complete-pending-adv-review
-last_updated: 2026-05-18
+last_updated: 2026-05-19
 activation_head: dea1664
 ---
 
@@ -183,6 +183,7 @@ They have `wave: feature-followup` in frontmatter and live under `.factory/code-
 | S-345 | Extract label-coalesce JSON builder into pure function with proptest coverage | BC-3.4.006 | — | MERGED — PR #371 @ bb352ea (2026-05-16) | small |
 | S-346 | Add cargo-mutants CI job + whitelist policy for bulk + create modules | — | — | MERGED — PR #373 @ d909e65 (2026-05-16) | small |
 | S-382 | Refactor JrError::InsufficientScope Display to use structured required_scope field (closes #382) | BC-1.6.042 | — | completed (PR #389 / b1c863e; merged 2026-05-19) | small (2 SP) |
+| S-383 | Emit stderr warnings when --field/--on-behalf-of used without --request-type on platform path (closes #383) | BC-3.8.012, BC-3.8.013 | — | ready | small (2 SP) |
 
 Feature-followup story files: `.factory/code-delivery/issue-NNN/story.md`
 
@@ -272,7 +273,7 @@ gaps that are not blocking for v0.5 but should be tracked.
 ## Story Manifest
 
 Complete mapping of every `story_id` to its absolute file path. Generated 2026-05-07; updated 2026-05-08 (S-3.10 added).
-Total rows: 40 (matches `total_stories: 40` in frontmatter). Updated 2026-05-15 (S-340 added). Updated 2026-05-16 (S-345 added). Updated 2026-05-16 (S-346 added). Updated 2026-05-18 (issue-288-pr1..pr4 added). Updated 2026-05-18 (issue-288-pr3-scope dropped; 40→39). Updated 2026-05-19 (S-382 added; quick-dev F4; 39→40). Updated 2026-05-19 (S-382 completed PR #389 / b1c863e).
+Total rows: 41 (matches `total_stories: 41` in frontmatter). Updated 2026-05-15 (S-340 added). Updated 2026-05-16 (S-345 added). Updated 2026-05-16 (S-346 added). Updated 2026-05-18 (issue-288-pr1..pr4 added). Updated 2026-05-18 (issue-288-pr3-scope dropped; 40→39). Updated 2026-05-19 (S-382 added; quick-dev F4; 39→40). Updated 2026-05-19 (S-382 completed PR #389 / b1c863e). Updated 2026-05-19 (S-383 added; F3; 40→41).
 
 ### Wave 0
 
@@ -337,3 +338,4 @@ Total rows: 40 (matches `total_stories: 40` in frontmatter). Updated 2026-05-15 
 | issue-288-pr2-cli | cycle-3-wave-2 | /Users/zious/Documents/GITHUB/jira-cli/.factory/code-delivery/issue-288-pr2-cli/story.md |
 | issue-288-pr4-dispatch | cycle-3-wave-3 | /Users/zious/Documents/GITHUB/jira-cli/.factory/code-delivery/issue-288-pr4-dispatch/story.md |
 | S-382 | feature-followup (quick-dev F4) | /Users/zious/Documents/GITHUB/jira-cli/.factory/stories/S-382-error-insufficient-scope-refactor.md |
+| S-383 | feature-followup (F3) | /Users/zious/Documents/GITHUB/jira-cli/.factory/stories/S-383-platform-inverse-warnings.md |

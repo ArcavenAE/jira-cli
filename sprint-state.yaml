@@ -502,3 +502,20 @@ cycle_3_feature_288:
       bc_anchors: [BC-3.8.001, BC-3.8.002, BC-3.8.003, BC-3.8.004, BC-3.8.005, BC-3.8.006, BC-3.8.007, BC-3.8.008, BC-3.8.009, BC-3.8.010, BC-3.3.001, BC-1.3.023, BC-X.3.005]
       holdout_anchors: [H-NEW-JSM-RT-001, H-NEW-JSM-RT-002, H-NEW-JSM-RT-003, H-NEW-JSM-RT-004]
       notes: "Wave 3 pending. Depends on pr1 + pr2 merging. Absorbs OAuth scope addition from former pr3-scope. Large (5 SP)."
+
+# Feature Followup — Standalone F3 stories (post-feature-cycle)
+# Updated: 2026-05-19
+
+feature_followup_standalone:
+  - id: S-383
+    title: "Emit stderr warnings when --field/--on-behalf-of used without --request-type on platform path"
+    status: ready
+    pr: null
+    merge_sha: null
+    merged_at: null
+    depends_on: []
+    bc_anchors: [BC-3.8.012, BC-3.8.013]
+    holdout_anchors: []
+    issue: 383
+    points: 2
+    notes: "F3 story. Closes issue #383. Two eprintln! guards inserted in handle_create (src/cli/issue/create.rs) before platform path. 7 new integration tests in tests/issue_create_jsm.rs (AC-1..AC-7). F2 converged 2026-05-19 (9 passes + final confirmation). BC-3.8.012/013 sealed. Ready for F4 implementation."
