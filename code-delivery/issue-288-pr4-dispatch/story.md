@@ -22,6 +22,7 @@ bc_anchors:
   - BC-3.8.008
   - BC-3.8.009
   - BC-3.8.010
+  - BC-3.8.011
   - BC-3.3.001
   - BC-1.3.023
   - BC-X.3.005
@@ -96,6 +97,7 @@ branch is structurally separate. Revisit at F7 if the file exceeds 2,000 LOC.
 | BC-3.8.008 | `--field NAME=VALUE`; first `=` splits; duplicate last-wins | proptest A.1–A.4 + integration |
 | BC-3.8.009 | `--on-behalf-of <accountId>` → `raiseOnBehalfOf`; pass-through | OBO injection + absence omission |
 | BC-3.8.010 | `--type` ignored with stderr warning when `--request-type` set | H-NEW-JSM-RT-004 |
+| BC-3.8.011 | Platform-only flags (`--team`, `--points`, `--parent`, `--to`, `--account-id`) emit stderr warnings on JSM path | 5 new warning-emission tests, one per flag |
 | BC-3.3.001 | Platform path unchanged when `--request-type` absent | all existing tests stay green |
 | BC-1.3.023 | 401 scope-mismatch hint surfaces `write:servicedesk-request` | H-NEW-JSM-RT-003 |
 | BC-X.3.005 | `InsufficientScope` dispatch on 401 | scope-mismatch integration test |
@@ -103,7 +105,7 @@ branch is structurally separate. Revisit at F7 if the file exceeds 2,000 LOC.
 ## Approved Scope
 
 **New files:**
-- `tests/issue_create_jsm.rs` — comprehensive integration tests for all BC-3.8.001..010
+- `tests/issue_create_jsm.rs` — comprehensive integration tests for all BC-3.8.001..011
 
 **Modified files:**
 - `src/api/auth.rs` — add `write:servicedesk-request` to `DEFAULT_OAUTH_SCOPES` (absorbed from former pr3-scope)
@@ -191,14 +193,21 @@ key is completely absent from body (NOT null). Pinned by:
 `tests/issue_create_jsm.rs::test_jsm_create_on_behalf_of_injected_at_top_level`
 AND proptest C.3 in `src/api/jsm/requests.rs::mod proptests`.
 
-**AC-011** (traces to BC-3.8.010 + H-NEW-JSM-RT-004 — `--type` warning on success path).
+**AC-011** (traces to BC-3.8.010 + H-NEW-JSM-RT-004 — `--type` warning emitted before dispatch).
 `jr issue create --project HELP --request-type "Bug" --type Task --summary "test"` emits
 a single line to stderr: "warning: --type is ignored when --request-type is set; request type
-encodes the issue type". Exit 0. JSON output shape unchanged. The warning fires ONLY on the
-success path (after flag parsing and request-type resolution succeed) — it does NOT fire if
-the command exits early (e.g., `--summary` missing, ambiguous type). Pinned by:
+encodes the issue type". Exit 0. JSON output shape unchanged. The warning is emitted before
+the dispatch is issued; per BC-3.8.010, the warning may or may not fire if the command
+early-exits on a downstream validation error (`--summary` missing, ambiguous type, etc.).
+Pinned by:
 `tests/issue_create_jsm.rs::test_jsm_create_type_flag_ignored_with_warning`
 (holdout H-NEW-JSM-RT-004)
+
+[UPDATED 2026-05-19 issue #288 pr4 adversary-pass-06 O-01] AC-011 wording
+aligned to BC-3.8.010 permissive "need not" language. Implementation fires
+warnings pre-dispatch (so they appear even on early-exit paths), which is
+BC-compliant. Wave 2 pass-02 M-2 precedent applied: align AC to BC+impl
+when impl is already correct per BC.
 
 **AC-012** (traces to BC-1.3.023 + BC-X.3.005 + H-NEW-JSM-RT-003 — 401 scope-mismatch hint).
 When `POST /rest/servicedeskapi/request` returns 401, the error path surfaces a hint
@@ -245,6 +254,23 @@ Existing tests `tests/issue_create_json.rs`, `tests/issue_commands.rs`,
 `docs/specs/cargo-mutants-policy.md` "Scope" section updated to list the three new files.
 Pinned by: updated `mutants.toml` in this PR.
 (Formerly AC-017 before absorption of OAuth scope work from pr3-scope.)
+
+**AC-019** (traces to BC-3.8.011 — platform-only flag warnings on JSM path). When
+`--request-type <NAME|ID>` is set on `jr issue create`, each of `--team`, `--points`,
+`--parent`, `--to`, `--account-id` (if set) emits exactly ONE stderr warning line
+with the verbatim BC-3.8.011 wording for that flag; JSM dispatch proceeds normally
+to exit 0 on success. Generalizes the BC-3.8.010 `--type` warning pattern to all
+platform-only flags. Idempotent — passing the same flag twice emits ONE warning.
+Pinned by `tests/issue_create_jsm.rs::test_jsm_create_team_flag_emits_warning_with_request_type`,
+`test_jsm_create_points_flag_emits_warning_with_request_type`,
+`test_jsm_create_parent_flag_emits_warning_with_request_type`,
+`test_jsm_create_to_flag_emits_warning_with_request_type`,
+`test_jsm_create_account_id_flag_emits_warning_with_request_type` (5 tests).
+
+[NEW 2026-05-19 issue #288 pr4 adversary-pass-03 M-01] AC-019 added to fill the
+gap between BC-3.8.011 (codified in pass-01 C-02) and the story's AC list.
+Frontmatter bc_anchors and BC table already referenced BC-3.8.011; only the
+AC anchor was missing.
 
 ## Implementation Tasks
 
@@ -452,9 +478,10 @@ Key lesson from `handle_create` review (F1 delta analysis):
 - **`--type` vs. `--request-type` naming:** `--type` is the existing flag (issue type for
   platform create). `--request-type` is the new flag (JSM request type). Do NOT confuse
   these in variable names or comments.
-- **`--type` warning semantics (BC-3.8.010):** The warning fires ONLY on the success path,
-  after request-type resolution succeeds. If `--summary` is missing or the request type is
-  ambiguous, the command errors BEFORE the warning fires. This is intentional per BC-3.8.010.
+- **`--type` warning semantics (BC-3.8.010):** The warning is emitted before the dispatch is
+  issued; per BC-3.8.010, the warning may or may not fire if the command early-exits on a
+  downstream validation error (`--summary` missing, ambiguous type, etc.). The implementation
+  fires warnings pre-dispatch, which is BC-compliant.
 - **F5 adversarial will check:** (1) Does `--type` flag silently swallow without warning?
   (2) Does `--field NAME=VALUE` correctly build `requestFieldValues` for multi-value fields?
   (3) Is `raiseOnBehalfOf` at the top level (NOT in `requestFieldValues`)?

@@ -200,7 +200,7 @@ Dependency graph and BC traceability matrix live at
 |----------|-------|------------|-----------------|--------|-------------|------|
 | issue-288-pr1-api | JSM request submission API client + types (no CLI surface) | BC-3.8.001 (partial), BC-X.12.001, BC-X.12.005, BC-X.12.008 | — | completed (PR #379 / 0f219eb; merged 2026-05-18) | medium (3 SP) | 1 |
 | issue-288-pr2-cli | jr requesttype list/fields discovery commands + cache | BC-X.12.001..008, BC-X.8.004 | H-NEW-JSM-RT-002 (partial), H-NEW-JSM-RT-005 | completed (PR #380 / 9d0b72c; merged 2026-05-19) | medium (3 SP) | 2 |
-| issue-288-pr4-dispatch | jr issue create --request-type dispatch fork + OAuth scope addition | BC-3.8.001..010, BC-3.3.001, BC-1.3.023, BC-X.3.005 | H-NEW-JSM-RT-001..004 | ready-for-implementation | large (5 SP) | 3 |
+| issue-288-pr4-dispatch | jr issue create --request-type dispatch fork + OAuth scope addition | BC-3.8.001..010, BC-3.3.001, BC-1.3.023, BC-X.3.005 | H-NEW-JSM-RT-001..004 | completed (PR #381 / 95232555; merged 2026-05-19) | large (5 SP) | 3 |
 
 Cycle 3 story files: `.factory/code-delivery/issue-288-pr{1,2,4}-*/story.md`
 

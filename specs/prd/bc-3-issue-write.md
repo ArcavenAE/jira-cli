@@ -1,9 +1,9 @@
 ---
 context: bc-3
 title: "Issue Write (create/edit/move/assign/comment/link/open/remote-link)"
-total_bcs: 88   # cumulative claim (incl. range-collapsed); definitional_count below is individually-bodied headings
-definitional_count: 59   # count of `#### BC-` headings in this file
-last_updated: 2026-05-18
+total_bcs: 89   # cumulative claim (incl. range-collapsed); definitional_count below is individually-bodied headings
+definitional_count: 60   # count of `#### BC-` headings in this file
+last_updated: 2026-05-19
 source_pass: 3
 trace: |
   - L2: .factory/specs/domain-spec/bc-03-issue-write.md
@@ -12,11 +12,12 @@ trace: |
   - F2 addition (2026-05-15): BC-3.4.009 — bulk-poll timeout task_id contract (issue #340)
   - F2 addition (2026-05-18): BC-3.8.001..010 — JSM request submission (issue #288 F2 added 001..009; F1d pass-01 added BC-3.8.010 to close --type interaction)
   - F1d addition (2026-05-18): BC-3.8.010 — --type ignored with warning when --request-type is set (issue #288 adversary pass-01)
+  - F1d addition (2026-05-19): BC-3.8.011 — platform-only flags emit stderr warnings on JSM path (issue #288 adversary-pass-01 C-02); H-01 BC-3.8.003 verb aligned "Use"→"Run"
 ---
 
 # BC-3 — Issue Write
 
-88 behavioral contracts across 8 subdomains: Assign (3.1), Move/Transition (3.2),
+89 behavioral contracts across 8 subdomains: Assign (3.1), Move/Transition (3.2),
 Create (3.3), Edit+Open (3.4), Comment (3.5), Links (3.6), Remote links (3.7),
 JSM Request Create (3.8).
 
@@ -544,7 +545,7 @@ existing wall-clock bound and `"deadline"` substring assertions.
 
 ## BC-3.8: JSM Request Submission
 
-10 behavioral contracts covering `jr issue create --request-type` dispatch to the JSM service desk API.
+11 behavioral contracts covering `jr issue create --request-type` dispatch to the JSM service desk API.
 All BCs in this section require the `--request-type` flag to be set; the platform path (BC-3.3.001) is
 entirely unchanged when `--request-type` is absent.
 
@@ -582,7 +583,12 @@ entirely unchanged when `--request-type` is absent.
 
 **Confidence**: HIGH
 **Subject**: Issue write (JSM path)
-**Behavior**: When `--request-type` is a non-numeric string, the handler fetches (or cache-hits) the service desk's request type list, then calls `partial_match(input, &names)`. `MatchResult::Exact(id)` → proceeds. `MatchResult::Ambiguous` or `MatchResult::ExactMultiple` → exits 64 with "Ambiguous request type" + candidate names + hint "Use `jr requesttype list --project <KEY>` to see all request types". `MatchResult::None` → exits 64 with "Request type not found" + hint. In `--no-input` mode, ambiguous partial match exits 64 cleanly (does NOT prompt).
+**Behavior**: When `--request-type` is a non-numeric string, the handler fetches (or cache-hits) the service desk's request type list, then calls `partial_match(input, &names)`. `MatchResult::Exact(id)` → proceeds. `MatchResult::Ambiguous` or `MatchResult::ExactMultiple` → exits 64 with "Ambiguous request type" + candidate names + hint "Run `jr requesttype list --project <KEY>` to see all request types". `MatchResult::None` → exits 64 with "Request type not found" + hint. In `--no-input` mode, ambiguous partial match exits 64 cleanly (does NOT prompt).
+
+[UPDATED 2026-05-19 issue #288 pr4 adversary-pass-01 H-01] Hint verb aligned from
+"Use" to "Run" to match Wave 2 cli/requesttype.rs sibling (line 227) and the
+Wave 3 cli/issue/create.rs dispatch fork (lines 2005, 2017). Imperative active
+verb fits jr CLI ergonomics. Wave 2 pass-02 M-2 precedent applied.
 **Inputs**: `--request-type <NAME>` (string, non-numeric); service desk request type list (API or cache)
 **Outputs/Effects**: Resolved `requestTypeId` string passed into JSM request body.
 **Errors**: Ambiguous → exit 64; None → exit 64; both with actionable hint. Zero HTTP to `POST /rest/servicedeskapi/request` on error paths.
@@ -687,6 +693,40 @@ entirely unchanged when `--request-type` is absent.
 **Trace**: `tests/issue_create_jsm.rs` (warning_on_type_with_request_type integration test)
 **Source**: ADR-0014 §"Dispatch fork: --type interaction" — `--type` is meaningless in the JSM path because `requestTypeId` encodes the issue type server-side; emitting a warning rather than erroring preserves backward compatibility for scripts that habitually pass `--type`.
 **Confidence**: HIGH
+
+---
+
+#### BC-3.8.011: Platform-only flags ignored on JSM path emit stderr warnings
+
+**Confidence**: HIGH
+**Subject**: JSM request submission cross-flag interaction
+**Behavior**: When `--request-type <NAME|ID>` is set on `jr issue create`, the following
+platform-only flags are NOT supported by the JSM `/rest/servicedeskapi/request` endpoint
+and are silently ignored if passed. For EACH such flag set, the handler MUST emit ONE
+warning line to stderr (NOT stdout, NOT in --output json data), then continue with the
+JSM dispatch normally. Flags covered:
+
+- `--team <id>`: warning `"warning: --team is ignored when --request-type is set; teams are managed by the request type's workflow"`
+- `--points <n>`: warning `"warning: --points is ignored when --request-type is set; story points are not part of JSM request schema"`
+- `--parent <key>`: warning `"warning: --parent is ignored when --request-type is set; JSM requests cannot be sub-tasks"`
+- `--to <accountId>`: warning `"warning: --to is ignored when --request-type is set; use --on-behalf-of to set the requester"`
+- `--account-id <id>`: warning `"warning: --account-id is ignored when --request-type is set; use --on-behalf-of to set the requester"`
+
+Generalizes the existing `--type` warning pattern from BC-3.8.010. Idempotent — passing
+the same flag twice still emits ONE warning per logical flag.
+
+**Inputs**: any combination of `--team`, `--points`, `--parent`, `--to`, `--account-id`
+with `--request-type`
+**Outputs/Effects**: One stderr warning line per dropped flag; JSM dispatch continues
+normally; exit 0 on success.
+**Errors**: None — these are warnings, not errors. Dispatch proceeds.
+**Trace**: `tests/issue_create_jsm.rs` (5 new warning-emission tests, one per flag)
+**Source**: Adversary pass-01 C-02 codification; mirrors BC-3.8.010 pattern
+**Confidence**: HIGH
+
+[NEW 2026-05-19 issue #288 pr4 adversary-pass-01 C-02] Added to codify the cross-flag
+warning policy after adversary pass-01 found silent-drop of 5 platform-only flags on
+the JSM dispatch path.
 
 ---
 
