@@ -31,7 +31,8 @@ src/
 │   ├── auth.rs          # auth login/switch/list/status/refresh/logout/remove. Multi-profile aware via --profile.
 │   ├── init.rs          # Interactive setup (prefetches org metadata + team cache + story points field)
 │   ├── project.rs       # project fields (types, priorities, statuses, CMDB fields)
-│   └── queue.rs         # queue list/view (JSM service desks)
+│   ├── queue.rs         # queue list/view (JSM service desks)
+│   └── requesttype.rs   # requesttype list/fields (JSM request-type discovery + 7d cache)
 ├── api/
 │   ├── client.rs        # JiraClient — HTTP methods, auth headers, rate limit retry, 429/401 handling
 │   ├── auth.rs          # OAuth 2.0 flow + per-profile keychain layout (shared email/api-token/oauth_client_*; namespaced <profile>:oauth-access-token / <profile>:oauth-refresh-token); lazy migration of legacy flat OAuth keys for the "default" profile
@@ -152,6 +153,33 @@ When adding a new feature:
 - **Multi-profile boundary:** every cache reader/writer takes `profile: &str` as its first arg. Pass `&config.active_profile_name` from any handler that has `&Config` in scope. Cross-profile cache leakage is a correctness bug, not a UX issue — sandbox vs prod custom-field IDs can differ.
 - **Per-profile vs shared OAuth keys:** `email`, `api-token`, `oauth_client_id`, `oauth_client_secret` live under flat keychain keys (account-level, shared across profiles). `oauth-access-token` / `oauth-refresh-token` are namespaced as `<profile>:oauth-*` because they're cloudId-scoped. The `"default"` profile lazy-migrates legacy flat keys on first read; other profiles do not.
 - **Cache format changes:** `~/.cache/jr/v1/<profile>/cmdb_fields.json` stores `(id, name)` tuples. Old format (ID-only) causes deserialization failure, handled as cache miss. If you change cache structs, old caches auto-expire (7-day TTL) or fail gracefully. To break compatibility cleanly, bump the cache root from `v1/` to `v2/` — old files orphan harmlessly.
+  - **Request-type caches (S-288-pr2):** `~/.cache/jr/v1/<profile>/request_types_<service_desk_id>.json`
+    stores the list of `RequestType` structs; `request_type_fields_<service_desk_id>_<request_type_id>.json`
+    stores the fields response. Both inherit `RequestType`/`RequestTypeField` shape from
+    `src/types/jsm/request_type.rs`; if Atlassian adds required fields to either response,
+    older cache files fail to deserialize (handled as cache miss → refetch; self-heals).
+    Same 7-day TTL as all other caches; same `v1/` root-bump path for incompatible changes.
+- **`jr requesttype fields <NAME|ID>` numeric-bypass edge case:** When `<NAME|ID>`
+  is all ASCII digits, the handler treats it as a numeric request type ID and
+  skips `partial_match` resolution. If an admin names a request type `"100"` or
+  `"42"` (a legal Atlassian display name), `jr requesttype fields 100` will
+  hit `.../requesttype/100/field` directly and surface a raw API error if no
+  RT with that ID exists. To force name-based resolution, prefix with any
+  non-digit (no Atlassian-supported escape exists today; user must use the
+  numeric ID directly via `jr requesttype list --output json | jq` to look it
+  up). Tracked behavior — not a bug — but worth noting if you add a `--by-id`
+  flag in the future.
+- **Cache-write error handling — "best-effort writer" pattern (S-288-pr2):**
+  The `write_request_type_cache` and `write_request_type_fields_cache` functions
+  swallow disk-write errors via `eprintln!("warning: ...")` + return `Ok(())`,
+  diverging from all other cache writers in `src/cache.rs` which propagate
+  errors via `?`. The "best-effort" model exists because cache write failures
+  must NEVER break a successful API call (the cost of a missed write is at
+  most one extra HTTP on the next call). When adding a NEW cache family,
+  pick a model: (a) propagate via `?` if the cache is correctness-critical
+  (e.g., resolutions, team metadata where downstream code depends on values),
+  (b) swallow + warn if the cache is purely a read-acceleration shortcut.
+  Document the choice in the writer's rustdoc.
 - **`list.rs` is large (~970 lines):** Contains both `handle_list` and `handle_view` plus all JQL composition logic. If modifying, read the full function you're changing — context matters.
 - **`aqlFunction()` not `assetsQuery()`:** The Jira Assets JQL function is `aqlFunction()`. It requires the human-readable field **name**, not `cf[ID]` or `customfield_NNNNN`. AQL attribute for object key is `Key` (not `objectKey` — that's the JSON field name).
 - **Status category colors are fixed:** `green` = Done, `yellow` = In Progress, `blue-gray` = To Do. These mappings are hardcoded in Jira Cloud across all instances. Used by `--open` filtering.
@@ -185,6 +213,21 @@ When adding a new feature:
   pagination (selects range [startAt, startAt+maxResults) then applies permission
   filtering), so a short non-empty page does NOT mean end-of-data. Advancing by returned
   count would overlap windows and produce duplicates. Do not change this behavior.
+- **`jr requesttype list/fields` (JSM request-type discovery):** `cli/requesttype.rs` implements
+  two subcommands: `list` (table: Name, Description; JSON array) and `fields <NAME|ID>` (table:
+  Field Name, Required, Type; JSON object). Request types are cached per `(profile, serviceDeskId)`
+  as `request_types_<sid>.json` (7-day TTL); field schemas per `(profile, sid, rtId)` as
+  `request_type_fields_<sid>_<rtId>.json`. Search results (`--search`) are never cached — only
+  the full list is. Cache functions: `read_request_type_cache`, `write_request_type_cache`,
+  `read_request_type_fields_cache`, `write_request_type_fields_cache`.
+- **`require_service_desk` call-site label (BC-X.8.004):** `servicedesks::require_service_desk`
+  accepts a `call_site_label: &'static str` parameter; the rendered error embeds the label
+  followed by ` a Jira Service Management project.` (the template drops the verb to allow
+  correct plural/singular agreement). Every caller MUST supply a full noun-phrase ending in
+  the matching verb. Current callers:
+  - `cli/queue.rs:32` passes `"Queue commands (\`jr queue\`) require"`
+  - `cli/requesttype.rs:38` passes `` "`jr requesttype` commands require" ``
+  See `src/api/jsm/servicedesks.rs::require_service_desk` rustdoc for the canonical contract.
 - **`board view` truncation hint emits to stderr:** The truncation hint ("Showing N of M
   columns — use --all to see everything") is written to stderr, consistent with the
   convention used by `issue list` and `sprint current`. This is intentional — stderr

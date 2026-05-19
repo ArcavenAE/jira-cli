@@ -99,7 +99,21 @@ pub async fn get_or_fetch_project_meta(
 }
 
 /// Require the project to be a JSM service desk. Returns the serviceDeskId or errors.
-pub async fn require_service_desk(client: &JiraClient, project_key: &str) -> Result<String> {
+///
+/// `call_site_label` is embedded in the error message to produce caller-specific
+/// error text per BC-X.8.004 + BC-X.12.003. The label MUST be a full noun-phrase
+/// ending in the matching verb (e.g., "Queue commands (`jr queue`) require" or
+/// "`jr requesttype` commands require"), because the template drops the verb to
+/// allow correct number agreement for plural vs singular subjects.
+///
+/// Error message template (verbatim per BC-X.8.004 + BC-X.12.003):
+/// `Project "<KEY>" is a <TYPE> project. <LABEL> a Jira Service Management project.
+///  Run "jr project list" to find a JSM project.`
+pub async fn require_service_desk(
+    client: &JiraClient,
+    project_key: &str,
+    call_site_label: &'static str,
+) -> Result<String> {
     let meta = get_or_fetch_project_meta(client, project_key).await?;
 
     if meta.project_type != "service_desk" {
@@ -109,9 +123,9 @@ pub async fn require_service_desk(client: &JiraClient, project_key: &str) -> Res
             _ => "Jira",
         };
         return Err(JrError::UserError(format!(
-            "\"{}\" is a {} project. Queue commands require a Jira Service Management project. \
-             Run \"jr project fields --project {}\" to see available commands.",
-            project_key, type_label, project_key
+            "Project \"{}\" is a {} project. {} a Jira Service Management project. \
+             Run \"jr project list\" to find a JSM project.",
+            project_key, type_label, call_site_label
         ))
         .into());
     }
