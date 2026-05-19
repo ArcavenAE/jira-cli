@@ -1147,3 +1147,84 @@ Pattern: when an adversarial NIT is "self-documented imperfection" (test author 
 
 _Discovered: S-288-pr1-api F4 delivery + 6 Copilot rounds → convergence, 2026-05-18_
 _Tagged: [codified] [process-gap] — first occurrence; applicable to all future adversarial-remediation cycles_
+
+---
+
+## L-288-pr2-01: Budget 8-12 adversarial passes for stories with NEW BCs [codified]
+
+**Date:** 2026-05-19
+**Cycle:** 3-feature-jsm-request-types-288 (F4 pr2-cli delivery)
+**Tag:** [codified] [process-level]
+
+### What happened
+
+S-288-pr2-cli required 11 adversarial passes before reaching 3/3 CLEAN convergence. Substantive findings were present in passes 01-08 (30+ total findings across BC↔impl gaps, spec-intra-document inconsistencies, test-precision issues, encapsulation problems, and doc-fallout). Passes 09-10-11 were all CLEAN.
+
+Each successive pass found defects the previous missed because fresh-context revealed different surfaces:
+- Pass 01: BC-string implementation drift (CRITICAL), output-channel violations (HIGH)
+- Pass 02-03: spec-intra-document consistency, test-precision `||` disjunctions
+- Pass 04-05: encapsulation, cross-profile cache discipline, POLICY compliance
+- Pass 06-07: accept-either test hiding, cell-content `||`, numeric-bypass `||`
+- Pass 08: CLAUDE.md call_site_label drift
+
+### Lesson
+
+**Budget 8-12 adversarial passes for stories that introduce NEW BCs (vs <5 for pure refactor stories).** New BCs create new contract surfaces that fresh-context passes continue to find violations of, even after earlier passes declared "converging." The 3/3 CLEAN convergence criterion is correct; the budget estimate must reflect the actual contract density.
+
+Do not shortcut even when the trajectory looks "almost converged" — passes 06-07 found material issues (MEDIUM severity) on what felt like a near-clean trajectory after pass 05.
+
+### Application going forward
+
+- Story-writer: annotate estimated adversarial pass budget in story frontmatter for stories with ≥4 new BCs: `estimated_adv_passes: 8-12`
+- Orchestrator: when dispatching per-story adversary for a new-BC story, pre-set the convergence expectation at 10+ passes rather than 5
+- For pure refactor stories (no new BCs, only internal restructuring): <5 passes is still the correct budget
+
+_Discovered: S-288-pr2-cli F4 per-story adversarial convergence, 2026-05-19_
+_Tagged: [codified] — budget discipline for new-BC stories vs refactor stories_
+
+---
+
+## L-288-pr2-02: L-288-pr1-01 `||`/`.or_else()` test-precision recurrence rate is HIGH — elevate to MEDIUM [codified]
+
+**Date:** 2026-05-19
+**Cycle:** 3-feature-jsm-request-types-288 (F4 pr2-cli delivery)
+**Tag:** [codified] [process-level] [policy]
+
+### What happened
+
+L-288-pr1-01 (codified 2026-05-18) states: do not use `||` in positive assertions because it accepts either disjunct and hides the case where one branch always passes while the other never fires. The lesson was codified in CLAUDE.md and lessons.md after pr1-api.
+
+Despite being codified, the same pattern recurred FOUR times across pr2-cli adversarial passes:
+- Pass 02: `.or_else()` escape in `require_service_desk` test assertion (accepted wrong exit code)
+- Pass 03: case-sensitive ExactMultiple test hidden by `||` (case-variant was never exercised)
+- Pass 06: cell-content assertion used `||` allowing either cell to satisfy the check
+- Pass 07: numeric-bypass `||` — test passed on numeric input that should have been rejected
+
+Every recurrence was found by fresh-context adversarial review, not by the test author or the implementing agent.
+
+### Lesson
+
+**Adversary should grep `tests/` for `||` and `.or_else(` in ALL new test code on EVERY pass and report any match as MEDIUM (not LOW per prior classification).** The recurrence rate (4× in a single story despite an explicit codified lesson) shows that the pattern is a systematic failure mode requiring grep-level enforcement, not documentation-level awareness.
+
+The current policy (L-288-pr1-01) classifies `||`/`.or_else()` violations as LOW. This classification is wrong for repeated recurrences across a single story. MEDIUM is appropriate: the issue is not catastrophic but it has a demonstrated pattern of slipping through human review AND prior VSDD adversarial passes.
+
+### Concrete grep rule
+
+On every adversarial pass, as part of the L-288-pr1-01 audit section, run:
+
+```bash
+grep -n "\|\|" tests/<story-test-files>.rs
+grep -n "\.or_else(" tests/<story-test-files>.rs
+grep -n "\.or(" tests/<story-test-files>.rs
+```
+
+Any match in a positive assertion (not a negative compound test or a functional `or_else` for option handling) is a MEDIUM finding: "MEDIUM — accept-either disjunction in positive assertion. Hides case where one branch never fires."
+
+### Application going forward
+
+- Per-story adversary: include explicit `||`/`.or_else(` grep results in every pass report, under "L-288-pr1-01 test-precision audit" section
+- Classify any hit in a positive test assertion as MEDIUM (not LOW)
+- This rule applies to ALL stories, not just #288 follow-ons
+
+_Discovered: S-288-pr2-cli F4 adversarial passes 02/03/06/07 (four recurrences of L-288-pr1-01 despite codification), 2026-05-19_
+_Tagged: [codified] [policy] — elevates accept-either classification from LOW to MEDIUM; mandates grep audit on every adversary pass_

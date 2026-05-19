@@ -35,7 +35,11 @@ files_modified:
   - src/cache.rs
   - src/api/jsm/servicedesks.rs
   - src/cli/queue.rs
+  - src/config.rs
+  - src/types/jsm/request_type.rs
   - tests/requesttype_commands.rs
+  - tests/queue.rs
+  - tests/project_meta.rs
   - CLAUDE.md
 breaking_change: false
 depends_on:
@@ -160,8 +164,9 @@ only ONE HTTP call to the fields endpoint. Pinned by:
 
 **AC-010** (traces to BC-X.8.004 — `require_service_desk` queue caller unchanged).
 After this PR, `jr queue list --project HELP` on a non-JSM project still exits 64 with
-a message containing "Queue commands". The error message is NOT changed for queue callers.
-Pinned by: `tests/queue.rs` (existing test — must remain green without modification)
+a message containing the verbatim BC-X.8.004 phrase `"Queue commands (`jr queue`) require a Jira Service Management project"` (capitalised "Queue", parenthetical `` (`jr queue`) ``, plural verb "require") in stderr. The error message is NOT changed for queue callers.
+Pinned by: `tests/queue.rs::test_queue_list_non_jsm_project_emits_canonical_callsite_message` (NEW assertion added by adversary-pass-01 H-5 remediation, verifies the literal BC-X.8.004 phrase appears verbatim in stderr). Test-writer will add this test in a follow-up pass.
+[UPDATED 2026-05-18 issue #288 adversary-pass-01 H-5]: Removed false "existing test — must remain green without modification" claim. No test named test_queue_list_non_jsm_project_emits_canonical_callsite_message exists in tests/queue.rs; a new test must be added. The exact verbatim phrase from BC-X.8.004 is pinned here so test-writer has an unambiguous string literal to assert against.
 
 **AC-011** (traces to BC-X.12.003 — `--project` from profile, not flag only).
 When no `--project` flag is given but the active profile has a project configured,
@@ -170,36 +175,45 @@ configured, exits 64 with actionable message. Pinned by:
 `tests/requesttype_commands.rs::test_requesttype_list_uses_profile_project_when_no_flag`
 
 **AC-012** (release-gate). `cargo test`, `cargo clippy -- -D warnings`, `cargo fmt --check`
-all pass. `tests/queue.rs`, `tests/auth_profiles.rs` remain green (no regression).
-`tests/requesttype_commands.rs` all green.
+all pass. `tests/requesttype_commands.rs` all green. Regression: `tests/queue.rs`,
+`tests/auth_profiles.rs`, and `tests/project_meta.rs` must remain green. `tests/queue.rs`
+and `tests/project_meta.rs` receive S-288-pr2 modifications (per `files_modified`);
+`tests/auth_profiles.rs` must remain green without modification.
 
 ## Implementation Tasks
 
-- [ ] Write RED tests in `tests/requesttype_commands.rs` covering AC-001..AC-011 before
+- [x] Write RED tests in `tests/requesttype_commands.rs` covering AC-001..AC-011 before
       implementing (TDD Red Gate).
-- [ ] Extend `require_service_desk` in `src/api/jsm/servicedesks.rs` to accept
+- [x] Extend `require_service_desk` in `src/api/jsm/servicedesks.rs` to accept
       `context_label: &'static str`; update error message to embed the label.
       Update `src/cli/queue.rs` call site to pass `"queue commands"` in the same commit.
-- [ ] Add `RequestTypeCache` struct (with `fetched_at: DateTime<Utc>`, `service_desk_id: String`,
+- [x] Add `RequestTypeCache` struct (with `fetched_at: DateTime<Utc>`, `service_desk_id: String`,
       `request_types: Vec<CachedRequestType>`) to `src/cache.rs`. Add `read_request_type_cache`
       and `write_request_type_cache`. Mirror `read_team_cache` / `write_team_cache` patterns
       (same 7-day TTL check, same XDG path construction using `profile` parameter).
-- [ ] Add `RequestTypeFieldsCache` struct (with `fetched_at`, `service_desk_id`, `request_type_id`,
+- [x] Add `RequestTypeFieldsCache` struct (with `fetched_at`, `service_desk_id`, `request_type_id`,
       `fields_response`) to `src/cache.rs`. Add `read_request_type_fields_cache` and
       `write_request_type_fields_cache`. Cache key: `request_type_fields_<sid>_<rtId>.json`.
-- [ ] Create `src/cli/requesttype.rs` with `pub async fn handle(...)`. Implement `List` arm:
+- [x] Create `src/cli/requesttype.rs` with `pub async fn handle(...)`. Implement `List` arm:
       `require_service_desk`, cache read, API call if miss, cache write, format output.
       Implement `Fields` arm: same pattern with field-level cache.
       Use `partial_match::partial_match` for name→ID resolution in `Fields` (not a bespoke matcher).
-- [ ] Add `pub mod requesttype;` to `src/cli/mod.rs`. Add `Command::RequestType { command: RequestTypeCommand }`.
+- [x] Add `pub mod requesttype;` to `src/cli/mod.rs`. Add `Command::RequestType { command: RequestTypeCommand }`.
       Add `RequestTypeCommand` enum with `List { project, search, output }` and
       `Fields { name_or_id, project, output }` variants. Follow `Command::Queue` clap annotations.
-- [ ] Add `Command::RequestType { command }` dispatch arm to `src/main.rs` following
+- [x] Add `Command::RequestType { command }` dispatch arm to `src/main.rs` following
       `Command::Queue` pattern.
-- [ ] Update `CLAUDE.md` with new commands and call-site label contract.
-- [ ] Verify `cargo test --test requesttype_commands` green.
-- [ ] Verify `cargo test --test queue` still green (regression guard for BC-X.8.004 queue path).
-- [ ] Run full `cargo test`, `cargo clippy -- -D warnings`, `cargo fmt --check`.
+- [x] Update `CLAUDE.md` with new commands and call-site label contract.
+- [x] Verify `cargo test --test requesttype_commands` green.
+- [x] Verify `cargo test --test queue` still green (regression guard for BC-X.8.004 queue path).
+- [x] Run full `cargo test`, `cargo clippy -- -D warnings`, `cargo fmt --check`.
+- [ ] Create PR and obtain merge to develop. (Pending — Step 5-7 of per-story delivery.)
+
+[UPDATED 2026-05-18 issue #288 adversary-pass-05 M-1 + M-2 + L-5] Frontmatter
+files_modified completed (was missing src/config.rs, src/types/jsm/request_type.rs,
+tests/queue.rs, tests/project_meta.rs); AC-012 regression-guard list extended to
+include tests/project_meta.rs; Implementation Tasks checked off for completed
+work (PR creation / merge remain pending).
 
 ## Testing Strategy
 
