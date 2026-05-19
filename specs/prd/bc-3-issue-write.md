@@ -720,7 +720,7 @@ with `--request-type`
 **Outputs/Effects**: One stderr warning line per dropped flag; JSM dispatch continues
 normally; exit 0 on success.
 **Errors**: None — these are warnings, not errors. Dispatch proceeds.
-**Trace**: `tests/issue_create_jsm.rs` (5 new warning-emission tests, one per flag)
+**Trace**: `tests/issue_create_jsm.rs` (per-flag warning-emission integration tests, one assertion per platform-only flag)
 **Source**: Adversary pass-01 C-02 codification; mirrors BC-3.8.010 pattern
 **Confidence**: HIGH
 
