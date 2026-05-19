@@ -10,9 +10,9 @@ feature_type: "backend"
 scope: "trivial"
 severity: "N/A"
 sources:
-  - impact-boundary.md (architect, F1-Step-3; revised F1d adversary-pass-01 F-01 + F-03; revised F1d adversary-pass-02 H-01 + M-01 + L-01)
-  - affected-artifacts.md (business-analyst, F1-Step-4; revised F1d adversary-pass-01 F-02 + F-04 + F-06 + F-07; revised F1d adversary-pass-02 H-01 + L-03)
-  - design-validation.md (research-agent, pre-F2 gate; revised F1d adversary-pass-01 F-01 + F-05; revised F1d adversary-pass-02 H-02 + M-05 + L-02)
+  - impact-boundary.md (architect, F1-Step-3; revised F1d adversary-pass-01 F-01 + F-03; revised F1d adversary-pass-02 H-01 + M-01 + L-01; revised F1d adversary-pass-03 M-02)
+  - affected-artifacts.md (business-analyst, F1-Step-4; revised F1d adversary-pass-01 F-02 + F-04 + F-06 + F-07; revised F1d adversary-pass-02 H-01 + L-03; revised F1d adversary-pass-03 M-01 + M-03 + L-01 + L-02 intent)
+  - design-validation.md (research-agent, pre-F2 gate; revised F1d adversary-pass-01 F-01 + F-05; revised F1d adversary-pass-02 H-02 + M-05 + L-02; revised F1d adversary-pass-03 L-03 + AC-4 added)
   - po-decision-bc-parameterization.md (product-owner, F1d adversary-pass-01 F-02)
   - bc-1-auth-identity.md BC-1.6.042 (Empty-Some policy added in pass-02)
 ---
@@ -81,9 +81,10 @@ sources:
 | `src/error.rs` | MODIFIED | `InsufficientScope` variant gains `required_scope: Option<String>` field; `#[error]` uses expression-argument form with `.filter(|s| !s.is_empty())` per BC-1.6.042 Empty-Some policy |
 | `src/api/client.rs` | MODIFIED | 2 construction sites (lines 700 `send()` first-401-body block, 969 `parse_error()` helper) gain `required_scope: None` (back-compat fallback; preserves `"write:jira-work"` Display text for platform-write path) |
 | `src/cli/issue/create.rs` | MODIFIED | 1 construction site (line 1983) gains `required_scope: Some("write:servicedesk-request".to_string())` |
-| `src/error.rs` unit test T-1b (line 131) | MODIFIED | `insufficient_scope_exit_code`: construction call updated to add `required_scope: None`; assertion (exit code 2) unchanged |
-| `src/error.rs` unit test T-1 (line 171) | MODIFIED | `insufficient_scope_display_includes_workarounds`: construction call updated to add `required_scope: None`; assertion text UNCHANGED (fallback renders historical `write:jira-work` literal) |
-| `tests/api_client.rs` T-2 (line 136) | UNCHANGED | Falls back to historical literal via `None` branch at C-2; assertion passes unmodified |
+| `src/error.rs` unit test T-1b (line 131) | MODIFIED | `insufficient_scope_exit_code`: construction call updated to add `required_scope: None`; assertion (exit_code == 2) UNCHANGED |
+| `src/error.rs` unit test T-1 (line 171) | MODIFIED | `insufficient_scope_display_includes_workarounds`: construction call updated to add `required_scope: None`; assertion text UNCHANGED (None-fallback preserves `write:jira-work` literal in Display) |
+| `tests/api_client.rs` T-2 (line 136) | UNCHANGED | Assertion passes unmodified via None-fallback at C-2; `write:jira-work` literal preserved byte-for-byte |
+| `src/error.rs` unit test T-3 (NEW, AC-4) | NEW | `test_insufficient_scope_display_empty_some_falls_back`: constructs with `required_scope: Some("".into())`; asserts Display contains `write:jira-work` (fallback). Pins Empty-Some policy from BC-1.6.042 pass-02. |
 | `BC-1.6.042` | MODIFY (option-a, in-place) | Behavior line parameterized + Empty-Some policy added; no new BC added; no BC-INDEX or CANONICAL-COUNTS change |
 | `BC-1.6.047` (candidate) | WITHDRAWN | PO decision: not needed |
 
@@ -151,6 +152,12 @@ Note the `.filter(|s| !s.is_empty())` between `as_deref()` and `unwrap_or`. This
 | AC-5 | T-2 (`tests/api_client.rs:136`) still passes unmodified — `None`→`"write:jira-work"` fallback preserves assertion byte-for-byte | Verified by design |
 | AC-6 | All 3 production construction sites updated per lookup table: `client.rs:700` → `None`, `client.rs:969` → `None`, `create.rs:1983` → `Some("write:servicedesk-request")` | Required for F4 |
 
+### Known Cosmetic — Accepted for #382
+
+**C-3 dual-rendering:** Post-refactor, the JSM C-3 path (`src/cli/issue/create.rs:1983`) renders the scope name twice in the error Display output: once via the C-3-enriched `message` string already present in the `message` field (which the existing code appends at call-site), and once via the new `scope_hint` workaround line generated from `required_scope: Some("write:servicedesk-request")`. This duplication is cosmetically suboptimal but functionally harmless — the scope name is reinforced rather than contradicted, and the user receives actionable information in either occurrence.
+
+**Decision:** Accept for #382. Removing the C-3 enrichment from the `message` field is a separate refactor with its own AC surface and is OUT OF SCOPE for this issue. If user feedback flags the duplication in stderr, file a follow-up issue. See affected-artifacts.md Section 6 for full rationale (L-01 cosmetic accept note).
+
 ---
 
 ## Files Changed
@@ -200,7 +207,7 @@ These files must not be modified during implementation. All their tests must con
 
 ### Docs/Index Surfaces Verified Unchanged
 
-These spec and doc files reference `InsufficientScope` behavior or BC-1.6.042. They require no edits under option (a) parameterization but must be verified after implementation confirms accuracy. 6 surfaces enumerated (matching impact-boundary.md Section 5b and affected-artifacts.md Section 8 Docs/Index count).
+These spec and doc files reference `InsufficientScope` behavior or BC-1.6.042. They require no edits under option (a) parameterization but must be verified after implementation confirms accuracy. 8 surfaces enumerated (matching impact-boundary.md Section 5b and affected-artifacts.md Section 8 Docs/Index count; 2 rows added in pass-03 M-03).
 
 | File | Reference | Why Unchanged | Verify Action |
 |------|-----------|---------------|---------------|
@@ -210,6 +217,8 @@ These spec and doc files reference `InsufficientScope` behavior or BC-1.6.042. T
 | `.factory/specs/prd/edge-case-catalog.md` (line 78) | `Covered by BC-1.6.042; holdout H-012` | BC-1.6.042 still covers this edge case under parameterization | Confirm edge-case description aligns with updated BC-1.6.042 Behavior line |
 | `.factory/specs/prd/holdout-scenarios.md` (lines 138–145, H-012) | `write:jira-work` substring assertion | None-fallback preserves `write:jira-work` in Display; H-012 passes unmodified | Run H-012 in validation; confirm `write:jira-work` present in None-path Display |
 | `.factory/specs/prd/holdout-scenarios.md` (lines 658–682, H-NEW-JSM-RT-003) | `write:servicedesk-request` in stderr | Satisfied by call-site injection at C-3; `Some("write:servicedesk-request")` reinforces this | Run H-NEW-JSM-RT-003; confirm `write:servicedesk-request` present |
+| `docs/superpowers/specs/2026-04-17-insufficient-scope-error-design.md` | Historical v1 design record; stale `{ message: String }` references (lines 23, 63, 90) reflect v1 variant signature, not post-#382 | Not a living doc; deliberately frozen at 2026-04-17 implementation state. Stale references are intentional — post-#382 variant shape is documented in the live spec, not here. | None — frozen record; no verify action required |
+| `docs/superpowers/plans/2026-04-17-insufficient-scope-error.md` | Historical v1 plan record; stale `{ message: String }` references (lines 24, 47, 57, 111, 193, 416, 448) reflect v1 variant signature, not post-#382 | Not a living doc; deliberately frozen at 2026-04-17 implementation state. Same rationale as spec above. | None — frozen record; no verify action required |
 
 ---
 
@@ -227,9 +236,11 @@ These spec and doc files reference `InsufficientScope` behavior or BC-1.6.042. T
 ## Regression Baseline
 
 - **Tests in regression risk zone (asserting on InsufficientScope Display or dispatch):** 10 total (T-1, T-1b, T-2 through T-9)
-- **Tests requiring source change:** 2 (T-1b at `src/error.rs:131` + T-1 at `src/error.rs:171` — construction-call update only, adding `required_scope: None`; assertions unchanged)
+- **Tests requiring source change:** 2 (T-1b at `src/error.rs:131` — construction-call adds `required_scope: None`; assertion (exit_code == 2) UNCHANGED. T-1 at `src/error.rs:171` — construction-call adds `required_scope: None`; assertion text UNCHANGED.)
 - **Tests unaffected despite Display change:** 8 (T-2 through T-9 — all pass via `None` fallback or pin non-literal assertions)
-- **New tests required:** 2 (AC-3 — `test_insufficient_scope_display_uses_required_scope_when_some` pins the `Some` Display branch; AC-4 — `test_insufficient_scope_display_empty_some_falls_back` pins the Empty-Some policy per BC-1.6.042 pass-02)
+- **T-2 specifically:** `tests/api_client.rs:136` — UNCHANGED; assertion passes via None-fallback at C-2; `write:jira-work` literal preserved byte-for-byte
+- **New unit tests required:** 2 (AC-3 — `test_insufficient_scope_display_uses_required_scope_when_some` pins `Some("write:servicedesk-request")` Display branch; AC-4 — `test_insufficient_scope_display_empty_some_falls_back` pins `Some("")` → `write:jira-work` fallback per BC-1.6.042 Empty-Some policy)
+- **MODIFIED construction-call sites:** 2 (T-1 + T-1b; both in `src/error.rs`; assertions in both are UNCHANGED)
 - **Risk zone test files:** `src/error.rs` (inline), `tests/api_client.rs`, `tests/oauth_flow_holdouts.rs`, `tests/issue_create_jsm.rs`
 
 ---
@@ -265,6 +276,14 @@ All questions resolved. Status recorded below.
 
 ## Change Log
 
+- [REVISED 2026-05-19 per F1d adversary-pass-03 — all 3 MED + 3 LOW findings addressed; status remains under-review until pass-04+ CLEAN]
+  - **Docs/Index count updated 6 → 8.** Two historical superpowers docs added to "Docs/Index Surfaces Verified Unchanged": `docs/superpowers/specs/2026-04-17-insufficient-scope-error-design.md` and `docs/superpowers/plans/2026-04-17-insufficient-scope-error.md`. Both are frozen v1 records; stale `{ message: String }` references are intentional; no verify action required. Propagated from affected-artifacts.md Section 8 (M-03 finding).
+  - **Component Impact Table corrected.** T-1 and T-1b row notes tightened to state construction-call-only updates; assertions explicitly noted as UNCHANGED. T-2 row notes updated to cite `write:jira-work` preserved byte-for-byte. T-3 (NEW, AC-4) row added for `test_insufficient_scope_display_empty_some_falls_back` pinning Empty-Some policy.
+  - **Known cosmetic subsection added.** "Known Cosmetic — Accepted for #382" documents C-3 dual-rendering wart (scope name appears twice in Display for JSM path). Decision: accept for #382; follow-up if user feedback flags. Cites affected-artifacts.md Section 6 for rationale (L-01 intent).
+  - **Regression Baseline counts updated.** NEW unit tests = 2 (AC-3 + AC-4); MODIFIED construction-call sites = 2 (T-1 + T-1b); UNCHANGED assertions = confirmed at all sites including T-2.
+  - **Sources frontmatter updated** with pass-03 revision entries for impact-boundary.md, affected-artifacts.md, and design-validation.md.
+  - **AC list verified complete:** AC-1 (variant signature), AC-2 (Display thiserror template with `.filter(|s| !s.is_empty())`), AC-3 (test `test_insufficient_scope_display_uses_required_scope_when_some`), AC-4 (test `test_insufficient_scope_display_empty_some_falls_back`), AC-5 (T-2 passes unmodified), AC-6 (all 3 production sites per lookup table). All ACs confirmed present and correctly worded per CLAUDE.md `test_<verb>_<subject>_<expected_outcome>` naming convention.
+  - **PG-01 sibling-propagation note:** Pass-02 remediation fixed several sibling artifacts in isolation but missed propagating consistent T-1/T-2 row-level corrections across all sibling cells (cells in impact-boundary.md were corrected in pass-03 M-02 sweep). This is a known process gap in the F1d adversarial cycle: sibling-cell propagation relies on each agent re-reading the full artifact set at each pass. Pass-03 caught the drift. Acknowledged as partial-propagation regression class per S-7.01 discipline; mitigated by the explicit sweep step now codified in pass-03 M-02 methodology.
 - [REVISED 2026-05-19 per F1d adversary-pass-02 remediation — all 8 findings addressed; status remains under-review until pass-03 CLEAN]
   - **Scope reclassified STANDARD → TRIVIAL (quick-dev route).** Rationale: single semantic concept (one BC modification with parameterization), 3 production + 2 test construction-call sites (small, bounded surface), no architecture change, no new external deps, LOW regression risk (None-fallback preserves byte-for-byte behavior). "Scope Recommendation" section updated from "Feature Mode / Full F1-F7 (STANDARD scope)" to "Quick-dev route (TRIVIAL scope)".
   - **AC list expanded.** AC-4 added: new unit test pins `Some("")` → `write:jira-work` fallback (Empty-Some policy from BC-1.6.042 pass-02). AC-2 updated to include `.filter(|s| !s.is_empty())` in the thiserror expression. New unit test count updated from 1 to 2 in Regression Baseline.

@@ -165,7 +165,8 @@ Future opportunity (out of scope for #382): if more call sites want to inject en
 - **T-1 (`src/error.rs:170` `insufficient_scope_display_includes_workarounds`):** add `required_scope: None` to the construction call on line 171-173. Assertion text unchanged.
 - **T-1b (`src/error.rs:131` `insufficient_scope_exit_code`):** add `required_scope: None` to the construction call on line 131. This test also constructs `JrError::InsufficientScope { message: "..." .into() }` and will fail to compile when the variant signature widens. Assertion text unchanged.
 - **T-2 (`tests/api_client.rs:100`):** **NO CHANGE.** Behavior preserved by `None`→`write:jira-work` fallback.
-- **NEW unit test** required per issue #382 AC-3 ("New unit test pins the new structured Display behavior"). Recommended: `insufficient_scope_display_uses_required_scope_when_some` — constructs with `required_scope: Some("write:servicedesk-request".into())`, asserts Display contains `write:servicedesk-request` and does NOT contain `write:jira-work`. Pins the new branch.
+- **NEW unit test** required per issue #382 AC-3 ("New unit test pins the new structured Display behavior"). Recommended: `test_insufficient_scope_display_uses_required_scope_when_some` (per CLAUDE.md test-naming convention `test_<verb>_<subject>_<expected_outcome>`) — constructs with `required_scope: Some("write:servicedesk-request".into())`, asserts Display contains `write:servicedesk-request` and does NOT contain `write:jira-work`. Pins the new branch.
+- **NEW unit test for Empty-Some policy (AC-4)**: `test_insufficient_scope_display_empty_some_falls_back` — constructs with `required_scope: Some("".into())`, asserts Display contains `write:jira-work` (fallback). Pins BC-1.6.042 Empty-Some policy.
 
 ---
 

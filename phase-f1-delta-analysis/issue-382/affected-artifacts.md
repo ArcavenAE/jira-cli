@@ -8,7 +8,7 @@ producer: business-analyst
 date: 2026-05-19
 intent: enhancement
 feature_type: backend
-trivial_classification: STANDARD
+trivial_classification: TRIVIAL
 status: complete
 ---
 
@@ -104,38 +104,34 @@ All test locations asserting on InsufficientScope Display or dispatch:
 
 ## 6. Trivial vs Standard Scope Classification
 
-**Decision: STANDARD**
+**Decision: TRIVIAL (revised pass-02; quick-dev route)**
 
 **Reasoning:**
 
-The change touches a shared error type (`src/error.rs`) whose Display is asserted in
-multiple test files across multiple layers (unit, integration, holdout). A trivial
-classification would apply if the only change were a wording update inside a single
-function with a single test. This change requires:
+Revised to TRIVIAL by F1d adversary-pass-02. The implementation narrows to a single
+semantic concept: add `scope_hint: Option<String>` as an additive optional field to
+`JrError::InsufficientScope`, extend Display conditionally, and propagate via 3
+production call-sites + 2 test sites. Specifically:
 
-1. Structural modification to `JrError::InsufficientScope` — adding a `scope: String` or
-   `hint: String` field alongside `message: String` (or replacing the hardcoded Display
-   with a dynamic field).
-2. Updating all construction call-sites in `src/api/client.rs` (2 sites) to supply the
-   scope name.
-3. Updating the JSM create call-site in `src/cli/issue/create.rs` — currently re-wraps
-   `InsufficientScope { message }` and appends the scope hint into `message`; under a
-   structured approach the call-site should supply `scope: "write:servicedesk-request"`.
-4. Updating 2 test assertions that pin the `write:jira-work` literal.
-5. Updating BC-1.6.042 (and potentially adding BC-1.6.047).
-6. Verifying H-012 and H-NEW-JSM-RT-003 holdout scenarios remain accurate.
+1. Add `scope_hint: Option<String>` to `JrError::InsufficientScope` (additive; existing
+   construction sites gain `scope_hint: None` with no behavioral change).
+2. Extend Display: when `scope_hint` is `Some(s)`, append ` Use a classic token with
+   "{s}" scope.` — the `None` path is byte-for-byte identical to the current Display.
+3. Update 3 production call-sites (`src/api/client.rs` ×2, `src/cli/issue/create.rs` ×1).
+4. Update 2 test assertions that require the extended Display on the JSM (C-3) path.
+5. No arch change; no new module; no new external dependency.
 
-The regression risk is LOW-MEDIUM: the shared type is load-bearing (used by every OAuth
-command path), so a struct change with missed construction sites causes compile errors
-(caught by Rust's exhaustive match), making accidental regressions unlikely at the
-compile level. However, the test surface is wide enough that STANDARD classification
-with full F1-F7 is appropriate.
+Regression risk is LOW under the None-fallback: exhaustive Rust match catches missed
+construction sites at compile time; the C-1/C-2 paths (None) remain unchanged; only the
+C-3 JSM path gets the `Some("write:servicedesk-request")` value. Per-story adversary
+3/3 CLEAN remains the F4 gate.
 
-A quick-dev routing could apply if the scope hint is added as a separate optional field
-(`scope_hint: Option<String>`) and the Display is conditionally extended — this would be
-a purely additive change. However, the issue description asks for "structured/dynamic,
-not hardcoded", which implies replacing the hardcoded literal, not just supplementing it.
-Treat as STANDARD unless F1d adversary narrows to additive-only.
+**Known cosmetic — accepted for #382:** Post-refactor, the JSM C-3 path renders the scope
+name twice in Display (once in the C-3-enriched message already present in `message`,
+once in the new `scope_hint` workaround line). This is cosmetically suboptimal but
+functionally harmless — the duplication reinforces the scope name. Removing the C-3
+enrichment is out of scope for #382 (separate refactor with its own AC surface). If user
+feedback flags the duplication, file a follow-up issue.
 
 ---
 
@@ -194,6 +190,10 @@ These files reference `InsufficientScope` behavior or BC-1.6.042 but require no 
 | `.factory/specs/prd/edge-case-catalog.md` (line 78) | `Covered by BC-1.6.042; holdout H-012` | BC-1.6.042 still covers this edge case under parameterization; the coverage assertion remains accurate | Confirm edge-case description still aligns with updated BC-1.6.042 Behavior line |
 | `.factory/specs/prd/holdout-scenarios.md` (lines 138–145, H-012) | `InsufficientScope` scope-mismatch holdout; asserts `write:jira-work` substring | Under option (a), the `None`→`write:jira-work` fallback path preserves the assertion; H-012 passes unmodified | Run H-012 in validation; confirm `write:jira-work` still present in Display for None path |
 | `.factory/specs/prd/holdout-scenarios.md` (lines 658–682, H-NEW-JSM-RT-003) | JSM OAuth scope hint holdout; asserts `write:servicedesk-request` in stderr | Satisfied at call-site injection (C-3 in `create.rs`); `required_scope: Some("write:servicedesk-request")` on C-3 reinforces this; holdout passes | Run H-NEW-JSM-RT-003 in validation; confirm `write:servicedesk-request` still present |
+| `docs/superpowers/specs/2026-04-17-insufficient-scope-error-design.md` | Historical v1 design record; deliberately frozen at 2026-04-17 implementation state. Stale `{ message: String }` references (lines 23, 63, 90) reflect v1 variant signature, not post-#382. | Not a living doc; intentionally not updated. | None — frozen record. |
+| `docs/superpowers/plans/2026-04-17-insufficient-scope-error.md` | Historical v1 plan record; deliberately frozen at 2026-04-17 implementation state. Stale `{ message: String }` references (lines 24, 47, 57, 111, 193, 416, 448) reflect v1 variant signature, not post-#382. | Not a living doc; intentionally not updated. Same rationale as spec above. | None — frozen record. |
+
+> **BC-INDEX.md summary terseness (L-02 intent — accepted):** BC-INDEX.md line 122 summary text says "InsufficientScope with 5 required substrings" — still accurate (count is 5) but does not hint that substring #3 is now parameterized. Summary text retained as-is (terse pointer convention); BC body is the authoritative description. BC body line 472 has the full parameterization description. Readers wanting depth follow the link.
 
 ---
 
@@ -208,7 +208,7 @@ These files reference `InsufficientScope` behavior or BC-1.6.042 but require no 
 | Regression-risk-zone stories | S-1.06, issue-288-pr4-dispatch |
 | High-risk tests | `src/error.rs:170-185`, `tests/api_client.rs:100-144` |
 | Intent | enhancement |
-| Trivial / Standard | STANDARD |
+| Trivial / Standard | TRIVIAL (revised pass-02) |
 | Feature type | backend |
 | Architect impact | Single module + 2 call-sites; no architecture change |
 
@@ -216,6 +216,11 @@ These files reference `InsufficientScope` behavior or BC-1.6.042 but require no 
 
 ## Change Log
 
+- [REVISED 2026-05-19 per F1d adversary-pass-03 M-01 + M-03 + L-01 + L-02 intent]
+  - M-01: Propagated TRIVIAL reclassification from delta-analysis.md to 3 sites: frontmatter `trivial_classification`, Section 6 heading, Section 9 summary table row. Section 6 rationale paragraph rewritten to match delta-analysis.md line 54 TRIVIAL rationale (additive `scope_hint: Option<String>`, 3 production + 2 test sites, no arch change, LOW regression risk under None-fallback, per-story adversary 3/3 CLEAN as F4 gate).
+  - M-03: Two historical superpowers docs added to Section 8 "Docs/Index Surfaces Verified Unchanged": `docs/superpowers/specs/2026-04-17-insufficient-scope-error-design.md` and `docs/superpowers/plans/2026-04-17-insufficient-scope-error.md`. Both are frozen v1 records; stale `{ message: String }` references are intentional. Verified-unchanged doc-surface count now 8 (was 6).
+  - L-01: Known cosmetic (JSM C-3 path renders scope name twice in Display) documented as accepted wart in Section 6. Duplication is functionally harmless; removing C-3 enrichment is out of scope for #382.
+  - L-02: BC-INDEX.md summary terseness accepted. Note added to Section 8 BC-INDEX row: terse pointer convention retained; BC body line 472 has full parameterization description.
 - [REVISED 2026-05-19 per F1d adversary-pass-02 H-01 + L-03]
   - H-01: Section 4 row for `tests/api_client.rs:100-144` "Change Required?" cell corrected from "YES — if scope becomes dynamic" to "No — None-fallback at C-2 preserves `write:jira-work` Display literal verbatim; assertion at `tests/api_client.rs:136` still satisfied". The conditional was inconsistent with the rest of the artifact set's UNCHANGED classification for that test.
   - L-03: Section 1 BC table row for BC-1.6.042 pruned. Implementation detail `(runtime-parameterized via JrError::InsufficientScope { required_scope: Option<String> })` removed from Title/Key Behavior cell — that detail belongs in the BC body, not the summary cell. BC ID cell updated to include the MODIFY classification inline per the prescribed format.
