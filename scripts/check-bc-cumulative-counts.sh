@@ -3,9 +3,10 @@ set -euo pipefail
 
 # check-bc-cumulative-counts.sh — DRIFT-002 mitigation
 #
-# Validates that cumulative total_bcs count claims agree across 7 surfaces
-# (plus body-preamble prose) for each bounded context file:
+# Validates that cumulative total_bcs count claims agree across 8 surfaces
+# (4 per-file surfaces + body-preamble prose, plus 3 grand-total surfaces):
 #
+# Per-file surfaces (checked for each bc-N.md / cross-cutting.md):
 #   Surface A: bc-N.md frontmatter total_bcs:
 #   Surface B: BC-INDEX.md ## Section N: header cumulative count
 #   Surface C: BC-INDEX.md frontmatter sections: line for each file

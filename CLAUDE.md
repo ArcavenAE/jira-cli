@@ -324,9 +324,10 @@ When adding a new feature:
   nfr-catalog.md, or holdout-scenarios.md. Exits 0 if frontmatter counts match body counts.
   Exits 1 with specific mismatch details if drift is detected (DRIFT-001 mitigation).
 - Run `scripts/check-bc-cumulative-counts.sh` after any edit to BC-INDEX.md, CANONICAL-COUNTS.md,
-  or `total_bcs:` frontmatter values. Exits 0 if all 7 cumulative surfaces agree (per-file
-  frontmatter, BC-INDEX.md Section headers, BC-INDEX.md sections: lines, CANONICAL-COUNTS.md
-  per-file table, grand-total Sum row, grand-total prose, and body preamble prose counts).
+  or `total_bcs:` frontmatter values. Exits 0 if all 8 surfaces agree: per-file frontmatter
+  (Surface A), BC-INDEX.md Section headers (B), BC-INDEX.md sections: lines (C),
+  CANONICAL-COUNTS.md per-file table (D), body preamble prose, BC-INDEX.md frontmatter
+  total_bcs (Surface E), CANONICAL-COUNTS.md Sum row (F), and grand-total prose (G).
   Exits 1 with specific mismatch details if drift is detected (DRIFT-002 mitigation).
 - **BC Trace and Source fields must not contain numeric test counts.** The `Trace:` and
   `Source:` fields in `.factory/specs/prd/bc-*.md` BC bodies should describe coverage
