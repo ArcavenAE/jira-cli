@@ -14,7 +14,7 @@ trace: |
 
 # BC-2 — Issue Read (list / view / comments / changelog)
 
-92 behavioral contracts across 6 subdomains: JQL composition (2.1), Issue list
+93 behavioral contracts across 6 subdomains: JQL composition (2.1), Issue list
 behavior (2.2), Issue view (2.3), Comments (2.4), Changelog (2.5), API layer (2.6).
 
 ---
