@@ -725,11 +725,20 @@ async fn test_jsm_create_description_is_adf_with_is_adf_request_true() {
         desc
     );
 
-    // The ADF object must contain a "type" key at some level — at minimum the doc root.
+    // BC-3.8.006: ADF root MUST be `{"type":"doc","version":N,"content":[...]}`.
+    // Pin both required keys strictly to catch any ADF-shape drift.
     let desc_obj = desc.unwrap();
+    assert_eq!(
+        desc_obj.get("type").and_then(Value::as_str),
+        Some("doc"),
+        "BC-3.8.006: ADF root type must be \"doc\"; got: {desc_obj}"
+    );
     assert!(
-        desc_obj.get("type").is_some() || desc_obj.get("content").is_some(),
-        "BC-3.8.006: ADF root must have 'type' or 'content' key; got: {desc_obj}"
+        desc_obj
+            .get("content")
+            .map(Value::is_array)
+            .unwrap_or(false),
+        "BC-3.8.006: ADF root content must be an array; got: {desc_obj}"
     );
 }
 
