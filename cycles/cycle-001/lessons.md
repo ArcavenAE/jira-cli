@@ -1227,4 +1227,76 @@ Any match in a positive assertion (not a negative compound test or a functional 
 - This rule applies to ALL stories, not just #288 follow-ons
 
 _Discovered: S-288-pr2-cli F4 adversarial passes 02/03/06/07 (four recurrences of L-288-pr1-01 despite codification), 2026-05-19_
+
+---
+
+## PG-384-1: `check-bc-cumulative-counts.sh` does not cover the BC-INDEX `## Coverage Statistics` table [deferred — infrastructure gap]
+
+**Date:** 2026-05-20
+**Cycle:** issue-384 F7 convergence close-out
+**Tag:** [deferred] [infrastructure-gap] [spec-guard]
+
+### What happened
+
+During #384 F2 (spec evolution), the BC-INDEX `## Coverage Statistics` table drifted — it showed stale section totals (569/337) while the canonical counts were 573/341. Both existing spec guards (`check-spec-counts.sh` and `check-bc-cumulative-counts.sh`) still exited 0; the drift was caught only by a fresh-context adversarial review pass.
+
+Investigation showed that `check-bc-cumulative-counts.sh` validates BC-INDEX `## Section N:` header lines, the `total_bcs:` frontmatter value, and per-file frontmatter counts, but does NOT validate the `## Coverage Statistics` narrative table that appears below the section headers in BC-INDEX.md. That table is a redundant restatement of the already-guarded header data, but it drifts independently.
+
+### Lesson
+
+**The `## Coverage Statistics` table in BC-INDEX.md is a third sync surface that the existing guards do not cover.** When BCs are added and the section-header counts are updated, the Coverage Statistics prose table must also be updated manually — there is no automated check.
+
+Two remediation paths:
+1. Extend `check-bc-cumulative-counts.sh` to parse and validate the Coverage Statistics table rows against the canonical per-section counts.
+2. Remove the Coverage Statistics table entirely (it is fully redundant with the guarded section headers).
+
+### Status: DEFERRED
+
+The drift class is low-impact (redundant table; arithmetic is correct in all load-bearing locations). A GitHub follow-up issue could not be auto-created at F7 close (per S-7.02 cycle-closing-checklist, deferral is the sanctioned alternative). User to file in next maintenance cycle or #392-successor issue.
+
+_Discovered: #384 F2 adversarial spec review pass 1; recorded at F7 close-out, 2026-05-20_
+_Tagged: [deferred] — needs GitHub issue; target: next maintenance sweep_
+
+---
+
+## PG-384-2: All three spec guard scripts must be run after ANY BC file edit — two-guard dispatch in F2/F3 is incomplete [codified]
+
+**Date:** 2026-05-20
+**Cycle:** issue-384 F7 convergence close-out
+**Tag:** [codified] [process-level] [spec-guard]
+
+### What happened
+
+During #384 F2 and F3, the orchestrator instructed the product-owner to run only two of the three spec guard scripts after each BC file edit:
+- `scripts/check-spec-counts.sh`
+- `scripts/check-bc-cumulative-counts.sh`
+
+The third guard — `scripts/check-bc-no-numeric-test-counts.sh` — was not included in the dispatch instructions. As a result, a BC body containing the phrasing "Basic-auth 401 integration tests" (a numeric-adjacent string pattern flagged by the guard) reached the PR and caused the `Spec Guards` CI job to fail on PR #394 in its first push. The failure required a fixup commit before CI went green.
+
+The guard was already live in CI (added by #392 / PR #393). The gap was not in the guard itself — it was in the orchestration dispatch not including the guard in the run-locally pre-PR checklist.
+
+### Lesson
+
+**After ANY edit to `.factory/specs/prd/` BC files, ALL THREE guard scripts must be run locally before creating or updating a PR:**
+
+```bash
+scripts/check-spec-counts.sh
+scripts/check-bc-cumulative-counts.sh
+scripts/check-bc-no-numeric-test-counts.sh
+```
+
+This applies to:
+- F2 spec evolution bursts (BC body authoring or modification)
+- F3 story ACs referencing BC text
+- Any chore/maintenance PR touching BC files
+- Any spec-drift fix PR
+
+The two-guard pattern (`check-spec-counts.sh` + `check-bc-cumulative-counts.sh`) is insufficient for any burst that modifies BC body text. Add `check-bc-no-numeric-test-counts.sh` to all three contexts.
+
+### Status: CODIFIED
+
+No code change needed. The guard already exists. The gap was not running it. Future orchestration dispatch instructions for any phase that touches `.factory/specs/prd/` BC files must explicitly list all three scripts.
+
+_Discovered: #384 F3 implementation → CI failure on PR #394 Spec Guards job; recorded at F7 close-out, 2026-05-20_
+_Tagged: [codified] — dispatch instructions must include all three guards_
 _Tagged: [codified] [policy] — elevates accept-either classification from LOW to MEDIUM; mandates grep audit on every adversary pass_
