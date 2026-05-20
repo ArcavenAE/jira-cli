@@ -216,6 +216,21 @@ impl JiraClient {
         self.verbose
     }
 
+    /// Returns `true` when the active auth scheme is OAuth (Bearer token),
+    /// `false` for Basic/API-token auth.
+    ///
+    /// Implementation: `self.auth_header.starts_with("Bearer ")` — case-sensitive,
+    /// single space after `Bearer`. This is the same `Bearer`-scheme discriminant
+    /// used by the auto-refresh guard in `send_inner`.
+    ///
+    /// This is the single predicate gating auth-scheme-specific error-hint dispatch
+    /// in `handle_jsm_create` (BC-3.8.014/015) and `require_service_desk`
+    /// (BC-X.8.006/007). No other predicate or ad-hoc check should be introduced
+    /// at either call site.
+    pub(crate) fn is_oauth_auth(&self) -> bool {
+        self.auth_header.starts_with("Bearer ")
+    }
+
     /// Read a response body as raw bytes, optionally printing it to stderr
     /// when `--verbose-bodies` is enabled. Returns the bytes for deserialization.
     ///
@@ -2498,5 +2513,56 @@ mod clamp_tests {
                 );
             }
         }
+    }
+}
+
+#[cfg(test)]
+mod is_oauth_auth_tests {
+    use super::JiraClient;
+
+    /// AC-1 (BC-3.8.014 / BC-3.8.015 / BC-X.8.006 / BC-X.8.007 precondition 1):
+    /// `is_oauth_auth()` returns `true` when the auth header starts with "Bearer ".
+    ///
+    /// This is the SINGLE predicate gating auth-scheme detection in error-hint
+    /// dispatch. Uses `new_for_test` which populates `auth_header` directly.
+    #[test]
+    fn test_is_oauth_auth_bearer_header_returns_true() {
+        let client = JiraClient::new_for_test(
+            "http://localhost:1234".to_string(),
+            "Bearer test-oauth-token".to_string(),
+        );
+        assert!(
+            client.is_oauth_auth(),
+            "is_oauth_auth() must return true for 'Bearer ...' auth header"
+        );
+    }
+
+    /// AC-1 (BC-3.8.014 / BC-X.8.006 precondition 1):
+    /// `is_oauth_auth()` returns `false` when the auth header starts with "Basic ".
+    #[test]
+    fn test_is_oauth_auth_basic_header_returns_false() {
+        let client = JiraClient::new_for_test(
+            "http://localhost:1234".to_string(),
+            "Basic dGVzdDp0ZXN0".to_string(),
+        );
+        assert!(
+            !client.is_oauth_auth(),
+            "is_oauth_auth() must return false for 'Basic ...' auth header"
+        );
+    }
+
+    /// AC-1 edge case: lowercase "bearer" is NOT treated as OAuth (predicate is
+    /// case-sensitive per F2 PRD delta §Interface Contract). Malformed seam values
+    /// silently classify as Basic — consistent with starts_with("Bearer ") semantics.
+    #[test]
+    fn test_is_oauth_auth_lowercase_bearer_returns_false() {
+        let client = JiraClient::new_for_test(
+            "http://localhost:1234".to_string(),
+            "bearer test-token".to_string(),
+        );
+        assert!(
+            !client.is_oauth_auth(),
+            "is_oauth_auth() is case-sensitive: lowercase 'bearer' must return false"
+        );
     }
 }
