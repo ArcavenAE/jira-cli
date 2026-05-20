@@ -133,7 +133,7 @@ variant to `JrError::NotAuthenticated { hint: API_TOKEN_EXPIRY_HINT }`. Stderr M
 - `contains` "jr auth login"
 - NOT contain "write:servicedesk-request"
 
-Exit code: 1.
+Exit code: 2.
 
 **New test required:** `test_jsm_create_basic_auth_401_surfaces_api_token_hint`
 File: `tests/issue_create_jsm.rs`.
