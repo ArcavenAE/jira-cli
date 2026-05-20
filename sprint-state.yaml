@@ -535,13 +535,13 @@ feature_followup_standalone:
 
   - id: S-384
     title: "JSM 401 auth-aware hints: gate is_oauth_auth() in handle_jsm_create + require_service_desk (closes #384)"
-    status: ready
-    pr: null
-    merge_sha: null
-    merged_at: null
+    status: completed
+    pr: 394
+    merge_sha: b36b291
+    merged_at: "2026-05-20"
     depends_on: []
     bc_anchors: [BC-3.8.014, BC-3.8.015, BC-X.8.006, BC-X.8.007, BC-3.8.001, BC-3.8.009, BC-X.3.002]
     holdout_anchors: [H-NEW-JSM-RT-003]
     issue: 384
     points: 5
-    notes: "Feature mode F3 story. Closes issue #384. Adds is_oauth_auth() predicate to JiraClient (client.rs), API_TOKEN_EXPIRY_HINT const to error.rs, gates handle_jsm_create map_err on is_oauth_auth() (create.rs), introduces new map_err on get_or_fetch_project_meta in require_service_desk (servicedesks.rs). 4 new integration tests + 1 repurposed existing test + 1 anchor comment in tests/issue_create_jsm.rs. F2 CONVERGED 2026-05-19 (9 passes). F3 story produced 2026-05-20. BC count post-F2: 573 (+4: BC-3.8.014/015/X.8.006/X.8.007)."
+    notes: "Feature mode F3 story. Closes issue #384. Adds is_oauth_auth() predicate to JiraClient (client.rs), API_TOKEN_EXPIRY_HINT const to error.rs, gates handle_jsm_create map_err on is_oauth_auth() (create.rs), introduces new map_err on get_or_fetch_project_meta in require_service_desk (servicedesks.rs). 4 new integration tests + 1 repurposed existing test + 1 anchor comment in tests/issue_create_jsm.rs. F2 CONVERGED 2026-05-19 (9 passes). F3 story produced 2026-05-20. BC count post-F2: 573 (+4: BC-3.8.014/015/X.8.006/X.8.007). F3 IMPLEMENTED + F4 per-story adversary CONVERGED 3/3 CLEAN. Copilot 3 cycles →0. PR #394 squash-merged @ b36b291 (2026-05-20). Issue #384 auto-closed."
