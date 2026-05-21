@@ -11,7 +11,7 @@ input-hash: "[live-state]"
 traces_to: ""
 project: jira-cli
 mode: BROWNFIELD
-current_step: "phase-3-wave-2-gate-CLOSED"
+current_step: "issue-388-F2-spec-evolution-IN-PROGRESS"
 current_cycle: "cycle-001"
 dtu_required: false
 phase_2_status: APPROVED
@@ -36,7 +36,7 @@ activation_version: "v0.5.0-dev.7"
 | **Language** | Rust |
 | **Target Workspace** | develop → main |
 | **Started** | 2026-05-04 |
-| **Last Updated** | 2026-05-20 — 4 Dependabot dependency bumps merged to develop after 7-day soak: #374 cargo-deny-action 2.0.17→2.0.18 (aac5ff4), #377 open 5.3.4→5.3.5 (cb3436a), #376 assert_cmd 2.2.1→2.2.2 (b2d066b), #375 clap_complete 4.6.2→4.6.5 (a66d664). All published 2026-05-11 (9-day soak), CI green. #327 rand 0.9.4→0.10.1 deferred (breaking 0.x major bump, failing CI). Remaining open backlog: #210, #331, #372, #387. Open PRs: #327, #368. |
+| **Last Updated** | 2026-05-20 — Issue #388 entered Feature Mode; F1 (Delta Analysis) COMPLETE with human-approved gate. 2 new BCs (BC-3.4.010/011) in bc-3-issue-write.md; BC-3.4.003 annotation update; BC-INDEX 575→577. 1 new story to be created in F3. New test file tests/issue_edit_type_errors.rs; T-06 in tests/issue_edit_no_parent.rs to be strengthened. Entering F2 — Spec Evolution. |
 | **Current Phase** | Phase 3 — TDD Implementation **IN PROGRESS** — Wave 3 CLOSED (10/10). Feature Mode #110-pr2 COMPLETE. PRs #355–#364, #366–#367, #369–#373 MERGED. **0 audit-followups remain** (#331 sandbox-blocked deferred; #333 closed by PR #360; #340 closed by PR #370; #345 closed by PR #371; #346 closed by PR #373; #350 closed by PR #362; #361 closed by PR #364; #365 closed by PR #367; PG-365-1 closed by PR #369). **#383 DELIVERED PR #390 @ 25f7211 (2026-05-19)**. **#392 DELIVERED PR #393 @ 0be2e3a (2026-05-20)**. **#384 DELIVERED PR #394 @ b36b291 (2026-05-20)**: F3+F4 complete; 4 new BCs (BC-3.8.014/015, BC-X.8.006/007); spec v1.1.0 (573 BCs); F4 adversary 3/3 CLEAN; Copilot 3 cycles →0; issue #384 closed. Remaining open: #210, #331, #372, #385, #387. |
 | **Next Phase** | Wave 3 — 10 stories (S-3.01..S-3.10) |
 | **Activation HEAD** | dea166471e22eff55974d7675593469b37048c5f (v0.5.0-dev.7) |
@@ -84,6 +84,7 @@ Goal 1c: **Harden v0.5 + feature delivery** — formalize existing codebase with
 | issue-383 (F3 standalone) | **MERGED — PR #390 @ 25f7211 (2026-05-19)** — F2 CONVERGED 11 adversary passes. F4 per-story adversary CONVERGED 3/3 (pass-01 CLEAN, pass-02-retry CLEAN, pass-03 CLEAN). Copilot COMMENTED (0 inline). CI 10/10 GREEN. pr-reviewer APPROVE 1 cycle (3 non-blocking). Issue #383 auto-closed. 3 deferred follow-up items logged (DEFER-383-1/2/3). | 2026-05-19 | 2026-05-19 | MERGED — PR #390 @ 25f7211; issue #383 closed | F2 adv: 11 passes, 3/3 CLEAN (passes 09/10/11). F4 adv: 3 passes, 3/3 CLEAN. pr-reviewer: APPROVE (0 blocking). Copilot: COMMENTED (0 inline) |
 | issue-392 (F3 standalone) | **DELIVERED — PR #393 MERGED @ 0be2e3a (2026-05-20)** — `scripts/check-bc-cumulative-counts.sh` (DRIFT-002) live in CI. 7-fixture self-test harness. DRIFT-BC2-PROSE fixed (bc-2 prose 92→93). DEFER-383-3 resolved. Per-story adversary CONVERGED 3/3. Copilot 4 rounds (19 round-1 comments → 0 round 4). CI 10/10 GREEN. Issue #392 auto-closed. Lessons L-392-01..05 codified. | 2026-05-19 | 2026-05-20 | DELIVERED — PR #393 @ 0be2e3a | adv: 3/3 CLEAN |
 | issue-384 (F1–F7 full cycle) | **CONVERGED + CYCLE CLOSED — PR #394 MERGED @ b36b291 (2026-05-20); F7 closed 2026-05-20** — JSM 401 auth-aware error hints. F1+F2: 4 new BCs (BC-3.8.014/015, BC-X.8.006/007), 3 modified (BC-3.8.001/009, BC-X.3.002), H-NEW-JSM-RT-003 revised, spec v1.1.0 (573 BCs). CRITICAL OAuth control-flow defect caught + corrected in F2. F3 implementation: is_oauth_auth() predicate + API_TOKEN_EXPIRY_HINT + gated map_err in handle_jsm_create + require_service_desk; 4 new integration tests. F4 per-story adversary CONVERGED 3/3 CLEAN. Copilot 3 cycles →0. CI green. Issue #384 auto-closed. F7 traceability: 4 BCs ↔ 5 named tests in tests/issue_create_jsm.rs + inline unit tests ↔ 4-file implementation; all 3 spec guards exit 0. PG-384-1/2 recorded as justified deferrals. | 2026-05-20 | 2026-05-20 | F7 CLOSED — F1–F7 COMPLETE; 3 spec guards PASS | F2 adv: 3/3 CLEAN. F4 adv: 3/3 CLEAN. Copilot: 3 cycles →0 |
+| issue-388 (Feature Mode) | **F1 COMPLETE — human-approved gate 2026-05-20.** Entering F2 — Spec Evolution. Report: `.factory/phase-f1-delta-analysis/issue-388/delta-analysis.md`. Classifications: enhancement (bundled bug-fix), backend, standard scope, MEDIUM regression risk. Delta: 2 new BCs (BC-3.4.010/011); BC-3.4.003 annotation update; BC-INDEX 575→577. 1 story (F3). New test file tests/issue_edit_type_errors.rs; T-06 in tests/issue_edit_no_parent.rs strengthened. | 2026-05-20 | | F2 in progress | |
 | issue-385 (F1–F7) | **F1–F7 COMPLETE — PR #395 merged f7fc8c3, issue CLOSED 2026-05-20.** F1 (enhancement, standard scope). F2: 2 new BCs (BC-3.8.016/017), 3 modified (BC-3.8.002/010/011), 2 holdouts (H-NEW-JSM-RT-006/007), spec v1.2.0 (575 BCs), adv 3/3 CLEAN (19 passes). F3: S-385 decomposed (1 story, 5 SP, 7 ACs), adv 3/3 CLEAN (12 passes). F4: PR #395 delivered, Red Gate verified, all 4 O-08 fixes in handle_jsm_create. F7: traceability VERIFIED (4 fixes → 5 BCs → 7 test deliverables → merged code @ f7fc8c3). 7 process-gaps PG-385-1..7 JUSTIFIED DEFERRALS. Cycle CLOSED. | 2026-05-20 | 2026-05-20 | F7 CLOSED — F1–F7 COMPLETE; all 3 spec guards PASS | F2: 19 passes, 3/3 CLEAN \| F3 adv: 12 passes, 3/3 CLEAN \| F4 adv: 3/3 CLEAN \| Copilot: 3 rounds →0 |
 | 4: Holdout Evaluation | not-started | | | | |
 | 5: Adversarial Refinement | not-started | | | | |
@@ -96,10 +97,10 @@ Goal 1c: **Harden v0.5 + feature delivery** — formalize existing codebase with
 
 | Step | Agent | Status | Output |
 |------|-------|--------|--------|
-| S-384 DELIVERED — state update | state-manager | complete | sprint-state.yaml S-384 → completed (PR #394 / b36b291). STORY-INDEX S-384 → completed. STATE.md Phase Progress row + Open Issues Tracker #384 → CLOSED. Session checkpoint updated. Remaining open backlog: #210, #331, #372, #385, #387. factory-artifacts commit pushed. |
 | #384 F7 Convergence close-out | state-manager | complete | **F7 CLOSED — full cycle converged.** Traceability verified: 4 BCs ↔ 5 integration tests ↔ 4-file impl. All 3 spec guards exit 0. PG-384-1 (BC-INDEX Coverage Statistics gap — DEFERRED) + PG-384-2 (spec-guard incomplete during F2/F3 — CODIFIED) recorded. Drift Items updated. Lessons appended to cycles/cycle-001/lessons.md. Session checkpoint replaced. factory-artifacts committed + pushed. |
 | S-385 F4 state update | state-manager | complete | sprint-state.yaml S-385 → completed (PR #395 / f7fc8c3). STORY-INDEX S-385 → completed. Phase Progress row #385 → F1–F7 COMPLETE. |
 | #385 F7 Convergence close-out | state-manager | complete | **F7 CLOSED — full cycle converged.** Traceability verified: 4 O-08 fixes → 5 BCs (BC-3.8.002/010/011/016/017) → 7 test deliverables → merged code f7fc8c3. Guard strings confirmed in src/cli/issue/create.rs. H-NEW-JSM-RT-006/007 realized_by bindings in tests/issue_create_jsm.rs. All 3 spec guards pass. 7 PG-385-1..7 JUSTIFIED DEFERRALS recorded. Lessons appended to cycles/cycle-001/lessons.md. Session checkpoint replaced. factory-artifacts committed + pushed. |
+| #388 F1 COMPLETE — entering F2 | state-manager | complete | Issue #388 Feature Mode F1 (Delta Analysis) gate APPROVED by human on 2026-05-20. Report: `.factory/phase-f1-delta-analysis/issue-388/delta-analysis.md`. 2 new BCs (BC-3.4.010/011), BC-3.4.003 annotation update; BC-INDEX 575→577. Phase Progress row added. Open Issues Tracker #388 added. Session checkpoint replaced. Entering F2 — Spec Evolution. factory-artifacts commit pushed. |
 
 ## Decisions Log
 
@@ -287,8 +288,8 @@ _Not started._
 | Field | Value |
 |-------|-------|
 | **Date** | 2026-05-20 |
-| **Position** | **Dependabot maintenance sweep COMPLETE.** 4 Dependabot PRs merged to develop after 7-day soak: #374 (cargo-deny-action 2.0.17→2.0.18 @ aac5ff4), #377 (open 5.3.4→5.3.5 @ cb3436a), #376 (assert_cmd 2.2.1→2.2.2 @ b2d066b), #375 (clap_complete 4.6.2→4.6.5 @ a66d664). All published 2026-05-11 (9-day soak), CI green. #327 (rand 0.9.4→0.10.1) DEFERRED — breaking 0.x major bump, failing CI, needs migration. Remaining open backlog issues: #210, #331, #372, #387. Open PRs: #327, #368. Previous state: #385 F1–F7 COMPLETE (PR #395 @ f7fc8c3, 2026-05-20). Next: next feature from open backlog or #327 migration (human directs). |
-| **Convergence counter** | #385 F7 CONVERGED (prior). BC corpus: 575 BCs (spec v1.2.0). Story corpus: 43 stories. Maintenance-only burst — no BC/story changes. |
+| **Position** | **Issue #388 Feature Mode — F1 COMPLETE, entering F2 (Spec Evolution).** F1 gate APPROVED by human 2026-05-20. Delta: 2 new BCs (BC-3.4.010, BC-3.4.011) in bc-3-issue-write.md; BC-3.4.003 annotation-only update; BC-INDEX 575→577. 1 new story to be created in F3. New test file tests/issue_edit_type_errors.rs; T-06 in tests/issue_edit_no_parent.rs to be strengthened. Next: F2 Spec Evolution (product-owner updates bc-3-issue-write.md with BC-3.4.010/011 full bodies + BC-3.4.003 annotation; PRD delta document). Remaining open backlog: #210, #331, #372, #387, #388. Open PRs: #327, #368. |
+| **Convergence counter** | #388 F1 COMPLETE (prior #385 F7 CONVERGED). BC corpus: 575 BCs (spec v1.2.0; will become 577 after F2). Story corpus: 43 stories. |
 
 ## Post-Cycle Housekeeping (2026-05-19)
 
@@ -313,6 +314,7 @@ Events after issue #288 epic closeout (factory-artifacts @ 7dbbfed):
 | #383 | O-01: platform-path flag symmetry | **CLOSED** (auto-closed via PR #390 25f7211) | LOW | Delivered 2026-05-19 |
 | #384 | O-08-01+O-08-05 JSM 401 auth-aware error hints | **CLOSED** (auto-closed via PR #394 b36b291; 2026-05-20; F7 CONVERGED + CYCLE CLOSED 2026-05-20) | LOW | F1–F7 COMPLETE. 4 new BCs (BC-3.8.014/015, BC-X.8.006/007); spec v1.1.0; CRITICAL OAuth control-flow defect caught + corrected; F4 adversary 3/3 CLEAN; Copilot 3 cycles →0; all 3 spec guards PASS; PG-384-1/2 recorded |
 | #385 | O-08-02/04/06/07 UX polish | **CLOSED** (auto-closed via PR #395 f7fc8c3; 2026-05-20; F7 CONVERGED + CYCLE CLOSED) | LOW | F1–F7 COMPLETE. 2 new BCs (BC-3.8.016/017), 3 modified (BC-3.8.002/010/011), 2 holdouts (H-NEW-JSM-RT-006/007), spec v1.2.0 (575 BCs). PG-385-1..7 recorded. |
+| #388 | Accurate cross-hierarchy type-change error + fix fake-endpoint hint (Option A) | **F1 COMPLETE — F2 IN PROGRESS** | MEDIUM | F1 gate APPROVED 2026-05-20. intent=enhancement (bundled bug-fix), backend, standard, MEDIUM regression risk. 2 new BCs (BC-3.4.010/011); BC-3.4.003 annotation; BC-INDEX 575→577. 1 story (F3). New test file tests/issue_edit_type_errors.rs; T-06 strengthened. Report: `.factory/phase-f1-delta-analysis/issue-388/delta-analysis.md`. |
 | #386 | docs/demo-evidence removal | **MERGED** @ acdf212 | — | 505 files, ~85 MB freed at HEAD |
 | #387 | git history rewrite for demo-evidence blobs | OPEN | LOW | Deferred; force-push needed |
 | #389 | S-382: JrError::InsufficientScope required_scope refactor | **MERGED** @ b1c863e (2026-05-19T18:40:25Z) | — | PR merged; issue #382 auto-closed |

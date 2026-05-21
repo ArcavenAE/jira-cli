@@ -62,3 +62,13 @@ _Was the active checkpoint when S-1.08 state-manager dispatch ran._
 | **Date** | 2026-05-08 |
 | **Position** | S-1.07 merged (PR #301 at 5813059). Wave 1 progress: 7/8 (87.5%). Active story: S-1.08 (keychain round-trip holdout — final Wave 1 story). Wave 1 will complete on S-1.08 merge. Open deferred: R1-001, R1-002, S-0.03-S1, S-0.05-F1, S-0.05-F2 (TO_VERIFY), S-0.05-F3, S-1.02-DEFER, S-1.03-DEFER (body-tracing → Wave 2), S-1.04-DEFER-01/02/03, S-1.05-DEFER-01 (Node.js 24 deadline Jun 2026). Manual user action still pending: AC-001 repo Settings → Code security → Secret scanning. Wave 0 holdouts active: H-045, H-046, H-036, H-NEW-MP-001, H-NEW-VERBOSE-001/002; H-NEW-AUTH-002 gated behind JR_RUN_RELEASE_AUTH_GATE_TEST=1. |
 | **Convergence counter** | 3/3 CONVERGED (Phase 2-adv; Pass 13 CLEAN-PASS — final trajectory: 14→5→5→5→4→5→4→4→4→1→0→1→0) |
+
+---
+
+_Archived 2026-05-20. Was the active checkpoint entering #388 Feature Mode._
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-05-20 |
+| **Position** | **Dependabot maintenance sweep COMPLETE.** 4 Dependabot PRs merged to develop after 7-day soak: #374 (cargo-deny-action 2.0.17→2.0.18 @ aac5ff4), #377 (open 5.3.4→5.3.5 @ cb3436a), #376 (assert_cmd 2.2.1→2.2.2 @ b2d066b), #375 (clap_complete 4.6.2→4.6.5 @ a66d664). All published 2026-05-11 (9-day soak), CI green. #327 (rand 0.9.4→0.10.1) DEFERRED — breaking 0.x major bump, failing CI, needs migration. Remaining open backlog issues: #210, #331, #372, #387. Open PRs: #327, #368. Previous state: #385 F1–F7 COMPLETE (PR #395 @ f7fc8c3, 2026-05-20). Next: next feature from open backlog or #327 migration (human directs). |
+| **Convergence counter** | #385 F7 CONVERGED (prior). BC corpus: 575 BCs (spec v1.2.0). Story corpus: 43 stories. Maintenance-only burst — no BC/story changes. |
