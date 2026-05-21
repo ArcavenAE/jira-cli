@@ -36,7 +36,7 @@ activation_version: "v0.5.0-dev.7"
 | **Language** | Rust |
 | **Target Workspace** | develop → main |
 | **Started** | 2026-05-04 |
-| **Last Updated** | 2026-05-20 — #385 F1–F7 COMPLETE. PR #395 squash-merged @ f7fc8c3. Issue #385 CLOSED. S-385 delivered: F4 per-story adversary 3/3 CLEAN, Copilot 3 rounds →0, CI 10/10 green, security CLEAN. 7 process-gaps PG-385-1..7 recorded as justified deferrals. Cycle CLOSED. Remaining open backlog: #210, #331, #372, #387. |
+| **Last Updated** | 2026-05-20 — 4 Dependabot dependency bumps merged to develop after 7-day soak: #374 cargo-deny-action 2.0.17→2.0.18 (aac5ff4), #377 open 5.3.4→5.3.5 (cb3436a), #376 assert_cmd 2.2.1→2.2.2 (b2d066b), #375 clap_complete 4.6.2→4.6.5 (a66d664). All published 2026-05-11 (9-day soak), CI green. #327 rand 0.9.4→0.10.1 deferred (breaking 0.x major bump, failing CI). Remaining open backlog: #210, #331, #372, #387. Open PRs: #327, #368. |
 | **Current Phase** | Phase 3 — TDD Implementation **IN PROGRESS** — Wave 3 CLOSED (10/10). Feature Mode #110-pr2 COMPLETE. PRs #355–#364, #366–#367, #369–#373 MERGED. **0 audit-followups remain** (#331 sandbox-blocked deferred; #333 closed by PR #360; #340 closed by PR #370; #345 closed by PR #371; #346 closed by PR #373; #350 closed by PR #362; #361 closed by PR #364; #365 closed by PR #367; PG-365-1 closed by PR #369). **#383 DELIVERED PR #390 @ 25f7211 (2026-05-19)**. **#392 DELIVERED PR #393 @ 0be2e3a (2026-05-20)**. **#384 DELIVERED PR #394 @ b36b291 (2026-05-20)**: F3+F4 complete; 4 new BCs (BC-3.8.014/015, BC-X.8.006/007); spec v1.1.0 (573 BCs); F4 adversary 3/3 CLEAN; Copilot 3 cycles →0; issue #384 closed. Remaining open: #210, #331, #372, #385, #387. |
 | **Next Phase** | Wave 3 — 10 stories (S-3.01..S-3.10) |
 | **Activation HEAD** | dea166471e22eff55974d7675593469b37048c5f (v0.5.0-dev.7) |
@@ -287,8 +287,8 @@ _Not started._
 | Field | Value |
 |-------|-------|
 | **Date** | 2026-05-20 |
-| **Position** | **#385 F1–F7 COMPLETE — cycle CLOSED.** PR #395 squash-merged @ f7fc8c3 (2026-05-20). Issue #385 CLOSED / stateReason COMPLETED. All 4 O-08 fixes delivered in src/cli/issue/create.rs::handle_jsm_create. F4 per-story adversary 3/3 CLEAN. Copilot 3 rounds →0. CI 10/10 green. Security CLEAN. F7 traceability verified: 4 fixes → 5 BCs → 7 test deliverables → f7fc8c3. 7 process-gaps PG-385-1..7 as justified deferrals. Remaining open backlog: #210, #331, #372, #387. Next: next feature from open backlog (human directs). |
-| **Convergence counter** | #385 F7 CONVERGED. F4 adv 3/3 CLEAN. BC corpus: 575 BCs (spec v1.2.0). Story corpus: 43 stories. #384 + #385 both F1–F7 CLOSED. |
+| **Position** | **Dependabot maintenance sweep COMPLETE.** 4 Dependabot PRs merged to develop after 7-day soak: #374 (cargo-deny-action 2.0.17→2.0.18 @ aac5ff4), #377 (open 5.3.4→5.3.5 @ cb3436a), #376 (assert_cmd 2.2.1→2.2.2 @ b2d066b), #375 (clap_complete 4.6.2→4.6.5 @ a66d664). All published 2026-05-11 (9-day soak), CI green. #327 (rand 0.9.4→0.10.1) DEFERRED — breaking 0.x major bump, failing CI, needs migration. Remaining open backlog issues: #210, #331, #372, #387. Open PRs: #327, #368. Previous state: #385 F1–F7 COMPLETE (PR #395 @ f7fc8c3, 2026-05-20). Next: next feature from open backlog or #327 migration (human directs). |
+| **Convergence counter** | #385 F7 CONVERGED (prior). BC corpus: 575 BCs (spec v1.2.0). Story corpus: 43 stories. Maintenance-only burst — no BC/story changes. |
 
 ## Post-Cycle Housekeeping (2026-05-19)
 
@@ -312,13 +312,19 @@ Events after issue #288 epic closeout (factory-artifacts @ 7dbbfed):
 | #382 | M-03: JrError::InsufficientScope stale text | **CLOSED** (auto-closed via PR #389 b1c863e) | MEDIUM | Delivered 2026-05-19 |
 | #383 | O-01: platform-path flag symmetry | **CLOSED** (auto-closed via PR #390 25f7211) | LOW | Delivered 2026-05-19 |
 | #384 | O-08-01+O-08-05 JSM 401 auth-aware error hints | **CLOSED** (auto-closed via PR #394 b36b291; 2026-05-20; F7 CONVERGED + CYCLE CLOSED 2026-05-20) | LOW | F1–F7 COMPLETE. 4 new BCs (BC-3.8.014/015, BC-X.8.006/007); spec v1.1.0; CRITICAL OAuth control-flow defect caught + corrected; F4 adversary 3/3 CLEAN; Copilot 3 cycles →0; all 3 spec guards PASS; PG-384-1/2 recorded |
-| #385 | O-08-02/04/06/07 UX polish | **F3 CONVERGED — entering F4 per-story delivery** | LOW | F1 COMPLETE (standard scope, 1 story). F2 CONVERGED 3/3 CLEAN (19 passes). 2 new BCs (BC-3.8.016/017), 3 modified (BC-3.8.002/010/011), 2 holdouts (H-NEW-JSM-RT-006/007), spec v1.2.0 (575 BCs). F3 COMPLETE: S-385 decomposed (1 story, 5 SP, 7 ACs); adversarial story convergence 3/3 CLEAN (12 passes); STORY-INDEX 44→43 (PG-385-6). PG-385-1..7 recorded. |
+| #385 | O-08-02/04/06/07 UX polish | **CLOSED** (auto-closed via PR #395 f7fc8c3; 2026-05-20; F7 CONVERGED + CYCLE CLOSED) | LOW | F1–F7 COMPLETE. 2 new BCs (BC-3.8.016/017), 3 modified (BC-3.8.002/010/011), 2 holdouts (H-NEW-JSM-RT-006/007), spec v1.2.0 (575 BCs). PG-385-1..7 recorded. |
 | #386 | docs/demo-evidence removal | **MERGED** @ acdf212 | — | 505 files, ~85 MB freed at HEAD |
 | #387 | git history rewrite for demo-evidence blobs | OPEN | LOW | Deferred; force-push needed |
 | #389 | S-382: JrError::InsufficientScope required_scope refactor | **MERGED** @ b1c863e (2026-05-19T18:40:25Z) | — | PR merged; issue #382 auto-closed |
 | #390 | S-383: platform-path inverse warnings (--field/--on-behalf-of) | **MERGED** @ 25f7211 (2026-05-19) | — | PR merged; issue #383 auto-closed |
 | #391 | docs: harmonize bc-3 subdomain 3.8 heading to ### N.M format | **CLOSED** (factory-artifacts commit 2026-05-20; DEFER-383-1 resolved) | LOW | bc-3 subdomain 3.8 heading harmonized to `### 3.8` format; stale deferral note removed |
 | #392 | ci: extend spec-count guard to validate cumulative total_bcs + BC-INDEX section headers | **CLOSED** (auto-closed via PR #393 0be2e3a) | LOW | DRIFT-002 guard live; DEFER-383-3 + DRIFT-BC2-PROSE resolved |
+| #374 | Dependabot: cargo-deny-action 2.0.17→2.0.18 | **MERGED** @ aac5ff4 (squash, 2026-05-20) | — | 9-day soak (pub 2026-05-11); CI green |
+| #377 | Dependabot: open 5.3.4→5.3.5 | **MERGED** @ cb3436a (squash, 2026-05-20) | — | 9-day soak; CI green |
+| #376 | Dependabot: assert_cmd 2.2.1→2.2.2 | **MERGED** @ b2d066b (squash, 2026-05-20) | — | 9-day soak; CI green |
+| #375 | Dependabot: clap_complete 4.6.2→4.6.5 | **MERGED** @ a66d664 (squash, 2026-05-20) | — | 9-day soak; CI green |
+| #327 | Dependabot: rand 0.9.4→0.10.1 | OPEN — DEFERRED | LOW | Passes soak (pub 2026-05-11) but breaking 0.x major bump; CI failing; needs migration |
+| #368 | (open PR — see backlog) | OPEN | — | |
 
 ## Historical Content
 
