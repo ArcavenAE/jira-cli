@@ -1461,3 +1461,79 @@ _Discovered: #385 F3 story drafting. Status: [deferred] — engine story-writer 
 
 _Recorded: F7 close-out, 2026-05-20_
 _Tagged: [codified] [policy] — elevates accept-either classification from LOW to MEDIUM; mandates grep audit on every adversary pass_
+
+---
+
+## Issue #388 F2 — Deferred Process-Gap Findings (for F7/cycle-close codification)
+
+_Recorded: F2 close-out, 2026-05-20. Source: #388 adversarial spec review, passes 1–10._
+_Status: DEFERRED — for codification at F7 gate or cycle-close, not blocking F3._
+
+---
+
+### PG-388-1 [deferred] BC-authoring checklist: None/null branch assignment for Optional fields
+
+**Finding:** For every `Option<T>` / nullable field that a BC branches on, the None/null branch
+must be explicitly assigned a classification (e.g., `Errors:`, `Outputs/Effects:`, or a
+designated fall-through). During #388 F2 adversarial review, missing None-branch classifications
+on BC-3.4.010/011 were caught in passes 1–3 and required correction. No existing checklist item
+codifies this rule.
+
+**Recommendation:** Add to BC-authoring checklist: "For every `Option`/nullable field a BC
+branches on, confirm the None/null branch is assigned a classification. Do not leave None-path
+behavior implicit."
+
+**Target:** Engine-level BC-authoring checklist / F2 product-owner prompt. Not solvable from
+jira-cli repo. Target: next engine maintenance pass.
+
+_Discovered: #388 F2 adversarial review passes 1–3. Status: [deferred] — engine template gap._
+
+---
+
+### PG-388-2 [deferred] No convention/CI check that "pinned verbatim" code blocks in BC bodies have a corresponding full-string assertion test
+
+**Finding:** Several BC bodies in bc-3-issue-write.md use a "pinned verbatim" code block
+(triple-backtick block with an exact error string or output literal) to express a required
+output. There is no project convention and no CI guard requiring that each such pinned-verbatim
+block has a corresponding full-string assertion in the test suite (as opposed to a `contains()`
+or partial-match assertion). The gap was surfaced during #388 F2 passes 4–5 when reviewers
+noted that new BC-3.4.010/011 verbatim strings lacked paired full-string pins.
+
+**Recommendation:** Establish a convention: any code block in a BC body annotated or named
+as "pinned verbatim" (or containing an exact error string literal) MUST have a corresponding
+`assert_eq!` / `.stdout("...")` full-string assertion test. Consider a CI grep that flags
+verbatim-pin blocks in BC files and cross-checks for a matching literal in the test corpus.
+
+**Target:** Convention: codify in CLAUDE.md or BC-authoring guidelines. CI guard: new
+`scripts/check-bc-verbatim-pins.sh` (future scripts-maintenance PR). Not blocking any current
+delivery.
+
+_Discovered: #388 F2 adversarial review passes 4–5. Status: [deferred] — convention gap; CI
+guard would require new scripts/ work._
+
+---
+
+### PG-388-3 [deferred] Pre-existing L2↔L3 BC-count drift not gated by any guard script
+
+**Finding:** The L2 domain spec files (`bc-02.md`, `bc-03.md`) have `bc_count` frontmatter
+values that are approximately 20 BCs behind the L3 PRD values (DRIFT-009 in Drift Items).
+This drift has accumulated across multiple cycles (#350, #365, #340, #288, and now #388)
+because no guard script validates that L2 frontmatter counts stay in sync with L3 PRD
+frontmatter counts. The #388 F2 adversarial review surfaced this again in pass 6.
+
+**Important:** This drift was NOT introduced by #388. It is pre-existing (first recorded as
+DRIFT-009 during #288 F1d). Including here for F7/cycle-close codification tracking.
+
+**Recommendation:** Extend `scripts/check-bc-cumulative-counts.sh` (or add a sibling script)
+to compare L2 domain-spec `bc_count` frontmatter values against the corresponding L3 PRD
+`bc_count` / `total_bcs` values and emit a warning (not hard-fail, since L2 propagation
+policy has not been decided) when they diverge by more than a configurable threshold.
+Alternatively, decide the L2 propagation policy (DRIFT-009 target: v0.6) so the drift can
+be closed systematically.
+
+**Target:** Policy decision (DRIFT-009 → v0.6 / L2 propagation policy). Scripts improvement:
+extend `check-bc-cumulative-counts.sh` or add `check-l2-l3-bc-alignment.sh`. Not solvable
+until L2 propagation policy is decided.
+
+_Discovered: #388 F2 adversarial review pass 6. Pre-existing: DRIFT-009. Status: [deferred] —
+L2 propagation policy required first; DRIFT-009 owner: orchestrator._

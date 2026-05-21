@@ -72,3 +72,13 @@ _Archived 2026-05-20. Was the active checkpoint entering #388 Feature Mode._
 | **Date** | 2026-05-20 |
 | **Position** | **Dependabot maintenance sweep COMPLETE.** 4 Dependabot PRs merged to develop after 7-day soak: #374 (cargo-deny-action 2.0.17→2.0.18 @ aac5ff4), #377 (open 5.3.4→5.3.5 @ cb3436a), #376 (assert_cmd 2.2.1→2.2.2 @ b2d066b), #375 (clap_complete 4.6.2→4.6.5 @ a66d664). All published 2026-05-11 (9-day soak), CI green. #327 (rand 0.9.4→0.10.1) DEFERRED — breaking 0.x major bump, failing CI, needs migration. Remaining open backlog issues: #210, #331, #372, #387. Open PRs: #327, #368. Previous state: #385 F1–F7 COMPLETE (PR #395 @ f7fc8c3, 2026-05-20). Next: next feature from open backlog or #327 migration (human directs). |
 | **Convergence counter** | #385 F7 CONVERGED (prior). BC corpus: 575 BCs (spec v1.2.0). Story corpus: 43 stories. Maintenance-only burst — no BC/story changes. |
+
+---
+
+_Archived 2026-05-20. Was the active checkpoint entering #388 F2 (Spec Evolution)._
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-05-20 |
+| **Position** | **Issue #388 Feature Mode — F1 COMPLETE, entering F2 (Spec Evolution).** F1 gate APPROVED by human 2026-05-20. Delta: 2 new BCs (BC-3.4.010, BC-3.4.011) in bc-3-issue-write.md; BC-3.4.003 annotation-only update; BC-INDEX 575→577. 1 new story to be created in F3. New test file tests/issue_edit_type_errors.rs; T-06 in tests/issue_edit_no_parent.rs to be strengthened. Next: F2 Spec Evolution (product-owner updates bc-3-issue-write.md with BC-3.4.010/011 full bodies + BC-3.4.003 annotation; PRD delta document). Remaining open backlog: #210, #331, #372, #387, #388. Open PRs: #327, #368. |
+| **Convergence counter** | #388 F1 COMPLETE (prior #385 F7 CONVERGED). BC corpus: 575 BCs (spec v1.2.0; will become 577 after F2). Story corpus: 43 stories. |
