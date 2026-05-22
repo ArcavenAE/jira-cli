@@ -309,7 +309,7 @@ The create table output already shows the browse URL — a useful second line. A
 - The JSON path already does a follow-up GET and returns the full Issue object.
 - The only ambiguous resolution is `--team` (same partial-match concern as edit).
 
-**Original recommendation (superseded)**: `issue create` table output was recommended as OUT OF SCOPE for this issue. This recommendation was overridden at the human gate. BC-3.4.014 implements the `--team` echo for `issue create` table mode.
+**Original recommendation (superseded)**: `issue create` table output was recommended as OUT OF SCOPE for this issue. This recommendation was overridden at the human gate. BC-3.4.014 implements the `--team` echo for `issue create` table mode. — subsequently further broadened at the 2026-05-22 human-gate to echo ALL set fields, mirroring BC-3.4.012; see prd-delta-398.md §3 BC-3.4.014 and the BC-3.4.014 body.
 
 ---
 

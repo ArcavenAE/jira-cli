@@ -32,7 +32,7 @@ The following decisions were locked before spec evolution. They are NOT re-litig
 | Decision | Value |
 |----------|-------|
 | Scope: `issue edit` echo | ALL changed fields echoed on single-key success path |
-| Scope: `issue create` echo | ONLY `--team` resolved name echoed in table output |
+| Scope: `issue create` echo | ALL set fields echoed in table output, mirroring BC-3.4.012 (human-gate decision 2026-05-22) |
 | Table output channel | stderr (Symmetric profile 4, consistent with existing confirmation) |
 | Description in table/human | `(updated)` marker only — content never echoed |
 | Description in JSON | Raw `--description`/`--description-stdin` input string (no ADF→text round-trip; `src/adf.rs` converter NOT used) |
@@ -80,15 +80,28 @@ Single-key `jr issue edit KEY [flags...] --output json`:
 - Scope: single-key path only (`effective_keys.len() == 1`, including `--jql` matching exactly one issue); bulk paths unaffected.
 - Stderr: empty. Exit code: 0.
 
-### BC-3.4.014 — `issue create` table-mode team echo
+### BC-3.4.014 — `issue create` table-mode all-fields echo (human-gate revision 2026-05-22)
 
-`jr issue create [flags...] --team <name_or_uuid>` (table mode):
+> **[REVISED 2026-05-22 human-gate]** The original BC-3.4.014 scoped `issue create` echo to ONLY `--team`. The human senior architect decided at the F2 gate that `issue create` and `issue edit` must match. BC-3.4.014 now governs ALL-set-fields echo, mirroring BC-3.4.012.
+
+`jr issue create [flags...]` (table mode, no `--output json`):
 - Existing output: `Created issue FOO-123\nhttps://...`.
-- New output: `Created issue FOO-123\n  team → Platform Core\nhttps://...`.
-- Echo line appears between the "Created issue" confirmation and the browse URL.
-- Echo value is the RESOLVED team display name from `resolve_team_field` 3-tuple return.
-- When `--team` absent: output byte-for-byte identical to pre-#398 behavior.
-- JSON output path (`--output json`) is unchanged.
+- New output: `Created issue FOO-123` + one `  <field> → <value>` line per field set (alphabetical) + browse URL — all on stderr.
+- Field echo lines appear between the "Created issue" confirmation and the browse URL.
+- Fields echoed and their values (create-path enumeration):
+  - `assignee` → resolved display name from `--to` (second return element of `resolve_assignee_by_project`, currently bound as `_display_name` — must be bound and used); or account ID when `--account-id` is used (no lookup on that path).
+  - `description` → literal `(updated)` marker (same asymmetry as BC-3.4.012; content never echoed in table mode).
+  - `issue_type` → literal `--type` value (required; always present).
+  - `label` → comma-space-separated list of `--label` values in command-line order (e.g., `bug, urgent`). Absent when `--label` not supplied. Note: `--label` on create is the platform single-POST path (NOT the bulk path used by `edit --label`), so echoing is feasible and IS implemented here. There is no `label` exclusion on create (contrast with BC-3.4.012's explicit label exclusion for `handle_edit_bulk_labels`).
+  - `parent` → issue key from `--parent`.
+  - `points` → `f64::to_string()` result (e.g., `"5"` for 5.0, `"2.5"` for 2.5).
+  - `priority` → literal `--priority` value.
+  - `summary` → literal `--summary` value (required; always present).
+  - `team` → RESOLVED display name from `resolve_team_field` 3-tuple third element. UUID-bypass: when caller passes a raw UUID, the UUID is echoed as-is.
+- No "clear" concept exists on create (`--no-points` / `--no-parent` are edit-only). No `(cleared)` values appear on the create echo path.
+- JSON output path (`--output json`) is **UNCHANGED** — it already returns the full issue object via a follow-up GET, a superset of `changed_fields`. No `changed_fields` key is added to create JSON. This is intentional: the full issue object is richer than `changed_fields` would be.
+- `project` is not echoed (implicit/required; not echoed, matching BC-3.4.012's convention of not echoing the issue key itself).
+- When no optional flags are set (only required `--summary` and `--type`): echo contains only `issue_type` and `summary` lines.
 
 ## 4. Modified Behavioral Contracts
 
@@ -108,7 +121,7 @@ No behavioral change to the PUT wire contract itself.
 
 Call sites that must be updated:
 1. `handle_edit` (create.rs ~line 794): destructure to `(field_id, team_id, resolved_team_name)` — use `resolved_team_name` in `changed_fields`.
-2. `handle_create` (create.rs ~line 187): destructure to `(field_id, team_id, resolved_team_name)` — use `resolved_team_name` for the table-mode team echo line. **Note (O-4, round 7):** The superseded F1 delta-analysis §7 says bind the team name to `_resolved_team_name` (underscore-prefixed unused) — that guidance is SUPERSEDED; the create table path now USES the resolved name, so bind it as `resolved_team_name` (no underscore). **Note (OBS-1, round 11):** The resolved team name must outlive the `if let Some(ref team_name) = team` block to reach the post-POST table-output match arm — hoist it (e.g., a `let mut team_echo: Option<String> = None;` declared before the `if let`, assigned inside it). `handle_edit` has no equivalent issue because its echo BTreeMap is constructed across the whole function body.
+2. `handle_create` (create.rs ~line 187): destructure to `(field_id, team_id, resolved_team_name)` — use `resolved_team_name` as the `team` value in the create echo map. **Note (O-4, round 7):** The superseded F1 delta-analysis §7 says bind the team name to `_resolved_team_name` (underscore-prefixed unused) — that guidance is SUPERSEDED; the create table path now USES the resolved name, so bind it as `resolved_team_name` (no underscore). **Note (OBS-1, round 11 / human-gate 2026-05-22):** `handle_create` must now build a `BTreeMap<String, String>` echo map in the same pattern as `handle_edit` (BC-3.4.012 §6). Each field is inserted as it is resolved/built. The team name must outlive the `if let Some(ref team_name) = team` block — hoist via the map (insert into the `BTreeMap` inside the block; the map is declared before the block). Similarly: `summary` and `issue_type` are always inserted (required fields resolved before field-building). `description` inserts the literal `"(updated)"` string when `desc_text.is_some()`. `priority`, `parent`, `points`, `label` insert when their respective options are non-empty/non-None. `assignee` (from `--to` path): `resolve_assignee_by_project` currently returns `(acct_id, _display_name)` — the second element (the display name) must be bound (not `_display_name`) and inserted as `"assignee"` in the echo map. `assignee` (from `--account-id` path): insert the raw account ID string. The map is emitted only after POST 201; it is discarded on POST failure.
 3. `handle_list` (list.rs): The 3-tuple change does NOT affect line 161 (the `.await?` line — `Some(helpers::resolve_team_field(...).await?)` — which is unchanged). The actual destructure that must be updated is the closure at list.rs:167: `resolved_team.as_ref().map(|(field_id, team_uuid)| { ... })` becomes `.map(|(field_id, team_uuid, _resolved_team_name)| { ... })`. The underscore-prefixed third element is intentional because this path uses the `--team` flag only to build a JQL filter (it inserts `field_id`/`team_uuid` into the query) and does NOT echo the team name anywhere. **Do NOT apply the "use the resolved name for echo" guidance from sites 1 and 2 to this site.** The unused third element must be prefixed with an underscore (`_resolved_team_name`) to satisfy the `clippy -D warnings` zero-warning policy. Additionally, if there is an explicit type annotation on the `resolved_team` binding (e.g., `Option<(String, String)>`), it must be updated to `Option<(String, String, String)>`; if no explicit annotation exists, no annotation change is needed.
 
 **Affected files** (all three call sites):
@@ -191,6 +204,49 @@ DECISION LOCKED (MED-1): Cleared-field key model uses single map keys. `parent` 
 both `--parent` (value = issue key) and `--no-parent` (value = `"(cleared)"`). `points`
 covers both `--points` (value = number string) and `--no-points` (value = `"(cleared)"`).
 No separate `no_parent` / `no_points` keys exist.
+
+### `create_echo_fields` map construction in `handle_create` (human-gate 2026-05-22)
+
+**Add a NEW declaration** at the top of `handle_create`'s platform path (after the `--request-type` dispatch fork, before field resolution):
+
+```rust
+let mut create_echo: BTreeMap<String, String> = BTreeMap::new();
+```
+
+Populate in parallel with `fields` as each flag is resolved:
+
+```
+summary          → literal summary_text (always inserted; required field)
+issue_type       → literal issue_type_name (always inserted; required field)
+description      → "(updated)"  [when desc_text.is_some(); content NOT inserted, same as handle_edit table echo]
+priority         → literal prio  [when priority.is_some()]
+label            → labels.join(", ")  [when !labels.is_empty(); comma-space join in command-line order]
+team             → resolved_team_name (3rd element of resolve_team_field 3-tuple)  [when team.is_some()]
+points           → pts.to_string()  [when points.is_some(); f64::to_string()]
+parent           → parent_key  [when parent.is_some()]
+assignee         → display_name  [when --to path used; currently bound as _display_name — must unbind]
+assignee         → account_id value  [when --account-id path used; raw string]
+```
+
+No "cleared" variants exist on create (`--no-points` / `--no-parent` are edit-only flags and do not appear in `IssueCommand::Create`).
+
+The map is emitted ONLY in the `OutputFormat::Table` arm, after POST 201:
+
+```rust
+OutputFormat::Table => {
+    output::print_success(&format!("Created issue {}", response.key));
+    for (field, value) in &create_echo {
+        eprintln!("  {} \u{2192} {}", field, value);  // "  field → value"
+    }
+    eprintln!("{}", browse_url);
+}
+```
+
+`BTreeMap` guarantees alphabetical key order, matching BC-3.4.012's table-mode ordering invariant.
+
+**`resolve_assignee_by_project` display-name binding**: This function currently returns `(acct_id, _display_name)` with the display name unused. The implementer MUST rebind the second element to `display_name` (no underscore) and insert `create_echo.insert("assignee".into(), display_name)`. `resolve_assignee_by_project` encapsulates the `--to me` short-circuit internally and its second tuple element already carries the display name for BOTH the `--to NAME` lookup path and the `--to me` (`get_myself()`) path — the same rebind covers both cases.
+
+**`project` is NOT echoed**: `project_key` is a required field but is not echoed (analogous to how BC-3.4.012 does not echo the issue key).
 
 ### Import note: HashMap → BTreeMap (IMP-2)
 
@@ -287,8 +343,11 @@ snapshot before merging — a wrong-but-stable snapshot is a HIGH severity findi
 - `issue edit`: single-key success now echoes changed fields to stderr (table mode) and
   includes `changed_fields` in JSON output. `--team` shows resolved display name.
   Description shown as `(updated)` marker in table mode; raw user-supplied input string in JSON.
-- `issue create`: `--team` resolved name now echoed in table mode between "Created issue"
-  and browse URL.
+- `issue create`: ALL set fields now echoed in table mode between "Created issue" and
+  browse URL (alphabetical order), mirroring `issue edit`. Fields: `assignee`, `description`
+  (as `(updated)` marker), `issue_type`, `label` (comma-joined), `parent`, `points`,
+  `priority`, `summary`, `team` (resolved display name). JSON output unchanged (full issue
+  object already returned via follow-up GET). Human-gate decision 2026-05-22.
 - `resolve_team_field` return type changed to 3-tuple `(field_id, team_id, team_name)`.
   All THREE call sites updated: `handle_edit` (create.rs ~794), `handle_create` (create.rs ~187),
   and `handle_list` (list.rs ~161). The `list.rs` site destructures to

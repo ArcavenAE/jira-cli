@@ -26,6 +26,7 @@ trace: |
   - F2 addition (2026-05-21): BC-3.4.012 — `issue edit` table-mode success echoes one stderr line per changed field (issue #398)
   - F2 addition (2026-05-21): BC-3.4.013 — `issue edit` JSON-mode success includes `changed_fields` object; description carries the RAW user-supplied input string (NOT an adf.rs round-trip); `updated:true` retained (issue #398)
   - F2 addition (2026-05-21): BC-3.4.014 — `issue create` table-mode success echoes resolved team name when `--team` is set (issue #398)
+  - F2 modified (2026-05-22, human-gate): BC-3.4.014 — broadened from team-only to ALL set fields, mirroring BC-3.4.012 (human-gate decision 2026-05-22)
   - F2 modified (2026-05-21): BC-3.4.003 — cross-reference to BC-3.4.012 and BC-3.4.013 added (issue #398 annotation only)
   - F2 modified (2026-05-21, adversary round 3): BC-3.4.012 — EC-13 (--description+--summary alphabetical sort pin) and EC-14 (--markdown table-mode still shows (updated)) added (M-1, MED-1, MED-2)
   - F2 modified (2026-05-21, adversary round 3): BC-3.4.013 — EC-11 (--markdown raw Markdown in changed_fields) added; frontmatter trace corrected to raw-input-string model (MED-2, M-1)
@@ -840,77 +841,113 @@ The deliberate asymmetry between BC-3.4.012 (table: `(updated)` marker for descr
 
 ---
 
-#### BC-3.4.014: `issue create` table-mode success echoes resolved team name to stderr when `--team` is set
+#### BC-3.4.014: `issue create` table-mode success echoes ALL set fields to stderr (mirroring BC-3.4.012)
 
 **Confidence**: HIGH
 **Source**: issue #398 F2 spec evolution; `src/cli/issue/create.rs::handle_create` (table-mode success path); `src/cli/issue/helpers.rs::resolve_team_field` (signature change to return 3-tuple)
 **Subject**: Issue write
-**Behavior**: On the `jr issue create` success path (table mode, no `--output json`), when `--team <name_or_uuid>` is supplied, the existing output:
+
+> **[REVISED 2026-05-22 human-gate]** BC-3.4.014 broadened from team-only to all-set-fields echo to match BC-3.4.012. The sentence "Unlike `issue edit`, `issue create` echoes ONLY the resolved team name" is superseded and removed.
+
+**Behavior**: On the `jr issue create` success path (table mode, no `--output json`), the existing two-line output:
 
 ```
 Created issue FOO-123
 https://example.atlassian.net/browse/FOO-123
 ```
 
-gains a third stderr line showing the resolved team name:
+gains one `  <field> → <value>` stderr line per field the create command set, appearing between the `"Created issue <key>"` confirmation and the browse URL:
 
 ```
 Created issue FOO-123
+  assignee → Jane Doe
+  description → (updated)
+  issue_type → Task
+  label → bug, urgent
+  parent → PROJ-5
+  points → 5
+  priority → High
+  summary → Fix the login bug
   team → Platform Core
 https://example.atlassian.net/browse/FOO-123
 ```
 
-The team echo line (`  team → <resolved_name>`) is emitted to **stderr** between the `"Created issue <key>"` line and the browse URL line. Format matches BC-3.4.012 (`  team → <value>` with two leading spaces and a unicode arrow).
+Field echo lines are sorted in **alphabetical field-name order** (matching BC-3.4.012). Only fields actually set by the caller appear — unset optional fields emit no line. Format is `  <field> → <value>` with two leading spaces and a unicode right arrow, identical to BC-3.4.012.
 
-The resolved team name is the third element from `resolve_team_field`'s updated return tuple `(field_id, team_id, team_name)`. When the caller passed a raw UUID (UUID-bypass path in `resolve_team_field`), `team_name` is the UUID — it is echoed as-is.
+**Fields echoed and their table-mode values (create-path enumeration)**:
 
-When `--team` is NOT supplied, no team echo line is emitted. The existing browse URL line is unaffected.
+- `summary` → literal `--summary` value. Required field; always present on the platform path (post-resolve).
+- `issue_type` → literal `--type` value. Required field; always present on the platform path.
+- `description` → literal `(updated)` marker. Content is never echoed in table mode. Same asymmetry as BC-3.4.012. (`--description` or `--description-stdin`; either source shows the marker.)
+- `priority` → literal `--priority` value.
+- `label` → comma-separated list of label values (e.g., `bug, urgent` for `--label bug --label urgent`). If a single label is supplied, no trailing comma. If `--label` is absent, no echo line.
+- `team` → RESOLVED display name (not UUID, not partial-match query). UUID-bypass: when the caller passes a raw UUID, the UUID is echoed as-is (no lookup occurred). Uses the third element from `resolve_team_field`'s `(field_id, team_id, team_name)` return tuple.
+- `points` → `f64::to_string()` result (e.g., `"5"` for 5.0, `"2.5"` for 2.5).
+- `parent` → issue key string from `--parent` (e.g., `PROJ-5`).
+- `assignee` → display name of the resolved assignee. Sourced from `resolve_assignee_by_project`'s second return element `_display_name` (currently unused — must be bound and used for echo). When `--account-id` is used instead of `--to`, the account ID is echoed as the value (no display name lookup occurs on the `--account-id` path).
 
-**Output channel profile**: All three output lines (`Created issue <key>`, `  team → <name>`, browse URL) are emitted to **stderr**. Stdout is empty in `issue create` table mode. The browse URL line was already on stderr pre-#398 (emitted via `eprintln!`). This contract is **output channel profile 4 (Symmetric)**: stdout is empty in table mode; all confirmation and diagnostics go to stderr — consistent with BC-3.4.012 and BC-3.4.013 and the Symmetric profile classification used throughout the delta-analysis.
+**Fields NOT echoed**:
+- `project` — implicit/required; not echoed (same decision as BC-3.4.012 which does not echo the issue key).
+- `--request-type` path fields — the JSM path is governed by BC-3.8.011; this contract applies to the platform path only.
+- `--label` on create is the platform single-POST path (NOT the bulk path used by `edit --label`). Because all labels are present in the create POST body, echoing them as a comma-joined list is feasible and IS implemented. There is no `label` key exclusion on create (contrast with BC-3.4.012 which explicitly excludes `label` because `edit --label` routes through `handle_edit_bulk_labels`).
 
-> **Profile-4 carve-out — success lines on stderr**: CLAUDE.md profile 4 ("Symmetric") describes "stderr for human-readable errors" as a distinguishing trait, but `issue create` (and `issue edit`) also route **success confirmation lines** to stderr — specifically `output::print_success` (`"Created issue <key>"`, `"Updated <key>"`) and the browse URL `eprintln!`. This is **pre-existing behavior predating #398**; it is NOT an error path. #398 only inserts the `  team → <name>` line into that same pre-existing stderr stream. The profile-4 label is correct: in `--output json` mode stdout carries the full JSON payload while stderr is empty (true symmetric channel split); in table mode stdout is empty and all human-readable output (success confirmations, field-echo lines, browse URL) goes to stderr. A reader must not interpret "stderr for errors" as prohibiting success text on stderr — profile 4 makes no such restriction for state-changing commands.
+**JSON mode is UNCHANGED**: `issue create --output json` already performs a follow-up GET returning the full created issue object — a superset of the edit `changed_fields`. No `changed_fields` key is added to create JSON output; the JSON path is byte-for-byte identical to pre-#398 behavior. The full issue object is richer than `changed_fields` would be, making a `changed_fields` addition redundant.
 
-**Scope**: `issue create` table-mode output ONLY. The `issue create` JSON output path (`--output json`) is unchanged — it already returns the full issue object via a follow-up GET and contains the team field as part of that object. This BC addresses only the table/human output gap where partial-match team resolution was previously silent. Unlike `issue edit` (BC-3.4.012), `issue create` echoes ONLY the resolved team name, not other changed fields — this is a deliberate scope decision (prd-delta-398.md §2), not an incomplete implementation.
+**Output channel profile**: All output lines (`Created issue <key>`, field echo lines, browse URL) are emitted to **stderr**. Stdout is empty in table mode. The browse URL was already on stderr pre-#398 (via `eprintln!`). This is **output channel profile 4 (Symmetric)**: stdout is empty in table mode; in `--output json` mode stdout carries the full JSON payload while stderr is empty. Profile-4 carve-out: success confirmation lines on stderr is pre-existing behavior, not an error path. #398 only inserts field-echo lines into the same pre-existing stderr stream.
 
 **Preconditions**:
-- `jr issue create [flags] --team <name_or_uuid>` issued without `--output json`.
+- `jr issue create [flags...]` issued without `--output json`.
 - The `--request-type` flag is absent (platform create path; JSM path is governed by BC-3.8.011).
-- `resolve_team_field` returns successfully (no error).
+- All field resolution succeeds (team, assignee, story-points field ID).
 - POST 201 received; `issueKey` extracted.
 
 **Postconditions**:
 - Exit code 0.
 - Stderr contains `"Created issue <key>"` (via `output::print_success`).
-- Stderr contains `  team → <resolved_team_name>` on the line immediately following the "Created issue" line.
-- Stderr contains the browse URL (same `eprintln!` path as pre-#398).
-- Stdout is empty (table mode; no JSON, no diagnostic text).
+- Stderr contains one `  <field> → <value>` line per field set, in alphabetical field-name order, between the "Created issue" line and the browse URL.
+- Stderr contains the browse URL.
+- Stdout is empty.
 
 **Invariants**:
-1. The team echo value is the RESOLVED display name, never a UUID (unless the caller supplied a UUID directly, in which case the UUID is echoed as the "resolved name"). VP-398-001 covers both `edit` and `create` table-mode team echo.
-2. The team echo line appears between the "Created issue" confirmation and the browse URL — not after the browse URL.
-3. When `--team` is absent, the output is byte-for-byte identical to pre-#398 behavior.
+1. The `team` echo value is the RESOLVED display name, never a UUID (unless the caller supplied a UUID directly). VP-398-001 covers `edit` and `create` table-mode team echo.
+2. The `description` echo value is always `(updated)` — never the content, never truncated. Same asymmetry as BC-3.4.012.
+3. Field echo lines appear between the "Created issue" confirmation and the browse URL — never after the browse URL.
+4. When no optional flags are set (only required `--summary` and `--type` supplied), the minimal echo contains only `issue_type` and `summary` lines.
+5. The `label` echo is a comma-separated join of the labels Vec, in the order they appear on the command line (no re-sorting of the labels themselves; only the field-key `label` is alphabetically sorted relative to other field keys).
+6. The echo map is constructed alongside field-building; it is discarded if the POST fails. Field echo lines are emitted only post-201.
 
 **Edge Cases**:
 - EC-3.4.014-1: `--team` supplied as a UUID directly → team echo shows the UUID (UUID-bypass path; no name resolution occurred).
 - EC-3.4.014-2: `--team` triggers disambiguation prompt (interactive, `--no-input` absent) → user selects a team → resolved name is echoed.
-- EC-3.4.014-3: `--no-input` with an ambiguous team name → `resolve_team_field` errors via `JrError::UserError` before POST (exit code per `src/error.rs::exit_code()`, currently 64); no team echo line emitted.
-- EC-3.4.014-4: JSM create path (`--request-type` set) → this BC does NOT apply; the team warning is governed by BC-3.8.011 (`--team` is ignored on JSM path).
-- EC-3.4.014-5: `--team` value matches no team at all (`MatchResult::None(_)`) → `resolve_team_field` errors via `JrError::UserError` before POST (exit code per `src/error.rs::exit_code()`, currently 64); no team echo line emitted and the create does not proceed. The error text contains the stable substring `No team matching` (exact wording varies by `fetched_fresh` cache state; assert only the substring). Note: the `None` variant carries a `Vec<String>` of candidate names, unused by this contract.
+- EC-3.4.014-3: `--no-input` with an ambiguous team name → `resolve_team_field` errors via `JrError::UserError` before POST (exit code per `src/error.rs::exit_code()`, currently 64); no echo emitted.
+- EC-3.4.014-4: JSM create path (`--request-type` set) → this BC does NOT apply; the team warning is governed by BC-3.8.011 (`--team` is ignored on JSM path). None of the create field echo lines fire on the JSM path.
+- EC-3.4.014-5: `--team` value matches no team at all (`MatchResult::None(_)`) → `resolve_team_field` errors via `JrError::UserError` before POST (exit code per `src/error.rs::exit_code()`, currently 64); no echo emitted and the create does not proceed. The error text contains the stable substring `No team matching` (exact wording varies by `fetched_fresh` cache state; assert only the substring). Note: the `None` variant carries a `Vec<String>` of candidate names, unused by this contract.
+- EC-3.4.014-6: `--label` absent → no `label` echo line emitted.
+- EC-3.4.014-7: `--to me` → assignee resolves via `get_myself()`; display name from the myself response is echoed as `assignee → <display_name>`.
+- EC-3.4.014-8: `--account-id <id>` used instead of `--to` → `assignee → <account_id>` (the account ID is echoed; no display-name lookup is performed on the `--account-id` path, consistent with existing `jr issue assign --account-id` behavior).
+- EC-3.4.014-9: `--label bug --label urgent` → `label → bug, urgent` (comma-space separated).
+- EC-3.4.014-10: Only `--summary` and `--type` set → echo contains `issue_type` and `summary` lines only; output byte-for-byte identical to `BC-3.4.012` equivalent when only those two fields are set.
+- EC-3.4.014-11: `--points 5.0` → echo depends on Rust `f64::to_string()` (may produce `"5"` not `"5.0"`); pinned by snapshot test. Concrete assertions (NOT snapshot-only): `jr issue create ... --points 5` → stderr contains `  points → 5`; `jr issue create ... --points 2.5` → stderr contains `  points → 2.5`. Snapshot pins the full line; assertion pins the exact string to catch a wrong-but-stable snapshot value. (Mirrors EC-3.4.012-5.)
+- EC-3.4.014-12: `jr issue create ... --summary ""` (empty-string value) → echo line is `  summary → ` with nothing after the arrow. This is correct rendering — the empty string is a valid value, not a rendering bug. Note: this is a wiremock-only test scenario — real Jira rejects an empty `summary` with HTTP 400 (`summary` is a system-required field), so the success-path echo is not reachable against live Jira; the test exercises the echo formatting via a mocked 201 response only. (Mirrors EC-3.4.012-12; clap accepts `--summary ""` even though the field is required by the API.)
+- EC-3.4.014-13: `--points` used when `story_points_field_id` is not configured → `handle_create` errors via `resolve_story_points_field_id` with `JrError::ConfigError` (exit 1) before the POST; no echo fires. (Mirrors EC-3.4.012-11.)
 
 **Verification Properties**:
-- VP-398-001: Resolved team name in `create` table output is the display name, not a UUID substring (shared VP with BC-3.4.012 and BC-3.4.013). Negative case (DECISION LOCKED — round 5 F-1): write a **direct unit-level assertion on `is_team_uuid`** — call `is_team_uuid("36885b3c-1bf0-4f85-a357-c5b858c31de")` (35 chars, one short of UUID length) and assert the return value is `false`. Reuse or cite the existing `is_team_uuid_rejects_wrong_length` test at `src/cli/issue/helpers.rs` (~line 617). Do NOT write an integration test routing this probe through `partial_match` — that tests `partial_match` fallback behavior, not the `is_team_uuid` predicate boundary. **PLACEMENT (DECISION LOCKED — round 7 F-1): `is_team_uuid` has no `pub` visibility — it is module-private. The `is_team_uuid` negative-case assertion is a UNIT test that MUST be placed in the `#[cfg(test)] mod tests` block inside `src/cli/issue/helpers.rs` (because `is_team_uuid` is module-private and not exported via lib.rs). Do NOT place it in `tests/`. The team-echo positive cases (verifying that a resolved display name, not a UUID, appears in stderr for `issue create` table output) remain wiremock integration tests in `tests/`.**
-- VP-398-005: `issue create` team-resolution-error exits with code 64. Integration test (wiremock) verifies that `jr issue create --team <unresolvable_name> --no-input` exits with code 64, stdout is empty, and no POST was issued. Suggested test name: `test_BC_3_4_014_create_unresolvable_team_no_input_exits_64`. See verification-delta-398.md §VP-398-005 for full test strategy.
+- VP-398-001: Resolved team name in `create` table output is the display name, not a UUID substring (shared VP with BC-3.4.012 and BC-3.4.013). Negative case (DECISION LOCKED — round 5 F-1): write a **direct unit-level assertion on `is_team_uuid`** — call `is_team_uuid("36885b3c-1bf0-4f85-a357-c5b858c31de")` (35 chars, one short of UUID length) and assert the return value is `false`. Reuse or cite the existing `is_team_uuid_rejects_wrong_length` test at `src/cli/issue/helpers.rs` (~line 617). Do NOT write an integration test routing this probe through `partial_match`. **PLACEMENT (DECISION LOCKED — round 7 F-1): `is_team_uuid` has no `pub` visibility — it is module-private. The `is_team_uuid` negative-case assertion is a UNIT test that MUST be placed in the `#[cfg(test)] mod tests` block inside `src/cli/issue/helpers.rs`. Do NOT place it in `tests/`.** The team-echo positive cases remain wiremock integration tests in `tests/`.
+- VP-398-005: Broadened to cover all-fields create echo. Integration test (wiremock) verifies: (a) `jr issue create --team <unresolvable_name> --no-input` exits 64, no POST issued; (b) `jr issue create --summary X --type Task --priority High --team "Platform Core"` in table mode emits `  priority → High` and `  team → Platform Core` on stderr (alphabetical order) between "Created issue" and browse URL. Suggested test names: `test_BC_3_4_014_create_unresolvable_team_no_input_exits_64`, `test_BC_3_4_014_create_all_fields_echo_alphabetical_order`. See verification-delta-398.md §VP-398-005 for full test strategy.
+- VP-398-006 (NEW): Create `description` echo is `(updated)` marker (table mode) — never the content. Integration test: `jr issue create --summary X --type Task --description "Some content"` in table mode emits `  description → (updated)` on stderr, does NOT contain `"Some content"`. Suggested test name: `test_BC_3_4_014_create_description_echo_is_updated_marker`.
 
-**Trace**: issue #398 F2; `src/cli/issue/create.rs::handle_create`; `src/cli/issue/helpers.rs::resolve_team_field`; `.factory/phase-f2-spec-evolution/prd-delta-398.md §2`
+**Trace**: issue #398 F2; `src/cli/issue/create.rs::handle_create`; `src/cli/issue/helpers.rs::resolve_team_field`; `.factory/phase-f2-spec-evolution/prd-delta-398.md §2`; human-gate decision 2026-05-22
 
 [NEW 2026-05-21 issue #398 F2]
 [UPDATED 2026-05-21 adversarial review round 1: MIN-3 Trace repointed to prd-delta-398.md §2 (locked decisions)]
 [UPDATED 2026-05-21 adversarial review round 2: F-7 output channel profile explicit (all three lines to stderr; stdout empty)]
 [UPDATED 2026-05-21 adversarial review round 3: COS-1 H1 title drops erroneous KEY token; MED-4 output channel profile reclassified from profile 5 (No-log facade) to profile 4 (Symmetric)]
-[UPDATED 2026-05-21 adversarial review round 4: F-1 profile-4 carve-out paragraph added (success lines on stderr is pre-existing behavior, not error path); F-3 VP-398-001 fixture constraint + No-team-matching substring assertion; O-2 EC-3.4.014-3 exit code pinned to 64 (JrError::UserError)]
-[UPDATED 2026-05-21 adversarial review round 5: F-1 VP-398-001 negative case rewritten as direct unit-level is_team_uuid assertion (cite is_team_uuid_rejects_wrong_length); F-3 EC-3.4.014-5 added (MatchResult::None → JrError::UserError exit 64, no echo, no POST)]
-[UPDATED 2026-05-21 adversarial review round 7: F-1 VP-398-001 + explicit module-private placement sentence (UNIT test in helpers.rs #[cfg(test)] block, NOT tests/)]
-[UPDATED 2026-05-21 adversarial review round 8: IMP-5 EC-3.4.014-3 / EC-3.4.014-5 wording softened to "errors via JrError::UserError before POST (exit code per src/error.rs::exit_code(), currently 64)"; IMP-5 VP-398-005 added (create-path team exit-64 integration test)]
+[UPDATED 2026-05-21 adversarial review round 4: F-1 profile-4 carve-out paragraph added; F-3 VP-398-001 fixture constraint + No-team-matching substring assertion; O-2 EC-3.4.014-3 exit code pinned to 64]
+[UPDATED 2026-05-21 adversarial review round 5: F-1 VP-398-001 negative case rewritten as direct unit-level is_team_uuid assertion; F-3 EC-3.4.014-5 added]
+[UPDATED 2026-05-21 adversarial review round 7: F-1 VP-398-001 + explicit module-private placement sentence]
+[UPDATED 2026-05-21 adversarial review round 8: IMP-5 EC-3.4.014-3/5 wording softened; VP-398-005 added]
+[REVISED 2026-05-22 human-gate: BC-3.4.014 broadened from team-only echo to ALL set fields echo, mirroring BC-3.4.012; label/assignee decisions documented; EC-3.4.014-6..10 added; VP-398-006 added; JSON-mode note added; obsolete "ONLY --team" scope sentence removed]
+[UPDATED 2026-05-22 re-convergence pass 1-3: EC-3.4.014-11 added (--points f64::to_string() format assertions, mirrors EC-3.4.012-5); EC-3.4.014-12 added (empty-string --summary echo, mirrors EC-3.4.012-12); EC-3.4.014-13 added (--points without story_points_field_id configured → ConfigError exit 1, mirrors EC-3.4.012-11)]
 
 ---
 
@@ -1512,4 +1549,4 @@ Sources: `src/cli/issue/snapshots/jr__cli__issue__json_output__tests__*.snap`; B
 
 ## Total BCs in this file: 71 individually-bodied (cumulative 100 incl. range-collapsed; see BC-INDEX.md)
 
-_Last updated 2026-05-21: +3 BCs (BC-3.4.012..014) — BC-3.4.012 (issue edit table-mode success echo), BC-3.4.013 (issue edit JSON-mode success echo with changed_fields), BC-3.4.014 (issue create table-mode team echo); BC-3.4.003 Success output cross-reference added; Section 3.4 header updated to 14 contracts. Previous update (2026-05-20 issue #388): +2 BCs (BC-3.4.010..011): BC-3.4.010 (cross-hierarchy `edit --type` 400 → CROSS_HIERARCHY_HINT citing JRACLOUD-27893) and BC-3.4.011 (same-hierarchy/indeterminate `edit --type` 400 → typo hint or raw error, no JRACLOUD-27893 hint) added in F2 delta (issue #388). BC-3.4.003 Errors cross-reference updated (annotation only, no behavioral change). Section 3.4 header updated to 11 contracts. Previous update (2026-05-20 issue #385): +2 BCs (BC-3.8.016..017); BC-3.8.002/010/011 modified._
+_Last updated 2026-05-21: +3 BCs (BC-3.4.012..014) — BC-3.4.012 (issue edit table-mode success echo), BC-3.4.013 (issue edit JSON-mode success echo with changed_fields), BC-3.4.014 (issue create table-mode all-fields echo (broadened from team-only at the 2026-05-22 human-gate to mirror BC-3.4.012)); BC-3.4.003 Success output cross-reference added; Section 3.4 header updated to 14 contracts. Previous update (2026-05-20 issue #388): +2 BCs (BC-3.4.010..011): BC-3.4.010 (cross-hierarchy `edit --type` 400 → CROSS_HIERARCHY_HINT citing JRACLOUD-27893) and BC-3.4.011 (same-hierarchy/indeterminate `edit --type` 400 → typo hint or raw error, no JRACLOUD-27893 hint) added in F2 delta (issue #388). BC-3.4.003 Errors cross-reference updated (annotation only, no behavioral change). Section 3.4 header updated to 11 contracts. Previous update (2026-05-20 issue #385): +2 BCs (BC-3.8.016..017); BC-3.8.002/010/011 modified._

@@ -10,6 +10,7 @@ new_vps:
   - VP-398-003
   - VP-398-004
   - VP-398-005
+  - VP-398-006
 related_bcs:
   - BC-3.4.012
   - BC-3.4.013
@@ -180,33 +181,62 @@ decision from prd-delta-398.md §6: single map keys for cleared-field cases.
 
 ---
 
-### VP-398-005: Create-path team-resolution error exits with `JrError::UserError` (IMP-5)
+### VP-398-005: Create-path all-fields echo — team-resolution error + alphabetical field ordering (broadened 2026-05-22)
 
-**Description**: When `jr issue create --team <ambiguous_or_missing_name> --no-input` is
-run, `resolve_team_field` returns `Err(JrError::UserError)` before the POST. No team echo
-is emitted, the create does not proceed, and the exit code matches
-`JrError::UserError.exit_code()` as defined in `src/error.rs` (currently 64). This VP
-adds a test to verify the create-path exit code so it is no longer an unverified pin.
+**Description**: Two related invariants on `issue create` table-mode echo (broadened from team-only at human-gate 2026-05-22):
+
+**(A) Team-resolution error exits with `JrError::UserError` (original IMP-5 scope):**
+When `jr issue create --team <ambiguous_or_missing_name> --no-input` is run, `resolve_team_field` returns `Err(JrError::UserError)` before the POST. No echo is emitted, the create does not proceed, and the exit code matches `JrError::UserError.exit_code()` as defined in `src/error.rs` (currently 64). The test must assert the numeric exit code (64), not just non-zero.
+
+**(B) All-fields echo appears in alphabetical order between "Created issue" and browse URL (human-gate addition):**
+When multiple fields are set, the echo lines must appear in alphabetical field-name order, consistent with BC-3.4.012's `BTreeMap`-guaranteed ordering.
 
 **Applies to**:
-- BC-3.4.014: `issue create` table-mode team echo — EC-3.4.014-3, EC-3.4.014-5
+- BC-3.4.014: `issue create` table-mode all-fields echo — EC-3.4.014-3, EC-3.4.014-5, EC-3.4.014-9
 
-**Test strategy**:
-1. Mock the team-list API to return a team list containing no team matching the given
-   partial name (or return an ambiguous/none match).
-2. Run `jr issue create --summary "Test" --type Task --team <unresolvable_name> --no-input`
-   via wiremock integration test.
+**Test strategy (A — team-resolution error)**:
+1. Mock the team-list API to return a team list containing no team matching the given partial name.
+2. Run `jr issue create --summary "Test" --type Task --team <unresolvable_name> --no-input` via wiremock integration test.
 3. Assert the process exit code is 64.
 4. Assert stdout is empty (no JSON, no issue key).
-5. Assert stderr contains the stable substring `No team matching` (or the ambiguous-team
-   error text, depending on the mock topology chosen).
+5. Assert stderr contains the stable substring `No team matching`.
 6. Assert no POST to `/rest/api/3/issue` was issued.
 
-**Note**: The exit code 64 is derived from `JrError::UserError.exit_code()` in
-`src/error.rs`. If `exit_code()` is ever changed for `UserError`, this VP will catch the
-regression. The test must assert the numeric exit code (64), not just non-zero.
+**Test strategy (B — all-fields echo alphabetical order)**:
+1. Mock team list to return a team `"Platform Core"`. Mock project metadata, POST 201.
+2. Run `jr issue create --summary "Fix login bug" --type Task --priority High --team "plat"` (table mode).
+3. Assert stderr output order: `"Created issue"` line, then `  issue_type → Task`, then `  priority → High`, then `  summary → Fix login bug`, then `  team → Platform Core`, then browse URL. Assert no `  description` line (description not supplied). Assert `  priority → High` appears BEFORE `  summary → Fix login bug` (alphabetical: p < s). Assert `  team → Platform Core` appears AFTER `  summary → Fix login bug` (t > s).
+4. Assert stdout is empty.
+5. Assert exit code 0.
 
-**Suggested test name**: `test_BC_3_4_014_create_unresolvable_team_no_input_exits_64`.
+**Note on VP-398-001 and VP-398-005 relationship**: VP-398-001 verifies that the echoed team name is the display name (not UUID) across all three BCs (012, 013, 014). VP-398-005 verifies (A) the error-exit behavior and (B) the alphabetical ordering of the create echo. Both VPs apply to BC-3.4.014 in different aspects — they are complementary, not redundant.
+
+**Suggested test names**: `test_BC_3_4_014_create_unresolvable_team_no_input_exits_64` (part A), `test_BC_3_4_014_create_all_fields_echo_alphabetical_order` (part B).
+
+---
+
+### VP-398-006: Create-path description echo is `(updated)` marker — never the content (NEW 2026-05-22)
+
+**Description**: When `jr issue create --description "Some content"` (or `--description-stdin`) is
+run in table mode, the `description` echo line must show the literal marker `(updated)`, never the
+raw content. This mirrors the BC-3.4.012 / VP-398-002 asymmetry for `issue edit` and pins that the
+same decision was applied to the create path.
+
+**Applies to**:
+- BC-3.4.014: `issue create` table-mode all-fields echo — `description` field
+
+**Test strategy**:
+1. Mock POST 201. Run `jr issue create --summary "X" --type Task --description "Some longer description text"` in table mode via wiremock.
+2. Assert stderr CONTAINS the substring `description → (updated)`.
+3. Assert stderr does NOT contain `"Some longer description text"`.
+4. Assert no truncated preview of the description content appears anywhere on stderr.
+5. Assert stdout is empty. Assert exit code 0.
+
+**Note**: The description-content suppression on create follows the same rationale as BC-3.4.012 (table mode optimizes for scannability; content can be arbitrarily long). The JSON output path is unchanged — create JSON already returns the full issue object including the rendered ADF description, so no `changed_fields.description` raw-input value is needed on the create JSON path.
+
+**Placement**: Wiremock integration test in `tests/` (create path uses POST to a real mock URL; can be co-located with existing `issue_create_json.rs` or a new `issue_create_echo.rs` test file — story-writer's decision).
+
+**Suggested test name**: `test_BC_3_4_014_create_description_echo_is_updated_marker`.
 
 ---
 
@@ -218,7 +248,8 @@ regression. The test must assert the numeric exit code (64), not just non-zero.
 | VP-398-002 | BC-3.4.012, BC-3.4.013 | Description echo asymmetry: table=marker, JSON=raw input string |
 | VP-398-003 | BC-3.4.013 | `"updated": true` present after `changed_fields` extension |
 | VP-398-004 | BC-3.4.012, BC-3.4.013 | Cleared-field uses single key (`parent`/`points`), no `no_parent`/`no_points` keys |
-| VP-398-005 | BC-3.4.014 | Create-path team-resolution error exits with code 64 (`JrError::UserError`) |
+| VP-398-005 | BC-3.4.014 | Create-path team-resolution error exits 64; all-fields echo is in alphabetical order |
+| VP-398-006 | BC-3.4.014 | Create description echo is `(updated)` marker — never the content |
 
 ## Project Convention Note
 
@@ -226,12 +257,12 @@ This project inlines Verification Properties directly in BC body files rather th
 maintaining separate VP-INDEX, verification-architecture.md, or
 verification-coverage-matrix.md files (those files do not exist in this repository).
 
-VP-398-001, VP-398-002, VP-398-003, VP-398-004, and VP-398-005 are recorded as **Verification Properties
-subsections within the BC bodies** in `.factory/specs/prd/bc-3-issue-write.md`:
+VP-398-001 through VP-398-006 are recorded as **Verification Properties subsections within the BC bodies** in `.factory/specs/prd/bc-3-issue-write.md`:
 - VP-398-001: present in BC-3.4.012 §Verification Properties and BC-3.4.013 §Verification Properties and BC-3.4.014 §Verification Properties.
 - VP-398-002: present in BC-3.4.012 §Verification Properties and BC-3.4.013 §Verification Properties.
 - VP-398-003: present in BC-3.4.013 §Verification Properties.
 - VP-398-004: present in BC-3.4.012 §Verification Properties and BC-3.4.013 §Verification Properties.
-- VP-398-005: present in BC-3.4.014 §Verification Properties (added round 8).
+- VP-398-005: present in BC-3.4.014 §Verification Properties (original round 8; broadened 2026-05-22 human-gate).
+- VP-398-006: present in BC-3.4.014 §Verification Properties (new 2026-05-22 human-gate).
 
-No separate index propagation is required. VP-398-004 and VP-398-005 are verification artifacts only — they do not affect BC count surfaces (total_bcs, definitional_count, BC-INDEX, CANONICAL-COUNTS).
+No separate index propagation is required. VP-398-004, VP-398-005, and VP-398-006 are verification artifacts only — they do not affect BC count surfaces (total_bcs, definitional_count, BC-INDEX, CANONICAL-COUNTS).
