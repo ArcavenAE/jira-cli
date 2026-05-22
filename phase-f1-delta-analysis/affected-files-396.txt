@@ -1,0 +1,29 @@
+# Affected files — Issue #396 (`issue edit --field NAME=VALUE`)
+# Format: ACTION path (ACTION = CREATE | MODIFY | NO-CHANGE)
+# -----------------------------------------------------------------------
+
+# New files
+CREATE tests/issue_edit_field.rs
+
+# Modified files
+MODIFY src/cli/mod.rs
+MODIFY src/cli/issue/create.rs
+MODIFY src/api/jira/issues.rs
+MODIFY src/api/jira/fields.rs
+MODIFY src/cli/issue/helpers.rs
+MODIFY CLAUDE.md
+
+# New types file (may be inlined into issues.rs instead — see delta-analysis §New API Surface)
+CREATE src/types/jira/editmeta.rs
+
+# BC spec update (not a source file but must be updated in F2)
+MODIFY .factory/specs/prd/bc-3-issue-write.md
+MODIFY .factory/specs/prd/CANONICAL-COUNTS.md
+MODIFY .factory/specs/prd/BC-INDEX.md
+
+# No changes required
+NO-CHANGE src/cli/issue/json_output.rs
+NO-CHANGE src/api/jsm/servicedesks.rs
+NO-CHANGE src/api/jsm/queues.rs
+NO-CHANGE src/cache.rs
+NO-CHANGE src/api/auth.rs

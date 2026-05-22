@@ -1,9 +1,9 @@
 ---
 context: bc-3
 title: "Issue Write (create/edit/move/assign/comment/link/open/remote-link)"
-total_bcs: 100   # cumulative claim (incl. range-collapsed); definitional_count below is individually-bodied headings
-definitional_count: 71   # count of `#### BC-` headings in this file
-last_updated: 2026-05-21
+total_bcs: 103   # cumulative claim (incl. range-collapsed); definitional_count below is individually-bodied headings
+definitional_count: 74   # count of `#### BC-` headings in this file
+last_updated: 2026-05-22
 source_pass: 3
 trace: |
   - L2: .factory/specs/domain-spec/bc-03-issue-write.md
@@ -50,11 +50,18 @@ trace: |
   - F2 modified (2026-05-21, adversary round 12): BC-3.4.013 — EC-3.4.013-13 reverted to has_any_field_change (pre-HTTP guard at create.rs:341); two-guard clarifying parenthetical added; serde_json top-level key order rationale corrected from insertion-order to alphabetical-by-default (MAJOR-1, MAJOR-2)
   - F2 modified (2026-05-21, adversary round 12): BC-3.4.013 — signature paragraph top-level key order rationale corrected from insertion-order to alphabetical-by-default (MAJOR-1)
   - F2 modified (2026-05-21, adversary round 12): BC-3.4.013 — invariant 4 top-level key order rationale corrected from insertion-order to alphabetical-by-default (MAJOR-1)
+  - F2 addition (2026-05-22): BC-3.4.015 — `issue edit --field NAME=VALUE` string/number/date/datetime/user field on single-key path via editmeta (issue #396)
+  - F2 addition (2026-05-22): BC-3.4.016 — `issue edit --field NAME=VALUE` single-select option field: value→allowedValues id resolution, wire `{"id":"..."}`, echo shows human label (issue #396)
+  - F2 addition (2026-05-22): BC-3.4.017 — `--field` multi-key/--jql multi-issue rejection (C-1 guard) + flag-overlap hard error for summary/description/issuetype/priority (issue #396)
+  - F2 amended (2026-05-22, adversary pass 1): BC-3.4.015 — EC-3.4.015-9 empty-NAME behavior corrected; EC-3.4.015-4a number wire format; EC-3.4.015-12a PUT-failure discard; EC-3.4.015-17 case-sensitive bypass deliberate; EC-3.4.015-18 dry-run; resolve_edit_fields canonical signature; VP-396-007..010 added
+  - F2 amended (2026-05-22, adversary pass 1): BC-3.4.016 — EC-3.4.016-4 id/label collision note; VP-396-006 added to Verification Properties
+  - F2 amended (2026-05-22, adversary pass 1): BC-3.4.017 — invariant 1 Gate B-before-A ordering; EC-3.4.017-2 JQL-multi clarification; EC-3.4.017-10 same-field two-pairs; EC-3.4.017-11 type vs issuetype; EC-3.4.017-12 simultaneous Gate A+B; Gate A postcondition split; LOW-001 EC ref corrected; VP-396-008 added
+  - F2 amended (2026-05-22, adversary pass 3): BC-3.4.015 — Step 3b (operations/"set" check + exit 64 hint) added; EC-3.4.015-19 (resolution failure under --dry-run exits 64); EC-3.4.015-20 (operations lacks "set"); EC-3.4.015-18 exit code pinned to 0; VP-396-011 (user/date/datetime wire) and VP-396-012 (operations check) added; VP-396-008 one-liner updated
 ---
 
 # BC-3 — Issue Write
 
-100 behavioral contracts across 8 subdomains: Assign (3.1), Move/Transition (3.2),
+103 behavioral contracts across 8 subdomains: Assign (3.1), Move/Transition (3.2),
 Create (3.3), Edit+Open (3.4), Comment (3.5), Links (3.6), Remote links (3.7),
 JSM Request Create + Platform-Path Inverse Warnings + Auth-Conditional 401 Hints (3.8).
 
@@ -382,6 +389,8 @@ URL is composed as `format!("{}/browse/{}", client.instance_url(), key)`. `clien
 > **[UPDATED 2026-05-20 issue #388]** Errors cross-reference added for `edit --type` 400 enrichment paths (BC-3.4.010, BC-3.4.011). No behavioral change to this contract.
 
 > **[UPDATED 2026-05-21 issue #398]** Success output cross-reference added for changed-fields echo (BC-3.4.012, BC-3.4.013). No behavioral change to the PUT wire contract.
+
+> **[UPDATED 2026-05-22 issue #396]** `--field NAME=VALUE` extension cross-reference added: BC-3.4.015 (string/number/date/datetime/user field single-key path), BC-3.4.016 (single-select option field), BC-3.4.017 (multi-key/--jql rejection + flag-overlap guard). These BCs extend the `handle_edit` execution path but do not change the PUT wire contract specified here.
 
 ---
 
@@ -948,6 +957,587 @@ Field echo lines are sorted in **alphabetical field-name order** (matching BC-3.
 [UPDATED 2026-05-21 adversarial review round 8: IMP-5 EC-3.4.014-3/5 wording softened; VP-398-005 added]
 [REVISED 2026-05-22 human-gate: BC-3.4.014 broadened from team-only echo to ALL set fields echo, mirroring BC-3.4.012; label/assignee decisions documented; EC-3.4.014-6..10 added; VP-398-006 added; JSON-mode note added; obsolete "ONLY --team" scope sentence removed]
 [UPDATED 2026-05-22 re-convergence pass 1-3: EC-3.4.014-11 added (--points f64::to_string() format assertions, mirrors EC-3.4.012-5); EC-3.4.014-12 added (empty-string --summary echo, mirrors EC-3.4.012-12); EC-3.4.014-13 added (--points without story_points_field_id configured → ConfigError exit 1, mirrors EC-3.4.012-11)]
+
+---
+
+#### BC-3.4.015: `issue edit KEY --field NAME=VALUE` (string/number/date/datetime/user field, single-key path) — resolves field name, validates against editmeta, serializes per type, PUTs; success echoes field in `changed_fields`
+
+**Confidence**: HIGH
+**Source**: issue #396 F2 spec evolution; `src/cli/issue/create.rs::handle_edit` (single-key success path, extended); `src/api/jira/issues.rs::get_editmeta` (new); `src/cli/issue/helpers.rs::resolve_edit_fields` (new, owns field-lookup and ambiguity handling); `.factory/research/issue-396-jsm-fields-validation.md`
+**Subject**: Issue write
+
+**Description**: On the single-key `issue edit KEY --field NAME=VALUE` path, for fields
+whose `editmeta` schema type is `string`, `number`, `date`, `datetime`, or `user`:
+the handler resolves the field name to its `customfield_NNNNN` id, confirms the field
+is on the Edit screen via `editmeta`, serializes `VALUE` per the schema type, and PUTs
+it alongside any other changed fields. Successful resolution inserts the field into the
+`changed_fields` BTreeMap (key: human field name or `customfield_NNNNN` literal; value:
+the raw `VALUE` string), so it appears in the BC-3.4.012 table-mode echo and the
+BC-3.4.013 JSON-mode `changed_fields` object.
+
+**`resolve_edit_fields` canonical signature** (as of F2 amendment, P2-006 corrected, F-1 reconciled):
+`resolve_edit_fields(client: &JiraClient, profile: &str, key: &str, field_pairs: &HashMap<String, String>, fields: &mut Value, changed_fields: &mut BTreeMap<String, String>) -> Result<()>`
+
+The `field_pairs` parameter is `&HashMap<String, String>` (NOT `&[(String, String)]`) because `parse_field_kv` (the upstream parser at `src/cli/issue/create.rs:1982-1997`) returns `HashMap<String, String>`. `parse_field_kv` uses `map.insert(key, value)` with last-wins semantics — duplicate `--field` keys are collapsed AT PARSE TIME, before `resolve_edit_fields` ever runs. An ordered slice would be structurally incompatible with this upstream output. `HashMap` is the correct type at this boundary.
+
+The `profile: &str` parameter (second arg, after `client`) is REQUIRED because `read_fields_cache(profile)` and `write_fields_cache(profile, ...)` are called inside this function. Per the CLAUDE.md hard rule: every cache reader/writer takes `profile: &str`; cross-profile leakage is a correctness bug (sandbox vs prod custom-field IDs can differ). The caller passes `&config.active_profile_name`.
+
+The function mutates the caller's `fields` JSON object and `changed_fields` map in place; returns `Ok(())` on full success or `Err` on any resolution failure. The divergent F1 line-141 form `-> Result<(Value, Vec<(String,String)>)>` (which also lacked `profile` and used `Vec`) is **superseded** by this signature; the `&mut` + `HashMap` form avoids allocations and is structurally consistent with the upstream parser output. Any implementation that uses the F1 form must be updated before merge.
+
+**Field-name resolution algorithm** (per `resolve_edit_fields`):
+
+1. If `NAME` matches `customfield_\d+` (case-sensitive): bypass Steps 2–2b; use `NAME`
+   as the field ID. This is the same bypass used by `parse_field_kv` on the JSM
+   create path (BC-3.8.008).
+2. **Cache-first field-list fetch** (new per F2 amendment): read
+   `~/.cache/jr/v1/<profile>/fields.json` (`read_fields_cache(profile)`).
+   - **Cache hit (non-stale, ≤7 days old)**: use the cached `Vec<(id, name)>` directly.
+     No `GET /rest/api/3/field` HTTP call is made.
+   - **Cache miss or stale**: call `list_fields()` (→ `GET /rest/api/3/field`). On
+     success, write the result to `fields.json` via `write_fields_cache(profile, &fields)`
+     using the **best-effort writer pattern** (see invariant 6). The fetched result is
+     used for this invocation regardless of whether the cache write succeeds.
+   - The field list (from cache or API) is shared across all `--field` pairs in the same
+     invocation — at most one cache read and at most one API call per `issue edit`
+     invocation, regardless of how many `--field` pairs are supplied.
+2b. Perform case-insensitive exact match first against the field list; if no exact match,
+   perform case-insensitive substring match.
+   - Zero matches → `JrError::UserError` with hint to use `jr project fields` or
+     supply `customfield_NNNNN` directly. Exit 64.
+   - Multiple substring matches → `JrError::UserError` naming the ambiguous candidates.
+     Exit 64.
+   - Single match → use its `id`.
+3. Call `get_editmeta(key)` (→ `GET /rest/api/3/issue/{key}/editmeta`). If the
+   resolved field ID is absent from `editmeta.fields` → `JrError::UserError` with
+   Edit-screen actionable hint ("ask a project admin to add this field to the Edit
+   screen"). Exit 64. This applies to BOTH the name-resolved path AND the
+   `customfield_NNNNN` literal bypass path. The `editmeta` response is NOT cached
+   (see non-goal note below).
+3b. **Operations check** (new, P3-LOW-002): inspect `editmeta.fields[id].operations`.
+   If `"set"` is NOT present in the list → `JrError::UserError`: "field '<NAME>'
+   does not support direct `set` via the edit API (operations: [<actual_ops>]). Use
+   the Jira web UI or check with your project admin." Exit 64. No PUT attempted.
+   This guards against fields that are present on the Edit screen but are read-only
+   (e.g., system-managed computed fields) — a PUT for such a field would be rejected
+   by the server anyway; catching it early gives a more actionable error. Standard
+   editable custom fields always include `"set"` in their `operations` array.
+4. Read `editmeta.fields[id].schema.type` and serialize `VALUE`. Full type dispatch
+   matrix (F-4: `option` explicitly anchored here so this step covers all types):
+   - `string` or `text`: bare JSON string.
+   - `number`: parse `VALUE` as `f64` (error → exit 64 if non-numeric or non-finite).
+     Wire: JSON number. See EC-3.4.015-4 and EC-3.4.015-4a.
+   - `date` / `datetime`: bare JSON string (no client-side ISO 8601 validation; server
+     validates). See VP-396-011.
+   - `user`: `{"accountId": VALUE}`. Caller supplies raw `accountId`. See VP-396-011.
+   - **`option`**: → dispatch to BC-3.4.016 Step 4a. Resolve `VALUE` against
+     `editmeta.fields[id].allowedValues` (human label → option `id`); wire payload is
+     `{"id": "<optionId>"}`. `resolve_edit_fields` delegates the option-value resolution
+     step to the same code path as BC-3.4.016. This arm must be handled BEFORE the
+     unknown→exit-64 arm — `option` is a known, supported type.
+   - `array` / `any` / unknown: `JrError::UserError` naming the unsupported type with
+     a hint. Exit 64.
+5. Merge the resolved `(field_id, serialized_value)` pair into the shared `fields`
+   JSON object (same object used by all other `issue edit` flags).
+6. After successful resolution: insert `(human_name_or_field_id, VALUE)` into
+   `changed_fields`. For the `customfield_NNNNN` literal bypass path, the key is the
+   literal `customfield_NNNNN` string. For name-resolved fields, the key is the human
+   name as it was supplied in `--field NAME=VALUE` (not the resolved `customfield_*` id).
+
+**Non-goal — `editmeta` is NOT cached**: The `GET /rest/api/3/issue/{key}/editmeta`
+response is issue-specific and mutable (an admin can change the Edit screen at any
+time). Caching it would risk stale `allowedValues` producing wrong option IDs on the
+wire. No `editmeta` cache is planned for v1. This is a deliberate non-goal and must
+not be flagged as a gap by reviewers.
+
+**Preconditions**:
+- `jr issue edit <key> --field NAME=VALUE [--field ...]` issued on the single-key path.
+- No flag-overlap (BC-3.4.017 Gate B passes).
+- No multi-key context (BC-3.4.017 Gate A passes).
+- At least one other field flag OR `--field` alone satisfies `has_any_field_change`.
+- PUT 204 received from Jira API.
+
+**Postconditions**:
+- Exit code 0.
+- The field is updated on the Jira issue.
+- `changed_fields` contains the `--field` key/value entries alongside any other changed
+  fields, in BTreeMap alphabetical order.
+- Table-mode stderr: `  <NAME> → <VALUE>` echo line (consistent with BC-3.4.012).
+- JSON-mode stdout: `changed_fields["<NAME>"] == "<VALUE>"` (consistent with BC-3.4.013).
+- `GET /rest/api/3/field` is NOT called when a warm (non-stale) `fields.json` cache
+  exists for the active profile. At most one `GET /rest/api/3/field` call per invocation
+  regardless of how many `--field` pairs are supplied.
+- `fields.json` cache is populated on a cache miss; the populated file persists for
+  subsequent invocations (7-day TTL, same as all other jr caches).
+- `get_editmeta(key)` is called AT MOST ONCE per invocation (the response is shared
+  across all `--field` pairs).
+- `get_editmeta` is NOT called when `--field` is absent (no latency added to existing
+  `issue edit` invocations).
+
+**Invariants**:
+1. `--field` pairs are resolved AFTER all existing flag resolutions (description,
+   summary, type, priority, team, points, no_points, parent, no_parent). The
+   `resolve_edit_fields` call is the last step before `client.edit_issue`.
+2. The `changed_fields` map key for a `--field` entry is the human-supplied `NAME`
+   (or the `customfield_NNNNN` literal for bypass calls) — never the internal
+   `customfield_NNNNN` ID when a name was resolved.
+3. The `fields` JSON object is the same object used by all other flags. The
+   `--field` entries are merged into it, not a separate object.
+4. On PUT failure (non-204 response), the constructed `changed_fields` entries for
+   `--field` are discarded (same invariant as BC-3.4.012 invariant 6 — map emitted
+   only post-204).
+5. The `number` type serialization reuses `f64` parsing. If `VALUE` parses successfully
+   as `f64`, the wire value is the JSON number. If not, exit 64 before the PUT.
+6. **Field-list cache contract** (mirrors `CmdbFieldsCache` / `cmdb_fields.json` pattern
+   in `src/cache.rs`): the `fields.json` cache stores `Vec<(String, String)>` — `(id, name)`
+   tuples — under `~/.cache/jr/v1/<profile>/fields.json`, 7-day TTL, per-profile. The
+   struct is `FieldsCache { fields: Vec<(String, String)>, fetched_at: DateTime<Utc> }`
+   implementing `Expiring`. Read function: `read_fields_cache(profile: &str) -> Result<Option<FieldsCache>>`.
+   Write function: `write_fields_cache(profile: &str, fields: &[(String, String)]) -> Result<()>`.
+7. **Best-effort writer** (`write_fields_cache`): cache write failures are swallowed via
+   `eprintln!("warning: failed to write fields cache: {e}")` and the function returns
+   `Ok(())`. This follows the request-type cache writer pattern (`write_request_type_cache`
+   in `src/cache.rs`): a missed cache write costs at most one extra HTTP call on the
+   next invocation — it must NEVER fail a successful field resolution. The writer's
+   rustdoc MUST document this choice with: "Best-effort: disk-write errors are logged to
+   stderr and swallowed; callers always proceed with the fetched result."
+8. **Cache is a read-acceleration shortcut only** — not correctness-critical. The global
+   field list changes only when Jira admins add/remove custom fields (infrequent). A
+   7-day stale cache in the worst case causes a name-resolution failure against a newly
+   added field (user can clear via cache path or supply `customfield_NNNNN` directly).
+9. The `editmeta` response is NEVER cached. See non-goal note above the algorithm.
+10. **`resolve_edit_fields` MUST be called INSIDE the `--dry-run` block** (before the
+    `return Ok(())` short-circuit), NOT after it. The existing `--dry-run` block in
+    `src/cli/issue/create.rs:551-708` is self-contained and short-circuits with
+    `return Ok(())` at line 707. Any code placed AFTER the dry-run block never executes
+    under `--dry-run`. Therefore: `resolve_edit_fields` (Steps 1–6) must be invoked
+    within the dry-run path so that (a) the resolved `--field` entries appear in the
+    planned-changes preview table/JSON, and (b) resolution failures (zero-match, bad type,
+    absent from `editmeta`, `"set"` absent from `operations`) still propagate as `Err`
+    and exit 64 even under `--dry-run`. The PUT (Step 6 `client.edit_issue`) must NOT be
+    called inside the dry-run path. Concrete placement: the dry-run path runs parse →
+    Gate B → Gate A → existing-flag resolutions → `resolve_edit_fields` →
+    render-preview → `return Ok(())`. The live path runs the same steps but replaces
+    render-preview with `client.edit_issue` → success-echo.
+
+**Edge Cases**:
+- EC-3.4.015-1: `--field "Unknown Field=Value"` — zero matches in `list_fields()` →
+  exit 64 with actionable hint naming `jr project fields` as a discovery tool.
+- EC-3.4.015-2: `--field "Sum=Value"` — multiple substring matches (e.g., "Summary",
+  "Sum Total") → exit 64 naming the ambiguous candidates with their `customfield_NNNNN`
+  IDs to help the caller use the literal bypass.
+- EC-3.4.015-3: Field found in `list_fields()` but absent from `editmeta` (not on Edit
+  screen) → exit 64 with "ask a project admin to add this field to the Edit screen for
+  this issue's project/issue type."
+- EC-3.4.015-4: Number field (`schema.type: "number"`) with a non-numeric or non-finite
+  `VALUE` → exit 64 with parse error message. No PUT attempted. Two distinct failure
+  modes: (a) `"abc".parse::<f64>()` fails at parse → exit 64 immediately; (b) `"inf"` or
+  `"nan"` parse successfully as `f64` but `serde_json::Number::from_f64(v)` returns
+  `None` for non-finite values (NaN, +Inf, -Inf) → exit 64 at the JSON-number
+  construction step. Both paths produce the same user-facing exit 64; see EC-3.4.015-4a
+  for the integer-representation invariant on success.
+- EC-3.4.015-4a: Number field with `VALUE = "5"` (integer input) → parses to `f64(5.0)`
+  → wire value is the JSON number `5` (NOT `5.0`). The `serde_json` `Number` type
+  preserves the integer representation when `f64` has no fractional part (i.e., `5.0_f64`
+  serializes as `5`, not `5.0`). Implementation: use `serde_json::Number::from_f64(v)`
+  (returns `Option`; error if NaN/Inf → exit 64). VP-396-010 pins this invariant.
+  `5e3` round-trips as `5000` (serde_json normalizes scientific notation to integer form
+  when the value is a whole number). `5.5` serializes as `5.5`.
+- EC-3.4.015-5: Field has `schema.type: "array"` or `schema.type: "any"` → exit 64
+  with message naming the unsupported type and suggesting the Jira UI or a future
+  `--field` v2 for multi-value support.
+- EC-3.4.015-6: `list_fields()` API failure (401/403/5xx) → propagated via `?`. The
+  error surfaces as a standard auth/API error using the existing error-hint infrastructure
+  (`API_TOKEN_EXPIRY_HINT` on 401, raw message on other statuses). No PUT attempted.
+- EC-3.4.015-7: `get_editmeta` API failure (including 404 = unknown issue key) →
+  propagated via `?`. Same error surface as EC-3.4.015-6.
+- EC-3.4.015-8: `customfield_NNNNN` literal bypass — field absent from `editmeta` →
+  exit 64 with Edit-screen hint using the literal `customfield_NNNNN` as the field
+  name in the message. Same error as EC-3.4.015-3 but triggered without a `list_fields()`
+  round-trip.
+- EC-3.4.015-9: `--field =VALUE` (empty `NAME`) → `parse_field_kv` splits on the first
+  `=` and returns `Ok(("", "VALUE"))` (no error — the string contains `=`). The empty key
+  falls through to Step 2b name resolution and exits 64 via the zero-match path (same as
+  EC-3.4.015-1: zero matches → exit 64 with actionable hint). There is no dedicated
+  empty-NAME guard in `parse_field_kv`; the zero-match exit path in `resolve_edit_fields`
+  is the sole error handler for empty NAME.
+- EC-3.4.015-10: `--field NAME` (no `=` in the argument) → parse error at
+  `parse_field_kv` → exit 64.
+- EC-3.4.015-11: `--field NAME=` (empty `VALUE`, name present) → allowed. Empty string
+  is a legal value for string fields and is passed to Jira. Jira validates required
+  fields server-side; optional string fields may be cleared with an empty value.
+- EC-3.4.015-12: Multiple `--field` pairs in one invocation — all share the same
+  field list (from cache or single API fetch) and the same `editmeta` result. If any
+  pair fails resolution (e.g., `--field A=ok --field B=bad` where `B` is absent from
+  `list_fields()`), `resolve_edit_fields` returns `Err` on the first failing pair; the
+  entire call fails with exit 64 and zero PUT is attempted. `changed_fields` is discarded
+  (never emitted). VP-396-009 pins this all-or-nothing invariant.
+- EC-3.4.015-12a: Valid `--field` with a PUT mock returning 400 → the resolution
+  succeeds (exit 64 is NOT triggered at the resolution stage); the PUT is attempted; the
+  400 surfaces as a `JrError` with the server's error body; exit code reflects failure
+  (exit 1 or as mapped by `JrError`). `changed_fields` is discarded (invariant 4:
+  emitted only post-204). VP-396-009 pins this path. No `  NAME → VALUE` echo is
+  emitted on table mode; no `changed_fields` key appears in JSON mode.
+- EC-3.4.015-13: `--field` and other flags (`--summary`, `--priority`, etc.) in the
+  same invocation — the `fields` JSON object contains entries from both sources; the
+  single PUT carries all changes simultaneously. The `changed_fields` map contains
+  entries from both sources in alphabetical key order.
+- EC-3.4.015-14: **Cache hit** — `~/.cache/jr/v1/<profile>/fields.json` exists and is
+  ≤7 days old → field list is loaded from cache; `GET /rest/api/3/field` is NOT called.
+  The resolution and PUT proceed normally. VP-396-006 verifies this invariant.
+- EC-3.4.015-15: **Cache miss or stale** — `fields.json` absent or >7 days old → `GET
+  /rest/api/3/field` is called; result is written to `fields.json` via the best-effort
+  writer; resolution proceeds with the fetched list. Subsequent invocations within 7
+  days skip the HTTP call.
+- EC-3.4.015-16: **Cache-write failure** — disk full, permissions error, or other I/O
+  failure during `write_fields_cache` → `eprintln!("warning: failed to write fields
+  cache: ...")` is emitted to stderr; the function returns `Ok(())`. The current
+  invocation proceeds with the fetched field list and resolves normally; exit code is
+  NOT affected by the cache-write failure. The next invocation will encounter a cache
+  miss (and attempt another fetch + write).
+
+- EC-3.4.015-17: `--field CUSTOMFIELD_10001=Value` (mixed/upper-case `customfield_`
+  prefix) → the bypass regex `customfield_\d+` is case-sensitive (Rust `Regex::is_match`
+  on a lowercase-only pattern). `CUSTOMFIELD_10001` does NOT match the bypass. It falls
+  through to Step 2b name resolution. If no field named `CUSTOMFIELD_10001` exists in
+  the cached/fetched field list, exit 64 via the zero-match path with the standard
+  actionable hint ("use `jr project fields` or supply the lowercase `customfield_NNNNN`
+  literal directly"). This is a deliberate design choice: the Jira Cloud REST API uses
+  lowercase `customfield_` prefix in all API responses; accepting uppercase would mask
+  typos and create a second bypass surface. Users must supply the exact lowercase literal
+  to activate the bypass.
+- EC-3.4.015-18: `--field NAME=VALUE --dry-run` → Gate A and Gate B still fire (the
+  guards are evaluated before any HTTP, including under `--dry-run`). If the gates pass,
+  `resolve_edit_fields` is called INSIDE the `--dry-run` block (before the `return Ok(())`
+  short-circuit) — see invariant 10 for the mandatory control-flow placement. The
+  read-only HTTP calls (`GET /rest/api/3/field` / cache read, `GET /rest/api/3/issue/
+  {key}/editmeta`) execute within `resolve_edit_fields` as they would on the live path.
+  The PUT is NOT issued. The planned-changes preview (same as BC-3.4.012 EC-3.4.012-9
+  behavior) reflects the resolved `--field` entries in the preview table.
+  **Exit code: 0** (the dry-run block returns `Ok(())` — confirmed from source at
+  `src/cli/issue/create.rs:707`: `return Ok(());` at the end of the dry-run block).
+  Mirrors EC-3.4.012-9. Implementers MUST NOT place `resolve_edit_fields` after the
+  dry-run `return Ok(())` — it would silently skip `--field` preview and never surface
+  resolution failures under `--dry-run`.
+- EC-3.4.015-19: **Resolution failure under `--dry-run`** — if field resolution fails
+  (zero-match, ambiguous name, unsupported type, field absent from `editmeta`, or
+  `"set"` absent from `operations`) while `--dry-run` is set, the resolution error is
+  still surfaced with **exit 64**. The dry-run preview is NOT rendered when resolution
+  fails: the read-only HTTP calls (`list_fields()`, `editmeta`) run as normal, but if
+  they produce an error before the preview is rendered, `resolve_edit_fields` returns
+  `Err` and the error propagates through `handle_edit` as a standard `JrError`. The
+  `--dry-run` flag does not suppress or defer resolution errors — it only suppresses
+  the PUT and redirects the success path to a preview. VP-396-008 covers the
+  resolution-failure-under-dry-run sub-case.
+- EC-3.4.015-20: **`operations` lacks `"set"`** — field is present in `editmeta` (Step 3
+  passes), but `editmeta.fields[id].operations` does not contain `"set"` → Step 3b fires
+  → exit 64 with hint naming the field and its actual operations list. No PUT attempted.
+  This covers computed/read-only fields that appear on the Edit screen but cannot be set
+  via the API. VP-396-012 verifies this path.
+
+**Verification Properties**:
+- VP-396-001: String/number `--field` value appears in `changed_fields` echo (table and
+  JSON); human name as key; `customfield_NNNNN` literal bypass skips field-list fetch
+  entirely.
+- VP-396-003: Field absent from `editmeta` → exit 64 with Edit-screen actionable hint;
+  no PUT issued.
+- VP-396-004: Unsupported field types (`array`, `any`) → exit 64 with hint; no PUT issued.
+- VP-396-006: Warm `fields.json` cache (non-stale) → no `GET /rest/api/3/field` HTTP
+  call; field resolution and PUT still succeed.
+- VP-396-007: Cache-write failure (`write_fields_cache` I/O error) → `warning:` line on
+  stderr, exit 0, resolution and PUT succeed (best-effort swallow positively tested).
+- VP-396-008: `--field` + `--dry-run` → success path exits 0; read-only HTTP (cache,
+  `editmeta`) fires; PUT NOT issued; resolution failure under `--dry-run` still exits 64.
+- VP-396-009: Multi-`--field` partial-failure and PUT-failure discard `changed_fields`.
+- VP-396-010: Number field `f64` wire serialization — integer inputs produce exact integer
+  JSON output (`5` → `5`, NOT `5.0`).
+- VP-396-011: `user`-type wire shape `{"accountId": VALUE}` and `date`/`datetime`
+  bare-string pass-through are present on wire; claimed in BC-3.4.015 Step 4.
+- VP-396-012 (P3-LOW-002): field present in `editmeta` but `"set"` absent from
+  `operations` → exit 64 with actionable hint; no PUT.
+
+**Trace**: issue #396 F2; `src/cli/issue/create.rs::handle_edit` (resolution integration);
+`src/api/jira/issues.rs::get_editmeta` (new); `src/cli/issue/helpers.rs::resolve_edit_fields`
+(new, orchestrates resolution pipeline — owns exact-match-then-substring logic and all
+exit-64 ambiguity handling; any field-lookup helper it calls is an implementation detail
+not spec-anchored here);
+`src/types/jira/editmeta.rs` (new — `EditMeta`, `EditMetaField`, `EditMetaFieldSchema`,
+`AllowedValue`); `src/cache.rs::FieldsCache` / `read_fields_cache` / `write_fields_cache`
+(new, mirrors `CmdbFieldsCache` / `cmdb_fields.json` pattern; best-effort writer);
+`.factory/research/issue-396-jsm-fields-validation.md`;
+`.factory/phase-f2-spec-evolution/prd-delta-396.md §3 and §5`
+
+[NEW 2026-05-22 issue #396 F2]
+[AMENDED 2026-05-22 F2 cache gap: field-list cache (fields.json, 7-day TTL, best-effort writer) specified; editmeta non-goal stated; EC-3.4.015-14..16 added; invariants 6-9 added; VP-396-006 cited]
+[AMENDED 2026-05-22 adversary pass 3: Step 3b (operations/"set" check) added; EC-3.4.015-19 (resolution failure under --dry-run, exit 64) added; EC-3.4.015-18 exit code pinned to 0; VP-396-011 (user/date/datetime wire) and VP-396-012 (operations check) added]
+
+---
+
+#### BC-3.4.016: `issue edit KEY --field NAME=VALUE` (single-select `option` field) — resolves human option value to `allowedValues[].id`, sends `{"id":"<id>"}` on wire; `changed_fields` echo shows human label
+
+**Confidence**: HIGH
+**Source**: issue #396 F2 spec evolution; `src/cli/issue/create.rs::handle_edit`; `src/api/jira/issues.rs::get_editmeta`; `.factory/research/issue-396-jsm-fields-validation.md §Q2`
+**Subject**: Issue write
+
+**Description**: When `editmeta` reports `schema.type == "option"` for the resolved
+field, the handler additionally resolves the human-readable `VALUE` to the numeric
+option `id` from `editmeta.fields[id].allowedValues`. The wire payload uses the
+`{"id": "<optionId>"}` shape required by the Jira Cloud REST API for single-select
+custom fields. The `changed_fields` echo shows the human option label (not the id),
+keeping the output readable for both table and JSON consumers.
+
+This BC builds on BC-3.4.015 (same field-name resolution, `editmeta` fetch, and
+merge steps apply). Only Step 4 differs: instead of bare-string serialization, the
+option value is resolved to its `id` before building the wire fragment. **The
+cache-first field-list fetch from BC-3.4.015 invariants 6–8 applies here equally** —
+field-name resolution reads from `fields.json` before falling back to `GET
+/rest/api/3/field`; the `editmeta` response remains uncached.
+
+**Option value resolution** (Step 4a, applied after `schema.type == "option"` is
+detected):
+
+1. If `VALUE` matches an `allowedValues[].id` exactly (numeric string comparison) →
+   use that `id` as-is (id-bypass path). The `changed_fields` echo value is `VALUE`
+   (the raw literal, not a reverse-looked-up label — no label resolution occurs on
+   the id-bypass path).
+2. Otherwise: perform case-insensitive exact match on `allowedValues[].value`.
+   If no exact match, perform case-insensitive substring match.
+   - Zero matches → `JrError::UserError` listing allowed values (e.g., "Allowed values:
+     High, Medium, Low"). Exit 64.
+   - Multiple substring matches → `JrError::UserError` listing ambiguous candidates with
+     their ids (e.g., "value 'H' is ambiguous — found: High (id=10286), Unknown (id=10299).
+     Specify the exact value."). Exit 64.
+   - `allowedValues` is empty or absent → `JrError::UserError` ("field 'NAME' has no
+     configured option values. Confirm the field is set up correctly in your Jira
+     project admin."). Exit 64.
+   - Single match → use its `id`. `changed_fields` echo value is the matched
+     `allowedValues[].value` (the stored label, not the user's query casing).
+
+Wire payload: `{"fields": {"customfield_NNNNN": {"id": "<optionId>"}}}`.
+
+`changed_fields` key: human field name (or `customfield_NNNNN` literal for bypass).
+`changed_fields` value: matched `allowedValues[].value` (stored label) — NOT the
+option `id`. Exception: when the id-bypass path fires, `changed_fields` value is
+`VALUE` (the id literal).
+
+**Preconditions**:
+- Same as BC-3.4.015 (single-key path, no flag-overlap, no multi-key context, PUT 204).
+- `editmeta.fields[id].schema.type == "option"`.
+- `allowedValues` is populated (non-empty) for single-match case.
+
+**Postconditions**:
+- Exit code 0.
+- PUT body contains `{"customfield_NNNNN": {"id": "<resolvedOptionId>"}}`.
+- `changed_fields["<NAME>"]` == matched option label (stored casing from `allowedValues[].value`),
+  NOT the option `id`, NOT the user's query casing.
+- Table-mode stderr: `  <NAME> → <matched_label>` echo (consistent with BC-3.4.012).
+- JSON-mode `changed_fields["<NAME>"]` == `"<matched_label>"` (consistent with BC-3.4.013).
+
+**Invariants**:
+1. The wire payload for `option`-type fields MUST use `{"id": "<optionId>"}`. Sending
+   `{"value": "..."}` is rejected by the Jira Cloud REST API (confirmed in research Q2).
+2. The `changed_fields` value is the STORED label (casing from `allowedValues[].value`),
+   not the user's query string. Case-insensitive matching but stored-casing echo.
+3. The option `id` is never exposed in the `changed_fields` echo (for the name-match
+   path). The id appears only on the wire and in the server's response.
+4. The id-bypass path (when `VALUE` is an exact numeric match to an `allowedValues[].id`)
+   does not perform a reverse lookup — the echo value is the raw id.
+
+**Edge Cases**:
+- EC-3.4.016-1: `allowedValues` is empty or absent for the `option`-type field → exit
+  64 with "field has no configured option values" message. This is unusual but possible
+  for misconfigured fields.
+- EC-3.4.016-2: `VALUE` matches no `allowedValues[].value` → exit 64 listing the allowed
+  values. The error message enumerates all `allowedValues[].value` strings to aid the caller.
+- EC-3.4.016-3: `VALUE` is a substring match against multiple `allowedValues[].value`
+  entries (e.g., `--field Urgency=h` matches "High" and "High Priority") → exit 64
+  listing ambiguous candidates with their ids.
+- EC-3.4.016-4: `VALUE` is a valid option `id` (numeric, e.g., `"10286"`) → id-bypass:
+  used directly without `allowedValues[].value` lookup. `changed_fields` echo is `"10286"`.
+  No reverse label lookup. This mirrors the `customfield_NNNNN` bypass for field names.
+  Note: if an option `id` and an option `value` happen to be the same numeric string
+  (e.g., id=`"42"` and another option value=`"42"`), the id-bypass wins — the numeric
+  check is applied first. This is a deliberate disambiguation rule: id-bypass takes
+  priority over label matching when the value string is purely numeric and matches an id.
+- EC-3.4.016-5: Case-insensitive matching: `--field Urgency=high` (all lowercase) →
+  matches `"High"` in `allowedValues` → `changed_fields` shows `"High"` (stored casing),
+  not `"high"`.
+- EC-3.4.016-6: `--field Urgency=HIGH` (all uppercase) → matches `"High"` →
+  `changed_fields` shows `"High"` (stored casing).
+- EC-3.4.016-7: Exact match takes precedence over substring: `"High"` with `VALUE="High"`
+  (exact) → uses exact-match result, even if "High" is also a substring of "High Priority".
+  Ambiguity is evaluated only when there is no exact match.
+
+**Verification Properties**:
+- VP-396-002: Option field resolves to `{"id": ...}` on wire; `changed_fields` echo
+  shows human label (not id); case-insensitive matching; option-id bypass.
+- VP-396-006: Warm `fields.json` cache (non-stale) → no `GET /rest/api/3/field` HTTP
+  call; field-name resolution for option fields proceeds from cache; `editmeta` fetch
+  and PUT still execute normally. (BC-3.4.016 inherits the cache-first behavior from
+  BC-3.4.015 invariants 6–8 — the same `resolve_edit_fields` step 2/2b path is
+  followed regardless of whether the field schema type is `string` or `option`.)
+
+**Trace**: issue #396 F2; `src/cli/issue/create.rs::handle_edit`;
+`src/api/jira/issues.rs::get_editmeta`; `.factory/research/issue-396-jsm-fields-validation.md §Q2`
+(wire format confirmed: `{"customfield_NNNNN": {"id": "..."}}` is the working shape);
+`.factory/phase-f2-spec-evolution/prd-delta-396.md §3`
+
+[NEW 2026-05-22 issue #396 F2]
+
+---
+
+#### BC-3.4.017: `--field` multi-key/`--jql` multi-issue rejection (C-1 guard) + flag-overlap hard error for `summary`/`description`/`issuetype`/`priority`
+
+**Confidence**: HIGH
+**Source**: issue #396 F2 spec evolution; `src/cli/issue/create.rs::handle_edit` (C-1 guard, `REJECTED_IN_BULK` set); `.factory/phase-f2-spec-evolution/prd-delta-396.md §3`
+**Subject**: Issue write
+
+**Description**: Two enforcement gates ensure `--field` is not misused in contexts
+where its behavior is either undefined (bulk edit) or would silently overwrite an
+explicitly-set flag value (flag overlap). Both gates fire BEFORE any HTTP call.
+
+**Gate A — multi-key/`--jql` multi-issue rejection (C-1 guard):**
+
+`--field` is added to the `REJECTED_IN_BULK` set in `handle_edit`. When the handler
+detects 2+ positional keys, or when `--jql` resolves to 2+ issues, the C-1 block
+fires with the same error pattern used by other bulk-rejected flags (`--parent`,
+`--team`, `--description`): "Multi-key bulk edit doesn't yet support: `--field`. Use
+a single key, or open an issue if this matters for your workflow." Exit 64.
+
+`--jql` resolving to exactly ONE issue routes through the existing single-match fast
+path and proceeds normally on the single-key path (consistent with BC-3.4.003 and
+all other bulk-rejected flags).
+
+**Gate B — flag-overlap hard error:**
+
+If a dedicated flag and `--field` both target the same system field in the same
+invocation:
+- `--summary X --field summary=Y` (or `--field Summary=Y` — case-insensitive on the
+  `--field NAME` side against the known system field keys)
+- `--description X --field description=Y`
+- `--type X --field issuetype=Y` (note: `--type` maps to the Jira system field key
+  `issuetype`, not `type`)
+- `--priority X --field priority=Y`
+
+→ `JrError::UserError`: "<Field> is set by both --<flag> and --field; use only one."
+Exit 64. NO HTTP call (no `list_fields()`, no `editmeta`, no PUT).
+
+Gate B is evaluated at the top of `handle_edit`, after clap parsing (so both flag
+values are in scope), but before any field resolution or HTTP calls. This ensures the
+guard is O(1) and never causes a latency penalty.
+
+**Scope of Gate B**: Exactly four first-party system fields (`summary`, `description`,
+`issuetype`, `priority`). Team (`--team`) and points (`--points`/`--no-points`) use
+dynamically-resolved custom field IDs; overlap detection for those would require an
+API call, violating the "no HTTP before the guard" invariant. These are deferred to v2.
+
+**Scope of Gate A**: `--field` is REJECTED_IN_BULK (not BULK_SUPPORTED). This is
+intentional: the Jira Cloud Bulk API does not support arbitrary custom field writes;
+adding bulk `--field` support would require a separate design pass.
+
+**Preconditions for Gate A error**:
+- 2+ positional keys supplied, OR `--jql` resolves to 2+ issues.
+- `--field` is present.
+
+**Preconditions for Gate B error**:
+- At least one of the four dedicated flags (`--summary`, `--description`, `--type`,
+  `--priority`) is present AND the corresponding system field key is targeted by a
+  `--field NAME=VALUE` pair (case-insensitive key comparison).
+
+**Postconditions (Gate A)**:
+- Exit code 64.
+- Stderr contains a message referencing `--field` and the bulk-rejection pattern.
+- **Positional multi-key sub-case**: No HTTP calls are made (no JQL execution, no
+  `list_fields()`, no `editmeta`, no PUT). The gate fires purely from argument count.
+- **`--jql` multi-issue sub-case**: The JQL search IS executed to determine the matched
+  issue count (you cannot know the count without running the query). Once 2+ results are
+  detected, the gate fires. No `list_fields()`, no `editmeta`, no PUT is issued.
+  The JQL call is the only HTTP call that occurs before the gate fires.
+
+**Postconditions (Gate B)**:
+- Exit code 64.
+- Stderr contains the overlap error message naming the conflicting flag and field.
+- No HTTP calls are made.
+
+**Invariants**:
+1. **Gate B is evaluated before Gate A.** When an invocation is BOTH multi-key AND flag-
+   overlap (both conditions are simultaneously true), Gate B fires first: the flag-overlap
+   error is emitted to stderr, Gate A is NOT evaluated, and exactly ONE error message
+   reaches stderr. This ordering is intentional: a flag-overlap error is a programmer
+   mistake that is equally invalid on any key count, and surfacing it directly is more
+   actionable than a bulk-rejection that obscures the root cause.
+2. The `REJECTED_IN_BULK` set partition test (the compile-time assertion in
+   `create.rs:1435+` that partitions flags into `SELECTORS`, `BULK_SUPPORTED`, and
+   `REJECTED_IN_BULK`) must be updated to include `--field`. This ensures the partition
+   is exhaustive: `--field` appears in exactly ONE of the three sets.
+3. `--jql` matching exactly ONE issue routes to the single-key path — this is NOT an
+   error. Gate A only fires when `--jql` matches 2+ issues.
+4. The flag-overlap comparison on the `--field NAME` side is case-insensitive against
+   the canonical system field keys (`summary`, `description`, `issuetype`, `priority`).
+   A `--field SUMMARY=X` or `--field Summary=X` is detected as an overlap for
+   `--summary Y`.
+
+**Edge Cases**:
+- EC-3.4.017-1: `jr issue edit KEY1 KEY2 --field Urgency=High` → Gate A fires → exit
+  64, bulk-rejection message.
+- EC-3.4.017-2: `jr issue edit --jql "project = FOO" --field Urgency=High` when JQL
+  matches 2+ issues → JQL search executes (required to determine match count) → Gate A
+  fires → exit 64. No `list_fields()`, no `editmeta`, no PUT.
+- EC-3.4.017-3: `jr issue edit --jql "key = FOO-1" --field Urgency=High` when JQL
+  matches exactly 1 issue → Gate A does NOT fire → single-key path proceeds normally.
+- EC-3.4.017-4: `jr issue edit KEY --summary "New title" --field summary=Other` →
+  Gate B fires for `summary` → exit 64, overlap error, no HTTP.
+- EC-3.4.017-5: `jr issue edit KEY --description "text" --field description=other` →
+  Gate B fires for `description` → exit 64.
+- EC-3.4.017-6: `jr issue edit KEY --type Bug --field issuetype=Task` → Gate B fires
+  for `issuetype` (note: `--type` maps to the `issuetype` system field key, not `type`)
+  → exit 64.
+- EC-3.4.017-7: `jr issue edit KEY --priority High --field priority=Low` → Gate B
+  fires for `priority` → exit 64.
+- EC-3.4.017-8: `jr issue edit KEY --team "Platform Core" --field team=Other` → Gate B
+  does NOT fire (team uses a dynamically-resolved custom field ID; deferred to v2) →
+  both `--team` and `--field team=Other` are processed; last-write-wins in the `fields`
+  JSON object. This is a known limitation documented in the CLAUDE.md Gotcha entry.
+- EC-3.4.017-9: `jr issue edit KEY --field NAME=` (empty value) → Gate B does NOT fire
+  (field overlap check requires matching a dedicated flag, not just any `--field` pair);
+  empty value is allowed by BC-3.4.015 EC-3.4.015-11.
+- EC-3.4.017-10: `jr issue edit KEY --field summary=A --field summary=B` (two `--field`
+  pairs targeting the same system field, WITHOUT the dedicated `--summary` flag) → Gate B
+  does NOT fire (Gate B requires the dedicated flag AND a `--field` pair for the same
+  key; two `--field` pairs for the same key without the dedicated flag is not a Gate B
+  condition). `parse_field_kv` (at `src/cli/issue/create.rs:1982-1997`) collapses the
+  duplicate key AT PARSE TIME via `map.insert(key, value)` — the HashMap retains only
+  the LAST value (`"B"`). `resolve_edit_fields` never sees both entries; it receives
+  `{"summary": "B"}` as a single-entry `HashMap<String, String>`. No "second write"
+  occurs inside `resolve_edit_fields` — the collapse happens before it is called.
+  End state: `summary` is set to `"B"` on the wire. No error is produced.
+  This is last-wins behavior, implemented entirely within `parse_field_kv` (BC-3.8.008).
+- EC-3.4.017-11: `jr issue edit KEY --field type=Bug` (using `type` as the field name,
+  not `issuetype`) → Gate B does NOT fire. The Gate B comparison checks whether the
+  `--field NAME` key, lowercased, matches the canonical system field keys `summary`,
+  `description`, `issuetype`, `priority`. The key `type` does NOT match `issuetype`.
+  `--field type=Bug` is treated as an ordinary name lookup in `resolve_edit_fields` and
+  proceeds to field-name resolution (Step 2b). Note: `--type` maps to the `issuetype`
+  system field key in Jira; a `--field` pair targeting `issuetype` directly WOULD trigger
+  Gate B when `--type` is also present. Using `type` (without `issue`) as a field name
+  is a user error that surfaces as a resolution error (EC-3.4.015-1: zero matches or
+  wrong field), not a Gate B conflict.
+- EC-3.4.017-12: `jr issue edit KEY1 KEY2 --summary "New" --field summary=Other` →
+  both multi-key (Gate A) AND flag-overlap (Gate B) conditions are true. Gate B fires
+  first (evaluated before Gate A per invariant 1): the flag-overlap error is emitted to
+  stderr, Gate A is NOT evaluated, and exit code is 64. Exactly one error message
+  reaches stderr. The multi-key detection is not reached.
+
+**Verification Properties**:
+- VP-396-005: Multi-key/`--jql`-multi-issue rejection exits 64; flag-overlap hard error
+  for `summary`, `description`, `issuetype`, `priority` exits 64 before any HTTP call.
+- VP-396-008: `--field` + `--dry-run` → success path exits 0; Gate A/B still fire;
+  read-only HTTP executes for preview; PUT NOT issued; resolution failure still exits 64.
+
+**Trace**: issue #396 F2; `src/cli/issue/create.rs::handle_edit` (`REJECTED_IN_BULK`
+set update; Gate B overlap check; `has_any_field_change` update to include `--field`);
+`.factory/phase-f2-spec-evolution/prd-delta-396.md §3`
+
+[NEW 2026-05-22 issue #396 F2]
 
 ---
 
@@ -1547,6 +2137,6 @@ When `--markdown` is absent, the guard does NOT fire — `--field description=va
 
 Sources: `src/cli/issue/snapshots/jr__cli__issue__json_output__tests__*.snap`; BC-1104..BC-1112 (R4)
 
-## Total BCs in this file: 71 individually-bodied (cumulative 100 incl. range-collapsed; see BC-INDEX.md)
+## Total BCs in this file: 74 individually-bodied (cumulative 103 incl. range-collapsed; see BC-INDEX.md)
 
-_Last updated 2026-05-21: +3 BCs (BC-3.4.012..014) — BC-3.4.012 (issue edit table-mode success echo), BC-3.4.013 (issue edit JSON-mode success echo with changed_fields), BC-3.4.014 (issue create table-mode all-fields echo (broadened from team-only at the 2026-05-22 human-gate to mirror BC-3.4.012)); BC-3.4.003 Success output cross-reference added; Section 3.4 header updated to 14 contracts. Previous update (2026-05-20 issue #388): +2 BCs (BC-3.4.010..011): BC-3.4.010 (cross-hierarchy `edit --type` 400 → CROSS_HIERARCHY_HINT citing JRACLOUD-27893) and BC-3.4.011 (same-hierarchy/indeterminate `edit --type` 400 → typo hint or raw error, no JRACLOUD-27893 hint) added in F2 delta (issue #388). BC-3.4.003 Errors cross-reference updated (annotation only, no behavioral change). Section 3.4 header updated to 11 contracts. Previous update (2026-05-20 issue #385): +2 BCs (BC-3.8.016..017); BC-3.8.002/010/011 modified._
+_Last updated 2026-05-22 (issue #396 F2): +3 BCs (BC-3.4.015..017) — BC-3.4.015 (`issue edit --field` string/number/date/datetime/user field single-key path, with editmeta validation, fields.json cache, and dry-run invariants), BC-3.4.016 (`issue edit --field` single-select `option` field), BC-3.4.017 (`--field` multi-key/`--jql` rejection Gate A and flag-overlap Gate B); Section 3.4 header updated to 17 contracts. Previous update (2026-05-21 issue #398 F2): +3 BCs (BC-3.4.012..014) — BC-3.4.012 (issue edit table-mode success echo), BC-3.4.013 (issue edit JSON-mode success echo with changed_fields), BC-3.4.014 (issue create table-mode all-fields echo (broadened from team-only at the 2026-05-22 human-gate to mirror BC-3.4.012)); BC-3.4.003 Success output cross-reference added; Section 3.4 header updated to 14 contracts. Previous update (2026-05-20 issue #388): +2 BCs (BC-3.4.010..011): BC-3.4.010 (cross-hierarchy `edit --type` 400 → CROSS_HIERARCHY_HINT citing JRACLOUD-27893) and BC-3.4.011 (same-hierarchy/indeterminate `edit --type` 400 → typo hint or raw error, no JRACLOUD-27893 hint) added in F2 delta (issue #388). BC-3.4.003 Errors cross-reference updated (annotation only, no behavioral change). Section 3.4 header updated to 11 contracts. Previous update (2026-05-20 issue #385): +2 BCs (BC-3.8.016..017); BC-3.8.002/010/011 modified._
