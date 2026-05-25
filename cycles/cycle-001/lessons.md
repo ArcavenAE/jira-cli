@@ -1708,3 +1708,127 @@ _Discovered: #398 F7 cycle-close, 2026-05-22. Recurrence check: #384 (PG-384-1/2
 but no issue filed at cycle-close), #385 (PG-385-1..7 recorded), #388 (PG-388-1..4 recorded).
 #398 is the first cycle where a dedicated follow-up issue (#400) was explicitly filed at
 cycle-close per S-7.02 discipline. Status: [codified]._
+
+---
+
+## 2026-05-25 — Issue #396 Cycle-Close Lessons (PG-396-1..5)
+
+### PG-396-1 [codified] [recurring 2×] Silent-drop class: flag-combination conflict blocks require an update whenever a new flag is added
+
+**Finding (F5 pass 1 — 2026-05-25):** The `--label` conflict block in `handle_edit` guards against
+flag combinations (labels + other flags) that would produce a silent partial edit on the bulk-labels
+path. When `--field` was implemented in #396, the conflict block was not extended to include `--field`.
+A user passing `jr issue edit FOO-1 --label add:foo --field priority=High` would silently drop
+`--field`. FIX-F5-001 (PR #406 @ `699a5fd`) added `--field` to the conflict block with an exit-64
+guard and integration test.
+
+This is a recurring class: in #110-pr2, the adversarial review found the same pattern — adding a
+non-label flag without extending the conflict block. The structural root cause is that the conflict
+block has no CI-enforced structural invariant tying its entries to the set of flags that could
+silently interact with the bulk-labels path.
+
+**Rule:** Whenever a new flag is added to `handle_edit` that modifies issue fields on the
+platform-write path, the implementer MUST check the `--label` conflict block and add the new flag
+if it is not already included. This is currently a manual discipline; a structural meta-test that
+mechanizes the invariant has been filed as issue #407.
+
+**Recurrence tracking:** 2 occurrences (#110-pr2 → #396). Status: [codified]. Mitigation: #407
+files a structural meta-test to make the invariant mechanically enforceable at CI time.
+
+_Discovered: #396 F5 adversarial pass 1, 2026-05-25. Recurring class, 2× occurrences._
+
+---
+
+### PG-396-2 [codified] [process-gap] Line-anchor citations in spec files and CLAUDE.md drift as code evolves
+
+**Finding (F5 passes 2/3 — 2026-05-25):** The F5 adversarial review found EC-3.4.017-13 (the newly
+inserted spec entry) referenced a specific line number in `bc-3-issue-write.md:1529` that will drift
+as the file is edited. Additionally, 2 other stale line-anchor citations were found in
+`.factory/specs/prd/*.md` and `CLAUDE.md` (`src/file.rs:NN-MM` references). This is the same class
+as PG-385-3 (line-range citations in BC Source/Trace fields), now extended to include spec prose and
+CLAUDE.md gotcha entries.
+
+**Rule:** BC entries, spec prose, and CLAUDE.md entries MUST NOT cite absolute line numbers in source
+files. The correct citation form is function name, type name, or a stable identifier (e.g.,
+`handle_edit` in `src/cli/issue/create.rs`) — not `src/cli/issue/create.rs:NN-MM`. The existing
+`scripts/check-bc-no-line-range-citations.sh` proposed in PG-385-3 would cover this class. Filed as
+issue #408 to track a systematic guard or sweep process.
+
+_Discovered: #396 F5 adversarial passes 2/3, 2026-05-25. Status: [codified]. Tracked in #408._
+
+---
+
+### PG-396-3 [codified] Test isolation discipline: production code follows the spec; fragile tests get isolation infrastructure, not production workarounds
+
+**Finding (F4 per-story adversary, commit 32f60a0 revert — 2026-05-23):** The F4 implementer
+initially used `jr_cmd` (real disk, `~/.cache/jr/v1/default/fields.json`) for cache-touching tests
+and then added a "strictly-larger guard" in production `resolve_edit_fields` to avoid test
+interference: if the cache file exists but is zero-size or older, skip it. This production
+guard existed solely to make fragile tests pass — it was not in the spec.
+
+The adversarial review caught the pattern. The revert (commit `32f60a0`) removed the production
+workaround and replaced the tests with `jr_cmd_with_xdg` + per-test `tempfile::TempDir`, which
+provides an isolated `XDG_CACHE_HOME` per test invocation.
+
+**Rule:** When tests are fragile because they share real-disk state (caches, config files, keychains),
+the fix is test isolation, not production code hardening. Acceptable isolation patterns in this
+codebase:
+- `jr_cmd_with_xdg(env_vars)` with `tempfile::TempDir` for `XDG_CACHE_HOME` + `XDG_CONFIG_HOME`
+- `temp_env::with_var` for environment-variable overrides
+- `#[ignore]` + `JR_RUN_KEYRING_TESTS=1` for keychain-touching tests
+
+Production code must not contain guards whose sole purpose is to accommodate test fragility.
+
+_Discovered: #396 F4 per-story adversarial review, 2026-05-23. Revert commit 32f60a0. Status: [codified]._
+
+---
+
+### PG-396-4 [soft-codified] Best-effort cache writer style consistency — `let _ = ...` vs `?` for always-Ok Results
+
+**Finding (F4 PR review + Copilot — 2026-05-23):** The #396 implementer used `let _ = ...` to
+discard the `Result<()>` from one best-effort cache writer and `?` on another best-effort writer
+(both return `Ok(())` unconditionally — the "best-effort writer" pattern documented in CLAUDE.md).
+The inconsistency was flagged by the PR reviewer and Copilot review.
+
+The CLAUDE.md documents two patterns for cache writers (propagate via `?` if correctness-critical;
+swallow + warn if purely a read-acceleration shortcut), but does not prescribe a single canonical
+spelling for the swallow case.
+
+**Observation (not a hard rule):** For best-effort writers that always return `Ok(())`, prefer
+`let _ = ...` (intention-revealing, shows the discard is deliberate) over `?` (which implies the
+caller should handle a possible error). Consider updating CLAUDE.md to specify `let _ = ...` as
+the canonical spelling for the always-Ok best-effort writer pattern.
+
+**Status:** soft-codified as an observation. No follow-up issue filed. Decide at next cache writer
+touch whether to promote to a CLAUDE.md gotcha.
+
+_Discovered: #396 F4 PR review + Copilot R2, 2026-05-23. Status: [soft-codified]._
+
+---
+
+### PG-396-5 [codified] [recurring 3×] Tautological tests — implementer-written tests that reimplementing production logic inline rather than exercising the production path
+
+**Finding (F4 Copilot R2 C4 — 2026-05-23):** Test 38 of the S-396 deliverable
+(`test_bc_3_4_015_number_resolver_integer_is_i64_not_f64`) reconstructed the production
+wire-serialization logic inline inside the test body. The test's assertion was computed by the
+same algorithm as the production code, meaning the test would pass even if both the production code
+and the test logic contained the same bug. Tests 26 and 27 already exercise the same contract
+end-to-end via wiremock; test 38 added no new coverage and degraded test fidelity.
+
+This is a recurring class: same pattern recorded in TH-398-1 (#398 cycle) and TH-398-2 (#398 cycle)
+following the same root cause (implementer writes the test while typing the production algorithm
+and re-expresses that algorithm in the assertion).
+
+**Rule:** If a test's assertion is computed by reimplementing the production logic inline, extract
+a named production helper instead and write the test against that helper. The test should exercise
+the production path, not duplicate it. If the test cannot exercise the production path (because the
+path has no callable helper surface), that is a design signal to extract one.
+
+CLAUDE.md TDD anti-pattern candidate: "If your test re-implements the production logic you are
+testing, extract a helper instead. A tautological assertion (produced by the same algorithm being
+tested) has zero defect-catching value."
+
+**Recurrence tracking:** 3 occurrences (TH-398-1 → TH-398-2 → PG-396-5). Filed as issue #409
+(S-396 specific instance: extract `parsed_number_to_wire_value` helper). Status: [codified].
+
+_Discovered: #396 F4 Copilot R2 finding C4, 2026-05-23. Recurring class, 3× occurrences. Tracked in #409._
