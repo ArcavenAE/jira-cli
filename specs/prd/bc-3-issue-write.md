@@ -1526,6 +1526,15 @@ adding bulk `--field` support would require a separate design pass.
   first (evaluated before Gate A per invariant 1): the flag-overlap error is emitted to
   stderr, Gate A is NOT evaluated, and exit code is 64. Exactly one error message
   reaches stderr. The multi-key detection is not reached.
+- EC-3.4.017-13: `jr issue edit KEY --label add:foo --field Severity=Critical` on a single
+  key → exit 64 with `--label` conflict-block error. The `--label` short-circuit at
+  `src/cli/issue/create.rs:~835` routes to `handle_edit_bulk_labels` which does not accept
+  `field_pairs`; without rejection before the routing decision the `--field` write silently
+  drops (exit 0, data loss). The `--label` mutual-exclusion block at lines 445-489 rejects
+  this combination before any HTTP call. Error: `"--label cannot be combined with --field in
+  the same call. Run separate \`jr issue edit\` commands, or open an issue to track combined
+  label + field bulk edits (see #331)."` Combined label + custom-field bulk edits tracked at
+  #331. [FIX-F5-001]
 
 **Verification Properties**:
 - VP-396-005: Multi-key/`--jql`-multi-issue rejection exits 64; flag-overlap hard error
