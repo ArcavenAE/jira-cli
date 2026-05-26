@@ -77,7 +77,7 @@ Key call chain for `oauth_refresh_integration.rs`: `harness::seed_oauth_tokens()
 
 ## Per-Test Keychain Classification: `tests/multi_cloudid_disambiguation.rs`
 
-Total tests in file: **10**
+Total tests in file: **12**
 
 The file defines `jr_isolated()` (line 183) which sets `JR_SERVICE_NAME=jr-test-mc-<pid>-<tid>-<nanos>`
 on every subprocess command. This partitions the keychain namespace but does NOT eliminate
@@ -96,12 +96,9 @@ keychain access — novel service names still trigger macOS security framework i
 | 9 | `test_cloud_id_flag_does_not_change_redirect_uri_in_authorize_url` | 802 | NO | **KEYCHAIN-TRANSITIVE** | Full OAuth login flow with wiremock; success path calls `store_oauth_tokens` at `auth.rs:813`. Uses `jr_isolated()`. Keychain IS accessed post-implementation. |
 | 10 | `test_interactive_select_via_stdin_picks_second_resource` | 884 | NO | **KEYCHAIN-TRANSITIVE** | Interactive path with stdin injection. Success path calls `store_oauth_tokens` at `auth.rs:813`. Uses `jr_isolated()`. Keychain IS accessed post-implementation. |
 | 11 | `test_cloud_id_help_text_mentions_disambiguation_or_multiple_orgs` | 1049 | NO | **NO-KEYCHAIN** | Runs `jr auth login --help`. No OAuth flow, no keychain touch. |
+| 12 | `test_interactive_render_shows_name_url_and_id` | 995 | NO | **KEYCHAIN-TRANSITIVE** | Full OAuth login flow with wiremock asserting `exit_code == 0`; success path calls `store_oauth_tokens` at `auth.rs:813`. Uses `jr_isolated()` so `JR_SERVICE_NAME` is set, but the keychain IS accessed. Missed in initial F1 audit; caught by pr-reviewer. |
 
-**COUNT CORRECTION — FLAGGED:** The issue body claims 10 keychain-touching tests. The actual
-count is **5 KEYCHAIN-TRANSITIVE** tests (tests 2, 3, 7, 9, 10) and **6 NO-KEYCHAIN** tests
-(tests 1, 4, 5, 6, 8, 11). The file has **11 total tests**, not 10 as the issue body implies.
-Test #11 (`test_cloud_id_help_text_mentions_disambiguation_or_multiple_orgs`) was missed
-in the issue body count. It is NO-KEYCHAIN.
+**COUNT CORRECTION — FLAGGED (REVISED 2026-05-26 post-PR-review):** The issue body claims 10 keychain-touching tests. The actual count is **6 KEYCHAIN-TRANSITIVE** tests (#2, 3, 7, 9, 10, 12) and **6 NO-KEYCHAIN** tests (#1, 4, 5, 6, 8, 11). The file has **12 total tests**, not 10 or 11. The initial F1 audit missed `test_interactive_render_shows_name_url_and_id` (#12); this was caught by pr-reviewer during PR for S-410. Lesson logged for cycle-close.
 
 The confirmed flaky CI test (#3, `test_cloud_id_flag_picks_named_resource_not_first`) is
 correctly identified as KEYCHAIN-TRANSITIVE. It is the only test that both (a) succeeds
@@ -186,7 +183,7 @@ Rationale for standard classification:
 3. Adding a new `JR_RUN_CLOUDID_INTEGRATION` env var (Option B) requires updating CLAUDE.md
    with the new pattern, which is a documentation discipline obligation.
 4. The `multi_cloudid_disambiguation.rs` always-run tests that ARE currently NO-KEYCHAIN
-   (tests 1, 4, 5, 6, 8, 11) must NOT be gated — gating them would suppress useful red-gate
+   (tests 1, 4, 5, 6, 8, 11 — 6 NO-KEYCHAIN tests) must NOT be gated — gating them would suppress useful red-gate
    failures that run in standard CI. Correct classification of each test matters.
 
 ---
@@ -194,7 +191,7 @@ Rationale for standard classification:
 ## Impact: Affected Files
 
 Test files requiring changes:
-- `/Users/zious/Documents/GITHUB/jira-cli/tests/multi_cloudid_disambiguation.rs` — add gate to 5 KEYCHAIN-TRANSITIVE tests (tests 2, 3, 7, 9, 10)
+- `/Users/zious/Documents/GITHUB/jira-cli/tests/multi_cloudid_disambiguation.rs` — add gate to 6 KEYCHAIN-TRANSITIVE tests (tests 2, 3, 7, 9, 10, 12)
 - `/Users/zious/Documents/GITHUB/jira-cli/tests/oauth_refresh_integration.rs` — add gate to 7 always-run KEYCHAIN-TRANSITIVE tests (tests 1, 3, 4, 5, 6, 7, 9)
 
 Documentation requiring changes:
@@ -252,8 +249,8 @@ the gate selectively per the classification tables above.
 - Production code paths: unchanged.
 - Existing gated tests: unchanged (tests already behind `#[ignore]`/`JR_RUN_KEYRING_TESTS`
   remain unchanged).
-- The only behavioral change is that 12 tests move from always-run to `#[ignore]` +
-  `JR_RUN_KEYRING_TESTS=1` gated.
+- The only behavioral change is that 13 tests move from always-run to `#[ignore]` +
+  `JR_RUN_KEYRING_TESTS=1` gated (6 in multi_cloudid_disambiguation.rs + 7 in oauth_refresh_integration.rs).
 - Regression baseline: the 6 always-run NO-KEYCHAIN tests in `multi_cloudid_disambiguation.rs`
   continue to run in CI and provide red-gate coverage for flag-registration and error-path ACs.
 

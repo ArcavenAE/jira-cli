@@ -31,7 +31,7 @@ spec_source: ".factory/phase-f1-delta-analysis/issue-410/delta-analysis.md"
 implementation_strategy: tdd
 module_criticality: MEDIUM
 files_modified:
-  - tests/multi_cloudid_disambiguation.rs    # MODIFIED — add #[ignore] + JR_RUN_KEYRING_TESTS=1 early-return guard to 5 KEYCHAIN-TRANSITIVE tests (tests #2, 3, 7, 9, 10 per delta-analysis classification tables)
+  - tests/multi_cloudid_disambiguation.rs    # MODIFIED — add #[ignore] + JR_RUN_KEYRING_TESTS=1 early-return guard to 6 KEYCHAIN-TRANSITIVE tests (tests #2, 3, 7, 9, 10, 12 per delta-analysis classification tables)
   - tests/oauth_refresh_integration.rs       # MODIFIED — add #[ignore] + JR_RUN_KEYRING_TESTS=1 early-return guard to 7 KEYCHAIN-TRANSITIVE tests (tests #1, 3, 4, 5, 6, 7, 9 per delta-analysis classification tables)
   - CLAUDE.md                                # MODIFIED — extend JR_RUN_KEYRING_TESTS=1 documentation (line ~351) to explicitly name both test files
 files_created: []
@@ -65,7 +65,7 @@ keychain security framework triggers a system prompt — halting the runner.
 The existing canonical convention (CLAUDE.md line 351) requires `JR_RUN_KEYRING_TESTS=1` +
 `#[ignore]` for all keychain-touching tests, but neither test file follows it:
 
-- `tests/multi_cloudid_disambiguation.rs`: 5 KEYCHAIN-TRANSITIVE tests (#2, 3, 7, 9, 10), none gated
+- `tests/multi_cloudid_disambiguation.rs`: 6 KEYCHAIN-TRANSITIVE tests (#2, 3, 7, 9, 10, 12), none gated
 - `tests/oauth_refresh_integration.rs`: 7 KEYCHAIN-TRANSITIVE tests (#1, 3, 4, 5, 6, 7, 9), none gated
 
 The confirmed flaky CI test is `test_cloud_id_flag_picks_named_resource_not_first` (test #3 in
@@ -80,9 +80,9 @@ No user-visible behavior changes. BC status: no BC authorship required.
 
 ## Acceptance Criteria
 
-### AC-001 — 5 KEYCHAIN-TRANSITIVE tests in `multi_cloudid_disambiguation.rs` are gated
+### AC-001 — 6 KEYCHAIN-TRANSITIVE tests in `multi_cloudid_disambiguation.rs` are gated
 
-The following 5 tests have `#[ignore]` attribute AND an early-return guard as the FIRST
+The following 6 tests have `#[ignore]` attribute AND an early-return guard as the FIRST
 statement in the test body:
 
 ```rust
@@ -97,6 +97,7 @@ Tests that must be gated (by function name):
 3. `test_single_resource_no_regression_single_org_path` (line 659) — single-org success path calls `store_oauth_tokens`
 4. `test_cloud_id_flag_does_not_change_redirect_uri_in_authorize_url` (line 802) — full OAuth flow calls `store_oauth_tokens`
 5. `test_interactive_select_via_stdin_picks_second_resource` (line 884) — interactive path calls `store_oauth_tokens`
+6. `test_interactive_render_shows_name_url_and_id` (line 995) — full OAuth login flow asserting exit_code == 0; success path calls `store_oauth_tokens` at `auth.rs:813`. Missed in initial F1 audit; caught by pr-reviewer. (`revised 2026-05-26`)
 
 The `JR_SERVICE_NAME` isolation via `jr_isolated()` must be preserved on all gated tests.
 These tests use `#[tokio::test]`; the guard goes INSIDE the async body (cannot be a compile-time gate).
@@ -135,7 +136,7 @@ The following tests must NOT receive `#[ignore]` — they are always-run red-gat
 6. `test_cloud_id_help_text_mentions_disambiguation_or_multiple_orgs` (line 1049) — `jr auth login --help` only; no keychain
 
 Verification: `grep -n '#\[ignore\]' tests/multi_cloudid_disambiguation.rs` must show exactly
-5 lines, one per AC-001 test function. No other `#[ignore]` annotations in this file.
+6 lines, one per AC-001 test function. No other `#[ignore]` annotations in this file.
 
 ### AC-004 — `test_manual_jr_auth_refresh_unchanged` remains always-run
 
@@ -160,7 +161,7 @@ This is the convergence proof for the primary bug: the CI flake is gone.
 ### AC-006 — `JR_RUN_KEYRING_TESTS=1 cargo test -- --include-ignored` runs all tests
 
 `JR_RUN_KEYRING_TESTS=1 cargo test -- --include-ignored` exits 0 (on a developer machine
-with keychain access). The 12 newly-gated tests run and pass. No regression to the gated tests
+with keychain access). The 13 newly-gated tests run and pass. No regression to the gated tests
 themselves — their logic is unchanged, only the skip gate is added.
 
 This is the convergence proof that the gated tests remain valid.
@@ -189,7 +190,7 @@ This story requires NO production code changes. All changes are test annotations
    from the delta analysis match the actual file. The delta analysis was produced from a read-only
    audit; line numbers may drift if recent PRs landed after the audit.
 
-3. **Edit `tests/multi_cloudid_disambiguation.rs`:** For each of the 5 KEYCHAIN-TRANSITIVE tests
+3. **Edit `tests/multi_cloudid_disambiguation.rs`:** For each of the 6 KEYCHAIN-TRANSITIVE tests
    (AC-001), add `#[ignore]` before the `#[tokio::test]` attribute, then add the guard as the
    first statement inside the async body. Preserve `jr_isolated()` usage on all gated tests.
 
@@ -202,7 +203,7 @@ This story requires NO production code changes. All changes are test annotations
 6. **Run `cargo test`** — must exit 0 with no keychain prompt (AC-005 proxy in local env).
 
 7. **Verify gated test counts:**
-   - `grep -c '#\[ignore\]' tests/multi_cloudid_disambiguation.rs` → 5
+   - `grep -c '#\[ignore\]' tests/multi_cloudid_disambiguation.rs` → 6
    - `grep -c '#\[ignore\]' tests/oauth_refresh_integration.rs` → 11
 
 8. **Run `cargo clippy -- -D warnings`** — must exit 0. No new warnings from guard addition.
@@ -241,7 +242,7 @@ This story requires NO production code changes. All changes are test annotations
   and provide red-gate signal for flag-registration and error-path ACs.
 - `test_manual_jr_auth_refresh_unchanged` continues running in CI as a manual refresh command
   regression guard.
-- The 12 newly-gated tests are unchanged in logic — only a skip gate is added. They remain
+- The 13 newly-gated tests are unchanged in logic — only a skip gate is added. They remain
   executable under `JR_RUN_KEYRING_TESTS=1`.
 - No behavior that reaches end users can regress from this change.
 
@@ -255,7 +256,7 @@ The change IS the test isolation fix. There are no new test functions to write.
 |-------------|-----|----|
 | Standard CI no longer flakes | `cargo test` exits 0 without env vars (no keychain prompt) | AC-005 |
 | Gated tests still valid | `JR_RUN_KEYRING_TESTS=1 cargo test -- --include-ignored` exits 0 | AC-006 |
-| No inadvertent always-run gating | `grep -c '#[ignore]' tests/multi_cloudid_disambiguation.rs` → 5 | AC-003 |
+| No inadvertent always-run gating | `grep -c '#[ignore]' tests/multi_cloudid_disambiguation.rs` → 6 | AC-003 |
 | No inadvertent always-run gating | `grep -c '#[ignore]' tests/oauth_refresh_integration.rs` → 11 | AC-004 |
 | CLAUDE.md updated | grep for new file names in updated entry | AC-007 |
 
@@ -264,7 +265,7 @@ The change IS the test isolation fix. There are no new test functions to write.
 | Criterion | Required | Notes |
 |-----------|----------|-------|
 | `cargo test` exits 0 (no env vars) | AC-005 | Primary convergence proof; gated tests skipped |
-| `grep -c '#\[ignore\]' tests/multi_cloudid_disambiguation.rs` → 5 | AC-001/AC-003 | Exactly 5; no accidental gating of NO-KEYCHAIN tests |
+| `grep -c '#\[ignore\]' tests/multi_cloudid_disambiguation.rs` → 6 | AC-001/AC-003 | Exactly 6; no accidental gating of NO-KEYCHAIN tests |
 | `grep -c '#\[ignore\]' tests/oauth_refresh_integration.rs` → 11 | AC-002/AC-004 | 4 pre-existing + 7 newly-gated |
 | `cargo clippy -- -D warnings` exits 0 | project convention | Zero warnings; no `#[allow]` suppressions |
 | `cargo fmt --all -- --check` exits 0 | project convention | Guard idiom formatted consistently |
@@ -286,16 +287,16 @@ The change IS the test isolation fix. There are no new test functions to write.
 | **Total** | **~43 k** |
 
 Well within a single-agent context window (~200 k). No split required.
-LOC delta estimate: +5 per gated test (1 `#[ignore]` + 3 guard lines + 1 comment) × 12 tests = ~60 LOC net new across 2 test files. CLAUDE.md: ~3-5 LOC extension.
+LOC delta estimate: +5 per gated test (1 `#[ignore]` + 3 guard lines + 1 comment) × 13 tests = ~65 LOC net new across 2 test files. CLAUDE.md: ~3-5 LOC extension. (`revised 2026-05-26 — F1 audit miscount corrected after pr-review; 5→6 gated in multi_cloudid_disambiguation`)
 
 ## Tasks
 
-- [ ] Read `tests/multi_cloudid_disambiguation.rs` in full — verify 11 total tests; confirm function names and line numbers from delta-analysis match the actual file
+- [ ] Read `tests/multi_cloudid_disambiguation.rs` in full — verify 12 total tests; confirm function names and line numbers from delta-analysis match the actual file
 - [ ] Read `tests/oauth_refresh_integration.rs` in full — verify 12 total tests; confirm function names and line numbers from delta-analysis match the actual file
 - [ ] Create branch `fix/keychain-test-isolation` from `develop`
-- [ ] Edit `tests/multi_cloudid_disambiguation.rs`: add `#[ignore]` + early-return guard to 5 KEYCHAIN-TRANSITIVE tests (AC-001); preserve `jr_isolated()` on each
+- [ ] Edit `tests/multi_cloudid_disambiguation.rs`: add `#[ignore]` + early-return guard to 6 KEYCHAIN-TRANSITIVE tests (AC-001); preserve `jr_isolated()` on each
 - [ ] Edit `tests/oauth_refresh_integration.rs`: add `#[ignore]` + early-return guard to 7 KEYCHAIN-TRANSITIVE tests (AC-002); place guard BEFORE any `env_lock` acquisition
-- [ ] Verify AC-003: `grep -c '#\[ignore\]' tests/multi_cloudid_disambiguation.rs` → 5 (no NO-KEYCHAIN tests accidentally gated)
+- [ ] Verify AC-003: `grep -c '#\[ignore\]' tests/multi_cloudid_disambiguation.rs` → 6 (no NO-KEYCHAIN tests accidentally gated)
 - [ ] Verify AC-004: `grep -c '#\[ignore\]' tests/oauth_refresh_integration.rs` → 11
 - [ ] Edit `CLAUDE.md`: extend `JR_RUN_KEYRING_TESTS=1` entry (line ~351) to name both test files (AC-007)
 - [ ] Run `cargo test` — must exit 0 with no keychain prompt (AC-005)
@@ -370,7 +371,7 @@ standard library — no new crate imports.
 
 | File | Action | Notes |
 |------|--------|-------|
-| `tests/multi_cloudid_disambiguation.rs` | Modify | Add `#[ignore]` + guard to 5 tests; ~+25 LOC |
+| `tests/multi_cloudid_disambiguation.rs` | Modify | Add `#[ignore]` + guard to 6 tests; ~+30 LOC |
 | `tests/oauth_refresh_integration.rs` | Modify | Add `#[ignore]` + guard to 7 tests; ~+35 LOC |
 | `CLAUDE.md` | Modify | Extend `JR_RUN_KEYRING_TESTS=1` entry to name both test files; ~+3 LOC |
 
