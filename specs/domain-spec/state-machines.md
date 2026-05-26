@@ -49,7 +49,7 @@ Five canonical state machines (plus SM-06 Profile Lifecycle as bonus context) th
                                             ▼
                               ┌─────────────────────────────────┐
                               │ generate state                   │
-                              │ 32 bytes OsRng → 64 hex chars    │
+                              │ 32 bytes SysRng → 64 hex chars   │
                               │ build authorize URL              │
                               │ (NO PKCE — NFR-S-A)             │
                               └─────────────┬───────────────────┘
@@ -92,7 +92,7 @@ Five canonical state machines (plus SM-06 Profile Lifecycle as bonus context) th
 
 ### Key Invariants
 
-- CSRF state is 32 bytes from `OsRng` → 64 hex chars (BC-1146).
+- CSRF state is 32 bytes from `SysRng` → 64 hex chars (BC-1146).
 - State mismatch at callback → error; keychain NOT written.
 - `accessible_resources.first()` silent first-wins for multi-site users (gap: NEW-INV-179).
 - Zero accessible resources → explicit error.

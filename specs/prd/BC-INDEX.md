@@ -107,7 +107,7 @@ R1/R4 prefix = deepening round that introduced it.
 | BC-1.5.032 | `RedirectUriStrategyRequest::Fixed(p)` produces EADDRINUSE friendly error | BC-032 (R1); BC-1161 (R4) | src/api/auth.rs:427-447 | HIGH | Auth & Identity |
 | BC-1.5.033 | `ResolvedRedirect` private fields prevent listener detachment from strategy | BC-033 (R1) | src/api/auth.rs:455-477 | HIGH | Auth & Identity |
 | BC-1.5.034 | BYO OAuth uses `DynamicPort` (dynamic `:0`); embedded uses `FixedPort(53682)` | BC-1140 (R4) | src/api/auth.rs:927-937 | HIGH | Auth & Identity |
-| BC-1.5.035 | `generate_state()` produces 32 bytes from OsRng encoded as 64 hex chars | BC-1146 (R4) | src/api/auth.rs:882 | HIGH | Auth & Identity |
+| BC-1.5.035 | `generate_state()` produces 32 bytes from SysRng encoded as 64 hex chars | BC-1146 (R4) | src/api/auth.rs:882 | HIGH | Auth & Identity |
 | BC-1.5.036 | OAuth flow has NO PKCE (`code_challenge`/`code_verifier` absent) | BC-1148, BC-1149 (R4) | src/api/auth.rs:608-616 | HIGH | Auth & Identity |
 | BC-1.5.037 | `build_authorize_url` percent-encodes hostile `client_id` containing injection chars | BC-1149 (R4) | src/api/auth.rs:1043-1060 | HIGH | Auth & Identity |
 | BC-1.5.038 | `accessible_resources` first-wins for cloud_id discovery (silent first-only) | BC-1176 (R4) | src/api/auth.rs | HIGH | Auth & Identity |

@@ -4,14 +4,14 @@ level: ops
 version: "2.0"
 status: active
 producer: state-manager
-timestamp: 2026-05-25T00:00:00
+timestamp: 2026-05-26T00:00:00
 phase: phase-3-tdd-implementation
 inputs: []
 input-hash: "[live-state]"
 traces_to: ""
 project: jira-cli
 mode: BROWNFIELD
-current_step: "issue-407-CYCLE-CLOSED"
+current_step: "issue-327-CYCLE-CLOSED"
 current_cycle: "cycle-001"
 dtu_required: false
 phase_2_status: APPROVED
@@ -36,7 +36,7 @@ activation_version: "v0.5.0-dev.7"
 | **Language** | Rust |
 | **Target Workspace** | develop → main |
 | **Started** | 2026-05-04 |
-| **Last Updated** | 2026-05-25 — Issue #407 F7 CYCLE CLOSED. PR #411 @ 6eb2535. All 5 convergence dimensions PASS. Mutation 100% (1/1). Regression 1483/0. MAXIMUM_VIABLE_REFINEMENT_REACHED. DI-396-F5-1/DI-396-F5-2 RESOLVED. (Prior: #396 CYCLE CLOSED — PR #401 @ 2f61566 + FIX-F5-001 PR #406 @ 699a5fd.) |
+| **Last Updated** | 2026-05-26 — Issue #327 F7 CYCLE CONVERGED. PR #413 @ 375c0f91. rand 0.9→0.10 migration: 4 file changes (Cargo.toml +1/-1, src/api/auth.rs +3/-3, deny.toml +13/-0, Cargo.lock +50/-6). 7 spec sites OsRng→SysRng. F5 3/3 CLEAN. F6 mutation 100% (2/2). Regression 1483/0. 4 process-gap items captured: PG-327-1 (BA grep scope), PG-327-2 (F5 adversary tooling), PG-327-3 (mutants.toml auth.rs exclusion), PG-327-4 (story AC-5 narrative drift). (Prior: #407 CYCLE CLOSED — PR #411 @ 6eb2535, 2026-05-25.) |
 | **Current Phase** | Phase 3 — TDD Implementation **IN PROGRESS** — Wave 3 CLOSED (10/10). Feature Mode #110-pr2 COMPLETE. PRs #355–#364, #366–#367, #369–#373 MERGED. **0 audit-followups remain** (#331 sandbox-blocked deferred; #333 closed by PR #360; #340 closed by PR #370; #345 closed by PR #371; #346 closed by PR #373; #350 closed by PR #362; #361 closed by PR #364; #365 closed by PR #367; PG-365-1 closed by PR #369). **#383 DELIVERED PR #390 @ 25f7211 (2026-05-19)**. **#392 DELIVERED PR #393 @ 0be2e3a (2026-05-20)**. **#384 DELIVERED PR #394 @ b36b291 (2026-05-20)**: F3+F4 complete; 4 new BCs (BC-3.8.014/015, BC-X.8.006/007); spec v1.1.0 (573 BCs); F4 adversary 3/3 CLEAN; Copilot 3 cycles →0; issue #384 closed. Remaining open: #210, #331, #372, #385, #387. |
 | **Next Phase** | Wave 3 — 10 stories (S-3.01..S-3.10) |
 | **Activation HEAD** | dea166471e22eff55974d7675593469b37048c5f (v0.5.0-dev.7) |
@@ -89,6 +89,7 @@ Goal 1c: **Harden v0.5 + feature delivery** — formalize existing codebase with
 | issue-396 (Feature Mode) | **ALL PHASES COMPLETE — CYCLE CLOSED (human-authorized F7 2026-05-25).** PR #401 @ 2f61566 + FIX-F5-001 PR #406 @ 699a5fd; issue #396 CLOSED. F5 CONVERGED: 4 passes, passes 2/3/4 CLEAN; pass 1 HIGH (silent-drop `--label`+`--field`) → FIX-F5-001. F6 PASS: mutation 100% (15/15 viable), cargo-deny + audit 0 vulns, regression 1459/0. F7: all 5 dimensions PASS, MAXIMUM_VIABLE_REFINEMENT_REACHED. Follow-ups #407–#410 filed. Ships with next batched develop→main release. | 2026-05-22 | 2026-05-25 | F1–F7 ALL COMPLETE — CYCLE CLOSED | F2 adv: 9 passes, 3/3 CLEAN (P7/P8/P9). F4 adv: 5 passes, 3/3 CLEAN (P3/P4/P5). F5 adv: 4 passes, 3/3 CLEAN (P2/P3/P4). F6: 100% mutation kill. F7: 5/5 PASS. |
 | issue-396-FIX-F5-001 | **CLOSED — PR #406 squash-merged @ 699a5fd (2026-05-25); EC-3.4.017-13 committed factory-artifacts @ 9e61c05.** F5 pass 1 found 1 HIGH (silent-drop of `--label` + `--field` on platform non-JSM path). Fix: `--field` added to `--label` conflict block; exit 64 guard + integration test. Spec amendment: EC-3.4.017-13 in bc-3-issue-write.md. | 2026-05-25 | 2026-05-25 | CLOSED/DELIVERED | F5 pass 1: 1 HIGH (silent-drop). Fix-PR #406 @ 699a5fd. Spec @ 9e61c05. |
 | issue-407 (Feature Mode) | **ALL PHASES COMPLETE — CYCLE CLOSED (human-authorized F7 2026-05-25).** PR #411 @ 6eb2535; issue #407 CLOSED. F6 PASS: mutation 100% (1/1 in-diff), cargo-audit 0 vulns, cargo-deny clean, regression 1483/0, CI green. F7: all 5 dimensions PASS. MAXIMUM_VIABLE_REFINEMENT_REACHED (12 iterations, trajectory monotonically →0). Ships with next batched develop→main release. DI-396-F5-1 + DI-396-F5-2 RESOLVED. O-1/O-2 pre-existing → #408. | 2026-05-25 | 2026-05-25 | F1–F7 ALL COMPLETE — CYCLE CLOSED | F2 adv: 4 passes, 3/3 CLEAN (P2/P3/P4). F5: 4→0→0 (3 passes, 3/3 CLEAN). F6: 100% mutation kill (1/1). F7: 5/5 PASS. |
+| issue-327 (Dependabot / Feature Mode) | **ALL PHASES COMPLETE — CYCLE CONVERGED (F7 2026-05-26).** PR #413 @ 375c0f91; Dependabot PR #327 auto-closed. F6 PASS: mutation 100% (2/2 on generate_state), cargo-audit 0 vulns, cargo-deny exit 0 (empirical — no skip entries needed), regression 1483/0, CI green. F7: all 6 dimensions PASS (Behavioral/Test/Spec/Architectural/Implementation/Regression). MAXIMUM_VIABLE_REFINEMENT_REACHED. 4 PG items (PG-327-1..4) as justified deferrals. L-327-1/2/3 codified in lessons.md. Ships with next batched develop→main release. | 2026-05-26 | 2026-05-26 | F1–F7 ALL COMPLETE — CYCLE CONVERGED | F2: BC-1.5.035 title refresh; 7 spec sites; 19/19 consistency PASS. F5 adv: HIGH-FP→0→0 (3 passes, 3/3 CLEAN). F6: 100% mutation kill (2/2). F7: 6/6 PASS. |
 | issue-385 (F1–F7) | **F1–F7 COMPLETE — PR #395 merged f7fc8c3, issue CLOSED 2026-05-20.** F1 (enhancement, standard scope). F2: 2 new BCs (BC-3.8.016/017), 3 modified (BC-3.8.002/010/011), 2 holdouts (H-NEW-JSM-RT-006/007), spec v1.2.0 (575 BCs), adv 3/3 CLEAN (19 passes). F3: S-385 decomposed (1 story, 5 SP, 7 ACs), adv 3/3 CLEAN (12 passes). F4: PR #395 delivered, Red Gate verified, all 4 O-08 fixes in handle_jsm_create. F7: traceability VERIFIED (4 fixes → 5 BCs → 7 test deliverables → merged code @ f7fc8c3). 7 process-gaps PG-385-1..7 JUSTIFIED DEFERRALS. Cycle CLOSED. | 2026-05-20 | 2026-05-20 | F7 CLOSED — F1–F7 COMPLETE; all 3 spec guards PASS | F2: 19 passes, 3/3 CLEAN \| F3 adv: 12 passes, 3/3 CLEAN \| F4 adv: 3/3 CLEAN \| Copilot: 3 rounds →0 |
 | 4: Holdout Evaluation | not-started | | | | |
 | 5: Adversarial Refinement | not-started | | | | |
@@ -101,12 +102,11 @@ Goal 1c: **Harden v0.5 + feature delivery** — formalize existing codebase with
 
 | Step | Agent | Status | Output |
 |------|-------|--------|--------|
-| #396 F2 PASSED + F3 PASSED (human-approved 2026-05-22) — F4 IN PROGRESS | state-manager | complete | F2 human-approved. F3 PASSED: S-396 created — 18 ACs, 34 test deliverables, 8 SP, HIGH criticality. STORY-INDEX total_stories 45→46. |
-| #396 F6 PASS + F7 PASS + CYCLE CLOSED (human-authorized 2026-05-25) | state-manager | complete | F6: Mutation 100% (15/15 viable caught). cargo-audit 0 vulns, cargo-deny clean. Regression 1459/0. F7: all 5 dimensions PASS. MAXIMUM_VIABLE_REFINEMENT_REACHED. PR #401 @ 2f61566 + FIX-F5-001 PR #406 @ 699a5fd. Issue #396 CLOSED. Follow-ups #407–#410 filed. |
 | #396 CYCLE CLOSED — 5 lessons codified (PG-396-1..5); factory-artifacts committed | state-manager | complete | Lessons PG-396-1 (silent-drop recurring 2×), PG-396-2 (line-anchor citation drift), PG-396-3 (test isolation), PG-396-4 (best-effort writer style), PG-396-5 (tautological tests recurring 3×) codified in cycles/cycle-001/lessons.md. |
 | #407 F2 PASSED (human-approved 2026-05-25) + F3 PASSED (human-approved 2026-05-25) | state-manager | complete | F2: EC-3.4.017-14 added to BC-3.4.017; adversarial 4 passes, 3/3 CLEAN. F3: S-407 created (16 ACs, 12 test deliverables, 1 SP, LOW criticality, tdd, depends_on S-396). STORY-INDEX total_stories 46→47. |
 | #407 F5 CONVERGED — 3 passes, all CLEAN, no fix-PRs; O-1/O-2 routed to #408 | state-manager | complete | F5 trajectory: 4 LOW → 0 → 0. 12/12 conflict-block entries covered. Meta-test (EC-3.4.017-14) mechanically enforces invariant. AWAITING F6. |
 | #407 F6 PASS + F7 PASS + CYCLE CLOSED (human-authorized 2026-05-25) | state-manager | complete | F6: Mutation 100% (1/1 in-diff caught). cargo-audit 0 vulns, cargo-deny clean. Regression 1483/0. CI @ 6eb2535 green (2m40s). F7: all 5 dimensions PASS. MAXIMUM_VIABLE_REFINEMENT_REACHED (12 refinement iterations, monotonic decay to zero). PR #411 @ 6eb2535. Issue #407 CLOSED. DI-396-F5-1/DI-396-F5-2 RESOLVED. O-1/O-2 pre-existing → #408. |
+| #327 F7 CONVERGED + CYCLE CLOSED (2026-05-26) | state-manager | complete | F7: all 6 dimensions PASS. Mutation 100% (2/2). Regression 1483/0. PR #413 @ 375c0f91. Dependabot PR #327 auto-closed. 4 PG items justified deferrals. 3 lessons codified (L-327-1/2/3). factory-artifacts committed. |
 
 ## Decisions Log
 

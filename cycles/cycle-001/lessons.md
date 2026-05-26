@@ -1949,3 +1949,101 @@ to apply abbreviated F1d (single-pass) or skip-with-justification on truly mecha
 But for any cycle involving spec extension (even +1 EC), F2 adversarial review adds value.
 
 _Discovered: #407 F7 cycle-close, 2026-05-25. Status: [observation]._
+
+---
+
+## 2026-05-26 — Lessons from issue #327 (rand 0.9 → 0.10 migration)
+
+### L-327-1 [codified] Empirical-first beats prediction for supply-chain changes
+
+**Context (S-327 — F1/F2/F3 predicted `deny.toml` skip entries; F4 cargo-deny exit 0 without
+them; F5 adversary inferred a defect from static analysis that didn't exist):**
+
+The F1 delta analysis and F3 story spec (AC-5) both anticipated that `[[bans.skip]]` entries
+would be required in `deny.toml` for the `rand 0.9` / `rand 0.10` transitive dual-presence.
+This prediction was reasonable — the deny.toml pattern for getrandom (0.2/0.3/0.4 triple-skip)
+and toml (1.x/2.x dual-skip) both use explicit `[[bans.skip]]` entries for similar situations.
+
+However, at F4 implementation time, `cargo deny check` exited 0 WITHOUT any skip entries.
+The reason: `cargo-deny` does not flag crates that are dev-dep-only transitive duplicates
+when the duplicate path is not in the production dependency graph of the current target platform.
+`rand 0.9.4` enters via `proptest 1.x` (dev-dep) and `quinn-proto` (reqwest/rustls transitive —
+platform-specific). On the standard `x86_64-unknown-linux-gnu` target, `cargo-deny` saw only
+one `rand` instance in the active build graph.
+
+The F5 adversary (pass 1) then inferred from static analysis of the lockfile that `cargo deny
+check` MUST fail — rated this HIGH severity. The orchestrator ran `cargo deny check` live and
+observed exit 0, empirically refuting the finding. Passes 2/3 were CLEAN.
+
+**Lesson:** For supply-chain and tooling changes (Cargo.toml bumps, deny.toml changes, lockfile
+touches), run the tools empirically FIRST before writing spec narrative that predicts what the
+tools will report. Prediction based on "similar situations" can be wrong because tool behavior
+depends on the exact dependency graph shape at the time of the change. Empirical-first:
+1. Apply the change.
+2. Run the tools.
+3. Observe the actual exit code and output.
+4. Write spec narrative to match observed behavior.
+
+Codify as a story-template convention for dependency-migration stories.
+
+_Discovered: S-327 F5 pass-1 resolution, 2026-05-26. Status: [codified]._
+
+---
+
+### L-327-2 [observation] Perplexity verification adds zero value for well-cited primary-source research
+
+**Context (S-327 research verification pass — verdict `PERPLEXITY-CONFIRMS-PRIOR-ASSESSMENT`):**
+
+The Perplexity verification pass for this story found zero divergences from the prior assessment.
+All claims were already grounded in primary sources:
+- `docs.rs/rand/0.10.x` changelog (rename motivation and behavior equivalence)
+- `GHSA-cq8v-f236-94qc` advisory text (affected path: `Rng::sample` with `ThreadRng` + custom logger)
+- `rand` 0.10.x release notes and the `getrandom` crate documentation
+
+When 3+ primary sources already cover the claim space, Perplexity duplicates effort without
+adding new information.
+
+**Suggestion:** Consider a "skip Perplexity when 3+ primary sources are already cited in the
+research doc" heuristic for future research-validation passes. This is not a hard rule —
+Perplexity adds value when claims are second-hand (documentation comments, third-party blog
+posts, secondary spec citations). For first-party crate documentation + advisory text,
+primary sources dominate.
+
+**Status:** [observation] — not a policy change. The existing DEC-018 Perplexity-validation
+discipline remains in force for Copilot review findings. This observation applies only to
+optional research-verification passes driven by F2/F5 dispatch.
+
+_Discovered: S-327 research verification (`.factory/research/rand-0.10-perplexity-verification.md`), 2026-05-26. Status: [observation]._
+
+---
+
+### L-327-3 [codified] Embed live tool output in F5 dispatch packets to prevent static-analysis false positives
+
+**Context (S-327 F5 pass-1 HIGH false positive F-327-P1-001 — resolved in ~2 hours):**
+
+F5 adversary (pass 1) rated the deny.toml change HIGH severity based on static analysis of the
+lockfile: `rand 0.9.4` entry visible → `multiple-versions = "deny"` in deny.toml → `cargo deny
+check` must fail → skip entries missing → HIGH defect.
+
+The chain of reasoning was logically sound given the inputs. But the F5 adversary `read-only`
+profile cannot run `cargo deny check` to reproduce the claim. The orchestrator had to run the
+tool live, observe exit 0, and communicate the resolution back — a round-trip that cost ~2
+hours of investigation.
+
+The same pattern will recur for every code-implementation-review F5 cycle where the adversary's
+inference is about tool behavior (`cargo build`, `cargo test`, `cargo clippy`, `cargo deny check`,
+`cargo fmt`). The adversary cannot disprove their own inference without tool access.
+
+**Mitigation options (in priority order):**
+1. **Embed live tool output in F5 dispatch packets by default** — before dispatching F5, run
+   `cargo deny check --message-format json 2>&1` (or the relevant tool), capture the full output,
+   and include it in the dispatch packet as a `tool_outputs` block. The adversary can then cite
+   "verified by cargo-deny exit 0 with output: ..." rather than inferring from lockfile structure.
+2. **Grant F5 adversary Bash access scoped to read-only cargo subcommands** — `cargo build`,
+   `cargo test`, `cargo clippy`, `cargo deny check`, `cargo audit`, `cargo fmt --check`. This is
+   the more powerful fix but requires a profile configuration change.
+
+Codifies PG-327-2. The mitigation is especially high-value for dependency-bump and deny.toml
+stories where the adversary's primary axis is supply-chain hygiene.
+
+_Discovered: S-327 F5 pass-1 back-and-forth, 2026-05-26. Status: [codified]._

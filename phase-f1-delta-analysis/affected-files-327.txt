@@ -1,0 +1,77 @@
+# Affected files — Issue #327
+# Dependency bump: rand 0.9.4 → 0.10.1 (Dependabot PR #327)
+# Generated: 2026-05-26
+# Scope: small — 4 modified files, 0 new files, no test authoring required
+
+# MODIFIED
+src/api/auth.rs
+Cargo.toml
+deny.toml
+Cargo.lock
+
+# DEPENDENT (no code change; exercises the modified path)
+# src/api/auth.rs — inline tests at lines 1185-1224:
+#   test_generate_state_is_hex
+#   test_generate_state_is_64_hex_chars
+#   test_generate_state_is_not_deterministic
+
+# UNCHANGED (regression baseline)
+src/main.rs
+src/cli/mod.rs
+src/cli/issue/mod.rs
+src/cli/issue/list.rs
+src/cli/issue/view.rs
+src/cli/issue/create.rs
+src/cli/issue/workflow.rs
+src/cli/issue/links.rs
+src/cli/issue/helpers.rs
+src/cli/issue/format.rs
+src/cli/issue/comments.rs
+src/cli/issue/assets.rs
+src/cli/assets.rs
+src/cli/board.rs
+src/cli/sprint.rs
+src/cli/worklog.rs
+src/cli/team.rs
+src/cli/user.rs
+src/cli/auth.rs
+src/cli/init.rs
+src/cli/project.rs
+src/cli/queue.rs
+src/cli/requesttype.rs
+src/api/client.rs
+src/api/auth.rs (all functions other than generate_state + rustdoc)
+src/api/pagination.rs
+src/api/rate_limit.rs
+src/api/assets/workspace.rs
+src/api/assets/linked.rs
+src/api/assets/objects.rs
+src/api/assets/schemas.rs
+src/api/assets/tickets.rs
+src/api/jira/issues.rs
+src/api/jira/boards.rs
+src/api/jira/sprints.rs
+src/api/jira/fields.rs
+src/api/jira/statuses.rs
+src/api/jira/links.rs
+src/api/jira/teams.rs
+src/api/jira/worklogs.rs
+src/api/jira/projects.rs
+src/api/jira/users.rs
+src/api/jsm/servicedesks.rs
+src/api/jsm/queues.rs
+src/types/
+src/cache.rs
+src/config.rs
+src/output.rs
+src/adf.rs
+src/duration.rs
+src/observability.rs
+src/jql.rs
+src/partial_match.rs
+src/error.rs
+src/lib.rs
+tests/
+CLAUDE.md
+.factory/specs/prd/
+scripts/

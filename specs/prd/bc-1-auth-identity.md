@@ -392,7 +392,7 @@ Embedded OAuth app (1.3), Token keychain (1.4), OAuth state machine (1.5), Auth 
 
 ---
 
-#### BC-1.5.035: `generate_state()` produces 32 bytes from OsRng encoded as 64 hex chars
+#### BC-1.5.035: `generate_state()` produces 32 bytes from SysRng encoded as 64 hex chars
 
 **Confidence**: HIGH
 **Source**: `src/api/auth.rs:882`; Pass 3 R4 §3.10

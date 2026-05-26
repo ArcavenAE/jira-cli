@@ -40,7 +40,7 @@ stateDiagram-v2
     ValidateScopes --> [*]: ConfigError "oauth_scopes is empty"
 
     PersistApp --> OAuthLogin: keychain write skipped if Embedded source
-    OAuthLogin --> GenerateState: 32 bytes from OsRng → 64 hex chars
+    OAuthLogin --> GenerateState: 32 bytes from SysRng → 64 hex chars
     GenerateState --> BuildAuthorizeUrl: percent-encoded params via urlencoding::encode
     note right of BuildAuthorizeUrl
         NO PKCE — no code_challenge / code_challenge_method
@@ -78,7 +78,7 @@ stateDiagram-v2
 
 - `ResolvedRedirect` holds the `TcpListener` in private fields — TOCTOU window is eliminated (verified `api/auth.rs:459-478`)
 - Fixed callback: `http://127.0.0.1:53682/callback` (literal IPv4, ADR-0006)
-- `generate_state`: 32 bytes from `OsRng` → 64 lowercase hex chars (BC-1.5.035)
+- `generate_state`: 32 bytes from `SysRng` → 64 lowercase hex chars (BC-1.5.035)
 - `resources.first()` is silent first-wins — a user with multiple cloud sites may authenticate to the wrong one (NFR-O-S)
 
 ---
