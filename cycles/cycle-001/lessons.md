@@ -1832,3 +1832,120 @@ tested) has zero defect-catching value."
 (S-396 specific instance: extract `parsed_number_to_wire_value` helper). Status: [codified].
 
 _Discovered: #396 F4 Copilot R2 finding C4, 2026-05-23. Recurring class, 3× occurrences. Tracked in #409._
+
+---
+
+## 2026-05-25 — Issue #407 Cycle-Close Lessons (PG-407-1..3)
+
+### PG-407-1 [codified] Validate-before-acting on Copilot review findings: ALL THREE R1 findings on PR #411 were REFUTED
+
+**Context (PR #411 Copilot R1 — 2026-05-25):** Copilot Round 1 on PR #411 posted 3 findings.
+All 3 appeared reasonable at face value:
+1. Refactor `expected` sets in the meta-test to named `const` slices at module scope (DRY).
+2. Replace the guard comment above the global-source-text extraction with brace-matched extraction
+   to make the invariant structurally self-enforcing.
+3. Share a helper function to deduplicate the expected-set construction across subtests.
+
+Per DEC-018, a research agent validated each finding against the locked F1/F2 design decisions
+before acting. All 3 were REFUTED:
+
+1. **`const` slice refactor REFUTED by AC-016 + F1 Q1.** The spec deliberately chose manual
+   enumeration per AC-016 ("manually enumerate the expected set") to keep the meta-test as a
+   direct human-readable declaration of the contract. Extracting to a shared module-level `const`
+   would reduce reviewability and obscure which test asserts which invariant. The F1 design note
+   (Q1: "Why manual enumeration? Because each test is an independent witness…") explicitly
+   rejected shared constants.
+
+2. **Guard comment removal REFUTED by EC-3.4.017-14.** The spec extension EC-3.4.017-14 explicitly
+   documents the guard comment as a load-bearing anchor: it marks the extraction site in the
+   source text, enabling the `include_str!` scan to locate the conflict block reliably. Replacing
+   it with brace-matched extraction would have required a different (more fragile) parsing strategy.
+
+3. **Shared expected-set helper REFUTED by AC-013.** AC-013 requires each subtest to be an
+   "independent witness" — tests must not share state that could mask an error in one path while
+   another passes. A shared helper introduces a common-mode failure point: if the helper were
+   wrong, all subtests would pass while the invariant was violated.
+
+After citing F1 Q1, AC-013, AC-016, and EC-3.4.017-14 in the R1 replies, Copilot converged
+on R2 with zero new comments.
+
+**Rule (reinforcement of DEC-018):** ALWAYS research-validate Copilot findings before acting —
+especially when the finding suggests an "obvious" refactor. The danger class is findings that
+sound like best-practice improvements (DRY, structured parsing, shared helpers) but contradict
+human-gated spec decisions. The validation cost is one research pass; the cost of acting on a
+refuted finding is reverting production code that contradicted the spec.
+
+**Quantified benefit:** Without validation, 3 wrong changes would have shipped: module-scope
+`const` (contradicts AC-016), guard comment removal (contradicts EC-3.4.017-14), shared helper
+(contradicts AC-013). 0 rounds of rework needed after research-validation. Copilot converged
+in 2 rounds (R1 with 3 findings → R2 with 0).
+
+_Discovered: #407 PR #411 Copilot R1, 2026-05-25. Status: [codified]. Reinforces DEC-018._
+
+---
+
+### PG-407-2 [codified] Structural meta-tests mechanize invariants that previously relied on developer discipline
+
+**Context (S-407 delivery — 2026-05-25):** The `--label` conflict-block silent-drop bug
+(FIX-F5-001, post-#396) existed because there was no test enforcing that the conflict block
+listed every relevant flag. The bug recurred twice (#110-pr2 → #396) before being fixed,
+because the invariant was maintained only by developer discipline (manual checklist, code review,
+spec prose) — none of which fired at CI time.
+
+S-407 delivered `test_label_conflict_block_lists_every_relevant_flag`, which mechanically
+enforces the invariant:
+- Uses `include_str!("../create.rs")` to extract the full source text of `create.rs` at
+  compile-verification time.
+- Parses the `--label` conflict block from the source text (no mocking, no indirection).
+- Asserts via `BTreeSet` difference that EVERY entry in `BULK_SUPPORTED` /
+  `REJECTED_IN_BULK` appears in the conflict block.
+- On failure: emits actionable diff — "Flags in expected but NOT in conflict block: [\"--newflag\"]"
+
+A future developer adding a new flag to `BULK_SUPPORTED`/`REJECTED_IN_BULK` will see
+`cargo test` fail with a deterministic, named diff — not a silent drop in production.
+
+**Rule:** When a recurring silent-drop class is identified (same invariant violated 2+ times
+because it depended on developer discipline), the correct response is a structural meta-test
+that mechanizes the invariant at CI time. The meta-test should:
+1. Parse or read the production artifact directly (no mock, no fixture copy that can drift).
+2. Assert the invariant as a set/count comparison with actionable error output.
+3. Fail deterministically — the failure message must identify exactly which entry was missing.
+
+**Pattern name:** structural meta-test. Distinct from a unit test (which tests a function's
+output) and an integration test (which tests end-to-end behavior). A structural meta-test
+tests a structural property of the source code or spec artifact itself.
+
+_Discovered: #407 cycle-close analysis, 2026-05-25. Status: [codified]._
+
+---
+
+### PG-407-3 [observation] Test-only cycles benefit from full F1→F7 VSDD discipline even at 1 SP
+
+**Context (S-407 pipeline — 2026-05-25):** S-407 was a 1-SP test-hardening cycle with no new
+BCs, no new VPs, and a net change of +1 EC (EC-3.4.017-14). Despite the small scope, the full
+F1→F7 pipeline was applied.
+
+The pipeline surfaced real value at every stage despite the minimal footprint:
+- **F2 pass 1 (HIGH design-trap):** The adversary identified that `issue_type` vs `--type`
+  clap rename would have caused a `clap::Error` on first run (flag name mismatch). Caught
+  before implementation — zero cost to fix.
+- **F2 passes 2–4 (MEDIUM clarity findings):** Cross-reference language in EC-3.4.017-14,
+  trace frontmatter, invariant wording — all improved before the story was handed to F3.
+- **F5 passes 1–3 (all CLEAN):** No fix-PRs needed, confirming the implementation was
+  spec-faithful. The meta-test approach (EC-3.4.017-14) mechanically enforces the invariant
+  without ambiguity.
+- **F6 (100% mutation kill on in-diff mutant):** Confirmed the test catches real faults,
+  not just structural conformance.
+- **F7 (5/5 PASS):** Traceability confirmed end-to-end.
+
+**Observation:** The compounding value of adversarial convergence applies even to small deltas.
+The F2 HIGH finding alone (design-trap that would have caused first-run failure) justified the
+pipeline cost for a 1-SP story. The pattern "this is too small for full VSDD" is a rationalization
+that should be resisted unless the orchestrator has strong reason to believe F2 will be trivially
+CLEAN.
+
+**Status:** [observation] — not a hard rule. The orchestrator may exercise judgment on whether
+to apply abbreviated F1d (single-pass) or skip-with-justification on truly mechanical refactors.
+But for any cycle involving spec extension (even +1 EC), F2 adversarial review adds value.
+
+_Discovered: #407 F7 cycle-close, 2026-05-25. Status: [observation]._
