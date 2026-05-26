@@ -446,4 +446,99 @@ CONVERGED. 0 substantive findings. OBS-13-1 RESOLVED (JiaClient typo global swee
 
 5. **Fastest-ever convergence comparison:** PR #357 (2 rounds) remains the fastest in cycle-001. PR #358 (5 rounds) is second fastest. The distribution is heavily bimodal: PR #356 (19 rounds) is an outlier caused by a broad behavioral change with repeated doc-fallout accumulation. PRs that are scoped to a single mechanism (security gate, test helper, docs-only) converge in 2-5 rounds consistently.
 
+---
+
+## Extracted from STATE.md Convergence Trackers on 2026-05-26 (compact-state run)
+
+### Phase 1d — Adversarial Spec Review
+
+**3/3 FULLY CONVERGED** at Pass 28 (2026-05-04). 28 passes total: 25 SUBSTANTIVE + 3 consecutive CLEAN-PASS (P26-P27-P28). 5 counter resets. ~80+ findings addressed. Final trajectory: 30→15→9→5→10→5→4→3→4→0→2→0→3→0→2→0→3→0→3→5→3→4→5→5→5→2→0→0→0. Spec corpus at convergence: 541 BCs, 41 NFRs, 48 holdouts, 26 risks, 13 ADRs, 3 SDs. Phase 1 → Phase 2 gate APPROVED (DEC-009, 2026-05-04). Full per-pass details in this file above.
+
+### Phase 2-adv — Adversarial Story Review
+
+**3/3 FULLY CONVERGED** at Pass 13 (2026-05-07). 13 passes: 10 SUBSTANTIVE + 3 consecutive CLEAN-PASS (P11-P12-P13). Trajectory: 14→5→5→5→4→5→4→4→4→1→0→1→0. Full per-pass details in this file above.
+
+### Phase 3-adv — Wave Adversarial Reviews (per-story + wave)
+
+Wave gate: not started. Feature Mode #110-pr2: **F5 CONVERGED** 12→5→0→0→0 (Pass 5, 2026-05-10). F6: SECURITY PASS (→#334). F7: PASS-WITH-FOLLOWUPS (5/5; →#347). 10 Copilot rounds: 27/27 resolved. PR #348 MERGED 2026-05-11 @ e480ff2 (closes #110). **PR #351 MERGED 2026-05-11 @ 3216ec2** (closes #339+#344). **PR #352 MERGED 2026-05-11 @ 57cc0ae** (closes #337+#341+#347; R2 clean 3→0). **PR #353 MERGED 2026-05-11 @ 7fbf14d** (closes #338; 0 inline Round 1). **PR #354 MERGED 2026-05-11 @ 4e14849** (closes #342; docs-only; CONVERGED 1→1→0). **PR #355 MERGED 2026-05-11 @ 448c568** (closes #332; trajectory 3→1→0). **PR #356 MERGED 2026-05-12T01:37:46Z @ 9acf01d** (closes #334; CWE-117 sanitize_for_stderr; 19 rounds; trajectory 4→1→2→2→3→2→3→2→2→1→1→2→1→1→2→3→1→1→0; 36/36 threads resolved; CI 8/8 green). **PR #357 MERGED 2026-05-12T03:03:12Z @ d208a6d** (closes #335; chore(security): release-gate JR_BASE_URL; 2 rounds; trajectory 3→0; fastest convergence in cycle-001; doc-fallout lesson applied). **PR #358 MERGED 2026-05-12 @ 561217b** (squash: "chore(test): assert every IssueCommand::Edit field is categorized (#343) (#358)"; closes #343; 5 rounds; trajectory 1→1→2→1-FP→0; second fastest in cycle-001; first false-positive at R4 caught by DEC-018 empirical-first discipline). 6 audit-followups remain: #333, #336, #340, #345, #346, #350 (#331 sandbox-blocked deferred). Full records: `cycles/cycle-001/adversarial-reviews/issue-110-pr2/` + `cycles/cycle-001/adversarial-reviews/pr-352-docs-cleanup/` + `cycles/cycle-001/adversarial-reviews/pr-353-bulk-max-keys/` + `cycles/cycle-001/adversarial-reviews/pr-354-labels-shape-doc/` + `cycles/cycle-001/adversarial-reviews/pr-355-task-id-validation/` + `cycles/cycle-001/adversarial-reviews/pr-356-sanitize-errors/` + `cycles/cycle-001/adversarial-reviews/pr-357-release-gate-jr-base-url/` + `cycles/cycle-001/adversarial-reviews/pr-358-edit-field-categorization-test/`.
+
+**Issue #350 (search_issue_keys) F5 CONVERGED 2026-05-13** — 11 substantive passes (longest cycle-001 convergence). Trajectory 4→0→5→5→3→5→2→1→0→0→0. 3 consecutive CLEAN at passes 09-10-11. **PR #362 MERGED 2026-05-13T17:51:09Z @ 8010445** (Copilot R3=0). Net delivery: BC-2.6.050 + 13 tests + 8 ACs + ~70 LOC impl. Full record at `.factory/cycles/cycle-001/adversarial-reviews/issue-350-search-issue-keys/CONVERGENCE.md`.
+
+**Issue #361 (JRACLOUD-95368 citation rebind) CONVERGED + MERGED 2026-05-14** — PR #364 @ b8a87c5. Branch `chore/search-warning-jra-95368`. ~10 Copilot rounds →0. Fixes citation JRACLOUD-94632 → JRACLOUD-95368 in repeated-cursor stderr warning; fixes has_more asymmetry in search_issues; pins no-dedupe contract test; updates spec with citation + per-CLI carve-out bullets. Closes #361.
+
+**Issue #365 follow-up (CLAUDE.md citation-validation discipline) MERGED 2026-05-14** — PR #366 @ ad6b979. Branch `docs/claude-md-jracloud-95368-followup`. Copilot R1=0. Adds CLAUDE.md Gotcha for JRACLOUD-95368 + AI Agent Note for external-tracker citation discipline.
+
+**Issue #365 (search_issue_keys + search_issues in-function dedupe) MERGED 2026-05-15** — 17 F1d passes (2 rounds) + F5 CONVERGED (4 passes) + F6 5 Copilot rounds → **PR #367 MERGED @ e193c16** (squash, 2026-05-15T17:51:09Z; closes #365).
+- F1d Round 1: P1-P11, 6 resets, CONVERGED at v0.1.8 (3/3 CLEAN P9-P10-P11). Trajectory: 0/4/2→0/0/2→0/1/3→0/2/2→0/1/1→0/2/5→0/1/4→0/1/2→0→0→0.
+- F1d Round 2: P12-P17, 2 resets, CONVERGED at v0.1.12 (3/3 CLEAN P15-P16-P17). Trajectory: CLEAN(P12)→0/6/0(P13)→1B/2/0(P14)→CLEAN(P15)→CLEAN/2NIT(P16)→CLEAN(P17).
+- F5: adversary 3-clean + code-reviewer CONVERGENCE_REACHED + security LOW-RISK APPROVE (4 passes total).
+- F6: R1 (substantive) → R2 (O(N²)→O(N) algorithmic improvement caught) → R3 (cascade doc cleanup) → R4 (remaining doc cascade) → R5 (0 inline, CLEAN). Trajectory: substantive→algorithmic-improvement→doc-cascade×2→clean.
+- Notable: F6 R2 caught O(N²) complexity issue (Vec::retain + per-iteration HashSet rebuild replaced with incremental external `seen_keys` HashSet) that F5 3-reviewer panel missed. See L-365-1. Drift items: PG-365-1 (BC Trace stale-count), PG-365-2 (F1d citation-verification scope, engine-level). DRIFT-006 added for F5 multi-axis review gap.
+Full record: `.factory/cycles/cycle-001/adversarial-reviews/issue-365-search-issue-keys-dedupe/CONVERGENCE.md`. Cycle CLOSED 2026-05-15T17:51:09Z.
+
+### Issue #288 — Retrospective Audit (2026-05-19)
+
+9-pass retrospective audit completed 2026-05-19 by research-agent. Convergence trustworthiness: **PASS**. Outcome: 0 REFUTED, 11 CONFIRMED, 1 PARTIAL (no-action), 1 INCONCLUSIVE (already filed as #384/#385). 3 INCONCLUSIVE-LOCAL items re-validated post-pull (develop @ 9523255) — all CONFIRMED. 4 follow-up GitHub issues filed: #382 (M-03), #383 (O-01), #384 (O-08-01+O-08-05), #385 (O-08-02/04/06/07). F5/F6/F7 epic-level reruns waived.
+
+Research artifacts: `.factory/research/issue-288-pr4-retrospective-audit.md` + `.factory/research/issue-288-pr4-deferred-validation.md`
+
+### Issue #382 — Quick-Dev Convergence (2026-05-19)
+
+F1d adversarial: 8 passes total (passes 06/07/08 CLEAN, 3/3). F4 per-story adversarial: 3 passes total (all CLEAN, 3/3). pr-reviewer: APPROVE in 1 cycle, 0 blocking findings. Copilot review: COMMENTED with 0 inline comments. CI: 10/10 green including mutation testing (5min). Pre-existing flake noted: tests/multi_cloudid_disambiguation.rs keychain contention (NOT a regression). PR #389 MERGED @ b1c863e (2026-05-19T18:40:25Z). Issue #382 auto-closed at 2026-05-19T18:40:27Z.
+
+### Issue #384 — Full-Cycle Convergence CLOSED (2026-05-20)
+
+F2 adversarial spec review: 3 passes, 3/3 CLEAN. CRITICAL control-flow defect caught at pass 1: OAuth Bearer + generic-expiry 401 must route through the refresh coordinator (blanket-401 trigger per BC-X.3.002 + DEC-013), NOT the NotAuthenticated arm; corrected in bc-3-issue-write.md BC-3.8.014/015 scoping language + OAuth test paths pinned via scope-mismatch request bodies. Spec corpus at convergence: 573 BCs total (+4: BC-3.8.014, BC-3.8.015, BC-X.8.006, BC-X.8.007; modified: BC-3.8.001, BC-3.8.009, BC-X.3.002). H-NEW-JSM-RT-003 revised. Spec version 1.1.0. F4 per-story adversarial: 3 passes, 3/3 CLEAN. BC-3.8.014/015 + BC-X.8.006/007 verified. is_oauth_auth() predicate + API_TOKEN_EXPIRY_HINT contract verified. Copilot review: 3 cycles, converged to zero comments. PR #394 squash-merged @ b36b291 (2026-05-20). Issue #384 auto-closed. F7 traceability verified: 4 BCs (BC-3.8.014/015, BC-X.8.006/007) ↔ 5 named tests in tests/issue_create_jsm.rs + inline unit tests ↔ 4-file implementation (is_oauth_auth(), API_TOKEN_EXPIRY_HINT, handle_jsm_create, require_service_desk). All 3 spec guards exit 0. PG-384-1 (BC-INDEX Coverage Statistics table gap) + PG-384-2 (spec-guard incompleteness F2/F3) recorded as justified deferrals. Cycle CLOSED 2026-05-20.
+
+### Issue #385 — Full-Cycle Convergence CLOSED (2026-05-20)
+
+F2 adversarial spec review: 19 total passes, 3/3 CLEAN (passes 17/18/19). Enhancement: JSM input validation + UX polish (O-08-02/04/06/07). 2 new BCs added: BC-3.8.016 (empty-request-type guard), BC-3.8.017 (markdown/field-conflict guard). 3 BCs modified: BC-3.8.002 (JSM guard-string precision), BC-3.8.010 (--type-ignored stderr), BC-3.8.011 (--field on JSM path). 2 new holdouts: H-NEW-JSM-RT-006/007. Spec version advanced v1.1.0→v1.2.0 (575 BCs). Process gaps recorded: PG-385-1..4.
+
+F3 story decomposition: S-385 (JSM input validation + UX polish) decomposed — 1 story, 5 SP, 7 ACs covering O-08-02/04/06/07. Adversarial story convergence: 12 total passes, 3/3 CLEAN. STORY-INDEX total_stories corrected 44→43 (pre-existing off-by-one, PG-385-6). Process gaps recorded: PG-385-5/6/7.
+
+F4 delivery: PR #395 squash-merged @ f7fc8c3 (2026-05-20). All 4 O-08 fixes delivered: O-08-02 (BC-3.8.002 harmonized error string), O-08-04 (BC-3.8.016 empty --request-type guard), O-08-06 (BC-3.8.017 --markdown+--field description= conflict guard), O-08-07 (BC-3.8.010/011 platform-flag warnings moved post-require_service_desk). Red Gate verified in src/cli/issue/create.rs. Per-story adversary CONVERGED 3/3 CLEAN. Copilot 3 rounds →0. CI 10/10 green.
+
+F7 traceability verified: 4 O-08 fixes → 5 BCs (BC-3.8.002/010/011/016/017) → 7 required test deliverables in tests/issue_create_jsm.rs → merged implementation @ handle_jsm_create locus in src/cli/issue/create.rs → f7fc8c3 on develop. Guard strings "request type cannot be empty" and "`--field description=...` cannot be combined with `--markdown`" confirmed present via git show f7fc8c3. H-NEW-JSM-RT-006/007 holdouts: realized_by bindings exist in tests/issue_create_jsm.rs per F3 story spec. All 3 spec guards exit 0. 7 process-gaps PG-385-1..7 recorded as justified deferrals. Issue #385 CLOSED / stateReason COMPLETED. Cycle CLOSED 2026-05-20.
+
+### Issue #398 — CYCLE CONVERGED & CLOSED (2026-05-22)
+
+F1 Delta Analysis COMPLETE + human-approved. F2 Spec Evolution COMPLETE (re-converged): 16 total adversary passes, 3/3 CLEAN (passes 14/15/16). 10 product-owner fix rounds. Human-gate scope change: BC-3.4.014 (confirmation-echo --output json shape) broadened from team-only to ALL-set-fields echo, mirroring BC-3.4.012. VP-398-005 scope broadened; VP-398-006 added → 6 VPs total (VP-398-001..006). 3 additional re-convergence passes CLEAN after broadening. F2-gate consistency-validator re-audit run twice; all defects fixed. Both spec-count guard scripts exit 0 (580 BCs across 8 files). New BCs: BC-3.4.012 (confirmation-echo field-list contract), BC-3.4.013 (confirmation-echo suppression on --no-input), BC-3.4.014 (confirmation-echo --output json shape — all set-fields). BC-3.4.003 annotated. bc-3: 97→100 BCs. BC-INDEX: 577→580. New VPs: VP-398-001..006 in `.factory/phase-f2-spec-evolution/verification-delta-398.md`. PRD delta: `.factory/phase-f2-spec-evolution/prd-delta-398.md`.
+
+F3 COMPLETE: S-398 created (21 ACs, 23 test deliverables). F4 COMPLETE: PR #399 squash-merged @ b49f2fd (2026-05-22); issue #398 CLOSED; Red Gate → TDD 5 micro-commits → 3/3 CLEAN adversary (1 false-alarm PG-398-4 discarded) → 10/10 CI → Copilot (1 finding REFUTED).
+
+F5 CONVERGED — 3 consecutive clean adversary passes (no CRITICAL/HIGH). PG-398-4 codified (worktree-path class, 2nd recurrence from PG-388-4).
+
+F6 PASS — mutation testing 100% (3/3 viable mutants caught, 0 surviving). Kani + fuzz: JUSTIFIED-SKIP (no new unsafe code, no new numeric boundary operations). `cargo audit`: 0 vulnerabilities. `cargo deny`: clean. No new dependencies introduced. Full regression: CLEAN (modulo pre-existing `multi_cloudid_disambiguation` macOS-keychain flake, unrelated to #398).
+
+F7 PASS — all 5 dimensions PASS. Spec: BC-3.4.012/013/014 + VP-398-001..006 in corpus; both spec guards exit 0. Test: 23 test deliverables present. Implementation: feature code on develop @ b49f2fd. Verification: 6 VPs all PASS. Holdout: no new holdout scenarios introduced (none required). Regression: PASS. MAXIMUM_VIABLE_REFINEMENT reached. Human authorized cycle-close 2026-05-22.
+
+Disposition: PR #399 squash-merged to develop @ b49f2fd; issue #398 CLOSED. Ships with next batched develop→main release (no standalone release cut). Follow-up #400 filed for TH-398-1..4 + PG-398-1..5 (non-blocking maintenance sweep). Lessons L-398-01..05 codified. CYCLE CONVERGED & CLOSED.
+
+### Issue #396 — F4 Delta Implementation COMPLETE (2026-05-23)
+
+F2 adversarial spec review: 9 passes total, 3/3 CLEAN (passes 7/8/9). Feature: `jr issue edit --field NAME=VALUE` (arbitrary custom fields incl. JSM Urgency/Impact via platform PUT/editmeta-driven resolution + new per-profile `fields.json` cache; edit side only — create side shipped in S-288-pr4). 3 new BCs: BC-3.4.015 (editmeta-driven field resolution), BC-3.4.016 (type coercion + validation), BC-3.4.017 (fields.json per-profile cache). 12 VPs: VP-396-001..012. bc-3: 100→103 BCs; canonical total: 580→583. `check-bc-cumulative-counts.sh` extended with Surface H (bc-N file footer) during pass 2. Fresh-context consistency audit verdict: CONSISTENT (4 minor gaps found + fixed). Both spec-count guard scripts exit 0. F1 gate decisions: flag-overlap exits 64; v1 type coverage = string/number/option/date/datetime/user (array + CMDB rejected); single-key only. Request-Type-change: declared non-goal (JSDCLOUD-4609). F2 PASSED (human-approved 2026-05-22). F3 PASSED (human-approved 2026-05-22) — S-396 created: 18 ACs, 34 test deliverables, 8 SP, HIGH criticality, tdd strategy, depends_on S-398 (already delivered). STORY-INDEX total_stories 45→46. Artifacts: `.factory/phase-f1-delta-analysis/issue-396/`, `.factory/phase-f2-spec-evolution/adversarial-396-pass-1..9.md`, `prd-delta-396.md`, `verification-delta-396.md`, `consistency-audit-396.md`, `.factory/stories/S-396-issue-edit-field-flag.md`.
+
+F4 Delta Implementation COMPLETE (2026-05-23): PR #401 squash-merged @ 2f61566; issue #396 auto-closed. Per-story adversarial convergence: 5 passes, CONVERGED at passes 3/4/5 (3 consecutive CLEAN). Trajectory: 4 HIGH + 7 MED → 1 MED → CLEAN×3. Copilot review cycle: R1 3 findings (all fixed); R2 4 findings (2 fixed in-PR, 1 REFUTED research-backed, 1 DEFERRED with rationale); R3 = 0 inline comments → COPILOT-CONVERGED. All 7 review threads resolved. CI on final commit `f81fe66`: 10/10 pass including mutation testing. Test count: 44 total (43 integration + 1 cache unit). Feature branch + `ci/issue-396-bc-cumulative-counts-surface-h` branch both deleted. Worktree cleaned. Drift item R2-C4 recorded (test 38 wire-serialization reimplementation; GitHub issue to be filed post-cycle). AWAITING F5 Scoped Adversarial Review.
+
+### Issue #396 — F5 Scoped Adversarial Review CONVERGED (2026-05-25)
+
+4 passes total. Convergence at passes 2/3/4 (3 consecutive CLEAN). Trajectory: 1→0→0→0 (HIGH count per pass). Pass 1 NOT-CLEAN: 1 HIGH (silent-drop of `--label` + `--field` on platform non-JSM path; missing EC-3.4.017-13). Passes 2/3/4 CLEAN: 4 LOW observations each (pre-existing/cosmetic; recorded as drift items DI-396-F5-1/2/3/4). FIX-F5-001 resolved: PR #406 squash-merged @ `699a5fd` (develop, 2026-05-25); EC-3.4.017-13 added to bc-3-issue-write.md; factory-artifacts spec commit `9e61c05`. AWAITING F6.
+
+Full pass reports: `.factory/phase-f5-adversarial/issue-396/`.
+
+### Issue #407 — F2 Adversarial Spec Review CONVERGED (2026-05-25)
+
+4 passes total. Convergence at passes 2/3/4 (3 consecutive CLEAN). Trajectory: 7→2→1→2 (all LOW severity, no CRITICAL/HIGH/MEDIUM). Pass 1: 7 LOW findings (trace frontmatter gap, invariant wording, cross-ref language, minor structural items). Passes 2–4 CLEAN. Fresh-context consistency audit: CONSISTENT (1 LOW perimeter gap — missing trace frontmatter entry — found and fixed). F2 net changes: EC-3.4.017-14 added to BC-3.4.017 documenting the structural meta-test mechanism (include_str! source-text parsing); BC-3.4.017 invariant 2 updated with cross-reference. 0 new BCs. 0 new VPs. BC counts: 583 total / bc-3: 103. All 3 spec guards exit 0. Frontmatter dates advanced 2026-05-25. AWAITING F2 human gate.
+
+Artifacts: `.factory/phase-f1-delta-analysis/issue-407/`, `.factory/phase-f1-delta-analysis/affected-files-407.txt`, `.factory/phase-f2-spec-evolution/prd-delta-407.md`, `adversarial-407-pass-1..4.md`, `consistency-audit-407.md`.
+
+### Issue #407 — F5 Scoped Adversarial Review CONVERGED (2026-05-25)
+
+3 passes total. Convergence at passes 1/2/3 (3 consecutive CLEAN). Trajectory: 4→0→0 (LOW observation count per pass). No CRITICAL/HIGH/MEDIUM at any pass. No fix-PRs needed — implementation passed clean from the start. Pass 1: 4 LOW informational observations (O-1: stale code-comment line citation in test_343 — routed to #408; O-2: stale spec line citation in EC-3.4.017-10 — routed to #408; O-3: single-line-only extractor fragility with R2 pin as safety net — intentional; O-4: 12/12 coverage positive confirmation). Passes 2/3: 0 findings (novelty: NONE). Spec fidelity high; meta-test (EC-3.4.017-14) mechanically enforces BC-3.4.017 invariant 2; bidirectional test coverage 12/12. AWAITING F6.
+
+Full pass reports: `.factory/phase-f5-adversarial/issue-407/`.
+
+### Phase 5-adv — Adversarial Refinement
+Not started.
+
 **Pattern for test-only PRs:** Based on PRs #353 (0 rounds of adversarial), #354 (2 rounds docs-only), #358 (5 rounds — test mechanics): test-only PRs tend toward fast convergence but are NOT immune to doc-fallout. When test code contains narration-style comments describing implementation strategy (Strategy:, Logic:, Algorithm:), those comments must be audited the same way as production doc comments when the behavior they describe changes.

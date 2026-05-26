@@ -3129,3 +3129,118 @@ Feature Mode Phase F4 (Delta Implementation) for story S-388 (cross-hierarchy `e
 | Step | Agent | Status | Output |
 |------|-------|--------|--------|
 | #388 F4 COMPLETE — state update | state-manager | complete | STORY-INDEX S-388 → completed. STATE.md Phase Progress row + Open Issues Tracker #388 → CLOSED. Session checkpoint archived + replaced. factory-artifacts committed + pushed. |
+
+---
+
+## Extracted from STATE.md Phase Progress on 2026-05-26 (compact-state run)
+
+The following are full per-row narratives from the STATE.md Phase Progress table, extracted to keep STATE.md under 200 lines. The Phase Progress table in STATE.md retains a slim one-line-per-row format; full history is preserved here.
+
+### 3-feature-#110-pr2
+**MERGED** — PR #348 @ e480ff2; closes #110. F5 CONVERGED + F6 + F7. Trajectory: 12→5→0→0→0.
+
+### 3-feature-test-hygiene
+**MERGED** — PR #351 @ 3216ec2; closes #339+#344. Trajectory: 2→1→0.
+
+### 3-feature-docs-cleanup
+**MERGED** — PR #352 @ 57cc0ae; closes #337+#341+#347. Trajectory: 3→0.
+
+### 3-feature-bulk-max-keys-338
+**MERGED** — PR #353 @ 7fbf14d; closes #338. Trajectory: 0.
+
+### 3-feature-labels-doc-342
+**MERGED** — PR #354 @ 4e14849; closes #342; docs-only. Trajectory: 1→1→0.
+
+### 3-feature-task-id-validation-332
+**MERGED** — PR #355 MERGED @ 448c568 (2026-05-11T17:32:05Z); closes #332; trajectory 3→1→0.
+
+### 3-feature-sanitize-errors-334
+**MERGED** — PR #356 MERGED @ 9acf01d (chore/sanitize-errors-334; closes #334; CWE-117 sanitize_for_stderr; 19 rounds; trajectory →0; CI 8/8 green; merged 2026-05-12T01:37:46Z). Trajectory: 4→1→2→2→3→2→3→2→2→1→1→2→1→1→2→3→1→1→0.
+
+### 3-feature-release-gate-jr-base-url-335
+**MERGED** — PR #357 MERGED @ d208a6d (squash: "chore(security): release-gate JR_BASE_URL to prevent token leak (#335) (#357)"; closes #335; merged 2026-05-12T03:03:12Z; 2 rounds; trajectory 3→0; fastest convergence cycle-001; doc-fallout lesson applied: CLAUDE.md updated in same commit as fix).
+
+### 3-feature-edit-field-categorization-343
+**MERGED** — PR #358 MERGED @ 561217b (squash: "chore(test): assert every IssueCommand::Edit field is categorized (#343) (#358)"; closes #343; 5 rounds; trajectory 1→1→2→1-FP→0; merged 2026-05-12).
+
+### 3-feature-bulk-deadline-clamp-333
+**MERGED** — PR #360 MERGED @ 1ffc332 (squash: "fix(bulk): clamp 429-retry + outer-loop sleep by caller deadline (closes #333) (#360)"; closes #333; full F1-F7 lifecycle; **F5 6-pass adversarial CONVERGED** 14→7→8→2→2→2 (3 consecutive CLEAN); Copilot R1 = 0 inline; merged 2026-05-12T20:35:12Z).
+
+### 3-feature-search-issue-keys-350
+**MERGED** — PR #362 MERGED @ 8010445 (squash: "feat(bulk): add search_issue_keys lightweight API for JQL bulk-edit selection (closes #350)"; closes #350; F5 11-pass adversarial CONVERGED; Copilot R3=0; merged 2026-05-13T17:51:09Z). Trajectory: 4→0→5→5→3→5→2→1→0→0→0.
+
+### 3-feature-search-issue-keys-350-spec-followup
+**MERGED** — PR #363 MERGED @ 3acd07f (squash: "docs(spec): backport has_more guard-abort trigger to public spec rustdoc snippet (PR #362 follow-up)"; 8/8 CI green; Copilot R1=0 findings; closes post-merge doc-fallout gap detected on PR #362).
+
+### 3-feature-search-warning-citation-rebind-361
+**MERGED** — PR #364 MERGED @ b8a87c5 (squash: "chore(search): rebind repeated-cursor warning to JRACLOUD-95368 (closes #361) (#364)"; rebinds JRACLOUD-94632 citation to JRACLOUD-95368; fixes has_more asymmetry in search_issues; adds test_search_issue_keys_repeated_cursor_abort_does_not_dedupe; updates spec with citation + per-CLI carve-out bullets; 11+ Copilot rounds; closes #361). F5 CONVERGED ~10 Copilot rounds →0.
+
+### 3-feature-claude-md-doc-followup-364
+**MERGED** — PR #366 MERGED @ ad6b979 (squash: "docs(claude-md): codify JRACLOUD-95368 attribution + citation-validation discipline (PR #364 follow-up) (#366)"; adds Gotcha entry for JRACLOUD-95368 + AI Agent Note for citation discipline; Copilot R1=0 findings). R1=0.
+
+### 3-feature-search-issue-keys-dedupe-365
+**MERGED — PR #367 @ e193c16 (squash); closes #365; full F1-F7 lifecycle CONVERGED in single cycle.** F1d: 17 passes (R1: P1-P11 CONVERGED v0.1.8; R2: P12-P17 CONVERGED v0.1.12). F5: 4 passes (adversary 3-clean + code-reviewer CONVERGENCE_REACHED + security LOW-RISK APPROVE). F6: 5 Copilot rounds (R2 O(N²)→O(N) algorithmic fix; R3-R4 doc cascade; R5 clean). Merged 2026-05-15T17:51:09Z. Trajectory: F1d R1: 0/4/2→…→0→0→0 (11p) | F1d R2: 0/0/3→0/6/0→1B/2/0→0→0/0/2→0 (6p) | F5: →→→clean×3 | F6: 5R→clean.
+
+### 3-chore-pg365-1-bc-trace-cleanup
+**MERGED** — PR #369 @ 6ca9587 (squash); resolves PG-365-1 Drift Item from cycle #365. Gate: MERGED — 7 Copilot rounds, 9 valid findings. Trajectory: R1=1 R2=1 R3=1 R4=1 R5=3 R6=2 R7=0.
+
+### 3-feature-340-bulk-poll-task-id-pin
+**MERGED** — PR #370 @ 394dc25 (squash); closes #340; F1-F7 full cycle CONVERGED in single delivery. Gate: MERGED — 5 adv passes (0/0 trajectory), 3 CLEAN; Copilot R1=0; CI 9/9 green. Trajectory: 8→5→3-obs→7→4 (BLOCKER+CONCERN: 0 every pass).
+
+### 3-feature-345-label-coalesce-extract
+**MERGED** — PR #371 @ bb352ea (squash, admin); closes #345; F1-F7 full cycle CONVERGED. Gate: MERGED — 6 adv passes (3 CLEAN); 3 Copilot cycles + 1 convergence batch; 17 threads resolved; CI 9/9 green. Trajectory: 0/1/6 → 0/2/3 → 0/2/2 → 0/0/0 → 0/0/0 → 0/0/0 (3 consecutive CLEAN).
+
+### 3-feature-346-cargo-mutants-ci
+**MERGED** — PR #373 @ d909e65 (2026-05-16); closes #346. 8 adv passes, 5 fix rounds, 3 CLEAN; trajectory 0/6/14→2/6/4→0/3/3→0/2/4→2/3/3(1 REFUTED)→0/0/3→0/0/0→0/0/0. Copilot R1=APPROVE; CI 10/10 green. Follow-up #372 filed for partial-baseline completion.
+
+### 3-feature-jsm-request-types-288
+**CLOSED — issue #288 FULLY CONVERGED (2026-05-19).** F1d CONVERGED 3/3 at pass-10; F3 story decomposition: 3 stories (pr1-api/pr2-cli/pr4-dispatch). Wave 1 MERGED PR #379 @ 0f219eb (2026-05-18). Wave 2 MERGED PR #380 @ 9d0b72c (2026-05-19). Wave 3 MERGED PR #381 @ 95232555 (2026-05-19T12:55:29Z): 9 adv passes (1 invalid + 1 retry + 7 substantive), 3/3 CLEAN (passes 07/08/09), 28 invariants verified in final pass. Issue #288 auto-closed. Retrospective audit 2026-05-19: PASS (0 REFUTED, 11 CONFIRMED, 1 PARTIAL no-action, 1 INCONCLUSIVE already filed). 4 follow-ups filed (#382-#385). F5/F6/F7 substantively satisfied by per-wave convergence; formal epic-level reruns waived based on retrospective audit (PASS, 0 REFUTED, 11 CONFIRMED, 1 PARTIAL no-action, 1 INCONCLUSIVE already filed). Lessons L-288-pr4-01..06 codified. Gate: CLOSED — retrospective audit PASS; 4 follow-ups filed (#382-#385). Trajectory: pr4-dispatch adv: 9 passes, 3/3 CLEAN (passes 07/08/09), 28 invariants final pass.
+
+### issue-382 (quick-dev)
+**MERGED — PR #389 @ b1c863e (2026-05-19).** F1 + F1d CONVERGED 3/3 (8 passes). F4 per-story adversary CONVERGED 3/3. Copilot CLEAN (0 inline). CI 10/10 green including mutation testing (5min). Issue #382 auto-closed. Gate: MERGED — PR #389 @ b1c863e; issue #382 closed. Trajectory: F1d: 8 passes, 3/3 CLEAN (passes 06/07/08). F4 adv: 3 passes, 3/3 CLEAN. pr-reviewer: APPROVE (0 blocking). Copilot: COMMENTED (0 inline).
+
+### issue-383 (F3 standalone)
+**MERGED — PR #390 @ 25f7211 (2026-05-19).** F2 CONVERGED 11 adversary passes. F4 per-story adversary CONVERGED 3/3 (pass-01 CLEAN, pass-02-retry CLEAN, pass-03 CLEAN). Copilot COMMENTED (0 inline). CI 10/10 GREEN. pr-reviewer APPROVE 1 cycle (3 non-blocking). Issue #383 auto-closed. 3 deferred follow-up items logged (DEFER-383-1/2/3). Gate: MERGED — PR #390 @ 25f7211; issue #383 closed. Trajectory: F2 adv: 11 passes, 3/3 CLEAN (passes 09/10/11). F4 adv: 3 passes, 3/3 CLEAN. pr-reviewer: APPROVE (0 blocking). Copilot: COMMENTED (0 inline).
+
+### issue-392 (F3 standalone)
+**DELIVERED — PR #393 MERGED @ 0be2e3a (2026-05-20).** `scripts/check-bc-cumulative-counts.sh` (DRIFT-002) live in CI. 7-fixture self-test harness. DRIFT-BC2-PROSE fixed (bc-2 prose 92→93). DEFER-383-3 resolved. Per-story adversary CONVERGED 3/3. Copilot 4 rounds (19 round-1 comments → 0 round 4). CI 10/10 GREEN. Issue #392 auto-closed. Lessons L-392-01..05 codified. Gate: DELIVERED — PR #393 @ 0be2e3a. Trajectory: adv: 3/3 CLEAN.
+
+### issue-384 (F1–F7 full cycle)
+**CONVERGED + CYCLE CLOSED — PR #394 MERGED @ b36b291 (2026-05-20); F7 closed 2026-05-20.** JSM 401 auth-aware error hints. F1+F2: 4 new BCs (BC-3.8.014/015, BC-X.8.006/007), 3 modified (BC-3.8.001/009, BC-X.3.002), H-NEW-JSM-RT-003 revised, spec v1.1.0 (573 BCs). CRITICAL OAuth control-flow defect caught + corrected in F2. F3 implementation: is_oauth_auth() predicate + API_TOKEN_EXPIRY_HINT + gated map_err in handle_jsm_create + require_service_desk; 4 new integration tests. F4 per-story adversary CONVERGED 3/3 CLEAN. Copilot 3 cycles →0. CI green. Issue #384 auto-closed. F7 traceability: 4 BCs ↔ 5 named tests in tests/issue_create_jsm.rs + inline unit tests ↔ 4-file implementation; all 3 spec guards exit 0. PG-384-1/2 recorded as justified deferrals. Gate: F7 CLOSED — F1–F7 COMPLETE; 3 spec guards PASS. Trajectory: F2 adv: 3/3 CLEAN. F4 adv: 3/3 CLEAN. Copilot: 3 cycles →0.
+
+### issue-388 (Feature Mode)
+**ALL PHASES COMPLETE — CYCLE CLOSED (human-authorized F7 2026-05-21).** PR #397 @ e0ea24b; issue #388 closed. F5: 2 CLEAN passes (PG-388-4 codified). F6: mutation 100% (7/7 viable), cargo-deny + audit PASS, regression 1398/0. F7: all 5 dimensions PASS. PG-388-1/2/3/4 justified deferrals. Release disposition: ships with next batched develop→main release (not a standalone release). Gate: F1–F7 ALL COMPLETE — CYCLE CLOSED. Trajectory: F2 adv: 10 passes, 3/3 CLEAN (P8/P9/P10). F4 adv: 4 passes, 3 CLEAN (P2/P3/P4). F5: 2 CLEAN. F6: 100% mutation kill.
+
+### issue-398 (Feature Mode)
+**ALL PHASES COMPLETE — CYCLE CLOSED (human-authorized F7 2026-05-22).** PR #399 @ b49f2fd; issue #398 CLOSED. F5: CONVERGED — 3 consecutive clean passes (no CRITICAL/HIGH). F6: PASS — mutation 100% (3/3 caught, zero surviving), Kani + fuzz JUSTIFIED-SKIP, cargo audit 0 vulns, cargo deny clean, no new dependencies, full regression clean (modulo pre-existing `multi_cloudid_disambiguation` macOS-keychain flake). F7: all 5 dimensions PASS (Spec, Test, Implementation, Verification, Holdout). MAXIMUM_VIABLE_REFINEMENT reached. Ships with next batched develop→main release (no release cut now). Follow-up: #400 filed for TH-398-1..4 + PG-398-1..5. Gate: F1–F7 ALL COMPLETE — CYCLE CLOSED. Trajectory: F2 adv: 16 passes, 3/3 CLEAN (P14/15/16). F4 adv: 3/3 CLEAN (1 false-alarm PG-398-4 discarded). F5: 3 consecutive clean. F6: 100% mutation kill. F7: 5/5 PASS.
+
+### issue-396 (Feature Mode)
+**ALL PHASES COMPLETE — CYCLE CLOSED (human-authorized F7 2026-05-25).** PR #401 @ 2f61566 + FIX-F5-001 PR #406 @ 699a5fd; issue #396 CLOSED. F5 CONVERGED: 4 passes, passes 2/3/4 CLEAN; pass 1 HIGH (silent-drop `--label`+`--field`) → FIX-F5-001. F6 PASS: mutation 100% (15/15 viable), cargo-deny + audit 0 vulns, regression 1459/0. F7: all 5 dimensions PASS, MAXIMUM_VIABLE_REFINEMENT_REACHED. Follow-ups #407–#410 filed. Ships with next batched develop→main release. Gate: F1–F7 ALL COMPLETE — CYCLE CLOSED. Trajectory: F2 adv: 9 passes, 3/3 CLEAN (P7/P8/P9). F4 adv: 5 passes, 3/3 CLEAN (P3/P4/P5). F5 adv: 4 passes, 3/3 CLEAN (P2/P3/P4). F6: 100% mutation kill. F7: 5/5 PASS.
+
+### issue-396-FIX-F5-001
+**CLOSED — PR #406 squash-merged @ 699a5fd (2026-05-25); EC-3.4.017-13 committed factory-artifacts @ 9e61c05.** F5 pass 1 found 1 HIGH (silent-drop of `--label` + `--field` on platform non-JSM path). Fix: `--field` added to `--label` conflict block; exit 64 guard + integration test. Spec amendment: EC-3.4.017-13 in bc-3-issue-write.md. Gate: CLOSED/DELIVERED. Trajectory: F5 pass 1: 1 HIGH (silent-drop). Fix-PR #406 @ 699a5fd. Spec @ 9e61c05.
+
+### issue-407 (Feature Mode)
+**ALL PHASES COMPLETE — CYCLE CLOSED (human-authorized F7 2026-05-25).** PR #411 @ 6eb2535; issue #407 CLOSED. F6 PASS: mutation 100% (1/1 in-diff), cargo-audit 0 vulns, cargo-deny clean, regression 1483/0, CI green. F7: all 5 dimensions PASS. MAXIMUM_VIABLE_REFINEMENT_REACHED (12 iterations, trajectory monotonically →0). Ships with next batched develop→main release. DI-396-F5-1 + DI-396-F5-2 RESOLVED. O-1/O-2 pre-existing → #408. Gate: F1–F7 ALL COMPLETE — CYCLE CLOSED. Trajectory: F2 adv: 4 passes, 3/3 CLEAN (P2/P3/P4). F5: 4→0→0 (3 passes, 3/3 CLEAN). F6: 100% mutation kill (1/1). F7: 5/5 PASS.
+
+### issue-327 (Dependabot / Feature Mode)
+**ALL PHASES COMPLETE — CYCLE CONVERGED (F7 2026-05-26).** PR #413 @ 375c0f91; Dependabot PR #327 auto-closed. F6 PASS: mutation 100% (2/2 on generate_state), cargo-audit 0 vulns, cargo-deny exit 0 (empirical — no skip entries needed), regression 1483/0, CI green. F7: all 6 dimensions PASS (Behavioral/Test/Spec/Architectural/Implementation/Regression). MAXIMUM_VIABLE_REFINEMENT_REACHED. 4 PG items (PG-327-1..4) as justified deferrals. L-327-1/2/3 codified in lessons.md. Ships with next batched develop→main release. Gate: F1–F7 ALL COMPLETE — CYCLE CONVERGED. Trajectory: F2: BC-1.5.035 title refresh; 7 spec sites; 19/19 consistency PASS. F5 adv: HIGH-FP→0→0 (3 passes, 3/3 CLEAN). F6: 100% mutation kill (2/2). F7: 6/6 PASS.
+
+### issue-385 (F1–F7)
+**F1–F7 COMPLETE — PR #395 merged f7fc8c3, issue CLOSED 2026-05-20.** F1 (enhancement, standard scope). F2: 2 new BCs (BC-3.8.016/017), 3 modified (BC-3.8.002/010/011), 2 holdouts (H-NEW-JSM-RT-006/007), spec v1.2.0 (575 BCs), adv 3/3 CLEAN (19 passes). F3: S-385 decomposed (1 story, 5 SP, 7 ACs), adv 3/3 CLEAN (12 passes). F4: PR #395 delivered, Red Gate verified, all 4 O-08 fixes in handle_jsm_create. F7: traceability VERIFIED (4 fixes → 5 BCs → 7 test deliverables → merged code @ f7fc8c3). 7 process-gaps PG-385-1..7 JUSTIFIED DEFERRALS. Cycle CLOSED. Gate: F7 CLOSED — F1–F7 COMPLETE; all 3 spec guards PASS. Trajectory: F2: 19 passes, 3/3 CLEAN | F3 adv: 12 passes, 3/3 CLEAN | F4 adv: 3/3 CLEAN | Copilot: 3 rounds →0.
+
+---
+
+## Extracted from STATE.md Post-Cycle Housekeeping on 2026-05-26 (compact-state run)
+
+### Post-Cycle Housekeeping (2026-05-19)
+
+Events after issue #288 epic closeout (factory-artifacts @ 7dbbfed):
+
+- **BC-3.8.011 Trace numeric-count drift fixed** — commit `28e4603` on factory-artifacts (pushed to origin). Title: `fix(spec): remove numeric test count from BC-3.8.011 Trace (PG-365-1)`. File: `.factory/specs/prd/bc-3-issue-write.md:723`. Replaced "(5 new warning-emission tests, one per flag)" with "(per-flag warning-emission integration tests, one assertion per platform-only flag)". Caught by Spec Guards CI on PR #386; pre-existing drift introduced by PR #381 (issue #288 pr4). **This fix unblocked Spec Guards CI for all future PRs against develop.**
+
+- **PR #386 MERGED to develop** — merge commit `acdf212` (2026-05-19T15:07:31Z). Title: `chore: remove docs/demo-evidence/ and gitignore future demos`. Branch: `chore/remove-demo-evidence` (deleted post-merge). Scope: 505 files deleted, ~85 MB freed at HEAD (not from git history — see #387). Changes: removed docs/demo-evidence/ tree (35 story directories); added docs/demo-evidence/ to .gitignore; fixed broken cargo-mutants-policy.md reference. CI: 10/10 green (after Spec Guards rerun via 28e4603 fix above). Copilot review N/A (exceeded 300-file limit).
+
+- **Issue #387 FILED** — history rewrite tracking. URL: https://github.com/Zious11/jira-cli/issues/387. Title: `chore: rewrite git history to remove docs/demo-evidence/ blobs (deferred from #386)`. Severity: LOW (housekeeping). Tracks destructive history rewrite to reclaim ~80 MB from `.git/objects/`. Full prerequisites + blast-radius analysis included in issue body (force-push to protected branches required, all clones invalidated, SHA citations dangle). Current repo size ~105 MB; deferred pending explicit approval for protected-branch force-push.
+
+- **Process improvement note (PG-365-1 discipline):** Any PR touching `.factory/specs/prd/*.md` BC files should run `scripts/check-bc-no-numeric-test-counts.sh` locally before creating the PR. Would have caught the BC-3.8.011 Trace drift at PR #381 time instead of CI failure on PR #386. Add to pre-PR-creation checklist for BC file edits.
