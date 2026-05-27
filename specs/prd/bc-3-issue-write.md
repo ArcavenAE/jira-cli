@@ -3,7 +3,7 @@ context: bc-3
 title: "Issue Write (create/edit/move/assign/comment/link/open/remote-link)"
 total_bcs: 103   # cumulative claim (incl. range-collapsed); definitional_count below is individually-bodied headings
 definitional_count: 74   # count of `#### BC-` headings in this file
-last_updated: 2026-05-25
+last_updated: 2026-05-27
 source_pass: 3
 trace: |
   - L2: .factory/specs/domain-spec/bc-03-issue-write.md
@@ -58,6 +58,7 @@ trace: |
   - F2 amended (2026-05-22, adversary pass 1): BC-3.4.017 — invariant 1 Gate B-before-A ordering; EC-3.4.017-2 JQL-multi clarification; EC-3.4.017-10 same-field two-pairs; EC-3.4.017-11 type vs issuetype; EC-3.4.017-12 simultaneous Gate A+B; Gate A postcondition split; LOW-001 EC ref corrected; VP-396-008 added
   - F2 amended (2026-05-22, adversary pass 3): BC-3.4.015 — Step 3b (operations/"set" check + exit 64 hint) added; EC-3.4.015-19 (resolution failure under --dry-run exits 64); EC-3.4.015-20 (operations lacks "set"); EC-3.4.015-18 exit code pinned to 0; VP-396-011 (user/date/datetime wire) and VP-396-012 (operations check) added; VP-396-008 one-liner updated
   - F2 modified (2026-05-25): BC-3.4.017 — EC-3.4.017-14 added (mechanical enforcement meta-test for invariant 2 completeness); invariant 2 cross-reference added (issue #407 F2)
+  - F2 amended (2026-05-27): BC-3.4.015 — invariant 5 rewritten to describe two-stage i64-first strategy (no behavioral change for previously-correct inputs); EC-3.4.015-4b added (i64-boundary regression pin: "9223372036854775808" and "-9223372036854775809" MUST emit f64 wire form) (issue #421)
 ---
 
 # BC-3 — Issue Write
@@ -1086,8 +1087,13 @@ not be flagged as a gap by reviewers.
 4. On PUT failure (non-204 response), the constructed `changed_fields` entries for
    `--field` are discarded (same invariant as BC-3.4.012 invariant 6 — map emitted
    only post-204).
-5. The `number` type serialization reuses `f64` parsing. If `VALUE` parses successfully
-   as `f64`, the wire value is the JSON number. If not, exit 64 before the PUT.
+5. The `number` type serialization uses i64 parse first; falls back to f64 for decimals,
+   scientific notation, and out-of-i64-range integers. Wire value is i64 for exact integer
+   inputs (Stage 1), f64 for non-integer inputs OR integer inputs whose f64 representation
+   rounds outside the safe i64 range (Stage 2 with strict bounds: `parsed > (i64::MIN as f64)`
+   AND `parsed < (i64::MAX as f64)`). NaN and Inf inputs are rejected upstream. If `VALUE`
+   cannot be parsed as either i64 or f64, exit 64 before the PUT. See EC-3.4.015-4a
+   (i64 wire form for integer inputs) and EC-3.4.015-4b (f64 wire form for i64-boundary inputs).
 6. **Field-list cache contract** (mirrors `CmdbFieldsCache` / `cmdb_fields.json` pattern
    in `src/cache.rs`): the `fields.json` cache stores `Vec<(String, String)>` — `(id, name)`
    tuples — under `~/.cache/jr/v1/<profile>/fields.json`, 7-day TTL, per-profile. The
@@ -1143,6 +1149,23 @@ not be flagged as a gap by reviewers.
   (returns `Option`; error if NaN/Inf → exit 64). VP-396-010 pins this invariant.
   `5e3` round-trips as `5000` (serde_json normalizes scientific notation to integer form
   when the value is a whole number). `5.5` serializes as `5.5`.
+- EC-3.4.015-4b: Number field with `VALUE` representing an integer outside the i64 range —
+  e.g., `"9223372036854775808"` (i64::MAX + 1 = 2^63), or `"-9223372036854775809"` (i64::MIN - 1) —
+  MUST emit the f64 JSON wire form, NOT a silently-saturated i64.
+
+  Implementation rationale: `i64::MAX as f64` rounds UP to `9223372036854775808.0` (2^63) because
+  f64 cannot exactly represent every integer above 2^53. A naive predicate `parsed <= i64::MAX as f64`
+  passes the boundary value, and the subsequent `as i64` cast saturates silently (Rust 1.45+ behavior).
+  The two-stage parser eliminates this: Stage 1 (`value.parse::<i64>()`) rejects out-of-range integers
+  cleanly; Stage 2 (f64 fallback) uses strict inequalities (`>` lower, `<` upper) on both bounds so
+  the boundary cannot collide.
+
+  Test pins (regression):
+  - `"9223372036854775808"` → f64 wire (NOT i64 `9223372036854775807` saturated)
+  - `"-9223372036854775809"` → f64 wire (NOT i64 `-9223372036854775808` saturated)
+
+  Source: issue #421 (filed from Copilot review on PR #418); Perplexity-validated against
+  Rust language reference + f64 docs 2026-05-27.
 - EC-3.4.015-5: Field has `schema.type: "array"` or `schema.type: "any"` → exit 64
   with message naming the unsupported type and suggesting the Jira UI or a future
   `--field` v2 for multi-value support.
@@ -2205,4 +2228,4 @@ Sources: `src/cli/issue/snapshots/jr__cli__issue__json_output__tests__*.snap`; B
 
 ## Total BCs in this file: 74 individually-bodied (cumulative 103 incl. range-collapsed; see BC-INDEX.md)
 
-_Last updated 2026-05-25 (issue #407 F2): +EC-3.4.017-14 — mechanical enforcement meta-test for BC-3.4.017 invariant 2 (conflict block completeness via `test_label_conflict_block_lists_every_relevant_flag`); BC-3.4.017 invariant 2 cross-reference added; no BC count changes (103/74 unchanged). Previous update (2026-05-22 issue #396 F2): +3 BCs (BC-3.4.015..017) — BC-3.4.015 (`issue edit --field` string/number/date/datetime/user field single-key path, with editmeta validation, fields.json cache, and dry-run invariants), BC-3.4.016 (`issue edit --field` single-select `option` field), BC-3.4.017 (`--field` multi-key/`--jql` rejection Gate A and flag-overlap Gate B); Section 3.4 header updated to 17 contracts. Previous update (2026-05-21 issue #398 F2): +3 BCs (BC-3.4.012..014) — BC-3.4.012 (issue edit table-mode success echo), BC-3.4.013 (issue edit JSON-mode success echo with changed_fields), BC-3.4.014 (issue create table-mode all-fields echo (broadened from team-only at the 2026-05-22 human-gate to mirror BC-3.4.012)); BC-3.4.003 Success output cross-reference added; Section 3.4 header updated to 14 contracts. Previous update (2026-05-20 issue #388): +2 BCs (BC-3.4.010..011): BC-3.4.010 (cross-hierarchy `edit --type` 400 → CROSS_HIERARCHY_HINT citing JRACLOUD-27893) and BC-3.4.011 (same-hierarchy/indeterminate `edit --type` 400 → typo hint or raw error, no JRACLOUD-27893 hint) added in F2 delta (issue #388). BC-3.4.003 Errors cross-reference updated (annotation only, no behavioral change). Section 3.4 header updated to 11 contracts. Previous update (2026-05-20 issue #385): +2 BCs (BC-3.8.016..017); BC-3.8.002/010/011 modified._
+_Last updated 2026-05-27 (issue #421 F2): BC-3.4.015 invariant 5 rewritten (two-stage i64-first strategy); EC-3.4.015-4b added (i64-boundary regression pin); no BC count changes (103/74 unchanged). Previous update (2026-05-25 issue #407 F2): +EC-3.4.017-14 — mechanical enforcement meta-test for BC-3.4.017 invariant 2 (conflict block completeness via `test_label_conflict_block_lists_every_relevant_flag`); BC-3.4.017 invariant 2 cross-reference added; no BC count changes (103/74 unchanged). Previous update (2026-05-22 issue #396 F2): +3 BCs (BC-3.4.015..017) — BC-3.4.015 (`issue edit --field` string/number/date/datetime/user field single-key path, with editmeta validation, fields.json cache, and dry-run invariants), BC-3.4.016 (`issue edit --field` single-select `option` field), BC-3.4.017 (`--field` multi-key/`--jql` rejection Gate A and flag-overlap Gate B); Section 3.4 header updated to 17 contracts. Previous update (2026-05-21 issue #398 F2): +3 BCs (BC-3.4.012..014) — BC-3.4.012 (issue edit table-mode success echo), BC-3.4.013 (issue edit JSON-mode success echo with changed_fields), BC-3.4.014 (issue create table-mode all-fields echo (broadened from team-only at the 2026-05-22 human-gate to mirror BC-3.4.012)); BC-3.4.003 Success output cross-reference added; Section 3.4 header updated to 14 contracts. Previous update (2026-05-20 issue #388): +2 BCs (BC-3.4.010..011): BC-3.4.010 (cross-hierarchy `edit --type` 400 → CROSS_HIERARCHY_HINT citing JRACLOUD-27893) and BC-3.4.011 (same-hierarchy/indeterminate `edit --type` 400 → typo hint or raw error, no JRACLOUD-27893 hint) added in F2 delta (issue #388). BC-3.4.003 Errors cross-reference updated (annotation only, no behavioral change). Section 3.4 header updated to 11 contracts. Previous update (2026-05-20 issue #385): +2 BCs (BC-3.8.016..017); BC-3.8.002/010/011 modified._
