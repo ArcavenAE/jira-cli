@@ -2109,3 +2109,40 @@ adopt a new formatting convention mid-document) and the Copilot fallback caught 
 minimal cost (one round, one line). No follow-up story created.
 
 _Discovered: S-408 Copilot round 1, 2026-05-27. Status: [codified]._
+
+---
+
+## L-409-1 [codified] Byte-identical refactors surface inherited bugs — extraction PR is a low-stakes place to flag latent issues
+
+**Context (S-409 / issue #409 — 2026-05-27):**
+
+S-409 extracted the existing inline `parsed_number_to_wire_value` conversion logic from
+`src/cli/issue/field_resolve.rs` into a named helper function and replaced tautological
+integration test 38 with 6 discriminating inline unit tests. The production behavior was
+byte-identical; no BC changes were in scope.
+
+During the Copilot review cycle, Copilot caught 2 pre-existing precision bugs at the
+f64→i64 boundary in the extracted helper: edge-case values near `i64::MAX` and `i64::MIN`
+can silently truncate when the f64 representation is not exact. These bugs existed before
+S-409 in the original inline code; the extraction did not introduce them.
+
+The internal pr-reviewer had noticed the boundary behavior but correctly classified it as
+"pre-existing, not introduced by this PR" and did not flag it as a S-409 blocker.
+Perplexity-validation confirmed the technical claims were accurate (f64 can represent
+integers up to 2^53 exactly; beyond that, rounding occurs before the cast). Filed as
+follow-up issue #421 for the next maintenance sweep.
+
+**Why this pattern matters:** Byte-identical refactors that extract a function are an
+inherently low-risk delivery — no behavioral change means no regression risk. This makes
+the extraction PR a natural place to opportunistically surface latent bugs in the
+to-be-extracted block. The extractor can scan for precision/overflow/edge-case
+issues in the original code and either (a) file follow-ups scoped to the next maintenance
+sweep, or (b) include the fix in the refactor scope if the change is trivially contained.
+The cost of surfacing is near-zero; the cost of a silent truncation reaching production
+is non-trivial.
+
+**Disposition:** Opportunistic — when the next refactor lands that extracts an existing
+function, the implementer can scan the block for latent issues and queue them as
+follow-ups or include trivial fixes in scope. No new agent prompt edit this cycle.
+
+_Discovered: S-409 Copilot review, 2026-05-27. Status: [codified]._

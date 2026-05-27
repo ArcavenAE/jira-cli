@@ -122,3 +122,13 @@ _Archived 2026-05-27. Was the active checkpoint at S-408 MERGED. Superseded by S
 | **Date** | 2026-05-27 |
 | **Position** | **S-408 MERGED — cycle closed.** PR #417 merged 2026-05-27 (develop @ d53278a). 5 stale line-anchor citations re-anchored to symbol-form. 1 Copilot cycle (path-prefix inconsistency; fixed bfa333d; re-review clean). Issue #408 auto-closed. Symbol-form citation convention now active in CLAUDE.md. STORY-INDEX v1.4.24. Held Dependabot PRs #403/#404 due 2026-05-31. Open backlog: #210, #331, #368, #372, #387, #400, #409. |
 | **Convergence counter** | S-408 MERGED (CYCLE CLOSED). BC corpus: 583 BCs (unchanged). Story corpus: 50 stories. All feature-mode cycles since Wave 3 CONVERGED. |
+
+---
+
+_Archived 2026-05-27. Was the active checkpoint at S-409 IN-PROGRESS. Superseded by S-409 MERGED checkpoint._
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-05-27 |
+| **Position** | **S-409 IN-PROGRESS — awaiting PR.** Worktree `refactor/S-409-extract-number-wire-helper` off develop @ d53278a. Implementation commit 71dc2d4: extract `parsed_number_to_wire_value` helper (field_resolve.rs) + 6 inline unit tests + delete tautological integration test 38 (tests/issue_edit_field.rs). 2 files, 82 ins / 59 del. No BC changes. STORY-INDEX v1.4.25 (50→51). Open backlog: #210, #331, #368, #372, #387, #400. Held Dependabot PRs #403/#404 due 2026-05-31. |
+| **Convergence counter** | S-409 IN-PROGRESS (commit 71dc2d4; pre-PR). BC corpus: 583 BCs (unchanged). Story corpus: 51 stories. All feature-mode cycles through S-408 CONVERGED. |

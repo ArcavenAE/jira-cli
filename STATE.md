@@ -11,7 +11,7 @@ input-hash: "[live-state]"
 traces_to: ""
 project: jira-cli
 mode: BROWNFIELD
-current_step: "S-408-MERGED-PR417"
+current_step: "S-409-MERGED-PR418"
 current_cycle: "cycle-001"
 dtu_required: false
 phase_2_status: APPROVED
@@ -36,8 +36,8 @@ activation_version: "v0.5.0-dev.7"
 | **Language** | Rust |
 | **Target Workspace** | develop → main |
 | **Started** | 2026-05-04 |
-| **Last Updated** | 2026-05-27 — S-408 MERGED via PR #417 (develop @ d53278a). Symbol-form citation convention now active in CLAUDE.md AI Agent Notes. |
-| **Current Phase** | Phase 3 — TDD Implementation IN PROGRESS — Wave 3 CLOSED (10/10). Feature Mode ongoing. Open backlog: #210, #331, #368, #372, #387, #400, #409. Held Dependabot PRs #403/#404 due 2026-05-31, #368 stale. |
+| **Last Updated** | 2026-05-27 — S-409 MERGED via PR #418 (develop @ 88cf863). Copilot caught 2 pre-existing f64→i64 precision findings; deferred as #421. |
+| **Current Phase** | Phase 3 — TDD Implementation IN PROGRESS — Wave 3 CLOSED (10/10). Feature Mode ongoing. Open backlog: #210, #331, #368, #372, #387, #400, #421. Held Dependabot PRs #403/#404 due 2026-05-31, #368 stale. |
 | **Next Phase** | Phase 4: Holdout Evaluation (not started) |
 | **Activation HEAD** | dea166471e22eff55974d7675593469b37048c5f (v0.5.0-dev.7) |
 
@@ -76,7 +76,7 @@ Goal 1c: **Harden v0.5 + feature delivery** — formalize existing codebase with
 | #327 F7 CONVERGED + CYCLE CLOSED (2026-05-26) | state-manager | complete | F7: all 6 dimensions PASS. Mutation 100% (2/2). Regression 1483/0. PR #413 @ 375c0f91. Dependabot PR #327 auto-closed. 4 PG items justified deferrals. 3 lessons codified (L-327-1/2/3). factory-artifacts committed. |
 | #410 MERGED 2026-05-27 via PR #416 (develop @ 04e019a) | state-manager | complete | S-410: 13 keychain-transitive tests gated behind JR_RUN_KEYRING_TESTS=1 (6 in multi_cloudid_disambiguation.rs + 7 in oauth_refresh_integration.rs). 1 review cycle: pr-reviewer caught F1 audit undercount (11→12 in multi_cloudid), Copilot pass 1 found description count mismatch (5→6/12→13), Copilot pass 2 clean. Issue #410 auto-closed. F1-AUDIT-MISCOUNT-410 codified as drift deferral (see Drift Items). L-410-1 in lessons.md. |
 | #408 MERGED 2026-05-27 via PR #417 (develop @ d53278a) | state-manager | complete | S-408: 5 stale line-anchor citations re-anchored to symbol-form (2 in CLAUDE.md AI Agent Notes, 3 in bc-3-issue-write.md). 1 Copilot review cycle: caught path-prefix inconsistency on line 336 (`create.rs::handle_edit` vs `src/cli/issue/create.rs::handle_edit`); fixed in bfa333d; re-review clean. Symbol-form convention now active. Issue #408 auto-closed. L-408-1 in lessons.md. |
-| #409 F4 implementation IN-PROGRESS — commit 71dc2d4 in worktree S-409; awaiting PR | state-manager | in-progress | S-409 (option 2 from issue body): extract `parsed_number_to_wire_value` helper + replace tautological test 38. 6 new inline unit tests in field_resolve.rs. 2 files changed, 82 ins(+) 59 del(-). Production behavior byte-identical. BC-3.4.015 EC-3.4.015-4a coverage relocated (not modified). |
+| #409 MERGED 2026-05-27 via PR #418 (develop @ 88cf863) | state-manager | complete | S-409: extract `parsed_number_to_wire_value` helper + replace tautological test 38. 6 inline unit tests. 1 Copilot review cycle (caught 2 pre-existing f64→i64 precision findings at bounds check; Perplexity-validated; deferred as #421). Copilot re-review clean. Issue #409 auto-closed. |
 
 ## Decisions Log
 
@@ -103,6 +103,7 @@ Goal 1c: **Harden v0.5 + feature delivery** — formalize existing codebase with
 | DEC-021 | 2026-05-27: S-410 MERGED via PR #416 (develop @ 04e019a). 1 review cycle (Copilot found undercounted F1 audit; followup commit 211265a gated the missed test; description count reconciliation 5→6 / 12→13). F1-AUDIT-MISCOUNT-410 stays in drift register pending codification follow-up. Codified as drift deferral per established PG-NNN precedent (single instance, low recurrence risk). | cycle close | 2026-05-27 | state-manager |
 | DEC-023 | 2026-05-27: S-409 extract `parsed_number_to_wire_value` helper — issue body option 2 (extract + unit-test helper). 6 new inline unit tests in field_resolve.rs cover whole/scientific/fractional/zero/negative/out-of-range cases. Tautological test 38 deleted from tests/issue_edit_field.rs (was reimplementing the production conversion inline 3x). Integration tests 26/27 unchanged. Production behavior byte-identical via helper. Closes #409 on merge. | Tautological tests mask regressions — extracting a named helper and testing it directly gives the assertion real discriminating power. | Feature Mode / #409 | 2026-05-27 | orchestrator |
 | DEC-022 | 2026-05-27: S-408 MERGED via PR #417 (develop @ d53278a). 5 stale line-anchor citations re-anchored to symbol-form (2 in CLAUDE.md AI Agent Notes, 3 in bc-3-issue-write.md). Going-forward convention adopted in CLAUDE.md: prefer symbol-form (`<file>::<function>` or `<file>::<function> § "<comment>"`); ~LINE as fallback; existing bare/range citations cleaned up opportunistically (no mass-sweep). 1 Copilot review cycle (caught path-prefix inconsistency on line 336; fixed in bfa333d; re-review clean). Symbol-form citation convention now active in CLAUDE.md AI Agent Notes section. | Stale line-number anchors silently break on refactors; symbol-form is rename-proof. | Feature Mode / #408 | 2026-05-27 | state-manager |
+| DEC-024 | 2026-05-27: S-409 MERGED via PR #418 (develop @ 88cf863). 1 Copilot review cycle caught 2 pre-existing f64→i64 precision findings at `parsed_number_to_wire_value` bounds check; Perplexity-validated as real-but-tiny; deferred as follow-up issue #421 (out of scope for byte-identical refactor). Copilot re-review (round 2) clean. 6 new inline unit tests for the helper; tautological test 38 deleted. | Byte-identical refactors surface inherited bugs at low cost; opportunistically flag → file follow-up rather than fix in-scope. | Feature Mode / #409 | 2026-05-27 | state-manager |
 | DEC-014 | S-3.07 spec pivot to v2.0.0 (3 corrections: Part A reframe + Part B conditional drop + Part D elevation as confirmed JRACLOUD-94632 bug response) | Perplexity-driven verification on 2026-05-08 found 3 errors in v1: (a) Atlassian Retry-After typical values are 1425-3089 seconds with documented 3600s ceiling, NOT the 86400s extreme used as v1's threat framing — `MAX_RETRY_AFTER_SECS=60` aborts essentially every real-world 429 (still defensible for interactive CLI per RFC 9110 §10.2.3, but story rationale + user error message must reflect reality); (b) Part B's `checked_mul` overflow guard targets the 3-arg `parse_duration` calculator that S-3.10 deletes — the orchestrator's earlier "WV2-SEC-01's 64-byte cap eliminates overflow" reasoning was mathematically false (14-20 digit inputs still overflow u64 within 64 bytes) — correct reason to drop is that S-3.10 deletes the function; drop is conditional via `depends_on: [S-3.10]` + AC-NEW-B sequencing gate, with reinstatement plan if S-3.10 slips; (c) Part D's `/rest/api/3/search/jql` cursor-loop is NOT a defensive nice-to-have — it is a confirmed Jira Cloud bug per JRACLOUD-94632 + JRACLOUD-92049 + JRACLOUD-85546 (also reported in atlassian/atlassian-mcp-server#118 and ankitpokhrel/jira-cli#898) → v2 elevates from KNOWN-GAP source comment to real defensive guard + stderr warning containing literal "JRACLOUD-94632" so users have a copy-pasteable upstream search term. ACs change: drop AC-004/005 (Part B specific); add AC-NEW-B sequencing guard; add AC-NEW-D JRACLOUD content assertion. New risk: R-NEW-S307-1 (silent partial results — failure mode now visible). NFR catalog: NFR-R-NEW-2 row removed (Part B dropped → no longer in scope); NFR-R-F routing flipped from DOCUMENT-AS-IS to DOCUMENT-AS-IS-FIXED (real guard delivered, not just documented). Verification report: `.factory/research/S-3.07-wave3-verification.md`. Story rewrite: `.factory/stories/wave-3/S-3.07-low-nfr-code-fixes-and-search-jql-anti-loop.md` (renamed from `-low-nfr-code-cleanup.md`) at factory-artifacts@898937e. No develop-branch impact. | Phase 3 / Wave 3 | 2026-05-08 | human + research-agent (Perplexity + WebFetch) |
 
 ## Skip Log
@@ -151,7 +152,7 @@ Goal 1c: **Harden v0.5 + feature delivery** — formalize existing codebase with
 
 See `cycles/cycle-001/convergence-trajectory.md` for all per-issue convergence narratives (Phase 1d, Phase 2-adv, Phase 3-adv, issues #288/#382/#383/#384/#385/#396/#398/#407).
 
-Current trajectory summary: S-408 MERGED (PR #417 @ d53278a, 2026-05-27). S-409 IN-PROGRESS (commit 71dc2d4; awaiting PR). BC corpus: 583 BCs (unchanged). Story corpus: 51 stories.
+Current trajectory summary: S-409 MERGED (PR #418 @ 88cf863, 2026-05-27). #421 filed (pre-existing f64→i64 precision bug, LOW, next maintenance sweep). BC corpus: 583 BCs (unchanged). Story corpus: 51 stories.
 
 ## Session Resume Checkpoint
 
@@ -159,8 +160,8 @@ Current trajectory summary: S-408 MERGED (PR #417 @ d53278a, 2026-05-27). S-409 
 | Field | Value |
 |-------|-------|
 | **Date** | 2026-05-27 |
-| **Position** | **S-409 IN-PROGRESS — awaiting PR.** Worktree `refactor/S-409-extract-number-wire-helper` off develop @ d53278a. Implementation commit 71dc2d4: extract `parsed_number_to_wire_value` helper (field_resolve.rs) + 6 inline unit tests + delete tautological integration test 38 (tests/issue_edit_field.rs). 2 files, 82 ins / 59 del. No BC changes. STORY-INDEX v1.4.25 (50→51). Open backlog: #210, #331, #368, #372, #387, #400. Held Dependabot PRs #403/#404 due 2026-05-31. |
-| **Convergence counter** | S-409 IN-PROGRESS (commit 71dc2d4; pre-PR). BC corpus: 583 BCs (unchanged). Story corpus: 51 stories. All feature-mode cycles through S-408 CONVERGED. |
+| **Position** | **S-409 MERGED — cycle closed.** PR #418 merged into develop @ 88cf863. Extract `parsed_number_to_wire_value` helper + 6 inline unit tests + delete tautological test 38. 1 Copilot review cycle: 2 pre-existing f64→i64 precision findings deferred as #421. Worktree + branch removed. STORY-INDEX v1.4.26 (51 stories, unchanged count). Open backlog: #210, #331, #368, #372, #387, #400, #421. Held Dependabot PRs #403/#404 due 2026-05-31. |
+| **Convergence counter** | S-409 MERGED (PR #418 @ 88cf863). #421 filed (LOW, pre-existing precision bug). BC corpus: 583 BCs (unchanged). Story corpus: 51 stories. All feature-mode cycles through S-409 CONVERGED. |
 
 ## Open Issues Tracker (post-#288)
 
@@ -170,7 +171,7 @@ Current trajectory summary: S-408 MERGED (PR #417 @ d53278a, 2026-05-27). S-409 
 | #331 | Sandbox-blocked defer | OPEN | DEFERRED | Requires sandbox access |
 | #372 | cargo-mutants partial baseline | OPEN | LOW | Follow-up from #346 |
 | #400 | Test-hardening + process-gap follow-ups from #398 | OPEN | LOW | Filed 2026-05-22 — non-blocking, future maintenance sweep. Tracks TH-398-1..4 + PG-398-1..5. |
-| #409 | `parsed_number_to_wire_value` helper extraction — tautological test 38 | IN-PROGRESS | LOW | S-409 worktree commit 71dc2d4 on refactor/S-409-extract-number-wire-helper; awaiting PR. |
+| #421 | Pre-existing f64→i64 precision bugs at `parsed_number_to_wire_value` bounds check | OPEN | LOW | Filed 2026-05-27 — deferred from S-409 (byte-identical refactor scope); fix options documented in issue body. Next maintenance sweep. |
 | #387 | git history rewrite for demo-evidence blobs | OPEN | LOW | Deferred; force-push needed |
 | #368 | (open PR — see backlog) | OPEN | — | |
 
