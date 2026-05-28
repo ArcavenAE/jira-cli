@@ -4,14 +4,14 @@ level: ops
 version: "2.0"
 status: active
 producer: state-manager
-timestamp: 2026-05-27T00:00:00
+timestamp: 2026-05-28T00:00:00
 phase: phase-3-tdd-implementation
 inputs: []
 input-hash: "[live-state]"
 traces_to: ""
 project: jira-cli
 mode: BROWNFIELD
-current_step: "S-409-MERGED-PR418"
+current_step: "S-428-F1+F2-COMPLETE-F3-PENDING"
 current_cycle: "cycle-001"
 dtu_required: false
 phase_2_status: APPROVED
@@ -36,8 +36,8 @@ activation_version: "v0.5.0-dev.7"
 | **Language** | Rust |
 | **Target Workspace** | develop → main |
 | **Started** | 2026-05-04 |
-| **Last Updated** | 2026-05-28 — S-421 MERGED via PR #427 (develop @ c7ffb55). 9-round Copilot review cycle (deepest of the project). Follow-up #428 filed (S-410 architect-miscount extension — 3 more NO-KEYCHAIN exit-64 tests need gating). |
-| **Current Phase** | Phase 3 — TDD Implementation IN PROGRESS — Wave 3 CLOSED (10/10). Feature Mode ongoing. Open backlog: #210, #331, #368, #372, #387, #400, #428. Held Dependabot PRs #403/#404 due 2026-05-31, #368 stale. |
+| **Last Updated** | 2026-05-28 — S-428 IN_PROGRESS: F1+F2 complete, F3 not started; session paused for resume. F1 v2 delta analysis approved (wiremock-only refactor scope). F2 story S-428-wiremock-only-disambiguation.md written (12 ACs, SMALL/3pt). |
+| **Current Phase** | Phase 3 — TDD Implementation IN PROGRESS — Wave 3 CLOSED (10/10). Feature Mode ongoing. Open backlog: #210, #331, #368, #372, #387, #400, #428, #429. Held Dependabot PRs #404/#422/#423/#424/#425/#426 due 2026-05-31. |
 | **Next Phase** | Phase 4: Holdout Evaluation (not started) |
 | **Activation HEAD** | dea166471e22eff55974d7675593469b37048c5f (v0.5.0-dev.7) |
 
@@ -76,6 +76,7 @@ Goal 1c: **Harden v0.5 + feature delivery** — formalize existing codebase with
 | #408 MERGED 2026-05-27 via PR #417 (develop @ d53278a) | state-manager | complete | S-408: 5 stale line-anchor citations re-anchored to symbol-form (2 in CLAUDE.md AI Agent Notes, 3 in bc-3-issue-write.md). 1 Copilot review cycle: caught path-prefix inconsistency on line 336 (`create.rs::handle_edit` vs `src/cli/issue/create.rs::handle_edit`); fixed in bfa333d; re-review clean. Symbol-form convention now active. Issue #408 auto-closed. L-408-1 in lessons.md. |
 | #409 MERGED 2026-05-27 via PR #418 (develop @ 88cf863) | state-manager | complete | S-409: extract `parsed_number_to_wire_value` helper + replace tautological test 38. 6 inline unit tests. 1 Copilot review cycle (caught 2 pre-existing f64→i64 precision findings at bounds check; Perplexity-validated; deferred as #421). Copilot re-review clean. Issue #409 auto-closed. |
 | #421 MERGED 2026-05-28 via PR #427 (develop @ c7ffb55) | state-manager | complete | S-421: two-stage i64-first parser eliminates f64→i64 boundary saturation. 20 unit tests in field_resolve.rs::tests (was 14). 9-round Copilot review cycle (deepest to date): R2 BLOCKING precision regression; R3-R8 doc/stale-cross-ref; R5 contract-vs-impl mismatch; R6 empirically-false serde_json claim; R9 accepted as Option C trade-off (3-way boundary asymmetry documented in rustdoc). F2 spec evolution at factory 6680de7. STORY-INDEX v1.4.28. Follow-up #428 filed. |
+| #428 F1+F2 COMPLETE — F3 PENDING (session-save-resume-pending) | state-manager | paused | S-428 mid-cycle: F1 architect produced v2 delta-analysis (scope expanded from gating-only to wiremock-only refactor — user chose to close the always-run coverage gap rather than accept it). Four design decisions locked at F1 human gate: (1) AccessibleResource lifted to module scope with pub(crate)+Debug+PartialEq; (2) resolve_cloud_id pub(crate) async=false fn with all 3 disambiguation branches extracted verbatim; (3) test fixture construction via Vec<AccessibleResource> struct literals (no serde round-trip); (4) pub(crate) unconditional (not cfg(test)-gated). F2 story-writer produced S-428-wiremock-only-disambiguation.md with 12 ACs, SMALL/3-points, status=ready. F3 ready to start: needs worktree fix/S-428-wiremock-only-disambiguation off develop + test-writer for failing in-process tests covering AC-005/006/007 + implementer for the refactor. Issue #429 filed during F1 as followup for jr_isolated() crypto-random JR_SERVICE_NAME suffix (may become WONTFIX if #428 merges). |
 
 ## Decisions Log
 
@@ -105,6 +106,8 @@ Goal 1c: **Harden v0.5 + feature delivery** — formalize existing codebase with
 | DEC-024 | 2026-05-27: S-409 MERGED via PR #418 (develop @ 88cf863). 1 Copilot review cycle caught 2 pre-existing f64→i64 precision findings at `parsed_number_to_wire_value` bounds check; Perplexity-validated as real-but-tiny; deferred as follow-up issue #421 (out of scope for byte-identical refactor). Copilot re-review (round 2) clean. 6 new inline unit tests for the helper; tautological test 38 deleted. | Byte-identical refactors surface inherited bugs at low cost; opportunistically flag → file follow-up rather than fix in-scope. | Feature Mode / #409 | 2026-05-27 | state-manager |
 | DEC-025 | 2026-05-27: S-421 i64-boundary precision fix — Option C from F1 (two-stage parser: i64-first, then f64 fallback with strict inequalities). F2 spec evolution added EC-3.4.015-4b + updated BC-3.4.015 invariant 5 wording (factory commit 6680de7). 8 new unit tests in field_resolve.rs::tests cover both boundary classes + bonus precision win for 2^53+1..2^63 range. Implementer reported a possibly-pre-existing parallel-run flake on `test_cloud_id_flag_value_not_in_response_exits_64` (NO-KEYCHAIN, left always-run in S-410); deferred — will track via CI behavior on PR. Closes #421 on merge. | Two-stage parser avoids f64 round-trip loss for i64-representable integers; strict inequalities prevent saturation at ±2^63. | Feature Mode / #421 | 2026-05-27 | orchestrator |
 | DEC-026 | 2026-05-28: S-421 MERGED via PR #427 (develop @ c7ffb55). 9-round Copilot review cycle (deepest of the project to date): R1 deferred to follow-up; R2 caught BLOCKING precision regression in initial fix; R3-R8 caught doc-prose imprecision (including 4 rounds of stale-cross-reference propagation introduced during rewrites); R5 caught contract-vs-impl mismatch (`trim_start_matches` multi-sign); R6 caught empirically-false serde_json serialization claim; R9 accepted as documented F1 Option C design trade-off (3-way boundary asymmetry at ±2^63 between integer/decimal/scientific notation; trade-off documented in rustdoc). Final fix: 2-stage→3-stage parser (Stage 1 i64 parse, Stage 1.5 strip_integer_decimal_suffix retry, Stage 2 f64 with strict bounds). 20 unit tests in field_resolve.rs::tests (was 14). F2 spec evolution (BC-3.4.015 invariant 5 update + EC-3.4.015-4b) at factory commit 6680de7. Follow-up #428 tracks S-410 architect-miscount extension (3 more NO-KEYCHAIN exit-64 tests need gating). | Deep Copilot review cycles have diminishing returns after R5-ish; once findings transition from 'bugs in fix' to 'imprecision in my own doc cleanup', that is the inflection point. L-421-1..5 codified. | Feature Mode / #421 | 2026-05-28 | state-manager |
+| DEC-027 | 2026-05-28: S-428 F1 scope expansion — user chose to close the always-run coverage gap (wiremock-only refactor) rather than accept it (gate-only). F1 v1 proposed gating tests #4/#5/#6 behind JR_RUN_KEYRING_TESTS=1 (simpler, closes CI flakes, but loses always-run exit-64 coverage). User closed the OQ by selecting option (b): extract resolve_cloud_id + rewrite tests in-process. Scope expanded from 3-line gating patch to ~60 LOC production refactor + test rewrites. | F1 human gate for #428 | 2026-05-28 | human |
+| DEC-028 | 2026-05-28: S-428 — 4 design decisions locked at F1 human gate: (1) AccessibleResource lifted to module scope with pub(crate) visibility + Debug + PartialEq derives (not function-local); (2) resolve_cloud_id is pub(crate) fn (not async) with return type Result<String, JrError> so tests match variants without downcasting; (3) Vec<AccessibleResource> struct literals in tests (no serde JSON round-trip — cleaner and faster); (4) pub(crate) visibility is unconditional — not cfg(test)-gated — because function may have future callers (e.g., jr auth check). | F1 human gate for #428 | 2026-05-28 | human |
 | DEC-014 | S-3.07 spec pivot to v2.0.0 (3 corrections: Part A reframe + Part B conditional drop + Part D elevation as confirmed JRACLOUD-94632 bug response) | Perplexity-driven verification on 2026-05-08 found 3 errors in v1: (a) Atlassian Retry-After typical values are 1425-3089 seconds with documented 3600s ceiling, NOT the 86400s extreme used as v1's threat framing — `MAX_RETRY_AFTER_SECS=60` aborts essentially every real-world 429 (still defensible for interactive CLI per RFC 9110 §10.2.3, but story rationale + user error message must reflect reality); (b) Part B's `checked_mul` overflow guard targets the 3-arg `parse_duration` calculator that S-3.10 deletes — the orchestrator's earlier "WV2-SEC-01's 64-byte cap eliminates overflow" reasoning was mathematically false (14-20 digit inputs still overflow u64 within 64 bytes) — correct reason to drop is that S-3.10 deletes the function; drop is conditional via `depends_on: [S-3.10]` + AC-NEW-B sequencing gate, with reinstatement plan if S-3.10 slips; (c) Part D's `/rest/api/3/search/jql` cursor-loop is NOT a defensive nice-to-have — it is a confirmed Jira Cloud bug per JRACLOUD-94632 + JRACLOUD-92049 + JRACLOUD-85546 (also reported in atlassian/atlassian-mcp-server#118 and ankitpokhrel/jira-cli#898) → v2 elevates from KNOWN-GAP source comment to real defensive guard + stderr warning containing literal "JRACLOUD-94632" so users have a copy-pasteable upstream search term. ACs change: drop AC-004/005 (Part B specific); add AC-NEW-B sequencing guard; add AC-NEW-D JRACLOUD content assertion. New risk: R-NEW-S307-1 (silent partial results — failure mode now visible). NFR catalog: NFR-R-NEW-2 row removed (Part B dropped → no longer in scope); NFR-R-F routing flipped from DOCUMENT-AS-IS to DOCUMENT-AS-IS-FIXED (real guard delivered, not just documented). Verification report: `.factory/research/S-3.07-wave3-verification.md`. Story rewrite: `.factory/stories/wave-3/S-3.07-low-nfr-code-fixes-and-search-jql-anti-loop.md` (renamed from `-low-nfr-code-cleanup.md`) at factory-artifacts@898937e. No develop-branch impact. | Phase 3 / Wave 3 | 2026-05-08 | human + research-agent (Perplexity + WebFetch) |
 
 ## Skip Log
@@ -153,7 +156,7 @@ Goal 1c: **Harden v0.5 + feature delivery** — formalize existing codebase with
 
 See `cycles/cycle-001/convergence-trajectory.md` for all per-issue convergence narratives (Phase 1d, Phase 2-adv, Phase 3-adv, issues #288/#382/#383/#384/#385/#396/#398/#407).
 
-Current trajectory summary: S-421 MERGED (PR #427 @ c7ffb55, 2026-05-28). 9-round Copilot review (deepest cycle). 20 unit tests in field_resolve.rs (was 14). BC corpus: 583 BCs (unchanged). Story corpus: 52 stories (unchanged). Next: #428 (S-410 gating extension).
+Current trajectory summary: S-428 IN_PROGRESS (F1+F2 complete, F3 pending, 2026-05-28). Prior: S-421 MERGED (PR #427 @ c7ffb55). BC corpus: 583 BCs (unchanged — S-428 has no new BCs). Story corpus: 53 stories (added S-428). Next active: #428 F3.
 
 ## Session Resume Checkpoint
 
@@ -161,8 +164,9 @@ Current trajectory summary: S-421 MERGED (PR #427 @ c7ffb55, 2026-05-28). 9-roun
 | Field | Value |
 |-------|-------|
 | **Date** | 2026-05-28 |
-| **Position** | **S-421 MERGED via PR #427 (develop @ c7ffb55).** All feature-mode cycles through S-421 CONVERGED. 9-round Copilot review (deepest of project). 20 unit tests in field_resolve.rs::tests. F2 spec evolution at factory 6680de7. STORY-INDEX v1.4.28 (52 stories). Follow-up #428 filed (3 NO-KEYCHAIN exit-64 tests need keyring-gating). Open backlog: #210, #331, #368, #372, #387, #400, #428. Held Dependabot PRs #403/#404 due 2026-05-31. |
-| **Convergence counter** | S-421 MERGED. BC corpus: 583 BCs (unchanged). Story corpus: 52 stories (unchanged). All feature-mode cycles through S-421 CONVERGED. Next active story: #428. |
+| **Position** | **#428 mid-cycle (F1+F2 COMPLETE, F3 PENDING).** Story file at `.factory/stories/S-428-wiremock-only-disambiguation.md` (12 ACs, SMALL/3pt). Delta analysis at `.factory/phase-f1-delta-analysis/issue-428/delta-analysis.md` (v2 revised). 4 design decisions locked (DEC-027/DEC-028). Next: worktree `fix/S-428-wiremock-only-disambiguation` off develop @ 9369d35-OR-newer, test-writer for failing in-process tests in `tests/multi_cloudid_disambiguation.rs` covering tests #4/#5/#6 with in-process `resolve_cloud_id` calls, then implementer for the refactor in `src/api/auth.rs` (extract `resolve_cloud_id`, lift `AccessibleResource`, update CLAUDE.md atomically). Open backlog: #210, #331, #368, #372, #387, #400, #428, #429. Held Dependabot PRs #404/#422/#423/#424/#425/#426 due 2026-05-31. |
+| **Convergence counter** | S-428 F1+F2 complete; F3 pending. BC corpus: 583 BCs (unchanged — no new BCs in S-428). Story corpus: 53 stories (added S-428). Next active story: #428 F3. |
+| **Resume prompt** | `Resume S-428 from F3 start. Read .factory/STATE.md latest checkpoint, then read .factory/stories/S-428-wiremock-only-disambiguation.md + .factory/phase-f1-delta-analysis/issue-428/delta-analysis.md for full context. Create worktree fix/S-428-wiremock-only-disambiguation off latest develop, dispatch test-writer for failing in-process tests covering AC-005/006/007, then implementer for the refactor. F3 → F4 → F7 to complete the cycle.` |
 
 ## Open Issues Tracker (post-#288)
 
@@ -172,7 +176,8 @@ Current trajectory summary: S-421 MERGED (PR #427 @ c7ffb55, 2026-05-28). 9-roun
 | #331 | Sandbox-blocked defer | OPEN | DEFERRED | Requires sandbox access |
 | #372 | cargo-mutants partial baseline | OPEN | LOW | Follow-up from #346 |
 | #400 | Test-hardening + process-gap follow-ups from #398 | OPEN | LOW | Filed 2026-05-22 — non-blocking, future maintenance sweep. Tracks TH-398-1..4 + PG-398-1..5. |
-| #428 | S-410 architect-miscount extension — 3 more NO-KEYCHAIN exit-64 tests need gating behind JR_RUN_KEYRING_TESTS=1 (observed flaking 3× during S-421 cycle) | OPEN | LOW | Filed 2026-05-28. Tracks test_no_input_multi_org_exits_64_with_actionable_error, test_cloud_id_flag_value_not_in_response_exits_64, test_no_input_multi_org_lists_available_cloud_ids_in_error. |
+| #428 | Wiremock-only refactor: extract resolve_cloud_id + rewrite tests #4/#5/#6 in-process | IN_PROGRESS | MEDIUM | Filed 2026-05-28. F1+F2 COMPLETE. F3 PENDING. Story: .factory/stories/S-428-wiremock-only-disambiguation.md (12 ACs, SMALL/3pt). |
+| #429 | jr_isolated() crypto-random JR_SERVICE_NAME suffix to prevent keychain contention across parallel subprocess tests | OPEN | LOW | Filed 2026-05-28. Alternative root-cause fix to #428's approach. Sequence-after #428; may be superseded as WONTFIX if #428's wiremock-only refactor lands. |
 | #387 | git history rewrite for demo-evidence blobs | OPEN | LOW | Deferred; force-push needed |
 | #368 | (open PR — see backlog) | OPEN | — | |
 
