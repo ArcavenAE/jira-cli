@@ -1,7 +1,7 @@
 ---
 context: nfr-catalog
 title: "NFR Catalog — Pass 4 Convergence"
-total_nfrs: 40  # 42 − NFR-O-K (merged into NFR-S-D at ADV-P7-002) − NFR-R-NEW-2 (removed S-3.07 v2.0.0: Part B dropped; S-3.10 deletes target function)
+total_nfrs: 41  # 40 baseline + NFR-T-E2E-1 (F2 Feature Mode, live-Jira E2E CI obligation, 2026-05-29)
 last_updated: 2026-05-09
 source_pass: 4
 revision_note: "2026-05-09 — S-3.08 (PR #317 / fba47ad) closed 11 LOW NFRs: 7 flipped DOCUMENT-AS-IS → DOCUMENT-AS-IS-COMPLETE (source comments + CLAUDE.md entries); 4 flipped DEFER → DEFER-DOCUMENTED (CLAUDE.md entries noting v2 deferral). Two new status types introduced: DOCUMENT-AS-IS-COMPLETE (closure mechanism committed) and DEFER-DOCUMENTED (deferral explicitly surfaced in CLAUDE.md). Pre-impl audit confirmed NFR-O-H and NFR-O-R already RESOLVED via S-2.05; NFR-O-E and NFR-SCA-2 remain pure-DEFER with no action. Prior revision (2026-05-08): Wave 2 closure swept 10 additional NFRs to RESOLVED (NFR-O-F/J/L/M/O/W/H/R/V via S-2.05/S-2.07; NFR-R-F via S-2.05)."
@@ -13,9 +13,9 @@ trace: |
 
 # NFR Catalog — jira-cli Pass 4 Convergence
 
-42 individually-enumerated NFR rows. Pass 4 produced: broad (23) + R1 deepening (+18) + NFR-R-E re-promotion (0 net) + R4 NEW-2 (+1) = 42 entries then reconciled to 40 summary rows + NFR-R-NEW-1 added by ADV-P2-003 = 41 total. NFR-S-E severity promoted from LOW to HIGH per ADV-P2-004. NFR-S-F (cargo-deny supply chain) added per ADV-P3-007 = 42 total then NFR-O-K merged into NFR-S-D at ADV-P7-002 = 41 total. NFR-R-NEW-2 removed at S-3.07 v2.0.0 (2026-05-08) = 40 total.
+42 individually-enumerated NFR rows. Pass 4 produced: broad (23) + R1 deepening (+18) + NFR-R-E re-promotion (0 net) + R4 NEW-2 (+1) = 42 entries then reconciled to 40 summary rows + NFR-R-NEW-1 added by ADV-P2-003 = 41 total. NFR-S-E severity promoted from LOW to HIGH per ADV-P2-004. NFR-S-F (cargo-deny supply chain) added per ADV-P3-007 = 42 total then NFR-O-K merged into NFR-S-D at ADV-P7-002 = 41 total. NFR-R-NEW-2 removed at S-3.07 v2.0.0 (2026-05-08) = 40 total. NFR-T-E2E-1 added F2 Feature Mode (live-Jira E2E CI obligation, 2026-05-29) = 41 total.
 
-**Severity totals: 1 CRITICAL / 6 HIGH / 15 MEDIUM / 18 LOW = 40 total** (NFR-O-K merged into NFR-S-D at ADV-P7-002; NFR-R-NEW-2 removed at S-3.07 v2.0.0)
+**Severity totals: 1 CRITICAL / 6 HIGH / 16 MEDIUM / 18 LOW = 41 total** (NFR-O-K merged into NFR-S-D at ADV-P7-002; NFR-R-NEW-2 removed at S-3.07 v2.0.0; NFR-T-E2E-1 added F2 2026-05-29)
 
 All four MUST-FIX items (NFR-R-D, NFR-R-A, NFR-R-B, NFR-R-E) have been crystallized as behavioral contracts in the L3 PRD:
 - NFR-R-D → BC-6.3.001 (multi-profile fields bug)
@@ -139,6 +139,16 @@ All four MUST-FIX items (NFR-R-D, NFR-R-A, NFR-R-B, NFR-R-E) have been crystalli
 
 ---
 
+## Dimension 6: Testing / CI Infrastructure (T-*)
+
+### MEDIUM
+
+| ID | Description | Severity | Site | Phase 3 Routing |
+|---|---|---|---|---|
+| **NFR-T-E2E-1** | The live-Jira E2E suite (`tests/e2e_live.rs`) MUST remain runnable against a real Jira Cloud instance and MUST be wired into CI via `.github/workflows/e2e.yml` (triggered on push to `develop`/`main`, nightly cron, and `workflow_dispatch`; non-blocking). The suite MUST NOT execute without `JR_RUN_E2E=1` in a normal `cargo test` run (local or `ci.yml`). Annual API-token rotation MUST be documented in a runbook section of the repo. | MEDIUM | `tests/e2e_live.rs`, `.github/workflows/e2e.yml` | **NEW — Feature Mode (F2, 2026-05-29)**: Implement via story S-E2E-1. Design spec: `docs/specs/e2e-live-jira-testing.md`. Routing: DEFER to S-E2E-1 implementation. |
+
+---
+
 ## NFR Summary Table
 
 | ID | Dimension | Severity | Phase 3 Routing | BC Anchor |
@@ -183,8 +193,9 @@ All four MUST-FIX items (NFR-R-D, NFR-R-A, NFR-R-B, NFR-R-E) have been crystalli
 | NFR-SCA-1 | Scalability | LOW | DOCUMENT-AS-IS-COMPLETE (S-3.08, PR #317) | — |
 | NFR-SCA-2 | Scalability | LOW | DEFER | — |
 | NFR-SCA-3 | Scalability | LOW | DOCUMENT-AS-IS-COMPLETE (S-3.08, PR #317) | — |
+| NFR-T-E2E-1 | Testing / CI Infrastructure | MEDIUM | DEFER to S-E2E-1 (F2 Feature Mode, 2026-05-29) | — |
 
-**Phase 3 routing summary (post Wave 2 closure, 2026-05-08; updated S-3.08 PR #317 / fba47ad, 2026-05-09):**
+**Phase 3 routing summary (post Wave 2 closure, 2026-05-08; updated S-3.08 PR #317 / fba47ad, 2026-05-09; NFR-T-E2E-1 added F2 2026-05-29):**
 - RESOLVED: 10 (NFR-R-C via S-2.06; NFR-O-H/NFR-O-L/NFR-O-M/NFR-O-O/NFR-O-R/NFR-O-V via S-2.05; NFR-O-F/NFR-O-J/NFR-O-W via S-2.07)
 - COMPLETE: 1 (1 LOW: NFR-R-NEW-1 via S-3.07 — MAX_RETRY_AFTER_SECS=60 cap delivered)
 - FIX-IN-PHASE-3: 6 (1 CRITICAL: NFR-R-D; 5 HIGH: NFR-R-A, NFR-R-B, NFR-R-E, NFR-S-E, NFR-S-F)
@@ -194,8 +205,8 @@ All four MUST-FIX items (NFR-R-D, NFR-R-A, NFR-R-B, NFR-R-E) have been crystalli
 - DOCUMENT-AS-IS-COMPLETE: 7 (S-3.08 / PR #317 / 2026-05-09; all LOW: NFR-R-G via cache.rs:37; NFR-O-C via CLAUDE.md:108; NFR-O-G via CLAUDE.md:79; NFR-O-I via adf.rs:532; NFR-O-T via worklogs.rs:34; NFR-SCA-1 via rate_limit.rs:25; NFR-SCA-3 via jql.rs:39)
 - DOCUMENT-AS-IS-FIXED: 1 (NFR-R-F — S-2.05 KNOWN-GAP comment + S-3.07 v2 real guard added in src/api/jira/issues.rs + JRACLOUD-94632 warning)
 - DEFER-DOCUMENTED: 4 (S-3.08 / PR #317 / 2026-05-09; all LOW: NFR-O-N via CLAUDE.md:111; NFR-O-P via CLAUDE.md:112; NFR-O-U via CLAUDE.md:110; NFR-O-X via CLAUDE.md:109 — underlying gaps deferred to v2, CLAUDE.md entry surfaces the deferral explicitly)
-- DEFER: 9 (MEDIUM and LOW: NFR-O-A/B/D/S via DEFER; NFR-P-NEW-1 via DEFER; NFR-O-E/NFR-SCA-2 via pure-acknowledgment DEFER; NFR-S-A via DEFER per ADR-0013 / S-3.09 2026-05-09)
+- DEFER: 10 (MEDIUM and LOW: NFR-O-A/B/D/S via DEFER; NFR-P-NEW-1 via DEFER; NFR-O-E/NFR-SCA-2 via pure-acknowledgment DEFER; NFR-S-A via DEFER per ADR-0013 / S-3.09 2026-05-09; NFR-T-E2E-1 via DEFER to S-E2E-1 F2 2026-05-29)
 
-**Total: 40** (42 rows − NFR-O-K merged into NFR-S-D at adversary Pass 7 − NFR-R-NEW-2 removed at S-3.07 v2.0.0 2026-05-08. NFR-S-F added per ADV-P3-007. NFR-S-E severity promoted LOW→HIGH per ADV-P2-004.)
+**Total: 41** (42 rows − NFR-O-K merged into NFR-S-D at adversary Pass 7 − NFR-R-NEW-2 removed at S-3.07 v2.0.0 2026-05-08 + NFR-T-E2E-1 added F2 Feature Mode 2026-05-29. NFR-S-F added per ADV-P3-007. NFR-S-E severity promoted LOW→HIGH per ADV-P2-004.)
 
-**Counting clarification** (ADV-P2-005 + ADV-P3-007 + ADV-P7-002 + S-3.07-v2 reconciliation): The NFR Summary Table contains 40 individually-enumerated rows. Severity breakdown: 1 CRITICAL / 6 HIGH / 15 MEDIUM / 18 LOW = 40. NFR-O-K was a duplicate of NFR-S-D and was merged at adversary Pass 7. NFR-R-NEW-2 was removed at S-3.07 v2.0.0 (2026-05-08) because S-3.10 deletes the target function (`parse_duration` 3-arg calculator) — adding `checked_mul` to dead code is wasted churn. If S-3.10 is descoped, NFR-R-NEW-2 must be re-added. Prior counting clarifications referencing 39, 41, 42, 44, or 45 rows were inconsistent; this count supersedes them.
+**Counting clarification** (ADV-P2-005 + ADV-P3-007 + ADV-P7-002 + S-3.07-v2 reconciliation + F2-e2e-2026-05-29): The NFR Summary Table contains 41 individually-enumerated rows. Severity breakdown: 1 CRITICAL / 6 HIGH / 16 MEDIUM / 18 LOW = 41. NFR-O-K was a duplicate of NFR-S-D and was merged at adversary Pass 7. NFR-R-NEW-2 was removed at S-3.07 v2.0.0 (2026-05-08) because S-3.10 deletes the target function (`parse_duration` 3-arg calculator) — adding `checked_mul` to dead code is wasted churn. If S-3.10 is descoped, NFR-R-NEW-2 must be re-added. NFR-T-E2E-1 added at F2 Feature Mode (live-Jira E2E CI obligation, 2026-05-29). Prior counting clarifications referencing 39, 40, 42, 44, or 45 rows were inconsistent; this count supersedes them.

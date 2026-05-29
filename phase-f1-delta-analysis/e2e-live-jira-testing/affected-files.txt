@@ -1,0 +1,18 @@
+# Affected files — Live-Jira E2E testing in CI
+# Format: <CHANGE_TYPE> <file_path>
+# CHANGE_TYPE: NEW | MODIFIED | DEPENDENT (unchanged but depends on changed code)
+
+# New files
+NEW tests/e2e_live.rs
+NEW .github/workflows/e2e.yml
+
+# Modified files
+MODIFIED CLAUDE.md
+MODIFIED docs/specs/e2e-live-jira-testing.md
+
+# Regression baseline (NOT changed — listed for CI contract reference)
+# DEPENDENT src/config.rs              (JR_BASE_URL seam reused, not modified)
+# DEPENDENT src/api/client.rs          (JR_AUTH_HEADER seam reused, not modified)
+# DEPENDENT tests/base_url_release_gate.rs
+# DEPENDENT tests/auth_header_release_gate.rs
+# DEPENDENT tests/oauth_embedded_login.rs

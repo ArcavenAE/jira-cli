@@ -3255,6 +3255,22 @@ Events after issue #288 epic closeout (factory-artifacts @ 7dbbfed):
 
 ---
 
+### Archived Current Phase Step: E2E F1+F2 (from STATE.md — 2026-05-29 E2E feature burst)
+
+| Step | Agent | Status | Output |
+|------|-------|--------|--------|
+| E2E feature (F1 APPROVED + F2 COMPLETE) 2026-05-29 | state-manager | complete | Feature Mode: "Live-Jira E2E testing in CI" opened (DEC-032). F1 delta analysis APPROVED (zero src/, BC delta EMPTY, LOW regression risk, one story S-E2E-1 recommended). F2 spec evolution: NFR-T-E2E-1 added to nfr-catalog.md (Dimension 6: Testing/CI Infrastructure, MEDIUM). NFR count 40→41. CANONICAL-COUNTS.md updated (MEDIUM 15→16). Both guard scripts green. OQ-2 resolved: status names configurable via JR_E2E_STATUS_DONE/JR_E2E_STATUS_IN_PROGRESS. Design spec on feat/e2e-live-jira-testing @ c3e967a. Provisioning tracking issue R-NEW-1 pending. Next: F3 (story S-E2E-1, 11 ACs). |
+
+---
+
+### Archived Current Phase Step: #409 (from STATE.md — 2026-05-28 dev release v0.5.0-dev.11 burst)
+
+| Step | Agent | Status | Output |
+|------|-------|--------|--------|
+| #409 MERGED 2026-05-27 via PR #418 (develop @ 88cf863) | state-manager | complete | S-409: extract `parsed_number_to_wire_value` helper + replace tautological test 38. 6 inline unit tests. 1 Copilot review cycle (caught 2 pre-existing f64→i64 precision findings at bounds check; Perplexity-validated; deferred as #421). Copilot re-review clean. Issue #409 auto-closed. |
+
+---
+
 ### Archived Current Phase Step: #408 (from STATE.md — 2026-05-28 dev release v0.5.0-dev.11 burst)
 
 | Step | Agent | Status | Output |

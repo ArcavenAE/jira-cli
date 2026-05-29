@@ -97,11 +97,11 @@ grep -c '^| \*\*NFR-' .factory/specs/prd/nfr-catalog.md
 Severity distribution per nfr-catalog.md routing table:
 - CRITICAL: 1 (NFR-R-D)
 - HIGH: 6 (NFR-R-A, NFR-R-B, NFR-R-E, NFR-S-B, NFR-S-E, NFR-S-F)
-- MEDIUM: 15 (NFR-R-C, NFR-R-F, NFR-S-A, NFR-S-C, NFR-O-A, NFR-O-B, NFR-O-D, NFR-O-F, NFR-O-J, NFR-O-L, NFR-O-M, NFR-O-O, NFR-O-S, NFR-O-W, NFR-P-NEW-1) — check nfr-catalog.md §Summary for exact split
-- LOW: 19 (remainder)
+- MEDIUM: 16 (NFR-R-C, NFR-R-F, NFR-S-A, NFR-S-C, NFR-O-A, NFR-O-B, NFR-O-D, NFR-O-F, NFR-O-J, NFR-O-L, NFR-O-M, NFR-O-O, NFR-O-S, NFR-O-W, NFR-P-NEW-1, NFR-T-E2E-1)
+- LOW: 18 (remainder)
 - **Total: 41** (confirmed by grep count above)
 
-Note: NFR-O-K was merged into NFR-S-D at adversary Pass 7 (no net change). NFR-S-F added at ADV-P3-007 (+1). NFR-S-E severity promoted LOW→HIGH at ADV-P2-004 (no net count change).
+Note: NFR-O-K was merged into NFR-S-D at adversary Pass 7 (no net change). NFR-S-F added at ADV-P3-007 (+1). NFR-S-E severity promoted LOW→HIGH at ADV-P2-004 (no net count change). NFR-T-E2E-1 added F2 Feature Mode (live-Jira E2E CI obligation, 2026-05-29; +1 MEDIUM, total unchanged at 41 because CANONICAL-COUNTS already anticipated this addition).
 
 ---
 

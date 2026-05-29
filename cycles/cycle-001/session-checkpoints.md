@@ -160,6 +160,16 @@ _Archived 2026-05-28. Was the active checkpoint at S-400-A MERGED. Superseded by
 | Field | Value |
 |-------|-------|
 | **Date** | 2026-05-28 |
-| **Position** | **S-400-A COMPLETE. Develop @ 9d4a65b (PR #431 squash-merged, #400 stays OPEN).** No active mid-cycle story. Open backlog: #210, #331, #368, #372, #387, #400, #429. Held Dependabot PRs #404/#422/#423/#424/#425/#426 due 2026-05-31. #429 WONTFIX-pending (DEC-029) — do NOT close #429 autonomously. #400 Story B (PG-398-1) + engine items (PG-398-4/5) remain open. |
+| **Position** | **S-400-A COMPLETE. Develop @ 9d4a78b (PR #431 squash-merged, #400 stays OPEN).** No active mid-cycle story. Open backlog: #210, #331, #368, #372, #387, #400, #429. Held Dependabot PRs #404/#422/#423/#424/#425/#426 due 2026-05-31. #429 WONTFIX-pending (DEC-029) — do NOT close #429 autonomously. #400 Story B (PG-398-1) + engine items (PG-398-4/5) remain open. |
 | **Convergence counter** | S-400-A MERGED (TEST-ONLY). BC corpus: 583 BCs (unchanged). Story corpus: 53 stories. No active story. |
-| **Resume prompt** | `Read .factory/STATE.md latest checkpoint. S-400-A is closed (PR #431 @ 9d4a65b); #400 stays OPEN (Story B + PG-398-4/5). Open backlog: #210, #331, #368, #372, #387, #400, #429. Held Dependabot PRs #404/#422/#423/#424/#425/#426 due 2026-05-31. Issue #429 WONTFIX decision deferred to human (DEC-029). Next: pick #400 Story B, another backlog item, or advise on Dependabot strategy.` |
+| **Resume prompt** | `Read .factory/STATE.md latest checkpoint. S-400-A is closed (PR #431 @ 9d4a78b); #400 stays OPEN (Story B + PG-398-4/5). Open backlog: #210, #331, #368, #372, #387, #400, #429. Held Dependabot PRs #404/#422/#423/#424/#425/#426 due 2026-05-31. Issue #429 WONTFIX decision deferred to human (DEC-029). Next: pick #400 Story B, another backlog item, or advise on Dependabot strategy.` |
+
+---
+
+_Archived 2026-05-29. Was the active checkpoint at v0.5.0-dev.11 RELEASED. Superseded by E2E feature F1+F2 COMPLETE checkpoint._
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-05-28 (UTC 2026-05-29) |
+| **Position** | **Dev release v0.5.0-dev.11 SHIPPED. Develop @ 15bf305 (PR #432 squash-merged, annotated tag v0.5.0-dev.11 pushed).** No active mid-cycle story. Open backlog: #210, #331, #368, #372, #387, #400 (Story B), #429. Held Dependabot PRs #404/#422/#423/#424/#425/#426 due 2026-05-31. #429 WONTFIX-pending (DEC-029) — do NOT close #429 autonomously. #400 Story B (PG-398-1) + engine items (PG-398-4/5) remain open. |
+| **Convergence counter** | v0.5.0-dev.11 released. BC corpus: 583 BCs (unchanged). Story corpus: 53 stories. No active story. |
