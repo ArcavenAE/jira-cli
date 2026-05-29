@@ -1,22 +1,16 @@
 ---
 document_type: pipeline-state
-level: ops
 version: "2.0"
 status: active
-producer: state-manager
-timestamp: 2026-05-29T18:00:00
+timestamp: 2026-05-29T22:00:00
 phase: phase-3-tdd-implementation
-inputs: []
-input-hash: "[live-state]"
-traces_to: ""
 project: jira-cli
 mode: BROWNFIELD
-current_step: "v0.5.0-dev.11-RELEASED-develop-15bf305"
+current_step: "S-E2E-2-MERGED-develop-2ca9fc1-live-GREEN-20-0"
 current_cycle: "cycle-001"
 dtu_required: false
 phase_2_status: APPROVED
 phase_2_approved_at: 2026-05-07
-phase_2_approved_by: "human (user)"
 phase_3_status: IN_PROGRESS
 activation_head: "15bf305"
 activation_version: "v0.5.0-dev.11"
@@ -36,8 +30,8 @@ activation_version: "v0.5.0-dev.11"
 | **Language** | Rust |
 | **Target Workspace** | develop → main |
 | **Started** | 2026-05-04 |
-| **Last Updated** | 2026-05-29 — S-E2E-1 MERGED (PR #433 @ d484f84) via full VSDD Feature Mode F1–F7. DEC-034 recorded. E2E machinery on develop; INERT until provisioning (R-NEW-1). |
-| **Current Phase** | Phase 3 — TDD Implementation IN PROGRESS — Wave 3 CLOSED (10/10). Feature Mode ongoing. Open backlog: #210, #331, #368, #372, #387, #400, #429. Held Dependabot PRs #404/#422/#423/#424/#425/#426 due 2026-05-31. E2E MERGED; provisioning R-NEW-1 pending. |
+| **Last Updated** | 2026-05-29 — S-E2E-2 MERGED (PR #434 @ 2ca9fc1). Live E2E workflow GREEN (run 26658705120, 20/0). E2E feature DELIVERED + OPERATIONAL. DEC-035 recorded. OQ-1 open (sprint coverage on team-managed board). |
+| **Current Phase** | Phase 3 — TDD Implementation IN PROGRESS — Wave 3 CLOSED (10/10). Feature Mode ongoing. Open backlog: #210, #331, #368, #372, #387, #400, #429. Held Dependabot PRs #404/#422/#423/#424/#425/#426 due 2026-05-31. E2E DELIVERED + OPERATIONAL (OQ-1 sprint coverage open). |
 | **Next Phase** | Phase 4: Holdout Evaluation (not started) |
 | **Activation HEAD** | 15bf305 (v0.5.0-dev.11) |
 
@@ -60,7 +54,7 @@ Goal 1c: **Harden v0.5 + feature delivery** — formalize existing codebase with
 | 3: TDD Implementation | IN_PROGRESS — Wave 0/1/2/3 ALL COMPLETE (32/32). Feature Mode active. | — | — | Wave cadence complete; Feature Mode ongoing |
 | 3-adv: Wave Adversarial Reviews | WAVE 2 GATE CLOSED 2026-05-08 | 2026-05-08 | GATE-PASSES (consistency pass-02 `8ae5511`) | adv pass-01: 12 findings; fix-PRs A+B+WV2-SEC-01+pass-02 |
 | Feature Mode issues #110/#332..#346/#350..#367/#369..#373/#382..#388/#392/#396..#399/#407 | ALL COMPLETE | 2026-05-26 | F1–F7 ALL COMPLETE — CYCLE CONVERGED | F5: 3/3 CLEAN at P4. F6: 100% mutation kill. Regression 1483/0. |
-| E2E feature (S-E2E-1) — Live-Jira E2E testing in CI | F7 CONVERGED — MERGED PR #433 @ d484f84 | 2026-05-29 | F1–F7 ALL COMPLETE — CYCLE CONVERGED; 1493/0 regression green | (4C/4H)→(1C/2H)→(1C/2H/1M)→(2M)→CLEAN→CLEAN→CLEAN; F6 PASS (mutation N/A); F7 DELIVERED |
+| E2E feature (S-E2E-1 + S-E2E-2) — Live-Jira E2E testing in CI | F7 CONVERGED — DELIVERED + LIVE-GREEN | 2026-05-29 | F1–F7 ALL COMPLETE both stories; live workflow GREEN (run 26658705120, 20/0) | S-E2E-1: (4C/4H)→(1C/2H)→(1C/2H/1M)→(2M)→CLEAN×3; S-E2E-2: 1M→CLEAN×3; Copilot 5 rds resolved; F6 PASS both; live 17p/4f→20p/0f |
 | issue-327 (Dependabot rand 0.9→0.10) | CYCLE CONVERGED — PR #413 @ 375c0f91 | 2026-05-26 | F1–F7 ALL COMPLETE — MAXIMUM_VIABLE_REFINEMENT_REACHED | F5: HIGH-FP→0→0. F6: 100% (2/2). F7: 6/6 PASS. |
 | 4: Holdout Evaluation | not-started | | | |
 | 5: Adversarial Refinement | not-started | | | |
@@ -73,11 +67,11 @@ Goal 1c: **Harden v0.5 + feature delivery** — formalize existing codebase with
 
 | Step | Agent | Status | Output |
 |------|-------|--------|--------|
-| v0.5.0-dev.11 RELEASED 2026-05-28 (UTC 2026-05-29) via PR #432 (develop @ 15bf305) | state-manager | complete | Dev release v0.5.0-dev.11 tagged on develop @ 15bf305 (PR #432 squash-merged). 7 commits since dev.10. CI 11/11 green. Release workflow triggered. DEC-031 recorded. |
-| E2E feature (F1 APPROVED + F2 COMPLETE) 2026-05-29 | state-manager | complete | Feature Mode: "Live-Jira E2E testing in CI" (DEC-032). F1: zero src/ changes, BC delta EMPTY, LOW risk. F2: NFR-T-E2E-1 added (nfr-catalog.md, MEDIUM, Dimension 6). NFR 40→41. OQ-2 resolved. Both guards green. |
 | E2E feature F3 COMPLETE + F4 COMPLETE 2026-05-29 | state-manager | complete | F3: story S-E2E-1 created (12 ACs, MEDIUM/8SP, draft). BC delta EMPTY. F4 delivered on feat/e2e-live-jira-testing; 10 commits (cdf4dcf..f78eed2). Zero src/ changes. |
 | S-E2E-1 F5 CONVERGED 2026-05-29 — 7 passes, 3 consecutive CLEAN (DEC-033) | state-manager | complete | F5 scoped adversarial: 6 CRITICAL defects found+fixed. Full bar. Trajectory: (4C/4H)→(1C/2H)→(1C/2H/1M)→(2M)→CLEAN→CLEAN→CLEAN. 2 LOW deferred (DI-E2E-F5-1/2). F6: PASS (mutation N/A — zero src/ delta). |
 | S-E2E-1 MERGED 2026-05-29 via PR #433 (develop @ d484f84) — F7 CONVERGED | state-manager | complete | Full VSDD Feature Mode F1–F7 complete. 2 Copilot findings fixed (7a13f87 + 9597c1f); round 2 clean. CI 11/11 green. 1493/0 regression. E2E INERT until R-NEW-1 provisioned. DEC-034 recorded. |
+| S-E2E-2 F5 CONVERGED (1M→CLEAN×3; Copilot 5 rds resolved) 2026-05-29 (DEC-035) | state-manager | complete | F5: pass 1 found 1 MEDIUM doc-fallout; fixed. Passes 2-4 CLEAN. Copilot: 5 rounds; decayed bug→readability→doc-nit per DEC-026 inflection. F6: PASS (zero src/, 0 mutants). Fix commits: c9ad027..a927a72. |
+| S-E2E-2 MERGED 2026-05-29 via PR #434 (develop @ 2ca9fc1) — F7 CONVERGED + LIVE GREEN | state-manager | complete | Live e2e.yml GREEN (run 26658705120, 20/0). FIX-A (write_flow default transitions), FIX-B (sprint clean-skip), FIX-C (noop gate test removed). DI-E2E-F5-2 RESOLVED. OQ-1 open (team-managed sprint coverage). E2E DELIVERED + OPERATIONAL. DEC-035. |
 
 ## Decisions Log
 
@@ -114,6 +108,7 @@ Goal 1c: **Harden v0.5 + feature delivery** — formalize existing codebase with
 | DEC-032 | 2026-05-29: "Live-Jira E2E testing in CI" opened in Feature Mode (BROWNFIELD, per DEC-015). F1 APPROVED: zero src/ changes, BC delta EMPTY, LOW regression risk, one story S-E2E-1 recommended (11 ACs, MEDIUM effort). F2 COMPLETE: NFR-T-E2E-1 added to nfr-catalog.md (Dimension 6: Testing/CI Infrastructure, MEDIUM); NFR count 40→41; CANONICAL-COUNTS.md updated (MEDIUM 15→16, LOW 19→18); both guard scripts green; BC corpus unchanged at 583. OQ-2 resolved: status names configurable via JR_E2E_STATUS_DONE / JR_E2E_STATUS_IN_PROGRESS. Design spec: docs/specs/e2e-live-jira-testing.md on feat/e2e-live-jira-testing @ c3e967a. Provisioning tracking issue R-NEW-1 pending (file GitHub issue before F4). | Test-infra features (zero src/ changes) still warrant a Feature Mode cycle for spec discipline and audit trail. | Phase 3 / Feature Mode | 2026-05-29 | orchestrator + human |
 | DEC-033 | 2026-05-29: S-E2E-1 F5 CONVERGED at full 3-clean bar (passes 5/6/7). Human chose full bar over early-accept at P5. 7 total passes. 6 CRITICAL fixed (all tests/workflow; invisible to hermetic CI): auth-status unsatisfiable AC, nonexistent project subcommands, project-fields object-not-array shape, env-var mismatch, comment positional arg, harden-runner audit→block. Root cause: tests written against assumed CLI surface, not verified against real handlers. 2 LOW deferred (DI-E2E-F5-1/2). Full narrative: `cycles/cycle-001/convergence-trajectory.md`. | F5 adversarial catches CRITICALs hermetic CI cannot; essential even for zero-src-change stories. | Phase 3 / S-E2E-1 F5 | 2026-05-29 | human + adversary |
 | DEC-034 | 2026-05-29: S-E2E-1 MERGED PR #433 @ d484f84 — full VSDD F1–F7 complete. Isolation: dedicated E2E project key on existing site (no real data touched). 2 Copilot findings fixed (commits 7a13f87 + 9597c1f); round 2 clean. CI 11/11; 1493/0 regression. E2E INERT until R-NEW-1 provisioned (jira-e2e env + secrets). OQ-5 open: NFR-O-N in CLAUDE.md stale (`auth status --output json` has no JSON arm); file follow-up issue. | Zero src/ change features still warrant full Feature Mode: F5 caught 6 CRITICALs. | Phase 3 / S-E2E-1 F7 | 2026-05-29 | state-manager |
+| DEC-035 | 2026-05-29: S-E2E-2 MERGED PR #434 @ 2ca9fc1 — E2E DELIVERED + OPERATIONAL. Live run 26654916572 found 4 failures → FIX-A (default transition status fallback), FIX-B (sprint clean-skip on simple/team-managed board), FIX-C (noop gate test removed). Live run 26658705120: 20/0 GREEN. F5: 1M→CLEAN×3. Copilot 5 rds (bug→readability→doc-nit decay per DEC-026). F6: PASS (0 src, 0 mutants). DI-E2E-F5-2 RESOLVED. OQ-1 open (sprint coverage gap — team-managed board; LOW; potential jr enhancement). | Sprint gap is a platform limitation (team-managed boards unsupported by jr sprint commands), not a test-suite bug. | Phase 3 / S-E2E-2 F7 | 2026-05-29 | state-manager |
 | DEC-030 | 2026-05-28: S-400-A MERGED via PR #431 (develop @ 9d4a65b). TEST-ONLY hardening of TH-398-1..4 (issue #400 Story A). 4 Copilot review rounds converged to 0 findings. Round-3 Copilot finding (config.defaults.output flips dry-run output branch) REFUTED by code trace — `config.defaults.output` is not wired into the runtime output decision in main.rs (which reads `cli.output`, clap-defaulted to "table"); `--output table` flag added as defensive hardening / explicit intent rather than a bug fix. This validates the DEC-018 pattern: validate Copilot causal mechanism by code trace before acting. #400 NOT closed — Story B (PG-398-1 count-guard extension) and engine-scoped items (PG-398-4/5) remain open. | Receiving-code-review discipline: validate stated causal mechanism by code trace; hardening that documents intent is still a valid outcome even when the stated mechanism is wrong. | Feature Mode / S-400-A | 2026-05-28 | orchestrator + code-trace |
 | DEC-014 | S-3.07 spec pivot to v2.0.0 (3 corrections: Part A reframe + Part B conditional drop + Part D elevation as confirmed JRACLOUD-94632 bug response) | Perplexity-driven verification on 2026-05-08 found 3 errors in v1: (a) Atlassian Retry-After typical values are 1425-3089 seconds with documented 3600s ceiling, NOT the 86400s extreme used as v1's threat framing — `MAX_RETRY_AFTER_SECS=60` aborts essentially every real-world 429 (still defensible for interactive CLI per RFC 9110 §10.2.3, but story rationale + user error message must reflect reality); (b) Part B's `checked_mul` overflow guard targets the 3-arg `parse_duration` calculator that S-3.10 deletes — the orchestrator's earlier "WV2-SEC-01's 64-byte cap eliminates overflow" reasoning was mathematically false (14-20 digit inputs still overflow u64 within 64 bytes) — correct reason to drop is that S-3.10 deletes the function; drop is conditional via `depends_on: [S-3.10]` + AC-NEW-B sequencing gate, with reinstatement plan if S-3.10 slips; (c) Part D's `/rest/api/3/search/jql` cursor-loop is NOT a defensive nice-to-have — it is a confirmed Jira Cloud bug per JRACLOUD-94632 + JRACLOUD-92049 + JRACLOUD-85546 (also reported in atlassian/atlassian-mcp-server#118 and ankitpokhrel/jira-cli#898) → v2 elevates from KNOWN-GAP source comment to real defensive guard + stderr warning containing literal "JRACLOUD-94632" so users have a copy-pasteable upstream search term. ACs change: drop AC-004/005 (Part B specific); add AC-NEW-B sequencing guard; add AC-NEW-D JRACLOUD content assertion. New risk: R-NEW-S307-1 (silent partial results — failure mode now visible). NFR catalog: NFR-R-NEW-2 row removed (Part B dropped → no longer in scope); NFR-R-F routing flipped from DOCUMENT-AS-IS to DOCUMENT-AS-IS-FIXED (real guard delivered, not just documented). Verification report: `.factory/research/S-3.07-wave3-verification.md`. Story rewrite: `.factory/stories/wave-3/S-3.07-low-nfr-code-fixes-and-search-jql-anti-loop.md` (renamed from `-low-nfr-code-cleanup.md`) at factory-artifacts@898937e. No develop-branch impact. | Phase 3 / Wave 3 | 2026-05-08 | human + research-agent (Perplexity + WebFetch) |
 
@@ -155,8 +150,9 @@ Goal 1c: **Harden v0.5 + feature delivery** — formalize existing codebase with
 | S-288-pr2-PG group | 13 DEFERRED process-gap items from S-288-pr2 cycle (PG-1a..1g, PG-2a/2b, PG-3a/3b, PG-F1, PG-1b/1c/1e/1f). PG-2c RESOLVED (see blocking-issues-resolved.md). | LOW | DEFER → post-S-288 self-improvement epic. Full details: `cycles/cycle-001/drift-items-deferred-S-288.md`. |
 | F1-AUDIT-MISCOUNT-410 | F1 architect undercounted tests in `multi_cloudid_disambiguation.rs` by 1 (claimed 11, actual 12). Reviewer caught during PR. Future: F1 audits of test files should cross-check by counting `^async fn test_\|^fn test_` matches against the explicit per-test table row count before sign-off. | LOW | DEFERRED — single instance, low recurrence risk, codified informally in L-410-1 (lessons.md). Target: next maintenance sweep. No follow-up story created (per PG-NNN precedent for single-occurrence process gaps). |
 | L-428-2-PG | Story-writer AC verification greps drift from as-built code. Greps should anchor on stable code-arm patterns, validated against actual code, not speculative implementations. Consider whether story-writer agent prompt should require this. | LOW | DEFERRED — target: next maintenance sweep; reason: low-severity doc-mechanics gap, no runtime impact. No follow-up story created. |
-| DI-E2E-F5-1/2 | S-E2E-1 F5 LOW deferred: (1) AC-006 grep text imprecise — matches doc comments, not just code; executable code correct. (2) `sprint current` clean-skip only matches "No active sprint" — kanban board would panic; board must be Scrum (provisioning runbook). Both: no runtime impact on correctly-provisioned site. | LOW | DEFERRED — doc/runbook-level. Full narrative: `cycles/cycle-001/convergence-trajectory.md §E2E F5`. |
-| R-NEW-1 | E2E provisioning pending: maintainer must create dedicated Scrum project key `E2E` on existing site + create `jira-e2e` GitHub Environment with secrets/vars (JR_E2E_BASE_URL, JR_E2E_API_TOKEN, etc.). No code follow-up — ops/provisioning task only. Isolation: dedicated E2E project so real data untouched. Confirmed by human 2026-05-29. | MEDIUM | PENDING — manual ops. E2E suite exists on develop (feat/e2e-live-jira-testing merged @ d484f84); INERT until provisioned. |
+| DI-E2E-F5-1 | S-E2E-1 F5 LOW: AC-006 grep text imprecise (matches doc comments; executable code correct). | LOW | DEFERRED — doc/runbook-level. |
+| OQ-1 | Sprint coverage gap: ES board 1 = "simple board" (team-managed project). `jr sprint` unsupported for team-managed boards; live suite skips sprint tests but passes green. Real sprint coverage needs company-managed Scrum board or jr enhancement. | LOW | OPEN — potential jr enhancement issue. No code change needed. |
+| R-NEW-1 | E2E provisioning: jira-e2e GitHub env + secrets/vars + ES project + board 1 created. | MEDIUM | COMPLETE 2026-05-29 (DEC-035). |
 | OQ-5 | CLAUDE.md NFR-O-N line stale: "`auth status --output json` covers single-profile JSON" but `src/cli/auth/status.rs` has no JSON arm and makes no API call. Recommend filing separate GitHub follow-up issue: either implement a JSON arm calling /myself, or remove the inaccurate NFR-O-N claim. Out-of-scope for S-E2E-1 (zero src/ change feature). | LOW | DEFERRED — doc drift. File GitHub issue before next auth touch. |
 | S-382-FLAKE-01 | tests/multi_cloudid_disambiguation.rs keychain contention (macOS) | LOW | PRE-EXISTING — future test-infra cleanup. |
 | PG-388-4, PG-384-1/2, PG-385-1..7, PG-398-1..5 | Process gaps from issues #388/#384/#385/#398 cycles (checklists, template gaps, spec-guard gaps, worktree-path class) | LOW | CODIFIED in lessons.md / TRACKED IN #400. |
@@ -166,7 +162,7 @@ Goal 1c: **Harden v0.5 + feature delivery** — formalize existing codebase with
 
 See `cycles/cycle-001/convergence-trajectory.md` for all per-issue convergence narratives (Phase 1d, Phase 2-adv, Phase 3-adv, issues #288/#382/#383/#384/#385/#396/#398/#407).
 
-Current trajectory summary: S-E2E-1 F7 CONVERGED + MERGED 2026-05-29 (PR #433 @ d484f84). Full Feature Mode F1–F7 complete. F5: 7 passes, 3 consecutive CLEAN; F6: PASS (mutation N/A); F7: 1493/0 regression. BC corpus: 583 BCs (unchanged). NFR corpus: 41 NFRs. Story corpus: 54 stories. Next backlog item pending human direction. Develop @ d484f84. Provisioning R-NEW-1 pending.
+Current trajectory summary: **E2E feature DELIVERED + OPERATIONAL 2026-05-29.** S-E2E-1 PR #433 @ d484f84 + S-E2E-2 PR #434 @ 2ca9fc1 MERGED. S-E2E-2 F5: `1M→CLEAN→CLEAN→CLEAN`; F6: PASS (zero src/, 0 mutants); Copilot: 5 rounds resolved. Live run 26658705120: 20/0 GREEN. BC corpus: 583 BCs (unchanged). NFR corpus: 41 NFRs. Story corpus: 55 stories. Develop @ 2ca9fc1. OQ-1 open (sprint coverage — team-managed board). Next backlog item pending human direction.
 
 ## Session Resume Checkpoint
 
@@ -174,15 +170,15 @@ Current trajectory summary: S-E2E-1 F7 CONVERGED + MERGED 2026-05-29 (PR #433 @ 
 | Field | Value |
 |-------|-------|
 | **Date** | 2026-05-29 |
-| **Position** | **S-E2E-1 MERGED (PR #433 @ d484f84) via full VSDD Feature Mode F1–F7.** E2E machinery on develop but INERT until jira-e2e secrets provisioned (R-NEW-1, manual). 54 stories / 41 NFRs / 583 BCs. Develop @ d484f84. Open backlog: #210, #331, #368, #372, #387, #400 (Story B), #429. Held Dependabot PRs #404/#422/#423/#424/#425/#426 due 2026-05-31. #429 WONTFIX-pending (DEC-029) — do NOT close #429 autonomously. Open follow-up: OQ-5 (NFR-O-N doc drift). |
-| **Convergence counter** | S-E2E-1 F7 CONVERGED + MERGED. BC corpus: 583 BCs. NFR corpus: 41 NFRs. Story corpus: 54 stories. |
-| **Resume prompt** | `Read .factory/STATE.md. S-E2E-1 MERGED (PR #433 @ d484f84) via full VSDD Feature Mode F1–F7 (DEC-032/033/034). E2E INERT until R-NEW-1 provisioned (jira-e2e GitHub Environment + secrets). Next: provisioning (R-NEW-1, ops), or next backlog item. Open: OQ-5 (NFR-O-N doc drift — file GitHub issue). DEC-029 deferred to human (do NOT close #429). Dependabot PRs #404/#422/#423/#424/#425/#426 held until 2026-05-31. 54 stories / 41 NFRs. Develop @ d484f84.` |
+| **Position** | **E2E feature DELIVERED + OPERATIONAL.** S-E2E-1 (PR #433 @ d484f84) + S-E2E-2 (PR #434 @ 2ca9fc1) MERGED. Live e2e.yml GREEN (run 26658705120, 20/0). Provisioning complete (e2e profile OAuth + jira-e2e GitHub env + ES project + board 1). 55 stories / 41 NFRs / 583 BCs. Develop @ 2ca9fc1. Open backlog: #210, #331, #368, #372, #387, #400 (Story B), #429. Held Dependabot PRs #404/#422/#423/#424/#425/#426 due 2026-05-31. #429 WONTFIX-pending (DEC-029) — do NOT close #429 autonomously. Open: OQ-1 (sprint coverage — team-managed board, LOW); OQ-5 (NFR-O-N doc drift). |
+| **Convergence counter** | S-E2E-2 F7 CONVERGED + MERGED. BC corpus: 583 BCs. NFR corpus: 41 NFRs. Story corpus: 55 stories. |
+| **Resume prompt** | `Read .factory/STATE.md. E2E feature DELIVERED + OPERATIONAL (run 26658705120, 20/0). S-E2E-1 (#433 @ d484f84) + S-E2E-2 (#434 @ 2ca9fc1) merged. Provisioning complete (e2e profile, jira-e2e env, ES project, board 1). OQ-1 open (sprint coverage on team-managed board — LOW, no code change needed). OQ-5 open (NFR-O-N doc drift — file GitHub issue). DEC-029 deferred to human (do NOT close #429). Dependabot PRs #404/#422/#423/#424/#425/#426 held until 2026-05-31. 55 stories / 41 NFRs / 583 BCs. Develop @ 2ca9fc1.` |
 
 ## Open Issues Tracker (post-#288)
 
 | Issue | Title | Status | Priority | Notes |
 |-------|-------|--------|----------|-------|
-| e2e-live-jira-testing | Live-Jira E2E testing in CI (Feature Mode) | DELIVERED — PR #433 @ d484f84 (provisioning R-NEW-1 pending) | MEDIUM | DEC-032/033/034. F1–F7 ALL COMPLETE. S-E2E-1 MERGED. E2E INERT until jira-e2e secrets provisioned (R-NEW-1, manual). OQ-5 follow-up open (NFR-O-N doc drift). |
+| e2e-live-jira-testing | Live-Jira E2E testing in CI (Feature Mode) | DELIVERED + LIVE-GREEN — PR #433 @ d484f84 (S-E2E-1) + PR #434 @ 2ca9fc1 (S-E2E-2). Run 26658705120: 20/0 | MEDIUM | DEC-032/033/034/035. F1–F7 COMPLETE (both stories). Provisioning complete (e2e profile + OAuth + jira-e2e env + ES project + board 1). OQ-1 open (sprint coverage, team-managed board). OQ-5 open (NFR-O-N doc drift). |
 | #210 | (backlog) | OPEN | — | |
 | #331 | Sandbox-blocked defer | OPEN | DEFERRED | Requires sandbox access |
 | #372 | cargo-mutants partial baseline | OPEN | LOW | Follow-up from #346 |

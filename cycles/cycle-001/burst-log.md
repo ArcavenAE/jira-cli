@@ -3292,3 +3292,48 @@ Events after issue #288 epic closeout (factory-artifacts @ 7dbbfed):
 | Step | Agent | Status | Output |
 |------|-------|--------|--------|
 | E2E feature F3 COMPLETE 2026-05-29 (factory-artifacts 187e477) | state-manager | complete | F3 (Incremental Stories): story S-E2E-1 created (12 ACs, MEDIUM/8SP, draft). Traceability: NFR-T-E2E-1 + design-spec §3–§8; BC delta EMPTY. STORY-INDEX v1.4.30→v1.4.31, total_stories 53→54, feature-followup group 21→22. |
+
+---
+
+### Archived Current Phase Steps: v0.5.0-dev.11 + E2E F1+F2 (from STATE.md — 2026-05-29 S-E2E-2 F7 burst)
+
+| Step | Agent | Status | Output |
+|------|-------|--------|--------|
+| v0.5.0-dev.11 RELEASED 2026-05-28 (UTC 2026-05-29) via PR #432 (develop @ 15bf305) | state-manager | complete | Dev release v0.5.0-dev.11 tagged on develop @ 15bf305 (PR #432 squash-merged). 7 commits since dev.10. CI 11/11 green. Release workflow triggered. DEC-031 recorded. |
+| E2E feature (F1 APPROVED + F2 COMPLETE) 2026-05-29 | state-manager | complete | Feature Mode: "Live-Jira E2E testing in CI" (DEC-032). F1: zero src/ changes, BC delta EMPTY, LOW risk. F2: NFR-T-E2E-1 added (nfr-catalog.md, MEDIUM, Dimension 6). NFR 40→41. OQ-2 resolved. Both guards green. |
+
+---
+
+## S-E2E-2 F7 Burst — 2026-05-29 (E2E feature cycle CLOSE)
+
+**Agents dispatched:** implementer (fix/e2e-first-run worktree), adversary (F5), state-manager
+**Develop SHA:** 2ca9fc1 (PR #434 squash-merged)
+**Versions bumped:** none (test/workflow-only)
+
+### Summary
+
+S-E2E-2 delivered all 3 first-live-run fixes (FIX-A/B/C) and the live e2e.yml workflow is now GREEN. Full VSDD Feature Mode F1–F7 complete for S-E2E-2. E2E feature (S-E2E-1 + S-E2E-2) is DELIVERED + OPERATIONAL.
+
+### Details
+
+| Agent | Task | Output |
+|-------|------|--------|
+| implementer | F4 — implement FIX-A, FIX-B, FIX-C | fix/e2e-first-run worktree; commits c9ad027, ee5cbce, 2bce989, 5550b40, 1991fa9, 6954196, ce48952, a927a72. FIX-A: write_flow uses JR_E2E_STATUS_IN_PROGRESS / JR_E2E_STATUS_DONE env var defaults instead of hardcoded names. FIX-B: sprint_list + sprint_current detect "simple board" response and emit SKIP log line. FIX-C: self-contradictory gate test removed. |
+| adversary | F5 — scoped adversarial (4 passes) | Pass 1: 1 MEDIUM finding (doc-fallout on sprint skip comment). Fixed. Passes 2-4: CLEAN. Trajectory: `1M→CLEAN→CLEAN→CLEAN`. 3 consecutive CLEAN bar met. |
+| state-manager | F5 convergence + Copilot decay tracking | Copilot: 5 rounds. Decay: bugs (R1) → readability (R2-R3) → doc-nit (R4-R5). All resolved. Matched DEC-026 inflection pattern. |
+| state-manager | F6 — formal hardening | Zero src/ changes; 0 mutants surviving; F6 PASS. |
+| implementer | F7 — PR creation + merge | PR #434 created on fix/e2e-first-run → develop. CI green. Squash-merged @ 2ca9fc1. Branch + worktree removed post-merge. |
+| GitHub Actions | Live e2e.yml run 26658705120 | 20 passed / 0 failed — GREEN. All 4 failures from run 26654916572 resolved. |
+| state-manager | Cycle close + artifact update | STATE.md updated (DEC-035, OQ-1, DI-E2E-F5-2 RESOLVED, session checkpoint advanced). STORY-INDEX v1.4.32→v1.4.33. Convergence trajectory + session-checkpoints + blocking-issues-resolved updated. factory-artifacts committed. |
+
+### Files Touched (develop @ 2ca9fc1)
+
+- `tests/e2e_live.rs` — FIX-A default transition status; FIX-B sprint clean-skip; FIX-C noop test removed
+- `.github/workflows/e2e.yml` — (no changes in this PR; fixes were in test file only)
+- `.factory/stories/S-E2E-2-e2e-suite-first-live-run-fixes.md` — story status draft→merged
+- `.factory/STATE.md`, `.factory/stories/STORY-INDEX.md` — state update
+
+### Open Items Carried Forward
+
+- OQ-1 (LOW): Sprint coverage gap — ES board 1 is team-managed, reported as "simple board". `jr sprint` commands unsupported for team-managed boards. Net effect: suite skips sprint coverage but passes green. Potential jr enhancement to support team-managed scrum boards; no code change needed now.
+- OQ-5 (LOW): NFR-O-N doc drift — CLAUDE.md claims `auth status --output json` has a JSON arm; `src/cli/auth/status.rs` does not. File GitHub follow-up issue before next auth touch.

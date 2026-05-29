@@ -195,3 +195,14 @@ _Archived 2026-05-29. Was the active checkpoint after E2E F5 CONVERGED. Supersed
 | **Position** | **E2E Feature Mode: F1✓ F2✓ F3✓ F4✓ F5✓ (CONVERGED, 3 consecutive CLEAN). Next: F6 targeted hardening.** Branch feat/e2e-live-jira-testing; 10 commits (cdf4dcf..f78eed2); zero src/ changes. Story S-E2E-1 (12 ACs, MEDIUM/8SP). 54 stories / 41 NFRs. Develop @ 15bf305 (v0.5.0-dev.11). Open backlog: #210, #331, #368, #372, #387, #400 (Story B), #429. Held Dependabot PRs #404/#422/#423/#424/#425/#426 due 2026-05-31. #429 WONTFIX-pending (DEC-029) — do NOT close #429 autonomously. File provisioning GitHub issue (R-NEW-1) before F6/F7 merge. |
 | **Convergence counter** | E2E F5 CONVERGED (7 passes, 3 consecutive CLEAN). BC corpus: 583 BCs. NFR corpus: 41 NFRs. Story corpus: 54 stories. |
 | **Resume prompt** | `Read .factory/STATE.md. E2E feature (Feature Mode, DEC-032): F1✓ F2✓ F3✓ F4✓ F5✓ (CONVERGED, 3 consecutive CLEAN; DEC-033). Next: F6 targeted hardening on feat/e2e-live-jira-testing. 10 commits, zero src/ changes. 54 stories / 41 NFRs. Develop @ 15bf305 (v0.5.0-dev.11). Dependabot PRs held until 2026-05-31. DEC-029 deferred to human (do NOT close #429). File provisioning GitHub issue (R-NEW-1) before F6/F7 merge.` |
+
+---
+
+_Archived 2026-05-29. Was the active checkpoint after S-E2E-1 MERGED (F7 CONVERGED). Superseded by S-E2E-2 MERGED + live GREEN checkpoint._
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-05-29 |
+| **Position** | **S-E2E-1 MERGED (PR #433 @ d484f84) via full VSDD Feature Mode F1–F7.** E2E machinery on develop but INERT until jira-e2e secrets provisioned (R-NEW-1, manual). 54 stories / 41 NFRs / 583 BCs. Develop @ d484f84. Open backlog: #210, #331, #368, #372, #387, #400 (Story B), #429. Held Dependabot PRs #404/#422/#423/#424/#425/#426 due 2026-05-31. #429 WONTFIX-pending (DEC-029) — do NOT close #429 autonomously. Open follow-up: OQ-5 (NFR-O-N doc drift). |
+| **Convergence counter** | S-E2E-1 F7 CONVERGED + MERGED. BC corpus: 583 BCs. NFR corpus: 41 NFRs. Story corpus: 54 stories. |
+| **Resume prompt** | `Read .factory/STATE.md. S-E2E-1 MERGED (PR #433 @ d484f84) via full VSDD Feature Mode F1–F7 (DEC-032/033/034). E2E INERT until R-NEW-1 provisioned (jira-e2e GitHub Environment + secrets). Next: provisioning (R-NEW-1, ops), or next backlog item. Open: OQ-5 (NFR-O-N doc drift — file GitHub issue). DEC-029 deferred to human (do NOT close #429). Dependabot PRs #404/#422/#423/#424/#425/#426 held until 2026-05-31. 54 stories / 41 NFRs. Develop @ d484f84.` |

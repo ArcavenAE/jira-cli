@@ -583,3 +583,51 @@ Branch fix commits (feat/e2e-live-jira-testing): df660d7, b6aad30, 8336752, fb00
 Not started.
 
 **Pattern for test-only PRs:** Based on PRs #353 (0 rounds of adversarial), #354 (2 rounds docs-only), #358 (5 rounds — test mechanics): test-only PRs tend toward fast convergence but are NOT immune to doc-fallout. When test code contains narration-style comments describing implementation strategy (Strategy:, Logic:, Algorithm:), those comments must be audited the same way as production doc comments when the behavior they describe changes.
+
+---
+
+## S-E2E-2 — E2E Suite First-Live-Run Fixes (Feature Mode F5 CONVERGED, 2026-05-29)
+
+**Story:** S-E2E-2 — `tests/e2e_live.rs` + `.github/workflows/e2e.yml` first-live-run fixes
+**F5 Adversarial passes:** 4 total. Convergence at passes 2/3/4 (3 consecutive CLEAN).
+**Live run trajectory:** run 26654916572 (17p/4f) → run 26658705120 (20p/0f) GREEN
+
+### F5 Finding Progression
+
+| Pass | Date | CRIT | HIGH | MED | LOW | Counter | Verdict |
+|------|------|------|------|-----|-----|---------|---------|
+| 1 | 2026-05-29 | 0 | 0 | 1 | 0 | 0/3 | FINDINGS_REMAIN |
+| 2 | 2026-05-29 | 0 | 0 | 0 | 0 | 1/3 | CLEAN-PASS |
+| 3 | 2026-05-29 | 0 | 0 | 0 | 0 | 2/3 | CLEAN-PASS |
+| 4 | 2026-05-29 | 0 | 0 | 0 | 0 | 3/3 | FULL CONVERGENCE |
+
+Trajectory shorthand: `1M→CLEAN→CLEAN→CLEAN`
+
+**Pass 1 MEDIUM finding (fixed):** Doc-fallout on sprint skip comment — the inline comment describing the sprint clean-skip path was imprecise about what "simple board" means in the Jira API context. Fixed in the implementation commit before F5 pass 2.
+
+**Copilot review trajectory (5 rounds):**
+
+| Round | Findings | Delta | Notes |
+|-------|----------|-------|-------|
+| R1 | ~3 | — | Bugs in fix logic; all Perplexity-validated; fixed |
+| R2 | ~2 | -1 | Readability findings; fixed |
+| R3 | ~2 | 0 | Readability + doc nit; fixed |
+| R4 | 1 | -1 | Doc nit; fixed |
+| R5 | 0 | -1 | Clean — **STOP CONDITION** |
+
+Decay pattern: bug-class findings → readability → doc-nit. Matched DEC-026 inflection point analysis exactly.
+
+**Fix commits (fix/e2e-first-run):** c9ad027, ee5cbce, 2bce989, 5550b40, 1991fa9, 6954196, ce48952, a927a72
+
+**Fixes delivered:**
+- **FIX-A:** `write_flow` used hardcoded `"In Progress"` / `"Done"` transition names. Fixed: read `JR_E2E_STATUS_IN_PROGRESS` / `JR_E2E_STATUS_DONE` env vars (defaulting to those names for convenience, matching the existing DEC-032 design).
+- **FIX-B:** `sprint_list` and `sprint_current` would panic on the ES board (team-managed project = "simple board" response, not Scrum). Fixed: detect `"simple board"` board type in API response and emit a clean SKIP log message; test assertions relaxed to accept skip.
+- **FIX-C:** Gate test was self-contradictory — it asserted a condition and then immediately asserted its negation. Removed entirely (it was testing framework plumbing that was already covered elsewhere).
+
+**DI-E2E-F5-2 RESOLVED:** The sprint clean-skip originally only matched `"No active sprint"` stderr — now additionally handles "simple board" detection at the API response level. See `blocking-issues-resolved.md`.
+
+**OQ-1 OPEN (LOW):** Board ES-1 on the ES project is a team-managed project. `jr sprint` commands return "This board is not a scrum board" for team-managed boards. The live suite skips sprint_list and sprint_current tests — they emit a SKIP log line and exit 0. The board is NOT a kanban board (it doesn't trigger the original "No active sprint" path); it is a third category: team-managed simple board. Real sprint coverage requires either (a) a company-managed Scrum project, or (b) a jr enhancement to support team-managed scrum boards. No code change needed to pass the live suite — it already passes green with the skip.
+
+**Root-cause pattern:** First-live-run failures were all about runtime environment assumptions (board type, transition name strings) that hermetic wiremock tests cannot catch. This validates running the full live suite after provisioning rather than assuming hermetic green = live green.
+
+**PR #434:** Squash-merged to develop @ 2ca9fc1 (2026-05-29). Branch fix/e2e-first-run deleted post-merge.
