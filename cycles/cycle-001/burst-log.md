@@ -3379,3 +3379,9 @@ The following step row was archived from STATE.md "Current Phase Steps" table (o
 The following step row was archived from STATE.md "Current Phase Steps" table (oldest row pruned to maintain 5-row budget) when the E2E-enh SHIPPED row was added:
 
 | E2E-enh F4 S-E2E-3 MERGED to integration 2026-05-30 (PR #435 squash @ 7f3a1e9) | orchestrator + implementer + code-reviewer + pr-reviewer + pr-manager | complete | M1+foundation: poll_jql (Skip/FailOnShort), shape matchers, JR_E2E_POLL_* test seams, 18 always-run unit tests (7→25 in e2e_live), deepened 12 gated tests to round-trip. Zero src/. 2 reviews APPROVED 0C/0H/0M. ci.yml N/A on integration PR; final integration→develop PR gets full CI. Worktree cleaned. Next: S-E2E-4 (M2). |
+
+## Burst N+8 — Archived Current Phase Steps Row (2026-05-31)
+
+The following step row was archived from STATE.md "Current Phase Steps" table (oldest row pruned to maintain 5-row budget) when the E2E-PG-1 CLI-surface guard SHIPPED row was added:
+
+| E2E-enh F4 S-E2E-4 MERGED to integration 2026-05-31 (PR #437 squash @ 1a64cad) | orchestrator + implementer + code-reviewer + pr-manager | complete | M2: 11 new gated tests (transitions/changelog/comments/board-view/team-list/user-view/link-types/assign/link-unlink/dry-run/pagination-dedup + 404/400/401 error paths). Built on buggy base → rebased onto fixed foundation → source-verified re-review (1 HIGH comments-flake + 3 LOW, all fixed). Zero src/. e2e_live 28/0/26. Next: S-E2E-5 (M3 ops). |
