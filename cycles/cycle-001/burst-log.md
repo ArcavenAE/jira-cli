@@ -3367,3 +3367,9 @@ The following step row was archived from STATE.md "Current Phase Steps" table (o
 The following step row was archived from STATE.md "Current Phase Steps" table (oldest row pruned to maintain 5-row budget) when the E2E-enh F4 S-E2E-5 MERGED row was added:
 
 | E2E enhancements F1 COMPLETE + scope APPROVED 2026-05-29 | orchestrator + architect + business-analyst | complete | Delta: infrastructure/enhancement, NON-trivial, BC delta EMPTY, src/ delta ZERO (poll seam test-layer). Human approved: 3 stories S-E2E-3 (M1+foundation 5SP), S-E2E-4 (M2 5SP), S-E2E-5 (M3 ops 3SP). Report: .factory/phase-f1-delta-analysis/delta-analysis.md. Next: F2 spec evolution (lightweight, empty BC delta). |
+
+## Burst N+6 — Archived Current Phase Steps Row (2026-05-31)
+
+The following step row was archived from STATE.md "Current Phase Steps" table (oldest row pruned to maintain 5-row budget) when the E2E-enh F5 CONVERGED row was added:
+
+| E2E-enh F2 spec-evolution CONVERGED 2026-05-29 (3 consec clean P5/P6/P7) | orchestrator + adversary + product-owner | complete | BC delta EMPTY (PO; BC-2.6.051). Adversary P1 13→P2 5→[outage]→P4 6→P5/P6/P7 CLEAN. All assumed-CLI-surface defects eliminated + source-verified @ 3d29f8d. F-1 closed (board.rs type rename). 2 LOW deferred to F3/F4 (DI-E2E-F2-1/2). Awaiting F2 human gate → F3 story authoring. |

@@ -1,85 +1,77 @@
----
-document_type: f1-delta-analysis
-phase: phase-f1-delta-analysis
-producer: state-manager
-issue: 340
-input-hash: 96b509fc6ba2b2a35e852b095e110df27e13a234d376011eaf7dcc5f01f49408
-status: orchestrator-approved
-timestamp: 2026-05-15
-project: jira-cli
-mode: BROWNFIELD
-intent: enhancement
-feature_type: backend
-trivial_scope: false
-regression_risk: low
-inputs:
-  - ".factory/phase-f1-delta-analysis/architect-input.md"
-  - ".factory/phase-f1-delta-analysis/business-analyst-input.md"
----
+# Delta Analysis Report — Live-Jira E2E Test Suite Enhancements
 
-# F1 Delta Analysis — Issue #340
+**Feature:** Live-Jira E2E test suite enhancements (regression-safety + portability hardening)
+**Design spec:** docs/specs/e2e-test-enhancements.md (committed, branch test/e2e-enhancements @ d0f6ba3)
+**Research:** .factory/research/e2e-enhancement-best-practices.md (Perplexity-primary, cited)
+**Date:** 2026-05-29
+**Mode:** BROWNFIELD / Feature Mode (F1–F7)
 
-## Issue Summary
+## Classification
+| Dimension | Value |
+|-----------|-------|
+| Feature type | infrastructure (test-only) |
+| Intent | enhancement |
+| Trivial scope? | NO — multiple new test functions + new CI workflow; full F1–F7 |
+| BC delta | EMPTY (no new BCs; covers existing contracts) — same as S-E2E-1/S-E2E-2 |
+| src/ delta | ZERO (preserves S-E2E-1/S-E2E-2 precedent) |
+| Architecture change | NO (no ADR/arch-doc update; .factory/specs/architecture absent) |
 
-Issue #340 ("chore(bulk): scale await_bulk_task timeout with bulk size or include task_id in timeout error") emerged from the F5 adversarial review of PR #348 / issue #110 part 2. It presents three options: (a) a size-scaling formula for the timeout, (b) a const-bump from 300s to a larger fixed value, and (c) including task_id in the timeout error message. Option (c) — task_id in the error message — is ALREADY satisfied by production code at `src/api/jira/bulk.rs:412` (message: `"[deadline:bulk-outer] Bulk task {task_id} did not complete within …"`) delivered via PR #360. What is missing is only the test pinning that contract as a behavioral guarantee. Options (a) and (b) are DEFERRED per orchestrator directive (see Deferred Follow-ups below).
+## Impact Assessment
+| Layer | Impact |
+|-------|--------|
+| PRD / BCs | No change. Tests VERIFY existing BCs across bc-2, bc-3, bc-5, bc-7, error-taxonomy. |
+| Architecture | No change. |
+| UX | N/A (infrastructure). |
+| Stories | 3 new stories (S-E2E-3/4/5). |
+| Tests | tests/e2e_live.rs MODIFIED (deepen + add); new always-run unit tests for pure helpers. |
+| Verification | E2E tests are the verification artifact. |
+| CI | e2e.yml MODIFIED (failure classification); e2e-sweeper.yml NEW. |
 
-## Approved Scope
+## Component Impact Table
+| Component | Type | Rationale |
+|-----------|------|-----------|
+| tests/e2e_live.rs | MODIFIED | M1 deepen assertions; M2 ~7-10 new gated tests; M3 poll_jql + matchers + transient classifier + secret-leak guard + leak log. |
+| .github/workflows/e2e.yml | MODIFIED | M3: 401-vs-connection failure classification; optional JR_E2E_POLL_* env. |
+| .github/workflows/e2e-sweeper.yml | NEW | M3: daily non-blocking sweeper; concurrency: jira-e2e. |
+| CLAUDE.md (AI agent notes) | MODIFIED | Mandatory co-change: JR_E2E_POLL_* JR_* table entry (doc-fallout rule #335/#357). |
+| src/* | DEPENDENT (regression baseline) | error.rs exit codes read-only; bulk.rs is exemplar only. NOT modified. |
+| tests/issue_view_errors.rs, tests/issue_list_errors.rs | DEPENDENT | Read for exit-code constants; NOT modified. |
 
-TEST-PIN only. Pin the existing task_id-in-timeout-message behavior as a behavioral contract via one new BC (ID TBD by F2 product-owner) and one additive assertion in `tests/bulk_deadline_propagation.rs`. No production code changes. No options (a) or (b) in this cycle.
+## Poll-Budget Seam Verdict
+JR_E2E_POLL_* is TEST-LAYER ONLY. Unlike JR_BULK_* (which the jr binary reads inside its own async loop, requiring a #[cfg(debug_assertions)] src/ read site), poll_jql is a test-side loop that invokes jr as a subprocess repeatedly; the budget is owned by tests/e2e_live.rs and read via std::env::var there. ZERO src/ change.
 
-## Impact Assessment Table
+## BC Coverage Map (all VERIFIED, none new)
+BC-2.2.028 (list default fields); BC-2.3.032 (issue view raw JSON); BC-2.4.039 (comments); BC-2.5.043-046 (changelog); BC-3.1.003 (assign --me); BC-3.2.001 (single-key move idempotency); BC-3.4.012/013 (edit echo asymmetry #398); BC-3.6.001/004/005 (link/unlink/link-types); BC-5.1.001 (board list); BC-5.2.005 (sprint current); BC-6.2.051 (pagination dedup JRACLOUD-95368); BC-7.1.005 (JSON error shape); BC-7.3.006 (exit-code mapping); BC-X.3.002 (401→exit2); BC-X.5.001 (worklog add); BC-X.6.004 (team list). NOTE: BC ids to be confirmed against BC-INDEX.md during F3 story authoring — list is indicative of coverage intent.
 
-| Artifact | Change |
-|----------|--------|
-| PRD | +1 new BC (ID TBD by F2 product-owner; under `bc-3-issue-write.md`) |
-| Architecture | unchanged |
-| UX | n/a (backend only) |
-| Stories | +1 new story (created in F3) |
-| Tests | `tests/bulk_deadline_propagation.rs` — additive assertion only |
-| VPs | extend VP-deadline-bounded-bulk-poll (assert task_id literal in stderr on timeout) |
+## Regression Risk Assessment
+| Risk | Level | Detail |
+|------|-------|--------|
+| test_every_ignored_test_has_gate_guard (always-run meta-guard) | HIGH | Every new #[ignore] test MUST early-return via e2e_enabled() before any live call, or this fails in ci.yml. |
+| always-run gate tests | HIGH | Un-gated live call surfaces immediately in normal cargo test. |
+| extract_fn_body / new pure-helper unit tests | MEDIUM | New helpers (poll_jql, matchers) need their own always-run unit tests. |
+| e2e-sweeper.yml concurrency | LOW | Must share concurrency: jira-e2e; must not delete (close-only). |
+| CLAUDE.md JR_* doc | LOW | JR_E2E_POLL_* documented same commit as the seam. |
+| src/, Cargo.toml, BC count surfaces, ci.yml, release.yml | NONE | Regression baseline — not touched. |
 
-## Files Likely Changed
+## Error-Path Exit-Code Contract (M2 §6.3)
+Implementer MUST read tests/issue_view_errors.rs + tests/issue_list_errors.rs and reuse pinned codes; do NOT invent. From src/error.rs::exit_code(): 404→1 (ApiError), 400 malformed JQL→1 (ApiError, freeform --jql not client-validated), 401 bad auth→2 (NotAuthenticated). Assert exit code + JSON error-field presence only; never message substrings (JRACLOUD-95368 lesson).
 
-- `tests/bulk_deadline_propagation.rs` (MODIFIED — additive assertion: `stderr.contains(task_id)` on the B-1 test fixture task_id)
-- `.factory/specs/prd/bc-3-issue-write.md` (MODIFIED — append new BC for task_id-in-timeout-message contract)
-- `.factory/specs/prd/BC-INDEX.md` (MODIFIED — register new BC)
-- `.factory/specs/prd/CANONICAL-COUNTS.md` (MODIFIED — bump BC count by 1)
-- `.factory/stories/wave-4/STORY-NNN.md` (NEW — story for this feature; NNN = next available ID in F3)
-- `.factory/stories/STORY-INDEX.md` (MODIFIED — register new story)
+## Recommended Story Breakdown (3 stories, 13 SP)
+| Story | Scope | SP |
+|-------|-------|----|
+| S-E2E-3 | M1 + Foundation (poll_jql, matchers, transient classifier, JR_E2E_POLL_* seam, deepen existing test bodies, always-run helper unit tests) | 5 |
+| S-E2E-4 | M2 (new read/discovery tests, write/behavioral tests: assign/link/unlink/dry-run/bulk-move/pagination-dedup, error/exit-code paths) | 5 |
+| S-E2E-5 | M3 (e2e-sweeper.yml, e2e.yml failure classification, secret-leak guard, leak-detection log, CLAUDE.md JR_E2E_POLL_* docs) | 3 |
 
-## Files NOT Changed (regression baseline)
+Dependency: S-E2E-3 (foundation) → S-E2E-4 (uses poll_jql for pagination dedup). S-E2E-5 independent of both but logically last.
 
-- `src/api/jira/bulk.rs` — production code already correct from PR #360; `[deadline:bulk-outer] Bulk task {task_id} did not complete within…` at line 412 is the contract being pinned, not changed
-- `src/cli/issue/create.rs` — no call-site signature change (options (a)/(b) deferred)
-- `src/cli/issue/workflow.rs` — no call-site signature change (options (a)/(b) deferred)
-- `tests/bulk_await_timeout_release_gate.rs` — unaffected (resolver signature unchanged)
-- `tests/issue_bulk_pr2.rs` — no change; integration tests invoke binary via subprocess
-- `src/error.rs` — `JrError::DeadlineExceeded { remaining_ms, message }` already correct; no variant taxonomy change
-- `src/api/client.rs` — deadline propagation fully implemented by PR #360; no structural change
-- `CLAUDE.md` — no new seam documentation needed (no new env-var or resolver parameter)
-- All other test files
+## Regression Baseline (files NOT changed)
+All of src/; Cargo.toml; Cargo.lock; deny.toml; .github/workflows/ci.yml; .github/workflows/release.yml; tests/common/; BC-INDEX.md; CANONICAL-COUNTS.md; tests/issue_view_errors.rs; tests/issue_list_errors.rs.
 
-## Risk Assessment
-
-- **Regression risk: LOW** — additive test-only change; no production code touched; no resolver signature change; existing deadline tests (`test_333_bulk_429_storm_respects_deadline_within_grace` and `test_333_b1_bulk_running_storm_respects_deadline_via_outer_clamp`) remain valid as-is and the new assertion adds on top of the existing B-1 test infrastructure
-- **Architecture risk: NONE** — no new modules, no new interfaces, no dependency graph changes
-- **Security risk: NONE** — `task_id` surface already audited and validated via PR #355 (`validate_task_id` in `src/api/jira/bulk.rs`); CWE-117 log-injection surface for task_id already addressed (PR #356)
-
-## Recommended Scope for Subsequent Phases
-
-- **F2:** product-owner appends 1 new BC to `bc-3-issue-write.md`; updates BC-INDEX + CANONICAL-COUNTS; extends VP-deadline-bounded-bulk-poll to assert task_id literal in stderr
-- **F3:** story-writer creates 1 story tracing to the new BC + the existing VP extension; story target: `tests/bulk_deadline_propagation.rs` additive assertion
-- **F4:** test-writer extends `tests/bulk_deadline_propagation.rs` with 1 assertion (`stderr.contains(task_id_fixture_string)`) on the B-1 test; implementer no-op (production code already correct)
-- **F5:** scoped adversarial on the test diff only (1-file diff; no production code surface)
-- **F6:** minimal — no proofs, fuzz, or mutation testing needed for a single additive test assertion
-- **F7:** PR via pr-manager, target develop, label `audit-followup`, close #340
-
-## Deferred Follow-ups
-
-- **Option (a) size-scaling formula** (`300 + keys.len() * 2`, capped at 1800s) — requires resolver signature change propagating to 3 call sites + 1 release-gate test update + new unit test for formula. File as a NEW enhancement issue if/when operational data shows the 300s fixed default is insufficient for real-world bulk operations.
-- **Option (b) const-bump** (300s → 900s) — simpler than (a), but no empirical data justifies the bump today. File as a NEW enhancement issue with operational justification (e.g., field reports of timeout failures on large bulk edits) before acting.
-
-## Quality Gate
-
-Orchestrator approved 2026-05-15.
-Human approval gate: implicitly approved via "proceed and follow vsdd process" directive.
+## Recommended scope for F2–F7
+- F2 (spec evolution): EMPTY BC delta — confirm no PRD/BC change; record E2E coverage intent only. Lightweight.
+- F3 (incremental stories): author S-E2E-3/4/5 per breakdown above.
+- F4 (delta implementation): TDD per story; full regression suite (1490+/0) as safety net; zero src/.
+- F5 (scoped adversarial): 3-clean bar on the test/CI delta (prior E2E F5 caught 6 CRITICALs — essential even for zero-src stories).
+- F6 (hardening): mutation N/A (zero src/); security scan on new CI workflow (harden-runner allowlist, secret handling).
+- F7 (delta convergence): + full regression validation.

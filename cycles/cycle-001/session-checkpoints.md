@@ -217,3 +217,14 @@ _Archived 2026-05-29. Was the active checkpoint after S-E2E-2 MERGED + live GREE
 | **Position** | **E2E feature DELIVERED + OPERATIONAL.** S-E2E-1 (PR #433 @ d484f84) + S-E2E-2 (PR #434 @ 2ca9fc1) MERGED. Live e2e.yml GREEN (run 26658705120, 20/0). Provisioning complete (e2e profile OAuth + jira-e2e GitHub env + ES project + board 1). 55 stories / 41 NFRs / 583 BCs. Develop @ 2ca9fc1. Open backlog: #210, #331, #368, #372, #387, #400 (Story B), #429. Held Dependabot PRs #404/#422/#423/#424/#425/#426 due 2026-05-31. #429 WONTFIX-pending (DEC-029) — do NOT close #429 autonomously. Open: OQ-1 (sprint coverage — team-managed board, LOW); OQ-5 (NFR-O-N doc drift). |
 | **Convergence counter** | S-E2E-2 F7 CONVERGED + MERGED. BC corpus: 583 BCs. NFR corpus: 41 NFRs. Story corpus: 55 stories. |
 | **Resume prompt** | `Read .factory/STATE.md. E2E feature DELIVERED + OPERATIONAL (run 26658705120, 20/0). S-E2E-1 (#433 @ d484f84) + S-E2E-2 (#434 @ 2ca9fc1) merged. Provisioning complete (e2e profile, jira-e2e env, ES project, board 1). OQ-1 open (sprint coverage on team-managed board — LOW, no code change needed). OQ-5 open (NFR-O-N doc drift — file GitHub issue). DEC-029 deferred to human (do NOT close #429). Dependabot PRs #404/#422/#423/#424/#425/#426 held until 2026-05-31. 55 stories / 41 NFRs / 583 BCs. Develop @ 2ca9fc1.` |
+
+---
+
+_Archived 2026-05-30. Was the active checkpoint after OQ-1 RESOLVED (DEC-036; board 3; run 26659977426 20/0). Superseded by E2E-enh F3 stories authored (S-E2E-3/4/5) checkpoint._
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-05-29 |
+| **Position** | **E2E feature DELIVERED + FULLY OPERATIONAL (incl. sprint coverage).** S-E2E-1 (PR #433 @ d484f84) + S-E2E-2 (PR #434 @ 2ca9fc1) MERGED. Board recreated as company-managed Scrum (id 3); JR_E2E_BOARD_ID 1→3; live run 26659977426: 20/0, sprint tests RUN+PASS. OQ-1 RESOLVED (DEC-036). 55 stories / 41 NFRs / 583 BCs. Develop @ 2ca9fc1. Open backlog: #210, #331, #368, #372, #387, #400 (Story B), #429. Held Dependabot PRs #404/#422/#423/#424/#425/#426 due 2026-05-31. #429 WONTFIX-pending (DEC-029) — do NOT close #429 autonomously. OQ-5 open (NFR-O-N doc drift). |
+| **Convergence counter** | E2E FULLY OPERATIONAL post-OQ-1 resolution. BC corpus: 583 BCs. NFR corpus: 41 NFRs. Story corpus: 55 stories. |
+| **Resume prompt** | `Read .factory/STATE.md. E2E FULLY OPERATIONAL (run 26659977426, 20/0, sprint tests RUN+PASS on board 3). OQ-1 RESOLVED (DEC-036). S-E2E-1 (#433) + S-E2E-2 (#434) merged. OQ-5 open (NFR-O-N doc drift — file GitHub issue). DEC-029 deferred to human (do NOT close #429). Dependabot PRs #404/#422/#423/#424/#425/#426 held until 2026-05-31. 55 stories / 41 NFRs / 583 BCs. Develop @ 2ca9fc1.` |
