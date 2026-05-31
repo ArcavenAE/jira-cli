@@ -3337,3 +3337,33 @@ S-E2E-2 delivered all 3 first-live-run fixes (FIX-A/B/C) and the live e2e.yml wo
 
 - OQ-1 (LOW): Sprint coverage gap — ES board 1 is team-managed, reported as "simple board". `jr sprint` commands unsupported for team-managed boards. Net effect: suite skips sprint coverage but passes green. Potential jr enhancement to support team-managed scrum boards; no code change needed now.
 - OQ-5 (LOW): NFR-O-N doc drift — CLAUDE.md claims `auth status --output json` has a JSON arm; `src/cli/auth/status.rs` does not. File GitHub follow-up issue before next auth touch.
+
+## Burst N+1 — Archived Current Phase Steps Row (2026-05-29)
+
+The following step row was archived from STATE.md "Current Phase Steps" table (oldest row pruned to maintain 5-row budget) when the E2E test-enhancements F1 row was added:
+
+| E2E feature F3 COMPLETE + F4 COMPLETE 2026-05-29 | state-manager | complete | F3: story S-E2E-1 created (12 ACs, MEDIUM/8SP, draft). BC delta EMPTY. F4 delivered on feat/e2e-live-jira-testing; 10 commits (cdf4dcf..f78eed2). Zero src/ changes. |
+
+## Burst N+2 — Archived Current Phase Steps Row (2026-05-29)
+
+The following step row was archived from STATE.md "Current Phase Steps" table (oldest row pruned to maintain 5-row budget) when the E2E-enh F2 adversary CONVERGED row was added:
+
+| S-E2E-1 F5 CONVERGED 2026-05-29 — 7 passes, 3 consecutive CLEAN (DEC-033) | state-manager | complete | F5 scoped adversarial: 6 CRITICAL defects found+fixed. Full bar. Trajectory: (4C/4H)→(1C/2H)→(1C/2H/1M)→(2M)→CLEAN→CLEAN→CLEAN. 2 LOW deferred (DI-E2E-F5-1/2). F6: PASS (mutation N/A — zero src/ delta). |
+
+## Burst N+3 — Archived Current Phase Steps Row (2026-05-30)
+
+The following step row was archived from STATE.md "Current Phase Steps" table (oldest row pruned to maintain 5-row budget) when the E2E-enh F3 stories authored row was added:
+
+| S-E2E-1 MERGED 2026-05-29 via PR #433 (develop @ d484f84) — F7 CONVERGED | state-manager | complete | Full VSDD Feature Mode F1–F7 complete. 2 Copilot findings fixed (7a13f87 + 9597c1f); round 2 clean. CI 11/11 green. 1493/0 regression. E2E INERT until R-NEW-1 provisioned. DEC-034 recorded. |
+
+## Burst N+4 — Archived Current Phase Steps Row (2026-05-31)
+
+The following step row was archived from STATE.md "Current Phase Steps" table (oldest row pruned to maintain 5-row budget) when the E2E-enh F4 S-E2E-4 MERGED row was added:
+
+| S-E2E-2 MERGED 2026-05-29 via PR #434 (develop @ 2ca9fc1) — F7 CONVERGED + LIVE GREEN | state-manager | complete | Live e2e.yml GREEN (run 26658705120, 20/0). FIX-A (write_flow default transitions), FIX-B (sprint clean-skip), FIX-C (noop gate test removed). DI-E2E-F5-2 RESOLVED. OQ-1 open (team-managed sprint coverage). E2E DELIVERED + OPERATIONAL. DEC-035. |
+
+## Burst N+5 — Archived Current Phase Steps Row (2026-05-31)
+
+The following step row was archived from STATE.md "Current Phase Steps" table (oldest row pruned to maintain 5-row budget) when the E2E-enh F4 S-E2E-5 MERGED row was added:
+
+| E2E enhancements F1 COMPLETE + scope APPROVED 2026-05-29 | orchestrator + architect + business-analyst | complete | Delta: infrastructure/enhancement, NON-trivial, BC delta EMPTY, src/ delta ZERO (poll seam test-layer). Human approved: 3 stories S-E2E-3 (M1+foundation 5SP), S-E2E-4 (M2 5SP), S-E2E-5 (M3 ops 3SP). Report: .factory/phase-f1-delta-analysis/delta-analysis.md. Next: F2 spec evolution (lightweight, empty BC delta). |
