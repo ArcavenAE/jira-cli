@@ -3463,3 +3463,38 @@ All 6 merged via code-owner approval; no branch-protection bypass used.
 | #423 | github/codeql-action | 3.35.5 → 4.35.5 (major) | 2ba19c68 |
 | #426 | actions/upload-artifact | 4.6.2 → 7.0.1 (major) | c4404c890 |
 | #425 | actions/checkout | 4.3.1 → 6.0.2 (major, rebased) | 403582e7 |
+
+---
+
+## Burst N+13 — Dev release v0.5.0-dev.13 shipped (2026-06-01)
+
+**Agents dispatched:** state-manager (recording release)
+**develop HEAD after:** ec8f6be
+**Tag:** v0.5.0-dev.13 (annotated, points at ec8f6be)
+**PR:** #457 (branch chore/release-v0.5.0-dev.13 off develop @ 403582e)
+
+### Summary
+
+Dev release v0.5.0-dev.13 shipped via branch+PR+tag flow (DEC-031/053 precedent).
+11 commits bundled since dev.12 tag (432f381):
+- PR #452: priority/worklog/unassign e2e + priorityId schema
+- PR #453: #331 issueType bulk camelCase issueType + issueTypeId + cross-project guard
+- PR #454: #331 wire JR_E2E_ISSUE_TYPE_ALT into e2e.yml
+- PR #455: #331 createmeta issueTypes + offset pagination fix
+- PR #456: CLAUDE.md compaction ~36%
+- PRs #404/#424/#422/#423/#426/#425: Dependabot bumps
+
+Pre-PR local checks all green: cargo fmt --all --check, cargo clippy --all-targets -D warnings, cargo test (exit 0).
+PR CI: all 6 required checks green (Format, Clippy, Test ubuntu-latest, Test macos-latest, MSRV 1.85.0, Deny).
+PR #457 could not be self-approved (author = code owner) but merged CLEAN: required_approving_review_count=0, code-owner requirement auto-satisfied for self-authored PRs.
+
+Release workflow run 26785757910 COMPLETED SUCCESS.
+GitHub prerelease v0.5.0-dev.13 published 2026-06-01T22:29:16Z with 8 assets:
+aarch64-apple-darwin.tar.gz + .sha256, x86_64-apple-darwin.tar.gz + .sha256,
+aarch64-unknown-linux-gnu.tar.gz + .sha256, x86_64-unknown-linux-gnu.tar.gz + .sha256.
+
+### Archived Current Phase Step (from STATE.md, superseded by dev.13 row)
+
+| Step | Agent | Status | Output |
+|------|-------|--------|--------|
+| E2E-enh F6 PASS + F7 CONVERGED 2026-05-31 (READY FOR MERGE) | orchestrator + formal-verifier + state-manager | complete | F6: mutation N/A (zero src/, empty mutant set per policy), Kani/fuzz N/A, security scan PASS, test-helpers unit-covered. F7: 5-dim convergence PASS (spec 3-clean, test ACs+no-vacuous, impl 3-clean 0 HIGH, verification N/A-justified+security PASS, holdout N/A product-behavior-unchanged). Regression 1521/0/58 clean (interim '8 failed' was a force-removed-worktree artifact, re-verified clean). Integration @ f19acd9. AWAITING HUMAN MERGE GATE for integration→develop PR. |
