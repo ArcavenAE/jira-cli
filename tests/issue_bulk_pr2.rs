@@ -784,16 +784,32 @@ async fn test_multi_key_summary_update_uses_bulk_fields_endpoint() {
 /// `jr issue edit KEY1 KEY2 --priority High --no-input`
 /// Assert: POST /rest/api/3/bulk/issues/fields with priority in editedFieldsInput.
 ///
-/// SCHEMA NOTE: priority shape in editedFieldsInput is unverified. Best-guess:
-///   {"editedFieldsInput": {"priority": {"name": "High"}}}
-/// Test uses body_string_contains("priority") as a tolerant matcher.
+/// Updated for issue #331: priority shape is now verified.
+/// The code calls GET /rest/api/3/priority to resolve "High" → id, then builds
+///   `{"editedFieldsInput": {"priority": {"priorityId": "<id>"}}}`.
+/// This test provides the priority list mock and uses a tolerant
+/// body_string_contains("priorityId") matcher (the strict id-value assertion is
+/// in `test_bulk_priority_body_uses_priority_id_not_name`).
 #[tokio::test]
 async fn test_multi_key_priority_update_uses_bulk_fields_endpoint() {
     let server = MockServer::start().await;
 
+    // Mock GET /rest/api/3/priority — required since the fix resolves name→id.
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/priority"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!([
+            {"id": "1", "name": "Highest"},
+            {"id": "2", "name": "High"},
+            {"id": "3", "name": "Medium"},
+            {"id": "4", "name": "Low"},
+            {"id": "5", "name": "Lowest"}
+        ])))
+        .mount(&server)
+        .await;
+
     Mock::given(method("POST"))
         .and(path("/rest/api/3/bulk/issues/fields"))
-        .and(body_string_contains("priority"))
+        .and(body_string_contains("priorityId"))
         // Regression pin (audit F5): selectedActions field must always be present.
         .and(body_string_contains("selectedActions"))
         .respond_with(ResponseTemplate::new(200).set_body_json(bulk_enqueued("task-prio-001")))
@@ -821,6 +837,107 @@ async fn test_multi_key_priority_update_uses_bulk_fields_endpoint() {
     assert!(
         output.status.success(),
         "Expected exit 0 for multi-key --priority bulk edit; stderr={stderr} stdout={stdout}"
+    );
+}
+
+// ---------------------------------------------------------------------------
+// #331: bulk priority payload — must use priorityId (string), NOT name.
+// ---------------------------------------------------------------------------
+
+/// `jr issue edit KEY1 KEY2 --priority High --no-input`
+/// Verifies the CORRECTED bulk priority wire shape (issue #331).
+///
+/// The Atlassian Bulk Operations FAQ (verbatim JSON) specifies:
+///   `editedFieldsInput.priority = {"priorityId": "<id-string>"}`
+/// NOT `{"name": "High"}` (which is what jr currently sends — the bug).
+///
+/// Fix requires jr to:
+///   1. Call `GET /rest/api/3/priority` to resolve "High" → id "3".
+///   2. Build `editedFieldsInput = {"priority": {"priorityId": "3"}}`.
+///   3. NOT use `{"name": "High"}` in `editedFieldsInput`.
+///
+/// RED gate: current code sends `{"priority":{"name":"High"}}` in editedFieldsInput,
+/// which contains `"name"` but NOT `"priorityId"`. The `body_string_contains("priorityId")`
+/// matcher will NOT match the current body, so wiremock rejects the request → test fails.
+///
+/// Source: https://developer.atlassian.com/cloud/jira/platform/bulk-operation-additional-examples-and-faqs/
+#[tokio::test]
+async fn test_bulk_priority_body_uses_priority_id_not_name() {
+    let server = MockServer::start().await;
+
+    // Mock GET /rest/api/3/priority → returns a list with "High" = id "3".
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/priority"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!([
+            {"id": "1", "name": "Highest"},
+            {"id": "2", "name": "High"},
+            {"id": "3", "name": "Medium"},
+            {"id": "4", "name": "Low"},
+            {"id": "5", "name": "Lowest"}
+        ])))
+        .expect(1)
+        .mount(&server)
+        .await;
+
+    // Bulk POST must contain "priorityId" (string id), NOT "name".
+    // Using body_string_contains("priorityId") as the RED gate:
+    // current code sends {"name":"High"} which does NOT contain "priorityId".
+    Mock::given(method("POST"))
+        .and(path("/rest/api/3/bulk/issues/fields"))
+        .and(body_string_contains("priorityId"))
+        .and(body_string_contains("selectedActions"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(bulk_enqueued("task-prio-id-001")))
+        .expect(1)
+        .mount(&server)
+        .await;
+
+    mount_poll_complete(&server, "task-prio-id-001", &["PRI-1", "PRI-2"]).await;
+
+    let output = jr_cmd(&server.uri())
+        .args([
+            "--no-input",
+            "issue",
+            "edit",
+            "PRI-1",
+            "PRI-2",
+            "--priority",
+            "High",
+        ])
+        .output()
+        .unwrap();
+
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    assert!(
+        output.status.success(),
+        "Expected exit 0 for multi-key --priority bulk edit; stderr={stderr} stdout={stdout}"
+    );
+
+    // Verify the recorded request body structure precisely.
+    let requests = server.received_requests().await.unwrap();
+    let bulk_req = requests
+        .iter()
+        .find(|r| r.url.path() == "/rest/api/3/bulk/issues/fields")
+        .expect("Expected exactly one POST to /rest/api/3/bulk/issues/fields");
+    let body_str = std::str::from_utf8(&bulk_req.body).unwrap_or("");
+
+    // "priorityId" MUST appear in the body (the id-based shape).
+    assert!(
+        body_str.contains("priorityId"),
+        "Expected 'priorityId' in bulk body (got name-based shape instead); body={body_str}"
+    );
+
+    // The resolved id "2" (for "High") must appear in the body.
+    assert!(
+        body_str.contains("\"2\""),
+        "Expected priority id '\"2\"' in bulk body; body={body_str}"
+    );
+
+    // "priorityName" / {"name":"High"} must NOT appear as the editedFieldsInput value.
+    // We check that "\"High\"" does not appear as a JSON string value.
+    assert!(
+        !body_str.contains("\"High\""),
+        "Bulk body must NOT contain '\"High\"' (name-based shape — use priorityId instead); body={body_str}"
     );
 }
 

@@ -657,18 +657,18 @@ pub(super) async fn handle_edit(
                     //       "labels": [{"name": "foo"}]}]}` (nested array, or
                     //     two elements when ADD+REMOVE coalesce).
                     //   - `priority`: dry-run emits a bare string. POST body wraps as
-                    //     `{"name": "..."}` (best-guess; Atlassian docs document
-                    //     `{"priorityId": <int>}`).
+                    //     `{"priorityId": "<id-string>"}` (name→id resolved via
+                    //     GET /rest/api/3/priority; #331).
                     //   - `issueType`: dry-run emits a bare string. POST body wraps as
                     //     `{"issuetype": {"name": "..."}}` (best-guess; Atlassian docs
                     //     document `{"issueTypeId": "..."}`).
                     // The dry-run JSON is a human-and-tool-friendly preview, NOT a
-                    // byte-for-byte snapshot of the wire request. Rationale: all three
-                    // POST shapes are best-guesses pending #331 empirical verification.
-                    // Locking dry-run consumers to unverified canonical Atlassian
-                    // shapes now would force a second breaking change once #331
-                    // confirms the true shapes. Once #331 verifies the wire shapes,
-                    // this dry-run builder can be unified with
+                    // byte-for-byte snapshot of the wire request. Priority shape was
+                    // empirically verified by #331. Labels shape was verified and fixed
+                    // in #446. issueType shape is still a best-guess pending #331
+                    // empirical verification; locking dry-run consumers to an unverified
+                    // shape now would force a second breaking change. Once #331 verifies
+                    // the issueType shape, this dry-run builder can be unified with
                     // `handle_edit_bulk_labels` / `handle_edit_bulk_fields` to
                     // emit byte-identical JSON.
                     let label_entries: Vec<serde_json::Value> = labels
@@ -1273,20 +1273,27 @@ async fn handle_edit_bulk_labels(
 /// previews for these same fields (bare strings for `priority` and `issueType`,
 /// see the dry-run builder in `handle_edit` above) that do NOT match the POST
 /// body shapes built here. Dry-run is a human-and-tool-friendly diff; the POST
-/// body shapes here are the current best-guess (still unverified, pending #331).
-/// Once #331 confirms the canonical wire shapes and the bulk builders are
-/// extracted into pure functions, the two paths can converge.
+/// body shapes here follow the Atlassian Bulk Operations FAQ (issue #331).
 ///
-/// editedFieldsInput shape (best-guess — unverified against live API):
+/// editedFieldsInput shape (verified against Atlassian Bulk Operations FAQ):
 /// ```json
 /// {
 ///   "summary": "New title",
-///   "priority": {"name": "High"},
+///   "priority": {"priorityId": "3"},
 ///   "issuetype": {"name": "Bug"}
 /// }
 /// ```
-/// Tests use body_string_contains("summary") / body_string_contains("priority")
-/// as loose matchers so exact nesting variation is tolerated.
+///
+/// Priority resolution: the bulk endpoint requires `{"priorityId": "<id-string>"}`,
+/// NOT `{"name": "High"}`. This function calls `GET /rest/api/3/priority` to
+/// resolve the priority name to a string id. If the name does not match any known
+/// priority (case-insensitive), a `UserError` is returned listing valid names.
+///
+/// Issue type: the current implementation sends `{"name": t}` under the lowercase
+/// `"issuetype"` key (unchanged legacy behavior). Both key casing and the correct
+/// id-based shape (`{"issueTypeId": "..."}`) for the bulk endpoint are UNVERIFIED
+/// and tracked in #331 — do NOT assume a camelCase `"issueType"` / `issueTypeId`
+/// shape without confirmation from a live Atlassian response.
 async fn handle_edit_bulk_fields(
     keys: &[String],
     summary: Option<&str>,
@@ -1303,7 +1310,25 @@ async fn handle_edit_bulk_fields(
         selected_actions.push("summary".to_string());
     }
     if let Some(p) = priority {
-        edited.insert("priority".into(), json!({"name": p}));
+        // Bulk endpoint requires {"priorityId": "<id-string>"}, NOT {"name": "High"}.
+        // Resolve name→id via GET /rest/api/3/priority (one extra HTTP call only when
+        // --priority is used on the bulk path).
+        // Source: Atlassian Bulk Operations FAQ (issue #331).
+        let priorities = client.get_priorities().await?;
+        let p_lower = p.to_lowercase();
+        let priority_id = priorities
+            .iter()
+            .find(|pm| pm.name.to_lowercase() == p_lower)
+            .map(|pm| pm.id.clone())
+            .ok_or_else(|| {
+                let valid: Vec<&str> = priorities.iter().map(|pm| pm.name.as_str()).collect();
+                JrError::UserError(format!(
+                    "Priority '{p}' not found. Valid priorities: {}. \
+                     Run `jr project fields --project <KEY>` to see priorities for your project.",
+                    valid.join(", ")
+                ))
+            })?;
+        edited.insert("priority".into(), json!({"priorityId": priority_id}));
         selected_actions.push("priority".to_string());
     }
     if let Some(t) = issue_type {
