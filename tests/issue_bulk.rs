@@ -12,14 +12,16 @@
 //
 //   CONFIRMED:
 //     selectedIssueIdsOrKeys  string[]  required  — list of up to 1,000 issue IDs or keys
-//   BEST-GUESS (unverified, mark for empirical check):
+//   VERIFIED (Atlassian Bulk Operations FAQ):
 //     editedFieldsInput       object    required  — per-field edit spec
-//       labels                object    optional  — label field edit
-//         labelsAction        enum      required  — ADD | REMOVE | REPLACE (consistent with
-//                                                   Atlassian bulk-edit UI semantics; exact
-//                                                   string values unverified — could be
-//                                                   "ADD"/"add"/"Add")
-//         labels              string[]  required  — label names to add/remove/replace
+//       labelsFields          array     required  — label field edit (one element per
+//                                                   ADD/REMOVE action; NOT "labels" object)
+//         fieldId             string    required  — "labels" (literal)
+//         bulkEditMultiSelectFieldOption
+//                             enum      required  — "ADD" | "REMOVE" | "REPLACE"
+//                                                   (verified casing from Atlassian FAQ)
+//         labels              object[]  required  — [{"name": "<label>"}] objects
+//                                                   (NOT bare strings — those are PUT-only)
 //   UNVERIFIED:
 //     sendBulkNotification    bool      optional  — suppress notifications during bulk op
 //     jql                     string    optional  — NOT confirmed; research report flags
@@ -74,7 +76,8 @@
 //   GET  /bulk/queue/{taskId}    → 200
 //
 // KNOWN GAPS (implementer must verify empirically):
-//   1. Exact casing/format of labelsAction enum values ("ADD" vs "add" vs "Add")
+//   1. [RESOLVED] Label schema uses labelsFields array with bulkEditMultiSelectFieldOption
+//      (verified against Atlassian Bulk Operations FAQ; old labelsAction shape was incorrect)
 //   2. Whether "COMPLETE" or "COMPLETED" is the actual live API status string
 //   3. Whether sendBulkNotification is a real field
 //   4. Whether jql is an accepted optional field on /bulk/issues/fields
@@ -183,7 +186,8 @@ async fn test_edit_multi_key_issues_one_bulk_post_then_polls_to_complete() {
 
     // The bulk edit POST: expect exactly 1 call.
     // Body must include selectedIssueIdsOrKeys with all three keys.
-    // SCHEMA NOTE: labelsAction casing is best-guess "ADD"; see SCHEMA NOTES block.
+    // SCHEMA NOTE: label payload uses labelsFields array with bulkEditMultiSelectFieldOption;
+    // see SCHEMA NOTES block (labelsAction shape was old/incorrect).
     // selectedActions pin: label paths pass vec!["labels"] as selected_actions, so the
     // request body must contain "selectedActions". This matcher catches regressions
     // where the field is accidentally dropped from the label edit path.
@@ -476,33 +480,40 @@ async fn test_polling_respects_retry_after_on_429() {
 
 // ---------------------------------------------------------------------------
 // AC-009 (single-key BC): jr issue edit KEY1 --label add:foo
-//   → still routes via bulk API (same code path), exits 0,
-//   --output json shape has "key" field for backward compatibility.
+//   UPDATED (BUG-LABEL-400 fix): single-key label edits now route to
+//   PUT /rest/api/3/issue/{key} with update.labels, NOT the bulk endpoint.
+//   The old test asserted the wrong (bulk) behavior and encoded the bug that
+//   caused HTTP 400 on real Jira instances (live E2E run 26730687481).
+//   Rewritten to assert the correct PUT behavior.
+//   --output json shape is {"key":"...","updated":true,"changed_fields":{...}}.
 // ---------------------------------------------------------------------------
 
 #[tokio::test]
-async fn test_edit_single_key_routes_via_bulk_api_backward_compatible() {
+async fn test_edit_single_key_label_routes_via_put_issue_update() {
     let server = MockServer::start().await;
 
-    // Even for a single key, the bulk endpoint is called.
+    // Single-key label edit MUST use PUT, NOT the bulk endpoint.
+    // .expect(0) panics on drop if the bulk endpoint is called.
     Mock::given(method("POST"))
         .and(path("/rest/api/3/bulk/issues/fields"))
-        .and(body_partial_json(serde_json::json!({
-            "selectedIssueIdsOrKeys": ["SOLO-1"]
-        })))
         .respond_with(
-            ResponseTemplate::new(200).set_body_json(bulk_task_enqueued_response("task-solo-001")),
+            ResponseTemplate::new(501)
+                .set_body_string("BUG: single-key label edit routed to bulk endpoint"),
         )
-        .expect(1)
+        .expect(0)
         .mount(&server)
         .await;
 
-    Mock::given(method("GET"))
-        .and(path("/rest/api/3/bulk/queue/task-solo-001"))
-        .respond_with(
-            ResponseTemplate::new(200)
-                .set_body_json(bulk_task_complete_response("task-solo-001", vec!["SOLO-1"])),
-        )
+    // PUT /rest/api/3/issue/SOLO-1 with update.labels (bare string).
+    Mock::given(method("PUT"))
+        .and(path("/rest/api/3/issue/SOLO-1"))
+        .and(body_partial_json(serde_json::json!({
+            "update": {
+                "labels": [{"add": "solo-test"}]
+            }
+        })))
+        .respond_with(ResponseTemplate::new(204))
+        .expect(1)
         .mount(&server)
         .await;
 
@@ -525,22 +536,29 @@ async fn test_edit_single_key_routes_via_bulk_api_backward_compatible() {
 
     assert!(
         output.status.success(),
-        "Expected exit 0 for single-key bulk edit; stderr={stderr} stdout={stdout}"
+        "Expected exit 0 for single-key label PUT; stderr={stderr} stdout={stdout}"
     );
 
-    // --output json must produce parseable JSON.
+    // --output json must produce the single-key edit shape:
+    //   {"key": "SOLO-1", "updated": true, "changed_fields": {...}}
     let parsed: serde_json::Value = serde_json::from_str(&stdout)
         .unwrap_or_else(|e| panic!("stdout not valid JSON: {e}; stdout={stdout}"));
 
-    // Backward-compat shape: either {"key":"SOLO-1"} (single-key shorthand)
-    // or {"results":[{"key":"SOLO-1","status":"ok"}]} (multi-key shape with 1 item).
-    // Either is acceptable; verify one of these shapes is present.
-    let has_key_field = parsed.get("key").is_some();
-    let has_results_field = parsed.get("results").is_some();
-    assert!(
-        has_key_field || has_results_field,
-        "Expected {{\"key\":...}} or {{\"results\":[...]}} in --output json; got: {stdout}"
+    assert_eq!(
+        parsed.get("key").and_then(|v| v.as_str()),
+        Some("SOLO-1"),
+        "Expected \"key\": \"SOLO-1\" in JSON output; got: {stdout}"
     );
+    assert_eq!(
+        parsed.get("updated").and_then(|v| v.as_bool()),
+        Some(true),
+        "Expected \"updated\": true in JSON output; got: {stdout}"
+    );
+    assert!(
+        parsed.get("taskId").is_none(),
+        "Expected no 'taskId' in single-key label JSON output (bulk shape); got: {stdout}"
+    );
+    // wiremock .expect(0) on bulk POST + .expect(1) on PUT fire on drop.
 }
 
 // ---------------------------------------------------------------------------
@@ -649,9 +667,9 @@ async fn test_edit_multi_key_with_no_input_skips_confirmation_prompt() {
 }
 
 // ---------------------------------------------------------------------------
-// Bonus: labels ADD vs REMOVE — verify labelsAction field is passed correctly.
-// SCHEMA NOTE: "ADD" and "REMOVE" are best-guess casing; implementer must
-// verify empirically against live Atlassian schema.
+// Bonus: labels ADD vs REMOVE — verify bulkEditMultiSelectFieldOption value is passed correctly.
+// SCHEMA NOTE: "ADD" and "REMOVE" casing is VERIFIED from Atlassian Bulk Operations FAQ
+// (old labelsAction shape was incorrect; see issue #446 fix).
 // ---------------------------------------------------------------------------
 
 #[tokio::test]
@@ -659,9 +677,10 @@ async fn test_edit_label_remove_sends_remove_action_in_bulk_payload() {
     let server = MockServer::start().await;
 
     // Use body_string_contains instead of body_partial_json for the action value,
-    // because the exact casing of labelsAction enum is unverified (see SCHEMA NOTES).
-    // This matcher is intentionally loose: it checks the substring "REMOVE" appears
-    // in the request body JSON, tolerating different nesting structures.
+    // because this test predates the #446 fix and is intentionally loose: it checks
+    // the substring "REMOVE" appears in the request body JSON. The authoritative
+    // structural test is test_multi_key_label_remove_only_uses_labels_fields_schema
+    // in issue_edit_labels.rs, which pins the full labelsFields schema.
     Mock::given(method("POST"))
         .and(path("/rest/api/3/bulk/issues/fields"))
         .and(body_string_contains("REMOVE"))
@@ -771,4 +790,87 @@ async fn test_edit_multi_key_output_json_returns_results_array() {
         2,
         "Expected 2 result entries for 2 keys; got: {stdout}"
     );
+}
+
+// ---------------------------------------------------------------------------
+// Regression: numeric processedAccessibleIssues in poll response (live E2E 26735034015)
+//
+// Real Jira Cloud returns processedAccessibleIssues as an array of numeric
+// issue IDs (e.g. [10129, 10130]), not the issue-key strings ("FOO-1") used
+// in wiremock mocks. This gap caused:
+//   "Error: invalid type: integer 10129, expected a string at line 1 column 115"
+// on every multi-key bulk label edit (jr issue edit K1 K2 --label add:<probe>).
+//
+// The mock in this test has the poll response return integer IDs to close the
+// wiremock-vs-real-API gap. The fix is `deserialize_string_or_int_array` on
+// `BulkOperationProgress::processed_accessible_issues`.
+// ---------------------------------------------------------------------------
+
+/// Multi-key label bulk edit succeeds when the poll response contains numeric
+/// (integer) processedAccessibleIssues, as returned by real Jira Cloud.
+///
+/// Previously this crashed with a serde deserialization error (live E2E run
+/// 26735034015). Now accepted via `deserialize_string_or_int_array`.
+#[tokio::test]
+async fn test_edit_multi_key_label_succeeds_with_numeric_processed_issues_in_poll() {
+    let server = MockServer::start().await;
+
+    // Bulk POST: returns a task ID (as a string — this was fixed separately in #449).
+    Mock::given(method("POST"))
+        .and(path("/rest/api/3/bulk/issues/fields"))
+        .and(body_partial_json(serde_json::json!({
+            "selectedIssueIdsOrKeys": ["FOO-1", "FOO-2"]
+        })))
+        .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
+            "taskId": "10128",
+            "status": "ENQUEUED",
+            "progressPercent": 0,
+            "processedAccessibleIssues": [],
+            "failedAccessibleIssues": {},
+            "totalIssueCount": 2
+        })))
+        .expect(1)
+        .mount(&server)
+        .await;
+
+    // Poll response: COMPLETE with NUMERIC processedAccessibleIssues (the live bug).
+    // Real Jira Cloud returns integer issue IDs here, not string keys like "FOO-1".
+    // Before the fix this response caused:
+    //   "invalid type: integer 10129, expected a string at line 1 column 115"
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/bulk/queue/10128"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
+            "taskId": "10128",
+            "status": "COMPLETE",
+            "progressPercent": 100,
+            "processedAccessibleIssues": [10129, 10130],
+            "failedAccessibleIssues": {},
+            "totalIssueCount": 2,
+            "invalidOrInaccessibleIssueCount": 0
+        })))
+        .mount(&server)
+        .await;
+
+    let output = jr_cmd(&server.uri())
+        .args([
+            "--no-input",
+            "issue",
+            "edit",
+            "FOO-1",
+            "FOO-2",
+            "--label",
+            "add:probe",
+        ])
+        .output()
+        .unwrap();
+
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    let stdout = String::from_utf8_lossy(&output.stdout);
+
+    assert!(
+        output.status.success(),
+        "Expected exit 0 when poll response has numeric processedAccessibleIssues; \
+         this was the live E2E 26735034015 failure. stderr={stderr} stdout={stdout}"
+    );
+    // wiremock .expect(1) on the bulk POST fires on drop — verifies the POST was made.
 }

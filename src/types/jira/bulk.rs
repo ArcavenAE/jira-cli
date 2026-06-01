@@ -1,5 +1,238 @@
 use std::collections::HashMap;
 
+/// Deserialize a taskId field that Jira Cloud may return as either a JSON string
+/// or a JSON integer.
+///
+/// Real Jira Cloud tenants return `taskId` as a JSON integer (e.g. `10110`),
+/// not a string. The Atlassian OpenAPI spec documents it as a string, but the
+/// live API disagrees. Discovered via live E2E run 26733998365 which produced:
+///   `Error: invalid type: integer 10110, expected a string at line 1 column 114`
+///
+/// This deserializer accepts both shapes and normalizes to `String` so downstream
+/// code (`validate_task_id`, URL path construction, `urlencoding::encode`) all
+/// receive a consistent type. "10110" is a valid `validate_task_id` input
+/// (all ASCII alphanumeric).
+///
+/// Rejects floats, booleans, arrays, objects, and **null** with a serde error —
+/// only `String` and integer types are plausible taskId representations. This
+/// variant is used for required (`String`) fields; `null` or absent values are
+/// therefore an error. For optional taskId fields that should map `null`/absent
+/// → `None`, use `deserialize_opt_task_id_string_or_int` instead.
+fn deserialize_task_id_string_or_int<'de, D>(deserializer: D) -> Result<String, D::Error>
+where
+    D: serde::Deserializer<'de>,
+{
+    use serde::de::{Error, Unexpected, Visitor};
+    use std::fmt;
+
+    struct StringOrIntVisitor;
+
+    impl<'de> Visitor<'de> for StringOrIntVisitor {
+        type Value = String;
+
+        fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+            formatter.write_str("a string or integer taskId")
+        }
+
+        fn visit_str<E: Error>(self, v: &str) -> Result<Self::Value, E> {
+            Ok(v.to_owned())
+        }
+
+        fn visit_string<E: Error>(self, v: String) -> Result<Self::Value, E> {
+            Ok(v)
+        }
+
+        fn visit_i64<E: Error>(self, v: i64) -> Result<Self::Value, E> {
+            Ok(v.to_string())
+        }
+
+        fn visit_u64<E: Error>(self, v: u64) -> Result<Self::Value, E> {
+            Ok(v.to_string())
+        }
+
+        fn visit_f64<E: Error>(self, v: f64) -> Result<Self::Value, E> {
+            Err(E::invalid_type(
+                Unexpected::Float(v),
+                &"a string or integer taskId",
+            ))
+        }
+
+        fn visit_bool<E: Error>(self, v: bool) -> Result<Self::Value, E> {
+            Err(E::invalid_type(
+                Unexpected::Bool(v),
+                &"a string or integer taskId",
+            ))
+        }
+    }
+
+    deserializer.deserialize_any(StringOrIntVisitor)
+}
+
+/// Option-wrapped variant of `deserialize_task_id_string_or_int` for
+/// `BulkOperationProgress.task_id: Option<String>`. Handles `null` and
+/// absent fields (via `#[serde(default)]`) → `None`; string → `Some(String)`;
+/// integer → `Some(String)`.
+fn deserialize_opt_task_id_string_or_int<'de, D>(
+    deserializer: D,
+) -> Result<Option<String>, D::Error>
+where
+    D: serde::Deserializer<'de>,
+{
+    use serde::de::{Error, Unexpected, Visitor};
+    use std::fmt;
+
+    struct OptStringOrIntVisitor;
+
+    impl<'de> Visitor<'de> for OptStringOrIntVisitor {
+        type Value = Option<String>;
+
+        fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+            formatter.write_str("a string, integer, or null taskId")
+        }
+
+        fn visit_none<E: Error>(self) -> Result<Self::Value, E> {
+            Ok(None)
+        }
+
+        fn visit_unit<E: Error>(self) -> Result<Self::Value, E> {
+            Ok(None)
+        }
+
+        fn visit_some<D2: serde::Deserializer<'de>>(
+            self,
+            deserializer: D2,
+        ) -> Result<Self::Value, D2::Error> {
+            deserialize_task_id_string_or_int(deserializer).map(Some)
+        }
+
+        fn visit_str<E: Error>(self, v: &str) -> Result<Self::Value, E> {
+            Ok(Some(v.to_owned()))
+        }
+
+        fn visit_string<E: Error>(self, v: String) -> Result<Self::Value, E> {
+            Ok(Some(v))
+        }
+
+        fn visit_i64<E: Error>(self, v: i64) -> Result<Self::Value, E> {
+            Ok(Some(v.to_string()))
+        }
+
+        fn visit_u64<E: Error>(self, v: u64) -> Result<Self::Value, E> {
+            Ok(Some(v.to_string()))
+        }
+
+        fn visit_f64<E: Error>(self, v: f64) -> Result<Self::Value, E> {
+            Err(E::invalid_type(
+                Unexpected::Float(v),
+                &"a string, integer, or null taskId",
+            ))
+        }
+
+        fn visit_bool<E: Error>(self, v: bool) -> Result<Self::Value, E> {
+            Err(E::invalid_type(
+                Unexpected::Bool(v),
+                &"a string, integer, or null taskId",
+            ))
+        }
+    }
+
+    deserializer.deserialize_any(OptStringOrIntVisitor)
+}
+
+/// Deserialize an array whose elements are either JSON strings or JSON integers,
+/// normalizing each element to `String`.
+///
+/// Real Jira Cloud returns `processedAccessibleIssues` as an array of **numeric
+/// issue IDs** (e.g. `[10129, 10130]`), not the issue-key strings (`["FOO-1"]`)
+/// that the Atlassian OpenAPI spec documents. The wiremock-based tests always
+/// mock this field as string arrays, so this mismatch never surfaced offline until
+/// live E2E run 26735034015.
+///
+/// This deserializer accepts both shapes:
+/// - `["FOO-1", "FOO-2"]` — string elements, returned as-is
+/// - `[10129, 10130]`     — integer elements, converted to `"10129"`, `"10130"`
+/// - `[]`                  — empty array, no-op
+///
+/// Mixed arrays (some string, some integer) are also accepted — each element is
+/// normalized independently.
+///
+/// Rejects floats, booleans, objects, and arrays-of-arrays with a serde error;
+/// only strings and integer types are plausible issue-ID representations.
+fn deserialize_string_or_int_array<'de, D>(deserializer: D) -> Result<Vec<String>, D::Error>
+where
+    D: serde::Deserializer<'de>,
+{
+    use serde::de::{Error, SeqAccess, Unexpected, Visitor};
+    use std::fmt;
+
+    struct StringOrIntSeqVisitor;
+
+    impl<'de> Visitor<'de> for StringOrIntSeqVisitor {
+        type Value = Vec<String>;
+
+        fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+            formatter.write_str("an array of strings or integers (issue IDs or keys)")
+        }
+
+        fn visit_seq<A: SeqAccess<'de>>(self, mut seq: A) -> Result<Self::Value, A::Error> {
+            use serde::de::DeserializeSeed;
+            let mut result = Vec::with_capacity(seq.size_hint().unwrap_or(0));
+
+            // Use a per-element visitor inline so we can convert each item.
+            struct ElementVisitor;
+            impl<'de> Visitor<'de> for ElementVisitor {
+                type Value = String;
+                fn expecting(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+                    f.write_str("a string or integer issue ID")
+                }
+                fn visit_str<E: Error>(self, v: &str) -> Result<String, E> {
+                    Ok(v.to_owned())
+                }
+                fn visit_string<E: Error>(self, v: String) -> Result<String, E> {
+                    Ok(v)
+                }
+                fn visit_i64<E: Error>(self, v: i64) -> Result<String, E> {
+                    Ok(v.to_string())
+                }
+                fn visit_u64<E: Error>(self, v: u64) -> Result<String, E> {
+                    Ok(v.to_string())
+                }
+                fn visit_f64<E: Error>(self, v: f64) -> Result<String, E> {
+                    Err(E::invalid_type(
+                        Unexpected::Float(v),
+                        &"a string or integer issue ID",
+                    ))
+                }
+                fn visit_bool<E: Error>(self, v: bool) -> Result<String, E> {
+                    Err(E::invalid_type(
+                        Unexpected::Bool(v),
+                        &"a string or integer issue ID",
+                    ))
+                }
+            }
+
+            // serde requires a DeserializeSeed wrapper to call visit_any per element.
+            struct ElementSeed;
+            impl<'de> DeserializeSeed<'de> for ElementSeed {
+                type Value = String;
+                fn deserialize<D2: serde::Deserializer<'de>>(
+                    self,
+                    d: D2,
+                ) -> Result<Self::Value, D2::Error> {
+                    d.deserialize_any(ElementVisitor)
+                }
+            }
+
+            while let Some(elem) = seq.next_element_seed(ElementSeed)? {
+                result.push(elem);
+            }
+            Ok(result)
+        }
+    }
+
+    deserializer.deserialize_seq(StringOrIntSeqVisitor)
+}
+
 /// Request body for POST /rest/api/3/bulk/issues/fields (bulk field edit).
 ///
 /// CONFIRMED from OpenAPI JSON (2026-05-09) + Perplexity verification (2026-05-10, PR2):
@@ -17,10 +250,9 @@ use std::collections::HashMap;
 ///     as a best-guess and may receive 400 from real Jira tenants.
 ///     issueType → `{"issueTypeId": "..."}` per docs (camelCase key); we currently
 ///     ship `{"issuetype": {"name": "..."}}` (lowercase, name) as a best-guess.
-///     labels → `{"labelsFields": [{"fieldId":"labels","labels":[...],
-///     "bulkEditMultiSelectFieldOption":"ADD|REMOVE"}]}` per docs; we currently ship
-///     the simpler `{"labels": ...}` shapes (single object for ADD-only/REMOVE-only,
-///     array for ADD+REMOVE coalesced) as a best-guess.
+///     labels → `{"labelsFields": [{"fieldId":"labels","bulkEditMultiSelectFieldOption":"ADD|REMOVE","labels":[{"name":"..."}]}]}`
+///     per Atlassian Bulk Operations FAQ (verified, issue #446). Each action (ADD / REMOVE)
+///     is a separate element. Label items are `{"name":...}` objects.
 ///     Empirical verification against a live Jira sandbox + name→ID resolution
 ///     (priorities + issue types per project) is tracked at issue #331.
 #[derive(serde::Serialize, Debug)]
@@ -47,9 +279,14 @@ pub struct BulkTransitionRequest {
 ///
 /// CONFIRMED from OpenAPI JSON: taskId is a top-level field in the BulkOperationProgress body.
 /// HTTP 200 is the success status for both bulk submission endpoints.
+///
+/// NOTE: The Atlassian OpenAPI spec documents `taskId` as a string, but real Jira Cloud
+/// tenants return it as a JSON integer (e.g. 10110). `deserialize_task_id_string_or_int`
+/// normalizes both forms to `String`. Discovered via live E2E run 26733998365.
 #[derive(serde::Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct BulkSubmitResponse {
+    #[serde(deserialize_with = "deserialize_task_id_string_or_int")]
     pub task_id: String,
 }
 
@@ -71,11 +308,23 @@ pub struct BulkSubmitResponse {
 #[derive(serde::Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct BulkOperationProgress {
+    #[serde(default, deserialize_with = "deserialize_opt_task_id_string_or_int")]
     pub task_id: Option<String>,
     /// Status string — terminal when one of: COMPLETE, FAILED, CANCELLED, DEAD
     pub status: String,
-    #[serde(default)]
+    /// Issue IDs (or keys) that were successfully processed.
+    ///
+    /// The Atlassian OpenAPI spec documents elements as `string`, but real Jira Cloud
+    /// returns **numeric issue IDs** (e.g. `[10129, 10130]`), not key strings like
+    /// `["FOO-1"]`. `deserialize_string_or_int_array` accepts both forms.
+    /// Discovered via live E2E run 26735034015.
+    #[serde(default, deserialize_with = "deserialize_string_or_int_array")]
     pub processed_accessible_issues: Vec<String>,
+    /// Per-issue error map: issue ID (string key) → error detail.
+    ///
+    /// JSON object keys are always strings — no numeric-key risk here.
+    /// Values (BulkActionError) contain only error message strings; no
+    /// issue-ID fields that could be numeric.
     #[serde(default)]
     pub failed_accessible_issues: HashMap<String, BulkActionError>,
     /// Human-readable failure reason from Atlassian when status is FAILED.
@@ -235,6 +484,195 @@ mod tests {
                 "expected {s} non-terminal"
             );
         }
+    }
+
+    // --- taskId integer deserialization tests (live E2E 26733998365) ---
+    //
+    // Real Jira Cloud returns `taskId` as a JSON integer (e.g. 10110), not a
+    // string. The wiremock-based tests always mock it as a string, so this
+    // never surfaced offline. These tests pin the fix: both BulkSubmitResponse
+    // and BulkOperationProgress must accept integer taskId and normalize to String.
+
+    /// BulkSubmitResponse: integer taskId → String (the live E2E bug case).
+    #[test]
+    fn test_deserialize_bulk_submit_response_integer_task_id() {
+        let json = r#"{"taskId": 10110}"#;
+        let resp: BulkSubmitResponse = serde_json::from_str(json)
+            .expect("BulkSubmitResponse should deserialize integer taskId");
+        assert_eq!(resp.task_id, "10110");
+    }
+
+    /// BulkSubmitResponse: string taskId → unchanged (regression guard).
+    #[test]
+    fn test_deserialize_bulk_submit_response_string_task_id_regression() {
+        let json = r#"{"taskId": "abc-1"}"#;
+        let resp: BulkSubmitResponse = serde_json::from_str(json)
+            .expect("BulkSubmitResponse should deserialize string taskId");
+        assert_eq!(resp.task_id, "abc-1");
+    }
+
+    /// BulkOperationProgress: integer taskId → Some(String).
+    #[test]
+    fn test_deserialize_bulk_operation_progress_integer_task_id() {
+        let json = r#"{"taskId": 10110, "status": "ENQUEUED"}"#;
+        let prog: BulkOperationProgress = serde_json::from_str(json)
+            .expect("BulkOperationProgress should deserialize integer taskId");
+        assert_eq!(prog.task_id, Some("10110".to_string()));
+    }
+
+    /// BulkOperationProgress: string taskId → Some(String) (regression guard).
+    #[test]
+    fn test_deserialize_bulk_operation_progress_string_task_id_regression() {
+        let json = r#"{"taskId": "abc-1", "status": "COMPLETE"}"#;
+        let prog: BulkOperationProgress = serde_json::from_str(json)
+            .expect("BulkOperationProgress should deserialize string taskId");
+        assert_eq!(prog.task_id, Some("abc-1".to_string()));
+    }
+
+    /// BulkOperationProgress: absent taskId → None (field is Option).
+    #[test]
+    fn test_deserialize_bulk_operation_progress_absent_task_id() {
+        let json = r#"{"status": "RUNNING"}"#;
+        let prog: BulkOperationProgress =
+            serde_json::from_str(json).expect("BulkOperationProgress should allow absent taskId");
+        assert_eq!(prog.task_id, None);
+    }
+
+    // --- Rejection contract: floats and bools must never be silently accepted ---
+    //
+    // These tests pin the rustdoc claim that `deserialize_task_id_string_or_int`
+    // (required-field variant) rejects floats and booleans with a serde error.
+    // A future refactor that widens the visitor (e.g. accepting `visit_f64` to
+    // "be lenient") would silently break callers that depend on strict typing;
+    // these tests catch that regression at the unit level.
+
+    /// BulkSubmitResponse: float taskId must be rejected.
+    #[test]
+    fn test_deserialize_bulk_submit_response_rejects_float_task_id() {
+        assert!(
+            serde_json::from_str::<BulkSubmitResponse>(r#"{"taskId": 1.5}"#).is_err(),
+            "BulkSubmitResponse must reject a float taskId"
+        );
+    }
+
+    /// BulkSubmitResponse: bool taskId must be rejected.
+    #[test]
+    fn test_deserialize_bulk_submit_response_rejects_bool_task_id() {
+        assert!(
+            serde_json::from_str::<BulkSubmitResponse>(r#"{"taskId": true}"#).is_err(),
+            "BulkSubmitResponse must reject a bool taskId"
+        );
+    }
+
+    /// BulkOperationProgress: float taskId must be rejected.
+    #[test]
+    fn test_deserialize_bulk_operation_progress_rejects_float_task_id() {
+        assert!(
+            serde_json::from_str::<BulkOperationProgress>(
+                r#"{"taskId": 1.5, "status": "ENQUEUED"}"#
+            )
+            .is_err(),
+            "BulkOperationProgress must reject a float taskId"
+        );
+    }
+
+    /// BulkOperationProgress: bool taskId must be rejected.
+    #[test]
+    fn test_deserialize_bulk_operation_progress_rejects_bool_task_id() {
+        assert!(
+            serde_json::from_str::<BulkOperationProgress>(
+                r#"{"taskId": false, "status": "ENQUEUED"}"#
+            )
+            .is_err(),
+            "BulkOperationProgress must reject a bool taskId"
+        );
+    }
+
+    // --- processedAccessibleIssues numeric ID tests (live E2E 26735034015) ---
+    //
+    // Real Jira Cloud returns `processedAccessibleIssues` as a JSON array of
+    // integers (numeric issue IDs, e.g. [10129]), NOT strings. The Atlassian
+    // OpenAPI spec documents the array element type as `string`, but the live
+    // API disagrees. The wiremock-based tests always mock this field as string
+    // arrays (e.g. ["FOO-1"]), so this never surfaced offline.
+    //
+    // REPRODUCTION (pre-fix RED state, empirically confirmed):
+    //   JSON: {"taskId":"10128","status":"COMPLETE","progressPercent":100,
+    //          "totalIssueCount":2,"processedAccessibleIssues":[10129],
+    //          "failedAccessibleIssues":{}}
+    //   Error: invalid type: integer 10129, expected a string at line 1 column 115
+    //   (column 110 is where 10129 starts; serde_json reports end of token + 1 = 115)
+    //   This PINS that `processedAccessibleIssues` is the field causing the live error.
+    //
+    // Fix: `deserialize_string_or_int_array` accepts both string and integer elements.
+
+    /// BulkOperationProgress: integer processedAccessibleIssues → Vec<String> (the live E2E fix).
+    /// Mirrors real Jira Cloud response shape: taskId string, processedAccessibleIssues integers.
+    #[test]
+    fn test_deserialize_bulk_operation_progress_numeric_processed_issues_succeeds() {
+        // This JSON reproduces the live error shape (E2E run 26735034015).
+        // Before the fix: serde_json error "invalid type: integer 10129, expected a string
+        // at line 1 column 115" — pinned that processedAccessibleIssues was the failing field.
+        let json = r#"{"taskId":"10128","status":"COMPLETE","progressPercent":100,"totalIssueCount":2,"processedAccessibleIssues":[10129],"failedAccessibleIssues":{}}"#;
+        let prog: BulkOperationProgress = serde_json::from_str(json)
+            .expect("BulkOperationProgress must deserialize integer processedAccessibleIssues");
+        assert_eq!(
+            prog.processed_accessible_issues,
+            vec!["10129".to_string()],
+            "Numeric issue ID must be normalized to string"
+        );
+        assert!(prog.failed_accessible_issues.is_empty());
+        assert_eq!(prog.status, "COMPLETE");
+        assert_eq!(prog.task_id, Some("10128".to_string()));
+    }
+
+    /// Multiple integer IDs in processedAccessibleIssues → all normalized to String.
+    #[test]
+    fn test_deserialize_bulk_operation_progress_multiple_numeric_processed_issues() {
+        let json = r#"{"taskId":"10128","status":"COMPLETE","progressPercent":100,"processedAccessibleIssues":[10129,10130,10131],"failedAccessibleIssues":{}}"#;
+        let prog: BulkOperationProgress = serde_json::from_str(json)
+            .expect("Must deserialize multiple integer processedAccessibleIssues");
+        assert_eq!(
+            prog.processed_accessible_issues,
+            vec![
+                "10129".to_string(),
+                "10130".to_string(),
+                "10131".to_string()
+            ]
+        );
+    }
+
+    /// String processedAccessibleIssues (issue keys) still work — regression guard.
+    #[test]
+    fn test_deserialize_bulk_operation_progress_string_processed_issues_regression() {
+        let json = r#"{"taskId":"task-1","status":"COMPLETE","progressPercent":100,"processedAccessibleIssues":["FOO-1","FOO-2"],"failedAccessibleIssues":{}}"#;
+        let prog: BulkOperationProgress = serde_json::from_str(json)
+            .expect("Must deserialize string processedAccessibleIssues (regression guard)");
+        assert_eq!(
+            prog.processed_accessible_issues,
+            vec!["FOO-1".to_string(), "FOO-2".to_string()]
+        );
+    }
+
+    /// Empty processedAccessibleIssues → empty Vec (no regression on ENQUEUED responses).
+    #[test]
+    fn test_deserialize_bulk_operation_progress_empty_processed_issues() {
+        let json = r#"{"taskId":"task-1","status":"ENQUEUED","progressPercent":0,"processedAccessibleIssues":[],"failedAccessibleIssues":{}}"#;
+        let prog: BulkOperationProgress =
+            serde_json::from_str(json).expect("Must deserialize empty processedAccessibleIssues");
+        assert!(prog.processed_accessible_issues.is_empty());
+    }
+
+    /// Mixed array (string + integer elements) — defensive against partially-migrated responses.
+    #[test]
+    fn test_deserialize_bulk_operation_progress_mixed_processed_issues() {
+        let json = r#"{"status":"COMPLETE","processedAccessibleIssues":["FOO-1",10130],"failedAccessibleIssues":{}}"#;
+        let prog: BulkOperationProgress = serde_json::from_str(json)
+            .expect("Must deserialize mixed string/integer processedAccessibleIssues");
+        assert_eq!(
+            prog.processed_accessible_issues,
+            vec!["FOO-1".to_string(), "10130".to_string()]
+        );
     }
 
     #[test]
