@@ -3422,3 +3422,44 @@ Full VSDD Feature Mode cycle for issue #331 (issueType bulk-edit wire schema fix
 | Cycle summary | F1 (APPROVED) → F2 (BC-3.4.018/019, 585 BCs) → F3 (S-331, 12 ACs) → F4 (TDD) → F5 (3 clean: passes 5/6/7; 7 findings fixed across P1+P4) → F6 (mutation 91.7% 11/12, deny PASS, no-unsafe, regression 1568/0; Mutant B killed by 723ccd7) → F7 (5-dim convergence MET, merged). |
 | Demo artifacts | factory-artifacts commit 19757a3. Prior factory commits this cycle: 5a03277 (F1-F3), 91ee923 (F5/F6/F7 records). |
 | E2E follow-up | Gated test test_e2e_issue_edit_issuetype_multikey_bulk_roundtrip clean-skips until JR_E2E_ISSUE_TYPE_ALT is set in the jira-e2e GitHub Environment AND the E2E project has a 2nd issue type. Tracked as DRIFT-E2E-ALT. |
+
+---
+
+## Burst N+11 — Archived from STATE.md Current Phase Steps (2026-06-01)
+
+**Step archived:** E2E-enh F5 CONVERGED 2026-05-31 (3 clean passes; fix PR #439 @ f19acd9)
+**Agents dispatched:** orchestrator + adversary + implementer + pr-manager
+**Status:** complete
+
+### Summary
+
+Whole-feature combined-delta adversarial: pass1 found 2 HIGH (F-1 portability: issue_type() helper used in only 1/10 create tests → propagated to all; F-2 teardown: dedup issues now carry base+unique label) → fixed → 3 consecutive CLEAN passes (P-clean1/2/3, 0C/0H). Added permanent line-budget meta-test guard (caps test fn body at 500 lines, catches gated-dead-code runaway). Doc fixes (line-budget number consistency, spec §6.2 bulk-move marked DEFERRED). Zero src/. Integration @ f19acd9.
+
+---
+
+## Burst N+12 — Dependabot soak review + 6-PR merge batch (2026-06-01)
+
+**Agents dispatched:** orchestrator (gh/git-verified) + state-manager
+**Merged:** #404 (serde_json patch), #424 (scorecard patch), #422 (dependency-review-action major), #423 (codeql-action major), #426 (upload-artifact major), #425 (checkout major, rebased)
+**develop HEAD after:** 403582e7
+
+### Summary
+
+7-day soak review performed measuring soak from each dependency VERSION PUBLISH DATE (not PR-open age). All 6 PRs cleared the 7-day window (tightest: serde_json at 11 days). Soak policy established: Dependabot soak = 7 days from dependency version publish date, NOT PR-open age.
+
+Major-bump vetting conclusion: sole breaking surface for all 4 Actions major bumps is the Node.js 24 runtime (requires Actions Runner >= v2.327.1); GitHub-hosted runners auto-satisfy this. checkout v6 / upload-artifact v7 already proven green in ci.yml/release.yml/e2e.yml. The 4 major-version Actions bumps only touched two laggard workflow files (dependency-review.yml, scorecards.yml) — ci.yml/release.yml/e2e.yml were already current.
+
+PR #425 (checkout) showed a macOS Test failure on first CI run — diagnosed as S-382-FLAKE-01 keychain flake (all `test result:` lines were 0 failed); rebased via `@dependabot rebase`; re-ran CI with all 6 required checks green; then merged.
+
+All 6 merged via code-owner approval; no branch-protection bypass used.
+
+### Merge details (in order)
+
+| PR | Dependency | Bump | Squash SHA |
+|----|-----------|------|------------|
+| #404 | serde_json | 1.0.149 → 1.0.150 (patch) | 9dfea264 |
+| #424 | ossf/scorecard-action | 2.4.0 → 2.4.3 (patch) | 9ba3e484 |
+| #422 | actions/dependency-review-action | 4.9.0 → 5.0.0 (major) | e5592edf |
+| #423 | github/codeql-action | 3.35.5 → 4.35.5 (major) | 2ba19c68 |
+| #426 | actions/upload-artifact | 4.6.2 → 7.0.1 (major) | c4404c890 |
+| #425 | actions/checkout | 4.3.1 → 6.0.2 (major, rebased) | 403582e7 |
