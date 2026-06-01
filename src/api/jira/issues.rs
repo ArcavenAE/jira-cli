@@ -650,6 +650,89 @@ impl JiraClient {
         }
         Ok(all)
     }
+
+    /// Resolve the available issue types for a project via the createmeta issuetypes endpoint.
+    ///
+    /// Calls `GET /rest/api/3/issue/createmeta/{projectKey}/issuetypes` and paginates by
+    /// offset until `startAt + page_len >= total` (or an empty page), returning all
+    /// `IssueTypeEntry` values (id + name).
+    ///
+    /// `PageOfCreateMetaIssueTypes` uses OFFSET pagination (`startAt`/`maxResults`/`total`).
+    /// There is NO `isLast` field — that belongs to the generic `PageBean<T>` family, not
+    /// the specialized `PageOf...` types. Verified against the Atlassian OpenAPI-derived
+    /// `jira.js` client (issue #331; see
+    /// `.factory/research/issue-331-createmeta-response-schema.md`).
+    ///
+    /// # Usage
+    /// - No cache — one or more HTTP calls per `--type` bulk invocation.
+    ///   Most projects have ≤50 types (one page at `maxResults=200`); pagination
+    ///   is a correctness guard for large enterprise type schemes.
+    /// - Project-scoped: the same type name can have different IDs in different projects.
+    /// - Call site: `handle_edit_bulk_fields` in `src/cli/issue/create.rs` only.
+    pub(crate) async fn get_issue_types_for_project(
+        &self,
+        project_key: &str,
+    ) -> Result<Vec<IssueTypeEntry>> {
+        // Reuse IssueTypeMetadata from projects.rs is not possible here — that struct
+        // lacks an `id` field (it has name/description/subtask only). We define a
+        // separate IssueTypeEntry with id + name for createmeta resolution.
+        let page_size: u32 = 200;
+        let mut all: Vec<IssueTypeEntry> = Vec::new();
+        let mut start_at: u32 = 0;
+        loop {
+            let response: CreatemetaIssueTypesResponse = self
+                .get(&format!(
+                    "/rest/api/3/issue/createmeta/{}/issuetypes?startAt={}&maxResults={}",
+                    urlencoding::encode(project_key),
+                    start_at,
+                    page_size,
+                ))
+                .await?;
+            let total = response.total;
+            let page_len = response.issue_types.len() as u32;
+            all.extend(response.issue_types);
+            // Offset termination: stop on empty page or once we've consumed `total`.
+            // (`PageOfCreateMetaIssueTypes` has no `isLast`; total drives the loop.)
+            if page_len == 0 || start_at + page_len >= total {
+                break;
+            }
+            start_at += page_len;
+        }
+        Ok(all)
+    }
+}
+
+/// Issue type entry returned by `GET /rest/api/3/issue/createmeta/{projectKey}/issuetypes`.
+///
+/// Contains the `id` (string) and `name` fields needed for bulk issue-type resolution.
+/// The `id` field is the value used as `issueTypeId` in the bulk edit payload.
+///
+/// Note: `IssueTypeMetadata` in `src/api/jira/projects.rs` lacks the `id` field
+/// (it has name/description/subtask only); this struct is a separate, minimal type
+/// scoped to the createmeta resolution path.
+#[derive(Debug, serde::Deserialize)]
+pub(crate) struct IssueTypeEntry {
+    pub id: String,
+    pub name: String,
+}
+
+/// Response wrapper for `GET /rest/api/3/issue/createmeta/{projectKey}/issuetypes`.
+///
+/// `PageOfCreateMetaIssueTypes` uses OFFSET pagination: `{issueTypes, startAt,
+/// maxResults, total}`. There is NO `values` field and NO `isLast` field — those
+/// belong to the generic `PageBean<T>` family, NOT to the specialized `PageOf...`
+/// types. Termination is `startAt + issueTypes.len() >= total` (or an empty page).
+/// Verified against the Atlassian OpenAPI-derived `jira.js` client and
+/// developer.atlassian.com (issue #331; see
+/// `.factory/research/issue-331-createmeta-response-schema.md`).
+#[derive(Debug, serde::Deserialize)]
+struct CreatemetaIssueTypesResponse {
+    #[serde(rename = "issueTypes", default)]
+    pub issue_types: Vec<IssueTypeEntry>,
+    /// Total number of issue types across all pages. Defaults to 0 if absent
+    /// (defensive — drives the offset-termination check).
+    #[serde(default)]
+    pub total: u32,
 }
 
 #[cfg(test)]
@@ -686,5 +769,40 @@ mod tests {
         let json = r#"{"count": 0}"#;
         let resp: ApproximateCountResponse = serde_json::from_str(json).unwrap();
         assert_eq!(resp.count, 0);
+    }
+
+    /// Regression-pin: `PageOfCreateMetaIssueTypes` uses `issueTypes` (NOT `values`),
+    /// offset pagination (`startAt`/`maxResults`/`total`), and NO `isLast` field.
+    ///
+    /// This test MUST FAIL before the fix (current struct requires `values`) and
+    /// MUST PASS after the fix (struct renames field to `issueTypes`).
+    ///
+    /// Bug source: live E2E `test_e2e_issue_edit_issuetype_multikey_bulk_roundtrip`
+    /// failed with "missing field `values`". Verified against Atlassian OpenAPI-derived
+    /// jira.js client and developer.atlassian.com. See issue #331 and
+    /// `.factory/research/issue-331-createmeta-response-schema.md`.
+    #[test]
+    fn test_createmeta_response_deserializes_issuetypes_field() {
+        // This is the REAL shape returned by
+        // GET /rest/api/3/issue/createmeta/{projectKey}/issuetypes.
+        // It uses the top-level key `issueTypes` — NOT `values`.
+        // There is no `isLast` field (offset pagination only).
+        let json = r#"{
+            "startAt": 0,
+            "maxResults": 200,
+            "total": 2,
+            "issueTypes": [
+                {"id": "10001", "name": "Bug"},
+                {"id": "10002", "name": "Story"}
+            ]
+        }"#;
+        let resp: CreatemetaIssueTypesResponse = serde_json::from_str(json)
+            .expect("CreatemetaIssueTypesResponse must deserialize from real Jira API shape");
+        assert_eq!(resp.issue_types.len(), 2, "Expected 2 issue types");
+        assert_eq!(resp.issue_types[0].id, "10001");
+        assert_eq!(resp.issue_types[0].name, "Bug");
+        assert_eq!(resp.issue_types[1].id, "10002");
+        assert_eq!(resp.issue_types[1].name, "Story");
+        assert_eq!(resp.total, 2, "Expected total=2");
     }
 }

@@ -602,6 +602,36 @@ pub(super) async fn handle_edit(
         }
     }
 
+    // --- BC-3.4.019 cross-project guard for --type (fires in BOTH live and dry-run). ---
+    // Issue-type IDs are project-scoped; the bulk endpoint takes ONE issueTypeId for
+    // the entire batch. A cross-project set cannot be safely resolved to a single id,
+    // so we error BEFORE any API call — including before the dry-run block short-circuits.
+    //
+    // ASYMMETRY (EC-3.4.018-5 vs EC-3.4.019-5): the unknown-type-NAME check requires
+    // a createmeta HTTP call, so it is deliberately SKIPPED in dry-run (dry-run emits
+    // a bare string for issueType with no id resolution). The cross-project guard is
+    // purely client-side (no HTTP needed) and therefore MUST fire even in dry-run.
+    if issue_type.is_some() && effective_keys.len() > 1 {
+        let mut project_keys: Vec<&str> = effective_keys
+            .iter()
+            .map(|k| project_key_from_issue_key(k))
+            .collect();
+        project_keys.sort_unstable();
+        project_keys.dedup();
+        if project_keys.len() > 1 {
+            return Err(JrError::UserError(format!(
+                "--type requires all issues to be in the same project; \
+                 the provided keys span {} distinct projects: {}. \
+                 Issue-type IDs differ per project, so a single bulk edit cannot \
+                 target all of them — split the keys by project and run separate \
+                 `jr issue edit` commands.",
+                project_keys.len(),
+                project_keys.join(", "),
+            ))
+            .into());
+        }
+    }
+
     // --- Dry-run short-circuit: render diff, no HTTP mutations. ---
     if dry_run {
         // NOTE: The "no fields specified" guard already fired unconditionally above
@@ -657,20 +687,17 @@ pub(super) async fn handle_edit(
                     //       "labels": [{"name": "foo"}]}]}` (nested array, or
                     //     two elements when ADD+REMOVE coalesce).
                     //   - `priority`: dry-run emits a bare string. POST body wraps as
-                    //     `{"name": "..."}` (best-guess; Atlassian docs document
-                    //     `{"priorityId": <int>}`).
-                    //   - `issueType`: dry-run emits a bare string. POST body wraps as
-                    //     `{"issuetype": {"name": "..."}}` (best-guess; Atlassian docs
-                    //     document `{"issueTypeId": "..."}`).
+                    //     `{"priorityId": "<id-string>"}` (name→id resolved via
+                    //     GET /rest/api/3/priority; #331).
+                    //   - `issueType`: dry-run emits a bare string (the type name).
+                    //     POST body uses camelCase `"issueType"` key + `{"issueTypeId": "<id>"}`
+                    //     (id resolved via GET /rest/api/3/issue/createmeta/{proj}/issuetypes;
+                    //     verified against Atlassian Bulk Operations FAQ, issue #331).
+                    //     Dry-run intentionally omits the id resolution call — no HTTP in dry-run.
                     // The dry-run JSON is a human-and-tool-friendly preview, NOT a
-                    // byte-for-byte snapshot of the wire request. Rationale: all three
-                    // POST shapes are best-guesses pending #331 empirical verification.
-                    // Locking dry-run consumers to unverified canonical Atlassian
-                    // shapes now would force a second breaking change once #331
-                    // confirms the true shapes. Once #331 verifies the wire shapes,
-                    // this dry-run builder can be unified with
-                    // `handle_edit_bulk_labels` / `handle_edit_bulk_fields` to
-                    // emit byte-identical JSON.
+                    // byte-for-byte snapshot of the wire request. All three field shapes
+                    // (priority, labels, issueType) are empirically verified: priority+issueType
+                    // per Atlassian Bulk Operations FAQ (issue #331), labels per #446.
                     let label_entries: Vec<serde_json::Value> = labels
                         .iter()
                         .map(|l| {
@@ -1265,28 +1292,42 @@ async fn handle_edit_bulk_labels(
     render_bulk_edit_results(keys, &task_id, &progress, output_format)
 }
 
-/// Route non-label multi-key edits through the Atlassian Bulk Fields API.
+/// Extract the project key from an issue key by splitting on the last hyphen.
 ///
+/// Examples:
+///   `"FOO-1"` → `"FOO"`
+///   `"PROJ2-100"` → `"PROJ2"`
+///
+/// This is used by the cross-project guard in `handle_edit_bulk_fields` to detect
+/// when a multi-key `--type` bulk edit spans multiple projects (which is not supported
+/// because issue-type IDs are project-scoped). Verified by `test_project_key_extraction`.
+fn project_key_from_issue_key(key: &str) -> &str {
+    match key.rfind('-') {
+        Some(pos) => &key[..pos],
+        None => key,
+    }
+}
+
 /// Supports 2..=1000 keys with --summary, --priority, --type.
 ///
-/// NOTE: The `--dry-run --output json` `plannedChanges` block emits SIMPLIFIED
-/// previews for these same fields (bare strings for `priority` and `issueType`,
-/// see the dry-run builder in `handle_edit` above) that do NOT match the POST
-/// body shapes built here. Dry-run is a human-and-tool-friendly diff; the POST
-/// body shapes here are the current best-guess (still unverified, pending #331).
-/// Once #331 confirms the canonical wire shapes and the bulk builders are
-/// extracted into pure functions, the two paths can converge.
-///
-/// editedFieldsInput shape (best-guess — unverified against live API):
+/// editedFieldsInput shape (verified against Atlassian Bulk Operations FAQ, issue #331):
 /// ```json
 /// {
 ///   "summary": "New title",
-///   "priority": {"name": "High"},
-///   "issuetype": {"name": "Bug"}
+///   "priority": {"priorityId": "3"},
+///   "issueType": {"issueTypeId": "10001"}
 /// }
 /// ```
-/// Tests use body_string_contains("summary") / body_string_contains("priority")
-/// as loose matchers so exact nesting variation is tolerated.
+///
+/// Priority resolution: calls `GET /rest/api/3/priority` (global, no cache).
+/// Issue type resolution: calls `GET /rest/api/3/issue/createmeta/{proj}/issuetypes`
+/// (project-scoped, no cache). Requires all keys to be from the same project
+/// (BC-3.4.019 cross-project guard — exits 64 before any API call if guard fires).
+///
+/// The `selectedActions` element for issue type is lowercase `"issuetype"` (Atlassian
+/// canonical), while the `editedFieldsInput` key is camelCase `"issueType"`. These
+/// INTENTIONALLY differ per the Atlassian Bulk Operations FAQ — do NOT "fix" the
+/// asymmetry. See `.factory/research/issue-331-issuetype-bulk-schema.md`.
 async fn handle_edit_bulk_fields(
     keys: &[String],
     summary: Option<&str>,
@@ -1303,14 +1344,56 @@ async fn handle_edit_bulk_fields(
         selected_actions.push("summary".to_string());
     }
     if let Some(p) = priority {
-        edited.insert("priority".into(), json!({"name": p}));
+        // Bulk endpoint requires {"priorityId": "<id-string>"}, NOT {"name": "High"}.
+        // Resolve name→id via GET /rest/api/3/priority (one extra HTTP call only when
+        // --priority is used on the bulk path).
+        // Source: Atlassian Bulk Operations FAQ (issue #331).
+        let priorities = client.get_priorities().await?;
+        let p_lower = p.to_lowercase();
+        let priority_id = priorities
+            .iter()
+            .find(|pm| pm.name.to_lowercase() == p_lower)
+            .map(|pm| pm.id.clone())
+            .ok_or_else(|| {
+                let valid: Vec<&str> = priorities.iter().map(|pm| pm.name.as_str()).collect();
+                JrError::UserError(format!(
+                    "Priority '{p}' not found. Valid priorities: {}. \
+                     Run `jr project fields --project <KEY>` to see priorities for your project.",
+                    valid.join(", ")
+                ))
+            })?;
+        edited.insert("priority".into(), json!({"priorityId": priority_id}));
         selected_actions.push("priority".to_string());
     }
     if let Some(t) = issue_type {
-        edited.insert("issuetype".into(), json!({"name": t}));
-        // Match editedFieldsInput key (lowercase). Atlassian docs are ambiguous on
-        // canonical casing for the bulk endpoint specifically; the lowercase form
-        // matches the legacy single-key path. Empirical schema verification deferred to #331.
+        // BC-3.4.018: resolve issue type name → id via project-scoped createmeta endpoint.
+        // No cache — one HTTP call per --type bulk invocation (matches priority resolver model).
+        // Source: Atlassian Bulk Operations FAQ + createmeta issuetypes endpoint docs (issue #331).
+        //
+        // The BC-3.4.019 cross-project guard (ensuring all keys are same-project) already
+        // fired in handle_edit before this function was called — so here we know all keys
+        // share the same project key and we can safely use keys[0] to derive it.
+        let project_key = project_key_from_issue_key(&keys[0]);
+        let issue_types = client.get_issue_types_for_project(project_key).await?;
+        let t_lower = t.to_lowercase();
+        let type_id = issue_types
+            .iter()
+            .find(|it| it.name.to_lowercase() == t_lower)
+            .map(|it| it.id.clone())
+            .ok_or_else(|| {
+                let valid: Vec<&str> = issue_types.iter().map(|it| it.name.as_str()).collect();
+                JrError::UserError(format!(
+                    "Issue type '{t}' not found for project {project_key}. Valid types: {}.",
+                    valid.join(", "),
+                ))
+            })?;
+
+        // Verified canonical shape (Atlassian Bulk Operations FAQ, 2026-06-01):
+        //   editedFieldsInput key: camelCase "issueType"
+        //   value: {"issueTypeId": "<id-string>"}
+        // selectedActions element: lowercase "issuetype" (these INTENTIONALLY differ)
+        // See `.factory/research/issue-331-issuetype-bulk-schema.md`.
+        edited.insert("issueType".into(), json!({"issueTypeId": type_id}));
         selected_actions.push("issuetype".to_string());
     }
 
@@ -2717,5 +2800,81 @@ async fn resolve_jsm_request_type_id(
             ))
             .into())
         }
+    }
+}
+
+// ---------------------------------------------------------------------------
+// AC-006 (BC-3.4.018 invariant 4): project key extraction unit tests.
+// RED GATE: `project_key_from_issue_key` does not yet exist. These tests will
+// fail to compile until the Green step adds the helper. The integration test
+// binaries (tests/*.rs) compile separately and are unaffected by this compile
+// failure — only `cargo test --lib` / `cargo test --doc` will fail to compile.
+// ---------------------------------------------------------------------------
+#[cfg(test)]
+mod test_project_key_extraction {
+    use super::project_key_from_issue_key;
+
+    /// `FOO-1` → project key `"FOO"`.
+    #[test]
+    fn test_project_key_from_issue_key_simple() {
+        assert_eq!(project_key_from_issue_key("FOO-1"), "FOO");
+    }
+
+    /// `PROJ2-100` → project key `"PROJ2"` (multi-char project key with digit, splits on LAST hyphen).
+    #[test]
+    fn test_project_key_from_issue_key_multi_char() {
+        assert_eq!(project_key_from_issue_key("PROJ2-100"), "PROJ2");
+    }
+
+    /// `FOO-2` → project key `"FOO"` (same as FOO-1 — same-project check).
+    #[test]
+    fn test_project_key_from_issue_key_same_project_second_key() {
+        assert_eq!(project_key_from_issue_key("FOO-2"), "FOO");
+    }
+
+    /// Two same-project keys extract the same project key.
+    #[test]
+    fn test_project_key_extraction_same_project_no_cross_project() {
+        let k1 = project_key_from_issue_key("FOO-1");
+        let k2 = project_key_from_issue_key("FOO-2");
+        assert_eq!(
+            k1, k2,
+            "Same-project keys must extract the same project key"
+        );
+    }
+
+    /// Two different-project keys extract different project keys.
+    #[test]
+    fn test_project_key_extraction_different_projects() {
+        let k1 = project_key_from_issue_key("FOO-1");
+        let k2 = project_key_from_issue_key("BAR-2");
+        assert_ne!(
+            k1, k2,
+            "Different-project keys must extract different project keys"
+        );
+    }
+
+    // --- Edge cases pinning BC-3.4.018 invariant 4 fail-safe behavior ---
+
+    /// No hyphen: the whole string is returned (fail-safe — treats the input as its
+    /// own project key). Real Jira keys always contain a hyphen, so this is a
+    /// defensive no-panic contract.
+    #[test]
+    fn test_project_key_from_issue_key_no_hyphen() {
+        assert_eq!(project_key_from_issue_key("FOO"), "FOO");
+    }
+
+    /// Trailing hyphen: `rfind('-')` returns the last position (the trailing hyphen),
+    /// so everything before it is returned — `"FOO-"` → `"FOO"`. This pins that a
+    /// malformed key doesn't panic and produces a stable (if semantically odd) result.
+    #[test]
+    fn test_project_key_from_issue_key_trailing_hyphen() {
+        assert_eq!(project_key_from_issue_key("FOO-"), "FOO");
+    }
+
+    /// Empty string: no hyphen → returns `""`. Pins the no-panic contract.
+    #[test]
+    fn test_project_key_from_issue_key_empty_string() {
+        assert_eq!(project_key_from_issue_key(""), "");
     }
 }
