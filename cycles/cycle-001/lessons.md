@@ -2660,3 +2660,39 @@ gate is considered a sufficient control — but the F2/F5 evidence shows it catc
 AFTER spec/test authoring, not at authoring time.
 
 _Discovered: E2E-enh F2 adversarial convergence + recurrence analysis, 2026-05-31. Status: [process-gap]._
+
+---
+
+### L-E2E-11 [process-gap] Recover ground truth from live git/gh output BEFORE acting on any remembered or typed commit SHA
+
+**Background:** During the E2E-PG-4 coverage cycle, the orchestrator fabricated three
+non-existent commit SHAs (4a8e36b, 4be9c33, 5f1c9e2) from corrupted tool output and acted
+on them. This produced a replacement PR (#444) built on a STALE base (merge-base 2ca9fc1,
+pre-PR-#443) that would have regressed the offline CLI-surface guard from 9 passing tests
+to 7. The error was caught only when git output was re-verified directly. Correct commits
+were then recovered from the object store (dc7c34b, parent c395e27), adversary fixes were
+forward-ported (85198c5), and the corrected chain shipped as PR #445.
+
+**This is a recurrence of the DEC-047 fabrication failure mode** (sub-agents fabricating
+merge SHAs, run IDs, and PR numbers during E2E-enh ship — multiple occurrences).
+
+**Mitigation (mandatory pre-action checks):**
+
+Before any destructive git operation (branch delete, worktree remove, PR creation from a
+branch, force-push), verify:
+
+1. **SHA existence:** `git cat-file -t <sha>` — if this returns `commit`, the SHA exists
+   locally. If it errors, the SHA does not exist and must not be referenced.
+2. **Base currency:** `git merge-base --is-ancestor origin/<base-branch> HEAD` (or
+   `git merge-base <sha> origin/develop | grep <sha>`) — confirms the branch was built
+   on current upstream, not a stale pre-merge base.
+3. **Command-read only:** Never use a SHA, run ID, or count from memory or prior
+   conversation turns — always re-read from a live `git log`, `git rev-parse`, or
+   `gh run list` command output in the current turn.
+
+**Rule:** Before any git/gh operation that uses a specific SHA or run ID, run the
+minimal verification command (`git cat-file -t <sha>` or `gh run view <id>`) to confirm
+the value exists. Record only values read from command output in the current turn.
+
+_Discovered: E2E-PG-4 coverage cycle (DEC-050), 2026-06-01. Status: [process-gap].
+Recurrence: DEC-047 fabrication failure mode — third documented instance._
