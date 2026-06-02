@@ -6,6 +6,15 @@ All notable changes to jr will be documented here.
 
 ### Added
 
+- **JSM live-E2E coverage expansion (S-JSM-E2E-1):** replaces 2 shallow JSM smoke tests
+  with 7 shape-asserting / round-trip live tests — queue list/view (by-name + `--id`),
+  requesttype list/fields (numeric-bypass pin), internal vs external comment visibility
+  round-trip, `issue create --request-type` write round-trip (ADR-0014 dispatch fork), and
+  the non-JSM `require_service_desk` guard (exit-64 + message assertions). Also adds a
+  SURFACE flag-subset guard (`test_e2e_live_flags_are_subset_of_surface_table`) that closed
+  a pre-existing gap (`--priority` missing from the `issue edit` SURFACE row). Zero `src/`
+  change. Gated on `JR_E2E_JSM_PROJECT`; set to `EJ` in the `jira-e2e` GitHub Environment
+  to activate. (S-JSM-E2E-1)
 - **Fork-safe E2E CI gate:** `e2e.yml` and `e2e-sweeper.yml` are now gated by a repository
   variable `JR_E2E_ENABLED`. Both workflow jobs skip cleanly on forks and any repo where the
   variable is not set (empty string `!= 'true'`). A preflight step in `e2e.yml` asserts all
@@ -19,6 +28,14 @@ All notable changes to jr will be documented here.
   `JR_E2E_ENABLED`); shows red when tests fail. Badge is pinned to the canonical repo.
 
 ### Fixed
+
+- **JSM E2E self-close teardown (S-JSM-E2E-2):** the comment-visibility and
+  create-request live tests now self-close their EJ tickets by dynamically discovering a
+  closing transition (`statusCategory.key == "done"`, preferring Resolved/Closed/Done)
+  instead of the hardcoded `"Done"` status name, which the EJ JSM workflow rejects —
+  created EJ tickets were being left open on every nightly run. Best-effort teardown
+  preserved (warn-and-return on failure, never fails the test). Zero `src/` change.
+  (S-JSM-E2E-2)
 
 ### Changed
 
