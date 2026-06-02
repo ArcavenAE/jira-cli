@@ -17,6 +17,21 @@ Superseded checkpoints are archived here when STATE.md is updated with a newer o
 
 ---
 
+## Checkpoint archived 2026-06-02 (develop @ 04b6b2c; S-JSM-E2E-1 CYCLE CLOSED+MERGED; awaiting first full JSM live run on next nightly)
+
+_Was the active checkpoint when S-JSM-E2E-1 had merged (PR #460 → develop @ 04b6b2c) and JR_E2E_JSM_PROJECT=EJ was activated. Post-merge e2e run 26828126605 validated clean-skip path and non-JSM guard; 6 JSM tests clean-skipped due to env var set AFTER run start. Superseded when post-merge e2e result was recorded._
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-06-02 |
+| **Position** | **S-JSM-E2E-1 CYCLE CLOSED + MERGED.** PR #460 → develop @ 04b6b2c (14:55:50Z); 11 CI GREEN; 1571/0. JR_E2E_JSM_PROJECT=EJ in jira-e2e env (14:57:01Z). Nightly e2e.yml will exercise 7 JSM scenarios. No active worktrees. |
+| **Convergence counter** | BC: 585. NFR: 41. Stories: 61. develop HEAD on origin: 04b6b2c. jira-e2e env: JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ. DRIFT-331-PAGINATION: log-only (deferred). |
+| **Standing context** | JR_E2E_ENABLED=true repo var set. DEC-065: queue tests deliberately un-contracted (S-QUEUE-BC-1 draft). Do NOT close #429 (DEC-029). OQ-5 open. E2E-PG-4 remote-link round-back open (blocked: no `jr remote-link read`). Deferred sub-gaps: --on-behalf-of (2nd customer), 401 scope hint. |
+| **Next step** | S-QUEUE-BC-1 (queue BC authorship + docstring→anchor cross-check process, DEC-065). Dispatch next feature cycle. |
+| **Resume prompt** | `Read .factory/STATE.md. S-JSM-E2E-1 CYCLE CLOSED+MERGED: PR #460 → develop @ 04b6b2c; 11 CI GREEN; 1571/0; BC 585 / NFR 41 UNCHANGED. JR_E2E_JSM_PROJECT=EJ active in jira-e2e env. factory-artifacts HEAD = git -C .factory log -1 --format='%h'. DEC-065: queue tests deliberately un-contracted (S-QUEUE-BC-1 draft). jira-e2e env: JR_E2E_ISSUE_TYPE_ALT=Bug. 61 stories / 41 NFRs / 585 BCs. Do NOT close #429 (DEC-029). OQ-5 open. E2E-PG-4 remote-link round-back open. Next: S-QUEUE-BC-1 or next feature cycle.` |
+
+---
+
 ## Checkpoint archived 2026-06-02 (develop @ cc187cc; S-JSM-E2E-1 F3–F7 CYCLE CONVERGED; PR #460 open awaiting merge)
 
 _Was the active checkpoint when S-JSM-E2E-1 had converged (F3–F7 complete, 11 CI GREEN, 1571/0) but PR #460 was not yet merged. Superseded when PR #460 was squash-merged to develop @ 04b6b2c and JR_E2E_JSM_PROJECT=EJ was activated._
