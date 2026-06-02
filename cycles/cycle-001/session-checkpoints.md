@@ -17,6 +17,19 @@ Superseded checkpoints are archived here when STATE.md is updated with a newer o
 
 ---
 
+## Checkpoint archived 2026-06-02 (develop @ afa12570; JSM E2E expansion F2-COMPLETE / F3-PENDING; DEC-064; F2 spec snapshot preserved)
+
+_Was the active checkpoint at JSM E2E expansion F2-complete / F3-pending. Superseded when F2 spec snapshot was committed to factory-artifacts and resume checkpoint was finalized for session clear (2026-06-02)._
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-06-02 |
+| **Position** | **JSM E2E expansion at F2-complete / F3-pending.** Feature cycle "JSM E2E coverage expansion (project EJ / E2E-JSM)" opened. F1 APPROVED (DEC-064) + F2 spec complete (docs/specs/jsm-e2e-coverage.md; VER-JSM-E2E-1..7 defined; spec-changelog.md [1.3.2]). Brainstorming report: .factory/planning/brainstorming-report-jsm-e2e.md. F1 delta-analysis: .factory/planning/jsm-e2e-expansion/delta-analysis.md. develop @ afa12570 (no code merged). No active worktrees. Deferred sub-gaps: --on-behalf-of (needs 2nd customer account), write:servicedesk-request 401 scope hint (scope-stripped token needed). |
+| **Convergence counter** | BC corpus: 585 BCs. NFR corpus: 41 NFRs. Story corpus: 59 stories. develop HEAD: afa12570. jira-e2e env: JR_E2E_ISSUE_TYPE_ALT=Bug. DRIFT-331-PAGINATION tracked (deferred). |
+| **Resume prompt** | `Read .factory/STATE.md. JSM E2E expansion feature at F2-complete/F3-pending (DEC-064). develop HEAD = afa12570 (PR #459, S-E2E-FORK-1 CYCLE CLOSED prior). No active worktrees. factory-artifacts HEAD = git -C .factory log -1 --format='%h'. jira-e2e env: JR_E2E_ISSUE_TYPE_ALT=Bug; set JR_E2E_JSM_PROJECT=EJ to activate JSM tests. 59 stories / 41 NFRs / 585 BCs. Do NOT close #429 (human decision, DEC-029). OQ-5 open. DRIFT-331-PAGINATION: log-only (deferred). F4 touch-points: tests/e2e_live.rs (7 gated tests), tests/e2e_cli_surface_guard.rs (4 new SURFACE rows), docs/specs/e2e-live-jira-testing.md §4/§8, CLAUDE.md E2E note.` |
+
+---
+
 ## Checkpoint archived 2026-06-02 (develop @ afa12570; S-E2E-FORK-1 CYCLE CLOSED + LIVE-GREEN; DEC-063)
 
 _Was the active checkpoint at E2E fork-safe CI F2-complete / F3-pending. Superseded when S-E2E-FORK-1 completed F3–F7, PR #459 squash-merged to develop @ afa12570, and LIVE-GREEN confirmed (run 26793560680, 67/0)._
