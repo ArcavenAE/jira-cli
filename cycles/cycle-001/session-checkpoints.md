@@ -17,6 +17,23 @@ Superseded checkpoints are archived here when STATE.md is updated with a newer o
 
 ---
 
+## Checkpoint archived 2026-06-02 (develop @ cc187cc; S-JSM-E2E-1 F3–F7 CYCLE CONVERGED; PR #460 open awaiting merge)
+
+_Was the active checkpoint when S-JSM-E2E-1 had converged (F3–F7 complete, 11 CI GREEN, 1571/0) but PR #460 was not yet merged. Superseded when PR #460 was squash-merged to develop @ 04b6b2c and JR_E2E_JSM_PROJECT=EJ was activated._
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-06-02 |
+| **Position** | **S-JSM-E2E-1 F3–F7 ALL COMPLETE — CYCLE CONVERGED. PR #460 → develop @ cc187cc; 11 CI checks GREEN; 1571/0. Awaiting human merge.** 61 stories / 41 NFRs / 585 BCs. No active worktrees. |
+| **Convergence counter** | BC: 585. NFR: 41. Stories: 61. develop HEAD: cc187cc (feature branch; develop = afa12570). jira-e2e env: JR_E2E_ISSUE_TYPE_ALT=Bug. DRIFT-331-PAGINATION: log-only (deferred). |
+| **Key artifacts** | F2 spec: `docs/specs/jsm-e2e-coverage.md` (on feature branch). Story: `.factory/stories/S-JSM-E2E-1-jsm-e2e-coverage-expansion.md`. Follow-up: `.factory/stories/S-QUEUE-BC-1-contract-queue-commands.md`. Research: `.factory/research/jsm-e2e-queue-bc-anchoring-validation.md`. |
+| **Post-merge admin** | Set `JR_E2E_JSM_PROJECT=EJ` as an **environment variable** in the `jira-e2e` GitHub Environment (not a repo variable — must be env-scoped for Rust binary; already wired in e2e.yml at the "Run live E2E tests" step env: block). |
+| **Deferred sub-gaps** | `--on-behalf-of` (needs 2nd customer account); `write:servicedesk-request` 401 scope hint (needs scope-stripped token). |
+| **Standing context** | S-E2E-FORK-1 #459 + assign-by-query #458 both CLOSED+LIVE-GREEN. JR_E2E_ENABLED=true repo var set. JR_E2E_ISSUE_TYPE_ALT=Bug in jira-e2e env. Do NOT close #429 (DEC-029). OQ-5 open. E2E-PG-4 remote-link round-back open (blocked: no `jr remote-link read`). S-QUEUE-BC-1 draft (queue BC authorship follow-up; DEC-065). |
+| **Resume prompt** | `Read .factory/STATE.md. S-JSM-E2E-1 CYCLE CONVERGED: PR #460 → develop @ cc187cc; 11 CI GREEN; 1571/0; BC 585 / NFR 41 UNCHANGED. factory-artifacts HEAD = git -C .factory log -1 --format='%h'. DEC-065: queue tests deliberately un-contracted (research-validated; S-QUEUE-BC-1 draft). Post-merge: set JR_E2E_JSM_PROJECT=EJ in jira-e2e env (environment variable, NOT repo variable). Deferred: --on-behalf-of (2nd customer), 401 scope hint. jira-e2e env: JR_E2E_ISSUE_TYPE_ALT=Bug. 61 stories / 41 NFRs / 585 BCs. Do NOT close #429 (DEC-029). OQ-5 open. E2E-PG-4 remote-link round-back open. Next: merge PR #460, then consider S-QUEUE-BC-1.` |
+
+---
+
 ## Checkpoint archived 2026-06-02 (develop @ afa12570; JSM E2E expansion F2-COMPLETE / F3-PENDING; DEC-064; F2 spec snapshot preserved)
 
 _Was the active checkpoint at JSM E2E expansion F2-complete / F3-pending. Superseded when F2 spec snapshot was committed to factory-artifacts and resume checkpoint was finalized for session clear (2026-06-02)._

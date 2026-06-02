@@ -2,11 +2,11 @@
 document_type: pipeline-state
 version: "2.0"
 status: active
-timestamp: 2026-06-02T00:00:00
+timestamp: 2026-06-02T15:00:00
 phase: phase-3-tdd-implementation
 project: jira-cli
 mode: BROWNFIELD
-current_step: "jsm-e2e-expansion-F1..F7-COMPLETE-PR460-open-awaiting-merge"
+current_step: "jsm-e2e-expansion-CLOSED-MERGED-PR460-develop-04b6b2c-activated"
 current_cycle: "cycle-001"
 dtu_required: false
 phase_2_status: APPROVED
@@ -29,8 +29,8 @@ activation_version: "v0.5.0-dev.11"
 | **Language** | Rust |
 | **Target Workspace** | develop → main |
 | **Started** | 2026-05-04 |
-| **Last Updated** | 2026-06-02 — JSM E2E expansion S-JSM-E2E-1: F3–F7 ALL COMPLETE. PR #460 → develop @ cc187cc; 11 CI checks GREEN; 1571 tests 0 failed; BC 585 / NFR 41 UNCHANGED. DEC-065: queue tests deliberately un-contracted (orphan). S-QUEUE-BC-1 follow-up draft opened. |
-| **Current Phase** | Phase 3 — TDD Implementation IN PROGRESS — Feature Mode active. JSM E2E expansion (EJ / E2E-JSM): F3–F7 ALL COMPLETE — CYCLE CONVERGED, PR #460 open awaiting merge. develop HEAD: cc187cc (feature branch). BC corpus 585. NFR corpus 41. Stories 61. |
+| **Last Updated** | 2026-06-02 — S-JSM-E2E-1 CYCLE CLOSED + MERGED. PR #460 squash-merged → develop @ 04b6b2c (2026-06-02T14:55:50Z); 11 CI GREEN; 1571/0; BC 585 / NFR 41 UNCHANGED. JR_E2E_JSM_PROJECT=EJ set in jira-e2e env (activated 2026-06-02T14:57:01Z). Worktree + branch cleaned up. S-QUEUE-BC-1 open draft follow-up. |
+| **Current Phase** | Phase 3 — TDD Implementation IN PROGRESS — Feature Mode active. S-JSM-E2E-1 CYCLE CLOSED + MERGED (PR #460 → develop @ 04b6b2c). develop HEAD on origin: 04b6b2c. BC 585. NFR 41. Stories 61. |
 | **Next Phase** | Phase 4: Holdout Evaluation (not started) |
 | **Activation HEAD** | 15bf305 (v0.5.0-dev.11) |
 
@@ -55,7 +55,7 @@ Goal 1c: **Harden v0.5 + feature delivery** — formalize existing codebase with
 | Feature Mode issues #110/#332..#346/#350..#367/#369..#373/#382..#388/#392/#396..#399/#407 | ALL COMPLETE | 2026-05-26 | F1–F7 ALL COMPLETE — CYCLE CONVERGED | F5: 3/3 CLEAN at P4. F6: 100% mutation kill. Regression 1483/0. |
 | issue-331 (issueType bulk-edit wire schema fix — PR #453 + live-fix #454+#455) | CYCLE CLOSED + LIVE-GREEN — PR #455 → develop @ f418bf5; run 26779732719 66/0; #331 CLOSED | 2026-06-01 | F1–F7 ALL COMPLETE — CYCLE CONVERGED + LIVE-VALIDATED | F5: 3/3 CLEAN (P5/P6/P7; 7 findings fixed). F6: 91.7% mutation. Regression 1568/0. Live run 26777755130 (65/1) caught createmeta schema defect → fixed #454+#455 → live run 26779732719 (66/0) GREEN. |
 | E2E fork-safe CI enablement (`JR_E2E_ENABLED` repo-var gate + README badge) — S-E2E-FORK-1 | **CYCLE CLOSED + LIVE-GREEN** — PR #459 → develop @ afa12570; run 26793560680 = 67/0 (2026-06-02). JR_E2E_ENABLED=true repo variable set. 7 files: e2e.yml, e2e-sweeper.yml, README.md, CLAUDE.md, CHANGELOG.md, docs/specs/e2e-fork-safe-ci-enablement.md, e2e-live-jira-testing.md. | 2026-06-02 | F1–F7 ALL COMPLETE — CYCLE CONVERGED + LIVE-GREEN (DEC-063) | F5: sibling-omission→fix→off-branch-spec→fix→polish-idiom-drift→sweep→CLEAN×3. VER-E2E-FORK-1..4 all confirmed. BC: 585 unchanged. NFR: 41 unchanged. No formal VP-NNN (zero Rust). |
-| JSM E2E coverage expansion (project EJ / E2E-JSM) — S-JSM-E2E-1 | **F3–F7 ALL COMPLETE — CYCLE CONVERGED** (2026-06-02). PR #460 → develop @ cc187cc; 11 CI checks GREEN; regression 1571/0; BC 585 / NFR 41 UNCHANGED. Adv: ~11 passes; CRITICAL (queue-view shape) → MEDIUM (write-path: false-pass, auth-skip, orphan-lag, retry) → traceability/docstring → 3/3 CLEAN. --priority missing from SURFACE row gap (latent, closed). | F1–F7 ALL COMPLETE — CYCLE CONVERGED (PR-OPEN) | F1 gate APPROVED (DEC-064); F2 spec: docs/specs/jsm-e2e-coverage.md; VER-JSM-E2E-1..7 all PASS. DEC-065: queue tests un-contracted orphan (research-validated). S-QUEUE-BC-1 draft opened. | BC: 585 unchanged. NFR: 41 unchanged. Pending: set JR_E2E_JSM_PROJECT=EJ in jira-e2e env post-merge. |
+| JSM E2E coverage expansion (project EJ / E2E-JSM) — S-JSM-E2E-1 | **CYCLE CLOSED + MERGED** (2026-06-02). PR #460 squash-merged → develop @ 04b6b2c (2026-06-02T14:55:50Z); 11 CI GREEN; regression 1571/0; BC 585 / NFR 41 UNCHANGED. JR_E2E_JSM_PROJECT=EJ activated in jira-e2e env. Nightly e2e.yml will exercise 7 JSM scenarios. Worktree + branch cleaned. | F1–F7 ALL COMPLETE — CYCLE CLOSED | F1 gate APPROVED (DEC-064); F2 spec: docs/specs/jsm-e2e-coverage.md; VER-JSM-E2E-1..7 all PASS. DEC-065: queue tests un-contracted orphan (research-validated). S-QUEUE-BC-1 draft follow-up open. BC: 585 unchanged. NFR: 41 unchanged. |
 | E2E feature (S-E2E-1..5) — Live-Jira E2E testing in CI + E2E enhancements | F7 CONVERGED — SHIPPED + LIVE-GREEN (CYCLE CLOSED 2026-05-31) | 2026-05-31 | F1–F7 ALL COMPLETE all 5 stories; live workflow GREEN (run 26719160283, 57/0; develop @ fef44bd via #440+#441+#442) | S-E2E-1: (4C/4H)→(1C/2H)→(1C/2H/1M)→(2M)→CLEAN×3; S-E2E-2: 1M→CLEAN×3; E2E-enh F2: P1 13→P4 2C/2H→CLEAN×3; F5: 2H→CLEAN×3; live: 54/3→56/1→57/0 |
 | issue-327 (Dependabot rand 0.9→0.10) | CYCLE CONVERGED — PR #413 @ 375c0f91 | 2026-05-26 | F1–F7 ALL COMPLETE — MAXIMUM_VIABLE_REFINEMENT_REACHED | F5: HIGH-FP→0→0. F6: 100% (2/2). F7: 6/6 PASS. |
 | 4: Holdout Evaluation | not-started | | | |
@@ -74,7 +74,7 @@ Goal 1c: **Harden v0.5 + feature delivery** — formalize existing codebase with
 | E2E fork-safe CI enablement feature opened 2026-06-02 — F1 APPROVED → F2 COMPLETE (spec written) | orchestrator + human (F1 gate) + state-manager | complete (F1+F2) | DEC-062: `JR_E2E_ENABLED` repo-variable gate + preflight + README badge. Spec: docs/specs/e2e-fork-safe-ci-enablement.md. VER-E2E-FORK-1..4. develop HEAD: d45ec88 (no code merged). |
 | S-E2E-FORK-1 CYCLE CLOSED + LIVE-GREEN 2026-06-02 — F3→F7 COMPLETE; PR #459 → develop @ afa12570; live run 26793560680 = 67/0 | orchestrator + implementer + adversary + state-manager | complete | F3 story S-E2E-FORK-1, F4 7-file delivery (zero src/), F5 CONVERGED (sibling-omission + off-branch-spec + idiom-drift caught → fixed → CLEAN×3), F6 VER-E2E-FORK-4 empirically verified, F7 5-dim MET. JR_E2E_ENABLED=true repo var set. Preflight "OK" printed. L-459-1 + L-459-2 codified. PG-459-1/2 deferred. DEC-063. |
 | JSM E2E expansion opened 2026-06-02 — brainstorm (brainstorming-report-jsm-e2e.md) → F1 APPROVED (DEC-064) → F2 COMPLETE (docs/specs/jsm-e2e-coverage.md + VER-JSM-E2E-1..7) | orchestrator + human (F1 gate) + state-manager | complete (F1+F2) | 7 scenarios; zero-src; 1 story ~3 SP; BC 585 unchanged; NFR 41 unchanged. Teardown: SELF-CLOSE in test body. Dynamic RT id + queue discovery. CLEAN-SKIP on JR_E2E_JSM_PROJECT unset/403. Deferred: --on-behalf-of, 401 scope hint. Rollout: JR_E2E_JSM_PROJECT=EJ in jira-e2e env. develop HEAD: afa12570 (no code merged). |
-| S-JSM-E2E-1 F3–F7 CYCLE CONVERGED 2026-06-02 — F3 story created, F4 7-test delivery (zero src/), F5 adversarial ~11 passes (CRITICAL→MEDIUM→traceability→3/3 CLEAN), F6 1571 regression/0, F7 PR #460 → develop @ cc187cc; 11 CI GREEN. DEC-065: queue tests un-contracted orphan (research-validated; S-QUEUE-BC-1 draft). Process-gap PG-JSM-E2E-1: no docstring→story/spec anchor cross-check → folded into S-QUEUE-BC-1. Stories: 60→61. | orchestrator + implementer + adversary + state-manager | complete (F3–F7) | PR #460 open awaiting human merge. Post-merge admin: set JR_E2E_JSM_PROJECT=EJ in jira-e2e GitHub Environment. |
+| S-JSM-E2E-1 CYCLE CLOSED + MERGED 2026-06-02 — PR #460 squash-merged → develop @ 04b6b2c (14:55:50Z); 11 CI GREEN; 1571/0. JR_E2E_JSM_PROJECT=EJ set in jira-e2e env (14:57:01Z). Worktree .worktrees/S-JSM-E2E-1 + branch test/jsm-e2e-coverage removed. DEC-065 confirmed. S-QUEUE-BC-1 open draft. | orchestrator + state-manager | complete (CYCLE CLOSED) | BC 585 / NFR 41 / Stories 61 — UNCHANGED. develop HEAD on origin: 04b6b2c. |
 
 ## Decisions Log
 
@@ -154,7 +154,7 @@ Goal 1c: **Harden v0.5 + feature delivery** — formalize existing codebase with
 
 ## Convergence Trackers
 
-Full per-issue narratives: `cycles/cycle-001/convergence-trajectory.md`. Current: **[2026-06-02] S-JSM-E2E-1 F3–F7 ALL COMPLETE — CYCLE CONVERGED. PR #460 open → develop @ cc187cc; 11 CI GREEN; 1571/0 regression. Adversarial: ~11 passes — CRITICAL (queue-view shape mismatch: `handle_view` returns issues array, not queue identity object) → MEDIUM (write-path: false-pass on empty-array, auth-skip signal, orphan-on-lag, retry condition) → traceability/docstring propagation (PG-JSM-E2E-1) → 3/3 CLEAN. DEC-065: queue tests un-contracted (research-validated). S-QUEUE-BC-1 draft. BC: 585. NFR: 41. Stories: 61.**
+Full per-issue narratives: `cycles/cycle-001/convergence-trajectory.md`. Current: **[2026-06-02] S-JSM-E2E-1 CYCLE CLOSED + MERGED — PR #460 squash-merged → develop @ 04b6b2c (2026-06-02T14:55:50Z); 11 CI GREEN; 1571/0. JR_E2E_JSM_PROJECT=EJ activated in jira-e2e env (14:57:01Z). DEC-065: queue tests un-contracted (research-validated; S-QUEUE-BC-1 draft follow-up). BC: 585. NFR: 41. Stories: 61.**
 
 ## Session Resume Checkpoint
 
@@ -162,14 +162,11 @@ Full per-issue narratives: `cycles/cycle-001/convergence-trajectory.md`. Current
 | Field | Value |
 |-------|-------|
 | **Date** | 2026-06-02 |
-| **Position** | **S-JSM-E2E-1 F3–F7 ALL COMPLETE — CYCLE CONVERGED. PR #460 → develop @ cc187cc; 11 CI checks GREEN; 1571/0. Awaiting human merge.** 61 stories / 41 NFRs / 585 BCs. No active worktrees. |
-| **Convergence counter** | BC: 585. NFR: 41. Stories: 61. develop HEAD: cc187cc (feature branch; develop = afa12570). jira-e2e env: JR_E2E_ISSUE_TYPE_ALT=Bug. DRIFT-331-PAGINATION: log-only (deferred). |
-| **Key artifacts** | F2 spec: `docs/specs/jsm-e2e-coverage.md` (on feature branch). Story: `.factory/stories/S-JSM-E2E-1-jsm-e2e-coverage-expansion.md`. Follow-up: `.factory/stories/S-QUEUE-BC-1-contract-queue-commands.md`. Research: `.factory/research/jsm-e2e-queue-bc-anchoring-validation.md`. |
-| **Post-merge admin** | Set `JR_E2E_JSM_PROJECT=EJ` as an **environment variable** in the `jira-e2e` GitHub Environment (not a repo variable — must be env-scoped for Rust binary; already wired in e2e.yml at the "Run live E2E tests" step env: block). |
-| **Deferred sub-gaps** | `--on-behalf-of` (needs 2nd customer account); `write:servicedesk-request` 401 scope hint (needs scope-stripped token). |
-| **Standing context** | S-E2E-FORK-1 #459 + assign-by-query #458 both CLOSED+LIVE-GREEN. JR_E2E_ENABLED=true repo var set. JR_E2E_ISSUE_TYPE_ALT=Bug in jira-e2e env. Do NOT close #429 (DEC-029). OQ-5 open. E2E-PG-4 remote-link round-back open (blocked: no `jr remote-link read`). S-QUEUE-BC-1 draft (queue BC authorship follow-up; DEC-065). |
-| **Next step** | Merge PR #460 (human action). Then: (1) set JR_E2E_JSM_PROJECT=EJ in jira-e2e env; (2) dispatch next feature cycle. S-QUEUE-BC-1 (queue BC authorship) is the logical next spec story. |
-| **Resume prompt** | `Read .factory/STATE.md. S-JSM-E2E-1 CYCLE CONVERGED: PR #460 → develop @ cc187cc; 11 CI GREEN; 1571/0; BC 585 / NFR 41 UNCHANGED. factory-artifacts HEAD = git -C .factory log -1 --format='%h'. DEC-065: queue tests deliberately un-contracted (research-validated; S-QUEUE-BC-1 draft). Post-merge: set JR_E2E_JSM_PROJECT=EJ in jira-e2e env (environment variable, NOT repo variable). Deferred: --on-behalf-of (2nd customer), 401 scope hint. jira-e2e env: JR_E2E_ISSUE_TYPE_ALT=Bug. 61 stories / 41 NFRs / 585 BCs. Do NOT close #429 (DEC-029). OQ-5 open. E2E-PG-4 remote-link round-back open. Next: merge PR #460, then consider S-QUEUE-BC-1.` |
+| **Position** | **S-JSM-E2E-1 CYCLE CLOSED + MERGED.** PR #460 → develop @ 04b6b2c (14:55:50Z); 11 CI GREEN; 1571/0. JR_E2E_JSM_PROJECT=EJ in jira-e2e env (14:57:01Z). Nightly e2e.yml will exercise 7 JSM scenarios. No active worktrees. |
+| **Convergence counter** | BC: 585. NFR: 41. Stories: 61. develop HEAD on origin: 04b6b2c. jira-e2e env: JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ. DRIFT-331-PAGINATION: log-only (deferred). |
+| **Standing context** | JR_E2E_ENABLED=true repo var set. DEC-065: queue tests deliberately un-contracted (S-QUEUE-BC-1 draft). Do NOT close #429 (DEC-029). OQ-5 open. E2E-PG-4 remote-link round-back open (blocked: no `jr remote-link read`). Deferred sub-gaps: --on-behalf-of (2nd customer), 401 scope hint. |
+| **Next step** | S-QUEUE-BC-1 (queue BC authorship + docstring→anchor cross-check process, DEC-065). Dispatch next feature cycle. |
+| **Resume prompt** | `Read .factory/STATE.md. S-JSM-E2E-1 CYCLE CLOSED+MERGED: PR #460 → develop @ 04b6b2c; 11 CI GREEN; 1571/0; BC 585 / NFR 41 UNCHANGED. JR_E2E_JSM_PROJECT=EJ active in jira-e2e env. factory-artifacts HEAD = git -C .factory log -1 --format='%h'. DEC-065: queue tests deliberately un-contracted (S-QUEUE-BC-1 draft). jira-e2e env: JR_E2E_ISSUE_TYPE_ALT=Bug. 61 stories / 41 NFRs / 585 BCs. Do NOT close #429 (DEC-029). OQ-5 open. E2E-PG-4 remote-link round-back open. Next: S-QUEUE-BC-1 or next feature cycle.` |
 
 ## Open Issues Tracker (post-#288)
 
