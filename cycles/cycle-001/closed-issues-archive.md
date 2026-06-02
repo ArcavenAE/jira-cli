@@ -37,3 +37,11 @@ traces_to: STATE.md
 | #375 | Dependabot: clap_complete 4.6.2→4.6.5 | **MERGED** @ a66d664 (squash, 2026-05-20) | — | 9-day soak; CI green |
 | #410 | keychain-touching test isolation infra — developer macOS (S-410) | **CLOSED — DELIVERED** (PR #416 @ 04e019a; 2026-05-27; issue #410 auto-closed) | LOW | F1–F7 (F2/F3 skipped per bug-fix routing). 13 keychain-transitive tests gated behind JR_RUN_KEYRING_TESTS=1 (6 in multi_cloudid_disambiguation.rs + 7 in oauth_refresh_integration.rs). 1 review cycle: pr-reviewer found F1 audit undercount (11→12), Copilot pass 1 found description count mismatch (5→6/12→13), Copilot pass 2 clean. F1-AUDIT-MISCOUNT-410 codified as drift deferral. |
 | #408 | spec/CLAUDE.md line-anchor citation drift — re-anchor to symbol-form (S-408) | **CLOSED — DELIVERED** (PR #417 @ d53278a; 2026-05-27; issue #408 auto-closed) | LOW | 5 stale line-anchor citations re-anchored to symbol-form (2 in CLAUDE.md AI Agent Notes, 3 in bc-3-issue-write.md). Symbol-form convention adopted in CLAUDE.md. 1 Copilot review cycle: caught path-prefix inconsistency (create.rs vs src/cli/issue/create.rs on line 336); fixed in bfa333d; re-review clean. L-408-1 codified in lessons.md. |
+
+---
+
+## Closed issues extracted from STATE.md Open Issues Tracker on 2026-06-02 (compact-state run)
+
+| Issue | Title | Status | Priority | Notes |
+|-------|-------|--------|----------|-------|
+| e2e-live-jira-testing | Live-Jira E2E testing in CI + E2E enhancements (Feature Mode) | [FINAL VERIFIED] S-E2E-1 PR #433 + S-E2E-2 PR #434 DELIVERED + live-green (20/0). S-E2E-3/4/5 SHIPPED to develop + LIVE-GREEN @ fef44bd (PR #440 feature d1fdca7 + PR #441 live-fix 46be96e + PR #442 bad-auth portability fef44bd). Live e2e run 26719160283 = 57/0 SUCCESS. E2E-ENH CYCLE CLOSED 2026-05-31. | CLOSED | DEC-032..047. OQ-1 RESOLVED (DEC-036). OQ-5 open (NFR-O-N doc drift). [process-gap] clap-tree guard DEFERRED (DRIFT-E2E-1). |
