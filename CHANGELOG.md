@@ -6,9 +6,51 @@ All notable changes to jr will be documented here.
 
 ### Added
 
+- **Fork-safe E2E CI gate:** `e2e.yml` and `e2e-sweeper.yml` are now gated by a repository
+  variable `JR_E2E_ENABLED`. Both workflow jobs skip cleanly on forks and any repo where the
+  variable is not set (empty string `!= 'true'`). A preflight step in `e2e.yml` asserts all
+  required secrets/variables are present before consuming runner minutes building Rust.
+  **Maintainers:** after merging, create a repository variable `JR_E2E_ENABLED=true` at
+  Settings → Secrets and variables → Actions → Variables (repository scope, NOT
+  environment scope) to re-enable nightly E2E on the canonical repo. Without this step both
+  workflows skip on every trigger. See `docs/specs/e2e-fork-safe-ci-enablement.md §5.1`.
+- **README E2E status badge:** `[![E2E](...e2e.yml/badge.svg?branch=develop)]` added as the
+  second badge in the badge row. Shows green for passing or skipped runs (skipped = no
+  `JR_E2E_ENABLED`); shows red when tests fail. Badge is pinned to the canonical repo.
+
 ### Fixed
 
 ### Changed
+
+## [0.5.0-dev.13] - 2026-06-01
+
+### Fixed
+
+- **`jr issue edit --priority` (bulk / multi-key) now sends the correct `{"priorityId":"<id>"}` schema**,
+  resolving the priority name to its id via `GET /rest/api/3/priority` and validating against real
+  Jira Cloud. Adds live E2E coverage for priority (single + multi-key bulk), `worklog add`, and
+  `issue` unassign. (#452, E2E-PG-4)
+- **`jr issue edit --type` (bulk / multi-key) now uses the verified Jira Bulk Ops schema** — camelCase
+  `issueType` in `editedFieldsInput`, project-scoped name→`issueTypeId` resolution via createmeta, and a
+  cross-project exit-64 guard before any API call. (#331, #453)
+- **`createmeta` issue-types response is parsed correctly** — the deserializer now reads the `issueTypes`
+  field (not `values`) with offset-based pagination, fixing live issueType bulk-edit resolution that the
+  mock-only tests had masked. (#331, #455)
+
+### Changed
+
+- Wired `JR_E2E_ISSUE_TYPE_ALT` into the live E2E workflow so the issueType bulk round-trip test runs in
+  CI (`jira-e2e` environment). (#331, #454)
+- Compacted `CLAUDE.md` gotchas / AI-agent-notes (~36% smaller) with no loss of load-bearing guidance. (#456)
+- Dependency bumps (each cleared a 7-day soak measured from the dependency's version publish date):
+  - `serde_json` 1.0.149 → 1.0.150 (#404)
+  - `ossf/scorecard-action` 2.4.0 → 2.4.3 (#424)
+  - `actions/dependency-review-action` 4.9.0 → 5.0.0 (#422)
+  - `github/codeql-action` 3.35.5 → 4.35.5 (#423)
+  - `actions/upload-artifact` 4.6.2 → 7.0.1 (#426)
+  - `actions/checkout` 4.3.1 → 6.0.2 (#425)
+  These four GitHub Actions majors move all workflows onto the Node.js 24 runtime; GitHub-hosted runners
+  satisfy the new minimum runner requirement.
 
 ## [0.5.0-dev.12] - 2026-06-01
 
