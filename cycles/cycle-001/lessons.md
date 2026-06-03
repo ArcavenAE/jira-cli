@@ -2932,3 +2932,62 @@ _Reference: DEC-063. PR #459 → develop @ afa12570._
 
 _Discovered: S-E2E-FORK-1 F5 adversarial review, 2026-06-02._
 _Reference: DEC-063. PR #459 → develop @ afa12570._
+
+---
+
+## L-DISPATCH-CWD-1: F2 architect must be dispatched with cwd = feature worktree, not main checkout (2026-06-03)
+
+**Tags:** [process-gap, orchestration]
+
+**Context:** During S-JSM-RESOLUTION-REQUIRED, the F2 architect was dispatched with `cwd` set to the main checkout (`/Users/zious/Documents/GITHUB/jira-cli`) instead of the feature worktree. As a result, ADR-0015, `docs/specs/issue-move-resolution.md`, and the CLAUDE.md Gotchas edit all landed on `develop`'s working tree rather than on the feature branch. The gap was not caught until F5 Pass F (merge-readiness check), which required a propagation + revert fix — extra work that would not have been needed if the worktree had been set correctly at dispatch.
+
+**Lesson:** When delegating authorship of any SHIPPED file (`docs/`, `CHANGELOG.md`, `CLAUDE.md`, `src/`, `tests/`, `.factory/specs/`) to a sub-agent for a worktree-based feature, ALWAYS set the agent's `cwd` to the WORKTREE path (e.g., `.worktrees/<feature>`), never the main checkout. The main checkout's working tree is shared across all in-flight branches; writing to it during a feature cycle creates unintended coupling.
+
+**Codification:** codified-in-place — the fix was applied this cycle (worktree-path discipline was enforced for all subsequent F-cycle dispatches). No follow-up story created; recurrence risk is low given this lesson is now explicit.
+
+**Cross-reference:** Mirrors `feedback_worktree_subagents.md` in project memory (subagents must use worktree path, not main repo, to avoid stray commits). Applies the same principle to orchestrator-level architect dispatch.
+
+### Status
+
+[codified] — applies to all future Feature Mode cycles that use worktrees.
+
+_Discovered: S-JSM-RESOLUTION-REQUIRED F5 Pass F (merge-readiness), 2026-06-03._
+_Reference: PR #465 → develop @ 8ec9527._
+
+---
+
+## L-MUTATION-PURE-HELPERS-1: Extract non-TTY-testable control flow into pure helpers before declaring mutation coverage complete (2026-06-03)
+
+**Tags:** [codified-pattern]
+
+**Context:** During S-JSM-RESOLUTION-REQUIRED F6 (formal hardening), the initial mutation testing run produced 64% kill rate. The surviving mutants were concentrated in interactive/dialoguer control flow: TTY guards (`refuse_noninteractive`), list-source selection logic (`select_prompt_base_names`), and default-index arithmetic (`optional_prompt_default_index`). These branches are not reachable via subprocess tests (which run non-TTY with `--no-input`) and cannot vary operands across test scenarios. After extracting each branch into a standalone pure helper with dedicated unit tests, the kill rate rose to 100%.
+
+**Lesson:** Inline interactive control flow (TTY guards, list-source selection, default-index arithmetic) is NOT mutation-coverable via subprocess-level tests running under `--no-input` / non-TTY. Before declaring F6 complete on any feature that contains interactive paths, extract that logic into PURE helper functions and add unit tests that vary operands directly. This reinforces the O-5/E-F2 pure-helper-extraction convention established in prior cycles.
+
+**Pattern:** The extraction target is any branch whose operands are fixed in all subprocess test calls (e.g., "always `--no-input`", "always single-item list"). Extract the selection/guard logic to a pure fn; test it with varied operands in a unit test; the subprocess test exercises the integration path.
+
+### Status
+
+[codified] — applies to all future Feature Mode cycles that deliver interactive CLI paths (prompts, list selection, TTY guards).
+
+_Discovered: S-JSM-RESOLUTION-REQUIRED F6 formal hardening, 2026-06-03._
+_Reference: PR #465 → develop @ 8ec9527. Kill rate: 64% → 100% after pure-helper extraction._
+
+---
+
+## L-ANALYTICAL-VS-EMPIRICAL-1: Do not trust analytical mutation-coverage claims — run cargo-mutants empirically before declaring F6 complete (2026-06-03)
+
+**Tags:** [analytical-vs-empirical]
+
+**Context:** During S-JSM-RESOLUTION-REQUIRED F5 Pass G, the adversary made an analytical prediction that "all gate mutants are killed" based on the test structure. This claim was REFUTED by the F6 empirical `cargo-mutants` run, which reported 64% kill rate (not 100%). The analytical reasoning had failed to account for the non-TTY testability gap described in L-MUTATION-PURE-HELPERS-1 — the test structure looked correct but subprocess tests cannot exercise the interactive branches at the mutation level.
+
+**Lesson:** Analytical reasoning about mutation coverage is not a substitute for running `cargo-mutants` empirically. Always run mutation testing (`cargo mutants --in-diff "$DIFF_FILE" --jobs 4`) and read the actual kill count before claiming F6 convergence on any `src/` delta. Do not trust pass/fail predictions from adversarial review — the adversary cannot know which mutants are reachable by the test harness without running the tool.
+
+**Corollary:** F5 adversarial convergence (3 CLEAN passes) does NOT imply F6 mutation-coverage convergence. The two gates are orthogonal.
+
+### Status
+
+[codified] — applies to all future Feature Mode F5→F6 transitions.
+
+_Discovered: S-JSM-RESOLUTION-REQUIRED F6 formal hardening, 2026-06-03._
+_Reference: PR #465 → develop @ 8ec9527. F5 Pass G analytical claim "all gate mutants killed" REFUTED by F6 empirical run (64%)._

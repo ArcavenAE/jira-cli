@@ -6,7 +6,7 @@ timestamp: 2026-06-03T20:01:51Z
 phase: phase-3-tdd-implementation
 project: jira-cli
 mode: BROWNFIELD
-current_step: "S-JSM-RESOLUTION-REQUIRED-MERGED-LIVE-GREEN-develop-8ec9527"
+current_step: "JSM-resolution-chain-CLOSED-live-green-develop-8ec9527; idle"
 current_cycle: "cycle-001"
 dtu_required: false
 phase_2_status: APPROVED
@@ -164,11 +164,11 @@ Full per-issue narratives: `cycles/cycle-001/convergence-trajectory.md`. Current
 | Field | Value |
 |-------|-------|
 | **Date** | 2026-06-03 |
-| **Position** | **S-JSM-RESOLUTION-REQUIRED COMPLETE + MERGED + LIVE-GREEN.** The full JSM resolution-enforcement chain (S-JSM-E2E-1/2/3 + S-JSM-RESOLUTION-REQUIRED) is COMPLETE. PR #465 squash-merged → develop @ 8ec9527 (20:01:51Z). Post-merge e2e.yml run 26909701606 SUCCESS: JR_E2E_JSM_PROJECT=EJ ACTIVE; test_e2e_jsm_resolution_enforcement EXECUTED LIVE (not skipped) and PASSED; full JSM suite 73/0 (110.55s). First live proof BC-3.2.013 works against real Jira: positive path sets fields.resolution; enforcement path exits 64 + "--resolution" hint on done-category without --resolution. Write scenarios self-closed (S-JSM-E2E-2/3 teardown); no orphaned EJ tickets. Remote branch + local worktree cleaned up. Note: local develop checkout is behind origin — human to ff-only. |
+| **Position** | **JSM resolution-chain CLOSED + IDLE.** Full chain S-JSM-E2E-1/2/3 + S-JSM-RESOLUTION-REQUIRED CYCLE CLOSED. PR #465 squash-merged → develop @ 8ec9527. Post-merge e2e.yml run 26909701606 JSM suite 73/0 (110.55s); test_e2e_jsm_resolution_enforcement PASSED LIVE. Lessons L-DISPATCH-CWD-1 / L-MUTATION-PURE-HELPERS-1 / L-ANALYTICAL-VS-EMPIRICAL-1 codified to cycles/cycle-001/lessons.md. DISPATCH-CWD gap: codified-in-place (no follow-up story — fix was applied this cycle). |
 | **Convergence counter** | BC: 586. NFR: 41. Stories: 64. develop HEAD on origin: 8ec9527. jira-e2e env: JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ. DRIFT-331-PAGINATION: log-only (deferred). |
-| **Standing context** | JR_E2E_ENABLED=true repo var set. DEC-066 retained (trigger = done-category AND offers resolution field; --no-resolution opt-out; bulk excluded). DEC-065: queue tests deliberately un-contracted (S-QUEUE-BC-1 draft open). Do NOT close #429 (DEC-029). OQ-5 open. E2E-PG-4 remote-link round-back open (blocked: no `jr remote-link read`). Coverage runs nightly. |
+| **Standing context** | JR_E2E_ENABLED=true repo var set. DEC-066 retained (done-category AND offers resolution field; --no-resolution opt-out; bulk excluded). DEC-065: queue tests deliberately un-contracted (S-QUEUE-BC-1 draft open). Do NOT close #429 (DEC-029). OQ-5 open. E2E-PG-4 remote-link round-back open (blocked: no `jr remote-link read`). Coverage runs nightly. |
 | **Next step** | S-QUEUE-BC-1: author BC-X.8.008/009 (queue list/view contracts) + PG-JSM-E2E-1 guard (BC-trace cross-check). |
-| **Resume prompt** | `Read .factory/STATE.md. S-JSM-RESOLUTION-REQUIRED COMPLETE: PR #465 squash-merged → develop @ 8ec9527; e2e.yml run 26909701606 JSM suite 73/0; test_e2e_jsm_resolution_enforcement PASSED LIVE. BC 586 / NFR 41 / Stories 64 UNCHANGED. DEC-066 retained (trigger=done-category AND offers resolution field; --no-resolution opt-out; bulk excluded). DEC-065: queue tests deliberately un-contracted (S-QUEUE-BC-1 draft). jira-e2e env: JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ. Do NOT close #429 (DEC-029). OQ-5 open. E2E-PG-4 remote-link round-back open. Local develop behind origin (ff-only needed). Next: S-QUEUE-BC-1.` |
+| **Resume prompt** | `Read .factory/STATE.md. JSM resolution-chain CLOSED + IDLE. develop @ 8ec9527 (PR #465 merged). e2e.yml run 26909701606 JSM suite 73/0 LIVE-GREEN. BC 586 / NFR 41 / Stories 64. Lessons L-DISPATCH-CWD-1/L-MUTATION-PURE-HELPERS-1/L-ANALYTICAL-VS-EMPIRICAL-1 in cycles/cycle-001/lessons.md. DEC-066 retained. DEC-065 queue un-contracted (S-QUEUE-BC-1 draft). jira-e2e env: JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ. Do NOT close #429 (DEC-029). OQ-5 open. E2E-PG-4 remote-link round-back open. Next: S-QUEUE-BC-1.` |
 
 ## Open Issues Tracker (post-#288)
 
