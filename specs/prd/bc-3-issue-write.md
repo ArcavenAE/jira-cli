@@ -1,9 +1,9 @@
 ---
 context: bc-3
 title: "Issue Write (create/edit/move/assign/comment/link/open/remote-link)"
-total_bcs: 105   # cumulative claim (incl. range-collapsed); definitional_count below is individually-bodied headings
-definitional_count: 76   # count of `#### BC-` headings in this file
-last_updated: 2026-06-01
+total_bcs: 106   # cumulative claim (incl. range-collapsed); definitional_count below is individually-bodied headings
+definitional_count: 77   # count of `#### BC-` headings in this file
+last_updated: 2026-06-03
 source_pass: 3
 trace: |
   - L2: .factory/specs/domain-spec/bc-03-issue-write.md
@@ -61,11 +61,12 @@ trace: |
   - F2 amended (2026-05-27): BC-3.4.015 — invariant 5 rewritten to describe two-stage i64-first strategy (no behavioral change for previously-correct inputs); EC-3.4.015-4b added (i64-boundary regression pin: "9223372036854775808" and "-9223372036854775809" MUST emit f64 wire form) (issue #421)
   - F2 addition (2026-06-01): BC-3.4.018 — `issue edit KEY1 KEY2 --type <NAME>` multi-key bulk wire shape: selectedActions=["issuetype"] (lowercase), editedFieldsInput["issueType"]={"issueTypeId":"<id-string>"} (camelCase key, id-based value); name→id resolved via GET /rest/api/3/issue/createmeta/{proj}/issuetypes; unknown type name exits 64; dry-run builder consistency pin (issue #331 F2)
   - F2 addition (2026-06-01): BC-3.4.019 — `issue edit KEY1 KEY2 --type <NAME>` cross-project guard: when resolved keys span >1 distinct project, exit 64 with actionable message BEFORE any API call; references single-issueTypeId-per-batch constraint as rationale (issue #331 F2)
+  - F2 addition (2026-06-03): BC-3.2.013 — `issue move` proactive resolution enforcement on done-category transitions (single-key only): REQUIRED resolution → mandatory (prompt or --resolution or exit 64 on --no-input; --no-resolution exits 64); OPTIONAL resolution → explicit choice required (--resolution / --no-resolution / prompt; non-interactive without either flag exits 64); breaking change to jr issue move default behavior; BC-3.2.009 retained as backstop (F2 jsm-resolution-required)
 ---
 
 # BC-3 — Issue Write
 
-105 behavioral contracts across 8 subdomains: Assign (3.1), Move/Transition (3.2),
+106 behavioral contracts across 8 subdomains: Assign (3.1), Move/Transition (3.2),
 Create (3.3), Edit+Open (3.4), Comment (3.5), Links (3.6), Remote links (3.7),
 JSM Request Create + Platform-Path Inverse Warnings + Auth-Conditional 401 Hints (3.8).
 
@@ -267,6 +268,103 @@ JSM Request Create + Platform-Path Inverse Warnings + Auth-Conditional 401 Hints
 **Source**: `tests/issue_commands.rs:105-128`
 **Behavior**: Negative-serialization pin. `body.contains("\"fields\"") == false`. Atlassian rejects `fields: null`.
 **Trace**: Pass 3 BC-1040 (R4)
+
+---
+
+#### BC-3.2.013: `issue move` (single-key) proactively enforces resolution when the target transition is done-category AND offers a resolution field — or is conditional
+
+**Confidence**: HIGH
+**Source**: `tests/issue_resolution.rs` (new); `tests/issue_move_resolution_enforce.rs` (new)
+**Subject**: Issue write
+**Origin**: BROWNFIELD
+
+**Trigger condition**: After calling `GET /rest/api/3/issue/{key}/transitions?expand=transitions.fields` and resolving the target transition (via the existing name/status-name match logic), the enforcement gate fires when ALL of:
+
+- `transition.to.statusCategory.key == "done"` (the stable, lowercase, instance-independent Jira Cloud category constant), AND
+- `transition.fields` contains the key `"resolution"` (resolution is on the transition screen) OR `transition.isConditional == true` (hidden validator or condition may require resolution).
+
+**Conservative gate**: If `to.statusCategory` is absent from the API response (expand unavailable or incomplete deserialization), enforcement is SKIPPED. The transition is attempted and BC-3.2.009 (reactive 400 handler) applies as backstop.
+
+**Scope**: Single-key `issue move` only. The bulk transition path does NOT receive proactive enforcement (out of scope; see ADR-0015 rationale).
+
+**Resolution-REQUIRED branch** (`fields.resolution.required == true` OR `isConditional == true`):
+
+- `--resolution <name>` provided → validate name against `transition.fields.resolution.allowedValues` (when present) → set `{resolution: {name: "<name>"}}` in the transition body (same shape as BC-3.2.011) → proceed.
+- `--no-resolution` provided → exit 64 (`UserError`) with stderr:
+  ```
+  error: the "<to_status_name>" transition requires a resolution and --no-resolution cannot be used here.
+
+  Try:
+      jr issue move <KEY> <to_status_name> --resolution <name>
+
+  Run `jr issue resolutions` to see available values.
+  ```
+- Interactive (TTY, `--no-input` absent), no flag → prompt via `dialoguer::Select` listing resolution names from `transition.fields.resolution.allowedValues` (when available) or `load_resolutions(client, false)` (instance-global cache fallback). No "(none — no resolution)" option is offered. On Ctrl+C / prompt failure → exit non-zero.
+- Non-interactive (`--no-input` OR stdin not a TTY), no flag → exit 64 (`UserError`) with stderr:
+  ```
+  error: the "<to_status_name>" transition requires a resolution.
+
+  Try:
+      jr issue move <KEY> <to_status_name> --resolution <name>
+
+  Run `jr issue resolutions` to see available values.
+  ```
+
+**Resolution-OPTIONAL branch** (`fields.resolution.required == false` AND NOT `isConditional`):
+
+- `--resolution <name>` provided → set `{resolution: {name: "<name>"}}` → proceed.
+- `--no-resolution` provided → transition without a `resolution` field in the body (body shape matches BC-3.2.012, no `"fields"` key) → proceed.
+- Interactive (TTY, `--no-input` absent), neither flag → prompt via `dialoguer::Select` listing resolution names PLUS a final `"(none — no resolution)"` option. Selecting "(none — no resolution)" proceeds without a resolution body field. On Ctrl+C / prompt failure → exit non-zero.
+- Non-interactive (`--no-input` OR stdin not a TTY), neither flag → exit 64 (`UserError`) with stderr:
+  ```
+  error: the "<to_status_name>" transition offers a resolution field. You must explicitly choose:
+
+      jr issue move <KEY> <to_status_name> --resolution <name>
+      jr issue move <KEY> <to_status_name> --no-resolution
+
+  Run `jr issue resolutions` to see available values.
+  ```
+
+**Flag constraints**:
+
+- `--resolution` and `--no-resolution` are mutually exclusive (clap conflict). Both present → clap exits with usage error before any HTTP call.
+- `--no-resolution` is a new flag introduced by this feature. It has no effect when the enforcement gate does not fire (non-done-category transitions, or conservative-gate fallback) and has no semantics outside of `issue move`.
+
+**Resolution value format**: Always an object (`{resolution: {name: "<name>"}}`), never a bare string, per the Atlassian API requirement (OpenAPI FieldMetadata schema).
+
+**Idempotency**: The existing idempotency check (BC-3.2.001 / BC-3.2.002 — already in target status → exit 0) is preserved and runs BEFORE the enforcement gate. No resolution prompt fires for a no-op move.
+
+**Backstop retained**: BC-3.2.009 (reactive 400 "resolution required" handler) is preserved as a fallback for workflows that enforce resolution via a server-side validator not reflected in the transition screen's `fields` map (conservative gate passes, POST fires, API returns 400).
+
+**Breaking change**: This is a breaking change to `jr issue move` default behavior. Previously, a done-category move with a resolution field silently succeeded with `resolution=null`. After this change, such a move in non-interactive mode exits 64 unless `--resolution` or `--no-resolution` is supplied. A CHANGELOG entry under Breaking Changes is required for the next minor version.
+
+**Edge cases**:
+
+- EC-3.2.013-1: `isConditional == true` with no `resolution` key in `fields` → treated as REQUIRED branch (conservative; the conditional may require resolution that the expand cannot enumerate). Exit 64 / prompt as per REQUIRED branch.
+- EC-3.2.013-2: `fields.resolution.allowedValues` is empty or absent → fall back to `load_resolutions(client, false)` (instance-global resolution list) for the prompt menu; resolution name validation skipped when allowedValues is absent.
+- EC-3.2.013-3: Resolution name provided via `--resolution` not found in `allowedValues` (when present) → exit 64 listing allowed values (same style as other name-resolution failures).
+- EC-3.2.013-4: Transition has `to.statusCategory.key == "done"` but `fields` map is entirely absent (API returned expanded response with no fields key) → enforcement SKIPPED; BC-3.2.009 backstop applies.
+- EC-3.2.013-5: Interactive prompt aborted via Ctrl+C → exit 130 (`Interrupted`).
+- EC-3.2.013-6: `--resolution` supplied on a non-done-category transition (enforcement gate does not fire) → `--resolution` is forwarded as a fields body parameter exactly as it was pre-BC-3.2.013. BC-3.2.011 behavior.
+- EC-3.2.013-7: `--no-resolution` supplied on a non-done-category transition (enforcement gate does not fire) → flag is silently ignored (no HTTP change; the transition body has no resolution field regardless, matching BC-3.2.012).
+- EC-3.2.013-8: Bulk `issue move` (multi-key positional or `--to` set) with a done-category target → enforcement gate NOT invoked; bulk path is out of scope. If the API rejects a bulk transition for missing resolution, BC-3.2.009-class per-key error appears.
+
+**Test vectors** (canonical, for test-writer):
+
+| Scenario | Mock transitions response | Flag(s) | Expected exit | Expected stderr |
+|---|---|---|---|---|
+| REQUIRED, non-interactive, no flag | `statusCategory.key="done"`, `fields.resolution.required=true` | `--no-input` | 64 | contains `"--resolution"` and `"jr issue resolutions"` |
+| REQUIRED, `--no-resolution` | same | `--no-resolution` | 64 | contains `"requires a resolution"` and `"--no-resolution cannot be used"` |
+| REQUIRED, `--resolution Done` | same, `allowedValues=[{name:"Done",id:"10000"}]` | `--resolution Done` | 0 | contains `"Moved"` |
+| OPTIONAL, non-interactive, no flag | `statusCategory.key="done"`, `fields.resolution.required=false` | `--no-input` | 64 | contains `"must explicitly choose"` and `"--no-resolution"` |
+| OPTIONAL, `--no-resolution` | same | `--no-resolution --no-input` | 0 | contains `"Moved"` (no fields key in POST body) |
+| OPTIONAL, `--resolution Done` | same, `allowedValues=[{name:"Done",id:"10000"}]` | `--resolution Done --no-input` | 0 | contains `"Moved"` (POST body contains `resolution`) |
+| `isConditional=true`, non-interactive | `statusCategory.key="done"`, `isConditional=true`, no `resolution` in fields | `--no-input` | 64 | contains `"--resolution"` |
+| No `statusCategory` (conservative gate) | `to.name="Done"`, no `statusCategory` key | `--no-input` | 0 | POST fired; BC-3.2.009 backstop in effect |
+| Not done-category | `statusCategory.key="indeterminate"` | `--no-input` | 0 | no enforcement; POST fired |
+| No `fields` key at all | `statusCategory.key="done"`, no `fields` key | `--no-input` | 0 | conservative gate fires; BC-3.2.009 backstop |
+
+**Trace**: F2 jsm-resolution-required (2026-06-03); API validation: `.factory/research/jsm-resolution-required-api-validation.md`; Delta analysis: `.factory/phase-f1-delta-analysis/jsm-resolution-required/delta-analysis.md`
 
 ---
 
@@ -2334,6 +2432,6 @@ When `--markdown` is absent, the guard does NOT fire — `--field description=va
 
 Sources: `src/cli/issue/snapshots/jr__cli__issue__json_output__tests__*.snap`; BC-1104..BC-1112 (R4)
 
-## Total BCs in this file: 76 individually-bodied (cumulative 105 incl. range-collapsed; see BC-INDEX.md)
+## Total BCs in this file: 77 individually-bodied (cumulative 106 incl. range-collapsed; see BC-INDEX.md)
 
-_Last updated 2026-06-01 (issue #331 F2): +2 BCs (BC-3.4.018..019) — BC-3.4.018 (multi-key `--type` bulk wire shape: camelCase `issueType` key, `issueTypeId` string value, name resolved via createmeta issuetypes), BC-3.4.019 (cross-project guard: keys spanning >1 project exit 64 before any API call); Section 3.4 header updated to 19 contracts. Previous update 2026-05-27 (issue #421 F2): BC-3.4.015 invariant 5 rewritten (two-stage i64-first strategy); EC-3.4.015-4b added (i64-boundary regression pin); no BC count changes (103/74 unchanged). Previous update (2026-05-25 issue #407 F2): +EC-3.4.017-14 — mechanical enforcement meta-test for BC-3.4.017 invariant 2 (conflict block completeness via `test_label_conflict_block_lists_every_relevant_flag`); BC-3.4.017 invariant 2 cross-reference added; no BC count changes (103/74 unchanged). Previous update (2026-05-22 issue #396 F2): +3 BCs (BC-3.4.015..017) — BC-3.4.015 (`issue edit --field` string/number/date/datetime/user field single-key path, with editmeta validation, fields.json cache, and dry-run invariants), BC-3.4.016 (`issue edit --field` single-select `option` field), BC-3.4.017 (`--field` multi-key/`--jql` rejection Gate A and flag-overlap Gate B); Section 3.4 header updated to 17 contracts. Previous update (2026-05-21 issue #398 F2): +3 BCs (BC-3.4.012..014) — BC-3.4.012 (issue edit table-mode success echo), BC-3.4.013 (issue edit JSON-mode success echo with changed_fields), BC-3.4.014 (issue create table-mode all-fields echo (broadened from team-only at the 2026-05-22 human-gate to mirror BC-3.4.012)); BC-3.4.003 Success output cross-reference added; Section 3.4 header updated to 14 contracts. Previous update (2026-05-20 issue #388): +2 BCs (BC-3.4.010..011): BC-3.4.010 (cross-hierarchy `edit --type` 400 → CROSS_HIERARCHY_HINT citing JRACLOUD-27893) and BC-3.4.011 (same-hierarchy/indeterminate `edit --type` 400 → typo hint or raw error, no JRACLOUD-27893 hint) added in F2 delta (issue #388). BC-3.4.003 Errors cross-reference updated (annotation only, no behavioral change). Section 3.4 header updated to 11 contracts. Previous update (2026-05-20 issue #385): +2 BCs (BC-3.8.016..017); BC-3.8.002/010/011 modified._
+_Last updated 2026-06-03 (jsm-resolution-required F2): +1 BC (BC-3.2.013) — BC-3.2.013 (proactive resolution enforcement on done-category transitions: REQUIRED and OPTIONAL branches, --no-resolution flag, isConditional coverage, conservative gate, BC-3.2.009 backstop retained; single-key only; breaking change); Section 3.2 header updated to 13 contracts. Previous update 2026-06-01 (issue #331 F2): +2 BCs (BC-3.4.018..019) — BC-3.4.018 (multi-key `--type` bulk wire shape: camelCase `issueType` key, `issueTypeId` string value, name resolved via createmeta issuetypes), BC-3.4.019 (cross-project guard: keys spanning >1 project exit 64 before any API call); Section 3.4 header updated to 19 contracts. Previous update 2026-05-27 (issue #421 F2): BC-3.4.015 invariant 5 rewritten (two-stage i64-first strategy); EC-3.4.015-4b added (i64-boundary regression pin); no BC count changes (103/74 unchanged). Previous update (2026-05-25 issue #407 F2): +EC-3.4.017-14 — mechanical enforcement meta-test for BC-3.4.017 invariant 2 (conflict block completeness via `test_label_conflict_block_lists_every_relevant_flag`); BC-3.4.017 invariant 2 cross-reference added; no BC count changes (103/74 unchanged). Previous update (2026-05-22 issue #396 F2): +3 BCs (BC-3.4.015..017) — BC-3.4.015 (`issue edit --field` string/number/date/datetime/user field single-key path, with editmeta validation, fields.json cache, and dry-run invariants), BC-3.4.016 (`issue edit --field` single-select `option` field), BC-3.4.017 (`--field` multi-key/`--jql` rejection Gate A and flag-overlap Gate B); Section 3.4 header updated to 17 contracts. Previous update (2026-05-21 issue #398 F2): +3 BCs (BC-3.4.012..014) — BC-3.4.012 (issue edit table-mode success echo), BC-3.4.013 (issue edit JSON-mode success echo with changed_fields), BC-3.4.014 (issue create table-mode all-fields echo (broadened from team-only at the 2026-05-22 human-gate to mirror BC-3.4.012)); BC-3.4.003 Success output cross-reference added; Section 3.4 header updated to 14 contracts. Previous update (2026-05-20 issue #388): +2 BCs (BC-3.4.010..011): BC-3.4.010 (cross-hierarchy `edit --type` 400 → CROSS_HIERARCHY_HINT citing JRACLOUD-27893) and BC-3.4.011 (same-hierarchy/indeterminate `edit --type` 400 → typo hint or raw error, no JRACLOUD-27893 hint) added in F2 delta (issue #388). BC-3.4.003 Errors cross-reference updated (annotation only, no behavioral change). Section 3.4 header updated to 11 contracts. Previous update (2026-05-20 issue #385): +2 BCs (BC-3.8.016..017); BC-3.8.002/010/011 modified._

@@ -1,0 +1,68 @@
+# Affected Files — jsm-resolution-required
+# Feature: jr issue move requires --resolution on done-category transitions that offer the field
+# Base: develop @ 176215e
+
+# ── src/ (MODIFIED) ────────────────────────────────────────────────────────────
+
+# Type change: add `#[serde(default, skip_serializing)] fields: Option<HashMap<String, Value>>`
+# to the `Transition` struct. Ensures read-command JSON output stability.
+src/types/jira/issue.rs
+
+# New method: `get_transitions_with_fields(key) -> Result<TransitionsResponse>`
+# Calls GET /rest/api/3/issue/{key}/transitions?expand=transitions.fields
+src/api/client.rs
+
+# Handler change: switch `handle_move` to call `get_transitions_with_fields`;
+# insert needs_resolution detection after transition selection;
+# add no_input branch (exit 64 + hint) and interactive branch (dialoguer::Select).
+# `handle_transitions` (read command) keeps calling `get_transitions` — no change there.
+src/cli/issue/workflow.rs
+
+# ── tests/ (NEW + MODIFIED) ────────────────────────────────────────────────────
+
+# NEW tests for enforcement:
+# - test_move_refuses_done_category_with_resolution_field_no_input (Red Gate test)
+# - test_move_proceeds_no_enforcement_when_no_status_category
+# - test_move_proceeds_no_enforcement_when_not_done_category
+# - test_move_proceeds_no_enforcement_when_fields_absent
+# May go in tests/issue_resolution.rs (extend existing file) or new file.
+tests/issue_resolution.rs
+
+# Fixture builder: add `transitions_response_with_status_category_and_fields` (or similar)
+# for wiremock mocks that include statusCategory + the `fields.resolution` expansion.
+tests/common/fixtures.rs
+
+# E2E: invert bypass-demo branch in test_e2e_jsm_resolution_enforcement.
+# Bypass-demo becomes: --no-input → assert exit 64 + "--resolution" in stderr.
+# jsm_discover_resolution and jsm_self_close are unchanged.
+tests/e2e_live.rs
+
+# ── docs/ (NEW + MODIFIED) ─────────────────────────────────────────────────────
+
+# NEW: feature spec for proactive enforcement (extends issue-move-resolution.md).
+docs/specs/issue-move-resolution-enforce.md
+
+# MODIFIED: update JSM gotcha entry for proactive enforcement behavior.
+CLAUDE.md
+
+# ── .factory/specs/prd/ (MODIFIED — F2 responsibility) ────────────────────────
+
+# Register BC-3.2.013 body.
+.factory/specs/prd/bc-3-issue-write.md
+
+# Register BC-3.2.013 row; update section 3.2 header count (12 → 13 BCs).
+.factory/specs/prd/BC-INDEX.md
+
+# Update cumulative count tables.
+.factory/specs/prd/CANONICAL-COUNTS.md
+
+# ── docs/adr/ (NEW — F2/architect responsibility) ──────────────────────────────
+
+# ADR-0015: proactive resolution enforcement on done-category transitions.
+# Covers: expand-based detection, skip_serializing stability contract,
+# single-key-only scope, backward-compat rationale.
+docs/adr/0015-proactive-resolution-enforcement.md
+
+# ── CHANGELOG.md (F7 responsibility) ──────────────────────────────────────────
+
+CHANGELOG.md
