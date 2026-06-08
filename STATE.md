@@ -2,11 +2,11 @@
 document_type: pipeline-state
 version: "2.0"
 status: active
-timestamp: 2026-06-03T20:01:51Z
+timestamp: 2026-06-08T15:30:12Z
 phase: phase-3-tdd-implementation
 project: jira-cli
 mode: BROWNFIELD
-current_step: "JSM-resolution-chain-CLOSED-live-green-develop-8ec9527; idle"
+current_step: "#470-BC-7.2.006-PR477-merged-develop-aa602a1; idle"
 current_cycle: "cycle-001"
 dtu_required: false
 phase_2_status: APPROVED
@@ -29,8 +29,8 @@ activation_version: "v0.5.0-dev.11"
 | **Language** | Rust |
 | **Target Workspace** | develop → main |
 | **Started** | 2026-05-04 |
-| **Last Updated** | 2026-06-03 — S-JSM-RESOLUTION-REQUIRED MERGED + LIVE-VALIDATED. PR #465 squash-merged → develop @ 8ec9527 (20:01:51Z). Post-merge e2e.yml run 26909701606 SUCCESS: test_e2e_jsm_resolution_enforcement PASSED LIVE (not skipped); full JSM suite 73/0 (110.55s). First live proof of BC-3.2.013 proactive resolution gate. BC 586 / NFR 41 / Stories 64 UNCHANGED. |
-| **Current Phase** | Phase 3 — TDD Implementation IN PROGRESS — Feature Mode active. S-JSM-RESOLUTION-REQUIRED COMPLETE + MERGED + LIVE-GREEN (develop @ 8ec9527). BC 586. NFR 41. Stories 64. Next: S-QUEUE-BC-1. |
+| **Last Updated** | 2026-06-08 — #470/BC-7.2.006 PR #477 squash-merged → develop @ aa602a1 (15:30:11Z); issue #470 CLOSED (15:30:12Z); adf-listitem worktree + branch cleaned up. BC 587 / NFR 41 / Stories 64 UNCHANGED. |
+| **Current Phase** | Phase 3 — TDD Implementation IN PROGRESS — Feature Mode active. #470/BC-7.2.006 COMPLETE + MERGED (develop @ aa602a1). BC 587. NFR 41. Stories 64. Next: S-QUEUE-BC-1. |
 | **Next Phase** | Phase 4: Holdout Evaluation (not started) |
 | **Activation HEAD** | 15bf305 (v0.5.0-dev.11) |
 
@@ -59,7 +59,7 @@ Goal 1c: **Harden v0.5 + feature delivery** — formalize existing codebase with
 | JSM teardown fix — S-JSM-E2E-2 | **CYCLE CLOSED + MERGED** (2026-06-02). PR #464 squash-merged → develop @ 176215e; all 11 CI checks GREEN; full regression 1571/0. Fixed live-caught teardown bug: hardcoded "Done" rejected by JSM workflow → orphaned EJ tickets. Fix: jsm_self_close dynamic close-transition discovery (statusCategory.key=="done", prefer Resolved/Closed/Done, move to to.name). F1–F7 COMPLETE; 3 clean adversarial passes. Zero src expected. BC: 585. NFR: 41 UNCHANGED. | F1–F7 ALL COMPLETE — CYCLE CLOSED + MERGED | Full regression 1571/0. Worktree cleaned up. |
 | JSM resolution enforcement — S-JSM-E2E-3 | **SUPERSEDED** — folded into S-JSM-RESOLUTION-REQUIRED (2026-06-03). Bypass-demo inverted to enforcement assertion; positive path + helpers + SURFACE carried forward. Do NOT dispatch as standalone. | SUPERSEDED | BC: 585 / NFR: 41 (baseline before S-JSM-RESOLUTION-REQUIRED). |
 | JSM resolution enforcement (SRC) — S-JSM-RESOLUTION-REQUIRED | **CYCLE CLOSED + MERGED + LIVE-GREEN** (2026-06-03). PR #465 squash-merged → develop @ 8ec9527 (20:01:51Z). Post-merge e2e.yml run 26909701606 SUCCESS: JR_E2E_JSM_PROJECT=EJ ACTIVE; test_e2e_jsm_resolution_enforcement PASSED LIVE (not skipped); full JSM suite 73/0 (110.55s). First live proof of BC-3.2.013 proactive resolution gate: positive path sets fields.resolution; enforcement path exits 64 + "--resolution" hint. Write-scenario self-close worked (S-JSM-E2E-2/3 teardown); no orphaned EJ tickets. ci.yml on develop @ 8ec9527 also triggered (build/test). | F1–F7 ALL COMPLETE — CYCLE CLOSED + LIVE-GREEN | F5: tautological tests→allowedValues gap→doc-propagation→bypass-demo inversion→mutation survivors — ALL fixed. F6: 27/27 killed. DEC-066 retained. |
-| ADF listItem content-model BC — issue #470 / BC-7.2.006 | **CYCLE CLOSED + LIVE-GREEN** (2026-06-08). BC-7.2.006 authored + adversarially converged (pass-1: 2I+5m fixed; pass-2: minor fixed; passes 3/6/7 CLEAN). Factory artifacts committed @ 46b36b4 → pushed factory-artifacts. Code on develop via PR #477 (worktree adf-listitem); CI green. BC corpus: 587 (+1). | F1–F7 ALL COMPLETE — CYCLE CLOSED | F5: 3 clean fresh-context passes (P1 2I+5m→fixed; P2 minor→fixed; P3/P6/P7 CLEAN). Count-surface reconciliation: all 8 surfaces agree at 587. Process-gaps: PG-A (check-bc-cumulative-counts.sh scope gap) + DRIFT-README (Document Map stale 573→587) logged. |
+| ADF listItem content-model BC — issue #470 / BC-7.2.006 | **CYCLE CLOSED + MERGED** (2026-06-08). BC-7.2.006 authored + adversarially converged (pass-1: 2I+5m fixed; pass-2: minor fixed; passes 3/6/7 CLEAN). Factory artifacts @ 46b36b4. PR #477 squash-merged → develop @ aa602a1 (15:30:11Z); issue #470 CLOSED (15:30:12Z); adf-listitem worktree + branch cleaned up. BC corpus: 587 (+1). | F1–F7 ALL COMPLETE — CYCLE CLOSED + MERGED | F5: 3 clean fresh-context passes (P1 2I+5m→fixed; P2 minor→fixed; P3/P6/P7 CLEAN). Count-surface reconciliation: all 8 surfaces agree at 587. Process-gaps: PG-A + DRIFT-README logged. |
 | E2E feature (S-E2E-1..5) — Live-Jira E2E testing in CI + E2E enhancements | F7 CONVERGED — SHIPPED + LIVE-GREEN (CYCLE CLOSED 2026-05-31) | 2026-05-31 | F1–F7 ALL COMPLETE all 5 stories; live workflow GREEN (run 26719160283, 57/0; develop @ fef44bd via #440+#441+#442) | S-E2E-1: (4C/4H)→(1C/2H)→(1C/2H/1M)→(2M)→CLEAN×3; S-E2E-2: 1M→CLEAN×3; E2E-enh F2: P1 13→P4 2C/2H→CLEAN×3; F5: 2H→CLEAN×3; live: 54/3→56/1→57/0 |
 | issue-327 (Dependabot rand 0.9→0.10) | CYCLE CONVERGED — PR #413 @ 375c0f91 | 2026-05-26 | F1–F7 ALL COMPLETE — MAXIMUM_VIABLE_REFINEMENT_REACHED | F5: HIGH-FP→0→0. F6: 100% (2/2). F7: 6/6 PASS. |
 | 4: Holdout Evaluation | not-started | | | |
@@ -77,7 +77,7 @@ Goal 1c: **Harden v0.5 + feature delivery** — formalize existing codebase with
 | S-JSM-E2E-3 SUPERSEDED 2026-06-03 — folded into S-JSM-RESOLUTION-REQUIRED. Bypass-demo inverted to enforcement assertion; positive path + helpers + SURFACE carried forward. Branch test/jsm-e2e-resolution closed (superseded). | orchestrator + state-manager | superseded | BC 585 / NFR 41 — baseline before enforcement feature. |
 | S-JSM-RESOLUTION-REQUIRED F1–F7 CONVERGED 2026-06-03 — PR #465 OPEN (awaiting human merge — breaking change). First SRC feature in JSM chain. BC-3.2.013 + ADR-0015. 9 F5 adversarial passes, all findings fixed. F6: 27/27 mutation kill. Full suite 1605/0; 11 CI GREEN. | orchestrator + state-manager | CYCLE CONVERGED (archived) | BC 586 / NFR 41 / Stories 64. |
 | S-JSM-RESOLUTION-REQUIRED MERGED + LIVE-GREEN 2026-06-03 — PR #465 squash-merged → develop @ 8ec9527 (20:01:51Z). Post-merge e2e.yml run 26909701606 SUCCESS: test_e2e_jsm_resolution_enforcement PASSED LIVE (not skipped); JSM suite 73/0 (110.55s). First live proof of BC-3.2.013 proactive resolution gate. Write-scenarios self-closed (no orphaned EJ tickets). ci.yml on 8ec9527 also triggered. Remote branch + local worktree cleaned up. | orchestrator + state-manager | CYCLE CLOSED + LIVE-GREEN | BC 586 / NFR 41 / Stories 64 UNCHANGED. develop HEAD on origin: 8ec9527. |
-| #470 BC-7.2.006 listItem content-model CYCLE CLOSED 2026-06-08 — BC authored + converged (3 clean fresh-context adversary passes: P1 2I+5m fixed; P2 minor fixed; P3/P6/P7 CLEAN). Factory artifacts committed @ 46b36b4 → pushed. Code on develop via PR #477 (adf-listitem worktree); CI green. PG-A + DRIFT-README logged to Drift Items. | state-manager | CYCLE CLOSED | BC 587 (+1). NFR 41 / Stories 64 UNCHANGED. factory-artifacts HEAD: 46b36b4. |
+| #470 BC-7.2.006 MERGED + CLOSED 2026-06-08 — PR #477 squash-merged → develop @ aa602a1 (15:30:11Z); issue #470 CLOSED (15:30:12Z); adf-listitem worktree + branch cleaned up. PG-A + DRIFT-README deferred (see Drift Items). | state-manager | CYCLE CLOSED + MERGED | BC 587 / NFR 41 / Stories 64 UNCHANGED. develop HEAD on origin: aa602a1. |
 
 ## Decisions Log
 
@@ -160,7 +160,7 @@ Goal 1c: **Harden v0.5 + feature delivery** — formalize existing codebase with
 
 ## Convergence Trackers
 
-Full per-issue narratives: `cycles/cycle-001/convergence-trajectory.md`. Current: **[2026-06-08] #470 BC-7.2.006 (ADF listItem content-model) CYCLE CLOSED. BC authored + adversarially converged (3 clean fresh-context passes: P1 2I+5m→fixed; P2 minor→fixed; P3/P6/P7 CLEAN). Factory artifacts @ 46b36b4. Code on develop via PR #477. BC: 587. NFR: 41. Stories: 64. PG-A + DRIFT-README logged.**
+Full per-issue narratives: `cycles/cycle-001/convergence-trajectory.md`. Current: **[2026-06-08] #470 BC-7.2.006 (ADF listItem content-model) CYCLE CLOSED + MERGED. PR #477 squash-merged → develop @ aa602a1 (15:30:11Z); issue #470 CLOSED. adf-listitem worktree + branch cleaned up. BC: 587. NFR: 41. Stories: 64. PG-A + DRIFT-README deferred.**
 
 ## Session Resume Checkpoint
 
@@ -168,11 +168,11 @@ Full per-issue narratives: `cycles/cycle-001/convergence-trajectory.md`. Current
 | Field | Value |
 |-------|-------|
 | **Date** | 2026-06-08 |
-| **Position** | **#470 BC-7.2.006 CLOSED + IDLE.** BC-7.2.006 (ADF listItem content-model conformance) authored, adversarially converged (3 clean fresh-context passes), factory artifacts pushed @ 46b36b4. Code on develop via PR #477 (adf-listitem worktree); CI green. PG-A + DRIFT-README logged. JSM resolution-chain remains CLOSED + LIVE-GREEN (develop @ 8ec9527). |
-| **Convergence counter** | BC: 587 (+1 from #470). NFR: 41. Stories: 64. develop HEAD on origin: 8ec9527 (unchanged — #470 is spec-only; PR #477 on adf-listitem worktree). jira-e2e env: JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ. |
+| **Position** | **#470 BC-7.2.006 MERGED + CLOSED + IDLE.** PR #477 squash-merged → develop @ aa602a1 (2026-06-08T15:30:11Z); issue #470 CLOSED (15:30:12Z); adf-listitem worktree + branch cleaned up. BC-7.2.006 adversarially converged (3 clean fresh-context passes), factory artifacts @ 46b36b4. PG-A + DRIFT-README deferred. JSM resolution-chain CLOSED + LIVE-GREEN (8ec9527 → now superseded by aa602a1). |
+| **Convergence counter** | BC: 587 (+1 from #470). NFR: 41. Stories: 64. develop HEAD on origin: aa602a1 (PR #477 squash-merged 2026-06-08). jira-e2e env: JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ. |
 | **Standing context** | JR_E2E_ENABLED=true repo var set. DEC-066 retained. DEC-065 queue un-contracted (S-QUEUE-BC-1 draft open). Do NOT close #429 (DEC-029). OQ-5 open. E2E-PG-4 remote-link round-back open. PG-A + DRIFT-README: deferred doc-reconciliation items (see Drift Items). Coverage runs nightly. |
 | **Next step** | S-QUEUE-BC-1: author BC-X.8.008/009 (queue list/view contracts) + PG-JSM-E2E-1 guard (BC-trace cross-check). |
-| **Resume prompt** | `Read .factory/STATE.md. #470 BC-7.2.006 CLOSED (factory-artifacts @ 46b36b4). BC 587 / NFR 41 / Stories 64. develop HEAD: 8ec9527 (JSM-resolution-chain). PR #477 open on adf-listitem worktree (code for #470). DEC-066 retained. DEC-065 queue un-contracted (S-QUEUE-BC-1 draft). PG-A + DRIFT-README deferred (see Drift Items). jira-e2e env: JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ. Do NOT close #429. OQ-5 open. E2E-PG-4 remote-link round-back open. Next: S-QUEUE-BC-1.` |
+| **Resume prompt** | `Read .factory/STATE.md. #470/BC-7.2.006 MERGED + CLOSED (PR #477 → develop @ aa602a1, 2026-06-08). BC 587 / NFR 41 / Stories 64. adf-listitem worktree + branch cleaned up. DEC-066 retained. DEC-065 queue un-contracted (S-QUEUE-BC-1 draft). PG-A + DRIFT-README deferred (see Drift Items). jira-e2e env: JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ. Do NOT close #429. OQ-5 open. E2E-PG-4 remote-link round-back open. Next: S-QUEUE-BC-1.` |
 
 ## Open Issues Tracker (post-#288)
 
