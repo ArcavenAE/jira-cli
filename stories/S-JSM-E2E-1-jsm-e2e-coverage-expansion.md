@@ -19,6 +19,8 @@ depends_on: []
 blocks: []
 bc_anchors:
   - BC-X.8.004
+  - BC-X.8.008
+  - BC-X.8.009
   - BC-X.12.001
   - BC-X.12.005
   - BC-3.8.001
@@ -27,15 +29,17 @@ bc_anchors:
   - BC-2.4.041
 # BC delta: EMPTY — this story adds live E2E tests and documentation only.
 # No product behavioral contracts are introduced or modified.
-# BC corpus (585 BCs) and NFR corpus (41 NFRs) are EXPLICITLY UNCHANGED.
+# BC corpus (589 BCs) and NFR corpus (41 NFRs) are EXPLICITLY UNCHANGED by this story.
 # No new BC file is created; no existing BC is modified; BC-INDEX.md is unchanged.
 #
-# bc_anchors note: BC-X.12.001 is retained for AC-002 (requesttype list) and AC-003
-# is an explicitly-logged orphan — queue commands shipped without behavioral contracts
-# (pre-existing corpus gap, tracked in S-QUEUE-BC-1). BC-3.5.001 + BC-2.4.041 added
-# for AC-005 comment-visibility round-trip.
+# bc_anchors note: BC-X.8.008 (queue list output shape) and BC-X.8.009 (queue view
+# output shape) were authored document-as-is by product-owner in cross-cutting.md §X.8
+# via follow-up story S-QUEUE-BC-1. AC-001 and AC-003 are now contracted (orphan
+# resolved). BC-3.5.001 + BC-2.4.041 cover AC-005 comment-visibility round-trip.
 bcs:
   - BC-X.8.004
+  - BC-X.8.008
+  - BC-X.8.009
   - BC-X.12.001
   - BC-X.12.005
   - BC-3.8.001
@@ -63,7 +67,7 @@ acceptance_criteria_count: 7
 assumption_validations: []
 risk_mitigations: []
 created: "2026-06-01"
-last_updated: "2026-06-01"
+last_updated: "2026-06-08"
 traceability_note: >
   BC delta is EMPTY for new BCs; this story exercises existing BCs via live
   E2E tests. All 7 ACs trace to VER-JSM-E2E-N verification properties defined
@@ -85,6 +89,14 @@ changelog:
       Initial story creation. JSM E2E Coverage Expansion — 7 live test scenarios
       for queue view, requesttype fields, comment visibility, create round-trip,
       and non-JSM guard. Zero src/ delta. Extends existing live E2E suite.
+  - date: "2026-06-08"
+    phase: traceability-maintenance
+    author: story-writer
+    summary: >
+      Orphan resolution via S-QUEUE-BC-1: added BC-X.8.008 (jr queue list output
+      shape) and BC-X.8.009 (jr queue view output shape) to bc_anchors and bcs
+      arrays; AC-001 now traces to BC-X.8.008, AC-003 now traces to BC-X.8.009.
+      BCs authored document-as-is by product-owner in cross-cutting.md §X.8.
 ---
 
 # S-JSM-E2E-1 — JSM E2E Coverage Expansion
@@ -144,7 +156,9 @@ All new tests trace to existing BCs — no BCs are created or modified.
 
 | BC | What the new tests exercise |
 |----|----------------------------|
-| BC-X.12.001 | `jr requesttype list` — deepened to assert per-item `id` + `name` fields (AC-002). **Note:** AC-001 (`jr queue list`) and AC-003 (`jr queue view`) do NOT trace to BC-X.12.001 — queue commands shipped in an earlier cycle with no behavioral contracts (pre-existing corpus gap). See orphan note below. |
+| BC-X.8.008 | `jr queue list` output shape — JSON array with per-item `id` + `name` fields (AC-001). Authored document-as-is by S-QUEUE-BC-1 in cross-cutting.md §X.8. |
+| BC-X.8.009 | `jr queue view` output shape — issues JSON array; by-name and `--id` routing branches (AC-003). Authored document-as-is by S-QUEUE-BC-1 in cross-cutting.md §X.8. |
+| BC-X.12.001 | `jr requesttype list` — deepened to assert per-item `id` + `name` fields (AC-002). |
 | BC-X.12.005 | `jr requesttype fields <numeric_id>` — asserts top-level `"fields"` key in response (AC-004) |
 | BC-3.8.001 | `jr issue create --request-type` write round-trip — `POST /rest/servicedeskapi/request`; asserts `{"key": "EJ-N"}` on stdout (AC-006) |
 | BC-3.8.004 | Numeric-bypass path: all-ASCII-digit RT id skips name resolution in both `requesttype fields` and `issue create --request-type` (AC-004, AC-006) |
@@ -152,27 +166,22 @@ All new tests trace to existing BCs — no BCs are created or modified.
 | BC-3.5.001 | `jr issue comment <key> --internal` write side: adds `sd.public.comment` property on the comment (AC-005) |
 | BC-2.4.041 | `jr issue comments --output json` read side: exposes `properties[]` array including `sd.public.comment` for JSM-aware comment display (AC-005) |
 
-**Orphan note — AC-001 and AC-003 (queue list / queue view):** The queue commands
-(`jr queue list`, `jr queue view`) shipped in an earlier delivery cycle without any
-behavioral contracts in the BC corpus. Anchoring the queue E2E tests to BC-X.12.001
-(a `requesttype` contract) would be a semantically-invalid traceability link — false
-coverage. Instead, AC-001 and AC-003 are explicitly logged as un-contracted (orphan)
-acceptance criteria. This is a tracked, pre-existing corpus gap; the resolution is a
-dedicated follow-up story (S-QUEUE-BC-1) that will author document-as-is BCs for the
-queue command family. Research justification: `.factory/research/jsm-e2e-queue-bc-anchoring-validation.md`.
+**Orphan resolved (2026-06-08, S-QUEUE-BC-1):** BC-X.8.008 (`jr queue list` output shape)
+and BC-X.8.009 (`jr queue view` output shape) were authored document-as-is by product-owner
+in cross-cutting.md §X.8. AC-001 traces to BC-X.8.008; AC-003 traces to BC-X.8.009. The
+pre-existing corpus gap logged in S-QUEUE-BC-1 is closed. Research justification:
+`.factory/research/jsm-e2e-queue-bc-anchoring-validation.md`.
 
 ## Acceptance Criteria
 
-### AC-001 — Queue list shape assertions (VER-JSM-E2E-1 → un-contracted; orphan, tracked)
+### AC-001 — Queue list shape assertions (VER-JSM-E2E-1 → BC-X.8.008)
 
 `test_e2e_jsm_queue_list_shape` is added to `tests/e2e_live.rs` as an `#[ignore]`-gated
 function with an `e2e_enabled()` check and the JSM project gate per spec §3.1.
 
-**BC trace: NONE (explicitly logged orphan).** `jr queue list` shipped in an earlier cycle
-without a behavioral contract. BC-X.12.001 is a `requesttype` contract — reusing it to
-cover queue behavior is a semantically-invalid traceability link (false coverage). The gap is
-tracked in follow-up story S-QUEUE-BC-1, which will author document-as-is BCs (BC-X.8.008 /
-BC-X.8.009) for the queue command family. Research: `.factory/research/jsm-e2e-queue-bc-anchoring-validation.md`.
+**BC trace: BC-X.8.008 (traces to BC-X.8.008).** `jr queue list` output shape is now
+contracted via BC-X.8.008, authored document-as-is by product-owner in cross-cutting.md
+§X.8 as part of follow-up story S-QUEUE-BC-1 (2026-06-08). Orphan resolved.
 
 **Behavior asserted:**
 1. `jr queue list --project <EJ> --output json` exits 0.
@@ -185,8 +194,8 @@ BC-X.8.009) for the queue command family. Research: `.factory/research/jsm-e2e-q
 `eprintln!("[SKIP] …")` and `return` per spec §3.1.
 
 **Verification (VER-JSM-E2E-1, F6):** CI E2E run log for `test_e2e_jsm_queue_list_shape`
-shows PASS; no shape assertion fires. (verifies queue list output shape — currently
-un-contracted; behavior is empirically verified; contract authoring tracked in S-QUEUE-BC-1)
+shows PASS; no shape assertion fires. (traces to BC-X.8.008 — queue list output shape;
+contract authored document-as-is by S-QUEUE-BC-1)
 
 ---
 
@@ -210,7 +219,7 @@ read command output shape)
 
 ---
 
-### AC-003 — Queue view by name AND by --id (VER-JSM-E2E-3 → un-contracted; orphan, tracked)
+### AC-003 — Queue view by name AND by --id (VER-JSM-E2E-3 → BC-X.8.009)
 
 `test_e2e_jsm_queue_view` is added to `tests/e2e_live.rs` as an `#[ignore]`-gated function.
 
@@ -234,8 +243,9 @@ issue arrays, not by comparing queue `id`/`name` fields in the response.
 **DO NOT** assert `"id"` or `"name"` matching in the view response (those fields are
 present in `queue list` output, not in `queue view` output).
 
-**BC trace: NONE (explicitly logged orphan).** `jr queue view` shipped in an earlier cycle
-without a behavioral contract. See AC-001 orphan note and S-QUEUE-BC-1 follow-up.
+**BC trace: BC-X.8.009 (traces to BC-X.8.009).** `jr queue view` output shape is now
+contracted via BC-X.8.009, authored document-as-is by product-owner in cross-cutting.md
+§X.8 as part of follow-up story S-QUEUE-BC-1 (2026-06-08). Orphan resolved.
 
 **SURFACE guard row added to `tests/e2e_cli_surface_guard.rs`:**
 ```
@@ -244,8 +254,8 @@ without a behavioral contract. See AC-001 orphan note and S-QUEUE-BC-1 follow-up
 
 **Verification (VER-JSM-E2E-3, F6):** CI log for `test_e2e_jsm_queue_view` shows both
 by-name and by-id sub-paths exercised and passing with issue-array shape assertions.
-(verifies queue view output shape + `--id` routing branch — currently un-contracted;
-contract authoring tracked in S-QUEUE-BC-1)
+(traces to BC-X.8.009 — queue view output shape + `--id` routing branch; contract
+authored document-as-is by S-QUEUE-BC-1)
 
 ---
 

@@ -396,3 +396,16 @@ _Was the active checkpoint after PR #465 squash-merged and post-merge e2e.yml ru
 | **Standing context** | JR_E2E_ENABLED=true repo var set. DEC-066 retained (trigger = done-category AND offers resolution field; --no-resolution opt-out; bulk excluded). DEC-065: queue tests deliberately un-contracted (S-QUEUE-BC-1 draft open). Do NOT close #429 (DEC-029). OQ-5 open. E2E-PG-4 remote-link round-back open (blocked: no `jr remote-link read`). Coverage runs nightly. |
 | **Next step** | S-QUEUE-BC-1: author BC-X.8.008/009 (queue list/view contracts) + PG-JSM-E2E-1 guard (BC-trace cross-check). |
 | **Resume prompt** | `Read .factory/STATE.md. S-JSM-RESOLUTION-REQUIRED COMPLETE: PR #465 squash-merged → develop @ 8ec9527; e2e.yml run 26909701606 JSM suite 73/0; test_e2e_jsm_resolution_enforcement PASSED LIVE. BC 586 / NFR 41 / Stories 64 UNCHANGED. DEC-066 retained (trigger=done-category AND offers resolution field; --no-resolution opt-out; bulk excluded). DEC-065: queue tests deliberately un-contracted (S-QUEUE-BC-1 draft). jira-e2e env: JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ. Do NOT close #429 (DEC-029). OQ-5 open. E2E-PG-4 remote-link round-back open. Local develop behind origin (ff-only needed). Next: S-QUEUE-BC-1.` |
+
+---
+
+_Was the active checkpoint after #470/BC-7.2.006 MERGED + CLOSED (PR #477 → develop @ aa602a1, 2026-06-08T15:30:11Z). Superseded when S-QUEUE-BC-1 cycle converged._
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-06-08 |
+| **Position** | **#470 BC-7.2.006 MERGED + CLOSED + IDLE.** PR #477 squash-merged → develop @ aa602a1 (2026-06-08T15:30:11Z); issue #470 CLOSED (15:30:12Z); adf-listitem worktree + branch cleaned up. BC-7.2.006 adversarially converged (3 clean fresh-context passes), factory artifacts @ 46b36b4. PG-A + DRIFT-README deferred. JSM resolution-chain CLOSED + LIVE-GREEN (8ec9527 → now superseded by aa602a1). |
+| **Convergence counter** | BC: 587 (+1 from #470). NFR: 41. Stories: 64. develop HEAD on origin: aa602a1 (PR #477 squash-merged 2026-06-08). jira-e2e env: JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ. |
+| **Standing context** | JR_E2E_ENABLED=true repo var set. DEC-066 retained. DEC-065 queue un-contracted (S-QUEUE-BC-1 draft open). Do NOT close #429 (DEC-029). OQ-5 open. E2E-PG-4 remote-link round-back open. PG-A + DRIFT-README: deferred doc-reconciliation items (see Drift Items). Coverage runs nightly. |
+| **Next step** | S-QUEUE-BC-1: author BC-X.8.008/009 (queue list/view contracts) + PG-JSM-E2E-1 guard (BC-trace cross-check). |
+| **Resume prompt** | `Read .factory/STATE.md. #470/BC-7.2.006 MERGED + CLOSED (PR #477 → develop @ aa602a1, 2026-06-08). BC 587 / NFR 41 / Stories 64. adf-listitem worktree + branch cleaned up. DEC-066 retained. DEC-065 queue un-contracted (S-QUEUE-BC-1 draft). PG-A + DRIFT-README deferred (see Drift Items). jira-e2e env: JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ. Do NOT close #429. OQ-5 open. E2E-PG-4 remote-link round-back open. Next: S-QUEUE-BC-1.` |

@@ -1,9 +1,9 @@
 ---
 context: bc-x
 title: "Cross-cutting (HTTP client, Runtime, Users, Teams, Worklogs, Projects, Queues, JQL, Partial-match, JSM Request Types)"
-total_bcs: 140   # cumulative claim (incl. range-collapsed); definitional_count below is individually-bodied headings
-definitional_count: 74   # count of `#### BC-` headings in this file
-last_updated: 2026-05-19
+total_bcs: 142   # cumulative claim (incl. range-collapsed); definitional_count below is individually-bodied headings
+definitional_count: 76   # count of `#### BC-` headings in this file
+last_updated: 2026-06-08
 source_pass: 3
 trace: |
   - L2: .factory/specs/domain-spec/cross-cutting.md
@@ -12,11 +12,12 @@ trace: |
   - Source R4: .factory/semport/jira-cli/jira-cli-pass-3-deep-r4.md §3.2-3.4
   - F2 addition (2026-05-18): BC-X.12.001..008 — JSM request type discovery (issue #288)
   - F2 addition (2026-05-19): BC-X.8.006..007 — auth-conditional 401 hints on require_service_desk path (cache miss only): Basic-auth (is_oauth_auth==false) → API-token hint with InsufficientScope rewrite; OAuth (is_oauth_auth==true) → read:jira-work + read:servicedesk-request hint (issue #384; corrected model: gate is is_oauth_auth() alone)
+  - S-QUEUE-BC-1 addition (2026-06-08): BC-X.8.008..009 — document-as-is BCs for jr queue list and jr queue view (queue traceability orphan closure)
 ---
 
 # BC-X — Cross-cutting
 
-140 behavioral contracts covering: HTTP client (X.1), Pagination (X.2), Error handling (X.3),
+142 behavioral contracts covering: HTTP client (X.1), Pagination (X.2), Error handling (X.3),
 Rate limiting (X.4), Worklogs & duration (X.5), Teams (X.6), Users (X.7), Projects & Queues (X.8),
 JQL utilities (X.9), Partial-match (X.10), Build-time (X.11), JSM Request Types (X.12).
 
@@ -605,6 +606,67 @@ This is the canonical pinnable string for `test_require_service_desk_oauth_401_s
 [REVISED 2026-05-19 issue #384 adversary-pass-6 F-07] BYO-OAuth sentence in hint reworded: for a BYO-OAuth user with genuinely missing scopes, `jr auth refresh` re-mints a token with the SAME deficient scope set — it cannot add scopes. Only `jr auth login` re-consents and can acquire `read:jira-work` + `read:servicedesk-request`. Hint text updated to connect `jr auth login` explicitly to scope acquisition; `jr auth refresh` positioned as expiry-recovery only. Rationale paragraph in BC body aligned.
 
 [REVISED 2026-05-19 issue #384 adversary-pass-9 C-01 CRITICAL design correction] Setup block corrected: the project-GET 401 mock body changed from generic-expiry to **scope-mismatch** (`{"errorMessages": ["Unauthorized; scope does not match"]}`). A Bearer client receiving a generic-expiry 401 on this GET routes through the refresh coordinator (client.rs:727+), which fails with a raw anyhow error (not a `JrError`) via the `JR_AUTH_HEADER` seam — the read-scope hint is never injected, making the test non-deterministic. The scope-mismatch body short-circuits to `JrError::InsufficientScope` at client.rs:696-704 BEFORE the refresh coordinator, deterministically reaching the `map_err`. BC-X.8.006 (Basic) is UNAFFECTED — Basic 401s never enter the refresh path and any body yields a `JrError` deterministically; BC-X.8.006's generic-expiry Setup remains as-is.
+
+---
+
+#### BC-X.8.008: `jr queue list` auto-paginates `/rest/servicedeskapi/servicedesk/{sdId}/queue` and renders `["Queue", "Issues"]` table; empty queue list is a valid success
+
+**Confidence**: HIGH
+**Subject**: X.8 Projects & Queues (JSM queue list)
+**Behavior**: `handle_list` in `src/cli/queue.rs` calls `client.list_queues(service_desk_id)`. `list_queues` auto-paginates `GET /rest/servicedeskapi/servicedesk/{sdId}/queue?includeCount=true&start={N}&limit=50` using `ServiceDeskPage` until `isLastPage == true`, collecting all `Queue` values. Exit 0 on success. Requires a JSM service desk project — non-JSM projects are rejected by `require_service_desk` before `handle_list` is reached (BC-X.8.004).
+
+**Table output** (default): two-column table with headers `["Queue", "Issues"]`. The Issues cell shows `q.issue_count.map(|c| c.to_string()).unwrap_or_else(|| "\u{2014}".into())` — i.e., the numeric count when `issueCount` is present in the API response, or em-dash `—` (U+2014) when `issueCount` is absent (None). An empty queue list (service desk with zero queues) in table mode renders the literal `No results found.` line (dimmed, via `src/output.rs::print_output`'s empty-rows branch), or `[]` in JSON mode, and exits 0 — NOT an error condition.
+
+**JSON output** (`--output json`): `Vec<Queue>` serialized directly to a JSON array. Each element is a `Queue` object: `id` (string, non-null — serde `String`; empty-string is not type-prevented), `name` (string, non-null — serde `String`; empty-string is not type-prevented), and optionally `jql` (string or null), `fields` (array of strings or null), `issueCount` (number or null, serde field name `issueCount`). An empty array `[]` is a valid success state. The JSON output shape is governed by `src/types/jsm/Queue`'s `#[derive(Serialize)]` and the `#[serde(rename = "issueCount")]` annotation on `issue_count`.
+
+**Pagination details**: page size is 50 per request; `includeCount=true` query param is always sent (causes the API to populate `issueCount` on each queue object). Pagination uses `ServiceDeskPage::has_more()` and `ServiceDeskPage::next_start()` for loop control. No client-side item cap (unlike `handle_view`).
+
+**Inputs**: `service_desk_id` string (resolved by `require_service_desk`); `output_format` (table or JSON).
+**Outputs/Effects**: stdout table or JSON array; exit 0.
+**Errors**: 5xx → exit 1, `API error (N)` on stderr. 401 → exit 2, `Not authenticated` + `jr auth login` on stderr. Network drop → exit 1, `Could not reach <host> — check your connection` on stderr. Non-JSM project → exit 64 via `require_service_desk` (BC-X.8.004), before reaching `handle_list`.
+**Trace**: `tests/queue.rs` (list_queues_returns_all_queues, list_queues_empty, queue_list_server_error_surfaces_friendly_message, queue_list_unauthorized_dispatches_reauth_message, queue_list_network_drop_surfaces_reach_error, test_queue_list_non_jsm_project_emits_canonical_callsite_message); `src/cli/queue.rs::handle_list`; `src/api/jsm/queues.rs::list_queues`
+**Source**: S-QUEUE-BC-1 document-as-is; `src/cli/queue.rs::handle_list`; `src/api/jsm/queues.rs::list_queues`; `src/types/jsm/queue.rs`
+
+[NEW 2026-06-08 S-QUEUE-BC-1] Closes traceability orphan: `jr queue list` was implemented but had no individually-bodied BC. Document-as-is: no aspirational behavior — all details verified against source and test files.
+
+---
+
+#### BC-X.8.009: `jr queue view` resolves queue by name (via `partial_match`) or `--id` (string pass-through), fetches issue keys in queue order, batch-fetches full issues, and reorders to queue position; issues absent from search are silently omitted
+
+**Confidence**: HIGH
+**Subject**: X.8 Projects & Queues (JSM queue view)
+**Behavior**: `handle_view` in `src/cli/queue.rs` resolves a queue ID by one of two paths, then fetches and renders issues.
+
+**Queue ID resolution (two paths):**
+1. **By `--id <id>`**: The `id: Option<String>` argument is taken verbatim as the queue ID string. It is passed directly to `get_queue_issue_keys` without validation. There is no numeric validation — any string is accepted (e.g., `--id 10`, `--id "my-queue"`). This path BYPASSES `resolve_queue_by_name` entirely.
+2. **By positional `<name>`**: `resolve_queue_by_name(service_desk_id, &name, client)` is called, which calls `client.list_queues(service_desk_id)` and applies `partial_match::partial_match(name, &names)`. Resolution outcomes:
+   - `MatchResult::Exact(matched_name)` → returns the `id` of the matched queue. Proceeds.
+   - `MatchResult::Ambiguous(matches)` → exit 64: `"<name>" matches multiple queues: "<m1>", "<m2>". Be more specific or use --id.`
+   - `MatchResult::ExactMultiple(matched_name)` → exit 64: `Multiple queues named "<matched_name>" found (IDs: <id1>, <id2>, ...). Use --id <id1> to specify.` (where `<matched_name>` carries the queue's stored casing, e.g., input `"triage"` yields `Multiple queues named "Triage"` — NOT the user's input string)
+   - `MatchResult::None(_)` → exit 64: `No queue matching "<name>" found. Run "jr queue list" to see available queues.`
+   - Neither `<name>` nor `--id` supplied → exit 64: `Specify a queue name or use --id. Run "jr queue list" to see available queues.`
+   
+   **Partial-match semantics (verified from unit tests in `src/cli/queue.rs` and `tests/queue.rs`):** A lone substring hit (e.g., `"escal"` matching `"Escalations"`) is returned as `MatchResult::Ambiguous` — NOT Exact. The caller must supply the full exact name (case-insensitive) for `MatchResult::Exact` to fire. This is the strict-matching invariant from `src/partial_match.rs`.
+
+**Issue fetch pipeline (after queue ID is resolved):**
+1. `client.get_queue_issue_keys(service_desk_id, &queue_id, effective_limit)` — GETs `/rest/servicedeskapi/servicedesk/{sdId}/queue/{queueId}/issue` in pages of up to 50, collecting issue keys in queue order. The effective limit is `limit.or(Some(crate::cli::DEFAULT_LIMIT))` — i.e., `DEFAULT_LIMIT = 30` when `--limit` is absent; `--limit N` caps collection at N.
+2. If the keys list is empty (queue has zero issues): renders the `No results found.` line in table mode (via `src/output.rs::print_output`) or `[]` in JSON mode, and exits 0 immediately — no `search_issues` call is made.
+3. Otherwise: `client.search_issues(&jql, Some(keys.len() as u32), &[])` with `jql = "key IN (<k1>, <k2>, ...)"` (keys NOT quoted in JQL — issue keys are identifiers). Batch size equals the number of keys fetched.
+4. `reorder_by_queue_position(search_result.issues, &keys)` — re-orders the batch-fetched issues to match the original queue key ordering. Issues present in the queue keys but absent from the search result (e.g., permission-denied) are silently omitted (issues absent from the `search_issues` result are never present in the returned vec — `reorder_by_queue_position` only reorders the issues search actually returned; it neither synthesizes nor drops missing keys).
+
+**Output (both resolution paths):**
+- **Table output** (default): standard issue table using `issue_table_headers(false, false, false)` and `format_issue_rows_public(&issues)`. Same column set as `jr issue list`.
+- **JSON output** (`--output json`): JSON array of full `Issue` objects (each has `key` + `fields`). NOT Queue objects. Empty array `[]` is a valid success state (queue exists, zero issues or all silently omitted).
+
+**Requires JSM service desk project**: delegated to `require_service_desk` in the shared `handle` dispatcher before `handle_view` is entered (BC-X.8.004).
+
+**Inputs**: `service_desk_id` string (from `require_service_desk`); `name: Option<String>` (positional); `id: Option<String>` (`--id` flag); `limit: Option<u32>` (`--limit` flag); `output_format`.
+**Outputs/Effects**: stdout table or JSON array of issue objects; exit 0.
+**Errors**: Name resolution errors → exit 64 (see messages above). 5xx from any HTTP call → exit 1, `API error (N)`. 401 → exit 2, `Not authenticated` + `jr auth login`. Network drop → exit 1, `Could not reach`. Non-JSM project → exit 64 via `require_service_desk` (BC-X.8.004), before reaching `handle_view`.
+**Trace**: `tests/queue.rs` (resolve_queue_duplicate_names_error_message, resolve_queue_single_substring_is_ambiguous, resolve_queue_mixed_case_duplicate_names_error_message, get_queue_issue_keys_returns_keys, get_queue_issue_keys_with_limit, get_queue_issue_keys_paginated); `src/cli/queue.rs` (handle_view, resolve_queue_by_name, build_key_in_jql, reorder_by_queue_position); `src/api/jsm/queues.rs::get_queue_issue_keys`
+**Source**: S-QUEUE-BC-1 document-as-is; `src/cli/queue.rs::handle_view`; `src/cli/queue.rs::resolve_queue_by_name`; `src/api/jsm/queues.rs::get_queue_issue_keys`; `src/cli/mod.rs::DEFAULT_LIMIT`
+
+[NEW 2026-06-08 S-QUEUE-BC-1] Closes traceability orphan: `jr queue view` was implemented but had no individually-bodied BC. Document-as-is: no aspirational behavior — all details verified against source and test files.
 
 ---
 

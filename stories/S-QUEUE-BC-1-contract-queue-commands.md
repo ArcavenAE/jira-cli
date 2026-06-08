@@ -3,24 +3,26 @@ document_type: story
 story_id: "S-QUEUE-BC-1"
 title: "Author document-as-is behavioral contracts for jr queue list / queue view (section X.8)"
 wave: feature-followup
-status: draft
+status: converged-merge-pending
 intent: documentation
 feature_type: spec
 scope: small
 severity: small
 trivial_scope: false
 issue: TBD
-points: TBD
+points: 2
 priority: P3
 tdd_mode: strict
 estimated_effort: small
 mode: feature
 depends_on: []
 blocks: []
-bc_anchors: []
-# BC status: pending PO authorship — this story CREATES new BCs (BC-X.8.008, BC-X.8.009).
-# No BCs exist yet for queue list/view. They will be authored document-as-is in this story.
-bcs: []
+bc_anchors:
+  - BC-X.8.008
+  - BC-X.8.009
+bcs:
+  - BC-X.8.008
+  - BC-X.8.009
 verification_properties: []
 holdout_anchors: []
 nfr_anchors: []
@@ -34,7 +36,7 @@ acceptance_criteria_count: 4
 assumption_validations: []
 risk_mitigations: []
 created: "2026-06-02"
-last_updated: "2026-06-02"
+last_updated: "2026-06-08"
 traceability_note: >
   This story resolves the explicitly-logged traceability orphan in S-JSM-E2E-1 (AC-001
   and AC-003 — queue list / queue view E2E tests with no behavioral contract). It authors

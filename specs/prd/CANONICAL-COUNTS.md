@@ -2,7 +2,7 @@
 document_type: canonical-counts
 product: jr (jira-cli)
 generated: "2026-05-04"
-last_verified: "2026-06-08 (BC-7.2.006 added issue #470 listItem content-model conformance; 587 total, bc-7 85/39)"
+last_verified: "2026-06-08 (BC-X.8.008..009 added S-QUEUE-BC-1 queue list/view document-as-is; 589 total, cross-cutting 142/76)"
 ---
 
 # Canonical Counts — jr (jira-cli) L3 PRD
@@ -26,8 +26,8 @@ re-run to verify. Disputes go here first.
 | bc-5-boards-sprints.md | 17 | 17 | YES |
 | bc-6-config-cache.md | 29 | 29 | YES |
 | bc-7-output-render.md | 39 | 39 | YES |
-| cross-cutting.md | 74 | 74 | YES |
-| **Total individually-bodied** | **355** | — | — |
+| cross-cutting.md | 76 | 76 | YES |
+| **Total individually-bodied** | **357** | — | — |
 
 Verification command:
 ```bash
@@ -47,24 +47,24 @@ done
 | bc-5-boards-sprints.md | 35 |
 | bc-6-config-cache.md | 39 |
 | bc-7-output-render.md | 85 |
-| cross-cutting.md | 140 |
-| **Sum** | **587** |
+| cross-cutting.md | 142 |
+| **Sum** | **589** |
 
 ### Grand total
 
-**Canonical grand total: 587** (+4 BC-7.4.013-016 added 2026-05-08 via Fix-PR A `28b0f35`; +1 BC-2.6.050 added 2026-05-13 via issue #350; +1 BC-2.6.051 added 2026-05-14 via issue #365; +1 BC-3.4.009 added 2026-05-15 via issue #340 F2; +18 BC-3.8.001..010 + BC-X.12.001..008 added 2026-05-18 via issue #288 F2+F1d; +3 BC-3.8.011..013 added 2026-05-19 via issue #288 F1d + issue #383 F2; +4 BC-3.8.014..015 + BC-X.8.006..007 added 2026-05-19 via issue #384 F2; +2 BC-3.8.016..017 added 2026-05-20 via issue #385 F2; +2 BC-3.4.010..011 added 2026-05-20 via issue #388 F2; +3 BC-3.4.012..014 added 2026-05-21 via issue #398 F2; +3 BC-3.4.015..017 added 2026-05-22 via issue #396 F2; +2 BC-3.4.018..019 added 2026-06-01 via issue #331 F2; +1 BC-3.2.013 added 2026-06-03 via jsm-resolution-required F2; +1 BC-7.2.006 added 2026-06-08 via issue #470 listItem content-model conformance)
+**Canonical grand total: 589** (+4 BC-7.4.013-016 added 2026-05-08 via Fix-PR A `28b0f35`; +1 BC-2.6.050 added 2026-05-13 via issue #350; +1 BC-2.6.051 added 2026-05-14 via issue #365; +1 BC-3.4.009 added 2026-05-15 via issue #340 F2; +18 BC-3.8.001..010 + BC-X.12.001..008 added 2026-05-18 via issue #288 F2+F1d; +3 BC-3.8.011..013 added 2026-05-19 via issue #288 F1d + issue #383 F2; +4 BC-3.8.014..015 + BC-X.8.006..007 added 2026-05-19 via issue #384 F2; +2 BC-3.8.016..017 added 2026-05-20 via issue #385 F2; +2 BC-3.4.010..011 added 2026-05-20 via issue #388 F2; +3 BC-3.4.012..014 added 2026-05-21 via issue #398 F2; +3 BC-3.4.015..017 added 2026-05-22 via issue #396 F2; +2 BC-3.4.018..019 added 2026-06-01 via issue #331 F2; +1 BC-3.2.013 added 2026-06-03 via jsm-resolution-required F2; +1 BC-7.2.006 added 2026-06-08 via issue #470 listItem content-model conformance; +2 BC-X.8.008..009 added 2026-06-08 via S-QUEUE-BC-1 queue list/view document-as-is)
 
-_Note: BC-INDEX.md `total_bcs` header updated to 587 to match this file. CANONICAL-COUNTS.md carries the per-file sum as the primary source of truth. (+1 BC count change since last verified — BC-7.2.006 added via issue #470 listItem content-model conformance 2026-06-08)_
+_Note: BC-INDEX.md `total_bcs` header updated to 589 to match this file. CANONICAL-COUNTS.md carries the per-file sum as the primary source of truth. (+2 BC count change since last verified — BC-X.8.008..009 added via S-QUEUE-BC-1 queue list/view document-as-is 2026-06-08)_
 
 Breakdown:
-- 587 = sum of per-file `total_bcs` values (canonical; see per-file table above)
-- 355 of 587 are individually-bodied (have a `#### BC-` heading)
+- 589 = sum of per-file `total_bcs` values (canonical; see per-file table above)
+- 357 of 589 are individually-bodied (have a `#### BC-` heading)
 - 232 are range-collapsed (counted in cumulative claim, no individual heading)
 - BC-X.4.009 (ADV-P1-029) is a `#### BC-` heading in cross-cutting.md; it is
-  included in cross-cutting's `total_bcs: 140` and in the **587 sum**.
-  It does NOT add +1 beyond the 587.
+  included in cross-cutting's `total_bcs: 142` and in the **589 sum**.
+  It does NOT add +1 beyond the 589.
 
-_Historical note (archived; historical total was 566; current canonical is 587): Passes 10-13 involved a 541/542 count confusion around BC-X.4.009. All 542 claims were corrected to 541 at Pass 13. Subsequent additions (BC-7.4.013-016, BC-2.6.050-051, BC-3.4.009, BC-3.8.001-010, BC-X.12.001-008) brought the total to 566. See git history for the full audit trail._
+_Historical note (archived; historical total was 566; current canonical: see Sum row above (589)): Passes 10-13 involved a 541/542 count confusion around BC-X.4.009. All 542 claims were corrected to 541 at Pass 13. Subsequent additions (BC-7.4.013-016, BC-2.6.050-051, BC-3.4.009, BC-3.8.001-010, BC-X.12.001-008) brought the total to 566. See git history for the full audit trail._
 
 ### L2 domain-spec bc_count vs L3 total_bcs alignment (ADV-P17-003)
 

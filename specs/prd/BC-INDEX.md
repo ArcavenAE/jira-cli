@@ -1,7 +1,7 @@
 ---
 context: bc-index
 title: "BC Master Index"
-total_bcs: 587  # cumulative claim (incl. range-collapsed) — see preamble below; +4 added 2026-05-08 (BC-7.4.013-016, Fix-PR A); +1 added 2026-05-13 (BC-2.6.050, issue #350); +1 added 2026-05-14 (BC-2.6.051, issue #365); +1 added 2026-05-15 (BC-3.4.009, issue #340 F2); +18 added 2026-05-18 (BC-3.8.001..010 + BC-X.12.001..008, issue #288 F2+F1d); +3 added 2026-05-19 (BC-3.8.011..013, issue #288 F1d + issue #383 F2); +4 added 2026-05-19 (BC-3.8.014..015 + BC-X.8.006..007, issue #384 F2); +2 added 2026-05-20 (BC-3.8.016..017, issue #385 F2); +2 added 2026-05-20 (BC-3.4.010..011, issue #388 F2); +3 added 2026-05-21 (BC-3.4.012..014, issue #398 F2); +3 added 2026-05-22 (BC-3.4.015..017, issue #396 F2); +2 added 2026-06-01 (BC-3.4.018..019, issue #331 F2); +1 added 2026-06-03 (BC-3.2.013, jsm-resolution-required F2); +1 added 2026-06-08 (BC-7.2.006, issue #470 listItem content-model conformance); BC-1.3.023, BC-3.3.001, BC-X.8.004, BC-3.8.009, BC-X.3.002, BC-3.8.002, BC-3.8.010, BC-3.8.011, BC-3.4.003 modified
+total_bcs: 589  # cumulative claim (incl. range-collapsed) — see preamble below; +4 added 2026-05-08 (BC-7.4.013-016, Fix-PR A); +1 added 2026-05-13 (BC-2.6.050, issue #350); +1 added 2026-05-14 (BC-2.6.051, issue #365); +1 added 2026-05-15 (BC-3.4.009, issue #340 F2); +18 added 2026-05-18 (BC-3.8.001..010 + BC-X.12.001..008, issue #288 F2+F1d); +3 added 2026-05-19 (BC-3.8.011..013, issue #288 F1d + issue #383 F2); +4 added 2026-05-19 (BC-3.8.014..015 + BC-X.8.006..007, issue #384 F2); +2 added 2026-05-20 (BC-3.8.016..017, issue #385 F2); +2 added 2026-05-20 (BC-3.4.010..011, issue #388 F2); +3 added 2026-05-21 (BC-3.4.012..014, issue #398 F2); +3 added 2026-05-22 (BC-3.4.015..017, issue #396 F2); +2 added 2026-06-01 (BC-3.4.018..019, issue #331 F2); +1 added 2026-06-03 (BC-3.2.013, jsm-resolution-required F2); +1 added 2026-06-08 (BC-7.2.006, issue #470 listItem content-model conformance); +2 added 2026-06-08 (BC-X.8.008..009, S-QUEUE-BC-1 queue list/view document-as-is); BC-1.3.023, BC-3.3.001, BC-X.8.004, BC-3.8.009, BC-X.3.002, BC-3.8.002, BC-3.8.010, BC-3.8.011, BC-3.4.003 modified
 last_updated: 2026-06-08
 source_pass: 3
 sections:
@@ -12,7 +12,7 @@ sections:
   - bc-5-boards-sprints.md (35 BCs cumulative; 17 individually-bodied)
   - bc-6-config-cache.md (39 BCs cumulative; 29 individually-bodied)
   - bc-7-output-render.md (85 BCs cumulative; 39 individually-bodied)
-  - cross-cutting.md (140 BCs cumulative; 74 individually-bodied)
+  - cross-cutting.md (142 BCs cumulative; 76 individually-bodied)
   - nfr-catalog.md (41 NFR items, not counted in BC total; NFR-O-K merged into NFR-S-D per ADV-P7-002)
 ---
 
@@ -537,7 +537,7 @@ R1/R4 prefix = deepening round that introduced it.
 
 ---
 
-## Section X: Cross-Cutting Utilities (cross-cutting.md) — 140 BCs cumulative; 74 individually-bodied
+## Section X: Cross-Cutting Utilities (cross-cutting.md) — 142 BCs cumulative; 76 individually-bodied
 
 ### X.1 HTTP Client (10 BCs: BC-X.1.001..010)
 
@@ -622,7 +622,7 @@ R1/R4 prefix = deepening round that introduced it.
 | BC-X.7.005 | `user view <id>` → 404 → friendly `"User with accountId '<id>' not found"` exit 64 | BC-1132i (R4) | tests/user_commands.rs | HIGH |
 | BC-X.7.006 | `user search --all` advances startAt by REQUESTED maxResults (JRACLOUD-71293 workaround) | BC-1119 (R4) | tests/user_pagination.rs:202-247 | HIGH |
 
-### X.8 Projects & Queues (7 BCs: BC-X.8.001..007) [BC-X.8.006..007 added 2026-05-19 issue #384 F2]
+### X.8 Projects & Queues (9 BCs: BC-X.8.001..009) [BC-X.8.006..007 added 2026-05-19 issue #384 F2; BC-X.8.008..009 added 2026-06-08 S-QUEUE-BC-1]
 
 | L3 BC ID | Summary | Pass 3 BC ID | Source | Confidence |
 |---|---|---|---|---|
@@ -633,6 +633,8 @@ R1/R4 prefix = deepening round that introduced it.
 | BC-X.8.005 | `list_projects` paginates via `startAt`; filter via `typeKey` query param | BC-1133d, BC-1133e (R4) | tests/project_commands.rs:1-323 | HIGH |
 | BC-X.8.006 | Basic-auth 401 from `require_service_desk` (cache miss — project GET or service-desk list GET) → API-token-expiry hint; no OAuth-scope language; any `InsufficientScope` variant rewritten to `NotAuthenticated`; gated by `client.is_oauth_auth() == false`; benefits all JSM callers | — (issue #384 F2) | tests/issue_create_jsm.rs | HIGH |
 | BC-X.8.007 | OAuth 401 from `require_service_desk` (cache miss — project GET or service-desk list GET) → read-side scope hint (`read:jira-work` + `read:servicedesk-request`); gated by `client.is_oauth_auth() == true` | — (issue #384 F2) | tests/issue_create_jsm.rs | HIGH |
+| BC-X.8.008 | `jr queue list` auto-paginates `GET /rest/servicedeskapi/servicedesk/{sdId}/queue?includeCount=true` in pages of 50; renders `["Queue", "Issues"]` table (em-dash when issue_count is None); `--output json` returns Vec<Queue> array; empty list is valid success | — (S-QUEUE-BC-1) | tests/queue.rs; src/cli/queue.rs::handle_list; src/api/jsm/queues.rs::list_queues | HIGH |
+| BC-X.8.009 | `jr queue view` resolves queue by `--id` (string pass-through, bypasses name resolution) or positional name (via `partial_match`; single-substring → Ambiguous exit 64; ExactMultiple → exit 64; None → exit 64; neither supplied → exit 64); fetches issue keys in queue order up to DEFAULT_LIMIT (30); batch-fetches full issues via `key IN (...)` JQL; reorders to queue position; issues absent from search silently omitted; output is Issue objects not Queue objects | — (S-QUEUE-BC-1) | tests/queue.rs; src/cli/queue.rs::handle_view; src/api/jsm/queues.rs::get_queue_issue_keys | HIGH |
 
 ### X.9 JQL Utilities (4 BCs: BC-X.9.001..004)
 
@@ -698,12 +700,12 @@ R1/R4 prefix = deepening round that introduced it.
 | 5: Boards & Sprints | 35 | 17 |
 | 6: Config & Cache | 39 | 29 |
 | 7: Output Rendering | 85 | 39 |
-| X: Cross-Cutting | 140 | 74 |
-| **Total** | **587** | **355** |
+| X: Cross-Cutting | 142 | 76 |
+| **Total** | **589** | **357** |
 
-**Note**: BC-X.4.009 (ADV-P1-029) is included in cross-cutting's `total_bcs` and in the sum above. Canonical total is **587** (+4 BC-7.4.013-016 added 2026-05-08 via Fix-PR A; +1 BC-2.6.050 added 2026-05-13 via issue #350; +1 BC-2.6.051 added 2026-05-14 via issue #365; +1 BC-3.4.009 added 2026-05-15 via issue #340 F2; +18 BC-3.8.001..010 + BC-X.12.001..008 added 2026-05-18 via issue #288 F2+F1d; +3 BC-3.8.011..013 added 2026-05-19 via issue #288 F1d + issue #383 F2; +4 BC-3.8.014..015 + BC-X.8.006..007 added 2026-05-19 via issue #384 F2; +2 BC-3.8.016..017 added 2026-05-20 via issue #385 F2; +2 BC-3.4.010..011 added 2026-05-20 via issue #388 F2; +3 BC-3.4.012..014 added 2026-05-21 via issue #398 F2; +3 BC-3.4.015..017 added 2026-05-22 via issue #396 F2; +2 BC-3.4.018..019 added 2026-06-01 via issue #331 F2; +1 BC-3.2.013 added 2026-06-03 via jsm-resolution-required F2; +1 BC-7.2.006 added 2026-06-08 via issue #470 listItem content-model conformance).
+**Note**: BC-X.4.009 (ADV-P1-029) is included in cross-cutting's `total_bcs` and in the sum above. Canonical total is **589** (+4 BC-7.4.013-016 added 2026-05-08 via Fix-PR A; +1 BC-2.6.050 added 2026-05-13 via issue #350; +1 BC-2.6.051 added 2026-05-14 via issue #365; +1 BC-3.4.009 added 2026-05-15 via issue #340 F2; +18 BC-3.8.001..010 + BC-X.12.001..008 added 2026-05-18 via issue #288 F2+F1d; +3 BC-3.8.011..013 added 2026-05-19 via issue #288 F1d + issue #383 F2; +4 BC-3.8.014..015 + BC-X.8.006..007 added 2026-05-19 via issue #384 F2; +2 BC-3.8.016..017 added 2026-05-20 via issue #385 F2; +2 BC-3.4.010..011 added 2026-05-20 via issue #388 F2; +3 BC-3.4.012..014 added 2026-05-21 via issue #398 F2; +3 BC-3.4.015..017 added 2026-05-22 via issue #396 F2; +2 BC-3.4.018..019 added 2026-06-01 via issue #331 F2; +1 BC-3.2.013 added 2026-06-03 via jsm-resolution-required F2; +1 BC-7.2.006 added 2026-06-08 via issue #470 listItem content-model conformance; +2 BC-X.8.008..009 added 2026-06-08 via S-QUEUE-BC-1 queue list/view document-as-is).
 
-Cumulative total (587) ≠ individually-bodied count (355). The difference (232) comprises range-collapsed BCs that exist in the cumulative claim but are not individually headlined in body files. This is by design — range-collapsed BCs trace to Pass 3 source material but were not individually expanded. The 4 MUST-FIX BCs are included in the individually-bodied count.
+Cumulative total (589) ≠ individually-bodied count (357). The difference (232) comprises range-collapsed BCs that exist in the cumulative claim but are not individually headlined in body files. This is by design — range-collapsed BCs trace to Pass 3 source material but were not individually expanded. The 4 MUST-FIX BCs are included in the individually-bodied count.
 
 **Process gap [process-gap]**: `scripts/check-bc-cumulative-counts.sh` currently guards 8 surfaces (per-file frontmatter, BC-INDEX headers, BC-INDEX section lines, CANONICAL-COUNTS per-file table, body preamble prose, BC-INDEX frontmatter total_bcs, CANONICAL-COUNTS Sum row, grand-total prose). The BC-INDEX Coverage Statistics body table (this section) is a 9th surface with no automated guard. Manual update required whenever BC counts change. Tracked for future script extension.
 
