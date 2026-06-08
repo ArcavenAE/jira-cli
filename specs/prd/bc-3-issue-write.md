@@ -1,9 +1,9 @@
 ---
 context: bc-3
 title: "Issue Write (create/edit/move/assign/comment/link/open/remote-link)"
-total_bcs: 106   # cumulative claim (incl. range-collapsed); definitional_count below is individually-bodied headings
-definitional_count: 77   # count of `#### BC-` headings in this file
-last_updated: 2026-06-03
+total_bcs: 107   # cumulative claim (incl. range-collapsed); definitional_count below is individually-bodied headings
+definitional_count: 78   # count of `#### BC-` headings in this file
+last_updated: 2026-06-08
 source_pass: 3
 trace: |
   - L2: .factory/specs/domain-spec/bc-03-issue-write.md
@@ -62,11 +62,12 @@ trace: |
   - F2 addition (2026-06-01): BC-3.4.018 — `issue edit KEY1 KEY2 --type <NAME>` multi-key bulk wire shape: selectedActions=["issuetype"] (lowercase), editedFieldsInput["issueType"]={"issueTypeId":"<id-string>"} (camelCase key, id-based value); name→id resolved via GET /rest/api/3/issue/createmeta/{proj}/issuetypes; unknown type name exits 64; dry-run builder consistency pin (issue #331 F2)
   - F2 addition (2026-06-01): BC-3.4.019 — `issue edit KEY1 KEY2 --type <NAME>` cross-project guard: when resolved keys span >1 distinct project, exit 64 with actionable message BEFORE any API call; references single-issueTypeId-per-batch constraint as rationale (issue #331 F2)
   - F2 addition (2026-06-03): BC-3.2.013 — `issue move` proactive resolution enforcement on done-category transitions (single-key only): REQUIRED resolution → mandatory (prompt or --resolution or exit 64 on --no-input; --no-resolution exits 64); OPTIONAL resolution → explicit choice required (--resolution / --no-resolution / prompt; non-interactive without either flag exits 64); breaking change to jr issue move default behavior; BC-3.2.009 retained as backstop (F2 jsm-resolution-required)
+  - F2 addition (2026-06-08): BC-3.2.014 — multi-key bulk move `bulkTransitionInputs` nested wrapper wire schema (document-as-is correctness bug fix, commit acca854, live run 27156639337)
 ---
 
 # BC-3 — Issue Write
 
-106 behavioral contracts across 8 subdomains: Assign (3.1), Move/Transition (3.2),
+107 behavioral contracts across 8 subdomains: Assign (3.1), Move/Transition (3.2),
 Create (3.3), Edit+Open (3.4), Comment (3.5), Links (3.6), Remote links (3.7),
 JSM Request Create + Platform-Path Inverse Warnings + Auth-Conditional 401 Hints (3.8).
 
@@ -365,6 +366,55 @@ JSM Request Create + Platform-Path Inverse Warnings + Auth-Conditional 401 Hints
 | No `fields` key at all | `statusCategory.key="done"`, no `fields` key | `--no-input` | 0 | conservative gate fires; BC-3.2.009 backstop |
 
 **Trace**: F2 jsm-resolution-required (2026-06-03); API validation: `.factory/research/jsm-resolution-required-api-validation.md`; Delta analysis: `.factory/phase-f1-delta-analysis/jsm-resolution-required/delta-analysis.md`
+
+---
+
+#### BC-3.2.014: Multi-key `issue move` bulk transition POST body nests keys and transitionId inside `bulkTransitionInputs` array wrapper — NOT at top level
+
+**Confidence**: HIGH
+**Source**: `src/api/jira/bulk.rs::bulk_transition`; `src/types/jira/bulk.rs::BulkTransitionRequest`; `src/types/jira/bulk.rs::BulkTransitionInput`; `src/cli/issue/workflow.rs::handle_move_bulk`
+**Subject**: Issue write
+**Origin**: DOCUMENT-AS-IS (correctness bug fix, live run 27156639337)
+
+**Wire schema** — `POST /rest/api/3/bulk/issues/transition` body MUST be:
+
+```json
+{
+  "bulkTransitionInputs": [
+    {
+      "selectedIssueIdsOrKeys": ["K1", "K2", ...],
+      "transitionId": "<id>"
+    }
+  ],
+  "sendBulkNotification": false
+}
+```
+
+**Invariants**:
+
+1. `selectedIssueIdsOrKeys` and `transitionId` are fields of an object **inside** the `bulkTransitionInputs` array — they are NEVER top-level fields of the request body.
+2. `bulkTransitionInputs` is always a JSON array containing exactly **one** entry for a given `jr issue move` invocation: all supplied keys share the same single `BulkTransitionInput` object.
+3. `transitionId` is resolved from the FIRST key in the supplied set via `GET /rest/api/3/issue/{first_key}/transitions` and is applied to all keys in that same single entry.
+4. `sendBulkNotification` is always `false` (mirrors the bulk-edit default).
+5. The flat body shape `{ "selectedIssueIdsOrKeys": [...], "transitionId": "..." }` (without the `bulkTransitionInputs` wrapper) is INVALID; live Jira Cloud returns HTTP 400 "bulkTransitionInputs must not be empty". This flat shape was the pre-fix bug body (fixed in commit acca854).
+6. Same-workflow assumption: all keys are expected to share the same workflow and therefore the same transition is valid for all. Cross-workflow keys with a differing transition availability are a pre-existing limitation (out of scope); no guard fires — the API may reject individual keys in the task results.
+7. After the POST, `jr` polls `GET /rest/api/3/bulk/queue/{taskId}` until a terminal status (COMPLETE, FAILED, CANCELLED, DEAD) and renders per-key results. Same polling and rendering path as bulk edit (BC-3.4.005).
+
+**Edge cases**:
+
+- EC-3.2.014-1: Only one key in the positional list (degenerate bulk invocation, dispatched from `handle_move_bulk`) — the `bulkTransitionInputs` array still has one entry with a one-element `selectedIssueIdsOrKeys` array; POST body shape is identical.
+- EC-3.2.014-2: `sendBulkNotification: false` — must be present in all serialized bodies; absence would use the Jira default (true), which would send notifications for potentially many issues. This field is always serialized because `BulkTransitionRequest.send_bulk_notification: bool` has no `#[serde(skip_serializing_if)]`.
+- EC-3.2.014-3: `transitionId` is a string in the JSON body (not a number), even though Jira transition IDs are numeric in the GET response. The `BulkTransitionInput.transition_id: String` field serializes with `#[serde(rename_all = "camelCase")]` to `"transitionId"` as a JSON string value. Sending a number would violate the OpenAPI spec and may be rejected.
+- EC-3.2.014-4: Proactive resolution enforcement (BC-3.2.013) is NOT applied on the bulk path; bulk `issue move` with a done-category target proceeds unconditionally. The reactive BC-3.2.009 backstop (400 "resolution required" per-key error in the poll results) is the only safeguard. Pre-filtering with `jr issue list --jql "... AND status != \"<target>\""` is recommended for done-category bulk moves.
+
+**Test vectors** (canonical, for test-writer):
+
+| Scenario | Keys | POST body assertion | Expected exit |
+|---|---|---|---|
+| Three keys, "Done" target | `["BAR-10","BAR-11","BAR-12"]` | `bulkTransitionInputs[0].selectedIssueIdsOrKeys == ["BAR-10","BAR-11","BAR-12"]`, `transitionId == "31"`, `sendBulkNotification == false` | 0 |
+| Flat body shape (regression) | any | `body_string_contains("bulkTransitionInputs")` fails → mock not matched → wiremock `.expect(1)` fires | N/A (red gate) |
+
+**Trace**: F2 fix-bulk-transition-schema (2026-06-08, commit acca854); wiremock regression: `tests/issue_bulk.rs::test_move_multikey_bulk_transition_uses_bulktransitioninputs_wrapper`; pre-existing wiremock: `tests/issue_bulk.rs::test_move_multi_key_issues_one_bulk_transition_post_then_polls`; live E2E: `tests/e2e_live.rs::test_e2e_issue_move_multikey_bulk` (live run 27156639337)
 
 ---
 
@@ -2432,6 +2482,6 @@ When `--markdown` is absent, the guard does NOT fire — `--field description=va
 
 Sources: `src/cli/issue/snapshots/jr__cli__issue__json_output__tests__*.snap`; BC-1104..BC-1112 (R4)
 
-## Total BCs in this file: 77 individually-bodied (cumulative 106 incl. range-collapsed; see BC-INDEX.md)
+## Total BCs in this file: 78 individually-bodied (cumulative 107 incl. range-collapsed; see BC-INDEX.md)
 
-_Last updated 2026-06-03 (jsm-resolution-required F2): +1 BC (BC-3.2.013) — BC-3.2.013 (proactive resolution enforcement on done-category transitions: REQUIRED and OPTIONAL branches, --no-resolution flag, isConditional coverage, conservative gate, BC-3.2.009 backstop retained; single-key only; breaking change); Section 3.2 header updated to 13 contracts. Previous update 2026-06-01 (issue #331 F2): +2 BCs (BC-3.4.018..019) — BC-3.4.018 (multi-key `--type` bulk wire shape: camelCase `issueType` key, `issueTypeId` string value, name resolved via createmeta issuetypes), BC-3.4.019 (cross-project guard: keys spanning >1 project exit 64 before any API call); Section 3.4 header updated to 19 contracts. Previous update 2026-05-27 (issue #421 F2): BC-3.4.015 invariant 5 rewritten (two-stage i64-first strategy); EC-3.4.015-4b added (i64-boundary regression pin); no BC count changes (103/74 unchanged). Previous update (2026-05-25 issue #407 F2): +EC-3.4.017-14 — mechanical enforcement meta-test for BC-3.4.017 invariant 2 (conflict block completeness via `test_label_conflict_block_lists_every_relevant_flag`); BC-3.4.017 invariant 2 cross-reference added; no BC count changes (103/74 unchanged). Previous update (2026-05-22 issue #396 F2): +3 BCs (BC-3.4.015..017) — BC-3.4.015 (`issue edit --field` string/number/date/datetime/user field single-key path, with editmeta validation, fields.json cache, and dry-run invariants), BC-3.4.016 (`issue edit --field` single-select `option` field), BC-3.4.017 (`--field` multi-key/`--jql` rejection Gate A and flag-overlap Gate B); Section 3.4 header updated to 17 contracts. Previous update (2026-05-21 issue #398 F2): +3 BCs (BC-3.4.012..014) — BC-3.4.012 (issue edit table-mode success echo), BC-3.4.013 (issue edit JSON-mode success echo with changed_fields), BC-3.4.014 (issue create table-mode all-fields echo (broadened from team-only at the 2026-05-22 human-gate to mirror BC-3.4.012)); BC-3.4.003 Success output cross-reference added; Section 3.4 header updated to 14 contracts. Previous update (2026-05-20 issue #388): +2 BCs (BC-3.4.010..011): BC-3.4.010 (cross-hierarchy `edit --type` 400 → CROSS_HIERARCHY_HINT citing JRACLOUD-27893) and BC-3.4.011 (same-hierarchy/indeterminate `edit --type` 400 → typo hint or raw error, no JRACLOUD-27893 hint) added in F2 delta (issue #388). BC-3.4.003 Errors cross-reference updated (annotation only, no behavioral change). Section 3.4 header updated to 11 contracts. Previous update (2026-05-20 issue #385): +2 BCs (BC-3.8.016..017); BC-3.8.002/010/011 modified._
+_Last updated 2026-06-08 (fix-bulk-transition-schema F2): +1 BC (BC-3.2.014) — BC-3.2.014 (multi-key bulk move `bulkTransitionInputs` nested wrapper wire schema; documents correctness bug fix commit acca854; live run 27156639337); Section 3.2 header updated to 14 contracts. Previous update 2026-06-03 (jsm-resolution-required F2): +1 BC (BC-3.2.013) — BC-3.2.013 (proactive resolution enforcement on done-category transitions: REQUIRED and OPTIONAL branches, --no-resolution flag, isConditional coverage, conservative gate, BC-3.2.009 backstop retained; single-key only; breaking change); Section 3.2 header updated to 13 contracts. Previous update 2026-06-01 (issue #331 F2): +2 BCs (BC-3.4.018..019) — BC-3.4.018 (multi-key `--type` bulk wire shape: camelCase `issueType` key, `issueTypeId` string value, name resolved via createmeta issuetypes), BC-3.4.019 (cross-project guard: keys spanning >1 project exit 64 before any API call); Section 3.4 header updated to 19 contracts. Previous update 2026-05-27 (issue #421 F2): BC-3.4.015 invariant 5 rewritten (two-stage i64-first strategy); EC-3.4.015-4b added (i64-boundary regression pin); no BC count changes (103/74 unchanged). Previous update (2026-05-25 issue #407 F2): +EC-3.4.017-14 — mechanical enforcement meta-test for BC-3.4.017 invariant 2 (conflict block completeness via `test_label_conflict_block_lists_every_relevant_flag`); BC-3.4.017 invariant 2 cross-reference added; no BC count changes (103/74 unchanged). Previous update (2026-05-22 issue #396 F2): +3 BCs (BC-3.4.015..017) — BC-3.4.015 (`issue edit --field` string/number/date/datetime/user field single-key path, with editmeta validation, fields.json cache, and dry-run invariants), BC-3.4.016 (`issue edit --field` single-select `option` field), BC-3.4.017 (`--field` multi-key/`--jql` rejection Gate A and flag-overlap Gate B); Section 3.4 header updated to 17 contracts. Previous update (2026-05-21 issue #398 F2): +3 BCs (BC-3.4.012..014) — BC-3.4.012 (issue edit table-mode success echo), BC-3.4.013 (issue edit JSON-mode success echo with changed_fields), BC-3.4.014 (issue create table-mode all-fields echo (broadened from team-only at the 2026-05-22 human-gate to mirror BC-3.4.012)); BC-3.4.003 Success output cross-reference added; Section 3.4 header updated to 14 contracts. Previous update (2026-05-20 issue #388): +2 BCs (BC-3.4.010..011): BC-3.4.010 (cross-hierarchy `edit --type` 400 → CROSS_HIERARCHY_HINT citing JRACLOUD-27893) and BC-3.4.011 (same-hierarchy/indeterminate `edit --type` 400 → typo hint or raw error, no JRACLOUD-27893 hint) added in F2 delta (issue #388). BC-3.4.003 Errors cross-reference updated (annotation only, no behavioral change). Section 3.4 header updated to 11 contracts. Previous update (2026-05-20 issue #385): +2 BCs (BC-3.8.016..017); BC-3.8.002/010/011 modified._
