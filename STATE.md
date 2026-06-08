@@ -6,7 +6,7 @@ timestamp: 2026-06-08T15:30:12Z
 phase: phase-3-tdd-implementation
 project: jira-cli
 mode: BROWNFIELD
-current_step: "S-QUEUE-BC-1 CONVERGED — PR #478 open → develop; awaiting CI+approval"
+current_step: "S-QUEUE-BC-1 MERGED → develop @ e3a14de; idle"
 current_cycle: "cycle-001"
 dtu_required: false
 phase_2_status: APPROVED
@@ -29,8 +29,8 @@ activation_version: "v0.5.0-dev.11"
 | **Language** | Rust |
 | **Target Workspace** | develop → main |
 | **Started** | 2026-05-04 |
-| **Last Updated** | 2026-06-08 — S-QUEUE-BC-1 CONVERGED. BC-X.8.008/009 authored (queue list/view document-as-is); 10-pass hybrid adversarial review (3 consecutive clean: passes 8/9/10); S-JSM-E2E-1 AC-001/003 re-anchored (traceability orphan closed). BC 587→589 (+2). NFR 41. Stories 64 (S-QUEUE-BC-1 done pending merge). PR #478 open → develop. |
-| **Current Phase** | Phase 3 — TDD Implementation IN PROGRESS — Feature Mode active. S-QUEUE-BC-1 CONVERGED (BC 589). PR #478 open → develop awaiting CI+merge. NFR 41. Stories 64. |
+| **Last Updated** | 2026-06-08 — S-QUEUE-BC-1 MERGED + CYCLE CLOSED. PR #478 squash-merged → develop @ e3a14de (2026-06-08T17:54:53Z). Worktree + branches cleaned up. Gemini CLI sliced re-review of #478 = CLEAN (4/4 slices). BC 589 / NFR 41 / Stories 64 UNCHANGED. |
+| **Current Phase** | Phase 3 — TDD Implementation IN PROGRESS — Feature Mode active. S-QUEUE-BC-1 DONE (merged → develop @ e3a14de). BC 589. NFR 41. Stories 64. Idle — no active cycle. |
 | **Next Phase** | Phase 4: Holdout Evaluation (not started) |
 | **Activation HEAD** | 15bf305 (v0.5.0-dev.11) |
 
@@ -60,7 +60,7 @@ Goal 1c: **Harden v0.5 + feature delivery** — formalize existing codebase with
 | JSM resolution enforcement — S-JSM-E2E-3 | **SUPERSEDED** — folded into S-JSM-RESOLUTION-REQUIRED (2026-06-03). Bypass-demo inverted to enforcement assertion; positive path + helpers + SURFACE carried forward. Do NOT dispatch as standalone. | SUPERSEDED | BC: 585 / NFR: 41 (baseline before S-JSM-RESOLUTION-REQUIRED). |
 | JSM resolution enforcement (SRC) — S-JSM-RESOLUTION-REQUIRED | **CYCLE CLOSED + MERGED + LIVE-GREEN** (2026-06-03). PR #465 squash-merged → develop @ 8ec9527 (20:01:51Z). Post-merge e2e.yml run 26909701606 SUCCESS: JR_E2E_JSM_PROJECT=EJ ACTIVE; test_e2e_jsm_resolution_enforcement PASSED LIVE (not skipped); full JSM suite 73/0 (110.55s). First live proof of BC-3.2.013 proactive resolution gate: positive path sets fields.resolution; enforcement path exits 64 + "--resolution" hint. Write-scenario self-close worked (S-JSM-E2E-2/3 teardown); no orphaned EJ tickets. ci.yml on develop @ 8ec9527 also triggered (build/test). | F1–F7 ALL COMPLETE — CYCLE CLOSED + LIVE-GREEN | F5: tautological tests→allowedValues gap→doc-propagation→bypass-demo inversion→mutation survivors — ALL fixed. F6: 27/27 killed. DEC-066 retained. |
 | ADF listItem content-model BC — issue #470 / BC-7.2.006 | **CYCLE CLOSED + MERGED** (2026-06-08). BC-7.2.006 authored + adversarially converged (pass-1: 2I+5m fixed; pass-2: minor fixed; passes 3/6/7 CLEAN). Factory artifacts @ 46b36b4. PR #477 squash-merged → develop @ aa602a1 (15:30:11Z); issue #470 CLOSED (15:30:12Z); adf-listitem worktree + branch cleaned up. BC corpus: 587 (+1). | F1–F7 ALL COMPLETE — CYCLE CLOSED + MERGED | F5: 3 clean fresh-context passes (P1 2I+5m→fixed; P2 minor→fixed; P3/P6/P7 CLEAN). Count-surface reconciliation: all 8 surfaces agree at 587. Process-gaps: PG-A + DRIFT-README logged. |
-| S-QUEUE-BC-1 — queue list/view document-as-is BCs (BC-X.8.008/009) | **CONVERGED — PR #478 OPEN → develop** (2026-06-08). BC-X.8.008 (queue list) + BC-X.8.009 (queue view) authored in §X.8. S-JSM-E2E-1 AC-001/003 re-anchored (DEC-065 traceability orphan closed). Hybrid adversarial review: 10 fresh-context passes + 1 Gemini CLI corroboration. 3 consecutive clean (passes 8/9/10). PG-QUEUE-1 + PG-QUEUE-2 deferred. PR #478 open → develop awaiting CI + code-owner approval. | F5 CONVERGED (3×CLEAN passes 8/9/10); PR open | Finding progression: 3→2→2→2→0→0→1→0→0→0. BC corpus: 589 (+2). NFR 41. Stories 64 (merge-pending). |
+| S-QUEUE-BC-1 — queue list/view document-as-is BCs (BC-X.8.008/009) | **CYCLE CLOSED + MERGED** (2026-06-08). BC-X.8.008 (queue list) + BC-X.8.009 (queue view) authored in §X.8. S-JSM-E2E-1 AC-001/003 re-anchored (DEC-065 traceability orphan closed). Hybrid adversarial review: 10 fresh-context passes + 1 Gemini CLI corroboration. 3 consecutive clean (passes 8/9/10). PG-QUEUE-1 + PG-QUEUE-2 deferred. PR #478 squash-merged → develop @ e3a14de (2026-06-08T17:54:53Z). Worktree + branches cleaned up. Gemini CLI sliced re-review CLEAN (4/4 slices). | F5 CONVERGED — CYCLE CLOSED + MERGED | Finding progression: 3→2→2→2→0→0→1→0→0→0. BC corpus: 589 (+2). NFR 41. Stories 64. develop HEAD: e3a14de. |
 | E2E feature (S-E2E-1..5) — Live-Jira E2E testing in CI + E2E enhancements | F7 CONVERGED — SHIPPED + LIVE-GREEN (CYCLE CLOSED 2026-05-31) | 2026-05-31 | F1–F7 ALL COMPLETE all 5 stories; live workflow GREEN (run 26719160283, 57/0; develop @ fef44bd via #440+#441+#442) | S-E2E-1: (4C/4H)→(1C/2H)→(1C/2H/1M)→(2M)→CLEAN×3; S-E2E-2: 1M→CLEAN×3; E2E-enh F2: P1 13→P4 2C/2H→CLEAN×3; F5: 2H→CLEAN×3; live: 54/3→56/1→57/0 |
 | issue-327 (Dependabot rand 0.9→0.10) | CYCLE CONVERGED — PR #413 @ 375c0f91 | 2026-05-26 | F1–F7 ALL COMPLETE — MAXIMUM_VIABLE_REFINEMENT_REACHED | F5: HIGH-FP→0→0. F6: 100% (2/2). F7: 6/6 PASS. |
 | 4: Holdout Evaluation | not-started | | | |
@@ -74,10 +74,10 @@ Goal 1c: **Harden v0.5 + feature delivery** — formalize existing codebase with
 
 | Step | Agent | Status | Output |
 |------|-------|--------|--------|
-| S-JSM-RESOLUTION-REQUIRED F1–F7 CONVERGED 2026-06-03 — PR #465 OPEN (awaiting human merge — breaking change). First SRC feature in JSM chain. BC-3.2.013 + ADR-0015. 9 F5 adversarial passes, all findings fixed. F6: 27/27 mutation kill. Full suite 1605/0; 11 CI GREEN. | orchestrator + state-manager | CYCLE CONVERGED (archived) | BC 586 / NFR 41 / Stories 64. |
 | S-JSM-RESOLUTION-REQUIRED MERGED + LIVE-GREEN 2026-06-03 — PR #465 squash-merged → develop @ 8ec9527 (20:01:51Z). Post-merge e2e.yml run 26909701606 SUCCESS: test_e2e_jsm_resolution_enforcement PASSED LIVE (not skipped); JSM suite 73/0 (110.55s). First live proof of BC-3.2.013 proactive resolution gate. Write-scenarios self-closed (no orphaned EJ tickets). ci.yml on 8ec9527 also triggered. Remote branch + local worktree cleaned up. | orchestrator + state-manager | CYCLE CLOSED + LIVE-GREEN | BC 586 / NFR 41 / Stories 64 UNCHANGED. develop HEAD on origin: 8ec9527. |
 | #470 BC-7.2.006 MERGED + CLOSED 2026-06-08 — PR #477 squash-merged → develop @ aa602a1 (15:30:11Z); issue #470 CLOSED (15:30:12Z); adf-listitem worktree + branch cleaned up. PG-A + DRIFT-README deferred (see Drift Items). | state-manager | CYCLE CLOSED + MERGED | BC 587 / NFR 41 / Stories 64 UNCHANGED. develop HEAD on origin: aa602a1. |
 | S-QUEUE-BC-1 CONVERGED 2026-06-08 — BC-X.8.008/009 authored in §X.8 (queue list/view document-as-is). Hybrid adversarial review: 10 fresh-context passes + 1 Gemini CLI; finding progression 3→2→2→2→0→0→1→0→0→0; 3 consecutive clean (passes 8/9/10). S-JSM-E2E-1 AC-001/003 re-anchored (DEC-065 traceability orphan closed). PR #478 open → develop. PG-QUEUE-1 + PG-QUEUE-2 deferred (see Drift Items). | state-manager | CONVERGED — PR #478 open | BC 589 (+2) / NFR 41 / Stories 64 (merge-pending). develop HEAD on origin: aa602a1 (unchanged; spec-only). |
+| S-QUEUE-BC-1 MERGED + CYCLE CLOSED 2026-06-08 — PR #478 squash-merged → develop @ e3a14de (2026-06-08T17:54:53Z); worktree .worktrees/S-QUEUE-BC-1 removed; local branch docs/queue-bc-x8 deleted; remote branch auto-deleted by GitHub on merge. Gemini CLI sliced re-review of PR #478 diff (4 slices: §2.2 coverage map, §5 Scenario 1, §5 Scenario 3, §8 VER-1/3) = VERDICT CLEAN, all 4 slices PASS. PG-QUEUE-1 + PG-QUEUE-2 still deferred (see Drift Items). | state-manager | CYCLE CLOSED + MERGED | BC 589 / NFR 41 / Stories 64 UNCHANGED. develop HEAD on origin: e3a14de. |
 
 ## Decisions Log
 
@@ -162,7 +162,7 @@ Goal 1c: **Harden v0.5 + feature delivery** — formalize existing codebase with
 
 ## Convergence Trackers
 
-Full per-issue narratives: `cycles/cycle-001/convergence-trajectory.md`. Current: **[2026-06-08] S-QUEUE-BC-1 CONVERGED. BC-X.8.008/009 authored; hybrid review 10+1 passes, 3 consecutive clean (8/9/10). S-JSM-E2E-1 AC-001/003 re-anchored (DEC-065 orphan closed). BC: 589 (+2). NFR: 41. Stories: 64 (S-QUEUE-BC-1 merge-pending, PR #478 open). PG-QUEUE-1 + PG-QUEUE-2 deferred.**
+Full per-issue narratives: `cycles/cycle-001/convergence-trajectory.md`. Current: **[2026-06-08] S-QUEUE-BC-1 MERGED + CYCLE CLOSED. PR #478 squash-merged → develop @ e3a14de; Gemini CLI sliced re-review CLEAN (4/4). BC: 589. NFR: 41. Stories: 64. PG-QUEUE-1 + PG-QUEUE-2 deferred. No active cycle.**
 
 ## Session Resume Checkpoint
 
@@ -170,11 +170,11 @@ Full per-issue narratives: `cycles/cycle-001/convergence-trajectory.md`. Current
 | Field | Value |
 |-------|-------|
 | **Date** | 2026-06-08 |
-| **Position** | **S-QUEUE-BC-1 CONVERGED — PR #478 OPEN → develop, awaiting CI + code-owner approval.** BC-X.8.008/009 authored in §X.8 (queue list/view document-as-is). Hybrid adversarial review: 10 fresh-context passes + 1 Gemini CLI; finding progression 3→2→2→2→0→0→1→0→0→0; 3 consecutive clean (passes 8/9/10). S-JSM-E2E-1 AC-001/003 re-anchored (DEC-065 traceability orphan closed). Factory artifacts committed to factory-artifacts. PG-QUEUE-1 + PG-QUEUE-2 deferred (see Drift Items). |
-| **Convergence counter** | BC: 589 (+2 from S-QUEUE-BC-1). NFR: 41. Stories: 64 (S-QUEUE-BC-1 merge-pending). develop HEAD on origin: aa602a1 (unchanged; spec-only PR #478 pending). jira-e2e env: JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ. |
-| **Standing context** | JR_E2E_ENABLED=true repo var set. DEC-066 retained. DEC-065 closed (queue orphan resolved by S-QUEUE-BC-1). Do NOT close #429 (DEC-029). OQ-5 open. E2E-PG-4 remote-link round-back open. PG-A + DRIFT-README: deferred doc-reconciliation items (see Drift Items). PG-QUEUE-1 + PG-QUEUE-2: new deferred process-gaps (see Drift Items). Coverage runs nightly. |
-| **Next step** | Await PR #478 CI + code-owner approval → merge. After merge: mark S-QUEUE-BC-1 status merged in STORY-INDEX, update develop HEAD reference. |
-| **Resume prompt** | `Read .factory/STATE.md. S-QUEUE-BC-1 CONVERGED (2026-06-08). BC-X.8.008/009 authored; 3 consecutive clean adversarial passes (8/9/10). PR #478 open → develop awaiting CI+approval. BC 589 / NFR 41 / Stories 64 (merge-pending). DEC-065 closed (orphan resolved). DEC-066 retained. PG-A + DRIFT-README + PG-QUEUE-1 + PG-QUEUE-2 deferred (see Drift Items). jira-e2e env: JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ. Do NOT close #429. OQ-5 open. E2E-PG-4 remote-link round-back open. Next: await PR #478 merge.` |
+| **Position** | **S-QUEUE-BC-1 MERGED + CYCLE CLOSED.** PR #478 squash-merged → develop @ e3a14de (2026-06-08T17:54:53Z). BC-X.8.008/009 in §X.8. Gemini CLI sliced re-review CLEAN (4/4 slices). Worktree + branches cleaned up. No active cycle — idle. PG-QUEUE-1 + PG-QUEUE-2 deferred (see Drift Items). |
+| **Convergence counter** | BC: 589. NFR: 41. Stories: 64. develop HEAD on origin: e3a14de (PR #478 squash-merged). jira-e2e env: JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ. |
+| **Standing context** | JR_E2E_ENABLED=true repo var set. DEC-066 retained. DEC-065 closed (queue orphan resolved by S-QUEUE-BC-1). Do NOT close #429 (DEC-029). OQ-5 open. E2E-PG-4 remote-link round-back open. PG-A + DRIFT-README: deferred doc-reconciliation items (see Drift Items). PG-QUEUE-1 + PG-QUEUE-2: deferred process-gaps (see Drift Items). Coverage runs nightly. |
+| **Next step** | No active cycle. Await next feature request or maintenance sweep. |
+| **Resume prompt** | `Read .factory/STATE.md. S-QUEUE-BC-1 MERGED + CYCLE CLOSED (2026-06-08). PR #478 squash-merged → develop @ e3a14de. BC 589 / NFR 41 / Stories 64. DEC-065 closed. DEC-066 retained. PG-A + DRIFT-README + PG-QUEUE-1 + PG-QUEUE-2 deferred (see Drift Items). jira-e2e env: JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ. Do NOT close #429. OQ-5 open. E2E-PG-4 remote-link round-back open. No active cycle — idle.` |
 
 ## Open Issues Tracker (post-#288)
 
