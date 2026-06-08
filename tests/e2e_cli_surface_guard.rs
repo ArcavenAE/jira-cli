@@ -71,7 +71,8 @@ const SURFACE: &[(&[&str], &[&str])] = &[
     (&["issue", "list"], &["--jql", "--output"]),
     // issue view
     (&["issue", "view"], &["--output"]),
-    // issue create  (--request-type added in S-JSM-E2E-1 Scenarios 5+6)
+    // issue create  (--request-type added in S-JSM-E2E-1 Scenarios 5+6;
+    //                --description/--description-stdin/--markdown/--points/--parent added in E2E-HV-2)
     (
         &["issue", "create"],
         &[
@@ -81,9 +82,16 @@ const SURFACE: &[(&[&str], &[&str])] = &[
             "--label",
             "--output",
             "--request-type",
+            "--description",
+            "--description-stdin",
+            "--markdown",
+            "--points",
+            "--parent",
         ],
     ),
-    // issue edit  (--priority added: used in e2e_live.rs priority round-trip test)
+    // issue edit  (--priority added: used in e2e_live.rs priority round-trip test;
+    //              --description-stdin/--markdown/--points/--no-points/--parent/--no-parent/--field
+    //              added in E2E-HV-2)
     (
         &["issue", "edit"],
         &[
@@ -95,17 +103,35 @@ const SURFACE: &[(&[&str], &[&str])] = &[
             "--priority",
             "--type",
             "--no-input",
+            "--description-stdin",
+            "--markdown",
+            "--points",
+            "--no-points",
+            "--parent",
+            "--no-parent",
+            "--field",
         ],
     ),
-    // issue comment  (--internal added in S-JSM-E2E-1 Scenario 5)
-    (&["issue", "comment"], &["--output", "--internal"]),
+    // issue comment  (--internal added in S-JSM-E2E-1 Scenario 5;
+    //                 --file/--stdin/--markdown added in E2E-HV-2 comment-channels test)
+    (
+        &["issue", "comment"],
+        &["--output", "--internal", "--file", "--stdin", "--markdown"],
+    ),
     // issue comments
     (&["issue", "comments"], &["--output"]),
     // issue move  (positional: key + status-name; --resolution added in S-JSM-E2E-3 Scenario 8;
-    //              --no-resolution + --no-input added in S-JSM-RESOLUTION-REQUIRED)
+    //              --no-resolution + --no-input added in S-JSM-RESOLUTION-REQUIRED;
+    //              --to added in E2E-HV-1 multi-key bulk-move test)
     (
         &["issue", "move"],
-        &["--output", "--resolution", "--no-resolution", "--no-input"],
+        &[
+            "--output",
+            "--resolution",
+            "--no-resolution",
+            "--no-input",
+            "--to",
+        ],
     ),
     // issue resolutions  (added in S-JSM-E2E-3 Scenario 8)
     (&["issue", "resolutions"], &["--output"]),
@@ -131,12 +157,20 @@ const SURFACE: &[(&[&str], &[&str])] = &[
     (&["sprint", "list"], &["--board", "--output"]),
     // sprint current
     (&["sprint", "current"], &["--board", "--output"]),
+    // sprint add  (positional: issue keys; added in E2E-HV-1 add/remove round-trip)
+    (&["sprint", "add"], &["--sprint", "--output"]),
+    // sprint remove  (positional: issue keys; added in E2E-HV-1 add/remove round-trip)
+    (&["sprint", "remove"], &["--output"]),
     // team list
     (&["team", "list"], &["--output"]),
     // user search  (positional: query)
     (&["user", "search"], &["--output"]),
+    // user list  (added in E2E-HV-1 assignable-users test)
+    (&["user", "list"], &["--project", "--output"]),
     // user view  (positional: accountId)
     (&["user", "view"], &["--output"]),
+    // project list  (added in E2E-HV-1 project-list test)
+    (&["project", "list"], &["--output"]),
     // project fields
     (&["project", "fields"], &["--project", "--output"]),
     // queue list
@@ -151,6 +185,8 @@ const SURFACE: &[(&[&str], &[&str])] = &[
     (&["worklog", "add"], &["--output"]),
     // worklog list  (positional: key)
     (&["worklog", "list"], &["--output"]),
+    // api  (positional: path; used by E2E-HV-2 story-points field discovery)
+    (&["api"], &[]),
 ];
 
 // ---------------------------------------------------------------------------

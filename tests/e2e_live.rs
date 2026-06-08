@@ -42,6 +42,10 @@
 //! |                             |          | read by test code only — no `#[cfg(debug_assertions)]` needed |
 //! | `JR_E2E_POLL_INITIAL_MS`    | no       | Initial backoff milliseconds for `poll_jql` (default 250);   |
 //! |                             |          | read by test code only — no `#[cfg(debug_assertions)]` needed |
+//! | `JR_E2E_PARENT_KEY`         | no       | Existing parent/epic key; enables `create --parent` test (E2E-HV-2) |
+//! | `JR_E2E_CHILD_TYPE`         | no       | Child issue type valid under the parent (e.g. `Sub-task`); paired with `JR_E2E_PARENT_KEY` |
+//! | `JR_E2E_EDIT_FIELD`         | no       | `NAME=VALUE` custom field on the Edit screen; enables `edit --field` test (E2E-HV-2) |
+//! |                             |          | The story-points field id is auto-discovered via `jr api`; no env var needed |
 
 use assert_cmd::Command;
 use serde_json::Value;
@@ -118,6 +122,47 @@ impl E2eHarness {
             .arg("--no-input");
         cmd
     }
+
+    /// Write a `config.toml` into the isolated config dir.
+    ///
+    /// The default harness runs entirely off the `JR_BASE_URL` / `JR_AUTH_HEADER`
+    /// test seams and never materializes a config file. Tests that exercise
+    /// config-resolved fields — currently only `story_points_field_id`, needed
+    /// by `--points` / `--no-points` — call this to seed a minimal
+    /// `[profiles.default]` entry. Auth and base URL still come from the env
+    /// seams; the file only supplies the field id the resolver reads from config.
+    fn write_config(&self, toml: &str) {
+        let dir = self.config_dir.path().join("jr");
+        std::fs::create_dir_all(&dir).expect("failed to create config dir");
+        std::fs::write(dir.join("config.toml"), toml).expect("failed to write config.toml");
+    }
+}
+
+/// Discover the "Story Points" custom-field id via `jr api /rest/api/3/field`.
+///
+/// Returns the field id (e.g. `customfield_10016`) for the first field whose
+/// name matches a known story-points label, or `None` when no such field
+/// exists on the site (clean-skip signal for the points round-trip test) or
+/// the API call / parse fails. The match is case-insensitive and covers both
+/// the company-managed "Story Points" and team-managed "Story point estimate"
+/// labels.
+fn discover_story_points_field(h: &E2eHarness) -> Option<String> {
+    let path = "/rest/api/3/field".to_string();
+    let out = h.cmd().args(["api", &path]).output().ok()?;
+    if !out.status.success() {
+        eprintln!("[WARN] discover_story_points_field: `jr api {path}` exited non-zero");
+        return None;
+    }
+    let fields: Value = serde_json::from_slice(&out.stdout).ok()?;
+    let wanted = ["story points", "story point estimate"];
+    fields.as_array()?.iter().find_map(|f| {
+        let name = f.get("name").and_then(Value::as_str)?.to_lowercase();
+        if wanted.contains(&name.as_str()) {
+            f.get("id").and_then(Value::as_str).map(str::to_owned)
+        } else {
+            None
+        }
+    })
 }
 
 /// Build a `jr` command with the E2E environment.
@@ -467,6 +512,93 @@ fn issue_type() -> String {
     match std::env::var("JR_E2E_ISSUE_TYPE") {
         Ok(v) if !v.trim().is_empty() => v.trim().to_string(),
         _ => "Task".to_string(),
+    }
+}
+
+/// Create a throwaway Task issue in the E2E project and return its key.
+///
+/// The issue carries the `e2e-<run_label>` label so the `if: always()`
+/// teardown step in `e2e.yml` closes it even if the test panics before its
+/// own best-effort close runs. Polls via `poll_view` for GET-consistency
+/// before returning so callers can immediately operate on the key.
+///
+/// Panics (fails the test) only on `issue create` non-zero exit or malformed
+/// JSON — a seed failure is a genuine harness/site fault, not a clean skip.
+///
+/// Shared by the sprint add/remove and multi-key move round-trip tests
+/// (E2E-HV-1) to avoid duplicating the create+poll pattern.
+fn seed_issue(h: &E2eHarness, label: &str, summary: &str) -> String {
+    let itype = issue_type();
+    let out = h
+        .cmd()
+        .args([
+            "issue",
+            "create",
+            "--project",
+            &project(),
+            "--type",
+            &itype,
+            "--summary",
+            summary,
+            "--label",
+            label,
+            "--output",
+            "json",
+        ])
+        .output()
+        .expect("failed to spawn jr for seed issue create");
+    assert!(
+        out.status.success(),
+        "seed issue create failed:\nstdout: {}\nstderr: {}",
+        String::from_utf8_lossy(&out.stdout),
+        String::from_utf8_lossy(&out.stderr)
+    );
+    let json: Value =
+        serde_json::from_slice(&out.stdout).expect("seed issue create output must be valid JSON");
+    let key = json
+        .get("key")
+        .and_then(Value::as_str)
+        .expect("seed issue create JSON must contain a 'key' field")
+        .to_string();
+    assert_key_format(&key);
+    // Block until the issue is GET-visible so callers can act on it immediately.
+    let _ = poll_view(&key, h);
+    key
+}
+
+/// Best-effort teardown: move an issue to the configured "Done" status.
+///
+/// Never fails the test — any non-zero exit emits a `[WARN]` and returns.
+/// The `e2e-<run_label>` label on seeded issues is the authoritative safety
+/// net; this is a courtesy close so the live project stays tidy between runs.
+///
+/// Passes `--no-resolution` so the close is robust against workflows whose
+/// Done transition requires a resolution: without it, ADR-0015 / BC-3.2.013
+/// proactive enforcement would exit 64 in non-interactive mode and leave the
+/// issue open. `--no-resolution` is a silent no-op on transitions that do not
+/// require a resolution, so it is always safe here.
+fn best_effort_close(h: &E2eHarness, key: &str) {
+    match h
+        .cmd()
+        .args([
+            "issue",
+            "move",
+            key,
+            &status_done(),
+            "--no-resolution",
+            "--output",
+            "json",
+        ])
+        .output()
+    {
+        Ok(o) if o.status.success() => {}
+        Ok(o) => eprintln!(
+            "[WARN] best_effort_close: move {key} to {:?} failed (exit {:?}) — \
+             label sweeper will reap; orphan risk LOW",
+            status_done(),
+            o.status.code()
+        ),
+        Err(e) => eprintln!("[WARN] best_effort_close: failed to spawn move for {key}: {e}"),
     }
 }
 
@@ -3967,6 +4099,805 @@ fn test_e2e_issue_view_returns_key_field() {
         view_json.get("key").is_some(),
         "issue view JSON must contain a 'key' field; got: {view_json}"
     );
+}
+
+// ===========================================================================
+// E2E-HV-1 — high-value coverage gap closure
+//   1. project list           (read; pagination surface)
+//   2. user list --project    (read; assignable-users path)
+//   3. sprint add / remove     (write round-trip)
+//   4. issue move multi-key    (bulk transition path — non-idempotent per CLAUDE.md)
+// ===========================================================================
+
+/// E2E: `jr project list --output json` returns a JSON array of projects.
+///
+/// When non-empty, each element has `key` + `name` (presence + type, not value
+/// equality — project inventory varies per site). The authenticated service
+/// account always has at least the E2E project visible, but the "if non-empty"
+/// contract stays portable across sites (lesson from S-398 over-fitting).
+///
+/// Traces to: E2E-HV-1, NFR-T-E2E-1.
+#[test]
+#[ignore = "set JR_RUN_E2E=1 and use --include-ignored to run against a live Jira site"]
+fn test_e2e_project_list_returns_array() {
+    if !e2e_enabled() {
+        return;
+    }
+    let h = e2e_harness();
+    let output = h
+        .cmd()
+        .args(["project", "list", "--output", "json"])
+        .output()
+        .expect("failed to spawn jr for project list");
+
+    assert!(
+        output.status.success(),
+        "project list failed:\nstdout: {}\nstderr: {}",
+        String::from_utf8_lossy(&output.stdout),
+        String::from_utf8_lossy(&output.stderr)
+    );
+
+    let v: Value =
+        serde_json::from_slice(&output.stdout).expect("project list output must be valid JSON");
+    let arr = v
+        .as_array()
+        .unwrap_or_else(|| panic!("project list output must be a JSON array; got: {v}"));
+    // The authenticated account always has access to at least its own project,
+    // so an empty array is a genuine defect (e.g. pagination dropping the only
+    // page or a serde regression), NOT a portable "if non-empty" case. Assert
+    // non-empty so the test cannot pass vacuously.
+    assert!(
+        !arr.is_empty(),
+        "project list must return at least one accessible project; got an empty array"
+    );
+    // Each element exposes key + name.
+    assert_array_of_objects_with_keys(&v, &["key", "name"]);
+}
+
+/// E2E: `jr user list --project <P> --output json` returns a JSON array.
+///
+/// Lists users assignable to the E2E project. When non-empty, each element has
+/// `accountId` + `displayName` (same serde-confirmed keys as `user search`).
+/// Depends on the "Browse users and groups" permission, so an empty array is a
+/// valid result — the "if non-empty" contract avoids permission-coupling.
+///
+/// Traces to: E2E-HV-1, BC-2.2.028, NFR-T-E2E-1.
+#[test]
+#[ignore = "set JR_RUN_E2E=1 and use --include-ignored to run against a live Jira site"]
+fn test_e2e_user_list_assignable_returns_array() {
+    if !e2e_enabled() {
+        return;
+    }
+    let proj = project();
+    let h = e2e_harness();
+    let output = h
+        .cmd()
+        .args(["user", "list", "--project", &proj, "--output", "json"])
+        .output()
+        .expect("failed to spawn jr for user list");
+
+    assert!(
+        output.status.success(),
+        "user list failed:\nstdout: {}\nstderr: {}",
+        String::from_utf8_lossy(&output.stdout),
+        String::from_utf8_lossy(&output.stderr)
+    );
+
+    let v: Value =
+        serde_json::from_slice(&output.stdout).expect("user list output must be valid JSON");
+    assert!(
+        v.is_array(),
+        "user list output must be a JSON array; got: {v}"
+    );
+    assert_array_of_objects_with_keys(&v, &["accountId", "displayName"]);
+}
+
+/// E2E: `jr sprint add --sprint <ID> <KEY>` then `jr sprint remove <KEY>` round-trip.
+///
+/// Clean-skips when:
+/// - `JR_E2E_BOARD_ID` is unset (no board to resolve a sprint from), OR
+/// - the board is not a scrum board (`"only available for scrum boards"`), OR
+/// - the board has no active sprint (`"No active sprint"`).
+///
+/// On the happy path: seeds a throwaway issue, adds it to the active sprint
+/// (asserts `added: true`), removes it back to the backlog (asserts
+/// `removed: true`), then best-effort closes the seed issue. The active sprint
+/// id is discovered via `jr sprint current` rather than hard-coded (S-398
+/// over-fitting lesson).
+///
+/// Traces to: E2E-HV-1, NFR-T-E2E-1.
+#[test]
+#[ignore = "set JR_RUN_E2E=1 and use --include-ignored to run against a live Jira site"]
+fn test_e2e_sprint_add_remove_roundtrip() {
+    if !e2e_enabled() {
+        return;
+    }
+    let board_id = match env::var("JR_E2E_BOARD_ID") {
+        Ok(id) if !id.trim().is_empty() => id.trim().to_string(),
+        _ => return, // clean skip: no board configured
+    };
+    let h = e2e_harness();
+
+    // Discover the active sprint id via `jr sprint current` (do not hard-code).
+    let current = h
+        .cmd()
+        .args([
+            "sprint", "current", "--board", &board_id, "--output", "json",
+        ])
+        .output()
+        .expect("failed to spawn jr for sprint current");
+    if !current.status.success() {
+        let stderr = String::from_utf8_lossy(&current.stderr);
+        if stderr.contains("No active sprint") || stderr.contains("only available for scrum boards")
+        {
+            return; // clean skip: no sprint capability / no active sprint
+        }
+        panic!("sprint current failed unexpectedly:\nstderr: {stderr}");
+    }
+    let current_json: Value =
+        serde_json::from_slice(&current.stdout).expect("sprint current output must be valid JSON");
+    let sprint_id = current_json
+        .get("sprint")
+        .and_then(|s| s.get("id"))
+        .and_then(Value::as_u64)
+        .expect("sprint current JSON must contain sprint.id");
+
+    let label = run_label();
+    let key = seed_issue(&h, &label, &format!("[e2e {label}] sprint round-trip"));
+
+    // Add to the active sprint.
+    let add = h
+        .cmd()
+        .args([
+            "sprint",
+            "add",
+            "--sprint",
+            &sprint_id.to_string(),
+            &key,
+            "--output",
+            "json",
+        ])
+        .output()
+        .expect("failed to spawn jr for sprint add");
+    assert!(
+        add.status.success(),
+        "sprint add failed for {key}:\nstdout: {}\nstderr: {}",
+        String::from_utf8_lossy(&add.stdout),
+        String::from_utf8_lossy(&add.stderr)
+    );
+    let add_json: Value =
+        serde_json::from_slice(&add.stdout).expect("sprint add output must be valid JSON");
+    assert_eq!(
+        add_json.get("added"),
+        Some(&Value::Bool(true)),
+        "sprint add JSON must have added: true; got: {add_json}"
+    );
+
+    // Remove back to the backlog.
+    let remove = h
+        .cmd()
+        .args(["sprint", "remove", &key, "--output", "json"])
+        .output()
+        .expect("failed to spawn jr for sprint remove");
+    assert!(
+        remove.status.success(),
+        "sprint remove failed for {key}:\nstdout: {}\nstderr: {}",
+        String::from_utf8_lossy(&remove.stdout),
+        String::from_utf8_lossy(&remove.stderr)
+    );
+    let remove_json: Value =
+        serde_json::from_slice(&remove.stdout).expect("sprint remove output must be valid JSON");
+    assert_eq!(
+        remove_json.get("removed"),
+        Some(&Value::Bool(true)),
+        "sprint remove JSON must have removed: true; got: {remove_json}"
+    );
+
+    best_effort_close(&h, &key);
+}
+
+/// E2E: `jr issue move <K1> <K2> --to <STATUS> --output json` (multi-key bulk).
+///
+/// The single-key move path is covered by the write-flow test; this exercises
+/// the distinct bulk path (`POST .../bulk` + async poll), which is documented
+/// as non-idempotent in CLAUDE.md and previously had no live coverage.
+///
+/// Seeds two throwaway issues, bulk-moves both to "In Progress" (a non-done
+/// status, so the bulk path is not subject to single-key resolution
+/// enforcement), and asserts the `{taskId, results: [...]}` payload reports
+/// `status: "success"` for each key. Then best-effort closes both seeds.
+///
+/// Traces to: E2E-HV-1, BC-3.2.009, NFR-T-E2E-1.
+#[test]
+#[ignore = "set JR_RUN_E2E=1 and use --include-ignored to run against a live Jira site"]
+fn test_e2e_issue_move_multikey_bulk() {
+    if !e2e_enabled() {
+        return;
+    }
+    let h = e2e_harness();
+    let label = run_label();
+    let target = status_in_progress();
+
+    let key1 = seed_issue(&h, &label, &format!("[e2e {label}] bulk-move A"));
+    let key2 = seed_issue(&h, &label, &format!("[e2e {label}] bulk-move B"));
+
+    let output = h
+        .cmd()
+        .args([
+            "issue", "move", &key1, &key2, "--to", &target, "--output", "json",
+        ])
+        .output()
+        .expect("failed to spawn jr for multi-key issue move");
+
+    assert!(
+        output.status.success(),
+        "multi-key issue move failed for [{key1}, {key2}]:\nstdout: {}\nstderr: {}",
+        String::from_utf8_lossy(&output.stdout),
+        String::from_utf8_lossy(&output.stderr)
+    );
+
+    let v: Value =
+        serde_json::from_slice(&output.stdout).expect("multi-key move output must be valid JSON");
+    let results = v
+        .get("results")
+        .and_then(Value::as_array)
+        .unwrap_or_else(|| panic!("multi-key move JSON must contain 'results' array; got: {v}"));
+    assert_eq!(
+        results.len(),
+        2,
+        "multi-key move must report a result per key; got: {v}"
+    );
+    for key in [&key1, &key2] {
+        let entry = results
+            .iter()
+            .find(|r| r.get("key").and_then(Value::as_str) == Some(key.as_str()))
+            .unwrap_or_else(|| panic!("multi-key move results must include {key}; got: {v}"));
+        assert_eq!(
+            entry.get("status").and_then(Value::as_str),
+            Some("success"),
+            "multi-key move must report success for {key}; got: {entry}"
+        );
+    }
+
+    best_effort_close(&h, &key1);
+    best_effort_close(&h, &key2);
+}
+
+// ===========================================================================
+// E2E-HV-2 — write-flag coverage (description / stdin / markdown / comment
+//            input channels, plus instance-gated points / parent / field)
+// ===========================================================================
+
+/// E2E: description round-trip across `create --description`,
+/// `edit --description`, and `edit --description-stdin`.
+///
+/// - Create carries `--description`; the follow-up-GET JSON exposes a non-null
+///   `fields.description` (ADF object).
+/// - `edit --description <text>` returns `changed_fields.description == <text>`
+///   (the RAW input string, NOT an ADF round-trip — BC-3.4.013, issue #398).
+/// - `edit --description-stdin` reads the body from piped stdin and produces
+///   the same raw-echo contract.
+///
+/// Traces to: E2E-HV-2, BC-3.4.013, NFR-T-E2E-1.
+#[test]
+#[ignore = "set JR_RUN_E2E=1 and use --include-ignored to run against a live Jira site"]
+fn test_e2e_issue_description_create_edit_stdin_roundtrip() {
+    if !e2e_enabled() {
+        return;
+    }
+    let label = run_label();
+    let itype = issue_type();
+    let proj = project();
+    let h = e2e_harness();
+
+    let create = h
+        .cmd()
+        .args([
+            "issue",
+            "create",
+            "--project",
+            &proj,
+            "--type",
+            &itype,
+            "--summary",
+            &format!("[e2e {label}] description round-trip"),
+            "--description",
+            "initial description from --description",
+            "--label",
+            &label,
+            "--output",
+            "json",
+        ])
+        .output()
+        .expect("failed to spawn jr for create --description");
+    assert!(
+        create.status.success(),
+        "create --description failed:\nstdout: {}\nstderr: {}",
+        String::from_utf8_lossy(&create.stdout),
+        String::from_utf8_lossy(&create.stderr)
+    );
+    let create_json: Value =
+        serde_json::from_slice(&create.stdout).expect("create output must be valid JSON");
+    let key = create_json
+        .get("key")
+        .and_then(Value::as_str)
+        .expect("create JSON must contain a 'key'")
+        .to_string();
+    assert_key_format(&key);
+    assert!(
+        create_json
+            .get("fields")
+            .and_then(|f| f.get("description"))
+            .is_some_and(|d| !d.is_null()),
+        "create --description must yield a non-null fields.description; got: {create_json}"
+    );
+
+    // edit --description: changed_fields.description echoes the RAW input.
+    let new_desc = "edited description via --description flag";
+    let edit = h
+        .cmd()
+        .args([
+            "issue",
+            "edit",
+            &key,
+            "--description",
+            new_desc,
+            "--output",
+            "json",
+        ])
+        .output()
+        .expect("failed to spawn jr for edit --description");
+    assert!(edit.status.success(), "edit --description failed for {key}");
+    let edit_json: Value =
+        serde_json::from_slice(&edit.stdout).expect("edit output must be valid JSON");
+    assert_eq!(
+        edit_json
+            .get("changed_fields")
+            .and_then(|cf| cf.get("description"))
+            .and_then(Value::as_str),
+        Some(new_desc),
+        "edit JSON changed_fields.description must be the raw input string (BC-3.4.013); got: {edit_json}"
+    );
+
+    // edit --description-stdin: body piped via stdin, same raw-echo contract.
+    let piped_desc = "description piped via --description-stdin";
+    let edit_stdin = h
+        .cmd()
+        .args([
+            "issue",
+            "edit",
+            &key,
+            "--description-stdin",
+            "--output",
+            "json",
+        ])
+        .write_stdin(piped_desc)
+        .output()
+        .expect("failed to spawn jr for edit --description-stdin");
+    assert!(
+        edit_stdin.status.success(),
+        "edit --description-stdin failed for {key}:\nstderr: {}",
+        String::from_utf8_lossy(&edit_stdin.stderr)
+    );
+    let stdin_json: Value =
+        serde_json::from_slice(&edit_stdin.stdout).expect("edit-stdin output must be valid JSON");
+    assert_eq!(
+        stdin_json
+            .get("changed_fields")
+            .and_then(|cf| cf.get("description"))
+            .and_then(Value::as_str),
+        Some(piped_desc),
+        "edit --description-stdin changed_fields.description must echo the piped raw input; got: {stdin_json}"
+    );
+
+    best_effort_close(&h, &key);
+}
+
+/// E2E: `issue create --markdown --description <md>` converts Markdown to ADF.
+///
+/// A plain-text description becomes a single paragraph node; Markdown with a
+/// heading becomes a `heading` ADF node. Asserting that the created issue's
+/// `fields.description.content` contains a `heading` node proves the
+/// `--markdown` flag drove `markdown_to_adf` (rather than `text_to_adf`),
+/// which a plain string could not produce.
+///
+/// Traces to: E2E-HV-2, NFR-T-E2E-1.
+#[test]
+#[ignore = "set JR_RUN_E2E=1 and use --include-ignored to run against a live Jira site"]
+fn test_e2e_issue_markdown_description_roundtrip() {
+    if !e2e_enabled() {
+        return;
+    }
+    let label = run_label();
+    let itype = issue_type();
+    let proj = project();
+    let h = e2e_harness();
+
+    let md = "# E2E Markdown Heading\n\nA paragraph with **bold** text.";
+    let create = h
+        .cmd()
+        .args([
+            "issue",
+            "create",
+            "--project",
+            &proj,
+            "--type",
+            &itype,
+            "--summary",
+            &format!("[e2e {label}] markdown description"),
+            "--markdown",
+            "--description",
+            md,
+            "--label",
+            &label,
+            "--output",
+            "json",
+        ])
+        .output()
+        .expect("failed to spawn jr for create --markdown");
+    assert!(
+        create.status.success(),
+        "create --markdown failed:\nstdout: {}\nstderr: {}",
+        String::from_utf8_lossy(&create.stdout),
+        String::from_utf8_lossy(&create.stderr)
+    );
+    let json: Value =
+        serde_json::from_slice(&create.stdout).expect("create output must be valid JSON");
+    let key = json
+        .get("key")
+        .and_then(Value::as_str)
+        .expect("create JSON must contain a 'key'")
+        .to_string();
+
+    let content = json
+        .get("fields")
+        .and_then(|f| f.get("description"))
+        .and_then(|d| d.get("content"))
+        .and_then(Value::as_array)
+        .unwrap_or_else(|| {
+            panic!("markdown create must yield ADF fields.description.content; got: {json}")
+        });
+    assert!(
+        content
+            .iter()
+            .any(|node| node.get("type").and_then(Value::as_str) == Some("heading")),
+        "--markdown must produce a heading ADF node (not a flat paragraph); got: {content:?}"
+    );
+
+    best_effort_close(&h, &key);
+}
+
+/// E2E: `issue comment` across all three input channels — `--file`, `--stdin`,
+/// `--markdown` (positional message).
+///
+/// Seeds a fresh issue (zero comments), adds one comment through each channel
+/// (asserting each returns a JSON object with an `id`), then verifies
+/// `issue comments --output json` reports at least three comments.
+///
+/// Traces to: E2E-HV-2, NFR-T-E2E-1.
+#[test]
+#[ignore = "set JR_RUN_E2E=1 and use --include-ignored to run against a live Jira site"]
+fn test_e2e_issue_comment_input_channels() {
+    if !e2e_enabled() {
+        return;
+    }
+    let label = run_label();
+    let h = e2e_harness();
+    let key = seed_issue(&h, &label, &format!("[e2e {label}] comment channels"));
+
+    let assert_comment_id = |out: std::process::Output, channel: &str| {
+        assert!(
+            out.status.success(),
+            "comment via {channel} failed for {key}:\nstderr: {}",
+            String::from_utf8_lossy(&out.stderr)
+        );
+        let v: Value = serde_json::from_slice(&out.stdout)
+            .unwrap_or_else(|e| panic!("comment ({channel}) output must be valid JSON: {e}"));
+        assert!(
+            v.get("id").and_then(Value::as_str).is_some(),
+            "comment ({channel}) JSON must contain an 'id'; got: {v}"
+        );
+    };
+
+    // --file
+    let file = h.config_dir.path().join("comment-body.txt");
+    std::fs::write(&file, "comment body from a file").expect("write comment file");
+    let file_arg = file.to_string_lossy().to_string();
+    let out_file = h
+        .cmd()
+        .args([
+            "issue", "comment", &key, "--file", &file_arg, "--output", "json",
+        ])
+        .output()
+        .expect("failed to spawn jr for comment --file");
+    assert_comment_id(out_file, "--file");
+
+    // --stdin
+    let out_stdin = h
+        .cmd()
+        .args(["issue", "comment", &key, "--stdin", "--output", "json"])
+        .write_stdin("comment body from stdin")
+        .output()
+        .expect("failed to spawn jr for comment --stdin");
+    assert_comment_id(out_stdin, "--stdin");
+
+    // --markdown (positional message)
+    let out_md = h
+        .cmd()
+        .args([
+            "issue",
+            "comment",
+            &key,
+            "**bold** comment via markdown",
+            "--markdown",
+            "--output",
+            "json",
+        ])
+        .output()
+        .expect("failed to spawn jr for comment --markdown");
+    assert_comment_id(out_md, "--markdown");
+
+    // Verify all three landed.
+    let comments = h
+        .cmd()
+        .args(["issue", "comments", &key, "--output", "json"])
+        .output()
+        .expect("failed to spawn jr for issue comments");
+    assert!(comments.status.success(), "issue comments failed for {key}");
+    let arr: Value =
+        serde_json::from_slice(&comments.stdout).expect("comments output must be valid JSON");
+    assert!(
+        arr.as_array().is_some_and(|a| a.len() >= 3),
+        "issue comments must report >= 3 comments after three adds; got: {arr}"
+    );
+
+    best_effort_close(&h, &key);
+}
+
+/// E2E: story-points round-trip — `create --points`, `edit --points`,
+/// `edit --no-points`.
+///
+/// Self-configuring + clean-skipping: discovers the Story Points field id via
+/// `jr api /rest/api/3/field` and writes it into the harness config (the
+/// resolver reads `story_points_field_id` from config, which the seam-only
+/// harness otherwise lacks). Clean-skips when:
+/// - no story-points field exists on the site, OR
+/// - the field is not on the project's Create screen (the create attempt fails
+///   — an instance-config issue, not a `jr` defect; emits a `[WARN]`).
+///
+/// On the happy path: `create --points 5` yields `fields.<id> == 5.0`;
+/// `edit --points 8` yields `changed_fields.points == "8"`; `edit --no-points`
+/// yields `changed_fields.points == "(cleared)"`.
+///
+/// Traces to: E2E-HV-2, BC-3.4.012, NFR-T-E2E-1.
+#[test]
+#[ignore = "set JR_RUN_E2E=1 and use --include-ignored to run against a live Jira site"]
+fn test_e2e_issue_points_roundtrip() {
+    if !e2e_enabled() {
+        return;
+    }
+    let h = e2e_harness();
+    let sp_id = match discover_story_points_field(&h) {
+        Some(id) => id,
+        None => return, // clean skip: no story-points field on this site
+    };
+    h.write_config(&format!(
+        "default_profile = \"default\"\n\n[profiles.default]\nstory_points_field_id = \"{sp_id}\"\n"
+    ));
+
+    let label = run_label();
+    let itype = issue_type();
+    let proj = project();
+
+    let create = h
+        .cmd()
+        .args([
+            "issue",
+            "create",
+            "--project",
+            &proj,
+            "--type",
+            &itype,
+            "--summary",
+            &format!("[e2e {label}] points round-trip"),
+            "--points",
+            "5",
+            "--label",
+            &label,
+            "--output",
+            "json",
+        ])
+        .output()
+        .expect("failed to spawn jr for create --points");
+    if !create.status.success() {
+        eprintln!(
+            "[WARN] points round-trip: create --points failed (field {sp_id} likely not on the \
+             project Create screen) — clean skip; stderr: {}",
+            String::from_utf8_lossy(&create.stderr)
+        );
+        return;
+    }
+    let create_json: Value =
+        serde_json::from_slice(&create.stdout).expect("create output must be valid JSON");
+    let key = create_json
+        .get("key")
+        .and_then(Value::as_str)
+        .expect("create JSON must contain a 'key'")
+        .to_string();
+    assert_eq!(
+        create_json
+            .get("fields")
+            .and_then(|f| f.get(&sp_id))
+            .and_then(Value::as_f64),
+        Some(5.0),
+        "create --points 5 must set fields.{sp_id} to 5.0; got: {create_json}"
+    );
+
+    // edit --points 8
+    let edit = h
+        .cmd()
+        .args(["issue", "edit", &key, "--points", "8", "--output", "json"])
+        .output()
+        .expect("failed to spawn jr for edit --points");
+    assert!(edit.status.success(), "edit --points failed for {key}");
+    let edit_json: Value =
+        serde_json::from_slice(&edit.stdout).expect("edit output must be valid JSON");
+    assert_eq!(
+        edit_json
+            .get("changed_fields")
+            .and_then(|cf| cf.get("points"))
+            .and_then(Value::as_str),
+        Some("8"),
+        "edit --points 8 must echo changed_fields.points == \"8\"; got: {edit_json}"
+    );
+
+    // edit --no-points
+    let clear = h
+        .cmd()
+        .args(["issue", "edit", &key, "--no-points", "--output", "json"])
+        .output()
+        .expect("failed to spawn jr for edit --no-points");
+    assert!(clear.status.success(), "edit --no-points failed for {key}");
+    let clear_json: Value =
+        serde_json::from_slice(&clear.stdout).expect("edit output must be valid JSON");
+    assert_eq!(
+        clear_json
+            .get("changed_fields")
+            .and_then(|cf| cf.get("points"))
+            .and_then(Value::as_str),
+        Some("(cleared)"),
+        "edit --no-points must echo changed_fields.points == \"(cleared)\"; got: {clear_json}"
+    );
+
+    best_effort_close(&h, &key);
+}
+
+/// E2E: `issue create --parent <KEY>` parents a new issue under an existing one.
+///
+/// Instance-gated: requires `JR_E2E_PARENT_KEY` (an existing parent/epic issue)
+/// and `JR_E2E_CHILD_TYPE` (an issue type valid as that parent's child, e.g.
+/// `Sub-task` or `Story`). Clean-skips when either is unset, since the valid
+/// parent/child hierarchy is entirely project-config dependent.
+///
+/// On the happy path: creates a child with `--parent` and asserts the
+/// follow-up-GET JSON reports `fields.parent.key == <parent>`.
+///
+/// Traces to: E2E-HV-2, NFR-T-E2E-1.
+#[test]
+#[ignore = "set JR_RUN_E2E=1 and use --include-ignored to run against a live Jira site"]
+fn test_e2e_issue_parent_roundtrip() {
+    if !e2e_enabled() {
+        return;
+    }
+    let parent = match env::var("JR_E2E_PARENT_KEY") {
+        Ok(p) if !p.trim().is_empty() => p.trim().to_string(),
+        _ => return, // clean skip: no parent issue configured
+    };
+    let child_type = match env::var("JR_E2E_CHILD_TYPE") {
+        Ok(t) if !t.trim().is_empty() => t.trim().to_string(),
+        _ => return, // clean skip: no child issue type configured
+    };
+    let label = run_label();
+    let proj = project();
+    let h = e2e_harness();
+
+    let create = h
+        .cmd()
+        .args([
+            "issue",
+            "create",
+            "--project",
+            &proj,
+            "--type",
+            &child_type,
+            "--summary",
+            &format!("[e2e {label}] child of {parent}"),
+            "--parent",
+            &parent,
+            "--label",
+            &label,
+            "--output",
+            "json",
+        ])
+        .output()
+        .expect("failed to spawn jr for create --parent");
+    assert!(
+        create.status.success(),
+        "create --parent failed:\nstdout: {}\nstderr: {}",
+        String::from_utf8_lossy(&create.stdout),
+        String::from_utf8_lossy(&create.stderr)
+    );
+    let json: Value =
+        serde_json::from_slice(&create.stdout).expect("create output must be valid JSON");
+    let key = json
+        .get("key")
+        .and_then(Value::as_str)
+        .expect("create JSON must contain a 'key'")
+        .to_string();
+    assert_eq!(
+        json.get("fields")
+            .and_then(|f| f.get("parent"))
+            .and_then(|p| p.get("key"))
+            .and_then(Value::as_str),
+        Some(parent.as_str()),
+        "create --parent must set fields.parent.key to {parent}; got: {json}"
+    );
+
+    best_effort_close(&h, &key);
+}
+
+/// E2E: `issue edit --field NAME=VALUE` sets an arbitrary custom field.
+///
+/// Instance-gated: requires `JR_E2E_EDIT_FIELD` in `NAME=VALUE` form, where
+/// `NAME` is a custom field present on the issue's Edit screen (validated via
+/// `GET .../editmeta`). Clean-skips when unset, since no custom field is
+/// guaranteed to exist on an arbitrary site.
+///
+/// On the happy path: seeds an issue, applies `--field NAME=VALUE`, and asserts
+/// the edit succeeded (`updated == true`) and recorded a non-empty
+/// `changed_fields` map (the resolved field keys are instance-specific, so the
+/// assertion checks for presence rather than an exact key).
+///
+/// Traces to: E2E-HV-2, NFR-T-E2E-1.
+#[test]
+#[ignore = "set JR_RUN_E2E=1 and use --include-ignored to run against a live Jira site"]
+fn test_e2e_issue_edit_custom_field() {
+    if !e2e_enabled() {
+        return;
+    }
+    let field = match env::var("JR_E2E_EDIT_FIELD") {
+        Ok(f) if f.contains('=') && !f.trim().is_empty() => f,
+        _ => return, // clean skip: no custom field configured
+    };
+    let label = run_label();
+    let h = e2e_harness();
+    let key = seed_issue(&h, &label, &format!("[e2e {label}] custom field edit"));
+
+    let edit = h
+        .cmd()
+        .args(["issue", "edit", &key, "--field", &field, "--output", "json"])
+        .output()
+        .expect("failed to spawn jr for edit --field");
+    assert!(
+        edit.status.success(),
+        "edit --field {field:?} failed for {key}:\nstdout: {}\nstderr: {}",
+        String::from_utf8_lossy(&edit.stdout),
+        String::from_utf8_lossy(&edit.stderr)
+    );
+    let json: Value = serde_json::from_slice(&edit.stdout).expect("edit output must be valid JSON");
+    assert_eq!(
+        json.get("updated"),
+        Some(&Value::Bool(true)),
+        "edit --field must report updated == true; got: {json}"
+    );
+    assert!(
+        json.get("changed_fields")
+            .and_then(Value::as_object)
+            .is_some_and(|m| !m.is_empty()),
+        "edit --field must record a non-empty changed_fields map; got: {json}"
+    );
+
+    best_effort_close(&h, &key);
 }
 
 // ---------------------------------------------------------------------------

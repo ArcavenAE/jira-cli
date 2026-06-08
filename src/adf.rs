@@ -162,25 +162,24 @@ impl AdfBuilder {
                 Some(node)
             }
             NodeKind::ListItem => {
-                // The documented ADF listItem schema lists paragraph, bulletList,
-                // orderedList, codeBlock, and mediaSingle as accepted content.
-                // pulldown-cmark, however, legitimately emits blockquote, heading,
-                // table, and rule inside Item for markdown like `- > quoted` or
-                // `- # heading`. We recognize those as blocks (don't wrap them in a
-                // paragraph — that would produce `paragraph > blockquote`, invalid
-                // at a lower level than `listItem > blockquote`). Jira's renderer
-                // handles the latter shape leniently; the former it does not.
+                // ADF `listItem.content` permits ONLY paragraph, bulletList,
+                // orderedList, codeBlock, and mediaSingle. pulldown-cmark
+                // legitimately emits blockquote, heading, table, and rule inside
+                // Item for markdown like `- > quoted` or `- # heading`; those are
+                // NOT valid listItem children (issue #470,
+                // docs/specs/adf-listitem-content-model.md). `normalize_list_item_content`
+                // transforms each disallowed block into the permitted set BEFORE
+                // wrapping loose inline runs — shrinking the allowlist alone would
+                // instead wrap them into a paragraph, producing the equally-invalid
+                // `paragraph > blockquote` shape.
+                let normalized = normalize_list_item_content(children);
                 let wrapped = wrap_inlines_as_blocks(
-                    children,
+                    normalized,
                     &[
                         "paragraph",
                         "bulletList",
                         "orderedList",
-                        "blockquote",
                         "codeBlock",
-                        "heading",
-                        "table",
-                        "rule",
                         "mediaSingle",
                     ],
                 );
@@ -329,6 +328,111 @@ fn wrap_inlines_as_blocks(children: Vec<Value>, block_types: &[&str]) -> Vec<Val
         result.push(json!({ "type": "paragraph", "content": inline_run }));
     }
     result
+}
+
+/// Normalize the children of a `listItem` to the ADF-permitted content model.
+///
+/// ADF `listItem.content` permits only `paragraph`, `bulletList`, `orderedList`,
+/// `codeBlock`, and `mediaSingle`. pulldown-cmark legitimately emits
+/// `blockquote`, `heading`, `table`, and `rule` inside list items; this pass
+/// transforms each into the permitted set (issue #470,
+/// `docs/specs/adf-listitem-content-model.md`):
+///
+/// - `blockquote` → unwrapped: its child blocks are spliced in and recursively
+///   normalized (handles e.g. `- > # heading`).
+/// - `heading` → converted to `paragraph`, preserving inline content and dropping
+///   the `level` attr.
+/// - `table` → flattened to one `paragraph` per row, joining cells in `| a | b |`
+///   form while preserving each cell's inline content and ADF marks
+///   (`flatten_table_to_paragraphs`). The grid structure is not preserved.
+/// - `rule` → dropped (empty leaf, meaningless inside a list item).
+///
+/// Permitted blocks and loose inline nodes (`text`, `hardBreak`) pass through
+/// untouched; the caller's `wrap_inlines_as_blocks` then groups the inline runs
+/// into paragraphs.
+fn normalize_list_item_content(children: Vec<Value>) -> Vec<Value> {
+    let mut out: Vec<Value> = Vec::new();
+    for child in children {
+        match child["type"].as_str() {
+            Some("blockquote") => {
+                let inner = child
+                    .get("content")
+                    .and_then(|c| c.as_array())
+                    .cloned()
+                    .unwrap_or_default();
+                out.extend(normalize_list_item_content(inner));
+            }
+            Some("heading") => {
+                let content = child.get("content").cloned().unwrap_or_else(|| json!([]));
+                out.push(json!({ "type": "paragraph", "content": content }));
+            }
+            Some("table") => out.extend(flatten_table_to_paragraphs(&child)),
+            Some("rule") => { /* dropped — no content, invalid inside listItem */ }
+            _ => out.push(child),
+        }
+    }
+    out
+}
+
+/// Flatten an ADF `table` node into one `paragraph` per row, for embedding inside
+/// a `listItem` (which the ADF content model forbids from containing a table).
+///
+/// Cells are joined in `| a | b |` form. Each cell's inline content is spliced in
+/// as real ADF nodes, so marks (`strong`, `em`, `link`, …) are **preserved** — we
+/// do NOT route through `adf_to_text`, which would render marks as literal
+/// markdown syntax (`**bold**`, `[label](url)`) that Jira would then display
+/// verbatim. The table's grid structure is necessarily lost (there is no ADF node
+/// nesting a table inside a listItem); only the per-row pipe layout and cell
+/// content survive.
+fn flatten_table_to_paragraphs(table: &Value) -> Vec<Value> {
+    let mut paragraphs: Vec<Value> = Vec::new();
+    let Some(rows) = table.get("content").and_then(|c| c.as_array()) else {
+        return paragraphs;
+    };
+    for row in rows {
+        if row.get("type").and_then(Value::as_str) != Some("tableRow") {
+            continue;
+        }
+        let Some(cells) = row.get("content").and_then(|c| c.as_array()) else {
+            continue;
+        };
+        let mut content: Vec<Value> = Vec::new();
+        for cell in cells {
+            let sep = if content.is_empty() { "| " } else { " | " };
+            content.push(json!({ "type": "text", "text": sep }));
+            // For markdown tables a cell's content is always `paragraph` blocks,
+            // so we splice their inline children in, preserving marks. The ADF
+            // `tableCell` schema also permits richer blocks (bulletList, codeBlock,
+            // …); a non-paragraph block must NOT be spliced as inline — that would
+            // emit invalid `paragraph > <block>`. Render any such block to a
+            // newline-free plain-text node instead. This branch is unreachable from
+            // `markdown_to_adf` today (pulldown-cmark emits only inline events in
+            // GFM cells) but keeps the function total and ADF-valid.
+            if let Some(blocks) = cell.get("content").and_then(|c| c.as_array()) {
+                for block in blocks {
+                    if block.get("type").and_then(Value::as_str) == Some("paragraph") {
+                        if let Some(inlines) = block.get("content").and_then(|c| c.as_array()) {
+                            content.extend(inlines.iter().cloned());
+                        }
+                    } else {
+                        let doc = json!({ "type": "doc", "version": 1, "content": [block] });
+                        let text = adf_to_text(&doc).trim_end().replace(['\n', '\r'], " ");
+                        if !text.is_empty() {
+                            content.push(json!({ "type": "text", "text": text }));
+                        }
+                    }
+                }
+            }
+        }
+        // An all-empty row collapses to bare separators (`| | |`) — valid ADF, and
+        // a faithful (if sparse) rendering of an empty source row; emitted as-is.
+        if content.is_empty() {
+            continue; // a row with no cells contributes nothing
+        }
+        content.push(json!({ "type": "text", "text": " |" }));
+        paragraphs.push(json!({ "type": "paragraph", "content": content }));
+    }
+    paragraphs
 }
 
 fn heading_level_to_u8(level: HeadingLevel) -> u8 {
@@ -694,6 +798,21 @@ fn apply_marks(text: &str, marks: Option<&Vec<Value>>) -> String {
 mod tests {
     use super::*;
 
+    /// Recursively check whether any node in an ADF value (or its `content`
+    /// subtrees) has the given `type`. Structural — unlike a serialized-string
+    /// substring search, it cannot false-positive on a text node whose literal
+    /// text happens to contain the type name.
+    fn contains_node_type(value: &Value, node_type: &str) -> bool {
+        if value.get("type").and_then(Value::as_str) == Some(node_type) {
+            return true;
+        }
+        match value {
+            Value::Array(items) => items.iter().any(|v| contains_node_type(v, node_type)),
+            Value::Object(map) => map.values().any(|v| contains_node_type(v, node_type)),
+            _ => false,
+        }
+    }
+
     #[test]
     fn test_text_to_adf() {
         let adf = text_to_adf("Hello world");
@@ -919,19 +1038,262 @@ mod tests {
     }
 
     #[test]
-    fn test_markdown_blockquote_inside_list_item_is_nested_not_paragraph_wrapped() {
-        // `- > quoted` → pulldown-cmark emits blockquote inside Item. The block
-        // must be a direct child of the listItem; wrapping in a paragraph would
-        // produce `paragraph > blockquote`, which violates paragraph's inline-only
-        // content rule at a lower level than `listItem > blockquote` does.
+    fn test_markdown_blockquote_inside_list_item_is_unwrapped_to_paragraph() {
+        // `- > quoted` → pulldown-cmark emits blockquote inside Item. The ADF
+        // `listItem` content model does NOT permit `blockquote` (only paragraph,
+        // bulletList, orderedList, codeBlock, mediaSingle — see
+        // docs/specs/adf-listitem-content-model.md, issue #470). We unwrap the
+        // blockquote and splice its child paragraph(s) directly into the listItem.
         let adf = markdown_to_adf("- > quoted text");
         let item = &adf["content"][0]["content"][0];
         assert_eq!(item["type"], "listItem");
         let first_child = &item["content"][0];
-        assert_eq!(first_child["type"], "blockquote");
-        let inner_para = &first_child["content"][0];
-        assert_eq!(inner_para["type"], "paragraph");
-        assert_eq!(inner_para["content"][0]["text"], "quoted text");
+        assert_eq!(first_child["type"], "paragraph");
+        assert_eq!(first_child["content"][0]["text"], "quoted text");
+        // No blockquote node anywhere in the document.
+        assert!(
+            !contains_node_type(&adf, "blockquote"),
+            "blockquote must not appear inside listItem: {adf}"
+        );
+    }
+
+    #[test]
+    fn test_markdown_heading_inside_list_item_becomes_paragraph() {
+        // ADF `listItem` does not permit `heading`. Convert to a paragraph,
+        // preserving inline content (issue #470).
+        let adf = markdown_to_adf("- # Heading text");
+        let item = &adf["content"][0]["content"][0];
+        assert_eq!(item["type"], "listItem");
+        let first_child = &item["content"][0];
+        assert_eq!(first_child["type"], "paragraph");
+        assert_eq!(first_child["content"][0]["text"], "Heading text");
+        assert!(
+            first_child.get("attrs").is_none(),
+            "downconverted paragraph must not carry the heading's level attr: {first_child}"
+        );
+        assert!(
+            !contains_node_type(&adf, "heading"),
+            "heading must not appear inside listItem: {adf}"
+        );
+    }
+
+    #[test]
+    fn test_markdown_heading_inside_list_item_preserves_inline_marks() {
+        // `- ### deep **bold** head` → paragraph preserving the strong mark on
+        // "bold" (inline content kept verbatim, only the heading wrapper dropped).
+        let adf = markdown_to_adf("- ### deep **bold** head");
+        let para = &adf["content"][0]["content"][0]["content"][0];
+        assert_eq!(para["type"], "paragraph");
+        let content = para["content"].as_array().unwrap();
+        let bold = content
+            .iter()
+            .find(|n| n["text"] == "bold")
+            .expect("expected a 'bold' text node");
+        assert_eq!(bold["marks"][0]["type"], "strong");
+    }
+
+    #[test]
+    fn test_markdown_blockquote_with_heading_inside_list_item_normalizes_recursively() {
+        // `- > # quoted heading` → unwrap blockquote, then the inner heading is
+        // itself downconverted to a paragraph (recursive normalization).
+        let adf = markdown_to_adf("- > # quoted heading");
+        let item = &adf["content"][0]["content"][0];
+        assert_eq!(item["type"], "listItem");
+        let first_child = &item["content"][0];
+        assert_eq!(first_child["type"], "paragraph");
+        assert_eq!(first_child["content"][0]["text"], "quoted heading");
+        assert!(
+            !contains_node_type(&adf, "blockquote") && !contains_node_type(&adf, "heading"),
+            "neither blockquote nor heading may appear inside listItem: {adf}"
+        );
+    }
+
+    #[test]
+    fn test_markdown_rule_inside_list_item_is_dropped() {
+        // ADF `listItem` does not permit `rule`. A horizontal rule inside a list
+        // item carries no content and is dropped; the paragraph is kept.
+        let adf = markdown_to_adf("- item\n\n  ---");
+        let item = &adf["content"][0]["content"][0];
+        assert_eq!(item["type"], "listItem");
+        assert_eq!(item["content"][0]["type"], "paragraph");
+        assert_eq!(item["content"][0]["content"][0]["text"], "item");
+        assert!(
+            !contains_node_type(&adf, "rule"),
+            "rule must not appear inside listItem: {adf}"
+        );
+    }
+
+    #[test]
+    fn test_markdown_table_inside_list_item_flattens_to_paragraphs() {
+        // ADF `listItem` does not permit `table`. The table is flattened to one
+        // paragraph per row (`| a | b |` form); no `table`/`tableRow` node
+        // survives. The header cell is bold to verify inline marks are preserved
+        // as real ADF marks (NOT serialized to literal `**` markdown).
+        let adf = markdown_to_adf("- intro\n\n  | **a** | b |\n  | - | - |\n  | 1 | 2 |");
+        let item = &adf["content"][0]["content"][0];
+        assert_eq!(item["type"], "listItem");
+        let children = item["content"].as_array().unwrap();
+        // Every child must be a permitted listItem block type.
+        for child in children {
+            let t = child["type"].as_str().unwrap();
+            assert!(
+                [
+                    "paragraph",
+                    "bulletList",
+                    "orderedList",
+                    "codeBlock",
+                    "mediaSingle"
+                ]
+                .contains(&t),
+                "unexpected listItem child type {t:?}: {item}"
+            );
+        }
+        assert!(
+            !contains_node_type(&adf, "table") && !contains_node_type(&adf, "tableRow"),
+            "no table node may appear inside listItem: {adf}"
+        );
+
+        // Every text node across the flattened paragraphs is newline-free, and no
+        // literal markdown mark syntax leaked (the bold cell must NOT render as
+        // `**a**` — that would mean we routed through adf_to_text).
+        let all_texts: Vec<String> = children
+            .iter()
+            .filter_map(|p| p["content"].as_array())
+            .flatten()
+            .filter_map(|n| n["text"].as_str().map(str::to_string))
+            .collect();
+        assert!(
+            all_texts.iter().all(|t| !t.contains('\n')),
+            "text nodes must be newline-free: {all_texts:?}"
+        );
+        let joined = all_texts.concat();
+        assert!(
+            !joined.contains("**"),
+            "bold cell must be a real strong mark, not literal `**`: {joined:?}"
+        );
+        // The pipe layout and both rows' cell text survive.
+        assert!(
+            joined.contains("| a "),
+            "header cell 'a' missing: {joined:?}"
+        );
+        assert!(
+            joined.contains("| 1 ") && joined.contains("| 2 "),
+            "data cells missing: {joined:?}"
+        );
+
+        // The bold header cell keeps its ADF `strong` mark.
+        let bold_a = children
+            .iter()
+            .filter_map(|p| p["content"].as_array())
+            .flatten()
+            .find(|n| n["text"] == "a")
+            .expect("expected an 'a' text node from the header cell");
+        assert_eq!(
+            bold_a["marks"][0]["type"], "strong",
+            "bold cell text must retain its strong mark: {bold_a}"
+        );
+    }
+
+    #[test]
+    fn test_flatten_table_non_paragraph_cell_block_renders_as_plain_text() {
+        // Defensive branch: the ADF tableCell schema permits non-paragraph blocks
+        // (here a codeBlock with an embedded newline) even though markdown_to_adf
+        // never produces them. flatten_table_to_paragraphs must NOT splice such a
+        // block as inline (that would be invalid `paragraph > codeBlock`); it
+        // renders to a single newline-free text node. Tests the private fn directly
+        // since the branch is unreachable through the parser.
+        let table = json!({
+            "type": "table",
+            "content": [{
+                "type": "tableRow",
+                "content": [{
+                    "type": "tableCell",
+                    "content": [{
+                        "type": "codeBlock",
+                        "content": [{ "type": "text", "text": "line1\nline2" }]
+                    }]
+                }]
+            }]
+        });
+        let paras = flatten_table_to_paragraphs(&table);
+        assert_eq!(paras.len(), 1, "one row → one paragraph: {paras:?}");
+        let content = paras[0]["content"].as_array().unwrap();
+        // No block node smuggled into the paragraph; every child is a text node.
+        for node in content {
+            assert_eq!(node["type"], "text", "paragraph child must be text: {node}");
+            assert!(
+                !node["text"].as_str().unwrap().contains(['\n', '\r']),
+                "flattened text must be newline-free: {node}"
+            );
+        }
+        let joined: String = content.iter().filter_map(|n| n["text"].as_str()).collect();
+        assert!(
+            joined.contains("line1 line2"),
+            "code text must survive: {joined:?}"
+        );
+    }
+
+    #[test]
+    fn test_markdown_rule_only_list_item_yields_empty_paragraph() {
+        // A list item whose only content is a rule: the rule is dropped, leaving
+        // the item empty, so `wrap_inlines_as_blocks` supplies a single empty
+        // paragraph to satisfy ADF's "at least one block" rule (BC-7.2.006 edge
+        // case). No `rule` node survives.
+        let adf = markdown_to_adf("-   \n\n    ---");
+        let item = &adf["content"][0]["content"][0];
+        assert_eq!(item["type"], "listItem");
+        let children = item["content"].as_array().unwrap();
+        assert_eq!(children.len(), 1, "expected exactly one child: {item}");
+        assert_eq!(children[0]["type"], "paragraph");
+        assert_eq!(
+            children[0]["content"].as_array().map(Vec::len),
+            Some(0),
+            "the fallback paragraph must be empty: {item}"
+        );
+        assert!(
+            !contains_node_type(&adf, "rule"),
+            "rule must not survive inside listItem: {adf}"
+        );
+    }
+
+    #[test]
+    fn test_markdown_codeblock_inside_list_item_passes_through() {
+        // `codeBlock` is a permitted listItem child and must pass through the
+        // normalization untouched (BC-7.2.006).
+        let adf = markdown_to_adf("- ```\n  let x = 1;\n  ```");
+        let item = &adf["content"][0]["content"][0];
+        assert_eq!(item["type"], "listItem");
+        let code = &item["content"][0];
+        assert_eq!(code["type"], "codeBlock");
+        assert!(
+            code["content"][0]["text"]
+                .as_str()
+                .is_some_and(|t| t.contains("let x = 1;")),
+            "codeBlock content must be preserved verbatim: {item}"
+        );
+    }
+
+    #[test]
+    fn test_markdown_ordered_list_inside_list_item_passes_through() {
+        // A nested `orderedList` is a permitted listItem child and passes through;
+        // its own items are normalized at their own listItem boundary.
+        let adf = markdown_to_adf("- outer\n  1. a\n  2. b");
+        let item = &adf["content"][0]["content"][0];
+        assert_eq!(item["type"], "listItem");
+        let nested = item["content"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .find(|c| c["type"] == "orderedList")
+            .expect("expected a nested orderedList child");
+        let inner_items = nested["content"].as_array().unwrap();
+        assert_eq!(
+            inner_items.len(),
+            2,
+            "nested ordered list must keep both items"
+        );
+        assert_eq!(inner_items[0]["type"], "listItem");
+        assert_eq!(inner_items[0]["content"][0]["type"], "paragraph");
     }
 
     #[test]
