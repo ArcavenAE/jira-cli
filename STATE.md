@@ -6,7 +6,7 @@ timestamp: 2026-06-08T15:30:12Z
 phase: phase-3-tdd-implementation
 project: jira-cli
 mode: BROWNFIELD
-current_step: "bulk-transition fix — PR #479 open → develop; awaiting CI+approval"
+current_step: "BULK-TRANSITION FIX MERGED → develop @ be6b57b; post-merge e2e.yml validation in progress (run 27159962721)"
 current_cycle: "cycle-001"
 dtu_required: false
 phase_2_status: APPROVED
@@ -29,8 +29,8 @@ activation_version: "v0.5.0-dev.11"
 | **Language** | Rust |
 | **Target Workspace** | develop → main |
 | **Started** | 2026-05-04 |
-| **Last Updated** | 2026-06-08 — BC-3.2.014 authored (bulk-transition wire schema fix, document-as-is); full VSDD TDD red→green; hybrid adversarial CONVERGED (3 clean + Gemini); PR #479 open → develop awaiting CI+approval. Fixes E2E red (test_e2e_issue_move_multikey_bulk, live run 27156639337). BC 590 / NFR 41 / Stories 64. |
-| **Current Phase** | Phase 3 — TDD Implementation IN PROGRESS — Feature Mode active. BULK-TRANSITION FIX (PR #479 open → develop). BC 590. NFR 41. Stories 64. |
+| **Last Updated** | 2026-06-08 — BULK-TRANSITION FIX PR #479 squash-merged → develop @ be6b57b (18:55:51Z); post-merge e2e.yml run 27159962721 in progress. Worktree .worktrees/FIX-BULK-TRANSITION removed; fix/bulk-transition-schema branch deleted (local + remote). DEFER-469: Dependabot PR #469 (gitleaks-action 2.3.9 → 3.0.0 MAJOR) intentionally held open — extended soak period before adopting on protected branches (maintainer decision 2026-06-08). BC 590 / NFR 41 / Stories 64. |
+| **Current Phase** | Phase 3 — TDD Implementation IN PROGRESS — Feature Mode active. BULK-TRANSITION FIX MERGED → develop @ be6b57b; post-merge e2e.yml validation in progress. BC 590. NFR 41. Stories 64. |
 | **Next Phase** | Phase 4: Holdout Evaluation (not started) |
 | **Activation HEAD** | 15bf305 (v0.5.0-dev.11) |
 
@@ -77,7 +77,7 @@ Goal 1c: **Harden v0.5 + feature delivery** — formalize existing codebase with
 | #470 BC-7.2.006 MERGED + CLOSED 2026-06-08 — PR #477 squash-merged → develop @ aa602a1 (15:30:11Z); issue #470 CLOSED (15:30:12Z); adf-listitem worktree + branch cleaned up. PG-A + DRIFT-README deferred (see Drift Items). | state-manager | CYCLE CLOSED + MERGED | BC 587 / NFR 41 / Stories 64 UNCHANGED. develop HEAD on origin: aa602a1. |
 | S-QUEUE-BC-1 CONVERGED 2026-06-08 — BC-X.8.008/009 authored in §X.8 (queue list/view document-as-is). Hybrid adversarial review: 10 fresh-context passes + 1 Gemini CLI; finding progression 3→2→2→2→0→0→1→0→0→0; 3 consecutive clean (passes 8/9/10). S-JSM-E2E-1 AC-001/003 re-anchored (DEC-065 traceability orphan closed). PR #478 open → develop. PG-QUEUE-1 + PG-QUEUE-2 deferred (see Drift Items). | state-manager | CONVERGED — PR #478 open | BC 589 (+2) / NFR 41 / Stories 64 (merge-pending). develop HEAD on origin: aa602a1 (unchanged; spec-only). |
 | S-QUEUE-BC-1 MERGED + CYCLE CLOSED 2026-06-08 — PR #478 squash-merged → develop @ e3a14de (2026-06-08T17:54:53Z); worktree .worktrees/S-QUEUE-BC-1 removed; local branch docs/queue-bc-x8 deleted; remote branch auto-deleted by GitHub on merge. Gemini CLI sliced re-review of PR #478 diff (4 slices: §2.2 coverage map, §5 Scenario 1, §5 Scenario 3, §8 VER-1/3) = VERDICT CLEAN, all 4 slices PASS. PG-QUEUE-1 + PG-QUEUE-2 still deferred (see Drift Items). | state-manager | CYCLE CLOSED + MERGED | BC 589 / NFR 41 / Stories 64 UNCHANGED. develop HEAD on origin: e3a14de. |
-| BULK-TRANSITION FIX — BC-3.2.014 authored (multi-key `issue move --to` bulkTransitionInputs nested wrapper; flat body → 400 live; document-as-is correctness bug fix commit acca854); full VSDD TDD red→green (test_move_multikey_bulk_transition_uses_bulktransitioninputs_wrapper); hybrid adversarial CONVERGED (Pass 1: 3 findings fixed + Gemini CLEAN; Passes 2/3/4 CLEAN + Gemini CLEAN — 3 consecutive clean). PR #479 open → develop awaiting CI+approval. REMEDIATES E2E red: test_e2e_issue_move_multikey_bulk red since develop/nightly run 27140266025 (PR #467); fix validated live run 27156639337. | state-manager | PR #479 OPEN — AWAITING CI+APPROVAL | BC 590 (+1) / NFR 41 / Stories 64. develop HEAD on origin: e3a14de (unchanged; fix on fix/bulk-transition-schema branch). |
+| BULK-TRANSITION FIX MERGED 2026-06-08 — PR #479 squash-merged → develop @ be6b57b (18:55:51Z). Worktree .worktrees/FIX-BULK-TRANSITION removed; fix/bulk-transition-schema branch deleted local + remote. Post-merge e2e.yml run 27159962721 in progress. E2E-remediation MERGED; post-merge live validation pending. BC-3.2.014 (multi-key `issue move --to` bulkTransitionInputs wrapper fix). | state-manager | CYCLE CLOSED + MERGED — E2E VALIDATION IN PROGRESS | BC 590 / NFR 41 / Stories 64. develop HEAD on origin: be6b57b. |
 
 ## Decisions Log
 
@@ -159,10 +159,11 @@ Goal 1c: **Harden v0.5 + feature delivery** — formalize existing codebase with
 | DRIFT-README | `.factory/specs/prd/README.md` Document Map is stale: grand total 573 vs canonical 587; bc-3 93 vs 106; bc-7 84 vs 85; ADF 54 vs 52; holdout 55 vs 57. Pre-existing systemic drift across ~13 cycles (since ~#384), NOT introduced by #470. Deferred to a dedicated doc-reconciliation pass; out of #470 scope. No count-bearing guard covers README.md (see PG-A). | LOW | OPEN — deferred (2026-06-08). |
 | PG-QUEUE-1 | [process-gap] A 10th unguarded count surface exists: the CANONICAL-COUNTS.md `_Historical note_` parenthetical previously embedded a live "current canonical is N" value. Caught at Pass 3 of S-QUEUE-BC-1 adversarial review; fixed + reworded to "see Sum row above" in that pass. Follow-up: extend `scripts/check-bc-cumulative-counts.sh` to grep `current canonical is (\d+)` (and similar live-value-in-prose patterns) and compare to Sum row. Defer to a self-improvement story; reason: tooling enhancement, not blocking. | LOW | DEFERRED — tooling enhancement; target: self-improvement epic. No follow-up story yet (2026-06-08). |
 | PG-QUEUE-2 | [process-gap] Pre-existing "empty table" miscitation in 3 BC-X.12 (requesttype) BCs in cross-cutting.md (lines ~806/808/837): they claim empty output "renders an empty table" but `output::print_output` prints the dimmed `No results found.` line. Out of S-QUEUE-BC-1 scope (those are requesttype BCs). Defer as a document-as-is correction follow-up; reason: pre-existing, separate BC family. | LOW | DEFERRED — pre-existing requesttype BC prose correction; target: next cross-cutting.md touch. No follow-up story (2026-06-08). |
+| DEFER-469 | Dependabot PR #469 (gitleaks-action 2.3.9 → 3.0.0, MAJOR version bump) intentionally held open for extended soak period before merge. Maintainer decision 2026-06-08: major-version GitHub Action upgrade warrants longer observation window before adopting on protected branches. No target date; revisit at maintainer discretion. | LOW | OPEN — intentional hold (2026-06-08). No follow-up story. |
 
 ## Convergence Trackers
 
-Full per-issue narratives: `cycles/cycle-001/convergence-trajectory.md`. Current: **[2026-06-08] BULK-TRANSITION FIX — BC-3.2.014 authored; TDD red→green; hybrid adversarial CONVERGED (Pass 1: 3 fixed + Gemini CLEAN; Passes 2/3/4 CLEAN + Gemini CLEAN — 3 consecutive clean). PR #479 open → develop. REMEDIATES E2E red (test_e2e_issue_move_multikey_bulk since run 27140266025). BC: 590. NFR: 41. Stories: 64.**
+Full per-issue narratives: `cycles/cycle-001/convergence-trajectory.md`. Current: **[2026-06-08] BULK-TRANSITION FIX MERGED — PR #479 squash-merged → develop @ be6b57b (18:55:51Z). BC-3.2.014 (bulkTransitionInputs wrapper). Post-merge e2e.yml run 27159962721 in progress. E2E-remediation MERGED; live validation pending. BC: 590. NFR: 41. Stories: 64.**
 
 ## Session Resume Checkpoint
 
@@ -170,11 +171,11 @@ Full per-issue narratives: `cycles/cycle-001/convergence-trajectory.md`. Current
 | Field | Value |
 |-------|-------|
 | **Date** | 2026-06-08 |
-| **Position** | **BULK-TRANSITION FIX — PR #479 OPEN → develop, awaiting CI+approval.** BC-3.2.014 authored (multi-key `issue move --to` `bulkTransitionInputs` wrapper; flat body → 400 live; document-as-is). Full VSDD: TDD red→green (regression test added); hybrid adversarial CONVERGED (Pass 1: 3 findings fixed + Gemini CLEAN; Passes 2/3/4 CLEAN + Gemini CLEAN). PR #479 (branch fix/bulk-transition-schema, commits acca854+5771995) open → develop; CI pending; awaiting code-owner approval. REMEDIATES E2E red (test_e2e_issue_move_multikey_bulk red since run 27140266025/PR #467; fix live-validated run 27156639337). .factory artifacts committed (BC-3.2.014, BC-INDEX 590, CANONICAL-COUNTS 590). |
-| **Convergence counter** | BC: 590. NFR: 41. Stories: 64. develop HEAD on origin: e3a14de (S-QUEUE-BC-1, unchanged). fix/bulk-transition-schema HEAD: 5771995. jira-e2e env: JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ. |
-| **Standing context** | JR_E2E_ENABLED=true repo var set. DEC-066 retained. DEC-065 closed. Do NOT close #429 (DEC-029). OQ-5 open. E2E-PG-4 remote-link round-back open. PG-A + DRIFT-README + PG-QUEUE-1 + PG-QUEUE-2: deferred (see Drift Items). E2E nightly is RED on test_e2e_issue_move_multikey_bulk since run 27140266025 — PENDING MERGE of PR #479. Coverage runs nightly. |
-| **Next step** | Await PR #479 CI green + code-owner approval → squash-merge → post-merge e2e.yml run to confirm E2E green. Then idle until next feature request. |
-| **Resume prompt** | `Read .factory/STATE.md. BULK-TRANSITION FIX: BC-3.2.014 authored (589→590); PR #479 open → develop (branch fix/bulk-transition-schema, commits acca854+5771995). Awaiting CI+approval. E2E nightly RED since run 27140266025/PR #467 (test_e2e_issue_move_multikey_bulk) — fix validated live run 27156639337; will clear on merge. DEC-066 retained. DEC-065 closed. PG-A + DRIFT-README + PG-QUEUE-1 + PG-QUEUE-2 deferred. jira-e2e env: JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ. Do NOT close #429. OQ-5 open. E2E-PG-4 remote-link round-back open.` |
+| **Position** | **BULK-TRANSITION FIX MERGED.** PR #479 squash-merged → develop @ be6b57b (2026-06-08T18:55:51Z). BC-3.2.014 (multi-key `issue move --to` `bulkTransitionInputs` wrapper fix). Worktree .worktrees/FIX-BULK-TRANSITION removed; fix/bulk-transition-schema branch deleted local + remote. Post-merge e2e.yml run 27159962721 in progress. DEFER-469 recorded: Dependabot PR #469 (gitleaks-action MAJOR bump) held open — extended soak period, no target date. |
+| **Convergence counter** | BC: 590. NFR: 41. Stories: 64. develop HEAD on origin: be6b57b. jira-e2e env: JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ. |
+| **Standing context** | JR_E2E_ENABLED=true repo var set. DEC-066 retained. DEC-065 closed. Do NOT close #429 (DEC-029). OQ-5 open. E2E-PG-4 remote-link round-back open. PG-A + DRIFT-README + PG-QUEUE-1 + PG-QUEUE-2 + DEFER-469: deferred (see Drift Items). E2E nightly was RED on test_e2e_issue_move_multikey_bulk — fix MERGED @ be6b57b; post-merge run 27159962721 validating. |
+| **Next step** | Await post-merge e2e.yml run 27159962721 completion to confirm E2E green. Then idle until next feature request. |
+| **Resume prompt** | `Read .factory/STATE.md. BULK-TRANSITION FIX: PR #479 squash-merged → develop @ be6b57b (2026-06-08T18:55:51Z). BC-3.2.014 (bulkTransitionInputs wrapper). Post-merge e2e.yml run 27159962721 in progress. DEFER-469: gitleaks-action MAJOR bump PR #469 held open (soak period). DEC-066 retained. DEC-065 closed. PG-A + DRIFT-README + PG-QUEUE-1 + PG-QUEUE-2 + DEFER-469 deferred. jira-e2e env: JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ. Do NOT close #429. OQ-5 open. E2E-PG-4 remote-link round-back open.` |
 
 ## Open Issues Tracker (post-#288)
 
