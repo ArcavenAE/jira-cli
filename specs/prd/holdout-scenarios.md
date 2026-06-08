@@ -432,7 +432,7 @@ Setup uses:
 **Action**: `jr issue view PROJ-1`
 **Expected**: exit 0; stdout contains the heading text and paragraph text (rendered). Mention node silently dropped (current behavior). No panic on any node type.
 **Why hidden**: ADF node rendering is a large surface; easy to panic on unexpected node types.
-**BC refs**: BC-7.2.001..BC-7.2.051
+**BC refs**: BC-7.2.001..BC-7.2.052
 
 ---
 

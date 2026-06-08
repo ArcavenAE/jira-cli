@@ -1,9 +1,9 @@
 ---
 context: bc-7
 title: "Output Rendering & Error"
-total_bcs: 84   # cumulative claim (incl. range-collapsed); definitional_count below is individually-bodied headings; +4 added 2026-05-08 (BC-7.4.013-016, Fix-PR A)
-definitional_count: 38   # count of `#### BC-` headings in this file
-last_updated: 2026-05-08
+total_bcs: 85   # cumulative claim (incl. range-collapsed); definitional_count below is individually-bodied headings; +4 added 2026-05-08 (BC-7.4.013-016, Fix-PR A); +1 added 2026-06-08 (BC-7.2.006, issue #470 listItem content-model conformance)
+definitional_count: 39   # count of `#### BC-` headings in this file
+last_updated: 2026-06-08
 source_pass: 3
 trace: |
   - L2: .factory/specs/domain-spec/bc-07-output-render.md
@@ -13,8 +13,8 @@ trace: |
 
 # BC-7 — Output Rendering & Error
 
-84 behavioral contracts across 5 subdomains: Table/JSON output (7.1), ADF rendering (7.2),
-Error display (7.3), JSON output shapes (7.4), Observability (7.5). (+4 BC-7.4.013-016 added 2026-05-08 by Fix-PR A for auth JSON shapes.)
+85 behavioral contracts across 5 subdomains: Table/JSON output (7.1), ADF rendering (7.2),
+Error display (7.3), JSON output shapes (7.4), Observability (7.5). (+4 BC-7.4.013-016 added 2026-05-08 by Fix-PR A for auth JSON shapes. +1 BC-7.2.006 added 2026-06-08 by issue #470 listItem content-model conformance.)
 
 ---
 
@@ -70,7 +70,7 @@ Error display (7.3), JSON output shapes (7.4), Observability (7.5). (+4 BC-7.4.0
 
 ---
 
-### 7.2 ADF Rendering (51 contracts)
+### 7.2 ADF Rendering (52 contracts)
 
 #### BC-7.2.001: `text_to_adf("hello")` emits `{type:"doc", version:1, content:[{type:"paragraph", content:[{type:"text", text:"hello"}]}]}`
 
@@ -116,6 +116,29 @@ Error display (7.3), JSON output shapes (7.4), Observability (7.5). (+4 BC-7.4.0
 **Source**: `tests/issue_commands.rs:647-687`
 **Behavior**: Wire-level pin; markdown fully converted before HTTP.
 **Trace**: Pass 3 BC-1056 (R4)
+
+---
+
+#### BC-7.2.006: `markdown_to_adf` produces only permitted child node types inside any `listItem` — `blockquote`, `heading`, `table`, and `rule` are normalized before output
+
+**Confidence**: HIGH
+**Source**: `src/adf.rs::normalize_list_item_content`; `src/adf.rs::flatten_table_to_paragraphs`; listItem unit tests in `src/adf.rs::tests`; `docs/specs/adf-listitem-content-model.md`
+**Subject**: Output rendering
+**Behavior**: The ADF `listItem` content model permits exactly five child node types: `paragraph`, `bulletList`, `orderedList`, `codeBlock`, `mediaSingle`. `markdown_to_adf` calls `normalize_list_item_content` on every `listItem` before `wrap_inlines_as_blocks`, applying four normalizations:
+1. **`blockquote`** — unwrapped recursively; child block nodes are spliced inline in place of the `blockquote` node.
+2. **`heading`** — converted to `paragraph`; inline content and marks are preserved exactly; the `level` attribute is dropped.
+3. **`table`** — flattened by `flatten_table_to_paragraphs` to one `paragraph` per `tableRow` in `| a | b |` form; cell inline marks are preserved as real ADF marks (NOT via a lossy `adf_to_text` round-trip).
+4. **`rule` (horizontal rule)** — dropped entirely; no replacement node emitted.
+
+After normalization, no `listItem` in the output document contains any node type outside the five permitted types. This invariant holds recursively — nested lists whose items receive disallowed node types from nested markdown are also normalized.
+
+**Edge cases**:
+- A `blockquote` nested inside another `blockquote` inside a `listItem` is unwrapped recursively until all blockquote wrappers are removed.
+- A `table` inside a `listItem` that contains cells with bold, italic, code, or link marks: cell paragraph nodes carry those marks as first-class ADF marks, not plain text with markdown syntax characters.
+- A `rule` that is the only child of a `listItem`: after dropping the rule the `listItem` has no children; `wrap_inlines_as_blocks` subsequently wraps it in an empty `paragraph` to keep the list item structurally valid.
+- A `listItem` containing only permitted node types (the common case): `normalize_list_item_content` is a no-op; output is byte-for-byte identical to pre-normalization behavior.
+
+**Trace**: `src/adf.rs::normalize_list_item_content`; `src/adf.rs::flatten_table_to_paragraphs`; `src/adf.rs::tests` (listItem normalization unit tests); `docs/specs/adf-listitem-content-model.md`; issue #470 / PR #477
 
 ---
 

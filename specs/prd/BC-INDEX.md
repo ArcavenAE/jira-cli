@@ -1,8 +1,8 @@
 ---
 context: bc-index
 title: "BC Master Index"
-total_bcs: 586  # cumulative claim (incl. range-collapsed) — see preamble below; +4 added 2026-05-08 (BC-7.4.013-016, Fix-PR A); +1 added 2026-05-13 (BC-2.6.050, issue #350); +1 added 2026-05-14 (BC-2.6.051, issue #365); +1 added 2026-05-15 (BC-3.4.009, issue #340 F2); +18 added 2026-05-18 (BC-3.8.001..010 + BC-X.12.001..008, issue #288 F2+F1d); +3 added 2026-05-19 (BC-3.8.011..013, issue #288 F1d + issue #383 F2); +4 added 2026-05-19 (BC-3.8.014..015 + BC-X.8.006..007, issue #384 F2); +2 added 2026-05-20 (BC-3.8.016..017, issue #385 F2); +2 added 2026-05-20 (BC-3.4.010..011, issue #388 F2); +3 added 2026-05-21 (BC-3.4.012..014, issue #398 F2); +3 added 2026-05-22 (BC-3.4.015..017, issue #396 F2); +2 added 2026-06-01 (BC-3.4.018..019, issue #331 F2); +1 added 2026-06-03 (BC-3.2.013, jsm-resolution-required F2); BC-1.3.023, BC-3.3.001, BC-X.8.004, BC-3.8.009, BC-X.3.002, BC-3.8.002, BC-3.8.010, BC-3.8.011, BC-3.4.003 modified
-last_updated: 2026-06-03
+total_bcs: 587  # cumulative claim (incl. range-collapsed) — see preamble below; +4 added 2026-05-08 (BC-7.4.013-016, Fix-PR A); +1 added 2026-05-13 (BC-2.6.050, issue #350); +1 added 2026-05-14 (BC-2.6.051, issue #365); +1 added 2026-05-15 (BC-3.4.009, issue #340 F2); +18 added 2026-05-18 (BC-3.8.001..010 + BC-X.12.001..008, issue #288 F2+F1d); +3 added 2026-05-19 (BC-3.8.011..013, issue #288 F1d + issue #383 F2); +4 added 2026-05-19 (BC-3.8.014..015 + BC-X.8.006..007, issue #384 F2); +2 added 2026-05-20 (BC-3.8.016..017, issue #385 F2); +2 added 2026-05-20 (BC-3.4.010..011, issue #388 F2); +3 added 2026-05-21 (BC-3.4.012..014, issue #398 F2); +3 added 2026-05-22 (BC-3.4.015..017, issue #396 F2); +2 added 2026-06-01 (BC-3.4.018..019, issue #331 F2); +1 added 2026-06-03 (BC-3.2.013, jsm-resolution-required F2); +1 added 2026-06-08 (BC-7.2.006, issue #470 listItem content-model conformance); BC-1.3.023, BC-3.3.001, BC-X.8.004, BC-3.8.009, BC-X.3.002, BC-3.8.002, BC-3.8.010, BC-3.8.011, BC-3.4.003 modified
+last_updated: 2026-06-08
 source_pass: 3
 sections:
   - bc-1-auth-identity.md (57 BCs cumulative; 46 individually-bodied)
@@ -11,7 +11,7 @@ sections:
   - bc-4-assets-cmdb.md (32 BCs cumulative; 22 individually-bodied)
   - bc-5-boards-sprints.md (35 BCs cumulative; 17 individually-bodied)
   - bc-6-config-cache.md (39 BCs cumulative; 29 individually-bodied)
-  - bc-7-output-render.md (84 BCs cumulative; 38 individually-bodied)
+  - bc-7-output-render.md (85 BCs cumulative; 39 individually-bodied)
   - cross-cutting.md (140 BCs cumulative; 74 individually-bodied)
   - nfr-catalog.md (41 NFR items, not counted in BC total; NFR-O-K merged into NFR-S-D per ADV-P7-002)
 ---
@@ -468,7 +468,7 @@ R1/R4 prefix = deepening round that introduced it.
 
 ---
 
-## Section 7: Output Rendering (bc-7-output-render.md) — 84 BCs cumulative; 38 individually-bodied
+## Section 7: Output Rendering (bc-7-output-render.md) — 85 BCs cumulative; 39 individually-bodied
 
 ### 7.1 Table / JSON Output (5 BCs: BC-7.1.001..005)
 
@@ -480,7 +480,7 @@ R1/R4 prefix = deepening round that introduced it.
 | BC-7.1.004 | Truncation hint emitted to stderr (NOT stdout); `--all` suppresses hint | BC-1110, BC-1111 | tests/sprint_commands.rs:97-100, 175-179 | HIGH |
 | BC-7.1.005 | `--output json` error shape: `{"error": "<message>", "code": <exit>}` to stderr | BC-1208 | src/main.rs:34-49 | MEDIUM |
 
-### 7.2 ADF Rendering (5 individually-bodied BCs: BC-7.2.001..005; 51 BCs cumulative including range-collapsed)
+### 7.2 ADF Rendering (6 individually-bodied BCs: BC-7.2.001..006; 52 BCs cumulative including range-collapsed)
 
 | L3 BC ID | Summary | Pass 3 BC ID | Source | Confidence |
 |---|---|---|---|---|
@@ -489,7 +489,8 @@ R1/R4 prefix = deepening round that introduced it.
 | BC-7.2.003 | ADF markdown round-trip covers: headings, lists, code blocks, blockquotes, tables, links | BC-1117 (R4) | src/snapshots/ | HIGH |
 | BC-7.2.004 | ADF→text rendering: table render, code, headings preserved; lossy nodes silently dropped | BC-1106; BC-1116 (R4) | src/adf.rs::tests | HIGH |
 | BC-7.2.005 | `markdown_to_adf("**bold text**")` body on wire: `marks: [{type: "strong"}]`; `text` is `"bold text"` NOT `"**bold text**"` | BC-1056 (R4) | tests/issue_commands.rs:647-687 | HIGH |
-| BC-7.2.006..051 | Additional ADF contracts (range-collapsed from bc-7 body) [range-collapsed; not individually-bodied] | BC-1106..1117 | src/adf.rs::tests (69 tests) | HIGH |
+| BC-7.2.006 | `markdown_to_adf` normalizes listItem children: blockquote→unwrap, heading→paragraph, table→paragraphs, rule→drop (ADF listItem content-model conformance) | issue #470 / PR #477 | src/adf.rs::normalize_list_item_content; src/adf.rs::flatten_table_to_paragraphs; src/adf.rs::tests | HIGH |
+| BC-7.2.007..052 | Additional ADF contracts (range-collapsed from bc-7 body) [range-collapsed; not individually-bodied] | BC-1106..1117 | src/adf.rs::tests | HIGH |
 
 ### 7.3 Error Display (9 BCs: BC-7.3.001..009)
 
@@ -696,13 +697,13 @@ R1/R4 prefix = deepening round that introduced it.
 | 4: Assets & CMDB | 32 | 22 |
 | 5: Boards & Sprints | 35 | 17 |
 | 6: Config & Cache | 39 | 29 |
-| 7: Output Rendering | 84 | 38 |
+| 7: Output Rendering | 85 | 39 |
 | X: Cross-Cutting | 140 | 74 |
-| **Total** | **586** | **354** |
+| **Total** | **587** | **355** |
 
-**Note**: BC-X.4.009 (ADV-P1-029) is included in cross-cutting's `total_bcs` and in the sum above. Canonical total is **586** (+4 BC-7.4.013-016 added 2026-05-08 via Fix-PR A; +1 BC-2.6.050 added 2026-05-13 via issue #350; +1 BC-2.6.051 added 2026-05-14 via issue #365; +1 BC-3.4.009 added 2026-05-15 via issue #340 F2; +18 BC-3.8.001..010 + BC-X.12.001..008 added 2026-05-18 via issue #288 F2+F1d; +3 BC-3.8.011..013 added 2026-05-19 via issue #288 F1d + issue #383 F2; +4 BC-3.8.014..015 + BC-X.8.006..007 added 2026-05-19 via issue #384 F2; +2 BC-3.8.016..017 added 2026-05-20 via issue #385 F2; +2 BC-3.4.010..011 added 2026-05-20 via issue #388 F2; +3 BC-3.4.012..014 added 2026-05-21 via issue #398 F2; +3 BC-3.4.015..017 added 2026-05-22 via issue #396 F2; +2 BC-3.4.018..019 added 2026-06-01 via issue #331 F2; +1 BC-3.2.013 added 2026-06-03 via jsm-resolution-required F2).
+**Note**: BC-X.4.009 (ADV-P1-029) is included in cross-cutting's `total_bcs` and in the sum above. Canonical total is **587** (+4 BC-7.4.013-016 added 2026-05-08 via Fix-PR A; +1 BC-2.6.050 added 2026-05-13 via issue #350; +1 BC-2.6.051 added 2026-05-14 via issue #365; +1 BC-3.4.009 added 2026-05-15 via issue #340 F2; +18 BC-3.8.001..010 + BC-X.12.001..008 added 2026-05-18 via issue #288 F2+F1d; +3 BC-3.8.011..013 added 2026-05-19 via issue #288 F1d + issue #383 F2; +4 BC-3.8.014..015 + BC-X.8.006..007 added 2026-05-19 via issue #384 F2; +2 BC-3.8.016..017 added 2026-05-20 via issue #385 F2; +2 BC-3.4.010..011 added 2026-05-20 via issue #388 F2; +3 BC-3.4.012..014 added 2026-05-21 via issue #398 F2; +3 BC-3.4.015..017 added 2026-05-22 via issue #396 F2; +2 BC-3.4.018..019 added 2026-06-01 via issue #331 F2; +1 BC-3.2.013 added 2026-06-03 via jsm-resolution-required F2; +1 BC-7.2.006 added 2026-06-08 via issue #470 listItem content-model conformance).
 
-Cumulative total (586) ≠ individually-bodied count (354). The difference (232) comprises range-collapsed BCs that exist in the cumulative claim but are not individually headlined in body files. This is by design — range-collapsed BCs trace to Pass 3 source material but were not individually expanded. The 4 MUST-FIX BCs are included in the individually-bodied count.
+Cumulative total (587) ≠ individually-bodied count (355). The difference (232) comprises range-collapsed BCs that exist in the cumulative claim but are not individually headlined in body files. This is by design — range-collapsed BCs trace to Pass 3 source material but were not individually expanded. The 4 MUST-FIX BCs are included in the individually-bodied count.
 
 **Process gap [process-gap]**: `scripts/check-bc-cumulative-counts.sh` currently guards 8 surfaces (per-file frontmatter, BC-INDEX headers, BC-INDEX section lines, CANONICAL-COUNTS per-file table, body preamble prose, BC-INDEX frontmatter total_bcs, CANONICAL-COUNTS Sum row, grand-total prose). The BC-INDEX Coverage Statistics body table (this section) is a 9th surface with no automated guard. Manual update required whenever BC counts change. Tracked for future script extension.
 

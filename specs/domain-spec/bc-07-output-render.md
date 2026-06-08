@@ -6,13 +6,13 @@ traces_to: "README.md"
 source_passes: "Pass 2 broad §2a.2 Errors + §2a.3 Value objects + R1 §3.6 T-09 ADF + Pass 8 §2.2 BC#13,14"
 entity_count: 16
 invariant_count: 18
-bc_count: 80
+bc_count: 85
 risk_level: HIGH
 ---
 
 # BC-07: Output Rendering & Error Handling
 
-Covers all output formatting (table and JSON), ADF rendering, the `JrError` type, and the runtime concerns of `main.rs`. The ADF renderer alone is 1,826 LOC and accounts for 51 BCs in the pass-3 contract index.
+Covers all output formatting (table and JSON), ADF rendering, the `JrError` type, and the runtime concerns of `main.rs`. The ADF renderer alone is 1,826 LOC and accounts for 52 BCs in the pass-3 contract index (51 original + BC-7.2.006 added 2026-06-08 via issue #470).
 
 ---
 
@@ -109,7 +109,7 @@ Covers all output formatting (table and JSON), ADF rendering, the `JrError` type
 | INV-OUT-008 | `Retry-After` integer-only parser. HTTP-date format (RFC 7231 §7.1.3) silently falls back to `DEFAULT_RETRY_SECS`. NFR-R-NEW-1 (LOW). | `api/rate_limit.rs` |
 | INV-OUT-009 | ADF mention/emoji/inlineCard/media nodes silently dropped in `adf_to_text`. Documented in source as "per #202 spec". NFR-O-A (MEDIUM). | `adf.rs:531-540` |
 | INV-OUT-010 | ADF `orderedList` `attrs.order` falsy values default to 1 (treated as first-order list). | `adf.rs:407-416`, NEW-INV-15 |
-| INV-OUT-011 | ADF `listItem` wraps children to satisfy ADF schema. Widened allowlist — spec + extra children tolerated. | `adf.rs:163-188`, NEW-INV-16 |
+| INV-OUT-011 | ADF `listItem` children are normalized to the 5-type ADF allowlist (`paragraph`, `bulletList`, `orderedList`, `codeBlock`, `mediaSingle`). Disallowed blocks (`blockquote`, `heading`, `table`, `rule`) are transformed before output — not tolerated: `blockquote` is unwrapped recursively, `heading` is converted to `paragraph` (marks preserved, `level` dropped), `table` is flattened to one `paragraph` per row (cell marks preserved as real ADF marks), `rule` is dropped. Enforced by `src/adf.rs::normalize_list_item_content` (+ helper `src/adf.rs::flatten_table_to_paragraphs`). | BC-7.2.006; `src/adf.rs::normalize_list_item_content` |
 | INV-OUT-012 | ADF `tableCell` content always wrapped in a block. | `adf.rs:201-211`, NEW-INV-17 |
 | INV-OUT-013 | ADF roundtrip (text→ADF→text or markdown→ADF→text) is lossy in both directions. No round-trip fidelity guarantee. | NEW-INV-14 |
 | INV-OUT-014 | `extract_error_message` 7-level precedence: (1) empty body literal; (2) non-UTF-8 lossy; (3) `errorMessages[]`; (4) `errors{field:msg}`; (5) top-level `message`; (6) `errorMessage` (singular, JSM); (7) raw body text. | `api/client.rs`, Pass 1 §3 |
@@ -124,7 +124,7 @@ Covers all output formatting (table and JSON), ADF rendering, the `JrError` type
 
 - **`JrError`** is the single error type aggregating all domain errors. Exit codes are the public contract (`exit_code()` method).
 - **`JiraClient`** is the single HTTP-layer aggregate. The L3 bifurcation (validated vs raw) is an internal design choice, not a public boundary.
-- **ADF renderer** (`adf.rs`) is a self-contained subdomain (1,826 LOC, 51 BCs). No external dependencies beyond `pulldown-cmark` and `serde_json`.
+- **ADF renderer** (`adf.rs`) is a self-contained subdomain (1,826 LOC, 52 BCs). No external dependencies beyond `pulldown-cmark` and `serde_json`.
 
 ---
 
