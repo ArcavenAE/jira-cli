@@ -2990,4 +2990,51 @@ _Reference: PR #465 → develop @ 8ec9527. Kill rate: 64% → 100% after pure-he
 [codified] — applies to all future Feature Mode F5→F6 transitions.
 
 _Discovered: S-JSM-RESOLUTION-REQUIRED F6 formal hardening, 2026-06-03._
-_Reference: PR #465 → develop @ 8ec9527. F5 Pass G analytical claim "all gate mutants killed" REFUTED by F6 empirical run (64%)._
+
+---
+
+## PG-A: check-bc-cumulative-counts.sh does not cover README.md Document Map or embedded "current canonical" prose (2026-06-08)
+
+**Tags:** [process-gap, count-guard-scope]
+
+**Context:** During the #470 (BC-7.2.006) adversarial convergence cycle, two adversary findings flagged stale counts not covered by the cumulative-counts guard:
+- F-1 / M-3: `.factory/specs/prd/README.md` Document Map showed a stale grand total (573 vs canonical 587) and stale per-file counts.
+- OBS-1: Archived historical notes embedded present-tense "current canonical is N" prose (N=583) that was never updated.
+
+Both survived `check-bc-cumulative-counts.sh` (8-surface guard) and `check-spec-counts.sh` because neither script reads README.md or scans for `current canonical is \d+` patterns.
+
+**Process gap:** The guard covers 8 specific count-bearing surfaces but does NOT cover:
+1. `.factory/specs/prd/README.md` "Total BCs in PRD" / "Document Map" lines.
+2. Any `current canonical is \d+` prose embedded in historical notes or supplementary docs.
+
+**Follow-up:** Extend `check-bc-cumulative-counts.sh` to assert README.md grand total matches `CANONICAL-COUNTS.md` Sum row, AND grep for any `current canonical is \d+` pattern across the specs tree asserting it equals the canonical total. Alternatively, schedule a dedicated doc-reconciliation pass. Deferred to self-improvement epic; justified as out-of-scope for #470 (doc-mechanics gap, zero runtime impact, no false-green CI risk).
+
+**Tracked as:** PG-A in STATE.md Drift Items.
+
+### Status
+
+[deferred] — deferred to self-improvement epic or doc-reconciliation pass. No follow-up story created (doc-mechanics, zero runtime impact). See Drift Items PG-A.
+
+_Discovered: #470 BC-7.2.006 adversarial convergence (findings F-1/M-3/OBS-1), 2026-06-08._
+
+---
+
+## DRIFT-README: specs/prd/README.md Document Map is systemically stale (2026-06-08)
+
+**Tags:** [drift, doc-reconciliation, deferred]
+
+**Context:** `.factory/specs/prd/README.md` Document Map contains a stale grand total (573 vs canonical 587) and multiple stale per-file counts: bc-3 shows 93 vs canonical 106; bc-7 shows 84 vs 85; ADF shows 54 vs 52; holdout shows 55 vs 57. This was surfaced as OBS-1 during the #470 adversarial cycle.
+
+**Root cause:** README.md is not covered by any count-bearing guard (see PG-A). The drift accumulated over approximately 13 cycles since around issue #384 — it is pre-existing and was NOT introduced by #470.
+
+**Deferral reason:** Correcting the README Document Map is out of scope for #470 (a BC-spec-only cycle). The drift is in advisory documentation only (no runtime, no test, no CI impact). A side-effect fix would conflate a multi-cycle doc-reconciliation effort with a focused spec addition.
+
+**Follow-up:** Schedule a dedicated doc-reconciliation pass to update README.md Document Map to match canonical counts, AND extend PG-A's guard to prevent future drift.
+
+**Tracked as:** DRIFT-README in STATE.md Drift Items.
+
+### Status
+
+[deferred] — deferred to dedicated doc-reconciliation pass. See Drift Items DRIFT-README and PG-A.
+
+_Discovered: #470 BC-7.2.006 adversarial cycle (OBS-1), 2026-06-08._
