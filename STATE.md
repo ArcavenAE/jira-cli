@@ -2,7 +2,7 @@
 document_type: pipeline-state
 version: "2.0"
 status: active
-timestamp: 2026-06-08T15:30:12Z
+timestamp: 2026-06-09T17:41:21Z
 phase: phase-3-tdd-implementation
 project: jira-cli
 mode: BROWNFIELD
@@ -29,8 +29,8 @@ activation_version: "v0.5.0-dev.11"
 | **Language** | Rust |
 | **Target Workspace** | develop → main |
 | **Started** | 2026-05-04 |
-| **Last Updated** | 2026-06-09 — #474 ADF minor constructs CYCLE CLOSED + MERGED. PR #486 squash-merged → develop @ 56226b4 (17:41:21Z); issue #474 CLOSED; feat/adf-minor-constructs-474 deleted. 105 adf::tests (13 new) green. BC 592. NFR 41. Stories 64. 3 F5 process-gap lessons [deferred] with justified dispositions in lessons.md. |
-| **Current Phase** | Phase 3 — TDD Implementation IN PROGRESS — Feature Mode active. #474 CYCLE CLOSED + MERGED. develop HEAD: 56226b4. BC 592. NFR 41. Stories 64. Ready for next feature cycle. |
+| **Last Updated** | 2026-06-09 — #474 ADF minor constructs CYCLE CLOSED + MERGED. PR #486 squash-merged → develop @ 56226b4 (17:41:21Z); issue #474 CLOSED; feat/adf-minor-constructs-474 deleted. 105 adf::tests (13 new) green. BC 592. NFR 41. Stories 65. 3 F5 process-gap lessons [deferred] with justified dispositions in lessons.md. |
+| **Current Phase** | Phase 3 — TDD Implementation IN PROGRESS — Feature Mode active. #474 CYCLE CLOSED + MERGED. develop HEAD: 56226b4. BC 592. NFR 41. Stories 65. Ready for next feature cycle. |
 | **Next Phase** | Phase 4: Holdout Evaluation (not started) |
 | **Activation HEAD** | 15bf305 (v0.5.0-dev.11) |
 
@@ -75,8 +75,8 @@ Goal 1c: **Harden v0.5 + feature delivery** — formalize existing codebase with
 
 | Step | Agent | Status | Output |
 |------|-------|--------|--------|
-| #474 ADF minor constructs F5–F7 2026-06-09 — F5 HYBRID (8 Claude + Gemini cross-model, 3 CLEAN P6/P7/P8); Gemini CRITICAL REFUTED; BC 592 (+2). F6: 100% mutation kill, 796+ green. F7: consistency-validator 5/5 PASS. PR #486 opened on feat/adf-minor-constructs-474 → develop. | state-manager | F7 CONVERGED — PR #486 OPEN | BC 592 / NFR 41 / Stories 64. |
-| #474 ADF minor constructs CYCLE CLOSED + MERGED 2026-06-09 — PR #486 squash-merged → develop @ 56226b4 (17:41:21Z). Issue #474 CLOSED. feat/adf-minor-constructs-474 deleted (local + remote auto-deleted on merge). 105 adf::tests (13 new) green on develop. 3 F5 process-gap lessons [deferred] with justified dispositions in lessons.md (VP-anchor guidance, subsection-count guard gap, `agy` tooling). | state-manager | CYCLE CLOSED + MERGED | BC 592 / NFR 41 / Stories 64. develop HEAD on origin: 56226b4. |
+| #474 ADF minor constructs F5–F7 2026-06-09 — F5 HYBRID (8 Claude + Gemini cross-model, 3 CLEAN P6/P7/P8); Gemini CRITICAL REFUTED; BC 592 (+2). F6: 100% mutation kill, 796+ green. F7: consistency-validator 5/5 PASS. PR #486 opened on feat/adf-minor-constructs-474 → develop. | state-manager | F7 CONVERGED — PR #486 OPEN | BC 592 / NFR 41 / Stories 65. |
+| #474 ADF minor constructs CYCLE CLOSED + MERGED 2026-06-09 — PR #486 squash-merged → develop @ 56226b4 (17:41:21Z). Issue #474 CLOSED. feat/adf-minor-constructs-474 deleted (local + remote auto-deleted on merge). 105 adf::tests (13 new) green on develop. 3 F5 process-gap lessons [deferred] with justified dispositions in lessons.md (VP-anchor guidance, subsection-count guard gap, `agy` tooling). | state-manager | CYCLE CLOSED + MERGED | BC 592 / NFR 41 / Stories 65. develop HEAD on origin: 56226b4. |
 
 ## Decisions Log
 
@@ -162,7 +162,7 @@ Goal 1c: **Harden v0.5 + feature delivery** — formalize existing codebase with
 
 ## Convergence Trackers
 
-Full per-issue narratives: `cycles/cycle-001/convergence-trajectory.md`. Current: **[2026-06-09] #474 ADF minor constructs CYCLE CLOSED + MERGED — PR #486 squash-merged → develop @ 56226b4 (17:41:21Z); issue #474 CLOSED. F5 HYBRID (8 Claude + Gemini, 3 CLEAN); F6 100% mutation kill; F7 5/5. develop HEAD: 56226b4. BC: 592. NFR: 41. Stories: 64. Ready for next feature cycle.**
+Full per-issue narratives: `cycles/cycle-001/convergence-trajectory.md`. Current: **[2026-06-09] #474 ADF minor constructs CYCLE CLOSED + MERGED — PR #486 squash-merged → develop @ 56226b4 (17:41:21Z); issue #474 CLOSED. F5 HYBRID (8 Claude + Gemini, 3 CLEAN); F6 100% mutation kill; F7 5/5. develop HEAD: 56226b4. BC: 592. NFR: 41. Stories: 65. Ready for next feature cycle.**
 
 ## Session Resume Checkpoint
 
@@ -171,10 +171,10 @@ Full per-issue narratives: `cycles/cycle-001/convergence-trajectory.md`. Current
 |-------|-------|
 | **Date** | 2026-06-09 |
 | **Position** | **#474 ADF minor constructs CYCLE CLOSED + MERGED.** PR #486 squash-merged → develop @ 56226b4 (2026-06-09T17:41:21Z). Issue #474 CLOSED. feat/adf-minor-constructs-474 deleted (local + remote). subsup + heading-attr (BC-7.2.007/008). 105 adf::tests (13 new) green on develop. BC 592. F-cycle SUB-CYCLE COMPLETE. Ready for next feature cycle. |
-| **Convergence counter** | BC: 592. NFR: 41. Stories: 64. develop HEAD on origin: 56226b4. jira-e2e env: JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ. No active worktrees. |
+| **Convergence counter** | BC: 592. NFR: 41. Stories: 65. develop HEAD on origin: 56226b4. jira-e2e env: JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ. No active worktrees. |
 | **Standing context** | JR_E2E_ENABLED=true repo var set. DEC-066 retained. DEC-065 closed. Do NOT close #429 (DEC-029). OQ-5 open. E2E-PG-4 remote-link round-back open. PG-A + DRIFT-README + PG-QUEUE-1 + PG-QUEUE-2 + DEFER-469 deferred. 3 #474 F5 process-gap lessons [process-gap, deferred] with justified dispositions in lessons.md (VP-anchor, subsection-count guard, `agy` tooling). |
 | **Next step** | Dispatch next feature cycle from develop @ 56226b4. |
-| **Resume prompt** | `Read .factory/STATE.md. #474 ADF minor constructs CYCLE CLOSED + MERGED: PR #486 → develop @ 56226b4 (2026-06-09T17:41:21Z); issue #474 CLOSED; feat/adf-minor-constructs-474 deleted. BC: 592. NFR: 41. Stories: 64. develop HEAD: 56226b4. DEC-066 retained. Do NOT close #429 (DEC-029). OQ-5 open. E2E-PG-4 remote-link round-back open. PG-A + DRIFT-README + PG-QUEUE-1 + PG-QUEUE-2 + DEFER-469 deferred. 3 #474 F5 process-gaps [deferred] in lessons.md. jira-e2e: JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ. Ready: next feature cycle.` |
+| **Resume prompt** | `Read .factory/STATE.md. #474 ADF minor constructs CYCLE CLOSED + MERGED: PR #486 → develop @ 56226b4 (2026-06-09T17:41:21Z); issue #474 CLOSED; feat/adf-minor-constructs-474 deleted. BC: 592. NFR: 41. Stories: 65. develop HEAD: 56226b4. DEC-066 retained. Do NOT close #429 (DEC-029). OQ-5 open. E2E-PG-4 remote-link round-back open. PG-A + DRIFT-README + PG-QUEUE-1 + PG-QUEUE-2 + DEFER-469 deferred. 3 #474 F5 process-gaps [deferred] in lessons.md. jira-e2e: JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ. Ready: next feature cycle.` |
 
 ## Open Issues Tracker (post-#288)
 
