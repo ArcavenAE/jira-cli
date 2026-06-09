@@ -17,6 +17,21 @@ Superseded checkpoints are archived here when STATE.md is updated with a newer o
 
 ---
 
+## Checkpoint archived 2026-06-09 (#474 F6+F7 ALL COMPLETE — PR #486 OPEN awaiting CI + code-owner)
+
+_Was the active checkpoint after #474 ADF minor constructs F6+F7 completed and PR #486 was opened on feat/adf-minor-constructs-474 → base develop. Superseded when PR #486 was squash-merged → develop @ 56226b4 and issue #474 was CLOSED._
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-06-09 |
+| **Position** | **#474 ADF minor constructs F1–F7 ALL COMPLETE.** subsup (^x^/~x~→ADF subsup) + heading-attr stripping (BC-7.2.007/008). F5 HYBRID: 8 Claude + Gemini cross-model, 3 CLEAN (P6/P7/P8); Gemini CRITICAL mark-leak REFUTED. F6: mutation 100% effective kill, 796+ green, deny clean. F7: consistency-validator 5/5 PASS. Code delivery: PR #486 (https://github.com/Zious11/jira-cli/pull/486), commit 1270677 on feat/adf-minor-constructs-474 → base develop. Status: PR OPEN, awaiting CI + code-owner approval. |
+| **Convergence counter** | BC: 592. NFR: 41. Stories: 64. develop HEAD on origin: be6b57b (unchanged — #474 code on feat branch). Branch: feat/adf-minor-constructs-474. jira-e2e env: JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ. |
+| **Standing context** | JR_E2E_ENABLED=true repo var set. DEC-066 retained. DEC-065 closed. Do NOT close #429 (DEC-029). OQ-5 open. E2E-PG-4 remote-link round-back open. PG-A + DRIFT-README + PG-QUEUE-1 + PG-QUEUE-2 + DEFER-469 + 3 #474 process-gap lessons deferred (all with justified dispositions in lessons.md). DEFER-469: gitleaks-action MAJOR bump PR #469 held. Non-blocking #474 follow-ups in lessons.md: (a) doc-only #[mutants::skip]+justification on markdown_to_adf if adf.rs ever enters examine_globs; (b) optional proptest round-trip for subsup. |
+| **Next step** | On CI green + code-owner approval: squash-merge PR #486 → develop, close issue #474, clean up feat/adf-minor-constructs-474 worktree/branch. Then dispatch next feature cycle. |
+| **Resume prompt** | `Read .factory/STATE.md. #474 ADF minor constructs: F1–F7 ALL COMPLETE. PR #486 OPEN on feat/adf-minor-constructs-474 → base develop (commit 1270677). Awaiting CI + code-owner approval. BC: 592 (BC-7.2.007/008). NFR: 41. Stories: 64. develop HEAD on origin: be6b57b. DEC-066 retained. Do NOT close #429 (DEC-029). OQ-5 open. E2E-PG-4 remote-link round-back open. PG-A + DRIFT-README + PG-QUEUE-1 + PG-QUEUE-2 + DEFER-469 deferred. jira-e2e: JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ. On merge: squash-merge → develop, close #474, clean worktree/branch.` |
+
+---
+
 ## Checkpoint archived 2026-06-09 (#474 F5 CONVERGED; awaiting F6 targeted hardening)
 
 _Was the active checkpoint after #474 ADF minor constructs F5 CONVERGED (HYBRID: 8 Claude + Gemini cross-model, 3 CLEAN passes P6/P7/P8; Gemini CRITICAL mark-leak REFUTED). BC corpus: 592 (+2: BC-7.2.007/008). Superseded when F6+F7 completed and PR #486 was opened._

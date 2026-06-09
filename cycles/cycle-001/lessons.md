@@ -3066,6 +3066,11 @@ anchors are MEDIUM adversarial findings."
 **Tracked as:** First-occurrence lesson; no follow-up story (template-doc gap, zero runtime
 impact). Monitor for recurrence.
 
+### Status
+
+[process-gap, deferred] — deferred; justified (template-doc gap, zero runtime impact, zero CI risk).
+Disposition: add story-template guidance note in the next story-writer template touch. No follow-up story.
+
 _Discovered: #474 BC-7.2.007/008 adversarial convergence — Pass 2 MEDIUM finding, 2026-06-09._
 
 ---
@@ -3095,6 +3100,11 @@ of BCs in that subsection. This closes the gap that allowed the §7.2=52→54 dr
 
 **Tracked as:** First-occurrence lesson; deferred to self-improvement epic (tooling enhancement,
 zero runtime impact). No follow-up story created.
+
+### Status
+
+[process-gap, deferred] — deferred to self-improvement epic; justified (tooling enhancement, zero runtime impact, zero CI risk).
+Disposition: extend `check-bc-cumulative-counts.sh` to validate per-subsection range rows in a future maintenance sweep.
 
 _Discovered: #474 BC-7.2.007/008 adversarial convergence — Pass 3 blocker (count-drift slipped P1–P4), 2026-06-09._
 
@@ -3129,5 +3139,10 @@ before fixing.
 
 **Tracked as:** First-occurrence lesson for `agy` tooling; no follow-up story (tooling
 operational note). Update adversarial-review dispatch instructions if pattern recurs.
+
+### Status
+
+[process-gap, deferred] — deferred; justified (engine/tooling operational note, zero runtime impact).
+Disposition: update adversarial-review SKILL.md dispatch instructions on next recurrence of `agy` cross-model usage.
 
 _Discovered: #474 BC-7.2.007/008 cross-model Gemini pass (Gemini Finding 1 CRITICAL = REFUTED), 2026-06-09._
