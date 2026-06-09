@@ -1,9 +1,9 @@
 ---
 context: bc-7
 title: "Output Rendering & Error"
-total_bcs: 87   # cumulative claim (incl. range-collapsed); definitional_count below is individually-bodied headings; +4 added 2026-05-08 (BC-7.4.013-016, Fix-PR A); +1 added 2026-06-08 (BC-7.2.006, issue #470 listItem content-model conformance); +2 added 2026-06-08 (BC-7.2.007..008, issue #474 markdown subsup + heading-attr)
-definitional_count: 41   # count of `#### BC-` headings in this file
-last_updated: 2026-06-08
+total_bcs: 88   # cumulative claim (incl. range-collapsed); definitional_count below is individually-bodied headings; +4 added 2026-05-08 (BC-7.4.013-016, Fix-PR A); +1 added 2026-06-08 (BC-7.2.006, issue #470 listItem content-model conformance); +2 added 2026-06-08 (BC-7.2.007..008, issue #474 markdown subsup + heading-attr); +1 added 2026-06-09 (BC-7.2.009, issue #483 GFM alerts → panel)
+definitional_count: 42   # count of `#### BC-` headings in this file
+last_updated: 2026-06-09
 source_pass: 3
 trace: |
   - L2: .factory/specs/domain-spec/bc-07-output-render.md
@@ -13,8 +13,8 @@ trace: |
 
 # BC-7 — Output Rendering & Error
 
-87 behavioral contracts across 5 subdomains: Table/JSON output (7.1), ADF rendering (7.2),
-Error display (7.3), JSON output shapes (7.4), Observability (7.5). (+4 BC-7.4.013-016 added 2026-05-08 by Fix-PR A for auth JSON shapes. +1 BC-7.2.006 added 2026-06-08 by issue #470 listItem content-model conformance. +2 BC-7.2.007..008 added 2026-06-08 by issue #474 markdown subsup + heading-attr.)
+88 behavioral contracts across 5 subdomains: Table/JSON output (7.1), ADF rendering (7.2),
+Error display (7.3), JSON output shapes (7.4), Observability (7.5). (+4 BC-7.4.013-016 added 2026-05-08 by Fix-PR A for auth JSON shapes. +1 BC-7.2.006 added 2026-06-08 by issue #470 listItem content-model conformance. +2 BC-7.2.007..008 added 2026-06-08 by issue #474 markdown subsup + heading-attr. +1 BC-7.2.009 added 2026-06-09 by issue #483 GFM alerts → panel.)
 
 ---
 
@@ -70,7 +70,7 @@ Error display (7.3), JSON output shapes (7.4), Observability (7.5). (+4 BC-7.4.0
 
 ---
 
-### 7.2 ADF Rendering (8 individually-bodied BCs: BC-7.2.001..008; 54 BCs cumulative including range-collapsed)
+### 7.2 ADF Rendering (9 individually-bodied BCs: BC-7.2.001..009; 55 BCs cumulative including range-collapsed)
 
 #### BC-7.2.001: `text_to_adf("hello")` emits `{type:"doc", version:1, content:[{type:"paragraph", content:[{type:"text", text:"hello"}]}]}`
 
@@ -177,6 +177,30 @@ After normalization, no `listItem` in the output document contains any node type
 - **(EC-3) No ADF id field emitted**: ADF does not support heading ids; there is no `id` field in the heading node's `attrs`. The parsed id value is consumed and not stored anywhere in the output document.
 
 **Trace**: `src/adf.rs::markdown_to_adf` (Options block — `ENABLE_HEADING_ATTRIBUTES`); `src/adf.rs::tests` (`test_markdown_heading_attributes_stripped`, `test_markdown_heading_non_attribute_brace_stripped`); issue #474
+
+---
+
+#### BC-7.2.009: `markdown_to_adf` maps GFM alerts (`> [!NOTE|TIP|IMPORTANT|WARNING|CAUTION]`) to ADF `panel`, normalizing the panel content model; `adf_to_text` renders `panel` back to an alert
+
+**Confidence**: HIGH
+**Source**: `src/adf.rs::panel_type_for`; `src/adf.rs::gfm_label_for_panel_type`; `src/adf.rs::normalize_panel_content`; `src/adf.rs::normalize_list_item_content` (panel arm); `src/adf.rs::is_empty_block_container` (panel in prune set); `src/adf.rs::tests` (panel mapping + reverse + round-trip unit tests); `docs/specs/adf-panel-content-model.md`
+**Subject**: Output rendering
+**Behavior**: `markdown_to_adf` enables `Options::ENABLE_GFM`. In pulldown-cmark 0.13 this gates only alert blockquotes (no side effect on the individually-set tables/strikethrough/footnotes/subsup/heading-attr flags). A tagged alert arrives as `Tag::BlockQuote(Some(BlockQuoteKind))` and maps to an ADF `panel` with a portable `panelType`; a plain `Tag::BlockQuote(None)` stays a `blockquote`.
+
+Kind → panelType (`panel_type_for`, exhaustive match): Note→`info`, Tip→`success`, Important→`note`, Warning→`warning`, Caution→`error`. Only the five always-portable panelTypes are emitted; `tip`/`custom` are avoided (editor-feature-gated, inconsistent on Jira Cloud).
+
+The ADF `panel` content model permits `paragraph`(no marks)/`heading`(no marks)/`bulletList`/`orderedList`/`codeBlock`/`rule`/`taskList`/media/card/decision nodes — but forbids nested `panel`, `table`, and `blockquote`. `normalize_panel_content` runs over every panel's children before `wrap_inlines_as_blocks`, applying: nested `panel` → unwrapped recursively (inner panelType discarded); `blockquote` → unwrapped recursively; `table` → flattened to one `paragraph` per row via `flatten_table_to_paragraphs` (marks preserved); `heading`/`paragraph` → kept with any node-level `marks` stripped. `normalize_list_item_content` gains a `panel` arm (alongside `blockquote`) that unwraps a panel inside a `listItem` (ADF `listItem` forbids `panel`). `panel` is added to `is_empty_block_container`'s prune set so an empty alert shell is removed (invalid ADF).
+
+Reverse path: `adf_to_text` gains a `panel` arm mapping `panelType` back to a GFM label via `gfm_label_for_panel_type` (info→NOTE, success→TIP, note→IMPORTANT, warning→WARNING, error→CAUTION), rendering `> [!KIND]` followed by the `> `-quoted body (line-prefixing mirrors the `blockquote` arm). An unmapped panelType renders as a plain blockquote with no marker. The markdown→ADF→text round-trip is stable for the five alert kinds.
+
+**Edge cases**:
+- **(EC-1) Parser leniency**: pulldown 0.13 recognizes the marker with or without the leading space (`>[!NOTE]`) and is case-insensitive (`[!note]`/`[!Note]`). The only disqualifiers are trailing text on the marker line (`> [!NOTE] extra` → plain blockquote) and an unknown kind (`> [!FOO]` → plain blockquote). The renderer keys off `Some(kind)` only and never string-matches the marker text.
+- **(EC-2) Nested alerts**: `> [!NOTE]\n> > [!TIP]` would produce `panel > panel` (invalid); the inner panel is unwrapped, its blocks spliced into the outer panel. No panel contains a nested panel.
+- **(EC-3) Alert wrapping a table**: the table is flattened out of the panel (no `panel > table`).
+- **(EC-4) Alert inside a list item**: `- x\n\n  > [!NOTE]` produces no `listItem > panel`; the panel is unwrapped in place.
+- **(EC-5) Empty alert**: `> [!NOTE]` with no body yields an empty panel shell, pruned by `is_empty_block_container`.
+
+**Trace**: `src/adf.rs::panel_type_for`; `src/adf.rs::gfm_label_for_panel_type`; `src/adf.rs::normalize_panel_content`; `src/adf.rs::normalize_list_item_content`; `src/adf.rs::is_empty_block_container`; `src/adf.rs::tests` (GFM alert panel mapping unit tests); `docs/specs/adf-panel-content-model.md`; issue #483
 
 ---
 
