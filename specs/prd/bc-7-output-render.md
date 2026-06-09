@@ -1,8 +1,8 @@
 ---
 context: bc-7
 title: "Output Rendering & Error"
-total_bcs: 85   # cumulative claim (incl. range-collapsed); definitional_count below is individually-bodied headings; +4 added 2026-05-08 (BC-7.4.013-016, Fix-PR A); +1 added 2026-06-08 (BC-7.2.006, issue #470 listItem content-model conformance)
-definitional_count: 39   # count of `#### BC-` headings in this file
+total_bcs: 87   # cumulative claim (incl. range-collapsed); definitional_count below is individually-bodied headings; +4 added 2026-05-08 (BC-7.4.013-016, Fix-PR A); +1 added 2026-06-08 (BC-7.2.006, issue #470 listItem content-model conformance); +2 added 2026-06-08 (BC-7.2.007..008, issue #474 markdown subsup + heading-attr)
+definitional_count: 41   # count of `#### BC-` headings in this file
 last_updated: 2026-06-08
 source_pass: 3
 trace: |
@@ -13,8 +13,8 @@ trace: |
 
 # BC-7 — Output Rendering & Error
 
-85 behavioral contracts across 5 subdomains: Table/JSON output (7.1), ADF rendering (7.2),
-Error display (7.3), JSON output shapes (7.4), Observability (7.5). (+4 BC-7.4.013-016 added 2026-05-08 by Fix-PR A for auth JSON shapes. +1 BC-7.2.006 added 2026-06-08 by issue #470 listItem content-model conformance.)
+87 behavioral contracts across 5 subdomains: Table/JSON output (7.1), ADF rendering (7.2),
+Error display (7.3), JSON output shapes (7.4), Observability (7.5). (+4 BC-7.4.013-016 added 2026-05-08 by Fix-PR A for auth JSON shapes. +1 BC-7.2.006 added 2026-06-08 by issue #470 listItem content-model conformance. +2 BC-7.2.007..008 added 2026-06-08 by issue #474 markdown subsup + heading-attr.)
 
 ---
 
@@ -70,7 +70,7 @@ Error display (7.3), JSON output shapes (7.4), Observability (7.5). (+4 BC-7.4.0
 
 ---
 
-### 7.2 ADF Rendering (52 contracts)
+### 7.2 ADF Rendering (8 individually-bodied BCs: BC-7.2.001..008; 54 BCs cumulative including range-collapsed)
 
 #### BC-7.2.001: `text_to_adf("hello")` emits `{type:"doc", version:1, content:[{type:"paragraph", content:[{type:"text", text:"hello"}]}]}`
 
@@ -139,6 +139,44 @@ After normalization, no `listItem` in the output document contains any node type
 - A `listItem` containing only permitted node types (the common case): `normalize_list_item_content` is a no-op; output is byte-for-byte identical to pre-normalization behavior.
 
 **Trace**: `src/adf.rs::normalize_list_item_content`; `src/adf.rs::flatten_table_to_paragraphs`; `src/adf.rs::tests` (listItem normalization unit tests); `docs/specs/adf-listitem-content-model.md`; issue #470 / PR #477
+
+---
+
+#### BC-7.2.007: `markdown_to_adf` maps `^x^`→`subsup` sup and `~x~`→`subsup` sub; double-tilde `~~x~~` stays `strike`
+
+**Confidence**: HIGH
+**Source**: `src/adf.rs::tests` (`test_markdown_superscript_to_subsup_sup`, `test_markdown_subscript_to_subsup_sub`, `test_markdown_intraword_superscript_stays_literal`, `test_markdown_double_tilde_still_strikethrough_not_subscript`, `test_render_subsup_mark_reverse_path`, `test_subsup_markdown_to_text_roundtrip`, `test_subsup_composes_with_strong`, `test_markdown_strike_sub_sup_coexist`, `test_markdown_nested_sub_in_sup_dedupes_subsup_mark`, `test_markdown_nested_sub_in_sup_keeps_outer_sup`, `test_markdown_superscript_no_mark_leak_to_trailing_text`)
+**Subject**: Output rendering
+**Behavior**: `markdown_to_adf` enables `Options::ENABLE_SUPERSCRIPT | Options::ENABLE_SUBSCRIPT`. The `AdfBuilder` handles the new pulldown-cmark events as follows:
+- `Tag::Superscript` → `push_mark({"type":"subsup","attrs":{"type":"sup"}})` — text wrapped in `^…^` emits a `subsup` mark with `attrs.type = "sup"` on every text node inside the span.
+- `Tag::Subscript` → `push_mark({"type":"subsup","attrs":{"type":"sub"}})` — text wrapped in single-tilde `~…~` emits a `subsup` mark with `attrs.type = "sub"`.
+- Enabling `ENABLE_SUBSCRIPT` reassigns single-tilde `~x~` from strikethrough to subscript. Double-tilde `~~x~~` continues to produce `Tag::Strikethrough` → `strike` mark — this disambiguation is a load-bearing tokeniser behaviour of pulldown-cmark 0.13 pinned by `test_markdown_double_tilde_still_strikethrough_not_subscript`.
+- **Deduplication (`dedup_marks_by_type`)**: ADF ProseMirror requires that each mark type appears at most once per text node. `dedup_marks_by_type` (a free function) filters `active_marks` to the first occurrence of each `type` value before emitting any text node. It is applied at both `push_text` and `push_code`. For nested same-type spans such as `^a ~b~ c^`, the inner text node `b` would otherwise carry two `subsup` marks (one sup from the outer `^`, one sub from the inner `~`); after dedup it carries exactly one `subsup` mark (first-wins, so `sup` (the outer span) in that specific nesting).
+- **Reverse path (`adf_to_text`)**: The `apply_marks` function gains a `"subsup"` arm. If `attrs.type == "sub"`, the rendered text is wrapped as `~{text}~`; otherwise (sup or missing `type`) it is wrapped as `^{text}^`. This makes the markdown→ADF→text round-trip lossless for content that became a `subsup` mark (standalone `^x^` and `~x~`); intraword forms that never became a mark (EC-1) are out of scope of this guarantee — `^sup^` round-trips to `^sup^` and `~sub~` round-trips to `~sub~`.
+
+**Edge cases**:
+- **(EC-1) Intraword caret stays literal**: pulldown-cmark does not open a `Tag::Superscript` when `^` is immediately adjacent to a preceding word character. `mc^2^` produces literal text `mc^2^` with no `subsup` mark. Use `mc ^2^` (space before `^`) to produce a superscript. Pinned by `test_markdown_intraword_superscript_stays_literal`.
+- **(EC-2) `code` mark cannot coexist with `subsup` on one text node**: ADF schema forbids the `code` mark alongside `subsup`, `em`, `strong`, or `strike` on the same text node. `` ^`x`^ `` (superscript wrapping a code span) would produce a node with both `code` and `subsup` marks, which Jira rejects with HTTP 400. This is an accepted known limitation in the same class as `` **`x`** `` (pre-existing); not guarded here, tracked as a follow-up.
+- **(EC-3) Dedup is first-wins**: when two spans of the same type are nested (e.g., `^a ~b~ c^`), the first `subsup` mark encountered for a given text node is kept. The result is deterministic and consistent regardless of nesting depth.
+- **(EC-4) Footnote marker interaction is inert**: `push_footnote_marker` (from issue #472) bypasses the dedup'd text-emission path entirely — it appends an unmarked text node directly via `append_child` without going through `push_text`, so `dedup_marks_by_type` is never called on that path. No interaction.
+
+**Trace**: `src/adf.rs::markdown_to_adf` (Options block); `src/adf.rs::AdfBuilder::start` (Superscript/Subscript arms); `src/adf.rs::push_text` (dedup call); `src/adf.rs::push_code` (dedup call); `src/adf.rs::dedup_marks_by_type`; `src/adf.rs::apply_marks` (subsup arm); `src/adf.rs::tests` (`test_markdown_superscript_to_subsup_sup`, `test_markdown_subscript_to_subsup_sub`, `test_markdown_intraword_superscript_stays_literal`, `test_markdown_double_tilde_still_strikethrough_not_subscript`, `test_render_subsup_mark_reverse_path`, `test_subsup_markdown_to_text_roundtrip`, `test_subsup_composes_with_strong`, `test_markdown_strike_sub_sup_coexist`, `test_markdown_nested_sub_in_sup_dedupes_subsup_mark`, `test_markdown_nested_sub_in_sup_keeps_outer_sup`, `test_markdown_superscript_no_mark_leak_to_trailing_text`); issue #474
+
+---
+
+#### BC-7.2.008: `markdown_to_adf` consumes heading attribute syntax `## Title {#id}` instead of leaking it into heading text
+
+**Confidence**: HIGH
+**Source**: `src/adf.rs::tests` (`test_markdown_heading_attributes_stripped`, `test_markdown_heading_non_attribute_brace_stripped`)
+**Subject**: Output rendering
+**Behavior**: `markdown_to_adf` enables `Options::ENABLE_HEADING_ATTRIBUTES`. Once enabled, pulldown-cmark parses and discards id (`{#id}`), class (`{.cls}`), key-value (`{key=val}`), and combined (`{#id .cls}`) attribute blocks that appear at the end of a heading line — they are consumed internally by the parser and never emitted as `Event::Text`. The `AdfBuilder` requires no code change: heading text events already pass through the standard text handler; the absence of attribute-syntax text events means those characters never enter the heading node's content. Result: `## Title {#id}` yields a heading node whose text is exactly `"Title"`, not `"Title {#id}"`. ADF headings have no id attribute; the parsed id, class, and key-value values are silently dropped with no ADF representation.
+
+**Edge cases**:
+- **(EC-1) Four attribute forms are all consumed**: `{#myid}`, `{.cls}`, `{#id .cls}`, `{key=val}` — all produce heading text equal to the heading title only, with zero leakage. Pinned by `test_markdown_heading_attributes_stripped`.
+- **(EC-2) Any trailing `{...}` block is consumed and dropped regardless of content**: when `ENABLE_HEADING_ATTRIBUTES` is active, pulldown-cmark consumes ANY trailing `{...}` block at the end of an ATX heading — including blocks whose contents are not valid attribute syntax. `## Foo {bar}` (contents `bar` contain no `#`, `.`, or `=`) yields heading text `"Foo"`, NOT `"Foo {bar}"`. Pinned by `test_markdown_heading_non_attribute_brace_stripped`. Scope: tested for the trailing-brace case only; behaviour for mid-heading braces (e.g., `## Fo{o} bar`) is untested and not asserted here.
+- **(EC-3) No ADF id field emitted**: ADF does not support heading ids; there is no `id` field in the heading node's `attrs`. The parsed id value is consumed and not stored anywhere in the output document.
+
+**Trace**: `src/adf.rs::markdown_to_adf` (Options block — `ENABLE_HEADING_ATTRIBUTES`); `src/adf.rs::tests` (`test_markdown_heading_attributes_stripped`, `test_markdown_heading_non_attribute_brace_stripped`); issue #474
 
 ---
 

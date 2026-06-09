@@ -3038,3 +3038,96 @@ _Discovered: #470 BC-7.2.006 adversarial convergence (findings F-1/M-3/OBS-1), 2
 [deferred] — deferred to dedicated doc-reconciliation pass. See Drift Items DRIFT-README and PG-A.
 
 _Discovered: #470 BC-7.2.006 adversarial cycle (OBS-1), 2026-06-08._
+
+---
+
+## #474 Process-Gap Lessons (2026-06-09)
+
+### [process-gap] Story-template `verification_properties` field emits dangling VP anchors when no VP catalog exists
+
+**Tags:** [process-gap, story-template]
+
+**Context:** The #474 story used the standard story template and populated `verification_properties`
+with `VER-474-001` / `VER-474-002` placeholders. No VP catalog file exists for #474 (spec-only
+ADF delta; formal VPs are not authored for every feature). The dangling anchors surfaced as a
+MEDIUM finding in Pass 2 and required a fix commit setting the field to `[]`.
+
+The same pattern was observed in S-JSM-RESOLUTION-REQUIRED (dangling VER-* anchors in story
+frontmatter where no companion VP catalog was authored).
+
+**Process gap:** The story template does not guide authors on when to populate
+`verification_properties` vs leave it empty. Authors default to adding placeholder VER-* IDs,
+which become dangling references in the absence of a companion VP catalog.
+
+**Recommendation:** Add template guidance: "Leave `verification_properties: []` unless VER-* IDs
+are formally defined in a companion spec or VP catalog. Do NOT invent placeholder IDs — dangling
+anchors are MEDIUM adversarial findings."
+
+**Tracked as:** First-occurrence lesson; no follow-up story (template-doc gap, zero runtime
+impact). Monitor for recurrence.
+
+_Discovered: #474 BC-7.2.007/008 adversarial convergence — Pass 2 MEDIUM finding, 2026-06-09._
+
+---
+
+### [process-gap] `check-bc-cumulative-counts.sh` does not validate per-subsection (###) cumulative figures vs range-collapsed rows
+
+**Tags:** [process-gap, count-guard-scope]
+
+**Context:** During #474 adversarial convergence, a §7.2 section-range inconsistency slipped
+through 4 passes (Passes 1–4) before being caught: the BC-INDEX.md `### 7.2` collapsed range
+row still showed `…052` after BC-7.2.007 and BC-7.2.008 were added (should be `…054`).
+CANONICAL-COUNTS.md prose/Sum row was also stale at 590 instead of 592.
+
+`check-bc-cumulative-counts.sh` validates 8 top-level count surfaces (per-file frontmatter,
+BC-INDEX.md Section headers, BC-INDEX.md sections: lines, CANONICAL-COUNTS.md per-file table,
+body preamble prose, BC-INDEX.md frontmatter total_bcs, CANONICAL-COUNTS.md Sum row, grand-total
+prose). It does NOT validate per-subsection (`### N.N`) range rows against the actual count of
+BCs in that subsection.
+
+**Process gap:** A 2-count §7.2 inconsistency survived 4 adversarial passes because no
+automated check cross-validates per-subsection range rows with the actual subsection BC count.
+
+**Recommendation:** Extend `check-bc-cumulative-counts.sh` (or add a companion script) to
+validate per-subsection (`### N.N`) collapsed-range terminal index equals the actual count
+of BCs in that subsection. This closes the gap that allowed the §7.2=52→54 drift to survive
+4 passes.
+
+**Tracked as:** First-occurrence lesson; deferred to self-improvement epic (tooling enhancement,
+zero runtime impact). No follow-up story created.
+
+_Discovered: #474 BC-7.2.007/008 adversarial convergence — Pass 3 blocker (count-drift slipped P1–P4), 2026-06-09._
+
+---
+
+### [process-gap] Cross-model tooling: gemini-cli replaced by `agy`; agentic print-mode requires short prompt in clean working dir
+
+**Tags:** [process-gap, tooling, cross-model-review]
+
+**Context:** The S-QUEUE-BC-1 cycle used `gemini-cli` for cross-model corroboration. By the
+#474 cycle, `gemini-cli` was no longer available and was replaced by `agy` (Antigravity CLI).
+
+Lessons from operating `agy` as a cross-model adversary:
+1. `agy -p` (print-mode) is agentic — it runs a multi-step agent loop. This is beneficial for
+   deep review but requires careful prompt design: a SHORT, focused prompt in a CLEAN (non-repo)
+   working directory keeps the agent on-task. Long prompts or running from within the repository
+   working tree cause derailment (the agent picks up unrelated context).
+2. The `--model` flag was unreliable in agentic mode during this session; it was dropped and
+   the default model (Gemini 2.5 Pro) was used.
+3. Free-tier Gemini capacity is throttled with approximately 25-minute rolling windows on a
+   per-tier basis, NOT per-account. Hitting the quota limit manifests as silent hangs or
+   timeout errors; the fix is to wait and retry.
+4. Gemini's diff-only context can produce false-positive CRITICAL findings when the diff does
+   not include the full context of an existing mechanism (e.g., the `end()` / `pop_mark`
+   generic dispatch). Cross-model findings should always be validated against the full source
+   (not just the diff) before acting on them.
+
+**Recommendation:** When dispatching `agy` for cross-model review: (1) compose a short,
+single-paragraph prompt; (2) run from a temp directory with only the diff file present;
+(3) plan for quota wait time; (4) treat CRITICAL findings as "requires source validation"
+before fixing.
+
+**Tracked as:** First-occurrence lesson for `agy` tooling; no follow-up story (tooling
+operational note). Update adversarial-review dispatch instructions if pattern recurs.
+
+_Discovered: #474 BC-7.2.007/008 cross-model Gemini pass (Gemini Finding 1 CRITICAL = REFUTED), 2026-06-09._

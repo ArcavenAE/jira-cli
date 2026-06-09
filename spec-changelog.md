@@ -7,6 +7,44 @@ project: "jr (jira-cli)"
 
 Track all spec version changes. Most recent version first.
 
+## [1.3.3] - 2026-06-08
+
+### Type: PATCH
+
+### Summary
+
+Issue #474: Markdown minor constructs → ADF (superscript/subscript `subsup` mark + heading-attribute stripping) — F2 spec evolution. Two new BCs authored in `bc-7-output-render.md` (BC-7.2.007 and BC-7.2.008). BC corpus 590→592. NFR corpus unchanged at 41. Implementation already written on branch `feat/adf-minor-constructs-474`; this is a retroactive VSDD wrap.
+
+### New Requirements
+
+| ID | Description |
+|----|-------------|
+| BC-7.2.007 | `markdown_to_adf` maps `^x^`→`subsup` sup mark and `~x~`→`subsup` sub mark. Single-tilde reassigned from strikethrough to subscript; double-tilde `~~x~~` stays `strike`. `adf_to_text` round-trip lossless: sup→`^x^`, sub→`~x~`. `dedup_marks_by_type` prevents duplicate mark types per text node (first-wins). Intraword carets (`mc^2^`) stay literal. |
+| BC-7.2.008 | `markdown_to_adf` with `ENABLE_HEADING_ATTRIBUTES` consumes id/class/key-val attribute blocks from heading lines instead of leaking them into heading text. `## Title {#id}` yields heading text exactly `"Title"`. ADF headings have no id attribute; parsed attribute values are dropped. |
+
+### Modified Requirements
+
+None.
+
+### New Spec Artifacts
+
+None (BCs added inline to `bc-7-output-render.md`).
+
+### Impact Assessment
+
+| Dimension | Before | After | Delta |
+|-----------|--------|-------|-------|
+| BC corpus (BC-INDEX.md total_bcs) | 590 | 592 | +2 |
+| NFR corpus (nfr-catalog.md total_nfrs) | 41 | 41 | 0 |
+| bc-7-output-render.md total_bcs | 85 | 87 | +2 |
+| bc-7-output-render.md definitional_count | 39 | 41 | +2 |
+
+### Feature Scope
+
+Backend only — `src/adf.rs` delta. No CLI surface change, no API shape change, no config change. F4 delivery validates the 10 inline unit tests in `src/adf.rs::tests` covering subsup forward path, reverse path, round-trip, tilde-collision safety, mark deduplication, and heading-attribute stripping. No new integration tests or E2E tests required.
+
+---
+
 ## [1.3.2] - 2026-06-01
 
 ### Type: PATCH

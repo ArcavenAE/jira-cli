@@ -409,3 +409,16 @@ _Was the active checkpoint after #470/BC-7.2.006 MERGED + CLOSED (PR #477 → de
 | **Standing context** | JR_E2E_ENABLED=true repo var set. DEC-066 retained. DEC-065 queue un-contracted (S-QUEUE-BC-1 draft open). Do NOT close #429 (DEC-029). OQ-5 open. E2E-PG-4 remote-link round-back open. PG-A + DRIFT-README: deferred doc-reconciliation items (see Drift Items). Coverage runs nightly. |
 | **Next step** | S-QUEUE-BC-1: author BC-X.8.008/009 (queue list/view contracts) + PG-JSM-E2E-1 guard (BC-trace cross-check). |
 | **Resume prompt** | `Read .factory/STATE.md. #470/BC-7.2.006 MERGED + CLOSED (PR #477 → develop @ aa602a1, 2026-06-08). BC 587 / NFR 41 / Stories 64. adf-listitem worktree + branch cleaned up. DEC-066 retained. DEC-065 queue un-contracted (S-QUEUE-BC-1 draft). PG-A + DRIFT-README deferred (see Drift Items). jira-e2e env: JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ. Do NOT close #429. OQ-5 open. E2E-PG-4 remote-link round-back open. Next: S-QUEUE-BC-1.` |
+
+---
+
+## Checkpoint archived 2026-06-09 (develop @ be6b57b; BULK-TRANSITION FIX MERGED; post-merge e2e.yml run 27159962721 was in progress)
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-06-08 |
+| **Position** | **BULK-TRANSITION FIX MERGED.** PR #479 squash-merged → develop @ be6b57b (2026-06-08T18:55:51Z). BC-3.2.014 (multi-key `issue move --to` `bulkTransitionInputs` wrapper fix). Worktree .worktrees/FIX-BULK-TRANSITION removed; fix/bulk-transition-schema branch deleted local + remote. Post-merge e2e.yml run 27159962721 in progress. DEFER-469 recorded: Dependabot PR #469 (gitleaks-action MAJOR bump) held open — extended soak period, no target date. |
+| **Convergence counter** | BC: 590. NFR: 41. Stories: 64. develop HEAD on origin: be6b57b. jira-e2e env: JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ. |
+| **Standing context** | JR_E2E_ENABLED=true repo var set. DEC-066 retained. DEC-065 closed. Do NOT close #429 (DEC-029). OQ-5 open. E2E-PG-4 remote-link round-back open. PG-A + DRIFT-README + PG-QUEUE-1 + PG-QUEUE-2 + DEFER-469: deferred (see Drift Items). E2E nightly was RED on test_e2e_issue_move_multikey_bulk — fix MERGED @ be6b57b; post-merge run 27159962721 validating. |
+| **Next step** | Await post-merge e2e.yml run 27159962721 completion to confirm E2E green. Then idle until next feature request. |
+| **Resume prompt** | `Read .factory/STATE.md. BULK-TRANSITION FIX: PR #479 squash-merged → develop @ be6b57b (2026-06-08T18:55:51Z). BC-3.2.014 (bulkTransitionInputs wrapper). Post-merge e2e.yml run 27159962721 in progress. DEFER-469: gitleaks-action MAJOR bump PR #469 held open (soak period). DEC-066 retained. DEC-065 closed. PG-A + DRIFT-README + PG-QUEUE-1 + PG-QUEUE-2 + DEFER-469 deferred. jira-e2e env: JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ. Do NOT close #429. OQ-5 open. E2E-PG-4 remote-link round-back open.` |
