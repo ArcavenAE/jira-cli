@@ -2,11 +2,11 @@
 document_type: pipeline-state
 version: "2.0"
 status: active
-timestamp: 2026-06-09T00:00:00Z
+timestamp: 2026-06-09T21:37:22Z
 phase: phase-3-tdd-implementation
 project: jira-cli
 mode: BROWNFIELD
-current_step: "#483 GFM alerts → ADF panel CYCLE CLOSED + MERGED — PR #487 → develop; issue #483 CLOSED; BC-7.2.009; BC 593; Stories 66. F1/F2/F3/F5/F6/F7 artifacts complete. Live-Jira sandbox verification deferred (needs-sandbox). Awaiting next feature cycle."
+current_step: "#476 ADF unit-test gap fill CYCLE CLOSED + MERGED — PR #488 squash-merged → develop @ d0bbb70 (2026-06-09). 3 new pinning tests (130 adf::tests). Bug #489 filed: block-level HTML silently dropped. BC 593. Stories 66."
 current_cycle: "cycle-001"
 dtu_required: false
 phase_2_status: APPROVED
@@ -29,8 +29,8 @@ activation_version: "v0.5.0-dev.11"
 | **Language** | Rust |
 | **Target Workspace** | develop → main |
 | **Started** | 2026-05-04 |
-| **Last Updated** | 2026-06-09 — #483 GFM alerts → ADF panel CYCLE CLOSED + MERGED. PR #487 squash-merged → develop; issue #483 CLOSED. 18 new unit tests; 132 adf::tests green. BC 593. NFR 41. Stories 66. F1/F2/F3/F5/F6/F7 artifacts complete. BC-7.2.009 authored. |
-| **Current Phase** | Phase 3 — TDD Implementation IN PROGRESS — Feature Mode active. #483 CYCLE CLOSED + MERGED. BC 593. NFR 41. Stories 66. Ready for next feature cycle. |
+| **Last Updated** | 2026-06-09 — #476 ADF unit-test gap fill CYCLE CLOSED + MERGED. PR #488 squash-merged → develop @ d0bbb70; issue #476 CLOSED. 3 new pinning tests (127→130 adf::tests). Bug #489 filed (block-level HTML silently dropped). BC 593. NFR 41. Stories 66. |
+| **Current Phase** | Phase 3 — TDD Implementation IN PROGRESS — Feature Mode active. #476 CYCLE CLOSED + MERGED. BC 593. NFR 41. Stories 66. Ready for next feature cycle. |
 | **Next Phase** | Phase 4: Holdout Evaluation (not started) |
 | **Activation HEAD** | 15bf305 (v0.5.0-dev.11) |
 
@@ -62,6 +62,7 @@ Goal 1c: **Harden v0.5 + feature delivery** — formalize existing codebase with
 | ADF listItem content-model BC — issue #470 / BC-7.2.006 | **CYCLE CLOSED + MERGED** (2026-06-08). BC-7.2.006 authored + adversarially converged (pass-1: 2I+5m fixed; pass-2: minor fixed; passes 3/6/7 CLEAN). Factory artifacts @ 46b36b4. PR #477 squash-merged → develop @ aa602a1 (15:30:11Z); issue #470 CLOSED (15:30:12Z); adf-listitem worktree + branch cleaned up. BC corpus: 587 (+1). | F1–F7 ALL COMPLETE — CYCLE CLOSED + MERGED | F5: 3 clean fresh-context passes (P1 2I+5m→fixed; P2 minor→fixed; P3/P6/P7 CLEAN). Count-surface reconciliation: all 8 surfaces agree at 587. Process-gaps: PG-A + DRIFT-README logged. |
 | ADF minor constructs — issue #474 / BC-7.2.007+008 | **CYCLE CLOSED + MERGED** (2026-06-09). PR #486 squash-merged → develop @ 56226b4 (17:41:21Z); issue #474 CLOSED; feat/adf-minor-constructs-474 deleted. subsup (^x^/~x~→ADF subsup) + heading-attr stripping. 105 adf::tests (13 new) green. BC 592 (+2). 3 F5 process-gap lessons [deferred] in lessons.md. | F1–F7 ALL COMPLETE — CYCLE CLOSED + MERGED | F5 progression: P1 3M/1FP → P2 1M/2L → P3 count-drift → P4 5L stale → P5 1L → P6 CLEAN → Gemini 1FP+1L → P7 CLEAN → P8 CLEAN. |
 | GFM alerts → ADF panel — issue #483 / BC-7.2.009 | **CYCLE CLOSED + MERGED** (2026-06-09). PR #487 squash-merged → develop @ 87a15ad; issue #483 CLOSED; branch deleted. GFM alerts (`> [!NOTE|TIP|IMPORTANT|WARNING|CAUTION]`) → ADF `panel` node; normalize_panel_content (mirrors #470 listItem); reverse adf_to_text panel→alert; parser leniency pinned; empty-alert prune. 18 new unit tests; 132 adf::tests green. BC 593 (+1). F1/F2/F3/F5/F6/F7 artifacts complete. S-483 story. Live-Jira sandbox verification deferred (needs-sandbox). S-7.02: F5 findings were CONTENT defects (dead empty-prune branch + test-coverage gaps) — no [process-gap] findings; no follow-up self-improvement story required. | F1–F7 ALL COMPLETE — CYCLE CLOSED + MERGED; verdict CONVERGED | F5: CLEAN. F6: PASS. F7: CONVERGED. BC-7.2.009 authored; 8 count surfaces consistent (593 grand total). |
+| ADF unit-test gap fill — issue #476 (test-only) | **CYCLE CLOSED + MERGED** (2026-06-09). PR #488 squash-merged → develop @ d0bbb70 (mergedAt 2026-06-09T21:37:22Z); issue #476 CLOSED; branch test/adf-untested-paths-476 deleted; worktree .worktrees/adf-476 removed. 3 new pinning/characterization tests in src/adf.rs: test_convert_nested_ordered_list_produces_inner_ordered_list, test_convert_block_html_is_silently_dropped, test_convert_hard_break_inside_mark_span_preserves_mark_and_break. adf::tests 127→130 (+3). Zero production code changed. Code-review (local): CR-001+CR-002 BOTH fixed before PR. PR-stage review: 0 findings. CI 11/11 GREEN. Counts UNCHANGED: BC 593, NFR 41, Stories 66. NOTABLE: block-level HTML silent-drop confirmed as bug → filed #489. | CYCLE CLOSED + MERGED — test-only | CI 11/11 GREEN. BC 593 / NFR 41 / Stories 66 UNCHANGED. develop HEAD: d0bbb70. |
 | S-QUEUE-BC-1 — queue list/view document-as-is BCs (BC-X.8.008/009) | **CYCLE CLOSED + MERGED** (2026-06-08). BC-X.8.008 (queue list) + BC-X.8.009 (queue view) authored in §X.8. S-JSM-E2E-1 AC-001/003 re-anchored (DEC-065 traceability orphan closed). Hybrid adversarial review: 10 fresh-context passes + 1 Gemini CLI corroboration. 3 consecutive clean (passes 8/9/10). PG-QUEUE-1 + PG-QUEUE-2 deferred. PR #478 squash-merged → develop @ e3a14de (2026-06-08T17:54:53Z). Worktree + branches cleaned up. Gemini CLI sliced re-review CLEAN (4/4 slices). | F5 CONVERGED — CYCLE CLOSED + MERGED | Finding progression: 3→2→2→2→0→0→1→0→0→0. BC corpus: 589 (+2). NFR 41. Stories 64. develop HEAD: e3a14de. |
 | E2E feature (S-E2E-1..5) — Live-Jira E2E testing in CI + E2E enhancements | F7 CONVERGED — SHIPPED + LIVE-GREEN (CYCLE CLOSED 2026-05-31) | 2026-05-31 | F1–F7 ALL COMPLETE all 5 stories; live workflow GREEN (run 26719160283, 57/0; develop @ fef44bd via #440+#441+#442) | S-E2E-1: (4C/4H)→(1C/2H)→(1C/2H/1M)→(2M)→CLEAN×3; S-E2E-2: 1M→CLEAN×3; E2E-enh F2: P1 13→P4 2C/2H→CLEAN×3; F5: 2H→CLEAN×3; live: 54/3→56/1→57/0 |
 | issue-327 (Dependabot rand 0.9→0.10) | CYCLE CONVERGED — PR #413 @ 375c0f91 | 2026-05-26 | F1–F7 ALL COMPLETE — MAXIMUM_VIABLE_REFINEMENT_REACHED | F5: HIGH-FP→0→0. F6: 100% (2/2). F7: 6/6 PASS. |
@@ -76,8 +77,8 @@ Goal 1c: **Harden v0.5 + feature delivery** — formalize existing codebase with
 
 | Step | Agent | Status | Output |
 |------|-------|--------|--------|
-| #474 ADF minor constructs CYCLE CLOSED + MERGED 2026-06-09 — PR #486 squash-merged → develop @ 56226b4 (17:41:21Z). Issue #474 CLOSED. feat/adf-minor-constructs-474 deleted. 105 adf::tests (13 new) green. 3 F5 process-gap lessons [deferred] in lessons.md. | state-manager | CYCLE CLOSED + MERGED | BC 592 / NFR 41 / Stories 65. develop HEAD: 56226b4. |
-| #483 GFM alerts → ADF panel CYCLE CLOSED + MERGED 2026-06-09 — PR #487 squash-merged → develop @ 87a15ad; issue #483 CLOSED; branch deleted. 18 new unit tests; 132 adf::tests green. BC-7.2.009 authored; 593 grand total; both check scripts pass. S-483 story; STORY-INDEX 65→66. F1/F2/F3/F5/F6/F7 artifacts complete. S-7.02 checklist: F5 findings = CONTENT defects only; no process-gap follow-up required. | state-manager | CYCLE CLOSED + MERGED; verdict CONVERGED | BC 593 / NFR 41 / Stories 66. develop HEAD: 87a15ad. |
+| #483 GFM alerts → ADF panel CYCLE CLOSED + MERGED 2026-06-09 — PR #487 squash-merged → develop @ 87a15ad; issue #483 CLOSED; branch deleted. 18 new unit tests; 132 adf::tests green. BC-7.2.009 authored; 593 grand total. S-7.02 satisfied. | state-manager | CYCLE CLOSED + MERGED | BC 593 / NFR 41 / Stories 66. develop HEAD: 87a15ad. |
+| #476 ADF unit-test gap fill CYCLE CLOSED + MERGED 2026-06-09 — PR #488 squash-merged → develop @ d0bbb70 (21:37:22Z); issue #476 CLOSED; branch test/adf-untested-paths-476 + worktree .worktrees/adf-476 removed. 3 new pinning tests (127→130 adf::tests); zero production code changed. CR-001+CR-002 fixed before PR. Bug #489 filed (block-level HTML silent drop). CI 11/11 GREEN. | state-manager | CYCLE CLOSED + MERGED | BC 593 / NFR 41 / Stories 66 UNCHANGED. develop HEAD: d0bbb70. |
 
 ## Decisions Log
 
@@ -131,13 +132,10 @@ Goal 1c: **Harden v0.5 + feature delivery** — formalize existing codebase with
 | S-0.05-F1 | Cosmetic typo "JiaClient" → "JiraClient" in test doc comment | DEFERRED — 2026-05-07 | LOW | DEFERRED |
 | S-0.05-F2 | Stale doc comment in renamed test | LOW | TO_VERIFY — 2026-05-07 |
 | S-0.05-F3..S-1.04-DEFER-03, S-2.03-DOC-01..S-2.07-DEFER-02 | 14 LOW cosmetic/doc DEFERRED items (Wave 1+2 era) | LOW | DEFERRED — bundle into next relevant touch. Full details: `cycles/cycle-001/blocking-issues-resolved.md` section "Drift Items". |
-| S-1.05-DEFER-01 | gitleaks-action Node.js 20 → Node.js 24 required by June 2, 2026 | MEDIUM | DEFERRED — 2026-05-08; Dependabot may auto-pick |
-| WV2-FIX-A-FOLLOWUP-01 | 11 test docstrings in auth_output_json.rs cite BC-7.3.004 (should be BC-7.4.013-016) | LOW | DEFERRED — bundle into next develop touch |
-| WV2-FIX-A-FOLLOWUP-02 | 2 test names embed bc_6_2_013 (should be bc_6_2_006) | LOW | DEFERRED — bundle into next develop touch |
+| WV2-FIX-A-FOLLOWUP-01/02 | auth_output_json.rs BC citation fixes (11 docstrings BC-7.3.004→7.4.013-016; 2 test names bc_6_2_013→bc_6_2_006) | LOW | DEFERRED — bundle into next develop touch |
 | WV2-CV-03 | STORY-INDEX Wave 0/1 rows show `draft` status | DRIFT | DEFERRED — S-3.06 sweep |
 | WV2-CV-11, WV2-CV-12 | NITs: H-018 annotation + S-0.05-F2 TO_VERIFY target | NIT | DEFERRED |
 | DRIFT-005..DRIFT-009, PG-365-2 | Process-gap/drift items (doc-fallout, chore-mode, check-spec-counts scope, L2 propagation, engine-level citation scope) | LOW | process-gap codified; Owner: orchestrator. Target: v0.6 / engine. |
-| M-03, O-01, O-08-01..07 | #288 retrospective observations — all filed as GitHub issues | MEDIUM/LOW | FILED → all CLOSED (#382/#383/#384/#385). |
 | PG-01..04 | Process gaps from pr4-dispatch adversary passes | LOW | DEFERRED — engine-scope. |
 | S-288-pr2-PG group | 13 DEFERRED process-gap items from S-288-pr2 cycle (PG-1a..1g, PG-2a/2b, PG-3a/3b, PG-F1, PG-1b/1c/1e/1f). PG-2c RESOLVED (see blocking-issues-resolved.md). | LOW | DEFER → post-S-288 self-improvement epic. Full details: `cycles/cycle-001/drift-items-deferred-S-288.md`. |
 | F1-AUDIT-MISCOUNT-410 | F1 architect undercounted tests in `multi_cloudid_disambiguation.rs` by 1 (claimed 11, actual 12). Reviewer caught during PR. Future: F1 audits of test files should cross-check by counting `^async fn test_\|^fn test_` matches against the explicit per-test table row count before sign-off. | LOW | DEFERRED — single instance, low recurrence risk, codified informally in L-410-1 (lessons.md). Target: next maintenance sweep. No follow-up story created (per PG-NNN precedent for single-occurrence process gaps). |
@@ -146,7 +144,6 @@ Goal 1c: **Harden v0.5 + feature delivery** — formalize existing codebase with
 | OQ-5 | CLAUDE.md NFR-O-N line stale: "`auth status --output json` covers single-profile JSON" but `src/cli/auth/status.rs` has no JSON arm and makes no API call. Recommend filing separate GitHub follow-up issue: either implement a JSON arm calling /myself, or remove the inaccurate NFR-O-N claim. Out-of-scope for S-E2E-1 (zero src/ change feature). | LOW | DEFERRED — doc drift. File GitHub issue before next auth touch. |
 | S-382-FLAKE-01 | tests/multi_cloudid_disambiguation.rs keychain contention (macOS) | LOW | PRE-EXISTING — future test-infra cleanup. |
 | PG-388-4, PG-384-1/2, PG-385-1..7, PG-398-1..5 | Process gaps from issues #388/#384/#385/#398 cycles (checklists, template gaps, spec-guard gaps, worktree-path class) | LOW | CODIFIED in lessons.md / TRACKED IN #400. |
-| DI-396-F5 + R2-C4 | #396 cycle drift items: DI-396-F5-1/2/3/4, R2-C4 | LOW | FILED → #407 (F5-1/2), #408 (F5-4), #409 (R2-C4), #410 (F5-3). |
 | E2E-PG-4 | E2E label/link/priority/worklog/unassign/issueType/assign coverage. Label: DONE #447-#450. Link/unlink/remote-link smoke: DONE PR #445. Priority single+multi-key bulk: DONE PR #452. Worklog+unassign: DONE PR #452. issueType bulk: DONE PR #453+#454+#455 (run 26779732719 66/0). assign-by-query (--to): DONE PR #458 (run 26790203429 67/0; DEC-061). REMAINING OPEN sub-gap: remote-link round-back (blocked: no `jr remote-link read`). | remote-link round-back future | test-infra / e2e-coverage | **partially-addressed — OPEN (1 sub-gap remains; assign-specific-user RESOLVED via #458)** |
 | PG-331-1 | [process-gap] CLI surface guard direction gap: the `tests/e2e_cli_surface_guard.rs` guard only validates used-flags ⊆ listed-flags (test invocations reference only flags that exist in `--help`). The reverse direction — listed-flags ⊆ used-flags (every `--help` flag gets a test invocation) — is not enforced. Tagged as I-3 from F5 P1. | LOW | DEFERRED — engine/test-infra scope; target: maintenance sweep. No follow-up story created (engine-scope process gap, low recurrence risk given the existing guard handles the primary failure class). |
 | PG-331-2 | [process-gap] Adversary dispatch wrong-tree misread: adversary reviewed main-repo develop instead of the worktree twice (original P1 + original P5 dispatch). Root cause: dispatch prompt lacked a diff attachment and HEAD self-check requirement. Mitigation (per DEC-056): feed captured diff as explicit context + require adversary self-check line. | LOW | DEFERRED / CODIFIED-AS-LESSON — cycles/cycle-001/lessons.md; target: engine-level adversary dispatch prompt template. No follow-up story (codified as lesson; low recurrence risk now mitigation is applied). |
@@ -163,7 +160,7 @@ Goal 1c: **Harden v0.5 + feature delivery** — formalize existing codebase with
 
 ## Convergence Trackers
 
-Full per-issue narratives: `cycles/cycle-001/convergence-trajectory.md`. Current: **[2026-06-09] #483 GFM alerts → ADF panel CYCLE CLOSED + MERGED — PR #487 squash-merged → develop @ 87a15ad; issue #483 CLOSED; branch deleted. BC-7.2.009; BC: 593. NFR: 41. Stories: 66. F5: CLEAN (content defects only; S-7.02 checklist satisfied). F6: PASS. F7: CONVERGED.**
+Full per-issue narratives: `cycles/cycle-001/convergence-trajectory.md`. Current: **[2026-06-09] #476 ADF unit-test gap fill CYCLE CLOSED + MERGED — PR #488 squash-merged → develop @ d0bbb70; issue #476 CLOSED; 3 pinning tests (127→130 adf::tests); zero src changed. Bug #489 filed (block-level HTML silent drop). BC: 593. NFR: 41. Stories: 66. CI 11/11 GREEN.**
 
 ## Session Resume Checkpoint
 
@@ -171,16 +168,17 @@ Full per-issue narratives: `cycles/cycle-001/convergence-trajectory.md`. Current
 | Field | Value |
 |-------|-------|
 | **Date** | 2026-06-09 |
-| **Position** | **#483 GFM alerts → ADF panel CYCLE CLOSED + MERGED.** PR #487 squash-merged → develop @ 87a15ad; issue #483 CLOSED; branch deleted. 18 new unit tests; 132 adf::tests green. BC-7.2.009; BC 593. S-483 story; Stories 66. F1/F2/F3/F5/F6/F7 artifacts complete. S-7.02: F5 findings = CONTENT defects only; no follow-up required. Live-Jira sandbox verification deferred (needs-sandbox). |
+| **Position** | **#476 ADF unit-test gap fill CYCLE CLOSED + MERGED.** PR #488 squash-merged → develop @ d0bbb70 (2026-06-09T21:37:22Z); issue #476 CLOSED; branch test/adf-untested-paths-476 deleted; worktree .worktrees/adf-476 removed. 3 new pinning tests (127→130 adf::tests); zero production code changed. Code review: CR-001+CR-002 fixed before PR; 0 PR-stage findings. CI 11/11 GREEN. FOLLOW-UP: #489 filed (fix(adf): block-level HTML silently dropped — inconsistent with inline HTML). |
 | **Convergence counter** | BC: 593. NFR: 41. Stories: 66. jira-e2e env: JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ. No active worktrees. |
-| **Standing context** | JR_E2E_ENABLED=true repo var set. DEC-066 retained. DEC-065 closed. Do NOT close #429 (DEC-029). OQ-5 open. E2E-PG-4 remote-link round-back open. PG-A + DRIFT-README + PG-QUEUE-1 + PG-QUEUE-2 + DEFER-469 deferred. 3 #474 F5 process-gap lessons [deferred] in lessons.md. |
+| **Standing context** | JR_E2E_ENABLED=true repo var set. DEC-066 retained. DEC-065 closed. Do NOT close #429 (DEC-029). OQ-5 open. #489 OPEN (block-level HTML silent drop — future fix cycle). E2E-PG-4 remote-link round-back open. PG-A + DRIFT-README + PG-QUEUE-1 + PG-QUEUE-2 + DEFER-469 deferred. 3 #474 F5 process-gap lessons [deferred] in lessons.md. |
 | **Next step** | Dispatch next feature cycle. |
-| **Resume prompt** | `Read .factory/STATE.md. #483 GFM alerts → ADF panel CYCLE CLOSED + MERGED: PR #487 squash-merged → develop @ 87a15ad; issue #483 CLOSED; branch deleted. BC: 593. NFR: 41. Stories: 66. BC-7.2.009 authored. S-7.02 satisfied. DEC-066 retained. Do NOT close #429 (DEC-029). OQ-5 open. E2E-PG-4 remote-link round-back open. PG-A + DRIFT-README + PG-QUEUE-1 + PG-QUEUE-2 + DEFER-469 deferred. jira-e2e: JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ. Live-sandbox verification deferred (needs-sandbox). Ready: next feature cycle.` |
+| **Resume prompt** | `Read .factory/STATE.md. #476 ADF unit-test gap fill CYCLE CLOSED + MERGED: PR #488 squash-merged → develop @ d0bbb70 (2026-06-09T21:37:22Z); issue #476 CLOSED; 3 pinning tests (127→130 adf::tests); zero src changed. BC: 593. NFR: 41. Stories: 66 UNCHANGED. #489 OPEN (block-level HTML silent drop; future fix cycle). DEC-066 retained. Do NOT close #429 (DEC-029). OQ-5 open. E2E-PG-4 remote-link round-back open. PG-A + DRIFT-README + PG-QUEUE-1 + PG-QUEUE-2 + DEFER-469 deferred. jira-e2e: JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ. Ready: next feature cycle.` |
 
 ## Open Issues Tracker (post-#288)
 
 | Issue | Title | Status | Priority | Notes |
 |-------|-------|--------|----------|-------|
+| #489 | fix(adf): block-level HTML silently dropped | **OPEN** | MEDIUM | Discovered #476 cycle. Block `<div>` → empty doc; inline HTML preserved as text. Labels: bug/rust/ai-usability. Future fix cycle. |
 | #210 | (backlog) | OPEN | — | |
 | #331 | issueType bulk-edit wire schema fix | **CLOSED + LIVE-GREEN** — PR #453 + PR #454+#455 → develop @ f418bf5 (2026-06-01). Issue #331 CLOSED. | HIGH | Full VSDD F1–F7 COMPLETE (DEC-057). Live-fix chain: first live run 26777755130 (65/1, createmeta schema defect) → Perplexity+OpenAPI re-research → PR #454 (e2e wiring) + PR #455 (issueTypes/offset fix) → live run 26779732719 (66/0 ALL GREEN) (DEC-058). BC-3.4.018/019 (585 BCs). DRIFT-E2E-ALT RESOLVED. DRIFT-331-PAGINATION tracked (deferred). |
 | S-JSM-RESOLUTION-REQUIRED | jr issue move proactive resolution enforcement | **CLOSED + MERGED + LIVE-GREEN** — PR #465 squash-merged → develop @ 8ec9527 (2026-06-03T20:01:51Z). Post-merge e2e.yml run 26909701606 SUCCESS: JSM suite 73/0 (110.55s); test_e2e_jsm_resolution_enforcement PASSED LIVE. | HIGH | BC-3.2.013 + ADR-0015. --no-resolution opt-out; bulk excluded; reactive 400 backstop retained. First live proof of proactive resolution gate. DEC-066 retained. |

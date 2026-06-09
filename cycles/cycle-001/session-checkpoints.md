@@ -452,3 +452,16 @@ _Was the active checkpoint after #470/BC-7.2.006 MERGED + CLOSED (PR #477 → de
 | **Standing context** | JR_E2E_ENABLED=true repo var set. DEC-066 retained. DEC-065 closed. Do NOT close #429 (DEC-029). OQ-5 open. E2E-PG-4 remote-link round-back open. PG-A + DRIFT-README + PG-QUEUE-1 + PG-QUEUE-2 + DEFER-469: deferred (see Drift Items). E2E nightly was RED on test_e2e_issue_move_multikey_bulk — fix MERGED @ be6b57b; post-merge run 27159962721 validating. |
 | **Next step** | Await post-merge e2e.yml run 27159962721 completion to confirm E2E green. Then idle until next feature request. |
 | **Resume prompt** | `Read .factory/STATE.md. BULK-TRANSITION FIX: PR #479 squash-merged → develop @ be6b57b (2026-06-08T18:55:51Z). BC-3.2.014 (bulkTransitionInputs wrapper). Post-merge e2e.yml run 27159962721 in progress. DEFER-469: gitleaks-action MAJOR bump PR #469 held open (soak period). DEC-066 retained. DEC-065 closed. PG-A + DRIFT-README + PG-QUEUE-1 + PG-QUEUE-2 + DEFER-469 deferred. jira-e2e env: JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ. Do NOT close #429. OQ-5 open. E2E-PG-4 remote-link round-back open.` |
+
+---
+
+## Checkpoint archived 2026-06-09 (#483 GFM alerts → ADF panel CYCLE CLOSED + MERGED)
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-06-09 |
+| **Position** | **#483 GFM alerts → ADF panel CYCLE CLOSED + MERGED.** PR #487 squash-merged → develop @ 87a15ad; issue #483 CLOSED; branch deleted. 18 new unit tests; 132 adf::tests green. BC-7.2.009; BC 593. S-483 story; Stories 66. F1/F2/F3/F5/F6/F7 artifacts complete. S-7.02: F5 findings = CONTENT defects only; no follow-up required. Live-Jira sandbox verification deferred (needs-sandbox). |
+| **Convergence counter** | BC: 593. NFR: 41. Stories: 66. jira-e2e env: JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ. No active worktrees. |
+| **Standing context** | JR_E2E_ENABLED=true repo var set. DEC-066 retained. DEC-065 closed. Do NOT close #429 (DEC-029). OQ-5 open. E2E-PG-4 remote-link round-back open. PG-A + DRIFT-README + PG-QUEUE-1 + PG-QUEUE-2 + DEFER-469 deferred. 3 #474 F5 process-gap lessons [deferred] in lessons.md. |
+| **Next step** | Dispatch next feature cycle. |
+| **Resume prompt** | `Read .factory/STATE.md. #483 GFM alerts → ADF panel CYCLE CLOSED + MERGED: PR #487 squash-merged → develop @ 87a15ad; issue #483 CLOSED; branch deleted. BC: 593. NFR: 41. Stories: 66. BC-7.2.009 authored. S-7.02 satisfied. DEC-066 retained. Do NOT close #429 (DEC-029). OQ-5 open. E2E-PG-4 remote-link round-back open. PG-A + DRIFT-README + PG-QUEUE-1 + PG-QUEUE-2 + DEFER-469 deferred. jira-e2e: JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ. Live-sandbox verification deferred (needs-sandbox). Ready: next feature cycle.` |
