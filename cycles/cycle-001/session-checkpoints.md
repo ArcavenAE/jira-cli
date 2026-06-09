@@ -17,6 +17,21 @@ Superseded checkpoints are archived here when STATE.md is updated with a newer o
 
 ---
 
+## Checkpoint archived 2026-06-09 (#474 F5 CONVERGED; awaiting F6 targeted hardening)
+
+_Was the active checkpoint after #474 ADF minor constructs F5 CONVERGED (HYBRID: 8 Claude + Gemini cross-model, 3 CLEAN passes P6/P7/P8; Gemini CRITICAL mark-leak REFUTED). BC corpus: 592 (+2: BC-7.2.007/008). Superseded when F6+F7 completed and PR #486 was opened._
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-06-09 |
+| **Position** | **#474 ADF minor constructs F5 CONVERGED.** HYBRID adversarial: 8 Claude passes + Gemini cross-model (`agy`). 3 consecutive CLEAN (P6/P7/P8). Gemini CRITICAL mark-leak finding REFUTED (diff-only blindness; generic `end()`/`pop_mark` dispatch confirmed). BC corpus: 592 (+2: BC-7.2.007/008). All 8 count surfaces reconciled. 3 process-gap lessons appended to lessons.md (#474 VP-anchor guidance, subsection-count guard gap, `agy` tooling notes). Convergence record: `.factory/phase-f5-adversarial/474/convergence.md`. |
+| **Convergence counter** | BC: 592. NFR: 41. Stories: 64. develop HEAD on origin: be6b57b (unchanged — #474 spec-only so far). Branch: feat/adf-minor-constructs-474. jira-e2e env: JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ. |
+| **Standing context** | JR_E2E_ENABLED=true repo var set. DEC-066 retained. DEC-065 closed. Do NOT close #429 (DEC-029). OQ-5 open. E2E-PG-4 remote-link round-back open. PG-A + DRIFT-README + PG-QUEUE-1 + PG-QUEUE-2 + DEFER-469 deferred. Post-merge e2e.yml run 27159962721 (BULK-TRANSITION FIX) in progress at archive time. |
+| **Next step** | F6 targeted hardening for #474 (`vsdd-factory:phase-f6-targeted-hardening`), then F7 delta-convergence + code-delivery PR. |
+| **Resume prompt** | `Read .factory/STATE.md. #474 ADF minor constructs: F5 CONVERGED (8 Claude passes + Gemini cross-model via agy; 3 CLEAN: P6/P7/P8). Gemini CRITICAL mark-leak REFUTED. BC: 592. All 8 surfaces reconciled. Next: F6 targeted hardening. DEC-066 retained. Do NOT close #429. OQ-5 open. PG-A + DRIFT-README + PG-QUEUE-1 + PG-QUEUE-2 + DEFER-469 deferred. jira-e2e: JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ.` |
+
+---
+
 ## Checkpoint archived 2026-06-02 (develop @ 04b6b2c; S-JSM-E2E-1 CYCLE CLOSED+MERGED; awaiting first full JSM live run on next nightly)
 
 _Was the active checkpoint when S-JSM-E2E-1 had merged (PR #460 → develop @ 04b6b2c) and JR_E2E_JSM_PROJECT=EJ was activated. Post-merge e2e run 26828126605 validated clean-skip path and non-JSM guard; 6 JSM tests clean-skipped due to env var set AFTER run start. Superseded when post-merge e2e result was recorded._
