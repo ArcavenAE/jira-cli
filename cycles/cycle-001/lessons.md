@@ -3146,3 +3146,120 @@ operational note). Update adversarial-review dispatch instructions if pattern re
 Disposition: update adversarial-review SKILL.md dispatch instructions on next recurrence of `agy` cross-model usage.
 
 _Discovered: #474 BC-7.2.007/008 cross-model Gemini pass (Gemini Finding 1 CRITICAL = REFUTED), 2026-06-09._
+
+---
+
+## PG-REVIEW-1 [process-gap] F5 adversarial review must run as a STANDARD pre-merge step — not an after-the-fact addition
+
+**Tags:** [process-gap]
+
+**Date:** 2026-06-10
+**Cycles:** #489 ADF block-level HTML preservation (bug fix) + #473 bare-URL autolink (feature)
+**Tag:** [process-gap, pre-merge-discipline]
+
+### What happened
+
+F5 adversarial review was SKIPPED on the initial delivery of both cycle #489 (ADF block-level
+HTML preservation, bug fix) and cycle #473 (bare-URL autolink feature). In both cases the
+omission was caught only because the human explicitly asked "did we do the adversary review?"
+— not by any automated or process gate.
+
+When F5 was run retrospectively on #473, it found a real user-facing bug: the `href.contains`
+URL-scheme matching was over-permissive (redirect-href false-positive: `https://evil.com/http://`
+would pass the scheme check). This was caught specifically by the Gemini cross-model sliced
+corroboration pass — the Claude-only passes in the same session had not flagged it. The fix
+(trailing-slash-tolerant exact equality via `href == url || href == &(url.to_string() + "/")`)
+was confirmed CLEAN in a follow-up Claude confirm pass before PR merge.
+
+When F5 was run retrospectively on #489, it surfaced substantive findings about the raw-newline
+invariant in block HTML handling — leading to the filing of follow-up issue #492.
+
+### Why the cross-model (Gemini) layer is load-bearing
+
+The Gemini cross-model slice is not redundant with the Claude-only F5 passes. In both documented
+instances it caught defects that same-family Claude passes missed:
+
+- **#473:** `href.contains` over-permissiveness and case-insensitivity of URL-scheme matching
+  — caught by Gemini; NOT caught by 2 prior Claude passes in the same session.
+- **#474 (prior cycle):** §7.2 section-range inconsistency — caught by Gemini; missed by 4
+  Claude passes.
+
+The family-diversity of the cross-model layer produces genuinely independent review signal,
+not just a repetition of prior passes with different phrasing.
+
+### Corrective
+
+F5 adversarial review (Claude multi-pass to convergence + Gemini CLI sliced cross-model
+corroboration) MUST run as a STANDARD pre-merge step in every Feature-Mode cycle, before
+PR merge. It is not optional, not deferrable pending human inquiry, and not skippable
+because the feature "is small" or "is a bug fix."
+
+The cycle-closing checklist (S-7.02) gate at F7 should catch a skipped F5 — if it did not,
+that is itself a process-gap in the checklist's enforcement path.
+
+### Disposition
+
+Codified as a workflow convention. No separate self-improvement story needed: the corrective
+is a workflow discipline, not a code change. PG-REVIEW-1 is the canonical tracking reference.
+
+_Discovered: #473/#489 cycle retrospective — F5 SKIPPED on both; caught by human inquiry, 2026-06-10._
+_Tagged: [process-gap] — corrective: F5 (Claude convergence + Gemini cross-model) is MANDATORY pre-merge in all Feature-Mode cycles._
+
+---
+
+## PG-E2E-1 [process-gap] Live-Jira E2E coverage for a feature's load-bearing premise must be part of the same cycle — not deferred
+
+**Tags:** [process-gap]
+
+**Date:** 2026-06-10
+**Cycles:** #473 bare-URL autolink (feature) + #493 E2E follow-up
+**Tag:** [process-gap, e2e-coverage-discipline]
+
+### What happened
+
+Live-Jira E2E coverage was SKIPPED on the initial delivery of issue #473 (bare-URL autolink,
+`markdown_to_adf`). The omission was caught only because the human explicitly asked "did we
+add E2E tests?"
+
+The feature's core premise — that Jira REST requires the explicit `link` mark for autolinks
+to render as hyperlinks, and does NOT auto-linkify plain text — was confirmed via Atlassian
+documentation research and Perplexity-backed validation. However, this research was never
+proven end-to-end against a live Jira tenant.
+
+A follow-up cycle (#493, PR #493 → develop @ 8b639c1) was required to deliver the gated
+live-E2E test (`test_e2e_markdown_bare_url_produces_link_mark` + `adf_has_linked_url` helper
+in `tests/e2e_live.rs`). This test proves that Jira REST preserves the autolink `link` mark
+on round-trip, which is the load-bearing premise of the entire feature.
+
+### The distinction that matters
+
+**Tracked-but-deferred E2E** (e.g., #475, live sandbox verification for panel rendering)
+is acceptable when the deferral covers _coverage breadth_ — additional scenarios, edge-cases,
+or platforms that add confidence beyond what is already established. These deferrals have a
+known, bounded risk class.
+
+**Load-bearing-premise E2E** (e.g., #473) is NOT acceptable to defer. If a feature's
+_correctness rests on a claim about a third-party system's behavior_, a gated live-E2E delta
+proving that claim is part of the feature's minimum-viable verification set. Doc-confirmed
+is not sufficient when the behavior is the feature's entire raison d'être.
+
+### Corrective
+
+When a feature's correctness rests on a third-party-system behavior claim, a gated live-E2E
+delta proving that claim end-to-end should be part of the same cycle (F4 delivery or F7
+convergence), not deferred to a follow-up. The F7 cycle-closing checklist (S-7.02) should
+include an explicit gate: "If the feature's correctness depends on a third-party-system
+behavior claim, has a live-E2E test been delivered or explicitly justified as deferred with
+rationale (breadth vs. premise distinction)?"
+
+### Disposition
+
+Codified as a workflow convention. No separate self-improvement story needed: the corrective
+is a workflow discipline. PG-E2E-1 is the canonical tracking reference.
+
+Additional context: `tests/e2e_live.rs` and `docs/specs/e2e-live-jira-testing.md §4`
+document the delivered E2E test (`test_e2e_markdown_bare_url_produces_link_mark`). The test
+is inert in normal CI; runs nightly in `e2e.yml`.
+
+_Discovered: #473 follow-up cycle #493 — live-Jira E2E coverage skipped on initial delivery; caught by human inquiry, 2026-06-10._
+_Tagged: [process-gap] — corrective: load-bearing-premise E2E must be delivered in the same cycle, not deferred._
