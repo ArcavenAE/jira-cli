@@ -44,11 +44,192 @@ pub fn markdown_to_adf(markdown: &str) -> Value {
     for event in parser {
         builder.process(event);
     }
+    let mut content = builder.finish();
+    // pulldown-cmark 0.13 has no autolink extension (ENABLE_GFM only adds alert
+    // blockquotes), so bare URLs arrive as plain text. Post-process the built
+    // tree to apply `link` marks to explicit-scheme `http(s)://` runs — Jira's
+    // REST API does NOT auto-linkify plain text, so the mark is required for the
+    // URL to be clickable (#473, .factory/research/issue-473-bare-url-autolink-scope.md).
+    autolink_bare_urls(&mut content);
     json!({
         "version": 1,
         "type": "doc",
-        "content": builder.finish(),
+        "content": content,
     })
+}
+
+/// Post-process an ADF node array, applying `link` marks to bare `http(s)://`
+/// URLs found in plain `text` nodes. Scope is deliberately narrow (#473):
+///
+/// - **Explicit scheme only** (`http://` / `https://`). `www.`-prefixed hosts
+///   and bare emails are out of scope — they require scheme inference and carry
+///   a much higher false-positive rate in prose (version strings, file paths,
+///   sentence-final domains). Since an applied mark permanently writes a link
+///   into the user's issue, the narrowest scope that covers the common case wins.
+/// - Text nodes already carrying a `link` mark (from `<url>` autolinks or
+///   `[text](url)`) or a `code` mark (inline code) are left untouched.
+/// - `codeBlock` content is never linkified (preformatted/code text).
+///
+/// A *subset* of the GFM autolink boundary + extent rules is applied (see the
+/// "Deviations from GFM" section of `docs/specs/adf-bare-url-autolink.md`):
+/// a URL may start only at the beginning of a text node or after whitespace /
+/// `*_~(` (GFM's "before" set also admits `[` and `]`, which we deliberately omit
+/// to cut false positives); trailing punctuation (`?!.,:*_~`) is excluded; a trailing
+/// `)` is trimmed only when unbalanced. One inherent limitation of running over
+/// the *already-built* tree: a URL whose interior contains inline markup (e.g.
+/// `https://x/a*b*c`, where `*b*` parsed as emphasis) has already been split into
+/// separate text nodes, so only the leading plain run is linked.
+fn autolink_bare_urls(nodes: &mut Vec<Value>) {
+    let mut i = 0;
+    while i < nodes.len() {
+        let node_type = nodes[i].get("type").and_then(Value::as_str).unwrap_or("");
+        match node_type {
+            // Never linkify code — both block content and inline-code text nodes.
+            "codeBlock" => {}
+            "text" => {
+                let has_link_or_code =
+                    nodes[i]
+                        .get("marks")
+                        .and_then(Value::as_array)
+                        .is_some_and(|ms| {
+                            ms.iter().any(|m| {
+                                matches!(
+                                    m.get("type").and_then(Value::as_str),
+                                    Some("link") | Some("code")
+                                )
+                            })
+                        });
+                if !has_link_or_code {
+                    if let Some(replacement) = split_text_node_on_urls(&nodes[i]) {
+                        let len = replacement.len();
+                        nodes.splice(i..=i, replacement);
+                        i += len;
+                        continue;
+                    }
+                }
+            }
+            _ => {
+                if let Some(content) = nodes[i].get_mut("content").and_then(Value::as_array_mut) {
+                    autolink_bare_urls(content);
+                }
+            }
+        }
+        i += 1;
+    }
+}
+
+/// Split a plain `text` node into a run of text nodes where each bare-URL span
+/// gains a `link` mark (preserving the node's existing inline marks). Returns
+/// `None` when the text contains no bare URL, so the caller leaves the node as-is.
+fn split_text_node_on_urls(node: &Value) -> Option<Vec<Value>> {
+    let text = node.get("text").and_then(Value::as_str)?;
+    let spans = find_bare_url_spans(text);
+    if spans.is_empty() {
+        return None;
+    }
+    let base_marks = node.get("marks").and_then(Value::as_array);
+    let make_node = |slice: &str, is_link: bool| {
+        let mut out = json!({ "type": "text", "text": slice });
+        let mut marks: Vec<Value> = base_marks.cloned().unwrap_or_default();
+        if is_link {
+            marks.push(json!({ "type": "link", "attrs": { "href": slice } }));
+        }
+        if !marks.is_empty() {
+            out["marks"] = json!(marks);
+        }
+        out
+    };
+    let mut result = Vec::new();
+    let mut cursor = 0;
+    for (start, end) in spans {
+        if start > cursor {
+            result.push(make_node(&text[cursor..start], false));
+        }
+        result.push(make_node(&text[start..end], true));
+        cursor = end;
+    }
+    if cursor < text.len() {
+        result.push(make_node(&text[cursor..], false));
+    }
+    Some(result)
+}
+
+/// Locate bare `http(s)://` URL byte-spans within `text`, applying GFM autolink
+/// boundary and extent rules (explicit-scheme subset, #473).
+fn find_bare_url_spans(text: &str) -> Vec<(usize, usize)> {
+    // Scheme detection is case-insensitive (RFC 3986 / GFM treat URL schemes
+    // case-insensitively, so `HTTPS://`, `Http://`, `httpS://` are all valid).
+    // Search a lowercased copy: `to_ascii_lowercase` is a 1:1 byte-length-
+    // preserving map (only ASCII A–Z fold; non-ASCII bytes are untouched), so
+    // every offset into `lower` is a valid offset into `text`. Spans and hrefs
+    // are sliced from the ORIGINAL `text`, preserving the user's path case.
+    let lower = text.to_ascii_lowercase();
+    let mut spans = Vec::new();
+    let mut search = 0;
+    while let Some(rel) = lower[search..].find("http") {
+        let start = search + rel;
+        let scheme_len = if lower[start..].starts_with("https://") {
+            8
+        } else if lower[start..].starts_with("http://") {
+            7
+        } else {
+            search = start + 4;
+            continue;
+        };
+        // GFM boundary: an autolink starts only at text-node start, or after
+        // whitespace or one of `*`, `_`, `~`, `(`. (ASCII whitespace/punctuation
+        // are identical in `text` and `lower`, so checking either is equivalent.)
+        let boundary_ok = start == 0
+            || text[..start]
+                .chars()
+                .next_back()
+                .is_some_and(|c| c.is_whitespace() || matches!(c, '*' | '_' | '~' | '('));
+        if !boundary_ok {
+            search = start + scheme_len;
+            continue;
+        }
+        // Extent: consume non-whitespace, non-`<` characters after the scheme.
+        let mut end = start + scheme_len;
+        for ch in text[start + scheme_len..].chars() {
+            if ch.is_whitespace() || ch == '<' {
+                break;
+            }
+            end += ch.len_utf8();
+        }
+        let trimmed = start + trim_url_extent(&text[start..end]);
+        // Require at least one character past `scheme://` after trimming.
+        if trimmed > start + scheme_len {
+            spans.push((start, trimmed));
+            search = trimmed;
+        } else {
+            search = start + scheme_len;
+        }
+    }
+    spans
+}
+
+/// Given a candidate URL slice, return the byte length to keep after applying
+/// GFM trailing-punctuation trimming and parenthesis balancing. Trailing
+/// `?!.,:*_~` are excluded; a trailing `)` is trimmed only when the slice has
+/// more `)` than `(` (so a balanced `…Foo_(bar)` keeps its parens). Iterates
+/// until stable to handle combinations like `…example.com).`.
+fn trim_url_extent(url: &str) -> usize {
+    let mut end = url.len();
+    loop {
+        let trimmed = url[..end].trim_end_matches(['?', '!', '.', ',', ':', '*', '_', '~']);
+        let mut new_end = trimmed.len();
+        if trimmed.ends_with(')') {
+            let opens = trimmed.matches('(').count();
+            let closes = trimmed.matches(')').count();
+            if closes > opens {
+                new_end -= 1; // ')' is one byte
+            }
+        }
+        if new_end == end {
+            return end;
+        }
+        end = new_end;
+    }
 }
 
 /// Map a GFM alert kind to a portable ADF `panelType`.
@@ -1710,6 +1891,379 @@ mod tests {
         assert!(
             para_text.contains("<span>") && para_text.contains("</span>"),
             "HTML should pass through as literal text, got: {para_text:?}"
+        );
+    }
+
+    /// Bare-URL autolinking (#473). Scope: explicit-scheme `http(s)://` only.
+    /// Find the link `href` on the first text node carrying a `link` mark whose
+    /// text equals `expected_text`, searching a paragraph's inline content.
+    fn link_href_for_text<'a>(para: &'a Value, expected_text: &str) -> Option<&'a str> {
+        para["content"].as_array()?.iter().find_map(|n| {
+            if n.get("text").and_then(Value::as_str) != Some(expected_text) {
+                return None;
+            }
+            n.get("marks")?
+                .as_array()?
+                .iter()
+                .find(|m| m.get("type").and_then(Value::as_str) == Some("link"))
+                .and_then(|m| m.get("attrs"))
+                .and_then(|a| a.get("href"))
+                .and_then(Value::as_str)
+        })
+    }
+
+    #[test]
+    fn test_bare_https_url_becomes_link_mark() {
+        let adf = markdown_to_adf("see https://example.com now");
+        let para = &adf["content"][0];
+        assert_eq!(para["type"], "paragraph");
+        // Surrounding text stays plain; the URL span carries a link mark.
+        assert_eq!(
+            link_href_for_text(para, "https://example.com"),
+            Some("https://example.com"),
+            "bare https URL must get a link mark: {adf}"
+        );
+        // The leading/trailing words remain unmarked plain text.
+        let texts: Vec<&str> = para["content"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .filter_map(|n| n["text"].as_str())
+            .collect();
+        assert_eq!(texts, vec!["see ", "https://example.com", " now"], "{adf}");
+    }
+
+    #[test]
+    fn test_bare_http_url_becomes_link_mark() {
+        let adf = markdown_to_adf("http://a.co/x?q=1");
+        let para = &adf["content"][0];
+        assert_eq!(
+            link_href_for_text(para, "http://a.co/x?q=1"),
+            Some("http://a.co/x?q=1"),
+            "bare http URL must get a link mark: {adf}"
+        );
+    }
+
+    #[test]
+    fn test_bare_url_trailing_period_is_trimmed() {
+        let adf = markdown_to_adf("visit https://example.com.");
+        let para = &adf["content"][0];
+        // Trailing sentence period is NOT part of the link.
+        assert_eq!(
+            link_href_for_text(para, "https://example.com"),
+            Some("https://example.com"),
+            "trailing period must be excluded from the URL: {adf}"
+        );
+        let joined: String = para["content"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .filter_map(|n| n["text"].as_str())
+            .collect();
+        assert_eq!(joined, "visit https://example.com.", "no text lost: {adf}");
+    }
+
+    #[test]
+    fn test_bare_url_wrapping_paren_not_captured() {
+        let adf = markdown_to_adf("(https://example.com)");
+        let para = &adf["content"][0];
+        assert_eq!(
+            link_href_for_text(para, "https://example.com"),
+            Some("https://example.com"),
+            "wrapping close-paren must not be part of the URL: {adf}"
+        );
+    }
+
+    #[test]
+    fn test_bare_url_balanced_inner_parens_kept() {
+        let adf = markdown_to_adf("https://en.wikipedia.org/wiki/Foo_(bar)");
+        let para = &adf["content"][0];
+        assert_eq!(
+            link_href_for_text(para, "https://en.wikipedia.org/wiki/Foo_(bar)"),
+            Some("https://en.wikipedia.org/wiki/Foo_(bar)"),
+            "balanced trailing parens are part of the URL: {adf}"
+        );
+    }
+
+    #[test]
+    fn test_url_in_inline_code_not_linkified() {
+        let adf = markdown_to_adf("`https://example.com`");
+        let node = &adf["content"][0]["content"][0];
+        let marks: Vec<&str> = node["marks"]
+            .as_array()
+            .map(|a| a.iter().filter_map(|m| m["type"].as_str()).collect())
+            .unwrap_or_default();
+        assert!(marks.contains(&"code"), "must stay code: {adf}");
+        assert!(
+            !marks.contains(&"link"),
+            "code span must NOT be linkified: {adf}"
+        );
+    }
+
+    #[test]
+    fn test_url_in_code_block_not_linkified() {
+        let adf = markdown_to_adf("```\nhttps://example.com\n```");
+        assert_eq!(adf["content"][0]["type"], "codeBlock", "{adf}");
+        let node = &adf["content"][0]["content"][0];
+        assert!(
+            node.get("marks").is_none(),
+            "code block content must NOT be linkified: {adf}"
+        );
+    }
+
+    #[test]
+    fn test_existing_markdown_link_not_double_linkified() {
+        let adf = markdown_to_adf("[x](https://example.com)");
+        let content = adf["content"][0]["content"].as_array().unwrap();
+        assert_eq!(content.len(), 1, "exactly one text node: {adf}");
+        assert_eq!(
+            content[0]["text"], "x",
+            "link text preserved, not the URL: {adf}"
+        );
+        let link_marks = content[0]["marks"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .filter(|m| m["type"] == "link")
+            .count();
+        assert_eq!(link_marks, 1, "must not stack a second link mark: {adf}");
+    }
+
+    #[test]
+    fn test_www_url_stays_plain_text() {
+        let adf = markdown_to_adf("see www.example.com here");
+        let para = &adf["content"][0];
+        // www. is deliberately out of scope (no scheme to infer); stays plain.
+        assert!(
+            !contains_node_type(&adf, "link"),
+            "www. URL must NOT be linkified (out of scope): {adf}"
+        );
+        let joined: String = para["content"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .filter_map(|n| n["text"].as_str())
+            .collect();
+        assert_eq!(joined, "see www.example.com here", "{adf}");
+    }
+
+    #[test]
+    fn test_bare_email_stays_plain_text() {
+        let adf = markdown_to_adf("ping user@example.com please");
+        assert!(
+            !contains_node_type(&adf, "link"),
+            "bare email must NOT be linkified (out of scope): {adf}"
+        );
+        let joined: String = adf["content"][0]["content"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .filter_map(|n| n["text"].as_str())
+            .collect();
+        assert_eq!(
+            joined, "ping user@example.com please",
+            "email text preserved: {adf}"
+        );
+    }
+
+    #[test]
+    fn test_uppercase_https_scheme_is_linkified() {
+        // RFC 3986 / GFM treat schemes case-insensitively. The href preserves the
+        // user's original case (we do not normalize the scheme or path).
+        let adf = markdown_to_adf("see HTTPS://example.com now");
+        let para = &adf["content"][0];
+        assert_eq!(
+            link_href_for_text(para, "HTTPS://example.com"),
+            Some("HTTPS://example.com"),
+            "uppercase HTTPS scheme must be linkified, href preserves case: {adf}"
+        );
+    }
+
+    #[test]
+    fn test_mixed_case_scheme_is_linkified_and_path_case_preserved() {
+        let adf = markdown_to_adf("Http://Example.com/Path");
+        let para = &adf["content"][0];
+        assert_eq!(
+            link_href_for_text(para, "Http://Example.com/Path"),
+            Some("Http://Example.com/Path"),
+            "mixed-case scheme linkified; path case preserved verbatim: {adf}"
+        );
+    }
+
+    #[test]
+    fn test_trailing_uppercase_in_scheme_is_linkified() {
+        // `httpS://` matches `http` then the case-insensitive `https://` check.
+        let adf = markdown_to_adf("httpS://example.com");
+        let para = &adf["content"][0];
+        assert_eq!(
+            link_href_for_text(para, "httpS://example.com"),
+            Some("httpS://example.com"),
+            "partial-uppercase scheme must still match: {adf}"
+        );
+    }
+
+    #[test]
+    fn test_bare_url_after_open_bracket_stays_plain_text() {
+        // Deviation #1: GFM's autolink "before" set admits `[`, but we omit it to
+        // avoid linking the inner URL of an unresolved reference shortcut. pulldown
+        // emits `[https://example.com]` as literal text; the `[` before `http`
+        // fails our boundary check, so no link is produced.
+        let adf = markdown_to_adf("[https://example.com]");
+        assert!(
+            !contains_node_type(&adf, "link"),
+            "URL after `[` (reference-shortcut form) must stay plain text: {adf}"
+        );
+    }
+
+    #[test]
+    fn test_url_tight_against_preceding_word_not_matched() {
+        // GFM boundary: an autolink must start at line-start, after whitespace, or
+        // after one of *_~( . A scheme tight against a word char is not an autolink.
+        let adf = markdown_to_adf("foohttps://example.com");
+        assert!(
+            !contains_node_type(&adf, "link"),
+            "URL tight against a preceding word char must NOT match: {adf}"
+        );
+    }
+
+    #[test]
+    fn test_bare_url_round_trips_to_markdown_link_text() {
+        // A bare URL becomes a real link, so adf_to_text renders it in `[t](href)`
+        // form — semantically correct (it IS a link now), not the bare string.
+        let adf = markdown_to_adf("https://example.com");
+        let text = adf_to_text(&adf);
+        assert_eq!(
+            text, "[https://example.com](https://example.com)",
+            "bare URL round-trips as a markdown link: {text:?}"
+        );
+    }
+
+    // --- #473 F5 adversary remediation: characterize live autolink paths ---
+
+    #[test]
+    fn test_bare_url_split_by_emphasis_links_only_leading_run() {
+        // KNOWN LIMITATION (post-finish approach): inline markup inside a URL is
+        // parsed FIRST, so `*b*` splits the URL into separate text nodes. The
+        // autolink pass sees only the leading plain run and links that; the
+        // emphasized tail is NOT part of the href. Documented in the spec's
+        // "Deviations from GFM" section. This test pins the limitation so it is a
+        // declared behavior, not an accident.
+        let adf = markdown_to_adf("see https://example.com/a*b*c done");
+        let para = &adf["content"][0];
+        assert_eq!(
+            link_href_for_text(para, "https://example.com/a"),
+            Some("https://example.com/a"),
+            "only the leading run before the emphasis is linked: {adf}"
+        );
+        // The emphasized `b` is a separate em-marked node, not in the href.
+        let b = para["content"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .find(|n| n["text"] == "b")
+            .expect("emphasized 'b' node present");
+        assert_eq!(
+            b["marks"][0]["type"], "em",
+            "tail keeps em, not link: {adf}"
+        );
+    }
+
+    #[test]
+    fn test_bare_url_inside_emphasis_keeps_em_and_link() {
+        // A URL wholly inside an emphasis span arrives carrying an `em` mark; the
+        // split must preserve it AND add `link` (two distinct mark types, valid).
+        let adf = markdown_to_adf("*https://example.com*");
+        let node = &adf["content"][0]["content"][0];
+        let mark_types: Vec<&str> = node["marks"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .filter_map(|m| m["type"].as_str())
+            .collect();
+        assert!(mark_types.contains(&"em"), "em preserved: {adf}");
+        assert!(mark_types.contains(&"link"), "link added: {adf}");
+        // No duplicate-type marks (ADF treats marks as a type-keyed set).
+        assert_eq!(
+            mark_types.len(),
+            2,
+            "exactly em + link, no duplicates: {adf}"
+        );
+    }
+
+    #[test]
+    fn test_two_bare_urls_in_one_text_node_both_link() {
+        // find_bare_url_spans returns multiple spans; split_text_node_on_urls
+        // loops over them. Pins the cursor bookkeeping for >1 URL in one node.
+        let adf = markdown_to_adf("https://a.example.com and https://b.example.com");
+        let para = &adf["content"][0];
+        assert_eq!(
+            link_href_for_text(para, "https://a.example.com"),
+            Some("https://a.example.com"),
+            "first URL linked: {adf}"
+        );
+        assert_eq!(
+            link_href_for_text(para, "https://b.example.com"),
+            Some("https://b.example.com"),
+            "second URL linked: {adf}"
+        );
+        // The separator text between them stays plain.
+        let joined: String = para["content"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .filter_map(|n| n["text"].as_str())
+            .collect();
+        assert_eq!(
+            joined, "https://a.example.com and https://b.example.com",
+            "no text lost across two URLs: {adf}"
+        );
+    }
+
+    #[test]
+    fn test_bare_url_with_port_is_preserved() {
+        // The `:` trailing-trim rule must NOT strip a port (`:8080` is followed by
+        // digits, so `:` is interior, not trailing). Load-bearing: pins port survival.
+        let adf = markdown_to_adf("https://example.com:8080/path");
+        let para = &adf["content"][0];
+        assert_eq!(
+            link_href_for_text(para, "https://example.com:8080/path"),
+            Some("https://example.com:8080/path"),
+            "port must survive the trailing-colon trim rule: {adf}"
+        );
+    }
+
+    #[test]
+    fn test_bare_url_trailing_colon_is_trimmed() {
+        // A genuinely trailing `:` (end of the run) IS trimmed, per GFM.
+        let adf = markdown_to_adf("see https://example.com: next");
+        let para = &adf["content"][0];
+        assert_eq!(
+            link_href_for_text(para, "https://example.com"),
+            Some("https://example.com"),
+            "trailing colon excluded from URL: {adf}"
+        );
+    }
+
+    #[test]
+    fn test_bare_url_in_panel_is_linkified() {
+        // The walker recurses into a `panel` AFTER normalize_panel_content ran.
+        // A `link` is an inline text-node mark (not a node-level mark), so it does
+        // not violate the panel "no node marks" rule. Pins the post-normalization path.
+        let adf = markdown_to_adf("> [!NOTE]\n> see https://example.com here");
+        assert_eq!(adf["content"][0]["type"], "panel", "is a panel: {adf}");
+        assert!(
+            contains_node_type(&adf, "link"),
+            "URL inside a panel must be linkified: {adf}"
+        );
+    }
+
+    #[test]
+    fn test_bare_url_in_table_cell_is_linkified() {
+        let adf = markdown_to_adf("| a |\n|---|\n| https://example.com |");
+        assert!(contains_node_type(&adf, "table"), "is a table: {adf}");
+        assert!(
+            contains_node_type(&adf, "link"),
+            "URL inside a table cell must be linkified: {adf}"
         );
     }
 
