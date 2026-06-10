@@ -3600,3 +3600,9 @@ Archived to free STATE.md SIZE budget. All decisions belong to closed Feature Mo
 | DEC-032 | 2026-05-29: "Live-Jira E2E testing in CI" opened in Feature Mode. F1 APPROVED: zero src/, BC delta EMPTY, LOW regression risk, one story S-E2E-1. F2 COMPLETE: NFR-T-E2E-1 added; NFR count 40→41; CANONICAL-COUNTS.md updated; BC corpus unchanged at 583. OQ-2 resolved. Spec: docs/specs/e2e-live-jira-testing.md. | Test-infra features still warrant a Feature Mode cycle for spec discipline. | Phase 3 / Feature Mode | 2026-05-29 | orchestrator + human |
 | DEC-033/034 | 2026-05-29: S-E2E-1 F5 CONVERGED (7 passes, 3-clean bar). 6 CRITICAL fixed. S-E2E-1 MERGED PR #433 @ d484f84 — full VSDD F1–F7. CI 11/11; 1493/0. E2E INERT until R-NEW-1 provisioned. OQ-5 open. | F5 adversarial is load-bearing even for zero-src-change stories. | Phase 3 / S-E2E-1 F5+F7 | 2026-05-29 | human + adversary + state-manager |
 | DEC-035/036 | 2026-05-29: S-E2E-2 PR #434 @ 2ca9fc1 — E2E DELIVERED + OPERATIONAL. First live run (4 failures → FIX-A/B/C) → 20/0 GREEN. OQ-1 (sprint gap: team-managed board) RESOLVED: board recreated as company-managed Scrum id 3; JR_E2E_BOARD_ID 1→3; 20/0 sprint tests pass. | Team-managed board doesn't support jr sprint commands; company-managed Scrum fixes coverage. | Phase 3 / S-E2E-2 F7 + OQ-1 | 2026-05-29 | state-manager |
+
+### Archived Current Phase Step (from STATE.md, superseded by #489 ADF block-level HTML preservation CYCLE CLOSED row)
+
+| Step | Agent | Status | Output |
+|------|-------|--------|--------|
+| #483 GFM alerts → ADF panel CYCLE CLOSED + MERGED 2026-06-09 — PR #487 squash-merged → develop @ 87a15ad; issue #483 CLOSED; branch deleted. 18 new unit tests; 132 adf::tests green. BC-7.2.009 authored; 593 grand total. S-7.02 satisfied. | state-manager | CYCLE CLOSED + MERGED | BC 593 / NFR 41 / Stories 66. develop HEAD: 87a15ad. |

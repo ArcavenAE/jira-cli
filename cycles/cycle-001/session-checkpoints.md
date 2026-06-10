@@ -465,3 +465,16 @@ _Was the active checkpoint after #470/BC-7.2.006 MERGED + CLOSED (PR #477 → de
 | **Standing context** | JR_E2E_ENABLED=true repo var set. DEC-066 retained. DEC-065 closed. Do NOT close #429 (DEC-029). OQ-5 open. E2E-PG-4 remote-link round-back open. PG-A + DRIFT-README + PG-QUEUE-1 + PG-QUEUE-2 + DEFER-469 deferred. 3 #474 F5 process-gap lessons [deferred] in lessons.md. |
 | **Next step** | Dispatch next feature cycle. |
 | **Resume prompt** | `Read .factory/STATE.md. #483 GFM alerts → ADF panel CYCLE CLOSED + MERGED: PR #487 squash-merged → develop @ 87a15ad; issue #483 CLOSED; branch deleted. BC: 593. NFR: 41. Stories: 66. BC-7.2.009 authored. S-7.02 satisfied. DEC-066 retained. Do NOT close #429 (DEC-029). OQ-5 open. E2E-PG-4 remote-link round-back open. PG-A + DRIFT-README + PG-QUEUE-1 + PG-QUEUE-2 + DEFER-469 deferred. jira-e2e: JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ. Live-sandbox verification deferred (needs-sandbox). Ready: next feature cycle.` |
+
+---
+
+## Checkpoint archived 2026-06-10 (#489 ADF block-level HTML preservation CYCLE CLOSED + MERGED)
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-06-09 |
+| **Position** | **#476 ADF unit-test gap fill CYCLE CLOSED + MERGED.** PR #488 squash-merged → develop @ d0bbb70 (2026-06-09T21:37:22Z); issue #476 CLOSED; branch test/adf-untested-paths-476 deleted; worktree .worktrees/adf-476 removed. 3 new pinning tests (127→130 adf::tests); zero production code changed. Code review: CR-001+CR-002 fixed before PR; 0 PR-stage findings. CI 11/11 GREEN. FOLLOW-UP: #489 filed (fix(adf): block-level HTML silently dropped — inconsistent with inline HTML). |
+| **Convergence counter** | BC: 593. NFR: 41. Stories: 66. jira-e2e env: JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ. No active worktrees. |
+| **Standing context** | JR_E2E_ENABLED=true repo var set. DEC-066 retained. DEC-065 closed. Do NOT close #429 (DEC-029). OQ-5 open. #489 OPEN (block-level HTML silent drop — future fix cycle). E2E-PG-4 remote-link round-back open. PG-A + DRIFT-README + PG-QUEUE-1 + PG-QUEUE-2 + DEFER-469 deferred. 3 #474 F5 process-gap lessons [deferred] in lessons.md. |
+| **Next step** | Dispatch next feature cycle. |
+| **Resume prompt** | `Read .factory/STATE.md. #476 ADF unit-test gap fill CYCLE CLOSED + MERGED: PR #488 squash-merged → develop @ d0bbb70 (2026-06-09T21:37:22Z); issue #476 CLOSED; 3 pinning tests (127→130 adf::tests); zero src changed. BC: 593. NFR: 41. Stories: 66 UNCHANGED. #489 OPEN (block-level HTML silent drop; future fix cycle). DEC-066 retained. Do NOT close #429 (DEC-029). OQ-5 open. E2E-PG-4 remote-link round-back open. PG-A + DRIFT-README + PG-QUEUE-1 + PG-QUEUE-2 + DEFER-469 deferred. jira-e2e: JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ. Ready: next feature cycle.` |
