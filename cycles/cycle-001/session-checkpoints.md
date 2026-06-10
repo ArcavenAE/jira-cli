@@ -468,6 +468,19 @@ _Was the active checkpoint after #470/BC-7.2.006 MERGED + CLOSED (PR #477 → de
 
 ---
 
+## Checkpoint archived 2026-06-10 (#471 GFM task lists → ADF — pre-F4 gate awaiting human approval)
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-06-10 |
+| **Position** | **#473 bare-URL autolink E2E coverage CYCLE CLOSED + MERGED.** PR #493 squash-merged → develop @ 8b639c1 (2026-06-10); issue #473 CLOSED (feature #491 + E2E #493 both merged); branch test/e2e-bare-url-autolink-473 deleted. `test_e2e_markdown_bare_url_produces_link_mark` + `adf_has_linked_url` helper added to `tests/e2e_live.rs`; documented in `docs/specs/e2e-live-jira-testing.md §4`. Proves Jira REST preserves autolink `link` mark on round-trip. F5: Claude adversary CLEAN → Gemini cross-model slice caught `href.contains` over-permissiveness (redirect-href false-positive) → fixed to trailing-slash-tolerant exact equality → Claude confirm CLEAN. CI 11/11 GREEN. No new CLI surface; no new env vars. BC 593 / NFR 41 / Stories 66 UNCHANGED. PG-REVIEW-1 + PG-E2E-1 codified in `cycles/cycle-001/lessons.md` (corrective-convention, no follow-up story). #492 OPEN (block-HTML raw-\n follow-up, needs-sandbox). |
+| **Convergence counter** | BC: 593. NFR: 41. Stories: 66. jira-e2e env: JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ. No active worktrees. |
+| **Standing context** | JR_E2E_ENABLED=true repo var set. DEC-066 retained. DEC-065 closed. Do NOT close #429 (DEC-029). OQ-5 open. #473 CLOSED (feature + E2E both merged). #492 OPEN (block-HTML raw-\n). E2E-PG-4 remote-link round-back open. PG-A + DRIFT-README + PG-QUEUE-1 + PG-QUEUE-2 + DEFER-469 deferred. PG-REVIEW-1 + PG-E2E-1 codified in lessons.md (corrective-convention; no follow-up story). 3 #474 F5 process-gap lessons [deferred] also in lessons.md. |
+| **Next step** | Dispatch next feature cycle. |
+| **Resume prompt** | `Read .factory/STATE.md. #473 bare-URL autolink CYCLE CLOSED + MERGED (feature PR #491 + E2E PR #493 → develop @ 8b639c1, 2026-06-10); issue #473 CLOSED; test_e2e_markdown_bare_url_produces_link_mark + adf_has_linked_url added to e2e_live.rs; Gemini cross-model caught href.contains over-permissiveness → fixed; F5 CLEAN. BC: 593. NFR: 41. Stories: 66 UNCHANGED. #492 OPEN (block-HTML raw-\n). PG-REVIEW-1 + PG-E2E-1 codified in lessons.md (F5+E2E pre-merge discipline; corrective-convention). DEC-066 retained. Do NOT close #429 (DEC-029). OQ-5 open. E2E-PG-4 remote-link round-back open. PG-A + DRIFT-README + PG-QUEUE-1 + PG-QUEUE-2 + DEFER-469 deferred. jira-e2e: JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ. Ready: next feature cycle.` |
+
+---
+
 ## Checkpoint archived 2026-06-10 (#489 ADF block-level HTML preservation CYCLE CLOSED + MERGED)
 
 | Field | Value |

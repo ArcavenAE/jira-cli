@@ -3263,3 +3263,45 @@ is inert in normal CI; runs nightly in `e2e.yml`.
 
 _Discovered: #473 follow-up cycle #493 — live-Jira E2E coverage skipped on initial delivery; caught by human inquiry, 2026-06-10._
 _Tagged: [process-gap] — corrective: load-bearing-premise E2E must be delivered in the same cycle, not deferred._
+
+---
+
+### PG-471-1: ADF story baseline hardcoding (4th recurrence in ADF story family)
+
+**Category:** [process-gap]
+**Cycle:** #471 GFM task lists → ADF — F3 story decomposition, 2026-06-10
+**Tracking ID:** PG-471-1
+
+#### Symptom
+
+Story adversary finding F-001 (Pass 1) caught a hardcoded `adf::tests` baseline count (132/149) in
+S-471 AC text. The actual baseline at story-authoring time was 155 (post-#483, #489). The stale
+number was inherited from the F1 EC list, which referenced a different baseline.
+
+This is the **4th occurrence** in the ADF story family: #470 F3, #474 F3, #483 F3, and now #471 F3
+all had stale test-count baselines caught by the adversary.
+
+#### Root cause
+
+Story authors copy the "net +N tests" framing from the feature EC list into ACs, using the
+baseline that was current when the EC list was drafted. By the time F3 story decomposition runs,
+the adf::tests count has often advanced (due to other merged cycles running in parallel).
+
+#### Mitigation adopted in S-471
+
+ACs reworded to express counts as **derive-at-implementation-time deltas** rather than frozen
+targets. The implementer runs `grep -c 'fn test_' src/adf.rs` at the start of F4 to establish the
+real baseline, then derives the expected post-implementation count from that. The AC text reads
+"net +N adf::tests over the baseline established at implementation time" rather than citing a
+specific number.
+
+#### Corrective convention
+
+For any ADF-touching story: do NOT freeze a specific `adf::tests` count in ACs. Express as delta
+over implementation-time baseline. Story-writer should note the current count as "approximately N
+(verify at implementation time)".
+
+No follow-up story needed — the convention is adopted in-story as the mitigation.
+
+_Discovered: #471 F3 adversary Pass 1 finding F-001, 2026-06-10._
+_Tagged: [process-gap] — 4th recurrence; corrective convention adopted in-story._

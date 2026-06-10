@@ -7,6 +7,71 @@ project: "jr (jira-cli)"
 
 Track all spec version changes. Most recent version first.
 
+## [1.3.5] - 2026-06-10
+
+### Type: PATCH
+
+### Summary
+
+BC-7.2.010 Phase F2 update: F4-conditional blockquote dependency resolved at spec time by research `issue-471-pulldown-blockquote-tasklist.md`. pulldown-cmark 0.13.3 primary-source read (`firstpass.rs:128–160`, `parse.rs:2269`) confirms `blockquote > taskList` is emitted for `> - [ ] item` — the task scan is container-agnostic, runs after the blockquote `>` prefix is stripped, and is gated only on `ENABLE_TASKLISTS`. No F4 back-propagation needed. BC count unchanged at 594.
+
+### Modified Requirements
+
+| ID | Change |
+|----|--------|
+| BC-7.2.010 | (1) Obligation #2 de-fenced: removed CONDITIONAL/F4-gated status; normalization arm is now REQUIRED and unconditional. (2) EC-6 de-fenced: removed CONDITIONAL qualifier and `[process-gap]` tag; normalization now specified definitively as `blockquote > [paragraph, ...]`. (3) EC-10(c) `(conditional on EC-6 confirmation)` qualifier removed. (4) Trace test `test_task_list_in_blockquote_normalized_to_paragraphs` annotation updated from "(F4-conditional)" to "(asserts definite output — unconditional)". (5) Builder-mechanics paragraph gains an explicit `TaskListMarker` ordering contract pinning the marker as the first child after `Start(Tag::Item)` in ALL nesting contexts (top-level, blockquote, nested), citing `firstpass.rs:128–160` and the research file. (6) Confidence headline updated: blockquote question now HIGH; MEDIUM-HIGH on top-level placement unchanged. |
+
+### Impact Assessment
+
+| Dimension | Before | After | Delta |
+|-----------|--------|-------|-------|
+| BC corpus (BC-INDEX.md total_bcs) | 594 | 594 | 0 |
+| NFR corpus | 41 | 41 | 0 |
+| bc-7-output-render.md total_bcs | 89 | 89 | 0 |
+
+### Research Basis
+
+`.factory/research/issue-471-pulldown-blockquote-tasklist.md` (2026-06-10, HIGH confidence, primary-source read of pulldown-cmark 0.13.3 `firstpass.rs` + `parse.rs` + `gfm_tasklist.rs` snapshot suite, cross-validated via Perplexity sonar-deep-research).
+
+---
+
+## [1.3.4] - 2026-06-10
+
+### Type: PATCH
+
+### Summary
+
+Issue #471: GFM task lists (`- [ ] …` / `- [x] …`) → ADF `taskList`/`taskItem` — F2 spec evolution. One new BC authored in `bc-7-output-render.md` (BC-7.2.010). BC corpus 593→594. NFR corpus unchanged at 41. F1 gate decisions encoded: localId uses counter-based deterministic strings (no `uuid` crate), mixed list promotes whole container to `taskList`, live round-trip verification deferred (needs-sandbox).
+
+### New Requirements
+
+| ID | Description |
+|----|-------------|
+| BC-7.2.010 | `markdown_to_adf` enables `ENABLE_TASKLISTS`; `- [ ]` maps to `taskItem { state: "TODO" }` and `- [x]`/`- [X]` maps to `taskItem { state: "DONE" }` (uppercase enforced per `full.json` schema). `taskList.attrs.localId` and `taskItem.attrs.localId` are counter-based deterministic strings (`"0"`, `"1"`, …). Mixed lists (any item has a checkbox) promote the entire container to a `taskList`; plain items become `taskItem { state: "TODO" }`. `taskItem.content` is inline-only (no paragraph wrapper). `normalize_list_item_content` gains a `taskList` arm (unwrap to plain `listItem`+`paragraph`). Blockquote content normalizes `taskList` to `paragraph` nodes. Panel content passes `taskList` through unchanged. `is_empty_block_container` prune set gains `"taskList"` and `"taskItem"`. `adf_to_text` renders `taskList`/`taskItem` back to `- [ ]`/`- [x]` GFM syntax with `ListFrame::Task` indentation. Round-trip stable for all five canonical state values. |
+
+### Modified Requirements
+
+None. BC-7.2.003 cross-reference note added (BC-7.2.010 is the task-list coverage anchor; no body change to BC-7.2.003 itself).
+
+### New Spec Artifacts
+
+None (BC added inline to `bc-7-output-render.md`). Implementer should create `docs/specs/adf-task-list.md` design spec in F4 (parallel to `docs/specs/adf-panel-content-model.md` for #483).
+
+### Impact Assessment
+
+| Dimension | Before | After | Delta |
+|-----------|--------|-------|-------|
+| BC corpus (BC-INDEX.md total_bcs) | 593 | 594 | +1 |
+| NFR corpus (nfr-catalog.md total_nfrs) | 41 | 41 | 0 |
+| bc-7-output-render.md total_bcs | 88 | 89 | +1 |
+| bc-7-output-render.md definitional_count | 42 | 43 | +1 |
+
+### Feature Scope
+
+Backend only — `src/adf.rs` delta. No CLI surface change, no API shape change, no config change. Regression risk MEDIUM: existing test `test_markdown_task_list_syntax_preserved_as_text` will fail when `ENABLE_TASKLISTS` is added and must be replaced in F4 with new tests asserting `taskList`/`taskItem` output shape. No new integration tests or E2E tests required. All new tests will be inline unit tests in `src/adf.rs::tests`.
+
+---
+
 ## [1.3.3] - 2026-06-08
 
 ### Type: PATCH

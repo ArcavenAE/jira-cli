@@ -1,0 +1,21 @@
+# Affected files — issue #471 (task list ADF mapping)
+# Format: <change-type> <path>
+# Change types: MODIFIED, NEW, POSSIBLY_MODIFIED
+
+MODIFIED    src/adf.rs
+NEW         docs/specs/adf-task-list.md
+MODIFIED    .factory/specs/prd/bc-7-output-render.md
+MODIFIED    .factory/specs/prd/BC-INDEX.md
+MODIFIED    .factory/specs/prd/CANONICAL-COUNTS.md
+MODIFIED    CLAUDE.md
+POSSIBLY_MODIFIED  Cargo.toml
+
+# Regression baseline (NOT changed)
+# src/api/
+# src/cli/
+# src/types/
+# src/cache.rs
+# src/config.rs
+# src/output.rs
+# tests/ (integration tests — no existing tests touch adf.rs directly)
+# All bc-*.md files except bc-7-output-render.md
