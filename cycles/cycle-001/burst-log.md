@@ -3606,3 +3606,80 @@ Archived to free STATE.md SIZE budget. All decisions belong to closed Feature Mo
 | Step | Agent | Status | Output |
 |------|-------|--------|--------|
 | #483 GFM alerts → ADF panel CYCLE CLOSED + MERGED 2026-06-09 — PR #487 squash-merged → develop @ 87a15ad; issue #483 CLOSED; branch deleted. 18 new unit tests; 132 adf::tests green. BC-7.2.009 authored; 593 grand total. S-7.02 satisfied. | state-manager | CYCLE CLOSED + MERGED | BC 593 / NFR 41 / Stories 66. develop HEAD: 87a15ad. |
+
+---
+
+### Archived Decisions (DEC-064..066) from STATE.md Decisions Log — 2026-06-11
+
+Archived to free STATE.md SIZE budget. All three belong to closed cycles. DEC-067..071 remain inline in STATE.md.
+
+| ID | Decision | Rationale | Phase | Date | Made By |
+|----|----------|-----------|-------|------|---------|
+| DEC-064 | 2026-06-02: JSM E2E expansion (project EJ) — 7 scenarios, self-close teardown, dynamic RT id, zero-src. JR_E2E_JSM_PROJECT=EJ in jira-e2e env. | F1 human gate | Phase 3 / JSM E2E | 2026-06-02 | human + orchestrator |
+| DEC-065 | 2026-06-02: S-JSM-E2E-1 AC-001/003 deliberately un-contracted orphans. Queue BCs deferred to S-QUEUE-BC-1. PG-JSM-E2E-1 logged. | F5 adversarial resolution | Phase 3 / JSM E2E | 2026-06-02 | orchestrator + adversary |
+| DEC-066 | 2026-06-03: S-JSM-RESOLUTION-REQUIRED F1 gate. Proactive resolution enforcement on done-category transitions. ADR-0015. --no-resolution opt-out. Bulk excluded. | F1 human gate | Phase 3 / JSM SRC | 2026-06-03 | human + orchestrator |
+
+### Archived Phase Progress Rows (pre-#471 ADF era) from STATE.md — 2026-06-11
+
+Archived to free STATE.md SIZE budget. All rows for closed cycles between issue-327 and issue-473 (inclusive).
+
+| Cycle | Status | Merged At | Notes |
+|-------|--------|-----------|-------|
+| issue-327 (Dependabot rand 0.9→0.10) | CYCLE CONVERGED — PR #413 | 2026-05-26 | F1–F7 COMPLETE |
+| E2E feature (S-E2E-1..5) | F7 CONVERGED + LIVE-GREEN | develop @ fef44bd | PR #440+#441+#442; live run 26719160283 57/0. BC 585. Stories 56. |
+| S-QUEUE-BC-1 (queue BCs BC-X.8.008/009) | CYCLE CLOSED + MERGED | develop @ e3a14de | PR #478. BC 589 (+2). 10-pass convergence. |
+| issue-331 (issueType bulk-edit wire schema fix) | CYCLE CLOSED + LIVE-GREEN | develop @ f418bf5 | PR #453+#454+#455; live run 26779732719 66/0. BC 585 (+0). DEC-058. |
+| E2E fork-safe CI enablement (S-E2E-FORK-1) | CYCLE CLOSED + LIVE-GREEN | develop @ afa12570 | PR #459; run 26793560680 67/0. BC 585. DEC-063. |
+| JSM E2E coverage (S-JSM-E2E-1) | CYCLE CLOSED + LIVE-VALIDATED | develop @ 04b6b2c | PR #460; 7 JSM scenarios. BC 585. DEC-064/065. |
+| JSM teardown fix (S-JSM-E2E-2) | CYCLE CLOSED + MERGED | develop @ 176215e | PR #464. jsm_self_close dynamic. BC 585. |
+| JSM resolution enforcement (S-JSM-RESOLUTION-REQUIRED) | CYCLE CLOSED + MERGED + LIVE-GREEN | develop @ 8ec9527 | PR #465; live run 73/0. BC-3.2.013. DEC-066. |
+| ADF listItem content-model (issue #470 / BC-7.2.006) | CYCLE CLOSED + MERGED | develop @ aa602a1 | PR #477. BC 587 (+1). |
+| ADF minor constructs (issue #474 / BC-7.2.007+008) | CYCLE CLOSED + MERGED | develop @ 56226b4 | PR #486. subsup + heading-attr. BC 592 (+2). |
+| GFM alerts → ADF panel (issue #483 / BC-7.2.009) | CYCLE CLOSED + MERGED | develop @ 87a15ad | PR #487. 18 tests; 132 adf::tests. BC 593 (+1). |
+| ADF unit-test gap fill (issue #476, test-only) | CYCLE CLOSED + MERGED | develop @ d0bbb70 | PR #488. 3 pinning tests. BC 593 unchanged. |
+| ADF block-level HTML (issue #489, bug fix) | CYCLE CLOSED + MERGED | develop @ 13978ce | PR #490. NodeKind::HtmlBlock. 3 tests. BC 593 unchanged. |
+| bare-URL autolink E2E coverage (issue #473 follow-up, PR #493) | CYCLE CLOSED + MERGED | develop @ 8b639c1 | E2E follow-up. PG-REVIEW-1 + PG-E2E-1. BC 593 unchanged. |
+
+### Archived Drift Items (DEFERRED/LOW, pre-#471) from STATE.md Drift Items — 2026-06-11
+
+Archived to free STATE.md SIZE budget. Items with status DEFERRED or process-gap/LOW that are not actively watched.
+
+| ID | Area | Description | Status at Archive |
+|----|------|-------------|-------------------|
+| DRIFT-001 | Pass 21+ propagation (recurring) | Count/chain-length fixes require downstream grep sweep. Codify as S-7.01. | MEDIUM — process-gap recurring |
+| DRIFT-003 | STORY-INDEX → WAVE-PLAN sibling propagation gap | S-3.06 scope expansion needed. | MEDIUM — process-gap |
+| DRIFT-004 | STORY-INDEX BC IDs not validated | Fix authors must open canonical BC file. | HIGH — process-gap |
+| R1-001 | JiraClient ergonomics | DEFERRED 2026-05-07. Bundle into next client.rs touch. | DEFERRED |
+| R1-002 | Stale doc comment workflow.rs | DEFERRED 2026-05-07. One-line fix. | DEFERRED |
+| S-0.03-S1 | Missing integration test effective_wid fallback | DEFERRED 2026-05-07. | DEFERRED |
+| S-0.05-F1 | Cosmetic typo "JiaClient" | DEFERRED 2026-05-07. | DEFERRED |
+| S-0.05-F2 | Stale doc comment renamed test | TO_VERIFY 2026-05-07. | DEFERRED |
+| S-0.05-F3..S-2.07-DEFER-02 | 14 LOW cosmetic/doc items (Wave 1+2) | Full details: `cycles/cycle-001/blocking-issues-resolved.md`. | DEFERRED |
+| WV2-FIX-A-FOLLOWUP-01/02 | auth_output_json.rs BC citation fixes | Bundle into next develop touch. | DEFERRED |
+| WV2-CV-03 | STORY-INDEX Wave 0/1 rows show `draft` | DEFERRED — S-3.06 sweep. | DEFERRED |
+| WV2-CV-11, WV2-CV-12 | NITs H-018 + S-0.05-F2 | DEFERRED. | DEFERRED |
+| DRIFT-005..DRIFT-009, PG-365-2 | Process-gap/drift items | Codified; target: v0.6 / engine. | DEFERRED |
+| PG-01..04 | Process gaps pr4-dispatch passes | DEFERRED — engine-scope. | DEFERRED |
+| S-288-pr2-PG group | 13 DEFERRED process-gap items | Full details: `cycles/cycle-001/drift-items-deferred-S-288.md`. | DEFERRED |
+| F1-AUDIT-MISCOUNT-410 | F1 test undercount in multi_cloudid_disambiguation.rs | DEFERRED; codified L-410-1. | DEFERRED |
+| L-428-2-PG | Story-writer AC verification greps drift | DEFERRED. | DEFERRED |
+| DI-E2E-F5-1 | AC-006 grep text imprecise | DEFERRED — doc/runbook-level. | DEFERRED |
+| PG-388-4, PG-384-1/2, PG-385-1..7, PG-398-1..5 | Process gaps #388/#384/#385/#398 | Codified in lessons.md / TRACKED IN #400. | DEFERRED |
+| PG-331-1 | CLI surface guard direction gap | DEFERRED — engine/test-infra scope. | DEFERRED |
+| PG-331-2 | Adversary dispatch wrong-tree misread | DEFERRED / CODIFIED-AS-LESSON. | DEFERRED |
+| PG-458-1/2 | Surface guard gaps | DEFERRED — engine/test-infra scope. | DEFERRED |
+| PG-459-1 | No CI lint for GHA YAML | DEFERRED — engine/test-infra scope. | DEFERRED |
+| PG-459-2 | No spec-vs-workflow drift check | DEFERRED — engine/test-infra scope. | DEFERRED |
+| PG-JSM-E2E-1 | No guard for test-docstring BC traces | TRACKED → S-QUEUE-BC-1 (complete). | DEFERRED |
+| PG-QUEUE-1 | 10th unguarded count surface in CANONICAL-COUNTS.md | DEFERRED — tooling enhancement. | DEFERRED |
+| PG-QUEUE-2 | Empty table miscitation in BC-X.12 requesttype BCs | DEFERRED — pre-existing requesttype prose correction. | DEFERRED |
+
+### Archived Open Issues Tracker Closed Rows — 2026-06-11
+
+| Issue | Status at Archive |
+|-------|-------------------|
+| #471 | CLOSED + MERGED — PR #494 → develop @ 4c9b069 (2026-06-11). BC-7.2.010 + EC-17. |
+| #489 | CLOSED + MERGED — PR #490 → develop @ 13978ce (2026-06-10). |
+| #473 | CLOSED + MERGED — PR #491 + PR #493 → develop @ 8b639c1 (2026-06-10). |
+| #331 | CLOSED + LIVE-GREEN — PR #453+#454+#455 → develop @ f418bf5 (2026-06-01). |
+| S-JSM-RESOLUTION-REQUIRED | CLOSED + MERGED + LIVE-GREEN — PR #465 → develop @ 8ec9527 (2026-06-03). |

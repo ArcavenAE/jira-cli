@@ -504,3 +504,18 @@ _Was the active checkpoint after #470/BC-7.2.006 MERGED + CLOSED (PR #477 → de
 | **Standing context** | JR_E2E_ENABLED=true repo var set. DEC-066 retained. DEC-065 closed. Do NOT close #429 (DEC-029). OQ-5 open. #489 OPEN (block-level HTML silent drop — future fix cycle). E2E-PG-4 remote-link round-back open. PG-A + DRIFT-README + PG-QUEUE-1 + PG-QUEUE-2 + DEFER-469 deferred. 3 #474 F5 process-gap lessons [deferred] in lessons.md. |
 | **Next step** | Dispatch next feature cycle. |
 | **Resume prompt** | `Read .factory/STATE.md. #476 ADF unit-test gap fill CYCLE CLOSED + MERGED: PR #488 squash-merged → develop @ d0bbb70 (2026-06-09T21:37:22Z); issue #476 CLOSED; 3 pinning tests (127→130 adf::tests); zero src changed. BC: 593. NFR: 41. Stories: 66 UNCHANGED. #489 OPEN (block-level HTML silent drop; future fix cycle). DEC-066 retained. Do NOT close #429 (DEC-029). OQ-5 open. E2E-PG-4 remote-link round-back open. PG-A + DRIFT-README + PG-QUEUE-1 + PG-QUEUE-2 + DEFER-469 deferred. jira-e2e: JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ. Ready: next feature cycle.` |
+
+---
+
+## Checkpoint archived 2026-06-11 (pre-compact — #471 + #495 CYCLE CLOSED + MERGED, STATE.md at 200-line limit)
+
+_Was the active checkpoint after PR #495 (ADF E2E loop-back) squash-merged → develop @ bfb723f. Superseded when STATE.md was compacted from 200→142 lines and the resume checkpoint was rewritten for durability._
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-06-11 |
+| **Position** | ADF E2E coverage cycle (deferred-test loop-back) CLOSED + MERGED @ bfb723f. PR #495 → develop (2026-06-11T01:43:18Z). 5 gated live-Jira E2E tests added (#471 task-lists+EC-17, #474 subsup, #483 panel info/warning, #489 block-HTML). NO src change. BC 594. NFR 41. Stories 67. No active worktrees. Nightly e2e.yml = first live-verify pending. #475 partially addressed (Gap 1 + #470 listItem remain). |
+| **Convergence counter** | BC: 594. NFR: 41. Stories: 67. jira-e2e env: JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ. No active worktrees. |
+| **Standing context** | JR_E2E_ENABLED=true. DEC-067/068/069/070/071 (#471 F1→F7). DEC-066 retained. Do NOT close #429 (DEC-029). OQ-5 open. #492 OPEN. E2E-PG-4 remote-link round-back open. PG-A + DRIFT-README + PG-QUEUE-1 + PG-QUEUE-2 + DEFER-469 deferred. SEC-001 logged. DEFERRED-ADF-E2E PARTIALLY RESOLVED: remaining #470 listItem live-E2E + #475 Gap 1. |
+| **Next step** | STATE.md compaction + durable resume checkpoint rewrite. |
+| **Resume prompt** | `Read .factory/STATE.md. ADF E2E loop-back CLOSED + MERGED (2026-06-11). PR #495 → develop @ bfb723f. 5 gated E2E tests. BC 594 / NFR 41 / Stories 67. No active worktrees. develop HEAD bfb723f. Nightly e2e.yml = first live-verify pending. DEFERRED-ADF-E2E partially resolved: remaining #470 listItem live-E2E + #475 Gap 1. DEC-066 retained. Do NOT close #429 (DEC-029). OQ-5 open. #492 OPEN. E2E-PG-4 remote-link open. PG-A + DRIFT-README + PG-QUEUE-1 + PG-QUEUE-2 + DEFER-469 deferred. SEC-001 logged. jira-e2e: JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ.` |
