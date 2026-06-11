@@ -2,11 +2,11 @@
 document_type: pipeline-state
 version: "2.0"
 status: active
-timestamp: 2026-06-11T02:30:00Z
+timestamp: 2026-06-11T08:00:00Z
 phase: phase-3-tdd-implementation
 project: jira-cli
 mode: BROWNFIELD
-current_step: "Both #471 (GFM task lists → ADF) + #495 (ADF E2E loop-back) CYCLES CLOSED + MERGED — develop @ bfb723f (2026-06-11). BC 594. NFR 41. Stories 67. No active worktrees. Nightly e2e.yml first live-verify pending."
+current_step: "description-leading-dash cycle CLOSED + MERGED — PR #496 squash-merged → develop @ 45ceae6 (2026-06-11). allow_hyphen_values on 7 free-text write args. BC 594. NFR 41. Stories 67. No active worktrees."
 current_cycle: "cycle-001"
 dtu_required: false
 phase_2_status: APPROVED
@@ -26,10 +26,10 @@ activation_version: "v0.5.0-dev.11"
 | **Product** | jr (Jira CLI) |
 | **Mode** | BROWNFIELD / Rust |
 | **Target Workspace** | develop → main |
-| **Last Updated** | 2026-06-11 — #471 (GFM task lists → ADF, PR #494 @ 4c9b069) + #495 (ADF E2E loop-back, PR #495 @ bfb723f) BOTH CLOSED + MERGED. BC 594. NFR 41. Stories 67. No active worktrees. |
+| **Last Updated** | 2026-06-11 — description-leading-dash cycle (PR #496 @ 45ceae6) CLOSED + MERGED. allow_hyphen_values on 7 write args. BC 594. NFR 41. Stories 67. No active worktrees. |
 | **Current Phase** | Phase 3 — TDD Implementation IN PROGRESS — Feature Mode active. BC 594. NFR 41. Stories 67. |
 | **Next Phase** | Phase 4: Holdout Evaluation (not started) |
-| **Activation HEAD** | 15bf305 (v0.5.0-dev.11) |
+| **Activation HEAD** | 15bf305 (v0.5.0-dev.11) — develop HEAD now 45ceae6 |
 
 ## Phase Progress
 
@@ -44,6 +44,7 @@ activation_version: "v0.5.0-dev.11"
 | Pre-#471 ADF era (issues #110..#493, 18 cycles) | ALL CYCLE CLOSED + MERGED | 2026-05-11..2026-06-10 | F1–F7 each | develop progressed 15bf305→8b639c1. BC 583→593. See `cycles/cycle-001/burst-log.md` "Archived Phase Progress Rows". |
 | GFM task lists → ADF (issue #471 / BC-7.2.010) | **CYCLE CLOSED + MERGED** | 2026-06-11 | F1–F7 ALL COMPLETE — CONVERGED | PR #494 → develop @ 4c9b069. BC 594 (+1). EC-17. 210 adf::tests; 1746/0; 97.3% mutation kill. F5: 16-pass adversary; F6: proptest 512 cases (found 17th bug). DEC-067/068/069/070/071. |
 | ADF E2E coverage loop-back (#471/#474/#483/#489) | **CYCLE CLOSED + MERGED** | 2026-06-11 | CYCLE CLOSED | PR #495 → develop @ bfb723f. 5 gated live E2E tests. NO src change. BC 594 unchanged. First live-verify pending (nightly e2e.yml). |
+| CLI leading-dash values (issue #471 e2e / description-leading-dash) | **CYCLE CLOSED + MERGED** | 2026-06-11 | F1–F7 ALL COMPLETE — CONVERGED | PR #496 → develop @ 45ceae6. `allow_hyphen_values = true` on 7 free-text write args. BC 594 unchanged. +17 hermetic parse tests (tests/cli_smoke.rs, 44 total). F5: 8 passes / 3-clean-pass CONVERGED. F6: 1763/0, clippy/fmt/deny clean, mutation zero-in-scope. F7: 5-dimension consistency CLEAN. DEC-072. |
 | 4: Holdout Evaluation | not-started | | | |
 | 5: Adversarial Refinement | not-started | | | |
 | 6: Formal Hardening | not-started | | | |
@@ -58,6 +59,7 @@ activation_version: "v0.5.0-dev.11"
 | #473 bare-URL autolink E2E — PR #493 → develop @ 8b639c1 (2026-06-10). test_e2e_markdown_bare_url_produces_link_mark. PG-REVIEW-1 + PG-E2E-1 codified. | state-manager | CYCLE CLOSED + MERGED | BC 593 / NFR 41 / Stories 66. |
 | #471 GFM task lists → ADF — PR #494 → develop @ 4c9b069 (2026-06-11). BC-7.2.010 + EC-17. 1746/0. Worktree cleaned. | state-manager | CYCLE CLOSED + MERGED | BC 594 / NFR 41 / Stories 67. develop HEAD: 4c9b069. |
 | ADF E2E loop-back — PR #495 → develop @ bfb723f (2026-06-11). 5 gated tests. Worktree cleaned. #475 partially addressed. | state-manager | CYCLE CLOSED + MERGED | BC 594 / NFR 41 / Stories 67. develop HEAD: bfb723f. |
+| description-leading-dash — PR #496 → develop @ 45ceae6 (2026-06-11). allow_hyphen_values on 7 write args. +17 hermetic parse tests. F5 8-pass converged. Worktree cleaned. DEC-072. | state-manager | CYCLE CLOSED + MERGED | BC 594 / NFR 41 / Stories 67. develop HEAD: 45ceae6. |
 
 ## Decisions Log
 
@@ -70,6 +72,7 @@ activation_version: "v0.5.0-dev.11"
 | DEC-069 | 2026-06-10: #471 F3 CONVERGED. S-471 (67 stories), 18 ACs, 19 named tests. Key catches: stale count; taskItem structural-empty branch; EC-16 flatten ordering; DFS-preorder localId (AC-018). PG-471-1 → lessons.md. | F3 story decomposition | Phase 3 / #471 | 2026-06-10 |
 | DEC-070 | 2026-06-10: #471 F4+F5 CONVERGED — 16 adversary passes / 8 fix iterations. ~15 genuine bugs (MULTIPLE CRITICAL invalid-ADF Jira-400). Root fixes: typed EndResult::WithHoists; reclassify_as_task_list / split_stray_blocks_end_result helpers; recursive normalize nesting; tight/loose symmetry. Systemic guard: 100-input structural-validity corpus + proptest. LESSON: structural-validity corpus + proptest are load-bearing guards. | F4+F5 convergence | Phase 3 / #471 | 2026-06-10 |
 | DEC-071 | 2026-06-10: #471 F6 — proptest found 17th bug (panel-wrapped plain-item → invalid taskList>taskList; tuple-lead violation). Mutation: 97.3% (72/74; 2 documented equivalent). SEC-002 fixed → debug_assert. Full suite 1746/0. | F6 hardening | Phase 3 / #471 | 2026-06-10 |
+| DEC-072 | 2026-06-11: description-leading-dash — trivial-scope clap ergonomics fix. Scope expanded from `--description` to all 7 free-text write-command args (`issue create/edit --summary`+`--description`, `issue comment` positional message, `issue remote-link --title`, `worklog add --message`) with human approval at F4→F5 boundary. Adjacent F5 findings F-01 (`--summary`) and F-02 (worklog `--message`) RESOLVED in this PR (not deferred). `issue comment` + `remote-link --title` added during F5 for completeness. F5-P5-01 (flag-binding pinned only in nightly e2e) RESOLVED by adding 17 hermetic parse tests to tests/cli_smoke.rs. F-H1 (F1↔implementation scope-reconciliation manual, no automated gate) DEFERRED — handled manually this cycle; revisit if recurs 3+ times. | Feature Mode / description-leading-dash | Phase 3 | 2026-06-11 |
 
 ## Skip Log
 
@@ -96,11 +99,12 @@ activation_version: "v0.5.0-dev.11"
 | DRIFT-README | .factory/specs/prd/README.md Document Map stale | Grand total 573 vs canonical 587; multiple per-section drifts. Pre-existing ~13 cycles. Dedicated reconciliation pass needed. | LOW | OPEN — deferred 2026-06-08 |
 | DEFER-469 | Dependabot PR #469 (gitleaks-action 3.0 MAJOR) | Intentional hold — major-version GitHub Action; extended soak. Revisit at maintainer discretion. | LOW | OPEN — intentional hold |
 | SEC-001 | CWE-674 deep-nesting recursion in adf.rs | Uncontrolled recursion in normalize_list_item_content / normalize_blockquote_content / assign_local_ids_walk / render_node. File-wide sweep target. | LOW | OPEN — deferred 2026-06-10 |
-| DEFERRED-ADF-E2E | ADF live E2E remaining gaps | #470 (listItem-normalization live test) + #475 Gap 1 (ADF→text read path via `issue view` human mode). #473/#471/#474/#483/#489 DONE. | LOW | PARTIALLY RESOLVED — #470+#475 Gap 1 remain |
+| DEFERRED-ADF-E2E | ADF live E2E remaining gaps | #470 (listItem-normalization live test) + #475 Gap 1 (ADF→text read path via `issue view` human mode). #473/#471/#474/#483/#489 DONE. `test_e2e_markdown_task_list_produces_task_items` UNBLOCKED by PR #496 (allow_hyphen_values fix). Verify against next nightly/post-merge e2e run. | LOW | PARTIALLY RESOLVED — #470+#475 Gap 1 remain; task-list E2E UNBLOCKED |
+| F-H1 | F1↔F4 scope-reconciliation manual | F1→F4 handoff has no enforced consistency gate; scope expansion can silently supersede F1 doc. Handled manually this cycle (DEC-072). Revisit if recurs 3+ times. Detail: cycles/cycle-001/lessons.md F-H1. | LOW | DEFERRED — revisit at 3+ recurrences |
 
 ## Convergence Trackers
 
-Full per-issue: `cycles/cycle-001/convergence-trajectory.md`. Current: **[2026-06-11] ADF E2E coverage loop-back CLOSED + MERGED — PR #495 → develop @ bfb723f. 5 gated live E2E tests. BC 594 / NFR 41 / Stories 67 UNCHANGED. No active worktrees. First live-verify pending (nightly e2e.yml).**
+Full per-issue: `cycles/cycle-001/convergence-trajectory.md`. Current: **[2026-06-11] description-leading-dash CLOSED + MERGED — PR #496 → develop @ 45ceae6. allow_hyphen_values on 7 write args. F5: 8 passes / 3-clean-pass CONVERGED. BC 594 / NFR 41 / Stories 67 UNCHANGED. No active worktrees.**
 
 ## Session Resume Checkpoint
 
@@ -108,12 +112,12 @@ Full per-issue: `cycles/cycle-001/convergence-trajectory.md`. Current: **[2026-0
 
 | Field | Value |
 |-------|-------|
-| **Date** | 2026-06-10/11 |
-| **Position** | **BOTH CYCLES COMPLETE + MERGED.** (a) #471 GFM task lists → ADF: PR #494 squash-merged → develop @ 4c9b069 (2026-06-11T01:09:45Z); issue #471 CLOSED (auto). BC-7.2.010 + EC-17. Full F1–F7. 210 adf::tests; full suite 1746/0; clippy zero; fmt clean; 97.3% mutation kill (72/74). F5: 16-pass adversary convergence; 8 fix iterations; ~15 genuine bugs (CRITICAL invalid-ADF Jira-400). F6: proptest 512 cases found 17th bug (tuple-lead violation). AI PR review APPROVE 0 findings. 11/11 CI GREEN. (b) ADF E2E coverage loop-back: PR #495 squash-merged → develop @ bfb723f (2026-06-11T01:43:18Z). 5 gated live-Jira tests: task-lists + EC-17/orderedList-absence (#471), subsup (#474), GFM-alert panel info/warning (#483), block-HTML (#489). Pattern: poll_view → fields.description raw ADF → recursive matchers. [#ignore]+JR_RUN_E2E+e2e_enabled(). INERT ci.yml; nightly e2e.yml. NO src change. |
-| **develop HEAD** | origin/develop = **bfb723f**. IMPORTANT: main repo's LOCAL develop is BEHIND at 8b639c1 (2 commits). Fresh session: `git fetch` and treat origin/develop @ bfb723f as truth; `git pull` on develop when ready. No active worktrees (.worktrees/ has only .factory + .reference). |
+| **Date** | 2026-06-11 |
+| **Position** | **description-leading-dash CYCLE CLOSED + MERGED.** PR #496 squash-merged → develop @ 45ceae6 (2026-06-11). Branch fix/cli-leading-dash-values deleted; worktree removed. Fix: `allow_hyphen_values = true` on 7 free-text write-command clap args in `src/cli/mod.rs` (`issue create/edit --summary`+`--description`, `issue comment` positional message, `issue remote-link --title`, `worklog add --message`). Fixes #471 task-list creation failure surfaced by nightly e2e run 27318191693. Scope expanded from `--description` to all 7 args with human approval. F5: 8 passes / 3-clean-pass CONVERGED. F6: 1763/0, clippy/fmt/cargo-deny clean, mutation zero-in-scope. F7: 5-dimension consistency CLEAN. +17 hermetic parse tests in tests/cli_smoke.rs (44 total). F5-P5-01 RESOLVED (hermetic tests added). F-H1 DEFERRED (manual scope-reconciliation; threshold 3+). DEC-072. `test_e2e_markdown_task_list_produces_task_items` UNBLOCKED — verify on next nightly e2e run. |
+| **develop HEAD** | origin/develop = **45ceae6**. BC 594. NFR 41. Stories 67. No active worktrees. |
 | **Convergence counter** | BC: **594**. NFR: **41**. Stories: **67**. jira-e2e env: JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ, JR_E2E_ENABLED=true. No active worktrees. |
-| **Next / Pending** | (1) NIGHTLY E2E LIVE-VERIFY PENDING: next e2e.yml run = FIRST live verify of 5 new ADF E2E tests. Medium-risk needs-sandbox: EC-17 (ordered→taskList), subsup-mark acceptance, panel editor-flag. Live failure = needs-sandbox signal; diagnostic asserts distinguish jr-bug vs site-config. (2) #475 OPEN: Gap 1 (ADF→text read path via `issue view` human mode) + #470 listItem-normalization live test. (3) SEC-001 (CWE-674 deep-nesting recursion in adf.rs, LOW) deferred to file-wide recursion-depth-guard sweep. (4) Deferred: #400 Story B + engine items; #372 cargo-mutants; STATE drift items. (5) Standing: do NOT close #429 (DEC-029 human deferral); #492 OPEN (block-HTML raw-\n needs-sandbox); OQ-5 + E2E-PG-4 remote-link documented-but-untracked; DEFER-469 Dependabot gitleaks 3.0 hold. |
-| **Resume prompt** | `Read .factory/STATE.md. DATE: 2026-06-10/11. POSITION: Both cycles COMPLETE + MERGED. (a) #471 GFM task lists → ADF: PR #494 squash-merged → develop @ 4c9b069; issue #471 CLOSED; BC-7.2.010 + EC-17; full F1-F7; 210 adf::tests; 1746/0; 97.3% mutation kill; F5 16-pass adversary; F6 proptest 512 cases found 17th bug. (b) ADF E2E loop-back: PR #495 squash-merged → develop @ bfb723f; 5 gated live-Jira tests (task-lists+EC-17 [#471], subsup [#474], panel info/warning [#483], block-HTML [#489]); test-only; inert ci.yml; nightly e2e.yml. DEVELOP HEAD: origin/develop = bfb723f; LOCAL develop BEHIND at 8b639c1 (run git fetch + git pull). COUNTS: BC 594, NFR 41, Stories 67. jira-e2e: JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ, JR_E2E_ENABLED=true. No active worktrees. NEXT: (1) NIGHTLY E2E LIVE-VERIFY PENDING — first live run of 5 new ADF tests; EC-17/subsup/panel medium-risk needs-sandbox; live failure = triage jr-bug vs site-config. (2) #475 OPEN: Gap 1 (ADF→text issue view human mode) + #470 listItem live-E2E remain. (3) SEC-001 (CWE-674 adf.rs deep-nesting recursion, LOW) deferred to file-wide sweep. (4) STANDING: do NOT close #429 (DEC-029 human); #492 OPEN (block-HTML raw-\n needs-sandbox); OQ-5 open; E2E-PG-4 remote-link open; DEFER-469 gitleaks 3.0 hold.` |
+| **Next / Pending** | (1) NIGHTLY E2E LIVE-VERIFY: task-list E2E (`test_e2e_markdown_task_list_produces_task_items`) UNBLOCKED by PR #496; also verify 5 ADF E2E tests (EC-17/subsup/panel) from PR #495. (2) #475 OPEN: Gap 1 (ADF→text read path via `issue view` human mode) + #470 listItem-normalization live test. (3) SEC-001 (CWE-674 deep-nesting recursion in adf.rs, LOW) deferred. (4) Deferred: #400 Story B + engine items; #372 cargo-mutants. (5) Standing: do NOT close #429 (DEC-029 human deferral); #492 OPEN; OQ-5 + E2E-PG-4 remote-link open; DEFER-469 gitleaks 3.0 hold. F-H1 deferred drift item logged. |
+| **Resume prompt** | `Read .factory/STATE.md. DATE: 2026-06-11. POSITION: description-leading-dash CLOSED + MERGED. PR #496 → develop @ 45ceae6. allow_hyphen_values on 7 write args; +17 hermetic parse tests (tests/cli_smoke.rs 44 total). BC 594 / NFR 41 / Stories 67 UNCHANGED. No active worktrees. DEC-072. F-H1 DEFERRED (logs: cycles/cycle-001/lessons.md). F5-P5-01 RESOLVED. DEFERRED-ADF-E2E: task-list E2E UNBLOCKED by this fix; verify on next nightly. #475 OPEN (Gap 1 + #470 remain). STANDING: do NOT close #429 (DEC-029); #492 OPEN; OQ-5 open; E2E-PG-4 remote-link open; DEFER-469 hold; SEC-001 LOW deferred. jira-e2e: JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ, JR_E2E_ENABLED=true.` |
 
 ## Open Issues Tracker
 

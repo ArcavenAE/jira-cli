@@ -3361,3 +3361,90 @@ No follow-up story needed — the corrective (corpus + proptest) is already in t
 
 _Discovered: #471 F6 proptest run F6-P1; found bug missed by 16 example-based adversary passes (2026-06-10)._
 _Tagged: [process-gap] — corrective convention: proptest + structural-validity validator are load-bearing guards for tree-transformation code._
+
+---
+
+### F-H1 [process-gap] F1→F4 handoff has no enforced consistency gate — scope expansion can silently supersede the F1 doc
+
+**Tags:** [process-gap]
+
+**Date:** 2026-06-11
+**Cycle:** `description-leading-dash` (fix/cli-leading-dash-values, PR #496)
+**Tracking ID:** F-H1
+**Severity:** LOW
+
+#### What happened
+
+The F1 delta-analysis doc (`.factory/phase-f1-delta-analysis/description-leading-dash-delta-analysis.md`)
+was authored with `scope_args: 7` (all 7 free-text write-command args). However, the initial scope at
+F1 time covered only `--description` on `issue create/edit`. The orchestrator then expanded scope to
+the remaining 6 args (`--summary`, `issue comment` positional message, `issue remote-link --title`,
+`worklog add --message`) during the F4→F5 arc, with human approval. The F1 doc was updated
+retroactively to reflect the expanded scope.
+
+No gate exists that enforces consistency between the F1 doc and the actual implementation scope at
+merge time. The reconciliation was manual and required human review to catch.
+
+#### Impact
+
+Low for this cycle: the scope expansion was human-approved and the F1 doc was updated before merge.
+Risk class: if a scope expansion happens WITHOUT updating the F1 doc, the artifact audit trail
+diverges silently from the delivered implementation.
+
+#### Disposition
+
+DEFERRED — handled manually this cycle; the corrective is process discipline, not an automated gate.
+Revisit if the pattern recurs 3+ times across Feature Mode cycles. At that point, consider: (a) adding
+an explicit F7 consistency-audit step that cross-checks the F1 `scope_args` count against the merged
+diff's `allow_hyphen_values` additions; or (b) a convention that scope expansions post-F1 must produce
+a `description-leading-dash-delta-analysis-v2.md` rather than editing the original in place.
+
+No follow-up story filed — disposition is "deferred with documented threshold."
+
+_Discovered: `description-leading-dash` cycle F5 adversary retrospective, 2026-06-11._
+_Tagged: [process-gap] — LOW severity; deferred pending recurrence threshold (3+)._
+
+---
+
+### F5-P5-01 [process-gap] Flag-vs-positional binding pinned only by nightly-gated E2E — RESOLVED this cycle
+
+**Tags:** [process-gap]
+
+**Date:** 2026-06-11
+**Cycle:** `description-leading-dash` (fix/cli-leading-dash-values, PR #496)
+**Tracking ID:** F5-P5-01
+**Status:** RESOLVED
+
+#### What happened
+
+F5 adversary Pass 5 (finding F5-P5-01) flagged that the `allow_hyphen_values = true` flag
+configuration on the `issue comment` positional message argument was verified only by the nightly
+e2e.yml run (`test_e2e_markdown_task_list_produces_task_items`), not by any fast-CI hermetic test.
+This meant a regression in clap flag binding for that arg would not be caught until the next
+nightly run — a 24-hour detection gap.
+
+#### Resolution
+
+Resolved within the same PR by adding 17 hermetic parse tests to `tests/cli_smoke.rs` (44 total in
+that file post-PR). These tests cover all 7 args that received `allow_hyphen_values = true`:
+
+- `issue create --summary` / `--description` with leading-dash values
+- `issue edit --summary` / `--description` with leading-dash values
+- `issue comment` positional message with leading-dash value
+- `issue remote-link --title` with leading-dash value
+- `worklog add --message` with leading-dash value
+
+All 17 tests run in fast CI (ci.yml). The nightly e2e.yml test remains as a live-Jira integration
+test that covers the ADF rendering end-to-end, which is complementary coverage, not the only gate.
+
+#### Corrective convention
+
+When adding `allow_hyphen_values = true` to a clap arg, a hermetic parse test (clap `try_parse_from`
+pattern) MUST be included in the same PR. The test must verify at minimum: (a) a leading-dash value
+is accepted without error; (b) the value is correctly bound to the expected field. This is now
+established by the 17 tests in `tests/cli_smoke.rs`.
+
+No follow-up story needed — the corrective is fully applied in PR #496.
+
+_Discovered: F5 Pass 5 (finding F5-P5-01), `description-leading-dash` cycle, 2026-06-11._
+_Tagged: [process-gap] — RESOLVED this PR; corrective convention codified._
