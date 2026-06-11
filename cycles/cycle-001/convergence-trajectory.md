@@ -705,3 +705,31 @@ Trajectory shorthand: `1C(sibling-omission)→fix→1C(off-branch-spec)→fix→
 **Scope:** 7 files — .github/workflows/e2e.yml, .github/workflows/e2e-sweeper.yml, README.md, CLAUDE.md, CHANGELOG.md, docs/specs/e2e-fork-safe-ci-enablement.md (new), docs/specs/e2e-live-jira-testing.md. Zero src/, zero Rust tests.
 
 **Cycle CLOSED 2026-06-02.** PR #459 squash-merged → develop @ afa12570. DEC-063.
+
+---
+
+## #475 ADF E2E read-path coverage — F5–F7 Convergence (2026-06-11)
+
+**Story:** S-475-adf-e2e-readpath — ADF E2E read-path coverage (test-only)
+**Cycle:** test/issue-475-adf-e2e-readpath → PR #499 → develop @ 418a392e
+**F4 trajectory (per-story Step-4.5):** R1 = F-1 HIGH (async gate-guard false-green) + F-1b LOW → fixed (ca07cbc); R2 = 0/0/0. CONVERGED.
+**F5–F7 adversarial passes:** 5-dimension delta convergence + full-tree regression.
+
+### F5–F7 Convergence Narrative
+
+**5-dimension delta convergence check:**
+1. **Behavior delta:** Test-only. No production src/ change. AC-1/2/3/4 all verified offline (hermetic compile + --list + gate-guard green). Live E2E: nightly e2e.yml (prior run 27352373680 89/0 GREEN; new gated tests will exercise on next nightly).
+2. **Correctness:** Full `cargo test` clean (all tests pass including gate-guard meta-test). `cargo deny` ok. `cargo clippy -- -D warnings` clean. `cargo fmt -- --check` clean.
+3. **Spec alignment:** F7 consistency audit CONSISTENT — counts agree across 8 surfaces (BC-INDEX frontmatter, BC-INDEX sections, BC-INDEX body, CANONICAL-COUNTS.md, prd.md, ARCH-INDEX, STORY-INDEX, CLAUDE.md). BC 594 / NFR 41 / Stories 68 all match. CLAUDE.md no change needed (test-only cycle).
+4. **Security:** security reviewer APPROVE (no security surface; test-only).
+5. **Process-gaps:** F-1b FIXED; O1-TABLE-ASSERT DEFERRED (justified); DEC-075 LESSON codified. Cycle-closing checklist SATISFIED.
+
+**Input-drift check (S-7.02 defensive sweep):** 11 pre-existing files with stale content — all cycles/bookkeeping files from prior sessions, none #475-related. No propagation gap.
+
+**Code review:** APPROVE — 0 blocking findings. Spec-example post-merge sync (multi-word→single-token in spec v1.3.10) was the only post-merge action.
+
+**CI result:** 11/11 checks GREEN on PR #499. No flakes.
+
+**Trajectory shorthand:** F4: `1H+1L(async-guard-false-green)→fix→CLEAN→CLEAN→CLEAN` / F5–F7: `5-dim-delta-CLEAN`
+
+**Cycle CLOSED 2026-06-11.** PR #499 squash-merged → develop @ 418a392e. DEC-076. DEFERRED-ADF-E2E: ALL sub-gaps DONE.

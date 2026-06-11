@@ -3694,3 +3694,48 @@ Rows archived from STATE.md Current Phase Steps to stay within 5-row budget:
 | #473 bare-URL autolink E2E — PR #493 → develop @ 8b639c1 (2026-06-10). test_e2e_markdown_bare_url_produces_link_mark. PG-REVIEW-1 + PG-E2E-1 codified. | state-manager | CYCLE CLOSED + MERGED | BC 593 / NFR 41 / Stories 66. |
 | #471 GFM task lists → ADF — PR #494 → develop @ 4c9b069 (2026-06-11). BC-7.2.010 + EC-17. 1746/0. Worktree cleaned. | state-manager | CYCLE CLOSED + MERGED | BC 594 / NFR 41 / Stories 67. develop HEAD: 4c9b069. |
 | ADF E2E loop-back — PR #495 → develop @ bfb723f (2026-06-11). 5 gated tests. Worktree cleaned. #475 partially addressed. | state-manager | CYCLE CLOSED + MERGED | BC 594 / NFR 41 / Stories 67. develop HEAD: bfb723f. |
+
+## Burst archived from STATE.md Current Phase Steps — 2026-06-11 (cycle-close)
+
+Row archived from STATE.md Current Phase Steps to stay within 5-row budget (oldest row evicted):
+
+| Step | Agent | Status | Output |
+|------|-------|--------|--------|
+| description-leading-dash — PR #496 → develop @ 45ceae6 (2026-06-11). allow_hyphen_values on 7 write args. +17 hermetic parse tests. F5 8-pass converged. Worktree cleaned. DEC-072. | state-manager | CYCLE CLOSED + MERGED | BC 594 / NFR 41 / Stories 67. develop HEAD: 45ceae6. |
+
+---
+
+## #475 ADF E2E read-path coverage — CYCLE CLOSED + MERGED (2026-06-11)
+
+**Issue:** #475 — ADF read-path / E2E coverage
+**PR:** #499 → develop @ 418a392e (squash-merged 2026-06-11)
+**Cycle type:** Feature Mode test-only (no src/ change)
+**Story:** S-475-adf-e2e-readpath (Stories 67→68)
+**F-phases:** F1–F7 ALL COMPLETE — CONVERGED
+
+### Delivery Summary
+
+Test-only cycle delivering 4 ACs:
+- **AC-1:** `test_e2e_markdown_description_produces_heading_node` — live E2E: `jr issue create --description "# heading"` → `jr issue view` human mode asserts `"##"` token in stdout (read-path adf_to_text exercised).
+- **AC-2:** `test_e2e_listitem_normalization_blockquote_excluded` — live E2E: blockquote-in-listItem create exits 0 + `adf_has_blockquote_in_list_item` asserts false on returned ADF (listItem normalization #470 live assertion).
+- **AC-3:** `test_e2e_comment_read_path_adf_to_text` — live E2E: `jr issue comment <KEY> "_emphasis_"` → `jr issue comments` human mode asserts `"_emphasis_"` discriminator token in stdout (comment read path exercised).
+- **AC-4:** `test_e2e_issue_markdown_description_roundtrip` renamed → `test_e2e_markdown_description_produces_heading_node` (misnomer corrected; semantics unchanged).
+
+Additional: gate-guard hardened for `async fn test_` (F-1b fix from F4 per-story review).
+
+### Phase outcomes
+
+- **F1:** 1 story, RENAME override (human approved AC-4 in-scope instead of annotate-only), AC-3 comments path IN SCOPE.
+- **F2:** R1 9→0 / 6→0 + R2 0→0→0 CONVERGED. Research-validated 5/5 Jira-API assumptions (GET issue v3 returns ADF object; listItem forbids blockquote child; Jira silently rewrites ADF server-side; spec v1.3.6→1.3.9). DEC-073.
+- **F3:** S-475-adf-e2e-readpath (Stories 67→68). R1 2→fixed (cell-wrap fragility → single-token; count drift → fixed); R2 0/0/0 CONVERGED. O1-TABLE-ASSERT drift item added. DEC-074.
+- **F4:** R1 F-1 HIGH (async gate-guard false-green — de-async root-fix) + F-1b (guard hardened); R2 0/0/0. Full suite clean + deny + clippy/fmt. DEC-075.
+- **F5–F7:** 5-dimension delta convergence (behavior, correctness, spec, security, process-gaps) + full-tree regression all green. CI 11/11, security APPROVE, code review APPROVE 0-blocking, cargo test clean, cargo deny ok. F7 consistency audit CONSISTENT (counts agree across 8 surfaces; CLAUDE.md no change). Input-drift: 11 pre-existing cycles/bookkeeping stale files, none #475-related. Spec-example synced multi-word→single-token (spec v1.3.10). DEC-076.
+
+### Cycle-closing checklist (S-7.02)
+
+- **F-1b (guard blind to `async fn test_`):** FIXED in PR #499. Guard hardened. Residual `pub async fn` LOW — no such tests exist; no action. Codified in lessons.md.
+- **O1 (no shared assert_table_contains helper):** DEFERRED as O1-TABLE-ASSERT (already in STATE.md Drift Items). Single-token mitigation sufficient this cycle. Revisit at 3+ recurrences. Codified in lessons.md.
+- **LESSON (DEC-075):** Codified in lessons.md as "silent-exclusion false green pattern." Fresh-context per-story review is the load-bearing catch mechanism.
+
+**BC:** 594 / **NFR:** 41 / **Stories:** 68 — all unchanged (test-only cycle).
+**develop HEAD:** 418a392e. No active worktrees.

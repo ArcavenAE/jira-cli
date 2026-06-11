@@ -17,6 +17,21 @@ Superseded checkpoints are archived here when STATE.md is updated with a newer o
 
 ---
 
+## Checkpoint archived 2026-06-11 (#475 ADF E2E read-path — F4 CONVERGED, entering PR)
+
+_Was the active checkpoint after #475 F4 CONVERGED (per-story Step-4.5). R1 F-1 HIGH async gate-guard false-green (de-async root-fix) + F-1b guard hardened; R2 0/0/0. Full suite clean + deny + clippy/fmt. DEC-075. Worktree test/issue-475-adf-e2e-readpath @ ca07cbc. develop HEAD: 18a6441. Superseded when PR #499 was squash-merged → develop @ 418a392e and cycle was CLOSED._
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-06-11 |
+| **Position** | **#475 ADF E2E read-path — F4 CONVERGED (per-story Step-4.5).** R1: F-1 HIGH (async test silently escaped gate-guard meta-test — matched only `fn test_`, not `async fn test_`; root-fix: de-async, no .await existed) + F-1b LOW process-gap (guard hardened to strip `async ` prefix). Both fixed in ca07cbc. R2: 0/0/0 fresh-context three-pass clean. Full suite ALL CLEAN, deny ok, clippy/fmt clean. DEC-075. Worktree branch test/issue-475-adf-e2e-readpath @ ca07cbc. LESSON: implementer hermetic PASS on a guard can be false-green when guard's pattern excludes the new construct — fresh-context review is load-bearing. Prior: F3 CONVERGED DEC-074. |
+| **develop HEAD** | origin/develop = **18a6441**. BC 594. NFR 41. Stories 68. Active worktree: test/issue-475-adf-e2e-readpath @ ca07cbc. |
+| **Convergence counter** | BC: **594**. NFR: **41**. Stories: **68**. jira-e2e env: JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ, JR_E2E_ENABLED=true. Worktree: test/issue-475-adf-e2e-readpath. |
+| **Next / Pending** | (1) #475 ACTIVE — F5 scoped adversarial + PR creation. Worktree test/issue-475-adf-e2e-readpath @ ca07cbc. (2) DEFERRED-ADF-E2E: #470 listItem live-E2E remains open. (3) SEC-001 (CWE-674 deep-nesting recursion in adf.rs, LOW) deferred. (4) Standing: do NOT close #429 (DEC-029); #492 OPEN; OQ-5 open; E2E-PG-4 remote-link open; F-H1 DEFERRED; O1-TABLE-ASSERT DEFERRED. |
+| **Resume prompt** | `Read .factory/STATE.md. DATE: 2026-06-11. POSITION: #475 ADF E2E read-path — F4 CONVERGED (per-story Step-4.5). Worktree test/issue-475-adf-e2e-readpath @ ca07cbc. R1: F-1 HIGH async gate-guard false-green (de-async root-fix) + F-1b guard hardened; R2 0/0/0. Full suite clean + deny + clippy/fmt. DEC-075. develop HEAD: 18a6441. BC 594 / NFR 41 / Stories 68. NEXT: F5 scoped adversarial + PR. DEFERRED-ADF-E2E: #470 listItem live-E2E remains. STANDING: do NOT close #429 (DEC-029); #492 OPEN; OQ-5 open; E2E-PG-4 remote-link open; SEC-001 LOW deferred; F-H1 DEFERRED; O1-TABLE-ASSERT DEFERRED. jira-e2e: JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ, JR_E2E_ENABLED=true.` |
+
+---
+
 ## Checkpoint archived 2026-06-09 (#474 F6+F7 ALL COMPLETE — PR #486 OPEN awaiting CI + code-owner)
 
 _Was the active checkpoint after #474 ADF minor constructs F6+F7 completed and PR #486 was opened on feat/adf-minor-constructs-474 → base develop. Superseded when PR #486 was squash-merged → develop @ 56226b4 and issue #474 was CLOSED._

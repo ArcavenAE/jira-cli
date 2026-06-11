@@ -3448,3 +3448,153 @@ No follow-up story needed — the corrective is fully applied in PR #496.
 
 _Discovered: F5 Pass 5 (finding F5-P5-01), `description-leading-dash` cycle, 2026-06-11._
 _Tagged: [process-gap] — RESOLVED this PR; corrective convention codified._
+
+---
+
+## 2026-06-11 — #475 ADF E2E read-path cycle — Cycle-Closing Checklist Codifications
+
+### F-1b [process-gap] Gate-guard meta-test blind to `async fn test_` — FIXED in PR #499
+
+**Tags:** [process-gap] [fixed]
+
+**Date:** 2026-06-11
+**Cycle:** #475 ADF E2E read-path (test/issue-475-adf-e2e-readpath, PR #499)
+**Tracking ID:** F-1b
+**Status:** FIXED — codified
+
+#### What happened
+
+The gate-guard meta-test in `tests/e2e_live.rs` matched gated functions by searching for
+`fn test_` in the file text. An `async fn test_` is syntactically valid and produces a
+gated test function, but the `async ` prefix caused it to be excluded from the guard's scan.
+
+During #475 F4, a new test was written as `async fn test_e2e_...`. The implementer ran the
+gate-guard meta-test hermetically and it returned PASS — because the guard could not see the
+new async test at all. This was a false green: the new test was live (it would have run if
+`JR_RUN_E2E=1` were set) but unguarded (no `if !e2e_enabled() { return; }` check required
+by the gate-guard contract). The per-story fresh-context review (Step-4.5) caught this.
+
+**Root cause:** The original `fn test_` pattern assumed all E2E tests are sync functions.
+Adding async tests (which is generally correct for tokio-based code) was not anticipated.
+
+**Fix applied in PR #499:** The test was de-asynced (no `.await` call existed; the async
+attribute was unnecessary). Additionally, the gate-guard meta-test was hardened to recognize
+`async fn test_` as a variant (stripping `async ` prefix before pattern-match).
+
+**Residual limitation:** `pub async fn` (a public async test helper, not a `#[test]` fn)
+is still not in scope for the guard. No such tests exist in the current test suite; this
+edge case is LOW priority and does not warrant a follow-up story. Revisit if `pub async fn`
+test helpers are added in future.
+
+**Corrective convention:** When writing any E2E test function in `tests/e2e_live.rs`, verify:
+(a) it carries the `if !e2e_enabled() { return; }` guard; (b) the gate-guard meta-test
+counts it — run `cargo test -- test_every_ignored_test_has_gate_guard` and confirm the count
+matches expectations. Async tests are now detected; `pub async fn` remains out of scope.
+
+No follow-up story needed — the corrective is fully applied in PR #499.
+
+_Discovered: #475 F4 per-story Step-4.5 fresh-context review, 2026-06-11._
+_Tagged: [process-gap] — FIXED in PR #499; guard hardened for `async fn test_`; residual `pub async fn` limitation documented as LOW non-issue._
+
+---
+
+### O1-TABLE-ASSERT [process-gap] No shared de-wrap/assert_table_contains helper for human-mode E2E stdout assertions — DEFERRED
+
+**Tags:** [process-gap]
+
+**Date:** 2026-06-11
+**Cycle:** #475 ADF E2E read-path (test/issue-475-adf-e2e-readpath, PR #499)
+**Tracking ID:** O1-TABLE-ASSERT
+**Status:** DEFERRED — justified deferral, revisit if recurs
+
+#### What happened
+
+S-475 is the first Feature Mode E2E test that asserts against human-readable table output
+(stdout from `jr issue view` and `jr issue comments` in default human mode). The `jr issue view`
+command renders output via comfy-table, which can word-wrap long strings across cells depending
+on the terminal width. A multi-word assertion string (e.g., "ADF heading" inside a Description
+cell) could break across lines in a narrow terminal, making a substring match fail
+non-deterministically.
+
+The mitigation chosen for this cycle: single-token assertions (e.g., `"##"` for a heading
+node, `"_emphasis_"` for an italic discriminator, `"## Comment"` header for comments).
+Single-token strings are wrap-safe because comfy-table only breaks at word boundaries (spaces),
+not within a continuous token.
+
+There is no shared `assert_table_contains` helper or cell de-wrapping utility in the test suite.
+If more human-mode E2E tests land, each implementer may independently re-discover this
+cell-wrap constraint and apply ad-hoc mitigations.
+
+#### Disposition
+
+DEFERRED — single-token approach is sufficient for the current cycle and is documented here
+as the corrective convention. A shared helper (e.g., `assert_output_contains_token`) would be
+the permanent fix but is pre-mature optimization when only one human-mode E2E test exists.
+
+**Revisit threshold:** If 3 or more human-mode E2E tests exist and any of them have
+multi-word assertions, invest in a shared `assert_table_contains(output, token)` helper or
+a cell-unwrap utility in `tests/common/` that strips comfy-table cell-wrap artifacts.
+
+**Corrective convention (immediate):** For all human-mode E2E stdout assertions:
+(a) prefer single-token discriminators over multi-word phrases;
+(b) if a multi-word phrase is necessary, verify it cannot be split at a word boundary by
+    checking comfy-table's wrapping behavior at a narrow terminal width (e.g., 80 chars).
+
+No follow-up story filed — deferral is tracked in STATE.md Drift Items (O1-TABLE-ASSERT)
+and here. DEC-074.
+
+_Discovered: #475 F3 fresh adversary catch (F1 cell-wrap fragility finding), 2026-06-11._
+_Tagged: [process-gap] — DEFERRED with justified threshold; single-token convention codified._
+
+---
+
+### DEC-075 LESSON [codified] Implementer hermetic PASS on a guard can be a false green when the guard's own pattern excludes the new construct
+
+**Tags:** [codified]
+
+**Date:** 2026-06-11
+**Cycle:** #475 ADF E2E read-path (test/issue-475-adf-e2e-readpath, PR #499)
+**Reference:** DEC-075
+**Status:** CODIFIED
+
+#### Lesson
+
+A meta-test or guard that validates "all tests in file X carry property Y" passes if and
+only if it can *see* the tests it is guarding. When a new test uses a syntactic form not
+anticipated by the guard's pattern (e.g., `async fn test_` vs the expected `fn test_`), the
+guard silently excludes the new test from its scan — and returns PASS. The implementer gets
+a green meta-test result and reasonably concludes the new test is guarded. It is not.
+
+This is the **silent-exclusion false green** pattern:
+
+1. Guard is written for construct A.
+2. Implementer writes construct A' (a valid variant of A, e.g., async version).
+3. Guard's pattern matches A but not A'.
+4. Guard returns PASS (it sees no un-guarded A's — because it can't see A' at all).
+5. Implementer trusts the green result. New construct is live but unguarded.
+
+**Why fresh-context per-story review is load-bearing:** The implementer cannot reliably
+detect this class of failure by running the guard — the guard lies. A reviewer reading the
+diff with fresh eyes (not trusting the green meta-test result) can spot that the new test
+uses `async fn` while the guard only matches `fn`. This is the F5 / per-story Step-4.5
+review's irreplaceable value: a second pair of eyes on the diff, not the test output.
+
+**Generalization:** Any meta-test / guard / linter that classifies constructs by pattern
+has this failure mode when new construct variants are introduced. The pattern is not
+specific to async vs sync — it applies equally to any structural variant (e.g., `pub fn`,
+`#[allow(dead_code)] fn`, attribute macro wrapping). Before trusting a guard's PASS result
+on code that introduces a new structural form, verify the guard can see the new form.
+
+**Prevention checklist:**
+1. When writing a new test or function in a file with a meta-test / guard, identify whether
+   the guard's pattern covers the new form.
+2. If unsure, add a probe: temporarily remove the guard annotation from the new function and
+   verify the guard reports FAIL. If it still reports PASS, the guard cannot see the new
+   form and must be hardened.
+3. If the guard must be hardened, do so in the same commit as the new test/function.
+
+No follow-up story needed — the corrective was applied in PR #499 (guard hardened for
+`async fn test_`). This lesson is codified for future implementers.
+
+_Discovered: #475 F4 per-story Step-4.5 fresh-context review, 2026-06-11._
+_Tagged: [codified] — silent-exclusion false green pattern; fresh-context per-story review is the load-bearing catch mechanism._

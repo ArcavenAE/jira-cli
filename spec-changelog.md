@@ -7,6 +7,28 @@ project: "jr (jira-cli)"
 
 Track all spec version changes. Most recent version first.
 
+## [1.3.10] - 2026-06-11
+
+### Type: PATCH
+
+### Summary
+
+F7 post-merge spec-example sync — AC-1 example assertion strings updated multi-word→single-token to match shipped impl (DEC-074 F3 wrap fix). `contains("Section Header")` → `contains("Header")`, `contains("link text")` → `contains("link")`, `contains("code snippet")` → `contains("snippet")`, `contains("nested blockquote text")` → `contains("blockquote")`. Added one-line note that single-token assertions resist comfy-table `ContentArrangement::Dynamic` cell-wrap. AC-2's `adf_contains_text("nested blockquote text")` (raw ADF JSON check) is unchanged. No BC/NFR change (594/41).
+
+### Modified Requirements
+
+No BC or NFR bodies modified. Spec example strings in `e2e-coverage-spec.md` AC-1 code block only.
+
+### Impact Assessment
+
+| Dimension | Before | After | Delta |
+|-----------|--------|-------|-------|
+| BC corpus (BC-INDEX.md total_bcs) | 594 | 594 | 0 |
+| NFR corpus | 41 | 41 | 0 |
+| bc-7-output-render.md total_bcs | 89 | 89 | 0 |
+
+---
+
 ## [1.3.9] - 2026-06-11
 
 ### Type: PATCH

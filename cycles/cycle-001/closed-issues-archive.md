@@ -45,3 +45,9 @@ traces_to: STATE.md
 | Issue | Title | Status | Priority | Notes |
 |-------|-------|--------|----------|-------|
 | e2e-live-jira-testing | Live-Jira E2E testing in CI + E2E enhancements (Feature Mode) | [FINAL VERIFIED] S-E2E-1 PR #433 + S-E2E-2 PR #434 DELIVERED + live-green (20/0). S-E2E-3/4/5 SHIPPED to develop + LIVE-GREEN @ fef44bd (PR #440 feature d1fdca7 + PR #441 live-fix 46be96e + PR #442 bad-auth portability fef44bd). Live e2e run 26719160283 = 57/0 SUCCESS. E2E-ENH CYCLE CLOSED 2026-05-31. | CLOSED | DEC-032..047. OQ-1 RESOLVED (DEC-036). OQ-5 open (NFR-O-N doc drift). [process-gap] clap-tree guard DEFERRED (DRIFT-E2E-1). |
+
+### Closed issues archived 2026-06-11 (#475 cycle-close)
+
+| Issue | Title | Status | Priority | Notes |
+|-------|-------|--------|----------|-------|
+| #475 | ADF read-path / E2E coverage | **CLOSED — CYCLE CLOSED + MERGED** (PR #499 → develop @ 418a392e, 2026-06-11). Gap 1 (read-path adf_to_text via issue view/comments) DELIVERED. Gap 2 (#470 listItem live assert) DELIVERED. Issue was already CLOSED; no Closes keyword in PR. | LOW | F1–F7 ALL COMPLETE. DEC-073/074/075/076. Test-only: no src change. BC 594 / NFR 41 / Stories 68 unchanged. DEFERRED-ADF-E2E: ALL sub-gaps DONE. |
