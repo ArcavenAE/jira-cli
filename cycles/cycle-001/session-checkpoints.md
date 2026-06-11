@@ -592,3 +592,14 @@ _Was the active checkpoint after STATE.md was compacted and rewritten post-#495 
 | **Resume prompt** | `Read .factory/STATE.md. DATE: 2026-06-11. POSITION: #475 ADF E2E read-path — F3 APPROVED + entering F4. Stories 68. S-475-adf-e2e-readpath (BC-7.2.003/004/006; 4 ACs; leaf node). F3: R1 2→fixed (cell-wrap, count drift); R2 0/0/0 CONVERGED. DEC-073/074. develop HEAD: 18a6441. BC 594 / NFR 41 / Stories 68. F4 worktree being created. DEFERRED-ADF-E2E: #470 listItem live-E2E remains. STANDING: do NOT close #429 (DEC-029); #492 OPEN; OQ-5 open; E2E-PG-4 remote-link open; SEC-001 LOW deferred; F-H1 DEFERRED; O1-TABLE-ASSERT DEFERRED. jira-e2e: JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ, JR_E2E_ENABLED=true.` |
 
 ---
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-06-11 |
+| **Position** | **#475 ADF E2E read-path — CYCLE CLOSED + MERGED.** PR #499 squash-merged → develop @ 418a392e (2026-06-11). Test-only: 4 ACs delivered (AC-1 adf_to_text live read via issue view; AC-2 listItem normalization live assert; AC-3 comment read path; AC-4 misnomer rename). Gate-guard hardened for `async fn test_` (F-1b). F5–F7 CONVERGED: 5-dimension delta convergence + full-tree regression all green (CI 11/11, security APPROVE, code review APPROVE 0-blocking). F7 consistency audit CONSISTENT. DEC-076. Cycle-closing checklist SATISFIED. BC 594 / NFR 41 / Stories 68. No active worktrees. DEFERRED-ADF-E2E: ALL sub-gaps DONE (#470 listItem + #475 read-path both delivered). |
+| **develop HEAD** | origin/develop = **418a392e**. BC 594. NFR 41. Stories 68. No active worktrees. |
+| **Convergence counter** | BC: **594**. NFR: **41**. Stories: **68**. jira-e2e env: JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ, JR_E2E_ENABLED=true. No active worktrees. |
+| **Next / Pending** | (1) No active cycle — pick next backlog item. (2) SEC-001 (CWE-674 deep-nesting recursion in adf.rs, LOW) deferred. (3) Deferred: #400 Story B + engine items; #372 cargo-mutants. (4) Standing: do NOT close #429 (DEC-029 human deferral); #492 OPEN; OQ-5 + E2E-PG-4 remote-link open; F-H1 DEFERRED; O1-TABLE-ASSERT DEFERRED. |
+| **Resume prompt** | `Read .factory/STATE.md. DATE: 2026-06-11. POSITION: #475 ADF E2E read-path CYCLE CLOSED + MERGED (PR #499 @ 418a392e). develop HEAD: 418a392e. BC 594 / NFR 41 / Stories 68. No active worktrees. DEFERRED-ADF-E2E: ALL sub-gaps DONE. Next: pick next backlog item. STANDING: do NOT close #429 (DEC-029); #492 OPEN; OQ-5 open; E2E-PG-4 remote-link open; SEC-001 LOW deferred; F-H1 DEFERRED; O1-TABLE-ASSERT DEFERRED. jira-e2e: JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ, JR_E2E_ENABLED=true.` |
+
+---
