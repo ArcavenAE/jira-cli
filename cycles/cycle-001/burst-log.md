@@ -3692,3 +3692,4 @@ Rows archived from STATE.md Current Phase Steps to stay within 5-row budget:
 | Step | Agent | Status | Output |
 |------|-------|--------|--------|
 | #473 bare-URL autolink E2E — PR #493 → develop @ 8b639c1 (2026-06-10). test_e2e_markdown_bare_url_produces_link_mark. PG-REVIEW-1 + PG-E2E-1 codified. | state-manager | CYCLE CLOSED + MERGED | BC 593 / NFR 41 / Stories 66. |
+| #471 GFM task lists → ADF — PR #494 → develop @ 4c9b069 (2026-06-11). BC-7.2.010 + EC-17. 1746/0. Worktree cleaned. | state-manager | CYCLE CLOSED + MERGED | BC 594 / NFR 41 / Stories 67. develop HEAD: 4c9b069. |
