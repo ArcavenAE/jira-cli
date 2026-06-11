@@ -522,6 +522,21 @@ _Was the active checkpoint after PR #495 (ADF E2E loop-back) squash-merged → d
 
 ---
 
+## Checkpoint archived 2026-06-11 (pre-#475-F2-close — Maintenance 4 Dependabot PRs, DEFER-469 resolved)
+
+_Was the active checkpoint after 4 Dependabot PRs merged (#497/#498/#484/#469) → develop @ 18a6441. Superseded when #475 F2 converged and gate was approved 2026-06-11._
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-06-11 |
+| **Position** | Maintenance: 4 Dependabot PRs merged, DEFER-469 hold resolved. PR #469 squash-merged → develop @ 18a6441 (2026-06-11): gitleaks/gitleaks-action 2.3.9 → 3.0.0 (MAJOR; runtime-only Node20→Node24, no behavior/licensing change, ahead of Node20 removal 2026-09-16). SHA 18a6441 verified vs v3.0.0 tag. Code-owner approved, full CI green (Secret Scan job ran v3 action successfully). DEFER-469 drift item CLOSED. Prior: #497 chrono 0.4.45 + #498 codeql-action 4.36.2 + #484 checkout 6.0.3 → 4478db5. All 4 Dependabot PRs soak-verified, CI green, code-owner approved. |
+| **develop HEAD** | origin/develop = **18a6441**. BC 594. NFR 41. Stories 67. No active worktrees. |
+| **Convergence counter** | BC: **594**. NFR: **41**. Stories: **67**. jira-e2e env: JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ, JR_E2E_ENABLED=true. No active worktrees. |
+| **Next / Pending** | (1) DONE — task-list E2E + PR #495 ADF E2E (EC-17/subsup/panel/block-HTML) VERIFIED GREEN — e2e run 27352373680 (89/0), 2026-06-11. (2) #475 OPEN: Gap 1 (ADF→text `issue view` human mode) + #470 listItem-normalization live test remain. (3) SEC-001 (CWE-674 deep-nesting recursion in adf.rs, LOW) deferred. (4) Deferred: #400 Story B + engine items; #372 cargo-mutants. (5) Standing: do NOT close #429 (DEC-029 human deferral); #492 OPEN; OQ-5 + E2E-PG-4 remote-link open. F-H1 deferred drift item logged. |
+| **Resume prompt** | `Read .factory/STATE.md. DATE: 2026-06-11. POSITION: Maintenance complete — 4 Dependabot PRs merged (#497 chrono 0.4.45, #498 codeql-action 4.36.2, #484 checkout 6.0.3, #469 gitleaks-action v3.0.0 MAJOR) → develop @ 18a6441. DEFER-469 hold RESOLVED (v3.0.0 runtime-only Node24, ahead of Node20 removal 2026-09-16). Prior feature: description-leading-dash CLOSED + MERGED (PR #496 @ 45ceae6). BC 594 / NFR 41 / Stories 67 UNCHANGED. No active worktrees. DEC-072. F-H1 DEFERRED. F5-P5-01 RESOLVED. DEFERRED-ADF-E2E: task-list E2E VERIFIED GREEN (e2e run 27352373680, 89/0); PR #495 ADF E2E also live-verified (all 5 tests pass). #475 OPEN (Gap 1 + #470 remain). STANDING: do NOT close #429 (DEC-029); #492 OPEN; OQ-5 open; E2E-PG-4 remote-link open; SEC-001 LOW deferred. jira-e2e: JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ, JR_E2E_ENABLED=true.` |
+
+---
+
 ## Checkpoint archived 2026-06-11 (#471+#495 CLOSED+MERGED — both cycles complete; nightly e2e live-verify pending)
 
 _Was the active checkpoint after STATE.md was compacted and rewritten post-#495 merge. Superseded when description-leading-dash cycle (PR #496) CLOSED + MERGED → develop @ 45ceae6._

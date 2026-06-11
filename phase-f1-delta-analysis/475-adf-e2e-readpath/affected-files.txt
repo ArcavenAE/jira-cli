@@ -1,0 +1,35 @@
+# Affected files for issue #475 — ADF E2E read-path coverage
+# Format: <change-type> <file-path>
+# Change types: NEW, MODIFIED, DEPENDENT, UNCHANGED
+
+# MODIFIED — new test functions added
+MODIFIED tests/e2e_live.rs
+
+# MODIFIED (conditional) — only if a new flag is used; likely UNCHANGED
+MODIFIED tests/e2e_cli_surface_guard.rs
+
+# NEW — story spec
+NEW .factory/stories/S-475-adf-e2e-readpath.md
+
+# DEPENDENT (exercised by new test; no code change)
+DEPENDENT src/adf.rs
+DEPENDENT src/cli/issue/view.rs
+DEPENDENT src/cli/issue/comments.rs
+
+# UNCHANGED — all src/ files not listed above
+UNCHANGED src/main.rs
+UNCHANGED src/cli/mod.rs
+UNCHANGED src/cli/issue/mod.rs
+UNCHANGED src/cli/issue/list.rs
+UNCHANGED src/cli/issue/create.rs
+UNCHANGED src/cli/issue/workflow.rs
+UNCHANGED src/api/client.rs
+UNCHANGED src/api/jira/issues.rs
+
+# UNCHANGED — all other test files
+UNCHANGED tests/common/fixtures.rs
+
+# UNCHANGED — BC / spec files (no new BCs)
+UNCHANGED .factory/specs/prd/bc-7-output-render.md
+UNCHANGED .factory/specs/prd/BC-INDEX.md
+UNCHANGED .factory/specs/prd/CANONICAL-COUNTS.md

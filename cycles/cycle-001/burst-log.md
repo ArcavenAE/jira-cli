@@ -3684,3 +3684,11 @@ Archived to free STATE.md SIZE budget. Items with status DEFERRED or process-gap
 | #473 | CLOSED + MERGED — PR #491 + PR #493 → develop @ 8b639c1 (2026-06-10). |
 | #331 | CLOSED + LIVE-GREEN — PR #453+#454+#455 → develop @ f418bf5 (2026-06-01). |
 | S-JSM-RESOLUTION-REQUIRED | CLOSED + MERGED + LIVE-GREEN — PR #465 → develop @ 8ec9527 (2026-06-03). |
+
+### Archived Current Phase Steps — 2026-06-11
+
+Rows archived from STATE.md Current Phase Steps to stay within 5-row budget:
+
+| Step | Agent | Status | Output |
+|------|-------|--------|--------|
+| #473 bare-URL autolink E2E — PR #493 → develop @ 8b639c1 (2026-06-10). test_e2e_markdown_bare_url_produces_link_mark. PG-REVIEW-1 + PG-E2E-1 codified. | state-manager | CYCLE CLOSED + MERGED | BC 593 / NFR 41 / Stories 66. |

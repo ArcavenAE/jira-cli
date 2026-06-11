@@ -7,6 +7,80 @@ project: "jr (jira-cli)"
 
 Track all spec version changes. Most recent version first.
 
+## [1.3.9] - 2026-06-11
+
+### Type: PATCH
+
+### Summary
+
+Issue #475 F2 research-validation guardrails added to `e2e-coverage-spec.md`. New section "Server-Side ADF Mutation Guardrail (research-validated)" encodes five confirmed facts from external research (Claim 3, `.factory/research/issue-475-adf-e2e-external-validation.md`): (1) Jira Cloud silently normalizes stored ADF (localId injection, mark reordering, paragraph coalescing, silent node drop — no canonical transform list); (2) mandatory constraint that all ACs must assert structural invariants and/or `adf_to_text` rendered output, NEVER exact-ADF-tree equality — with explicit warning against future snapshot tightening; (3) read path confirmed to return raw ADF (not HTML): `get_issue` uses `?fields={}` (no `expand=renderedFields`), `list_comments` uses `?expand=properties` (not `renderedBody`), both code-confirmed at `src/api/jira/issues.rs:~426,~654`; (4) fixture constraint: no `@mentions`/user-identity nodes (GDPR non-deterministic); (5) recency: no breaking v3/ADF change in 12 months; GraphQL token deprecation 2026-11-01 is non-blocking. No AC assertion logic changed. BC/NFR counts unchanged at 594/41.
+
+### Modified Requirements
+
+No BC or NFR bodies modified. Additive guardrail section in `e2e-coverage-spec.md` only.
+
+### Impact Assessment
+
+| Dimension | Before | After | Delta |
+|-----------|--------|-------|-------|
+| BC corpus (BC-INDEX.md total_bcs) | 594 | 594 | 0 |
+| NFR corpus | 41 | 41 | 0 |
+| bc-7-output-render.md total_bcs | 89 | 89 | 0 |
+
+---
+
+## [1.3.8] - 2026-06-11
+
+### Type: PATCH
+
+### Summary
+
+Issue #475 F2 adversarial convergence fixes (pass 2). Resolved all 6 findings from the adversarial spec delta review: (1) CRITICAL — AC-3 assertion strategy corrected: `adf_to_text` is a markdown re-emitter, not a syntax stripper; `_emphasis_` → `*emphasis*` (single asterisk); negative assertion now checks `_emphasis_` absent (raw passthrough would leave underscores); positive assertion checks `**body**` (strong round-trip) and `*emphasis*` (em round-trip). (2) HIGH — `docs/specs/e2e-live-jira-testing.md:~123` added to AC-4 rename touch-point list. (3) MEDIUM — helper names corrected to actual `e2e_live.rs` identifiers (`poll_view`, `adf_has_node_type`, `adf_contains_text`; `adf_has_blockquote_in_list_item` marked NEW); harness invocation pattern corrected to `harness.cmd().args([...]).output()`. (4) MEDIUM — "proves unwrap-not-drop" framing softened to "sanity check." (5) LOW — SURFACE registration questions resolved as hard facts (all three CLI paths already registered; no F4 action needed). (6) LOW — test name verb decomposition made coherent. BC/NFR counts unchanged at 594/41.
+
+### Modified Requirements
+
+No BC or NFR bodies modified. Spec delta doc corrections only (e2e-coverage-spec.md, prd-delta.md in `.factory/phase-f2-spec-evolution/475-adf-e2e-readpath/`).
+
+### Impact Assessment
+
+| Dimension | Before | After | Delta |
+|-----------|--------|-------|-------|
+| BC corpus (BC-INDEX.md total_bcs) | 594 | 594 | 0 |
+| NFR corpus | 41 | 41 | 0 |
+| bc-7-output-render.md total_bcs | 89 | 89 | 0 |
+
+---
+
+## [1.3.7] - 2026-06-11
+
+### Type: PATCH
+
+### Summary
+
+Issue #475 F2 Spec Evolution: test-only BC Trace-field annotations and test rename. Three BC Trace fields in `bc-7-output-render.md` updated to reference the new live E2E coverage introduced by issue #475 (`test_e2e_adf_read_path_human_output`). Test rename: `test_e2e_issue_markdown_description_roundtrip` → `test_e2e_markdown_description_produces_heading_node` to correct a misnomer (the test verifies only the forward markdown→ADF direction). BC count unchanged at 594. NFR count unchanged at 41.
+
+### Modified Requirements
+
+| ID | Change |
+|----|--------|
+| BC-7.2.003 | Trace field extended: added reference to `tests/e2e_live.rs::test_e2e_adf_read_path_human_output` (first live E2E exercise of ADF read path via `jr issue view` human mode — AC-1) and renamed test reference `test_e2e_markdown_description_produces_heading_node` (formerly `test_e2e_issue_markdown_description_roundtrip`). Qualitative only; no numeric test counts added. |
+| BC-7.2.004 | Trace field extended: added reference to `tests/e2e_live.rs::test_e2e_adf_read_path_human_output` as the first live E2E coverage of `adf_to_text` — via `cli/issue/view.rs` human mode (AC-1) and `cli/issue/comments.rs` human mode (AC-3). Qualitative only. |
+| BC-7.2.006 | Trace field extended: added reference to `tests/e2e_live.rs::test_e2e_adf_read_path_human_output` as the first live E2E exercise of `normalize_list_item_content` — blockquote-in-listItem normalization sub-case AC-2. Qualitative only. |
+
+### Impact Assessment
+
+| Dimension | Before | After | Delta |
+|-----------|--------|-------|-------|
+| BC corpus (BC-INDEX.md total_bcs) | 594 | 594 | 0 |
+| NFR corpus | 41 | 41 | 0 |
+| bc-7-output-render.md total_bcs | 89 | 89 | 0 |
+
+### Discovery Basis
+
+F2 Spec Evolution for issue #475. Human gate decisions honored: one story (`S-475-adf-e2e-readpath`), 4 ACs, rename is a RENAME (not annotate-only), AC-3 in scope. No BC/NFR count change. Architecture unchanged. Verification properties unchanged.
+
+---
+
 ## [1.3.6] - 2026-06-10
 
 ### Type: PATCH

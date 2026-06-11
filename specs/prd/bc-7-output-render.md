@@ -96,7 +96,7 @@ Error display (7.3), JSON output shapes (7.4), Observability (7.5). (+4 BC-7.4.0
 **Source**: `src/snapshots/jr__adf__tests__markdown_complex_to_adf.snap` (330-line snapshot)
 **Subject**: Output rendering
 **Behavior**: Canonical complex doc → ADF snapshot. Round-trip canary; specific bytes pinned.
-**Trace**: Pass 3 BC-1117 (R4)
+**Trace**: Pass 3 BC-1117 (R4); `tests/e2e_live.rs::test_e2e_adf_read_path_human_output` (first live E2E exercise of ADF read path via `jr issue view` human mode — AC-1, issue #475); `tests/e2e_live.rs::test_e2e_markdown_description_produces_heading_node` (formerly `test_e2e_issue_markdown_description_roundtrip` — renamed issue #475 AC-4 to reflect forward-only markdown→ADF assertion)
 
 ---
 
@@ -106,7 +106,7 @@ Error display (7.3), JSON output shapes (7.4), Observability (7.5). (+4 BC-7.4.0
 **Source**: `src/adf.rs::tests`; `src/snapshots/jr__adf__tests__adf_to_text_complex.snap` (18-line snapshot)
 **Subject**: Output rendering
 **Behavior**: `_` fall-through arm at `adf.rs:531-540` silently drops unsupported nodes (documented per #202 spec). NFR-O-A (MEDIUM): ADF lossy nodes in text mode.
-**Trace**: Pass 3 BC-1106; BC-1116 (R4)
+**Trace**: Pass 3 BC-1106; BC-1116 (R4); `tests/e2e_live.rs::test_e2e_adf_read_path_human_output` (first live E2E exercise of `adf_to_text` — via `cli/issue/view.rs` human mode AC-1 and `cli/issue/comments.rs` human mode AC-3, issue #475)
 
 ---
 
@@ -138,7 +138,7 @@ After normalization, no `listItem` in the output document contains any node type
 - A `rule` that is the only child of a `listItem`: after dropping the rule the `listItem` has no children; `wrap_inlines_as_blocks` subsequently wraps it in an empty `paragraph` to keep the list item structurally valid.
 - A `listItem` containing only permitted node types (the common case): `normalize_list_item_content` is a no-op; output is byte-for-byte identical to pre-normalization behavior.
 
-**Trace**: `src/adf.rs::normalize_list_item_content`; `src/adf.rs::flatten_table_to_paragraphs`; `src/adf.rs::tests` (listItem normalization unit tests); `docs/specs/adf-listitem-content-model.md`; issue #470 / PR #477
+**Trace**: `src/adf.rs::normalize_list_item_content`; `src/adf.rs::flatten_table_to_paragraphs`; `src/adf.rs::tests` (listItem normalization unit tests); `docs/specs/adf-listitem-content-model.md`; issue #470 / PR #477; `tests/e2e_live.rs::test_e2e_adf_read_path_human_output` (first live E2E exercise of `normalize_list_item_content` — blockquote-in-listItem normalization sub-case AC-2, issue #475)
 
 ---
 
