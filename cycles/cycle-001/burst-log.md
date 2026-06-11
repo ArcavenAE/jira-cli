@@ -3673,6 +3673,7 @@ Archived to free STATE.md SIZE budget. Items with status DEFERRED or process-gap
 | PG-JSM-E2E-1 | No guard for test-docstring BC traces | TRACKED → S-QUEUE-BC-1 (complete). | DEFERRED |
 | PG-QUEUE-1 | 10th unguarded count surface in CANONICAL-COUNTS.md | DEFERRED — tooling enhancement. | DEFERRED |
 | PG-QUEUE-2 | Empty table miscitation in BC-X.12 requesttype BCs | DEFERRED — pre-existing requesttype prose correction. | DEFERRED |
+| DEFER-469 | Dependabot PR #469 (gitleaks-action 3.0 MAJOR) — intentional hold | RESOLVED 2026-06-11 — PR #469 merged @ 18a6441; v3.0.0 is runtime-only (Node20→Node24), no behavior/licensing change; ahead of Node20 removal 2026-09-16. |
 
 ### Archived Open Issues Tracker Closed Rows — 2026-06-11
 
