@@ -6,7 +6,7 @@ timestamp: 2026-06-11T20:00:00Z
 phase: phase-3-tdd-implementation
 project: jira-cli
 mode: BROWNFIELD
-current_step: "#475 ADF E2E read-path — F3 CONVERGED + gate APPROVED 2026-06-11. R1 2→fixed (F1 cell-wrap, F2 count drift); R2 0/0/0. S-475-adf-e2e-readpath. Stories 67→68. BC 594. NFR 41. Entering F4 (worktree creation in progress)."
+current_step: "#475 ADF E2E read-path — F4 CONVERGED 2026-06-11 (per-story Step-4.5). R1 F-1 HIGH async gate-guard false-green + F-1b → fixed (ca07cbc). R2 0/0/0. Full suite clean + deny + clippy/fmt. DEC-075. BC 594. NFR 41. Stories 68. Entering PR."
 current_cycle: "cycle-001"
 dtu_required: false
 phase_2_status: APPROVED
@@ -26,7 +26,7 @@ activation_version: "v0.5.0-dev.11"
 | **Product** | jr (Jira CLI) |
 | **Mode** | BROWNFIELD / Rust |
 | **Target Workspace** | develop → main |
-| **Last Updated** | 2026-06-11 — #475 F3 CONVERGED + gate APPROVED. S-475-adf-e2e-readpath; Stories 67→68. R1 2→fixed (F1 cell-wrap, F2 count drift); R2 0/0/0. DEC-074. O1-TABLE-ASSERT. BC 594 / NFR 41 / Stories 68. Entering F4. develop HEAD: 18a6441. |
+| **Last Updated** | 2026-06-11 — #475 F4 CONVERGED (per-story Step-4.5). R1 F-1 HIGH async gate-guard false-green + F-1b → fixed (ca07cbc); R2 0/0/0. Full suite clean + deny + clippy/fmt. DEC-075. BC 594 / NFR 41 / Stories 68. Worktree test/issue-475-adf-e2e-readpath @ ca07cbc. Entering PR. develop HEAD: 18a6441. |
 | **Current Phase** | Phase 3 — TDD Implementation IN PROGRESS — Feature Mode active. BC 594. NFR 41. Stories 68. |
 | **Next Phase** | Phase 4: Holdout Evaluation (not started) |
 | **Activation HEAD** | 15bf305 (v0.5.0-dev.11) — develop HEAD now 18a6441 |
@@ -45,7 +45,7 @@ activation_version: "v0.5.0-dev.11"
 | GFM task lists → ADF (issue #471 / BC-7.2.010) | **CYCLE CLOSED + MERGED** | 2026-06-11 | F1–F7 ALL COMPLETE — CONVERGED | PR #494 → develop @ 4c9b069. BC 594 (+1). EC-17. 210 adf::tests; 1746/0; 97.3% mutation kill. F5: 16-pass adversary; F6: proptest 512 cases (found 17th bug). DEC-067/068/069/070/071. |
 | ADF E2E coverage loop-back (#471/#474/#483/#489) | **CYCLE CLOSED + MERGED** | 2026-06-11 | CYCLE CLOSED | PR #495 → develop @ bfb723f. 5 gated live E2E tests. NO src change. BC 594 unchanged. Live-verified GREEN — e2e run 27352373680 (89/0) on develop @ 45ceae6, 2026-06-11. |
 | CLI leading-dash values (issue #471 e2e / description-leading-dash) | **CYCLE CLOSED + MERGED** | 2026-06-11 | F1–F7 ALL COMPLETE — CONVERGED | PR #496 → develop @ 45ceae6. `allow_hyphen_values = true` on 7 free-text write args. BC 594 unchanged. +17 hermetic parse tests (tests/cli_smoke.rs, 44 total). F5: 8 passes / 3-clean-pass CONVERGED. F6: 1763/0, clippy/fmt/deny clean, mutation zero-in-scope. F7: 5-dimension consistency CLEAN. DEC-072. |
-| ADF E2E read-path coverage (issue #475) | **F3 CONVERGED — gate APPROVED** | 2026-06-11 | F1+F2+F3 APPROVED | F1: 1 story, RENAME override, AC-3 in scope. F2: R1 9→0/6→0 + R2 0→0→0; spec v1.3.9. F3: S-475-adf-e2e-readpath (Stories 67→68); R1 2→fixed (F1 cell-wrap, F2 count drift); R2 0/0/0 CONVERGED. DEC-073/074. BC 594 / NFR 41. Entering F4. |
+| ADF E2E read-path coverage (issue #475) | **F4 CONVERGED — entering PR** | 2026-06-11 | F1+F2+F3+F4 APPROVED | F1: 1 story, RENAME override, AC-3 in scope. F2: R1 9→0/6→0 + R2 0→0→0; spec v1.3.9. F3: S-475-adf-e2e-readpath (Stories 67→68); R1 2→fixed; R2 0/0/0 CONVERGED. F4: R1 F-1 HIGH async gate-guard false-green + F-1b → fixed (ca07cbc); R2 0/0/0. Full suite clean. DEC-073/074/075. BC 594 / NFR 41 / Stories 68. |
 | 4: Holdout Evaluation | not-started | | | |
 | 5: Adversarial Refinement | not-started | | | |
 | 6: Formal Hardening | not-started | | | |
@@ -57,11 +57,11 @@ activation_version: "v0.5.0-dev.11"
 
 | Step | Agent | Status | Output |
 |------|-------|--------|--------|
-| ADF E2E loop-back — PR #495 → develop @ bfb723f (2026-06-11). 5 gated tests. Worktree cleaned. #475 partially addressed. | state-manager | CYCLE CLOSED + MERGED | BC 594 / NFR 41 / Stories 67. develop HEAD: bfb723f. |
 | description-leading-dash — PR #496 → develop @ 45ceae6 (2026-06-11). allow_hyphen_values on 7 write args. +17 hermetic parse tests. F5 8-pass converged. Worktree cleaned. DEC-072. | state-manager | CYCLE CLOSED + MERGED | BC 594 / NFR 41 / Stories 67. develop HEAD: 45ceae6. |
 | Maintenance: 4 Dependabot PRs merged (#497 chrono 0.4.44→0.4.45, #498 codeql-action 4.36.0→4.36.2, #484 checkout 6.0.2→6.0.3, #469 gitleaks-action 2.3.9→3.0.0 MAJOR) → develop @ 18a6441 (2026-06-11). Soak-verified, CI green, code-owner approved. DEFER-469 hold resolved (v3 runtime-only Node24). | state-manager | MAINTENANCE COMPLETE | BC 594 / NFR 41 / Stories 67 UNCHANGED. develop HEAD: 18a6441. |
 | #475 ADF E2E read-path — F1 APPROVED + F2 CONVERGED (R1 9→0/6→0; R2 0→0→0) + research-validated (5/5 Jira-API assumptions) → spec v1.3.9. Rename target confirmed: test_e2e_markdown_description_produces_heading_node. | state-manager | F2 GATE APPROVED | BC 594 / NFR 41 / Stories 67 (→68 at F3). |
 | #475 ADF E2E read-path — F3 CONVERGED (R1 2→fixed: F1 cell-wrap fragility, F2 count drift; R2 0/0/0). Gate APPROVED 2026-06-11. Story S-475-adf-e2e-readpath; Stories 67→68. DEC-074. O1-TABLE-ASSERT drift item added. Entering F4. | state-manager | F3 GATE APPROVED | BC 594 / NFR 41 / Stories 68. develop HEAD: 18a6441. |
+| #475 F4 impl CONVERGED (per-story Step-4.5: R1 F-1 HIGH async gate-guard false-green + F-1b → fixed; R2 0/0/0). Full suite clean + deny ok + clippy/fmt clean. Worktree test/issue-475-adf-e2e-readpath @ ca07cbc. Demo: justified handling (test-only, no production behavior change; offline verification + nightly e2e live). Entering PR. | state-manager | F4 CONVERGED | BC 594 / NFR 41 / Stories 68. develop HEAD: 18a6441. |
 
 ## Decisions Log
 
@@ -77,11 +77,13 @@ activation_version: "v0.5.0-dev.11"
 | DEC-072 | 2026-06-11: description-leading-dash — trivial-scope clap ergonomics fix. Scope expanded from `--description` to all 7 free-text write-command args (`issue create/edit --summary`+`--description`, `issue comment` positional message, `issue remote-link --title`, `worklog add --message`) with human approval at F4→F5 boundary. Adjacent F5 findings F-01 (`--summary`) and F-02 (worklog `--message`) RESOLVED in this PR (not deferred). `issue comment` + `remote-link --title` added during F5 for completeness. F5-P5-01 (flag-binding pinned only in nightly e2e) RESOLVED by adding 17 hermetic parse tests to tests/cli_smoke.rs. F-H1 (F1↔implementation scope-reconciliation manual, no automated gate) DEFERRED — handled manually this cycle; revisit if recurs 3+ times. | Feature Mode / description-leading-dash | Phase 3 | 2026-06-11 |
 | DEC-073 | 2026-06-11: #475 F1+F2 — test-only ADF E2E read-path coverage. F1 gate: ONE story, RENAME misnomer test (human overrode annotate-only), AC-3 (comments read path) IN SCOPE. F2 CONVERGED — fresh adversary caught CRITICAL (AC-3 negative assertions were guaranteed live-failure: `adf_to_text` re-emits markdown, `src/adf.rs:2255`). Research-validated all 5 external Jira-API assumptions (`developer.atlassian.com` 2026-06-11): GET issue v3 returns ADF object; `listItem` forbids `blockquote` child (normalization required); Jira silently rewrites ADF server-side → spec mandates structural/rendered assertions not exact-tree snapshots. No BC/NFR change (594/41). Spec v1.3.6→1.3.9. | Feature Mode / #475 ADF E2E read-path | Phase 3 | 2026-06-11 |
 | DEC-074 | 2026-06-11: #475 F3 CONVERGED. ONE story S-475-adf-e2e-readpath (Stories 67→68), 4 ACs traced to BC-7.2.003/004/006, leaf node. Fresh adversary caught F1 (comfy-table cell-wrap fragility — multi-word AC-1 substring assertions could break on cell wrap) → fixed via single-token assertions; F2 (STORY-INDEX prose count drift 67/32) → fixed. R2 0/0/0 converged. Process-gap O1 (no shared assert_table_contains/de-wrap helper for human-mode E2E stdout — this is the first such test) DEFERRED as drift item O1-TABLE-ASSERT, single-token approach sufficient this cycle; revisit if recurs. | Feature Mode / #475 F3 story decomposition | Phase 3 | 2026-06-11 |
+| DEC-075 | 2026-06-11: #475 F4 CONVERGED. Per-story Step-4.5 fresh-context review caught HIGH false-green: new test was async, silently escaping the gate-guard meta-test (matched only `fn test_`). Root-fix: de-async (no .await existed). Hardened guard to recognize `async fn test_` (F-1b process-gap). LESSON: implementer hermetic 'PASS' on a guard can be a false green when the guard's own pattern excludes the new construct — fresh-context review on the diff is load-bearing. Demo: justified adapted-skip for test-only no-behavior-change story. | Feature Mode / #475 F4 delta implementation | Phase 3 | 2026-06-11 |
 
 ## Skip Log
 
 | Step | Skipped? | Justification |
 |------|----------|---------------|
+| F4 per-AC video demo (#475) | Yes — adapted | Test-only story, NO production behavior change (adds gated E2E coverage for existing converters). No offline-runnable live demo; evidence = offline hermetic verification (compile + gate guards + full suite green + --list) and nightly e2e.yml live run. Same handling as prior test-only E2E cycles (#493/#495). |
 
 ## Blocking Issues
 
@@ -108,7 +110,7 @@ activation_version: "v0.5.0-dev.11"
 
 ## Convergence Trackers
 
-Full per-issue: `cycles/cycle-001/convergence-trajectory.md`. Current: **[2026-06-11] #475 F3 CONVERGED — R1 2→fixed (F1 cell-wrap, F2 count drift); R2 0/0/0. S-475-adf-e2e-readpath; Stories 67→68. DEC-074. Gate APPROVED. BC 594 / NFR 41 / Stories 68. No active worktrees. develop HEAD: 18a6441. Entering F4.** Prior: #475 F2 CONVERGED — R1 9→0/6→0; R2 0→0→0. Spec v1.3.9. Research-validated 5/5 Jira-API assumptions.
+Full per-issue: `cycles/cycle-001/convergence-trajectory.md`. Current: **[2026-06-11] #475 F4 CONVERGED (per-story Step-4.5) — R1 F-1 HIGH (async false-green gate-guard escape) + F-1b (guard blind to async fn); both FIXED in ca07cbc. R2 0/0/0. Full suite clean + deny + clippy/fmt. DEC-075. BC 594 / NFR 41 / Stories 68. Worktree test/issue-475-adf-e2e-readpath @ ca07cbc. Entering PR.** Prior: #475 F3 CONVERGED — R1 2→fixed (cell-wrap, count drift); R2 0/0/0. DEC-074.
 
 ## Session Resume Checkpoint
 
@@ -117,11 +119,11 @@ Full per-issue: `cycles/cycle-001/convergence-trajectory.md`. Current: **[2026-0
 | Field | Value |
 |-------|-------|
 | **Date** | 2026-06-11 |
-| **Position** | **#475 ADF E2E read-path — F3 APPROVED, entering F4 (worktree creation in progress).** F3 adversary R1 2→fixed (F1 comfy-table cell-wrap fragility in AC-1 multi-word assertions → single-token fix; F2 STORY-INDEX prose count drift 67/32 → fixed to 68/33). R2 0/0/0 CONVERGED. Story S-475-adf-e2e-readpath written; Stories 67→68. DEC-074. O1-TABLE-ASSERT drift item added. Prior: F2 CONVERGED R1 9→0/6→0; R2 0→0→0; spec v1.3.9; DEC-073. |
-| **develop HEAD** | origin/develop = **18a6441**. BC 594. NFR 41. Stories 68. No active worktrees (F4 worktree being created). |
-| **Convergence counter** | BC: **594**. NFR: **41**. Stories: **68**. jira-e2e env: JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ, JR_E2E_ENABLED=true. No active worktrees. |
-| **Next / Pending** | (1) #475 ACTIVE — F4 delta implementation (TDD). Story S-475-adf-e2e-readpath; worktree creation in progress. (2) DEFERRED-ADF-E2E: #470 listItem live-E2E remains open. (3) SEC-001 (CWE-674 deep-nesting recursion in adf.rs, LOW) deferred. (4) Deferred: #400 Story B + engine items; #372 cargo-mutants. (5) Standing: do NOT close #429 (DEC-029 human deferral); #492 OPEN; OQ-5 + E2E-PG-4 remote-link open; F-H1 DEFERRED; O1-TABLE-ASSERT DEFERRED. |
-| **Resume prompt** | `Read .factory/STATE.md. DATE: 2026-06-11. POSITION: #475 ADF E2E read-path — F3 APPROVED + entering F4. Stories 68. S-475-adf-e2e-readpath (BC-7.2.003/004/006; 4 ACs; leaf node). F3: R1 2→fixed (cell-wrap, count drift); R2 0/0/0 CONVERGED. DEC-073/074. develop HEAD: 18a6441. BC 594 / NFR 41 / Stories 68. F4 worktree being created. DEFERRED-ADF-E2E: #470 listItem live-E2E remains. STANDING: do NOT close #429 (DEC-029); #492 OPEN; OQ-5 open; E2E-PG-4 remote-link open; SEC-001 LOW deferred; F-H1 DEFERRED; O1-TABLE-ASSERT DEFERRED. jira-e2e: JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ, JR_E2E_ENABLED=true.` |
+| **Position** | **#475 ADF E2E read-path — F4 CONVERGED (per-story Step-4.5).** R1: F-1 HIGH (async test silently escaped gate-guard meta-test — matched only `fn test_`, not `async fn test_`; root-fix: de-async, no .await existed) + F-1b LOW process-gap (guard hardened to strip `async ` prefix). Both fixed in ca07cbc. R2: 0/0/0 fresh-context three-pass clean. Full suite ALL CLEAN, deny ok, clippy/fmt clean. DEC-075. Worktree branch test/issue-475-adf-e2e-readpath @ ca07cbc. LESSON: implementer hermetic PASS on a guard can be false-green when guard's pattern excludes the new construct — fresh-context review is load-bearing. Prior: F3 CONVERGED DEC-074. |
+| **develop HEAD** | origin/develop = **18a6441**. BC 594. NFR 41. Stories 68. Active worktree: test/issue-475-adf-e2e-readpath @ ca07cbc. |
+| **Convergence counter** | BC: **594**. NFR: **41**. Stories: **68**. jira-e2e env: JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ, JR_E2E_ENABLED=true. Worktree: test/issue-475-adf-e2e-readpath. |
+| **Next / Pending** | (1) #475 ACTIVE — F5 scoped adversarial + PR creation. Worktree test/issue-475-adf-e2e-readpath @ ca07cbc. (2) DEFERRED-ADF-E2E: #470 listItem live-E2E remains open. (3) SEC-001 (CWE-674 deep-nesting recursion in adf.rs, LOW) deferred. (4) Deferred: #400 Story B + engine items; #372 cargo-mutants. (5) Standing: do NOT close #429 (DEC-029 human deferral); #492 OPEN; OQ-5 + E2E-PG-4 remote-link open; F-H1 DEFERRED; O1-TABLE-ASSERT DEFERRED. |
+| **Resume prompt** | `Read .factory/STATE.md. DATE: 2026-06-11. POSITION: #475 ADF E2E read-path — F4 CONVERGED (per-story Step-4.5). Worktree test/issue-475-adf-e2e-readpath @ ca07cbc. R1: F-1 HIGH async gate-guard false-green (de-async root-fix) + F-1b guard hardened; R2 0/0/0. Full suite clean + deny + clippy/fmt. DEC-075. develop HEAD: 18a6441. BC 594 / NFR 41 / Stories 68. NEXT: F5 scoped adversarial + PR. DEFERRED-ADF-E2E: #470 listItem live-E2E remains. STANDING: do NOT close #429 (DEC-029); #492 OPEN; OQ-5 open; E2E-PG-4 remote-link open; SEC-001 LOW deferred; F-H1 DEFERRED; O1-TABLE-ASSERT DEFERRED. jira-e2e: JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ, JR_E2E_ENABLED=true.` |
 
 ## Open Issues Tracker
 

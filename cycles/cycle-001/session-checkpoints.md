@@ -564,3 +564,16 @@ _Was the active checkpoint after STATE.md was compacted and rewritten post-#495 
 | **Resume prompt** | `Read .factory/STATE.md. DATE: 2026-06-11. POSITION: #475 ADF E2E read-path — F2 CONVERGED + gate APPROVED (2026-06-11). R1: 9→0/6→0 (spec 1.3.8); R2 fresh-context 0→0→0; research-validated 5/5 (developer.atlassian.com). Spec v1.3.9. DEC-073. Rename target: test_e2e_markdown_description_produces_heading_node. develop HEAD: 18a6441. BC 594 / NFR 41 / Stories 67 (→68 at F3). No active worktrees. NEXT: F3 story decomposition (S-475-adf-e2e-readpath). DEFERRED-ADF-E2E: #470 listItem live-E2E remains. STANDING: do NOT close #429 (DEC-029); #492 OPEN; OQ-5 open; E2E-PG-4 remote-link open; SEC-001 LOW deferred; F-H1 DEFERRED. jira-e2e: JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ, JR_E2E_ENABLED=true.` |
 
 ---
+
+## Checkpoint — 2026-06-11 (#475 F3 CONVERGED + gate APPROVED)
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-06-11 |
+| **Position** | **#475 ADF E2E read-path — F3 CONVERGED, gate APPROVED.** R1 2→fixed (F1 comfy-table cell-wrap fragility in AC-1 multi-word assertions → single-token fix; F2 STORY-INDEX prose count drift 67/32 → fixed to 68/33). R2 0/0/0 CONVERGED. Story S-475-adf-e2e-readpath written; Stories 67→68. DEC-074. O1-TABLE-ASSERT drift item added. Prior: F2 CONVERGED R1 9→0/6→0; R2 0→0→0; spec v1.3.9; DEC-073. |
+| **develop HEAD** | origin/develop = **18a6441**. BC 594. NFR 41. Stories 68. No active worktrees (F4 worktree being created). |
+| **Convergence counter** | BC: **594**. NFR: **41**. Stories: **68**. jira-e2e env: JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ, JR_E2E_ENABLED=true. No active worktrees. |
+| **Next / Pending** | (1) #475 ACTIVE — F4 delta implementation (TDD). Story S-475-adf-e2e-readpath; worktree creation in progress. (2) DEFERRED-ADF-E2E: #470 listItem live-E2E remains open. (3) SEC-001 (CWE-674 deep-nesting recursion in adf.rs, LOW) deferred. (4) Deferred: #400 Story B + engine items; #372 cargo-mutants. (5) Standing: do NOT close #429 (DEC-029 human deferral); #492 OPEN; OQ-5 + E2E-PG-4 remote-link open; F-H1 DEFERRED; O1-TABLE-ASSERT DEFERRED. |
+| **Resume prompt** | `Read .factory/STATE.md. DATE: 2026-06-11. POSITION: #475 ADF E2E read-path — F3 APPROVED + entering F4. Stories 68. S-475-adf-e2e-readpath (BC-7.2.003/004/006; 4 ACs; leaf node). F3: R1 2→fixed (cell-wrap, count drift); R2 0/0/0 CONVERGED. DEC-073/074. develop HEAD: 18a6441. BC 594 / NFR 41 / Stories 68. F4 worktree being created. DEFERRED-ADF-E2E: #470 listItem live-E2E remains. STANDING: do NOT close #429 (DEC-029); #492 OPEN; OQ-5 open; E2E-PG-4 remote-link open; SEC-001 LOW deferred; F-H1 DEFERRED; O1-TABLE-ASSERT DEFERRED. jira-e2e: JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ, JR_E2E_ENABLED=true.` |
+
+---
