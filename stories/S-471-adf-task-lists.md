@@ -51,6 +51,7 @@ BC-7.2.010 body: `.factory/specs/prd/bc-7-output-render.md §7.2.010`
 Delta analysis: `.factory/phase-f1-delta-analysis/issue-471-delta-analysis.md`
 Research — node shape: `.factory/research/issue-471-adf-tasknode-shape.md`
 Research — pulldown blockquote: `.factory/research/issue-471-pulldown-blockquote-tasklist.md`
+Research — panel/taskList shape: `.factory/research/issue-471-panel-tasklist-shape.md`
 Predecessor issue: #483 (GFM alerts → ADF panel; same pattern class: new node types + normalization + reverse path)
 Design spec (to be authored in F4 implementer step): `docs/specs/adf-task-list.md`
 
@@ -101,6 +102,15 @@ passes → reverse path → prune set extension. The `normalize_panel_content` `
 catch-all **already passes `taskList` through correctly** because `panel.content` permits
 `taskList` (BC-7.2.009) — do NOT add a `taskList` arm to `normalize_panel_content`.
 
+**REQUIRED: `wrap_inlines_as_blocks` Panel allowlist fix (confirmed by `.factory/research/issue-471-panel-tasklist-shape.md`):**
+`normalize_panel_content` preserves the `taskList`, but the Panel arm's subsequent
+`wrap_inlines_as_blocks` call (lines 451–459 in `end()`) has an allowlist
+`["paragraph", "heading", "bulletList", "orderedList", "codeBlock", "rule"]` that does
+NOT include `"taskList"`. Without the fix, a `taskList` is misclassified as inline and
+wrapped into `panel > paragraph > taskList` — INVALID ADF (Jira 400). Adding `"taskList"`
+to that allowlist is a REQUIRED one-line change for F4. See AC-008 and File Structure
+Requirements for the checkable item.
+
 **Predecessor: issue #470 (BC-7.2.006, PR #477)**
 Introduced `normalize_list_item_content`, `is_empty_block_container`, and
 `flatten_table_to_paragraphs`. The `normalize_list_item_content` function gains a
@@ -147,6 +157,7 @@ is added.
 | `additionalProperties: false` on attrs | BC-7.2.010 §Schema strictness note | Emit ONLY `localId` for `taskList.attrs`; ONLY `localId` + `state` for `taskItem.attrs`. Any extra key causes Jira HTTP 400. |
 | taskItem content is inline-only | BC-7.2.010 §Required attributes | Do NOT wrap `taskItem` content in a `paragraph`. Text nodes and marks go directly in `taskItem.content`. This differs from `listItem` which uses `paragraph` wrappers. |
 | Panel normalization: no-op | BC-7.2.010 Content-model obligation #3 | `panel.content` permits `taskList` — the existing `_ => out.push(child)` catch-all handles it correctly. Do NOT add a `taskList` arm to `normalize_panel_content`. |
+| Panel `wrap_inlines_as_blocks` allowlist: add `"taskList"` | `.factory/research/issue-471-panel-tasklist-shape.md` §D (REQUIRED) | The Panel arm's `wrap_inlines_as_blocks` call (lines ~451–459) allowlist `["paragraph","heading","bulletList","orderedList","codeBlock","rule"]` MUST have `"taskList"` added. Without it, a surviving `taskList` child is misclassified as inline → `panel > paragraph > taskList` (INVALID ADF, Jira 400). This is a one-line required change. Pinned by `test_task_list_in_panel_passes_through` (AC-008). |
 | ENABLE_GFM must not be added here | BC-7.2.009 (already shipped) | `ENABLE_GFM` was added in issue #483 for panel support. Adding it again is a no-op, but do NOT duplicate the flag in the options chain. |
 | Dedup marks at all text-emission sites | BC-7.2.007 (already in force) | `dedup_marks_by_type` is already applied at `push_text` and `push_code`. The new `taskItem` inline-emission path must also call `dedup_marks_by_type`. |
 
@@ -163,7 +174,7 @@ No new crate dependencies are added by this story.
 
 | File | Create / Modify | Description |
 |------|----------------|-------------|
-| `src/adf.rs` | MODIFY | (1) Add `Options::ENABLE_TASKLISTS` to parser options; (2) Add `TaskItem { checked: bool }` and `TaskList` to `NodeKind` enum; (3) Add `Event::TaskListMarker(checked)` arm in `AdfBuilder::process`; (4) Modify `Tag::Item` arm in `AdfBuilder::start` to defer task-item candidate creation; (5) Modify `TagEnd::List` arm in `AdfBuilder::end` for post-hoc reclassification; (6) Add `TagEnd::Item` finalization for TaskItem — the `End(TagEnd::Item)` pulldown event fires `end()`, which pops the stack and enters the `match kind` block; EC-16 inline-flattening (paragraph-strip + hardBreak-separator + leading/trailing-hardBreak trim) MUST run INSIDE the `NodeKind::TaskItem` arm of that `match kind` block (there is NO `match tag_end { TagEnd::Item => }` arm — the flatten logic lives in the `match kind` block), BEFORE the arm returns `Some(taskItem_node)` to the prune gate at ~line 608. Do NOT place the flatten in a post-`finish()` pass — that inverts the EC-16-before-EC-8 ordering and breaks the both-empty prune (see AC-015); (7) Add `"taskList"` arm in `normalize_list_item_content`; (8) Add `normalize_blockquote_content` pass (or equivalent) for blockquote→taskList unwrapping; (9) Add `"taskList"` and `"taskItem"` to `is_empty_block_container` — adding `"taskItem"` to `REQUIRES_CONTENT` is NECESSARY but INSUFFICIENT: `is_empty_block_container` currently checks `content.is_empty()` (zero-length array). A `taskItem` with `content: [hardBreak]` or `content: [text("   ")]` has a non-empty array and would NOT be pruned by membership alone. A second "structurally-empty inline content" branch is required, applied ONLY to `taskItem`: treat content as effectively empty when ALL nodes are either (a) whitespace-only text nodes (trim is empty) or (b) hardBreak nodes, with no other content. The structural-only `c.is_empty()` semantics for the existing 8 container types MUST NOT be altered — the existing `test_is_empty_block_container_membership` pin at ~line 2753 must still pass after adding the taskItem branch; (10) Add `ListFrame::Task` variant; (11) Add `"taskList"` and `"taskItem"` arms in `AdfRenderer::render_node`; (12) Implement post-normalization DFS localId assignment walk; (13) Add 19 new named inline unit tests (net delta +18 from baseline: `test_markdown_task_list_emits_task_list_node`, `test_markdown_task_checked_item_emits_done_state`, `test_markdown_task_uppercase_x_emits_done_state`, `test_markdown_mixed_task_plain_list_promotes_container`, `test_markdown_task_item_inline_marks_preserved`, `test_task_list_in_list_item_normalized_to_nested_bullet_list`, `test_task_list_in_blockquote_normalized_to_paragraphs`, `test_task_list_in_panel_passes_through`, `test_empty_task_item_pruned`, `test_empty_task_list_pruned`, `test_hardbreak_only_task_item_pruned`, `test_task_list_roundtrip_adf_to_text`, `test_adf_to_text_external_lowercase_state`, `test_nested_task_list_preserved`, `test_malformed_task_markers_stay_literal_text`, `test_task_item_with_nested_plain_list_hoists_block_sibling`, `test_task_item_multi_paragraph_flattened_to_inline`, `test_task_item_native_hardbreak_inline_is_roundtrip_lossy`, `test_task_list_localid_dfs_preorder_assignment`; REPLACE (not delete) `test_markdown_task_list_syntax_preserved_as_text`). |
+| `src/adf.rs` | MODIFY | (1) Add `Options::ENABLE_TASKLISTS` to parser options; (2) Add `TaskItem { checked: bool }` and `TaskList` to `NodeKind` enum; (3) Add `Event::TaskListMarker(checked)` arm in `AdfBuilder::process`; (4) Modify `Tag::Item` arm in `AdfBuilder::start` to defer task-item candidate creation; (5) Modify `TagEnd::List` arm in `AdfBuilder::end` for post-hoc reclassification; (6) Add `TagEnd::Item` finalization for TaskItem — the `End(TagEnd::Item)` pulldown event fires `end()`, which pops the stack and enters the `match kind` block; EC-16 inline-flattening (paragraph-strip + hardBreak-separator + leading/trailing-hardBreak trim) MUST run INSIDE the `NodeKind::TaskItem` arm of that `match kind` block (there is NO `match tag_end { TagEnd::Item => }` arm — the flatten logic lives in the `match kind` block), BEFORE the arm returns `Some(taskItem_node)` to the prune gate at ~line 608. Do NOT place the flatten in a post-`finish()` pass — that inverts the EC-16-before-EC-8 ordering and breaks the both-empty prune (see AC-015); (7) Add `"taskList"` arm in `normalize_list_item_content`; (8) Add `normalize_blockquote_content` pass (or equivalent) for blockquote→taskList unwrapping; (9) Add `"taskList"` and `"taskItem"` to `is_empty_block_container` — adding `"taskItem"` to `REQUIRES_CONTENT` is NECESSARY but INSUFFICIENT: `is_empty_block_container` currently checks `content.is_empty()` (zero-length array). A `taskItem` with `content: [hardBreak]` or `content: [text("   ")]` has a non-empty array and would NOT be pruned by membership alone. A second "structurally-empty inline content" branch is required, applied ONLY to `taskItem`: treat content as effectively empty when ALL nodes are either (a) whitespace-only text nodes (trim is empty) or (b) hardBreak nodes, with no other content. The structural-only `c.is_empty()` semantics for the existing 8 container types MUST NOT be altered — the existing `test_is_empty_block_container_membership` pin at ~line 2753 must still pass after adding the taskItem branch; (10) Add `ListFrame::Task` variant; (11) Add `"taskList"` and `"taskItem"` arms in `AdfRenderer::render_node`; (12) Implement post-normalization DFS localId assignment walk; **(13) [REQUIRED — AC-008] Add `"taskList"` to the Panel arm's `wrap_inlines_as_blocks` allowlist (lines ~451–459 in `end()`). Without this one-line change, a task list inside a GFM alert produces `panel > paragraph > taskList` — INVALID ADF (Jira 400). The fix is: add `"taskList"` to the `&[…]` slice passed to `wrap_inlines_as_blocks` in the `NodeKind::Panel` arm. Pinned by `test_task_list_in_panel_passes_through`. Source: `.factory/research/issue-471-panel-tasklist-shape.md` §D.** (14) Add 19 new named inline unit tests (net delta +18 from baseline: `test_markdown_task_list_emits_task_list_node`, `test_markdown_task_checked_item_emits_done_state`, `test_markdown_task_uppercase_x_emits_done_state`, `test_markdown_mixed_task_plain_list_promotes_container`, `test_markdown_task_item_inline_marks_preserved`, `test_task_list_in_list_item_normalized_to_nested_bullet_list`, `test_task_list_in_blockquote_normalized_to_paragraphs`, `test_task_list_in_panel_passes_through`, `test_empty_task_item_pruned`, `test_empty_task_list_pruned`, `test_hardbreak_only_task_item_pruned`, `test_task_list_roundtrip_adf_to_text`, `test_adf_to_text_external_lowercase_state`, `test_nested_task_list_preserved`, `test_malformed_task_markers_stay_literal_text`, `test_task_item_with_nested_plain_list_hoists_block_sibling`, `test_task_item_multi_paragraph_flattened_to_inline`, `test_task_item_native_hardbreak_inline_is_roundtrip_lossy`, `test_task_list_localid_dfs_preorder_assignment`; REPLACE (not delete) `test_markdown_task_list_syntax_preserved_as_text`). |
 | `docs/specs/adf-task-list.md` | CREATE | Design spec authored during F4 (following the pattern of `docs/specs/adf-panel-content-model.md`). Documents builder mechanics, localId walk, normalization decisions, lossiness table. |
 | `CLAUDE.md` | MODIFY | Add `"Markdown GFM task lists → ADF (adf.rs, issue #471)"` gotcha entry immediately after the existing bare-URL autolink entry. |
 
@@ -278,45 +289,70 @@ Pinned by: `test_task_list_in_blockquote_normalized_to_paragraphs`
 
 ---
 
-### AC-008 — Task list inside a `panel` → passes through unchanged
-(traces to BC-7.2.010 postcondition — Content-model obligation #3; EC-7; no-op)
+### AC-008 — Task list inside a `panel` → passes through as `panel > [taskList > taskItem]`
+(traces to BC-7.2.010 postcondition — Content-model obligation #3; EC-7; no-op via catch-all + REQUIRED allowlist fix)
 
 Input `"> [!NOTE]\n> - [ ] item"` produces a `panel` (from the GFM alert, per #483)
-whose `content` includes a `taskList` node. The `taskList` passes through
-`normalize_panel_content`'s `_ => out.push(child)` catch-all unchanged. No unwrapping
-occurs. ADF `panel.content` permits `taskList` (BC-7.2.009).
+whose `content` is `[taskList > [taskItem(state: "TODO", content: [text("item")])]]`.
+The `taskList` passes through `normalize_panel_content`'s `_ => out.push(child)` catch-all
+unchanged. ADF `panel.content` permits `taskList` (BC-7.2.009 — confirmed against canonical
+`@atlaskit/adf-schema` full.json v44.0.0).
 
-**F4 empirical confirmation required (resolves F-007):** It is unverified whether
-pulldown-cmark 0.13.3 emits `panel > taskList` or routes the inner blockquote content
-through the AC-007 blockquote-normalization pass first (which would produce
-`panel > [paragraph]` rather than `panel > [taskList]`). The `ENABLE_GFM` alert path
-and the `ENABLE_TASKLISTS` task-list path interact in a pipeline order that has not been
-empirically confirmed for this combined input.
+**Expected shape LOCKED** (no F4-empirical confirmation needed). Evidence from
+`.factory/research/issue-471-panel-tasklist-shape.md` (HIGH confidence, primary-source
+code trace + ADF schema):
 
-- BC-7.2.009 states `panel.content` permits `taskList` — so IF the taskList is formed
-  inside the panel, the `_ => out.push(child)` catch-all handles it correctly.
-- During F4 implementation, the implementer MUST run `test_task_list_in_panel_passes_through`
-  and inspect the actual tree shape to confirm the `panel > taskList` arrangement.
-- **Fallback if empirical check shows `panel > [paragraph]`:** The test must be rewritten
-  to assert `panel.content` contains `paragraph` nodes (task item text extracted), not
-  a `taskList`, and AC-008 must be updated with a note that `panel > taskList` is
-  normalized just as `blockquote > taskList` is. This fallback is acceptable per
-  BC-7.2.010 Content-model obligation #2 (unconditional blockquote normalization runs
-  at the blockquote level before the alert→panel conversion completes).
+1. pulldown-cmark 0.13.3 emits `TaskListMarker` inside the alert-blockquote context
+   identically to a plain blockquote — the task-marker scan in `firstpass.rs:142–160`
+   is container-agnostic; the `kind` payload only tags the container type and does not
+   alter the inner scan path.
+2. `normalize_panel_content` preserves the `taskList` via the `_ => out.push(child)` arm
+   (no unwrapping occurs).
+3. `panel.content` explicitly permits `taskList_node` as a direct child in the canonical
+   ADF schema (cross-checked v40.9.2 and v44.0.0).
 
-**Implementation note — `wrap_inlines_as_blocks` allowlist (F4 carry-forward):** Beyond
-`normalize_panel_content`'s catch-all passing `taskList` through, the Panel arm's subsequent
-`wrap_inlines_as_blocks` call (`src/adf.rs` ~449–459) uses a block-type allowlist that does
-NOT currently include `"taskList"`. A surviving `taskList` node could therefore be
-misclassified as inline and wrapped into an invalid `paragraph > taskList` structure (INVALID
-ADF — Jira 400). The F4 implementer MUST verify the allowlist includes `"taskList"` (or that
-the panel path otherwise preserves it correctly) when confirming AC-008's empirical shape.
-This strengthens the existing F4-empirical confirmation requirement — do not assume the
-pass-through is clean without checking the allowlist. This note does not change AC-008's
-provisional/fallback status.
+**REQUIRED implementation change (not merely a test expectation):** The Panel arm's
+`wrap_inlines_as_blocks` call (lines ~451–459 in `end()`) currently uses allowlist
+`["paragraph", "heading", "bulletList", "orderedList", "codeBlock", "rule"]` — `"taskList"`
+is MISSING. Without this one-line fix, a surviving `taskList` is misclassified as inline
+and wrapped into `panel > paragraph > taskList` — INVALID ADF (Jira 400). The F4
+implementer MUST add `"taskList"` to this allowlist. This change is checkable in the File
+Structure Requirements section.
 
-Pinned by: `test_task_list_in_panel_passes_through` (requires F4 empirical confirmation
-of actual tree shape — implementer must not assume the expected shape without running).
+The locked expected ADF for the test input is:
+```json
+{
+  "type": "panel",
+  "attrs": { "panelType": "info" },
+  "content": [{
+    "type": "taskList",
+    "attrs": { "localId": "<counter>" },
+    "content": [{
+      "type": "taskItem",
+      "attrs": { "localId": "<counter>", "state": "TODO" },
+      "content": [{ "type": "text", "text": "item" }]
+    }]
+  }]
+}
+```
+
+**tableCell arm — OUT OF SCOPE (unreachable from markdown input):** The research file
+flags the tableCell `wrap_inlines_as_blocks` allowlist as the same omission class.
+However, GFM table cells are inline-only — pulldown-cmark does not emit `Tag::List`
+(and therefore no `TaskListMarker`) inside a table cell. A `- [ ]` inside a `| cell |`
+is parsed as literal text, not a list. A `taskList` node cannot arise inside a `tableCell`
+from markdown→ADF input. No tableCell allowlist change is required.
+
+**listItem arm — covered by AC-006:** The research file also notes the listItem
+`wrap_inlines_as_blocks` allowlist lacks `"taskList"`. This case is correctly handled by
+the existing `normalize_list_item_content` `"taskList"` arm (AC-006), which unwraps
+`taskList` into a `bulletList > listItem` shape BEFORE `wrap_inlines_as_blocks` runs —
+so no surviving `taskList` reaches the listItem allowlist call. No listItem allowlist
+change is required.
+
+Pinned by: `test_task_list_in_panel_passes_through` — asserts the definite locked shape
+`panel(info) > [taskList > [taskItem(state: "TODO", content: [text("item")])]]`
+unconditionally. No fallback or provisional branch.
 
 ---
 
@@ -586,6 +622,11 @@ the 2-item case and the pruned-gap case).
   upgrade any plain `listItem` children to `taskItem { state: "TODO" }`.
 - `normalize_list_item_content`: add `"taskList"` arm — each `taskItem`'s inline content
   wrapped in `paragraph` → `listItem` → new `bulletList`. NOT: `listItem > listItem` (INVALID ADF).
+- **[REQUIRED — one-line fix, AC-008]** Panel arm's `wrap_inlines_as_blocks` allowlist
+  (lines ~451–459): add `"taskList"` to the `&[…]` slice. Failure mode without this fix:
+  `panel > paragraph > taskList` (INVALID ADF — Jira 400). `normalize_panel_content`'s
+  catch-all already preserves the `taskList`; this allowlist add is the second required step
+  to prevent it from being re-wrapped. Pinned by `test_task_list_in_panel_passes_through`.
 - `normalize_blockquote_content` (new, or extend existing `wrap_inlines_as_blocks` path):
   unwrap `taskList` → each `taskItem`'s inline content becomes a `paragraph` in the blockquote.
 - `is_empty_block_container`: add `"taskList"` and `"taskItem"` to the prune set. IMPORTANT:
@@ -681,7 +722,7 @@ Jira instance — valid ADF accepted by Jira Cloud REST API per JSDCLOUD-15228 e
 | `test_markdown_task_item_inline_marks_preserved` | BC-7.2.010 postcondition EC-4 | AC-005 |
 | `test_task_list_in_list_item_normalized_to_nested_bullet_list` | BC-7.2.010 obligation #1 EC-5; EC-10(b) | AC-006 |
 | `test_task_list_in_blockquote_normalized_to_paragraphs` | BC-7.2.010 obligation #2 EC-6 | AC-007 |
-| `test_task_list_in_panel_passes_through` | BC-7.2.010 obligation #3 EC-7 | AC-008 (needs F4 empirical confirmation) |
+| `test_task_list_in_panel_passes_through` | BC-7.2.010 obligation #3 EC-7; confirmed shape: panel > [taskList > taskItem*] | AC-008 |
 | `test_empty_task_item_pruned` | BC-7.2.010 postcondition EC-8 | AC-009 |
 | `test_empty_task_list_pruned` | BC-7.2.010 postcondition EC-9 | AC-009 |
 | `test_hardbreak_only_task_item_pruned` | BC-7.2.010 deliberate product choice | AC-009 |

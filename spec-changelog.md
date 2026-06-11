@@ -7,6 +7,34 @@ project: "jr (jira-cli)"
 
 Track all spec version changes. Most recent version first.
 
+## [1.3.6] - 2026-06-10
+
+### Type: PATCH
+
+### Summary
+
+BC-7.2.010 EC-8 mechanism correction: The spec incorrectly stated that input `- [ ] \` (backslash line break in a task item) produces `taskItem.content: [hardBreak]`. In pulldown-cmark 0.13.3, a trailing backslash in a task item produces `Text("\\")` (a literal backslash text node), NOT a hardBreak. Discovered during F4 implementation — as-built behavior is authoritative (DOCUMENT-AS-IS). The prune outcome is unchanged and correct: a backslash-only task item is pruned. The fix corrects the mechanism description in EC-8 and the `is_empty_block_container` prune set description to name both the backslash-text case and the hardBreak-only case as distinct sub-cases, each a DELIBERATE PRODUCT CHOICE. BC count unchanged at 594.
+
+### Modified Requirements
+
+| ID | Change |
+|----|--------|
+| BC-7.2.010 | (1) EC-8: replaced incorrect claim that `- [ ] \` produces `taskItem.content: [hardBreak]` with correct mechanism: pulldown-cmark 0.13.3 emits `Text("\\")` (literal backslash text node) for a trailing backslash; the `is_empty_block_container` structurally-empty-inline branch prunes task items whose content is text-only after trimming whitespace and backslashes. Added "Backslash-text case" sub-entry documenting the correct pulldown behavior and prune rationale. (2) `is_empty_block_container` prune set paragraph updated to include "text nodes that are empty after trimming whitespace and backslash characters" alongside whitespace-only text nodes and bare hardBreaks. (3) Prune criterion summary updated from "all three cases" to "all four cases" (empty, whitespace-only, backslash-text, hardBreak-only). Both backslash-text and hardBreak-only prunes noted as DELIBERATE PRODUCT CHOICES. |
+
+### Impact Assessment
+
+| Dimension | Before | After | Delta |
+|-----------|--------|-------|-------|
+| BC corpus (BC-INDEX.md total_bcs) | 594 | 594 | 0 |
+| NFR corpus | 41 | 41 | 0 |
+| bc-7-output-render.md total_bcs | 89 | 89 | 0 |
+
+### Discovery Basis
+
+F4 implementation of BC-7.2.010 (issue #471). The implemented `is_empty_block_container` correctly prunes backslash-only task items via the text-trimming branch. The spec mechanism description was incorrect; the as-built behavior is the authoritative source per DOCUMENT-AS-IS policy.
+
+---
+
 ## [1.3.5] - 2026-06-10
 
 ### Type: PATCH
