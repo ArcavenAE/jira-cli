@@ -481,6 +481,19 @@ _Was the active checkpoint after #470/BC-7.2.006 MERGED + CLOSED (PR #477 → de
 
 ---
 
+## Checkpoint archived 2026-06-10 (#471 GFM task lists → ADF — F1/F2/F3 COMPLETE, awaiting F3 human gate)
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-06-10 |
+| **Position** | **#471 GFM task lists → ADF — Feature Mode F1/F2/F3 COMPLETE, awaiting F3 human approval gate before F4 TDD.** BC-7.2.010 authored (corpus 593→594). Story S-471 created (Stories 66→67, 18 ACs, 19 named tests, net +18 adf::tests, baseline 155). F2 converged 8 passes (P5/6/7/8 clean); F3 story converged 8 passes (P6/7/8 clean). F4-conditional blockquote dependency RESOLVED at spec time via research (pulldown-cmark 0.13.3 emits blockquote>taskList → normalization arm unconditional). No code yet. develop HEAD remains 8b639c1. |
+| **Convergence counter** | BC: 594. NFR: 41. Stories: 67. jira-e2e env: JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ. No active worktrees. |
+| **Standing context** | JR_E2E_ENABLED=true repo var set. DEC-067/068/069 (F1/F2/F3 #471). DEC-066 retained. Do NOT close #429 (DEC-029). OQ-5 open. #492 OPEN (block-HTML raw-\n). E2E-PG-4 remote-link round-back open. PG-A + DRIFT-README + PG-QUEUE-1 + PG-QUEUE-2 + DEFER-469 deferred. PG-471-1 logged to lessons.md. PG-REVIEW-1 + PG-E2E-1 codified in lessons.md. |
+| **Next step** | Await F3 human gate approval, then dispatch F4 TDD implementation for #471. |
+| **Resume prompt** | `Read .factory/STATE.md. #471 GFM task lists → ADF Feature Mode F1/F2/F3 COMPLETE (2026-06-10), awaiting F3 human gate before F4 TDD. BC-7.2.010 authored (BC 593→594). S-471 story (Stories 66→67; 18 ACs, 19 named tests, baseline 155, net +18 adf::tests at impl time). F2 8-pass adversary convergence (P5/6/7/8 clean). F3 8-pass story convergence (P6/7/8 clean). Blockquote-taskList dependency resolved at spec time. No code yet; develop HEAD 8b639c1. DEC-067 (F1 gate), DEC-068 (F2 convergence), DEC-069 (F3 story). DEC-066 retained. Do NOT close #429 (DEC-029). OQ-5 open. #492 OPEN (block-HTML raw-\n). E2E-PG-4 remote-link round-back open. PG-471-1 in lessons.md. PG-A + DRIFT-README + PG-QUEUE-1 + PG-QUEUE-2 + DEFER-469 deferred. jira-e2e: JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ. Awaiting F3 human gate; upon approval dispatch F4.` |
+
+---
+
 ## Checkpoint archived 2026-06-10 (#489 ADF block-level HTML preservation CYCLE CLOSED + MERGED)
 
 | Field | Value |

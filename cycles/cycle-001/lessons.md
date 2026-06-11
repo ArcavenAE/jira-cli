@@ -3305,3 +3305,59 @@ No follow-up story needed — the convention is adopted in-story as the mitigati
 
 _Discovered: #471 F3 adversary Pass 1 finding F-001, 2026-06-10._
 _Tagged: [process-gap] — 4th recurrence; corrective convention adopted in-story._
+
+---
+
+### PG-471-2: Example-based adversarial review systematically under-covers deep compositional edges in tree-transformation code
+
+**Category:** [process-gap]
+**Cycle:** #471 GFM task lists → ADF — F5+F6, 2026-06-10
+**Tracking ID:** PG-471-2
+
+#### Symptom
+
+16 adversary passes (F5) and 8 fix iterations caught approximately 15 genuine bugs, including
+multiple CRITICAL invalid-ADF cases that would have caused Jira 400 responses. Yet after all
+16 passes converged (3 consecutive clean), the F6 proptest harness (512 cases) IMMEDIATELY found
+a 17th bug on its first run: a panel-wrapped plain item with a nested task sublist produced an
+invalid `taskList>taskList` structure (tuple-lead violation), a composition that no example-based
+test had exercised.
+
+#### Root cause
+
+Example-based adversarial review constructs specific input scenarios. For tree-transformation code
+that must produce valid ADF across ALL compositions of: tight vs. loose, nested vs. flat,
+ordered vs. bullet, checked vs. unchecked, plain items vs. task items, panels, blockquotes, and
+mixed-content lists — the combinatorial space vastly exceeds what any finite set of named examples
+can cover. The adversary can reason about combinations but cannot enumerate them exhaustively.
+
+#### Mitigation adopted in #471
+
+Two complementary guards now in the test suite:
+
+1. **Structural-validity corpus** (100 inputs): `assert_valid_adf_structure` validates the full
+   ADF content-model (parent→child legality) over a comprehensive set of composition-product
+   inputs. This is a recursive validator, not a snapshot test — it checks invariants, not output
+   equality, so it does not need updating when the exact output changes.
+
+2. **Proptest harness** (`prop_task_list_markdown_always_valid_adf`, 512 cases, soaked 4096):
+   asserts no-panic + `assert_valid_adf_structure` + no-underscore-key-leak + stable round-trip
+   across randomly generated markdown inputs. Found the F6-P1 bug on first run; provides ongoing
+   regression coverage for newly discovered composition classes.
+
+#### Corrective convention
+
+For any ADF tree-transformation code (not just task lists): the minimum verification set is
+(a) a recursive structural-validity invariant validator asserting ADF content-model correctness,
+(b) a proptest harness exercising random compositions through that validator,
+AND (c) a named-example corpus for the most critical known edge cases.
+
+Example-based adversarial review remains valuable for reasoning about behavioral semantics
+(round-trip fidelity, correctness of text content, BC compliance) but should NOT be the primary
+guard against structural validity for tree-transformation code. The proptest + invariant validator
+are load-bearing for that class.
+
+No follow-up story needed — the corrective (corpus + proptest) is already in the test suite.
+
+_Discovered: #471 F6 proptest run F6-P1; found bug missed by 16 example-based adversary passes (2026-06-10)._
+_Tagged: [process-gap] — corrective convention: proptest + structural-validity validator are load-bearing guards for tree-transformation code._
