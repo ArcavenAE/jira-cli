@@ -95,8 +95,8 @@ jobs:
       - uses: dtolnay/rust-toolchain@c93f4f9c67595668add93d3d6895795ce52d8c2d  # stable
         with:
           components: llvm-tools-preview
-      - uses: taiki-e/install-action@e5de28abeb52d916c5e5875d54b21a9e738b61ec # cargo-llvm-cov
-      - uses: step-security/rust-cache@851174d9a2fdc03e0896e02844dcc61d81dd7851 # v2.9.1
+      - uses: taiki-e/install-action@e5de28abeb52d916c5e5875d54b21a9e738b61ec  # cargo-llvm-cov
+      - uses: Swatinem/rust-cache@e18b497796c12c097a38f9edb9d0641fb99eee32  # v2
       - run: cargo llvm-cov --all-features --workspace --lcov --output-path lcov.info
       - uses: codecov/codecov-action@e79a6962e0d4c0c17b229090214935d2e33f8354  # v6
         with:
@@ -110,9 +110,10 @@ jobs:
     timeout-minutes: 5
     steps:
       - name: Harden the runner (Audit all outbound calls)
-        uses: step-security/harden-runner@a5ad31d6a139d249332a2605b85202e8c0b78450 # v2.19.1
+        uses: step-security/harden-runner@9af89fc71515a100421586dfdb3dc9c984fbf411 # v2.19.4
         with:
           egress-policy: audit
+
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10  # v6
       - name: Fetch factory-artifacts branch (.factory/specs/prd/)
         run: |
@@ -133,7 +134,12 @@ jobs:
     timeout-minutes: 10
     permissions:
       contents: read
-    if: github.event_name == 'pull_request'
+    # gitleaks-action v2+ requires an org license for some commercial use
+    # cases. Default behavior is unchanged (runs on every PR); a fork that
+    # can't or doesn't want to obtain a license opts out by setting the
+    # GITLEAKS_DISABLED repository variable to 'true'. Forks that opt out
+    # should rely on org-level secret scanning or an alternative scanner.
+    if: github.event_name == 'pull_request' && vars.GITLEAKS_DISABLED != 'true'
     steps:
       - name: Harden the runner (Audit all outbound calls)
         uses: step-security/harden-runner@9af89fc71515a100421586dfdb3dc9c984fbf411 # v2.19.4
@@ -144,7 +150,7 @@ jobs:
         with:
           fetch-depth: 0
       - name: Run gitleaks
-        uses: step-security/gitleaks-action@678c692fa015502757d021ac74f2a42604bf2048 # v2.4.0
+        uses: gitleaks/gitleaks-action@e0c47f4f8be36e29cdc102c57e68cb5cbf0e8d1e  # v3.0.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -157,7 +163,7 @@ jobs:
     if: github.event_name == 'pull_request'
     steps:
       - name: Harden the runner (Audit all outbound calls)
-        uses: step-security/harden-runner@a5ad31d6a139d249332a2605b85202e8c0b78450 # v2.19.1
+        uses: step-security/harden-runner@9af89fc71515a100421586dfdb3dc9c984fbf411 # v2.19.4
         with:
           egress-policy: audit
 

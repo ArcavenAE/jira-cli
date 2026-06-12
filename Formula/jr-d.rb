@@ -1,14 +1,14 @@
 class JrD < Formula
   desc "Fast, keyboard-driven Jira CLI with offline support and fuzzy search (dev ch)"
-  homepage "https://github.com/arcavenae/jira-cli"
+  homepage "https://github.com/REPO_PLACEHOLDER"
   version "VERSION_PLACEHOLDER"
   license "MIT"
 
   if Hardware::CPU.arm?
-    url "https://github.com/arcavenae/jira-cli/releases/download/TAG_PLACEHOLDER/jr-darwin-arm64"
+    url "https://github.com/REPO_PLACEHOLDER/releases/download/TAG_PLACEHOLDER/jr-darwin-arm64"
     sha256 "SHA256_ARM64_PLACEHOLDER"
   else
-    url "https://github.com/arcavenae/jira-cli/releases/download/TAG_PLACEHOLDER/jr-darwin-amd64"
+    url "https://github.com/REPO_PLACEHOLDER/releases/download/TAG_PLACEHOLDER/jr-darwin-amd64"
     sha256 "SHA256_AMD64_PLACEHOLDER"
   end
 
@@ -20,7 +20,7 @@ class JrD < Formula
   def caveats
     <<~EOS
       jr-d is the dev channel. Updates on every v*-dev.* tag.
-      For stable: brew install arcavenae/tap/jr
+      For stable: brew install TAP_PLACEHOLDER/jr
     EOS
   end
 

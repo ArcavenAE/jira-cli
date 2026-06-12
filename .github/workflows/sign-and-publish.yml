@@ -7,8 +7,11 @@
 #   v*-rc.*       → rc       (jr-rc formula, signs release binaries)
 #   v*.*.* (no -) → stable   (jr formula, signs release binaries)
 #
-# Isolated: gracefully skips if SIGNING_ENABLED != 'true' or secrets are missing.
-# Safe to merge upstream — all steps are gated on fork-only conditions.
+# OPT-IN: every job is gated on repository variables. With SIGNING_ENABLED
+# unset (the default), this workflow is a no-op — no Apple Developer Program
+# setup, secrets, or tap repo are required to host it. Downstream forks that
+# publish signed builds set the variables/secrets listed in
+# docs/specs/fork-friendly-release-ops.md.
 name: Sign & Publish
 
 on:
@@ -38,20 +41,20 @@ jobs:
             arch: amd64
     steps:
       - name: Harden the runner (Audit all outbound calls)
-        uses: step-security/harden-runner@a5ad31d6a139d249332a2605b85202e8c0b78450 # v2.19.1
+        uses: step-security/harden-runner@9af89fc71515a100421586dfdb3dc9c984fbf411 # v2.19.4
         with:
           egress-policy: audit
 
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10  # v6
         with:
           persist-credentials: false
 
       - name: Install Rust
-        uses: dtolnay/rust-toolchain@29eef336d9b2848a0b548edc03f92a220660cdb8 # stable
+        uses: dtolnay/rust-toolchain@c93f4f9c67595668add93d3d6895795ce52d8c2d  # stable
         with:
           targets: ${{ matrix.target }}
 
-      - uses: step-security/rust-cache@851174d9a2fdc03e0896e02844dcc61d81dd7851 # v2.9.1
+      - uses: Swatinem/rust-cache@e18b497796c12c097a38f9edb9d0641fb99eee32  # v2
         with:
           key: ${{ matrix.target }}
 
@@ -110,7 +113,7 @@ jobs:
         run: cp target/${{ matrix.target }}/release/jr jr-a-darwin-${{ matrix.arch }}
 
       - name: Upload artifact
-        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7
         with:
           name: alpha-${{ matrix.arch }}
           path: jr-a-darwin-${{ matrix.arch }}
@@ -128,11 +131,11 @@ jobs:
       tag: ${{ steps.meta.outputs.tag }}
     steps:
       - name: Harden the runner (Audit all outbound calls)
-        uses: step-security/harden-runner@a5ad31d6a139d249332a2605b85202e8c0b78450 # v2.19.1
+        uses: step-security/harden-runner@9af89fc71515a100421586dfdb3dc9c984fbf411 # v2.19.4
         with:
           egress-policy: audit
 
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10  # v6
         with:
           persist-credentials: false
 
@@ -155,7 +158,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
 
       - name: Download alpha binaries
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c  # v8
         with:
           merge-multiple: true
 
@@ -234,17 +237,25 @@ jobs:
       - name: Create alpha release
         env:
           GH_TOKEN: ${{ github.token }}
+          HOMEBREW_TAP_REPO: ${{ vars.HOMEBREW_TAP_REPO }}
         run: |
           TAG="${{ steps.meta.outputs.tag }}"
+
+          BINARY_LINE="download below"
+          if [ -n "$HOMEBREW_TAP_REPO" ]; then
+            TAP_SHORT="${HOMEBREW_TAP_REPO#*/}"
+            TAP_NAME="${HOMEBREW_TAP_REPO%%/*}/${TAP_SHORT#homebrew-}"
+            BINARY_LINE="\`brew install ${TAP_NAME}/jr-a\` or download below"
+          fi
+
+          NOTES="**Channel:** alpha (develop branch)
+          **Binary:** ${BINARY_LINE}
+          **Commit:** ${{ github.sha }}
+          **Signed:** Apple Developer ID (notarized)"
+
           gh release create "$TAG" \
             --title "jr-a $TAG" \
-            --notes "$(cat <<'NOTES'
-          **Channel:** alpha (develop branch)
-          **Binary:** \`brew install arcavenae/tap/jr-a\` or download below
-          **Commit:** ${{ github.sha }}
-          **Signed:** Apple Developer ID (notarized)
-          NOTES
-          )" \
+            --notes "$NOTES" \
             --prerelease \
             jr-a-darwin-arm64 \
             jr-a-darwin-amd64 \
@@ -261,17 +272,17 @@ jobs:
   alpha-homebrew:
     name: Alpha Update Homebrew Tap
     needs: alpha-sign
-    if: needs.alpha-sign.result == 'success'
+    if: needs.alpha-sign.result == 'success' && vars.HOMEBREW_TAP_REPO != ''
     permissions:
       contents: write
     runs-on: ubuntu-latest
     steps:
       - name: Harden the runner (Audit all outbound calls)
-        uses: step-security/harden-runner@a5ad31d6a139d249332a2605b85202e8c0b78450 # v2.19.1
+        uses: step-security/harden-runner@9af89fc71515a100421586dfdb3dc9c984fbf411 # v2.19.4
         with:
           egress-policy: audit
 
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10  # v6
         with:
           persist-credentials: false
 
@@ -286,19 +297,25 @@ jobs:
       - name: Update alpha formula
         env:
           HOMEBREW_TAP_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+          HOMEBREW_TAP_REPO: ${{ vars.HOMEBREW_TAP_REPO }}
         run: |
           VERSION="${{ needs.alpha-sign.outputs.version }}"
           TAG="${{ needs.alpha-sign.outputs.tag }}"
 
+          TAP_SHORT="${HOMEBREW_TAP_REPO#*/}"
+          TAP_NAME="${HOMEBREW_TAP_REPO%%/*}/${TAP_SHORT#homebrew-}"
+
           SHA256_ARM64=$(shasum -a 256 jr-a-darwin-arm64 | cut -d' ' -f1)
           SHA256_AMD64=$(shasum -a 256 jr-a-darwin-amd64 | cut -d' ' -f1)
 
-          git clone "https://x-access-token:${HOMEBREW_TAP_TOKEN}@github.com/arcavenae/homebrew-tap.git" homebrew-tap-repo
+          git clone "https://x-access-token:${HOMEBREW_TAP_TOKEN}@github.com/${HOMEBREW_TAP_REPO}.git" homebrew-tap-repo
           cd homebrew-tap-repo
 
           mkdir -p Formula
           cp ../Formula/jr-a.rb Formula/jr-a.rb
 
+          sed -i "s|REPO_PLACEHOLDER|${GITHUB_REPOSITORY}|g" Formula/jr-a.rb
+          sed -i "s|TAP_PLACEHOLDER|${TAP_NAME}|g" Formula/jr-a.rb
           sed -i "s/VERSION_PLACEHOLDER/$VERSION/g" Formula/jr-a.rb
           sed -i "s/TAG_PLACEHOLDER/$TAG/g" Formula/jr-a.rb
           sed -i "s/SHA256_ARM64_PLACEHOLDER/$SHA256_ARM64/g" Formula/jr-a.rb
@@ -330,11 +347,11 @@ jobs:
       channel: ${{ steps.meta.outputs.channel }}
     steps:
       - name: Harden the runner (Audit all outbound calls)
-        uses: step-security/harden-runner@a5ad31d6a139d249332a2605b85202e8c0b78450 # v2.19.1
+        uses: step-security/harden-runner@9af89fc71515a100421586dfdb3dc9c984fbf411 # v2.19.4
         with:
           egress-policy: audit
 
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10  # v6
         with:
           persist-credentials: false
 
@@ -464,6 +481,7 @@ jobs:
       - name: Update release title and notes
         env:
           GH_TOKEN: ${{ github.token }}
+          HOMEBREW_TAP_REPO: ${{ vars.HOMEBREW_TAP_REPO }}
         run: |
           TAG="${{ steps.meta.outputs.tag }}"
           CHANNEL="${{ steps.meta.outputs.channel }}"
@@ -477,19 +495,23 @@ jobs:
             *)      FORMULA="jr" ;;
           esac
 
+          BINARY_LINE="download below"
+          if [ -n "$HOMEBREW_TAP_REPO" ]; then
+            TAP_SHORT="${HOMEBREW_TAP_REPO#*/}"
+            TAP_NAME="${HOMEBREW_TAP_REPO%%/*}/${TAP_SHORT#homebrew-}"
+            BINARY_LINE="\`brew install ${TAP_NAME}/${FORMULA}\` or download below"
+          fi
+
           # Get existing release notes
           EXISTING_NOTES=$(gh release view "$TAG" --json body --jq '.body')
 
           # Append signing info
-          NOTES=$(cat <<ENOTES
-          ${EXISTING_NOTES}
+          NOTES="${EXISTING_NOTES}
 
           ---
           **Channel:** ${CHANNEL}
-          **Binary:** \`brew install arcavenae/tap/${FORMULA}\` or download below
-          **Signed:** Apple Developer ID (notarized)
-          ENOTES
-          )
+          **Binary:** ${BINARY_LINE}
+          **Signed:** Apple Developer ID (notarized)"
 
           gh release edit "$TAG" \
             --title "${FORMULA} ${TAG}" \
@@ -505,16 +527,17 @@ jobs:
     if: >-
       needs.stable-sign.result == 'success'
       && needs.stable-sign.outputs.channel != 'unknown'
+      && vars.HOMEBREW_TAP_REPO != ''
     permissions:
       contents: write
     runs-on: ubuntu-latest
     steps:
       - name: Harden the runner (Audit all outbound calls)
-        uses: step-security/harden-runner@a5ad31d6a139d249332a2605b85202e8c0b78450 # v2.19.1
+        uses: step-security/harden-runner@9af89fc71515a100421586dfdb3dc9c984fbf411 # v2.19.4
         with:
           egress-policy: audit
 
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10  # v6
         with:
           persist-credentials: false
 
@@ -529,6 +552,7 @@ jobs:
       - name: Update formula for channel
         env:
           HOMEBREW_TAP_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+          HOMEBREW_TAP_REPO: ${{ vars.HOMEBREW_TAP_REPO }}
         run: |
           set -euo pipefail
           VERSION="${{ needs.stable-sign.outputs.version }}"
@@ -544,15 +568,20 @@ jobs:
             *)      echo "Unknown channel: $CHANNEL, skipping"; exit 0 ;;
           esac
 
+          TAP_SHORT="${HOMEBREW_TAP_REPO#*/}"
+          TAP_NAME="${HOMEBREW_TAP_REPO%%/*}/${TAP_SHORT#homebrew-}"
+
           SHA256_ARM64=$(shasum -a 256 jr-darwin-arm64 | cut -d' ' -f1)
           SHA256_AMD64=$(shasum -a 256 jr-darwin-amd64 | cut -d' ' -f1)
 
-          git clone "https://x-access-token:${HOMEBREW_TAP_TOKEN}@github.com/arcavenae/homebrew-tap.git" homebrew-tap-repo
+          git clone "https://x-access-token:${HOMEBREW_TAP_TOKEN}@github.com/${HOMEBREW_TAP_REPO}.git" homebrew-tap-repo
           cd homebrew-tap-repo
 
           mkdir -p Formula
           cp "../Formula/${FORMULA}.rb" "Formula/${FORMULA}.rb"
 
+          sed -i "s|REPO_PLACEHOLDER|${GITHUB_REPOSITORY}|g" "Formula/${FORMULA}.rb"
+          sed -i "s|TAP_PLACEHOLDER|${TAP_NAME}|g" "Formula/${FORMULA}.rb"
           sed -i "s/VERSION_PLACEHOLDER/$VERSION/g" "Formula/${FORMULA}.rb"
           sed -i "s/TAG_PLACEHOLDER/$TAG/g" "Formula/${FORMULA}.rb"
           sed -i "s/SHA256_ARM64_PLACEHOLDER/$SHA256_ARM64/g" "Formula/${FORMULA}.rb"

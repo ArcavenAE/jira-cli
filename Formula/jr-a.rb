@@ -1,14 +1,14 @@
 class JrA < Formula
   desc "Fast, keyboard-driven Jira CLI with offline support and fuzzy search (alpha ch)"
-  homepage "https://github.com/arcavenae/jira-cli"
+  homepage "https://github.com/REPO_PLACEHOLDER"
   version "VERSION_PLACEHOLDER"
   license "MIT"
 
   if Hardware::CPU.arm?
-    url "https://github.com/arcavenae/jira-cli/releases/download/TAG_PLACEHOLDER/jr-a-darwin-arm64"
+    url "https://github.com/REPO_PLACEHOLDER/releases/download/TAG_PLACEHOLDER/jr-a-darwin-arm64"
     sha256 "SHA256_ARM64_PLACEHOLDER"
   else
-    url "https://github.com/arcavenae/jira-cli/releases/download/TAG_PLACEHOLDER/jr-a-darwin-amd64"
+    url "https://github.com/REPO_PLACEHOLDER/releases/download/TAG_PLACEHOLDER/jr-a-darwin-amd64"
     sha256 "SHA256_AMD64_PLACEHOLDER"
   end
 
@@ -20,7 +20,7 @@ class JrA < Formula
   def caveats
     <<~EOS
       jr-a is the alpha channel. Updates on every push to develop.
-      For stable: brew install arcavenae/tap/jr
+      For stable: brew install TAP_PLACEHOLDER/jr
     EOS
   end
 
