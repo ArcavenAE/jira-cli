@@ -12,7 +12,9 @@
 #   - max-per-run guard (default 5) so a large gap can't exhaust CI
 #   - dry_run input to preview before triggering anything
 #
-# LOCAL-ONLY: listed in .github/local-workflows.txt, not from upstream.
+# OPT-IN: the scheduled run is gated on the RELEASE_GAP_FILL_ENABLED
+# repository variable and skips cleanly when unset; manual dispatch always
+# works. See docs/specs/fork-friendly-release-ops.md.
 name: Release Gap Fill
 
 on:
@@ -37,14 +39,16 @@ permissions:
 
 jobs:
   gap-fill:
+    # Scheduled runs are opt-in via repo variable; workflow_dispatch always runs.
+    if: github.event_name == 'workflow_dispatch' || vars.RELEASE_GAP_FILL_ENABLED == 'true'
     runs-on: ubuntu-latest
     steps:
       - name: Harden the runner (Audit all outbound calls)
-        uses: step-security/harden-runner@a5ad31d6a139d249332a2605b85202e8c0b78450 # v2.19.1
+        uses: step-security/harden-runner@9af89fc71515a100421586dfdb3dc9c984fbf411 # v2.19.4
         with:
           egress-policy: audit
 
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10  # v6
         with:
           fetch-depth: 0
           fetch-tags: true

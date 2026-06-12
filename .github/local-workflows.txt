@@ -1,8 +1,27 @@
-# Local-only workflows — protected during upstream sync.
-# Files listed here will never be overwritten by upstream merges.
-# One path per line, relative to repo root.
-# Comments (#) and blank lines are ignored.
+# Fork-local files — protected during upstream sync.
+#
+# Used by .github/workflows/sync-upstream.yml: when a scheduled upstream
+# merge conflicts on a file listed here, the fork's version wins
+# automatically ("ours"); conflicts in any other file stop the sync for
+# manual resolution. One path per line, relative to repo root. Comments (#)
+# and blank lines are ignored.
+#
+# These entries are insurance, not divergence: each file below was offered
+# upstream (Zious11/jira-cli) in identical form via the fork-friendly
+# release-ops PR. While the two copies are identical, no conflict can occur;
+# entries can be pruned as upstream adopts them. This file lists itself so
+# the fork's list survives upstream template changes.
+.github/local-workflows.txt
 .github/workflows/sign-and-publish.yml
 .github/workflows/sync-upstream.yml
 .github/workflows/backfill-release.yml
 .github/workflows/release-gap-fill.yml
+Formula/jr.rb
+Formula/jr-a.rb
+Formula/jr-b.rb
+Formula/jr-d.rb
+Formula/jr-rc.rb
+packaging/Info.plist
+scripts/create-app.sh
+scripts/create-dmg.sh
+scripts/create-pkg.sh

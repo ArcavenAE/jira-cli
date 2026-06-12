@@ -1,9 +1,13 @@
 # Backfill Release — build, release, sign, and publish for an existing tag.
 #
-# Use this to create full signed releases for tags that existed before
-# the signing pipeline was in place. Trigger once per tag via workflow_dispatch.
+# Use this to create full releases for tags that predate release.yml (or the
+# signing pipeline). Trigger once per tag via workflow_dispatch, or let
+# release-gap-fill.yml dispatch it automatically.
 #
-# LOCAL-ONLY: listed in .github/local-workflows.txt, not from upstream.
+# OPT-IN signing: the sign and homebrew jobs are gated on repository
+# variables (SIGNING_ENABLED, HOMEBREW_TAP_REPO) and skip cleanly when
+# unset. Without them this workflow still backfills unsigned releases.
+# See docs/specs/fork-friendly-release-ops.md.
 name: Backfill Release
 
 on:
@@ -48,17 +52,17 @@ jobs:
             use_cross: true
     steps:
       - name: Harden the runner (Audit all outbound calls)
-        uses: step-security/harden-runner@a5ad31d6a139d249332a2605b85202e8c0b78450 # v2.19.1
+        uses: step-security/harden-runner@9af89fc71515a100421586dfdb3dc9c984fbf411 # v2.19.4
         with:
           egress-policy: audit
 
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10  # v6
         with:
           ref: ${{ inputs.tag }}
           persist-credentials: false
 
       - name: Install Rust
-        uses: dtolnay/rust-toolchain@29eef336d9b2848a0b548edc03f92a220660cdb8 # stable
+        uses: dtolnay/rust-toolchain@c93f4f9c67595668add93d3d6895795ce52d8c2d  # stable
         with:
           targets: ${{ matrix.target }}
 
@@ -90,7 +94,7 @@ jobs:
           fi
 
       - name: Upload artifact
-        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7
         with:
           name: jr-${{ matrix.target }}
           path: |
@@ -108,11 +112,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Harden the runner (Audit all outbound calls)
-        uses: step-security/harden-runner@a5ad31d6a139d249332a2605b85202e8c0b78450 # v2.19.1
+        uses: step-security/harden-runner@9af89fc71515a100421586dfdb3dc9c984fbf411 # v2.19.4
         with:
           egress-policy: audit
 
-      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c  # v8
         with:
           merge-multiple: true
 
@@ -152,11 +156,11 @@ jobs:
       version: ${{ steps.meta.outputs.version }}
     steps:
       - name: Harden the runner (Audit all outbound calls)
-        uses: step-security/harden-runner@a5ad31d6a139d249332a2605b85202e8c0b78450 # v2.19.1
+        uses: step-security/harden-runner@9af89fc71515a100421586dfdb3dc9c984fbf411 # v2.19.4
         with:
           egress-policy: audit
 
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10  # v6
         with:
           ref: develop  # need packaging scripts from develop, not the old tag
           persist-credentials: false
@@ -279,17 +283,17 @@ jobs:
   homebrew:
     name: Update Homebrew Tap
     needs: sign
-    if: needs.sign.result == 'success' && inputs.update_homebrew == true
+    if: needs.sign.result == 'success' && inputs.update_homebrew == true && vars.HOMEBREW_TAP_REPO != ''
     permissions:
       contents: write
     runs-on: ubuntu-latest
     steps:
       - name: Harden the runner (Audit all outbound calls)
-        uses: step-security/harden-runner@a5ad31d6a139d249332a2605b85202e8c0b78450 # v2.19.1
+        uses: step-security/harden-runner@9af89fc71515a100421586dfdb3dc9c984fbf411 # v2.19.4
         with:
           egress-policy: audit
 
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10  # v6
         with:
           ref: develop  # need Formula/jr.rb template from develop
           persist-credentials: false
@@ -305,19 +309,25 @@ jobs:
       - name: Update stable formula
         env:
           HOMEBREW_TAP_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+          HOMEBREW_TAP_REPO: ${{ vars.HOMEBREW_TAP_REPO }}
         run: |
           VERSION="${{ needs.sign.outputs.version }}"
           TAG="${{ inputs.tag }}"
 
+          TAP_SHORT="${HOMEBREW_TAP_REPO#*/}"
+          TAP_NAME="${HOMEBREW_TAP_REPO%%/*}/${TAP_SHORT#homebrew-}"
+
           SHA256_ARM64=$(shasum -a 256 jr-darwin-arm64 | cut -d' ' -f1)
           SHA256_AMD64=$(shasum -a 256 jr-darwin-amd64 | cut -d' ' -f1)
 
-          git clone "https://x-access-token:${HOMEBREW_TAP_TOKEN}@github.com/arcavenae/homebrew-tap.git" homebrew-tap-repo
+          git clone "https://x-access-token:${HOMEBREW_TAP_TOKEN}@github.com/${HOMEBREW_TAP_REPO}.git" homebrew-tap-repo
           cd homebrew-tap-repo
 
           mkdir -p Formula
           cp ../Formula/jr.rb Formula/jr.rb
 
+          sed -i "s|REPO_PLACEHOLDER|${GITHUB_REPOSITORY}|g" Formula/jr.rb
+          sed -i "s|TAP_PLACEHOLDER|${TAP_NAME}|g" Formula/jr.rb
           sed -i "s/VERSION_PLACEHOLDER/$VERSION/g" Formula/jr.rb
           sed -i "s/TAG_PLACEHOLDER/$TAG/g" Formula/jr.rb
           sed -i "s/SHA256_ARM64_PLACEHOLDER/$SHA256_ARM64/g" Formula/jr.rb

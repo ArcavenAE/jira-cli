@@ -1,3 +1,11 @@
+# Sync Upstream — keep a fork's branches merged with its upstream repository.
+#
+# FORK-SUPPORT INFRASTRUCTURE: this workflow is a no-op unless the
+# SYNC_UPSTREAM_REPO repository variable is set (e.g. "Zious11/jira-cli" in a
+# downstream fork). Hosting it here means forks stay aligned without each one
+# carrying a divergent copy. Fork-local files that should survive a sync are
+# listed in .github/local-workflows.txt. See
+# docs/specs/fork-friendly-release-ops.md.
 name: Sync Upstream
 
 on:
@@ -7,11 +15,15 @@ on:
 
 permissions:
   contents: write
-  # No issues:write — fork has has_issues:false; we report conflicts via
-  # GITHUB_STEP_SUMMARY + exit 1 instead. See "Report unresolved conflict".
+  # No issues:write — conflicts are reported via GITHUB_STEP_SUMMARY + exit 1
+  # instead of issue creation, so this works even when the Issues feature is
+  # disabled or the workflow token is read-only. See "Report unresolved
+  # conflict".
 
 jobs:
   sync:
+    # No-op unless this repo is a fork that opted in by setting the variable.
+    if: vars.SYNC_UPSTREAM_REPO != ''
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -24,12 +36,12 @@ jobs:
       fail-fast: false
     steps:
       - name: Harden the runner (Audit all outbound calls)
-        uses: step-security/harden-runner@a5ad31d6a139d249332a2605b85202e8c0b78450 # v2.19.1
+        uses: step-security/harden-runner@9af89fc71515a100421586dfdb3dc9c984fbf411 # v2.19.4
         with:
           egress-policy: audit
 
       - name: Checkout
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10  # v6
         with:
           ref: ${{ matrix.branch }}
           fetch-depth: 0
@@ -42,7 +54,7 @@ jobs:
 
       - name: Fetch upstream
         run: |
-          git remote add upstream https://github.com/Zious11/jira-cli.git
+          git remote add upstream "https://github.com/${{ vars.SYNC_UPSTREAM_REPO }}.git"
           git fetch upstream ${{ matrix.branch }} --tags
 
       - name: Check if sync needed
@@ -116,13 +128,12 @@ jobs:
             echo 'git push'
             echo '```'
           } >> "$GITHUB_STEP_SUMMARY"
-          # Exit non-zero so the run fails visibly in the Actions tab
-          # and Mike's notifications fire. We do NOT call gh issue create:
-          # the fork has has_issues:false (Issues feature disabled), and
-          # the repo's default_workflow_permissions is "read", so the
-          # GITHUB_TOKEN can't create issues here even with permissions:
-          # issues:write declared. The job summary above is the durable
-          # signal; the run failure is the alert.
+          # Exit non-zero so the run fails visibly in the Actions tab and
+          # the repo owner's notifications fire. We do NOT call gh issue
+          # create: forks may have the Issues feature disabled, and with
+          # default_workflow_permissions "read" the GITHUB_TOKEN can't create
+          # issues even with permissions: issues:write declared. The job
+          # summary above is the durable signal; the run failure is the alert.
           exit 1
 
       - name: Push branch
