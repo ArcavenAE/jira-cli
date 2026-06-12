@@ -26,7 +26,12 @@ pub async fn handle(
         )
     })?;
 
-    let service_desk_id = servicedesks::require_service_desk(client, &project_key).await?;
+    let service_desk_id = servicedesks::require_service_desk(
+        client,
+        &project_key,
+        "Queue commands (`jr queue`) require",
+    )
+    .await?;
 
     match command {
         QueueCommand::List => handle_list(&service_desk_id, output_format, client).await,
@@ -89,7 +94,7 @@ async fn handle_view(
         .await?;
 
     if keys.is_empty() {
-        let headers = issue_table_headers(false, false);
+        let headers = issue_table_headers(false, false, false);
         let empty: Vec<Vec<String>> = vec![];
         let empty_issues: Vec<crate::types::jira::Issue> = vec![];
         return output::print_output(output_format, &headers, &empty, &empty_issues);
@@ -105,7 +110,7 @@ async fn handle_view(
     let issues = reorder_by_queue_position(search_result.issues, &keys);
 
     // Step 4: Output
-    let headers = issue_table_headers(false, false);
+    let headers = issue_table_headers(false, false, false);
     let rows = format_issue_rows_public(&issues);
     output::print_output(output_format, &headers, &rows, &issues)
 }
@@ -225,9 +230,11 @@ mod tests {
     }
 
     #[test]
-    fn partial_match() {
+    fn single_substring_is_ambiguous() {
+        // Single substring hits are now Ambiguous — callers must use the exact name.
         let queues = vec![make_queue("10", "Triage"), make_queue("20", "In Progress")];
-        assert_eq!(find_queue_id("tri", &queues).unwrap(), "10");
+        let err = find_queue_id("tri", &queues).unwrap_err();
+        assert!(err.starts_with("ambiguous"), "got: {err}");
     }
 
     #[test]

@@ -1,6 +1,7 @@
 #[allow(dead_code)]
 mod common;
 
+use assert_cmd::Command;
 use serde_json::json;
 use wiremock::matchers::{method, path, query_param};
 use wiremock::{Mock, MockServer, ResponseTemplate};
@@ -228,6 +229,58 @@ async fn resolve_queue_duplicate_names_error_message() {
     );
 }
 
+/// Single-substring hit on a queue name must route through Ambiguous and
+/// error with the disambiguation message + UserError (exit 64 in the
+/// binary). Complements the ExactMultiple coverage above and locks the
+/// behavior at queue.rs:169 from the #193 strict-matching rollout.
+#[tokio::test]
+async fn resolve_queue_single_substring_is_ambiguous() {
+    let server = MockServer::start().await;
+
+    // "escal" is a single-substring of "Escalations" only — "General Requests"
+    // shares no substring. The input is neither exact nor a multi-hit, which
+    // is the exact scenario the #193 strict-matching rollout now routes
+    // through Ambiguous.
+    Mock::given(method("GET"))
+        .and(path("/rest/servicedeskapi/servicedesk/15/queue"))
+        .and(query_param("includeCount", "true"))
+        .and(query_param("start", "0"))
+        .and(query_param("limit", "50"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(json!({
+            "size": 2,
+            "start": 0,
+            "limit": 50,
+            "isLastPage": true,
+            "values": [
+                { "id": "10", "name": "Escalations", "issueCount": 5 },
+                { "id": "20", "name": "General Requests", "issueCount": 3 }
+            ]
+        })))
+        .mount(&server)
+        .await;
+
+    let client =
+        jr::api::client::JiraClient::new_for_test(server.uri(), "Basic dGVzdDp0ZXN0".into());
+    let result = jr::cli::queue::resolve_queue_by_name("15", "escal", &client).await;
+
+    let err = result.unwrap_err();
+    assert!(
+        err.downcast_ref::<jr::error::JrError>()
+            .is_some_and(|e| matches!(e, jr::error::JrError::UserError(_))),
+        "Expected JrError::UserError, got: {err}"
+    );
+
+    let msg = err.to_string();
+    assert!(
+        msg.contains("matches multiple queues"),
+        "Expected disambiguation phrase in error, got: {msg}"
+    );
+    assert!(
+        msg.contains("Escalations"),
+        "Expected matched queue 'Escalations' in error, got: {msg}"
+    );
+}
+
 #[tokio::test]
 async fn resolve_queue_mixed_case_duplicate_names_error_message() {
     let server = MockServer::start().await;
@@ -272,4 +325,225 @@ async fn resolve_queue_mixed_case_duplicate_names_error_message() {
         msg.contains("Use --id 30 to specify"),
         "Expected --id suggestion in error, got: {msg}"
     );
+}
+
+// ─── Error-path coverage (#187) ─────────────────────────────────────────────
+
+/// Write a minimal jr config to a temp XDG_CONFIG_HOME so the subprocess
+/// finds a URL while JR_BASE_URL / JR_AUTH_HEADER override the real values.
+fn write_minimal_config(config_home: &std::path::Path, url: &str) {
+    let dir = config_home.join("jr");
+    std::fs::create_dir_all(&dir).unwrap();
+    std::fs::write(
+        dir.join("config.toml"),
+        format!("[instance]\nurl = \"{url}\"\n"),
+    )
+    .unwrap();
+}
+
+#[tokio::test]
+async fn queue_list_server_error_surfaces_friendly_message() {
+    let server = MockServer::start().await;
+    let cache_dir = tempfile::tempdir().unwrap();
+    let config_dir = tempfile::tempdir().unwrap();
+    write_minimal_config(config_dir.path(), &server.uri());
+
+    // Fail the FIRST call in the queue-list chain:
+    // require_service_desk → get_or_fetch_project_meta → GET /rest/api/3/project/{key}
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/project/PROJ"))
+        .respond_with(ResponseTemplate::new(500).set_body_json(serde_json::json!({
+            "errorMessages": ["Internal server error"],
+            "errors": {}
+        })))
+        .mount(&server)
+        .await;
+
+    let output = Command::cargo_bin("jr")
+        .unwrap()
+        .env("JR_BASE_URL", server.uri())
+        .env("JR_AUTH_HEADER", "Basic dGVzdDp0ZXN0")
+        .env("XDG_CACHE_HOME", cache_dir.path())
+        .env("XDG_CONFIG_HOME", config_dir.path())
+        .args(["queue", "list", "--project", "PROJ"])
+        .output()
+        .unwrap();
+
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(
+        !output.status.success(),
+        "Expected failure, got stdout: {}",
+        String::from_utf8_lossy(&output.stdout)
+    );
+    assert_eq!(
+        output.status.code(),
+        Some(1),
+        "5xx should exit 1, got: {:?}",
+        output.status.code()
+    );
+    assert!(
+        stderr.contains("API error (500)"),
+        "Expected 'API error (500)' in stderr, got: {stderr}"
+    );
+    assert!(!stderr.contains("panic"), "stderr leaked a panic: {stderr}");
+}
+
+#[tokio::test]
+async fn queue_list_unauthorized_dispatches_reauth_message() {
+    let server = MockServer::start().await;
+    let cache_dir = tempfile::tempdir().unwrap();
+    let config_dir = tempfile::tempdir().unwrap();
+    write_minimal_config(config_dir.path(), &server.uri());
+
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/project/PROJ"))
+        .respond_with(ResponseTemplate::new(401).set_body_json(serde_json::json!({
+            "errorMessages": ["Client must be authenticated to access this resource."],
+            "errors": {}
+        })))
+        .mount(&server)
+        .await;
+
+    let output = Command::cargo_bin("jr")
+        .unwrap()
+        .env("JR_BASE_URL", server.uri())
+        .env("JR_AUTH_HEADER", "Basic dGVzdDp0ZXN0")
+        .env("XDG_CACHE_HOME", cache_dir.path())
+        .env("XDG_CONFIG_HOME", config_dir.path())
+        .args(["queue", "list", "--project", "PROJ"])
+        .output()
+        .unwrap();
+
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(
+        !output.status.success(),
+        "Expected failure, got stdout: {}",
+        String::from_utf8_lossy(&output.stdout)
+    );
+    assert_eq!(
+        output.status.code(),
+        Some(2),
+        "401 should exit 2, got: {:?}",
+        output.status.code()
+    );
+    assert!(
+        stderr.contains("Not authenticated"),
+        "Expected 'Not authenticated' in stderr, got: {stderr}"
+    );
+    assert!(
+        stderr.contains("jr auth login"),
+        "Expected 'jr auth login' suggestion in stderr, got: {stderr}"
+    );
+    assert!(!stderr.contains("panic"), "stderr leaked a panic: {stderr}");
+}
+
+/// AC-010 (S-288-pr2-cli) + BC-X.8.004: verifies the queue caller of
+/// `require_service_desk` produces the canonical capitalised plural-agreement
+/// error message. Regression guard for the pre-adv-01 lowercase/singular-verb
+/// drift ("queue commands requires" → "Queue commands (`jr queue`) require").
+#[tokio::test]
+async fn test_queue_list_non_jsm_project_emits_canonical_callsite_message() {
+    let server = MockServer::start().await;
+    let cache_dir = tempfile::tempdir().unwrap();
+    let config_dir = tempfile::tempdir().unwrap();
+    write_minimal_config(config_dir.path(), &server.uri());
+
+    // Project meta for "DEV" returns a software project — NOT service_desk.
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/project/DEV"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(json!({
+            "id": "100",
+            "key": "DEV",
+            "projectTypeKey": "software",
+            "simplified": true
+        })))
+        .mount(&server)
+        .await;
+
+    let output = Command::cargo_bin("jr")
+        .unwrap()
+        .env("JR_BASE_URL", server.uri())
+        .env("JR_AUTH_HEADER", "Basic dGVzdDp0ZXN0")
+        .env("XDG_CACHE_HOME", cache_dir.path())
+        .env("XDG_CONFIG_HOME", config_dir.path())
+        .args(["queue", "list", "--project", "DEV", "--no-input"])
+        .output()
+        .unwrap();
+
+    let stderr = String::from_utf8_lossy(&output.stderr);
+
+    assert_eq!(
+        output.status.code(),
+        Some(64),
+        "Expected exit 64 for non-JSM project, got {:?}. stderr: {stderr}",
+        output.status.code()
+    );
+
+    // BC-X.8.004 prefix pin: "Project " prefix (C-1 fix mirrored here for queue).
+    assert!(
+        stderr.contains("Project \"DEV\" is a"),
+        "BC-X.8.004: error must start with 'Project \"DEV\" is a'; got: {stderr}"
+    );
+
+    // BC-X.8.004 verbatim phrase — capitalised, plural noun, plural-agreement verb.
+    assert!(
+        stderr.contains("Queue commands (`jr queue`) require a Jira Service Management project"),
+        "BC-X.8.004: stderr must contain the verbatim canonical phrase; got: {stderr}"
+    );
+
+    // C-2: BC-X.8.004 closing sentence — BC-verbatim "find a JSM project".
+    assert!(
+        stderr.contains("Run \"jr project list\" to find a JSM project."),
+        "BC-X.8.004: closing must use 'find a JSM project'; got: {stderr}"
+    );
+    assert!(
+        !stderr.contains("see available projects"),
+        "Old drifted closing 'see available projects' must not appear; got: {stderr}"
+    );
+
+    // Regression guard: the pre-adv-01 lowercase/singular-verb form must never appear.
+    assert!(
+        !stderr.contains("queue commands requires"),
+        "Regression: lowercase singular-verb form 'queue commands requires' must not appear; got: {stderr}"
+    );
+}
+
+#[tokio::test]
+async fn queue_list_network_drop_surfaces_reach_error() {
+    let cache_dir = tempfile::tempdir().unwrap();
+    let config_dir = tempfile::tempdir().unwrap();
+    write_minimal_config(config_dir.path(), "http://127.0.0.1:1");
+
+    // Privileged port 1 — connect-refused from any unprivileged process.
+    let output = Command::cargo_bin("jr")
+        .unwrap()
+        .env("JR_BASE_URL", "http://127.0.0.1:1")
+        .env("JR_AUTH_HEADER", "Basic dGVzdDp0ZXN0")
+        .env("XDG_CACHE_HOME", cache_dir.path())
+        .env("XDG_CONFIG_HOME", config_dir.path())
+        .args(["queue", "list", "--project", "PROJ"])
+        .output()
+        .unwrap();
+
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(
+        !output.status.success(),
+        "Expected failure, got stdout: {}",
+        String::from_utf8_lossy(&output.stdout)
+    );
+    assert_eq!(
+        output.status.code(),
+        Some(1),
+        "Net-drop should exit 1, got: {:?}",
+        output.status.code()
+    );
+    assert!(
+        stderr.contains("Could not reach"),
+        "Expected 'Could not reach' in stderr, got: {stderr}"
+    );
+    assert!(
+        stderr.contains("check your connection"),
+        "Expected 'check your connection' in stderr, got: {stderr}"
+    );
+    assert!(!stderr.contains("panic"), "stderr leaked a panic: {stderr}");
 }

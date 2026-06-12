@@ -1,8 +1,10 @@
 pub mod boards;
+pub mod bulk;
 pub mod fields;
 pub mod issues;
 pub mod links;
 pub mod projects;
+pub mod resolutions;
 pub mod sprints;
 pub mod statuses;
 pub mod teams;

@@ -1,0 +1,207 @@
+name: E2E (Live Jira)
+
+on:
+  push:
+    branches: [develop, main]
+  schedule:
+    - cron: "0 6 * * *"  # 06:00 UTC nightly; also keeps the free site warm
+  workflow_dispatch:
+
+# Serialize on the shared Jira site — never cancel an in-flight run.
+# Cancellation mid-flight leaves orphaned in-progress issues with no teardown.
+concurrency:
+  group: jira-e2e
+  cancel-in-progress: false
+
+jobs:
+  e2e:
+    # Belt-and-suspenders guard: this workflow has no pull_request trigger, but
+    # this if: ensures we never accidentally run against a Jira site from a PR
+    # even if the on: block is later modified.
+    # JR_E2E_ENABLED must be a repository-level variable (not environment-scoped):
+    # environment variables are not available in jobs.<id>.if at scheduling time.
+    # Forks without this variable set receive empty string → job skips cleanly.
+    if: github.event_name != 'pull_request' && vars.JR_E2E_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    # Secrets are gated to this GitHub Environment + its branch-protection policy
+    # (deploy allowed only from develop/main). Fork PRs cannot read these secrets.
+    environment: jira-e2e
+
+    steps:
+      - name: Harden the runner (block unexpected egress)
+        uses: step-security/harden-runner@9af89fc71515a100421586dfdb3dc9c984fbf411 # v2.19.4
+        with:
+          egress-policy: block
+          # Allowlist seeded from expected endpoints — confirm/tune on first live run.
+          # Fail-closed: an incomplete list fails the job rather than leaking credentials.
+          # No real subdomain is hard-coded; the Atlassian target is matched by wildcard.
+          # Includes rust-cache/Actions-cache endpoints (*.actions.githubusercontent.com
+          # for the cache service runtime, *.blob.core.windows.net for Azure-backed
+          # artifact blobs). Exact CDN hostnames can vary; block still fail-closes safely
+          # if an unlisted host appears — the non-blocking job fails rather than leaking
+          # the credential.
+          allowed-endpoints: >
+            github.com:443
+            api.github.com:443
+            objects.githubusercontent.com:443
+            codeload.github.com:443
+            *.actions.githubusercontent.com:443
+            *.blob.core.windows.net:443
+            *.atlassian.net:443
+            static.crates.io:443
+            index.crates.io:443
+            crates.io:443
+            static.rust-lang.org:443
+            sh.rustup.rs:443
+
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10  # v6
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@c93f4f9c67595668add93d3d6895795ce52d8c2d  # stable
+
+      - uses: Swatinem/rust-cache@e18b497796c12c097a38f9edb9d0641fb99eee32  # v2
+
+      - name: Preflight — assert required E2E config
+        env:
+          JR_E2E_BASE_URL: ${{ secrets.JR_E2E_BASE_URL }}
+          JR_E2E_PROJECT: ${{ vars.JR_E2E_PROJECT }}
+          JR_E2E_EMAIL: ${{ secrets.JR_E2E_EMAIL }}
+          JR_E2E_API_TOKEN: ${{ secrets.JR_E2E_API_TOKEN }}
+        run: |
+          missing=()
+          [ -z "${JR_E2E_BASE_URL:-}" ]  && missing+=("JR_E2E_BASE_URL (secret, jira-e2e environment)")
+          [ -z "${JR_E2E_PROJECT:-}" ]   && missing+=("JR_E2E_PROJECT (variable)")
+          [ -z "${JR_E2E_EMAIL:-}" ]     && missing+=("JR_E2E_EMAIL (secret)")
+          [ -z "${JR_E2E_API_TOKEN:-}" ] && missing+=("JR_E2E_API_TOKEN (secret)")
+          if [ ${#missing[@]} -gt 0 ]; then
+            printf '::error::E2E preflight failed — missing required config:\n'
+            printf '  - %s\n' "${missing[@]}"
+            exit 1
+          fi
+          echo "E2E preflight OK — all required config present."
+
+      - name: Run live E2E tests
+        id: run_e2e
+        env:
+          JR_RUN_E2E: "1"
+          # JR_E2E_BASE_URL is read by the test harness (E2eHarness::cmd()), which
+          # forwards it to the subprocess as JR_BASE_URL — the debug-only seam
+          # (gated by #[cfg(debug_assertions)]) that redirects jr's HTTP calls to
+          # the configured Jira site. The real site URL is stored as a secret.
+          JR_E2E_BASE_URL: ${{ secrets.JR_E2E_BASE_URL }}
+          JR_E2E_PROJECT: ${{ vars.JR_E2E_PROJECT }}
+          GITHUB_RUN_ID: ${{ github.run_id }}
+          # Optional: enables sprint list/current tests
+          JR_E2E_BOARD_ID: ${{ vars.JR_E2E_BOARD_ID }}
+          # Optional: enables JSM queue/requesttype read tests
+          JR_E2E_JSM_PROJECT: ${{ vars.JR_E2E_JSM_PROJECT }}
+          # Optional: override status names for sites with non-default workflow names
+          JR_E2E_STATUS_DONE: ${{ vars.JR_E2E_STATUS_DONE }}
+          JR_E2E_STATUS_IN_PROGRESS: ${{ vars.JR_E2E_STATUS_IN_PROGRESS }}
+          # Optional: alternate issue type for the multi-key `issue edit --type` bulk
+          # round-trip test (#331). Test clean-skips if unset. Must name a real issue
+          # type in the E2E project's scheme, distinct from JR_E2E_ISSUE_TYPE (seed type).
+          JR_E2E_ISSUE_TYPE_ALT: ${{ vars.JR_E2E_ISSUE_TYPE_ALT }}
+          # Individual secrets for auth header composition (composed in-script below)
+          JR_E2E_EMAIL: ${{ secrets.JR_E2E_EMAIL }}
+          JR_E2E_API_TOKEN: ${{ secrets.JR_E2E_API_TOKEN }}
+        run: |
+          # Compose JR_AUTH_HEADER from individual secrets.
+          # Stored separately so email and API token can be rotated independently.
+          # tr -d '\n' strips the trailing newline that base64 adds on Linux.
+          JR_AUTH_HEADER="Basic $(printf '%s:%s' "$JR_E2E_EMAIL" "$JR_E2E_API_TOKEN" | base64 | tr -d '\n')"
+          export JR_AUTH_HEADER
+
+          cargo test --test e2e_live -- --include-ignored --test-threads=1
+
+      - name: Classify failure (runs only when the test step itself fails)
+        # Gated on the test step's outcome, not blanket failure(), so that a preflight
+        # abort (missing config) does not trigger this step — the binary was never built
+        # and ./target/debug/jr does not exist, which would produce a misleading
+        # "UNKNOWN FAILURE" instead of the clear ::error:: preflight annotation.
+        if: failure() && steps.run_e2e.conclusion == 'failure'
+        env:
+          JR_BASE_URL: ${{ secrets.JR_E2E_BASE_URL }}
+          JR_E2E_PROJECT: ${{ vars.JR_E2E_PROJECT }}
+          JR_E2E_EMAIL: ${{ secrets.JR_E2E_EMAIL }}
+          JR_E2E_API_TOKEN: ${{ secrets.JR_E2E_API_TOKEN }}
+        run: |
+          # Compose auth header for the classification probe.
+          JR_AUTH_HEADER="Basic $(printf '%s:%s' "$JR_E2E_EMAIL" "$JR_E2E_API_TOKEN" | base64 | tr -d '\n')"
+          export JR_AUTH_HEADER
+          # Mask the composed header so any accidental echo in this step is redacted.
+          echo "::add-mask::$JR_AUTH_HEADER"
+
+          # Run a lightweight probe to classify the failure root cause.
+          # Classification is grep-based on PROBE_OUTPUT — not on the exit code.
+          # (PROBE_EXIT is always 0 because of the || true guard inside the
+          #  command substitution; it is intentionally not used for classification.)
+          PROBE_OUTPUT=$(./target/debug/jr issue list \
+            --jql "project=$JR_E2E_PROJECT" \
+            --output json 2>&1 || true)
+
+          if echo "$PROBE_OUTPUT" | grep -qi "401\|Unauthorized\|NotAuthenticated\|access token\|not authenticated"; then
+            echo "::error::AUTH FAILURE — the JR_E2E_API_TOKEN secret is expired or revoked."
+            echo "ACTION: rotate JR_E2E_API_TOKEN in the CI service account before expiry"
+            echo "        and update the secret in the 'jira-e2e' GitHub Environment."
+            echo "        Atlassian caps API tokens at 1 year — annual rotation is required."
+            echo "        Runbook: docs/specs/e2e-live-jira-testing.md §9"
+          elif echo "$PROBE_OUTPUT" | grep -qi "connection\|dns\|resolve\|network\|timeout\|unreachable\|tls\|certificate"; then
+            echo "::error::CONNECTION FAILURE — cannot reach the Jira E2E site."
+            echo "ACTION: the free Jira Cloud site may have been deactivated due to inactivity."
+            echo "        Free sites deactivate after ~120 days of inactivity and have only a"
+            echo "        ~15-60 day reactivation window before permanent data loss."
+            echo "        reactivate the site via https://id.atlassian.com/manage-profile/products"
+            echo "        Runbook: docs/specs/e2e-live-jira-testing.md §9"
+          else
+            echo "::warning::UNKNOWN FAILURE — see the test step output above for details."
+          fi
+
+      - name: Teardown — close leftover E2E issues (close-only, always runs)
+        if: always()
+        env:
+          JR_BASE_URL: ${{ secrets.JR_E2E_BASE_URL }}
+          JR_E2E_PROJECT: ${{ vars.JR_E2E_PROJECT }}
+          JR_E2E_STATUS_DONE: ${{ vars.JR_E2E_STATUS_DONE }}
+          JR_E2E_EMAIL: ${{ secrets.JR_E2E_EMAIL }}
+          JR_E2E_API_TOKEN: ${{ secrets.JR_E2E_API_TOKEN }}
+          # GITHUB_RUN_ID is set explicitly so the JQL label matches the label the
+          # test built from this same env var — no implicit coupling to the Actions
+          # expression context.
+          GITHUB_RUN_ID: ${{ github.run_id }}
+        run: |
+          # Compose auth header the same way as the test step.
+          JR_AUTH_HEADER="Basic $(printf '%s:%s' "$JR_E2E_EMAIL" "$JR_E2E_API_TOKEN" | base64 | tr -d '\n')"
+          export JR_AUTH_HEADER
+
+          # Default to "Done" if JR_E2E_STATUS_DONE is not configured as a variable.
+          STATUS_DONE="${JR_E2E_STATUS_DONE:-Done}"
+
+          # Fetch ALL matching issues — --all bypasses the default page limit so
+          # every issue labelled for this run is closed, not just the first page.
+          # The debug binary is used here so JR_BASE_URL / JR_AUTH_HEADER seams work.
+          # || true makes the acquisition non-fatal: a 401 (expired token) or jq
+          # failure must not abort the always-run teardown step entirely.
+          KEYS=$(./target/debug/jr issue list \
+            --jql "project=$JR_E2E_PROJECT AND labels=e2e-$GITHUB_RUN_ID AND statusCategory != Done" \
+            --output json --all \
+            | jq -r '.[].key' || true)
+
+          # Emit a runtime count so an empty match is visible in the log (M-5).
+          COUNT=$(echo "$KEYS" | grep -c '[A-Z]' || true)
+          echo "Teardown: closing $COUNT issue(s) for run $GITHUB_RUN_ID"
+
+          # Close every issue; the if/else absorbs the exit status so a single
+          # move failure does not abort the teardown loop (a partially-closed set
+          # is better than an aborted teardown).
+          echo "$KEYS" | while read -r KEY; do
+            [ -z "$KEY" ] && continue
+            if ./target/debug/jr issue move "$KEY" "$STATUS_DONE" >/dev/null 2>&1; then
+              echo "closed $KEY"
+            else
+              echo "WARN: failed to close $KEY (left for next run / manual cleanup)"
+            fi
+          done

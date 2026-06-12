@@ -1,4 +1,6 @@
 use jr::api::client::JiraClient;
+use jr::api::client::extract_error_message;
+use reqwest::Method;
 use serde::Deserialize;
 use wiremock::matchers::{header, method, path};
 use wiremock::{Mock, MockServer, ResponseTemplate};
@@ -92,4 +94,397 @@ async fn test_401_returns_not_authenticated() {
         err_string.contains("Not authenticated"),
         "Expected 'Not authenticated' in error, got: {err_string}"
     );
+}
+
+#[tokio::test]
+async fn test_401_scope_mismatch_returns_insufficient_scope() {
+    // Atlassian API gateway rejects granular-scoped personal tokens on POST
+    // requests with this exact body shape. The error must surface actionable
+    // workaround guidance instead of the generic "Not authenticated" message.
+    let server = MockServer::start().await;
+
+    Mock::given(method("POST"))
+        .and(path("/rest/api/3/issue"))
+        .respond_with(ResponseTemplate::new(401).set_body_json(serde_json::json!({
+            "code": 401,
+            "message": "Unauthorized; scope does not match"
+        })))
+        .expect(1)
+        .mount(&server)
+        .await;
+
+    let client = JiraClient::new_for_test(server.uri(), "Basic granular-token".to_string());
+
+    let err = client
+        .post::<serde_json::Value, _>(
+            "/rest/api/3/issue",
+            &serde_json::json!({"fields": {"summary": "test"}}),
+        )
+        .await
+        .unwrap_err();
+
+    let s = err.to_string();
+    assert!(
+        s.contains("Insufficient token scope"),
+        "expected distinct scope error, got: {s}"
+    );
+    assert!(
+        s.contains("Unauthorized; scope does not match"),
+        "raw gateway message should be preserved: {s}"
+    );
+    assert!(
+        s.contains("write:jira-work"),
+        "classic-scope workaround missing: {s}"
+    );
+    assert!(s.contains("OAuth 2.0"), "OAuth workaround missing: {s}");
+    assert!(
+        s.contains("github.com/Zious11/jira-cli/issues/185"),
+        "issue link missing: {s}"
+    );
+}
+
+#[tokio::test]
+async fn test_401_without_scope_mismatch_falls_through_to_not_authenticated() {
+    // 401 responses whose body does NOT contain "scope does not match" (e.g.,
+    // expired session, bad credentials) must continue to return the generic
+    // NotAuthenticated error. Pins the dispatch boundary intentionally so a
+    // future tightening of the substring match surfaces as a test failure
+    // instead of a silent behavior change.
+    let server = MockServer::start().await;
+
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/myself"))
+        .respond_with(ResponseTemplate::new(401).set_body_json(serde_json::json!({
+            "code": 401,
+            "message": "Session expired"
+        })))
+        .expect(1)
+        .mount(&server)
+        .await;
+
+    let client = JiraClient::new_for_test(server.uri(), "Basic expired-session".to_string());
+
+    let err = client
+        .get::<serde_json::Value>("/rest/api/3/myself")
+        .await
+        .unwrap_err();
+
+    let s = err.to_string();
+    assert!(
+        s.contains("Not authenticated"),
+        "expected generic 401 fall-through, got: {s}"
+    );
+    assert!(
+        !s.contains("Insufficient token scope"),
+        "must NOT dispatch to InsufficientScope without the substring: {s}"
+    );
+}
+
+#[tokio::test]
+async fn test_401_scope_mismatch_matches_case_insensitively() {
+    // Gateway message is stable lowercase today, but `parse_error` matches
+    // case-insensitively via `to_ascii_lowercase()`. Pin that behavior so a
+    // future drop of the lowercase call trips a test instead of silently
+    // narrowing the match.
+    let server = MockServer::start().await;
+
+    Mock::given(method("POST"))
+        .and(path("/rest/api/3/issue"))
+        .respond_with(ResponseTemplate::new(401).set_body_json(serde_json::json!({
+            "code": 401,
+            "message": "Unauthorized; Scope Does Not Match"
+        })))
+        .expect(1)
+        .mount(&server)
+        .await;
+
+    let client = JiraClient::new_for_test(server.uri(), "Basic granular-token".to_string());
+
+    let err = client
+        .post::<serde_json::Value, _>(
+            "/rest/api/3/issue",
+            &serde_json::json!({"fields": {"summary": "test"}}),
+        )
+        .await
+        .unwrap_err();
+
+    let s = err.to_string();
+    assert!(
+        s.contains("Insufficient token scope"),
+        "case-insensitive substring match should still dispatch to InsufficientScope: {s}"
+    );
+}
+
+#[tokio::test]
+async fn test_non_401_with_scope_substring_does_not_dispatch_to_insufficient_scope() {
+    // The scope-mismatch dispatch is gated on status == 401. A 403 (or any
+    // other 4xx/5xx) whose body happens to contain "scope does not match"
+    // must fall through to the generic ApiError path — pins the status gate
+    // so a future broadening of the match to all statuses trips a test.
+    let server = MockServer::start().await;
+
+    Mock::given(method("POST"))
+        .and(path("/rest/api/3/issue"))
+        .respond_with(ResponseTemplate::new(403).set_body_json(serde_json::json!({
+            "code": 403,
+            "message": "Forbidden: scope does not match policy"
+        })))
+        .expect(1)
+        .mount(&server)
+        .await;
+
+    let client = JiraClient::new_for_test(server.uri(), "Basic granular-token".to_string());
+
+    let err = client
+        .post::<serde_json::Value, _>(
+            "/rest/api/3/issue",
+            &serde_json::json!({"fields": {"summary": "test"}}),
+        )
+        .await
+        .unwrap_err();
+
+    let s = err.to_string();
+    assert!(
+        !s.contains("Insufficient token scope"),
+        "non-401 status must NOT dispatch to InsufficientScope: {s}"
+    );
+    assert!(
+        s.contains("API error (403)"),
+        "expected generic ApiError for non-401 status: {s}"
+    );
+}
+
+#[test]
+fn test_extract_error_message_from_error_messages_array() {
+    let body =
+        br#"{"errorMessages":["Issue does not exist","Or you lack permission"],"errors":{}}"#;
+    let result = extract_error_message(body);
+    assert_eq!(result, "Issue does not exist; Or you lack permission");
+}
+
+#[test]
+fn test_extract_error_message_from_message_field() {
+    let body = br#"{"message":"Property with key not found"}"#;
+    let result = extract_error_message(body);
+    assert_eq!(result, "Property with key not found");
+}
+
+#[test]
+fn test_extract_error_message_prefers_error_messages_over_message() {
+    let body = br#"{"errorMessages":["first"],"message":"second"}"#;
+    let result = extract_error_message(body);
+    assert_eq!(result, "first");
+}
+
+#[test]
+fn test_extract_error_message_empty_error_messages_falls_back_to_errors_object() {
+    let body = br#"{"errorMessages":[],"errors":{"summary":"You must specify a summary"}}"#;
+    let result = extract_error_message(body);
+    assert_eq!(result, "summary: You must specify a summary");
+}
+
+#[test]
+fn test_extract_error_message_errors_object_multiple_fields() {
+    let body =
+        br#"{"errorMessages":[],"errors":{"summary":"is required","priority":"is required"}}"#;
+    let result = extract_error_message(body);
+    assert_eq!(result, "priority: is required; summary: is required");
+}
+
+#[test]
+fn test_extract_error_message_errors_object_empty_falls_through() {
+    let body = br#"{"errorMessages":[],"errors":{}}"#;
+    let result = extract_error_message(body);
+    // Empty errors object, no message field → raw body fallback
+    assert_eq!(result, r#"{"errorMessages":[],"errors":{}}"#);
+}
+
+#[test]
+fn test_extract_error_message_errors_object_nested_value() {
+    let body = br#"{"errorMessages":[],"errors":{"customfield_10001":{"messages":["invalid"]}}}"#;
+    let result = extract_error_message(body);
+    assert_eq!(result, r#"customfield_10001: {"messages":["invalid"]}"#);
+}
+
+#[test]
+fn test_extract_error_message_errors_object_mixed_values() {
+    let body = br#"{"errorMessages":[],"errors":{"summary":"is required","components":["a","b"]}}"#;
+    let result = extract_error_message(body);
+    assert!(
+        result.contains("summary: is required"),
+        "expected 'summary: is required' in '{result}'"
+    );
+    assert!(
+        result.contains(r#"components: ["a","b"]"#),
+        "expected serialized array in '{result}'"
+    );
+}
+
+#[test]
+fn test_extract_error_message_error_message_singular() {
+    let body = br#"{"errorMessage":"Cannot find issue"}"#;
+    let result = extract_error_message(body);
+    assert_eq!(result, "Cannot find issue");
+}
+
+#[test]
+fn test_extract_error_message_plain_text_body() {
+    let body = b"Internal Server Error";
+    let result = extract_error_message(body);
+    assert_eq!(result, "Internal Server Error");
+}
+
+#[test]
+fn test_extract_error_message_empty_body() {
+    let body = b"";
+    let result = extract_error_message(body);
+    assert_eq!(result, "<empty response body>");
+}
+
+// CWE-117 sanitization is wired into extract_error_message — these integration tests
+// exercise the public API to confirm hostile/proxy-injected control chars in any of
+// the precedence paths get rendered as visible escape sequences (ASCII controls as
+// `\xNN`, Unicode C1 controls U+0080..U+009F as `\u{NNNN}`) before reaching stderr.
+
+#[test]
+fn test_extract_error_message_sanitizes_crlf_in_error_messages_array() {
+    // CWE-117 attack: hostile errorMessages payload tries to inject a fake log line.
+    let body = br#"{"errorMessages":["Issue not found\r\n[jr] CRITICAL: fake log"]}"#;
+    let result = extract_error_message(body);
+    assert_eq!(result, "Issue not found\\x0d\\x0a[jr] CRITICAL: fake log");
+    assert!(!result.contains('\r'));
+    assert!(!result.contains('\n'));
+}
+
+#[test]
+fn test_extract_error_message_sanitizes_ansi_escape_in_message_field() {
+    // CWE-117 attack: ANSI escape sequence in the `message` field would change
+    // terminal color / cursor / title if rendered literally.
+    let body = br#"{"message":"Error\u001b[31mRED\u001b[0m"}"#;
+    let result = extract_error_message(body);
+    assert_eq!(result, "Error\\x1b[31mRED\\x1b[0m");
+    assert!(!result.contains('\x1b'));
+}
+
+#[test]
+fn test_extract_error_message_sanitizes_null_byte_in_errors_object_value() {
+    // CWE-117 attack: NUL byte in a field-level error value could truncate
+    // C-string-based loggers or break some terminals.
+    let body = br#"{"errorMessages":[],"errors":{"summary":"bad\u0000value"}}"#;
+    let result = extract_error_message(body);
+    assert_eq!(result, "summary: bad\\x00value");
+    assert!(!result.contains('\0'));
+}
+
+#[test]
+fn test_extract_error_message_preserves_utf8_in_sanitized_path() {
+    // Localized error messages (non-English Jira tenants) must survive the
+    // sanitization layer intact — only control characters (ASCII C0/DEL and
+    // Unicode C1) are escaped; printable Unicode (CJK, Latin extended, etc.)
+    // passes through unchanged.
+    let body = r#"{"errorMessages":["問題が見つかりません"]}"#;
+    let result = extract_error_message(body.as_bytes());
+    assert_eq!(result, "問題が見つかりません");
+}
+
+#[tokio::test]
+async fn test_send_raw_returns_response_for_2xx() {
+    let server = MockServer::start().await;
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/myself"))
+        .respond_with(ResponseTemplate::new(200).set_body_string(r#"{"accountId":"abc"}"#))
+        .expect(1)
+        .mount(&server)
+        .await;
+
+    let client = JiraClient::new_for_test(server.uri(), "Basic dGVzdDp0ZXN0".to_string());
+
+    let req = client
+        .request(Method::GET, "/rest/api/3/myself")
+        .build()
+        .unwrap();
+    let response = client.send_raw(req).await.unwrap();
+
+    assert_eq!(response.status().as_u16(), 200);
+    let body = response.text().await.unwrap();
+    assert_eq!(body, r#"{"accountId":"abc"}"#);
+}
+
+#[tokio::test]
+async fn test_send_raw_returns_response_for_404() {
+    let server = MockServer::start().await;
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/issue/MISSING-1"))
+        .respond_with(
+            ResponseTemplate::new(404)
+                .set_body_string(r#"{"errorMessages":["Issue does not exist"],"errors":{}}"#),
+        )
+        .expect(1)
+        .mount(&server)
+        .await;
+
+    let client = JiraClient::new_for_test(server.uri(), "Basic dGVzdDp0ZXN0".to_string());
+
+    let req = client
+        .request(Method::GET, "/rest/api/3/issue/MISSING-1")
+        .build()
+        .unwrap();
+    let response = client.send_raw(req).await.unwrap();
+
+    // Critical: 404 is NOT converted to an error
+    assert_eq!(response.status().as_u16(), 404);
+    let body = response.text().await.unwrap();
+    assert!(body.contains("Issue does not exist"));
+}
+
+#[tokio::test]
+async fn test_send_raw_retries_429_then_succeeds() {
+    let server = MockServer::start().await;
+    // First call returns 429
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/myself"))
+        .respond_with(ResponseTemplate::new(429).insert_header("Retry-After", "0"))
+        .up_to_n_times(1)
+        .expect(1)
+        .mount(&server)
+        .await;
+    // Second call returns 200
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/myself"))
+        .respond_with(ResponseTemplate::new(200).set_body_string(r#"{"ok":true}"#))
+        .expect(1)
+        .mount(&server)
+        .await;
+
+    let client = JiraClient::new_for_test(server.uri(), "Basic dGVzdDp0ZXN0".to_string());
+
+    let req = client
+        .request(Method::GET, "/rest/api/3/myself")
+        .build()
+        .unwrap();
+    let response = client.send_raw(req).await.unwrap();
+
+    assert_eq!(response.status().as_u16(), 200);
+}
+
+#[tokio::test]
+async fn test_send_raw_returns_429_after_exhausting_retries() {
+    let server = MockServer::start().await;
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/myself"))
+        .respond_with(ResponseTemplate::new(429).insert_header("Retry-After", "0"))
+        .expect(4) // initial + 3 retries (MAX_RETRIES)
+        .mount(&server)
+        .await;
+
+    let client = JiraClient::new_for_test(server.uri(), "Basic dGVzdDp0ZXN0".to_string());
+
+    let req = client
+        .request(Method::GET, "/rest/api/3/myself")
+        .build()
+        .unwrap();
+    let response = client.send_raw(req).await.unwrap();
+
+    // Caller receives the 429 response — not an error
+    assert_eq!(response.status().as_u16(), 429);
 }
