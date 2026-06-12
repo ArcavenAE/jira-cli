@@ -17,6 +17,21 @@ Superseded checkpoints are archived here when STATE.md is updated with a newer o
 
 ---
 
+## Checkpoint archived 2026-06-12 (v0.5.0 STABLE released + develop bumped to 0.6.0-dev.1)
+
+_Was the active checkpoint after v0.5.0-dev.14 dev release (PR #500 @ a0f45cc). Superseded when v0.5.0 STABLE shipped (PR #501 → main; tag v0.5.0) and develop was bumped to 0.6.0-dev.1 (PR #502 → develop @ 587206e)._
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-06-11 |
+| **Position** | **v0.5.0-dev.14 DEV RELEASE PUBLISHED.** PR #500 (Cargo.toml→dev.14, CHANGELOG finalized, 31 commits since dev.13) squash-merged → develop @ a0f45cc. Tag v0.5.0-dev.14 pushed; release.yml run 27383452695 — 4/4 platform builds (x86_64/aarch64 × darwin/linux) + sha256 checksums. GitHub pre-release published 2026-06-11T23:20:09Z. First release with full ADF markdown-conversion feature set + BC-3.2.013 resolution enforcement (breaking) + gitleaks-action v3 MAJOR. No active cycles. BC 594 / NFR 41 / Stories 68. No active worktrees. |
+| **develop HEAD** | origin/develop = **a0f45cc**. activation v0.5.0-dev.14. BC 594. NFR 41. Stories 68. No active worktrees. |
+| **Convergence counter** | BC: **594**. NFR: **41**. Stories: **68**. jira-e2e env: JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ, JR_E2E_ENABLED=true. No active worktrees. |
+| **Next / Pending** | (1) No active cycle — pick next backlog item. (2) SEC-001 (CWE-674 deep-nesting recursion in adf.rs, LOW) deferred. (3) Deferred: #400 Story B + engine items; #372 cargo-mutants. (4) Standing: do NOT close #429 (DEC-029 human deferral); #492 OPEN; OQ-5 + E2E-PG-4 remote-link open; F-H1 DEFERRED; O1-TABLE-ASSERT DEFERRED. |
+| **Resume prompt** | `Read .factory/STATE.md. DATE: 2026-06-11. POSITION: v0.5.0-dev.14 RELEASED (PR #500 @ a0f45cc; release.yml 27383452695 — 4/4 builds). activation_version: v0.5.0-dev.14. develop HEAD: a0f45cc. BC 594 / NFR 41 / Stories 68. No active worktrees. Next: pick next backlog item. STANDING: do NOT close #429 (DEC-029); #492 OPEN; OQ-5 open; E2E-PG-4 remote-link open; SEC-001 LOW deferred; F-H1 DEFERRED; O1-TABLE-ASSERT DEFERRED. jira-e2e: JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ, JR_E2E_ENABLED=true.` |
+
+---
+
 ## Checkpoint archived 2026-06-11 (#475 ADF E2E read-path — F4 CONVERGED, entering PR)
 
 _Was the active checkpoint after #475 F4 CONVERGED (per-story Step-4.5). R1 F-1 HIGH async gate-guard false-green (de-async root-fix) + F-1b guard hardened; R2 0/0/0. Full suite clean + deny + clippy/fmt. DEC-075. Worktree test/issue-475-adf-e2e-readpath @ ca07cbc. develop HEAD: 18a6441. Superseded when PR #499 was squash-merged → develop @ 418a392e and cycle was CLOSED._
