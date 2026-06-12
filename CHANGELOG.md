@@ -12,6 +12,52 @@ All notable changes to jr will be documented here.
 
 ### Changed
 
+## [0.5.0] - 2026-06-11
+
+First stable release of the 0.5.0 line, consolidating the `0.5.0-dev.1`
+through `0.5.0-dev.14` pre-releases. Highlights below; see the per-dev
+sections for full detail.
+
+### Breaking Changes
+
+- **`jr issue move <key> <done-status>` now requires an explicit resolution on
+  done-category transitions** (BC-3.2.013, ADR-0015). Supply `--resolution <name>`
+  or `--no-resolution`; interactive sessions prompt. Bulk (multi-key) move is
+  unaffected. (#465)
+
+### Added
+
+- **Jira Service Management support:** `jr requesttype list/fields`, `jr queue
+  list/view`, `jr issue create --request-type` (servicedeskapi dispatch),
+  `--internal` comments, JSM-aware 401 scope hints, and input validation.
+  (#288 series, #379, #385, #394, #395)
+- **Markdown → ADF coverage:** GFM task lists, GFM alerts (`> [!NOTE]`) → panel,
+  super/subscript, bare-URL autolinking, footnotes, and block-HTML preservation.
+  (#470, #471, #473, #474, #481, #487, #489)
+- **Bulk operations:** multi-key `issue edit`/`move` via the Atlassian Bulk API,
+  `--jql` selection, `--dry-run`, `--max` cap, and multi-field edits. (#110, #331, #345)
+- **`issue edit` enhancements:** `--field NAME=VALUE` arbitrary custom-field edits,
+  `--no-parent`, and changed-field echo on create/edit. (#324, #399, #401)
+- **Auth:** OAuth auto-refresh on 401 with per-profile single-flight, multi-cloudId
+  disambiguation (`--cloud-id`), and `auth --output json`. (#309, #320, #321)
+- **Search:** keys-only JQL API and in-function pagination dedupe. (#362, #367)
+
+### Fixed
+
+- Bulk wire-schema corrections: label objects, `issueType` camelCase, `priorityId`,
+  nested bulk-transition body, and numeric issue/task IDs in poll responses.
+  (#447–#453, #449, #450, #479)
+- ADF `listItem` and footnote content-model conformance. (#470, #481)
+- Security hardening: `JR_BASE_URL` release-gate, `errorMessages` stderr
+  sanitization, and `task_id` validation. (#355, #356, #357)
+- Field-resolution numeric boundary parsing. (#418, #427)
+
+### Changed
+
+- Extensive live-Jira E2E suite with fork-safe CI gating, `cargo-mutants` CI,
+  regression holdout suites, gitleaks secret scanning, and StepSecurity runner
+  hardening. (#300–#306, #346, #373, #433–#499)
+
 ## [0.5.0-dev.14] - 2026-06-11
 
 ### Breaking Changes
