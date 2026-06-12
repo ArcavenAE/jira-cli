@@ -353,10 +353,15 @@ pub enum IssueCommand {
         #[arg(short = 't', long = "type")]
         issue_type: Option<String>,
         /// Summary
-        #[arg(short, long)]
+        #[arg(short, long, allow_hyphen_values = true)]
         summary: Option<String>,
         /// Description
-        #[arg(short, long, conflicts_with = "description_stdin")]
+        #[arg(
+            short,
+            long,
+            allow_hyphen_values = true,
+            conflicts_with = "description_stdin"
+        )]
         description: Option<String>,
         /// Read description from stdin (for piping)
         #[arg(long, conflicts_with = "description")]
@@ -431,7 +436,7 @@ pub enum IssueCommand {
         #[arg(long)]
         dry_run: bool,
         /// New summary
-        #[arg(long)]
+        #[arg(long, allow_hyphen_values = true)]
         summary: Option<String>,
         /// New issue type
         #[arg(long = "type")]
@@ -458,7 +463,12 @@ pub enum IssueCommand {
         #[arg(long, conflicts_with = "parent")]
         no_parent: bool,
         /// Description
-        #[arg(short, long, conflicts_with = "description_stdin")]
+        #[arg(
+            short,
+            long,
+            allow_hyphen_values = true,
+            conflicts_with = "description_stdin"
+        )]
         description: Option<String>,
         /// Read description from stdin (for piping)
         #[arg(long, conflicts_with = "description")]
@@ -531,6 +541,7 @@ pub enum IssueCommand {
         /// Issue key
         key: String,
         /// Comment text
+        #[arg(allow_hyphen_values = true)]
         message: Option<String>,
         /// Interpret input as Markdown
         #[arg(long)]
@@ -638,7 +649,7 @@ pub enum IssueCommand {
         url: String,
 
         /// Label shown in the Jira UI. Defaults to the URL when omitted.
-        #[arg(long)]
+        #[arg(long, allow_hyphen_values = true)]
         title: Option<String>,
     },
     /// List available link types
@@ -800,7 +811,7 @@ pub enum WorklogCommand {
         /// Duration (e.g., 2h, 1h30m, 1d)
         duration: String,
         /// Comment
-        #[arg(short, long)]
+        #[arg(short, long, allow_hyphen_values = true)]
         message: Option<String>,
     },
     /// List worklogs on an issue
