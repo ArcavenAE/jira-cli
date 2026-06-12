@@ -1,0 +1,1008 @@
+// SCHEMA NOTES — Atlassian Bulk API (issue #110 PR1, locked 2026-05-09)
+//
+// Sources: OpenAPI spec (developer.atlassian.com/cloud/jira/platform/swagger-v3.v3.json)
+// fetched 2026-05-09. HTML doc pages truncated every attempt; schema extracted from
+// the machine-readable OpenAPI JSON instead.
+//
+// === POST /rest/api/3/bulk/issues/fields (bulk edit fields) ===
+//
+// Schema name: BulkEditSubmitInput (not fully retrievable from OpenAPI JSON due to
+// truncation at CustomFieldContextDefaultValue definitions). The following fields are
+// CONFIRMED from research report + partial OpenAPI extract:
+//
+//   CONFIRMED:
+//     selectedIssueIdsOrKeys  string[]  required  — list of up to 1,000 issue IDs or keys
+//   VERIFIED (Atlassian Bulk Operations FAQ):
+//     editedFieldsInput       object    required  — per-field edit spec
+//       labelsFields          array     required  — label field edit (one element per
+//                                                   ADD/REMOVE action; NOT "labels" object)
+//         fieldId             string    required  — "labels" (literal)
+//         bulkEditMultiSelectFieldOption
+//                             enum      required  — "ADD" | "REMOVE" | "REPLACE"
+//                                                   (verified casing from Atlassian FAQ)
+//         labels              object[]  required  — [{"name": "<label>"}] objects
+//                                                   (NOT bare strings — those are PUT-only)
+//   UNVERIFIED:
+//     sendBulkNotification    bool      optional  — suppress notifications during bulk op
+//     jql                     string    optional  — NOT confirmed; research report flags
+//                                                   as "assert by one source, not confirmed";
+//                                                   implementation must verify empirically
+//
+// Response: HTTP 200 with body containing `taskId` (string).
+//   CONFIRMED: status 200 (not 202 or 204). BulkOperationProgress schema returned.
+//   NOTE: research report flagged taskId-in-body vs Location-header as uncertain.
+//   OpenAPI extract confirms `taskId` field directly in BulkOperationProgress response body.
+//   Tests use body_string_contains("taskId") rather than exact-JSON to tolerate minor
+//   schema drift.
+//
+// === POST /rest/api/3/bulk/issues/transition ===
+//
+// Schema name: BulkTransitionSubmitInput — OpenAPI JSON documents a FLAT top-level shape
+//   (selectedIssueIdsOrKeys + transitionId at root), but that shape is WRONG.
+//
+// REFUTED by live run 27156639337: flat body → 400 "bulkTransitionInputs must not be empty".
+//
+// CORRECT wire format (CONFIRMED: Atlassian community 2026-02-19 + live run 27156639337):
+//   {
+//     "bulkTransitionInputs": [
+//       {
+//         "selectedIssueIdsOrKeys": [...],
+//         "transitionId": "31"
+//       }
+//     ],
+//     "sendBulkNotification": false
+//   }
+//
+// `selectedIssueIdsOrKeys` and `transitionId` are NESTED inside `bulkTransitionInputs`
+// array elements, NOT direct top-level fields. Same asymmetry class as
+// `labelsFields`/`"labels"` and `issueType`/`"issuetype"`.
+//
+// See: BC-3.2.014, [FIX-BULK-TRANSITION-001].
+// Response: HTTP 200 with BulkOperationProgress (same shape as fields endpoint).
+//
+// === GET /rest/api/3/bulk/queue/{taskId} ===
+//
+// Schema name: BulkOperationProgress — CONFIRMED from OpenAPI JSON:
+//   taskId                          string    readOnly  — the task ID
+//   status                          enum      — CONFIRMED values: ENQUEUED | RUNNING |
+//                                               COMPLETE | FAILED | CANCEL_REQUESTED |
+//                                               CANCELLED | DEAD
+//                                               NOTE: value is "COMPLETE" not "COMPLETED"
+//                                               (OpenAPI schema). Research report used
+//                                               "COMPLETED" (unverified). Tests use
+//                                               "COMPLETE" per OpenAPI; if live API
+//                                               returns "COMPLETED", tests will need
+//                                               adjustment — flagged as empirical-verify.
+//   processedAccessibleIssues       string[]  — issue IDs where operation succeeded
+//   failedAccessibleIssues          object    — map of issue ID → error details
+//   invalidOrInaccessibleIssueCount int32     — issues that couldn't be acted on
+//   totalIssueCount                 int32
+//   progressPercent                 int64
+//   created                         date-time
+//
+// Per-issue error shape (BulkEditActionError):
+//   errorMessages   string[]
+//   errors          object    — map of field name → error message
+//
+// HTTP status codes:
+//   POST /bulk/issues/fields     → 200 (confirmed from OpenAPI response refs)
+//   POST /bulk/issues/transition → 200
+//   GET  /bulk/queue/{taskId}    → 200
+//
+// KNOWN GAPS (implementer must verify empirically):
+//   1. [RESOLVED] Label schema uses labelsFields array with bulkEditMultiSelectFieldOption
+//      (verified against Atlassian Bulk Operations FAQ; old labelsAction shape was incorrect)
+//   2. Whether "COMPLETE" or "COMPLETED" is the actual live API status string
+//   3. [RESOLVED] sendBulkNotification IS a real field — sent as `false` to suppress
+//      notification spam across many issues. See BC-3.2.014, [FIX-BULK-TRANSITION-001].
+//   4. Whether jql is an accepted optional field on /bulk/issues/fields
+//   5. Exact nesting of editedFieldsInput for non-label fields (priority, assignee, etc.)
+//
+// Red Gate: all tests in this file MUST FAIL before implementation because:
+//   - `--to` flag does not exist on `jr issue move`
+//   - `keys: Vec<String>` positional does not exist (currently `key: String`)
+//   - `src/api/jira/bulk.rs` (or equivalent) does not exist
+//   - polling endpoint logic does not exist
+//   Expected failure modes:
+//     - Tests exercising new flags: clap exits 2 ("unrecognized argument")
+//       → assertions on exit 0 or specific output fail.
+//     - Tests checking bulk POST mock calls: command never reaches HTTP layer
+//       → wiremock .expect(1) panics on drop (0 calls, expected 1).
+//     - Cap test: no `> 1000 keys` check exists → command attempts HTTP call
+//       → mock for exact 1-call assertion fails, or exit code differs.
+
+#[allow(dead_code)]
+mod common;
+
+use assert_cmd::Command;
+use wiremock::matchers::{body_partial_json, body_string_contains, method, path, path_regex};
+use wiremock::{Mock, MockServer, ResponseTemplate};
+
+// ---------------------------------------------------------------------------
+// Harness
+// ---------------------------------------------------------------------------
+
+/// Build a `jr` command pointing at the mock server.
+/// Auth injected via JR_AUTH_HEADER; instance URL via JR_BASE_URL.
+fn jr_cmd(server_url: &str) -> Command {
+    let mut cmd = Command::cargo_bin("jr").unwrap();
+    cmd.env("JR_BASE_URL", server_url)
+        .env("JR_AUTH_HEADER", "Basic dGVzdDp0ZXN0"); // test:test base64
+    cmd
+}
+
+/// Build a bulk-edit fields endpoint response (HTTP 200 with taskId).
+/// Matches BulkOperationProgress shape from the Atlassian OpenAPI spec.
+fn bulk_task_enqueued_response(task_id: &str) -> serde_json::Value {
+    serde_json::json!({
+        "taskId": task_id,
+        "status": "ENQUEUED",
+        "progressPercent": 0,
+        "totalIssueCount": 0,
+        "processedAccessibleIssues": [],
+        "failedAccessibleIssues": {},
+        "invalidOrInaccessibleIssueCount": 0
+    })
+}
+
+/// Build a completed task poll response (all issues succeeded).
+fn bulk_task_complete_response(task_id: &str, processed_ids: Vec<&str>) -> serde_json::Value {
+    serde_json::json!({
+        "taskId": task_id,
+        "status": "COMPLETE",
+        "progressPercent": 100,
+        "totalIssueCount": processed_ids.len(),
+        "processedAccessibleIssues": processed_ids,
+        "failedAccessibleIssues": {},
+        "invalidOrInaccessibleIssueCount": 0
+    })
+}
+
+/// Build a completed task response with some per-issue failures.
+fn bulk_task_complete_with_failures_response(
+    task_id: &str,
+    processed_ids: Vec<&str>,
+    failed: serde_json::Value,
+) -> serde_json::Value {
+    serde_json::json!({
+        "taskId": task_id,
+        "status": "COMPLETE",
+        "progressPercent": 100,
+        "totalIssueCount": processed_ids.len() + failed.as_object().map_or(0, |m| m.len()),
+        "processedAccessibleIssues": processed_ids,
+        "failedAccessibleIssues": failed,
+        "invalidOrInaccessibleIssueCount": 0
+    })
+}
+
+/// Build an in-progress task poll response.
+fn bulk_task_in_progress_response(task_id: &str) -> serde_json::Value {
+    serde_json::json!({
+        "taskId": task_id,
+        "status": "RUNNING",
+        "progressPercent": 50,
+        "totalIssueCount": 3,
+        "processedAccessibleIssues": [],
+        "failedAccessibleIssues": {},
+        "invalidOrInaccessibleIssueCount": 0
+    })
+}
+
+// ---------------------------------------------------------------------------
+// AC-001: jr issue edit KEY1 KEY2 KEY3 --label add:foo
+//   → exactly 1 POST to /rest/api/3/bulk/issues/fields
+//   + 1+ polls to /rest/api/3/bulk/queue/{taskId}
+//   + exit 0 on COMPLETE
+// ---------------------------------------------------------------------------
+
+#[tokio::test]
+async fn test_edit_multi_key_issues_one_bulk_post_then_polls_to_complete() {
+    let server = MockServer::start().await;
+
+    // The bulk edit POST: expect exactly 1 call.
+    // Body must include selectedIssueIdsOrKeys with all three keys.
+    // SCHEMA NOTE: label payload uses labelsFields array with bulkEditMultiSelectFieldOption;
+    // see SCHEMA NOTES block (labelsAction shape was old/incorrect).
+    // selectedActions pin: label paths pass vec!["labels"] as selected_actions, so the
+    // request body must contain "selectedActions". This matcher catches regressions
+    // where the field is accidentally dropped from the label edit path.
+    Mock::given(method("POST"))
+        .and(path("/rest/api/3/bulk/issues/fields"))
+        .and(body_partial_json(serde_json::json!({
+            "selectedIssueIdsOrKeys": ["FOO-1", "FOO-2", "FOO-3"]
+        })))
+        .and(body_string_contains("selectedActions"))
+        .respond_with(
+            ResponseTemplate::new(200).set_body_json(bulk_task_enqueued_response("task-abc-001")),
+        )
+        .expect(1)
+        .mount(&server)
+        .await;
+
+    // Poll endpoint: first call returns in-progress, second returns complete.
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/bulk/queue/task-abc-001"))
+        .respond_with(
+            ResponseTemplate::new(200)
+                .set_body_json(bulk_task_in_progress_response("task-abc-001")),
+        )
+        .up_to_n_times(1)
+        .mount(&server)
+        .await;
+
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/bulk/queue/task-abc-001"))
+        .respond_with(
+            ResponseTemplate::new(200).set_body_json(bulk_task_complete_response(
+                "task-abc-001",
+                vec!["FOO-1", "FOO-2", "FOO-3"],
+            )),
+        )
+        .mount(&server)
+        .await;
+
+    let output = jr_cmd(&server.uri())
+        .args([
+            "--no-input",
+            "issue",
+            "edit",
+            "FOO-1",
+            "FOO-2",
+            "FOO-3",
+            "--label",
+            "add:foo",
+        ])
+        .output()
+        .unwrap();
+
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    assert!(
+        output.status.success(),
+        "Expected exit 0 for multi-key bulk edit; stderr={stderr} stdout={stdout}"
+    );
+    // wiremock verifies .expect(1) on drop — missing bulk POST panics.
+}
+
+// ---------------------------------------------------------------------------
+// AC-002: jr issue move KEY1 KEY2 KEY3 --to "Done"
+//   → exactly 1 POST to /rest/api/3/bulk/issues/transition
+//   + 1+ polls + exit 0
+// ---------------------------------------------------------------------------
+
+#[tokio::test]
+async fn test_move_multi_key_issues_one_bulk_transition_post_then_polls() {
+    let server = MockServer::start().await;
+
+    // Transition lookup: need to resolve "Done" → transitionId.
+    // jr currently calls GET /issue/{key}/transitions for single-key move.
+    // For multi-key, it may call it for the first key only, or require --transition-id.
+    // We mock a typical transitions response so the name-lookup path can work.
+    // If the implementation uses a different discovery path, this mock is harmless.
+    Mock::given(method("GET"))
+        .and(path_regex(r"^/rest/api/3/issue/[A-Z]+-\d+/transitions$"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
+            "transitions": [
+                {"id": "31", "name": "Done", "to": {"name": "Done"}},
+                {"id": "11", "name": "To Do", "to": {"name": "To Do"}},
+                {"id": "21", "name": "In Progress", "to": {"name": "In Progress"}}
+            ]
+        })))
+        .mount(&server)
+        .await;
+
+    // The bulk transition POST: expect exactly 1 call.
+    // CONFIRMED schema (Atlassian community 2026-02-19 + live run 27156639337):
+    // keys and transitionId are nested inside bulkTransitionInputs — NOT top-level.
+    // [FIX-BULK-TRANSITION-001]
+    Mock::given(method("POST"))
+        .and(path("/rest/api/3/bulk/issues/transition"))
+        .and(body_partial_json(serde_json::json!({
+            "bulkTransitionInputs": [
+                {
+                    "selectedIssueIdsOrKeys": ["BAR-10", "BAR-11", "BAR-12"],
+                    "transitionId": "31"
+                }
+            ]
+        })))
+        .respond_with(
+            ResponseTemplate::new(200).set_body_json(bulk_task_enqueued_response("task-trans-001")),
+        )
+        .expect(1)
+        .mount(&server)
+        .await;
+
+    // Poll: in-progress then complete.
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/bulk/queue/task-trans-001"))
+        .respond_with(
+            ResponseTemplate::new(200)
+                .set_body_json(bulk_task_in_progress_response("task-trans-001")),
+        )
+        .up_to_n_times(1)
+        .mount(&server)
+        .await;
+
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/bulk/queue/task-trans-001"))
+        .respond_with(
+            ResponseTemplate::new(200).set_body_json(bulk_task_complete_response(
+                "task-trans-001",
+                vec!["BAR-10", "BAR-11", "BAR-12"],
+            )),
+        )
+        .mount(&server)
+        .await;
+
+    let output = jr_cmd(&server.uri())
+        .args([
+            "--no-input",
+            "issue",
+            "move",
+            "BAR-10",
+            "BAR-11",
+            "BAR-12",
+            "--to",
+            "Done",
+        ])
+        .output()
+        .unwrap();
+
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    assert!(
+        output.status.success(),
+        "Expected exit 0 for multi-key bulk move; stderr={stderr} stdout={stdout}"
+    );
+}
+
+// ---------------------------------------------------------------------------
+// AC-007 (partial-failure): Bulk task COMPLETE with per-issue errors
+//   → exit 1 + stdout lists per-key success/error breakdown
+// ---------------------------------------------------------------------------
+
+#[tokio::test]
+async fn test_edit_partial_failure_exits_one_with_per_key_breakdown() {
+    let server = MockServer::start().await;
+
+    Mock::given(method("POST"))
+        .and(path("/rest/api/3/bulk/issues/fields"))
+        .respond_with(
+            ResponseTemplate::new(200)
+                .set_body_json(bulk_task_enqueued_response("task-partial-001")),
+        )
+        .expect(1)
+        .mount(&server)
+        .await;
+
+    // Poll response: COMPLETE but FOO-3 failed.
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/bulk/queue/task-partial-001"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(
+            bulk_task_complete_with_failures_response(
+                "task-partial-001",
+                vec!["FOO-1", "FOO-2"],
+                serde_json::json!({
+                    "FOO-3": {
+                        "errorMessages": ["You do not have permission to edit this issue."],
+                        "errors": {}
+                    }
+                }),
+            ),
+        ))
+        .mount(&server)
+        .await;
+
+    let output = jr_cmd(&server.uri())
+        .args([
+            "--no-input",
+            "issue",
+            "edit",
+            "FOO-1",
+            "FOO-2",
+            "FOO-3",
+            "--label",
+            "add:urgent",
+        ])
+        .output()
+        .unwrap();
+
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    let stdout = String::from_utf8_lossy(&output.stdout);
+
+    // Must exit 1 (partial failure, not total failure or usage error).
+    assert_eq!(
+        output.status.code(),
+        Some(1),
+        "Expected exit 1 for partial bulk failure; stderr={stderr} stdout={stdout}"
+    );
+
+    // Output must reference FOO-3 and its error (or "failed"/"error").
+    let combined = format!("{stdout}{stderr}");
+    assert!(
+        combined.contains("FOO-3"),
+        "Expected FOO-3 key in output for partial failure; combined={combined}"
+    );
+    assert!(
+        combined.contains("permission")
+            || combined.contains("failed")
+            || combined.contains("error"),
+        "Expected error description in output; combined={combined}"
+    );
+}
+
+// ---------------------------------------------------------------------------
+// AC-008 (polling): Polling respects Retry-After on 429
+//   Mock sequence: 429 with Retry-After: 1 → 200 COMPLETE
+//   Test verifies retry happens (exit 0, not exit 1 after giving up on 429).
+// ---------------------------------------------------------------------------
+
+#[tokio::test]
+async fn test_polling_respects_retry_after_on_429() {
+    let server = MockServer::start().await;
+
+    Mock::given(method("POST"))
+        .and(path("/rest/api/3/bulk/issues/fields"))
+        .respond_with(
+            ResponseTemplate::new(200).set_body_json(bulk_task_enqueued_response("task-429-001")),
+        )
+        .expect(1)
+        .mount(&server)
+        .await;
+
+    // First poll: 429 with Retry-After header.
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/bulk/queue/task-429-001"))
+        .respond_with(
+            ResponseTemplate::new(429)
+                .insert_header("Retry-After", "1")
+                .set_body_json(serde_json::json!({
+                    "errorMessages": ["Rate limit exceeded"]
+                })),
+        )
+        .up_to_n_times(1)
+        .mount(&server)
+        .await;
+
+    // Second poll: COMPLETE.
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/bulk/queue/task-429-001"))
+        .respond_with(
+            ResponseTemplate::new(200).set_body_json(bulk_task_complete_response(
+                "task-429-001",
+                vec!["FOO-1", "FOO-2"],
+            )),
+        )
+        .mount(&server)
+        .await;
+
+    let output = jr_cmd(&server.uri())
+        .args([
+            "--no-input",
+            "issue",
+            "edit",
+            "FOO-1",
+            "FOO-2",
+            "--label",
+            "add:retry-test",
+        ])
+        .output()
+        .unwrap();
+
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    let stdout = String::from_utf8_lossy(&output.stdout);
+
+    // Must succeed after retry — NOT exit 1 treating 429 as fatal.
+    assert!(
+        output.status.success(),
+        "Expected exit 0 after polling retried past 429 Retry-After; stderr={stderr} stdout={stdout}"
+    );
+}
+
+// ---------------------------------------------------------------------------
+// AC-009 (single-key BC): jr issue edit KEY1 --label add:foo
+//   UPDATED (BUG-LABEL-400 fix): single-key label edits now route to
+//   PUT /rest/api/3/issue/{key} with update.labels, NOT the bulk endpoint.
+//   The old test asserted the wrong (bulk) behavior and encoded the bug that
+//   caused HTTP 400 on real Jira instances (live E2E run 26730687481).
+//   Rewritten to assert the correct PUT behavior.
+//   --output json shape is {"key":"...","updated":true,"changed_fields":{...}}.
+// ---------------------------------------------------------------------------
+
+#[tokio::test]
+async fn test_edit_single_key_label_routes_via_put_issue_update() {
+    let server = MockServer::start().await;
+
+    // Single-key label edit MUST use PUT, NOT the bulk endpoint.
+    // .expect(0) panics on drop if the bulk endpoint is called.
+    Mock::given(method("POST"))
+        .and(path("/rest/api/3/bulk/issues/fields"))
+        .respond_with(
+            ResponseTemplate::new(501)
+                .set_body_string("BUG: single-key label edit routed to bulk endpoint"),
+        )
+        .expect(0)
+        .mount(&server)
+        .await;
+
+    // PUT /rest/api/3/issue/SOLO-1 with update.labels (bare string).
+    Mock::given(method("PUT"))
+        .and(path("/rest/api/3/issue/SOLO-1"))
+        .and(body_partial_json(serde_json::json!({
+            "update": {
+                "labels": [{"add": "solo-test"}]
+            }
+        })))
+        .respond_with(ResponseTemplate::new(204))
+        .expect(1)
+        .mount(&server)
+        .await;
+
+    let output = jr_cmd(&server.uri())
+        .args([
+            "--no-input",
+            "--output",
+            "json",
+            "issue",
+            "edit",
+            "SOLO-1",
+            "--label",
+            "add:solo-test",
+        ])
+        .output()
+        .unwrap();
+
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    let stdout = String::from_utf8_lossy(&output.stdout);
+
+    assert!(
+        output.status.success(),
+        "Expected exit 0 for single-key label PUT; stderr={stderr} stdout={stdout}"
+    );
+
+    // --output json must produce the single-key edit shape:
+    //   {"key": "SOLO-1", "updated": true, "changed_fields": {...}}
+    let parsed: serde_json::Value = serde_json::from_str(&stdout)
+        .unwrap_or_else(|e| panic!("stdout not valid JSON: {e}; stdout={stdout}"));
+
+    assert_eq!(
+        parsed.get("key").and_then(|v| v.as_str()),
+        Some("SOLO-1"),
+        "Expected \"key\": \"SOLO-1\" in JSON output; got: {stdout}"
+    );
+    assert_eq!(
+        parsed.get("updated").and_then(|v| v.as_bool()),
+        Some(true),
+        "Expected \"updated\": true in JSON output; got: {stdout}"
+    );
+    assert!(
+        parsed.get("taskId").is_none(),
+        "Expected no 'taskId' in single-key label JSON output (bulk shape); got: {stdout}"
+    );
+    // wiremock .expect(0) on bulk POST + .expect(1) on PUT fire on drop.
+}
+
+// ---------------------------------------------------------------------------
+// Cap: > 1000 keys → exit 64 (USAGE error) with hint, NO HTTP call made.
+// ---------------------------------------------------------------------------
+
+#[tokio::test]
+async fn test_edit_more_than_1000_keys_exits_64_without_http_call() {
+    let server = MockServer::start().await;
+
+    // No mock registered — any HTTP call will return 501, causing a different error.
+    // The test asserts exit 64 before any HTTP call is made.
+
+    // Build 1001 fake issue keys.
+    let keys: Vec<String> = (1..=1001).map(|i| format!("FOO-{i}")).collect();
+
+    let output = jr_cmd(&server.uri())
+        .arg("--no-input")
+        .arg("issue")
+        .arg("edit")
+        .args(&keys)
+        .arg("--label")
+        .arg("add:overflow")
+        .output()
+        .unwrap();
+
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    let stdout = String::from_utf8_lossy(&output.stdout);
+
+    // Exit 64 = USAGE error (EX_USAGE from sysexits.h, used by JrError).
+    assert_eq!(
+        output.status.code(),
+        Some(64),
+        "Expected exit 64 for > 1000 keys; stderr={stderr} stdout={stdout}"
+    );
+
+    // Hint must mention the cap or splitting.
+    assert!(
+        stderr.contains("1000")
+            || stderr.contains("1,000")
+            || stderr.contains("split")
+            || stderr.contains("batch"),
+        "Expected cap hint in stderr; stderr={stderr}"
+    );
+
+    // Verify no HTTP call was made to the bulk endpoint.
+    assert_eq!(
+        server.received_requests().await.unwrap().len(),
+        0,
+        "Expected zero HTTP calls for > 1000 key cap check"
+    );
+}
+
+// ---------------------------------------------------------------------------
+// --no-input skips the confirmation prompt for multi-key edits.
+// (Interactive mode would prompt "Edit 3 issues? [y/N]"; --no-input must skip it.)
+// ---------------------------------------------------------------------------
+
+#[tokio::test]
+async fn test_edit_multi_key_with_no_input_skips_confirmation_prompt() {
+    let server = MockServer::start().await;
+
+    Mock::given(method("POST"))
+        .and(path("/rest/api/3/bulk/issues/fields"))
+        .respond_with(
+            ResponseTemplate::new(200)
+                .set_body_json(bulk_task_enqueued_response("task-noinput-001")),
+        )
+        .expect(1)
+        .mount(&server)
+        .await;
+
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/bulk/queue/task-noinput-001"))
+        .respond_with(
+            ResponseTemplate::new(200).set_body_json(bulk_task_complete_response(
+                "task-noinput-001",
+                vec!["X-1", "X-2", "X-3"],
+            )),
+        )
+        .mount(&server)
+        .await;
+
+    let output = jr_cmd(&server.uri())
+        .args([
+            "--no-input",
+            "issue",
+            "edit",
+            "X-1",
+            "X-2",
+            "X-3",
+            "--label",
+            "add:no-prompt",
+        ])
+        .output()
+        .unwrap();
+
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    let stdout = String::from_utf8_lossy(&output.stdout);
+
+    assert!(
+        output.status.success(),
+        "Expected exit 0 with --no-input (no prompt hang); stderr={stderr} stdout={stdout}"
+    );
+    // wiremock .expect(1) fires on drop — verifies the POST was made.
+}
+
+// ---------------------------------------------------------------------------
+// Bonus: labels ADD vs REMOVE — verify bulkEditMultiSelectFieldOption value is passed correctly.
+// SCHEMA NOTE: "ADD" and "REMOVE" casing is VERIFIED from Atlassian Bulk Operations FAQ
+// (old labelsAction shape was incorrect; see issue #446 fix).
+// ---------------------------------------------------------------------------
+
+#[tokio::test]
+async fn test_edit_label_remove_sends_remove_action_in_bulk_payload() {
+    let server = MockServer::start().await;
+
+    // Use body_string_contains instead of body_partial_json for the action value,
+    // because this test predates the #446 fix and is intentionally loose: it checks
+    // the substring "REMOVE" appears in the request body JSON. The authoritative
+    // structural test is test_multi_key_label_remove_only_uses_labels_fields_schema
+    // in issue_edit_labels.rs, which pins the full labelsFields schema.
+    Mock::given(method("POST"))
+        .and(path("/rest/api/3/bulk/issues/fields"))
+        .and(body_string_contains("REMOVE"))
+        .respond_with(
+            ResponseTemplate::new(200)
+                .set_body_json(bulk_task_enqueued_response("task-remove-001")),
+        )
+        .expect(1)
+        .mount(&server)
+        .await;
+
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/bulk/queue/task-remove-001"))
+        .respond_with(
+            ResponseTemplate::new(200).set_body_json(bulk_task_complete_response(
+                "task-remove-001",
+                vec!["FOO-1", "FOO-2"],
+            )),
+        )
+        .mount(&server)
+        .await;
+
+    let output = jr_cmd(&server.uri())
+        .args([
+            "--no-input",
+            "issue",
+            "edit",
+            "FOO-1",
+            "FOO-2",
+            "--label",
+            "remove:stale",
+        ])
+        .output()
+        .unwrap();
+
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    let stdout = String::from_utf8_lossy(&output.stdout);
+
+    assert!(
+        output.status.success(),
+        "Expected exit 0 for --label remove:stale; stderr={stderr} stdout={stdout}"
+    );
+}
+
+// ---------------------------------------------------------------------------
+// Bonus: --output json for multi-key edit returns results array shape.
+// ---------------------------------------------------------------------------
+
+#[tokio::test]
+async fn test_edit_multi_key_output_json_returns_results_array() {
+    let server = MockServer::start().await;
+
+    Mock::given(method("POST"))
+        .and(path("/rest/api/3/bulk/issues/fields"))
+        .respond_with(
+            ResponseTemplate::new(200).set_body_json(bulk_task_enqueued_response("task-json-001")),
+        )
+        .mount(&server)
+        .await;
+
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/bulk/queue/task-json-001"))
+        .respond_with(
+            ResponseTemplate::new(200).set_body_json(bulk_task_complete_response(
+                "task-json-001",
+                vec!["FOO-1", "FOO-2"],
+            )),
+        )
+        .mount(&server)
+        .await;
+
+    let output = jr_cmd(&server.uri())
+        .args([
+            "--no-input",
+            "--output",
+            "json",
+            "issue",
+            "edit",
+            "FOO-1",
+            "FOO-2",
+            "--label",
+            "add:json-test",
+        ])
+        .output()
+        .unwrap();
+
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    let stdout = String::from_utf8_lossy(&output.stdout);
+
+    assert!(
+        output.status.success(),
+        "Expected exit 0 for multi-key --output json; stderr={stderr} stdout={stdout}"
+    );
+
+    let parsed: serde_json::Value = serde_json::from_str(&stdout)
+        .unwrap_or_else(|e| panic!("stdout not valid JSON: {e}; stdout={stdout}"));
+
+    // For multi-key, the JSON must have a "results" array with per-key entries.
+    let results = parsed.get("results").and_then(|v| v.as_array());
+    assert!(
+        results.is_some(),
+        "Expected {{\"results\":[...]}} for multi-key --output json; got: {stdout}"
+    );
+    let results = results.unwrap();
+    assert_eq!(
+        results.len(),
+        2,
+        "Expected 2 result entries for 2 keys; got: {stdout}"
+    );
+}
+
+// ---------------------------------------------------------------------------
+// BC-FIX-BULK-TRANSITION: multi-key `jr issue move` MUST wrap the transition
+// payload in a `bulkTransitionInputs` array.
+//
+// Bug: current code sends a FLAT body:
+//   { "selectedIssueIdsOrKeys": [...], "transitionId": "31" }
+// Live Jira Cloud requires the NESTED shape:
+//   { "bulkTransitionInputs": [ { "selectedIssueIdsOrKeys": [...], "transitionId": "31" } ],
+//     "sendBulkNotification": false }
+// Live error on flat body: 400 "bulkTransitionInputs must not be empty"
+//
+// Source: Atlassian developer community (2026-02-19) + live E2E run 27156639337
+// (`test_e2e_issue_move_multikey_bulk`).
+//
+// Red Gate: this test MUST FAIL before the fix because:
+//   - The POST mock uses `body_string_contains("bulkTransitionInputs")` — the flat
+//     body does NOT contain that key, so the mock goes unmatched.
+//   - wiremock `.expect(1)` fires on drop when the POST is never satisfied.
+// ---------------------------------------------------------------------------
+
+#[tokio::test]
+async fn test_move_multikey_bulk_transition_uses_bulktransitioninputs_wrapper() {
+    let server = MockServer::start().await;
+
+    // Transition lookup: resolve "Done" → id "31" from first key.
+    // StatusCategory requires both `name` and `key` fields (Status struct in types/jira/issue.rs).
+    Mock::given(method("GET"))
+        .and(path_regex(r"^/rest/api/3/issue/[A-Z]+-\d+/transitions$"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
+            "transitions": [
+                {"id": "31", "name": "Done",        "to": {"name": "Done",        "statusCategory": {"key": "done",          "name": "Done"}}},
+                {"id": "11", "name": "To Do",        "to": {"name": "To Do",       "statusCategory": {"key": "new",           "name": "To Do"}}},
+                {"id": "21", "name": "In Progress",  "to": {"name": "In Progress", "statusCategory": {"key": "indeterminate", "name": "In Progress"}}}
+            ]
+        })))
+        .mount(&server)
+        .await;
+
+    // The bulk transition POST MUST use the nested `bulkTransitionInputs` wrapper shape.
+    //
+    // body_partial_json asserts the nested structure is present.
+    // body_string_contains("bulkTransitionInputs") acts as a closed-failure guard:
+    //   if the wrapper key is absent (flat body), the mock is not matched and
+    //   .expect(1) fires on drop — proving Red Gate.
+    Mock::given(method("POST"))
+        .and(path("/rest/api/3/bulk/issues/transition"))
+        .and(body_string_contains("bulkTransitionInputs"))
+        .and(body_partial_json(serde_json::json!({
+            "bulkTransitionInputs": [
+                {
+                    "selectedIssueIdsOrKeys": ["BAR-10", "BAR-11", "BAR-12"],
+                    "transitionId": "31"
+                }
+            ],
+            "sendBulkNotification": false
+        })))
+        .respond_with(
+            ResponseTemplate::new(200)
+                .set_body_json(bulk_task_enqueued_response("task-btinputs-001")),
+        )
+        .expect(1)
+        .mount(&server)
+        .await;
+
+    // Poll: in-progress then complete.
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/bulk/queue/task-btinputs-001"))
+        .respond_with(
+            ResponseTemplate::new(200)
+                .set_body_json(bulk_task_in_progress_response("task-btinputs-001")),
+        )
+        .up_to_n_times(1)
+        .mount(&server)
+        .await;
+
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/bulk/queue/task-btinputs-001"))
+        .respond_with(
+            ResponseTemplate::new(200).set_body_json(bulk_task_complete_response(
+                "task-btinputs-001",
+                vec!["BAR-10", "BAR-11", "BAR-12"],
+            )),
+        )
+        .mount(&server)
+        .await;
+
+    let output = jr_cmd(&server.uri())
+        .args([
+            "--no-input",
+            "issue",
+            "move",
+            "BAR-10",
+            "BAR-11",
+            "BAR-12",
+            "--to",
+            "Done",
+        ])
+        .output()
+        .unwrap();
+
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    assert!(
+        output.status.success(),
+        "Expected exit 0 for multi-key bulk move with bulkTransitionInputs wrapper; \
+         stderr={stderr} stdout={stdout}"
+    );
+    // wiremock .expect(1) on the bulk POST fires on drop — verifies the POST was made
+    // with the correct nested body shape.
+}
+
+// ---------------------------------------------------------------------------
+// Regression: numeric processedAccessibleIssues in poll response (live E2E 26735034015)
+//
+// Real Jira Cloud returns processedAccessibleIssues as an array of numeric
+// issue IDs (e.g. [10129, 10130]), not the issue-key strings ("FOO-1") used
+// in wiremock mocks. This gap caused:
+//   "Error: invalid type: integer 10129, expected a string at line 1 column 115"
+// on every multi-key bulk label edit (jr issue edit K1 K2 --label add:<probe>).
+//
+// The mock in this test has the poll response return integer IDs to close the
+// wiremock-vs-real-API gap. The fix is `deserialize_string_or_int_array` on
+// `BulkOperationProgress::processed_accessible_issues`.
+// ---------------------------------------------------------------------------
+
+/// Multi-key label bulk edit succeeds when the poll response contains numeric
+/// (integer) processedAccessibleIssues, as returned by real Jira Cloud.
+///
+/// Previously this crashed with a serde deserialization error (live E2E run
+/// 26735034015). Now accepted via `deserialize_string_or_int_array`.
+#[tokio::test]
+async fn test_edit_multi_key_label_succeeds_with_numeric_processed_issues_in_poll() {
+    let server = MockServer::start().await;
+
+    // Bulk POST: returns a task ID (as a string — this was fixed separately in #449).
+    Mock::given(method("POST"))
+        .and(path("/rest/api/3/bulk/issues/fields"))
+        .and(body_partial_json(serde_json::json!({
+            "selectedIssueIdsOrKeys": ["FOO-1", "FOO-2"]
+        })))
+        .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
+            "taskId": "10128",
+            "status": "ENQUEUED",
+            "progressPercent": 0,
+            "processedAccessibleIssues": [],
+            "failedAccessibleIssues": {},
+            "totalIssueCount": 2
+        })))
+        .expect(1)
+        .mount(&server)
+        .await;
+
+    // Poll response: COMPLETE with NUMERIC processedAccessibleIssues (the live bug).
+    // Real Jira Cloud returns integer issue IDs here, not string keys like "FOO-1".
+    // Before the fix this response caused:
+    //   "invalid type: integer 10129, expected a string at line 1 column 115"
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/bulk/queue/10128"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
+            "taskId": "10128",
+            "status": "COMPLETE",
+            "progressPercent": 100,
+            "processedAccessibleIssues": [10129, 10130],
+            "failedAccessibleIssues": {},
+            "totalIssueCount": 2,
+            "invalidOrInaccessibleIssueCount": 0
+        })))
+        .mount(&server)
+        .await;
+
+    let output = jr_cmd(&server.uri())
+        .args([
+            "--no-input",
+            "issue",
+            "edit",
+            "FOO-1",
+            "FOO-2",
+            "--label",
+            "add:probe",
+        ])
+        .output()
+        .unwrap();
+
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    let stdout = String::from_utf8_lossy(&output.stdout);
+
+    assert!(
+        output.status.success(),
+        "Expected exit 0 when poll response has numeric processedAccessibleIssues; \
+         this was the live E2E 26735034015 failure. stderr={stderr} stdout={stdout}"
+    );
+    // wiremock .expect(1) on the bulk POST fires on drop — verifies the POST was made.
+}

@@ -1,3 +1,4 @@
+pub mod api;
 pub mod assets;
 pub mod auth;
 pub mod board;
@@ -5,8 +6,10 @@ pub mod init;
 pub mod issue;
 pub mod project;
 pub mod queue;
+pub mod requesttype;
 pub mod sprint;
 pub mod team;
+pub mod user;
 pub mod worklog;
 
 use clap::{Parser, Subcommand, ValueEnum};
@@ -33,9 +36,17 @@ pub struct Cli {
     #[arg(long, global = true)]
     pub no_input: bool,
 
-    /// Enable verbose output
+    /// verbose mode (headers + status + URL only; use --verbose-bodies for full body inspection)
     #[arg(long, global = true)]
     pub verbose: bool,
+
+    /// print full HTTP request/response bodies to stderr (PII warning emitted; use with care — see CLAUDE.md)
+    #[arg(long, global = true)]
+    pub verbose_bodies: bool,
+
+    /// Override the active profile (precedence: this flag > JR_PROFILE > config > "default")
+    #[arg(long, global = true)]
+    pub profile: Option<String>,
 }
 
 #[derive(Clone, Copy, ValueEnum)]
@@ -91,10 +102,38 @@ pub enum Command {
         #[command(subcommand)]
         command: TeamCommand,
     },
+    /// Manage users
+    User {
+        #[command(subcommand)]
+        command: UserCommand,
+    },
     /// Manage JSM queues
     Queue {
         #[command(subcommand)]
         command: QueueCommand,
+    },
+    /// Discover JSM request types and their fields
+    #[command(name = "requesttype")]
+    RequestType {
+        #[command(subcommand)]
+        command: RequestTypeCommand,
+    },
+    /// Make a raw authenticated HTTP request to the Jira REST API.
+    Api {
+        /// API path (leading slash optional). Example: /rest/api/3/myself
+        path: String,
+
+        /// HTTP method
+        #[arg(short = 'X', long, value_enum, default_value_t = api::HttpMethod::Get)]
+        method: api::HttpMethod,
+
+        /// Request body: inline JSON, @file to read from a file, or @- to read from stdin
+        #[arg(short = 'd', long)]
+        data: Option<String>,
+
+        /// Custom header in "Key: Value" format (repeatable)
+        #[arg(short = 'H', long = "header")]
+        header: Vec<String>,
     },
     /// Generate shell completions
     Completion {
@@ -161,12 +200,95 @@ pub enum AssetsCommand {
 pub enum AuthCommand {
     /// Authenticate with Jira
     Login {
-        /// Use OAuth 2.0 instead of API token (requires your own OAuth app)
+        /// Profile to log in to (creates it if absent). Defaults to active profile.
+        #[arg(long)]
+        profile: Option<String>,
+        /// Jira instance URL (required when creating a new profile under --no-input).
+        #[arg(long)]
+        url: Option<String>,
+        /// Use OAuth 2.0 instead of API token (requires your own OAuth app).
+        /// Scope list is Atlassian's recommended classic set by default;
+        /// override via `[profiles.<name>].oauth_scopes` in config.toml — see
+        /// Configuration below.
         #[arg(long)]
         oauth: bool,
+        /// Jira email (API token flow). Prefer $JR_EMAIL over this flag.
+        #[arg(long)]
+        email: Option<String>,
+        /// API token (API token flow). Prefer $JR_API_TOKEN over this flag — bare
+        /// CLI args can leak via process lists (`ps`, audit logs).
+        #[arg(long)]
+        token: Option<String>,
+        /// OAuth Client ID (OAuth flow). Prefer $JR_OAUTH_CLIENT_ID over this flag.
+        #[arg(long)]
+        client_id: Option<String>,
+        /// OAuth Client Secret (OAuth flow). Prefer $JR_OAUTH_CLIENT_SECRET over
+        /// this flag — bare CLI args can leak via process lists.
+        #[arg(long)]
+        client_secret: Option<String>,
+        /// Cloud ID to use when multiple Atlassian orgs are accessible
+        /// (disambiguates which site to target). Use this in scripts to select
+        /// the correct org. Run `jr auth login --oauth` interactively first to
+        /// see available org IDs and names.
+        #[arg(long)]
+        cloud_id: Option<String>,
     },
     /// Show authentication status
-    Status,
+    Status {
+        /// Profile to show status for. Defaults to active profile.
+        #[arg(long)]
+        profile: Option<String>,
+    },
+    /// Clear stored credentials and re-run the login flow.
+    ///
+    /// On macOS, run this after upgrading `jr` (e.g., `brew upgrade`, binary
+    /// replacement). The legacy Keychain ACL is bound to the original binary's
+    /// identity; this command deletes the entries so the new binary becomes
+    /// the creator of fresh entries, avoiding repeated "allow access"
+    /// prompts. See issue #207.
+    Refresh {
+        /// Profile to refresh credentials for. Defaults to active profile.
+        #[arg(long)]
+        profile: Option<String>,
+        /// Use OAuth 2.0 instead of API token (matches `jr auth login --oauth`)
+        #[arg(long)]
+        oauth: bool,
+        /// Jira email (API token flow). Prefer $JR_EMAIL over this flag.
+        #[arg(long)]
+        email: Option<String>,
+        /// API token (API token flow). Prefer $JR_API_TOKEN over this flag —
+        /// bare CLI args can leak via process lists.
+        #[arg(long)]
+        token: Option<String>,
+        /// OAuth Client ID (OAuth flow). Prefer $JR_OAUTH_CLIENT_ID over this flag.
+        #[arg(long)]
+        client_id: Option<String>,
+        /// OAuth Client Secret (OAuth flow). Prefer $JR_OAUTH_CLIENT_SECRET over
+        /// this flag — bare CLI args can leak via process lists.
+        #[arg(long)]
+        client_secret: Option<String>,
+    },
+    /// Set the default profile in config.toml.
+    Switch {
+        /// Profile name to make active. Must already exist in config.
+        name: String,
+    },
+    /// List all configured profiles, marking the active one.
+    List,
+    /// Clear OAuth tokens for a profile (profile entry stays in config).
+    /// Shared API-token credential is NEVER touched.
+    Logout {
+        /// Profile to log out of. Defaults to active profile.
+        #[arg(long)]
+        profile: Option<String>,
+    },
+    /// Permanently delete a profile (config + cache + per-profile OAuth tokens).
+    /// Shared credentials are NEVER touched.
+    Remove {
+        /// Profile name to remove. Cannot be the active profile —
+        /// switch first with `jr auth switch`.
+        name: String,
+    },
 }
 
 #[derive(Subcommand)]
@@ -231,10 +353,15 @@ pub enum IssueCommand {
         #[arg(short = 't', long = "type")]
         issue_type: Option<String>,
         /// Summary
-        #[arg(short, long)]
+        #[arg(short, long, allow_hyphen_values = true)]
         summary: Option<String>,
         /// Description
-        #[arg(short, long, conflicts_with = "description_stdin")]
+        #[arg(
+            short,
+            long,
+            allow_hyphen_values = true,
+            conflicts_with = "description_stdin"
+        )]
         description: Option<String>,
         /// Read description from stdin (for piping)
         #[arg(long, conflicts_with = "description")]
@@ -263,6 +390,20 @@ pub enum IssueCommand {
         /// Assign to this Jira accountId directly (bypasses name search)
         #[arg(long, conflicts_with = "to")]
         account_id: Option<String>,
+        /// JSM request type (name or numeric ID). When set, dispatches to
+        /// POST /rest/servicedeskapi/request instead of POST /rest/api/3/issue.
+        /// The project must be a Jira Service Management project.
+        #[arg(long = "request-type")]
+        request_type: Option<String>,
+        /// Additional request field values as NAME=VALUE pairs (repeatable).
+        /// The first '=' splits; subsequent '=' characters are part of the value.
+        /// Duplicate keys use the last value provided. Applies to JSM requests only.
+        #[arg(long = "field", action = clap::ArgAction::Append)]
+        field: Vec<String>,
+        /// Raise the JSM request on behalf of this accountId (JSM requests only).
+        /// Maps to the top-level `raiseOnBehalfOf` field in the request body.
+        #[arg(long = "on-behalf-of")]
+        on_behalf_of: Option<String>,
     },
     /// View issue details
     View {
@@ -271,10 +412,31 @@ pub enum IssueCommand {
     },
     /// Edit issue fields
     Edit {
-        /// Issue key
-        key: String,
-        /// New summary
+        /// Issue keys (positional; omit when using --jql). Mutually exclusive with --jql.
+        /// Up to 1000 keys per call (Atlassian Bulk API limit).
+        #[arg(num_args = 0..=1001, conflicts_with = "jql")]
+        keys: Vec<String>,
+        /// JQL query to select issues for bulk edit. Mutually exclusive with positional keys.
+        #[arg(long, conflicts_with = "keys")]
+        jql: Option<String>,
+        /// Maximum number of issues to match via --jql (default 50, hard ceiling 1000).
+        /// Requires --jql; cannot be used with positional keys. If the JQL match count
+        /// exceeds this value, the command errors without mutating.
+        ///
+        /// Values above 100 trigger cursor pagination on /rest/api/3/search/jql (Jira
+        /// caps maxResults at 100 per page), so --max 1000 triggers up to ~10 search
+        /// requests before the bulk call. Use the smallest --max that fits your workflow.
+        #[arg(long, value_parser = clap::value_parser!(u32).range(1..=1000))]
+        max: Option<u32>,
+        /// Skip the interactive confirmation prompt for large JQL match sets.
         #[arg(long)]
+        yes: bool,
+        /// Preview the planned changes without making any HTTP mutations.
+        /// For --jql, the search IS executed (read-only); for positional keys, no HTTP calls.
+        #[arg(long)]
+        dry_run: bool,
+        /// New summary
+        #[arg(long, allow_hyphen_values = true)]
         summary: Option<String>,
         /// New issue type
         #[arg(long = "type")]
@@ -295,10 +457,18 @@ pub enum IssueCommand {
         #[arg(long, conflicts_with = "points")]
         no_points: bool,
         /// Parent issue key
-        #[arg(long)]
+        #[arg(long, conflicts_with = "no_parent")]
         parent: Option<String>,
+        /// Clear the issue's parent
+        #[arg(long, conflicts_with = "parent")]
+        no_parent: bool,
         /// Description
-        #[arg(short, long, conflicts_with = "description_stdin")]
+        #[arg(
+            short,
+            long,
+            allow_hyphen_values = true,
+            conflicts_with = "description_stdin"
+        )]
         description: Option<String>,
         /// Read description from stdin (for piping)
         #[arg(long, conflicts_with = "description")]
@@ -306,18 +476,51 @@ pub enum IssueCommand {
         /// Interpret description as Markdown
         #[arg(long)]
         markdown: bool,
+        /// Arbitrary custom field values as NAME=VALUE pairs (repeatable).
+        /// The first '=' splits name from value; subsequent '=' are part of the value.
+        /// Duplicate keys use the last value provided. Single-key path only (rejected
+        /// in bulk-edit context). See also: CLAUDE.md Gotchas — `--field` on issue edit.
+        #[arg(long = "field", action = clap::ArgAction::Append)]
+        field: Vec<String>,
     },
-    /// Transition issue to a new status
+    /// Transition one or more issues to a new status
+    ///
+    /// Single-key legacy form:  jr issue move FOO-100 Done
+    /// Multi-key form:          jr issue move FOO-100 FOO-101 FOO-102 --to Done
+    ///
+    /// For multi-key (2+ keys), `--to` is required. For single-key, the
+    /// trailing positional is the target status (backward compatible).
     Move {
-        /// Issue key
-        key: String,
-        /// Target status (partial match supported)
-        status: Option<String>,
+        /// Issue keys (legacy single-key: KEY STATUS; multi-key: KEY1 KEY2 ... --to STATUS)
+        #[arg(required = true, num_args = 1..=1001)]
+        keys: Vec<String>,
+        /// Target status for multi-key form (required when 2+ keys are given)
+        #[arg(long)]
+        to: Option<String>,
+        /// Set resolution atomically with the transition (e.g. "Fixed"). Many
+        /// JSM workflows require this; run `jr issue resolutions` to discover
+        /// valid values. (Single-key only; ignored in multi-key bulk form.)
+        #[arg(long, conflicts_with = "no_resolution")]
+        resolution: Option<String>,
+        /// Explicit opt-out from proactive resolution enforcement. Use when
+        /// moving to a done-category status where a null resolution is genuinely
+        /// intentional (e.g., "Won't Do" automation paths). Mutually exclusive
+        /// with --resolution. No effect on non-done-category transitions.
+        /// (BC-3.2.013; ADR-0015 §7)
+        #[arg(long, conflicts_with = "resolution")]
+        no_resolution: bool,
     },
     /// List available transitions without performing one
     Transitions {
         /// Issue key
         key: String,
+    },
+    /// List the resolution values defined on this Jira instance. Cached
+    /// for 7 days; use --refresh to bypass the cache.
+    Resolutions {
+        /// Bypass the local cache and re-fetch from the server.
+        #[arg(long)]
+        refresh: bool,
     },
     /// Assign issue
     Assign {
@@ -338,6 +541,7 @@ pub enum IssueCommand {
         /// Issue key
         key: String,
         /// Comment text
+        #[arg(allow_hyphen_values = true)]
         message: Option<String>,
         /// Interpret input as Markdown
         #[arg(long)]
@@ -348,6 +552,11 @@ pub enum IssueCommand {
         /// Read comment from stdin (for piping)
         #[arg(long)]
         stdin: bool,
+        /// Mark comment as internal — agent-only, not visible to the customer on the JSM
+        /// portal. Without this flag the comment is a public reply (the default). No-op on
+        /// standard (non-JSM) projects, where Jira ignores the `sd.public.comment` property.
+        #[arg(long)]
+        internal: bool,
     },
     /// List comments on an issue
     Comments {
@@ -356,6 +565,32 @@ pub enum IssueCommand {
         /// Maximum number of comments to return
         #[arg(long)]
         limit: Option<u32>,
+    },
+    /// Show an issue's audit changelog (status/field changes)
+    Changelog {
+        /// Issue key (e.g., FOO-123)
+        key: String,
+        /// Maximum number of rows (default 30). Applies post-filter.
+        #[arg(long, conflicts_with = "all")]
+        limit: Option<u32>,
+        /// Show all rows (disable the default 30-row limit)
+        #[arg(long, conflicts_with = "limit")]
+        all: bool,
+        /// Filter by field name; repeatable (case-insensitive substring)
+        #[arg(long = "field")]
+        field: Vec<String>,
+        /// Filter by author ("me" for current user, or a name/accountId)
+        ///
+        /// "me" is reserved and resolves to the current user. AccountIds
+        /// (values containing ':' or ≥12 characters of `[A-Za-z0-9_-]`
+        /// that include at least one digit) are matched exactly; other
+        /// values match as a case-insensitive substring of displayName
+        /// or accountId.
+        #[arg(long)]
+        author: Option<String>,
+        /// Render oldest-first instead of default newest-first
+        #[arg(long)]
+        reverse: bool,
     },
     /// Open issue in browser
     Open {
@@ -366,6 +601,13 @@ pub enum IssueCommand {
         url_only: bool,
     },
     /// Link two issues
+    ///
+    /// Creates a directional link (e.g., "blocks", "is blocked by") between
+    /// `<KEY1>` and `<KEY2>`. The link type defaults to "Relates"; pass
+    /// `--type <NAME>` to use any other type from your Jira instance.
+    ///
+    /// See also: `jr issue unlink` to remove a link, `jr issue link-types` to
+    /// list available link type names.
     Link {
         /// First issue key (outward — e.g., the issue that "blocks")
         key1: String,
@@ -376,6 +618,13 @@ pub enum IssueCommand {
         r#type: String,
     },
     /// Remove link(s) between two issues
+    ///
+    /// Removes one or more links between `<KEY1>` and `<KEY2>`. If `--type` is
+    /// omitted, ALL links between the pair are removed. Pass `--type <NAME>` to
+    /// scope deletion to a specific link type.
+    ///
+    /// See also: `jr issue link` to create a link, `jr issue link-types` to
+    /// list available link type names.
     Unlink {
         /// First issue key
         key1: String,
@@ -384,6 +633,24 @@ pub enum IssueCommand {
         /// Only remove links of this type (removes all if omitted)
         #[arg(long)]
         r#type: Option<String>,
+    },
+    /// Link a Confluence page or arbitrary web URL to an issue as a remote link.
+    ///
+    /// Renders under the issue's "Web links" (or "Confluence pages") panel in
+    /// Jira's UI. Jira decides which panel based on its own app-integration
+    /// metadata — this command creates a plain remote link and lets Jira sort
+    /// it into the right panel.
+    RemoteLink {
+        /// Issue key (e.g. PROJ-123).
+        key: String,
+
+        /// URL to link to.
+        #[arg(long)]
+        url: String,
+
+        /// Label shown in the Jira UI. Defaults to the URL when omitted.
+        #[arg(long, allow_hyphen_values = true)]
+        title: Option<String>,
     },
     /// List available link types
     LinkTypes,
@@ -488,6 +755,54 @@ pub enum TeamCommand {
 }
 
 #[derive(Subcommand)]
+pub enum UserCommand {
+    /// Search for users by display name or email
+    ///
+    /// Results depend on the "Browse users and groups" global permission.
+    /// Empty results may indicate either no matches or missing permission.
+    /// Email is hidden when the target user's privacy settings opt out.
+    Search {
+        /// Search string (matches displayName and emailAddress substrings)
+        query: String,
+        /// Cap the number of results shown (default 30). Applies to both
+        /// table rows and JSON array length; does not reduce the API fetch.
+        #[arg(long)]
+        limit: Option<u32>,
+        /// Fetch all matching users by paginating through every API page
+        /// (up to Jira's documented 1000-user hard cap). Overrides the
+        /// default local cap.
+        #[arg(long, conflicts_with = "limit")]
+        all: bool,
+    },
+    /// List users assignable to a project
+    ///
+    /// Results depend on the "Browse users and groups" global permission.
+    List {
+        /// Project key (e.g., FOO)
+        #[arg(long, short = 'p')]
+        project: String,
+        /// Cap the number of results shown (default 30). Applies to both
+        /// table rows and JSON array length; does not reduce the API fetch.
+        #[arg(long)]
+        limit: Option<u32>,
+        /// Fetch all assignable users by paginating through every API page
+        /// (up to Jira's documented 1000-user hard cap). Overrides the
+        /// default local cap.
+        #[arg(long, conflicts_with = "limit")]
+        all: bool,
+    },
+    /// Look up a user by accountId
+    ///
+    /// Resolves an accountId to displayName, email (when visible), and
+    /// active status. Use this when you have an accountId and need the
+    /// human-readable identity.
+    View {
+        /// Atlassian accountId
+        account_id: String,
+    },
+}
+
+#[derive(Subcommand)]
 pub enum WorklogCommand {
     /// Log time on an issue
     Add {
@@ -496,7 +811,7 @@ pub enum WorklogCommand {
         /// Duration (e.g., 2h, 1h30m, 1d)
         duration: String,
         /// Comment
-        #[arg(short, long)]
+        #[arg(short, long, allow_hyphen_values = true)]
         message: Option<String>,
     },
     /// List worklogs on an issue
@@ -520,6 +835,21 @@ pub enum QueueCommand {
         /// Maximum number of issues to return
         #[arg(long)]
         limit: Option<u32>,
+    },
+}
+
+#[derive(Subcommand)]
+pub enum RequestTypeCommand {
+    /// List request types for the current project's service desk
+    List {
+        /// Filter results by name/description substring (server-side via searchQuery)
+        #[arg(long)]
+        search: Option<String>,
+    },
+    /// Show fields for a specific request type
+    Fields {
+        /// Request type name (partial match supported) OR numeric ID
+        name_or_id: String,
     },
 }
 

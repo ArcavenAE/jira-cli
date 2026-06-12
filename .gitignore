@@ -15,3 +15,21 @@ Thumbs.db
 .trees/
 .worktrees/
 .claude/worktrees/
+
+# VSDD Factory
+.factory/
+.reference/
+
+# Fixture trees for spec-count tests contain .factory/ subdirs — allow them
+!tests/spec-count-fixtures/*/.factory/
+!tests/spec-count-fixtures/*/.factory/**
+
+# Proptest persisted regression seeds (local cache, never commit)
+proptest-regressions/
+
+# cargo-mutants artifacts (local mutation test runs) — see docs/specs/cargo-mutants-policy.md
+mutants.out/
+mutants.out.old/
+
+# Demo evidence (per-story VHS recordings + evidence reports) — local-only, not committed
+docs/demo-evidence/

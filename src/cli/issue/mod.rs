@@ -1,11 +1,15 @@
 mod assets;
+mod changelog;
+mod comments;
 mod create;
+mod field_resolve;
 mod format;
 mod helpers;
 mod json_output;
 mod links;
 mod list;
-mod workflow;
+mod view;
+pub mod workflow;
 
 pub use format::{format_issue_row, format_issue_rows_public, format_points, issue_table_headers};
 
@@ -37,7 +41,7 @@ pub async fn handle(
             .await
         }
         IssueCommand::View { .. } => {
-            list::handle_view(command, output_format, config, client).await
+            view::handle_view(command, output_format, config, client).await
         }
         IssueCommand::Create { .. } => {
             create::handle_create(
@@ -59,6 +63,9 @@ pub async fn handle(
         IssueCommand::Transitions { .. } => {
             workflow::handle_transitions(command, output_format, client).await
         }
+        IssueCommand::Resolutions { refresh } => {
+            workflow::handle_resolutions(refresh, output_format, client).await
+        }
         IssueCommand::Assign { .. } => {
             workflow::handle_assign(command, output_format, client, no_input).await
         }
@@ -66,14 +73,18 @@ pub async fn handle(
             workflow::handle_comment(command, output_format, client).await
         }
         IssueCommand::Comments { key, limit } => {
-            list::handle_comments(&key, limit, output_format, client).await
+            comments::handle_comments(&key, limit, output_format, client).await
         }
+        IssueCommand::Changelog { .. } => changelog::handle(command, output_format, client).await,
         IssueCommand::Open { .. } => workflow::handle_open(command, client).await,
         IssueCommand::Link { .. } => {
             links::handle_link(command, output_format, client, no_input).await
         }
         IssueCommand::Unlink { .. } => {
             links::handle_unlink(command, output_format, client, no_input).await
+        }
+        IssueCommand::RemoteLink { .. } => {
+            links::handle_remote_link(command, output_format, client).await
         }
         IssueCommand::LinkTypes => links::handle_link_types(output_format, client).await,
         IssueCommand::Assets { key } => {

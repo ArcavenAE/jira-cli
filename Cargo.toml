@@ -1,6 +1,6 @@
 [package]
 name = "jr"
-version = "0.4.0"
+version = "0.5.0"
 edition = "2024"
 description = "A fast CLI for Jira Cloud"
 repository = "https://github.com/Zious11/jira-cli"
@@ -31,7 +31,12 @@ toml = "1"
 base64 = "0.22"
 chrono = { version = "0.4", features = ["serde"] }
 futures = { version = "0.3", default-features = false, features = ["async-await"] }
+rand = "0.10"
 urlencoding = "2"
+url = "2"
+pulldown-cmark = { version = "0.13", default-features = false }
+tracing = "0.1.41"
+tracing-subscriber = { version = "0.3.19", features = ["env-filter", "fmt"] }
 
 [dev-dependencies]
 assert_cmd = "2"
@@ -40,6 +45,12 @@ tempfile = "3"
 wiremock = "0.6"
 insta = { version = "1", features = ["json"] }
 proptest = "1"
+# test-util enables tokio::time::pause() + start_paused = true for S-3.07 AC-001/AC-002
+tokio = { version = "1", features = ["test-util"] }
+# temp-env: scoped env-var overrides for cache-isolation tests (H-2 / S-396)
+temp-env = "0.3"
+# scopeguard: defer! for cleanup-on-panic in integration tests (L-7 / S-396)
+scopeguard = "1"
 
 [profile.release]
 opt-level = 3

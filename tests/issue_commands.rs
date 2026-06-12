@@ -73,7 +73,58 @@ async fn test_get_transitions() {
         jr::api::client::JiraClient::new_for_test(server.uri(), "Basic dGVzdDp0ZXN0".to_string());
     let transitions = client.get_transitions("FOO-1").await.unwrap();
     assert_eq!(transitions.transitions.len(), 2);
-    client.transition_issue("FOO-1", "21").await.unwrap();
+    client.transition_issue("FOO-1", "21", None).await.unwrap();
+}
+
+#[tokio::test]
+async fn transition_issue_with_fields_sends_fields_in_body() {
+    use wiremock::matchers::{body_partial_json, method, path};
+
+    let server = wiremock::MockServer::start().await;
+    wiremock::Mock::given(method("POST"))
+        .and(path("/rest/api/3/issue/FOO-1/transitions"))
+        .and(body_partial_json(serde_json::json!({
+            "transition": { "id": "31" },
+            "fields": { "resolution": { "name": "Done" } }
+        })))
+        .respond_with(wiremock::ResponseTemplate::new(204))
+        .expect(1)
+        .mount(&server)
+        .await;
+
+    let client =
+        jr::api::client::JiraClient::new_for_test(server.uri(), "Basic dGVzdDp0ZXN0".to_string());
+    let fields = serde_json::json!({ "resolution": { "name": "Done" } });
+    client
+        .transition_issue("FOO-1", "31", Some(&fields))
+        .await
+        .unwrap();
+    // wiremock .expect(1) verifies the matcher was hit exactly once
+}
+
+#[tokio::test]
+async fn transition_issue_without_fields_omits_fields_key() {
+    use wiremock::matchers::{method, path};
+
+    let server = wiremock::MockServer::start().await;
+    wiremock::Mock::given(method("POST"))
+        .and(path("/rest/api/3/issue/FOO-1/transitions"))
+        .respond_with(wiremock::ResponseTemplate::new(204))
+        .mount(&server)
+        .await;
+
+    let client =
+        jr::api::client::JiraClient::new_for_test(server.uri(), "Basic dGVzdDp0ZXN0".to_string());
+    client.transition_issue("FOO-1", "31", None).await.unwrap();
+
+    let requests = server.received_requests().await.unwrap();
+    let body = String::from_utf8_lossy(&requests[0].body);
+    assert!(
+        !body.contains("\"fields\""),
+        "fields key must be absent when None is passed, got body: {body}"
+    );
+    assert!(body.contains("\"transition\""));
+    assert!(body.contains("\"31\""));
 }
 
 #[tokio::test]
@@ -1214,14 +1265,13 @@ async fn test_move_by_transition_name() {
         .unwrap();
 
     let stderr = String::from_utf8_lossy(&output.stderr);
-    let stdout = String::from_utf8_lossy(&output.stdout);
     assert!(
         output.status.success(),
         "Expected success, stderr: {stderr}"
     );
     assert!(
-        stdout.contains("Moved FOO-1"),
-        "Expected move confirmation in stdout: {stdout}"
+        stderr.contains("Moved FOO-1"),
+        "Expected move confirmation in stderr: {stderr}"
     );
 }
 
@@ -1274,14 +1324,13 @@ async fn test_move_by_status_name() {
         .unwrap();
 
     let stderr = String::from_utf8_lossy(&output.stderr);
-    let stdout = String::from_utf8_lossy(&output.stdout);
     assert!(
         output.status.success(),
         "Expected success, stderr: {stderr}"
     );
     assert!(
-        stdout.contains("Moved FOO-1"),
-        "Expected move confirmation in stdout: {stdout}"
+        stderr.contains("Moved FOO-1"),
+        "Expected move confirmation in stderr: {stderr}"
     );
 }
 
@@ -1334,14 +1383,13 @@ async fn test_move_dedup_same_transition_and_status_name() {
         .unwrap();
 
     let stderr = String::from_utf8_lossy(&output.stderr);
-    let stdout = String::from_utf8_lossy(&output.stdout);
     assert!(
         output.status.success(),
         "Expected success, stderr: {stderr}"
     );
     assert!(
-        stdout.contains("Moved FOO-1"),
-        "Expected move confirmation in stdout: {stdout}"
+        stderr.contains("Moved FOO-1"),
+        "Expected move confirmation in stderr: {stderr}"
     );
 }
 
@@ -1490,14 +1538,13 @@ async fn test_move_idempotent_with_status_name() {
         .unwrap();
 
     let stderr = String::from_utf8_lossy(&output.stderr);
-    let stdout = String::from_utf8_lossy(&output.stdout);
     assert!(
         output.status.success(),
         "Expected success (idempotent), stderr: {stderr}"
     );
     assert!(
-        stdout.contains("already in status"),
-        "Expected idempotent message in stdout: {stdout}"
+        stderr.contains("already in status"),
+        "Expected idempotent message in stderr: {stderr}"
     );
 }
 
@@ -1546,14 +1593,13 @@ async fn test_move_idempotent_with_transition_name() {
         .unwrap();
 
     let stderr = String::from_utf8_lossy(&output.stderr);
-    let stdout = String::from_utf8_lossy(&output.stdout);
     assert!(
         output.status.success(),
         "Expected success (idempotent via transition name), stderr: {stderr}"
     );
     assert!(
-        stdout.contains("already in status"),
-        "Expected idempotent message in stdout: {stdout}"
+        stderr.contains("already in status"),
+        "Expected idempotent message in stderr: {stderr}"
     );
 }
 
@@ -1688,5 +1734,187 @@ async fn test_assign_issue_invalid_account_id_returns_error() {
     assert!(
         msg.contains("does not exist"),
         "Expected Jira error message in error, got: {msg}"
+    );
+}
+
+// ── partial_match single-substring rejection (issue #193) ────────────
+//
+// These lock the guarantee that a single substring-only hit under
+// `--no-input` routes through `Ambiguous` and errors before any
+// state-changing HTTP call is made. The unit tests in partial_match.rs
+// cover the matcher itself; these cover the handler wiring at each
+// call site.
+
+#[tokio::test]
+async fn test_move_single_substring_rejected_no_input() {
+    let server = MockServer::start().await;
+
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/issue/FOO-1/transitions"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(
+            common::fixtures::transitions_response_with_status(vec![
+                ("21", "Start", "In Progress"),
+                ("31", "Close", "Closed"),
+            ]),
+        ))
+        .mount(&server)
+        .await;
+
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/issue/FOO-1"))
+        .respond_with(
+            ResponseTemplate::new(200).set_body_json(common::fixtures::issue_response(
+                "FOO-1",
+                "Test issue",
+                "To Do",
+            )),
+        )
+        .mount(&server)
+        .await;
+
+    // Assert no transition POST occurs — the substring must short-circuit.
+    Mock::given(method("POST"))
+        .and(path("/rest/api/3/issue/FOO-1/transitions"))
+        .respond_with(ResponseTemplate::new(204))
+        .expect(0)
+        .mount(&server)
+        .await;
+
+    let output = assert_cmd::Command::cargo_bin("jr")
+        .unwrap()
+        .env("JR_BASE_URL", server.uri())
+        .env("JR_AUTH_HEADER", "Basic dGVzdDp0ZXN0")
+        .args(["--no-input", "issue", "move", "FOO-1", "prog"])
+        .output()
+        .unwrap();
+
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(
+        !output.status.success(),
+        "Expected failure on ambiguous substring, stderr: {stderr}"
+    );
+    assert_eq!(
+        output.status.code(),
+        Some(64),
+        "Ambiguous transition should exit 64 (UserError), got: {:?}",
+        output.status.code()
+    );
+    assert!(
+        stderr.contains("Ambiguous transition"),
+        "Expected 'Ambiguous transition' in stderr: {stderr}"
+    );
+    assert!(
+        stderr.contains("In Progress"),
+        "Expected matched candidate 'In Progress' in stderr: {stderr}"
+    );
+}
+
+#[tokio::test]
+async fn test_link_single_substring_rejected_no_input() {
+    let server = MockServer::start().await;
+
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/issueLinkType"))
+        .respond_with(
+            ResponseTemplate::new(200).set_body_json(common::fixtures::link_types_response()),
+        )
+        .mount(&server)
+        .await;
+
+    // Assert no link POST occurs — the substring must short-circuit.
+    Mock::given(method("POST"))
+        .and(path("/rest/api/3/issueLink"))
+        .respond_with(ResponseTemplate::new(201))
+        .expect(0)
+        .mount(&server)
+        .await;
+
+    let output = assert_cmd::Command::cargo_bin("jr")
+        .unwrap()
+        .env("JR_BASE_URL", server.uri())
+        .env("JR_AUTH_HEADER", "Basic dGVzdDp0ZXN0")
+        .args([
+            "--no-input",
+            "issue",
+            "link",
+            "FOO-1",
+            "FOO-2",
+            "--type",
+            "block",
+        ])
+        .output()
+        .unwrap();
+
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(
+        !output.status.success(),
+        "Expected failure on ambiguous substring, stderr: {stderr}"
+    );
+    assert_eq!(
+        output.status.code(),
+        Some(64),
+        "Ambiguous link type should exit 64 (UserError), got: {:?}",
+        output.status.code()
+    );
+    assert!(
+        stderr.contains("Ambiguous link type"),
+        "Expected 'Ambiguous link type' in stderr: {stderr}"
+    );
+    assert!(
+        stderr.contains("Blocks"),
+        "Expected matched candidate 'Blocks' in stderr: {stderr}"
+    );
+}
+
+#[tokio::test]
+async fn test_unlink_single_substring_rejected_no_input() {
+    let server = MockServer::start().await;
+
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/issueLinkType"))
+        .respond_with(
+            ResponseTemplate::new(200).set_body_json(common::fixtures::link_types_response()),
+        )
+        .mount(&server)
+        .await;
+
+    // Assert no DELETE /issueLink/* occurs — the substring must short-circuit.
+    // Unlink also fetches candidate links (GET /rest/api/3/issue/FOO-1?fields=issuelinks)
+    // before any delete, but that's irrelevant here since we error out before
+    // reaching that call. No DELETE mock is mounted at all.
+    let output = assert_cmd::Command::cargo_bin("jr")
+        .unwrap()
+        .env("JR_BASE_URL", server.uri())
+        .env("JR_AUTH_HEADER", "Basic dGVzdDp0ZXN0")
+        .args([
+            "--no-input",
+            "issue",
+            "unlink",
+            "FOO-1",
+            "FOO-2",
+            "--type",
+            "block",
+        ])
+        .output()
+        .unwrap();
+
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(
+        !output.status.success(),
+        "Expected failure on ambiguous substring, stderr: {stderr}"
+    );
+    assert_eq!(
+        output.status.code(),
+        Some(64),
+        "Ambiguous link type should exit 64 (UserError), got: {:?}",
+        output.status.code()
+    );
+    assert!(
+        stderr.contains("Ambiguous link type"),
+        "Expected 'Ambiguous link type' in stderr: {stderr}"
+    );
+    assert!(
+        stderr.contains("Blocks"),
+        "Expected matched candidate 'Blocks' in stderr: {stderr}"
     );
 }

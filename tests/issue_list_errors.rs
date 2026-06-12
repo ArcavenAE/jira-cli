@@ -261,3 +261,163 @@ async fn issue_list_no_active_sprint_falls_back_to_project_jql() {
         "Should show fallback results, got: {stdout}"
     );
 }
+
+// ─── 401 + net-drop error coverage (#187) ──────────────────────────────────
+
+#[tokio::test]
+async fn issue_list_unauthorized_dispatches_reauth_message() {
+    let server = MockServer::start().await;
+
+    // Fail the first call (project-exists check) with 401.
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/project/PROJ"))
+        .respond_with(ResponseTemplate::new(401).set_body_json(serde_json::json!({
+            "errorMessages": ["Client must be authenticated to access this resource."],
+            "errors": {}
+        })))
+        .mount(&server)
+        .await;
+
+    let project_dir = tempfile::tempdir().unwrap();
+    std::fs::write(
+        project_dir.path().join(".jr.toml"),
+        "project = \"PROJ\"\nboard_id = 42\n",
+    )
+    .unwrap();
+
+    let output = Command::cargo_bin("jr")
+        .unwrap()
+        .env("JR_BASE_URL", server.uri())
+        .env("JR_AUTH_HEADER", "Basic dGVzdDp0ZXN0")
+        .current_dir(project_dir.path())
+        .args(["issue", "list"])
+        .output()
+        .unwrap();
+
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(
+        !output.status.success(),
+        "Expected failure, got stdout: {}",
+        String::from_utf8_lossy(&output.stdout)
+    );
+    assert_eq!(
+        output.status.code(),
+        Some(2),
+        "401 should exit 2, got: {:?}",
+        output.status.code()
+    );
+    assert!(
+        stderr.contains("Not authenticated"),
+        "Expected 'Not authenticated' in stderr, got: {stderr}"
+    );
+    assert!(
+        stderr.contains("jr auth login"),
+        "Expected 'jr auth login' suggestion in stderr, got: {stderr}"
+    );
+    assert!(!stderr.contains("panic"), "stderr leaked a panic: {stderr}");
+}
+
+#[tokio::test]
+async fn issue_list_network_drop_surfaces_reach_error() {
+    let project_dir = tempfile::tempdir().unwrap();
+    std::fs::write(
+        project_dir.path().join(".jr.toml"),
+        "project = \"PROJ\"\nboard_id = 42\n",
+    )
+    .unwrap();
+
+    // Privileged port 1 — connect-refused from any unprivileged process.
+    let output = Command::cargo_bin("jr")
+        .unwrap()
+        .env("JR_BASE_URL", "http://127.0.0.1:1")
+        .env("JR_AUTH_HEADER", "Basic dGVzdDp0ZXN0")
+        .current_dir(project_dir.path())
+        .args(["issue", "list"])
+        .output()
+        .unwrap();
+
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(
+        !output.status.success(),
+        "Expected failure, got stdout: {}",
+        String::from_utf8_lossy(&output.stdout)
+    );
+    assert_eq!(
+        output.status.code(),
+        Some(1),
+        "Net-drop should exit 1, got: {:?}",
+        output.status.code()
+    );
+    assert!(
+        stderr.contains("Could not reach"),
+        "Expected 'Could not reach' in stderr, got: {stderr}"
+    );
+    assert!(
+        stderr.contains("check your connection"),
+        "Expected 'check your connection' in stderr, got: {stderr}"
+    );
+    assert!(!stderr.contains("panic"), "stderr leaked a panic: {stderr}");
+}
+
+// ── partial_match single-substring rejection (issue #193) ────────────
+
+/// Asserts `issue list --status <substring>` rejects a single-hit
+/// substring with a disambiguation error and exit code 64, without
+/// issuing a JQL search. Locks the handler-level guarantee from the
+/// strict-matching rollout (unit-tested in src/partial_match.rs).
+#[tokio::test]
+async fn issue_list_status_single_substring_rejected() {
+    let server = MockServer::start().await;
+
+    // Project statuses response — candidates include "In Progress"; "prog"
+    // is a single-hit substring → routes through Ambiguous.
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/project/PROJ/statuses"))
+        .respond_with(
+            ResponseTemplate::new(200).set_body_json(common::fixtures::project_statuses_response()),
+        )
+        .mount(&server)
+        .await;
+
+    // Assert no JQL search fires — ambiguous status must short-circuit.
+    Mock::given(method("POST"))
+        .and(path("/rest/api/3/search/jql"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
+            "issues": [], "nextPageToken": null
+        })))
+        .expect(0)
+        .mount(&server)
+        .await;
+
+    let project_dir = tempfile::tempdir().unwrap();
+    std::fs::write(project_dir.path().join(".jr.toml"), "project = \"PROJ\"\n").unwrap();
+
+    let output = Command::cargo_bin("jr")
+        .unwrap()
+        .env("JR_BASE_URL", server.uri())
+        .env("JR_AUTH_HEADER", "Basic dGVzdDp0ZXN0")
+        .current_dir(project_dir.path())
+        .args(["--no-input", "issue", "list", "--status", "prog"])
+        .output()
+        .unwrap();
+
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(
+        !output.status.success(),
+        "Expected failure on ambiguous substring, stderr: {stderr}"
+    );
+    assert_eq!(
+        output.status.code(),
+        Some(64),
+        "Ambiguous status should exit 64 (UserError), got: {:?}",
+        output.status.code()
+    );
+    assert!(
+        stderr.contains("Ambiguous status"),
+        "Expected 'Ambiguous status' in stderr: {stderr}"
+    );
+    assert!(
+        stderr.contains("In Progress"),
+        "Expected matched candidate 'In Progress' in stderr: {stderr}"
+    );
+}
