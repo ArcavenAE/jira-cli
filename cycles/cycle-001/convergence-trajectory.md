@@ -733,3 +733,31 @@ Trajectory shorthand: `1C(sibling-omission)→fix→1C(off-branch-spec)→fix→
 **Trajectory shorthand:** F4: `1H+1L(async-guard-false-green)→fix→CLEAN→CLEAN→CLEAN` / F5–F7: `5-dim-delta-CLEAN`
 
 **Cycle CLOSED 2026-06-11.** PR #499 squash-merged → develop @ 418a392e. DEC-076. DEFERRED-ADF-E2E: ALL sub-gaps DONE.
+
+---
+
+## Windows-build F2 Adversarial Convergence (2026-06-12)
+
+**Feature:** Windows build (x86_64-pc-windows-msvc)
+**Phase:** F2 spec evolution adversarial loop
+
+| Pass | Date | Total | CRIT | HIGH | MED | LOW | Counter | Verdict |
+|------|------|-------|------|------|-----|-----|---------|---------|
+| 1 | 2026-06-12 | 6 | 0 | 2 | 3 | 1 | 0/3 | FINDINGS_REMAIN |
+| 2 | 2026-06-12 | 5 | 0 | 1 | 3 | 1 | 0/3 | FINDINGS_REMAIN |
+| 3 | 2026-06-12 | 1 | 0 | 0 | 1 | 0 | 0/3 | FINDINGS_REMAIN |
+| 4 | 2026-06-12 | 2 | 0 | 0 | 2 | 0 | 0/3 | REGRESSION |
+| 5 | 2026-06-12 | 2 | 0 | 0 | 2 | 0 | 0/3 | PLATEAU |
+| 6 | 2026-06-12 | 1 | 0 | 0 | 1 | 0 | 0/3 | FINDINGS_REMAIN |
+| 7 | 2026-06-12 | 0 | 0 | 0 | 0 | 0 | 1/3 | CLEAN-PASS |
+| 8 | 2026-06-12 | 1 | 0 | 0 | 1 | 0 | 0/3 | REGRESSION (reset) |
+| 9 | 2026-06-12 | 0 | 0 | 0 | 0 | 0 | 1/3 | CLEAN-PASS |
+| 10 | 2026-06-12 | 0 | 0 | 0 | 0 | 0 | 2/3 | CLEAN-PASS |
+| 11 | 2026-06-12 | 0 | 0 | 0 | 0 | 0 | 3/3 | CONVERGED (reset — research corrections pending) |
+| 12 | 2026-06-12 | 0 | 0 | 0 | 0 | 0 | 1/3 | CLEAN-PASS (post-correction P1) |
+| 13 | 2026-06-12 | 0 | 0 | 0 | 0 | 0 | 2/3 | CLEAN-PASS (post-correction P2) |
+| 14 | 2026-06-12 | 0 | 0 | 0 | 0 | 0 | 3/3 | CONVERGED (3-clean-pass) |
+
+**Trajectory shorthand:** `6→5→1→2→2→1→0→1(reset)→0→0→0(reset@P11)→0→0→0`
+**Genuine catches:** false-green release-gate test description; dirs Known-Folder-API rationale; empty-string-filter propagation (4 sites); per-profile cache path table inconsistency.
+**Post-convergence:** fresh-context consistency audit CONSISTENT. Research validation C1–C7 completed after P11 convergence; C4+C2 corrections applied; P12–P14 rerun confirmed CLEAN post-correction.

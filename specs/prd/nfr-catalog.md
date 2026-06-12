@@ -1,10 +1,10 @@
 ---
 context: nfr-catalog
 title: "NFR Catalog — Pass 4 Convergence"
-total_nfrs: 41  # 40 baseline + NFR-T-E2E-1 (F2 Feature Mode, live-Jira E2E CI obligation, 2026-05-29)
-last_updated: 2026-05-09
+total_nfrs: 42  # 41 baseline + NFR-P-W1 (windows-build F2, supported platforms, 2026-06-12)
+last_updated: 2026-06-12
 source_pass: 4
-revision_note: "2026-05-09 — S-3.08 (PR #317 / fba47ad) closed 11 LOW NFRs: 7 flipped DOCUMENT-AS-IS → DOCUMENT-AS-IS-COMPLETE (source comments + CLAUDE.md entries); 4 flipped DEFER → DEFER-DOCUMENTED (CLAUDE.md entries noting v2 deferral). Two new status types introduced: DOCUMENT-AS-IS-COMPLETE (closure mechanism committed) and DEFER-DOCUMENTED (deferral explicitly surfaced in CLAUDE.md). Pre-impl audit confirmed NFR-O-H and NFR-O-R already RESOLVED via S-2.05; NFR-O-E and NFR-SCA-2 remain pure-DEFER with no action. Prior revision (2026-05-08): Wave 2 closure swept 10 additional NFRs to RESOLVED (NFR-O-F/J/L/M/O/W/H/R/V via S-2.05/S-2.07; NFR-R-F via S-2.05)."
+revision_note: "2026-06-12 — windows-build F2: NFR-P-W1 (Supported Platforms — x86_64-pc-windows-msvc added as full-support tier) added to Dimension 4 (Performance/Platform). 2026-05-09 — S-3.08 (PR #317 / fba47ad) closed 11 LOW NFRs: 7 flipped DOCUMENT-AS-IS → DOCUMENT-AS-IS-COMPLETE (source comments + CLAUDE.md entries); 4 flipped DEFER → DEFER-DOCUMENTED (CLAUDE.md entries noting v2 deferral). Two new status types introduced: DOCUMENT-AS-IS-COMPLETE (closure mechanism committed) and DEFER-DOCUMENTED (deferral explicitly surfaced in CLAUDE.md). Pre-impl audit confirmed NFR-O-H and NFR-O-R already RESOLVED via S-2.05; NFR-O-E and NFR-SCA-2 remain pure-DEFER with no action. Prior revision (2026-05-08): Wave 2 closure swept 10 additional NFRs to RESOLVED (NFR-O-F/J/L/M/O/W/H/R/V via S-2.05/S-2.07; NFR-R-F via S-2.05)."
 trace: |
   - L2: .factory/specs/domain-spec/
   - Source: .factory/semport/jira-cli/jira-cli-pass-4-deep-r4.md §2,§3,§4
@@ -13,9 +13,9 @@ trace: |
 
 # NFR Catalog — jira-cli Pass 4 Convergence
 
-42 individually-enumerated NFR rows. Pass 4 produced: broad (23) + R1 deepening (+18) + NFR-R-E re-promotion (0 net) + R4 NEW-2 (+1) = 42 entries then reconciled to 40 summary rows + NFR-R-NEW-1 added by ADV-P2-003 = 41 total. NFR-S-E severity promoted from LOW to HIGH per ADV-P2-004. NFR-S-F (cargo-deny supply chain) added per ADV-P3-007 = 42 total then NFR-O-K merged into NFR-S-D at ADV-P7-002 = 41 total. NFR-R-NEW-2 removed at S-3.07 v2.0.0 (2026-05-08) = 40 total. NFR-T-E2E-1 added F2 Feature Mode (live-Jira E2E CI obligation, 2026-05-29) = 41 total.
+42 individually-enumerated NFR rows. Pass 4 produced: broad (23) + R1 deepening (+18) + NFR-R-E re-promotion (0 net) + R4 NEW-2 (+1) = 42 entries then reconciled to 40 summary rows + NFR-R-NEW-1 added by ADV-P2-003 = 41 total. NFR-S-E severity promoted from LOW to HIGH per ADV-P2-004. NFR-S-F (cargo-deny supply chain) added per ADV-P3-007 = 42 total then NFR-O-K merged into NFR-S-D at ADV-P7-002 = 41 total. NFR-R-NEW-2 removed at S-3.07 v2.0.0 (2026-05-08) = 40 total. NFR-T-E2E-1 added F2 Feature Mode (live-Jira E2E CI obligation, 2026-05-29) = 41 total. NFR-P-W1 added windows-build F2 (supported platforms, 2026-06-12) = 42 total.
 
-**Severity totals: 1 CRITICAL / 6 HIGH / 16 MEDIUM / 18 LOW = 41 total** (NFR-O-K merged into NFR-S-D at ADV-P7-002; NFR-R-NEW-2 removed at S-3.07 v2.0.0; NFR-T-E2E-1 added F2 2026-05-29)
+**Severity totals: 1 CRITICAL / 6 HIGH / 17 MEDIUM / 18 LOW = 42 total** (NFR-O-K merged into NFR-S-D at ADV-P7-002; NFR-R-NEW-2 removed at S-3.07 v2.0.0; NFR-T-E2E-1 added F2 2026-05-29; NFR-P-W1 added windows-build F2 2026-06-12)
 
 All four MUST-FIX items (NFR-R-D, NFR-R-A, NFR-R-B, NFR-R-E) have been crystallized as behavioral contracts in the L3 PRD:
 - NFR-R-D → BC-6.3.001 (multi-profile fields bug)
@@ -117,12 +117,13 @@ All four MUST-FIX items (NFR-R-D, NFR-R-A, NFR-R-B, NFR-R-E) have been crystalli
 
 ---
 
-## Dimension 4: Performance (P-*)
+## Dimension 4: Performance / Platform (P-*)
 
 ### MEDIUM
 
 | ID | Description | Severity | Site | Phase 3 Routing |
 |---|---|---|---|---|
+| **NFR-P-W1** | Supported Platforms. `jr` must provide a pre-built, fully functional binary for each supported platform tier. **Full support** (pre-built artifact on GitHub Releases, all features functional, CI-tested): `x86_64-pc-windows-msvc` (.zip artifact; Windows Credential Manager keyring via `windows-native` feature; idiomatic `%APPDATA%\jr` config and `%LOCALAPPDATA%\jr` cache paths); `x86_64-apple-darwin` (.tar.gz); `aarch64-apple-darwin` (.tar.gz); `x86_64-unknown-linux-gnu` (.tar.gz); `aarch64-unknown-linux-gnu` (.tar.gz). **Not supported this cycle** (deferred): `aarch64-pc-windows-msvc`, `i686-pc-windows-msvc`, WSL-specific behavior. **Numerical target**: Windows CI passes on `windows-latest` for all non-gated tests (category B tests migrate to `JR_CONFIG_DIR`/`JR_CACHE_DIR` seam before CI is enabled). **Validation method**: Release pipeline produces `jr-<version>-x86_64-pc-windows-msvc.zip` + `.sha256` artifact on every tag; `cargo test` passes on `windows-latest` runner (when Windows added to `ci.yml`). | MEDIUM | `Cargo.toml` (keyring features), `.github/workflows/release.yml` (matrix), `src/config.rs::global_config_dir()`, `src/cache.rs::cache_root()` | **FIX-IN-PHASE-3** (windows-build F2 2026-06-12): Implement via stories S-WIN-1..S-WIN-N. ADR-0016. BC anchors: BC-6.1.014 (Windows config path), BC-6.2.016 (Windows cache path), BC-6.2.017 (debug seam). |
 | **NFR-P-NEW-1** | Asset enrichment uses `futures::future::join_all` with no concurrency cap. K unique assets → K simultaneous HTTP calls. 429-storm risk for large issue lists with many CMDB assets. `MAX_RETRIES=3` mitigates but does not bound. | MEDIUM | `src/cli/issue/list.rs:445`, `src/api/assets/linked.rs:216` | **DEFER**: Replace `join_all` with `buffer_unordered(8)`; add `MAX_CONCURRENT_ASSET_FETCHES = 8` constant. P2 priority. |
 
 ---
@@ -158,6 +159,7 @@ All four MUST-FIX items (NFR-R-D, NFR-R-A, NFR-R-B, NFR-R-E) have been crystalli
 | NFR-R-B | Reliability | HIGH | FIX-IN-PHASE-3 | BC-3.4.001 |
 | NFR-R-E | Reliability | HIGH | FIX-IN-PHASE-3 | BC-4.3.001 |
 | NFR-S-B | Security | HIGH | SECURITY-DECIDE | — |
+| NFR-P-W1 | Performance / Platform | MEDIUM | FIX-IN-PHASE-3 (windows-build F2 2026-06-12) | BC-6.1.014, BC-6.2.016, BC-6.2.017 |
 | NFR-R-C | Reliability | MEDIUM | RESOLVED (2026-05-08, S-2.06 v2.0.0, PR #308 / c8f15d8) | — |
 | NFR-R-F | Reliability | MEDIUM | DOCUMENT-AS-IS-FIXED (S-2.05 comment + S-3.07 v2 guard + JRACLOUD-94632 warning) | — |
 | NFR-S-A | Security | MEDIUM | DEFER (per ADR-0013) | — |
@@ -195,10 +197,10 @@ All four MUST-FIX items (NFR-R-D, NFR-R-A, NFR-R-B, NFR-R-E) have been crystalli
 | NFR-SCA-3 | Scalability | LOW | DOCUMENT-AS-IS-COMPLETE (S-3.08, PR #317) | — |
 | NFR-T-E2E-1 | Testing / CI Infrastructure | MEDIUM | DEFER to S-E2E-1 (F2 Feature Mode, 2026-05-29) | — |
 
-**Phase 3 routing summary (post Wave 2 closure, 2026-05-08; updated S-3.08 PR #317 / fba47ad, 2026-05-09; NFR-T-E2E-1 added F2 2026-05-29):**
+**Phase 3 routing summary (post Wave 2 closure, 2026-05-08; updated S-3.08 PR #317 / fba47ad, 2026-05-09; NFR-T-E2E-1 added F2 2026-05-29; NFR-P-W1 added windows-build F2 2026-06-12):**
 - RESOLVED: 10 (NFR-R-C via S-2.06; NFR-O-H/NFR-O-L/NFR-O-M/NFR-O-O/NFR-O-R/NFR-O-V via S-2.05; NFR-O-F/NFR-O-J/NFR-O-W via S-2.07)
 - COMPLETE: 1 (1 LOW: NFR-R-NEW-1 via S-3.07 — MAX_RETRY_AFTER_SECS=60 cap delivered)
-- FIX-IN-PHASE-3: 6 (1 CRITICAL: NFR-R-D; 5 HIGH: NFR-R-A, NFR-R-B, NFR-R-E, NFR-S-E, NFR-S-F)
+- FIX-IN-PHASE-3: 7 (1 CRITICAL: NFR-R-D; 5 HIGH: NFR-R-A, NFR-R-B, NFR-R-E, NFR-S-E, NFR-S-F; 1 MEDIUM: NFR-P-W1 windows-build F2 2026-06-12)
 - SECURITY-DECIDE: 2 (1 HIGH: NFR-S-B; 1 MEDIUM: NFR-S-C)
 - POLICY-DECISION: 0 (all 3 closed by Wave 2: NFR-O-F, NFR-O-J, NFR-O-W)
 - DOCUMENT-AS-IS: 1 (NFR-S-D — LOW; improve error message precision, 2 LOC)
@@ -207,6 +209,6 @@ All four MUST-FIX items (NFR-R-D, NFR-R-A, NFR-R-B, NFR-R-E) have been crystalli
 - DEFER-DOCUMENTED: 4 (S-3.08 / PR #317 / 2026-05-09; all LOW: NFR-O-N via CLAUDE.md:111; NFR-O-P via CLAUDE.md:112; NFR-O-U via CLAUDE.md:110; NFR-O-X via CLAUDE.md:109 — underlying gaps deferred to v2, CLAUDE.md entry surfaces the deferral explicitly)
 - DEFER: 10 (MEDIUM and LOW: NFR-O-A/B/D/S via DEFER; NFR-P-NEW-1 via DEFER; NFR-O-E/NFR-SCA-2 via pure-acknowledgment DEFER; NFR-S-A via DEFER per ADR-0013 / S-3.09 2026-05-09; NFR-T-E2E-1 via DEFER to S-E2E-1 F2 2026-05-29)
 
-**Total: 41** (42 rows − NFR-O-K merged into NFR-S-D at adversary Pass 7 − NFR-R-NEW-2 removed at S-3.07 v2.0.0 2026-05-08 + NFR-T-E2E-1 added F2 Feature Mode 2026-05-29. NFR-S-F added per ADV-P3-007. NFR-S-E severity promoted LOW→HIGH per ADV-P2-004.)
+**Total: 42** (42 rows − NFR-O-K merged into NFR-S-D at adversary Pass 7 − NFR-R-NEW-2 removed at S-3.07 v2.0.0 2026-05-08 + NFR-T-E2E-1 added F2 Feature Mode 2026-05-29 + NFR-P-W1 added windows-build F2 2026-06-12. NFR-S-F added per ADV-P3-007. NFR-S-E severity promoted LOW→HIGH per ADV-P2-004.)
 
-**Counting clarification** (ADV-P2-005 + ADV-P3-007 + ADV-P7-002 + S-3.07-v2 reconciliation + F2-e2e-2026-05-29): The NFR Summary Table contains 41 individually-enumerated rows. Severity breakdown: 1 CRITICAL / 6 HIGH / 16 MEDIUM / 18 LOW = 41. NFR-O-K was a duplicate of NFR-S-D and was merged at adversary Pass 7. NFR-R-NEW-2 was removed at S-3.07 v2.0.0 (2026-05-08) because S-3.10 deletes the target function (`parse_duration` 3-arg calculator) — adding `checked_mul` to dead code is wasted churn. If S-3.10 is descoped, NFR-R-NEW-2 must be re-added. NFR-T-E2E-1 added at F2 Feature Mode (live-Jira E2E CI obligation, 2026-05-29). Prior counting clarifications referencing 39, 40, 42, 44, or 45 rows were inconsistent; this count supersedes them.
+**Counting clarification** (ADV-P2-005 + ADV-P3-007 + ADV-P7-002 + S-3.07-v2 reconciliation + F2-e2e-2026-05-29 + windows-build-F2-2026-06-12): The NFR Summary Table contains 42 individually-enumerated rows. Severity breakdown: 1 CRITICAL / 6 HIGH / 17 MEDIUM / 18 LOW = 42. NFR-O-K was a duplicate of NFR-S-D and was merged at adversary Pass 7. NFR-R-NEW-2 was removed at S-3.07 v2.0.0 (2026-05-08) because S-3.10 deletes the target function (`parse_duration` 3-arg calculator) — adding `checked_mul` to dead code is wasted churn. If S-3.10 is descoped, NFR-R-NEW-2 must be re-added. NFR-T-E2E-1 added at F2 Feature Mode (live-Jira E2E CI obligation, 2026-05-29). NFR-P-W1 added at windows-build F2 (supported platforms, 2026-06-12). Prior counting clarifications referencing 39, 40, 42, 44, or 45 rows were inconsistent; this count supersedes them.

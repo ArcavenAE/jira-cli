@@ -618,3 +618,16 @@ _Was the active checkpoint after STATE.md was compacted and rewritten post-#495 
 | **Resume prompt** | `Read .factory/STATE.md. DATE: 2026-06-11. POSITION: #475 ADF E2E read-path CYCLE CLOSED + MERGED (PR #499 @ 418a392e). develop HEAD: 418a392e. BC 594 / NFR 41 / Stories 68. No active worktrees. DEFERRED-ADF-E2E: ALL sub-gaps DONE. Next: pick next backlog item. STANDING: do NOT close #429 (DEC-029); #492 OPEN; OQ-5 open; E2E-PG-4 remote-link open; SEC-001 LOW deferred; F-H1 DEFERRED; O1-TABLE-ASSERT DEFERRED. jira-e2e: JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ, JR_E2E_ENABLED=true.` |
 
 ---
+
+---
+
+## Archived Checkpoint: 2026-06-12 (v0.5.0 STABLE RELEASED + 0.6.0 CYCLE OPEN)
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-06-12 |
+| **Position** | **v0.5.0 STABLE RELEASED + 0.6.0 CYCLE OPEN.** v0.5.0 STABLE: PR #501 "chore: release v0.5.0" (release/v0.5.0) squash-merged → main 2026-06-12T15:27:54Z; tag v0.5.0 pushed; GitHub Release graduated to 'Latest'. First STABLE shipping full ADF markdown-conversion feature set + BC-3.2.013 proactive resolution enforcement (breaking; ADR-0015). develop then bumped: PR #502 squash-merged → develop @ 587206e 2026-06-12T15:31:57Z (Cargo.toml 0.6.0-dev.1). No active cycles. BC 594 / NFR 41 / Stories 68. No active worktrees. DEC-078. |
+| **develop HEAD** | origin/develop = **587206e**. activation v0.6.0-dev.1 (v0.5.0 STABLE shipped). BC 594. NFR 41. Stories 68. No active worktrees. |
+| **Convergence counter** | BC: **594**. NFR: **41**. Stories: **68**. jira-e2e env: JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ, JR_E2E_ENABLED=true. No active worktrees. |
+| **Next / Pending** | (1) No active cycle — pick next backlog item for 0.6.0 line. (2) SEC-001 (CWE-674 deep-nesting recursion in adf.rs, LOW) deferred. (3) Deferred: #400 Story B + engine items; #372 cargo-mutants. (4) Standing: do NOT close #429 (DEC-029 human deferral); #492 OPEN; OQ-5 + E2E-PG-4 remote-link open; F-H1 DEFERRED; O1-TABLE-ASSERT DEFERRED. |
+| **Resume prompt** | `Read .factory/STATE.md. DATE: 2026-06-12. POSITION: v0.5.0 STABLE RELEASED (PR #501 → main; tag v0.5.0; 'Latest'). develop @ 587206e (0.6.0-dev.1; PR #502). DEC-078. BC 594 / NFR 41 / Stories 68. No active worktrees. Next: pick next backlog item for 0.6.0 line. STANDING: do NOT close #429 (DEC-029); #492 OPEN; OQ-5 open; E2E-PG-4 remote-link open; SEC-001 LOW deferred; F-H1 DEFERRED; O1-TABLE-ASSERT DEFERRED. jira-e2e: JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ, JR_E2E_ENABLED=true.` |

@@ -50,6 +50,10 @@
 | ADR-0010 | list_worklogs Pagination Fix | Accepted |
 | ADR-0011 | Type-Level Profile Fence (Newtype) | Deferred |
 | ADR-0012 | Module Shard Rule Codification | Accepted |
+| ADR-0013 | PKCE Deferral for OAuth 2.0 Authorization Code Flow | Accepted |
+| ADR-0014 | JSM Request Creation Dispatch Fork in `jr issue create` | Accepted |
+| ADR-0015 | Proactive Resolution Enforcement on Done-Category Transitions | Accepted |
+| ADR-0016 | Windows Build Target (x86_64-msvc, .zip, AppData Paths, WCM, CI) | Accepted |
 
 Source ADRs (0001–0006) live in `.reference/jira-cli/docs/adr/`. New ADRs (0007–0012) live in `.factory/architecture/adr/`.
 

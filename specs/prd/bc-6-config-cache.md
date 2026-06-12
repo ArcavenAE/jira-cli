@@ -1,10 +1,11 @@
 ---
 context: bc-6
 title: "Configuration & Cache"
-total_bcs: 39   # cumulative claim (incl. range-collapsed; now +1 for BC-6.2.015)
-definitional_count: 29   # count of `#### BC-` headings in this file (added BC-6.2.015)
-last_updated: 2026-05-04
+total_bcs: 42   # cumulative claim (incl. range-collapsed; +3 windows-build F2 2026-06-12: BC-6.1.014, BC-6.2.016, BC-6.2.017)
+definitional_count: 32   # count of `#### BC-` headings in this file (+3 windows-build F2 2026-06-12)
+last_updated: 2026-06-12
 source_pass: 3
+adversary_fixes: "F-1/F-2/F-5/F-6 applied 2026-06-12 (windows-build Phase F2 adversarial review)"
 trace: |
   - L2: .factory/specs/domain-spec/bc-06-config-cache.md
   - Source broad: .factory/semport/jira-cli/jira-cli-pass-3-behavioral-contracts.md §2.10-2.11
@@ -15,7 +16,7 @@ trace: |
 
 # BC-6 — Configuration & Cache
 
-39 behavioral contracts across 3 subdomains: Configuration (6.1), Cache (6.2),
+42 behavioral contracts across 3 subdomains: Configuration (6.1), Cache (6.2),
 Multi-profile fields — MUST-FIX (6.3).
 
 ---
@@ -145,6 +146,28 @@ Multi-profile fields — MUST-FIX (6.3).
 
 ---
 
+#### BC-6.1.014: On Windows, `global_config_dir()` resolves to `%APPDATA%\jr\` via `dirs::config_dir()`; XDG env vars are NOT consulted
+
+**Confidence**: HIGH
+**Source**: `src/config.rs::global_config_dir()` (windows-build F2 target design); architecture-delta.md §1.2
+**Subject**: Config & Cache
+**Behavior**:
+- **Precondition**: Running on `x86_64-pc-windows-msvc` (or any `#[cfg(windows)]` target). `JR_CONFIG_DIR` is NOT set (or build is a release build — see BC-6.2.017).
+- **Postcondition**: `global_config_dir()` returns `dirs::config_dir().unwrap_or_else(|| std::env::var("APPDATA").ok().filter(|s| !s.is_empty()).map(PathBuf::from).unwrap_or_else(|| PathBuf::from("."))).join("jr")`.
+  - Canonical result: `C:\Users\<User>\AppData\Roaming\jr` (i.e., `%APPDATA%\jr`).
+  - `global_config_path()` (unchanged) appends `config.toml` → `%APPDATA%\jr\config.toml`.
+- **Invariant**: `XDG_CONFIG_HOME` env var is NOT read on Windows. The `#[cfg(not(windows))]` branch handles XDG; the `#[cfg(windows)]` branch calls `dirs::config_dir()` unconditionally.
+- **Invariant**: `%APPDATA%` resolves via `dirs::config_dir()` which maps to Windows `CSIDL_APPDATA` (Roaming profile). The `APPDATA` direct-env fallback in `unwrap_or_else` is defensive only; `dirs` should always succeed on a Windows system with a user profile.
+- **Unix behavior unchanged**: On `#[cfg(not(windows))]`, `global_config_dir()` continues to honor `XDG_CONFIG_HOME` first, then falls back to `dirs::home_dir().join(".config").join("jr")`. No change to macOS/Linux behavior.
+
+**Edge cases**:
+- EC-1: `dirs::config_dir()` returns `None` (Windows Known Folder API failure — rare; `dirs` resolves via `SHGetKnownFolderPath`/`FOLDERID_RoamingAppData` and does NOT consult the `APPDATA` env var, so this is independent of `APPDATA`'s value). The `unwrap_or_else` fallback then reads `APPDATA` directly: `std::env::var("APPDATA").ok()` returns `None` (unset) or `Some("")` (empty), both filtered out by `.filter(|s| !s.is_empty())`; `.map(PathBuf::from)` is not called; `.unwrap_or_else(|| PathBuf::from("."))` yields `"."` → joined with `"jr"` → relative path `./jr`. A set-but-empty `APPDATA=""` is therefore treated identically to an unset `APPDATA` — both route to the `./jr` defensive fallback. Binary proceeds; config file not found is handled by `Config::load_with` returning defaults.
+- EC-2: Running in a Windows container with no user profile — same as EC-1. Not a supported deployment scenario for v1.
+
+**Trace**: windows-build F2 2026-06-12; architecture-delta.md §1.2; ADR-0016; F1 decision: Option B adopted
+
+---
+
 ### 6.2 Cache
 
 #### BC-6.2.001: `read_cache<T>` returns `Ok(None)` for NotFound; propagates other I/O errors
@@ -177,12 +200,17 @@ Multi-profile fields — MUST-FIX (6.3).
 
 ---
 
-#### BC-6.2.004: Per-profile cache directory: `~/.cache/jr/v1/<profile>/`
+#### BC-6.2.004: Per-profile cache directory — platform-conditional root
 
 **Confidence**: HIGH
 **Source**: `src/cache.rs:7, 30, 76-78`
-**Behavior**: Versioned root `v1/` allows future schema-bump cleanup. New schema → bump to `v2/`, old files orphan harmlessly.
-**Trace**: Pass 3 BC-1004
+**Behavior**: The per-profile cache directory is platform-conditional. The `v1/` versioning root is present on all platforms; new schema → bump to `v2/`, old files orphan harmlessly.
+
+- **Unix (macOS/Linux)**: `~/.cache/jr/v1/<profile>/` — `XDG_CACHE_HOME` honored when set; `dirs::home_dir()` fallback otherwise.
+- **Windows**: `%LOCALAPPDATA%\jr\v1\<profile>\` — `dirs::cache_dir()` used; XDG env vars are NOT consulted on Windows (see BC-6.2.016).
+
+**Platform-conditional clause** [added windows-build F2 2026-06-12]: The `~/.cache/jr/v1/` prefix documented in pre-Windows-build specs applies to Unix only. Windows path is `%LOCALAPPDATA%\jr\v1\<profile>\`.
+**Trace**: Pass 3 BC-1004; platform-conditional update windows-build F2 2026-06-12
 
 ---
 
@@ -290,6 +318,72 @@ Multi-profile fields — MUST-FIX (6.3).
 
 ---
 
+#### BC-6.2.016: On Windows, `cache_root()` resolves to `%LOCALAPPDATA%\jr\` via `dirs::cache_dir()`; per-profile path is `%LOCALAPPDATA%\jr\v1\<profile>\`; XDG env vars are NOT consulted
+
+**Confidence**: HIGH
+**Source**: `src/cache.rs::cache_root()` (windows-build F2 target design); architecture-delta.md §1.2
+**Subject**: Config & Cache
+**Behavior**:
+- **Precondition**: Running on `#[cfg(windows)]` target. `JR_CACHE_DIR` is NOT set (or build is a release build — see BC-6.2.017).
+- **Postcondition**: `cache_root()` returns `dirs::cache_dir().unwrap_or_else(|| std::env::var("LOCALAPPDATA").ok().filter(|s| !s.is_empty()).map(PathBuf::from).unwrap_or_else(|| PathBuf::from("."))).join("jr")`.
+  - Canonical result: `C:\Users\<User>\AppData\Local\jr` (i.e., `%LOCALAPPDATA%\jr`).
+  - Per-profile path via `cache_dir(profile)` = `cache_root().join("v1").join(profile)`:
+    → `%LOCALAPPDATA%\jr\v1\<profile>\`.
+- **Invariant**: The `v1/` versioning root is preserved on all platforms (Windows included). Schema bump to `v2/` would orphan old Windows cache files the same as on Unix.
+- **Invariant**: `XDG_CACHE_HOME` env var is NOT read on Windows. The `#[cfg(not(windows))]` branch handles XDG; the `#[cfg(windows)]` branch calls `dirs::cache_dir()` unconditionally.
+- **Invariant**: `%LOCALAPPDATA%` resolves via `dirs::cache_dir()` which maps to Windows `CSIDL_LOCAL_APPDATA` (Local — NOT Roaming). Per-machine, per-user. This is intentional: cache data should not roam across machines.
+- **Unix behavior unchanged**: On `#[cfg(not(windows))]`, `cache_root()` continues to honor `XDG_CACHE_HOME` first, then falls back to `dirs::home_dir().join(".cache").join("jr")`. No change to macOS/Linux behavior.
+- **`cache_dir(profile)` function unchanged**: The composed per-profile path function is `cache_root().join("v1").join(profile)` — unchanged on all platforms. Only the `cache_root()` return value differs by platform.
+
+**Edge cases**:
+- EC-1: `dirs::cache_dir()` returns `None` (Windows Known Folder API failure — rare; `dirs` resolves via `SHGetKnownFolderPath`/`FOLDERID_LocalAppData` and does NOT consult the `LOCALAPPDATA` env var, so this is independent of `LOCALAPPDATA`'s value). The `unwrap_or_else` fallback then reads `LOCALAPPDATA` directly: `std::env::var("LOCALAPPDATA").ok()` returns `None` (unset) or `Some("")` (empty), both filtered out by `.filter(|s| !s.is_empty())`; `.map(PathBuf::from)` is not called; `.unwrap_or_else(|| PathBuf::from("."))` yields `"."` → joined with `"jr"` → relative `./jr`. A set-but-empty `LOCALAPPDATA=""` is therefore treated identically to an unset `LOCALAPPDATA` — both route to the `./jr` defensive fallback. Cache writes proceed; on next TTL expiry cache is re-fetched from API.
+- EC-2: Existing Windows user running pre-BC-6.2.016 build (non-idiomatic `%USERPROFILE%\.cache\jr\` path) — cache is not migrated; old files orphan harmlessly; TTL expiry causes re-fetch. No corruption. Not a blocker for v1.
+
+**Related BCs**: BC-6.2.004 (platform-conditional root, updated), BC-6.2.017 (debug seam)
+**Trace**: windows-build F2 2026-06-12; architecture-delta.md §1.2; ADR-0016
+
+---
+
+#### BC-6.2.017: `JR_CONFIG_DIR` / `JR_CACHE_DIR` env vars override config/cache directory resolution in debug builds; compiled out in release builds
+
+**Confidence**: HIGH
+**Source**: `src/config.rs::global_config_dir()` and `src/cache.rs::cache_root()` (windows-build F2 target design); architecture-delta.md §2; `tests/config_dir_release_gate.rs` (new)
+**Subject**: Config & Cache
+**Behavior**:
+- **Precondition (debug path)**: `#[cfg(debug_assertions)]` is active (i.e., debug build). `JR_CONFIG_DIR` env var is set to a non-empty string (see EC-1 for the empty-string case).
+- **Postcondition (debug path)**: `global_config_dir()` returns `PathBuf::from(env::var("JR_CONFIG_DIR").unwrap())` immediately, bypassing all OS-specific logic (`#[cfg(windows)]` and `#[cfg(not(windows))]` branches are not evaluated).
+- **Symmetric**: `JR_CACHE_DIR` controls `cache_root()` with identical semantics — returns `PathBuf::from(env::var("JR_CACHE_DIR").unwrap())`, bypassing `dirs::cache_dir()` and XDG logic.
+- **Precondition (release path)**: `#[cfg(debug_assertions)]` is NOT active (i.e., release build). `JR_CONFIG_DIR` / `JR_CACHE_DIR` may be set.
+- **Postcondition (release path)**: `JR_CONFIG_DIR` / `JR_CACHE_DIR` have NO effect. `global_config_dir()` / `cache_root()` proceed to the OS-branch logic as if the env vars were unset. The env-var read code is compiled out via `#[cfg(debug_assertions)]`.
+- **Invariant**: The seam is consulted BEFORE the OS-platform branch in BOTH functions (`global_config_dir()` and `cache_root()`). When the debug seam fires, neither the Windows nor the Unix path-resolution branch is evaluated.
+- **Invariant**: These seams do not replace `JR_BASE_URL` / `JR_AUTH_HEADER`; they are additive. A debug binary can have all four seams active simultaneously.
+- **Invariant**: Env var value is used as-is (no `.join("jr")` suffix appended). The caller supplies the full target directory path. This matches the behavior of `XDG_CONFIG_HOME` when set: `global_config_dir()` appends `.join("jr")` for the XDG path but the seam bypasses that append. Integration test helpers must pass the path EXCLUDING the `jr/` suffix — the same path they pass for `XDG_CONFIG_HOME`.
+- **Invariant (empty-string filter)**: Both seams use `std::env::var("JR_CONFIG_DIR").ok().filter(|s| !s.is_empty())` (and likewise for `JR_CACHE_DIR`). An empty-string value is treated as unset: the OS-branch logic proceeds normally. This applies symmetrically to both env vars.
+
+**Test isolation use case**: Integration tests set `JR_CONFIG_DIR` and `JR_CACHE_DIR` pointing to `TempDir` instances alongside the existing `XDG_CONFIG_HOME` / `XDG_CACHE_HOME` vars. On Unix, XDG vars continue to provide isolation (unchanged). On Windows (debug build), `JR_CONFIG_DIR` / `JR_CACHE_DIR` provide cross-platform isolation because `dirs` ignores XDG on Windows. **The debug seam takes precedence over XDG when both are set to different paths.** When a test sets both `XDG_CONFIG_HOME=/tmp/xdg` and `JR_CONFIG_DIR=/tmp/seam`, the seam value (`/tmp/seam`) wins and XDG is silently ignored. Tests that set both intending them to be identical (belt-and-suspenders) are safe; tests that set them to different values expecting XDG to prevail are incorrect on debug Windows builds.
+
+**Release gate test**: `tests/config_dir_release_gate.rs` (new) mirrors the pattern of `tests/base_url_release_gate.rs` — a **source-adjacency grep test**, NOT a binary-execution test. `cargo test` runs in debug mode and physically cannot observe release-build behavior at runtime. The test uses `include_str!("../src/config.rs")` and `include_str!("../src/cache.rs")` (or equivalent source reads) and asserts:
+
+1. **Config site**: In `src/config.rs`, `#[cfg(debug_assertions)]` appears within 5 lines of the `std::env::var("JR_CONFIG_DIR")` read inside `global_config_dir()`. This asserts the gate is adjacent to the seam read — the same adjacency the `base_url_release_gate.rs` test enforces for `JR_BASE_URL` in `src/config.rs`.
+2. **Cache site**: In `src/cache.rs`, `#[cfg(debug_assertions)]` appears within 5 lines of the `std::env::var("JR_CACHE_DIR")` read inside `cache_root()`. This is a separate, required assertion — gating only the config site but not the cache site leaves `JR_CACHE_DIR` unguarded in release, the same class of defect that required `JR_BASE_URL` to be gated at TWO source sites (`src/config.rs::base_url()` AND `src/api/client.rs::from_config()`).
+3. A `const { assert!(cfg!(debug_assertions)) }` compile-time assertion is present in the seam code, confirming the gate is not just a comment but a hard compile-time check.
+
+Both assertions (config site + cache site) are required. A test that checks only one site is non-compliant with this contract.
+
+**Edge cases**:
+- EC-1: `JR_CONFIG_DIR` set to empty string (`""`) in debug build — treated as unset by the `filter(|s| !s.is_empty())` guard. `global_config_dir()` proceeds to OS-branch logic. `PathBuf::from("")` is NOT returned. Symmetric behavior for `JR_CACHE_DIR=""`.
+  - Contrast with `XDG_CONFIG_HOME=""`: XDG path goes `PathBuf::from("").join("jr")` → relative path `"jr"` (WITH the `jr/` suffix). The seam with empty-string filter produces the full OS-branch result (e.g., `~/.config/jr` or `%APPDATA%\jr`). These are observably different and the empty-string filter is the intentional contract for sane test semantics.
+- EC-2: `JR_CONFIG_DIR` / `JR_CACHE_DIR` set in a release build — silently ignored. No warning emitted. Mirrors `JR_BASE_URL` behavior in release builds.
+- EC-3: Only `JR_CONFIG_DIR` set (not `JR_CACHE_DIR`) — config dir uses seam, cache dir uses OS logic. The two seams are independent.
+- EC-4: Debug seam path and OS path differ (e.g., Windows runner with `JR_CONFIG_DIR=/tmp/test`) — OS path is entirely bypassed. The debug seam overrides regardless of whether the supplied path is Windows-style or Unix-style.
+- EC-5: `JR_CACHE_DIR` set to empty string (`""`) in debug build — symmetric to EC-1. Treated as unset; `cache_root()` proceeds to OS-branch logic.
+
+**Related BCs**: BC-6.1.014 (Windows config path), BC-6.2.016 (Windows cache path), BC-6.1.010 (`JR_BASE_URL` seam — pattern this mirrors)
+**CLAUDE.md documentation**: `JR_CONFIG_DIR` / `JR_CACHE_DIR` must be added to the "AI Agent Notes" JR_* env var table in CLAUDE.md per the doc-fallout pattern (parallel to `JR_BASE_URL` and `JR_BULK_*` entries).
+**Trace**: windows-build F2 2026-06-12; architecture-delta.md §2; ADR-0016; mirrors BC-6.1.010 / `tests/base_url_release_gate.rs` pattern; adversary fixes F-1/F-2/F-5/F-6 applied 2026-06-12
+
+---
+
 ### 6.3 Multi-Profile Fields — MUST-FIX (NFR-R-D)
 
 #### BC-6.3.001: Per-profile `story_points_field_id` and `team_field_id` survive `Config::save_global()` and are read by ALL hot-path read sites [MUST-FIX: NFR-R-D — CRITICAL]
@@ -374,7 +468,10 @@ These pinned-text changes are load-bearing for the holdout H-NEW-MP-001 verifica
 - Profile-name max 64 chars; charset `[A-Za-z0-9_-]`; Windows reserved names blocked
 - Migration write-back uses file-only baseline
 - Cache TTL: 7 days; `>= 7` is expired (not `> 7`)
-- Cache directory: `~/.cache/jr/v1/<profile>/`
+- Cache directory: `~/.cache/jr/v1/<profile>/` (Unix); `%LOCALAPPDATA%\jr\v1\<profile>\` (Windows) — see BC-6.2.004, BC-6.2.016
+- Config directory: `~/.config/jr/` (Unix); `%APPDATA%\jr\` (Windows) — see BC-6.1.014
 - Non-atomic writes are the documented contract; self-heal on read
 - Cross-profile cache isolation enforced by naming convention (not type system)
 - `config.active_profile()` is the SOLE source of truth for per-profile custom field IDs post-fix
+- `JR_CONFIG_DIR` / `JR_CACHE_DIR` override path resolution in debug builds only; no-op in release — see BC-6.2.017
+- XDG env vars (`XDG_CONFIG_HOME`, `XDG_CACHE_HOME`) are consulted ONLY on `#[cfg(not(windows))]` — not on Windows builds

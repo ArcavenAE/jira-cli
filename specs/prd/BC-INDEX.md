@@ -1,8 +1,8 @@
 ---
 context: bc-index
 title: "BC Master Index"
-total_bcs: 594  # cumulative claim (incl. range-collapsed) — see preamble below; +4 added 2026-05-08 (BC-7.4.013-016, Fix-PR A); +1 added 2026-05-13 (BC-2.6.050, issue #350); +1 added 2026-05-14 (BC-2.6.051, issue #365); +1 added 2026-05-15 (BC-3.4.009, issue #340 F2); +18 added 2026-05-18 (BC-3.8.001..010 + BC-X.12.001..008, issue #288 F2+F1d); +3 added 2026-05-19 (BC-3.8.011..013, issue #288 F1d + issue #383 F2); +4 added 2026-05-19 (BC-3.8.014..015 + BC-X.8.006..007, issue #384 F2); +2 added 2026-05-20 (BC-3.8.016..017, issue #385 F2); +2 added 2026-05-20 (BC-3.4.010..011, issue #388 F2); +3 added 2026-05-21 (BC-3.4.012..014, issue #398 F2); +3 added 2026-05-22 (BC-3.4.015..017, issue #396 F2); +2 added 2026-06-01 (BC-3.4.018..019, issue #331 F2); +1 added 2026-06-03 (BC-3.2.013, jsm-resolution-required F2); +1 added 2026-06-08 (BC-7.2.006, issue #470 listItem content-model conformance); +2 added 2026-06-08 (BC-X.8.008..009, S-QUEUE-BC-1 queue list/view document-as-is); +1 added 2026-06-08 (BC-3.2.014, fix-bulk-transition-schema bulkTransitionInputs wrapper); +2 added 2026-06-08 (BC-7.2.007..008, issue #474 markdown subsup + heading-attr); +1 added 2026-06-09 (BC-7.2.009, issue #483 GFM alerts → panel); +1 added 2026-06-10 (BC-7.2.010, issue #471 GFM task lists → taskList/taskItem); BC-1.3.023, BC-3.3.001, BC-X.8.004, BC-3.8.009, BC-X.3.002, BC-3.8.002, BC-3.8.010, BC-3.8.011, BC-3.4.003 modified
-last_updated: 2026-06-08
+total_bcs: 597  # cumulative claim (incl. range-collapsed) — see preamble below; +4 added 2026-05-08 (BC-7.4.013-016, Fix-PR A); +1 added 2026-05-13 (BC-2.6.050, issue #350); +1 added 2026-05-14 (BC-2.6.051, issue #365); +1 added 2026-05-15 (BC-3.4.009, issue #340 F2); +18 added 2026-05-18 (BC-3.8.001..010 + BC-X.12.001..008, issue #288 F2+F1d); +3 added 2026-05-19 (BC-3.8.011..013, issue #288 F1d + issue #383 F2); +4 added 2026-05-19 (BC-3.8.014..015 + BC-X.8.006..007, issue #384 F2); +2 added 2026-05-20 (BC-3.8.016..017, issue #385 F2); +2 added 2026-05-20 (BC-3.4.010..011, issue #388 F2); +3 added 2026-05-21 (BC-3.4.012..014, issue #398 F2); +3 added 2026-05-22 (BC-3.4.015..017, issue #396 F2); +2 added 2026-06-01 (BC-3.4.018..019, issue #331 F2); +1 added 2026-06-03 (BC-3.2.013, jsm-resolution-required F2); +1 added 2026-06-08 (BC-7.2.006, issue #470 listItem content-model conformance); +2 added 2026-06-08 (BC-X.8.008..009, S-QUEUE-BC-1 queue list/view document-as-is); +1 added 2026-06-08 (BC-3.2.014, fix-bulk-transition-schema bulkTransitionInputs wrapper); +2 added 2026-06-08 (BC-7.2.007..008, issue #474 markdown subsup + heading-attr); +1 added 2026-06-09 (BC-7.2.009, issue #483 GFM alerts → panel); +1 added 2026-06-10 (BC-7.2.010, issue #471 GFM task lists → taskList/taskItem); +3 added 2026-06-12 (BC-6.1.014 + BC-6.2.016..017, windows-build F2); BC-6.2.004 modified; BC-1.3.023, BC-3.3.001, BC-X.8.004, BC-3.8.009, BC-X.3.002, BC-3.8.002, BC-3.8.010, BC-3.8.011, BC-3.4.003 modified
+last_updated: 2026-06-12
 source_pass: 3
 sections:
   - bc-1-auth-identity.md (57 BCs cumulative; 46 individually-bodied)
@@ -10,10 +10,10 @@ sections:
   - bc-3-issue-write.md (107 BCs cumulative; 78 individually-bodied)
   - bc-4-assets-cmdb.md (32 BCs cumulative; 22 individually-bodied)
   - bc-5-boards-sprints.md (35 BCs cumulative; 17 individually-bodied)
-  - bc-6-config-cache.md (39 BCs cumulative; 29 individually-bodied)
+  - bc-6-config-cache.md (42 BCs cumulative; 32 individually-bodied)
   - bc-7-output-render.md (89 BCs cumulative; 43 individually-bodied)
   - cross-cutting.md (142 BCs cumulative; 76 individually-bodied)
-  - nfr-catalog.md (41 NFR items, not counted in BC total; NFR-O-K merged into NFR-S-D per ADV-P7-002)
+  - nfr-catalog.md (42 NFR items, not counted in BC total; NFR-O-K merged into NFR-S-D per ADV-P7-002)
 ---
 
 # BC Master Index — jira-cli L3 PRD
@@ -421,9 +421,9 @@ R1/R4 prefix = deepening round that introduced it.
 
 ---
 
-## Section 6: Config & Cache (bc-6-config-cache.md) — 39 BCs cumulative; 29 individually-bodied
+## Section 6: Config & Cache (bc-6-config-cache.md) — 42 BCs cumulative; 32 individually-bodied
 
-### 6.1 Configuration (13 BCs: BC-6.1.001..013)
+### 6.1 Configuration (14 BCs: BC-6.1.001..014)
 
 | L3 BC ID | Summary | Pass 3 BC ID | Source | Confidence |
 |---|---|---|---|---|
@@ -440,15 +440,16 @@ R1/R4 prefix = deepening round that introduced it.
 | BC-6.1.011 | `find_project_config()` walks up cwd to filesystem root looking for `.jr.toml`; returns first match | BC-911; BC-911-R (R1) | src/config.rs:340-353 | HIGH |
 | BC-6.1.012 | User-facing migration message emitted to stderr exactly once per process | BC-151 (R1) | src/config.rs:262-265 | HIGH |
 | BC-6.1.013 | `JR_PROFILE` env override for active profile; scrubbed by tests to prevent direnv pollution | BC-154 (R1) | tests/auth_profiles.rs:9-32 | HIGH |
+| BC-6.1.014 | On Windows, `global_config_dir()` resolves to `%APPDATA%\jr\` via `dirs::config_dir()`; XDG env vars NOT consulted on Windows; Unix behavior unchanged | — (windows-build F2 2026-06-12) | src/config.rs::global_config_dir() | HIGH |
 
-### 6.2 Cache (15 BCs: BC-6.2.001..015)
+### 6.2 Cache (17 BCs: BC-6.2.001..017)
 
 | L3 BC ID | Summary | Pass 3 BC ID | Source | Confidence |
 |---|---|---|---|---|
 | BC-6.2.001 | `read_cache<T>` returns `Ok(None)` for NotFound; propagates other I/O errors | BC-1001; BC-1001-R (R1) | src/cache.rs:14-34 | HIGH |
 | BC-6.2.002 | `read_cache<T>` returns `Ok(None)` AND stderr warning for parse failure | BC-1002; BC-1002-R (R1) | src/cache.rs:23-26 | HIGH |
 | BC-6.2.003 | TTL check: `(Utc::now() - fetched_at).num_days() >= CACHE_TTL_DAYS (7)`; exactly 7 days is expired | BC-1003; BC-1003-R (R1) | src/cache.rs:7, 30-32 | HIGH |
-| BC-6.2.004 | Per-profile cache directory: `~/.cache/jr/v1/<profile>/` | BC-1004 | src/cache.rs:7, 30, 76-78 | HIGH |
+| BC-6.2.004 | Per-profile cache directory — platform-conditional root: Unix `~/.cache/jr/v1/<profile>/`; Windows `%LOCALAPPDATA%\jr\v1\<profile>\`; `v1/` versioning preserved on all platforms [UPDATED windows-build F2 2026-06-12] | BC-1004; windows-build F2 | src/cache.rs:7, 30, 76-78 | HIGH |
 | BC-6.2.005 | `clear_profile_cache(name)` is no-op when directory doesn't exist (does NOT error) | BC-1005; BC-1005-R (R1) | src/cache.rs:82-88 | HIGH |
 | BC-6.2.006 | `cmdb_fields.json` stores (id, name) tuples; old ID-only format → cache miss (graceful) | BC-1006 | src/cache.rs:237-247 | HIGH |
 | BC-6.2.007 | `ProjectMeta` map cache `project_meta.json` keyed by project key; per-entry TTL | BC-1007 | src/cache.rs:105-143 | HIGH |
@@ -460,6 +461,8 @@ R1/R4 prefix = deepening round that introduced it.
 | BC-6.2.013 | `write_object_type_attr_cache` MERGES into existing per-type map; same corruption recovery pattern | BC-1015 (R1) | src/cache.rs:318-354 | HIGH |
 | BC-6.2.014 | Cache write is non-atomic (`std::fs::write`); crash mid-write leaves truncated file; read-side resilient | BC-1016 (R1) | src/cache.rs:42, 171, 351 | HIGH |
 | BC-6.2.015 | Every cache reader/writer takes `profile: &str` as its first parameter (soft-fence convention) | NFR-SCA-2; ADV-P1-019 | src/cache.rs (all public functions) | HIGH |
+| BC-6.2.016 | On Windows, `cache_root()` resolves to `%LOCALAPPDATA%\jr\` via `dirs::cache_dir()`; per-profile path `%LOCALAPPDATA%\jr\v1\<profile>\`; XDG env vars NOT consulted on Windows; Unix behavior unchanged | — (windows-build F2 2026-06-12) | src/cache.rs::cache_root() | HIGH |
+| BC-6.2.017 | `JR_CONFIG_DIR` / `JR_CACHE_DIR` env vars override config/cache directory in debug builds (compiled out in release); seam checked before OS-platform branch; mirrors `JR_BASE_URL` debug-gate pattern; `tests/config_dir_release_gate.rs` pins the gate | — (windows-build F2 2026-06-12) | src/config.rs::global_config_dir(); src/cache.rs::cache_root(); tests/config_dir_release_gate.rs | HIGH |
 
 ### 6.3 Multi-Profile Fields — MUST-FIX (1 BC: BC-6.3.001)
 
@@ -703,14 +706,14 @@ R1/R4 prefix = deepening round that introduced it.
 | 3: Issue Write | 107 | 78 |
 | 4: Assets & CMDB | 32 | 22 |
 | 5: Boards & Sprints | 35 | 17 |
-| 6: Config & Cache | 39 | 29 |
+| 6: Config & Cache | 42 | 32 |
 | 7: Output Rendering | 89 | 43 |
 | X: Cross-Cutting | 142 | 76 |
-| **Total** | **594** | **362** |
+| **Total** | **597** | **365** |
 
-**Note**: BC-X.4.009 (ADV-P1-029) is included in cross-cutting's `total_bcs` and in the sum above. Canonical total is **594** (+4 BC-7.4.013-016 added 2026-05-08 via Fix-PR A; +1 BC-2.6.050 added 2026-05-13 via issue #350; +1 BC-2.6.051 added 2026-05-14 via issue #365; +1 BC-3.4.009 added 2026-05-15 via issue #340 F2; +18 BC-3.8.001..010 + BC-X.12.001..008 added 2026-05-18 via issue #288 F2+F1d; +3 BC-3.8.011..013 added 2026-05-19 via issue #288 F1d + issue #383 F2; +4 BC-3.8.014..015 + BC-X.8.006..007 added 2026-05-19 via issue #384 F2; +2 BC-3.8.016..017 added 2026-05-20 via issue #385 F2; +2 BC-3.4.010..011 added 2026-05-20 via issue #388 F2; +3 BC-3.4.012..014 added 2026-05-21 via issue #398 F2; +3 BC-3.4.015..017 added 2026-05-22 via issue #396 F2; +2 BC-3.4.018..019 added 2026-06-01 via issue #331 F2; +1 BC-3.2.013 added 2026-06-03 via jsm-resolution-required F2; +1 BC-7.2.006 added 2026-06-08 via issue #470 listItem content-model conformance; +2 BC-X.8.008..009 added 2026-06-08 via S-QUEUE-BC-1 queue list/view document-as-is; +1 BC-3.2.014 added 2026-06-08 via fix-bulk-transition-schema bulkTransitionInputs wrapper; +2 BC-7.2.007..008 added 2026-06-08 via issue #474 markdown subsup + heading-attr; +1 BC-7.2.009 added 2026-06-09 via issue #483 GFM alerts → panel; +1 BC-7.2.010 added 2026-06-10 via issue #471 GFM task lists → taskList/taskItem).
+**Note**: BC-X.4.009 (ADV-P1-029) is included in cross-cutting's `total_bcs` and in the sum above. Canonical total is **597** (+4 BC-7.4.013-016 added 2026-05-08 via Fix-PR A; +1 BC-2.6.050 added 2026-05-13 via issue #350; +1 BC-2.6.051 added 2026-05-14 via issue #365; +1 BC-3.4.009 added 2026-05-15 via issue #340 F2; +18 BC-3.8.001..010 + BC-X.12.001..008 added 2026-05-18 via issue #288 F2+F1d; +3 BC-3.8.011..013 added 2026-05-19 via issue #288 F1d + issue #383 F2; +4 BC-3.8.014..015 + BC-X.8.006..007 added 2026-05-19 via issue #384 F2; +2 BC-3.8.016..017 added 2026-05-20 via issue #385 F2; +2 BC-3.4.010..011 added 2026-05-20 via issue #388 F2; +3 BC-3.4.012..014 added 2026-05-21 via issue #398 F2; +3 BC-3.4.015..017 added 2026-05-22 via issue #396 F2; +2 BC-3.4.018..019 added 2026-06-01 via issue #331 F2; +1 BC-3.2.013 added 2026-06-03 via jsm-resolution-required F2; +1 BC-7.2.006 added 2026-06-08 via issue #470 listItem content-model conformance; +2 BC-X.8.008..009 added 2026-06-08 via S-QUEUE-BC-1 queue list/view document-as-is; +1 BC-3.2.014 added 2026-06-08 via fix-bulk-transition-schema bulkTransitionInputs wrapper; +2 BC-7.2.007..008 added 2026-06-08 via issue #474 markdown subsup + heading-attr; +1 BC-7.2.009 added 2026-06-09 via issue #483 GFM alerts → panel; +1 BC-7.2.010 added 2026-06-10 via issue #471 GFM task lists → taskList/taskItem; +3 BC-6.1.014 + BC-6.2.016..017 added 2026-06-12 via windows-build F2).
 
-Cumulative total (594) ≠ individually-bodied count (362). The difference (232) comprises range-collapsed BCs that exist in the cumulative claim but are not individually headlined in body files. This is by design — range-collapsed BCs trace to Pass 3 source material but were not individually expanded. The 4 MUST-FIX BCs are included in the individually-bodied count.
+Cumulative total (597) ≠ individually-bodied count (365). The difference (232) comprises range-collapsed BCs that exist in the cumulative claim but are not individually headlined in body files. This is by design — range-collapsed BCs trace to Pass 3 source material but were not individually expanded. The 4 MUST-FIX BCs are included in the individually-bodied count.
 
 **Process gap [process-gap]**: `scripts/check-bc-cumulative-counts.sh` currently guards 8 surfaces (per-file frontmatter, BC-INDEX headers, BC-INDEX section lines, CANONICAL-COUNTS per-file table, body preamble prose, BC-INDEX frontmatter total_bcs, CANONICAL-COUNTS Sum row, grand-total prose). The BC-INDEX Coverage Statistics body table (this section) is a 9th surface with no automated guard. Manual update required whenever BC counts change. Tracked for future script extension.
 

@@ -2,7 +2,7 @@
 
 **traces_to:** README.md
 **Source ADRs (0001–0006):** `.reference/jira-cli/docs/adr/`
-**New ADRs (0007–0013):** `.factory/architecture/adr/`
+**New ADRs (0007–0016):** `.factory/architecture/adr/`
 
 ---
 
@@ -24,6 +24,8 @@
 | [ADR-0012](adr/0012-shard-rule.md) | Module Shard Rule Codification | **Accepted** | risk-register.md §R-M5 |
 | [ADR-0013](adr/0013-pkce-deferral.md) | PKCE Deferral for OAuth 2.0 Authorization Code Flow | **Accepted** | security-decisions/SD-001-pkce.md |
 | [ADR-0014](adr/0014-jsm-request-create-dispatch-fork.md) | JSM Request Creation Dispatch Fork in `jr issue create` | **Accepted** | component-graph.md §api_jsm, cross-cutting.md §10 |
+| [ADR-0015](../../../docs/adr/0015-proactive-resolution-enforcement.md) | Proactive Resolution Enforcement on Done-Category Transitions | **Accepted** | — (feature ADR) |
+| [ADR-0016](adr/0016-windows-build-target.md) | Windows Build Target (x86_64-msvc, .zip, AppData Paths, WCM, CI) | **Accepted** | cycles/cycle-001/windows-build/architecture-delta.md |
 
 ---
 

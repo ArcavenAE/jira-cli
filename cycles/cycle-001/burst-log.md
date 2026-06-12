@@ -3739,3 +3739,71 @@ Additional: gate-guard hardened for `async fn test_` (F-1b fix from F4 per-story
 
 **BC:** 594 / **NFR:** 41 / **Stories:** 68 — all unchanged (test-only cycle).
 **develop HEAD:** 418a392e. No active worktrees.
+
+---
+
+## Burst: Windows-build F1+F2 (2026-06-12)
+
+**Agents dispatched:** orchestrator, architect (F1 delta-analysis, F2 spec-evolution), adversary (F2 14-pass loop), research-agent (C1–C7 external validation), state-manager
+**Files touched:**
+- `.factory/cycles/cycle-001/windows-build/delta-analysis.md` (F1 doc)
+- `.factory/architecture/adr/0016-windows-build-target.md` (new ADR)
+- `.factory/architecture/adr/ADR-INDEX.md` (updated: ADR 15→16)
+- `.factory/cycles/cycle-001/windows-build/architecture-delta.md` (F2 delta doc)
+- `.factory/specs/behavioral-contracts/bc-6-platform.md` (3 new BCs + 1 updated)
+- `.factory/specs/behavioral-contracts/BC-INDEX.md` (updated: 594→597)
+- `.factory/specs/prd/nfr-catalog.md` (1 new NFR: NFR-P-W1)
+- `.factory/research/windows-build-c1-c7-validation.md` (C1–C7 research report)
+- `.factory/STATE.md` (this update)
+- PR #504 opened: `docs/adr/0003-reqwest-rustls.md` correction (branch docs/adr-0003-rustls-0.13-platform-verifier, commit 15dc7da) — OPEN, awaiting review
+
+**Versions bumped:** BC 594→597, NFR 41→42, ADR 15→16. Stories 68 unchanged. develop HEAD 587206e unchanged.
+
+### F1 Delta Analysis Summary
+
+Classified as full Feature Mode (not a hotfix). Locked human-gate decisions:
+- Target: `x86_64-pc-windows-msvc` only; aarch64 deferred
+- Artifact: `.zip` (not `.tar.gz`)
+- CI: Add Windows job to ci.yml for full regression
+- Config path: idiomatic `%APPDATA%\jr` via `#[cfg(windows)]` (`dirs` crate `config_dir()`)
+- Cache path: idiomatic `%LOCALAPPDATA%\jr\v1\<profile>` via `#[cfg(windows)]` (`dirs` crate `cache_dir()`)
+- Keyring: `windows-native` feature (Windows Credential Manager)
+- OAuth embedded-creds smoke step: gated OFF on Windows for v1
+- ADR: ADR-0016 recorded
+
+### F2 Spec Evolution Summary
+
+Artifacts produced:
+- **ADR-0016** (Windows Build Target): rationale covers dirs Known-Folder-API, keyring windows-native, msvc native build, rustls-platform-verifier (corrected from webpki-roots after C4 research refutation)
+- **architecture-delta**: platform-conditional path logic, CI matrix extension, zip packaging
+- **3 NEW BCs:** BC-6.1.014 (Windows config path `%APPDATA%\jr`), BC-6.2.016 (Windows cache path `%LOCALAPPDATA%\jr\v1\<profile>`), BC-6.2.017 (JR_CONFIG_DIR/JR_CACHE_DIR debug path seam on Windows)
+- **1 UPDATED BC:** BC-6.2.004 (platform-conditional cache root — extended to cover Windows)
+- **1 NEW NFR:** NFR-P-W1 (Supported Platforms: x86_64-pc-windows-msvc added)
+
+**F2 adversarial convergence:** 14 passes. Trajectory: 6→5→1→2→2→1→0→1(reset)→0→0→0(reset@P11)→0→0→0. Three consecutive clean passes (P12/13/14). Genuine catches: false-green release-gate test description; dirs Known-Folder-API rationale; empty-string-filter propagation (4 sites); per-profile cache path table inconsistency.
+
+**External research validation (research-agent, Perplexity + primary sources, 2026-06-12):**
+- C1: dirs Known-Folder-API — VALIDATED
+- C2: keyring windows-native + colon keys — VALIDATED (no sanitization needed; correction applied to ADR-0016)
+- C3: msvc native build no-cross — VALIDATED
+- C4: rustls — PARTIALLY REFUTED → rationale corrected: pure-Rust handshake BUT Windows cert-store root verification via rustls-platform-verifier (not webpki-roots bundle). Applied to ADR-0016 + architecture-delta.
+- C5: pwsh default shell — VALIDATED
+- C6: Compress-Archive — VALIDATED
+- C7: 127.0.0.1 loopback no-firewall-prompt — VALIDATED
+Note: Perplexity deep-research output for dirs/keyring contained fabrications; research-agent caught these via primary-source override (citation-discipline win).
+
+**ADR-0003 docs correction:** PR #504 (branch `docs/adr-0003-rustls-0.13-platform-verifier`, commit 15dc7da) corrected ADR-0003's stale "webpki-roots CA bundle" Consequence to reflect reqwest 0.13 platform-verifier default. OPEN, awaiting human review/merge. Do NOT mark merged.
+
+### F4 Obligations (Drift Items added)
+
+- **WIN-O-3:** CANONICAL-COUNTS "Cache Types" prose path is Unix-only; add Windows `%LOCALAPPDATA%\jr\v1\<profile>\` during F4.
+- **WIN-O-4:** Add JR_CONFIG_DIR/JR_CACHE_DIR to CLAUDE.md "AI Agent Notes" JR_* table; update CLAUDE.md cache/config path docs for Windows during F4.
+- **ADR cross-ref:** Add ADR-0016↔ADR-0003 cross-reference when ADR-0016 is materialized into `docs/adr/` during F4 (architect omitted: docs/adr/0016 doesn't exist yet).
+
+### Process-Gap Follow-Ups (open before cycle close)
+
+1. No CI guard for inline-PROSE BC counts (WIN-PG-1)
+2. No NFR cross-surface count guard
+3. 3rd recurrence of JR_* test-seam doc-fallout without CI parity check — codify per lessons-codification rule or justify deferral before cycle close
+
+**DEC-079.** Both count guards green (check-spec-counts.sh, check-bc-cumulative-counts.sh).

@@ -2,7 +2,7 @@
 document_type: canonical-counts
 product: jr (jira-cli)
 generated: "2026-05-04"
-last_verified: "2026-06-10 (BC-7.2.010 added issue #471 GFM task lists → taskList/taskItem; 594 total, bc-7 89/43)"
+last_verified: "2026-06-12 (BC-6.1.014 + BC-6.2.016..017 added windows-build F2; 597 total, bc-6 42/32)"
 ---
 
 # Canonical Counts — jr (jira-cli) L3 PRD
@@ -24,10 +24,10 @@ re-run to verify. Disputes go here first.
 | bc-3-issue-write.md | 78 | 78 | YES |
 | bc-4-assets-cmdb.md | 22 | 22 | YES |
 | bc-5-boards-sprints.md | 17 | 17 | YES |
-| bc-6-config-cache.md | 29 | 29 | YES |
+| bc-6-config-cache.md | 32 | 32 | YES |
 | bc-7-output-render.md | 43 | 43 | YES |
 | cross-cutting.md | 76 | 76 | YES |
-| **Total individually-bodied** | **361** | — | — |
+| **Total individually-bodied** | **365** | — | — |
 
 Verification command:
 ```bash
@@ -45,26 +45,26 @@ done
 | bc-3-issue-write.md | 107 |
 | bc-4-assets-cmdb.md | 32 |
 | bc-5-boards-sprints.md | 35 |
-| bc-6-config-cache.md | 39 |
+| bc-6-config-cache.md | 42 |
 | bc-7-output-render.md | 89 |
 | cross-cutting.md | 142 |
-| **Sum** | **594** |
+| **Sum** | **597** |
 
 ### Grand total
 
-**Canonical grand total: 594** (+4 BC-7.4.013-016 added 2026-05-08 via Fix-PR A `28b0f35`; +1 BC-2.6.050 added 2026-05-13 via issue #350; +1 BC-2.6.051 added 2026-05-14 via issue #365; +1 BC-3.4.009 added 2026-05-15 via issue #340 F2; +18 BC-3.8.001..010 + BC-X.12.001..008 added 2026-05-18 via issue #288 F2+F1d; +3 BC-3.8.011..013 added 2026-05-19 via issue #288 F1d + issue #383 F2; +4 BC-3.8.014..015 + BC-X.8.006..007 added 2026-05-19 via issue #384 F2; +2 BC-3.8.016..017 added 2026-05-20 via issue #385 F2; +2 BC-3.4.010..011 added 2026-05-20 via issue #388 F2; +3 BC-3.4.012..014 added 2026-05-21 via issue #398 F2; +3 BC-3.4.015..017 added 2026-05-22 via issue #396 F2; +2 BC-3.4.018..019 added 2026-06-01 via issue #331 F2; +1 BC-3.2.013 added 2026-06-03 via jsm-resolution-required F2; +1 BC-7.2.006 added 2026-06-08 via issue #470 listItem content-model conformance; +2 BC-X.8.008..009 added 2026-06-08 via S-QUEUE-BC-1 queue list/view document-as-is; +1 BC-3.2.014 added 2026-06-08 via fix-bulk-transition-schema bulkTransitionInputs wrapper; +2 BC-7.2.007..008 added 2026-06-08 via issue #474 markdown subsup + heading-attr; +1 BC-7.2.009 added 2026-06-09 via issue #483 GFM alerts → panel; +1 BC-7.2.010 added 2026-06-10 via issue #471 GFM task lists → taskList/taskItem)
+**Canonical grand total: 597** (+4 BC-7.4.013-016 added 2026-05-08 via Fix-PR A `28b0f35`; +1 BC-2.6.050 added 2026-05-13 via issue #350; +1 BC-2.6.051 added 2026-05-14 via issue #365; +1 BC-3.4.009 added 2026-05-15 via issue #340 F2; +18 BC-3.8.001..010 + BC-X.12.001..008 added 2026-05-18 via issue #288 F2+F1d; +3 BC-3.8.011..013 added 2026-05-19 via issue #288 F1d + issue #383 F2; +4 BC-3.8.014..015 + BC-X.8.006..007 added 2026-05-19 via issue #384 F2; +2 BC-3.8.016..017 added 2026-05-20 via issue #385 F2; +2 BC-3.4.010..011 added 2026-05-20 via issue #388 F2; +3 BC-3.4.012..014 added 2026-05-21 via issue #398 F2; +3 BC-3.4.015..017 added 2026-05-22 via issue #396 F2; +2 BC-3.4.018..019 added 2026-06-01 via issue #331 F2; +1 BC-3.2.013 added 2026-06-03 via jsm-resolution-required F2; +1 BC-7.2.006 added 2026-06-08 via issue #470 listItem content-model conformance; +2 BC-X.8.008..009 added 2026-06-08 via S-QUEUE-BC-1 queue list/view document-as-is; +1 BC-3.2.014 added 2026-06-08 via fix-bulk-transition-schema bulkTransitionInputs wrapper; +2 BC-7.2.007..008 added 2026-06-08 via issue #474 markdown subsup + heading-attr; +1 BC-7.2.009 added 2026-06-09 via issue #483 GFM alerts → panel; +1 BC-7.2.010 added 2026-06-10 via issue #471 GFM task lists → taskList/taskItem; +3 BC-6.1.014 + BC-6.2.016..017 added 2026-06-12 via windows-build F2)
 
-_Note: BC-INDEX.md `total_bcs` header updated to 594 to match this file. CANONICAL-COUNTS.md carries the per-file sum as the primary source of truth. (+1 BC count change since last verified — BC-7.2.010 added via issue #471 GFM task lists → taskList/taskItem 2026-06-10)_
+_Note: BC-INDEX.md `total_bcs` header updated to 597 to match this file. CANONICAL-COUNTS.md carries the per-file sum as the primary source of truth. (+3 BC count change since last verified — BC-6.1.014 + BC-6.2.016..017 added via windows-build F2 2026-06-12)_
 
 Breakdown:
-- 594 = sum of per-file `total_bcs` values (canonical; see per-file table above)
-- 362 of 594 are individually-bodied (have a `#### BC-` heading)
+- 597 = sum of per-file `total_bcs` values (canonical; see per-file table above)
+- 365 of 597 are individually-bodied (have a `#### BC-` heading)
 - 232 are range-collapsed (counted in cumulative claim, no individual heading)
 - BC-X.4.009 (ADV-P1-029) is a `#### BC-` heading in cross-cutting.md; it is
-  included in cross-cutting's `total_bcs: 142` and in the **592 sum**.
-  It does NOT add +1 beyond the 592.
+  included in cross-cutting's `total_bcs: 142` and in the **597 sum**.
+  It does NOT add +1 beyond the 597.
 
-_Historical note (archived; historical total was 566; current canonical: see Sum row above (592)): Passes 10-13 involved a 541/542 count confusion around BC-X.4.009. All 542 claims were corrected to 541 at Pass 13. Subsequent additions (BC-7.4.013-016, BC-2.6.050-051, BC-3.4.009, BC-3.8.001-010, BC-X.12.001-008) brought the total to 566. See git history for the full audit trail._
+_Historical note (archived; historical total was 566; current canonical: see Sum row above (597)): Passes 10-13 involved a 541/542 count confusion around BC-X.4.009. All 542 claims were corrected to 541 at Pass 13. Subsequent additions (BC-7.4.013-016, BC-2.6.050-051, BC-3.4.009, BC-3.8.001-010, BC-X.12.001-008) brought the total to 566. See git history for the full audit trail._
 
 ### L2 domain-spec bc_count vs L3 total_bcs alignment (ADV-P17-003)
 
@@ -78,7 +78,7 @@ bc_count in L2 represents the same cumulative claim (individually-bodied + range
 | bc-03-issue-write.md | 77 | bc-3-issue-write.md | 107 | PENDING (L2 bc_count not yet bumped; L3 +1 BC-3.4.009 2026-05-15; +10 BC-3.8.001-010 2026-05-18; +3 BC-3.8.011-013 2026-05-19; +2 BC-3.8.014-015 2026-05-19; +2 BC-3.8.016-017 2026-05-20; +2 BC-3.4.010-011 2026-05-20; +3 BC-3.4.012-014 2026-05-21; +3 BC-3.4.015-017 2026-05-22; +2 BC-3.4.018-019 2026-06-01; +1 BC-3.2.013 2026-06-03; +1 BC-3.2.014 2026-06-08) |
 | bc-04-assets-cmdb.md | 32 | bc-4-assets-cmdb.md | 32 | YES (was 44) |
 | bc-05-boards-sprints.md | 35 | bc-5-boards-sprints.md | 35 | YES |
-| bc-06-config-cache.md | 39 | bc-6-config-cache.md | 39 | YES (was 38) |
+| bc-06-config-cache.md | 39 | bc-6-config-cache.md | 42 | PENDING (L2 bc_count not yet bumped; L3 +3 BC-6.1.014 + BC-6.2.016..017 added 2026-06-12 via windows-build F2) |
 | bc-07-output-render.md | 85 | bc-7-output-render.md | 89 | PENDING (L2 bc_count not yet bumped; L3 +2 BC-7.2.007..008 added 2026-06-08 via issue #474; +1 BC-7.2.009 added 2026-06-09 via issue #483; +1 BC-7.2.010 added 2026-06-10 via issue #471) |
 
 Note: bc-01/02/03/05 were already aligned pre-Pass 17. bc-04/06/07 corrected at Pass 17.
@@ -87,7 +87,7 @@ Note: bc-01/02/03/05 were already aligned pre-Pass 17. bc-04/06/07 corrected at 
 
 ## NFR Counts
 
-**Canonical NFR total: 41**
+**Canonical NFR total: 42**
 
 Verification command:
 ```bash
@@ -97,11 +97,11 @@ grep -c '^| \*\*NFR-' .factory/specs/prd/nfr-catalog.md
 Severity distribution per nfr-catalog.md routing table:
 - CRITICAL: 1 (NFR-R-D)
 - HIGH: 6 (NFR-R-A, NFR-R-B, NFR-R-E, NFR-S-B, NFR-S-E, NFR-S-F)
-- MEDIUM: 16 (NFR-R-C, NFR-R-F, NFR-S-A, NFR-S-C, NFR-O-A, NFR-O-B, NFR-O-D, NFR-O-F, NFR-O-J, NFR-O-L, NFR-O-M, NFR-O-O, NFR-O-S, NFR-O-W, NFR-P-NEW-1, NFR-T-E2E-1)
+- MEDIUM: 17 (NFR-R-C, NFR-R-F, NFR-S-A, NFR-S-C, NFR-O-A, NFR-O-B, NFR-O-D, NFR-O-F, NFR-O-J, NFR-O-L, NFR-O-M, NFR-O-O, NFR-O-S, NFR-O-W, NFR-P-NEW-1, NFR-T-E2E-1, NFR-P-W1)
 - LOW: 18 (remainder)
-- **Total: 41** (confirmed by grep count above)
+- **Total: 42** (confirmed by grep count above)
 
-Note: NFR-O-K was merged into NFR-S-D at adversary Pass 7 (no net change). NFR-S-F added at ADV-P3-007 (+1). NFR-S-E severity promoted LOW→HIGH at ADV-P2-004 (no net count change). NFR-T-E2E-1 added F2 Feature Mode (live-Jira E2E CI obligation, 2026-05-29; +1 MEDIUM, total unchanged at 41 because CANONICAL-COUNTS already anticipated this addition).
+Note: NFR-O-K was merged into NFR-S-D at adversary Pass 7 (no net change). NFR-S-F added at ADV-P3-007 (+1). NFR-S-E severity promoted LOW→HIGH at ADV-P2-004 (no net count change). NFR-T-E2E-1 added F2 Feature Mode (live-Jira E2E CI obligation, 2026-05-29; +1 MEDIUM). NFR-P-W1 added windows-build F2 (supported platforms, 2026-06-12; +1 MEDIUM).
 
 ---
 
@@ -144,10 +144,13 @@ Last reconciled: 2026-05-18 (post-#288 F2 delta; previous reconciliation pre-S-3
 
 ## ADRs
 
-**Canonical ADR count: 13** (ADR-0001..ADR-0013)
+**Canonical ADR count: 16** (ADR-0001..ADR-0016; all present, no gaps)
 
 - ADR-0001..0006: source in `.reference/jira-cli/docs/adr/`
 - ADR-0007..0013: in `.factory/architecture/adr/`
+- ADR-0014: JSM request create dispatch fork (issue #288)
+- ADR-0015: Proactive resolution enforcement on done-category transitions (jsm-resolution-required)
+- ADR-0016: Windows Build Target (windows-build F2 2026-06-12)
 - ADR-0002: Superseded by ADR-0006 (still counted — superseded is a valid status)
 - ADR-0013: PKCE deferral for OAuth 2.0 authorization code flow (Phase 1→2 gate, 2026-05-04)
 

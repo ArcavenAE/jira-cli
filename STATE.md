@@ -2,11 +2,11 @@
 document_type: pipeline-state
 version: "2.0"
 status: active
-timestamp: 2026-06-12T15:31:57Z
+timestamp: 2026-06-12T18:00:00Z
 phase: phase-3-tdd-implementation
 project: jira-cli
 mode: BROWNFIELD
-current_step: "2026-06-12: v0.5.0 STABLE released (PR #501 → main; tag v0.5.0; GitHub Release 'Latest'). develop bumped to 0.6.0-dev.1 (PR #502 → develop @ 587206e). BC 594 / NFR 41 / Stories 68. No active worktrees. 0.6.0 dev cycle open."
+current_step: "2026-06-12: Windows-build feature F1+F2 COMPLETE, F2 human gate APPROVED. BC 597 / NFR 42 / ADR 16 / Stories 68. Entering F3 (story decomposition). develop HEAD 587206e. PR #504 OPEN (ADR-0003 docs fix)."
 current_cycle: "cycle-001"
 dtu_required: false
 phase_2_status: APPROVED
@@ -26,8 +26,8 @@ activation_version: "v0.6.0-dev.1"
 | **Product** | jr (Jira CLI) |
 | **Mode** | BROWNFIELD / Rust |
 | **Target Workspace** | develop → main |
-| **Last Updated** | 2026-06-12: v0.5.0 STABLE released (PR #501 → main; tag v0.5.0; GitHub Release 'Latest'). develop bumped to 0.6.0-dev.1 (PR #502 → develop @ 587206e). |
-| **Current Phase** | Phase 3 — TDD Implementation IN PROGRESS — Feature Mode active. BC 594. NFR 41. Stories 68. |
+| **Last Updated** | 2026-06-12: Windows-build feature F1+F2 COMPLETE + F2 human gate APPROVED. BC 597 (+3) / NFR 42 (+1) / ADR 16 (+1). Entering F3. PR #504 OPEN (ADR-0003 docs). |
+| **Current Phase** | Phase 3 — TDD Implementation IN PROGRESS — Feature Mode active. BC 597. NFR 42. ADR 16. Stories 68. |
 | **Next Phase** | Phase 4: Holdout Evaluation (not started) |
 | **Activation HEAD** | 587206e (v0.6.0-dev.1; v0.5.0 STABLE shipped 2026-06-12) |
 
@@ -46,6 +46,7 @@ activation_version: "v0.6.0-dev.1"
 | ADF E2E coverage loop-back (#471/#474/#483/#489) | **CYCLE CLOSED + MERGED** | 2026-06-11 | CYCLE CLOSED | PR #495 → develop @ bfb723f. 5 gated live E2E tests. NO src change. BC 594 unchanged. Live-verified GREEN — e2e run 27352373680 (89/0) on develop @ 45ceae6, 2026-06-11. |
 | CLI leading-dash values (issue #471 e2e / description-leading-dash) | **CYCLE CLOSED + MERGED** | 2026-06-11 | F1–F7 ALL COMPLETE — CONVERGED | PR #496 → develop @ 45ceae6. `allow_hyphen_values = true` on 7 free-text write args. BC 594 unchanged. +17 hermetic parse tests (tests/cli_smoke.rs, 44 total). F5: 8 passes / 3-clean-pass CONVERGED. F6: 1763/0, clippy/fmt/deny clean, mutation zero-in-scope. F7: 5-dimension consistency CLEAN. DEC-072. |
 | ADF E2E read-path coverage (issue #475) | **CYCLE CLOSED + MERGED** | 2026-06-11 | F1–F7 ALL COMPLETE — CONVERGED | PR #499 → develop @ 418a392e. Test-only (no src change). BC 594 / NFR 41 / Stories 68 unchanged. DEC-073/074/075/076. |
+| Windows build (x86_64-pc-windows-msvc) | **F1+F2 COMPLETE — F2 APPROVED** | 2026-06-12 | F2 human gate APPROVED 2026-06-12 — entering F3 | BC 594→597 (+3 BCs), NFR 41→42 (+1), ADR 15→16 (+1). F2 adversary: 14 passes / 6→5→1→2→2→1→0→1→0→0→0→0→0→0 (3-clean-pass convergence P12/13/14). Research-validated C1–C7 (C4 corrected: rustls-platform-verifier). DEC-079. PR #504 OPEN (ADR-0003 docs). |
 | 4: Holdout Evaluation | not-started | | | |
 | 5: Adversarial Refinement | not-started | | | |
 | 6: Formal Hardening | not-started | | | |
@@ -57,13 +58,11 @@ activation_version: "v0.6.0-dev.1"
 
 | Step | Agent | Status | Output |
 |------|-------|--------|--------|
-| Maintenance: 4 Dependabot PRs merged (#497 chrono 0.4.44→0.4.45, #498 codeql-action 4.36.0→4.36.2, #484 checkout 6.0.2→6.0.3, #469 gitleaks-action 2.3.9→3.0.0 MAJOR) → develop @ 18a6441 (2026-06-11). Soak-verified, CI green, code-owner approved. DEFER-469 hold resolved (v3 runtime-only Node24). | state-manager | MAINTENANCE COMPLETE | BC 594 / NFR 41 / Stories 67 UNCHANGED. develop HEAD: 18a6441. |
-| #475 ADF E2E read-path — F3 CONVERGED (R1 2→fixed: F1 cell-wrap fragility, F2 count drift; R2 0/0/0). Gate APPROVED 2026-06-11. Story S-475-adf-e2e-readpath; Stories 67→68. DEC-074. O1-TABLE-ASSERT drift item added. Entering F4. | state-manager | F3 GATE APPROVED | BC 594 / NFR 41 / Stories 68. develop HEAD: 18a6441. |
-| #475 F4 impl CONVERGED (per-story Step-4.5: R1 F-1 HIGH async gate-guard false-green + F-1b → fixed; R2 0/0/0). Full suite clean + deny ok + clippy/fmt clean. Worktree test/issue-475-adf-e2e-readpath @ ca07cbc. Demo: justified handling (test-only, no production behavior change; offline verification + nightly e2e live). Entering PR. | state-manager | F4 CONVERGED | BC 594 / NFR 41 / Stories 68. develop HEAD: 18a6441. |
 | #475 ADF E2E read-path — F5–F7 CONVERGED + PR #499 squash-merged → develop @ 418a392e (2026-06-11). 5-dimension delta convergence + full-tree regression all green. CI 11/11 green, security APPROVE, code review APPROVE 0-blocking, full cargo test clean, cargo deny ok. Fresh-context F7 consistency audit CONSISTENT. Input-drift: no #475 drift (11 pre-existing unrelated). Spec-example synced multi-word→single-token (spec v1.3.10). DEC-076. Process-gap checklist (F-1b, O1-TABLE-ASSERT, DEC-075 LESSON) codified in lessons.md. | state-manager | CYCLE CLOSED + MERGED | BC 594 / NFR 41 / Stories 68. develop HEAD: 418a392e. No active worktrees. |
 | v0.5.0-dev.14 dev release: PR #500 (Cargo.toml→dev.14 + CHANGELOG finalized, 31 commits since dev.13) squash-merged → develop @ a0f45cc; tag v0.5.0-dev.14 pushed → release.yml success (run 27383452695, 4/4 platform builds); GitHub pre-release published 2026-06-11. | devops-engineer | RELEASE PUBLISHED | BC 594 / NFR 41 / Stories 68. develop HEAD: a0f45cc. |
 | v0.5.0 STABLE released 2026-06-12T15:27:54Z: PR #501 "chore: release v0.5.0" (release/v0.5.0) squash-merged → main. Tag v0.5.0 pushed. GitHub Release v0.5.0 graduated to 'Latest'. First STABLE shipping full ADF markdown-conversion feature set + BC-3.2.013 resolution enforcement (breaking). DEC-078. | state-manager | STABLE RELEASED | BC 594 / NFR 41 / Stories 68. main HEAD: v0.5.0. |
 | develop bumped to 0.6.0-dev.1 2026-06-12T15:31:57Z: PR #502 "chore: sync main → develop + bump to v0.6.0-dev.1" squash-merged → develop @ 587206e. Cargo.toml version 0.6.0-dev.1. 0.6.0 dev cycle open. No active worktrees. DEC-078. | state-manager | 0.6.0 CYCLE OPEN | BC 594 / NFR 41 / Stories 68. develop HEAD: 587206e. |
+| Windows-build F1+F2 COMPLETE — F2 human gate APPROVED 2026-06-12. F1: classified full Feature Mode, target x86_64-pc-windows-msvc, artifact .zip, idiomatic %APPDATA%/%LOCALAPPDATA%, keyring windows-native, ADR-0016 recorded. F2: 3 new BCs (BC-6.1.014, BC-6.2.016, BC-6.2.017), 1 updated (BC-6.2.004), 1 new NFR (NFR-P-W1). 14-pass F2 adversary; 3-clean-pass convergence (P12/13/14). External research C1–C7 validated (C4 corrected: rustls-platform-verifier not webpki-roots). ADR-0003 docs fix PR #504 OPEN. DEC-079. | state-manager | F2 APPROVED — ENTERING F3 | BC 597 / NFR 42 / ADR 16 / Stories 68. develop HEAD: 587206e. |
 
 ## Decisions Log
 
@@ -83,6 +82,7 @@ activation_version: "v0.6.0-dev.1"
 | DEC-076 | 2026-06-11: #475 F7 CONVERGED + MERGED (PR #499 → develop @ 418a392e). 5-dimension delta convergence + full-tree regression all green (CI 11/11, security APPROVE, code review APPROVE 0-blocking, full cargo test clean, cargo deny ok). Fresh-context F7 consistency audit CONSISTENT (counts agree across 8 surfaces; CLAUDE.md no change). Input-drift: no #475 drift (11 pre-existing cycles/bookkeeping stale, unrelated). Post-merge: spec-example synced multi-word→single-token (spec v1.3.10). Demo: adapted-skip (test-only, no production behavior change). Issue #475 stays CLOSED (no Closes keyword). Cycle-closing checklist SATISFIED: F-1b FIXED + codified; O1-TABLE-ASSERT DEFERRED (justified); DEC-075 LESSON codified. | Feature Mode / #475 F7 delta convergence + merge | Phase 3 | 2026-06-11 |
 | DEC-077 | 2026-06-11: v0.5.0-dev.14 dev release cut via branch+PR (#500) per release-workflow rule (no direct develop commits). Tag-triggered release.yml (run 27383452695) built 4 targets (x86_64/aarch64 × darwin/linux) + sha256 checksums + published GitHub pre-release. First release to ship the full ADF markdown-conversion feature set (task lists/panel/subsup/bare-URL/footnotes/block-HTML/listItem-normalization) + BC-3.2.013 resolution enforcement (breaking) + gitleaks-action v3 MAJOR. develop HEAD a0f45cc. | Release workflow | Phase 3 | 2026-06-11 |
 | DEC-078 | 2026-06-12: v0.5.0 STABLE released (PR #501 → main @ 2026-06-12T15:27:54Z; tag v0.5.0; GitHub Release graduated to 'Latest'). First STABLE release shipping full ADF markdown-conversion feature set + BC-3.2.013 proactive resolution enforcement (breaking; ADR-0015). Develop then bumped to 0.6.0-dev.1 via PR #502 (squash-merged → develop @ 587206e; 2026-06-12T15:31:57Z). 0.6.0 dev cycle open. BC 594 / NFR 41 / Stories 68 unchanged. | Release milestone | Phase 3 | 2026-06-12 |
+| DEC-079 | 2026-06-12: Windows-build (x86_64-pc-windows-msvc) F1+F2 COMPLETE, F2 human gate APPROVED. F1 locked decisions: target x86_64-pc-windows-msvc only (aarch64 deferred); artifact .zip; add Windows job to ci.yml (full regression); idiomatic %APPDATA%(config)/%LOCALAPPDATA%(cache) via #[cfg(windows)]; keyring windows-native (Windows Credential Manager); OAuth embedded-creds smoke step gated off on Windows v1; ADR-0016 recorded. F2 artifacts: ADR-0016 (.factory/architecture/adr/0016-windows-build-target.md + adr-index); architecture-delta (.factory/cycles/cycle-001/windows-build/architecture-delta.md); 3 NEW BCs (BC-6.1.014 Windows config path, BC-6.2.016 Windows cache path, BC-6.2.017 JR_CONFIG_DIR/JR_CACHE_DIR debug path seam) + 1 UPDATED (BC-6.2.004 platform-conditional cache root); 1 NEW NFR (NFR-P-W1 Supported Platforms). Counts: BC 594→597 (+3), NFR 41→42 (+1), ADR 15→16 (+1). F2 adversary: 14 passes / 6→5→1→2→2→1→0→1→0→0→0→0→0→0 — 3-clean-pass convergence (P12/13/14). Fresh-context consistency audit: CONSISTENT. Research-validated C1–C7 (Perplexity + primary sources, 2026-06-12): C4 PARTIALLY REFUTED → rationale corrected (rustls-platform-verifier not webpki-roots); C2 corrected (no colon sanitization needed). ADR-0003 docs fix PR #504 OPEN (branch docs/adr-0003-rustls-0.13-platform-verifier, commit 15dc7da). F4 obligations: O-3 (CANONICAL-COUNTS Unix-only cache path), O-4 (JR_CONFIG_DIR/JR_CACHE_DIR in CLAUDE.md), ADR-0016↔ADR-0003 cross-ref to add during F4. Process-gap follow-ups: (1) no CI guard for inline-PROSE BC counts; (2) no NFR cross-surface count guard; (3) 3rd JR_* doc-fallout recurrence. | Windows-build F1+F2 | Phase 3 | 2026-06-12 |
 
 ## Skip Log
 
@@ -112,10 +112,13 @@ activation_version: "v0.6.0-dev.1"
 | DEFERRED-ADF-E2E | ADF live E2E remaining gaps | #470 (listItem-normalization live test) DELIVERED via PR #499 (AC-2). #475 Gap 1 (read-path adf_to_text) DELIVERED via PR #499 (AC-1+AC-3+AC-4). #473/#471/#474/#483/#489 DONE. task-list E2E VERIFIED GREEN — e2e run 27352373680 (89/0), 2026-06-11. All tracked sub-gaps now DONE. | LOW | FULLY RESOLVED — all sub-gaps delivered (PR #499 @ 418a392e). No remaining items. |
 | F-H1 | F1↔F4 scope-reconciliation manual | F1→F4 handoff has no enforced consistency gate; scope expansion can silently supersede F1 doc. Handled manually this cycle (DEC-072). Revisit if recurs 3+ times. Detail: cycles/cycle-001/lessons.md F-H1. | LOW | DEFERRED — revisit at 3+ recurrences |
 | O1-TABLE-ASSERT | No shared de-wrap/assert_table_contains helper for human-mode (table) E2E stdout assertions | S-475 is the first human-mode E2E test; mitigated via single-token assertions (wrap-safe). Codify a shared helper before more human-mode E2E tests land. DEC-074. | LOW | DEFERRED — revisit if recurs |
+| WIN-O-3 | CANONICAL-COUNTS "Cache Types" prose path is Unix-only | Add Windows `%LOCALAPPDATA%\jr\v1\<profile>\` path entry during F4 implementation. F4 obligation from DEC-079. | LOW | OPEN — F4 obligation |
+| WIN-O-4 | CLAUDE.md Windows paths not documented | Add JR_CONFIG_DIR/JR_CACHE_DIR to CLAUDE.md "AI Agent Notes" JR_* table; update cache/config path docs for Windows. F4 obligation from DEC-079. | LOW | OPEN — F4 obligation |
+| WIN-PG-1 | No CI guard for inline-PROSE BC counts | 3rd recurrence of JR_* test-seam doc-fallout without CI parity check. Codify or justify deferral before cycle close. | LOW | OPEN — process-gap |
 
 ## Convergence Trackers
 
-Full per-issue: `cycles/cycle-001/convergence-trajectory.md`. Current: **[2026-06-12] v0.5.0 STABLE RELEASED (PR #501 → main; tag v0.5.0; GitHub Release 'Latest'). develop bumped to 0.6.0-dev.1 (PR #502 → develop @ 587206e). BC 594 / NFR 41 / Stories 68. No active worktrees. 0.6.0 dev cycle open. DEC-078.** Prior: v0.5.0-dev.14 DEV RELEASE (PR #500 → develop @ a0f45cc; release.yml run 27383452695 — 4/4 builds). DEC-077.
+Full per-issue: `cycles/cycle-001/convergence-trajectory.md`. Current: **[2026-06-12] Windows-build F1+F2 COMPLETE — F2 human gate APPROVED. BC 597 (+3) / NFR 42 (+1) / ADR 16 (+1) / Stories 68 (unchanged). F2 adversary: 14 passes / 6→5→1→2→2→1→0→1→0→0→0→0→0→0 (3-clean-pass P12/13/14). Research C1–C7 validated (C4 corrected). DEC-079. Entering F3.** Prior: v0.5.0 STABLE RELEASED (PR #501 → main; tag v0.5.0; GitHub Release 'Latest'). develop @ 587206e (0.6.0-dev.1; PR #502). DEC-078.
 
 ## Session Resume Checkpoint
 
@@ -124,11 +127,11 @@ Full per-issue: `cycles/cycle-001/convergence-trajectory.md`. Current: **[2026-0
 | Field | Value |
 |-------|-------|
 | **Date** | 2026-06-12 |
-| **Position** | **v0.5.0 STABLE RELEASED + 0.6.0 CYCLE OPEN.** v0.5.0 STABLE: PR #501 "chore: release v0.5.0" (release/v0.5.0) squash-merged → main 2026-06-12T15:27:54Z; tag v0.5.0 pushed; GitHub Release graduated to 'Latest'. First STABLE shipping full ADF markdown-conversion feature set + BC-3.2.013 proactive resolution enforcement (breaking; ADR-0015). develop then bumped: PR #502 squash-merged → develop @ 587206e 2026-06-12T15:31:57Z (Cargo.toml 0.6.0-dev.1). No active cycles. BC 594 / NFR 41 / Stories 68. No active worktrees. DEC-078. |
-| **develop HEAD** | origin/develop = **587206e**. activation v0.6.0-dev.1 (v0.5.0 STABLE shipped). BC 594. NFR 41. Stories 68. No active worktrees. |
-| **Convergence counter** | BC: **594**. NFR: **41**. Stories: **68**. jira-e2e env: JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ, JR_E2E_ENABLED=true. No active worktrees. |
-| **Next / Pending** | (1) No active cycle — pick next backlog item for 0.6.0 line. (2) SEC-001 (CWE-674 deep-nesting recursion in adf.rs, LOW) deferred. (3) Deferred: #400 Story B + engine items; #372 cargo-mutants. (4) Standing: do NOT close #429 (DEC-029 human deferral); #492 OPEN; OQ-5 + E2E-PG-4 remote-link open; F-H1 DEFERRED; O1-TABLE-ASSERT DEFERRED. |
-| **Resume prompt** | `Read .factory/STATE.md. DATE: 2026-06-12. POSITION: v0.5.0 STABLE RELEASED (PR #501 → main; tag v0.5.0; 'Latest'). develop @ 587206e (0.6.0-dev.1; PR #502). DEC-078. BC 594 / NFR 41 / Stories 68. No active worktrees. Next: pick next backlog item for 0.6.0 line. STANDING: do NOT close #429 (DEC-029); #492 OPEN; OQ-5 open; E2E-PG-4 remote-link open; SEC-001 LOW deferred; F-H1 DEFERRED; O1-TABLE-ASSERT DEFERRED. jira-e2e: JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ, JR_E2E_ENABLED=true.` |
+| **Position** | **Windows-build F1+F2 COMPLETE — F2 human gate APPROVED. Entering F3 (story decomposition).** F1 locked: target x86_64-pc-windows-msvc (aarch64 deferred); artifact .zip; Windows job in ci.yml; %APPDATA%/%LOCALAPPDATA% via #[cfg(windows)]; keyring windows-native; OAuth smoke gated off Windows v1; ADR-0016. F2 CONVERGED: 3 new BCs (BC-6.1.014/6.2.016/6.2.017) + 1 updated (BC-6.2.004) + 1 new NFR (NFR-P-W1). BC 594→597, NFR 41→42, ADR 15→16. F2 adversary 14-pass / 3-clean-pass convergence (P12/13/14). Research C1–C7 validated (C4 corrected: rustls-platform-verifier). ADR-0003 docs fix PR #504 OPEN (commit 15dc7da). DEC-079. develop HEAD still 587206e (v0.6.0-dev.1; no source changes yet). |
+| **develop HEAD** | origin/develop = **587206e**. activation v0.6.0-dev.1. BC **597**. NFR **42**. ADR **16**. Stories **68**. No active worktrees. |
+| **Convergence counter** | BC: **597**. NFR: **42**. ADR: **16**. Stories: **68**. jira-e2e env: JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ, JR_E2E_ENABLED=true. No active worktrees. |
+| **Next / Pending** | (1) Windows-build ACTIVE — enter F3 story decomposition. (2) PR #504 OPEN (ADR-0003 docs fix) — awaiting human review/merge; do NOT mark merged. (3) F4 obligations: WIN-O-3 (CANONICAL-COUNTS Unix path), WIN-O-4 (CLAUDE.md JR_* table + Windows paths). (4) SEC-001 (CWE-674, LOW) deferred. (5) Deferred: #400 Story B; #372 cargo-mutants. (6) Standing: do NOT close #429 (DEC-029); #492 OPEN; OQ-5; E2E-PG-4 remote-link; F-H1 DEFERRED; O1-TABLE-ASSERT DEFERRED. |
+| **Resume prompt** | `Read .factory/STATE.md. DATE: 2026-06-12. POSITION: Windows-build F1+F2 COMPLETE, F2 APPROVED. Entering F3. BC 597 / NFR 42 / ADR 16 / Stories 68. develop HEAD: 587206e (v0.6.0-dev.1). PR #504 OPEN (ADR-0003 docs; do NOT mark merged). DEC-079. F4 obligations: WIN-O-3 + WIN-O-4 in Drift Items. STANDING: do NOT close #429 (DEC-029); #492 OPEN; OQ-5; E2E-PG-4 remote-link open; SEC-001 LOW deferred; F-H1 DEFERRED; O1-TABLE-ASSERT DEFERRED. jira-e2e: JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ, JR_E2E_ENABLED=true.` |
 
 ## Open Issues Tracker
 
