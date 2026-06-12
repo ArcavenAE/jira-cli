@@ -134,7 +134,12 @@ jobs:
     timeout-minutes: 10
     permissions:
       contents: read
-    if: github.event_name == 'pull_request'
+    # gitleaks-action v2+ requires an org license for some commercial use
+    # cases. Default behavior is unchanged (runs on every PR); a fork that
+    # can't or doesn't want to obtain a license opts out by setting the
+    # GITLEAKS_DISABLED repository variable to 'true'. Forks that opt out
+    # should rely on org-level secret scanning or an alternative scanner.
+    if: github.event_name == 'pull_request' && vars.GITLEAKS_DISABLED != 'true'
     steps:
       - name: Harden the runner (Audit all outbound calls)
         uses: step-security/harden-runner@9af89fc71515a100421586dfdb3dc9c984fbf411 # v2.19.4
