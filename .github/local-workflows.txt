@@ -1,0 +1,12 @@
+# Fork-local files — protected during upstream sync.
+#
+# Used by .github/workflows/sync-upstream.yml (fork-support infrastructure):
+# when a scheduled upstream merge conflicts on a file listed here, the
+# fork's version wins automatically ("ours"); conflicts in any other file
+# stop the sync for manual resolution.
+#
+# In the canonical repo this list is empty. Forks that carry local-only
+# files (extra workflows, packaging overrides, formulas) list them here,
+# one path per line, relative to repo root. Comments (#) and blank lines
+# are ignored. Listing this file itself keeps the fork's list intact when
+# the upstream template changes.
