@@ -489,6 +489,11 @@ This glob runs on Linux; both Unix and Windows artifacts are available via
 
 ### 4.1 Test Matrix Addition and Clippy Matrix Addition
 
+> **Reconciliation note (2026-06-13):** ADR-0016 §Decision 3 has been amended to match
+> this section. The original Decision 3 scope note contained the false claim that Windows
+> clippy is folded into the `test` job; it now records the separate-clippy-matrix approach
+> described here as the correct and locked decision.
+
 **IMPORTANT — `clippy` and `test` are separate top-level jobs in `ci.yml`.** The `test`
 job does NOT run clippy. The `clippy` job is currently pinned to `ubuntu-latest` only
 and is NOT part of the test matrix. Any claim that "the Windows test job runs clippy

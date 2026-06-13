@@ -312,6 +312,15 @@ serialize tests that mutate global env state. F4 implementer must check whether 
 existing mutex is present before adding new `set_var` calls, and add `ENV_MUTEX.lock()`
 guards to new tests that call `std::env::set_var("APPDATA", ...)` etc.
 
+**Note on path-separator assertions (F-WIN-F3-005):** These tests are `#[cfg(windows)]`-gated
+and run on a Windows runner where `PathBuf::join` produces `\`-separated paths. When
+writing assertions that compare expected path values, use `PathBuf`/`Path` component
+comparison (e.g., `result.ends_with(Path::new("jr"))`, `result.components().collect()`)
+or construct expected values via `PathBuf::from(root).join("jr")` rather than embedding
+`/`-separated string literals (e.g., avoid `assert_eq!(result.to_str().unwrap(), "C:/Users/Alice/AppData/Roaming/jr")`).
+`PathBuf::join` on Windows produces `\`-separated paths, so a string-literal assertion
+with `/` will fail even when the path is semantically correct.
+
 ---
 
 ## Holdout Scenarios

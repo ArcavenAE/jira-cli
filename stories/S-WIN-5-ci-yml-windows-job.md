@@ -279,7 +279,7 @@ the primary shared helper (even though AC-004 cannot enforce this across all 37 
 `cargo test --all-features` exits 0 on:
 - `windows-latest` — the new Windows CI runner
 - `ubuntu-latest` — existing Ubuntu CI runner (must remain green; migration is a regression risk)
-- `macos-latest` (if in matrix) — macOS runner (must remain green)
+- `macos-latest` — macOS runner (must remain green; the test matrix IS `[ubuntu-latest, macos-latest, windows-latest]` per architecture-delta.md §4.1 and the live ci.yml; macOS green is a required regression gate)
 
 Tests in Category A (`#[cfg(unix)]`) compile out cleanly on Windows. Tests in Category B
 (XDG-isolation) work because the seam override is active (debug build) and the seam value
@@ -417,6 +417,31 @@ Both must be merged before this story's Windows CI job will produce green.
 **blocks: []** — No other story depends on this.
 
 **Topological order:** S-WIN-2 → S-WIN-1 → S-WIN-5.
+
+### S-WIN-3 Runtime Dependency Note (F-WIN-F3-002)
+
+S-WIN-5 is NOT declared as hard-depending on S-WIN-3 (`depends_on` does not include
+`"S-WIN-3"`), and this is intentional. The reasons:
+
+1. **Keyring tests are `#[ignore]`-gated.** The standard `cargo test` run in the
+   Windows CI matrix does NOT set `JR_RUN_KEYRING_TESTS=1`, so keyring-exercising
+   tests are never executed in the CI matrix that this story targets.
+
+2. **Keyring degrades gracefully to a compiling null backend on Windows without
+   `windows-native`.** The keyring crate compiles without linker errors; the feature
+   gate only determines WHICH credential store backend is selected at runtime. The
+   integration test helpers this story migrates do NOT exercise credential storage.
+
+3. **Intra-cycle schedule already orders S-WIN-3 before S-WIN-5.** The windows-build
+   intra-cycle delivery schedule places S-WIN-3 in Wave 1 (independent, dispatched
+   first) and S-WIN-5 in Wave 3 (after S-WIN-1 and S-WIN-2). In practice S-WIN-3
+   will always be merged well before S-WIN-5 reaches F4. A merge-gate hard dependency
+   is therefore redundant.
+
+**Conclusion:** S-WIN-5 passes `cargo test` on `windows-latest` without S-WIN-3 being
+merged first, because keyring tests are gated. S-WIN-3 must land before a fully
+functional Windows _release_ binary (`jr auth login` persisting credentials), but that
+is S-WIN-4's concern, not this story's. No `depends_on` change is needed.
 
 ---
 

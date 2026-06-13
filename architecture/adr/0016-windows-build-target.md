@@ -97,9 +97,26 @@ PowerShell `Expand-Archive` without third-party tools. CLI tools on Windows (e.g
 expectations. The `softprops/action-gh-release` step accepts arbitrary file types;
 `.zip` uploads cleanly alongside the existing `.tar.gz` artifacts.
 
-**Implementation note:** Use `shell: bash` with `zip -j` (available via Git Bash on
-`windows-latest`). Alternatively, PowerShell `Compress-Archive` is acceptable. Either
-produces an equivalent `.zip`. `sha256sum` is available via Git Bash on Windows runners.
+**Implementation note:** Use `shell: bash` with `zip` (Git Bash) AND `sha256sum` (Git
+Bash) — both are pre-installed on `windows-latest` GitHub-hosted runners via the Git for
+Windows bundle. Specify `shell: bash` on the `run:` step; no further PATH manipulation is
+needed.
+
+> **AMENDED 2026-06-13 (F-WIN-F3-003):** Adversarial review found the original wording
+> listed `Compress-Archive` as a fallback without clarifying the primary mechanism, leaving
+> an ambiguous "either works" statement that could cause implementer divergence. Resolution
+> chosen: **Git Bash `zip` is the primary, deterministic packaging mechanism** for the
+> Windows target, not a fallback. Rationale: `windows-latest` GitHub-hosted runners ship
+> Git for Windows, which places `zip` and `sha256sum` in `C:\Program Files\Git\usr\bin`.
+> This is documented in the `actions/runner-images` repository (windows-latest image
+> manifest) and is the mechanism used by the majority of Rust CLI projects (ripgrep, fd,
+> bat) that distribute `.zip` artifacts from `windows-latest` CI. PowerShell
+> `Compress-Archive` remains a known alternative if the runner image ever changes, but it
+> is NOT the primary mechanism for this cycle. Risk-acceptance note: because `zip`
+> availability depends on the runner image (not a standard Windows OS feature), the story
+> S-WIN-4 EC-002 risk is accepted as LOW given GitHub's image stability guarantees; no
+> additional AC or runtime check is required. Story S-WIN-4 AC-002 wording is consistent
+> with this decision — see story-writer note below.
 
 ### Decision 3: Add Windows job to `ci.yml` (full CI regression protection)
 
@@ -117,10 +134,26 @@ must be implemented before Windows is added to `ci.yml`. Without the seam, tests
 `XDG_CONFIG_HOME`/`XDG_CACHE_HOME`, which `dirs` ignores on Windows, causing tests to
 write to the real user profile.
 
-**Scope note for `fmt` and `deny` jobs:** These run on `ubuntu-latest` only. The `clippy`
-job runs on `ubuntu-latest` only; Windows clippy is folded into the `test` matrix step
-(Windows `test` job runs `cargo clippy -- -D warnings` before `cargo test`). This avoids
-adding a separate `windows-latest` clippy job at extra runner cost.
+**Scope note for `fmt` and `deny` jobs:** These run on `ubuntu-latest` only.
+
+> **AMENDED 2026-06-13 (F-WIN-F3-001):** The original scope note above contained a
+> factually false statement that was corrected by adversarial review before implementation.
+> It claimed "the `clippy` job runs on `ubuntu-latest` only; Windows clippy is folded into
+> the `test` matrix step." This is incorrect on two counts: (1) `clippy` and `test` are
+> separate top-level jobs in `ci.yml` — the `test` job runs `cargo test --all-features`
+> only and never ran clippy; (2) folding clippy into `test` would be architecturally wrong
+> because Ubuntu clippy cannot lint `#[cfg(windows)]` branches — those branches are dead
+> code on Linux and are silently skipped. See architecture-delta.md §4.1.
+
+**Correct `clippy` job behaviour (supersedes the original scope note):** The `clippy`
+job gains a `strategy.matrix.os` over `[ubuntu-latest, windows-latest]` and changes
+`runs-on: ubuntu-latest` to `runs-on: ${{ matrix.os }}`. This is a **separate clippy job
+matrixed over both platforms** — NOT folded into the `test` job. The Windows clippy run
+is required to lint the `#[cfg(windows)]` path-resolution branches in `src/config.rs` and
+`src/cache.rs` that are invisible to an Ubuntu runner. The `test` job independently adds
+`windows-latest` to its own matrix (`cargo test --all-features` only, no clippy).
+Runner-cost impact: two clippy runs per PR (ubuntu + windows) instead of one.
+Cross-reference: architecture-delta.md §4.1; S-WIN-5 AC-006.
 
 ### Decision 4: Config/cache paths use idiomatic Windows conventions
 
