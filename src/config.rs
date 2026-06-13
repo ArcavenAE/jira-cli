@@ -463,6 +463,24 @@ impl Config {
     }
 }
 
+/// Pure fallback for a Windows `%APPDATA%`/`%LOCALAPPDATA%`-style env path when the
+/// `dirs` crate returns `None`. Accepts the raw `env::var(NAME).ok()` value so the
+/// logic can be tested on any platform without a `#[cfg(windows)]` gate.
+///
+/// Rules (BC-6.1.014 EC-1, EC-3):
+/// - `Some(s)` where `s` is non-empty → `PathBuf::from(s)`
+/// - `Some(s)` where `s` is empty → `PathBuf::from(".")` (treated as unset)
+/// - `None` → `PathBuf::from(".")`
+///
+/// Called from the `#[cfg(windows)]` production branch in `global_config_dir()`
+/// and directly from cross-platform unit tests.
+pub fn config_appdata_fallback(env_val: Option<String>) -> PathBuf {
+    env_val
+        .filter(|s| !s.is_empty())
+        .map(PathBuf::from)
+        .unwrap_or_else(|| PathBuf::from("."))
+}
+
 pub fn global_config_dir() -> PathBuf {
     // JR_CONFIG_DIR override is debug builds only — release binaries ignore this env
     // var to prevent path-injection attacks (BC-6.2.017). Seam must be first in body,
@@ -474,14 +492,28 @@ pub fn global_config_dir() -> PathBuf {
     {
         return PathBuf::from(dir);
     }
-    // Use XDG_CONFIG_HOME if set, otherwise ~/.config (matches spec: ~/.config/jr/)
-    if let Ok(xdg) = std::env::var("XDG_CONFIG_HOME") {
-        PathBuf::from(xdg).join("jr")
-    } else {
-        dirs::home_dir()
-            .unwrap_or_else(|| PathBuf::from("~"))
-            .join(".config")
+
+    #[cfg(windows)]
+    {
+        // Windows: %APPDATA%\jr  (e.g., C:\Users\Alice\AppData\Roaming\jr)
+        // BC-6.1.014: dirs::config_dir() maps to %APPDATA% (Roaming) on Windows.
+        // APPDATA fallback filters empty string: unset and empty both route to ".".
+        dirs::config_dir()
+            .unwrap_or_else(|| config_appdata_fallback(std::env::var("APPDATA").ok()))
             .join("jr")
+    }
+
+    #[cfg(not(windows))]
+    {
+        // Unix: $XDG_CONFIG_HOME/jr or ~/.config/jr (unchanged)
+        if let Ok(xdg) = std::env::var("XDG_CONFIG_HOME") {
+            PathBuf::from(xdg).join("jr")
+        } else {
+            dirs::home_dir()
+                .unwrap_or_else(|| PathBuf::from("~"))
+                .join(".config")
+                .join("jr")
+        }
     }
 }
 
@@ -1423,6 +1455,148 @@ mod tests {
             !result.as_os_str().is_empty(),
             "AC-003 (BC-6.2.017 EC-1): OS-branch result must be a non-empty path. \
              Got: {}",
+            result.display()
+        );
+    }
+
+    // -------------------------------------------------------------------------
+    // BC-6.1.014 — Windows AppData path resolution tests (S-WIN-1)
+    // All tests below are `#[cfg(windows)]`-gated. They compile out on macOS/Linux
+    // (zero impact on Unix CI) and run only on a Windows runner (S-WIN-5).
+    //
+    // RED GATE RATIONALE: `global_config_dir()` currently has NO `#[cfg(windows)]`
+    // branch — on a Windows build it falls through to the XDG/home_dir Unix path,
+    // so `dirs::config_dir()` (= %APPDATA%) is never consulted. Every assertion
+    // below would therefore FAIL on a Windows runner against the current code.
+    // The implementation in S-WIN-1 adds the `#[cfg(windows)]` branch that makes
+    // these tests pass.
+    // -------------------------------------------------------------------------
+
+    /// AC-001 / BC-6.1.014 postcondition — on Windows, `global_config_dir()` returns
+    /// `dirs::config_dir().join("jr")` which resolves to `%APPDATA%\jr` (Roaming).
+    ///
+    /// The test cannot call `dirs::config_dir()` and directly inject its return value
+    /// (it's an OS call). Instead it verifies the structural postcondition: the returned
+    /// path ends with the `jr` component, and its parent equals `dirs::config_dir()`.
+    ///
+    /// Uses PathBuf component comparison (not string literals with `/`) per
+    /// F-WIN-F3-005: on Windows `PathBuf::join` produces `\`-separated paths.
+    ///
+    /// Traces: BC-6.1.014 postcondition, AC-001.
+    #[cfg(windows)]
+    #[test]
+    fn test_bc_6_1_014_windows_config_dir_uses_appdata() {
+        // On Windows, dirs::config_dir() returns Some(%APPDATA% Roaming path).
+        // The function under test must return dirs::config_dir().unwrap().join("jr").
+        let _guard = ENV_MUTEX.lock().unwrap_or_else(|e| e.into_inner());
+        // Scrub the debug seam vars so they cannot short-circuit global_config_dir()
+        // and perturb the assertion (RB-102).
+        // SAFETY: ENV_MUTEX is held for the duration; no concurrent env access occurs.
+        unsafe {
+            std::env::remove_var("JR_CONFIG_DIR");
+            std::env::remove_var("JR_CACHE_DIR");
+        }
+        let expected_parent = dirs::config_dir()
+            .expect("dirs::config_dir() must return Some on a Windows system with a user profile");
+        let expected = expected_parent.join("jr");
+        let result = global_config_dir();
+        assert_eq!(
+            result,
+            expected,
+            "AC-001 (BC-6.1.014): on Windows, global_config_dir() must return \
+             dirs::config_dir().join(\"jr\") = %APPDATA%\\jr. \
+             Expected: {}, got: {}",
+            expected.display(),
+            result.display()
+        );
+        // Structural assertion: must end with component "jr"
+        assert!(
+            result.ends_with("jr"),
+            "AC-001 (BC-6.1.014): path must end with 'jr' component, got: {}",
+            result.display()
+        );
+    }
+
+    /// AC-002 / BC-6.1.014 EC-1 — `config_appdata_fallback` pure helper.
+    ///
+    /// Exercises the extracted `config_appdata_fallback` helper directly so that
+    /// mutations to the production fallback (e.g. dropping `.filter(|s| !s.is_empty())`
+    /// or changing `PathBuf::from(".")`) are caught on every platform, not only on a
+    /// Windows CI runner.
+    ///
+    /// The helper is un-gated (no `#[cfg(windows)]`) so this test compiles and runs
+    /// on macOS/Linux in CI, genuinely killing the empty-filter/default mutants.
+    ///
+    /// Traces: BC-6.1.014 EC-1, EC-3, AC-002.
+    #[test]
+    fn test_bc_6_1_014_appdata_env_fallback() {
+        // EC-3: empty string → treated as unset → PathBuf::from(".")
+        assert_eq!(
+            config_appdata_fallback(Some(String::new())),
+            PathBuf::from("."),
+            "EC-3: empty APPDATA must yield PathBuf::from(\".\")"
+        );
+
+        // EC-1: None (unset APPDATA) → PathBuf::from(".")
+        assert_eq!(
+            config_appdata_fallback(None),
+            PathBuf::from("."),
+            "EC-1: None (unset APPDATA) must yield PathBuf::from(\".\")"
+        );
+
+        // Happy-path: non-empty value is passed through unchanged
+        assert_eq!(
+            config_appdata_fallback(Some("C:\\Users\\Alice\\AppData\\Roaming".into())),
+            PathBuf::from("C:\\Users\\Alice\\AppData\\Roaming"),
+            "non-empty APPDATA must be returned as-is"
+        );
+    }
+
+    /// AC-003 / BC-6.1.014 invariant — XDG_CONFIG_HOME must NOT affect `global_config_dir()`
+    /// on Windows. The `#[cfg(windows)]` branch calls `dirs::config_dir()` unconditionally
+    /// and never reads `XDG_CONFIG_HOME`.
+    ///
+    /// This test sets `XDG_CONFIG_HOME` to a sentinel value and asserts that the returned
+    /// path does NOT contain that sentinel — confirming XDG is ignored on the Windows path.
+    ///
+    /// Uses ENV_MUTEX to serialize env-var mutation.
+    ///
+    /// Traces: BC-6.1.014 invariant, EC-5, AC-003.
+    #[cfg(windows)]
+    #[test]
+    fn test_bc_6_1_014_xdg_ignored_on_windows() {
+        let sentinel = "C:\\SENTINEL_XDG_SHOULD_BE_IGNORED_ON_WINDOWS";
+        // with_env_var is #[cfg(debug_assertions)]-gated in config.rs.
+        // On a Windows runner in CI we may be in release mode; use ENV_MUTEX directly.
+        let _guard = ENV_MUTEX.lock().unwrap_or_else(|e| e.into_inner());
+        // SAFETY: ENV_MUTEX is held for the duration; no concurrent env access occurs.
+        // Scrub the debug seam vars so they cannot short-circuit global_config_dir()
+        // and perturb the assertion (RB-102).
+        unsafe {
+            std::env::remove_var("JR_CONFIG_DIR");
+            std::env::remove_var("JR_CACHE_DIR");
+            std::env::set_var("XDG_CONFIG_HOME", sentinel);
+        }
+        let result = global_config_dir();
+        // SAFETY: ENV_MUTEX still held.
+        unsafe { std::env::remove_var("XDG_CONFIG_HOME") };
+        drop(_guard);
+
+        // The result must NOT contain the sentinel — XDG is not consulted on Windows.
+        assert!(
+            !result
+                .to_string_lossy()
+                .contains("SENTINEL_XDG_SHOULD_BE_IGNORED_ON_WINDOWS"),
+            "AC-003 (BC-6.1.014 invariant): XDG_CONFIG_HOME must be ignored on Windows. \
+             global_config_dir() must return the APPDATA-derived path, not the XDG sentinel. \
+             Got: {}",
+            result.display()
+        );
+        // The result must still end with the 'jr' component (correct APPDATA path).
+        assert!(
+            result.ends_with("jr"),
+            "AC-003 (BC-6.1.014 invariant): path must still end with 'jr' component \
+             when XDG_CONFIG_HOME is set. Got: {}",
             result.display()
         );
     }
