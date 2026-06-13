@@ -308,7 +308,7 @@ test isolation requires both the seam and the migrated test helpers), and **S-WI
 (docs fallout: CLAUDE.md JR_* table entries and Windows path docs follow the seam
 implementation — accurate docs require the seam interface to be finalized).
 
-**No cycle.** Topological order: S-WIN-2 → {S-WIN-1, S-WIN-6} → S-WIN-5.
+**No cycle.** Topological order: S-WIN-2 → S-WIN-1 → S-WIN-5 (S-WIN-5 also directly depends on S-WIN-2); S-WIN-2 → S-WIN-6 (leaf, docs).
 
 ---
 
