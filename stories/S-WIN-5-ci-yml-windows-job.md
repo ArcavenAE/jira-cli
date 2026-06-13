@@ -416,7 +416,7 @@ Both must be merged before this story's Windows CI job will produce green.
 
 **blocks: []** — No other story depends on this.
 
-**Topological order:** S-WIN-2 → S-WIN-1 → S-WIN-5.
+**Topological order:** {S-WIN-2} → {S-WIN-1} → S-WIN-5 (S-WIN-5 also directly depends on S-WIN-2; see frontmatter `depends_on: ["S-WIN-1", "S-WIN-2"]`).
 
 ### S-WIN-3 Runtime Dependency Note (F-WIN-F3-002)
 

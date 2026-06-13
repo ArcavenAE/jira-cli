@@ -128,7 +128,13 @@ No runner-compat issue for the release job itself.
      os: windows-latest
    ```
 
-2. On ALL `run:` steps in the `build` job, add `shell: bash` (applies to Build, Package, smoke, etc.).
+2. On ALL `run:` steps in the `build` job, add `shell: bash`. The complete inventory of `run:` steps in the `build` job is:
+   - **"Ensure cross-target installed (defensive)"** (`rustup target add ${{ matrix.target }}`) — present on all rows including Windows; add `shell: bash`.
+   - **"Install cross"** (gated `if: matrix.use_cross`) — Windows row has no `use_cross`, so this step is skipped on Windows; add `shell: bash` regardless (no-op on Windows due to the gate).
+   - **"Build"** (`cargo build ...`) — add `shell: bash`.
+   - **"Package (Unix)"** (renamed from "Package"; gated `if: runner.os != 'Windows'`) — add `shell: bash`.
+   - **"Package (Windows)"** (new step; gated `if: runner.os == 'Windows'`) — add `shell: bash` (see item 4 below).
+   - **"Verify embedded OAuth app present"** (smoke step; gated `if: runner.os != 'Windows'` per item 5) — add `shell: bash`.
 
 3. Rename existing `Package` step to `Package (Unix)` and add `if: runner.os != 'Windows'`.
 
@@ -255,6 +261,16 @@ Pinned by: integration: existing release CI green on next run (macOS/Linux artif
 All tests in this story are source-text grep tests of `.github/workflows/release.yml`.
 They are lightweight, always-run tests that catch accidental removal of the Windows
 matrix row, package step, smoke gate, or artifact glob.
+
+**Presence-only caveat:** AC-001 through AC-005 are YAML source-text assertions. They
+verify that the required configuration text is present in `release.yml` but do NOT verify
+that the resulting workflow executes correctly or that the `.zip` artifact is actually
+produced. A misconfigured step (e.g., `zip` command failing, wrong binary name) would pass
+all five ACs while still producing an empty or absent archive. The SOLE correctness gate
+for the actual Windows release artifact is **H-WIN-6** — a human inspects the GitHub
+Release page after a live version tag to confirm
+`jr-<version>-x86_64-pc-windows-msvc.zip` and its `.sha256` are present as release
+assets. (This mirrors the limitation explicitly codified in S-WIN-5 AC-004.)
 
 | Test name | File | AC |
 |-----------|------|-----|
