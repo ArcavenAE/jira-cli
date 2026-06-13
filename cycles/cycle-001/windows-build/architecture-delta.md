@@ -387,11 +387,21 @@ existing rows (macOS and Linux already use bash; adding an explicit `shell: bash
 
 ### 3.3 Package Step
 
+> **RECONCILIATION NOTE (2026-06-13, C-V3):** The Windows package step shown below
+> originally used Git Bash `zip`. Pre-F4 verification research (C-V3 in
+> `.factory/research/windows-build-f4-preflight-verification.md`) confirmed that the Unix
+> `zip` command is NOT available on `windows-latest` runners — it is a separate MSYS2
+> package not bundled with Git for Windows. ADR-0016 Decision 2 has been re-amended.
+> **The correct Windows packaging mechanism is PowerShell `Compress-Archive` (`shell: pwsh`).**
+> `sha256sum` remains in a separate `shell: bash` step (confirmed available from Git
+> for Windows coreutils). The YAML below reflects the corrected design. Story-writer must
+> align S-WIN-4 with this shape; EC-002 must be reframed (see ADR-0016 Decision 2 C-V3 block).
+
 The existing `Package` step packages `jr` (no `.exe`) into a `.tar.gz`. This fails on
 Windows for two reasons: the binary is `jr.exe`, and `.tar.gz` is non-idiomatic.
 
 Design: make the `Package` step platform-conditional via `if: runner.os != 'Windows'`
-for the tar/shasum block, and add a separate Windows-specific package step:
+for the tar/shasum block, and add separate Windows-specific package + checksum steps:
 
 **Unix package step** (unchanged, restricted to non-Windows):
 ```yaml
@@ -411,24 +421,30 @@ for the tar/shasum block, and add a separate Windows-specific package step:
     fi
 ```
 
-**Windows package step** (new):
+**Windows package step** (Compress-Archive, `shell: pwsh` — PRIMARY):
 ```yaml
 - name: Package (Windows)
   if: runner.os == 'Windows'
+  shell: pwsh
+  run: |
+    Compress-Archive -Path "target/${{ matrix.target }}/release/jr.exe" `
+      -DestinationPath "jr-${{ github.ref_name }}-${{ matrix.target }}.zip"
+```
+
+**Windows checksum step** (separate `shell: bash` — sha256sum from Git for Windows coreutils):
+```yaml
+- name: Checksum (Windows)
+  if: runner.os == 'Windows'
   shell: bash
   run: |
-    cd target/${{ matrix.target }}/release
-    zip ../../../jr-${{ github.ref_name }}-${{ matrix.target }}.zip jr.exe
-    cd ../../..
     sha256sum jr-${{ github.ref_name }}-${{ matrix.target }}.zip \
       > jr-${{ github.ref_name }}-${{ matrix.target }}.zip.sha256
 ```
 
-`zip` is available via Git Bash on `windows-latest`. `sha256sum` is also available via
-Git Bash. Using `shell: bash` makes both commands portable without PowerShell equivalents.
-
-Alternative: PowerShell `Compress-Archive`. Either is acceptable. The Git Bash approach
-keeps the implementation in bash throughout and is simpler.
+`Compress-Archive` is always present on `windows-latest` (built into PowerShell 5.1+,
+ships with Windows). `sha256sum` is confirmed available from Git for Windows coreutils
+(C-V3). The two steps are kept separate so the unavailability of any zip tool cannot
+silently prevent checksum generation. No external tool installation is required.
 
 ### 3.4 Smoke Step Gate
 
@@ -699,12 +715,21 @@ platform difference internally.
 
 ### 5.3 `deny.toml` Verification
 
-After adding `windows-native`, run `cargo deny check` to verify no new version conflicts.
+~~After adding `windows-native`, run `cargo deny check` to verify no new version conflicts.
 The existing `deny.toml` has `[[bans.skip]]` entries for `windows-sys 0.45` (from `jni`)
 vs `0.61.2` (majority tree). The `windows-native` feature in keyring v3.6.3 uses
 `windows-sys 0.61` (same major as the majority tree). A new skip entry is unlikely needed,
 but must be verified at F4 implementation time. If `cargo deny check` exits 1, add the
-minimal `[[bans.skip]]` entry for the specific version conflict.
+minimal `[[bans.skip]]` entry for the specific version conflict.~~
+
+**C-V2(b) correction (2026-06-13):** The above was wrong. F4 pre-flight verification
+(`.factory/research/windows-build-f4-preflight-verification.md`, C-V2(b)) confirmed that
+keyring v3.6.3 `windows-native` pulls **windows-sys 0.60**, NOT 0.61. The existing
+`deny.toml` skip entries cover only `windows-sys 0.45` (jni) and `0.61.2` (majority
+tree) — `0.60` is NOT covered. A `[[bans.skip]]` entry for `windows-sys 0.60` is
+**REQUIRED** in the same commit as enabling `windows-native`; `cargo deny check` exits 1
+without it under `bans.multiple-versions = "deny"`. This is not conditional — it must be
+added unconditionally.
 
 ---
 
@@ -852,7 +877,7 @@ Any existing NFR covering build/packaging must acknowledge the new artifact form
 
 | Risk ID | Description | Severity | Mitigation |
 |---------|-------------|----------|------------|
-| R-W1 | `windows-native` keyring feature pulls incompatible `windows-sys` version | MEDIUM | Run `cargo deny check` at F4; add `[[bans.skip]]` if needed |
+| R-W1 | `windows-native` keyring feature pulls incompatible `windows-sys` version | MEDIUM | windows-sys 0.60 skip is REQUIRED (C-V2b research-confirmed); added to deny.toml in the same commit as keyring windows-native. Not conditional. |
 | R-W2 | `JR_CONFIG_DIR` debug seam present in debug builds of the final release binary (expected) — ensure `#[cfg(debug_assertions)]` gate is not accidentally removed | LOW | `tests/config_dir_release_gate.rs` regression test pins the gate |
 | R-W3 | Snapshot test CRLF contamination from Windows committers | LOW | Add `.gitattributes` with `*.snap text eol=lf` before Windows CI is active |
 | R-W4 | Embedded-OAuth smoke step skipped on Windows — embedded creds not verified for Windows artifact | MEDIUM | Documented accepted risk for v1; ported smoke step deferred to follow-up cycle |

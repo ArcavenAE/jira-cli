@@ -37,10 +37,10 @@ acceptance_criteria_count: 6
 assumption_validations: []
 risk_mitigations: ["R-W4"]
 created: "2026-06-12"
-last_updated: "2026-06-12"
+last_updated: "2026-06-13"
 breaking_change: false
 files_modified:
-  - .github/workflows/release.yml   # matrix addition, Package (Unix) if-gate, Package (Windows) new step, smoke-step if-gate, upload-artifact glob, release-job files glob
+  - .github/workflows/release.yml   # matrix addition, Package (Unix) if-gate, Package (Windows) pwsh/Compress-Archive new step, Checksum (Windows) bash/sha256sum new step, smoke-step if-gate, upload-artifact glob, release-job files glob
 ---
 
 # S-WIN-4 — release.yml: Windows Build Matrix Row and .zip Packaging
@@ -99,7 +99,7 @@ No runner-compat issue for the release job itself.
 | New matrix row format | architecture-delta.md §3.1 | `{ target: x86_64-pc-windows-msvc, os: windows-latest }`. No `use_cross` field. |
 | `shell: bash` on all `run:` steps | architecture-delta.md §3.2 | Add `shell: bash` to ALL `run:` steps in the `build` job. Git Bash is pre-installed on `windows-latest`. This is a no-op for existing Unix rows. |
 | No `cross` for Windows | architecture-delta.md §3.1 | The existing `Install cross` step is gated `if: matrix.use_cross`. The Windows row has no `use_cross`, so cross is correctly skipped. |
-| Windows package step: `.zip` | architecture-delta.md §3.3; ADR-0016 §Decision 2 | Artifact: `jr-<version>-x86_64-pc-windows-msvc.zip` containing `jr.exe`. Use `zip` via `shell: bash` (Git Bash). Checksum: `sha256sum` via Git Bash. |
+| Windows package step: `.zip` | architecture-delta.md §3.3; ADR-0016 §Decision 2 (re-amended per C-V3) | Artifact: `jr-<version>-x86_64-pc-windows-msvc.zip` containing `jr.exe`. TWO steps: (1) archive creation via PowerShell `Compress-Archive` (`shell: pwsh`) — this is built into PowerShell 5.1+ and is always present on `windows-latest`, immune to the `zip`-not-on-PATH constraint (C-V3 BLOCKER); (2) checksum via `sha256sum` in a separate `shell: bash` step — sha256sum is confirmed present via Git coreutils on `windows-latest`. Do NOT use the Unix `zip` command: it is not in the Git Bash bundle shipped on `windows-latest` runners and will cause the packaging step to fail. |
 | Unix package step: `if: runner.os != 'Windows'` | architecture-delta.md §3.3 | Add the existing `Package` step's condition: `if: runner.os != 'Windows'`. Rename step to `Package (Unix)` for clarity. |
 | Smoke-step gate | architecture-delta.md §3.4; ADR-0016 §Decision 5c | Add `if: runner.os != 'Windows'` to the "Verify embedded OAuth app present" step. No other change to the step body. |
 | Upload-artifact glob | architecture-delta.md §3.5 | Add `jr-*.zip` to the `path:` block. The `.sha256` suffix is shared. |
@@ -110,8 +110,9 @@ No runner-compat issue for the release job itself.
 
 | Tool | Source | Constraint |
 |------|--------|-----------|
-| `zip` | Git Bash on `windows-latest` | Pre-installed via Git Bash on GitHub's `windows-latest` runner. Use `zip <archive> jr.exe` (run after `cd target/${{ matrix.target }}/release` so `jr.exe` is in cwd with no path prefix). |
-| `sha256sum` | Git Bash on `windows-latest` | Pre-installed. Use `sha256sum jr-<ver>-x86_64-pc-windows-msvc.zip > jr-<ver>-x86_64-pc-windows-msvc.zip.sha256`. |
+| `Compress-Archive` (PowerShell cmdlet) | Built into PowerShell 5.1+ (always present on `windows-latest`) | Use in `shell: pwsh` step to create the `.zip` archive. Command: `Compress-Archive -Path "target/${{ matrix.target }}/release/jr.exe" -DestinationPath "jr-${{ github.ref_name }}-${{ matrix.target }}.zip"`. No install step required. Research citation: C-V3 (`.factory/research/windows-build-f4-preflight-verification.md`). |
+| `sha256sum` | Git coreutils bundled with Git for Windows (`C:\Program Files\Git\usr\bin\sha256sum.exe`) | Available on PATH in `shell: bash` steps. Use in a SEPARATE bash step after the PowerShell archive step. Confirmed present on `windows-latest` runners (C-V3 CONFIRMED). |
+| ~~`zip`~~ | ~~Git Bash on `windows-latest`~~ | **DO NOT USE.** `zip` (Unix Info-ZIP) is NOT bundled with Git for Windows and is NOT on the PATH of `windows-latest` runners. Using `zip` in a bash step will fail with `command not found`. This was a BLOCKER (C-V3 REFUTED) — the prior spec's risk-acceptance is superseded. |
 | `softprops/action-gh-release` | existing (pinned SHA in release.yml) | Accepts arbitrary file types including `.zip`. No version change needed. |
 
 ## File Structure Requirements
@@ -128,28 +129,40 @@ No runner-compat issue for the release job itself.
      os: windows-latest
    ```
 
-2. On ALL `run:` steps in the `build` job, add `shell: bash`. The complete inventory of `run:` steps in the `build` job is:
+2. On ALL `run:` steps in the `build` job, add `shell: bash` where the shell is bash. The complete inventory of `run:` steps in the `build` job is:
    - **"Ensure cross-target installed (defensive)"** (`rustup target add ${{ matrix.target }}`) — present on all rows including Windows; add `shell: bash`.
    - **"Install cross"** (gated `if: matrix.use_cross`) — Windows row has no `use_cross`, so this step is skipped on Windows; add `shell: bash` regardless (no-op on Windows due to the gate).
    - **"Build"** (`cargo build ...`) — add `shell: bash`.
    - **"Package (Unix)"** (renamed from "Package"; gated `if: runner.os != 'Windows'`) — add `shell: bash`.
-   - **"Package (Windows)"** (new step; gated `if: runner.os == 'Windows'`) — add `shell: bash` (see item 4 below).
+   - **"Package (Windows)"** (new step; gated `if: runner.os == 'Windows'`) — uses `shell: pwsh` (see item 4a below).
+   - **"Checksum (Windows)"** (new step; gated `if: runner.os == 'Windows'`) — uses `shell: bash` (see item 4b below).
    - **"Verify embedded OAuth app present"** (smoke step; gated `if: runner.os != 'Windows'` per item 5) — add `shell: bash`.
 
 3. Rename existing `Package` step to `Package (Unix)` and add `if: runner.os != 'Windows'`.
 
-4. After the Unix Package step, add:
+4. After the Unix Package step, add TWO steps (replacing the former single bash zip step):
+
+   **Step 4a — Package (Windows)** — PowerShell Compress-Archive (C-V3 fix):
    ```yaml
    - name: Package (Windows)
      if: runner.os == 'Windows'
-     shell: bash
-     run: |
-       cd target/${{ matrix.target }}/release
-       zip ../../../jr-${{ github.ref_name }}-${{ matrix.target }}.zip jr.exe
-       cd ../../..
-       sha256sum jr-${{ github.ref_name }}-${{ matrix.target }}.zip \
-         > jr-${{ github.ref_name }}-${{ matrix.target }}.zip.sha256
+     shell: pwsh
+     run: Compress-Archive -Path "target/${{ matrix.target }}/release/jr.exe" -DestinationPath "jr-${{ github.ref_name }}-${{ matrix.target }}.zip"
    ```
+
+   **Step 4b — Checksum (Windows)** — sha256sum in bash (confirmed available):
+   ```yaml
+   - name: Checksum (Windows)
+     if: runner.os == 'Windows'
+     shell: bash
+     run: sha256sum jr-${{ github.ref_name }}-${{ matrix.target }}.zip > jr-${{ github.ref_name }}-${{ matrix.target }}.zip.sha256
+   ```
+
+   Rationale: `Compress-Archive` is built into PowerShell 5.1+ and is always present on
+   `windows-latest` (no install step required). `zip` (Unix Info-ZIP) is NOT available on
+   `windows-latest` PATH — using it would fail with `command not found` (C-V3 BLOCKER).
+   `sha256sum` remains in a separate `shell: bash` step because it is confirmed present via
+   Git coreutils (C-V3 CONFIRMED) and the bash invocation form is consistent with the Unix steps.
 
 5. Add `if: runner.os != 'Windows'` to the "Verify embedded OAuth app present" step.
 
@@ -171,15 +184,21 @@ Pinned by: `tests/release_yml_windows_matrix.rs::test_release_yml_has_windows_ma
 
 ---
 
-### AC-002 — Package (Windows) step produces `.zip` artifact
-(traces to NFR-P-W1; ADR-0016 §Decision 2 — `.zip` format)
+### AC-002 — Package (Windows) and Checksum (Windows) steps use Compress-Archive + sha256sum
+(traces to NFR-P-W1; ADR-0016 §Decision 2 re-amended per C-V3 BLOCKER)
 
-The `Package (Windows)` step in `release.yml` (gated `if: runner.os == 'Windows'`):
-- Uses `shell: bash`
-- Packages `jr.exe` into `jr-<version>-x86_64-pc-windows-msvc.zip`
-- Produces `jr-<version>-x86_64-pc-windows-msvc.zip.sha256`
+`release.yml` contains TWO Windows-packaging steps (both gated `if: runner.os == 'Windows'`):
 
-Pinned by: `test_release_yml_windows_package_step_produces_zip` (source-text grep)
+1. `Package (Windows)`: uses `shell: pwsh` and runs `Compress-Archive -Path "target/.../jr.exe" -DestinationPath "jr-...-x86_64-pc-windows-msvc.zip"`.
+2. `Checksum (Windows)`: uses `shell: bash` and runs `sha256sum jr-...-x86_64-pc-windows-msvc.zip > jr-...-x86_64-pc-windows-msvc.zip.sha256`.
+
+The `Package (Windows)` step MUST use `shell: pwsh` with `Compress-Archive`.
+It MUST NOT use `shell: bash` with `zip` (Unix Info-ZIP is NOT on `windows-latest` PATH — C-V3 BLOCKER).
+
+No tool-install step is needed: `Compress-Archive` is built into PowerShell 5.1+ which
+is pre-installed on all `windows-latest` runners.
+
+Pinned by: `test_release_yml_windows_package_step_produces_zip` (source-text grep — verifies `Compress-Archive` and `shell: pwsh` are present in the Package (Windows) step; NOT `zip` or `shell: bash`)
 
 ---
 
@@ -250,7 +269,7 @@ Pinned by: integration: existing release CI green on next run (macOS/Linux artif
 | ID | Source | Description | Expected Behavior | AC / BC |
 |----|--------|-------------|-------------------|---------|
 | EC-001 | architecture-delta.md §3.2 | `shell: bash` on an existing Unix `run:` step | No-op; bash is already the effective shell on ubuntu-latest and macos-latest | AC-006 |
-| EC-002 | architecture-delta.md §3.3 | `zip` or `sha256sum` command not available on `windows-latest` | Risk: if Git Bash is not installed or either `zip` or `sha256sum` is not in PATH, the Windows Package step fails. Mitigation: `windows-latest` has Git Bash pre-installed; both `zip` and `sha256sum` are available in Git Bash's `/usr/bin` (both ship in Git for Windows). `sha256sum` availability is an accepted LOW risk on the same basis as `zip` per ADR-0016 Decision 2's amended risk-acceptance. No runtime guard is added (parity with the ADR's accepted-risk stance). H-WIN-6 is the correctness gate. If CI fails, alternative is PowerShell `Compress-Archive` / `Get-FileHash`. | AC-002 |
+| EC-002 | C-V3 BLOCKER — `.factory/research/windows-build-f4-preflight-verification.md` | `zip` (Unix Info-ZIP) is NOT available on `windows-latest` PATH. The runner ships Git for Windows 2.54 which bundles GNU coreutils (sha256sum confirmed) but does NOT bundle the separate `zip` package. Using `zip` in `shell: bash` fails with `command not found`. | **Handled by construction**: the `Package (Windows)` step uses PowerShell `Compress-Archive` (`shell: pwsh`), which is built into PowerShell 5.1+ and is always present on `windows-latest`. No fallback or install step is needed. `sha256sum` availability is confirmed via Git coreutils (C-V3 CONFIRMED) — the separate `Checksum (Windows)` bash step is reliable. The prior risk-acceptance language ("accepted LOW risk") is superseded; this is now resolved by design, not accepted risk. | AC-002 |
 | EC-003 | ADR-0016 §Decision 5c | Smoke step skipped on Windows | BCryptGenRandom path verified implicitly by the build succeeding (build.rs panics if entropy unavailable) | AC-003 |
 | EC-004 | architecture-delta.md §3.5 | `.sha256` glob already in upload path | `jr-*.sha256` covers both `jr-<ver>-<target>.tar.gz.sha256` and `jr-<ver>-<target>.zip.sha256` — no change needed to the sha256 glob | AC-004 |
 
@@ -265,12 +284,17 @@ matrix row, package step, smoke gate, or artifact glob.
 **Presence-only caveat:** AC-001 through AC-005 are YAML source-text assertions. They
 verify that the required configuration text is present in `release.yml` but do NOT verify
 that the resulting workflow executes correctly or that the `.zip` artifact is actually
-produced. A misconfigured step (e.g., `zip` command failing, wrong binary name) would pass
-all five ACs while still producing an empty or absent archive. The SOLE correctness gate
+produced. A misconfigured step (e.g., wrong path in Compress-Archive, wrong binary name)
+would pass all five ACs while still producing an absent archive. The SOLE correctness gate
 for the actual Windows release artifact is **H-WIN-6** — a human inspects the GitHub
 Release page after a live version tag to confirm
 `jr-<version>-x86_64-pc-windows-msvc.zip` and its `.sha256` are present as release
 assets. (This mirrors the limitation explicitly codified in S-WIN-5 AC-004.)
+
+**C-V3 correction note:** `test_release_yml_windows_package_step_produces_zip` must grep
+for `Compress-Archive` and `shell: pwsh` in the `Package (Windows)` step — NOT for `zip`
+or `shell: bash`. A test that greps for `zip` would incorrectly pass on the old (broken)
+spec and fail to detect a regression to the unsafe `zip` invocation.
 
 | Test name | File | AC |
 |-----------|------|-----|
@@ -317,7 +341,7 @@ No cycle.
 2. Read architecture-delta.md §3 for exact step shapes.
 3. Add Windows matrix row to `build` job.
 4. Add `shell: bash` to all `run:` steps in the `build` job.
-5. Split existing `Package` step into `Package (Unix)` (gated `if: runner.os != 'Windows'`) and new `Package (Windows)` (gated `if: runner.os == 'Windows'`).
+5. Split existing `Package` step into three parts: `Package (Unix)` (gated `if: runner.os != 'Windows'`, `shell: bash`, unchanged tarball logic), `Package (Windows)` (gated `if: runner.os == 'Windows'`, `shell: pwsh`, uses `Compress-Archive` — NOT `zip`), and `Checksum (Windows)` (gated `if: runner.os == 'Windows'`, `shell: bash`, uses `sha256sum`). See File Structure Requirements item 4 for exact YAML.
 6. Add `if: runner.os != 'Windows'` to smoke step.
 7. Add `jr-*.zip` to upload-artifact path block and release-job files block.
 8. Create `tests/release_yml_windows_matrix.rs` with 5 source-text assertions.

@@ -25,7 +25,7 @@
 | [ADR-0013](adr/0013-pkce-deferral.md) | PKCE Deferral for OAuth 2.0 Authorization Code Flow | **Accepted** | security-decisions/SD-001-pkce.md |
 | [ADR-0014](adr/0014-jsm-request-create-dispatch-fork.md) | JSM Request Creation Dispatch Fork in `jr issue create` | **Accepted** | component-graph.md §api_jsm, cross-cutting.md §10 |
 | [ADR-0015](../../../docs/adr/0015-proactive-resolution-enforcement.md) | Proactive Resolution Enforcement on Done-Category Transitions | **Accepted** | — (feature ADR) |
-| [ADR-0016](adr/0016-windows-build-target.md) | Windows Build Target (x86_64-msvc, .zip, AppData Paths, WCM, CI) | **Accepted** (amended 2026-06-13: Decision 2 primary zip mechanism clarified; Decision 3 separate-clippy-matrix corrected) | cycles/cycle-001/windows-build/architecture-delta.md |
+| [ADR-0016](adr/0016-windows-build-target.md) | Windows Build Target (x86_64-msvc, .zip, AppData Paths, WCM, CI) | **Accepted** (amended 2026-06-13 F-WIN-F3-001: Decision 3 separate-clippy-matrix corrected; amended 2026-06-13 F-WIN-F3-003: Decision 2 primary zip clarified — **superseded same day by C-V3 re-amendment**: `zip` not on PATH; Compress-Archive (pwsh) is now primary; amended 2026-06-13 C-V2(b): Decision 5b deny.toml note corrected — windows-sys 0.60 skip is REQUIRED, not conditional) | cycles/cycle-001/windows-build/architecture-delta.md |
 
 ---
 

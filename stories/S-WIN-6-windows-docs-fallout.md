@@ -175,9 +175,9 @@ Pinned by: `test_adr_0016_materialized_in_docs_adr` (file existence + grep for b
 
 `.factory/architecture/adr-index.md` contains an entry for ADR-0016 with status
 `Accepted` and a link to the ADR file. **Do NOT overwrite an existing row** — if an
-ADR-0016 row is already present (e.g., carrying the 2026-06-13 amendment annotation
-"Accepted (amended 2026-06-13: Decision 2 primary zip mechanism clarified; Decision 3
-separate-clippy-matrix corrected)"), verify that row is intact and leave it unchanged.
+ADR-0016 row is already present (regardless of what amendment-annotation text it carries;
+the annotation evolves across correction passes such as F-WIN-F3-001/003, C-V2(b), and
+C-V3), verify that row is intact and leave it unchanged.
 Only add a new row if no ADR-0016 entry exists at all.
 
 Pinned by: `test_adr_index_includes_adr_0016` (substring grep for `ADR-0016` AND

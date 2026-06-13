@@ -6,7 +6,7 @@ version: "1.4.38"
 total_stories: 74
 total_waves: 4
 status: complete
-last_updated: 2026-06-13 (Windows-build F3 adversarial story-convergence CONVERGED — 3 clean passes P6/P7/P8; S-WIN-1..6 status complete; total_stories 74 authoritative)
+last_updated: 2026-06-13 (Windows-build F3 adversarial story-convergence CONVERGED — 3 clean passes P6/P7/P8; S-WIN-1..6 status complete; total_stories 74 authoritative. Pre-F4 BLOCKER corrections applied: S-WIN-3 deny.toml windows-sys 0.60 skip now REQUIRED not conditional (C-V2b); S-WIN-4 Package (Windows) step replaced with Compress-Archive/pwsh + Checksum (Windows)/bash, zip removed (C-V3))
 activation_head: dea1664
 ---
 
@@ -238,8 +238,8 @@ S-WIN-5 (Wave 3, depends on S-WIN-1 and S-WIN-2).
 |----------|-------|-----------------|--------|-------------|------|
 | S-WIN-1 | Per-OS path resolution: `#[cfg(windows)]` branches in `global_config_dir()` and `cache_root()` | BC-6.1.014, BC-6.2.016, BC-6.2.004, NFR-P-W1 | **ready** — F3 CONVERGED (adv P6/7/8); depends on S-WIN-2; awaiting F4 dispatch | small (5 SP) | 2 |
 | S-WIN-2 | `JR_CONFIG_DIR` / `JR_CACHE_DIR` debug-only path-isolation seam + `tests/config_dir_release_gate.rs` | BC-6.2.017, NFR-P-W1 | **ready** — F3 CONVERGED (adv P6/7/8); no dependencies; awaiting F4 dispatch | small (3 SP) | 1 |
-| S-WIN-3 | Add `windows-native` feature to keyring in Cargo.toml; verify `cargo deny check` compatibility | NFR-P-W1, NFR-S-F | **ready** — F3 CONVERGED (adv P6/7/8); no dependencies; awaiting F4 dispatch | xsmall (2 SP) | 1 |
-| S-WIN-4 | `release.yml`: x86_64-pc-windows-msvc matrix row, `.zip` packaging, smoke-step gate, artifact glob | NFR-P-W1 | **ready** — F3 CONVERGED (adv P6/7/8); depends on S-WIN-3; awaiting F4 dispatch | small (5 SP) | 2 |
+| S-WIN-3 | Add `windows-native` feature to keyring in Cargo.toml; `[[bans.skip]]` for windows-sys 0.60 REQUIRED in same commit | NFR-P-W1, NFR-S-F | **ready** — F3 CONVERGED; BLOCKER corrected 2026-06-13 (C-V2b: windows-sys 0.60 skip is required, not conditional; deny.toml change mandatory); awaiting F4 dispatch | xsmall (2 SP) | 1 |
+| S-WIN-4 | `release.yml`: x86_64-pc-windows-msvc matrix row, `.zip` packaging via `Compress-Archive` (pwsh), smoke-step gate, artifact glob | NFR-P-W1 | **ready** — F3 CONVERGED; BLOCKER corrected 2026-06-13 (C-V3: Package (Windows) now Compress-Archive/pwsh + Checksum (Windows)/bash; zip removed); awaiting F4 dispatch | small (5 SP) | 2 |
 | S-WIN-5 | `ci.yml` Windows CI job: `windows-latest` test matrix, test-helper seam migration, `.gitattributes` snap eol=lf | BC-6.2.017, NFR-P-W1 | **ready** — F3 CONVERGED (adv P6/7/8); depends on S-WIN-1 + S-WIN-2; awaiting F4 dispatch | medium (8 SP) | 3 |
 | S-WIN-6 | Docs fallout: CLAUDE.md JR_* table entries, Windows config/cache path docs, ADR-0016 materialize, adr-index | BC-6.2.017, NFR-P-W1 | **ready** — F3 CONVERGED (adv P6/7/8); depends on S-WIN-2; awaiting F4 dispatch | small (2 SP) | 2 |
 
@@ -433,7 +433,7 @@ Total rows: 74 (matches `total_stories: 74` in frontmatter). Updated 2026-06-12 
 | S-475 | feature-followup (feature mode F3; ADF E2E read-path coverage; BC-7.2.003/004/006; 67→68; 2026-06-11) | /Users/zious/Documents/GITHUB/jira-cli/.factory/stories/S-475-adf-e2e-readpath.md |
 | S-WIN-1 | feature-followup (windows-build cycle-001 F3; per-OS path resolution; BC-6.1.014/6.2.016/6.2.004/NFR-P-W1; 2026-06-12; depends on S-WIN-2) | /Users/zious/Documents/GITHUB/jira-cli/.factory/stories/S-WIN-1-windows-per-os-path-resolution.md |
 | S-WIN-2 | feature-followup (windows-build cycle-001 F3; debug path-isolation seam JR_CONFIG_DIR/JR_CACHE_DIR + release gate test; BC-6.2.017/NFR-P-W1; 2026-06-12; no deps) | /Users/zious/Documents/GITHUB/jira-cli/.factory/stories/S-WIN-2-debug-path-isolation-seam.md |
-| S-WIN-3 | feature-followup (windows-build cycle-001 F3; keyring windows-native feature + cargo deny check; NFR-P-W1/NFR-S-F; 2026-06-12; no deps) | /Users/zious/Documents/GITHUB/jira-cli/.factory/stories/S-WIN-3-keyring-windows-native-feature.md |
-| S-WIN-4 | feature-followup (windows-build cycle-001 F3; release.yml Windows matrix + .zip packaging + smoke-step gate; NFR-P-W1; 2026-06-12; depends on S-WIN-3) | /Users/zious/Documents/GITHUB/jira-cli/.factory/stories/S-WIN-4-release-yml-windows-target.md |
+| S-WIN-3 | feature-followup (windows-build cycle-001 F3; keyring windows-native feature + deny.toml windows-sys 0.60 skip REQUIRED; NFR-P-W1/NFR-S-F; 2026-06-12; corrected 2026-06-13 C-V2b; no deps) | /Users/zious/Documents/GITHUB/jira-cli/.factory/stories/S-WIN-3-keyring-windows-native-feature.md |
+| S-WIN-4 | feature-followup (windows-build cycle-001 F3; release.yml Windows matrix + Compress-Archive/pwsh packaging + sha256sum/bash checksum + smoke-step gate; NFR-P-W1; 2026-06-12; corrected 2026-06-13 C-V3; depends on S-WIN-3) | /Users/zious/Documents/GITHUB/jira-cli/.factory/stories/S-WIN-4-release-yml-windows-target.md |
 | S-WIN-5 | feature-followup (windows-build cycle-001 F3; ci.yml Windows CI job + test-helper seam migration + .gitattributes + clippy matrix; BC-6.2.017/NFR-P-W1; 2026-06-12; depends on S-WIN-1+S-WIN-2) | /Users/zious/Documents/GITHUB/jira-cli/.factory/stories/S-WIN-5-ci-yml-windows-job.md |
 | S-WIN-6 | feature-followup (windows-build cycle-001 F3; docs fallout: CLAUDE.md JR_* table + Windows paths + ADR-0016 materialize + adr-index; BC-6.2.017/NFR-P-W1; 2026-06-12; depends on S-WIN-2) | /Users/zious/Documents/GITHUB/jira-cli/.factory/stories/S-WIN-6-windows-docs-fallout.md |

@@ -83,6 +83,13 @@ the correct choice.
 was made explicitly for cross-compilation reasons. That decision pays off here: no TLS
 linking issues on Windows.
 
+**TLS implementation note (C-V5 inoculation, 2026-06-13):** On Windows, reqwest 0.13's
+`rustls` feature activates `rustls-platform-verifier 0.6` (delegates root verification to
+the Windows certificate store via CryptoAPI) with `aws-lc-rs` as the crypto provider —
+NOT `webpki-roots` and NOT `ring`. This is confirmed by the reqwest v0.13.0 `Cargo.toml`
+`rustls` feature entry (`dep:rustls-platform-verifier`, `__rustls-aws-lc-rs`). Cross-ref:
+ADR-0003. Research: C-V5 in `.factory/research/windows-build-f4-preflight-verification.md`.
+
 ### Decision 2: Artifact format `.zip`
 
 **Decision:** Package the Windows binary as `jr-<version>-x86_64-pc-windows-msvc.zip`
@@ -97,12 +104,12 @@ PowerShell `Expand-Archive` without third-party tools. CLI tools on Windows (e.g
 expectations. The `softprops/action-gh-release` step accepts arbitrary file types;
 `.zip` uploads cleanly alongside the existing `.tar.gz` artifacts.
 
-**Implementation note:** Use `shell: bash` with `zip` (Git Bash) AND `sha256sum` (Git
+**Implementation note:** ~~Use `shell: bash` with `zip` (Git Bash) AND `sha256sum` (Git
 Bash) — both are pre-installed on `windows-latest` GitHub-hosted runners via the Git for
 Windows bundle. Specify `shell: bash` on the `run:` step; no further PATH manipulation is
-needed.
+needed.~~
 
-> **AMENDED 2026-06-13 (F-WIN-F3-003):** Adversarial review found the original wording
+> **AMENDED 2026-06-13 (F-WIN-F3-003):** ~~Adversarial review found the original wording
 > listed `Compress-Archive` as a fallback without clarifying the primary mechanism, leaving
 > an ambiguous "either works" statement that could cause implementer divergence. Resolution
 > chosen: **Git Bash `zip` is the primary, deterministic packaging mechanism** for the
@@ -116,7 +123,58 @@ needed.
 > availability depends on the runner image (not a standard Windows OS feature), the story
 > S-WIN-4 EC-002 risk is accepted as LOW given GitHub's image stability guarantees; no
 > additional AC or runtime check is required. Story S-WIN-4 AC-002 wording is consistent
-> with this decision — see story-writer note below.
+> with this decision — see story-writer note below.~~
+>
+> **SUPERSEDED 2026-06-13 (C-V3 re-amendment):** The F-WIN-F3-003 amendment above is
+> factually incorrect and is superseded by this block. Pre-F4 verification research
+> (`.factory/research/windows-build-f4-preflight-verification.md`, Claim C-V3) refuted
+> the core premise: the Unix `zip` command is **NOT** available on `windows-latest`
+> runners. Primary sources confirm: (1) the MSYS2 package index lists `zip` as a
+> separately-installable package (`pacman -S zip`), NOT part of the coreutils/base set
+> that Git for Windows bundles; (2) the Windows2022/Windows2025 runner-images manifests
+> list `7zip` and `zstd` but do NOT list `zip` (the Info-ZIP Unix command); (3)
+> `azure/azure-cli#27842` documents `bash: line N: zip: command not found` on these
+> runners; (4) `actions/runner-images#9361` shows GitHub actively trims compression
+> tooling. A bash step running `zip ...` on `windows-latest` will fail at that line.
+>
+> **Locked Decision 2 (as of C-V3):**
+>
+> The Windows release artifact is produced with **PowerShell `Compress-Archive`**
+> (`shell: pwsh`) as the PRIMARY, deterministic `.zip` packaging mechanism — NOT Git Bash
+> `zip`. `sha256sum` (Git for Windows coreutils, confirmed available) is used for the
+> checksum, but MUST be in a **separate** `shell: bash` step so a missing `zip` binary
+> cannot silently prevent checksum generation.
+>
+> Chosen implementation shape (two steps):
+>
+> ```yaml
+> - name: Package (Windows)
+>   if: runner.os == 'Windows'
+>   shell: pwsh
+>   run: |
+>     Compress-Archive -Path "target/${{ matrix.target }}/release/jr.exe" `
+>       -DestinationPath "jr-${{ github.ref_name }}-${{ matrix.target }}.zip"
+>
+> - name: Checksum (Windows)
+>   if: runner.os == 'Windows'
+>   shell: bash
+>   run: |
+>     sha256sum jr-${{ github.ref_name }}-${{ matrix.target }}.zip \
+>       > jr-${{ github.ref_name }}-${{ matrix.target }}.zip.sha256
+> ```
+>
+> `Compress-Archive` is always present on `windows-latest` (ships with PowerShell 5.1+,
+> built into Windows). `sha256sum` is confirmed available from Git for Windows coreutils
+> (C-V3). No external tool installation is required.
+>
+> **EC-002 reframing:** The `zip`-not-available case is no longer an "accepted LOW risk"
+> — it is the definitive reason `Compress-Archive` is primary. Story S-WIN-4 EC-002 must
+> be reframed from risk-acceptance of a LOW-probability failure to a statement that the
+> `zip`-unavailable constraint is handled by construction (Compress-Archive is immune to it).
+>
+> Primary sources: MSYS2 package index (https://packages.msys2.org/package/zip);
+> actions/runner-images Windows2022-Readme / Windows2025-Readme; azure/azure-cli#27842;
+> actions/runner-images#9361. Research report: C-V3.
 
 ### Decision 3: Add Windows job to `ci.yml` (full CI regression protection)
 
@@ -268,10 +326,17 @@ character. The `<profile>:oauth-access-token` scheme is therefore portable to Wi
 unchanged with no key sanitization required (verified against keyring-rs v3.6.3
 `src/windows.rs` + Microsoft `CredWriteW` documentation, 2026-06-12).
 
-**`deny.toml` note:** `windows-native` pulls in `windows-sys` (wincred backend). The
+~~**`deny.toml` note:** `windows-native` pulls in `windows-sys` (wincred backend). The
 existing `deny.toml` already skips the `windows-sys 0.45` / `0.61.2` version conflict.
 Adding `windows-native` may introduce a new windows-sys version. Verify `cargo deny check`
-at implementation time and add a `[[bans.skip]]` entry if needed.
+at implementation time and add a `[[bans.skip]]` entry if needed.~~
+
+**C-V2(b) amendment (2026-06-13):** F4 pre-flight verification confirmed that keyring
+v3.6.3 `windows-native` pulls **windows-sys 0.60**, not 0.61. The existing skip entries
+cover only 0.45 and 0.61.2 — `0.60` is absent. A `[[bans.skip]]` entry for windows-sys
+0.60 is **REQUIRED** (not conditional) in the same commit as enabling `windows-native`;
+`cargo deny check` under `bans.multiple-versions = "deny"` exits 1 without it.
+Source: `.factory/research/windows-build-f4-preflight-verification.md`, claim C-V2(b).
 
 ### Decision 5c: Embedded-OAuth smoke step gated off on Windows
 
