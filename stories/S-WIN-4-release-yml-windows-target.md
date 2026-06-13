@@ -27,8 +27,8 @@ nfr_anchors:
   - NFR-P-W1
 adr_refs:
   - ADR-0016
-sd_refs:
   - ADR-0006
+sd_refs: []
 parent_phase: F3-incremental-stories
 spec_source: ".factory/cycles/cycle-001/windows-build/architecture-delta.md"
 implementation_strategy: tdd
@@ -250,7 +250,7 @@ Pinned by: integration: existing release CI green on next run (macOS/Linux artif
 | ID | Source | Description | Expected Behavior | AC / BC |
 |----|--------|-------------|-------------------|---------|
 | EC-001 | architecture-delta.md §3.2 | `shell: bash` on an existing Unix `run:` step | No-op; bash is already the effective shell on ubuntu-latest and macos-latest | AC-006 |
-| EC-002 | architecture-delta.md §3.3 | `zip` command not available on `windows-latest` | Risk: if Git Bash is not installed or `zip` is not in PATH, the Windows Package step fails. Mitigation: `windows-latest` has Git Bash pre-installed; `zip` is available in Git Bash's `/usr/bin`. If CI fails, alternative is PowerShell `Compress-Archive`. | AC-002 |
+| EC-002 | architecture-delta.md §3.3 | `zip` or `sha256sum` command not available on `windows-latest` | Risk: if Git Bash is not installed or either `zip` or `sha256sum` is not in PATH, the Windows Package step fails. Mitigation: `windows-latest` has Git Bash pre-installed; both `zip` and `sha256sum` are available in Git Bash's `/usr/bin` (both ship in Git for Windows). `sha256sum` availability is an accepted LOW risk on the same basis as `zip` per ADR-0016 Decision 2's amended risk-acceptance. No runtime guard is added (parity with the ADR's accepted-risk stance). H-WIN-6 is the correctness gate. If CI fails, alternative is PowerShell `Compress-Archive` / `Get-FileHash`. | AC-002 |
 | EC-003 | ADR-0016 §Decision 5c | Smoke step skipped on Windows | BCryptGenRandom path verified implicitly by the build succeeding (build.rs panics if entropy unavailable) | AC-003 |
 | EC-004 | architecture-delta.md §3.5 | `.sha256` glob already in upload path | `jr-*.sha256` covers both `jr-<ver>-<target>.tar.gz.sha256` and `jr-<ver>-<target>.zip.sha256` — no change needed to the sha256 glob | AC-004 |
 
