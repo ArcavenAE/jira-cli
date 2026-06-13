@@ -38,7 +38,7 @@ acceptance_criteria_count: 5
 assumption_validations: []
 risk_mitigations: []
 created: "2026-06-12"
-last_updated: "2026-06-12"
+last_updated: "2026-06-13"
 breaking_change: false
 files_modified:
   - CLAUDE.md                                     # JR_CONFIG_DIR / JR_CACHE_DIR in JR_* env table; Windows config/cache path entries; NOTE gotcha

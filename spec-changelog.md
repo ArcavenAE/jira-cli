@@ -7,6 +7,68 @@ project: "jr (jira-cli)"
 
 Track all spec version changes. Most recent version first.
 
+## [1.3.11] - 2026-06-13
+
+### Type: PATCH
+
+### Summary
+
+DEC-082 pre-F4 external-claim verification corrections propagated to F3-converged artifacts.
+No BC or NFR bodies were modified (BC 597 / NFR 42 unchanged). Two BLOCKER findings from
+primary-source research (keyring 3.6.3 Cargo.toml; actions/runner-images manifest; MSYS2
+package index) corrected two factually wrong claims that had survived internal-consistency
+adversarial review:
+
+- **C-V2(b) BLOCKER:** keyring `windows-native` pulls `windows-sys 0.60` — NOT covered by
+  existing deny.toml skips (0.45/0.61). ADR-0016 Decision 5b deny.toml note updated from
+  "may need a skip" to "REQUIRED skip". architecture-delta §5.3 strikethrough+correction
+  applied. S-WIN-3 AC-002/EC-001/file-structure requirements updated to mandate the
+  windows-sys 0.60 `[[bans.skip]]` entry unconditionally. R-W1 risk record corrected.
+- **C-V3 BLOCKER:** Unix `zip` command is NOT available on `windows-latest` GitHub runners.
+  ADR-0016 Decision 2 F-WIN-F3-003 amendment (Git Bash zip primary) superseded by C-V3
+  re-amendment (PowerShell `Compress-Archive` / `shell: pwsh` primary; sha256sum in
+  separate `shell: bash` step). architecture-delta §3.3 updated. S-WIN-4 AC-002 and
+  packaging steps updated; EC-002 reframed.
+- **C-V5 note (confirmed, no correction):** TLS note (aws-lc-rs backend, not ring) added
+  to ADR-0016 Decision 1 as a C-V5 inoculation paragraph.
+- S-WIN-6 stale adr-index quote genericized (AC-005 wording no longer references a specific
+  amendment-annotation text that would silently become stale on the next ADR amendment).
+
+### Modified Requirements
+
+No BC or NFR bodies modified. Corrections are to architecture decision records
+(ADR-0016), architecture-delta cycle artifact, and story files (S-WIN-3, S-WIN-4, S-WIN-6).
+STORY-INDEX last_updated and version bumped by story-writer (v1.4.37→v1.4.38) reflecting the
+F3-convergence + DEC-082 corrections. ADR-0016 date bumped to 2026-06-13 (effective amendment
+date). architecture-delta date bumped to 2026-06-13. S-WIN-6 last_updated bumped to 2026-06-13.
+
+### Impact Assessment
+
+| Dimension | Before | After | Delta |
+|-----------|--------|-------|-------|
+| BC corpus (BC-INDEX.md total_bcs) | 597 | 597 | 0 |
+| NFR corpus | 42 | 42 | 0 |
+| ADR count | 16 | 16 | 0 (ADR-0016 amended in place, not new) |
+| Stories total | 74 | 74 | 0 |
+| Governing decision | — | DEC-082 | STATE.md decisions log |
+
+### Research Source
+
+`.factory/research/windows-build-f4-preflight-verification.md` (claims C-V2b, C-V3, C-V5).
+Primary sources: keyring v3.6.3 Cargo.toml (docs.rs); actions/runner-images Windows2022/2025
+manifests; MSYS2 package index; reqwest v0.13.0 Cargo.toml.
+
+### Required Follow-Ups
+
+- Phase F5 adversarial re-review (scoped to DEC-082 corrections)
+- Phase F7 re-gate before S-WIN-3/4 F4 implementation
+- S-WIN-3 implementer must add `[[bans.skip]]` for windows-sys 0.60 in same commit as
+  keyring `windows-native` feature (AC-002 mandatory, not conditional)
+- S-WIN-4 implementer must use `Compress-Archive` (shell: pwsh) for packaging,
+  NOT `zip` (shell: bash) — see AC-002
+
+---
+
 ## [1.3.10] - 2026-06-11
 
 ### Type: PATCH

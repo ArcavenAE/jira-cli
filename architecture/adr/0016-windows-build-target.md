@@ -2,7 +2,7 @@
 document_type: architecture-decision-record
 adr_number: "0016"
 status: Accepted
-date: 2026-06-12
+date: 2026-06-13
 supersedes: []
 superseded_by: []
 related: ["ADR-0003", "ADR-0006", "BC-6.1.001", "BC-6.1.002", "BC-1.4.027", "BC-6.1.014", "BC-6.2.016", "BC-6.2.017"]

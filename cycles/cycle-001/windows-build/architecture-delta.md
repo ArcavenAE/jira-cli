@@ -4,7 +4,7 @@ feature: windows-build
 cycle: cycle-001
 base_ref: 587206e
 base_version: 0.6.0-dev.1
-date: 2026-06-12
+date: 2026-06-13
 author: architect
 status: accepted
 adr: ADR-0016
