@@ -160,22 +160,29 @@ Pinned by: `test_claude_md_documents_windows_paths` (source-text grep)
 ### AC-004 — ADR-0016 is present in docs/adr/
 (traces to architecture-delta.md §8 — ADR must be accessible alongside existing ADRs)
 
-`docs/adr/0016-windows-build-target.md` exists and contains the full ADR-0016 text
-(including all five decisions, rationale, consequences, and cross-references to
-ADR-0003 and ADR-0006).
+`docs/adr/0016-windows-build-target.md` exists and is a verbatim copy of
+`.factory/architecture/adr/0016-windows-build-target.md`, including all five top-level
+decisions PLUS sub-decisions 5b (keyring Windows Credential Manager) and 5c (OAuth
+smoke-step gate), rationale, consequences, and cross-references to ADR-0003 and ADR-0006.
 
-Pinned by: `test_adr_0016_materialized_in_docs_adr` (file existence + content check)
+Pinned by: `test_adr_0016_materialized_in_docs_adr` (file existence + grep for both
+`5b` and `5c` headings/labels so a truncated copy missing either sub-decision fails)
 
 ---
 
-### AC-005 — ADR-0016 row added to adr-index.md
+### AC-005 — ADR-0016 row present in adr-index.md (verify/reconcile, do not overwrite)
 (traces to architecture-delta.md §8 — ADR registry updated)
 
-`.factory/architecture/adr-index.md` contains an entry for ADR-0016 with title
-"Windows Build Target (x86_64-msvc, .zip, AppData Paths, WCM, CI)", status "Accepted",
-and a link to the ADR file.
+`.factory/architecture/adr-index.md` contains an entry for ADR-0016 with status
+`Accepted` and a link to the ADR file. **Do NOT overwrite an existing row** — if an
+ADR-0016 row is already present (e.g., carrying the 2026-06-13 amendment annotation
+"Accepted (amended 2026-06-13: Decision 2 primary zip mechanism clarified; Decision 3
+separate-clippy-matrix corrected)"), verify that row is intact and leave it unchanged.
+Only add a new row if no ADR-0016 entry exists at all.
 
-Pinned by: `test_adr_index_includes_adr_0016` (source-text grep of adr-index.md)
+Pinned by: `test_adr_index_includes_adr_0016` (substring grep for `ADR-0016` AND
+`Accepted` in adr-index.md — NOT a full-title exact match, so the test passes against
+both the bare title and the amended-annotation form)
 
 ---
 
