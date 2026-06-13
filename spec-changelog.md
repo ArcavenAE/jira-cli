@@ -7,6 +7,80 @@ project: "jr (jira-cli)"
 
 Track all spec version changes. Most recent version first.
 
+## [1.3.12] - 2026-06-13
+
+### Type: PATCH
+
+### Summary
+
+S-WIN-3 F4 implementation-confirmed deny.toml scope reconciliation (DEC-082 follow-on).
+No BC or NFR bodies were modified (BC 597 / NFR 42 / ADR 16 / Stories 74 unchanged).
+Three implementation findings propagated to spec artifacts after `cargo deny check EXIT 0`
+confirmed the full transitive scope in the S-WIN-3 worktree:
+
+- **F-WIN3-IMPL-102 (transitive-deny-scope):** The DEC-082 correction had documented a single
+  `[[bans.skip]]` entry (windows-sys 0.60). Implementation revealed the full required scope is
+  exactly 17 entries: 1 (windows-sys 0.60) + 0.42 tier (windows-targets 0.42 + 7 arch crates)
+  + 0.53 tier (windows-targets 0.53 + 7 arch crates) = 1 + 2×(1+7) = 17. Propagated to:
+  S-WIN-3 (files_modified comment, AC-002, EC-001), STORY-INDEX.md (S-WIN-3 rows),
+  architecture-delta §5.3, ADR-0016 Decision 5b scope correction, research C-V2(b) scope
+  annotation.
+- **F-WIN3-RA-101 (count correction 8→7 arch crates):** The 0.42 generation lacks
+  `windows_i686_gnullvm` (stub did not exist). Only 7 arch crates are skipped per tier
+  (not 8); a skip for `windows_i686_gnullvm` would be unmatched and produce a cargo-deny
+  error. Propagated alongside F-WIN3-IMPL-102 to same artifacts.
+- **F-WIN3-AR1 (windows-sys topology):** Architecture-delta §5.3 and STORY-INDEX now
+  document the three-tier lineage explicitly: 0.42.x (jni → windows-sys 0.45 →
+  rustls-platform-verifier), 0.52.6 (ring; un-skipped canonical), 0.53.x (keyring
+  windows-native → windows-sys 0.60). Plus process-gap PG-WIN3-001 codified in
+  architecture-delta §10, and WIN-DENY-FRAGILITY risk (LOW) tracked in §10.
+
+ADR-0016 date remains 2026-06-13 (already set by DEC-082 amendment — no further date bump
+needed; the decision content is unchanged, only the scope documentation is corrected).
+This is an implementation-driven doc-accuracy reconciliation within the already-approved
+S-WIN-3 story, not a behavioral-decision change. 3-clean adversarial re-convergence
+(DEC-082/083 passes A/B/C) was already complete before F4 began; no new adversarial
+re-convergence or re-gate is required for this follow-on documentation correction.
+
+### Modified Requirements
+
+No BC or NFR bodies modified. Corrections are to architecture-delta cycle artifact,
+ADR-0016 Decision 5b scope block, S-WIN-3 story spec, STORY-INDEX.md S-WIN-3 rows,
+and research file C-V2(b) annotation. spec-changelog v1.3.11→v1.3.12 (this entry).
+
+### Impact Assessment
+
+| Dimension | Before | After | Delta |
+|-----------|--------|-------|-------|
+| BC corpus (BC-INDEX.md total_bcs) | 597 | 597 | 0 |
+| NFR corpus | 42 | 42 | 0 |
+| ADR count | 16 | 16 | 0 (ADR-0016 amended in place) |
+| Stories total | 74 | 74 | 0 |
+| S-WIN-3 deny scope | "1 skip entry" | "17 skip entries (7 arch crates / 0.52.6 canonical)" | Documentation only |
+| Governing decision | — | DEC-082 follow-on (F4 implementation-confirmed) | STATE.md |
+
+### Research Source
+
+`.factory/research/windows-build-f4-preflight-verification.md` (C-V2b scope annotation).
+Implementation-confirmed via `cargo deny check EXIT 0` in S-WIN-3 worktree (branch
+feat/win-3-keyring-windows-native, 2026-06-13).
+
+### Re-Gate Assessment
+
+**No behavioral re-gate required.** This is an implementation-driven doc-accuracy
+reconciliation within an already-approved story (S-WIN-3, F3 gate RE-AFFIRMED DEC-084).
+The DECISION (enable windows-native + add required deny skips) is unchanged; only the
+documented scope of the skip set is corrected from "1 entry (windows-sys 0.60)" to
+"17 entries (transitive tier)". The 3-clean adversarial convergence completed under
+DEC-082/083 already validated the full skip requirement. Standard per-story convergence
+applies; S-WIN-3 is already 3-clean and implementation-confirmed green.
+
+### Change Record
+
+`.factory/cycles/cycle-001/windows-build/spec-change-record-S-WIN-3-F4.md`
+
+---
+
 ## [1.3.11] - 2026-06-13
 
 ### Type: PATCH

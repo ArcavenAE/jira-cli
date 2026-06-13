@@ -341,15 +341,18 @@ Source: `.factory/research/windows-build-f4-preflight-verification.md`, claim C-
 **Scope correction (implementation-confirmed, 2026-06-13):** The C-V2(b) research
 correctly identified windows-sys 0.60 but did NOT trace the transitive fan-out a new
 windows-sys minor mechanically introduces. S-WIN-3 implementation confirmed that windows-sys
-0.60 (via windows-native) pulls `windows-targets 0.53.x` and 8 `windows_*` arch crates at
+0.60 (via windows-native) pulls `windows-targets 0.53.x` and 7 `windows_*` arch crates at
 the 0.53.x tier. Combined with the pre-existing 0.42.x lineage (jni → windows-sys 0.45)
 and 0.52.x lineage (ring → windows-sys 0.52), Cargo.lock carries windows-targets at three
-versions. `cargo deny check` required ~17 `[[bans.skip]]` entries in total — not 1 — to
-pass: 1 (windows-sys 0.60) + the 0.42 tier (windows-targets 0.42 + 8 arch crates) + the
-0.53 tier (windows-targets 0.53 + 8 arch crates), leaving 0.52.6 as the single un-skipped
-canonical version. The DECISION (enable windows-native + add required deny skips) is
-unchanged; only the documented scope of the skip set is corrected here. See
-architecture-delta.md §5.3 and §10 process-gap note (PG-WIN3-001).
+versions. `cargo deny check` required exactly 17 `[[bans.skip]]` entries in total — not 1
+— to pass: 1 (windows-sys 0.60) + the 0.42 tier (windows-targets 0.42 + 7 arch crates) +
+the 0.53 tier (windows-targets 0.53 + 7 arch crates) = 1 + 2 × (1 + 7) = 17, leaving
+0.52.6 as the single un-skipped canonical version. Note: `windows_i686_gnullvm` is NOT
+skipped — it has no 0.42 tier (the i686-gnullvm stub did not exist in the 0.42 generation);
+only 2 versions appear in Cargo.lock (0.52.6, 0.53.1) and `cargo deny` tolerates it; a
+skip entry would be unmatched and would error. The DECISION (enable windows-native + add
+required deny skips) is unchanged; only the documented scope of the skip set is corrected
+here. See architecture-delta.md §5.3 and §10 process-gap note (PG-WIN3-001).
 
 ### Decision 5c: Embedded-OAuth smoke step gated off on Windows
 

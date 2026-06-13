@@ -733,18 +733,21 @@ added unconditionally.
 
 **Implementation-confirmed scope correction (2026-06-13):** The windows-sys 0.60 skip is
 not a single entry. Enabling `windows-sys 0.60` via `windows-native` mechanically
-introduces a new `windows-targets` minor (0.53.x) and a corresponding tier of 8
+introduces a new `windows-targets` minor (0.53.x) and a corresponding tier of 7
 `windows_*` architecture crates (0.53.x). Cargo.lock at S-WIN-3 implementation confirms
 `windows-targets` at THREE versions — 0.42.2 (jni → windows-sys 0.45 →
 rustls-platform-verifier), 0.52.6 (ring → windows-sys 0.52), and 0.53.5 (keyring
 windows-native → windows-sys 0.60) — with `windows_*` arch crates at the same three
 tiers. `cargo deny check` under `bans.multiple-versions = "deny"` requires N-1 versions
 skipped per crate; the implementation leaves 0.52.6 as the single un-skipped version for
-both `windows-targets` and the 8 arch families, and skips the 0.42 and 0.53 tiers. The
-total deny skip set is **~17 entries**: 1 (`windows-sys 0.60`) + 2 tiers × (1
-`windows-targets` + 8 `windows_*` arch crates) = 1 + 18 skips across the two non-canonical
-tiers (0.42 and 0.53). Budget the deny skip set as a tier (~9 entries per new
-windows-targets lineage), not a single windows-sys entry. See process-gap note in §10.
+both `windows-targets` and the 7 arch families, and skips the 0.42 and 0.53 tiers. The
+total deny skip set is **exactly 17 entries**: 1 (`windows-sys 0.60`) + 2 tiers × (1
+`windows-targets` + 7 `windows_*` arch crates) = 1 + 16 = 17 entries across the two
+non-canonical tiers (0.42 and 0.53). Note: `windows_i686_gnullvm` is NOT skipped because
+it has no 0.42 tier (the i686-gnullvm stub did not exist in the 0.42 generation); only 2
+versions appear in Cargo.lock (0.52.6, 0.53.1) and `cargo deny` tolerates it; a skip would
+be an unmatched-skip error. Budget the deny skip set as a tier, not a single windows-sys
+entry. See process-gap note in §10.
 
 ---
 
@@ -892,7 +895,7 @@ Any existing NFR covering build/packaging must acknowledge the new artifact form
 
 | Risk ID | Description | Severity | Mitigation |
 |---------|-------------|----------|------------|
-| R-W1 | `windows-native` keyring feature pulls incompatible `windows-sys` version and a full transitive windows-targets/windows_* tier | MEDIUM | windows-sys 0.60 skip is REQUIRED (C-V2b research-confirmed), but enabling a new windows-sys minor entails a full tier: windows-targets (0.53.x) + 8 windows_* arch crates (0.53.x) alongside the pre-existing 0.42 lineage. Total ~17 [[bans.skip]] entries; 0.52 (ring lineage) left as un-skipped canonical. Added to deny.toml in the same commit as keyring windows-native. Not conditional. Risk severity revised from "trivial single entry" to fully-documented tier. See §5.3 and §10 process-gap note. |
+| R-W1 | `windows-native` keyring feature pulls incompatible `windows-sys` version and a full transitive windows-targets/windows_* tier | MEDIUM | windows-sys 0.60 skip is REQUIRED (C-V2b research-confirmed), but enabling a new windows-sys minor entails a full tier: windows-targets (0.53.x) + 7 windows_* arch crates (0.53.x) alongside the pre-existing 0.42 lineage. Total exactly 17 [[bans.skip]] entries (1 windows-sys 0.60 + 2 × (1 windows-targets + 7 arch crates) = 1 + 16 = 17); 0.52 (ring lineage) left as un-skipped canonical. Note: windows_i686_gnullvm omitted from skips — no 0.42 tier exists for that crate; cargo deny tolerates it. Added to deny.toml in the same commit as keyring windows-native. Not conditional. Risk severity revised from "trivial single entry" to fully-documented tier. See §5.3 and §10 process-gap note. |
 | R-W2 | `JR_CONFIG_DIR` debug seam present in debug builds of the final release binary (expected) — ensure `#[cfg(debug_assertions)]` gate is not accidentally removed | LOW | `tests/config_dir_release_gate.rs` regression test pins the gate |
 | R-W3 | Snapshot test CRLF contamination from Windows committers | LOW | Add `.gitattributes` with `*.snap text eol=lf` before Windows CI is active |
 | R-W4 | Embedded-OAuth smoke step skipped on Windows — embedded creds not verified for Windows artifact | MEDIUM | Documented accepted risk for v1; ported smoke step deferred to follow-up cycle |
@@ -902,20 +905,39 @@ Any existing NFR covering build/packaging must acknowledge the new artifact form
 
 **Trigger:** S-WIN-3 implementation (2026-06-13) revealed that the spec chain
 (architecture-delta §5.3, ADR-0016 Decision 5b, research C-V2b) anticipated a single
-`[[bans.skip]]` entry for `windows-sys 0.60`. The actual implementation required ~17
-entries because enabling a new `windows-sys` minor mechanically introduces a full
-`windows-targets` + 8 `windows_*` arch-crate tier.
+`[[bans.skip]]` entry for `windows-sys 0.60`. The actual implementation required exactly
+17 entries because enabling a new `windows-sys` minor mechanically introduces a full
+`windows-targets` tier plus however-many `windows_*` arch crates exist across the affected
+generations (7 in this case — the 0.42 generation lacks `windows_i686_gnullvm`).
 
 **Rule:** When enabling a Cargo feature that pulls a NEW `windows-sys` minor version, the
 `cargo-deny` skip budget is a **tier**, not a single entry. Each new `windows-targets`
-minor lineage requires skipping: 1 `windows-targets` entry + 8 `windows_*` arch-crate
-entries (one per architecture family: `windows_aarch64_gnullvm`, `windows_aarch64_msvc`,
-`windows_i686_gnullvm`, `windows_i686_msvc`, `windows_i686_pc_windows_gnullvm` or
-equivalent, `windows_x86_64_gnullvm`, `windows_x86_64_msvc`, `windows_x86_64_pc_windows_gnu`,
-`windows_x86_64_pc_windows_msvc`). Budget ~9 skip entries per new lineage (one
-`windows-targets` + 8 arch crates), plus 1 for the `windows-sys` version itself.
+minor lineage requires skipping: 1 `windows-targets` entry + however-many `windows_*`
+arch-crate entries exist in BOTH the new tier and at least one other existing tier. The
+count is NOT a fixed 8 — arch-crate membership differs across `windows-targets` minors.
+In the 0.42 generation the `windows_i686_gnullvm` stub did not exist, so the 0.42 tier
+has only 7 arch crates and requires only 7 skip entries (not 8); attempting to skip a
+crate with no matching version produces an unmatched-skip error. For this cycle: 7 arch
+crates skipped per tier (0.42 and 0.53), 1 `windows-targets` per tier, 1 `windows-sys
+0.60` = 2 × (1 + 7) + 1 = 17 entries total. Budget roughly 8–9 skip entries per new
+lineage (1 `windows-targets` + 7–8 arch crates depending on generation), plus 1 for the
+`windows-sys` version itself. Always verify against the actual Cargo.lock — do not apply
+"8 arch crates" as a rigid constant.
 
 **Application:** When any dependency adds a `windows-sys` version not already in the skip
 set, enumerate the full transitive tier in `deny.toml` in the same commit. Verify with
 `cargo deny check` (exits 0 = complete). Do not mark the deny change as "trivial" or
 "single entry" in specs, ADRs, or stories.
+
+### Tracked Risk: WIN-DENY-FRAGILITY (LOW / tracked, F-WIN3-RC-103)
+
+The canonical-un-skipped-version invariant (0.52.6 for both `windows-targets` and the 7
+arch families) has no proactive CI guard beyond `cargo deny check` in the `deny` job. If a
+future dependency update pulls a FOURTH `windows-sys` minor (e.g., 0.61 becomes the new
+majority and 0.52 is dropped, or a new crate adds 0.62), the existing skip set would
+become stale and `cargo deny check` would fail — but only after the fact, not at the point
+the dependency is added. This is LOW severity because `cargo deny check` runs on every PR
+and would surface the failure immediately. No proactive guard (such as an unnecessary-skip
+lint) is prescribed now. Risk is tracked here so future maintainers know why the skip count
+is exactly 17 and that any change to the windows-sys/targets version set in Cargo.lock
+requires revisiting `deny.toml`.
