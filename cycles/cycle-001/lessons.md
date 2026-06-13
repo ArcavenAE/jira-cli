@@ -3598,3 +3598,47 @@ No follow-up story needed — the corrective was applied in PR #499 (guard harde
 
 _Discovered: #475 F4 per-story Step-4.5 fresh-context review, 2026-06-11._
 _Tagged: [codified] — silent-exclusion false green pattern; fresh-context per-story review is the load-bearing catch mechanism._
+
+---
+
+## LESSON-PRESENCE-ANCHOR [codified] Presence-grep tests must anchor to owning step/block unless token is provably file-unique (2026-06-13)
+
+**Tags:** [codified]
+
+**Date:** 2026-06-13
+**Cycle:** Windows-build F4 / S-WIN-4 (release.yml Windows target — PowerShell Compress-Archive)
+**Tracking ID:** LESSON-PRESENCE-ANCHOR
+**Status:** CODIFIED
+
+### Lesson
+
+Source-text/presence-grep tests MUST anchor each assertion to its owning step/block (e.g. find(step_name) → slice to next sibling marker) UNLESS the searched token is provably file-unique — in which case document the uniqueness as the anchoring justification.
+
+Bare whole-file `contains()` on a non-unique token is a false-green vector: a sibling occurrence satisfies the assertion while a regression in the intended block goes undetected.
+
+### Exemplar (S-WIN-4 step_block helper)
+
+S-WIN-4 (release.yml Compress-Archive packaging) demonstrated the pattern across two anchoring rounds:
+
+1. **Pass 1 (F-WIN4-IMPL-101, LOW):** AC-003 smoke-gate test grepped non-unique `runner.os != 'Windows'` — the same string appears on Package(Unix). Fixed by anchoring to step name + window (ebc5475).
+2. **Round 2 (F-001, MEDIUM):** AC-004 + AC-005 both used bare whole-file `contains("jr-*.zip")` — indistinguishable; release-files glob deletion would be undetectable. Fixed by anchoring each assertion to its owning step block (2150355).
+3. **Round 3 (F-2, LOW):** Fixed 5-line window was fragile against future `env:` insertion. Fixed by extracting `step_block` helper that slices anchor→next `- name:` boundary (3a4cdf0) — robust to reformat.
+
+The final `step_block` helper + the AC-001 file-unique-token exception is the exemplar for this pattern.
+
+### Exception (file-unique tokens)
+
+A whole-file `contains()` is acceptable when the searched token is provably unique in the file. Document the uniqueness claim in a comment so future readers know the absence of anchoring is intentional. Example: AC-001 (`x86_64-pc-windows-msvc` appears once in the matrix definition).
+
+### Recurrence history
+
+- S-WIN-3 (deny.toml): presence tests for allow-entries required anchoring to deny.toml section context.
+- S-WIN-4 (release.yml): three-round anchoring journey culminating in `step_block` boundary helper.
+
+### Application
+
+Apply LESSON-PRESENCE-ANCHOR to S-WIN-5 (ci.yml) and S-WIN-6 (docs) presence tests. For any future story whose ACs include source-text grep assertions against a YAML/TOML/config file: require step/block anchoring OR file-unique-token justification before declaring per-story review complete.
+
+_Discovered: S-WIN-4 Step-4.5 per-story adversarial convergence (3-clean final), 2026-06-13._
+_Tagged: [codified] — positive pattern; recurring across S-WIN-3 and S-WIN-4; step_block helper is the reference implementation._
+_Apply to: S-WIN-5 (ci.yml), S-WIN-6 (docs), all future config-file presence tests._
