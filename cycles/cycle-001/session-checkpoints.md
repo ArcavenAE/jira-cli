@@ -646,3 +646,18 @@ _Was the active checkpoint after Windows-build F3 human gate APPROVED. Supersede
 | **Convergence counter** | BC: **597**. NFR: **42**. ADR: **16**. Stories: **74** authoritative. jira-e2e env: JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ, JR_E2E_ENABLED=true. No active worktrees. |
 | **Next / Pending** | (1) F4 IN PROGRESS — deliver S-WIN-2 first (Wave 1), then S-WIN-3, then Wave 2/3. F4 obligations WIN-O-3/WIN-O-4 land in S-WIN-6; WIN-PG-2 codify-or-defer before cycle close. (2) PR #504 OPEN (ADR-0003 docs) do-not-merge. (3) SEC-001 LOW deferred. (4) Standing: #429 do-not-close; #492 OPEN; OQ-5; E2E-PG-4; F-H1; O1-TABLE-ASSERT. |
 | **Resume prompt** | `Read .factory/STATE.md. DATE 2026-06-13; Windows-build F3 APPROVED; F4 IN PROGRESS Wave 1 (S-WIN-2 first); Stories 74; develop 587206e; PR #504 OPEN do-not-merge; jira-e2e env JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ, JR_E2E_ENABLED=true.` |
+
+---
+
+## Archived Checkpoint: 2026-06-13 (DEC-082 corrections RE-CONVERGED — Awaiting F3 RE-GATE)
+
+_Was the active checkpoint after DEC-082 corrections were governed (spec-steward v1.3.11) + RE-CONVERGED (3-clean adversarial A/B/C) on S-WIN-3/S-WIN-4. S-WIN-2 PR #505 OPEN. Awaiting F3 re-gate (human re-affirmation). Superseded when human RE-AFFIRMED F3 (DEC-084)._
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-06-13 |
+| **Position** | **F4 IN PROGRESS. DEC-082 corrections fully closed per VSDD: spec-steward v1.3.11 + 3-clean re-convergence (A/B/C). AWAITING F3 RE-GATE (human re-affirmation of the corrected S-WIN-3/S-WIN-4). S-WIN-2 PR #505 OPEN → develop (CI 11/11 green, AI APPROVE, security clean) — PAUSED before merge awaiting human decision (review-first). On re-gate + merge: squash-merge + delete branch + cleanup worktree .worktrees/S-WIN-2, then deliver S-WIN-3 (Wave 1, deny windows-sys 0.60 skip REQUIRED per DEC-082/C-V2b), then Wave 2 {S-WIN-1,4,6}, then Wave 3 {S-WIN-5; must also close F-WIN2-C-101 scrub-list + WIN-O-3/O-4 in S-WIN-6}. S-WIN-4 packaging uses Compress-Archive per DEC-082/C-V3.** |
+| **develop HEAD** | origin/develop = **a7da775** (PR #504 MERGED). activation v0.6.0-dev.1. BC **597**. NFR **42**. ADR **16**. Stories **74** (authoritative). 1 active worktree: .worktrees/S-WIN-2 (feat/win-2-config-cache-dir-seam @ b958e60). PR #505 OPEN. |
+| **Convergence counter** | BC: **597**. NFR: **42**. ADR: **16**. Stories: **74** authoritative. jira-e2e env: JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ, JR_E2E_ENABLED=true. 1 active worktree: .worktrees/S-WIN-2 (feat/win-2-config-cache-dir-seam @ b958e60). |
+| **Next / Pending** | (1) F3 RE-GATE human re-affirmation (corrected S-WIN-3/S-WIN-4); (2) S-WIN-2 PR #505 merge decision; (3) S-WIN-3 next (deny 0.60 skip REQUIRED); (4) S-WIN-4 Compress-Archive; (5) S-WIN-5 closes F-WIN2-C-101; standing items unchanged. |
+| **Resume prompt** | `Read .factory/STATE.md. DATE 2026-06-13; DEC-082 corrections CLOSED (spec-steward v1.3.11 + 3-clean re-convergence A/B/C); AWAITING F3 RE-GATE then PR #505 merge; S-WIN-3 next with deny 0.60 skip REQUIRED; S-WIN-4 Compress-Archive; develop a7da775; do NOT reintroduce zip-primary or if-needed deny skip for windows-sys 0.60; S-WIN-3 REQUIRES [[bans.skip]] for windows-sys 0.60 (deny would FAIL otherwise); Stories 74; jira-e2e env JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ, JR_E2E_ENABLED=true.` |
