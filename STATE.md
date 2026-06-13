@@ -2,11 +2,11 @@
 document_type: pipeline-state
 version: "2.0"
 status: active
-timestamp: 2026-06-12T18:00:00Z
+timestamp: 2026-06-13T00:00:00Z
 phase: phase-3-tdd-implementation
 project: jira-cli
 mode: BROWNFIELD
-current_step: "2026-06-12: Windows-build feature F1+F2 COMPLETE, F2 human gate APPROVED. BC 597 / NFR 42 / ADR 16 / Stories 68. Entering F3 (story decomposition). develop HEAD 587206e. PR #504 OPEN (ADR-0003 docs fix)."
+current_step: "2026-06-13: Windows-build F3 story-decomposition DRAFTS created (S-WIN-1..6; STORY-INDEX 68→74 v1.4.37 incl. F3-audit reconcile) and committed to factory-artifacts. F3 adversarial story-convergence gate NOT yet run — that is the resume step. BC 597 / NFR 42 / ADR 16 / Stories 74 (PROVISIONAL, pending adv-review). develop HEAD 587206e. PR #504 OPEN (ADR-0003 docs)."
 current_cycle: "cycle-001"
 dtu_required: false
 phase_2_status: APPROVED
@@ -46,7 +46,7 @@ activation_version: "v0.6.0-dev.1"
 | ADF E2E coverage loop-back (#471/#474/#483/#489) | **CYCLE CLOSED + MERGED** | 2026-06-11 | CYCLE CLOSED | PR #495 → develop @ bfb723f. 5 gated live E2E tests. NO src change. BC 594 unchanged. Live-verified GREEN — e2e run 27352373680 (89/0) on develop @ 45ceae6, 2026-06-11. |
 | CLI leading-dash values (issue #471 e2e / description-leading-dash) | **CYCLE CLOSED + MERGED** | 2026-06-11 | F1–F7 ALL COMPLETE — CONVERGED | PR #496 → develop @ 45ceae6. `allow_hyphen_values = true` on 7 free-text write args. BC 594 unchanged. +17 hermetic parse tests (tests/cli_smoke.rs, 44 total). F5: 8 passes / 3-clean-pass CONVERGED. F6: 1763/0, clippy/fmt/deny clean, mutation zero-in-scope. F7: 5-dimension consistency CLEAN. DEC-072. |
 | ADF E2E read-path coverage (issue #475) | **CYCLE CLOSED + MERGED** | 2026-06-11 | F1–F7 ALL COMPLETE — CONVERGED | PR #499 → develop @ 418a392e. Test-only (no src change). BC 594 / NFR 41 / Stories 68 unchanged. DEC-073/074/075/076. |
-| Windows build (x86_64-pc-windows-msvc) | **F1+F2 COMPLETE — F2 APPROVED** | 2026-06-12 | F2 human gate APPROVED 2026-06-12 — entering F3 | BC 594→597 (+3 BCs), NFR 41→42 (+1), ADR 15→16 (+1). F2 adversary: 14 passes / 6→5→1→2→2→1→0→1→0→0→0→0→0→0 (3-clean-pass convergence P12/13/14). Research-validated C1–C7 (C4 corrected: rustls-platform-verifier). DEC-079. PR #504 OPEN (ADR-0003 docs). |
+| Windows build (x86_64-pc-windows-msvc) | **F3 DRAFTS COMPLETE — adv-convergence PENDING** | 2026-06-12 (F2) / 2026-06-13 (F3 drafts) | F3 adversarial story-convergence gate NOT yet run (3 clean passes required) | BC 594→597 (+3), NFR 41→42 (+1), ADR 15→16 (+1). Stories 68→74 PROVISIONAL (pending adv-review). F2 adversary: 14 passes, 3-clean-pass convergence P12/13/14. DEC-079. PR #504 OPEN. |
 | 4: Holdout Evaluation | not-started | | | |
 | 5: Adversarial Refinement | not-started | | | |
 | 6: Formal Hardening | not-started | | | |
@@ -62,7 +62,7 @@ activation_version: "v0.6.0-dev.1"
 | v0.5.0-dev.14 dev release: PR #500 (Cargo.toml→dev.14 + CHANGELOG finalized, 31 commits since dev.13) squash-merged → develop @ a0f45cc; tag v0.5.0-dev.14 pushed → release.yml success (run 27383452695, 4/4 platform builds); GitHub pre-release published 2026-06-11. | devops-engineer | RELEASE PUBLISHED | BC 594 / NFR 41 / Stories 68. develop HEAD: a0f45cc. |
 | v0.5.0 STABLE released 2026-06-12T15:27:54Z: PR #501 "chore: release v0.5.0" (release/v0.5.0) squash-merged → main. Tag v0.5.0 pushed. GitHub Release v0.5.0 graduated to 'Latest'. First STABLE shipping full ADF markdown-conversion feature set + BC-3.2.013 resolution enforcement (breaking). DEC-078. | state-manager | STABLE RELEASED | BC 594 / NFR 41 / Stories 68. main HEAD: v0.5.0. |
 | develop bumped to 0.6.0-dev.1 2026-06-12T15:31:57Z: PR #502 "chore: sync main → develop + bump to v0.6.0-dev.1" squash-merged → develop @ 587206e. Cargo.toml version 0.6.0-dev.1. 0.6.0 dev cycle open. No active worktrees. DEC-078. | state-manager | 0.6.0 CYCLE OPEN | BC 594 / NFR 41 / Stories 68. develop HEAD: 587206e. |
-| Windows-build F1+F2 COMPLETE — F2 human gate APPROVED 2026-06-12. F1: classified full Feature Mode, target x86_64-pc-windows-msvc, artifact .zip, idiomatic %APPDATA%/%LOCALAPPDATA%, keyring windows-native, ADR-0016 recorded. F2: 3 new BCs (BC-6.1.014, BC-6.2.016, BC-6.2.017), 1 updated (BC-6.2.004), 1 new NFR (NFR-P-W1). 14-pass F2 adversary; 3-clean-pass convergence (P12/13/14). External research C1–C7 validated (C4 corrected: rustls-platform-verifier not webpki-roots). ADR-0003 docs fix PR #504 OPEN. DEC-079. | state-manager | F2 APPROVED — ENTERING F3 | BC 597 / NFR 42 / ADR 16 / Stories 68. develop HEAD: 587206e. |
+| INTERRUPTED-SESSION RECOVERY 2026-06-13: Windows-build F3 story drafts (S-WIN-1..6, ~1997 LOC) + STORY-INDEX 68→74 (v1.4.37, F3-audit reconcile fixed Σ=58≠74: added cycle-3 wave-plan row + corrected feature-followup 26→39) + bc-6/architecture-delta/ADR-0016 edits committed to factory-artifacts for durability. F3 adversarial story-convergence (3 clean passes) NOT yet run — resume there. | state-manager | DURABLE CHECKPOINT — F3 adv-review PENDING | BC 597 / NFR 42 / Stories 74 PROVISIONAL. develop HEAD 587206e. No active worktrees. |
 
 ## Decisions Log
 
@@ -118,7 +118,7 @@ activation_version: "v0.6.0-dev.1"
 
 ## Convergence Trackers
 
-Full per-issue: `cycles/cycle-001/convergence-trajectory.md`. Current: **[2026-06-12] Windows-build F1+F2 COMPLETE — F2 human gate APPROVED. BC 597 (+3) / NFR 42 (+1) / ADR 16 (+1) / Stories 68 (unchanged). F2 adversary: 14 passes / 6→5→1→2→2→1→0→1→0→0→0→0→0→0 (3-clean-pass P12/13/14). Research C1–C7 validated (C4 corrected). DEC-079. Entering F3.** Prior: v0.5.0 STABLE RELEASED (PR #501 → main; tag v0.5.0; GitHub Release 'Latest'). develop @ 587206e (0.6.0-dev.1; PR #502). DEC-078.
+Full per-issue: `cycles/cycle-001/convergence-trajectory.md`. Current: **[2026-06-13] Windows-build F3 drafts created + made durable; adversarial story convergence PENDING; Stories 74 PROVISIONAL.** Prior: [2026-06-12] Windows-build F1+F2 COMPLETE — F2 human gate APPROVED. BC 597 (+3) / NFR 42 (+1) / ADR 16 (+1) / Stories 68 (unchanged). F2 adversary: 14 passes / 6→5→1→2→2→1→0→1→0→0→0→0→0→0 (3-clean-pass P12/13/14). DEC-079.
 
 ## Session Resume Checkpoint
 
@@ -126,12 +126,12 @@ Full per-issue: `cycles/cycle-001/convergence-trajectory.md`. Current: **[2026-0
 
 | Field | Value |
 |-------|-------|
-| **Date** | 2026-06-12 |
-| **Position** | **Windows-build F1+F2 COMPLETE — F2 human gate APPROVED. Entering F3 (story decomposition).** F1 locked: target x86_64-pc-windows-msvc (aarch64 deferred); artifact .zip; Windows job in ci.yml; %APPDATA%/%LOCALAPPDATA% via #[cfg(windows)]; keyring windows-native; OAuth smoke gated off Windows v1; ADR-0016. F2 CONVERGED: 3 new BCs (BC-6.1.014/6.2.016/6.2.017) + 1 updated (BC-6.2.004) + 1 new NFR (NFR-P-W1). BC 594→597, NFR 41→42, ADR 15→16. F2 adversary 14-pass / 3-clean-pass convergence (P12/13/14). Research C1–C7 validated (C4 corrected: rustls-platform-verifier). ADR-0003 docs fix PR #504 OPEN (commit 15dc7da). DEC-079. develop HEAD still 587206e (v0.6.0-dev.1; no source changes yet). |
-| **develop HEAD** | origin/develop = **587206e**. activation v0.6.0-dev.1. BC **597**. NFR **42**. ADR **16**. Stories **68**. No active worktrees. |
-| **Convergence counter** | BC: **597**. NFR: **42**. ADR: **16**. Stories: **68**. jira-e2e env: JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ, JR_E2E_ENABLED=true. No active worktrees. |
-| **Next / Pending** | (1) Windows-build ACTIVE — enter F3 story decomposition. (2) PR #504 OPEN (ADR-0003 docs fix) — awaiting human review/merge; do NOT mark merged. (3) F4 obligations: WIN-O-3 (CANONICAL-COUNTS Unix path), WIN-O-4 (CLAUDE.md JR_* table + Windows paths). (4) SEC-001 (CWE-674, LOW) deferred. (5) Deferred: #400 Story B; #372 cargo-mutants. (6) Standing: do NOT close #429 (DEC-029); #492 OPEN; OQ-5; E2E-PG-4 remote-link; F-H1 DEFERRED; O1-TABLE-ASSERT DEFERRED. |
-| **Resume prompt** | `Read .factory/STATE.md. DATE: 2026-06-12. POSITION: Windows-build F1+F2 COMPLETE, F2 APPROVED. Entering F3. BC 597 / NFR 42 / ADR 16 / Stories 68. develop HEAD: 587206e (v0.6.0-dev.1). PR #504 OPEN (ADR-0003 docs; do NOT mark merged). DEC-079. F4 obligations: WIN-O-3 + WIN-O-4 in Drift Items. STANDING: do NOT close #429 (DEC-029); #492 OPEN; OQ-5; E2E-PG-4 remote-link open; SEC-001 LOW deferred; F-H1 DEFERRED; O1-TABLE-ASSERT DEFERRED. jira-e2e: JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ, JR_E2E_ENABLED=true.` |
+| **Date** | 2026-06-13 |
+| **Position** | **Windows-build Feature Mode F3 story-decomposition DRAFTS COMPLETE but NOT adversarially converged.** 6 story files S-WIN-1..S-WIN-6 created (status: ready); STORY-INDEX bumped 68→74 (v1.4.37) including an F3-audit reconcile (fixed wave-count Σ=58≠74 by adding cycle-3 row + correcting feature-followup 26→39); bc-6-config-cache / architecture-delta / ADR-0016 touched. ALL committed to factory-artifacts as a durability checkpoint. **NEXT STEP: run F3 adversarial story convergence (3 clean passes minimum) via the adversary agent on the 6 S-WIN stories + STORY-INDEX, then F3 human gate.** No source changes on develop yet (still 587206e). |
+| **develop HEAD** | origin/develop = **587206e**. activation v0.6.0-dev.1. BC **597**. NFR **42**. ADR **16**. Stories **74** (PROVISIONAL — pending F3 adv-review). No active worktrees. |
+| **Convergence counter** | BC: **597**. NFR: **42**. ADR: **16**. Stories: **74** (PROVISIONAL — pending F3 adv-review). jira-e2e env: JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ, JR_E2E_ENABLED=true. No active worktrees. |
+| **Next / Pending** | (1) Windows-build: run F3 adversarial story convergence on S-WIN-1..6 + STORY-INDEX (3 clean passes), then F3 human gate; only then mark Stories 74 authoritative. (2) PR #504 OPEN (ADR-0003 docs) — do NOT mark merged. (3) F4 obligations WIN-O-3 + WIN-O-4 (in Drift Items). (4) SEC-001 LOW deferred. (5) Standing: do NOT close #429 (DEC-029); #492 OPEN; OQ-5; E2E-PG-4 remote-link; F-H1 DEFERRED; O1-TABLE-ASSERT DEFERRED. |
+| **Resume prompt** | `Read .factory/STATE.md. DATE: 2026-06-13. POSITION: Windows-build F3 drafts created + committed, adversarial story convergence is the next step. BC 597 / NFR 42 / ADR 16 / Stories 74 PROVISIONAL (pending F3 adv-review). develop HEAD: 587206e (v0.6.0-dev.1; no source changes). PR #504 OPEN (ADR-0003 docs; do NOT mark merged). F4 obligations: WIN-O-3 + WIN-O-4 in Drift Items. STANDING: do NOT close #429 (DEC-029); #492 OPEN; OQ-5; E2E-PG-4 remote-link open; SEC-001 LOW deferred; F-H1 DEFERRED; O1-TABLE-ASSERT DEFERRED. jira-e2e: JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ, JR_E2E_ENABLED=true.` |
 
 ## Open Issues Tracker
 
