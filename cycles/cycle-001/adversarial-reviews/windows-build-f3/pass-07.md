@@ -1,0 +1,4 @@
+# Adversarial Review — Windows-build F3 Story Decomposition — Pass 7 (fresh context)
+Date: 2026-06-13. Gate: Phase F3 story-decomposition convergence (Windows-build, cycle-001).
+VERDICT: CLEAN. Novelty: ZERO. Clean pass #2 of 3. No findings, no edits.
+Verified-clean: traceability (4 BCs resolve + BC-INDEX titles match); dependency graph acyclic+reciprocal; scope vs AMENDED Decisions 2/3 (zip primary; separate clippy matrix) matches live ci.yml/release.yml; dual-site release gate (S-WIN-2 mirrors base_url_release_gate.rs); STORY-INDEX 74 (7+8+7+10+3+39); prior-pass fixes F-WIN-F3-001/002/003 fully propagated (ADR body + delta §4.1 + adr-index annotation; .join("jr") rule to delta §2.3 + BC-6.2.017 + S-WIN-5). Known limitations all traced to accepted risk (R-W4) or compensating gate (H-WIN-6, AC-005). VERDICT: CLEAN.

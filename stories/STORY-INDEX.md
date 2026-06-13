@@ -2,11 +2,11 @@
 document_type: story-index
 phase: phase-2-story-decomposition
 producer: story-writer
-version: "1.4.37"
+version: "1.4.38"
 total_stories: 74
 total_waves: 4
-status: complete-pending-adv-review
-last_updated: 2026-06-12 (S-WIN-1..S-WIN-6 added; Windows build feature F3; 68→74; BC-6.1.014/6.2.016/6.2.017/6.2.004/NFR-P-W1; cycle-001 windows-build; ADR-0016)
+status: complete
+last_updated: 2026-06-13 (Windows-build F3 adversarial story-convergence CONVERGED — 3 clean passes P6/P7/P8; S-WIN-1..6 status complete; total_stories 74 authoritative)
 activation_head: dea1664
 ---
 
@@ -236,12 +236,12 @@ S-WIN-5 (Wave 3, depends on S-WIN-1 and S-WIN-2).
 
 | Story ID | Title | BC / NFR Anchors | Status | Est. Effort | Wave |
 |----------|-------|-----------------|--------|-------------|------|
-| S-WIN-1 | Per-OS path resolution: `#[cfg(windows)]` branches in `global_config_dir()` and `cache_root()` | BC-6.1.014, BC-6.2.016, BC-6.2.004, NFR-P-W1 | **ready** — F3 COMPLETE (2026-06-12); depends on S-WIN-2; awaiting F4 dispatch | small (5 SP) | 2 |
-| S-WIN-2 | `JR_CONFIG_DIR` / `JR_CACHE_DIR` debug-only path-isolation seam + `tests/config_dir_release_gate.rs` | BC-6.2.017, NFR-P-W1 | **ready** — F3 COMPLETE (2026-06-12); no dependencies; awaiting F4 dispatch | small (3 SP) | 1 |
-| S-WIN-3 | Add `windows-native` feature to keyring in Cargo.toml; verify `cargo deny check` compatibility | NFR-P-W1, NFR-S-F | **ready** — F3 COMPLETE (2026-06-12); no dependencies; awaiting F4 dispatch | xsmall (2 SP) | 1 |
-| S-WIN-4 | `release.yml`: x86_64-pc-windows-msvc matrix row, `.zip` packaging, smoke-step gate, artifact glob | NFR-P-W1 | **ready** — F3 COMPLETE (2026-06-12); depends on S-WIN-3; awaiting F4 dispatch | small (5 SP) | 2 |
-| S-WIN-5 | `ci.yml` Windows CI job: `windows-latest` test matrix, test-helper seam migration, `.gitattributes` snap eol=lf | BC-6.2.017, NFR-P-W1 | **ready** — F3 COMPLETE (2026-06-12); depends on S-WIN-1 + S-WIN-2; awaiting F4 dispatch | medium (8 SP) | 3 |
-| S-WIN-6 | Docs fallout: CLAUDE.md JR_* table entries, Windows config/cache path docs, ADR-0016 materialize, adr-index | BC-6.2.017, NFR-P-W1 | **ready** — F3 COMPLETE (2026-06-12); depends on S-WIN-2; awaiting F4 dispatch | small (2 SP) | 2 |
+| S-WIN-1 | Per-OS path resolution: `#[cfg(windows)]` branches in `global_config_dir()` and `cache_root()` | BC-6.1.014, BC-6.2.016, BC-6.2.004, NFR-P-W1 | **ready** — F3 CONVERGED (adv P6/7/8); depends on S-WIN-2; awaiting F4 dispatch | small (5 SP) | 2 |
+| S-WIN-2 | `JR_CONFIG_DIR` / `JR_CACHE_DIR` debug-only path-isolation seam + `tests/config_dir_release_gate.rs` | BC-6.2.017, NFR-P-W1 | **ready** — F3 CONVERGED (adv P6/7/8); no dependencies; awaiting F4 dispatch | small (3 SP) | 1 |
+| S-WIN-3 | Add `windows-native` feature to keyring in Cargo.toml; verify `cargo deny check` compatibility | NFR-P-W1, NFR-S-F | **ready** — F3 CONVERGED (adv P6/7/8); no dependencies; awaiting F4 dispatch | xsmall (2 SP) | 1 |
+| S-WIN-4 | `release.yml`: x86_64-pc-windows-msvc matrix row, `.zip` packaging, smoke-step gate, artifact glob | NFR-P-W1 | **ready** — F3 CONVERGED (adv P6/7/8); depends on S-WIN-3; awaiting F4 dispatch | small (5 SP) | 2 |
+| S-WIN-5 | `ci.yml` Windows CI job: `windows-latest` test matrix, test-helper seam migration, `.gitattributes` snap eol=lf | BC-6.2.017, NFR-P-W1 | **ready** — F3 CONVERGED (adv P6/7/8); depends on S-WIN-1 + S-WIN-2; awaiting F4 dispatch | medium (8 SP) | 3 |
+| S-WIN-6 | Docs fallout: CLAUDE.md JR_* table entries, Windows config/cache path docs, ADR-0016 materialize, adr-index | BC-6.2.017, NFR-P-W1 | **ready** — F3 CONVERGED (adv P6/7/8); depends on S-WIN-2; awaiting F4 dispatch | small (2 SP) | 2 |
 
 Windows-build story files: `.factory/stories/S-WIN-N-*.md`
 
