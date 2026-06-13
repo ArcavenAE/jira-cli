@@ -2,11 +2,11 @@
 document_type: pipeline-state
 version: "2.0"
 status: active
-timestamp: 2026-06-14T04:00:00Z
+timestamp: 2026-06-14T05:00:00Z
 phase: phase-3-tdd-implementation
 project: jira-cli
 mode: BROWNFIELD
-current_step: "2026-06-13: S-WIN-1 (per-OS #[cfg(windows)] AppData path resolution) implementation CONVERGED — Step-4.5 3-clean (after extracting pure fallback helpers + un-gating fallback tests + seam-scrub). macOS cargo test green (907); cross-compile zero Rust errors; clippy/fmt clean. Branch feat/win-1-per-os-path-resolution @ db175c6. Next: S-WIN-1 PR. develop 2b13596."
+current_step: "2026-06-13: S-WIN-1 PR #507 OPEN → develop, CI 11/11 GREEN, AI APPROVE (cycle 3), security CLEAR. PAUSED before merge for human decision. READY TO MERGE. Process-gap WIN-CFG-TESTS-CHECK codified (cross-compile must use --tests not --lib for cfg(windows) test code). develop 2b13596."
 current_cycle: "cycle-001"
 dtu_required: false
 phase_2_status: APPROVED
@@ -26,7 +26,7 @@ activation_version: "v0.6.0-dev.1"
 | **Product** | jr (Jira CLI) |
 | **Mode** | BROWNFIELD / Rust |
 | **Target Workspace** | develop → main |
-| **Last Updated** | 2026-06-13: S-WIN-3 (keyring windows-native + 17-entry deny skip set) MERGED → develop @ 2b13596 via squash PR #506. 2/6 Windows-build stories shipped. DEC-087. |
+| **Last Updated** | 2026-06-13: S-WIN-1 PR #507 OPEN → develop (CI 11/11, AI APPROVE cycle 3, security CLEAR). WIN-CFG-TESTS-CHECK process-gap codified. PAUSED before merge. develop 2b13596. |
 | **Current Phase** | Phase 3 — TDD Implementation IN PROGRESS — Feature Mode active. BC 597. NFR 42. ADR 16. Stories 74 (authoritative). |
 | **Next Phase** | Phase 4: Holdout Evaluation (not started) |
 | **Activation HEAD** | 587206e (v0.6.0-dev.1; v0.5.0 STABLE shipped 2026-06-12) |
@@ -46,7 +46,7 @@ activation_version: "v0.6.0-dev.1"
 | ADF E2E coverage loop-back (#471/#474/#483/#489) | **CYCLE CLOSED + MERGED** | 2026-06-11 | CYCLE CLOSED | PR #495 → develop @ bfb723f. 5 gated live E2E tests. NO src change. BC 594 unchanged. Live-verified GREEN — e2e run 27352373680 (89/0) on develop @ 45ceae6, 2026-06-11. |
 | CLI leading-dash values (issue #471 e2e / description-leading-dash) | **CYCLE CLOSED + MERGED** | 2026-06-11 | F1–F7 ALL COMPLETE — CONVERGED | PR #496 → develop @ 45ceae6. `allow_hyphen_values = true` on 7 free-text write args. BC 594 unchanged. +17 hermetic parse tests (tests/cli_smoke.rs, 44 total). F5: 8 passes / 3-clean-pass CONVERGED. F6: 1763/0, clippy/fmt/deny clean, mutation zero-in-scope. F7: 5-dimension consistency CLEAN. DEC-072. |
 | ADF E2E read-path coverage (issue #475) | **CYCLE CLOSED + MERGED** | 2026-06-11 | F1–F7 ALL COMPLETE — CONVERGED | PR #499 → develop @ 418a392e. Test-only (no src change). BC 594 / NFR 41 / Stories 68 unchanged. DEC-073/074/075/076. |
-| Windows build (x86_64-pc-windows-msvc) | **F4 IN PROGRESS — S-WIN-2 + S-WIN-3 MERGED (2/6); S-WIN-1 impl CONVERGED (awaiting PR); Wave 2 (S-WIN-4, S-WIN-6 remain)** | 2026-06-12 (F2) / 2026-06-13 (F3 APPROVED + S-WIN-2 MERGED + S-WIN-3 MERGED) | F3 human gate APPROVED 2026-06-13; DEC-082 RE-CONVERGED + RE-AFFIRMED 2026-06-13 (DEC-084) | 8-pass F3 trajectory 6→5→2→2→2→0→0→0; S-WIN-3 Step-4.5 3-clean; Stories 68→74 authoritative; ADR-0016 Decisions 2/3/5b amended; DEC-079..088. PR #504 MERGED (develop a7da775). S-WIN-2 MERGED PR #505 (develop 1b84feb). S-WIN-3 MERGED PR #506 (develop 2b13596). S-WIN-1 impl CONVERGED @ db175c6. |
+| Windows build (x86_64-pc-windows-msvc) | **F4 IN PROGRESS — S-WIN-2 + S-WIN-3 MERGED (2/6); S-WIN-1 PR #507 OPEN (CI 11/11) awaiting human merge; Wave 2 (S-WIN-4, S-WIN-6 remain)** | 2026-06-12 (F2) / 2026-06-13 (F3 APPROVED + S-WIN-2 MERGED + S-WIN-3 MERGED) | F3 human gate APPROVED 2026-06-13; DEC-082 RE-CONVERGED + RE-AFFIRMED 2026-06-13 (DEC-084) | 8-pass F3 trajectory 6→5→2→2→2→0→0→0; S-WIN-3 Step-4.5 3-clean; Stories 68→74 authoritative; ADR-0016 Decisions 2/3/5b amended; DEC-079..088. PR #504 MERGED (develop a7da775). S-WIN-2 MERGED PR #505 (develop 1b84feb). S-WIN-3 MERGED PR #506 (develop 2b13596). S-WIN-1 PR #507 OPEN — READY TO MERGE. |
 | 4: Holdout Evaluation | not-started | | | |
 | 5: Adversarial Refinement | not-started | | | |
 | 6: Formal Hardening | not-started | | | |
@@ -58,10 +58,9 @@ activation_version: "v0.6.0-dev.1"
 
 | Step | Agent | Status | Output |
 |------|-------|--------|--------|
-| S-WIN-2 PR #505 squash-MERGED → develop @ 1b84feb (2026-06-13T16:55:26Z); remote branch feat/win-2-config-cache-dir-seam deleted; worktree cleanup dispatched. First of 6 Windows-build stories shipped. develop a7da775→1b84feb. | Agent pr-manager+state-manager | S-WIN-2 MERGED (1/6) — S-WIN-3 next | develop @ 1b84feb. BC 597/Stories 74. |
-| S-WIN-3 PR #506 created → develop (branch feat/win-3-keyring-windows-native, 4 commits). CI 11/11 PASS (incl. deny job all-target — validates 17 windows skips on ubuntu runner). AI PR review APPROVE 0-blocking. Security APPROVE 0 CRITICAL/HIGH (SEC-001 WCM inherent → doc follow-up; SEC-002 JR_SERVICE_NAME → follow-up story). PAUSED before merge per human pattern. | Agent pr-manager | S-WIN-3 PR #506 OPEN — READY TO MERGE (paused, human gate) | PR #506. CI 11/11. develop 1b84feb. Recommend squash-merge. |
 | S-WIN-3 PR #506 squash-MERGED → develop @ 2b13596 (2026-06-13T18:27:29Z); remote branch feat/win-3-keyring-windows-native deleted; worktree cleanup dispatched. 2/6 Windows-build stories shipped (keyring windows-native + 17-entry deny skip set). develop 1b84feb→2b13596. | Agent pr-manager+state-manager | S-WIN-3 MERGED (2/6) — Wave 2 next | develop @ 2b13596. BC 597 / Stories 74. |
 | S-WIN-1 F4 delivery: #[cfg(windows)] AppData branches (global_config_dir→%APPDATA%, cache_root→%LOCALAPPDATA%) + pure fallback helpers + 6 windows tests. Step-4.5 per-story CONVERGED (Pass1 clean; round found tautological-fallback-test + seam-scrub LOW → fixed via pure-helper extraction [db175c6]; final 3-clean, all 5 mutation classes killed). macOS cargo test 907 green; cross-compile zero Rust errors; clippy/fmt clean. No spec reconciliation needed. | Agent multi | S-WIN-1 CONVERGED — awaiting PR | Source on feat branch. develop 2b13596. BC 597 / Stories 74. |
+| S-WIN-1 PR #507 created → develop (branch feat/win-1-per-os-path-resolution, 4 commits). CI 11/11 PASS. AI PR review APPROVE (cycle 3): caught BLOCKING E0425 (seam-scrub tests in wrong module — ENV_MUTEX out of scope) that Step-4.5 3-clean MISSED (read-only adversaries can't compile; cross-compile used --lib which excludes #[cfg(test)]). Security CLEAR. PAUSED before merge. | Agent pr-manager | S-WIN-1 PR #507 OPEN — READY TO MERGE (paused, human gate) | PR #507. CI 11/11. develop 2b13596. |
 
 ## Decisions Log
 
@@ -111,6 +110,7 @@ activation_version: "v0.6.0-dev.1"
 
 | ID | Area | Description | Severity | Status |
 |----|------|-------------|----------|--------|
+| WIN-CFG-TESTS-CHECK | Cross-compile verification of #[cfg(windows)] code must use --tests, not --lib | `cargo check --target x86_64-pc-windows-msvc --lib` excludes #[cfg(test)] blocks, so #[cfg(windows)] TEST code is NOT type-checked — a compile error (E0425) in windows-gated tests slips past both the Step-4.5 adversary (read-only, no compile) and the implementer's --lib cross-check; only the PR gate / a Windows runner catches it. RULE: verify cfg(windows) test code with `cargo check --target x86_64-pc-windows-msvc --tests`. Surfaced by S-WIN-1 PR #507 (2 review-fix cycles). | LOW | OPEN — process-gap (apply to S-WIN-5 + future cfg-gated work) |
 | SEC-WCM-DOC | Windows Credential Manager isolation model undocumented | WCM secrets are accessible to any process in the same user session (inherent to WCM, same posture as gh/git-credential-manager). Document in CLAUDE.md Gotchas. Surfaced by S-WIN-3 security review (SEC-001). | LOW | OPEN — doc follow-up |
 | SEC-JR-SERVICE-NAME-GATE | JR_SERVICE_NAME env var not debug-gated | Unlike JR_BASE_URL/JR_AUTH_HEADER (debug-only release-gated, SD-002), JR_SERVICE_NAME is readable in release builds. Pre-existing. Candidate follow-up story: add #[cfg(debug_assertions)] gate + release-gate test. Surfaced by S-WIN-3 security review (SEC-002). | LOW | OPEN — follow-up story candidate |
 | WIN-DENY-FRAGILITY | deny.toml canonical-un-skipped-version invariant has no proactive CI guard | 17-entry windows skip set is topology-dependent; future windows-sys/targets version-set change could silently break the N-1 canonical invariant. Documented in deny.toml comment + architecture-delta §10. | LOW | OPEN — tracked process-gap |
@@ -128,7 +128,7 @@ activation_version: "v0.6.0-dev.1"
 
 ## Convergence Trackers
 
-Full per-issue: `cycles/cycle-001/convergence-trajectory.md`. Current: **[2026-06-13] S-WIN-1 impl CONVERGED (Step-4.5 3-clean; pure-helper extraction killed the fallback mutant cross-platform). Branch @ db175c6. Awaiting PR. develop 2b13596. DEC-088.** Prior: [2026-06-13] S-WIN-3 MERGED → develop @ 2b13596 (PR #506; 2/6). Wave 2 next (S-WIN-1, S-WIN-4, S-WIN-6). develop 2b13596. DEC-087. Prior: [2026-06-13] S-WIN-3 PR #506 OPEN → develop: CI 11/11 GREEN (deny job all-target), AI APPROVE, security 0 CRIT/HIGH (2 MEDIUM tracked follow-ups). PAUSED before merge. READY TO MERGE. develop 1b84feb. Prior: [2026-06-13] S-WIN-3 impl CONVERGED (Step-4.5 3-clean after F-102 reconciliation + count correction 8→7 arch / 17 exact + F-WIN3-AR1). 17-entry deny skip set, cargo deny EXIT 0. spec v1.3.12. Branch @ 63b981f. DEC-086. Prior: [2026-06-13] DEC-082 corrections RE-CONVERGED — spec-steward v1.3.11 + 3-clean adversarial (A/B/C) on S-WIN-3/S-WIN-4. Full-VSDD closure. Awaiting F3 re-gate. DEC-083. Prior: [2026-06-13] S-WIN-2 PR #505 OPEN → develop: CI 11/11 GREEN, AI review APPROVE, security no-blocking; release-gate empirically verified. PAUSED before merge per human. READY TO MERGE. Prior: [2026-06-13] Pre-F4 research verification: 2 BLOCKERS caught (C-V2b windows-sys 0.60 deny skip REQUIRED; C-V3 Compress-Archive not zip) + 4 propagation leaks, all fixed + re-verified clean. DEC-082.
+Full per-issue: `cycles/cycle-001/convergence-trajectory.md`. Current: **[2026-06-13] S-WIN-1 PR #507 OPEN → develop: CI 11/11 GREEN, AI APPROVE (cycle 3), security CLEAR. PR gate caught E0425 the Step-4.5 3-clean missed (--lib excludes cfg(test); WIN-CFG-TESTS-CHECK codified). PAUSED before merge. READY TO MERGE.** Prior: [2026-06-13] S-WIN-1 impl CONVERGED (Step-4.5 3-clean; pure-helper extraction killed the fallback mutant cross-platform). Branch @ db175c6. Awaiting PR. develop 2b13596. DEC-088. Prior: [2026-06-13] S-WIN-3 MERGED → develop @ 2b13596 (PR #506; 2/6). Wave 2 next (S-WIN-1, S-WIN-4, S-WIN-6). develop 2b13596. DEC-087. Prior: [2026-06-13] S-WIN-3 PR #506 OPEN → develop: CI 11/11 GREEN (deny job all-target), AI APPROVE, security 0 CRIT/HIGH (2 MEDIUM tracked follow-ups). PAUSED before merge. READY TO MERGE. develop 1b84feb. Prior: [2026-06-13] DEC-082 corrections RE-CONVERGED — spec-steward v1.3.11 + 3-clean adversarial (A/B/C) on S-WIN-3/S-WIN-4. Full-VSDD closure. Awaiting F3 re-gate. DEC-083.
 
 ## Session Resume Checkpoint
 
@@ -137,11 +137,11 @@ Full per-issue: `cycles/cycle-001/convergence-trajectory.md`. Current: **[2026-0
 | Field | Value |
 |-------|-------|
 | **Date** | 2026-06-13/14 |
-| **Position** | **F4 IN PROGRESS. S-WIN-2 + S-WIN-3 MERGED (2/6). S-WIN-1 impl CONVERGED on branch feat/win-1-per-os-path-resolution @ db175c6 (per-OS AppData path resolution) — Step-4.5 3-clean, macOS cargo test 907 green, cross-compile zero Rust errors, demo adapted-skip. NOT yet PR'd. NEXT: create S-WIN-1 PR → human merge → then remaining Wave 2 {S-WIN-4 (release.yml Compress-Archive), S-WIN-6 (docs fallout + WIN-O-3/O-4 + SEC-WCM-DOC)} → Wave 3 {S-WIN-5 (ci.yml Windows job; runs the #[cfg(windows)] tests; closes F-WIN2-C-101)}. develop 2b13596.** |
+| **Position** | **F4 IN PROGRESS. S-WIN-2 + S-WIN-3 MERGED (2/6). S-WIN-1 PR #507 OPEN → develop (CI 11/11, AI APPROVE cycle 3, security CLEAR) — PAUSED before merge awaiting human decision. On merge: cleanup worktree .worktrees/S-WIN-1 + deliver remaining Wave 2 {S-WIN-4 (release.yml Compress-Archive), S-WIN-6 (docs fallout + WIN-O-3/O-4 + SEC-WCM-DOC)} → Wave 3 {S-WIN-5 (ci.yml Windows job; runs cfg(windows) tests; closes F-WIN2-C-101; apply WIN-CFG-TESTS-CHECK)}. develop 2b13596; S-WIN-1 branch @ 87b8c51.** |
 | **develop HEAD** | origin/develop = **2b13596** (S-WIN-3 merged). activation v0.6.0-dev.1. BC **597**. NFR **42**. ADR **16**. Stories **74** (authoritative). |
-| **Convergence counter** | BC: **597**. NFR: **42**. ADR: **16**. Stories: **74** authoritative. jira-e2e env: JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ, JR_E2E_ENABLED=true. 1 active worktree: .worktrees/S-WIN-1 @ db175c6. |
-| **Next / Pending** | (1) S-WIN-1 PR then human merge; (2) S-WIN-4 + S-WIN-6 (Wave 2); (3) Wave 3 S-WIN-5 closes F-WIN2-C-101; (4) tracked LOW: WIN-DENY-FRAGILITY, SEC-WCM-DOC, SEC-JR-SERVICE-NAME-GATE; standing items unchanged. |
-| **Resume prompt** | `Read .factory/STATE.md. DATE 2026-06-13/14; S-WIN-1 impl CONVERGED @ db175c6 (per-OS #[cfg(windows)] AppData path resolution, Step-4.5 3-clean); NOT yet PR'd; develop 2b13596; BC 597 / Stories 74; next: S-WIN-1 PR → human merge → S-WIN-4 + S-WIN-6 (Wave 2) → Wave 3 S-WIN-5; jira-e2e env JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ, JR_E2E_ENABLED=true.` |
+| **Convergence counter** | BC: **597**. NFR: **42**. ADR: **16**. Stories: **74** authoritative. jira-e2e env: JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ, JR_E2E_ENABLED=true. 1 active worktree: .worktrees/S-WIN-1 @ 87b8c51. |
+| **Next / Pending** | (1) HUMAN MERGE DECISION on PR #507; (2) S-WIN-4 + S-WIN-6 (Wave 2); (3) Wave 3 S-WIN-5 closes F-WIN2-C-101 + applies WIN-CFG-TESTS-CHECK; (4) tracked LOW: WIN-DENY-FRAGILITY, SEC-WCM-DOC, SEC-JR-SERVICE-NAME-GATE, WIN-CFG-TESTS-CHECK; standing items unchanged. |
+| **Resume prompt** | `Read .factory/STATE.md. DATE 2026-06-13/14; S-WIN-1 PR #507 OPEN → develop (CI 11/11, AI APPROVE cycle 3, security CLEAR); PAUSED before merge; develop 2b13596; BC 597 / Stories 74; next: human merge PR #507 → S-WIN-4 + S-WIN-6 (Wave 2) → Wave 3 S-WIN-5 (apply WIN-CFG-TESTS-CHECK); jira-e2e env JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ, JR_E2E_ENABLED=true.` |
 
 ## Open Issues Tracker
 
@@ -149,8 +149,7 @@ Full per-issue: `cycles/cycle-001/convergence-trajectory.md`. Current: **[2026-0
 
 | Issue | Title | Status | Priority | Notes |
 |-------|-------|--------|----------|-------|
-| #506 | S-WIN-3 keyring windows-native + deny transitive skip set | **MERGED → develop @ 2b13596 (squash, 2026-06-13T18:27:29Z). 2/6 Windows-build stories shipped.** | — | Closed. |
-| #505 | S-WIN-2 JR_CONFIG_DIR/JR_CACHE_DIR debug seam (BC-6.2.017) | **MERGED → develop @ 1b84feb (squash, 2026-06-13). First Windows-build story shipped.** | — | Closed. |
+| #507 | S-WIN-1 per-OS #[cfg(windows)] AppData path resolution | **OPEN — READY TO MERGE** (CI 11/11, AI APPROVE cycle 3, security CLEAR). Paused for human review. | — | Squash-merge → develop when human approves. |
 | #492 | fix(adf): block-HTML raw-\n invariant | **OPEN** — needs-sandbox. Filed 2026-06-09. Raw-\n in literal-text paragraphs may not survive Jira REST round-trip. | LOW | No active cycle. |
 | #475 | ADF read-path / E2E coverage | **CLOSED — CYCLE CLOSED + MERGED** (PR #499 → develop @ 418a392e, 2026-06-11). All sub-gaps DONE. | LOW | CYCLE CLOSED. |
 | #210 | (backlog) | OPEN | — | |
