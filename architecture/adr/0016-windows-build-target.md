@@ -203,7 +203,7 @@ checks `XDG_CONFIG_HOME` in the `#[cfg(not(windows))]` branch. Both mechanisms c
 **Migration scope for test files:** All test files that set `XDG_CONFIG_HOME` or
 `XDG_CACHE_HOME` must be updated to also set (or switch to) `JR_CONFIG_DIR`/`JR_CACHE_DIR`
 for Windows CI compatibility. The primary affected helper is `jr_isolated()` in
-`tests/auth_output_json.rs:69` and the ad-hoc `.env("XDG_*")` calls in ~12 other test files.
+`tests/auth_output_json.rs:69` and the ad-hoc `.env("XDG_*")` calls in 37 other in-scope test files (38 total files set XDG vars; `tests/e2e_live.rs` is excluded as fully `#[ignore]`/`JR_RUN_E2E`-gated and never runs in the `windows-latest` CI matrix). Canonical enumeration: `grep -rlE 'XDG_CONFIG_HOME|XDG_CACHE_HOME' tests/`. The migration is mechanical: add `.env("JR_CONFIG_DIR", …)` / `.env("JR_CACHE_DIR", …)` alongside each existing `.env("XDG_*", …)` call site.
 
 **Release gate:** `JR_CONFIG_DIR` and `JR_CACHE_DIR` have NO effect in release binaries
 (`cargo build --release` sets `cfg(not(debug_assertions))`). The `#[cfg(debug_assertions)]`

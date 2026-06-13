@@ -165,7 +165,7 @@ Windows becomes `%LOCALAPPDATA%\jr\v1\<profile>\`.
 | macOS/Linux (XDG set) | `$XDG_CONFIG_HOME/jr/` | `$XDG_CACHE_HOME/jr/v1/<profile>/` |
 | macOS/Linux (XDG unset) | `~/.config/jr/` | `~/.cache/jr/v1/<profile>/` |
 | Windows | `%APPDATA%\jr\` | `%LOCALAPPDATA%\jr\v1\<profile>\` |
-| Any (debug, JR_CONFIG_DIR set) | `$JR_CONFIG_DIR/` | `$JR_CACHE_DIR/v1/<profile>/` (seam sets `cache_root()`; `cache_dir(profile)` still appends `/v1/<profile>/`) |
+| Any (debug, JR_CONFIG_DIR set) | `$JR_CONFIG_DIR/` | `$JR_CACHE_DIR/v1/<profile>/` (seam sets `cache_root()`; `cache_dir(profile)` still appends `/v1/<profile>/`). Note: test helpers must supply the `/jr`-suffixed path (e.g. `$XDG_CONFIG_HOME/jr`) — see §2.3. |
 
 Note: `%APPDATA%` and `%LOCALAPPDATA%` are Windows environment variable names. `dirs::config_dir()`
 resolves `%APPDATA%` (Roaming) and `dirs::cache_dir()` resolves `%LOCALAPPDATA%` (Local). The
@@ -236,54 +236,83 @@ OS-specific logic.
 
 ### 2.3 Test Helper Migration
 
-The primary helper (`tests/auth_output_json.rs::jr_isolated()`) sets both XDG vars today.
-Migration: add `JR_CONFIG_DIR` and `JR_CACHE_DIR` alongside the XDG vars. The XDG vars
-can remain (they are harmless on Unix and ignored on Windows):
+**CRITICAL INVARIANT (corrects an earlier invariant that would have regressed the ubuntu/macos `test` matrix):**
+
+The seam value is used as-is — no `.join("jr")` is appended inside `global_config_dir()` or `cache_root()` when the seam fires. However, ~25 existing test files write their config fixture into a `/jr`-suffixed subdirectory, e.g. `dir.path().join("jr").join("config.toml")`, because under `XDG_CONFIG_HOME` the binary resolves config to `<xdg>/jr/config.toml` (the XDG branch appends `.join("jr")` internally). If `JR_CONFIG_DIR` is set to the same bare `<TempDir>` path that `XDG_CONFIG_HOME` receives, `jr` will look for `<TempDir>/config.toml` while the fixture lives at `<TempDir>/jr/config.toml` — **fixture not found → test fails on Ubuntu and macOS, not just Windows.**
+
+The correct migration rule is:
 
 ```rust
 fn jr_isolated(config_dir: &TempDir, cache_dir: &TempDir) -> Command {
     let mut cmd = Command::cargo_bin("jr").unwrap();
-    cmd.env("XDG_CONFIG_HOME", config_dir.path())   // Unix isolation (unchanged)
-       .env("XDG_CACHE_HOME", cache_dir.path())      // Unix isolation (unchanged)
-       .env("JR_CONFIG_DIR", config_dir.path())      // Cross-platform isolation (NEW)
-       .env("JR_CACHE_DIR", cache_dir.path())         // Cross-platform isolation (NEW)
+    cmd.env("XDG_CONFIG_HOME", config_dir.path())         // Unix isolation (unchanged)
+       .env("XDG_CACHE_HOME", cache_dir.path())           // Unix isolation (unchanged)
+       .env("JR_CONFIG_DIR", config_dir.path().join("jr")) // Cross-platform isolation (NEW)
+       .env("JR_CACHE_DIR", cache_dir.path().join("jr"))   // Cross-platform isolation (NEW)
        // ... rest unchanged
 ```
 
-The `JR_CONFIG_DIR`/`JR_CACHE_DIR` values should be the same paths as `XDG_*` — the temp
-directory root, not the `jr/` subdirectory. The seam returns `PathBuf::from(dir)` directly,
-WITHOUT the `.join("jr")` suffix that the XDG and OS branches append. This is a deliberate
-asymmetry: integration-test helpers must pass the path EXCLUDING the `jr/` segment (the same
-value they pass to `XDG_CONFIG_HOME`), and the seam uses it as the final directory. Because
-the seam takes precedence over XDG on Unix debug builds, an already-migrated test that sets
-both will resolve to `<dir>` rather than `<dir>/jr` — isolation is preserved (still under the
-TempDir) but the literal resolved path changes by the `jr/` segment.
+The seam value is the **fully-resolved directory** — i.e. the same directory `jr` resolves to under XDG:
 
-**F4 MUST** grep the existing test suite for literal `/jr/config.toml`, `/jr/v1/`, or similar
-path-string assertions before adding `JR_CONFIG_DIR`/`JR_CACHE_DIR` to shared test helpers,
-since such assertions would break under the no-suffix seam.
+- `XDG_CONFIG_HOME` → seam must be `<XDG_CONFIG_HOME value>.join("jr")`
+- `XDG_CACHE_HOME` → seam must be `<XDG_CACHE_HOME value>.join("jr")`
+
+The per-profile cache segments (`v1/<profile>`) are still appended downstream by `cache_dir(profile)`, unchanged.
+
+The seam takes precedence over XDG on Unix debug builds. When both are set — `XDG_CONFIG_HOME=<dir>` and `JR_CONFIG_DIR=<dir>/jr` — the seam wins and resolves to `<dir>/jr`, which is exactly what XDG would have resolved to anyway. There is no behavioral difference; isolation is fully preserved.
+
+**F4 MUST** grep the existing test suite for `.join("jr")` in path construction and for literal `/jr/config.toml`, `/jr/v1/`, or similar path-string assertions before adding `JR_CONFIG_DIR`/`JR_CACHE_DIR` to shared test helpers, to verify fixtures are written to the correct location after migration.
 
 ### 2.4 Test Files Requiring Migration
 
 All test files that set `XDG_CONFIG_HOME` or `XDG_CACHE_HOME` on a `Command` builder
-must add the corresponding `JR_CONFIG_DIR`/`JR_CACHE_DIR` env vars. The following files
-are affected (grep of `XDG_CONFIG_HOME` or `XDG_CACHE_HOME` in `tests/`):
+must add the corresponding `JR_CONFIG_DIR`/`JR_CACHE_DIR` env vars with the fully-resolved
+(`.join("jr")`-suffixed) paths per §2.3.
+
+**Canonical enumeration commands (run both):**
+
+```sh
+# Primary: find files that set XDG vars (identifies which files to migrate)
+grep -rlE 'XDG_CONFIG_HOME|XDG_CACHE_HOME' tests/
+
+# Secondary: find the dominant fixture-construction pattern (identifies break risk)
+grep -rE '\.join\("jr"\)' tests/
+```
+
+The `.join("jr")` grep is the most important audit step: it identifies test files where
+fixtures are written into the `/jr`-suffixed subdirectory. Files with this pattern MUST
+receive `JR_CONFIG_DIR=<xdg_value>.join("jr")` (not the bare XDG value). Files without
+it (isolation-only helpers that set XDG but write no fixtures directly) still need the
+`.join("jr")`-suffixed seam value for symmetry, since other tests in the same file may
+write fixtures.
+
+**Scope:** 38 files total set XDG vars. `tests/e2e_live.rs` is excluded from the migration
+(it is fully `#[ignore]`/`JR_RUN_E2E`-gated and never runs in the `windows-latest` CI
+matrix). **37 files are in-scope.** "Mixed" files that have some `#[ignore]` keyring tests
+but also non-ignored CI-run tests (e.g. `tests/auth_output_json.rs`,
+`tests/auth_profiles.rs`, `tests/multi_cloudid_disambiguation.rs`,
+`tests/rate_limit_holdouts.rs`) are in-scope because their non-ignored tests DO run on
+`windows-latest`.
+
+Representative in-scope files (not exhaustive — run the grep above for the full list):
 
 | File | Migration needed |
 |------|-----------------|
-| `tests/auth_output_json.rs` | `jr_isolated()` helper — add `JR_CONFIG_DIR`, `JR_CACHE_DIR` |
-| `tests/issue_list_assets.rs` | Lines ~167-168 — add both vars |
-| `tests/issue_resolution.rs` | Lines ~29-30 — add both vars |
-| (all other test files using `.env("XDG_*")`) | Same pattern |
+| `tests/auth_output_json.rs` | `jr_isolated()` helper — add `JR_CONFIG_DIR=config_dir.path().join("jr")`, `JR_CACHE_DIR=cache_dir.path().join("jr")` |
+| `tests/migration_legacy.rs` | Lines ~97,149 write to `dir.path().join("jr").join("config.toml")` — seam must be `dir.path().join("jr")` |
+| `tests/issue_list_assets.rs` | Lines ~167-168 — add both vars with `.join("jr")` suffix |
+| `tests/issue_resolution.rs` | Lines ~29-30 — add both vars with `.join("jr")` suffix |
+| (all 37 in-scope files) | Same pattern: add `.env("JR_CONFIG_DIR", xdg_val.join("jr"))` / `.env("JR_CACHE_DIR", xdg_val.join("jr"))` alongside each existing `.env("XDG_*", xdg_val)` call |
 
 Additionally, `src/config.rs` inline unit tests use `std::env::set_var("XDG_CONFIG_HOME")`
 (unsafe in Rust 2024). These are in-process unit tests that DO modify global env state.
-On Windows, these tests still need `std::env::set_var("JR_CONFIG_DIR")` added, because the
-`global_config_dir()` function will check `JR_CONFIG_DIR` before XDG. Alternatively,
-those tests can set both. F4 must handle this.
+On Windows, these tests still need `std::env::set_var("JR_CONFIG_DIR")` added (with the
+`.join("jr")`-suffixed value), because the `global_config_dir()` function will check
+`JR_CONFIG_DIR` before XDG. F4 must handle this.
 
 **Note on `src/cache.rs` unit tests:** Same pattern — the cache unit tests use
-`std::env::set_var("XDG_CACHE_HOME")`. On Windows they need `JR_CACHE_DIR` added.
+`std::env::set_var("XDG_CACHE_HOME")`. On Windows they need `JR_CACHE_DIR` added with
+the `.join("jr")`-suffixed value.
 
 ### 2.5 Release Gate Test
 
@@ -458,25 +487,65 @@ This glob runs on Linux; both Unix and Windows artifacts are available via
 
 ## 4. `ci.yml` Windows Job
 
-### 4.1 Test Matrix Addition
+### 4.1 Test Matrix Addition and Clippy Matrix Addition
 
-Add `windows-latest` to the `test` job matrix:
+**IMPORTANT — `clippy` and `test` are separate top-level jobs in `ci.yml`.** The `test`
+job does NOT run clippy. The `clippy` job is currently pinned to `ubuntu-latest` only
+and is NOT part of the test matrix. Any claim that "the Windows test job runs clippy
+then test" is factually false.
+
+Two distinct changes are required:
+
+**Change 1 — `test` job: add `windows-latest` to the existing matrix.**
+
 ```yaml
-strategy:
-  matrix:
-    os: [ubuntu-latest, macos-latest, windows-latest]
+# ci.yml — test job
+test:
+  name: Test
+  runs-on: ${{ matrix.os }}
+  strategy:
+    matrix:
+      os: [ubuntu-latest, macos-latest, windows-latest]
 ```
 
-The Windows test job runs:
-1. `cargo clippy --all --all-features --tests -- -D warnings` (Windows clippy, debug build)
-2. `cargo test --all-features` (all tests, debug build)
+The Windows test run executes `cargo test --all-features` only (same as all other
+matrix entries). The debug build activates `#[cfg(debug_assertions)]`, which enables
+the `JR_CONFIG_DIR`/`JR_CACHE_DIR` seam. Tests that set these vars will isolate
+correctly.
 
-The debug build activates `#[cfg(debug_assertions)]`, which enables the `JR_CONFIG_DIR`/
-`JR_CACHE_DIR` seam. Tests that set these vars will isolate correctly.
+**Change 2 — `clippy` job: add a `strategy.matrix.os` over `[ubuntu-latest, windows-latest]`.**
 
-The `shell:` for `run:` steps in `ci.yml` does not need to be overridden — `ci.yml`
-uses `run: cargo ...` commands, which are cross-platform (`cargo` is a cross-platform
-binary). No bash syntax is present in the current `ci.yml` test/clippy steps.
+This is required because Ubuntu clippy cannot lint `#[cfg(windows)]` code paths — the
+`#[cfg(windows)]` branches are dead code on Linux and are silently skipped. The new
+`#[cfg(windows)]` path-resolution branches in `src/config.rs` and `src/cache.rs` must
+be linted on an actual Windows runner.
+
+```yaml
+# ci.yml — clippy job (updated)
+clippy:
+  name: Clippy
+  runs-on: ${{ matrix.os }}
+  timeout-minutes: 15
+  strategy:
+    matrix:
+      os: [ubuntu-latest, windows-latest]
+  steps:
+    - name: Harden the runner (Audit all outbound calls)
+      uses: step-security/harden-runner@...
+      with:
+        egress-policy: audit
+    - uses: actions/checkout@...
+    - uses: Swatinem/rust-cache@...
+    - run: cargo clippy --all --all-features --tests -- -D warnings
+```
+
+No `shell:` override is needed for the clippy `run:` step — `cargo clippy` is a
+cross-platform binary, no bash syntax involved. The `Swatinem/rust-cache` action
+is Windows-compatible.
+
+The `shell:` for `run:` steps in `ci.yml` does not need to be overridden for either
+the `test` or `clippy` jobs — both use `run: cargo ...` commands, which are
+cross-platform. No bash syntax is present in these steps.
 
 ### 4.2 Tests at Risk on Windows
 
@@ -556,10 +625,28 @@ vars) is platform-agnostic. No action needed for unit tests.
 For subprocess integration tests, each test launches an isolated subprocess with its own
 env vars — parallelism is safe because each process sees its own environment.
 
-### 4.3 `fmt` and `deny` Jobs
+### 4.3 Complete CI Job Windows Applicability (F-WIN-O2)
 
-`fmt` and `deny` run only on `ubuntu-latest`. No Windows runner needed — formatting and
-license checking are platform-independent. No change to these jobs.
+Every job in `ci.yml` is enumerated below with its Windows applicability and rationale.
+No quality or security job should be silently skipped on the new platform without a
+documented justification.
+
+| Job | Current runner | Windows change | Rationale |
+|-----|---------------|----------------|-----------|
+| `fmt` | `ubuntu-latest` | **No change — ubuntu-only** | `cargo fmt --all -- --check` is platform-independent; formatting rules produce identical output on any OS. Running on Linux once is sufficient. |
+| `clippy` | `ubuntu-latest` | **Matrix over `[ubuntu-latest, windows-latest]`** | Ubuntu clippy cannot lint `#[cfg(windows)]` branches — they compile to dead code and are silently skipped. Windows clippy is REQUIRED to catch errors in the new `#[cfg(windows)]` path-resolution code. See §4.1 Change 2 for the full mechanism. |
+| `test` | `[ubuntu-latest, macos-latest]` | **Add `windows-latest` to matrix** | Core functional coverage for Windows-specific code paths (`global_config_dir()`, `cache_root()`, keyring `windows-native`). This is the primary gate for BC-6.1.014, BC-6.2.016, BC-6.2.017. See §4.1 Change 1. |
+| `msrv` | `ubuntu-latest` | **No change — ubuntu-only** | MSRV check (`cargo check --all-features`) validates that the codebase compiles under Rust 1.85.0. MSRV is a compiler-version property, not an OS property. The `#[cfg(windows)]` additions use only stable Rust features available at MSRV. Running on Linux is sufficient. |
+| `deny` | `ubuntu-latest` | **No change — ubuntu-only** | License and vulnerability audit (`cargo-deny-action`) is platform-independent. The `deny.toml` constraint set is identical across platforms; the `windows-native` keyring dependency is evaluated in the dependency tree regardless of runner OS. Running on Linux is sufficient. |
+| `coverage` | `ubuntu-latest` | **No change — ubuntu-only** | `cargo-llvm-cov` with `llvm-tools-preview` is Linux-only in the current setup. Windows coverage tooling requires separate configuration. The `#[cfg(windows)]` branches produce dead code on Linux and will show as uncovered — accepted gap for this cycle; Windows coverage is deferred. |
+| `spec-guard` | `ubuntu-latest` | **No change — ubuntu-only** | Runs bash scripts (`check-spec-counts.sh`, `check-bc-no-numeric-test-counts.sh`, `check-bc-cumulative-counts.sh`) against the `factory-artifacts` git branch. These scripts have no Rust compilation step and no platform-specific behavior. Linux-only is correct. |
+| `security` | `ubuntu-latest`, PR-only | **No change — ubuntu-only** | Runs `gitleaks` via a GitHub Action. Secret scanning is performed on the git diff, not on compiled artifacts — entirely platform-independent. Linux-only is correct. |
+| `mutants` | `ubuntu-latest`, PR-only | **No change — ubuntu-only** | Mutation testing via `cargo-mutants --in-diff` is prohibitively expensive (60-minute budget on Linux). Adding a Windows runner would double the cost for minimal marginal value — mutation coverage is a code-quality property, not an OS-behavioral property. Deferred to a future cycle if Windows-specific branches accumulate enough complexity to warrant dedicated mutation scope. |
+
+**Summary of changes to `ci.yml`:**
+- `clippy` job: add `strategy.matrix.os: [ubuntu-latest, windows-latest]`, change `runs-on` to `${{ matrix.os }}`
+- `test` job: add `windows-latest` to existing `strategy.matrix.os`
+- All other jobs: no change
 
 ---
 
