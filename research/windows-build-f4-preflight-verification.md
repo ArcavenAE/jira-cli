@@ -91,7 +91,7 @@ docs.rs/keyring/3.6.3 confirms: *"windows-native: Provides access to the Windows
 
 > The Perplexity deep-research claim that the feature is `wincred` pulling windows-sys 0.45 is **REFUTED** by the Cargo.toml — there is no `wincred` feature in keyring 3.x.
 
-**(b) windows-sys version + deny.toml coverage — REFUTED (correction required).** Primary source: keyring v3.6.3 `Cargo.toml`:
+**(b) windows-sys version + deny.toml coverage — REFUTED (correction required). [SCOPE ANNOTATION 2026-06-13: this finding correctly identified windows-sys 0.60 but did NOT trace the full transitive fan-out — see annotation at end of this section.]** Primary source: keyring v3.6.3 `Cargo.toml`:
 
 ```toml
 [target.'cfg(target_os = "windows")'.dependencies]
@@ -116,6 +116,36 @@ Sources:
 - https://github.com/hwchen/keyring-rs/blob/v3.6.3/Cargo.toml
 - https://docs.rs/keyring/3.6.3/keyring/
 - https://crates.io/crates/windows-sys/0.60.0
+
+> **[SCOPE ANNOTATION — implementation-confirmed, 2026-06-13]**
+>
+> This finding correctly identified that `windows-sys 0.60` was not covered by the existing
+> `deny.toml` skip entries and that a new skip was required. However, it did NOT trace the
+> transitive dependency fan-out that a new `windows-sys` minor mechanically introduces.
+>
+> **What the research missed:** `windows-sys 0.60` transitively pulls `windows-targets 0.53.x`
+> and 8 `windows_*` architecture crates at the 0.53.x tier. Combined with the pre-existing
+> 0.42.x lineage (jni → windows-sys 0.45 → rustls-platform-verifier) and the 0.52.x lineage
+> (ring → windows-sys 0.52), the S-WIN-3 Cargo.lock carries `windows-targets` at **three**
+> versions (0.42.2, 0.52.6, 0.53.5) and the 8 `windows_*` arch crate families at the same
+> three tiers.
+>
+> **Corrected full scope (implementation-confirmed via `cargo deny check` EXIT 0 in S-WIN-3
+> worktree):** `cargo deny check` under `bans.multiple-versions = "deny"` required ~17
+> `[[bans.skip]]` entries — not 1 — to pass: 1 (`windows-sys 0.60`) + the 0.42 tier
+> (`windows-targets 0.42` + 8 `windows_*` arch crates at 0.42) + the 0.53 tier
+> (`windows-targets 0.53` + 8 `windows_*` arch crates at 0.53). The 0.52.6 lineage is left
+> as the single un-skipped canonical version.
+>
+> **Root cause of research gap:** C-V2(b) was a per-crate point claim ("windows-sys 0.60
+> needs a skip") and did not apply the windows-sys ecosystem rule that each minor version
+> ships a paired `windows-targets` minor and full arch-crate tier. The downstream
+> architecture-delta §5.3 and ADR-0016 Decision 5b both inherited this gap by propagating
+> the single-entry characterization. All three have been corrected (2026-06-13).
+>
+> **Process lesson (codified as PG-WIN3-001 in architecture-delta §10):** When enabling any
+> Cargo feature that pulls a NEW `windows-sys` minor, budget the deny skip set as a tier
+> (~9 entries per new `windows-targets` lineage), not a single `windows-sys` entry.
 
 ---
 
