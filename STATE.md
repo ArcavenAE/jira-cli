@@ -2,11 +2,11 @@
 document_type: pipeline-state
 version: "2.0"
 status: active
-timestamp: 2026-06-13T12:00:00Z
+timestamp: 2026-06-13T13:00:00Z
 phase: phase-3-tdd-implementation
 project: jira-cli
 mode: BROWNFIELD
-current_step: "2026-06-13: Windows-build F3 story-decomposition CONVERGED — 8-pass adversarial story review, 3-clean-pass P6/P7/P8 (trajectory 6→5→2→2→2→0→0→0). STORY-INDEX status=complete, total_stories 74 authoritative. ADR-0016 Decisions 2/3 amended during convergence. Next: F3 human gate, then F4 delta implementation. develop HEAD 587206e. PR #504 OPEN."
+current_step: "2026-06-13: Windows-build F3 human gate APPROVED → entering F4 delta implementation. TDD on S-WIN-1..6 in intra-cycle wave order (Wave 1: S-WIN-2, S-WIN-3 | Wave 2: S-WIN-1, S-WIN-4, S-WIN-6 | Wave 3: S-WIN-5). Stories 74. develop HEAD 587206e. PR #504 OPEN."
 current_cycle: "cycle-001"
 dtu_required: false
 phase_2_status: APPROVED
@@ -46,7 +46,7 @@ activation_version: "v0.6.0-dev.1"
 | ADF E2E coverage loop-back (#471/#474/#483/#489) | **CYCLE CLOSED + MERGED** | 2026-06-11 | CYCLE CLOSED | PR #495 → develop @ bfb723f. 5 gated live E2E tests. NO src change. BC 594 unchanged. Live-verified GREEN — e2e run 27352373680 (89/0) on develop @ 45ceae6, 2026-06-11. |
 | CLI leading-dash values (issue #471 e2e / description-leading-dash) | **CYCLE CLOSED + MERGED** | 2026-06-11 | F1–F7 ALL COMPLETE — CONVERGED | PR #496 → develop @ 45ceae6. `allow_hyphen_values = true` on 7 free-text write args. BC 594 unchanged. +17 hermetic parse tests (tests/cli_smoke.rs, 44 total). F5: 8 passes / 3-clean-pass CONVERGED. F6: 1763/0, clippy/fmt/deny clean, mutation zero-in-scope. F7: 5-dimension consistency CLEAN. DEC-072. |
 | ADF E2E read-path coverage (issue #475) | **CYCLE CLOSED + MERGED** | 2026-06-11 | F1–F7 ALL COMPLETE — CONVERGED | PR #499 → develop @ 418a392e. Test-only (no src change). BC 594 / NFR 41 / Stories 68 unchanged. DEC-073/074/075/076. |
-| Windows build (x86_64-pc-windows-msvc) | **F3 CONVERGED — adv 3-clean-pass P6/7/8; awaiting F3 human gate** | 2026-06-12 (F2) / 2026-06-13 (F3 converged) | F3 adversarial story-convergence CONVERGED; F3 human gate PENDING | 8-pass trajectory 6→5→2→2→2→0→0→0; Stories 68→74 now authoritative; ADR-0016 Decisions 2/3 amended during F3 (F-WIN-F3-001/003). DEC-079/080. PR #504 OPEN. |
+| Windows build (x86_64-pc-windows-msvc) | **F3 APPROVED — F4 IN PROGRESS (Wave 1 starting: S-WIN-2)** | 2026-06-12 (F2) / 2026-06-13 (F3 APPROVED) | F3 human gate APPROVED 2026-06-13 | 8-pass trajectory 6→5→2→2→2→0→0→0; Stories 68→74 authoritative; ADR-0016 Decisions 2/3 amended (F-WIN-F3-001/003); scope: x86_64-pc-windows-msvc only (aarch64 deferred); R-W4 accepted; WIN-PG-2+STORY-INDEX-NARRATIVE-PG carried forward. DEC-079/080. PR #504 OPEN. |
 | 4: Holdout Evaluation | not-started | | | |
 | 5: Adversarial Refinement | not-started | | | |
 | 6: Formal Hardening | not-started | | | |
@@ -58,11 +58,10 @@ activation_version: "v0.6.0-dev.1"
 
 | Step | Agent | Status | Output |
 |------|-------|--------|--------|
-| Windows-build F3 adversarial story-convergence CONVERGED 2026-06-13: 8 passes (pass-01..08 in cycles/cycle-001/adversarial-reviews/windows-build-f3/), trajectory 6→5→2→2→2→0→0→0, 3-clean-pass P6/P7/P8. 13 findings dispositioned: F-001 CRITICAL (ADR-0016 Decision 3 false clippy premise → amended to separate-clippy-matrix), F-003 MEDIUM (ADR Decision 2 zip-primary risk-accept), plus 8 story refinements + 2 cosmetic + 3 informational-accepted. STORY-INDEX status=complete v1.4.38, total_stories 74 authoritative. | state-manager | F3 CONVERGED — awaiting human gate | BC 597 / NFR 42 / ADR 16 (Decisions 2/3 amended) / Stories 74 authoritative. develop HEAD 587206e. No active worktrees. |
-| v0.5.0-dev.14 dev release: PR #500 (Cargo.toml→dev.14 + CHANGELOG finalized, 31 commits since dev.13) squash-merged → develop @ a0f45cc; tag v0.5.0-dev.14 pushed → release.yml success (run 27383452695, 4/4 platform builds); GitHub pre-release published 2026-06-11. | devops-engineer | RELEASE PUBLISHED | BC 594 / NFR 41 / Stories 68. develop HEAD: a0f45cc. |
 | v0.5.0 STABLE released 2026-06-12T15:27:54Z: PR #501 "chore: release v0.5.0" (release/v0.5.0) squash-merged → main. Tag v0.5.0 pushed. GitHub Release v0.5.0 graduated to 'Latest'. First STABLE shipping full ADF markdown-conversion feature set + BC-3.2.013 resolution enforcement (breaking). DEC-078. | state-manager | STABLE RELEASED | BC 594 / NFR 41 / Stories 68. main HEAD: v0.5.0. |
 | develop bumped to 0.6.0-dev.1 2026-06-12T15:31:57Z: PR #502 "chore: sync main → develop + bump to v0.6.0-dev.1" squash-merged → develop @ 587206e. Cargo.toml version 0.6.0-dev.1. 0.6.0 dev cycle open. No active worktrees. DEC-078. | state-manager | 0.6.0 CYCLE OPEN | BC 594 / NFR 41 / Stories 68. develop HEAD: 587206e. |
-| INTERRUPTED-SESSION RECOVERY 2026-06-13: Windows-build F3 story drafts (S-WIN-1..6, ~1997 LOC) + STORY-INDEX 68→74 (v1.4.37, F3-audit reconcile fixed Σ=58≠74: added cycle-3 wave-plan row + corrected feature-followup 26→39) + bc-6/architecture-delta/ADR-0016 edits committed to factory-artifacts for durability. F3 adversarial story-convergence (3 clean passes) NOT yet run — resume there. | state-manager | DURABLE CHECKPOINT — F3 adv-review PENDING | BC 597 / NFR 42 / Stories 74 PROVISIONAL. develop HEAD 587206e. No active worktrees. |
+| Windows-build F3 adversarial story-convergence CONVERGED 2026-06-13: 8 passes (pass-01..08 in cycles/cycle-001/adversarial-reviews/windows-build-f3/), trajectory 6→5→2→2→2→0→0→0, 3-clean-pass P6/P7/P8. 13 findings dispositioned: F-001 CRITICAL (ADR-0016 Decision 3 false clippy premise → amended to separate-clippy-matrix), F-003 MEDIUM (ADR Decision 2 zip-primary risk-accept), plus 8 story refinements + 2 cosmetic + 3 informational-accepted. STORY-INDEX status=complete v1.4.38, total_stories 74 authoritative. | state-manager | F3 CONVERGED — awaiting human gate | BC 597 / NFR 42 / ADR 16 (Decisions 2/3 amended) / Stories 74 authoritative. develop HEAD 587206e. No active worktrees. |
+| Windows-build F3 human gate APPROVED 2026-06-13 (human chose Approve → F4): accepted 6-story decomposition, single-target x86_64-pc-windows-msvc scope (aarch64 deferred), R-W4 accepted risk (Windows OAuth smoke deferred v1), process-gaps WIN-PG-2 + STORY-INDEX-NARRATIVE-PG carried forward. Entering F4 delta implementation — first story S-WIN-2 (debug seam, Wave 1). | state-manager | F3 APPROVED — F4 STARTING | BC 597 / NFR 42 / ADR 16 / Stories 74. develop HEAD 587206e. |
 
 ## Decisions Log
 
@@ -131,11 +130,11 @@ Full per-issue: `cycles/cycle-001/convergence-trajectory.md`. Current: **[2026-0
 | Field | Value |
 |-------|-------|
 | **Date** | 2026-06-13 |
-| **Position** | **Windows-build F3 CONVERGED (8-pass adversarial, 3-clean-pass P6/P7/P8). STORY-INDEX status complete v1.4.38, total_stories 74 authoritative. ADR-0016 Decisions 2/3 amended during convergence. AWAITING F3 HUMAN GATE — orchestrator to present gate; on approval proceed to F4 delta implementation (TDD on S-WIN-1..6 per intra-cycle wave order S-WIN-2,3 → S-WIN-1,4,6 → S-WIN-5). No source changes on develop yet (587206e).** |
+| **Position** | **Windows-build F3 APPROVED (human gate, 2026-06-13). F4 delta implementation IN PROGRESS. Wave order: Wave 1 {S-WIN-2, S-WIN-3} → Wave 2 {S-WIN-1, S-WIN-4, S-WIN-6} → Wave 3 {S-WIN-5}. First story: S-WIN-2 (JR_CONFIG_DIR/JR_CACHE_DIR debug seam — modifies src/config.rs + src/cache.rs, adds tests/config_dir_release_gate.rs). Each story follows full per-story-delivery (test-writer stubs→failing tests→implementer TDD→Step-4.5 per-story adversarial 3-clean-pass→demo→PR→merge). No source on develop yet (587206e).** |
 | **develop HEAD** | origin/develop = **587206e**. activation v0.6.0-dev.1. BC **597**. NFR **42**. ADR **16**. Stories **74** (authoritative). No active worktrees. |
 | **Convergence counter** | BC: **597**. NFR: **42**. ADR: **16**. Stories: **74** authoritative. jira-e2e env: JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ, JR_E2E_ENABLED=true. No active worktrees. |
-| **Next / Pending** | (1) F3 HUMAN GATE pending — then F4. (2) PR #504 OPEN (ADR-0003 docs) do-not-merge. (3) F4 obligations WIN-O-3, WIN-O-4, WIN-PG-2. (4) SEC-001 LOW deferred. (5) Standing: #429 do-not-close; #492 OPEN; OQ-5; E2E-PG-4; F-H1; O1-TABLE-ASSERT. |
-| **Resume prompt** | `Read .factory/STATE.md. DATE 2026-06-13; Windows-build F3 CONVERGED 3-clean-pass; Stories 74 authoritative; awaiting F3 human gate then F4; develop 587206e; PR #504 OPEN; jira-e2e env JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ, JR_E2E_ENABLED=true.` |
+| **Next / Pending** | (1) F4 IN PROGRESS — deliver S-WIN-2 first (Wave 1), then S-WIN-3, then Wave 2/3. F4 obligations WIN-O-3/WIN-O-4 land in S-WIN-6; WIN-PG-2 codify-or-defer before cycle close. (2) PR #504 OPEN (ADR-0003 docs) do-not-merge. (3) SEC-001 LOW deferred. (4) Standing: #429 do-not-close; #492 OPEN; OQ-5; E2E-PG-4; F-H1; O1-TABLE-ASSERT. |
+| **Resume prompt** | `Read .factory/STATE.md. DATE 2026-06-13; Windows-build F3 APPROVED; F4 IN PROGRESS Wave 1 (S-WIN-2 first); Stories 74; develop 587206e; PR #504 OPEN do-not-merge; jira-e2e env JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ, JR_E2E_ENABLED=true.` |
 
 ## Open Issues Tracker
 
