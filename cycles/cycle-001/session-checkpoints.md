@@ -631,3 +631,18 @@ _Was the active checkpoint after STATE.md was compacted and rewritten post-#495 
 | **Convergence counter** | BC: **594**. NFR: **41**. Stories: **68**. jira-e2e env: JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ, JR_E2E_ENABLED=true. No active worktrees. |
 | **Next / Pending** | (1) No active cycle — pick next backlog item for 0.6.0 line. (2) SEC-001 (CWE-674 deep-nesting recursion in adf.rs, LOW) deferred. (3) Deferred: #400 Story B + engine items; #372 cargo-mutants. (4) Standing: do NOT close #429 (DEC-029 human deferral); #492 OPEN; OQ-5 + E2E-PG-4 remote-link open; F-H1 DEFERRED; O1-TABLE-ASSERT DEFERRED. |
 | **Resume prompt** | `Read .factory/STATE.md. DATE: 2026-06-12. POSITION: v0.5.0 STABLE RELEASED (PR #501 → main; tag v0.5.0; 'Latest'). develop @ 587206e (0.6.0-dev.1; PR #502). DEC-078. BC 594 / NFR 41 / Stories 68. No active worktrees. Next: pick next backlog item for 0.6.0 line. STANDING: do NOT close #429 (DEC-029); #492 OPEN; OQ-5 open; E2E-PG-4 remote-link open; SEC-001 LOW deferred; F-H1 DEFERRED; O1-TABLE-ASSERT DEFERRED. jira-e2e: JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ, JR_E2E_ENABLED=true.` |
+
+---
+
+## Archived Checkpoint: 2026-06-13 (Windows-build F3 APPROVED — F4 STARTING)
+
+_Was the active checkpoint after Windows-build F3 human gate APPROVED. Superseded when S-WIN-2 F4 implementation CONVERGED and PR #504 merged (develop @ a7da775). DEC-081._
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-06-13 |
+| **Position** | **Windows-build F3 APPROVED (human gate, 2026-06-13). F4 delta implementation IN PROGRESS. Wave order: Wave 1 {S-WIN-2, S-WIN-3} → Wave 2 {S-WIN-1, S-WIN-4, S-WIN-6} → Wave 3 {S-WIN-5}. First story: S-WIN-2 (JR_CONFIG_DIR/JR_CACHE_DIR debug seam — modifies src/config.rs + src/cache.rs, adds tests/config_dir_release_gate.rs). Each story follows full per-story-delivery (test-writer stubs→failing tests→implementer TDD→Step-4.5 per-story adversarial 3-clean-pass→demo→PR→merge). No source on develop yet (587206e).** |
+| **develop HEAD** | origin/develop = **587206e**. activation v0.6.0-dev.1. BC **597**. NFR **42**. ADR **16**. Stories **74** (authoritative). No active worktrees. |
+| **Convergence counter** | BC: **597**. NFR: **42**. ADR: **16**. Stories: **74** authoritative. jira-e2e env: JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ, JR_E2E_ENABLED=true. No active worktrees. |
+| **Next / Pending** | (1) F4 IN PROGRESS — deliver S-WIN-2 first (Wave 1), then S-WIN-3, then Wave 2/3. F4 obligations WIN-O-3/WIN-O-4 land in S-WIN-6; WIN-PG-2 codify-or-defer before cycle close. (2) PR #504 OPEN (ADR-0003 docs) do-not-merge. (3) SEC-001 LOW deferred. (4) Standing: #429 do-not-close; #492 OPEN; OQ-5; E2E-PG-4; F-H1; O1-TABLE-ASSERT. |
+| **Resume prompt** | `Read .factory/STATE.md. DATE 2026-06-13; Windows-build F3 APPROVED; F4 IN PROGRESS Wave 1 (S-WIN-2 first); Stories 74; develop 587206e; PR #504 OPEN do-not-merge; jira-e2e env JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ, JR_E2E_ENABLED=true.` |

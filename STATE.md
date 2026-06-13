@@ -2,11 +2,11 @@
 document_type: pipeline-state
 version: "2.0"
 status: active
-timestamp: 2026-06-13T13:00:00Z
+timestamp: 2026-06-13T16:00:00Z
 phase: phase-3-tdd-implementation
 project: jira-cli
 mode: BROWNFIELD
-current_step: "2026-06-13: Windows-build F3 human gate APPROVED → entering F4 delta implementation. TDD on S-WIN-1..6 in intra-cycle wave order (Wave 1: S-WIN-2, S-WIN-3 | Wave 2: S-WIN-1, S-WIN-4, S-WIN-6 | Wave 3: S-WIN-5). Stories 74. develop HEAD 587206e. PR #504 OPEN."
+current_step: "2026-06-13: S-WIN-2 (debug path seam) implementation CONVERGED — TDD green (7 tests AC-001..008), 5-pass Step-4.5 per-story adversarial CLEAN, full cargo test green, clippy/fmt clean. Branch feat/win-2-config-cache-dir-seam (3 commits, off develop a7da775). Demo adapted-skip (debug/infra seam). Next: S-WIN-2 PR. develop HEAD a7da775 (PR #504 MERGED)."
 current_cycle: "cycle-001"
 dtu_required: false
 phase_2_status: APPROVED
@@ -26,7 +26,7 @@ activation_version: "v0.6.0-dev.1"
 | **Product** | jr (Jira CLI) |
 | **Mode** | BROWNFIELD / Rust |
 | **Target Workspace** | develop → main |
-| **Last Updated** | 2026-06-13: Windows-build F3 CONVERGED — 8-pass adversarial story review, 3-clean-pass P6/P7/P8. Stories 74 authoritative. ADR-0016 Decisions 2/3 amended. Awaiting F3 human gate. |
+| **Last Updated** | 2026-06-13: S-WIN-2 impl CONVERGED (5-pass Step-4.5, TDD green, cargo test green). Branch feat/win-2-config-cache-dir-seam @ b958e60. PR #504 MERGED (develop a7da775). DEC-081. |
 | **Current Phase** | Phase 3 — TDD Implementation IN PROGRESS — Feature Mode active. BC 597. NFR 42. ADR 16. Stories 74 (authoritative). |
 | **Next Phase** | Phase 4: Holdout Evaluation (not started) |
 | **Activation HEAD** | 587206e (v0.6.0-dev.1; v0.5.0 STABLE shipped 2026-06-12) |
@@ -46,7 +46,7 @@ activation_version: "v0.6.0-dev.1"
 | ADF E2E coverage loop-back (#471/#474/#483/#489) | **CYCLE CLOSED + MERGED** | 2026-06-11 | CYCLE CLOSED | PR #495 → develop @ bfb723f. 5 gated live E2E tests. NO src change. BC 594 unchanged. Live-verified GREEN — e2e run 27352373680 (89/0) on develop @ 45ceae6, 2026-06-11. |
 | CLI leading-dash values (issue #471 e2e / description-leading-dash) | **CYCLE CLOSED + MERGED** | 2026-06-11 | F1–F7 ALL COMPLETE — CONVERGED | PR #496 → develop @ 45ceae6. `allow_hyphen_values = true` on 7 free-text write args. BC 594 unchanged. +17 hermetic parse tests (tests/cli_smoke.rs, 44 total). F5: 8 passes / 3-clean-pass CONVERGED. F6: 1763/0, clippy/fmt/deny clean, mutation zero-in-scope. F7: 5-dimension consistency CLEAN. DEC-072. |
 | ADF E2E read-path coverage (issue #475) | **CYCLE CLOSED + MERGED** | 2026-06-11 | F1–F7 ALL COMPLETE — CONVERGED | PR #499 → develop @ 418a392e. Test-only (no src change). BC 594 / NFR 41 / Stories 68 unchanged. DEC-073/074/075/076. |
-| Windows build (x86_64-pc-windows-msvc) | **F3 APPROVED — F4 IN PROGRESS (Wave 1 starting: S-WIN-2)** | 2026-06-12 (F2) / 2026-06-13 (F3 APPROVED) | F3 human gate APPROVED 2026-06-13 | 8-pass trajectory 6→5→2→2→2→0→0→0; Stories 68→74 authoritative; ADR-0016 Decisions 2/3 amended (F-WIN-F3-001/003); scope: x86_64-pc-windows-msvc only (aarch64 deferred); R-W4 accepted; WIN-PG-2+STORY-INDEX-NARRATIVE-PG carried forward. DEC-079/080. PR #504 OPEN. |
+| Windows build (x86_64-pc-windows-msvc) | **F4 IN PROGRESS — S-WIN-2 impl CONVERGED (awaiting PR); Wave 1 (S-WIN-3 next)** | 2026-06-12 (F2) / 2026-06-13 (F3 APPROVED) | F3 human gate APPROVED 2026-06-13 | 8-pass trajectory 6→5→2→2→2→0→0→0; Stories 68→74 authoritative; ADR-0016 Decisions 2/3 amended; DEC-079/080/081. PR #504 MERGED (develop a7da775). S-WIN-2 CONVERGED: 5-pass Step-4.5, 7 tests AC-001..008. |
 | 4: Holdout Evaluation | not-started | | | |
 | 5: Adversarial Refinement | not-started | | | |
 | 6: Formal Hardening | not-started | | | |
@@ -62,6 +62,7 @@ activation_version: "v0.6.0-dev.1"
 | develop bumped to 0.6.0-dev.1 2026-06-12T15:31:57Z: PR #502 "chore: sync main → develop + bump to v0.6.0-dev.1" squash-merged → develop @ 587206e. Cargo.toml version 0.6.0-dev.1. 0.6.0 dev cycle open. No active worktrees. DEC-078. | state-manager | 0.6.0 CYCLE OPEN | BC 594 / NFR 41 / Stories 68. develop HEAD: 587206e. |
 | Windows-build F3 adversarial story-convergence CONVERGED 2026-06-13: 8 passes (pass-01..08 in cycles/cycle-001/adversarial-reviews/windows-build-f3/), trajectory 6→5→2→2→2→0→0→0, 3-clean-pass P6/P7/P8. 13 findings dispositioned: F-001 CRITICAL (ADR-0016 Decision 3 false clippy premise → amended to separate-clippy-matrix), F-003 MEDIUM (ADR Decision 2 zip-primary risk-accept), plus 8 story refinements + 2 cosmetic + 3 informational-accepted. STORY-INDEX status=complete v1.4.38, total_stories 74 authoritative. | state-manager | F3 CONVERGED — awaiting human gate | BC 597 / NFR 42 / ADR 16 (Decisions 2/3 amended) / Stories 74 authoritative. develop HEAD 587206e. No active worktrees. |
 | Windows-build F3 human gate APPROVED 2026-06-13 (human chose Approve → F4): accepted 6-story decomposition, single-target x86_64-pc-windows-msvc scope (aarch64 deferred), R-W4 accepted risk (Windows OAuth smoke deferred v1), process-gaps WIN-PG-2 + STORY-INDEX-NARRATIVE-PG carried forward. Entering F4 delta implementation — first story S-WIN-2 (debug seam, Wave 1). | state-manager | F3 APPROVED — F4 STARTING | BC 597 / NFR 42 / ADR 16 / Stories 74. develop HEAD 587206e. |
+| S-WIN-2 F4 delivery: TDD seam implemented (src/config.rs + src/cache.rs #[cfg(debug_assertions)] JR_CONFIG_DIR/JR_CACHE_DIR + tests/config_dir_release_gate.rs), 7 tests AC-001..008 green, Step-4.5 per-story adversarial CONVERGED (5 passes: P1 clean+2LOW, A/B clean, C 2-findings[1 deferred 1 fixed], D/E clean), full cargo test green, clippy/fmt clean. F-WIN2-C-102 fixed (with_env_var catch_unwind). Branch feat/win-2-config-cache-dir-seam @ b958e60. | Agent state-manager+specialists | S-WIN-2 CONVERGED — awaiting PR | Source on worktree branch (not develop). develop a7da775. BC 597 / Stories 74. |
 
 ## Decisions Log
 
@@ -83,6 +84,8 @@ activation_version: "v0.6.0-dev.1"
 | DEC-078 | 2026-06-12: v0.5.0 STABLE released (PR #501 → main @ 2026-06-12T15:27:54Z; tag v0.5.0; GitHub Release graduated to 'Latest'). First STABLE release shipping full ADF markdown-conversion feature set + BC-3.2.013 proactive resolution enforcement (breaking; ADR-0015). Develop then bumped to 0.6.0-dev.1 via PR #502 (squash-merged → develop @ 587206e; 2026-06-12T15:31:57Z). 0.6.0 dev cycle open. BC 594 / NFR 41 / Stories 68 unchanged. | Release milestone | Phase 3 | 2026-06-12 |
 | DEC-079 | 2026-06-12: Windows-build (x86_64-pc-windows-msvc) F1+F2 COMPLETE, F2 human gate APPROVED. F1 locked decisions: target x86_64-pc-windows-msvc only (aarch64 deferred); artifact .zip; add Windows job to ci.yml (full regression); idiomatic %APPDATA%(config)/%LOCALAPPDATA%(cache) via #[cfg(windows)]; keyring windows-native (Windows Credential Manager); OAuth embedded-creds smoke step gated off on Windows v1; ADR-0016 recorded. F2 artifacts: ADR-0016 (.factory/architecture/adr/0016-windows-build-target.md + adr-index); architecture-delta (.factory/cycles/cycle-001/windows-build/architecture-delta.md); 3 NEW BCs (BC-6.1.014 Windows config path, BC-6.2.016 Windows cache path, BC-6.2.017 JR_CONFIG_DIR/JR_CACHE_DIR debug path seam) + 1 UPDATED (BC-6.2.004 platform-conditional cache root); 1 NEW NFR (NFR-P-W1 Supported Platforms). Counts: BC 594→597 (+3), NFR 41→42 (+1), ADR 15→16 (+1). F2 adversary: 14 passes / 6→5→1→2→2→1→0→1→0→0→0→0→0→0 — 3-clean-pass convergence (P12/13/14). Fresh-context consistency audit: CONSISTENT. Research-validated C1–C7 (Perplexity + primary sources, 2026-06-12): C4 PARTIALLY REFUTED → rationale corrected (rustls-platform-verifier not webpki-roots); C2 corrected (no colon sanitization needed). ADR-0003 docs fix PR #504 OPEN (branch docs/adr-0003-rustls-0.13-platform-verifier, commit 15dc7da). F4 obligations: O-3 (CANONICAL-COUNTS Unix-only cache path), O-4 (JR_CONFIG_DIR/JR_CACHE_DIR in CLAUDE.md), ADR-0016↔ADR-0003 cross-ref to add during F4. Process-gap follow-ups: (1) no CI guard for inline-PROSE BC counts; (2) no NFR cross-surface count guard; (3) 3rd JR_* doc-fallout recurrence. | Windows-build F1+F2 | Phase 3 | 2026-06-12 |
 
+| DEC-081 | 2026-06-13: PR #504 (ADR-0003 docs) MERGED → develop @ a7da775 (was OPEN do-not-merge; human merged). S-WIN-2 (Windows debug path-isolation seam) F4 implementation CONVERGED: TDD on branch feat/win-2-config-cache-dir-seam off a7da775; 7 tests pin AC-001..008 (BC-6.2.017); 5-pass Step-4.5 per-story adversarial convergence; security dual-site #[cfg(debug_assertions)] gate verified (B: all 6 mutations killed); F-WIN2-C-102 (LOW env-leak-on-panic) fixed via with_env_var catch_unwind helper; full cargo test green. Demo adapted-skip per test/infra-seam precedent (DEC-075/076): no user-visible behavior, evidence = hermetic test green + release-gate proof. Deferred: F-WIN2-C-101 (MEDIUM cross-story) → S-WIN-5 must add JR_CONFIG_DIR/JR_CACHE_DIR to integration-test env_remove scrub lists + jr_isolated(). | Feature Mode / Windows-build F4 / S-WIN-2 | Phase 3 | 2026-06-13 |
+
 | DEC-080 | 2026-06-13: Windows-build F3 story decomposition CONVERGED. 6 stories S-WIN-1..6 (total_stories 68→74 authoritative). 8-pass adversarial story review, 3-clean-pass convergence P6/P7/P8 (trajectory 6→5→2→2→2→0→0→0). Key catch: F-WIN-F3-001 CRITICAL — ADR-0016 Decision 3 carried a factually false premise (claimed Windows clippy folded into the test job; live ci.yml has separate clippy/test jobs) → architect amended Decision 3 to the separate-clippy-matrix [ubuntu,windows] approach + cross-ref delta §4.1 + adr-index annotation. F-WIN-F3-003 MEDIUM — ADR Decision 2 amended: Git Bash zip primary (windows-latest ships Git for Windows zip+sha256sum), Compress-Archive alternative, EC-002 risk accepted LOW. ADR 15→16 unchanged in count (ADR-0016 amended in place, not new). Counts: BC 597 / NFR 42 / Stories 74. STORY-INDEX status complete v1.4.38. Process-gaps tracked: WIN-PG-2 (presence-only source-text test template field), STORY-INDEX-NARRATIVE-PG (manifest changelog has no consistency gate). Next: F3 human gate → F4. | Feature Mode / Windows-build F3 | Phase 3 | 2026-06-13 |
 
 ## Skip Log
@@ -90,6 +93,7 @@ activation_version: "v0.6.0-dev.1"
 | Step | Skipped? | Justification |
 |------|----------|---------------|
 | F4 per-AC video demo (#475) | Yes — adapted | Test-only story, NO production behavior change (adds gated E2E coverage for existing converters). No offline-runnable live demo; evidence = offline hermetic verification (compile + gate guards + full suite green + --list) and nightly e2e.yml live run. Same handling as prior test-only E2E cycles (#493/#495). |
+| S-WIN-2 per-AC demo | Yes — adapted | Debug/infra path-isolation seam; no user-visible behavior change (release builds ignore the seam). Evidence = hermetic test suite green (7 AC tests + dual-site release gate) + clippy/fmt. Same handling as test/infra-only stories DEC-075/076. |
 
 ## Blocking Issues
 
@@ -104,6 +108,7 @@ activation_version: "v0.6.0-dev.1"
 
 | ID | Area | Description | Severity | Status |
 |----|------|-------------|----------|--------|
+| F-WIN2-C-101 | Integration-test scrub lists omit JR_CONFIG_DIR/JR_CACHE_DIR | S-WIN-2 seam makes ambient JR_CONFIG_DIR/JR_CACHE_DIR shadow XDG in integration tests; env_remove scrub lists + jr_isolated() must add both vars. CI risk nil (never set in CI). S-WIN-5 scope obligation. | MEDIUM | OPEN — wave-gate obligation (S-WIN-5) |
 | OQ-5 | CLAUDE.md NFR-O-N stale | `auth status --output json` documents JSON arm but src/cli/auth/status.rs has none. File GitHub issue before next auth touch. | LOW | OPEN — doc drift |
 | E2E-PG-4 | E2E coverage gap | All label/link/priority/worklog/unassign/issueType/assign DONE. REMAINING: remote-link round-back (blocked: no `jr remote-link read`). | LOW | OPEN — 1 sub-gap |
 | DRIFT-331-PAGINATION | get_issue_types_for_project pagination | Reimplements offset pagination inline; target: reuse OffsetPage<T>. Deferred per human 2026-06-01. | LOW | OPEN — tracking |
@@ -121,7 +126,7 @@ activation_version: "v0.6.0-dev.1"
 
 ## Convergence Trackers
 
-Full per-issue: `cycles/cycle-001/convergence-trajectory.md`. Current: **[2026-06-13] Windows-build F3 story-decomposition CONVERGED — 8-pass adversarial, 3-clean-pass P6/7/8 (6→5→2→2→2→0→0→0). Stories 74 authoritative (STORY-INDEX complete v1.4.38). ADR-0016 Decisions 2/3 amended. DEC-080. Awaiting F3 human gate.** Prior: [2026-06-13] Windows-build F3 drafts created + made durable; adversarial story convergence PENDING; Stories 74 PROVISIONAL. [2026-06-12] Windows-build F1+F2 COMPLETE — F2 human gate APPROVED. BC 597 (+3) / NFR 42 (+1) / ADR 16 (+1). F2 adversary: 14 passes / 6→5→1→2→2→1→0→1→0→0→0→0→0→0 (3-clean-pass P12/13/14). DEC-079.
+Full per-issue: `cycles/cycle-001/convergence-trajectory.md`. Current: **[2026-06-13] S-WIN-2 impl CONVERGED (5-pass Step-4.5 per-story, security gate verified, cargo test green). Branch feat/win-2-config-cache-dir-seam @ b958e60. Awaiting PR. Next Wave-1 story: S-WIN-3. develop @ a7da775 (PR #504 merged). DEC-081.** Prior: [2026-06-13] Windows-build F3 story-decomposition CONVERGED — 8-pass adversarial, 3-clean-pass P6/7/8 (6→5→2→2→2→0→0→0). Stories 74 authoritative (STORY-INDEX complete v1.4.38). ADR-0016 Decisions 2/3 amended. DEC-080. F3 human gate APPROVED. [2026-06-12] Windows-build F1+F2 COMPLETE — F2 human gate APPROVED. BC 597 (+3) / NFR 42 (+1) / ADR 16 (+1). F2 adversary: 14 passes / 6→5→1→2→2→1→0→1→0→0→0→0→0→0 (3-clean-pass P12/13/14). DEC-079.
 
 ## Session Resume Checkpoint
 
@@ -130,11 +135,11 @@ Full per-issue: `cycles/cycle-001/convergence-trajectory.md`. Current: **[2026-0
 | Field | Value |
 |-------|-------|
 | **Date** | 2026-06-13 |
-| **Position** | **Windows-build F3 APPROVED (human gate, 2026-06-13). F4 delta implementation IN PROGRESS. Wave order: Wave 1 {S-WIN-2, S-WIN-3} → Wave 2 {S-WIN-1, S-WIN-4, S-WIN-6} → Wave 3 {S-WIN-5}. First story: S-WIN-2 (JR_CONFIG_DIR/JR_CACHE_DIR debug seam — modifies src/config.rs + src/cache.rs, adds tests/config_dir_release_gate.rs). Each story follows full per-story-delivery (test-writer stubs→failing tests→implementer TDD→Step-4.5 per-story adversarial 3-clean-pass→demo→PR→merge). No source on develop yet (587206e).** |
-| **develop HEAD** | origin/develop = **587206e**. activation v0.6.0-dev.1. BC **597**. NFR **42**. ADR **16**. Stories **74** (authoritative). No active worktrees. |
-| **Convergence counter** | BC: **597**. NFR: **42**. ADR: **16**. Stories: **74** authoritative. jira-e2e env: JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ, JR_E2E_ENABLED=true. No active worktrees. |
-| **Next / Pending** | (1) F4 IN PROGRESS — deliver S-WIN-2 first (Wave 1), then S-WIN-3, then Wave 2/3. F4 obligations WIN-O-3/WIN-O-4 land in S-WIN-6; WIN-PG-2 codify-or-defer before cycle close. (2) PR #504 OPEN (ADR-0003 docs) do-not-merge. (3) SEC-001 LOW deferred. (4) Standing: #429 do-not-close; #492 OPEN; OQ-5; E2E-PG-4; F-H1; O1-TABLE-ASSERT. |
-| **Resume prompt** | `Read .factory/STATE.md. DATE 2026-06-13; Windows-build F3 APPROVED; F4 IN PROGRESS Wave 1 (S-WIN-2 first); Stories 74; develop 587206e; PR #504 OPEN do-not-merge; jira-e2e env JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ, JR_E2E_ENABLED=true.` |
+| **Position** | **F4 IN PROGRESS. S-WIN-2 (Wave 1) implementation CONVERGED on branch feat/win-2-config-cache-dir-seam @ b958e60 (off develop a7da775) — TDD green, 5-pass Step-4.5 adversarial clean, full cargo test green, clippy/fmt clean, demo adapted-skip. NOT yet PR'd/merged. NEXT: create S-WIN-2 PR (pr-manager full process) → merge → then deliver S-WIN-3 (Wave 1, keyring windows-native, independent), then Wave 2 {S-WIN-1, S-WIN-4, S-WIN-6}, then Wave 3 {S-WIN-5}.** |
+| **develop HEAD** | origin/develop = **a7da775** (PR #504 MERGED). activation v0.6.0-dev.1. BC **597**. NFR **42**. ADR **16**. Stories **74** (authoritative). 1 active worktree: .worktrees/S-WIN-2 (feat/win-2-config-cache-dir-seam @ b958e60). |
+| **Convergence counter** | BC: **597**. NFR: **42**. ADR: **16**. Stories: **74** authoritative. jira-e2e env: JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ, JR_E2E_ENABLED=true. 1 active worktree: .worktrees/S-WIN-2 (feat/win-2-config-cache-dir-seam @ b958e60). |
+| **Next / Pending** | (1) S-WIN-2 PR then merge; (2) S-WIN-3 next (Wave 1); (3) S-WIN-5 must close F-WIN2-C-101 (scrub-list) + WIN-O-3/O-4 land in S-WIN-6; (4) SEC-001 LOW deferred. Standing items: #429/#492/OQ-5/E2E-PG-4/F-H1/O1-TABLE-ASSERT/WIN-PG-2. |
+| **Resume prompt** | `Read .factory/STATE.md. DATE 2026-06-13; S-WIN-2 CONVERGED awaiting PR (feat/win-2-config-cache-dir-seam @ b958e60, worktree .worktrees/S-WIN-2); develop a7da775 (PR #504 MERGED); F4 Wave 1 next: S-WIN-2 PR → S-WIN-3; Stories 74; jira-e2e env JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ, JR_E2E_ENABLED=true.` |
 
 ## Open Issues Tracker
 
