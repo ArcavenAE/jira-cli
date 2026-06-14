@@ -69,3 +69,27 @@ These rows had Status = RESOLVED / CLOSED / COMPLETE in the Drift Items table an
 | E2E-PG-1 | mechanical jr-invocation-vs-clap-tree validator (assumed-CLI-surface defect class, ~10x recurrence) | **RESOLVED 2026-05-31** — tests/e2e_cli_surface_guard.rs shipped via PR #443 (merge c395e27; 11/11 CI; live e2e run 26722732004 = 57/0). See DEC-048 + DRIFT-E2E-1. | self-improvement/test-infra | **CLOSED** | 2026-05-31 |
 | DRIFT-E2E-ALT | Gated test `test_e2e_issue_edit_issuetype_multikey_bulk_roundtrip` clean-skips until `JR_E2E_ISSUE_TYPE_ALT` is set in the jira-e2e GitHub Environment AND the E2E project has a 2nd issue type. Live validation of issueType bulk resolution deferred to CI (nightly e2e.yml). Owner: maintainer. Target: next E2E env touch. | LOW | **RESOLVED 2026-06-01** — JR_E2E_ISSUE_TYPE_ALT=Bug set in jira-e2e GitHub Environment (PR #454). Live run 26779732719 = 66/0: test now RUN and PASSES live (DEC-058). | 2026-06-01 |
 | BUG-LABEL-400 | jr `issue edit --label add:/remove:` (single key) sends malformed bulk payload → HTTP 400 on real Jira. Root cause: fabricated editedFieldsInput schema (`labels.labelsAction` + `{"name":..}` items) matches no real Jira schema; wiremock-only coverage never validated live. **RESOLVED by fix chain: #447 (single-key PUT /rest/api/3/issue/{key} update.labels) + #448 (multi-key labelsFields schema) + #449 (integer taskId deserializer) + #450 (numeric issue IDs deserializer). Final live run 26735722804 (develop @ cff86d2) = 61/0 ALL GREEN.** | HIGH | **RESOLVED — fix chain #447-#450 live-green (run 26735722804, 61/0, 2026-06-01)** | 2026-06-01 |
+
+---
+
+## Resolved Blocking Issues / Drift Items extracted from STATE.md on 2026-06-14
+
+### WIN-BRANCH-PROTECTION (DEC-096 / DEC-097) — RESOLVED 2026-06-14
+
+| Field | Value |
+|-------|-------|
+| **ID** | WIN-BRANCH-PROTECTION |
+| **Severity** | HIGH |
+| **Opened** | 2026-06-14 (DEC-096) |
+| **Resolved** | 2026-06-14 (DEC-097) |
+| **Root Cause** | clippy→matrix rename (ADR-0016 Decision 3) made the branch-protection required context `Clippy` permanently unsatisfiable — all PRs to develop and main were BLOCKED. |
+| **Fix Applied** | PATCH `.../protection/required_status_checks` (scoped endpoint, NOT top-level PUT — preserves code-owner review settings) on BOTH develop AND main branches. New required contexts: Format, Clippy (ubuntu-latest), Clippy (windows-latest), Test (ubuntu-latest), Test (macos-latest), Test (windows-latest), MSRV (1.85.0), Deny (licenses + vulnerabilities) — all app_id 15368. Stale bare `Clippy` context removed. require_code_owner_reviews preserved. |
+| **Verification** | `gh pr view 510 --json mergeStateStatus` changed from BLOCKED → CLEAN. PR #510 mergeable. |
+| **Lesson** | LESSON-MATRIX-BRANCH-PROTECTION: whenever a CI job is renamed or converted to a matrix, re-verify branch-protection required_status_checks immediately. Use SCOPED endpoint only. |
+| **Decision** | DEC-097 |
+
+### Closed Open Issues Tracker row — #510 MERGED (2026-06-14)
+
+| Issue | Title | Resolution |
+|-------|-------|------------|
+| #510 | S-WIN-5 ci.yml Windows job + XDG→seam migration | SQUASH-MERGED to develop @ 4bd83c7. Squash title: `ci(windows): add windows-latest matrix, .gitattributes eol=lf, XDG→JR env-seam migration, /STACK:8388608 stack fix`. Remote branch deleted. Windows-build F4 COMPLETE (6/6). |

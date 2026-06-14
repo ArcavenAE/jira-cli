@@ -2,11 +2,11 @@
 document_type: pipeline-state
 version: "2.0"
 status: active
-timestamp: 2026-06-15T00:00:00Z
+timestamp: 2026-06-14T00:00:00Z
 phase: phase-3-tdd-implementation
 project: jira-cli
 mode: BROWNFIELD
-current_step: "See RESUME PLAN section below. Windows-build F4: 5/6 merged; S-WIN-5 PR #510 green-but-BLOCKED by branch-protection drift (DEC-096). STEP 1: gh api PATCH required_status_checks on develop+main; STEP 2: merge #510 (6/6); STEP 3: F5/F6/F7; STEP 4: H-WIN-6."
+current_step: "Windows-build F4 COMPLETE (6/6). PR #510 SQUASH-MERGED → develop @ 4bd83c7. Branch-protection drift RESOLVED (DEC-097). Next: Windows-build F5 (scoped adversarial on 6-story delta) → F6 → F7 → H-WIN-6."
 current_cycle: "cycle-001"
 dtu_required: false
 phase_2_status: APPROVED
@@ -26,7 +26,7 @@ activation_version: "v0.6.0-dev.1"
 | **Product** | jr (Jira CLI) |
 | **Mode** | BROWNFIELD / Rust |
 | **Target Workspace** | develop → main |
-| **Last Updated** | 2026-06-14: S-WIN-5 PR #510 all 13 CI GREEN but BLOCKED — branch-protection drift: `Clippy` required context unsatisfiable after clippy→matrix rename. Research-validated fix: PATCH develop+main required_status_checks. User-approved, repo-admin action pending. DEC-096. LESSON-MATRIX-BRANCH-PROTECTION codified. |
+| **Last Updated** | 2026-06-14: Branch-protection drift RESOLVED (DEC-097) — PATCH develop+main required_status_checks to matrixed contexts. PR #510 (S-WIN-5) SQUASH-MERGED → develop @ 4bd83c7. Windows-build F4 COMPLETE (6/6). Worktree .worktrees/S-WIN-5 cleaned up. Next: F5/F6/F7 → H-WIN-6. |
 | **Current Phase** | Phase 3 — TDD Implementation IN PROGRESS — Feature Mode active. BC 597. NFR 42. ADR 16. Stories 74 (authoritative). |
 | **Next Phase** | Phase 4: Holdout Evaluation (not started) |
 | **Activation HEAD** | 587206e (v0.6.0-dev.1; v0.5.0 STABLE shipped 2026-06-12) |
@@ -46,7 +46,7 @@ activation_version: "v0.6.0-dev.1"
 | ADF E2E coverage loop-back (#471/#474/#483/#489) | **CYCLE CLOSED + MERGED** | 2026-06-11 | CYCLE CLOSED | PR #495 → develop @ bfb723f. 5 gated live E2E tests. NO src change. BC 594 unchanged. Live-verified GREEN — e2e run 27352373680 (89/0) on develop @ 45ceae6, 2026-06-11. |
 | CLI leading-dash values (issue #471 e2e / description-leading-dash) | **CYCLE CLOSED + MERGED** | 2026-06-11 | F1–F7 ALL COMPLETE — CONVERGED | PR #496 → develop @ 45ceae6. `allow_hyphen_values = true` on 7 free-text write args. BC 594 unchanged. +17 hermetic parse tests (tests/cli_smoke.rs, 44 total). F5: 8 passes / 3-clean-pass CONVERGED. F6: 1763/0, clippy/fmt/deny clean, mutation zero-in-scope. F7: 5-dimension consistency CLEAN. DEC-072. |
 | ADF E2E read-path coverage (issue #475) | **CYCLE CLOSED + MERGED** | 2026-06-11 | F1–F7 ALL COMPLETE — CONVERGED | PR #499 → develop @ 418a392e. Test-only (no src change). BC 594 / NFR 41 / Stories 68 unchanged. DEC-073/074/075/076. |
-| Windows build (x86_64-pc-windows-msvc) | **F4 IN PROGRESS — S-WIN-2/3/1/4/6 MERGED (5/6); S-WIN-5 PR #510 ALL 13 CI GREEN (incl windows) — READY TO MERGE (6/6 on merge); then F5/F6/F7 cycle close** | 2026-06-12 (F2) / 2026-06-13 (F3 APPROVED + S-WIN-2/3/1/4 MERGED) / 2026-06-14 (S-WIN-6 MERGED; S-WIN-5 ALL CI GREEN) | F3 human gate APPROVED 2026-06-13; DEC-082 RE-CONVERGED + RE-AFFIRMED 2026-06-13 (DEC-084) | 8-pass F3 trajectory 6→5→2→2→2→0→0→0; S-WIN-3 Step-4.5 3-clean; Stories 68→74 authoritative; ADR-0016 Decisions 2/3/5b amended; DEC-079..095. PR #504 MERGED (develop a7da775). S-WIN-2 MERGED PR #505 (develop 1b84feb). S-WIN-3 MERGED PR #506 (develop 2b13596). S-WIN-1 MERGED PR #507 (develop 219debc). S-WIN-4 MERGED PR #508 (develop b49dc08). S-WIN-6 MERGED PR #509 (develop bc69c625; 2026-06-14; docs fallout; WIN-O-3/O-4/SEC-WCM-DOC closed). S-WIN-5 PR #510 ALL 13 CI GREEN (2026-06-14; integration gate MET; 4 CI iterations; real jr.exe stack-overflow PROD BUG caught+fixed .cargo/config.toml /STACK:8388608; LESSON-INTEGRATION-GATE-PROD + WIN-STACK; DEC-095). READY TO MERGE (6/6 on merge). |
+| Windows build (x86_64-pc-windows-msvc) | **F4 COMPLETE — 6/6 MERGED** → next F5/F6/F7 | 2026-06-12 (F2) / 2026-06-13 (F3 gate) / 2026-06-14 (S-WIN-5 #510 MERGED; F4 COMPLETE) | F3 human gate APPROVED 2026-06-13; F4 COMPLETE 2026-06-14 (DEC-097) | develop @ 4bd83c7. All 6 stories: S-WIN-2 #505, S-WIN-3 #506, S-WIN-1 #507, S-WIN-4 #508, S-WIN-6 #509, S-WIN-5 #510. Branch-protection drift RESOLVED (DEC-097). LESSON-MATRIX-BRANCH-PROTECTION. Next: F5 (scoped adversarial on 6-story delta) → F6 → F7 → H-WIN-6. |
 | 4: Holdout Evaluation | not-started | | | |
 | 5: Adversarial Refinement | not-started | | | |
 | 6: Formal Hardening | not-started | | | |
@@ -58,10 +58,11 @@ activation_version: "v0.6.0-dev.1"
 
 | Step | Agent | Status | Output |
 |------|-------|--------|--------|
-| S-WIN-6 PR #509 squash-MERGED → develop @ bc69c625. 5/6 Windows-build stories shipped. WIN-O-3/O-4/SEC-WCM-DOC closed. | Agent pr-manager+state-manager | S-WIN-6 MERGED (5/6) | develop @ bc69c625. BC 597 / Stories 74. |
-| S-WIN-5 (FINAL) F4 delivery CONVERGED: ci.yml windows matrix + .gitattributes eol=lf + 37-file XDG→JR seam migration. Step-4.5 3-clean after 4 fix rounds. LESSON-WIN-CI-CHECKLIST codified. | Agent multi | S-WIN-5 CONVERGED — awaiting PR | feat branch. develop bc69c625. |
 | S-WIN-5 windows-latest integration gate MET — 4 CI iterations; caught real jr.exe stack-overflow prod bug → .cargo/config.toml /STACK:8388608. ALL 13 CI GREEN. LESSON-INTEGRATION-GATE-PROD codified. | Agent multi | S-WIN-5 PR #510 READY TO MERGE | PR #510 13/13 green. develop bc69c625. |
-| DEC-096: PR #510 ALL GREEN but BLOCKED — branch-protection drift (clippy→matrix rename made required context `Clippy` unsatisfiable). User-approved fix: PATCH develop+main required_status_checks (see RESUME PLAN). | Agent state-manager | BLOCKED — awaiting repo-admin PATCH | develop bc69c625. Worktree .worktrees/S-WIN-5 @ 0c86d6b. |
+| DEC-096: PR #510 ALL GREEN but BLOCKED — branch-protection drift (clippy→matrix rename). User-approved fix: PATCH develop+main required_status_checks. | Agent state-manager | BLOCKED — repo-admin PATCH pending | develop bc69c625. |
+| STEP 1 DONE (DEC-097): branch-protection drift RESOLVED — PATCH develop+main required_status_checks to matrixed contexts (Format, Clippy (ubuntu/windows), Test (ubuntu/macos/windows), MSRV, Deny). Stale `Clippy` context removed. PR #510 mergeStateStatus BLOCKED → CLEAN. | User (repo-admin) | RESOLVED — WIN-BRANCH-PROTECTION closed | develop bc69c625. |
+| STEP 2 DONE: PR #510 (S-WIN-5) SQUASH-MERGED → develop @ 4bd83c7. Squash: `ci(windows): add windows-latest matrix, .gitattributes eol=lf, XDG→JR env-seam migration, /STACK:8388608 stack fix`. Remote branch deleted. | User (squash merge) | S-WIN-5 MERGED (6/6) | develop @ 4bd83c7. |
+| Windows-build F4 COMPLETE (6/6). .worktrees/S-WIN-5 removed, local feat/win-5-ci-yml-windows-job deleted, git worktree prune ran. 0 active Windows worktrees (.factory + .reference only). | Agent state-manager | F4 COMPLETE | develop @ 4bd83c7. BC 597 / Stories 74. |
 
 ## Decisions Log
 
@@ -75,6 +76,7 @@ activation_version: "v0.6.0-dev.1"
 | DEC-094 | 2026-06-14: S-WIN-5 F4 impl CONVERGED — 37-file XDG→JR seam migration, ci.yml windows test+clippy matrix, .gitattributes eol=lf, AC-004 per-call-site count guard. Step-4.5 3-clean after 4 fix rounds (R1 config/cache half-migration, R2 worklog, R3 separator, R4 CRLF+yaml). LESSON-WIN-CI-CHECKLIST codified. Counts unchanged. | Feature Mode / Windows-build F4 / S-WIN-5 | Phase 3 | 2026-06-14 |
 | DEC-095 | 2026-06-14: S-WIN-5 windows-latest CI integration gate MET (ALL 13 GREEN). Caught real jr.exe Windows stack-overflow prod bug → .cargo/config.toml /STACK:8388608 fix. 4 CI iterations. LESSON-INTEGRATION-GATE-PROD + WIN-STACK codified. PR #510 READY TO MERGE (6/6). | Feature Mode / Windows-build F4 / S-WIN-5 | Phase 3 | 2026-06-14 |
 | DEC-096 | 2026-06-14: PR #510 ALL 13 GREEN but BLOCKED — branch-protection drift: clippy→matrix rename made required context `Clippy` unsatisfiable (now `Clippy (ubuntu-latest)`/`(windows-latest)`). User-approved fix: PATCH develop+main required_status_checks to matrixed names + Test(windows-latest); repo-admin action (harness-blocked). Research: `.factory/research/branch-protection-matrix-required-checks.md`. LESSON-MATRIX-BRANCH-PROTECTION codified. | Feature Mode / Windows-build F4 / S-WIN-5 | Phase 3 | 2026-06-14 |
+| DEC-097 | 2026-06-14: branch-protection drift RESOLVED — PATCH develop+main required_status_checks to matrixed contexts (app_id 15368: Format, Clippy (ubuntu-latest), Clippy (windows-latest), Test (ubuntu-latest), Test (macos-latest), Test (windows-latest), MSRV (1.85.0), Deny (licenses + vulnerabilities)); stale `Clippy` removed; require_code_owner_reviews preserved (scoped endpoint). PR #510 mergeStateStatus BLOCKED → CLEAN; SQUASH-MERGED → develop @ 4bd83c7. Windows-build F4 COMPLETE (6/6). WIN-BRANCH-PROTECTION RESOLVED. Archived to cycles/cycle-001/blocking-issues-resolved.md. | Feature Mode / Windows-build F4 / S-WIN-5 | Phase 3 | 2026-06-14 |
 
 ## Skip Log
 
@@ -93,7 +95,6 @@ All 7 S-WIN-1..6 + #475 per-AC demos: **Yes — adapted**. All are CI-config / i
 
 | ID | Area | Description | Severity | Status |
 |----|------|-------------|----------|--------|
-| WIN-BRANCH-PROTECTION | clippy→matrix rename broke required_status_checks | Required context `Clippy` unsatisfiable → all PRs BLOCKED. PATCH develop+main to matrixed names + Test(windows-latest). Repo-admin action pending (user runs gh api). | HIGH | OPEN — repo-admin fix pending |
 | WIN-CI-GATE-AGGREGATOR | No ci-gate aggregator job | Add a single `ci-gate` job so future matrix changes never re-break branch protection. Follow-up story candidate (own PR). | LOW | OPEN — durable follow-up |
 | WIN-CFG-TESTS-CHECK | Cross-compile must use --tests, not --lib | `cargo check --lib` excludes #[cfg(test)] blocks — use `--tests`. Surfaced by S-WIN-1 PR #507. | LOW | OPEN — process-gap |
 | SEC-JR-SERVICE-NAME-GATE | JR_SERVICE_NAME env var not debug-gated | Unlike JR_BASE_URL/JR_AUTH_HEADER, readable in release builds. Follow-up story candidate. | LOW | OPEN — follow-up |
@@ -106,11 +107,11 @@ All 7 S-WIN-1..6 + #475 per-AC demos: **Yes — adapted**. All are CI-config / i
 | SEC-001 | CWE-674 deep-nesting recursion in adf.rs | Uncontrolled recursion in normalize/assign_local_ids/render_node. Deferred. | LOW | OPEN |
 | WIN-PG-1 | No CI guard for inline-PROSE BC counts | 3rd recurrence of JR_* test-seam doc-fallout without CI parity check. | LOW | OPEN |
 | WIN-PG-2 | Story-template lacks presence-only-test disclosure field | Anchoring aspect resolved by LESSON-PRESENCE-ANCHOR; template-field disclosure remains open. | LOW | OPEN |
-| Closed: SEC-WCM-DOC / F-WIN2-C-101 / WIN-SRC-UNITTEST-SEAM / WIN-O-3 / WIN-O-4 | CLOSED in S-WIN-5/6 | See `cycles/cycle-001/blocking-issues-resolved.md` | — | CLOSED |
+| Closed: SEC-WCM-DOC / F-WIN2-C-101 / WIN-SRC-UNITTEST-SEAM / WIN-O-3 / WIN-O-4 / WIN-BRANCH-PROTECTION | CLOSED in S-WIN-5/6 / DEC-097 | See `cycles/cycle-001/blocking-issues-resolved.md` | — | CLOSED |
 
 ## Convergence Trackers
 
-Full per-issue: `cycles/cycle-001/convergence-trajectory.md`. Current: **[2026-06-14] S-WIN-5 PR #510 ALL 13 CI GREEN but BLOCKED — branch-protection drift (DEC-096). PATCH develop+main required_status_checks → unblocks. LESSON-MATRIX-BRANCH-PROTECTION codified.** Prior: S-WIN-5 windows integration gate MET — caught real jr.exe stack-overflow prod bug (.cargo/config.toml /STACK:8388608). LESSON-INTEGRATION-GATE-PROD codified. Prior: S-WIN-5 F4 CONVERGED Step-4.5 3-clean after 4 fix rounds. LESSON-WIN-CI-CHECKLIST codified. develop bc69c625.
+Full per-issue: `cycles/cycle-001/convergence-trajectory.md`. Current: **[2026-06-14] Windows-build F4 COMPLETE (6/6). Branch-protection drift RESOLVED (DEC-097) — PATCH develop+main required_status_checks to matrixed contexts. PR #510 SQUASH-MERGED → develop @ 4bd83c7. 0 active Windows worktrees. Next: F5/F6/F7 → H-WIN-6.** Prior: S-WIN-5 PR #510 BLOCKED by branch-protection drift (DEC-096); LESSON-MATRIX-BRANCH-PROTECTION codified. Prior: windows integration gate MET — caught jr.exe stack-overflow prod bug.
 
 ## Session Resume Checkpoint
 
@@ -119,44 +120,18 @@ Full per-issue: `cycles/cycle-001/convergence-trajectory.md`. Current: **[2026-0
 | Field | Value |
 |-------|-------|
 | **Date** | 2026-06-14 |
-| **Position** | **PR #510 (S-WIN-5 FINAL story) is all 13 CI GREEN but mergeStateStatus=BLOCKED — root cause is branch-protection drift: the clippy→matrix conversion in ADR-0016 Decision 3 renamed the emitted GitHub status-check context from `Clippy` to `Clippy (ubuntu-latest)`/`Clippy (windows-latest)`, making the required context `Clippy` permanently unsatisfiable. All PRs to develop and main are blocked until a repo-admin PATCH fixes the required_status_checks on both branches. User-approved fix: match matrixed names + add Test(windows-latest). User runs the gh api PATCH command (harness-blocked). Once unblocked, HUMAN MERGE PR #510 (6/6 — completes Windows-build F4). develop bc69c625; S-WIN-5 branch @ 0c86d6b.** |
-| **develop HEAD** | origin/develop = **bc69c625** (S-WIN-6 merged). activation v0.6.0-dev.1. BC **597**. NFR **42**. ADR **16**. Stories **74** (authoritative). |
-| **Convergence counter** | BC: **597**. NFR: **42**. ADR: **16**. Stories: **74** authoritative. jira-e2e env: JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ, JR_E2E_ENABLED=true. 1 active worktree: .worktrees/S-WIN-5 @ 0c86d6b. |
-| **Next / Pending** | (1) BRANCH-PROTECTION FIX (user-run gh api PATCH on develop+main required_status_checks to matrixed clippy names + Test(windows-latest)) → unblocks PR #510; (2) then HUMAN MERGE PR #510 (6/6 — completes Windows-build F4); (3) Windows-build F5/F6/F7 cycle close + human gate; (4) H-WIN-6 live release-page gate; (5) WIN-CI-GATE-AGGREGATOR durable follow-up; (6) tracked LOW: WIN-DENY-FRAGILITY, SEC-JR-SERVICE-NAME-GATE, WIN-AUTH-ENVLOCK-POISON; standing items. |
-| **Resume prompt** | `Read .factory/STATE.md → RESUME PLAN. Windows-build F4: 5/6 merged; S-WIN-5 PR #510 green-but-BLOCKED by branch-protection drift (DEC-096). STEP 1: run the gh api PATCH (in RESUME PLAN) on develop+main required_status_checks → unblock; STEP 2 merge #510 (6/6); STEP 3 F5/F6/F7; STEP 4 H-WIN-6. develop bc69c625; active worktree .worktrees/S-WIN-5 @ 0c86d6b.` |
+| **Position** | **Windows-build F4 COMPLETE (6/6). All 6 stories merged to develop @ 4bd83c7 (S-WIN-2/3/1/4/6/5). Branch-protection drift RESOLVED (DEC-097): PATCH develop+main required_status_checks to matrixed contexts. PR #510 SQUASH-MERGED. Worktree .worktrees/S-WIN-5 cleaned up. 0 active Windows worktrees (.factory + .reference only). Next: Windows-build F5 (scoped adversarial on the 6-story delta) → F6 (targeted hardening) → F7 (5-dim delta convergence + human gate) → H-WIN-6 (release-page holdout).** |
+| **develop HEAD** | origin/develop = **4bd83c7** (S-WIN-5 #510 merged). activation v0.6.0-dev.1. BC **597**. NFR **42**. ADR **16**. Stories **74** (authoritative). |
+| **Convergence counter** | BC: **597**. NFR: **42**. ADR: **16**. Stories: **74** authoritative. jira-e2e env: JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ, JR_E2E_ENABLED=true. 0 active Windows worktrees (.factory + .reference only). |
+| **Next / Pending** | (1) Windows-build F5 (scoped adversarial on 6-story delta: ci.yml matrix, .gitattributes, XDG→JR seam, /STACK:8388608); (2) F6 targeted hardening; (3) F7 5-dim delta convergence + human gate; (4) H-WIN-6 live release-page holdout (push dev release tag, confirm jr-<ver>-x86_64-pc-windows-msvc.zip on GitHub Release page + runs on Windows without stack-overflow); (5) WIN-CI-GATE-AGGREGATOR durable follow-up; (6) tracked LOW: WIN-DENY-FRAGILITY, SEC-JR-SERVICE-NAME-GATE, WIN-AUTH-ENVLOCK-POISON; standing items. |
+| **Resume prompt** | `Read .factory/STATE.md. Windows-build F4 COMPLETE (6/6) at develop 4bd83c7. Branch-protection drift RESOLVED (DEC-097). 0 active Windows worktrees. Next: Windows-build F5 (scoped adversarial on the 6-story delta) → F6 → F7 (human gate) → H-WIN-6 (release-page holdout).` |
 
 ## RESUME PLAN (cold-start, self-contained)
 
 ### State snapshot
 
-- Feature: Windows-build (cycle-001, Feature Mode F4). 5 of 6 stories MERGED to develop @ bc69c625 (S-WIN-2 #505, S-WIN-3 #506, S-WIN-1 #507, S-WIN-4 #508, S-WIN-6 #509). FINAL story S-WIN-5 = PR #510 OPEN, all 13 CI checks GREEN (incl Test+Clippy windows-latest), but mergeStateStatus=BLOCKED. Branch feat/win-5-ci-yml-windows-job @ 0c86d6b (pushed). Active worktree .worktrees/S-WIN-5. Counts BC 597 / NFR 42 / ADR 16 / Stories 74.
-- BLOCK CAUSE (DEC-096 / WIN-BRANCH-PROTECTION): clippy→matrix rename made the branch-protection required context `Clippy` unsatisfiable (now emits `Clippy (ubuntu-latest)`/`Clippy (windows-latest)`). Research-validated: .factory/research/branch-protection-matrix-required-checks.md.
-
-### STEP 1 (BLOCKING) — fix branch protection on develop AND main
-
-Repo-admin action; harness-blocked — user runs OR authorize gh api. EXACT command:
-
-```
-read -r -d '' BODY <<'JSON'
-{"strict": false, "checks": [
-  {"context": "Format", "app_id": 15368},
-  {"context": "Clippy (ubuntu-latest)", "app_id": 15368},
-  {"context": "Clippy (windows-latest)", "app_id": 15368},
-  {"context": "Test (ubuntu-latest)", "app_id": 15368},
-  {"context": "Test (macos-latest)", "app_id": 15368},
-  {"context": "Test (windows-latest)", "app_id": 15368},
-  {"context": "MSRV (1.85.0)", "app_id": 15368},
-  {"context": "Deny (licenses + vulnerabilities)", "app_id": 15368}
-]}
-JSON
-for BR in develop main; do printf '%s' "$BODY" | gh api -X PATCH "repos/Zious11/jira-cli/branches/$BR/protection/required_status_checks" --input -; done
-```
-
-Use the SCOPED `.../protection/required_status_checks` endpoint (NOT top-level PUT `.../protection` — it clobbers code-owner reviews). After running, verify `gh pr view 510 --json mergeStateStatus` is no longer BLOCKED.
-
-### STEP 2 — merge PR #510
-
-Human-approved squash merge. On merge: 6/6, Windows-build F4 COMPLETE → develop advances. Then cleanup .worktrees/S-WIN-5 + local branch (devops-engineer), and state-manager records the merge.
+- Feature: Windows-build (cycle-001, Feature Mode F4 COMPLETE). All 6 stories MERGED to develop @ 4bd83c7: S-WIN-2 #505, S-WIN-3 #506, S-WIN-1 #507, S-WIN-4 #508, S-WIN-6 #509, S-WIN-5 #510. Branch-protection drift RESOLVED (DEC-097). Counts BC 597 / NFR 42 / ADR 16 / Stories 74. 0 active Windows worktrees.
+- Next: Windows-build F5 → F6 → F7 (human gate) → H-WIN-6 holdout.
 
 ### STEP 3 — Windows-build cycle close
 
@@ -180,14 +155,13 @@ Full-VSDD run this cycle caught 3 classes invisible to the prior gate each time 
 
 | Issue | Title | Status | Priority | Notes |
 |-------|-------|--------|----------|-------|
-| #510 | S-WIN-5 ci.yml Windows job + XDG→seam migration | **OPEN — READY TO MERGE** (ALL 13 CI green incl Test+Clippy windows; integration gate MET; caught+fixed real jr.exe Windows stack-overflow prod bug). Completes Windows-build F4 (6/6). | — | Squash-merge → develop when human approves. |
 | #492 | fix(adf): block-HTML raw-\n invariant | OPEN — needs-sandbox. Raw-\n in literal-text paragraphs may not survive Jira REST round-trip. | LOW | No active cycle. |
 | #429 | jr_isolated() crypto-random suffix | OPEN | LOW | DEC-029 deferred to human. Do NOT close autonomously. |
 | #400 | Test-hardening + process-gap follow-ups | OPEN — Story A MERGED PR #431. Story B + engine items remain. | LOW | |
 | #372 | cargo-mutants partial baseline | OPEN | LOW | Follow-up from #346 |
 | #387/#368 | git history rewrite / open PR | OPEN | LOW | #387: deferred; force-push needed. |
 | #209/#210 | (backlog) | OPEN | — | |
-| Merged: #509/508/507/475 | MERGED or CLOSED | Archived | — | See `cycles/cycle-001/burst-log.md` "Archived Open Issues" |
+| Merged: #510/509/508/507/475 | MERGED or CLOSED | Archived | — | See `cycles/cycle-001/blocking-issues-resolved.md` (#510) + `cycles/cycle-001/burst-log.md` "Archived Open Issues" (rest) |
 
 ## Historical Content
 
