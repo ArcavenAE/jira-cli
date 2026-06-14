@@ -3722,3 +3722,32 @@ For any story that activates a new platform in CI (first-real-runner run): treat
 _Discovered: S-WIN-5 windows-latest CI integration gate (4 iterations, 25 failures, 1 real production bug), 2026-06-14._
 _Tagged: [codified] — integration gate is a hard gate; static/Unix review does not substitute for a real cross-platform CI run._
 _Apply to: all future stories that activate a new platform CI runner for the first time._
+
+---
+
+## LESSON-MATRIX-BRANCH-PROTECTION [codified] CI matrix rename silently breaks branch-protection required contexts (2026-06-14)
+
+**Tags:** [codified]
+
+**Date:** 2026-06-14
+**Cycle:** Windows-build F4 / S-WIN-5 (branch-protection drift from clippy→matrix conversion)
+**Tracking ID:** LESSON-MATRIX-BRANCH-PROTECTION
+**Status:** CODIFIED
+**Source:** S-WIN-5 PR #510 — all 13 CI checks green but mergeStateStatus=BLOCKED. Research: `.factory/research/branch-protection-matrix-required-checks.md`.
+
+### Lesson
+
+When a REQUIRED CI job is renamed or converted to a matrix, the emitted GitHub status-check CONTEXT NAME changes (`<job> (<matrix value>)`), which silently makes the old required context unsatisfiable → all PRs to the protected branch BLOCK forever, even with all reported checks green. This is invisible to code-level review and to a green CI run (it lives in repo settings).
+
+### Mitigations
+
+1. **Immediate:** When renaming/matrixing a required job, update branch-protection required_status_checks in the SAME change. Use the scoped `PATCH .../protection/required_status_checks` (NOT the top-level `PUT .../protection` — that clobbers code-owner review settings).
+2. **Durable:** Require only a single stable `ci-gate` aggregator job (`needs: [all]` + `if: always()`, inspect `needs.*.result`, count `skipped` as success). With a stable aggregator context, the matrix can change freely without ever re-breaking branch protection (WIN-CI-GATE-AGGREGATOR follow-up).
+
+### S-WIN-5 Evidence
+
+ADR-0016 Decision 3 converted the `clippy` job to a matrix (`ubuntu-latest` + `windows-latest`). GitHub emitted contexts `Clippy (ubuntu-latest)` and `Clippy (windows-latest)`. Branch protection on develop and main still required the literal string `Clippy` (never emitted again) → `mergeStateStatus=BLOCKED` on all PRs, including PR #510 with all 13 checks green. Invisible to: per-story 3-clean adversarial convergence (read-only), AI PR review, green CI run (the block lives in GitHub repo settings, not repo files). Research-confirmed (primary GitHub docs + scoped PATCH endpoint behavior). Fix: user runs `gh api -X PATCH /repos/Zious11/jira-cli/branches/{develop,main}/protection/required_status_checks` with the matrixed names + `Test (windows-latest)` added.
+
+_Discovered: S-WIN-5 PR #510 branch-protection drift (clippy→matrix), 2026-06-14._
+_Tagged: [codified] — required-context rename silently blocks all PRs; visible only via mergeStateStatus, not CI green/red._
+_Apply to: all future ci.yml job renames or matrix conversions on jobs that are required by branch protection._
