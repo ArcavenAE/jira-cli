@@ -232,6 +232,13 @@ impl Config {
 
         // Read with env-overlay for in-memory use. The rest of the program
         // sees `JR_*` env overrides applied on top of `config.toml`.
+        //
+        // GUARD: GlobalConfig MUST NEVER gain a `config_dir` or `cache_dir`
+        // field. If it did, figment's `Env::prefixed("JR_")` would honor
+        // `JR_CONFIG_DIR` / `JR_CACHE_DIR` in RELEASE builds, bypassing the
+        // `#[cfg(debug_assertions)]` gate in `global_config_dir()` /
+        // `cache_root()` and re-opening the path-injection vector (SEC-PATH-1).
+        // Those env vars are intentionally debug-only seams (BC-6.2.017).
         let mut global: GlobalConfig = Figment::new()
             .merge(Serialized::defaults(GlobalConfig::default()))
             .merge(Toml::file(&global_path))
@@ -1623,6 +1630,123 @@ mod tests {
             result.ends_with("jr"),
             "AC-003 (BC-6.1.014 invariant): path must still end with 'jr' component \
              when XDG_CONFIG_HOME is set. Got: {}",
+            result.display()
+        );
+    }
+
+    // -----------------------------------------------------------------------
+    // R1-003 — Unix XDG_CONFIG_HOME branch integration coverage
+    //
+    // Characterizes the existing Unix production path: when XDG_CONFIG_HOME is
+    // set and JR_CONFIG_DIR is absent, `global_config_dir()` resolves through
+    // the XDG branch (PathBuf::from(xdg).join("jr")).
+    //
+    // This is a GREEN test (passes against current code) that pins pre-migration
+    // Unix path coverage so a future refactor can't silently drop the XDG branch.
+    // NOT `#[cfg(debug_assertions)]` — the XDG branch is NOT gated on debug_assertions
+    // (unlike JR_CONFIG_DIR which is), so this test runs in both debug and release
+    // builds on Unix.
+    // -----------------------------------------------------------------------
+
+    /// R1-003 — On Unix, `global_config_dir()` resolves through `XDG_CONFIG_HOME`
+    /// when that variable is set and `JR_CONFIG_DIR` is absent.
+    ///
+    /// Sets `XDG_CONFIG_HOME` to a tempdir and explicitly removes `JR_CONFIG_DIR`,
+    /// then asserts the returned path equals `<tempdir>/jr`.
+    ///
+    /// This test PASSES against current code — it characterizes existing behavior
+    /// and prevents regression of the Unix XDG path during Windows-build refactors.
+    ///
+    /// Traces: `global_config_dir()` Unix branch (`#[cfg(not(windows))]`); FIX-F5-001 R1-003.
+    #[cfg(not(windows))]
+    #[test]
+    fn test_global_config_dir_resolves_through_xdg_on_unix() {
+        let dir = TempDir::new().unwrap();
+        let _guard = ENV_MUTEX.lock().unwrap_or_else(|e| e.into_inner());
+
+        // SAFETY: ENV_MUTEX is held for the duration; no concurrent env access occurs.
+        // Explicitly remove JR_CONFIG_DIR so the debug seam cannot short-circuit
+        // to a different path (even though JR_CONFIG_DIR is debug-only, removing it
+        // is defense-in-depth for all build configurations).
+        unsafe {
+            std::env::remove_var("JR_CONFIG_DIR");
+            std::env::set_var("XDG_CONFIG_HOME", dir.path());
+        }
+
+        let result = global_config_dir();
+
+        // SAFETY: ENV_MUTEX still held.
+        unsafe {
+            std::env::remove_var("XDG_CONFIG_HOME");
+        }
+        drop(_guard);
+
+        let expected = dir.path().join("jr");
+        assert_eq!(
+            result,
+            expected,
+            "R1-003: global_config_dir() must resolve through XDG_CONFIG_HOME when \
+             set (and JR_CONFIG_DIR is absent). Expected: {}, got: {}",
+            expected.display(),
+            result.display()
+        );
+        // Structural invariant: path ends with 'jr' component.
+        assert!(
+            result.ends_with("jr"),
+            "R1-003: resolved path must end with 'jr' component. Got: {}",
+            result.display()
+        );
+    }
+
+    // -----------------------------------------------------------------------
+    // M-6 — Unix XDG fallback branch coverage (XDG_CONFIG_HOME unset)
+    //
+    // Pins the `else` branch of `global_config_dir()` on Unix: when neither
+    // XDG_CONFIG_HOME nor JR_CONFIG_DIR is set, the function falls back to
+    // `dirs::home_dir().join(".config").join("jr")`.  A refactor that changed
+    // the fallback suffix (e.g. to ".cache/jr") would silently break without
+    // this pin test.
+    // -----------------------------------------------------------------------
+
+    /// M-6 — On Unix, `global_config_dir()` falls back to `~/.config/jr` when
+    /// `XDG_CONFIG_HOME` is unset and `JR_CONFIG_DIR` is absent.
+    ///
+    /// Removes both env vars, calls `global_config_dir()`, and asserts the
+    /// returned path ends with `.config/jr`.  The full prefix is `home_dir()`
+    /// which varies by user, so only the suffix is checked.
+    ///
+    /// Traces: `global_config_dir()` Unix else-branch (`#[cfg(not(windows))]`);
+    /// FIX-F5-001 M-6.
+    #[cfg(not(windows))]
+    #[test]
+    fn test_global_config_dir_falls_back_to_home_config_on_unix_when_xdg_unset() {
+        let _guard = ENV_MUTEX.lock().unwrap_or_else(|e| e.into_inner());
+
+        // SAFETY: ENV_MUTEX is held for the duration; no concurrent env access occurs.
+        // Remove both overrides so the production else-branch fires.
+        // Note: cleanup is not panic-safe (consistent with adjacent R1-003 test);
+        // global_config_dir() on a standard system cannot panic.
+        unsafe {
+            std::env::remove_var("JR_CONFIG_DIR");
+            std::env::remove_var("XDG_CONFIG_HOME");
+        }
+
+        let result = global_config_dir();
+        drop(_guard);
+
+        // The fallback path must end with ".config/jr" (the Unix default).
+        // We cannot assert the full path (home dir varies), so check the suffix.
+        let result_str = result.to_string_lossy();
+        assert!(
+            result_str.ends_with("/.config/jr"),
+            "M-6: global_config_dir() fallback (XDG_CONFIG_HOME unset) must end \
+             with '/.config/jr'. Got: {}",
+            result.display()
+        );
+        // Structural invariant: path ends with 'jr' component.
+        assert!(
+            result.ends_with("jr"),
+            "M-6: resolved path must end with 'jr' component. Got: {}",
             result.display()
         );
     }

@@ -25,7 +25,8 @@
 //! | Test | AC |
 //! |------|----|
 //! | `test_release_yml_has_windows_matrix_row` | AC-001 |
-//! | `test_release_yml_windows_package_step_produces_zip` | AC-002 |
+//! | `test_release_yml_windows_package_step_produces_zip` | AC-002 (R1-001 fix) |
+//! | `test_release_yml_windows_has_functional_smoke_step` | R1-002 (Red Gate) |
 //! | `test_release_yml_smoke_step_skipped_on_windows` | AC-003 |
 //! | `test_release_yml_upload_artifact_includes_zip` | AC-004 |
 //! | `test_release_yml_release_job_files_includes_zip` | AC-005 |
@@ -190,20 +191,25 @@ fn test_release_yml_windows_package_step_produces_zip() {
         pkg_block
     );
 
-    // C-V3 negative check: `zip ` (Unix Info-ZIP) must NOT appear in the Package
-    // (Windows) step body — only in the adjacent Compress-Archive invocation which
-    // uses it as a DestinationPath suffix, not as a shell command.
-    // We check for `zip ` with a trailing space to avoid false-matching the `.zip`
-    // extension inside the Compress-Archive -DestinationPath argument.
+    // C-V3 negative check: a bash `zip` invocation (Unix Info-ZIP) must NOT appear
+    // in the Package (Windows) step body. A bare `zip ` substring check is BRITTLE
+    // because `.zip` appears legitimately in the Compress-Archive -DestinationPath
+    // argument. Instead we check for run-line patterns that indicate a real
+    // Info-ZIP invocation: a line starting with `zip ` after trim, or containing
+    // `&& zip ` or `| zip ` (shell pipeline/chain forms).
+    let has_bash_zip_invocation = pkg_block.lines().any(|line| {
+        let t = line.trim();
+        t.starts_with("zip ") || t.contains("&& zip ") || t.contains("| zip ")
+    });
     assert!(
-        !pkg_block.contains("zip "),
-        "AC-002 FAIL: `zip ` (Unix Info-ZIP invocation) found in the \
-         'Package (Windows)' step block (up to the next step) in \
-         .github/workflows/release.yml.\n\
-         The Package (Windows) step MUST use `Compress-Archive`, not the Unix `zip` \
-         command. `zip` is NOT available on `windows-latest` PATH (C-V3 BLOCKER).\n\
+        !has_bash_zip_invocation,
+        "AC-002 FAIL: a bash `zip` invocation (line starting with `zip `, or \
+         containing `&& zip ` / `| zip `) found in the 'Package (Windows)' step \
+         block (up to the next step) in .github/workflows/release.yml.\n\
+         The Package (Windows) step MUST use `Compress-Archive`, not the Unix \
+         `zip` command. `zip` is NOT available on `windows-latest` PATH (C-V3 BLOCKER).\n\
          Step block:\n{}\n\
-         (S-WIN-4 AC-002 / ADR-0016 §Decision 2 C-V3)",
+         (S-WIN-4 AC-002 / ADR-0016 §Decision 2 C-V3 / R1-001)",
         pkg_block
     );
 
@@ -244,6 +250,163 @@ fn test_release_yml_windows_package_step_produces_zip() {
          Step block:\n{}\n\
          (S-WIN-4 AC-002 / ADR-0016 §Decision 2 C-V3)",
         chk_block
+    );
+}
+
+/// R1-002 — Windows build job has a functional smoke step that executes `jr.exe`.
+///
+/// Verifies that the `build` job contains a step that runs the freshly-built
+/// `jr.exe` on Windows (e.g. `.\jr.exe --version`), so the release binary's
+/// `/STACK:8388608` reserve and basic launchability are validated in the RELEASE path.
+///
+/// The existing "Verify embedded OAuth app present" step is gated
+/// `if: runner.os != 'Windows'` (ADR-0016 §Decision 5c), leaving Windows with
+/// no runtime validation without this dedicated step.
+///
+/// This test is a regression guard: it asserts that a Windows-applicable smoke step
+/// exists and was not accidentally removed. The step and this test were co-delivered
+/// in PR #511 (FIX-F5-001); the failing state can be reproduced locally by reverting
+/// only the release.yml hunk from that PR.
+///
+/// This test asserts the existence of a Windows-applicable step that:
+/// 1. Invokes `jr.exe` (the Windows binary name, with explicit `.\` prefix for pwsh)
+/// 2. Is NOT excluded on Windows (does NOT carry `runner.os != 'Windows'`)
+/// 3. Uses `shell: pwsh` OR an explicit `runner.os == 'Windows'` condition
+///
+/// Traces to: WIN-STACK (jr.exe stack reservation, CLAUDE.md §Gotchas);
+/// ADR-0016 §Decision 5c (OAuth smoke step gated off on Windows — motivation for
+/// this dedicated Windows step); FIX-F5-001 R1-002.
+#[test]
+fn test_release_yml_windows_has_functional_smoke_step() {
+    let yml = release_yml();
+
+    // Strategy: find every step block in the file that EXECUTES `jr.exe` as a
+    // binary (not merely references it as a file path argument). For each such block,
+    // check that:
+    //   (a) it is NOT excluded on Windows (no `runner.os != 'Windows'` gate)
+    //   (b) it is either explicitly Windows-only (`runner.os == 'Windows'`) or
+    //       uses `shell: pwsh` (pwsh is Windows-native and implies a Windows step)
+    //
+    // "Executes jr.exe" means a run-line that launches the binary. The detection
+    // covers three invocation forms (note: variable-indirection `& $bin` where $bin
+    // holds a path is NOT detected — only literal callee references are):
+    //   - starts with `jr.exe`, `.\jr.exe`, or `./jr.exe` (direct/CWD-relative), OR
+    //   - contains `& ` followed by a token ending in `jr.exe` (PowerShell call
+    //     operator with a literal callee), OR
+    //   - contains a path ending in `/jr.exe` or `\jr.exe` used as a command (not
+    //     as a `-Path` or `-DestinationPath` argument to another cmdlet)
+    //
+    // The Compress-Archive packaging step MUST NOT match: it references `jr.exe` only
+    // as a `-Path "target/.../jr.exe"` argument to Compress-Archive, not as an
+    // executable invocation.
+    //
+    // Note: step_starts scans the entire YAML file (not just the build job). The
+    // release job's steps don't reference jr.exe, so this is correct in practice.
+
+    let step_marker = "\n      - name:";
+
+    // Collect starting offsets of all step blocks in the file.
+    let mut step_starts: Vec<usize> = Vec::new();
+    let mut search_from = 0;
+    while let Some(rel) = yml[search_from..].find(step_marker) {
+        let abs = search_from + rel + 1; // +1: skip the leading '\n', point at '-'
+        step_starts.push(abs);
+        search_from = abs + 1;
+    }
+
+    /// Returns true if any run-line in `block` *executes* jr.exe as a binary.
+    ///
+    /// Rejects lines where jr.exe appears only as an argument to another command
+    /// (e.g. `Compress-Archive -Path "…/jr.exe"`), which is not an execution.
+    fn step_executes_jr_exe(block: &str) -> bool {
+        block.lines().any(|line| {
+            let t = line.trim();
+            // Direct invocation: line starts with jr.exe (bare or with leading `.\`)
+            if t.starts_with("jr.exe") || t.starts_with(".\\jr.exe") || t.starts_with("./jr.exe") {
+                return true;
+            }
+            // PowerShell call-operator: `& $bin` or `& "…/jr.exe"` or `& .\jr.exe`
+            if t.contains("& ") {
+                // After `& `, look for jr.exe used as the callee (not after -Path or similar)
+                let after_call = t.find("& ").map(|i| &t[i + 2..]).unwrap_or("");
+                let callee = after_call.split_whitespace().next().unwrap_or("");
+                if callee.ends_with("jr.exe")
+                    || callee
+                        .trim_matches(|c| c == '"' || c == '\'')
+                        .ends_with("jr.exe")
+                {
+                    return true;
+                }
+            }
+            // Path-based invocation: ends with /jr.exe or \jr.exe as executable
+            // followed by space/flag/EOL (not as a -Path or -DestinationPath argument).
+            // Reject: the line contains `-Path` or `-DestinationPath` before `jr.exe`
+            // (Compress-Archive pattern).
+            if (t.contains("/jr.exe") || t.contains("\\jr.exe"))
+                && !t.contains("-Path")
+                && !t.contains("-DestinationPath")
+            {
+                // Verify jr.exe is used as a command: followed by space, flag, or EOL
+                let find_jr = t.find("/jr.exe").or_else(|| t.find("\\jr.exe"));
+                if let Some(pos) = find_jr {
+                    let after = &t[pos + 7..]; // len("jr.exe") == 6; prefix char is 1 extra
+                    if after.is_empty() || after.starts_with(' ') || after.starts_with('-') {
+                        return true;
+                    }
+                }
+            }
+            false
+        })
+    }
+
+    // For each step, extract its block (up to the next step or EOF) and look for
+    // one that both executes jr.exe AND is Windows-applicable.
+    let found_windows_smoke = step_starts.iter().enumerate().any(|(i, &start)| {
+        let end = step_starts.get(i + 1).copied().unwrap_or(yml.len());
+        let block = &yml[start..end];
+
+        // Must EXECUTE jr.exe (not merely reference it as a file path argument).
+        if !step_executes_jr_exe(block) {
+            return false;
+        }
+
+        // Must NOT be excluded on Windows.
+        if block.contains("runner.os != 'Windows'") {
+            return false;
+        }
+
+        // Must be Windows-applicable: either a Windows-only guard or pwsh shell.
+        block.contains("runner.os == 'Windows'") || block.contains("shell: pwsh")
+    });
+
+    assert!(
+        found_windows_smoke,
+        "R1-002 FAIL: no Windows-applicable smoke step invoking `jr.exe` found in \
+         .github/workflows/release.yml.\n\
+         \n\
+         The build job must contain a step that:\n\
+           1. Invokes `jr.exe` (e.g. `.\\jr.exe --version` — use the `.\\ ` prefix\n\
+              in pwsh; PowerShell does NOT search CWD without it)\n\
+           2. Is NOT excluded on Windows (no `if: runner.os != 'Windows'`)\n\
+           3. Uses `shell: pwsh` or `if: runner.os == 'Windows'`\n\
+         \n\
+         The 'Verify embedded OAuth app present' step is gated \
+         `if: runner.os != 'Windows'` (ADR-0016 §Decision 5c), leaving the \
+         Windows release binary with NO runtime launchability check — the \
+         /STACK:8388608 PE reserve and basic binary integrity are never exercised \
+         in CI for release builds without this step.\n\
+         \n\
+         Required: add a Windows smoke step such as:\n\
+           - name: Smoke test (Windows)\n\
+             if: runner.os == 'Windows'\n\
+             shell: pwsh\n\
+             run: |\n\
+               $ErrorActionPreference = 'Stop'\n\
+               Set-Location \"target/${{ matrix.target }}/release\"\n\
+               .\\jr.exe --version\n\
+               if ($LASTEXITCODE -ne 0) {{ exit $LASTEXITCODE }}\n\
+         \n\
+         (FIX-F5-001 R1-002 / WIN-STACK / ADR-0016 §Decision 5c)"
     );
 }
 
