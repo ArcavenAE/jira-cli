@@ -1,7 +1,7 @@
 ---
 document_type: story
 story_id: "S-WIN-6"
-title: "Docs fallout: CLAUDE.md JR_* table entries, Windows config/cache path docs, ADR-0016 materialize, adr-index update"
+title: "Docs fallout: CLAUDE.md JR_* table entries, Windows config/cache path docs, ADR-0016 materialize, CLAUDE.md Key Decisions entry"
 wave: feature-followup
 status: ready
 intent: enhancement
@@ -38,12 +38,11 @@ acceptance_criteria_count: 5
 assumption_validations: []
 risk_mitigations: []
 created: "2026-06-12"
-last_updated: "2026-06-13"
+last_updated: "2026-06-13"  # AC-005 re-scoped at Red-Gate: product-repo deliverable is CLAUDE.md §Key Decisions (ADR-0016 entry), NOT .factory/architecture/adr-index.md (factory bookkeeping, already done in F2/F3, unreachable in CI)
 breaking_change: false
 files_modified:
-  - CLAUDE.md                                     # JR_CONFIG_DIR / JR_CACHE_DIR in JR_* env table; Windows config/cache path entries; NOTE gotcha
+  - CLAUDE.md                                     # (1) JR_CONFIG_DIR / JR_CACHE_DIR in JR_* env table; Windows config/cache path entries; NOTE gotcha; (2) Add ADR-0016 entry to §Key Decisions section (product-repo ADR registry)
   - docs/adr/0016-windows-build-target.md         # Materialize ADR-0016 from .factory/architecture/adr/ into docs/adr/
-  - .factory/architecture/adr-index.md            # Add ADR-0016 row to ADR registry
 ---
 
 # S-WIN-6 — Docs Fallout: CLAUDE.md + ADR-0016 Materialization
@@ -78,7 +77,7 @@ contributors and agents do not use incorrect paths or miss the new env vars.
 | CLAUDE.md (relevant sections for edit) | ~1,500 |
 | ADR-0016 source (already authored) | ~2,500 |
 | architecture-delta.md §8 | ~200 |
-| .factory/architecture/adr-index.md | ~400 |
+| CLAUDE.md §Key Decisions section (for ADR-0016 entry) | ~200 |
 | **Total** | **~5,500** |
 
 Small. No splitting required.
@@ -108,7 +107,7 @@ The existing ADRs (ADR-0001 through ADR-0015) live in `docs/adr/`. Copy ADR-0016
 | JR_* table format | CLAUDE.md §AI Agent Notes; existing entries | Add two entries in the same bulleted-list format as existing `JR_BASE_URL`, `JR_AUTH_HEADER`, etc. entries. Parallel form: "`JR_CONFIG_DIR` env var overrides the config directory in debug builds (combined with direnv to scope tests; see BC-6.2.017). Debug-only." |
 | Windows config/cache path entry | BC-6.2.017 §CLAUDE.md documentation; BC-6.1.014; BC-6.2.016 | Add a brief bullet in the "AI Agent Notes" or "Gotchas" section noting Windows paths: `%APPDATA%\jr` (config) and `%LOCALAPPDATA%\jr` (cache). Reference the BCs. |
 | ADR-0016 cross-reference to ADR-0003 | ADR-0016 §See Also | The ADR-0016 body already includes cross-references to ADR-0003 and ADR-0006. The materialized copy in `docs/adr/` must be verbatim from the source. |
-| adr-index update | architecture-delta.md §8 | Add ADR-0016 row to `.factory/architecture/adr-index.md`. |
+| CLAUDE.md §Key Decisions update | architecture-delta.md §8; Red-Gate AC-005 re-scope | Add ADR-0016 entry to CLAUDE.md's `## Key Decisions` section (the product-repo ADR registry). Terse style matching the existing list: "ADR-0016: Windows build target (x86_64-pc-windows-msvc, AppData config/cache paths, Windows Credential Manager keyring, .zip packaging, CI)". Note: the `.factory/architecture/adr-index.md` row was added during F2/F3 (factory bookkeeping on the factory-artifacts orphan branch) and is NOT a product-PR deliverable — do not touch it here. |
 | No spec body changes | F2 is frozen | Do NOT modify any BC or NFR body in `.factory/specs/prd/`. Documentation lives in CLAUDE.md and docs/adr/ only. |
 
 ## Library and Framework Requirements
@@ -119,9 +118,8 @@ N/A — documentation-only story. No library changes.
 
 | File | Create / Modify | Description |
 |------|----------------|-------------|
-| `CLAUDE.md` | MODIFY | (1) Add `JR_CONFIG_DIR` entry to JR_* env var table in "AI Agent Notes" section; (2) Add `JR_CACHE_DIR` entry (same section); (3) Add Windows config/cache path note (either in "AI Agent Notes" or under "Gotchas" — whichever is consistent with existing structure) |
+| `CLAUDE.md` | MODIFY | (1) Add `JR_CONFIG_DIR` entry to JR_* env var table in "AI Agent Notes" section; (2) Add `JR_CACHE_DIR` entry (same section); (3) Add Windows config/cache path note (either in "AI Agent Notes" or under "Gotchas" — whichever is consistent with existing structure); (4) Add ADR-0016 entry to `## Key Decisions` section (product-repo ADR registry — currently lists ADR-0001..0006, 0015 but is missing ADR-0016) |
 | `docs/adr/0016-windows-build-target.md` | CREATE | Verbatim copy of `.factory/architecture/adr/0016-windows-build-target.md` |
-| `.factory/architecture/adr-index.md` | MODIFY | Add ADR-0016 row |
 
 ## Acceptance Criteria
 
@@ -170,19 +168,23 @@ Pinned by: `test_adr_0016_materialized_in_docs_adr` (file existence + grep for b
 
 ---
 
-### AC-005 — ADR-0016 row present in adr-index.md (verify/reconcile, do not overwrite)
-(traces to architecture-delta.md §8 — ADR registry updated)
+### AC-005 — ADR-0016 listed in CLAUDE.md §Key Decisions (product-repo ADR registry)
+(traces to architecture-delta.md §8 — product-repo ADR registry updated)
 
-`.factory/architecture/adr-index.md` contains an entry for ADR-0016 with status
-`Accepted` and a link to the ADR file. **Do NOT overwrite an existing row** — if an
-ADR-0016 row is already present (regardless of what amendment-annotation text it carries;
-the annotation evolves across correction passes such as F-WIN-F3-001/003, C-V2(b), and
-C-V3), verify that row is intact and leave it unchanged.
-Only add a new row if no ADR-0016 entry exists at all.
+`CLAUDE.md`'s `## Key Decisions` section contains an entry for `ADR-0016` listing
+the Windows build target decision. The entry follows the terse style of existing ADR
+bullets (e.g. "ADR-0001: Thin client vs generated API client"). Suggested text:
+`ADR-0016: Windows build target (x86_64-pc-windows-msvc, AppData config/cache paths,
+Windows Credential Manager keyring, .zip packaging, CI)`.
 
-Pinned by: `test_adr_index_includes_adr_0016` (substring grep for `ADR-0016` AND
-`Accepted` in adr-index.md — NOT a full-title exact match, so the test passes against
-both the bare title and the amended-annotation form)
+**Note on factory artifact:** The `.factory/architecture/adr-index.md` ADR-0016 row
+was added during F2/F3 (factory bookkeeping on the factory-artifacts orphan branch).
+It is already present, is NOT a product-PR deliverable, and must NOT be modified by
+this story's product PR. The product-repo ADR registry is CLAUDE.md §Key Decisions.
+
+Pinned by: `test_claude_md_key_decisions_includes_adr_0016` (source-text grep of
+`CLAUDE.md` asserting the `## Key Decisions` section contains `ADR-0016` — CI-safe,
+reads a product-repo file that is always checked out)
 
 ---
 
@@ -202,9 +204,8 @@ both the bare title and the amended-annotation form)
 
 | Component | Module | Pure/Effectful | Justification |
 |-----------|--------|---------------|---------------|
-| `CLAUDE.md` | docs | N/A | Developer/agent-facing documentation; no runtime behavior |
-| `docs/adr/0016-windows-build-target.md` | docs | N/A | Architecture decision record; copied from .factory/architecture/adr/ |
-| `.factory/architecture/adr-index.md` | .factory | N/A | ADR registry |
+| `CLAUDE.md` | docs | N/A | Developer/agent-facing documentation; no runtime behavior. Modified in two places: JR_* env table (AC-001/002/003) and §Key Decisions ADR registry (AC-005). |
+| `docs/adr/0016-windows-build-target.md` | docs | N/A | Architecture decision record; copied from .factory/architecture/adr/. Product-repo file, CI-reachable. |
 
 ---
 
@@ -213,7 +214,7 @@ both the bare title and the amended-annotation form)
 | ID | Source | Description | Expected Behavior | AC / BC |
 |----|--------|-------------|-------------------|---------|
 | EC-001 | CLAUDE.md "When adding a new JR_* var" note | JR_CONFIG_DIR / JR_CACHE_DIR entries must be in the same commit as or after S-WIN-2's code change | This story depends on S-WIN-2 being merged; doc entries should not pre-date the feature implementation | (dependency ordering) |
-| EC-002 | adr-index.md format | ADR-0016 row must match existing row format in adr-index | Read the existing ADR-0003 row and match the format exactly | AC-005 |
+| EC-002 | CLAUDE.md §Key Decisions format | ADR-0016 entry must match the terse bullet style of existing Key Decisions entries (e.g. "ADR-0001: Thin client vs generated API client") | Read the existing entries and match format exactly; do not add prose beyond the terse description line | AC-005 |
 
 ---
 
@@ -225,7 +226,7 @@ both the bare title and the amended-annotation form)
 | `test_claude_md_documents_jr_cache_dir` | same file | AC-002 |
 | `test_claude_md_documents_windows_paths` | same file | AC-003 |
 | `test_adr_0016_materialized_in_docs_adr` | same file | AC-004 |
-| `test_adr_index_includes_adr_0016` | same file | AC-005 |
+| `test_claude_md_key_decisions_includes_adr_0016` | same file | AC-005 |
 
 All tests are source-text greps of the respective files. No runtime behavior tested.
 
@@ -258,11 +259,11 @@ the feature exists in the codebase.
 1. Read CLAUDE.md "AI Agent Notes" section to find the JR_* env var table format.
 2. Add `JR_CONFIG_DIR` and `JR_CACHE_DIR` entries to the JR_* table (same format as `JR_BASE_URL`).
 3. Add Windows config/cache path note in CLAUDE.md (either under "AI Agent Notes" or "Gotchas").
-4. Read `.factory/architecture/adr/0016-windows-build-target.md`.
-5. Copy verbatim to `docs/adr/0016-windows-build-target.md`.
-6. Read `.factory/architecture/adr-index.md` to find existing row format.
-7. Add ADR-0016 row to adr-index.md.
-8. Create `tests/docs_fallout_windows.rs` with 5 source-text grep assertions.
+4. Read CLAUDE.md `## Key Decisions` section to find the existing bullet format (e.g. "ADR-0001: Thin client vs generated API client").
+5. Add ADR-0016 entry to `## Key Decisions` in CLAUDE.md: "ADR-0016: Windows build target (x86_64-pc-windows-msvc, AppData config/cache paths, Windows Credential Manager keyring, .zip packaging, CI)".
+6. Read `.factory/architecture/adr/0016-windows-build-target.md`.
+7. Copy verbatim to `docs/adr/0016-windows-build-target.md`.
+8. Create `tests/docs_fallout_windows.rs` with 5 source-text grep assertions (AC-001..005). Note: AC-005 test (`test_claude_md_key_decisions_includes_adr_0016`) greps CLAUDE.md for `ADR-0016` within or after the `## Key Decisions` section — NOT `.factory/architecture/adr-index.md` (factory artifact, unreachable in CI).
 9. Run `cargo test --test docs_fallout_windows` — passes.
 10. Run `cargo clippy -- -D warnings` — zero warnings.
 11. Run `scripts/check-bc-cumulative-counts.sh` — exits 0 (no BC body changes).

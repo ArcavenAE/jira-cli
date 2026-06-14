@@ -661,3 +661,18 @@ _Was the active checkpoint after DEC-082 corrections were governed (spec-steward
 | **Convergence counter** | BC: **597**. NFR: **42**. ADR: **16**. Stories: **74** authoritative. jira-e2e env: JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ, JR_E2E_ENABLED=true. 1 active worktree: .worktrees/S-WIN-2 (feat/win-2-config-cache-dir-seam @ b958e60). |
 | **Next / Pending** | (1) F3 RE-GATE human re-affirmation (corrected S-WIN-3/S-WIN-4); (2) S-WIN-2 PR #505 merge decision; (3) S-WIN-3 next (deny 0.60 skip REQUIRED); (4) S-WIN-4 Compress-Archive; (5) S-WIN-5 closes F-WIN2-C-101; standing items unchanged. |
 | **Resume prompt** | `Read .factory/STATE.md. DATE 2026-06-13; DEC-082 corrections CLOSED (spec-steward v1.3.11 + 3-clean re-convergence A/B/C); AWAITING F3 RE-GATE then PR #505 merge; S-WIN-3 next with deny 0.60 skip REQUIRED; S-WIN-4 Compress-Archive; develop a7da775; do NOT reintroduce zip-primary or if-needed deny skip for windows-sys 0.60; S-WIN-3 REQUIRES [[bans.skip]] for windows-sys 0.60 (deny would FAIL otherwise); Stories 74; jira-e2e env JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ, JR_E2E_ENABLED=true.` |
+
+---
+
+## Archived Checkpoint: 2026-06-13/14 (S-WIN-4 MERGED 4/6 — S-WIN-6 next)
+
+_Was the active checkpoint after S-WIN-4 PR #508 squash-merged → develop @ b49dc08. 4/6 Windows-build stories shipped. Superseded when S-WIN-6 impl CONVERGED (DEC-092)._
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-06-13/14 |
+| **Position** | **F4 IN PROGRESS. S-WIN-2/3/1/4 MERGED (4/6). Last Wave 2 story S-WIN-6 (docs fallout: CLAUDE.md JR_CONFIG_DIR/JR_CACHE_DIR table entries + Windows config/cache path docs, materialize ADR-0016 to docs/adr/0016-windows-build-target.md + adr-index, closes WIN-O-3 [CANONICAL-COUNTS Windows cache path] + WIN-O-4 [CLAUDE.md JR_* table] + SEC-WCM-DOC [WCM isolation in Gotchas]; depends on S-WIN-2 merged) on new worktree feat/win-6-windows-docs-fallout off develop b49dc08. Apply LESSON-PRESENCE-ANCHOR to its presence tests. Then Wave 3 S-WIN-5 (ci.yml Windows job; runs cfg(windows) tests; closes F-WIN2-C-101 scrub-list; apply WIN-CFG-TESTS-CHECK). develop b49dc08. POST-ALL-MERGE: H-WIN-6 live release-page gate.** |
+| **develop HEAD** | origin/develop = **b49dc08** (S-WIN-4 merged). activation v0.6.0-dev.1. BC **597**. NFR **42**. ADR **16**. Stories **74** (authoritative). |
+| **Convergence counter** | BC: **597**. NFR: **42**. ADR: **16**. Stories: **74** authoritative. jira-e2e env: JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ, JR_E2E_ENABLED=true. Active worktree being created: .worktrees/S-WIN-6 off b49dc08. |
+| **Next / Pending** | (1) Deliver S-WIN-6 (last Wave 2; closes WIN-O-3/O-4/SEC-WCM-DOC); (2) Wave 3 S-WIN-5 closes F-WIN2-C-101 + applies WIN-CFG-TESTS-CHECK + LESSON-PRESENCE-ANCHOR; (3) H-WIN-6 post-all-merge; (4) tracked LOW: WIN-DENY-FRAGILITY, SEC-JR-SERVICE-NAME-GATE (SEC-WCM-DOC → closed by S-WIN-6); standing items unchanged. |
+| **Resume prompt** | `Read .factory/STATE.md. DATE 2026-06-13/14; S-WIN-2/3/1/4 MERGED (4/6); develop b49dc08; BC 597 / Stories 74; NEXT: (1) S-WIN-6 (docs + WIN-O-3/O-4 + SEC-WCM-DOC; worktree feat/win-6-windows-docs-fallout off b49dc08) → (2) Wave 3 S-WIN-5 (ci.yml; closes F-WIN2-C-101; apply WIN-CFG-TESTS-CHECK + LESSON-PRESENCE-ANCHOR) → (3) H-WIN-6 live release-page gate; jira-e2e env JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ, JR_E2E_ENABLED=true.` |

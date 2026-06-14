@@ -7,6 +7,62 @@ project: "jr (jira-cli)"
 
 Track all spec version changes. Most recent version first.
 
+## [1.3.13] - 2026-06-13
+
+### Type: PATCH
+
+### Summary
+
+S-WIN-6 AC-005 Red-Gate reconciliation: product-repo ADR registry re-scoped from
+`.factory/architecture/adr-index.md` (factory-internal artifact, unreachable in product CI)
+to CLAUDE.md `## Key Decisions` section (product-repo ADR registry).
+
+The DECISION — "document ADR-0016 in the product-repo ADR registry" — is unchanged.
+Only WHICH registry was corrected: the `.factory/architecture/adr-index.md` row was already
+present from F2/F3 (factory bookkeeping on the factory-artifacts orphan branch). Product CI
+cannot read `.factory/` at all; a test reading it would always fail on CI. The correct
+product-repo ADR registry is CLAUDE.md `## Key Decisions`, which was missing an ADR-0016
+entry. The pinning test was correspondingly corrected:
+`test_claude_md_key_decisions_includes_adr_0016` now greps CLAUDE.md (CI-safe) rather than
+`.factory/architecture/adr-index.md` (factory artifact, CI-unreachable).
+
+No BC body, NFR body, ADR count, or story count changed. Counts remain: BC 597 / NFR 42 /
+ADR 16 / Stories 74.
+
+### Modified Requirements
+
+No BC or NFR bodies modified. Changes are governance/traceability artifacts only:
+- `spec-changelog.md`: this entry (v1.3.12→v1.3.13)
+- `STORY-INDEX.md`: S-WIN-6 row title reconciled ("adr-index" → "CLAUDE.md §Key Decisions (ADR-0016 entry)")
+- `S-WIN-6-windows-docs-fallout.md`: `last_updated` already 2026-06-13; AC-005 body and `files_modified` already reconciled by story-writer prior to this governance pass
+- `.factory/cycles/cycle-001/windows-build/spec-change-record-S-WIN-6-AC005.md`: created (this entry)
+
+### Impact Assessment
+
+| Dimension | Before | After | Delta |
+|-----------|--------|-------|-------|
+| BC corpus (BC-INDEX.md total_bcs) | 597 | 597 | 0 |
+| NFR corpus | 42 | 42 | 0 |
+| ADR count | 16 | 16 | 0 |
+| Stories total | 74 | 74 | 0 |
+| S-WIN-6 AC-005 deliverable | `.factory/architecture/adr-index.md` (factory artifact, CI-unreachable) | `CLAUDE.md §Key Decisions` (product-repo ADR registry, CI-safe) | Doc-target correction only |
+| Pinning test | (would read `.factory/` — CI failure) | `test_claude_md_key_decisions_includes_adr_0016` greps `CLAUDE.md` | CI-reachability fix |
+
+### Re-Gate Assessment
+
+**No behavioral re-gate required.** This is a doc-target reconciliation within an already
+approved and 3-clean-converged story (S-WIN-6, F3 gate APPROVED DEC-080/DEC-082/DEC-084).
+The DECISION (document the ADR registry) is unchanged. Only WHICH registry was the correct
+product-repo deliverable was corrected. No behavioral contract changed; no BC/NFR/ADR/story
+count changed. Standard per-story convergence applies (S-WIN-6 already 3-clean; F4
+dispatch unblocked).
+
+### Change Record
+
+`.factory/cycles/cycle-001/windows-build/spec-change-record-S-WIN-6-AC005.md`
+
+---
+
 ## [1.3.12] - 2026-06-13
 
 ### Type: PATCH

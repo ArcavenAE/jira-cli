@@ -177,7 +177,7 @@ Location: `.factory/architecture/security-decisions/`
 6. resolutions
 7. fields list (`fields.json` — `FieldsCache`; added issue #396 F2 for `--field` name resolution; best-effort writer; 7-day TTL)
 
-All use 7-day TTL. Root path: `~/.cache/jr/v1/<profile>/`.
+All use 7-day TTL. Root path (platform-conditional per BC-6.2.016): `~/.cache/jr/v1/<profile>/` (Unix/macOS) or `%LOCALAPPDATA%\jr\v1\<profile>\` (Windows).
 
 ---
 
