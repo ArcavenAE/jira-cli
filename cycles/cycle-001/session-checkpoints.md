@@ -691,3 +691,18 @@ _Was the active checkpoint after S-WIN-4 PR #508 squash-merged → develop @ b49
 | **Convergence counter** | BC: **597**. NFR: **42**. ADR: **16**. Stories: **74** authoritative. jira-e2e env: JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ, JR_E2E_ENABLED=true. Active worktree being created: .worktrees/S-WIN-6 off b49dc08. |
 | **Next / Pending** | (1) Deliver S-WIN-6 (last Wave 2; closes WIN-O-3/O-4/SEC-WCM-DOC); (2) Wave 3 S-WIN-5 closes F-WIN2-C-101 + applies WIN-CFG-TESTS-CHECK + LESSON-PRESENCE-ANCHOR; (3) H-WIN-6 post-all-merge; (4) tracked LOW: WIN-DENY-FRAGILITY, SEC-JR-SERVICE-NAME-GATE (SEC-WCM-DOC → closed by S-WIN-6); standing items unchanged. |
 | **Resume prompt** | `Read .factory/STATE.md. DATE 2026-06-13/14; S-WIN-2/3/1/4 MERGED (4/6); develop b49dc08; BC 597 / Stories 74; NEXT: (1) S-WIN-6 (docs + WIN-O-3/O-4 + SEC-WCM-DOC; worktree feat/win-6-windows-docs-fallout off b49dc08) → (2) Wave 3 S-WIN-5 (ci.yml; closes F-WIN2-C-101; apply WIN-CFG-TESTS-CHECK + LESSON-PRESENCE-ANCHOR) → (3) H-WIN-6 live release-page gate; jira-e2e env JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ, JR_E2E_ENABLED=true.` |
+
+---
+
+## Checkpoint archived 2026-06-14 (Windows-build F5 CONVERGED — next F6)
+
+_Was the active checkpoint after F5 CONVERGED (DEC-098; 14 passes; 5 fix PRs #511–#515; 3 clean: R12/R13/R14). Superseded when F6 PASS recorded (DEC-099; FIX-F6-001 #516 merged → develop fac555f)._
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-06-14 |
+| **Position** | **Windows-build F5 CONVERGED. develop @ 2f96543 (post-#515). 14 adversary passes (R1–R14, distinct lenses), 5 fix PRs (#511–#515). 3 clean: R12 (regression/spec), R13 (completeness+COMPLETE), R14 (security/guard 0/0/0 with confirm-HEAD-SHA protocol). R11 VOID (checkout-race; LESSON-ADVERSARY-CHECKOUT-RACE codified). Security perimeter (path-injection + figment re-entry) machine-guarded. DEC-098. 0 active worktrees (.worktrees/ empty).** |
+| **develop HEAD** | origin/develop = **2f96543** (post-F5 fix PRs #511–#515). activation v0.6.0-dev.1. BC **597**. NFR **42**. ADR **16**. Stories **74** (authoritative). |
+| **Convergence counter** | BC: **597**. NFR: **42**. ADR: **16**. Stories: **74** authoritative. jira-e2e env: JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ, JR_E2E_ENABLED=true. 0 active worktrees (.factory + .reference only). |
+| **Next / Pending** | (1) Windows-build F6 (targeted hardening: formal-verify/fuzz/mutation scoped to Windows delta + full-tree regression + security scan); (2) F7 (5-dim delta convergence + human gate); (3) H-WIN-6 live release-page holdout; (4) WIN-CI-GATE-AGGREGATOR durable follow-up; (5) tracked LOWs: WIN-DENY-FRAGILITY, SEC-JR-SERVICE-NAME-GATE, WIN-AUTH-ENVLOCK-POISON, WIN-RUNTIME-OAUTH-PROBE (accepted ADR-0016), WIN-AC004-DIRECTIONAL. |
+| **Resume prompt** | `Read .factory/STATE.md. Windows-build F5 CONVERGED at develop 2f96543 (DEC-098; 14 passes; 5 fix PRs #511–#515; 3 clean: R12/R13/R14). Security perimeter closed + machine-guarded. 0 active worktrees. Next: F6 targeted hardening (formal-verify/fuzz/mutation on Windows delta + security scan) → F7 (5-dim + human gate) → H-WIN-6 (release-page holdout). STANDING: do NOT close #429 (DEC-029); #492 OPEN; OQ-5 open; E2E-PG-4 open; SEC-001 LOW deferred. jira-e2e: JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ, JR_E2E_ENABLED=true.` |
