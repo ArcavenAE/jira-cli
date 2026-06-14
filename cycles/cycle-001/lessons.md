@@ -3682,3 +3682,43 @@ Final 3 passes ALL CLEAN. Migration call-site-exact (delta = allowlisted `e2e_li
 _Discovered: S-WIN-5 Step-4.5 per-story adversarial convergence (3-clean final after 4 fix rounds), 2026-06-14._
 _Tagged: [codified] — 6-point Windows-CI-readiness checklist; each checklist item maps to a distinct failure class from the S-WIN-5 4-round journey._
 _Apply to: all future cross-platform CI matrix story activations._
+
+---
+
+## LESSON-INTEGRATION-GATE-PROD [codified] Static/Unix review does not substitute for the real integration gate (2026-06-14)
+
+**Tags:** [codified]
+
+**Date:** 2026-06-14
+**Cycle:** Windows-build F4 / S-WIN-5 (FINAL story — windows-latest CI integration gate)
+**Tracking ID:** LESSON-INTEGRATION-GATE-PROD
+**Status:** CODIFIED
+**Source:** S-WIN-5 windows-latest CI run — 4 iterations, 25 failures, 1 real production bug. Detail: `.factory/cycles/cycle-001/adversarial-reviews/windows-build-f3/S-WIN-5-impl-review.md §Integration Gate (windows-latest CI) — AC-005/007 MET`.
+
+### Lesson
+
+A static/Unix-verifiable Step-4.5 3-clean does NOT substitute for the real integration gate (AC-005 = actual cross-platform CI run). Activating a new platform's CI for the first time surfaces production-runtime bugs (e.g. jr.exe 1 MB Windows main-thread stack overflow) and platform-runtime test issues (env-var seam isolation, OS error strings) invisible to host-only review. Schedule the integration-gate CI run as a hard gate; budget fix iterations. S-WIN-5: 4 iterations, 25 failures, 1 real production bug.
+
+### S-WIN-5 Evidence
+
+The Step-4.5 3-clean (Unix-side adversarial convergence) was reached on the static/Unix-verifiable surface. When the windows-latest CI job ran for the first time, it surfaced 4 distinct failure classes across 25 test failures that no prior review pass had detected:
+
+1. **src/ inline config+cache unit tests — XDG vs JR seam isolation (13 failures, Iter 1):** Tests using `with_temp_cache` and similar helpers isolated via `XDG_CACHE_HOME`/`XDG_CONFIG_HOME` only. On Windows, XDG is ignored, so those tests touched real `%APPDATA%\jr` / `%LOCALAPPDATA%\jr`. Also: `ENV_MUTEX` poison cascade from panicking tests. Fixed d2afc5a (JR seam in `with_temp_cache` + 5 config tests + 12 poison-recovery sites; OS-agnostic `api.rs` `NotFound`). Adversary-verified CLEAN.
+
+2. **jr.exe main-thread stack overflow — REAL PRODUCTION BUG (11 failures, Iter 2):** `jr.exe` overflows the Windows 1 MB default main-thread stack (`#[tokio::main]` async runtime + dispatch + render) for NORMAL commands (`jr issue list`). Real Windows users would crash on any standard `jr` invocation. `RUST_MIN_STACK` (5a62b0c) was an INEFFECTIVE fix — it only affects spawned threads, not the process main thread. Reverted. Correct fix: `.cargo/config.toml [target.x86_64-pc-windows-msvc] rustflags = ["/STACK:8388608"]` embeds an 8 MB main-thread stack reserve in `jr.exe`'s PE header (651342c). Target-scoped; `release.yml` picks it up so the shipped `jr.exe` is fixed. Adversary-verified CLEAN.
+
+3. **XdgConfigGuard scrub-list erased JR_CONFIG_DIR (1 failure, Iter 3):** `legacy_instance_block_migrated_in_memory` test — `XdgConfigGuard` scrub list erased `JR_CONFIG_DIR` right after setting it (passed on Unix via XDG fallback; failed on Windows where XDG is not the active seam). Fixed 0c86d6b. Adversary-verified CLEAN.
+
+4. **FINAL: ALL 13 CI checks GREEN** — `Test(windows-latest)` PASS (8m11s) + `Clippy(windows-latest)` PASS. AC-005/AC-007 MET.
+
+### Key catch
+
+The integration gate caught a real production Windows crash (`jr.exe` stack overflow on normal commands) that would have shipped in S-WIN-4's release `jr.exe`. This validates activating Windows CI before the release tag, not after.
+
+### Rule
+
+For any story that activates a new platform in CI (first-real-runner run): treat the CI run itself as a hard gate (AC-xxx = "CI green on new platform"), budget fix iterations in the story estimate, and do not mark the story as converged until the CI gate is MET — not just the static/host-side review.
+
+_Discovered: S-WIN-5 windows-latest CI integration gate (4 iterations, 25 failures, 1 real production bug), 2026-06-14._
+_Tagged: [codified] — integration gate is a hard gate; static/Unix review does not substitute for a real cross-platform CI run._
+_Apply to: all future stories that activate a new platform CI runner for the first time._

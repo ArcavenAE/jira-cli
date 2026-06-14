@@ -14,6 +14,14 @@ Change: ci.yml adds windows-latest to test matrix + a SEPARATE windows clippy ma
 
 ## Verdict: CONVERGED (3-clean final). Full Unix suite 1793/0; cross-compile --tests zero Rust errors; clippy/fmt clean; actionlint/YAML valid. AC-005/AC-007 are integration gates satisfied by the windows-latest CI run in this story's PR.
 
+## Integration Gate (windows-latest CI) — AC-005/007 MET (2026-06-14)
+The Step-4.5 3-clean was on the static/Unix-verifiable surface. AC-005 (Windows CI green) is a true integration gate — the windows-latest test+clippy jobs running for the first time surfaced issues static/Unix review CANNOT catch. 4 CI iterations to green:
+- Iter 1 (13 failures): src/ inline config+cache unit tests isolated via XDG only, not the JR seam (touch real %APPDATA%/%LOCALAPPDATA% on Windows). + ENV_MUTEX poison cascade. Fixed d2afc5a (JR seam in with_temp_cache + 5 config tests + 12 poison-recovery sites; OS-agnostic api.rs NotFound). Adversary-verified CLEAN.
+- Iter 2 (11 failures, jr.exe "thread 'main' overflowed its stack"): REAL PRODUCTION BUG — jr.exe overflows the Windows 1 MB default main-thread stack (#[tokio::main] async runtime + dispatch + render) for NORMAL commands (jr issue list); real Windows users would crash. RUST_MIN_STACK (5a62b0c) was an INEFFECTIVE fix (only affects spawned threads, not a process main thread). Reverted + fixed properly: .cargo/config.toml [target.x86_64-pc-windows-msvc] rustflags /STACK:8388608 embeds an 8 MB main-thread stack reserve in jr.exe's PE header (651342c). Adversary-verified CLEAN (target-scoped; release.yml picks it up so the shipped jr.exe is fixed).
+- Iter 3 (1 failure, legacy_instance_block_migrated_in_memory): test-side — XdgConfigGuard scrub list erased JR_CONFIG_DIR right after setting it (passed on Unix via XDG fallback; failed on Windows). Fixed 0c86d6b. Adversary-verified CLEAN.
+- FINAL: ALL 13 CI checks GREEN — Test(windows-latest) PASS (8m11s) + Clippy(windows-latest) PASS. AC-005/AC-007 MET.
+KEY CATCH: the integration gate caught a real production Windows crash (jr.exe stack overflow) that would have shipped in S-WIN-4's release jr.exe. Validates activating Windows CI before release.
+
 ## LESSON-WIN-CI-CHECKLIST (codify — the durable artifact from the 4-round journey)
 
 Windows-CI-readiness checklist for future cross-platform CI matrix activations:
