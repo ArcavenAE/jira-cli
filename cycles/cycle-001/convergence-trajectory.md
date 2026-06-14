@@ -761,3 +761,34 @@ Trajectory shorthand: `1C(sibling-omission)→fix→1C(off-branch-spec)→fix→
 **Trajectory shorthand:** `6→5→1→2→2→1→0→1(reset)→0→0→0(reset@P11)→0→0→0`
 **Genuine catches:** false-green release-gate test description; dirs Known-Folder-API rationale; empty-string-filter propagation (4 sites); per-profile cache path table inconsistency.
 **Post-convergence:** fresh-context consistency audit CONSISTENT. Research validation C1–C7 completed after P11 convergence; C4+C2 corrections applied; P12–P14 rerun confirmed CLEAN post-correction.
+
+---
+
+## Windows-build F5 Scoped Adversarial Convergence (2026-06-14)
+
+**Feature:** Windows build (x86_64-pc-windows-msvc)
+**Phase:** F5 scoped adversarial review (6-story delta: ci.yml matrix, .gitattributes, XDG→JR seam, /STACK:8388608, embedded-OAuth verify, deny.toml)
+**develop HEAD at convergence:** 2f96543 (was 4bd83c7 at F4 close; updated via 5 fix PRs #511–#515)
+
+| Pass | Date | Total | CRIT | HIGH | MED | LOW | Counter | Verdict |
+|------|------|-------|------|------|-----|-----|---------|---------|
+| R1 | 2026-06-14 | 2 | 0 | 2 | 0 | 0 | 0/3 | FINDINGS_REMAIN — smoke step missing jr.exe path + Compress-Archive assertion imprecise |
+| R2 | 2026-06-14 | 2 | 0 | 1 | 1 | 0 | 0/3 | FINDINGS_REMAIN — smoke fail-closed plumbing + debug-gate adjacency |
+| R3 | 2026-06-14 | 3 | 0 | 0 | 2 | 1 | 0/3 | FINDINGS_REMAIN — Windows OAuth verify step + .gitattributes catch-all + deny.toml comment |
+| R4 | 2026-06-14 | 0 | 0 | 0 | 0 | 0 | 1/3 | CLEAN-PASS |
+| R5 | 2026-06-14 | 0 | 0 | 0 | 0 | 0 | 2/3 | CLEAN-PASS |
+| R6 | 2026-06-14 | 2 | 0 | 0 | 1 | 1 | 0/3 | REGRESSION (reset) — CHANGELOG entry missing Windows + figment re-entry guard |
+| R7 | 2026-06-14 | 2 | 0 | 1 | 1 | 0 | 0/3 | FINDINGS_REMAIN — ADR-0016 Decision 5c amendment + harden OAuth guard |
+| R8 | 2026-06-14 | 1 | 0 | 0 | 1 | 0 | 0/3 | FINDINGS_REMAIN — OAuth-verify guard must bind to -match construct |
+| R9 | 2026-06-14 | 0 | 0 | 0 | 0 | 0 | 1/3 | CLEAN-PASS |
+| R10 | 2026-06-14 | 0 | 0 | 0 | 0 | 0 | 2/3 | CLEAN-PASS |
+| R11 | 2026-06-14 | 1-VOID | 0 | 1 | 0 | 0 | —/— | VOID — checkout-race (concurrent git pull mid-review; reviewed stale pre-merge code). Re-run as R14. |
+| R12 | 2026-06-14 | 0 | 0 | 0 | 0 | 0 | 1/3 | CLEAN-PASS (regression/spec lens @ 2f96543) |
+| R13 | 2026-06-14 | 0 | 0 | 0 | 0 | 0 | 2/3 | CLEAN-PASS+COMPLETE (completeness critic lens @ 2f96543) |
+| R14 | 2026-06-14 | 0 | 0 | 0 | 0 | 0 | 3/3 | CONVERGED 0/0/0 (security/guard integrity lens @ 2f96543) |
+
+**Trajectory shorthand:** `2→2→3→0→0→2(reset)→2→1→0→0→VOID→0→0→0` — **CONVERGED** at R14 (2026-06-14)
+**Genuine catches:** release-path smoke step missing explicit jr.exe path; Compress-Archive assertion imprecise; smoke fail-closed plumbing gap; debug-gate adjacency; Windows OAuth verification step absent; .gitattributes catch-all absent; deny.toml comment gap; CHANGELOG missing Windows entry; figment re-entry guard absent (F5-WIN-R6-002, now machine-guarded by test); ADR-0016 Decision 5c missing; OAuth-verify guard binding to -match construct.
+**VOID pass:** R11 was dispatched concurrently with a devops cleanup agent that did `git checkout develop && git pull` on the shared main working tree. R11 read mid-pull stale code and found F5-WIN-R11-001 (spurious HIGH for issue already fixed on 2f96543). Mitigation codified as LESSON-ADVERSARY-CHECKOUT-RACE. R14 re-run added "confirm HEAD SHA on first line" guard and reviewed cleanly at 2f96543.
+**Fix PRs merged during F5:** #511 (R1 HIGHs: smoke step + Compress-Archive), #512 (R2: fail-closed + debug-gate), #513 (R3: OAuth verify + .gitattributes + deny.toml), #514 (R7/R6: CHANGELOG + ADR-0016 Decision 5c + figment guard test), #515 (R8: OAuth guard -match binding). 0 CRITICAL/HIGH since R2; all R3+ findings doc/test/CI hardening.
+**Residual LOWs accepted:** WIN-RUNTIME-OAUTH-PROBE (runtime probe not ported to Windows, accepted in ADR-0016 Decision 5c), WIN-AC004-DIRECTIONAL (count-equality check covers in-process set_var only; subprocess sites have presence-only check). SEC-JR-SERVICE-NAME-GATE and WIN-DENY-FRAGILITY re-surfaced as out-of-scope / existing tracked items.

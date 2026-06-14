@@ -3751,3 +3751,33 @@ ADR-0016 Decision 3 converted the `clippy` job to a matrix (`ubuntu-latest` + `w
 _Discovered: S-WIN-5 PR #510 branch-protection drift (clippy→matrix), 2026-06-14._
 _Tagged: [codified] — required-context rename silently blocks all PRs; visible only via mergeStateStatus, not CI green/red._
 _Apply to: all future ci.yml job renames or matrix conversions on jobs that are required by branch protection._
+
+---
+
+## LESSON-ADVERSARY-CHECKOUT-RACE [codified] Never dispatch adversary reviews concurrently with working-tree mutations (2026-06-14)
+
+**Tags:** [codified]
+
+**Date:** 2026-06-14
+**Cycle:** Windows-build F5 / R11 VOID
+**Tracking ID:** LESSON-ADVERSARY-CHECKOUT-RACE
+**Status:** CODIFIED
+**Source:** F5 R11 was dispatched in the SAME parallel batch as a devops cleanup agent that ran `git checkout develop && git pull` on the shared main working tree. R11 read working-tree files mid-pull and reviewed STALE pre-merge code, producing spurious HIGH finding F5-WIN-R11-001 for an issue already fixed on develop @ 2f96543.
+
+### Lesson
+
+A "read-only" adversary pass is NOT free from concurrency hazards on a shared working tree. If any agent mutates the working tree (checkout, pull, merge, rebase, clean) concurrently with a review agent reading it, the review agent may silently observe an inconsistent mid-operation state — producing findings for non-issues ("ghost findings"). The review pass must be voided and re-run; there is no partial-credit fix path.
+
+### Mitigations (in priority order)
+
+1. **Sequence cleanup BEFORE review batch.** Never batch a working-tree-mutating agent (devops-engineer / cleanup / git operations) in the SAME parallel dispatch as an adversary/review agent on the same working tree. Complete all mutations first; confirm HEAD SHA; then dispatch the review batch.
+2. **Pin HEAD SHA at review start.** Require every adversary agent to confirm and record the exact HEAD SHA on its first line of output before reading any file. If HEAD differs from the expected SHA, abort and surface to orchestrator. The R14 re-run adopted this protocol and reviewed cleanly.
+3. **Use a dedicated read-only worktree pinned to target SHA.** Pin the worktree with `git worktree add --detach .worktrees/review-pass <sha>` before dispatching the review batch. The adversary reads only from that worktree; no concurrent mutation can affect it.
+
+### S-WIN-5 / R11 Evidence
+
+R11 was dispatched in the same parallel batch as a devops agent that cleaned up .worktrees/S-WIN-5 (git checkout + pull). R11 read mid-pull files and flagged F5-WIN-R11-001 (HIGH) for an OAuth guard that was already fixed in PR #515 @ 2f96543. The finding was spurious — R14 re-run at pinned 2f96543 produced 0/0/0 CONVERGED. R11 was voided (marked VOID in convergence-trajectory) and counted as wasted round.
+
+_Discovered: Windows-build F5 R11 VOID (checkout race), 2026-06-14._
+_Tagged: [codified] — adversary review must never run concurrently with working-tree mutations; pin HEAD SHA on first adversary line._
+_Apply to: all future parallel-dispatch batches that mix review agents with working-tree-mutating agents._

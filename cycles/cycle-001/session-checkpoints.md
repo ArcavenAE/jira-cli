@@ -17,6 +17,21 @@ Superseded checkpoints are archived here when STATE.md is updated with a newer o
 
 ---
 
+## Checkpoint archived 2026-06-14 (Windows-build F4 COMPLETE — 6/6 MERGED; next F5/F6/F7)
+
+_Was the active checkpoint after PR #510 (S-WIN-5) SQUASH-MERGED → develop @ 4bd83c7 and branch-protection drift RESOLVED (DEC-097). Superseded when Windows-build F5 CONVERGED at develop @ 2f96543 after 14 adversary passes + 5 fix PRs (#511–#515)._
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-06-14 |
+| **Position** | **Windows-build F4 COMPLETE (6/6). All 6 stories merged to develop @ 4bd83c7 (S-WIN-2 #505, S-WIN-3 #506, S-WIN-1 #507, S-WIN-4 #508, S-WIN-6 #509, S-WIN-5 #510). Branch-protection drift RESOLVED (DEC-097): PATCH develop+main required_status_checks to matrixed contexts. PR #510 SQUASH-MERGED. Worktree .worktrees/S-WIN-5 cleaned up. 0 active Windows worktrees (.factory + .reference only). Next: Windows-build F5 (scoped adversarial on the 6-story delta) → F6 (targeted hardening) → F7 (5-dim delta convergence + human gate) → H-WIN-6 (release-page holdout).** |
+| **develop HEAD** | origin/develop = **4bd83c7** (S-WIN-5 #510 merged). activation v0.6.0-dev.1. BC **597**. NFR **42**. ADR **16**. Stories **74** (authoritative). |
+| **Convergence counter** | BC: **597**. NFR: **42**. ADR: **16**. Stories: **74** authoritative. jira-e2e env: JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ, JR_E2E_ENABLED=true. 0 active Windows worktrees (.factory + .reference only). |
+| **Next / Pending** | (1) Windows-build F5 (scoped adversarial on 6-story delta: ci.yml matrix, .gitattributes, XDG→JR seam, /STACK:8388608); (2) F6 targeted hardening; (3) F7 5-dim delta convergence + human gate; (4) H-WIN-6 live release-page holdout; (5) WIN-CI-GATE-AGGREGATOR durable follow-up; (6) tracked LOW: WIN-DENY-FRAGILITY, SEC-JR-SERVICE-NAME-GATE, WIN-AUTH-ENVLOCK-POISON. |
+| **Resume prompt** | `Read .factory/STATE.md. Windows-build F4 COMPLETE (6/6) at develop 4bd83c7. Branch-protection drift RESOLVED (DEC-097). 0 active Windows worktrees. Next: Windows-build F5 (scoped adversarial on the 6-story delta) → F6 → F7 (human gate) → H-WIN-6 (release-page holdout).` |
+
+---
+
 ## Checkpoint archived 2026-06-12 (v0.5.0 STABLE released + develop bumped to 0.6.0-dev.1)
 
 _Was the active checkpoint after v0.5.0-dev.14 dev release (PR #500 @ a0f45cc). Superseded when v0.5.0 STABLE shipped (PR #501 → main; tag v0.5.0) and develop was bumped to 0.6.0-dev.1 (PR #502 → develop @ 587206e)._
