@@ -3642,3 +3642,43 @@ Apply LESSON-PRESENCE-ANCHOR to S-WIN-5 (ci.yml) and S-WIN-6 (docs) presence tes
 _Discovered: S-WIN-4 Step-4.5 per-story adversarial convergence (3-clean final), 2026-06-13._
 _Tagged: [codified] — positive pattern; recurring across S-WIN-3 and S-WIN-4; step_block helper is the reference implementation._
 _Apply to: S-WIN-5 (ci.yml), S-WIN-6 (docs), all future config-file presence tests._
+
+---
+
+## LESSON-WIN-CI-CHECKLIST [codified] Windows-CI-readiness checklist for cross-platform CI matrix activations (2026-06-14)
+
+**Tags:** [codified]
+
+**Date:** 2026-06-14
+**Cycle:** Windows-build F4 / S-WIN-5 (FINAL story — ci.yml windows-latest test+clippy matrix + 37-file XDG→JR seam migration)
+**Tracking ID:** LESSON-WIN-CI-CHECKLIST
+**Status:** CODIFIED
+**Source:** S-WIN-5 Step-4.5 4-round adversarial journey — each round caught a DISTINCT Windows-failure class the prior round's guard missed. Full detail: `.factory/cycles/cycle-001/adversarial-reviews/windows-build-f3/S-WIN-5-impl-review.md`
+
+### Lesson
+
+Activating a real Windows CI runner exposes a class of latent test defects that are invisible on Unix CI. The S-WIN-5 journey produced a 6-point checklist covering every failure class encountered across 4 fix rounds. Apply this checklist before declaring any cross-platform CI matrix story complete.
+
+### The 4-Round Journey (each round a distinct failure class)
+
+1. **Round 1 — Config-seam half-migration (MEDIUM):** `multi_cloudid` integration tests set `XDG_CONFIG_HOME` but not `JR_CONFIG_DIR`. Guard was per-FILE presence (`||`) → masked in-file sites that set XDG but not JR. Fix (26c17d6): migrate remaining sites + strengthen guard to per-VAR count parity.
+2. **Round A/B/C — In-process cache-seam half-migration (MEDIUM):** `worklog_duration_holdouts` set XDG inline (in-process, not via helper call) — per-FILE guard blind to in-process patterns. Fix (db4d98f): migrate in-process sites + strengthen guard to per-CALL-SITE count (not per-file).
+3. **Round 1/2/3 — Separator assertion (HIGH):** `issue_create_jsm.rs` asserted `contains("/jr/v1/")` on a rendered `PathBuf` — fails on Windows backslash. Fix (cc1d9e3): separator-agnostic assertion + Step-5b sweep of all path-contains uses (all other sites SAFE: URLs/log prefixes).
+4. **Round final/pass 1 — CRLF yaml read + grep subprocess (CRITICAL + MEDIUM):** `ci_yml_windows_matrix.rs` used `":\n"` as a line anchor in `extract_job_block` — fails on CRLF-checked-out `.yml` files because `.gitattributes` covered `.snap` but not `.yml`/`.yaml`. Separately, a `grep` subprocess call is Unix-only. Fix (f40c310): `.replace("\r\n", "\n")` on all yaml reads + `*.yml/*.yaml eol=lf` in `.gitattributes` + replace grep subprocess with in-process `std::fs` walk.
+
+### The 6-Point Checklist
+
+1. **Seam parity at every call site.** Every test setting an OS-specific isolation env var (`XDG_*`) MUST pair it with the cross-platform seam (`JR_*`) at EVERY call site. Meta-test enforces per-CALL-SITE count parity — not file-level presence, which misses in-process half-migrations.
+2. **CRLF normalization for line-sensitive file reads.** Every test reading a file for `\n`-sensitive or line-anchored matching MUST `.replace("\r\n", "\n")` or use `.lines()`. Pin `*.snap`, `*.yml`, `*.yaml` with `eol=lf` in `.gitattributes` (not just `*.snap`).
+3. **Separator-agnostic path assertions.** Runtime stderr/stdout path assertions MUST NOT use `contains("a/b")` on a rendered `PathBuf` — assert filename, non-path prefix, or `Path` components instead. (LESSON-PATH-SEP-ASSERT)
+4. **Scrub ambient seam values before setting.** Seam/isolation env vars MUST call `.env_remove(VAR)` before `.env(VAR, value)` to prevent dev-shell leakage (`F-WIN2-C-101` class).
+5. **No un-gated external-binary subprocesses.** No `grep`/`sh`/`sed`/`chmod`/`ln` subprocess in tests unless inside `#[cfg(unix)]`. Prefer in-process `std::fs`; gate Unix-only tests explicitly.
+6. **Cross-platform pure helpers for OS-branch logic.** Extract `#[cfg(windows)]` / `#[cfg(unix)]` logic into un-gated pure helpers so mutation tests die on the Unix runner without needing a Windows runner.
+
+### Convergence result
+
+Final 3 passes ALL CLEAN. Migration call-site-exact (delta = allowlisted `e2e_live.rs` only). Full Unix suite 1793/0; cross-compile `--tests` zero Rust errors; clippy/fmt/actionlint clean. AC-005/AC-007 are integration gates satisfied by the windows-latest CI run in the PR.
+
+_Discovered: S-WIN-5 Step-4.5 per-story adversarial convergence (3-clean final after 4 fix rounds), 2026-06-14._
+_Tagged: [codified] — 6-point Windows-CI-readiness checklist; each checklist item maps to a distinct failure class from the S-WIN-5 4-round journey._
+_Apply to: all future cross-platform CI matrix story activations._
