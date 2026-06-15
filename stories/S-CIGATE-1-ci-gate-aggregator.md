@@ -41,7 +41,7 @@ breaking_change: false
 files_modified:
   - .github/workflows/ci.yml              # ADD ci-gate aggregator job (~20 lines)
   - CLAUDE.md                             # ADD bullet under "Key Decisions" or "Conventions" noting ci-gate convention
-  - docs/adr/0016-windows-build-target.md  # ADD informational one-line note in §5 CI section
+  - docs/adr/0016-windows-build-target.md  # ADD informational one-line note in Decision 3 (CI) section
   - tests/ci_gate_completeness.rs         # CREATE hermetic drift-prevention test (~30 lines)
 ---
 
@@ -51,7 +51,7 @@ files_modified:
 
 F1 Delta Analysis: `.factory/phase-f1-delta-analysis/win-ci-gate-aggregator/delta-analysis.md`
 Drift item: WIN-CI-GATE-AGGREGATOR (STATE.md DEC-096, DEC-097, DEC-101)
-ADR-0016: `docs/adr/0016-windows-build-target.md §5 CI`
+ADR-0016: `docs/adr/0016-windows-build-target.md` Decision 3 (Add Windows job to `ci.yml`)
 
 ## Behavioral Contracts
 
@@ -73,7 +73,7 @@ so that the required-status-check surface area is decoupled from CI matrix expan
 | `.github/workflows/ci.yml` (current, ~170 LOC) | ~1,800 |
 | `tests/ci_gate_completeness.rs` (new, ~450 LOC) | ~5,500 |
 | `CLAUDE.md` relevant section (Key Decisions) | ~300 |
-| `docs/adr/0016-windows-build-target.md` §5 CI section | ~300 |
+| `docs/adr/0016-windows-build-target.md` Decision 3 (CI) section | ~300 |
 | F1 delta analysis (design reference) | ~800 |
 | **Total** | **~10,700** |
 
@@ -116,7 +116,7 @@ No library changes. This story modifies only YAML and Rust source-text-grep test
 | `.github/workflows/ci.yml` | MODIFY | Append `ci-gate` job at the end of the file. Job definition: `ci-gate:`, `name: CI Gate`, `runs-on: ubuntu-latest`, `needs: [fmt, clippy, test, msrv, deny, spec-guard]`, `if: ${{ always() }}`, one step `name: Fail if any required job failed or was cancelled` with `if: ${{ contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled') }}` and `run: exit 1`. |
 | `tests/ci_gate_completeness.rs` | CREATE | Hermetic drift-prevention test: parses `.github/workflows/ci.yml`, asserts a job named `ci-gate` exists, asserts `ci-gate.needs` contains exactly `[fmt, clippy, test, msrv, deny, spec-guard]` (order-insensitive). |
 | `CLAUDE.md` | MODIFY | Add one bullet under "Key Decisions" or "Conventions": `ci-gate` is the single required branch-protection status check; new CI jobs that should be required must be added to `ci-gate.needs`, never to branch protection directly. |
-| `docs/adr/0016-windows-build-target.md` | MODIFY | Add one informational sentence in §5 CI: "`ci-gate` is the required status check for `develop` and `main`; add new mandatory CI jobs to `ci-gate.needs`, not to branch protection directly." |
+| `docs/adr/0016-windows-build-target.md` | MODIFY | Add one informational sentence in Decision 3 (Add Windows job to `ci.yml`): "`ci-gate` is the required status check for `develop` and `main`; add new mandatory CI jobs to `ci-gate.needs`, not to branch protection directly." |
 
 ## Acceptance Criteria
 
@@ -174,14 +174,14 @@ Pinned by: `cargo test --test ci_gate_completeness` exits 0.
 
 ---
 
-### AC-005 — Documentation: CLAUDE.md bullet + ADR-0016 §5 informational note
+### AC-005 — Documentation: CLAUDE.md bullet + ADR-0016 Decision 3 informational note
 (traces to WIN-CI-GATE-AGGREGATOR — convention codified so future contributors do not bypass the aggregator)
 
 > **Scope note:** These documentation edits were classified as "optional" in the F1 delta analysis but are promoted to required ACs here for traceability — they are the codified convention that prevents the DEC-096/DEC-097 fragility class from recurring. A future contributor who skips them cannot know the `ci-gate` convention exists.
 
 (a) `CLAUDE.md` contains a bullet (under "Key Decisions" or "Conventions") stating that `ci-gate` is the single required branch-protection status check and that new CI jobs requiring blocking must be added to `ci-gate.needs`, never to branch protection directly.
 
-(b) `docs/adr/0016-windows-build-target.md` §5 CI contains a one-line informational note with equivalent content.
+(b) `docs/adr/0016-windows-build-target.md` Decision 3 (Add Windows job to `ci.yml`) contains a one-line informational note with equivalent content.
 
 These documentation changes do not affect `cargo test` but are verifiable by source-text inspection.
 
@@ -307,7 +307,7 @@ Topological order: standalone (Wave 1 in any wave-scheduling pass that honors th
    ```
 3. Create `tests/ci_gate_completeness.rs` with six test functions (see AC-004). Reference `tests/ci_yml_windows_matrix.rs` as the pattern for YAML source-text parsing in this repo.
 4. Add the `ci-gate` convention bullet to `CLAUDE.md`.
-5. Add the one-line informational note to `docs/adr/0016-windows-build-target.md` §5 CI.
+5. Add the one-line informational note to `docs/adr/0016-windows-build-target.md` Decision 3 (Add Windows job to `ci.yml`).
 6. Run `cargo test --test ci_gate_completeness` — all six tests pass.
 7. Run `cargo test` — full suite green (no regression).
 8. Run `cargo clippy -- -D warnings` — zero warnings.
