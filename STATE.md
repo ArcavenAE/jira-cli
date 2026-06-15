@@ -2,7 +2,7 @@
 document_type: pipeline-state
 version: "2.0"
 status: active
-timestamp: 2026-06-14T00:00:00Z
+timestamp: 2026-06-14T21:15:00Z
 phase: phase-3-tdd-implementation
 project: jira-cli
 mode: BROWNFIELD
@@ -12,7 +12,7 @@ dtu_required: false
 phase_2_status: APPROVED
 phase_2_approved_at: 2026-05-07
 phase_3_status: IN_PROGRESS
-activation_head: "587206e"
+activation_head: "4258202"
 activation_version: "v0.6.0-dev.2"
 ---
 <!-- SIZE BUDGET: <200 lines. Historical content → cycle files. Run /vsdd-factory:compact-state if over 200. -->
@@ -29,7 +29,7 @@ activation_version: "v0.6.0-dev.2"
 | **Last Updated** | 2026-06-14: Windows-build CYCLE CLOSED. v0.6.0-dev.2 released (#517 → develop @ 4258202). H-WIN-6 live PASS (Windows .zip on Release page; smoke test ✓ on windows-latest; /STACK:8388608 fix validated). DEC-101. |
 | **Current Phase** | Phase 3 — TDD Implementation IN PROGRESS — No active feature. BC 597. NFR 42. ADR 16. Stories 74 (authoritative). |
 | **Next Phase** | Phase 4: Holdout Evaluation (not started) |
-| **Activation HEAD** | 587206e (v0.6.0-dev.2 released 2026-06-14; v0.5.0 STABLE shipped 2026-06-12) |
+| **Activation HEAD** | 4258202 (v0.6.0-dev.2 released 2026-06-14; v0.5.0 STABLE shipped 2026-06-12) |
 
 ## Phase Progress
 
