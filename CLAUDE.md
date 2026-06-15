@@ -98,6 +98,7 @@ DIFF_FILE=$(mktemp -t pr.diff.XXXXXX) && trap 'rm -f "$DIFF_FILE"' EXIT && git d
 - **Commits:** Conventional Commits format (`feat:`, `fix:`, `docs:`, `chore:`, `ci:`, `test:`)
 - **Branches:** `type/short-description` (e.g., `feat/issue-commands`, `fix/auth-flow`). Default branch is `develop`. Feature branches → PR to `develop` → PR to `main` for releases.
 - **Protected branches:** `main` and `develop` require CI to pass and code owner approval on PRs. Admins can bypass.
+- **CI Gate:** `ci-gate` (job name "CI Gate") is THE single required branch-protection status check on `develop`/`main`. New CI jobs that must be required must be added to `ci-gate.needs`, never wired directly into branch protection — this prevents the matrix-rename fragility class (DEC-096/DEC-097).
 - **Errors:** Always suggest what to do next. Map to exit codes via `JrError::exit_code()`
 - **Output:** `--output json` returns structured JSON for both success and errors. Human text is default.
 - **Non-interactive:** `--no-input` disables prompts (auto-enabled when stdin is not a TTY). Commands must have fully non-interactive flag equivalents.
