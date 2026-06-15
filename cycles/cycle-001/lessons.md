@@ -3781,3 +3781,72 @@ R11 was dispatched in the same parallel batch as a devops agent that cleaned up 
 _Discovered: Windows-build F5 R11 VOID (checkout race), 2026-06-14._
 _Tagged: [codified] — adversary review must never run concurrently with working-tree mutations; pin HEAD SHA on first adversary line._
 _Apply to: all future parallel-dispatch batches that mix review agents with working-tree-mutating agents._
+
+---
+
+## S-7.02 Cycle-Closing Review — Windows-build feature cycle (2026-06-14)
+
+_Windows-build feature cycle CLOSED: released v0.6.0-dev.2 (#517 → develop @ 4258202); H-WIN-6 live PASS (jr-v0.6.0-dev.2-x86_64-pc-windows-msvc.zip on Release page; checksum OK; smoke test `.\jr.exe --version` PASS on windows-latest; /STACK:8388608 fix validated, no stack overflow). Full trajectory: F4 COMPLETE (6/6, PRs #504–510) → F5 CONVERGED (14 adversary passes, 5 fix PRs #511–515) → F6 PASS (100% delta mutation, 9 property proofs, #516) → F7 CONVERGED + human-authorized (DEC-100) → released v0.6.0-dev.2 (#517) → H-WIN-6 PASS. Final counts: BC 597 / NFR 42 / ADR 16 / Stories 74._
+
+_The following items were reviewed per the S-7.02 Cycle-Closing Checklist. Each has either a confirmed tracked entry (LESSON/Drift Item already in files) or an explicit deferral justification._
+
+### S-7.02 Item 1: LESSON-ADVERSARY-CHECKOUT-RACE — CONFIRMED PRESENT
+
+Status: CODIFIED (see above in this file). No further action required.
+
+Durable rule: Never dispatch adversary reviews concurrently with working-tree-mutating agents on the same working tree. Pin HEAD SHA on first adversary line. Use a dedicated read-only worktree if available. R11 VOID was the direct consequence; R14 re-run with pinned SHA produced 0/0/0 clean.
+
+### S-7.02 Item 2: WIN-RUNTIME-OAUTH-PROBE (LOW) — DEFERRED
+
+Status: OPEN Drift Item in STATE.md. ADR-0016 Decision 5c amendment accepts the limitation: the Windows release-job checks for the binary's embedded OAuth constants file (`embedded_oauth.rs` constants-file check) but does NOT exercise a full `jr auth status` runtime probe on Windows (the Unix probe step is not ported). Accepted per DEC-098. Target: future Windows-hardening pass.
+
+Deferral rationale: The constants-file check is sufficient to confirm the OAuth binary is branded; a full runtime `jr auth status` on Windows would require a live Jira credential in CI, which is E2E-scoped and intentionally not present in release.yml.
+
+### S-7.02 Item 3: WIN-AC004-DIRECTIONAL (LOW, process-gap) — DEFERRED
+
+Status: OPEN Drift Item in STATE.md. The XDG→JR seam-migration enforcement test (`ci_yml_windows_matrix.rs`) uses count-equality for in-process `set_var` sites but only presence-only checks for subprocess `.env()` sites. This is a directional blind spot: new subprocess `.env(JR_CONFIG_DIR)` calls could be added without the count guard catching them.
+
+Deferral rationale: The class of missing sites (subprocess `.env()`) is narrower than the full seam-migration surface; the adversary reviewed and accepted as LOW. No recurrence in this cycle. Tracked for a future test-hardening pass.
+
+### S-7.02 Item 4: WIN-DENY-FRAGILITY (LOW) — DEFERRED
+
+Status: OPEN Drift Item in STATE.md. The `deny.toml` 17-entry skip set topology is dependent on the `windows-sys` transitive dependency tree. Future `windows-sys` updates could silently change the dependency topology, breaking the N-1 invariant (deny rejects the version we skip to) without any CI guard catching it before a PR merges.
+
+Deferral rationale: deny.toml is audited at every CI run via `cargo deny check`; a broken skip would produce a CI failure on the next PR that rebuilds the lockfile, not a silent regression. The gap is absence of a pre-notification guard (before the lockfile changes), not a silent-pass risk. Low probability; tracked.
+
+### S-7.02 Item 5: SEC-JR-SERVICE-NAME-GATE (LOW) — DEFERRED
+
+Status: OPEN Drift Item in STATE.md. `JR_SERVICE_NAME` env var is readable in release builds (unlike `JR_BASE_URL`/`JR_AUTH_HEADER` which are `#[cfg(debug_assertions)]`-gated). The service name is used for keychain service identification and is low-severity, but it diverges from the established gating convention.
+
+Deferral rationale: `JR_SERVICE_NAME` cannot be used for credential redirection (it only names the keychain service, not the target host), so the security risk is lower than `JR_BASE_URL`. Tracked as a follow-up story candidate to bring it in line with the established convention.
+
+### S-7.02 Item 6: WIN-CI-GATE-AGGREGATOR (LOW) — DEFERRED
+
+Status: OPEN Drift Item in STATE.md. A single stable `ci-gate` aggregator job (with `needs: [all]` + `if: always()`) would make all future ci.yml matrix changes free of branch-protection drift risk. Currently, any job rename or matrix conversion requires a manual `PATCH` to branch-protection required_status_checks (LESSON-MATRIX-BRANCH-PROTECTION).
+
+Deferral rationale: The immediate risk is mitigated (branch protection already updated for current matrix). The aggregator is a durable hygiene improvement; no active defect pending. Tracked as a durable follow-up story candidate (own PR, ~1 hour scope).
+
+### S-7.02 Item 7: OBS-001 (LOW) — DEFERRED
+
+Status: OPEN Drift Item in STATE.md. 6 S-WIN stories still carry `status:ready` in the story-index (S-WIN-1 through S-WIN-6 plus supporting items). Human deprioritized at the F7 gate (DEC-100: OBS-001 LOW deferred — "optional hygiene, matches project convention"). Stories are fully MERGED; the `status:ready` label is cosmetic artifact of the story-template default not being updated post-merge.
+
+Deferral rationale: No functional or audit-trail gap — the Phase Progress table and burst-log record all merges with PR numbers and SHAs. Story status field is informational; the story-index is not machine-read by any gate script. Accepted per DEC-100.
+
+### S-7.02 Item 8: R6-002 figment re-entry guard — CONFIRMED RESOLVED
+
+Status: RESOLVED. `test_global_config_struct_has_no_path_override_field` was merged in F5 fix PR #514 → develop @ 2f96543. The structural guard verifies that `GlobalConfig` never acquires a `config_dir`/`cache_dir`/`data_dir` field (which would enable figment re-entry via `JR_CONFIG_DIR`/`JR_CACHE_DIR` as a Figmap source). The guard compiles the struct's `#[derive(Deserialize)]` surface. DEC-098 records the resolution.
+
+Closing note: R6-002 was the highest-priority residual from F5 R6; the guard is machine-enforceable and was the last open RESOLVED item. No recurrence expected.
+
+---
+
+### S-7.02 Summary
+
+All 8 process-gap items reviewed:
+- 1 CODIFIED lesson confirmed present (LESSON-ADVERSARY-CHECKOUT-RACE)
+- 6 DEFERRED with explicit rationale (WIN-RUNTIME-OAUTH-PROBE, WIN-AC004-DIRECTIONAL, WIN-DENY-FRAGILITY, SEC-JR-SERVICE-NAME-GATE, WIN-CI-GATE-AGGREGATOR, OBS-001)
+- 1 RESOLVED confirmed (R6-002 figment re-entry guard, PR #514)
+
+Cycle-001 Windows-build sub-cycle is CLOSED. No unresolved blockers. No process-gap items requiring immediate action before the next feature cycle.
+
+_Recorded: 2026-06-14 — Windows-build feature cycle CLOSED; H-WIN-6 live PASS; v0.6.0-dev.2 released._

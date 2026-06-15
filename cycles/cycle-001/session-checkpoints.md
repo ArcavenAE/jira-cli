@@ -17,6 +17,21 @@ Superseded checkpoints are archived here when STATE.md is updated with a newer o
 
 ---
 
+## Checkpoint archived 2026-06-14 (Windows-build F7 CONVERGED + human-authorized @ fac555f; next release + H-WIN-6)
+
+_Was the active checkpoint after Windows-build F7 CONVERGED + human-authorized (DEC-100). 5/5 dims PASS. Zero regressions (1808/0). Consistency CLEAN (FINDING-001 fixed @ ba1fc1a). Superseded when v0.6.0-dev.2 released (#517 → develop @ 4258202) and H-WIN-6 PASS recorded._
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-06-14 |
+| **Position** | **Windows-build F7 CONVERGED + human-authorized at develop fac555f (DEC-100). 5/5 dimensions PASS. Zero regressions (1808/0). Consistency CLEAN (FINDING-001 fixed @ ba1fc1a). OBS-001 LOW deferred (6 S-WIN stories status:ready — optional hygiene). BC 597 / NFR 42 / ADR 16 / Stories 74 unchanged. 0 active worktrees. READY FOR RELEASE.** |
+| **develop HEAD** | origin/develop = **fac555f** (post-F6 FIX-F6-001 #516). activation v0.6.0-dev.1. BC **597**. NFR **42**. ADR **16**. Stories **74** (authoritative). |
+| **Convergence counter** | BC: **597**. NFR: **42**. ADR: **16**. Stories: **74** authoritative. jira-e2e env: JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ, JR_E2E_ENABLED=true. 0 active worktrees (.factory + .reference only). |
+| **Next / Pending** | (1) RELEASE: version bump via branch+PR (suggest v0.6.0-dev.2 dev release to first-time-validate never-yet-executed release.yml Windows matrix); finalize CHANGELOG [Unreleased]→version; tag; GitHub Release triggers release.yml → builds jr-&lt;ver&gt;-x86_64-pc-windows-msvc.zip. (2) H-WIN-6 live holdout: confirm zip on Release page AND runs on Windows (no stack overflow). (3) WIN-CI-GATE-AGGREGATOR durable follow-up. (4) Tracked LOWs: WIN-DENY-FRAGILITY, SEC-JR-SERVICE-NAME-GATE, WIN-AUTH-ENVLOCK-POISON, WIN-RUNTIME-OAUTH-PROBE (accepted ADR-0016), WIN-AC004-DIRECTIONAL; standing items. |
+| **Resume prompt** | `Read .factory/STATE.md. Windows-build F7 CONVERGED + human-authorized at develop fac555f (DEC-100). 5/5 dims PASS; zero regressions; FINDING-001 fixed. 0 active worktrees. Next: (1) RELEASE: version bump branch+PR → v0.6.0-dev.2 dev release → tag → GitHub Release (release.yml Windows matrix + jr-<ver>-x86_64-pc-windows-msvc.zip); (2) H-WIN-6 live holdout: confirm zip on Release page + runs on Windows. STANDING: do NOT close #429 (DEC-029); #492 OPEN; OQ-5 open; E2E-PG-4 open; SEC-001 LOW deferred. jira-e2e: JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ, JR_E2E_ENABLED=true.` |
+
+---
+
 ## Checkpoint archived 2026-06-14 (Windows-build F6 PASS — FIX-F6-001 #516 merged @ fac555f; next F7)
 
 _Was the active checkpoint after FIX-F6-001 (tests/win_path_fallback_props.rs) SQUASH-MERGED → develop @ fac555f via PR #516. Superseded when Windows-build F7 CONVERGED + human-authorized (DEC-100)._
