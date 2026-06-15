@@ -17,6 +17,21 @@ Superseded checkpoints are archived here when STATE.md is updated with a newer o
 
 ---
 
+## Checkpoint archived 2026-06-15 (S-CIGATE-1 DELIVERED — PR #518 → develop @ e9b2269; DEC-102; CIGATE-BRANCH-PROTECTION-SWAP pending)
+
+_Was the active checkpoint after S-CIGATE-1 (ci-gate aggregator) DELIVERED (PR #518 squash-merged → develop @ e9b2269; DEC-102). ci-gate GREEN on PR+push CI run 27551871837. Step 4.5 4-pass CONVERGED (3 clean). F7 DELTA_CONVERGED. Stories 74→75. Superseded when branch-protection swap was completed by user (develop+main now require single `CI Gate` context; DEC-103) and S-CIGATE-1 feature cycle was CLOSED._
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-06-15 |
+| **Position** | **S-CIGATE-1 DELIVERED + MERGED @ e9b2269. ci-gate GREEN on PR CI + develop push CI run 27551871837. Step 4.5 4-pass CONVERGED (3 clean). F7 DELTA_CONVERGED. DEC-102. Stories 75. Awaiting human branch-protection swap (CIGATE-BRANCH-PROTECTION-SWAP). 0 active worktrees.** |
+| **develop HEAD** | origin/develop = **e9b2269** (S-CIGATE-1 ci-gate aggregator PR #518). activation v0.6.0-dev.2. BC **597**. NFR **42**. ADR **16**. Stories **75** (authoritative). |
+| **Convergence counter** | BC: **597**. NFR: **42**. ADR: **16**. Stories: **75** authoritative. jira-e2e env: JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ, JR_E2E_ENABLED=true. 0 active worktrees (.factory + .reference only). |
+| **Next / Pending** | CIGATE-BRANCH-PROTECTION-SWAP (harness-blocked, awaiting human repo-admin action). Standing: WIN-DENY-FRAGILITY (LOW), SEC-JR-SERVICE-NAME-GATE (LOW), WIN-AUTH-ENVLOCK-POISON (LOW), WIN-RUNTIME-OAUTH-PROBE (LOW, accepted ADR-0016), WIN-AC004-DIRECTIONAL (LOW). Open issues: #492, #429 (DNC), #400 Story B, #372. |
+| **Resume prompt** | `Read .factory/STATE.md. S-CIGATE-1 DELIVERED at develop e9b2269 (PR #518); ci-gate aggregator GREEN. PENDING: human branch-protection swap (CIGATE-BRANCH-PROTECTION-SWAP). Stories 75. STANDING: do NOT close #429 (DEC-029); #492 OPEN; OQ-5 open; E2E-PG-4 open; SEC-001 LOW deferred. jira-e2e: JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ, JR_E2E_ENABLED=true.` |
+
+---
+
 ## Checkpoint archived 2026-06-15 (Windows-build CYCLE CLOSED; v0.6.0-dev.2 released; H-WIN-6 PASS; no active feature)
 
 _Was the active checkpoint after Windows-build CYCLE CLOSED (DEC-101). v0.6.0-dev.2 released (#517 → develop @ 4258202). H-WIN-6 live PASS. Superseded when S-CIGATE-1 (ci-gate aggregator) was DELIVERED (PR #518 → develop @ e9b2269; DEC-102)._

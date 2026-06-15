@@ -93,3 +93,22 @@ These rows had Status = RESOLVED / CLOSED / COMPLETE in the Drift Items table an
 | Issue | Title | Resolution |
 |-------|-------|------------|
 | #510 | S-WIN-5 ci.yml Windows job + XDG→seam migration | SQUASH-MERGED to develop @ 4bd83c7. Squash title: `ci(windows): add windows-latest matrix, .gitattributes eol=lf, XDG→JR env-seam migration, /STACK:8388608 stack fix`. Remote branch deleted. Windows-build F4 COMPLETE (6/6). |
+
+---
+
+## Resolved Blocking Issues / Drift Items extracted from STATE.md on 2026-06-15
+
+### CIGATE-BRANCH-PROTECTION-SWAP (DEC-103) — RESOLVED 2026-06-15
+
+| Field | Value |
+|-------|-------|
+| **ID** | CIGATE-BRANCH-PROTECTION-SWAP |
+| **Severity** | LOW |
+| **Opened** | 2026-06-15 (DEC-102; recorded when S-CIGATE-1 ci-gate aggregator was delivered via PR #518 → develop @ e9b2269 and harness-blocked swap was identified as the remaining activation step) |
+| **Resolved** | 2026-06-15 (DEC-103; user-executed) |
+| **Root Cause** | After ci-gate aggregator job was shipped in ci.yml (PR #518), the 8 per-job required status check contexts on develop and main still needed to be replaced with a single `CI Gate` context to activate the aggregator as the authoritative gate. This was a repo-admin action the harness could not perform. |
+| **Fix Applied** | Safe 2-step add-before-remove: (1) added `CI Gate` (app_id 15368) to required_status_checks on both develop and main; (2) removed the 8 old per-job contexts (Format, Clippy (ubuntu-latest), Clippy (windows-latest), Test (ubuntu-latest), Test (macos-latest), Test (windows-latest), MSRV (1.85.0), Deny (licenses + vulnerabilities)). spec-guard promoted to a blocking check via the aggregator. require_code_owner_reviews and strict mode preserved. |
+| **Verification** | Both develop and main now have exactly ONE required status check: `CI Gate` (app_id 15368). Verified read-only by user. |
+| **Lesson** | LESSON-MATRIX-BRANCH-PROTECTION (already codified DEC-096): the durable fix is an aggregator gate job in ci.yml so that required_status_checks membership is decoupled from individual job names. The aggregator (S-CIGATE-1) is that fix — now activated. |
+| **Decision** | DEC-103 |
+| **Related** | DEC-096 (matrix-rename fragility class discovered), DEC-097 (intermediate fix: 8 matrixed contexts), DEC-102 (ci-gate aggregator shipped), DEC-103 (swap complete; fragility class structurally eliminated) |
