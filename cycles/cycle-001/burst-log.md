@@ -3818,6 +3818,12 @@ Note: Perplexity deep-research output for dirs/keyring contained fabrications; r
 | DEC-084 | 2026-06-13: F3 re-gate RE-AFFIRMED by human after DEC-082/DEC-083 full-VSDD closure. Accepted: S-WIN-4 Compress-Archive; S-WIN-3 windows-sys 0.60 deny skip REQUIRED; corrections scoped to S-WIN-3/S-WIN-4 only. F3 CONVERGED with corrections folded in. | Feature Mode / Windows-build F3 re-gate | Phase 3 | 2026-06-13 |
 | DEC-085 | 2026-06-13: S-WIN-2 MERGED → develop @ 1b84feb via squash PR #505 (human-approved). First Windows-build cycle story shipped. CI 11/11, AI APPROVE, security clean, release-gate empirically verified. Deferred F-WIN2-C-101 → S-WIN-5; CLAUDE.md JR_* doc-fallout → S-WIN-6. develop a7da775→1b84feb. | Feature Mode / Windows-build F4 / S-WIN-2 | Phase 3 | 2026-06-13 |
 
+## Archived Current Phase Steps (archived from STATE.md 2026-06-15 to free size budget — #492 cycle open)
+
+| Step | Agent | Status | Output |
+|------|-------|--------|--------|
+| v0.6.0-dev.2 RELEASED (#517 squash-merged → develop @ 4258202). CHANGELOG [Unreleased] Windows entries → [0.6.0-dev.2]. Tag v0.6.0-dev.2 pushed. release.yml run 27519999184 SUCCESS. | Agent devops | RELEASED | develop @ 4258202. activation_version v0.6.0-dev.2. |
+
 ## Archived Decisions DEC-086..092 (archived from STATE.md 2026-06-15 to free size budget)
 
 | ID | Decision | Rationale | Phase | Date |

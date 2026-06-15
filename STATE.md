@@ -2,11 +2,11 @@
 document_type: pipeline-state
 version: "2.0"
 status: active
-timestamp: 2026-06-15T18:00:00Z
+timestamp: 2026-06-15T18:30:00Z
 phase: phase-3-tdd-implementation
 project: jira-cli
 mode: BROWNFIELD
-current_step: "Fork-friendly-release-ops integrated: PR #520 squash-merged → develop @ 2cb219b (integrates closed #503 by @ArcavenAE, credited). 17 files inert-by-default. Enablement decision PENDING (backfill / gap-fill / signing / suppress-phantom-runs). DEC-104."
+current_step: "Feature Mode (bug-fix) OPENED for issue #492 — block-HTML raw-\\n ADF invariant violation. F1 delta analysis next."
 current_cycle: "cycle-001"
 dtu_required: false
 phase_2_status: APPROVED
@@ -58,11 +58,11 @@ activation_version: "v0.6.0-dev.2"
 
 | Step | Agent | Status | Output |
 |------|-------|--------|--------|
-| v0.6.0-dev.2 RELEASED (#517 squash-merged → develop @ 4258202). CHANGELOG [Unreleased] Windows entries → [0.6.0-dev.2]. Tag v0.6.0-dev.2 pushed. release.yml run 27519999184 SUCCESS. | Agent devops | RELEASED | develop @ 4258202. activation_version v0.6.0-dev.2. |
 | H-WIN-6 PASS (live). GitHub Release page: jr-v0.6.0-dev.2-x86_64-pc-windows-msvc.zip + .sha256 — local checksum OK. Smoke test `.\jr.exe --version` PASS on windows-latest (/STACK:8388608 fix validated, no stack overflow). Embedded OAuth verify PASS (Windows). Windows-build CYCLE CLOSED. DEC-101. S-7.02 checklist: 1 codified, 6 deferred, 1 resolved. | Agent state-manager | CYCLE CLOSED | develop @ 4258202. BC 597 / NFR 42 / ADR 16 / Stories 74. |
 | S-CIGATE-1 (ci-gate aggregator) DELIVERED F1–F7. PR #518 squash-merged → develop @ e9b2269. ci-gate GREEN on PR+push CI run 27551871837 (live holdout proof). Step 4.5 4-pass CONVERGED (3 clean). F7 DELTA_CONVERGED. DEC-102. Stories 74→75. CIGATE-BRANCH-PROTECTION-SWAP pending human. | Agent state-manager | DELIVERED | develop @ e9b2269. BC 597 / NFR 42 / ADR 16 / Stories 75. |
 | S-CIGATE-1 branch-protection swap COMPLETE + verified (develop+main now require single `CI Gate` context, app_id 15368; safe 2-step add-before-remove; user-executed). WIN-CI-GATE-AGGREGATOR CLOSED. Feature cycle CLOSED. DEC-103. | Agent state-manager | CYCLE CLOSED | develop @ e9b2269. BC 597 / NFR 42 / ADR 16 / Stories 75. |
 | Fork-friendly-release-ops integrated: PR #520 squash-merged → develop @ 2cb219b (integrates closed #503 by @ArcavenAE, credited). 17 files inert-by-default; ci.yml Windows-matrix+ci-gate+gitleaks-v3 preserved; 14/14 CI GREEN incl CI Gate. 4-lens review done. Enablement decision PENDING (backfill/gap-fill/signing/suppress-phantom-runs — each needs fixes first). Full plan → `.factory/research/fork-release-ops-integration.md`. DEC-104. | Agent state-manager | PENDING-DECISION | develop @ 2cb219b. BC 597 / NFR 42 / ADR 16 / Stories 75. |
+| Issue #492 bug-fix cycle OPENED (F1 delta analysis pending). DEC-105. Cycle artifacts: `cycles/cycle-001/issue-492/`. | Agent state-manager | OPEN | develop @ 2cb219b. |
 
 ## Decisions Log
 
@@ -84,6 +84,7 @@ activation_version: "v0.6.0-dev.2"
 | DEC-102 | 2026-06-15: WIN-CI-GATE-AGGREGATOR delivered via S-CIGATE-1 quick-dev (PR #518 @ e9b2269). ci-gate aggregator job (`name: CI Gate`; `needs: [fmt, clippy, test, msrv, deny, spec-guard]`; `if: ${{ always() }}`; step fails on `contains(needs.*.result,'failure'/'cancelled')`) is the durable fix for the matrix-rename branch-protection fragility class (DEC-096/097). Code shipped: `.github/workflows/ci.yml` ci-gate job + `tests/ci_gate_completeness.rs` (6 drift tests) + CLAUDE.md Conventions bullet + ADR-0016 Decision 3 note. REMAINING: human/repo-admin branch-protection swap to make `CI Gate` (app_id 15368) the single required context on develop+main (precondition met: ci-gate green on develop push). | Feature Mode / S-CIGATE-1 / ci-infra | Phase 3 | 2026-06-15 |
 | DEC-103 | 2026-06-15: WIN-CI-GATE-AGGREGATOR cycle CLOSED. Branch-protection swapped to single `CI Gate` context on develop+main (app_id 15368; safe 2-step add-before-remove; user-executed; verified). The matrix-rename fragility class (DEC-096/097) is now structurally eliminated — required-check membership lives in `ci-gate.needs` in ci.yml, not in repo settings. spec-guard promoted to a blocking check via the aggregator (user decision). S-CIGATE-1 feature cycle CLOSED. | Feature Mode / S-CIGATE-1 / ci-infra | Phase 3 | 2026-06-15 |
 | DEC-104 | 2026-06-15: Integrated @ArcavenAE's fork-friendly release-ops (PR #503→#520 @ 2cb219b). Merged from canonical (fork unpushable; Co-authored-by credit added). Machinery inert by default (all new jobs gated on unset repo vars; ~7 phantom workflow runs/day accepted). 4-lens review done (security/code/consistency/adversary; first adversary pass discarded as confabulated, re-run fresh). Enablement of selected pieces deferred — each requires its security/quality fixes first. Full plan + findings: `.factory/research/fork-release-ops-integration.md`. | ci-infra / external-contribution | Phase 3 | 2026-06-15 |
+| DEC-105 | 2026-06-15: Opened VSDD Feature-Mode bug-fix cycle for issue #492 (block-HTML raw-\\n violates adf.rs file-wide newline-free invariant; F5-retrospective finding from #489/#490). Routes as bug-fix: fix story + mandatory regression test + scoped holdout + compressed F5/F6/F7 → PATCH. Core F-1 decision (hardBreak-split vs collapse-to-space vs sandbox-confirm) deferred to F1/F2 + human gate. Artifacts: `cycles/cycle-001/issue-492/`. | Feature Mode / #492 bug-fix | Phase 3 | 2026-06-15 |
 
 ## Skip Log
 
