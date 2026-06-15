@@ -6,7 +6,7 @@ timestamp: 2026-06-14T00:00:00Z
 phase: phase-3-tdd-implementation
 project: jira-cli
 mode: BROWNFIELD
-current_step: "Windows-build F6 COMPLETE — FIX-F6-001 MERGED → develop @ fac555f (PR #516). 9 properties, 2048 cases each, 13/13 CI GREEN. Next: F7 convergence."
+current_step: "Windows-build F7 CONVERGED + human-authorized @ develop fac555f (DEC-100). 5/5 dimensions PASS. READY FOR RELEASE. Next: version bump branch+PR → v0.6.0-dev.2 dev release → H-WIN-6."
 current_cycle: "cycle-001"
 dtu_required: false
 phase_2_status: APPROVED
@@ -26,7 +26,7 @@ activation_version: "v0.6.0-dev.1"
 | **Product** | jr (Jira CLI) |
 | **Mode** | BROWNFIELD / Rust |
 | **Target Workspace** | develop → main |
-| **Last Updated** | 2026-06-14: Windows-build F6 PASS @ develop fac555f — 100% delta mutation kill (9/9), 9 proptest properties (~10k cases), cargo audit 0 vulns, 1808 regression green. FIX-F6-001 PR #516 squash-merged. DEC-099. Next: F7 five-dimension delta convergence + final human gate. |
+| **Last Updated** | 2026-06-14: Windows-build F7 CONVERGED + human-authorized @ develop fac555f. 5/5 dims PASS (Holdout live portion → H-WIN-6 post-release). Zero regressions; FINDING-001 fixed. DEC-100. Next: version bump branch+PR → v0.6.0-dev.2 dev release → H-WIN-6. |
 | **Current Phase** | Phase 3 — TDD Implementation IN PROGRESS — Feature Mode active. BC 597. NFR 42. ADR 16. Stories 74 (authoritative). |
 | **Next Phase** | Phase 4: Holdout Evaluation (not started) |
 | **Activation HEAD** | 587206e (v0.6.0-dev.1; v0.5.0 STABLE shipped 2026-06-12) |
@@ -46,7 +46,7 @@ activation_version: "v0.6.0-dev.1"
 | ADF E2E coverage loop-back (#471/#474/#483/#489) | **CYCLE CLOSED + MERGED** | 2026-06-11 | CYCLE CLOSED | PR #495 → develop @ bfb723f. 5 gated live E2E tests. NO src change. BC 594 unchanged. Live-verified GREEN — e2e run 27352373680 (89/0) on develop @ 45ceae6, 2026-06-11. |
 | CLI leading-dash values (issue #471 e2e / description-leading-dash) | **CYCLE CLOSED + MERGED** | 2026-06-11 | F1–F7 ALL COMPLETE — CONVERGED | PR #496 → develop @ 45ceae6. `allow_hyphen_values = true` on 7 free-text write args. BC 594 unchanged. +17 hermetic parse tests (tests/cli_smoke.rs, 44 total). F5: 8 passes / 3-clean-pass CONVERGED. F6: 1763/0, clippy/fmt/deny clean, mutation zero-in-scope. F7: 5-dimension consistency CLEAN. DEC-072. |
 | ADF E2E read-path coverage (issue #475) | **CYCLE CLOSED + MERGED** | 2026-06-11 | F1–F7 ALL COMPLETE — CONVERGED | PR #499 → develop @ 418a392e. Test-only (no src change). BC 594 / NFR 41 / Stories 68 unchanged. DEC-073/074/075/076. |
-| Windows build (x86_64-pc-windows-msvc) | **F6 PASS** @ fac555f → next F7 | 2026-06-12 (F2) / 2026-06-13 (F3 gate) / 2026-06-14 (F4 COMPLETE + F5 CONVERGED + F6 PASS) | F3 APPROVED 2026-06-13; F4 COMPLETE (DEC-097); F5 CONVERGED (DEC-098); F6 PASS (DEC-099) | develop @ fac555f. F6: 9 mutants 9 CAUGHT (100% kill), 9 proptest props, 0 vulns, 1808 tests green. FIX-F6-001 #516 merged (test-only). Next: F7 (five-dimension delta convergence + human gate) → H-WIN-6. |
+| Windows build (x86_64-pc-windows-msvc) | **F7 CONVERGED + human-authorized** @ fac555f → next: release + H-WIN-6 | 2026-06-12 (F2) / 2026-06-13 (F3) / 2026-06-14 (F4+F5+F6+F7) | F4 COMPLETE (DEC-097); F5 CONVERGED (DEC-098); F6 PASS (DEC-099); F7 CONVERGED (DEC-100) | develop @ fac555f. 5/5 dims PASS; 14-pass F5 adversary; 9/9 mutants killed; 9 props; 0 vulns; 1808 green; FINDING-001 fixed. 7 fix PRs (#511–#516 + series). Next: release → H-WIN-6. |
 | 4: Holdout Evaluation | not-started | | | |
 | 5: Adversarial Refinement | not-started | | | |
 | 6: Formal Hardening | not-started | | | |
@@ -58,10 +58,10 @@ activation_version: "v0.6.0-dev.1"
 
 | Step | Agent | Status | Output |
 |------|-------|--------|--------|
-| F5 R6–R10: REGRESSION (CHANGELOG + figment guard) → 2 findings (ADR-0016 + OAuth guard) → 1 finding (OAuth -match) → 0→0. Fix PRs #514, #515 merged. | Agent adversary | R9+R10 CLEAN (2/3) | develop 2f96543 via #514/515. |
-| F5 R11 VOID — checkout-race (concurrent git pull); reviewed stale code. LESSON-ADVERSARY-CHECKOUT-RACE codified. Re-run as R14. | Agent state-manager | VOID — re-run as R14 | develop 2f96543. |
-| F5 R12 (regression/spec) CONVERGED + R13 (completeness) CONVERGED+COMPLETE + R14 (security/guard, "confirm HEAD SHA" guard) CONVERGED 0/0/0. Windows-build F5 CONVERGED. DEC-098. | Agent adversary | F5 CONVERGED (3/3 clean) | develop @ 2f96543. BC 597 / ADR 16. |
-| Windows-build F6 (targeted hardening) PASS. FIX-F6-001 (tests/win_path_fallback_props.rs) SQUASH-MERGED → develop @ fac555f via PR #516. 9 proptest props (2048 cases each), 9/9 mutants CAUGHT (100% kill), cargo audit 0 vulns, 1808 regression tests green, clippy/fmt clean. Kani OOM (justified-skip). Security APPROVE. 13/13 CI GREEN (incl. windows-latest). Test-only; counts unchanged. DEC-099. | Agent formal-verifier | F6 PASS | develop @ fac555f. BC 597 / NFR 42 / ADR 16 / Stories 74. |
+| F5 R12 (regression/spec) CONVERGED + R13 (completeness) CONVERGED + R14 (security/guard, "confirm HEAD SHA") CONVERGED 0/0/0. Windows-build F5 CONVERGED. DEC-098. | Agent adversary | F5 CONVERGED (3/3 clean) | develop @ 2f96543. BC 597 / ADR 16. |
+| Windows-build F6 PASS. FIX-F6-001 (tests/win_path_fallback_props.rs) #516 merged → fac555f. 9 proptest props (2048 cases each), 9/9 mutants CAUGHT (100% kill). Kani: justified-skip. Audit: 0 vulns. 1808 regression green. 13/13 CI GREEN. DEC-099. | Agent formal-verifier | F6 PASS | develop @ fac555f. BC 597 / NFR 42 / ADR 16 / Stories 74. |
+| FINDING-001 fix: factory ADR-0016 copy synced with source at ba1fc1a. Consistency-validation clean post-fix. Input-drift check clean for all delta artifacts. | Agent state-manager | FINDING-001 RESOLVED | factory-artifacts @ ba1fc1a. |
+| Windows-build F7 (five-dimension delta convergence): Dim1 Spec PASS (F5 14-pass CONVERGED, novelty→0); Dim2 Test PASS (9/9 mutations, 9 proptest props); Dim3 Impl PASS (0 CRIT/HIGH since R2, 7 fix PRs); Dim4 Verif PASS (proptest+Kani-skip+fuzz-skip+audit+deny); Dim5 Holdout PASS-on-automatable (H-WIN-6 post-release). Regression CLEAN. Consistency CLEAN. DEC-100. Human gate AUTHORIZED 2026-06-14. | Agent state-manager | F7 CONVERGED + HUMAN-AUTHORIZED | develop @ fac555f. READY FOR RELEASE. |
 
 ## Decisions Log
 
@@ -78,6 +78,7 @@ activation_version: "v0.6.0-dev.1"
 | DEC-097 | 2026-06-14: branch-protection drift RESOLVED — PATCH develop+main required_status_checks to matrixed contexts (app_id 15368: Format, Clippy (ubuntu-latest), Clippy (windows-latest), Test (ubuntu-latest), Test (macos-latest), Test (windows-latest), MSRV (1.85.0), Deny (licenses + vulnerabilities)); stale `Clippy` removed; require_code_owner_reviews preserved (scoped endpoint). PR #510 mergeStateStatus BLOCKED → CLEAN; SQUASH-MERGED → develop @ 4bd83c7. Windows-build F4 COMPLETE (6/6). WIN-BRANCH-PROTECTION RESOLVED. Archived to cycles/cycle-001/blocking-issues-resolved.md. | Feature Mode / Windows-build F4 / S-WIN-5 | Phase 3 | 2026-06-14 |
 | DEC-098 | 2026-06-14: Windows-build F5 CONVERGED at develop 2f96543 after 14 adversary passes (R1–R14, fresh-context, distinct lenses) + 5 fix PRs (#511–#515). Security perimeter (path-injection/token-redirection via JR_CONFIG_DIR/JR_CACHE_DIR + figment re-entry) provably closed and machine-guarded (test_global_config_struct_has_no_path_override_field). R6-002 figment re-entry invariant RESOLVED. 3 clean passes: R12 (regression/spec), R13 (completeness), R14 (security/guard, with "confirm HEAD SHA" protocol). R11 VOID (checkout-race; LESSON-ADVERSARY-CHECKOUT-RACE codified). Counts unchanged: BC 597 / NFR 42 / ADR 16 / Stories 74. Residual LOWs accepted: WIN-RUNTIME-OAUTH-PROBE, WIN-AC004-DIRECTIONAL. Next: F6 targeted hardening. | Feature Mode / Windows-build F5 | Phase 3 | 2026-06-14 |
 | DEC-099 | 2026-06-14: Windows-build F6 COMPLETE — FIX-F6-001 MERGED → develop @ fac555f41d via squash PR #516. Proptest property suite (9 properties, 2048 cases each, ~10k generated inputs) formally verifies BC-6.1.014 EC-1/EC-3 + BC-6.2.016 EC-1/EC-4 invariants on pure path-fallback helpers. Kani OOM on PathBuf equality — proptest substituted (tractability probe recorded). Security review APPROVED (0 CRIT/HIGH/MEDIUM/LOW). AI review APPROVED cycle 1. 13/13 CI GREEN (including Test (windows-latest)). Mutation 100% kill on delta. Test-only, no production code changes. Counts unchanged: BC 597 / NFR 42 / ADR 16 / Stories 74. Next: F7 convergence check. | Feature Mode / Windows-build F6 | Phase 3 | 2026-06-14 |
+| DEC-100 | 2026-06-14: Windows-build F7 (delta convergence) CONVERGED + HUMAN-AUTHORIZED at develop fac555f. 5/5 dimensions pass: Dim1 Spec (F5 14-pass CONVERGED, novelty→0; ADR-0016/PRD/CHANGELOG synced); Dim2 Test (100% delta mutation kill 9/9; R5-001+R8-001 guard tests; +9-property suite #516); Dim3 Impl (0 CRIT/HIGH since R2; all findings resolved via PRs #511–#516; adversary findings were real); Dim4 Verif (9 proptest props PASS; Kani justified-skip OOM; fuzz justified-skip; cargo audit 0 vulns; cargo deny ok; purity boundaries intact); Dim5 Holdout PASS-on-automatable (windows-latest CI green; release.yml smoke + OAuth-verify; /STACK:8388608 prod-crash fix); H-WIN-6 live release-page holdout deferred to post-release. Zero regressions (1808/0 on fac555f). Consistency CLEAN (FINDING-001 fixed @ ba1fc1a). OBS-001 LOW deferred: 6 S-WIN stories still status:ready — optional hygiene, matches project convention. Next: release (version bump via branch+PR; suggest v0.6.0-dev.2 dev release to validate release.yml Windows matrix first-time) → H-WIN-6 live holdout. | Feature Mode / Windows-build F7 | Phase 3 | 2026-06-14 |
 
 ## Skip Log
 
@@ -114,7 +115,7 @@ All 7 S-WIN-1..6 + #475 per-AC demos: **Yes — adapted**. All are CI-config / i
 
 ## Convergence Trackers
 
-Full per-issue: `cycles/cycle-001/convergence-trajectory.md`. Current: **[2026-06-14] Windows-build F6 PASS at develop fac555f. Delta mutation: 9/9 CAUGHT (100% kill; config.rs 5/5, cache.rs 4/4; all 4 security-critical `delete !` mutants killed). Proptest: 9 properties ~10k cases PASS. Kani: justified-skip (PathBuf equality OOM). Audit: 0 vulns. Regression: 1808/0 green. FIX-F6-001 #516 (test-only). DEC-099. Next: F7 five-dimension delta convergence + human gate.** Prior: F5 CONVERGED @ 2f96543 (DEC-098; 14 passes; 5 fix PRs; 3 clean R12/R13/R14).
+Full per-issue: `cycles/cycle-001/convergence-trajectory.md`. Current: **[2026-06-14] Windows-build F7 CONVERGED + human-authorized at develop fac555f. 5/5 dimensions PASS. 7 fix PRs total this cycle (#511–#516 + FIX-F5 series). Regression: 1808/0. Consistency: CLEAN (FINDING-001 fixed @ ba1fc1a). OBS-001 LOW (6 S-WIN stories status:ready) deferred. DEC-100. READY FOR RELEASE.** Prior: F6 PASS @ fac555f (DEC-099; 9/9 mutation kill; 9 proptest props; #516). F5 CONVERGED @ 2f96543 (DEC-098; 14 passes; 5 fix PRs; 3 clean R12/R13/R14).
 
 ## Session Resume Checkpoint
 
@@ -123,26 +124,26 @@ Full per-issue: `cycles/cycle-001/convergence-trajectory.md`. Current: **[2026-0
 | Field | Value |
 |-------|-------|
 | **Date** | 2026-06-14 |
-| **Position** | **Windows-build F6 PASS. FIX-F6-001 (tests/win_path_fallback_props.rs) SQUASH-MERGED → develop @ fac555f via PR #516. 9 proptest properties (2048 cases each), 9/9 mutants CAUGHT (100% delta kill; config.rs 5/5, cache.rs 4/4; all 4 security-critical `delete !` mutants killed). Kani: justified-skip (PathBuf equality OOM). cargo audit 0 vulns. 1808 regression green. Security APPROVE. 13/13 CI GREEN (incl. windows-latest). Test-only; BC 597 / NFR 42 / ADR 16 / Stories 74 unchanged. DEC-099. 0 active worktrees.** |
+| **Position** | **Windows-build F7 CONVERGED + human-authorized at develop fac555f (DEC-100). 5/5 dimensions PASS. Zero regressions (1808/0). Consistency CLEAN (FINDING-001 fixed @ ba1fc1a). OBS-001 LOW deferred (6 S-WIN stories status:ready — optional hygiene). BC 597 / NFR 42 / ADR 16 / Stories 74 unchanged. 0 active worktrees. READY FOR RELEASE.** |
 | **develop HEAD** | origin/develop = **fac555f** (post-F6 FIX-F6-001 #516). activation v0.6.0-dev.1. BC **597**. NFR **42**. ADR **16**. Stories **74** (authoritative). |
 | **Convergence counter** | BC: **597**. NFR: **42**. ADR: **16**. Stories: **74** authoritative. jira-e2e env: JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ, JR_E2E_ENABLED=true. 0 active worktrees (.factory + .reference only). |
-| **Next / Pending** | (1) Windows-build F7 (five-dimension delta convergence: spec/tests/implementation/verification/docs on the Windows delta + full-tree regression validation → final human gate); (2) H-WIN-6 live release-page holdout (push dev release tag, confirm jr-<ver>-x86_64-pc-windows-msvc.zip on GitHub Release page + runs on Windows); (3) WIN-CI-GATE-AGGREGATOR durable follow-up; (4) tracked LOWs: WIN-DENY-FRAGILITY, SEC-JR-SERVICE-NAME-GATE, WIN-AUTH-ENVLOCK-POISON, WIN-RUNTIME-OAUTH-PROBE (accepted ADR-0016), WIN-AC004-DIRECTIONAL; standing items. |
-| **Resume prompt** | `Read .factory/STATE.md. Windows-build F6 PASS at develop fac555f (DEC-099; FIX-F6-001 #516 test-only; 9/9 mutation kill; 9 proptest props; 0 vulns; 1808 regression green). 0 active worktrees. Next: F7 (five-dimension delta convergence: spec/tests/impl/verif/docs on Windows delta + full-tree regression + FINAL HUMAN GATE) → H-WIN-6 (release-page holdout). STANDING: do NOT close #429 (DEC-029); #492 OPEN; OQ-5 open; E2E-PG-4 open; SEC-001 LOW deferred. jira-e2e: JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ, JR_E2E_ENABLED=true.` |
+| **Next / Pending** | (1) RELEASE: version bump via branch+PR (suggest v0.6.0-dev.2 dev release to first-time-validate never-yet-executed release.yml Windows matrix); finalize CHANGELOG [Unreleased]→version; tag; GitHub Release triggers release.yml → builds jr-&lt;ver&gt;-x86_64-pc-windows-msvc.zip. (2) H-WIN-6 live holdout: confirm zip on Release page AND runs on Windows (no stack overflow). (3) WIN-CI-GATE-AGGREGATOR durable follow-up. (4) Tracked LOWs: WIN-DENY-FRAGILITY, SEC-JR-SERVICE-NAME-GATE, WIN-AUTH-ENVLOCK-POISON, WIN-RUNTIME-OAUTH-PROBE (accepted ADR-0016), WIN-AC004-DIRECTIONAL; standing items. |
+| **Resume prompt** | `Read .factory/STATE.md. Windows-build F7 CONVERGED + human-authorized at develop fac555f (DEC-100). 5/5 dims PASS; zero regressions; FINDING-001 fixed. 0 active worktrees. Next: (1) RELEASE: version bump branch+PR → v0.6.0-dev.2 dev release → tag → GitHub Release (release.yml Windows matrix + jr-<ver>-x86_64-pc-windows-msvc.zip); (2) H-WIN-6 live holdout: confirm zip on Release page + runs on Windows. STANDING: do NOT close #429 (DEC-029); #492 OPEN; OQ-5 open; E2E-PG-4 open; SEC-001 LOW deferred. jira-e2e: JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ, JR_E2E_ENABLED=true.` |
 
 ## RESUME PLAN (cold-start, self-contained)
 
 ### State snapshot
 
-- Feature: Windows-build (cycle-001, Feature Mode F6 PASS). All 6 stories MERGED to develop @ fac555f (post-F6 FIX-F6-001 #516). F5 CONVERGED (DEC-098); F6 PASS (DEC-099): 9/9 mutation kill, 9 proptest props, 0 vulns, 1808 regression green. Counts BC 597 / NFR 42 / ADR 16 / Stories 74. 0 active worktrees.
-- Next: Windows-build F7 → H-WIN-6 holdout.
+- Feature: Windows-build (cycle-001, Feature Mode F7 CONVERGED + human-authorized). All 6 stories MERGED to develop @ fac555f. F5 CONVERGED (DEC-098); F6 PASS (DEC-099); F7 CONVERGED (DEC-100): 5/5 dims PASS, zero regressions, FINDING-001 fixed. Counts BC 597 / NFR 42 / ADR 16 / Stories 74. 0 active worktrees. READY FOR RELEASE.
+- Next: version bump branch+PR → v0.6.0-dev.2 dev release → H-WIN-6 holdout.
 
 ### STEP 3 — Windows-build cycle close
 
-F5 CONVERGED (DEC-098). F6 PASS (DEC-099). F7 (five-dimension delta convergence: spec/tests/implementation/verification/docs on the Windows delta + full-tree regression + final human gate).
+F5 CONVERGED (DEC-098). F6 PASS (DEC-099). F7 CONVERGED + human-authorized (DEC-100). READY FOR RELEASE.
 
-### STEP 4 — H-WIN-6 holdout
+### STEP 4 — Release + H-WIN-6 holdout
 
-Push a release tag (dev release via branch+PR per release-workflow rule), confirm jr-&lt;ver&gt;-x86_64-pc-windows-msvc.zip appears on the GitHub Release page AND runs on Windows (the .cargo/config.toml /STACK:8388608 fix means it won't stack-overflow).
+Create branch+PR for version bump → v0.6.0-dev.2 dev release (first-time-validate release.yml Windows matrix before stable). Finalize CHANGELOG [Unreleased]→version, tag, GitHub Release triggers release.yml. Then confirm jr-&lt;ver&gt;-x86_64-pc-windows-msvc.zip on Release page AND runs on Windows (the .cargo/config.toml /STACK:8388608 fix means it won't stack-overflow).
 
 ### Durable follow-ups (tracked Drift Items)
 

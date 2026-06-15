@@ -17,6 +17,21 @@ Superseded checkpoints are archived here when STATE.md is updated with a newer o
 
 ---
 
+## Checkpoint archived 2026-06-14 (Windows-build F6 PASS — FIX-F6-001 #516 merged @ fac555f; next F7)
+
+_Was the active checkpoint after FIX-F6-001 (tests/win_path_fallback_props.rs) SQUASH-MERGED → develop @ fac555f via PR #516. Superseded when Windows-build F7 CONVERGED + human-authorized (DEC-100)._
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-06-14 |
+| **Position** | **Windows-build F6 PASS. FIX-F6-001 (tests/win_path_fallback_props.rs) SQUASH-MERGED → develop @ fac555f via PR #516. 9 proptest properties (2048 cases each), 9/9 mutants CAUGHT (100% delta kill; config.rs 5/5, cache.rs 4/4; all 4 security-critical `delete !` mutants killed). Kani: justified-skip (PathBuf equality OOM). cargo audit 0 vulns. 1808 regression green. Security APPROVE. 13/13 CI GREEN (incl. windows-latest). Test-only; BC 597 / NFR 42 / ADR 16 / Stories 74 unchanged. DEC-099. 0 active worktrees.** |
+| **develop HEAD** | origin/develop = **fac555f** (post-F6 FIX-F6-001 #516). activation v0.6.0-dev.1. BC **597**. NFR **42**. ADR **16**. Stories **74** (authoritative). |
+| **Convergence counter** | BC: **597**. NFR: **42**. ADR: **16**. Stories: **74** authoritative. jira-e2e env: JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ, JR_E2E_ENABLED=true. 0 active worktrees (.factory + .reference only). |
+| **Next / Pending** | (1) Windows-build F7 (five-dimension delta convergence: spec/tests/implementation/verification/docs on the Windows delta + full-tree regression validation → final human gate); (2) H-WIN-6 live release-page holdout; (3) WIN-CI-GATE-AGGREGATOR; (4) tracked LOWs. |
+| **Resume prompt** | `Read .factory/STATE.md. Windows-build F6 PASS at develop fac555f (DEC-099; FIX-F6-001 #516 test-only; 9/9 mutation kill; 9 proptest props; 0 vulns; 1808 regression green). 0 active worktrees. Next: F7 (five-dimension delta convergence + FINAL HUMAN GATE) → H-WIN-6 (release-page holdout).` |
+
+---
+
 ## Checkpoint archived 2026-06-14 (Windows-build F4 COMPLETE — 6/6 MERGED; next F5/F6/F7)
 
 _Was the active checkpoint after PR #510 (S-WIN-5) SQUASH-MERGED → develop @ 4bd83c7 and branch-protection drift RESOLVED (DEC-097). Superseded when Windows-build F5 CONVERGED at develop @ 2f96543 after 14 adversary passes + 5 fix PRs (#511–#515)._
