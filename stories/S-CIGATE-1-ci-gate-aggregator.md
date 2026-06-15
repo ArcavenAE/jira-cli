@@ -157,14 +157,14 @@ Pinned by: `tests/ci_gate_completeness.rs::test_ci_gate_needs_exactly_the_requir
 ### AC-004 — Hermetic drift test: `tests/ci_gate_completeness.rs` exists and passes
 (traces to WIN-CI-GATE-AGGREGATOR / DEC-096 repeat-prevention — catches next CI job added without wiring into aggregator)
 
-`tests/ci_gate_completeness.rs` exists and contains at minimum:
+`tests/ci_gate_completeness.rs` exists and contains the following six tests:
 
 1. `test_ci_gate_job_exists_with_correct_shell` — asserts `ci-gate` job exists with `name: CI Gate`, `runs-on: ubuntu-latest`, and job-level `if:` containing `always()`
 2. `test_ci_gate_needs_exactly_the_required_jobs` — asserts `ci-gate.needs` equals `{fmt, clippy, test, msrv, deny, spec-guard}` (order-insensitive exact match)
 3. `test_ci_gate_excludes_pr_only_jobs` — asserts `security`, `mutants`, and `coverage` are absent from `ci-gate.needs`
 4. `test_ci_gate_fails_on_failed_or_cancelled_need` — asserts the gate step references `needs.*.result`, `'failure'`, and `'cancelled'`
-
-Two additional hardening tests for adversarial findings M1 (no event-conditional `if:` on needs jobs) and M2 (structural placement of pass/fail semantics) accompany the above four but may be added in the same PR.
+5. `test_ci_gate_needs_jobs_have_no_event_conditional_if` (M1 hardening) — asserts no job in `ci-gate.needs` carries a job-level `if:` that references `github.event_name`; pins the unconditional-execution invariant; closes the EC-002 drift vector
+6. `test_ci_gate_pass_fail_semantics_are_structurally_placed` (M2 hardening) — asserts `always()` is the job-level `if:` and does NOT contain `contains(needs`; `contains(needs.*.result,'failure'/'cancelled')` is on a step-level `if:`; and a `run:` step exists; prevents always()/contains() transposition reopening the skipped-job trap
 
 Test naming follows the project convention `test_<verb>_<subject>_<expected_outcome>`.
 
@@ -255,7 +255,7 @@ This AC is marked INFORMATIONAL — it is not a code-gated acceptance criterion 
 | ID | Source | Description | Expected Behavior |
 |----|--------|-------------|-------------------|
 | EC-001 | F1 delta analysis §4 (Skipped-Job Trap) | Failed upstream without `if: always()` on `ci-gate` | `ci-gate` is SKIPPED (not failed); GitHub evaluates skip as success → unprotected merge. Mitigation: `if: ${{ always() }}` is REQUIRED at job level. |
-| EC-002 | F1 delta analysis §4 | Future CI job added to `needs` that has `if: github.event_name == 'pull_request'` | That job emits `skipped` on push → `ci-gate` would pass on push even when that job is broken. Mitigation: AC-004 hermetic test fails when such a job is added without explicit review; doc (AC-005) warns contributors. |
+| EC-002 | F1 delta analysis §4 | Future CI job added to `needs` that has `if: github.event_name == 'pull_request'` | That job emits `skipped` on push → `ci-gate` would pass on push even when that job is broken. Mitigation: `test_ci_gate_needs_jobs_have_no_event_conditional_if` (M1) asserts no job in `ci-gate.needs` carries a job-level `if:` referencing `github.event_name`; this test fails when a PR-only job is mistakenly added to `needs`; doc (AC-005) warns contributors. |
 | EC-003 | F1 delta analysis §5 | `name: CI Gate` omitted from job definition | Branch-protection context becomes `ci-gate` (kebab) instead of `CI Gate` (human-readable). The PATCH payload in AC-006 must match exactly. Mitigation: `name: CI Gate` is specified in AC-001. |
 | EC-004 | DEC-097 precedent | Old required contexts removed before `ci-gate` is green | No gating check; unprotected merges. Mitigation: AC-006 ordering constraint (add first, verify, then swap). |
 | EC-005 | AC-004 test design | `ci_gate_completeness.rs` exact-set check fails after a legitimate CI job is added to `needs` | Expected outcome — the test fails intentionally, prompting the author to (a) confirm the new job has no PR-only `if:` guard and (b) update the expected set in the test. |
@@ -264,14 +264,16 @@ This AC is marked INFORMATIONAL — it is not a code-gated acceptance criterion 
 
 ## Test Coverage Summary
 
-| Test name | File | AC |
-|-----------|------|-----|
-| `test_ci_gate_job_exists_with_correct_shell` | `tests/ci_gate_completeness.rs` | AC-001, AC-002 (`always()` assertion) |
-| `test_ci_gate_fails_on_failed_or_cancelled_need` | `tests/ci_gate_completeness.rs` | AC-002 |
-| `test_ci_gate_needs_exactly_the_required_jobs` | `tests/ci_gate_completeness.rs` | AC-003 |
-| `test_ci_gate_excludes_pr_only_jobs` | `tests/ci_gate_completeness.rs` | AC-003 |
+| # | Test name | File | AC |
+|---|-----------|------|-----|
+| 1 | `test_ci_gate_job_exists_with_correct_shell` | `tests/ci_gate_completeness.rs` | AC-001, AC-002 (`always()` presence) |
+| 2 | `test_ci_gate_fails_on_failed_or_cancelled_need` | `tests/ci_gate_completeness.rs` | AC-002 |
+| 3 | `test_ci_gate_needs_exactly_the_required_jobs` | `tests/ci_gate_completeness.rs` | AC-003 (exact-set) |
+| 4 | `test_ci_gate_excludes_pr_only_jobs` | `tests/ci_gate_completeness.rs` | AC-003 (exclusion) |
+| 5 | `test_ci_gate_needs_jobs_have_no_event_conditional_if` | `tests/ci_gate_completeness.rs` | AC-003 / EC-002 hardening (M1) — asserts no job in `ci-gate.needs` carries a job-level `if:` referencing `github.event_name`; pins the unconditional-execution invariant |
+| 6 | `test_ci_gate_pass_fail_semantics_are_structurally_placed` | `tests/ci_gate_completeness.rs` | AC-002 hardening (M2) — asserts `always()` is on the job-level `if:` and does NOT contain `contains(needs`; `contains(needs.*.result,'failure'/'cancelled')` is on a step-level `if:`; a `run:` step exists; prevents always()/contains() transposition reopening the skipped-job trap |
 
-AC-004 is covered by the four tests above (they ARE the hermetic test).
+AC-004 is covered by the six tests above (they ARE the hermetic test).
 AC-005 and AC-006 are verified by source-text inspection and human action respectively — no automated test.
 
 ---
@@ -303,10 +305,10 @@ Topological order: standalone (Wave 1 in any wave-scheduling pass that honors th
                contains(needs.*.result, 'cancelled') }}
          run: exit 1
    ```
-3. Create `tests/ci_gate_completeness.rs` with four test functions (see AC-004). Reference `tests/ci_yml_windows_matrix.rs` as the pattern for YAML source-text parsing in this repo.
+3. Create `tests/ci_gate_completeness.rs` with six test functions (see AC-004). Reference `tests/ci_yml_windows_matrix.rs` as the pattern for YAML source-text parsing in this repo.
 4. Add the `ci-gate` convention bullet to `CLAUDE.md`.
 5. Add the one-line informational note to `docs/adr/0016-windows-build-target.md` §5 CI.
-6. Run `cargo test --test ci_gate_completeness` — all four tests pass.
+6. Run `cargo test --test ci_gate_completeness` — all six tests pass.
 7. Run `cargo test` — full suite green (no regression).
 8. Run `cargo clippy -- -D warnings` — zero warnings.
 
