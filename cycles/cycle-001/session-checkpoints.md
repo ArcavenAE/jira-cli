@@ -17,6 +17,21 @@ Superseded checkpoints are archived here when STATE.md is updated with a newer o
 
 ---
 
+## Checkpoint archived 2026-06-15 (S-CIGATE-1 CYCLE CLOSED — branch-protection swap complete; awaiting next directive)
+
+_Was the active checkpoint after S-CIGATE-1 branch-protection swap completed (DEC-103). ci-gate aggregator SHIPPED (PR #518 @ e9b2269) + ACTIVATED (single `CI Gate` required check on develop+main; app_id 15368). WIN-CI-GATE-AGGREGATOR CLOSED. Matrix-rename fragility class structurally eliminated. Superseded when fork-friendly-release-ops was integrated (PR #520 @ 2cb219b; DEC-104)._
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-06-15 |
+| **Position** | **S-CIGATE-1 feature cycle CLOSED. ci-gate aggregator SHIPPED (PR #518 @ e9b2269) + ACTIVATED (single `CI Gate` required check on develop+main; app_id 15368; DEC-103). No active feature. Awaiting next directive. 0 active worktrees.** |
+| **develop HEAD** | origin/develop = **e9b2269** (S-CIGATE-1 ci-gate aggregator PR #518). activation v0.6.0-dev.2. BC **597**. NFR **42**. ADR **16**. Stories **75** (authoritative). |
+| **Convergence counter** | BC: **597**. NFR: **42**. ADR: **16**. Stories: **75** authoritative. jira-e2e env: JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ, JR_E2E_ENABLED=true. 0 active worktrees (.factory + .reference only). |
+| **Next / Pending** | No active feature. Standing: WIN-DENY-FRAGILITY (LOW), SEC-JR-SERVICE-NAME-GATE (LOW), WIN-AUTH-ENVLOCK-POISON (LOW), WIN-RUNTIME-OAUTH-PROBE (LOW, accepted ADR-0016), WIN-AC004-DIRECTIONAL (LOW). Open issues: #492, #429 (DNC), #400 Story B, #372. |
+| **Resume prompt** | `Read .factory/STATE.md. S-CIGATE-1 CYCLE CLOSED at develop e9b2269 (PR #518). ci-gate aggregator SHIPPED + ACTIVATED (single CI Gate required check on develop+main; DEC-103). No active feature — awaiting next directive. STANDING: do NOT close #429 (DEC-029); #492 OPEN; OQ-5 open; E2E-PG-4 open; SEC-001 LOW deferred. jira-e2e: JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ, JR_E2E_ENABLED=true.` |
+
+---
+
 ## Checkpoint archived 2026-06-15 (S-CIGATE-1 DELIVERED — PR #518 → develop @ e9b2269; DEC-102; CIGATE-BRANCH-PROTECTION-SWAP pending)
 
 _Was the active checkpoint after S-CIGATE-1 (ci-gate aggregator) DELIVERED (PR #518 squash-merged → develop @ e9b2269; DEC-102). ci-gate GREEN on PR+push CI run 27551871837. Step 4.5 4-pass CONVERGED (3 clean). F7 DELTA_CONVERGED. Stories 74→75. Superseded when branch-protection swap was completed by user (develop+main now require single `CI Gate` context; DEC-103) and S-CIGATE-1 feature cycle was CLOSED._

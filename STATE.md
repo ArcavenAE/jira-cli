@@ -2,11 +2,11 @@
 document_type: pipeline-state
 version: "2.0"
 status: active
-timestamp: 2026-06-15T12:00:00Z
+timestamp: 2026-06-15T18:00:00Z
 phase: phase-3-tdd-implementation
 project: jira-cli
 mode: BROWNFIELD
-current_step: "S-CIGATE-1 feature cycle CLOSED. Branch-protection swapped to single CI Gate context on develop+main (app_id 15368; DEC-103). WIN-CI-GATE-AGGREGATOR CLOSED. No active feature. Awaiting next directive."
+current_step: "Fork-friendly-release-ops integrated: PR #520 squash-merged → develop @ 2cb219b (integrates closed #503 by @ArcavenAE, credited). 17 files inert-by-default. Enablement decision PENDING (backfill / gap-fill / signing / suppress-phantom-runs). DEC-104."
 current_cycle: "cycle-001"
 dtu_required: false
 phase_2_status: APPROVED
@@ -26,7 +26,7 @@ activation_version: "v0.6.0-dev.2"
 | **Product** | jr (Jira CLI) |
 | **Mode** | BROWNFIELD / Rust |
 | **Target Workspace** | develop → main |
-| **Last Updated** | 2026-06-15: S-CIGATE-1 CYCLE CLOSED. Branch-protection swap complete — develop+main now require single `CI Gate` context (app_id 15368; safe 2-step add-before-remove; verified). WIN-CI-GATE-AGGREGATOR CLOSED. DEC-103. BC 597 / NFR 42 / ADR 16 / Stories 75. |
+| **Last Updated** | 2026-06-15: Fork-friendly-release-ops integrated (PR #520 @ 2cb219b integrates closed #503 by @ArcavenAE, credited). 4-lens review done. Machinery inert by default. Enablement of selected pieces PENDING — each needs fixes first (findings → `.factory/research/fork-release-ops-integration.md`). DEC-104. BC 597 / NFR 42 / ADR 16 / Stories 75. |
 | **Current Phase** | Phase 3 — TDD Implementation IN PROGRESS — No active feature. BC 597. NFR 42. ADR 16. Stories **75** (authoritative). |
 | **Next Phase** | Phase 4: Holdout Evaluation (not started) |
 | **Activation HEAD** | 4258202 (v0.6.0-dev.2 released 2026-06-14; v0.5.0 STABLE shipped 2026-06-12) |
@@ -58,11 +58,11 @@ activation_version: "v0.6.0-dev.2"
 
 | Step | Agent | Status | Output |
 |------|-------|--------|--------|
-| Windows-build F7 (five-dimension delta convergence): Dim1 Spec PASS (F5 14-pass CONVERGED, novelty→0); Dim2 Test PASS (9/9 mutations, 9 proptest props); Dim3 Impl PASS (0 CRIT/HIGH since R2, 7 fix PRs); Dim4 Verif PASS (proptest+Kani-skip+fuzz-skip+audit+deny); Dim5 Holdout PASS-on-automatable (H-WIN-6 post-release). Regression CLEAN. Consistency CLEAN. DEC-100. Human gate AUTHORIZED 2026-06-14. | Agent state-manager | F7 CONVERGED + HUMAN-AUTHORIZED | develop @ fac555f. READY FOR RELEASE. |
 | v0.6.0-dev.2 RELEASED (#517 squash-merged → develop @ 4258202). CHANGELOG [Unreleased] Windows entries → [0.6.0-dev.2]. Tag v0.6.0-dev.2 pushed. release.yml run 27519999184 SUCCESS. | Agent devops | RELEASED | develop @ 4258202. activation_version v0.6.0-dev.2. |
 | H-WIN-6 PASS (live). GitHub Release page: jr-v0.6.0-dev.2-x86_64-pc-windows-msvc.zip + .sha256 — local checksum OK. Smoke test `.\jr.exe --version` PASS on windows-latest (/STACK:8388608 fix validated, no stack overflow). Embedded OAuth verify PASS (Windows). Windows-build CYCLE CLOSED. DEC-101. S-7.02 checklist: 1 codified, 6 deferred, 1 resolved. | Agent state-manager | CYCLE CLOSED | develop @ 4258202. BC 597 / NFR 42 / ADR 16 / Stories 74. |
 | S-CIGATE-1 (ci-gate aggregator) DELIVERED F1–F7. PR #518 squash-merged → develop @ e9b2269. ci-gate GREEN on PR+push CI run 27551871837 (live holdout proof). Step 4.5 4-pass CONVERGED (3 clean). F7 DELTA_CONVERGED. DEC-102. Stories 74→75. CIGATE-BRANCH-PROTECTION-SWAP pending human. | Agent state-manager | DELIVERED | develop @ e9b2269. BC 597 / NFR 42 / ADR 16 / Stories 75. |
 | S-CIGATE-1 branch-protection swap COMPLETE + verified (develop+main now require single `CI Gate` context, app_id 15368; safe 2-step add-before-remove; user-executed). WIN-CI-GATE-AGGREGATOR CLOSED. Feature cycle CLOSED. DEC-103. | Agent state-manager | CYCLE CLOSED | develop @ e9b2269. BC 597 / NFR 42 / ADR 16 / Stories 75. |
+| Fork-friendly-release-ops integrated: PR #520 squash-merged → develop @ 2cb219b (integrates closed #503 by @ArcavenAE, credited). 17 files inert-by-default; ci.yml Windows-matrix+ci-gate+gitleaks-v3 preserved; 14/14 CI GREEN incl CI Gate. 4-lens review done. Enablement decision PENDING (backfill/gap-fill/signing/suppress-phantom-runs — each needs fixes first). Full plan → `.factory/research/fork-release-ops-integration.md`. DEC-104. | Agent state-manager | PENDING-DECISION | develop @ 2cb219b. BC 597 / NFR 42 / ADR 16 / Stories 75. |
 
 ## Decisions Log
 
@@ -83,6 +83,7 @@ activation_version: "v0.6.0-dev.2"
 | DEC-101 | 2026-06-14: Windows-build feature cycle CLOSED. v0.6.0-dev.2 released (#517 squash-merged → develop @ 4258202; release.yml run 27519999184 SUCCESS). H-WIN-6 live holdout PASS: jr-v0.6.0-dev.2-x86_64-pc-windows-msvc.zip on GitHub Release page; local checksum verify = OK; smoke test `.\jr.exe --version` PASS on windows-latest (/STACK:8388608 fix validated, no stack overflow); Embedded OAuth verification PASS (Windows). S-7.02 cycle-closing checklist complete: 1 lesson codified (LESSON-ADVERSARY-CHECKOUT-RACE), 6 items deferred with rationale (WIN-RUNTIME-OAUTH-PROBE, WIN-AC004-DIRECTIONAL, WIN-DENY-FRAGILITY, SEC-JR-SERVICE-NAME-GATE, WIN-CI-GATE-AGGREGATOR, OBS-001), 1 resolved confirmed (R6-002 figment re-entry). No active feature. Awaiting next directive. | Feature Mode / Windows-build CYCLE CLOSE | Phase 3 | 2026-06-14 |
 | DEC-102 | 2026-06-15: WIN-CI-GATE-AGGREGATOR delivered via S-CIGATE-1 quick-dev (PR #518 @ e9b2269). ci-gate aggregator job (`name: CI Gate`; `needs: [fmt, clippy, test, msrv, deny, spec-guard]`; `if: ${{ always() }}`; step fails on `contains(needs.*.result,'failure'/'cancelled')`) is the durable fix for the matrix-rename branch-protection fragility class (DEC-096/097). Code shipped: `.github/workflows/ci.yml` ci-gate job + `tests/ci_gate_completeness.rs` (6 drift tests) + CLAUDE.md Conventions bullet + ADR-0016 Decision 3 note. REMAINING: human/repo-admin branch-protection swap to make `CI Gate` (app_id 15368) the single required context on develop+main (precondition met: ci-gate green on develop push). | Feature Mode / S-CIGATE-1 / ci-infra | Phase 3 | 2026-06-15 |
 | DEC-103 | 2026-06-15: WIN-CI-GATE-AGGREGATOR cycle CLOSED. Branch-protection swapped to single `CI Gate` context on develop+main (app_id 15368; safe 2-step add-before-remove; user-executed; verified). The matrix-rename fragility class (DEC-096/097) is now structurally eliminated — required-check membership lives in `ci-gate.needs` in ci.yml, not in repo settings. spec-guard promoted to a blocking check via the aggregator (user decision). S-CIGATE-1 feature cycle CLOSED. | Feature Mode / S-CIGATE-1 / ci-infra | Phase 3 | 2026-06-15 |
+| DEC-104 | 2026-06-15: Integrated @ArcavenAE's fork-friendly release-ops (PR #503→#520 @ 2cb219b). Merged from canonical (fork unpushable; Co-authored-by credit added). Machinery inert by default (all new jobs gated on unset repo vars; ~7 phantom workflow runs/day accepted). 4-lens review done (security/code/consistency/adversary; first adversary pass discarded as confabulated, re-run fresh). Enablement of selected pieces deferred — each requires its security/quality fixes first. Full plan + findings: `.factory/research/fork-release-ops-integration.md`. | ci-infra / external-contribution | Phase 3 | 2026-06-15 |
 
 ## Skip Log
 
@@ -103,6 +104,12 @@ All 7 S-WIN-1..6 + #475 per-AC demos: **Yes — adapted**. All are CI-config / i
 | ID | Area | Description | Severity | Status |
 |----|------|-------------|----------|--------|
 | WIN-CI-GATE-AGGREGATOR | ci-gate aggregator job | CLOSED — CODE SHIPPED (PR #518 @ e9b2269) AND ACTIVATED (branch-protection swap 2026-06-15; single `CI Gate` required check on develop+main; app_id 15368; DEC-103). Matrix-rename fragility class structurally eliminated. | LOW | CLOSED — DEC-103 |
+| FORK-OPS-SIGN-INJECTION | `sign-and-publish.yml` shell injection | `workflow_run.head_branch` written unsanitized into shell with Apple secrets (CWE-77, SEC-001/CR-001). Validate `^v…` pattern before any shell step. Blocks signing enablement. | HIGH | OPEN — gates signing |
+| FORK-OPS-ALPHA-RACE | Alpha-tag read-then-create race | `sign-and-publish.yml` non-atomic alpha tag: reads current then creates — concurrent runs make duplicates (CR-002). Use `git rev-parse --short HEAD`. Blocks signing enablement. | HIGH | OPEN — gates signing |
+| FORK-OPS-BACKFILL-DESTRUCTIVE | `release-gap-fill.yml` blast radius | `gh release delete`+recreate can clobber curated notes if enabled on wrong repo/tag. Add "existing release?" guard + `github.repository==` check. Blocks gap-fill enable. | MED | OPEN — gates gap-fill |
+| FORK-OPS-PHANTOM-RUNS | ~7 phantom workflow runs/day | New schedule/push triggers create skipped runs on canonical (~7/day). Cosmetic; decide suppress or accept. | LOW | OPEN — decide |
+| FORK-OPS-GITLEAKS-DOC | `GITLEAKS_DISABLED` undocumented | Secret-scan opt-out variable added to ci.yml but not documented in CLAUDE.md or spec. | MED | OPEN — doc gap |
+| FORK-OPS-BACKFILL-WIN-TARGET | `backfill-release.yml` missing Windows | `x86_64-pc-windows-msvc` target absent → backfilled releases lack Windows binary. Fix before using. | MED | OPEN — fix before enabling |
 | WIN-CFG-TESTS-CHECK | Cross-compile must use --tests, not --lib | `cargo check --lib` excludes #[cfg(test)] blocks — use `--tests`. Surfaced by S-WIN-1 PR #507. | LOW | OPEN — process-gap |
 | SEC-JR-SERVICE-NAME-GATE | JR_SERVICE_NAME env var not debug-gated | Unlike JR_BASE_URL/JR_AUTH_HEADER, readable in release builds. Follow-up story candidate. | LOW | OPEN — follow-up |
 | WIN-DENY-FRAGILITY | deny.toml canonical-un-skipped-version has no CI guard | 17-entry skip set topology-dependent; future windows-sys update could silently break N-1 invariant. | LOW | OPEN — tracked process-gap |
@@ -120,7 +127,7 @@ All 7 S-WIN-1..6 + #475 per-AC demos: **Yes — adapted**. All are CI-config / i
 
 ## Convergence Trackers
 
-Full per-issue: `cycles/cycle-001/convergence-trajectory.md`. Current: **[2026-06-15] S-CIGATE-1 CYCLE CLOSED. ci-gate aggregator SHIPPED (PR #518 @ e9b2269) + ACTIVATED (branch-protection swap → single `CI Gate` required check on develop+main; app_id 15368; DEC-103). WIN-CI-GATE-AGGREGATOR CLOSED. Matrix-rename fragility class structurally eliminated. No active feature. Stories 75.** Prior: Windows-build CYCLE CLOSED @ 4258202 (DEC-101; v0.6.0-dev.2; H-WIN-6 PASS). F7 CONVERGED + human-authorized @ fac555f (DEC-100; 5/5 dims PASS; 1808/0 regression).
+Full per-issue: `cycles/cycle-001/convergence-trajectory.md`. Current: **[2026-06-15] Fork-friendly-release-ops integrated (PR #520 @ 2cb219b; integrates closed #503 by @ArcavenAE, credited). Inert by default. 4-lens review complete (findings → `.factory/research/fork-release-ops-integration.md`). Enablement decision PENDING (DEC-104). Stories 75.** Prior: S-CIGATE-1 CYCLE CLOSED (PR #518 @ e9b2269; DEC-103). ci-gate aggregator SHIPPED + ACTIVATED (single `CI Gate` required check on develop+main; app_id 15368). WIN-CI-GATE-AGGREGATOR CLOSED. Matrix-rename fragility class structurally eliminated.
 
 ## Session Resume Checkpoint
 
@@ -129,18 +136,19 @@ Full per-issue: `cycles/cycle-001/convergence-trajectory.md`. Current: **[2026-0
 | Field | Value |
 |-------|-------|
 | **Date** | 2026-06-15 |
-| **Position** | **S-CIGATE-1 feature cycle CLOSED. ci-gate aggregator SHIPPED (PR #518 @ e9b2269) + ACTIVATED (single `CI Gate` required check on develop+main; app_id 15368; DEC-103). No active feature. Awaiting next directive. 0 active worktrees.** |
-| **develop HEAD** | origin/develop = **e9b2269** (S-CIGATE-1 ci-gate aggregator PR #518). activation v0.6.0-dev.2. BC **597**. NFR **42**. ADR **16**. Stories **75** (authoritative). |
+| **Position** | **Fork-friendly-release-ops MERGED (PR #520 @ develop 2cb219b; integrates closed #503 by @ArcavenAE, credited). Inert by default. AWAITING USER DECISION on which pieces to enable (backfill / gap-fill / signing / suppress-phantom-runs) — each needs fixes first. 0 active worktrees.** |
+| **develop HEAD** | origin/develop = **2cb219b** (fork-release-ops PR #520). activation v0.6.0-dev.2. BC **597**. NFR **42**. ADR **16**. Stories **75** (authoritative). |
 | **Convergence counter** | BC: **597**. NFR: **42**. ADR: **16**. Stories: **75** authoritative. jira-e2e env: JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ, JR_E2E_ENABLED=true. 0 active worktrees (.factory + .reference only). |
-| **Next / Pending** | No active feature. Standing: WIN-DENY-FRAGILITY (LOW), SEC-JR-SERVICE-NAME-GATE (LOW), WIN-AUTH-ENVLOCK-POISON (LOW), WIN-RUNTIME-OAUTH-PROBE (LOW, accepted ADR-0016), WIN-AC004-DIRECTIONAL (LOW). Open issues: #492, #429 (DNC), #400 Story B, #372. |
-| **Resume prompt** | `Read .factory/STATE.md. S-CIGATE-1 CYCLE CLOSED at develop e9b2269 (PR #518). ci-gate aggregator SHIPPED + ACTIVATED (single CI Gate required check on develop+main; DEC-103). No active feature — awaiting next directive. STANDING: do NOT close #429 (DEC-029); #492 OPEN; OQ-5 open; E2E-PG-4 open; SEC-001 LOW deferred. jira-e2e: JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ, JR_E2E_ENABLED=true.` |
+| **Next / Pending** | AWAITING USER DECISION: which fork-release-ops pieces to enable (backfill / gap-fill / signing / suppress-phantom-runs). Each requires specific fixes — see `.factory/research/fork-release-ops-integration.md`. Standing drift: WIN-DENY-FRAGILITY (LOW), SEC-JR-SERVICE-NAME-GATE (LOW), WIN-AUTH-ENVLOCK-POISON (LOW), WIN-RUNTIME-OAUTH-PROBE (LOW, accepted ADR-0016), WIN-AC004-DIRECTIONAL (LOW). Open issues: #492, #429 (DNC), #400 Story B, #372. |
+| **Resume prompt** | `Read .factory/STATE.md THEN .factory/research/fork-release-ops-integration.md. Fork-release-ops MERGED at develop 2cb219b (PR #520; integrates closed #503 by @ArcavenAE, credited). Machinery inert by default. AWAITING user decision: which pieces to enable (backfill/gap-fill/signing/suppress-phantom-runs — each has specific prereq fixes; all in the research file). DEC-104. STANDING: do NOT close #429 (DEC-029); #492 OPEN; OQ-5 open; E2E-PG-4 open; SEC-001 LOW deferred. jira-e2e: JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ, JR_E2E_ENABLED=true.` |
 
 ## RESUME PLAN (cold-start, self-contained)
 
 ### State snapshot
 
-- Feature: S-CIGATE-1 CYCLE CLOSED (DEC-103). PR #518 squash-merged → develop @ e9b2269. ci-gate aggregator SHIPPED + ACTIVATED (single `CI Gate` required check on develop+main; app_id 15368; branch-protection swap complete 2026-06-15). BC 597 / NFR 42 / ADR 16 / Stories 75. 0 active worktrees.
-- Next: No active feature. Awaiting next directive.
+- Fork-release-ops: PR #520 squash-merged → develop @ 2cb219b (integrates closed #503 by @ArcavenAE, credited). 4-lens review done. Machinery inert by default. BC 597 / NFR 42 / ADR 16 / Stories 75. 0 active worktrees.
+- Prior: S-CIGATE-1 CYCLE CLOSED (DEC-103). ci-gate aggregator SHIPPED + ACTIVATED (single `CI Gate` required check on develop+main; app_id 15368; branch-protection swap 2026-06-15).
+- Next: Awaiting user decision on which fork-release-ops pieces to enable. **Read `.factory/research/fork-release-ops-integration.md` first** — contains per-piece enablement plan, prereq fixes, and full review findings.
 
 ### Durable follow-ups (tracked Drift Items)
 
@@ -162,7 +170,9 @@ Full-VSDD run caught 3 classes invisible to the prior gate each time — pre-F4 
 | #372 | cargo-mutants partial baseline | OPEN | LOW | Follow-up from #346 |
 | #387/#368 | git history rewrite / open PR | OPEN | LOW | #387: deferred; force-push needed. |
 | #209/#210 | (backlog) | OPEN | — | |
-| Merged: #510/509/508/507/475 | MERGED or CLOSED | Archived | — | See `cycles/cycle-001/blocking-issues-resolved.md` (#510) + `cycles/cycle-001/burst-log.md` "Archived Open Issues" (rest) |
+| #520 | ci: opt-in release ops (fork-friendly) | MERGED @ 2cb219b (develop). Integrates #503. Inert by default. | LOW | Enablement decision PENDING — see DEC-104 + research file. |
+| #503 | External fork contribution by @ArcavenAE | CLOSED (integrated via #520; Co-authored-by credit in squash commit; credit comment left on PR #503). | — | CLOSED — no further action. |
+| Merged: #518/517/510/509/508/507/475 | MERGED or CLOSED | Archived | — | See `cycles/cycle-001/blocking-issues-resolved.md` (#510) + `cycles/cycle-001/burst-log.md` "Archived Open Issues" (rest) |
 
 ## Historical Content
 
