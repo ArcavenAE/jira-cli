@@ -17,6 +17,21 @@ Superseded checkpoints are archived here when STATE.md is updated with a newer o
 
 ---
 
+## Checkpoint archived 2026-06-15 (Windows-build CYCLE CLOSED; v0.6.0-dev.2 released; H-WIN-6 PASS; no active feature)
+
+_Was the active checkpoint after Windows-build CYCLE CLOSED (DEC-101). v0.6.0-dev.2 released (#517 → develop @ 4258202). H-WIN-6 live PASS. Superseded when S-CIGATE-1 (ci-gate aggregator) was DELIVERED (PR #518 → develop @ e9b2269; DEC-102)._
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-06-14 |
+| **Position** | **Windows-build CYCLE CLOSED. v0.6.0-dev.2 released (#517 → develop @ 4258202; release.yml run 27519999184 SUCCESS). H-WIN-6 live PASS: jr-v0.6.0-dev.2-x86_64-pc-windows-msvc.zip on Release page; checksum OK; smoke test `.\jr.exe --version` PASS on windows-latest (/STACK:8388608 fix validated, no stack overflow). DEC-101. S-7.02 complete. No active feature. 0 active worktrees.** |
+| **develop HEAD** | origin/develop = **4258202** (v0.6.0-dev.2 release PR #517). activation v0.6.0-dev.2. BC **597**. NFR **42**. ADR **16**. Stories **74** (authoritative). |
+| **Convergence counter** | BC: **597**. NFR: **42**. ADR: **16**. Stories: **74** authoritative. jira-e2e env: JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ, JR_E2E_ENABLED=true. 0 active worktrees (.factory + .reference only). |
+| **Next / Pending** | No active feature. Awaiting next directive. Standing: WIN-CI-GATE-AGGREGATOR (LOW durable), WIN-DENY-FRAGILITY (LOW), SEC-JR-SERVICE-NAME-GATE (LOW), WIN-AUTH-ENVLOCK-POISON (LOW), WIN-RUNTIME-OAUTH-PROBE (LOW, accepted ADR-0016), WIN-AC004-DIRECTIONAL (LOW). Open issues: #492, #429 (DNC), #400 Story B, #372. |
+| **Resume prompt** | `Read .factory/STATE.md. Windows-build cycle CLOSED at develop 4258202; v0.6.0-dev.2 released; H-WIN-6 PASS. No active feature — awaiting next directive. STANDING: do NOT close #429 (DEC-029); #492 OPEN; OQ-5 open; E2E-PG-4 open; SEC-001 LOW deferred. jira-e2e: JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ, JR_E2E_ENABLED=true.` |
+
+---
+
 ## Checkpoint archived 2026-06-14 (Windows-build F7 CONVERGED + human-authorized @ fac555f; next release + H-WIN-6)
 
 _Was the active checkpoint after Windows-build F7 CONVERGED + human-authorized (DEC-100). 5/5 dims PASS. Zero regressions (1808/0). Consistency CLEAN (FINDING-001 fixed @ ba1fc1a). Superseded when v0.6.0-dev.2 released (#517 → develop @ 4258202) and H-WIN-6 PASS recorded._

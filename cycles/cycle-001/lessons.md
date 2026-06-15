@@ -3850,3 +3850,43 @@ All 8 process-gap items reviewed:
 Cycle-001 Windows-build sub-cycle is CLOSED. No unresolved blockers. No process-gap items requiring immediate action before the next feature cycle.
 
 _Recorded: 2026-06-14 — Windows-build feature cycle CLOSED; H-WIN-6 live PASS; v0.6.0-dev.2 released._
+
+---
+
+## S-7.02 Cycle-Closing Review — S-CIGATE-1 (ci-gate aggregator, 2026-06-15)
+
+_S-CIGATE-1 DELIVERED: PR #518 squash-merged → develop @ e9b2269. ci-gate aggregator job GREEN on PR CI run + develop push CI run 27551871837 (live holdout proof). F1–F7 complete; Step 4.5 4-pass CONVERGED (3 consecutive NITPICK_ONLY). Stories 74→75. BC 597 / NFR 42 / ADR 16._
+
+_The following item was reviewed per the S-7.02 Cycle-Closing Checklist for S-CIGATE-1._
+
+### S-7.02 Process-gap: N-3 orchestrator formal worktree-identity tuple — DEFERRED
+
+**Tags:** [process-gap] [deferred]
+
+**Date:** 2026-06-15
+**Cycle:** S-CIGATE-1 (ci-gate aggregator)
+**Tracking ID:** N-3-WORKTREE-TUPLE
+**Status:** DEFERRED — no follow-up story required
+
+**Finding:** During S-CIGATE-1 adversary step 4.5, the adversary (Pass 1) raised process-gap N-3: "Orchestrator omitted the formal worktree-identity tuple from sub-agent dispatches." The stricter format would include a structured tuple identifying the worktree path, expected HEAD SHA, and branch for each sub-agent dispatch.
+
+**Deferral rationale:** LOW severity; no defect resulted. The orchestrator DID pass the absolute worktree path in every dispatch — only the stricter formal-tuple format (structured SHA + branch assertion alongside the path) was omitted. Every sub-agent operated on the correct worktree without incident. The gap is a documentation/formality shortcoming, not a correctness or security failure. The cost of adopting the full tuple format for single-repo quick-dev dispatches is disproportionate to the risk level. No follow-up story required (deferral with reason satisfies the checklist).
+
+**Applicability:** The formal worktree-identity tuple matters most when dispatching to multi-repo projects (multiple worktrees with potentially overlapping paths) or during concurrent parallel dispatches to different worktrees. For single-repo sequential dispatches (as in S-CIGATE-1), the absolute path alone provides unambiguous identity.
+
+_Discovered: S-CIGATE-1 Step 4.5 adversary Pass 1 process-gap N-3, 2026-06-15._
+_Tagged: [process-gap] [deferred] — LOW severity; orchestrator did pass absolute worktree path in every dispatch; no defect resulted; no follow-up story required._
+_Apply to: multi-repo projects and concurrent parallel sub-agent dispatches where path ambiguity is plausible._
+
+---
+
+### S-7.02 Summary for S-CIGATE-1
+
+All process-gap items reviewed:
+- 0 NEW lessons codified (no novel high-value pattern emerged)
+- 1 process-gap DEFERRED with explicit rationale (N-3 orchestrator formal worktree-identity tuple)
+- Accepted residual nitpicks: `_with_correct_shell` test-name misnomer (cosmetic, pre-existing convention), coverage-map AC-granularity (informational gap only), ci-gate has no harden-runner step (benign — no egress/checkout in the aggregator job).
+
+S-CIGATE-1 is DELIVERED (code shipped, PR #518 merged, ci-gate GREEN). REMAINING: human branch-protection swap (CIGATE-BRANCH-PROTECTION-SWAP) to activate ci-gate as the single required status check.
+
+_Recorded: 2026-06-15 — S-CIGATE-1 DELIVERED; PR #518 → develop @ e9b2269; ci-gate GREEN on PR+push CI run 27551871837._

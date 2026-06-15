@@ -2,11 +2,11 @@
 document_type: pipeline-state
 version: "2.0"
 status: active
-timestamp: 2026-06-14T21:15:00Z
+timestamp: 2026-06-15T00:00:00Z
 phase: phase-3-tdd-implementation
 project: jira-cli
 mode: BROWNFIELD
-current_step: "Windows-build CYCLE CLOSED. v0.6.0-dev.2 released (#517 → develop @ 4258202). H-WIN-6 PASS (Windows .zip + smoke test on windows-latest). DEC-101. No active feature."
+current_step: "S-CIGATE-1 (ci-gate aggregator) DELIVERED F1–F7. PR #518 squash-merged → develop @ e9b2269. ci-gate GREEN on PR+push CI run 27551871837. Step 4.5 4-pass CONVERGED (3 clean). F7 DELTA_CONVERGED. Stories 74→75. CIGATE-BRANCH-PROTECTION-SWAP awaiting human."
 current_cycle: "cycle-001"
 dtu_required: false
 phase_2_status: APPROVED
@@ -26,8 +26,8 @@ activation_version: "v0.6.0-dev.2"
 | **Product** | jr (Jira CLI) |
 | **Mode** | BROWNFIELD / Rust |
 | **Target Workspace** | develop → main |
-| **Last Updated** | 2026-06-14: Windows-build CYCLE CLOSED. v0.6.0-dev.2 released (#517 → develop @ 4258202). H-WIN-6 live PASS (Windows .zip on Release page; smoke test ✓ on windows-latest; /STACK:8388608 fix validated). DEC-101. |
-| **Current Phase** | Phase 3 — TDD Implementation IN PROGRESS — No active feature. BC 597. NFR 42. ADR 16. Stories 74 (authoritative). |
+| **Last Updated** | 2026-06-15: S-CIGATE-1 (ci-gate aggregator) DELIVERED. PR #518 squash-merged → develop @ e9b2269. ci-gate GREEN on PR CI + develop push CI run 27551871837. Step 4.5 4-pass CONVERGED (3 clean). F7 DELTA_CONVERGED. DEC-102. Stories 74→75. CIGATE-BRANCH-PROTECTION-SWAP pending human. |
+| **Current Phase** | Phase 3 — TDD Implementation IN PROGRESS — No active feature. BC 597. NFR 42. ADR 16. Stories **75** (authoritative). |
 | **Next Phase** | Phase 4: Holdout Evaluation (not started) |
 | **Activation HEAD** | 4258202 (v0.6.0-dev.2 released 2026-06-14; v0.5.0 STABLE shipped 2026-06-12) |
 
@@ -58,11 +58,11 @@ activation_version: "v0.6.0-dev.2"
 
 | Step | Agent | Status | Output |
 |------|-------|--------|--------|
-| Windows-build F6 PASS. FIX-F6-001 (tests/win_path_fallback_props.rs) #516 merged → fac555f. 9 proptest props (2048 cases each), 9/9 mutants CAUGHT (100% kill). Kani: justified-skip. Audit: 0 vulns. 1808 regression green. 13/13 CI GREEN. DEC-099. | Agent formal-verifier | F6 PASS | develop @ fac555f. BC 597 / NFR 42 / ADR 16 / Stories 74. |
 | FINDING-001 fix: factory ADR-0016 copy synced with source at ba1fc1a. Consistency-validation clean post-fix. Input-drift check clean for all delta artifacts. | Agent state-manager | FINDING-001 RESOLVED | factory-artifacts @ ba1fc1a. |
 | Windows-build F7 (five-dimension delta convergence): Dim1 Spec PASS (F5 14-pass CONVERGED, novelty→0); Dim2 Test PASS (9/9 mutations, 9 proptest props); Dim3 Impl PASS (0 CRIT/HIGH since R2, 7 fix PRs); Dim4 Verif PASS (proptest+Kani-skip+fuzz-skip+audit+deny); Dim5 Holdout PASS-on-automatable (H-WIN-6 post-release). Regression CLEAN. Consistency CLEAN. DEC-100. Human gate AUTHORIZED 2026-06-14. | Agent state-manager | F7 CONVERGED + HUMAN-AUTHORIZED | develop @ fac555f. READY FOR RELEASE. |
 | v0.6.0-dev.2 RELEASED (#517 squash-merged → develop @ 4258202). CHANGELOG [Unreleased] Windows entries → [0.6.0-dev.2]. Tag v0.6.0-dev.2 pushed. release.yml run 27519999184 SUCCESS. | Agent devops | RELEASED | develop @ 4258202. activation_version v0.6.0-dev.2. |
 | H-WIN-6 PASS (live). GitHub Release page: jr-v0.6.0-dev.2-x86_64-pc-windows-msvc.zip + .sha256 — local checksum OK. Smoke test `.\jr.exe --version` PASS on windows-latest (/STACK:8388608 fix validated, no stack overflow). Embedded OAuth verify PASS (Windows). Windows-build CYCLE CLOSED. DEC-101. S-7.02 checklist: 1 codified, 6 deferred, 1 resolved. | Agent state-manager | CYCLE CLOSED | develop @ 4258202. BC 597 / NFR 42 / ADR 16 / Stories 74. |
+| S-CIGATE-1 (ci-gate aggregator) DELIVERED F1–F7. PR #518 squash-merged → develop @ e9b2269. ci-gate GREEN on PR+push CI run 27551871837 (live holdout proof). Step 4.5 4-pass CONVERGED (3 clean). F7 DELTA_CONVERGED. DEC-102. Stories 74→75. CIGATE-BRANCH-PROTECTION-SWAP pending human. | Agent state-manager | DELIVERED | develop @ e9b2269. BC 597 / NFR 42 / ADR 16 / Stories 75. |
 
 ## Decisions Log
 
@@ -81,6 +81,7 @@ activation_version: "v0.6.0-dev.2"
 | DEC-099 | 2026-06-14: Windows-build F6 COMPLETE — FIX-F6-001 MERGED → develop @ fac555f41d via squash PR #516. Proptest property suite (9 properties, 2048 cases each, ~10k generated inputs) formally verifies BC-6.1.014 EC-1/EC-3 + BC-6.2.016 EC-1/EC-4 invariants on pure path-fallback helpers. Kani OOM on PathBuf equality — proptest substituted (tractability probe recorded). Security review APPROVED (0 CRIT/HIGH/MEDIUM/LOW). AI review APPROVED cycle 1. 13/13 CI GREEN (including Test (windows-latest)). Mutation 100% kill on delta. Test-only, no production code changes. Counts unchanged: BC 597 / NFR 42 / ADR 16 / Stories 74. Next: F7 convergence check. | Feature Mode / Windows-build F6 | Phase 3 | 2026-06-14 |
 | DEC-100 | 2026-06-14: Windows-build F7 (delta convergence) CONVERGED + HUMAN-AUTHORIZED at develop fac555f. 5/5 dimensions pass: Dim1 Spec (F5 14-pass CONVERGED, novelty→0; ADR-0016/PRD/CHANGELOG synced); Dim2 Test (100% delta mutation kill 9/9; R5-001+R8-001 guard tests; +9-property suite #516); Dim3 Impl (0 CRIT/HIGH since R2; all findings resolved via PRs #511–#516; adversary findings were real); Dim4 Verif (9 proptest props PASS; Kani justified-skip OOM; fuzz justified-skip; cargo audit 0 vulns; cargo deny ok; purity boundaries intact); Dim5 Holdout PASS-on-automatable (windows-latest CI green; release.yml smoke + OAuth-verify; /STACK:8388608 prod-crash fix); H-WIN-6 live release-page holdout deferred to post-release. Zero regressions (1808/0 on fac555f). Consistency CLEAN (FINDING-001 fixed @ ba1fc1a). OBS-001 LOW deferred: 6 S-WIN stories still status:ready — optional hygiene, matches project convention. Next: release (version bump via branch+PR; suggest v0.6.0-dev.2 dev release to validate release.yml Windows matrix first-time) → H-WIN-6 live holdout. | Feature Mode / Windows-build F7 | Phase 3 | 2026-06-14 |
 | DEC-101 | 2026-06-14: Windows-build feature cycle CLOSED. v0.6.0-dev.2 released (#517 squash-merged → develop @ 4258202; release.yml run 27519999184 SUCCESS). H-WIN-6 live holdout PASS: jr-v0.6.0-dev.2-x86_64-pc-windows-msvc.zip on GitHub Release page; local checksum verify = OK; smoke test `.\jr.exe --version` PASS on windows-latest (/STACK:8388608 fix validated, no stack overflow); Embedded OAuth verification PASS (Windows). S-7.02 cycle-closing checklist complete: 1 lesson codified (LESSON-ADVERSARY-CHECKOUT-RACE), 6 items deferred with rationale (WIN-RUNTIME-OAUTH-PROBE, WIN-AC004-DIRECTIONAL, WIN-DENY-FRAGILITY, SEC-JR-SERVICE-NAME-GATE, WIN-CI-GATE-AGGREGATOR, OBS-001), 1 resolved confirmed (R6-002 figment re-entry). No active feature. Awaiting next directive. | Feature Mode / Windows-build CYCLE CLOSE | Phase 3 | 2026-06-14 |
+| DEC-102 | 2026-06-15: WIN-CI-GATE-AGGREGATOR delivered via S-CIGATE-1 quick-dev (PR #518 @ e9b2269). ci-gate aggregator job (`name: CI Gate`; `needs: [fmt, clippy, test, msrv, deny, spec-guard]`; `if: ${{ always() }}`; step fails on `contains(needs.*.result,'failure'/'cancelled')`) is the durable fix for the matrix-rename branch-protection fragility class (DEC-096/097). Code shipped: `.github/workflows/ci.yml` ci-gate job + `tests/ci_gate_completeness.rs` (6 drift tests) + CLAUDE.md Conventions bullet + ADR-0016 Decision 3 note. REMAINING: human/repo-admin branch-protection swap to make `CI Gate` (app_id 15368) the single required context on develop+main (precondition met: ci-gate green on develop push). | Feature Mode / S-CIGATE-1 / ci-infra | Phase 3 | 2026-06-15 |
 
 ## Skip Log
 
@@ -92,6 +93,7 @@ All 7 S-WIN-1..6 + #475 per-AC demos: **Yes — adapted**. All are CI-config / i
 
 | ID | Issue | Severity | Status |
 |----|-------|----------|--------|
+| CIGATE-BRANCH-PROTECTION-SWAP | Make `CI Gate` the single required status check on develop+main (PATCH required_status_checks → single context, app_id 15368; preserve strict + code-owner review; add-before-remove ordering; verify via GET). Harness-blocked (repo-admin). | LOW | OPEN — awaiting human |
 
 ## Drift Items
 
@@ -99,7 +101,7 @@ All 7 S-WIN-1..6 + #475 per-AC demos: **Yes — adapted**. All are CI-config / i
 
 | ID | Area | Description | Severity | Status |
 |----|------|-------------|----------|--------|
-| WIN-CI-GATE-AGGREGATOR | No ci-gate aggregator job | Add a single `ci-gate` job so future matrix changes never re-break branch protection. Follow-up story candidate (own PR). | LOW | OPEN — durable follow-up |
+| WIN-CI-GATE-AGGREGATOR | ci-gate aggregator job | CODE SHIPPED (PR #518 @ e9b2269) — RESOLUTION PENDING human branch-protection swap: make `CI Gate` the single required status context on develop+main (app_id 15368; CIGATE-BRANCH-PROTECTION-SWAP). | LOW | CODE SHIPPED — awaiting human branch-protection swap |
 | WIN-CFG-TESTS-CHECK | Cross-compile must use --tests, not --lib | `cargo check --lib` excludes #[cfg(test)] blocks — use `--tests`. Surfaced by S-WIN-1 PR #507. | LOW | OPEN — process-gap |
 | SEC-JR-SERVICE-NAME-GATE | JR_SERVICE_NAME env var not debug-gated | Unlike JR_BASE_URL/JR_AUTH_HEADER, readable in release builds. Follow-up story candidate. | LOW | OPEN — follow-up |
 | WIN-DENY-FRAGILITY | deny.toml canonical-un-skipped-version has no CI guard | 17-entry skip set topology-dependent; future windows-sys update could silently break N-1 invariant. | LOW | OPEN — tracked process-gap |
@@ -117,7 +119,7 @@ All 7 S-WIN-1..6 + #475 per-AC demos: **Yes — adapted**. All are CI-config / i
 
 ## Convergence Trackers
 
-Full per-issue: `cycles/cycle-001/convergence-trajectory.md`. Current: **[2026-06-14] Windows-build CYCLE CLOSED. v0.6.0-dev.2 released (#517 → develop @ 4258202; release.yml run 27519999184 SUCCESS). H-WIN-6 live PASS: jr-v0.6.0-dev.2-x86_64-pc-windows-msvc.zip verified + smoke test PASS on windows-latest (/STACK:8388608 fix validated). S-7.02 checklist complete. DEC-101. No active feature.** Prior: F7 CONVERGED + human-authorized @ fac555f (DEC-100; 5/5 dims PASS; 1808/0 regression). F5 CONVERGED @ 2f96543 (DEC-098; 14 passes; 5 fix PRs). F6 PASS @ fac555f (DEC-099; 9/9 mutation; 9 props).
+Full per-issue: `cycles/cycle-001/convergence-trajectory.md`. Current: **[2026-06-15] S-CIGATE-1 (ci-gate aggregator) CONVERGED. PR #518 → develop @ e9b2269. Step 4.5: Pass1 HAS_BLOCKING (H1/H2/M1/M2/M3+L1/L2/L3 fixed); Pass2/3/4 = 3 consecutive NITPICK_ONLY. F7 DELTA_CONVERGED (5/5 dims, zero defects). ci-gate GREEN on PR+push CI run 27551871837. DEC-102. Stories 75.** Prior: Windows-build CYCLE CLOSED @ 4258202 (DEC-101; v0.6.0-dev.2; H-WIN-6 PASS). F7 CONVERGED + human-authorized @ fac555f (DEC-100; 5/5 dims PASS; 1808/0 regression).
 
 ## Session Resume Checkpoint
 
@@ -125,23 +127,23 @@ Full per-issue: `cycles/cycle-001/convergence-trajectory.md`. Current: **[2026-0
 
 | Field | Value |
 |-------|-------|
-| **Date** | 2026-06-14 |
-| **Position** | **Windows-build CYCLE CLOSED. v0.6.0-dev.2 released (#517 → develop @ 4258202; release.yml run 27519999184 SUCCESS). H-WIN-6 live PASS: jr-v0.6.0-dev.2-x86_64-pc-windows-msvc.zip on Release page; checksum OK; smoke test `.\jr.exe --version` PASS on windows-latest (/STACK:8388608 fix validated, no stack overflow). DEC-101. S-7.02 complete. No active feature. 0 active worktrees.** |
-| **develop HEAD** | origin/develop = **4258202** (v0.6.0-dev.2 release PR #517). activation v0.6.0-dev.2. BC **597**. NFR **42**. ADR **16**. Stories **74** (authoritative). |
-| **Convergence counter** | BC: **597**. NFR: **42**. ADR: **16**. Stories: **74** authoritative. jira-e2e env: JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ, JR_E2E_ENABLED=true. 0 active worktrees (.factory + .reference only). |
-| **Next / Pending** | No active feature. Awaiting next directive. Standing: WIN-CI-GATE-AGGREGATOR (LOW durable), WIN-DENY-FRAGILITY (LOW), SEC-JR-SERVICE-NAME-GATE (LOW), WIN-AUTH-ENVLOCK-POISON (LOW), WIN-RUNTIME-OAUTH-PROBE (LOW, accepted ADR-0016), WIN-AC004-DIRECTIONAL (LOW). Open issues: #492, #429 (DNC), #400 Story B, #372. |
-| **Resume prompt** | `Read .factory/STATE.md. Windows-build cycle CLOSED at develop 4258202; v0.6.0-dev.2 released; H-WIN-6 PASS. No active feature — awaiting next directive. STANDING: do NOT close #429 (DEC-029); #492 OPEN; OQ-5 open; E2E-PG-4 open; SEC-001 LOW deferred. jira-e2e: JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ, JR_E2E_ENABLED=true.` |
+| **Date** | 2026-06-15 |
+| **Position** | **S-CIGATE-1 DELIVERED + MERGED @ e9b2269. ci-gate GREEN on PR CI + develop push CI run 27551871837. Step 4.5 4-pass CONVERGED (3 clean). F7 DELTA_CONVERGED. DEC-102. Stories 75. Awaiting human branch-protection swap (CIGATE-BRANCH-PROTECTION-SWAP). 0 active worktrees.** |
+| **develop HEAD** | origin/develop = **e9b2269** (S-CIGATE-1 ci-gate aggregator PR #518). activation v0.6.0-dev.2. BC **597**. NFR **42**. ADR **16**. Stories **75** (authoritative). |
+| **Convergence counter** | BC: **597**. NFR: **42**. ADR: **16**. Stories: **75** authoritative. jira-e2e env: JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ, JR_E2E_ENABLED=true. 0 active worktrees (.factory + .reference only). |
+| **Next / Pending** | CIGATE-BRANCH-PROTECTION-SWAP (harness-blocked, awaiting human repo-admin action). Standing: WIN-DENY-FRAGILITY (LOW), SEC-JR-SERVICE-NAME-GATE (LOW), WIN-AUTH-ENVLOCK-POISON (LOW), WIN-RUNTIME-OAUTH-PROBE (LOW, accepted ADR-0016), WIN-AC004-DIRECTIONAL (LOW). Open issues: #492, #429 (DNC), #400 Story B, #372. |
+| **Resume prompt** | `Read .factory/STATE.md. S-CIGATE-1 DELIVERED at develop e9b2269 (PR #518); ci-gate aggregator GREEN. PENDING: human branch-protection swap (CIGATE-BRANCH-PROTECTION-SWAP). Stories 75. STANDING: do NOT close #429 (DEC-029); #492 OPEN; OQ-5 open; E2E-PG-4 open; SEC-001 LOW deferred. jira-e2e: JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ, JR_E2E_ENABLED=true.` |
 
 ## RESUME PLAN (cold-start, self-contained)
 
 ### State snapshot
 
-- Feature: Windows-build CYCLE CLOSED (DEC-101). v0.6.0-dev.2 released (#517 → develop @ 4258202). H-WIN-6 live PASS. S-7.02 complete. No active feature. BC 597 / NFR 42 / ADR 16 / Stories 74. 0 active worktrees.
-- Next: awaiting next directive from orchestrator/user.
+- Feature: S-CIGATE-1 DELIVERED (DEC-102). PR #518 squash-merged → develop @ e9b2269. ci-gate aggregator GREEN (PR CI + push CI run 27551871837). BC 597 / NFR 42 / ADR 16 / Stories 75. 0 active worktrees.
+- Next: CIGATE-BRANCH-PROTECTION-SWAP (harness-blocked — awaiting human repo-admin branch-protection swap to make `CI Gate` the single required context on develop+main).
 
 ### Durable follow-ups (tracked Drift Items)
 
-WIN-CI-GATE-AGGREGATOR (add a single ci-gate aggregator job — own PR), WIN-AUTH-ENVLOCK-POISON (LOW), WIN-DENY-FRAGILITY (LOW), SEC-JR-SERVICE-NAME-GATE (LOW), WIN-RUNTIME-OAUTH-PROBE (LOW, accepted ADR-0016), WIN-AC004-DIRECTIONAL (LOW). Standing (non-Windows): #429 do-not-close, #492 OPEN, OQ-5, E2E-PG-4, #400 Story B, #372.
+CIGATE-BRANCH-PROTECTION-SWAP (harness-blocked, human repo-admin action required), WIN-AUTH-ENVLOCK-POISON (LOW), WIN-DENY-FRAGILITY (LOW), SEC-JR-SERVICE-NAME-GATE (LOW), WIN-RUNTIME-OAUTH-PROBE (LOW, accepted ADR-0016), WIN-AC004-DIRECTIONAL (LOW). Standing (non-Windows): #429 do-not-close, #492 OPEN, OQ-5, E2E-PG-4, #400 Story B, #372.
 
 ### Process note
 
