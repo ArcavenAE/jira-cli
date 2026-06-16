@@ -7,6 +7,20 @@ project: "jr (jira-cli)"
 
 Track all spec version changes. Most recent version first.
 
+## [1.3.16] - 2026-06-16
+
+### Type: PATCH
+
+### Summary
+
+BC-7.2.011 v1.9.5: fix self-contradicting forward/reverse loss grouping (F-P8-001) + drop stale BC-INDEX line citation (F-P8-002).
+
+### Changed Requirements
+
+- BC-7.2.011 v1.9.5: corrected Behavior paragraph and Reverse-path paragraph grouping — condition 5 (EC-4, bare-URL autolink) is a FORWARD/POST-PASS loss, not a reverse-path loss; the only reverse-path loss is case 4 (EC-10). Dropped stale `(~L2188-2189)` line-number suffix from BC-INDEX.md `src/adf.rs::AdfRenderer::finish` citation, leaving symbol-form only. No algorithm, EC content, per-condition annotations, total_bcs, definitional_count, or CANONICAL-COUNTS changed.
+
+---
+
 ## [1.3.15] - 2026-06-16
 
 ### Type: PATCH
