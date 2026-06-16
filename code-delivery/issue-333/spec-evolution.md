@@ -8,7 +8,7 @@ inputs:
   - ".factory/code-delivery/issue-333/delta-analysis.md"
   - ".factory/specs/prd/nfr-catalog.md"
   - ".factory/specs/prd/holdout-scenarios.md"
-input-hash: "[live-state]"
+input-hash: "bd13583"
 status: draft
 timestamp: 2026-05-12
 ---

@@ -7,7 +7,7 @@ producer: state-manager
 timestamp: 2026-05-04T00:00:00
 cycle: "cycle-001"
 inputs: [adversarial-reviews/]
-input-hash: "[live-state]"
+input-hash: "7e52d32"
 traces_to: STATE.md
 ---
 

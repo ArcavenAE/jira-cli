@@ -7,13 +7,28 @@ producer: state-manager
 timestamp: 2026-05-08T00:00:00
 cycle: "cycle-001"
 inputs: [STATE.md]
-input-hash: "[live-state]"
+input-hash: "327f491"
 traces_to: STATE.md
 ---
 
 # Archived Session Checkpoints — cycle-001
 
 Superseded checkpoints are archived here when STATE.md is updated with a newer one.
+
+---
+
+## Checkpoint archived 2026-06-16 (Issue #492 F5-CONVERGED / F6-next — PR #521 OPEN @ 8062b78)
+
+_Was the active checkpoint after Issue #492 F5 scoped adversarial CONVERGED (DEC-107; 15 passes, 6 fix rounds, 3 clean; BC-7.2.011 v1.9.6 @ factory-artifacts 87e3c53; zero code defects). PR #521 OPEN @ 8062b78. Superseded when F6 COMPLETE + F7 DELTA_CONVERGED recorded (DEC-108; PR #521 @ 72fbcb9; human-authorized merge pending CI-green)._
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-06-16 |
+| **Position** | **Issue #492 at F5-CONVERGED / F6-next. PR #521 OPEN (base: develop @ 8062b78; CI running). BC-7.2.011 v1.9.6 @ factory-artifacts 87e3c53. develop @ 2cb219b. Worktree .worktrees/S-492 @ 8062b78 active (branch fix/adf-block-html-hardbreak-492).** |
+| **develop HEAD** | origin/develop = **2cb219b** (fork-release-ops PR #520). activation v0.6.0-dev.2. BC **598**. NFR **42**. ADR **16**. Stories **75** (authoritative). |
+| **Convergence counter** | BC: **598**. NFR: **42**. ADR: **16**. Stories: **75** authoritative. jira-e2e env: JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ, JR_E2E_ENABLED=true. Active worktree: .worktrees/S-492 @ 8062b78. |
+| **Next / Pending** | #492 F6 targeted hardening. Also pending: fork-release-ops enablement decision. Standing drift: WIN-DENY-FRAGILITY (LOW), SEC-JR-SERVICE-NAME-GATE (LOW), WIN-AUTH-ENVLOCK-POISON (LOW), WIN-RUNTIME-OAUTH-PROBE (LOW, accepted ADR-0016), WIN-AC004-DIRECTIONAL (LOW), #492-TEST-HARNESS-COUPLING (LOW). Open issues: #492 (F6 next), #429 (DNC), #400 Story B, #372. |
+| **Resume prompt** | `Read .factory/STATE.md. Issue #492 F5 CONVERGED (DEC-107). PR #521 OPEN @ 8062b78 (base: develop). BC-7.2.011 v1.9.6 @ factory-artifacts 87e3c53. Next: F6 targeted hardening on frozen 8062b78. develop @ 2cb219b. Worktree .worktrees/S-492 active. STANDING: do NOT close #429 (DEC-029); OQ-5 open; E2E-PG-4 open; SEC-001 LOW deferred. Fork-release-ops enablement PENDING (DEC-104). jira-e2e: JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ, JR_E2E_ENABLED=true.` |
 
 ---
 

@@ -9,7 +9,7 @@ phase: 3
 inputs:
   - .factory/code-delivery/issue-340/story.md
   - .factory/specs/prd/bc-3-issue-write.md
-input-hash: "[n/a — regression-pin, no stub generation]"
+input-hash: "b196f34"
 traces_to: "BC-3.4.009"
 stub_architect_agent: "[n/a]"
 stub_compile_verified: false
