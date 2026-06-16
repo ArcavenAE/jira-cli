@@ -7,6 +7,25 @@ project: "jr (jira-cli)"
 
 Track all spec version changes. Most recent version first.
 
+## [1.3.14] - 2026-06-16
+
+### Type: PATCH
+
+### Summary
+
+BC-7.2.011 v1.9.3: citation hygiene — replaced stale line-number anchors with symbol-form (F-P2-002, #408 convention).
+
+### Changed Requirements
+
+- BC-7.2.011 v1.9.3: replaced `~L1975-1976` and `~L2188-2189` approximate line-number citations in Behavior paragraph, Reverse-path paragraph, EC-10, and Trace field with symbol-form citations (`src/adf.rs::AdfRenderer::render_node` `"hardBreak"` arm and `src/adf.rs::AdfRenderer::finish`). Citation-text-only change; no algorithm, BC count, AC, or count surface modified.
+
+### Impact Assessment
+
+- **Affected stories:** None
+- **Migration needed:** NO
+
+---
+
 ## [1.3.13] - 2026-06-13
 
 ### Type: PATCH
