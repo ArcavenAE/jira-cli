@@ -51,3 +51,10 @@ traces_to: STATE.md
 | Issue | Title | Status | Priority | Notes |
 |-------|-------|--------|----------|-------|
 | #475 | ADF read-path / E2E coverage | **CLOSED — CYCLE CLOSED + MERGED** (PR #499 → develop @ 418a392e, 2026-06-11). Gap 1 (read-path adf_to_text via issue view/comments) DELIVERED. Gap 2 (#470 listItem live assert) DELIVERED. Issue was already CLOSED; no Closes keyword in PR. | LOW | F1–F7 ALL COMPLETE. DEC-073/074/075/076. Test-only: no src change. BC 594 / NFR 41 / Stories 68 unchanged. DEFERRED-ADF-E2E: ALL sub-gaps DONE. |
+
+### Closed issues archived 2026-06-16 (#492 cycle-close)
+
+| Issue | Title | Status | Priority | Notes |
+|-------|-------|--------|----------|-------|
+| #492 | fix(adf): block-HTML interior newlines render as hardBreak nodes, not raw \n (BC-7.2.011) | **CLOSED — CYCLE CLOSED + MERGED** (PR #521 squash-merged → develop @ 3ba8ea2, 2026-06-16; #492 auto-closed). F4 TDD (Algorithm B, 13 block-HTML tests) → F5 15-pass/3-clean CONVERGED (0 code defects; severity M→L→0) → F6 proptest 5-invariant 150k-case suite + 100% effective mutation (3 equivalent) → F7 5/5 DELTA_CONVERGED. BC-7.2.011 v1.9.6 FINAL. 14/14 CI green incl CI Gate. Remote branch fix/adf-block-html-hardbreak-492 deleted; worktree .worktrees/S-492 removed. DEC-105..109. | LOW | BC-7.2.011 v1.9.6. Cycle artifacts: `cycles/cycle-001/issue-492/`. Follow-up #522 (pre-existing lone-CR OOS). S-7.02 checklist complete. |
+| #521 | PR: fix(adf): block-HTML interior newlines render as hardBreak nodes (BC-7.2.011, #492) | **MERGED** → develop @ 3ba8ea2 (2026-06-16). 14/14 CI green incl CI Gate. Squash-merged. | — | Closes #492. |

@@ -2,11 +2,11 @@
 document_type: pipeline-state
 version: "2.0"
 status: active
-timestamp: 2026-06-16T12:00:00Z
+timestamp: 2026-06-16T14:00:00Z
 phase: phase-3-tdd-implementation
 project: jira-cli
 mode: BROWNFIELD
-current_step: "Issue #492: F6 COMPLETE + F7 DELTA_CONVERGED (5/5). PR #521 @ 72fbcb9 HUMAN-AUTHORIZED merge (pending CI-green). Follow-up issue for pre-existing lone-CR defect being filed. DEC-108."
+current_step: "Issue #492 bug-fix cycle CLOSED — PR #521 squash-merged → develop @ 3ba8ea2; #492 closed. Follow-up #522 open (pre-existing lone-CR). No active feature. DEC-109."
 current_cycle: "cycle-001"
 dtu_required: false
 phase_2_status: APPROVED
@@ -26,10 +26,10 @@ activation_version: "v0.6.0-dev.2"
 | **Product** | jr (Jira CLI) |
 | **Mode** | BROWNFIELD / Rust |
 | **Target Workspace** | develop → main |
-| **Last Updated** | 2026-06-16: Issue #492 F6 COMPLETE + F7 DELTA_CONVERGED (5/5). PR #521 @ 72fbcb9 human-authorized merge pending CI-green (DEC-108). Pre-existing lone-CR OOS defect pinned. BC 598 / NFR 42 / ADR 16 / Stories 75. |
-| **Current Phase** | Phase 3 — TDD Implementation IN PROGRESS — #492 F7 CONVERGED / merge-pending. BC 598. NFR 42. ADR 16. Stories **75** (authoritative). |
+| **Last Updated** | 2026-06-16: Issue #492 cycle CLOSED — PR #521 squash-merged → develop @ 3ba8ea2 (14/14 CI green incl CI Gate; #492 auto-closed). Follow-up #522 open (pre-existing lone-CR). BC 598 / NFR 42 / ADR 16 / Stories 75. DEC-109. |
+| **Current Phase** | Phase 3 — TDD Implementation IN PROGRESS — no active feature. develop @ 3ba8ea2. BC 598. NFR 42. ADR 16. Stories **75** (authoritative). |
 | **Next Phase** | Phase 4: Holdout Evaluation (not started) |
-| **Activation HEAD** | 4258202 (v0.6.0-dev.2 released 2026-06-14; v0.5.0 STABLE shipped 2026-06-12) |
+| **Activation HEAD** | 4258202 (v0.6.0-dev.2 released 2026-06-14; develop HEAD 3ba8ea2; v0.5.0 STABLE shipped 2026-06-12) |
 
 ## Phase Progress
 
@@ -47,7 +47,7 @@ activation_version: "v0.6.0-dev.2"
 | CLI leading-dash values (issue #471 e2e / description-leading-dash) | **CYCLE CLOSED + MERGED** | 2026-06-11 | F1–F7 ALL COMPLETE — CONVERGED | PR #496 → develop @ 45ceae6. `allow_hyphen_values = true` on 7 free-text write args. BC 594 unchanged. +17 hermetic parse tests (tests/cli_smoke.rs, 44 total). F5: 8 passes / 3-clean-pass CONVERGED. F6: 1763/0, clippy/fmt/deny clean, mutation zero-in-scope. F7: 5-dimension consistency CLEAN. DEC-072. |
 | ADF E2E read-path coverage (issue #475) | **CYCLE CLOSED + MERGED** | 2026-06-11 | F1–F7 ALL COMPLETE — CONVERGED | PR #499 → develop @ 418a392e. Test-only (no src change). BC 594 / NFR 41 / Stories 68 unchanged. DEC-073/074/075/076. |
 | Windows build (x86_64-pc-windows-msvc) | **CYCLE CLOSED** — v0.6.0-dev.2 released + H-WIN-6 PASS | 2026-06-14 (F4+F5+F6+F7+RELEASE) | F4–F7 ALL COMPLETE; H-WIN-6 PASS; DEC-101 | develop @ 4258202 (#517). 14-pass F5; 9/9 mutants; 9 props; 0 vulns; 1808 green. jr-v0.6.0-dev.2-x86_64-pc-windows-msvc.zip + checksum verified. Smoke test ✓ windows-latest. |
-| Issue #492 block-HTML hardBreak (BC-7.2.011) | **F6 COMPLETE + F7 CONVERGED — merge-pending** | F1–F7 ALL COMPLETE 2026-06-16 | 5/5 dims; 150k proptest cases; 100% mutation; 0 code defects | BC-7.2.011 v1.9.6; PR #521 @ 72fbcb9; human-authorized (pending CI-green); DEC-108 |
+| Issue #492 block-HTML hardBreak (BC-7.2.011) | **CYCLE CLOSED + MERGED** | 2026-06-16 | F1–F7 ALL COMPLETE — CONVERGED | PR #521 → develop @ 3ba8ea2. BC-7.2.011 v1.9.6. 5/5 F7 dims; 150k proptest; 100% mutation; 0 code defects. Follow-up #522 (lone-CR OOS). DEC-109. |
 | 4: Holdout Evaluation | not-started | | | |
 | 5: Adversarial Refinement | not-started | | | |
 | 6: Formal Hardening | not-started | | | |
@@ -63,7 +63,7 @@ activation_version: "v0.6.0-dev.2"
 | S-CIGATE-1 branch-protection swap COMPLETE + verified (develop+main now require single `CI Gate` context, app_id 15368; safe 2-step add-before-remove; user-executed). WIN-CI-GATE-AGGREGATOR CLOSED. Feature cycle CLOSED. DEC-103. | Agent state-manager | CYCLE CLOSED | develop @ e9b2269. BC 597 / NFR 42 / ADR 16 / Stories 75. |
 | Fork-friendly-release-ops integrated: PR #520 squash-merged → develop @ 2cb219b (integrates closed #503 by @ArcavenAE, credited). 17 files inert-by-default; ci.yml Windows-matrix+ci-gate+gitleaks-v3 preserved; 14/14 CI GREEN incl CI Gate. 4-lens review done. Enablement decision PENDING (backfill/gap-fill/signing/suppress-phantom-runs — each needs fixes first). Full plan → `.factory/research/fork-release-ops-integration.md`. DEC-104. | Agent state-manager | PENDING-DECISION | develop @ 2cb219b. BC 597 / NFR 42 / ADR 16 / Stories 75. |
 | Issue #492 bug-fix cycle OPENED (F1 delta analysis pending). DEC-105. Cycle artifacts: `cycles/cycle-001/issue-492/`. | Agent state-manager | OPEN | develop @ 2cb219b. |
-| Issue #492: F6 targeted hardening COMPLETE (proptest prop_492_* — 3 properties, 150k executions, 5 invariants hold; mutation 7 total: 4 caught + 3 proven-equivalent = 100% effective; cargo audit 346 deps 0 advisories; cargo deny ok; 222 adf tests green; 1 OOS lone-CR defect pinned as #[ignore]d). F7 DELTA_CONVERGED 5/5 (consistency audit PASS-WITH-NOTES, 3 non-blocking deferred; input-drift PASS for #492 perimeter). PR #521 @ 72fbcb9 HUMAN-AUTHORIZED merge (pending CI-green). DEC-108. | Agent state-manager | F6+F7 CONVERGED | PR #521 OPEN @ 72fbcb9. merge-pending (human-authorized). BC 598 / NFR 42 / ADR 16 / Stories 75. |
+| Issue #492 cycle CLOSED. PR #521 squash-merged → develop @ 3ba8ea2 (14/14 CI green incl CI Gate; #492 auto-closed). Follow-up #522 filed (pre-existing lone-CR OOS defect, pulldown-cmark CR-normalization gap in heading/codeBlock via Event::Text path). Worktree .worktrees/S-492 removed; local branch fix/adf-block-html-hardbreak-492 deleted. S-7.02 cycle-closing checklist complete (see cycles/cycle-001/lessons.md). DEC-109. | Agent state-manager | CYCLE CLOSED | develop @ 3ba8ea2. BC 598 / NFR 42 / ADR 16 / Stories 75. |
 
 ## Decisions Log
 
@@ -89,6 +89,7 @@ activation_version: "v0.6.0-dev.2"
 | DEC-106 | 2026-06-16: Issue #492 F2 spec evolution CONVERGED. BC-7.2.011 (block-HTML→ADF hardBreak interior-newline mapping) evolved v1.2.0→v1.9.1 across ~12 fresh-context adversarial passes (multi-lens parallel: algorithm/EC, code-drift, consistency/implementer). Substantive findings burned down: CRITICAL algorithm A→B ambiguity; HIGH impossible href autolink example + CRLF split double-count; MED count-prose drift + byte-identity reverse-trim_end overclaim (FRESH-02) + byte-identity forward trailing-newline overclaim (FRESH-04); plus LOW wording/annotation polish to a fully-harmonized 6-EC byte-identity annotation set. Byte-identity round-trip claim made EXHAUSTIVE (5 conditions; forward-path: CR-normalize/step3, leading-trim/step5b, trailing-newline/step2, autolink/post-pass; reverse-path: final-whitespace/finish-trim_end) — completeness confirmed exhaustive (no 6th mechanism) by multiple passes. Final scoped pass on frozen v1.9.1 (634cb88) = CLEAN. Counts unchanged: BC 598 / bc-7 90/44 / Stories 75. Human-approved fix direction = Option a (hardBreak split). Cycle artifacts: cycles/cycle-001/issue-492/. | Feature Mode / #492 F2 spec | Phase 3 | 2026-06-16 |
 | DEC-107 | 2026-06-16: Issue #492 F5 scoped adversarial CONVERGED. 15 fresh-context passes / 6 fix rounds / final 3 clean (Pass 13 deep cross-consistency, Pass 14 holistic+traceability+counts, Pass 15 robustness+completeness) on frozen 8062b78 + BC-7.2.011 v1.9.6 @ factory-artifacts 87e3c53. ZERO production-code defects — single Algorithm B path proven correct ~12x across all lenses; all findings were doc/spec precision (severity decayed M→L→0). BC version trail: v1.9.1→v1.9.2→v1.9.3→v1.9.4→v1.9.5→v1.9.6. PR #521 pushed. Next: F6 targeted hardening. | Feature Mode / #492 F5 | Phase 3 | 2026-06-16 |
 | DEC-108 | 2026-06-16: Issue #492 F6 hardening COMPLETE (proptest 5-invariant suite, 150k cases; mutation 100% effective, 3 equivalent; cargo audit 346 deps 0 advisories; cargo deny ok; full suite 222 adf green) + F7 DELTA_CONVERGED 5/5 (consistency audit PASS-WITH-NOTES, 3 non-blocking deferred; input-drift PASS for #492 perimeter). Human-authorized merge of PR #521 @ 72fbcb9 (pending CI green). F6 surfaced pre-existing OOS lone-CR defect (heading/codeBlock via generic Event::Text path; pulldown-cmark CR-normalization gap) — follow-up issue filed, #[ignore]d test test_lone_cr_survives_pre_existing_492_oos pinned. NOT a #492 regression. | Feature Mode / #492 F6+F7 | Phase 3 | 2026-06-16 |
+| DEC-109 | 2026-06-16: Issue #492 bug-fix cycle CLOSED. PR #521 squash-merged → develop @ 3ba8ea2 (14/14 CI green incl CI Gate; #492 auto-closed). Full Feature-Mode pipeline: F4 TDD → F5 15-pass/3-clean scoped-adversarial CONVERGED (zero code defects; all findings doc/spec precision) → F6 hardening (proptest 5-invariant 150k-case suite + 100% effective mutation) → F7 5/5 DELTA_CONVERGED + consistency PASS-WITH-NOTES + input-drift PASS. BC-7.2.011 v1.9.6. F6 surfaced pre-existing OOS lone-CR defect → follow-up #522 filed. S-7.02 checklist complete (cycles/cycle-001/lessons.md). LESSON-RESUME-STATE-RECONCILE codified. | Feature Mode / #492 CYCLE CLOSE | Phase 3 | 2026-06-16 |
 
 ## Skip Log
 
@@ -120,12 +121,12 @@ All 7 S-WIN-1..6 + #475 per-AC demos: **Yes — adapted**. All are CI-config / i
 | WIN-DENY-FRAGILITY | deny.toml canonical-un-skipped-version has no CI guard | 17-entry skip set topology-dependent; future windows-sys update could silently break N-1 invariant. | LOW | OPEN — tracked process-gap |
 | WIN-AUTH-ENVLOCK-POISON | ENV_LOCK uses .lock().unwrap() in auth tests | Latent poison-cascade risk. Apply .unwrap_or_else(|e| e.into_inner()) uniformly. | LOW | OPEN — follow-up |
 | #492-F4-IMPL | F4 implementation carry-forward | RESOLVED — F4 COMPLETE (Algorithm B, 13 block-HTML tests, docs/specs/adf-block-html.md, PR #521 @ 8062b78). | n/a | RESOLVED — F4 DONE |
-| PRE-EXISTING-LONE-CR | heading+codeBlock raw `\r` survival | pulldown-cmark CR-normalization gap: lone `\r` (no `\n`) passes through `Event::Text → push_text` into heading/codeBlock text nodes. JSON-level hazard. NOT introduced by #492 (Algorithm B path proven CR-free). Pinned: `#[ignore]`d `test_lone_cr_survives_pre_existing_492_oos`. Follow-up issue filed (human-authorized). | MED | OPEN — follow-up issue filed |
+| PRE-EXISTING-LONE-CR | heading+codeBlock raw `\r` survival | pulldown-cmark CR-normalization gap: lone `\r` (no `\n`) passes through `Event::Text → push_text` into heading/codeBlock text nodes. JSON-level hazard. NOT introduced by #492 (Algorithm B path proven CR-free). Pinned: `#[ignore]`d `test_lone_cr_survives_pre_existing_492_oos`. **Follow-up issue #522 FILED + OPEN.** | MED | OPEN — tracked as #522 |
 | F7-001 | CLAUDE.md 'symmetric' wording | CLAUDE.md description-echo section uses 'symmetric'/'asymmetric' wording with minor precision gap noted in F7 consistency audit. Non-blocking cosmetic. Deferred to next CLAUDE.md edit. | LOW | ACCEPTED-DEFERRED (F7 non-blocking) |
 | F7-002 | F2-record archival note | cycles/cycle-001/issue-492/f2-convergence.md archival notation note from F7 audit. No functional gap; reference file exists. | LOW | ACCEPTED-DEFERRED (F7 non-blocking) |
 | F7-003 | BC-7.2.011 "13 tests" phrasing | BC-7.2.011 body uses "13 tests" — acceptable per check-bc-no-numeric-test-counts.sh qualitative policy (PG-365-1); no change required. | LOW | ACCEPTED-DEFERRED (F7 non-blocking) |
-| #492-TEST-HARNESS-COUPLING | process-gap (F-P1-003) | Handler-level block-HTML tests (EC-6/7/8/9/10) construct AdfBuilder directly and couple to push_text accumulation shape; re-validate if that accumulation path is refactored. Adversary verdict: process-gap, no code change required. | LOW | OPEN — cycle-close codification candidate |
-| #492-PG-TRACE-TESTS | process-gap | No CI check that BC Source/Trace-cited test symbols resolve to real #[test] fns. Must be PHASE-AWARE (pre-impl BCs legitimately cite not-yet-created tests) to avoid false-positives on in-flight BCs. Candidate: scripts/check-bc-trace-tests-exist.sh gated on cycle status. | LOW | OPEN — cycle-close codification candidate |
+| #492-TEST-HARNESS-COUPLING | process-gap (F-P1-003) | Handler-level block-HTML tests (EC-6/7/8/9/10) construct AdfBuilder directly and couple to push_text accumulation shape; re-validate if that accumulation path is refactored. Adversary verdict: process-gap, no code change required. | LOW | TRACKED DEFERRAL — no follow-up story required; re-validate on push_text refactor |
+| #492-PG-TRACE-TESTS | process-gap | No CI check that BC Source/Trace-cited test symbols resolve to real #[test] fns. Must be PHASE-AWARE (pre-impl BCs legitimately cite not-yet-created tests) to avoid false-positives on in-flight BCs. Candidate: scripts/check-bc-trace-tests-exist.sh gated on cycle status. | LOW | TRACKED DEFERRAL — pre-existing; no CI check yet |
 | OQ-5 | CLAUDE.md NFR-O-N stale | auth status --output json documented but not implemented in src. | LOW | OPEN — doc drift |
 | E2E-PG-4 | E2E coverage gap | REMAINING: remote-link round-back (no `jr remote-link read`). | LOW | OPEN |
 | DRIFT-331-PAGINATION | get_issue_types_for_project pagination | Inline reimplementation; target: reuse OffsetPage<T>. Deferred. | LOW | OPEN |
@@ -139,7 +140,7 @@ All 7 S-WIN-1..6 + #475 per-AC demos: **Yes — adapted**. All are CI-config / i
 
 ## Convergence Trackers
 
-Full per-issue: `cycles/cycle-001/convergence-trajectory.md`. Current: **[2026-06-16] Issue #492 F6 COMPLETE + F7 DELTA_CONVERGED 5/5. proptest 150k cases (5 invariants hold); mutation 100% effective; cargo audit/deny clean; 222 adf green. Consistency audit PASS-WITH-NOTES (3 non-blocking deferred). Input-drift PASS for #492 perimeter. PR #521 @ 72fbcb9 human-authorized merge (pending CI-green). DEC-108.** Prior: F5 CONVERGED DEC-107 (15 passes / 3 clean / 0 code defects). Stories 75. BC 598.
+Full per-issue: `cycles/cycle-001/convergence-trajectory.md`. Current: **[2026-06-16] Issue #492 CYCLE CLOSED — PR #521 squash-merged → develop @ 3ba8ea2 (DEC-109). F5: 15-pass/3-clean CONVERGED (0 code defects; all findings doc/spec precision). F6: proptest 150k/5-invariant + 100% effective mutation. F7: 5/5 DELTA_CONVERGED. BC-7.2.011 v1.9.6 FINAL. Follow-up #522 open (OOS lone-CR). Stories 75. BC 598.**
 
 ## Session Resume Checkpoint
 
@@ -148,28 +149,27 @@ Full per-issue: `cycles/cycle-001/convergence-trajectory.md`. Current: **[2026-0
 | Field | Value |
 |-------|-------|
 | **Date** | 2026-06-16 |
-| **Position** | **Issue #492 at F7-CONVERGED / merge-pending. PR #521 @ 72fbcb9 HUMAN-AUTHORIZED (pending CI-green). BC-7.2.011 v1.9.6. develop @ 2cb219b. Worktree .worktrees/S-492 @ 72fbcb9 (branch fix/adf-block-html-hardbreak-492).** |
-| **develop HEAD** | origin/develop = **2cb219b** (fork-release-ops PR #520). activation v0.6.0-dev.2. BC **598**. NFR **42**. ADR **16**. Stories **75** (authoritative). |
-| **Convergence counter** | BC: **598**. NFR: **42**. ADR: **16**. Stories: **75** authoritative. jira-e2e env: JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ, JR_E2E_ENABLED=true. Active worktree: .worktrees/S-492 @ 72fbcb9. |
-| **Next / Pending** | Await CI-green on PR #521 → human merge → close #492 → clean worktree. Pre-existing lone-CR follow-up issue pending filing. Fork-release-ops enablement PENDING (DEC-104). Standing drift: WIN-DENY-FRAGILITY (LOW), SEC-JR-SERVICE-NAME-GATE (LOW), WIN-AUTH-ENVLOCK-POISON (LOW), WIN-RUNTIME-OAUTH-PROBE (LOW, accepted ADR-0016), WIN-AC004-DIRECTIONAL (LOW), #492-TEST-HARNESS-COUPLING (LOW), PRE-EXISTING-LONE-CR (MED). Open issues: #492 (merge-pending), #429 (DNC), #400 Story B, #372. |
-| **Resume prompt** | `Read .factory/STATE.md. Issue #492 F6+F7 CONVERGED (DEC-108). PR #521 @ 72fbcb9 HUMAN-AUTHORIZED merge (pending CI-green). BC-7.2.011 v1.9.6. develop @ 2cb219b. Worktree .worktrees/S-492 @ 72fbcb9. On CI-green: merge #521 → close #492 → clean worktree. Pre-existing lone-CR OOS follow-up issue pending. STANDING: do NOT close #429 (DEC-029); OQ-5 open; E2E-PG-4 open; SEC-001 LOW deferred. Fork-release-ops enablement PENDING (DEC-104). jira-e2e: JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ, JR_E2E_ENABLED=true.` |
+| **Position** | **Issue #492 CYCLE CLOSED. PR #521 squash-merged → develop @ 3ba8ea2 (DEC-109). No active feature. BC-7.2.011 v1.9.6 FINAL. Follow-up #522 open (pre-existing lone-CR OOS).** |
+| **develop HEAD** | origin/develop = **3ba8ea2** (PR #521 #492 bug-fix). activation v0.6.0-dev.2. BC **598**. NFR **42**. ADR **16**. Stories **75** (authoritative). |
+| **Convergence counter** | BC: **598**. NFR: **42**. ADR: **16**. Stories: **75** authoritative. jira-e2e env: JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ, JR_E2E_ENABLED=true. No active worktree. |
+| **Next / Pending** | No active feature. Fork-release-ops enablement PENDING (DEC-104). #522 open (lone-CR OOS). Standing drift: WIN-DENY-FRAGILITY (LOW), SEC-JR-SERVICE-NAME-GATE (LOW), WIN-AUTH-ENVLOCK-POISON (LOW), WIN-RUNTIME-OAUTH-PROBE (LOW, accepted ADR-0016), WIN-AC004-DIRECTIONAL (LOW), #492-TEST-HARNESS-COUPLING (LOW, deferred), #492-PG-TRACE-TESTS (LOW, deferred). Open issues: #522 (OPEN), #429 (DNC), #400 Story B, #372. |
+| **Resume prompt** | `Read .factory/STATE.md. Issue #492 CYCLE CLOSED — PR #521 → develop @ 3ba8ea2 (DEC-109). BC-7.2.011 v1.9.6 FINAL. No active feature. Follow-up #522 open (pre-existing lone-CR OOS). STANDING: do NOT close #429 (DEC-029); OQ-5 open; E2E-PG-4 open; SEC-001 LOW deferred. Fork-release-ops enablement PENDING (DEC-104). jira-e2e: JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ, JR_E2E_ENABLED=true.` |
 
 ## RESUME PLAN (cold-start, self-contained)
 
 ### State snapshot
 
-- Issue #492: F1–F7 ALL COMPLETE. F6 COMPLETE (proptest 5-inv suite 150k cases; mutation 100% effective; audit/deny clean). F7 DELTA_CONVERGED 5/5 (consistency audit PASS-WITH-NOTES; 3 non-blocking deferred; input-drift PASS for #492 perimeter). DEC-108. PR #521 @ 72fbcb9 HUMAN-AUTHORIZED (pending CI-green). develop @ 2cb219b. Worktree .worktrees/S-492 @ 72fbcb9 active.
-- Pre-existing OOS lone-CR defect surfaced by F6 — pinned as #[ignore]d test; follow-up issue being filed.
-- Prior: Fork-release-ops PR #520 squash-merged → develop @ 2cb219b (integrates closed #503 by @ArcavenAE; DEC-104). Machinery inert by default. BC 598 / NFR 42 / ADR 16 / Stories 75.
-- Next: await CI-green → merge #521 → close #492 → clean worktree. Then: fork-release-ops enablement decision (read `.factory/research/fork-release-ops-integration.md`).
+- Issue #492 CYCLE CLOSED: PR #521 squash-merged → develop @ 3ba8ea2 (14/14 CI green incl CI Gate; #492 auto-closed; DEC-109). BC-7.2.011 v1.9.6 FINAL. No active feature. No active worktree.
+- Follow-up #522 OPEN: pre-existing lone-CR OOS defect (pulldown-cmark CR-normalization gap; heading/codeBlock Event::Text path). Pinned: `#[ignore]`d test. S-7.02 cycle-closing checklist complete (cycles/cycle-001/lessons.md). LESSON-RESUME-STATE-RECONCILE codified.
+- develop @ 3ba8ea2. BC 598 / NFR 42 / ADR 16 / Stories 75. Fork-release-ops enablement PENDING (DEC-104; read `.factory/research/fork-release-ops-integration.md`).
 
 ### Durable follow-ups (tracked Drift Items)
 
-WIN-AUTH-ENVLOCK-POISON (LOW), WIN-DENY-FRAGILITY (LOW), SEC-JR-SERVICE-NAME-GATE (LOW), WIN-RUNTIME-OAUTH-PROBE (LOW, accepted ADR-0016), WIN-AC004-DIRECTIONAL (LOW), #492-TEST-HARNESS-COUPLING (LOW, cycle-close codification candidate), PRE-EXISTING-LONE-CR (MED, follow-up issue filed). Standing (non-Windows): #429 do-not-close, OQ-5, E2E-PG-4, #400 Story B, #372.
+WIN-AUTH-ENVLOCK-POISON (LOW), WIN-DENY-FRAGILITY (LOW), SEC-JR-SERVICE-NAME-GATE (LOW), WIN-RUNTIME-OAUTH-PROBE (LOW, accepted ADR-0016), WIN-AC004-DIRECTIONAL (LOW), #492-TEST-HARNESS-COUPLING (LOW, deferred), #492-PG-TRACE-TESTS (LOW, deferred). Standing (non-Windows): #429 do-not-close, OQ-5, E2E-PG-4, #400 Story B, #372, #522.
 
 ### Process note
 
-Full-VSDD run caught 3 classes invisible to the prior gate each time — pre-F4 research (windows-sys 0.60 / Compress-Archive), the integration gate (real jr.exe Windows stack-overflow prod bug), and repo-settings drift (branch protection). Lessons codified: LESSON-PRESENCE-ANCHOR, LESSON-WIN-CI-CHECKLIST, LESSON-INTEGRATION-GATE-PROD, LESSON-MATRIX-BRANCH-PROTECTION, LESSON-ADVERSARY-CHECKOUT-RACE. #492: single Algorithm B path proven correct across 15 F5 passes (M→L→0 severity decay); F6 proptest 150k cases + 100% effective mutation; F6 also surfaced pre-existing lone-CR OOS defect (pinned #[ignore]d).
+Full-VSDD run caught 3 classes invisible to the prior gate each time — pre-F4 research (windows-sys 0.60 / Compress-Archive), the integration gate (real jr.exe Windows stack-overflow prod bug), and repo-settings drift (branch protection). Lessons codified: LESSON-PRESENCE-ANCHOR, LESSON-WIN-CI-CHECKLIST, LESSON-INTEGRATION-GATE-PROD, LESSON-MATRIX-BRANCH-PROTECTION, LESSON-ADVERSARY-CHECKOUT-RACE, LESSON-RESUME-STATE-RECONCILE. #492: single Algorithm B path proven correct across 15 F5 passes (M→L→0 severity decay); F6 proptest 150k cases + 100% effective mutation; F6 surfaced pre-existing lone-CR OOS defect → #522.
 
 ## Open Issues Tracker
 
@@ -177,7 +177,7 @@ Full-VSDD run caught 3 classes invisible to the prior gate each time — pre-F4 
 
 | Issue | Title | Status | Priority | Notes |
 |-------|-------|--------|----------|-------|
-| #492 | fix(adf): block-HTML raw-\n invariant | OPEN — F6+F7 CONVERGED; PR #521 @ 72fbcb9 merge-pending (human-authorized, pending CI-green). | LOW | DEC-108. Cycle: cycles/cycle-001/issue-492/. |
+| #522 | fix(adf): lone-CR survival in heading/codeBlock (pre-existing OOS from #492 F6) | OPEN | LOW/MED | Pre-existing lone-CR defect (pulldown-cmark CR-normalization gap in Event::Text path). Surfaced by #492 F6 proptest. Pinned: `#[ignore]`d test. NOT a #492 regression. DEC-109. |
 | #429 | jr_isolated() crypto-random suffix | OPEN | LOW | DEC-029 deferred to human. Do NOT close autonomously. |
 | #400 | Test-hardening + process-gap follow-ups | OPEN — Story A MERGED PR #431. Story B + engine items remain. | LOW | |
 | #372 | cargo-mutants partial baseline | OPEN | LOW | Follow-up from #346 |
@@ -185,7 +185,7 @@ Full-VSDD run caught 3 classes invisible to the prior gate each time — pre-F4 
 | #209/#210 | (backlog) | OPEN | — | |
 | #520 | ci: opt-in release ops (fork-friendly) | MERGED @ 2cb219b (develop). Integrates #503. Inert by default. | LOW | Enablement decision PENDING — see DEC-104 + research file. |
 | #503 | External fork contribution by @ArcavenAE | CLOSED (integrated via #520; Co-authored-by credit in squash commit; credit comment left on PR #503). | — | CLOSED — no further action. |
-| Merged: #518/517/510/509/508/507/475 | MERGED or CLOSED | Archived | — | See `cycles/cycle-001/blocking-issues-resolved.md` (#510) + `cycles/cycle-001/burst-log.md` "Archived Open Issues" (rest) |
+| Merged: #521/518/517/510/509/508/507/475 | MERGED or CLOSED | Archived | — | See `cycles/cycle-001/closed-issues-archive.md` (#492/#521 + prior) + `cycles/cycle-001/blocking-issues-resolved.md` (#510) |
 
 ## Historical Content
 

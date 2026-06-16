@@ -3890,3 +3890,118 @@ All process-gap items reviewed:
 S-CIGATE-1 is DELIVERED (code shipped, PR #518 merged, ci-gate GREEN). REMAINING: human branch-protection swap (CIGATE-BRANCH-PROTECTION-SWAP) to activate ci-gate as the single required status check.
 
 _Recorded: 2026-06-15 — S-CIGATE-1 DELIVERED; PR #518 → develop @ e9b2269; ci-gate GREEN on PR+push CI run 27551871837._
+
+---
+
+## S-7.02 Cycle-Closing Review — Issue #492 (block-HTML hardBreak, 2026-06-16)
+
+_Issue #492 CYCLE CLOSED: PR #521 squash-merged → develop @ 3ba8ea2 (2026-06-16; 14/14 CI green incl CI Gate; #492 auto-closed; DEC-109). BC-7.2.011 v1.9.6 FINAL. Full VSDD Feature-Mode pipeline: F4 TDD → F5 15-pass/3-clean CONVERGED → F6 proptest 5-inv 150k cases + 100% effective mutation → F7 5/5 DELTA_CONVERGED._
+
+_The following process-gap items are reviewed per the S-7.02 Cycle-Closing Checklist for issue #492._
+
+### S-7.02 Item 1: #492-TEST-HARNESS-COUPLING (F-P1-003, LOW) — TRACKED DEFERRAL [deferred]
+
+**Tags:** [process-gap] [deferred]
+
+**Date:** 2026-06-16
+**Cycle:** Issue #492 (block-HTML hardBreak)
+**Tracking ID:** #492-TEST-HARNESS-COUPLING / F-P1-003
+**Status:** TRACKED DEFERRAL — no follow-up story required
+
+**Finding (from F5 adversarial review):** Handler-level block-HTML tests (covering ECs 6–10 in BC-7.2.011) construct `AdfBuilder` directly and couple to the `push_text` accumulation shape. This is a process-gap: if the `push_text` accumulation path is refactored, the test coupling could cause false-positive CLEAN results (tests pass structurally but no longer assert the exact normalization steps). The adversary verdict was: process-gap only, no code change required, no failing test.
+
+**Deferral rationale:** The coupling is stable at the current `push_text` API surface. No refactor of `push_text` is planned or in flight. The risk is future-conditional (triggered only by a `push_text` refactor, at which point the coupling is easily detected in code review). No follow-up story required; re-validate at any future `push_text` refactor PR. This satisfies the S-7.02 disposition requirement.
+
+**Disposition:** TRACKED DEFERRAL — recorded in STATE.md Drift Items as `#492-TEST-HARNESS-COUPLING`. Revisit at any `push_text` refactor PR.
+
+_Recorded: 2026-06-16 — Issue #492 cycle-close S-7.02 review._
+_Tagged: [process-gap] [deferred] — LOW severity; no code defect; no follow-up story required._
+
+---
+
+### S-7.02 Item 2: PRE-EXISTING-LONE-CR — FOLLOW-UP FILED [codified]
+
+**Tags:** [process-gap] [follow-up-filed]
+
+**Date:** 2026-06-16
+**Cycle:** Issue #492 (block-HTML hardBreak)
+**Tracking ID:** PRE-EXISTING-LONE-CR
+**Status:** FOLLOW-UP ISSUE #522 FILED + OPEN
+
+**Finding (from F6 proptest hardening):** `adf.rs` `markdown_to_adf` does not normalize lone `\r` (CR without following `\n`) in heading and codeBlock content. pulldown-cmark's tokenizer does not normalize lone CRs in `Event::Text` tokens; they pass through `push_text` into ADF heading/codeBlock text nodes. The resulting JSON carries a raw CR character — a JSON-level hazard. This defect is PRE-EXISTING (present before #492) and is NOT on the Algorithm B code path proven correct by #492; it affects the generic `Event::Text` handling in `start()` → `push_text()` for heading/codeBlock node types. Pinned as `#[ignore]`d test `test_lone_cr_survives_pre_existing_492_oos`.
+
+**Disposition:** FOLLOW-UP ISSUE #522 FILED (human-authorized). Issue #522 is OPEN. The `#[ignore]`d pinning test provides a regression anchor until the fix lands. This satisfies the S-7.02 disposition requirement (tracked follow-up with open issue).
+
+_Recorded: 2026-06-16 — Issue #492 cycle-close S-7.02 review._
+_Tagged: [process-gap] [follow-up-filed] — MED severity; pre-existing; NOT a #492 regression; Issue #522 open._
+
+---
+
+### S-7.02 Item 3: #492-PG-TRACE-TESTS (LOW) — TRACKED DEFERRAL [deferred]
+
+**Tags:** [process-gap] [deferred]
+
+**Date:** 2026-06-16
+**Cycle:** Issue #492 (block-HTML hardBreak) — but this is a pre-existing process-gap predating #492.
+**Tracking ID:** #492-PG-TRACE-TESTS
+**Status:** TRACKED DEFERRAL — pre-existing; no CI check yet; no follow-up story required at this time
+
+**Finding:** No CI script validates that test symbols cited in BC `Source:` and `Trace:` fields resolve to real `#[test]` functions in the codebase. A BC could cite `test_foo_bar` which was deleted or renamed, and no gate would catch the stale reference. A candidate fix is `scripts/check-bc-trace-tests-exist.sh` gated on `cycle_status == closed` (to avoid false-positives on in-flight BCs that legitimately cite not-yet-created tests).
+
+**Deferral rationale:** The risk is documentation drift (stale BC test citations), not a production correctness risk. The existing `scripts/check-bc-no-numeric-test-counts.sh` guard (PG-365-1) already enforces qualitative-only Source/Trace fields, which reduces the volume of test-symbol citations that could go stale. The phase-aware gating requirement makes the guard non-trivial to implement without false-positives. No follow-up story required at this time; deferred to a future test-hardening pass alongside similar CI-guard candidates (#492-TEST-HARNESS-COUPLING, WIN-PG-1, WIN-PG-2).
+
+**Disposition:** TRACKED DEFERRAL — recorded in STATE.md Drift Items as `#492-PG-TRACE-TESTS`. No CI guard yet; re-evaluate at next test-hardening pass.
+
+_Recorded: 2026-06-16 — Issue #492 cycle-close S-7.02 review._
+_Tagged: [process-gap] [deferred] — LOW severity; pre-existing; no follow-up story required._
+
+---
+
+### LESSON-RESUME-STATE-RECONCILE [codified]
+
+**Tags:** [codified] [pipeline-resume] [state-management]
+
+**Date:** 2026-06-16
+**Cycle:** Issue #492 (block-HTML hardBreak)
+**Lesson ID:** LESSON-RESUME-STATE-RECONCILE
+**Status:** CODIFIED
+
+**Observation:** When the #492 bug-fix cycle was resumed in-session, STATE.md was significantly stale relative to the actual in-progress work. STATE.md claimed F3/F4 phases were next for #492, when in reality F4 was already complete (Algorithm B implemented, 13 tests, PR #521 pushed at commit `8062b78`) and F5 adversarial review was already in progress (3 passes done). The inline-F5 work had not been recorded in STATE.md at resume time. This created a false picture where the pipeline appeared to be earlier in the cycle than it actually was.
+
+**Root cause:** State-manager dispatches were skipped during the F4→F5 transition. The orchestrator performed the F5 adversarial review dispatch without first reconciling STATE.md to reflect F4 completion. The stale STATE.md persisted across the resume boundary.
+
+**Why this matters:** At pipeline resume (cold-start or cross-session handoff), the orchestrator reads STATE.md as the ground-truth position indicator. If STATE.md is stale, the orchestrator may re-dispatch phases already completed (wasted work), mis-sequence phases (skipping required gates), or report incorrect progress to the human. In the #492 case, the stale state was caught by human inspection of git/GitHub artifacts, but the reconciliation overhead cost time.
+
+**Rule (LESSON-RESUME-STATE-RECONCILE):** At every pipeline resume — especially after a cross-session handoff or worktree switch — the orchestrator MUST reconcile STATE.md against git/GitHub ground truth BEFORE dispatching any phase agent. The reconciliation protocol:
+
+1. Run `git log --oneline origin/develop -5` → compare to STATE.md `develop HEAD`.
+2. Check active PR status: `gh pr list --state open` → compare to STATE.md "Session Resume Checkpoint".
+3. Check worktree status: `git worktree list` → compare to STATE.md active worktree.
+4. If ANY discrepancy: dispatch state-manager to update STATE.md FIRST, BEFORE the next phase agent.
+
+**Corollary:** State-manager must be dispatched after EVERY phase transition (F4 complete, F5 pass N, F6 complete, etc.) — not only at cycle-open and cycle-close. A skipped state-manager dispatch after F4 directly caused the stale-resume issue in #492.
+
+**Scope:** Applies to all VSDD Feature-Mode cycles, not only bug-fix cycles. Long-running cycles with multiple F-phases are especially susceptible.
+
+_Discovered: Issue #492 pipeline resume — STATE.md claimed F3/F4 next when F4 was done and F5 was in progress, 2026-06-16._
+_Tagged: [codified] — LESSON-RESUME-STATE-RECONCILE; pipeline resume ground-truth reconciliation required before phase dispatch._
+_Reinforces existing Lesson 2 addendum (state-manager dispatch at PR creation + each fix commit) with a resume-specific rule._
+
+---
+
+### S-7.02 Summary for Issue #492
+
+All 3 process-gap items reviewed:
+
+| Item | Tracking ID | Disposition | Status |
+|------|-------------|-------------|--------|
+| F-P1-003 handler-level test harness coupling | #492-TEST-HARNESS-COUPLING | [deferred] — no follow-up story; re-validate on push_text refactor | OPEN DRIFT |
+| Pre-existing lone-CR OOS defect | PRE-EXISTING-LONE-CR | [follow-up-filed] — Issue #522 FILED + OPEN | #522 OPEN |
+| Pre-existing trace-test CI gap | #492-PG-TRACE-TESTS | [deferred] — no CI check yet; revisit at test-hardening pass | OPEN DRIFT |
+
+Key LESSON codified:
+- LESSON-RESUME-STATE-RECONCILE: at pipeline resume, reconcile STATE.md against git/GitHub ground truth (develop HEAD, active PRs, worktrees) BEFORE dispatching any phase agent. Stale STATE.md at resume caused incorrect phase position (F3/F4 claimed next when F4 done + F5 in progress); detected by human git inspection.
+
+Issue #492 cycle CLOSED. All S-7.02 checklist items dispositioned.
+
+_Recorded: 2026-06-16 — Issue #492 CYCLE CLOSED; PR #521 → develop @ 3ba8ea2; #492 auto-closed; follow-up #522 open._
