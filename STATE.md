@@ -2,11 +2,11 @@
 document_type: pipeline-state
 version: "2.0"
 status: active
-timestamp: 2026-06-15T18:30:00Z
+timestamp: 2026-06-16T00:00:00Z
 phase: phase-3-tdd-implementation
 project: jira-cli
 mode: BROWNFIELD
-current_step: "Feature Mode (bug-fix) OPENED for issue #492 — block-HTML raw-\\n ADF invariant violation. F1 delta analysis next."
+current_step: "Issue #492 bug-fix: F2 spec CONVERGED (BC-7.2.011 v1.9.1 @ factory-artifacts 634cb88). Fix direction = hardBreak split (Option a, human-approved). Next: F3 fix-story creation, then F4 TDD implementation."
 current_cycle: "cycle-001"
 dtu_required: false
 phase_2_status: APPROVED
@@ -26,7 +26,7 @@ activation_version: "v0.6.0-dev.2"
 | **Product** | jr (Jira CLI) |
 | **Mode** | BROWNFIELD / Rust |
 | **Target Workspace** | develop → main |
-| **Last Updated** | 2026-06-15: Fork-friendly-release-ops integrated (PR #520 @ 2cb219b integrates closed #503 by @ArcavenAE, credited). 4-lens review done. Machinery inert by default. Enablement of selected pieces PENDING — each needs fixes first (findings → `.factory/research/fork-release-ops-integration.md`). DEC-104. BC 597 / NFR 42 / ADR 16 / Stories 75. |
+| **Last Updated** | 2026-06-16: Issue #492 F2 spec CONVERGED (BC-7.2.011 v1.9.1 @ 634cb88). DEC-106. Fix direction = hardBreak split (human-approved). F3+F4 next. BC 598 / NFR 42 / ADR 16 / Stories 75. |
 | **Current Phase** | Phase 3 — TDD Implementation IN PROGRESS — No active feature. BC 597. NFR 42. ADR 16. Stories **75** (authoritative). |
 | **Next Phase** | Phase 4: Holdout Evaluation (not started) |
 | **Activation HEAD** | 4258202 (v0.6.0-dev.2 released 2026-06-14; v0.5.0 STABLE shipped 2026-06-12) |
@@ -85,6 +85,7 @@ activation_version: "v0.6.0-dev.2"
 | DEC-103 | 2026-06-15: WIN-CI-GATE-AGGREGATOR cycle CLOSED. Branch-protection swapped to single `CI Gate` context on develop+main (app_id 15368; safe 2-step add-before-remove; user-executed; verified). The matrix-rename fragility class (DEC-096/097) is now structurally eliminated — required-check membership lives in `ci-gate.needs` in ci.yml, not in repo settings. spec-guard promoted to a blocking check via the aggregator (user decision). S-CIGATE-1 feature cycle CLOSED. | Feature Mode / S-CIGATE-1 / ci-infra | Phase 3 | 2026-06-15 |
 | DEC-104 | 2026-06-15: Integrated @ArcavenAE's fork-friendly release-ops (PR #503→#520 @ 2cb219b). Merged from canonical (fork unpushable; Co-authored-by credit added). Machinery inert by default (all new jobs gated on unset repo vars; ~7 phantom workflow runs/day accepted). 4-lens review done (security/code/consistency/adversary; first adversary pass discarded as confabulated, re-run fresh). Enablement of selected pieces deferred — each requires its security/quality fixes first. Full plan + findings: `.factory/research/fork-release-ops-integration.md`. | ci-infra / external-contribution | Phase 3 | 2026-06-15 |
 | DEC-105 | 2026-06-15: Opened VSDD Feature-Mode bug-fix cycle for issue #492 (block-HTML raw-\\n violates adf.rs file-wide newline-free invariant; F5-retrospective finding from #489/#490). Routes as bug-fix: fix story + mandatory regression test + scoped holdout + compressed F5/F6/F7 → PATCH. Core F-1 decision (hardBreak-split vs collapse-to-space vs sandbox-confirm) deferred to F1/F2 + human gate. Artifacts: `cycles/cycle-001/issue-492/`. | Feature Mode / #492 bug-fix | Phase 3 | 2026-06-15 |
+| DEC-106 | 2026-06-16: Issue #492 F2 spec evolution CONVERGED. BC-7.2.011 (block-HTML→ADF hardBreak interior-newline mapping) evolved v1.2.0→v1.9.1 across ~12 fresh-context adversarial passes (multi-lens parallel: algorithm/EC, code-drift, consistency/implementer). Substantive findings burned down: CRITICAL algorithm A→B ambiguity; HIGH impossible href autolink example + CRLF split double-count; MED count-prose drift + byte-identity reverse-trim_end overclaim (FRESH-02) + byte-identity forward trailing-newline overclaim (FRESH-04); plus LOW wording/annotation polish to a fully-harmonized 6-EC byte-identity annotation set. Byte-identity round-trip claim made EXHAUSTIVE (5 conditions; forward-path: CR-normalize/step3, leading-trim/step5b, trailing-newline/step2, autolink/post-pass; reverse-path: final-whitespace/finish-trim_end) — completeness confirmed exhaustive (no 6th mechanism) by multiple passes. Final scoped pass on frozen v1.9.1 (634cb88) = CLEAN. Counts unchanged: BC 598 / bc-7 90/44 / Stories 75. Human-approved fix direction = Option a (hardBreak split). Cycle artifacts: cycles/cycle-001/issue-492/. | Feature Mode / #492 F2 spec | Phase 3 | 2026-06-16 |
 
 ## Skip Log
 
@@ -115,6 +116,8 @@ All 7 S-WIN-1..6 + #475 per-AC demos: **Yes — adapted**. All are CI-config / i
 | SEC-JR-SERVICE-NAME-GATE | JR_SERVICE_NAME env var not debug-gated | Unlike JR_BASE_URL/JR_AUTH_HEADER, readable in release builds. Follow-up story candidate. | LOW | OPEN — follow-up |
 | WIN-DENY-FRAGILITY | deny.toml canonical-un-skipped-version has no CI guard | 17-entry skip set topology-dependent; future windows-sys update could silently break N-1 invariant. | LOW | OPEN — tracked process-gap |
 | WIN-AUTH-ENVLOCK-POISON | ENV_LOCK uses .lock().unwrap() in auth tests | Latent poison-cascade risk. Apply .unwrap_or_else(|e| e.into_inner()) uniformly. | LOW | OPEN — follow-up |
+| #492-F4-IMPL | F4 implementation carry-forward | BC-7.2.011 mandates F4 work: (1) replace HtmlBlock end-handler strip_suffix('\n') with trim_end_matches(['\r','\n']) + full 7-step Algorithm B (normalize-then-split, one hardBreak/boundary, step-5b trim_leading_trailing_hardbreaks, step-6 early-return); (2) REPLACE test_convert_multiline_block_html_preserves_interior_newlines (currently asserts old raw-\\n behavior) with hardBreak-segmented assertion; (3) add 9 named tests per BC Source/Trace; (4) create docs/specs/adf-block-html.md. | n/a | OPEN — F4 task list |
+| #492-PG-TRACE-TESTS | process-gap | No CI check that BC Source/Trace-cited test symbols resolve to real #[test] fns. Must be PHASE-AWARE (pre-impl BCs legitimately cite not-yet-created tests) to avoid false-positives on in-flight BCs. Candidate: scripts/check-bc-trace-tests-exist.sh gated on cycle status. | LOW | OPEN — cycle-close codification candidate |
 | OQ-5 | CLAUDE.md NFR-O-N stale | auth status --output json documented but not implemented in src. | LOW | OPEN — doc drift |
 | E2E-PG-4 | E2E coverage gap | REMAINING: remote-link round-back (no `jr remote-link read`). | LOW | OPEN |
 | DRIFT-331-PAGINATION | get_issue_types_for_project pagination | Inline reimplementation; target: reuse OffsetPage<T>. Deferred. | LOW | OPEN |
@@ -165,7 +168,7 @@ Full-VSDD run caught 3 classes invisible to the prior gate each time — pre-F4 
 
 | Issue | Title | Status | Priority | Notes |
 |-------|-------|--------|----------|-------|
-| #492 | fix(adf): block-HTML raw-\n invariant | OPEN — needs-sandbox. Raw-\n in literal-text paragraphs may not survive Jira REST round-trip. | LOW | No active cycle. |
+| #492 | fix(adf): block-HTML raw-\n invariant | OPEN — F2 CONVERGED (BC-7.2.011 v1.9.1 @ 634cb88; hardBreak-split direction approved). F3 fix-story + F4 TDD impl next. | LOW | DEC-106. Cycle: cycles/cycle-001/issue-492/. |
 | #429 | jr_isolated() crypto-random suffix | OPEN | LOW | DEC-029 deferred to human. Do NOT close autonomously. |
 | #400 | Test-hardening + process-gap follow-ups | OPEN — Story A MERGED PR #431. Story B + engine items remain. | LOW | |
 | #372 | cargo-mutants partial baseline | OPEN | LOW | Follow-up from #346 |
