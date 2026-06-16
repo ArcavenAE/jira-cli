@@ -6,7 +6,7 @@ timestamp: 2026-06-16T00:00:00Z
 phase: phase-3-tdd-implementation
 project: jira-cli
 mode: BROWNFIELD
-current_step: "Issue #492 bug-fix: F2 spec CONVERGED (BC-7.2.011 v1.9.1 @ factory-artifacts 634cb88). Fix direction = hardBreak split (Option a, human-approved). Next: F3 fix-story creation, then F4 TDD implementation."
+current_step: "Issue #492 bug-fix: F4 TDD impl DONE (PR #521 @ 8062b78); F5 scoped adversarial CONVERGED (15 passes, 6 fix rounds, 3 clean; BC-7.2.011 v1.9.6 @ 87e3c53; zero code defects). Next: F6 targeted hardening."
 current_cycle: "cycle-001"
 dtu_required: false
 phase_2_status: APPROVED
@@ -26,8 +26,8 @@ activation_version: "v0.6.0-dev.2"
 | **Product** | jr (Jira CLI) |
 | **Mode** | BROWNFIELD / Rust |
 | **Target Workspace** | develop → main |
-| **Last Updated** | 2026-06-16: Issue #492 F2 spec CONVERGED (BC-7.2.011 v1.9.1 @ 634cb88). DEC-106. Fix direction = hardBreak split (human-approved). F3+F4 next. BC 598 / NFR 42 / ADR 16 / Stories 75. |
-| **Current Phase** | Phase 3 — TDD Implementation IN PROGRESS — No active feature. BC 597. NFR 42. ADR 16. Stories **75** (authoritative). |
+| **Last Updated** | 2026-06-16: Issue #492 F5 scoped adversarial CONVERGED (BC-7.2.011 v1.9.6 @ 87e3c53; PR #521 @ 8062b78; 15 passes / 6 fix rounds / 3 clean; zero code defects). DEC-107. BC 598 / NFR 42 / ADR 16 / Stories 75. |
+| **Current Phase** | Phase 3 — TDD Implementation IN PROGRESS — #492 F5 CONVERGED, F6 next. BC 598. NFR 42. ADR 16. Stories **75** (authoritative). |
 | **Next Phase** | Phase 4: Holdout Evaluation (not started) |
 | **Activation HEAD** | 4258202 (v0.6.0-dev.2 released 2026-06-14; v0.5.0 STABLE shipped 2026-06-12) |
 
@@ -47,6 +47,7 @@ activation_version: "v0.6.0-dev.2"
 | CLI leading-dash values (issue #471 e2e / description-leading-dash) | **CYCLE CLOSED + MERGED** | 2026-06-11 | F1–F7 ALL COMPLETE — CONVERGED | PR #496 → develop @ 45ceae6. `allow_hyphen_values = true` on 7 free-text write args. BC 594 unchanged. +17 hermetic parse tests (tests/cli_smoke.rs, 44 total). F5: 8 passes / 3-clean-pass CONVERGED. F6: 1763/0, clippy/fmt/deny clean, mutation zero-in-scope. F7: 5-dimension consistency CLEAN. DEC-072. |
 | ADF E2E read-path coverage (issue #475) | **CYCLE CLOSED + MERGED** | 2026-06-11 | F1–F7 ALL COMPLETE — CONVERGED | PR #499 → develop @ 418a392e. Test-only (no src change). BC 594 / NFR 41 / Stories 68 unchanged. DEC-073/074/075/076. |
 | Windows build (x86_64-pc-windows-msvc) | **CYCLE CLOSED** — v0.6.0-dev.2 released + H-WIN-6 PASS | 2026-06-14 (F4+F5+F6+F7+RELEASE) | F4–F7 ALL COMPLETE; H-WIN-6 PASS; DEC-101 | develop @ 4258202 (#517). 14-pass F5; 9/9 mutants; 9 props; 0 vulns; 1808 green. jr-v0.6.0-dev.2-x86_64-pc-windows-msvc.zip + checksum verified. Smoke test ✓ windows-latest. |
+| Issue #492 block-HTML hardBreak (BC-7.2.011) | F5 CONVERGED — F6 next | F1+F2+F3+F4 COMPLETE; F5 CONVERGED 2026-06-16 | 15 passes / 3 clean / 0 code defects | BC-7.2.011 v1.9.6 @ 87e3c53; PR #521 @ 8062b78; zero code defects |
 | 4: Holdout Evaluation | not-started | | | |
 | 5: Adversarial Refinement | not-started | | | |
 | 6: Formal Hardening | not-started | | | |
@@ -58,11 +59,11 @@ activation_version: "v0.6.0-dev.2"
 
 | Step | Agent | Status | Output |
 |------|-------|--------|--------|
-| H-WIN-6 PASS (live). GitHub Release page: jr-v0.6.0-dev.2-x86_64-pc-windows-msvc.zip + .sha256 — local checksum OK. Smoke test `.\jr.exe --version` PASS on windows-latest (/STACK:8388608 fix validated, no stack overflow). Embedded OAuth verify PASS (Windows). Windows-build CYCLE CLOSED. DEC-101. S-7.02 checklist: 1 codified, 6 deferred, 1 resolved. | Agent state-manager | CYCLE CLOSED | develop @ 4258202. BC 597 / NFR 42 / ADR 16 / Stories 74. |
 | S-CIGATE-1 (ci-gate aggregator) DELIVERED F1–F7. PR #518 squash-merged → develop @ e9b2269. ci-gate GREEN on PR+push CI run 27551871837 (live holdout proof). Step 4.5 4-pass CONVERGED (3 clean). F7 DELTA_CONVERGED. DEC-102. Stories 74→75. CIGATE-BRANCH-PROTECTION-SWAP pending human. | Agent state-manager | DELIVERED | develop @ e9b2269. BC 597 / NFR 42 / ADR 16 / Stories 75. |
 | S-CIGATE-1 branch-protection swap COMPLETE + verified (develop+main now require single `CI Gate` context, app_id 15368; safe 2-step add-before-remove; user-executed). WIN-CI-GATE-AGGREGATOR CLOSED. Feature cycle CLOSED. DEC-103. | Agent state-manager | CYCLE CLOSED | develop @ e9b2269. BC 597 / NFR 42 / ADR 16 / Stories 75. |
 | Fork-friendly-release-ops integrated: PR #520 squash-merged → develop @ 2cb219b (integrates closed #503 by @ArcavenAE, credited). 17 files inert-by-default; ci.yml Windows-matrix+ci-gate+gitleaks-v3 preserved; 14/14 CI GREEN incl CI Gate. 4-lens review done. Enablement decision PENDING (backfill/gap-fill/signing/suppress-phantom-runs — each needs fixes first). Full plan → `.factory/research/fork-release-ops-integration.md`. DEC-104. | Agent state-manager | PENDING-DECISION | develop @ 2cb219b. BC 597 / NFR 42 / ADR 16 / Stories 75. |
 | Issue #492 bug-fix cycle OPENED (F1 delta analysis pending). DEC-105. Cycle artifacts: `cycles/cycle-001/issue-492/`. | Agent state-manager | OPEN | develop @ 2cb219b. |
+| Issue #492: F4 TDD impl DONE (Algorithm B, BC-7.2.011; 13 block-HTML tests; docs/specs/adf-block-html.md; PR #521 @ 8062b78). F5 scoped adversarial CONVERGED (15 passes, 6 fix rounds, 3 clean; zero code defects; BC-7.2.011 v1.9.6 @ factory-artifacts 87e3c53). DEC-107. Next: F6. | Agent state-manager | F5 CONVERGED | PR #521 OPEN @ 8062b78. BC 598 / NFR 42 / ADR 16 / Stories 75. |
 
 ## Decisions Log
 
@@ -86,6 +87,7 @@ activation_version: "v0.6.0-dev.2"
 | DEC-104 | 2026-06-15: Integrated @ArcavenAE's fork-friendly release-ops (PR #503→#520 @ 2cb219b). Merged from canonical (fork unpushable; Co-authored-by credit added). Machinery inert by default (all new jobs gated on unset repo vars; ~7 phantom workflow runs/day accepted). 4-lens review done (security/code/consistency/adversary; first adversary pass discarded as confabulated, re-run fresh). Enablement of selected pieces deferred — each requires its security/quality fixes first. Full plan + findings: `.factory/research/fork-release-ops-integration.md`. | ci-infra / external-contribution | Phase 3 | 2026-06-15 |
 | DEC-105 | 2026-06-15: Opened VSDD Feature-Mode bug-fix cycle for issue #492 (block-HTML raw-\\n violates adf.rs file-wide newline-free invariant; F5-retrospective finding from #489/#490). Routes as bug-fix: fix story + mandatory regression test + scoped holdout + compressed F5/F6/F7 → PATCH. Core F-1 decision (hardBreak-split vs collapse-to-space vs sandbox-confirm) deferred to F1/F2 + human gate. Artifacts: `cycles/cycle-001/issue-492/`. | Feature Mode / #492 bug-fix | Phase 3 | 2026-06-15 |
 | DEC-106 | 2026-06-16: Issue #492 F2 spec evolution CONVERGED. BC-7.2.011 (block-HTML→ADF hardBreak interior-newline mapping) evolved v1.2.0→v1.9.1 across ~12 fresh-context adversarial passes (multi-lens parallel: algorithm/EC, code-drift, consistency/implementer). Substantive findings burned down: CRITICAL algorithm A→B ambiguity; HIGH impossible href autolink example + CRLF split double-count; MED count-prose drift + byte-identity reverse-trim_end overclaim (FRESH-02) + byte-identity forward trailing-newline overclaim (FRESH-04); plus LOW wording/annotation polish to a fully-harmonized 6-EC byte-identity annotation set. Byte-identity round-trip claim made EXHAUSTIVE (5 conditions; forward-path: CR-normalize/step3, leading-trim/step5b, trailing-newline/step2, autolink/post-pass; reverse-path: final-whitespace/finish-trim_end) — completeness confirmed exhaustive (no 6th mechanism) by multiple passes. Final scoped pass on frozen v1.9.1 (634cb88) = CLEAN. Counts unchanged: BC 598 / bc-7 90/44 / Stories 75. Human-approved fix direction = Option a (hardBreak split). Cycle artifacts: cycles/cycle-001/issue-492/. | Feature Mode / #492 F2 spec | Phase 3 | 2026-06-16 |
+| DEC-107 | 2026-06-16: Issue #492 F5 scoped adversarial CONVERGED. 15 fresh-context passes / 6 fix rounds / final 3 clean (Pass 13 deep cross-consistency, Pass 14 holistic+traceability+counts, Pass 15 robustness+completeness) on frozen 8062b78 + BC-7.2.011 v1.9.6 @ factory-artifacts 87e3c53. ZERO production-code defects — single Algorithm B path proven correct ~12x across all lenses; all findings were doc/spec precision (severity decayed M→L→0). BC version trail: v1.9.1→v1.9.2→v1.9.3→v1.9.4→v1.9.5→v1.9.6. PR #521 pushed. Next: F6 targeted hardening. | Feature Mode / #492 F5 | Phase 3 | 2026-06-16 |
 
 ## Skip Log
 
@@ -116,7 +118,8 @@ All 7 S-WIN-1..6 + #475 per-AC demos: **Yes — adapted**. All are CI-config / i
 | SEC-JR-SERVICE-NAME-GATE | JR_SERVICE_NAME env var not debug-gated | Unlike JR_BASE_URL/JR_AUTH_HEADER, readable in release builds. Follow-up story candidate. | LOW | OPEN — follow-up |
 | WIN-DENY-FRAGILITY | deny.toml canonical-un-skipped-version has no CI guard | 17-entry skip set topology-dependent; future windows-sys update could silently break N-1 invariant. | LOW | OPEN — tracked process-gap |
 | WIN-AUTH-ENVLOCK-POISON | ENV_LOCK uses .lock().unwrap() in auth tests | Latent poison-cascade risk. Apply .unwrap_or_else(|e| e.into_inner()) uniformly. | LOW | OPEN — follow-up |
-| #492-F4-IMPL | F4 implementation carry-forward | BC-7.2.011 mandates F4 work: (1) replace HtmlBlock end-handler strip_suffix('\n') with trim_end_matches(['\r','\n']) + full 7-step Algorithm B (normalize-then-split, one hardBreak/boundary, step-5b trim_leading_trailing_hardbreaks, step-6 early-return); (2) REPLACE test_convert_multiline_block_html_preserves_interior_newlines (currently asserts old raw-\\n behavior) with hardBreak-segmented assertion; (3) add 9 named tests per BC Source/Trace; (4) create docs/specs/adf-block-html.md. | n/a | OPEN — F4 task list |
+| #492-F4-IMPL | F4 implementation carry-forward | RESOLVED — F4 COMPLETE (Algorithm B, 13 block-HTML tests, docs/specs/adf-block-html.md, PR #521 @ 8062b78). | n/a | RESOLVED — F4 DONE |
+| #492-TEST-HARNESS-COUPLING | process-gap (F-P1-003) | Handler-level block-HTML tests (EC-6/7/8/9/10) construct AdfBuilder directly and couple to push_text accumulation shape; re-validate if that accumulation path is refactored. Adversary verdict: process-gap, no code change required. | LOW | OPEN — cycle-close codification candidate |
 | #492-PG-TRACE-TESTS | process-gap | No CI check that BC Source/Trace-cited test symbols resolve to real #[test] fns. Must be PHASE-AWARE (pre-impl BCs legitimately cite not-yet-created tests) to avoid false-positives on in-flight BCs. Candidate: scripts/check-bc-trace-tests-exist.sh gated on cycle status. | LOW | OPEN — cycle-close codification candidate |
 | OQ-5 | CLAUDE.md NFR-O-N stale | auth status --output json documented but not implemented in src. | LOW | OPEN — doc drift |
 | E2E-PG-4 | E2E coverage gap | REMAINING: remote-link round-back (no `jr remote-link read`). | LOW | OPEN |
@@ -131,7 +134,7 @@ All 7 S-WIN-1..6 + #475 per-AC demos: **Yes — adapted**. All are CI-config / i
 
 ## Convergence Trackers
 
-Full per-issue: `cycles/cycle-001/convergence-trajectory.md`. Current: **[2026-06-15] Fork-friendly-release-ops integrated (PR #520 @ 2cb219b; integrates closed #503 by @ArcavenAE, credited). Inert by default. 4-lens review complete (findings → `.factory/research/fork-release-ops-integration.md`). Enablement decision PENDING (DEC-104). Stories 75.** Prior: S-CIGATE-1 CYCLE CLOSED (PR #518 @ e9b2269; DEC-103). ci-gate aggregator SHIPPED + ACTIVATED (single `CI Gate` required check on develop+main; app_id 15368). WIN-CI-GATE-AGGREGATOR CLOSED. Matrix-rename fragility class structurally eliminated.
+Full per-issue: `cycles/cycle-001/convergence-trajectory.md`. Current: **[2026-06-16] Issue #492 F5 scoped adversarial CONVERGED. 15 passes / 6 fix rounds / 3 clean (cross-consistency, holistic, robustness) on frozen 8062b78 / BC-7.2.011 v1.9.6 @ 87e3c53. ZERO code defects. Severity decay M→L→0. DEC-107. PR #521 OPEN. F6 next.** Prior: Fork-friendly-release-ops integrated (PR #520 @ 2cb219b; DEC-104). Stories 75. BC 598.
 
 ## Session Resume Checkpoint
 
@@ -139,28 +142,28 @@ Full per-issue: `cycles/cycle-001/convergence-trajectory.md`. Current: **[2026-0
 
 | Field | Value |
 |-------|-------|
-| **Date** | 2026-06-15 |
-| **Position** | **Fork-friendly-release-ops MERGED (PR #520 @ develop 2cb219b; integrates closed #503 by @ArcavenAE, credited). Inert by default. AWAITING USER DECISION on which pieces to enable (backfill / gap-fill / signing / suppress-phantom-runs) — each needs fixes first. 0 active worktrees.** |
-| **develop HEAD** | origin/develop = **2cb219b** (fork-release-ops PR #520). activation v0.6.0-dev.2. BC **597**. NFR **42**. ADR **16**. Stories **75** (authoritative). |
-| **Convergence counter** | BC: **597**. NFR: **42**. ADR: **16**. Stories: **75** authoritative. jira-e2e env: JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ, JR_E2E_ENABLED=true. 0 active worktrees (.factory + .reference only). |
-| **Next / Pending** | AWAITING USER DECISION: which fork-release-ops pieces to enable (backfill / gap-fill / signing / suppress-phantom-runs). Each requires specific fixes — see `.factory/research/fork-release-ops-integration.md`. Standing drift: WIN-DENY-FRAGILITY (LOW), SEC-JR-SERVICE-NAME-GATE (LOW), WIN-AUTH-ENVLOCK-POISON (LOW), WIN-RUNTIME-OAUTH-PROBE (LOW, accepted ADR-0016), WIN-AC004-DIRECTIONAL (LOW). Open issues: #492, #429 (DNC), #400 Story B, #372. |
-| **Resume prompt** | `Read .factory/STATE.md THEN .factory/research/fork-release-ops-integration.md. Fork-release-ops MERGED at develop 2cb219b (PR #520; integrates closed #503 by @ArcavenAE, credited). Machinery inert by default. AWAITING user decision: which pieces to enable (backfill/gap-fill/signing/suppress-phantom-runs — each has specific prereq fixes; all in the research file). DEC-104. STANDING: do NOT close #429 (DEC-029); #492 OPEN; OQ-5 open; E2E-PG-4 open; SEC-001 LOW deferred. jira-e2e: JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ, JR_E2E_ENABLED=true.` |
+| **Date** | 2026-06-16 |
+| **Position** | **Issue #492 at F5-CONVERGED / F6-next. PR #521 OPEN (base: develop @ 8062b78; CI running). BC-7.2.011 v1.9.6 @ factory-artifacts 87e3c53. develop @ 2cb219b. Worktree .worktrees/S-492 @ 8062b78 active (branch fix/adf-block-html-hardbreak-492).** |
+| **develop HEAD** | origin/develop = **2cb219b** (fork-release-ops PR #520). activation v0.6.0-dev.2. BC **598**. NFR **42**. ADR **16**. Stories **75** (authoritative). |
+| **Convergence counter** | BC: **598**. NFR: **42**. ADR: **16**. Stories: **75** authoritative. jira-e2e env: JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ, JR_E2E_ENABLED=true. Active worktree: .worktrees/S-492 @ 8062b78. |
+| **Next / Pending** | #492 F6 targeted hardening. Also pending: fork-release-ops enablement decision (each piece needs prereq fixes — see `.factory/research/fork-release-ops-integration.md`). Standing drift: WIN-DENY-FRAGILITY (LOW), SEC-JR-SERVICE-NAME-GATE (LOW), WIN-AUTH-ENVLOCK-POISON (LOW), WIN-RUNTIME-OAUTH-PROBE (LOW, accepted ADR-0016), WIN-AC004-DIRECTIONAL (LOW), #492-TEST-HARNESS-COUPLING (LOW). Open issues: #492 (F6 next), #429 (DNC), #400 Story B, #372. |
+| **Resume prompt** | `Read .factory/STATE.md. Issue #492 F5 CONVERGED (DEC-107). PR #521 OPEN @ 8062b78 (base: develop). BC-7.2.011 v1.9.6 @ factory-artifacts 87e3c53. Next: F6 targeted hardening on frozen 8062b78. develop @ 2cb219b. Worktree .worktrees/S-492 active. STANDING: do NOT close #429 (DEC-029); OQ-5 open; E2E-PG-4 open; SEC-001 LOW deferred. Fork-release-ops enablement PENDING (DEC-104). jira-e2e: JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ, JR_E2E_ENABLED=true.` |
 
 ## RESUME PLAN (cold-start, self-contained)
 
 ### State snapshot
 
-- Fork-release-ops: PR #520 squash-merged → develop @ 2cb219b (integrates closed #503 by @ArcavenAE, credited). 4-lens review done. Machinery inert by default. BC 597 / NFR 42 / ADR 16 / Stories 75. 0 active worktrees.
-- Prior: S-CIGATE-1 CYCLE CLOSED (DEC-103). ci-gate aggregator SHIPPED + ACTIVATED (single `CI Gate` required check on develop+main; app_id 15368; branch-protection swap 2026-06-15).
-- Next: Awaiting user decision on which fork-release-ops pieces to enable. **Read `.factory/research/fork-release-ops-integration.md` first** — contains per-piece enablement plan, prereq fixes, and full review findings.
+- Issue #492: F4 TDD impl DONE (Algorithm B; PR #521 @ 8062b78 OPEN; CI running). F5 scoped adversarial CONVERGED (DEC-107; 15 passes, 6 fix rounds, 3 clean; BC-7.2.011 v1.9.6 @ factory-artifacts 87e3c53; zero code defects). develop @ 2cb219b. Worktree .worktrees/S-492 active.
+- Prior: Fork-release-ops PR #520 squash-merged → develop @ 2cb219b (integrates closed #503 by @ArcavenAE; DEC-104). Machinery inert by default. BC 598 / NFR 42 / ADR 16 / Stories 75.
+- Next: #492 F6 targeted hardening. Then: fork-release-ops enablement decision (read `.factory/research/fork-release-ops-integration.md`).
 
 ### Durable follow-ups (tracked Drift Items)
 
-WIN-AUTH-ENVLOCK-POISON (LOW), WIN-DENY-FRAGILITY (LOW), SEC-JR-SERVICE-NAME-GATE (LOW), WIN-RUNTIME-OAUTH-PROBE (LOW, accepted ADR-0016), WIN-AC004-DIRECTIONAL (LOW). Standing (non-Windows): #429 do-not-close, #492 OPEN, OQ-5, E2E-PG-4, #400 Story B, #372.
+WIN-AUTH-ENVLOCK-POISON (LOW), WIN-DENY-FRAGILITY (LOW), SEC-JR-SERVICE-NAME-GATE (LOW), WIN-RUNTIME-OAUTH-PROBE (LOW, accepted ADR-0016), WIN-AC004-DIRECTIONAL (LOW), #492-TEST-HARNESS-COUPLING (LOW, cycle-close codification candidate). Standing (non-Windows): #429 do-not-close, OQ-5, E2E-PG-4, #400 Story B, #372.
 
 ### Process note
 
-Full-VSDD run caught 3 classes invisible to the prior gate each time — pre-F4 research (windows-sys 0.60 / Compress-Archive), the integration gate (real jr.exe Windows stack-overflow prod bug), and repo-settings drift (branch protection). Lessons codified: LESSON-PRESENCE-ANCHOR, LESSON-WIN-CI-CHECKLIST, LESSON-INTEGRATION-GATE-PROD, LESSON-MATRIX-BRANCH-PROTECTION, LESSON-ADVERSARY-CHECKOUT-RACE.
+Full-VSDD run caught 3 classes invisible to the prior gate each time — pre-F4 research (windows-sys 0.60 / Compress-Archive), the integration gate (real jr.exe Windows stack-overflow prod bug), and repo-settings drift (branch protection). Lessons codified: LESSON-PRESENCE-ANCHOR, LESSON-WIN-CI-CHECKLIST, LESSON-INTEGRATION-GATE-PROD, LESSON-MATRIX-BRANCH-PROTECTION, LESSON-ADVERSARY-CHECKOUT-RACE. #492 F5 finding: single Algorithm B path proven correct across 15 fresh-context passes (12+ distinct lenses); all findings were doc/spec precision with severity decay M→L→0.
 
 ## Open Issues Tracker
 
@@ -168,7 +171,7 @@ Full-VSDD run caught 3 classes invisible to the prior gate each time — pre-F4 
 
 | Issue | Title | Status | Priority | Notes |
 |-------|-------|--------|----------|-------|
-| #492 | fix(adf): block-HTML raw-\n invariant | OPEN — F2 CONVERGED (BC-7.2.011 v1.9.1 @ 634cb88; hardBreak-split direction approved). F3 fix-story + F4 TDD impl next. | LOW | DEC-106. Cycle: cycles/cycle-001/issue-492/. |
+| #492 | fix(adf): block-HTML raw-\n invariant | OPEN — F4 DONE (PR #521 @ 8062b78), F5 CONVERGED (BC-7.2.011 v1.9.6 @ 87e3c53; 15 passes, zero code defects). F6 next. | LOW | DEC-107. Cycle: cycles/cycle-001/issue-492/. |
 | #429 | jr_isolated() crypto-random suffix | OPEN | LOW | DEC-029 deferred to human. Do NOT close autonomously. |
 | #400 | Test-hardening + process-gap follow-ups | OPEN — Story A MERGED PR #431. Story B + engine items remain. | LOW | |
 | #372 | cargo-mutants partial baseline | OPEN | LOW | Follow-up from #346 |

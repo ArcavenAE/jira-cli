@@ -781,3 +781,18 @@ _Was the active checkpoint after F5 CONVERGED (DEC-098; 14 passes; 5 fix PRs #51
 | **Convergence counter** | BC: **597**. NFR: **42**. ADR: **16**. Stories: **74** authoritative. jira-e2e env: JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ, JR_E2E_ENABLED=true. 0 active worktrees (.factory + .reference only). |
 | **Next / Pending** | (1) Windows-build F6 (targeted hardening: formal-verify/fuzz/mutation scoped to Windows delta + full-tree regression + security scan); (2) F7 (5-dim delta convergence + human gate); (3) H-WIN-6 live release-page holdout; (4) WIN-CI-GATE-AGGREGATOR durable follow-up; (5) tracked LOWs: WIN-DENY-FRAGILITY, SEC-JR-SERVICE-NAME-GATE, WIN-AUTH-ENVLOCK-POISON, WIN-RUNTIME-OAUTH-PROBE (accepted ADR-0016), WIN-AC004-DIRECTIONAL. |
 | **Resume prompt** | `Read .factory/STATE.md. Windows-build F5 CONVERGED at develop 2f96543 (DEC-098; 14 passes; 5 fix PRs #511–#515; 3 clean: R12/R13/R14). Security perimeter closed + machine-guarded. 0 active worktrees. Next: F6 targeted hardening (formal-verify/fuzz/mutation on Windows delta + security scan) → F7 (5-dim + human gate) → H-WIN-6 (release-page holdout). STANDING: do NOT close #429 (DEC-029); #492 OPEN; OQ-5 open; E2E-PG-4 open; SEC-001 LOW deferred. jira-e2e: JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ, JR_E2E_ENABLED=true.` |
+
+---
+
+## Checkpoint archived 2026-06-16 (Issue #492 F5 CONVERGED — next F6)
+
+_Was the active checkpoint after #492 F2 spec CONVERGED + fork-release-ops merged. Superseded when F5 scoped adversarial CONVERGED recorded (DEC-107; 15 passes; 6 fix rounds; 3 clean)._
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-06-15 |
+| **Position** | **Fork-friendly-release-ops MERGED (PR #520 @ develop 2cb219b; integrates closed #503 by @ArcavenAE, credited). Inert by default. AWAITING USER DECISION on which pieces to enable (backfill / gap-fill / signing / suppress-phantom-runs) — each needs fixes first. 0 active worktrees.** |
+| **develop HEAD** | origin/develop = **2cb219b** (fork-release-ops PR #520). activation v0.6.0-dev.2. BC **597**. NFR **42**. ADR **16**. Stories **75** (authoritative). |
+| **Convergence counter** | BC: **597**. NFR: **42**. ADR: **16**. Stories: **75** authoritative. jira-e2e env: JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ, JR_E2E_ENABLED=true. 0 active worktrees (.factory + .reference only). |
+| **Next / Pending** | AWAITING USER DECISION: which fork-release-ops pieces to enable (backfill / gap-fill / signing / suppress-phantom-runs). Each requires specific fixes — see `.factory/research/fork-release-ops-integration.md`. Standing drift: WIN-DENY-FRAGILITY (LOW), SEC-JR-SERVICE-NAME-GATE (LOW), WIN-AUTH-ENVLOCK-POISON (LOW), WIN-RUNTIME-OAUTH-PROBE (LOW, accepted ADR-0016), WIN-AC004-DIRECTIONAL (LOW). Open issues: #492, #429 (DNC), #400 Story B, #372. |
+| **Resume prompt** | `Read .factory/STATE.md THEN .factory/research/fork-release-ops-integration.md. Fork-release-ops MERGED at develop 2cb219b (PR #520; integrates closed #503 by @ArcavenAE, credited). Machinery inert by default. AWAITING user decision: which pieces to enable (backfill/gap-fill/signing/suppress-phantom-runs — each has specific prereq fixes; all in the research file). DEC-104. STANDING: do NOT close #429 (DEC-029); #492 OPEN; OQ-5 open; E2E-PG-4 open; SEC-001 LOW deferred. jira-e2e: JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ, JR_E2E_ENABLED=true.` |
