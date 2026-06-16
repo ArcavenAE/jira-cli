@@ -7,6 +7,25 @@ project: "jr (jira-cli)"
 
 Track all spec version changes. Most recent version first.
 
+## [1.3.15] - 2026-06-16
+
+### Type: PATCH
+
+### Summary
+
+BC-7.2.011 v1.9.4: traceability — add 2 omitted block-HTML test names to Source/Trace + EC-4 body (F-P3-001).
+
+### Changed Requirements
+
+- BC-7.2.011 v1.9.4: added `test_block_html_round_trips_through_adf_to_text` (EC-5, single-line round-trip) and `test_block_html_interior_line_url_split_preserves_hardbreaks` (EC-4, interior-line URL split preserving flanking hardBreaks) to Source and Trace fields; added `test_block_html_interior_line_url_split_preserves_hardbreaks` to EC-4 body prose. Traceability-text-only change; no algorithm, BC count, AC, EC count, or CANONICAL-COUNTS modified.
+
+### Impact Assessment
+
+- **Affected stories:** None
+- **Migration needed:** NO
+
+---
+
 ## [1.3.14] - 2026-06-16
 
 ### Type: PATCH
