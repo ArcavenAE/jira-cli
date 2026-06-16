@@ -145,10 +145,23 @@ Rationale:
    →  text("<div>"), hardBreak, text("  <span>x</span>"), hardBreak, text("</div>")
    ```
 
-   Empty segments (from consecutive `\n\n` lines) become zero-length strings
-   that the existing `push_text` guard (which drops empty strings) handles
-   naturally. The `is_empty_block_container` check on the resulting paragraph
-   still applies if all segments are empty.
+   Empty segments (from consecutive `\n\n` lines) emit no `text` node but still
+   emit a `hardBreak` for the split boundary (Algorithm B). The `content` array
+   is built directly in the end-handler (NOT via `push_text`, which appends to
+   the top-of-stack and consults active_marks — incorrect for a mid-pop
+   end-handler). If all segments are empty, the `content` array ends up with only
+   `hardBreak` nodes; `trim_leading_trailing_hardbreaks` (step 5b) removes them,
+   leaving an empty array; the end-handler early-returns with no node. The
+   `is_empty_block_container` helper is NOT involved for paragraphs — paragraph is
+   deliberately excluded from the REQUIRES_CONTENT set; the empty-result path is
+   handled entirely by the end-handler's own early-return guard (step 6).
+
+   **[F-3 correction, 2026-06-15]:** The original text above ("that the existing
+   `push_text` guard … handles naturally" and "`is_empty_block_container` … still
+   applies") was inaccurate. `push_text` is not in the HtmlBlock end-handler call
+   path; using it would be wrong (it targets the current stack top and merges
+   marks, both inappropriate here). `is_empty_block_container` excludes paragraphs
+   by design. The authoritative algorithm is in BC-7.2.011 steps 4/5b/6.
 
 5. **Autolink interaction is benign.** After option (a), `autolink_bare_urls`
    processes each resulting `text` node independently. A bare URL that straddles
