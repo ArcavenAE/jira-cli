@@ -7,6 +7,20 @@ project: "jr (jira-cli)"
 
 Track all spec version changes. Most recent version first.
 
+## [1.3.17] - 2026-06-16
+
+### Type: PATCH
+
+### Summary
+
+BC-7.2.011 v1.9.6: add defense-in-depth note to EC-6 for parity with EC-8/EC-9/EC-10 (F-P10-002).
+
+### Changed Requirements
+
+- BC-7.2.011 v1.9.6: added "Defense-in-depth note" to EC-6 (consecutive blank lines → double hardBreak) stating that CommonMark §4.6 terminates a type-6 HTML block at a blank line so this input cannot arrive via `markdown_to_adf`; `test_block_html_consecutive_blank_lines_produce_double_hardbreak` is a handler-level unit test (direct `AdfBuilder` construction). EC-6 was the only handler-level EC in the body lacking the annotation present on EC-8/EC-9/EC-10. No algorithm, AC, EC count, total_bcs, definitional_count, BC-INDEX, CANONICAL-COUNTS, or src/ changed.
+
+---
+
 ## [1.3.16] - 2026-06-16
 
 ### Type: PATCH
