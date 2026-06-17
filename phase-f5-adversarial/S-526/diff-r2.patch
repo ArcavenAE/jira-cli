@@ -1,0 +1,350 @@
+diff --git a/src/cli/auth/list.rs b/src/cli/auth/list.rs
+index 68aa4db..f3603fa 100644
+--- a/src/cli/auth/list.rs
++++ b/src/cli/auth/list.rs
+@@ -1,5 +1,7 @@
+ use anyhow::Result;
+ 
++use crate::output;
++
+ /// Render the table-form output of `jr auth list`. The active profile is
+ /// marked with a leading `*`; others get a leading space so column widths
+ /// stay stable across rows. Status today is a coarse "do we have a URL on
+@@ -48,7 +50,7 @@ pub(crate) fn render_list_json(
+             })
+         })
+         .collect();
+-    Ok(serde_json::to_string_pretty(&arr)?)
++    output::render_json(&arr)
+ }
+ 
+ /// `jr auth list` — print every configured profile, marking the active one.
+diff --git a/src/cli/auth/login.rs b/src/cli/auth/login.rs
+index 772d9ee..6f01ce8 100644
+--- a/src/cli/auth/login.rs
++++ b/src/cli/auth/login.rs
+@@ -331,8 +331,7 @@ pub async fn handle_login(args: LoginArgs) -> Result<()> {
+     if matches!(args.output, OutputFormat::Json) {
+         println!(
+             "{}",
+-            serde_json::to_string_pretty(&auth_json_response(&target, "login"))
+-                .expect("auth JSON response serialization cannot fail")
++            output::render_json(&auth_json_response(&target, "login"))?
+         );
+     }
+     Ok(())
+diff --git a/src/cli/auth/logout.rs b/src/cli/auth/logout.rs
+index 3086a93..947d2cb 100644
+--- a/src/cli/auth/logout.rs
++++ b/src/cli/auth/logout.rs
+@@ -1,5 +1,6 @@
+ use crate::cli::OutputFormat;
+ use crate::error::JrError;
++use crate::output;
+ 
+ use super::auth_json_response;
+ 
+@@ -40,11 +41,10 @@ pub async fn handle_logout(profile_arg: Option<&str>, output: &OutputFormat) ->
+     if matches!(output, OutputFormat::Json) {
+         println!(
+             "{}",
+-            serde_json::to_string_pretty(&auth_json_response(&target, "logout"))
+-                .expect("auth JSON response serialization cannot fail")
++            output::render_json(&auth_json_response(&target, "logout"))?
+         );
+     } else {
+-        crate::output::print_success(&format!("Logged out of profile {target:?}"));
++        output::print_success(&format!("Logged out of profile {target:?}"));
+     }
+     Ok(())
+ }
+diff --git a/src/cli/auth/refresh.rs b/src/cli/auth/refresh.rs
+index d526b45..bed4eb1 100644
+--- a/src/cli/auth/refresh.rs
++++ b/src/cli/auth/refresh.rs
+@@ -3,6 +3,7 @@ use anyhow::{Context, Result};
+ use crate::api::auth;
+ use crate::config::Config;
+ use crate::error::JrError;
++use crate::output;
+ 
+ use super::{AuthFlow, chosen_flow_for_profile, login_oauth, login_token};
+ 
+@@ -138,8 +139,7 @@ pub async fn refresh_credentials(args: RefreshArgs<'_>) -> Result<()> {
+ 
+     match args.output {
+         crate::cli::OutputFormat::Json => {
+-            let payload = serde_json::to_string_pretty(&refresh_success_payload(flow))
+-                .context("failed to serialize refresh success payload as JSON")?;
++            let payload = output::render_json(&refresh_success_payload(flow))?;
+             println!("{payload}");
+         }
+         crate::cli::OutputFormat::Table => {
+diff --git a/src/cli/auth/remove.rs b/src/cli/auth/remove.rs
+index 851b354..fcf7fe7 100644
+--- a/src/cli/auth/remove.rs
++++ b/src/cli/auth/remove.rs
+@@ -1,6 +1,7 @@
+ use crate::cli::OutputFormat;
+ use crate::config::Config;
+ use crate::error::JrError;
++use crate::output;
+ 
+ use super::auth_json_response;
+ 
+@@ -89,7 +90,7 @@ pub async fn handle_remove(
+             .default(false)
+             .interact()?;
+         if !confirm {
+-            crate::output::print_warning("Aborted.");
++            output::print_warning("Aborted.");
+             return Ok(());
+         }
+     }
+@@ -103,14 +104,14 @@ pub async fn handle_remove(
+     // user does need to know they have leftover state to clean up
+     // manually. Surface as warnings; report overall success.
+     if let Err(e) = crate::api::auth::clear_profile_creds(target) {
+-        crate::output::print_warning(&format!(
++        output::print_warning(&format!(
+             "removed config entry but failed to clear OAuth tokens for {target:?}: {e}. \
+              Remove the entries manually via your OS keychain UI."
+         ));
+     }
+     if let Err(e) = crate::cache::clear_profile_cache(target) {
+         let cache_path = crate::cache::cache_dir(target);
+-        crate::output::print_warning(&format!(
++        output::print_warning(&format!(
+             "removed config entry but failed to clear cache for {target:?}: {e}. \
+              Remove {} manually if disk space matters.",
+             cache_path.display()
+@@ -119,11 +120,10 @@ pub async fn handle_remove(
+     if matches!(output, OutputFormat::Json) {
+         println!(
+             "{}",
+-            serde_json::to_string_pretty(&auth_json_response(target, "remove"))
+-                .expect("auth JSON response serialization cannot fail")
++            output::render_json(&auth_json_response(target, "remove"))?
+         );
+     } else {
+-        crate::output::print_success(&format!("Removed profile {target:?}"));
++        output::print_success(&format!("Removed profile {target:?}"));
+     }
+     Ok(())
+ }
+diff --git a/src/cli/auth/switch.rs b/src/cli/auth/switch.rs
+index 90144f9..1521c75 100644
+--- a/src/cli/auth/switch.rs
++++ b/src/cli/auth/switch.rs
+@@ -41,8 +41,7 @@ pub async fn handle_switch(
+     if matches!(output, OutputFormat::Json) {
+         println!(
+             "{}",
+-            serde_json::to_string_pretty(&auth_json_response(target, "switch"))
+-                .expect("auth JSON response serialization cannot fail")
++            output::render_json(&auth_json_response(target, "switch"))?
+         );
+     } else {
+         output::print_success(&format!("Active profile set to {target:?}"));
+diff --git a/src/cli/issue/create.rs b/src/cli/issue/create.rs
+index 7332c55..c9b3bb3 100644
+--- a/src/cli/issue/create.rs
++++ b/src/cli/issue/create.rs
+@@ -260,7 +260,7 @@ pub(super) async fn handle_create(
+                     if let Some(obj) = issue_json.as_object_mut() {
+                         obj.insert("url".into(), serde_json::Value::String(browse_url.clone()));
+                     }
+-                    println!("{}", serde_json::to_string_pretty(&issue_json)?);
++                    println!("{}", output::render_json(&issue_json)?);
+                 }
+                 Err(err) => {
+                     // Fallback JSON carries a top-level `fetch_error` string so
+@@ -276,7 +276,7 @@ pub(super) async fn handle_create(
+                     let mut json_response = serde_json::to_value(&response)?;
+                     json_response["url"] = json!(browse_url);
+                     json_response["fetch_error"] = json!(err_msg);
+-                    println!("{}", serde_json::to_string_pretty(&json_response)?);
++                    println!("{}", output::render_json(&json_response)?);
+                 }
+             }
+         }
+@@ -755,7 +755,7 @@ pub(super) async fn handle_edit(
+                     "issues": &effective_keys,
+                     "plannedChanges": planned,
+                 });
+-                println!("{}", serde_json::to_string_pretty(&payload)?);
++                println!("{}", output::render_json(&payload)?);
+             }
+             OutputFormat::Table => {
+                 // Human-readable prose on stdout (profile-1 for dry-run: data on stdout is fine).
+@@ -1097,7 +1097,7 @@ pub(super) async fn handle_edit(
+         OutputFormat::Json => {
+             println!(
+                 "{}",
+-                serde_json::to_string_pretty(&json_output::edit_response(key, &changed_fields))?
++                output::render_json(&json_output::edit_response(key, &changed_fields))?
+             );
+         }
+         OutputFormat::Table => {
+@@ -1259,10 +1259,7 @@ async fn handle_edit_bulk_labels(
+             OutputFormat::Json => {
+                 println!(
+                     "{}",
+-                    serde_json::to_string_pretty(&json_output::edit_response(
+-                        key,
+-                        &changed_fields
+-                    ))?
++                    output::render_json(&json_output::edit_response(key, &changed_fields))?
+                 );
+             }
+             OutputFormat::Table => {
+@@ -1483,7 +1480,7 @@ fn render_bulk_edit_results(
+             if keys.len() == 1 {
+                 payload["key"] = json!(&keys[0]);
+             }
+-            println!("{}", serde_json::to_string_pretty(&payload)?);
++            println!("{}", output::render_json(&payload)?);
+         }
+         OutputFormat::Table => {
+             for entry in &results {
+@@ -2721,7 +2718,10 @@ async fn handle_jsm_create(
+     let issue_key = &created.issue_key;
+     match output_format {
+         OutputFormat::Json => {
+-            println!("{}", serde_json::json!({"key": issue_key}));
++            println!(
++                "{}",
++                output::render_json(&serde_json::json!({"key": issue_key}))?
++            );
+         }
+         OutputFormat::Table => {
+             output::print_success(&format!("Created request {issue_key}"));
+diff --git a/src/cli/issue/links.rs b/src/cli/issue/links.rs
+index 64771ae..de4fa77 100644
+--- a/src/cli/issue/links.rs
++++ b/src/cli/issue/links.rs
+@@ -96,11 +96,7 @@ pub(super) async fn handle_link(
+         OutputFormat::Json => {
+             println!(
+                 "{}",
+-                serde_json::to_string_pretty(&json_output::link_response(
+-                    &key1,
+-                    &key2,
+-                    &resolved_name,
+-                ))?
++                output::render_json(&json_output::link_response(&key1, &key2, &resolved_name,))?
+             );
+         }
+         OutputFormat::Table => {
+@@ -194,7 +190,7 @@ pub(super) async fn handle_unlink(
+             OutputFormat::Json => {
+                 println!(
+                     "{}",
+-                    serde_json::to_string_pretty(&json_output::unlink_response(false, 0))?
++                    output::render_json(&json_output::unlink_response(false, 0))?
+                 );
+             }
+             OutputFormat::Table => {
+@@ -213,7 +209,7 @@ pub(super) async fn handle_unlink(
+         OutputFormat::Json => {
+             println!(
+                 "{}",
+-                serde_json::to_string_pretty(&json_output::unlink_response(true, count))?
++                output::render_json(&json_output::unlink_response(true, count))?
+             );
+         }
+         OutputFormat::Table => {
+@@ -275,7 +271,7 @@ pub(super) async fn handle_remote_link(
+         OutputFormat::Json => {
+             println!(
+                 "{}",
+-                serde_json::to_string_pretty(&json_output::remote_link_response(
++                output::render_json(&json_output::remote_link_response(
+                     &key,
+                     response.id,
+                     url,
+diff --git a/src/cli/issue/workflow.rs b/src/cli/issue/workflow.rs
+index aa1b21c..0af19a0 100644
+--- a/src/cli/issue/workflow.rs
++++ b/src/cli/issue/workflow.rs
+@@ -291,7 +291,7 @@ async fn finish_transition(
+         OutputFormat::Json => {
+             println!(
+                 "{}",
+-                serde_json::to_string_pretty(&json_output::move_response(key, new_status, true))?
++                output::render_json(&json_output::move_response(key, new_status, true))?
+             );
+         }
+         OutputFormat::Table => {
+@@ -416,11 +416,7 @@ pub(super) async fn handle_move(
+             OutputFormat::Json => {
+                 println!(
+                     "{}",
+-                    serde_json::to_string_pretty(&json_output::move_response(
+-                        key,
+-                        &current_status,
+-                        false,
+-                    ))?
++                    output::render_json(&json_output::move_response(key, &current_status, false,))?
+                 );
+             }
+             OutputFormat::Table => {
+@@ -928,7 +924,7 @@ async fn handle_move_bulk(
+                 "taskId": task_id,
+                 "results": results,
+             });
+-            println!("{}", serde_json::to_string_pretty(&payload)?);
++            println!("{}", output::render_json(&payload)?);
+         }
+         OutputFormat::Table => {
+             for entry in &results {
+@@ -1034,7 +1030,7 @@ pub(super) async fn handle_assign(
+                 OutputFormat::Json => {
+                     println!(
+                         "{}",
+-                        serde_json::to_string_pretty(&json_output::unassign_response(&key, false))?
++                        output::render_json(&json_output::unassign_response(&key, false))?
+                     );
+                 }
+                 OutputFormat::Table => {
+@@ -1049,7 +1045,7 @@ pub(super) async fn handle_assign(
+             OutputFormat::Json => {
+                 println!(
+                     "{}",
+-                    serde_json::to_string_pretty(&json_output::unassign_response(&key, true))?
++                    output::render_json(&json_output::unassign_response(&key, true))?
+                 );
+             }
+             OutputFormat::Table => {
+@@ -1079,11 +1075,11 @@ pub(super) async fn handle_assign(
+                 OutputFormat::Json => {
+                     println!(
+                         "{}",
+-                        serde_json::to_string_pretty(&json_output::assign_unchanged_response(
++                        output::render_json(&json_output::assign_unchanged_response(
+                             &key,
+                             &display_name,
+                             &account_id,
+-                        ),)?
++                        ))?
+                     );
+                 }
+                 OutputFormat::Table => {
+@@ -1103,7 +1099,7 @@ pub(super) async fn handle_assign(
+         OutputFormat::Json => {
+             println!(
+                 "{}",
+-                serde_json::to_string_pretty(&json_output::assign_changed_response(
++                output::render_json(&json_output::assign_changed_response(
+                     &key,
+                     &display_name,
+                     &account_id,
+@@ -1169,7 +1165,7 @@ pub(super) async fn handle_comment(
+ 
+     match output_format {
+         OutputFormat::Json => {
+-            println!("{}", serde_json::to_string_pretty(&comment)?);
++            println!("{}", output::render_json(&comment)?);
+         }
+         OutputFormat::Table => {
+             output::print_success(&format!(

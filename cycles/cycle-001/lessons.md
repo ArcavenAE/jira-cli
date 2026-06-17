@@ -4070,3 +4070,40 @@ Date: 2026-06-17. PR #523 squash-merged → develop @ 53f6d98. #522 auto-closed.
 
 _Recorded: 2026-06-17 — Issue #522 CYCLE CLOSED. DEC-119._
 _Tagged: [cycle-close] [S-7.02] [confirmed]_
+
+---
+
+## Issue #526 F5 Process-Gap (2026-06-17)
+
+### LESSON-CENTRALIZATION-AC-GREP [codified] Centralization ACs must use enumeration or multiline-aware scanning, never single-line grep negation (2026-06-17)
+
+**Lesson ID:** LESSON-CENTRALIZATION-AC-GREP
+
+**Context:** Issue #526 Bundle C Story 2 — Replace all direct JSON serialization call sites in `src/cli/` with `output::render_json`. F5 adversarial round 3 (third pass needed to converge; round 1 and 2 found additional sites).
+
+**What happened:** The story's acceptance criteria for "zero remaining direct serialization call sites" used verification steps of the form:
+
+```bash
+grep -rn 'serde_json::to_string_pretty' src/cli/ | grep -v 'render_json'
+```
+
+This single-line grep negation pattern has a systematic blind spot: multi-line call sites where `render_json` appears on a different line than `to_string_pretty` (e.g., a `render_json(` call that is NOT `serde_json::to_string_pretty` but is the correct form) pass the grep, while a bypassed `to_string_pretty` call whose output is later wrapped does not. Similarly, compact `serde_json::json!(...).to_string()` (Display) sites are a DIFFERENT call pattern that the grep negation for `to_string_pretty` misses entirely — `src/cli/project.rs` (finding F-1) and `handle_jsm_create` (finding C-1) were compact Display sites, not `to_string_pretty` sites, so the negation grep gave a false-all-clear.
+
+**Root cause:** The grep negation technique (`grep PATTERN | grep -v EXCLUSION`) verifies that no line matches BOTH patterns simultaneously. It does NOT enumerate all distinct call patterns at the relevant sites. Multi-line call sites and alternative call patterns (compact Display vs pretty) evade it.
+
+**Recurrence history:**
+- Round 1 clean (grep reported 0 hits) — F-1 (project.rs compact site) and C-1 (handle_jsm_create compact site) both evaded the pattern-specific grep because they use `json!(...).to_string()` not `to_string_pretty`.
+- Round 2 caught F-1 (project.rs) but missed the scope expansion decision that C-1 was now in scope.
+- Round 3 caught C-1 — true convergence.
+
+**Rule (LESSON-CENTRALIZATION-AC-GREP):** When writing ACs for "all X sites migrated to Y" (centralization claims), verification MUST:
+1. Enumerate ALL distinct call patterns for X (not just the most common one) in the F1/F2 spec.
+2. Use multiline-aware scanning (e.g., `rg --multiline`, AST-level grep, or exhaustive `rg` patterns covering each variant) rather than single-line pipe negation.
+3. Grep for the OLD patterns (to confirm absence) AND enumerate the expected NEW pattern count (to confirm presence) — both checks, not just the absence check.
+4. Never use `grep PATTERN | grep -v EXCLUSION` as the sole verification step for a centralization claim.
+
+**Follow-up:** No follow-up story required. The lesson is codified here and in STATE.md standing constraints. The `check-spec-counts.sh` and `check-bc-cumulative-counts.sh` guards are structural (count-based), not grep-negation based, so this class of error does not apply to them.
+
+_Recorded: 2026-06-17 — Issue #526 F5 CONVERGED (round 3). S-7.02 discipline._
+_Tagged: [process-gap] [F5] [centralization] [codified]_
+_Status: [codified]_
