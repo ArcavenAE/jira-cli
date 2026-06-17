@@ -47,6 +47,21 @@ _Was the active checkpoint after Issue #522 bug-fix cycle opened: F1 (delta anal
 
 ---
 
+## Checkpoint archived 2026-06-17 (Issue #522 F6 hardening PASS — superseded by F7 DELTA_CONVERGED)
+
+_Was the active checkpoint after Issue #522 F6 targeted hardening PASS (0ed1395): full regression 1850 green, 100k proptest INV-1-clean, mutation 16-caught/5-equivalent+2 killing tests, audit/deny clean, no prod-logic change. Superseded when F7 DELTA_CONVERGED (DEC-117)._
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-06-17 |
+| **Position** | **Issue #522 F6 hardening PASS — 1850 green, 100k proptest INV-1-clean, mutation 16-caught/5-equivalent+2 killing tests, audit/deny clean. Code @ 0ed1395 LOCAL. BC-7.2.011 v1.11.0. S-522 19 ACs HIGH. DEC-116. Next: F7.** |
+| **develop HEAD** | origin/develop = **3ba8ea2** (PR #521 #492 bug-fix). activation v0.6.0-dev.2. BC **598**. NFR **42**. ADR **16**. Stories **77** (authoritative). |
+| **Convergence counter** | BC: **598**. NFR: **42**. ADR: **16**. Stories: **77** authoritative. jira-e2e env: JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ, JR_E2E_ENABLED=true. Active worktree: .worktrees/S-522 @ 0ed1395 (LOCAL ONLY — not pushed). |
+| **Next / Pending** | F7: 5-dim delta convergence + fresh consistency-validator + /vsdd-factory:check-input-drift. Then PR via pr-manager → develop. Human merge gate. Fork-release-ops enablement PENDING (DEC-104). MUTANTS-ADF-GLOB follow-up. |
+| **Resume prompt** | `Read .factory/STATE.md. Issue #522 F6 PASS @ 0ed1395. Worktree: .worktrees/S-522 @ 0ed1395 (LOCAL ONLY). BC-7.2.011 v1.11.0. S-522 19 ACs HIGH. 1850 tests green. develop @ 3ba8ea2. DEC-116. Next: F7, then PR → develop via pr-manager.` |
+
+---
+
 ## Checkpoint archived 2026-06-16 (Issue #492 F5-CONVERGED / F6-next — PR #521 OPEN @ 8062b78)
 
 _Was the active checkpoint after Issue #492 F5 scoped adversarial CONVERGED (DEC-107; 15 passes, 6 fix rounds, 3 clean; BC-7.2.011 v1.9.6 @ factory-artifacts 87e3c53; zero code defects). PR #521 OPEN @ 8062b78. Superseded when F6 COMPLETE + F7 DELTA_CONVERGED recorded (DEC-108; PR #521 @ 72fbcb9; human-authorized merge pending CI-green)._

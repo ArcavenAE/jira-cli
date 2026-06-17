@@ -2,7 +2,7 @@
 document_type: canonical-counts
 product: jr (jira-cli)
 generated: "2026-05-04"
-last_verified: "2026-06-15 (BC-7.2.011 added issue #492 block-HTML hardBreak fix F2; 598 total, bc-7 90/44)"
+last_verified: "2026-06-17 (BC-7.2.011 v1.11.0 confirmed #522 F7 DELTA_CONVERGED; 598 total unchanged)"
 ---
 
 # Canonical Counts — jr (jira-cli) L3 PRD

@@ -2,11 +2,11 @@
 document_type: pipeline-state
 version: "2.0"
 status: active
-timestamp: 2026-06-17T23:59:01Z
+timestamp: 2026-06-17T23:59:59Z
 phase: phase-3-tdd-implementation
 project: jira-cli
 mode: BROWNFIELD
-current_step: "Issue #522 F6 hardening PASS (1850 green, 100k proptest no-counterexample, mutation 16-caught/5-equivalent + 2 killing tests, audit/deny clean). Code LOCAL @ 0ed1395. Next: F7 (5-dim delta convergence + fresh consistency-validator + input-drift) then PR→develop."
+current_step: "Issue #522 F7 DELTA_CONVERGED (5/5 dims PASS; 1850/0 regression; CR-01 closed). AWAITING HUMAN MERGE GATE → then PR via pr-manager → develop. Code LOCAL @ 0ed1395."
 current_cycle: "cycle-001"
 dtu_required: false
 phase_2_status: APPROVED
@@ -26,7 +26,7 @@ activation_version: "v0.6.0-dev.2"
 | **Product** | jr (Jira CLI) |
 | **Mode** | BROWNFIELD / Rust |
 | **Target Workspace** | develop → main |
-| **Last Updated** | 2026-06-17: Issue #522 F6 hardening PASS — 1850 green, 100k proptest INV-1-clean (incl CR-01 catcher), mutation 16-caught/5-equivalent+2 killing tests (0ed1395), audit/deny clean. No prod-logic change. BC-7.2.011 v1.11.0. S-522 19 ACs HIGH. DEC-116. MUTANTS-ADF-GLOB tooling gap tracked. F7 next. |
+| **Last Updated** | 2026-06-17: Issue #522 F7 DELTA_CONVERGED — 5/5 dims PASS (spec/tests/impl/verification/docs); 1850/0 regression; 100k proptest INV-1-clean; CR-01 closed; count guards exit 0. BC-7.2.011 v1.11.0. S-522 19 ACs HIGH. DEC-117. AWAITING HUMAN MERGE GATE → PR via pr-manager → develop. |
 | **Current Phase** | Phase 3 — TDD Implementation IN PROGRESS — #522 two-chokepoint bug-fix (F5 CONVERGED → F6 next). develop @ 3ba8ea2. BC 598. NFR 42. ADR 16. Stories **77** (authoritative). |
 | **Next Phase** | Phase 4: Holdout Evaluation (not started) |
 | **Activation HEAD** | 4258202 (v0.6.0-dev.2 released 2026-06-14; develop HEAD 3ba8ea2; v0.5.0 STABLE shipped 2026-06-12) |
@@ -43,7 +43,7 @@ activation_version: "v0.6.0-dev.2"
 | 3: TDD Implementation | IN_PROGRESS — Feature Mode active | — | Wave 0/1/2/3 ALL COMPLETE (32/32) | Wave adversarial: GATE-CLOSED 2026-05-08; Feature Mode ongoing |
 | Feature cycles #110..#499 (19 cycles, 2026-05-11..2026-06-11) | ALL CYCLE CLOSED + MERGED | 2026-06-11 | F1–F7 each | develop BC 583→594. See `cycles/cycle-001/burst-log.md` "Archived Phase Progress Rows". |
 | Issue #492 block-HTML hardBreak (BC-7.2.011) | **CYCLE CLOSED + MERGED** | 2026-06-16 | F1–F7 ALL COMPLETE — CONVERGED | PR #521 → develop @ 3ba8ea2. BC-7.2.011 v1.9.6. 5/5 F7 dims; 150k proptest; 100% mutation; 0 code defects. Follow-up #522 (lone-CR OOS). DEC-109. |
-| Issue #522 ADF CR normalization — EXPANDED two chokepoints (EC-11 + EC-12) | **F5 CONVERGED + F6 PASS (2026-06-17). Next F7.** | — | F1–F6 ALL COMPLETE; F6: 1850 green, 100k proptest INV-1-clean, mutation 16-caught/5-equivalent+2 killing tests, audit 0 advisories/deny clean, no prod-logic change. Code @ 0ed1395 LOCAL. DEC-116. | F1: EC-11+EC-12. F2: BC-7.2.011 v1.11.0. F3: S-522 19 ACs HIGH. F4: 237→248 tests. F5: 4 rounds CONVERGED. F6: PASS. Next: F7. |
+| Issue #522 ADF CR normalization — EXPANDED two chokepoints (EC-11 + EC-12) | **F5 CONVERGED + F6 PASS + F7 DELTA_CONVERGED (2026-06-17). AWAITING human gate → PR.** | — | F1–F7 ALL COMPLETE. F7: 5/5 dims PASS (spec/tests/impl/verification/docs), count guards 0, 1850/0 regression, CR-01 closed, input-drift PASS. Code @ 0ed1395 LOCAL. DEC-117. | F1: EC-11+EC-12. F2: BC-7.2.011 v1.11.0. F3: S-522 19 ACs HIGH. F4: 237→248 tests. F5: 4 rounds CONVERGED. F6: PASS. F7: DELTA_CONVERGED. |
 | 4: Holdout Evaluation | not-started | | | |
 | 5: Adversarial Refinement | not-started | | | |
 | 6: Formal Hardening | not-started | | | |
@@ -74,6 +74,7 @@ activation_version: "v0.6.0-dev.2"
 | DEC-114 | 2026-06-17: Issue #522 F5 round-2 second pass-set (3 fresh perspective-diverse lenses over 182a93d) found ZERO new production-code defects — correctness lens fully clean, code proven correct under exhaustive hand-trace. Findings were doc/test/spec completeness only: MED F-522-01 (block→hardBreak vs inline→space HTML-newline asymmetry was a sound but undocumented product decision; now documented in docs/specs/adf-block-html.md with BC-7.2.011 EC-11 reference), LOW F-522-02 (added deterministic 3-line + CRLF inline-HTML regression cases), LOW F-OBS-1 (AC-014 illustrative snippet form cosmetic: cases 2048→1000, prop_map wrapper dropped). All fixed @ c7103b7; 244 lib green. Severity decay HIGH(CR-01)→MED(doc)→LOW — converging. Next: 3 fresh passes over c7103b7 for final clean-pass set, then F6. | Feature Mode / #522 F5-R2 follow-up | Phase 3 | 2026-06-17 |
 | DEC-115 | 2026-06-17: Issue #522 F5 scoped-adversarial CONVERGED. 4 fresh-context rounds (perspective-diverse: correctness/coherence/completeness lenses). R2 found a genuine HIGH end-to-end-reachable INV-1 bug (CR-01: bare \n survived push_text/push_code Other context via multi-line inline HTML) that F1–F4 + #492/EC-11/EC-12 scoping all missed — vindicates F5. Severity decayed HIGH→MED(doc)→LOW→0-blocking; final 3 consecutive passes all PASS-CLEAN. Outcome: BC-7.2.011 v1.11.0 (EC-11 bare-\n rows + COMP-1 Unicode scope note), S-522 19 ACs severity HIGH, block-vs-inline HTML newline asymmetry documented (docs/specs/adf-block-html.md), 248 lib tests, full suite green. Code @ 6d87bb6 LOCAL. Next: F6 hardening. PROCESS-GAP [process-gap]: F1 Impact Boundary again missed a sibling control-char case (\n alongside \r) on the SAME chokepoint — reinforces Step-7 lesson 'F1 must enumerate sibling cases sharing a target invariant'; F5 3-lens fan-out is what caught it. | Feature Mode / #522 F5 CONVERGED | Phase 3 | 2026-06-17 |
 | DEC-116 | 2026-06-17: Issue #522 F6 targeted hardening PASS. Full regression 1850 green / 0 failed / 91 ignored (gated suites). PROPTEST_CASES=100k (release): prop_text_to_adf_holds_inv1, prop_markdown_to_adf_html_chars_holds_inv1 (CR-01 catcher), prop_492_arbitrary_string_holds_core_invariants, prop_492_block_html_holds_core_invariants — NO counterexample; INV-1 held under 100k-case stress. Diff-scoped mutation (src/adf.rs): 21 mutants → 16 caught + 5 hand-verified-equivalent (text_to_adf hardBreak-index variants removed by trim; push_text Sink-guard redundant with append_child guard; needs_norm &&→|| only adds no-op replace); 2 killing tests added (test_text_to_adf_three_lines_produce_two_interior_hardbreaks, test_markdown_image_alt_text_is_dropped_by_sink_guard). cargo audit 346 deps 0 advisories. cargo deny ok. clippy/fmt clean. No production-logic change (F5-converged); no correctness bug surfaced. Code @ 0ed1395. Surfaced tooling gap: .cargo/mutants.toml examine_globs omits src/adf.rs → canonical `cargo mutants --in-diff` false-greens ADF deltas; workaround used `--file src/adf.rs`. Tracked MUTANTS-ADF-GLOB. Next: F7 (5-dim delta convergence + fresh consistency-validator + input-drift) then PR → develop. | Feature Mode / #522 F6 | Phase 3 | 2026-06-17 |
+| DEC-117 | 2026-06-17: Issue #522 F7 DELTA_CONVERGED. Fresh-context consistency-validator: 5/5 dimensions PASS (spec/tests/impl/verification/docs), count guards 0, full suite 1850/0, clippy/fmt clean, CR-01 reachable-HIGH bug confirmed closed, no blocking cross-doc drift, input-drift PASS (manual perimeter — no hash registry, as #492). 3 non-blocking: CLAUDE.md gotcha deferred post-merge per story scope; MUTANTS-ADF-GLOB tracked; CANONICAL-COUNTS last_verified timestamp fixed this commit. Branch ready for PR→develop pending human merge gate. | Feature Mode / #522 F7 | Phase 3 | 2026-06-17 |
 | DEC-112 | 2026-06-17: Issue #522 F5 Pass-1 LOW findings F-1/F-2/F-3 remediated before re-running adversarial passes. F-1 proptest \n-coverage gap closed (both proptests dotall-charset `"[\r\n\t a-zA-Z0-9]{0,64}"`, code c70f07d) + AC-014 prose harmonized byte-for-byte; F-2 BC-7.2.011 EC-12 table count corrected 13→12 (true=12); F-3 empty-paragraph shape positively pinned (2 new tests `test_text_to_adf_empty_string_shape`+`test_text_to_adf_all_newlines_shape`, 235→237 adf green). F5 counter reset 0/3; next: 3 fresh-context scoped-adversarial passes over full EC-11+EC-12 delta. Code LOCAL @ c70f07d. | Feature Mode / #522 F5 remediation | Phase 3 | 2026-06-17 |
 | DEC-111 | 2026-06-17: Issue #522 cycle EXPANDED mid-cycle (user approval) to TWO chokepoints — EC-11 (push_text/push_code markdown path, original) + EC-12 (text_to_adf plain-text path, sibling defect discovered during F5 traceability pass). F1-ext complete: issue-522-text-to-adf-extension.md. F2 expanded: BC-7.2.011 v1.9.8→v1.9.9→v1.10.0 (EC-11 context-aware contract + EC-12 INV-1-plain-text). F3 expanded: S-522 7→14 ACs. F4 COMPLETE both paths: 235 adf tests green; cargo test green; clippy clean; fmt clean. Code LOCAL ONLY on branch fix/adf-push-text-cr-normalization-522 @ b999d97 (6 commits: baf2a42→0d7775d→7968d66→514d364→35d81bb→b999d97). F5 expanded-delta Pass-1 COMPLETE — CLEAN (1/3); 3 LOW findings (F-1/F-2/F-3) to fix before re-running. Pre-session-clear checkpoint committed to factory-artifacts branch. | Feature Mode / #522 EXPANDED | Phase 3 | 2026-06-17 |
 
@@ -95,6 +96,7 @@ All 7 S-WIN-1..6 + #475 per-AC demos: **Yes — adapted**. All are CI-config / i
 
 | ID | Area | Description | Severity | Status |
 |----|------|-------------|----------|--------|
+| CLAUDE.md-S522-GOTCHA | root CLAUDE.md block-HTML gotcha still cites #489+#492 only | Add note that push_text/push_code/text_to_adf normalize \r AND bare \n across all paths (#522); block→hardBreak vs inline→space asymmetry documented | LOW | OPEN — post-merge cleanup per story scope |
 | MUTANTS-ADF-GLOB | .cargo/mutants.toml examine_globs omits src/adf.rs | Canonical `cargo mutants --in-diff` command returns 'No mutants to filter' for adf.rs-only deltas → false-green mutation coverage. F6 verifier worked around with `--file src/adf.rs`. Fix: add src/adf.rs to examine_globs (one-line config). | MED | OPEN — process-gap, follow-up (not folded into #522 PR to keep it focused) |
 | WIN-CI-GATE-AGGREGATOR | ci-gate aggregator job | CLOSED — CODE SHIPPED (PR #518 @ e9b2269) AND ACTIVATED (branch-protection swap 2026-06-15; single `CI Gate` required check on develop+main; app_id 15368; DEC-103). Matrix-rename fragility class structurally eliminated. | LOW | CLOSED — DEC-103 |
 | FORK-OPS-SIGN-INJECTION | `sign-and-publish.yml` shell injection | `workflow_run.head_branch` written unsanitized into shell with Apple secrets (CWE-77, SEC-001/CR-001). Validate `^v…` pattern before any shell step. Blocks signing enablement. | HIGH | OPEN — gates signing |
@@ -108,7 +110,7 @@ All 7 S-WIN-1..6 + #475 per-AC demos: **Yes — adapted**. All are CI-config / i
 | WIN-DENY-FRAGILITY | deny.toml canonical-un-skipped-version has no CI guard | 17-entry skip set topology-dependent; future windows-sys update could silently break N-1 invariant. | LOW | OPEN — tracked process-gap |
 | WIN-AUTH-ENVLOCK-POISON | ENV_LOCK uses .lock().unwrap() in auth tests | Latent poison-cascade risk. Apply .unwrap_or_else(|e| e.into_inner()) uniformly. | LOW | OPEN — follow-up |
 | #492-F4-IMPL | F4 implementation carry-forward | RESOLVED — F4 COMPLETE (Algorithm B, 13 block-HTML tests, docs/specs/adf-block-html.md, PR #521 @ 8062b78). | n/a | RESOLVED — F4 DONE |
-| PRE-EXISTING-LONE-CR | heading+codeBlock raw `\r` survival + bare `\n` Other-ctx (CR-01) | **#522 F6 PASS** @ 0ed1395. EC-11+EC-12 fix; F5 3/3 clean; F6 1850 green+100k proptest. F7 next. | HIGH | IN PROGRESS — #522 F7 next |
+| PRE-EXISTING-LONE-CR | heading+codeBlock raw `\r` survival + bare `\n` Other-ctx (CR-01) | **#522 F7 DELTA_CONVERGED** @ 0ed1395. EC-11+EC-12 fix; F5 3/3 clean; F6 1850 green+100k proptest; F7 5/5 PASS. CR-01 confirmed closed. AWAITING human merge gate → PR. | HIGH | IN PROGRESS — awaiting PR merge |
 | F7-001 | CLAUDE.md 'symmetric' wording | CLAUDE.md description-echo section uses 'symmetric'/'asymmetric' wording with minor precision gap noted in F7 consistency audit. Non-blocking cosmetic. Deferred to next CLAUDE.md edit. | LOW | ACCEPTED-DEFERRED (F7 non-blocking) |
 | F7-002 | F2-record archival note | cycles/cycle-001/issue-492/f2-convergence.md archival notation note from F7 audit. No functional gap; reference file exists. | LOW | ACCEPTED-DEFERRED (F7 non-blocking) |
 | F7-003 | BC-7.2.011 "13 tests" phrasing | BC-7.2.011 body uses "13 tests" — acceptable per check-bc-no-numeric-test-counts.sh qualitative policy (PG-365-1); no change required. | LOW | ACCEPTED-DEFERRED (F7 non-blocking) |
@@ -127,7 +129,7 @@ All 7 S-WIN-1..6 + #475 per-AC demos: **Yes — adapted**. All are CI-config / i
 
 ## Convergence Trackers
 
-Full per-issue: `cycles/cycle-001/convergence-trajectory.md`. Current: **[2026-06-17] Issue #522 F6 PASS — 1850 green, 100k proptest INV-1-clean, mutation 16-caught/5-equivalent+2 killing tests, audit/deny clean. Code @ 0ed1395 LOCAL. BC-7.2.011 v1.11.0. S-522 19 ACs HIGH. DEC-116. F7 next. #492 CYCLE CLOSED → develop @ 3ba8ea2 (DEC-109).**
+Full per-issue: `cycles/cycle-001/convergence-trajectory.md`. Current: **[2026-06-17] Issue #522 F7 DELTA_CONVERGED @ 0ed1395 — 5/5 dims PASS; 1850/0 regression; CR-01 closed; count guards 0; input-drift PASS. BC-7.2.011 v1.11.0. S-522 19 ACs HIGH. DEC-117. AWAITING HUMAN MERGE GATE → PR via pr-manager → develop. #492 CYCLE CLOSED → develop @ 3ba8ea2 (DEC-109).**
 
 ## Session Resume Checkpoint
 
@@ -136,15 +138,15 @@ Full per-issue: `cycles/cycle-001/convergence-trajectory.md`. Current: **[2026-0
 | Field | Value |
 |-------|-------|
 | **Date** | 2026-06-17 |
-| **Position** | **Issue #522 F6 hardening PASS — 1850 green, 100k proptest INV-1-clean, mutation 16-caught/5-equivalent+2 killing tests, audit/deny clean. Code @ 0ed1395 LOCAL. BC-7.2.011 v1.11.0. S-522 19 ACs HIGH. DEC-116. Next: F7.** |
+| **Position** | **Issue #522 F7 DELTA_CONVERGED — 5/5 dims PASS (spec/tests/impl/verification/docs), 1850/0 regression, 100k proptest INV-1-clean, CR-01 confirmed closed. Code LOCAL @ 0ed1395. BC-7.2.011 v1.11.0. S-522 19 ACs HIGH. DEC-117. AWAITING HUMAN MERGE GATE → PR via pr-manager → develop.** |
 | **develop HEAD** | origin/develop = **3ba8ea2** (PR #521 #492 bug-fix). activation v0.6.0-dev.2. BC **598**. NFR **42**. ADR **16**. Stories **77** (authoritative). |
 | **Convergence counter** | BC: **598**. NFR: **42**. ADR: **16**. Stories: **77** authoritative. jira-e2e env: JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ, JR_E2E_ENABLED=true. Active worktree: .worktrees/S-522 @ 0ed1395 (LOCAL ONLY — not pushed). |
-| **Next / Pending** | F7: 5-dim delta convergence + fresh consistency-validator + /vsdd-factory:check-input-drift. Then PR via pr-manager → develop. Human merge gate. Fork-release-ops enablement PENDING (DEC-104). MUTANTS-ADF-GLOB follow-up (examine_globs fix for src/adf.rs). |
-| **Resume prompt** | `Read .factory/STATE.md. Issue #522 F6 PASS @ 0ed1395. Worktree: .worktrees/S-522 on fix/adf-push-text-cr-normalization-522 @ 0ed1395 (LOCAL ONLY — not pushed). BC-7.2.011 v1.11.0. S-522 19 ACs HIGH. 1850 tests green. develop @ 3ba8ea2. DEC-116. Next: F7 (5-dim delta convergence + fresh consistency-validator + input-drift), then PR → develop via pr-manager. STANDING: do NOT close #429 (DEC-029); OQ-5 open; E2E-PG-4 open; SEC-001 LOW deferred. Fork-release-ops PENDING (DEC-104). MUTANTS-ADF-GLOB open. jira-e2e: JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ, JR_E2E_ENABLED=true.` |
+| **Next / Pending** | HUMAN MERGE GATE. On approval: pr-manager creates PR → develop (full 9-step PR process) → human merge. Then cycle close (S-7.02: 3 process gaps as lessons). Durable follow-ups: MUTANTS-ADF-GLOB (examine_globs fix), CLAUDE.md-S522-GOTCHA post-merge. Fork-release-ops enablement PENDING (DEC-104). |
+| **Resume prompt** | `Read .factory/STATE.md. Issue #522 F7 DELTA_CONVERGED @ 0ed1395. Worktree: .worktrees/S-522 on fix/adf-push-text-cr-normalization-522 @ 0ed1395 (LOCAL ONLY — not pushed). BC-7.2.011 v1.11.0. S-522 19 ACs HIGH. 1850/0 tests. develop @ 3ba8ea2. DEC-117. AWAITING HUMAN MERGE GATE — on approval, invoke pr-manager for full 9-step PR → develop. STANDING: do NOT close #429 (DEC-029); OQ-5 open; E2E-PG-4 open; SEC-001 LOW deferred. Fork-release-ops PENDING (DEC-104). MUTANTS-ADF-GLOB open. CLAUDE.md-S522-GOTCHA deferred post-merge. jira-e2e: JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ, JR_E2E_ENABLED=true.` |
 
 ## RESUME PLAN (cold-start, self-contained)
 
-<!-- State snapshot: see Session Resume Checkpoint above. Code: .worktrees/S-522 @ 0ed1395 LOCAL. BC-7.2.011 v1.11.0. S-522 19 ACs severity HIGH. F5 CONVERGED. F6 PASS. Next: F7. -->
+<!-- State snapshot: see Session Resume Checkpoint above. Code: .worktrees/S-522 @ 0ed1395 LOCAL. BC-7.2.011 v1.11.0. S-522 19 ACs severity HIGH. F5 CONVERGED. F6 PASS. F7 DELTA_CONVERGED. AWAITING HUMAN MERGE GATE. -->
 
 ### Steps (assume ZERO memory)
 
@@ -158,7 +160,7 @@ Full per-issue: `cycles/cycle-001/convergence-trajectory.md`. Current: **[2026-0
 
 **Step 5 (DONE — 2026-06-17 @ 0ed1395):** F6 targeted hardening PASS. Full regression 1850 green; PROPTEST_CASES=100k prop_text_to_adf_holds_inv1 + prop_markdown_to_adf_html_chars_holds_inv1 + prop_492_* — NO counterexample. Diff-scoped mutation 21 mutants → 16 caught + 5 hand-verified-equivalent + 2 killing tests. cargo audit 0 advisories; deny ok. clippy/fmt clean. No production-logic change. DEC-116. MUTANTS-ADF-GLOB tooling gap surfaced + tracked.
 
-**Step 6 (F7 + PR) [NEXT LIVE STEP]:** 5-dim delta convergence + fresh consistency-validator (`/vsdd-factory:consistency-validation`) + input-drift check (`/vsdd-factory:check-input-drift`). Then PR via pr-manager (branch local — push first) targeting develop. Human merge gate.
+**Step 6 (F7 + PR) [PARTIAL — F7 DONE; PR PENDING HUMAN GATE]:** F7 DELTA_CONVERGED — 5/5 dims PASS; fresh consistency-validator PASS; input-drift PASS (manual perimeter). DEC-117. AWAITING HUMAN MERGE GATE → on approval, invoke pr-manager for full 9-step PR → develop.
 
 **Step 7 (cycle close — S-7.02):** Codify THREE process gaps as lessons: (a) F5 partial-fix sweeps missed SIBLING stale CRLF doc sites repeatedly → add "same-document + cross-artifact + phase-input repro-sweep" checklist step to F5 AC-revision; (b) F1 Impact Boundary missed text_to_adf sibling path sharing INV-1 → F1 must enumerate sibling functions sharing a target invariant; (c) F1 Impact Boundary again missed the sibling \n case on the SAME push_text chokepoint (\n alongside \r) — F5 perspective-diverse fan-out (correctness/coherence/completeness) caught it; reinforces Step-4(a) scrutiny must include "enumerate ALL control chars sharing the same hazard class at each chokepoint".
 
@@ -170,7 +172,7 @@ Durable follow-ups: see Drift Items section (WIN-AUTH-ENVLOCK-POISON, WIN-DENY-F
 
 | Issue | Title | Status | Priority | Notes |
 |-------|-------|--------|----------|-------|
-| #522 | fix(adf): ADF CR/newline normalization — EC-11 (push_text/push_code) + EC-12 (text_to_adf) | **IN PROGRESS — F6 PASS; F7 next** | HIGH | F1–F6 ALL COMPLETE. F6 PASS @ 0ed1395: 1850 green, 100k proptest INV-1-clean, mutation 16-caught/5-equivalent+2 killing tests, audit/deny clean. BC-7.2.011 v1.11.0. S-522 19 ACs HIGH. DEC-110+111+112+113+114+115+116. Next: F7 (5-dim delta convergence + consistency-validator + input-drift). |
+| #522 | fix(adf): ADF CR/newline normalization — EC-11 (push_text/push_code) + EC-12 (text_to_adf) | **F7 DELTA_CONVERGED — AWAITING HUMAN MERGE GATE → PR** | HIGH | F1–F7 ALL COMPLETE. F7 DELTA_CONVERGED @ 0ed1395: 5/5 dims PASS, 1850/0, CR-01 closed, input-drift PASS. BC-7.2.011 v1.11.0. S-522 19 ACs HIGH. DEC-110+111+112+113+114+115+116+117. |
 | #429 | jr_isolated() crypto-random suffix | OPEN | LOW | DEC-029 deferred to human. Do NOT close autonomously. |
 | #400 | Test-hardening + process-gap follow-ups | OPEN — Story A MERGED PR #431. Story B + engine items remain. | LOW | |
 | #372 | cargo-mutants partial baseline | OPEN | LOW | Follow-up from #346 |
