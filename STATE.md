@@ -2,11 +2,11 @@
 document_type: pipeline-state
 version: "2.0"
 status: active
-timestamp: 2026-06-17T00:00:00Z
+timestamp: 2026-06-17T12:00:00Z
 phase: phase-3-tdd-implementation
 project: jira-cli
 mode: BROWNFIELD
-current_step: "Issue #522 CYCLE CLOSED + MERGED — PR #523 squash-merged → develop @ 53f6d98 (#522 auto-closed). Full F1–F7: F5 caught HIGH CR-01; F6/F7 PASS. BC-7.2.011 v1.11.0. Factory idle — awaiting next work."
+current_step: "FACTORY IDLE — Issue #522 CYCLE CLOSED+MERGED (PR #523 → develop @ 53f6d98). No active worktree. Awaiting next work item. PRE-SESSION-CLEAR CHECKPOINT durable."
 current_cycle: "cycle-001"
 dtu_required: false
 phase_2_status: APPROVED
@@ -67,19 +67,7 @@ activation_version: "v0.6.0-dev.2"
 | DEC-064..DEC-078 | JSM E2E (064..066), #471 taskList ADF F1..F6 (067..071), leading-dash fix (072), #475 E2E (073..076), v0.5.0-dev.14 + v0.5.0 STABLE releases (077..078). All CYCLE CLOSED. | See `cycles/cycle-001/burst-log.md` | Phase 3 / 2026-06-02..12 | archived |
 | DEC-079..092 | Windows-build F1..F4 decisions (F1+F2 gate, F3 CONVERGED, Pre-F4 research, VSDD-closure, F3 re-gate, S-WIN-2 MERGED; S-WIN-3/S-WIN-1/S-WIN-4/S-WIN-6 F4 per-story CONVERGED+MERGED). All archived. | See `cycles/cycle-001/burst-log.md` "Archived Decisions DEC-079..085" + "DEC-086..092" | Phase 3 | 2026-06-12..13 |
 | DEC-093..106 | Windows-build F4–F7 + fork-release-ops integration + #492 F1–F2/F5 cycle decisions (all CYCLE CLOSED). | See `cycles/cycle-001/burst-log.md` "Archived Decisions DEC-093..106" | Phase 3 | 2026-06-14..16 |
-| DEC-107 | 2026-06-16: Issue #492 F5 scoped adversarial CONVERGED. 15 fresh-context passes / 6 fix rounds / final 3 clean (Pass 13 deep cross-consistency, Pass 14 holistic+traceability+counts, Pass 15 robustness+completeness) on frozen 8062b78 + BC-7.2.011 v1.9.6 @ factory-artifacts 87e3c53. ZERO production-code defects — single Algorithm B path proven correct ~12x across all lenses; all findings were doc/spec precision (severity decayed M→L→0). BC version trail: v1.9.1→v1.9.2→v1.9.3→v1.9.4→v1.9.5→v1.9.6. PR #521 pushed. Next: F6 targeted hardening. | Feature Mode / #492 F5 | Phase 3 | 2026-06-16 |
-| DEC-108 | 2026-06-16: Issue #492 F6 hardening COMPLETE (proptest 5-invariant suite, 150k cases; mutation 100% effective, 3 equivalent; cargo audit 346 deps 0 advisories; cargo deny ok; full suite 222 adf green) + F7 DELTA_CONVERGED 5/5 (consistency audit PASS-WITH-NOTES, 3 non-blocking deferred; input-drift PASS for #492 perimeter). Human-authorized merge of PR #521 @ 72fbcb9 (pending CI green). F6 surfaced pre-existing OOS lone-CR defect (heading/codeBlock via generic Event::Text path; pulldown-cmark CR-normalization gap) — follow-up issue filed, #[ignore]d test test_lone_cr_survives_pre_existing_492_oos pinned. NOT a #492 regression. | Feature Mode / #492 F6+F7 | Phase 3 | 2026-06-16 |
-| DEC-109 | 2026-06-16: Issue #492 bug-fix cycle CLOSED. PR #521 squash-merged → develop @ 3ba8ea2 (14/14 CI green incl CI Gate; #492 auto-closed). Full Feature-Mode pipeline: F4 TDD → F5 15-pass/3-clean scoped-adversarial CONVERGED (zero code defects; all findings doc/spec precision) → F6 hardening (proptest 5-invariant 150k-case suite + 100% effective mutation) → F7 5/5 DELTA_CONVERGED + consistency PASS-WITH-NOTES + input-drift PASS. BC-7.2.011 v1.9.6. F6 surfaced pre-existing OOS lone-CR defect → follow-up #522 filed. S-7.02 checklist complete (cycles/cycle-001/lessons.md). LESSON-RESUME-STATE-RECONCILE codified. | Feature Mode / #492 CYCLE CLOSE | Phase 3 | 2026-06-16 |
-| DEC-110 | 2026-06-16: Issue #522 bug-fix cycle OPENED. F1 COMPLETE: chokepoint = AdfBuilder::push_text + push_code in src/adf.rs; blast radius uniformly safe (all generic-path block types; Algorithm B from #492 normalizes independently, no double-normalization). F2 COMPLETE: BC-7.2.011 extended to v1.9.7 with EC-11 (INV-push-text-cr) — push_text/push_code normalize \r\n→\n then lone \r→\n for ALL block types; no new BC; total_bcs 598 unchanged; spec-changelog + BC-INDEX updated; 3 count guards green. F3 COMPLETE: S-522 story (7 ACs anchored to BC-7.2.011/EC-11); STORY-INDEX 76→77 (feature_followup 41→42); sprint-state.yaml S-522 added (ready/F3/leaf). F4 TDD next. | Feature Mode / #522 bug-fix | Phase 3 | 2026-06-16 |
-| DEC-113 | 2026-06-17: Issue #522 F5 round-2 scoped-adversarial (3 fresh passes, perspective-diverse: correctness/coherence/completeness) surfaced a genuine HIGH end-to-end-reachable INV-1 bug (CR-01): push_text/push_code only normalized on \r-present, so a bare \n in Other context survived into a text node — reachable via multi-line inline HTML (Event::InlineHtml carries raw \n) in user --description/comment → Jira 400. Pre-existing defect missed by F1–F4 (and by #492/EC-11/EC-12 scoping — sibling \n case of the \r fix). Fixed: bare \n→space in Other/push_code, codeBlock preserves \n; BC-7.2.011→v1.11.0 (EC-11 behavior table, COMP-1 Unicode scope exclusion); S-522 14→19 ACs severity HIGH. 5 LOW also fixed (CR-02 inline-HTML fuzz proptest, COMP-1/2/3, OBS-1 AC-014 form). Red cb299d7 → green 182a93d, 244 lib green. F5 counter reset 0/3; re-running 3 fresh passes. PROCESS-GAP: F1 Impact Boundary again missed a sibling control-char case (\n alongside \r) on the SAME chokepoint — reinforces the Step-7 'enumerate sibling cases sharing a target invariant' lesson; F5 perspective-diverse fan-out (3 lenses) is what caught it. | Feature Mode / #522 F5-R2 | Phase 3 | 2026-06-17 |
-| DEC-114 | 2026-06-17: Issue #522 F5 round-2 second pass-set (3 fresh perspective-diverse lenses over 182a93d) found ZERO new production-code defects — correctness lens fully clean, code proven correct under exhaustive hand-trace. Findings were doc/test/spec completeness only: MED F-522-01 (block→hardBreak vs inline→space HTML-newline asymmetry was a sound but undocumented product decision; now documented in docs/specs/adf-block-html.md with BC-7.2.011 EC-11 reference), LOW F-522-02 (added deterministic 3-line + CRLF inline-HTML regression cases), LOW F-OBS-1 (AC-014 illustrative snippet form cosmetic: cases 2048→1000, prop_map wrapper dropped). All fixed @ c7103b7; 244 lib green. Severity decay HIGH(CR-01)→MED(doc)→LOW — converging. Next: 3 fresh passes over c7103b7 for final clean-pass set, then F6. | Feature Mode / #522 F5-R2 follow-up | Phase 3 | 2026-06-17 |
-| DEC-115 | 2026-06-17: Issue #522 F5 scoped-adversarial CONVERGED. 4 fresh-context rounds (perspective-diverse: correctness/coherence/completeness lenses). R2 found a genuine HIGH end-to-end-reachable INV-1 bug (CR-01: bare \n survived push_text/push_code Other context via multi-line inline HTML) that F1–F4 + #492/EC-11/EC-12 scoping all missed — vindicates F5. Severity decayed HIGH→MED(doc)→LOW→0-blocking; final 3 consecutive passes all PASS-CLEAN. Outcome: BC-7.2.011 v1.11.0 (EC-11 bare-\n rows + COMP-1 Unicode scope note), S-522 19 ACs severity HIGH, block-vs-inline HTML newline asymmetry documented (docs/specs/adf-block-html.md), 248 lib tests, full suite green. Code @ 6d87bb6 LOCAL. Next: F6 hardening. PROCESS-GAP [process-gap]: F1 Impact Boundary again missed a sibling control-char case (\n alongside \r) on the SAME chokepoint — reinforces Step-7 lesson 'F1 must enumerate sibling cases sharing a target invariant'; F5 3-lens fan-out is what caught it. | Feature Mode / #522 F5 CONVERGED | Phase 3 | 2026-06-17 |
-| DEC-116 | 2026-06-17: Issue #522 F6 targeted hardening PASS. Full regression 1850 green / 0 failed / 91 ignored (gated suites). PROPTEST_CASES=100k (release): prop_text_to_adf_holds_inv1, prop_markdown_to_adf_html_chars_holds_inv1 (CR-01 catcher), prop_492_arbitrary_string_holds_core_invariants, prop_492_block_html_holds_core_invariants — NO counterexample; INV-1 held under 100k-case stress. Diff-scoped mutation (src/adf.rs): 21 mutants → 16 caught + 5 hand-verified-equivalent (text_to_adf hardBreak-index variants removed by trim; push_text Sink-guard redundant with append_child guard; needs_norm &&→|| only adds no-op replace); 2 killing tests added (test_text_to_adf_three_lines_produce_two_interior_hardbreaks, test_markdown_image_alt_text_is_dropped_by_sink_guard). cargo audit 346 deps 0 advisories. cargo deny ok. clippy/fmt clean. No production-logic change (F5-converged); no correctness bug surfaced. Code @ 0ed1395. Surfaced tooling gap: .cargo/mutants.toml examine_globs omits src/adf.rs → canonical `cargo mutants --in-diff` false-greens ADF deltas; workaround used `--file src/adf.rs`. Tracked MUTANTS-ADF-GLOB. Next: F7 (5-dim delta convergence + fresh consistency-validator + input-drift) then PR → develop. | Feature Mode / #522 F6 | Phase 3 | 2026-06-17 |
-| DEC-117 | 2026-06-17: Issue #522 F7 DELTA_CONVERGED. Fresh-context consistency-validator: 5/5 dimensions PASS (spec/tests/impl/verification/docs), count guards 0, full suite 1850/0, clippy/fmt clean, CR-01 reachable-HIGH bug confirmed closed, no blocking cross-doc drift, input-drift PASS (manual perimeter — no hash registry, as #492). 3 non-blocking: CLAUDE.md gotcha deferred post-merge per story scope; MUTANTS-ADF-GLOB tracked; CANONICAL-COUNTS last_verified timestamp fixed this commit. Branch ready for PR→develop pending human merge gate. | Feature Mode / #522 F7 | Phase 3 | 2026-06-17 |
-| DEC-118 | 2026-06-17: Issue #522 — human (AskUserQuestion gate) approved "Create PR but fold in follow-ups first". Folded into fix branch @ 5a0b7d8: (a) root CLAUDE.md gotcha for the #522 push_text/push_code/text_to_adf INV-1 chokepoint + block-vs-inline HTML newline asymmetry + CR-01 HIGH-bug note + Unicode-OOS; (b) .cargo/mutants.toml examine_globs += src/adf.rs — canonical diff-scoped mutation now lists 21 adf.rs mutants (was 0; MUTANTS-ADF-GLOB false-green eliminated). 246 adf tests green, clippy/fmt clean. Both drift items RESOLVED. Next: pr-manager creates PR fix/adf-push-text-cr-normalization-522 → develop; merge human-gated. | Feature Mode / #522 follow-ups | Phase 3 | 2026-06-17 |
-| DEC-119 | 2026-06-17: Issue #522 bug-fix cycle CLOSED + MERGED. PR #523 squash-merged → develop @ 53f6d98 (#522 auto-closed; CI Gate PASS, pr-reviewer + security APPROVE). Full Feature-Mode F1–F7: F4 TDD → F5 4-round/3-lens scoped-adversarial CONVERGED (caught genuine HIGH end-to-end-reachable INV-1 bug CR-01: bare \n survived push_text/push_code Other context via multi-line inline HTML → Jira 400, missed by F1-F4 and all prior ADF work) → F6 hardening (1850/0, 100k proptest, mutation 16-caught/5-equivalent+2 killing tests, audit/deny clean) → F7 5/5 DELTA_CONVERGED. BC-7.2.011 v1.11.0 (EC-11 bare-\n rows + COMP-1 Unicode scope note), S-522 19 ACs HIGH, block-vs-inline HTML newline asymmetry documented. 2 follow-ups folded into PR (CLAUDE.md gotcha + mutants.toml adf.rs scope — both drift RESOLVED). S-7.02 checklist complete: LESSON-F1-SIBLING-CASE codified (2nd recurrence of F1 sibling-case-enumeration gap) — justified deferral, no follow-up story required (process-discipline lesson, documented for next cycle's F1). | Feature Mode / #522 CYCLE CLOSE | Phase 3 | 2026-06-17 |
-| DEC-112 | 2026-06-17: Issue #522 F5 Pass-1 LOW findings F-1/F-2/F-3 remediated before re-running adversarial passes. F-1 proptest \n-coverage gap closed (both proptests dotall-charset `"[\r\n\t a-zA-Z0-9]{0,64}"`, code c70f07d) + AC-014 prose harmonized byte-for-byte; F-2 BC-7.2.011 EC-12 table count corrected 13→12 (true=12); F-3 empty-paragraph shape positively pinned (2 new tests `test_text_to_adf_empty_string_shape`+`test_text_to_adf_all_newlines_shape`, 235→237 adf green). F5 counter reset 0/3; next: 3 fresh-context scoped-adversarial passes over full EC-11+EC-12 delta. Code LOCAL @ c70f07d. | Feature Mode / #522 F5 remediation | Phase 3 | 2026-06-17 |
-| DEC-111 | 2026-06-17: Issue #522 cycle EXPANDED mid-cycle (user approval) to TWO chokepoints — EC-11 (push_text/push_code markdown path, original) + EC-12 (text_to_adf plain-text path, sibling defect discovered during F5 traceability pass). F1-ext complete: issue-522-text-to-adf-extension.md. F2 expanded: BC-7.2.011 v1.9.8→v1.9.9→v1.10.0 (EC-11 context-aware contract + EC-12 INV-1-plain-text). F3 expanded: S-522 7→14 ACs. F4 COMPLETE both paths: 235 adf tests green; cargo test green; clippy clean; fmt clean. Code LOCAL ONLY on branch fix/adf-push-text-cr-normalization-522 @ b999d97 (6 commits: baf2a42→0d7775d→7968d66→514d364→35d81bb→b999d97). F5 expanded-delta Pass-1 COMPLETE — CLEAN (1/3); 3 LOW findings (F-1/F-2/F-3) to fix before re-running. Pre-session-clear checkpoint committed to factory-artifacts branch. | Feature Mode / #522 EXPANDED | Phase 3 | 2026-06-17 |
+| DEC-107..119 | 2026-06-16..17: Issue #492 F5–F7+CYCLE-CLOSE (DEC-107..109) + Issue #522 full F1–F7+CYCLE-CLOSE (DEC-110..119). All CYCLE CLOSED. See `cycles/cycle-001/burst-log.md` "Archived Decisions DEC-107..119". | Feature Mode / #492+#522 | Phase 3 | 2026-06-16..17 |
 
 ## Skip Log
 
@@ -139,23 +127,41 @@ Full per-issue: `cycles/cycle-001/convergence-trajectory.md`. Current: **[2026-0
 | Field | Value |
 |-------|-------|
 | **Date** | 2026-06-17 |
-| **Position** | **Issue #522 CYCLE CLOSED + MERGED. PR #523 squash-merged → develop @ 53f6d98 (#522 auto-closed). CI Gate PASS; pr-reviewer + security APPROVE. No active worktree (S-522 cleaned up). Factory idle — awaiting next work item.** |
-| **develop HEAD** | origin/develop = **53f6d98** (PR #523 #522 fix). activation v0.6.0-dev.2. BC **598**. NFR **42**. ADR **16**. Stories **77** (authoritative). |
-| **Convergence counter** | BC: **598**. NFR: **42**. ADR: **16**. Stories: **77** authoritative. jira-e2e env: JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ, JR_E2E_ENABLED=true. No active worktree. |
-| **Next / Pending** | Factory idle — awaiting next work item. Open backlog: #429 DNC (DEC-029), #400 Story B, #372, #387/#368, #209/#210. Fork-release-ops enablement PENDING (DEC-104). |
-| **Resume prompt** | Read .factory/STATE.md. Issue #522 CYCLE CLOSED + MERGED. PR #523 squash-merged → develop @ 53f6d98 (#522 auto-closed). BC-7.2.011 v1.11.0. BC 598. No active worktree. Factory idle — awaiting next work item. Open backlog: #429 DNC (DEC-029), #400 Story B, #372, #387/#368, #209/#210. Fork-release-ops enablement PENDING (DEC-104). STANDING: do NOT close #429 (DEC-029); OQ-5 open; E2E-PG-4 open; SEC-001 LOW deferred. jira-e2e: JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ, JR_E2E_ENABLED=true. |
+| **Position** | FACTORY IDLE between cycles. Last completed: Issue #522 (ADF CR/LF normalization, BC-7.2.011 v1.11.0) CYCLE CLOSED+MERGED via PR #523. No active worktree. Awaiting next work item. |
+| **develop HEAD** | origin/develop = **53f6d98** (PR #523 squash-merged 2026-06-17). Note: local working checkout may still show 3ba8ea2 — run `git fetch origin` before any work. |
+| **Activation** | v0.6.0-dev.2 @ 4258202. v0.5.0 STABLE shipped 2026-06-12. |
+| **Counters** | BC **598**. NFR **42**. ADR **16**. Stories **77** (authoritative). |
+| **Active worktree** | NONE — S-522 cleaned up. .factory worktree on factory-artifacts is mounted. |
+| **jira-e2e env** | JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ, JR_E2E_ENABLED=true. |
+| **Standing constraints** | Do NOT close #429 (DEC-029). All fixes through full VSDD Feature Mode pipeline. Fork-release-ops INERT by default (enablement blocked on FORK-OPS-SIGN-INJECTION + FORK-OPS-ALPHA-RACE HIGH). |
 
 ## RESUME PLAN (cold-start, self-contained)
 
-<!-- State snapshot: Issue #522 CYCLE CLOSED + MERGED. PR #523 → develop @ 53f6d98. No active worktree. Factory idle. -->
+<!-- State snapshot: FACTORY IDLE. #522 CYCLE CLOSED+MERGED. No active worktree. develop @ 53f6d98. -->
 
 ### Steps (assume ZERO memory)
 
-**Step 1 (BLOCKING):** Run `vsdd-factory:factory-worktree-health`. Then read STATE.md.
+**Step 1 (BLOCKING):** Run `vsdd-factory:factory-worktree-health`. Then read `.factory/STATE.md`.
 
-**Step 2 (idle — no active worktree):** Issue #522 CYCLE CLOSED. develop @ 53f6d98. BC-7.2.011 v1.11.0. BC 598. No active worktree. Consult open backlog: #429 DNC (DEC-029), #400 Story B, #372, #387/#368, #209/#210. Fork-release-ops enablement PENDING (DEC-104).
+**Step 2:** Confirm factory is IDLE — no in-flight cycle, no active worktree, develop @ 53f6d98, #522 CLOSED. If develop shows different HEAD, run `git fetch origin` first.
 
-Durable follow-ups: see Drift Items section (WIN-AUTH-ENVLOCK-POISON, WIN-DENY-FRAGILITY, SEC-JR-SERVICE-NAME-GATE, WIN-RUNTIME-OAUTH-PROBE, WIN-AC004-DIRECTIONAL, #492-TEST-HARNESS-COUPLING, #492-PG-TRACE-TESTS, #429-DNC, OQ-5, E2E-PG-4, #400-Story-B, #372).
+**Step 3 — Determine next work.** OPEN BACKLOG (priority order, all LOW unless noted):
+- Fork-release-ops enablement PENDING (DEC-104; gated on FORK-OPS-SIGN-INJECTION + FORK-OPS-ALPHA-RACE HIGH — see Drift Items).
+- **#429** jr_isolated crypto-random suffix — DO NOT close autonomously (DEC-029, human-deferred).
+- **#400** Story B + engine items.
+- **#372** cargo-mutants partial baseline.
+- **#387/#368** git-history-rewrite/open-PR (force-push needed, deferred).
+- **#209/#210** backlog.
+- If human brings new feature/bug: run Feature Mode (F1–F7) per `workflows/feature.lobster`.
+
+**Step 4 — STANDING CONSTRAINTS (survive session clear):**
+- Do NOT close #429 (DEC-029, human-deferred).
+- All fixes through full VSDD Feature Mode pipeline (orchestrator delegates, never hand-edits).
+- Fork-release-ops workflows INERT by default (repo-variable gates unset) — enablement blocked on FORK-OPS-SIGN-INJECTION + FORK-OPS-ALPHA-RACE (HIGH) in Drift Items.
+- OQ-5, E2E-PG-4, SEC-001 LOW deferrals remain open.
+- LESSON-F1-SIBLING-CASE: next Feature Mode F1 MUST enumerate sibling control-char/invariant cases at any normalization chokepoint.
+
+Durable follow-ups: see Drift Items section.
 
 ## Open Issues Tracker
 
@@ -177,7 +183,7 @@ Durable follow-ups: see Drift Items section (WIN-AUTH-ENVLOCK-POISON, WIN-DENY-F
 
 | Content | Location |
 |---------|----------|
-| Burst history + archived decisions DEC-027..092 + archived phase rows + archived drift items + archived closed issues | `cycles/cycle-001/burst-log.md` |
+| Burst history + archived decisions DEC-027..119 + archived phase rows + archived drift items + archived closed issues | `cycles/cycle-001/burst-log.md` |
 | Convergence trajectory (full per-pass) | `cycles/cycle-001/convergence-trajectory.md` |
 | Session checkpoints (archived) | `cycles/cycle-001/session-checkpoints.md` |
 | Lessons learned | `cycles/cycle-001/lessons.md` |
