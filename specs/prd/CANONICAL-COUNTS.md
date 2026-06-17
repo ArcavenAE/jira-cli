@@ -74,14 +74,14 @@ bc_count in L2 represents the same cumulative claim (individually-bodied + range
 | L2 File | L2 bc_count (after P17 fix) | L3 File | L3 total_bcs | Aligned? |
 |---------|----------------------------|---------|--------------|----------|
 | bc-01-auth-identity.md | 57 | bc-1-auth-identity.md | 57 | YES |
-| bc-02-issue-read.md | 92 | bc-2-issue-read.md | 93 | PENDING (L2 bc_count not yet bumped; L3 +1 BC-2.6.051 added 2026-05-14) |
-| bc-03-issue-write.md | 77 | bc-3-issue-write.md | 107 | PENDING (L2 bc_count not yet bumped; L3 +1 BC-3.4.009 2026-05-15; +10 BC-3.8.001-010 2026-05-18; +3 BC-3.8.011-013 2026-05-19; +2 BC-3.8.014-015 2026-05-19; +2 BC-3.8.016-017 2026-05-20; +2 BC-3.4.010-011 2026-05-20; +3 BC-3.4.012-014 2026-05-21; +3 BC-3.4.015-017 2026-05-22; +2 BC-3.4.018-019 2026-06-01; +1 BC-3.2.013 2026-06-03; +1 BC-3.2.014 2026-06-08) |
+| bc-02-issue-read.md | 93 | bc-2-issue-read.md | 93 | YES (bumped 2026-06-17; +1 BC-2.6.051 added 2026-05-14) |
+| bc-03-issue-write.md | 107 | bc-3-issue-write.md | 107 | YES (bumped 2026-06-17; +30 BCs added across feature cycles) |
 | bc-04-assets-cmdb.md | 32 | bc-4-assets-cmdb.md | 32 | YES (was 44) |
 | bc-05-boards-sprints.md | 35 | bc-5-boards-sprints.md | 35 | YES |
-| bc-06-config-cache.md | 39 | bc-6-config-cache.md | 42 | PENDING (L2 bc_count not yet bumped; L3 +3 BC-6.1.014 + BC-6.2.016..017 added 2026-06-12 via windows-build F2) |
-| bc-07-output-render.md | 85 | bc-7-output-render.md | 90 | PENDING (L2 bc_count not yet bumped; L3 +2 BC-7.2.007..008 added 2026-06-08 via issue #474; +1 BC-7.2.009 added 2026-06-09 via issue #483; +1 BC-7.2.010 added 2026-06-10 via issue #471; +1 BC-7.2.011 added 2026-06-15 via issue #492) |
+| bc-06-config-cache.md | 42 | bc-6-config-cache.md | 42 | YES (bumped 2026-06-17; +3 BC-6.1.014 + BC-6.2.016..017 added 2026-06-12 via windows-build F2) |
+| bc-07-output-render.md | 90 | bc-7-output-render.md | 90 | YES (bumped 2026-06-17; +5 BCs: BC-7.2.007..008 #474, BC-7.2.009 #483, BC-7.2.010 #471, BC-7.2.011 #492) |
 
-Note: bc-01/02/03/05 were already aligned pre-Pass 17. bc-04/06/07 corrected at Pass 17.
+Note: bc-01/04/05 aligned at Pass 17. bc-02/03/06/07 had PENDING drift; all four bumped 2026-06-17 (Maintenance Bundle B, SC-01).
 
 ---
 

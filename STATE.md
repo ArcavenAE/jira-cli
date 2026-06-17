@@ -2,7 +2,7 @@
 document_type: pipeline-state
 version: "2.0"
 status: active
-timestamp: 2026-06-17T12:00:00Z
+timestamp: 2026-06-17T14:00:00Z
 phase: phase-3-tdd-implementation
 project: jira-cli
 mode: BROWNFIELD
@@ -26,7 +26,7 @@ activation_version: "v0.6.0-dev.2"
 | **Product** | jr (Jira CLI) |
 | **Mode** | BROWNFIELD / Rust |
 | **Target Workspace** | develop → main |
-| **Last Updated** | 2026-06-17: Issue #522 CYCLE CLOSED + MERGED. PR #523 squash-merged → develop @ 53f6d98 (#522 auto-closed). Full F1–F7: F5 caught HIGH CR-01 (bare \n Other-ctx via multi-line inline HTML → Jira 400); F6/F7 PASS. BC-7.2.011 v1.11.0. S-522 19 ACs HIGH. DEC-119. Factory idle — awaiting next work. |
+| **Last Updated** | 2026-06-17: (1) Issue #522 CYCLE CLOSED + MERGED. PR #523 squash-merged → develop @ 53f6d98 (#522 auto-closed). Full F1–F7: F5 caught HIGH CR-01 (bare \n Other-ctx via multi-line inline HTML → Jira 400); F6/F7 PASS. BC-7.2.011 v1.11.0. S-522 19 ACs HIGH. DEC-119. Factory idle — awaiting next work. (2) Bundle B maintenance sweep COMMITTED (GREEN): SC-01 bc_count frontmatter, SC-02 Document Map 573→598, SC-04 ADR-0016 CI-Gate paragraph, SC-06 risk-register + S-3.07 JRACLOUD-95368, SC-07 risk-register RESOLVED annotations. SC-05 DEFERRED; SC-03 DEFERRED. |
 | **Current Phase** | Phase 3 — Feature Mode; #522 CYCLE CLOSED + MERGED. develop @ 53f6d98. BC 598. NFR 42. ADR 16. Stories 77. |
 | **Next Phase** | Phase 4: Holdout Evaluation (not started) |
 | **Activation HEAD** | 4258202 (v0.6.0-dev.2 released 2026-06-14; develop HEAD 3ba8ea2; v0.5.0 STABLE shipped 2026-06-12) |
@@ -87,6 +87,8 @@ All 7 S-WIN-1..6 + #475 per-AC demos: **Yes — adapted**. All are CI-config / i
 
 | ID | Area | Description | Severity | Status |
 |----|------|-------------|----------|--------|
+| MAINT-2026-06-17-SC-05 | STORY-INDEX.md 77-count invariant | SC-05: STORY-INDEX.md total count not verified vs authoritative 77 stories in STATE.md. Deferred pending decision on whether STORY-INDEX.md is canonical or derived. | LOW | DEFERRED — no action taken in Bundle B |
+| MAINT-2026-06-17-SC-03 | ADR location convention | SC-03: docs/adr/ vs .factory/architecture/adr/ convention discrepancy. Not actioned in Bundle B sweep. | LOW | DEFERRED — tracked for future CLAUDE.md/docs cleanup |
 | WIN-CI-GATE-AGGREGATOR | ci-gate aggregator job | CLOSED — CODE SHIPPED (PR #518 @ e9b2269) AND ACTIVATED (branch-protection swap 2026-06-15; single `CI Gate` required check on develop+main; app_id 15368; DEC-103). Matrix-rename fragility class structurally eliminated. | LOW | CLOSED — DEC-103 |
 | FORK-OPS-SIGN-INJECTION | `sign-and-publish.yml` shell injection | `workflow_run.head_branch` written unsanitized into shell with Apple secrets (CWE-77, SEC-001/CR-001). Validate `^v…` pattern before any shell step. Blocks signing enablement. | HIGH | OPEN — gates signing |
 | FORK-OPS-ALPHA-RACE | Alpha-tag read-then-create race | `sign-and-publish.yml` non-atomic alpha tag: reads current then creates — concurrent runs make duplicates (CR-002). Use `git rev-parse --short HEAD`. Blocks signing enablement. | HIGH | OPEN — gates signing |
