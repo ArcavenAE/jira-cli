@@ -612,3 +612,22 @@ feature_followup_standalone:
     issue: 398
     points: 5
     notes: "Feature mode F4 story (DELIVERED). Closes issue #398. PR #399 squash-merged @ b49f2fd (2026-05-22). Delivery: stubs → 27 failing tests (Red Gate verified) → TDD implementation (5 micro-commits) → per-story adversarial convergence (3 consecutive CLEAN passes; 1 false-alarm pass discarded — PG-398-4, adversary mis-resolved worktree path) → 7 demo recordings → PR #399 → 10/10 CI green → AI review APPROVE → Copilot review (1 finding, REFUTED via research-agent as deliberate spec carve-out) → merged. Phase F4 Delta Implementation: COMPLETE. Entering F5 Scoped Adversarial Review."
+
+  - id: S-522
+    title: "Fix push_text / push_code: normalize lone \\r on the generic ADF parser path (issue #522, BC-7.2.011 EC-11)"
+    status: ready
+    pr: null
+    merge_sha: null
+    merged_at: null
+    depends_on: []
+    bc_anchors: [BC-7.2.011]
+    ec_anchors: [EC-11, INV-push-text-cr]
+    holdout_anchors: []
+    issue: 522
+    points: 1
+    criticality: MEDIUM
+    implementation_strategy: tdd
+    tdd_mode: strict
+    phase: F3
+    f3_approved_at: "2026-06-16"
+    notes: "F3 COMPLETE (2026-06-16). Story S-522 created. 1 SP xsmall; 4–6 LOC in src/adf.rs::push_text and push_code. Closes the pre-existing CR-normalization gap on the generic markdown_to_adf parser path (deferred from S-492 / issue #492). Key deliverables: (1) rename+de-ignore+invert test_lone_cr_survives_pre_existing_492_oos; (2) flip prop_492_arbitrary_string_holds_core_invariants strict_cr false→true; (3) add 3 new focused unit tests; (4) two-pass replace guard in push_text + push_code. No new BCs — BC-7.2.011 EC-11 authored in F2 by product-owner. No count drift. Leaf story (no downstream dependents). Awaiting F4 dispatch."

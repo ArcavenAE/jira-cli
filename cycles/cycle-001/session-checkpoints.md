@@ -811,3 +811,18 @@ _Was the active checkpoint after #492 F2 spec CONVERGED + fork-release-ops merge
 | **Convergence counter** | BC: **597**. NFR: **42**. ADR: **16**. Stories: **75** authoritative. jira-e2e env: JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ, JR_E2E_ENABLED=true. 0 active worktrees (.factory + .reference only). |
 | **Next / Pending** | AWAITING USER DECISION: which fork-release-ops pieces to enable (backfill / gap-fill / signing / suppress-phantom-runs). Each requires specific fixes — see `.factory/research/fork-release-ops-integration.md`. Standing drift: WIN-DENY-FRAGILITY (LOW), SEC-JR-SERVICE-NAME-GATE (LOW), WIN-AUTH-ENVLOCK-POISON (LOW), WIN-RUNTIME-OAUTH-PROBE (LOW, accepted ADR-0016), WIN-AC004-DIRECTIONAL (LOW). Open issues: #492, #429 (DNC), #400 Story B, #372. |
 | **Resume prompt** | `Read .factory/STATE.md THEN .factory/research/fork-release-ops-integration.md. Fork-release-ops MERGED at develop 2cb219b (PR #520; integrates closed #503 by @ArcavenAE, credited). Machinery inert by default. AWAITING user decision: which pieces to enable (backfill/gap-fill/signing/suppress-phantom-runs — each has specific prereq fixes; all in the research file). DEC-104. STANDING: do NOT close #429 (DEC-029); #492 OPEN; OQ-5 open; E2E-PG-4 open; SEC-001 LOW deferred. jira-e2e: JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ, JR_E2E_ENABLED=true.` |
+
+---
+
+## Checkpoint archived 2026-06-16 (Issue #492 cycle CLOSED — #522 not yet started)
+
+_Was the active checkpoint after #492 bug-fix cycle closed + PR #521 squash-merged → develop @ 3ba8ea2. Superseded when #522 bug-fix cycle opened (F1-F3 COMPLETE, F4 IN PROGRESS — DEC-110)._
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-06-16 |
+| **Position** | **Issue #492 CYCLE CLOSED. PR #521 squash-merged → develop @ 3ba8ea2 (DEC-109). No active feature. BC-7.2.011 v1.9.6 FINAL. Follow-up #522 open (pre-existing lone-CR OOS).** |
+| **develop HEAD** | origin/develop = **3ba8ea2** (PR #521 #492 bug-fix). activation v0.6.0-dev.2. BC **598**. NFR **42**. ADR **16**. Stories **75** (authoritative). |
+| **Convergence counter** | BC: **598**. NFR: **42**. ADR: **16**. Stories: **75** authoritative. jira-e2e env: JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ, JR_E2E_ENABLED=true. No active worktree. |
+| **Next / Pending** | No active feature. Fork-release-ops enablement PENDING (DEC-104). #522 open (lone-CR OOS). Standing drift: WIN-DENY-FRAGILITY (LOW), SEC-JR-SERVICE-NAME-GATE (LOW), WIN-AUTH-ENVLOCK-POISON (LOW), WIN-RUNTIME-OAUTH-PROBE (LOW, accepted ADR-0016), WIN-AC004-DIRECTIONAL (LOW), #492-TEST-HARNESS-COUPLING (LOW, deferred), #492-PG-TRACE-TESTS (LOW, deferred). Open issues: #522 (OPEN), #429 (DNC), #400 Story B, #372. |
+| **Resume prompt** | `Read .factory/STATE.md. Issue #492 CYCLE CLOSED — PR #521 → develop @ 3ba8ea2 (DEC-109). BC-7.2.011 v1.9.6 FINAL. No active feature. Follow-up #522 open (pre-existing lone-CR OOS). STANDING: do NOT close #429 (DEC-029); OQ-5 open; E2E-PG-4 open; SEC-001 LOW deferred. Fork-release-ops enablement PENDING (DEC-104). jira-e2e: JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ, JR_E2E_ENABLED=true.` |

@@ -1,0 +1,2 @@
+src/adf.rs
+.factory/specs/prd/bc-7-output-render.md

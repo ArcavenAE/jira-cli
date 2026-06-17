@@ -2,11 +2,11 @@
 document_type: pipeline-state
 version: "2.0"
 status: active
-timestamp: 2026-06-16T14:00:00Z
+timestamp: 2026-06-16T15:00:00Z
 phase: phase-3-tdd-implementation
 project: jira-cli
 mode: BROWNFIELD
-current_step: "Issue #492 bug-fix cycle CLOSED — PR #521 squash-merged → develop @ 3ba8ea2; #492 closed. Follow-up #522 open (pre-existing lone-CR). No active feature. DEC-109."
+current_step: "Issue #522 bug-fix cycle OPEN — F1+F2+F3 COMPLETE, F4 TDD IN PROGRESS. BC-7.2.011/EC-11 added v1.9.7. S-522 (7 ACs). Stories 77. DEC-110."
 current_cycle: "cycle-001"
 dtu_required: false
 phase_2_status: APPROVED
@@ -26,8 +26,8 @@ activation_version: "v0.6.0-dev.2"
 | **Product** | jr (Jira CLI) |
 | **Mode** | BROWNFIELD / Rust |
 | **Target Workspace** | develop → main |
-| **Last Updated** | 2026-06-16: Issue #492 cycle CLOSED — PR #521 squash-merged → develop @ 3ba8ea2 (14/14 CI green incl CI Gate; #492 auto-closed). Follow-up #522 open (pre-existing lone-CR). BC 598 / NFR 42 / ADR 16 / Stories 75. DEC-109. |
-| **Current Phase** | Phase 3 — TDD Implementation IN PROGRESS — no active feature. develop @ 3ba8ea2. BC 598. NFR 42. ADR 16. Stories **75** (authoritative). |
+| **Last Updated** | 2026-06-16: Issue #522 bug-fix cycle OPEN. F1 (delta analysis), F2 (BC-7.2.011 EC-11 v1.9.7), F3 (S-522 story, 7 ACs) COMPLETE. Stories 75→77. F4 TDD next. DEC-110. |
+| **Current Phase** | Phase 3 — TDD Implementation IN PROGRESS — #522 bug-fix active (F4 next). develop @ 3ba8ea2. BC 598. NFR 42. ADR 16. Stories **77** (authoritative). |
 | **Next Phase** | Phase 4: Holdout Evaluation (not started) |
 | **Activation HEAD** | 4258202 (v0.6.0-dev.2 released 2026-06-14; develop HEAD 3ba8ea2; v0.5.0 STABLE shipped 2026-06-12) |
 
@@ -43,6 +43,7 @@ activation_version: "v0.6.0-dev.2"
 | 3: TDD Implementation | IN_PROGRESS — Feature Mode active | — | Wave 0/1/2/3 ALL COMPLETE (32/32) | Wave adversarial: GATE-CLOSED 2026-05-08; Feature Mode ongoing |
 | Feature cycles #110..#499 (19 cycles, 2026-05-11..2026-06-11) | ALL CYCLE CLOSED + MERGED | 2026-06-11 | F1–F7 each | develop BC 583→594. See `cycles/cycle-001/burst-log.md` "Archived Phase Progress Rows". |
 | Issue #492 block-HTML hardBreak (BC-7.2.011) | **CYCLE CLOSED + MERGED** | 2026-06-16 | F1–F7 ALL COMPLETE — CONVERGED | PR #521 → develop @ 3ba8ea2. BC-7.2.011 v1.9.6. 5/5 F7 dims; 150k proptest; 100% mutation; 0 code defects. Follow-up #522 (lone-CR OOS). DEC-109. |
+| Issue #522 lone-CR ADF normalization (BC-7.2.011/EC-11) | **IN PROGRESS** — F4 TDD next | — | F1+F2+F3 COMPLETE | F1: chokepoint push_text/push_code; F2: EC-11 INV-push-text-cr added v1.9.7; F3: S-522 7 ACs. Stories 75→77. DEC-110. |
 | 4: Holdout Evaluation | not-started | | | |
 | 5: Adversarial Refinement | not-started | | | |
 | 6: Formal Hardening | not-started | | | |
@@ -53,11 +54,11 @@ activation_version: "v0.6.0-dev.2"
 <!-- Keep last 5 rows only. Archive older rows to cycles/cycle-001/burst-log.md. -->
 | Step | Agent | Status | Output |
 |------|-------|--------|--------|
-| S-CIGATE-1 (ci-gate aggregator) DELIVERED F1–F7. PR #518 squash-merged → develop @ e9b2269. ci-gate GREEN on PR+push CI run 27551871837 (live holdout proof). Step 4.5 4-pass CONVERGED (3 clean). F7 DELTA_CONVERGED. DEC-102. Stories 74→75. CIGATE-BRANCH-PROTECTION-SWAP pending human. | Agent state-manager | DELIVERED | develop @ e9b2269. BC 597 / NFR 42 / ADR 16 / Stories 75. |
 | S-CIGATE-1 branch-protection swap COMPLETE + verified (develop+main now require single `CI Gate` context, app_id 15368; safe 2-step add-before-remove; user-executed). WIN-CI-GATE-AGGREGATOR CLOSED. Feature cycle CLOSED. DEC-103. | Agent state-manager | CYCLE CLOSED | develop @ e9b2269. BC 597 / NFR 42 / ADR 16 / Stories 75. |
 | Fork-friendly-release-ops integrated: PR #520 squash-merged → develop @ 2cb219b (integrates closed #503 by @ArcavenAE, credited). 17 files inert-by-default; ci.yml Windows-matrix+ci-gate+gitleaks-v3 preserved; 14/14 CI GREEN incl CI Gate. 4-lens review done. Enablement decision PENDING (backfill/gap-fill/signing/suppress-phantom-runs — each needs fixes first). Full plan → `.factory/research/fork-release-ops-integration.md`. DEC-104. | Agent state-manager | PENDING-DECISION | develop @ 2cb219b. BC 597 / NFR 42 / ADR 16 / Stories 75. |
-| Issue #492 bug-fix cycle OPENED (F1 delta analysis pending). DEC-105. Cycle artifacts: `cycles/cycle-001/issue-492/`. | Agent state-manager | OPEN | develop @ 2cb219b. |
 | Issue #492 cycle CLOSED. PR #521 squash-merged → develop @ 3ba8ea2 (14/14 CI green incl CI Gate; #492 auto-closed). Follow-up #522 filed (pre-existing lone-CR OOS defect, pulldown-cmark CR-normalization gap in heading/codeBlock via Event::Text path). Worktree .worktrees/S-492 removed; local branch fix/adf-block-html-hardbreak-492 deleted. S-7.02 cycle-closing checklist complete (see cycles/cycle-001/lessons.md). DEC-109. | Agent state-manager | CYCLE CLOSED | develop @ 3ba8ea2. BC 598 / NFR 42 / ADR 16 / Stories 75. |
+| Issue #522 bug-fix cycle OPENED. F1 (delta analysis: chokepoint push_text/push_code in adf.rs; blast radius uniformly safe) COMPLETE. Artifact: .factory/phase-f1-delta-analysis/issue-522-delta-analysis.md. DEC-110. | Agent state-manager | F1 COMPLETE | develop @ 3ba8ea2. BC 598. Stories 75. |
+| Issue #522 F2+F3 COMPLETE. F2: BC-7.2.011 v1.9.7 + EC-11 (INV-push-text-cr; push_text/push_code normalize \r\n->\n then lone \r->\n for ALL block types). spec-changelog + BC-INDEX updated. 3 count guards green. F3: S-522 story (7 ACs anchored to EC-11). STORY-INDEX 76->77. sprint-state.yaml: S-522 ready/F3/leaf. Stories 75->77. DEC-110. | Agent state-manager | F3 COMPLETE — F4 next | develop @ 3ba8ea2. BC 598. Stories 77. |
 
 ## Decisions Log
 
@@ -70,6 +71,7 @@ activation_version: "v0.6.0-dev.2"
 | DEC-107 | 2026-06-16: Issue #492 F5 scoped adversarial CONVERGED. 15 fresh-context passes / 6 fix rounds / final 3 clean (Pass 13 deep cross-consistency, Pass 14 holistic+traceability+counts, Pass 15 robustness+completeness) on frozen 8062b78 + BC-7.2.011 v1.9.6 @ factory-artifacts 87e3c53. ZERO production-code defects — single Algorithm B path proven correct ~12x across all lenses; all findings were doc/spec precision (severity decayed M→L→0). BC version trail: v1.9.1→v1.9.2→v1.9.3→v1.9.4→v1.9.5→v1.9.6. PR #521 pushed. Next: F6 targeted hardening. | Feature Mode / #492 F5 | Phase 3 | 2026-06-16 |
 | DEC-108 | 2026-06-16: Issue #492 F6 hardening COMPLETE (proptest 5-invariant suite, 150k cases; mutation 100% effective, 3 equivalent; cargo audit 346 deps 0 advisories; cargo deny ok; full suite 222 adf green) + F7 DELTA_CONVERGED 5/5 (consistency audit PASS-WITH-NOTES, 3 non-blocking deferred; input-drift PASS for #492 perimeter). Human-authorized merge of PR #521 @ 72fbcb9 (pending CI green). F6 surfaced pre-existing OOS lone-CR defect (heading/codeBlock via generic Event::Text path; pulldown-cmark CR-normalization gap) — follow-up issue filed, #[ignore]d test test_lone_cr_survives_pre_existing_492_oos pinned. NOT a #492 regression. | Feature Mode / #492 F6+F7 | Phase 3 | 2026-06-16 |
 | DEC-109 | 2026-06-16: Issue #492 bug-fix cycle CLOSED. PR #521 squash-merged → develop @ 3ba8ea2 (14/14 CI green incl CI Gate; #492 auto-closed). Full Feature-Mode pipeline: F4 TDD → F5 15-pass/3-clean scoped-adversarial CONVERGED (zero code defects; all findings doc/spec precision) → F6 hardening (proptest 5-invariant 150k-case suite + 100% effective mutation) → F7 5/5 DELTA_CONVERGED + consistency PASS-WITH-NOTES + input-drift PASS. BC-7.2.011 v1.9.6. F6 surfaced pre-existing OOS lone-CR defect → follow-up #522 filed. S-7.02 checklist complete (cycles/cycle-001/lessons.md). LESSON-RESUME-STATE-RECONCILE codified. | Feature Mode / #492 CYCLE CLOSE | Phase 3 | 2026-06-16 |
+| DEC-110 | 2026-06-16: Issue #522 bug-fix cycle OPENED. F1 COMPLETE: chokepoint = AdfBuilder::push_text + push_code in src/adf.rs; blast radius uniformly safe (all generic-path block types; Algorithm B from #492 normalizes independently, no double-normalization). F2 COMPLETE: BC-7.2.011 extended to v1.9.7 with EC-11 (INV-push-text-cr) — push_text/push_code normalize \r\n→\n then lone \r→\n for ALL block types; no new BC; total_bcs 598 unchanged; spec-changelog + BC-INDEX updated; 3 count guards green. F3 COMPLETE: S-522 story (7 ACs anchored to BC-7.2.011/EC-11); STORY-INDEX 76→77 (feature_followup 41→42); sprint-state.yaml S-522 added (ready/F3/leaf). F4 TDD next. | Feature Mode / #522 bug-fix | Phase 3 | 2026-06-16 |
 
 ## Skip Log
 
@@ -120,7 +122,7 @@ All 7 S-WIN-1..6 + #475 per-AC demos: **Yes — adapted**. All are CI-config / i
 
 ## Convergence Trackers
 
-Full per-issue: `cycles/cycle-001/convergence-trajectory.md`. Current: **[2026-06-16] Issue #492 CYCLE CLOSED — PR #521 squash-merged → develop @ 3ba8ea2 (DEC-109). F5: 15-pass/3-clean CONVERGED (0 code defects; all findings doc/spec precision). F6: proptest 150k/5-invariant + 100% effective mutation. F7: 5/5 DELTA_CONVERGED. BC-7.2.011 v1.9.6 FINAL. Follow-up #522 open (OOS lone-CR). Stories 75. BC 598.**
+Full per-issue: `cycles/cycle-001/convergence-trajectory.md`. Current: **[2026-06-16] Issue #522 OPEN — F1+F2+F3 COMPLETE, F4 TDD next. BC-7.2.011 v1.9.7 (EC-11 INV-push-text-cr). S-522 (7 ACs). Stories 77. BC 598. DEC-110. Prior: #492 CYCLE CLOSED → develop @ 3ba8ea2 (DEC-109).**
 
 ## Session Resume Checkpoint
 
@@ -129,23 +131,23 @@ Full per-issue: `cycles/cycle-001/convergence-trajectory.md`. Current: **[2026-0
 | Field | Value |
 |-------|-------|
 | **Date** | 2026-06-16 |
-| **Position** | **Issue #492 CYCLE CLOSED. PR #521 squash-merged → develop @ 3ba8ea2 (DEC-109). No active feature. BC-7.2.011 v1.9.6 FINAL. Follow-up #522 open (pre-existing lone-CR OOS).** |
-| **develop HEAD** | origin/develop = **3ba8ea2** (PR #521 #492 bug-fix). activation v0.6.0-dev.2. BC **598**. NFR **42**. ADR **16**. Stories **75** (authoritative). |
-| **Convergence counter** | BC: **598**. NFR: **42**. ADR: **16**. Stories: **75** authoritative. jira-e2e env: JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ, JR_E2E_ENABLED=true. No active worktree. |
-| **Next / Pending** | No active feature. Fork-release-ops enablement PENDING (DEC-104). #522 open (lone-CR OOS). Standing drift: WIN-DENY-FRAGILITY (LOW), SEC-JR-SERVICE-NAME-GATE (LOW), WIN-AUTH-ENVLOCK-POISON (LOW), WIN-RUNTIME-OAUTH-PROBE (LOW, accepted ADR-0016), WIN-AC004-DIRECTIONAL (LOW), #492-TEST-HARNESS-COUPLING (LOW, deferred), #492-PG-TRACE-TESTS (LOW, deferred). Open issues: #522 (OPEN), #429 (DNC), #400 Story B, #372. |
-| **Resume prompt** | `Read .factory/STATE.md. Issue #492 CYCLE CLOSED — PR #521 → develop @ 3ba8ea2 (DEC-109). BC-7.2.011 v1.9.6 FINAL. No active feature. Follow-up #522 open (pre-existing lone-CR OOS). STANDING: do NOT close #429 (DEC-029); OQ-5 open; E2E-PG-4 open; SEC-001 LOW deferred. Fork-release-ops enablement PENDING (DEC-104). jira-e2e: JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ, JR_E2E_ENABLED=true.` |
+| **Position** | **Issue #522 bug-fix cycle OPEN — F1+F2+F3 COMPLETE, F4 TDD IN PROGRESS. BC-7.2.011 v1.9.7/EC-11. S-522 (7 ACs). Stories 77. DEC-110.** |
+| **develop HEAD** | origin/develop = **3ba8ea2** (PR #521 #492 bug-fix). activation v0.6.0-dev.2. BC **598**. NFR **42**. ADR **16**. Stories **77** (authoritative). |
+| **Convergence counter** | BC: **598**. NFR: **42**. ADR: **16**. Stories: **77** authoritative. jira-e2e env: JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ, JR_E2E_ENABLED=true. No active worktree. |
+| **Next / Pending** | F4 TDD for #522 (push_text/push_code CR normalization in src/adf.rs; EC-11). Fork-release-ops enablement PENDING (DEC-104). Standing drift: WIN-DENY-FRAGILITY (LOW), SEC-JR-SERVICE-NAME-GATE (LOW), WIN-AUTH-ENVLOCK-POISON (LOW), WIN-RUNTIME-OAUTH-PROBE (LOW, accepted ADR-0016), WIN-AC004-DIRECTIONAL (LOW), #492-TEST-HARNESS-COUPLING (LOW, deferred), #492-PG-TRACE-TESTS (LOW, deferred). Open: #429 (DNC), #400 Story B, #372. |
+| **Resume prompt** | `Read .factory/STATE.md. Issue #522 OPEN — F1+F2+F3 COMPLETE. F4 TDD next: push_text+push_code CR normalization in src/adf.rs (EC-11 INV-push-text-cr). BC-7.2.011 v1.9.7. S-522 (7 ACs). Stories 77. develop @ 3ba8ea2. DEC-110. STANDING: do NOT close #429 (DEC-029); OQ-5 open; E2E-PG-4 open; SEC-001 LOW deferred. Fork-release-ops enablement PENDING (DEC-104). jira-e2e: JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ, JR_E2E_ENABLED=true.` |
 
 ## RESUME PLAN (cold-start, self-contained)
 
 ### State snapshot
 
-- Issue #492 CYCLE CLOSED: PR #521 squash-merged → develop @ 3ba8ea2 (14/14 CI green incl CI Gate; #492 auto-closed; DEC-109). BC-7.2.011 v1.9.6 FINAL. No active feature. No active worktree.
-- Follow-up #522 OPEN: pre-existing lone-CR OOS defect (pulldown-cmark CR-normalization gap; heading/codeBlock Event::Text path). Pinned: `#[ignore]`d test. S-7.02 cycle-closing checklist complete (cycles/cycle-001/lessons.md). LESSON-RESUME-STATE-RECONCILE codified.
-- develop @ 3ba8ea2. BC 598 / NFR 42 / ADR 16 / Stories 75. Fork-release-ops enablement PENDING (DEC-104; read `.factory/research/fork-release-ops-integration.md`).
+- Issue #522 OPEN — F1+F2+F3 COMPLETE, F4 TDD next. Chokepoint: push_text + push_code in src/adf.rs. EC-11 (INV-push-text-cr) added to BC-7.2.011 v1.9.7. S-522 story (7 ACs). STORY-INDEX 77. DEC-110.
+- develop @ 3ba8ea2. BC 598 / NFR 42 / ADR 16 / Stories 77. Fork-release-ops enablement PENDING (DEC-104; read `.factory/research/fork-release-ops-integration.md`).
+- #492 CYCLE CLOSED: PR #521 @ 3ba8ea2 (DEC-109). BC-7.2.011 v1.9.6 FINAL. LESSON-RESUME-STATE-RECONCILE codified.
 
 ### Durable follow-ups (tracked Drift Items)
 
-WIN-AUTH-ENVLOCK-POISON (LOW), WIN-DENY-FRAGILITY (LOW), SEC-JR-SERVICE-NAME-GATE (LOW), WIN-RUNTIME-OAUTH-PROBE (LOW, accepted ADR-0016), WIN-AC004-DIRECTIONAL (LOW), #492-TEST-HARNESS-COUPLING (LOW, deferred), #492-PG-TRACE-TESTS (LOW, deferred). Standing (non-Windows): #429 do-not-close, OQ-5, E2E-PG-4, #400 Story B, #372, #522.
+WIN-AUTH-ENVLOCK-POISON (LOW), WIN-DENY-FRAGILITY (LOW), SEC-JR-SERVICE-NAME-GATE (LOW), WIN-RUNTIME-OAUTH-PROBE (LOW, accepted ADR-0016), WIN-AC004-DIRECTIONAL (LOW), #492-TEST-HARNESS-COUPLING (LOW, deferred), #492-PG-TRACE-TESTS (LOW, deferred). Standing (non-Windows): #429 do-not-close, OQ-5, E2E-PG-4, #400 Story B, #372. Active: #522 (F4 next).
 
 ### Process note
 
@@ -157,7 +159,7 @@ Full-VSDD run caught 3 classes invisible to the prior gate each time — pre-F4 
 
 | Issue | Title | Status | Priority | Notes |
 |-------|-------|--------|----------|-------|
-| #522 | fix(adf): lone-CR survival in heading/codeBlock (pre-existing OOS from #492 F6) | OPEN | LOW/MED | Pre-existing lone-CR defect (pulldown-cmark CR-normalization gap in Event::Text path). Surfaced by #492 F6 proptest. Pinned: `#[ignore]`d test. NOT a #492 regression. DEC-109. |
+| #522 | fix(adf): lone-CR survival in heading/codeBlock (pre-existing OOS from #492 F6) | **IN PROGRESS — F4 TDD** | LOW/MED | F1+F2+F3 COMPLETE. Chokepoint: push_text/push_code in src/adf.rs. EC-11 (INV-push-text-cr) added BC-7.2.011 v1.9.7. S-522 (7 ACs). Stories 77. DEC-110. |
 | #429 | jr_isolated() crypto-random suffix | OPEN | LOW | DEC-029 deferred to human. Do NOT close autonomously. |
 | #400 | Test-hardening + process-gap follow-ups | OPEN — Story A MERGED PR #431. Story B + engine items remain. | LOW | |
 | #372 | cargo-mutants partial baseline | OPEN | LOW | Follow-up from #346 |

@@ -7,6 +7,35 @@ project: "jr (jira-cli)"
 
 Track all spec version changes. Most recent version first.
 
+## [1.3.18] - 2026-06-16
+
+### Type: PATCH
+
+### Summary
+
+BC-7.2.011 v1.9.7: extend no-raw-`\r` invariant to all block types via `push_text`/`push_code` CR normalization chokepoints (issue #522, EC-11 / INV-push-text-cr).
+
+### Changed Requirements
+
+- BC-7.2.011 v1.9.7: added EC-11 (INV-push-text-cr) documenting that `AdfBuilder::push_text` and `AdfBuilder::push_code` normalize `\r\n`→`\n` and lone `\r`→`\n` before building any text node, extending INV-1's no-raw-CR guarantee from block-HTML-only (Algorithm B, EC-9) to ALL block types on the generic parser path (heading, paragraph, codeBlock, listItem, taskItem, tableCell, blockquote, panel, inline marks, footnote definitions, inline HTML). Updated the "file-wide newline-free-text-node rule" critical invariant paragraph to reference INV-push-text-cr. Updated the BC section headline and BC-INDEX row summary to mention the issue #522 extension. Added three new tests to Source and Trace fields: `test_push_text_normalizes_lone_cr_in_heading_and_code_block`, `test_push_text_normalizes_crlf_in_paragraph`, `test_push_code_normalizes_lone_cr_in_inline_code`. Noted that the pre-existing `#[ignore]`d regression test is renamed and de-ignored, and `prop_492_arbitrary_string_holds_core_invariants` flips `strict_cr` from `false` to `true`. No new BC heading added — no change to `total_bcs`, `definitional_count`, BC-INDEX counts, or CANONICAL-COUNTS.
+
+### Impact Assessment
+
+| Artifact | Change Type | Notes |
+|----------|-------------|-------|
+| `.factory/specs/prd/bc-7-output-render.md` | MODIFIED | Added EC-11 (INV-push-text-cr); extended critical invariant paragraph; extended Source + Trace with 3 new tests; updated BC-7.2.011 section headline |
+| `.factory/specs/prd/BC-INDEX.md` | MODIFIED | Updated BC-7.2.011 row summary to mention issue #522 extension; added push_text / push_code to module column |
+| `.factory/spec-changelog.md` | MODIFIED | This entry |
+
+### Files NOT Changed
+
+- `total_bcs`, `definitional_count` frontmatter in `bc-7-output-render.md` — no new BC heading
+- `CANONICAL-COUNTS.md` — no count change
+- All story body files — story-writer handles body/AC propagation in F3
+- `src/adf.rs` — implementation changes handled in F4
+
+---
+
 ## [1.3.17] - 2026-06-16
 
 ### Type: PATCH

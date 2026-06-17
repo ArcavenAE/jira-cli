@@ -3865,3 +3865,11 @@ Note: Perplexity deep-research output for dirs/keyring contained fabrications; r
 | CLI leading-dash values (issue #471 e2e / description-leading-dash) | **CYCLE CLOSED + MERGED** | 2026-06-11 | F1–F7 ALL COMPLETE — CONVERGED | PR #496 → develop @ 45ceae6. `allow_hyphen_values = true` on 7 free-text write args. BC 594 unchanged. +17 hermetic parse tests (tests/cli_smoke.rs, 44 total). F5: 8 passes / 3-clean-pass CONVERGED. F6: 1763/0, clippy/fmt/deny clean, mutation zero-in-scope. F7: 5-dimension consistency CLEAN. DEC-072. |
 | ADF E2E read-path coverage (issue #475) | **CYCLE CLOSED + MERGED** | 2026-06-11 | F1–F7 ALL COMPLETE — CONVERGED | PR #499 → develop @ 418a392e. Test-only (no src change). BC 594 / NFR 41 / Stories 68 unchanged. DEC-073/074/075/076. |
 | Windows build (x86_64-pc-windows-msvc) | **CYCLE CLOSED** — v0.6.0-dev.2 released + H-WIN-6 PASS | 2026-06-14 (F4+F5+F6+F7+RELEASE) | F4–F7 ALL COMPLETE; H-WIN-6 PASS; DEC-101 | develop @ 4258202 (#517). 14-pass F5; 9/9 mutants; 9 props; 0 vulns; 1808 green. jr-v0.6.0-dev.2-x86_64-pc-windows-msvc.zip + checksum verified. Smoke test ✓ windows-latest. |
+| Issue #492 block-HTML hardBreak (BC-7.2.011) | **CYCLE CLOSED + MERGED** | 2026-06-16 | F1–F7 ALL COMPLETE — CONVERGED | PR #521 → develop @ 3ba8ea2. BC-7.2.011 v1.9.6. 5/5 F7 dims; 150k proptest; 100% mutation; 0 code defects. Follow-up #522 (lone-CR OOS). DEC-109. |
+| Issue #522 lone-CR ADF normalization (BC-7.2.011/EC-11) | **IN PROGRESS** — F4 next | 2026-06-16 (F1+F2+F3 COMPLETE) | F1–F3 COMPLETE; F4 next | F1: chokepoint push_text/push_code in adf.rs; F2: BC-7.2.011 EC-11 added v1.9.7; F3: S-522 (7 ACs). Stories 75→77. DEC-110. |
+
+## Archived Current Phase Steps (archived 2026-06-16 to free STATE.md size budget)
+
+| Step | Agent | Status | Output |
+|------|-------|--------|--------|
+| S-CIGATE-1 (ci-gate aggregator) DELIVERED F1–F7. PR #518 squash-merged → develop @ e9b2269. ci-gate GREEN on PR+push CI run 27551871837 (live holdout proof). Step 4.5 4-pass CONVERGED (3 clean). F7 DELTA_CONVERGED. DEC-102. Stories 74→75. CIGATE-BRANCH-PROTECTION-SWAP pending human. | Agent state-manager | DELIVERED | develop @ e9b2269. BC 597 / NFR 42 / ADR 16 / Stories 75. |
