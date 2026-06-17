@@ -3873,6 +3873,8 @@ Note: Perplexity deep-research output for dirs/keyring contained fabrications; r
 | Step | Agent | Status | Output |
 |------|-------|--------|--------|
 | S-CIGATE-1 (ci-gate aggregator) DELIVERED F1–F7. PR #518 squash-merged → develop @ e9b2269. ci-gate GREEN on PR+push CI run 27551871837 (live holdout proof). Step 4.5 4-pass CONVERGED (3 clean). F7 DELTA_CONVERGED. DEC-102. Stories 74→75. CIGATE-BRANCH-PROTECTION-SWAP pending human. | Agent state-manager | DELIVERED | develop @ e9b2269. BC 597 / NFR 42 / ADR 16 / Stories 75. |
+| F5 final pass-set R4 (3 fresh perspective-diverse passes over full EC-11+EC-12+F5-R2 delta @ c7103b7→6d87bb6): doc count "Three"→"Four" asymmetries tidied (6d87bb6). ALL 3 PASSES PASS-CLEAN — zero blocking findings. Only non-actionable cosmetic observations. 3 consecutive clean = CONVERGED. F5 COMPLETE. DEC-115. | Agent adversary + state-manager | **F5 CONVERGED — 3/3 CLEAN** | worktree .worktrees/S-522 @ 6d87bb6 (LOCAL ONLY). BC-7.2.011 v1.11.0. S-522 19 ACs HIGH. 248 lib tests. Next: F6. |
+| (Archived 2026-06-17 — maintenance sweep checkpoint, Bundle A DELIVERED+MERGED PR #524 → ca24200, Bundle B COMMITTED factory-artifacts @ 20d2441, Bundle C Feature Mode opened #525+#526.) |
 
 ## Archived Decisions DEC-107..119 (archived 2026-06-17 — #522 cycle CLOSED)
 

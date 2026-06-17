@@ -886,3 +886,21 @@ _Was the active checkpoint after Issue #522 F5 scoped-adversarial CONVERGED: 4 f
 | **Convergence counter** | BC: **598**. NFR: **42**. ADR: **16**. Stories: **77** authoritative. jira-e2e env: JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ, JR_E2E_ENABLED=true. Active worktree: .worktrees/S-522 @ 6d87bb6 (LOCAL ONLY — not pushed). |
 | **Next / Pending** | F6 targeted hardening: cargo-mutants scoped to push_text/push_code/text_to_adf diff + proptest prop_markdown_to_adf_html_chars_holds_inv1/prop_text_to_adf_holds_inv1/prop_492_* + cargo audit/deny + full suite. Then F7 (5-dim delta convergence + fresh consistency-validator + input-drift) + PR via pr-manager → develop. Human merge gate. Fork-release-ops enablement PENDING (DEC-104). |
 | **Resume prompt** | `Read .factory/STATE.md. Issue #522 F5 CONVERGED @ 6d87bb6. Worktree: .worktrees/S-522 on fix/adf-push-text-cr-normalization-522 @ 6d87bb6 (LOCAL ONLY — not pushed). BC-7.2.011 v1.11.0. S-522 19 ACs HIGH. 248 lib tests green. develop @ 3ba8ea2. DEC-115. Next: F6 targeted hardening (cargo-mutants push_text/push_code/text_to_adf + proptest + cargo audit/deny), then F7 + PR → develop. STANDING: do NOT close #429 (DEC-029); OQ-5 open; E2E-PG-4 open; SEC-001 LOW deferred. Fork-release-ops PENDING (DEC-104). jira-e2e: JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ, JR_E2E_ENABLED=true.` |
+
+---
+
+## Checkpoint archived 2026-06-17 (Issue #522 CYCLE CLOSED+MERGED; FACTORY IDLE)
+
+_Was the active checkpoint after #522 squash-merged → develop @ 53f6d98 (PR #523, DEC-119). Superseded when maintenance-sweep Bundle A DELIVERED+MERGED → ca24200 and Bundle C Feature Mode opened (#525/#526)._
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-06-17 |
+| **Position** | FACTORY IDLE between cycles. Last completed: Issue #522 (ADF CR/LF normalization, BC-7.2.011 v1.11.0) CYCLE CLOSED+MERGED via PR #523. No active worktree. Awaiting next work item. |
+| **develop HEAD** | origin/develop = **53f6d98** (PR #523 squash-merged 2026-06-17). Note: local working checkout may still show 3ba8ea2 — run `git fetch origin` before any work. |
+| **Activation** | v0.6.0-dev.2 @ 4258202. v0.5.0 STABLE shipped 2026-06-12. |
+| **Counters** | BC **598**. NFR **42**. ADR **16**. Stories **77** (authoritative). |
+| **Active worktree** | NONE — S-522 cleaned up. .factory worktree on factory-artifacts is mounted. |
+| **jira-e2e env** | JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ, JR_E2E_ENABLED=true. |
+| **Standing constraints** | Do NOT close #429 (DEC-029). All fixes through full VSDD Feature Mode pipeline. Fork-release-ops INERT by default (enablement blocked on FORK-OPS-SIGN-INJECTION + FORK-OPS-ALPHA-RACE HIGH). OQ-5, E2E-PG-4, SEC-001 LOW deferrals open. |
+| **Resume prompt** | `Read .factory/STATE.md. Issue #522 CYCLE CLOSED — PR #523 → develop @ 53f6d98 (DEC-119). BC-7.2.011 v1.11.0. FACTORY IDLE. No active worktree. STANDING: do NOT close #429 (DEC-029); OQ-5 open; E2E-PG-4 open; SEC-001 LOW deferred. Fork-release-ops PENDING (DEC-104). jira-e2e: JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ, JR_E2E_ENABLED=true.` |
