@@ -7,6 +7,54 @@ project: "jr (jira-cli)"
 
 Track all spec version changes. Most recent version first.
 
+## [1.3.22] - 2026-06-17
+
+### Type: MINOR
+
+### Summary
+
+BC-7.2.011 v1.11.0: F5-R2 fix of EC-11 chokepoint contract — bare `\n` in Other-context via multi-line inline HTML was a **reachable HIGH-severity INV-1 violation** (CR-01; `test_markdown_multiline_inline_html_holds_inv1` was RED before the fix). Extends `push_text` (Other context) and `push_code` to normalize bare `\n` → space, making the chokepoint self-sufficient per INV-1. Adds EC-11 behavior table (7 rows), COMP-1 Unicode separator scope exclusion note, and five new tests. No new BC heading — `total_bcs` and `definitional_count` unchanged.
+
+### Changed Requirements
+
+- BC-7.2.011 v1.11.0 (MINOR — EC-11 chokepoint precision fix, reachable HIGH severity, new behavior table, new test names):
+
+  **Bug fixed (HIGH severity, CR-01):** EC-11 (INV-push-text-cr) previously specified the Other-context branch as "`\r\n`→space, lone `\r`→space" but was SILENT on a bare `\n` (U+000A not preceded by `\r`). The code only normalized when `\r` was present, so a bare `\n` could survive into a non-codeBlock text node, violating INV-1 ("no raw `\n`/`\r` in any non-codeBlock text node"). The violation was reachable end-to-end: multi-line inline HTML (`Event::InlineHtml`) in a non-block context delivers a bare `\n` to `push_text` in Other context. `test_markdown_multiline_inline_html_holds_inv1` was RED (failing) before the fix — this is a confirmed reachable HIGH bug, not a latent/defense-in-depth gap.
+
+  **Fix — EC-11 item 3 (Other contexts):** Added "`AND bare \n (U+000A not preceded by \r) → space`" to the normalization rule for all non-codeBlock, non-HtmlBlock contexts. The fix also makes the chokepoint self-sufficient so INV-1 is enforced regardless of future parser-path changes.
+
+  **Fix — `push_code`:** Added "bare `\n`→space" alongside the existing lone-`\r`→space rule (defense-in-depth for inline code spans, which CommonMark §6.3 gates to single-line input).
+
+  **CodeBlock context unchanged:** bare `\n` is PRESERVED in codeBlock (those nodes may contain `\n` per INV-1's allowance for codeBlock).
+
+  **New EC-11 behavior table (7 rows):** canonical rows for Other-context bare `\n`→space, CodeBlock bare `\n` preserved, and for completeness the CRLF/lone-CR rows in both contexts — all directly testable.
+
+  **COMP-1 scope exclusion:** added concise non-normative note: Unicode line/paragraph separators U+2028 LS, U+2029 PS, U+0085 NEL, U+000B VT, U+000C FF are OUT OF SCOPE — passed through verbatim by design. INV-1 covers only ASCII `\r` (U+000D) / `\n` (U+000A); Jira accepts the Unicode separators as ordinary characters. Mirrors narrow-scope pattern from issue #473.
+
+  **New test names (5) added to Source, Trace, and AC:**
+  - `test_push_text_normalizes_bare_lf_in_other_context_to_space` — direct `push_text`: Other context `"a\nb"` → `"a b"`
+  - `test_push_text_codeblock_preserves_bare_lf` — direct `push_text`: CodeBlock context `"a\nb"` → `"a\nb"`
+  - `test_push_code_normalizes_bare_lf_to_space` — direct `push_code`: `"a\nb"` → `"a b"` (defense-in-depth)
+  - `test_markdown_multiline_inline_html_holds_inv1` — end-to-end `markdown_to_adf` multi-line inline HTML; was RED before fix (proves CR-01 was reachable HIGH severity)
+  - `prop_markdown_to_adf_html_chars_holds_inv1` — proptest: interleaving `<>/"=` with `\r`/`\n` holds INV-1
+
+### Impact Assessment
+
+| Artifact | Change Type | Notes |
+|----------|-------------|-------|
+| `.factory/specs/prd/bc-7-output-render.md` | MODIFIED | EC-11 item 3 extended with bare `\n`→space (HIGH bug fix); `push_code` line extended; INV-1 rationale updated; EC-11 behavior table added (7 rows); COMP-1 scope exclusion note added; AC section extended with 5 new test names (corrected from wrong names); BC-7.2.011 headline updated; Source and Trace updated; v1.11.0 row added to inline Spec Changelog |
+| `.factory/specs/prd/BC-INDEX.md` | MODIFIED | BC-7.2.011 row updated to describe bare-`\n` normalization (F5-R2), COMP-1 scope exclusion, and updated Source column |
+| `.factory/spec-changelog.md` | MODIFIED | This entry |
+
+### Files NOT Changed
+
+- `total_bcs` (90 in bc-7 file; 598 global), `definitional_count` (44) — no new BC heading; EC-11 is an existing edge case within BC-7.2.011; EC row count within EC-11 extended, not a new numbered EC
+- `CANONICAL-COUNTS.md` — no count change
+- All story body files — story-writer handles AC propagation under `bc_array_changes_propagate_to_body_and_acs` policy
+- `src/adf.rs` — implementation already committed (commit 182a93d, 244 tests green); this entry corrects test-name citations and severity framing in the spec
+
+---
+
 ## [1.3.21] - 2026-06-17
 
 ### Type: MINOR

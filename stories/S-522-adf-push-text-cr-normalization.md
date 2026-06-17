@@ -8,14 +8,14 @@ intent: bug-fix
 feature_type: backend
 mode: feature
 scope: small
-severity: MEDIUM
+severity: HIGH
 trivial_scope: true
 issue: 522
 points: 2
 priority: P1
 tdd_mode: strict
-estimated_effort: xsmall
-estimated_days: 1.0
+estimated_effort: small
+estimated_days: 1.5
 target_module: adf
 subsystems: []
 depends_on: []
@@ -34,11 +34,12 @@ spec_source: ".factory/phase-f1-delta-analysis/issue-522-delta-analysis.md"
 spec_source_ext: ".factory/phase-f1-delta-analysis/issue-522-text-to-adf-extension.md"
 implementation_strategy: tdd
 module_criticality: MEDIUM
-acceptance_criteria_count: 14
+acceptance_criteria_count: 19
 assumption_validations: []
 risk_mitigations: []
 created: "2026-06-16"
 last_updated: "2026-06-17"
+# F5 HIGH-severity refinement (commit 182a93d): bare \n in Other context → INV-1 violation; push_text/push_code now normalize bare \n → space in Other ctx; AC count 14→19
 breaking_change: false
 retroactive: false
 predecessor_cycles: "PR #492 (issue #492, BC-7.2.011 block-HTML hardBreak fix — introduced the strict_cr=false proptest gap that this story closes)"
@@ -151,13 +152,13 @@ function (no regression on the dominant use case).
 
 | Context component | Estimated tokens |
 |---|---|
-| Story spec (this file — expanded to cover EC-11 + EC-12) | ~4,500 |
+| Story spec (this file — expanded to cover EC-11 + EC-12 + F5 bare-`\n` ACs AC-015..AC-019) | ~5,200 |
 | `src/adf.rs` (full file — only modified file) | ~4,500 |
 | BC-7.2.011 body (`bc-7-output-render.md` §BC-7.2.011, EC-11 + EC-12 sections) | ~2,000 |
 | F1 delta analysis (`issue-522-delta-analysis.md`) | ~1,400 |
 | F1 delta analysis extension (`issue-522-text-to-adf-extension.md`) | ~1,600 |
 | Test output (`cargo test adf::tests`) | ~800 |
-| **Total** | **~14,800** |
+| **Total** | **~15,500** |
 
 Well within a 20% agent context window budget (~200k tokens). No splitting required.
 
@@ -607,25 +608,142 @@ For each input, `assert_no_raw_newline_in_text_nodes(&result, input)` MUST pass 
 proptest infrastructure is already warmed up from EC-11 tests):
 
 ```rust
-#[cfg(test)]
-fn prop_text_to_adf_holds_inv1(input in "[\\r\\n\\t a-zA-Z0-9]{0,64}") {
-    let adf = text_to_adf(&input);
-    assert_no_raw_newline_in_text_nodes(&adf, &input);
+#[test]
+fn prop_text_to_adf_holds_inv1() {
+    let mut config = ProptestConfig::default();
+    config.cases = 2048;
+    TestRunner::new(config)
+        .run(
+            &proptest::strategy::Strategy::prop_map(
+                string_regex("[\\r\\n\\t a-zA-Z0-9]{0,64}").unwrap(),
+                |s| s,
+            ),
+            |input| {
+                let adf = text_to_adf(&input);
+                assert_no_raw_newline_in_text_nodes(&adf, &input);
+                Ok(())
+            },
+        )
+        .unwrap();
 }
 ```
 
-The strategy explicitly samples `\r` (U+000D), `\n` (U+000A), tab, space, and
-alphanumeric characters, bounded to 0–64 characters — `".*"` does NOT match `\n` in
-the default regex flavour used by proptest, so it would silently exclude the very
-inputs the property needs to cover. The bounded charset ensures `\r`, `\n`, and `\r\n`
-sequences are generated while keeping proptest run times predictable. This generatively
-verifies INV-1 for the new implementation and is the `text_to_adf` equivalent of the
-updated `prop_492_arbitrary_string_holds_core_invariants` (EC-11 proptest).
+The committed test uses a manual `TestRunner::new(config).run(&string_regex(...), |input| { ... })` form (not the `proptest!` macro) because EC-11's `prop_492_arbitrary_string_holds_core_invariants` uses the same manual runner pattern. The strategy regex `"[\\r\\n\\t a-zA-Z0-9]{0,64}"` explicitly samples `\r` (U+000D), `\n` (U+000A), tab, space, and alphanumeric characters, bounded to 0–64 characters — `".*"` does NOT match `\n` in the default regex flavour used by proptest, so it would silently exclude the very inputs the property needs to cover. The bounded charset ensures `\r`, `\n`, and `\r\n` sequences are generated while keeping proptest run times predictable. This generatively verifies INV-1 for the new implementation and is the `text_to_adf` equivalent of the updated `prop_492_arbitrary_string_holds_core_invariants` (EC-11 proptest).
 
 **Red Gate requirement:** Before the fix, `assert_no_raw_newline_in_text_nodes` fails
 for any multi-line input (all produce raw `\n` in text nodes). This test MUST FAIL
 pre-fix and MUST PASS post-fix. The optional proptest, if added, MUST also fail
 pre-fix and pass post-fix.
+
+---
+
+## Acceptance Criteria — EC-11 bare-`\n` chokepoint (F5 HIGH-severity refinement)
+
+> **F5 HIGH-severity refinement note (commit 182a93d):** F5 adversarial review found
+> that the original EC-11 fix handled `\r` presence but left a bare `\n` (no `\r`)
+> reachable in Other (non-codeBlock) contexts. A bare `\n` in a text node is an INV-1
+> violation — Jira rejects with HTTP 400. Confirmed end-to-end reachable via multi-line
+> inline HTML: `markdown_to_adf("foo <span\ndata-x=\"1\">bar")` placed a raw `\n` into
+> a text node. The fix (commit 182a93d) makes `push_text` / `push_code` self-sufficient
+> in Other context: bare `\n` → space (mirrors SoftBreak→" " and the `\r`→space rule);
+> codeBlock PRESERVES `\n`; HtmlBlock owned by Algorithm B (unchanged). ACs AC-015
+> through AC-019 trace to BC-7.2.011 EC-11 / INV-1 (v1.11.0).
+
+---
+
+### AC-015 — `push_text` in Other context normalizes bare `\n` to space
+(traces to BC-7.2.011 EC-11 / INV-1 postcondition — Other context: bare `\n` in input → space in text node; no raw `\n` survives; mirrors SoftBreak→" " and `\r`→space rule)
+
+A new test `test_push_text_normalizes_bare_lf_in_other_context_to_space` asserts that
+a direct `push_text` call in a non-codeBlock context (e.g., paragraph) with input
+`"a\nb"` produces a text node with value `"a b"` (a SPACE — the bare `\n` is
+normalized to space, NOT preserved). No text node in the result contains a raw `\n`
+character (`assert_no_raw_newline_in_text_nodes` passes). This test covers the
+self-sufficient chokepoint behavior: `push_text` alone (without relying on upstream
+pulldown-cmark CR-stripping) prevents INV-1 violations in Other contexts.
+
+The fix ensures that the `contains('\r')` fast-path guard is widened — or that the
+bare-`\n` normalization runs independently — so that an input with a bare `\n` and no
+`\r` is also normalized. The test specifically targets inputs with only `\n` (no `\r`)
+to cover the regression path that was missed by the original `contains('\r')` guard.
+
+**Red Gate requirement:** Before commit 182a93d, `push_text("a\nb")` in Other context
+passes the `\n` through unchanged (INV-1 violation). This test MUST FAIL against
+pre-182a93d code and MUST PASS after.
+
+---
+
+### AC-016 — `push_text` in CodeBlock context preserves bare `\n` byte-identically
+(traces to BC-7.2.011 EC-11 / INV-1 invariant — CodeBlock context: bare `\n` is preserved; codeBlock text nodes may contain `\n`; no regression on the code-display path)
+
+A new test `test_push_text_codeblock_preserves_bare_lf` asserts that a direct
+`push_text` call in a CodeBlock context with input `"a\nb"` produces a text node with
+value `"a\nb"` — the bare `\n` is preserved byte-identically (codeBlock text nodes are
+explicitly permitted to contain `\n` per INV-1). This test is the codeBlock complement
+of AC-015 and ensures the context-aware dispatch does NOT collapse `\n`→space in the
+CodeBlock arm.
+
+**Red Gate requirement:** This test PASSES both before and after the fix (codeBlock `\n`
+preservation is pre-existing correct behavior). Its purpose is a regression pin: any
+future change that accidentally normalizes `\n`→space in codeBlock context will fail
+this test immediately.
+
+---
+
+### AC-017 — `push_code` (inline) normalizes bare `\n` to space
+(traces to BC-7.2.011 EC-11 / INV-1 postcondition — `push_code` defense-in-depth: bare `\n` → space; inline code is always Other context; INV-1 preserved)
+
+A new test `test_push_code_normalizes_bare_lf_to_space` asserts that a direct
+`push_code("a\nb")` call produces a text node with value `"a b"` (a SPACE — the bare
+`\n` in an inline code span is normalized to space). No text node contains a raw `\n`
+character. Inline code spans are always in inline/non-codeBlock context; a bare `\n` in
+an inline code span would violate INV-1.
+
+This is the bare-`\n` counterpart to AC-004 (which covers `push_code` for `\r`).
+Together AC-004 and AC-017 pin that `push_code` normalizes BOTH lone `\r` and bare `\n`
+to space in inline context.
+
+**Red Gate requirement:** Before commit 182a93d, `push_code("a\nb")` passes the `\n`
+through unchanged. This test MUST FAIL against pre-182a93d code and MUST PASS after.
+
+---
+
+### AC-018 — End-to-end: `markdown_to_adf` with multi-line inline HTML upholds INV-1
+(traces to BC-7.2.011 EC-11 / INV-1 postcondition — end-to-end reachable path: multi-line inline HTML in markdown input; no raw `\n` in any text node; confirms reachability of the bug)
+
+A new test `test_markdown_multiline_inline_html_holds_inv1` asserts that
+`markdown_to_adf("foo <span\ndata-x=\"1\">bar")` produces an ADF value in which no
+text node contains a raw `\n` character (`assert_no_raw_newline_in_text_nodes` passes).
+This is the exact end-to-end reachable path confirmed by F5 adversarial review — a
+bare `\n` embedded in an inline HTML tag reaches `push_text` in Other (paragraph)
+context, and without the fix, the `\n` survives into the text node (INV-1 violation,
+Jira HTTP 400).
+
+**Red Gate requirement (load-bearing):** This test MUST FAIL against pre-182a93d code
+(the `\n` in the inline HTML tag survives into a text node) and MUST PASS after the
+fix. This is the primary reachability proof: RED before fix, GREEN after fix confirms
+that the F5-identified bug was real and the fix closes it.
+
+---
+
+### AC-019 — Property test: inline-HTML/markdown path fuzzing upholds INV-1
+(traces to BC-7.2.011 EC-11 / INV-1 invariant — property-based: inputs interleaving `<>/"=` with `\r`/`\n` generate no raw newline in any text node; generative regression harness)
+
+A new property test `prop_markdown_to_adf_html_chars_holds_inv1` generates inputs that
+interleave HTML-relevant characters (`<`, `>`, `"`, `/`, `=`) with `\r`, `\n`, and
+printable ASCII characters, and asserts that `assert_no_raw_newline_in_text_nodes`
+passes for each generated input through `markdown_to_adf`. The strategy is designed to
+exercise the multi-line inline-HTML path (AC-018) generatively, covering variations
+that a manually authored test would miss (e.g., `\r\n` between attribute name and
+value, multiple HTML tags each with embedded newlines, nested inline HTML, etc.).
+
+The test uses the same manual `TestRunner::new(config).run(...)` form as the other EC-11
+propertests. The strategy charset includes `[\r\n <>"/=a-zA-Z0-9]{0,80}` to reliably
+generate inline-HTML-shaped fragments with embedded newlines.
+
+**Red Gate requirement:** Before commit 182a93d, this proptest finds counterexamples
+where `\n` survives into text nodes from inline-HTML paths. This test MUST FAIL
+against pre-182a93d code and MUST PASS after the fix.
 
 ## Edge Cases
 
