@@ -4005,3 +4005,45 @@ Key LESSON codified:
 Issue #492 cycle CLOSED. All S-7.02 checklist items dispositioned.
 
 _Recorded: 2026-06-16 — Issue #492 CYCLE CLOSED; PR #521 → develop @ 3ba8ea2; #492 auto-closed; follow-up #522 open._
+
+---
+
+### LESSON-F1-SIBLING-CASE [process-gap] F1 Impact Boundary must enumerate sibling control-char cases on the same chokepoint (2026-06-17)
+
+**Tags:** [process-gap] [F1] [impact-boundary]
+
+**Date:** 2026-06-17
+**Cycle:** Issue #522 (ADF CR/newline normalization — EC-11 + EC-12)
+**Lesson ID:** LESSON-F1-SIBLING-CASE
+**Status:** [process-gap] — REINFORCES existing Step-7 lesson from #492 EC-12 expansion; no new follow-up story required (F1 boundary gap class already tracked)
+
+**Observation:** F5 Round 2 (correctness/coherence/completeness 3-lens fan-out) surfaced a genuine HIGH end-to-end-reachable bug — CR-01: bare `\n` survived `push_text`/`push_code` in the `Other` block-type context and was emittable into ADF text nodes via multi-line inline HTML (e.g. `Event::InlineHtml` carrying raw `\n`), causing a Jira 400 (INV-1 violation). This defect was missed by F1, F2, F3, F4, F5-R1 (Pass 1 CLEAN), and by the entire #492/EC-11/EC-12 scoping phase.
+
+**Root cause:** The F1 Impact Boundary analysis for #522 identified `push_text`/`push_code` as the chokepoint and analyzed the `\r` (lone CR) and `\r\n` (CRLF) normalization cases. It did NOT enumerate the sibling control-character case `\n` on the same chokepoint — a bare `\n` is in exactly the same hazard class as `\r` (both are raw control chars that must not appear in ADF text nodes outside `hardBreak`), sharing the same invariant (INV-1) and the same code path. The `\r`→space and `\r\n`→`\n` rules were fixed; the `\n`→space rule was omitted.
+
+**This is a second recurrence** of the same class of F1 miss:
+- #492 F6 surfaced that `push_text` in heading/codeBlock lacked `\r` normalization → #522 opened.
+- #522 F1 identified `push_text`/`push_code` as the chokepoint for `\r`/`\r\n` and fixed those cases but missed the sibling `\n` case on the SAME function.
+- #522 F5 R2 (3-lens fan-out) caught the `\n` gap.
+
+The pattern: F1 correctly identifies the chokepoint but performs a "per-reported-symptom" analysis (what specific control char was reported?) rather than a "chokepoint-exhaustive" analysis (what is the full set of control chars in the same hazard class at this chokepoint?).
+
+**Rule (LESSON-F1-SIBLING-CASE):** When F1 Impact Boundary identifies a normalization chokepoint (a function whose invariant is "no raw control chars in output"), it MUST enumerate ALL control characters sharing the same hazard class at that chokepoint in the same analysis pass:
+
+1. Identify the invariant being enforced (e.g., INV-1: no raw `\n` in ADF text nodes).
+2. Enumerate ALL characters that could violate the invariant at the chokepoint (not just the one reported by the triggering defect).
+3. For each character: trace the reachability path (which upstream `Event` types can deliver it to the chokepoint?).
+4. Include all reachable characters in the F1 impact boundary document AND in the F3 ACs.
+
+**What F5 3-lens fan-out caught that F1–F4 missed:** The "correctness" lens asked "is there any other character that violates INV-1 at this chokepoint?" — a question F1 did not ask because it was anchored to the symptom (lone-CR behavior). The 3-lens fan-out is structurally better suited to catch this class of miss than repeated same-lens passes.
+
+**Deferral note:** A formal follow-up story to add a "chokepoint-exhaustive" checklist step to the F1 impact boundary template is NOT opened at this time — the lesson is codified here for the next Feature Mode cycle, and the existing Step-7 RESUME PLAN item already references this gap. If the gap recurs on a third chokepoint, promote to a follow-up story to update the F1 skill template.
+
+**Related:**
+- Issue #492 S-7.02 Item 2 (PRE-EXISTING-LONE-CR): F1 for #492 missed the `push_text` heading/codeBlock `\r` gap → filed #522.
+- Issue #522 DEC-113: same gap class; F5 R2 caught `\n` on the same chokepoint.
+- STATE.md DEC-115: this lesson codified as [process-gap] in the DEC-115 entry.
+- RESUME PLAN Step-7(c): references this lesson as "F1 again missed sibling \n case on the SAME push_text chokepoint."
+
+_Recorded: 2026-06-17 — Issue #522 F5 CONVERGED; S-7.02 Step-7 codification._
+_Tagged: [process-gap] [F1] [impact-boundary] — reinforces existing gap; no follow-up story required at this time._

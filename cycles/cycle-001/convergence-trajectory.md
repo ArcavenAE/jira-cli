@@ -792,3 +792,55 @@ Trajectory shorthand: `1C(sibling-omission)→fix→1C(off-branch-spec)→fix→
 **VOID pass:** R11 was dispatched concurrently with a devops cleanup agent that did `git checkout develop && git pull` on the shared main working tree. R11 read mid-pull stale code and found F5-WIN-R11-001 (spurious HIGH for issue already fixed on 2f96543). Mitigation codified as LESSON-ADVERSARY-CHECKOUT-RACE. R14 re-run added "confirm HEAD SHA on first line" guard and reviewed cleanly at 2f96543.
 **Fix PRs merged during F5:** #511 (R1 HIGHs: smoke step + Compress-Archive), #512 (R2: fail-closed + debug-gate), #513 (R3: OAuth verify + .gitattributes + deny.toml), #514 (R7/R6: CHANGELOG + ADR-0016 Decision 5c + figment guard test), #515 (R8: OAuth guard -match binding). 0 CRITICAL/HIGH since R2; all R3+ findings doc/test/CI hardening.
 **Residual LOWs accepted:** WIN-RUNTIME-OAUTH-PROBE (runtime probe not ported to Windows, accepted in ADR-0016 Decision 5c), WIN-AC004-DIRECTIONAL (count-equality check covers in-process set_var only; subprocess sites have presence-only check). SEC-JR-SERVICE-NAME-GATE and WIN-DENY-FRAGILITY re-surfaced as out-of-scope / existing tracked items.
+
+---
+
+## Issue #492 Block-HTML F5 Scoped Adversarial Convergence (2026-06-16)
+
+**Feature:** #492 ADF block-HTML hardBreak interior newlines (BC-7.2.011)
+**Phase:** F5 scoped adversarial review
+**Code at convergence:** 8062b78 (PR #521 pushed; BC-7.2.011 v1.9.6)
+
+| Pass | Date | Total | CRIT | HIGH | MED | LOW | Counter | Verdict |
+|------|------|-------|------|------|-----|-----|---------|---------|
+| P1–P12 | 2026-06-16 | see burst-log | 0 | 0 | varied | varied | 0/3→reset×N | FINDINGS_REMAIN / REGRESSION / CLEAN (interleaved) |
+| P13 | 2026-06-16 | 0 | 0 | 0 | 0 | 0 | 1/3 | CLEAN-PASS (deep cross-consistency) |
+| P14 | 2026-06-16 | 0 | 0 | 0 | 0 | 0 | 2/3 | CLEAN-PASS (holistic+traceability+counts) |
+| P15 | 2026-06-16 | 0 | 0 | 0 | 0 | 0 | 3/3 | CONVERGED (robustness+completeness) |
+
+**Trajectory shorthand:** 15 passes; 6 fix rounds; final 3/3 CLEAN. Zero production-code defects — all findings were doc/spec precision.
+**Genuine catches:** doc/spec precision gaps only; Algorithm B proven correct ~12x across all lenses.
+**Code delta:** BC-7.2.011 v1.9.1→v1.9.2→v1.9.3→v1.9.4→v1.9.5→v1.9.6. PR #521 MERGED → develop @ 3ba8ea2. DEC-107.
+
+---
+
+## Issue #522 ADF CR/newline Normalization F5 Scoped Adversarial Convergence (2026-06-17)
+
+**Feature:** #522 ADF CR/newline normalization — EC-11 (push_text/push_code) + EC-12 (text_to_adf)
+**Phase:** F5 scoped adversarial review (perspective-diverse: correctness/coherence/completeness lenses)
+**Code at convergence:** 6d87bb6 (LOCAL on fix/adf-push-text-cr-normalization-522; BC-7.2.011 v1.11.0)
+
+| Pass/Round | Date | Total | CRIT | HIGH | MED | LOW | Counter | Verdict |
+|------------|------|-------|------|------|-----|-----|---------|---------|
+| R1-Pass1 (correctness) | 2026-06-17 | 1 | 0 | 0 | 0 | 1 | 1/3 | CLEAN-PASS (1 LOW OBS-1 noted) |
+| R1-Pass2 (coherence) | 2026-06-17 | 2 | 0 | 0 | 0 | 2 | 0/3 | FINDINGS_REMAIN (OBS-1 spec note + OBS-2 whitespace-blank test) |
+| R1-Pass3 (completeness) | 2026-06-17 | 0 | 0 | 0 | 0 | 0 | 1/3 | CLEAN-PASS |
+| R2-Pass1 (correctness) | 2026-06-17 | 6 | 0 | 1 | 0 | 5 | 0/3 | FINDINGS_REMAIN — HIGH CR-01 (bare \n Other-ctx INV-1 via inline HTML) + 5 LOW |
+| R2-Pass2 (coherence) | 2026-06-17 | 0 | 0 | 0 | 0 | 0 | 0/3 | CLEAN after R2-Pass1 fix |
+| R2-Pass3 (completeness) | 2026-06-17 | 0 | 0 | 0 | 0 | 0 | 1/3 | CLEAN-PASS |
+| R3-Pass1 (correctness) | 2026-06-17 | 0 | 0 | 0 | 0 | 0 | 2/3 | CLEAN-PASS |
+| R3-Pass2 (coherence) | 2026-06-17 | 1 | 0 | 0 | 0 | 1 | 0/3 | FINDINGS_REMAIN — MED F-522-01 (block/inline HTML asymmetry undocumented) |
+| R3-Pass3 (completeness) | 2026-06-17 | 2 | 0 | 0 | 1 | 1 | 0/3 | FINDINGS_REMAIN — LOW F-522-02 + LOW F-OBS-1 |
+| R4-Pass1 (correctness) | 2026-06-17 | 0 | 0 | 0 | 0 | 0 | 1/3 | CLEAN-PASS |
+| R4-Pass2 (coherence) | 2026-06-17 | 0 | 0 | 0 | 0 | 0 | 2/3 | CLEAN-PASS |
+| R4-Pass3 (completeness) | 2026-06-17 | 0 | 0 | 0 | 0 | 0 | 3/3 | **CONVERGED** |
+
+**Trajectory shorthand:** `R1: 2LOW → R2: 1HIGH+5LOW(reset) → R3: 1MED+2LOW(reset) → R4: 0/0/0 CONVERGED`
+**Genuine catches:**
+- HIGH CR-01 (R2): bare `\n` survived `push_text`/`push_code` in `Other` block-type context; reachable end-to-end via multi-line `Event::InlineHtml` → Jira 400 (INV-1 violation). Missed by F1–F4 and #492/EC-11/EC-12 scoping. FIXED @ 182a93d.
+- MED F-522-01 (R3): block-HTML → `hardBreak` vs inline-HTML → space newline-handling asymmetry was a sound but undocumented product decision. Documented in `docs/specs/adf-block-html.md` + BC-7.2.011 EC-11. FIXED @ c7103b7.
+- LOW F-522-02 (R3): added deterministic 3-line + CRLF inline-HTML regression cases. FIXED @ c7103b7.
+- LOW F-OBS-1 (R3): AC-014 illustrative snippet form (cases 2048→1000, `prop_map` wrapper removed). FIXED @ c7103b7.
+- LOW OBS-1/OBS-2 (R1): spec split-mechanism note + whitespace-blank test. FIXED @ d3c35a4.
+**Code delta:** BC-7.2.011 v1.9.7→v1.9.8→v1.9.9→v1.10.0→v1.11.0 across F2/F4/F5. S-522 7→14→19 ACs, severity LOW→MED→HIGH→HIGH. 237→244→248 lib tests. DEC-110+111+112+113+114+115.
+**Process gap:** LESSON-F1-SIBLING-CASE codified — F1 boundary analysis must enumerate ALL control chars in same hazard class at a normalization chokepoint, not only the one that triggered the issue report. F5 3-lens fan-out caught the gap; repeated single-lens passes did not.
