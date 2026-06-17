@@ -14,6 +14,32 @@ created: "2026-06-16"
 
 # Phase F1 Delta Analysis — Issue #522
 
+> **WARNING: SUPERSEDED IN PART BY F5**
+>
+> The uniform `\r`→`\n` normalization design described below was found during F5
+> adversarial review to violate INV-1 (it would create a raw `\n` in non-codeBlock
+> text nodes, which Jira rejects). The IMPLEMENTED contract is CONTEXT-AWARE:
+>
+> - **non-codeBlock** (heading, paragraph, inline code spans, list items, table cells,
+>   blockquote, panel, inline marks): `\r\n` and lone `\r` → **SPACE**
+>   Example: `"# x\ry"` → heading text node `"x y"` (not `"x\ny"`)
+>   Example: `` `a\rb` `` → inline code text node `"a b"` (not `"a\nb"`)
+> - **codeBlock**: `\r\n`→`\n`, lone `\r`→`\n` (multi-line code with LF is valid ADF)
+>   Example: `"\ta\r"` → codeBlock text node `"a\n"`
+> - **HtmlBlock**: CR untouched at `push_text`/`push_code` — Algorithm B (the
+>   HtmlBlock end handler) owns CR normalization for that path independently.
+>
+> **Authoritative source:** BC-7.2.011 EC-11 (v1.9.9) in
+> `.factory/specs/prd/bc-7-output-render.md`. Commit 7968d66.
+>
+> - **`strict_cr` parameter was REMOVED (not flipped to `true`):** the implemented
+>   `assert_no_raw_newline_in_text_nodes` helper takes only `(adf, input)` — the
+>   `strict_cr` bool was eliminated and the `\r` check is now unconditional. All
+>   §4.1/§6.2/§8 references to "flip `strict_cr=false` → `strict_cr=true`" are
+>   superseded by this removal.
+>
+> Per-site supersession annotations are inline below, prefixed **[SUPERSEDED]**.
+
 ## Feature / Bug Summary
 
 **GitHub Issue #522:** A lone `\r` (U+000D carriage return without a following `\n`)
@@ -63,8 +89,13 @@ Rationale:
    (see code comment at line 951: "do NOT route through push_text… would break
    the direct-content-array build"). No conflict or double-normalization risk.
 
-**Normalization to apply** (mirroring Algorithm B step 3):
+**[SUPERSEDED] Normalization to apply** (the sketch below is the original F1 design —
+uniform `\r`→`\n` for all paths. The F5-implemented contract is context-aware; see
+banner above. The actual implementation in commit 7968d66 applies `\r`→space in
+non-codeBlock context and `\r`→`\n` only in codeBlock context.):
 ```rust
+// SUPERSEDED DESIGN — uniform \r→\n for all paths (NOT implemented).
+// Actual: context-aware — see BC-7.2.011 EC-11 and commit 7968d66.
 fn push_text(&mut self, text: &str) {
     // Normalize CR line endings before building the ADF text node.
     // CommonMark §2.3: lone \r → \n (pulldown-cmark 0.13 does not normalize
@@ -83,7 +114,8 @@ fn push_text(&mut self, text: &str) {
 ```
 
 The same normalization must be applied in `push_code` for `Event::Code` (inline
-code spans — same JSON hazard).
+code spans — same JSON hazard). **(SUPERSEDED — actual: non-codeBlock inline code
+also uses `\r`→space, not `\r`→`\n`; see banner above.)**
 
 ### 1.2 Functions to Modify
 
@@ -106,7 +138,7 @@ safe** for all of them:
 |-------------------------------|-------------|--------------------------|
 | `heading` | `NodeKind::Heading` | YES — heading text must never contain control chars |
 | `paragraph` | `NodeKind::Paragraph` | YES — already no-CR invariant (INV-1, strict_cr scope expands) |
-| `codeBlock` | `NodeKind::CodeBlock` | YES — `\r` is invalid in codeBlock text too; `\n` in codeBlock IS valid ADF, so `\r\n`→`\n` and `\r`→`\n` are safe transforms that preserve line structure |
+| `codeBlock` | `NodeKind::CodeBlock` | YES — `\r` is invalid in codeBlock text too; `\n` in codeBlock IS valid ADF, so `\r\n`→`\n` and `\r`→`\n` are safe transforms that preserve line structure *(context-aware `\r`→`\n` for codeBlock is correct and matches the implemented contract)* |
 | `bulletList` / `orderedList` / `listItem` | `NodeKind::ListItem` etc. | YES — inline text in list items must be CR-free |
 | `taskItem` | `NodeKind::TaskItem` | YES — inline text only; `\r` invalid |
 | `blockquote` | `NodeKind::BlockQuote` | YES |
@@ -119,14 +151,19 @@ safe** for all of them:
 **No path intentionally preserves CR.** There is no ADF node type that requires
 or permits a raw `\r` in a text node content string. The `codeBlock` exemption in
 INV-1 applies to `\n` (multi-line code is valid as a single text node with LF
-newlines, which Jira accepts) — it does NOT apply to `\r`. After normalization,
-`\r\n` and lone `\r` become `\n`, which the existing codeBlock exemption already
-handles correctly.
+newlines, which Jira accepts) — it does NOT apply to `\r`. **(SUPERSEDED — see
+banner above for the context-aware outcome: non-codeBlock `\r`→space so that no raw
+`\n` is injected into a heading/paragraph/inline-code text node; codeBlock `\r`→`\n`
+as stated here. The claim "`\r\n` and lone `\r` become `\n`" is correct only for
+the codeBlock context.)**
 
 **`push_code` blast radius:** `Event::Code` maps to inline code spans. The `code`
 mark in ADF does not grant a CR exemption (only `codeBlock` interiors carry the
 `\n` exemption, and only in the `in_code_block` check in `assert_no_raw_newline_in_text_nodes`).
-Normalizing `\r` in `push_code` is uniformly correct.
+Normalizing `\r` in `push_code` is uniformly correct. **(SUPERSEDED — actual
+implemented behavior: `push_code` applies `\r`→space since inline code spans are NOT
+codeBlock context; the F1 claim "uniformly correct" meaning `\r`→`\n` was superseded
+by the context-aware contract. `` `a\rb` `` → `"a b"`, not `"a\nb"`.)**
 
 ---
 
@@ -167,7 +204,7 @@ out-of-scope.
 | Test | Location | Change Required |
 |------|----------|-----------------|
 | `test_lone_cr_survives_pre_existing_492_oos` | `src/adf.rs::tests` ~line 9280 | **INVERT assertions**: change `assert!(…any(|t| t.contains('\r')),…)` to `assert!(…all(|t| !t.contains('\r')),…)`; remove `#[ignore]`; rename to match `test_<verb>_<subject>_<expected_outcome>` convention (e.g. `test_push_text_normalizes_lone_cr_in_heading_and_code_block`) |
-| `prop_492_arbitrary_string_holds_core_invariants` | `src/adf.rs::tests` ~line 9180 | **Flip `strict_cr` argument from `false` to `true`**: change `assert_no_raw_newline_in_text_nodes(&adf, &input, false)` to `assert_no_raw_newline_in_text_nodes(&adf, &input, true)`. The `\r` exemption comment in that call site (`strict_cr=false: pre-existing defect`) must be removed and replaced with the post-fix rationale. |
+| `prop_492_arbitrary_string_holds_core_invariants` | `src/adf.rs::tests` ~line 9180 | **Flip `strict_cr` argument from `false` to `true`**: change `assert_no_raw_newline_in_text_nodes(&adf, &input, false)` to `assert_no_raw_newline_in_text_nodes(&adf, &input, true)`. The `\r` exemption comment in that call site (`strict_cr=false: pre-existing defect`) must be removed and replaced with the post-fix rationale. **(SUPERSEDED — `strict_cr` was REMOVED entirely; helper is now `assert_no_raw_newline_in_text_nodes(adf, input)` with no bool; the `\r` check is unconditional.)** |
 
 ### 4.2 Snapshot Tests
 
@@ -192,15 +229,20 @@ is the desired outcome — the property becomes a regression harness for the fix
 ### 4.4 `adf_to_text` Round-Trip Implications
 
 `adf_to_text` reads ADF JSON and renders to text. A heading text node with `"x\ry"`
-would render as `# x\ry` in the current (buggy) state. After the fix, the input
-`"# x\ry"` produces a heading text node with `"x\ny"` (CR normalized to LF), and
-`adf_to_text` renders it as:
+would render as `# x\ry` in the current (buggy) state. **(SUPERSEDED — see banner
+above. After the fix, the input `"# x\ry"` produces a heading text node with `"x y"`
+(CR normalized to SPACE in non-codeBlock context, not `"x\ny"`), and `adf_to_text`
+renders it as `# x y` on a single line. The original F1 analysis below is stale:)**
+
+~~After the fix, the input `"# x\ry"` produces a heading text node with `"x\ny"` (CR
+normalized to LF), and `adf_to_text` renders it as:~~
 ```
-# x
-y
+# x y
 ```
-This is the correct CommonMark-compliant behavior. The `AdfRenderer::finish()` method
-applies `.trim_end()` which already strips trailing whitespace from the rendered string.
+*(Actual implemented outcome: `"x y"` on one line — non-codeBlock `\r`→space.)*
+
+The `AdfRenderer::finish()` method applies `.trim_end()` which already strips
+trailing whitespace from the rendered string.
 
 No existing `adf_to_text` test passes ADF with literal `\r` in text nodes, so no
 round-trip tests break.
@@ -236,6 +278,11 @@ BC-7.2.011 is the correct governance action.
 > `push_text` / `push_code` chokepoints before the text node is built. This extends
 > INV-1's CR-free guarantee from block-HTML-only (Algorithm B) to the full generic
 > parser path. Mirrors CommonMark §2.3 (lone CR is a line ending).
+>
+> **(SUPERSEDED — the "normalized to `\n`" claim in this AC draft is the original F1
+> design. The authoritative EC-11 (v1.9.9) in BC-7.2.011 reflects the context-aware
+> contract: non-codeBlock `\r`→space; codeBlock `\r`→`\n`; HtmlBlock untouched.
+> Commit 7968d66. Do not use this AC draft as a spec reference.)**
 
 The BC-7.2.011 frontmatter `total_bcs` and `definitional_count` do NOT change
 (this is a new AC in an existing BC, not a new BC heading). The BC-INDEX row for
@@ -255,7 +302,7 @@ BC-7.2.011 summary text should be updated to mention the CR fix.
 
 | Property | File | Change |
 |----------|------|--------|
-| `prop_492_arbitrary_string_holds_core_invariants` | `src/adf.rs` ~L9180 | Change `strict_cr=false` → `strict_cr=true`; update the inline comment from "pre-existing out-of-#492-scope defect" to "fixed in #522: push_text normalizes lone \\r" |
+| `prop_492_arbitrary_string_holds_core_invariants` | `src/adf.rs` ~L9180 | Change `strict_cr=false` → `strict_cr=true`; update the inline comment from "pre-existing out-of-#492-scope defect" to "fixed in #522: push_text normalizes lone \\r" **(SUPERSEDED — `strict_cr` was REMOVED entirely; helper is now `assert_no_raw_newline_in_text_nodes(adf, input)` with no bool; the `\r` check is unconditional.)** |
 
 ### 6.3 New Tests to Add
 
@@ -265,8 +312,8 @@ These should be in-file unit tests in `src/adf.rs::tests`, following the
 | Test | Covers |
 |------|--------|
 | `test_push_text_normalizes_lone_cr_in_heading_and_code_block` | The two repros from the issue pinned in the de-ignored test: `"# x\ry"` and `"\ta\r"` |
-| `test_push_text_normalizes_crlf_in_paragraph` | `"hello\r\nworld"` → paragraph text nodes contain `\n` or `hardBreak`, not `\r` |
-| `test_push_code_normalizes_lone_cr_in_inline_code` | `` "`a\rb`" `` → inline code span text node is `"a\nb"` |
+| `test_push_text_normalizes_crlf_in_paragraph` | **(SUPERSEDED — this test was RENAMED to `test_push_text_normalizes_lone_cr_in_fenced_code_block` in the F5-implemented contract. The original F1 expectation "`"hello\r\nworld"` → paragraph text nodes contain `\n` or `hardBreak`" is wrong: paragraph is non-codeBlock so `\r\n`→space, not `\n`/hardBreak. The renamed test covers a codeBlock context where `\r\n`→`\n` is correct.)** |
+| `test_push_code_normalizes_lone_cr_in_inline_code` | `` "`a\rb`" `` → inline code span text node is `"a\nb"` **(SUPERSEDED — actual: `"a b"`, not `"a\nb"`. Inline code spans are non-codeBlock context; `\r`→space. See banner above.)** |
 
 ### 6.4 Tests NOT Affected
 
@@ -302,7 +349,7 @@ These should be in-file unit tests in `src/adf.rs::tests`, following the
 | `src/adf.rs::AdfBuilder::push_text` | MODIFIED | Add CR normalization before text node construction |
 | `src/adf.rs::AdfBuilder::push_code` | MODIFIED | Same normalization for inline code spans |
 | `src/adf.rs::tests::test_lone_cr_survives_pre_existing_492_oos` | MODIFIED | Remove `#[ignore]`; invert assertions; rename |
-| `src/adf.rs::tests::prop_492_arbitrary_string_holds_core_invariants` | MODIFIED | Flip `strict_cr=false` → `strict_cr=true`; update comment |
+| `src/adf.rs::tests::prop_492_arbitrary_string_holds_core_invariants` | MODIFIED | Flip `strict_cr=false` → `strict_cr=true`; update comment **(SUPERSEDED — `strict_cr` was REMOVED entirely; helper is now `assert_no_raw_newline_in_text_nodes(adf, input)` with no bool; the `\r` check is unconditional.)** |
 | `src/adf.rs::tests` | NEW tests | 3 new focused unit tests (see §6.3) |
 | `.factory/specs/prd/bc-7-output-render.md` | MODIFIED | Add new AC to BC-7.2.011 body; update BC-INDEX row summary text |
 

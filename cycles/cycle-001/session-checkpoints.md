@@ -17,6 +17,21 @@ Superseded checkpoints are archived here when STATE.md is updated with a newer o
 
 ---
 
+## Checkpoint archived 2026-06-17 (Issue #522 F1+F2+F3 COMPLETE — F4 TDD, 7 ACs, EC-11 only)
+
+_Was the active checkpoint after Issue #522 bug-fix cycle opened: F1 (delta analysis push_text/push_code), F2 (BC-7.2.011 v1.9.7 EC-11), F3 (S-522 7 ACs). F4 TDD was declared next. Superseded when cycle EXPANDED to two chokepoints (EC-11 + EC-12) mid-cycle (user approval): F4 COMPLETE for both paths (235 tests green @ b999d97), F5 IN PROGRESS. BC-7.2.011 v1.10.0 (EC-11 + EC-12). S-522 expanded to 14 ACs. DEC-111 recorded._
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-06-16 |
+| **Position** | **Issue #522 bug-fix cycle OPEN — F1+F2+F3 COMPLETE, F4 TDD IN PROGRESS. BC-7.2.011 v1.9.7/EC-11. S-522 (7 ACs). Stories 77. DEC-110.** |
+| **develop HEAD** | origin/develop = **3ba8ea2** (PR #521 #492 bug-fix). activation v0.6.0-dev.2. BC **598**. NFR **42**. ADR **16**. Stories **77** (authoritative). |
+| **Convergence counter** | BC: **598**. NFR: **42**. ADR: **16**. Stories: **77** authoritative. jira-e2e env: JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ, JR_E2E_ENABLED=true. No active worktree. |
+| **Next / Pending** | F4 TDD for #522 (push_text/push_code CR normalization in src/adf.rs; EC-11). Fork-release-ops enablement PENDING (DEC-104). |
+| **Resume prompt** | `Read .factory/STATE.md. Issue #522 OPEN — F1+F2+F3 COMPLETE. F4 TDD next: push_text+push_code CR normalization in src/adf.rs (EC-11 INV-push-text-cr). BC-7.2.011 v1.9.7. S-522 (7 ACs). Stories 77. develop @ 3ba8ea2. DEC-110.` |
+
+---
+
 ## Checkpoint archived 2026-06-16 (Issue #492 F5-CONVERGED / F6-next — PR #521 OPEN @ 8062b78)
 
 _Was the active checkpoint after Issue #492 F5 scoped adversarial CONVERGED (DEC-107; 15 passes, 6 fix rounds, 3 clean; BC-7.2.011 v1.9.6 @ factory-artifacts 87e3c53; zero code defects). PR #521 OPEN @ 8062b78. Superseded when F6 COMPLETE + F7 DELTA_CONVERGED recorded (DEC-108; PR #521 @ 72fbcb9; human-authorized merge pending CI-green)._

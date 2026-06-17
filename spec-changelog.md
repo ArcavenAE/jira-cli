@@ -7,6 +7,121 @@ project: "jr (jira-cli)"
 
 Track all spec version changes. Most recent version first.
 
+## [1.3.21] - 2026-06-17
+
+### Type: MINOR
+
+### Summary
+
+BC-7.2.011 v1.10.0: Added EC-12 (INV-1-plain-text) — `text_to_adf` CR/newline normalization. This closes the third INV-1 chokepoint in `src/adf.rs` (plain-text write path), after Algorithm B / HtmlBlock end arm (EC-1..EC-10) and EC-11 (`push_text`/`push_code` markdown parser path). No new BC heading — `total_bcs` and `definitional_count` unchanged.
+
+### Changed Requirements
+
+- BC-7.2.011 v1.10.0 (MINOR — new EC/AC added): Added EC-12 (`text_to_adf` CR/newline normalization, INV-1-plain-text, issue #522 extension).
+
+  **Defect covered:** `text_to_adf(text)` builds an ADF `doc` from a raw `&str` using a one-liner `json!` macro, placing `text` verbatim into a `text` ADF node with no normalization. Any `\r`, `\n`, or `\r\n` in the argument is placed directly into the JSON, violating INV-1 ("no raw `\n`/`\r` in any non-codeBlock text node"). Jira rejects such payloads with HTTP 400. Five call sites are affected: `handle_create` (issue create `--description`), `handle_edit` (issue edit `--description`), `handle_comment` (issue comment arg), `handle_add` (worklog `--message`), and JSM request build (`--description`).
+
+  **EC-12 contract:** `text_to_adf(text)` MUST NOT emit any ADF text node containing raw `\r` (U+000D) or `\n` (U+000A). Normalization algorithm (mirrors Algorithm B steps 2–5): (1) strip trailing `\r`/`\n`; (2) normalize `\r\n`→`\n`, lone `\r`→`\n` (two-pass); (3) split on `\n\n` (blank line) → separate `paragraph` nodes (consecutive blank lines collapse to one boundary); (4) within each block, split on `\n` and emit alternating `text` + `hardBreak` nodes; trim leading/trailing `hardBreak` per paragraph; (5) single-line inputs (no `\r`/`\n`) produce byte-identical output to the pre-fix `text_to_adf` — strict no-regression guarantee.
+
+  **Implementation note:** Implementation MAY share a `normalize_text_to_inline_nodes` private helper with Algorithm B. The behavior table in EC-12 is the contract; Algorithm B's observable output must remain byte-identical.
+
+  **New tests added to Source and Trace:**
+  - `test_text_to_adf_single_line_unchanged` — regression guard
+  - `test_text_to_adf_normalizes_interior_lf_to_hardbreak`
+  - `test_text_to_adf_normalizes_interior_crlf_to_hardbreak`
+  - `test_text_to_adf_normalizes_interior_lone_cr_to_hardbreak`
+  - `test_text_to_adf_strips_trailing_newlines`
+  - `test_text_to_adf_no_raw_newline_in_any_text_node`
+  - Optional: `prop_text_to_adf_holds_inv1`
+
+  **Headline update:** BC-7.2.011 section headline extended with `text_to_adf` normalization clause (`text_to_adf` normalizes CR/newlines: interior → `hardBreak` nodes; blank lines → separate `paragraph` nodes; single-line byte-identical).
+
+### Impact Assessment
+
+| Artifact | Change Type | Notes |
+|----------|-------------|-------|
+| `.factory/specs/prd/bc-7-output-render.md` | MODIFIED | EC-12 added after EC-11; BC-7.2.011 headline extended; Source and Trace fields updated with EC-12 test names and `src/adf.rs::text_to_adf` symbol; v1.10.0 row added to inline Spec Changelog |
+| `.factory/specs/prd/BC-INDEX.md` | MODIFIED | BC-7.2.011 row summary updated to include EC-12 plain-text chokepoint clause and `src/adf.rs::text_to_adf` in Source column |
+| `.factory/spec-changelog.md` | MODIFIED | This entry |
+
+### Files NOT Changed
+
+- `total_bcs` (90 in bc-7 file; 598 global), `definitional_count` (44) — no new BC heading; EC-12 is an edge case within BC-7.2.011
+- `CANONICAL-COUNTS.md` — no count change
+- All story body files — story-writer handles AC propagation under `bc_array_changes_propagate_to_body_and_acs` policy
+- `src/adf.rs` — implementation handled by implementer in F4 story
+
+---
+
+## [1.3.20] - 2026-06-17
+
+### Type: PATCH
+
+### Summary
+
+BC-7.2.011 v1.9.9: F5 Pass 3 stale-prose AC correction for `test_push_text_crlf_two_pass_ordering_deterministic` — replace the context-independent single-outcome assertion with the correct context-split outcomes (non-codeBlock → space-separated; codeBlock → `\n`-separated). No algorithm, EC count, test names, total_bcs, definitional_count, BC-INDEX, CANONICAL-COUNTS, or src/ changed.
+
+### Changed Requirements
+
+- BC-7.2.011 v1.9.9 (within-v1.9.8 F5 Pass 3 stale-prose correction): The v1.9.8 EC-11 AC line for `test_push_text_crlf_two_pass_ordering_deterministic` was incorrect. The prior text asserted `"a\r\nb"` → `"a\nb"` as the single context-independent outcome and treated `"a  b"` (two spaces) as something to EXCLUDE — contradicting the actual test assertions (which assert context-split behaviour).
+  Corrected AC outcomes:
+  - **Non-codeBlock**: `"a\r\nb"` → `"a b"` (single space); `"a\r\rb"` → `"a  b"` (two spaces); `"\r\n\r"` → `"  "` (two spaces).
+  - **codeBlock**: `"a\r\nb"` → `"a\nb"`.
+  The Source field entry for the same test was also corrected to show both context outcomes (non-codeBlock and codeBlock) rather than codeBlock-only. No algorithm, EC numbering, acceptance-criteria logic, test names, `total_bcs`, `definitional_count`, BC-INDEX, CANONICAL-COUNTS, or `src/` changed. Spec version trail: v1.9.7 superseded by v1.9.8 → v1.9.9.
+
+### Impact Assessment
+
+| Artifact | Change Type | Notes |
+|----------|-------------|-------|
+| `.factory/specs/prd/bc-7-output-render.md` | MODIFIED | EC-11 AC line for `test_push_text_crlf_two_pass_ordering_deterministic` corrected to context-split outcomes; Source field for same test corrected; v1.9.9 row added to inline Spec Changelog |
+| `.factory/spec-changelog.md` | MODIFIED | This entry |
+
+### Files NOT Changed
+
+- `total_bcs`, `definitional_count` frontmatter in `bc-7-output-render.md` — no new BC heading
+- `CANONICAL-COUNTS.md` — no count change
+- `BC-INDEX.md` — no row content change (v1.9.8 row summary remains accurate)
+- All story body files — AC-prose correction only; no story acceptance-criteria change
+- `src/adf.rs` — implementation is correct; only spec prose was stale
+
+---
+
+## [1.3.19] - 2026-06-17
+
+### Type: PATCH
+
+### Summary
+
+BC-7.2.011 v1.9.8: F5 context-aware CR normalization revision — rewrite EC-11 (INV-push-text-cr) to describe the IMPLEMENTED context-aware contract (issue #522, commit 7968d66). Supersedes v1.9.7 uniform-normalization spec, which described `\r`→`\n` uniformly and would have violated INV-1 for non-codeBlock contexts.
+
+### Changed Requirements
+
+- BC-7.2.011 v1.9.8: EC-11 (INV-push-text-cr) completely rewritten. The v1.9.7 spec described a uniform `\r\n`→`\n` / lone-`\r`→`\n` rule — but a uniform `\r`→`\n` in non-codeBlock contexts (heading, paragraph, etc.) would CREATE a raw `\n` in those text nodes, violating INV-1 (Jira HTTP 400 hazard). The actual implemented contract (commit 7968d66) is CONTEXT-AWARE, three-way dispatch:
+  - **CodeBlock context**: `\r\n`→`\n`, lone `\r`→`\n` (codeBlock text nodes may contain `\n`).
+  - **HtmlBlock context**: CR left UNCHANGED — Algorithm B (EC-9) owns CR normalization in its End arm.
+  - **All other contexts** (heading, paragraph, listItem, taskItem, tableCell, blockquote, panel, inline marks, footnote definitions, inline HTML): `\r\n` and lone `\r` → SPACE (mirrors SoftBreak; preserves INV-1).
+  - **`push_code`** (always inline, never codeBlock): lone `\r` → space (defense-in-depth).
+  Corrected minimal-repro outcomes: `"# x\ry"` → heading `"x y"` (SPACE); `"\ta\r"` → codeBlock `"a\n"`; `` `a\rb` `` → inline code `"a b"` (public-path output; push_code guard is direct-call only).
+  Updated test names (F5-revised): `test_push_text_normalizes_lone_cr_in_heading_and_code_block` (heading→space, codeBlock→`\n`); `test_push_text_normalizes_lone_cr_in_fenced_code_block` (renamed from `test_push_text_normalizes_crlf_in_paragraph`); `test_push_text_crlf_two_pass_ordering_deterministic` (NEW); `test_push_code_normalizes_lone_cr_in_inline_code` (direct-call defense-in-depth). `assert_no_raw_newline_in_text_nodes` `strict_cr` parameter REMOVED (check unconditional); `prop_492_arbitrary_string_holds_core_invariants` calls it without that arg.
+  BC-7.2.011 section headline, Critical-invariant paragraph, Source, and Trace fields updated. BC-INDEX row summary updated. No new BC heading — `total_bcs`, `definitional_count`, CANONICAL-COUNTS unchanged.
+
+### Impact Assessment
+
+| Artifact | Change Type | Notes |
+|----------|-------------|-------|
+| `.factory/specs/prd/bc-7-output-render.md` | MODIFIED | EC-11 rewritten; headline, critical-invariant paragraph, Source, Trace updated; v1.9.7 superseded-by note + v1.9.8 row added to inline Spec Changelog |
+| `.factory/specs/prd/BC-INDEX.md` | MODIFIED | BC-7.2.011 row summary updated to describe context-aware dispatch |
+| `.factory/spec-changelog.md` | MODIFIED | This entry |
+
+### Files NOT Changed
+
+- `total_bcs`, `definitional_count` frontmatter in `bc-7-output-render.md` — no new BC heading
+- `CANONICAL-COUNTS.md` — no count change
+- All story body files — story-writer handles body/AC propagation
+- `src/adf.rs` — implementation changes handled in F4/F5
+
+---
+
 ## [1.3.18] - 2026-06-16
 
 ### Type: PATCH
