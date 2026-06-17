@@ -131,3 +131,11 @@ These rows had Status = RESOLVED / CLOSED / COMPLETE in the Drift Items table an
 |----|------|-------------|----------|--------|---------------|
 | CLAUDE.md-S522-GOTCHA | root CLAUDE.md block-HTML gotcha | Added push_text/push_code/text_to_adf INV-1 chokepoint gotcha to root CLAUDE.md: Other→space for \r\n/\r/bare-\n, codeBlock preserves \n, HtmlBlock→Algorithm B; block→hardBreak vs inline→space asymmetry; CR-01 HIGH bug note; Unicode-line-sep OOS note. Follow-up from F7 non-blocking item CLAUDE.md-S522-GOTCHA. | LOW | **RESOLVED @ 5a0b7d8** (DEC-118 — human-approved fold-in before PR) | 2026-06-17 |
 | MUTANTS-ADF-GLOB | .cargo/mutants.toml examine_globs omits src/adf.rs | Added `src/adf.rs` to `examine_globs` in .cargo/mutants.toml. Canonical `cargo mutants --in-diff <develop...HEAD> --list` now lists 21 src/adf.rs mutants (was 0 — false-green eliminated). Surfaced during F6 (#522); verified in follow-up commit @ 5a0b7d8. | MED | **RESOLVED @ 5a0b7d8** (DEC-118 — human-approved fold-in before PR) | 2026-06-17 |
+
+---
+
+## Resolved Blocking Issues / Drift Items extracted from STATE.md on 2026-06-17 (Issue #522 CYCLE CLOSED, DEC-119)
+
+| ID | Area | Description | Severity | Status | Resolved Date |
+|----|------|-------------|----------|--------|---------------|
+| PRE-EXISTING-LONE-CR | src/adf.rs push_text/push_code/text_to_adf | heading+codeBlock raw `\r` survival + bare `\n` Other-ctx (CR-01). EC-11+EC-12+CR-01 fixed. F5 CONVERGED; F6 PASS (1850/0, 100k proptest); F7 5/5 PASS. Shipped in PR #523 @ 53f6d98. BC-7.2.011 v1.11.0. | HIGH | **RESOLVED — shipped in PR #523 @ 53f6d98 (DEC-119)** | 2026-06-17 |
