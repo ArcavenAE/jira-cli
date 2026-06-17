@@ -856,3 +856,18 @@ _Was the active checkpoint after #492 bug-fix cycle closed + PR #521 squash-merg
 | **Convergence counter** | BC: **598**. NFR: **42**. ADR: **16**. Stories: **75** authoritative. jira-e2e env: JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ, JR_E2E_ENABLED=true. No active worktree. |
 | **Next / Pending** | No active feature. Fork-release-ops enablement PENDING (DEC-104). #522 open (lone-CR OOS). Standing drift: WIN-DENY-FRAGILITY (LOW), SEC-JR-SERVICE-NAME-GATE (LOW), WIN-AUTH-ENVLOCK-POISON (LOW), WIN-RUNTIME-OAUTH-PROBE (LOW, accepted ADR-0016), WIN-AC004-DIRECTIONAL (LOW), #492-TEST-HARNESS-COUPLING (LOW, deferred), #492-PG-TRACE-TESTS (LOW, deferred). Open issues: #522 (OPEN), #429 (DNC), #400 Story B, #372. |
 | **Resume prompt** | `Read .factory/STATE.md. Issue #492 CYCLE CLOSED — PR #521 → develop @ 3ba8ea2 (DEC-109). BC-7.2.011 v1.9.6 FINAL. No active feature. Follow-up #522 open (pre-existing lone-CR OOS). STANDING: do NOT close #429 (DEC-029); OQ-5 open; E2E-PG-4 open; SEC-001 LOW deferred. Fork-release-ops enablement PENDING (DEC-104). jira-e2e: JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ, JR_E2E_ENABLED=true.` |
+
+---
+
+## Checkpoint archived 2026-06-17 (Issue #522 F5 CONVERGED — 4 rounds, 3 final clean passes; F6 next)
+
+_Was the active checkpoint after Issue #522 F5 scoped-adversarial CONVERGED: 4 fresh-context rounds (perspective-diverse), severity decay HIGH(CR-01)→MED(doc)→LOW→0-blocking, final 3 consecutive clean passes (R4) over 6d87bb6. BC-7.2.011 v1.11.0. S-522 19 ACs HIGH. 248 lib tests green. DEC-115. Superseded when F6 targeted hardening completed (0ed1395): 1850 green, 100k proptest INV-1-clean, mutation 16-caught/5-equivalent+2 killing tests, audit/deny clean. DEC-116._
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-06-17 |
+| **Position** | **Issue #522 F5 CONVERGED — 4 rounds, 3 final clean passes, code @ 6d87bb6 LOCAL. BC-7.2.011 v1.11.0. S-522 19 ACs HIGH. 248 lib tests green. DEC-115. Next: F6 targeted hardening.** |
+| **develop HEAD** | origin/develop = **3ba8ea2** (PR #521 #492 bug-fix). activation v0.6.0-dev.2. BC **598**. NFR **42**. ADR **16**. Stories **77** (authoritative). |
+| **Convergence counter** | BC: **598**. NFR: **42**. ADR: **16**. Stories: **77** authoritative. jira-e2e env: JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ, JR_E2E_ENABLED=true. Active worktree: .worktrees/S-522 @ 6d87bb6 (LOCAL ONLY — not pushed). |
+| **Next / Pending** | F6 targeted hardening: cargo-mutants scoped to push_text/push_code/text_to_adf diff + proptest prop_markdown_to_adf_html_chars_holds_inv1/prop_text_to_adf_holds_inv1/prop_492_* + cargo audit/deny + full suite. Then F7 (5-dim delta convergence + fresh consistency-validator + input-drift) + PR via pr-manager → develop. Human merge gate. Fork-release-ops enablement PENDING (DEC-104). |
+| **Resume prompt** | `Read .factory/STATE.md. Issue #522 F5 CONVERGED @ 6d87bb6. Worktree: .worktrees/S-522 on fix/adf-push-text-cr-normalization-522 @ 6d87bb6 (LOCAL ONLY — not pushed). BC-7.2.011 v1.11.0. S-522 19 ACs HIGH. 248 lib tests green. develop @ 3ba8ea2. DEC-115. Next: F6 targeted hardening (cargo-mutants push_text/push_code/text_to_adf + proptest + cargo audit/deny), then F7 + PR → develop. STANDING: do NOT close #429 (DEC-029); OQ-5 open; E2E-PG-4 open; SEC-001 LOW deferred. Fork-release-ops PENDING (DEC-104). jira-e2e: JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ, JR_E2E_ENABLED=true.` |
