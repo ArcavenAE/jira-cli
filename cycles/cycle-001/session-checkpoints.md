@@ -17,6 +17,21 @@ Superseded checkpoints are archived here when STATE.md is updated with a newer o
 
 ---
 
+## Checkpoint archived 2026-06-17 (Issue #522 F5 Pass-1 — 3 LOW findings F-1/F-2/F-3 to fix; 1/3 clean)
+
+_Was the active checkpoint after Issue #522 expanded two-chokepoint cycle: F1-F4 ALL COMPLETE (235 adf tests green @ b999d97). F5 Pass-1 COMPLETE — CLEAN (1/3). 3 LOW findings (F-1/F-2/F-3) to fix before re-running. Superseded after F-1/F-2/F-3 remediation burst (c70f07d): proptest charset corrected, BC-7.2.011 EC-12 row count corrected 13→12, AC-014 snippet harmonized. F5 counter RESET — 0/3 clean; ready for 3 fresh passes._
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-06-17 |
+| **Position** | **Issue #522 EXPANDED two-chokepoint cycle (EC-11 + EC-12): F1-F4 ALL COMPLETE. F5 1/3 CLEAN — 3 LOW findings to fix (F-1/F-2/F-3) before 3 fresh passes. BC-7.2.011 v1.10.0. S-522 14 ACs. Code LOCAL ONLY @ b999d97. DEC-111.** |
+| **develop HEAD** | origin/develop = **3ba8ea2** (PR #521 #492 bug-fix). activation v0.6.0-dev.2. BC **598**. NFR **42**. ADR **16**. Stories **77** (authoritative). |
+| **Convergence counter** | BC: **598**. NFR: **42**. ADR: **16**. Stories: **77** authoritative. jira-e2e env: JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ, JR_E2E_ENABLED=true. Active worktree: .worktrees/S-522 @ b999d97 (LOCAL ONLY — not pushed). |
+| **Next / Pending** | (1) Fix F-1 (proptest strategy dotall), F-2 (EC-12 table row count prose "13"→"12"), F-3 (empty-paragraph positive assert). (2) Run 3 FRESH clean adversarial passes over FULL EC-11+EC-12 delta. (3) F6 hardening. (4) F7 + PR. Fork-release-ops enablement PENDING (DEC-104). |
+| **Resume prompt** | `Read .factory/STATE.md. Issue #522 IN PROGRESS — F5 1/3 CLEAN. Fix F-1/F-2/F-3 (see Blocking Issues) FIRST, then run 3 FRESH adversarial passes over FULL EC-11+EC-12 delta. Worktree: .worktrees/S-522 on fix/adf-push-text-cr-normalization-522 @ b999d97 (LOCAL ONLY). BC-7.2.011 v1.10.0. S-522 14 ACs. develop @ 3ba8ea2. DEC-111.` |
+
+---
+
 ## Checkpoint archived 2026-06-17 (Issue #522 F1+F2+F3 COMPLETE — F4 TDD, 7 ACs, EC-11 only)
 
 _Was the active checkpoint after Issue #522 bug-fix cycle opened: F1 (delta analysis push_text/push_code), F2 (BC-7.2.011 v1.9.7 EC-11), F3 (S-522 7 ACs). F4 TDD was declared next. Superseded when cycle EXPANDED to two chokepoints (EC-11 + EC-12) mid-cycle (user approval): F4 COMPLETE for both paths (235 tests green @ b999d97), F5 IN PROGRESS. BC-7.2.011 v1.10.0 (EC-11 + EC-12). S-522 expanded to 14 ACs. DEC-111 recorded._

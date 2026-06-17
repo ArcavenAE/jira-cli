@@ -608,15 +608,19 @@ proptest infrastructure is already warmed up from EC-11 tests):
 
 ```rust
 #[cfg(test)]
-fn prop_text_to_adf_holds_inv1(input in ".*") {
+fn prop_text_to_adf_holds_inv1(input in "[\\r\\n\\t a-zA-Z0-9]{0,64}") {
     let adf = text_to_adf(&input);
     assert_no_raw_newline_in_text_nodes(&adf, &input);
 }
 ```
 
-This generatively verifies INV-1 for the new implementation against all arbitrary
-inputs, including `\r`/`\r\n`/`\n` combinations. It is the `text_to_adf` equivalent
-of the updated `prop_492_arbitrary_string_holds_core_invariants` (EC-11 proptest).
+The strategy explicitly samples `\r` (U+000D), `\n` (U+000A), tab, space, and
+alphanumeric characters, bounded to 0–64 characters — `".*"` does NOT match `\n` in
+the default regex flavour used by proptest, so it would silently exclude the very
+inputs the property needs to cover. The bounded charset ensures `\r`, `\n`, and `\r\n`
+sequences are generated while keeping proptest run times predictable. This generatively
+verifies INV-1 for the new implementation and is the `text_to_adf` equivalent of the
+updated `prop_492_arbitrary_string_holds_core_invariants` (EC-11 proptest).
 
 **Red Gate requirement:** Before the fix, `assert_no_raw_newline_in_text_nodes` fails
 for any multi-line input (all produce raw `\n` in text nodes). This test MUST FAIL

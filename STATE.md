@@ -2,11 +2,11 @@
 document_type: pipeline-state
 version: "2.0"
 status: active
-timestamp: 2026-06-17T00:00:00Z
+timestamp: 2026-06-17T12:00:00Z
 phase: phase-3-tdd-implementation
 project: jira-cli
 mode: BROWNFIELD
-current_step: "Issue #522 EXPANDED two-chokepoint cycle (EC-11 + EC-12): F1-F4 ALL COMPLETE (235 adf tests green @ b999d97). F5 IN PROGRESS over expanded delta. BC-7.2.011 v1.10.0 (EC-11+EC-12). S-522 14 ACs. Code LOCAL ONLY on fix/adf-push-text-cr-normalization-522. DEC-111. PRE-SESSION-CLEAR CHECKPOINT COMMITTED."
+current_step: "Issue #522 F5 Pass-1 findings F-1/F-2/F-3 REMEDIATED. Proptest charset fixed (c70f07d); BC-7.2.011 EC-12 row count 13→12; AC-014 snippet harmonized. 237 adf tests green. F5 counter RESET — 0/3 clean. Ready for 3 FRESH adversarial passes over full EC-11+EC-12 delta. DEC-112."
 current_cycle: "cycle-001"
 dtu_required: false
 phase_2_status: APPROVED
@@ -26,7 +26,7 @@ activation_version: "v0.6.0-dev.2"
 | **Product** | jr (Jira CLI) |
 | **Mode** | BROWNFIELD / Rust |
 | **Target Workspace** | develop → main |
-| **Last Updated** | 2026-06-17: Issue #522 EXPANDED to two chokepoints (EC-11 + EC-12). F1-F4 COMPLETE both paths (235 adf tests green). F5 IN PROGRESS over expanded delta. BC-7.2.011 v1.10.0. S-522 14 ACs. Code local-only @ b999d97. DEC-111. Pre-session-clear checkpoint committed. |
+| **Last Updated** | 2026-06-17: Issue #522 F5 Pass-1 LOW findings F-1/F-2/F-3 REMEDIATED. Proptest charset fix + 2 empty-para shape tests @ c70f07d; BC-7.2.011 EC-12 row count 13→12; AC-014 snippet harmonized. 237 adf tests green. F5 counter RESET 0/3 clean — ready for 3 fresh passes. DEC-112. |
 | **Current Phase** | Phase 3 — TDD Implementation IN PROGRESS — #522 two-chokepoint bug-fix (F5 in progress). develop @ 3ba8ea2. BC 598. NFR 42. ADR 16. Stories **77** (authoritative). |
 | **Next Phase** | Phase 4: Holdout Evaluation (not started) |
 | **Activation HEAD** | 4258202 (v0.6.0-dev.2 released 2026-06-14; develop HEAD 3ba8ea2; v0.5.0 STABLE shipped 2026-06-12) |
@@ -43,7 +43,7 @@ activation_version: "v0.6.0-dev.2"
 | 3: TDD Implementation | IN_PROGRESS — Feature Mode active | — | Wave 0/1/2/3 ALL COMPLETE (32/32) | Wave adversarial: GATE-CLOSED 2026-05-08; Feature Mode ongoing |
 | Feature cycles #110..#499 (19 cycles, 2026-05-11..2026-06-11) | ALL CYCLE CLOSED + MERGED | 2026-06-11 | F1–F7 each | develop BC 583→594. See `cycles/cycle-001/burst-log.md` "Archived Phase Progress Rows". |
 | Issue #492 block-HTML hardBreak (BC-7.2.011) | **CYCLE CLOSED + MERGED** | 2026-06-16 | F1–F7 ALL COMPLETE — CONVERGED | PR #521 → develop @ 3ba8ea2. BC-7.2.011 v1.9.6. 5/5 F7 dims; 150k proptest; 100% mutation; 0 code defects. Follow-up #522 (lone-CR OOS). DEC-109. |
-| Issue #522 ADF CR normalization — EXPANDED two chokepoints (EC-11 + EC-12) | **IN PROGRESS** — F5 over expanded delta | — | F1+F2+F3+F4 ALL COMPLETE | F1: EC-11 (push_text/push_code) + F1-ext: EC-12 (text_to_adf). F2: BC-7.2.011 v1.10.0. F3: S-522 14 ACs. F4: 235 adf tests green @ b999d97 LOCAL. F5: 6 passes on EC-11 (3 clean); EC-12 F5 pass 1 IN FLIGHT — DISCARD. Re-run from scratch. DEC-110+DEC-111. |
+| Issue #522 ADF CR normalization — EXPANDED two chokepoints (EC-11 + EC-12) | **IN PROGRESS** — F5 counter RESET 0/3; ready for 3 fresh passes | — | F1+F2+F3+F4+F5-remediation COMPLETE | F1: EC-11 (push_text/push_code) + F1-ext: EC-12 (text_to_adf). F2: BC-7.2.011 v1.10.0. F3: S-522 14 ACs. F4: 237 adf tests green @ c70f07d LOCAL. F5 Pass-1 LOW findings F-1/F-2/F-3 REMEDIATED: proptest charset + 2 empty-para shape tests (c70f07d); BC EC-12 row count 13→12; AC-014 harmonized. DEC-110+DEC-111+DEC-112. |
 | 4: Holdout Evaluation | not-started | | | |
 | 5: Adversarial Refinement | not-started | | | |
 | 6: Formal Hardening | not-started | | | |
@@ -54,11 +54,10 @@ activation_version: "v0.6.0-dev.2"
 <!-- Keep last 5 rows only. Archive older rows to cycles/cycle-001/burst-log.md. -->
 | Step | Agent | Status | Output |
 |------|-------|--------|--------|
-| Issue #492 cycle CLOSED. PR #521 squash-merged → develop @ 3ba8ea2 (14/14 CI green incl CI Gate; #492 auto-closed). Follow-up #522 filed (pre-existing lone-CR OOS defect). DEC-109. | Agent state-manager | CYCLE CLOSED | develop @ 3ba8ea2. BC 598. Stories 75. |
-| Issue #522 F1+F2+F3 COMPLETE. F1: chokepoint push_text/push_code. F2: BC-7.2.011 v1.9.7 EC-11. F3: S-522 7 ACs. Stories 77. DEC-110. | Agent state-manager | F3 COMPLETE | develop @ 3ba8ea2. BC 598. Stories 77. |
 | Issue #522 EXPANDED mid-cycle (user approval): F1-ext (text_to_adf EC-12 delta analysis). F2 expanded: BC-7.2.011 v1.9.8→v1.9.9→v1.10.0 (EC-11 context-aware fix + EC-12). S-522 expanded 7→14 ACs. F4 COMPLETE both paths (235 adf tests green; cargo test green; clippy clean; fmt clean). Code LOCAL ONLY on fix/adf-push-text-cr-normalization-522 @ b999d97 (6 commits). DEC-111. | Agent state-manager | F4 COMPLETE — F5 next (expanded delta) | worktree .worktrees/S-522 @ b999d97 (LOCAL ONLY). BC 598. Stories 77. |
-| F5 EXPANDED-DELTA Pass-1 COMPLETE — CLEAN (1/3). Hand-traced text_to_adf all adversarial inputs (empty, "\n", "\r", "\r\n", "a\r\rb", "\n\n\n", leading/trailing, "a\nb\n\nc\nd") — ALL INV-1-safe; single-line fast-path byte-identical; empty-content guards present; BC-EC-12-story-AC coherent. No HIGH/MED. 3 LOW findings to fix before re-running (see Blocking Issues). EC-11 markdown-path prior history: 6 fresh passes, Pass-1 found INV-1 heading-\n bug (7968d66), Pass 2-3 swept stale prose, Pass 4-5 CLEAN, final round fixed 2 MED + surfaced EC-12 gap. DEC-111. | Agent state-manager | F5 1/3 CLEAN — 3 LOW FINDINGS TO FIX FIRST | Next: fix F-1/F-2/F-3 (see Blocking Issues), then 3 FRESH clean passes over full EC-11+EC-12 delta. |
-| PRE-SESSION-CLEAR CHECKPOINT committed (DEC-111). All factory artifacts committed to factory-artifacts branch. Cold-start resume plan below. | Agent state-manager | CHECKPOINT COMMITTED | develop @ 3ba8ea2. BC 598. Stories 77. Worktree @ b999d97 LOCAL. |
+| F5 EXPANDED-DELTA Pass-1 COMPLETE — CLEAN (1/3). Hand-traced text_to_adf all adversarial inputs — ALL INV-1-safe; single-line fast-path byte-identical; empty-content guards present; BC-EC-12-story-AC coherent. No HIGH/MED. 3 LOW findings (F-1/F-2/F-3) to fix before re-running. DEC-111. | Agent state-manager | F5 1/3 CLEAN — 3 LOW FINDINGS TO FIX FIRST | Next: fix F-1/F-2/F-3, then 3 FRESH clean passes over full EC-11+EC-12 delta. |
+| PRE-SESSION-CLEAR CHECKPOINT committed (DEC-111). All factory artifacts committed to factory-artifacts branch. | Agent state-manager | CHECKPOINT COMMITTED | develop @ 3ba8ea2. BC 598. Stories 77. Worktree @ b999d97 LOCAL. |
+| F5 Pass-1 findings F-1/F-2/F-3 REMEDIATED. F-1: proptest charset `"[\r\n\t a-zA-Z0-9]{0,64}"` (both proptests, c70f07d) + AC-014 prose harmonized byte-for-byte. F-2: BC-7.2.011 EC-12 row count "13 rows"→"12 rows" (true count = 12). F-3: `test_text_to_adf_empty_string_shape` + `test_text_to_adf_all_newlines_shape` pin `doc>[paragraph>[text("")]]` (235→237 adf tests green). All clean: cargo test green; clippy+fmt clean. DEC-112. | Agent state-manager + test-writer | F5 REMEDIATION COMPLETE — 0/3 clean | worktree .worktrees/S-522 @ c70f07d (LOCAL ONLY). F5 counter RESET. Ready for 3 FRESH adversarial passes. |
 
 ## Decisions Log
 
@@ -72,6 +71,7 @@ activation_version: "v0.6.0-dev.2"
 | DEC-108 | 2026-06-16: Issue #492 F6 hardening COMPLETE (proptest 5-invariant suite, 150k cases; mutation 100% effective, 3 equivalent; cargo audit 346 deps 0 advisories; cargo deny ok; full suite 222 adf green) + F7 DELTA_CONVERGED 5/5 (consistency audit PASS-WITH-NOTES, 3 non-blocking deferred; input-drift PASS for #492 perimeter). Human-authorized merge of PR #521 @ 72fbcb9 (pending CI green). F6 surfaced pre-existing OOS lone-CR defect (heading/codeBlock via generic Event::Text path; pulldown-cmark CR-normalization gap) — follow-up issue filed, #[ignore]d test test_lone_cr_survives_pre_existing_492_oos pinned. NOT a #492 regression. | Feature Mode / #492 F6+F7 | Phase 3 | 2026-06-16 |
 | DEC-109 | 2026-06-16: Issue #492 bug-fix cycle CLOSED. PR #521 squash-merged → develop @ 3ba8ea2 (14/14 CI green incl CI Gate; #492 auto-closed). Full Feature-Mode pipeline: F4 TDD → F5 15-pass/3-clean scoped-adversarial CONVERGED (zero code defects; all findings doc/spec precision) → F6 hardening (proptest 5-invariant 150k-case suite + 100% effective mutation) → F7 5/5 DELTA_CONVERGED + consistency PASS-WITH-NOTES + input-drift PASS. BC-7.2.011 v1.9.6. F6 surfaced pre-existing OOS lone-CR defect → follow-up #522 filed. S-7.02 checklist complete (cycles/cycle-001/lessons.md). LESSON-RESUME-STATE-RECONCILE codified. | Feature Mode / #492 CYCLE CLOSE | Phase 3 | 2026-06-16 |
 | DEC-110 | 2026-06-16: Issue #522 bug-fix cycle OPENED. F1 COMPLETE: chokepoint = AdfBuilder::push_text + push_code in src/adf.rs; blast radius uniformly safe (all generic-path block types; Algorithm B from #492 normalizes independently, no double-normalization). F2 COMPLETE: BC-7.2.011 extended to v1.9.7 with EC-11 (INV-push-text-cr) — push_text/push_code normalize \r\n→\n then lone \r→\n for ALL block types; no new BC; total_bcs 598 unchanged; spec-changelog + BC-INDEX updated; 3 count guards green. F3 COMPLETE: S-522 story (7 ACs anchored to BC-7.2.011/EC-11); STORY-INDEX 76→77 (feature_followup 41→42); sprint-state.yaml S-522 added (ready/F3/leaf). F4 TDD next. | Feature Mode / #522 bug-fix | Phase 3 | 2026-06-16 |
+| DEC-112 | 2026-06-17: Issue #522 F5 Pass-1 LOW findings F-1/F-2/F-3 remediated before re-running adversarial passes. F-1 proptest \n-coverage gap closed (both proptests dotall-charset `"[\r\n\t a-zA-Z0-9]{0,64}"`, code c70f07d) + AC-014 prose harmonized byte-for-byte; F-2 BC-7.2.011 EC-12 table count corrected 13→12 (true=12); F-3 empty-paragraph shape positively pinned (2 new tests `test_text_to_adf_empty_string_shape`+`test_text_to_adf_all_newlines_shape`, 235→237 adf green). F5 counter reset 0/3; next: 3 fresh-context scoped-adversarial passes over full EC-11+EC-12 delta. Code LOCAL @ c70f07d. | Feature Mode / #522 F5 remediation | Phase 3 | 2026-06-17 |
 | DEC-111 | 2026-06-17: Issue #522 cycle EXPANDED mid-cycle (user approval) to TWO chokepoints — EC-11 (push_text/push_code markdown path, original) + EC-12 (text_to_adf plain-text path, sibling defect discovered during F5 traceability pass). F1-ext complete: issue-522-text-to-adf-extension.md. F2 expanded: BC-7.2.011 v1.9.8→v1.9.9→v1.10.0 (EC-11 context-aware contract + EC-12 INV-1-plain-text). F3 expanded: S-522 7→14 ACs. F4 COMPLETE both paths: 235 adf tests green; cargo test green; clippy clean; fmt clean. Code LOCAL ONLY on branch fix/adf-push-text-cr-normalization-522 @ b999d97 (6 commits: baf2a42→0d7775d→7968d66→514d364→35d81bb→b999d97). F5 expanded-delta Pass-1 COMPLETE — CLEAN (1/3); 3 LOW findings (F-1/F-2/F-3) to fix before re-running. Pre-session-clear checkpoint committed to factory-artifacts branch. | Feature Mode / #522 EXPANDED | Phase 3 | 2026-06-17 |
 
 ## Skip Log
@@ -84,9 +84,7 @@ All 7 S-WIN-1..6 + #475 per-AC demos: **Yes — adapted**. All are CI-config / i
 
 | ID | Issue | Severity | Status |
 |----|-------|----------|--------|
-| F-1 [#522-F5-P1] | proptest `prop_text_to_adf_holds_inv1` strategy `".*"` does NOT match `\n` — LF/CRLF/\n\n paths not generatively covered; rustdoc + AC-014 overstate coverage. Fix: change to `string_regex("(?s).*")` or explicit charset. | LOW | OPEN — fix before F5 Pass-2 |
-| F-2 [#522-F5-P1] | BC-7.2.011 v1.10.0 inline changelog + spec-changelog [1.3.21] state "13 rows" in EC-12 behavior table; actual count is 12. Correct prose to "12". | LOW | OPEN — fix before F5 Pass-2 |
-| F-3 [#522-F5-P1] | `text_to_adf("")` and `text_to_adf("\n\n\n")` → empty-paragraph shape unpinned; `assert_no_raw_newline_in_text_nodes` trivially passes on empty. Add explicit positive `assert_eq!` on the `doc > [paragraph > [text("")]]` shape. | LOW | OPEN — fix before F5 Pass-2 |
+| F-1/F-2/F-3 [#522-F5-P1] | Proptest charset gap + BC EC-12 row count + empty-para shape pin. | LOW | **RESOLVED 2026-06-17 (DEC-112)** — archived to cycles/cycle-001/blocking-issues-resolved.md |
 
 ## Drift Items
 
@@ -106,7 +104,7 @@ All 7 S-WIN-1..6 + #475 per-AC demos: **Yes — adapted**. All are CI-config / i
 | WIN-DENY-FRAGILITY | deny.toml canonical-un-skipped-version has no CI guard | 17-entry skip set topology-dependent; future windows-sys update could silently break N-1 invariant. | LOW | OPEN — tracked process-gap |
 | WIN-AUTH-ENVLOCK-POISON | ENV_LOCK uses .lock().unwrap() in auth tests | Latent poison-cascade risk. Apply .unwrap_or_else(|e| e.into_inner()) uniformly. | LOW | OPEN — follow-up |
 | #492-F4-IMPL | F4 implementation carry-forward | RESOLVED — F4 COMPLETE (Algorithm B, 13 block-HTML tests, docs/specs/adf-block-html.md, PR #521 @ 8062b78). | n/a | RESOLVED — F4 DONE |
-| PRE-EXISTING-LONE-CR | heading+codeBlock raw `\r` survival | **IN PROGRESS as #522** — EC-11+EC-12 fix at .worktrees/S-522 @ b999d97. F5 1/3 CLEAN. | MED | IN PROGRESS — #522 |
+| PRE-EXISTING-LONE-CR | heading+codeBlock raw `\r` survival | **IN PROGRESS as #522** — EC-11+EC-12 fix at .worktrees/S-522 @ c70f07d. F5 Pass-1 remediated — F5 counter 0/3. | MED | IN PROGRESS — #522 |
 | F7-001 | CLAUDE.md 'symmetric' wording | CLAUDE.md description-echo section uses 'symmetric'/'asymmetric' wording with minor precision gap noted in F7 consistency audit. Non-blocking cosmetic. Deferred to next CLAUDE.md edit. | LOW | ACCEPTED-DEFERRED (F7 non-blocking) |
 | F7-002 | F2-record archival note | cycles/cycle-001/issue-492/f2-convergence.md archival notation note from F7 audit. No functional gap; reference file exists. | LOW | ACCEPTED-DEFERRED (F7 non-blocking) |
 | F7-003 | BC-7.2.011 "13 tests" phrasing | BC-7.2.011 body uses "13 tests" — acceptable per check-bc-no-numeric-test-counts.sh qualitative policy (PG-365-1); no change required. | LOW | ACCEPTED-DEFERRED (F7 non-blocking) |
@@ -125,7 +123,7 @@ All 7 S-WIN-1..6 + #475 per-AC demos: **Yes — adapted**. All are CI-config / i
 
 ## Convergence Trackers
 
-Full per-issue: `cycles/cycle-001/convergence-trajectory.md`. Current: **[2026-06-17] Issue #522 IN PROGRESS — F5 1/3 CLEAN (expanded delta EC-11+EC-12). 3 LOW findings (F-1/F-2/F-3) to fix before re-running. BC-7.2.011 v1.10.0. S-522 14 ACs. Code LOCAL @ b999d97. BC 598. DEC-111. Prior: #492 CYCLE CLOSED → develop @ 3ba8ea2 (DEC-109).**
+Full per-issue: `cycles/cycle-001/convergence-trajectory.md`. Current: **[2026-06-17] Issue #522 IN PROGRESS — F5 Pass-1 LOW findings F-1/F-2/F-3 REMEDIATED (c70f07d); F5 counter RESET 0/3 clean. BC-7.2.011 v1.10.0. S-522 14 ACs. 237 adf tests green. Code LOCAL @ c70f07d. BC 598. DEC-112. Prior: #492 CYCLE CLOSED → develop @ 3ba8ea2 (DEC-109).**
 
 ## Session Resume Checkpoint
 
@@ -134,27 +132,23 @@ Full per-issue: `cycles/cycle-001/convergence-trajectory.md`. Current: **[2026-0
 | Field | Value |
 |-------|-------|
 | **Date** | 2026-06-17 |
-| **Position** | **Issue #522 EXPANDED two-chokepoint cycle (EC-11 + EC-12): F1-F4 ALL COMPLETE. F5 1/3 CLEAN — 3 LOW findings to fix (F-1/F-2/F-3) before 3 fresh passes. BC-7.2.011 v1.10.0. S-522 14 ACs. Code LOCAL ONLY @ b999d97. DEC-111.** |
+| **Position** | **Issue #522 EXPANDED two-chokepoint cycle (EC-11 + EC-12): F1-F4 ALL COMPLETE. F5 Pass-1 findings F-1/F-2/F-3 REMEDIATED @ c70f07d — F5 counter RESET 0/3. BC-7.2.011 v1.10.0. S-522 14 ACs. 237 adf tests green. Code LOCAL ONLY. DEC-112.** |
 | **develop HEAD** | origin/develop = **3ba8ea2** (PR #521 #492 bug-fix). activation v0.6.0-dev.2. BC **598**. NFR **42**. ADR **16**. Stories **77** (authoritative). |
-| **Convergence counter** | BC: **598**. NFR: **42**. ADR: **16**. Stories: **77** authoritative. jira-e2e env: JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ, JR_E2E_ENABLED=true. Active worktree: .worktrees/S-522 @ b999d97 (LOCAL ONLY — not pushed). |
-| **Next / Pending** | (1) Fix F-1 (proptest strategy dotall), F-2 (EC-12 table row count prose "13"→"12"), F-3 (empty-paragraph positive assert). (2) Run 3 FRESH clean adversarial passes over FULL EC-11+EC-12 delta. (3) F6 hardening. (4) F7 + PR. Fork-release-ops enablement PENDING (DEC-104). |
-| **Resume prompt** | `Read .factory/STATE.md. Issue #522 IN PROGRESS — F5 1/3 CLEAN. Fix F-1/F-2/F-3 (see Blocking Issues) FIRST, then run 3 FRESH adversarial passes over FULL EC-11+EC-12 delta. Worktree: .worktrees/S-522 on fix/adf-push-text-cr-normalization-522 @ b999d97 (LOCAL ONLY). BC-7.2.011 v1.10.0. S-522 14 ACs. develop @ 3ba8ea2. DEC-111. STANDING: do NOT close #429 (DEC-029); OQ-5 open; E2E-PG-4 open; SEC-001 LOW deferred. Fork-release-ops PENDING (DEC-104). jira-e2e: JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ, JR_E2E_ENABLED=true.` |
+| **Convergence counter** | BC: **598**. NFR: **42**. ADR: **16**. Stories: **77** authoritative. jira-e2e env: JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ, JR_E2E_ENABLED=true. Active worktree: .worktrees/S-522 @ c70f07d (LOCAL ONLY — not pushed). |
+| **Next / Pending** | Run 3 FRESH clean adversarial passes over FULL EC-11+EC-12 delta (counter reset 0/3). Then F6 hardening. Then F7 + PR. Fork-release-ops enablement PENDING (DEC-104). |
+| **Resume prompt** | `Read .factory/STATE.md. Issue #522 IN PROGRESS — F5 Pass-1 remediated; F5 counter 0/3. Run 3 FRESH adversarial passes over FULL EC-11+EC-12 delta. Worktree: .worktrees/S-522 on fix/adf-push-text-cr-normalization-522 @ c70f07d (LOCAL ONLY). BC-7.2.011 v1.10.0. S-522 14 ACs. 237 adf tests green. develop @ 3ba8ea2. DEC-112. STANDING: do NOT close #429 (DEC-029); OQ-5 open; E2E-PG-4 open; SEC-001 LOW deferred. Fork-release-ops PENDING (DEC-104). jira-e2e: JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ, JR_E2E_ENABLED=true.` |
 
 ## RESUME PLAN (cold-start, self-contained)
 
-<!-- State snapshot: see Session Resume Checkpoint above. Code: .worktrees/S-522 @ b999d97 LOCAL. BC-7.2.011 v1.10.0. S-522 14 ACs. F5 1/3 CLEAN. -->
+<!-- State snapshot: see Session Resume Checkpoint above. Code: .worktrees/S-522 @ c70f07d LOCAL. BC-7.2.011 v1.10.0. S-522 14 ACs. F5 counter 0/3 CLEAN — all Pass-1 findings remediated. -->
 
 ### Steps (assume ZERO memory)
 
 **Step 1 (BLOCKING):** Run `vsdd-factory:factory-worktree-health`. Then read STATE.md.
 
-**Step 2:** Verify worktree `.worktrees/S-522` exists on branch `fix/adf-push-text-cr-normalization-522` @ `b999d97`. Run `cargo test --lib adf` in worktree — expect 235 green. Run `cargo test` — expect 0 failures.
+**Step 2:** Verify worktree `.worktrees/S-522` exists on branch `fix/adf-push-text-cr-normalization-522` @ `c70f07d`. Run `cargo test --lib adf` in worktree — expect 237 green. Run `cargo test` — expect 0 failures.
 
-**Step 3 (BEFORE re-running F5):** Fix the 3 LOW findings from F5 Pass-1 (route to correct agents):
-- **F-1** (test-writer): change `prop_text_to_adf_holds_inv1` strategy from `string_regex(".*")` to `string_regex("(?s).*")` or explicit `[\r\n\t a-z]{0,12}` charset so `\n` is generatively sampled. Same fix to `prop_492_arbitrary_string_holds_core_invariants` if it has the same gap. Also fix rustdoc + AC-014 prose that overstates proptest `\n` coverage.
-- **F-2** (product-owner): BC-7.2.011 v1.10.0 inline spec-changelog entry + global spec-changelog [1.3.21] say "13 rows" in EC-12 behavior table — actual is 12. Correct prose.
-- **F-3** (test-writer): add `assert_eq!` on the exact `doc > [paragraph > [text("")]]` JSON shape for `text_to_adf("")` and `text_to_adf("\n\n\n")` — positive pin, not just `assert_no_raw_newline` (which is trivially true for empty content).
-After fixing all 3: run `cargo test --lib adf` (must pass) + count guards green.
+**Step 3 (DONE — 2026-06-17 @ c70f07d):** F5 Pass-1 findings F-1/F-2/F-3 all remediated. F-1: proptest charset `"[\r\n\t a-zA-Z0-9]{0,64}"` (both proptests) + AC-014 prose harmonized. F-2: BC-7.2.011 EC-12 row count 13→12. F-3: `test_text_to_adf_empty_string_shape` + `test_text_to_adf_all_newlines_shape` added. 237 adf tests green. DEC-112.
 
 **Step 4 (F5 continued):** Spawn 3 FRESH-CONTEXT adversary passes over the FULL expanded delta (EC-11 push_text/push_code + EC-12 text_to_adf). Require 3 CLEAN consecutive passes. Scrutiny priorities: (a) EC-12 empty-paragraph hazards (`""`, all-blank, all-newline → must NOT yield invalid empty-content paragraph); (b) single-line BYTE-IDENTICAL fast path for 5 call sites; (c) hardBreak trimming not leaving empty content arrays; (d) two-pass CRLF ordering; (e) code↔BC-EC-12↔story-AC-008..014 coherence. Pass-1 already consumed — re-run from Pass-2 (counter reset: need 3 CLEAN total).
 
@@ -172,7 +166,7 @@ Durable follow-ups: see Drift Items section (WIN-AUTH-ENVLOCK-POISON, WIN-DENY-F
 
 | Issue | Title | Status | Priority | Notes |
 |-------|-------|--------|----------|-------|
-| #522 | fix(adf): ADF CR/newline normalization — EC-11 (push_text/push_code) + EC-12 (text_to_adf) | **IN PROGRESS — F5 1/3 CLEAN; fix F-1/F-2/F-3 before 3 fresh passes** | LOW/MED | F1-F4 ALL COMPLETE (235 adf tests green). Code LOCAL @ .worktrees/S-522 branch fix/adf-push-text-cr-normalization-522 @ b999d97. BC-7.2.011 v1.10.0 (EC-11+EC-12). S-522 14 ACs. DEC-110+DEC-111. |
+| #522 | fix(adf): ADF CR/newline normalization — EC-11 (push_text/push_code) + EC-12 (text_to_adf) | **IN PROGRESS — F5 counter 0/3; F5 Pass-1 findings remediated; run 3 FRESH passes** | LOW/MED | F1-F4 ALL COMPLETE (237 adf tests green @ c70f07d). F5 Pass-1 LOW findings F-1/F-2/F-3 RESOLVED (DEC-112). Code LOCAL @ .worktrees/S-522 branch fix/adf-push-text-cr-normalization-522 @ c70f07d. BC-7.2.011 v1.10.0 (EC-11+EC-12). S-522 14 ACs. DEC-110+DEC-111+DEC-112. |
 | #429 | jr_isolated() crypto-random suffix | OPEN | LOW | DEC-029 deferred to human. Do NOT close autonomously. |
 | #400 | Test-hardening + process-gap follow-ups | OPEN — Story A MERGED PR #431. Story B + engine items remain. | LOW | |
 | #372 | cargo-mutants partial baseline | OPEN | LOW | Follow-up from #346 |

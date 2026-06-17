@@ -112,3 +112,13 @@ These rows had Status = RESOLVED / CLOSED / COMPLETE in the Drift Items table an
 | **Lesson** | LESSON-MATRIX-BRANCH-PROTECTION (already codified DEC-096): the durable fix is an aggregator gate job in ci.yml so that required_status_checks membership is decoupled from individual job names. The aggregator (S-CIGATE-1) is that fix — now activated. |
 | **Decision** | DEC-103 |
 | **Related** | DEC-096 (matrix-rename fragility class discovered), DEC-097 (intermediate fix: 8 matrixed contexts), DEC-102 (ci-gate aggregator shipped), DEC-103 (swap complete; fragility class structurally eliminated) |
+
+---
+
+## Resolved Blocking Issues extracted from STATE.md on 2026-06-17 (Issue #522 F5 Pass-1 remediation burst)
+
+| ID | Issue | Severity | Resolved | Resolution |
+|----|-------|----------|----------|------------|
+| F-1 [#522-F5-P1] | proptest `prop_text_to_adf_holds_inv1` strategy `".*"` does NOT match `\n` — LF/CRLF/\n\n paths not generatively covered; rustdoc + AC-014 overstate coverage. | LOW | 2026-06-17 (code @ c70f07d) | test-writer changed both `prop_text_to_adf_holds_inv1` + `prop_492_arbitrary_string_holds_core_invariants` to strategy `"[\r\n\t a-zA-Z0-9]{0,64}"` — explicit charset samples `\r`/`\n`/`\t` generatively. Rustdoc corrected. AC-014 in S-522 prose harmonized byte-for-byte with committed code (snippet `"[\\r\\n\\t a-zA-Z0-9]{0,64}"`; overstated "printable ASCII" corrected to bounded charset description). 235→237 adf tests green; clippy+fmt clean. |
+| F-2 [#522-F5-P1] | BC-7.2.011 v1.10.0 inline spec-changelog [1.10.0] states "13 rows" in EC-12 behavior table; actual count is 12. | LOW | 2026-06-17 (.factory commit this burst) | product-owner corrected .factory/specs/prd/bc-7-output-render.md line ~697 inline spec-changelog [1.10.0] entry: "13 rows" → "12 rows" (verified by counting table rows 379-390 = 12 data rows). Global spec-changelog.md [1.3.21] did NOT contain "13 rows" — no change there. count guards unaffected (check-spec-counts.sh + check-bc-cumulative-counts.sh both pass). |
+| F-3 [#522-F5-P1] | `text_to_adf("")` and `text_to_adf("\n\n\n")` → empty-paragraph shape unpinned; `assert_no_raw_newline_in_text_nodes` trivially passes on empty. Add explicit positive `assert_eq!` on the `doc > [paragraph > [text("")]]` shape. | LOW | 2026-06-17 (code @ c70f07d) | test-writer added two positive shape tests: `test_text_to_adf_empty_string_shape` and `test_text_to_adf_all_newlines_shape`, both asserting `doc > [paragraph > [text("")]]`. 235→237 adf tests green. |
