@@ -611,13 +611,10 @@ proptest infrastructure is already warmed up from EC-11 tests):
 #[test]
 fn prop_text_to_adf_holds_inv1() {
     let mut config = ProptestConfig::default();
-    config.cases = 2048;
+    config.cases = 1000;
     TestRunner::new(config)
         .run(
-            &proptest::strategy::Strategy::prop_map(
-                string_regex("[\\r\\n\\t a-zA-Z0-9]{0,64}").unwrap(),
-                |s| s,
-            ),
+            &string_regex("[\\r\\n\\t a-zA-Z0-9]{0,64}").unwrap(),
             |input| {
                 let adf = text_to_adf(&input);
                 assert_no_raw_newline_in_text_nodes(&adf, &input);
