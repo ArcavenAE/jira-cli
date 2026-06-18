@@ -142,6 +142,18 @@ These rows had Status = RESOLVED / CLOSED / COMPLETE in the Drift Items table an
 
 ---
 
+## Resolved Drift Items extracted from STATE.md on 2026-06-18 (S-FORK-OPS-SIGN-1 CYCLE CLOSED, DEC-121)
+
+| ID | Area | Description | Severity | Status | Resolved Date |
+|----|------|-------------|----------|--------|---------------|
+| FORK-OPS-SIGN-INJECTION | sign-and-publish.yml | CWE-77: github.event.workflow_run.head_branch unquoted in shell with Apple secrets. All inline attacker-controllable context across both signing workflows env-bound. Structural-scope rewrite in F5 surfaced 23 injection sites vs the original 5 hardcoded. | HIGH | **RESOLVED — PR #535 → 1a2a79b (2026-06-18)** | 2026-06-18 |
+| FORK-OPS-ALPHA-RACE | sign-and-publish.yml | Non-atomic alpha tag creation (TOCTOU). Atomic alpha-tag via `gh api git/refs` (HTTP 201/422 protocol); `--cleanup-tag` purge dropped. | HIGH | **RESOLVED — PR #535 → 1a2a79b (2026-06-18)** | 2026-06-18 |
+| FORK-OPS-NIT-USECROSS-GUARD | sign-and-publish.yml | `rustup target add` step lacked `if: !matrix.use_cross` guard. Was already satisfied by PR #529 (confirmed). Defensive parity step added to alpha-build. | LOW | **RESOLVED — PR #535 → 1a2a79b (2026-06-18)** | 2026-06-18 |
+| FORK-OPS-NIT-TMP-PREDICTABLE | sign-and-publish.yml | Predictable /tmp/cs.out + /tmp/spctl.out paths in verify steps (CWE-377/362). Replaced with mktemp + trap EXIT. | LOW | **RESOLVED — PR #535 → 1a2a79b (2026-06-18)** | 2026-06-18 |
+| FORK-OPS-NIT-PIPEFAIL | sign-and-publish.yml | `set -e` without `set -o pipefail` on codesign \| tee chains (CWE-390). Changed to `set -eo pipefail` in all 3 verify locations. | LOW | **RESOLVED — PR #535 → 1a2a79b (2026-06-18)** | 2026-06-18 |
+
+---
+
 ## Resolved Drift Items extracted from STATE.md on 2026-06-18 (S-TESTTOOL-1 CYCLE CLOSED, DEC-120)
 
 | ID | Area | Description | Severity | Status | Resolved Date |

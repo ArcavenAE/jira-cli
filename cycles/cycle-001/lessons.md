@@ -4213,6 +4213,112 @@ _Status: [codified]_
 
 ---
 
+## S-FORK-OPS-SIGN-1: LESSON-F2-PIECEWISE — Multi-step atomic sequences must be one worked control-flow block [codified]
+
+**Lesson:** When a spec describes a multi-step atomic sequence (e.g., tag reservation with retry),
+write it as a single worked control-flow block — a numbered sequence that shows intermediate state
+explicitly, including what happens at each branch (HTTP 201 → continue, HTTP 422 → increment SEQ
+and retry, other → exit 1). Do NOT scatter normative statements across separate numbered paragraphs
+("Step 1: increment SEQ" in one paragraph, "Step 2: retry" in another). Piecewise paragraphs
+create gaps where intermediate state assumptions are implicit, enabling self-defeating ordering
+bugs that survive multiple review passes.
+
+**Evidence:** During F2 round 4, the adversary identified that the `--cleanup-tag` purge was
+positioned AFTER the atomic `gh api git/refs` call — the spec's piecewise paragraphs had described
+the two operations in separate sections, leaving the ordering implicit. The self-defeating sequence
+(reserve then delete the reservation) survived rounds 1–3 undetected.
+
+**Fix pattern:** For any sequence with ≥2 steps where order is invariant-critical, write:
+```
+1. Bind env: ...
+2. Attempt X → if success → continue; if conflict → do Y; if other → exit 1
+3. Loop with bounded counter N=10
+4. On exhaustion → exit 1 with diagnostic
+5. Export result
+```
+
+**Application scope:** Any spec with "atomic", "reservation", "retry loop", or "create-or-fail"
+semantics. Also applies to: bulk-transition sequences (step A then step B, not "step A" / "step B"
+in separate normative clauses).
+
+_Recorded: 2026-06-18 — S-FORK-OPS-SIGN-1 F2 round-4 catch._
+_Tagged: [process-gap] [F2] [spec-authorship] [atomic-sequences] [codified]_
+_Status: [codified]_
+
+---
+
+## S-FORK-OPS-SIGN-1: LESSON-INJECTION-GUARD-SCOPE — Injection guards must define their coverage boundary for indirection (composite actions) [codified]
+
+**Lesson:** A CI injection guard that uses a hardcoded list of job names or a hardcoded list of
+injection sites has a structural false-negative class: any job or file added after the guard was
+written is unchecked. The guard's coverage boundary must be explicitly defined and tested.
+
+**Evidence:** The initial `check-signing-workflow-injection.sh` in F4 implementation used a
+hardcoded list of 5 injection sites. F5 adversarial review found the guard had a live false-negative:
+structural scope (every job with secrets/contents:write permissions in `sign-and-publish.yml` and
+`backfill-release.yml`) covered 23 injection sites, not 5. The 18 additional sites were existing jobs
+with write permissions that were not enumerated in the hardcoded list.
+
+The **fix** was to rewrite the guard to use structural scope: YAML-parse every job block and check
+for `secrets: write` OR `contents: write` in permissions, then scan all `run:` bodies in those jobs.
+This is the **default-deny** approach: any new write-permission job is checked automatically.
+
+**Corollary (OBS-1 / FORK-OPS-COMPOSITE-ACTION-SCAN):** The structural scope still does not follow
+`uses: ./` local composite actions. If a composite action is added to a write-permission job, its
+`run:` bodies are not scanned by the current guard. This is a justified deferral (no composite
+actions exist today), but the guard's documentation and comments must state this boundary explicitly
+so a future author adding a composite action knows to update the guard. Tracked as drift item
+FORK-OPS-COMPOSITE-ACTION-SCAN.
+
+**Required pattern for any CI injection guard:**
+1. Define the coverage boundary explicitly in a comment: "Covers: all jobs with secrets/contents:write
+   in files X and Y. Does NOT cover: composite actions (`uses: ./`), third-party actions, or
+   env/if/with keys."
+2. Negative self-test fixture: confirm the guard WOULD fire on a known-bad input (exit 1 on fixture).
+   A guard that always exits 0 is worse than no guard — it provides false assurance.
+3. Positive-coverage assertion: print total run-blocks scanned. An unexpectedly-low count is visible.
+
+_Recorded: 2026-06-18 — S-FORK-OPS-SIGN-1 F5 2×CRITICAL catch._
+_Tagged: [process-gap] [F5] [security] [injection-guard] [coverage-boundary] [codified]_
+_Status: [codified]_
+
+---
+
+## S-FORK-OPS-SIGN-1 S-7.02 Cycle-Closing Checklist (2026-06-18)
+
+**Cycle:** S-FORK-OPS-SIGN-1 fork-ops signing-workflow hardening. Confirmed CLOSED.
+
+All process-gap findings from this cycle have either a codified lesson or a tracked drift item:
+
+| Finding | Disposition | Status |
+|---------|-------------|--------|
+| FORK-OPS-COMPOSITE-ACTION-SCAN [process-gap] (F5 OBS-1) | Drift item added (LOW; latent — no composite actions exist; guard boundary comment added) | ✓ TRACKED |
+| FORK-OPS-HEADBRANCH-EMPTY-GUARD (F6 SEC-008 theoretical) | Drift item added (LOW, OPEN — future story) | ✓ TRACKED |
+| FORK-OPS-ALPHA-ORPHAN-CLEANUP | Drift item added (LOW, OPEN — future housekeeping) | ✓ TRACKED |
+| LESSON-F2-PIECEWISE | Codified in lessons.md + STATE.md standing constraints | ✓ CODIFIED |
+| LESSON-INJECTION-GUARD-SCOPE | Codified in lessons.md (coverage boundary + negative fixture pattern) | ✓ CODIFIED |
+
+**Evidence that FULL VSDD pays off on CI-only security changes (DEC-121):**
+- F5 caught a CRITICAL guard false-negative: hardcoded scope of 5 injection sites vs 23 structural
+  sites. A naive "the guard exists and runs" review would have shipped a false-security check.
+- F5 also caught a CRITICAL negative-fixture gap: guard that always exits 0 passed CI, providing
+  false assurance. Without adversarial review, this would have been invisible.
+- F2 caught a self-defeating --cleanup-tag ordering bug in the spec itself (round 4), before any
+  implementation. Piecewise spec authorship was the root cause.
+- Total: 2×CRITICAL + 1×HIGH on a story classified as `severity: HIGH, scope: ci-workflow-only`.
+
+**Count guards (S-7.02 defensive sweep):** BC 599 unchanged. No new BC headings. No product src/ changes. Stories 80→81.
+
+**develop HEAD at close:** 1a2a79b (PR #535 squash-merged 2026-06-18).
+
+**Verdict: S-7.02 CHECKLIST SATISFIED. S-FORK-OPS-SIGN-1 CYCLE CLOSED.**
+
+_Recorded: 2026-06-18 — S-FORK-OPS-SIGN-1 cycle close-out. State-manager._
+_Tagged: [s-7.02] [feature-mode] [cycle-close] [checklist]_
+_Status: [CLOSED]_
+
+---
+
 ## S-TESTTOOL-1 S-7.02 Cycle-Closing Checklist (2026-06-18)
 
 **Cycle:** S-TESTTOOL-1 test-tooling hardening (MAINT-MUTANTS-GLOBS-01 + #526-F6-KEYRING-GATE). Confirmed CLOSED.

@@ -1,5 +1,7 @@
-tests/e2e_live.rs
-.github/workflows/e2e.yml
-.github/workflows/e2e-sweeper.yml
-CLAUDE.md
-docs/specs/e2e-test-enhancements.md
+# affected-files.txt — fork-ops-signing-hardening (2026-06-18)
+# Format: <change-type> <file>
+# Change types: MODIFIED, NEW
+
+MODIFIED .github/workflows/sign-and-publish.yml
+MODIFIED .github/workflows/backfill-release.yml
+MODIFIED docs/specs/fork-friendly-release-ops.md

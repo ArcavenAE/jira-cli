@@ -1,0 +1,6 @@
+# Affected Files — S-FORK-OPS-SIGN-1
+
+.github/workflows/sign-and-publish.yml
+scripts/check-signing-workflow-injection.sh   (NEW)
+.github/workflows/ci.yml                      (ci-gate.needs: 6→7)
+tests/ci_gate_completeness.rs                 (6→7 job count)

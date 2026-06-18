@@ -1,77 +1,335 @@
-# Delta Analysis Report — Live-Jira E2E Test Suite Enhancements
+---
+document_type: phase-f1-delta-analysis
+feature: fork-ops-signing-hardening
+intent: bug-fix
+severity: HIGH
+feature_type: infrastructure
+scope: standard
+trivial: false
+created: 2026-06-18
+blocking_decision: DEC-104
+---
 
-**Feature:** Live-Jira E2E test suite enhancements (regression-safety + portability hardening)
-**Design spec:** docs/specs/e2e-test-enhancements.md (committed, branch test/e2e-enhancements @ d0f6ba3)
-**Research:** .factory/research/e2e-enhancement-best-practices.md (Perplexity-primary, cited)
-**Date:** 2026-05-29
-**Mode:** BROWNFIELD / Feature Mode (F1–F7)
+# Phase F1 Delta Analysis: Fork-Ops Signing Hardening
+
+## Feature Summary
+
+Resolve two HIGH-severity drift items (FORK-OPS-SIGN-INJECTION + FORK-OPS-ALPHA-RACE)
+that block signing enablement (DEC-104), and fold in three related LOW nits from the same
+file set. All five items are confined to two GitHub Actions workflow files:
+
+- `.github/workflows/sign-and-publish.yml`
+- `.github/workflows/backfill-release.yml`
+
+Both files are INERT in the canonical repo (`vars.SIGNING_ENABLED` is unset). The fix
+unblocks downstream fork signing enablement without affecting CI in the canonical repo.
+
+---
 
 ## Classification
-| Dimension | Value |
-|-----------|-------|
-| Feature type | infrastructure (test-only) |
-| Intent | enhancement |
-| Trivial scope? | NO — multiple new test functions + new CI workflow; full F1–F7 |
-| BC delta | EMPTY (no new BCs; covers existing contracts) — same as S-E2E-1/S-E2E-2 |
-| src/ delta | ZERO (preserves S-E2E-1/S-E2E-2 precedent) |
-| Architecture change | NO (no ADR/arch-doc update; .factory/specs/architecture absent) |
 
-## Impact Assessment
-| Layer | Impact |
-|-------|--------|
-| PRD / BCs | No change. Tests VERIFY existing BCs across bc-2, bc-3, bc-5, bc-7, error-taxonomy. |
-| Architecture | No change. |
-| UX | N/A (infrastructure). |
-| Stories | 3 new stories (S-E2E-3/4/5). |
-| Tests | tests/e2e_live.rs MODIFIED (deepen + add); new always-run unit tests for pure helpers. |
-| Verification | E2E tests are the verification artifact. |
-| CI | e2e.yml MODIFIED (failure classification); e2e-sweeper.yml NEW. |
+| Field | Value |
+|-------|-------|
+| Intent | `bug-fix` (security hardening) |
+| Feature type | `infrastructure` (CI/CD workflow) |
+| Scope | `standard` (two files, not trivial — two HIGH security items require careful reasoning) |
+| Severity | HIGH (CWE-77 shell injection with Apple secrets in scope; TOCTOU race on tag creation) |
+| Expedited | No — workflows are INERT in canonical repo; no production risk |
+| Blocking | DEC-104 (fork signing enablement) |
 
-## Component Impact Table
-| Component | Type | Rationale |
-|-----------|------|-----------|
-| tests/e2e_live.rs | MODIFIED | M1 deepen assertions; M2 ~7-10 new gated tests; M3 poll_jql + matchers + transient classifier + secret-leak guard + leak log. |
-| .github/workflows/e2e.yml | MODIFIED | M3: 401-vs-connection failure classification; optional JR_E2E_POLL_* env. |
-| .github/workflows/e2e-sweeper.yml | NEW | M3: daily non-blocking sweeper; concurrency: jira-e2e. |
-| CLAUDE.md (AI agent notes) | MODIFIED | Mandatory co-change: JR_E2E_POLL_* JR_* table entry (doc-fallout rule #335/#357). |
-| src/* | DEPENDENT (regression baseline) | error.rs exit codes read-only; bulk.rs is exemplar only. NOT modified. |
-| tests/issue_view_errors.rs, tests/issue_list_errors.rs | DEPENDENT | Read for exit-code constants; NOT modified. |
+---
 
-## Poll-Budget Seam Verdict
-JR_E2E_POLL_* is TEST-LAYER ONLY. Unlike JR_BULK_* (which the jr binary reads inside its own async loop, requiring a #[cfg(debug_assertions)] src/ read site), poll_jql is a test-side loop that invokes jr as a subprocess repeatedly; the budget is owned by tests/e2e_live.rs and read via std::env::var there. ZERO src/ change.
+## Items to Fix
 
-## BC Coverage Map (all VERIFIED, none new)
-BC-2.2.028 (list default fields); BC-2.3.032 (issue view raw JSON); BC-2.4.039 (comments); BC-2.5.043-046 (changelog); BC-3.1.003 (assign --me); BC-3.2.001 (single-key move idempotency); BC-3.4.012/013 (edit echo asymmetry #398); BC-3.6.001/004/005 (link/unlink/link-types); BC-5.1.001 (board list); BC-5.2.005 (sprint current); BC-6.2.051 (pagination dedup JRACLOUD-95368); BC-7.1.005 (JSON error shape); BC-7.3.006 (exit-code mapping); BC-X.3.002 (401→exit2); BC-X.5.001 (worklog add); BC-X.6.004 (team list). NOTE: BC ids to be confirmed against BC-INDEX.md during F3 story authoring — list is indicative of coverage intent.
+### HIGH-1: FORK-OPS-SIGN-INJECTION (CWE-77)
+
+**File:** `.github/workflows/sign-and-publish.yml`
+**Job:** `stable-sign`
+**Step:** "Extract release metadata" (lines 358–378)
+
+**Current injection point (line 361):**
+```yaml
+      - name: Extract release metadata
+        id: meta
+        run: |
+          TAG="${{ github.event.workflow_run.head_branch }}"
+```
+
+`${{ github.event.workflow_run.head_branch }}` is interpolated inline into the shell
+`run:` block. A branch name containing shell metacharacters (semicolons, backticks,
+`$()`) could execute arbitrary commands inside a runner that has Apple Developer ID
+secrets (APPLE_CERTIFICATE_P12, APPLE_SIGNING_IDENTITY, etc.) and `contents: write`
+permissions in scope via the `release` environment.
+
+**Trigger context:** This job runs on `workflow_run` events from the "Release" workflow
+(`release.yml`), which fires on `push: tags: ["v*"]`. In the canonical repo, the
+`stable-sign` job is additionally gated on `vars.SIGNING_ENABLED == 'true'` (line 339),
+making it fully inert. However, the injection vulnerability is real and must be fixed
+before SIGNING_ENABLED is enabled (DEC-104).
+
+**Standard mitigation (GitHub recommended pattern):** pass the untrusted value through an
+`env:` block and reference it as a quoted shell variable (`"$BRANCH"`), never inline
+`${{ }}` in the shell body. GitHub's "Understanding the risk of script injections"
+documentation (https://docs.github.com/en/actions/security-for-github-actions/security-guides/security-hardening-for-github-actions#understanding-the-risk-of-script-injections)
+explicitly states this as the canonical fix: use `env:` to bind context values before the
+`run:` block, then reference `$ENV_VAR` (never `${{ expression }}`) inside the script.
+
+**Proposed fix:**
+```yaml
+      - name: Extract release metadata
+        id: meta
+        env:
+          HEAD_BRANCH: ${{ github.event.workflow_run.head_branch }}
+        run: |
+          TAG="$HEAD_BRANCH"
+          VERSION="${TAG#v}"
+          ...
+```
+
+---
+
+### HIGH-2: FORK-OPS-ALPHA-RACE (TOCTOU)
+
+**File:** `.github/workflows/sign-and-publish.yml`
+**Job:** `alpha-sign`
+**Step:** "Generate alpha version" (lines 142–158)
+
+**Current check-then-create logic (lines 145–156):**
+```yaml
+        run: |
+          DATE=$(date -u +%Y%m%d)
+          # Count existing tags today (more reliable than releases)
+          EXISTING=$(git ls-remote --tags origin "refs/tags/alpha-${DATE}.*" | wc -l | tr -d ' ')
+          SEQ=$((EXISTING + 1))
+          TAG="alpha-${DATE}.${SEQ}"
+          VERSION="${TAG}"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "Alpha release: $TAG"
+
+          # Clean up any stale release/tag with the same name
+          gh release delete "$TAG" --cleanup-tag --yes 2>/dev/null || true
+```
+
+The sequence is: (1) count existing tags to compute SEQ; (2) construct TAG; (3) delete
+any existing release/tag with that name; (4) later create a new release with that tag.
+Between steps 1 and 4, a concurrent develop push could trigger a second `alpha-sign`
+run that computes the same SEQ (same count at observation time), generating the same tag.
+Both runs delete the "stale" release the other just created, producing race-to-last-write
+semantics.
+
+**Mitigation:** Use atomic tag creation. Attempt `git push origin
+refs/tags/$TAG:refs/tags/$TAG` and treat a non-zero exit (remote already has the tag) as
+a collision signal — increment SEQ and retry. Git's remote tag push is atomic at the
+server level: the remote atomically reserves the ref or rejects the push. A retry loop
+eliminates the check-decide-write window. The existing `gh release delete` cleanup can be
+retained as a best-effort stale-release purge but must run AFTER the atomic tag is
+reserved.
+
+---
+
+### LOW-1: FORK-OPS-NIT-USECROSS-GUARD
+
+**File:** `.github/workflows/sign-and-publish.yml`
+**Job:** `alpha-build`
+**Step:** "Install Rust" (lines 52–55)
+
+`sign-and-publish.yml`'s `alpha-build` job uses `dtolnay/rust-toolchain` with
+`targets: ${{ matrix.target }}` but has no defensive `rustup target add` step.
+The `release.yml` pattern (line 43–45) adds:
+```yaml
+      - name: Ensure cross-target installed (defensive)
+        if: ${{ !matrix.use_cross }}
+        run: rustup target add ${{ matrix.target }}
+```
+Since `alpha-build` only builds native macOS targets and does not use `cross`, the
+`use_cross` matrix field is absent — the guard simplifies to unconditional. Adding a
+`rustup target add` step achieves defensive parity with `release.yml`.
+
+---
+
+### LOW-2: FORK-OPS-NIT-TMP-PREDICTABLE (CWE-377/362)
+
+**Files:** `.github/workflows/sign-and-publish.yml` (both `alpha-sign` and `stable-sign`
+verify steps), `.github/workflows/backfill-release.yml` (`sign` verify step)
+
+The "Verify signatures" steps added by PR #530 (commit 99f212d) use predictable paths:
+```bash
+set -e
+codesign -dvv "$BIN" 2>&1 | tee /tmp/cs.out
+spctl --assess --type install --verbose=4 "$PKG" 2>&1 | tee /tmp/spctl.out
+```
+
+On ephemeral GitHub Actions macOS runners, symlink attacks (CWE-362) and temp-file
+collisions (CWE-377) are theoretical, but the pattern is incorrect. Fix: replace with
+`mktemp` and clean up via `trap`:
+```bash
+CS_OUT=$(mktemp)
+SPCTL_OUT=$(mktemp)
+trap 'rm -f "$CS_OUT" "$SPCTL_OUT"' EXIT
+codesign -dvv "$BIN" 2>&1 | tee "$CS_OUT"
+```
+
+---
+
+### LOW-3: FORK-OPS-NIT-PIPEFAIL (CWE-390)
+
+**Files:** same three verify steps as LOW-2
+
+The verify step scripts use `set -e` without `set -o pipefail`:
+```bash
+set -e
+codesign -dvv "$BIN" 2>&1 | tee /tmp/cs.out
+```
+
+Without `pipefail`, if `codesign` exits non-zero, the pipe `codesign ... | tee` still
+succeeds because `tee` exits 0. `set -e` only catches the last pipeline command.
+A failing `codesign` silently produces empty output; subsequent `grep` checks
+misattribute the failure. Fix: change `set -e` to `set -eo pipefail`.
+
+---
+
+## Impact Assessment Table
+
+| Artifact | Status | Notes |
+|----------|--------|-------|
+| PRD (BC-S.SS.NNN) | UNCHANGED | No existing BCs cover signing workflow behavior. No new BCs needed — this is a CI/CD workflow fix, not a `jr` product behavioral contract. |
+| Architecture | UNCHANGED | No `src/` changes. All `.factory/specs/architecture/` files are unaffected. |
+| NFR catalog | UNCHANGED | No NFRs cover signing workflow security. No new NFRs needed. |
+| UX / design | N/A | Infrastructure-only change. |
+| Stories | NEW (1 story) | `docs/specs/fork-friendly-release-ops.md` needs a security notes delta. One tracking story S-FORK-OPS-SIGN-1 recommended. |
+| Tests (Rust) | UNCHANGED | No Rust test files are touched. `tests/e2e_cli_surface_guard.rs` is unaffected. |
+| Verification properties (VP-NNN) | UNCHANGED | No VPs cover CI/CD workflow files. |
+| `docs/specs/fork-friendly-release-ops.md` | MODIFIED | Add "Security constraints" section: env-var binding requirement for `workflow_run` context values; atomic tag loop pattern for alpha channel. |
+
+---
+
+## Files Changed Table
+
+| File | Change Type | Items |
+|------|-------------|-------|
+| `.github/workflows/sign-and-publish.yml` | MODIFIED | HIGH-1 (env-var binding), HIGH-2 (atomic tag), LOW-1 (rustup guard), LOW-2 (mktemp), LOW-3 (pipefail) |
+| `.github/workflows/backfill-release.yml` | MODIFIED | LOW-2 (mktemp in verify step), LOW-3 (pipefail in verify step) |
+| `docs/specs/fork-friendly-release-ops.md` | MODIFIED | Security constraints section |
+
+---
+
+## Files NOT Changed (Regression Baseline)
+
+**All Rust source (`src/`):** No changes. The `jr` binary behavior, API calls, output
+rendering, authentication, and all product features are completely unchanged.
+
+**All Rust tests (`tests/`):** No changes. The full cargo test suite (unit, integration,
+property-based, snapshot, E2E) is unaffected. The workflows being modified are INERT in
+the canonical repo (`SIGNING_ENABLED` unset), so no test exercises them.
+
+**All other workflows:** `ci.yml`, `release.yml`, `e2e.yml`, `e2e-sweeper.yml`,
+`dependency-review.yml`, `release-gap-fill.yml`, `scorecards.yml`, `sync-upstream.yml`
+are all unchanged. The `release.yml` → `sign-and-publish.yml` triggering relationship
+is preserved: `sign-and-publish.yml` continues to listen on `workflow_run: workflows:
+["Release"]`; the fix only changes the internal shell logic, not the `on:` trigger or
+workflow name. No other workflow references `sign-and-publish.yml` or
+`backfill-release.yml` by name.
+
+**CI Gate:** The `ci-gate` required status check is unaffected. The modified workflows
+do not run in the canonical repo.
+
+**All spec files except fork-friendly-release-ops.md:** All BC files, NFR catalog,
+holdout scenarios, ADRs, and all `.factory/specs/architecture/` files are unchanged.
+
+---
 
 ## Regression Risk Assessment
-| Risk | Level | Detail |
-|------|-------|--------|
-| test_every_ignored_test_has_gate_guard (always-run meta-guard) | HIGH | Every new #[ignore] test MUST early-return via e2e_enabled() before any live call, or this fails in ci.yml. |
-| always-run gate tests | HIGH | Un-gated live call surfaces immediately in normal cargo test. |
-| extract_fn_body / new pure-helper unit tests | MEDIUM | New helpers (poll_jql, matchers) need their own always-run unit tests. |
-| e2e-sweeper.yml concurrency | LOW | Must share concurrency: jira-e2e; must not delete (close-only). |
-| CLAUDE.md JR_* doc | LOW | JR_E2E_POLL_* documented same commit as the seam. |
-| src/, Cargo.toml, BC count surfaces, ci.yml, release.yml | NONE | Regression baseline — not touched. |
 
-## Error-Path Exit-Code Contract (M2 §6.3)
-Implementer MUST read tests/issue_view_errors.rs + tests/issue_list_errors.rs and reuse pinned codes; do NOT invent. From src/error.rs::exit_code(): 404→1 (ApiError), 400 malformed JQL→1 (ApiError, freeform --jql not client-validated), 401 bad auth→2 (NotAuthenticated). Assert exit code + JSON error-field presence only; never message substrings (JRACLOUD-95368 lesson).
+| Risk Type | Level | Rationale |
+|-----------|-------|-----------|
+| Product regression | NEAR-ZERO | No `src/` changes. Workflows are INERT in canonical repo. All Rust tests pass against unchanged code. |
+| CI regression | NEAR-ZERO | `ci.yml` and `ci-gate` are unaffected. The two modified workflows do not participate in the CI gate. |
+| Architecture regression | NONE | No architectural changes. |
+| Security sensitivity | HIGH | Even though product-regression risk is near-zero, the items are security-critical: CWE-77 injection with Apple Developer ID secrets in scope must be reviewed with full security diligence before SIGNING_ENABLED is set. |
+| Release triggering relationship | NONE | `release.yml` → `sign-and-publish.yml` `workflow_run` trigger is unchanged. |
+| Concurrent alpha run behavior | IMPROVED | After the alpha-race fix, concurrent develop pushes resolve deterministically via atomic tag creation. |
 
-## Recommended Story Breakdown (3 stories, 13 SP)
-| Story | Scope | SP |
-|-------|-------|----|
-| S-E2E-3 | M1 + Foundation (poll_jql, matchers, transient classifier, JR_E2E_POLL_* seam, deepen existing test bodies, always-run helper unit tests) | 5 |
-| S-E2E-4 | M2 (new read/discovery tests, write/behavioral tests: assign/link/unlink/dry-run/bulk-move/pagination-dedup, error/exit-code paths) | 5 |
-| S-E2E-5 | M3 (e2e-sweeper.yml, e2e.yml failure classification, secret-leak guard, leak-detection log, CLAUDE.md JR_E2E_POLL_* docs) | 3 |
+---
 
-Dependency: S-E2E-3 (foundation) → S-E2E-4 (uses poll_jql for pagination dedup). S-E2E-5 independent of both but logically last.
+## Security Validation
 
-## Regression Baseline (files NOT changed)
-All of src/; Cargo.toml; Cargo.lock; deny.toml; .github/workflows/ci.yml; .github/workflows/release.yml; tests/common/; BC-INDEX.md; CANONICAL-COUNTS.md; tests/issue_view_errors.rs; tests/issue_list_errors.rs.
+### CWE-77 Mitigation (FORK-OPS-SIGN-INJECTION)
 
-## Recommended scope for F2–F7
-- F2 (spec evolution): EMPTY BC delta — confirm no PRD/BC change; record E2E coverage intent only. Lightweight.
-- F3 (incremental stories): author S-E2E-3/4/5 per breakdown above.
-- F4 (delta implementation): TDD per story; full regression suite (1490+/0) as safety net; zero src/.
-- F5 (scoped adversarial): 3-clean bar on the test/CI delta (prior E2E F5 caught 6 CRITICALs — essential even for zero-src stories).
-- F6 (hardening): mutation N/A (zero src/); security scan on new CI workflow (harden-runner allowlist, secret handling).
-- F7 (delta convergence): + full regression validation.
+The proposed env-var mitigation is the GitHub-documented standard. GitHub's official
+security hardening guide ("Security hardening for GitHub Actions", section "Understanding
+the risk of script injections") explicitly states:
+
+> "Instead of using `${{ expression }}` in your scripts, consider using an intermediate
+> environment variable."
+
+This is the same pattern recommended by StepSecurity's actionlint and enforced by the
+`zizmor` static analysis tool. Binding the untrusted value to an env var means the shell
+receives it as a literal environment variable value — shell parsing of the `run:` block's
+string interpolation happens before env var expansion, so metacharacters in the value are
+never interpreted as shell syntax.
+
+Note: a scan of all `${{ }}` expressions in `stable-sign`'s shell scripts should be
+performed during F5 to confirm no other `workflow_run` context values are inline-expanded.
+The `head_branch` on line 361 is the identified injection point, but sibling fields
+(e.g., `head_sha`, `head_commit.message`) should be verified as either safe (used only
+in non-shell contexts like `uses:` parameters) or also moved to env vars.
+
+### TOCTOU Mitigation (FORK-OPS-ALPHA-RACE)
+
+Atomic tag push (`git push origin TAG:TAG`) eliminates the check-then-create window.
+Git's remote tag creation is atomic at the server level: two concurrent runs attempting
+to push the same tag name will have one succeed and one receive a "tag already exists"
+rejection. A retry loop that increments SEQ until the push succeeds is the canonical
+pattern. `git push --force` must NOT be used (would defeat atomicity); `--force-with-lease`
+does not help for new tags. The existing `gh release delete --cleanup-tag` can be kept as
+a best-effort purge on the retry path, after the new tag is successfully reserved.
+
+---
+
+## Existing Spec Coverage
+
+No existing BC-S.SS.NNN identifiers cover signing workflow behavior. The fork-ops
+infrastructure is documented in:
+- `docs/specs/fork-friendly-release-ops.md` (authoritative spec for this subsystem)
+- `.factory/STATE.md` Drift Items: FORK-OPS-SIGN-INJECTION, FORK-OPS-ALPHA-RACE,
+  FORK-OPS-NIT-USECROSS-GUARD, FORK-OPS-NIT-TMP-PREDICTABLE, FORK-OPS-NIT-PIPEFAIL
+- `.factory/research/fork-release-ops-integration.md`
+- `.factory/research/issue-210-macos-signing-notarize.md`
+
+No new BC-S.SS.NNN identifiers are appropriate for CI/CD workflow behavior.
+Do NOT invent FR-NNN identifiers.
+
+---
+
+## Recommended Scope for F2–F7
+
+### F2 (Spec Evolution)
+Minimal. Update `docs/specs/fork-friendly-release-ops.md` with a "Security constraints"
+section: (1) all `workflow_run` context values that enter shell scripts MUST be bound via
+`env:`; (2) alpha tag generation uses an atomic push loop — read-decide-write is
+prohibited. No BC, NFR, or architecture document changes.
+
+### F3 (Stories)
+One story: `S-FORK-OPS-SIGN-1` — fix all five items in two workflow files + update
+spec. ACs trace to Drift Item IDs (FORK-OPS-SIGN-INJECTION, FORK-OPS-ALPHA-RACE,
+FORK-OPS-NIT-USECROSS-GUARD, FORK-OPS-NIT-TMP-PREDICTABLE, FORK-OPS-NIT-PIPEFAIL).
+Delivery includes STATE.md Drift Item status updates.
+
+### F4 (Delta Implementation)
+Single-story YAML edit. No Rust code changes. One PR for both workflow files + spec doc.
+
+### F5 (Adversarial Refinement)
+1 round max. Focus: (a) scan ALL `${{ }}` inline expansions in `stable-sign` and
+`alpha-sign` shell scripts, not just line 361; (b) verify retry loop has a maximum bound
+to prevent infinite loops; (c) confirm `mktemp` temp files cleaned up on error paths;
+(d) verify `pipefail` interacts correctly with existing `|| { ...; exit 1; }` patterns.
+
+### F6 (Formal Hardening)
+Minimal. No Rust code, no property proofs, no mutation testing. Security scan
+(`cargo deny check`) is unaffected. Human review of workflow YAML YAML is the
+verification mechanism — formal tooling does not apply to shell scripts in CI files.
+
+### F7 (Convergence)
+Standard: STATE.md Drift Items for all five items marked RESOLVED; spec changelog entry;
+no VP or BC count changes needed.
