@@ -72,6 +72,28 @@ repo-neutral. The macOS bundle identifier in `packaging/Info.plist` and
 `scripts/create-pkg.sh` (`com.arcavenae.jr`) reflects the first signing fork;
 a different signing fork should override it to match its own Apple team.
 
+## Shared docs (CLAUDE.md, README, ADRs)
+
+Files that exist in both repos and that both repos edit — `CLAUDE.md`,
+`README.md`, `docs/adr/*` — are deliberately NOT protected by
+`local-workflows.txt`. Listing them there would freeze the fork's copy and
+silently drop every upstream improvement to the same file.
+
+The recurring conflict shape is a small hunk where both repos added an
+equivalent bullet (e.g. a `JR_*` env-var doc line for a feature that landed
+in both) at the same position with slightly different phrasing. The sync
+workflow can't auto-resolve it, so the merge stops for a human. To avoid it:
+
+1. **Send the doc bullet upstream alongside the feature.** When a fork-local
+   feature touches a shared doc, open a small `docs(CLAUDE.md)` PR upstream
+   in the same window as the feature. The bullet lands in upstream-canonical
+   placement once; the fork's next sync fast-forwards through it.
+2. **If the doc must land fork-first**, keep upstream-conventional placement
+   and phrasing so the eventual merge resolves cleanly when upstream adds
+   an equivalent.
+3. **Never add shared docs to `local-workflows.txt`.** That converts shared
+   content into fork divergence and swallows upstream edits to the same file.
+
 ## Known limitations
 
 - `sync-upstream.yml` hardcodes the branch matrix

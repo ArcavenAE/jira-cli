@@ -199,8 +199,17 @@ url = "https://from-flag.example"
 /// because each handler reloaded config internally and only saw the
 /// subcommand-level `--profile`. main.rs now composes an effective profile
 /// (`subcmd.profile.or(cli.profile)`) so the global flag propagates.
+///
+/// Gated behind `JR_RUN_KEYRING_TESTS=1` because `auth status` reaches
+/// `load_api_token()` → `keyring::Entry::get_password()`, which can block
+/// under Keychain contention on macOS or hang on Linux CI without a
+/// secret-service daemon (#526-F6-KEYRING-GATE).
 #[test]
+#[ignore = "requires keyring backend; set JR_RUN_KEYRING_TESTS=1 to run"]
 fn global_profile_flag_targets_auth_status() {
+    if std::env::var("JR_RUN_KEYRING_TESTS").is_err() {
+        return;
+    }
     let (dir, path) = fresh_config_dir();
     std::fs::write(
         &path,
@@ -238,6 +247,65 @@ auth_method = "api_token"
         combined.contains("sandbox") || combined.contains("https://sandbox.example"),
         "global --profile flag should target sandbox; got: {combined}"
     );
+}
+
+/// Ungated substitute coverage for the global-`--profile`→subcommand fallback
+/// fork in `src/main.rs` (the `effective_profile = subcmd.profile.or_else(||
+/// cli.profile.clone())` branch in `AuthCommand::Status`).
+///
+/// # Why this test exists
+///
+/// `global_profile_flag_targets_auth_status` (above) was keyring-gated in
+/// `#526-F6-KEYRING-GATE` because `auth status` against an existing profile
+/// reaches `load_api_token()` → `keyring::Entry::get_password()`, which can
+/// block on CI without a secret-service daemon. That left the global-flag
+/// propagation path with ZERO default-CI coverage.
+///
+/// This test recovers that coverage without touching the keychain by exploiting
+/// the strict active-profile-existence guard in `Config::load_with` (called as
+/// the first statement in `src/cli/auth/status.rs::status()`). When
+/// `Config::load_with(Some("ghost"))` is invoked, `load_inner(strict=true)`
+/// checks whether the resolved active profile exists in `[profiles]`; because
+/// `"ghost"` is absent, it returns `JrError::UserError("unknown profile: …")`
+/// before any credential probe occurs. The `contains_key` guard inside
+/// `status.rs` is a redundant second backstop for the explicit `--profile` path
+/// but is never reached here — the config-load boundary fires first.
+///
+/// If the global `--profile ghost` flag were dropped (not propagated from
+/// `cli.profile` into `effective_profile`), the active profile would fall back
+/// to `"default"` (which exists in the test config), `Config::load_with` would
+/// succeed, the status handler would proceed to the keyring probe, and the
+/// process would exit with a different code — NOT 64. Therefore exit 64 proves
+/// the global flag was propagated all the way into `Config::load_with`.
+#[test]
+fn test_global_profile_flag_propagates_to_auth_status_unknown_profile_exits_64() {
+    let (dir, path) = fresh_config_dir();
+    std::fs::write(
+        &path,
+        r#"
+default_profile = "default"
+[profiles.default]
+url = "https://default.example"
+auth_method = "api_token"
+[profiles.sandbox]
+url = "https://sandbox.example"
+auth_method = "api_token"
+"#,
+    )
+    .unwrap();
+
+    // Global `--profile ghost` positioned BEFORE the subcommand — this is the
+    // fork that main.rs::run() handles with `effective_profile =
+    // profile.or_else(|| cli.profile.clone())` for AuthCommand::Status.
+    // "ghost" is NOT in [profiles], so the unknown-profile guard in status.rs
+    // fires before any keyring probe and exits 64.
+    jr().env("XDG_CONFIG_HOME", dir.path())
+        .env("JR_CONFIG_DIR", dir.path().join("jr"))
+        .args(["--profile", "ghost", "auth", "status"])
+        .assert()
+        .failure()
+        .code(64)
+        .stderr(predicates::str::contains("unknown profile"));
 }
 
 /// Regression: round-4's unified active-profile existence check at

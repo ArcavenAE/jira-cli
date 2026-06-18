@@ -2,23 +2,31 @@
 
 ## Purpose
 
-Mutation testing as a meta-verification layer on the bulk + create modules.
+Mutation testing as a meta-verification layer on the bulk, create, ADF, and supporting modules.
 Reference: F6 hardening review of PR #110-pr2 (2026-05-10); closes audit-followup #346.
 
 Mutation testing catches a class of defect that line-coverage metrics miss: tests that
 pass even when the implementation is silently broken by small code mutations (negated
-conditions, removed returns, swapped operators). The three modules designated below had
+conditions, removed returns, swapped operators). The scoped modules designated below had
 high line coverage but untested assertion strength at the time of the F6 review.
 
 ## Scope
 
 `cargo-mutants` runs against:
+- `src/adf.rs` — ADF conversion core (`markdown_to_adf`, `adf_to_text`, `text_to_adf`); largest
+  behavior-dense module with high weak-assertion surface across node normalization, pruning,
+  mark deduplication, and the Algorithm B HTML block path (added F6 hardening)
 - `src/cli/issue/create.rs` — `handle_edit_bulk_labels`, `handle_edit_bulk_fields`, `handle_jsm_create`, `parse_field_kv`
 - `src/api/jira/bulk.rs` — `await_bulk_task`, polling loop, deadline propagation
 - `src/types/jira/bulk.rs` — serde structs for bulk API responses
 - `src/api/jsm/requests.rs` — `JsmRequestBuilder::build` (JSM POST body construction) (added S-288-pr4)
 - `src/api/jsm/request_types.rs` — `list_request_types`, `get_request_type_fields` (added S-288-pr4)
 - `src/cli/requesttype.rs` — `handle_list`, `handle_fields`, `resolve_request_type_id` (added S-288-pr4)
+- `src/api/jira/issues.rs` — `search_issues`, `search_issue_keys` (anti-loop guard, `seen_keys` dedup,
+  `has_more` sentinel, cursor-vs-offset pagination branch); `list_comments` (added MAINT-MUTANTS-GLOBS-01)
+- `src/cache.rs` — TTL logic, per-profile path construction, model-a vs model-b error-handling split
+  (`write_cmdb_fields_cache` / `write_object_type_attr_cache` swallow errors; others propagate)
+  (added MAINT-MUTANTS-GLOBS-01)
 
 Configured in `.cargo/mutants.toml::examine_globs`. The CI job relies on this
 configuration alone (no `--file` CLI flags) for scope enforcement; `--in-diff` further
@@ -26,6 +34,17 @@ narrows to lines changed in the PR diff.
 
 Note: cargo-mutants v27+ reads its config from `.cargo/mutants.toml` (not `.mutants.toml`
 at repo root). This is the canonical config location for this project.
+
+### Sibling Candidates Considered and Deferred (MAINT-MUTANTS-GLOBS-01)
+
+These files were evaluated when `issues.rs` and `cache.rs` were added. Their dispositions
+are recorded here so future reviewers know they were considered, not overlooked.
+
+| File | Disposition | Rationale |
+|------|-------------|-----------|
+| `src/api/pagination.rs` | EXCLUDE | Simple serde structs + `items()` field accessor. No conditional logic or error-handling branches worth mutating; survivors would be caught by the broad integration test suite. Low payoff relative to baseline cost. |
+| `src/jql.rs` | EXCLUDE | Already property-tested inline with proptest. Mutation survivors in JQL escaping/validation would almost certainly be caught by existing proptest strategies. |
+| `src/api/jira/users.rs` | DEFER | Contains the `USER_PAGE_SIZE`-advance pagination workaround (JRACLOUD-71293 fix). Good candidate in principle, but test coverage via `tests/user_commands.rs` is limited — adding it without targeted pagination tests risks a noisy first-run kill rate. Revisit in a dedicated "users pagination hardening" cycle. |
 
 ## Kill-Rate Target
 
@@ -130,7 +149,7 @@ mutation testing cost bounded to the PR review phase.
 The job uses `--in-diff "$DIFF_FILE"` (where `DIFF_FILE` is a `mktemp`-created path
 under `${{ runner.temp }}`) to scope mutations to lines changed in the PR.
 This means:
-- Only mutants in code **changed by the PR** AND **in the three scoped files** are tested
+- Only mutants in code **changed by the PR** AND **in the scoped files** are tested
   (`.cargo/mutants.toml::examine_globs` provides the file-scope; `--in-diff` narrows to
   changed lines within those files).
 - PRs that do not touch the scoped files generate zero mutants; the kill-rate check
