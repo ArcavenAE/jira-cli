@@ -4107,3 +4107,43 @@ This single-line grep negation pattern has a systematic blind spot: multi-line c
 _Recorded: 2026-06-17 — Issue #526 F5 CONVERGED (round 3). S-7.02 discipline._
 _Tagged: [process-gap] [F5] [centralization] [codified]_
 _Status: [codified]_
+
+---
+
+## Issue #525 F5 Process-Gap (2026-06-17)
+
+### LESSON-CITATION-SIBLING-PROPAGATION [codified] When removing a misattributed external-tracker citation, grep ALL sibling occurrences symmetrically (2026-06-17)
+
+**Lesson ID:** LESSON-CITATION-SIBLING-PROPAGATION
+
+**Context:** Issue #525 Bundle C Story 1 — list_comments anti-stall guard (CR-001) + cache write-error alignment (CR-007). F5 adversarial round 2 (two rounds needed to converge; round 1 passed; round 2 caught C-1/C-2 citation-leak findings).
+
+**What happened:** During F1 delta analysis, a misattributed citation `JRACLOUD-94357` was identified and removed from the new code being written in the story. However, F5 adversarial review (round 2) found that the same misattributed citation appeared in TWO sibling locations:
+- C-1: The `get_changelog` reference-implementation comment in `src/api/jira/issues.rs` (cloned from the same S-3.07 anti-loop guard that originated the citation) still contained `JRACLOUD-94357`.
+- C-2: The `.factory/phase-f1-delta-analysis/bundle-c-2026-06-17.md` delta analysis document still cited `JRACLOUD-94357` in its analysis prose.
+
+Both were purged in a remediation pass before F5 declared CONVERGED (round 2).
+
+**Root cause:** The de-citation action was applied only at the new site (the story's F2 spec / BC body), not at the sibling locations where the same citation had propagated: the reference-impl comment that the new guard was modeled on, and the F1 analysis document that described the source code context.
+
+**Recurrence history:**
+- CLAUDE.md already contains a citation-discipline rule (see "Citation discipline for external-tracker IDs in user-facing strings"). That rule covers NEW citations; it does not address removal of EXISTING misattributed citations from sibling code/doc locations.
+- LESSON-F1-SIBLING-CASE (Issue #522) covers sibling *control-char* cases; this is the analogous pattern for sibling *citation* propagation.
+
+**Rule (LESSON-CITATION-SIBLING-PROPAGATION):** When removing a misattributed external-tracker citation (JRACLOUD-NNN, GitHub issue #NNN, community post ID, etc.) from any location:
+1. **Immediately grep the full codebase** for the citation string across all file types (`.rs`, `.md`, `.toml`, docs, spec files, comment blocks, inline docs).
+2. Apply de-citation **symmetrically** to ALL occurrences — reference-impl comments cloned-from, upstream analysis docs, F1 delta docs, CLAUDE.md gotchas, spec BCs, test comments.
+3. The proactive-validation win from this cycle: the research-agent caught the JRACLOUD-94357 misattribution before it shipped — a proactive Perplexity-validate step as part of F5 adversarial review confirmed the citation was wrong, triggering the systematic sweep that found the siblings.
+4. Do NOT declare "citation removed" until the grep sweep is complete and zero hits remain.
+
+**Minimal sweep command:**
+```bash
+grep -r "JRACLOUD-94357" src/ .factory/ docs/ CLAUDE.md 2>/dev/null || true
+# Apply to any misattributed ID being removed
+```
+
+**Follow-up:** No follow-up story required. LESSON-CITATION-SIBLING-PROPAGATION added to STATE.md standing constraints. Proactive Perplexity-validate step for external citations in F5 adversarial review remains best practice.
+
+_Recorded: 2026-06-17 — Issue #525 F5 CONVERGED (round 2). S-7.02 discipline._
+_Tagged: [process-gap] [F5] [citation] [codified]_
+_Status: [codified]_

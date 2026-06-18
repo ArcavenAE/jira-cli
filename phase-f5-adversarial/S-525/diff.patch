@@ -1,0 +1,381 @@
+diff --git a/CLAUDE.md b/CLAUDE.md
+index e694991..f1cebe3 100644
+--- a/CLAUDE.md
++++ b/CLAUDE.md
+@@ -191,6 +191,8 @@ When adding a new feature:
+   - **Request-type caches (S-288-pr2):** `request_types_<sid>.json` + `request_type_fields_<sid>_<rtId>.json`; shape from `src/types/jsm/request_type.rs`. Same 7-day TTL / `v1/`-bump rules; deserialize failure → cache miss → refetch (self-heals).
+ - **`jr requesttype fields <NAME|ID>` numeric-bypass edge case:** all-ASCII-digit input is treated as a numeric RT ID and skips `partial_match`. A request type *named* `"100"` is therefore unreachable by name (no escape exists; look up its ID via `jr requesttype list --output json | jq`). Tracked behavior, not a bug — relevant if you add a `--by-id` flag.
+ - **Cache-write error handling — two models (S-288-pr2):** most writers in `src/cache.rs` propagate via `?`; the request-type writers (`write_request_type_cache`, `write_request_type_fields_cache`) swallow + `eprintln!("warning:…")` so a failed write never breaks a successful API call. New cache family → pick (a) propagate if correctness-critical, (b) swallow+warn if pure read-acceleration; document the choice in the writer's rustdoc.
++  - **`write_cmdb_fields_cache` (`src/cache.rs`, S-525/CR-007):** model-b writer — swallows disk-write errors with `eprintln!("warning: failed to write cmdb_fields cache: {e}")` and returns `Ok(())`. Its call site in `src/api/assets/linked.rs` uses `.ok()` to discard the infallible result. Do NOT re-introduce `let _ =` or `?` at the call site.
++  - **`write_object_type_attr_cache` (`src/cache.rs`, S-525/CR-007):** model-b writer — swallows disk-write errors with `eprintln!("warning: failed to write object_type_attrs cache: {e}")` and returns `Ok(())`. Its call site in `src/api/assets/objects.rs` uses `.ok()` to discard the infallible result. Do NOT re-introduce `let _ =` or `?` at the call site.
+ - **`aqlFunction()` not `assetsQuery()`:** The Jira Assets JQL function is `aqlFunction()`. It requires the human-readable field **name**, not `cf[ID]` or `customfield_NNNNN`. AQL attribute for object key is `Key` (not `objectKey` — that's the JSON field name).
+ - **Status category colors are fixed:** `green` = Done, `yellow` = In Progress, `blue-gray` = To Do. These mappings are hardcoded in Jira Cloud across all instances. Used by `--open` filtering.
+ - **Embedded OAuth app uses fixed callback port 53682.** Callback URL is `http://127.0.0.1:53682/callback` — literal `127.0.0.1` (not `localhost`) to force IPv4 and dodge the macOS/Chrome `localhost`→`::1` pitfall; must match the Atlassian Developer Console registration, so changing the port is a breaking release. Release builds inject `JR_BUILD_OAUTH_CLIENT_ID`/`_SECRET` via `build.rs` → XOR-obfuscated `embedded_oauth.rs`. BYO sources (flag/env/keychain) keep dynamic-port behavior. Detail: ADR-0006, `docs/superpowers/specs/2026-04-30-embedded-oauth-app-design.md`.
+diff --git a/src/api/assets/linked.rs b/src/api/assets/linked.rs
+index b0b7040..c100aaf 100644
+--- a/src/api/assets/linked.rs
++++ b/src/api/assets/linked.rs
+@@ -31,7 +31,9 @@ pub async fn get_or_fetch_cmdb_fields(client: &JiraClient) -> Result<Vec<(String
+     }
+ 
+     let fields = client.find_cmdb_fields().await?;
+-    let _ = cache::write_cmdb_fields_cache(profile, &fields);
++    // Best-effort cache write — writer is model-b (always Ok); .ok() discards the
++    // infallible Result without triggering "unused Result" warnings.
++    cache::write_cmdb_fields_cache(profile, &fields).ok();
+     Ok(fields)
+ }
+ 
+diff --git a/src/api/assets/objects.rs b/src/api/assets/objects.rs
+index f3b3527..314a0cf 100644
+--- a/src/api/assets/objects.rs
++++ b/src/api/assets/objects.rs
+@@ -185,8 +185,9 @@ pub async fn enrich_search_attributes(
+                                 position: d.position,
+                             })
+                             .collect();
+-                        // Best-effort cache write
+-                        let _ = cache::write_object_type_attr_cache(profile, type_id, &cached);
++                        // Best-effort cache write — writer is model-b (always Ok); .ok() discards the
++                        // infallible Result without triggering "unused Result" warnings.
++                        cache::write_object_type_attr_cache(profile, type_id, &cached).ok();
+                         cached
+                     }
+                     Err(_) => {
+diff --git a/src/api/jira/issues.rs b/src/api/jira/issues.rs
+index 29bacdc..5a3a323 100644
+--- a/src/api/jira/issues.rs
++++ b/src/api/jira/issues.rs
+@@ -668,6 +668,17 @@ impl JiraClient {
+             if !has_more {
+                 break;
+             }
++            // Guard against an API response that advertises more pages but
++            // returns a page that wouldn't advance `startAt` — otherwise we'd
++            // infinite-loop on a malformed/empty page. Surface as an explicit
++            // error instead.
++            if next <= start_at {
++                return Err(anyhow::anyhow!(
++                    "Jira comment pagination did not advance (startAt {} → {}) — aborting to prevent infinite loop",
++                    start_at,
++                    next
++                ));
++            }
+             start_at = next;
+         }
+         Ok(all)
+diff --git a/src/cache.rs b/src/cache.rs
+index b11d2ca..155367d 100644
+--- a/src/cache.rs
++++ b/src/cache.rs
+@@ -291,15 +291,27 @@ pub fn read_cmdb_fields_cache(profile: &str) -> Result<Option<CmdbFieldsCache>>
+     read_cache(profile, "cmdb_fields.json")
+ }
+ 
++/// Best-effort writer: swallows disk-write errors with `eprintln!` and returns
++/// `Ok(())`. A missed write costs at most one extra HTTP call on the next
++/// invocation. Cache write failures MUST NOT break a successful API call.
++///
++/// Chosen model: (b) swallow + warn — this cache is a read-acceleration
++/// shortcut, not a correctness-critical store. The call site in
++/// `src/api/assets/linked.rs` does NOT use `let _ =`; errors are absorbed
++/// inside this writer. Do not re-introduce `let _ =` or `?` at the call site.
+ pub fn write_cmdb_fields_cache(profile: &str, fields: &[(String, String)]) -> Result<()> {
+-    write_cache(
++    let result = write_cache(
+         profile,
+         "cmdb_fields.json",
+         &CmdbFieldsCache {
+             fields: fields.to_vec(),
+             fetched_at: Utc::now(),
+         },
+-    )
++    );
++    if let Err(e) = result {
++        eprintln!("warning: failed to write cmdb_fields cache: {e}");
++    }
++    Ok(())
+ }
+ 
+ /// Per-profile cache of `GET /rest/api/3/field` results (all Jira fields).
+@@ -403,41 +415,56 @@ pub fn read_object_type_attr_cache(
+ /// Write cached attributes for a specific object type.
+ ///
+ /// Merges into the existing map file, preserving entries for other object types.
++///
++/// Best-effort writer: swallows disk-write errors with `eprintln!` and returns
++/// `Ok(())`. A missed write costs at most one extra HTTP call on the next
++/// invocation. Cache write failures MUST NOT break a successful API call.
++///
++/// Chosen model: (b) swallow + warn — this cache is a read-acceleration
++/// shortcut, not a correctness-critical store. The call site in
++/// `src/api/assets/objects.rs` does NOT use `let _ =`; errors are absorbed
++/// inside this writer. Do not re-introduce `let _ =` or `?` at the call site.
+ pub fn write_object_type_attr_cache(
+     profile: &str,
+     object_type_id: &str,
+     attrs: &[CachedObjectTypeAttr],
+ ) -> Result<()> {
+-    let dir = cache_dir(profile);
+-    std::fs::create_dir_all(&dir)?;
+-
+-    let path = dir.join("object_type_attrs.json");
+-
+-    let mut cache: ObjectTypeAttrCache = if path.exists() {
+-        let content = std::fs::read_to_string(&path)?;
+-        serde_json::from_str(&content).unwrap_or_else(|e| {
+-            eprintln!(
+-                "warning: object_type_attrs.json unreadable ({e}); starting fresh — other cached object types will be lost"
+-            );
++    let result = (|| -> Result<()> {
++        let dir = cache_dir(profile);
++        std::fs::create_dir_all(&dir)?;
++
++        let path = dir.join("object_type_attrs.json");
++
++        let mut cache: ObjectTypeAttrCache = if path.exists() {
++            let content = std::fs::read_to_string(&path)?;
++            serde_json::from_str(&content).unwrap_or_else(|e| {
++                eprintln!(
++                    "warning: object_type_attrs.json unreadable ({e}); starting fresh — other cached object types will be lost"
++                );
++                ObjectTypeAttrCache {
++                    fetched_at: Utc::now(),
++                    types: HashMap::new(),
++                }
++            })
++        } else {
+             ObjectTypeAttrCache {
+                 fetched_at: Utc::now(),
+                 types: HashMap::new(),
+             }
+-        })
+-    } else {
+-        ObjectTypeAttrCache {
+-            fetched_at: Utc::now(),
+-            types: HashMap::new(),
+-        }
+-    };
++        };
+ 
+-    cache
+-        .types
+-        .insert(object_type_id.to_string(), attrs.to_vec());
+-    cache.fetched_at = Utc::now();
++        cache
++            .types
++            .insert(object_type_id.to_string(), attrs.to_vec());
++        cache.fetched_at = Utc::now();
+ 
+-    let content = serde_json::to_string_pretty(&cache)?;
+-    std::fs::write(&path, content)?;
++        let content = serde_json::to_string_pretty(&cache)?;
++        std::fs::write(&path, content)?;
++        Ok(())
++    })();
++    if let Err(e) = result {
++        eprintln!("warning: failed to write object_type_attrs cache: {e}");
++    }
+     Ok(())
+ }
+ 
+@@ -1000,6 +1027,70 @@ mod tests {
+         );
+     }
+ 
++    // AC-003 / CR-007: `write_cmdb_fields_cache` swallow behavior — mirrors
++    // `test_write_fields_cache_swallow_io_error_returns_ok` above.
++    // Forces an I/O error by pointing JR_CACHE_DIR at a file (not a dir), so
++    // create_dir_all inside write_cache fails with ENOTDIR.  The model-b writer
++    // must return Ok(()) and NOT panic.
++    #[test]
++    fn test_write_cmdb_fields_cache_swallow_io_error_returns_ok() {
++        let outer_dir = tempfile::TempDir::new().unwrap();
++        let fake_cache_home = outer_dir.path().join("i_am_a_file");
++        std::fs::write(&fake_cache_home, "file, not a dir").unwrap();
++
++        let guard = ENV_MUTEX.lock().unwrap_or_else(|e| e.into_inner());
++        unsafe {
++            std::env::set_var("XDG_CACHE_HOME", &fake_cache_home);
++            std::env::set_var("JR_CACHE_DIR", &fake_cache_home);
++        }
++        let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
++            write_cmdb_fields_cache(
++                "test-cmdb-swallow",
++                &[("customfield_10191".to_string(), "Client".to_string())],
++            )
++        }));
++        unsafe {
++            std::env::remove_var("XDG_CACHE_HOME");
++            std::env::remove_var("JR_CACHE_DIR");
++        }
++        drop(guard);
++
++        let result = result.expect("write_cmdb_fields_cache must not panic on I/O error");
++        assert!(
++            result.is_ok(),
++            "write_cmdb_fields_cache must return Ok(()) on I/O error (best-effort writer); got: {result:?}"
++        );
++    }
++
++    // AC-003 / CR-007: `write_object_type_attr_cache` swallow behavior — same
++    // ENOTDIR pattern as above.
++    #[test]
++    fn test_write_object_type_attr_cache_swallow_io_error_returns_ok() {
++        let outer_dir = tempfile::TempDir::new().unwrap();
++        let fake_cache_home = outer_dir.path().join("i_am_a_file");
++        std::fs::write(&fake_cache_home, "file, not a dir").unwrap();
++
++        let guard = ENV_MUTEX.lock().unwrap_or_else(|e| e.into_inner());
++        unsafe {
++            std::env::set_var("XDG_CACHE_HOME", &fake_cache_home);
++            std::env::set_var("JR_CACHE_DIR", &fake_cache_home);
++        }
++        let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
++            write_object_type_attr_cache("test-objattr-swallow", "99", &[])
++        }));
++        unsafe {
++            std::env::remove_var("XDG_CACHE_HOME");
++            std::env::remove_var("JR_CACHE_DIR");
++        }
++        drop(guard);
++
++        let result = result.expect("write_object_type_attr_cache must not panic on I/O error");
++        assert!(
++            result.is_ok(),
++            "write_object_type_attr_cache must return Ok(()) on I/O error (best-effort writer); got: {result:?}"
++        );
++    }
++
+     #[test]
+     fn read_missing_object_type_attr_cache_returns_none() {
+         with_temp_cache(|| {
+diff --git a/tests/comments.rs b/tests/comments.rs
+index 8bcf7f5..a116fb6 100644
+--- a/tests/comments.rs
++++ b/tests/comments.rs
+@@ -400,3 +400,124 @@ async fn comments_parse_failure_silent_without_verbose() {
+         "expected no verbose parse-failure output without --verbose, got:\n{stderr}"
+     );
+ }
++
++// ─── BC-2.4.043 — anti-stall guard ──────────────────────────────────────────
++
++/// AC-002 / BC-2.4.043: non-advancing startAt must return Err (not hang).
++///
++/// Simulates a malformed Jira response where `total > len(comments)` (has_more=true)
++/// but startAt stays at 0 on the first page, which would cause an infinite loop
++/// without the guard. The guard fires after page 1 and returns Err.
++#[tokio::test]
++async fn test_list_comments_stall_guard_returns_error_when_start_at_does_not_advance() {
++    let server = MockServer::start().await;
++
++    // Page 1: startAt=0, maxResults=0 in response, total=5.
++    // next_start = startAt + maxResults = 0 + 0 = 0.
++    // has_more = 0 + 0 < 5 = true.
++    // Guard fires: next (0) <= start_at (0) → Err.
++    Mock::given(method("GET"))
++        .and(path("/rest/api/3/issue/TEST-1/comment"))
++        .and(query_param("startAt", "0"))
++        .and(query_param("maxResults", "100"))
++        .and(query_param("expand", "properties"))
++        .respond_with(ResponseTemplate::new(200).set_body_json(json!({
++            "comments": [
++                {
++                    "id": "10001",
++                    "author": {
++                        "accountId": "abc", "displayName": "Alice",
++                        "emailAddress": "a@test.com", "active": true
++                    },
++                    "body": null,
++                    "created": "2026-03-20T10:00:00.000+0000"
++                }
++            ],
++            "startAt": 0,
++            "maxResults": 0,
++            "total": 5
++        })))
++        .mount(&server)
++        .await;
++
++    let client =
++        jr::api::client::JiraClient::new_for_test(server.uri(), "Basic dGVzdDp0ZXN0".to_string());
++    let result = client.list_comments("TEST-1", None).await;
++
++    assert!(result.is_err(), "expected Err from stall guard, got Ok");
++    let err = result.unwrap_err();
++    assert!(
++        err.to_string()
++            .contains("aborting to prevent infinite loop"),
++        "expected 'aborting to prevent infinite loop' in error, got: {err}"
++    );
++}
++
++/// AC-002 / BC-2.4.043 (normal path): multi-page pagination with advancing startAt
++/// must return Ok with all comments collected.
++///
++/// The existing `list_comments_paginated` test covers this code path — this test
++/// is an explicit named regression pin that exercices the guard skip (guard does
++/// NOT fire when next > start_at) to confirm normal pagination works correctly.
++#[tokio::test]
++async fn test_list_comments_paginates_correctly_when_offset_advances() {
++    let server = MockServer::start().await;
++
++    // Page 1: startAt=0, total=2, one comment — next_start = 0+1 = 1 > 0 (guard skipped).
++    Mock::given(method("GET"))
++        .and(path("/rest/api/3/issue/ADV-1/comment"))
++        .and(query_param("startAt", "0"))
++        .and(query_param("maxResults", "100"))
++        .and(query_param("expand", "properties"))
++        .respond_with(ResponseTemplate::new(200).set_body_json(json!({
++            "comments": [
++                {
++                    "id": "20001",
++                    "author": {
++                        "accountId": "u1", "displayName": "Alice",
++                        "emailAddress": "a@test.com", "active": true
++                    },
++                    "body": null,
++                    "created": "2026-03-20T10:00:00.000+0000"
++                }
++            ],
++            "startAt": 0,
++            "maxResults": 1,
++            "total": 2
++        })))
++        .mount(&server)
++        .await;
++
++    // Page 2: startAt=1, total=2, one comment — isLast (next_start == 1+1 == 2 >= total 2).
++    Mock::given(method("GET"))
++        .and(path("/rest/api/3/issue/ADV-1/comment"))
++        .and(query_param("startAt", "1"))
++        .and(query_param("maxResults", "100"))
++        .and(query_param("expand", "properties"))
++        .respond_with(ResponseTemplate::new(200).set_body_json(json!({
++            "comments": [
++                {
++                    "id": "20002",
++                    "author": {
++                        "accountId": "u2", "displayName": "Bob",
++                        "emailAddress": "b@test.com", "active": true
++                    },
++                    "body": null,
++                    "created": "2026-03-21T11:00:00.000+0000"
++                }
++            ],
++            "startAt": 1,
++            "maxResults": 1,
++            "total": 2
++        })))
++        .mount(&server)
++        .await;
++
++    let client =
++        jr::api::client::JiraClient::new_for_test(server.uri(), "Basic dGVzdDp0ZXN0".to_string());
++    let comments = client.list_comments("ADV-1", None).await.unwrap();
++
++    assert_eq!(comments.len(), 2, "expected 2 comments from two pages");
++    assert_eq!(comments[0].id.as_deref(), Some("20001"));
++    assert_eq!(comments[1].id.as_deref(), Some("20002"));
++}

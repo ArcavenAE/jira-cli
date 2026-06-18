@@ -1,9 +1,9 @@
 ---
 context: bc-2
 title: "Issue Read (list/view/comments/changelog)"
-total_bcs: 93   # cumulative claim (incl. range-collapsed); definitional_count below is individually-bodied headings
-definitional_count: 51   # count of `#### BC-` headings in this file
-last_updated: 2026-05-13
+total_bcs: 94   # cumulative claim (incl. range-collapsed); definitional_count below is individually-bodied headings
+definitional_count: 52   # count of `#### BC-` headings in this file
+last_updated: 2026-06-17
 source_pass: 3
 trace: |
   - L2: .factory/specs/domain-spec/bc-02-issue-read.md
@@ -14,7 +14,7 @@ trace: |
 
 # BC-2 — Issue Read (list / view / comments / changelog)
 
-93 behavioral contracts across 6 subdomains: JQL composition (2.1), Issue list
+94 behavioral contracts across 6 subdomains: JQL composition (2.1), Issue list
 behavior (2.2), Issue view (2.3), Comments (2.4), Changelog (2.5), API layer (2.6).
 
 ---
@@ -424,6 +424,21 @@ behavior (2.2), Issue view (2.3), Comments (2.4), Changelog (2.5), API layer (2.
 
 ---
 
+#### BC-2.4.043: `list_comments` offset pagination aborts cleanly if startAt does not advance (anti-stall guard)
+
+**Confidence**: HIGH
+**Source**: `src/api/jira/issues.rs::list_comments` (impl guard); `tests/comments.rs::test_list_comments_stall_guard_returns_error_when_start_at_does_not_advance` (verification)
+**Subject**: Issue read
+**Behavior**: After each page fetch inside `list_comments`, before advancing `start_at`, the implementation MUST check `if next_start_at <= start_at`. If the condition is true, it MUST return `Err(anyhow::anyhow!("Jira comment pagination did not advance (startAt {} → {}) — aborting to prevent infinite loop", start_at, next_start_at))` — an abort, not a silent loop or an empty-result return. `start_at` is only advanced to `next_start_at` when `next_start_at > start_at`. This guard pattern is identical to the one in `get_changelog` (the reference implementation) and is a defensive-by-design guard against a non-advancing `startAt` offset / stale `has_more` (infinite-loop class). No external tracker ticket is cited — none publicly documents this symptom for the comment endpoint; the guard exists to mirror the `get_changelog` anti-loop guard as a precautionary measure. The guard does NOT apply to cursor-based paginators (`search_issues`, `search_issue_keys`) — those use the JRACLOUD-95368 repeated-token guard instead (BC-2.6.050, BC-2.6.051).
+**Edge cases**:
+- EC-1: Server returns `total > current_count` (has_more true) but `next_start_at == start_at` (zero-advance) → Err, no further pages fetched.
+- EC-2: Server returns `total > current_count` but `next_start_at < start_at` (regression) → same Err path. _(Note: the strict-regression branch `next < start_at` is unreachable for a well-formed u32 OffsetPage response — reaching it would require u32 offset overflow. The `<=` guard is retained as defensive code mirroring `get_changelog`; the reachable case under test is the `==` zero-advance arm, EC-1 above, which is exercised by `max_results == 0`.)_
+- EC-3: Normal page where `next_start_at > start_at` → advances cleanly, loop continues.
+- EC-4: Final page where `has_more = false` → exits loop normally before guard is evaluated.
+**Trace**: CR-001 (Bundle C 2026-06-17); reference impl: `src/api/jira/issues.rs::get_changelog` offset-guard at `if next <= start_at`
+
+---
+
 ### 2.5 Changelog
 
 #### BC-2.5.043: `issue changelog --field <substr>` filters items by case-insensitive field substring (client-side)
@@ -518,4 +533,4 @@ All issue-read errors follow the universal pattern (BC-X.3.012):
 
 Pass 3 sources: `tests/issue_list_errors.rs`, `tests/issue_view_errors.rs`, `tests/comments.rs`
 
-## Total BCs in this file: 51 (representative set; BC-INDEX.md carries all 93)
+## Total BCs in this file: 52 (representative set; BC-INDEX.md carries all 94)

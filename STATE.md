@@ -6,7 +6,7 @@ timestamp: 2026-06-17T22:00:00Z
 phase: phase-3-tdd-implementation
 project: jira-cli
 mode: BROWNFIELD
-current_step: "Maintenance sweep 2026-06-17: Bundle A DELIVERED+MERGED (PR #524 → ca24200). Bundle B COMMITTED (factory-artifacts @ 20d2441). Bundle C Feature Mode IN PROGRESS — #526 (Story 2) F5 CONVERGED 3/3, F6 PASS, F7 CONVERGED 5/5; PR delivery in progress. #525 (Story 1) PENDING."
+current_step: "Maintenance sweep 2026-06-17: Bundle A DELIVERED+MERGED (PR #524 → ca24200). Bundle B COMMITTED (factory-artifacts @ 20d2441). Bundle C Feature Mode: #526 (Story 2) F7 CONVERGED + PR in progress; #525 (Story 1) F7 CONVERGED — PR delivery in progress. Bundle C BOTH stories delivered. BC 599. Stories 79."
 current_cycle: "cycle-001"
 dtu_required: false
 phase_2_status: APPROVED
@@ -26,8 +26,8 @@ activation_version: "v0.6.0-dev.2"
 | **Product** | jr (Jira CLI) |
 | **Mode** | BROWNFIELD / Rust |
 | **Target Workspace** | develop → main |
-| **Last Updated** | 2026-06-17: (1) #522 CYCLE CLOSED+MERGED PR #523 → 53f6d98. (2) Bundle A DELIVERED+MERGED PR #524 → develop @ ca24200 (doc-accuracy: CLAUDE.md arch tree, README gaps, OQ-5/NFR-O-N, adf.rs+cli/mod.rs comments; DRIFT-D1..D12, CR-003, CR-004; CI 13/13 GREEN). (3) Bundle B factory-artifacts COMMITTED @ 20d2441 (SC-01/02/04/06/07). (4) Bundle C F1 complete; #525+#526 created. (5) #526 Story 2: F5 CONVERGED 3/3, F6 PASS, F7 5/5; PR in progress. Stories 78. |
-| **Current Phase** | Phase 3 — Maintenance sweep 2026-06-17; Bundle C Feature Mode in progress. develop @ ca24200. BC 598. NFR 42. ADR 16. Stories 78. |
+| **Last Updated** | 2026-06-17: (1) #522 CYCLE CLOSED+MERGED PR #523 → 53f6d98. (2) Bundle A DELIVERED+MERGED PR #524 → develop @ ca24200 (DRIFT-D1..D12, CR-003, CR-004; CI 13/13 GREEN). (3) Bundle B factory-artifacts COMMITTED @ 20d2441 (SC-01/02/04/06/07). (4) Bundle C: #526 F7 CONVERGED 5/5 + PR in progress; #525 F7 CONVERGED 5/5 + PR in progress. Bundle C BOTH stories delivered. BC 599. Stories 79. |
+| **Current Phase** | Phase 3 — Maintenance sweep 2026-06-17; Bundle C Feature Mode: both stories F7 CONVERGED, PRs in progress. develop @ ca24200. BC 599. NFR 42. ADR 16. Stories 79. |
 | **Next Phase** | Phase 4: Holdout Evaluation (not started) |
 | **Activation HEAD** | 4258202 (v0.6.0-dev.2 released 2026-06-14; develop HEAD 3ba8ea2; v0.5.0 STABLE shipped 2026-06-12) |
 
@@ -44,7 +44,7 @@ activation_version: "v0.6.0-dev.2"
 | Feature cycles #110..#499 (19 cycles, 2026-05-11..2026-06-11) | ALL CYCLE CLOSED + MERGED | 2026-06-11 | F1–F7 each | develop BC 583→594. See `cycles/cycle-001/burst-log.md` "Archived Phase Progress Rows". |
 | Issue #492 block-HTML hardBreak (BC-7.2.011) | **CYCLE CLOSED + MERGED** | 2026-06-16 | F1–F7 ALL COMPLETE — CONVERGED | PR #521 → develop @ 3ba8ea2. BC-7.2.011 v1.9.6. 5/5 F7 dims; 150k proptest; 100% mutation; 0 code defects. Follow-up #522 (lone-CR OOS). DEC-109. |
 | Issue #522 ADF CR/newline normalization (EC-11+EC-12+CR-01) | **CYCLE CLOSED + MERGED** | 2026-06-17 | F1–F7 ALL COMPLETE — CONVERGED | PR #523 → develop @ 53f6d98. BC-7.2.011 v1.11.0. HIGH CR-01 caught by F5 adversarial. DEC-110..119. |
-| Maintenance sweep 2026-06-17 | **IN PROGRESS** | — | Bundle A MERGED; Bundle B COMMITTED; Bundle C #526 F7 CONVERGED | Bundle A: PR #524 → ca24200 (DRIFT-D1..D12, CR-003, CR-004, OQ-5/NFR-O-N fix). Bundle B: factory-artifacts @ 20d2441 (SC-01/02/04/06/07). Bundle C: #526 (Story 2 JSON render unification) F5 CONVERGED 3/3 (round 3; F-1+C-1 caught+fixed), F6 PASS (1309/0, mut 5/5), F7 5/5; PR in progress. #525 (Story 1) PENDING. |
+| Maintenance sweep 2026-06-17 | **IN PROGRESS** | — | Bundle A MERGED; Bundle B COMMITTED; Bundle C #525+#526 F7 CONVERGED | Bundle A: PR #524 → ca24200 (DRIFT-D1..D12, CR-003, CR-004, OQ-5/NFR-O-N fix). Bundle B: factory-artifacts @ 20d2441 (SC-01/02/04/06/07). Bundle C: #526 (Story 2 JSON render unification) F5 CONVERGED 3/3 (round 3; F-1+C-1 caught+fixed), F6 PASS (1309/0, mut 5/5), F7 5/5; PR in progress. #525 (Story 1 list_comments anti-stall + cache write-error) F5 CONVERGED 3/3 (round 2; JRACLOUD-94357 misattribution purged), F6 PASS (1853/0, mut 6/6=100%), F7 5/5; PR in progress. Bundle C BOTH stories delivered. |
 | 4: Holdout Evaluation | not-started | | | |
 | 5: Adversarial Refinement | not-started | | | |
 | 6: Formal Hardening | not-started | | | |
@@ -55,11 +55,10 @@ activation_version: "v0.6.0-dev.2"
 <!-- Keep last 5 rows only. Archive older rows to cycles/cycle-001/burst-log.md. -->
 | Step | Agent | Status | Output |
 |------|-------|--------|--------|
-| F6 targeted hardening PASS: full regression 1850 green / 0 failed / 91 ignored; PROPTEST_CASES=100k; diff-scoped mutation 21→16 caught+5 equivalent+2 killing tests; cargo audit 346 deps 0 advisories; clippy/fmt clean. DEC-116. Surfaced MUTANTS-ADF-GLOB gap. | Agent formal-verifier | **F6 PASS** | worktree .worktrees/S-522 @ 0ed1395. |
-| Issue #522 CYCLE CLOSED + MERGED. PR #523 → develop @ 53f6d98. CI Gate PASS; pr-reviewer + security APPROVE. S-7.02 complete. LESSON-F1-SIBLING-CASE codified. DEC-119. | state-manager | **CYCLE CLOSED** | develop @ 53f6d98. BC-7.2.011 v1.11.0. BC 598. |
 | Bundle A DELIVERED+MERGED: PR #524 squash-merged → develop @ ca24200. Doc-accuracy fixes (DRIFT-D1..D12, CR-003/004, OQ-5/NFR-O-N, CLAUDE.md arch tree, README, adf.rs+cli/mod.rs comments). CI 13/13 GREEN, security CLEAN, pr-reviewer APPROVE. OQ-5 RESOLVED. Bundle B COMMITTED: factory-artifacts @ 20d2441 (SC-01/02/04/06/07). | orchestrator + state-manager | **A MERGED / B COMMITTED** | develop @ ca24200. factory-artifacts @ 20d2441. |
-| Bundle C F1 delta analysis COMPLETE: .factory/phase-f1-delta-analysis/bundle-c-2026-06-17.md. Split → Story 1 #525 (list_comments anti-stall CR-001 + cache write-error CR-007 incl. sibling write_cmdb_fields_cache) + Story 2 #526 (24-site JSON-render unification CR-002). LESSON-F1-SIBLING-CASE confirmed: list_comments only vulnerable paginated fetcher. Next: F2 spec evolution (new BC for stall guard). | orchestrator | **F1 COMPLETE** | #525 + #526 created. F2 next. |
-| #526 (Bundle C Story 2) F5 CONVERGED 3/3 (round 3; blocking F-1: project.rs compact site missing + C-1: src/cli/project.rs compact site caught; both fixed), F6 PASS (regression 1309/0, diff-scoped mutation 5/5, cargo deny 0 advisories, clippy/fmt clean), F7 CONVERGED 5/5. Two disclosed compact→pretty behavior changes: handle_jsm_create + jr project fields --output json. PR delivery in progress awaiting CI + user merge decision. #525 PENDING. | orchestrator + state-manager | **F7 CONVERGED** | .factory/phase-f7-convergence/S-526-convergence.md. |
+| Bundle C F1 delta analysis COMPLETE: .factory/phase-f1-delta-analysis/bundle-c-2026-06-17.md. Split → Story 1 #525 (list_comments anti-stall CR-001 + cache write-error CR-007 incl. sibling write_cmdb_fields_cache) + Story 2 #526 (24-site JSON-render unification CR-002). LESSON-F1-SIBLING-CASE confirmed: list_comments only vulnerable paginated fetcher. | orchestrator | **F1 COMPLETE** | #525 + #526 created. |
+| #526 (Bundle C Story 2) F5 CONVERGED 3/3 (round 3; blocking F-1: project.rs compact site missing + C-1: src/cli/project.rs compact site caught; both fixed), F6 PASS (regression 1309/0, diff-scoped mutation 5/5, cargo deny 0 advisories, clippy/fmt clean), F7 CONVERGED 5/5. Two disclosed compact→pretty behavior changes: handle_jsm_create + jr project fields --output json. PR delivery in progress awaiting CI + user merge decision. | orchestrator + state-manager | **F7 CONVERGED** | .factory/phase-f7-convergence/S-526-convergence.md. |
+| #525 (Bundle C Story 1) F5 CONVERGED 3/3 (round 2; citation-leak C-1/C-2 caught+fixed — misattributed JRACLOUD-94357 purged from get_changelog comment + F1 delta doc), F6 PASS (regression 1853/0, diff-scoped mutation 6/6=100%, cargo deny 0 advisories, bounded-time test added), F7 CONVERGED 5/5. LESSON-CITATION-SIBLING-PROPAGATION codified. PR delivery in progress. Bundle C BOTH stories delivered. | orchestrator + state-manager | **F7 CONVERGED** | .factory/phase-f7-convergence/S-525-convergence.md. |
 
 ## Decisions Log
 
@@ -130,26 +129,26 @@ Full per-issue: `cycles/cycle-001/convergence-trajectory.md`. Current: **[2026-0
 | Field | Value |
 |-------|-------|
 | **Date** | 2026-06-17 |
-| **Position** | Maintenance sweep 2026-06-17 IN PROGRESS. Bundle A DELIVERED+MERGED PR #524 → ca24200. Bundle B factory-artifacts COMMITTED @ 20d2441. Bundle C: #526 (Story 2 JSON render unification) F5 CONVERGED 3/3 / F6 PASS / F7 5/5 — PR in progress awaiting CI + merge. #525 (Story 1: list_comments anti-stall + cache write-error) PENDING — F2 spec evolution next. |
+| **Position** | Maintenance sweep 2026-06-17 IN PROGRESS. Bundle A DELIVERED+MERGED PR #524 → ca24200. Bundle B factory-artifacts COMMITTED @ 20d2441. Bundle C: #526 (Story 2) F7 CONVERGED 5/5 — PR in progress awaiting CI + merge. #525 (Story 1) F7 CONVERGED 5/5 — PR in progress awaiting CI + merge. Bundle C BOTH stories delivered. |
 | **develop HEAD** | origin/develop = **ca24200** (PR #524 squash-merged 2026-06-17). |
 | **Activation** | v0.6.0-dev.2 @ 4258202. v0.5.0 STABLE shipped 2026-06-12. |
-| **Counters** | BC **598**. NFR **42**. ADR **16**. Stories **78** (authoritative). |
-| **Active worktree** | .worktrees/S-526 active (Bundle C Story 2 PR in progress). .factory on factory-artifacts is mounted. |
+| **Counters** | BC **599**. NFR **42**. ADR **16**. Stories **79** (authoritative). |
+| **Active worktree** | .worktrees/S-525 active (Bundle C Story 1 PR in progress). .worktrees/S-526 active (Bundle C Story 2 PR in progress). .factory on factory-artifacts is mounted. |
 | **jira-e2e env** | JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ, JR_E2E_ENABLED=true. |
 | **Standing constraints** | Do NOT close #429 (DEC-029). All fixes through full VSDD Feature Mode pipeline. Fork-release-ops INERT (blocked on FORK-OPS-SIGN-INJECTION + FORK-OPS-ALPHA-RACE HIGH). LESSON-F1-SIBLING-CASE: enumerate sibling control-char cases at any normalization chokepoint. LESSON-CENTRALIZATION-AC-GREP: centralization ACs must use enumeration or multiline-aware scanning, never single-line grep negation. |
 
 ## RESUME PLAN (cold-start, self-contained)
 
-<!-- State snapshot: MAINTENANCE SWEEP IN PROGRESS. Bundle C F2 next. No feature worktree. develop @ ca24200. -->
+<!-- State snapshot: MAINTENANCE SWEEP IN PROGRESS. Bundle C BOTH stories F7 CONVERGED, PRs in progress. develop @ ca24200. -->
 
 ### Steps (assume ZERO memory)
 
 **Step 1 (BLOCKING):** Run `vsdd-factory:factory-worktree-health`. Then read `.factory/STATE.md`.
 
-**Step 2:** Confirm maintenance sweep IN PROGRESS. develop @ ca24200. Bundle C: #526 (Story 2: JSON render unification) F5/F6/F7 COMPLETE — PR in progress, awaiting CI + user merge. #525 (Story 1: CR-001 + CR-007) F2 spec evolution PENDING. .worktrees/S-526 is active feature worktree. If develop shows different HEAD, run `git fetch origin`.
+**Step 2:** Confirm maintenance sweep IN PROGRESS. develop @ ca24200. Bundle C: #526 (Story 2: JSON render unification) F7 CONVERGED — PR in progress, awaiting CI + user merge. #525 (Story 1: CR-001 + CR-007) F7 CONVERGED — PR in progress, awaiting CI + user merge. Bundle C BOTH stories delivered. .worktrees/S-525 and .worktrees/S-526 are active feature worktrees. If develop shows different HEAD, run `git fetch origin`.
 
 **Step 3 — Determine next work.** OPEN (priority order):
-- **ACTIVE:** Bundle C — #526 PR in progress (awaiting CI + user merge). Then #525 F2 spec evolution (new BC for list_comments anti-stall guard, CR-007 cache-write alignment).
+- **ACTIVE:** Bundle C — #526 PR in progress (awaiting CI + user merge). #525 PR in progress (awaiting CI + user merge). After both PRs merged: maintenance sweep COMPLETE.
 - Fork-release-ops enablement PENDING (DEC-104; gated on FORK-OPS-SIGN-INJECTION + FORK-OPS-ALPHA-RACE HIGH — see Drift Items).
 - **#429** jr_isolated crypto-random suffix — DO NOT close autonomously (DEC-029, human-deferred).
 - **#400** Story B + engine items.
@@ -165,6 +164,7 @@ Full per-issue: `cycles/cycle-001/convergence-trajectory.md`. Current: **[2026-0
 - OQ-5 RESOLVED (PR #524). E2E-PG-4, SEC-001 LOW deferrals remain open.
 - LESSON-F1-SIBLING-CASE: next Feature Mode F1 MUST enumerate sibling control-char/invariant cases at any normalization chokepoint.
 - LESSON-CENTRALIZATION-AC-GREP: centralization ACs must use enumeration or multiline-aware scanning, never single-line grep negation (line-wrapped emits defeat line-anchored greps; surfaced by #526 F5).
+- LESSON-CITATION-SIBLING-PROPAGATION: when removing a misattributed external-tracker citation, grep ALL sibling occurrences (reference-impl comments cloned-from, upstream analysis docs) — de-citation must be applied symmetrically, not just at the new site (surfaced by #525 F5; JRACLOUD-94357 in get_changelog comment + F1 doc).
 
 Durable follow-ups: see Drift Items section.
 
@@ -174,7 +174,7 @@ Durable follow-ups: see Drift Items section.
 
 | Issue | Title | Status | Priority | Notes |
 |-------|-------|--------|----------|-------|
-| #525 | fix: list_comments anti-stall guard (CR-001) + cache write-error alignment (CR-007) | **OPEN** — Bundle C Story 1; F2 spec evolution next | MED | LESSON-F1-SIBLING-CASE: sibling write_cmdb_fields_cache included in scope. |
+| #525 | fix: list_comments anti-stall guard (CR-001) + cache write-error alignment (CR-007) | **F7 CONVERGED** — PR delivery in progress, awaiting CI + user merge decision | MED | F5 CONVERGED 3/3 (round 2; JRACLOUD-94357 misattribution purged). F6 PASS 1853/0 mut 6/6. F7 5/5. LESSON-CITATION-SIBLING-PROPAGATION codified. |
 | #526 | fix: 24-site JSON-render unification (CR-002) | **F7 CONVERGED** — PR in progress, awaiting CI + user merge | MED | F5 CONVERGED 3/3 (round 3; F-1+C-1 caught+fixed). F6 PASS 1309/0. F7 5/5. 2 compact→pretty behavior changes disclosed (handle_jsm_create, jr project fields). |
 | #522 | fix(adf): ADF CR/newline normalization — EC-11+EC-12+CR-01 | **CLOSED + MERGED** (PR #523 → develop @ 53f6d98, 2026-06-17; auto-closed) | HIGH | Archived to cycles/cycle-001/closed-issues-archive.md. DEC-119. |
 | #429 | jr_isolated() crypto-random suffix | OPEN | LOW | DEC-029 deferred to human. Do NOT close autonomously. |
