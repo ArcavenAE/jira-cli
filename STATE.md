@@ -2,18 +2,18 @@
 document_type: pipeline-state
 version: "2.0"
 status: idle
-timestamp: 2026-06-18T00:00:00Z
+timestamp: 2026-06-18T12:00:00Z
 phase: phase-3-tdd-implementation
 project: jira-cli
 mode: BROWNFIELD
-current_step: "S-TESTTOOL-1 test-tooling hardening CYCLE CLOSED + MERGED. PR #533 → b4a470f. F1–F7 ALL COMPLETE. Stories 79→80. MAINT-MUTANTS-GLOBS-01 + #526-F6-KEYRING-GATE RESOLVED. develop HEAD b4a470f. IDLE."
+current_step: "v0.6.0-dev.3 released 2026-06-18. Tag on develop @ 8aca89f (PR #534). release.yml 27775233196 SUCCESS — 5-target build + 10 assets. IDLE."
 current_cycle: "cycle-001"
 dtu_required: false
 phase_2_status: APPROVED
 phase_2_approved_at: 2026-05-07
 phase_3_status: IN_PROGRESS
-activation_head: "4258202"
-activation_version: "v0.6.0-dev.2"
+activation_head: "8aca89f"
+activation_version: "v0.6.0-dev.3"
 ---
 <!-- SIZE BUDGET: <200 lines. Historical content → cycle files. Run /vsdd-factory:compact-state if over 200. -->
 
@@ -26,10 +26,10 @@ activation_version: "v0.6.0-dev.2"
 | **Product** | jr (Jira CLI) |
 | **Mode** | BROWNFIELD / Rust |
 | **Target Workspace** | develop → main |
-| **Last Updated** | 2026-06-18: S-TESTTOOL-1 test-tooling hardening CYCLE CLOSED + MERGED. PR #533 → b4a470f (develop). F1–F7 ALL COMPLETE — CONVERGED. Stories 79→80. MAINT-MUTANTS-GLOBS-01 + #526-F6-KEYRING-GATE RESOLVED. BC 599. IDLE. |
-| **Current Phase** | Phase 3 — IDLE. S-TESTTOOL-1 CYCLE CLOSED. develop @ b4a470f. BC 599. NFR 42. ADR 16. Stories 80. |
+| **Last Updated** | 2026-06-18: v0.6.0-dev.3 released (PR #534 → 8aca89f). release.yml SUCCESS — 5-target build + 10 assets. IDLE. |
+| **Current Phase** | Phase 3 — IDLE. develop @ 8aca89f (v0.6.0-dev.3). BC 599. NFR 42. ADR 16. Stories 80. |
 | **Next Phase** | Phase 4: Holdout Evaluation (not started) |
-| **Activation HEAD** | 4258202 (v0.6.0-dev.2 released 2026-06-14; develop HEAD 6f24748; v0.5.0 STABLE shipped 2026-06-12) |
+| **Activation HEAD** | 8aca89f (v0.6.0-dev.3 released 2026-06-18; develop HEAD 8aca89f; v0.5.0 STABLE shipped 2026-06-12) |
 
 ## Phase Progress
 
@@ -56,10 +56,10 @@ activation_version: "v0.6.0-dev.2"
 <!-- Keep last 5 rows only. Archive older rows to cycles/cycle-001/burst-log.md. -->
 | Step | Agent | Status | Output |
 |------|-------|--------|--------|
-| Bundle A DELIVERED+MERGED: PR #524 squash-merged → develop @ ca24200. Doc-accuracy fixes (DRIFT-D1..D12, CR-003/004, OQ-5/NFR-O-N, CLAUDE.md arch tree, README). CI 13/13 GREEN. Bundle B COMMITTED: factory-artifacts @ 20d2441 (SC-01/02/04/06/07). | orchestrator + state-manager | **A MERGED / B COMMITTED** | develop @ ca24200. factory-artifacts @ 20d2441. |
 | #525 (Bundle C Story 1) F7 CONVERGED 5/5. PR #531 MERGED → 6f24748. CI GREEN. LESSON-CITATION-SIBLING-PROPAGATION codified. | orchestrator | **MERGED** | develop @ 6f24748. |
 | Maintenance sweep 2026-06-17 COMPLETE. Session review written. S-7.02 checklist SATISFIED. 2 new drift items added (MAINT-MUTANTS-GLOBS-01, MAINT-HOLDOUT-H007-DRIFT). cycle-001 maintenance sub-cycle CLOSED. | state-manager | **MERGED** | develop @ 6f24748. factory-artifacts committed. |
 | S-TESTTOOL-1 F1–F7 COMPLETE. F5 caught: coverage-regression HIGH (missing keyring guard) + C-1 split-brain (F2 edits in main checkout, not worktree). F6 PASS (1855 tests, deny clean, mutation no-op, AC-001 proven). F7 CONVERGED. PR #533 squash-merged → b4a470f. CI Gate 14/14 GREEN. pr-reviewer APPROVE 1 cycle. MAINT-MUTANTS-GLOBS-01 + #526-F6-KEYRING-GATE RESOLVED. | orchestrator + state-manager | **CYCLE CLOSED + MERGED** | develop @ b4a470f. Stories 80. |
+| v0.6.0-dev.3 release: PR #534 squash-merged → develop @ 8aca89f. release.yml 27775233196 SUCCESS — 5-target build (macOS x2, Linux x2, Windows), 10 assets (5 archives + 5 sha256). Tag v0.6.0-dev.3 on 8aca89f. Bundles 8 commits since dev.2 (#492, #522, #525, #526, #533 + CI-gate aggregator + opt-in release-ops + chore). | orchestrator | **RELEASED** | develop @ 8aca89f. v0.6.0-dev.3 tag on 8aca89f. |
 
 ## Decisions Log
 
@@ -125,7 +125,7 @@ All 7 S-WIN-1..6 + #475 per-AC demos: **Yes — adapted**. All are CI-config / i
 
 ## Convergence Trackers
 
-Full per-issue: `cycles/cycle-001/convergence-trajectory.md`. Current: **[2026-06-18] S-TESTTOOL-1 CONVERGED → b4a470f. F5 material findings decayed to zero over 6 rounds (LESSON-F2-WORKTREE-FIRST + coverage-regression HIGH both remediated). [2026-06-17] Maintenance sweep COMPLETE. #525 MERGED → 6f24748. #526 MERGED → d56dcfc. #522 CYCLE CLOSED → 53f6d98. #492 CYCLE CLOSED → 3ba8ea2.**
+Full per-issue: `cycles/cycle-001/convergence-trajectory.md`. Current: **[2026-06-18] v0.6.0-dev.3 released → 8aca89f (PR #534). S-TESTTOOL-1 CONVERGED → b4a470f. F5 material findings decayed to zero over 6 rounds (LESSON-F2-WORKTREE-FIRST + coverage-regression HIGH both remediated). [2026-06-17] Maintenance sweep COMPLETE. #525 MERGED → 6f24748. #526 MERGED → d56dcfc.**
 
 ## Session Resume Checkpoint
 
@@ -134,23 +134,23 @@ Full per-issue: `cycles/cycle-001/convergence-trajectory.md`. Current: **[2026-0
 | Field | Value |
 |-------|-------|
 | **Date** | 2026-06-18 |
-| **Position** | IDLE. S-TESTTOOL-1 test-tooling hardening CYCLE CLOSED + MERGED. PR #533 → b4a470f. MAINT-MUTANTS-GLOBS-01 + #526-F6-KEYRING-GATE RESOLVED. S-7.02 SATISFIED. |
-| **develop HEAD** | origin/develop = **b4a470f** (PR #533 squash-merged 2026-06-18). |
-| **Activation** | v0.6.0-dev.2 @ 4258202. v0.5.0 STABLE shipped 2026-06-12. |
+| **Position** | IDLE. v0.6.0-dev.3 released (PR #534 → 8aca89f). S-TESTTOOL-1 CYCLE CLOSED + MERGED. MAINT-MUTANTS-GLOBS-01 + #526-F6-KEYRING-GATE RESOLVED. S-7.02 SATISFIED. |
+| **develop HEAD** | origin/develop = **8aca89f** (PR #534 squash-merged 2026-06-18; v0.6.0-dev.3 tag). |
+| **Activation** | v0.6.0-dev.3 @ 8aca89f. v0.5.0 STABLE shipped 2026-06-12. |
 | **Counters** | BC **599**. NFR **42**. ADR **16**. Stories **80** (authoritative). |
-| **Active worktree** | None (S-TESTTOOL-1 worktree removed). .factory on factory-artifacts is mounted. |
+| **Active worktree** | None (release worktree removed). .factory on factory-artifacts is mounted. |
 | **jira-e2e env** | JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ, JR_E2E_ENABLED=true. |
 | **Standing constraints** | Do NOT close #429 (DEC-029). All fixes through full VSDD Feature Mode pipeline. LESSON-F2-WORKTREE-FIRST: F2 spec edits to docs/ must be in the story worktree, not main checkout. Fork-release-ops INERT (blocked on FORK-OPS-SIGN-INJECTION + FORK-OPS-ALPHA-RACE HIGH). LESSON-F1-SIBLING-CASE: enumerate sibling control-char cases at any normalization chokepoint. LESSON-CENTRALIZATION-AC-GREP: centralization ACs must use enumeration or multiline-aware scanning, never single-line grep negation. LESSON-CITATION-SIBLING-PROPAGATION: when removing a misattributed citation, grep ALL sibling occurrences symmetrically. |
 
 ## RESUME PLAN (cold-start, self-contained)
 
-<!-- State snapshot: IDLE. S-TESTTOOL-1 CYCLE CLOSED. develop @ b4a470f. No active worktrees. -->
+<!-- State snapshot: IDLE. v0.6.0-dev.3 released. develop @ 8aca89f. No active worktrees. -->
 
 ### Steps (assume ZERO memory)
 
 **Step 1 (BLOCKING):** Run `vsdd-factory:factory-worktree-health`. Then read `.factory/STATE.md`.
 
-**Step 2:** Confirm IDLE. develop @ b4a470f. No active feature worktrees. S-TESTTOOL-1 CYCLE CLOSED + MERGED (PR #533). If develop shows different HEAD, run `git fetch origin`.
+**Step 2:** Confirm IDLE. develop @ 8aca89f (v0.6.0-dev.3 tag). No active feature worktrees. S-TESTTOOL-1 CYCLE CLOSED + MERGED (PR #533). v0.6.0-dev.3 released via PR #534. If develop shows different HEAD, run `git fetch origin`.
 
 **Step 3 — Determine next work.** OPEN (priority order):
 - Fork-release-ops enablement PENDING (DEC-104; gated on FORK-OPS-SIGN-INJECTION + FORK-OPS-ALPHA-RACE HIGH — see Drift Items).
@@ -180,6 +180,7 @@ Durable follow-ups: see Drift Items section.
 
 | Issue | Title | Status | Priority | Notes |
 |-------|-------|--------|----------|-------|
+| #534 | chore(release): v0.6.0-dev.3 | **MERGED** (PR #534 squash-merged → develop @ 8aca89f, 2026-06-18; tag v0.6.0-dev.3; release.yml 27775233196 SUCCESS) | — | 8 commits since dev.2. 5-target build, 10 assets. |
 | #533 | feat(ci): S-TESTTOOL-1 test-tooling hardening — mutants globs + keyring gate | **MERGED** (PR #533 squash-merged → develop @ b4a470f, 2026-06-18; auto-closed) | LOW | F1–F7 COMPLETE. MAINT-MUTANTS-GLOBS-01 + #526-F6-KEYRING-GATE resolved. |
 | #532 | fix(test): Login/Refresh/Logout global-`--profile` fallback ungated coverage | **OPEN** — LOW, follow-up coverage; opened 2026-06-18 | LOW | Deferred from S-TESTTOOL-1 F5. No blocking impact. |
 | #525 | fix: list_comments anti-stall guard (CR-001) + cache write-error alignment (CR-007) | **MERGED** (PR #531 → develop @ 6f24748, 2026-06-17; auto-closed) | MED | LESSON-CITATION-SIBLING-PROPAGATION codified. F6 1853/0 mut 6/6. F7 5/5. |
