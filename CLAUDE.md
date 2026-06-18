@@ -12,55 +12,83 @@ src/
 ├── cli/                 # Clap derive definitions + command handlers
 │   ├── mod.rs           # CLI enums, global flags (--output, --project, --profile, --no-input, --no-color)
 │   ├── issue/           # issue commands (split by operation theme)
-│   │   ├── mod.rs       # dispatch + re-exports
-│   │   ├── format.rs    # row formatting, headers, points display
-│   │   ├── list.rs      # list + view + comments (read operations, unified JQL composition)
-│   │   ├── view.rs      # cli/issue/view.rs — issue view handler, detailed single-issue rendering (~287 LOC)
-│   │   ├── comments.rs  # cli/issue/comments.rs — comment list formatting and display (~61 LOC)
-│   │   ├── create.rs    # create + edit (field-building)
-│   │   ├── workflow.rs  # move + transitions + assign + comment + open
-│   │   ├── links.rs     # link + unlink + link-types
-│   │   ├── helpers.rs   # team/points resolution, user resolution, prompts
-│   │   └── assets.rs    # linked assets (issue→asset lookup)
-│   ├── assets.rs        # assets search/view/tickets/schemas/types/schema (search enrichment, schema discovery)
+│   │   ├── mod.rs           # dispatch + re-exports
+│   │   ├── format.rs        # row formatting, headers, points display
+│   │   ├── list.rs          # list only (JQL composition, filter application)
+│   │   ├── view.rs          # issue view handler, detailed single-issue rendering (~287 LOC)
+│   │   ├── comments.rs      # comment list formatting and display (~61 LOC)
+│   │   ├── create.rs        # create + edit (field-building)
+│   │   ├── workflow.rs      # move + transitions + assign + comment + open
+│   │   ├── links.rs         # link + unlink + link-types
+│   │   ├── helpers.rs       # team/points resolution, user resolution, prompts
+│   │   ├── assets.rs        # linked assets (issue→asset lookup)
+│   │   ├── changelog.rs     # issue changelog handler (`jr issue changelog`)
+│   │   ├── field_resolve.rs # field resolution helpers for `issue edit --field`
+│   │   └── json_output.rs   # JSON output helpers for issue commands
+│   ├── assets/          # assets commands (module directory)
+│   │   ├── mod.rs           # dispatch + re-exports
+│   │   ├── search.rs        # assets search (AQL, enrichment)
+│   │   ├── view.rs          # asset detail view
+│   │   ├── tickets.rs       # connected tickets (`filter_tickets` lives here)
+│   │   └── schemas.rs       # schema/type/attribute discovery
+│   ├── auth/            # auth commands (module directory)
+│   │   ├── mod.rs           # dispatch + re-exports
+│   │   ├── keychain.rs      # keychain helpers
+│   │   ├── list.rs          # auth list
+│   │   ├── login.rs         # auth login
+│   │   ├── logout.rs        # auth logout
+│   │   ├── refresh.rs       # auth refresh
+│   │   ├── remove.rs        # auth remove
+│   │   ├── status.rs        # auth status (human text only; no JSON path)
+│   │   └── switch.rs        # auth switch
+│   ├── api.rs           # API passthrough command (`jr api`)
 │   ├── board.rs         # board list/view
 │   ├── sprint.rs        # sprint list/current/add/remove (scrum-only, errors on kanban)
 │   ├── worklog.rs       # worklog add/list
 │   ├── team.rs          # team list (with cache + lazy org discovery)
 │   ├── user.rs          # user search/list/view (thin wrapper over api/jira/users.rs)
-│   ├── auth.rs          # auth login/switch/list/status/refresh/logout/remove. Multi-profile aware via --profile.
 │   ├── init.rs          # Interactive setup (prefetches org metadata + team cache + story points field)
 │   ├── project.rs       # project fields (types, priorities, statuses, CMDB fields)
 │   ├── queue.rs         # queue list/view (JSM service desks)
 │   └── requesttype.rs   # requesttype list/fields (JSM request-type discovery + 7d cache)
 ├── api/
-│   ├── client.rs        # JiraClient — HTTP methods, auth headers, rate limit retry, 429/401 handling
-│   ├── auth.rs          # OAuth 2.0 flow + per-profile keychain layout (shared email/api-token/oauth_client_*; namespaced <profile>:oauth-access-token / <profile>:oauth-refresh-token); lazy migration of legacy flat OAuth keys for the "default" profile
-│   ├── pagination.rs    # Offset-based (most endpoints) + cursor-based (JQL search)
-│   ├── rate_limit.rs    # Retry-After parsing
+│   ├── client.rs              # JiraClient — HTTP methods, auth headers, rate limit retry, 429/401 handling
+│   ├── auth.rs                # OAuth 2.0 flow + per-profile keychain layout (shared email/api-token/oauth_client_*; namespaced <profile>:oauth-access-token / <profile>:oauth-refresh-token); lazy migration of legacy flat OAuth keys for the "default" profile
+│   ├── auth_embedded.rs       # thin sibling to auth.rs; XOR-obfuscated embedded OAuth app credentials
+│   ├── pagination.rs          # Offset-based (most endpoints) + cursor-based (JQL search)
+│   ├── rate_limit.rs          # Retry-After parsing
+│   ├── refresh_coordinator.rs # per-profile single-flight OAuth refresh coordinator (prevents concurrent invalid_grant races)
 │   ├── assets/          # Assets/CMDB API call implementations
 │   │   ├── workspace.rs     # workspace ID discovery + cache
 │   │   ├── linked.rs        # CMDB field discovery, asset extraction/enrichment (per-field + JSON)
 │   │   ├── objects.rs       # AQL search, get object, resolve key
-│   │   ├── schemas.rs       # api/assets/schemas.rs — schema discovery + object-type attributes (~44 LOC)
+│   │   ├── schemas.rs       # schema discovery + object-type attributes (~44 LOC)
 │   │   └── tickets.rs       # connected tickets
-│   └── jira/            # Jira-specific API call implementations (one file per resource)
-│       ├── issues.rs    # search (full + keys-only), get, create, edit, list comments
-│       ├── boards.rs    # list boards, get board config
-│       ├── sprints.rs   # list sprints, get sprint issues
-│       ├── fields.rs    # list fields, story points + CMDB field discovery
-│       ├── statuses.rs  # get all statuses (global, not project-scoped)
-│       ├── links.rs     # create/delete issue links, list link types
-│       ├── teams.rs     # org metadata (GraphQL), list teams
-│       ├── worklogs.rs  # add/list worklogs
-│       ├── projects.rs  # project details
-│       └── users.rs     # current user, user search, assignable users, single-user lookup
-│   ├── jsm/             # JSM-specific API call implementations
-│   │   ├── servicedesks.rs  # list service desks, project meta orchestration
-│   │   └── queues.rs        # list queues, get queue issues
+│   ├── jira/            # Jira-specific API call implementations (one file per resource)
+│   │   ├── issues.rs    # search (full + keys-only), get, create, edit, list comments
+│   │   ├── bulk.rs      # bulk issue operations (transition, field edit, label edit)
+│   │   ├── boards.rs    # list boards, get board config
+│   │   ├── sprints.rs   # list sprints, get sprint issues
+│   │   ├── fields.rs    # list fields, story points + CMDB field discovery
+│   │   ├── statuses.rs  # get all statuses (global, not project-scoped)
+│   │   ├── links.rs     # create/delete issue links, list link types
+│   │   ├── resolutions.rs # resolution list endpoint
+│   │   ├── teams.rs     # org metadata (GraphQL), list teams
+│   │   ├── worklogs.rs  # add/list worklogs
+│   │   ├── projects.rs  # project details
+│   │   └── users.rs     # current user, user search, assignable users, single-user lookup
+│   └── jsm/             # JSM-specific API call implementations
+│       ├── servicedesks.rs  # list service desks, project meta orchestration
+│       ├── queues.rs        # list queues, get queue issues
+│       ├── request_types.rs # JSM request-type discovery
+│       └── requests.rs      # JSM request creation (`handle_jsm_create` path)
 ├── types/assets/        # Serde structs for Assets API responses (AssetObject, ConnectedTicket, LinkedAsset, etc.)
-├── types/jira/          # Serde structs for API responses (Issue, Board, Sprint, User, Team, etc.)
-├── types/jsm/           # Serde structs for JSM API responses (ServiceDesk, Queue, etc.)
+├── types/jira/          # Serde structs for Jira API responses
+│   ├── issue.rs, board.rs, sprint.rs, user.rs, team.rs, project.rs, worklog.rs  # core types
+│   ├── bulk.rs          # serde structs for bulk operations
+│   ├── changelog.rs     # serde structs for changelog API
+│   └── editmeta.rs      # serde structs for editmeta
+├── types/jsm/           # Serde structs for JSM API responses (ServiceDesk, Queue, RequestType, etc.)
 ├── cache.rs             # Per-profile XDG cache (~/.cache/jr/v1/<profile>/) — team list, project meta, workspace ID, CMDB fields, object-type attrs, resolutions (all 7-day TTL). Versioned root (`v1/`) lets a future schema bump orphan stale files cleanly.
 ├── config.rs            # Global (~/.config/jr/config.toml) [profiles.<name>] + default_profile + per-project (.jr.toml), figment layering. Auto-migrates legacy [instance]/[fields] shape on first load. Active profile resolved at load via Config::load_with(cli_profile) (cli flag threaded through as a parameter, NOT an env-var seam) > JR_PROFILE env > default_profile field > "default".
 ├── output.rs            # Table (comfy-table) and JSON formatting
@@ -77,7 +105,7 @@ Product-namespaced `api/jira/` and `types/jira/` so future Confluence/JSM/Assets
 
 ## Known Size Deviations
 
-- `cli/issue/list.rs`: 1,083 LOC post-split (target was ≤750 per `docs/specs/list-rs-split.md`; spec target not achieved but split was partial — `view.rs` and `comments.rs` already extracted). NFR-O-G: DOCUMENT-AS-IS-COMPLETE (S-3.08).
+- `cli/issue/list.rs`: 1,256 LOC post-split (target was ≤750 per `docs/specs/list-rs-split.md`; spec target not achieved but split was partial — `view.rs` and `comments.rs` already extracted). NFR-O-G: DOCUMENT-AS-IS-COMPLETE (S-3.08).
 
 ## Build & Test
 
@@ -98,6 +126,7 @@ DIFF_FILE=$(mktemp -t pr.diff.XXXXXX) && trap 'rm -f "$DIFF_FILE"' EXIT && git d
 - **Commits:** Conventional Commits format (`feat:`, `fix:`, `docs:`, `chore:`, `ci:`, `test:`)
 - **Branches:** `type/short-description` (e.g., `feat/issue-commands`, `fix/auth-flow`). Default branch is `develop`. Feature branches → PR to `develop` → PR to `main` for releases.
 - **Protected branches:** `main` and `develop` require CI to pass and code owner approval on PRs. Admins can bypass.
+- **CI Gate:** `ci-gate` (job name "CI Gate") is THE single required branch-protection status check on `develop`/`main`. New CI jobs that must be required must be added to `ci-gate.needs`, never wired directly into branch protection — this prevents the matrix-rename fragility class (DEC-096/DEC-097).
 - **Errors:** Always suggest what to do next. Map to exit codes via `JrError::exit_code()`
 - **Output:** `--output json` returns structured JSON for both success and errors. Human text is default.
 - **Non-interactive:** `--no-input` disables prompts (auto-enabled when stdin is not a TTY). Commands must have fully non-interactive flag equivalents.
@@ -110,7 +139,7 @@ DIFF_FILE=$(mktemp -t pr.diff.XXXXXX) && trap 'rm -f "$DIFF_FILE"' EXIT && git d
 - `--dry-run` is implemented on `issue edit` (multi-key positional + `--jql`-resolved sets) with `--output json` support. Pre-PR2 NFR-O-C originally documented this as DOCUMENT-AS-IS-OUT-OF-SCOPE; superseded by issue #110 part 2.
 - `jr version --output json` is not implemented (NFR-O-X: deferred to v2; consider for `release-notes` automation).
 - `sprint list` table omits start/end dates (NFR-O-U: deferred UX pass v2; available in API response).
-- `auth status --output json` covers single-profile JSON; multi-profile listing has no JSON path (NFR-O-N: deferred; planned alongside future `auth list --output json` extension).
+- `auth status` has no `--output json` support (NFR-O-N: deferred; neither single-profile nor multi-profile JSON is implemented — `src/cli/auth/status.rs::status()` writes human text only via `println!`). JSON path planned alongside future `auth list --output json` extension.
 - JSON output has no `_meta: {version: N}` envelope (NFR-O-P: deliberate for v0.5; consider for v2 to enable downstream-parser schema-drift detection).
 
 ### Output channels
@@ -135,6 +164,7 @@ See `docs/adr/` for detailed rationale:
 - ADR-0005: GraphQL hostNames for org discovery (team support)
 - ADR-0006: Embedded `jr` OAuth app with compile-time XOR obfuscation (re-supersedes ADR-0002)
 - ADR-0015: Proactive resolution enforcement on done-category transitions (`jr issue move` requires `--resolution` or `--no-resolution`)
+- ADR-0016: Windows build target (x86_64-pc-windows-msvc, AppData config/cache paths, Windows Credential Manager keyring, .zip packaging, CI)
 
 ## Specs & Plans
 
@@ -151,6 +181,9 @@ When adding a new feature:
 
 ## Gotchas
 
+- **Windows config/cache paths (BC-6.1.014, BC-6.2.016):** On Windows, `jr` uses idiomatic AppData locations — config at `%APPDATA%\jr` (Roaming, via `dirs::config_dir()`) and cache at `%LOCALAPPDATA%\jr` (Local, via `dirs::cache_dir()`). Unix paths (`~/.config/jr`, `~/.cache/jr/v1/<profile>/`) are unchanged. The `JR_CONFIG_DIR`/`JR_CACHE_DIR` debug seam (Decision 5, ADR-0016) provides cross-platform test isolation; `XDG_CONFIG_HOME`/`XDG_CACHE_HOME` remain Unix-only.
+- **Windows Credential Manager isolation (SEC-WCM-DOC):** On Windows, `jr` stores OAuth tokens and API tokens via the `keyring` crate's `windows-native` feature, which uses Windows Credential Manager (`CRED_TYPE_GENERIC` entries). Secrets stored there are accessible to any process running in the same user session — the same security posture as `gh` and `git-credential-manager`. OS-level user-session isolation is the trust boundary on Windows. Do not use `jr` in a shared-session environment (e.g., a shared Windows terminal server) without understanding this posture.
+- **jr.exe requires an explicit 8 MB main-thread stack on Windows (WIN-STACK):** Windows PE headers default to a 1 MB main-thread stack, while Linux/macOS default to 8 MB. The `#[tokio::main]` async runtime + clap dispatch + result rendering exceed 1 MB, causing jr.exe to crash on normal commands like `jr issue list`. The fix is embedded at compile time via `.cargo/config.toml` under `[target.x86_64-pc-windows-msvc]`: `rustflags = ["-C", "link-arg=/STACK:8388608"]` — this sets an 8 MB reserve in the PE header. Unix builds are unaffected. `RUST_MIN_STACK` is NOT a valid fix: it only affects `std::thread::spawn` threads (test-harness workers), not a process's main thread.
 - **Multi-profile boundary:** every cache reader/writer takes `profile: &str` as its first arg. Pass `&config.active_profile_name` from any handler that has `&Config` in scope. Cross-profile cache leakage is a correctness bug, not a UX issue — sandbox vs prod custom-field IDs can differ.
 - **Per-profile vs shared OAuth keys:** `email`, `api-token`, `oauth_client_id`, `oauth_client_secret` live under flat keychain keys (account-level, shared across profiles). `oauth-access-token` / `oauth-refresh-token` are namespaced as `<profile>:oauth-*` because they're cloudId-scoped. The `"default"` profile lazy-migrates legacy flat keys on first read; other profiles do not.
 - **Cache format changes:** `~/.cache/jr/v1/<profile>/cmdb_fields.json` stores `(id, name)` tuples. Old format (ID-only) causes deserialization failure, handled as cache miss. If you change cache structs, old caches auto-expire (7-day TTL) or fail gracefully. To break compatibility cleanly, bump the cache root from `v1/` to `v2/` — old files orphan harmlessly.
@@ -162,11 +195,11 @@ When adding a new feature:
 - **Embedded OAuth app uses fixed callback port 53682.** Callback URL is `http://127.0.0.1:53682/callback` — literal `127.0.0.1` (not `localhost`) to force IPv4 and dodge the macOS/Chrome `localhost`→`::1` pitfall; must match the Atlassian Developer Console registration, so changing the port is a breaking release. Release builds inject `JR_BUILD_OAUTH_CLIENT_ID`/`_SECRET` via `build.rs` → XOR-obfuscated `embedded_oauth.rs`. BYO sources (flag/env/keychain) keep dynamic-port behavior. Detail: ADR-0006, `docs/superpowers/specs/2026-04-30-embedded-oauth-app-design.md`.
 - **`src/api/auth_embedded.rs` is a thin sibling module** to `auth.rs`. Keep
   obfuscation plumbing there; keep keychain/OAuth flow plumbing in `auth.rs`.
-- **`--verbose` is header-only (SD-003 breaking change):** As of v0.6, `--verbose` shows method + URL + status only. It does NOT print request/response bodies. To inspect bodies (e.g., for debugging API calls), use `--verbose-bodies`. This flag emits a 3-line PII warning to stderr because bodies contain accountIds, email addresses, and ADF content. Do not use `--verbose-bodies` in shared terminals, debug log files piped to shared storage, or AI-agent context windows. Migration: `jr ... --verbose` → `jr ... --verbose --verbose-bodies` if body inspection was relied upon.
+- **`--verbose` is header-only (SD-003 breaking change):** As of v0.6, `--verbose` shows method + URL only. It does NOT print request/response bodies. To inspect bodies (e.g., for debugging API calls), use `--verbose-bodies`. This flag emits a 3-line PII warning to stderr because bodies contain accountIds, email addresses, and ADF content. Do not use `--verbose-bodies` in shared terminals, debug log files piped to shared storage, or AI-agent context windows. Migration: `jr ... --verbose` → `jr ... --verbose --verbose-bodies` if body inspection was relied upon.
 - **`refresh_oauth_token` resolves credentials internally** (keychain →
   embedded) — callers pass only `profile`. Do not re-introduce
   `client_id`/`client_secret` parameters; they short-circuit the resolver.
-- **`--open` filter uses two mechanisms:** Jira issues → `statusCategory != Done` injected into JQL (server-side). Connected CMDB tickets (`cli/assets.rs::filter_tickets`) → client-side `status.colorName != "green"`, because CMDB tickets don't support JQL `statusCategory` filtering.
+- **`--open` filter uses two mechanisms:** Jira issues → `statusCategory != Done` injected into JQL (server-side). Connected CMDB tickets (`cli/assets/tickets.rs::filter_tickets`) → client-side `status.colorName != "green"`, because CMDB tickets don't support JQL `statusCategory` filtering.
 - **User pagination advances by `USER_PAGE_SIZE`, not returned count:** In
   `src/api/jira/users.rs`, both `search_users_all` and `search_assignable_users_by_project_all`
   increment `start_at` by `USER_PAGE_SIZE` (100) after each page, NOT by the number of
@@ -226,7 +259,8 @@ When adding a new feature:
 - **Markdown footnotes → ADF (`adf.rs`, issue #472):** `markdown_to_adf` enables `Options::ENABLE_FOOTNOTES`. ADF has no native footnote node, so the mapping is **preserve, not drop**: a reference `[^1]` becomes a *plain, unmarked* `[label]` text marker (via `push_footnote_marker` — deliberately does NOT inherit active marks, so a ref inside `**bold**` is not bolded); definitions are collected and flushed at `finish()` into an appended section (one `rule` divider + one `[label] `-prefixed paragraph each). Load-bearing details: (1) pulldown-cmark only emits `FootnoteReference` for *defined* labels — an undefined `[^x]` stays literal text upstream; (2) duplicate `[^1]:` lines are deduped by label (first wins) via `footnote_labels_seen`; (3) definitions render in definition-source order, not reference order (deliberate, deterministic); (4) the `[n]` marker can collide visually with literal `[n]` user text (accepted ADF-mapping limitation). **Empty-container pruning:** pulldown hoists footnote defs out of enclosing blocks, leaving empty shells (`> [^1]: x` → empty `blockquote`); `is_empty_block_container` (a free fn) prunes any `blockquote`/`heading`/`panel`/`listItem`/`bulletList`/`orderedList`/`table`/`tableRow` left with empty `content` (invalid ADF → Jira 400). `paragraph`/`codeBlock`/`tableCell`/`tableHeader` are excluded (empty is valid ADF / a placeholder paragraph keeps cells non-empty / pruning a cell would break column alignment). This also prunes a bare-`#` empty heading. Detail: `src/adf.rs` rustdoc + `adf::tests::test_markdown_footnote_*`.
 - **Markdown minor constructs → ADF (`adf.rs`, issue #474):** `markdown_to_adf` also enables `ENABLE_SUPERSCRIPT | ENABLE_SUBSCRIPT | ENABLE_HEADING_ATTRIBUTES`. (1) **subsup:** `^x^` → `subsup` sup, `~x~` → `subsup` sub (rendered back by `adf_to_text` for a lossless round-trip). Enabling `ENABLE_SUBSCRIPT` reassigns *single*-tilde `~x~` from strikethrough to subscript; *double*-tilde `~~x~~` stays `strike` (pinned by `test_markdown_double_tilde_still_strikethrough_not_subscript`). Nested same-type spans (`^a ~b~ c^`) are deduped by `dedup_marks_by_type` so a text node never carries two `subsup` marks (ADF rejects duplicate mark types). **Limitations:** (a) pulldown does not open a superscript when `^` is tight against a preceding word char, so `mc^2^` stays literal — use `mc ^2^`; (b) `code` mark cannot coexist with `subsup`/`em`/`strong`/`strike` on one text node per the ADF schema (`code_inline_node`), so `` ^`x`^ `` would be invalid — not guarded here (pre-existing class: `` **`x`** `` has the same issue; tracked as a follow-up). (2) **Heading attrs:** `## Title {#id}` no longer leaks `{#id}` into text (ADF headings have no id; id/classes/attrs are parsed and dropped). GFM alerts (`> [!NOTE]`) → ADF `panel` shipped separately in #483 (below). Detail: `adf::tests::test_markdown_{superscript,subscript,heading_attributes}*` + `test_render_subsup_mark_reverse_path`.
 - **Markdown GFM alerts → ADF `panel` (`adf.rs`, issue #483):** `markdown_to_adf` enables `ENABLE_GFM`, which in pulldown-cmark 0.13 gates *only* alert blockquotes (no side effect on the separately-set tables/strike/footnotes/subsup/heading-attr flags). A tagged alert arrives as `Tag::BlockQuote(Some(BlockQuoteKind))` → `panel`; plain `BlockQuote(None)` stays `blockquote`. **Kind → panelType** (`panel_type_for`, exhaustive — no `_` arm so a new pulldown variant is a compile error): Note→`info`, Tip→`success`, Important→`note`, Warning→`warning`, Caution→`error`. Only the five portable panelTypes are emitted; `tip`/`custom` are avoided (editor-flag-gated, inconsistent on Jira Cloud). **Content-model normalization (`normalize_panel_content`, mirrors #470's listItem pass):** ADF `panel.content` forbids nested `panel`, `table`, and `blockquote` — so nested panels/blockquotes are unwrapped recursively (inner panelType discarded) and tables are flattened to per-row paragraphs via `flatten_table_to_paragraphs`; `heading`/`paragraph` are kept but stripped of any node-level `marks` (`panel.content` requires no-marks). `normalize_list_item_content` gains a `panel` arm (ADF `listItem` forbids `panel` → unwrap). `panel` is in `is_empty_block_container`'s prune set (empty alert shell is invalid ADF). **Reverse path:** `adf_to_text` renders `panel` back to `> [!KIND]` via `gfm_label_for_panel_type` (inverse map); an unmapped panelType (`tip`/`custom`/foreign) falls back to a plain `> ` blockquote with no marker. Round-trip is stable for the five kinds (table/nesting normalizations are lossy, same class as listItem). **Parser leniency (verified empirically, looser than GitHub's spec):** the marker is recognized with or without the leading space (`>[!NOTE]`) and is case-insensitive (`[!note]`/`[!Note]`); the only disqualifiers are trailing text on the marker line (`> [!NOTE] extra`) and an unknown kind (`> [!FOO]`), both → plain blockquote. The renderer keys off `Some(kind)`, never string-matching the marker text. Spec: `docs/specs/adf-panel-content-model.md`; BC-7.2.009. Detail: `adf::tests::test_markdown_alert_*` + `test_render_panel_*` + `test_alert_markdown_to_text_roundtrip_all_kinds`.
-- **Block-level HTML → literal text (`adf.rs`, issue #489):** ADF has no raw-HTML node, so `markdown_to_adf` **preserves** block HTML rather than dropping it — symmetric with inline HTML. pulldown-cmark wraps a block run in `Tag::HtmlBlock` (Start/End) around per-line `Event::Html` events; `start()` routes `Tag::HtmlBlock` → `NodeKind::HtmlBlock` (NOT the `_ => Sink` catch-all, which silently discarded it before #489). On End the inner Html lines are concatenated into one literal text node, the **single trailing block newline trimmed** (so a one-line `<div>x</div>` leaves no dangling break), and emitted as one `paragraph`; **interior newlines are kept verbatim** as the honest literal representation. An empty block yields `None` (no empty paragraph). Round-trips through `adf_to_text` losslessly. Inline HTML (`Event::InlineHtml`) was already preserved via the shared `push_text` arm — this closes the block/inline asymmetry. Detail: `adf::tests::test_convert_block_html_is_preserved_as_literal_text` + `test_convert_multiline_block_html_preserves_interior_newlines` + `test_block_html_round_trips_through_adf_to_text`.
+- **Block-level HTML → literal text with `hardBreak` interior newlines (`adf.rs`, issues #489 + #492):** ADF has no raw-HTML node, so `markdown_to_adf` **preserves** block HTML rather than dropping it — symmetric with inline HTML. pulldown-cmark wraps a block run in `Tag::HtmlBlock` (Start/End) around per-line `Event::Html` events; `start()` routes `Tag::HtmlBlock` → `NodeKind::HtmlBlock` (NOT the `_ => Sink` catch-all, which silently discarded it before #489). On End the handler runs **Algorithm B** (BC-7.2.011): (1) concatenate accumulated Html-event text; (2) trim trailing `\r`/`\n` only (spaces/tabs preserved); (3) normalize `\r\n`→`\n`, lone `\r`→`\n`, then split on `\n`; (4) emit alternating `text` and `hardBreak` nodes (empty segments get `hardBreak` boundary, no text); (5) wrap in `paragraph`, trim leading/trailing `hardBreak`s; (6) if content array is empty after trim, return `EndResult::Empty` — no paragraph emitted (`paragraph` is excluded from `is_empty_block_container`, so this explicit guard is the operative prune path for EC-7). **Critical file-wide invariant (BC-7.2.011):** no `text` node may contain a raw `\n` character — Jira rejects them. Interior newlines are `hardBreak` nodes, never verbatim `\n` in text. Round-trip via `adf_to_text` is **line-structure-lossless but NOT byte-identical** in five cases: CRLF input (normalized to LF), leading newline (leading `hardBreak` trimmed), trailing newline(s) (stripped by step 2), trailing non-newline whitespace on final line (preserved forward, stripped by `AdfRenderer::finish().trim_end()` on reverse), and bare URL at an autolink boundary (rewritten to `[url](url)` by the #473 pass). Inline HTML (`Event::InlineHtml`) was already preserved via the shared `push_text` arm — this closes the block/inline asymmetry. Spec: `docs/specs/adf-block-html.md`; BC-7.2.011. Detail: `adf::tests::test_convert_block_html_is_preserved_as_literal_text` + `test_convert_multiline_block_html_preserves_interior_newlines` + `test_block_html_round_trips_through_adf_to_text` + `test_block_html_all_empty_block_emits_no_paragraph`.
+- **`push_text`/`push_code`/`text_to_adf` CR/LF normalization chokepoint (`adf.rs`, issue #522, BC-7.2.011 INV-1):** `push_text` (Other context), `push_code`, and `text_to_adf` are the SELF-SUFFICIENT enforcement point for INV-1 — no raw `\r` or `\n` may appear in a non-codeBlock `text` node. In **Other context**, `\r\n`, lone `\r`, and bare `\n` are all mapped to a single space (mirrors `SoftBreak → " "`). In **codeBlock context**, `\r\n`→`\n` and lone `\r`→`\n` (newlines preserved as-is; codeBlock content is exempt from INV-1). HtmlBlock is exempt from both: it defers to Algorithm B (which produces `hardBreak` nodes instead). **Load-bearing asymmetry:** block HTML interior newlines → `hardBreak` nodes (Algorithm B); inline HTML (`Event::InlineHtml`, Other context) interior newlines → a **space** via `push_text`, consistent with `SoftBreak`. This closed a reachable HIGH bug (#522 CR-01): multi-line inline HTML in a user `--description` or comment (e.g. `foo <span\nx>bar`) previously emitted a raw `\n` into a text node → Jira HTTP 400. **Out of scope:** Unicode line separators U+2028/U+2029/U+0085/U+000B/U+000C are passed through verbatim — INV-1 covers ASCII `\r`/`\n` only.
 - **GFM task lists → ADF `taskList`/`taskItem` (`adf.rs`, issue #471):** `markdown_to_adf` enables `Options::ENABLE_TASKLISTS`. The builder uses Approach B (post-hoc reclassification): lists start as `BulletList`; at `End(Tag::List)` the BulletList arm inspects children for `taskItem` nodes and reclassifies to `taskList`. **Critical event ordering (empirically confirmed, pulldown-cmark 0.13.3):** `Event::TaskListMarker(bool)` fires AFTER `Start(Tag::Item)` — in a TIGHT list it fires directly (item body is inline-only); in a LOOSE list it fires INSIDE a `Tag::Paragraph` wrapper. The retroactive stack mutation converts the current top (`Paragraph` or `ListItem`) to `TaskItem { checked }`. **Loose multi-paragraph task items (EC-16):** the `NodeKind::ListItem` arm detects when its first child is a `taskItem` JSON node (from loose-list paragraph promotion) and merges all subsequent paragraph children into one `taskItem` using `hardBreak` separators. **Nested sublists:** `TaskItem` finalization returns block children (`taskList`, `bulletList`, `orderedList`, and any other block node type) as `EndResult::WithHoists`; `BulletList` reclassification sees them as sibling entries in BulletList.children — nested `taskList` → `task_children` (EC-13), everything else → hoisted set (EC-15); `WithHoists` appends the `taskList` FIRST, then hoists, achieving `[taskList, bulletList]` doc-level ordering. No JSON side-channel fields. **`taskItem.attrs.state`:** `markdown_to_adf` ALWAYS emits uppercase `"TODO"` / `"DONE"` (Jira requires uppercase). `adf_to_text` is deliberately lenient: it uses `state.eq_ignore_ascii_case("DONE")` so externally-produced ADF with lowercase `"done"` still renders as `- [x]`. **localId assignment:** `assign_local_ids` DFS pre-order pass runs after `finish()`, before `autolink_bare_urls`; 1-based counter strings, document-wide unique, no uuid crate. **Pruning:** `"taskList"` and `"taskItem"` in `is_empty_block_container`; taskItem extended branch also prunes content containing only hardBreaks, whitespace text, and backslash-only text (the failed-escape artifact from `\\\n` in a tight list — a deliberate product choice). Spec: `docs/specs/adf-task-list.md`; BC-7.2.010. Detail: `adf::tests::test_markdown_task_*` + `test_task_*` + `test_nested_task_*`.
 - **`allow_hyphen_values` on free-text CLI args (issue #471):** All user-authored free-text write-command inputs carry `allow_hyphen_values = true` (`src/cli/mod.rs`): `--summary` and `--description` (on `issue create` and `issue edit`), `worklog add --message`, the `issue comment` positional message, and `issue remote-link --title`. This lets leading-dash free text (e.g. GFM task lists `- [ ] todo`, bullet lists `- item`, titled links `- important ref`) pass through clap without being treated as an unknown flag. **Tradeoff:** with `allow_hyphen_values`, a missing value (user forgets the string after `--description`) silently consumes the next token as the value instead of erroring. Prefer `--description="…"` (equals-sign form) or `--description-stdin` for programmatic/AI-agent usage where the value may start with a dash. `conflicts_with` enforcement (e.g. `--description` vs `--description-stdin`) is unaffected — the mutual-exclusion guard remains active.
 - **Bare-URL autolinking → ADF `link` mark (`adf.rs`, issue #473):** pulldown-cmark 0.13 has **no autolink extension** (`ENABLE_GFM` adds only alert blockquotes, NOT GFM extended autolinks), so bare URLs arrive as plain text. `markdown_to_adf` runs a post-`finish()` pass — `autolink_bare_urls` → `split_text_node_on_urls` → `find_bare_url_spans`/`trim_url_extent` — that walks the built ADF tree and applies a `link` mark to bare-URL runs. **This is required, not cosmetic:** Jira's REST API does NOT auto-linkify plain-text URLs in a submitted ADF body (smart-link unfurl is a browser-editor-only, compose-time feature) — without the mark the URL is unclickable (Atlassian-confirmed; `.factory/research/issue-473-bare-url-autolink-scope.md`). **Scope is `http(s)://` explicit-scheme ONLY** (deliberate, #473): `www.`-prefixed hosts and bare emails are OUT of scope — they need scheme inference and carry high false-positive risk in prose (version strings `0.13`, file paths `src/adf.rs`, sentence-final domains), and because an applied mark permanently writes a link into the user's issue the narrowest covering scope wins. **Rules (GFM-derived):** (1) a URL starts only at text-node start or after whitespace/`*_~(` (so `foohttps://…` does NOT match); (2) extent runs to the next whitespace or `<`; (3) trailing `?!.,:*_~` are trimmed and a trailing `)` is dropped only when unbalanced (so `…/Foo_(bar)` keeps its parens but `(https://x)`/`https://x.` do not); (4) text nodes already carrying a `link` mark (`<url>` / `[t](url)`) or a `code` mark, and all `codeBlock` content, are skipped — never double-linked, never linkified inside code; (5) the scheme is matched **case-insensitively** (`HTTPS://`, `Http://`, `httpS://` all link — `find_bare_url_spans` searches a `to_ascii_lowercase` copy whose byte offsets map 1:1 to the original since only ASCII A–Z fold), and the `href` is sliced from the original text so the user's casing is preserved. Existing inline marks (strong/em/…) are preserved on the split URL node. **Deviations from GFM (deliberate, bias toward fewer false positives):** (a) the boundary "before" set is `*_~(`+whitespace+start ONLY — GFM also admits `[`, which we omit (so an unresolved `[https://x]` shortcut stays plain); (b) because the pass runs over the *already-built* tree, a URL whose interior contains inline markup (`https://x/a*b*c`, `*b*` parsed as emphasis) is already split into separate text nodes, so only the leading plain run links (`https://x/a`) — pinned by `test_bare_url_split_by_emphasis_links_only_leading_run`. Round-trip note: a bare URL now renders back through `adf_to_text` as `[url](url)` (it IS a link), not the bare string. Detail: `adf::tests::test_bare_*` + `test_url_in_*_not_linkified` + `test_www_url_stays_plain_text` + `test_bare_email_stays_plain_text`.
@@ -237,6 +271,8 @@ When adding a new feature:
 - `JR_BULK_UNKNOWN_GRACE_SECS` overrides the unknown-bulk-task grace period (default 30s). Debug-only, single-site gate in `bulk.rs::resolve_unknown_status_grace` (not security-critical). Pinned by `tests/bulk_unknown_grace_release_gate.rs`. (#336)
 - `JR_BULK_AWAIT_TIMEOUT_SECS` overrides the bulk-poll wall-clock timeout (default 300s). Debug-only, single-site gate in `bulk.rs::resolve_bulk_await_timeout`. Pinned by `tests/bulk_await_timeout_release_gate.rs`. (#333)
 - `JR_E2E_ENABLED` — GitHub Actions **repository variable** (`vars.JR_E2E_ENABLED`). Gates the `e2e:` job at scheduling time. NOT a Rust env var; never read by `src/` code. Forks with this variable unset skip cleanly (empty string `!= 'true'`). The canonical repo sets `JR_E2E_ENABLED=true` as a repository variable in GitHub repo settings (not environment-scoped — environment-level variables are not available in `jobs.<id>.if:`). See `docs/specs/e2e-fork-safe-ci-enablement.md §2.3`.
+- `JR_CONFIG_DIR` env var overrides the config directory in debug builds (cross-platform test isolation seam; see BC-6.2.017). Debug builds only — release binaries ignore this env var. The override is read before the `#[cfg(windows)]` / `#[cfg(not(windows))]` OS split in `src/config.rs::global_config_dir()`, so it works identically on all platforms. Pinned by `tests/config_dir_release_gate.rs`.
+- `JR_CACHE_DIR` env var overrides the cache root directory in debug builds (cross-platform test isolation seam; see BC-6.2.017). Debug builds only — release binaries ignore this env var. Identical gate pattern to `JR_CONFIG_DIR`, applied in `src/cache.rs::cache_root()`. Pinned by `tests/config_dir_release_gate.rs`.
 - **Release-ops repo-variable gates** — `SIGNING_ENABLED`, `HOMEBREW_TAP_REPO`, `RELEASE_GAP_FILL_ENABLED`, `SYNC_UPSTREAM_REPO` (all GitHub Actions repository variables, never read by `src/` code) gate the opt-in signing/backfill/gap-fill/fork-sync workflows. All unset in the canonical repo → those workflows are no-ops; downstream forks opt in. Same fail-safe pattern as `JR_E2E_ENABLED`. See `docs/specs/fork-friendly-release-ops.md`.
 - **When adding a new `JR_*` test-seam env var:** grep `CLAUDE.md` for existing `JR_*` entries and add a parallel line in the SAME commit as the code change. This is the codified doc-fallout pattern from #335/#357; first applied retroactively when `JR_BULK_UNKNOWN_GRACE_SECS` and `JR_BULK_AWAIT_TIMEOUT_SECS` shipped without documentation.
 - **Citation discipline for external-tracker IDs in user-facing strings:** before citing a JRACLOUD-*/GitHub/community ID in anything a user sees (stderr, errors, JSON, hints) or in literal rustdoc, Perplexity-validate the source actually documents the symptom — issue #361 had three misattributed JRACLOUD tickets survive multiple PRs. Also ensure the string is valid in the user's env (e.g. JQL allows one ORDER BY) and keep paraphrasing rustdoc in lockstep. Detail: `.factory/research/issue-361-validation.md`, `-followup.md`.
