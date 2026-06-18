@@ -2,18 +2,18 @@
 document_type: pipeline-state
 version: "2.0"
 status: idle
-timestamp: 2026-06-18T22:00:00Z
+timestamp: 2026-06-18T23:00:00Z
 phase: phase-3-tdd-implementation
 project: jira-cli
 mode: BROWNFIELD
-current_step: "S-FORK-OPS-SIGN-1 CYCLE CLOSED + MERGED (PR #535 → 1a2a79b). IDLE."
+current_step: "v0.6.0-dev.4 RELEASED — PR #536 merged → 45ddf7a, tag pushed, release.yml 27792346419 SUCCESS. IDLE."
 current_cycle: "cycle-001"
 dtu_required: false
 phase_2_status: APPROVED
 phase_2_approved_at: 2026-05-07
 phase_3_status: IN_PROGRESS
-activation_head: "1a2a79b"
-activation_version: "v0.6.0-dev.3"
+activation_head: "45ddf7a"
+activation_version: "v0.6.0-dev.4"
 ---
 <!-- SIZE BUDGET: <200 lines. Historical content → cycle files. Run /vsdd-factory:compact-state if over 200. -->
 
@@ -26,10 +26,10 @@ activation_version: "v0.6.0-dev.3"
 | **Product** | jr (Jira CLI) |
 | **Mode** | BROWNFIELD / Rust |
 | **Target Workspace** | develop → main |
-| **Last Updated** | 2026-06-18: S-FORK-OPS-SIGN-1 CYCLE CLOSED + MERGED (PR #535 → 1a2a79b). develop @ 1a2a79b. IDLE. |
-| **Current Phase** | Phase 3 — IDLE. develop @ 1a2a79b (v0.6.0-dev.3 + 4 fork-ops commits). BC 599. NFR 42. ADR 16. Stories 81. |
+| **Last Updated** | 2026-06-18: v0.6.0-dev.4 RELEASED (PR #536 → 45ddf7a). release.yml 27792346419 SUCCESS. develop @ 45ddf7a == v0.6.0-dev.4 tag. IDLE. |
+| **Current Phase** | Phase 3 — IDLE. develop @ 45ddf7a (== v0.6.0-dev.4 tag; 0 commits ahead). BC 599. NFR 42. ADR 16. Stories 81. |
 | **Next Phase** | Phase 4: Holdout Evaluation (not started) |
-| **Activation HEAD** | 1a2a79b (develop HEAD 2026-06-18; 4 fork-ops commits ahead of v0.6.0-dev.3 tag @ 8aca89f; v0.5.0 STABLE shipped 2026-06-12) |
+| **Activation HEAD** | 45ddf7a (develop HEAD 2026-06-18; == v0.6.0-dev.4 tag; v0.5.0 STABLE shipped 2026-06-12) |
 
 ## Phase Progress
 
@@ -48,6 +48,7 @@ activation_version: "v0.6.0-dev.3"
 | S-TESTTOOL-1 test-tooling hardening | CYCLE CLOSED + MERGED | 2026-06-18 | F1–F7 ALL COMPLETE — CONVERGED | PR #533 → develop @ b4a470f. F5 caught HIGH + C-1. Stories 79→80. |
 | arcaven fork-ops PRs #528/#529/#530 reviewed + merged | COMPLETE | 2026-06-18 | APPROVE / APPROVE-WITH-NITS; no CRITICAL/HIGH | #528→5d0d9a3 (docs sync); #529→2aae5ce (ci: rustup target add hardening); #530→99f212d (ci: Gatekeeper+hardened-runtime verify — closes #210). develop @ 99f212d. Signing still INERT. |
 | S-FORK-OPS-SIGN-1 fork-ops signing hardening (F1–F7) | CYCLE CLOSED + MERGED | 2026-06-18 | PR #535 → 1a2a79b | F2 6-pass converged (round-4: --cleanup-tag self-defeat; round-6: piecewise-spec process-gap). F5 5-pass converged (2 CRIT: guard hardcoded-scope false-negative → structural-scope rewrite → 23 sites vs 5; missing negative fixture. 1 HIGH). Stories 80→81. Signing UNBLOCKED (DEC-104 still pending). |
+| v0.6.0-dev.4 release | RELEASED | 2026-06-18 | PR #536 → 45ddf7a; release.yml 27792346419 SUCCESS | 5-target build (aarch64/x86_64 macOS, aarch64/x86_64 Linux, x86_64 Windows). 10 assets (5 archives + 5 SHA-256). CHANGELOG [Unreleased] repopulated + promoted to [0.6.0-dev.4]. Cargo.toml 0.6.0-dev.3→0.6.0-dev.4. develop == v0.6.0-dev.4 tag (0 ahead). |
 | 4: Holdout Evaluation | not-started | | | |
 | 5: Adversarial Refinement | not-started | | | |
 | 6: Formal Hardening | not-started | | | |
@@ -61,6 +62,7 @@ activation_version: "v0.6.0-dev.3"
 | v0.6.0-dev.3 release: PR #534 squash-merged → develop @ 8aca89f. release.yml 27775233196 SUCCESS — 5-target build, 10 assets. Tag v0.6.0-dev.3. | orchestrator | RELEASED | develop @ 8aca89f. v0.6.0-dev.3 tag. |
 | arcaven fork-ops PRs #528/#529/#530: security-reviewed (#529/#530) + pr-reviewed (#528); all APPROVE/APPROVE-WITH-NITS. Squash-merged #528→#529→#530. #530 closes #210 Gatekeeper gap. 3 new LOW nits → Drift Items. | orchestrator | COMPLETE | develop @ 99f212d. Signing INERT. |
 | S-FORK-OPS-SIGN-1 CYCLE CLOSED + MERGED. PR #535 → develop @ 1a2a79b. CWE-77 env-binding + atomic alpha-tag + injection guard (check-signing-workflow-injection.sh). 5 drift items resolved; 3 new deferred. Signing UNBLOCKED. DEC-121 added. | state-manager | COMPLETE | develop @ 1a2a79b. Stories 81. Signing INERT (DEC-104 pending). |
+| v0.6.0-dev.4 RELEASED. PR #536 squash-merged → develop @ 45ddf7a. release.yml 27792346419 SUCCESS — 5-target build, 10 assets. Tag v0.6.0-dev.4. CHANGELOG hygiene drift closed. develop == tag (0 ahead). | orchestrator | RELEASED | develop @ 45ddf7a == v0.6.0-dev.4 tag. |
 
 ## Decisions Log
 
@@ -118,7 +120,7 @@ All 7 S-WIN-1..6 + #475 per-AC demos: **Yes — adapted**. CI-config / infra / d
 
 ## Convergence Trackers
 
-Full per-issue: `cycles/cycle-001/convergence-trajectory.md`. Current: **[2026-06-18] S-FORK-OPS-SIGN-1 CYCLE CLOSED + MERGED PR #535 → 1a2a79b. F2: 6 passes. F5: 5 passes (2 CRIT + 1 HIGH). develop 4 commits ahead of v0.6.0-dev.3 tag. Stories 81. IDLE.**
+Full per-issue: `cycles/cycle-001/convergence-trajectory.md`. Current: **[2026-06-18] v0.6.0-dev.4 RELEASED — PR #536 → 45ddf7a. release.yml 27792346419 SUCCESS. 5-target build, 10 assets. develop == v0.6.0-dev.4 tag (0 ahead). Stories 81. IDLE.**
 
 ## Session Resume Checkpoint
 
@@ -127,9 +129,9 @@ Full per-issue: `cycles/cycle-001/convergence-trajectory.md`. Current: **[2026-0
 | Field | Value |
 |-------|-------|
 | **Date** | 2026-06-18 |
-| **Position** | IDLE. S-FORK-OPS-SIGN-1 CYCLE CLOSED + MERGED (PR #535 → 1a2a79b). CWE-77 env-binding + atomic alpha-tag + injection guard. Signing UNBLOCKED (DEC-104 still pending human decision + Apple secrets). No active worktrees. |
-| **develop HEAD** | origin/develop = **1a2a79b** (S-FORK-OPS-SIGN-1 squash-merged 2026-06-18; 4 commits ahead of v0.6.0-dev.3 tag @ 8aca89f). |
-| **Activation** | v0.6.0-dev.3 @ 8aca89f. develop now 4 fork-ops commits ahead of tag. v0.5.0 STABLE shipped 2026-06-12. |
+| **Position** | IDLE. v0.6.0-dev.4 RELEASED (PR #536 → 45ddf7a). release.yml 27792346419 SUCCESS. Signing UNBLOCKED (DEC-104 still pending human decision + Apple secrets). No active worktrees. |
+| **develop HEAD** | origin/develop = **45ddf7a** (chore(release): v0.6.0-dev.4 squash-merged 2026-06-18; == v0.6.0-dev.4 tag; 0 commits ahead of tag). |
+| **Activation** | v0.6.0-dev.4 @ 45ddf7a. develop == tag. v0.5.0 STABLE shipped 2026-06-12. |
 | **Counters** | BC **599**. NFR **42**. ADR **16**. Stories **81** (authoritative). |
 | **Active worktree** | None. .factory on factory-artifacts mounted. |
 | **jira-e2e env** | JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ, JR_E2E_ENABLED=true. |
@@ -137,13 +139,13 @@ Full per-issue: `cycles/cycle-001/convergence-trajectory.md`. Current: **[2026-0
 
 ## RESUME PLAN (cold-start, self-contained)
 
-<!-- State snapshot: IDLE. S-FORK-OPS-SIGN-1 MERGED (PR #535 → 1a2a79b). develop @ 1a2a79b (4 ahead of v0.6.0-dev.3 tag). No active worktrees. -->
+<!-- State snapshot: IDLE. v0.6.0-dev.4 RELEASED (PR #536 → 45ddf7a). develop @ 45ddf7a == v0.6.0-dev.4 tag (0 ahead). No active worktrees. -->
 
 ### Steps (assume ZERO memory)
 
 **Step 1 (BLOCKING):** Run `vsdd-factory:factory-worktree-health`. Then read `.factory/STATE.md`.
 
-**Step 2:** Confirm IDLE. develop @ **1a2a79b** (S-FORK-OPS-SIGN-1 squash-merged 2026-06-18 via PR #535; develop is 4 fork-ops commits ahead of v0.6.0-dev.3 tag @ 8aca89f — NOT yet released). Activation v0.6.0-dev.3. No active feature worktrees. S-FORK-OPS-SIGN-1 CYCLE CLOSED + MERGED (PR #535 → 1a2a79b). If develop shows different HEAD, run `git fetch origin`.
+**Step 2:** Confirm IDLE. develop @ **45ddf7a** (chore(release): v0.6.0-dev.4 squash-merged 2026-06-18 via PR #536; develop == v0.6.0-dev.4 tag; 0 commits ahead of tag). Activation v0.6.0-dev.4. No active feature worktrees. v0.6.0-dev.4 RELEASED (PR #536 → 45ddf7a, release.yml 27792346419 SUCCESS). If develop shows different HEAD, run `git fetch origin`.
 
 **Step 3 — Determine next work.** OPEN (priority order):
 - Fork-release-ops enablement PENDING (DEC-104; both HIGH blockers RESOLVED by S-FORK-OPS-SIGN-1 PR #535. Signing UNBLOCKED. Remaining gate = human decision + Apple secrets config).
