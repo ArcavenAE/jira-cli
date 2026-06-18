@@ -150,21 +150,68 @@ jobs:
 
       - name: Generate alpha version
         id: meta
+        env:
+          COMMIT_SHA: ${{ github.sha }}
+          GH_TOKEN: ${{ github.token }}
         run: |
+          # Atomic alpha-tag reservation via GitHub API (no TOCTOU race).
+          # Spec: docs/specs/fork-friendly-release-ops.md § "Atomic alpha-tag creation"
+          # Step 1: inputs bound from env: above (CWE-77 rule).
+
+          # Step 2: compute seed hint (starting point only — correctness does NOT
+          # depend on its accuracy; the atomic reservation loop is the sole guarantor).
           DATE=$(date -u +%Y%m%d)
-          # Count existing tags today (more reliable than releases)
           EXISTING=$(git ls-remote --tags origin "refs/tags/alpha-${DATE}.*" | wc -l | tr -d ' ')
           SEQ=$((EXISTING + 1))
-          TAG="alpha-${DATE}.${SEQ}"
-          VERSION="${TAG}"
-          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
-          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
-          echo "Alpha release: $TAG"
 
-          # Clean up any stale release/tag with the same name
-          gh release delete "$TAG" --cleanup-tag --yes 2>/dev/null || true
-        env:
-          GH_TOKEN: ${{ github.token }}
+          # Steps 3 + 4: atomic reservation with bounded retry.
+          # HTTP 201 → reserved. HTTP 422 → ref exists, increment SEQ and retry.
+          # Any other non-zero exit → fatal (exit 1 with diagnostic).
+          # MAX_ATTEMPTS=10 (includes first attempt in step 3).
+          # NEVER re-count remote tags on retry — increment from just-rejected SEQ only.
+          MAX_ATTEMPTS=10
+          ATTEMPT=1
+          TAG=""
+          GH_API_ERR_FILE=$(mktemp)
+          trap 'rm -f "$GH_API_ERR_FILE"' EXIT
+
+          while [ "$ATTEMPT" -le "$MAX_ATTEMPTS" ]; do
+            CANDIDATE="alpha-${DATE}.${SEQ}"
+            echo "Attempt ${ATTEMPT}/${MAX_ATTEMPTS}: reserving tag ${CANDIDATE}..."
+            if gh api --method POST \
+              "/repos/${{ github.repository }}/git/refs" \
+              -f "ref=refs/tags/${CANDIDATE}" \
+              -f "sha=${COMMIT_SHA}" \
+              2>"$GH_API_ERR_FILE"; then
+              # HTTP 201 — reservation succeeded
+              TAG="$CANDIDATE"
+              echo "Reserved tag: $TAG"
+              break
+            else
+              ERR_BODY=$(cat "$GH_API_ERR_FILE")
+              # gh CLI exits non-zero for both 422 (already exists) and other errors.
+              # Distinguish 422 by the "already exists" message in the error body.
+              if echo "$ERR_BODY" | grep -qi "already exists\|Reference already exists"; then
+                echo "Tag ${CANDIDATE} already exists (HTTP 422), incrementing SEQ..."
+                SEQ=$((SEQ + 1))
+                ATTEMPT=$((ATTEMPT + 1))
+              else
+                echo "::error::Fatal error reserving tag ${CANDIDATE}: ${ERR_BODY}"
+                exit 1
+              fi
+            fi
+          done
+
+          # Step 4 exhaustion — silent success and || true are PROHIBITED on exhaustion.
+          if [ -z "$TAG" ]; then
+            echo "::error::alpha tag reservation failed after ${MAX_ATTEMPTS} attempts — burst contention ceiling exceeded; retry when concurrent workflow runs settle"
+            exit 1
+          fi
+
+          # Step 5: export reserved name.
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "version=$TAG" >> "$GITHUB_OUTPUT"
+          echo "Alpha release: $TAG"
 
       - name: Download alpha binaries
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c  # v8
@@ -209,8 +256,9 @@ jobs:
         env:
           APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
           APPLE_INSTALLER_IDENTITY: ${{ secrets.APPLE_INSTALLER_IDENTITY }}
+          RELEASE_VERSION: ${{ steps.meta.outputs.version }}
         run: |
-          VERSION="${{ steps.meta.outputs.version }}"
+          VERSION="$RELEASE_VERSION"
           chmod +x scripts/create-app.sh scripts/create-dmg.sh scripts/create-pkg.sh
 
           for arch in arm64 amd64; do
@@ -239,7 +287,10 @@ jobs:
 
       - name: Verify signatures (Gatekeeper + codesign)
         run: |
-          set -e
+          set -eo pipefail
+          CS_OUT=$(mktemp)
+          SPCTL_OUT=$(mktemp)
+          trap 'rm -f "$CS_OUT" "$SPCTL_OUT"' EXIT
           # Bare Mach-O binaries: stapler can't attach to a bare binary
           # (Apple TN3147), so `spctl --assess --type execute` would
           # report "Unnotarized Developer ID". Verify the load-bearing
@@ -247,12 +298,12 @@ jobs:
           # identity, stable Team Identifier, and hardened runtime flag.
           for BIN in jr-a-darwin-arm64 jr-a-darwin-amd64; do
             echo "::group::Verify $BIN"
-            codesign -dvv "$BIN" 2>&1 | tee /tmp/cs.out
-            grep -q "^Authority=Developer ID Application:" /tmp/cs.out \
+            codesign -dvv "$BIN" 2>&1 | tee "$CS_OUT"
+            grep -q "^Authority=Developer ID Application:" "$CS_OUT" \
               || { echo "::error::$BIN missing Developer ID Application authority"; exit 1; }
-            grep -q "^TeamIdentifier=" /tmp/cs.out \
+            grep -q "^TeamIdentifier=" "$CS_OUT" \
               || { echo "::error::$BIN missing TeamIdentifier"; exit 1; }
-            grep -qE "^CodeDirectory.*flags=0x[0-9a-f]+\(.*runtime.*\)" /tmp/cs.out \
+            grep -qE "^CodeDirectory.*flags=0x[0-9a-f]+\(.*runtime.*\)" "$CS_OUT" \
               || { echo "::error::$BIN missing hardened runtime (--options runtime) flag"; exit 1; }
             echo "::endgroup::"
           done
@@ -261,15 +312,15 @@ jobs:
           # stapled. .pkg → --type install; .dmg → --type open.
           for PKG in jr-a-arm64.pkg jr-a-amd64.pkg; do
             echo "::group::Verify $PKG"
-            spctl --assess --type install --verbose=4 "$PKG" 2>&1 | tee /tmp/spctl.out
-            grep -q "source=Notarized Developer ID" /tmp/spctl.out \
+            spctl --assess --type install --verbose=4 "$PKG" 2>&1 | tee "$SPCTL_OUT"
+            grep -q "source=Notarized Developer ID" "$SPCTL_OUT" \
               || { echo "::error::$PKG not notarized (spctl source unexpected)"; exit 1; }
             echo "::endgroup::"
           done
           for DMG in jr-a-arm64.dmg jr-a-amd64.dmg; do
             echo "::group::Verify $DMG"
-            spctl --assess --type open --verbose=4 "$DMG" 2>&1 | tee /tmp/spctl.out
-            grep -q "source=Notarized Developer ID" /tmp/spctl.out \
+            spctl --assess --type open --verbose=4 "$DMG" 2>&1 | tee "$SPCTL_OUT"
+            grep -q "source=Notarized Developer ID" "$SPCTL_OUT" \
               || { echo "::error::$DMG not notarized (spctl source unexpected)"; exit 1; }
             echo "::endgroup::"
           done
@@ -284,8 +335,9 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           HOMEBREW_TAP_REPO: ${{ vars.HOMEBREW_TAP_REPO }}
+          RELEASE_TAG: ${{ steps.meta.outputs.tag }}
         run: |
-          TAG="${{ steps.meta.outputs.tag }}"
+          TAG="$RELEASE_TAG"
 
           BINARY_LINE="download below"
           if [ -n "$HOMEBREW_TAP_REPO" ]; then
@@ -335,8 +387,9 @@ jobs:
       - name: Download signed binaries from release
         env:
           GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ needs.alpha-sign.outputs.tag }}
         run: |
-          TAG="${{ needs.alpha-sign.outputs.tag }}"
+          TAG="$RELEASE_TAG"
           gh release download "$TAG" --pattern "jr-a-darwin-arm64" --dir .
           gh release download "$TAG" --pattern "jr-a-darwin-amd64" --dir .
 
@@ -344,9 +397,11 @@ jobs:
         env:
           HOMEBREW_TAP_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
           HOMEBREW_TAP_REPO: ${{ vars.HOMEBREW_TAP_REPO }}
+          RELEASE_VERSION: ${{ needs.alpha-sign.outputs.version }}
+          RELEASE_TAG: ${{ needs.alpha-sign.outputs.tag }}
         run: |
-          VERSION="${{ needs.alpha-sign.outputs.version }}"
-          TAG="${{ needs.alpha-sign.outputs.tag }}"
+          VERSION="$RELEASE_VERSION"
+          TAG="$RELEASE_TAG"
 
           TAP_SHORT="${HOMEBREW_TAP_REPO#*/}"
           TAP_NAME="${HOMEBREW_TAP_REPO%%/*}/${TAP_SHORT#homebrew-}"
@@ -403,8 +458,10 @@ jobs:
 
       - name: Extract release metadata
         id: meta
+        env:
+          HEAD_BRANCH: ${{ github.event.workflow_run.head_branch }}
         run: |
-          TAG="${{ github.event.workflow_run.head_branch }}"
+          TAG="$HEAD_BRANCH"
           VERSION="${TAG#v}"
           echo "tag=$TAG" >> "$GITHUB_OUTPUT"
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
@@ -426,8 +483,9 @@ jobs:
       - name: Download release binaries
         env:
           GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ steps.meta.outputs.tag }}
         run: |
-          TAG="${{ steps.meta.outputs.tag }}"
+          TAG="$RELEASE_TAG"
           for target in x86_64-apple-darwin aarch64-apple-darwin; do
             ASSET="jr-${TAG}-${target}.tar.gz"
             echo "Downloading $ASSET..."
@@ -475,8 +533,9 @@ jobs:
         env:
           APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
           APPLE_INSTALLER_IDENTITY: ${{ secrets.APPLE_INSTALLER_IDENTITY }}
+          RELEASE_VERSION: ${{ steps.meta.outputs.version }}
         run: |
-          VERSION="${{ steps.meta.outputs.version }}"
+          VERSION="$RELEASE_VERSION"
           chmod +x scripts/create-app.sh scripts/create-dmg.sh scripts/create-pkg.sh
 
           for arch in arm64 amd64; do
@@ -505,7 +564,10 @@ jobs:
 
       - name: Verify signatures (Gatekeeper + codesign)
         run: |
-          set -e
+          set -eo pipefail
+          CS_OUT=$(mktemp)
+          SPCTL_OUT=$(mktemp)
+          trap 'rm -f "$CS_OUT" "$SPCTL_OUT"' EXIT
           # Bare Mach-O binaries: stapler can't attach to a bare binary
           # (Apple TN3147), so `spctl --assess --type execute` would
           # report "Unnotarized Developer ID". Verify the load-bearing
@@ -513,12 +575,12 @@ jobs:
           # identity, stable Team Identifier, and hardened runtime flag.
           for BIN in jr-darwin-arm64 jr-darwin-amd64; do
             echo "::group::Verify $BIN"
-            codesign -dvv "$BIN" 2>&1 | tee /tmp/cs.out
-            grep -q "^Authority=Developer ID Application:" /tmp/cs.out \
+            codesign -dvv "$BIN" 2>&1 | tee "$CS_OUT"
+            grep -q "^Authority=Developer ID Application:" "$CS_OUT" \
               || { echo "::error::$BIN missing Developer ID Application authority"; exit 1; }
-            grep -q "^TeamIdentifier=" /tmp/cs.out \
+            grep -q "^TeamIdentifier=" "$CS_OUT" \
               || { echo "::error::$BIN missing TeamIdentifier"; exit 1; }
-            grep -qE "^CodeDirectory.*flags=0x[0-9a-f]+\(.*runtime.*\)" /tmp/cs.out \
+            grep -qE "^CodeDirectory.*flags=0x[0-9a-f]+\(.*runtime.*\)" "$CS_OUT" \
               || { echo "::error::$BIN missing hardened runtime (--options runtime) flag"; exit 1; }
             echo "::endgroup::"
           done
@@ -527,15 +589,15 @@ jobs:
           # stapled. .pkg → --type install; .dmg → --type open.
           for PKG in jr-arm64.pkg jr-amd64.pkg; do
             echo "::group::Verify $PKG"
-            spctl --assess --type install --verbose=4 "$PKG" 2>&1 | tee /tmp/spctl.out
-            grep -q "source=Notarized Developer ID" /tmp/spctl.out \
+            spctl --assess --type install --verbose=4 "$PKG" 2>&1 | tee "$SPCTL_OUT"
+            grep -q "source=Notarized Developer ID" "$SPCTL_OUT" \
               || { echo "::error::$PKG not notarized (spctl source unexpected)"; exit 1; }
             echo "::endgroup::"
           done
           for DMG in jr-arm64.dmg jr-amd64.dmg; do
             echo "::group::Verify $DMG"
-            spctl --assess --type open --verbose=4 "$DMG" 2>&1 | tee /tmp/spctl.out
-            grep -q "source=Notarized Developer ID" /tmp/spctl.out \
+            spctl --assess --type open --verbose=4 "$DMG" 2>&1 | tee "$SPCTL_OUT"
+            grep -q "source=Notarized Developer ID" "$SPCTL_OUT" \
               || { echo "::error::$DMG not notarized (spctl source unexpected)"; exit 1; }
             echo "::endgroup::"
           done
@@ -549,8 +611,9 @@ jobs:
       - name: Upload signed artifacts to release
         env:
           GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ steps.meta.outputs.tag }}
         run: |
-          TAG="${{ steps.meta.outputs.tag }}"
+          TAG="$RELEASE_TAG"
           gh release upload "$TAG" \
             jr-darwin-arm64 \
             jr-darwin-amd64 \
@@ -565,9 +628,11 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           HOMEBREW_TAP_REPO: ${{ vars.HOMEBREW_TAP_REPO }}
+          RELEASE_TAG: ${{ steps.meta.outputs.tag }}
+          RELEASE_CHANNEL: ${{ steps.meta.outputs.channel }}
         run: |
-          TAG="${{ steps.meta.outputs.tag }}"
-          CHANNEL="${{ steps.meta.outputs.channel }}"
+          TAG="$RELEASE_TAG"
+          CHANNEL="$RELEASE_CHANNEL"
 
           # Map channel to formula name
           case "$CHANNEL" in
@@ -627,8 +692,9 @@ jobs:
       - name: Download signed binaries from release
         env:
           GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ needs.stable-sign.outputs.tag }}
         run: |
-          TAG="${{ needs.stable-sign.outputs.tag }}"
+          TAG="$RELEASE_TAG"
           gh release download "$TAG" --pattern "jr-darwin-arm64" --dir .
           gh release download "$TAG" --pattern "jr-darwin-amd64" --dir .
 
@@ -636,11 +702,14 @@ jobs:
         env:
           HOMEBREW_TAP_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
           HOMEBREW_TAP_REPO: ${{ vars.HOMEBREW_TAP_REPO }}
+          RELEASE_VERSION: ${{ needs.stable-sign.outputs.version }}
+          RELEASE_TAG: ${{ needs.stable-sign.outputs.tag }}
+          RELEASE_CHANNEL: ${{ needs.stable-sign.outputs.channel }}
         run: |
           set -euo pipefail
-          VERSION="${{ needs.stable-sign.outputs.version }}"
-          TAG="${{ needs.stable-sign.outputs.tag }}"
-          CHANNEL="${{ needs.stable-sign.outputs.channel }}"
+          VERSION="$RELEASE_VERSION"
+          TAG="$RELEASE_TAG"
+          CHANNEL="$RELEASE_CHANNEL"
 
           # Map channel to formula name
           case "$CHANNEL" in

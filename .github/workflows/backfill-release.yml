@@ -92,14 +92,16 @@ jobs:
           fi
 
       - name: Package
+        env:
+          RELEASE_TAG: ${{ inputs.tag }}
         run: |
           cd target/${{ matrix.target }}/release
-          tar czf ../../../jr-${{ inputs.tag }}-${{ matrix.target }}.tar.gz jr
+          tar czf "../../../jr-${RELEASE_TAG}-${{ matrix.target }}.tar.gz" jr
           cd ../../..
           if command -v sha256sum &>/dev/null; then
-            sha256sum jr-${{ inputs.tag }}-${{ matrix.target }}.tar.gz > jr-${{ inputs.tag }}-${{ matrix.target }}.tar.gz.sha256
+            sha256sum "jr-${RELEASE_TAG}-${{ matrix.target }}.tar.gz" > "jr-${RELEASE_TAG}-${{ matrix.target }}.tar.gz.sha256"
           else
-            shasum -a 256 jr-${{ inputs.tag }}-${{ matrix.target }}.tar.gz > jr-${{ inputs.tag }}-${{ matrix.target }}.tar.gz.sha256
+            shasum -a 256 "jr-${RELEASE_TAG}-${{ matrix.target }}.tar.gz" > "jr-${RELEASE_TAG}-${{ matrix.target }}.tar.gz.sha256"
           fi
 
       - name: Upload artifact
@@ -132,8 +134,9 @@ jobs:
       - name: Create or update GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ inputs.tag }}
         run: |
-          TAG="${{ inputs.tag }}"
+          TAG="$RELEASE_TAG"
           PRERELEASE=""
           if [[ "$TAG" == *-* ]]; then
             PRERELEASE="--prerelease"
@@ -176,16 +179,19 @@ jobs:
 
       - name: Extract version
         id: meta
+        env:
+          RELEASE_TAG: ${{ inputs.tag }}
         run: |
-          TAG="${{ inputs.tag }}"
+          TAG="$RELEASE_TAG"
           VERSION="${TAG#v}"
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
 
       - name: Download release binaries
         env:
           GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ inputs.tag }}
         run: |
-          TAG="${{ inputs.tag }}"
+          TAG="$RELEASE_TAG"
           for target in x86_64-apple-darwin aarch64-apple-darwin; do
             ASSET="jr-${TAG}-${target}.tar.gz"
             echo "Downloading $ASSET..."
@@ -233,8 +239,9 @@ jobs:
         env:
           APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
           APPLE_INSTALLER_IDENTITY: ${{ secrets.APPLE_INSTALLER_IDENTITY }}
+          RELEASE_VERSION: ${{ steps.meta.outputs.version }}
         run: |
-          VERSION="${{ steps.meta.outputs.version }}"
+          VERSION="$RELEASE_VERSION"
           chmod +x scripts/create-app.sh scripts/create-dmg.sh scripts/create-pkg.sh
 
           for arch in arm64 amd64; do
@@ -263,7 +270,10 @@ jobs:
 
       - name: Verify signatures (Gatekeeper + codesign)
         run: |
-          set -e
+          set -eo pipefail
+          CS_OUT=$(mktemp)
+          SPCTL_OUT=$(mktemp)
+          trap 'rm -f "$CS_OUT" "$SPCTL_OUT"' EXIT
           # Bare Mach-O binaries: stapler can't attach to a bare binary
           # (Apple TN3147), so `spctl --assess --type execute` would
           # report "Unnotarized Developer ID". Verify the load-bearing
@@ -271,12 +281,12 @@ jobs:
           # identity, stable Team Identifier, and hardened runtime flag.
           for BIN in jr-darwin-arm64 jr-darwin-amd64; do
             echo "::group::Verify $BIN"
-            codesign -dvv "$BIN" 2>&1 | tee /tmp/cs.out
-            grep -q "^Authority=Developer ID Application:" /tmp/cs.out \
+            codesign -dvv "$BIN" 2>&1 | tee "$CS_OUT"
+            grep -q "^Authority=Developer ID Application:" "$CS_OUT" \
               || { echo "::error::$BIN missing Developer ID Application authority"; exit 1; }
-            grep -q "^TeamIdentifier=" /tmp/cs.out \
+            grep -q "^TeamIdentifier=" "$CS_OUT" \
               || { echo "::error::$BIN missing TeamIdentifier"; exit 1; }
-            grep -qE "^CodeDirectory.*flags=0x[0-9a-f]+\(.*runtime.*\)" /tmp/cs.out \
+            grep -qE "^CodeDirectory.*flags=0x[0-9a-f]+\(.*runtime.*\)" "$CS_OUT" \
               || { echo "::error::$BIN missing hardened runtime (--options runtime) flag"; exit 1; }
             echo "::endgroup::"
           done
@@ -285,15 +295,15 @@ jobs:
           # stapled. .pkg → --type install; .dmg → --type open.
           for PKG in jr-arm64.pkg jr-amd64.pkg; do
             echo "::group::Verify $PKG"
-            spctl --assess --type install --verbose=4 "$PKG" 2>&1 | tee /tmp/spctl.out
-            grep -q "source=Notarized Developer ID" /tmp/spctl.out \
+            spctl --assess --type install --verbose=4 "$PKG" 2>&1 | tee "$SPCTL_OUT"
+            grep -q "source=Notarized Developer ID" "$SPCTL_OUT" \
               || { echo "::error::$PKG not notarized (spctl source unexpected)"; exit 1; }
             echo "::endgroup::"
           done
           for DMG in jr-arm64.dmg jr-amd64.dmg; do
             echo "::group::Verify $DMG"
-            spctl --assess --type open --verbose=4 "$DMG" 2>&1 | tee /tmp/spctl.out
-            grep -q "source=Notarized Developer ID" /tmp/spctl.out \
+            spctl --assess --type open --verbose=4 "$DMG" 2>&1 | tee "$SPCTL_OUT"
+            grep -q "source=Notarized Developer ID" "$SPCTL_OUT" \
               || { echo "::error::$DMG not notarized (spctl source unexpected)"; exit 1; }
             echo "::endgroup::"
           done
@@ -307,8 +317,9 @@ jobs:
       - name: Upload signed artifacts to release
         env:
           GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ inputs.tag }}
         run: |
-          TAG="${{ inputs.tag }}"
+          TAG="$RELEASE_TAG"
           gh release upload "$TAG" \
             jr-darwin-arm64 \
             jr-darwin-amd64 \
@@ -347,8 +358,9 @@ jobs:
       - name: Download signed binaries from release
         env:
           GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ inputs.tag }}
         run: |
-          TAG="${{ inputs.tag }}"
+          TAG="$RELEASE_TAG"
           gh release download "$TAG" --pattern "jr-darwin-arm64" --dir .
           gh release download "$TAG" --pattern "jr-darwin-amd64" --dir .
 
@@ -356,9 +368,11 @@ jobs:
         env:
           HOMEBREW_TAP_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
           HOMEBREW_TAP_REPO: ${{ vars.HOMEBREW_TAP_REPO }}
+          RELEASE_VERSION: ${{ needs.sign.outputs.version }}
+          RELEASE_TAG: ${{ inputs.tag }}
         run: |
-          VERSION="${{ needs.sign.outputs.version }}"
-          TAG="${{ inputs.tag }}"
+          VERSION="$RELEASE_VERSION"
+          TAG="$RELEASE_TAG"
 
           TAP_SHORT="${HOMEBREW_TAP_REPO#*/}"
           TAP_NAME="${HOMEBREW_TAP_REPO%%/*}/${TAP_SHORT#homebrew-}"
