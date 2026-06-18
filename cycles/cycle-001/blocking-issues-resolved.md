@@ -7,7 +7,7 @@ producer: state-manager
 timestamp: 2026-05-26T00:00:00
 cycle: "cycle-001"
 inputs: [STATE.md]
-input-hash: "327f491"
+input-hash: "42eb2ca"
 traces_to: STATE.md
 ---
 
@@ -139,3 +139,12 @@ These rows had Status = RESOLVED / CLOSED / COMPLETE in the Drift Items table an
 | ID | Area | Description | Severity | Status | Resolved Date |
 |----|------|-------------|----------|--------|---------------|
 | PRE-EXISTING-LONE-CR | src/adf.rs push_text/push_code/text_to_adf | heading+codeBlock raw `\r` survival + bare `\n` Other-ctx (CR-01). EC-11+EC-12+CR-01 fixed. F5 CONVERGED; F6 PASS (1850/0, 100k proptest); F7 5/5 PASS. Shipped in PR #523 @ 53f6d98. BC-7.2.011 v1.11.0. | HIGH | **RESOLVED — shipped in PR #523 @ 53f6d98 (DEC-119)** | 2026-06-17 |
+
+---
+
+## Resolved Drift Items extracted from STATE.md on 2026-06-18 (S-TESTTOOL-1 CYCLE CLOSED, DEC-120)
+
+| ID | Area | Description | Severity | Status | Resolved Date |
+|----|------|-------------|----------|--------|---------------|
+| MAINT-MUTANTS-GLOBS-01 | mutants.toml examine_globs | `.cargo/mutants.toml` examine_globs expanded to cover `src/api/jira/issues.rs` + `src/cache.rs`. Baseline full-repo scan blind spot eliminated. Fixed in S-TESTTOOL-1 PR #533 → b4a470f. | LOW | **RESOLVED — PR #533 → b4a470f (2026-06-18)** | 2026-06-18 |
+| #526-F6-KEYRING-GATE | auth_profiles keyring test gate | `auth_profiles::global_profile_flag_targets_auth_status` gated behind `JR_RUN_KEYRING_TESTS` + early-return guard. Keychain contention hang risk eliminated. Fixed in S-TESTTOOL-1 PR #533 → b4a470f. | LOW | **RESOLVED — PR #533 → b4a470f (2026-06-18)** | 2026-06-18 |

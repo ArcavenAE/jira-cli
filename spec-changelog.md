@@ -7,6 +7,47 @@ project: "jr (jira-cli)"
 
 Track all spec version changes. Most recent version first.
 
+## [1.3.23] - 2026-06-18
+
+### Type: MINOR
+
+### Summary
+
+F2 spec delta for test-tooling hardening cycle (MAINT-MUTANTS-GLOBS-01 / #526-F6-KEYRING-GATE).
+Two spec-only changes: (1) `cargo-mutants-policy.md` Scope section extended with `issues.rs` and
+`cache.rs`, plus explicit sibling dispositions for three evaluated candidates; (2)
+`multi-profile-auth.md` Keyring CI compatibility section extended with the read-path gating rule
+and the updated gated-test roster. No behavioral contracts changed. No new BC headings.
+
+### Changed Requirements
+
+- `docs/specs/cargo-mutants-policy.md` (MAINT-MUTANTS-GLOBS-01): Added `src/api/jira/issues.rs`
+  and `src/cache.rs` to the Scope section with per-file rationale. Added "Sibling Candidates
+  Considered and Deferred" table documenting EXCLUDE/DEFER dispositions for `pagination.rs`,
+  `jql.rs`, and `users.rs`. Corrected "three scoped files" → "scoped files" in CI Integration.
+
+- `docs/specs/multi-profile-auth.md` § "Keyring CI compatibility" (#526-F6-KEYRING-GATE):
+  Extended section with explicit rule that the gate applies to ANY test reaching a live keychain
+  path (including read-only `auth status` with `api_token` profile). Added current gated-test
+  roster including `auth_profiles.rs::global_profile_flag_targets_auth_status` as a new entry.
+
+### Impact Assessment
+
+| Artifact | Change Type | Notes |
+|----------|-------------|-------|
+| `docs/specs/cargo-mutants-policy.md` | MODIFIED | Scope section + sibling table + CI wording fix |
+| `docs/specs/multi-profile-auth.md` | MODIFIED | Keyring gating rule + gated-test roster |
+| `.factory/spec-changelog.md` | MODIFIED | This entry |
+
+### Files NOT Changed
+
+- `.cargo/mutants.toml` — F4 implementation, not F2 spec
+- `tests/auth_profiles.rs` — F4 implementation, not F2 spec
+- All `src/` production files — no behavioral change
+- All BC files — no contract change; `total_bcs` unchanged
+
+---
+
 ## [1.3.22] - 2026-06-17
 
 ### Type: MINOR

@@ -7,7 +7,7 @@ producer: state-manager
 timestamp: 2026-05-07T00:00:00
 cycle: "cycle-001"
 inputs: [STATE.md]
-input-hash: "327f491"
+input-hash: "42eb2ca"
 traces_to: STATE.md
 ---
 
@@ -4180,4 +4180,64 @@ All process-gap findings from this run have either a codified lesson or a tracke
 
 _Recorded: 2026-06-17 — Maintenance sweep 2026-06-17 close-out. State-manager._
 _Tagged: [s-7.02] [maintenance] [cycle-close] [checklist]_
+_Status: [CLOSED]_
+
+---
+
+## S-TESTTOOL-1 F5 Process-Gap (2026-06-18)
+
+### LESSON-F2-WORKTREE-FIRST [codified] F2 spec edits to product-source paths (docs/) must be authored in the story worktree, not the main checkout (2026-06-18)
+
+**Lesson ID:** LESSON-F2-WORKTREE-FIRST
+
+**Context:** S-TESTTOOL-1 test-tooling hardening — cargo-mutants baseline scope + keyring-test gate. F5 adversarial review (C-1 split-brain orchestration error).
+
+**What happened:** During F2 spec evolution, the orchestrator authored edits to product-source spec files (docs/specs/cargo-mutants-policy.md and docs/specs/multi-profile-auth.md) in the main checkout rather than the story worktree. These edits landed on the develop branch (main checkout HEAD), not on the feature branch being built in the worktree. When the F3 implementer checked the worktree state, the spec files were absent — the work had stranded on the wrong branch. The issue was caught by F5 adversarial review as a C-1 (critical) split-brain error and required a mid-cycle remediation: cherry-picking or re-editing the spec files in the correct worktree branch before F4 could be validated.
+
+**Root cause:** The story worktree pattern requires all story-scoped file writes — including docs/ and .factory/ spec files — to happen within the worktree's branch. The main checkout is on develop; writes there are invisible to the feature branch until explicitly merged. The split-brain manifested because docs/ files "look like" they belong to the project root and the orchestrator instinctively wrote them in the convenience path.
+
+**Rule (LESSON-F2-WORKTREE-FIRST):** During Feature Mode F2 (spec evolution), ALL file writes that are scoped to the story cycle — including product-source spec files (docs/), .factory/ F1/F2 artifacts, and any story file — MUST be authored in the story worktree path. Verify by running `git -C <worktree-path> status` after every write to confirm the file appears as modified in the worktree, not in the main checkout.
+
+**Minimal verification command:**
+```bash
+# After any F2 spec write, verify it's in the worktree (not main checkout)
+git -C .worktrees/<story-id> status --short | grep "docs/"
+# Should show M (modified). If empty, the write went to the wrong path.
+```
+
+**Follow-up:** LESSON-F2-WORKTREE-FIRST added to STATE.md standing constraints and RESUME PLAN Step 4. No separate story required.
+
+_Recorded: 2026-06-18 — S-TESTTOOL-1 F5 C-1 split-brain. S-7.02 discipline._
+_Tagged: [process-gap] [F5] [worktree] [codified]_
+_Status: [codified]_
+
+---
+
+## S-TESTTOOL-1 S-7.02 Cycle-Closing Checklist (2026-06-18)
+
+**Cycle:** S-TESTTOOL-1 test-tooling hardening (MAINT-MUTANTS-GLOBS-01 + #526-F6-KEYRING-GATE). Confirmed CLOSED.
+
+All process-gap findings from this cycle have either a codified lesson or a tracked drift item:
+
+| Finding | Disposition | Status |
+|---------|-------------|--------|
+| Coverage gap (Login/Refresh/Logout global-`--profile` fallback) | Follow-up issue #532 opened (LOW; no blocking impact) | ✓ TRACKED (#532) |
+| LESSON-F2-WORKTREE-FIRST (C-1 split-brain: F2 edits in main checkout) | Codified in lessons.md + STATE.md standing constraints + RESUME PLAN | ✓ CODIFIED |
+| KEYRING-GUARD-IDIOM-DRIFT (3 co-existing guard idioms, no meta-test) | Drift item added to STATE.md (LOW, DEFERRED) | ✓ TRACKED |
+| CITATION-FORM-DISCIPLINE (bare file:NN citations vs symbol-form #408) | Drift item added to STATE.md (LOW, DEFERRED) | ✓ TRACKED |
+| F7-COSMETIC-ATTR-ORDER (#[ignore] vs #[test] ordering in prose vs code) | ACCEPTED-COSMETIC (semantically irrelevant in Rust) | ✓ ACCEPTED |
+
+**Evidence that FULL VSDD pays off on "trivial" changes (DEC-120):**
+- F5 adversarial review caught a real coverage-regression HIGH finding: `global_profile_flag_targets_auth_status` (auth_profiles.rs) was reachable without `#[ignore]` + early-return guard in CI, meaning a Keychain contention hang was latent. Without the adversarial pass, this would have shipped unnoticed.
+- F5 also caught C-1 split-brain: the F2 spec edits were in the wrong branch, which would have created a divergence between the story's accepted spec and the actual merged content.
+- Total: 2 substantive findings on a story classified as `trivial_scope: true`, `estimated_effort: xsmall`. The full VSDD discipline was not bureaucratic overhead — it was the mechanism that caught both.
+
+**Count guards (S-7.02 defensive sweep):** BC 599 unchanged. No new BC headings. No product src/ changes.
+
+**develop HEAD at close:** b4a470f (PR #533 squash-merged 2026-06-18). Stories: 79→80.
+
+**Verdict: S-7.02 CHECKLIST SATISFIED. S-TESTTOOL-1 CYCLE CLOSED.**
+
+_Recorded: 2026-06-18 — S-TESTTOOL-1 cycle close-out. State-manager._
+_Tagged: [s-7.02] [feature-mode] [cycle-close] [checklist]_
 _Status: [CLOSED]_

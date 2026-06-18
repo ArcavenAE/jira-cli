@@ -7,7 +7,7 @@ producer: state-manager
 timestamp: 2026-05-08T00:00:00
 cycle: "cycle-001"
 inputs: [STATE.md]
-input-hash: "327f491"
+input-hash: "42eb2ca"
 traces_to: STATE.md
 ---
 
@@ -904,3 +904,20 @@ _Was the active checkpoint after #522 squash-merged → develop @ 53f6d98 (PR #5
 | **jira-e2e env** | JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ, JR_E2E_ENABLED=true. |
 | **Standing constraints** | Do NOT close #429 (DEC-029). All fixes through full VSDD Feature Mode pipeline. Fork-release-ops INERT by default (enablement blocked on FORK-OPS-SIGN-INJECTION + FORK-OPS-ALPHA-RACE HIGH). OQ-5, E2E-PG-4, SEC-001 LOW deferrals open. |
 | **Resume prompt** | `Read .factory/STATE.md. Issue #522 CYCLE CLOSED — PR #523 → develop @ 53f6d98 (DEC-119). BC-7.2.011 v1.11.0. FACTORY IDLE. No active worktree. STANDING: do NOT close #429 (DEC-029); OQ-5 open; E2E-PG-4 open; SEC-001 LOW deferred. Fork-release-ops PENDING (DEC-104). jira-e2e: JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ, JR_E2E_ENABLED=true.` |
+
+---
+
+## Checkpoint archived 2026-06-18 (Maintenance sweep 2026-06-17 COMPLETE; IDLE @ 6f24748)
+
+_Was the active checkpoint after maintenance sweep 2026-06-17 COMPLETE (Bundle A+B+C+D all delivered). Superseded when S-TESTTOOL-1 test-tooling hardening cycle completed (PR #533 → b4a470f, 2026-06-18)._
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-06-17 |
+| **Position** | IDLE. Maintenance sweep 2026-06-17 COMPLETE. All bundles delivered and merged. S-7.02 checklist SATISFIED. cycle-001 maintenance sub-cycle CLOSED. |
+| **develop HEAD** | origin/develop = **6f24748** (PR #531 squash-merged 2026-06-17). |
+| **Activation** | v0.6.0-dev.2 @ 4258202. v0.5.0 STABLE shipped 2026-06-12. |
+| **Counters** | BC **599**. NFR **42**. ADR **16**. Stories **79** (authoritative). |
+| **Active worktree** | None (S-525 and S-526 worktrees cleaned up). .factory on factory-artifacts is mounted. |
+| **jira-e2e env** | JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ, JR_E2E_ENABLED=true. |
+| **Standing constraints** | Do NOT close #429 (DEC-029). All fixes through full VSDD Feature Mode pipeline (except quick-dev-route for test-hygiene micro-fixes). Fork-release-ops INERT. LESSON-F1-SIBLING-CASE. LESSON-CENTRALIZATION-AC-GREP. LESSON-CITATION-SIBLING-PROPAGATION. |
