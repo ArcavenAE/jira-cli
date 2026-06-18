@@ -66,6 +66,15 @@ jobs:
         with:
           targets: ${{ matrix.target }}
 
+      # rust-toolchain.toml pins channel = "stable", which overrides the
+      # toolchain dtolnay/rust-toolchain installs above. Without this step,
+      # native (non-cross) builds fail with `error[E0463]: can't find
+      # crate for 'core'`. Same defensive fix as release.yml.
+      - name: Ensure target installed (defensive)
+        if: ${{ !matrix.use_cross }}
+        shell: bash
+        run: rustup target add ${{ matrix.target }}
+
       - name: Install cross
         if: matrix.use_cross
         run: cargo install cross --git https://github.com/cross-rs/cross

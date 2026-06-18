@@ -54,6 +54,15 @@ jobs:
         with:
           targets: ${{ matrix.target }}
 
+      # rust-toolchain.toml pins channel = "stable", which overrides the
+      # toolchain dtolnay/rust-toolchain installs above. The target the
+      # action installed sits on the wrong toolchain; without this step
+      # the build fails with `error[E0463]: can't find crate for 'core'`.
+      # Same defensive fix as release.yml.
+      - name: Ensure target installed (defensive)
+        shell: bash
+        run: rustup target add ${{ matrix.target }}
+
       - uses: Swatinem/rust-cache@e18b497796c12c097a38f9edb9d0641fb99eee32  # v2
         with:
           key: ${{ matrix.target }}
