@@ -4147,3 +4147,37 @@ grep -r "JRACLOUD-94357" src/ .factory/ docs/ CLAUDE.md 2>/dev/null || true
 _Recorded: 2026-06-17 — Issue #525 F5 CONVERGED (round 2). S-7.02 discipline._
 _Tagged: [process-gap] [F5] [citation] [codified]_
 _Status: [codified]_
+
+---
+
+## Maintenance Sweep 2026-06-17 — S-7.02 Cycle-Closing Checklist
+
+**Sub-cycle:** 2026-06-17 maintenance sweep (Bundle A + B + C + D). Confirmed CLOSED.
+
+All process-gap findings from this run have either a codified lesson or a tracked drift item:
+
+| Finding | Disposition | Status |
+|---------|-------------|--------|
+| LESSON-CENTRALIZATION-AC-GREP | Codified in lessons.md + STATE.md standing constraints (Issue #526 F5 round 3) | ✓ CODIFIED |
+| LESSON-CITATION-SIBLING-PROPAGATION | Codified in lessons.md + STATE.md standing constraints (Issue #525 F5 round 2) | ✓ CODIFIED |
+| mutants.toml examine_globs gap (issues.rs, cache.rs) | Drift item MAINT-MUTANTS-GLOBS-01 added to STATE.md (LOW, process-gap) | ✓ TRACKED |
+| #526-F6-KEYRING-GATE (un-gated keyring test) | Already tracked in STATE.md Drift Items (LOW, OPEN — follow-up) | ✓ TRACKED |
+| H-007 holdout mechanism drift | Drift item MAINT-HOLDOUT-H007-DRIFT added to STATE.md (LOW, doc-gap) | ✓ TRACKED |
+| Quick-dev-route exemption for test-hygiene micro-fixes | Noted as process-improvement candidate in STATE.md standing constraints + session-review recommendation. No separate drift item required (non-blocking process guidance). | ✓ NOTED |
+
+**Bundle D deferrals (H-027/H-044 holdout prose):** Documented in `.factory/maintenance/2026-06-17/holdout-freshness.md`. No drift item; batched with H-007 via MAINT-HOLDOUT-H007-DRIFT.
+
+**Prior LOW deferrals confirmed still tracked:** SC-03, SC-05, FORK-OPS-* items, WIN-* items — all present in STATE.md Drift Items section.
+
+**Count guards (S-7.02 defensive sweep):** All 3 guards exited 0 at close-out:
+- `scripts/check-spec-counts.sh` → OK
+- `scripts/check-bc-cumulative-counts.sh` → OK (599 BCs, 8 surfaces)
+- `scripts/check-bc-no-numeric-test-counts.sh` → OK
+
+**develop HEAD at close:** 6f24748 (PR #531 squash-merged 2026-06-17).
+
+**Verdict: S-7.02 CHECKLIST SATISFIED. Maintenance sub-cycle CLOSED.**
+
+_Recorded: 2026-06-17 — Maintenance sweep 2026-06-17 close-out. State-manager._
+_Tagged: [s-7.02] [maintenance] [cycle-close] [checklist]_
+_Status: [CLOSED]_
