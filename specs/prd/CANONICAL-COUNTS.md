@@ -26,8 +26,8 @@ re-run to verify. Disputes go here first.
 | bc-5-boards-sprints.md | 17 | 17 | YES |
 | bc-6-config-cache.md | 32 | 32 | YES |
 | bc-7-output-render.md | 44 | 44 | YES |
-| cross-cutting.md | 76 | 76 | YES |
-| **Total individually-bodied** | **367** | — | — |
+| cross-cutting.md | 79 | 79 | YES |
+| **Total individually-bodied** | **370** | — | — |
 
 Verification command:
 ```bash
@@ -61,8 +61,8 @@ Breakdown:
 - 370 of 602 are individually-bodied (have a `#### BC-` heading)
 - 232 are range-collapsed (counted in cumulative claim, no individual heading)
 - BC-X.4.009 (ADV-P1-029) is a `#### BC-` heading in cross-cutting.md; it is
-  included in cross-cutting's `total_bcs: 142` and in the **599 sum**.
-  It does NOT add +1 beyond the 599.
+  included in cross-cutting's `total_bcs: 145` and in the **602 sum**.
+  It does NOT add +1 beyond the 602.
 
 _Historical note (archived; historical total was 566; current canonical: see Sum row above (599)): Passes 10-13 involved a 541/542 count confusion around BC-X.4.009. All 542 claims were corrected to 541 at Pass 13. Subsequent additions (BC-7.4.013-016, BC-2.6.050-051, BC-3.4.009, BC-3.8.001-010, BC-X.12.001-008) brought the total to 566. See git history for the full audit trail._
 
