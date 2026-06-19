@@ -82,7 +82,7 @@ CLAUDE.md cites file paths that do not exist on disk:
   <path> (line N)
   <path> (line N)
 Fix the citation or restore the file.
-Note: .factory/, glob, and symbol-form tokens are auto-excluded.
+Note: .factory/, glob, and symbol-form tokens are auto-excluded. Root-level files (Cargo.toml, CLAUDE.md, etc.) are checked.
 ```
 
 BC-X.13.001 postconditions require this EXACT message format. The old "add to allowlist"

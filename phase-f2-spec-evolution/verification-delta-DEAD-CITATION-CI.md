@@ -196,6 +196,7 @@ false positives to catch.
 - `test_root_file_deny_toml_extracted` (ROOT_FILES inclusion)
 - `test_shorthand_ci_yml_excluded` (ROOT_FILES exclusion — EC-CITE-030)
 - `test_shorthand_adf_rs_excluded` (ROOT_FILES exclusion — EC-CITE-031)
+- `test_paren_wrapped_root_file_extracted` (paren-wrap + ROOT_FILES interaction — EC-CITE-032: `(Cargo.toml)` → normalization strips parens → `Cargo.toml` → ROOT_FILES match → IS extracted)
 - `test_shorthand_fields_json_excluded` (ROOT_FILES exclusion)
 - `test_shorthand_release_yml_excluded` (ROOT_FILES exclusion)
 
@@ -413,7 +414,7 @@ Before F4 (TDD Implementation) can begin:
 - [ ] The integration test failure message matches CI-CITE-001 VERBATIM:
       lead line `CLAUDE.md cites file paths that do not exist on disk:`, then
       `  <path> (line N)` per dead path, then `Fix the citation or restore the file.`,
-      then `Note: .factory/, glob, and symbol-form tokens are auto-excluded.`
+      then `Note: .factory/, glob, and symbol-form tokens are auto-excluded. Root-level files (Cargo.toml, CLAUDE.md, etc.) are checked.`
       Do NOT use `Dead CLAUDE.md citations:` or any other wording.
 - [ ] CLAUDE.md doc-fallout note added in "AI Agent Notes" section (per F1 delta §4
       Files MODIFIED; follows the `*_release_gate.rs` guard documentation pattern)
@@ -434,10 +435,18 @@ Before F6 (Targeted Hardening) can sign off:
       EC-CITE-027: `src/api/client.rs:195,`; EC-CITE-028: `src/foo.rs::bar().`) each
       have a dedicated unit test asserting the correct extracted path
 - [ ] ROOT_FILES inclusion vectors (EC-CITE-029: `Cargo.toml` → IS extracted;
-      EC-CITE-030: `ci.yml` → NOT extracted; EC-CITE-031: `adf.rs` → NOT extracted)
+      EC-CITE-030: `ci.yml` → NOT extracted; EC-CITE-031: `adf.rs` → NOT extracted;
+      EC-CITE-032: `(Cargo.toml)` → paren-unwrap → ROOT_FILES match → IS extracted)
       each have dedicated unit tests
 - [ ] Proptest `prop_assert` allows both dir-prefix paths AND ROOT_FILES members in
       output (see updated proptest strategy in VP-CITE-001 §Proptest strategy)
+- [ ] **[Architect note — VP-CITE-001 proptest]** Add a paren-wrapped ROOT_FILES member
+      (e.g., `(Cargo.toml)`) to the VP-CITE-001 proptest alphabet so the interaction
+      between step-b paren unwrapping and the step-c ROOT_FILES exact-match is exercised
+      by random inputs. Without this, a mutation that skips paren-unwrapping for ROOT_FILES
+      tokens would survive the proptest. The assertion predicate must also recognize
+      `Cargo.toml` (and all ROOT_FILES members) as valid output after unwrapping. See
+      EC-CITE-032 in `cross-cutting.md §BC-X.13.002` for the full interaction description.
 - [ ] `cargo mutants --in-diff` on the PR diff does not flag uncovered branches in
       `extract_path_citations` (the exclusion rules are each independently exercisable
       by the unit tests above)
