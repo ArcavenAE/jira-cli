@@ -934,3 +934,16 @@ _Was the active checkpoint after maintenance sweep 2026-06-17 COMPLETE (Bundle A
 | **Active worktree** | None. .factory on factory-artifacts mounted. |
 | **jira-e2e env** | JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ, JR_E2E_ENABLED=true. |
 | **Standing constraints** | Do NOT close #429 (DEC-029). All fixes through full VSDD Feature Mode pipeline. LESSON-F2-WORKTREE-FIRST: F2 spec edits to docs/ must be in the story worktree, not main checkout. Fork-release-ops code defects RESOLVED (FORK-OPS-SIGN-INJECTION + FORK-OPS-ALPHA-RACE); signing UNBLOCKED but INERT pending DEC-104. LESSON-F1-SIBLING-CASE. LESSON-CENTRALIZATION-AC-GREP. LESSON-CITATION-SIBLING-PROPAGATION. CHANGELOG-per-PR hygiene. LESSON-F2-PIECEWISE. |
+
+## Checkpoint archived 2026-06-18 (replaced by S-FORK-OPS-BACKFILL F3-complete / F4-active checkpoint)
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-06-18 |
+| **Position** | Feature Mode ACTIVE — S-FORK-OPS-BACKFILL bundle. F2 COMPLETE — human-approved 2026-06-18. F3 (Story Decomposition + TDD) starting. Stories to create at F3: S-FORK-OPS-BACKFILL-1 (backfill-release.yml: WIN-TARGET + DESTRUCTIVE) + S-FORK-OPS-GITLEAKS-DOC-1 (doc-only: GITLEAKS_DISABLED). DEC-122/123. Spec 1.3.24. develop @ 45ddf7a. |
+| **develop HEAD** | origin/develop = **45ddf7a** (chore(release): v0.6.0-dev.4 squash-merged 2026-06-18; == v0.6.0-dev.4 tag; 0 commits ahead of tag). |
+| **Activation** | v0.6.0-dev.4 @ 45ddf7a. develop == tag. v0.5.0 STABLE shipped 2026-06-12. |
+| **Counters** | BC **599**. NFR **42**. ADR **16**. Stories **81** (authoritative; will advance to 83 at F3 registration). |
+| **Active worktree** | None (F3 not yet started). .factory on factory-artifacts mounted. |
+| **jira-e2e env** | JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ, JR_E2E_ENABLED=true. |
+| **Standing constraints** | Do NOT close #429 (DEC-029). All fixes through full VSDD Feature Mode pipeline. LESSON-F2-WORKTREE-FIRST: ALL story-scoped edits (including docs/) in story worktree, not main checkout. Fork signing UNBLOCKED but INERT (DEC-104 pending). LESSON-F1-SIBLING-CASE. LESSON-CENTRALIZATION-AC-GREP. LESSON-CITATION-SIBLING-PROPAGATION. CHANGELOG-per-PR hygiene. LESSON-F2-PIECEWISE. |

@@ -3936,3 +3936,31 @@ S-FORK-OPS-BACKFILL F2 (Spec Evolution) declared COMPLETE — human-approved 202
 
 ### DEC-123 lesson
 Fresh-context consistency audit caught 2 MAJOR cross-document defects that 3 adversarial passes missed. Validates "consistency-validator at every gate" rule: adversarial passes = within-perimeter correctness; consistency validator = perimeter-vs-perimeter drift. Complementary, not redundant.
+
+## Archived Current Phase Steps row (archived 2026-06-18 — overflow from STATE.md 5-row cap)
+
+| Step | Agent | Status | Output |
+|------|-------|--------|--------|
+| S-FORK-OPS-SIGN-1 CYCLE CLOSED + MERGED. PR #535 → develop @ 1a2a79b. CWE-77 env-binding + atomic alpha-tag + injection guard (check-signing-workflow-injection.sh). 5 drift items resolved; 3 new deferred. Signing UNBLOCKED. DEC-121 added. | state-manager | COMPLETE | develop @ 1a2a79b. Stories 81. Signing INERT (DEC-104 pending). |
+
+## Burst — S-FORK-OPS-BACKFILL F3 COMPLETE (2026-06-18)
+
+**Agents dispatched:** state-manager (state update only)
+**Files touched:** .factory/STATE.md, .factory/cycles/cycle-001/burst-log.md, .factory/cycles/cycle-001/session-checkpoints.md
+
+### Summary
+
+S-FORK-OPS-BACKFILL F3 (Incremental Stories) declared COMPLETE — human-approved 2026-06-18. 2 stories created and registered (81→83):
+
+- **S-FORK-OPS-BACKFILL-1** (5 SP, critical path): backfill-release.yml WIN-TARGET parity (full S-WIN-4: Package + Checksum + smoke test + embedded-OAuth verify) + DESTRUCTIVE upsert fix (safe `gh release edit --notes-file`) + REQUIRED `tests/backfill_matrix_parity.rs`.
+- **S-FORK-OPS-GITLEAKS-DOC-1** (1 SP, docs): document GITLEAKS_DISABLED in `docs/specs/fork-friendly-release-ops.md` + CLAUDE.md.
+
+Dependency graph: ACYCLIC (both depends_on: []). Zero file overlap between stories. 1 wave, parallelizable.
+
+Human gate decision: PARALLEL delivery — both stories run in separate worktrees + PRs concurrently in F4.
+
+Story count now **83** (authoritative; STORY-INDEX 6 surfaces agree).
+
+Per-AC demo recording: ADAPTED (N/A) — CI-workflow + docs-only stories; same precedent as S-WIN-1..6 / #475.
+
+STATE.md updated: feature_mode_phase F3→F4, Stories 81→83, Current Phase Steps row added (oldest row archived here), Phase Progress F3 row added, Skip Log updated, Convergence Tracker updated, Session Resume Checkpoint replaced (old archived to session-checkpoints.md), RESUME PLAN updated for F4-active parallel delivery. STATE.md at exactly 200 lines (within budget).

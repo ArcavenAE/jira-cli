@@ -2,14 +2,14 @@
 document_type: pipeline-state
 version: "2.0"
 status: active
-timestamp: 2026-06-18T23:55:00Z
+timestamp: 2026-06-19T00:15:00Z
 phase: phase-3-tdd-implementation
 project: jira-cli
 mode: BROWNFIELD
-current_step: "Feature Mode active — S-FORK-OPS-BACKFILL bundle. F2 COMPLETE — human-approved 2026-06-18. Adversarial CONVERGED (3 passes). Consistency audit clean (2 MAJOR caught+fixed). Spec 1.3.23→1.3.24. F3 starting."
+current_step: "Feature Mode active — S-FORK-OPS-BACKFILL bundle. F3 COMPLETE — human-approved 2026-06-18. 2 stories (81→83): S-FORK-OPS-BACKFILL-1 (5 SP) + S-FORK-OPS-GITLEAKS-DOC-1 (1 SP). Parallel delivery → F4 active."
 current_cycle: "cycle-001"
 feature_mode_bundle: "S-FORK-OPS-BACKFILL"
-feature_mode_phase: "F3"
+feature_mode_phase: "F4"
 dtu_required: false
 phase_2_status: APPROVED
 phase_2_approved_at: 2026-05-07
@@ -28,8 +28,8 @@ activation_version: "v0.6.0-dev.4"
 | **Product** | jr (Jira CLI) |
 | **Mode** | BROWNFIELD / Rust |
 | **Target Workspace** | develop → main |
-| **Last Updated** | 2026-06-18: S-FORK-OPS-BACKFILL F2 COMPLETE — human-approved. Adversarial CONVERGED 3 passes. Consistency audit clean (2 MAJOR fixed). Spec 1.3.23→1.3.24. F3 starting. DEC-123 added. |
-| **Current Phase** | Phase 3 — Feature Mode active (S-FORK-OPS-BACKFILL, F3 starting). develop @ 45ddf7a. BC 599. NFR 42. ADR 16. Stories 81. |
+| **Last Updated** | 2026-06-18: S-FORK-OPS-BACKFILL F3 COMPLETE — human-approved. 2 stories (81→83): S-FORK-OPS-BACKFILL-1 (5 SP, critical) + S-FORK-OPS-GITLEAKS-DOC-1 (1 SP, docs). Parallel delivery in F4. |
+| **Current Phase** | Phase 3 — Feature Mode active (S-FORK-OPS-BACKFILL, F4 active). develop @ 45ddf7a. BC 599. NFR 42. ADR 16. Stories 83. |
 | **Next Phase** | Phase 4: Holdout Evaluation (not started) |
 | **Activation HEAD** | 45ddf7a (develop HEAD 2026-06-18; == v0.6.0-dev.4 tag; v0.5.0 STABLE shipped 2026-06-12) |
 
@@ -52,6 +52,7 @@ activation_version: "v0.6.0-dev.4"
 | S-FORK-OPS-SIGN-1 fork-ops signing hardening (F1–F7) | CYCLE CLOSED + MERGED | 2026-06-18 | PR #535 → 1a2a79b | F2 6-pass converged (round-4: --cleanup-tag self-defeat; round-6: piecewise-spec process-gap). F5 5-pass converged (2 CRIT: guard hardcoded-scope false-negative → structural-scope rewrite → 23 sites vs 5; missing negative fixture. 1 HIGH). Stories 80→81. Signing UNBLOCKED (DEC-104 still pending). |
 | v0.6.0-dev.4 release | RELEASED | 2026-06-18 | PR #536 → 45ddf7a; release.yml 27792346419 SUCCESS | 5-target build (aarch64/x86_64 macOS, aarch64/x86_64 Linux, x86_64 Windows). 10 assets (5 archives + 5 SHA-256). CHANGELOG [Unreleased] repopulated + promoted to [0.6.0-dev.4]. Cargo.toml 0.6.0-dev.3→0.6.0-dev.4. develop == v0.6.0-dev.4 tag (0 ahead). |
 | S-FORK-OPS-BACKFILL F1+F2 | F2 COMPLETE — human-approved 2026-06-18 | 2026-06-18 | F2 APPROVED by human | 3 adv passes: CONVERGED (Pass 1: 3H/5M/3L→0; Pass 2: 0+3L→0; Pass 3: CLEAN). Consistency audit: 2 MAJOR caught+fixed (stale BC count + Optional/REQUIRED contradiction). Spec 1.3.23→1.3.24 PATCH. 2 stories: S-FORK-OPS-BACKFILL-1 + S-FORK-OPS-GITLEAKS-DOC-1. DEC-122/123. → F3. |
+| S-FORK-OPS-BACKFILL F3 | F3 COMPLETE — human-approved 2026-06-18 | 2026-06-18 | F3 APPROVED by human | 2 stories created (81→83): S-FORK-OPS-BACKFILL-1 (5 SP, critical) + S-FORK-OPS-GITLEAKS-DOC-1 (1 SP, docs). ACYCLIC dep graph. Zero file overlap. 1 wave, parallelizable. Human gate: parallel delivery in separate worktrees + PRs. → F4 (parallel). |
 | 4: Holdout Evaluation | not-started | | | |
 | 5: Adversarial Refinement | not-started | | | |
 | 6: Formal Hardening | not-started | | | |
@@ -62,10 +63,10 @@ activation_version: "v0.6.0-dev.4"
 <!-- Keep last 5 rows only. Archive older rows to cycles/cycle-001/burst-log.md. -->
 | Step | Agent | Status | Output |
 |------|-------|--------|--------|
-| S-FORK-OPS-SIGN-1 CYCLE CLOSED + MERGED. PR #535 → develop @ 1a2a79b. CWE-77 env-binding + atomic alpha-tag + injection guard (check-signing-workflow-injection.sh). 5 drift items resolved; 3 new deferred. Signing UNBLOCKED. DEC-121 added. | state-manager | COMPLETE | develop @ 1a2a79b. Stories 81. Signing INERT (DEC-104 pending). |
 | v0.6.0-dev.4 RELEASED. PR #536 squash-merged → develop @ 45ddf7a. release.yml 27792346419 SUCCESS — 5-target build, 10 assets. Tag v0.6.0-dev.4. CHANGELOG hygiene drift closed. develop == tag (0 ahead). | orchestrator | RELEASED | develop @ 45ddf7a == v0.6.0-dev.4 tag. |
 | S-FORK-OPS-BACKFILL bundle: F1 COMPLETE — human-approved 2026-06-18. 3 MED drift items (WIN-TARGET + DESTRUCTIVE + GITLEAKS-DOC). 2-story decomposition by file (S-FORK-OPS-BACKFILL-1 + S-FORK-OPS-GITLEAKS-DOC-1). Full F1–F7. DEC-122. Drift items set IN-PROGRESS. F2 starting. | state-manager | F1 APPROVED | develop @ 45ddf7a. Feature Mode active. Stories 81. |
 | S-FORK-OPS-BACKFILL F2 COMPLETE — human-approved 2026-06-18. Pass-3 adversarial review persisted (CONVERGED: 3 adv passes 11→0→0 blocking). Consistency audit clean (F1: BC 598→599 fixed; F2: Optional→REQUIRED fixed; F3: cold-start wording fixed). Spec 1.3.23→1.3.24 PATCH. DEC-123. F3 starting. | state-manager | F2 APPROVED | develop @ 45ddf7a. Spec 1.3.24. Stories 81. F3 active. |
+| S-FORK-OPS-BACKFILL F3 COMPLETE — human-approved 2026-06-18. 2 stories created (81→83): S-FORK-OPS-BACKFILL-1 (5 SP, critical path — backfill-release.yml WIN-TARGET parity + DESTRUCTIVE upsert + tests/backfill_matrix_parity.rs REQUIRED) + S-FORK-OPS-GITLEAKS-DOC-1 (1 SP, docs — GITLEAKS_DISABLED). ACYCLIC, zero overlap, 1 wave. Human gate: PARALLEL delivery → F4. Per-AC demo: ADAPTED (N/A, CI-workflow + docs stories; same precedent as S-WIN-1..6 / #475). | state-manager | F3 APPROVED | develop @ 45ddf7a. Stories 83. F4 active — parallel. |
 
 ## Decisions Log
 
@@ -79,7 +80,7 @@ activation_version: "v0.6.0-dev.4"
 
 ## Skip Log
 
-All 7 S-WIN-1..6 + #475 per-AC demos: **Yes — adapted**. CI-config / infra / docs / test-only / platform-cfg stories. See `cycles/cycle-001/burst-log.md`.
+All 7 S-WIN-1..6 + #475 + S-FORK-OPS-BACKFILL-1 + S-FORK-OPS-GITLEAKS-DOC-1 per-AC demos: **Yes — adapted**. CI-config / infra / docs / test-only / platform-cfg stories. See `cycles/cycle-001/burst-log.md`.
 
 ## Blocking Issues
 
@@ -125,7 +126,7 @@ All 7 S-WIN-1..6 + #475 per-AC demos: **Yes — adapted**. CI-config / infra / d
 
 ## Convergence Trackers
 
-Full per-issue: `cycles/cycle-001/convergence-trajectory.md`. Current: **[2026-06-18] S-FORK-OPS-BACKFILL F2 COMPLETE — human-approved. Adversarial CONVERGED: 3 passes (11→0→0 blocking). Consistency audit clean (2 MAJOR caught+fixed). Spec 1.3.24. DEC-122/123. develop @ 45ddf7a. Stories 81. F3 starting.**
+Full per-issue: `cycles/cycle-001/convergence-trajectory.md`. Current: **[2026-06-18] S-FORK-OPS-BACKFILL F3 COMPLETE — human-approved. 2 stories registered (81→83): S-FORK-OPS-BACKFILL-1 (5 SP) + S-FORK-OPS-GITLEAKS-DOC-1 (1 SP). ACYCLIC dep graph, zero file overlap, parallel delivery gate. develop @ 45ddf7a. Spec 1.3.24. F4 active.**
 
 ## Session Resume Checkpoint
 
@@ -134,30 +135,30 @@ Full per-issue: `cycles/cycle-001/convergence-trajectory.md`. Current: **[2026-0
 | Field | Value |
 |-------|-------|
 | **Date** | 2026-06-18 |
-| **Position** | Feature Mode ACTIVE — S-FORK-OPS-BACKFILL bundle. F2 COMPLETE — human-approved 2026-06-18. F3 (Story Decomposition + TDD) starting. Stories to create at F3: S-FORK-OPS-BACKFILL-1 (backfill-release.yml: WIN-TARGET + DESTRUCTIVE) + S-FORK-OPS-GITLEAKS-DOC-1 (doc-only: GITLEAKS_DISABLED). DEC-122/123. Spec 1.3.24. develop @ 45ddf7a. |
+| **Position** | Feature Mode ACTIVE — S-FORK-OPS-BACKFILL bundle. F3 COMPLETE — human-approved 2026-06-18. F4 (Delta Implementation) active — PARALLEL delivery of 2 stories in separate worktrees + PRs. Stories 83 (authoritative). |
 | **develop HEAD** | origin/develop = **45ddf7a** (chore(release): v0.6.0-dev.4 squash-merged 2026-06-18; == v0.6.0-dev.4 tag; 0 commits ahead of tag). |
 | **Activation** | v0.6.0-dev.4 @ 45ddf7a. develop == tag. v0.5.0 STABLE shipped 2026-06-12. |
-| **Counters** | BC **599**. NFR **42**. ADR **16**. Stories **81** (authoritative; will advance to 83 at F3 registration). |
-| **Active worktree** | None (F3 not yet started). .factory on factory-artifacts mounted. |
+| **Counters** | BC **599**. NFR **42**. ADR **16**. Stories **83** (authoritative; 81→83 registered at F3). |
+| **Active worktree** | None yet (F4 worktrees created at story delivery start). .factory on factory-artifacts mounted. |
 | **jira-e2e env** | JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ, JR_E2E_ENABLED=true. |
 | **Standing constraints** | Do NOT close #429 (DEC-029). All fixes through full VSDD Feature Mode pipeline. LESSON-F2-WORKTREE-FIRST: ALL story-scoped edits (including docs/) in story worktree, not main checkout. Fork signing UNBLOCKED but INERT (DEC-104 pending). LESSON-F1-SIBLING-CASE. LESSON-CENTRALIZATION-AC-GREP. LESSON-CITATION-SIBLING-PROPAGATION. CHANGELOG-per-PR hygiene. LESSON-F2-PIECEWISE. |
 
 ## RESUME PLAN (cold-start, self-contained)
 
-<!-- State snapshot: Feature Mode ACTIVE — S-FORK-OPS-BACKFILL bundle, F2 COMPLETE, F3 starting. develop @ 45ddf7a == v0.6.0-dev.4 tag. No active feature worktrees (F3 not yet started). -->
+<!-- State snapshot: Feature Mode ACTIVE — S-FORK-OPS-BACKFILL bundle, F3 COMPLETE, F4 active — parallel delivery. develop @ 45ddf7a == v0.6.0-dev.4 tag. No active feature worktrees yet (F4 worktrees created at delivery start). -->
 
 ### Steps (assume ZERO memory)
 
 **Step 1 (BLOCKING):** Run `vsdd-factory:factory-worktree-health`. Then read `.factory/STATE.md`.
 
-**Step 2:** Confirm Feature Mode ACTIVE — S-FORK-OPS-BACKFILL bundle. develop @ **45ddf7a** (== v0.6.0-dev.4 tag). F2 COMPLETE — human-approved 2026-06-18. Spec 1.3.24. F3 (Story Decomposition + TDD delivery) starting. Delta analysis: `.factory/phase-f1-delta-analysis/delta-analysis-fork-ops-backfill-1.md`. Spec-delta: `.factory/phase-f2-spec-evolution/spec-delta-fork-ops-backfill.md`. DEC-122/123. If develop shows different HEAD, run `git fetch origin`.
+**Step 2:** Confirm Feature Mode ACTIVE — S-FORK-OPS-BACKFILL bundle. develop @ **45ddf7a** (== v0.6.0-dev.4 tag). F3 COMPLETE — human-approved 2026-06-18. Stories **83** (authoritative). Spec 1.3.24. F4 (Delta Implementation) active — PARALLEL delivery gate approved by human. Delta analysis: `.factory/phase-f1-delta-analysis/delta-analysis-fork-ops-backfill-1.md`. Spec-delta: `.factory/phase-f2-spec-evolution/spec-delta-fork-ops-backfill.md`. Story files: `.factory/stories/S-FORK-OPS-BACKFILL-1.md` + `.factory/stories/S-FORK-OPS-GITLEAKS-DOC-1.md`. DEC-122/123. If develop shows different HEAD, run `git fetch origin`.
 
-**Step 3 — Begin Feature Mode F3 (Story Decomposition + TDD delivery).** For S-FORK-OPS-BACKFILL bundle:
-- F3: Create story files for S-FORK-OPS-BACKFILL-1 and S-FORK-OPS-GITLEAKS-DOC-1 in `.factory/stories/` and register them in STORY-INDEX.md (81→83). Story files do NOT exist yet — they are created during F3, not before.
-- F3–F7: per-story TDD delivery cycles (2 stories, each full F3–F7).
-- WIN-TARGET scope: full S-WIN-4 parity (Package + Checksum + smoke test + embedded-OAuth verify) in backfill-release.yml.
-- DESTRUCTIVE: replace `gh release delete+recreate` with safe `gh release edit --notes-file` pattern.
-- GITLEAKS-DOC: document GITLEAKS_DISABLED in docs/specs/fork-friendly-release-ops.md + CLAUDE.md.
+**Step 3 — F4 Parallel Delivery.** Two stories, each in its own git worktree + PR, running concurrently:
+
+- **S-FORK-OPS-BACKFILL-1** (5 SP, critical path): backfill-release.yml WIN-TARGET parity (full S-WIN-4: Package + Checksum + smoke test + embedded-OAuth verify) + DESTRUCTIVE upsert fix (replace `gh release delete+recreate` with safe `gh release edit --notes-file`) + REQUIRED `tests/backfill_matrix_parity.rs`. Story file at `.factory/stories/S-FORK-OPS-BACKFILL-1.md`.
+- **S-FORK-OPS-GITLEAKS-DOC-1** (1 SP, docs): document GITLEAKS_DISABLED in `docs/specs/fork-friendly-release-ops.md` + CLAUDE.md. Story file at `.factory/stories/S-FORK-OPS-GITLEAKS-DOC-1.md`.
+- Per-AC demo recording: ADAPTED (N/A) — CI-workflow + docs-only stories, same precedent as S-WIN-1..6 / #475.
+- Zero file overlap between stories; both worktrees safe to run in parallel.
 
 **Step 4 — STANDING CONSTRAINTS (survive session clear):**
 - Do NOT close #429 (DEC-029, human-deferred).
