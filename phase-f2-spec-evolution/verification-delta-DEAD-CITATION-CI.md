@@ -44,12 +44,16 @@ in test files (mirrors `src/partial_match.rs` and `src/jql.rs` inline test block
 **Test strategy — in-scope detection (BC-X.13.001 positive cases)**:
 
 1. Call `extract_path_citations` with a doc string containing several in-scope tokens.
-2. Assert each of the following token types IS extracted (develop-tracked prefixes only):
+2. Assert each of the following token types IS extracted (develop-tracked prefixes + ROOT_FILES):
    - Plain file reference: `` `src/adf.rs` ``
    - Nested path: `` `tests/auth_profiles.rs` ``
    - Docs path: `` `docs/adr/0016-windows-build-target.md` ``
    - Scripts path: `` `scripts/check-spec-counts.sh` ``
    - GitHub workflow path: `` `.github/workflows/ci.yml` ``
+   - ROOT_FILES — root config: `` `Cargo.toml` `` → extracted as `Cargo.toml` (step (c) ROOT_FILES inclusion; step (d) `.toml` passes)
+   - ROOT_FILES — root doc: `` `CLAUDE.md` `` → extracted as `CLAUDE.md`
+   - ROOT_FILES — root build script: `` `build.rs` `` → extracted as `build.rs`
+   - ROOT_FILES — root lint config: `` `deny.toml` `` → extracted as `deny.toml`
 
    NOTE: `.factory/` paths are EXCLUDED by dir-prefix filter — they are NOT in-scope
    positive cases. `` `.factory/research/S-3.03-wave3-verification.md` `` MUST NOT
@@ -83,6 +87,13 @@ NOT present in the extracted list (or is normalized to the base path, as appropr
 | (c) dir-prefix filter — no slash | `` `JR_BASE_URL` `` | No `/` — NOT in output |
 | (c) dir-prefix filter — type name | `` `std::sync::Mutex` `` | Has `::` but no known dir prefix — NOT in output |
 | (c) dir-prefix filter — `.factory/` | `` `.factory/research/S-3.03-wave3-verification.md` `` | `.factory/` NOT in develop-tracked prefix set — NOT in output |
+| (c) ROOT_FILES inclusion — Cargo.toml | `` `Cargo.toml` `` | Exactly matches ROOT_FILES member; `.toml` passes step (d) — IS in output as `Cargo.toml` |
+| (c) ROOT_FILES inclusion — build.rs | `` `build.rs` `` | Exactly matches ROOT_FILES member; `.rs` passes step (d) — IS in output as `build.rs` |
+| (c) ROOT_FILES inclusion — CLAUDE.md | `` `CLAUDE.md` `` | Exactly matches ROOT_FILES member; `.md` passes step (d) — IS in output as `CLAUDE.md` |
+| (c) ROOT_FILES exclusion — ci.yml shorthand | `` `ci.yml` `` | NOT in ROOT_FILES (shorthand for `.github/workflows/ci.yml`) — NOT in output |
+| (c) ROOT_FILES exclusion — adf.rs shorthand | `` `adf.rs` `` | NOT in ROOT_FILES (shorthand for `src/adf.rs`) — NOT in output |
+| (c) ROOT_FILES exclusion — fields.json shorthand | `` `fields.json` `` | NOT in ROOT_FILES (cache-file shorthand) — NOT in output |
+| (c) ROOT_FILES exclusion — release.yml shorthand | `` `release.yml` `` | NOT in ROOT_FILES (shorthand for `.github/workflows/release.yml`) — NOT in output |
 
 **Proptest strategy (BC-X.13.002 — no false positives)**:
 
@@ -131,6 +142,34 @@ excluded by dir-prefix filter at step (c)). If the proptest engine generates an 
 that starts with `.factory/`, the assertion correctly catches any regression where
 `.factory/` leaks into the output.
 
+Note on ROOT_FILES and proptest: the proptest above generates random non-prefix tokens
+and asserts they do NOT appear in the output. ROOT_FILES tokens (`Cargo.toml`, `CLAUDE.md`,
+etc.) WOULD appear in the output if the proptest engine generates exactly those strings —
+and that is CORRECT behavior, not a false positive. The proptest assertion allows paths
+starting with a known develop-tracked prefix, but ROOT_FILES tokens have no `/` prefix;
+the proptest should be extended to also allow exact ROOT_FILES members in the assertion:
+
+```rust
+for path in &result {
+    let is_dir_prefix = path.starts_with("src/")
+        || path.starts_with("tests/")
+        || path.starts_with("docs/")
+        || path.starts_with(".github/")
+        || path.starts_with("scripts/");
+    let root_files = ["build.rs", "Cargo.toml", "CHANGELOG.md", "CLAUDE.md",
+                      "deny.toml", "README.md", "rust-toolchain.toml"];
+    let is_root_file = root_files.contains(&path.as_str());
+    prop_assert!(
+        is_dir_prefix || is_root_file,
+        "Unexpected token in output (neither dir-prefix nor ROOT_FILES member): {}",
+        path
+    );
+}
+```
+
+This ensures the proptest correctly classifies ROOT_FILES members as valid output, not as
+false positives to catch.
+
 **Suggested test names** (unit):
 - `test_in_scope_src_path_extracted`
 - `test_in_scope_tests_path_extracted`
@@ -151,6 +190,14 @@ that starts with `.factory/`, the assertion correctly catches any regression whe
 - `test_env_var_excluded`
 - `test_type_name_excluded`
 - `test_factory_prefix_excluded_by_dir_filter`
+- `test_root_file_cargo_toml_extracted` (ROOT_FILES inclusion — EC-CITE-029)
+- `test_root_file_claude_md_extracted` (ROOT_FILES inclusion)
+- `test_root_file_build_rs_extracted` (ROOT_FILES inclusion)
+- `test_root_file_deny_toml_extracted` (ROOT_FILES inclusion)
+- `test_shorthand_ci_yml_excluded` (ROOT_FILES exclusion — EC-CITE-030)
+- `test_shorthand_adf_rs_excluded` (ROOT_FILES exclusion — EC-CITE-031)
+- `test_shorthand_fields_json_excluded` (ROOT_FILES exclusion)
+- `test_shorthand_release_yml_excluded` (ROOT_FILES exclusion)
 
 **Suggested test names** (proptest, in `mod proptests` block):
 - `test_non_prefix_tokens_are_never_extracted`
@@ -204,7 +251,7 @@ fn test_claude_md_citations_resolve_to_real_files() {
     assert!(
         dead.is_empty(),
         // CANONICAL failure message — CI-CITE-001 (error-taxonomy §8) — VERBATIM:
-        "CLAUDE.md cites file paths that do not exist on disk:\n  {}\nFix the citation or restore the file.\nNote: .factory/, glob, and symbol-form tokens are auto-excluded.",
+        "CLAUDE.md cites file paths that do not exist on disk:\n  {}\nFix the citation or restore the file.\nNote: .factory/, glob, and symbol-form tokens are auto-excluded. Root-level files (Cargo.toml, CLAUDE.md, etc.) are checked.",
         dead.iter().map(|p| format!("{} (line N)", p)).collect::<Vec<_>>().join("\n  ")
     );
 }
@@ -218,8 +265,10 @@ cites, this test will fail on CI.
 `CLAUDE.md cites file paths that do not exist on disk:` (NOT `Dead CLAUDE.md
 citations:` or any other wording). The closing lines MUST be `Fix the citation or
 restore the file.` followed by `Note: .factory/, glob, and symbol-form tokens are
-auto-excluded.` These strings are load-bearing — they are the CI-CITE-001 canonical
-message from error-taxonomy.md §8 and pinned by BC-X.13.001.
+auto-excluded. Root-level files (Cargo.toml, CLAUDE.md, etc.) are checked.` These
+strings are load-bearing — they are the CI-CITE-001 canonical message from
+error-taxonomy.md §8 and pinned by BC-X.13.001. (F2 amendment 2026-06-19: the Note
+line was extended to mention root-file inclusion.)
 
 **Test strategy — deterministic failure (fixture-based)**:
 
@@ -307,8 +356,8 @@ fn test_docs_path_is_in_scope() {
 
 | VP ID | BC(s) Covered | Key Invariant |
 |-------|---------------|---------------|
-| VP-CITE-001 | BC-X.13.001, BC-X.13.002 | `extract_path_citations` correctly identifies in-scope tokens and applies the canonical (a)–(e) pipeline (step a: glob-skip; step b: merged fixpoint — symbol-form strip sub-step 1, line-ref strip sub-step 2, leading-bracket strip sub-step 3, plain-punct trim sub-step 4, unbalanced `)` trim sub-step 5, unbalanced `]` trim sub-step 6; step c: dir-prefix filter including `.factory/` exclusion; step d: extension filter; step e: Path::exists()) — no false positives; no panics on arbitrary input; proptest alphabet includes `*`, `{`, `}`, `:`, `~`, trailing-punct chars, and leading-punct chars `(`, `[`, `]` to exercise all branches including merged-fixpoint multi-pass vectors |
-| VP-CITE-002 | BC-X.13.001, BC-X.13.003 | Integration guard is green on develop HEAD (zero dead citations); fails deterministically when a fixture with a known-dead path is fed; canonical CI-CITE-001 failure message emitted verbatim; `.factory/` exclusion via dir-prefix filter at step (c) (no allowlist function) |
+| VP-CITE-001 | BC-X.13.001, BC-X.13.002 | `extract_path_citations` correctly identifies in-scope tokens and applies the canonical (a)–(e) pipeline (step a: glob-skip; step b: merged fixpoint — symbol-form strip sub-step 1, line-ref strip sub-step 2, leading-bracket strip sub-step 3, plain-punct trim sub-step 4, unbalanced `)` trim sub-step 5, unbalanced `]` trim sub-step 6; step c: dir-prefix filter + ROOT_FILES inclusion — `{build.rs, Cargo.toml, CHANGELOG.md, CLAUDE.md, deny.toml, README.md, rust-toolchain.toml}` are IN-SCOPE; `ci.yml`, `adf.rs`, `fields.json`, `release.yml` are EXCLUDED; step d: extension filter; step e: Path::exists()) — no false positives; no panics on arbitrary input; proptest assertion allows both dir-prefix paths and ROOT_FILES members |
+| VP-CITE-002 | BC-X.13.001, BC-X.13.003 | Integration guard is green on develop HEAD (zero dead citations, including ROOT_FILES members like `Cargo.toml` that now resolve to root files); fails deterministically when a fixture with a known-dead path is fed; canonical CI-CITE-001 failure message emitted verbatim (updated Note line); `.factory/` exclusion via dir-prefix filter at step (c) (no allowlist function) |
 
 ## Project Convention Note
 
@@ -384,6 +433,11 @@ Before F6 (Targeted Hardening) can sign off:
 - [ ] Multi-pass merged-fixpoint vectors (EC-CITE-026: `(src/config.rs:~42)`;
       EC-CITE-027: `src/api/client.rs:195,`; EC-CITE-028: `src/foo.rs::bar().`) each
       have a dedicated unit test asserting the correct extracted path
+- [ ] ROOT_FILES inclusion vectors (EC-CITE-029: `Cargo.toml` → IS extracted;
+      EC-CITE-030: `ci.yml` → NOT extracted; EC-CITE-031: `adf.rs` → NOT extracted)
+      each have dedicated unit tests
+- [ ] Proptest `prop_assert` allows both dir-prefix paths AND ROOT_FILES members in
+      output (see updated proptest strategy in VP-CITE-001 §Proptest strategy)
 - [ ] `cargo mutants --in-diff` on the PR diff does not flag uncovered branches in
       `extract_path_citations` (the exclusion rules are each independently exercisable
       by the unit tests above)

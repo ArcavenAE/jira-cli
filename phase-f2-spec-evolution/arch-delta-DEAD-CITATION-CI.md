@@ -60,12 +60,24 @@ applying the canonical normalization/skip pipeline specified by BC-X.13.002
     with its leading `(`, so `:~42$` didn't match; after punct-trim removed `(` and `)`, `:~42`
     was left unchecked. The merged single-fixpoint re-runs all sub-steps until stable, eliminating
     this ordering-class of bugs (F-PASS6-01).
-(c) **Dir-prefix filter**: token must start with a develop-tracked directory prefix
-    (`src/`, `tests/`, `docs/`, `.github/`, `scripts/`). ALL `.factory/` prefixes are EXCLUDED
-    here — `.factory/` is NOT in the develop-tracked prefix set (it is git-ignored, lives in a
-    separate orphan-branch worktree, and is ABSENT from the CI checkout).
-    Section-ref tokens (`§N`-style) also lack a known directory prefix and are excluded here;
-    whitespace tokenization has already separated them from preceding path tokens.
+(c) **Dir-prefix filter + ROOT_FILES inclusion (F2 amendment 2026-06-19)**: a token is
+    IN-SCOPE if it meets EITHER of the following two conditions:
+    - **Condition 1 (dir-prefix)**: token starts with a develop-tracked directory prefix
+      (`src/`, `tests/`, `docs/`, `.github/`, `scripts/`). ALL `.factory/` prefixes are
+      EXCLUDED here — `.factory/` is NOT in the develop-tracked prefix set (it is git-ignored,
+      lives in a separate orphan-branch worktree, and is ABSENT from the CI checkout).
+    - **Condition 2 (ROOT_FILES exact-match)**: token exactly equals one of the curated
+      root-level tracked files:
+      `ROOT_FILES = { build.rs, Cargo.toml, CHANGELOG.md, CLAUDE.md, deny.toml, README.md, rust-toolchain.toml }`
+      This set is confirmed by `git ls-files --full-name | grep -v /` at 2026-06-19.
+      Bare-filename shorthands NOT in this set (e.g., `ci.yml`, `adf.rs`, `fields.json`,
+      `release.yml`, `embedded_oauth.rs`) are EXCLUDED — they name files in subdirectories
+      and would false-positive if checked at root.
+    Section-ref tokens (`§N`-style) also lack a known directory prefix and are not in ROOT_FILES;
+    they are excluded here. Whitespace tokenization has already separated them from path tokens.
+    **False-positive-safety rationale**: curated exact-match beats a structural rule. A rule
+    like "any bare filename with a recognized extension" would match `ci.yml`, `adf.rs`, etc.,
+    generating ~10 false positives on legitimate CLAUDE.md shorthands.
 (d) **Extension filter**: token must end with a recognized file extension
     (`.md`, `.rs`, `.sh`, `.toml`, `.yml`, `.yaml`)
 (e) **Path::exists() check**: only tokens surviving steps (a)–(d) reach this check
@@ -91,7 +103,7 @@ This is the integration-level test function. It:
    CLAUDE.md cites file paths that do not exist on disk:
      <path> (line N)
    Fix the citation or restore the file.
-   Note: .factory/, glob, and symbol-form tokens are auto-excluded.
+   Note: .factory/, glob, and symbol-form tokens are auto-excluded. Root-level files (Cargo.toml, CLAUDE.md, etc.) are checked.
    ```
 
 There is NO `is_off_working_branch_allowlisted` function — `.factory/` exclusion

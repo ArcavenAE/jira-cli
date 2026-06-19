@@ -5,6 +5,7 @@ phase: F2
 iteration: 2
 date: 2026-06-19
 status: complete
+amendment: "F2 ROOT_FILES amendment 2026-06-19 (human-requested scope extension)"
 ---
 
 # PRD Delta — DEAD-CITATION-CI (F2 Iteration 2)
@@ -13,6 +14,50 @@ status: complete
 
 Added 3 new behavioral contracts to `cross-cutting.md` under new subsystem **X.13 CI Guards**.
 Added error taxonomy entry for the guard's failure output to `error-taxonomy.md`.
+
+## F2 Amendment: ROOT_FILES Inclusion Rule (2026-06-19, human-requested)
+
+**Scope extension:** BC-X.13.002 step (c) extended in-place (no new BC; total count unchanged at 602).
+
+### Problem
+
+The original BC-X.13.002 step (c) accepted ONLY tokens starting with a develop-tracked directory prefix (`src/`, `tests/`, `docs/`, `.github/`, `scripts/`). This meant that root-level file citations in CLAUDE.md (e.g., `` `Cargo.toml` ``, `` `CLAUDE.md` ``, `` `build.rs` ``) were excluded from the guard by the dir-prefix filter, since they have no directory prefix. These are real, stable, citable files whose citation rot would go undetected.
+
+A naive fix ("check any bare filename with a recognized extension at root") was unsafe: it would false-positive on ~10 legitimate CLAUDE.md shorthand citations (`ci.yml`, `adf.rs`, `fields.json`, etc.) that are actually names of files in subdirectories, not root files.
+
+### Solution: Curated ROOT_FILES Exact-Match
+
+Step (c) was extended to add a second in-scope condition: a token exactly equals a member of the curated ROOT_FILES set. The set is enumerated explicitly from `git ls-files --full-name | grep -v /`:
+
+**ROOT_FILES = { build.rs, Cargo.toml, CHANGELOG.md, CLAUDE.md, deny.toml, README.md, rust-toolchain.toml }**
+
+Excluded from ROOT_FILES (intentionally, with rationale):
+- `ci.yml`, `e2e.yml`, `release.yml` → NOT in ROOT_FILES (`.github/workflows/` shorthands; false-positive if checked at root)
+- `fields.json` → NOT in ROOT_FILES (cache-file shorthand)
+- `adf.rs`, `auth.rs`, etc. → NOT in ROOT_FILES (`src/` shorthands)
+- `Cargo.lock` → NOT in ROOT_FILES (`.lock` not in recognized extension set at step (d))
+- `.gitattributes`, `.gitignore`, `.gitleaks.toml`, `.pre-commit-config.yaml` → NOT in ROOT_FILES (dotfiles, not typically cited)
+- `install.sh` → NOT in ROOT_FILES (rarely cited with path intent)
+
+### New Edge Cases Added to BC-X.13.002
+
+- EC-CITE-029: `Cargo.toml` → in ROOT_FILES → CHECKED (step (c) passes; `.toml` passes step (d))
+- EC-CITE-030: `ci.yml` → NOT in ROOT_FILES → EXCLUDED (`.github/workflows/` shorthand; false-positive-safe)
+- EC-CITE-031: `adf.rs` → NOT in ROOT_FILES → EXCLUDED (`src/adf.rs` shorthand)
+
+### Count Impact
+
+BC-X.13.002 extended in-place: 3 new edge cases (EC-CITE-029..031), expanded step (c), new Invariants, and expanded Canonical Test Vectors. No new BC created. **Total remains 602.**
+
+CANONICAL-COUNTS.md: unchanged (602).
+BC-INDEX.md: BC-X.13.001 and BC-X.13.002 rows updated in-place.
+error-taxonomy.md: CI-CITE-001 message format and actionability updated.
+arch-delta-DEAD-CITATION-CI.md: step (c) updated.
+verification-delta-DEAD-CITATION-CI.md: VP-CITE-001 test strategy extended; proptest updated; F6 checklist extended.
+
+### Architect Note
+
+VP-CITE-001 proptest must be updated in F4/F6 to allow ROOT_FILES members in the assertion (they are valid output, not false positives). See updated proptest in `verification-delta-DEAD-CITATION-CI.md` §VP-CITE-001 §Proptest strategy.
 
 **Iteration 2 (F2 Iter 2) applied the following major re-scope and spec improvements
 (all human-approved):**
