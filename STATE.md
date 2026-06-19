@@ -6,7 +6,7 @@ timestamp: 2026-06-19T23:59:59Z
 phase: 3
 project: jira-cli
 mode: brownfield
-current_step: "2026-06-19 maintenance sweep CLOSED. PR #543 MERGED → develop @ 6bdb251 (ADR-0014 + CLAUDE.md accuracy + CI timeout). 6 Bundle D stories registered (89). develop 1 commit ahead of v0.6.0-dev.5. IDLE."
+current_step: "2026-06-19 maintenance sweep CLOSED. Session-review committed 6b68f02. 4 process-gap/coverage items added to Drift Items (MAINT-PG-PR-MERGE-CHANNEL, MAINT-PG-CI-DOC-LINT, MAINT-PG-DEAD-CITATION-CI, PERF-BASELINE-ABSENT). IDLE."
 current_cycle: "cycle-001"
 feature_mode_bundle: "S-FORK-OPS-BACKFILL"
 dtu_required: false
@@ -27,7 +27,7 @@ activation_version: "v0.6.0-dev.5"
 | **Product** | jr (Jira CLI) |
 | **Mode** | BROWNFIELD / Rust |
 | **Target Workspace** | develop → main |
-| **Last Updated** | 2026-06-19: MAINTENANCE SWEEP CLOSED. PR #543 MERGED → develop @ 6bdb251 (ADR-0014 + CLAUDE.md accuracy + CI timeout CR-010). 5 drift items RESOLVED+ARCHIVED (DRIFT-D13/D15/D16/D9, FORK-OPS-BACKFILL-TIMEOUT-PARITY). Stories 89. IDLE. |
+| **Last Updated** | 2026-06-19: SESSION-REVIEW COMPLETE (6b68f02). 4 process-gap items added to Drift Items. Sweep FULLY CLOSED. IDLE. |
 | **Current Phase** | Phase 3 — IDLE (S-FORK-OPS-BACKFILL CYCLE CLOSED). develop @ 6bdb251, 1 commit ahead of v0.6.0-dev.5 tag. BC 599. NFR 42. ADR 16. Stories 89. |
 | **Next Phase** | Next feature cycle (no active bundle) |
 | **Activation HEAD** | 71f33c6 (v0.6.0-dev.5 tag); develop now @ 6bdb251 (1 commit ahead) |
@@ -117,6 +117,10 @@ All 7 S-WIN-1..6 + #475 + S-FORK-OPS-BACKFILL-1 + S-FORK-OPS-GITLEAKS-DOC-1 per-
 | FORK-OPS-BACKFILL-ZIP-GLOB-COUPLING | backfill-release.yml | `gh release upload jr-*.zip` fails loud on zero-match glob (accepted; guarded by needs:build + matrix-parity test; parity with release.yml). | LOW | OPEN — accepted |
 | FORK-OPS-F5-SELFTEST-CHECKLIST | process-gap | F5 checklist conflates `--self-test` inline fixture with real-file scan; wording could mislead. | LOW | OPEN |
 | DRIFT-CR-008 | test-helper dedup | extract_job_block / block-extraction helpers duplicated across test files. | LOW | TRACKED — S-MAINT-CR-008 (draft, 2026-06-19) |
+| MAINT-PG-PR-MERGE-CHANNEL | process-gap | Maintenance-sweep PR merge-authorization path not codified; pr-manager refuses coordinator-relayed approval, forcing orchestrator-direct merge. Action: codify merge-auth path in maintenance workflow doc so human approval flows directly to pr-manager. | LOW | DEFERRED |
+| MAINT-PG-CI-DOC-LINT | process-gap | CLAUDE.md src-file-tree drift (DRIFT-D15/D16 class) recurring across 2 sweeps; catchable by a CI script comparing src/ files vs CLAUDE.md tree. Action: new story to add scripts/check-claude-md-tree.sh to CI. | LOW | DEFERRED |
+| MAINT-PG-DEAD-CITATION-CI | process-gap | CLAUDE.md "Detail:"/"See:" path citations to non-existent files recurring (DRIFT-D13/D9 class). Action: scripts/check-claude-md-citations.sh verifying each cited path exists on disk, wired into ci-gate.needs. | LOW | OPEN — candidate for near-term action (session-review top recommendation) |
+| PERF-BASELINE-ABSENT | coverage-gap | Sweep 5 (perf) skipped for 4th consecutive sweep due to no benchmark baseline. Action: register draft story to establish minimal hyperfine baseline stored in .factory/perf/. | LOW | DEFERRED |
 
 ## Convergence Trackers
 
@@ -129,7 +133,7 @@ Full per-issue: `cycles/cycle-001/convergence-trajectory.md`. Current: **[2026-0
 | Field | Value |
 |-------|-------|
 | **Date** | 2026-06-19 |
-| **Position** | 2026-06-19 maintenance sweep CLOSED. PR #543 MERGED → develop @ 6bdb251. 5 drift items RESOLVED+ARCHIVED. Stories 89. IDLE. |
+| **Position** | 2026-06-19 maintenance sweep FULLY CLOSED. PR #543 MERGED → develop @ 6bdb251. Session-review committed 6b68f02. 4 process-gap drift items added (MAINT-PG-PR-MERGE-CHANNEL, MAINT-PG-CI-DOC-LINT, MAINT-PG-DEAD-CITATION-CI, PERF-BASELINE-ABSENT). Stories 89. IDLE. |
 | **develop HEAD** | origin/develop = **6bdb251** (docs: 2026-06-19 maintenance sweep accuracy fixes (#543); 1 commit ahead of v0.6.0-dev.5 tag 71f33c6). |
 | **Activation** | v0.6.0-dev.5 @ 71f33c6. develop @ 6bdb251 (1 ahead). v0.5.0 STABLE shipped 2026-06-12. |
 | **Counters** | BC **599**. NFR **42**. ADR **16**. Stories **89** (authoritative). |
@@ -188,3 +192,4 @@ Durable follow-ups: see Drift Items section.
 | Closed issues (CLOSED/MERGED/DELIVERED) | `cycles/cycle-001/closed-issues-archive.md` |
 | Phase 2→3 gate document | `cycles/cycle-001/gates/phase-2-to-3-gate.md` |
 | Maintenance sweep 2026-06-17 session review | `maintenance/2026-06-17/session-review.md` |
+| Maintenance sweep 2026-06-19 session review | `maintenance/2026-06-19/session-review.md` |
