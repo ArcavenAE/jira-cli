@@ -1,7 +1,7 @@
 ---
 context: holdout-scenarios
 title: "Holdout Scenarios"
-total_holdouts: 57
+total_holdouts: 60
 # H-NEW-AUTH-002 registered by S-0.07 (Phase 3, 2026-05-07). Wave 0 COMPLETE.
 # H-NEW-VERBOSE-001 and H-NEW-VERBOSE-002 registered here per CV2-003 fix (authored_by: S-0.06).
 version: "1.1.2"
@@ -805,3 +805,91 @@ Note: the step-2 conflict guard does not inspect the `--request-type` value at a
 **Why hidden**: The `--markdown` + `--field description=` combination produces a desync: `JsmRequestBuilder::build()` sets `isAdfRequest: true` from the ADF conversion of `self.description`, then `extra_fields["description"]` overwrites the ADF value with a plain string. This may cause a JSM 400 or silently drop ADF formatting — neither outcome is clean. A regression where the guard is removed would silently send a malformed request body to Atlassian with no client-side error, making the defect invisible in unit tests that do not mount a live JSM endpoint. Only this holdout's zero-mock setup catches the regression — any unexpected HTTP call fails the test.
 
 **Status**: MUST-PASS. Pins BC-3.8.017 (--markdown + --field description= conflict rejected at the top of `handle_jsm_create`, before `require_service_desk`, no HTTP). The rejection message must NOT assert "Atlassian returns 400" — it uses "may result in" phrasing per CLAUDE.md citation discipline.
+
+---
+
+## Group 8: CI Citation Guard (H-CITE-001..H-CITE-003)
+
+### H-CITE-001: Citation guard catches a dead `src/` citation and emits CI-CITE-001 detection (MUST-PASS)
+
+**NFR source**: BC-X.13.001
+**BC**: BC-X.13.001, BC-X.13.002
+**Authored by**: F3 story decomposition (2026-06-19, S-MAINT-DEAD-CITATION-CI)
+
+**Setup**: Call `extract_path_citations` from `tests/claude_md_citations.rs` with the fixture
+doc string `"See \`src/DOES_NOT_EXIST_IN_ANY_JR_BUILD.rs\` for details."`. Then filter the
+result with `Path::new(env!("CARGO_MANIFEST_DIR")).join(p).exists()` to get the `dead` vec.
+
+**Action**: Assert the `dead` vec contains `"src/DOES_NOT_EXIST_IN_ANY_JR_BUILD.rs"`.
+
+**Expected (MUST-PASS)**:
+- The dead vec contains the path `src/DOES_NOT_EXIST_IN_ANY_JR_BUILD.rs`.
+- The path passed `extract_path_citations` (starts with `src/`; passes extension filter `.rs`; no glob, no symbol suffix).
+- `Path::exists()` returns false (file genuinely does not exist in any `jr` build).
+- If this result were passed to the full integration test assertion, the panic message would begin with: `CLAUDE.md cites file paths that do not exist on disk:`.
+
+**Why hidden**: Confirms the guard correctly detects dead develop-tracked `src/` citations using a
+controlled fixture rather than CLAUDE.md content. A regression in the dir-prefix filter at step (c)
+that accidentally excluded `src/` paths would make this path invisible in the dead list.
+
+**Status**: MUST-PASS. Pins BC-X.13.001 (guard detects dead develop-tracked citations) and
+BC-X.13.002 (dir-prefix filter correctly admits `src/` paths).
+
+---
+
+### H-CITE-002: Citation guard correctly ignores a `.factory/` citation; no false positive (MUST-PASS)
+
+**NFR source**: BC-X.13.003
+**BC**: BC-X.13.003
+**Authored by**: F3 story decomposition (2026-06-19, S-MAINT-DEAD-CITATION-CI)
+
+**Setup**: Call `extract_path_citations` from `tests/claude_md_citations.rs` with the fixture
+doc string `"See \`.factory/specs/prd/cross-cutting.md\` for details."`.
+
+**Action**: Assert the return value is an empty vec.
+
+**Expected (MUST-PASS)**:
+- `extract_path_citations` returns `[]`.
+- The token `.factory/specs/prd/cross-cutting.md` passes glob-skip (step a) and fixpoint (step b),
+  but fails the dir-prefix filter at step (c): `.factory/` is NOT a develop-tracked directory prefix
+  and NOT a ROOT_FILES exact-match. The token is excluded and never reaches `Path::exists()`.
+- No false positive, regardless of whether `.factory/specs/prd/cross-cutting.md` exists on disk.
+
+**Why hidden**: `.factory/` citations are the most critical false-positive vector. If `.factory/`
+were incorrectly admitted by the dir-prefix filter, every CI run on a standard working-tree checkout
+(without the `factory-artifacts` branch worktree mounted) would fail for every CLAUDE.md citation of
+a `.factory/` path. A single regression in step (c) that added `.factory/` to the tracked prefix set
+would break CI globally. This holdout confirms the exclusion is structural and robust.
+
+**Status**: MUST-PASS. Pins BC-X.13.003 (ALL `.factory/` paths excluded by dir-prefix filter at step
+(c); no allowlist function involved; no `is_off_working_branch_allowlisted` call).
+
+---
+
+### H-CITE-003: Citation guard correctly ignores bare shorthand `ci.yml`; no false positive (MUST-PASS)
+
+**NFR source**: BC-X.13.002
+**BC**: BC-X.13.002 step (c) — ROOT_FILES exclusion (EC-CITE-030)
+**Authored by**: F3 story decomposition (2026-06-19, S-MAINT-DEAD-CITATION-CI)
+
+**Setup**: Call `extract_path_citations` from `tests/claude_md_citations.rs` with the fixture
+doc string `"See \`ci.yml\` for details."`.
+
+**Action**: Assert the return value is an empty vec.
+
+**Expected (MUST-PASS)**:
+- `extract_path_citations` returns `[]`.
+- The token `ci.yml` passes glob-skip (step a) and fixpoint (step b, leaves it unchanged).
+  At step (c): `ci.yml` has no develop-tracked directory prefix (`src/`, `tests/`, `docs/`,
+  `.github/`, `scripts/`) and does NOT exactly equal any ROOT_FILES member. Excluded.
+- The full path `.github/workflows/ci.yml` would be the correct in-scope citation form.
+- No false positive.
+
+**Why hidden**: Bare-shorthand tokens like `ci.yml`, `adf.rs`, `fields.json`, and `release.yml`
+appear frequently in CLAUDE.md prose but refer to files in subdirectories, not repo-root files.
+A regression that used a structural "any .yml file at step (c)" rule instead of the curated
+ROOT_FILES exact-match would generate spurious failures on these shorthands. This holdout
+confirms the ROOT_FILES exclusion (EC-CITE-030) is enforced at the token level.
+
+**Status**: MUST-PASS. Pins BC-X.13.002 step (c) ROOT_FILES exclusion — `ci.yml` is NOT a
+ROOT_FILES member; bare shorthands for non-root files are excluded.
