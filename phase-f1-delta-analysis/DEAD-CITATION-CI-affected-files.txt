@@ -1,0 +1,6 @@
+# Affected files for DEAD-CITATION-CI bundle
+# Format: CHANGE_TYPE path
+# NEW = file created, MODIFIED = file modified, DEPENDENT = unchanged but depends on changed code
+
+NEW tests/claude_md_citations.rs
+MODIFIED CLAUDE.md

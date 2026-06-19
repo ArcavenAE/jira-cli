@@ -69,7 +69,10 @@ NOT present in the extracted list (or is normalized to the base path, as appropr
 | (c) Line-ref strip tilde | `` `src/config.rs:~42` `` | Normalized to `src/config.rs` — IS in output as `src/config.rs` |
 | (c) Line-ref strip bare | `` `src/config.rs:100` `` | Normalized to `src/config.rs` — IS in output as `src/config.rs` |
 | (e) Trailing-punct trim | `` `src/adf.rs,` `` | Trailing comma trimmed → `src/adf.rs` — IS in output |
-| (e) Leading-punct trim | `` `(src/adf.rs)` `` | Leading `(` stripped; trailing `)` unbalanced → trimmed → `src/adf.rs` — IS in output |
+| (e) Leading-punct trim — `(` | `` `(src/adf.rs)` `` | Leading `(` stripped; trailing `)` unbalanced → trimmed → `src/adf.rs` — IS in output |
+| (e) Leading-punct trim — `[` (LOW-1) | `` `[docs/x.md]` `` | Leading `[` stripped; trailing `]` unbalanced → trimmed → `docs/x.md` — CHECKED (IS in output) |
+| (e) Greedy outer-pair strip — `(…).` (LOW-2) | `` `(src/adf.rs).` `` | Outer `(…)` pair stripped iteratively, trailing `.` trimmed → `src/adf.rs` — IS in output |
+| (e) Greedy outer-pair strip — `((…))` (LOW-3) | `` `((src/x.rs))` `` | Two nested `(…)` pairs stripped iteratively → `src/x.rs` — IS in output |
 | (f) Dir-prefix filter — section ref | `` `docs/specs/e2e-live-jira-testing.md §9` `` | `§9` excluded by dir-prefix filter (no known prefix); `docs/specs/e2e-live-jira-testing.md` IS in output |
 | (g) Extension filter | `` `src/cli/issue` `` | No recognized extension — NOT in output |
 | (f) Dir-prefix filter — URL | `` `http://127.0.0.1:53682/callback` `` | Not starting with known dir prefix — NOT in output |
@@ -85,15 +88,16 @@ Property: For any string `s` that does NOT start with a known directory prefix
 passing it to `extract_path_citations` returns an empty vec (or a vec whose entries
 all start with a known develop-tracked prefix). The alphabet deliberately includes
 `*`, `{`, `}`, trailing-punct chars (`,`, `.`, `;`, `:`, `)`), and leading-punct
-chars `(` and `[` so that the glob-skip branch (step a), trailing-punct-trim branch
-(step e), and leading-punct-strip branch (step e) are all exercised by random inputs
-— not merely by hand-crafted unit vectors — which reduces mutation survival risk in F6.
+chars `(`, `[`, and `]` so that the glob-skip branch (step a), trailing-punct-trim
+branch (step e), leading-punct-strip branch (step e), and `]` balance-trim branch
+(step e) are all exercised by random inputs — not merely by hand-crafted unit vectors
+— which reduces mutation survival risk in F6.
 
 ```rust
 proptest! {
     #[test]
     fn test_non_prefix_tokens_are_never_extracted(
-        s in "[A-Za-z0-9_:~./\\*\\{\\}\\.,;:\\)\\(\\[]{1,50}"
+        s in "[A-Za-z0-9_:~./\\*\\{\\}\\.,;:\\)\\(\\[\\]]{1,50}"
     ) {
         let non_prefix = format!("`{}`", s);
         let result = extract_path_citations(&non_prefix);
@@ -300,7 +304,7 @@ fn test_docs_path_is_in_scope() {
 
 | VP ID | BC(s) Covered | Key Invariant |
 |-------|---------------|---------------|
-| VP-CITE-001 | BC-X.13.001, BC-X.13.002 | `extract_path_citations` correctly identifies in-scope tokens and applies the canonical pipeline (glob-skip, symbol-form strip, line-ref strip, trailing-punct trim including leading-`(`/`[` strip, dir-prefix filter including `.factory/` exclusion, extension filter) — no false positives; no panics on arbitrary input; proptest alphabet includes `*`, `{`, `}`, trailing-punct chars, and leading-punct chars `(` and `[` to exercise all branches |
+| VP-CITE-001 | BC-X.13.001, BC-X.13.002 | `extract_path_citations` correctly identifies in-scope tokens and applies the canonical pipeline (glob-skip, symbol-form strip, line-ref strip, trailing-punct trim including leading-`(`/`[` strip and `]` balance-trim, greedy outer-pair stripping, dir-prefix filter including `.factory/` exclusion, extension filter) — no false positives; no panics on arbitrary input; proptest alphabet includes `*`, `{`, `}`, trailing-punct chars, and leading-punct chars `(`, `[`, and `]` to exercise all branches |
 | VP-CITE-002 | BC-X.13.001, BC-X.13.003 | Integration guard is green on develop HEAD (zero dead citations); fails deterministically when a fixture with a known-dead path is fed; canonical CI-CITE-001 failure message emitted verbatim; `.factory/` exclusion via dir-prefix filter (no allowlist function) |
 
 ## Project Convention Note
@@ -370,9 +374,9 @@ Before F6 (Targeted Hardening) can sign off:
       `test_extract_never_panics`) are in tree and pass
 - [ ] The proptest alphabet for `test_non_prefix_tokens_are_never_extracted` includes
       `*`, `{`, `}`, trailing-punct chars (`,`, `.`, `;`, `:`, `)`), and leading-punct
-      chars `(` and `[` so that the glob-skip branch (step a), trailing-punct-trim
-      branch (step e), and leading-punct-strip branch (step e) are exercised by random
-      inputs — reducing mutation-survival risk
+      chars `(`, `[`, and `]` so that the glob-skip branch (step a), trailing-punct-trim
+      branch (step e), leading-punct-strip branch (step e), and `]` balance-trim branch
+      (step e) are exercised by random inputs — reducing mutation-survival risk
 - [ ] `cargo mutants --in-diff` on the PR diff does not flag uncovered branches in
       `extract_path_citations` (the exclusion rules are each independently exercisable
       by the unit tests above)
