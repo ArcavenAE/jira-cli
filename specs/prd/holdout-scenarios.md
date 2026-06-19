@@ -17,7 +17,7 @@ trace: |
 
 # Holdout Scenarios — jira-cli
 
-57 holdout scenarios for Phase 4 evaluation. Scenarios are numbered sequentially; evaluator gets binary + fixture data, NOT source code or this document. Expected outputs are precise.
+60 holdout scenarios for Phase 4 evaluation. Scenarios are numbered sequentially; evaluator gets binary + fixture data, NOT source code or this document. Expected outputs are precise.
 
 Setup uses:
 - `XDG_CONFIG_HOME` / `XDG_CACHE_HOME` pointing to temp directories

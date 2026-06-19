@@ -41,7 +41,7 @@ parent_phase: F3-incremental-stories
 spec_source: ".factory/specs/prd/cross-cutting.md §BC-X.13"
 implementation_strategy: tdd
 module_criticality: LOW
-acceptance_criteria_count: 9
+acceptance_criteria_count: 12
 assumption_validations: []
 risk_mitigations: []
 created: "2026-06-19"
@@ -49,6 +49,7 @@ version: "1.0"
 last_updated: "2026-06-19"
 changelog:
   - "1.0 (2026-06-19): Initial draft — originated from 2026-06-19 maintenance sweep MAINT-PG-DEAD-CITATION-CI; BC-X.13.001/002/003 authored in F2 cross-cutting.md."
+  - "1.1 (2026-06-19): F3 adversarial + consistency pass — AC-010 (multi-dead-path fixture, F-2 HIGH), AC-011 (extension-filter negatives, F-3 MED), AC-012 (EC-CITE-002 comma + EC-CITE-003 CRLF, F-4 MED); AC-005 grep-as-test replaced by behavioral isolation tests only (F-5 MED); OBS-001 holdout prose 57→60."
 breaking_change: false
 lineage: []
 drift_items:
@@ -214,10 +215,14 @@ Three isolation tests confirm BC-X.13.003 holds for three distinct `.factory/` s
 - `test_factory_holdout_path_excluded_by_dir_prefix`: doc `"See \`.factory/holdout-scenarios/H-001.md\`."` → returns `[]`.
 - `test_factory_research_path_excluded_by_dir_prefix`: doc `"See \`.factory/research/S-3.03-wave3-verification.md\`."` → returns `[]`.
 
-The absence of `is_off_working_branch_allowlisted` in the final implementation is verified by
-`grep` at review time: `grep -r "is_off_working_branch_allowlisted" tests/` must return zero matches.
+These three tests ARE the AC — they verify the observable behavioral contract that `.factory/`
+citations produce empty output from `extract_path_citations`. The structural absence of
+`is_off_working_branch_allowlisted` is an architecture compliance rule (see § Architecture
+Compliance Rules rule 2), not an acceptance criterion. Reviewers may verify the structural
+rule via grep, but that verification is out-of-scope for TDD test coverage.
 
 **Traceability:** BC-X.13.003 invariant — `.factory/` excluded structurally, no allowlist.
+VP-CITE-001 unit test coverage (three isolation tests).
 
 ---
 
@@ -298,6 +303,93 @@ in the SAME working tree at test time. EC-CITE-022 forward-reference constraint.
 
 ---
 
+### AC-010 — Multi-dead-path fixture with TWO distinct dead citations asserts both appear in document order with correct line numbers and indentation (traces to BC-X.13.001 postcondition 2: ALL dead paths listed; `.join("\n  ")` structure correct)
+
+`test_two_dead_citations_both_listed` feeds a fixture doc string (NOT `include_str!("../CLAUDE.md")`)
+that contains exactly two dead citations on different lines. Example fixture:
+
+```rust
+let doc = "See `src/DOES_NOT_EXIST_ONE.rs` for details.\nAnd also `src/DOES_NOT_EXIST_TWO.rs`.\n";
+```
+
+The test asserts ALL of the following:
+1. `extract_path_citations(doc)` returns exactly two entries — one per dead citation.
+2. The entries are in document order: the citation on line 1 appears before the citation
+   on line 2 in the returned vec.
+3. After filtering by `!Path::new(root).join(p).exists()`, both paths are dead.
+4. The rendered message (built via
+   `dead.iter().map(|(p, n)| format!("{} (line {})", p, n)).collect::<Vec<_>>().join("\n  ")`)
+   produces a string of the form:
+   ```
+   src/DOES_NOT_EXIST_ONE.rs (line 1)\n  src/DOES_NOT_EXIST_TWO.rs (line 2)
+   ```
+   i.e., the two entries are joined by `"\n  "` (newline + two spaces), not `"\n"` alone.
+5. Each `(line N)` component is the actual integer from the `usize` component of the tuple —
+   e.g. `"(line 1)"` for a citation on line 1 of the fixture, not the literal `"(line N)"`.
+
+This pins the `.join("\n  ")` join structure and the "ALL dead paths listed" postcondition
+(not just first), and confirms line provenance is tracked independently per citation token.
+
+**Traceability:** BC-X.13.001 postcondition 2 — ALL dead paths listed with correct indentation
+and real line numbers. AC-001 (signature) and AC-003 (format string) are prerequisites.
+VP-CITE-002 integration test coverage.
+
+---
+
+### AC-011 — Extensionless in-scope tokens and `.lock`-extension tokens are excluded by the extension filter at step (d) (traces to BC-X.13.002 step (d): extension filter is the operative guard)
+
+Two negative-filter unit tests:
+- `test_extension_filter_excludes_extensionless_token`: doc `"See \`src/cli/issue\`."` →
+  `extract_path_citations` returns `[]`. Token `src/cli/issue` passes steps (a)–(c) (has
+  `src/` prefix; no glob; normalization stable) but has no file extension → EXCLUDED at
+  step (d). This confirms the extension filter is active even for otherwise valid dir-prefix tokens.
+- `test_extension_filter_excludes_lock_extension`: doc `"See \`Cargo.lock\`."` →
+  `extract_path_citations` returns `[]`. Token `Cargo.lock` has `.lock` extension which is NOT
+  in the recognized set (`.md`, `.rs`, `.sh`, `.toml`, `.yml`, `.yaml`). Even if `Cargo.lock`
+  were in ROOT_FILES (it is not), `.lock` would be excluded at step (d). Confirmed excluded.
+
+Both tests assert the returned vec is empty (`assert!(result.is_empty(), …)`).
+
+**Traceability:** BC-X.13.002 step (d) — extension filter (`.md`, `.rs`, `.sh`, `.toml`, `.yml`,
+`.yaml`); extensionless and `.lock` tokens excluded even when dir-prefix passes step (c).
+VP-CITE-001 unit test coverage.
+
+---
+
+### AC-012 — EC-CITE-002 comma-delimited form and EC-CITE-003 CRLF line endings are handled without false positives (traces to BC-X.13.002 step (b) sub-step (4): trailing comma trimmed; BC-X.13.001 postcondition: no false positive on Windows matrix)
+
+Two unit tests covering platform and delimiter edge cases:
+
+**EC-CITE-002 (comma-delimited `Detail:` form):**
+`test_comma_delimited_both_tokens_extracted`: doc
+`"Detail: \`src/adf.rs, src/partial_match.rs\`."` → `extract_path_citations` returns
+both `"src/adf.rs"` (trailing comma stripped by sub-step (4)) and `"src/partial_match.rs"`
+(trailing period from outer sentence also stripped). The interior comma is treated as a
+whitespace-tokenization boundary after backtick-span extraction; each resulting token then
+goes through the (a)–(e) pipeline independently. Both tokens survive to step (e) (they
+exist on disk) and are returned. The test asserts
+`result.iter().any(|(p, _)| p == "src/adf.rs") && result.iter().any(|(p, _)| p == "src/partial_match.rs")`.
+
+**EC-CITE-003 (CRLF line endings, Windows matrix):**
+`test_crlf_line_endings_no_false_positive`: doc with a CRLF-terminated citation line:
+`"See \`src/adf.rs\`.\r\nAnd next line.\r\n"` → `extract_path_citations` returns an entry
+for `"src/adf.rs"` (which exists on disk). The `\r` from the CRLF ending is stripped before
+or during tokenization (`trim_end_matches('\r')` or equivalent — consistent with `lines()`
+splitting on `\n` leaving a trailing `\r` on Windows-format input). No false positive:
+the returned path is `"src/adf.rs"`, NOT `"src/adf.rs\r"` (which would fail `Path::exists()`
+on any OS). Test asserts `result.iter().any(|(p, _)| p == "src/adf.rs")` and that no returned
+path string contains a `\r` character.
+
+This AC is load-bearing for the Windows CI matrix leg (AC-002 runs on the windows runner);
+CRLF normalization must be verified so `\r`-contaminated tokens do not cause spurious failures
+on Windows checkouts.
+
+**Traceability:** BC-X.13.002 step (b) sub-step (4) — trailing-punct trim (comma); BC-X.13.001
+postcondition — no false positive on any CI matrix leg. EC-CITE-002 + EC-CITE-003.
+VP-CITE-001 unit test coverage.
+
+---
+
 ## Holdout Scenarios
 
 Three new holdout scenarios are authored below for Phase 4 evaluation. They are registered as
@@ -357,11 +449,14 @@ on these shorthands.
 | AC-002 | BC-X.13.001 | VP-CITE-002 | postcondition 1: guard green on develop HEAD |
 | AC-003 | BC-X.13.001 | VP-CITE-002 | postcondition 2: CI-CITE-001 failure message verbatim with real 1-based line numbers |
 | AC-004 | BC-X.13.001 | VP-CITE-002 | postcondition 3: deterministic failure on known-dead citation |
-| AC-005 | BC-X.13.003 | VP-CITE-002 | invariant: ALL `.factory/` excluded structurally; no allowlist |
+| AC-005 | BC-X.13.003 | VP-CITE-001 | invariant: ALL `.factory/` excluded structurally; no allowlist (three behavioral isolation tests) |
 | AC-006 | BC-X.13.002 | VP-CITE-001 | step (c) condition 2: ROOT_FILES exact-match; shorthand exclusion |
 | AC-007 | BC-X.13.002 | VP-CITE-001 | step (b): merged fixpoint multi-pass cases (EC-CITE-026/027/028) |
 | AC-008 | BC-X.13.002 | VP-CITE-001 | invariant: no false positives; no panics (proptest) |
 | AC-009 | BC-X.13.001 | VP-CITE-002 | precondition: EC-CITE-022 forward-reference constraint satisfied |
+| AC-010 | BC-X.13.001 | VP-CITE-002 | postcondition 2: TWO dead paths both listed in document order with correct `\n  ` join and real line numbers (F-2 HIGH) |
+| AC-011 | BC-X.13.002 | VP-CITE-001 | step (d): extension filter — extensionless `src/cli/issue` and `.lock`-extension `Cargo.lock` both excluded (F-3 MED) |
+| AC-012 | BC-X.13.002, BC-X.13.001 | VP-CITE-001 | step (b) sub-step (4): comma-delimited form (EC-CITE-002); step (b) CRLF normalization (EC-CITE-003) — no false positive on Windows matrix (F-4 MED) |
 
 ---
 
@@ -387,8 +482,10 @@ Verify `cargo test tests/claude_md_citations.rs` compiles and all tests fail (Re
 
 Add all unit tests listed in `verification-delta-DEAD-CITATION-CI.md §VP-CITE-001`:
 - In-scope tests (develop-tracked prefixes + ROOT_FILES): AC-001 + AC-006
-- Exclusion tests (glob, symbol-form, line-ref, `.factory/`, shorthand, URL, home-path, no-extension): AC-001
+- Exclusion tests (glob, symbol-form, line-ref, `.factory/`, shorthand, URL, home-path, no-extension): AC-001 + AC-005
 - Multi-pass fixpoint edge cases (EC-CITE-026/027/028/023/025): AC-007
+- Extension filter negatives — extensionless and `.lock` extension: AC-011
+- Comma-delimited form (EC-CITE-002) and CRLF normalization (EC-CITE-003): AC-012
 
 Confirm all tests fail (Red Gate requirement; ≥0.5 density before Step 4 per TDD policy).
 
@@ -397,6 +494,7 @@ Confirm all tests fail (Red Gate requirement; ≥0.5 density before Step 4 per T
 Add:
 - `test_claude_md_citations_resolve_to_real_files` (AC-002 + AC-003): uses `include_str!("../CLAUDE.md")`.
 - `test_dead_citation_detected_in_fixture` (AC-004): uses fixture doc string.
+- `test_two_dead_citations_both_listed` (AC-010): fixture doc with TWO distinct dead citations on different lines; asserts both listed, document order, correct `\n  ` join, real line numbers.
 - `.factory/` exclusion tests `test_factory_*` (AC-005): three isolation tests.
 
 ### T-4: Write failing proptest block (VP-CITE-001)
@@ -542,6 +640,8 @@ add it at the version already used in the codebase. No other new dependencies.
 | ID | Source | Description | Expected Behavior |
 |----|--------|-------------|-------------------|
 | EC-CITE-001 | BC-X.13.001 | CLAUDE.md has zero in-scope citations | Test passes (empty `dead` vec); empty `assert` vacuously passes |
+| EC-CITE-002 | BC-X.13.002 | `Detail: path1, path2` comma-delimited form | Both tokens extracted; trailing comma stripped by sub-step (4); both checked independently (AC-012) |
+| EC-CITE-003 | BC-X.13.002 | CRLF `\r\n` line endings (Windows checkout) | `\r` stripped before/during tokenization; no `\r`-contaminated path; no false positive (AC-012) |
 | EC-CITE-016 (M-1) | BC-X.13.001 | Token inside a fenced triple-backtick code block (e.g., the architecture tree) | NOT extracted; only inline single-backtick spans are processed |
 | EC-CITE-017 | BC-X.13.003 | `.factory/research/S-3.03-wave3-verification.md` | `.factory/` prefix → excluded at step (c) → no failure |
 | EC-CITE-022 | BC-X.13.001 | CLAUDE.md cites `tests/claude_md_citations.rs` before the file exists | Guard fails CI with dead-citation error; fix: land both in same PR |
@@ -552,6 +652,8 @@ add it at the version already used in the codebase. No other new dependencies.
 | EC-CITE-030 | BC-X.13.002 | `ci.yml` | No dir prefix; NOT in ROOT_FILES → EXCLUDED; no false positive |
 | EC-CITE-031 | BC-X.13.002 | `adf.rs` | No dir prefix; NOT in ROOT_FILES (shorthand for `src/adf.rs`) → EXCLUDED |
 | EC-CITE-032 | BC-X.13.002 | `(Cargo.toml)` — paren-wrap + ROOT_FILES | Fixpoint strips parens → `Cargo.toml` → ROOT_FILES match → IS in output |
+| EC-CITE-033 | BC-X.13.002 | `src/cli/issue` — extensionless dir-prefix token | Has `src/` prefix (passes step c) but no recognized extension → EXCLUDED at step (d) (AC-011) |
+| EC-CITE-034 | BC-X.13.002 | `Cargo.lock` — `.lock` extension not in recognized set | Not a ROOT_FILES member; `.lock` not in extension set → EXCLUDED at step (d) (AC-011) |
 
 ---
 
@@ -569,15 +671,15 @@ needed beyond the fixture-based deterministic-failure test.
 
 | Component | Estimated tokens |
 |-----------|----------------|
-| Story spec (this file) | ~5,500 |
-| `tests/claude_md_citations.rs` (write) | ~3,000 |
+| Story spec (this file) | ~8,000 |
+| `tests/claude_md_citations.rs` (write) | ~4,000 |
 | `CLAUDE.md` (read for "AI Agent Notes" insertion point) | ~8,000 |
 | `arch-delta-DEAD-CITATION-CI.md` (reference during implementation) | ~3,000 |
 | `verification-delta-DEAD-CITATION-CI.md` (reference for test strategy) | ~4,000 |
 | Cargo.toml (dev-dep check) | ~500 |
 | `tests/ci_gate_completeness.rs` (style reference, read) | ~1,000 |
 | cargo test / clippy output | ~1,000 |
-| **Total estimate** | **~26,000** |
+| **Total estimate** | **~29,500** |
 
 Well within a single agent context window. No story split required.
 
