@@ -1,11 +1,11 @@
 ---
 document_type: pipeline-state
 version: "2.0"
-status: idle
-timestamp: 2026-06-19T21:30:00Z
-phase: phase-3-tdd-implementation
+status: in_progress
+timestamp: 2026-06-19T22:00:00Z
+phase: 3
 project: jira-cli
-mode: BROWNFIELD
+mode: brownfield
 current_step: "S-FORK-OPS-BACKFILL CYCLE CLOSED + RELEASED v0.6.0-dev.5 → 71f33c6. IDLE."
 current_cycle: "cycle-001"
 feature_mode_bundle: "S-FORK-OPS-BACKFILL"
@@ -145,9 +145,9 @@ Full per-issue: `cycles/cycle-001/convergence-trajectory.md`. Current: **[2026-0
 
 **Step 1 (BLOCKING):** Run `vsdd-factory:factory-worktree-health`. Then read `.factory/STATE.md`.
 
-**Step 2:** Confirm S-FORK-OPS-BACKFILL CYCLE CLOSED + RELEASED v0.6.0-dev.5 2026-06-19. develop @ **71f33c6** (== v0.6.0-dev.5 tag, 0 commits ahead). IDLE — no active feature bundle. Stories **83** (authoritative). BC **599**. 3 LOW carry-forward drift items: FORK-OPS-BACKFILL-ZIP-GLOB-COUPLING (accepted), FORK-OPS-F5-SELFTEST-CHECKLIST (next maintenance), FORK-OPS-BACKFILL-TIMEOUT-PARITY (next maintenance). DEC-122/123/124. If develop shows different HEAD, run `git fetch origin`.
+**Step 2:** Confirm S-FORK-OPS-BACKFILL CYCLE CLOSED + RELEASED v0.6.0-dev.5 2026-06-19. develop @ **71f33c6** (== v0.6.0-dev.5 tag, 0 commits ahead). IDLE — no active feature bundle. Counters: BC **599**, NFR **42**, ADR **16**, Stories **83** (authoritative). 3 LOW carry-forward drift items: FORK-OPS-BACKFILL-ZIP-GLOB-COUPLING (accepted), FORK-OPS-F5-SELFTEST-CHECKLIST (next maintenance), FORK-OPS-BACKFILL-TIMEOUT-PARITY (next maintenance). DEC-122/123/124. If develop shows different HEAD, run `git fetch origin`. Active worktrees: main checkout + `.factory` (factory-artifacts) + `.reference` only — no story worktrees open.
 
-**Step 3 — Next feature cycle.** No active bundle. Use `/vsdd-factory:next-step` or orchestrator to select next feature. Merge pre-authorization no longer active (S-FORK-OPS-BACKFILL bundle done).
+**Step 3 — Next feature cycle.** No active bundle. Open next-work candidates: **#532** (profile-fallback coverage, LOW), **fork-ops signing enablement** (DEC-104, needs human + Apple secrets — no code work remaining), **#429** (DO NOT close — DEC-029), **#400/#372/#387/#368/#209** (backlog), or **"human brings new feature/bug → Feature Mode F1–F7"**. Use `/vsdd-factory:next-step` or orchestrator to select. Merge pre-authorization no longer active (S-FORK-OPS-BACKFILL bundle done).
 
 **Step 4 — STANDING CONSTRAINTS (survive session clear):**
 - Do NOT close #429 (DEC-029, human-deferred).
@@ -156,6 +156,8 @@ Full per-issue: `cycles/cycle-001/convergence-trajectory.md`. Current: **[2026-0
 - LESSON-F2-WORKTREE-FIRST: ALL story-scoped file edits (including docs/) in the story worktree, not main checkout.
 - LESSON-F1-SIBLING-CASE, LESSON-CENTRALIZATION-AC-GREP, LESSON-CITATION-SIBLING-PROPAGATION, LESSON-F2-PIECEWISE.
 - CHANGELOG-per-PR hygiene: keep CHANGELOG `[Unreleased]` populated as PRs merge.
+- Merge/release agents require explicit human authorization. If an instance dead-locks on relayed approval, route via a fresh agent (not a nested relay).
+- Subagents work in worktree paths (not main checkout) — LESSON-F2-WORKTREE-FIRST.
 - 3 carry-forward LOW drift items remain OPEN/deferred (non-blocking, tracked in Drift Items).
 
 Durable follow-ups: see Drift Items section.
