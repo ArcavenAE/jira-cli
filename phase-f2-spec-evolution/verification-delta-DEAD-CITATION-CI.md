@@ -28,7 +28,7 @@ without any filesystem access.
 
 **Applies to**:
 - BC-X.13.001: in-scope token identification (directory prefix + extension filter)
-- BC-X.13.002: canonical normalization/skip pipeline (steps a–h)
+- BC-X.13.002: canonical normalization/skip pipeline (steps a–e, merged-fixpoint revision F2-Iter5)
 
 **Purity boundary**: `extract_path_citations` MUST be a standalone pure function
 (no `Path::exists()` calls inside). This is a design constraint from
@@ -64,22 +64,25 @@ NOT present in the extracted list (or is normalized to the base path, as appropr
 |------|-------------|------------------|
 | (a) Glob skip — `*` | `` `src/cli/bc-*.md` `` | Skipped entirely — NOT in output |
 | (a) Glob skip — `{` `}` | `` `adf-{block,task}-list.md` `` | Skipped entirely — NOT in output |
-| (b) Symbol-form strip | `` `src/adf.rs::push_text` `` | Normalized to `src/adf.rs` — IS in output as `src/adf.rs` |
-| (b) Symbol-form strip — no dir prefix | `` `adf::tests::test_bare_url_split` `` | Has `::` but no known dir prefix before `::` — NOT in output (excluded by dir-prefix filter) |
-| (c) Line-ref strip tilde | `` `src/config.rs:~42` `` | Normalized to `src/config.rs` — IS in output as `src/config.rs` |
-| (c) Line-ref strip bare | `` `src/config.rs:100` `` | Normalized to `src/config.rs` — IS in output as `src/config.rs` |
-| (e) Trailing-punct trim | `` `src/adf.rs,` `` | Trailing comma trimmed → `src/adf.rs` — IS in output |
-| (e) Leading-punct trim — `(` | `` `(src/adf.rs)` `` | Leading `(` stripped; trailing `)` unbalanced → trimmed → `src/adf.rs` — IS in output |
-| (e) Leading-punct trim — `[` (LOW-1) | `` `[docs/x.md]` `` | Leading `[` stripped; trailing `]` unbalanced → trimmed → `docs/x.md` — CHECKED (IS in output) |
-| (e) Greedy outer-pair strip — `(…).` (LOW-2) | `` `(src/adf.rs).` `` | Outer `(…)` pair stripped iteratively, trailing `.` trimmed → `src/adf.rs` — IS in output |
-| (e) Greedy outer-pair strip — `((…))` (LOW-3) | `` `((src/x.rs))` `` | Two nested `(…)` pairs stripped iteratively → `src/x.rs` — IS in output |
-| (f) Dir-prefix filter — section ref | `` `docs/specs/e2e-live-jira-testing.md §9` `` | `§9` excluded by dir-prefix filter (no known prefix); `docs/specs/e2e-live-jira-testing.md` IS in output |
-| (g) Extension filter | `` `src/cli/issue` `` | No recognized extension — NOT in output |
-| (f) Dir-prefix filter — URL | `` `http://127.0.0.1:53682/callback` `` | Not starting with known dir prefix — NOT in output |
-| (f) Dir-prefix filter — home path | `` `~/.config/jr/config.toml` `` | Not starting with known dir prefix — NOT in output |
-| (f) Dir-prefix filter — no slash | `` `JR_BASE_URL` `` | No `/` — NOT in output |
-| (f) Dir-prefix filter — type name | `` `std::sync::Mutex` `` | Has `::` but no known dir prefix — NOT in output |
-| (f) Dir-prefix filter — `.factory/` | `` `.factory/research/S-3.03-wave3-verification.md` `` | `.factory/` NOT in develop-tracked prefix set — NOT in output |
+| (b) fixpoint sub-step (1) symbol-form strip | `` `src/adf.rs::push_text` `` | Normalized to `src/adf.rs` — IS in output as `src/adf.rs` |
+| (b) fixpoint sub-step (1) symbol-form strip — no dir prefix | `` `adf::tests::test_bare_url_split` `` | Has `::` but no known dir prefix before `::` — NOT in output (excluded by dir-prefix filter at step c) |
+| (b) fixpoint sub-step (2) line-ref strip tilde | `` `src/config.rs:~42` `` | Normalized to `src/config.rs` — IS in output as `src/config.rs` |
+| (b) fixpoint sub-step (2) line-ref strip bare | `` `src/config.rs:100` `` | Normalized to `src/config.rs` — IS in output as `src/config.rs` |
+| (b) fixpoint sub-step (4) trailing-punct trim | `` `src/adf.rs,` `` | Trailing comma trimmed → `src/adf.rs` — IS in output |
+| (b) fixpoint sub-steps (3)+(5) leading/trailing paren | `` `(src/adf.rs)` `` | Leading `(` stripped; trailing `)` unbalanced → trimmed → `src/adf.rs` — IS in output |
+| (b) fixpoint sub-steps (3)+(6) leading/trailing bracket (LOW-1) | `` `[docs/x.md]` `` | Leading `[` stripped; trailing `]` unbalanced → trimmed → `docs/x.md` — CHECKED (IS in output) |
+| (b) fixpoint multi-pass (LOW-2) | `` `(src/adf.rs).` `` | Outer `(…)` pair stripped iteratively, trailing `.` trimmed → `src/adf.rs` — IS in output |
+| (b) fixpoint multi-pass (LOW-3) | `` `((src/x.rs))` `` | Two nested `(…)` pairs stripped iteratively → `src/x.rs` — IS in output |
+| (b) fixpoint multi-pass paren+line-ref (F-PASS6-01) | `` `(src/config.rs:~42)` `` | Pass 1: sub-steps (3)+(5) strip parens → `src/config.rs:~42`; pass 2: sub-step (2) strips `:~42` → `src/config.rs` — IS in output (NEW) |
+| (b) fixpoint multi-pass line-ref+comma (EC-CITE-027) | `` `src/api/client.rs:195,` `` | Pass 1: sub-step (4) strips `,` → `src/api/client.rs:195`; pass 2: sub-step (2) strips `:195` → `src/api/client.rs` — IS in output (NEW) |
+| (b) fixpoint sub-step (1) symbol+punct combo (EC-CITE-028) | `` `src/foo.rs::bar().` `` | Sub-step (1) strips `::bar().` → `src/foo.rs` in one pass — IS in output (NEW) |
+| (c) dir-prefix filter — section ref | `` `docs/specs/e2e-live-jira-testing.md §9` `` | `§9` excluded by dir-prefix filter (no known prefix); `docs/specs/e2e-live-jira-testing.md` IS in output |
+| (d) extension filter | `` `src/cli/issue` `` | No recognized extension — NOT in output |
+| (c) dir-prefix filter — URL | `` `http://127.0.0.1:53682/callback` `` | Not starting with known dir prefix — NOT in output |
+| (c) dir-prefix filter — home path | `` `~/.config/jr/config.toml` `` | Not starting with known dir prefix — NOT in output |
+| (c) dir-prefix filter — no slash | `` `JR_BASE_URL` `` | No `/` — NOT in output |
+| (c) dir-prefix filter — type name | `` `std::sync::Mutex` `` | Has `::` but no known dir prefix — NOT in output |
+| (c) dir-prefix filter — `.factory/` | `` `.factory/research/S-3.03-wave3-verification.md` `` | `.factory/` NOT in develop-tracked prefix set — NOT in output |
 
 **Proptest strategy (BC-X.13.002 — no false positives)**:
 
@@ -304,8 +307,8 @@ fn test_docs_path_is_in_scope() {
 
 | VP ID | BC(s) Covered | Key Invariant |
 |-------|---------------|---------------|
-| VP-CITE-001 | BC-X.13.001, BC-X.13.002 | `extract_path_citations` correctly identifies in-scope tokens and applies the canonical pipeline (glob-skip, symbol-form strip, line-ref strip, trailing-punct trim including leading-`(`/`[` strip and `]` balance-trim, greedy outer-pair stripping, dir-prefix filter including `.factory/` exclusion, extension filter) — no false positives; no panics on arbitrary input; proptest alphabet includes `*`, `{`, `}`, trailing-punct chars, and leading-punct chars `(`, `[`, and `]` to exercise all branches |
-| VP-CITE-002 | BC-X.13.001, BC-X.13.003 | Integration guard is green on develop HEAD (zero dead citations); fails deterministically when a fixture with a known-dead path is fed; canonical CI-CITE-001 failure message emitted verbatim; `.factory/` exclusion via dir-prefix filter (no allowlist function) |
+| VP-CITE-001 | BC-X.13.001, BC-X.13.002 | `extract_path_citations` correctly identifies in-scope tokens and applies the canonical (a)–(e) pipeline (step a: glob-skip; step b: merged fixpoint — symbol-form strip sub-step 1, line-ref strip sub-step 2, leading-bracket strip sub-step 3, plain-punct trim sub-step 4, unbalanced `)` trim sub-step 5, unbalanced `]` trim sub-step 6; step c: dir-prefix filter including `.factory/` exclusion; step d: extension filter; step e: Path::exists()) — no false positives; no panics on arbitrary input; proptest alphabet includes `*`, `{`, `}`, `:`, `~`, trailing-punct chars, and leading-punct chars `(`, `[`, `]` to exercise all branches including merged-fixpoint multi-pass vectors |
+| VP-CITE-002 | BC-X.13.001, BC-X.13.003 | Integration guard is green on develop HEAD (zero dead citations); fails deterministically when a fixture with a known-dead path is fed; canonical CI-CITE-001 failure message emitted verbatim; `.factory/` exclusion via dir-prefix filter at step (c) (no allowlist function) |
 
 ## Project Convention Note
 
@@ -373,10 +376,14 @@ Before F6 (Targeted Hardening) can sign off:
 - [ ] Both proptest properties from VP-CITE-001 (`test_non_prefix_tokens_are_never_extracted`,
       `test_extract_never_panics`) are in tree and pass
 - [ ] The proptest alphabet for `test_non_prefix_tokens_are_never_extracted` includes
-      `*`, `{`, `}`, trailing-punct chars (`,`, `.`, `;`, `:`, `)`), and leading-punct
-      chars `(`, `[`, and `]` so that the glob-skip branch (step a), trailing-punct-trim
-      branch (step e), leading-punct-strip branch (step e), and `]` balance-trim branch
-      (step e) are exercised by random inputs — reducing mutation-survival risk
+      `*`, `{`, `}`, `:`, `~`, trailing-punct chars (`,`, `.`, `;`), and leading/trailing
+      bracket chars `(`, `)`, `[`, `]` so that all six sub-steps of the merged fixpoint
+      at step (b) are exercised by random inputs — reducing mutation-survival risk. Note:
+      the former "step (e)" references in checklists now correspond to step (b) sub-steps
+      (3)–(6) in the (a)–(e) pipeline.
+- [ ] Multi-pass merged-fixpoint vectors (EC-CITE-026: `(src/config.rs:~42)`;
+      EC-CITE-027: `src/api/client.rs:195,`; EC-CITE-028: `src/foo.rs::bar().`) each
+      have a dedicated unit test asserting the correct extracted path
 - [ ] `cargo mutants --in-diff` on the PR diff does not flag uncovered branches in
       `extract_path_citations` (the exclusion rules are each independently exercisable
       by the unit tests above)

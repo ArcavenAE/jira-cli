@@ -44,24 +44,31 @@ applying the canonical normalization/skip pipeline specified by BC-X.13.002
 2. Split each span interior on ASCII whitespace. Each whitespace-delimited token is a
    candidate citation.
 
-**Canonical normalization/skip pipeline:**
+**Canonical normalization/skip pipeline (a)–(e), merged-fixpoint revision F2-Iter5:**
 (a) **Glob skip**: skip entirely if the token contains `*`, `{`, or `}` anywhere
-(b) **Symbol-form strip**: strip from the first `::` onward (`src/adf.rs::push_text` → `src/adf.rs`)
-(c) **Line-ref strip**: strip trailing `:~[0-9]+` or `:[0-9]+` suffix
-(d) **Section-ref**: `§N`-style tokens lack a known directory prefix and are excluded by the
-    dir-prefix filter at step (f); whitespace tokenization has already separated them from the
-    preceding path
-(e) **Punctuation trim — single fixpoint**: Repeat as one unit until a complete pass leaves the
-    token unchanged: (1) strip one leading `(` or `[`; (2) greedily trim trailing `.`,`,`,`;`,`:`; (3) trim
-    one trailing `)` iff `count('(') < count(')')` whole-token; (4) trim one trailing `]` iff
-    `count('[') < count(']')` whole-token. Termination: one condition — a full-pass no-op.
-(f) **Dir-prefix filter**: token must start with a develop-tracked directory prefix
+(b) **Normalize — single fixpoint**: repeat the following ordered sub-steps as ONE unit until a
+    complete pass leaves the token unchanged — ONE termination condition (full-pass no-op):
+    (1) strip a trailing `::…` symbol-form suffix (strip from first `::` onward);
+    (2) strip a trailing `:~[0-9]+` or `:[0-9]+` line-ref suffix;
+    (3) strip one leading `(` or `[`;
+    (4) greedily trim trailing `.`, `,`, `;`, `:`;
+    (5) trim one trailing `)` iff `count('(') < count(')')` whole-token;
+    (6) trim one trailing `]` iff `count('[') < count(']')` whole-token.
+    **Rationale for merge**: the former separated steps (b) symbol-strip, (c) line-ref-strip, (e)
+    fixpoint-punct-trim ran in sequence without re-entering earlier steps. A token like
+    `(src/config.rs:~42)` was a false-negative: the one-shot line-ref strip ran on the full token
+    with its leading `(`, so `:~42$` didn't match; after punct-trim removed `(` and `)`, `:~42`
+    was left unchecked. The merged single-fixpoint re-runs all sub-steps until stable, eliminating
+    this ordering-class of bugs (F-PASS6-01).
+(c) **Dir-prefix filter**: token must start with a develop-tracked directory prefix
     (`src/`, `tests/`, `docs/`, `.github/`, `scripts/`). ALL `.factory/` prefixes are EXCLUDED
     here — `.factory/` is NOT in the develop-tracked prefix set (it is git-ignored, lives in a
-    separate orphan-branch worktree, and is ABSENT from the CI checkout)
-(g) **Extension filter**: token must end with a recognized file extension
+    separate orphan-branch worktree, and is ABSENT from the CI checkout).
+    Section-ref tokens (`§N`-style) also lack a known directory prefix and are excluded here;
+    whitespace tokenization has already separated them from preceding path tokens.
+(d) **Extension filter**: token must end with a recognized file extension
     (`.md`, `.rs`, `.sh`, `.toml`, `.yml`, `.yaml`)
-(h) **Path::exists() check**: only tokens surviving steps (a)–(g) reach this check
+(e) **Path::exists() check**: only tokens surviving steps (a)–(d) reach this check
 
 No I/O occurs. No global state is read or written. The function is
 **suitable for inline `#[cfg(test)]` unit tests and proptest** — test

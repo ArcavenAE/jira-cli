@@ -1000,23 +1000,24 @@ that verifies every file-path citation in `CLAUDE.md` resolves to a real on-disk
 1. Extract all inline single-backtick spans (`` `…` ``) from the CLAUDE.md text. Fenced triple-backtick code blocks are OUT OF SCOPE and never read (M-1).
 2. Split each span interior on ASCII whitespace. Each whitespace-delimited token is a candidate citation.
 
-**Canonical normalization/skip pipeline (steps applied in this exact order — SR-004):**
+Section-ref tokens (`§9`-style) require no special pipeline step — they lack a known directory prefix and are excluded automatically by the dir-prefix filter at step (c). Whitespace tokenization (step 2 above) has already separated them from any preceding path token.
+
+**Canonical normalization/skip pipeline (steps applied in this exact order — SR-004, merged-fixpoint revision F2-Iter5):**
 
 a. **Glob skip**: if the token contains `*`, `{`, or `}` anywhere, skip entirely (not checked). Handles ``.factory/specs/prd/bc-*.md``, `adf-{block,task}-list.md`, and similar brace-glob forms (SR-002).
-b. **Symbol-form strip**: if the token contains `::`, strip from the first `::` onward before further processing. `src/adf.rs::push_text` → `src/adf.rs`. `adf::tests::test_bare_*` → already skipped at step (a).
-c. **Line-ref strip**: strip trailing `:~[0-9]+` or `:[0-9]+` suffix. `src/config.rs:~42` → `src/config.rs`.
-d. **Section-ref (classification no-op)**: `§9`-style tokens require no special handling — they lack a known directory prefix and are excluded automatically by the dir-prefix filter at step (f). Whitespace tokenization (step 2 of two-step extraction) has already separated section-ref tokens from any preceding path token. Step (d) is a documentation marker only; no code action is taken here.
-e. **Punctuation trim — single fixpoint (SR-005)**: Repeat the following ordered sub-steps as one unit until a complete pass leaves the token unchanged:
-   (1) strip one leading `(` or `[`;
-   (2) greedily trim trailing `.`, `,`, `;`, `:` (repeat until none remain);
-   (3) trim one trailing `)` iff `count('(') < count(')')` over the whole token;
-   (4) trim one trailing `]` iff `count('[') < count(']')` over the whole token.
-   **Termination**: the loop halts when a complete pass (all four sub-steps) makes no change (token is stable). There is exactly ONE termination condition — a full-pass no-op — not a per-sub-step condition. This closes both the `[`/`]` asymmetry (LOW-1) and the double-wrap ambiguity (MEDIUM-1): `(src/a.rs))` → pass 1: sub-step (1) strips leading `(` → `src/a.rs))`; (3) `count('(')=0 < count(')')=2` → strip ONE `)` → `src/a.rs)`; pass 2: (1) no leading bracket; (3) `count('(')=0 < count(')')=1` → strip `)` → `src/a.rs`; pass 3: no change → stable. Result: `src/a.rs` (deterministic, no contradicting early-exit).
-f. **Dir-prefix filter**: the token (after all strips above) must start with a develop-tracked directory prefix: `src/`, `tests/`, `docs/`, `.github/`, `scripts/`. ALL `.factory/` prefixes are excluded at this step — they are absent from the CI checkout. URL tokens (`http://`, `https://`), home-directory tokens (`~/`), Windows-env tokens (`%APP`), and bare identifiers with no `/` are all excluded here as corollaries.
-g. **Extension filter**: after all normalization, the token must end with a recognized file extension: `.md`, `.rs`, `.sh`, `.toml`, `.yml`, `.yaml`. Extensionless tokens (`src/cli/issue`) are excluded here.
-h. **Path::exists() check**: only tokens surviving steps (a)-(g) reach this check.
+b. **Normalize — single fixpoint (SR-005, merges former steps b/c/e)**: Repeat the following ordered sub-steps as ONE unit until a complete pass leaves the token unchanged:
+   (1) strip a trailing `::…` symbol-form suffix (strip from first `::` onward). `src/adf.rs::push_text` → `src/adf.rs`. `adf::tests::test_bare_*` → already skipped at step (a).
+   (2) strip a trailing `:~[0-9]+` or `:[0-9]+` line-ref suffix. `src/config.rs:~42` → `src/config.rs`.
+   (3) strip one leading `(` or `[`.
+   (4) greedily trim trailing `.`, `,`, `;`, `:` (repeat until none remain on this sub-step pass).
+   (5) trim one trailing `)` iff `count('(') < count(')')` over the whole token.
+   (6) trim one trailing `]` iff `count('[') < count(']')` over the whole token.
+   **Termination**: ONE condition — a full pass (all six sub-steps) makes no change. There is no per-sub-step early exit. Merging symbol-strip (1), line-ref-strip (2), and punctuation-trim (3)–(6) into one fixpoint eliminates the ordering-class bug where a leading `(` prevented the line-ref suffix from being seen in a single non-iterating strip (F-PASS6-01): `(src/config.rs:~42)` → pass 1: sub-step (3) strips `(` → `src/config.rs:~42)`, sub-step (5) strips `)` → `src/config.rs:~42`; pass 2: sub-step (2) strips `:~42` → `src/config.rs`; pass 3: stable. Result: `src/config.rs` (checked).
+c. **Dir-prefix filter**: the token (after all normalization above) must start with a develop-tracked directory prefix: `src/`, `tests/`, `docs/`, `.github/`, `scripts/`. ALL `.factory/` prefixes are excluded at this step — they are absent from the CI checkout. URL tokens (`http://`, `https://`), home-directory tokens (`~/`), Windows-env tokens (`%APP`), and bare identifiers with no `/` are all excluded here as corollaries.
+d. **Extension filter**: after all normalization, the token must end with a recognized file extension: `.md`, `.rs`, `.sh`, `.toml`, `.yml`, `.yaml`. Extensionless tokens (`src/cli/issue`) are excluded here.
+e. **Path::exists() check**: only tokens surviving steps (a)-(d) reach this check.
 
-**Cardinality note (F3-MINOR, updated LOW-1/LOW-2/LOW-3):** BC-X.13.002 enumerates 5 normalization/skip rule groups (steps a–e above). Step (e) contains multiple sub-rules (plain trailing-punct greedy strip, unbalanced `)` trim, unbalanced `]` trim, double-wrap greedy pair stripping) but they are all part of the single "punctuation trim" step — they do not add new top-level rule groups. The other exclusions in steps (f) and (g) — URL filter, home-path filter, no-slash filter, type-name filter, extension filter — are corollaries of the dir-prefix+extension filter, not separate named rules. References to "9 exclusion rules" in earlier passes are superseded by this canonical statement. Step (d) is a documentation marker/no-op, not an active rule — it requires no implementation code.
+**Cardinality note (F2-Iter5 merged-fixpoint, supersedes F3-MINOR/LOW-1/LOW-2/LOW-3):** BC-X.13.002 now defines 5 top-level pipeline steps (a)–(e). Step (b) is the single unified normalization fixpoint encompassing all former symbol-strip, line-ref-strip, and punctuation-trim rules as ordered sub-steps (1)–(6). Steps (c) and (d) are the two filter gates. Step (e) is the effectful existence check. References to the former (a)–(h) scheme (steps b/c/d/e/f/g/h) are superseded by this canonical (a)–(e) statement.
 
 **Preconditions**:
 - `extract_path_citations` is called with the full CLAUDE.md text
@@ -1024,61 +1025,71 @@ h. **Path::exists() check**: only tokens surviving steps (a)-(g) reach this chec
 
 **Postconditions**:
 - No token matching the glob, brace-glob, symbol-form, line-ref, trailing-punct, or section-ref patterns causes a false-positive path-existence failure
-- After normalization (stripping), the underlying file path (e.g. `src/adf.rs`) IS checked — the guard doesn't skip the file entirely, only strips the disambiguation suffix
-- `[docs/x.md]`-style bracket-wrapped tokens are CHECKED (not silently excluded) — the symmetric `]` balance rule (LOW-1) ensures the trailing `]` is stripped before the extension filter runs
+- After normalization (stripping in fixpoint step b), the underlying file path (e.g. `src/adf.rs`) IS checked — the guard doesn't skip the file entirely, only strips the disambiguation suffix
+- `[docs/x.md]`-style bracket-wrapped tokens are CHECKED (not silently excluded) — fixpoint sub-step (6) strips the unbalanced `]` before the extension filter at step (d) runs
+- `(src/config.rs:~42)`-style combined paren-wrapped + line-ref tokens are CHECKED — the merged fixpoint resolves both the leading `(` and the `:~42` suffix across successive passes (F-PASS6-01 fix)
 
 **Invariants**:
-- `::` cannot appear in a file path on any supported OS (Windows, macOS, Linux) — stripping `::.*` is unambiguous and safe
-- A glob/brace-glob pattern (`*`, `{`, `}`) causes skip, not strip — the base path before the wildcard would be a directory, not a file, and the glob intent is documentation of a naming pattern, not a specific file
+- `::` cannot appear in a file path on any supported OS (Windows, macOS, Linux) — stripping `::.*` in sub-step (1) is unambiguous and safe
+- A glob/brace-glob pattern (`*`, `{`, `}`) causes skip at step (a), not strip — the base path before the wildcard would be a directory, not a file, and the glob intent is documentation of a naming pattern, not a specific file
+- The single unified fixpoint at step (b) is the sole normalization loop — there is no separate per-rule single-pass outside it
 - **Case-sensitivity limitation (M-2, v1 documented):** `Path::exists()` uses the host OS's native case sensitivity. On case-insensitive filesystems (macOS HFS+, Windows NTFS), a citation with wrong case (e.g., `Src/adf.rs` instead of `src/adf.rs`) will return true and pass the guard. This is a documented v1 limitation; case-exact readdir validation is deferred to v2.
 - **Space-containing paths (L-2, v1 documented):** paths containing spaces are unsupported by the whitespace tokenizer and will be split into multiple fragments. By design; no escape exists in v1.
-- **Backslash paths (L-4, v1 documented):** only forward-slash path tokens are recognized. Windows-style `%APPDATA%\jr` paths are excluded by the dir-prefix filter (no known prefix) and are not checked.
-- **Proptest alphabet update required (LOW-1 follow-up):** The `[`/`]` symmetric trim rule (step e, added LOW-1) introduces a new stripping behavior for `]` characters. The proptest covering `extract_path_citations` must include `]` in its character alphabet so the balance rule is exercised by the property tests. Architect note: add `]` to the proptest character set alongside `(`, `)`, `[` when implementing `VP-CITE-001`'s proptest coverage.
+- **Backslash paths (L-4, v1 documented):** only forward-slash path tokens are recognized. Windows-style `%APPDATA%\jr` paths are excluded by the dir-prefix filter at step (c) and are not checked.
+- **Proptest alphabet requirement:** The proptest covering `extract_path_citations` must include `]` alongside `(`, `)`, `[` in its character alphabet, and must include `:`, `~` to exercise the line-ref strip sub-step. Architect note: this applies to `VP-CITE-001`'s proptest coverage.
 
 **Edge Cases**:
-- EC-CITE-006: Token is `src/adf.rs::tests::test_bare_url_split_by_emphasis_links_only_leading_run` — strip from first `::` → `src/adf.rs` → exists → pass
-- EC-CITE-007: Token is `src/config.rs:~42` — strip `:~42` → `src/config.rs` → exists → pass
-- EC-CITE-008: Token is `.factory/specs/prd/bc-*.md` — contains `*` → skip entirely (step a) → no false positive
-- EC-CITE-009: Token is `docs/specs/e2e-live-jira-testing.md §9` — whitespace tokenization yields `docs/specs/e2e-live-jira-testing.md` (checked) and `§9` (excluded by dir-prefix filter at step f) → pass
-- EC-CITE-010: Token is `adf::tests::test_bare_url_split` — has `::` but NO known directory prefix in the portion before `::` — excluded by dir-prefix filter at step (f) before suffix-stripping even matters
-- EC-CITE-011: Token is `src/cli/issue` (no extension, from hypothetical prose) — no recognized extension after normalization → excluded by extension filter at step (g)
-- EC-CITE-012 (trailing punct): Token is `src/adf.rs,` from a comma-delimited `Detail:` line — trailing comma trimmed at step (e) → `src/adf.rs` → checked → pass
+- EC-CITE-006: Token is `src/adf.rs::tests::test_bare_url_split_by_emphasis_links_only_leading_run` — fixpoint pass 1 sub-step (1) strips from first `::` → `src/adf.rs` → stable → checked → pass
+- EC-CITE-007: Token is `src/config.rs:~42` — fixpoint pass 1 sub-step (2) strips `:~42` → `src/config.rs` → stable → checked → pass
+- EC-CITE-008: Token is `.factory/specs/prd/bc-*.md` — contains `*` → skip entirely at step (a) → no false positive
+- EC-CITE-009: Token is `docs/specs/e2e-live-jira-testing.md §9` — whitespace tokenization yields `docs/specs/e2e-live-jira-testing.md` (checked) and `§9` (excluded by dir-prefix filter at step c) → pass
+- EC-CITE-010: Token is `adf::tests::test_bare_url_split` — has `::` but NO known directory prefix in the portion before `::` — after fixpoint strip `adf` has no known prefix → excluded by dir-prefix filter at step (c)
+- EC-CITE-011: Token is `src/cli/issue` (no extension, from hypothetical prose) — fixpoint leaves token unchanged; no recognized extension after normalization → excluded by extension filter at step (d)
+- EC-CITE-012 (trailing punct): Token is `src/adf.rs,` from a comma-delimited `Detail:` line — fixpoint sub-step (4) trims trailing comma → `src/adf.rs` → checked → pass
 - EC-CITE-013 (brace-glob): Token is `adf-{block,task}-list.md` — contains `{` and `}` → skip at step (a) → no false positive
-- EC-CITE-014 (unbalanced paren — leading punct): Token is `(src/adf.rs)` from prose — step (e) leading trim removes leading `(` → token is now `src/adf.rs)` → trailing `)` check: `count('(')` = 0, `count(')')` = 1 → unbalanced (0 < 1) → trailing `)` trimmed → `src/adf.rs` → passes dir-prefix filter (step f) → checked. Outcome: CHECKED (no false negative).
-- EC-CITE-015 (balanced paren — no leading punct): Token is `src/types/assets/mod.rs(foo)` (hypothetical) — no leading `(` or `[` to strip — trailing `)` check: `count('(')` = 1, `count(')')` = 1 → balanced (1 == 1, not `<`) → trailing `)` NOT trimmed — token remains `src/types/assets/mod.rs(foo)` → extension filter at step (g) excludes it (no recognized terminal extension after `)`) → excluded, no false positive. Outcome: EXCLUDED (correct; the `(foo)` suffix is not a real file path).
+- EC-CITE-014 (unbalanced paren — leading punct): Token is `(src/adf.rs)` from prose — fixpoint pass 1: sub-step (3) strips leading `(` → `src/adf.rs)`; sub-step (5) `count('(')=0 < count(')')=1` → strips `)` → `src/adf.rs`; pass 2: stable → passes dir-prefix filter (step c) → checked. Outcome: CHECKED (no false negative).
+- EC-CITE-015 (balanced paren — no leading punct): Token is `src/types/assets/mod.rs(foo)` (hypothetical) — no leading `(` or `[` to strip at sub-step (3); sub-step (5): `count('(')=1, count(')')=1` → balanced → NOT trimmed; fixpoint: stable → token remains `src/types/assets/mod.rs(foo)` → extension filter at step (d) excludes it (no recognized terminal extension after `)`) → excluded, no false positive. Outcome: EXCLUDED (correct; the `(foo)` suffix is not a real file path).
 - EC-CITE-016 (fenced block, M-1): Token appears inside a triple-backtick fenced code block → not extracted (only inline single-backtick spans are processed) → never checked
-- EC-CITE-023 (`[`/`]` symmetric trim, LOW-1): Token is `[docs/x.md]` — leading `[` stripped → `docs/x.md]`; trailing `]` check: `count('[')` = 0, `count(']')` = 1 → unbalanced → trailing `]` stripped → `docs/x.md` → passes dir-prefix + extension filter → CHECKED. Without the `]` balance rule, the `.md]` suffix fails the extension filter and the citation is silently excluded — a latent false-negative.
-- EC-CITE-024 (mixed trailing punct, LOW-2): Token is `(src/adf.rs).` — pass 1: sub-step (1) strips leading `(` → `src/adf.rs).`; sub-step (2) greedy plain-punct strips trailing `.` → `src/adf.rs)`; sub-step (3) `count('(')=0 < count(')')=1` → unbalanced → strip `)` → `src/adf.rs`; pass 2: no change → stable → checked. Demonstrates that sub-step (2) plain-punct stripping runs BEFORE the bracket balance checks and all plain punct is removed first.
-- EC-CITE-025 (double-wrap, LOW-3): Token is `((src/x.rs))` — pass 1: sub-step (1) strips leading `(` → `(src/x.rs))`; sub-step (2) no plain punct; sub-step (3) token has 1 `(`, 2 `)` → unbalanced (1 < 2) → strip one trailing `)` → `(src/x.rs)`; pass 2: sub-step (1) strips leading `(` → `src/x.rs)`; sub-step (3) token has 0 `(`, 1 `)` → unbalanced → strip `)` → `src/x.rs`; pass 3: no change → stable → checked. Single-fixpoint rule handles arbitrarily nested wraps deterministically.
+- EC-CITE-023 (`[`/`]` symmetric trim, LOW-1): Token is `[docs/x.md]` — fixpoint pass 1: sub-step (3) strips leading `[` → `docs/x.md]`; sub-step (6) `count('[')=0 < count(']')=1` → strips `]` → `docs/x.md`; pass 2: stable → passes dir-prefix + extension filters → CHECKED. Without sub-step (6), the `.md]` suffix fails the extension filter and the citation is silently excluded — a latent false-negative.
+- EC-CITE-024 (mixed trailing punct, LOW-2): Token is `(src/adf.rs).` — fixpoint pass 1: sub-step (3) strips `(` → `src/adf.rs).`; sub-step (4) strips `.` → `src/adf.rs)`; sub-step (5) `count('(')=0 < count(')')=1` → strips `)` → `src/adf.rs`; pass 2: stable → checked. Demonstrates sub-step (4) plain-punct stripping runs before the bracket balance checks within one pass.
+- EC-CITE-025 (double-wrap, LOW-3): Token is `((src/x.rs))` — fixpoint pass 1: sub-step (3) strips leading `(` → `(src/x.rs))`; sub-step (5) `count('(')=1, count(')')=2` → strips one `)` → `(src/x.rs)`; pass 2: sub-step (3) strips `(` → `src/x.rs)`; sub-step (5) `count('(')=0, count(')')=1` → strips `)` → `src/x.rs`; pass 3: stable → checked. Single-fixpoint rule handles arbitrarily nested wraps deterministically.
+- EC-CITE-026 (paren-wrap + line-ref — F-PASS6-01 fix): Token is `(src/config.rs:~42)` — fixpoint pass 1: sub-steps (1)/(2) find no suffix to strip (still has leading `(`); sub-step (3) strips leading `(` → `src/config.rs:~42)`; sub-step (5) `count('(')=0 < count(')')=1` → strips `)` → `src/config.rs:~42`; pass 2: sub-step (2) strips `:~42` → `src/config.rs`; pass 3: stable → checked → pass. Under the former separated pipeline this token was a false-negative: the one-shot line-ref strip ran on `(src/config.rs:~42)` (no match, trailing `)`), leaving `:~42` after paren trim completed.
+- EC-CITE-027 (line-ref + trailing comma): Token is `src/api/client.rs:195,` — fixpoint pass 1: sub-step (4) strips trailing `,` → `src/api/client.rs:195`; pass 2: sub-step (2) strips `:195` → `src/api/client.rs`; pass 3: stable → checked → pass.
+- EC-CITE-028 (symbol-form + trailing punct): Token is `src/foo.rs::bar().` — fixpoint pass 1: sub-step (1) strips from first `::` → `src/foo.rs`; sub-steps (2)-(6) find nothing to strip on `src/foo.rs`; pass 2: stable → checked → pass. (The trailing `.` is inside the `::bar().` suffix and is eliminated together with it by sub-step (1); no separate plain-punct pass is needed.)
 
 **Canonical Test Vectors** (for `extract_path_citations` unit tests):
 
 | Raw backtick content | Extracted path (after normalization) | Checked? |
 |---------------------|-------------------------------------|---------|
-| `src/adf.rs::push_text` | `src/adf.rs` | YES |
-| `src/config.rs:~42` | `src/config.rs` | YES |
-| `.factory/specs/prd/bc-*.md` | (skipped — contains `*`) | NO |
-| `adf-{block,task}-list.md` | (skipped — contains `{`) | NO |
+| `src/adf.rs::push_text` | `src/adf.rs` (fixpoint sub-step (1) strips `::push_text`) | YES |
+| `src/config.rs:~42` | `src/config.rs` (fixpoint sub-step (2) strips `:~42`) | YES |
+| `.factory/specs/prd/bc-*.md` | (skipped — contains `*`, step a) | NO |
+| `adf-{block,task}-list.md` | (skipped — contains `{`, step a) | NO |
 | `docs/specs/e2e-live-jira-testing.md` | `docs/specs/e2e-live-jira-testing.md` | YES |
-| `adf::tests::test_bare_*` | (skipped — contains `*`) | NO |
-| `std::sync::Mutex<HashMap>` | (excluded — no known dir prefix) | NO |
-| `src/api/jsm/servicedesks.rs::require_service_desk` | `src/api/jsm/servicedesks.rs` | YES |
-| `.factory/research/S-3.03-wave3-verification.md` | (excluded — `.factory/` prefix) | NO |
-| `src/config.rs,` | `src/config.rs` (trailing comma trimmed) | YES |
-| `(src/adf.rs)` | `src/adf.rs` (leading `(` stripped; trailing `)` unbalanced → trimmed) | YES |
-| `src/types/assets/mod.rs(foo)` | excluded (trailing `)` balanced → not trimmed; no recognized extension after `)`) | NO |
-| `[docs/x.md]` | `docs/x.md` (leading `[` stripped; trailing `]` unbalanced `count('[')=0 < count(']')=1` → trimmed) | YES |
-| `(src/adf.rs).` | `src/adf.rs` (leading `(` stripped → `src/adf.rs).`; trailing `.` greedily stripped → `src/adf.rs)`; trailing `)` unbalanced → stripped → `src/adf.rs`) | YES |
-| `((src/x.rs))` | `src/x.rs` (first pass: leading `(` stripped → `(src/x.rs))`; trailing `)` unbalanced → stripped → `(src/x.rs)`; second pass: leading `(` stripped → `src/x.rs)`; trailing `)` unbalanced → stripped → `src/x.rs`) | YES |
+| `adf::tests::test_bare_*` | (skipped — contains `*`, step a) | NO |
+| `std::sync::Mutex<HashMap>` | (excluded — no known dir prefix, step c) | NO |
+| `src/api/jsm/servicedesks.rs::require_service_desk` | `src/api/jsm/servicedesks.rs` (fixpoint sub-step (1)) | YES |
+| `.factory/research/S-3.03-wave3-verification.md` | (excluded — `.factory/` prefix, step c) | NO |
+| `src/config.rs,` | `src/config.rs` (fixpoint sub-step (4) trims trailing comma) | YES |
+| `(src/adf.rs)` | `src/adf.rs` (fixpoint: sub-step (3) strips `(`; sub-step (5) strips unbalanced `)`) | YES |
+| `src/types/assets/mod.rs(foo)` | excluded (fixpoint: `)` is balanced → not stripped; no recognized extension after `)`, step d) | NO |
+| `[docs/x.md]` | `docs/x.md` (fixpoint: sub-step (3) strips `[`; sub-step (6) strips unbalanced `]`) | YES |
+| `(src/adf.rs).` | `src/adf.rs` (fixpoint pass 1: sub-step (3) strips `(` → `src/adf.rs).`; sub-step (4) strips `.` → `src/adf.rs)`; sub-step (5) strips `)` → `src/adf.rs`; pass 2: stable) | YES |
+| `((src/x.rs))` | `src/x.rs` (fixpoint pass 1: sub-step (3) strips `(` → `(src/x.rs))`; sub-step (5) strips one `)` → `(src/x.rs)`; pass 2: sub-step (3) strips `(` → `src/x.rs)`; sub-step (5) strips `)` → `src/x.rs`; pass 3: stable) | YES |
+| `(src/config.rs:~42)` | `src/config.rs` (fixpoint pass 1: sub-step (3) strips `(` → `src/config.rs:~42)`; sub-step (5) strips `)` → `src/config.rs:~42`; pass 2: sub-step (2) strips `:~42` → `src/config.rs`; pass 3: stable — NEW, EC-CITE-026, F-PASS6-01 fix) | YES |
+| `src/api/client.rs:195,` | `src/api/client.rs` (fixpoint pass 1: sub-step (4) strips `,` → `src/api/client.rs:195`; pass 2: sub-step (2) strips `:195` → `src/api/client.rs`; pass 3: stable — NEW, EC-CITE-027) | YES |
+| `src/foo.rs::bar().` | `src/foo.rs` (fixpoint pass 1: sub-step (1) strips `::bar().` → `src/foo.rs`; pass 2: stable — NEW, EC-CITE-028) | YES |
 
 **Verification Properties**:
-- VP-CITE-001: `extract_path_citations` grammar — unit + proptest coverage of all normalization/exclusion rules including glob-skip (with `{`/`}`), symbol-form strip, line-ref strip, trailing-punct trim, section-ref whitespace exclusion, dir-prefix filter, and extension filter; no false positives. See `verification-delta-DEAD-CITATION-CI.md` §VP-CITE-001.
+- VP-CITE-001: `extract_path_citations` grammar — unit + proptest coverage of all normalization/exclusion rules including glob-skip at step (a) (with `{`/`}`), merged-fixpoint at step (b) (symbol-form strip sub-step 1, line-ref strip sub-step 2, leading-bracket strip sub-step 3, plain-punct trim sub-step 4, unbalanced `)` trim sub-step 5, unbalanced `]` trim sub-step 6), dir-prefix filter at step (c), extension filter at step (d); no false positives on any documented edge cases including combined paren-wrap + line-ref tokens (EC-CITE-026). See `verification-delta-DEAD-CITATION-CI.md` §VP-CITE-001.
 
 **Traceability**:
 - F1 Delta Analysis: `DEAD-CITATION-CI-delta-analysis.md` §5b OUT-OF-SCOPE, §6 Risk 1/2/3/4
 - Research: `maint-pg-dead-citation-ci-approach.md` §(d) grammar rules 4/5
 - Implementing story: S-MAINT-DEAD-CITATION-CI (F3)
 - Source: `tests/claude_md_citations.rs::extract_path_citations` (new function; has inline `#[cfg(test)]` unit tests)
+
+[REVISED 2026-06-19 F2-Iter5 F-PASS6-01] Merged the formerly separate symbol-form-strip step (b), line-ref-strip step (c), and punctuation-trim fixpoint step (e) into ONE unified normalization fixpoint as step (b) with ordered sub-steps (1)–(6). Pipeline is now (a)–(e) instead of (a)–(h). Root cause: under the former separated pipeline, a token like `(src/config.rs:~42)` caused a false-negative — the one-shot line-ref strip (former step c) ran when the token still had its leading `(`, so `:~42$` didn't match the trailing `)`, and after paren-trim completed the `:~42` residue was left unchecked. The merged single-fixpoint eliminates this ordering-class entirely by re-running all sub-steps until stable. Step (d) (section-ref) was always a no-op code marker — it is now folded into the extraction preamble prose. References to former steps (a)–(h) in external docs (arch-delta, verification-delta) must be updated by the architect.
 
 ---
 
