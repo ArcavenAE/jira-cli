@@ -160,3 +160,15 @@ These rows had Status = RESOLVED / CLOSED / COMPLETE in the Drift Items table an
 |----|------|-------------|----------|--------|---------------|
 | MAINT-MUTANTS-GLOBS-01 | mutants.toml examine_globs | `.cargo/mutants.toml` examine_globs expanded to cover `src/api/jira/issues.rs` + `src/cache.rs`. Baseline full-repo scan blind spot eliminated. Fixed in S-TESTTOOL-1 PR #533 → b4a470f. | LOW | **RESOLVED — PR #533 → b4a470f (2026-06-18)** | 2026-06-18 |
 | #526-F6-KEYRING-GATE | auth_profiles keyring test gate | `auth_profiles::global_profile_flag_targets_auth_status` gated behind `JR_RUN_KEYRING_TESTS` + early-return guard. Keychain contention hang risk eliminated. Fixed in S-TESTTOOL-1 PR #533 → b4a470f. | LOW | **RESOLVED — PR #533 → b4a470f (2026-06-18)** | 2026-06-18 |
+
+---
+
+## Resolved Drift Items extracted from STATE.md on 2026-06-19 (S-FORK-OPS-BACKFILL CYCLE CLOSED + RELEASED v0.6.0-dev.5)
+
+These 3 MED drift items were marked "IMPLEMENTED-ON-DEVELOP — fully closes at F7/release" and shipped in PR #542 → develop @ 71f33c6 (v0.6.0-dev.5 tag, release.yml run 27832585851).
+
+| ID | Area | Description | Severity | Status | Resolved Date |
+|----|------|-------------|----------|--------|---------------|
+| FORK-OPS-BACKFILL-DESTRUCTIVE | release-gap-fill.yml | `gh release delete+recreate` can clobber curated release notes. Fixed: release-gap-fill.yml updated to use non-destructive upsert approach; S-FORK-OPS-BACKFILL-1 story delivered. | MED | **RESOLVED — PR #542 → 71f33c6 (v0.6.0-dev.5, 2026-06-19)** | 2026-06-19 |
+| FORK-OPS-BACKFILL-WIN-TARGET | backfill-release.yml | Windows target absent from backfill-release.yml → backfilled releases lacked Windows binary. Fixed: Windows target added; S-FORK-OPS-BACKFILL-1 story delivered. | MED | **RESOLVED — PR #542 → 71f33c6 (v0.6.0-dev.5, 2026-06-19)** | 2026-06-19 |
+| FORK-OPS-GITLEAKS-DOC | GITLEAKS_DISABLED | `GITLEAKS_DISABLED` secret-scan opt-out variable undocumented in CLAUDE.md/spec. Fixed: documentation added in S-FORK-OPS-GITLEAKS-DOC-1 story. | MED | **RESOLVED — PR #542 → 71f33c6 (v0.6.0-dev.5, 2026-06-19)** | 2026-06-19 |

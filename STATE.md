@@ -1,21 +1,20 @@
 ---
 document_type: pipeline-state
 version: "2.0"
-status: active
-timestamp: 2026-06-19T18:00:00Z
+status: idle
+timestamp: 2026-06-19T21:30:00Z
 phase: phase-3-tdd-implementation
 project: jira-cli
 mode: BROWNFIELD
-current_step: "S-FORK-OPS-BACKFILL F7 CONVERGED + human-authorized 2026-06-19. 5/5 dims PASS. v0.6.0-dev.5 release in progress (separate burst). 3 LOW drift items carry forward. S-7.02 checklist satisfied."
+current_step: "S-FORK-OPS-BACKFILL CYCLE CLOSED + RELEASED v0.6.0-dev.5 → 71f33c6. IDLE."
 current_cycle: "cycle-001"
 feature_mode_bundle: "S-FORK-OPS-BACKFILL"
-feature_mode_phase: "F7-CONVERGED; v0.6.0-dev.5 release IN PROGRESS"
 dtu_required: false
 phase_2_status: APPROVED
 phase_2_approved_at: 2026-05-07
 phase_3_status: IN_PROGRESS
-activation_head: "45ddf7a"
-activation_version: "v0.6.0-dev.4"
+activation_head: "71f33c6"
+activation_version: "v0.6.0-dev.5"
 ---
 <!-- SIZE BUDGET: <200 lines. Historical content → cycle files. Run /vsdd-factory:compact-state if over 200. -->
 
@@ -28,10 +27,10 @@ activation_version: "v0.6.0-dev.4"
 | **Product** | jr (Jira CLI) |
 | **Mode** | BROWNFIELD / Rust |
 | **Target Workspace** | develop → main |
-| **Last Updated** | 2026-06-19: S-FORK-OPS-BACKFILL F7 CONVERGED + human-authorized. 5/5 dims PASS. v0.6.0-dev.5 release in progress. |
-| **Current Phase** | Phase 3 — Feature Mode (S-FORK-OPS-BACKFILL F7 CONVERGED). develop @ 83a141ad. BC 599. NFR 42. ADR 16. Stories 83. |
-| **Next Phase** | CYCLE CLOSED + release v0.6.0-dev.5 (release burst in progress) |
-| **Activation HEAD** | 45ddf7a (v0.6.0-dev.4 tag; v0.5.0 STABLE shipped 2026-06-12) |
+| **Last Updated** | 2026-06-19: S-FORK-OPS-BACKFILL CYCLE CLOSED + RELEASED v0.6.0-dev.5 → 71f33c6. IDLE. |
+| **Current Phase** | Phase 3 — IDLE (S-FORK-OPS-BACKFILL CYCLE CLOSED). develop @ 71f33c6 == v0.6.0-dev.5 tag. BC 599. NFR 42. ADR 16. Stories 83. |
+| **Next Phase** | Next feature cycle (no active bundle) |
+| **Activation HEAD** | 71f33c6 (v0.6.0-dev.5 tag; 0 commits ahead) |
 
 ## Phase Progress
 
@@ -49,7 +48,8 @@ activation_version: "v0.6.0-dev.4"
 | **S-FORK-OPS-BACKFILL F4** | **COMPLETE** | **2026-06-19** | **PR #539+#538 MERGED** | **S-FORK-OPS-BACKFILL-1 → 2756050; S-FORK-OPS-GITLEAKS-DOC-1 → f85647b. 1866 tests. DEC-124.** |
 | **S-FORK-OPS-BACKFILL F5** | **CONVERGED** | **2026-06-19** | **3 passes; M4 fixed FIX-F5-001/PR #540 @ 83a141ad** | Trajectory: `2→0→0`. M2 accepted; O3+timeout tracked. develop @ 83a141ad. |
 | **S-FORK-OPS-BACKFILL F6** | **PASS** | **2026-06-19** | **Formal hardening PASS (CI-only bundle)** | Mutation N/A (no src/). cargo-deny CLEAN. Injection-guard CLEAN. 1866/0 regression. |
-| **S-FORK-OPS-BACKFILL F7** | **CONVERGED + AUTHORIZED** | **2026-06-19** | **5/5 PASS — human authorized** | Pre-gate drift CLEAN. Consistency CONSISTENT. Spec novelty LOW. 3 LOW carry-forwards. v0.6.0-dev.5 release in progress. |
+| **S-FORK-OPS-BACKFILL F7** | **CONVERGED + AUTHORIZED** | **2026-06-19** | **5/5 PASS — human authorized** | Pre-gate drift CLEAN. Consistency CONSISTENT. Spec novelty LOW. 3 LOW carry-forwards. |
+| **S-FORK-OPS-BACKFILL RELEASED** | **CYCLE CLOSED** | **2026-06-19** | **v0.6.0-dev.5 shipped** | PR #542 → develop @ 71f33c6. Tag v0.6.0-dev.5. release.yml run 27832585851 SUCCESS. 5-target build, 10 assets. IDLE. |
 | 4: Holdout Evaluation | not-started | | | |
 | 7: Convergence (bundle) | CONVERGED | 2026-06-19 | S-FORK-OPS-BACKFILL F7 | S-7.02 satisfied; 3 deferred LOW items tracked. |
 
@@ -58,10 +58,10 @@ activation_version: "v0.6.0-dev.4"
 <!-- Keep last 5 rows only. Archive older rows to cycles/cycle-001/burst-log.md. -->
 | Step | Agent | Status | Output |
 |------|-------|--------|--------|
-| **FIX-F5-001 / PR #540 MERGED** — Fixed `test_backfill_release_job_zip_in_both_upsert_branches`: anchored zip assertion to distinct branches instead of counting ≥2 anywhere (vacuous assertion). M4 from F5 Pass 1. develop @ 83a141ad. | state-manager | FIX-F5-001 MERGED | PR #540 @ 83a141ad. 3 ahead of v0.6.0-dev.4. |
-| **S-FORK-OPS-BACKFILL F5 CONVERGED** — 3 passes (novelty 0.35→0.08→LOW). 0 CRIT/HIGH. M4 fixed (FIX-F5-001/PR #540); M2 accepted (zip-glob fail-loud); O3+timeout tracked as drift items. Advancing to F6 (Formal Hardening). | state-manager | F5 CONVERGED | develop @ 83a141ad. F6 active. |
-| **S-FORK-OPS-BACKFILL F6 PASS** — Formal hardening PASS (CI-only bundle). Mutation N/A (no src/ delta). cargo-deny CLEAN. Injection-guard scan CLEAN. 1866 tests / 0 failures. | state-manager | F6 PASS | develop @ 83a141ad. F7 active. |
-| **S-FORK-OPS-BACKFILL F7 CONVERGED + AUTHORIZED** — 5/5 dims PASS. Pre-gate drift CLEAN. Consistency CONSISTENT (0 findings). Spec novelty LOW. Test: 11 non-vacuous tests. Impl: F5 CONVERGED 0 CRIT/HIGH. Verification: CLEAN. Holdout: 1866/0. Human authorized 2026-06-19. 3 LOW drift items carry forward. v0.6.0-dev.5 release in progress. | state-manager | F7 CONVERGED + AUTHORIZED | develop @ 83a141ad. S-7.02 satisfied. Release in progress. |
+| **S-FORK-OPS-BACKFILL F5 CONVERGED** — 3 passes (novelty 0.35→0.08→LOW). 0 CRIT/HIGH. M4 fixed (FIX-F5-001/PR #540); M2 accepted (zip-glob fail-loud); O3+timeout tracked as drift items. | state-manager | F5 CONVERGED | develop @ 83a141ad. |
+| **S-FORK-OPS-BACKFILL F6 PASS** — Formal hardening PASS (CI-only bundle). Mutation N/A (no src/ delta). cargo-deny CLEAN. Injection-guard scan CLEAN. 1866 tests / 0 failures. | state-manager | F6 PASS | develop @ 83a141ad. |
+| **S-FORK-OPS-BACKFILL F7 CONVERGED + AUTHORIZED** — 5/5 dims PASS. Pre-gate drift CLEAN. Consistency CONSISTENT (0 findings). Spec novelty LOW. 3 LOW drift items carry forward. Human authorized 2026-06-19. | state-manager | F7 CONVERGED + AUTHORIZED | develop @ 83a141ad. S-7.02 satisfied. |
+| **S-FORK-OPS-BACKFILL RELEASED — v0.6.0-dev.5** — PR #542 squash-merged → develop @ 71f33c6. Tag v0.6.0-dev.5 pushed. release.yml run 27832585851 SUCCESS. 5-target build, 10 assets. Both stories shipped. FIX-F5-001 shipped. 3 MED drift items RESOLVED. | state-manager | CYCLE CLOSED + RELEASED | develop @ 71f33c6 == v0.6.0-dev.5. IDLE. |
 
 ## Decisions Log
 
@@ -90,10 +90,7 @@ All 7 S-WIN-1..6 + #475 + S-FORK-OPS-BACKFILL-1 + S-FORK-OPS-GITLEAKS-DOC-1 per-
 |----|------|-------------|----------|--------|
 | MAINT-2026-06-17-SC-03 | ADR location | SC-03: docs/adr/ vs .factory/architecture/adr/ convention discrepancy. | LOW | DEFERRED |
 | MAINT-HOLDOUT-H007-DRIFT | Holdout H-007 | H-007 mechanism stale (reactive fallback, not proactive as per ADR-0015). Batch with H-027/H-044. | LOW | OPEN |
-| FORK-OPS-BACKFILL-DESTRUCTIVE | release-gap-fill.yml | gh release delete+recreate can clobber curated notes. | MED | IMPLEMENTED-ON-DEVELOP — fully closes at F7/release |
 | FORK-OPS-PHANTOM-RUNS | Phantom workflow runs | ~7 phantom runs/day from new triggers. Cosmetic; decide suppress or accept. | LOW | OPEN |
-| FORK-OPS-GITLEAKS-DOC | GITLEAKS_DISABLED | Secret-scan opt-out variable undocumented in CLAUDE.md/spec. | MED | IMPLEMENTED-ON-DEVELOP — fully closes at F7/release |
-| FORK-OPS-BACKFILL-WIN-TARGET | backfill-release.yml | Windows target absent → backfilled releases lack Windows binary. | MED | IMPLEMENTED-ON-DEVELOP — fully closes at F7/release |
 | WIN-CFG-TESTS-CHECK | Cross-compile | cargo check --lib excludes #[cfg(test)]; use --tests. | LOW | OPEN |
 | SEC-JR-SERVICE-NAME-GATE | JR_SERVICE_NAME | Not debug-gated unlike JR_BASE_URL/JR_AUTH_HEADER. | LOW | OPEN |
 | WIN-DENY-FRAGILITY | deny.toml | Canonical-un-skipped-version has no CI guard. | LOW | OPEN |
@@ -123,7 +120,7 @@ All 7 S-WIN-1..6 + #475 + S-FORK-OPS-BACKFILL-1 + S-FORK-OPS-GITLEAKS-DOC-1 per-
 
 ## Convergence Trackers
 
-Full per-issue: `cycles/cycle-001/convergence-trajectory.md`. Current: **[2026-06-19] S-FORK-OPS-BACKFILL F7 CONVERGED + human-authorized — F5: 3 passes, novelty `2→0→0`. F6: PASS (CI-only, no src/ delta). F7: 5/5 PASS. develop @ 83a141ad. 3 LOW carry-forwards. v0.6.0-dev.5 release in progress.**
+Full per-issue: `cycles/cycle-001/convergence-trajectory.md`. Current: **[2026-06-19] S-FORK-OPS-BACKFILL CYCLE CLOSED + RELEASED v0.6.0-dev.5 — F5: 3 passes, novelty `2→0→0`. F6: PASS (CI-only, no src/ delta). F7: 5/5 PASS. PR #542 → develop @ 71f33c6 == v0.6.0-dev.5 tag. 3 LOW carry-forwards. IDLE.**
 
 ## Session Resume Checkpoint
 
@@ -132,25 +129,25 @@ Full per-issue: `cycles/cycle-001/convergence-trajectory.md`. Current: **[2026-0
 | Field | Value |
 |-------|-------|
 | **Date** | 2026-06-19 |
-| **Position** | S-FORK-OPS-BACKFILL F7 CONVERGED + human-authorized. v0.6.0-dev.5 release in progress (separate burst). 3 LOW drift items carry forward. S-7.02 checklist satisfied. develop @ 83a141ad. Stories 83. |
-| **develop HEAD** | origin/develop = **83a141ad** (test fix: FIX-F5-001; 3 commits ahead of v0.6.0-dev.4 tag). |
-| **Activation** | v0.6.0-dev.4 @ 45ddf7a. develop = 83a141ad (3 ahead). v0.5.0 STABLE shipped 2026-06-12. |
+| **Position** | S-FORK-OPS-BACKFILL CYCLE CLOSED + RELEASED v0.6.0-dev.5. IDLE. No active feature bundle. |
+| **develop HEAD** | origin/develop = **71f33c6** (chore(release): v0.6.0-dev.5; == v0.6.0-dev.5 tag, 0 commits ahead). |
+| **Activation** | v0.6.0-dev.5 @ 71f33c6. v0.5.0 STABLE shipped 2026-06-12. |
 | **Counters** | BC **599**. NFR **42**. ADR **16**. Stories **83** (authoritative). |
 | **Active worktree** | None. .factory on factory-artifacts mounted. |
 | **jira-e2e env** | JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ, JR_E2E_ENABLED=true. |
-| **Standing constraints** | Do NOT close #429 (DEC-029). All fixes through full VSDD Feature Mode pipeline (DEC-120/121/124). LESSON-F2-WORKTREE-FIRST: ALL story-scoped edits (including docs/) in story worktree. Fork signing UNBLOCKED but INERT (DEC-104 pending). LESSON-F1-SIBLING-CASE. LESSON-CENTRALIZATION-AC-GREP. LESSON-CITATION-SIBLING-PROPAGATION. CHANGELOG-per-PR hygiene. LESSON-F2-PIECEWISE. |
+| **Standing constraints** | Do NOT close #429 (DEC-029). All fixes through full VSDD Feature Mode pipeline (DEC-120/121/124). LESSON-F2-WORKTREE-FIRST: ALL story-scoped edits (including docs/) in story worktree. Fork signing UNBLOCKED but INERT (DEC-104 pending). LESSON-F1-SIBLING-CASE. LESSON-CENTRALIZATION-AC-GREP. LESSON-CITATION-SIBLING-PROPAGATION. CHANGELOG-per-PR hygiene. LESSON-F2-PIECEWISE. 3 carry-forward LOW drift items: FORK-OPS-BACKFILL-ZIP-GLOB-COUPLING (accepted), FORK-OPS-F5-SELFTEST-CHECKLIST (next maintenance), FORK-OPS-BACKFILL-TIMEOUT-PARITY (next maintenance). |
 
 ## RESUME PLAN (cold-start, self-contained)
 
-<!-- State snapshot: S-FORK-OPS-BACKFILL F7 CONVERGED + human-authorized. v0.6.0-dev.5 release in progress. develop @ 83a141ad. No active feature worktrees. -->
+<!-- State snapshot: S-FORK-OPS-BACKFILL CYCLE CLOSED + RELEASED v0.6.0-dev.5. develop @ 71f33c6 == v0.6.0-dev.5 tag. IDLE. -->
 
 ### Steps (assume ZERO memory)
 
 **Step 1 (BLOCKING):** Run `vsdd-factory:factory-worktree-health`. Then read `.factory/STATE.md`.
 
-**Step 2:** Confirm S-FORK-OPS-BACKFILL F7 CONVERGED + human-authorized 2026-06-19. develop @ **83a141ad** (3 ahead of v0.6.0-dev.4 tag). v0.6.0-dev.5 release in progress (separate burst). Stories **83** (authoritative). BC **599**. 3 LOW drift items carry forward (FORK-OPS-F5-SELFTEST-CHECKLIST, FORK-OPS-BACKFILL-ZIP-GLOB-COUPLING, FORK-OPS-BACKFILL-TIMEOUT-PARITY). DEC-122/123/124. If develop shows different HEAD, run `git fetch origin`.
+**Step 2:** Confirm S-FORK-OPS-BACKFILL CYCLE CLOSED + RELEASED v0.6.0-dev.5 2026-06-19. develop @ **71f33c6** (== v0.6.0-dev.5 tag, 0 commits ahead). IDLE — no active feature bundle. Stories **83** (authoritative). BC **599**. 3 LOW carry-forward drift items: FORK-OPS-BACKFILL-ZIP-GLOB-COUPLING (accepted), FORK-OPS-F5-SELFTEST-CHECKLIST (next maintenance), FORK-OPS-BACKFILL-TIMEOUT-PARITY (next maintenance). DEC-122/123/124. If develop shows different HEAD, run `git fetch origin`.
 
-**Step 3 — Release v0.6.0-dev.5.** A separate release burst is in progress. Run `/vsdd-factory:release` if resuming that burst. After release publishes, mark CYCLE CLOSED in STATE.md (follow-up state burst).
+**Step 3 — Next feature cycle.** No active bundle. Use `/vsdd-factory:next-step` or orchestrator to select next feature. Merge pre-authorization no longer active (S-FORK-OPS-BACKFILL bundle done).
 
 **Step 4 — STANDING CONSTRAINTS (survive session clear):**
 - Do NOT close #429 (DEC-029, human-deferred).
@@ -159,7 +156,7 @@ Full per-issue: `cycles/cycle-001/convergence-trajectory.md`. Current: **[2026-0
 - LESSON-F2-WORKTREE-FIRST: ALL story-scoped file edits (including docs/) in the story worktree, not main checkout.
 - LESSON-F1-SIBLING-CASE, LESSON-CENTRALIZATION-AC-GREP, LESSON-CITATION-SIBLING-PROPAGATION, LESSON-F2-PIECEWISE.
 - CHANGELOG-per-PR hygiene: keep CHANGELOG `[Unreleased]` populated as PRs merge.
-- 3 FORK-OPS-BACKFILL-* drift items remain OPEN/deferred (non-blocking, tracked in Drift Items).
+- 3 carry-forward LOW drift items remain OPEN/deferred (non-blocking, tracked in Drift Items).
 
 Durable follow-ups: see Drift Items section.
 
