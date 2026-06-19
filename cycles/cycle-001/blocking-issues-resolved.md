@@ -194,3 +194,17 @@ STATE.md Drift Items table does not contain any of these rows. Archive is comple
 | ID | Area | Description | Severity | Status | Resolved Date |
 |----|------|-------------|----------|--------|---------------|
 | MAINT-HOLDOUT-H007-DRIFT | Holdout H-007 | H-007 holdout mechanism was stale — described reactive 400 fallback only, not the proactive ADR-0015 enforcement path added by S-JSM-RESOLUTION-REQUIRED. Updated in factory-artifacts commit aa11887 (2026-06-19 maintenance sweep spec/holdout accuracy pass): H-007 text updated to reflect that `jr issue move` now invokes proactive enforcement BEFORE the POST (REQUIRED branch) per ADR-0015 BC-3.2.013, with reactive BC-3.2.009 400-backstop preserved alongside. | LOW | **RESOLVED — factory-artifacts aa11887 (2026-06-19)** | 2026-06-19 |
+
+---
+
+## Resolved Drift Items extracted from STATE.md on 2026-06-19 (PR #543 merge close-out — develop @ 6bdb251)
+
+PR #543 squash-merged into develop @ 6bdb251 (docs: 2026-06-19 maintenance sweep accuracy fixes (DRIFT-D13/D15/D16, D9, CR-010)). The 5 items below were previously `IN PR #543 (pending merge)` in the STATE.md Drift Items table and are now fully resolved.
+
+| ID | Area | Description | Severity | Status | Resolved Date |
+|----|------|-------------|----------|--------|---------------|
+| FORK-OPS-BACKFILL-TIMEOUT-PARITY | backfill-release.yml | backfill build job lacked `timeout-minutes` (release.yml=60); minor housekeeping. Fixed in PR #543 (CR-010). | LOW | **RESOLVED — PR #543 → develop @ 6bdb251 (2026-06-19)** | 2026-06-19 |
+| DRIFT-D9 | ADR-0014 doc-accuracy | ADR-0014 text doc-accuracy gap identified in 2026-06-19 maintenance sweep. Fixed in PR #543. | LOW | **RESOLVED — PR #543 → develop @ 6bdb251 (2026-06-19)** | 2026-06-19 |
+| DRIFT-D13 | CLAUDE.md doc-accuracy | CLAUDE.md doc-accuracy item D13 identified in 2026-06-19 maintenance sweep. Fixed in PR #543. | LOW | **RESOLVED — PR #543 → develop @ 6bdb251 (2026-06-19)** | 2026-06-19 |
+| DRIFT-D15 | CLAUDE.md doc-accuracy | CLAUDE.md doc-accuracy item D15 identified in 2026-06-19 maintenance sweep. Fixed in PR #543. | LOW | **RESOLVED — PR #543 → develop @ 6bdb251 (2026-06-19)** | 2026-06-19 |
+| DRIFT-D16 | CLAUDE.md doc-accuracy | CLAUDE.md doc-accuracy item D16 identified in 2026-06-19 maintenance sweep. Fixed in PR #543. | LOW | **RESOLVED — PR #543 → develop @ 6bdb251 (2026-06-19)** | 2026-06-19 |
