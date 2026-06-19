@@ -2,11 +2,11 @@
 document_type: pipeline-state
 version: "2.0"
 status: in_progress
-timestamp: 2026-06-19T23:30:00Z
+timestamp: 2026-06-19T23:59:00Z
 phase: 3
 project: jira-cli
 mode: brownfield
-current_step: "MAINTENANCE SWEEP 2026-06-19 COMPLETE — verdict GREEN. 3 resolved HIGH/MED drift items archived. Bundles A–D await human authorization. IDLE."
+current_step: "2026-06-19 maintenance sweep COMPLETE — GREEN; PR #543 ready-for-merge (doc+CI); factory-artifacts spec/holdout accuracy committed aa11887; 6 Bundle D stories registered (83→89). Drift items reconciled (resolved/in-PR/tracked). IDLE pending PR #543 merge."
 current_cycle: "cycle-001"
 feature_mode_bundle: "S-FORK-OPS-BACKFILL"
 dtu_required: false
@@ -27,8 +27,8 @@ activation_version: "v0.6.0-dev.5"
 | **Product** | jr (Jira CLI) |
 | **Mode** | BROWNFIELD / Rust |
 | **Target Workspace** | develop → main |
-| **Last Updated** | 2026-06-19: MAINTENANCE SWEEP COMPLETE — verdict GREEN. 0 CVEs. 3 resolved HIGH/MED fork-ops drift items archived. Bundles A–D (doc/holdout/CI/code) await human authorization. IDLE. |
-| **Current Phase** | Phase 3 — IDLE (S-FORK-OPS-BACKFILL CYCLE CLOSED). develop @ 71f33c6 == v0.6.0-dev.5 tag. BC 599. NFR 42. ADR 16. Stories 83. |
+| **Last Updated** | 2026-06-19: MAINTENANCE SWEEP COMPLETE — verdict GREEN. PR #543 ready-for-merge (doc+CI). factory-artifacts spec/holdout accuracy committed aa11887. 6 Bundle D stories registered (83→89). Drift items reconciled: 2 RESOLVED, ~5 IN PR #543, 6 TRACKED. IDLE pending PR #543 merge. |
+| **Current Phase** | Phase 3 — IDLE (S-FORK-OPS-BACKFILL CYCLE CLOSED). develop @ 71f33c6 == v0.6.0-dev.5 tag. BC 599. NFR 42. ADR 16. Stories 89. |
 | **Next Phase** | Next feature cycle (no active bundle) |
 | **Activation HEAD** | 71f33c6 (v0.6.0-dev.5 tag; 0 commits ahead) |
 
@@ -62,6 +62,7 @@ activation_version: "v0.6.0-dev.5"
 | **S-FORK-OPS-BACKFILL F6 PASS** — Formal hardening PASS (CI-only bundle). Mutation N/A (no src/ delta). cargo-deny CLEAN. Injection-guard scan CLEAN. 1866 tests / 0 failures. | state-manager | F6 PASS | develop @ 83a141ad. |
 | **S-FORK-OPS-BACKFILL F7 CONVERGED + AUTHORIZED** — 5/5 dims PASS. Pre-gate drift CLEAN. Consistency CONSISTENT (0 findings). Spec novelty LOW. 3 LOW drift items carry forward. Human authorized 2026-06-19. | state-manager | F7 CONVERGED + AUTHORIZED | develop @ 83a141ad. S-7.02 satisfied. |
 | **S-FORK-OPS-BACKFILL RELEASED — v0.6.0-dev.5** — PR #542 squash-merged → develop @ 71f33c6. Tag v0.6.0-dev.5 pushed. release.yml run 27832585851 SUCCESS. 5-target build, 10 assets. Both stories shipped. FIX-F5-001 shipped. 3 MED drift items RESOLVED. | state-manager | CYCLE CLOSED + RELEASED | develop @ 71f33c6 == v0.6.0-dev.5. IDLE. |
+| **2026-06-19 MAINTENANCE SWEEP BOOKKEEPING BURST** — 6 Bundle D stories registered (S-MAINT-CR-005/CR-008/CR-009/SEC-001/SEC-JR-SERVICE-NAME-GATE/532; 83→89). Drift items reconciled: MAINT-HOLDOUT-H007-DRIFT RESOLVED (aa11887); FORK-OPS-BACKFILL-TIMEOUT-PARITY + DRIFT-D9/D13/D15/D16 marked IN PR #543; DRIFT-331-PAGINATION/KEYRING-GUARD-IDIOM-DRIFT/SEC-001/SEC-JR-SERVICE-NAME-GATE/#532-COVERAGE-FOLLOW-UP/CR-008 marked TRACKED with story IDs. Count guards: all 3 exit 0. | state-manager | COMPLETE | Stories 89. IDLE pending PR #543 merge. |
 
 ## Decisions Log
 
@@ -89,16 +90,16 @@ All 7 S-WIN-1..6 + #475 + S-FORK-OPS-BACKFILL-1 + S-FORK-OPS-GITLEAKS-DOC-1 per-
 | ID | Area | Description | Severity | Status |
 |----|------|-------------|----------|--------|
 | MAINT-2026-06-17-SC-03 | ADR location | SC-03: docs/adr/ vs .factory/architecture/adr/ convention discrepancy. | LOW | DEFERRED |
-| MAINT-HOLDOUT-H007-DRIFT | Holdout H-007 | H-007 mechanism stale (reactive fallback, not proactive as per ADR-0015). Batch with H-027/H-044. | LOW | OPEN |
+| MAINT-HOLDOUT-H007-DRIFT | Holdout H-007 | H-007 mechanism stale (reactive fallback, not proactive as per ADR-0015). Batch with H-027/H-044. | LOW | RESOLVED — factory-artifacts aa11887 (2026-06-19); archived to blocking-issues-resolved.md |
 | FORK-OPS-PHANTOM-RUNS | Phantom workflow runs | ~7 phantom runs/day from new triggers. Cosmetic; decide suppress or accept. | LOW | OPEN |
 | WIN-CFG-TESTS-CHECK | Cross-compile | cargo check --lib excludes #[cfg(test)]; use --tests. | LOW | OPEN |
-| SEC-JR-SERVICE-NAME-GATE | JR_SERVICE_NAME | Not debug-gated unlike JR_BASE_URL/JR_AUTH_HEADER. | LOW | OPEN |
+| SEC-JR-SERVICE-NAME-GATE | JR_SERVICE_NAME | Not debug-gated unlike JR_BASE_URL/JR_AUTH_HEADER. | LOW | TRACKED — S-MAINT-SEC-JR-SERVICE-NAME-GATE (draft, security P2, 2026-06-19) |
 | WIN-DENY-FRAGILITY | deny.toml | Canonical-un-skipped-version has no CI guard. | LOW | OPEN |
 | WIN-AUTH-ENVLOCK-POISON | ENV_LOCK poison | .lock().unwrap() in auth tests; use unwrap_or_else. | LOW | OPEN |
 | E2E-PG-4 | E2E coverage gap | remote-link round-back (no jr remote-link read). | LOW | OPEN |
-| DRIFT-331-PAGINATION | get_issue_types_for_project | Inline reimplementation; target: reuse OffsetPage<T>. | LOW | OPEN |
+| DRIFT-331-PAGINATION | get_issue_types_for_project | Inline reimplementation; target: reuse OffsetPage<T>. | LOW | TRACKED — S-MAINT-CR-005 (draft, 2026-06-19) |
 | PG-A / DRIFT-README | Count guards | check-bc-cumulative-counts.sh misses README.md; Document Map total stale. | LOW | OPEN |
-| SEC-001 | CWE-674 recursion | Uncontrolled recursion in adf.rs normalize/assign_local_ids/render_node. | LOW | OPEN |
+| SEC-001 | CWE-674 recursion | Uncontrolled recursion in adf.rs normalize/assign_local_ids/render_node. | LOW | TRACKED — S-MAINT-SEC-001 (draft, security P2, 2026-06-19) |
 | WIN-PG-1 | No BC-count CI guard | 3rd recurrence of JR_* test-seam doc-fallout without CI parity check. | LOW | OPEN |
 | WIN-PG-2 | Story template | Presence-only-test disclosure field missing from story template. | LOW | OPEN |
 | WIN-RUNTIME-OAUTH-PROBE | Windows OAuth probe | Release OAuth verification is constants-file check only; no runtime jr auth status. | LOW | OPEN — accepted per ADR-0016 |
@@ -107,16 +108,21 @@ All 7 S-WIN-1..6 + #475 + S-FORK-OPS-BACKFILL-1 + S-FORK-OPS-GITLEAKS-DOC-1 per-
 | #492-TEST-HARNESS-COUPLING | process-gap | Handler-level block-HTML tests couple to push_text shape. | LOW | TRACKED DEFERRAL |
 | #492-PG-TRACE-TESTS | process-gap | No CI check that BC Source/Trace-cited test symbols resolve to real #[test] fns. | LOW | TRACKED DEFERRAL |
 | LESSON-F2-WORKTREE-FIRST | process-gap C-1 | ALL story-scoped edits in worktree, even docs/. Codified in lessons.md. | LOW | DEFERRED |
-| KEYRING-GUARD-IDIOM-DRIFT | process-gap | Three co-existing keyring-gate guard idioms; no meta-test enforces canonical form. | LOW | DEFERRED |
+| KEYRING-GUARD-IDIOM-DRIFT | process-gap | Three co-existing keyring-gate guard idioms; no meta-test enforces canonical form. | LOW | TRACKED — S-MAINT-CR-009 (draft, 2026-06-19) |
 | CITATION-FORM-DISCIPLINE | process-gap | Bare file:NN citations recur vs #408 symbol-form convention; no CI guard. | LOW | DEFERRED |
 | F7-COSMETIC-ATTR-ORDER | cosmetic | Story Architecture Rule 3 says #[ignore] before #[test]; code uses #[test] first. | LOW | ACCEPTED-COSMETIC |
-| #532-COVERAGE-FOLLOW-UP | coverage-gap | Login/Refresh/Logout global-`--profile` fallback ungated — issue #532 opened. | LOW | OPEN — issue #532 |
+| #532-COVERAGE-FOLLOW-UP | coverage-gap | Login/Refresh/Logout global-`--profile` fallback ungated — issue #532 opened. | LOW | TRACKED — S-MAINT-532 (draft, 2026-06-19) |
 | FORK-OPS-COMPOSITE-ACTION-SCAN | sign-and-publish.yml | Injection guard does not follow local composite actions; none exist today. F5 OBS-1. | LOW | OPEN — justified deferral |
 | FORK-OPS-HEADBRANCH-EMPTY-GUARD | sign-and-publish.yml | Empty head_branch → TAG=""/VERSION="" (theoretical CWE-74). Future story. | LOW | OPEN |
 | FORK-OPS-ALPHA-ORPHAN-CLEANUP | sign-and-publish.yml | Orphaned alpha tags from failed runs accumulate. Future housekeeping story. | LOW | OPEN |
 | FORK-OPS-BACKFILL-ZIP-GLOB-COUPLING | backfill-release.yml | `gh release upload jr-*.zip` fails loud on zero-match glob (accepted; guarded by needs:build + matrix-parity test; parity with release.yml). | LOW | OPEN — accepted |
 | FORK-OPS-F5-SELFTEST-CHECKLIST | process-gap | F5 checklist conflates `--self-test` inline fixture with real-file scan; wording could mislead. | LOW | OPEN |
-| FORK-OPS-BACKFILL-TIMEOUT-PARITY | backfill-release.yml | backfill build job lacks `timeout-minutes` (release.yml=60); minor housekeeping. | LOW | OPEN |
+| FORK-OPS-BACKFILL-TIMEOUT-PARITY | backfill-release.yml | backfill build job lacks `timeout-minutes` (release.yml=60); minor housekeeping. | LOW | IN PR #543 (pending merge) |
+| DRIFT-D9 | ADR-0014 doc-accuracy | ADR-0014 text has a doc-accuracy gap identified in 2026-06-19 sweep. | LOW | IN PR #543 (pending merge) |
+| DRIFT-D13 | CLAUDE.md doc-accuracy | CLAUDE.md doc-accuracy item D13 identified in 2026-06-19 sweep. | LOW | IN PR #543 (pending merge) |
+| DRIFT-D15 | CLAUDE.md doc-accuracy | CLAUDE.md doc-accuracy item D15 identified in 2026-06-19 sweep. | LOW | IN PR #543 (pending merge) |
+| DRIFT-D16 | CLAUDE.md doc-accuracy | CLAUDE.md doc-accuracy item D16 identified in 2026-06-19 sweep. | LOW | IN PR #543 (pending merge) |
+| DRIFT-CR-008 | test-helper dedup | extract_job_block / block-extraction helpers duplicated across test files. | LOW | TRACKED — S-MAINT-CR-008 (draft, 2026-06-19) |
 
 ## Convergence Trackers
 
@@ -129,13 +135,13 @@ Full per-issue: `cycles/cycle-001/convergence-trajectory.md`. Current: **[2026-0
 | Field | Value |
 |-------|-------|
 | **Date** | 2026-06-19 |
-| **Position** | S-FORK-OPS-BACKFILL CYCLE CLOSED + RELEASED v0.6.0-dev.5. IDLE. No active feature bundle. |
+| **Position** | 2026-06-19 maintenance sweep COMPLETE — GREEN. PR #543 ready-for-merge (doc+CI). 6 Bundle D stories registered (83→89). IDLE pending PR #543 merge. |
 | **develop HEAD** | origin/develop = **71f33c6** (chore(release): v0.6.0-dev.5; == v0.6.0-dev.5 tag, 0 commits ahead). |
 | **Activation** | v0.6.0-dev.5 @ 71f33c6. v0.5.0 STABLE shipped 2026-06-12. |
-| **Counters** | BC **599**. NFR **42**. ADR **16**. Stories **83** (authoritative). |
+| **Counters** | BC **599**. NFR **42**. ADR **16**. Stories **89** (authoritative). |
 | **Active worktree** | None. .factory on factory-artifacts mounted. |
 | **jira-e2e env** | JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ, JR_E2E_ENABLED=true. |
-| **Standing constraints** | Do NOT close #429 (DEC-029). All fixes through full VSDD Feature Mode pipeline (DEC-120/121/124). LESSON-F2-WORKTREE-FIRST: ALL story-scoped edits (including docs/) in story worktree. Fork signing UNBLOCKED but INERT (DEC-104 pending). LESSON-F1-SIBLING-CASE. LESSON-CENTRALIZATION-AC-GREP. LESSON-CITATION-SIBLING-PROPAGATION. CHANGELOG-per-PR hygiene. LESSON-F2-PIECEWISE. 3 carry-forward LOW drift items: FORK-OPS-BACKFILL-ZIP-GLOB-COUPLING (accepted), FORK-OPS-F5-SELFTEST-CHECKLIST (next maintenance), FORK-OPS-BACKFILL-TIMEOUT-PARITY (next maintenance). |
+| **Standing constraints** | Do NOT close #429 (DEC-029). All fixes through full VSDD Feature Mode pipeline (DEC-120/121/124). LESSON-F2-WORKTREE-FIRST: ALL story-scoped edits (including docs/) in story worktree. Fork signing UNBLOCKED but INERT (DEC-104 pending). LESSON-F1-SIBLING-CASE. LESSON-CENTRALIZATION-AC-GREP. LESSON-CITATION-SIBLING-PROPAGATION. CHANGELOG-per-PR hygiene. LESSON-F2-PIECEWISE. Carry-forward drift items: FORK-OPS-BACKFILL-ZIP-GLOB-COUPLING (accepted), FORK-OPS-F5-SELFTEST-CHECKLIST (deferred), FORK-OPS-BACKFILL-TIMEOUT-PARITY (IN PR #543). 6 maintenance-sweep draft stories (S-MAINT-*) registered 83→89. |
 
 ## RESUME PLAN (cold-start, self-contained)
 
@@ -145,9 +151,9 @@ Full per-issue: `cycles/cycle-001/convergence-trajectory.md`. Current: **[2026-0
 
 **Step 1 (BLOCKING):** Run `vsdd-factory:factory-worktree-health`. Then read `.factory/STATE.md`.
 
-**Step 2:** Confirm S-FORK-OPS-BACKFILL CYCLE CLOSED + RELEASED v0.6.0-dev.5 2026-06-19. develop @ **71f33c6** (== v0.6.0-dev.5 tag, 0 commits ahead). IDLE — no active feature bundle. Counters: BC **599**, NFR **42**, ADR **16**, Stories **83** (authoritative). 3 LOW carry-forward drift items: FORK-OPS-BACKFILL-ZIP-GLOB-COUPLING (accepted), FORK-OPS-F5-SELFTEST-CHECKLIST (next maintenance), FORK-OPS-BACKFILL-TIMEOUT-PARITY (next maintenance). DEC-122/123/124. If develop shows different HEAD, run `git fetch origin`. Active worktrees: main checkout + `.factory` (factory-artifacts) + `.reference` only — no story worktrees open.
+**Step 2:** 2026-06-19 maintenance sweep COMPLETE — GREEN. S-FORK-OPS-BACKFILL CYCLE CLOSED + RELEASED v0.6.0-dev.5. develop @ **71f33c6** (== v0.6.0-dev.5 tag, 0 commits ahead). IDLE — PR #543 pending merge (doc+CI items). Counters: BC **599**, NFR **42**, ADR **16**, Stories **89** (authoritative; 83→89 from 6 maintenance-sweep draft stories). Carry-forward drift items tracked: FORK-OPS-BACKFILL-ZIP-GLOB-COUPLING (accepted), FORK-OPS-F5-SELFTEST-CHECKLIST (deferred), FORK-OPS-BACKFILL-TIMEOUT-PARITY (IN PR #543). DEC-122/123/124. If develop shows different HEAD, run `git fetch origin`. Active worktrees: main checkout + `.factory` (factory-artifacts) + `.reference` only — no story worktrees open.
 
-**Step 3 — Next feature cycle.** No active bundle. Open next-work candidates: **#532** (profile-fallback coverage, LOW), **fork-ops signing enablement** (DEC-104, needs human + Apple secrets — no code work remaining), **#429** (DO NOT close — DEC-029), **#400/#372/#387/#368/#209** (backlog), or **"human brings new feature/bug → Feature Mode F1–F7"**. Use `/vsdd-factory:next-step` or orchestrator to select. Merge pre-authorization no longer active (S-FORK-OPS-BACKFILL bundle done).
+**Step 3 — Next feature cycle.** IMMEDIATE: merge PR #543 (doc+CI items for 2026-06-19 maintenance sweep — FORK-OPS-BACKFILL-TIMEOUT-PARITY + DRIFT-D9/D13/D15/D16 + ADR-0014 doc). After PR #543 merges, open next-work candidates: **#532** (TRACKED as S-MAINT-532), 6 Bundle D draft stories (S-MAINT-CR-005/CR-008/CR-009/SEC-001/SEC-JR-SERVICE-NAME-GATE/532), **fork-ops signing enablement** (DEC-104, needs human + Apple secrets), **#429** (DO NOT close — DEC-029), **#400/#372/#387/#368/#209** (backlog), or **"human brings new feature/bug → Feature Mode F1–F7"**. Use `/vsdd-factory:next-step` or orchestrator to select.
 
 **Step 4 — STANDING CONSTRAINTS (survive session clear):**
 - Do NOT close #429 (DEC-029, human-deferred).

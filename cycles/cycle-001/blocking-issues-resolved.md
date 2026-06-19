@@ -186,3 +186,11 @@ Maintenance sweep 2026-06-19 (develop @ 71f33c6 / v0.6.0-dev.5) confirmed the fo
 | FORK-OPS-GITLEAKS-DOC | "Resolved Drift Items extracted 2026-06-19 (S-FORK-OPS-BACKFILL)" section above | MED | 2026-06-19 | spec-coherence.md §3.1; sweep 7+8+11 |
 
 STATE.md Drift Items table does not contain any of these rows. Archive is complete. Maintenance sweep verdict: GREEN.
+
+---
+
+## Resolved Drift Items extracted from STATE.md on 2026-06-19 (bookkeeping burst — maintenance sweep final reconciliation)
+
+| ID | Area | Description | Severity | Status | Resolved Date |
+|----|------|-------------|----------|--------|---------------|
+| MAINT-HOLDOUT-H007-DRIFT | Holdout H-007 | H-007 holdout mechanism was stale — described reactive 400 fallback only, not the proactive ADR-0015 enforcement path added by S-JSM-RESOLUTION-REQUIRED. Updated in factory-artifacts commit aa11887 (2026-06-19 maintenance sweep spec/holdout accuracy pass): H-007 text updated to reflect that `jr issue move` now invokes proactive enforcement BEFORE the POST (REQUIRED branch) per ADR-0015 BC-3.2.013, with reactive BC-3.2.009 400-backstop preserved alongside. | LOW | **RESOLVED — factory-artifacts aa11887 (2026-06-19)** | 2026-06-19 |
