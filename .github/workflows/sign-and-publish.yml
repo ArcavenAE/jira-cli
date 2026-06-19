@@ -265,6 +265,12 @@ jobs:
             ./scripts/create-app.sh "jr-a-darwin-${arch}" "$VERSION" .
             codesign --force --deep --options runtime --sign "$APPLE_SIGNING_IDENTITY" --timestamp Jr.app
             ./scripts/create-dmg.sh Jr.app "$VERSION" "jr-a-${arch}.dmg"
+            # Sign the DMG container itself. Required for stapler to attach a
+            # Gatekeeper-recognized notarization ticket, and routes the
+            # notarytool submission through Apple's fast path (signed-image
+            # validation) instead of the slow "discovery" path that hangs at
+            # pre-submission under burst load (observed in run 27797831466).
+            codesign --force --sign "$APPLE_SIGNING_IDENTITY" --timestamp "jr-a-${arch}.dmg"
             ./scripts/create-pkg.sh "jr-a-darwin-${arch}" "$VERSION" "$APPLE_INSTALLER_IDENTITY" "jr-a-${arch}.pkg"
             rm -rf Jr.app
           done
@@ -550,6 +556,12 @@ jobs:
             ./scripts/create-app.sh "jr-darwin-${arch}" "$VERSION" .
             codesign --force --deep --options runtime --sign "$APPLE_SIGNING_IDENTITY" --timestamp Jr.app
             ./scripts/create-dmg.sh Jr.app "$VERSION" "jr-${arch}.dmg"
+            # Sign the DMG container itself. Required for stapler to attach a
+            # Gatekeeper-recognized notarization ticket, and routes the
+            # notarytool submission through Apple's fast path (signed-image
+            # validation) instead of the slow "discovery" path that hangs at
+            # pre-submission under burst load.
+            codesign --force --sign "$APPLE_SIGNING_IDENTITY" --timestamp "jr-${arch}.dmg"
             ./scripts/create-pkg.sh "jr-darwin-${arch}" "$VERSION" "$APPLE_INSTALLER_IDENTITY" "jr-${arch}.pkg"
             rm -rf Jr.app
           done
