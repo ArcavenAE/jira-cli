@@ -62,20 +62,21 @@ NOT present in the extracted list (or is normalized to the base path, as appropr
 
 | Step | Input token | Expected behavior |
 |------|-------------|------------------|
-| (c) Glob skip — `*` | `` `src/cli/bc-*.md` `` | Skipped entirely — NOT in output |
-| (c) Glob skip — `{` `}` | `` `adf-{block,task}-list.md` `` | Skipped entirely — NOT in output |
-| (d) Symbol-form strip | `` `src/adf.rs::push_text` `` | Normalized to `src/adf.rs` — IS in output as `src/adf.rs` |
-| (d) Symbol-form strip — no dir prefix | `` `adf::tests::test_bare_url_split` `` | Has `::` but no known dir prefix before `::` — NOT in output (excluded by dir-prefix filter) |
-| (e) Line-ref strip tilde | `` `src/config.rs:~42` `` | Normalized to `src/config.rs` — IS in output as `src/config.rs` |
-| (e) Line-ref strip bare | `` `src/config.rs:100` `` | Normalized to `src/config.rs` — IS in output as `src/config.rs` |
-| (f) Trailing-punct trim | `` `src/adf.rs,` `` | Trailing comma trimmed → `src/adf.rs` — IS in output |
-| (g) Dir-prefix filter — section ref | `` `docs/specs/e2e-live-jira-testing.md §9` `` | `§9` excluded by dir-prefix filter (no known prefix); `docs/specs/e2e-live-jira-testing.md` IS in output |
-| (g) Dir-prefix filter — extension | `` `src/cli/issue` `` | No recognized extension — NOT in output |
-| (g) Dir-prefix filter — URL | `` `http://127.0.0.1:53682/callback` `` | Not starting with known dir prefix — NOT in output |
-| (g) Dir-prefix filter — home path | `` `~/.config/jr/config.toml` `` | Not starting with known dir prefix — NOT in output |
-| (g) Dir-prefix filter — no slash | `` `JR_BASE_URL` `` | No `/` — NOT in output |
-| (g) Dir-prefix filter — type name | `` `std::sync::Mutex` `` | Has `::` but no known dir prefix — NOT in output |
-| (g) Dir-prefix filter — `.factory/` | `` `.factory/research/S-3.03-wave3-verification.md` `` | `.factory/` NOT in develop-tracked prefix set — NOT in output |
+| (a) Glob skip — `*` | `` `src/cli/bc-*.md` `` | Skipped entirely — NOT in output |
+| (a) Glob skip — `{` `}` | `` `adf-{block,task}-list.md` `` | Skipped entirely — NOT in output |
+| (b) Symbol-form strip | `` `src/adf.rs::push_text` `` | Normalized to `src/adf.rs` — IS in output as `src/adf.rs` |
+| (b) Symbol-form strip — no dir prefix | `` `adf::tests::test_bare_url_split` `` | Has `::` but no known dir prefix before `::` — NOT in output (excluded by dir-prefix filter) |
+| (c) Line-ref strip tilde | `` `src/config.rs:~42` `` | Normalized to `src/config.rs` — IS in output as `src/config.rs` |
+| (c) Line-ref strip bare | `` `src/config.rs:100` `` | Normalized to `src/config.rs` — IS in output as `src/config.rs` |
+| (e) Trailing-punct trim | `` `src/adf.rs,` `` | Trailing comma trimmed → `src/adf.rs` — IS in output |
+| (e) Leading-punct trim | `` `(src/adf.rs)` `` | Leading `(` stripped; trailing `)` unbalanced → trimmed → `src/adf.rs` — IS in output |
+| (f) Dir-prefix filter — section ref | `` `docs/specs/e2e-live-jira-testing.md §9` `` | `§9` excluded by dir-prefix filter (no known prefix); `docs/specs/e2e-live-jira-testing.md` IS in output |
+| (g) Extension filter | `` `src/cli/issue` `` | No recognized extension — NOT in output |
+| (f) Dir-prefix filter — URL | `` `http://127.0.0.1:53682/callback` `` | Not starting with known dir prefix — NOT in output |
+| (f) Dir-prefix filter — home path | `` `~/.config/jr/config.toml` `` | Not starting with known dir prefix — NOT in output |
+| (f) Dir-prefix filter — no slash | `` `JR_BASE_URL` `` | No `/` — NOT in output |
+| (f) Dir-prefix filter — type name | `` `std::sync::Mutex` `` | Has `::` but no known dir prefix — NOT in output |
+| (f) Dir-prefix filter — `.factory/` | `` `.factory/research/S-3.03-wave3-verification.md` `` | `.factory/` NOT in develop-tracked prefix set — NOT in output |
 
 **Proptest strategy (BC-X.13.002 — no false positives)**:
 
@@ -83,16 +84,16 @@ Property: For any string `s` that does NOT start with a known directory prefix
 (`src/`, `tests/`, `docs/`, `.github/`, `scripts/`), wrapping it in backticks and
 passing it to `extract_path_citations` returns an empty vec (or a vec whose entries
 all start with a known develop-tracked prefix). The alphabet deliberately includes
-`*`, `{`, `}`, and trailing-punct chars (`,`, `.`, `;`, `:`, `)`) so that the
-glob-skip branch (step c) and trailing-punct-trim branch (step f) are exercised by
-random inputs — not merely by hand-crafted unit vectors — which reduces mutation
-survival risk in F6.
+`*`, `{`, `}`, trailing-punct chars (`,`, `.`, `;`, `:`, `)`), and leading-punct
+chars `(` and `[` so that the glob-skip branch (step a), trailing-punct-trim branch
+(step e), and leading-punct-strip branch (step e) are all exercised by random inputs
+— not merely by hand-crafted unit vectors — which reduces mutation survival risk in F6.
 
 ```rust
 proptest! {
     #[test]
     fn test_non_prefix_tokens_are_never_extracted(
-        s in "[A-Za-z0-9_:~./\\*\\{\\}\\.,;:\\)]{1,50}"
+        s in "[A-Za-z0-9_:~./\\*\\{\\}\\.,;:\\)\\(\\[]{1,50}"
     ) {
         let non_prefix = format!("`{}`", s);
         let result = extract_path_citations(&non_prefix);
@@ -119,7 +120,7 @@ proptest! {
 
 Note: `.factory/` is intentionally ABSENT from the `starts_with` allowlist in the
 prop_assert — a token starting with `.factory/` MUST NOT appear in the output (it is
-excluded by dir-prefix filter at step g). If the proptest engine generates an `s`
+excluded by dir-prefix filter at step f). If the proptest engine generates an `s`
 that starts with `.factory/`, the assertion correctly catches any regression where
 `.factory/` leaks into the output.
 
@@ -188,7 +189,7 @@ fn test_claude_md_citations_resolve_to_real_files() {
     let root = env!("CARGO_MANIFEST_DIR");
     let citations = extract_path_citations(doc);
     // No is_off_working_branch_allowlisted call — .factory/ is excluded by
-    // extract_path_citations dir-prefix filter (step g); no allowlist needed.
+    // extract_path_citations dir-prefix filter (step f); no allowlist needed.
     let dead: Vec<String> = citations
         .into_iter()
         .filter(|p| !Path::new(root).join(p).exists())
@@ -299,7 +300,7 @@ fn test_docs_path_is_in_scope() {
 
 | VP ID | BC(s) Covered | Key Invariant |
 |-------|---------------|---------------|
-| VP-CITE-001 | BC-X.13.001, BC-X.13.002 | `extract_path_citations` correctly identifies in-scope tokens and applies the canonical pipeline (glob-skip, symbol-form strip, line-ref strip, trailing-punct trim, dir-prefix filter including `.factory/` exclusion, extension filter) — no false positives; no panics on arbitrary input; proptest alphabet includes `*`, `{`, `}`, and trailing-punct chars to exercise all branches |
+| VP-CITE-001 | BC-X.13.001, BC-X.13.002 | `extract_path_citations` correctly identifies in-scope tokens and applies the canonical pipeline (glob-skip, symbol-form strip, line-ref strip, trailing-punct trim including leading-`(`/`[` strip, dir-prefix filter including `.factory/` exclusion, extension filter) — no false positives; no panics on arbitrary input; proptest alphabet includes `*`, `{`, `}`, trailing-punct chars, and leading-punct chars `(` and `[` to exercise all branches |
 | VP-CITE-002 | BC-X.13.001, BC-X.13.003 | Integration guard is green on develop HEAD (zero dead citations); fails deterministically when a fixture with a known-dead path is fed; canonical CI-CITE-001 failure message emitted verbatim; `.factory/` exclusion via dir-prefix filter (no allowlist function) |
 
 ## Project Convention Note
@@ -347,7 +348,7 @@ Before F4 (TDD Implementation) can begin:
 - [ ] `extract_path_citations` is implemented as a **standalone pure function** (no
       `Path::exists()` calls inside) — required for VP-CITE-001 proptest coverage
 - [ ] **NO `is_off_working_branch_allowlisted` function** — `.factory/` exclusion is
-      handled entirely inside `extract_path_citations` by the dir-prefix filter (step g).
+      handled entirely inside `extract_path_citations` by the dir-prefix filter (step f).
       Do not implement or call this function.
 - [ ] `extract_path_citations` has an inline `#[cfg(test)] mod tests` block in
       `tests/claude_md_citations.rs`
@@ -368,9 +369,10 @@ Before F6 (Targeted Hardening) can sign off:
 - [ ] Both proptest properties from VP-CITE-001 (`test_non_prefix_tokens_are_never_extracted`,
       `test_extract_never_panics`) are in tree and pass
 - [ ] The proptest alphabet for `test_non_prefix_tokens_are_never_extracted` includes
-      `*`, `{`, `}`, and trailing-punct chars (`,`, `.`, `;`, `:`, `)`) so that the
-      glob-skip branch (step c) and trailing-punct-trim branch (step f) are exercised
-      by random inputs — reducing mutation-survival risk
+      `*`, `{`, `}`, trailing-punct chars (`,`, `.`, `;`, `:`, `)`), and leading-punct
+      chars `(` and `[` so that the glob-skip branch (step a), trailing-punct-trim
+      branch (step e), and leading-punct-strip branch (step e) are exercised by random
+      inputs — reducing mutation-survival risk
 - [ ] `cargo mutants --in-diff` on the PR diff does not flag uncovered branches in
       `extract_path_citations` (the exclusion rules are each independently exercisable
       by the unit tests above)

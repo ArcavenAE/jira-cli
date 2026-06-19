@@ -38,17 +38,28 @@ returns a sorted, deduplicated `Vec<String>` of candidate file paths after
 applying the canonical normalization/skip pipeline specified by BC-X.13.002
 (steps applied in this exact order — SR-004):
 
-(a) Extract inline single-backtick spans and split each interior on whitespace
-(b) Split interior on ASCII whitespace — each token is a candidate
-(c) **Glob skip**: skip entirely if the token contains `*`, `{`, or `}` anywhere
-(d) **Symbol-form strip**: strip from the first `::` onward (`src/adf.rs::push_text` → `src/adf.rs`)
-(e) **Line-ref strip**: strip trailing `:~[0-9]+` or `:[0-9]+` suffix
-(f) **Trailing-punctuation trim**: trim trailing `.`, `,`, `;`, `:`; trim unbalanced trailing `)`
-(g) **Dir-prefix + extension filter**: token must start with a develop-tracked directory prefix
-    (`src/`, `tests/`, `docs/`, `.github/`, `scripts/`) AND end with a recognized file extension
-    (`.md`, `.rs`, `.sh`, `.toml`, `.yml`, `.yaml`). ALL `.factory/` prefixes are EXCLUDED here —
-    `.factory/` is NOT in the develop-tracked prefix set (it is git-ignored, lives in a separate
-    orphan-branch worktree, and is ABSENT from the CI checkout)
+**Two-step extraction (pre-pipeline, unnumbered — SR-001):**
+1. Extract all inline single-backtick spans (`` `…` ``) from the CLAUDE.md text. Fenced
+   triple-backtick code blocks are OUT OF SCOPE and never read (M-1).
+2. Split each span interior on ASCII whitespace. Each whitespace-delimited token is a
+   candidate citation.
+
+**Canonical normalization/skip pipeline:**
+(a) **Glob skip**: skip entirely if the token contains `*`, `{`, or `}` anywhere
+(b) **Symbol-form strip**: strip from the first `::` onward (`src/adf.rs::push_text` → `src/adf.rs`)
+(c) **Line-ref strip**: strip trailing `:~[0-9]+` or `:[0-9]+` suffix
+(d) **Section-ref**: `§N`-style tokens lack a known directory prefix and are excluded by the
+    dir-prefix filter at step (f); whitespace tokenization has already separated them from the
+    preceding path
+(e) **Punctuation trim (leading and trailing)**: strip a leading `(` or `[` from the token;
+    trim trailing `.`, `,`, `;`, `:`; trim a trailing `)` ONLY if unbalanced across the whole
+    token (`count('(') < count(')')`) — mirrors `src/adf.rs::trim_url_extent`
+(f) **Dir-prefix filter**: token must start with a develop-tracked directory prefix
+    (`src/`, `tests/`, `docs/`, `.github/`, `scripts/`). ALL `.factory/` prefixes are EXCLUDED
+    here — `.factory/` is NOT in the develop-tracked prefix set (it is git-ignored, lives in a
+    separate orphan-branch worktree, and is ABSENT from the CI checkout)
+(g) **Extension filter**: token must end with a recognized file extension
+    (`.md`, `.rs`, `.sh`, `.toml`, `.yml`, `.yaml`)
 (h) **Path::exists() check**: only tokens surviving steps (a)–(g) reach this check
 
 No I/O occurs. No global state is read or written. The function is
@@ -76,7 +87,7 @@ This is the integration-level test function. It:
    ```
 
 There is NO `is_off_working_branch_allowlisted` function — `.factory/` exclusion
-is handled entirely by the dir-prefix filter inside `extract_path_citations` (step g
+is handled entirely by the dir-prefix filter inside `extract_path_citations` (step f
 above). The filesystem check (`Path::exists()`) is the **only effectful operation**
 in this guard. It is deliberately placed at the outermost layer, keeping the grammar
 logic (`extract_path_citations`) pure and independently testable.
@@ -194,5 +205,5 @@ integration test body, to enable VP-CITE-001 proptest coverage.
 
 There is NO `is_off_working_branch_allowlisted` function in the final
 implementation. `.factory/` exclusion is achieved solely by the dir-prefix
-filter inside `extract_path_citations` (step g in the canonical pipeline). Do
+filter inside `extract_path_citations` (step f in the canonical pipeline). Do
 not implement or reference an allowlist function.
