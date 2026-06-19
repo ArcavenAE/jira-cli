@@ -1,9 +1,9 @@
 ---
 context: bc-x
-title: "Cross-cutting (HTTP client, Runtime, Users, Teams, Worklogs, Projects, Queues, JQL, Partial-match, JSM Request Types)"
-total_bcs: 142   # cumulative claim (incl. range-collapsed); definitional_count below is individually-bodied headings
-definitional_count: 76   # count of `#### BC-` headings in this file
-last_updated: 2026-06-08
+title: "Cross-cutting (HTTP client, Runtime, Users, Teams, Worklogs, Projects, Queues, JQL, Partial-match, JSM Request Types, CI Guards)"
+total_bcs: 145   # cumulative claim (incl. range-collapsed); definitional_count below is individually-bodied headings
+definitional_count: 79   # count of `#### BC-` headings in this file
+last_updated: 2026-06-19
 source_pass: 3
 trace: |
   - L2: .factory/specs/domain-spec/cross-cutting.md
@@ -13,13 +13,15 @@ trace: |
   - F2 addition (2026-05-18): BC-X.12.001..008 — JSM request type discovery (issue #288)
   - F2 addition (2026-05-19): BC-X.8.006..007 — auth-conditional 401 hints on require_service_desk path (cache miss only): Basic-auth (is_oauth_auth==false) → API-token hint with InsufficientScope rewrite; OAuth (is_oauth_auth==true) → read:jira-work + read:servicedesk-request hint (issue #384; corrected model: gate is is_oauth_auth() alone)
   - S-QUEUE-BC-1 addition (2026-06-08): BC-X.8.008..009 — document-as-is BCs for jr queue list and jr queue view (queue traceability orphan closure)
+  - DEAD-CITATION-CI F2 addition (2026-06-19): BC-X.13.001..003 — CLAUDE.md dead-citation CI guard (citation path-existence, glob/suffix exclusion, off-branch allowlist)
 ---
 
 # BC-X — Cross-cutting
 
-142 behavioral contracts covering: HTTP client (X.1), Pagination (X.2), Error handling (X.3),
+145 behavioral contracts covering: HTTP client (X.1), Pagination (X.2), Error handling (X.3),
 Rate limiting (X.4), Worklogs & duration (X.5), Teams (X.6), Users (X.7), Projects & Queues (X.8),
-JQL utilities (X.9), Partial-match (X.10), Build-time (X.11), JSM Request Types (X.12).
+JQL utilities (X.9), Partial-match (X.10), Build-time (X.11), JSM Request Types (X.12),
+CI Guards (X.13).
 
 ---
 
@@ -904,6 +906,174 @@ without `--project`) is superseded; impl + tests already match the aligned form.
 **Trace**: `tests/requesttype_commands.rs` (cache hit: second call fires no HTTP); `src/cache.rs` (RequestTypeCache struct); `src/api/jsm/request_types.rs`
 **Source**: Follows `teams.json` cache pattern; 7-day TTL matches all other caches in `src/cache.rs`
 **Confidence**: HIGH
+
+---
+
+## BC-X.13: CI Guards
+
+3 behavioral contracts covering `tests/claude_md_citations.rs` — the doc-fallout guard
+that verifies every file-path citation in `CLAUDE.md` resolves to a real on-disk file.
+
+---
+
+#### BC-X.13.001: Every in-scope backtick-quoted path citation in CLAUDE.md resolves to a real on-disk file; guard fails listing all dead references with source context
+
+**Confidence**: HIGH
+**Subject**: CI guard / doc-fallout invariant
+**Behavior**: The `test_claude_md_citations_resolve_to_real_files` test in `tests/claude_md_citations.rs` reads `CLAUDE.md` via `include_str!("../CLAUDE.md")`, extracts every backtick-quoted token that (a) starts with a known directory prefix (`src/`, `tests/`, `docs/`, `.factory/`, `.github/`, `scripts/`) AND (b) has a recognized file extension (`.md`, `.rs`, `.sh`, `.toml`, `.yml`, `.yaml`), strips disambiguation suffixes per BC-X.13.002, skips allowlisted prefixes per BC-X.13.003, then asserts `Path::new(root).join(&citation).exists()` for each remaining path. On failure, the assertion message lists EVERY dead path (not just the first) separated by newline+two-spaces so each dead citation and its cleaned form are actionable. The test passes green on the current `develop` HEAD (zero dead citations) and fails deterministically when any newly-cited path does not exist.
+
+**Preconditions**:
+- `CLAUDE.md` is readable via `include_str!` at compile time
+- The crate root (`CARGO_MANIFEST_DIR`) is the jira-cli repo root
+- All cited paths in CLAUDE.md exist as files on the working branch at test time
+
+**Postconditions (on success)**:
+- Exit 0; test passes
+- Every backtick token matching the in-scope grammar (`src/...`, `tests/...`, `docs/...`, `.factory/research/...`, `.github/...`, `scripts/...`) resolves to a real file
+
+**Postconditions (on failure)**:
+- Test fails with assertion message listing each dead path on its own line, prefixed with two spaces for readability
+- The message includes the instruction to "Fix the citation or restore the file" and notes the allowlist escape hatch
+
+**Invariants**:
+- The guard runs on the 3-OS matrix (ubuntu, macos, windows) as part of the existing `test` job — no new CI job or `ci-gate.needs` edit required
+- A citation that was valid when committed becomes a failing test the moment the referenced file is deleted or renamed — drift is caught at the NEXT CI run touching either CLAUDE.md or the deleted file
+- `Path::join` (not string concatenation) is used to resolve paths — correct path-separator handling on Windows without a separate codepath
+
+**Edge Cases**:
+- EC-CITE-001: CLAUDE.md contains zero in-scope citations → test passes (empty `dead` vec)
+- EC-CITE-002: A citation uses `Detail: path1, path2` comma-delimited form → both tokens extracted and checked independently
+- EC-CITE-003: A citation has CRLF line ending (Windows checkout) → `lines()` and `.trim_end_matches('\r')` normalize before tokenization; no false positive
+- EC-CITE-004: A path exists as a directory (not a file) → `Path::exists()` returns true for directories; guard passes (acceptable: directory citations are extremely rare and not harmful)
+- EC-CITE-005: Two different CLAUDE.md lines cite the same path → path checked twice; redundant but not harmful (no dedup needed)
+
+**Canonical Test Vectors**:
+
+| Input token (after backtick extraction) | In-scope? | Expected outcome |
+|----------------------------------------|-----------|-----------------|
+| `src/adf.rs` | YES | Pass (file exists) |
+| `tests/auth_profiles.rs` | YES | Pass (file exists) |
+| `docs/adr/0016-windows-build-target.md` | YES | Pass (file exists) |
+| `.factory/research/S-3.03-wave3-verification.md` | YES | Pass (file exists) |
+| `scripts/check-spec-counts.sh` | YES | Pass (file exists) |
+| `src/api/jsm/nonexistent.rs` | YES | FAIL — listed in dead citations |
+| `~/.config/jr/config.toml` | NO | Excluded (no known dir prefix) |
+| `%APPDATA%\jr` | NO | Excluded (no known dir prefix) |
+| `http://127.0.0.1:53682/callback` | NO | Excluded (no known dir prefix) |
+| `JR_BASE_URL` | NO | Excluded (no `/` and no extension) |
+| `std::sync::Mutex` | NO | Excluded (no known dir prefix) |
+| `BC-3.2.013` | NO | Excluded (no `/`) |
+| `JRACLOUD-95368` | NO | Excluded (no `/`) |
+
+**Traceability**:
+- F1 Delta Analysis: `DEAD-CITATION-CI-delta-analysis.md` §7 BC-CITE-001
+- Research: `maint-pg-dead-citation-ci-approach.md` §(a)
+- Implementing story: S-MAINT-DEAD-CITATION-CI (F3)
+- Source: `tests/claude_md_citations.rs::test_claude_md_citations_resolve_to_real_files` (new file)
+
+---
+
+#### BC-X.13.002: Backtick tokens with glob wildcards (`*`), symbol suffixes (`::fn`), line-ref suffixes (`:~NN`/`:NN`), and section refs (` §N`) are excluded from or normalized before the path-existence check — no false positives on these forms
+
+**Confidence**: HIGH
+**Subject**: CI guard / parser grammar
+**Behavior**: The `extract_path_citations` helper in `tests/claude_md_citations.rs` applies these normalization and exclusion rules in order before the `Path::exists()` check:
+1. **Glob skip**: if the token contains `*` anywhere, skip entirely (not checked). Handles ``.factory/specs/prd/bc-*.md`` and similar.
+2. **Symbol-form strip**: if the token contains `::`, strip from `::` onward before checking. `src/adf.rs::push_text` → `src/adf.rs` (then checked). `adf::tests::test_bare_*` → skip (contains `*`).
+3. **Line-ref strip**: strip trailing `:~[0-9]+` or `:[0-9]+` suffix before checking. `src/config.rs:~42` → `src/config.rs`.
+4. **Section-ref**: whitespace-tokenization naturally separates `docs/specs/foo.md` from `§9`; the `§9` token lacks a known directory prefix and is excluded by the directory-prefix filter.
+5. **Extension filter**: after suffix stripping, the token must still have a recognized file extension; bare paths like `src/cli/issue` (no extension) are excluded.
+
+**Preconditions**:
+- `extract_path_citations` is called with the full CLAUDE.md text
+- The CLAUDE.md citation conventions described in CLAUDE.md §"Citation form in spec/CLAUDE.md" are in effect (symbol-form `<file>::<fn>`, approximate line `<file>:~NN`)
+
+**Postconditions**:
+- No token matching the glob, symbol-form, line-ref, or section-ref patterns causes a false-positive path-existence failure
+- After normalization (stripping), the underlying file path (e.g. `src/adf.rs`) IS checked — the guard doesn't skip the file entirely, only strips the disambiguation suffix
+
+**Invariants**:
+- `::` cannot appear in a file path on any supported OS (Windows, macOS, Linux) — stripping `::.*` is unambiguous and safe
+- A glob pattern (`*`) causes skip, not strip — the base path before `*` would be a directory, not a file, and the glob intent is documentation of a naming pattern, not a specific file
+
+**Edge Cases**:
+- EC-CITE-006: Token is `src/adf.rs::tests::test_bare_url_split_by_emphasis_links_only_leading_run` — strip from first `::` → `src/adf.rs` → exists → pass
+- EC-CITE-007: Token is `src/config.rs:~42` — strip `:~42` → `src/config.rs` → exists → pass
+- EC-CITE-008: Token is `.factory/specs/prd/bc-*.md` — contains `*` → skip entirely → no false positive
+- EC-CITE-009: Token is `docs/specs/e2e-live-jira-testing.md §9` — whitespace tokenization yields `docs/specs/e2e-live-jira-testing.md` (checked) and `§9` (excluded by dir-prefix filter) → pass
+- EC-CITE-010: Token is `adf::tests::test_bare_url_split` — has `::` but NO known directory prefix in the portion before `::` (no `src/` etc.) — excluded by directory-prefix filter before suffix-stripping even applies
+- EC-CITE-011: Token is `src/cli/issue` (no extension, from hypothetical prose) — no recognized extension after normalization → excluded by extension filter
+
+**Canonical Test Vectors** (for `extract_path_citations` unit tests):
+
+| Raw backtick content | Extracted path (after normalization) | Checked? |
+|---------------------|-------------------------------------|---------|
+| `src/adf.rs::push_text` | `src/adf.rs` | YES |
+| `src/config.rs:~42` | `src/config.rs` | YES |
+| `.factory/specs/prd/bc-*.md` | (skipped — contains `*`) | NO |
+| `docs/specs/e2e-live-jira-testing.md` | `docs/specs/e2e-live-jira-testing.md` | YES |
+| `adf::tests::test_bare_*` | (skipped — contains `*`) | NO |
+| `std::sync::Mutex<HashMap>` | (excluded — no known dir prefix) | NO |
+| `src/api/jsm/servicedesks.rs::require_service_desk` | `src/api/jsm/servicedesks.rs` | YES |
+
+**Traceability**:
+- F1 Delta Analysis: `DEAD-CITATION-CI-delta-analysis.md` §5b OUT-OF-SCOPE, §6 Risk 1/2/3/4
+- Research: `maint-pg-dead-citation-ci-approach.md` §(d) grammar rules 4/5
+- Implementing story: S-MAINT-DEAD-CITATION-CI (F3)
+- Source: `tests/claude_md_citations.rs::extract_path_citations` (new function; has inline `#[cfg(test)]` unit tests)
+
+---
+
+#### BC-X.13.003: Paths under off-working-branch prefixes (`.factory/specs/`, `.factory/holdout-scenarios/`, `.factory/cycles/`) are allowlisted and excluded from the check; `.factory/research/` paths are NOT allowlisted and ARE checked
+
+**Confidence**: HIGH
+**Subject**: CI guard / off-branch allowlist
+**Behavior**: `tests/claude_md_citations.rs` defines an `is_off_working_branch_allowlisted(path: &str) -> bool` function that returns `true` for paths starting with any of the following prefixes:
+- `.factory/specs/` — factory spec artifacts live on the `factory-artifacts` branch, not in a normal `develop` working-tree checkout
+- `.factory/holdout-scenarios/` — holdout documents, same branch
+- `.factory/cycles/` — cycle artifacts, same branch
+
+Paths starting with `.factory/research/` are NOT allowlisted: `.factory/research/` files are committed to `develop` and are present in a normal checkout. Dead `.factory/research/` citations SHOULD fail the guard.
+
+The allowlist function is implemented with a comment naming the originating branch for each prefix — this documents WHY the path is exempt, making future allowlist additions auditable.
+
+**Preconditions**:
+- The checked-out working tree is `develop` (or a feature branch off `develop`)
+- `.factory/specs/`, `.factory/holdout-scenarios/`, `.factory/cycles/` are NOT present in the working tree (they exist only on `factory-artifacts`)
+- `.factory/research/` IS present in the working tree
+
+**Postconditions**:
+- Any CLAUDE.md citation to a `.factory/specs/prd/...` path (e.g., a hypothetical `Detail: `.factory/specs/prd/bc-3-issue-write.md``) does NOT cause the guard to fail on `develop`
+- Any CLAUDE.md citation to a `.factory/research/...` path that does not exist causes the guard to FAIL with an actionable error listing the dead path
+- The allowlist is documented with a comment per prefix citing the branch name, making it machine-reviewable
+
+**Invariants**:
+- The allowlist is additive — new off-branch prefixes can be added by appending to `is_off_working_branch_allowlisted` with a comment
+- `.factory/research/` is explicitly NOT in the allowlist; this is a deliberate design decision and is documented as such in the guard source
+- If `.factory/research/` files are ever moved to a separate branch, the guard must be updated to add them to the allowlist (the guard itself documents this intent via comment)
+
+**Edge Cases**:
+- EC-CITE-012: CLAUDE.md cites `.factory/specs/prd/bc-3-issue-write.md` (exists on `factory-artifacts` but not on `develop`) → allowlisted → skipped → no false positive
+- EC-CITE-013: CLAUDE.md cites `.factory/research/S-3.03-wave3-verification.md` (exists on `develop`) → NOT allowlisted → checked → currently passes (file exists)
+- EC-CITE-014: CLAUDE.md cites `.factory/research/deleted-file.md` (does not exist) → NOT allowlisted → checked → FAILS with actionable message listing `.factory/research/deleted-file.md`
+- EC-CITE-015: CLAUDE.md cites `.factory/holdout-scenarios/H-001.md` (exists on `factory-artifacts` but not on `develop`) → allowlisted → skipped → no false positive
+
+**Canonical Test Vectors** (for `is_off_working_branch_allowlisted` unit tests):
+
+| Path | Allowlisted? | Rationale |
+|------|-------------|-----------|
+| `.factory/specs/prd/bc-3-issue-write.md` | YES | `.factory/specs/` prefix — factory-artifacts branch |
+| `.factory/holdout-scenarios/H-001.md` | YES | `.factory/holdout-scenarios/` prefix — factory-artifacts branch |
+| `.factory/cycles/cycle-01.md` | YES | `.factory/cycles/` prefix — factory-artifacts branch |
+| `.factory/research/S-3.03-wave3-verification.md` | NO | `.factory/research/` is on develop; must be checked |
+| `docs/adr/0016-windows-build-target.md` | NO | `docs/` is always on develop; must be checked |
+| `src/adf.rs` | NO | `src/` is always on develop; must be checked |
+
+**Traceability**:
+- F1 Delta Analysis: `DEAD-CITATION-CI-delta-analysis.md` §5c off-working-branch allowlist, §6 Risk 5
+- Research: `maint-pg-dead-citation-ci-approach.md` §(d) step 6
+- Implementing story: S-MAINT-DEAD-CITATION-CI (F3)
+- Source: `tests/claude_md_citations.rs::is_off_working_branch_allowlisted` (new function; has inline `#[cfg(test)]` unit tests)
 
 ---
 

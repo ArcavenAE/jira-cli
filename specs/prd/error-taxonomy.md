@@ -1,7 +1,7 @@
 ---
 context: error-taxonomy
 title: "Error Taxonomy"
-last_updated: 2026-05-04
+last_updated: 2026-06-19
 source_pass: 3
 trace: |
   - L2: .factory/specs/domain-spec/
@@ -183,3 +183,21 @@ Two HTTP dispatch paths with different error semantics:
 | `send_raw(req)` | Via `request()` (caller calls `client.request()` to build, auth injected there) | Returns `reqwest::Response` to caller — no error | Retries up to MAX_RETRIES=3 THEN returns 429 response | `jr api` raw passthrough |
 
 **Key invariant**: `send_raw` never raises `JrError` for 429 — the raw status code is returned to caller. This is intentional for the `jr api` passthrough command.
+
+---
+
+## Section 8: CI Guard Failure Taxonomy (DEAD-CITATION-CI F2 2026-06-19)
+
+### CI-CITE-001: CLAUDE.md dead path citation
+
+| Field | Value |
+|---|---|
+| **Guard** | `tests/claude_md_citations.rs::test_claude_md_citations_resolve_to_real_files` |
+| **Category** | Doc-fallout / citation drift |
+| **Severity** | BROKEN (test fail — blocks CI) |
+| **Exit code** | Rust test failure (non-zero `cargo test` exit) |
+| **When raised** | One or more backtick-quoted path tokens in CLAUDE.md match the in-scope grammar (known directory prefix + recognized extension) but do NOT resolve to a real file at `Path::new(CARGO_MANIFEST_DIR).join(&citation)` |
+| **Message format** | `CLAUDE.md cites file paths that do not exist on disk:\n  <path1>\n  <path2>\n...\nFix the citation or restore the file. If the path is intentionally on a non-working branch (factory-artifacts), add it to the allowlist with a comment.` |
+| **Actionability** | Each dead citation is listed on its own line, prefixed with two spaces. The developer can: (a) restore the deleted/renamed file, (b) update the CLAUDE.md citation to the new path, or (c) add the prefix to the allowlist in `tests/claude_md_citations.rs::is_off_working_branch_allowlisted` with a comment naming the branch |
+| **False-positive risk** | LOW when the guard is correctly implemented per BC-X.13.002 (glob skip, suffix strip) and BC-X.13.003 (allowlist). A false positive means a token was incorrectly classified as in-scope; the fix is a suffix-strip or allowlist addition |
+| **Tracing BCs** | BC-X.13.001 (core path-existence), BC-X.13.002 (exclusion grammar), BC-X.13.003 (off-branch allowlist) |
