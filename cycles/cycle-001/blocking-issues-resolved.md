@@ -172,3 +172,17 @@ These 3 MED drift items were marked "IMPLEMENTED-ON-DEVELOP — fully closes at 
 | FORK-OPS-BACKFILL-DESTRUCTIVE | release-gap-fill.yml | `gh release delete+recreate` can clobber curated release notes. Fixed: release-gap-fill.yml updated to use non-destructive upsert approach; S-FORK-OPS-BACKFILL-1 story delivered. | MED | **RESOLVED — PR #542 → 71f33c6 (v0.6.0-dev.5, 2026-06-19)** | 2026-06-19 |
 | FORK-OPS-BACKFILL-WIN-TARGET | backfill-release.yml | Windows target absent from backfill-release.yml → backfilled releases lacked Windows binary. Fixed: Windows target added; S-FORK-OPS-BACKFILL-1 story delivered. | MED | **RESOLVED — PR #542 → 71f33c6 (v0.6.0-dev.5, 2026-06-19)** | 2026-06-19 |
 | FORK-OPS-GITLEAKS-DOC | GITLEAKS_DISABLED | `GITLEAKS_DISABLED` secret-scan opt-out variable undocumented in CLAUDE.md/spec. Fixed: documentation added in S-FORK-OPS-GITLEAKS-DOC-1 story. | MED | **RESOLVED — PR #542 → 71f33c6 (v0.6.0-dev.5, 2026-06-19)** | 2026-06-19 |
+
+---
+
+## 2026-06-19 Maintenance Sweep (Bundle E) — Archive Confirmation
+
+Maintenance sweep 2026-06-19 (develop @ 71f33c6 / v0.6.0-dev.5) confirmed the following 3 items were already correctly archived from STATE.md Drift Items table prior to this sweep. Listed here for audit completeness.
+
+| ID | Archived In | Severity | Archive Date | Confirmation Source |
+|----|-------------|----------|--------------|---------------------|
+| FORK-OPS-SIGN-INJECTION | "Resolved Drift Items extracted 2026-06-18 (S-FORK-OPS-SIGN-1)" section above | HIGH | 2026-06-18 | spec-coherence.md §3.1; sweep 7+8+11 |
+| FORK-OPS-ALPHA-RACE | "Resolved Drift Items extracted 2026-06-18 (S-FORK-OPS-SIGN-1)" section above | HIGH | 2026-06-18 | spec-coherence.md §3.1; sweep 7+8+11 |
+| FORK-OPS-GITLEAKS-DOC | "Resolved Drift Items extracted 2026-06-19 (S-FORK-OPS-BACKFILL)" section above | MED | 2026-06-19 | spec-coherence.md §3.1; sweep 7+8+11 |
+
+STATE.md Drift Items table does not contain any of these rows. Archive is complete. Maintenance sweep verdict: GREEN.
