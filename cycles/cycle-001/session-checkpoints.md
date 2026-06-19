@@ -921,3 +921,16 @@ _Was the active checkpoint after maintenance sweep 2026-06-17 COMPLETE (Bundle A
 | **Active worktree** | None (S-525 and S-526 worktrees cleaned up). .factory on factory-artifacts is mounted. |
 | **jira-e2e env** | JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ, JR_E2E_ENABLED=true. |
 | **Standing constraints** | Do NOT close #429 (DEC-029). All fixes through full VSDD Feature Mode pipeline (except quick-dev-route for test-hygiene micro-fixes). Fork-release-ops INERT. LESSON-F1-SIBLING-CASE. LESSON-CENTRALIZATION-AC-GREP. LESSON-CITATION-SIBLING-PROPAGATION. |
+
+## Checkpoint archived 2026-06-18 (replaced by S-FORK-OPS-BACKFILL F2-active checkpoint)
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-06-18 |
+| **Position** | IDLE. v0.6.0-dev.4 RELEASED (PR #536 → 45ddf7a). release.yml 27792346419 SUCCESS. Signing UNBLOCKED (DEC-104 still pending human decision + Apple secrets). No active worktrees. |
+| **develop HEAD** | origin/develop = **45ddf7a** (chore(release): v0.6.0-dev.4 squash-merged 2026-06-18; == v0.6.0-dev.4 tag; 0 commits ahead of tag). |
+| **Activation** | v0.6.0-dev.4 @ 45ddf7a. develop == tag. v0.5.0 STABLE shipped 2026-06-12. |
+| **Counters** | BC **599**. NFR **42**. ADR **16**. Stories **81** (authoritative). |
+| **Active worktree** | None. .factory on factory-artifacts mounted. |
+| **jira-e2e env** | JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ, JR_E2E_ENABLED=true. |
+| **Standing constraints** | Do NOT close #429 (DEC-029). All fixes through full VSDD Feature Mode pipeline. LESSON-F2-WORKTREE-FIRST: F2 spec edits to docs/ must be in the story worktree, not main checkout. Fork-release-ops code defects RESOLVED (FORK-OPS-SIGN-INJECTION + FORK-OPS-ALPHA-RACE); signing UNBLOCKED but INERT pending DEC-104. LESSON-F1-SIBLING-CASE. LESSON-CENTRALIZATION-AC-GREP. LESSON-CITATION-SIBLING-PROPAGATION. CHANGELOG-per-PR hygiene. LESSON-F2-PIECEWISE. |

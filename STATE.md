@@ -1,13 +1,15 @@
 ---
 document_type: pipeline-state
 version: "2.0"
-status: idle
-timestamp: 2026-06-18T23:00:00Z
+status: active
+timestamp: 2026-06-18T23:30:00Z
 phase: phase-3-tdd-implementation
 project: jira-cli
 mode: BROWNFIELD
-current_step: "v0.6.0-dev.4 RELEASED — PR #536 merged → 45ddf7a, tag pushed, release.yml 27792346419 SUCCESS. IDLE."
+current_step: "Feature Mode active — S-FORK-OPS-BACKFILL bundle. F1 APPROVED 2026-06-18. F2 (Spec Evolution) starting. 2-story decomposition: S-FORK-OPS-BACKFILL-1 + S-FORK-OPS-GITLEAKS-DOC-1."
 current_cycle: "cycle-001"
+feature_mode_bundle: "S-FORK-OPS-BACKFILL"
+feature_mode_phase: "F2"
 dtu_required: false
 phase_2_status: APPROVED
 phase_2_approved_at: 2026-05-07
@@ -26,8 +28,8 @@ activation_version: "v0.6.0-dev.4"
 | **Product** | jr (Jira CLI) |
 | **Mode** | BROWNFIELD / Rust |
 | **Target Workspace** | develop → main |
-| **Last Updated** | 2026-06-18: v0.6.0-dev.4 RELEASED (PR #536 → 45ddf7a). release.yml 27792346419 SUCCESS. develop @ 45ddf7a == v0.6.0-dev.4 tag. IDLE. |
-| **Current Phase** | Phase 3 — IDLE. develop @ 45ddf7a (== v0.6.0-dev.4 tag; 0 commits ahead). BC 599. NFR 42. ADR 16. Stories 81. |
+| **Last Updated** | 2026-06-18: S-FORK-OPS-BACKFILL bundle F1 APPROVED. Feature Mode active at F2. 2-story decomposition (S-FORK-OPS-BACKFILL-1 + S-FORK-OPS-GITLEAKS-DOC-1). DEC-122 added. |
+| **Current Phase** | Phase 3 — Feature Mode active (S-FORK-OPS-BACKFILL, F2 starting). develop @ 45ddf7a. BC 599. NFR 42. ADR 16. Stories 81. |
 | **Next Phase** | Phase 4: Holdout Evaluation (not started) |
 | **Activation HEAD** | 45ddf7a (develop HEAD 2026-06-18; == v0.6.0-dev.4 tag; v0.5.0 STABLE shipped 2026-06-12) |
 
@@ -49,6 +51,7 @@ activation_version: "v0.6.0-dev.4"
 | arcaven fork-ops PRs #528/#529/#530 reviewed + merged | COMPLETE | 2026-06-18 | APPROVE / APPROVE-WITH-NITS; no CRITICAL/HIGH | #528→5d0d9a3 (docs sync); #529→2aae5ce (ci: rustup target add hardening); #530→99f212d (ci: Gatekeeper+hardened-runtime verify — closes #210). develop @ 99f212d. Signing still INERT. |
 | S-FORK-OPS-SIGN-1 fork-ops signing hardening (F1–F7) | CYCLE CLOSED + MERGED | 2026-06-18 | PR #535 → 1a2a79b | F2 6-pass converged (round-4: --cleanup-tag self-defeat; round-6: piecewise-spec process-gap). F5 5-pass converged (2 CRIT: guard hardcoded-scope false-negative → structural-scope rewrite → 23 sites vs 5; missing negative fixture. 1 HIGH). Stories 80→81. Signing UNBLOCKED (DEC-104 still pending). |
 | v0.6.0-dev.4 release | RELEASED | 2026-06-18 | PR #536 → 45ddf7a; release.yml 27792346419 SUCCESS | 5-target build (aarch64/x86_64 macOS, aarch64/x86_64 Linux, x86_64 Windows). 10 assets (5 archives + 5 SHA-256). CHANGELOG [Unreleased] repopulated + promoted to [0.6.0-dev.4]. Cargo.toml 0.6.0-dev.3→0.6.0-dev.4. develop == v0.6.0-dev.4 tag (0 ahead). |
+| S-FORK-OPS-BACKFILL bundle F1 | F1 COMPLETE — F2 starting | 2026-06-18 | F1 APPROVED by human | 3 MED drift items: WIN-TARGET + DESTRUCTIVE + GITLEAKS-DOC. Scope STANDARD → full F1–F7. 2 stories: S-FORK-OPS-BACKFILL-1 (backfill-release.yml) + S-FORK-OPS-GITLEAKS-DOC-1 (doc-only). DEC-122. |
 | 4: Holdout Evaluation | not-started | | | |
 | 5: Adversarial Refinement | not-started | | | |
 | 6: Formal Hardening | not-started | | | |
@@ -59,10 +62,10 @@ activation_version: "v0.6.0-dev.4"
 <!-- Keep last 5 rows only. Archive older rows to cycles/cycle-001/burst-log.md. -->
 | Step | Agent | Status | Output |
 |------|-------|--------|--------|
-| v0.6.0-dev.3 release: PR #534 squash-merged → develop @ 8aca89f. release.yml 27775233196 SUCCESS — 5-target build, 10 assets. Tag v0.6.0-dev.3. | orchestrator | RELEASED | develop @ 8aca89f. v0.6.0-dev.3 tag. |
 | arcaven fork-ops PRs #528/#529/#530: security-reviewed (#529/#530) + pr-reviewed (#528); all APPROVE/APPROVE-WITH-NITS. Squash-merged #528→#529→#530. #530 closes #210 Gatekeeper gap. 3 new LOW nits → Drift Items. | orchestrator | COMPLETE | develop @ 99f212d. Signing INERT. |
 | S-FORK-OPS-SIGN-1 CYCLE CLOSED + MERGED. PR #535 → develop @ 1a2a79b. CWE-77 env-binding + atomic alpha-tag + injection guard (check-signing-workflow-injection.sh). 5 drift items resolved; 3 new deferred. Signing UNBLOCKED. DEC-121 added. | state-manager | COMPLETE | develop @ 1a2a79b. Stories 81. Signing INERT (DEC-104 pending). |
 | v0.6.0-dev.4 RELEASED. PR #536 squash-merged → develop @ 45ddf7a. release.yml 27792346419 SUCCESS — 5-target build, 10 assets. Tag v0.6.0-dev.4. CHANGELOG hygiene drift closed. develop == tag (0 ahead). | orchestrator | RELEASED | develop @ 45ddf7a == v0.6.0-dev.4 tag. |
+| S-FORK-OPS-BACKFILL bundle: F1 COMPLETE — human-approved 2026-06-18. 3 MED drift items (WIN-TARGET + DESTRUCTIVE + GITLEAKS-DOC). 2-story decomposition by file (S-FORK-OPS-BACKFILL-1 + S-FORK-OPS-GITLEAKS-DOC-1). Full F1–F7. DEC-122. Drift items set IN-PROGRESS. F2 starting. | state-manager | F1 APPROVED | develop @ 45ddf7a. Feature Mode active. Stories 81. |
 
 ## Decisions Log
 
@@ -71,6 +74,7 @@ activation_version: "v0.6.0-dev.4"
 | DEC-001..DEC-119 | Phase 0/1/2/3 + Wave + Feature Mode + #492 + #522 + maintenance decisions. All CYCLE CLOSED. | See `cycles/cycle-001/burst-log.md` | Phase 0→3 / 2026-05-04..2026-06-17 | archived |
 | DEC-120 | S-TESTTOOL-1 full VSDD for a test/CI-config micro-change. F5 caught coverage-regression HIGH + C-1 (F2 edits in main checkout vs worktree). Validates: full VSDD is not bureaucratic overhead on "trivial" changes. | Feature Mode / S-TESTTOOL-1 | Phase 3 | 2026-06-18 |
 | DEC-121 | S-FORK-OPS-SIGN-1 full VSDD Feature Mode on a CI-workflow-only security fix. F5 caught a CRITICAL guard false-negative: hardcoded-scope had a live false-negative (5 injection sites checked; structural scope found 23). Structural-scope rewrite was the key fix. F5 also caught missing negative self-test fixture — a guard that always exits 0 passed CI undetected. Reinforces DEC-120: full VSDD is not overhead on "infra-only" changes. | Feature Mode / S-FORK-OPS-SIGN-1 | Phase 3 | 2026-06-18 |
+| DEC-122 | S-FORK-OPS-BACKFILL bundle F1 decomposition: 2 stories grouped by file to avoid worktree conflict on the shared release job. Story 1 S-FORK-OPS-BACKFILL-1 = WIN-TARGET (full S-WIN-4 Windows parity: Package + Checksum + smoke test + embedded-OAuth verify) + DESTRUCTIVE (safe release-notes update). Story 2 S-FORK-OPS-GITLEAKS-DOC-1 = doc-only GITLEAKS_DISABLED in fork-friendly-release-ops.md + CLAUDE.md. Full F1–F7 per DEC-120/121 precedent (infra-only changes still warrant full pipeline). | Feature Mode / S-FORK-OPS-BACKFILL F1 | Phase 3 | 2026-06-18 |
 
 ## Skip Log
 
@@ -88,10 +92,10 @@ All 7 S-WIN-1..6 + #475 per-AC demos: **Yes — adapted**. CI-config / infra / d
 |----|------|-------------|----------|--------|
 | MAINT-2026-06-17-SC-03 | ADR location | SC-03: docs/adr/ vs .factory/architecture/adr/ convention discrepancy. | LOW | DEFERRED |
 | MAINT-HOLDOUT-H007-DRIFT | Holdout H-007 | H-007 mechanism stale (reactive fallback, not proactive as per ADR-0015). Batch with H-027/H-044. | LOW | OPEN |
-| FORK-OPS-BACKFILL-DESTRUCTIVE | release-gap-fill.yml | gh release delete+recreate can clobber curated notes. Blocks gap-fill. | MED | OPEN |
+| FORK-OPS-BACKFILL-DESTRUCTIVE | release-gap-fill.yml | gh release delete+recreate can clobber curated notes. Blocks gap-fill. | MED | IN-PROGRESS — S-FORK-OPS-BACKFILL-1 |
 | FORK-OPS-PHANTOM-RUNS | Phantom workflow runs | ~7 phantom runs/day from new triggers. Cosmetic; decide suppress or accept. | LOW | OPEN |
-| FORK-OPS-GITLEAKS-DOC | GITLEAKS_DISABLED | Secret-scan opt-out variable undocumented in CLAUDE.md/spec. | MED | OPEN — doc gap |
-| FORK-OPS-BACKFILL-WIN-TARGET | backfill-release.yml | Windows target absent → backfilled releases lack Windows binary. | MED | OPEN |
+| FORK-OPS-GITLEAKS-DOC | GITLEAKS_DISABLED | Secret-scan opt-out variable undocumented in CLAUDE.md/spec. | MED | IN-PROGRESS — S-FORK-OPS-GITLEAKS-DOC-1 |
+| FORK-OPS-BACKFILL-WIN-TARGET | backfill-release.yml | Windows target absent → backfilled releases lack Windows binary. | MED | IN-PROGRESS — S-FORK-OPS-BACKFILL-1 |
 | WIN-CFG-TESTS-CHECK | Cross-compile | cargo check --lib excludes #[cfg(test)]; use --tests. | LOW | OPEN |
 | SEC-JR-SERVICE-NAME-GATE | JR_SERVICE_NAME | Not debug-gated unlike JR_BASE_URL/JR_AUTH_HEADER. | LOW | OPEN |
 | WIN-DENY-FRAGILITY | deny.toml | Canonical-un-skipped-version has no CI guard. | LOW | OPEN |
@@ -120,7 +124,7 @@ All 7 S-WIN-1..6 + #475 per-AC demos: **Yes — adapted**. CI-config / infra / d
 
 ## Convergence Trackers
 
-Full per-issue: `cycles/cycle-001/convergence-trajectory.md`. Current: **[2026-06-18] v0.6.0-dev.4 RELEASED — PR #536 → 45ddf7a. release.yml 27792346419 SUCCESS. 5-target build, 10 assets. develop == v0.6.0-dev.4 tag (0 ahead). Stories 81. IDLE.**
+Full per-issue: `cycles/cycle-001/convergence-trajectory.md`. Current: **[2026-06-18] S-FORK-OPS-BACKFILL bundle F1 APPROVED. Feature Mode active at F2. 2-story decomposition. 3 MED drift items IN-PROGRESS. DEC-122. develop @ 45ddf7a. Stories 81.**
 
 ## Session Resume Checkpoint
 
@@ -129,43 +133,38 @@ Full per-issue: `cycles/cycle-001/convergence-trajectory.md`. Current: **[2026-0
 | Field | Value |
 |-------|-------|
 | **Date** | 2026-06-18 |
-| **Position** | IDLE. v0.6.0-dev.4 RELEASED (PR #536 → 45ddf7a). release.yml 27792346419 SUCCESS. Signing UNBLOCKED (DEC-104 still pending human decision + Apple secrets). No active worktrees. |
+| **Position** | Feature Mode ACTIVE — S-FORK-OPS-BACKFILL bundle. F1 APPROVED 2026-06-18 (human gate). F2 (Spec Evolution) starting. Stories: S-FORK-OPS-BACKFILL-1 (backfill-release.yml: WIN-TARGET + DESTRUCTIVE) + S-FORK-OPS-GITLEAKS-DOC-1 (doc-only: GITLEAKS_DISABLED). DEC-122. develop @ 45ddf7a. |
 | **develop HEAD** | origin/develop = **45ddf7a** (chore(release): v0.6.0-dev.4 squash-merged 2026-06-18; == v0.6.0-dev.4 tag; 0 commits ahead of tag). |
 | **Activation** | v0.6.0-dev.4 @ 45ddf7a. develop == tag. v0.5.0 STABLE shipped 2026-06-12. |
 | **Counters** | BC **599**. NFR **42**. ADR **16**. Stories **81** (authoritative). |
-| **Active worktree** | None. .factory on factory-artifacts mounted. |
+| **Active worktree** | None yet (F2 not started). .factory on factory-artifacts mounted. |
 | **jira-e2e env** | JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ, JR_E2E_ENABLED=true. |
-| **Standing constraints** | Do NOT close #429 (DEC-029). All fixes through full VSDD Feature Mode pipeline. LESSON-F2-WORKTREE-FIRST: F2 spec edits to docs/ must be in the story worktree, not main checkout. Fork-release-ops code defects RESOLVED (FORK-OPS-SIGN-INJECTION + FORK-OPS-ALPHA-RACE); signing UNBLOCKED but INERT pending DEC-104. LESSON-F1-SIBLING-CASE: enumerate sibling control-char cases at any normalization chokepoint. LESSON-CENTRALIZATION-AC-GREP: centralization ACs must use enumeration or multiline-aware scanning, never single-line grep negation. LESSON-CITATION-SIBLING-PROPAGATION: grep ALL sibling occurrences when removing any misattributed citation. CHANGELOG-per-PR hygiene: keep [Unreleased] populated as PRs merge. LESSON-F2-PIECEWISE: multi-step atomic sequences must be one worked control-flow block in spec, not scattered normative paragraphs. |
+| **Standing constraints** | Do NOT close #429 (DEC-029). All fixes through full VSDD Feature Mode pipeline. LESSON-F2-WORKTREE-FIRST: ALL story-scoped edits (including docs/) in story worktree, not main checkout. Fork signing UNBLOCKED but INERT (DEC-104 pending). LESSON-F1-SIBLING-CASE. LESSON-CENTRALIZATION-AC-GREP. LESSON-CITATION-SIBLING-PROPAGATION. CHANGELOG-per-PR hygiene. LESSON-F2-PIECEWISE. |
 
 ## RESUME PLAN (cold-start, self-contained)
 
-<!-- State snapshot: IDLE. v0.6.0-dev.4 RELEASED (PR #536 → 45ddf7a). develop @ 45ddf7a == v0.6.0-dev.4 tag (0 ahead). No active worktrees. -->
+<!-- State snapshot: Feature Mode ACTIVE — S-FORK-OPS-BACKFILL bundle, F2 starting. develop @ 45ddf7a == v0.6.0-dev.4 tag. No active feature worktrees (F2 not yet started). -->
 
 ### Steps (assume ZERO memory)
 
 **Step 1 (BLOCKING):** Run `vsdd-factory:factory-worktree-health`. Then read `.factory/STATE.md`.
 
-**Step 2:** Confirm IDLE. develop @ **45ddf7a** (chore(release): v0.6.0-dev.4 squash-merged 2026-06-18 via PR #536; develop == v0.6.0-dev.4 tag; 0 commits ahead of tag). Activation v0.6.0-dev.4. No active feature worktrees. v0.6.0-dev.4 RELEASED (PR #536 → 45ddf7a, release.yml 27792346419 SUCCESS). If develop shows different HEAD, run `git fetch origin`.
+**Step 2:** Confirm Feature Mode ACTIVE — S-FORK-OPS-BACKFILL bundle. develop @ **45ddf7a** (== v0.6.0-dev.4 tag). F1 APPROVED 2026-06-18. F2 (Spec Evolution) starting. Delta analysis: `.factory/phase-f1-delta-analysis/delta-analysis-fork-ops-backfill-1.md`. Stories: S-FORK-OPS-BACKFILL-1 (backfill-release.yml: WIN-TARGET + DESTRUCTIVE) + S-FORK-OPS-GITLEAKS-DOC-1 (doc-only: GITLEAKS_DISABLED). DEC-122. If develop shows different HEAD, run `git fetch origin`.
 
-**Step 3 — Determine next work.** OPEN (priority order):
-- Fork-release-ops enablement PENDING (DEC-104; both HIGH blockers RESOLVED by S-FORK-OPS-SIGN-1 PR #535. Signing UNBLOCKED. Remaining gate = human decision + Apple secrets config).
-- **#532** Login/Refresh/Logout global-`--profile` fallback ungated coverage — LOW, follow-up from S-TESTTOOL-1 F5.
-- **#429** jr_isolated crypto-random suffix — DO NOT close autonomously (DEC-029, human-deferred).
-- **#400** Story B + engine items.
-- **#372** cargo-mutants partial baseline.
-- **#387/#368** git-history-rewrite/open-PR (force-push needed, deferred).
-- **#209/#210** backlog.
-- If human brings new feature/bug: run Feature Mode (F1–F7) per `workflows/feature.lobster`.
+**Step 3 — Continue Feature Mode F2 (Spec Evolution).** For S-FORK-OPS-BACKFILL bundle:
+- F2: Update specs (no BC/VP/NFR changes expected; infra-only). Confirm story files S-FORK-OPS-BACKFILL-1 + S-FORK-OPS-GITLEAKS-DOC-1 exist or create them.
+- F3–F7: per-story TDD delivery cycles.
+- WIN-TARGET scope: full S-WIN-4 parity (Package + Checksum + smoke test + embedded-OAuth verify) in backfill-release.yml.
+- DESTRUCTIVE: replace `gh release delete+recreate` with safe `gh release edit --notes-file` pattern.
+- GITLEAKS-DOC: document GITLEAKS_DISABLED in docs/specs/fork-friendly-release-ops.md + CLAUDE.md.
 
 **Step 4 — STANDING CONSTRAINTS (survive session clear):**
 - Do NOT close #429 (DEC-029, human-deferred).
-- All fixes through full VSDD Feature Mode pipeline (S-TESTTOOL-1 proved this catches real regressions on "trivial" changes).
-- Fork-release-ops code defects RESOLVED (FORK-OPS-SIGN-INJECTION + FORK-OPS-ALPHA-RACE fixed in PR #535). Signing UNBLOCKED. Enablement = human decision (DEC-104) + Apple secrets config — no code work remaining.
-- LESSON-F2-WORKTREE-FIRST: ALL story-scoped file edits (including docs/) in the story worktree, not main checkout — stranding off PR branch is a C-1 orchestration error.
-- LESSON-F1-SIBLING-CASE: enumerate sibling control-char/invariant cases at any normalization chokepoint.
-- LESSON-CENTRALIZATION-AC-GREP: centralization ACs must use enumeration or multiline-aware scanning, never single-line grep negation.
-- LESSON-CITATION-SIBLING-PROPAGATION: grep ALL sibling occurrences when removing any misattributed external-tracker citation.
-- CHANGELOG-per-PR hygiene: keep CHANGELOG `[Unreleased]` populated as PRs merge — do not let it drift empty across merges.
+- All fixes through full VSDD Feature Mode pipeline (DEC-120/121: full pipeline is NOT overhead on infra-only changes).
+- Fork signing UNBLOCKED (DEC-104 still pending human + Apple secrets — no code work remaining).
+- LESSON-F2-WORKTREE-FIRST: ALL story-scoped file edits (including docs/) in the story worktree, not main checkout.
+- LESSON-F1-SIBLING-CASE, LESSON-CENTRALIZATION-AC-GREP, LESSON-CITATION-SIBLING-PROPAGATION, LESSON-F2-PIECEWISE.
+- CHANGELOG-per-PR hygiene: keep CHANGELOG `[Unreleased]` populated as PRs merge.
 - E2E-PG-4, SEC-001 LOW deferrals remain open; FORK-OPS-* items tracked in Drift Items.
 
 Durable follow-ups: see Drift Items section.

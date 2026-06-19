@@ -1,0 +1,19 @@
+# affected-files-fork-ops-backfill-1.txt — fork-ops-backfill-1 (2026-06-18)
+# Bundle: S-FORK-OPS-BACKFILL-1
+# Drift items: FORK-OPS-BACKFILL-WIN-TARGET, FORK-OPS-BACKFILL-DESTRUCTIVE, FORK-OPS-GITLEAKS-DOC
+# Format: <change-type> <file>
+# Change types: MODIFIED, NEW, DEPENDENT
+
+# Story 1 — S-FORK-OPS-BACKFILL-1 (both backfill-release.yml workflow fixes)
+MODIFIED .github/workflows/backfill-release.yml
+
+# Story 2 — S-FORK-OPS-GITLEAKS-DOC-1 (documentation-only)
+MODIFIED docs/specs/fork-friendly-release-ops.md
+MODIFIED CLAUDE.md
+
+# Dependent (reference only — no changes)
+DEPENDENT .github/workflows/release.yml
+DEPENDENT .github/workflows/release-gap-fill.yml
+DEPENDENT .github/workflows/ci.yml
+DEPENDENT tests/ci_yml_windows_matrix.rs
+DEPENDENT scripts/check-signing-workflow-injection.sh
