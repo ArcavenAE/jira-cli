@@ -975,3 +975,20 @@ _Was the active checkpoint after maintenance sweep 2026-06-17 COMPLETE (Bundle A
 | **Active worktree** | None (F4 worktrees cleaned). .factory on factory-artifacts mounted. |
 | **jira-e2e env** | JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ, JR_E2E_ENABLED=true. |
 | **Standing constraints** | Do NOT close #429 (DEC-029). All fixes through full VSDD Feature Mode pipeline (DEC-120/121/124). LESSON-F2-WORKTREE-FIRST: ALL story-scoped edits (including docs/) in story worktree. Fork signing UNBLOCKED but INERT (DEC-104 pending). LESSON-F1-SIBLING-CASE. LESSON-CENTRALIZATION-AC-GREP. LESSON-CITATION-SIBLING-PROPAGATION. CHANGELOG-per-PR hygiene. LESSON-F2-PIECEWISE. |
+
+---
+
+## Checkpoint archived 2026-06-19 (replaced by S-FORK-OPS-BACKFILL F7-CONVERGED / v0.6.0-dev.5-release-in-progress checkpoint)
+
+_Was the active checkpoint after F5 CONVERGED / F6 active. Superseded after F7 CONVERGED + human-authorized 2026-06-19._
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-06-19 |
+| **Position** | Feature Mode ACTIVE — S-FORK-OPS-BACKFILL bundle. F5 CONVERGED 2026-06-19 (3 passes). FIX-F5-001/PR #540 merged. develop @ 83a141ad. F6 (Formal Hardening) starting. Stories 83. |
+| **develop HEAD** | origin/develop = **83a141ad** (test fix: FIX-F5-001; 3 commits ahead of v0.6.0-dev.4 tag). |
+| **Activation** | v0.6.0-dev.4 @ 45ddf7a. develop = 83a141ad (3 ahead). v0.5.0 STABLE shipped 2026-06-12. |
+| **Counters** | BC **599**. NFR **42**. ADR **16**. Stories **83** (authoritative). |
+| **Active worktree** | None (F5 complete). .factory on factory-artifacts mounted. |
+| **jira-e2e env** | JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ, JR_E2E_ENABLED=true. |
+| **Standing constraints** | Do NOT close #429 (DEC-029). All fixes through full VSDD Feature Mode pipeline (DEC-120/121/124). LESSON-F2-WORKTREE-FIRST: ALL story-scoped edits (including docs/) in story worktree. Fork signing UNBLOCKED but INERT (DEC-104 pending). LESSON-F1-SIBLING-CASE. LESSON-CENTRALIZATION-AC-GREP. LESSON-CITATION-SIBLING-PROPAGATION. CHANGELOG-per-PR hygiene. LESSON-F2-PIECEWISE. MERGE PRE-AUTHORIZATION (standing): User pre-authorized merging all remaining within-bundle F5/F6 fix-PRs to develop without per-PR human prompts. F7 public release remains explicit human gate. |

@@ -2,14 +2,14 @@
 document_type: pipeline-state
 version: "2.0"
 status: active
-timestamp: 2026-06-19T12:00:00Z
+timestamp: 2026-06-19T18:00:00Z
 phase: phase-3-tdd-implementation
 project: jira-cli
 mode: BROWNFIELD
-current_step: "Feature Mode active — S-FORK-OPS-BACKFILL bundle. F5 CONVERGED 2026-06-19 (3 passes; M4 fixed FIX-F5-001/PR #540 @ 83a141ad). develop @ 83a141ad. F6 (Formal Hardening) starting."
+current_step: "S-FORK-OPS-BACKFILL F7 CONVERGED + human-authorized 2026-06-19. 5/5 dims PASS. v0.6.0-dev.5 release in progress (separate burst). 3 LOW drift items carry forward. S-7.02 checklist satisfied."
 current_cycle: "cycle-001"
 feature_mode_bundle: "S-FORK-OPS-BACKFILL"
-feature_mode_phase: "F6"
+feature_mode_phase: "F7-CONVERGED; v0.6.0-dev.5 release IN PROGRESS"
 dtu_required: false
 phase_2_status: APPROVED
 phase_2_approved_at: 2026-05-07
@@ -28,9 +28,9 @@ activation_version: "v0.6.0-dev.4"
 | **Product** | jr (Jira CLI) |
 | **Mode** | BROWNFIELD / Rust |
 | **Target Workspace** | develop → main |
-| **Last Updated** | 2026-06-19: S-FORK-OPS-BACKFILL F5 CONVERGED (3 passes; M4 fixed FIX-F5-001/PR #540 @ 83a141ad). F6 starting. |
-| **Current Phase** | Phase 3 — Feature Mode active (S-FORK-OPS-BACKFILL, F6 active). develop @ 83a141ad. BC 599. NFR 42. ADR 16. Stories 83. |
-| **Next Phase** | F6: Formal Hardening (targeted; CI-only bundle) |
+| **Last Updated** | 2026-06-19: S-FORK-OPS-BACKFILL F7 CONVERGED + human-authorized. 5/5 dims PASS. v0.6.0-dev.5 release in progress. |
+| **Current Phase** | Phase 3 — Feature Mode (S-FORK-OPS-BACKFILL F7 CONVERGED). develop @ 83a141ad. BC 599. NFR 42. ADR 16. Stories 83. |
+| **Next Phase** | CYCLE CLOSED + release v0.6.0-dev.5 (release burst in progress) |
 | **Activation HEAD** | 45ddf7a (v0.6.0-dev.4 tag; v0.5.0 STABLE shipped 2026-06-12) |
 
 ## Phase Progress
@@ -48,18 +48,20 @@ activation_version: "v0.6.0-dev.4"
 | S-FORK-OPS-BACKFILL F1+F2+F3 | COMPLETE — human-approved 2026-06-18 | 2026-06-18 | APPROVED by human | 3 adv passes CONVERGED; consistency audit 2 MAJOR caught+fixed; spec 1.3.23→1.3.24; 2 stories 81→83. |
 | **S-FORK-OPS-BACKFILL F4** | **COMPLETE** | **2026-06-19** | **PR #539+#538 MERGED** | **S-FORK-OPS-BACKFILL-1 → 2756050; S-FORK-OPS-GITLEAKS-DOC-1 → f85647b. 1866 tests. DEC-124.** |
 | **S-FORK-OPS-BACKFILL F5** | **CONVERGED** | **2026-06-19** | **3 passes; M4 fixed FIX-F5-001/PR #540 @ 83a141ad** | Trajectory: `2→0→0`. M2 accepted; O3+timeout tracked. develop @ 83a141ad. |
+| **S-FORK-OPS-BACKFILL F6** | **PASS** | **2026-06-19** | **Formal hardening PASS (CI-only bundle)** | Mutation N/A (no src/). cargo-deny CLEAN. Injection-guard CLEAN. 1866/0 regression. |
+| **S-FORK-OPS-BACKFILL F7** | **CONVERGED + AUTHORIZED** | **2026-06-19** | **5/5 PASS — human authorized** | Pre-gate drift CLEAN. Consistency CONSISTENT. Spec novelty LOW. 3 LOW carry-forwards. v0.6.0-dev.5 release in progress. |
 | 4: Holdout Evaluation | not-started | | | |
-| 6: Formal Hardening (F6) | IN_PROGRESS — starting | — | — | Targeted; CI-only bundle |
-| 7: Convergence | not-started | | | |
+| 7: Convergence (bundle) | CONVERGED | 2026-06-19 | S-FORK-OPS-BACKFILL F7 | S-7.02 satisfied; 3 deferred LOW items tracked. |
 
 ## Current Phase Steps
 
 <!-- Keep last 5 rows only. Archive older rows to cycles/cycle-001/burst-log.md. -->
 | Step | Agent | Status | Output |
 |------|-------|--------|--------|
-| **S-FORK-OPS-BACKFILL F4 COMPLETE** — both stories squash-merged 2026-06-19. S-FORK-OPS-BACKFILL-1 → PR #539 (2756050): WIN parity + safe upsert + 11 tests. S-FORK-OPS-GITLEAKS-DOC-1 → PR #538 (f85647b): GITLEAKS_DISABLED docs. DEC-124: local review caught CRITICAL `shell: bash` defect. 1866 tests / 0 failing. | state-manager | F4 COMPLETE | develop @ f85647b. 2 ahead of v0.6.0-dev.4 tag. |
 | **FIX-F5-001 / PR #540 MERGED** — Fixed `test_backfill_release_job_zip_in_both_upsert_branches`: anchored zip assertion to distinct branches instead of counting ≥2 anywhere (vacuous assertion). M4 from F5 Pass 1. develop @ 83a141ad. | state-manager | FIX-F5-001 MERGED | PR #540 @ 83a141ad. 3 ahead of v0.6.0-dev.4. |
 | **S-FORK-OPS-BACKFILL F5 CONVERGED** — 3 passes (novelty 0.35→0.08→LOW). 0 CRIT/HIGH. M4 fixed (FIX-F5-001/PR #540); M2 accepted (zip-glob fail-loud); O3+timeout tracked as drift items. Advancing to F6 (Formal Hardening). | state-manager | F5 CONVERGED | develop @ 83a141ad. F6 active. |
+| **S-FORK-OPS-BACKFILL F6 PASS** — Formal hardening PASS (CI-only bundle). Mutation N/A (no src/ delta). cargo-deny CLEAN. Injection-guard scan CLEAN. 1866 tests / 0 failures. | state-manager | F6 PASS | develop @ 83a141ad. F7 active. |
+| **S-FORK-OPS-BACKFILL F7 CONVERGED + AUTHORIZED** — 5/5 dims PASS. Pre-gate drift CLEAN. Consistency CONSISTENT (0 findings). Spec novelty LOW. Test: 11 non-vacuous tests. Impl: F5 CONVERGED 0 CRIT/HIGH. Verification: CLEAN. Holdout: 1866/0. Human authorized 2026-06-19. 3 LOW drift items carry forward. v0.6.0-dev.5 release in progress. | state-manager | F7 CONVERGED + AUTHORIZED | develop @ 83a141ad. S-7.02 satisfied. Release in progress. |
 
 ## Decisions Log
 
@@ -121,7 +123,7 @@ All 7 S-WIN-1..6 + #475 + S-FORK-OPS-BACKFILL-1 + S-FORK-OPS-GITLEAKS-DOC-1 per-
 
 ## Convergence Trackers
 
-Full per-issue: `cycles/cycle-001/convergence-trajectory.md`. Current: **[2026-06-19] S-FORK-OPS-BACKFILL F5 CONVERGED — 3 passes, novelty 0.35→0.08→LOW. M4 fixed (FIX-F5-001/PR #540); M2 accepted; O3+timeout tracked. develop @ 83a141ad (3 ahead of v0.6.0-dev.4). F6 (Formal Hardening) starting.**
+Full per-issue: `cycles/cycle-001/convergence-trajectory.md`. Current: **[2026-06-19] S-FORK-OPS-BACKFILL F7 CONVERGED + human-authorized — F5: 3 passes, novelty `2→0→0`. F6: PASS (CI-only, no src/ delta). F7: 5/5 PASS. develop @ 83a141ad. 3 LOW carry-forwards. v0.6.0-dev.5 release in progress.**
 
 ## Session Resume Checkpoint
 
@@ -130,25 +132,25 @@ Full per-issue: `cycles/cycle-001/convergence-trajectory.md`. Current: **[2026-0
 | Field | Value |
 |-------|-------|
 | **Date** | 2026-06-19 |
-| **Position** | Feature Mode ACTIVE — S-FORK-OPS-BACKFILL bundle. F5 CONVERGED 2026-06-19 (3 passes). FIX-F5-001/PR #540 merged. develop @ 83a141ad. F6 (Formal Hardening) starting. Stories 83. |
+| **Position** | S-FORK-OPS-BACKFILL F7 CONVERGED + human-authorized. v0.6.0-dev.5 release in progress (separate burst). 3 LOW drift items carry forward. S-7.02 checklist satisfied. develop @ 83a141ad. Stories 83. |
 | **develop HEAD** | origin/develop = **83a141ad** (test fix: FIX-F5-001; 3 commits ahead of v0.6.0-dev.4 tag). |
 | **Activation** | v0.6.0-dev.4 @ 45ddf7a. develop = 83a141ad (3 ahead). v0.5.0 STABLE shipped 2026-06-12. |
 | **Counters** | BC **599**. NFR **42**. ADR **16**. Stories **83** (authoritative). |
-| **Active worktree** | None (F5 complete). .factory on factory-artifacts mounted. |
+| **Active worktree** | None. .factory on factory-artifacts mounted. |
 | **jira-e2e env** | JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ, JR_E2E_ENABLED=true. |
-| **Standing constraints** | Do NOT close #429 (DEC-029). All fixes through full VSDD Feature Mode pipeline (DEC-120/121/124). LESSON-F2-WORKTREE-FIRST: ALL story-scoped edits (including docs/) in story worktree. Fork signing UNBLOCKED but INERT (DEC-104 pending). LESSON-F1-SIBLING-CASE. LESSON-CENTRALIZATION-AC-GREP. LESSON-CITATION-SIBLING-PROPAGATION. CHANGELOG-per-PR hygiene. LESSON-F2-PIECEWISE. **MERGE PRE-AUTHORIZATION (standing):** User pre-authorized merging all remaining within-bundle F5/F6 fix-PRs to develop without per-PR human prompts. F7 public release remains explicit human gate. |
+| **Standing constraints** | Do NOT close #429 (DEC-029). All fixes through full VSDD Feature Mode pipeline (DEC-120/121/124). LESSON-F2-WORKTREE-FIRST: ALL story-scoped edits (including docs/) in story worktree. Fork signing UNBLOCKED but INERT (DEC-104 pending). LESSON-F1-SIBLING-CASE. LESSON-CENTRALIZATION-AC-GREP. LESSON-CITATION-SIBLING-PROPAGATION. CHANGELOG-per-PR hygiene. LESSON-F2-PIECEWISE. |
 
 ## RESUME PLAN (cold-start, self-contained)
 
-<!-- State snapshot: Feature Mode ACTIVE — S-FORK-OPS-BACKFILL bundle, F5 CONVERGED, F6 starting. develop @ 83a141ad (3 ahead of v0.6.0-dev.4). No active feature worktrees. -->
+<!-- State snapshot: S-FORK-OPS-BACKFILL F7 CONVERGED + human-authorized. v0.6.0-dev.5 release in progress. develop @ 83a141ad. No active feature worktrees. -->
 
 ### Steps (assume ZERO memory)
 
 **Step 1 (BLOCKING):** Run `vsdd-factory:factory-worktree-health`. Then read `.factory/STATE.md`.
 
-**Step 2:** Confirm Feature Mode ACTIVE — S-FORK-OPS-BACKFILL bundle. develop @ **83a141ad** (3 ahead of v0.6.0-dev.4 tag). F5 CONVERGED (3 passes, 2026-06-19). FIX-F5-001/PR #540 merged. Stories **83** (authoritative). Spec 1.3.24. F6 (Formal Hardening) active. Delta: `.factory/phase-f1-delta-analysis/delta-analysis-fork-ops-backfill-1.md`. F5 artifacts: `.factory/phase-f5-adversarial/S-FORK-OPS-BACKFILL/`. DEC-122/123/124. If develop shows different HEAD, run `git fetch origin`.
+**Step 2:** Confirm S-FORK-OPS-BACKFILL F7 CONVERGED + human-authorized 2026-06-19. develop @ **83a141ad** (3 ahead of v0.6.0-dev.4 tag). v0.6.0-dev.5 release in progress (separate burst). Stories **83** (authoritative). BC **599**. 3 LOW drift items carry forward (FORK-OPS-F5-SELFTEST-CHECKLIST, FORK-OPS-BACKFILL-ZIP-GLOB-COUPLING, FORK-OPS-BACKFILL-TIMEOUT-PARITY). DEC-122/123/124. If develop shows different HEAD, run `git fetch origin`.
 
-**Step 3 — F6 Formal Hardening.** Run `/vsdd-factory:phase-f6-targeted-hardening`. Targeted scope: CI-only bundle (backfill-release.yml + workflow changes). Expected: light pass. Focus: mutation test gate, cargo deny check, security scan on CI yaml.
+**Step 3 — Release v0.6.0-dev.5.** A separate release burst is in progress. Run `/vsdd-factory:release` if resuming that burst. After release publishes, mark CYCLE CLOSED in STATE.md (follow-up state burst).
 
 **Step 4 — STANDING CONSTRAINTS (survive session clear):**
 - Do NOT close #429 (DEC-029, human-deferred).
@@ -157,8 +159,7 @@ Full per-issue: `cycles/cycle-001/convergence-trajectory.md`. Current: **[2026-0
 - LESSON-F2-WORKTREE-FIRST: ALL story-scoped file edits (including docs/) in the story worktree, not main checkout.
 - LESSON-F1-SIBLING-CASE, LESSON-CENTRALIZATION-AC-GREP, LESSON-CITATION-SIBLING-PROPAGATION, LESSON-F2-PIECEWISE.
 - CHANGELOG-per-PR hygiene: keep CHANGELOG `[Unreleased]` populated as PRs merge.
-- 3 FORK-OPS-BACKFILL-* drift items are IMPLEMENTED-ON-DEVELOP; they fully close at F7/release.
-- **MERGE PRE-AUTHORIZATION (standing):** User pre-authorized merging all remaining within-bundle F5/F6 fix-PRs to develop without per-PR human prompts. F7 public release remains explicit human gate.
+- 3 FORK-OPS-BACKFILL-* drift items remain OPEN/deferred (non-blocking, tracked in Drift Items).
 
 Durable follow-ups: see Drift Items section.
 

@@ -871,3 +871,43 @@ Trajectory shorthand: `1C(sibling-omission)→fix→1C(off-branch-spec)→fix→
 - M2/O-1 / FORK-OPS-BACKFILL-ZIP-GLOB-COUPLING: zip-glob hard-fail coupling (accepted).
 
 **F5 S-FORK-OPS-BACKFILL: CONVERGED 2026-06-19. Advancing to F6.**
+
+---
+
+## S-FORK-OPS-BACKFILL — F6 Formal Hardening + F7 Delta Convergence (2026-06-19)
+
+**Bundle:** S-FORK-OPS-BACKFILL
+**Scope:** CI-only bundle (backfill-release.yml + sign-and-publish.yml harden + gitleaks docs). No new `src/` code.
+
+### F6 Formal Hardening
+
+- **Mutation testing:** N/A — no `src/` delta. cargo-mutants scoped to diff; 0 viable mutants. JUSTIFIED-SKIP.
+- **Fuzz / Kani:** JUSTIFIED-N/A — no new unsafe code, no numeric boundary operations.
+- **cargo deny:** CLEAN — 0 vulnerabilities, 0 license issues.
+- **Injection guard scan:** CLEAN — CWE-77 env-binding + atomic alpha-tag + injection guard pattern verified in sign-and-publish.yml (PR #535 @ 1a2a79b); Gatekeeper acceptance + hardened runtime after notarize verified (PR #536). No new injection surfaces.
+- **Full regression:** 1866 tests / 0 failures (develop @ 83a141ad).
+
+**F6 verdict: PASS (targeted, CI-only bundle). Advancing to F7.**
+
+### F7 Delta Convergence
+
+**Pre-gate input-drift check:** CLEAN. Fresh consistency audit: CONSISTENT (0 findings).
+
+**5-dimension verdict:**
+
+| Dimension | Result | Notes |
+|-----------|--------|-------|
+| Spec novelty | LOW (0.08→LOW) | 3 consecutive clean passes; 0 CRIT/HIGH |
+| Test | PASS — 11 non-vacuous tests (M4 fix included) | Mutation N/A (no src/) |
+| Implementation | F5 CONVERGED — 0 CRIT/HIGH | develop @ 83a141ad |
+| Verification | cargo-deny + injection-guard CLEAN | Kani/fuzz JUSTIFIED-N/A |
+| Holdout (infra regression-proxy) | 1866/0 (regression: 1855→1866, +11 new, 0 failures) | |
+
+**Human authorization: CONVERGED + AUTHORIZED 2026-06-19. Release v0.6.0-dev.5 in progress.**
+
+**Carry-forward drift (3 LOW items):**
+- FORK-OPS-F5-SELFTEST-CHECKLIST: process-gap deferral, next maintenance sweep.
+- FORK-OPS-BACKFILL-ZIP-GLOB-COUPLING: accepted fail-loud design.
+- FORK-OPS-BACKFILL-TIMEOUT-PARITY: minor housekeeping, next maintenance sweep.
+
+**F7 trajectory shorthand:** `F5: 2→0→0 CONVERGED` / `F6: PASS (CI-only)` / `F7: 5/5 PASS — CONVERGED + AUTHORIZED 2026-06-19`
