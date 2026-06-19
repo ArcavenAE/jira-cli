@@ -2,13 +2,13 @@
 document_type: pipeline-state
 version: "2.0"
 status: in_progress
-timestamp: 2026-06-19T23:59:59Z
+timestamp: 2026-06-20T00:10:00Z
 phase: 3
 project: jira-cli
 mode: brownfield
-current_step: "2026-06-19 maintenance sweep CLOSED. Session-review committed 6b68f02. 4 process-gap/coverage items added to Drift Items (MAINT-PG-PR-MERGE-CHANNEL, MAINT-PG-CI-DOC-LINT, MAINT-PG-DEAD-CITATION-CI, PERF-BASELINE-ABSENT). IDLE."
+current_step: "F1 Delta Analysis — DEAD-CITATION-CI started. DEAD-CITATION-CI feature cycle initialized 2026-06-20. Maintenance sweeps PAUSED during this feature cycle."
 current_cycle: "cycle-001"
-feature_mode_bundle: "S-FORK-OPS-BACKFILL"
+feature_mode_bundle: "DEAD-CITATION-CI"
 dtu_required: false
 phase_2_status: APPROVED
 phase_2_approved_at: 2026-05-07
@@ -27,9 +27,9 @@ activation_version: "v0.6.0-dev.5"
 | **Product** | jr (Jira CLI) |
 | **Mode** | BROWNFIELD / Rust |
 | **Target Workspace** | develop → main |
-| **Last Updated** | 2026-06-19: SESSION-REVIEW COMPLETE (6b68f02). 4 process-gap items added to Drift Items. Sweep FULLY CLOSED. IDLE. |
-| **Current Phase** | Phase 3 — IDLE (S-FORK-OPS-BACKFILL CYCLE CLOSED). develop @ 6bdb251, 1 commit ahead of v0.6.0-dev.5 tag. BC 599. NFR 42. ADR 16. Stories 89. |
-| **Next Phase** | Next feature cycle (no active bundle) |
+| **Last Updated** | 2026-06-20: DEAD-CITATION-CI feature cycle initialized. F1 Delta Analysis started. Maintenance sweeps PAUSED. |
+| **Current Phase** | Phase 3 — Feature Mode ACTIVE (DEAD-CITATION-CI). develop @ 6bdb251, 1 commit ahead of v0.6.0-dev.5 tag. BC 599. NFR 42. ADR 16. Stories 89. |
+| **Next Phase** | F1 Delta Analysis → F2 Spec Evolution → F3 Stories → F4 Implementation → F5 Adversarial → F6 Hardening → F7 Convergence |
 | **Activation HEAD** | 71f33c6 (v0.6.0-dev.5 tag); develop now @ 6bdb251 (1 commit ahead) |
 
 ## Phase Progress
@@ -63,6 +63,7 @@ activation_version: "v0.6.0-dev.5"
 | **S-FORK-OPS-BACKFILL F7 CONVERGED + AUTHORIZED** — 5/5 dims PASS. Pre-gate drift CLEAN. Consistency CONSISTENT (0 findings). Spec novelty LOW. 3 LOW drift items carry forward. Human authorized 2026-06-19. | state-manager | F7 CONVERGED + AUTHORIZED | develop @ 83a141ad. S-7.02 satisfied. |
 | **S-FORK-OPS-BACKFILL RELEASED — v0.6.0-dev.5** — PR #542 squash-merged → develop @ 71f33c6. Tag v0.6.0-dev.5 pushed. release.yml run 27832585851 SUCCESS. 5-target build, 10 assets. Both stories shipped. FIX-F5-001 shipped. 3 MED drift items RESOLVED. | state-manager | CYCLE CLOSED + RELEASED | develop @ 71f33c6 == v0.6.0-dev.5. IDLE. |
 | **2026-06-19 PR #543 MERGE CLOSE-OUT** — PR #543 squash-merged → develop @ 6bdb251. 5 drift items RESOLVED+ARCHIVED: DRIFT-D13/D15/D16/D9 (CLAUDE.md+ADR-0014 doc-accuracy), FORK-OPS-BACKFILL-TIMEOUT-PARITY (CR-010). Archived to cycles/cycle-001/blocking-issues-resolved.md. Count guards: all 3 exit 0. | state-manager | COMPLETE | develop @ 6bdb251 (1 ahead of v0.6.0-dev.5). IDLE. |
+| **DEAD-CITATION-CI FEATURE CYCLE INITIALIZED** — bundle DEAD-CITATION-CI. F1 Delta Analysis started 2026-06-20. DEC-125 logged. MAINT-PG-DEAD-CITATION-CI → IN-PROGRESS. Maintenance sweeps PAUSED. S-MAINT-DEAD-CITATION-CI NOT YET created (F3 will create formal story). | state-manager | F1 STARTED | develop @ 6bdb251. Feature Mode ACTIVE. |
 
 ## Decisions Log
 
@@ -74,6 +75,7 @@ activation_version: "v0.6.0-dev.5"
 | DEC-122 | S-FORK-OPS-BACKFILL 2-story grouping by file to avoid worktree conflicts; parallel delivery gate. Full F1–F7 per DEC-120/121 precedent. | Feature Mode / S-FORK-OPS-BACKFILL F1 | Phase 3 | 2026-06-18 |
 | DEC-123 | Fresh-context consistency audit at F2 gate caught 2 MAJOR cross-document defects that 3 adversarial passes missed. Validates consistency-validator at every gate. | Feature Mode / S-FORK-OPS-BACKFILL F2 | Phase 3 | 2026-06-18 |
 | DEC-124 | Local pre-PR code review caught a CRITICAL Windows-build defect (`shell: bash` missing on Build step) that all 9 Red-Gate tests missed — coverage gap closed with a new guard test. Reinforces "clean local review before PR" + full VSDD on infra changes (cf DEC-120/121). | Feature Mode / S-FORK-OPS-BACKFILL F4 | Phase 3 | 2026-06-19 |
+| DEC-125 | Full VSDD Feature Mode applied to DEAD-CITATION-CI guard (CI check that CLAUDE.md "Detail:"/"See:" file-path citations resolve to real on-disk files). Origin: 2026-06-19 maintenance sweep process-gap MAINT-PG-DEAD-CITATION-CI; research recommends Rust `#[test]` over bash per `.factory/research/maint-pg-dead-citation-ci-approach.md`. Consistent with DEC-120/121 precedent (full VSDD on CI-config/test changes). | Feature Mode / DEAD-CITATION-CI F1 | Phase 3 | 2026-06-20 |
 
 ## Skip Log
 
@@ -119,7 +121,7 @@ All 7 S-WIN-1..6 + #475 + S-FORK-OPS-BACKFILL-1 + S-FORK-OPS-GITLEAKS-DOC-1 per-
 | DRIFT-CR-008 | test-helper dedup | extract_job_block / block-extraction helpers duplicated across test files. | LOW | TRACKED — S-MAINT-CR-008 (draft, 2026-06-19) |
 | MAINT-PG-PR-MERGE-CHANNEL | process-gap | Maintenance-sweep PR merge-authorization path not codified; pr-manager refuses coordinator-relayed approval, forcing orchestrator-direct merge. Action: codify merge-auth path in maintenance workflow doc so human approval flows directly to pr-manager. | LOW | DEFERRED |
 | MAINT-PG-CI-DOC-LINT | process-gap | CLAUDE.md src-file-tree drift (DRIFT-D15/D16 class) recurring across 2 sweeps; catchable by a CI script comparing src/ files vs CLAUDE.md tree. Action: new story to add scripts/check-claude-md-tree.sh to CI. | LOW | DEFERRED |
-| MAINT-PG-DEAD-CITATION-CI | process-gap | CLAUDE.md "Detail:"/"See:" path citations to non-existent files recurring (DRIFT-D13/D9 class). Action: scripts/check-claude-md-citations.sh verifying each cited path exists on disk, wired into ci-gate.needs. | LOW | OPEN — candidate for near-term action (session-review top recommendation) |
+| MAINT-PG-DEAD-CITATION-CI | process-gap | CLAUDE.md "Detail:"/"See:" path citations to non-existent files recurring (DRIFT-D13/D9 class). Action: scripts/check-claude-md-citations.sh verifying each cited path exists on disk, wired into ci-gate.needs. | LOW | IN-PROGRESS — DEAD-CITATION-CI feature cycle (DEC-125, 2026-06-20) |
 | PERF-BASELINE-ABSENT | coverage-gap | Sweep 5 (perf) skipped for 4th consecutive sweep due to no benchmark baseline. Action: register draft story to establish minimal hyperfine baseline stored in .factory/perf/. | LOW | DEFERRED |
 
 ## Convergence Trackers
@@ -132,26 +134,26 @@ Full per-issue: `cycles/cycle-001/convergence-trajectory.md`. Current: **[2026-0
 
 | Field | Value |
 |-------|-------|
-| **Date** | 2026-06-19 |
-| **Position** | 2026-06-19 maintenance sweep FULLY CLOSED. PR #543 MERGED → develop @ 6bdb251. Session-review committed 6b68f02. 4 process-gap drift items added (MAINT-PG-PR-MERGE-CHANNEL, MAINT-PG-CI-DOC-LINT, MAINT-PG-DEAD-CITATION-CI, PERF-BASELINE-ABSENT). Stories 89. IDLE. |
+| **Date** | 2026-06-20 |
+| **Position** | DEAD-CITATION-CI feature cycle ACTIVE. F1 Delta Analysis started. DEC-125 logged. MAINT-PG-DEAD-CITATION-CI IN-PROGRESS. Maintenance sweeps PAUSED. develop @ 6bdb251. Stories 89. |
 | **develop HEAD** | origin/develop = **6bdb251** (docs: 2026-06-19 maintenance sweep accuracy fixes (#543); 1 commit ahead of v0.6.0-dev.5 tag 71f33c6). |
 | **Activation** | v0.6.0-dev.5 @ 71f33c6. develop @ 6bdb251 (1 ahead). v0.5.0 STABLE shipped 2026-06-12. |
 | **Counters** | BC **599**. NFR **42**. ADR **16**. Stories **89** (authoritative). |
 | **Active worktree** | None. .factory on factory-artifacts mounted. |
 | **jira-e2e env** | JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ, JR_E2E_ENABLED=true. |
-| **Standing constraints** | Do NOT close #429 (DEC-029). All fixes through full VSDD Feature Mode pipeline (DEC-120/121/124). LESSON-F2-WORKTREE-FIRST: ALL story-scoped edits (including docs/) in story worktree. Fork signing UNBLOCKED but INERT (DEC-104 pending). LESSON-F1-SIBLING-CASE. LESSON-CENTRALIZATION-AC-GREP. LESSON-CITATION-SIBLING-PROPAGATION. CHANGELOG-per-PR hygiene. LESSON-F2-PIECEWISE. Carry-forward drift items: FORK-OPS-BACKFILL-ZIP-GLOB-COUPLING (accepted), FORK-OPS-F5-SELFTEST-CHECKLIST (deferred). 6 maintenance-sweep draft stories (S-MAINT-*) registered 83→89. |
+| **Standing constraints** | Do NOT close #429 (DEC-029). All fixes through full VSDD Feature Mode pipeline (DEC-120/121/124/125). LESSON-F2-WORKTREE-FIRST: ALL story-scoped edits (including docs/) in story worktree. Fork signing UNBLOCKED but INERT (DEC-104 pending). LESSON-F1-SIBLING-CASE. LESSON-CENTRALIZATION-AC-GREP. LESSON-CITATION-SIBLING-PROPAGATION. CHANGELOG-per-PR hygiene. LESSON-F2-PIECEWISE. Carry-forward drift items: FORK-OPS-BACKFILL-ZIP-GLOB-COUPLING (accepted), FORK-OPS-F5-SELFTEST-CHECKLIST (deferred). 6 maintenance-sweep draft stories (S-MAINT-*) registered 83→89. Note: S-MAINT-DEAD-CITATION-CI NOT yet created — F3 will create formal story. |
 
 ## RESUME PLAN (cold-start, self-contained)
 
-<!-- State snapshot: S-FORK-OPS-BACKFILL CYCLE CLOSED + RELEASED v0.6.0-dev.5. PR #543 MERGED. develop @ 6bdb251 (1 ahead of tag). IDLE. -->
+<!-- State snapshot: DEAD-CITATION-CI feature cycle ACTIVE. F1 Delta Analysis started 2026-06-20. develop @ 6bdb251 (1 ahead of v0.6.0-dev.5 tag). -->
 
 ### Steps (assume ZERO memory)
 
 **Step 1 (BLOCKING):** Run `vsdd-factory:factory-worktree-health`. Then read `.factory/STATE.md`.
 
-**Step 2:** 2026-06-19 maintenance sweep CLOSED. S-FORK-OPS-BACKFILL CYCLE CLOSED + RELEASED v0.6.0-dev.5. PR #543 MERGED → develop @ **6bdb251** (1 commit ahead of v0.6.0-dev.5 tag 71f33c6). IDLE. Counters: BC **599**, NFR **42**, ADR **16**, Stories **89** (authoritative; 83→89 from 6 maintenance-sweep draft stories). Carry-forward drift items tracked: FORK-OPS-BACKFILL-ZIP-GLOB-COUPLING (accepted), FORK-OPS-F5-SELFTEST-CHECKLIST (deferred). DEC-122/123/124. If develop shows different HEAD, run `git fetch origin`. Active worktrees: main checkout + `.factory` (factory-artifacts) + `.reference` only — no story worktrees open.
+**Step 2:** DEAD-CITATION-CI feature cycle ACTIVE (DEC-125, 2026-06-20). F1 Delta Analysis started. Maintenance sweeps PAUSED. develop @ **6bdb251** (1 commit ahead of v0.6.0-dev.5 tag 71f33c6). Counters: BC **599**, NFR **42**, ADR **16**, Stories **89** (authoritative; 83→89 from 6 maintenance-sweep draft stories). S-MAINT-DEAD-CITATION-CI NOT YET created — F3 will create formal story. If develop shows different HEAD, run `git fetch origin`. Active worktrees: main checkout + `.factory` (factory-artifacts) + `.reference` only — no story worktrees open.
 
-**Step 3 — Next feature cycle.** PR #543 merged. Open next-work candidates: **#532** (TRACKED as S-MAINT-532), 6 Bundle D draft stories (S-MAINT-CR-005/CR-008/CR-009/SEC-001/SEC-JR-SERVICE-NAME-GATE/532), **fork-ops signing enablement** (DEC-104, needs human + Apple secrets), **#429** (DO NOT close — DEC-029), **#400/#372/#387/#368/#209** (backlog), or **"human brings new feature/bug → Feature Mode F1–F7"**. Use `/vsdd-factory:next-step` or orchestrator to select.
+**Step 3 — Current feature cycle: DEAD-CITATION-CI.** F1 Delta Analysis in progress. Next steps: F1 → F2 Spec Evolution → F3 Stories (creates S-MAINT-DEAD-CITATION-CI) → F4 Implementation → F5 Adversarial → F6 Hardening → F7 Convergence. Research in `.factory/research/maint-pg-dead-citation-ci-approach.md` recommends Rust `#[test]` over bash. After DEAD-CITATION-CI closes, open next-work candidates: **#532** (S-MAINT-532), Bundle D draft stories (S-MAINT-CR-005/CR-008/CR-009/SEC-001/SEC-JR-SERVICE-NAME-GATE), fork-ops signing enablement (DEC-104), **#429** (DO NOT close — DEC-029).
 
 **Step 4 — STANDING CONSTRAINTS (survive session clear):**
 - Do NOT close #429 (DEC-029, human-deferred).
