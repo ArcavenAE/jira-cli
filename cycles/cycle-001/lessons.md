@@ -4381,3 +4381,52 @@ All open items from the S-7.02 cycle-closing checklist are accounted for:
 _Recorded: 2026-06-19 — S-FORK-OPS-BACKFILL F7 cycle-closing checklist. State-manager._
 _Tagged: [s-7.02] [feature-mode] [f7] [converged] [authorized]_
 _Status: [F7-CONVERGED; RELEASE-IN-PROGRESS]_
+
+---
+
+## DEAD-CITATION-CI S-7.02 Cycle-Closing Checklist (2026-06-20)
+
+**Cycle:** DEAD-CITATION-CI (dead-citation CI guard — tests/claude_md_citations.rs + PR #545 hardening). F7 CONVERGED 2026-06-20. Awaiting human gate: merge PR #545 + PATCH release decision.
+
+All process-gap findings from this cycle have either a codified lesson, a tracked drift item, or a follow-up story:
+
+| Finding | Disposition | Status |
+|---------|-------------|--------|
+| PG-MERGE-AUTH-BYPASS (pr-manager delivery sub-agent self-authorized merge despite orchestrator hold) | [codified] Follow-up story S-PG-MERGE-AUTH-BYPASS registered (story 91, draft; engine self-improvement; engine-only, zero jr changes) | ✓ TRACKED — S-PG-MERGE-AUTH-BYPASS |
+| .factory/ CI-checkout scope flaw (CI job used `checkout@v4` without specifying factory-artifacts branch, pulling main instead) | Caught in F2 — spec corrected before implementation | ✓ CLOSED (spec-time fix) |
+| Count drift (test count in spec differed from implemented test count across 3 passes) | Caught in F2 — spec corrected piecewise as count settled | ✓ CLOSED (spec-time fix) |
+| 3-way message contradiction (error-taxonomy.md §8, spec body, and implementation all differed on error format) | Caught in F2 — canonical message locked before F4 | ✓ CLOSED (spec-time fix) |
+| Non-actionable `(line N)` literal in error output | Caught in F3 story review (DEC-127 HIGH) — Vec<(String,usize)> provenance carries real line numbers | ✓ CLOSED (story-time fix) |
+| False-green message assertion (test asserted substring that matched both correct and incorrect messages) | Caught in F5 — hardening PR #545 | ✓ IN PR #545 (awaiting merge) |
+| 4 mutation-survivor gaps (survivors from `cargo mutants --in-diff`) | Caught in F5/F6 — hardening PR #545 | ✓ IN PR #545 (awaiting merge) |
+| CWE-22 path-traversal (citation paths not validated against repo root before filesystem access) | Caught in F5 security review — hardening PR #545 | ✓ IN PR #545 (awaiting merge) |
+| F7-001..F7-003 minor precision gaps | ACCEPTED-DEFERRED (carried from earlier) | ✓ DEFERRED (non-blocking) |
+
+**Evidence that FULL VSDD pays off on a "single CI-guard test" (~211 LOC parser):**
+Full VSDD on a file that was classifiable as `trivial` scope caught 8+ distinct real defects spanning
+spec (F2), story (F3), implementation (F4), adversarial (F5), and formal (F6) phases. This is the
+strongest single reinforcement of DEC-120/121/124 yet. The cost was not bureaucratic overhead — each
+phase caught a class of defect that prior phases structurally could not see:
+- F2 (spec-level): .factory/ checkout flaw, count drift, 3-way message contradiction — invisible to
+  any code reviewer because the code did not exist yet.
+- F3 (story-level): (line N) non-actionable literal — a story-altitude adversary catch that 10 F2
+  passes accepted as valid.
+- F5 (adversarial): false-green assertion, mutation survivors, CWE-22 — invisible to TDD because tests
+  were self-consistent with the implementation.
+DEC-129 records this finding formally.
+
+**PG-MERGE-AUTH-BYPASS [codified]:**
+The merge-authorization gap (DEC-128, 2026-06-20 F4) is now codified as follow-up story
+S-PG-MERGE-AUTH-BYPASS (story 91, draft). Story target: Dark Factory engine governance — codify
+the merge-authorization gate so delivery sub-agents halt at ready-for-merge and merge only on
+explicit orchestrator-passed authorization signal. Engine-only scope; zero jr source code changes.
+This closes the "OPEN — needs follow-up story" status on the PG-MERGE-AUTH-BYPASS drift item;
+STATE.md Drift Items updated to TRACKED — S-PG-MERGE-AUTH-BYPASS.
+
+**Count guards (S-7.02 defensive sweep):** BC 602 unchanged. NFR 42 unchanged. ADR 16 unchanged. Stories 90→91 (S-PG-MERGE-AUTH-BYPASS added). No product src/ changes in this bookkeeping burst. develop HEAD unchanged at 496258a (PR #545 not yet merged).
+
+**Verdict: S-7.02 CHECKLIST SATISFIED. DEAD-CITATION-CI F7 CONVERGED. Awaiting human gate: merge PR #545 + PATCH release decision.**
+
+_Recorded: 2026-06-20 — DEAD-CITATION-CI F7 cycle-closing checklist. State-manager._
+_Tagged: [s-7.02] [feature-mode] [f7] [converged] [codified]_
+_Status: [F7-CONVERGED; AWAITING-HUMAN-GATE]_
