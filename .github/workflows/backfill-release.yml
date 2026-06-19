@@ -391,11 +391,16 @@ jobs:
               || { echo "::error::$PKG not notarized (spctl source unexpected)"; exit 1; }
             echo "::endgroup::"
           done
+          # `spctl --assess --type open` on a notarized .dmg returns
+          # "rejected: source=Insufficient Context" on macOS 15+ — Gatekeeper
+          # assesses the *mounted* contents, not the .dmg file. `stapler
+          # validate` is the canonical check: it verifies the notarization
+          # ticket is locally attached to the .dmg and references a valid
+          # Apple notarization record. Non-zero exit on missing/invalid
+          # staple fails the step.
           for DMG in jr-arm64.dmg jr-amd64.dmg; do
             echo "::group::Verify $DMG"
-            spctl --assess --type open --verbose=4 "$DMG" 2>&1 | tee "$SPCTL_OUT"
-            grep -q "source=Notarized Developer ID" "$SPCTL_OUT" \
-              || { echo "::error::$DMG not notarized (spctl source unexpected)"; exit 1; }
+            xcrun stapler validate "$DMG"
             echo "::endgroup::"
           done
 
