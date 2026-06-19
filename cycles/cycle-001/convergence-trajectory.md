@@ -844,3 +844,30 @@ Trajectory shorthand: `1C(sibling-omission)→fix→1C(off-branch-spec)→fix→
 - LOW OBS-1/OBS-2 (R1): spec split-mechanism note + whitespace-blank test. FIXED @ d3c35a4.
 **Code delta:** BC-7.2.011 v1.9.7→v1.9.8→v1.9.9→v1.10.0→v1.11.0 across F2/F4/F5. S-522 7→14→19 ACs, severity LOW→MED→HIGH→HIGH. 237→244→248 lib tests. DEC-110+111+112+113+114+115.
 **Process gap:** LESSON-F1-SIBLING-CASE codified — F1 boundary analysis must enumerate ALL control chars in same hazard class at a normalization chokepoint, not only the one that triggered the issue report. F5 3-lens fan-out caught the gap; repeated single-lens passes did not.
+
+---
+
+## S-FORK-OPS-BACKFILL — F5 Scoped Adversarial (2026-06-19)
+
+**Bundle:** S-FORK-OPS-BACKFILL
+**Scope:** Combined delta — backfill-release.yml (PR #539) + GITLEAKS_DISABLED doc changes (PR #538). Wave-gate adversarial consolidated into F5.
+**Code at convergence:** develop @ 83a141ad (post FIX-F5-001 / PR #540)
+
+| Pass | Date | Total | CRIT | HIGH | MED | LOW | Counter | Verdict |
+|------|------|-------|------|------|-----|-----|---------|---------|
+| 1 | 2026-06-19 | 6 | 0 | 0 | 2 | 4 | 0/3 | FINDINGS (novelty 0.35) — M4 FIXED via FIX-F5-001/PR #540; M2 ACCEPTED |
+| 2 | 2026-06-19 | 9 | 0 | 0 | 1* | 8 | 0/3 | CLEAN (novelty 0.08) — *O-1 = recurrence of accepted M2; no action |
+| 3 | 2026-06-19 | 1 | 0 | 0 | 0 | 1 | 3/3 | **CONVERGED** — independent re-derivation; 1 LOW timeout-minutes gap tracked |
+
+**Trajectory shorthand:** `2→0→0` (actionable MED). CONVERGED at Pass 3.
+
+**Genuine catches:**
+- M4 (Pass 1): `test_backfill_release_job_zip_in_both_upsert_branches` counted `jr-*.zip` ≥2 anywhere in file instead of anchoring to distinct branches — vacuous assertion. FIXED via FIX-F5-001 / PR #540 @ 83a141ad.
+- M2 (Pass 1): `gh release upload jr-*.zip` hard-fails on zero-match glob; diverges from release.yml softprops. ACCEPTED — fail-loud design, guarded by needs:build + matrix-parity test.
+
+**Tracked items (non-blocking):**
+- O3 / FORK-OPS-F5-SELFTEST-CHECKLIST: F5 checklist conflates `--self-test` inline fixture with real-file scan.
+- L-NEW-1 / FORK-OPS-BACKFILL-TIMEOUT-PARITY: backfill build job lacks `timeout-minutes` (release.yml=60).
+- M2/O-1 / FORK-OPS-BACKFILL-ZIP-GLOB-COUPLING: zip-glob hard-fail coupling (accepted).
+
+**F5 S-FORK-OPS-BACKFILL: CONVERGED 2026-06-19. Advancing to F6.**
