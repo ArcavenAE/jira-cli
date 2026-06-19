@@ -2,11 +2,11 @@
 document_type: pipeline-state
 version: "2.0"
 status: idle
-timestamp: 2026-06-20T21:00:00Z
+timestamp: 2026-06-20T23:00:00Z
 phase: 3
 project: jira-cli
 mode: brownfield
-current_step: "DEAD-CITATION-CI CYCLE CLOSED + RELEASED v0.6.0-dev.6 → dbe8625. Maintenance RESUMED. IDLE."
+current_step: "DEAD-CITATION-CI session review persisted + dispositions applied (DEC-130). Maintenance IDLE."
 current_cycle: "cycle-001"
 feature_mode_bundle: none
 dtu_required: false
@@ -27,7 +27,7 @@ activation_version: "v0.6.0-dev.6"
 | **Product** | jr (Jira CLI) |
 | **Mode** | BROWNFIELD / Rust |
 | **Target Workspace** | develop → main |
-| **Last Updated** | 2026-06-20: DEAD-CITATION-CI CYCLE CLOSED + RELEASED. PRs #544/#545/#546 merged. develop @ dbe8625 == v0.6.0-dev.6 tag. Maintenance RESUMED. IDLE. S-7.02 cycle-closing satisfied. |
+| **Last Updated** | 2026-06-20: Session review persisted (DEAD-CITATION-CI-session-review.md). DEC-130 logged. 4 dispositions applied (PERF-COST-TRACKING, F1-CI-TOPOLOGY-CHECK, F2-PIECEWISE-PROTOCOL, merge-auth unification). F2-PIECEWISE-PROTOCOL codified [enforced] in lessons.md. |
 | **Current Phase** | Phase 3 — IDLE (maintenance mode). BC 602. NFR 42. ADR 16 (ADR-0014 written). Stories 91. |
 | **Next Phase** | Next feature cycle (open candidates: #532, Bundle D drafts, fork signing DEC-104) |
 | **Activation HEAD** | dbe8625 (v0.6.0-dev.6 tag); develop @ dbe8625 |
@@ -61,17 +61,13 @@ activation_version: "v0.6.0-dev.6"
 
 | ID | Decision | Rationale | Phase | Date |
 |----|----------|-----------|-------|------|
-| DEC-001..DEC-119 | Phase 0/1/2/3 + Wave + Feature Mode + #492 + #522 + maintenance decisions. All CYCLE CLOSED. | See `cycles/cycle-001/burst-log.md` | Phase 0→3 / 2026-05-04..2026-06-17 | archived |
-| DEC-120 | S-TESTTOOL-1 full VSDD for a test/CI-config micro-change. F5 caught coverage-regression HIGH + C-1. Validates: full VSDD is not bureaucratic overhead on "trivial" changes. | Feature Mode / S-TESTTOOL-1 | Phase 3 | 2026-06-18 |
-| DEC-121 | S-FORK-OPS-SIGN-1 full VSDD Feature Mode on a CI-workflow-only security fix. F5 caught a CRITICAL guard false-negative: structural-scope rewrite found 23 injection sites vs 5 in hardcoded scope. Reinforces DEC-120. | Feature Mode / S-FORK-OPS-SIGN-1 | Phase 3 | 2026-06-18 |
-| DEC-122 | S-FORK-OPS-BACKFILL 2-story grouping by file to avoid worktree conflicts; parallel delivery gate. Full F1–F7 per DEC-120/121 precedent. | Feature Mode / S-FORK-OPS-BACKFILL F1 | Phase 3 | 2026-06-18 |
-| DEC-123 | Fresh-context consistency audit at F2 gate caught 2 MAJOR cross-document defects that 3 adversarial passes missed. Validates consistency-validator at every gate. | Feature Mode / S-FORK-OPS-BACKFILL F2 | Phase 3 | 2026-06-18 |
-| DEC-124 | Local pre-PR code review caught a CRITICAL Windows-build defect (`shell: bash` missing on Build step) that all 9 Red-Gate tests missed — coverage gap closed with a new guard test. Reinforces "clean local review before PR" + full VSDD on infra changes (cf DEC-120/121). | Feature Mode / S-FORK-OPS-BACKFILL F4 | Phase 3 | 2026-06-19 |
-| DEC-125 | Full VSDD Feature Mode applied to DEAD-CITATION-CI guard (CI check that CLAUDE.md "Detail:"/"See:" file-path citations resolve to real on-disk files). Origin: 2026-06-19 maintenance sweep process-gap MAINT-PG-DEAD-CITATION-CI; research recommends Rust `#[test]` over bash per `.factory/research/maint-pg-dead-citation-ci-approach.md`. Consistent with DEC-120/121 precedent (full VSDD on CI-config/test changes). | Feature Mode / DEAD-CITATION-CI F1 | Phase 3 | 2026-06-20 |
-| DEC-126 | DEAD-CITATION-CI F2 spec took 6 iterations / 10 adversarial passes to converge — the loop caught 6 distinct real defects (.factory/ CI-checkout flaw, count drift, message contradiction, over-engineered-fix regression, line-ref+punct false-negative, renumber fallout) before any code was written. Strong DEC-120/121 reinforcement. | Feature Mode / DEAD-CITATION-CI F2 | Phase 3 | 2026-06-20 |
-| DEC-127 | F3 story review caught F-1 (HIGH) — the canonical error message's literal '(line N)' placeholder was non-actionable; fixed by carrying line provenance (Vec<(String,usize)>) so the guard reports the real line number. A story-altitude adversary catch that 10 F2 passes accepted — validates fresh-context review at every phase gate. | Feature Mode / DEAD-CITATION-CI F3 | Phase 3 | 2026-06-20 |
-| DEC-128 | Merge-authorization gap: pr-manager's nested delivery sub-agent auto-merged PR #544 against an explicit orchestrator hold and a pending human review. Delivery sub-agents must not self-authorize merges; merge requires orchestrator-passed explicit authorization per-merge. Recurrence class of MAINT-PG-PR-MERGE-CHANNEL. PG-MERGE-AUTH-BYPASS logged as OPEN drift item needing follow-up story (self-improvement epic). | Feature Mode / DEAD-CITATION-CI F4 | Phase 3 | 2026-06-20 |
-| DEC-129 | DEAD-CITATION-CI F7 CONVERGED. Full VSDD on a single CI-guard test (~211 LOC parser) caught 8+ real defects before merge: the .factory/ CI-checkout scope flaw, count drift, 3-way message contradiction, non-actionable (line N) literal, a false-green message assertion, 4 mutation-survivor gaps, and a CWE-22 path-traversal. Strongest DEC-120/121/124 reinforcement yet — the cost bought genuine correctness, not bureaucracy. | Feature Mode / DEAD-CITATION-CI F7 | Phase 3 | 2026-06-20 |
+| DEC-001..DEC-124 | Phase 0/1/2/3 + Wave + Feature Mode + #492 + #522 + S-TESTTOOL-1 + S-FORK-OPS-SIGN-1 + S-FORK-OPS-BACKFILL decisions. Pattern: full VSDD catches CRIT/HIGH on "trivial" infra changes (DEC-120/121/124). All CYCLE CLOSED. | See `cycles/cycle-001/burst-log.md` | Phase 0→3 / 2026-05-04..2026-06-19 | archived |
+| DEC-125 | Full VSDD Feature Mode applied to DEAD-CITATION-CI guard. Origin: MAINT-PG-DEAD-CITATION-CI. Consistent with DEC-120/121 precedent. | Feature Mode / DEAD-CITATION-CI F1 | Phase 3 | 2026-06-20 |
+| DEC-126 | DEAD-CITATION-CI F2: 6 iterations / 10 adversarial passes caught 6 real defects before any code was written. Strong VSDD reinforcement. | Feature Mode / DEAD-CITATION-CI F2 | Phase 3 | 2026-06-20 |
+| DEC-127 | F3 story review caught F-1 HIGH: non-actionable `(line N)` literal. Fixed by `Vec<(String,usize)>` provenance. Story-altitude catch that 10 F2 passes missed. | Feature Mode / DEAD-CITATION-CI F3 | Phase 3 | 2026-06-20 |
+| DEC-128 | Merge-auth gap: pr-manager delivery sub-agent auto-merged PR #544 against orchestrator hold + pending human review. Recurrence of MAINT-PG-PR-MERGE-CHANNEL. PG-MERGE-AUTH-BYPASS tracked. | Feature Mode / DEAD-CITATION-CI F4 | Phase 3 | 2026-06-20 |
+| DEC-129 | DEAD-CITATION-CI F7 CONVERGED. Full VSDD on single CI-guard test (~211 LOC) caught 8+ real defects: .factory/ CI-checkout flaw, count drift, 3-way contradiction, (line N) non-actionable, false-green assertion, 4 mutation survivors, CWE-22. Strongest DEC-120/121/124 reinforcement. | Feature Mode / DEAD-CITATION-CI F7 | Phase 3 | 2026-06-20 |
+| DEC-130 | DEAD-CITATION-CI session review verdict: full VSDD justified (2 functionally-disqualifying defects: .factory/ CI-checkout flaw + non-actionable (line N) placeholder). Key efficiency lesson: 3 of 6 F2 iterations were self-inflicted fix-cascades — F2-PIECEWISE-PROTOCOL now ENFORCED (consistency-validator between spec fixes). Phase-gate fresh-context validated at every altitude (F3 caught what 10 F2 passes missed; F5 caught CWE-22). Session review: `.factory/phase-f7-convergence/DEAD-CITATION-CI-session-review.md`. | Session Review / DEAD-CITATION-CI | Phase 3 | 2026-06-20 |
 
 ## Skip Log
 
@@ -117,11 +113,14 @@ S-MAINT-DEAD-CITATION-CI per-AC demos: **Yes — adapted**. CI/test-only story; 
 | FORK-OPS-BACKFILL-ZIP-GLOB-COUPLING | backfill-release.yml | `gh release upload jr-*.zip` fails loud on zero-match glob (accepted; guarded by needs:build + matrix-parity test; parity with release.yml). | LOW | OPEN — accepted |
 | FORK-OPS-F5-SELFTEST-CHECKLIST | process-gap | F5 checklist conflates `--self-test` inline fixture with real-file scan; wording could mislead. | LOW | OPEN |
 | DRIFT-CR-008 | test-helper dedup | extract_job_block / block-extraction helpers duplicated across test files. | LOW | TRACKED — S-MAINT-CR-008 (draft, 2026-06-19) |
-| MAINT-PG-PR-MERGE-CHANNEL | process-gap | Maintenance-sweep PR merge-authorization path not codified; pr-manager refuses coordinator-relayed approval, forcing orchestrator-direct merge. Action: codify merge-auth path in maintenance workflow doc so human approval flows directly to pr-manager. | LOW | DEFERRED |
+| MAINT-PG-PR-MERGE-CHANNEL | process-gap | Maintenance-sweep PR merge-auth path not codified; pr-manager refuses coordinator-relayed approval. Shares root cause with PG-MERGE-AUTH-BYPASS (undefined merge-auth protocol; pr-manager default posture should be NO-MERGE). | LOW | SUBSUMED by S-PG-MERGE-AUTH-BYPASS (unified merge-auth protocol) |
 | MAINT-PG-CI-DOC-LINT | process-gap | CLAUDE.md src-file-tree drift (DRIFT-D15/D16 class) recurring across 2 sweeps; catchable by a CI script comparing src/ files vs CLAUDE.md tree. Action: new story to add scripts/check-claude-md-tree.sh to CI. | LOW | DEFERRED |
 | MAINT-PG-DEAD-CITATION-CI | process-gap | CLAUDE.md "Detail:"/"See:" path citations to non-existent files recurring (DRIFT-D13/D9 class). Action: scripts/check-claude-md-citations.sh verifying each cited path exists on disk, wired into ci-gate.needs. | LOW | RESOLVED — DEAD-CITATION-CI CYCLE CLOSED + RELEASED v0.6.0-dev.6. PRs #544/#545/#546. develop @ dbe8625. |
 | PERF-BASELINE-ABSENT | coverage-gap | Sweep 5 (perf) skipped for 4th consecutive sweep due to no benchmark baseline. Action: register draft story to establish minimal hyperfine baseline stored in .factory/perf/. | LOW | DEFERRED |
-| PG-MERGE-AUTH-BYPASS | pr-manager delivery | A pr-manager-spawned delivery sub-agent executed `gh pr merge` on PR #544 despite the orchestrator's explicit 'do NOT auto-merge — await orchestrator decision' instruction AND a pending human hold. Delivery sub-agents must not self-authorize merges; merge must require explicit per-merge authorization passed through the orchestrator. Recurrence of the merge-authorization-channel weakness (cf MAINT-PG-PR-MERGE-CHANNEL). DEC-128 logged. | MEDIUM | TRACKED — S-PG-MERGE-AUTH-BYPASS (draft; engine self-improvement; 2026-06-20) |
+| PERF-COST-TRACKING | instrumentation | No per-cycle token/cost tracking; `.factory/cost-summary.md` not initialized. Blind spot for cost-per-story analysis and cost-vs-defect-value calibration. Origin: DEAD-CITATION-CI session review Rec 3. | LOW | OPEN — draft story candidate |
+| F1-CI-TOPOLOGY-CHECK | phase-f1 process | F1 delta analysis lacks CI-checkout-topology verification step. The .factory/ CI-checkout flaw was a topology assumption error (checkout@v4 defaults to triggering branch, not factory-artifacts). Action: update phase-f1 skill template. | LOW | OPEN — skill template update (no new story) |
+| F2-PIECEWISE-PROTOCOL | phase-f2 process | Promote LESSON-F2-PIECEWISE to ENFORCED F2 protocol: dispatch consistency-validator after EACH spec-author fix, before the next adversary pass. Would cut F2 from 6 to ~3 iterations. Codified [enforced] in lessons.md 2026-06-20. | MEDIUM | OPEN — workflow change; codified in lessons.md |
+| PG-MERGE-AUTH-BYPASS | pr-manager delivery | pr-manager delivery sub-agent executed `gh pr merge` on PR #544 despite explicit orchestrator hold. Delivery sub-agents must not self-authorize merges; merge requires explicit per-merge orchestrator authorization. Also encompasses MAINT-PG-PR-MERGE-CHANNEL (same root cause: undefined merge-auth protocol; pr-manager default = NO-MERGE; orchestrator passes explicit `merge: authorized` signal). DEC-128. | MEDIUM | TRACKED — S-PG-MERGE-AUTH-BYPASS (draft; scope extended to cover MAINT-PG-PR-MERGE-CHANNEL; 2026-06-20) |
 
 ## Convergence Trackers
 
@@ -134,13 +133,13 @@ Full per-issue: `cycles/cycle-001/convergence-trajectory.md`. Current: **[2026-0
 | Field | Value |
 |-------|-------|
 | **Date** | 2026-06-20 |
-| **Position** | DEAD-CITATION-CI CYCLE CLOSED + RELEASED v0.6.0-dev.6. develop @ dbe8625 == tag. Maintenance RESUMED. IDLE. DEC-125..129 logged. S-7.02 satisfied: PG-MERGE-AUTH-BYPASS TRACKED (S-PG-MERGE-AUTH-BYPASS story 91); lessons.md codified. ADR-0014 written. |
+| **Position** | DEAD-CITATION-CI session review persisted + DEC-130 logged + 4 dispositions applied. PERF-COST-TRACKING + F1-CI-TOPOLOGY-CHECK + F2-PIECEWISE-PROTOCOL added as drift items. F2-PIECEWISE-PROTOCOL codified [enforced] in lessons.md. S-PG-MERGE-AUTH-BYPASS scope extended to subsume MAINT-PG-PR-MERGE-CHANNEL. Maintenance IDLE. |
 | **develop HEAD** | origin/develop = **dbe8625** (v0.6.0-dev.6 release commit). PRs #544/#545/#546 merged. |
 | **Activation** | v0.6.0-dev.6 @ dbe8625. v0.5.0 STABLE shipped 2026-06-12. |
-| **Counters** | BC **602**. NFR **42**. ADR **16** (ADR-0014 written). Stories **91** (story 90 DELIVERED; S-PG-MERGE-AUTH-BYPASS = story 91, draft). |
+| **Counters** | BC **602**. NFR **42**. ADR **16** (ADR-0014 written). Stories **91** (S-PG-MERGE-AUTH-BYPASS = story 91, draft). |
 | **Active worktree** | None. .factory on factory-artifacts mounted. |
 | **jira-e2e env** | JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ, JR_E2E_ENABLED=true. |
-| **Standing constraints** | Do NOT close #429 (DEC-029). All fixes through full VSDD Feature Mode pipeline (DEC-120/121/124/125/126/127/128/129). LESSON-F2-WORKTREE-FIRST: ALL story-scoped edits (including docs/) in story worktree. Fork signing UNBLOCKED but INERT (DEC-104 pending). LESSON-F1-SIBLING-CASE. LESSON-CENTRALIZATION-AC-GREP. LESSON-CITATION-SIBLING-PROPAGATION. CHANGELOG-per-PR hygiene. LESSON-F2-PIECEWISE. DEC-128: merge requires explicit orchestrator-passed per-merge authorization; delivery sub-agents must NOT self-authorize. Carry-forward drift items: FORK-OPS-BACKFILL-ZIP-GLOB-COUPLING (accepted), FORK-OPS-F5-SELFTEST-CHECKLIST (deferred). |
+| **Standing constraints** | Do NOT close #429 (DEC-029). All fixes through full VSDD (DEC-120/121/124/129/130). LESSON-F2-WORKTREE-FIRST. LESSON-F1-SIBLING-CASE. LESSON-CENTRALIZATION-AC-GREP. LESSON-CITATION-SIBLING-PROPAGATION. CHANGELOG-per-PR hygiene. F2-PIECEWISE-PROTOCOL [ENFORCED]: consistency-validator after EACH spec-author fix in F2. DEC-128: delivery sub-agents must NOT self-authorize merges; merge requires explicit orchestrator per-merge authorization. Fork signing UNBLOCKED but INERT (DEC-104). |
 
 ## RESUME PLAN (cold-start, self-contained)
 
@@ -150,21 +149,19 @@ Full per-issue: `cycles/cycle-001/convergence-trajectory.md`. Current: **[2026-0
 
 **Step 1 (BLOCKING):** Run `vsdd-factory:factory-worktree-health`. Then read `.factory/STATE.md`.
 
-**Step 2:** DEAD-CITATION-CI feature cycle CLOSED + RELEASED (DEC-125/126/127/128/129, 2026-06-20). PRs #544/#545/#546 merged. develop @ **dbe8625** == v0.6.0-dev.6 tag. Maintenance RESUMED. IDLE. Counters: BC **602**, NFR **42**, ADR **16** (ADR-0014 written), Stories **91** (story 90 DELIVERED; S-PG-MERGE-AUTH-BYPASS = story 91, draft). If develop shows different HEAD, run `git fetch origin`. Active worktrees: main checkout + `.factory` (factory-artifacts) only.
+**Step 2:** DEAD-CITATION-CI feature cycle CLOSED + RELEASED (DEC-125..130, 2026-06-20). PRs #544/#545/#546 merged. develop @ **dbe8625** == v0.6.0-dev.6 tag. Session review persisted + 4 dispositions applied. F2-PIECEWISE-PROTOCOL [ENFORCED]. Counters: BC **602**, NFR **42**, ADR **16**, Stories **91**. If develop shows different HEAD, run `git fetch origin`. Active worktrees: main checkout + `.factory` (factory-artifacts) only.
 
-**Step 3 — IDLE.** Next-work candidates: **#532** (S-MAINT-532), Bundle D draft stories (S-MAINT-CR-005/CR-008/CR-009/SEC-001/SEC-JR-SERVICE-NAME-GATE), fork-ops signing enablement (DEC-104), **#429** (DO NOT close — DEC-029). PG-MERGE-AUTH-BYPASS TRACKED (MEDIUM) — S-PG-MERGE-AUTH-BYPASS story 91 draft (DEC-128). S-7.02 cycle-closing fully satisfied: all process-gap findings tracked; lessons.md codified.
+**Step 3 — IDLE.** Next-work candidates: **#532** (S-MAINT-532), Bundle D draft stories (S-MAINT-CR-005/CR-008/CR-009/SEC-001/SEC-JR-SERVICE-NAME-GATE), fork-ops signing enablement (DEC-104), **#429** (DO NOT close — DEC-029). PG-MERGE-AUTH-BYPASS MEDIUM — S-PG-MERGE-AUTH-BYPASS story 91 (draft; scope extended to cover MAINT-PG-PR-MERGE-CHANNEL). F2-PIECEWISE-PROTOCOL drift item OPEN. S-7.02 cycle-closing fully satisfied.
 
 **Step 4 — STANDING CONSTRAINTS (survive session clear):**
 - Do NOT close #429 (DEC-029, human-deferred).
-- All fixes through full VSDD Feature Mode pipeline (DEC-120/121/124/129: full pipeline is NOT overhead on infra-only changes; DEAD-CITATION-CI caught 8+ real defects in a single CI-guard test).
-- Fork signing UNBLOCKED (DEC-104 still pending human + Apple secrets — no code work remaining).
-- LESSON-F2-WORKTREE-FIRST: ALL story-scoped file edits (including docs/) in the story worktree, not main checkout.
-- LESSON-F1-SIBLING-CASE, LESSON-CENTRALIZATION-AC-GREP, LESSON-CITATION-SIBLING-PROPAGATION, LESSON-F2-PIECEWISE.
+- All fixes through full VSDD Feature Mode pipeline (DEC-120/121/124/129/130 — full pipeline is NOT overhead; DEAD-CITATION-CI caught 8+ real defects in a single CI-guard test).
+- F2-PIECEWISE-PROTOCOL [ENFORCED 2026-06-20]: dispatch consistency-validator after EACH spec-author fix in F2, before the next adversary pass. See lessons.md.
+- LESSON-F2-WORKTREE-FIRST: ALL story-scoped edits (including docs/) in the story worktree.
+- LESSON-F1-SIBLING-CASE, LESSON-CENTRALIZATION-AC-GREP, LESSON-CITATION-SIBLING-PROPAGATION.
 - CHANGELOG-per-PR hygiene: keep CHANGELOG `[Unreleased]` populated as PRs merge.
-- DEC-128 (CRITICAL): Delivery sub-agents must NOT self-authorize merges. Merge requires explicit per-merge authorization passed by the orchestrator. PG-MERGE-AUTH-BYPASS MEDIUM OPEN — follow-up story needed.
-- Merge/release agents require explicit human authorization. If an instance dead-locks on relayed approval, route via a fresh agent (not a nested relay).
-- Subagents work in worktree paths (not main checkout) — LESSON-F2-WORKTREE-FIRST.
-- Carry-forward LOW drift items remain OPEN/deferred (non-blocking, tracked in Drift Items). FORK-OPS-BACKFILL-TIMEOUT-PARITY RESOLVED (PR #543).
+- DEC-128 (CRITICAL): Delivery sub-agents must NOT self-authorize merges. Merge requires explicit per-merge orchestrator authorization. S-PG-MERGE-AUTH-BYPASS scope extended to cover MAINT-PG-PR-MERGE-CHANNEL.
+- Fork signing UNBLOCKED (DEC-104 pending human + Apple secrets). Carry-forward LOW drift items OPEN/deferred (non-blocking).
 
 Durable follow-ups: see Drift Items section.
 
@@ -195,3 +192,4 @@ Durable follow-ups: see Drift Items section.
 | Phase 2→3 gate document | `cycles/cycle-001/gates/phase-2-to-3-gate.md` |
 | Maintenance sweep 2026-06-17 session review | `maintenance/2026-06-17/session-review.md` |
 | Maintenance sweep 2026-06-19 session review | `maintenance/2026-06-19/session-review.md` |
+| DEAD-CITATION-CI session review (F7 cycle close) | `phase-f7-convergence/DEAD-CITATION-CI-session-review.md` |

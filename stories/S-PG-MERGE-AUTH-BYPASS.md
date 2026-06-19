@@ -42,6 +42,7 @@ version: "1.0"
 last_updated: "2026-06-20"
 changelog:
   - "1.0 (2026-06-20): Initial draft — originated from PG-MERGE-AUTH-BYPASS drift item (DEC-128, DEAD-CITATION-CI F4). Delivery sub-agent auto-merged PR #544 against explicit orchestrator hold. Self-improvement / pipeline-governance scope. No BCs yet — PO authorship required before status=ready."
+  - "1.1 (2026-06-20): Scope extended to cover MAINT-PG-PR-MERGE-CHANNEL (session review Recommendation 2 / DEC-130). Both share root cause: undefined merge-authorization protocol. pr-manager default posture MUST be NO-MERGE; orchestrator passes explicit `merge: authorized` signal. MAINT-PG-PR-MERGE-CHANNEL status → SUBSUMED by this story."
 breaking_change: false
 lineage:
   - DEC-128

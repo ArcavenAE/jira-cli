@@ -4429,4 +4429,48 @@ STATE.md Drift Items updated to TRACKED — S-PG-MERGE-AUTH-BYPASS.
 
 _Recorded: 2026-06-20 — DEAD-CITATION-CI F7 cycle-closing checklist. State-manager._
 _Tagged: [s-7.02] [feature-mode] [f7] [converged] [codified]_
-_Status: [F7-CONVERGED; AWAITING-HUMAN-GATE]_
+_Status: [F7-CONVERGED; CYCLE CLOSED; v0.6.0-dev.6 RELEASED]_
+
+---
+
+## DEAD-CITATION-CI Session Review: F2-PIECEWISE-PROTOCOL [codified]
+
+**Lesson (promoted from LESSON-F2-PIECEWISE candidate to ENFORCED F2 protocol):**
+
+Dispatch the consistency-validator after EACH spec-author fix in F2, before the next
+adversary pass. Do NOT batch multiple spec-author fixes then run a single adversary pass.
+
+**Evidence from DEAD-CITATION-CI F2:**
+F2 required 6 iterations (10 adversarial passes). Root-cause analysis:
+- Iterations 1–2: Genuine new defects (`.factory/` checkout flaw, count drift)
+- Iterations 3–4: Fix-cascade — fixing iteration 2 introduced an over-engineered-fix regression
+  (`.factory/`-path allowlist function violating BC-X.13.003); fixing that regressed the
+  line-ref+punct false-negative exclusion
+- Iterations 5–6: Count renumbering fallout from prior fix cascade
+
+3 of 6 iterations were self-inflicted fix-cascades. A consistency-validator pass after each
+spec-author fix (before the next adversary) would have caught the cascade early, cutting F2
+from 6 iterations to approximately 3.
+
+**Protocol (ENFORCED from 2026-06-20):**
+```
+F2 loop:
+  1. adversary-pass → findings
+  2. For EACH spec-author fix:
+       a. apply fix
+       b. dispatch consistency-validator → must exit CONSISTENT before next fix
+  3. Repeat from 1 until adversary novelty < 0.15 threshold
+```
+
+Do NOT skip step 2b "for a quick one-line fix" — the F2 fix-cascade in DEAD-CITATION-CI
+started with a quick one-line count update.
+
+**Relationship to LESSON-F2-PIECEWISE:**
+LESSON-F2-PIECEWISE (codified S-FORK-OPS-SIGN-1) captures the spec-authorship symptom
+(write atomic sequences as one worked control-flow block). F2-PIECEWISE-PROTOCOL captures
+the process enforcement: consistency-validator between fixes is the mechanism that prevents
+fix-cascade propagation. Both apply; this is the execution-level complement.
+
+_Recorded: 2026-06-20 — DEAD-CITATION-CI session review disposition. State-manager._
+_Tagged: [process-gap] [F2] [consistency-validator] [codified] [enforced-protocol]_
+_Status: [codified] — F2-PIECEWISE-PROTOCOL ENFORCED from 2026-06-20_
