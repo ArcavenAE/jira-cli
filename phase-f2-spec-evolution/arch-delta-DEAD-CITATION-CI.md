@@ -30,11 +30,11 @@ describe.
 This feature introduces two logical components that live entirely in
 `tests/claude_md_citations.rs`. Their purity classification is explicit:
 
-### Pure: `extract_path_citations(doc: &str) -> Vec<String>`
+### Pure: `extract_path_citations(doc: &str) -> Vec<(String, usize)>`
 
 This function is **deterministic and side-effect-free**: it takes a string
 (the CLAUDE.md text, already loaded at compile time via `include_str!`) and
-returns a sorted, deduplicated `Vec<String>` of candidate file paths after
+returns a sorted, deduplicated `Vec<(String, usize)>` of `(normalized_path, 1-based-line-number)` pairs after
 applying the canonical normalization/skip pipeline specified by BC-X.13.002
 (steps applied in this exact order — SR-004):
 
@@ -101,10 +101,12 @@ This is the integration-level test function. It:
 4. On failure, panics with the CANONICAL failure message (CI-CITE-001, verbatim):
    ```
    CLAUDE.md cites file paths that do not exist on disk:
-     <path> (line N)
+     src/foo.rs (line 142)
    Fix the citation or restore the file.
    Note: .factory/, glob, and symbol-form tokens are auto-excluded. Root-level files (Cargo.toml, CLAUDE.md, etc.) are checked.
    ```
+   The per-path lines render real 1-based line numbers (e.g. `(line 142)`) computed from
+   the `usize` component of `Vec<(String, usize)>` returned by `extract_path_citations`.
 
 There is NO `is_off_working_branch_allowlisted` function — `.factory/` exclusion
 is handled entirely by the dir-prefix filter inside `extract_path_citations` (step (c)

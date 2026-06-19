@@ -343,7 +343,7 @@ fn test_factory_research_path_excluded_by_dir_prefix() {
 fn test_docs_path_is_in_scope() {
     let doc = "See `docs/adr/0016-windows-build-target.md` for details.";
     let citations = extract_path_citations(doc);
-    assert!(citations.contains(&"docs/adr/0016-windows-build-target.md".to_string()));
+    assert!(citations.iter().any(|(p, _)| p == "docs/adr/0016-windows-build-target.md"));
 }
 ```
 
