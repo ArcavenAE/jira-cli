@@ -4001,3 +4001,28 @@ These rows were in STATE.md before this compaction burst. They predate the F4 CO
 | S-FORK-OPS-BACKFILL F2 COMPLETE — human-approved 2026-06-18. Pass-3 adversarial review persisted (CONVERGED: 3 adv passes 11→0→0 blocking). Consistency audit clean (F1: BC 598→599 fixed; F2: Optional→REQUIRED fixed; F3: cold-start wording fixed). Spec 1.3.23→1.3.24 PATCH. DEC-123. F3 starting. | state-manager | F2 APPROVED | develop @ 45ddf7a. Spec 1.3.24. Stories 81. F3 active. |
 | S-FORK-OPS-BACKFILL F3 COMPLETE — human-approved 2026-06-18. 2 stories created (81→83): S-FORK-OPS-BACKFILL-1 (5 SP, critical path) + S-FORK-OPS-GITLEAKS-DOC-1 (1 SP, docs). ACYCLIC, zero overlap, 1 wave. Human gate: PARALLEL delivery → F4. | state-manager | F3 APPROVED | develop @ 45ddf7a. Stories 83. F4 active — parallel. |
 | **S-FORK-OPS-BACKFILL F5 CONVERGED** — 3 passes (novelty 0.35→0.08→LOW). 0 CRIT/HIGH. M4 fixed (FIX-F5-001/PR #540); M2 accepted (zip-glob fail-loud); O3+timeout tracked as drift items. | state-manager | F5 CONVERGED | develop @ 83a141ad. |
+
+## Archived Phase Progress Rows — 2026-06-20 STATE.md Compaction
+
+The following Phase Progress rows were compacted from STATE.md into summary rows on 2026-06-20 to maintain the <200 line budget:
+
+| Row | What was archived |
+|-----|------------------|
+| Phase 0 Codebase Ingestion | COMPLETE 2026-05-04; Phase A+B+B.5+B.6+C APPROVED |
+| Phase 1 Spec Crystallization | COMPLETE 2026-05-04; PASSED — DEC-006/007/008 |
+| Phase 1d Adversarial Spec Review | COMPLETE 3/3 CONVERGED Pass 28; 30→15→…→0→0→0 |
+| Phase 2 Story Decomposition | COMPLETE 2026-05-06; 31 stories; F1–F7 COMPLETE; 14→5→…→1→0→1→0 CONVERGED |
+| Phase 2 gate | APPROVED 2026-05-07 by human |
+| Phase 3 TDD Implementation | IN_PROGRESS Feature Mode; Wave 0/1/2/3 ALL COMPLETE (32/32); GATE-CLOSED 2026-05-08 |
+| Feature cycles #110..#499 + #492 + #522 + maintenance | ALL CYCLE CLOSED + MERGED 2026-06-17; F1–F7 each; BC 583→599; 19+ feature cycles |
+| S-TESTTOOL-1 + S-FORK-OPS-SIGN-1 + v0.6.0-dev.4 + PRs #528-530 | CYCLE CLOSED + MERGED 2026-06-18; PRs #533/#535/#536/#528-530; develop @ 45ddf7a == v0.6.0-dev.4; Stories 79→81 |
+| S-FORK-OPS-BACKFILL F1+F2+F3 | COMPLETE human-approved 2026-06-18; 3 adv passes CONVERGED; consistency audit 2 MAJOR caught+fixed; spec 1.3.23→1.3.24; 2 stories 81→83 |
+| S-FORK-OPS-BACKFILL F4 | COMPLETE 2026-06-19; PR #539+#538 MERGED; BACKFILL-1→2756050; GITLEAKS-DOC-1→f85647b; 1866 tests; DEC-124 |
+| S-FORK-OPS-BACKFILL F5 | CONVERGED 2026-06-19; 3 passes; M4 fixed FIX-F5-001/PR #540 @ 83a141ad; Trajectory 2→0→0; M2 accepted |
+| S-FORK-OPS-BACKFILL F6 | PASS 2026-06-19; Formal hardening PASS CI-only bundle; Mutation N/A; cargo-deny CLEAN; Injection-guard CLEAN; 1866/0 regression |
+| S-FORK-OPS-BACKFILL F7 | CONVERGED + AUTHORIZED 2026-06-19; 5/5 PASS human authorized; Pre-gate drift CLEAN; Consistency CONSISTENT; Spec novelty LOW; 3 LOW carry-forwards |
+| S-FORK-OPS-BACKFILL RELEASED | CYCLE CLOSED 2026-06-19; v0.6.0-dev.5 shipped; PR #542 → develop @ 71f33c6; Tag v0.6.0-dev.5; release.yml run 27832585851 SUCCESS; 5-target build 10 assets; IDLE |
+| Phase 7 Convergence bundle | CONVERGED 2026-06-19; S-FORK-OPS-BACKFILL F7; S-7.02 satisfied; 3 deferred LOW items tracked |
+| DEAD-CITATION-CI F2 | CONVERGED 2026-06-20; 10 adv passes + 5 consistency audits; human-approved; ROOT_FILES amendment added |
+
+Also archived: Current Phase Steps rows for S-FORK-OPS-BACKFILL F6 PASS, F7 CONVERGED, RELEASED v0.6.0-dev.5.
