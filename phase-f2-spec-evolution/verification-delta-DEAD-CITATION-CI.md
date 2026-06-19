@@ -19,12 +19,14 @@ related_bcs:
 
 ### VP-CITE-001: `extract_path_citations` grammar — in-scope detection and all normalization/exclusion rules (glob-skip, symbol-form, line-ref, trailing-punct, dir-prefix, extension), no false positives
 
-**Description**: The `extract_path_citations(doc: &str) -> Vec<String>` function in
+**Description**: The `extract_path_citations(doc: &str) -> Vec<(String, usize)>` function in
 `tests/claude_md_citations.rs` must correctly identify path tokens from arbitrary
-document strings and correctly reject all non-path tokens (symbols, URLs, BC IDs,
-ADR shorthands, glob patterns, type names, env-var names, bare words, `.factory/`
-paths). This VP covers the pure-function grammar, which is independently testable
-without any filesystem access.
+document strings (returning `(normalized_path, 1-based-line-number)` pairs) and
+correctly reject all non-path tokens (symbols, URLs, BC IDs, ADR shorthands, glob
+patterns, type names, env-var names, bare words, `.factory/` paths). This VP covers
+the pure-function grammar — including line provenance — which is independently testable
+without any filesystem access. Line number tracking is deterministic from the input
+string (count newlines up to the token start).
 
 **Applies to**:
 - BC-X.13.001: in-scope token identification (directory prefix + extension filter)
@@ -115,8 +117,8 @@ proptest! {
     ) {
         let non_prefix = format!("`{}`", s);
         let result = extract_path_citations(&non_prefix);
-        // Either empty, or any returned path starts with a known develop-tracked prefix
-        for path in &result {
+        // result is Vec<(String, usize)>; inspect the path component of each entry
+        for (path, _line) in &result {
             prop_assert!(
                 path.starts_with("src/")
                     || path.starts_with("tests/")
@@ -150,7 +152,8 @@ starting with a known develop-tracked prefix, but ROOT_FILES tokens have no `/` 
 the proptest should be extended to also allow exact ROOT_FILES members in the assertion:
 
 ```rust
-for path in &result {
+// result is Vec<(String, usize)>
+for (path, _line) in &result {
     let is_dir_prefix = path.starts_with("src/")
         || path.starts_with("tests/")
         || path.starts_with("docs/")
@@ -242,18 +245,19 @@ auto-exclusion note are all load-bearing:
 fn test_claude_md_citations_resolve_to_real_files() {
     let doc = include_str!("../CLAUDE.md");
     let root = env!("CARGO_MANIFEST_DIR");
+    // extract_path_citations returns Vec<(String, usize)> — (normalized_path, 1-based line)
     let citations = extract_path_citations(doc);
     // No is_off_working_branch_allowlisted call — .factory/ is excluded by
     // extract_path_citations dir-prefix filter (step (c)); no allowlist needed.
-    let dead: Vec<String> = citations
+    let dead: Vec<(String, usize)> = citations
         .into_iter()
-        .filter(|p| !Path::new(root).join(p).exists())
+        .filter(|(p, _)| !Path::new(root).join(p).exists())
         .collect();
     assert!(
         dead.is_empty(),
         // CANONICAL failure message — CI-CITE-001 (error-taxonomy §8) — VERBATIM:
         "CLAUDE.md cites file paths that do not exist on disk:\n  {}\nFix the citation or restore the file.\nNote: .factory/, glob, and symbol-form tokens are auto-excluded. Root-level files (Cargo.toml, CLAUDE.md, etc.) are checked.",
-        dead.iter().map(|p| format!("{} (line N)", p)).collect::<Vec<_>>().join("\n  ")
+        dead.iter().map(|(p, n)| format!("{} (line {})", p, n)).collect::<Vec<_>>().join("\n  ")
     );
 }
 ```
@@ -289,14 +293,15 @@ Some documentation text.
 Detail: `src/DOES_NOT_EXIST_IN_ANY_JR_BUILD.rs`
 "#;
     let root = env!("CARGO_MANIFEST_DIR");
+    // citations: Vec<(String, usize)> — (normalized_path, 1-based-line-number)
     let citations = extract_path_citations(fixture_doc);
     // No allowlist filter — .factory/ paths never reach this check (dir-prefix excluded).
-    let dead: Vec<String> = citations
+    let dead: Vec<(String, usize)> = citations
         .into_iter()
-        .filter(|p| !Path::new(root).join(p).exists())
+        .filter(|(p, _)| !Path::new(root).join(p).exists())
         .collect();
     assert!(
-        dead.contains(&"src/DOES_NOT_EXIST_IN_ANY_JR_BUILD.rs".to_string()),
+        dead.iter().any(|(p, _)| p == "src/DOES_NOT_EXIST_IN_ANY_JR_BUILD.rs"),
         "Expected dead citation to be detected but was not in: {:?}",
         dead
     );
@@ -357,8 +362,8 @@ fn test_docs_path_is_in_scope() {
 
 | VP ID | BC(s) Covered | Key Invariant |
 |-------|---------------|---------------|
-| VP-CITE-001 | BC-X.13.001, BC-X.13.002 | `extract_path_citations` correctly identifies in-scope tokens and applies the canonical (a)–(e) pipeline (step a: glob-skip; step b: merged fixpoint — symbol-form strip sub-step 1, line-ref strip sub-step 2, leading-bracket strip sub-step 3, plain-punct trim sub-step 4, unbalanced `)` trim sub-step 5, unbalanced `]` trim sub-step 6; step c: dir-prefix filter + ROOT_FILES inclusion — `{build.rs, Cargo.toml, CHANGELOG.md, CLAUDE.md, deny.toml, README.md, rust-toolchain.toml}` are IN-SCOPE; `ci.yml`, `adf.rs`, `fields.json`, `release.yml` are EXCLUDED; step d: extension filter; step e: Path::exists()) — no false positives; no panics on arbitrary input; proptest assertion allows both dir-prefix paths and ROOT_FILES members |
-| VP-CITE-002 | BC-X.13.001, BC-X.13.003 | Integration guard is green on develop HEAD (zero dead citations, including ROOT_FILES members like `Cargo.toml` that now resolve to root files); fails deterministically when a fixture with a known-dead path is fed; canonical CI-CITE-001 failure message emitted verbatim (updated Note line); `.factory/` exclusion via dir-prefix filter at step (c) (no allowlist function) |
+| VP-CITE-001 | BC-X.13.001, BC-X.13.002 | `extract_path_citations(doc: &str) -> Vec<(String, usize)>` correctly identifies in-scope tokens (returning `(normalized_path, 1-based-line)` pairs) and applies the canonical (a)–(e) pipeline (step a: glob-skip; step b: merged fixpoint — symbol-form strip sub-step 1, line-ref strip sub-step 2, leading-bracket strip sub-step 3, plain-punct trim sub-step 4, unbalanced `)` trim sub-step 5, unbalanced `]` trim sub-step 6; step c: dir-prefix filter + ROOT_FILES inclusion — `{build.rs, Cargo.toml, CHANGELOG.md, CLAUDE.md, deny.toml, README.md, rust-toolchain.toml}` are IN-SCOPE; `ci.yml`, `adf.rs`, `fields.json`, `release.yml` are EXCLUDED; step d: extension filter; step e: Path::exists()) — no false positives; no panics on arbitrary input; proptest assertion allows both dir-prefix paths and ROOT_FILES members (path component of each tuple) |
+| VP-CITE-002 | BC-X.13.001, BC-X.13.003 | Integration guard is green on develop HEAD (zero dead citations, including ROOT_FILES members like `Cargo.toml` that now resolve to root files); fails deterministically when a fixture with a known-dead path is fed; canonical CI-CITE-001 failure message emitted verbatim with REAL line numbers (e.g. `src/foo.rs (line 142)`) computed from `Vec<(String, usize)>` returned by `extract_path_citations`; `.factory/` exclusion via dir-prefix filter at step (c) (no allowlist function) |
 
 ## Project Convention Note
 
@@ -413,7 +418,9 @@ Before F4 (TDD Implementation) can begin:
       at the time of implementation (zero dead citations on develop as of 2026-06-19)
 - [ ] The integration test failure message matches CI-CITE-001 VERBATIM:
       lead line `CLAUDE.md cites file paths that do not exist on disk:`, then
-      `  <path> (line N)` per dead path, then `Fix the citation or restore the file.`,
+      `  <path> (line {n})` per dead path where `{n}` is the real 1-based line number
+      (e.g. `  src/foo.rs (line 142)`) — NOT a literal `(line N)` placeholder,
+      then `Fix the citation or restore the file.`,
       then `Note: .factory/, glob, and symbol-form tokens are auto-excluded. Root-level files (Cargo.toml, CLAUDE.md, etc.) are checked.`
       Do NOT use `Dead CLAUDE.md citations:` or any other wording.
 - [ ] CLAUDE.md doc-fallout note added in "AI Agent Notes" section (per F1 delta §4

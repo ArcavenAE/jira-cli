@@ -2,11 +2,33 @@
 document_type: prd-delta
 bundle: DEAD-CITATION-CI
 phase: F2
-iteration: 2
+iteration: 3
 date: 2026-06-19
 status: complete
-amendment: "F2 ROOT_FILES amendment 2026-06-19 (human-requested scope extension)"
+amendment: "F3-feedback line-provenance amendment 2026-06-19 (human-requested spec fix — extract_path_citations returns Vec<(String,usize)>)"
 ---
+
+# PRD Delta — DEAD-CITATION-CI (F2 Iteration 3 / F3-feedback)
+
+## F3-Feedback Amendment: Line Provenance in `extract_path_citations` (2026-06-19, human-requested)
+
+**Problem (F-1, HIGH):** The prior spec defined `extract_path_citations(doc: &str) -> Vec<String>` but the canonical CI-CITE-001 failure message showed `  <path> (line N)` as a per-path line reference "for actionability." The reference implementation could only emit the literal placeholder text `(line N)` because the function returned no line information. A dead-citation guard that cannot say WHICH line is defective is not actionable.
+
+**Fix:** Carry real line provenance in the return type.
+
+1. **Signature change (BC-X.13.002):** `extract_path_citations(doc: &str) -> Vec<(String, usize)>`. Each entry is `(normalized_path, 1-based-line-number)` where the line number is the 1-based line in `doc` where the backtick citation token occurs. The function remains PURE — line tracking is deterministic from the input string (count newlines up to the token start, no I/O). The proptest invariants (no false positives, no panics) still apply to the path component.
+
+2. **Message format change (BC-X.13.001 + CI-CITE-001):** The canonical failure message now uses the REAL integer: `  <path> (line 142)` rather than a literal placeholder. The integration test computes this from the `(path, line)` pairs returned by `extract_path_citations` filtered by `!Path::exists()`.
+
+3. **No count change:** No new BCs, no new ECs. `total_bcs` remains 602. Only the function signature and the message rendering change.
+
+**Files amended in this iteration:**
+- `.factory/specs/prd/cross-cutting.md` — BC-X.13.002 Behavior/Postconditions/CanonicalTestVectors/Source; BC-X.13.001 Postconditions(on failure); BC-X.13.003 Source
+- `.factory/specs/prd/error-taxonomy.md` — CI-CITE-001 Message format and Actionability rows
+- `.factory/phase-f2-spec-evolution/verification-delta-DEAD-CITATION-CI.md` — VP-CITE-001 description, proptest destructuring, VP-CITE-002 integration test code, F4 handoff checklist, VP mapping table
+- `.factory/stories/S-MAINT-DEAD-CITATION-CI.md` — AC-001 (signature), AC-002 (dead vec type), AC-003 (message format + implementation format string), AC-004 (dead vec type), BC table row, T-1 stub, T-5 implementation notes, H-CITE-001 expected message, AC traceability table
+
+**Architect note (carry-forward from prior amendment):** VP-CITE-001 proptest `prop_assert` must destructure tuples (`for (path, _line) in &result`) — updated in verification-delta. Integration test `dead: Vec<(String, usize)>` filter uses `|(p, _)| !Path::exists()` — updated in verification-delta and story.
 
 # PRD Delta — DEAD-CITATION-CI (F2 Iteration 2)
 

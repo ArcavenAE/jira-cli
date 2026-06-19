@@ -935,12 +935,12 @@ that verifies every file-path citation in `CLAUDE.md` resolves to a real on-disk
 - Test fails with the CANONICAL failure message (exact wording, authoritative per error-taxonomy CI-CITE-001):
   ```
   CLAUDE.md cites file paths that do not exist on disk:
-    <path> (line N)
-    <path> (line N)
+    <path> (line 142)
+    <path> (line 287)
   Fix the citation or restore the file.
   Note: .factory/, glob, and symbol-form tokens are auto-excluded. Root-level files (Cargo.toml, CLAUDE.md, etc.) are checked.
   ```
-- Each dead citation is listed on its own line, prefixed with two spaces, followed by ` (line N)` for actionability
+- Each dead citation is listed on its own line, prefixed with two spaces, followed by ` (line {n})` where `{n}` is the real 1-based line number in CLAUDE.md where the backtick citation occurs — computed from the `(path, line)` pairs returned by `extract_path_citations` filtered by `!Path::exists()`
 - The message includes the "Fix the citation or restore the file." instruction plus the auto-exclusion note and root-file inclusion note
 
 **Invariants**:
@@ -1002,7 +1002,7 @@ that verifies every file-path citation in `CLAUDE.md` resolves to a real on-disk
 
 **Confidence**: HIGH
 **Subject**: CI guard / parser grammar
-**Behavior**: The `extract_path_citations` helper in `tests/claude_md_citations.rs` applies a two-step extraction followed by a canonical pipeline in order before the `Path::exists()` check:
+**Behavior**: The `extract_path_citations(doc: &str) -> Vec<(String, usize)>` helper in `tests/claude_md_citations.rs` applies a two-step extraction followed by a canonical pipeline in order before the `Path::exists()` check. Each entry in the returned vec is a `(normalized_path, line_number)` pair where `line_number` is the 1-based line in `doc` where the backtick citation token occurs. Line tracking is deterministic from the input string (count newlines up to the token start) and requires no I/O. The function remains pure (no `Path::exists()` calls inside):
 
 **Two-step extraction (SR-001):**
 1. Extract all inline single-backtick spans (`` `…` ``) from the CLAUDE.md text. Fenced triple-backtick code blocks are OUT OF SCOPE and never read (M-1).
@@ -1038,10 +1038,11 @@ e. **Path::exists() check**: only tokens surviving steps (a)-(d) reach this chec
 **Cardinality note (F2-Iter5 merged-fixpoint, supersedes F3-MINOR/LOW-1/LOW-2/LOW-3):** BC-X.13.002 now defines 5 top-level pipeline steps (a)–(e). Step (b) is the single unified normalization fixpoint encompassing all former symbol-strip, line-ref-strip, and punctuation-trim rules as ordered sub-steps (1)–(6). Steps (c) and (d) are the two filter gates. Step (e) is the effectful existence check. References to the former (a)–(h) scheme (steps b/c/d/e/f/g/h) are superseded by this canonical (a)–(e) statement.
 
 **Preconditions**:
-- `extract_path_citations` is called with the full CLAUDE.md text
+- `extract_path_citations` is called with the full CLAUDE.md text as a `&str`
 - The CLAUDE.md citation conventions described in CLAUDE.md §"Citation form in spec/CLAUDE.md" are in effect (symbol-form `<file>::<fn>`, approximate line `<file>:~NN`)
 
 **Postconditions**:
+- Returns `Vec<(String, usize)>` — each entry is `(normalized_path, line_number)` where `line_number` is the 1-based line in the input `doc` where the backtick citation token appears
 - No token matching the glob, brace-glob, symbol-form, line-ref, trailing-punct, or section-ref patterns causes a false-positive path-existence failure
 - After normalization (stripping in fixpoint step b), the underlying file path (e.g. `src/adf.rs`) IS checked — the guard doesn't skip the file entirely, only strips the disambiguation suffix
 - `[docs/x.md]`-style bracket-wrapped tokens are CHECKED (not silently excluded) — fixpoint sub-step (6) strips the unbalanced `]` before the extension filter at step (d) runs
@@ -1081,7 +1082,7 @@ e. **Path::exists() check**: only tokens surviving steps (a)-(d) reach this chec
 - EC-CITE-031 (ROOT_FILES exclusion — adf.rs shorthand): Token is `adf.rs` — no known dir prefix; does NOT exactly match any ROOT_FILES member (`adf.rs` is a shorthand for `src/adf.rs`, not a root file) → EXCLUDED at step (c). No false positive. The correct citation is `src/adf.rs` (which IS in-scope via the dir-prefix rule).
 - EC-CITE-032 (ROOT_FILES paren-wrapped — punctuation interaction): Token is `(Cargo.toml)` — fixpoint pass 1: sub-step (3) strips leading `(` → `Cargo.toml)`; sub-step (5) `count('(')=0 < count(')')=1` → strips `)` → `Cargo.toml`; pass 2: stable. Now no dir prefix, but exactly matches ROOT_FILES member → IN-SCOPE at step (c) → passes extension filter at step (d) (`.toml`) → CHECKED. `Cargo.toml` exists at repo root → pass. **Load-bearing interaction:** confirms that punctuation unwrapping (step b) runs BEFORE the ROOT_FILES exact-match test (step c) — a token like `(Cargo.toml)` reaches the ROOT_FILES check only after the fixpoint strips its parens. Proptest note: the proptest alphabet must include `(` and `)` to exercise this interaction (i.e., generate `(Cargo.toml)` class inputs); the architect should add a `Cargo.toml` (or any ROOT_FILES member) with paren wrapping to the VP-CITE-001 proptest alphabet so the wrap+exact-match interaction is exercised by random inputs.
 
-**Canonical Test Vectors** (for `extract_path_citations` unit tests):
+**Canonical Test Vectors** (for `extract_path_citations` unit tests; returned type is `Vec<(String, usize)>` — tests assert on the path component of each tuple):
 
 | Raw backtick content | Extracted path (after normalization) | Checked? |
 |---------------------|-------------------------------------|---------|
@@ -1117,7 +1118,7 @@ e. **Path::exists() check**: only tokens surviving steps (a)-(d) reach this chec
 - F1 Delta Analysis: `DEAD-CITATION-CI-delta-analysis.md` §5b OUT-OF-SCOPE, §6 Risk 1/2/3/4
 - Research: `maint-pg-dead-citation-ci-approach.md` §(d) grammar rules 4/5
 - Implementing story: S-MAINT-DEAD-CITATION-CI (F3)
-- Source: `tests/claude_md_citations.rs::extract_path_citations` (new function; has inline `#[cfg(test)]` unit tests)
+- Source: `tests/claude_md_citations.rs::extract_path_citations` (new function; returns `Vec<(String, usize)>`; has inline `#[cfg(test)]` unit tests)
 
 [REVISED 2026-06-19 F2-Iter5 F-PASS6-01] Merged the formerly separate symbol-form-strip step (b), line-ref-strip step (c), and punctuation-trim fixpoint step (e) into ONE unified normalization fixpoint as step (b) with ordered sub-steps (1)–(6). Pipeline is now (a)–(e) instead of (a)–(h). Root cause: under the former separated pipeline, a token like `(src/config.rs:~42)` caused a false-negative — the one-shot line-ref strip (former step c) ran when the token still had its leading `(`, so `:~42$` didn't match the trailing `)`, and after paren-trim completed the `:~42` residue was left unchecked. The merged single-fixpoint eliminates this ordering-class entirely by re-running all sub-steps until stable. Step (d) (section-ref) was always a no-op code marker — it is now folded into the extraction preamble prose. References to former steps (a)–(h) in external docs (arch-delta, verification-delta) have been propagated (F2-Iter6 step-letter propagation sweep, 2026-06-19).
 
@@ -1178,7 +1179,7 @@ There is NO `is_off_working_branch_allowlisted` function in the final implementa
 - F1 Delta Analysis: `DEAD-CITATION-CI-delta-analysis.md` §5c (superseded by re-scope)
 - Re-scope decision: DEAD-CITATION-CI F2 Iteration 2 (2026-06-19, human-approved)
 - Implementing story: S-MAINT-DEAD-CITATION-CI (F3)
-- Source: `tests/claude_md_citations.rs::extract_path_citations` dir-prefix filter (`.factory/` absence from prefix set)
+- Source: `tests/claude_md_citations.rs::extract_path_citations` (returns `Vec<(String, usize)>`; dir-prefix filter — `.factory/` absence from prefix set)
 
 ---
 

@@ -85,17 +85,20 @@ stale reference that misleads future contributors.
 | BC | Statement |
 |----|-----------|
 | BC-X.13.001 | `test_claude_md_citations_resolve_to_real_files` in `tests/claude_md_citations.rs` reads CLAUDE.md via `include_str!`, extracts every in-scope backtick-quoted path token per BC-X.13.002, asserts `Path::exists()` for each, and on failure lists ALL dead paths with the canonical CI-CITE-001 message. Passes green on develop HEAD (zero dead citations). |
-| BC-X.13.002 | `extract_path_citations(doc: &str) -> Vec<String>` applies the 5-step pipeline (a)–(e): (a) glob-skip; (b) merged-fixpoint normalization (6 sub-steps); (c) dir-prefix filter + ROOT_FILES curated exact-match; (d) extension filter (`.md`, `.rs`, `.sh`, `.toml`, `.yml`, `.yaml`); (e) Path::exists() check. No false positives on any documented edge case. |
+| BC-X.13.002 | `extract_path_citations(doc: &str) -> Vec<(String, usize)>` applies the 5-step pipeline (a)–(e): (a) glob-skip; (b) merged-fixpoint normalization (6 sub-steps); (c) dir-prefix filter + ROOT_FILES curated exact-match; (d) extension filter (`.md`, `.rs`, `.sh`, `.toml`, `.yml`, `.yaml`); (e) Path::exists() check. Each entry is `(normalized_path, 1-based-line-number)`. No false positives on any documented edge case. |
 | BC-X.13.003 | ALL `.factory/` prefix paths are excluded by dir-prefix filter at step (c). `.factory/` is NOT a develop-tracked directory prefix. No allowlist function exists — exclusion is structural within `extract_path_citations`. |
 
 ---
 
 ## Acceptance Criteria
 
-### AC-001 — `extract_path_citations` is a standalone pure function with the 5-step pipeline (traces to BC-X.13.002 postcondition: all-in-one extraction/normalization function)
+### AC-001 — `extract_path_citations` is a standalone pure function with the 5-step pipeline returning `(path, line)` pairs (traces to BC-X.13.002 postcondition: all-in-one extraction/normalization function with line provenance)
 
-`tests/claude_md_citations.rs` defines `extract_path_citations(doc: &str) -> Vec<String>` as a
-standalone pure function (no `Path::exists()` calls inside). The function:
+`tests/claude_md_citations.rs` defines `extract_path_citations(doc: &str) -> Vec<(String, usize)>` as a
+standalone pure function (no `Path::exists()` calls inside). Each returned entry is a
+`(normalized_path, 1-based-line-number)` pair where `line_number` is the 1-based line in
+`doc` where the backtick citation token appears — computed by counting newlines up to the
+token start. Line tracking is deterministic and requires no I/O. The function:
 
 1. Extracts all inline single-backtick spans (`` `…` ``). Fenced triple-backtick blocks are
    OUT OF SCOPE (M-1, EC-CITE-016).
@@ -118,7 +121,11 @@ standalone pure function (no `Path::exists()` calls inside). The function:
 No `is_off_working_branch_allowlisted` function exists. BC-X.13.002 step (c) is the sole
 exclusion mechanism for `.factory/` and bare-shorthand tokens.
 
-**Traceability:** BC-X.13.002 postcondition — correct (a)–(e) pipeline with no false positives.
+Unit tests that assert over the returned vec MUST destructure the tuples: `for (path, line) in &result { … }`.
+Tests asserting on path values compare against the `String` component; tests asserting line numbers
+compare against the `usize` component.
+
+**Traceability:** BC-X.13.002 postcondition — correct (a)–(e) pipeline, `Vec<(String, usize)>` return type, no false positives.
 VP-CITE-001 targets this function via unit and proptest tests.
 
 ---
@@ -129,12 +136,13 @@ The test:
 ```rust
 let doc = include_str!("../CLAUDE.md");
 let root = env!("CARGO_MANIFEST_DIR");
+// extract_path_citations returns Vec<(String, usize)> — (normalized_path, 1-based line)
 let citations = extract_path_citations(doc);
-let dead: Vec<String> = citations
+let dead: Vec<(String, usize)> = citations
     .into_iter()
-    .filter(|p| !Path::new(root).join(p).exists())
+    .filter(|(p, _)| !Path::new(root).join(p).exists())
     .collect();
-assert!(dead.is_empty(), "<canonical CI-CITE-001 message>");
+assert!(dead.is_empty(), "<canonical CI-CITE-001 message with real line numbers>");
 ```
 
 - `include_str!("../CLAUDE.md")` embeds CLAUDE.md at compile time (no runtime file I/O for load).
@@ -148,26 +156,37 @@ VP-CITE-002 is the self-verification property for this test.
 
 ---
 
-### AC-003 — Failure message is CI-CITE-001 verbatim (traces to BC-X.13.001 postcondition 2: canonical failure message emitted byte-for-byte)
+### AC-003 — Failure message is CI-CITE-001 verbatim with real line numbers (traces to BC-X.13.001 postcondition 2: canonical failure message emitted byte-for-byte)
 
 When the integration test fails, the `assert!` failure message MUST match the CI-CITE-001
-format from `error-taxonomy.md §8` verbatim:
+format from `error-taxonomy.md §8` verbatim. The per-path lines use the REAL 1-based line
+number from the `(path, line)` tuples returned by `extract_path_citations`. Example output:
 
 ```
 CLAUDE.md cites file paths that do not exist on disk:
-  <path> (line N)
+  src/foo.rs (line 142)
+  tests/bar.rs (line 287)
 Fix the citation or restore the file.
 Note: .factory/, glob, and symbol-form tokens are auto-excluded. Root-level files (Cargo.toml, CLAUDE.md, etc.) are checked.
 ```
 
+The implementation format string (within `assert!`):
+```rust
+dead.iter().map(|(p, n)| format!("{} (line {})", p, n)).collect::<Vec<_>>().join("\n  ")
+```
+
 - Lead line: `CLAUDE.md cites file paths that do not exist on disk:` (NOT `Dead CLAUDE.md citations:`)
-- Per dead path: `  <path> (line N)` (two-space indent, then path, then ` (line N)`)
+- Per dead path: `  <path> (line {n})` (two-space indent, then path, then ` (line {n})` where `{n}` is the actual integer from the `usize` component of the tuple — e.g. `  src/foo.rs (line 142)`)
 - Fix line: `Fix the citation or restore the file.`
 - Note line: `Note: .factory/, glob, and symbol-form tokens are auto-excluded. Root-level files (Cargo.toml, CLAUDE.md, etc.) are checked.`
 
+The literal text `(line N)` MUST NOT appear in actual test output — `N` is a placeholder only
+in this spec document. The running test emits an integer (e.g. `142`).
+
 ALL dead paths are listed (not just the first).
 
-**Traceability:** BC-X.13.001 postcondition 2 — canonical CI-CITE-001 message emitted verbatim.
+**Traceability:** BC-X.13.001 postcondition 2 — canonical CI-CITE-001 message emitted verbatim with real line numbers.
+AC-001 (signature) is a prerequisite: line numbers are only available because `extract_path_citations` returns `Vec<(String, usize)>`.
 
 ---
 
@@ -176,8 +195,9 @@ ALL dead paths are listed (not just the first).
 `test_dead_citation_detected_in_fixture` feeds a doc string (NOT `include_str!("../CLAUDE.md")`)
 containing `src/DOES_NOT_EXIST_IN_ANY_JR_BUILD.rs` and asserts:
 ```rust
-let dead: Vec<String> = citations.into_iter().filter(|p| !Path::new(root).join(p).exists()).collect();
-assert!(dead.contains(&"src/DOES_NOT_EXIST_IN_ANY_JR_BUILD.rs".to_string()), ...);
+// citations: Vec<(String, usize)>
+let dead: Vec<(String, usize)> = citations.into_iter().filter(|(p, _)| !Path::new(root).join(p).exists()).collect();
+assert!(dead.iter().any(|(p, _)| p == "src/DOES_NOT_EXIST_IN_ANY_JR_BUILD.rs"), ...);
 ```
 
 This test verifies the guard catches dead develop-tracked citations without depending on CLAUDE.md
@@ -291,7 +311,9 @@ H-CITE-001, H-CITE-002, and H-CITE-003 and should be appended to `.factory/specs
 passed to `extract_path_citations`. The resulting vec is filtered with `Path::new(CARGO_MANIFEST_DIR).join(p).exists()`.
 **Action:** Assert the dead vec contains `"src/DOES_NOT_EXIST_IN_ANY_JR_BUILD.rs"`.
 **Expected:** The path IS in the dead list. The integration test would fail with the CI-CITE-001
-message: `CLAUDE.md cites file paths that do not exist on disk:` / `  src/DOES_NOT_EXIST_IN_ANY_JR_BUILD.rs (line N)`.
+message: `CLAUDE.md cites file paths that do not exist on disk:` / `  src/DOES_NOT_EXIST_IN_ANY_JR_BUILD.rs (line {n})`
+where `{n}` is the actual 1-based line number in the fixture doc string where the citation appears
+(not a literal `N`). The holdout evaluator may use `assert!(msg.contains("src/DOES_NOT_EXIST_IN_ANY_JR_BUILD.rs (line "))` to verify the real-number format without pinning the exact line.
 **Why hidden:** Confirms the guard correctly detects dead develop-tracked `src/` citations without
 relying on CLAUDE.md's actual content; a regression in the dir-prefix filter at step (c) would make
 this path invisible.
@@ -331,9 +353,9 @@ on these shorthands.
 
 | AC | BC(s) | VP | Clause |
 |----|-------|-----|--------|
-| AC-001 | BC-X.13.002 | VP-CITE-001 | postcondition: (a)–(e) pipeline correctly applied; no false positives |
+| AC-001 | BC-X.13.002 | VP-CITE-001 | postcondition: (a)–(e) pipeline correctly applied; returns `Vec<(String, usize)>`; no false positives |
 | AC-002 | BC-X.13.001 | VP-CITE-002 | postcondition 1: guard green on develop HEAD |
-| AC-003 | BC-X.13.001 | VP-CITE-002 | postcondition 2: CI-CITE-001 failure message verbatim |
+| AC-003 | BC-X.13.001 | VP-CITE-002 | postcondition 2: CI-CITE-001 failure message verbatim with real 1-based line numbers |
 | AC-004 | BC-X.13.001 | VP-CITE-002 | postcondition 3: deterministic failure on known-dead citation |
 | AC-005 | BC-X.13.003 | VP-CITE-002 | invariant: ALL `.factory/` excluded structurally; no allowlist |
 | AC-006 | BC-X.13.002 | VP-CITE-001 | step (c) condition 2: ROOT_FILES exact-match; shorthand exclusion |
@@ -350,7 +372,8 @@ on these shorthands.
 Create `tests/claude_md_citations.rs` with:
 ```rust
 // Stub — all function bodies are todo!()
-fn extract_path_citations(doc: &str) -> Vec<String> { todo!() }
+// Returns (normalized_path, 1-based-line-number) pairs
+fn extract_path_citations(doc: &str) -> Vec<(String, usize)> { todo!() }
 
 #[cfg(test)]
 mod tests {
@@ -385,13 +408,21 @@ proptest is already a dev-dep in this repo per `src/adf.rs` usage).
 
 ### T-5: Implement `extract_path_citations` (step by step, making one test green at a time)
 
-Implement the function in order of the (a)–(e) pipeline steps:
+Implement the function `extract_path_citations(doc: &str) -> Vec<(String, usize)>` in
+order of the (a)–(e) pipeline steps:
 1. Backtick extraction (regex or manual parse — inline single-backtick only).
-2. Whitespace tokenization.
+   Record the 1-based line number of each token start by counting newlines up to the
+   token's byte offset in `doc`. This is the line provenance carried in the `usize`
+   component of the returned tuples.
+2. Whitespace tokenization (each token inherits the line number of the backtick span
+   it came from — if a span spans multiple lines, tokens after the first newline take
+   the line of the token start within the span, not the span start; simplest correct
+   implementation: record line of the backtick-open character).
 3. Step (a): glob-skip.
 4. Step (b): merged fixpoint (6 sub-steps in a loop until stable).
 5. Step (c): dir-prefix filter + ROOT_FILES curated exact-match.
 6. Step (d): extension filter.
+7. Return surviving `(normalized_path, line_number)` pairs.
 
 No `Path::exists()` calls inside this function.
 
