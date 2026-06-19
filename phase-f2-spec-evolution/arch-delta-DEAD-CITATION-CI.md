@@ -35,16 +35,21 @@ This feature introduces two logical components that live entirely in
 This function is **deterministic and side-effect-free**: it takes a string
 (the CLAUDE.md text, already loaded at compile time via `include_str!`) and
 returns a sorted, deduplicated `Vec<String>` of candidate file paths after
-applying the normalization and exclusion rules specified by BC-X.13.002:
+applying the canonical normalization/skip pipeline specified by BC-X.13.002
+(steps applied in this exact order — SR-004):
 
-1. Tokenizes backtick-quoted content by whitespace
-2. Filters by known directory prefix (`src/`, `tests/`, `docs/`,
-   `.factory/`, `.github/`, `scripts/`)
-3. Filters by recognized file extension (`.md`, `.rs`, `.sh`, `.toml`,
-   `.yml`, `.yaml`)
-4. Skips tokens containing `*` (glob patterns)
-5. Strips symbol-form suffixes (`::` onward)
-6. Strips line-ref suffixes (`:~[0-9]+` or `:[0-9]+`)
+(a) Extract inline single-backtick spans and split each interior on whitespace
+(b) Split interior on ASCII whitespace — each token is a candidate
+(c) **Glob skip**: skip entirely if the token contains `*`, `{`, or `}` anywhere
+(d) **Symbol-form strip**: strip from the first `::` onward (`src/adf.rs::push_text` → `src/adf.rs`)
+(e) **Line-ref strip**: strip trailing `:~[0-9]+` or `:[0-9]+` suffix
+(f) **Trailing-punctuation trim**: trim trailing `.`, `,`, `;`, `:`; trim unbalanced trailing `)`
+(g) **Dir-prefix + extension filter**: token must start with a develop-tracked directory prefix
+    (`src/`, `tests/`, `docs/`, `.github/`, `scripts/`) AND end with a recognized file extension
+    (`.md`, `.rs`, `.sh`, `.toml`, `.yml`, `.yaml`). ALL `.factory/` prefixes are EXCLUDED here —
+    `.factory/` is NOT in the develop-tracked prefix set (it is git-ignored, lives in a separate
+    orphan-branch worktree, and is ABSENT from the CI checkout)
+(h) **Path::exists() check**: only tokens surviving steps (a)–(g) reach this check
 
 No I/O occurs. No global state is read or written. The function is
 **suitable for inline `#[cfg(test)]` unit tests and proptest** — test
@@ -62,17 +67,23 @@ This is the integration-level test function. It:
 2. Calls `extract_path_citations` (pure — see above)
 3. For each candidate path, calls `Path::new(env!("CARGO_MANIFEST_DIR")).join(&path).exists()`
    — this is a filesystem existence check (I/O)
-4. Calls `is_off_working_branch_allowlisted(path)` to skip factory-branch
-   paths (pure — deterministic string-prefix matching)
-5. On failure, panics with an actionable message listing all dead paths
+4. On failure, panics with the CANONICAL failure message (CI-CITE-001, verbatim):
+   ```
+   CLAUDE.md cites file paths that do not exist on disk:
+     <path> (line N)
+   Fix the citation or restore the file.
+   Note: .factory/, glob, and symbol-form tokens are auto-excluded.
+   ```
 
-The filesystem check (`Path::exists()`) is the **only effectful operation**
-in this guard. It is deliberately placed at the outermost layer, keeping
-the grammar logic (`extract_path_citations`) pure and independently testable.
+There is NO `is_off_working_branch_allowlisted` function — `.factory/` exclusion
+is handled entirely by the dir-prefix filter inside `extract_path_citations` (step g
+above). The filesystem check (`Path::exists()`) is the **only effectful operation**
+in this guard. It is deliberately placed at the outermost layer, keeping the grammar
+logic (`extract_path_citations`) pure and independently testable.
 
-**VP-CITE-002 targets this test**: the integration self-verification
-checks that the guard is green on current develop HEAD and fails
-deterministically when a dead citation is fed via a fixture string.
+**VP-CITE-002 targets this test**: the integration self-verification checks that the
+guard is green on current develop HEAD and fails deterministically when a dead citation
+is fed via a fixture string.
 
 ### Boundary Enforcement Note
 
@@ -82,7 +93,8 @@ The pure/effectful split is load-bearing for VP-CITE-001 testability:
   property-based tests would require mocking `Path::exists()` — impractical
   in Rust's standard test framework.
 - By extracting `extract_path_citations` as a pure function (no `Path::exists`
-  calls inside), proptest can exercise all 9 exclusion rules without any
+  calls inside), proptest can exercise all glob-skip, symbol-form, line-ref,
+  trailing-punct, dir-prefix, and extension-filter branches without any
   filesystem access.
 
 This matches the purity convention established by `src/adf.rs` (ADF builder
@@ -179,3 +191,8 @@ and `verification-delta-DEAD-CITATION-CI.md` without any architecture pre-work.
 The purity boundary documented in §2 is the critical design constraint for F4:
 `extract_path_citations` must be a standalone pure function, not inlined into the
 integration test body, to enable VP-CITE-001 proptest coverage.
+
+There is NO `is_off_working_branch_allowlisted` function in the final
+implementation. `.factory/` exclusion is achieved solely by the dir-prefix
+filter inside `extract_path_citations` (step g in the canonical pipeline). Do
+not implement or reference an allowlist function.
