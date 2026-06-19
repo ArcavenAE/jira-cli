@@ -46,7 +46,7 @@ hint sentence is REMOVED (no allowlist exists in the re-scoped design).
 ### Normalization Pipeline Improvements (HIGH + MEDIUM + SPEC-REVIEWER)
 
 BC-X.13.002 revised to specify:
-- Canonical pipeline order (SR-004): steps (a)–(h) in exact sequence
+- Canonical pipeline order (SR-004): steps (a)–(h) in exact sequence [historical: Iter-2 used (a)–(h); superseded by Iter-5 merged-fixpoint (a)–(e)]
 - Two-step extraction stated explicitly (SR-001): extract inline backtick spans, then split on whitespace
 - Brace-glob extension (SR-002): `{` and `}` added to glob-skip set alongside `*`
 - Trailing-punctuation trim (H-1/H-2): `.`, `,`, `;`, `:` always trimmed; `)` trimmed only if unbalanced

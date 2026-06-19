@@ -91,9 +91,9 @@ Property: For any string `s` that does NOT start with a known directory prefix
 passing it to `extract_path_citations` returns an empty vec (or a vec whose entries
 all start with a known develop-tracked prefix). The alphabet deliberately includes
 `*`, `{`, `}`, trailing-punct chars (`,`, `.`, `;`, `:`, `)`), and leading-punct
-chars `(`, `[`, and `]` so that the glob-skip branch (step a), trailing-punct-trim
-branch (step e), leading-punct-strip branch (step e), and `]` balance-trim branch
-(step e) are all exercised by random inputs — not merely by hand-crafted unit vectors
+chars `(`, `[`, and `]` so that the glob-skip branch (step (a)), trailing-punct-trim
+branch (step (b) sub-step (4)), leading-punct-strip branch (step (b) sub-step (3)), and `]` balance-trim branch
+(step (b) sub-step (6)) are all exercised by random inputs — not merely by hand-crafted unit vectors
 — which reduces mutation survival risk in F6.
 
 ```rust
@@ -127,7 +127,7 @@ proptest! {
 
 Note: `.factory/` is intentionally ABSENT from the `starts_with` allowlist in the
 prop_assert — a token starting with `.factory/` MUST NOT appear in the output (it is
-excluded by dir-prefix filter at step f). If the proptest engine generates an `s`
+excluded by dir-prefix filter at step (c)). If the proptest engine generates an `s`
 that starts with `.factory/`, the assertion correctly catches any regression where
 `.factory/` leaks into the output.
 
@@ -196,7 +196,7 @@ fn test_claude_md_citations_resolve_to_real_files() {
     let root = env!("CARGO_MANIFEST_DIR");
     let citations = extract_path_citations(doc);
     // No is_off_working_branch_allowlisted call — .factory/ is excluded by
-    // extract_path_citations dir-prefix filter (step f); no allowlist needed.
+    // extract_path_citations dir-prefix filter (step (c)); no allowlist needed.
     let dead: Vec<String> = citations
         .into_iter()
         .filter(|p| !Path::new(root).join(p).exists())
@@ -355,7 +355,7 @@ Before F4 (TDD Implementation) can begin:
 - [ ] `extract_path_citations` is implemented as a **standalone pure function** (no
       `Path::exists()` calls inside) — required for VP-CITE-001 proptest coverage
 - [ ] **NO `is_off_working_branch_allowlisted` function** — `.factory/` exclusion is
-      handled entirely inside `extract_path_citations` by the dir-prefix filter (step f).
+      handled entirely inside `extract_path_citations` by the dir-prefix filter (step (c)).
       Do not implement or call this function.
 - [ ] `extract_path_citations` has an inline `#[cfg(test)] mod tests` block in
       `tests/claude_md_citations.rs`

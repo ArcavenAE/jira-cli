@@ -95,7 +95,7 @@ This is the integration-level test function. It:
    ```
 
 There is NO `is_off_working_branch_allowlisted` function — `.factory/` exclusion
-is handled entirely by the dir-prefix filter inside `extract_path_citations` (step f
+is handled entirely by the dir-prefix filter inside `extract_path_citations` (step (c)
 above). The filesystem check (`Path::exists()`) is the **only effectful operation**
 in this guard. It is deliberately placed at the outermost layer, keeping the grammar
 logic (`extract_path_citations`) pure and independently testable.
@@ -213,5 +213,5 @@ integration test body, to enable VP-CITE-001 proptest coverage.
 
 There is NO `is_off_working_branch_allowlisted` function in the final
 implementation. `.factory/` exclusion is achieved solely by the dir-prefix
-filter inside `extract_path_citations` (step f in the canonical pipeline). Do
+filter inside `extract_path_citations` (step (c) in the canonical pipeline). Do
 not implement or reference an allowlist function.
