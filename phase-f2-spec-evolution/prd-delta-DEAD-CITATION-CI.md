@@ -105,9 +105,10 @@ the new story's BC table during F3 (bc_array_changes_propagate_to_body_and_acs p
 
 ## VP Citations Changed
 
-VP-CITE-001 and VP-CITE-002 are new VPs (not modifications to existing VPs). Architect
-must register them in VP-INDEX and verification-architecture.md under
-`vp_index_is_vp_catalog_source_of_truth` policy after F2 completes. VP-CITE-002's
+VP-CITE-001 and VP-CITE-002 are new VPs (not modifications to existing VPs). This
+repository does NOT have a VP-INDEX or verification-architecture.md — VPs are inlined
+directly in BC bodies (see BC-X.13.001 §Verification Properties and BC-X.13.002/003
+§Verification Properties). No separate VP registration step is required. VP-CITE-002's
 scope has changed (re-scope): it no longer exercises `test_factory_research_path_is_not_allowlisted`
 or `is_off_working_branch_allowlisted` (those test names are dropped); it exercises
 the dir-prefix filter's exclusion of `.factory/` paths instead.

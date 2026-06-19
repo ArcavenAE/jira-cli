@@ -951,12 +951,13 @@ that verifies every file-path citation in `CLAUDE.md` resolves to a real on-disk
 
 **Edge Cases**:
 - EC-CITE-001: CLAUDE.md contains zero in-scope citations → test passes (empty `dead` vec)
-- EC-CITE-002: A citation uses `Detail: path1, path2` comma-delimited form → both tokens extracted (interior whitespace tokenization); trailing comma stripped by trailing-punct rule (BC-X.13.002 step f) → both checked independently
+- EC-CITE-002: A citation uses `Detail: path1, path2` comma-delimited form → both tokens extracted (interior whitespace tokenization); trailing comma stripped by trailing-punct rule (BC-X.13.002 step (e)) → both checked independently
 - EC-CITE-003: A citation has CRLF line ending (Windows checkout) → `lines()` and `.trim_end_matches('\r')` normalize before tokenization; no false positive
 - EC-CITE-004: A path with a recognized extension (e.g., `src/cli/issue.rs`) that resolves to a directory rather than a file → `Path::exists()` returns true for directories; guard passes (the "path is a directory" case only arises when an extensioned token happens to name an existing directory, which is extremely rare; extensionless directory tokens such as `src/cli/issue` are excluded earlier by the extension filter at step g)
 - EC-CITE-005: Two different CLAUDE.md lines cite the same path → path checked twice; redundant but not harmful (no dedup needed)
 - EC-CITE-016 (M-1): Token appears inside a triple-backtick fenced code block (e.g., the architecture tree in CLAUDE.md) → OUT OF SCOPE; the guard extracts ONLY inline single-backtick spans, not fenced-block contents; fenced-block paths are never checked and never cause false positives
 - EC-CITE-017: CLAUDE.md cites `.factory/research/S-3.03-wave3-verification.md` → prefix `.factory/` → EXCLUDED (not checked); no failure even if file exists or does not exist on the working tree
+- EC-CITE-022 (forward-reference): A CLAUDE.md citation references a develop-tracked file (e.g., `tests/claude_md_citations.rs`) that does not yet exist on the working tree at CI time → the guard FAILS with a dead-citation error for that path. In-scope citations must reference files present in the SAME working tree at test time. The correct fix is to land the citation and the referenced file in the SAME commit or PR — e.g., the guard's own doc-fallout note in CLAUDE.md and the new `tests/claude_md_citations.rs` file must be introduced together, not in separate PRs.
 
 **Canonical Test Vectors**:
 
@@ -1004,8 +1005,10 @@ that verifies every file-path citation in `CLAUDE.md` resolves to a real on-disk
 a. **Glob skip**: if the token contains `*`, `{`, or `}` anywhere, skip entirely (not checked). Handles ``.factory/specs/prd/bc-*.md``, `adf-{block,task}-list.md`, and similar brace-glob forms (SR-002).
 b. **Symbol-form strip**: if the token contains `::`, strip from the first `::` onward before further processing. `src/adf.rs::push_text` → `src/adf.rs`. `adf::tests::test_bare_*` → already skipped at step (a).
 c. **Line-ref strip**: strip trailing `:~[0-9]+` or `:[0-9]+` suffix. `src/config.rs:~42` → `src/config.rs`.
-d. **Section-ref**: `§9`-style tokens lack a known directory prefix and are excluded by the dir-prefix filter at step (g); whitespace tokenization has already separated them from the preceding path.
-e. **Trailing-punctuation trim**: after the above strips, trim trailing `.`, `,`, `;`, `:` always; trim a trailing `)` ONLY if it is unbalanced within the token (mirror of the `adf.rs` bare-URL trailing-punct rule). This makes `path1,` in comma-delimited `Detail: path1, path2` correctly yield `path1` (H-1/H-2).
+d. **Section-ref**: `§9`-style tokens lack a known directory prefix and are excluded by the dir-prefix filter at step (f); whitespace tokenization has already separated them from the preceding path.
+e. **Punctuation trim (leading and trailing)**: applied symmetrically after the above strips.
+   - *Leading*: strip a leading `(` or `[` from the token. This allows `(src/adf.rs)` → after leading-`(` removal → `src/adf.rs)` → trailing-`)` check applies next.
+   - *Trailing*: trim trailing `.`, `,`, `;`, `:` always. Trim a trailing `)` ONLY if it is **unbalanced** across the whole token — defined as `count('(') < count(')')` after any leading-`(` strip (faithful mirror of `src/adf.rs::trim_url_extent` whole-token parenthesis balance). This makes `path1,` in comma-delimited `Detail: path1, path2` correctly yield `path1` (H-1/H-2); `(src/adf.rs)` → leading `(` stripped → `src/adf.rs)` → one `)`, zero `(` → unbalanced → trailing `)` stripped → `src/adf.rs` → checked.
 f. **Dir-prefix filter**: the token (after all strips above) must start with a develop-tracked directory prefix: `src/`, `tests/`, `docs/`, `.github/`, `scripts/`. ALL `.factory/` prefixes are excluded at this step — they are absent from the CI checkout. URL tokens (`http://`, `https://`), home-directory tokens (`~/`), Windows-env tokens (`%APP`), and bare identifiers with no `/` are all excluded here as corollaries.
 g. **Extension filter**: after all normalization, the token must end with a recognized file extension: `.md`, `.rs`, `.sh`, `.toml`, `.yml`, `.yaml`. Extensionless tokens (`src/cli/issue`) are excluded here.
 h. **Path::exists() check**: only tokens surviving steps (a)-(g) reach this check.
@@ -1036,8 +1039,8 @@ h. **Path::exists() check**: only tokens surviving steps (a)-(g) reach this chec
 - EC-CITE-011: Token is `src/cli/issue` (no extension, from hypothetical prose) — no recognized extension after normalization → excluded by extension filter at step (g)
 - EC-CITE-012 (trailing punct): Token is `src/adf.rs,` from a comma-delimited `Detail:` line — trailing comma trimmed at step (e) → `src/adf.rs` → checked → pass
 - EC-CITE-013 (brace-glob): Token is `adf-{block,task}-list.md` — contains `{` and `}` → skip at step (a) → no false positive
-- EC-CITE-014 (unbalanced paren): Token is `(src/adf.rs)` from prose — trailing `)` is unbalanced (no opening `(` inside the token after dir-prefix) → trimmed at step (e) → `src/adf.rs` → checked; or leading `(` is excluded by dir-prefix check at step (f) depending on token extraction boundary
-- EC-CITE-015 (balanced paren): Token is `src/types/assets/mod.rs(foo)` (hypothetical) — trailing `)` has a matching `(` → NOT trimmed → extension filter at step (g) excludes `mod.rs(foo)` (no recognized terminal extension after `)`) → excluded, no false positive
+- EC-CITE-014 (unbalanced paren — leading punct): Token is `(src/adf.rs)` from prose — step (e) leading trim removes leading `(` → token is now `src/adf.rs)` → trailing `)` check: `count('(')` = 0, `count(')')` = 1 → unbalanced (0 < 1) → trailing `)` trimmed → `src/adf.rs` → passes dir-prefix filter (step f) → checked. Outcome: CHECKED (no false negative).
+- EC-CITE-015 (balanced paren — no leading punct): Token is `src/types/assets/mod.rs(foo)` (hypothetical) — no leading `(` or `[` to strip — trailing `)` check: `count('(')` = 1, `count(')')` = 1 → balanced (1 == 1, not `<`) → trailing `)` NOT trimmed — token remains `src/types/assets/mod.rs(foo)` → extension filter at step (g) excludes it (no recognized terminal extension after `)`) → excluded, no false positive. Outcome: EXCLUDED (correct; the `(foo)` suffix is not a real file path).
 - EC-CITE-016 (fenced block, M-1): Token appears inside a triple-backtick fenced code block → not extracted (only inline single-backtick spans are processed) → never checked
 
 **Canonical Test Vectors** (for `extract_path_citations` unit tests):
@@ -1054,6 +1057,8 @@ h. **Path::exists() check**: only tokens surviving steps (a)-(g) reach this chec
 | `src/api/jsm/servicedesks.rs::require_service_desk` | `src/api/jsm/servicedesks.rs` | YES |
 | `.factory/research/S-3.03-wave3-verification.md` | (excluded — `.factory/` prefix) | NO |
 | `src/config.rs,` | `src/config.rs` (trailing comma trimmed) | YES |
+| `(src/adf.rs)` | `src/adf.rs` (leading `(` stripped; trailing `)` unbalanced → trimmed) | YES |
+| `src/types/assets/mod.rs(foo)` | excluded (trailing `)` balanced → not trimmed; no recognized extension after `)`) | NO |
 
 **Verification Properties**:
 - VP-CITE-001: `extract_path_citations` grammar — unit + proptest coverage of all normalization/exclusion rules including glob-skip (with `{`/`}`), symbol-form strip, line-ref strip, trailing-punct trim, section-ref whitespace exclusion, dir-prefix filter, and extension filter; no false positives. See `verification-delta-DEAD-CITATION-CI.md` §VP-CITE-001.
