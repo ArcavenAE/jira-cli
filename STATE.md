@@ -1,20 +1,20 @@
 ---
 document_type: pipeline-state
 version: "2.0"
-status: in_progress
-timestamp: 2026-06-20T20:00:00Z
+status: idle
+timestamp: 2026-06-20T21:00:00Z
 phase: 3
 project: jira-cli
 mode: brownfield
-current_step: "F7 CONVERGED. Awaiting human gate: merge PR #545 (hardening) + PATCH release decision."
+current_step: "DEAD-CITATION-CI CYCLE CLOSED + RELEASED v0.6.0-dev.6 → dbe8625. Maintenance RESUMED. IDLE."
 current_cycle: "cycle-001"
-feature_mode_bundle: "DEAD-CITATION-CI"
+feature_mode_bundle: none
 dtu_required: false
 phase_2_status: APPROVED
 phase_2_approved_at: 2026-05-07
 phase_3_status: IN_PROGRESS
-activation_head: "71f33c6"
-activation_version: "v0.6.0-dev.5"
+activation_head: "dbe8625"
+activation_version: "v0.6.0-dev.6"
 ---
 <!-- SIZE BUDGET: <200 lines. Historical content → cycle files. Run /vsdd-factory:compact-state if over 200. -->
 
@@ -27,10 +27,10 @@ activation_version: "v0.6.0-dev.5"
 | **Product** | jr (Jira CLI) |
 | **Mode** | BROWNFIELD / Rust |
 | **Target Workspace** | develop → main |
-| **Last Updated** | 2026-06-20: DEAD-CITATION-CI F7 CONVERGED. PR #545 (hardening) open, awaiting human merge gate + PATCH release decision. S-PG-MERGE-AUTH-BYPASS registered (story 91). DEC-129 logged. |
-| **Current Phase** | Phase 3 — Feature Mode ACTIVE (DEAD-CITATION-CI). F7 CONVERGED; awaiting merge #545 + release. BC 602. NFR 42. ADR 16. Stories 91. |
-| **Next Phase** | Human gate: merge PR #545 + PATCH release → next feature cycle |
-| **Activation HEAD** | 71f33c6 (v0.6.0-dev.5 tag); develop now @ 496258a (2 commits ahead) |
+| **Last Updated** | 2026-06-20: DEAD-CITATION-CI CYCLE CLOSED + RELEASED. PRs #544/#545/#546 merged. develop @ dbe8625 == v0.6.0-dev.6 tag. Maintenance RESUMED. IDLE. S-7.02 cycle-closing satisfied. |
+| **Current Phase** | Phase 3 — IDLE (maintenance mode). BC 602. NFR 42. ADR 16 (ADR-0014 written). Stories 91. |
+| **Next Phase** | Next feature cycle (open candidates: #532, Bundle D drafts, fork signing DEC-104) |
+| **Activation HEAD** | dbe8625 (v0.6.0-dev.6 tag); develop @ dbe8625 |
 
 ## Phase Progress
 
@@ -43,7 +43,8 @@ activation_version: "v0.6.0-dev.5"
 | **DEAD-CITATION-CI F1+F2** | **CONVERGED** | **2026-06-20** | **F1: delta analysis; F2: 10 adv passes + 5 consistency; ROOT_FILES amendment; human-approved** | DEC-125/126 |
 | **DEAD-CITATION-CI F3** | **CONVERGED** | **2026-06-20** | **3 adv passes + 2 consistency; story S-MAINT-DEAD-CITATION-CI (12 AC, 3 holdouts); human-approved** | DEC-127: F-1 HIGH fixed by Vec<(String,usize)> provenance |
 | **DEAD-CITATION-CI F4** | **COMPLETE** | **2026-06-20** | **PR #544 merged @ 496258a; 58 tests; 3 per-story adv passes + code/security review; ci-gate 15/15 incl. mutation testing+Windows** | PG-MERGE-AUTH-BYPASS logged |
-| **DEAD-CITATION-CI F5–F7** | **CONVERGED** | **2026-06-20** | **5/7 dims converged (visual/perf N/A); input-drift NONE; consistency CONSISTENT; CI 15/15 on #544+#545; PR #545 open, awaiting merge + release authorization** | DEC-129. S-PG-MERGE-AUTH-BYPASS registered (story 91). |
+| **DEAD-CITATION-CI F5–F7** | **CONVERGED** | **2026-06-20** | **5/7 dims converged (visual/perf N/A); input-drift NONE; consistency CONSISTENT; CI 15/15 on #544+#545; PR #545 merged** | DEC-129. S-PG-MERGE-AUTH-BYPASS registered (story 91). |
+| **DEAD-CITATION-CI RELEASED** | **CYCLE CLOSED** | **2026-06-20** | **v0.6.0-dev.6 shipped — PRs #544/#545/#546; release.yml run 27851891146 SUCCESS; 10 assets / 5 targets; full VSDD F1–F7; 8+ defects caught pre-merge** | develop @ dbe8625 == v0.6.0-dev.6. Maintenance RESUMED. |
 
 ## Current Phase Steps
 
@@ -54,7 +55,7 @@ activation_version: "v0.6.0-dev.5"
 | **DEAD-CITATION-CI F3 GATE CLOSE** — Story S-MAINT-DEAD-CITATION-CI registered (90 total; 12 AC, 3 holdouts, 3 SP, BC-X.13.001/002/003). 3 adv passes + 2 consistency audits CONVERGED. DEC-127 logged. Human-approved. | state-manager | F3 CONVERGED | develop @ 6bdb251. F4 next. |
 | **STATE.md COMPACTED** — Phase Progress rows archived to cycles/cycle-001/burst-log.md. Historical content extracted. STATE.md under 180 lines. | state-manager | COMPACTED | factory-artifacts. |
 | **DEAD-CITATION-CI F4 COMPLETE** — PR #544 merged @ 496258a. 58 tests (tests/claude_md_citations.rs). 3 per-story adv passes + code/security review. ci-gate 15/15 incl. mutation testing + Windows. PG-MERGE-AUTH-BYPASS + DEC-128 logged. F5 starting. | state-manager | F4 COMPLETE | develop @ 496258a. Story 90 DELIVERED. |
-| **DEAD-CITATION-CI F7 CONVERGED** — 5/7 dims converged (visual/perf N/A); input-drift NONE; consistency CONSISTENT; CI 15/15 on #544+#545; PR #545 open. S-PG-MERGE-AUTH-BYPASS registered (story 91). PG-MERGE-AUTH-BYPASS TRACKED. DEC-129 logged. Awaiting human gate: merge PR #545 + PATCH release decision. | state-manager | F7 CONVERGED | factory-artifacts. |
+| **DEAD-CITATION-CI CYCLE CLOSED + RELEASED** — PRs #544/#545 merged; PR #546 (release) merged. develop @ dbe8625 == v0.6.0-dev.6 tag. release.yml run 27851891146 SUCCESS; 10 assets / 5 targets. S-7.02 satisfied: PG-MERGE-AUTH-BYPASS TRACKED (S-PG-MERGE-AUTH-BYPASS story 91); lessons.md codified. ADR-0014 written. Maintenance RESUMED. IDLE. | state-manager | CYCLE CLOSED | factory-artifacts. |
 
 ## Decisions Log
 
@@ -118,7 +119,7 @@ S-MAINT-DEAD-CITATION-CI per-AC demos: **Yes — adapted**. CI/test-only story; 
 | DRIFT-CR-008 | test-helper dedup | extract_job_block / block-extraction helpers duplicated across test files. | LOW | TRACKED — S-MAINT-CR-008 (draft, 2026-06-19) |
 | MAINT-PG-PR-MERGE-CHANNEL | process-gap | Maintenance-sweep PR merge-authorization path not codified; pr-manager refuses coordinator-relayed approval, forcing orchestrator-direct merge. Action: codify merge-auth path in maintenance workflow doc so human approval flows directly to pr-manager. | LOW | DEFERRED |
 | MAINT-PG-CI-DOC-LINT | process-gap | CLAUDE.md src-file-tree drift (DRIFT-D15/D16 class) recurring across 2 sweeps; catchable by a CI script comparing src/ files vs CLAUDE.md tree. Action: new story to add scripts/check-claude-md-tree.sh to CI. | LOW | DEFERRED |
-| MAINT-PG-DEAD-CITATION-CI | process-gap | CLAUDE.md "Detail:"/"See:" path citations to non-existent files recurring (DRIFT-D13/D9 class). Action: scripts/check-claude-md-citations.sh verifying each cited path exists on disk, wired into ci-gate.needs. | LOW | F4 COMPLETE — DEAD-CITATION-CI PR #544 merged @ 496258a; F5 adversarial starting (DEC-125, 2026-06-20) |
+| MAINT-PG-DEAD-CITATION-CI | process-gap | CLAUDE.md "Detail:"/"See:" path citations to non-existent files recurring (DRIFT-D13/D9 class). Action: scripts/check-claude-md-citations.sh verifying each cited path exists on disk, wired into ci-gate.needs. | LOW | RESOLVED — DEAD-CITATION-CI CYCLE CLOSED + RELEASED v0.6.0-dev.6. PRs #544/#545/#546. develop @ dbe8625. |
 | PERF-BASELINE-ABSENT | coverage-gap | Sweep 5 (perf) skipped for 4th consecutive sweep due to no benchmark baseline. Action: register draft story to establish minimal hyperfine baseline stored in .factory/perf/. | LOW | DEFERRED |
 | PG-MERGE-AUTH-BYPASS | pr-manager delivery | A pr-manager-spawned delivery sub-agent executed `gh pr merge` on PR #544 despite the orchestrator's explicit 'do NOT auto-merge — await orchestrator decision' instruction AND a pending human hold. Delivery sub-agents must not self-authorize merges; merge must require explicit per-merge authorization passed through the orchestrator. Recurrence of the merge-authorization-channel weakness (cf MAINT-PG-PR-MERGE-CHANNEL). DEC-128 logged. | MEDIUM | TRACKED — S-PG-MERGE-AUTH-BYPASS (draft; engine self-improvement; 2026-06-20) |
 
@@ -133,25 +134,25 @@ Full per-issue: `cycles/cycle-001/convergence-trajectory.md`. Current: **[2026-0
 | Field | Value |
 |-------|-------|
 | **Date** | 2026-06-20 |
-| **Position** | DEAD-CITATION-CI F7 CONVERGED. PR #545 (hardening) open — awaiting human merge gate + PATCH release decision. DEC-125/126/127/128/129 logged. PG-MERGE-AUTH-BYPASS TRACKED (S-PG-MERGE-AUTH-BYPASS, story 91, draft). Maintenance sweeps PAUSED. develop @ 496258a + PR #545 open. |
-| **develop HEAD** | origin/develop = **496258a** ([S-MAINT-DEAD-CITATION-CI] Add CLAUDE.md dead-citation CI guard (#544)). PR #545 (hardening) open, not yet merged. |
-| **Activation** | v0.6.0-dev.5 @ 71f33c6. develop @ 496258a (2 ahead of tag). v0.5.0 STABLE shipped 2026-06-12. |
-| **Counters** | BC **602**. NFR **42**. ADR **16**. Stories **91** (authoritative; S-PG-MERGE-AUTH-BYPASS added; story 90 DELIVERED). |
+| **Position** | DEAD-CITATION-CI CYCLE CLOSED + RELEASED v0.6.0-dev.6. develop @ dbe8625 == tag. Maintenance RESUMED. IDLE. DEC-125..129 logged. S-7.02 satisfied: PG-MERGE-AUTH-BYPASS TRACKED (S-PG-MERGE-AUTH-BYPASS story 91); lessons.md codified. ADR-0014 written. |
+| **develop HEAD** | origin/develop = **dbe8625** (v0.6.0-dev.6 release commit). PRs #544/#545/#546 merged. |
+| **Activation** | v0.6.0-dev.6 @ dbe8625. v0.5.0 STABLE shipped 2026-06-12. |
+| **Counters** | BC **602**. NFR **42**. ADR **16** (ADR-0014 written). Stories **91** (story 90 DELIVERED; S-PG-MERGE-AUTH-BYPASS = story 91, draft). |
 | **Active worktree** | None. .factory on factory-artifacts mounted. |
 | **jira-e2e env** | JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ, JR_E2E_ENABLED=true. |
 | **Standing constraints** | Do NOT close #429 (DEC-029). All fixes through full VSDD Feature Mode pipeline (DEC-120/121/124/125/126/127/128/129). LESSON-F2-WORKTREE-FIRST: ALL story-scoped edits (including docs/) in story worktree. Fork signing UNBLOCKED but INERT (DEC-104 pending). LESSON-F1-SIBLING-CASE. LESSON-CENTRALIZATION-AC-GREP. LESSON-CITATION-SIBLING-PROPAGATION. CHANGELOG-per-PR hygiene. LESSON-F2-PIECEWISE. DEC-128: merge requires explicit orchestrator-passed per-merge authorization; delivery sub-agents must NOT self-authorize. Carry-forward drift items: FORK-OPS-BACKFILL-ZIP-GLOB-COUPLING (accepted), FORK-OPS-F5-SELFTEST-CHECKLIST (deferred). |
 
 ## RESUME PLAN (cold-start, self-contained)
 
-<!-- State snapshot: DEAD-CITATION-CI F7 CONVERGED. Awaiting human gate: merge PR #545 + PATCH release. develop @ 496258a (2 ahead of v0.6.0-dev.5 tag). -->
+<!-- State snapshot: DEAD-CITATION-CI CYCLE CLOSED + RELEASED v0.6.0-dev.6. develop @ dbe8625. Maintenance RESUMED. IDLE. -->
 
 ### Steps (assume ZERO memory)
 
 **Step 1 (BLOCKING):** Run `vsdd-factory:factory-worktree-health`. Then read `.factory/STATE.md`.
 
-**Step 2:** DEAD-CITATION-CI feature cycle ACTIVE (DEC-125/126/127/128/129, 2026-06-20). F7 CONVERGED. PR #545 (hardening) open — awaiting human merge gate + PATCH release decision. Maintenance sweeps PAUSED. develop @ **496258a** (2 commits ahead of v0.6.0-dev.5 tag 71f33c6). Counters: BC **602**, NFR **42**, ADR **16**, Stories **91** (story 90 DELIVERED; S-PG-MERGE-AUTH-BYPASS = story 91, draft). If develop shows different HEAD, run `git fetch origin`. Active worktrees: main checkout + `.factory` (factory-artifacts) only — no story worktrees open.
+**Step 2:** DEAD-CITATION-CI feature cycle CLOSED + RELEASED (DEC-125/126/127/128/129, 2026-06-20). PRs #544/#545/#546 merged. develop @ **dbe8625** == v0.6.0-dev.6 tag. Maintenance RESUMED. IDLE. Counters: BC **602**, NFR **42**, ADR **16** (ADR-0014 written), Stories **91** (story 90 DELIVERED; S-PG-MERGE-AUTH-BYPASS = story 91, draft). If develop shows different HEAD, run `git fetch origin`. Active worktrees: main checkout + `.factory` (factory-artifacts) only.
 
-**Step 3 — Current feature cycle: DEAD-CITATION-CI.** F7 CONVERGED. Awaiting human gate: (a) merge PR #545 to develop, (b) PATCH release decision. After merge + release, cycle CLOSES. PG-MERGE-AUTH-BYPASS TRACKED (MEDIUM) — S-PG-MERGE-AUTH-BYPASS story 91 registered (DEC-128/129). After DEAD-CITATION-CI closes, open next-work candidates: **#532** (S-MAINT-532), Bundle D draft stories (S-MAINT-CR-005/CR-008/CR-009/SEC-001/SEC-JR-SERVICE-NAME-GATE), fork-ops signing enablement (DEC-104), **#429** (DO NOT close — DEC-029).
+**Step 3 — IDLE.** Next-work candidates: **#532** (S-MAINT-532), Bundle D draft stories (S-MAINT-CR-005/CR-008/CR-009/SEC-001/SEC-JR-SERVICE-NAME-GATE), fork-ops signing enablement (DEC-104), **#429** (DO NOT close — DEC-029). PG-MERGE-AUTH-BYPASS TRACKED (MEDIUM) — S-PG-MERGE-AUTH-BYPASS story 91 draft (DEC-128). S-7.02 cycle-closing fully satisfied: all process-gap findings tracked; lessons.md codified.
 
 **Step 4 — STANDING CONSTRAINTS (survive session clear):**
 - Do NOT close #429 (DEC-029, human-deferred).
