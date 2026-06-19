@@ -4043,3 +4043,22 @@ The following Current Phase Step row was archived from STATE.md to maintain the 
 | develop HEAD after merge | 1c703d6 (post-release dev-dep bump; no new tag; activation_head/version remain dbe8625/v0.6.0-dev.6) |
 | #537 status | External fork signing-CI fix. pr-reviewer verdict: MERGE-WITH-CHANGES. security-reviewer verdict: APPROVE (1 LOW CWE-697, non-exploitable). Awaiting merge decision. |
 | #519 status | codecov-action v7 bump. Rebase requested; non-breaking, safe-after-green. |
+
+## Archived Current Phase Steps — 2026-06-19 PR Triage Complete Burst
+
+The following Current Phase Step row was archived from STATE.md to maintain the last-5 convention (2026-06-19):
+
+| Step | Agent | Status | Output |
+|------|-------|--------|--------|
+| **DEAD-CITATION-CI F3 GATE CLOSE** — Story S-MAINT-DEAD-CITATION-CI registered (90 total; 12 AC, 3 holdouts, 3 SP, BC-X.13.001/002/003). 3 adv passes + 2 consistency audits CONVERGED. DEC-127 logged. Human-approved. | state-manager | F3 CONVERGED | develop @ 6bdb251. F4 next. |
+
+## PR Triage Complete Burst — 2026-06-19 (open-PR queue cleared)
+
+| Field | Value |
+|-------|-------|
+| Event | Open-PR queue fully cleared: #541 (insta dev-dep) MERGED @ 1c703d6; #519 (codecov-action 6→7, non-breaking, post-rebase CI 15/15 green run 27853301753) MERGED @ c8e34ca; #537 (external fork verify-signatures fork fix, author arcaven) MERGED @ ed236d4 == develop HEAD. |
+| PR #541 | chore(deps): bump insta 1.47.2→1.48.0. Explicit orchestrator merge-auth per DEC-128. CI 15/15. |
+| PR #519 | chore(deps): bump codecov/codecov-action 6.0.1→7.0.0. Admin-merged after fresh post-rebase CI run 27853301753 went 15/15. Non-breaking version bump. |
+| PR #537 | fix(ci): make verify-signatures step exercise correctly in signing-configured fork. External PR (author arcaven). pr-reviewer verdict: MERGE-WITH-CHANGES; security-reviewer verdict: APPROVE (0 CRIT/HIGH/MED; 1 LOW CWE-697 non-exploitable). DEC-128 authorized. 2 optional LOW nits tracked as FORK-OPS-537-NITS (inert; SIGNING_ENABLED unset). |
+| develop HEAD after all merges | ed236d4 (post-#537 fix; no new tag; activation_head/version remain dbe8625/v0.6.0-dev.6) |
+| Status | IDLE — no active bundle, no story worktrees. Awaiting direction. |

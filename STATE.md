@@ -6,7 +6,7 @@ timestamp: 2026-06-19T20:00:00Z
 phase: 3
 project: jira-cli
 mode: brownfield
-current_step: "IDLE. All cycles complete. develop @ dbe8625 == v0.6.0-dev.6. Awaiting new direction."
+current_step: "IDLE. PR queue cleared: #541/#519/#537 all MERGED. develop @ ed236d4. Awaiting new direction."
 current_cycle: "cycle-001"
 feature_mode_bundle: none
 dtu_required: false
@@ -25,7 +25,7 @@ activation_version: "v0.6.0-dev.6"
 | **Product** | jr (Jira CLI) |
 | **Mode** | BROWNFIELD / Rust |
 | **Target Workspace** | develop → main |
-| **Last Updated** | 2026-06-19: #541 (insta dev-dep bump) MERGED @ 1c703d6 per DEC-128 merge-auth protocol (CI 15/15). #537 (external signing-CI fix) reviewed — pr-reviewer MERGE-WITH-CHANGES + security-reviewer APPROVE (1 LOW CWE-697, non-exploitable) — awaiting merge decision. #519 (codecov v7) rebase requested. |
+| **Last Updated** | 2026-06-19: PR queue cleared — #541 MERGED @ 1c703d6, #519 MERGED @ c8e34ca (post-rebase CI 15/15 run 27853301753), #537 MERGED @ ed236d4 (external fork; DEC-128 authorized; 2 LOW nits → FORK-OPS-537-NITS). ZERO open PRs. develop HEAD = ed236d4. |
 | **Current Phase** | Phase 3 — IDLE (maintenance mode). BC 602. NFR 42. ADR 16 (ADR-0014 written). Stories 91. |
 | **Next Phase** | Next feature cycle (open candidates: #532, Bundle D drafts, fork signing DEC-104) |
 | **Activation HEAD** | dbe8625 (v0.6.0-dev.6 tag); develop @ dbe8625 |
@@ -49,11 +49,11 @@ activation_version: "v0.6.0-dev.6"
 <!-- Keep last 5 rows only. Archive older rows to cycles/cycle-001/burst-log.md. -->
 | Step | Agent | Status | Output |
 |------|-------|--------|--------|
-| **DEAD-CITATION-CI F3 GATE CLOSE** — Story S-MAINT-DEAD-CITATION-CI registered (90 total; 12 AC, 3 holdouts, 3 SP, BC-X.13.001/002/003). 3 adv passes + 2 consistency audits CONVERGED. DEC-127 logged. Human-approved. | state-manager | F3 CONVERGED | develop @ 6bdb251. F4 next. |
 | **STATE.md COMPACTED** — Phase Progress rows archived to cycles/cycle-001/burst-log.md. Historical content extracted. STATE.md under 180 lines. | state-manager | COMPACTED | factory-artifacts. |
 | **DEAD-CITATION-CI F4 COMPLETE** — PR #544 merged @ 496258a. 58 tests (tests/claude_md_citations.rs). 3 per-story adv passes + code/security review. ci-gate 15/15 incl. mutation testing + Windows. PG-MERGE-AUTH-BYPASS + DEC-128 logged. F5 starting. | state-manager | F4 COMPLETE | develop @ 496258a. Story 90 DELIVERED. |
 | **DEAD-CITATION-CI CYCLE CLOSED + RELEASED** — PRs #544/#545 merged; PR #546 (release) merged. develop @ dbe8625 == v0.6.0-dev.6 tag. release.yml run 27851891146 SUCCESS; 10 assets / 5 targets. S-7.02 satisfied: PG-MERGE-AUTH-BYPASS TRACKED (S-PG-MERGE-AUTH-BYPASS story 91); lessons.md codified. ADR-0014 written. Maintenance RESUMED. IDLE. | state-manager | CYCLE CLOSED | factory-artifacts. |
 | **PR TRIAGE — #541 (insta dev-dep) MERGED @ 1c703d6 with explicit orchestrator merge-auth; #537 reviewed (pr-reviewer MERGE-WITH-CHANGES + security-reviewer APPROVE, 1 LOW CWE-697 non-exploitable) — awaiting merge decision; #519 (codecov v7) rebase requested, non-breaking, safe-after-green.** | state-manager | PR TRIAGE | develop @ 1c703d6. No new tag. |
+| **PR TRIAGE COMPLETE — open-PR queue cleared: #541 (insta) @ 1c703d6, #519 (codecov v7, non-breaking, post-rebase CI green run 27853301753) @ c8e34ca, #537 (fork verify-signatures fix; pr-reviewer MERGE-WITH-CHANGES + security-reviewer APPROVE; 2 LOW nits → FORK-OPS-537-NITS) @ ed236d4 == develop HEAD. All DEC-128-authorized. IDLE.** | state-manager | PR TRIAGE COMPLETE | develop @ ed236d4. ZERO open PRs. |
 
 ## Decisions Log
 
@@ -84,6 +84,7 @@ None open.
 | ID | Area | Description | Severity | Status |
 |----|------|-------------|----------|--------|
 | MAINT-2026-06-17-SC-03 | ADR location | SC-03: docs/adr/ vs .factory/architecture/adr/ convention discrepancy. | LOW | DEFERRED |
+| FORK-OPS-537-NITS | PR #537 optional nits | PR #537 (verify-signatures fork fix, merged @ ed236d4) carries 2 optional LOW nits posted as PR comment: (a) tighten TeamIdentifier regex `\*+`→`\*{3}` to match GHA's exact `***` mask (CWE-697 hardening, non-exploitable); (b) soften the overstated Bug-2 'signed-DMG performance fast-path' rationale in inline comment/PR body (undocumented by Apple; fix itself correct). Inert in this repo (SIGNING_ENABLED unset). | LOW | OPEN |
 | FORK-OPS-PHANTOM-RUNS | Phantom workflow runs | ~7 phantom runs/day from new triggers. Cosmetic; decide suppress or accept. | LOW | OPEN |
 | WIN-CFG-TESTS-CHECK | Cross-compile | cargo check --lib excludes #[cfg(test)]; use --tests. | LOW | OPEN |
 | SEC-JR-SERVICE-NAME-GATE | JR_SERVICE_NAME | Not debug-gated unlike JR_BASE_URL/JR_AUTH_HEADER. | LOW | TRACKED — S-MAINT-SEC-JR-SERVICE-NAME-GATE (draft, security P2, 2026-06-19) |
@@ -129,30 +130,30 @@ Full per-issue: `cycles/cycle-001/convergence-trajectory.md`. Current: **DEAD-CI
 | Field | Value |
 |-------|-------|
 | **Date** | 2026-06-19 |
-| **Status** | **IDLE.** No active feature_mode_bundle. No active story worktrees. Maintenance RESUMED and awaiting direction. |
-| **Position** | (a) DEAD-CITATION-CI feature cycle CLOSED + RELEASED v0.6.0-dev.6 (PRs #544/#545/#546). Session review persisted. DEC-130 logged. (b) PR triage: #541 (insta dev-dep) MERGED @ 1c703d6 per DEC-128 merge-auth (CI 15/15). #537 reviewed; awaiting merge decision. #519 rebase requested. |
-| **develop HEAD** | origin/develop = **1c703d6** (post-#541 insta bump; no new tag). activation_head/version unchanged: dbe8625 / v0.6.0-dev.6. |
+| **Status** | **IDLE.** No active feature_mode_bundle. No active story worktrees. Open-PR queue fully cleared. Awaiting direction. |
+| **Position** | DEAD-CITATION-CI feature cycle CLOSED + RELEASED v0.6.0-dev.6 (PRs #544/#545/#546). PR triage complete: #541 MERGED @ 1c703d6; #519 MERGED @ c8e34ca (post-rebase CI run 27853301753, 15/15); #537 MERGED @ ed236d4 (external fork; DEC-128 authorized; 2 LOW nits → FORK-OPS-537-NITS). ZERO open PRs remaining. |
+| **develop HEAD** | origin/develop = **ed236d4** (post-#537 fork fix; no new tag). activation_head/version unchanged: dbe8625 / v0.6.0-dev.6. |
 | **factory-artifacts HEAD** | see `git -C .factory log -1` |
 | **Activation** | activation_head: dbe8625; activation_version: v0.6.0-dev.6. v0.5.0 STABLE shipped 2026-06-12. |
 | **Counters** | BC **602**. NFR **42**. ADR **16** (ADR-0014 written). Stories **91** (S-PG-MERGE-AUTH-BYPASS = story 91, draft). |
 | **Active worktrees** | NONE under `.worktrees/`. Permanent infra only: main checkout (develop) + `.factory` (factory-artifacts) + `.reference/jira-cli` (detached). No story worktrees in-flight. |
-| **Open PRs (action needed)** | #537 external fork PR (signing-CI fix — reviewed: MERGE-WITH-CHANGES + APPROVE, 1 LOW CWE-697 non-exploitable; awaiting merge decision); #519 dependabot (codecov v7 — rebase requested, safe-after-green). **#541 MERGED.** |
+| **Open PRs (action needed)** | **NONE** — all three triaged PRs merged (#541, #519, #537). |
 | **jira-e2e env** | JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ, JR_E2E_ENABLED=true. |
 | **Standing constraints** | Do NOT close #429 (DEC-029). All fixes through full VSDD (DEC-120/121/124/129/130). LESSON-F2-WORKTREE-FIRST. F2-PIECEWISE-PROTOCOL [ENFORCED 2026-06-20]: consistency-validator after EACH spec-author fix in F2. DEC-128 (CRITICAL): delivery sub-agents must NOT self-authorize merges. Fork signing UNBLOCKED but INERT (DEC-104). |
 
 ## RESUME PLAN (cold-start, self-contained)
 
-<!-- State snapshot: IDLE. DEAD-CITATION-CI CYCLE CLOSED + RELEASED v0.6.0-dev.6. develop @ 1c703d6 (post-#541 insta bump; no new tag). Maintenance RESUMED. No active bundle. No story worktrees. -->
+<!-- State snapshot: IDLE. DEAD-CITATION-CI CYCLE CLOSED + RELEASED v0.6.0-dev.6. PR queue cleared: #541/#519/#537 all MERGED. develop @ ed236d4 (no new tag). Maintenance RESUMED. No active bundle. No story worktrees. -->
 
 ### Steps (assume ZERO memory)
 
 **Step 1 (BLOCKING):** Run `vsdd-factory:factory-worktree-health`. Then read `.factory/STATE.md` (this file).
 
 **Step 2 — Verify position:**
-- develop @ **1c703d6** (post-#541 insta bump; no new tag; activation_head dbe8625/v0.6.0-dev.6 unchanged).
+- develop @ **ed236d4** (post-#537 fork fix; no new tag; activation_head dbe8625/v0.6.0-dev.6 unchanged).
 - factory-artifacts: see `git -C .factory log -1` (already pushed; no uncommitted changes).
 - No story worktrees under `.worktrees/` — the directory is empty.
-- PRs #544/#545/#546 merged. #541 dependabot MERGED. Open: #537 (external, awaiting merge decision) + #519 (rebase requested).
+- PRs #544/#545/#546 merged. #541/#519/#537 ALL MERGED. ZERO open PRs.
 - Counters: BC **602**, NFR **42**, ADR **16**, Stories **91**.
 
 **Step 3 — IDLE. Present status to human, await direction.**
