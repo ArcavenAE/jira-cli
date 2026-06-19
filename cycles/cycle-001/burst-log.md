@@ -7,7 +7,7 @@ producer: state-manager
 timestamp: 2026-05-04T00:00:00
 cycle: "cycle-001"
 inputs: [STATE.md]
-input-hash: "42eb2ca"
+input-hash: "1306f82"
 traces_to: STATE.md
 ---
 
@@ -4000,3 +4000,4 @@ These rows were in STATE.md before this compaction burst. They predate the F4 CO
 | S-FORK-OPS-BACKFILL bundle: F1 COMPLETE — human-approved 2026-06-18. 3 MED drift items (WIN-TARGET + DESTRUCTIVE + GITLEAKS-DOC). 2-story decomposition by file (S-FORK-OPS-BACKFILL-1 + S-FORK-OPS-GITLEAKS-DOC-1). Full F1–F7. DEC-122. Drift items set IN-PROGRESS. F2 starting. | state-manager | F1 APPROVED | develop @ 45ddf7a. Feature Mode active. Stories 81. |
 | S-FORK-OPS-BACKFILL F2 COMPLETE — human-approved 2026-06-18. Pass-3 adversarial review persisted (CONVERGED: 3 adv passes 11→0→0 blocking). Consistency audit clean (F1: BC 598→599 fixed; F2: Optional→REQUIRED fixed; F3: cold-start wording fixed). Spec 1.3.23→1.3.24 PATCH. DEC-123. F3 starting. | state-manager | F2 APPROVED | develop @ 45ddf7a. Spec 1.3.24. Stories 81. F3 active. |
 | S-FORK-OPS-BACKFILL F3 COMPLETE — human-approved 2026-06-18. 2 stories created (81→83): S-FORK-OPS-BACKFILL-1 (5 SP, critical path) + S-FORK-OPS-GITLEAKS-DOC-1 (1 SP, docs). ACYCLIC, zero overlap, 1 wave. Human gate: PARALLEL delivery → F4. | state-manager | F3 APPROVED | develop @ 45ddf7a. Stories 83. F4 active — parallel. |
+| **S-FORK-OPS-BACKFILL F5 CONVERGED** — 3 passes (novelty 0.35→0.08→LOW). 0 CRIT/HIGH. M4 fixed (FIX-F5-001/PR #540); M2 accepted (zip-glob fail-loud); O3+timeout tracked as drift items. | state-manager | F5 CONVERGED | develop @ 83a141ad. |

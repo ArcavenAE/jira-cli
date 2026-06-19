@@ -1,3 +1,5 @@
+> SUPERSEDED by DEAD-CITATION-CI F2 Iter-2 re-scope: the allowlist sketch and pre-re-scope failure message below are historical. Canonical spec: BC-X.13.001/002/003 + error-taxonomy.md §8 CI-CITE-001.
+
 # Dead-Citation CI Guard: Bash Script vs Rust `#[test]` — Recommendation
 
 **Date:** 2026-06-19

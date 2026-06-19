@@ -7,7 +7,7 @@ producer: state-manager
 timestamp: 2026-05-08T00:00:00
 cycle: "cycle-001"
 inputs: [STATE.md]
-input-hash: "42eb2ca"
+input-hash: "1306f82"
 traces_to: STATE.md
 ---
 
@@ -992,3 +992,13 @@ _Was the active checkpoint after F5 CONVERGED / F6 active. Superseded after F7 C
 | **Active worktree** | None (F5 complete). .factory on factory-artifacts mounted. |
 | **jira-e2e env** | JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ, JR_E2E_ENABLED=true. |
 | **Standing constraints** | Do NOT close #429 (DEC-029). All fixes through full VSDD Feature Mode pipeline (DEC-120/121/124). LESSON-F2-WORKTREE-FIRST: ALL story-scoped edits (including docs/) in story worktree. Fork signing UNBLOCKED but INERT (DEC-104 pending). LESSON-F1-SIBLING-CASE. LESSON-CENTRALIZATION-AC-GREP. LESSON-CITATION-SIBLING-PROPAGATION. CHANGELOG-per-PR hygiene. LESSON-F2-PIECEWISE. MERGE PRE-AUTHORIZATION (standing): User pre-authorized merging all remaining within-bundle F5/F6 fix-PRs to develop without per-PR human prompts. F7 public release remains explicit human gate. |
+
+## Checkpoint: 2026-06-20 (F1 active — archived when F2 gate-close checkpoint was written)
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-06-20 |
+| **Position** | DEAD-CITATION-CI feature cycle ACTIVE. F1 Delta Analysis started. DEC-125 logged. MAINT-PG-DEAD-CITATION-CI IN-PROGRESS. Maintenance sweeps PAUSED. develop @ 6bdb251. Stories 89. |
+| **develop HEAD** | origin/develop = **6bdb251** (docs: 2026-06-19 maintenance sweep accuracy fixes (#543); 1 commit ahead of v0.6.0-dev.5 tag 71f33c6). |
+| **Counters** | BC **599**. NFR **42**. ADR **16**. Stories **89** (authoritative). |
+| **Standing constraints** | F3 will create S-MAINT-DEAD-CITATION-CI. Do NOT close #429 (DEC-029). Full VSDD Feature Mode pipeline for all fixes. |
