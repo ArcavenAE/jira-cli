@@ -3964,3 +3964,39 @@ Story count now **83** (authoritative; STORY-INDEX 6 surfaces agree).
 Per-AC demo recording: ADAPTED (N/A) — CI-workflow + docs-only stories; same precedent as S-WIN-1..6 / #475.
 
 STATE.md updated: feature_mode_phase F3→F4, Stories 81→83, Current Phase Steps row added (oldest row archived here), Phase Progress F3 row added, Skip Log updated, Convergence Tracker updated, Session Resume Checkpoint replaced (old archived to session-checkpoints.md), RESUME PLAN updated for F4-active parallel delivery. STATE.md at exactly 200 lines (within budget).
+
+---
+
+## Burst N+1 (2026-06-19) — S-FORK-OPS-BACKFILL F4 COMPLETE → F5 active; STATE compacted
+
+**Agents dispatched:** state-manager (state update + compaction)
+**Files touched:** .factory/STATE.md, .factory/cycles/cycle-001/burst-log.md, .factory/cycles/cycle-001/session-checkpoints.md
+**Versions bumped:** (none — develop @ f85647b, 2 commits ahead of v0.6.0-dev.4 tag)
+
+### Summary
+
+S-FORK-OPS-BACKFILL F4 (Delta Implementation) declared COMPLETE 2026-06-19. Both stories delivered in parallel worktrees and squash-merged to develop:
+
+- **S-FORK-OPS-BACKFILL-1** → PR #539 (squash `2756050`): backfill-release.yml Windows parity (full S-WIN-4: Package + Checksum + smoke test + embedded-OAuth verify) + safe check-then-upsert replacing `gh release delete+recreate` + 11 new `tests/backfill_matrix_parity.rs` tests. Local code review caught a CRITICAL: Build step missing `shell: bash` → Windows build would fail. Fixed test-first with a `shell: bash` guard test. security-reviewer APPROVE (0 CRIT/HIGH/MED).
+- **S-FORK-OPS-GITLEAKS-DOC-1** → PR #538 (squash `f85647b`): documented GITLEAKS_DISABLED in `docs/specs/fork-friendly-release-ops.md` + CLAUDE.md. pr-reviewer APPROVE.
+
+develop HEAD advanced: 45ddf7a → f85647b (2 commits ahead of v0.6.0-dev.4 tag).
+
+Wave integration gate: full regression 1866 tests passing / 0 failing (1855 baseline + 11 new). clippy/fmt/injection-guard/bc-count (599) all clean. Worktrees cleaned.
+
+DEC-124 added: local pre-PR code review caught a CRITICAL Windows-build defect (`shell: bash` on Build step) that all 9 Red-Gate tests missed — coverage gap closed with a new guard test. Reinforces "clean local review before PR" + the value of full VSDD on infra changes (cf DEC-120/121).
+
+3 Drift Items updated: FORK-OPS-BACKFILL-DESTRUCTIVE, FORK-OPS-BACKFILL-WIN-TARGET, FORK-OPS-GITLEAKS-DOC → IMPLEMENTED-ON-DEVELOP (fully close at F7/release).
+
+STATE.md compacted: Phase Progress rows condensed, older Current Phase Steps rows archived here, F4-active checkpoint archived to session-checkpoints.md, RESUME PLAN updated for F5-active. Feature mode phase F4→F5. develop HEAD 45ddf7a→f85647b.
+
+### Archived Current Phase Steps rows (compacted out of STATE.md)
+
+These rows were in STATE.md before this compaction burst. They predate the F4 COMPLETE entry.
+
+| Step | Agent | Status | Output |
+|------|-------|--------|--------|
+| v0.6.0-dev.4 RELEASED. PR #536 squash-merged → develop @ 45ddf7a. release.yml 27792346419 SUCCESS — 5-target build, 10 assets. Tag v0.6.0-dev.4. CHANGELOG hygiene drift closed. develop == tag (0 ahead). | orchestrator | RELEASED | develop @ 45ddf7a == v0.6.0-dev.4 tag. |
+| S-FORK-OPS-BACKFILL bundle: F1 COMPLETE — human-approved 2026-06-18. 3 MED drift items (WIN-TARGET + DESTRUCTIVE + GITLEAKS-DOC). 2-story decomposition by file (S-FORK-OPS-BACKFILL-1 + S-FORK-OPS-GITLEAKS-DOC-1). Full F1–F7. DEC-122. Drift items set IN-PROGRESS. F2 starting. | state-manager | F1 APPROVED | develop @ 45ddf7a. Feature Mode active. Stories 81. |
+| S-FORK-OPS-BACKFILL F2 COMPLETE — human-approved 2026-06-18. Pass-3 adversarial review persisted (CONVERGED: 3 adv passes 11→0→0 blocking). Consistency audit clean (F1: BC 598→599 fixed; F2: Optional→REQUIRED fixed; F3: cold-start wording fixed). Spec 1.3.23→1.3.24 PATCH. DEC-123. F3 starting. | state-manager | F2 APPROVED | develop @ 45ddf7a. Spec 1.3.24. Stories 81. F3 active. |
+| S-FORK-OPS-BACKFILL F3 COMPLETE — human-approved 2026-06-18. 2 stories created (81→83): S-FORK-OPS-BACKFILL-1 (5 SP, critical path) + S-FORK-OPS-GITLEAKS-DOC-1 (1 SP, docs). ACYCLIC, zero overlap, 1 wave. Human gate: PARALLEL delivery → F4. | state-manager | F3 APPROVED | develop @ 45ddf7a. Stories 83. F4 active — parallel. |
