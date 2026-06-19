@@ -1,12 +1,12 @@
 ---
 document_type: pipeline-state
 version: "2.0"
-status: idle
-timestamp: 2026-06-20T23:00:00Z
+status: complete
+timestamp: 2026-06-19T12:00:00Z
 phase: 3
 project: jira-cli
 mode: brownfield
-current_step: "DEAD-CITATION-CI session review persisted + dispositions applied (DEC-130). Maintenance IDLE."
+current_step: "IDLE. All cycles complete. develop @ dbe8625 == v0.6.0-dev.6. Awaiting new direction."
 current_cycle: "cycle-001"
 feature_mode_bundle: none
 dtu_required: false
@@ -16,8 +16,6 @@ phase_3_status: IN_PROGRESS
 activation_head: "dbe8625"
 activation_version: "v0.6.0-dev.6"
 ---
-<!-- SIZE BUDGET: <200 lines. Historical content → cycle files. Run /vsdd-factory:compact-state if over 200. -->
-
 # Pipeline State: jira-cli
 
 ## Project Metadata
@@ -77,11 +75,11 @@ S-MAINT-DEAD-CITATION-CI per-AC demos: **Yes — adapted**. CI/test-only story; 
 
 ## Blocking Issues
 
-<!-- No open blocking issues as of 2026-06-19. -->
+None open.
 
 ## Drift Items
 
-<!-- OPEN and actively-watched items only. RESOLVED items archived to cycles/cycle-001/blocking-issues-resolved.md. -->
+<!-- OPEN/TRACKED items only. Resolved → cycles/cycle-001/blocking-issues-resolved.md. -->
 
 | ID | Area | Description | Severity | Status |
 |----|------|-------------|----------|--------|
@@ -113,10 +111,8 @@ S-MAINT-DEAD-CITATION-CI per-AC demos: **Yes — adapted**. CI/test-only story; 
 | FORK-OPS-BACKFILL-ZIP-GLOB-COUPLING | backfill-release.yml | `gh release upload jr-*.zip` fails loud on zero-match glob (accepted; guarded by needs:build + matrix-parity test; parity with release.yml). | LOW | OPEN — accepted |
 | FORK-OPS-F5-SELFTEST-CHECKLIST | process-gap | F5 checklist conflates `--self-test` inline fixture with real-file scan; wording could mislead. | LOW | OPEN |
 | DRIFT-CR-008 | test-helper dedup | extract_job_block / block-extraction helpers duplicated across test files. | LOW | TRACKED — S-MAINT-CR-008 (draft, 2026-06-19) |
-| MAINT-PG-PR-MERGE-CHANNEL | process-gap | Maintenance-sweep PR merge-auth path not codified; pr-manager refuses coordinator-relayed approval. Shares root cause with PG-MERGE-AUTH-BYPASS (undefined merge-auth protocol; pr-manager default posture should be NO-MERGE). | LOW | SUBSUMED by S-PG-MERGE-AUTH-BYPASS (unified merge-auth protocol) |
-| MAINT-PG-CI-DOC-LINT | process-gap | CLAUDE.md src-file-tree drift (DRIFT-D15/D16 class) recurring across 2 sweeps; catchable by a CI script comparing src/ files vs CLAUDE.md tree. Action: new story to add scripts/check-claude-md-tree.sh to CI. | LOW | DEFERRED |
-| MAINT-PG-DEAD-CITATION-CI | process-gap | CLAUDE.md "Detail:"/"See:" path citations to non-existent files recurring (DRIFT-D13/D9 class). Action: scripts/check-claude-md-citations.sh verifying each cited path exists on disk, wired into ci-gate.needs. | LOW | RESOLVED — DEAD-CITATION-CI CYCLE CLOSED + RELEASED v0.6.0-dev.6. PRs #544/#545/#546. develop @ dbe8625. |
-| PERF-BASELINE-ABSENT | coverage-gap | Sweep 5 (perf) skipped for 4th consecutive sweep due to no benchmark baseline. Action: register draft story to establish minimal hyperfine baseline stored in .factory/perf/. | LOW | DEFERRED |
+| MAINT-PG-CI-DOC-LINT | process-gap | CLAUDE.md src-file-tree drift recurring; add scripts/check-claude-md-tree.sh to CI. | LOW | DEFERRED |
+| PERF-BASELINE-ABSENT | coverage-gap | Sweep 5 (perf) skipped 4× — no hyperfine baseline. Draft story: .factory/perf/ baseline. | LOW | DEFERRED |
 | PERF-COST-TRACKING | instrumentation | No per-cycle token/cost tracking; `.factory/cost-summary.md` not initialized. Blind spot for cost-per-story analysis and cost-vs-defect-value calibration. Origin: DEAD-CITATION-CI session review Rec 3. | LOW | OPEN — draft story candidate |
 | F1-CI-TOPOLOGY-CHECK | phase-f1 process | F1 delta analysis lacks CI-checkout-topology verification step. The .factory/ CI-checkout flaw was a topology assumption error (checkout@v4 defaults to triggering branch, not factory-artifacts). Action: update phase-f1 skill template. | LOW | OPEN — skill template update (no new story) |
 | F2-PIECEWISE-PROTOCOL | phase-f2 process | Promote LESSON-F2-PIECEWISE to ENFORCED F2 protocol: dispatch consistency-validator after EACH spec-author fix, before the next adversary pass. Would cut F2 from 6 to ~3 iterations. Codified [enforced] in lessons.md 2026-06-20. | MEDIUM | OPEN — workflow change; codified in lessons.md |
@@ -124,7 +120,7 @@ S-MAINT-DEAD-CITATION-CI per-AC demos: **Yes — adapted**. CI/test-only story; 
 
 ## Convergence Trackers
 
-Full per-issue: `cycles/cycle-001/convergence-trajectory.md`. Current: **[2026-06-20] DEAD-CITATION-CI F7 CONVERGED — 5/7 dims; input-drift NONE; consistency CONSISTENT; CI 15/15; PR #545 open; awaiting merge #545 + PATCH release. DEC-129 logged.**
+Full per-issue: `cycles/cycle-001/convergence-trajectory.md`. Current: **DEAD-CITATION-CI CONVERGED + RELEASED (2026-06-20). No active convergence tracker.**
 
 ## Session Resume Checkpoint
 
@@ -132,42 +128,50 @@ Full per-issue: `cycles/cycle-001/convergence-trajectory.md`. Current: **[2026-0
 
 | Field | Value |
 |-------|-------|
-| **Date** | 2026-06-20 |
-| **Position** | DEAD-CITATION-CI session review persisted + DEC-130 logged + 4 dispositions applied. PERF-COST-TRACKING + F1-CI-TOPOLOGY-CHECK + F2-PIECEWISE-PROTOCOL added as drift items. F2-PIECEWISE-PROTOCOL codified [enforced] in lessons.md. S-PG-MERGE-AUTH-BYPASS scope extended to subsume MAINT-PG-PR-MERGE-CHANNEL. Maintenance IDLE. |
-| **develop HEAD** | origin/develop = **dbe8625** (v0.6.0-dev.6 release commit). PRs #544/#545/#546 merged. |
-| **Activation** | v0.6.0-dev.6 @ dbe8625. v0.5.0 STABLE shipped 2026-06-12. |
+| **Date** | 2026-06-19 |
+| **Status** | **IDLE.** No active feature_mode_bundle. No active story worktrees. Maintenance RESUMED and awaiting direction. |
+| **Position** | (a) 2026-06-19 maintenance sweep CLOSED (v0.6.0-dev.5 era cleanup, PR #543). (b) DEAD-CITATION-CI feature cycle CLOSED + RELEASED v0.6.0-dev.6 (PRs #544/#545/#546, 2026-06-20). Session review persisted (DEAD-CITATION-CI-session-review.md). DEC-130 logged. 4 dispositions applied (PERF-COST-TRACKING, F1-CI-TOPOLOGY-CHECK, F2-PIECEWISE-PROTOCOL, merge-auth unification). |
+| **develop HEAD** | origin/develop = local develop = **dbe8625** (v0.6.0-dev.6 release commit). PRs #544/#545/#546 merged. Pushed. |
+| **factory-artifacts HEAD** | **261471f** `factory(session-review): persist DEAD-CITATION-CI session review + apply 4 dispositions (DEC-130)`. Pushed to origin/factory-artifacts. |
+| **Activation** | activation_head: dbe8625; activation_version: v0.6.0-dev.6. v0.5.0 STABLE shipped 2026-06-12. |
 | **Counters** | BC **602**. NFR **42**. ADR **16** (ADR-0014 written). Stories **91** (S-PG-MERGE-AUTH-BYPASS = story 91, draft). |
-| **Active worktree** | None. .factory on factory-artifacts mounted. |
+| **Active worktrees** | NONE under `.worktrees/`. Permanent infra only: main checkout (develop) + `.factory` (factory-artifacts) + `.reference/jira-cli` (detached). No story worktrees in-flight. |
+| **Open PRs (action needed)** | #541 dependabot (insta bump — low); #537 external fork PR (signing fix); #519 dependabot (codecov). None require orchestrator action. |
 | **jira-e2e env** | JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ, JR_E2E_ENABLED=true. |
-| **Standing constraints** | Do NOT close #429 (DEC-029). All fixes through full VSDD (DEC-120/121/124/129/130). LESSON-F2-WORKTREE-FIRST. LESSON-F1-SIBLING-CASE. LESSON-CENTRALIZATION-AC-GREP. LESSON-CITATION-SIBLING-PROPAGATION. CHANGELOG-per-PR hygiene. F2-PIECEWISE-PROTOCOL [ENFORCED]: consistency-validator after EACH spec-author fix in F2. DEC-128: delivery sub-agents must NOT self-authorize merges; merge requires explicit orchestrator per-merge authorization. Fork signing UNBLOCKED but INERT (DEC-104). |
+| **Standing constraints** | Do NOT close #429 (DEC-029). All fixes through full VSDD (DEC-120/121/124/129/130). LESSON-F2-WORKTREE-FIRST. F2-PIECEWISE-PROTOCOL [ENFORCED 2026-06-20]: consistency-validator after EACH spec-author fix in F2. DEC-128 (CRITICAL): delivery sub-agents must NOT self-authorize merges. Fork signing UNBLOCKED but INERT (DEC-104). |
 
 ## RESUME PLAN (cold-start, self-contained)
 
-<!-- State snapshot: DEAD-CITATION-CI CYCLE CLOSED + RELEASED v0.6.0-dev.6. develop @ dbe8625. Maintenance RESUMED. IDLE. -->
+<!-- State snapshot: IDLE. DEAD-CITATION-CI CYCLE CLOSED + RELEASED v0.6.0-dev.6. develop @ dbe8625. Maintenance RESUMED. No active bundle. No story worktrees. -->
 
 ### Steps (assume ZERO memory)
 
-**Step 1 (BLOCKING):** Run `vsdd-factory:factory-worktree-health`. Then read `.factory/STATE.md`.
+**Step 1 (BLOCKING):** Run `vsdd-factory:factory-worktree-health`. Then read `.factory/STATE.md` (this file).
 
-**Step 2:** DEAD-CITATION-CI feature cycle CLOSED + RELEASED (DEC-125..130, 2026-06-20). PRs #544/#545/#546 merged. develop @ **dbe8625** == v0.6.0-dev.6 tag. Session review persisted + 4 dispositions applied. F2-PIECEWISE-PROTOCOL [ENFORCED]. Counters: BC **602**, NFR **42**, ADR **16**, Stories **91**. If develop shows different HEAD, run `git fetch origin`. Active worktrees: main checkout + `.factory` (factory-artifacts) only.
+**Step 2 — Verify position:**
+- develop @ **dbe8625** == v0.6.0-dev.6 (run `git fetch origin` if HEAD differs).
+- factory-artifacts @ **261471f** (already pushed; no uncommitted changes).
+- No story worktrees under `.worktrees/` — the directory is empty.
+- All PRs (#544/#545/#546) merged. 3 open PRs are dependabot/external — no orchestrator action needed.
+- Counters: BC **602**, NFR **42**, ADR **16**, Stories **91**.
 
-**Step 3 — IDLE.** Next-work candidates: **#532** (S-MAINT-532), Bundle D draft stories (S-MAINT-CR-005/CR-008/CR-009/SEC-001/SEC-JR-SERVICE-NAME-GATE), fork-ops signing enablement (DEC-104), **#429** (DO NOT close — DEC-029). PG-MERGE-AUTH-BYPASS MEDIUM — S-PG-MERGE-AUTH-BYPASS story 91 (draft; scope extended to cover MAINT-PG-PR-MERGE-CHANNEL). F2-PIECEWISE-PROTOCOL drift item OPEN. S-7.02 cycle-closing fully satisfied.
+**Step 3 — IDLE. Present status to human, await direction.**
+Nothing is in-progress. Next-work candidates (orchestrator's choice or await human):
+- **S-PG-MERGE-AUTH-BYPASS** (story 91, MEDIUM, draft) — merge-auth protocol story; PG-MERGE-AUTH-BYPASS + MAINT-PG-PR-MERGE-CHANNEL unified.
+- **Bundle D** draft stories: S-MAINT-CR-005/CR-008/CR-009/SEC-001/SEC-JR-SERVICE-NAME-GATE.
+- **#532** / S-MAINT-532 (profile-fallback coverage gap, LOW).
+- Fork signing enablement (DEC-104, pending human + Apple secrets).
+- DO NOT close **#429** (DEC-029, human-deferred).
 
-**Step 4 — STANDING CONSTRAINTS (survive session clear):**
-- Do NOT close #429 (DEC-029, human-deferred).
-- All fixes through full VSDD Feature Mode pipeline (DEC-120/121/124/129/130 — full pipeline is NOT overhead; DEAD-CITATION-CI caught 8+ real defects in a single CI-guard test).
-- F2-PIECEWISE-PROTOCOL [ENFORCED 2026-06-20]: dispatch consistency-validator after EACH spec-author fix in F2, before the next adversary pass. See lessons.md.
-- LESSON-F2-WORKTREE-FIRST: ALL story-scoped edits (including docs/) in the story worktree.
-- LESSON-F1-SIBLING-CASE, LESSON-CENTRALIZATION-AC-GREP, LESSON-CITATION-SIBLING-PROPAGATION.
-- CHANGELOG-per-PR hygiene: keep CHANGELOG `[Unreleased]` populated as PRs merge.
-- DEC-128 (CRITICAL): Delivery sub-agents must NOT self-authorize merges. Merge requires explicit per-merge orchestrator authorization. S-PG-MERGE-AUTH-BYPASS scope extended to cover MAINT-PG-PR-MERGE-CHANNEL.
-- Fork signing UNBLOCKED (DEC-104 pending human + Apple secrets). Carry-forward LOW drift items OPEN/deferred (non-blocking).
-
-Durable follow-ups: see Drift Items section.
+**Step 4 — STANDING CONSTRAINTS:**
+- All fixes through full VSDD Feature Mode (DEC-120/121/124/129/130).
+- F2-PIECEWISE-PROTOCOL [ENFORCED 2026-06-20]: consistency-validator after EACH spec-author fix in F2.
+- LESSON-F2-WORKTREE-FIRST: ALL story-scoped edits (incl. docs/) in the story worktree.
+- DEC-128 (CRITICAL): delivery sub-agents must NOT self-authorize merges. Explicit orchestrator per-merge authorization required.
+- CHANGELOG-per-PR hygiene: keep `[Unreleased]` populated as PRs merge.
+- Carry-forward LOW drift items in Drift Items section (non-blocking).
 
 ## Open Issues Tracker
-
-<!-- OPEN issues only. Closed rows archived to cycles/cycle-001/burst-log.md. -->
 
 | Issue | Title | Status | Priority | Notes |
 |-------|-------|--------|----------|-------|
