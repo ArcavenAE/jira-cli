@@ -3907,3 +3907,32 @@ Note: Perplexity deep-research output for dirs/keyring contained fabrications; r
 | ID | Decision | Rationale | Phase | Date |
 |----|----------|-----------|-------|------|
 | DEC-122 | S-FORK-OPS-BACKFILL bundle F1 COMPLETE — human-approved 2026-06-18. Delta analysis: .factory/phase-f1-delta-analysis/delta-analysis-fork-ops-backfill-1.md. Feature type: infrastructure. 3 MED drift items (FORK-OPS-BACKFILL-DESTRUCTIVE, FORK-OPS-BACKFILL-WIN-TARGET, FORK-OPS-GITLEAKS-DOC). Scope STANDARD → full F1–F7 (per DEC-120/121). Decomposition: 2 stories by file — Story 1 S-FORK-OPS-BACKFILL-1 (WIN-TARGET + DESTRUCTIVE, both in .github/workflows/backfill-release.yml); Story 2 S-FORK-OPS-GITLEAKS-DOC-1 (doc-only: docs/specs/fork-friendly-release-ops.md + CLAUDE.md). WIN-TARGET scope: full S-WIN-4 parity (Package + Checksum + smoke test + embedded-OAuth verify). Grouped by file to prevent worktree conflict on the shared release job. | Feature Mode / S-FORK-OPS-BACKFILL F1 | Phase 3 | 2026-06-18 |
+
+## Archived Current Phase Steps row (archived 2026-06-18 — overflow from STATE.md 5-row cap)
+
+| Step | Agent | Status | Output |
+|------|-------|--------|--------|
+| arcaven fork-ops PRs #528/#529/#530: security-reviewed (#529/#530) + pr-reviewed (#528); all APPROVE/APPROVE-WITH-NITS. Squash-merged #528→#529→#530. #530 closes #210 Gatekeeper gap. 3 new LOW nits → Drift Items. | orchestrator | COMPLETE | develop @ 99f212d. Signing INERT. |
+
+## Burst — S-FORK-OPS-BACKFILL F2 COMPLETE (2026-06-18)
+
+**Agents dispatched:** state-manager (state update only)
+**Files touched:** .factory/STATE.md, .factory/phase-f2-spec-evolution/adversarial-spec-delta-review-pass3.md, .factory/phase-f2-spec-evolution/consistency-audit-f2.md, .factory/cycles/cycle-001/burst-log.md
+**Versions bumped:** spec 1.3.23→1.3.24 (already in spec-changelog; no new bump needed)
+
+### Summary
+
+S-FORK-OPS-BACKFILL F2 (Spec Evolution) declared COMPLETE — human-approved 2026-06-18. Persisted the Pass-3 adversarial review (read-only adversary could not write it). Appended RESOLUTION note to consistency-audit-f2.md documenting F1+F2+F3 findings all resolved. Fixed F3 cold-start wording in STATE.md RESUME PLAN (story files are created at F3, not F2). Updated STATE.md: feature_mode_phase F2→F3, DEC-123 added (lesson: consistency audit catches perimeter drift that adversarial passes miss), Session Resume Checkpoint updated. STATE.md at 199 lines (within 200-line budget). Oldest Current Phase Steps row archived to burst-log (5-row cap).
+
+### Adversarial convergence summary
+- Pass 1: 3 HIGH / 5 MED / 3 LOW → all fixed
+- Pass 2: CLEAN + 3 LOW → all fixed
+- Pass 3: CLEAN, 0 blocking, 2 non-blocking LOW → CONVERGED
+
+### Consistency audit outcomes
+- F1 (MAJOR): BC count stale 598→599 in prd-delta + spec-changelog → FIXED
+- F2 (MAJOR): Optional/REQUIRED contradiction on backfill-matrix-parity test → FIXED
+- F3 (MINOR): Story IDs not yet registered → expected-at-F2; cold-start wording fixed in STATE.md
+
+### DEC-123 lesson
+Fresh-context consistency audit caught 2 MAJOR cross-document defects that 3 adversarial passes missed. Validates "consistency-validator at every gate" rule: adversarial passes = within-perimeter correctness; consistency validator = perimeter-vs-perimeter drift. Complementary, not redundant.

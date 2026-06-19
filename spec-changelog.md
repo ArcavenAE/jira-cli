@@ -7,6 +7,58 @@ project: "jr (jira-cli)"
 
 Track all spec version changes. Most recent version first.
 
+## [1.3.24] - 2026-06-18
+
+### Type: PATCH
+
+### Summary
+
+F2 spec delta for the S-FORK-OPS-BACKFILL bundle (3 MED fork-ops infrastructure
+drift items). Infrastructure-only and documentation-hygiene change: no new BCs,
+no BC modifications, no new NFRs, no Edge Case Catalog additions. Two stories:
+S-FORK-OPS-BACKFILL-1 (backfill-release.yml WIN-TARGET + DESTRUCTIVE fixes) and
+S-FORK-OPS-GITLEAKS-DOC-1 (doc-only GITLEAKS_DISABLED variable documentation).
+WIN-TARGET closes the implementation gap against the existing NFR-P-W1 (Windows
+binary availability) — no new NFR needed. DESTRUCTIVE replaces a delete+create
+release pattern with a check-then-upsert that preserves curated release notes.
+GITLEAKS-DOC adds the `GITLEAKS_DISABLED` repository variable to
+`fork-friendly-release-ops.md` and `CLAUDE.md`. All spec artifacts (BC files,
+NFR catalog, holdout scenarios, CANONICAL-COUNTS, BC-INDEX) are unchanged.
+Implementation contract lives in the engineer/architect's spec delta, not in
+product BCs (same precedent as S-FORK-OPS-SIGN-1).
+
+### Changed Requirements
+
+- `.factory/phase-f2-spec-evolution/prd-delta-fork-ops-backfill-1.md` (NEW):
+  authoritative F2 PRD-delta record for the bundle, explicitly documenting no
+  BC/NFR/EC additions, mapping drift items to stories, and recording the PATCH
+  version bump recommendation.
+
+- `.factory/spec-changelog.md` (MODIFIED): this entry (v1.3.23 → v1.3.24).
+
+### Impact Assessment
+
+| Artifact | Change Type | Notes |
+|----------|-------------|-------|
+| `.factory/phase-f2-spec-evolution/prd-delta-fork-ops-backfill-1.md` | NEW | Authoritative F2 PRD-delta record: no BC/NFR/EC additions; drift-item-to-story mapping |
+| `.factory/phase-f2-spec-evolution/spec-delta-fork-ops-backfill.md` | NEW | Engineering-spec delta: `fork-friendly-release-ops.md` changes (WIN-TARGET parity note + GITLEAKS_DISABLED variable table + check-then-upsert behavioral intent) |
+| `.factory/phase-f2-spec-evolution/architecture-delta-fork-ops-backfill.md` | NEW | Architecture delta: confirms no module/subsystem/dependency-graph changes; regression-baseline table |
+| `.factory/phase-f2-spec-evolution/verification-delta-fork-ops-backfill.md` | NEW | Verification delta: no new VPs; F5 adversarial scan scope + CWE-77 compliance checks |
+| `.factory/spec-changelog.md` | MODIFIED | This entry |
+
+### Files NOT Changed
+
+- All BC files (`bc-1` through `bc-7`, `cross-cutting`) — no contract changes; `total_bcs` remains 599
+- `BC-INDEX.md` — no new rows; `total_bcs` 599 unchanged
+- `CANONICAL-COUNTS.md` — no count changes
+- `nfr-catalog.md` — NFR-P-W1 already present; no new NFR rows
+- `error-taxonomy.md`, `edge-case-catalog.md`, `holdout-scenarios.md` — unchanged
+- All `.factory/architecture/` files — no src/ changes
+- All `src/` production files — no behavioral change
+- All `tests/` files — no Rust test changes
+
+---
+
 ## [1.3.23] - 2026-06-18
 
 ### Type: MINOR
