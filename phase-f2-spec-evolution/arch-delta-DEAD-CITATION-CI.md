@@ -51,9 +51,10 @@ applying the canonical normalization/skip pipeline specified by BC-X.13.002
 (d) **Section-ref**: `§N`-style tokens lack a known directory prefix and are excluded by the
     dir-prefix filter at step (f); whitespace tokenization has already separated them from the
     preceding path
-(e) **Punctuation trim (leading and trailing)**: strip a leading `(` or `[` from the token;
-    trim trailing `.`, `,`, `;`, `:`; trim a trailing `)` ONLY if unbalanced across the whole
-    token (`count('(') < count(')')`) — mirrors `src/adf.rs::trim_url_extent`
+(e) **Punctuation trim — single fixpoint**: Repeat as one unit until a complete pass leaves the
+    token unchanged: (1) strip one leading `(` or `[`; (2) greedily trim trailing `.`,`,`,`;`,`:`; (3) trim
+    one trailing `)` iff `count('(') < count(')')` whole-token; (4) trim one trailing `]` iff
+    `count('[') < count(']')` whole-token. Termination: one condition — a full-pass no-op.
 (f) **Dir-prefix filter**: token must start with a develop-tracked directory prefix
     (`src/`, `tests/`, `docs/`, `.github/`, `scripts/`). ALL `.factory/` prefixes are EXCLUDED
     here — `.factory/` is NOT in the develop-tracked prefix set (it is git-ignored, lives in a
