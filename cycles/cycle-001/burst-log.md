@@ -4026,3 +4026,20 @@ The following Phase Progress rows were compacted from STATE.md into summary rows
 | DEAD-CITATION-CI F2 | CONVERGED 2026-06-20; 10 adv passes + 5 consistency audits; human-approved; ROOT_FILES amendment added |
 
 Also archived: Current Phase Steps rows for S-FORK-OPS-BACKFILL F6 PASS, F7 CONVERGED, RELEASED v0.6.0-dev.5.
+
+## Archived Current Phase Steps — 2026-06-19 PR Triage Burst
+
+The following Current Phase Step row was archived from STATE.md to maintain the last-5 convention (2026-06-19):
+
+| Step | Agent | Status | Output |
+|------|-------|--------|--------|
+| **DEAD-CITATION-CI F2 GATE CLOSE** — F2 spec CONVERGED after 10 adversarial passes + 5 consistency audits. ROOT_FILES amendment added. Human-approved. DEC-126 logged. | state-manager | F2 CONVERGED | develop @ 6bdb251. F3 next. |
+
+## PR Triage Burst — 2026-06-19
+
+| Field | Value |
+|-------|-------|
+| Event | dependabot PR #541 (chore(deps): bump insta from 1.47.2 to 1.48.0) MERGED with explicit orchestrator authorization per DEC-128 merge-auth protocol. CI 15/15 green. |
+| develop HEAD after merge | 1c703d6 (post-release dev-dep bump; no new tag; activation_head/version remain dbe8625/v0.6.0-dev.6) |
+| #537 status | External fork signing-CI fix. pr-reviewer verdict: MERGE-WITH-CHANGES. security-reviewer verdict: APPROVE (1 LOW CWE-697, non-exploitable). Awaiting merge decision. |
+| #519 status | codecov-action v7 bump. Rebase requested; non-breaking, safe-after-green. |

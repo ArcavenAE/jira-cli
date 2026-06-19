@@ -1002,3 +1002,15 @@ _Was the active checkpoint after F5 CONVERGED / F6 active. Superseded after F7 C
 | **develop HEAD** | origin/develop = **6bdb251** (docs: 2026-06-19 maintenance sweep accuracy fixes (#543); 1 commit ahead of v0.6.0-dev.5 tag 71f33c6). |
 | **Counters** | BC **599**. NFR **42**. ADR **16**. Stories **89** (authoritative). |
 | **Standing constraints** | F3 will create S-MAINT-DEAD-CITATION-CI. Do NOT close #429 (DEC-029). Full VSDD Feature Mode pipeline for all fixes. |
+
+## Archived Checkpoint — 2026-06-19 (pre-#541 merge)
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-06-19 |
+| **Status** | IDLE. No active feature_mode_bundle. No active story worktrees. Maintenance RESUMED and awaiting direction. |
+| **Position** | (a) 2026-06-19 maintenance sweep CLOSED (v0.6.0-dev.5 era cleanup, PR #543). (b) DEAD-CITATION-CI feature cycle CLOSED + RELEASED v0.6.0-dev.6 (PRs #544/#545/#546, 2026-06-20). Session review persisted (DEAD-CITATION-CI-session-review.md). DEC-130 logged. 4 dispositions applied. |
+| **develop HEAD** | dbe8625 (v0.6.0-dev.6 release commit). PRs #544/#545/#546 merged. |
+| **factory-artifacts HEAD** | 261471f — `factory(session-review): persist DEAD-CITATION-CI session review + apply 4 dispositions (DEC-130)`. |
+| **Counters** | BC 602. NFR 42. ADR 16. Stories 91. |
+| **Open PRs** | #541 (insta bump — low); #537 (signing fix); #519 (codecov). None required orchestrator action at time of checkpoint. |
