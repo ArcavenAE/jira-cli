@@ -282,10 +282,18 @@ jobs:
           for BIN in jr-darwin-arm64 jr-darwin-amd64; do
             echo "::group::Verify $BIN"
             codesign -dvv "$BIN" 2>&1 | tee "$CS_OUT"
-            grep -q "^Authority=Developer ID Application:" "$CS_OUT" \
-              || { echo "::error::$BIN missing Developer ID Application authority"; exit 1; }
-            grep -q "^TeamIdentifier=" "$CS_OUT" \
-              || { echo "::error::$BIN missing TeamIdentifier"; exit 1; }
+            # GHA log-masks the leaf cert CN (it matches APPLE_SIGNING_IDENTITY
+            # secret), so `Authority=Developer ID Application: ...` becomes
+            # `Authority=***`. Anchor instead on the intermediate cert in the
+            # Developer ID chain, which is a public Apple CA name and never
+            # masked. Its presence proves the chain.
+            grep -q "^Authority=Developer ID Certification Authority$" "$CS_OUT" \
+              || { echo "::error::$BIN missing Developer ID chain (intermediate CA)"; exit 1; }
+            # TeamIdentifier value matches APPLE_NOTARIZATION_TEAM_ID and is
+            # masked to "***" — accept either a real team-id format or the
+            # masked marker, but reject "not set" (the ad-hoc sentinel).
+            grep -qE "^TeamIdentifier=([A-Z0-9]{6,}|\*+)$" "$CS_OUT" \
+              || { echo "::error::$BIN: TeamIdentifier missing, ad-hoc, or unexpected format"; exit 1; }
             grep -qE "^CodeDirectory.*flags=0x[0-9a-f]+\(.*runtime.*\)" "$CS_OUT" \
               || { echo "::error::$BIN missing hardened runtime (--options runtime) flag"; exit 1; }
             echo "::endgroup::"
