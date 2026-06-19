@@ -965,6 +965,10 @@ that verifies every file-path citation in `CLAUDE.md` resolves to a real on-disk
 | `BC-3.2.013` | NO | Excluded (no `/`) |
 | `JRACLOUD-95368` | NO | Excluded (no `/`) |
 
+**Verification Properties**:
+- VP-CITE-001: `extract_path_citations` grammar — unit + proptest coverage of in-scope detection and all 9 exclusion rules; no false positives on documented edge cases. See `verification-delta-DEAD-CITATION-CI.md` §VP-CITE-001.
+- VP-CITE-002: Integration self-verification — `test_claude_md_citations_resolve_to_real_files` passes green on develop HEAD; fails deterministically when fed a fixture with a known-dead citation. See `verification-delta-DEAD-CITATION-CI.md` §VP-CITE-002.
+
 **Traceability**:
 - F1 Delta Analysis: `DEAD-CITATION-CI-delta-analysis.md` §7 BC-CITE-001
 - Research: `maint-pg-dead-citation-ci-approach.md` §(a)
@@ -1015,6 +1019,9 @@ that verifies every file-path citation in `CLAUDE.md` resolves to a real on-disk
 | `adf::tests::test_bare_*` | (skipped — contains `*`) | NO |
 | `std::sync::Mutex<HashMap>` | (excluded — no known dir prefix) | NO |
 | `src/api/jsm/servicedesks.rs::require_service_desk` | `src/api/jsm/servicedesks.rs` | YES |
+
+**Verification Properties**:
+- VP-CITE-001: `extract_path_citations` grammar — unit + proptest coverage of all 9 exclusion/normalization rules including glob-skip, symbol-form strip, line-ref strip, section-ref whitespace exclusion, and extension filter; no false positives. See `verification-delta-DEAD-CITATION-CI.md` §VP-CITE-001.
 
 **Traceability**:
 - F1 Delta Analysis: `DEAD-CITATION-CI-delta-analysis.md` §5b OUT-OF-SCOPE, §6 Risk 1/2/3/4
@@ -1068,6 +1075,9 @@ The allowlist function is implemented with a comment naming the originating bran
 | `.factory/research/S-3.03-wave3-verification.md` | NO | `.factory/research/` is on develop; must be checked |
 | `docs/adr/0016-windows-build-target.md` | NO | `docs/` is always on develop; must be checked |
 | `src/adf.rs` | NO | `src/` is always on develop; must be checked |
+
+**Verification Properties**:
+- VP-CITE-002: Integration self-verification — allowlist is exercised by `test_factory_specs_path_is_allowlisted`, `test_factory_research_path_is_not_allowlisted`, and fixture-based `test_dead_citation_detected_in_fixture`; off-branch paths are skipped; `.factory/research/` dead citations are detected. See `verification-delta-DEAD-CITATION-CI.md` §VP-CITE-002.
 
 **Traceability**:
 - F1 Delta Analysis: `DEAD-CITATION-CI-delta-analysis.md` §5c off-working-branch allowlist, §6 Risk 5
