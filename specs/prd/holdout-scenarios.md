@@ -90,11 +90,11 @@ Setup uses:
 ---
 
 ### H-007: `issue move FOO-1 Done` against state requiring resolution surfaces `--resolution` hint
-**Setup**: transitions list has Done; current status In Progress; POST transitions returns 400 `{errors: {resolution: "Field 'resolution' is required"}}`.
+**Setup**: transitions list includes Done (a done-category status); `GET .../issue/FOO-1/transitions?expand=transitions.fields` returns Done with a `resolution` field present. Current status In Progress.
 **Action**: `jr --no-input issue move FOO-1 Done`
-**Expected**: exit non-zero; stderr contains both `--resolution` AND `jr issue resolutions`.
-**Why hidden**: Atlassian's raw error wording is unfriendly. The remediation rewrite is the user-value.
-**BC refs**: BC-3.2.009
+**Expected**: exit 64; stderr contains both `--resolution` AND `jr issue resolutions`. No POST to `/rest/api/3/issue/FOO-1/transitions` is fired — interception occurs BEFORE the POST (proactive enforcement per ADR-0015 / BC-3.2.013).
+**Why hidden**: ADR-0015 made resolution enforcement proactive (pre-POST interception) rather than reactive (post-POST 400 rewrite). The exit code and stderr substrings are identical across both paths; the mechanism difference is invisible without mock-call-count assertions. BC-3.2.009 reactive backstop (POST→400 rewrite) is preserved but no longer the primary path for single-key moves.
+**BC refs**: BC-3.2.013 (proactive, primary), BC-3.2.009 (reactive fallback)
 
 ---
 
@@ -264,13 +264,13 @@ Setup uses:
 
 ---
 
-### H-027: `Retry-After: 86400` (24h) — parsed value preserved without upper bound (KNOWN-GAP pin)
+### H-027: `Retry-After: 86400` (24h) — abort signal honored; MAX_RETRY_AFTER_SECS=60 cap active (MUST-PASS)
 **Setup**: Construct a `http::HeaderMap` containing `Retry-After: 86400`. Call `RateLimitInfo::from_headers(&headers)` directly (unit test — no Wiremock, no process spawn, no real-time clock dependency).
-**Action**: Assert `rate_limit_info.retry_after_secs == 86400`.
-**Expected**: With the MAX_RETRY_AFTER_SECS cap (S-3.07), `RateLimitInfo::from_headers` (or its replacement after S-3.07) returns an "abort" signal when retry_after_secs exceeds 60. The literal value 86400 is parsed without overflow but the abort signal is honored — no 24-hour sleep occurs. Test passes against post-S-3.07 code.
-**Status**: MUST-PASS (S-3.07 added MAX_RETRY_AFTER_SECS=60 cap; verified by AC-001 + AC-002 + AC-003 in tests/rate_limit_cap_tests.rs and tests/rate_limit_cap_ac003.rs)
-**Why hidden**: Pin Pass 4 §7.1.3 NFR gap as an explicit holdout against silent fixes that add an upper bound cap. Reframed from retry-loop test (ADV-P22-004: Mock::expect(2) + 5s window were internally contradictory with an 86400s delay).
-**BC refs**: BC-X.4.002 (current behavior pinned — no cap); BC-X.4.009 (future MUST-FAIL when MAX_RETRY_AFTER_SECS=60 cap is implemented — flip assertion to `retry_after_secs == 60`)
+**Action**: Assert that `RateLimitInfo::from_headers` returns an "abort" signal (retry_after_secs exceeds MAX_RETRY_AFTER_SECS=60).
+**Expected**: The literal value 86400 is parsed without overflow; the abort signal is returned because 86400 > 60. No 24-hour sleep occurs. Test passes against post-S-3.07 code. The assertion checks for the abort signal, NOT `retry_after_secs == 86400`.
+**Status**: MUST-PASS (S-3.07 added MAX_RETRY_AFTER_SECS=60 cap; shipped. Verified by AC-001 + AC-002 + AC-003 in tests/rate_limit_cap_tests.rs and tests/rate_limit_cap_ac003.rs.)
+**Why hidden**: Pin S-3.07's MAX_RETRY_AFTER_SECS=60 cap as a regression guard. The cap shipped; evaluators must assert the abort-signal path, not the no-cap behavior. Reframed from retry-loop test (ADV-P22-004: Mock::expect(2) + 5s window were internally contradictory with an 86400s delay).
+**BC refs**: BC-X.4.002 (parsed value preserved without overflow); BC-X.4.009 (MAX_RETRY_AFTER_SECS=60 cap active — abort signal returned when retry_after_secs > 60; SHIPPED as of S-3.07)
 
 ---
 
@@ -477,7 +477,7 @@ Setup uses:
    - Profile `sandbox`: `story_points_field_id = "customfield_10099"`
 2. Wiremock at `JR_BASE_URL` captures POST `/rest/api/3/issue` request body.
 
-**Action**: `jr --profile sandbox issue create --summary "Test" --story-points 5 --type Story --project PROJ --no-input`
+**Action**: `jr --profile sandbox issue create --summary "Test" --points 5 --type Story --project PROJ --no-input`
 
 **Expected (FIXED behavior)**:
 - POST body contains `"customfield_10099": 5` (profile `sandbox`'s field ID)

@@ -188,8 +188,8 @@ All use 7-day TTL. Root path (platform-conditional per BC-6.2.016): `~/.cache/jr
 | Bounded contexts | 7 (bc-1..bc-7) + 1 cross-cutting | README.md Document Map |
 | HTTP method types | 11 (Pass 2 R1 verified) | Pass 2 deep R1 §inventory |
 | API resource files | 18 (`api/jira/*`, `api/jsm/*`, `api/assets/*`) | adr-index.md ADR-0001 harmonization |
-| list.rs LOC (post-split) | 1,083 | `wc -l src/cli/issue/list.rs` |
-| auth.rs LOC | 1,397 | `wc -l src/api/auth.rs` |
+| list.rs LOC (post-split) | 1,256 | `wc -l src/cli/issue/list.rs` |
+| auth.rs LOC | 1,875 | `wc -l src/api/auth.rs` |
 
 ---
 
