@@ -12,6 +12,22 @@ All notable changes to jr will be documented here.
 
 ### Changed
 
+## [0.6.0-dev.6] - 2026-06-19
+
+### Added
+
+- **CLAUDE.md dead-citation CI guard (`tests/claude_md_citations.rs`, #544, #545;
+  full VSDD F1–F7):** A new always-run test (`test_all_backtick_citations_in_claude_md_resolve`)
+  fails the build when an in-scope backtick file-path citation in `CLAUDE.md` points to a
+  missing file. Reports the real line number for each broken citation. Coverage scope:
+  `src/`, `tests/`, `docs/`, `.github/`, `scripts/`, and a curated set of root-level files
+  (`CHANGELOG.md`, `Cargo.toml`, `Cargo.lock`, `build.rs`, `.cargo/config.toml`,
+  `.cargo/mutants.toml`). Excluded: `.factory/` directory (artifact branch, not
+  workspace files), glob patterns (`*`, `**`), and human-readable shorthands (e.g.
+  `<file>::<fn>`). CWE-22 path-traversal-safe (rejects any token containing `..`).
+  (#544: base guard; #545: F6 hardening — `SEC-001` dotdot guard, shared constants,
+  mutation-resistance pins, SEC-002 path-canonicalization bypass proof.)
+
 ## [0.6.0-dev.5] - 2026-06-19
 
 ### Fixed
