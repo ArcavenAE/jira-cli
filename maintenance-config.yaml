@@ -1,0 +1,30 @@
+# Maintenance Sweep Configuration
+# Created: 2026-06-22
+# Format: vsdd-factory maintenance-sweep defaults
+
+schedule: weekly
+
+dependency_audit:
+  enabled: true
+  auto_pr_severity: high   # auto-PR when findings >= high
+
+documentation_drift:
+  enabled: true
+  auto_pr: true            # auto-create PR for doc drift findings
+
+pattern_consistency:
+  enabled: true
+  auto_pr: false           # manual review required for pattern changes
+
+holdout:
+  enabled: true
+  coverage_threshold: 0.8  # 80% coverage required
+
+perf:
+  enabled: true
+  regression_threshold: 0.10     # 10% regression triggers alert
+  critical_regression_threshold: 0.25  # 25% regression is critical
+
+quality_gate:
+  enabled: true
+  auto_merge: false        # human approval required for all merges

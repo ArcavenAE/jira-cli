@@ -2,11 +2,12 @@
 document_type: pipeline-state
 version: "2.0"
 status: complete
-timestamp: 2026-06-20T00:00:00Z
+timestamp: 2026-06-22T00:00:00Z
 phase: 3
 project: jira-cli
 mode: brownfield
-current_step: "IDLE. PR queue cleared: #541/#519/#537 all MERGED. develop @ ed236d4. Awaiting new direction."
+current_step: "MAINTENANCE SWEEP 2026-06-22 STARTED. Sweeps 1-5,7,8 dispatched (DTU/a11y N/A). Read-only scans in progress."
+maintenance_run: STARTED
 current_cycle: "cycle-001"
 feature_mode_bundle: none
 dtu_required: false
@@ -53,6 +54,7 @@ activation_version: "v0.6.0-dev.6"
 | **DEAD-CITATION-CI F4 COMPLETE** — PR #544 merged @ 496258a. 58 tests (tests/claude_md_citations.rs). 3 per-story adv passes + code/security review. ci-gate 15/15 incl. mutation testing + Windows. PG-MERGE-AUTH-BYPASS + DEC-128 logged. F5 starting. | state-manager | F4 COMPLETE | develop @ 496258a. Story 90 DELIVERED. |
 | **DEAD-CITATION-CI CYCLE CLOSED + RELEASED** — PRs #544/#545 merged; PR #546 (release) merged. develop @ dbe8625 == v0.6.0-dev.6 tag. release.yml run 27851891146 SUCCESS; 10 assets / 5 targets. S-7.02 satisfied: PG-MERGE-AUTH-BYPASS TRACKED (S-PG-MERGE-AUTH-BYPASS story 91); lessons.md codified. ADR-0014 written. Maintenance RESUMED. IDLE. | state-manager | CYCLE CLOSED | factory-artifacts. |
 | **PR TRIAGE COMPLETE — open-PR queue cleared: #541 (insta) @ 1c703d6, #519 (codecov v7, non-breaking, post-rebase CI green run 27853301753) @ c8e34ca, #537 (fork verify-signatures fix; pr-reviewer MERGE-WITH-CHANGES + security-reviewer APPROVE; 2 LOW nits → FORK-OPS-537-NITS) @ ed236d4 == develop HEAD. All DEC-128-authorized. IDLE. SESSION WRAPPED — SAFE TO CLEAR.** | state-manager | PR TRIAGE COMPLETE | develop @ ed236d4. ZERO open PRs. Local develop synced. |
+| **MAINTENANCE SWEEP 2026-06-22 STARTED** — maintenance-config.yaml created. maintenance/2026-06-22/ directory initialized. Sweeps 1-5,7,8 dispatched (DTU=N/A dtu_required:false; a11y=N/A CLI-only). Read-only scan agents in progress. | state-manager | IN_PROGRESS | factory-artifacts. |
 
 ## Decisions Log
 
