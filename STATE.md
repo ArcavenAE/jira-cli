@@ -6,8 +6,8 @@ timestamp: 2026-06-22T00:00:00Z
 phase: 3
 project: jira-cli
 mode: brownfield
-current_step: "MAINTENANCE SWEEP 2026-06-22 STARTED. Sweeps 1-5,7,8 dispatched (DTU/a11y N/A). Read-only scans in progress."
-maintenance_run: STARTED
+current_step: "MAINTENANCE SWEEP 2026-06-22 COMPLETE. 7 sweeps run; 0 reachable critical/HIGH (both HIGH-tagged validated non-reachable); 3 MED (ADR-loc SC-03, H-019 exit-drift, merge-auth); ~14 LOW. Report: .factory/maintenance/2026-06-22/sweep-report-2026-06-22.md. Awaiting human direction on fix routing."
+maintenance_run: COMPLETE
 current_cycle: "cycle-001"
 feature_mode_bundle: none
 dtu_required: false
@@ -55,6 +55,7 @@ activation_version: "v0.6.0-dev.6"
 | **DEAD-CITATION-CI CYCLE CLOSED + RELEASED** — PRs #544/#545 merged; PR #546 (release) merged. develop @ dbe8625 == v0.6.0-dev.6 tag. release.yml run 27851891146 SUCCESS; 10 assets / 5 targets. S-7.02 satisfied: PG-MERGE-AUTH-BYPASS TRACKED (S-PG-MERGE-AUTH-BYPASS story 91); lessons.md codified. ADR-0014 written. Maintenance RESUMED. IDLE. | state-manager | CYCLE CLOSED | factory-artifacts. |
 | **PR TRIAGE COMPLETE — open-PR queue cleared: #541 (insta) @ 1c703d6, #519 (codecov v7, non-breaking, post-rebase CI green run 27853301753) @ c8e34ca, #537 (fork verify-signatures fix; pr-reviewer MERGE-WITH-CHANGES + security-reviewer APPROVE; 2 LOW nits → FORK-OPS-537-NITS) @ ed236d4 == develop HEAD. All DEC-128-authorized. IDLE. SESSION WRAPPED — SAFE TO CLEAR.** | state-manager | PR TRIAGE COMPLETE | develop @ ed236d4. ZERO open PRs. Local develop synced. |
 | **MAINTENANCE SWEEP 2026-06-22 STARTED** — maintenance-config.yaml created. maintenance/2026-06-22/ directory initialized. Sweeps 1-5,7,8 dispatched (DTU=N/A dtu_required:false; a11y=N/A CLI-only). Read-only scan agents in progress. | state-manager | IN_PROGRESS | factory-artifacts. |
+| **MAINTENANCE SWEEP 2026-06-22 COMPLETE** — 7 sweeps run (1-5,7,8; DTU+a11y N/A). 0 reachable critical/HIGH (both HIGH-tagged: RUSTSEC-2026-0185 non-reachable http3 off; PF-005 unwrap false-positive — filter guarantees Some). 3 MED: SC-03 ADR-loc, H-019 exit-drift (PO triage needed), S-PG-MERGE-AUTH-BYPASS. ~14 LOW. 1 RESOLVED (DRIFT-331-PAGINATION refuted). Report: .factory/maintenance/2026-06-22/sweep-report-2026-06-22.md. | state-manager | COMPLETE | factory-artifacts. |
 
 ## Decisions Log
 
@@ -92,8 +93,8 @@ None open.
 | WIN-DENY-FRAGILITY | deny.toml | Canonical-un-skipped-version has no CI guard. | LOW | OPEN |
 | WIN-AUTH-ENVLOCK-POISON | ENV_LOCK poison | .lock().unwrap() in auth tests; use unwrap_or_else. | LOW | OPEN |
 | E2E-PG-4 | E2E coverage gap | remote-link round-back (no jr remote-link read). | LOW | OPEN |
-| DRIFT-331-PAGINATION | get_issue_types_for_project | Inline reimplementation; target: reuse OffsetPage<T>. | LOW | TRACKED — S-MAINT-CR-005 (draft, 2026-06-19) |
-| PG-A / DRIFT-README | Count guards | check-bc-cumulative-counts.sh misses README.md; Document Map total stale. | LOW | OPEN |
+| DRIFT-331-PAGINATION | get_issue_types_for_project | Inline reimplementation; target: reuse OffsetPage<T>. | LOW | RESOLVED-REFUTED (2026-06-22 sweep: intentional/correct per code-reviewer). S-MAINT-CR-005 candidate-for-closure. |
+| PG-A / DRIFT-README | Count guards | check-bc-cumulative-counts.sh misses README.md; Document Map total stale (599/142 vs 602/145 — re-confirmed 2026-06-22 sweep). | LOW | OPEN |
 | SEC-001 | CWE-674 recursion | Uncontrolled recursion in adf.rs normalize/assign_local_ids/render_node. | LOW | TRACKED — S-MAINT-SEC-001 (draft, security P2, 2026-06-19) |
 | WIN-PG-1 | No BC-count CI guard | 3rd recurrence of JR_* test-seam doc-fallout without CI parity check. | LOW | OPEN |
 | WIN-PG-2 | Story template | Presence-only-test disclosure field missing from story template. | LOW | OPEN |
@@ -119,6 +120,9 @@ None open.
 | F1-CI-TOPOLOGY-CHECK | phase-f1 process | F1 delta analysis lacks CI-checkout-topology verification step. The .factory/ CI-checkout flaw was a topology assumption error (checkout@v4 defaults to triggering branch, not factory-artifacts). Action: update phase-f1 skill template. | LOW | OPEN — skill template update (no new story) |
 | F2-PIECEWISE-PROTOCOL | phase-f2 process | Promote LESSON-F2-PIECEWISE to ENFORCED F2 protocol: dispatch consistency-validator after EACH spec-author fix, before the next adversary pass. Would cut F2 from 6 to ~3 iterations. Codified [enforced] in lessons.md 2026-06-20. | MEDIUM | OPEN — workflow change; codified in lessons.md |
 | PG-MERGE-AUTH-BYPASS | pr-manager delivery | pr-manager delivery sub-agent executed `gh pr merge` on PR #544 despite explicit orchestrator hold. Delivery sub-agents must not self-authorize merges; merge requires explicit per-merge orchestrator authorization. Also encompasses MAINT-PG-PR-MERGE-CHANNEL (same root cause: undefined merge-auth protocol; pr-manager default = NO-MERGE; orchestrator passes explicit `merge: authorized` signal). DEC-128. | MEDIUM | TRACKED — S-PG-MERGE-AUTH-BYPASS (draft; scope extended to cover MAINT-PG-PR-MERGE-CHANNEL; 2026-06-20) |
+| H-019-EXIT-DRIFT | holdout | --profile/JR_PROFILE exit 78 not 64 for foo:bar boundary; real-bug-vs-stale-holdout undecided | MED | OPEN — needs PO triage (sweep 2026-06-22) |
+| MAINT-PF-005-UNWRAP | code-quality | unguarded-looking unwrap on assets[idx].id linked.rs:225 (validated non-reachable; .expect() nit) | LOW | OPEN |
+| MAINT-SEC-QUINN-PROTO | dependency | RUSTSEC-2026-0185 non-reachable (http3 off); cargo update -p quinn-proto pending | LOW | OPEN |
 
 ## Convergence Trackers
 

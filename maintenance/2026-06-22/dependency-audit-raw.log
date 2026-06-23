@@ -1,0 +1,125 @@
+MAINTENANCE SWEEP 1a — Dependency Audit Raw Output
+Date: 2026-06-22
+Project: jr (jira-cli) v0.6.0-dev.6
+Working directory: /Users/zious/Documents/GITHUB/jira-cli
+
+=== TOOL VERSIONS ===
+cargo-audit 0.22.1
+cargo-deny  0.19.6
+cargo-outdated: NOT INSTALLED (skipped)
+
+=== SECTION 1: cargo audit ===
+
+    Fetching advisory database from `https://github.com/RustSec/advisory-db.git`
+      Loaded 1137 security advisories (from /Users/zious/.cargo/advisory-db)
+    Updating crates.io index
+    Scanning Cargo.lock for vulnerabilities (346 crate dependencies)
+Crate:     quinn-proto
+Version:   0.11.14
+Title:      Remote memory exhaustion in quinn-proto from unbounded out-of-order stream reassembly
+Date:      2026-06-22
+ID:        RUSTSEC-2026-0185
+URL:       https://rustsec.org/advisories/RUSTSEC-2026-0185
+Severity:  7.5 (high)
+Solution:  Upgrade to >=0.11.15
+Dependency tree:
+quinn-proto 0.11.14
+└── quinn 0.11.9
+    └── reqwest 0.13.4
+        └── jr 0.6.0-dev.6
+
+error: 1 vulnerability found!
+
+=== SECTION 2: cargo deny check ===
+
+warning[license-not-encountered]: license was not encountered
+  ┌─ /Users/zious/Documents/GITHUB/jira-cli/deny.toml:8:6
+  │
+8 │     "BSD-2-Clause",
+  │      ━━━━━━━━━━━━ unmatched license allowance
+
+warning[license-not-encountered]: license was not encountered
+   ┌─ /Users/zious/Documents/GITHUB/jira-cli/deny.toml:15:6
+   │
+15 │     "OpenSSL",
+   │      ━━━━━━━ unmatched license allowance
+
+warning[license-not-encountered]: license was not encountered
+   ┌─ /Users/zious/Documents/GITHUB/jira-cli/deny.toml:13:6
+   │
+13 │     "Unicode-DFS-2016",
+   │      ━━━━━━━━━━━━━━━━ unmatched license allowance
+
+advisories ok, bans ok, licenses ok, sources ok
+
+=== SECTION 3: cargo tree --duplicates ===
+
+getrandom v0.3.4
+└── rand_core v0.9.5
+    ├── rand v0.9.4
+    │   └── proptest v1.11.0
+    │       [dev-dependencies]
+    │       └── jr v0.6.0-dev.6 (/Users/zious/Documents/GITHUB/jira-cli)
+    ├── rand_chacha v0.9.0
+    │   └── proptest v1.11.0 (*)
+    └── rand_xorshift v0.4.0
+        └── proptest v1.11.0 (*)
+
+getrandom v0.4.2
+├── rand v0.10.1
+│   └── jr v0.6.0-dev.6 (/Users/zious/Documents/GITHUB/jira-cli)
+└── tempfile v3.27.0
+    ├── dialoguer v0.12.0
+    │   └── jr v0.6.0-dev.6 (/Users/zious/Documents/GITHUB/jira-cli)
+    ├── insta v1.48.0
+    │   [dev-dependencies]
+    │   └── jr v0.6.0-dev.6 (/Users/zious/Documents/GITHUB/jira-cli)
+    ├── proptest v1.11.0 (*)
+    └── rusty-fork v0.3.1
+        └── proptest v1.11.0 (*)
+    [dev-dependencies]
+    └── jr v0.6.0-dev.6 (/Users/zious/Documents/GITHUB/jira-cli)
+
+rand v0.9.4 (*)
+
+rand v0.10.1 (*)
+
+rand_core v0.9.5 (*)
+
+rand_core v0.10.1
+├── chacha20 v0.10.0
+│   └── rand v0.10.1 (*)
+├── getrandom v0.4.2 (*)
+└── rand v0.10.1 (*)
+
+serde_spanned v0.6.9
+├── toml v0.8.23
+│   └── figment v0.10.19
+│       └── jr v0.6.0-dev.6 (/Users/zious/Documents/GITHUB/jira-cli)
+└── toml_edit v0.22.27
+    └── toml v0.8.23 (*)
+
+serde_spanned v1.1.1
+└── toml v1.1.2+spec-1.1.0
+    └── jr v0.6.0-dev.6 (/Users/zious/Documents/GITHUB/jira-cli)
+
+toml v0.8.23 (*)
+
+toml v1.1.2+spec-1.1.0 (*)
+
+toml_datetime v0.6.11
+├── toml v0.8.23 (*)
+└── toml_edit v0.22.27 (*)
+
+toml_datetime v1.1.1+spec-1.1.0
+└── toml v1.1.2+spec-1.1.0 (*)
+
+winnow v0.7.15
+└── toml_edit v0.22.27 (*)
+
+winnow v1.0.0
+├── toml v1.1.2+spec-1.1.0 (*)
+└── toml_parser v1.1.2+spec-1.1.0
+    └── toml v1.1.2+spec-1.1.0 (*)
+
+=== END OF RAW LOG ===
