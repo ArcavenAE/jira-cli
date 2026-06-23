@@ -2,7 +2,8 @@
 
 **traces_to:** README.md
 **Source ADRs (0001–0006):** `.reference/jira-cli/docs/adr/`
-**New ADRs (0007–0016):** `.factory/architecture/adr/`
+**Promoted ADRs (0007–0015):** `docs/adr/` (canonical; factory copies are Phase-1 drafts)
+**Factory-only ADRs (0016):** `.factory/architecture/adr/`
 
 ---
 
@@ -16,14 +17,14 @@
 | [ADR-0004](#adr-0004-per-feature-specs) | Per-Feature Specs, Not a Growing Master Spec | **Accepted** | README.md §specs |
 | [ADR-0005](#adr-0005-graphql-org-discovery) | GraphQL hostNames for Org Discovery | **Accepted** | system-overview.md §network-egress |
 | [ADR-0006](#adr-0006-embedded-oauth) | Embedded `jr` OAuth App with XOR Obfuscation | **Accepted** | state-machines.md §SM-1 |
-| [ADR-0007](adr/0007-multi-profile-fields-fix.md) | Multi-Profile Fields Bug Fix Strategy | **Accepted** | risk-register.md §R-C1 |
-| [ADR-0008](adr/0008-asset-enrichment-key-correctness.md) | Asset Enrichment HashMap Key Correctness | **Accepted** | state-machines.md §SM-3 |
-| [ADR-0009](adr/0009-handle-open-instance-url.md) | handle_open Instance URL Fix | **Accepted** | risk-register.md §R-H3 |
-| [ADR-0010](adr/0010-list-worklogs-pagination.md) | list_worklogs Pagination Fix | **Accepted** | cross-cutting.md §4 |
-| [ADR-0011](adr/0011-type-level-profile-fence.md) | Type-Level Profile Fence (Newtype) | **Deferred** | risk-register.md §R-L1 |
-| [ADR-0012](adr/0012-shard-rule.md) | Module Shard Rule Codification | **Accepted** | risk-register.md §R-M5 |
-| [ADR-0013](adr/0013-pkce-deferral.md) | PKCE Deferral for OAuth 2.0 Authorization Code Flow | **Accepted** | security-decisions/SD-001-pkce.md |
-| [ADR-0014](adr/0014-jsm-request-create-dispatch-fork.md) | JSM Request Creation Dispatch Fork in `jr issue create` | **Accepted** | component-graph.md §api_jsm, cross-cutting.md §10 |
+| [ADR-0007](../../../docs/adr/0007-multi-profile-fields-fix.md) | Multi-Profile Fields Bug Fix Strategy | **Accepted** | risk-register.md §R-C1 |
+| [ADR-0008](../../../docs/adr/0008-asset-enrichment-key-correctness.md) | Asset Enrichment HashMap Key Correctness | **Accepted** | state-machines.md §SM-3 |
+| [ADR-0009](../../../docs/adr/0009-handle-open-instance-url.md) | handle_open Instance URL Fix | **Accepted** | risk-register.md §R-H3 |
+| [ADR-0010](../../../docs/adr/0010-list-worklogs-pagination.md) | list_worklogs Pagination Fix | **Accepted** | cross-cutting.md §4 |
+| [ADR-0011](../../../docs/adr/0011-type-level-profile-fence.md) | Type-Level Profile Fence (Newtype) | **Deferred** | risk-register.md §R-L1 |
+| [ADR-0012](../../../docs/adr/0012-shard-rule.md) | Module Shard Rule Codification | **Accepted** | risk-register.md §R-M5 |
+| [ADR-0013](../../../docs/adr/0013-pkce-deferral.md) | PKCE Deferral for OAuth 2.0 Authorization Code Flow | **Accepted** | security-decisions/SD-001-pkce.md |
+| [ADR-0014](../../../docs/adr/0014-jsm-request-type-dispatch.md) | JSM Request Creation Dispatch Fork in `jr issue create` | **Accepted** | component-graph.md §api_jsm, cross-cutting.md §10 |
 | [ADR-0015](../../../docs/adr/0015-proactive-resolution-enforcement.md) | Proactive Resolution Enforcement on Done-Category Transitions | **Accepted** | — (feature ADR) |
 | [ADR-0016](adr/0016-windows-build-target.md) | Windows Build Target (x86_64-msvc, .zip, AppData Paths, WCM, CI) | **Accepted** (amended 2026-06-13 F-WIN-F3-001: Decision 3 separate-clippy-matrix corrected; amended 2026-06-13 F-WIN-F3-003: Decision 2 primary zip clarified — **superseded same day by C-V3 re-amendment**: `zip` not on PATH; Compress-Archive (pwsh) is now primary; amended 2026-06-13 C-V2(b): Decision 5b deny.toml note corrected — windows-sys 0.60 skip is REQUIRED, not conditional) | cycles/cycle-001/windows-build/architecture-delta.md |
 
