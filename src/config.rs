@@ -119,9 +119,16 @@ pub fn validate_profile_name(name: &str) -> Result<(), JrError> {
     ];
 
     // BC-6.1.004 (AC-006): length check first so the error is unambiguous when
-    // both conditions fail. Empty names are treated as a length violation.
-    if name.is_empty() || name.len() > 64 {
-        return Err(JrError::ConfigError(
+    // both conditions fail. UserError (exit 64) because the name comes from
+    // user-supplied input (--profile flag, JR_PROFILE env, default_profile
+    // field) — not from a malformed config file.
+    if name.is_empty() {
+        return Err(JrError::UserError(
+            "Profile name must not be empty".to_string(),
+        ));
+    }
+    if name.len() > 64 {
+        return Err(JrError::UserError(
             "Profile name too long (max 64 characters)".to_string(),
         ));
     }
@@ -130,7 +137,7 @@ pub fn validate_profile_name(name: &str) -> Result<(), JrError> {
         .chars()
         .all(|c| c.is_ascii_alphanumeric() || c == '_' || c == '-')
     {
-        return Err(JrError::ConfigError(
+        return Err(JrError::UserError(
             "Profile name contains invalid characters (use a-z, 0-9, -, _)".to_string(),
         ));
     }
@@ -289,6 +296,7 @@ impl Config {
         // is also covered) and before resolving `active_profile_name` (so a
         // fresh first-run with empty profiles isn't gated).
         for name in global.profiles.keys() {
+            // map_err supplies a file-locating message; keep even though validate_profile_name now returns UserError.
             validate_profile_name(name).map_err(|_| {
                 JrError::UserError(format!(
                     "invalid profile name {name:?} in config.toml; allowed: \
@@ -1225,9 +1233,233 @@ mod tests {
             std::env::remove_var("XDG_CONFIG_HOME");
             std::env::remove_var("JR_CONFIG_DIR");
         }
+        let err = result.expect_err("JR_PROFILE with invalid char should reject");
+        let je = err.downcast_ref::<JrError>().expect("should be JrError");
+        // H-019: JR_PROFILE is user-supplied input → must be UserError (exit 64),
+        // not ConfigError (exit 78). Previously exited 78 (ConfigError); fixed by H-019.
         assert!(
-            result.is_err(),
-            "JR_PROFILE with invalid char should reject"
+            matches!(je, JrError::UserError(_)),
+            "H-019: JR_PROFILE invalid charset must produce UserError, got {je:?}"
+        );
+        assert_eq!(
+            je.exit_code(),
+            64,
+            "H-019: exit code must be 64 (EX_USAGE), got {}",
+            je.exit_code()
+        );
+    }
+
+    // -----------------------------------------------------------------------
+    // H-019: Invalid profile name via --profile flag → UserError (exit 64)
+    //
+    // BC-6.1.004 contract: the input source is the user (--profile flag), so
+    // charset/length violations must produce JrError::UserError (exit 64),
+    // not JrError::ConfigError (exit 78).
+    //
+    // Red Gate: currently validate_profile_name returns ConfigError for
+    // charset and length violations, propagated raw via `?` at load_inner
+    // line ~321, producing exit 78. These tests fail until the fix is applied.
+    // -----------------------------------------------------------------------
+
+    /// H-019 (BC-6.1.004): `Config::load_with(Some("foo:bar"))` must return
+    /// `Err` with `JrError::UserError` (exit 64). The colon is an invalid
+    /// charset character; the input comes from the `--profile` flag, not a
+    /// config file.
+    ///
+    /// Previously exited 78 (ConfigError) because `validate_profile_name`
+    /// returned `JrError::ConfigError` for charset violations and `load_inner`
+    /// propagated it raw via `?`. Fixed by H-019.
+    #[test]
+    fn test_load_with_invalid_charset_profile_flag_returns_user_error() {
+        let _guard = ENV_MUTEX.lock().unwrap_or_else(|e| e.into_inner());
+        let dir = TempDir::new().unwrap();
+        let cfg_dir = dir.path().join("jr");
+        std::fs::create_dir_all(&cfg_dir).unwrap();
+        // SAFETY: ENV_MUTEX held.
+        //
+        // JR_CONFIG_DIR is the cross-platform debug seam (BC-6.2.017).
+        // Clear JR_PROFILE so only the cli_flag path is exercised.
+        unsafe {
+            std::env::set_var("XDG_CONFIG_HOME", dir.path());
+            std::env::set_var("JR_CONFIG_DIR", dir.path().join("jr"));
+            std::env::remove_var("JR_PROFILE");
+        }
+        let result = Config::load_with(Some("foo:bar"));
+        unsafe {
+            std::env::remove_var("XDG_CONFIG_HOME");
+            std::env::remove_var("JR_CONFIG_DIR");
+        }
+        let err = result.expect_err("--profile foo:bar should reject (colon is invalid charset)");
+        let je = err.downcast_ref::<JrError>().expect("should be JrError");
+        assert!(
+            matches!(je, JrError::UserError(_)),
+            "H-019: --profile flag invalid charset must produce UserError, got {je:?}"
+        );
+        assert_eq!(
+            je.exit_code(),
+            64,
+            "H-019: exit code must be 64 (EX_USAGE), got {}",
+            je.exit_code()
+        );
+    }
+
+    /// H-019 (BC-6.1.004): `Config::load_with(Some(""))` must return
+    /// `Err` with `JrError::UserError` (exit 64). An empty profile name
+    /// supplied via `--profile ""` is a user error.
+    ///
+    /// Previously exited 78 (ConfigError) because `validate_profile_name`
+    /// returned `JrError::ConfigError` for the empty-name branch. Fixed by H-019.
+    #[test]
+    fn test_load_with_empty_profile_flag_returns_user_error() {
+        let _guard = ENV_MUTEX.lock().unwrap_or_else(|e| e.into_inner());
+        let dir = TempDir::new().unwrap();
+        let cfg_dir = dir.path().join("jr");
+        std::fs::create_dir_all(&cfg_dir).unwrap();
+        // SAFETY: ENV_MUTEX held.
+        unsafe {
+            std::env::set_var("XDG_CONFIG_HOME", dir.path());
+            std::env::set_var("JR_CONFIG_DIR", dir.path().join("jr"));
+            std::env::remove_var("JR_PROFILE");
+        }
+        let result = Config::load_with(Some(""));
+        unsafe {
+            std::env::remove_var("XDG_CONFIG_HOME");
+            std::env::remove_var("JR_CONFIG_DIR");
+        }
+        let err = result.expect_err("--profile \"\" should reject (empty name)");
+        let je = err.downcast_ref::<JrError>().expect("should be JrError");
+        assert!(
+            matches!(je, JrError::UserError(_)),
+            "H-019: --profile flag empty name must produce UserError, got {je:?}"
+        );
+        assert_eq!(
+            je.exit_code(),
+            64,
+            "H-019: exit code must be 64 (EX_USAGE), got {}",
+            je.exit_code()
+        );
+    }
+
+    /// H-019 (BC-6.1.004): `Config::load_with(Some(&"a".repeat(65)))` must
+    /// return `Err` with `JrError::UserError` (exit 64). A 65-char profile
+    /// name supplied via `--profile` is a user error (too long).
+    ///
+    /// Previously exited 78 (ConfigError) because `validate_profile_name`
+    /// returned `JrError::ConfigError` for the too-long branch. Fixed by H-019.
+    #[test]
+    fn test_load_with_overlength_profile_flag_returns_user_error() {
+        let _guard = ENV_MUTEX.lock().unwrap_or_else(|e| e.into_inner());
+        let dir = TempDir::new().unwrap();
+        let cfg_dir = dir.path().join("jr");
+        std::fs::create_dir_all(&cfg_dir).unwrap();
+        // SAFETY: ENV_MUTEX held.
+        unsafe {
+            std::env::set_var("XDG_CONFIG_HOME", dir.path());
+            std::env::set_var("JR_CONFIG_DIR", dir.path().join("jr"));
+            std::env::remove_var("JR_PROFILE");
+        }
+        let long_name = "a".repeat(65);
+        let result = Config::load_with(Some(long_name.as_str()));
+        unsafe {
+            std::env::remove_var("XDG_CONFIG_HOME");
+            std::env::remove_var("JR_CONFIG_DIR");
+        }
+        let err = result.expect_err("--profile with 65-char name should reject (too long)");
+        let je = err.downcast_ref::<JrError>().expect("should be JrError");
+        assert!(
+            matches!(je, JrError::UserError(_)),
+            "H-019: --profile flag too-long name must produce UserError, got {je:?}"
+        );
+        assert_eq!(
+            je.exit_code(),
+            64,
+            "H-019: exit code must be 64 (EX_USAGE), got {}",
+            je.exit_code()
+        );
+    }
+
+    /// H-019 (BC-6.1.004): `JR_PROFILE=""` (empty string) must return
+    /// `Err` with `JrError::UserError` (exit 64). An empty profile name
+    /// from the env var is a user error.
+    ///
+    /// Previously exited 78 (ConfigError) because `validate_profile_name`
+    /// returned `JrError::ConfigError` for the empty-name branch, propagated
+    /// raw by `load_inner`. Fixed by H-019.
+    #[test]
+    fn test_load_jr_profile_env_empty_returns_user_error() {
+        let _guard = ENV_MUTEX.lock().unwrap_or_else(|e| e.into_inner());
+        let dir = TempDir::new().unwrap();
+        let cfg_dir = dir.path().join("jr");
+        std::fs::create_dir_all(&cfg_dir).unwrap();
+        // SAFETY: ENV_MUTEX held.
+        //
+        // JR_CONFIG_DIR is the cross-platform debug seam (BC-6.2.017).
+        // Set JR_PROFILE="" so the env-var path exercises the empty-name guard.
+        // std::env::var("JR_PROFILE") returns Ok("") → Some("") → resolves to "".
+        unsafe {
+            std::env::set_var("XDG_CONFIG_HOME", dir.path());
+            std::env::set_var("JR_CONFIG_DIR", dir.path().join("jr"));
+            std::env::set_var("JR_PROFILE", "");
+        }
+        let result = Config::load();
+        unsafe {
+            std::env::remove_var("JR_PROFILE");
+            std::env::remove_var("XDG_CONFIG_HOME");
+            std::env::remove_var("JR_CONFIG_DIR");
+        }
+        let err = result.expect_err("JR_PROFILE=\"\" should reject (empty name)");
+        let je = err.downcast_ref::<JrError>().expect("should be JrError");
+        assert!(
+            matches!(je, JrError::UserError(_)),
+            "H-019: JR_PROFILE empty name must produce UserError, got {je:?}"
+        );
+        assert_eq!(
+            je.exit_code(),
+            64,
+            "H-019: exit code must be 64 (EX_USAGE), got {}",
+            je.exit_code()
+        );
+    }
+
+    /// H-019 (BC-6.1.004): `Config::load_with(Some("valid-name"))` returns `Ok` when the
+    /// config has a `[profiles.valid-name]` entry. Guards the `load_with(cli_flag)` wiring
+    /// and kills the "charset check → unconditional reject" mutant.
+    #[test]
+    fn test_load_with_valid_profile_flag_returns_ok() {
+        let _guard = ENV_MUTEX.lock().unwrap_or_else(|e| e.into_inner());
+        let dir = TempDir::new().unwrap();
+        let cfg_dir = dir.path().join("jr");
+        std::fs::create_dir_all(&cfg_dir).unwrap();
+        std::fs::write(
+            cfg_dir.join("config.toml"),
+            r#"
+                default_profile = "valid-name"
+                [profiles.valid-name]
+                url = "https://example.atlassian.net"
+                auth_method = "api_token"
+            "#,
+        )
+        .unwrap();
+
+        // SAFETY: ENV_MUTEX held.
+        //
+        // JR_CONFIG_DIR is the cross-platform debug seam (BC-6.2.017).
+        // Clear JR_PROFILE so only the cli_flag path is exercised.
+        unsafe {
+            std::env::set_var("XDG_CONFIG_HOME", dir.path());
+            std::env::set_var("JR_CONFIG_DIR", dir.path().join("jr"));
+            std::env::remove_var("JR_PROFILE");
+        }
+        let result = Config::load_with(Some("valid-name"));
+        unsafe {
+            std::env::remove_var("XDG_CONFIG_HOME");
+            std::env::remove_var("JR_CONFIG_DIR");
+        }
+
+        let cfg = result.expect("load_with(valid-name) must return Ok for a known, valid profile");
+        assert_eq!(
+            cfg.active_profile_name, "valid-name",
+            "active_profile_name must match the cli_flag value"
         );
     }
 
@@ -1307,6 +1539,20 @@ mod tests {
         }
 
         let err = result.expect_err("invalid profile key should reject");
+        // Regression guard (H-019): config-file boundary must emit UserError (exit 64),
+        // not ConfigError (exit 78). This already works via the .map_err wrapper in
+        // load_inner; assert explicitly to prevent future regression.
+        let je = err.downcast_ref::<JrError>().expect("should be JrError");
+        assert!(
+            matches!(je, JrError::UserError(_)),
+            "config-file invalid profile key must produce UserError (exit 64), got {je:?}"
+        );
+        assert_eq!(
+            je.exit_code(),
+            64,
+            "config-file invalid profile key exit code must be 64, got {}",
+            je.exit_code()
+        );
         let msg = format!("{err:#}");
         assert!(msg.contains("invalid profile name"), "got: {msg}");
         assert!(msg.contains("bad:name"), "got: {msg}");
