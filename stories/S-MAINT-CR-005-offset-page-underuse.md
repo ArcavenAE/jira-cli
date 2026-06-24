@@ -3,7 +3,8 @@ document_type: story
 story_id: "S-MAINT-CR-005"
 title: "Refactor remaining manual offset-pagination loops to use OffsetPage<T>::items()"
 wave: feature-followup
-status: draft
+status: closed
+closure_reason: "WON'T-FIX — DRIFT-331-PAGINATION refuted 2026-06-24 sweep — inline pagination intentional & correct (code-reviewer)"
 intent: refactor
 feature_type: code-quality
 mode: feature

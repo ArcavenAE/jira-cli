@@ -91,7 +91,7 @@ None open.
 | WIN-DENY-FRAGILITY | deny.toml | Canonical-un-skipped-version has no CI guard. | LOW | OPEN |
 | WIN-AUTH-ENVLOCK-POISON | ENV_LOCK poison | .lock().unwrap() in auth tests; use unwrap_or_else. | LOW | OPEN |
 | E2E-PG-4 | E2E coverage gap | remote-link round-back (no jr remote-link read). | LOW | OPEN |
-| DRIFT-331-PAGINATION | get_issue_types_for_project | Inline reimplementation; target: reuse OffsetPage<T>. | LOW | RESOLVED-REFUTED (2026-06-22 sweep: intentional/correct per code-reviewer). S-MAINT-CR-005 candidate-for-closure. |
+| DRIFT-331-PAGINATION | get_issue_types_for_project | Inline reimplementation; target: reuse OffsetPage<T>. | LOW | RESOLVED-REFUTED (2026-06-22 sweep: intentional/correct per code-reviewer). S-MAINT-CR-005 CLOSED WON'T-FIX 2026-06-24. |
 | PG-A / DRIFT-README | Count guards | check-bc-cumulative-counts.sh does not cover README.md; that guard gap remains OPEN. README Document Map staleness (599/142→602/145) was **RESOLVED** by factory commit e72bcb9 (prd/README refreshed). | LOW | OPEN (guard gap only; README content resolved) |
 | SEC-001 | CWE-674 recursion | Uncontrolled recursion in adf.rs normalize/assign_local_ids/render_node. | LOW | TRACKED — S-MAINT-SEC-001 (draft, security P2, 2026-06-19) |
 | WIN-PG-1 | No BC-count CI guard | 3rd recurrence of JR_* test-seam doc-fallout without CI parity check. | LOW | OPEN |
@@ -161,7 +161,7 @@ Full per-issue: `cycles/cycle-001/convergence-trajectory.md`. Current: **DEAD-CI
 **Step 3 — IDLE. Present status to human, await direction.**
 Nothing is in-progress. Next-work candidates (orchestrator's choice or await human):
 - **S-PG-MERGE-AUTH-BYPASS** (story 91, MEDIUM, draft) — merge-auth protocol story; PG-MERGE-AUTH-BYPASS + MAINT-PG-PR-MERGE-CHANNEL unified.
-- **Bundle D** draft stories: S-MAINT-CR-005/CR-008/CR-009/SEC-001/SEC-JR-SERVICE-NAME-GATE.
+- **Bundle D** draft stories: S-MAINT-CR-008/CR-009/SEC-001/SEC-JR-SERVICE-NAME-GATE. (S-MAINT-CR-005 CLOSED WON'T-FIX 2026-06-24 — DRIFT-331 refuted.)
 - **#532** / S-MAINT-532 (profile-fallback coverage gap, LOW).
 - Fork signing enablement (DEC-104, pending human + Apple secrets).
 - DO NOT close **#429** (DEC-029, human-deferred).
