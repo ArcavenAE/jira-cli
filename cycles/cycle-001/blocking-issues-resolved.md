@@ -208,3 +208,17 @@ PR #543 squash-merged into develop @ 6bdb251 (docs: 2026-06-19 maintenance sweep
 | DRIFT-D13 | CLAUDE.md doc-accuracy | CLAUDE.md doc-accuracy item D13 identified in 2026-06-19 maintenance sweep. Fixed in PR #543. | LOW | **RESOLVED — PR #543 → develop @ 6bdb251 (2026-06-19)** | 2026-06-19 |
 | DRIFT-D15 | CLAUDE.md doc-accuracy | CLAUDE.md doc-accuracy item D15 identified in 2026-06-19 maintenance sweep. Fixed in PR #543. | LOW | **RESOLVED — PR #543 → develop @ 6bdb251 (2026-06-19)** | 2026-06-19 |
 | DRIFT-D16 | CLAUDE.md doc-accuracy | CLAUDE.md doc-accuracy item D16 identified in 2026-06-19 maintenance sweep. Fixed in PR #543. | LOW | **RESOLVED — PR #543 → develop @ 6bdb251 (2026-06-19)** | 2026-06-19 |
+
+---
+
+## Resolved Drift Items extracted from STATE.md on 2026-06-24 (maintenance sweep 2026-06-22 CLOSED — DEC-131)
+
+PRs #547/#548/#549 squash-merged to develop @ 4022e00. The 5 items below were open in STATE.md Drift Items and are now fully resolved.
+
+| ID | Area | Description | Severity | Status | Resolved Date |
+|----|------|-------------|----------|--------|---------------|
+| MAINT-SEC-QUINN-PROTO | dependency | RUSTSEC-2026-0185 quinn-proto non-reachable (http3 feature off). Bumped quinn-proto to 0.11.15 in PR #547 hygiene bundle. | LOW | **RESOLVED — PR #547 → develop @ 4022e00 (2026-06-24); RUSTSEC-2026-0185 cleared** | 2026-06-24 |
+| MAINT-PF-005-UNWRAP | code-quality | Unguarded-looking `.unwrap()` on `assets[idx].id` in linked.rs:225 (validated non-reachable; .expect() nit). Changed to `.expect()` with explanatory message in PR #547 hygiene bundle. | LOW | **RESOLVED — PR #547 → develop @ 4022e00 (2026-06-24)** | 2026-06-24 |
+| H-019-EXIT-DRIFT | holdout | `--profile`/`JR_PROFILE` exit 78 not 64 for `foo:bar` boundary — confirmed real bug, not stale holdout. Exit code corrected from 78→64 in PR #548. | MED | **RESOLVED — PR #548 → develop @ 4022e00 (2026-06-24); H-019 holdout now accurate** | 2026-06-24 |
+| MAINT-2026-06-17-SC-03 | ADR location | SC-03: docs/adr/ vs .factory/architecture/adr/ convention discrepancy. ADR-0007..0013 promoted to docs/adr/ and factory ADR index + ADR-0016 row corrected in PR #549. | LOW | **RESOLVED — PR #549 → develop @ 4022e00 (2026-06-24)** | 2026-06-24 |
+| DOC-DRIFT-2026-06-22 | doc accuracy | CLAUDE.md src-file-tree stale, CHANGELOG [Unreleased] unpopulated, README version reference v0.3.0→v0.5.0 stale. All fixed in PR #547 hygiene bundle. | LOW | **RESOLVED — PR #547 → develop @ 4022e00 (2026-06-24)** | 2026-06-24 |

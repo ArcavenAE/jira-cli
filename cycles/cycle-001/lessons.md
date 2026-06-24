@@ -4474,3 +4474,49 @@ fix-cascade propagation. Both apply; this is the execution-level complement.
 _Recorded: 2026-06-20 — DEAD-CITATION-CI session review disposition. State-manager._
 _Tagged: [process-gap] [F2] [consistency-validator] [codified] [enforced-protocol]_
 _Status: [codified] — F2-PIECEWISE-PROTOCOL ENFORCED from 2026-06-20_
+
+---
+
+## LESSON-HOLDOUT-FRESHNESS-CATCHES-REAL-BUGS (2026-06-24)
+
+**Category:** maintenance-process / holdout-freshness
+
+**Lesson:** A converged, idle pipeline is not proof that all holdout scenarios remain accurate. Periodic holdout-freshness sweeps catch real bugs that remain undetected in a "green / converged" state.
+
+**Evidence from maintenance sweep 2026-06-22:**
+The pipeline was in a stable, released state (v0.6.0-dev.6, ZERO open PRs, all feature cycles CLOSED). Sweep 4 (holdout freshness) identified H-019 as potentially stale: `jr issue move` with an invalid profile format (`foo:bar`) was returning exit 78 (config-error) instead of exit 64 (usage-error). PO triage confirmed this was a **real exit-code bug**, not a stale holdout. The fix was delivered via PR #548 and squash-merged to develop @ 4022e00.
+
+**Key take-aways:**
+1. A "converged" pipeline does not prevent behavioral drift between holdout specification and implementation — especially when the implementation involves error-path code paths that are rarely exercised by unit tests.
+2. Exit-code correctness is a behavioral contract (JrError::exit_code() mapping) — holdout scenarios are a better long-term guard than unit tests alone because they exercise the full exit path.
+3. The holdout-freshness sweep also surfaced HOLDOUT-STALE items (H-NEW-MP-001, H-007, H-027) that need PO authoring passes — the value of periodic sweeps compounds over time as features accumulate without corresponding holdout coverage.
+
+**Related drift items:** HOLDOUT-STALE-2026-06-22 (open), HOLDOUT-COVERAGE-GAPS-2026-06-22 (open). DEC-131.
+
+_Recorded: 2026-06-24 — maintenance sweep 2026-06-22 close. State-manager._
+_Tagged: [maintenance] [holdout-freshness] [exit-code] [real-bug-found]_
+
+---
+
+## LESSON-FRESH-EYES-VS-SPOT-CHECK-CITATIONS (2026-06-24)
+
+**Category:** process-gap / code-review / citation-discipline
+
+**Lesson:** A constructive code-reviewer performing a spot-check on ADR prose will miss phantom code-symbol citations that a fresh-eyes pr-reviewer catches — because the spot-check reviewer has full codebase context and tends to fill in the gap mentally rather than flagging the missing symbol.
+
+**Evidence from PR #549 (ADR-0007..0013 promotion, maintenance sweep 2026-06-22):**
+The constructive code-reviewer spot-checked the promoted ADR text without flagging two phantom citations:
+- ADR-0007 cited `Config::field_id` — no such method exists in `src/config.rs`.
+- ADR-0010 cited `paginate_offset` — no such function exists in `src/api/pagination.rs`.
+
+Both were caught by the pr-reviewer performing a fresh-eyes diff review of PR #549 before merge.
+
+**Root cause:** The constructive code-reviewer had seen the code recently (full codebase context) and mentally associated each citation with nearby, real symbols (`Config::story_points_field_id` and `OffsetPage<T>` respectively). The pr-reviewer only saw the diff and found the cited symbols unrecognizable.
+
+**Implication for #492-PG-TRACE-TESTS:** This reinforces the tracked deferral: a CI guard that resolves cited code symbols against the actual codebase (similar to `claude_md_citations.rs` for file paths) would close this class of phantom-citation defects. The guard gap is higher-value than previously calibrated — it caught 2 instances in a single session.
+
+**Standing recommendation:** When writing ADR/spec prose that cites code symbols (function names, method names, module paths), verify the cited symbol against `grep -r` or `cargo doc` at time of authoring, not from memory. Symbol-form citations (`<file>::<fn>`) per #408 convention are more stable but still require verification.
+
+_Recorded: 2026-06-24 — maintenance sweep 2026-06-22 close. State-manager._
+_Tagged: [process-gap] [citation-discipline] [pr-reviewer] [code-reviewer] [phantom-citation]_
+_Related: #492-PG-TRACE-TESTS (drift item, reinforced 2026-06-22)_

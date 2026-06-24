@@ -4062,3 +4062,26 @@ The following Current Phase Step row was archived from STATE.md to maintain the 
 | PR #537 | fix(ci): make verify-signatures step exercise correctly in signing-configured fork. External PR (author arcaven). pr-reviewer verdict: MERGE-WITH-CHANGES; security-reviewer verdict: APPROVE (0 CRIT/HIGH/MED; 1 LOW CWE-697 non-exploitable). DEC-128 authorized. 2 optional LOW nits tracked as FORK-OPS-537-NITS (inert; SIGNING_ENABLED unset). |
 | develop HEAD after all merges | ed236d4 (post-#537 fix; no new tag; activation_head/version remain dbe8625/v0.6.0-dev.6) |
 | Status | IDLE — no active bundle, no story worktrees. Awaiting direction. |
+
+## Maintenance Sweep 2026-06-22 — Fix Delivery Burst (2026-06-24)
+
+| Field | Value |
+|-------|-------|
+| Event | Maintenance sweep 2026-06-22 fix PRs merged. Sweep CLOSED. DEC-131 logged. |
+| PR #547 | chore(maintenance): hygiene bundle — quinn-proto 0.11.15 (RUSTSEC-2026-0185), unwrap→expect in linked.rs, CLAUDE.md src-file-tree refresh, CHANGELOG [Unreleased] populated, README version v0.3.0→v0.5.0. |
+| PR #548 | fix(cli): H-019 exit-code correction — `--profile`/`JR_PROFILE` invalid-format boundary (foo:bar) now exits 64 (usage-error) instead of 78 (config-error). Confirmed real bug, not stale holdout. |
+| PR #549 | docs(adr): promote ADR-0007..0013 to docs/adr/; correct factory ADR index rows + ADR-0016 path row. pr-reviewer caught 2 phantom code-symbol citations (Config::field_id in ADR-0007, paginate_offset in ADR-0010) before merge. |
+| develop HEAD after all merges | 4022e00 (post-#549 squash-merge; no new tag; activation_head/version remain dbe8625/v0.6.0-dev.6) |
+| Drift items resolved | MAINT-SEC-QUINN-PROTO, MAINT-PF-005-UNWRAP, H-019-EXIT-DRIFT, MAINT-2026-06-17-SC-03, DOC-DRIFT-2026-06-22 (→ archived to blocking-issues-resolved.md) |
+| New drift items | HOLDOUT-COVERAGE-GAPS-2026-06-22 (LOW), HOLDOUT-STALE-2026-06-22 (LOW) |
+| Status | IDLE — no active bundle, no story worktrees. Awaiting direction. |
+
+## Archived Current Phase Steps — 2026-06-24 Maintenance Sweep Close
+
+The following rows were present in STATE.md Current Phase Steps before the last-5 trim on 2026-06-24:
+
+| Step | Agent | Status | Output |
+|------|-------|--------|--------|
+| **STATE.md COMPACTED** — Phase Progress rows archived to cycles/cycle-001/burst-log.md. Historical content extracted. STATE.md under 180 lines. | state-manager | COMPACTED | factory-artifacts. |
+| **DEAD-CITATION-CI F4 COMPLETE** — PR #544 merged @ 496258a. 58 tests (tests/claude_md_citations.rs). 3 per-story adv passes + code/security review. ci-gate 15/15 incl. mutation testing + Windows. PG-MERGE-AUTH-BYPASS + DEC-128 logged. F5 starting. | state-manager | F4 COMPLETE | develop @ 496258a. Story 90 DELIVERED. |
+| **DEAD-CITATION-CI CYCLE CLOSED + RELEASED** — PRs #544/#545 merged; PR #546 (release) merged. develop @ dbe8625 == v0.6.0-dev.6 tag. release.yml run 27851891146 SUCCESS; 10 assets / 5 targets. S-7.02 satisfied: PG-MERGE-AUTH-BYPASS TRACKED (story 91); lessons.md codified. ADR-0014 written. Maintenance RESUMED. IDLE. | state-manager | CYCLE CLOSED | factory-artifacts. |
