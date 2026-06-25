@@ -4112,3 +4112,11 @@ The following row was present in STATE.md Current Phase Steps before the last-5 
 | Reclassified | F2-PIECEWISE-PROTOCOL: MEDIUM/OPEN → LOW/OPEN (consider closing — enforced/codified) |
 | develop HEAD | b856f9f (unchanged; no source PRs in this sweep) |
 | Status | IDLE — awaiting human prioritization of D1-D5. |
+
+## Archived Current Phase Steps — D2 maintenance housekeeping trim (2026-06-25)
+
+The following row was present in STATE.md Current Phase Steps before the last-5 trim on 2026-06-25 D2 commit:
+
+| Step | Agent | Status | Output |
+|------|-------|--------|--------|
+| **PR #551 MERGED** — JR_SERVICE_NAME debug gate (SEC-JR-SERVICE-NAME-GATE resolved). **PR #552 MERGED** — test-hygiene: extract_job_block dedup (CR-008), keyring canonical idiom + meta-test (CR-009/KEYRING-GUARD-IDIOM-DRIFT), #532 coverage tests. | state-manager | MERGED | develop. |

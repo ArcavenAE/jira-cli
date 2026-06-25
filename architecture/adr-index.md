@@ -1,9 +1,14 @@
 # ADR Index — jr (jira-cli)
 
+> **CANONICAL ADR LOCATION (post-SC-03 / PR #549):** All ADRs (0001–0016) now live in
+> `docs/adr/` in the main checkout. The `.factory/architecture/adr/` shadow directory has
+> been removed (DRIFT-S3-003 resolved 2026-06-25). Do NOT create new files under
+> `.factory/architecture/adr/` — use `docs/adr/` for all new ADRs.
+
 **traces_to:** README.md
-**Source ADRs (0001–0006):** `.reference/jira-cli/docs/adr/`
-**Promoted ADRs (0007–0016):** `docs/adr/` (canonical; factory copies are Phase-1 drafts)
-**Factory-only ADRs:** none in the 0007–0016 range; `.factory/architecture/adr/` holds historical drafts only
+**Canonical ADR location (all 0001–0016):** `docs/adr/` (single source of truth post-#549/SC-03)
+**Pre-SC-03 source ADRs (0001–0006):** `.reference/jira-cli/docs/adr/` (historical reference only)
+**Factory-only ADRs:** none; `.factory/architecture/adr/` shadow directory removed 2026-06-25
 
 ---
 

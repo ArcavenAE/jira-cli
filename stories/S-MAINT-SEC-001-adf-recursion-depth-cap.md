@@ -3,7 +3,7 @@ document_type: story
 story_id: "S-MAINT-SEC-001"
 title: "Add depth cap / convert to iterative: CWE-674 uncontrolled recursion in src/adf.rs normalize_*/assign_local_ids/render_node"
 wave: feature-followup
-status: draft
+status: done
 intent: bug-fix
 feature_type: security
 mode: feature
@@ -19,14 +19,10 @@ target_module: adf
 subsystems: []
 depends_on: []
 blocks: []
-bc_anchors: []
-bcs: []
-# BC status: pending PO authorship
-# Security hardening story. No new user-visible behavioral contracts are introduced in the
-# happy path. The depth cap is an internal implementation invariant.
-# If a formal BC is authored for ADF depth limits, it would be BC-7.2.NNN — pending PO.
-# Until then this story may not be dispatched to status: ready per S-7.01 gate.
-# Do NOT add BCs to this story without PO sign-off.
+bc_anchors: ["BC-7.2.012"]
+bcs: ["BC-7.2.012"]
+# BC-7.2.012 was authored by the PO and shipped in PR #553 (merged to develop @ 35e20c9).
+# S-7.01 gate satisfied. Story status promoted to done.
 verification_properties: []
 holdout_anchors: []
 nfr_anchors: []
@@ -41,10 +37,11 @@ assumption_validations: []
 risk_mitigations:
   - SEC-001
 created: "2026-06-19"
-version: "1.0"
-last_updated: "2026-06-19"
+version: "1.1"
+last_updated: "2026-06-25"
 changelog:
   - "1.0 (2026-06-19): Initial draft — originated from 2026-06-19 maintenance sweep SEC-001 / CWE-674 (drift item; spec-coherence.md §3.2 row 11)."
+  - "1.1 (2026-06-25): Promoted to done — BC-7.2.012 authored by PO and shipped in PR #553 (merged to develop @ 35e20c9). Corrected constant name ADF_MAX_DEPTH → MAX_ADF_DEPTH and value 64 → 256 to match shipped reality (threshold revised during implementation/dual review per DEC-132)."
 breaking_change: false
 lineage:
   - S-492   # adf.rs block-HTML hardBreak fix — established normalize_panel_content and is_empty_block_container patterns
@@ -63,7 +60,7 @@ files_modified:
 # S-MAINT-SEC-001 — Add depth cap to CWE-674 recursive functions in `src/adf.rs`
 
 **Origin:** 2026-06-19 maintenance sweep, drift item SEC-001 / CWE-674 (`pattern-consistency.md` §5 "Carry-Forward Drift Items"; `spec-coherence.md` §3.2 row 11).
-**Status at sweep:** OPEN (LOW severity — risk constrained by input trust model).
+**Status at sweep:** OPEN (LOW severity — risk constrained by input trust model). **Resolved:** shipped in PR #553 (merged to develop @ 35e20c9).
 **Security classification:** CWE-674 (Uncontrolled Recursion).
 
 ## Source of Truth
@@ -96,13 +93,12 @@ and should be guarded against as a defense-in-depth measure.
 ## Behavioral Contracts
 
 No user-visible behavioral contracts change in the happy path. The depth cap fires only when
-ADF nesting exceeds a threshold (proposed: 64 levels — pulldown-cmark's implicit depth bound,
-or a more conservative 32). When the cap fires, the function MUST return a graceful result
-(truncated output or an error, not a stack overflow) — this is the only new behavioral
-postcondition introduced by this story.
+ADF nesting exceeds a threshold (`MAX_ADF_DEPTH = 256` — see implementation note below). When
+the cap fires, the function MUST return a graceful result (truncated output or an error, not a
+stack overflow) — this is the only new behavioral postcondition introduced by this story.
 
-A formal BC (BC-7.2.NNN) for the ADF depth limit may be authored by the PO before dispatch.
-Until then, this story carries `status: draft` per the Spec-First Gate (S-7.01).
+**BC-7.2.012** (SEC-001 / CWE-674 ADF recursion-depth guard) was formally authored by the PO
+and shipped in PR #553 (merged to develop @ 35e20c9). The S-7.01 gate is satisfied.
 
 This story traces its ACs to drift item SEC-001.
 
@@ -147,10 +143,10 @@ iterative alternatives.
 
 | Rule | Source | Constraint |
 |------|--------|-----------|
-| Depth cap value | SEC-001 finding | Use a compile-time constant `const ADF_MAX_DEPTH: usize = 64;` (or `32` for conservative choice). Document the constant with a comment citing CWE-674 and the pulldown-cmark implicit bound. |
-| Graceful behavior at cap | SEC-001 finding | At depth > `ADF_MAX_DEPTH`, return the shallowest safe result (e.g., skip further nesting, return `None` for the walk function, or return the current accumulated output for `render_node`). Do NOT panic. |
+| Depth cap value | SEC-001 finding | Shipped as compile-time constant `const MAX_ADF_DEPTH: usize = 256;` (original draft proposed 64; revised to 256 during dual review per DEC-132 — a threshold decision balancing defense-in-depth against realistic deep-nesting from Jira's own editor). Document the constant with a comment citing CWE-674 and the pulldown-cmark implicit bound. |
+| Graceful behavior at cap | SEC-001 finding | At depth > `MAX_ADF_DEPTH`, return the shallowest safe result (e.g., skip further nesting, return `None` for the walk function, or return the current accumulated output for `render_node`). Do NOT panic. |
 | Prefer iterative conversion for `render_node` | SEC-001 finding | `render_node` / `adf_to_text` is the highest-risk function (called on every `jr issue view`). Prefer converting it to an explicit stack rather than adding a depth counter. Other functions (normalize_*) may use a depth counter parameter. |
-| No behavioral change in depth ≤ 64 | SEC-001 finding | All existing ADF unit tests (130+ in `adf::tests`) MUST continue to pass. The depth cap MUST NOT affect any real-world or synthetic test input that fits within the cap. |
+| No behavioral change in depth ≤ 256 | SEC-001 finding | All existing ADF unit tests (130+ in `adf::tests`) MUST continue to pass. The depth cap MUST NOT affect any real-world or synthetic test input that fits within the cap. |
 | `cargo clippy -D warnings` must pass | CLAUDE.md zero-warnings policy | After every edit, `cargo clippy -- -D warnings` must exit 0. |
 | No new `#[allow]` without justification | CLAUDE.md lint-suppression policy | `src/adf.rs` already carries one justified `#[allow(clippy::too_many_lines)]` at the `finish()` function. Do NOT add new suppressions without a justification comment. |
 
@@ -166,7 +162,7 @@ No new library or framework dependencies. Uses only the Rust standard library.
 
 | File | Create / Modify | Description |
 |------|----------------|-------------|
-| `src/adf.rs` | MODIFY | Add `const ADF_MAX_DEPTH: usize = 64;`. Add depth counter parameter to `normalize_panel_content`, `normalize_list_item_content`. Convert `assign_local_ids_walk` and `autolink_bare_urls` to use depth counter or iterative form. Convert `render_node` to iterative stack if feasible; otherwise add depth counter. |
+| `src/adf.rs` | MODIFY | Added `const MAX_ADF_DEPTH: usize = 256;` (original draft proposed 64; revised to 256 during implementation/dual review per DEC-132). Added depth counter parameter to `normalize_panel_content`, `normalize_list_item_content`. Converted `assign_local_ids_walk` and `autolink_bare_urls` to use depth counter or iterative form. Converted `render_node` to iterative stack. |
 | `tests/adf_depth.rs` | CREATE | New test file: (1) a deeply nested JSON ADF structure (depth > 64 levels) passed to `adf_to_text` does not panic; (2) a moderately nested structure (depth ≤ 32) produces correct output; (3) `assign_local_ids` on a deep tree does not panic. |
 
 **Files NOT to touch:** `src/api/`, `src/cli/`, `tests/` (existing tests), CLAUDE.md (unless a gotcha note is warranted), `.factory/specs/`.
@@ -235,15 +231,15 @@ cargo test --lib adf
 
 ---
 
-### AC-005 (SEC-001) — `ADF_MAX_DEPTH` constant is documented with CWE-674 reference
+### AC-005 (SEC-001) — `MAX_ADF_DEPTH` constant is documented with CWE-674 reference
 
-The constant `ADF_MAX_DEPTH` in `src/adf.rs` carries a doc comment citing CWE-674 and
-explaining the rationale (pulldown-cmark implicit depth bound, defense-in-depth).
+The constant `MAX_ADF_DEPTH` in `src/adf.rs` carries a doc comment citing CWE-674 and
+explaining the rationale (defense-in-depth; value 256 chosen per DEC-132 dual review).
 
 **Verifiable by:**
 ```bash
-grep -A3 'ADF_MAX_DEPTH' src/adf.rs
-# Expected: constant definition followed by a comment referencing CWE-674
+grep -A3 'MAX_ADF_DEPTH' src/adf.rs
+# Expected: constant definition (= 256) followed by a comment referencing CWE-674
 ```
 
 (traces to SEC-001 — engineering rationale must be documented for future maintainers)
@@ -258,33 +254,33 @@ grep -A3 'ADF_MAX_DEPTH' src/adf.rs
 - [ ] Read each function body (use offset+limit on the Read tool, not the full file)
 - [ ] Understand the recursion structure and natural base cases
 
-### Item 2: Add `const ADF_MAX_DEPTH: usize = 64;`
+### Item 2: Add `const MAX_ADF_DEPTH: usize = 256;`
 
-- [ ] Add the constant near the top of `src/adf.rs` with a CWE-674 rustdoc comment
-- [ ] Confirm `cargo build` exits 0
+- [x] Added constant near the top of `src/adf.rs` with a CWE-674 rustdoc comment (note: original proposal was 64; revised to 256 during implementation/dual review per DEC-132)
+- [x] `cargo build` exits 0
 
 ### Item 3: Add depth counter to `normalize_panel_content` and `normalize_list_item_content`
 
 - [ ] Add `depth: usize` parameter; public callers pass `0`; recursive calls pass `depth + 1`
-- [ ] At `depth > ADF_MAX_DEPTH`, return the current node/Vec without further recursion
+- [ ] At `depth > MAX_ADF_DEPTH`, return the current node/Vec without further recursion
 - [ ] Verify: `cargo test --lib adf` exits 0 (all existing tests pass)
 
 ### Item 4: Add depth counter or convert `assign_local_ids_walk` to iterative
 
 - [ ] Prefer iterative (explicit stack using `Vec`) for a clean, non-recursive implementation
-- [ ] Alternatively, add `depth: usize` parameter; at `depth > ADF_MAX_DEPTH`, skip subtree
+- [ ] Alternatively, add `depth: usize` parameter; at `depth > MAX_ADF_DEPTH`, skip subtree
 - [ ] Verify: `cargo test --lib adf` exits 0
 
 ### Item 5: Convert `render_node` to iterative or add depth counter
 
 - [ ] Read `render_node` body to understand recursive structure
 - [ ] If converting to iterative: use `Vec<(AdfNode, indent_level)>` work stack
-- [ ] If adding depth counter: add `depth: usize` parameter; at `depth > ADF_MAX_DEPTH`, emit `"[...]"` placeholder or empty string
+- [ ] If adding depth counter: add `depth: usize` parameter; at `depth > MAX_ADF_DEPTH`, emit `"[...]"` placeholder or empty string
 - [ ] Verify: `cargo test --lib adf` exits 0
 
 ### Item 6: Add depth guard to `autolink_bare_urls`
 
-- [ ] Add `depth: usize` parameter to the inner recursive helper; cap at `ADF_MAX_DEPTH`
+- [ ] Add `depth: usize` parameter to the inner recursive helper; cap at `MAX_ADF_DEPTH`
 - [ ] Verify: `cargo test --lib adf` exits 0
 
 ### Item 7: Create `tests/adf_depth.rs`
@@ -306,15 +302,14 @@ grep -A3 'ADF_MAX_DEPTH' src/adf.rs
   Add to scope of a follow-on story if the sweep flags it.
 - **Converting all recursive functions to iterative in one story.** Prioritize `render_node` for
   iterative conversion (highest call-frequency); others may use depth counter for now.
-- **Adding a BC for ADF depth limits.** Requires PO authorship before this story can be `ready`.
-  The story remains `draft` until that gate is cleared.
+- **Authoring BC-7.2.012.** Completed — BC-7.2.012 was authored by the PO and shipped in PR #553. S-7.01 gate cleared.
 
 ## Architecture Mapping
 
 | Component | Module | Pure/Effectful | Justification |
 |-----------|--------|---------------|---------------|
-| `src/adf.rs::normalize_panel_content` | `adf` | Pure (tree transformation) | Add depth counter parameter; cap at ADF_MAX_DEPTH |
-| `src/adf.rs::normalize_list_item_content` | `adf` | Pure (tree transformation) | Add depth counter parameter; cap at ADF_MAX_DEPTH |
+| `src/adf.rs::normalize_panel_content` | `adf` | Pure (tree transformation) | Add depth counter parameter; cap at MAX_ADF_DEPTH |
+| `src/adf.rs::normalize_list_item_content` | `adf` | Pure (tree transformation) | Add depth counter parameter; cap at MAX_ADF_DEPTH |
 | `src/adf.rs::assign_local_ids_walk` | `adf` | Pure (tree mutation) | Convert to iterative or add depth counter |
 | `src/adf.rs::render_node` | `adf` | Pure (rendering) | Prefer iterative conversion |
 | `src/adf.rs::autolink_bare_urls` | `adf` | Pure (tree transformation) | Add depth counter |
