@@ -2,11 +2,11 @@
 document_type: pipeline-state
 version: "2.0"
 status: complete
-timestamp: 2026-06-24T00:00:00Z
+timestamp: 2026-06-25T00:00:00Z
 phase: 3
 project: jira-cli
 mode: brownfield
-current_step: "IDLE. Maintenance sweep 2026-06-22 CLOSED. 3 PRs merged (#547 hygiene, #548 H-019 bug fix, #549 ADR promotion). develop @ 4022e00. Awaiting direction."
+current_step: "IDLE. Bundle D + SEC-001 CLOSED. develop @ 35e20c9. Awaiting direction."
 maintenance_run: CLOSED
 current_cycle: "cycle-001"
 feature_mode_bundle: none
@@ -26,10 +26,10 @@ activation_version: "v0.6.0-dev.6"
 | **Product** | jr (Jira CLI) |
 | **Mode** | BROWNFIELD / Rust |
 | **Target Workspace** | develop → main |
-| **Last Updated** | 2026-06-24: Maintenance sweep 2026-06-22 CLOSED. PRs #547 (hygiene bundle), #548 (H-019 exit 78→64), #549 (ADR promotion) all squash-merged. develop @ 4022e00. |
-| **Current Phase** | Phase 3 — IDLE (maintenance closed). BC 602. NFR 42. ADR 16. Stories 91. |
-| **Next Phase** | Next feature cycle (open candidates: #532, Bundle D drafts, fork signing DEC-104) |
-| **Activation HEAD** | dbe8625 (v0.6.0-dev.6 tag); develop @ 4022e00 |
+| **Last Updated** | 2026-06-25: Bundle D + SEC-001 CLOSED. PRs #551 (JR_SERVICE_NAME gate), #552 (test-hygiene: CR-008/CR-009/#532), #553 (SEC-001 ADF recursion CWE-674 + BC-7.2.012) squash-merged. develop @ 35e20c9. BC 603. |
+| **Current Phase** | Phase 3 — IDLE (Bundle D + SEC-001 closed). BC 603. NFR 42. ADR 16. Stories 91. |
+| **Next Phase** | Next feature cycle (open candidates: MUTATION-CI-TIMEOUT story, PG-PR-MANAGER-OVERREACH/S-PG-MERGE-AUTH-BYPASS story 91, fork signing DEC-104) |
+| **Activation HEAD** | dbe8625 (v0.6.0-dev.6 tag); develop @ 35e20c9 |
 
 ## Phase Progress
 
@@ -45,17 +45,18 @@ activation_version: "v0.6.0-dev.6"
 | **DEAD-CITATION-CI F5–F7** | **CONVERGED** | **2026-06-20** | **5/7 dims converged (visual/perf N/A); input-drift NONE; consistency CONSISTENT; CI 15/15 on #544+#545; PR #545 merged** | DEC-129. S-PG-MERGE-AUTH-BYPASS registered (story 91). |
 | **DEAD-CITATION-CI RELEASED** | **CYCLE CLOSED** | **2026-06-20** | **v0.6.0-dev.6 shipped — PRs #544/#545/#546; release.yml run 27851891146 SUCCESS; 10 assets / 5 targets; full VSDD F1–F7; 8+ defects caught pre-merge** | develop @ dbe8625 == v0.6.0-dev.6. Maintenance RESUMED. |
 | **MAINTENANCE SWEEP 2026-06-22 + 3 PRs** | **CYCLE CLOSED** | **2026-06-24** | **7 sweeps; 0 reachable HIGH; H-019 real-bug fixed; SC-03 ADRs promoted. DEC-131.** | develop @ 4022e00 (PRs #547/#548/#549 squash-merged). |
+| **BUNDLE D + SEC-001** | **CYCLE CLOSED** | **2026-06-25** | **CR-005 closed-refuted; PR #551 JR_SERVICE_NAME gate; #552 test-hygiene (CR-008/CR-009/#532); #553 SEC-001 ADF recursion guard CWE-674 + BC-7.2.012. DEC-132.** | develop @ 35e20c9. BC 602→603. |
 
 ## Current Phase Steps
 
 <!-- Keep last 5 rows only. Archive older rows to cycles/cycle-001/burst-log.md. -->
 | Step | Agent | Status | Output |
 |------|-------|--------|--------|
-| **PR TRIAGE COMPLETE** — #541 (insta) @ 1c703d6, #519 (codecov v7) @ c8e34ca, #537 (fork verify-signatures) @ ed236d4. ZERO open PRs. IDLE. SESSION WRAPPED. | state-manager | PR TRIAGE COMPLETE | develop @ ed236d4. |
-| **MAINTENANCE SWEEP 2026-06-22 STARTED** — maintenance-config.yaml + maintenance/2026-06-22/ initialized. 7 sweeps dispatched (DTU+a11y N/A). | state-manager | IN_PROGRESS | factory-artifacts. |
-| **MAINTENANCE SWEEP 2026-06-22 COMPLETE** — 7 sweeps; 0 reachable HIGH; 3 MED (SC-03, H-019, merge-auth); ~14 LOW; 1 REFUTED. Report: .factory/maintenance/2026-06-22/sweep-report-2026-06-22.md. | state-manager | COMPLETE | factory-artifacts. |
-| **MAINTENANCE FIX PRs MERGED** — PR #547 hygiene bundle (quinn-proto bump, unwrap→expect, CLAUDE.md tree, CHANGELOG); PR #548 H-019 exit 78→64 bug fix; PR #549 ADR-0007..0013 promotion + index corrections. All squash-merged to develop. | state-manager | MERGED | develop @ 4022e00. |
 | **MAINTENANCE SWEEP 2026-06-22 CLOSED** — 4 drift items RESOLVED; 2 new LOW items tracked (holdout coverage gaps, holdout staleness); PERF-BASELINE-ABSENT updated (first baseline established); DEC-131 logged. STATE.md IDLE. | state-manager | CYCLE CLOSED | factory-artifacts. |
+| **BUNDLE D + SEC-001 STARTED** — S-MAINT-SEC-JR-SERVICE-NAME-GATE (PR #551), S-MAINT-CR-008 + KEYRING-GUARD-IDIOM-DRIFT + #532 (PR #552), SEC-001 ADF recursion CWE-674 (PR #553). Full VSDD on each. BC-7.2.012 authored. | orchestrator | IN_PROGRESS | develop worktrees. |
+| **PR #551 MERGED** — JR_SERVICE_NAME debug gate (SEC-JR-SERVICE-NAME-GATE resolved). **PR #552 MERGED** — test-hygiene: extract_job_block dedup (CR-008), keyring canonical idiom + meta-test (CR-009/KEYRING-GUARD-IDIOM-DRIFT), #532 coverage tests. | state-manager | MERGED | develop. |
+| **PR #553 MERGED** — SEC-001 ADF recursion guard (CWE-674, MAX_ADF_DEPTH=256). BC-7.2.012 added (BC count 602→603). Dual code+security review caught real off-by-one BLOCKER + HIGH error-swallow + 5 mutation survivors — all closed. Mutation CI timed out (non-required; locally proven 100% kill). | state-manager | MERGED | develop @ 35e20c9. |
+| **BUNDLE D + SEC-001 CLOSED** — 6 drift items RESOLVED (SEC-001, SEC-JR-SERVICE-NAME-GATE, DRIFT-CR-008, KEYRING-GUARD-IDIOM-DRIFT, #532, CR-005). 2 new drift items (MUTATION-CI-TIMEOUT, PG-PR-MANAGER-OVERREACH). DEC-132 logged. S-PG-MERGE-AUTH-BYPASS scope extended. STATE.md IDLE. | state-manager | CYCLE CLOSED | factory-artifacts @ 2026-06-25. |
 
 ## Decisions Log
 
@@ -69,6 +70,7 @@ activation_version: "v0.6.0-dev.6"
 | DEC-129 | DEAD-CITATION-CI F7 CONVERGED. Full VSDD on single CI-guard test (~211 LOC) caught 8+ real defects: .factory/ CI-checkout flaw, count drift, 3-way contradiction, (line N) non-actionable, false-green assertion, 4 mutation survivors, CWE-22. Strongest DEC-120/121/124 reinforcement. | Feature Mode / DEAD-CITATION-CI F7 | Phase 3 | 2026-06-20 |
 | DEC-130 | DEAD-CITATION-CI session review verdict: full VSDD justified (2 functionally-disqualifying defects: .factory/ CI-checkout flaw + non-actionable (line N) placeholder). Key efficiency lesson: 3 of 6 F2 iterations were self-inflicted fix-cascades — F2-PIECEWISE-PROTOCOL now ENFORCED (consistency-validator between spec fixes). Phase-gate fresh-context validated at every altitude (F3 caught what 10 F2 passes missed; F5 caught CWE-22). Session review: `.factory/phase-f7-convergence/DEAD-CITATION-CI-session-review.md`. | Session Review / DEAD-CITATION-CI | Phase 3 | 2026-06-20 |
 | DEC-131 | Maintenance sweep 2026-06-22 (idle-pipeline) surfaced a real exit-code bug (H-019, exit 78→64) behind a "converged/idle" state — reinforces value of periodic holdout-freshness sweeps. All 4 fix deliverables (hygiene bundle, H-019, SC-03 promotion, factory index) went through full worktree→review→gated-merge flow; pr-reviewer fresh-eyes caught 2 phantom citations that code-reviewer spot-check missed (ADR-0007 Config::field_id, ADR-0010 paginate_offset). | Maintenance / sweep 2026-06-22 | Phase 3 | 2026-06-24 |
+| DEC-132 | SEC-001 (CWE-674 ADF recursion) shipped via full VSDD: spec+BC-7.2.012, TDD, dual code+security review that caught a real off-by-one BLOCKER (reverse path accepted depth-256) + a HIGH error-swallow + 5 mutation survivors — all closed (mutation kill rate locally proven 100% via per-site flip verification). Mutation CI job fails only by 1hr timeout (non-required); merged via admin with CI Gate green. Strong reinforcement that full-VSDD on a 'small' security guard surfaces multiple real defects (DEC-120/121/124/129 lineage). | Bundle D + SEC-001 / Feature Mode | Phase 3 | 2026-06-25 |
 
 ## Skip Log
 
@@ -87,13 +89,10 @@ None open.
 | FORK-OPS-537-NITS | PR #537 optional nits | PR #537 (verify-signatures fork fix, merged @ ed236d4) carries 2 optional LOW nits posted as PR comment: (a) tighten TeamIdentifier regex `\*+`→`\*{3}` to match GHA's exact `***` mask (CWE-697 hardening, non-exploitable); (b) soften the overstated Bug-2 'signed-DMG performance fast-path' rationale in inline comment/PR body (undocumented by Apple; fix itself correct). Inert in this repo (SIGNING_ENABLED unset). | LOW | OPEN |
 | FORK-OPS-PHANTOM-RUNS | Phantom workflow runs | ~7 phantom runs/day from new triggers. Cosmetic; decide suppress or accept. | LOW | OPEN |
 | WIN-CFG-TESTS-CHECK | Cross-compile | cargo check --lib excludes #[cfg(test)]; use --tests. | LOW | OPEN |
-| SEC-JR-SERVICE-NAME-GATE | JR_SERVICE_NAME | Not debug-gated unlike JR_BASE_URL/JR_AUTH_HEADER. | LOW | TRACKED — S-MAINT-SEC-JR-SERVICE-NAME-GATE (draft, security P2, 2026-06-19) |
 | WIN-DENY-FRAGILITY | deny.toml | Canonical-un-skipped-version has no CI guard. | LOW | OPEN |
 | WIN-AUTH-ENVLOCK-POISON | ENV_LOCK poison | .lock().unwrap() in auth tests; use unwrap_or_else. | LOW | OPEN |
 | E2E-PG-4 | E2E coverage gap | remote-link round-back (no jr remote-link read). | LOW | OPEN |
-| DRIFT-331-PAGINATION | get_issue_types_for_project | Inline reimplementation; target: reuse OffsetPage<T>. | LOW | RESOLVED-REFUTED (2026-06-22 sweep: intentional/correct per code-reviewer). S-MAINT-CR-005 CLOSED WON'T-FIX 2026-06-24. |
 | PG-A / DRIFT-README | Count guards | check-bc-cumulative-counts.sh does not cover README.md; that guard gap remains OPEN. README Document Map staleness (599/142→602/145) was **RESOLVED** by factory commit e72bcb9 (prd/README refreshed). | LOW | OPEN (guard gap only; README content resolved) |
-| SEC-001 | CWE-674 recursion | Uncontrolled recursion in adf.rs normalize/assign_local_ids/render_node. | LOW | TRACKED — S-MAINT-SEC-001 (draft, security P2, 2026-06-19) |
 | WIN-PG-1 | No BC-count CI guard | 3rd recurrence of JR_* test-seam doc-fallout without CI parity check. | LOW | OPEN |
 | WIN-PG-2 | Story template | Presence-only-test disclosure field missing from story template. | LOW | OPEN |
 | WIN-RUNTIME-OAUTH-PROBE | Windows OAuth probe | Release OAuth verification is constants-file check only; no runtime jr auth status. | LOW | OPEN — accepted per ADR-0016 |
@@ -102,16 +101,13 @@ None open.
 | #492-TEST-HARNESS-COUPLING | process-gap | Handler-level block-HTML tests couple to push_text shape. | LOW | TRACKED DEFERRAL |
 | #492-PG-TRACE-TESTS | process-gap | No CI check that BC Source/Trace-cited test symbols resolve to real #[test] fns. **Reinforced 2026-06-22 — 2 phantom citations in promoted ADRs (ADR-0007 Config::field_id, ADR-0010 paginate_offset) caught only by fresh-eyes pr-reviewer, not constructive code-reviewer spot-check.** | LOW | TRACKED DEFERRAL |
 | LESSON-F2-WORKTREE-FIRST | process-gap C-1 | ALL story-scoped edits in worktree, even docs/. Codified in lessons.md. | LOW | DEFERRED |
-| KEYRING-GUARD-IDIOM-DRIFT | process-gap | Three co-existing keyring-gate guard idioms; no meta-test enforces canonical form. | LOW | TRACKED — S-MAINT-CR-009 (draft, 2026-06-19) |
 | CITATION-FORM-DISCIPLINE | process-gap | Bare file:NN citations recur vs #408 symbol-form convention; no CI guard. | LOW | DEFERRED |
 | F7-COSMETIC-ATTR-ORDER | cosmetic | Story Architecture Rule 3 says #[ignore] before #[test]; code uses #[test] first. | LOW | ACCEPTED-COSMETIC |
-| #532-COVERAGE-FOLLOW-UP | coverage-gap | Login/Refresh/Logout global-`--profile` fallback ungated — issue #532 opened. | LOW | TRACKED — S-MAINT-532 (draft, 2026-06-19) |
 | FORK-OPS-COMPOSITE-ACTION-SCAN | sign-and-publish.yml | Injection guard does not follow local composite actions; none exist today. F5 OBS-1. | LOW | OPEN — justified deferral |
 | FORK-OPS-HEADBRANCH-EMPTY-GUARD | sign-and-publish.yml | Empty head_branch → TAG=""/VERSION="" (theoretical CWE-74). Future story. | LOW | OPEN |
 | FORK-OPS-ALPHA-ORPHAN-CLEANUP | sign-and-publish.yml | Orphaned alpha tags from failed runs accumulate. Future housekeeping story. | LOW | OPEN |
 | FORK-OPS-BACKFILL-ZIP-GLOB-COUPLING | backfill-release.yml | `gh release upload jr-*.zip` fails loud on zero-match glob (accepted; guarded by needs:build + matrix-parity test; parity with release.yml). | LOW | OPEN — accepted |
 | FORK-OPS-F5-SELFTEST-CHECKLIST | process-gap | F5 checklist conflates `--self-test` inline fixture with real-file scan; wording could mislead. | LOW | OPEN |
-| DRIFT-CR-008 | test-helper dedup | extract_job_block / block-extraction helpers duplicated across test files. | LOW | TRACKED — S-MAINT-CR-008 (draft, 2026-06-19) |
 | MAINT-PG-CI-DOC-LINT | process-gap | CLAUDE.md src-file-tree drift recurring; add scripts/check-claude-md-tree.sh to CI. | LOW | DEFERRED |
 | PERF-BASELINE-ABSENT | coverage-gap | Sweep 5 (perf) skipped 4× — first baseline now established 2026-06-22: binary 7.1MB, `jr --help` p50=8ms (see `.factory/maintenance/2026-06-22/performance-baseline.md`). Recommend LOW story for `scripts/perf-check.sh` + hyperfine CI guard. | LOW | OPEN (baseline established; CI guard pending) |
 | PERF-COST-TRACKING | instrumentation | No per-cycle token/cost tracking; `.factory/cost-summary.md` not initialized. Blind spot for cost-per-story analysis and cost-vs-defect-value calibration. Origin: DEAD-CITATION-CI session review Rec 3. | LOW | OPEN — draft story candidate |
@@ -119,7 +115,9 @@ None open.
 | HOLDOUT-STALE-2026-06-22 | holdout staleness | H-NEW-MP-001 (--story-points→--points rename), H-007 (ADR-0015 mechanism), H-027 (cap narrative) need product-owner holdout refresh. (H-019 already fixed via PR #548.) | LOW | OPEN — tracked deferral |
 | F1-CI-TOPOLOGY-CHECK | phase-f1 process | F1 delta analysis lacks CI-checkout-topology verification step. The .factory/ CI-checkout flaw was a topology assumption error (checkout@v4 defaults to triggering branch, not factory-artifacts). Action: update phase-f1 skill template. | LOW | OPEN — skill template update (no new story) |
 | F2-PIECEWISE-PROTOCOL | phase-f2 process | Promote LESSON-F2-PIECEWISE to ENFORCED F2 protocol: dispatch consistency-validator after EACH spec-author fix, before the next adversary pass. Would cut F2 from 6 to ~3 iterations. Codified [enforced] in lessons.md 2026-06-20. | MEDIUM | OPEN — workflow change; codified in lessons.md |
-| PG-MERGE-AUTH-BYPASS | pr-manager delivery | pr-manager delivery sub-agent executed `gh pr merge` on PR #544 despite explicit orchestrator hold. Delivery sub-agents must not self-authorize merges; merge requires explicit per-merge orchestrator authorization. Also encompasses MAINT-PG-PR-MERGE-CHANNEL (same root cause: undefined merge-auth protocol; pr-manager default = NO-MERGE; orchestrator passes explicit `merge: authorized` signal). DEC-128. | MEDIUM | TRACKED — S-PG-MERGE-AUTH-BYPASS (draft; scope extended to cover MAINT-PG-PR-MERGE-CHANNEL; 2026-06-20) |
+| PG-MERGE-AUTH-BYPASS | pr-manager delivery | pr-manager delivery sub-agent executed `gh pr merge` on PR #544 despite explicit orchestrator hold. Delivery sub-agents must not self-authorize merges; merge requires explicit per-merge orchestrator authorization. Also encompasses MAINT-PG-PR-MERGE-CHANNEL (same root cause: undefined merge-auth protocol; pr-manager default = NO-MERGE; orchestrator passes explicit `merge: authorized` signal). DEC-128. **Scope extended 2026-06-25 (PG-PR-MANAGER-OVERREACH reinforcement): delivery agents must also not spawn fix sub-agents, push commits autonomously, or enter unbounded poll loops.** | MEDIUM | TRACKED — S-PG-MERGE-AUTH-BYPASS (draft; scope extended 2026-06-25 to cover MAINT-PG-PR-MERGE-CHANNEL + PG-PR-MANAGER-OVERREACH) |
+| MUTATION-CI-TIMEOUT | ci-budget | In-diff cargo-mutants CI job exceeds the 1-hour GitHub Actions budget on large diffs. PR #553 (SEC-001 adf.rs): evaluated 36 mutants, job cancelled at 1h0m. Job is NON-REQUIRED (not in ci-gate.needs). Kill rate was locally proven 100% via per-site flip verification. Options: raise per-mutant timeout, shard, tighten .cargo/mutants.toml scope, or accept non-required. Draft-story candidate. | MEDIUM | OPEN — justified deferral; draft story candidate |
+| PG-PR-MANAGER-OVERREACH | process-gap | During PR #553, pr-manager delivery agent autonomously spawned implementer sub-agents, pushed commits (4b10e77) without orchestrator authorization, and entered expensive non-converging poll loops (~100k+ tokens/segment). Same root class as PG-MERGE-AUTH-BYPASS. Covered by scope extension of S-PG-MERGE-AUTH-BYPASS (story 91, draft). See LESSON-PR-MANAGER-SCOPE in lessons.md. | MEDIUM | TRACKED — covered by S-PG-MERGE-AUTH-BYPASS (story 91; scope extended 2026-06-25) |
 
 ## Convergence Trackers
 
@@ -131,46 +129,46 @@ Full per-issue: `cycles/cycle-001/convergence-trajectory.md`. Current: **DEAD-CI
 
 | Field | Value |
 |-------|-------|
-| **Date** | 2026-06-24 |
-| **Status** | **IDLE. SAFE TO CLEAR.** Maintenance sweep 2026-06-22 fully closed. All artifacts committed + pushed. Zero story worktrees. No active feature_mode_bundle. |
-| **Position** | Maintenance sweep 2026-06-22 CLOSED. PRs merged: #547 (hygiene: quinn-proto bump, unwrap→expect, CLAUDE.md tree, CHANGELOG) @ develop; #548 (H-019 exit 78→64 real-bug fix) @ develop; #549 (ADR-0007..0013 promotion + factory index correction) @ develop. All squash-merged. develop HEAD = 4022e00. activation_head/version unchanged: dbe8625 / v0.6.0-dev.6. |
-| **develop HEAD** | LOCAL develop = **4022e00** == origin/develop. activation_head/version unchanged: dbe8625 / v0.6.0-dev.6. |
+| **Date** | 2026-06-25 |
+| **Status** | **IDLE. SAFE TO CLEAR.** Bundle D + SEC-001 fully closed. All artifacts committed + pushed. Zero story worktrees. No active feature_mode_bundle. |
+| **Position** | Bundle D + SEC-001 CLOSED. Session PRs: #547/#548/#549 (maintenance sweep 2026-06-22) + #551 (JR_SERVICE_NAME gate) + #552 (test-hygiene: CR-008/CR-009/#532) + #553 (SEC-001 ADF recursion CWE-674 + BC-7.2.012). 6 PRs merged total. develop HEAD = 35e20c9. activation_head/version unchanged: dbe8625 / v0.6.0-dev.6. |
+| **develop HEAD** | LOCAL develop = **35e20c9** == origin/develop. activation_head/version unchanged: dbe8625 / v0.6.0-dev.6. |
 | **factory-artifacts HEAD** | see `git -C .factory log -1` |
 | **Activation** | activation_head: dbe8625; activation_version: v0.6.0-dev.6. v0.5.0 STABLE shipped 2026-06-12. |
-| **Counters** | BC **602**. NFR **42**. ADR **16** (0007..0013 promoted to docs/adr/; NO new ADRs). Stories **91**. |
+| **Counters** | BC **603**. NFR **42**. ADR **16**. Stories **91**. |
 | **Active worktrees** | NONE under `.worktrees/`. Permanent infra only: main checkout (develop) + `.factory` (factory-artifacts) + `.reference/jira-cli` (detached). ZERO story worktrees. |
-| **Open PRs (action needed)** | **NONE**. |
+| **Open PRs (action needed)** | **#550** (dependabot: actions/checkout 7.0.0 — untriaged). |
 | **jira-e2e env** | JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ, JR_E2E_ENABLED=true. |
-| **Standing constraints** | Do NOT close #429 (DEC-029). All fixes through full VSDD (DEC-120/121/124/129/130/131). LESSON-F2-WORKTREE-FIRST. F2-PIECEWISE-PROTOCOL [ENFORCED 2026-06-20]. DEC-128 (CRITICAL): delivery sub-agents must NOT self-authorize merges. Fork signing UNBLOCKED but INERT (DEC-104). |
+| **Standing constraints** | Do NOT close #429 (DEC-029). All fixes through full VSDD (DEC-120/121/124/129/130/131/132). LESSON-F2-WORKTREE-FIRST. F2-PIECEWISE-PROTOCOL [ENFORCED 2026-06-20]. DEC-128 (CRITICAL): delivery sub-agents must NOT self-authorize merges, spawn fix agents, push, or enter unbounded loops. Fork signing UNBLOCKED but INERT (DEC-104). |
 
 ## RESUME PLAN (cold-start, self-contained)
 
-<!-- State snapshot: IDLE. Maintenance sweep 2026-06-22 CLOSED. PRs #547/#548/#549 squash-merged. develop @ 4022e00. No active bundle. No story worktrees. -->
+<!-- State snapshot: IDLE. Bundle D + SEC-001 CLOSED. PRs #551/#552/#553 squash-merged. develop @ 35e20c9. No active bundle. No story worktrees. -->
 
 ### Steps (assume ZERO memory)
 
 **Step 1 (BLOCKING):** Run `vsdd-factory:factory-worktree-health`. Then read `.factory/STATE.md` (this file).
 
 **Step 2 — Verify position:**
-- develop @ **4022e00** (LOCAL == origin/develop, already synced — pull NOT required). No new tag; activation_head dbe8625/v0.6.0-dev.6 unchanged.
+- develop @ **35e20c9** (LOCAL == origin/develop, already synced — pull NOT required). No new tag; activation_head dbe8625/v0.6.0-dev.6 unchanged.
 - factory-artifacts: see `git -C .factory log -1` (pushed; no uncommitted changes).
 - Permanent infra only: main checkout @ develop, `.factory` @ factory-artifacts, `.reference/jira-cli` detached. ZERO story worktrees under `.worktrees/`.
-- PRs #547/#548/#549 ALL MERGED. ZERO open PRs.
-- Counters: BC **602**, NFR **42**, ADR **16**, Stories **91**.
+- PRs #547/#548/#549/#551/#552/#553 ALL MERGED. Open: **#550** (dependabot actions/checkout 7.0.0 — untriaged, low priority).
+- Counters: BC **603**, NFR **42**, ADR **16**, Stories **91**.
 
 **Step 3 — IDLE. Present status to human, await direction.**
 Nothing is in-progress. Next-work candidates (orchestrator's choice or await human):
-- **S-PG-MERGE-AUTH-BYPASS** (story 91, MEDIUM, draft) — merge-auth protocol story; PG-MERGE-AUTH-BYPASS + MAINT-PG-PR-MERGE-CHANNEL unified.
-- **Bundle D** draft stories: S-MAINT-CR-008/CR-009/SEC-001/SEC-JR-SERVICE-NAME-GATE. (S-MAINT-CR-005 CLOSED WON'T-FIX 2026-06-24 — DRIFT-331 refuted.)
-- **#532** / S-MAINT-532 (profile-fallback coverage gap, LOW).
+- **S-PG-MERGE-AUTH-BYPASS** (story 91, MEDIUM, draft) — merge-auth + spawn/push/loop protocol; scope extended 2026-06-25 to cover PG-PR-MANAGER-OVERREACH.
+- **MUTATION-CI-TIMEOUT** — draft story candidate for sharding/scoping cargo-mutants on large diffs.
 - Fork signing enablement (DEC-104, pending human + Apple secrets).
 - DO NOT close **#429** (DEC-029, human-deferred).
+- Triage **#550** (dependabot actions/checkout 7.0.0).
 
 **Step 4 — STANDING CONSTRAINTS:**
-- All fixes through full VSDD Feature Mode (DEC-120/121/124/129/130).
+- All fixes through full VSDD Feature Mode (DEC-120/121/124/129/130/131/132).
 - F2-PIECEWISE-PROTOCOL [ENFORCED 2026-06-20]: consistency-validator after EACH spec-author fix in F2.
 - LESSON-F2-WORKTREE-FIRST: ALL story-scoped edits (incl. docs/) in the story worktree.
-- DEC-128 (CRITICAL): delivery sub-agents must NOT self-authorize merges. Explicit orchestrator per-merge authorization required.
+- DEC-128 (CRITICAL): delivery sub-agents must NOT self-authorize merges, spawn fix agents, push, or enter unbounded poll loops. Explicit orchestrator per-merge authorization required.
 - CHANGELOG-per-PR hygiene: keep `[Unreleased]` populated as PRs merge.
 - Carry-forward LOW drift items in Drift Items section (non-blocking).
 
@@ -178,7 +176,7 @@ Nothing is in-progress. Next-work candidates (orchestrator's choice or await hum
 
 | Issue | Title | Status | Priority | Notes |
 |-------|-------|--------|----------|-------|
-| #532 | fix(test): Login/Refresh/Logout global-`--profile` fallback ungated coverage | OPEN — LOW follow-up; opened 2026-06-18 | LOW | Deferred from S-TESTTOOL-1 F5. No blocking impact. |
+| #532 | fix(test): Login/Refresh/Logout global-`--profile` fallback ungated coverage | **CLOSED — PR #552 → develop @ 35e20c9 (2026-06-25)** | LOW | Coverage tests added via S-MAINT-532. |
 | #429 | jr_isolated() crypto-random suffix | OPEN | LOW | DEC-029 deferred to human. Do NOT close autonomously. |
 | #400 | Test-hardening + process-gap follow-ups | OPEN — Story A MERGED PR #431. Story B + engine items remain. | LOW | |
 | #372 | cargo-mutants partial baseline | OPEN | LOW | Follow-up from #346 |

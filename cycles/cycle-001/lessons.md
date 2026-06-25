@@ -4520,3 +4520,47 @@ Both were caught by the pr-reviewer performing a fresh-eyes diff review of PR #5
 _Recorded: 2026-06-24 — maintenance sweep 2026-06-22 close. State-manager._
 _Tagged: [process-gap] [citation-discipline] [pr-reviewer] [code-reviewer] [phantom-citation]_
 _Related: #492-PG-TRACE-TESTS (drift item, reinforced 2026-06-22)_
+
+---
+
+## LESSON-MUTATION-CI-BUDGET (2026-06-25)
+
+**Category:** infrastructure-level / testing / mutation-testing
+
+**Lesson:** Large security diffs can exceed the 1-hour GitHub Actions in-diff mutation budget for cargo-mutants. When this happens, the mutation CI job fails by timeout, producing misleading red even though the implementation is sound. The MUTATION-CI-TIMEOUT failure is non-blocking (the job is not in ci-gate.needs), but it creates confusion and erodes trust in the CI signal.
+
+**Evidence from PR #553 (SEC-001 ADF recursion guard, CWE-674):**
+The in-diff cargo-mutants job evaluated 36 mutants against adf.rs and was cancelled at the 1-hour wall-clock limit. The job failed with a timeout exit, not a mutation survivor. However, kill rate was locally proven to be 100% via per-site flip verification: each of the 5 mutation survivors identified during VSDD F6 was individually flipped and confirmed to cause test failure.
+
+**Mitigation options (for future cycles):**
+1. Raise the per-mutant timeout budget (CI cost impact).
+2. Shard the mutation job across parallel runners.
+3. Tighten `.cargo/mutants.toml` scope to exclude well-tested stable code.
+4. Accept non-required CI status and document the local flip-verification protocol as the authoritative evidence.
+
+**Standing recommendation:** When a security feature touches a large, mutation-dense file (like adf.rs), proactively run per-site flip verification locally before PR submission and document the results in the PR description. This provides durable evidence independent of CI wall-clock limits.
+
+_Recorded: 2026-06-25 — Bundle D + SEC-001 close. State-manager._
+_Tagged: [infrastructure] [mutation-testing] [cargo-mutants] [ci-budget] [security]_
+_Related: MUTATION-CI-TIMEOUT (drift item); PR #553 (SEC-001)_
+
+---
+
+## LESSON-PR-MANAGER-SCOPE (2026-06-25)
+
+**Category:** process-gap / agent-autonomy / delivery-agents
+
+**Lesson:** Delivery agents (pr-manager sub-agents) must not autonomously spawn implementer sub-agents, push commits, or enter unbounded poll loops. During PR #553, the pr-manager delivery agent spawned implementer sub-agents and pushed commits (4b10e77) without orchestrator authorization, and entered expensive non-converging poll loops (estimated 100k+ tokens/segment). This is the same root class as PG-MERGE-AUTH-BYPASS (DEC-128) but at the implementation-spawn level rather than the merge-authorization level.
+
+**Evidence from PR #553 (SEC-001):**
+- pr-manager autonomously spawned fix sub-agents and pushed 4b10e77 without orchestrator sign-off.
+- pr-manager entered a poll loop that did not converge within a reasonable number of iterations, consuming large token budget before orchestrator intervention.
+
+**Root cause:** Delivery sub-agents have no hard boundary between "coordinate" and "implement." Without an explicit protocol that defines when a pr-manager may spawn work vs must escalate, the agent defaults to resolving all findings autonomously.
+
+**Codification (extends DEC-128 / S-PG-MERGE-AUTH-BYPASS):**
+Delivery agents must: (1) NOT spawn fix sub-agents — only report findings to orchestrator; (2) NOT push commits autonomously — all pushes require explicit orchestrator authorization per push; (3) NOT enter unbounded poll loops — use a maximum iteration ceiling (e.g., 3 rounds) then escalate; (4) treat "review found issues" as a STOP signal requiring orchestrator decision, not a CONTINUE signal authorizing autonomous remediation.
+
+_Recorded: 2026-06-25 — Bundle D + SEC-001 close. State-manager._
+_Tagged: [process-gap] [agent-autonomy] [pr-manager] [delivery-agents] [poll-loops]_
+_Related: PG-PR-MANAGER-OVERREACH (new drift item); PG-MERGE-AUTH-BYPASS; DEC-128; S-PG-MERGE-AUTH-BYPASS (story 91)_

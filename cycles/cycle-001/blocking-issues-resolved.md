@@ -222,3 +222,18 @@ PRs #547/#548/#549 squash-merged to develop @ 4022e00. The 5 items below were op
 | H-019-EXIT-DRIFT | holdout | `--profile`/`JR_PROFILE` exit 78 not 64 for `foo:bar` boundary — confirmed real bug, not stale holdout. Exit code corrected from 78→64 in PR #548. | MED | **RESOLVED — PR #548 → develop @ 4022e00 (2026-06-24); H-019 holdout now accurate** | 2026-06-24 |
 | MAINT-2026-06-17-SC-03 | ADR location | SC-03: docs/adr/ vs .factory/architecture/adr/ convention discrepancy. ADR-0007..0013 promoted to docs/adr/ and factory ADR index + ADR-0016 row corrected in PR #549. | LOW | **RESOLVED — PR #549 → develop @ 4022e00 (2026-06-24)** | 2026-06-24 |
 | DOC-DRIFT-2026-06-22 | doc accuracy | CLAUDE.md src-file-tree stale, CHANGELOG [Unreleased] unpopulated, README version reference v0.3.0→v0.5.0 stale. All fixed in PR #547 hygiene bundle. | LOW | **RESOLVED — PR #547 → develop @ 4022e00 (2026-06-24)** | 2026-06-24 |
+
+---
+
+## Resolved Drift Items extracted from STATE.md on 2026-06-25 (Bundle D + SEC-001 CLOSED — DEC-132)
+
+PRs #551/#552/#553 squash-merged to develop @ 35e20c9. The items below were TRACKED/OPEN in STATE.md Drift Items and are now fully resolved.
+
+| ID | Area | Description | Severity | Status | Resolved Date |
+|----|------|-------------|----------|--------|---------------|
+| SEC-001 | CWE-674 recursion | Uncontrolled recursion in adf.rs normalize/assign_local_ids/render_node. MAX_ADF_DEPTH=256 guard added; BC-7.2.012 authored; dual code+security review caught real off-by-one (reverse path accepted depth-256) + HIGH error-swallow + 5 mutation survivors — all closed; kill rate locally proven 100% via per-site flip verification. | LOW (upgraded MEDIUM during VSDD) | **RESOLVED — PR #553 → develop @ 35e20c9 (2026-06-25); BC-7.2.012 added** | 2026-06-25 |
+| SEC-JR-SERVICE-NAME-GATE | JR_SERVICE_NAME not debug-gated | JR_SERVICE_NAME env var was not guarded by #[cfg(debug_assertions)] unlike JR_BASE_URL/JR_AUTH_HEADER, creating a potential redirect vector. Debug gate added to match canonical seam pattern. | LOW | **RESOLVED — PR #551 → develop @ 35e20c9 (2026-06-25)** | 2026-06-25 |
+| DRIFT-CR-008 | test-helper dedup | extract_job_block / block-extraction helpers duplicated across test files. Deduplicated and consolidated in PR #552. | LOW | **RESOLVED — PR #552 → develop @ 35e20c9 (2026-06-25)** | 2026-06-25 |
+| KEYRING-GUARD-IDIOM-DRIFT | process-gap | Three co-existing keyring-gate guard idioms; no meta-test enforces canonical form. Canonical idiom established + meta-test tests/keyring_guard_idiom.rs added in PR #552. | LOW | **RESOLVED — PR #552 → develop @ 35e20c9 (2026-06-25)** | 2026-06-25 |
+| #532 / S-MAINT-532 | coverage-gap | Login/Refresh/Logout global-`--profile` fallback ungated — issue #532 coverage tests added in PR #552. | LOW | **RESOLVED — PR #552 → develop @ 35e20c9 (2026-06-25); issue #532 closed** | 2026-06-25 |
+| DRIFT-331-PAGINATION / S-MAINT-CR-005 | get_issue_types_for_project | Inline reimplementation; already CLOSED-REFUTED 2026-06-24 — intentional/correct per code-reviewer. | LOW | **RESOLVED-REFUTED — S-MAINT-CR-005 CLOSED WON'T-FIX 2026-06-24** | 2026-06-24 |

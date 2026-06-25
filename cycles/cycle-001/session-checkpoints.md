@@ -1014,3 +1014,20 @@ _Was the active checkpoint after F5 CONVERGED / F6 active. Superseded after F7 C
 | **factory-artifacts HEAD** | 261471f — `factory(session-review): persist DEAD-CITATION-CI session review + apply 4 dispositions (DEC-130)`. |
 | **Counters** | BC 602. NFR 42. ADR 16. Stories 91. |
 | **Open PRs** | #541 (insta bump — low); #537 (signing fix); #519 (codecov). None required orchestrator action at time of checkpoint. |
+
+---
+
+## Checkpoint archived 2026-06-25 (Maintenance sweep 2026-06-22 CLOSED — DEC-131; develop @ 4022e00)
+
+_Was the active checkpoint after maintenance sweep 2026-06-22 fully closed. PRs #547 (hygiene bundle), #548 (H-019 exit 78→64), #549 (ADR-0007..0013 promotion + index correction) all squash-merged to develop @ 4022e00. Superseded by Bundle D + SEC-001 close checkpoint (2026-06-25)._
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-06-24 |
+| **Status** | **IDLE. SAFE TO CLEAR.** Maintenance sweep 2026-06-22 fully closed. All artifacts committed + pushed. Zero story worktrees. No active feature_mode_bundle. |
+| **Position** | Maintenance sweep 2026-06-22 CLOSED. PRs merged: #547 (hygiene: quinn-proto bump, unwrap→expect, CLAUDE.md tree, CHANGELOG) @ develop; #548 (H-019 exit 78→64 real-bug fix) @ develop; #549 (ADR-0007..0013 promotion + factory index correction) @ develop. All squash-merged. develop HEAD = 4022e00. activation_head/version unchanged: dbe8625 / v0.6.0-dev.6. |
+| **develop HEAD** | LOCAL develop = **4022e00** == origin/develop. activation_head/version unchanged: dbe8625 / v0.6.0-dev.6. |
+| **factory-artifacts HEAD** | see `git -C .factory log -1` |
+| **Counters** | BC **602**. NFR **42**. ADR **16**. Stories **91**. |
+| **Open PRs** | NONE. |
+| **jira-e2e env** | JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ, JR_E2E_ENABLED=true. |
