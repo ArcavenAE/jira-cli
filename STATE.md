@@ -2,11 +2,11 @@
 document_type: pipeline-state
 version: "2.0"
 status: complete
-timestamp: 2026-06-25T00:00:00Z
+timestamp: 2026-06-25T12:00:00Z
 phase: 3
 project: jira-cli
 mode: brownfield
-current_step: "IDLE. Bundle D + SEC-001 CLOSED. develop @ 35e20c9. Awaiting direction."
+current_step: "IDLE. PR #550 (actions/checkout v7) merged. develop @ b856f9f. Awaiting direction."
 maintenance_run: CLOSED
 current_cycle: "cycle-001"
 feature_mode_bundle: none
@@ -26,10 +26,10 @@ activation_version: "v0.6.0-dev.6"
 | **Product** | jr (Jira CLI) |
 | **Mode** | BROWNFIELD / Rust |
 | **Target Workspace** | develop → main |
-| **Last Updated** | 2026-06-25: Bundle D + SEC-001 CLOSED. PRs #551 (JR_SERVICE_NAME gate), #552 (test-hygiene: CR-008/CR-009/#532), #553 (SEC-001 ADF recursion CWE-674 + BC-7.2.012) squash-merged. develop @ 35e20c9. BC 603. |
+| **Last Updated** | 2026-06-25: PR #550 merged (dependabot: actions/checkout 6.0.3→7.0.0; triaged clean — zero fork-checkout breaking-change exposure; 25 SHA-pins across 10 workflows; CI 15/15 green; admin squash-merge). develop @ b856f9f. BC 603. |
 | **Current Phase** | Phase 3 — IDLE (Bundle D + SEC-001 closed). BC 603. NFR 42. ADR 16. Stories 91. |
 | **Next Phase** | Next feature cycle (open candidates: MUTATION-CI-TIMEOUT story, PG-PR-MANAGER-OVERREACH/S-PG-MERGE-AUTH-BYPASS story 91, fork signing DEC-104) |
-| **Activation HEAD** | dbe8625 (v0.6.0-dev.6 tag); develop @ 35e20c9 |
+| **Activation HEAD** | dbe8625 (v0.6.0-dev.6 tag); develop @ b856f9f |
 
 ## Phase Progress
 
@@ -52,11 +52,11 @@ activation_version: "v0.6.0-dev.6"
 <!-- Keep last 5 rows only. Archive older rows to cycles/cycle-001/burst-log.md. -->
 | Step | Agent | Status | Output |
 |------|-------|--------|--------|
-| **MAINTENANCE SWEEP 2026-06-22 CLOSED** — 4 drift items RESOLVED; 2 new LOW items tracked (holdout coverage gaps, holdout staleness); PERF-BASELINE-ABSENT updated (first baseline established); DEC-131 logged. STATE.md IDLE. | state-manager | CYCLE CLOSED | factory-artifacts. |
 | **BUNDLE D + SEC-001 STARTED** — S-MAINT-SEC-JR-SERVICE-NAME-GATE (PR #551), S-MAINT-CR-008 + KEYRING-GUARD-IDIOM-DRIFT + #532 (PR #552), SEC-001 ADF recursion CWE-674 (PR #553). Full VSDD on each. BC-7.2.012 authored. | orchestrator | IN_PROGRESS | develop worktrees. |
 | **PR #551 MERGED** — JR_SERVICE_NAME debug gate (SEC-JR-SERVICE-NAME-GATE resolved). **PR #552 MERGED** — test-hygiene: extract_job_block dedup (CR-008), keyring canonical idiom + meta-test (CR-009/KEYRING-GUARD-IDIOM-DRIFT), #532 coverage tests. | state-manager | MERGED | develop. |
 | **PR #553 MERGED** — SEC-001 ADF recursion guard (CWE-674, MAX_ADF_DEPTH=256). BC-7.2.012 added (BC count 602→603). Dual code+security review caught real off-by-one BLOCKER + HIGH error-swallow + 5 mutation survivors — all closed. Mutation CI timed out (non-required; locally proven 100% kill). | state-manager | MERGED | develop @ 35e20c9. |
 | **BUNDLE D + SEC-001 CLOSED** — 6 drift items RESOLVED (SEC-001, SEC-JR-SERVICE-NAME-GATE, DRIFT-CR-008, KEYRING-GUARD-IDIOM-DRIFT, #532, CR-005). 2 new drift items (MUTATION-CI-TIMEOUT, PG-PR-MANAGER-OVERREACH). DEC-132 logged. S-PG-MERGE-AUTH-BYPASS scope extended. STATE.md IDLE. | state-manager | CYCLE CLOSED | factory-artifacts @ 2026-06-25. |
+| **PR #550 MERGED** — dependabot actions/checkout 6.0.3→7.0.0; triaged clean (zero fork-checkout breaking-change exposure — no workflow uses pull_request_target; sign-and-publish.yml workflow_run checks out default ref, inert per DEC-104); 25 SHA-pins across 10 workflow files all correctly pinned to 9c091bb # v7.0.0; CI 15/15 green; admin squash-merge (human-authorized). Maintenance-mode dep bump — no spec/BC/test impact. | state-manager | MERGED | develop @ b856f9f. |
 
 ## Decisions Log
 
@@ -130,30 +130,30 @@ Full per-issue: `cycles/cycle-001/convergence-trajectory.md`. Current: **DEAD-CI
 | Field | Value |
 |-------|-------|
 | **Date** | 2026-06-25 |
-| **Status** | **IDLE. SAFE TO CLEAR.** Bundle D + SEC-001 fully closed. All artifacts committed + pushed. Zero story worktrees. No active feature_mode_bundle. |
-| **Position** | Bundle D + SEC-001 CLOSED. Session PRs: #547/#548/#549 (maintenance sweep 2026-06-22) + #551 (JR_SERVICE_NAME gate) + #552 (test-hygiene: CR-008/CR-009/#532) + #553 (SEC-001 ADF recursion CWE-674 + BC-7.2.012). 6 PRs merged total. develop HEAD = 35e20c9. activation_head/version unchanged: dbe8625 / v0.6.0-dev.6. |
-| **develop HEAD** | LOCAL develop = **35e20c9** == origin/develop. activation_head/version unchanged: dbe8625 / v0.6.0-dev.6. |
+| **Status** | **IDLE. SAFE TO CLEAR.** PR #550 (actions/checkout v7) merged and triaged clean. All artifacts committed + pushed. Zero story worktrees. No active feature_mode_bundle. |
+| **Position** | PR #550 MERGED (dependabot: actions/checkout 6.0.3→7.0.0; triaged clean; 25 SHA-pins; CI 15/15; admin squash-merge). Prior session: Bundle D + SEC-001 CLOSED (#551/#552/#553). develop HEAD = b856f9f. activation_head/version unchanged: dbe8625 / v0.6.0-dev.6. |
+| **develop HEAD** | LOCAL develop = **b856f9f** == origin/develop. activation_head/version unchanged: dbe8625 / v0.6.0-dev.6. |
 | **factory-artifacts HEAD** | see `git -C .factory log -1` |
 | **Activation** | activation_head: dbe8625; activation_version: v0.6.0-dev.6. v0.5.0 STABLE shipped 2026-06-12. |
 | **Counters** | BC **603**. NFR **42**. ADR **16**. Stories **91**. |
 | **Active worktrees** | NONE under `.worktrees/`. Permanent infra only: main checkout (develop) + `.factory` (factory-artifacts) + `.reference/jira-cli` (detached). ZERO story worktrees. |
-| **Open PRs (action needed)** | **#550** (dependabot: actions/checkout 7.0.0 — untriaged). |
+| **Open PRs (action needed)** | **NONE.** #550 merged @ b856f9f (2026-06-25). |
 | **jira-e2e env** | JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ, JR_E2E_ENABLED=true. |
 | **Standing constraints** | Do NOT close #429 (DEC-029). All fixes through full VSDD (DEC-120/121/124/129/130/131/132). LESSON-F2-WORKTREE-FIRST. F2-PIECEWISE-PROTOCOL [ENFORCED 2026-06-20]. DEC-128 (CRITICAL): delivery sub-agents must NOT self-authorize merges, spawn fix agents, push, or enter unbounded loops. Fork signing UNBLOCKED but INERT (DEC-104). |
 
 ## RESUME PLAN (cold-start, self-contained)
 
-<!-- State snapshot: IDLE. Bundle D + SEC-001 CLOSED. PRs #551/#552/#553 squash-merged. develop @ 35e20c9. No active bundle. No story worktrees. -->
+<!-- State snapshot: IDLE. PR #550 (actions/checkout v7) merged. develop @ b856f9f. No active bundle. No story worktrees. -->
 
 ### Steps (assume ZERO memory)
 
 **Step 1 (BLOCKING):** Run `vsdd-factory:factory-worktree-health`. Then read `.factory/STATE.md` (this file).
 
 **Step 2 — Verify position:**
-- develop @ **35e20c9** (LOCAL == origin/develop, already synced — pull NOT required). No new tag; activation_head dbe8625/v0.6.0-dev.6 unchanged.
+- develop @ **b856f9f** (LOCAL == origin/develop, already synced — pull NOT required). No new tag; activation_head dbe8625/v0.6.0-dev.6 unchanged.
 - factory-artifacts: see `git -C .factory log -1` (pushed; no uncommitted changes).
 - Permanent infra only: main checkout @ develop, `.factory` @ factory-artifacts, `.reference/jira-cli` detached. ZERO story worktrees under `.worktrees/`.
-- PRs #547/#548/#549/#551/#552/#553 ALL MERGED. Open: **#550** (dependabot actions/checkout 7.0.0 — untriaged, low priority).
+- PRs #547/#548/#549/#551/#552/#553/#550 ALL MERGED. **No open PRs.**
 - Counters: BC **603**, NFR **42**, ADR **16**, Stories **91**.
 
 **Step 3 — IDLE. Present status to human, await direction.**
@@ -162,7 +162,6 @@ Nothing is in-progress. Next-work candidates (orchestrator's choice or await hum
 - **MUTATION-CI-TIMEOUT** — draft story candidate for sharding/scoping cargo-mutants on large diffs.
 - Fork signing enablement (DEC-104, pending human + Apple secrets).
 - DO NOT close **#429** (DEC-029, human-deferred).
-- Triage **#550** (dependabot actions/checkout 7.0.0).
 
 **Step 4 — STANDING CONSTRAINTS:**
 - All fixes through full VSDD Feature Mode (DEC-120/121/124/129/130/131/132).
@@ -176,6 +175,7 @@ Nothing is in-progress. Next-work candidates (orchestrator's choice or await hum
 
 | Issue | Title | Status | Priority | Notes |
 |-------|-------|--------|----------|-------|
+| #550 | dependabot: bump actions/checkout 6.0.3→7.0.0 | **CLOSED — squash-merged → develop @ b856f9f (2026-06-25)** | LOW | Triaged clean: no pull_request_target usage; sign-and-publish.yml workflow_run inert (DEC-104); 25 SHA-pins to 9c091bb # v7.0.0 across 10 workflow files; CI 15/15 green. |
 | #532 | fix(test): Login/Refresh/Logout global-`--profile` fallback ungated coverage | **CLOSED — PR #552 → develop @ 35e20c9 (2026-06-25)** | LOW | Coverage tests added via S-MAINT-532. |
 | #429 | jr_isolated() crypto-random suffix | OPEN | LOW | DEC-029 deferred to human. Do NOT close autonomously. |
 | #400 | Test-hardening + process-gap follow-ups | OPEN — Story A MERGED PR #431. Story B + engine items remain. | LOW | |
