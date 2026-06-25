@@ -4136,3 +4136,24 @@ The following row was present in STATE.md Current Phase Steps before the last-5 
 | Step | Agent | Status | Output |
 |------|-------|--------|--------|
 | **BUNDLE D + SEC-001 CLOSED** — 6 drift items RESOLVED (SEC-001, SEC-JR-SERVICE-NAME-GATE, DRIFT-CR-008, KEYRING-GUARD-IDIOM-DRIFT, #532, CR-005). 2 new drift items (MUTATION-CI-TIMEOUT, PG-PR-MANAGER-OVERREACH). DEC-132 logged. S-PG-MERGE-AUTH-BYPASS scope extended. STATE.md IDLE. | state-manager | CYCLE CLOSED | factory-artifacts @ 2026-06-25. |
+
+## Archived Current Phase Steps — PR #555 merge trim (2026-06-25)
+
+The following row was present in STATE.md Current Phase Steps before the last-5 trim on 2026-06-25 PR #555 commit:
+
+| Step | Agent | Status | Output |
+|------|-------|--------|--------|
+| **PR #550 MERGED** — dependabot actions/checkout 6.0.3→7.0.0; triaged clean (zero fork-checkout breaking-change exposure — no workflow uses pull_request_target; sign-and-publish.yml workflow_run checks out default ref, inert per DEC-104); 25 SHA-pins across 10 workflow files all correctly pinned to 9c091bb # v7.0.0; CI 15/15 green; admin squash-merge (human-authorized). Maintenance-mode dep bump — no spec/BC/test impact. | state-manager | MERGED | develop @ b856f9f. |
+
+## D3 Pattern Hygiene — Burst (2026-06-25)
+
+| Field | Value |
+|-------|-------|
+| Event | PR #555 squash-merged to develop. D3 pattern hygiene complete. |
+| Changes | 6 bare .unwrap() → .expect("<invariant>") at structurally-guaranteed sites (src/cli/assets/schemas.rs ×2, src/cli/auth/keychain.rs ×2, src/cli/issue/list.rs, src/cli/issue/helpers.rs); 2 CLAUDE.md Known Size Deviations entries (src/cli/issue/create.rs 2,880 LOC, src/cli/issue/workflow.rs 1,341 LOC). Cosmetic/no-behavior-change. |
+| Review value | Code-reviewer independently re-derived all 5 invariants as sound. Fresh-eyes pr-reviewer caught BLOCKING factual error: PF-017 bullet wrongly claimed workflow.rs covers remote-link / proposed extracting handle_remote_link — which actually lives in links.rs. Fixed in commit 7ca3fde before merge. DEC-131-pattern fresh-eyes catch. |
+| New drift items | PF-008-ASSET-ID-RESULT-HARDENING (LOW, OPEN) — Result-propagation hardening deferred (behavior change, not cosmetic). PF-001/PF-002 remain OPEN. |
+| Resolved drift items | PATTERN-HYGIENE-2026-06-25 → RESOLVED (PF-010..014/016/017 closed). |
+| develop HEAD | 6b395d3 (PR #555 squash-merged 2026-06-25). |
+| Counters | BC 603 (UNCHANGED). NFR 42. ADR 16. Stories 91. |
+| Status | IDLE — D1+D2+D3 COMPLETE. D4/D5 tracked-deferred. |

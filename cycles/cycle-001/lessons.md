@@ -4584,3 +4584,23 @@ _Recorded: 2026-06-25 — H-028 investigation close. State-manager._
 _Tagged: [process-gap] [holdout-evaluation] [verify-before-fix] [false-positive]_
 _Related: HOLDOUT-STALE-2026-06-25 (drift item, corrected); maintenance/2026-06-25/H-028-root-cause.md_
 _Related: PG-PR-MANAGER-OVERREACH (new drift item); PG-MERGE-AUTH-BYPASS; DEC-128; S-PG-MERGE-AUTH-BYPASS (story 91)_
+
+---
+
+## FRESH-EYES-D3-PF-017 (2026-06-25)
+
+**Category:** process-gap / review / fresh-eyes-value
+
+**Tag:** [process-gap] FRESH-EYES-D3-PF-017 — LOW
+
+**Lesson:** During D3 pattern-hygiene PR #555, the fresh-eyes pr-reviewer independently caught a BLOCKING factual error that had survived the full constructive code-reviewer pass: PF-017 documented that `src/cli/issue/workflow.rs` covers the remote-link handler and proposed extracting `handle_remote_link` from it — but `handle_remote_link` actually lives in `src/cli/issue/links.rs`. Had this gone to merge the CLAUDE.md Known Size Deviations table would have contained a false module-to-function attribution visible to all future contributors.
+
+**Pattern:** This is the same DEC-131 pattern (maintenance sweep 2026-06-22) where fresh-eyes pr-review caught phantom ADR citations that constructive code-review missed. The fix was committed at 7ca3fde before merge.
+
+**Codification (reinforces DEC-131):** Fresh-eyes pr-review is not optional even for cosmetic/no-behavior-change PRs. Factual errors in documentation are blocking defects — a CLAUDE.md entry claiming a function lives in the wrong file is a correctness bug, not a nit. Constructive review (code-reviewer) and fresh-eyes review (pr-reviewer) catch different defect classes and are complements, not substitutes.
+
+**Recommendation:** Keep the two-reviewer discipline (constructive + fresh-eyes) for ALL PRs including doc-only and hygiene PRs. The token cost is low relative to the cost of a merged factual error propagating into developer mental models.
+
+_Recorded: 2026-06-25 — D3 pattern hygiene PR #555 close. State-manager._
+_Tagged: [process-gap] [review] [fresh-eyes-value] [documentation-correctness]_
+_Related: DEC-131 (2026-06-22 phantom ADR citation catch); PR #555 commit 7ca3fde._
