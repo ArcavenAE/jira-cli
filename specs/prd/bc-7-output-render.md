@@ -3,7 +3,7 @@ context: bc-7
 title: "Output Rendering & Error"
 total_bcs: 91   # cumulative claim (incl. range-collapsed); definitional_count below is individually-bodied headings; +4 added 2026-05-08 (BC-7.4.013-016, Fix-PR A); +1 added 2026-06-08 (BC-7.2.006, issue #470 listItem content-model conformance); +2 added 2026-06-08 (BC-7.2.007..008, issue #474 markdown subsup + heading-attr); +1 added 2026-06-09 (BC-7.2.009, issue #483 GFM alerts → panel); +1 added 2026-06-10 (BC-7.2.010, issue #471 GFM task lists → taskList/taskItem); +1 added 2026-06-15 (BC-7.2.011, issue #492 block-HTML hardBreak interior newlines); +1 added 2026-06-24 (BC-7.2.012, SEC-001 ADF recursion depth limit)
 definitional_count: 45   # count of `#### BC-` headings in this file
-last_updated: 2026-06-17
+last_updated: 2026-06-24
 source_pass: 4
 trace: |
   - L2: .factory/specs/domain-spec/bc-07-output-render.md
