@@ -4092,3 +4092,23 @@ The following rows were present in STATE.md Current Phase Steps before the last-
 | **BUNDLE D + SEC-001 STARTED** — S-MAINT-SEC-JR-SERVICE-NAME-GATE (PR #551), S-MAINT-CR-008 + KEYRING-GUARD-IDIOM-DRIFT + #532 (PR #552), SEC-001 ADF recursion CWE-674 (PR #553). Full VSDD on each. BC-7.2.012 authored. | orchestrator | IN_PROGRESS | develop worktrees. |
 | **BUNDLE D + SEC-001 CLOSED** — PR #551 (JR_SERVICE_NAME debug gate), PR #552 (test-hygiene: extract_job_block dedup, keyring canonical idiom + meta-test, #532 coverage), PR #553 (SEC-001: MAX_ADF_DEPTH=256 guard, BC-7.2.012) — all squash-merged to develop @ 35e20c9. DEC-132 logged. BC 602→603. Mutation CI job timed out (non-required; kill rate locally proven 100%). PG-PR-MANAGER-OVERREACH new drift item. IDLE. | state-manager | CYCLE CLOSED | factory-artifacts. |
 | **PR #550 MERGED** — dependabot actions/checkout 6.0.3→7.0.0; triaged clean (zero fork-checkout breaking-change exposure — no workflow uses pull_request_target; sign-and-publish.yml workflow_run checks out default ref, inert per DEC-104); 25 SHA-pins across 10 workflow files all correctly pinned to 9c091bb # v7.0.0; CI 15/15 green; admin squash-merge (human-authorized). Maintenance-mode dep bump — no spec/BC/test impact. develop @ b856f9f. | state-manager | MERGED | develop @ b856f9f. |
+
+## Archived Current Phase Steps — 2026-06-25 Maintenance Sweep Close
+
+The following row was present in STATE.md Current Phase Steps before the last-5 trim on 2026-06-25:
+
+| Step | Agent | Status | Output |
+|------|-------|--------|--------|
+| **BUNDLE D + SEC-001 STARTED** — S-MAINT-SEC-JR-SERVICE-NAME-GATE (PR #551), S-MAINT-CR-008 + KEYRING-GUARD-IDIOM-DRIFT + #532 (PR #552), SEC-001 ADF recursion CWE-674 (PR #553). Full VSDD on each. BC-7.2.012 authored. | orchestrator | IN_PROGRESS | develop worktrees. |
+
+## Maintenance Sweep 2026-06-25 — Burst (2026-06-25)
+
+| Field | Value |
+|-------|-------|
+| Event | Maintenance sweep 2026-06-25 complete. 6 sweeps, 0 reachable HIGH. D1-D5 follow-ups awaiting human prioritization. |
+| Sweeps | dep-audit CLEAN (RUSTSEC-2026-0185 already resolved); doc-drift PASS (1 MED DRIFT-S3-001 + 3 LOW); pattern CONVERGED (3 MED PF-010/011/016, 5 LOW); holdout NEEDS-REVISION (ratio 0.61, 3 stale, 7 gaps); perf PASS (7.09MB, 0.0% delta); spec-coherence PASS (SC-002 minor). |
+| New drift items | DOC-DRIFT-2026-06-25 (MED), PATTERN-HYGIENE-2026-06-25 (LOW), SC-002-SEC-001-STORY-HOUSEKEEPING (LOW), RA-001-JRACLOUD-27893-DOC (LOW), RA-002-ADR-0013-PKCE-REVALIDATE (LOW) |
+| Superseded drift items | HOLDOUT-COVERAGE-GAPS-2026-06-22 → HOLDOUT-COVERAGE-GAPS-2026-06-25 (7 gaps, 2 HIGH); HOLDOUT-STALE-2026-06-22 → HOLDOUT-STALE-2026-06-25 (H-028 new, H-019 fixed) |
+| Reclassified | F2-PIECEWISE-PROTOCOL: MEDIUM/OPEN → LOW/OPEN (consider closing — enforced/codified) |
+| develop HEAD | b856f9f (unchanged; no source PRs in this sweep) |
+| Status | IDLE — awaiting human prioritization of D1-D5. |

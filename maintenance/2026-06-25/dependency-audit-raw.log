@@ -1,0 +1,236 @@
+============================
+DEPENDENCY AUDIT RAW LOG
+Date: 2026-06-25
+Project: jr (jira-cli)
+Branch: develop
+============================
+
+--- TOOL VERSIONS ---
+
+cargo-audit 0.22.1
+cargo-deny  0.19.6
+cargo-outdated: NOT INSTALLED — fallback: cargo update --dry-run
+
+---
+
+--- cargo audit (2026-06-25) ---
+
+    Fetching advisory database from `https://github.com/RustSec/advisory-db.git`
+      Loaded 1138 security advisories (from /Users/zious/.cargo/advisory-db)
+    Updating crates.io index
+    Scanning Cargo.lock for vulnerabilities (346 crate dependencies)
+EXIT_CODE: 0
+
+(No output beyond the above — zero advisories found.)
+
+---
+
+--- cargo deny check (2026-06-25) ---
+
+warning[license-not-encountered]: license was not encountered
+  ┌─ /Users/zious/Documents/GITHUB/jira-cli/deny.toml:8:6
+  │
+8 │     "BSD-2-Clause",
+  │      ━━━━━━━━━━━━ unmatched license allowance
+
+warning[license-not-encountered]: license was not encountered
+   ┌─ /Users/zious/Documents/GITHUB/jira-cli/deny.toml:15:6
+   │
+15 │     "OpenSSL",
+   │      ━━━━━━━ unmatched license allowance
+
+warning[license-not-encountered]: license was not encountered
+   ┌─ /Users/zious/Documents/GITHUB/jira-cli/deny.toml:13:6
+   │
+13 │     "Unicode-DFS-2016",
+   │      ━━━━━━━━━━━━━━━━ unmatched license allowance
+
+advisories ok, bans ok, licenses ok, sources ok
+
+---
+
+--- cargo tree --duplicates (2026-06-25) ---
+
+getrandom v0.3.4
+└── rand_core v0.9.5
+    ├── rand v0.9.4
+    │   └── proptest v1.11.0
+    │       [dev-dependencies]
+    │       └── jr v0.6.0-dev.6 (/Users/zious/Documents/GITHUB/jira-cli)
+    ├── rand_chacha v0.9.0
+    │   └── proptest v1.11.0 (*)
+    └── rand_xorshift v0.4.0
+        └── proptest v1.11.0 (*)
+
+getrandom v0.4.2
+├── rand v0.10.1
+│   └── jr v0.6.0-dev.6 (/Users/zious/Documents/GITHUB/jira-cli)
+└── tempfile v3.27.0
+    ├── dialoguer v0.12.0
+    │   └── jr v0.6.0-dev.6 (/Users/zious/Documents/GITHUB/jira-cli)
+    ├── insta v1.48.0
+    │   [dev-dependencies]
+    │   └── jr v0.6.0-dev.6 (/Users/zious/Documents/GITHUB/jira-cli)
+    ├── proptest v1.11.0 (*)
+    └── rusty-fork v0.3.1
+        └── proptest v1.11.0 (*)
+    [dev-dependencies]
+    └── jr v0.6.0-dev.6 (/Users/zious/Documents/GITHUB/jira-cli)
+
+rand v0.9.4 (*)
+rand v0.10.1 (*)
+
+rand_core v0.9.5 (*)
+rand_core v0.10.1
+├── chacha20 v0.10.0
+│   └── rand v0.10.1 (*)
+├── getrandom v0.4.2 (*)
+└── rand v0.10.1 (*)
+
+serde_spanned v0.6.9
+├── toml v0.8.23
+│   └── figment v0.10.19
+│       └── jr v0.6.0-dev.6 (/Users/zious/Documents/GITHUB/jira-cli)
+└── toml_edit v0.22.27
+    └── toml v0.8.23 (*)
+
+serde_spanned v1.1.1
+└── toml v1.1.2+spec-1.1.0
+    └── jr v0.6.0-dev.6 (/Users/zious/Documents/GITHUB/jira-cli)
+
+toml v0.8.23 (*)
+toml v1.1.2+spec-1.1.0 (*)
+
+toml_datetime v0.6.11
+├── toml v0.8.23 (*)
+└── toml_edit v0.22.27 (*)
+
+toml_datetime v1.1.1+spec-1.1.0
+└── toml v1.1.2+spec-1.1.0 (*)
+
+winnow v0.7.15
+└── toml_edit v0.22.27 (*)
+
+winnow v1.0.0
+├── toml v1.1.2+spec-1.1.0 (*)
+└── toml_parser v1.1.2+spec-1.1.0
+    └── toml v1.1.2+spec-1.1.0 (*)
+
+---
+
+--- cargo update --dry-run (2026-06-25) ---
+
+    Updating crates.io index
+    Updating autocfg v1.5.0 -> v1.5.1
+    Updating aws-lc-rs v1.16.2 -> v1.17.0
+    Updating aws-lc-sys v0.39.0 -> v0.41.0
+    Updating bitflags v2.11.0 -> v2.13.0
+    Updating bstr v1.12.1 -> v1.12.3
+    Updating bumpalo v3.20.2 -> v3.20.3
+    Updating bytes v1.11.1 -> v1.12.0
+    Updating cc v1.2.57 -> v1.2.65
+    Removing cesu8 v1.1.0
+    Updating chacha20 v0.10.0 -> v0.10.1
+    Updating cmake v0.1.57 -> v0.1.58
+    Updating displaydoc v0.2.5 -> v0.2.6
+    Updating fastrand v2.3.0 -> v2.4.1
+    Removing foldhash v0.1.5
+    Updating getrandom v0.4.2 -> v0.4.3
+    Updating h2 v0.4.13 -> v0.4.15
+    Removing hashbrown v0.15.5
+    Removing hashbrown v0.16.1
+      Adding hashbrown v0.17.1
+    Updating http v1.4.0 -> v1.4.2
+    Updating hyper v1.8.1 -> v1.10.1
+    Updating hyper-rustls v0.27.7 -> v0.27.9
+    Removing id-arena v2.3.0
+    Updating indexmap v2.13.0 -> v2.14.0
+    Removing iri-string v0.7.11
+    Updating jni v0.21.1 -> v0.22.4
+      Adding jni-macros v0.22.4
+    Removing jni-sys v0.3.1
+    Updating js-sys v0.3.91 -> v0.3.103
+    Removing leb128fmt v0.1.0
+    Updating libc v0.2.183 -> v0.2.186
+    Updating libredox v0.1.14 -> v0.1.17
+    Updating litemap v0.8.1 -> v0.8.2
+    Updating log v0.4.29 -> v0.4.33
+    Updating memchr v2.8.0 -> v2.8.2
+    Updating mio v1.2.0 -> v1.2.1
+    Removing pin-utils v0.1.0
+    Updating potential_utf v0.1.4 -> v0.1.5
+    Removing prettyplease v0.2.37
+    Updating pulldown-cmark v0.13.3 -> v0.13.4
+    Updating quinn v0.11.9 -> v0.11.11
+    Updating quote v1.0.45 -> v1.0.46
+    Updating regex v1.12.3 -> v1.12.4
+    Updating regex-syntax v0.8.10 -> v0.8.11
+    Updating rustc-hash v2.1.1 -> v2.1.2
+      Adding rustc_version v0.4.1
+    Updating rustls v0.23.37 -> v0.23.41
+    Updating rustls-native-certs v0.8.3 -> v0.8.4
+    Updating rustls-pki-types v1.14.0 -> v1.14.1
+    Updating rustls-platform-verifier v0.6.2 -> v0.7.0
+    Updating semver v1.0.27 -> v1.0.28
+    Updating shlex v1.3.0 -> v2.0.1
+      Adding simd_cesu8 v1.1.1
+      Adding simdutf8 v0.1.5
+    Updating smallvec v1.15.1 -> v1.15.2
+    Updating socket2 v0.6.3 -> v0.6.4
+    Updating syn v2.0.117 -> v2.0.118
+    Removing thiserror v1.0.69
+    Removing thiserror-impl v1.0.69
+    Updating tinystr v0.8.2 -> v0.8.3
+    Updating tower-http v0.6.8 -> v0.6.11
+    Updating unicode-segmentation v1.12.0 -> v1.13.3
+    Removing unicode-xid v0.2.6
+    Removing wasip3 v0.4.0+wasi-0.3.0-rc-2026-01-06
+    Updating wasm-bindgen v0.2.114 -> v0.2.126
+    Updating wasm-bindgen-futures v0.4.64 -> v0.4.76
+    Updating wasm-bindgen-macro v0.2.114 -> v0.2.126
+    Updating wasm-bindgen-macro-support v0.2.114 -> v0.2.126
+    Updating wasm-bindgen-shared v0.2.114 -> v0.2.126
+    Removing wasm-encoder v0.244.0
+    Removing wasm-metadata v0.244.0
+    Removing wasmparser v0.244.0
+    Updating web-sys v0.3.91 -> v0.3.103
+    Updating webpki-root-certs v1.0.6 -> v1.0.8
+    Removing windows-sys v0.45.0
+    Removing windows-targets v0.42.2
+    Removing windows_aarch64_gnullvm v0.42.2
+    Removing windows_aarch64_msvc v0.42.2
+    Removing windows_i686_gnu v0.42.2
+    Removing windows_i686_msvc v0.42.2
+    Removing windows_x86_64_gnu v0.42.2
+    Removing windows_x86_64_gnullvm v0.42.2
+    Removing windows_x86_64_msvc v0.42.2
+    Updating winnow v1.0.0 -> v1.0.3
+    Removing wit-bindgen v0.51.0
+    Removing wit-bindgen-core v0.51.0
+    Removing wit-bindgen-rust v0.51.0
+    Removing wit-bindgen-rust-macro v0.51.0
+    Removing wit-component v0.244.0
+    Removing wit-parser v0.244.0
+    Updating writeable v0.6.2 -> v0.6.3
+    Updating yoke v0.8.1 -> v0.8.3
+    Updating yoke-derive v0.8.1 -> v0.8.2
+    Updating zerocopy v0.8.47 -> v0.8.52
+    Updating zerocopy-derive v0.8.47 -> v0.8.52
+    Updating zerofrom v0.1.6 -> v0.1.8
+    Updating zerofrom-derive v0.1.6 -> v0.1.7
+    Updating zeroize v1.8.2 -> v1.9.0
+    Updating zerotrie v0.2.3 -> v0.2.4
+    Updating zerovec v0.11.5 -> v0.11.6
+    Updating zerovec-derive v0.11.2 -> v0.11.3
+    note: pass `--verbose` to see 10 unchanged dependencies behind latest
+    warning: not updating lockfile due to dry run
+
+---
+
+--- quinn-proto lockfile version check ---
+
+name = "quinn-proto"
+version = "0.11.15"
+(Fixed from 0.11.14 — RUSTSEC-2026-0185 resolved)
+
+---
