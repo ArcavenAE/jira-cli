@@ -4128,3 +4128,11 @@ The following row was present in STATE.md Current Phase Steps before the last-5 
 | Step | Agent | Status | Output |
 |------|-------|--------|--------|
 | **PR #553 MERGED** — SEC-001 ADF recursion guard (CWE-674, MAX_ADF_DEPTH=256). BC-7.2.012 added (BC count 602→603). Dual code+security review caught real off-by-one BLOCKER + HIGH error-swallow + 5 mutation survivors — all closed. Mutation CI timed out (non-required; locally proven 100% kill). | state-manager | MERGED | develop @ 35e20c9. |
+
+## Archived Current Phase Steps — H-028 false-positive trim (2026-06-25)
+
+The following row was present in STATE.md Current Phase Steps before the last-5 trim on 2026-06-25 H-028 investigation commit:
+
+| Step | Agent | Status | Output |
+|------|-------|--------|--------|
+| **BUNDLE D + SEC-001 CLOSED** — 6 drift items RESOLVED (SEC-001, SEC-JR-SERVICE-NAME-GATE, DRIFT-CR-008, KEYRING-GUARD-IDIOM-DRIFT, #532, CR-005). 2 new drift items (MUTATION-CI-TIMEOUT, PG-PR-MANAGER-OVERREACH). DEC-132 logged. S-PG-MERGE-AUTH-BYPASS scope extended. STATE.md IDLE. | state-manager | CYCLE CLOSED | factory-artifacts @ 2026-06-25. |

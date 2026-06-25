@@ -2,11 +2,11 @@
 document_type: pipeline-state
 version: "2.0"
 status: complete
-timestamp: 2026-06-25T22:00:00Z
+timestamp: 2026-06-25T23:00:00Z
 phase: 3
 project: jira-cli
 mode: brownfield
-current_step: "IDLE. Maintenance sweep 2026-06-25 D1+D2 COMPLETE (PR #554 merged). develop @ aa2cdca. D3/D4/D5 tracked-deferred. Awaiting direction."
+current_step: "IDLE. Maintenance sweep 2026-06-25 D1+D2 COMPLETE (PR #554 merged). H-028 closed as FALSE POSITIVE (verify-before-fix; no code change). develop @ aa2cdca. D3/D4/D5 tracked-deferred. Awaiting direction."
 maintenance_run: CLOSED
 current_cycle: "cycle-001"
 feature_mode_bundle: none
@@ -26,7 +26,7 @@ activation_version: "v0.6.0-dev.6"
 | **Product** | jr (Jira CLI) |
 | **Mode** | BROWNFIELD / Rust |
 | **Target Workspace** | develop → main |
-| **Last Updated** | 2026-06-25: PR #554 merged — maintenance sweep 2026-06-25 D1 doc-fix bundle (CLAUDE.md BC-7.2.012 Gotchas + CHANGELOG #550/#551). D1+D2 COMPLETE. develop @ aa2cdca. BC 603. |
+| **Last Updated** | 2026-06-25: H-028 closed as FALSE POSITIVE (verify-before-fix; no code change). holdout-freshness.md stale count 3→2. HOLDOUT-STALE-2026-06-25 drift item corrected. Lesson HOLDOUT-FALSE-POSITIVE-VERIFY added. develop @ aa2cdca. BC 603. |
 | **Current Phase** | Phase 3 — IDLE (Bundle D + SEC-001 closed; sweep D1+D2 complete). BC 603. NFR 42. ADR 16. Stories 91. |
 | **Next Phase** | Next feature cycle (open candidates: MUTATION-CI-TIMEOUT story, PG-PR-MANAGER-OVERREACH/S-PG-MERGE-AUTH-BYPASS story 91, fork signing DEC-104) |
 | **Activation HEAD** | dbe8625 (v0.6.0-dev.6 tag); develop @ aa2cdca (PR #554 squash-merged 2026-06-25) |
@@ -53,11 +53,11 @@ activation_version: "v0.6.0-dev.6"
 <!-- Keep last 5 rows only. Archive older rows to cycles/cycle-001/burst-log.md. -->
 | Step | Agent | Status | Output |
 |------|-------|--------|--------|
-| **BUNDLE D + SEC-001 CLOSED** — 6 drift items RESOLVED (SEC-001, SEC-JR-SERVICE-NAME-GATE, DRIFT-CR-008, KEYRING-GUARD-IDIOM-DRIFT, #532, CR-005). 2 new drift items (MUTATION-CI-TIMEOUT, PG-PR-MANAGER-OVERREACH). DEC-132 logged. S-PG-MERGE-AUTH-BYPASS scope extended. STATE.md IDLE. | state-manager | CYCLE CLOSED | factory-artifacts @ 2026-06-25. |
 | **PR #550 MERGED** — dependabot actions/checkout 6.0.3→7.0.0; triaged clean (zero fork-checkout breaking-change exposure — no workflow uses pull_request_target; sign-and-publish.yml workflow_run checks out default ref, inert per DEC-104); 25 SHA-pins across 10 workflow files all correctly pinned to 9c091bb # v7.0.0; CI 15/15 green; admin squash-merge (human-authorized). Maintenance-mode dep bump — no spec/BC/test impact. | state-manager | MERGED | develop @ b856f9f. |
 | **MAINTENANCE SWEEP 2026-06-25 COMPLETE** — 6 sweeps (dep-audit CLEAN, doc-drift 1MED/3LOW, pattern CONVERGED 3MED/5LOW, holdout NEEDS-REVISION ratio 0.61, perf PASS, spec-coherence PASS). 0 reachable HIGH. 5 follow-up bundles D1-D5 identified. Report: maintenance/2026-06-25/. | state-manager | COMPLETE | factory-artifacts @ 2026-06-25. |
 | **MAINTENANCE D2** — S-MAINT-SEC-001 closed (BC-7.2.012 anchored, status→done, ADF_MAX_DEPTH→MAX_ADF_DEPTH 256 corrected); adr shadow copies removed (9 stale files deleted from .factory/architecture/adr/, dir removed, adr-index.md updated — canonical docs/adr/); F2-PIECEWISE-PROTOCOL reclassified RESOLVED-CODIFIED; SC-002 RESOLVED; DOC-DRIFT-2026-06-25 updated (DRIFT-S3-003 resolved; D1 in progress on docs/maint-2026-06-25-doc-fixes). | state-manager | COMMITTED | factory-artifacts @ 2026-06-25. |
 | **PR #554 MERGED** — D1 doc-fix bundle (CLAUDE.md BC-7.2.012 Gotchas entry for ADF recursion guard + CHANGELOG [Unreleased] entries for #551 JR_SERVICE_NAME debug-gate and #550 actions/checkout v7.0.0). Clean review: code-reviewer caught + fixed HIGH off-by-one factual error pre-PR (DEC-131-style fresh-review value); pr-reviewer APPROVE; CI 15/15 green; admin squash-merge (human-authorized). All of DRIFT-S3-001/002/003/004 now closed. Maintenance sweep 2026-06-25 D1+D2 COMPLETE. | state-manager | MERGED | develop @ aa2cdca. |
+| **H-028 INVESTIGATED — verify-before-fix root-cause found FALSE POSITIVE (verdict B):** `jr auth list` correctly exits 64 on invalid config key `[profiles."foo:bar"]` (both --output json and human paths) via shared `config.rs::Config::load_inner` (~L298–307) chokepoint. PR #548 did NOT regress this — guard test `config_load_rejects_invalid_profile_key_in_config` passes. Sweep entry was a false positive (likely flawed `JR_CONFIG_DIR` isolation during sweep repro). No code change. Avoided an unnecessary F1-F7 cycle. holdout-freshness.md corrected: stale count 3→2 (H-NEW-MP-001 + H-007 only). HOLDOUT-STALE-2026-06-25 drift item updated. Lesson HOLDOUT-FALSE-POSITIVE-VERIFY added to lessons.md. Finding: `maintenance/2026-06-25/H-028-root-cause.md`. | state-manager | COMPLETE | factory-artifacts @ 2026-06-25. |
 
 ## Decisions Log
 
@@ -113,7 +113,7 @@ None open.
 | PERF-BASELINE-ABSENT | coverage-gap | Sweep 5 (perf) skipped 4× — baseline re-confirmed 2026-06-25: binary 7.09MB (0.0% delta vs 7.1MB baseline), `jr --help` p50 6.4ms. No regression. Recommend LOW story for `scripts/perf-check.sh` + hyperfine CI guard. | LOW | OPEN (baseline confirmed; CI guard pending) |
 | PERF-COST-TRACKING | instrumentation | No per-cycle token/cost tracking; `.factory/cost-summary.md` not initialized. Blind spot for cost-per-story analysis and cost-vs-defect-value calibration. Origin: DEAD-CITATION-CI session review Rec 3. | LOW | OPEN — draft story candidate |
 | HOLDOUT-COVERAGE-GAPS-2026-06-25 | holdout coverage | 7 shipped feature areas with zero black-box holdout: ADF markdown→ADF wave (#471/#472/#474/#483/#489/#492/#522/#473) — HIGH; SEC-001 ADF recursion-depth guard (BC-7.2.012, CWE-674, #553) — HIGH (security); issue edit --field/--type/--label/--dry-run; bulk nested schema; issue changelog; worklog add; link/queue/board. Owner: product-owner to author scenarios. Supersedes HOLDOUT-COVERAGE-GAPS-2026-06-22. | LOW | OPEN — tracked deferral |
-| HOLDOUT-STALE-2026-06-25 | holdout staleness | H-NEW-MP-001 (--story-points→--points rename), H-028 NEW regression from #548 (auth list silently returns empty on invalid profile key), H-007 (ADR-0015 mechanism). H-019 FIXED. H-027 not re-counted. Supersedes HOLDOUT-STALE-2026-06-22. | LOW | OPEN — tracked deferral |
+| HOLDOUT-STALE-2026-06-25 | holdout staleness | H-NEW-MP-001 (--story-points→--points rename), H-007 (ADR-0015 mechanism). H-019 FIXED. H-028 INVESTIGATED 2026-06-25 → FALSE POSITIVE (verdict B): `jr auth list` correctly exits 64 on invalid config key via shared `config.rs::load_inner` chokepoint; #548 did not regress it; no code change. See `maintenance/2026-06-25/H-028-root-cause.md`. Supersedes HOLDOUT-STALE-2026-06-22. | LOW | OPEN — tracked deferral (H-NEW-MP-001 + H-007 only) |
 | DOC-DRIFT-2026-06-25 | doc hygiene | D1 bundle: CLAUDE.md missing BC-7.2.012 Gotchas entry (ADF recursion guard, SEC-001, #553); CHANGELOG [Unreleased] missing #551 (JR_SERVICE_NAME gate) and #550 (actions/checkout v7). All of DRIFT-S3-001/002/003/004 RESOLVED — DRIFT-S3-003 (adr shadow) via D2 factory commit 89d94d8; DRIFT-S3-001/002/004 via PR #554 (squash-merged → develop @ aa2cdca). Branch docs/maint-2026-06-25-doc-fixes deleted; no open PRs. | MED | RESOLVED — PR #554 merged 2026-06-25 (develop @ aa2cdca). |
 | PATTERN-HYGIENE-2026-06-25 | code hygiene | D3 bundle: PF-010/011 bare .unwrap() w/o invariant comment in src/cli/assets/schemas.rs; PF-016 src/cli/issue/create.rs 2,880 LOC undocumented shard candidate; PF-017 src/cli/issue/workflow.rs 1,341 LOC. Unwrap-comment hygiene PF-008/012/013/014. Manual PR needed (auto_pr:false). | LOW | OPEN |
 | SC-002-SEC-001-STORY-HOUSEKEEPING | spec coherence | D2 factory-only: S-MAINT-SEC-001 story still status:draft / bcs:[] post-merge #553; design table says ADF_MAX_DEPTH=64 vs shipped MAX_ADF_DEPTH=256. Close story (draft→done, bcs:[BC-7.2.012]). Reclassify F2-PIECEWISE drift item (enforced/codified — close or downgrade). | LOW | RESOLVED — 2026-06-25: BC-7.2.012 anchored in story (bcs:[BC-7.2.012]), status→done, ADF_MAX_DEPTH→MAX_ADF_DEPTH 256 corrected; F2-PIECEWISE reclassified RESOLVED-CODIFIED; adr shadow removed. |
@@ -136,9 +136,9 @@ Full per-issue: `cycles/cycle-001/convergence-trajectory.md`. Current: **DEAD-CI
 | Field | Value |
 |-------|-------|
 | **Date** | 2026-06-25 |
-| **Status** | **IDLE — sweep 2026-06-25 D1+D2 COMPLETE; D3/D4/D5 tracked-deferred.** PR #554 merged. Zero story worktrees. No active feature_mode_bundle. |
-| **Position** | Maintenance sweep 2026-06-25 D1+D2 COMPLETE. D1 doc-fix: PR #554 squash-merged (CLAUDE.md BC-7.2.012 Gotchas + CHANGELOG #550/#551) — all DRIFT-S3-001/002/003/004 resolved. D2 factory-only committed (89d94d8). D3 (PATTERN-HYGIENE-2026-06-25), D4 (HOLDOUT-*-2026-06-25), D5 (cargo update) tracked-deferred. develop HEAD = aa2cdca. activation_head/version unchanged: dbe8625 / v0.6.0-dev.6. |
-| **develop HEAD** | LOCAL develop = **aa2cdca** == origin/develop. activation_head/version unchanged: dbe8625 / v0.6.0-dev.6. |
+| **Status** | **IDLE — sweep 2026-06-25 D1+D2 COMPLETE; D3/D4/D5 tracked-deferred. H-028 closed as FALSE POSITIVE (verify-before-fix); no code change.** PR #554 merged. Zero story worktrees. No active feature_mode_bundle. |
+| **Position** | Maintenance sweep 2026-06-25 D1+D2 COMPLETE. H-028 holdout-sweep finding investigated 2026-06-25: FALSE POSITIVE — `jr auth list` already exits 64 on invalid config key (verdict B; regression guard passing; no code fix). holdout-freshness.md stale count corrected 3→2. D1 doc-fix: PR #554 squash-merged; all DRIFT-S3-001/002/003/004 resolved. D2 factory-only committed. D3 (PATTERN-HYGIENE), D4 (HOLDOUT-*), D5 (cargo update) tracked-deferred. develop HEAD = aa2cdca (unchanged). activation_head/version unchanged: dbe8625 / v0.6.0-dev.6. |
+| **develop HEAD** | LOCAL develop = **aa2cdca** == origin/develop (unchanged). activation_head/version unchanged: dbe8625 / v0.6.0-dev.6. |
 | **factory-artifacts HEAD** | see `git -C .factory log -1` |
 | **Activation** | activation_head: dbe8625; activation_version: v0.6.0-dev.6. v0.5.0 STABLE shipped 2026-06-12. |
 | **Counters** | BC **603**. NFR **42**. ADR **16**. Stories **91**. |
@@ -167,7 +167,7 @@ Maintenance sweep 2026-06-25 D1+D2 complete. Remaining follow-up bundles:
 - **D1 (COMPLETE):** PR #554 merged @ aa2cdca — CLAUDE.md BC-7.2.012 entry + CHANGELOG #550/#551. All DRIFT-S3-001/002/003/004 RESOLVED.
 - **D2 (COMPLETE):** S-MAINT-SEC-001 story closed (draft→done), ADF_MAX_DEPTH→MAX_ADF_DEPTH 256 corrected, F2-PIECEWISE reclassified, adr shadow removed. Factory commit 89d94d8.
 - **D3 (manual PR):** unwrap comments (PF-010/011/012/013/014) + shard-candidate docs.
-- **D4 (product-owner):** holdout refresh H-NEW-MP-001/H-028/H-007 + ADF-wave + SEC-001 recursion holdouts.
+- **D4 (product-owner):** holdout refresh H-NEW-MP-001/H-007 + ADF-wave + SEC-001 recursion holdouts. (H-028 CLOSED — false positive; no action needed.)
 - **D5 (optional):** `cargo update` (rustls 0.23.41 + 64 semver-compatible bumps).
 - **S-PG-MERGE-AUTH-BYPASS** (story 91, MEDIUM, draft) — merge-auth + spawn/push/loop protocol.
 - **MUTATION-CI-TIMEOUT** — draft story candidate.

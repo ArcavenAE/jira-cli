@@ -4563,4 +4563,24 @@ Delivery agents must: (1) NOT spawn fix sub-agents — only report findings to o
 
 _Recorded: 2026-06-25 — Bundle D + SEC-001 close. State-manager._
 _Tagged: [process-gap] [agent-autonomy] [pr-manager] [delivery-agents] [poll-loops]_
+
+---
+
+## HOLDOUT-FALSE-POSITIVE-VERIFY (2026-06-25)
+
+**Category:** process-gap / holdout-evaluation / verify-before-fix
+
+**Tag:** [process-gap] HOLDOUT-FALSE-POSITIVE-VERIFY — LOW
+
+**Lesson:** The 2026-06-25 maintenance sweep holdout-freshness evaluation emitted a finding (H-028) claiming `jr auth list` regressed to exit 0 + empty table on an invalid config key after PR #548. A verify-before-fix fresh-context root-cause investigation (2026-06-25, `maintenance/2026-06-25/H-028-root-cause.md`) reproduced the opposite: `jr auth list` correctly exits 64 on `[profiles."foo:bar"]` (both --output json and human paths) via the shared `config.rs::Config::load_inner` (~L298–307) chokepoint. The sweep observation was a false positive — most likely caused by a flawed `JR_CONFIG_DIR` isolation during the sweep repro (temp config not actually being read).
+
+**Cost of the false positive:** if acted on without investigation, this would have opened a full F1-F7 feature cycle (spec evolution → story → TDD → adversarial → formal → convergence) for a problem that does not exist. The investigation took one focused session; the avoided unnecessary cycle would have cost significantly more.
+
+**Codification:** Holdout-freshness findings that allege a REGRESSION (i.e., a previously-PASS holdout now fails) MUST be reproduced in an isolated environment using the canonical `JR_CONFIG_DIR` seam before opening a fix cycle. A failed-repro verdict (could-not-reproduce) closes the finding as a false positive. The holdout-evaluator is not infallible, especially for config-isolation-sensitive scenarios. Reproduced bugs proceed to fix; false positives get a corrected sweep entry and a lessons.md note.
+
+**Recommendation:** Add a "REGRESSION finding → reproduce first (verify-before-fix)" step to the holdout-evaluation skill checklist, citing this lesson. Tag: HOLDOUT-FALSE-POSITIVE-VERIFY.
+
+_Recorded: 2026-06-25 — H-028 investigation close. State-manager._
+_Tagged: [process-gap] [holdout-evaluation] [verify-before-fix] [false-positive]_
+_Related: HOLDOUT-STALE-2026-06-25 (drift item, corrected); maintenance/2026-06-25/H-028-root-cause.md_
 _Related: PG-PR-MANAGER-OVERREACH (new drift item); PG-MERGE-AUTH-BYPASS; DEC-128; S-PG-MERGE-AUTH-BYPASS (story 91)_
