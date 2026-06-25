@@ -4156,4 +4156,14 @@ The following row was present in STATE.md Current Phase Steps before the last-5 
 | Resolved drift items | PATTERN-HYGIENE-2026-06-25 → RESOLVED (PF-010..014/016/017 closed). |
 | develop HEAD | 6b395d3 (PR #555 squash-merged 2026-06-25). |
 | Counters | BC 603 (UNCHANGED). NFR 42. ADR 16. Stories 91. |
+
+---
+
+### Burst: Refactor Analysis 2026-06-25 (archived from STATE.md Current Phase Steps)
+
+| Field | Value |
+|-------|-------|
+| Event | MAINTENANCE SWEEP 2026-06-25 COMPLETE — 6 sweeps (dep-audit CLEAN, doc-drift 1MED/3LOW, pattern CONVERGED 3MED/5LOW, holdout NEEDS-REVISION ratio 0.61, perf PASS, spec-coherence PASS). 0 reachable HIGH. 5 follow-up bundles D1-D5 identified. Report: maintenance/2026-06-25/. |
+| Status | COMPLETE |
+| Output | factory-artifacts @ 2026-06-25. |
 | Status | IDLE — D1+D2+D3 COMPLETE. D4/D5 tracked-deferred. |
