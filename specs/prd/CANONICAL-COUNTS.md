@@ -2,7 +2,7 @@
 document_type: canonical-counts
 product: jr (jira-cli)
 generated: "2026-05-04"
-last_verified: "2026-06-19 (BC-X.13.001..003 added DEAD-CITATION-CI F2; 602 total)"
+last_verified: "2026-06-24 (BC-7.2.012 added SEC-001 ADF recursion depth limit; 603 total)"
 ---
 
 # Canonical Counts — jr (jira-cli) L3 PRD
@@ -25,9 +25,9 @@ re-run to verify. Disputes go here first.
 | bc-4-assets-cmdb.md | 22 | 22 | YES |
 | bc-5-boards-sprints.md | 17 | 17 | YES |
 | bc-6-config-cache.md | 32 | 32 | YES |
-| bc-7-output-render.md | 44 | 44 | YES |
+| bc-7-output-render.md | 45 | 45 | YES |
 | cross-cutting.md | 79 | 79 | YES |
-| **Total individually-bodied** | **370** | — | — |
+| **Total individually-bodied** | **371** | — | — |
 
 Verification command:
 ```bash
@@ -46,25 +46,25 @@ done
 | bc-4-assets-cmdb.md | 32 |
 | bc-5-boards-sprints.md | 35 |
 | bc-6-config-cache.md | 42 |
-| bc-7-output-render.md | 90 |
+| bc-7-output-render.md | 91 |
 | cross-cutting.md | 145 |
-| **Sum** | **602** |
+| **Sum** | **603** |
 
 ### Grand total
 
-**Canonical grand total: 602** (+4 BC-7.4.013-016 added 2026-05-08 via Fix-PR A `28b0f35`; +1 BC-2.6.050 added 2026-05-13 via issue #350; +1 BC-2.6.051 added 2026-05-14 via issue #365; +1 BC-3.4.009 added 2026-05-15 via issue #340 F2; +18 BC-3.8.001..010 + BC-X.12.001..008 added 2026-05-18 via issue #288 F2+F1d; +3 BC-3.8.011..013 added 2026-05-19 via issue #288 F1d + issue #383 F2; +4 BC-3.8.014..015 + BC-X.8.006..007 added 2026-05-19 via issue #384 F2; +2 BC-3.8.016..017 added 2026-05-20 via issue #385 F2; +2 BC-3.4.010..011 added 2026-05-20 via issue #388 F2; +3 BC-3.4.012..014 added 2026-05-21 via issue #398 F2; +3 BC-3.4.015..017 added 2026-05-22 via issue #396 F2; +2 BC-3.4.018..019 added 2026-06-01 via issue #331 F2; +1 BC-3.2.013 added 2026-06-03 via jsm-resolution-required F2; +1 BC-7.2.006 added 2026-06-08 via issue #470 listItem content-model conformance; +2 BC-X.8.008..009 added 2026-06-08 via S-QUEUE-BC-1 queue list/view document-as-is; +1 BC-3.2.014 added 2026-06-08 via fix-bulk-transition-schema bulkTransitionInputs wrapper; +2 BC-7.2.007..008 added 2026-06-08 via issue #474 markdown subsup + heading-attr; +1 BC-7.2.009 added 2026-06-09 via issue #483 GFM alerts → panel; +1 BC-7.2.010 added 2026-06-10 via issue #471 GFM task lists → taskList/taskItem; +3 BC-6.1.014 + BC-6.2.016..017 added 2026-06-12 via windows-build F2; +1 BC-7.2.011 added 2026-06-15 via issue #492 block-HTML hardBreak interior newlines; +1 BC-2.4.043 added 2026-06-17 via Bundle C CR-001 list_comments anti-stall guard; +3 BC-X.13.001..003 added 2026-06-19 via DEAD-CITATION-CI F2 CLAUDE.md citation guard)
+**Canonical grand total: 603** (+4 BC-7.4.013-016 added 2026-05-08 via Fix-PR A `28b0f35`; +1 BC-2.6.050 added 2026-05-13 via issue #350; +1 BC-2.6.051 added 2026-05-14 via issue #365; +1 BC-3.4.009 added 2026-05-15 via issue #340 F2; +18 BC-3.8.001..010 + BC-X.12.001..008 added 2026-05-18 via issue #288 F2+F1d; +3 BC-3.8.011..013 added 2026-05-19 via issue #288 F1d + issue #383 F2; +4 BC-3.8.014..015 + BC-X.8.006..007 added 2026-05-19 via issue #384 F2; +2 BC-3.8.016..017 added 2026-05-20 via issue #385 F2; +2 BC-3.4.010..011 added 2026-05-20 via issue #388 F2; +3 BC-3.4.012..014 added 2026-05-21 via issue #398 F2; +3 BC-3.4.015..017 added 2026-05-22 via issue #396 F2; +2 BC-3.4.018..019 added 2026-06-01 via issue #331 F2; +1 BC-3.2.013 added 2026-06-03 via jsm-resolution-required F2; +1 BC-7.2.006 added 2026-06-08 via issue #470 listItem content-model conformance; +2 BC-X.8.008..009 added 2026-06-08 via S-QUEUE-BC-1 queue list/view document-as-is; +1 BC-3.2.014 added 2026-06-08 via fix-bulk-transition-schema bulkTransitionInputs wrapper; +2 BC-7.2.007..008 added 2026-06-08 via issue #474 markdown subsup + heading-attr; +1 BC-7.2.009 added 2026-06-09 via issue #483 GFM alerts → panel; +1 BC-7.2.010 added 2026-06-10 via issue #471 GFM task lists → taskList/taskItem; +3 BC-6.1.014 + BC-6.2.016..017 added 2026-06-12 via windows-build F2; +1 BC-7.2.011 added 2026-06-15 via issue #492 block-HTML hardBreak interior newlines; +1 BC-2.4.043 added 2026-06-17 via Bundle C CR-001 list_comments anti-stall guard; +3 BC-X.13.001..003 added 2026-06-19 via DEAD-CITATION-CI F2 CLAUDE.md citation guard; +1 BC-7.2.012 added 2026-06-24 via SEC-001 ADF recursion depth limit)
 
-_Note: BC-INDEX.md `total_bcs` header updated to 602 to match this file. CANONICAL-COUNTS.md carries the per-file sum as the primary source of truth. (+3 BC count change since last verified — BC-X.13.001..003 added via DEAD-CITATION-CI F2 2026-06-19)_
+_Note: BC-INDEX.md `total_bcs` header updated to 603 to match this file. CANONICAL-COUNTS.md carries the per-file sum as the primary source of truth. (+1 BC count change since last verified — BC-7.2.012 added via SEC-001 ADF recursion depth limit 2026-06-24)_
 
 Breakdown:
-- 602 = sum of per-file `total_bcs` values (canonical; see per-file table above)
-- 370 of 602 are individually-bodied (have a `#### BC-` heading)
+- 603 = sum of per-file `total_bcs` values (canonical; see per-file table above)
+- 371 of 603 are individually-bodied (have a `#### BC-` heading)
 - 232 are range-collapsed (counted in cumulative claim, no individual heading)
 - BC-X.4.009 (ADV-P1-029) is a `#### BC-` heading in cross-cutting.md; it is
-  included in cross-cutting's `total_bcs: 145` and in the **602 sum**.
-  It does NOT add +1 beyond the 602.
+  included in cross-cutting's `total_bcs: 145` and in the **603 sum**.
+  It does NOT add +1 beyond the 603.
 
-_Historical note (archived; historical total was 566; current canonical: see Sum row above (602)): Passes 10-13 involved a 541/542 count confusion around BC-X.4.009. All 542 claims were corrected to 541 at Pass 13. Subsequent additions (BC-7.4.013-016, BC-2.6.050-051, BC-3.4.009, BC-3.8.001-010, BC-X.12.001-008) brought the total to 566. See git history for the full audit trail._
+_Historical note (archived; historical total was 566; current canonical: see Sum row above (603)): Passes 10-13 involved a 541/542 count confusion around BC-X.4.009. All 542 claims were corrected to 541 at Pass 13. Subsequent additions (BC-7.4.013-016, BC-2.6.050-051, BC-3.4.009, BC-3.8.001-010, BC-X.12.001-008) brought the total to 566. See git history for the full audit trail._
 
 ### L2 domain-spec bc_count vs L3 total_bcs alignment (ADV-P17-003)
 
@@ -79,7 +79,7 @@ bc_count in L2 represents the same cumulative claim (individually-bodied + range
 | bc-04-assets-cmdb.md | 32 | bc-4-assets-cmdb.md | 32 | YES (was 44) |
 | bc-05-boards-sprints.md | 35 | bc-5-boards-sprints.md | 35 | YES |
 | bc-06-config-cache.md | 42 | bc-6-config-cache.md | 42 | YES (bumped 2026-06-17; +3 BC-6.1.014 + BC-6.2.016..017 added 2026-06-12 via windows-build F2) |
-| bc-07-output-render.md | 90 | bc-7-output-render.md | 90 | YES (bumped 2026-06-17; +5 BCs: BC-7.2.007..008 #474, BC-7.2.009 #483, BC-7.2.010 #471, BC-7.2.011 #492) |
+| bc-07-output-render.md | 91 | bc-7-output-render.md | 91 | YES (bumped 2026-06-24; +1 BC-7.2.012 SEC-001 ADF recursion depth limit) |
 
 Note: bc-01/04/05 aligned at Pass 17. bc-02/03/06/07 had PENDING drift; all four bumped 2026-06-17 (Maintenance Bundle B, SC-01).
 
