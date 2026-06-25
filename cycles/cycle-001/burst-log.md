@@ -4120,3 +4120,11 @@ The following row was present in STATE.md Current Phase Steps before the last-5 
 | Step | Agent | Status | Output |
 |------|-------|--------|--------|
 | **PR #551 MERGED** — JR_SERVICE_NAME debug gate (SEC-JR-SERVICE-NAME-GATE resolved). **PR #552 MERGED** — test-hygiene: extract_job_block dedup (CR-008), keyring canonical idiom + meta-test (CR-009/KEYRING-GUARD-IDIOM-DRIFT), #532 coverage tests. | state-manager | MERGED | develop. |
+
+## Archived Current Phase Steps — PR #554 merge trim (2026-06-25)
+
+The following row was present in STATE.md Current Phase Steps before the last-5 trim on 2026-06-25 PR #554 commit:
+
+| Step | Agent | Status | Output |
+|------|-------|--------|--------|
+| **PR #553 MERGED** — SEC-001 ADF recursion guard (CWE-674, MAX_ADF_DEPTH=256). BC-7.2.012 added (BC count 602→603). Dual code+security review caught real off-by-one BLOCKER + HIGH error-swallow + 5 mutation survivors — all closed. Mutation CI timed out (non-required; locally proven 100% kill). | state-manager | MERGED | develop @ 35e20c9. |
