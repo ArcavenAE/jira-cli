@@ -4226,3 +4226,29 @@ The following row was present in STATE.md Current Phase Steps before the last-5 
 | Activation | dbe8625 / v0.6.0-dev.6 (UNCHANGED). |
 | REFACTOR-ISSUE-CLI-SHARD | Seam A DONE (#556). Seam B DONE (#558). Seam C DEFERRED indefinitely (I-17 cross-crate pub-helper test API). RESOLVED-PARTIAL — active DO-PARTIAL plan complete. |
 | develop HEAD | 2e3c3c2. |
+
+---
+
+### Burst: PR #555 MERGED — D3 pattern hygiene (archived from STATE.md Current Phase Steps)
+
+| Field | Value |
+|-------|-------|
+| Event | PR #555 MERGED — D3 pattern hygiene (6 unwrap→expect invariant docs PF-010..014; 2 CLAUDE.md Known Size Deviations entries PF-016/017). Cosmetic/no-behavior-change. Fresh-eyes pr-reviewer caught + fixed BLOCKING PF-017 remote-link factual error pre-merge (workflow.rs does NOT cover handle_remote_link — it lives in links.rs; DEC-131 pattern). CI 15/15 green; admin squash-merge (human-authorized). |
+| Agent | state-manager |
+| Status | MERGED |
+| Output | develop @ 6b395d3. |
+
+---
+
+### Burst: v0.6.0-dev.7 RELEASED (2026-06-26)
+
+| Field | Value |
+|-------|-------|
+| Event | PR #559 (chore(release): v0.6.0-dev.7) SQUASH-MERGED via admin to develop. develop HEAD = 342987f == v0.6.0-dev.7 tag. release.yml run 28248392006 SUCCESS after 1 transient-network rerun (Windows build: crates.io wasm-bindgen download curl [55] HTTP2 failure; fail-fast cancelled other 4 builds + skipped Create Release on first run; resolved by full `gh run rerun`). NOT a code or tag defect. |
+| GitHub Release | https://github.com/Zious11/jira-cli/releases/tag/v0.6.0-dev.7 — prerelease=true, 10 assets / 5 targets (x86_64/aarch64 apple-darwin, x86_64/aarch64 unknown-linux-gnu, x86_64-pc-windows-msvc; each tarball/zip + .sha256). |
+| CHANGELOG | [Unreleased] rolled into [0.6.0-dev.7] - 2026-06-26. Session PRs shipped: #550/#554/#555/#556/#558/#559. |
+| Activation | dbe8625 / v0.6.0-dev.6 → 342987f / v0.6.0-dev.7. |
+| Counters | BC 603 (UNCHANGED). NFR 42. ADR 16. Stories 91. |
+| develop HEAD | 342987f. |
+| Open PR | #557 (dependabot: softprops/action-gh-release 3.0.0→3.0.1) — UNTRIAGED. |
+| Drift item added | RELEASE-CI-NETWORK-FLAKE (LOW, OPEN) — transient crates.io curl flake; consider cargo-fetch retry in release.yml. |
