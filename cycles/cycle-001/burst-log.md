@@ -4252,3 +4252,28 @@ The following row was present in STATE.md Current Phase Steps before the last-5 
 | develop HEAD | 342987f. |
 | Open PR | #557 (dependabot: softprops/action-gh-release 3.0.0→3.0.1) — UNTRIAGED. |
 | Drift item added | RELEASE-CI-NETWORK-FLAKE (LOW, OPEN) — transient crates.io curl flake; consider cargo-fetch retry in release.yml. |
+
+---
+
+### Burst: REFACTOR ANALYSIS 2026-06-25 (archived from Current Phase Steps)
+
+| Field | Value |
+|-------|-------|
+| Event | Codebase-analyzer + architect produced structural-analysis.md + refactor-proposal.md for create.rs/workflow.rs. Verdict DO-PARTIAL (Seam A do-now, Seam B churn-triggered, Seam C deferred). No code change; awaiting human go/no-go on Seam A. |
+| Agent | state-manager |
+| Status | COMPLETE |
+| Output | factory-artifacts committed 2026-06-25. |
+
+---
+
+### Burst: PR #557 MERGED (2026-06-26T17:51:42Z)
+
+| Field | Value |
+|-------|-------|
+| Event | PR #557 SQUASH-MERGED via admin (--admin, human/orchestrator-authorized per DEC-128). dependabot bump: softprops/action-gh-release 3.0.0→3.0.1. develop HEAD advanced 342987f → c70d8a7 (full SHA: c70d8a74039a4d19291a748a0784551748fda991). Remote branch deleted. ci-gate 15/15 green. |
+| Triage | Supply-chain triage (security-reviewer) + soak research (research-agent) completed BEFORE merge. SHA-pin integrity MATCH: pins to 718ea10b132b3b2eba29c1007bb80653f286566b = real v3.0.1 commit. Zero CVEs/GHSA. Routine maintenance bump — no auth/token/network scope changes. Single live use-site: release.yml release job (tag-push-triggered, trusted, contents:write + GITHUB_TOKEN only). Risk LOW (CWE-829/494 mitigated by SHA pin). |
+| Soak floor | 7-day floor MET: published 2026-06-19, merged 2026-06-26 (7 days). |
+| Triage docs | `.factory/code-delivery/PR-557-supply-chain-triage.md`, `.factory/research/PR-557-action-gh-release-3.0.1-soak.md`. |
+| Decision | DEC-133 recorded: DEPENDABOT-ACTION-SOAK standing policy — third-party GitHub Action bumps require ≥7-day soak from publication + SHA-pin integrity check + clean advisory check before merge. |
+| develop HEAD | c70d8a7. |
+| Counters | BC 603 (UNCHANGED). NFR 42. ADR 16. Stories 91. |
