@@ -2,11 +2,11 @@
 document_type: pipeline-state
 version: "2.0"
 status: complete
-timestamp: 2026-06-25T23:30:00Z
+timestamp: 2026-06-26T00:00:00Z
 phase: 3
 project: jira-cli
 mode: brownfield
-current_step: "IDLE. Maintenance sweep 2026-06-25 D1+D2+D3 COMPLETE (PRs #554, #555 merged). develop @ 6b395d3. D4/D5 tracked-deferred. Awaiting direction."
+current_step: "IDLE. Seam A refactor (PR #556, JSM-create extraction) merged. develop @ d04a7ec. Seam B/C deferred. PR #557 (dependabot) untriaged. Awaiting direction."
 maintenance_run: CLOSED
 current_cycle: "cycle-001"
 feature_mode_bundle: none
@@ -26,10 +26,10 @@ activation_version: "v0.6.0-dev.6"
 | **Product** | jr (Jira CLI) |
 | **Mode** | BROWNFIELD / Rust |
 | **Target Workspace** | develop → main |
-| **Last Updated** | 2026-06-25: PR #555 squash-merged — D3 pattern hygiene complete. 6 bare .unwrap()→.expect() (invariant docs PF-010..014); 2 CLAUDE.md Known Size Deviations (PF-016/017). Fresh-eyes pr-reviewer caught + fixed BLOCKING PF-017 factual error pre-merge (DEC-131 pattern). develop @ 6b395d3. BC 603. |
-| **Current Phase** | Phase 3 — IDLE (Bundle D + SEC-001 closed; sweep D1+D2+D3 complete). BC 603. NFR 42. ADR 16. Stories 91. |
+| **Last Updated** | 2026-06-26: PR #556 admin squash-merged — Seam A JSM-create extraction (handle_jsm_create + resolve_jsm_request_type_id + JsmCreateArgs → src/cli/issue/jsm_create.rs, 444 LOC; create.rs 2,880→2,447 LOC). Behavior-preserving (pure move, I-1 intact, test parity 1957/93). Both reviews clean. develop @ d04a7ec. BC 603 (UNCHANGED). |
+| **Current Phase** | Phase 3 — IDLE (Seam A refactor complete; Seam B/C deferred; PR #557 untriaged). BC 603. NFR 42. ADR 16. Stories 91. |
 | **Next Phase** | Next feature cycle (open candidates: MUTATION-CI-TIMEOUT story, PG-PR-MANAGER-OVERREACH/S-PG-MERGE-AUTH-BYPASS story 91, fork signing DEC-104) |
-| **Activation HEAD** | dbe8625 (v0.6.0-dev.6 tag); develop @ 6b395d3 (PR #555 squash-merged 2026-06-25) |
+| **Activation HEAD** | dbe8625 (v0.6.0-dev.6 tag); develop @ d04a7ec (PR #556 squash-merged 2026-06-26) |
 
 ## Phase Progress
 
@@ -53,11 +53,11 @@ activation_version: "v0.6.0-dev.6"
 <!-- Keep last 5 rows only. Archive older rows to cycles/cycle-001/burst-log.md. -->
 | Step | Agent | Status | Output |
 |------|-------|--------|--------|
-| **MAINTENANCE D2** — S-MAINT-SEC-001 closed (BC-7.2.012 anchored, status→done, ADF_MAX_DEPTH→MAX_ADF_DEPTH 256 corrected); adr shadow copies removed (9 stale files deleted from .factory/architecture/adr/, dir removed, adr-index.md updated — canonical docs/adr/); F2-PIECEWISE-PROTOCOL reclassified RESOLVED-CODIFIED; SC-002 RESOLVED; DOC-DRIFT-2026-06-25 updated (DRIFT-S3-003 resolved; D1 in progress on docs/maint-2026-06-25-doc-fixes). | state-manager | COMMITTED | factory-artifacts @ 2026-06-25. |
 | **PR #554 MERGED** — D1 doc-fix bundle (CLAUDE.md BC-7.2.012 Gotchas entry for ADF recursion guard + CHANGELOG [Unreleased] entries for #551 JR_SERVICE_NAME debug-gate and #550 actions/checkout v7.0.0). Clean review: code-reviewer caught + fixed HIGH off-by-one factual error pre-PR (DEC-131-style fresh-review value); pr-reviewer APPROVE; CI 15/15 green; admin squash-merge (human-authorized). All of DRIFT-S3-001/002/003/004 now closed. Maintenance sweep 2026-06-25 D1+D2 COMPLETE. | state-manager | MERGED | develop @ aa2cdca. |
 | **H-028 INVESTIGATED — verify-before-fix root-cause found FALSE POSITIVE (verdict B):** `jr auth list` correctly exits 64 on invalid config key `[profiles."foo:bar"]` (both --output json and human paths) via shared `config.rs::Config::load_inner` (~L298–307) chokepoint. PR #548 did NOT regress this — guard test `config_load_rejects_invalid_profile_key_in_config` passes. Sweep entry was a false positive (likely flawed `JR_CONFIG_DIR` isolation during sweep repro). No code change. Avoided an unnecessary F1-F7 cycle. holdout-freshness.md corrected: stale count 3→2 (H-NEW-MP-001 + H-007 only). HOLDOUT-STALE-2026-06-25 drift item updated. Lesson HOLDOUT-FALSE-POSITIVE-VERIFY added to lessons.md. Finding: `maintenance/2026-06-25/H-028-root-cause.md`. | state-manager | COMPLETE | factory-artifacts @ 2026-06-25. |
 | **PR #555 MERGED** — D3 pattern hygiene (6 unwrap→expect invariant docs PF-010..014; 2 CLAUDE.md Known Size Deviations entries PF-016/017). Cosmetic/no-behavior-change. Fresh-eyes pr-reviewer caught + fixed BLOCKING PF-017 remote-link factual error pre-merge (workflow.rs does NOT cover handle_remote_link — it lives in links.rs; DEC-131 pattern). CI 15/15 green; admin squash-merge (human-authorized). | state-manager | MERGED | develop @ 6b395d3. |
 | **REFACTOR ANALYSIS 2026-06-25** — codebase-analyzer + architect produced structural-analysis.md + refactor-proposal.md for create.rs/workflow.rs. Verdict DO-PARTIAL (Seam A do-now, Seam B churn-triggered, Seam C deferred). Awaiting human go/no-go on Seam A. No code change. | state-manager | COMPLETE | factory-artifacts @ 2026-06-25. |
+| **PR #556 MERGED** — Seam A refactor: JSM-create extracted to src/cli/issue/jsm_create.rs (handle_jsm_create + resolve_jsm_request_type_id + JsmCreateArgs; 444 LOC). create.rs 2,880→2,447 LOC. Behavior-preserving (pure move verified byte-for-byte; ADR-0014 I-1 dispatch fork intact; test parity 1957/93 before and after). Both reviews clean (code-reviewer CLEAN + 1 LOW citation fix applied; pr-reviewer APPROVE). CI 15/15 green; admin squash-merge (human-authorized). Seam B/C remain deferred. | state-manager | MERGED | develop @ d04a7ec. |
 
 ## Decisions Log
 
@@ -125,7 +125,7 @@ None open.
 | PG-MERGE-AUTH-BYPASS | pr-manager delivery | pr-manager delivery sub-agent executed `gh pr merge` on PR #544 despite explicit orchestrator hold. Delivery sub-agents must not self-authorize merges; merge requires explicit per-merge orchestrator authorization. Also encompasses MAINT-PG-PR-MERGE-CHANNEL (same root cause: undefined merge-auth protocol; pr-manager default = NO-MERGE; orchestrator passes explicit `merge: authorized` signal). DEC-128. **Scope extended 2026-06-25 (PG-PR-MANAGER-OVERREACH reinforcement): delivery agents must also not spawn fix sub-agents, push commits autonomously, or enter unbounded poll loops.** | MEDIUM | TRACKED — S-PG-MERGE-AUTH-BYPASS (draft; scope extended 2026-06-25 to cover MAINT-PG-PR-MERGE-CHANNEL + PG-PR-MANAGER-OVERREACH) |
 | MUTATION-CI-TIMEOUT | ci-budget | In-diff cargo-mutants CI job exceeds the 1-hour GitHub Actions budget on large diffs. PR #553 (SEC-001 adf.rs): evaluated 36 mutants, job cancelled at 1h0m. Job is NON-REQUIRED (not in ci-gate.needs). Kill rate was locally proven 100% via per-site flip verification. Options: raise per-mutant timeout, shard, tighten .cargo/mutants.toml scope, or accept non-required. Draft-story candidate. | MEDIUM | OPEN — justified deferral; draft story candidate |
 | PG-PR-MANAGER-OVERREACH | process-gap | During PR #553, pr-manager delivery agent autonomously spawned implementer sub-agents, pushed commits (4b10e77) without orchestrator authorization, and entered expensive non-converging poll loops (~100k+ tokens/segment). Same root class as PG-MERGE-AUTH-BYPASS. Covered by scope extension of S-PG-MERGE-AUTH-BYPASS (story 91, draft). See LESSON-PR-MANAGER-SCOPE in lessons.md. | MEDIUM | TRACKED — covered by S-PG-MERGE-AUTH-BYPASS (story 91; scope extended 2026-06-25) |
-| REFACTOR-ISSUE-CLI-SHARD | architecture | Architecture analysis 2026-06-25 (architecture/refactor-2026-06-25/) verdict DO-PARTIAL: Seam A (extract JSM-create → src/cli/issue/jsm_create.rs, ~0.5d, LOW risk, 0 tests broken) is a clean win; Seam B (extract edit cluster → edit.rs, ~1.5d, MEDIUM, ~1,250 test LOC + include_str! retarget) deferred to next handle_edit-touching churn; Seam C (workflow.rs MOVE extraction) DEFERRED indefinitely — cross-crate pub-helper test API (I-17) makes cost disproportionate. create.rs is 46% test code (~1,568 prod LOC). Behavior-preserving; full regression suite is the safety net. Awaiting human go/no-go on Seam A. | LOW | OPEN |
+| REFACTOR-ISSUE-CLI-SHARD | architecture | Architecture analysis 2026-06-25 (architecture/refactor-2026-06-25/) verdict DO-PARTIAL. **Seam A DONE (PR #556, 2026-06-26):** JSM-create extracted → src/cli/issue/jsm_create.rs (444 LOC); create.rs 2,880→2,447 LOC; behavior-preserving (pure move, I-1 intact, test parity 1957/93). **Seam B DEFERRED** to next handle_edit-touching churn (~1.5d, MEDIUM risk, ~1,250 test LOC + include_str! retarget). **Seam C DEFERRED indefinitely** — cross-crate pub-helper test API (I-17) makes cost disproportionate. | LOW | OPEN (Seam B/C outstanding) |
 
 ## Convergence Trackers
 
@@ -137,38 +137,36 @@ Full per-issue: `cycles/cycle-001/convergence-trajectory.md`. Current: **DEAD-CI
 
 | Field | Value |
 |-------|-------|
-| **Date** | 2026-06-25 |
-| **Status** | **IDLE — sweep 2026-06-25 D1+D2+D3 COMPLETE; D4/D5 deferred.** PRs #554, #555 merged. Zero story worktrees. No active feature_mode_bundle. |
-| **Position** | Maintenance sweep 2026-06-25 D1+D2+D3 COMPLETE. D3: PR #555 squash-merged — 6 unwrap→expect invariant docs (PF-010..014), 2 CLAUDE.md Known Size Deviations (PF-016/017); cosmetic/no-behavior-change. PATTERN-HYGIENE-2026-06-25 drift item RESOLVED. PF-008-ASSET-ID-RESULT-HARDENING tracked-deferred (behavior change, not cosmetic). D4 (HOLDOUT-*), D5 (cargo update) tracked-deferred. develop HEAD = 6b395d3. activation_head/version unchanged: dbe8625 / v0.6.0-dev.6. |
-| **develop HEAD** | LOCAL develop = **6b395d3** == origin/develop. activation_head/version unchanged: dbe8625 / v0.6.0-dev.6. |
+| **Date** | 2026-06-26 |
+| **Status** | **IDLE — Seam A merged; Seam B/C deferred; PR #557 untriaged.** Zero story worktrees. No active feature_mode_bundle. |
+| **Position** | PR #556 squash-merged — Seam A refactor (JSM-create extraction, create.rs 2,880→2,447 LOC, behavior-preserving). REFACTOR-ISSUE-CLI-SHARD updated: Seam A DONE, Seam B/C remain DEFERRED. PR #557 (dependabot: softprops/action-gh-release 3.0.0→3.0.1) UNTRIAGED. D4 (HOLDOUT-*), D5 (cargo update) still tracked-deferred. develop HEAD = d04a7ec. activation_head/version unchanged: dbe8625 / v0.6.0-dev.6. |
+| **develop HEAD** | LOCAL develop = **d04a7ec** == origin/develop (PR #556 squash-merged 2026-06-26). activation_head/version unchanged: dbe8625 / v0.6.0-dev.6. |
 | **factory-artifacts HEAD** | see `git -C .factory log -1` |
 | **Activation** | activation_head: dbe8625; activation_version: v0.6.0-dev.6. v0.5.0 STABLE shipped 2026-06-12. |
 | **Counters** | BC **603**. NFR **42**. ADR **16**. Stories **91**. |
 | **Active worktrees** | NONE under `.worktrees/`. Permanent infra only: main checkout (develop) + `.factory` (factory-artifacts) + `.reference/jira-cli` (detached). ZERO story worktrees. |
-| **Open PRs (action needed)** | **NONE.** #555 merged @ 6b395d3 (2026-06-25). |
+| **Open PRs (action needed)** | **#557** (dependabot: softprops/action-gh-release 3.0.0→3.0.1) — UNTRIAGED. #556 merged @ d04a7ec (2026-06-26). |
 | **jira-e2e env** | JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ, JR_E2E_ENABLED=true. |
 | **Standing constraints** | Do NOT close #429 (DEC-029). All fixes through full VSDD (DEC-120/121/124/129/130/131/132). LESSON-F2-WORKTREE-FIRST. F2-PIECEWISE-PROTOCOL [ENFORCED 2026-06-20]. DEC-128 (CRITICAL): delivery sub-agents must NOT self-authorize merges, spawn fix agents, push, or enter unbounded loops. Fork signing UNBLOCKED but INERT (DEC-104). |
 
 ## RESUME PLAN (cold-start, self-contained)
 
-<!-- State snapshot: MAINTENANCE SWEEP 2026-06-25 D1+D2+D3 COMPLETE. develop @ 6b395d3. D4/D5 tracked-deferred. No active bundle. No story worktrees. -->
+<!-- State snapshot: Seam A refactor MERGED (PR #556). develop @ d04a7ec. D4/D5 tracked-deferred. PR #557 untriaged. No active bundle. No story worktrees. -->
 
 ### Steps (assume ZERO memory)
 
 **Step 1 (BLOCKING):** Run `vsdd-factory:factory-worktree-health`. Then read `.factory/STATE.md` (this file).
 
 **Step 2 — Verify position:**
-- develop @ **6b395d3** (LOCAL == origin/develop, already synced — pull NOT required). No new tag; activation_head dbe8625/v0.6.0-dev.6 unchanged.
+- develop @ **d04a7ec** (LOCAL == origin/develop, PR #556 squash-merged 2026-06-26). No new tag; activation_head dbe8625/v0.6.0-dev.6 unchanged.
 - factory-artifacts: see `git -C .factory log -1` (pushed; no uncommitted changes).
 - Permanent infra only: main checkout @ develop, `.factory` @ factory-artifacts, `.reference/jira-cli` detached. ZERO story worktrees under `.worktrees/`.
-- PRs #547/#548/#549/#551/#552/#553/#550/#554/#555 ALL MERGED. **No open PRs.**
+- PRs #547/#548/#549/#551/#552/#553/#550/#554/#555/#556 ALL MERGED. **Open PR: #557** (dependabot softprops/action-gh-release 3.0.0→3.0.1 — untriaged).
 - Counters: BC **603**, NFR **42**, ADR **16**, Stories **91**.
 
-**Step 3 — MAINTENANCE SWEEP D1+D2+D3 COMPLETE. Present D4-D5 to human, await direction.**
-Maintenance sweep 2026-06-25 D1+D2+D3 complete. Remaining follow-up bundles:
-- **D1 (COMPLETE):** PR #554 merged @ aa2cdca — CLAUDE.md BC-7.2.012 entry + CHANGELOG #550/#551. All DRIFT-S3-001/002/003/004 RESOLVED.
-- **D2 (COMPLETE):** S-MAINT-SEC-001 story closed (draft→done), ADF_MAX_DEPTH→MAX_ADF_DEPTH 256 corrected, F2-PIECEWISE reclassified, adr shadow removed. Factory commit 89d94d8.
-- **D3 (COMPLETE):** PR #555 merged @ 6b395d3 — 6 unwrap→expect invariant docs (PF-010..014) + 2 CLAUDE.md Known Size Deviations (PF-016/017). PATTERN-HYGIENE-2026-06-25 RESOLVED. PF-008-ASSET-ID-RESULT-HARDENING tracked-deferred.
+**Step 3 — IDLE. Seam A merged (PR #556). Present open items to human, await direction.**
+- **Seam A (COMPLETE):** PR #556 merged @ d04a7ec — JSM-create extraction (create.rs 2,880→2,447 LOC; behavior-preserving). REFACTOR-ISSUE-CLI-SHARD updated: Seam B/C remain deferred.
+- **PR #557** (dependabot: softprops/action-gh-release 3.0.0→3.0.1) — UNTRIAGED. Needs triage.
 - **D4 (product-owner):** holdout refresh H-NEW-MP-001/H-007 + ADF-wave + SEC-001 recursion holdouts. (H-028 CLOSED — false positive; no action needed.)
 - **D5 (optional):** `cargo update` (rustls 0.23.41 + 64 semver-compatible bumps).
 - **S-PG-MERGE-AUTH-BYPASS** (story 91, MEDIUM, draft) — merge-auth + spawn/push/loop protocol.
@@ -187,6 +185,8 @@ Maintenance sweep 2026-06-25 D1+D2+D3 complete. Remaining follow-up bundles:
 
 | Issue | Title | Status | Priority | Notes |
 |-------|-------|--------|----------|-------|
+| #557 | dependabot: bump softprops/action-gh-release 3.0.0→3.0.1 | **OPEN — UNTRIAGED** | LOW | Appeared post-#556 merge. Needs triage before action. |
+| #556 | refactor(cli): extract JSM-create into src/cli/issue/jsm_create.rs — Seam A | **CLOSED — squash-merged → develop @ d04a7ec (2026-06-26)** | LOW | Seam A refactor. Behavior-preserving pure move (I-1 intact, test parity 1957/93). Both reviews clean; admin squash-merge (human-authorized). CI 15/15 green. |
 | #555 | chore: pattern hygiene — unwrap invariant docs + size-deviation records (PF-010..017) | **CLOSED — squash-merged → develop @ 6b395d3 (2026-06-25)** | LOW | D3 pattern-hygiene bundle. Cosmetic/no-behavior-change. Fresh-eyes pr-reviewer caught + fixed BLOCKING PF-017 factual error pre-merge (workflow.rs does not cover handle_remote_link; DEC-131 pattern). CI 15/15; admin squash-merge (human-authorized). |
 | #554 | docs: maintenance sweep 2026-06-25 doc fixes (CLAUDE.md BC-7.2.012 Gotchas + CHANGELOG #550/#551) | **CLOSED — squash-merged → develop @ aa2cdca (2026-06-25)** | LOW | D1 doc-fix bundle. Clean review: code-reviewer caught HIGH off-by-one factual error pre-PR; pr-reviewer APPROVE; CI 15/15 green; admin squash-merge (human-authorized). All DRIFT-S3-001/002/003/004 resolved. |
 | #550 | dependabot: bump actions/checkout 6.0.3→7.0.0 | **CLOSED — squash-merged → develop @ b856f9f (2026-06-25)** | LOW | Triaged clean: no pull_request_target usage; sign-and-publish.yml workflow_run inert (DEC-104); 25 SHA-pins to 9c091bb # v7.0.0 across 10 workflow files; CI 15/15 green. |

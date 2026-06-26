@@ -4167,3 +4167,30 @@ The following row was present in STATE.md Current Phase Steps before the last-5 
 | Status | COMPLETE |
 | Output | factory-artifacts @ 2026-06-25. |
 | Status | IDLE — D1+D2+D3 COMPLETE. D4/D5 tracked-deferred. |
+
+---
+
+### Burst: MAINTENANCE D2 (archived from STATE.md Current Phase Steps)
+
+| Field | Value |
+|-------|-------|
+| Event | MAINTENANCE D2 — S-MAINT-SEC-001 closed (BC-7.2.012 anchored, status→done, ADF_MAX_DEPTH→MAX_ADF_DEPTH 256 corrected); adr shadow copies removed (9 stale files deleted from .factory/architecture/adr/, dir removed, adr-index.md updated — canonical docs/adr/); F2-PIECEWISE-PROTOCOL reclassified RESOLVED-CODIFIED; SC-002 RESOLVED; DOC-DRIFT-2026-06-25 updated (DRIFT-S3-003 resolved; D1 in progress on docs/maint-2026-06-25-doc-fixes). |
+| Agent | state-manager |
+| Status | COMMITTED |
+| Output | factory-artifacts @ 2026-06-25. |
+
+---
+
+### Burst: PR #556 MERGED — Seam A JSM-create extraction (2026-06-26)
+
+| Field | Value |
+|-------|-------|
+| Event | PR #556 (refactor(cli): extract JSM-create into src/cli/issue/jsm_create.rs — Seam A) SQUASH-MERGED via admin to develop. develop HEAD = d04a7ec. CI 15/15 green. |
+| Files changed | src/cli/issue/jsm_create.rs (new, 444 LOC — handle_jsm_create + resolve_jsm_request_type_id + JsmCreateArgs verbatim move); src/cli/issue/create.rs 2,880→2,447 LOC; src/cli/issue/mod.rs (mod jsm_create; visibility pub(super)). |
+| Behavior | Pure move. ADR-0014 I-1 dispatch fork (gated on request_type.is_some()) byte-for-byte intact. No behavioral change. |
+| Test parity | 1957 passed / 93 ignored BEFORE and AFTER (verified independently by pr-reviewer). No tests added or dropped. |
+| Reviews | code-reviewer: CLEAN + 1 LOW citation fix applied. pr-reviewer: APPROVE, confirmed pure-move byte-for-byte + minimal visibility mod jsm_create. Both reviews clean. |
+| Counters | BC 603 (UNCHANGED). NFR 42. ADR 16. Stories 91. |
+| Activation | dbe8625 / v0.6.0-dev.6 (UNCHANGED). |
+| REFACTOR-ISSUE-CLI-SHARD | Seam A DONE. Seam B (edit cluster → edit.rs) DEFERRED to next handle_edit-touching churn. Seam C (workflow.rs) DEFERRED indefinitely. |
+| develop HEAD | d04a7ec. |
