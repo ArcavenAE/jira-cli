@@ -2,11 +2,11 @@
 document_type: pipeline-state
 version: "2.0"
 status: complete
-timestamp: 2026-06-26T17:51:42Z
+timestamp: 2026-06-26T22:00:00Z
 phase: 3
 project: jira-cli
 mode: brownfield
-current_step: "IDLE. v0.6.0-dev.7 SHIPPED. PR #557 MERGED @ c70d8a7 (dependabot: softprops/action-gh-release 3.0.0→3.0.1; supply-chain soak PASS; DEC-133). develop @ c70d8a7. Awaiting direction."
+current_step: "IDLE. D4 HOLDOUT REFRESH CLOSED. PR #560 MERGED @ 9657b1e (test(adf): pin block-HTML + footnote node shapes). holdouts 60→70 (v1.2.0). develop @ 9657b1e. Awaiting direction."
 maintenance_run: CLOSED
 current_cycle: "cycle-001"
 feature_mode_bundle: none
@@ -26,10 +26,10 @@ activation_version: "v0.6.0-dev.7"
 | **Product** | jr (Jira CLI) |
 | **Mode** | BROWNFIELD / Rust |
 | **Target Workspace** | develop → main |
-| **Last Updated** | 2026-06-26: v0.6.0-dev.7 SHIPPED — PR #559 (chore(release): v0.6.0-dev.7) squash-merged @ 342987f; tag pushed; release.yml run 28248392006 SUCCESS (after 1 transient-network rerun — Windows crates.io curl [55] HTTP2 flake; fail-fast cancelled siblings; resolved by full rerun). 10 assets / 5 targets. GitHub prerelease published. CHANGELOG rolled. activation dbe8625/v0.6.0-dev.6 → 342987f/v0.6.0-dev.7. |
-| **Current Phase** | Phase 3 — IDLE (v0.6.0-dev.7 shipped; PR #557 untriaged). BC 603. NFR 42. ADR 16. Stories 91. |
+| **Last Updated** | 2026-06-26: D4 HOLDOUT REFRESH CLOSED — 10 new scenarios (H-NEW-ADF-001..008 + H-NEW-SEC-001/002); 2 stale fixed (H-NEW-MP-001, H-007); 60→70 (v1.2.0); source pins PR #560 squash-merged @ 9657b1e; adversary caught CRITICAL boundary off-by-one + fix-cascade (DEC-134). |
+| **Current Phase** | Phase 3 — IDLE (D4 CLOSED; v0.6.0-dev.7 shipped). BC 603. NFR 42. ADR 16. Stories 91. Holdouts 70. |
 | **Next Phase** | Next feature cycle (open candidates: MUTATION-CI-TIMEOUT story, PG-PR-MANAGER-OVERREACH/S-PG-MERGE-AUTH-BYPASS story 91, fork signing DEC-104) |
-| **Activation HEAD** | 342987f (v0.6.0-dev.7 tag); develop @ c70d8a7 (PR #557 squash-merged 2026-06-26T17:51:42Z) |
+| **Activation HEAD** | 342987f (v0.6.0-dev.7 tag); develop @ 9657b1e (PR #560 squash-merged 2026-06-26) |
 
 ## Phase Progress
 
@@ -39,26 +39,24 @@ activation_version: "v0.6.0-dev.7"
 | S-TESTTOOL-1 + S-FORK-OPS-SIGN-1 + v0.6.0-dev.4 | CYCLE CLOSED | 2026-06-18 | F1–F7 COMPLETE | PRs #533/#535/#536. develop @ 45ddf7a == v0.6.0-dev.4. Stories 79→81. |
 | S-FORK-OPS-BACKFILL F1–F7 + RELEASED v0.6.0-dev.5 | CYCLE CLOSED | 2026-06-19 | F1–F7 COMPLETE + human auth | PR #539/#538/#540/#542. develop @ 71f33c6. Stories 81→83. DEC-122/123/124. See `cycles/cycle-001/burst-log.md`. |
 | 4: Holdout Evaluation | not-started | | | |
-| **DEAD-CITATION-CI F1+F2** | **CONVERGED** | **2026-06-20** | **F1: delta analysis; F2: 10 adv passes + 5 consistency; ROOT_FILES amendment; human-approved** | DEC-125/126 |
-| **DEAD-CITATION-CI F3** | **CONVERGED** | **2026-06-20** | **3 adv passes + 2 consistency; story S-MAINT-DEAD-CITATION-CI (12 AC, 3 holdouts); human-approved** | DEC-127: F-1 HIGH fixed by Vec<(String,usize)> provenance |
-| **DEAD-CITATION-CI F4** | **COMPLETE** | **2026-06-20** | **PR #544 merged @ 496258a; 58 tests; 3 per-story adv passes + code/security review; ci-gate 15/15 incl. mutation testing+Windows** | PG-MERGE-AUTH-BYPASS logged |
-| **DEAD-CITATION-CI F5–F7** | **CONVERGED** | **2026-06-20** | **5/7 dims converged (visual/perf N/A); input-drift NONE; consistency CONSISTENT; CI 15/15 on #544+#545; PR #545 merged** | DEC-129. S-PG-MERGE-AUTH-BYPASS registered (story 91). |
-| **DEAD-CITATION-CI RELEASED** | **CYCLE CLOSED** | **2026-06-20** | **v0.6.0-dev.6 shipped — PRs #544/#545/#546; release.yml run 27851891146 SUCCESS; 10 assets / 5 targets; full VSDD F1–F7; 8+ defects caught pre-merge** | develop @ dbe8625 == v0.6.0-dev.6. Maintenance RESUMED. |
+| **DEAD-CITATION-CI F1–F7 + RELEASED v0.6.0-dev.6** | **CYCLE CLOSED** | **2026-06-20** | **Full VSDD F1–F7; 8+ defects caught; PRs #544/#545/#546; release.yml 27851891146 SUCCESS; 10 assets/5 targets. DEC-125/126/127/128/129/130.** | develop @ dbe8625 == v0.6.0-dev.6. Stories 83→91. |
 | **MAINTENANCE SWEEP 2026-06-22 + 3 PRs** | **CYCLE CLOSED** | **2026-06-24** | **7 sweeps; 0 reachable HIGH; H-019 real-bug fixed; SC-03 ADRs promoted. DEC-131.** | develop @ 4022e00 (PRs #547/#548/#549 squash-merged). |
 | **BUNDLE D + SEC-001** | **CYCLE CLOSED** | **2026-06-25** | **CR-005 closed-refuted; PR #551 JR_SERVICE_NAME gate; #552 test-hygiene (CR-008/CR-009/#532); #553 SEC-001 ADF recursion guard CWE-674 + BC-7.2.012. DEC-132.** | develop @ 35e20c9. BC 602→603. |
 | **MAINTENANCE SWEEP 2026-06-25** | **COMPLETE** | **2026-06-25** | **6 sweeps (DTU/a11y/design-drift N/A); 0 reachable HIGH; dep-audit CLEAN; doc-drift 1MED/3LOW; pattern CONVERGED 3MED/5LOW; holdout NEEDS-REVISION ratio 0.61; perf PASS; spec-coherence PASS. D1-D5 follow-ups.** | develop @ b856f9f. Report: `maintenance/2026-06-25/`. |
 | **v0.6.0-dev.7 RELEASED** | **CYCLE CLOSED** | **2026-06-26** | **release.yml run 28248392006 SUCCESS (after 1 transient-network rerun); 10 assets/5 targets; CHANGELOG rolled; PR #559 merged. activation dbe8625→342987f, v0.6.0-dev.6→v0.6.0-dev.7.** | Session shipped: #550/#554/#555/#556/#558/#559. |
 | **PR #557 SUPPLY-CHAIN TRIAGE + MERGE** | **COMPLETE** | **2026-06-26** | **security-reviewer triage + soak research: SHA-pin integrity MATCH (718ea10b), zero CVEs/GHSA, 7-day soak floor MET (pub 2026-06-19). Squash-merged --admin (human/orchestrator-authorized, DEC-128 protocol). DEC-133 + DEPENDABOT-ACTION-SOAK standing policy.** | develop 342987f → c70d8a7. #557 CLOSED. |
+| **D4 HOLDOUT REFRESH — CONVERGED + CLOSED** | **CONVERGED + CLOSED** | **2026-06-26** | **3 adv passes (1CRIT/2MED → 1CRIT/2MED → 0CRIT/0HIGH/0MED, 3 LOW); CRITICAL boundary off-by-one caught + fixed; fix-cascade (H-007) caught pass-2; LOW O-1/O-3 → PR #560 source regression pins; consistency CONSISTENT. +10 scenarios; 2 stale fixed; 60→70; v1.2.0. DEC-134.** | develop c70d8a7 → 9657b1e. PR #560 merged. Holdouts 70. |
 
 ## Current Phase Steps
 
 <!-- Keep last 5 rows only. Archive older rows to cycles/cycle-001/burst-log.md. -->
 | Step | Agent | Status | Output |
 |------|-------|--------|--------|
-| **PR #556 MERGED** — Seam A refactor: JSM-create extracted to src/cli/issue/jsm_create.rs (handle_jsm_create + resolve_jsm_request_type_id + JsmCreateArgs; 444 LOC). create.rs 2,880→2,447 LOC. Behavior-preserving (pure move; test parity 1957/93). Both reviews clean; admin squash-merge (human-authorized). CI 15/15 green. | state-manager | MERGED | develop @ d04a7ec. |
 | **PR #558 MERGED** — Seam B refactor: EDIT cluster extracted to src/cli/issue/edit.rs (2,067 LOC). create.rs 2,447→394 LOC. Issue module: create.rs 394 + edit.rs 2,067 + jsm_create.rs 444. Behavior-preserving (all invariants; test parity 1957/93; mutation 16m47s). Both reviews clean; admin squash-merge (human-authorized). | state-manager | MERGED | develop @ 2e3c3c2. |
 | **v0.6.0-dev.7 RELEASED** — PR #559 (version bump + CHANGELOG roll) merged @ 342987f; tag pushed; release.yml SUCCESS after transient-network rerun (Windows crates.io curl [55] HTTP2 flake); GitHub prerelease with 10 assets / 5 targets. Session shipped: #550/#554/#555/#556/#558/#559. | state-manager | SHIPPED | develop @ 342987f == v0.6.0-dev.7. |
 | **PR #557 MERGED** — dependabot: softprops/action-gh-release 3.0.0→3.0.1. Supply-chain soak: SHA-pin integrity MATCH (pins to 718ea10b = real v3.0.1 commit), zero CVEs/GHSA, 7-day soak floor MET (pub 2026-06-19 → merge 2026-06-26). Triage docs: `.factory/code-delivery/PR-557-supply-chain-triage.md` + `.factory/research/PR-557-action-gh-release-3.0.1-soak.md`. Admin squash-merge (human/orchestrator-authorized, DEC-128 protocol). DEC-133 DEPENDABOT-ACTION-SOAK standing policy recorded. | state-manager | MERGED | develop 342987f → c70d8a7. |
+| **D4 HOLDOUT REFRESH CONVERGED** — 10 new scenarios (H-NEW-ADF-001..008 + H-NEW-SEC-001/002); 2 stale fixed (H-NEW-MP-001, H-007); 3 adv passes; CRITICAL boundary off-by-one caught + fixed; fix-cascade (H-007) caught pass-2; LOW O-1/O-3 escalated to source pins. holdout-scenarios.md v1.1.2→1.2.0; total_holdouts 60→70. DEC-134. | state-manager | CONVERGED | holdout-scenarios.md committed to factory-artifacts. |
+| **PR #560 MERGED** — `test(adf): pin plain-text block-HTML and discrete footnote node shapes`. 2 regression-pin tests in src/adf.rs (test_block_html_plain_text_interior_lines_preserved_in_one_paragraph + test_footnote_reference_and_definition_are_discrete_unmarked_text_nodes). 15/15 CI green (incl. Windows, mutation, coverage). Clean code review (CR-004 found+fixed pre-merge). Admin squash-merge (DEC-128). | state-manager | MERGED | develop c70d8a7 → 9657b1e. |
 
 ## Decisions Log
 
@@ -74,6 +72,7 @@ activation_version: "v0.6.0-dev.7"
 | DEC-131 | Maintenance sweep 2026-06-22 (idle-pipeline) surfaced a real exit-code bug (H-019, exit 78→64) behind a "converged/idle" state — reinforces value of periodic holdout-freshness sweeps. All 4 fix deliverables (hygiene bundle, H-019, SC-03 promotion, factory index) went through full worktree→review→gated-merge flow; pr-reviewer fresh-eyes caught 2 phantom citations that code-reviewer spot-check missed (ADR-0007 Config::field_id, ADR-0010 paginate_offset). | Maintenance / sweep 2026-06-22 | Phase 3 | 2026-06-24 |
 | DEC-132 | SEC-001 (CWE-674 ADF recursion) shipped via full VSDD: spec+BC-7.2.012, TDD, dual code+security review that caught a real off-by-one BLOCKER (reverse path accepted depth-256) + a HIGH error-swallow + 5 mutation survivors — all closed (mutation kill rate locally proven 100% via per-site flip verification). Mutation CI job fails only by 1hr timeout (non-required); merged via admin with CI Gate green. Strong reinforcement that full-VSDD on a 'small' security guard surfaces multiple real defects (DEC-120/121/124/129 lineage). | Bundle D + SEC-001 / Feature Mode | Phase 3 | 2026-06-25 |
 | DEC-133 | **DEPENDABOT-ACTION-SOAK standing policy:** third-party GitHub Action dependabot bumps require (a) ≥7-day soak from publication date to merge date, AND (b) supply-chain triage confirming SHA-pin integrity (pinned commit matches the upstream tag) + clean advisory check (zero CVEs/GHSA), before the orchestrator authorizes merge. Established on PR #557 (softprops/action-gh-release 3.0.0→3.0.1, pub 2026-06-19, merged 2026-06-26 — exactly 7 days). Human-approved 2026-06-26 as the standing soak floor. Triage docs: `.factory/code-delivery/PR-557-supply-chain-triage.md` + `.factory/research/PR-557-action-gh-release-3.0.1-soak.md`. | PR #557 / Supply-chain triage | Phase 3 | 2026-06-26 |
+| DEC-134 | **D4 holdout refresh converged via full VSDD adversarial discipline.** Adversary caught a CRITICAL false-fail boundary off-by-one in H-NEW-SEC-001 (N `>` prefixes → ADF depth N+1; 255 prefixes REJECT at depth 256; accept boundary is 254 not 255). The pass-1 remediation introduced a factually-wrong `required`-flag rationale in H-007 (fix-cascade), caught by pass-2 adversary. F2-PIECEWISE/fresh-context value reinforced (DEC-120/121/129/130 lineage): a CRITICAL defect in a holdout scenario — not source code — would have caused Phase 4 to reject a correct binary. LOW observations O-1/O-3 escalated to source regression-pin tests (PR #560, develop @ 9657b1e) per human direction. HOLDOUT-COVERAGE-GAPS HIGH gaps CLOSED; HOLDOUT-STALE H-NEW-MP-001+H-007 FIXED. | D4 holdout refresh | Phase 3 | 2026-06-26 |
 
 ## Skip Log
 
@@ -114,8 +113,8 @@ None open.
 | MAINT-PG-CI-DOC-LINT | process-gap | CLAUDE.md src-file-tree drift recurring; add scripts/check-claude-md-tree.sh to CI. | LOW | DEFERRED |
 | PERF-BASELINE-ABSENT | coverage-gap | Sweep 5 (perf) skipped 4× — baseline re-confirmed 2026-06-25: binary 7.09MB (0.0% delta vs 7.1MB baseline), `jr --help` p50 6.4ms. No regression. Recommend LOW story for `scripts/perf-check.sh` + hyperfine CI guard. | LOW | OPEN (baseline confirmed; CI guard pending) |
 | PERF-COST-TRACKING | instrumentation | No per-cycle token/cost tracking; `.factory/cost-summary.md` not initialized. Blind spot for cost-per-story analysis and cost-vs-defect-value calibration. Origin: DEAD-CITATION-CI session review Rec 3. | LOW | OPEN — draft story candidate |
-| HOLDOUT-COVERAGE-GAPS-2026-06-25 | holdout coverage | 7 shipped feature areas with zero black-box holdout: ADF markdown→ADF wave (#471/#472/#474/#483/#489/#492/#522/#473) — HIGH; SEC-001 ADF recursion-depth guard (BC-7.2.012, CWE-674, #553) — HIGH (security); issue edit --field/--type/--label/--dry-run; bulk nested schema; issue changelog; worklog add; link/queue/board. Owner: product-owner to author scenarios. Supersedes HOLDOUT-COVERAGE-GAPS-2026-06-22. | LOW | OPEN — tracked deferral |
-| HOLDOUT-STALE-2026-06-25 | holdout staleness | H-NEW-MP-001 (--story-points→--points rename), H-007 (ADR-0015 mechanism). H-019 FIXED. H-028 INVESTIGATED 2026-06-25 → FALSE POSITIVE (verdict B): `jr auth list` correctly exits 64 on invalid config key via shared `config.rs::load_inner` chokepoint; #548 did not regress it; no code change. See `maintenance/2026-06-25/H-028-root-cause.md`. Supersedes HOLDOUT-STALE-2026-06-22. | LOW | OPEN — tracked deferral (H-NEW-MP-001 + H-007 only) |
+| HOLDOUT-COVERAGE-GAPS-2026-06-25 | holdout coverage | HIGH gaps CLOSED by D4 (2026-06-26): ADF markdown→ADF wave + SEC-001 recursion-guard now covered (H-NEW-ADF-001..008, H-NEW-SEC-001/002). Remaining tracked-deferred (MED/LOW): issue edit --field/--type/--label/--dry-run; bulk nested schema; issue changelog; worklog add; link/queue/board. Supersedes HOLDOUT-COVERAGE-GAPS-2026-06-22. | LOW | OPEN — HIGH gaps CLOSED; MED/LOW gaps tracked-deferred |
+| HOLDOUT-STALE-2026-06-25 | holdout staleness | RESOLVED (2026-06-26): H-NEW-MP-001 (--story-points→--points) FIXED in D4; H-007 (ADR-0015 mechanism) FIXED in D4 (re-anchored to BC-3.2.013 proactive + BC-3.2.009 fallback). H-019 FIXED. H-028 FALSE POSITIVE (2026-06-25). No remaining stale holdouts. | LOW | RESOLVED — all stale items fixed by D4 |
 | DOC-DRIFT-2026-06-25 | doc hygiene | D1 bundle: CLAUDE.md missing BC-7.2.012 Gotchas entry (ADF recursion guard, SEC-001, #553); CHANGELOG [Unreleased] missing #551 (JR_SERVICE_NAME gate) and #550 (actions/checkout v7). All of DRIFT-S3-001/002/003/004 RESOLVED — DRIFT-S3-003 (adr shadow) via D2 factory commit 89d94d8; DRIFT-S3-001/002/004 via PR #554 (squash-merged → develop @ aa2cdca). Branch docs/maint-2026-06-25-doc-fixes deleted; no open PRs. | MED | RESOLVED — PR #554 merged 2026-06-25 (develop @ aa2cdca). |
 | PATTERN-HYGIENE-2026-06-25 | code hygiene | D3 bundle: PF-010/011 bare .unwrap() w/o invariant comment in src/cli/assets/schemas.rs; PF-016 src/cli/issue/create.rs 2,880 LOC undocumented shard candidate; PF-017 src/cli/issue/workflow.rs 1,341 LOC. Unwrap-comment hygiene PF-008/012/013/014. Manual PR needed (auto_pr:false). | LOW | RESOLVED — PR #555 merged 2026-06-25 (develop @ 6b395d3). PF-010..014/016/017 closed. |
 | PF-008-ASSET-ID-RESULT-HARDENING | code hygiene | Result-propagation hardening of asset.id panic→JrError on CMDB contract violation at `src/api/assets/linked.rs` + `src/cli/issue/list.rs` (behavior change deliberately deferred out of cosmetic D3 PR; expect() now documents the invariant). PF-001/PF-002 (bare .unwrap() elsewhere) remain OPEN and unaddressed by D3. | LOW | OPEN — tracked deferral |
@@ -141,36 +140,36 @@ Full per-issue: `cycles/cycle-001/convergence-trajectory.md`. Current: **DEAD-CI
 | Field | Value |
 |-------|-------|
 | **Date** | 2026-06-26 |
-| **Status** | **IDLE — v0.6.0-dev.7 shipped; PR #557 MERGED (supply-chain soak PASS; DEC-133).** Zero story worktrees. No active feature_mode_bundle. |
-| **Position** | PR #559 (chore(release): v0.6.0-dev.7) squash-merged @ 342987f; tag pushed; release.yml run 28248392006 SUCCESS. PR #557 (dependabot: softprops/action-gh-release 3.0.0→3.0.1) squash-merged @ c70d8a7 after supply-chain soak (SHA-pin integrity MATCH, 7-day floor MET, zero CVEs/GHSA; DEC-133). REFACTOR-ISSUE-CLI-SHARD: RESOLVED-PARTIAL (Seams A+B DONE; Seam C accepted-deferral). D4 (HOLDOUT-*), D5 (cargo update) still tracked-deferred. |
-| **develop HEAD** | LOCAL develop = **c70d8a7** == origin/develop (PR #557 squash-merged 2026-06-26T17:51:42Z). |
+| **Status** | **IDLE — D4 HOLDOUT REFRESH CLOSED. PR #560 MERGED @ 9657b1e. holdouts 60→70 (v1.2.0). Zero story worktrees. No active feature_mode_bundle.** |
+| **Position** | D4 CLOSED: 10 new holdouts (H-NEW-ADF-001..008 + H-NEW-SEC-001/002), 2 stale fixed (H-NEW-MP-001, H-007), adversary caught CRITICAL boundary off-by-one + fix-cascade (DEC-134), LOW pins → PR #560 merged @ 9657b1e. v0.6.0-dev.7 shipped (PR #559 @ 342987f). PR #557 merged @ c70d8a7 (DEC-133). REFACTOR-ISSUE-CLI-SHARD: RESOLVED-PARTIAL (Seams A+B DONE; Seam C accepted-deferral). D5 (cargo update) still tracked-deferred. |
+| **develop HEAD** | LOCAL develop = **9657b1e** == origin/develop (PR #560 squash-merged 2026-06-26). |
 | **factory-artifacts HEAD** | see `git -C .factory log -1` |
 | **Activation** | activation_head: 342987f; activation_version: v0.6.0-dev.7. v0.5.0 STABLE shipped 2026-06-12. |
-| **Counters** | BC **603**. NFR **42**. ADR **16**. Stories **91**. |
+| **Counters** | BC **603**. NFR **42**. ADR **16**. Stories **91**. Holdouts **70**. |
 | **Active worktrees** | NONE under `.worktrees/`. Permanent infra only: main checkout (develop) + `.factory` (factory-artifacts) + `.reference/jira-cli` (detached). ZERO story worktrees. |
-| **Open PRs (action needed)** | **NONE.** #557 merged @ c70d8a7 (2026-06-26T17:51:42Z). #559 merged @ 342987f (2026-06-26, v0.6.0-dev.7). |
+| **Open PRs (action needed)** | **NONE.** #560 merged @ 9657b1e (2026-06-26). #557 merged @ c70d8a7. #559 merged @ 342987f. |
 | **jira-e2e env** | JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ, JR_E2E_ENABLED=true. |
-| **Standing constraints** | Do NOT close #429 (DEC-029). All fixes through full VSDD (DEC-120/121/124/129/130/131/132). LESSON-F2-WORKTREE-FIRST. F2-PIECEWISE-PROTOCOL [ENFORCED 2026-06-20]. DEC-128 (CRITICAL): delivery sub-agents must NOT self-authorize merges, spawn fix agents, push, or enter unbounded loops. Fork signing UNBLOCKED but INERT (DEC-104). **DEC-133 (DEPENDABOT-ACTION-SOAK):** third-party GitHub Action bumps require ≥7-day soak from publication + SHA-pin integrity check + clean advisory check before merge. |
+| **Standing constraints** | Do NOT close #429 (DEC-029). All fixes through full VSDD (DEC-120/121/124/129/130/131/132/134). LESSON-F2-WORKTREE-FIRST. F2-PIECEWISE-PROTOCOL [ENFORCED 2026-06-20]. DEC-128 (CRITICAL): delivery sub-agents must NOT self-authorize merges, spawn fix agents, push, or enter unbounded loops. Fork signing UNBLOCKED but INERT (DEC-104). **DEC-133 (DEPENDABOT-ACTION-SOAK):** third-party GitHub Action bumps require ≥7-day soak from publication + SHA-pin integrity check + clean advisory check before merge. |
 
 ## RESUME PLAN (cold-start, self-contained)
 
-<!-- State snapshot: v0.6.0-dev.7 RELEASED (PR #559, tag 342987f, release.yml 28248392006 SUCCESS). PR #557 MERGED @ c70d8a7 (supply-chain soak PASS; DEC-133). develop @ c70d8a7. D4/D5 tracked-deferred. No active bundle. No story worktrees. -->
+<!-- State snapshot: v0.6.0-dev.7 RELEASED (PR #559, tag 342987f). PR #557 MERGED @ c70d8a7 (DEC-133). D4 CLOSED — PR #560 MERGED @ 9657b1e (holdouts 60→70, v1.2.0). D5 (cargo update) tracked-deferred. No active bundle. No story worktrees. -->
 
 ### Steps (assume ZERO memory)
 
 **Step 1 (BLOCKING):** Run `vsdd-factory:factory-worktree-health`. Then read `.factory/STATE.md` (this file).
 
 **Step 2 — Verify position:**
-- develop @ **c70d8a7** (LOCAL == origin/develop, PR #557 squash-merged 2026-06-26T17:51:42Z). Tag v0.6.0-dev.7 pushed on 342987f (activation_head). activation_head/version: 342987f / v0.6.0-dev.7.
+- develop @ **9657b1e** (LOCAL == origin/develop, PR #560 squash-merged 2026-06-26). Tag v0.6.0-dev.7 pushed on 342987f (activation_head). activation_head/version: 342987f / v0.6.0-dev.7.
 - factory-artifacts: see `git -C .factory log -1` (pushed; no uncommitted changes).
 - Permanent infra only: main checkout @ develop, `.factory` @ factory-artifacts, `.reference/jira-cli` detached. ZERO story worktrees under `.worktrees/`.
-- PRs #547/#548/#549/#551/#552/#553/#550/#554/#555/#556/#558/#559/#557 ALL MERGED. **Open PRs: NONE.**
-- Counters: BC **603**, NFR **42**, ADR **16**, Stories **91**.
+- PRs #547/#548/#549/#551/#552/#553/#550/#554/#555/#556/#558/#559/#557/#560 ALL MERGED. **Open PRs: NONE.**
+- Counters: BC **603**, NFR **42**, ADR **16**, Stories **91**. Holdouts **70**.
 
-**Step 3 — IDLE. v0.6.0-dev.7 SHIPPED. PR #557 MERGED. Present open items to human, await direction.**
-- **v0.6.0-dev.7 (SHIPPED):** PR #559 merged @ 342987f; tag pushed; release.yml run 28248392006 SUCCESS (1 transient-rerun: Windows curl [55] HTTP2 crates.io flake); 10 assets/5 targets; GitHub prerelease; CHANGELOG rolled.
-- **PR #557 (MERGED @ c70d8a7):** dependabot: softprops/action-gh-release 3.0.0→3.0.1. Supply-chain soak PASS (SHA-pin integrity MATCH, 7-day floor MET, zero CVEs/GHSA). Admin squash-merge (human/orchestrator-authorized). DEC-133 DEPENDABOT-ACTION-SOAK standing policy now in effect.
-- **D4 (product-owner):** holdout refresh H-NEW-MP-001/H-007 + ADF-wave + SEC-001 recursion holdouts. (H-028 CLOSED — false positive; no action needed.)
+**Step 3 — IDLE. D4 CLOSED. v0.6.0-dev.7 SHIPPED. Present open items to human, await direction.**
+- **D4 CLOSED (2026-06-26):** holdout-scenarios.md v1.1.2→1.2.0; 10 new scenarios (H-NEW-ADF-001..008 + H-NEW-SEC-001/002); 2 stale fixed (H-NEW-MP-001, H-007); adversary caught CRITICAL boundary off-by-one + fix-cascade (DEC-134); LOW pins → PR #560 merged @ 9657b1e. H-028 CLOSED (false positive). HOLDOUT-COVERAGE-GAPS HIGH gaps CLOSED. HOLDOUT-STALE RESOLVED.
+- **v0.6.0-dev.7 (SHIPPED):** PR #559 merged @ 342987f; tag pushed; release.yml run 28248392006 SUCCESS (1 transient-rerun); 10 assets/5 targets; GitHub prerelease; CHANGELOG rolled.
+- **PR #557 (MERGED @ c70d8a7):** dependabot: softprops/action-gh-release 3.0.0→3.0.1. DEC-133 DEPENDABOT-ACTION-SOAK standing policy now in effect.
 - **D5 (optional):** `cargo update` (rustls 0.23.41 + 64 semver-compatible bumps).
 - **S-PG-MERGE-AUTH-BYPASS** (story 91, MEDIUM, draft) — merge-auth + spawn/push/loop protocol.
 - **MUTATION-CI-TIMEOUT** — draft story candidate.
@@ -190,6 +189,7 @@ Full per-issue: `cycles/cycle-001/convergence-trajectory.md`. Current: **DEAD-CI
 
 | Issue | Title | Status | Priority | Notes |
 |-------|-------|--------|----------|-------|
+| #560 | test(adf): pin plain-text block-HTML and discrete footnote node shapes | **CLOSED — squash-merged → develop @ 9657b1e (2026-06-26)** | LOW | D4 LOW observation pins. 2 regression-pin tests: test_block_html_plain_text_interior_lines_preserved_in_one_paragraph + test_footnote_reference_and_definition_are_discrete_unmarked_text_nodes. 15/15 CI green. Clean code review (CR-004 docstring fixed pre-merge). Open PRs (action needed): NONE. |
 | #559 | chore(release): v0.6.0-dev.7 | **CLOSED — squash-merged → develop @ 342987f (2026-06-26)** | LOW | Version bump + CHANGELOG roll. release.yml run 28248392006 SUCCESS after 1 transient-network rerun (Windows curl [55] HTTP2 crates.io flake). 10 assets/5 targets. GitHub prerelease published. |
 | #557 | dependabot: bump softprops/action-gh-release 3.0.0→3.0.1 | **CLOSED — squash-merged → develop @ c70d8a7 (2026-06-26T17:51:42Z)** | LOW | Supply-chain soak PASS: SHA-pin integrity MATCH (718ea10b = v3.0.1), 7-day floor MET, zero CVEs/GHSA. Admin squash-merge (human/orchestrator-authorized, DEC-128 protocol). DEC-133 DEPENDABOT-ACTION-SOAK standing policy. |
 | #558 | refactor(cli): extract EDIT cluster into src/cli/issue/edit.rs — Seam B | **CLOSED — squash-merged → develop @ 2e3c3c2 (2026-06-26)** | LOW | Seam B refactor. Behavior-preserving (all invariants byte-for-byte; test parity 1957/93; mutation passed 16m47s). Both reviews clean; admin squash-merge (human-authorized). CI 15/15 green. |

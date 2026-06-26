@@ -4277,3 +4277,25 @@ The following row was present in STATE.md Current Phase Steps before the last-5 
 | Decision | DEC-133 recorded: DEPENDABOT-ACTION-SOAK standing policy — third-party GitHub Action bumps require ≥7-day soak from publication + SHA-pin integrity check + clean advisory check before merge. |
 | develop HEAD | c70d8a7. |
 | Counters | BC 603 (UNCHANGED). NFR 42. ADR 16. Stories 91. |
+
+---
+
+### Burst: D4 HOLDOUT REFRESH — CONVERGED + CLOSED (2026-06-26)
+
+| Field | Value |
+|-------|-------|
+| Event | D4 holdout refresh: authored 10 new black-box scenarios in `.factory/specs/prd/holdout-scenarios.md`. 8 ADF markdown→ADF wave (H-NEW-ADF-001..008) + 2 SEC-001 recursion-guard (H-NEW-SEC-001/002, BC-7.2.012, CWE-674). Fixed 2 stale scenarios (H-NEW-MP-001 `--story-points`→`--points`; H-007 re-anchored to BC-3.2.013 proactive + BC-3.2.009 fallback). total_holdouts 60→70; version 1.1.2→1.2.0. |
+| Convergence | 3 fresh-context adversarial passes: severity decay 1CRIT/2MED → 1CRIT/2MED → 0CRIT/0HIGH/0MED, 3 LOW. consistency-validator CONSISTENT both passes. Adversary caught: (a) CRITICAL false-fail off-by-one in SEC recursion boundary (N `>` prefixes → ADF depth N+1; 255 prefixes REJECT at depth 256, accept boundary is 254); (b) pass-1 remediation introduced factually-wrong `required`-flag rationale in H-007 (caught/fixed pass-2). All fixed. |
+| LOW observations | O-1 + O-3 → two source regression-pin tests added to src/adf.rs via PR #560 (test-only, squash-merged → develop @ 9657b1e). O-2 → dash-leading-input doc note added to H-NEW-ADF-003. H-NEW-ADF-004/006 now cite the pinning tests. |
+| PR #560 | `test(adf): pin plain-text block-HTML and discrete footnote node shapes`. 15/15 CI green (incl. Windows, mutation, coverage). Clean code review (1 MEDIUM docstring finding CR-004 found+fixed pre-merge). Gated merge with explicit orchestrator authorization (DEC-128 honored). develop c70d8a7 → 9657b1e. Worktree + branch cleaned up. |
+| Drift updates | HOLDOUT-COVERAGE-GAPS-2026-06-25: HIGH gaps (ADF wave + SEC-001) CLOSED by D4. HOLDOUT-STALE-2026-06-25: H-NEW-MP-001 + H-007 FIXED → RESOLVED. |
+| develop HEAD | 9657b1e. |
+| Counters | BC 603 (UNCHANGED). NFR 42. ADR 16. Stories 91. Holdouts 60→70. |
+
+---
+
+### Burst: PR #556 MERGED (2026-06-26) — archived from Current Phase Steps
+
+| Step | Agent | Status | Output |
+|------|-------|--------|--------|
+| **PR #556 MERGED** — Seam A refactor: JSM-create extracted to src/cli/issue/jsm_create.rs (handle_jsm_create + resolve_jsm_request_type_id + JsmCreateArgs; 444 LOC). create.rs 2,880→2,447 LOC. Behavior-preserving (pure move; test parity 1957/93). Both reviews clean; admin squash-merge (human-authorized). CI 15/15 green. | state-manager | MERGED | develop @ d04a7ec. |

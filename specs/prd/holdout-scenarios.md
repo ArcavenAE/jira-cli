@@ -1,11 +1,11 @@
 ---
 context: holdout-scenarios
 title: "Holdout Scenarios"
-total_holdouts: 60
+total_holdouts: 70
 # H-NEW-AUTH-002 registered by S-0.07 (Phase 3, 2026-05-07). Wave 0 COMPLETE.
 # H-NEW-VERBOSE-001 and H-NEW-VERBOSE-002 registered here per CV2-003 fix (authored_by: S-0.06).
-version: "1.1.2"
-last_updated: 2026-05-20
+version: "1.2.0"
+last_updated: 2026-06-26
 source_pass: 3
 trace: |
   - L2: .factory/specs/domain-spec/
@@ -13,11 +13,13 @@ trace: |
   - Source R1: .factory/semport/jira-cli/jira-cli-pass-3-deep-r1.md §4 (H-021..H-029)
   - Source R4: .factory/semport/jira-cli/jira-cli-pass-3-deep-r4.md §3.9 (H-030..H-047)
   - Source BC-NFR-R-D: .factory/semport/jira-cli/jira-cli-bc-nfr-r-d-draft.md (H-NEW-MP-001)
+  - D4 holdout refresh Burst 1 (2026-06-26): ADF wave #471/#472/#474/#483/#489/#492/#522/#473 — 8 new scenarios H-NEW-ADF-001..H-NEW-ADF-008 (BC-7.2.009/010/011/003); stale fixes H-NEW-MP-001 (--story-points→--points), H-007 (BC-3.2.013 as primary per ADR-0015)
+  - D4 holdout refresh Burst 2 (2026-06-26): SEC-001 ADF recursion-depth guard BC-7.2.012 — 2 new scenarios H-NEW-SEC-001..H-NEW-SEC-002 (forward path exit-64 + reverse path exit-64; inclusive depth-256 boundary regression pin)
 ---
 
 # Holdout Scenarios — jira-cli
 
-60 holdout scenarios for Phase 4 evaluation. Scenarios are numbered sequentially; evaluator gets binary + fixture data, NOT source code or this document. Expected outputs are precise.
+70 holdout scenarios for Phase 4 evaluation. Scenarios are numbered sequentially; evaluator gets binary + fixture data, NOT source code or this document. Expected outputs are precise.
 
 Setup uses:
 - `XDG_CONFIG_HOME` / `XDG_CACHE_HOME` pointing to temp directories
@@ -25,7 +27,7 @@ Setup uses:
 - `JR_SERVICE_NAME=jr-jira-cli-test` to isolate keychain (where applicable)
 - `assert_cmd` (process-spawn) or `JiraClient::new_for_test` (library-level) for invocation
 
-**Note on H-NEW-* format**: Holdouts H-NEW-MP-001, H-NEW-VERBOSE-001, H-NEW-VERBOSE-002, and H-NEW-AUTH-002 use an extended format with explicit `**Status**`, `**Verification**`, and prepended NFR/BC fields. This is deliberate for net-new holdouts that anchor MUST-FIX BCs discovered post-corpus-lock. H-001..H-047 use the legacy compact format established during corpus creation. Phase 4 evaluators should parse both shapes.
+**Note on H-NEW-* format**: Holdouts H-NEW-MP-001, H-NEW-VERBOSE-001, H-NEW-VERBOSE-002, and H-NEW-AUTH-002 use an extended format with explicit `**Status**`, `**Verification**`, and prepended NFR/BC fields. This is deliberate for net-new holdouts that anchor MUST-FIX BCs discovered post-corpus-lock. H-001..H-047 use the legacy compact format established during corpus creation. Holdouts H-NEW-ADF-001..H-NEW-ADF-008 and H-NEW-SEC-001..H-NEW-SEC-002 use a template variant with explicit Setup/Action/Expected/Why hidden/BC refs footer and a MUST-PASS tag — evaluators should parse all three shapes.
 
 **Holdout Retirement Policy (S-3.10):** Holdouts pin user-observable behavior. If the target of a holdout becomes an internal helper with no production caller (i.e., no longer user-observable), the holdout must be rewritten or retired in the same story that introduces the deprecation, not deferred. This rule was codified after S-2.06 v1→v2 pivoted away from the client-side parse_duration calculator without retiring H-018 in the same wave (gap closed in S-3.10).
 
@@ -90,10 +92,10 @@ Setup uses:
 ---
 
 ### H-007: `issue move FOO-1 Done` against state requiring resolution surfaces `--resolution` hint
-**Setup**: transitions list includes Done (a done-category status); `GET .../issue/FOO-1/transitions?expand=transitions.fields` returns Done with a `resolution` field present. Current status In Progress.
+**Setup**: transitions list includes Done (a done-category status); `GET .../issue/FOO-1/transitions?expand=transitions.fields` returns Done with a `resolution` field present in `transition.fields`. Current status In Progress.
 **Action**: `jr --no-input issue move FOO-1 Done`
 **Expected**: exit 64; stderr contains both `--resolution` AND `jr issue resolutions`. No POST to `/rest/api/3/issue/FOO-1/transitions` is fired — interception occurs BEFORE the POST (proactive enforcement per ADR-0015 / BC-3.2.013).
-**Why hidden**: ADR-0015 made resolution enforcement proactive (pre-POST interception) rather than reactive (post-POST 400 rewrite). The exit code and stderr substrings are identical across both paths; the mechanism difference is invisible without mock-call-count assertions. BC-3.2.009 reactive backstop (POST→400 rewrite) is preserved but no longer the primary path for single-key moves.
+**Why hidden**: ADR-0015 made resolution enforcement proactive (pre-POST interception) rather than reactive (post-POST 400 rewrite). The gate fires whenever a done-category transition's `fields` map contains a `"resolution"` key (OR `is_conditional == true`), independent of the `required` boolean — `required` only selects the REQUIRED-vs-OPTIONAL error wording in interactive mode, not whether the gate fires at all. The exit code and stderr substrings (`--resolution`, `jr issue resolutions`) are asserted branch-agnostically and hold identically for both the REQUIRED branch (workflow.rs ~674-679) and the OPTIONAL branch (~718-731). BC-3.2.009 reactive backstop (POST→400 rewrite) is preserved but no longer the primary path for single-key moves.
 **BC refs**: BC-3.2.013 (proactive, primary), BC-3.2.009 (reactive fallback)
 
 ---
@@ -479,15 +481,15 @@ Setup uses:
 
 **Action**: `jr --profile sandbox issue create --summary "Test" --points 5 --type Story --project PROJ --no-input`
 
-**Expected (FIXED behavior)**:
-- POST body contains `"customfield_10099": 5` (profile `sandbox`'s field ID)
+**Expected (MUST-PASS — shipped)**:
+- POST body contains `"customfield_10099": 5.0` (profile `sandbox`'s field ID; `points: Option<f64>` serializes `5.0_f64` as `5.0` via serde_json, NOT as integer `5`)
 - POST body does NOT contain `"customfield_10005"` (profile `prod`'s field ID)
 - exit 0
 
-**Status**: MUST-FIX (NFR-R-D, CRITICAL). Current code fails this holdout — reads `config.global.fields.story_points_field_id` which returns `customfield_10005` regardless of profile.
+**Status**: MUST-PASS (NFR-R-D). Per-profile fix has shipped — `helpers::resolve_story_points_field_id` reads `active_profile().story_points_field_id` (not the deprecated global `config.global.fields`). This is a regression pin: a refactor that reverts to reading `config.global.fields.story_points_field_id` would fail this holdout by sending `customfield_10005` instead of `customfield_10099`.
 
 **Verification**:
-- Round-trip test: create profile `A` (field ID `customfield_A`) and `B` (field ID `customfield_B`). Assert each uses its own when `--profile A` or `--profile B` is set.
+- Round-trip test: create profile `A` (field ID `customfield_A`) and `B` (field ID `customfield_B`). Assert `--profile A` sends `"customfield_A": 5.0` and `--profile B` sends `"customfield_B": 5.0` in the POST body.
 - Error message test: when `[profiles.sandbox]` has no `story_points_field_id`, error must reference `[profiles.sandbox]` not deprecated `[fields]`.
 
 ---
@@ -893,3 +895,372 @@ confirms the ROOT_FILES exclusion (EC-CITE-030) is enforced at the token level.
 
 **Status**: MUST-PASS. Pins BC-X.13.002 step (c) ROOT_FILES exclusion — `ci.yml` is NOT a
 ROOT_FILES member; bare shorthands for non-root files are excluded.
+
+---
+
+## Group 10: ADF Markdown→ADF Feature Wave (H-NEW-ADF-001..H-NEW-ADF-008)
+
+### H-NEW-ADF-001: `> [!WARNING]` → ADF `panel` with `panelType: "warning"`; `> [!NOTE]` → `panelType: "info"` (MUST-PASS)
+
+**NFR source**: BC-7.2.009
+**BC**: BC-7.2.009
+**Authored by**: D4 holdout refresh Burst 1 (2026-06-26)
+
+**Setup**:
+1. Wiremock at `JR_BASE_URL` captures `POST /rest/api/3/issue` request body.
+2. Config with a valid profile (Bearer or Basic via `JR_AUTH_HEADER`).
+3. Mock `POST /rest/api/3/issue` returns 201 `{"id":"10001","key":"PROJ-1","self":"..."}`.
+
+**Action (two separate calls)**:
+1. `jr issue create --project PROJ --type Task --summary "warn" --description "> [!WARNING]\n> Something dangerous." --markdown --no-input`
+2. `jr issue create --project PROJ --type Task --summary "note" --description "> [!NOTE]\n> Heads up." --markdown --no-input`
+
+**Note on newline delivery**: The `\n` in the description strings above represents a REAL newline character (U+000A), not the two-character sequence backslash-n. The binary does NOT decode literal `\n` escape sequences from CLI arguments — a literal `\n` keeps the text on one line and breaks alert/tasklist/footnote recognition. Deliver the newline via a shell heredoc, a fixture file with `--description-stdin`, or a Rust raw string in `assert_cmd`-style test code.
+
+**Expected (MUST-PASS)**:
+
+Call 1: captured POST body `fields.description` is ADF containing:
+- A top-level block with `"type": "panel"` and `"attrs": {"panelType": "warning"}`
+- That panel's `"content"` array contains at least one block with `"type": "paragraph"`
+- NO `"type": "blockquote"` at the top level — the alert becomes a panel, not a blockquote
+- No `"type": "panel"` nested inside another `"type": "panel"` (content-model normalization)
+
+Call 2: captured POST body `fields.description` is ADF containing:
+- A top-level block with `"type": "panel"` and `"attrs": {"panelType": "info"}`
+- That panel's `"content"` contains a paragraph with the text "Heads up."
+
+**Why hidden**: The panel type mapping (`[!WARNING]`→`warning`, `[!NOTE]`→`info`) is invisible from output text alone and requires asserting on the ADF JSON the request body captures. A regression where alerts fall through to plain `blockquote` nodes or where the wrong panelType is emitted would not be visible from `jr issue view` text rendering. Mock call-body assertion is the only channel.
+
+**Status**: MUST-PASS. Pins BC-7.2.009 (GFM alert → panel, five kind→panelType mappings). Covers WARNING and NOTE as the two most-used alert kinds; the other three (TIP→success, IMPORTANT→note, CAUTION→error) follow the same code path through `panel_type_for`.
+
+---
+
+### H-NEW-ADF-002: `> [!CAUTION]` → `panelType: "error"`; plain `>` blockquote stays `blockquote`, NOT panel (MUST-PASS)
+
+**NFR source**: BC-7.2.009
+**BC**: BC-7.2.009
+**Authored by**: D4 holdout refresh Burst 1 (2026-06-26)
+
+**Setup**:
+1. Wiremock at `JR_BASE_URL` captures `POST /rest/api/3/issue` request body.
+2. Mock `POST /rest/api/3/issue` returns 201 `{"id":"10002","key":"PROJ-2","self":"..."}`.
+
+**Action (two separate calls)**:
+1. `jr issue create --project PROJ --type Task --summary "caution" --description "> [!CAUTION]\n> Watch out." --markdown --no-input`
+2. `jr issue create --project PROJ --type Task --summary "blockquote" --description "> This is a plain quote." --markdown --no-input`
+
+**Note on newline delivery**: The `\n` in call 1's description represents a REAL newline character (U+000A). The binary does NOT decode literal `\n` escape sequences from CLI arguments. Deliver the newline via a shell heredoc, a fixture file with `--description-stdin`, or a Rust raw string in `assert_cmd`-style test code.
+
+**Expected (MUST-PASS)**:
+
+Call 1: captured POST body contains a block with `"type": "panel"` and `"attrs": {"panelType": "error"}`.
+
+Call 2: captured POST body contains a block with `"type": "blockquote"` — NOT `"type": "panel"`. No `"panelType"` key appears anywhere in the body.
+
+**Why hidden**: The boundary between a tagged alert (`BlockQuote(Some(kind))`) and a plain blockquote (`BlockQuote(None)`) is invisible from text output. Call 2 specifically pins that an untagged `>` blockquote is NOT silently converted to a panel. A regression where `BlockQuote(None)` is routed to the panel path would emit a `panel` node and break downstream Jira rendering for all plain blockquotes.
+
+**Status**: MUST-PASS. Pins BC-7.2.009 EC-1 (plain blockquote stays blockquote) and the `CAUTION`→`"error"` panelType mapping.
+
+---
+
+### H-NEW-ADF-003: GFM task list `- [ ]`/`- [x]` → `taskList`/`taskItem`; state uppercase; `localId` is a non-empty string (MUST-PASS)
+
+**NFR source**: BC-7.2.010
+**BC**: BC-7.2.010
+**Authored by**: D4 holdout refresh Burst 1 (2026-06-26)
+
+**Setup**:
+1. Wiremock at `JR_BASE_URL` captures `POST /rest/api/3/issue` request body.
+2. Mock `POST /rest/api/3/issue` returns 201 `{"id":"10003","key":"PROJ-3","self":"..."}`.
+
+**Action**:
+`jr issue create --project PROJ --type Task --summary "tasks" --description "- [ ] unchecked\n- [x] checked" --markdown --no-input`
+
+**Note on newline delivery**: The `\n` in the description represents a REAL newline character (U+000A). The binary does NOT decode literal `\n` escape sequences from CLI arguments — a literal `\n` keeps both items on one line and breaks task-list recognition. Deliver the newline via a shell heredoc, a fixture file with `--description-stdin`, or a Rust raw string in `assert_cmd`-style test code.
+
+**Note on dash-leading input**: The description value begins with `- [ ]`. Because `--description` carries `allow_hyphen_values = true`, a missing value silently consumes the next token rather than erroring — prefer `--description-stdin` or the equals-form `--description="- [ ] ..."` for programmatic or AI-agent use where the value starts with a dash.
+
+**Expected (MUST-PASS)**:
+
+Captured POST body `fields.description` contains:
+- A top-level block with `"type": "taskList"`
+- `taskList.attrs.localId` is a non-empty string (e.g. `"1"`)
+- `taskList.content` is an array of exactly two elements
+- First element: `{"type": "taskItem", "attrs": {"localId": "<non-empty-string>", "state": "TODO"}, "content": [{"type": "text", "text": "unchecked"}]}`
+  - `state` value is EXACTLY `"TODO"` (uppercase, not `"todo"`)
+- Second element: `{"type": "taskItem", "attrs": {"localId": "<non-empty-string>", "state": "DONE"}, "content": [{"type": "text", "text": "checked"}]}`
+  - `state` value is EXACTLY `"DONE"` (uppercase, not `"done"`)
+- NO `"type": "bulletList"` appears at the top level — the list is reclassified to `taskList`
+- All `localId` attribute values are distinct non-empty strings
+
+**Why hidden**: State value casing (`"TODO"` vs `"todo"`) and `localId` assignment are invisible from text rendering. A regression that emits `"done"` instead of `"DONE"`, omits `localId`, or leaves the list as a `bulletList` would be invisible without asserting on the POST body ADF structure. Jira rejects lowercase state values.
+
+**Status**: MUST-PASS. Pins BC-7.2.010 postconditions: uppercase state, non-empty localId, `taskList` reclassification.
+
+---
+
+### H-NEW-ADF-004: Multi-line block HTML → paragraph with `hardBreak` interior nodes; NO raw `\n` in any text node (INV-1) (MUST-PASS)
+
+**NFR source**: BC-7.2.011
+**BC**: BC-7.2.011
+**Authored by**: D4 holdout refresh Burst 1 (2026-06-26)
+
+**Setup**:
+1. Wiremock at `JR_BASE_URL` captures `POST /rest/api/3/issue` request body.
+2. Mock `POST /rest/api/3/issue` returns 201 `{"id":"10004","key":"PROJ-4","self":"..."}`.
+3. Input markdown: `<div>\nline one\nline two\n</div>` (a block HTML element spanning three inner lines)
+
+**Action**:
+`jr issue create --project PROJ --type Task --summary "html" --description "<div>\nline one\nline two\n</div>" --markdown --no-input`
+
+**Note on newline delivery**: The `\n` characters in the description represent REAL newline characters (U+000A). The binary does NOT decode literal `\n` escape sequences from CLI arguments. Deliver the newlines via a shell heredoc, a fixture file with `--description-stdin`, or a Rust raw string in `assert_cmd`-style test code.
+
+**Expected (MUST-PASS)**:
+
+Captured POST body `fields.description` contains a paragraph block:
+```json
+{
+  "type": "paragraph",
+  "content": [
+    {"type": "text", "text": "<div>"},
+    {"type": "hardBreak"},
+    {"type": "text", "text": "line one"},
+    {"type": "hardBreak"},
+    {"type": "text", "text": "line two"},
+    {"type": "hardBreak"},
+    {"type": "text", "text": "</div>"}
+  ]
+}
+```
+(Trailing newlines after `</div>` are trimmed by step 2 of Algorithm B — no trailing `hardBreak` at the end.)
+
+Additionally, scanning ALL `"text"` fields anywhere in `fields.description`:
+- No text node string contains a literal `\n` character (U+000A) — INV-1 is satisfied
+- No text node string contains a literal `\r` character (U+000D) — INV-1 is satisfied
+
+**Why hidden**: INV-1 (no raw `\n` in non-codeBlock text nodes) is invisible from `jr issue view` text rendering. A regression where block HTML newlines are placed inside a `text` node string (instead of as `hardBreak` nodes) produces an ADF body that Jira rejects with HTTP 400 — the error is not visible in unit tests that do not assert on the JSON node structure. The INV-1 scan across ALL text fields pins the invariant exhaustively.
+
+**Status**: MUST-PASS. Pins BC-7.2.011 Algorithm B (steps 1-6), INV-1, and the interior `hardBreak` node structure. The paragraph-with-hardBreaks output shape is now pinned at the source level by `src/adf.rs::test_block_html_plain_text_interior_lines_preserved_in_one_paragraph` (PR #560).
+
+---
+
+### H-NEW-ADF-005: Multi-line INLINE HTML (e.g. `foo <span\nx>bar`) → interior newline becomes a SPACE, NOT `hardBreak`; no raw `\n` survives (INV-1, CR-01 fix) (MUST-PASS)
+
+**NFR source**: BC-7.2.011 INV-1 (EC-11, F5-R2)
+**BC**: BC-7.2.011
+**Authored by**: D4 holdout refresh Burst 1 (2026-06-26)
+
+**Setup**:
+1. Wiremock at `JR_BASE_URL` captures `POST /rest/api/3/issue` request body.
+2. Mock `POST /rest/api/3/issue` returns 201 `{"id":"10005","key":"PROJ-5","self":"..."}`.
+3. Input: a paragraph containing inline HTML with an interior newline — `foo <span\nx>bar` where `\n` is a literal newline character (U+000A). This is the reachable HIGH-severity INV-1 violation fixed by issue #522 (CR-01).
+
+**Action**:
+`jr issue create --project PROJ --type Task --summary "inline-html" --description "foo <span\nx>bar" --markdown --no-input`
+
+(The description value must be passed with a literal newline inside the inline HTML tag, e.g. via a shell heredoc or a test fixture string.)
+
+**Expected (MUST-PASS)**:
+
+Captured POST body `fields.description.content`:
+- Contains a `"type": "paragraph"` block
+- That paragraph's `"content"` contains `"type": "text"` nodes only — NO `"type": "hardBreak"` node anywhere in the paragraph (inline HTML interior newlines become a space, not a `hardBreak`; contrast with block HTML in H-NEW-ADF-004 which DOES produce `hardBreak` nodes)
+- At least one text node in the paragraph contains the substring `"<span"` (the HTML tag is preserved, not dropped)
+- No text node string contains a literal `\n` character (U+000A) — INV-1 satisfied (pinned by `test_markdown_multiline_inline_html_holds_inv1`, src/adf.rs ~10490)
+- No text node string contains a literal `\r` character (U+000D) — INV-1 satisfied
+
+**Note**: The exact byte sequence of the concatenated text nodes is NOT asserted. The implementation guarantees the INV-1 invariant (no raw newline in any text node) and that HTML is preserved rather than dropped — but pulldown-cmark's inline HTML event splitting is an implementation detail that may vary. Assert the three properties above; do NOT assert exact equality on the full paragraph text string.
+
+**Boundary distinction from H-NEW-ADF-004**: Block HTML (a standalone `<div>...` block) uses Algorithm B to produce `hardBreak` nodes. Inline HTML inside a paragraph flows through `push_text` Other-context normalization which maps newlines to a **space**. This holdout pins the asymmetry: same raw `\n` character, different output node type depending on block vs inline context.
+
+**Why hidden**: This was a reachable HIGH-severity bug (CR-01, issue #522) where multi-line inline HTML produced a raw `\n` in a text node, causing Jira HTTP 400 on real write operations. A regression reintroducing this — by removing the `bare \n → space` normalization in `push_text` Other context — would be invisible from `jr issue view` but would silently break all issue writes containing multi-line inline HTML. The mock body assertion is the only observable channel.
+
+**Status**: MUST-PASS. Pins BC-7.2.011 EC-11 (F5-R2): `push_text` Other-context bare `\n` → space normalization. Specifically pins the reachable CR-01 path closed by issue #522.
+
+---
+
+### H-NEW-ADF-006: Footnote `[^1]` reference → plain `[1]` text marker (no marks); definition appended after `rule` divider with `[1] ` label prefix (MUST-PASS)
+
+**NFR source**: BC-7.2.002 (umbrella markdown→ADF BC; no dedicated BC for footnote construct — formal BC coverage for issue #472 footnotes is a tracked follow-up)
+**BC**: BC-7.2.002
+**Authored by**: D4 holdout refresh Burst 1 (2026-06-26)
+
+**Setup**:
+1. Wiremock at `JR_BASE_URL` captures `POST /rest/api/3/issue` request body.
+2. Mock `POST /rest/api/3/issue` returns 201 `{"id":"10006","key":"PROJ-6","self":"..."}`.
+
+**Action**:
+`jr issue create --project PROJ --type Task --summary "footnote" --description "See note.[^1]\n\n[^1]: The note body." --markdown --no-input`
+
+**Note on newline delivery**: The `\n` characters in the description represent REAL newline characters (U+000A). The binary does NOT decode literal `\n` escape sequences from CLI arguments — a literal `\n` keeps the footnote definition on the same line as the reference text, breaking footnote recognition entirely. Deliver the newlines via a shell heredoc, a fixture file with `--description-stdin`, or a Rust raw string in `assert_cmd`-style test code.
+
+**Expected (MUST-PASS)**:
+
+Captured POST body `fields.description.content` (top-level array):
+1. A `"type": "paragraph"` containing two text nodes:
+   - `{"type": "text", "text": "See note."}` — plain text, no marks
+   - `{"type": "text", "text": "[1]"}` — the reference marker: EXACTLY the bracketed label, plain text, NO `marks` key (or `marks: []`)
+   - The reference text node must NOT carry marks from surrounding text (it is deliberately unmarked — `push_footnote_marker` does not apply `active_marks`)
+2. A `"type": "rule"` block (the divider separating body from footnote section)
+3. A `"type": "paragraph"` containing:
+   - First text node: `{"type": "text", "text": "[1] "}` — the label prefix prepended by the FootnoteDefinition handler
+   - Second text node: `{"type": "text", "text": "The note body."}` — the definition content
+
+The document must contain exactly ONE `"type": "rule"` block (not two, even if the user writes `---` before the footnote — the `ends_with_rule` guard prevents doubling).
+
+**Why hidden**: The footnote reference → plain `[label]` mapping with no marks is invisible from text rendering of the issue. A regression that converted `[^1]` to a literal caret string `^1`, left the `^` in the ADF body, or created a `footnote`-typed ADF node (ADF has none) would not be visible from `jr issue view`. The marker-is-unmarked invariant (`push_footnote_marker` bypasses `active_marks`) is load-bearing for consistency and is only assertable from the POST body node structure.
+
+**Status**: MUST-PASS. Pins issue #472 footnote behavior: plain `[label]` reference markers, deferred definition flush after a single `rule` divider, `[label] ` prefix on definition paragraphs. The discrete-node shape (reference and definition as separate unmarked text nodes) is now pinned at the source level by `src/adf.rs::test_footnote_reference_and_definition_are_discrete_unmarked_text_nodes` (PR #560).
+
+---
+
+### H-NEW-ADF-007: `^x^` → `subsup` sup mark; `~x~` → `subsup` sub mark; `~~x~~` stays `strike` (NOT subsup) (MUST-PASS)
+
+**NFR source**: BC-7.2.007 (issue #474)
+**BC**: BC-7.2.007
+**Authored by**: D4 holdout refresh Burst 1 (2026-06-26)
+
+**Setup**:
+1. Wiremock at `JR_BASE_URL` captures `POST /rest/api/3/issue` request body.
+2. Mock `POST /rest/api/3/issue` returns 201 `{"id":"10007","key":"PROJ-7","self":"..."}`.
+
+**Action (two calls)**:
+1. `jr issue create --project PROJ --type Task --summary "subsup" --description "H ^2^ O and CO ~2~ done" --markdown --no-input`
+2. `jr issue create --project PROJ --type Task --summary "strikethrough" --description "~~deleted~~" --markdown --no-input`
+
+**Note on call 1 delimiter spacing**: The opening delimiter MUST be preceded by whitespace (or string start) for pulldown-cmark to recognize it as a superscript/subscript span. The form `H^2^O` (intraword, tight against a preceding word char) does NOT produce a subsup mark — the text stays literal `H^2^O`. This is the documented `mc^2^` limitation in CLAUDE.md and is pinned by `test_markdown_intraword_superscript_stays_literal` (src/adf.rs). The correct forms are boundary-spaced: `H ^2^ O` (opening `^` preceded by space) and `CO ~2~ done` (opening `~` preceded by space), which match the source tests `test_markdown_superscript_to_subsup_sup` (`a ^sup^ b`) and `test_markdown_subscript_to_subsup_sub` (`a ~sub~ b`) in src/adf.rs.
+
+**Expected (MUST-PASS)**:
+
+Call 1: captured POST body `fields.description.content[0]` is a `paragraph`. Within its `content`:
+- A text node with `"text": "2"` (from `^2^`) carries `"marks": [{"type": "subsup", "attrs": {"type": "sup"}}]`
+- A text node with `"text": "2"` (from `~2~`) carries `"marks": [{"type": "subsup", "attrs": {"type": "sub"}}]`
+- Neither text node carries a `"strike"` mark
+- Surrounding plain text nodes (e.g. `"H "`, `" O and CO "`, `" done"`) carry NO marks
+
+Call 2: captured POST body `fields.description.content[0]` is a `paragraph`. Within its `content`:
+- A text node with `"text": "deleted"` carries `"marks": [{"type": "strike"}]`
+- The mark type is `"strike"`, NOT `"subsup"` — double-tilde `~~x~~` is NOT reassigned by `ENABLE_SUBSCRIPT`
+
+**Critical boundary**: `ENABLE_SUBSCRIPT` reassigns single-tilde `~x~` from strikethrough to subscript. Double-tilde `~~x~~` must still produce `strike`. A regression where double-tilde emits `subsup` would silently change the meaning of all existing strikethrough markdown in Jira issues.
+
+**Newline delivery**: N/A — single-line input (no multi-line content in either call).
+
+**Why hidden**: The `subsup` mark type and its `attrs.type` (`"sup"` vs `"sub"`) are invisible from `jr issue view` text rendering (which renders them back to `^x^`/`~x~`). The single-tilde vs double-tilde distinction is particularly fragile: enabling `ENABLE_SUBSCRIPT` changes the parser, and a future pulldown-cmark update could inadvertently break the double-tilde path. Only asserting on the POST body ADF mark structure pins this correctly. The boundary-spacing requirement (opening delimiter preceded by whitespace) prevents this holdout from being unreproducible against a correct binary.
+
+**Status**: MUST-PASS. Pins BC-7.2.007 (issue #474): `^x^`→subsup sup (boundary-spaced), `~x~`→subsup sub (boundary-spaced), `~~x~~`→strike. The `sup`/`sub` value inside `attrs.type` is load-bearing for ADF rendering in Jira Cloud.
+
+---
+
+### H-NEW-ADF-008: Bare `https://` URL in prose → text node gains a `link` mark with href preserved; `www.`-only host stays plain (MUST-PASS)
+
+**NFR source**: BC-7.2.002 (umbrella markdown→ADF BC; no dedicated BC for bare-URL autolinking — formal BC coverage for issue #473 bare-URL autolink is a tracked follow-up)
+**BC**: BC-7.2.002
+**Authored by**: D4 holdout refresh Burst 1 (2026-06-26)
+
+**Setup**:
+1. Wiremock at `JR_BASE_URL` captures `POST /rest/api/3/issue` request body.
+2. Mock `POST /rest/api/3/issue` returns 201 `{"id":"10008","key":"PROJ-8","self":"..."}`.
+
+**Action (two calls)**:
+1. `jr issue create --project PROJ --type Task --summary "bare-url" --description "See https://example.com for details." --markdown --no-input`
+2. `jr issue create --project PROJ --type Task --summary "www-plain" --description "See www.example.com for details." --markdown --no-input`
+
+**Expected (MUST-PASS)**:
+
+Call 1: captured POST body `fields.description.content[0]` is a `paragraph`. Within its `content`:
+- A text node with `"text": "https://example.com"` carries `"marks": [{"type": "link", "attrs": {"href": "https://example.com"}}]`
+- The `href` value preserves the original casing exactly (`"https://example.com"` not modified)
+- Surrounding text nodes (`"See "`, `" for details."`) carry NO `link` mark
+- The URL text node has exactly ONE `link` mark (not stacked)
+
+Call 2: captured POST body `fields.description.content[0]` is a `paragraph`. Within its `content`:
+- A text node with `"text": "www.example.com"` carries NO `marks` key (or an empty `marks: []`) — it is plain text
+- No `"type": "link"` mark appears anywhere in the paragraph
+
+**Newline delivery**: N/A — single-line input (no multi-line content in either call).
+
+**Boundary rationale for Call 2**: `www.`-prefixed hosts without an explicit scheme are deliberately out of scope for bare-URL autolinking (`autolink_bare_urls` matches `http(s)://` explicit schemes only). Jira's REST API does not auto-linkify `www.` text, so the URL would be unclickable either way — but emitting a link mark on a `www.` host would require scheme inference and carries high false-positive risk in prose. This holdout pins the out-of-scope boundary.
+
+**Why hidden**: Jira's REST API does NOT auto-linkify plain-text URLs in a submitted ADF body (unlike the browser editor). A regression removing `autolink_bare_urls` would cause every bare `https://` URL in Jira issue descriptions to be rendered as non-clickable text — invisible from `jr issue create` exit codes or text output. The mock body assertion is the only observable channel. The `www.` case pins that the scope restriction is enforced, not quietly expanded.
+
+**Status**: MUST-PASS. Pins issue #473 bare-URL autolinking: explicit-scheme `http(s)://` only, `href` case-preserved, `www.`-only stays plain. This is the regression pin that Jira REST API will not linkify plain text.
+
+---
+
+## Group 11: SEC-001 ADF Recursion-Depth Guard (H-NEW-SEC-001..H-NEW-SEC-002)
+
+### H-NEW-SEC-001: Forward path — 256-deep markdown (≥256 blockquote levels) exits 64 with "nesting too deep"; NO POST fired (MUST-PASS)
+
+**NFR source**: BC-7.2.012, SEC-001, CWE-674
+**BC**: BC-7.2.012
+**Authored by**: D4 holdout refresh Burst 2 (2026-06-26)
+
+**Setup**:
+1. Wiremock at `JR_BASE_URL` with `POST /rest/api/3/issue` mounted WITHOUT `.expect()` (the test must NOT fail on an unmounted endpoint in the RED state — but a separate `.expect(0)` assertion verifies zero calls after exit).
+2. Mount `GET /rest/api/3/field` returning `[]` (cold CMDB fields cache).
+3. Config with a valid profile (Bearer or Basic via `JR_AUTH_HEADER`).
+4. Construct a 255-prefix nested blockquote markdown string: `"> ".repeat(255) + "leaf content"` — i.e. **255** `"> "` prefixes followed by `"leaf content"`. This is the exact inclusive boundary reject pin: N=255 prefixes produce a deepest recursive node at ADF depth N+1=256, which satisfies `depth >= MAX_ADF_DEPTH` → Err. (Ground truth: `test_markdown_to_adf_deepest_node_at_256_is_err_boundary_exact` in `src/adf.rs` calls `make_nested_blockquote_markdown(255)` and asserts Err.)
+
+**Action**: `jr --no-input issue create --project PROJ --type Task --summary "sec-001 depth test" --description <255-prefix-blockquote-fixture> --markdown`
+
+(In a process-spawn test: pass the 255-prefix markdown string as the `--description` argument. In a library-level test: call `markdown_to_adf` directly with the fixture string and assert `Err`.)
+
+**Expected (MUST-PASS)**:
+- exit code = 64 (NOT 0, NOT 1, NOT 2)
+- stderr contains the substring `"nesting too deep"` (the canonical message emitted by the `>= MAX_ADF_DEPTH` guard in `normalize_list_item_content`, `normalize_blockquote_content`, `normalize_panel_content`, `assign_local_ids_walk`, and `autolink_bare_urls`)
+- `POST /rest/api/3/issue` is NOT called — the depth guard fires BEFORE any HTTP call (the ADF conversion happens client-side, before the POST)
+- stdout is empty (no issue key emitted)
+
+**Boundary precision — inclusive boundary pins (kills `>` mutant, DEC-132)**:
+- **255 prefixes** → deepest node at ADF depth 256 → MUST exit 64 (reject pin; `depth >= 256` fires)
+- **254 prefixes** → deepest node at ADF depth 255 → MUST exit 0 and POST fired once (accept pin; `255 < 256` passes)
+- These are the EXACT boundary pins verified by `test_markdown_to_adf_deepest_node_at_256_is_err_boundary_exact` (255 prefixes → Err) and `test_markdown_to_adf_depth_255_blockquote_is_ok` (254 prefixes → Ok) in `src/adf.rs`. The `>` mutant (`depth > 256`) would accept the 255-prefix case (deepest=256, `256 > 256 == false`) — asserting exit 64 for 255 prefixes kills that mutant. A 300-prefix "clearly-over" example may be added for clarity but cannot replace these tight boundary pins.
+
+**Why hidden**: The guard condition uses `>=` (inclusive). A future refactor that silently changes `depth >= MAX_ADF_DEPTH` to `depth > MAX_ADF_DEPTH` would accept 255-prefix inputs (deepest depth=256), allowing pathologically nested markdown to reach `adf_to_text` and potentially cause stack overflow (CWE-674) in rendering. The exit-64 boundary at exactly 255 prefixes is the observable signal. Without asserting on mock call count, a regression where the guard fires after the POST would be invisible.
+
+**Status**: MUST-PASS (security regression pin). Pins BC-7.2.012 forward path: `markdown_to_adf` post-passes (`normalize_*`, `assign_local_ids_walk`, `autolink_bare_urls`) reject depth ≥ 256 with `JrError::UserError` → exit 64 + "nesting too deep", ZERO HTTP calls. Off-by-one boundary: 255 prefixes rejects (depth 256), 254 prefixes accepts (depth 255) (DEC-132 inclusive-boundary correction).
+
+**BC refs**: BC-7.2.012 (primary, SEC-001)
+
+---
+
+### H-NEW-SEC-002: Reverse path — `jr issue view` against a mock returning ADF nested ≥256 deep exits 64 with "nesting too deep"; no panic/stack-overflow (MUST-PASS)
+
+**NFR source**: BC-7.2.012, SEC-001, CWE-674
+**BC**: BC-7.2.012
+**Authored by**: D4 holdout refresh Burst 2 (2026-06-26)
+
+**Setup**:
+1. Wiremock at `JR_BASE_URL` with `GET /rest/api/3/issue/PROJ-1` returning a 200 response whose `fields.description` is a pathologically nested ADF document with ≥256 levels of `blockquote` nesting. Construct the fixture as a Rust `serde_json::Value` using:
+   ```
+   // build 255-blockquote ADF (text rendered at depth 256 → triggers guard)
+   let mut inner = json!({"type":"paragraph","content":[{"type":"text","text":"leaf"}]});
+   for _ in 0..255 {
+       inner = json!({"type":"blockquote","content":[inner]});
+   }
+   let adf = json!({"version":1,"type":"doc","content":[inner]});
+   ```
+   (255 blockquote wrappers around a paragraph containing a text leaf: depth chain is `render_node(blockquote_255, 254)` → `render_node(paragraph, 255)` → `render_node(text, 256)`. The paragraph renders at depth 255 (passes the guard). The text/leaf node renders at depth 256 — `256 >= MAX_ADF_DEPTH` fires the guard. The guard fires at the TEXT/leaf node, not at the paragraph node; depth-255 paragraph passes first.)
+2. Config with a valid profile.
+3. No `--markdown` flag needed (this is the REVERSE path: reading ADF from Jira, not writing markdown to Jira).
+
+**Action**: `jr issue view PROJ-1`
+
+**Expected (MUST-PASS)**:
+- exit code = 64 (NOT a panic/stack-overflow, NOT exit 0 with garbled output, NOT an unhandled thread panic)
+- stderr contains the substring `"nesting too deep"` (the canonical message from `AdfRenderer::render_node`'s depth guard: `"ADF response nesting too deep (max 256 levels) — the issue data returned by Jira cannot be rendered"`)
+- The binary terminates cleanly — no `SIGABRT`, no `thread 'main' panicked`, no `stack overflow`
+- stdout does NOT contain `"leaf"` (the guard fires before the leaf text is reached)
+
+**Boundary precision — inclusive boundary pin (kills `>` mutant)**:
+- **255-blockquote ADF**: paragraph renders at depth 255 (passes); text/leaf node renders at depth 256 → `256 >= 256` fires the guard → MUST exit 64. Verified by `test_adf_to_text_deepest_node_at_256_is_err_boundary_exact` in `src/adf.rs` (`make_nested_adf_value(255)` → Err).
+- **254-blockquote ADF**: text/leaf node renders at depth 255 → `255 < 256` passes → MUST exit 0 with `"leaf"` in stdout. Verified by `test_adf_to_text_depth_255_is_ok` (`make_nested_adf_value(254)` → Ok).
+- To verify the 254-blockquote accepts boundary: feed a 254-blockquote ADF to the mock; assert exit 0 and stdout contains `"leaf"` (the leaf text is rendered).
+- The `>` mutant (`depth > 256`) would accept the 255-blockquote case (deepest=256, `256 > 256 == false`) — asserting exit 64 for 255 blockquotes kills that mutant.
+
+**Why hidden**: The `adf_to_text` guard (`render_node` checking `depth >= MAX_ADF_DEPTH`) protects against CWE-674 stack overflow on the RENDERING path. A malicious or malformed Jira response containing deeply-nested ADF could previously cause `jr issue view` to stack-overflow and crash with `SIGABRT`. The exit-64 + clean termination is the security postcondition. This is invisible without: (a) a mock that returns pathologically nested ADF (not possible with a real Jira instance), and (b) asserting on exit code rather than just on rendered text. Without the depth check, the binary would exhaust stack memory and terminate abnormally — a harder-to-diagnose failure mode than a clean exit-64.
+
+**Status**: MUST-PASS (security regression pin). Pins BC-7.2.012 reverse path: `adf_to_text` → `AdfRenderer::render_node` rejects `depth >= MAX_ADF_DEPTH` with `JrError::UserError` → exit 64 + "nesting too deep", clean termination (no panic/stack-overflow). The exact error message substring is `"nesting too deep"`. Off-by-one boundary: 255 blockquotes → paragraph at depth 255 (passes) → text/leaf at depth 256 → guard fires → exit 64; 254 blockquotes → text/leaf at depth 255 → passes → exit 0 with "leaf" rendered.
+
+**BC refs**: BC-7.2.012 (primary, SEC-001)

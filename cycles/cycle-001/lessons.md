@@ -4604,3 +4604,28 @@ _Related: PG-PR-MANAGER-OVERREACH (new drift item); PG-MERGE-AUTH-BYPASS; DEC-12
 _Recorded: 2026-06-25 — D3 pattern hygiene PR #555 close. State-manager._
 _Tagged: [process-gap] [review] [fresh-eyes-value] [documentation-correctness]_
 _Related: DEC-131 (2026-06-22 phantom ADR citation catch); PR #555 commit 7ca3fde._
+
+---
+
+## D4-HOLDOUT-BOUNDARY-ARITHMETIC (2026-06-26) [codified]
+
+**Category:** adversarial-review / holdout-authoring / boundary-arithmetic
+
+**Tag:** [codified] D4-HOLDOUT-BOUNDARY-ARITHMETIC — CRITICAL catch, process reinforcement
+
+**Lesson:** During D4 holdout refresh, a fresh-context adversary caught a CRITICAL false-fail in the SEC-001 recursion boundary scenario (H-NEW-SEC-001). The scenario originally specified 256 `>` blockquote prefixes as the "accept-boundary" input, asserting it should succeed. However, N blockquote levels → ADF depth N+1 (the document root counts). So 256 prefixes produce depth 257, which exceeds MAX_ADF_DEPTH=256 and correctly exits 64 — making the scenario a false-fail that would have rejected a CORRECT binary in Phase 4. The correct accept boundary is 254 prefixes (depth 255 < 256), and the reject boundary is 255 prefixes (depth 256 == MAX_ADF_DEPTH, triggers the inclusive `>=` guard).
+
+**Root cause:** boundary arithmetic in holdout scenarios requires the author to trace through the implementation's depth-counting model, not just the user-visible nesting level. A "256-deep" holdout written at the API surface (`>` prefix count) silently conflates two things: (a) the user's nesting level, and (b) the ADF depth which includes the document root node.
+
+**Reinforcement (F2-PIECEWISE lineage):** The same pass-1 remediation that corrected H-NEW-SEC-001 also introduced a factually-wrong `required`-flag rationale in H-007 (claimed the `required: true` field is used in non-interactive gating — incorrect; it is informational only). This is a textbook F2-PIECEWISE fix-cascade: the author's focus on the CRITICAL finding caused them to introduce an error in an adjacent scenario. The pass-2 adversary caught it. This is the DEC-130 pattern (DEAD-CITATION-CI had 3 self-inflicted F2 fix-cascades); F2-PIECEWISE-PROTOCOL [ENFORCED] applies to holdout authoring just as it does to spec authoring — run a consistency pass after each holdout-set edit before declaring convergence.
+
+**D4 LOW observations → source regression pins (PR #560):** All 3 LOW observations were escalated (per human direction) to source regression-pin tests in src/adf.rs rather than doc notes. This proved correct: the pinned tests (plain-text block-HTML + discrete footnote node shapes) are now CI-enforced guards against future behavioral drift. When a LOW adversarial observation identifies a load-bearing behavioral shape that is untested, prefer a regression-pin test over a prose note.
+
+**Codification:**
+1. Holdout boundary scenarios that test depth guards MUST trace through the implementation's depth model, not just the user-visible nesting level. Document the N+offset arithmetic explicitly in the scenario rationale.
+2. After fixing any holdout scenario, run a consistency pass (or fresh-context adversary pass) over ALL scenarios before declaring convergence — not just the repaired one.
+3. When LOW adversarial observations identify untested load-bearing behavioral shapes, prefer source regression-pin tests over doc-only notes.
+
+_Recorded: 2026-06-26 — D4 holdout refresh close. State-manager._
+_Tagged: [codified] [adversarial-review] [holdout-authoring] [boundary-arithmetic] [fix-cascade] [regression-pin]_
+_Related: DEC-134; BC-7.2.012; PR #560 (develop @ 9657b1e); DEC-120/121/129/130 lineage; F2-PIECEWISE-PROTOCOL._
