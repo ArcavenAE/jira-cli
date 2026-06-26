@@ -4194,3 +4194,35 @@ The following row was present in STATE.md Current Phase Steps before the last-5 
 | Activation | dbe8625 / v0.6.0-dev.6 (UNCHANGED). |
 | REFACTOR-ISSUE-CLI-SHARD | Seam A DONE. Seam B (edit cluster → edit.rs) DEFERRED to next handle_edit-touching churn. Seam C (workflow.rs) DEFERRED indefinitely. |
 | develop HEAD | d04a7ec. |
+
+---
+
+### Burst: PR #554 MERGED + H-028 FALSE POSITIVE (archived from STATE.md Current Phase Steps)
+
+| Field | Value |
+|-------|-------|
+| Event | PR #554 MERGED — D1 doc-fix bundle (CLAUDE.md BC-7.2.012 Gotchas entry for ADF recursion guard + CHANGELOG [Unreleased] entries for #551 JR_SERVICE_NAME debug-gate and #550 actions/checkout v7.0.0). Clean review: code-reviewer caught + fixed HIGH off-by-one factual error pre-PR (DEC-131-style fresh-review value); pr-reviewer APPROVE; CI 15/15 green; admin squash-merge (human-authorized). All of DRIFT-S3-001/002/003/004 now closed. Maintenance sweep 2026-06-25 D1+D2 COMPLETE. |
+| Agent | state-manager |
+| Status | MERGED |
+| Output | develop @ aa2cdca. |
+
+| Event | H-028 INVESTIGATED — verify-before-fix root-cause found FALSE POSITIVE (verdict B): `jr auth list` correctly exits 64 on invalid config key `[profiles."foo:bar"]` (both --output json and human paths) via shared `config.rs::Config::load_inner` (~L298–307) chokepoint. PR #548 did NOT regress this — guard test `config_load_rejects_invalid_profile_key_in_config` passes. Sweep entry was a false positive (likely flawed `JR_CONFIG_DIR` isolation during sweep repro). No code change. Avoided an unnecessary F1-F7 cycle. holdout-freshness.md corrected: stale count 3→2 (H-NEW-MP-001 + H-007 only). HOLDOUT-STALE-2026-06-25 drift item updated. Lesson HOLDOUT-FALSE-POSITIVE-VERIFY added to lessons.md. Finding: `maintenance/2026-06-25/H-028-root-cause.md`. |
+| Agent | state-manager |
+| Status | COMPLETE |
+| Output | factory-artifacts @ 2026-06-25. |
+
+---
+
+### Burst: PR #558 MERGED — Seam B EDIT extraction (2026-06-26)
+
+| Field | Value |
+|-------|-------|
+| Event | PR #558 (refactor(cli): extract EDIT cluster into src/cli/issue/edit.rs — Seam B) SQUASH-MERGED via admin to develop. develop HEAD = 2e3c3c2. CI 15/15 green INCLUDING mutation job (passed 16m47s, no timeout). |
+| Files changed | src/cli/issue/edit.rs (new, 2,067 LOC — EDIT cluster verbatim move); src/cli/issue/create.rs 2,447→394 LOC; two include_str! retargets + guard comment; src/cli/issue/mod.rs. |
+| Behavior | Behavior-preserving. All invariants byte-for-byte: --label fork (BUG-LABEL-400), --type asymmetry (S-331 camelCase/lowercase load-bearing), cross-project guard (BC-3.4.019), --field+--label exit-64 (FIX-F5-001), --type 400 classifier, #398 echo asymmetry. test_343 rewritten to equivalent single-assert form during move (semantically identical + passing). |
+| Test parity | 1957 passed / 93 ignored BEFORE and AFTER. No tests added or dropped. |
+| Reviews | code-reviewer: no findings. pr-reviewer: APPROVE with 1 NIT (test_343 single-assert — accepted). Both reviews clean. |
+| Counters | BC 603 (UNCHANGED). NFR 42. ADR 16. Stories 91. |
+| Activation | dbe8625 / v0.6.0-dev.6 (UNCHANGED). |
+| REFACTOR-ISSUE-CLI-SHARD | Seam A DONE (#556). Seam B DONE (#558). Seam C DEFERRED indefinitely (I-17 cross-crate pub-helper test API). RESOLVED-PARTIAL — active DO-PARTIAL plan complete. |
+| develop HEAD | 2e3c3c2. |
