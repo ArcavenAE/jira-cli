@@ -4706,3 +4706,70 @@ _Related: DEC-136; S-D4-TEST-HARDENING-BACKFILL-1; TEST-ONLY-GATE-ELIGIBILITY (d
 _Recorded: 2026-06-27 — E2E edge-case coverage audit close. State-manager._
 _Tagged: [codified] [test-coverage] [E2E-scope] [coverage-tier-design] [happy-path-by-design]_
 _Related: DEC-137; `.factory/research/e2e-edge-case-audit-2026-06-27-read.md`; `.factory/research/e2e-edge-case-audit-2026-06-27-write.md`; CACHE-COVERAGE-TIER-DISCIPLINE (2026-06-27)._
+
+---
+
+## DIVERSE-LENS-ADVERSARIAL-CONVERGENCE (2026-06-27) [codified]
+
+**Category:** spec-quality / adversarial-review / convergence-methodology
+
+**Tag:** [codified] DIVERSE-LENS-ADVERSARIAL-CONVERGENCE — run accuracy + anchor-adequacy as distinct lenses
+
+**Lesson:** The BC-sub-clause pass used DIVERSE-LENS F2 convergence: accuracy and anchor-adequacy lenses dispatched as distinct passes rather than a single combined prompt. The anchor-adequacy lens found Trace↔Behavior contradictions and off-by-one boundary traps (e.g., BC-7.2.012 EC-1/EC-2 N+1 depth boundary) that the accuracy lens passed clean. A single-lens accuracy pass would have declared convergence prematurely.
+
+Specific defects caught only by the anchor-adequacy lens:
+1. Pretty-print overclaim in BC-7.3.010 (initial draft said "always pretty-printed"; truth: only via `render_json` / `print_output`; EC-1 added).
+2. Footnote-pruning misstatement in BC-7.2.013 EC-7 (initial said "prune empty blockquote"; truth: the empty-container pruning is in `is_empty_block_container` which fires on a wider set of container types).
+3. Off-by-one depth-boundary trap in BC-7.2.012 EC-1/EC-2 N+1 (boundary condition stated as N not N-1 for the accept side, causing a fence-post error in any future holdout that relies on the exact accept/reject boundary).
+4. An expect(1)-vs-absence-of-mount mismatch in BC-6.2.018 (initial draft expected exactly one HTTP call; truth is "zero additional HTTP calls" — the warm-hit prevents any call).
+
+The self-inflicted fix-cascade pattern (DEC-130 lineage): when a remediation in pass N introduces a factually-wrong statement (as happened here in the depth-boundary section), the NEXT pass catches it — not the same pass. F2-PIECEWISE-PROTOCOL (dispatch consistency-validator after each fix before the next adversary pass) is the mechanical countermeasure. Enforced since 2026-06-20.
+
+**Consequence:** For BC authoring on complex behaviors (ADF processing, cache semantics), dispatch at minimum two lenses: (1) accuracy lens checking Behavior↔Source-Code alignment, (2) anchor-adequacy lens checking Trace/EC completeness for holdout framing. A CLEAN from both on the same pass is the convergence criterion.
+
+_Recorded: 2026-06-27 — BC-sub-clause pass convergence close. State-manager._
+_Tagged: [codified] [adversarial-review] [spec-quality] [convergence-methodology]_
+_Related: DEC-138; F2-PIECEWISE-PROTOCOL (enforced 2026-06-20); DEC-130 lineage._
+
+---
+
+## EXTERNAL-RESEARCH-VALIDATION-FOR-ADF-BCS (2026-06-27) [codified]
+
+**Category:** spec-quality / external-validation / research-before-finalize
+
+**Tag:** [codified] EXTERNAL-RESEARCH-VALIDATION-FOR-ADF-BCS — for characterization BCs anchoring live-API holdouts, validate ADF/spec claims externally before finalizing
+
+**Lesson:** For BC-sub-clause authoring where the BCs will anchor live-API or wiremock holdouts, external research validation of the ADF/spec claims is high-value before finalizing the BC body. The research-agent pass on BC-7.2.013/014 corroborated all 5 claims vs Atlassian ADF docs + GFM/CommonMark specs:
+- ADF has no native footnote node (Atlassian docs confirmed — "paragraph" is the correct mapping).
+- Jira REST API does NOT auto-linkify plain-text URLs in submitted ADF (REST vs browser-editor distinction confirmed).
+- pulldown-cmark 0.13 has no autolink extension (ENABLE_GFM in pulldown-cmark 0.13 adds only alert blockquotes — confirmed vs crates.io docs).
+- link-mark shape (`{type:"link", attrs:{href,title}}`) correct per Atlassian ADF spec.
+- 5 portable panelTypes (info/success/note/warning/error) confirmed stable; tip/custom are editor-flag-gated.
+
+Additionally, the research agent added 2 precision refinements that the F2 adversarial passes had not: (1) `ftp://` deliberate-exclusion rationale in BC-7.2.014 EC-12 (ftp:// excluded because it is not RFC 3986 authority-based and Jira renders it as plain text anyway); (2) holdout-framing guard against "full GFM autolink" mismatch (pulldown 0.13 autolink is http/https explicit-scheme only — a holdout must not test www. or email autolinking).
+
+**Consequence:** For any BC authoring where the behavioral claim references: (a) Atlassian ADF node types or schemas, (b) Markdown extension behavior (CommonMark, GFM, pulldown-cmark specifics), (c) Jira REST API response shapes that differ from browser-editor behavior — dispatch a research-agent pass after F2 convergence and before committing the BC body. Add 30 minutes to the plan for this step on ADF-heavy BCs.
+
+_Recorded: 2026-06-27 — BC-sub-clause pass, external validation close. State-manager._
+_Tagged: [codified] [spec-quality] [external-validation] [ADF] [research-before-finalize]_
+_Related: DEC-138; `.factory/research/adf-bc-external-validation-2026-06-27.md`; BC-7.2.013/014 bodies._
+
+---
+
+## BROKEN-ANCHOR-PATTERN-RESOLVED (2026-06-27) [codified]
+
+**Category:** spec-process / BC-authoring / holdout-readiness
+
+**Tag:** [codified] BROKEN-ANCHOR-PATTERN-RESOLVED — recurring missing-BC-sub-clause pattern now resolved for the ADF/cache/partial_match cluster
+
+**Lesson:** The recurring broken-anchor / missing-BC-sub-clause pattern (MISSING-BC-SUBCLAUSE-PATTERN drift item, DEC-137) is now resolved: BC-7.2.013 (footnote→ADF), BC-7.2.014 (bare-URL autolink), BC-7.3.010 (JSON render invariant), BC-6.2.018 (cache warm-hit no-HTTP), BC-X.10.001 EC-1 (partial_match no-network) now exist as individually-bodied contracts. These were behaviors shipped with full test coverage and CLAUDE.md Gotchas entries but without a dedicated BC sub-clause, blocking holdout authoring (a holdout without a BC anchor is technically incomplete per the factory BC-anchor rule).
+
+**Root cause:** BC authoring lagged feature delivery. The behavior was characterization-complete in CLAUDE.md and tests but not yet contracted in a BC body, breaking the holdout anchor chain.
+
+**Prevention pattern:** When closing any feature cycle that adds ADF processing, cache semantics, or CLI behavior to CLAUDE.md Gotchas — check whether a dedicated BC sub-clause exists. If not, open a MISSING-BC-SUBCLAUSE item immediately (don't wait until the next audit). The check is cheap; the cost of a batch remediation pass is higher.
+
+**Unblocked by this pass:** P4/P5 cache no-HTTP wiremock holdouts (BC-6.2.018 anchor now exists); G-ADF-FOOTNOTE holdout-tier item (BC-7.2.013 anchor now exists); G-ADF-BARE-URL holdout-tier item (BC-7.2.014 anchor now exists). Remaining P3/P6-P8 cache gaps and other E2E-EDGE-CASE-GAPS tiers still tracked.
+
+_Recorded: 2026-06-27 — BC-sub-clause pass resolution. State-manager._
+_Tagged: [codified] [spec-process] [BC-authoring] [holdout-readiness] [broken-anchor]_
+_Related: DEC-138; MISSING-BC-SUBCLAUSE-PATTERN (RESOLVED); CACHE-COVERAGE-GAPS-2026-06-27 (P4/P5 unblocked); E2E-EDGE-CASE-GAPS-2026-06-27 (holdout-tier items unblocked)._

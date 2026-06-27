@@ -237,3 +237,13 @@ PRs #551/#552/#553 squash-merged to develop @ 35e20c9. The items below were TRAC
 | KEYRING-GUARD-IDIOM-DRIFT | process-gap | Three co-existing keyring-gate guard idioms; no meta-test enforces canonical form. Canonical idiom established + meta-test tests/keyring_guard_idiom.rs added in PR #552. | LOW | **RESOLVED — PR #552 → develop @ 35e20c9 (2026-06-25)** | 2026-06-25 |
 | #532 / S-MAINT-532 | coverage-gap | Login/Refresh/Logout global-`--profile` fallback ungated — issue #532 coverage tests added in PR #552. | LOW | **RESOLVED — PR #552 → develop @ 35e20c9 (2026-06-25); issue #532 closed** | 2026-06-25 |
 | DRIFT-331-PAGINATION / S-MAINT-CR-005 | get_issue_types_for_project | Inline reimplementation; already CLOSED-REFUTED 2026-06-24 — intentional/correct per code-reviewer. | LOW | **RESOLVED-REFUTED — S-MAINT-CR-005 CLOSED WON'T-FIX 2026-06-24** | 2026-06-24 |
+
+---
+
+## Resolved 2026-06-27 — BC-sub-clause pass close (DEC-138)
+
+The items below were TRACKED/OPEN in STATE.md Drift Items and are now fully resolved.
+
+| ID | Area | Description | Severity | Status | Resolved Date |
+|----|------|-------------|----------|--------|---------------|
+| MISSING-BC-SUBCLAUSE-PATTERN | spec/process | Recurring blocker: ADF markdown→ADF behaviors (#471/472/474/483/489/492/522/473), cache D2 warm-hit no-HTTP, and read error-channel/partial_match behaviors lacked dedicated BC sub-clauses — breaking the holdout authoring anchor chain (broken-anchor class). BC-sub-clause pass authored BC-7.2.013 (footnote→ADF), BC-7.2.014 (bare-URL autolink), BC-7.3.010 (JSON render invariant + error channel), BC-6.2.018 (cache warm-hit zero-HTTP), BC-X.10.001 EC-1 (partial_match no-network). Confirmed #474/483/489/522 already bodied — no action needed. 603→605. MEDIUM drift item RESOLVED. | MEDIUM | **RESOLVED — 2026-06-27; DEC-138; factory-artifacts ba60b15** | 2026-06-27 |

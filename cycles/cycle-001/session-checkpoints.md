@@ -1049,3 +1049,21 @@ _Was the active checkpoint after maintenance sweep 2026-06-22 fully closed. PRs 
 | **Open PRs (action needed)** | **NONE.** #561 merged @ 5ab4e0f. #560 merged @ 9657b1e. #557 merged @ c70d8a7. All CLOSED. |
 | **jira-e2e env** | JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ, JR_E2E_ENABLED=true. |
 | **Standing constraints** | Do NOT close #429 (DEC-029). All fixes through full VSDD (DEC-120/121/124/129/130/131/132/134/135/136). LESSON-F2-WORKTREE-FIRST. F2-PIECEWISE-PROTOCOL [ENFORCED 2026-06-20]. DEC-128 (CRITICAL): delivery sub-agents must NOT self-authorize merges, spawn fix agents, push, or enter unbounded loops. Fork signing UNBLOCKED but INERT (DEC-104). DEC-133 (DEPENDABOT-ACTION-SOAK). DEC-136: test-only PRs must not silently skip the adversarial gate. |
+
+---
+
+## Checkpoint: 2026-06-27 — E2E EDGE-CASE AUDIT COMPLETE (archived)
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-06-27 |
+| **Status** | **IDLE — E2E EDGE-CASE AUDIT COMPLETE (record-only). 2 new MEDIUM drift items (E2E-EDGE-CASE-GAPS-2026-06-27 + MISSING-BC-SUBCLAUSE-PATTERN). DEC-137 recorded. develop @ 5ab4e0f. No active feature_mode_bundle. Zero story worktrees.** |
+| **Position** | E2E edge-case audit (2026-06-27): 2-part static audit (read/infra + write/state); 5H+13M+11L write gaps, 2H+4M+4L read gaps; key insight live E2E is happy-path-by-design. F5/F3/F7 RIGOR BACKFILL (PRs #560+#561) COMPLETE: DEC-136; story 91→92; TEST-ONLY-GATE-ELIGIBILITY. CACHE-COVERAGE audit complete: PR #561 @ 5ab4e0f (DEC-135). D4 CLOSED (PR #560 @ 9657b1e; holdouts 60→70). v0.6.0-dev.7 shipped (PR #559 @ 342987f). REFACTOR-ISSUE-CLI-SHARD: RESOLVED-PARTIAL (Seams A+B DONE). |
+| **develop HEAD** | LOCAL develop = **5ab4e0f** == origin/develop (PR #561 squash-merged 2026-06-27). |
+| **factory-artifacts HEAD** | see `git -C .factory log -1` |
+| **Activation** | activation_head: 342987f; activation_version: v0.6.0-dev.7. v0.5.0 STABLE shipped 2026-06-12. |
+| **Counters** | BC **603**. NFR **42**. ADR **16**. Stories **92**. Holdouts **70**. |
+| **Active worktrees** | NONE under `.worktrees/`. Permanent infra only: main checkout (develop) + `.factory` (factory-artifacts) + `.reference/jira-cli` (detached). ZERO story worktrees. |
+| **Open PRs (action needed)** | **NONE.** #561 merged @ 5ab4e0f. #560 merged @ 9657b1e. #557 merged @ c70d8a7. All CLOSED. |
+| **jira-e2e env** | JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ, JR_E2E_ENABLED=true. |
+| **Standing constraints** | Do NOT close #429 (DEC-029). All fixes through full VSDD (DEC-120/121/124/129/130/131/132/134/135/136). LESSON-F2-WORKTREE-FIRST. F2-PIECEWISE-PROTOCOL [ENFORCED 2026-06-20]. DEC-128 (CRITICAL): delivery sub-agents must NOT self-authorize merges, spawn fix agents, push, or enter unbounded loops. Fork signing UNBLOCKED but INERT (DEC-104). DEC-133 (DEPENDABOT-ACTION-SOAK). DEC-136: test-only PRs must not silently skip the adversarial gate. |
