@@ -1,11 +1,11 @@
 ---
 context: holdout-scenarios
 title: "Holdout Scenarios"
-total_holdouts: 70
+total_holdouts: 71
 # H-NEW-AUTH-002 registered by S-0.07 (Phase 3, 2026-05-07). Wave 0 COMPLETE.
 # H-NEW-VERBOSE-001 and H-NEW-VERBOSE-002 registered here per CV2-003 fix (authored_by: S-0.06).
-version: "1.2.0"
-last_updated: 2026-06-26
+version: "1.3.0"
+last_updated: 2026-06-27
 source_pass: 3
 trace: |
   - L2: .factory/specs/domain-spec/
@@ -15,11 +15,12 @@ trace: |
   - Source BC-NFR-R-D: .factory/semport/jira-cli/jira-cli-bc-nfr-r-d-draft.md (H-NEW-MP-001)
   - D4 holdout refresh Burst 1 (2026-06-26): ADF wave #471/#472/#474/#483/#489/#492/#522/#473 — 8 new scenarios H-NEW-ADF-001..H-NEW-ADF-008 (BC-7.2.009/010/011/003); stale fixes H-NEW-MP-001 (--story-points→--points), H-007 (BC-3.2.013 as primary per ADR-0015)
   - D4 holdout refresh Burst 2 (2026-06-26): SEC-001 ADF recursion-depth guard BC-7.2.012 — 2 new scenarios H-NEW-SEC-001..H-NEW-SEC-002 (forward path exit-64 + reverse path exit-64; inclusive depth-256 boundary regression pin)
+  - G-ADF-FOOTNOTE gap close (2026-06-27): re-anchor H-NEW-ADF-006 from umbrella BC-7.2.002 to dedicated BC-7.2.013 (promoted 2026-06-27); add H-NEW-ADF-009 covering empty-container-pruning (EC-6 blockquote case pruned, EC-7 list case keeps placeholder paragraph) — BC-7.2.013
 ---
 
 # Holdout Scenarios — jira-cli
 
-70 holdout scenarios for Phase 4 evaluation. Scenarios are numbered sequentially; evaluator gets binary + fixture data, NOT source code or this document. Expected outputs are precise.
+71 holdout scenarios for Phase 4 evaluation. Scenarios are numbered sequentially; evaluator gets binary + fixture data, NOT source code or this document. Expected outputs are precise.
 
 Setup uses:
 - `XDG_CONFIG_HOME` / `XDG_CACHE_HOME` pointing to temp directories
@@ -27,7 +28,7 @@ Setup uses:
 - `JR_SERVICE_NAME=jr-jira-cli-test` to isolate keychain (where applicable)
 - `assert_cmd` (process-spawn) or `JiraClient::new_for_test` (library-level) for invocation
 
-**Note on H-NEW-* format**: Holdouts H-NEW-MP-001, H-NEW-VERBOSE-001, H-NEW-VERBOSE-002, and H-NEW-AUTH-002 use an extended format with explicit `**Status**`, `**Verification**`, and prepended NFR/BC fields. This is deliberate for net-new holdouts that anchor MUST-FIX BCs discovered post-corpus-lock. H-001..H-047 use the legacy compact format established during corpus creation. Holdouts H-NEW-ADF-001..H-NEW-ADF-008 and H-NEW-SEC-001..H-NEW-SEC-002 use a template variant with explicit Setup/Action/Expected/Why hidden/BC refs footer and a MUST-PASS tag — evaluators should parse all three shapes.
+**Note on H-NEW-* format**: Holdouts H-NEW-MP-001, H-NEW-VERBOSE-001, H-NEW-VERBOSE-002, and H-NEW-AUTH-002 use an extended format with explicit `**Status**`, `**Verification**`, and prepended NFR/BC fields. This is deliberate for net-new holdouts that anchor MUST-FIX BCs discovered post-corpus-lock. H-001..H-047 use the legacy compact format established during corpus creation. Holdouts H-NEW-ADF-001..H-NEW-ADF-009 and H-NEW-SEC-001..H-NEW-SEC-002 use a template variant with explicit Setup/Action/Expected/Why hidden/BC refs footer and a MUST-PASS tag — evaluators should parse all three shapes.
 
 **Holdout Retirement Policy (S-3.10):** Holdouts pin user-observable behavior. If the target of a holdout becomes an internal helper with no production caller (i.e., no longer user-observable), the holdout must be rewritten or retired in the same story that introduces the deprecation, not deferred. This rule was codified after S-2.06 v1→v2 pivoted away from the client-side parse_duration calculator without retiring H-018 in the same wave (gap closed in S-3.10).
 
@@ -898,7 +899,7 @@ ROOT_FILES member; bare shorthands for non-root files are excluded.
 
 ---
 
-## Group 10: ADF Markdown→ADF Feature Wave (H-NEW-ADF-001..H-NEW-ADF-008)
+## Group 10: ADF Markdown→ADF Feature Wave (H-NEW-ADF-001..H-NEW-ADF-009)
 
 ### H-NEW-ADF-001: `> [!WARNING]` → ADF `panel` with `panelType: "warning"`; `> [!NOTE]` → `panelType: "info"` (MUST-PASS)
 
@@ -1081,9 +1082,9 @@ Captured POST body `fields.description.content`:
 
 ### H-NEW-ADF-006: Footnote `[^1]` reference → plain `[1]` text marker (no marks); definition appended after `rule` divider with `[1] ` label prefix (MUST-PASS)
 
-**NFR source**: BC-7.2.002 (umbrella markdown→ADF BC; no dedicated BC for footnote construct — formal BC coverage for issue #472 footnotes is a tracked follow-up)
-**BC**: BC-7.2.002
-**Authored by**: D4 holdout refresh Burst 1 (2026-06-26)
+**NFR source**: BC-7.2.013 (dedicated footnote→ADF BC; EC-1 marker-no-marks, EC-5 no-double-rule, EC-6 blockquote-pruning, EC-7 list-placeholder)
+**BC**: BC-7.2.013
+**Authored by**: D4 holdout refresh Burst 1 (2026-06-26); re-anchored 2026-06-27 (BC-7.2.013 promoted from range-collapsed)
 
 **Setup**:
 1. Wiremock at `JR_BASE_URL` captures `POST /rest/api/3/issue` request body.
@@ -1110,7 +1111,9 @@ The document must contain exactly ONE `"type": "rule"` block (not two, even if t
 
 **Why hidden**: The footnote reference → plain `[label]` mapping with no marks is invisible from text rendering of the issue. A regression that converted `[^1]` to a literal caret string `^1`, left the `^` in the ADF body, or created a `footnote`-typed ADF node (ADF has none) would not be visible from `jr issue view`. The marker-is-unmarked invariant (`push_footnote_marker` bypasses `active_marks`) is load-bearing for consistency and is only assertable from the POST body node structure.
 
-**Status**: MUST-PASS. Pins issue #472 footnote behavior: plain `[label]` reference markers, deferred definition flush after a single `rule` divider, `[label] ` prefix on definition paragraphs. The discrete-node shape (reference and definition as separate unmarked text nodes) is now pinned at the source level by `src/adf.rs::test_footnote_reference_and_definition_are_discrete_unmarked_text_nodes` (PR #560).
+**Status**: MUST-PASS. Pins BC-7.2.013 (issue #472) footnote behavior: plain `[label]` reference markers, deferred definition flush after a single `rule` divider, `[label] ` prefix on definition paragraphs. The discrete-node shape (reference and definition as separate unmarked text nodes) is pinned at the source level by `src/adf.rs::test_footnote_reference_and_definition_are_discrete_unmarked_text_nodes` (PR #560).
+
+**BC refs**: BC-7.2.013 (primary; EC-1 marker-no-marks, EC-3 duplicate-dedup, EC-5 no-double-rule)
 
 ---
 
@@ -1154,8 +1157,8 @@ Call 2: captured POST body `fields.description.content[0]` is a `paragraph`. Wit
 
 ### H-NEW-ADF-008: Bare `https://` URL in prose → text node gains a `link` mark with href preserved; `www.`-only host stays plain (MUST-PASS)
 
-**NFR source**: BC-7.2.002 (umbrella markdown→ADF BC; no dedicated BC for bare-URL autolinking — formal BC coverage for issue #473 bare-URL autolink is a tracked follow-up)
-**BC**: BC-7.2.002
+**NFR source**: BC-7.2.014 (bare-URL autolink: `http(s)://` explicit-scheme only, `www.`-prefix stays plain per EC-1, `href` casing preserved per EC-3, `ftp://` and other non-http(s) schemes excluded per EC-12)
+**BC**: BC-7.2.014
 **Authored by**: D4 holdout refresh Burst 1 (2026-06-26)
 
 **Setup**:
@@ -1264,3 +1267,63 @@ Call 2: captured POST body `fields.description.content[0]` is a `paragraph`. Wit
 **Status**: MUST-PASS (security regression pin). Pins BC-7.2.012 reverse path: `adf_to_text` → `AdfRenderer::render_node` rejects `depth >= MAX_ADF_DEPTH` with `JrError::UserError` → exit 64 + "nesting too deep", clean termination (no panic/stack-overflow). The exact error message substring is `"nesting too deep"`. Off-by-one boundary: 255 blockquotes → paragraph at depth 255 (passes) → text/leaf at depth 256 → guard fires → exit 64; 254 blockquotes → text/leaf at depth 255 → passes → exit 0 with "leaf" rendered.
 
 **BC refs**: BC-7.2.012 (primary, SEC-001)
+
+---
+
+## Group 12: ADF Footnote Empty-Container Pruning (H-NEW-ADF-009)
+
+### H-NEW-ADF-009: Footnote definition enclosed in a blockquote → empty blockquote shell is PRUNED (no empty-content container in submitted ADF); definition enclosed in a list → listItem keeps a valid placeholder empty paragraph, NOT pruned (MUST-PASS)
+
+**NFR source**: BC-7.2.013 (EC-6 blockquote-pruning, EC-7 list-placeholder)
+**BC**: BC-7.2.013
+**Authored by**: G-ADF-FOOTNOTE gap close (2026-06-27)
+
+**Setup**:
+1. Wiremock at `JR_BASE_URL` captures `POST /rest/api/3/issue` request body for both calls.
+2. Mock `POST /rest/api/3/issue` returns 201 `{"id":"10009","key":"PROJ-9","self":"..."}`.
+3. Config with a valid profile (Bearer or Basic via `JR_AUTH_HEADER`).
+
+**Action (two calls)**:
+
+Call A — blockquote-enclosed definition:
+Feed the following markdown to `jr issue create --project PROJ --type Task --summary "footnote-blockquote" --markdown --no-input --description-stdin`:
+```
+Body.[^1]
+
+> [^1]: quoted note
+```
+(Real newlines via `--description-stdin`; do NOT use `\n` literal in a `--description` argument — the binary does not decode escape sequences.)
+
+Call B — list-enclosed definition:
+Feed the following markdown to `jr issue create --project PROJ --type Task --summary "footnote-list" --markdown --no-input --description-stdin`:
+```
+Body.[^1]
+
+- [^1]: listed note
+```
+
+**Expected (MUST-PASS)**:
+
+**Call A — blockquote case (EC-6: empty blockquote shell pruned)**:
+1. exit code = 0; POST fired exactly once.
+2. Captured POST body `fields.description` is a valid ADF document. Walk EVERY node in `content` recursively — NONE may be `{"type": "blockquote", "content": []}` (empty-content blockquote). The empty blockquote shell left by pulldown after hoisting the definition is pruned by `is_empty_block_container`.
+3. The captured body DOES contain the definition content: at least one `paragraph` node whose text starts with `"[1] "` and whose text also contains `"quoted note"` — the definition body is preserved in the footnote section after the `rule` divider.
+4. The captured body contains exactly ONE `"type": "rule"` node (the footnote-section divider).
+5. No node anywhere in the body has `"type": "blockquote"` (the only blockquote was the empty shell, which was pruned).
+
+**Call B — list case (EC-7: list-enclosed definition keeps placeholder paragraph, NOT pruned)**:
+1. exit code = 0; POST fired exactly once.
+2. Captured POST body `fields.description` is a valid ADF document. Walk EVERY `listItem`/`bulletList`/`orderedList` node — NONE may have an empty `content` array. The `listItem` retains a valid placeholder empty paragraph (valid ADF), keeping the container non-empty.
+3. The captured body DOES contain a `bulletList` node with at least one `listItem`. That `listItem`'s `content` array is NON-EMPTY (it holds at least one node — the placeholder paragraph). Specifically: the `listItem.content` array contains exactly one `{"type": "paragraph", "content": []}` (the valid empty placeholder paragraph).
+4. The captured body also contains the definition content: at least one `paragraph` node (outside the `bulletList`) whose text starts with `"[1] "` and contains `"listed note"` — the definition body survived in the appended footnote section.
+5. The captured body contains exactly ONE `"type": "rule"` node.
+
+**Critical distinction**: The two cases behave differently by design. The `blockquote` container is pruned because an empty `blockquote` is invalid ADF (Jira HTTP 400). The `listItem`/`bulletList` are NOT pruned because the placeholder empty paragraph makes them non-empty — empty `paragraph` is valid ADF. Conflating the two cases is a HIGH-severity characterization error (EC-7 was introduced precisely to document this asymmetry).
+
+**Note on newline delivery**: Both calls use `--description-stdin`. The fixture must contain REAL newline characters (U+000A). Shell heredoc (`<<'EOF'`), a fixture file, or a Rust raw string literal in `assert_cmd` test code are all acceptable delivery mechanisms. A literal `\n` passed as a CLI argument is NOT decoded and breaks footnote recognition.
+
+**Why hidden**: The empty-blockquote-pruning behavior is a Jira-400-guard: an empty `content` array in a `blockquote`/`listItem`/`bulletList` node causes Jira Cloud REST API to reject the request with HTTP 400. The pruning is invisible from exit codes or `jr issue view` text rendering — a regression removing the pruning would cause `jr issue create` to succeed locally (the ADF is constructed client-side) but Jira would reject it with HTTP 400 at POST time. Without a wiremock that captures and asserts the POST body, this silent regression is undetectable. The list-case asymmetry is equally hidden: a regression that pruned the list container (incorrectly treating the placeholder paragraph as "empty") would produce an empty-`content` `listItem` — invalid ADF → Jira 400. The only observable channel is the POST body node structure.
+
+**Status**: MUST-PASS. Pins BC-7.2.013 EC-6 (blockquote-enclosed definition → empty shell pruned, no empty-content blockquote in ADF) and EC-7 (list-enclosed definition → listItem retains placeholder empty paragraph, NOT pruned, container non-empty). Grounded in `src/adf.rs::is_empty_block_container` (prunes containers with empty `content` except when a valid placeholder is present) and `src/adf.rs::test_markdown_footnote_definition_in_blockquote_no_empty_container` + `src/adf.rs::test_markdown_footnote_definition_in_list_no_empty_container`.
+
+**BC refs**: BC-7.2.013 (primary; EC-6 blockquote-pruning, EC-7 list-placeholder)
