@@ -4343,3 +4343,15 @@ The following row was present in STATE.md Current Phase Steps before the last-5 
 | Drift items | E2E-EDGE-CASE-GAPS-2026-06-27 (MEDIUM) + MISSING-BC-SUBCLAUSE-PATTERN (MEDIUM) added to STATE.md Drift Items. DEC-137 recorded. |
 | develop HEAD | 5ab4e0f (UNCHANGED). |
 | Counters | BC 603 (UNCHANGED). NFR 42. ADR 16. Stories 92. Holdouts 70. |
+
+---
+
+## Burst: E2E EDGE-CASE AUDIT COMPLETE — 2026-06-27 (archived from Current Phase Steps)
+
+| Field | Value |
+|-------|-------|
+| Step | E2E EDGE-CASE AUDIT COMPLETE (record-only) — 2-part static audit: 27 read + ~70 write edges; 5H+13M+11L gaps. Live E2E is happy-path-by-design. E2E-EDGE-CASE-GAPS-2026-06-27 + MISSING-BC-SUBCLAUSE-PATTERN tracked (both MEDIUM). DEC-137. |
+| Agent | state-manager |
+| Status | COMPLETE |
+| develop HEAD | 5ab4e0f (unchanged) |
+| Notes | Archived 2026-06-27 when E2E WIREMOCK TIER step was added to Current Phase Steps (keeping last-5 invariant). |

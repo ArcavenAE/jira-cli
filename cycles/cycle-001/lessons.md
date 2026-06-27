@@ -4797,3 +4797,52 @@ _Tagged: [codified] [spec-process] [BC-authoring] [holdout-readiness] [broken-an
 _Recorded: 2026-06-27 — E2E offline-CLI guard + JSON error-shape coverage delivery (PR #563, develop @ 894cc9d). State-manager._
 _Tagged: [codified] [test-coverage] [audit-methodology] [gap-vs-bug] [regression-hardening]_
 _Related: DEC-138; MISSING-BC-SUBCLAUSE-PATTERN (RESOLVED); CACHE-COVERAGE-GAPS-2026-06-27 (P4/P5 unblocked); E2E-EDGE-CASE-GAPS-2026-06-27 (holdout-tier items unblocked)._
+
+---
+
+## MARKDOWN-SOURCE-CANNOT-DELIVER-RAW-CR (2026-06-27) [codified]
+
+**Category:** test-coverage / ADF-testing / e2e-boundary-discipline
+
+**Tag:** [codified] MARKDOWN-SOURCE-CANNOT-DELIVER-RAW-CR — e2e tests driven from markdown source CANNOT pin char-level CR/LF normalization; delegate to direct push_text unit tests
+
+**Lesson:** CommonMark §2.3 normalizes `\r` and `\r\n` → `\n` BEFORE pulldown tokenization. This means a raw `\r` from a markdown source string (e.g., a `--description` CLI flag value containing an escaped `\r`) never reaches `push_text` at all — it is normalized to `\n` at the tokenizer boundary before any event fires.
+
+**Consequence for e2e test design:** An e2e test driven through a markdown CLI input cannot pin char-level CR/LF normalization behavior inside `push_text`. The e2e test that was authored for BC-7.2.011 INV-1 (PR #564, `test_issue_create_markdown_inline_html_submits_inv1_compliant_adf_no_hardbreak`) cannot assert "a lone-`\r` maps to a space" because the `\r` from markdown source is normalized to `\n` before it reaches `push_text`. What the e2e test CAN and DOES pin is:
+
+1. **No hardBreak node** in the submitted ADF (routing assertion: inline-HTML interior newlines enter `push_text` Other-context, not Algorithm B — the structural distinction between inline and block HTML handling).
+2. **INV-1 structural guarantee**: no raw `\r`/`\n` in any text node in the submitted ADF body.
+
+These are genuine e2e-unique assertions: they test the wiring from CLI input through the HTTP body, which unit tests cannot test in isolation.
+
+**Coverage boundary:**
+- Char-level CR/LF normalization (e.g., that a lone-`\r` maps to a space, not a `\n`) → **direct unit tests** in `src/adf.rs::tests` (pre-existing coverage in S-522; tests inject raw bytes directly into `push_text`).
+- No-hardBreak routing assertion (inline-HTML vs block-HTML Algorithm B path) → **e2e tier** (PR #564; `tests/adf_inline_html_inv1_e2e.rs`).
+
+**Origin:** Adversary-gate CRITICAL finding on PR #564 (DEC-140). The original story authoring claimed "e2e test covers lone-`\r` normalization via §2.3"; the adversary corrected this to "§2.3 normalizes `\r` before pulldown, so the `\r` never reaches `push_text` — the e2e pin is routing, not char-level bytes." The story file was corrected in three locations (f5_review_outcome frontmatter, body Status section, Architecture Compliance Rules table).
+
+_Recorded: 2026-06-27 — E2E wiremock tier delivery (PR #564, develop @ 502898f). State-manager._
+_Tagged: [codified] [test-coverage] [ADF-testing] [e2e-boundary-discipline] [CommonMark]_
+_Related: DEC-140; BC-7.2.011 INV-1; S-E2E-WIREMOCK-COVERAGE-1; COVERAGE-AUDIT-FOLLOW-THROUGH (2026-06-27)._
+
+---
+
+## ORCHESTRATOR-RELAYED-FIX-CAUTION (2026-06-27) [codified]
+
+**Category:** process-gap / adversarial-gate-value / verify-reachability
+
+**Tag:** [codified] ORCHESTRATOR-RELAYED-FIX-CAUTION — orchestrator may relay a confident-but-wrong fix mechanism; fresh-context adversarial gate is load-bearing even for test-only changes
+
+**Lesson:** During PR #564 authoring, the orchestrator relayed a specific fix mechanism: "use a lone-`\r` as the operative pin for the char-level CR normalization assertion." This fix was factually wrong — CommonMark §2.3 normalizes `\r` before pulldown tokenization, so the `\r` cannot reach `push_text` from markdown source. The fresh-context adversary caught this by grounding in the repository's own §2.3 invariant, which the orchestrator (under context pressure) had not verified.
+
+**Why this happens:** The orchestrator operates under accumulated context. When relaying a fix mechanism from a previous iteration, it may inherit an unchecked assumption from that iteration. The assumption here — that `\r` would reach `push_text` from a markdown CLI input — was plausible on the surface but wrong in light of the tokenizer normalization that happens first.
+
+**Consequence for process:** The adversarial gate on test-only changes is not ceremonial. Even when the fix looks mechanical ("add this assertion"), the gate verifies reachability of the claimed behavior. A test that asserts an unreachable condition is worse than no test: it creates false confidence that the behavior is pinned while actually testing nothing meaningful.
+
+**Verify-reachability-empirically rule:** Before asserting that an input condition reaches a specific code path, verify the path by tracing from input to code — particularly when a tokenizer, parser, or normalization layer sits between the input and the assertion target. The §2.3 boundary is one such layer; pulldown event filters, Rust pattern matches, and API routing are others.
+
+**Reinforces:** DEC-120/121/124/129/130/132/134/136/139 lineage — "trivial" changes (test-only, regression pins) still warrant the adversarial gate; the gate's value is precisely that it catches assumptions the primary author did not question.
+
+_Recorded: 2026-06-27 — E2E wiremock tier delivery (PR #564, develop @ 502898f). State-manager._
+_Tagged: [codified] [process-gap] [adversarial-gate-value] [verify-reachability] [TEST-ONLY-GATE-ELIGIBILITY]_
+_Related: DEC-140; TEST-ONLY-GATE-ELIGIBILITY (MEDIUM drift item); DEC-136; MARKDOWN-SOURCE-CANNOT-DELIVER-RAW-CR (2026-06-27)._
