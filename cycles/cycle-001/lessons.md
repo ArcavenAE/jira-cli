@@ -4629,3 +4629,21 @@ _Related: DEC-131 (2026-06-22 phantom ADR citation catch); PR #555 commit 7ca3fd
 _Recorded: 2026-06-26 — D4 holdout refresh close. State-manager._
 _Tagged: [codified] [adversarial-review] [holdout-authoring] [boundary-arithmetic] [fix-cascade] [regression-pin]_
 _Related: DEC-134; BC-7.2.012; PR #560 (develop @ 9657b1e); DEC-120/121/129/130 lineage; F2-PIECEWISE-PROTOCOL._
+
+---
+
+## CACHE-COVERAGE-TIER-DISCIPLINE (2026-06-27) [codified]
+
+**Category:** test-coverage / cache-behavior / E2E-scope
+
+**Tag:** [codified] CACHE-COVERAGE-TIER-DISCIPLINE — coverage-scope lesson
+
+**Lesson (a): E2E cannot assert cache no-HTTP.** A cache-coverage audit mapped 9 cache families across 6 behavior dimensions (D1 hit/miss, D2 warm-hit no-HTTP, D3 stale/evict, D4 format-drift self-heal, D5 write-error resilience, D6 profile-isolation). The D2 "warm-hit no-HTTP" dimension is unreachable from live E2E tests: `tests/e2e_live.rs` runs against a real Jira tenant without request-count instrumentation, so there is no way to assert that a warm-hit path issues zero HTTP calls. This is a structural limitation of live E2E testing, not a gap to close with more E2E tests. Coverage for D2 (no-HTTP warm-hit) belongs at the wiremock/unit tier where request counts are observable.
+
+**Lesson (b): Audit-proposed BC anchors must be verified against BC bodies before use.** The cache-coverage audit proposed two BC anchors that turned out to be wrong: BC-6.3.001 (proposed for P1 per-profile isolation) and BC-6.2.013 (proposed for P2 format-drift self-heal). After verifying the actual BC bodies, the correct anchors were BC-6.2.009 (multi-profile cache isolation) and BC-6.2.011 (fields.json format-drift self-heal). Mis-citations were caught at authoring time before any test code was written. This reinforces the DEC-131 / D4-lesson lineage: anchor accuracy requires reading the BC body, not inferring from the BC number or title.
+
+**Context:** P1 (6 per-profile isolation unit tests) and P2 (2 fields.json self-heal unit tests) shipped via PR #561, squash-merged → develop @ 5ab4e0f. 8 tests, all pass. No production bug found — confirms correct isolation and self-heal implementations serve as regression pins. Remaining audit proposals (P3–P8 + MED no-HTTP wiremock gaps) deferred pending BC sub-clause prerequisites.
+
+_Recorded: 2026-06-27 — cache-coverage audit + P1/P2 delivery close. State-manager._
+_Tagged: [codified] [test-coverage] [cache-behavior] [E2E-scope] [anchor-accuracy]_
+_Related: DEC-135; PR #561 (develop @ 5ab4e0f); BC-6.2.009; BC-6.2.011; audit: .factory/research/cache-coverage-audit-2026-06-27.md._

@@ -4299,3 +4299,25 @@ The following row was present in STATE.md Current Phase Steps before the last-5 
 | Step | Agent | Status | Output |
 |------|-------|--------|--------|
 | **PR #556 MERGED** — Seam A refactor: JSM-create extracted to src/cli/issue/jsm_create.rs (handle_jsm_create + resolve_jsm_request_type_id + JsmCreateArgs; 444 LOC). create.rs 2,880→2,447 LOC. Behavior-preserving (pure move; test parity 1957/93). Both reviews clean; admin squash-merge (human-authorized). CI 15/15 green. | state-manager | MERGED | develop @ d04a7ec. |
+
+---
+
+### Burst: PR #558 MERGED (2026-06-26) — archived from Current Phase Steps
+
+| Step | Agent | Status | Output |
+|------|-------|--------|--------|
+| **PR #558 MERGED** — Seam B refactor: EDIT cluster extracted to src/cli/issue/edit.rs (2,067 LOC). create.rs 2,447→394 LOC. Issue module: create.rs 394 + edit.rs 2,067 + jsm_create.rs 444. Behavior-preserving (all invariants byte-for-byte; test parity 1957/93; mutation 16m47s). Both reviews clean; admin squash-merge (human-authorized). CI 15/15 green. | state-manager | MERGED | develop @ 2e3c3c2. |
+
+---
+
+### Burst: CACHE-COVERAGE AUDIT + P1/P2 (2026-06-27)
+
+| Field | Value |
+|-------|-------|
+| Event | Cache-coverage audit produced `.factory/research/cache-coverage-audit-2026-06-27.md`. Assessed 9 cache families (workspace, resolutions, cmdb_fields, fields, object_type_attrs, project_meta, request_types, request_type_fields, teams) × 6 behavior dimensions (D1 hit/miss, D2 warm-hit no-HTTP, D3 stale/evict, D4 format-drift self-heal, D5 write-error resilience, D6 profile-isolation). Coverage matrix + prioritized gaps P1–P8. |
+| HIGH gaps | Closed by PR #561: P1 (6 per-profile cache-isolation unit tests anchoring BC-6.2.009 — workspace, resolutions, cmdb_fields, fields, object_type_attrs, project_meta) + P2 (2 fields.json format-drift self-heal unit tests anchoring BC-6.2.011). |
+| PR #561 | `test(cache): pin per-profile cache isolation and fields.json self-heal`. 8 unit tests total. Code review: 1 MED + 2 LOW findings (all fixed pre-merge). 15/15 CI green incl. Windows/mutation/coverage. No production bug found — confirms correct isolation + self-heal implemented; tests serve as regression pins. Gated merge with explicit orchestrator authorization (DEC-128 honored). |
+| Anchor corrections | Audit originally proposed BC-6.3.001 for P1 and BC-6.2.013 for P2; corrected at authoring after reading BC bodies → BC-6.2.009 (isolation) and BC-6.2.011 (self-heal). |
+| Deferred | P3–P8 + MED gaps tracked in CACHE-COVERAGE-GAPS-2026-06-27 drift item. BC sub-clause prerequisite noted for D2 wiremock no-HTTP holdouts. E2E zero cache-behavior assertions confirmed correct (D2 requires wiremock tier). |
+| develop HEAD | 5ab4e0f. |
+| Counters | BC 603 (UNCHANGED). NFR 42. ADR 16. Stories 91. Holdouts 70. |
