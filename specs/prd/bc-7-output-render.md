@@ -1,20 +1,21 @@
 ---
 context: bc-7
 title: "Output Rendering & Error"
-total_bcs: 91   # cumulative claim (incl. range-collapsed); definitional_count below is individually-bodied headings; +4 added 2026-05-08 (BC-7.4.013-016, Fix-PR A); +1 added 2026-06-08 (BC-7.2.006, issue #470 listItem content-model conformance); +2 added 2026-06-08 (BC-7.2.007..008, issue #474 markdown subsup + heading-attr); +1 added 2026-06-09 (BC-7.2.009, issue #483 GFM alerts → panel); +1 added 2026-06-10 (BC-7.2.010, issue #471 GFM task lists → taskList/taskItem); +1 added 2026-06-15 (BC-7.2.011, issue #492 block-HTML hardBreak interior newlines); +1 added 2026-06-24 (BC-7.2.012, SEC-001 ADF recursion depth limit)
-definitional_count: 45   # count of `#### BC-` headings in this file
-last_updated: 2026-06-24
-source_pass: 4
+total_bcs: 92   # cumulative claim (incl. range-collapsed); definitional_count below is individually-bodied headings; +4 added 2026-05-08 (BC-7.4.013-016, Fix-PR A); +1 added 2026-06-08 (BC-7.2.006, issue #470 listItem content-model conformance); +2 added 2026-06-08 (BC-7.2.007..008, issue #474 markdown subsup + heading-attr); +1 added 2026-06-09 (BC-7.2.009, issue #483 GFM alerts → panel); +1 added 2026-06-10 (BC-7.2.010, issue #471 GFM task lists → taskList/taskItem); +1 added 2026-06-15 (BC-7.2.011, issue #492 block-HTML hardBreak interior newlines); +1 added 2026-06-24 (BC-7.2.012, SEC-001 ADF recursion depth limit); +2 promoted 2026-06-27 (BC-7.2.013..014, range-collapsed → individually-bodied; issues #472 #473); +1 added 2026-06-27 (BC-7.3.010, issue #526 json-render invariant + error channel)
+definitional_count: 48   # count of `#### BC-` headings in this file
+last_updated: 2026-06-27
+source_pass: 5
 trace: |
   - L2: .factory/specs/domain-spec/bc-07-output-render.md
   - Source broad: .factory/semport/jira-cli/jira-cli-pass-3-behavioral-contracts.md §2.12-2.13
   - Source R4: .factory/semport/jira-cli/jira-cli-pass-3-deep-r4.md §3.5-3.6
+  - F2 pass-5 precision fix (2026-06-27): BC-7.2.012 EC-1/EC-2 — disambiguated depth unit (ADF-tree recursion depth, not markdown blockquote levels); cited boundary tests with N/depth accounting
 ---
 
 # BC-7 — Output Rendering & Error
 
-91 behavioral contracts across 5 subdomains: Table/JSON output (7.1), ADF rendering (7.2),
-Error display (7.3), JSON output shapes (7.4), Observability (7.5). (+4 BC-7.4.013-016 added 2026-05-08 by Fix-PR A for auth JSON shapes. +1 BC-7.2.006 added 2026-06-08 by issue #470 listItem content-model conformance. +2 BC-7.2.007..008 added 2026-06-08 by issue #474 markdown subsup + heading-attr. +1 BC-7.2.009 added 2026-06-09 by issue #483 GFM alerts → panel. +1 BC-7.2.010 added 2026-06-10 by issue #471 GFM task lists → taskList/taskItem. +1 BC-7.2.011 added 2026-06-15 by issue #492 block-HTML hardBreak interior newlines. +1 BC-7.2.012 added 2026-06-24 by SEC-001 ADF recursion depth limit.)
+92 behavioral contracts across 5 subdomains: Table/JSON output (7.1), ADF rendering (7.2),
+Error display (7.3), JSON output shapes (7.4), Observability (7.5). (+4 BC-7.4.013-016 added 2026-05-08 by Fix-PR A for auth JSON shapes. +1 BC-7.2.006 added 2026-06-08 by issue #470 listItem content-model conformance. +2 BC-7.2.007..008 added 2026-06-08 by issue #474 markdown subsup + heading-attr. +1 BC-7.2.009 added 2026-06-09 by issue #483 GFM alerts → panel. +1 BC-7.2.010 added 2026-06-10 by issue #471 GFM task lists → taskList/taskItem. +1 BC-7.2.011 added 2026-06-15 by issue #492 block-HTML hardBreak interior newlines. +1 BC-7.2.012 added 2026-06-24 by SEC-001 ADF recursion depth limit. +2 BC-7.2.013..014 promoted 2026-06-27 from range-collapsed to individually-bodied by issues #472 #473 (definitional_count +2, total_bcs unchanged). +1 BC-7.3.010 added 2026-06-27 by issue #526 json-render invariant + error channel.)
 
 ---
 
@@ -70,7 +71,7 @@ Error display (7.3), JSON output shapes (7.4), Observability (7.5). (+4 BC-7.4.0
 
 ---
 
-### 7.2 ADF Rendering (12 individually-bodied BCs: BC-7.2.001..012; 57 BCs cumulative including range-collapsed)
+### 7.2 ADF Rendering (14 individually-bodied BCs: BC-7.2.001..014; 57 BCs cumulative including range-collapsed)
 
 #### BC-7.2.001: `text_to_adf("hello")` emits `{type:"doc", version:1, content:[{type:"paragraph", content:[{type:"text", text:"hello"}]}]}`
 
@@ -438,21 +439,116 @@ Reverse path: `adf_to_text` gains a `panel` arm mapping `panelType` back to a GF
 
 ---
 
-#### BC-7.2.012: `markdown_to_adf` and `adf_to_text` enforce a maximum nesting depth of `MAX_ADF_DEPTH = 256`; inputs exceeding the limit return exit 64 with message "input nesting too deep (max 256)" rather than risking stack overflow (CWE-674); `text_to_adf` is non-recursive and unaffected
+#### BC-7.2.013: `markdown_to_adf` maps Markdown footnote references (`[^label]`) to plain unmarked `[label]` text markers; footnote definitions are flushed at `finish()` into a `rule`-separated appended section as `[label] `-prefixed paragraphs; `push_footnote_marker` bypasses `push_text` and active marks; empty blockquote shells produced by definition hoisting are pruned by `is_empty_block_container`; list-enclosed definitions leave a valid placeholder empty paragraph (NOT pruned)
+
+**Confidence**: HIGH
+**Subject**: Output rendering
+**Behavior**: `markdown_to_adf` enables `Options::ENABLE_FOOTNOTES` (pulldown-cmark). Footnote handling operates on two distinct surfaces:
+
+**Forward (reference) path**: A `Event::FootnoteReference(label)` event calls `push_footnote_marker(label)`, which directly appends a plain `{type:"text", text:"[{label}]"}` node to the current ADF node WITHOUT going through `push_text` or `dedup_marks_by_type`. Consequences: (1) the marker text inherits NO active marks — a reference inside `**bold**` is not bold; (2) no CR/LF normalization is applied (the `[label]` string is synthetic and contains no newlines); (3) the Sink guard still fires if the stack top is a `NodeKind::Sink`.
+
+**Reverse (definition) path**: A `Tag::FootnoteDefinition(label)` opens a `NodeKind::FootnoteDefinition { label }` scope. On `End`, the content is moved into `self.footnote_defs` (deferred, not emitted inline) with a `[label] ` prefix prepended to the first paragraph's content array. If the first block is not a paragraph, a standalone label paragraph is prepended first. If the definition body is empty, a bare label paragraph is emitted. Duplicate labels (`[^1]:` appearing twice) are silently dropped — only the first definition for each label is kept (via `footnote_labels_seen: HashSet<String>`).
+
+**Document-end flush** (`finish()`): If `footnote_defs` is non-empty, a single `{type:"rule"}` node is appended to the root (only if the root is non-empty AND does not already end with a `rule`), then all deferred definition blocks are appended via `self.root.append(&mut self.footnote_defs)`. A footnote-only document (no body) gets no leading rule.
+
+**Empty-container pruning (blockquote case)**: When a `FootnoteDefinition` is hoisted out of an enclosing blockquote (e.g., `> [^1]: def`), pulldown-cmark leaves an empty `blockquote` shell. `is_empty_block_container` prunes these empty `blockquote` shells, preventing invalid ADF (a `blockquote` with empty `content`). `paragraph` nodes are excluded from this pruning rule (empty paragraph is valid ADF). **List case differs**: a list-enclosed definition (`- [^1]: def`) leaves the `listItem` holding a placeholder empty paragraph — the `listItem` and `bulletList` are therefore non-empty and are NOT pruned (see EC-7).
+
+**Out-of-scope**: `adf_to_text` renders `[label]` markers as plain text (no special reverse mapping back to `[^label]` notation). The round-trip is intentionally one-directional.
+
+**Edge cases**:
+- **(EC-1) Reference inside bold not bolded**: `**see[^1]**` → `[1]` text node with NO `strong` mark; the surrounding bold text nodes DO carry the mark. `push_footnote_marker` bypasses `active_marks`.
+- **(EC-2) Undefined reference stays literal**: A reference `[^x]` with no corresponding `[^x]:` definition does NOT cause pulldown-cmark to emit a `FootnoteReference` event at all (pulldown only emits the event for defined labels). An undefined reference stays as literal text `[^x]` in the ADF output with no appended definitions section.
+- **(EC-3) Duplicate definition deduped**: Two occurrences of `[^1]:` → only the first is retained in `footnote_defs`; the second is dropped silently. The appended section shows exactly one `[1] …` paragraph.
+- **(EC-4) Footnote-only document**: Input with only footnote definitions and no body text → root stays empty → NO `rule` is prepended (guard: `!self.root.is_empty()`); the definition paragraphs are still appended.
+- **(EC-5) Body ends with rule**: If the last body node is already a `rule`, no second `rule` is emitted (guard: `!ends_with_rule`); the definitions follow the existing rule.
+- **(EC-6) Definition in blockquote → empty blockquote pruned**: `> [^1]: text` → pulldown hoists the definition out of the blockquote, leaving an empty `blockquote`. `is_empty_block_container` prunes it. The root receives the rule + definition paragraphs only.
+- **(EC-7) Definition in list → NO invalid empty container (NOT pruned like EC-6)**: Unlike the blockquote case (EC-6, which prunes the empty shell via `is_empty_block_container`), a list-enclosed definition (`- [^1]: text`) leaves the `listItem` holding a placeholder empty paragraph — valid ADF, so it is NOT pruned. The invariant is only that no `listItem`/`bulletList` ends with empty `content` (which would be a Jira 400); the definition body survives in the appended footnote section. The empty-paragraph placeholder keeps the `listItem` and `bulletList` non-empty. Pinned by `test_markdown_footnote_definition_in_list_no_empty_container`.
+
+**Source**: `src/adf.rs::AdfBuilder::push_footnote_marker`; `src/adf.rs::AdfBuilder::finish` (footnote flush); `src/adf.rs::AdfBuilder::end` (NodeKind::FootnoteDefinition arm); `src/adf.rs::is_empty_block_container`; `src/adf.rs::tests` (footnote unit tests: `test_markdown_footnote_reference_renders_marker_not_literal_caret`, `test_markdown_footnote_definition_appended_after_rule_with_label`, `test_markdown_footnote_definition_not_stray_broken_paragraph`, `test_markdown_footnote_undefined_reference_stays_literal_no_section`, `test_markdown_footnote_definition_in_blockquote_no_empty_container`, `test_markdown_footnote_definition_in_list_no_empty_container`, `test_markdown_footnote_reference_marker_does_not_inherit_marks`, `test_markdown_footnote_duplicate_definition_kept_once`, `test_markdown_footnote_no_double_rule_when_body_ends_with_rule`, `test_markdown_footnote_only_document_has_no_leading_rule`, `test_markdown_footnote_definition_body_list_preserved`, `test_footnote_reference_and_definition_are_discrete_unmarked_text_nodes` — issue #560)
+
+**Trace**: `src/adf.rs::AdfBuilder::push_footnote_marker` (plain-text marker, no marks, no push_text path); `src/adf.rs::AdfBuilder::end` (NodeKind::FootnoteDefinition arm — label prefix, dedup via `footnote_labels_seen`, move to `footnote_defs`); `src/adf.rs::AdfBuilder::finish` (rule guard + append); `src/adf.rs::is_empty_block_container` (empty-shell pruning); `src/adf.rs::tests` (footnote unit test suite, issue #472 + #560)
+
+| Version | Date | Author | Change |
+|---------|------|--------|--------|
+| 1.0.0 | 2026-06-27 | product-owner | Initial BC-7.2.013 (issue #472 — promote from range-collapsed to individually-bodied; characterizes shipped behavior) |
+| 1.1.0 | 2026-06-27 | product-owner | F2 pass-4 F-2 fix: EC-7 rewritten — list-enclosed definitions do NOT prune the listItem/bulletList (unlike the blockquote EC-6 case); they leave a valid placeholder empty paragraph. Empty-container pruning Behavior paragraph split into blockquote-case and list-case. Headline updated to reflect the list-case distinction. BC-INDEX row updated in lockstep. |
+
+---
+
+#### BC-7.2.014: `markdown_to_adf` applies a post-`finish()` pass (`autolink_bare_urls`) that converts bare `http(s)://` URLs in ADF text nodes to `link`-marked text nodes; scope is explicit-scheme `http(s)://` ONLY; `www.`-prefix and bare emails are out of scope; boundary rules derived from GFM; href sliced from original text (user casing preserved); text nodes already carrying `link` or `code` marks and all `codeBlock` content are skipped
+
+**Confidence**: HIGH
+**Subject**: Output rendering
+**Behavior**: After `finish()` and `assign_local_ids`, `markdown_to_adf` runs `autolink_bare_urls(&mut content, 0)?`. This pass walks the built ADF tree recursively and, for each text node that does NOT already carry a `link` or `code` mark, calls `split_text_node_on_urls` which uses `find_bare_url_spans` to locate bare URLs. Any found URL gets a `link` mark applied with the `href` sliced from the original (case-preserving) text.
+
+**Scope**: `http://` and `https://` (explicit scheme, case-insensitive — `HTTPS://`, `Http://`, `httpS://` all match). `www.`-only prefixes and bare email addresses are explicitly OUT of scope to minimize false positives. The scheme match uses a `to_ascii_lowercase` copy whose byte offsets map 1:1 to the original text, so hrefs are always sliced from the original string.
+
+**Boundary rules** (derived from GFM, conservatively scoped):
+1. A URL starts only at text-node start OR after a character that satisfies `c.is_whitespace() || matches!(c, '*' | '_' | '~' | '(')`. A URL tight against a preceding word character (e.g., `foohttps://x`) does NOT match.
+2. Extent runs until the next `char::is_whitespace()` or `<` character.
+3. Trailing `?!.,:*_~` are trimmed (iteratively until stable).
+4. A trailing `)` is trimmed only when it is unbalanced (more `)` than `(` in the remaining URL). Balanced `…/Foo_(bar)` keeps its parens.
+5. After trimming, at least one character past `scheme://` must remain; otherwise the span is discarded.
+
+**Exclusion rules**: Text nodes already carrying a `link` mark (produced by `[text](url)` or `<url>` markup) are never processed — no double-linking. Text nodes carrying a `code` mark are skipped. All content inside `codeBlock` nodes is skipped (the pass does NOT recurse into `codeBlock.content`).
+
+**Round-trip effect**: A bare URL in user input that passes through `markdown_to_adf` then `adf_to_text` renders back as `[url](url)` (because it IS a link), not the bare string. This is an intentional lossy transformation (Jira's REST API does not auto-linkify plain-text URLs; the `link` mark is required for clickability).
+
+**Motivation**: Jira's REST API does not auto-linkify plain-text URLs submitted in ADF bodies (smart-link unfurl is a browser-editor-only compose-time feature). Without the mark the URL is unclickable. The pass is required, not cosmetic.
+
+**Edge cases**:
+- **(EC-1) `www.`-prefix stays plain text**: `www.example.com` in a description is NOT linkified (no explicit scheme → out of scope). No `link` mark is applied.
+- **(EC-2) Bare email stays plain text**: `user@example.com` is NOT linkified (requires scheme inference → out of scope).
+- **(EC-3) Uppercase scheme linkified, href casing preserved**: `HTTPS://example.com/Path` matches scheme case-insensitively; the `href` is `HTTPS://example.com/Path` (original casing, not lowercased).
+- **(EC-4) Existing `link` mark not double-linked**: `[text](https://example.com)` already produces a `link`-marked text node. The `autolink_bare_urls` pass detects the existing mark and skips the node. No second `link` mark is added.
+- **(EC-5) URL in inline code not linked**: `` `https://example.com` `` → the text node carries a `code` mark. The pass skips `code`-marked nodes.
+- **(EC-6) URL in `codeBlock` not linked**: A fenced code block with a URL inside is not processed — the pass skips into `codeBlock.content`.
+- **(EC-7) Tight against word not matched**: `seehttps://example.com` → `s` is a word char, not in the boundary set → no match. The URL is not linkified.
+- **(EC-8) Unbalanced trailing paren trimmed**: `(https://example.com)` → trailing `)` is unbalanced → trimmed; `href = "https://example.com"`.
+- **(EC-9) Balanced inner parens kept**: `https://en.wikipedia.org/wiki/Foo_(bar)` → parens balanced → kept; `href` includes `(bar)`.
+- **(EC-10) URL split by inline markup**: `https://x/a*b*c` — the `*b*` emphasis is parsed as a separate node in the ADF tree; only the leading text node `"https://x/a"` is linkified. The trailing `"c"` text node is also considered but does not begin with a scheme. Result: `[https://x/a](https://x/a)` + `[b]` (em) + plain `c`.
+- **(EC-11) `[` before URL not a boundary**: An unresolved shortcut `[https://x]` → `[` is NOT in the boundary set → the URL portion is not linkified.
+- **(EC-12) `ftp://` and other non-http(s) schemes are NOT autolinked (deliberate scope)**: GFM's extended URL autolink spec (§6.9) recognizes `http://`, `https://`, AND `ftp://`. Our pass links `http(s)://` ONLY. This is a valid conservative SUBSET of GFM — "`GFM-derived`" in the Boundary rules means the boundary/trimming rules are inspired by GFM, NOT that we cover GFM's full URL-scheme set. An `ftp://` URL in user input is left as plain text. (The separate `remote-link --url` scheme allowlist, BC-X/H-033, is unrelated.) Provenance: `.factory/research/adf-bc-external-validation-2026-06-27.md` §Claim 3.
+
+**Source**: `src/adf.rs::autolink_bare_urls`; `src/adf.rs::split_text_node_on_urls`; `src/adf.rs::find_bare_url_spans`; `src/adf.rs::trim_url_extent`; `src/adf.rs::tests` (bare-url unit tests: `test_bare_https_url_becomes_link_mark`, `test_bare_http_url_becomes_link_mark`, `test_bare_url_trailing_period_is_trimmed`, `test_bare_url_wrapping_paren_not_captured`, `test_bare_url_balanced_inner_parens_kept`, `test_url_in_inline_code_not_linkified`, `test_url_in_code_block_not_linkified`, `test_www_url_stays_plain_text`, `test_bare_email_stays_plain_text`, `test_uppercase_https_scheme_is_linkified`, `test_bare_url_after_open_bracket_stays_plain_text`, `test_url_tight_against_preceding_word_not_matched`, `test_bare_url_round_trips_to_markdown_link_text`, `test_bare_url_split_by_emphasis_links_only_leading_run`, `test_bare_url_inside_emphasis_keeps_em_and_link`, `test_bare_url_with_port_is_preserved`, `test_bare_url_trailing_colon_is_trimmed`, `test_bare_url_in_panel_is_linkified`, `test_bare_url_in_table_cell_is_linkified`); `docs/specs/` (issue #473)
+
+**Trace**: `src/adf.rs::autolink_bare_urls` (post-finish tree walk, depth-guarded); `src/adf.rs::find_bare_url_spans` (scheme detection on lowercased copy, boundary-char predicate `char::is_whitespace() OR one of * _ ~ (`); `src/adf.rs::trim_url_extent` (trailing-punctuation trimming + parenthesis balancing); `src/adf.rs::split_text_node_on_urls` (text-node split into link-marked + plain segments, mark-preservation); `src/adf.rs::tests` (bare-url unit test suite, issue #473)
+
+**Holdout/wiremock framing note**: A holdout or wiremock test for this behavior MUST assert that `jr`'s OWN submitted `link` mark round-trips through POST + GET (i.e., that the ADF structure `jr` constructs is accepted and returned intact by the Jira Cloud REST API). It must NOT assert that Jira auto-applies a `link` mark to a bare URL in submitted ADF (Jira's REST API does not do this; smart-link unfurl is a browser-editor compose-time feature, confirmed inferentially against Atlassian developer docs — `.factory/research/adf-bc-external-validation-2026-06-27.md` §Claim 2), and must NOT assert that an unmarked URL is "unclickable in the UI" (this is an undocumented renderer heuristic and is not observable via the REST API). The contract operates at the submitted-ADF-structure level: the test fixture should POST ADF with a `link` mark, GET the issue, and assert the `link` mark is present in the returned ADF body. A fixture using a bare `ftp://` URL must not expect linkification (see EC-12). Provenance: `.factory/research/adf-bc-external-validation-2026-06-27.md` §Claim 2 risk flag.
+
+| Version | Date | Author | Change |
+|---------|------|--------|--------|
+| 1.0.0 | 2026-06-27 | product-owner | Initial BC-7.2.014 (issue #473 — promote from range-collapsed to individually-bodied; characterizes shipped behavior) |
+| 1.1.0 | 2026-06-27 | product-owner | REFINE-1: added EC-12 (`ftp://` and other non-http(s) schemes deliberately excluded; GFM-derived ≠ GFM-complete). REFINE-2: added Holdout/wiremock framing note to Trace — specifies that holdout assertions must operate at submitted-ADF-structure level (link mark round-trip), not Jira renderer heuristics. Provenance: `.factory/research/adf-bc-external-validation-2026-06-27.md` §Claim 2 (risk flag) and §Claim 3 (ftp divergence). |
+
+---
+
+#### BC-7.2.012: `markdown_to_adf` and `adf_to_text` enforce a maximum nesting depth of `MAX_ADF_DEPTH = 256`; inputs exceeding the limit return exit 64; forward path message is `"markdown nesting too deep (max 256 levels)"`, reverse path message is `"ADF response nesting too deep (max 256 levels) — …"`; stable machine-detectable substring is `"nesting too deep (max 256 levels)"`; `text_to_adf` is non-recursive and unaffected
 
 **Confidence**: HIGH
 **Source**: `src/adf.rs` recursion guards; `tests/adf_recursion_depth.rs`; `src/adf.rs` unit tests; `docs/specs/adf-recursion-depth.md`
 **Subject**: Output rendering
-**Behavior**: ADF tree construction (`markdown_to_adf` and its normalization, localId assignment, and autolink passes) and ADF rendering (`adf_to_text` via `render_node`/`render_children`) enforce a maximum nesting depth constant `MAX_ADF_DEPTH = 256`. The boundary is inclusive: depth 256 is rejected (not permitted). Input whose nesting depth never exceeds 256 processes normally. Input whose nesting depth exceeds 256 returns a user error with exit code 64 and message `"input nesting too deep (max 256)"` rather than risking uncontrolled recursion or stack overflow (CWE-674). The depth check is applied before recursing into child nodes. Both directions are covered: the forward path (user `--description` or comment markdown input) and the reverse path (rendering ADF from Jira server responses). `text_to_adf` is non-recursive (it constructs a flat single-paragraph ADF node directly) and is NOT subject to this limit.
+**Behavior**: ADF tree construction (`markdown_to_adf` and its normalization, localId assignment, and autolink passes) and ADF rendering (`adf_to_text` via `render_node`/`render_children`) enforce a maximum nesting depth constant `MAX_ADF_DEPTH = 256`. The boundary is inclusive: depth 256 is rejected (not permitted). Input whose nesting depth never exceeds 256 processes normally. Input whose nesting depth exceeds 256 returns a user error with exit code 64 rather than risking uncontrolled recursion or stack overflow (CWE-674). The depth check is applied before recursing into child nodes. Both directions are covered: the forward path (user `--description` or comment markdown input) and the reverse path (rendering ADF from Jira server responses). `text_to_adf` is non-recursive (it constructs a flat single-paragraph ADF node directly) and is NOT subject to this limit.
+
+The two directions emit **distinct** error messages:
+- **Forward path** (`markdown_to_adf` and normalization/localId/autolink passes): `"markdown nesting too deep (max 256 levels)"` (`src/adf.rs` ~lines 206, 1664, 1797, 1862, 2075).
+- **Reverse path** (`adf_to_text` / `render_node`): `"ADF response nesting too deep (max 256 levels) — the issue data returned by Jira cannot be rendered"` (`src/adf.rs` ~line 2149).
+
+The stable machine-detectable substring present in BOTH messages is `"nesting too deep (max 256 levels)"`. CLAUDE.md documents the minimal stable fragment as `"nesting too deep"`. Tests assert only `.contains("nesting too deep")` — never the exact full strings above — so the full strings are implementation detail, not a pinned contract surface.
 
 **Edge cases**:
-- **(EC-1) Inclusive boundary — depth 256 rejected**: Input with exactly 256 nesting levels is rejected. This is the inclusive-rejection boundary; depth 255 is the deepest accepted input.
-- **(EC-2) Depth 255 accepted**: Input with 255 nesting levels processes normally and produces valid ADF output.
+- **(EC-1) Inclusive boundary — ADF-tree recursion depth 256 rejected**: The guard counts ADF-tree **recursion depth** (the number of container content-array nesting levels during the post-build `assign_local_ids_walk` / `autolink_bare_urls` walk and during `render_node`), NOT the number of markdown blockquote `>` levels. For N nested blockquotes the deepest recursive call lands at depth N+1 (one extra level for the paragraph's content array inside the innermost blockquote). The inclusive boundary is depth 256: a document whose deepest recursive call reaches depth 256 is REJECTED with exit 64. In blockquote terms, this means N=255 nested blockquotes → deepest call at depth 256 → Err. Pinned by `test_markdown_to_adf_deepest_node_at_256_is_err_boundary_exact` (N=255, asserts `is_err()`).
+- **(EC-2) ADF-tree recursion depth 255 accepted**: A document whose deepest recursive call reaches depth 255 is accepted and produces valid output. In blockquote terms, N=254 nested blockquotes → deepest call at depth 255 → Ok. Pinned by `test_markdown_to_adf_depth_255_blockquote_is_ok` (N=254, asserts `is_ok()`).
 - **(EC-3) `text_to_adf` exempt**: `text_to_adf` is non-recursive and not subject to `MAX_ADF_DEPTH`. No depth check is applied to plain-text input on this path.
 - **(EC-4) Both directions enforced**: The depth guard applies to the forward path (`markdown_to_adf` input) and the reverse path (`adf_to_text` rendering of ADF from Jira server responses). A malformed ADF response with deeply-nested content does not cause stack overflow.
-- **(EC-5) Error message is exact**: The user-visible error message is exactly `"input nesting too deep (max 256)"` with no variation in wording. This is load-bearing for scripted error-detection.
+- **(EC-5) Error messages are distinct by direction**: The forward path emits `"markdown nesting too deep (max 256 levels)"`. The reverse path emits `"ADF response nesting too deep (max 256 levels) — the issue data returned by Jira cannot be rendered"`. The common stable substring `"nesting too deep (max 256 levels)"` is the machine-detectable signal; tests use `.contains("nesting too deep")`. The exact full strings are NOT independently pinned by tests and may vary across implementations — only the common substring is contractual.
 
 **Trace**: `src/adf.rs` recursion guard implementations in `markdown_to_adf` and `adf_to_text` call paths; `tests/adf_recursion_depth.rs` integration tests; `src/adf.rs::tests` unit tests; `docs/specs/adf-recursion-depth.md`; SEC-001
+
+| Version | Date | Author | Change |
+|---------|------|--------|--------|
+| 1.1.0 | 2026-06-27 | product-owner | F2-pass2 O-2 (MEDIUM): corrected EC-5 and Behavior section — forward path emits `"markdown nesting too deep (max 256 levels)"`, reverse path emits `"ADF response nesting too deep (max 256 levels) — …"`, stable fragment is `"nesting too deep (max 256 levels)"`. Removed false "exact / no variation in wording" claim; headline updated to reflect two distinct messages. |
+| 1.2.0 | 2026-06-27 | product-owner | F2-pass5 precision fix: disambiguated depth unit in EC-1/EC-2. The guard counts ADF-tree recursion depth (container content-array nesting levels), NOT markdown blockquote `>` count. For N nested blockquotes the deepest call is at depth N+1. EC-1 rewritten: N=255 → depth 256 → Err, pinned by `test_markdown_to_adf_deepest_node_at_256_is_err_boundary_exact` (N=255). EC-2 rewritten: N=254 → depth 255 → Ok, pinned by `test_markdown_to_adf_depth_255_blockquote_is_ok` (N=254). Removed bare "256 nesting levels" phrasing that conflated markdown levels with recursion depth. |
 
 ---
 
@@ -551,6 +647,41 @@ Note: The function doc comment inside client.rs lists precedence as "1. errorMes
 **Confidence**: MEDIUM
 **Source**: `src/error.rs:30-36`
 **Trace**: Pass 3 BC-1213
+
+---
+
+#### BC-7.3.010: Every `--output json` SUCCESS path (stdout data) routes through `output::render_json` or `output::print_output` and is pretty-printed; the error envelope on stderr is intentionally compact single-line JSON emitted by `src/main.rs::main`; direct `serde_json::to_string_pretty` calls and compact `serde_json::json!` Display printing in CLI handlers are forbidden
+
+**Confidence**: HIGH
+**Subject**: Output rendering
+**Behavior**: This is a file-wide coding invariant enforced across all `src/cli/**/*.rs` handlers. Every command that supports `--output json` MUST route all SUCCESS JSON serialization through exactly one of:
+- `output::render_json<T: Serialize>(data: &T)` — serializes to a pretty-printed string (wraps `serde_json::to_string_pretty`).
+- `output::print_output(format, headers, rows, json_data)` — dispatches on `OutputFormat`; in `Json` mode calls `render_json` and `println!`s the result.
+
+Direct calls to `serde_json::to_string_pretty` at CLI handler call sites, or printing JSON by formatting a `serde_json::json!()` macro inline in a CLI handler, are FORBIDDEN. Both patterns bypass the canonical routing chokepoint and produce inconsistent output (e.g., compact JSON instead of pretty-printed, or missing pretty-print wrapper for complex types).
+
+**Error output discipline under `--output json`**: When a command fails, the error envelope `{"error": "<message>", "code": <exit>}` is written to STDERR. Stdout is empty on error. This channel separation is invariant: data (success) → stdout; errors → stderr. No handler may write an error JSON envelope to stdout. The envelope is built and emitted by `src/main.rs::main` (the `Err(e)` arm) after the handler propagates the error as `JrError`.
+
+**Pretty-print invariant (SUCCESS stdout data only)**: As of v0.6 (issue #526), ALL `--output json` SUCCESS paths (stdout data) produce pretty-printed JSON (two-space indented via `serde_json::to_string_pretty`). Commands changed in #526: `jr issue create --request-type` (JSM path) and `jr project fields` both shifted from compact to pretty-printed output. `jq` and programmatic parsers that handle valid JSON are unaffected by indentation.
+
+**Error envelope channel (stderr, intentionally compact)**: The error envelope on stderr is emitted by `src/main.rs::main` via `eprintln!("{}", serde_json::json!({"error": …, "code": …}))`. `serde_json::json!` Display renders COMPACT single-line JSON — it does NOT route through `output::render_json` and is NOT pretty-printed. This is intentional: the error envelope is a one-liner diagnostic signal, not a data payload. EC-1 and EC-2 illustrate the compact single-line form. This design is consistent: the "forbidden compact JSON" rule applies to CLI handler files (`src/cli/**/*.rs`), not to `src/main.rs::main` which owns the error-channel contract.
+
+**Verification of the invariant**: The absence of direct `serde_json::to_string_pretty` and bare `json!` Display printing in CLI handler files is audited by code review. The invariant was established in issue #526; any future handler that introduces a direct serialization call violates this contract.
+
+**Edge cases**:
+- **(EC-1) Error on read command**: `jr issue view MISSING-1 --output json` → stdout is EMPTY; stderr receives compact single-line JSON: `{"error":"Issue MISSING-1 not found","code":1}` (no indentation; emitted by `src/main.rs::main` via `serde_json::json!` Display — NOT routed through `render_json`).
+- **(EC-2) Error on write command**: `jr issue edit KEY-1 --summary "" --output json` → compact single-line error envelope to stderr; stdout empty.
+- **(EC-3) Compact JSON in a CLI handler is a violation**: A handler in `src/cli/**/*.rs` that writes `println!("{}", serde_json::json!({"key": v}))` produces compact one-line JSON on stdout. This violates the pretty-print invariant for SUCCESS data. The canonical form is `println!("{}", output::render_json(&data)?)` or `output::print_output(format, …)`. Note: `src/main.rs::main` is explicitly exempt — it legitimately uses `serde_json::json!` Display for the compact error envelope on stderr.
+- **(EC-4) Both channels active simultaneously is a violation**: Writing success JSON to stdout AND then writing an error JSON to stderr in the same command invocation is a violation. Exactly one channel carries output per invocation.
+
+**Source**: `src/output.rs::render_json`; `src/output.rs::print_output`; `src/main.rs::main` (error envelope routing to stderr via compact `serde_json::json!` Display); `src/cli/**/*.rs` (all handlers must use the render_json chokepoint for success data); issue #526; `tests/issue_commands.rs` and `tests/issue_view_errors.rs` (error-channel assertions)
+
+**Trace**: `src/output.rs::render_json` (sole permitted JSON serialization chokepoint for success data on stdout); `src/output.rs::print_output` (dispatch wrapper); `src/main.rs::main` (error-envelope routing: compact `serde_json::json!` Display → stderr; does NOT route through `render_json`); `src/cli/**/*.rs` (all `--output json` callers — invariant verified at code review); issue #526 (json-render invariant establishment); `tests/issue_commands.rs` and `tests/issue_view_errors.rs` (error-channel correctness tests)
+
+| Version | Date | Author | Change |
+|---------|------|--------|--------|
+| 1.0.0 | 2026-06-27 | product-owner | Initial BC-7.3.010 (issue #526 json-render invariant + error channel; genuinely new ID) |
+| 1.1.0 | 2026-06-27 | product-owner | F2-pass2 F-1 (HIGH): corrected pretty-print overclaim — scoped invariant to SUCCESS stdout data only; added explicit "error envelope channel" section stating the stderr envelope is intentionally compact single-line JSON emitted by `src/main.rs::main` via `serde_json::json!` Display (does NOT route through `render_json`); updated header, Behavior, EC-1/EC-2/EC-3, Source, and Trace accordingly. The EC-1/EC-2 compact examples now match BC-7.3.005 and `src/main.rs::main` actual behavior. |
 
 ---
 
@@ -744,3 +875,6 @@ Field types: `profile` is `string`, `action` is `string` literal `"remove"`, `ok
 | 1.9.9 | 2026-06-17 | product-owner | F5 Pass 3 stale-prose correction (within-v1.9.8): The v1.9.8 EC-11 AC line for `test_push_text_crlf_two_pass_ordering_deterministic` was corrected to the context-split outcomes. The prior AC text asserted `"a\r\nb"` → `"a\nb"` as the single context-independent outcome and treated `"a  b"` (two spaces) as something to EXCLUDE — contradicting the actual test assertions. Corrected form: non-codeBlock `"a\r\nb"` → `"a b"` (space), `"a\r\rb"` → `"a  b"` (two spaces), `"\r\n\r"` → `"  "` (two spaces); codeBlock `"a\r\nb"` → `"a\nb"`. The Source field entry for the same test was also corrected to show both context outcomes instead of codeBlock-only. No algorithm, EC count, acceptance-criteria logic, test names, total_bcs, definitional_count, BC-INDEX, CANONICAL-COUNTS, or src/ changed. |
 | 1.10.0 | 2026-06-17 | product-owner | Added EC-12 (INV-1-plain-text) — `text_to_adf` CR/newline normalization (issue #522 extension, plain-text write path). EC-12 closes the third INV-1 chokepoint after Algorithm B (HtmlBlock end arm, EC-1..EC-10) and EC-11 (`push_text`/`push_code`). Contract: `text_to_adf` must not emit any ADF text node containing raw `\r` or `\n`; interior newlines are represented as `hardBreak` nodes; blank lines produce separate `paragraph` nodes; trailing `\r`/`\n` stripped; single-line inputs byte-identical to pre-fix output (no-regression guarantee). Per-input behavior table added (12 rows covering single-line, trailing newline, interior LF/CRLF/lone-CR, blank-line separation, double blank, all-newlines). Shared-helper implementation note: implementation MAY share `normalize_text_to_inline_nodes` helper with Algorithm B; BC body behavior table is the contract; Algorithm B byte-identity preserved. Six new test names added to Source and Trace: `test_text_to_adf_single_line_unchanged`, `test_text_to_adf_normalizes_interior_lf_to_hardbreak`, `test_text_to_adf_normalizes_interior_crlf_to_hardbreak`, `test_text_to_adf_normalizes_interior_lone_cr_to_hardbreak`, `test_text_to_adf_strips_trailing_newlines`, `test_text_to_adf_no_raw_newline_in_any_text_node`; optional `prop_text_to_adf_holds_inv1`. BC-7.2.011 headline extended with `text_to_adf` normalization clause. `src/adf.rs::text_to_adf` added to Source and Trace. BC-INDEX row summary updated. Global spec-changelog [1.3.21] added. No new BC heading added — `total_bcs` stays 90 (bc-7 file) / 598 (global); `definitional_count` unchanged at 44. |
 | 1.11.0 | 2026-06-17 | product-owner | F5-R2 fix: extended EC-11 (`push_text`/`push_code` chokepoint) to cover bare `\n` in Other-context and `push_code` (issue #522, BC-7.2.011 EC-11 chokepoint precision). Prior contract for the Other-context branch normalized `\r\n`→space and lone `\r`→space but was SILENT on a bare `\n` (U+000A not preceded by `\r`). F5 adversarial review found the code only normalized when `\r` was present, leaving a bare `\n` able to survive into a non-codeBlock text node via multi-line inline HTML — a **reachable HIGH-severity INV-1 violation** (`test_markdown_multiline_inline_html_holds_inv1` was RED before the fix). Fix: Other-context branch now also maps bare `\n`→space. CodeBlock context: bare `\n` is PRESERVED (codeBlock nodes may contain `\n`). `push_code` similarly extended: bare `\n`→space (defense-in-depth). **Changes:** (1) EC-11 item 3 (Other contexts): added "`AND bare \n (U+000A not preceded by \r) → space`"; reachability note cites multi-line inline HTML as the confirmed reachable end-to-end path; (2) EC-11 `push_code` line: added "bare `\n` → space"; (3) EC-11 INV-1 preservation rationale: extended to mention bare `\n` explicitly and chokepoint-self-sufficiency framing; (4) EC-11 behavior table (NEW): 7-row table covering Other-context bare `\n` → space, CodeBlock `\n` preserved, CRLF/lone-CR both contexts — provides testable canonical rows; (5) COMP-1 scope exclusion note (NEW): Unicode line separators U+2028 LS, U+2029 PS, U+0085 NEL, U+000B VT, U+000C FF are OUT OF SCOPE — passed through verbatim; INV-1 covers ASCII `\r`/`\n` only; mirrors issue #473 narrow-scope pattern; (6) EC-11 AC section: five new tests (`test_push_text_normalizes_bare_lf_in_other_context_to_space`, `test_push_text_codeblock_preserves_bare_lf`, `test_push_code_normalizes_bare_lf_to_space`, `test_markdown_multiline_inline_html_holds_inv1`, `prop_markdown_to_adf_html_chars_holds_inv1`); (7) BC-7.2.011 headline: updated `push_text` clause to mention bare `\n`→space (Other context) and F5-R2; (8) Source and Trace: `push_text` and `push_code` annotations extended with F5-R2 bare-`\n` rules; five new test names appended; (9) BC-INDEX BC-7.2.011 row: updated to describe bare-`\n` normalization and COMP-1 scope exclusion; (10) Global spec-changelog [1.3.22] added. No new BC heading — `total_bcs` stays 90 (bc-7 file) / 598 (global); `definitional_count` unchanged at 44. |
+| 1.12.0 | 2026-06-27 | product-owner | Added BC-7.2.013 (issue #472 footnote→ADF) and BC-7.2.014 (issue #473 bare-URL autolink) as individually-bodied sections — promoted from range-collapsed BC-7.2.013..057 pool. `definitional_count` 45→47; `total_bcs` unchanged (both IDs already counted in range-collapsed 603 total). Range-collapsed row in BC-INDEX updated from `013..057` to `015..057`. Section header updated from "12 individually-bodied" to "14 individually-bodied". |
+| 1.13.0 | 2026-06-27 | product-owner | Added BC-7.3.010 (issue #526 json-render invariant + read-command error channel). Genuinely new ID; `definitional_count` 47→48; `total_bcs` 91→92. BC-INDEX §7.3 section header updated from "9 BCs" to "10 BCs"; new row added. CANONICAL-COUNTS updated. |
+| 1.14.0 | 2026-06-27 | product-owner | F2 pass-4 F-2 adversarial finding (MEDIUM): BC-7.2.013 EC-7 mischaracterized list-definition pruning as "same mechanism as EC-6". Fixed: EC-7 now correctly states that list-enclosed definitions are NOT pruned — the `listItem` retains a valid placeholder empty paragraph. Empty-container pruning Behavior paragraph now explicitly distinguishes blockquote case (pruned by `is_empty_block_container`) from list case (NOT pruned; placeholder paragraph keeps container valid). BC-7.2.013 headline updated to reflect both cases. BC-7.2.013 internal version row 1.1.0 added. BC-INDEX BC-7.2.013 row updated in lockstep. No `total_bcs`, `definitional_count`, algorithm, EC count, or CANONICAL-COUNTS changed. |

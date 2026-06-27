@@ -1,9 +1,9 @@
 ---
 context: bc-6
 title: "Configuration & Cache"
-total_bcs: 42   # cumulative claim (incl. range-collapsed; +3 windows-build F2 2026-06-12: BC-6.1.014, BC-6.2.016, BC-6.2.017)
-definitional_count: 32   # count of `#### BC-` headings in this file (+3 windows-build F2 2026-06-12)
-last_updated: 2026-06-12
+total_bcs: 43   # cumulative claim (incl. range-collapsed; +3 windows-build F2 2026-06-12: BC-6.1.014, BC-6.2.016, BC-6.2.017; +1 added 2026-06-27: BC-6.2.018 cache warm-hit no-HTTP invariant)
+definitional_count: 33   # count of `#### BC-` headings in this file (+3 windows-build F2 2026-06-12; +1 added 2026-06-27)
+last_updated: 2026-06-27
 source_pass: 3
 adversary_fixes: "F-1/F-2/F-5/F-6 applied 2026-06-12 (windows-build Phase F2 adversarial review)"
 trace: |
@@ -16,8 +16,8 @@ trace: |
 
 # BC-6 — Configuration & Cache
 
-42 behavioral contracts across 3 subdomains: Configuration (6.1), Cache (6.2),
-Multi-profile fields — MUST-FIX (6.3).
+43 behavioral contracts across 3 subdomains: Configuration (6.1), Cache (6.2),
+Multi-profile fields — MUST-FIX (6.3). (+1 BC-6.2.018 added 2026-06-27 cache warm-hit no-HTTP invariant.)
 
 ---
 
@@ -391,6 +391,61 @@ Both assertions (config site + cache site) are required. A test that checks only
 **Related BCs**: BC-6.1.014 (Windows config path), BC-6.2.016 (Windows cache path), BC-6.1.010 (`JR_BASE_URL` seam — pattern this mirrors)
 **CLAUDE.md documentation**: `JR_CONFIG_DIR` / `JR_CACHE_DIR` must be added to the "AI Agent Notes" JR_* env var table in CLAUDE.md per the doc-fallout pattern (parallel to `JR_BASE_URL` and `JR_BULK_*` entries).
 **Trace**: windows-build F2 2026-06-12; architecture-delta.md §2; ADR-0016; mirrors BC-6.1.010 / `tests/base_url_release_gate.rs` pattern; adversary fixes F-1/F-2/F-5/F-6 applied 2026-06-12
+
+---
+
+#### BC-6.2.018: A warm cache hit (second invocation within TTL) returns the cached value and issues ZERO HTTP calls to the backing API endpoint; this invariant holds for all nine cache families
+
+**Confidence**: HIGH
+**Subject**: Config & Cache
+**Behavior**: **Behavioral invariant (all 9 families)**: For every cache family, a second invocation within the 7-day TTL (warm hit) returns the cached value and issues ZERO HTTP calls to the backing API endpoint. The HTTP call is entirely bypassed on a warm hit; the first (cold miss) invocation triggers the HTTP request and writes the result back to the cache file.
+
+**Mechanism** (two distinct implementations in `src/cache.rs`):
+
+**(a) 7 families delegate to the generic `read_cache<T>` warm-hit return path** (lines 16–34). `read_cache<T>` is private; the public wrappers below delegate to it:
+- **Family 1 (teams)**: `read_team_cache(profile)` / `write_team_cache`
+- **Family 3 (workspace ID)**: `read_workspace_cache(profile)` / `write_workspace_cache`
+- **Family 4 (CMDB fields)**: `read_cmdb_fields_cache(profile)` / `write_cmdb_fields_cache`
+- **Family 6 (Jira fields)**: `read_fields_cache(profile)` / `write_fields_cache`
+- **Family 7 (resolutions)**: `read_resolutions_cache(profile)` / `write_resolutions_cache`
+- **Family 8 (request types)**: `read_request_type_cache(profile, service_desk_id)` / `write_request_type_cache`
+- **Family 9 (request type fields)**: `read_request_type_fields_cache(profile, service_desk_id, rt_id)` / `write_request_type_fields_cache`
+
+On warm hit: `read_cache<T>` returns `Ok(Some(T))` after (1) file read, (2) JSON deserialization, (3) TTL check passes (`num_days() < 7`). No network call before or after this return.
+
+**(b) 2 families implement an equivalent per-entry inline warm path** and do NOT call `read_cache<T>`:
+- **Family 2 (project meta)**: `read_project_meta(profile, project_key)` at `src/cache.rs::read_project_meta` — own `path.exists()` check → `from_str::<HashMap<String,ProjectMeta>>` → per-entry `meta.fetched_at` TTL check → returns `Ok(Some(meta.clone()))` on warm hit. Keyed design: TTL is checked per entry, not per file, because multiple project keys share one `project_meta.json` file.
+- **Family 5 (object-type attrs)**: `read_object_type_attr_cache(profile, object_type_id)` at `src/cache.rs::read_object_type_attr_cache` — own `path.exists()` → `from_str::<ObjectTypeAttrCache>` → per-file `cache.fetched_at` TTL → `types.get(object_type_id).cloned()` → returns `Ok(Some(Vec<CachedObjectTypeAttr>))` on warm hit. Keyed design: TTL is per-file; lookup is per object type ID.
+
+Both bespoke paths enforce the same behavioral invariant as `read_cache<T>`: warm hit within TTL → cached value returned, ZERO additional HTTP calls.
+
+**D2 verification property**: The warm-hit no-HTTP invariant is the only cache property that output alone cannot verify — output is identical whether the value came from cache or a fresh HTTP call. Two distinct techniques are used across families:
+
+**(i) Wiremock `expect(1)` call-count pin**: configure the mock to fire exactly once (`expect(1)`), make the first request (cold miss), confirm the mock was called, then make the second request (warm hit) and confirm the mock was still called exactly once (not twice). Wiremock asserts the call count automatically on server shutdown. Used by Families 8+9 (`tests/requesttype_commands.rs::test_requesttype_list_cache_hit_no_second_http`, `test_requesttype_fields_cache_hit_no_second_http`) and Family 3 (holdout H-037).
+
+**(ii) Absence-of-mount**: the second-call endpoint is deliberately NOT mounted; any follow-on call to it would return 404 as an unregistered request, surfacing visibly in the test output. Used by Family 6 (`tests/issue_edit_field.rs::test_bc_3_4_015_warm_fields_cache_skips_field_list_http`): the test pre-populates the fields cache and explicitly does NOT mount `GET /rest/api/3/field` — confirmed by the test comment: "Deliberately do NOT mount GET /rest/api/3/field — any call to it would be an unregistered request (wiremock returns 404 which the handler would surface)".
+
+Both techniques prove the zero-follow-on-HTTP property; they are complementary, not interchangeable preferences. New tests for un-pinned families may use either technique; `expect(1)` is preferred when the test spans two binary invocations, absence-of-mount is simpler for single-invocation tests.
+
+**Edge cases**:
+- **(EC-1) Expired cache (TTL = 7 days)**: On the 7th day (`num_days() >= 7`), all paths return `Ok(None)`. The caller issues a fresh HTTP request. This is a cold miss, not a warm hit.
+- **(EC-2) Corrupt cache file (parse failure)**: `serde_json::from_str` fails → returns `Ok(None)` + stderr warning. The caller issues a fresh HTTP request (self-healing behavior; BC-6.2.002). All 9 families implement this self-heal path.
+- **(EC-3) Missing cache file (first run)**: File not found → returns `Ok(None)`. The caller issues an HTTP request (cold miss; BC-6.2.001).
+- **(EC-4) Family-8 (request-type) cache is per-`(profile, service_desk_id)` tuple**: The filename is `request_types_<service_desk_id>.json`. Two different service desk IDs have independent warm-hit paths; a warm hit on SID-1 does NOT satisfy SID-2's cache.
+- **(EC-5) Family-9 (RT-fields) cache is per-`(profile, service_desk_id, rt_id)` triple**: The filename is `request_type_fields_<service_desk_id>_<rtId>.json`. Independent per-triple.
+
+**Source**: `src/cache.rs::read_cache` (generic warm-hit path — lines 16–34); `src/cache.rs::read_project_meta` (bespoke per-entry inline warm path, lines 159–185); `src/cache.rs::read_object_type_attr_cache` (bespoke per-file inline warm path, lines 389–413); wiremock integration tests that pin `expect(1)` per-family: `tests/requesttype_commands.rs` (`test_requesttype_list_cache_hit_no_second_http`, `test_requesttype_fields_cache_hit_no_second_http`); `tests/issue_edit_field.rs` (`test_bc_3_4_015_warm_fields_cache_skips_field_list_http`); workspace warm-hit: holdout H-037 (workspace ID cache no-HTTP)
+
+**Trace**: `src/cache.rs::read_cache` (generic warm-hit return path, Families 1/3/4/6/7/8/9); `src/cache.rs::read_project_meta` (bespoke inline warm path, Family 2); `src/cache.rs::read_object_type_attr_cache` (bespoke inline warm path, Family 5); `src/cache.rs::read_workspace_cache`, `read_fields_cache`, `read_request_type_cache`, `read_request_type_fields_cache` (all delegate to `read_cache<T>`); D2 no-HTTP verification: `tests/requesttype_commands.rs` (`test_requesttype_list_cache_hit_no_second_http`, `test_requesttype_fields_cache_hit_no_second_http` — call-count-pin technique, Families 8+9); `tests/issue_edit_field.rs` (`test_bc_3_4_015_warm_fields_cache_skips_field_list_http` — absence-of-mount technique, Family 6); holdout H-037 (call-count-pin technique, Family 3).
+
+**Coverage honesty note (F2 pass-5)**: The "invariant holds for all 9 families" claim is supported differently per family. **TEST-PINNED families** (dedicated test explicitly pins the no-HTTP property for this specific family): Family 6 (fields) via `test_bc_3_4_015_warm_fields_cache_skips_field_list_http` in `tests/issue_edit_field.rs` using the **absence-of-mount** technique (GET /field intentionally not mounted — any call would 404); Families 8+9 (request-type list/fields) via `test_requesttype_list_cache_hit_no_second_http` and `test_requesttype_fields_cache_hit_no_second_http` in `tests/requesttype_commands.rs` using the **`expect(1)` call-count pin** technique; Family 3 (workspace ID) via holdout H-037 using `expect(1)`. **INVARIANT-HOLDS-BY-SHARED-MECHANISM (not yet individually pinned)**: Families 1 (teams), 2 (project-meta), 4 (CMDB fields), 5 (object-type-attrs), 7 (resolutions) — the warm-hit no-HTTP property holds by the shared `read_cache<T>` / bespoke inline path mechanism described in Behavior, but no dedicated per-family test currently exists for these families. An author adding a test for an un-pinned family should use either the `expect(1)` or absence-of-mount technique as appropriate for the test design.
+
+| Version | Date | Author | Change |
+|---------|------|--------|--------|
+| 1.0.0 | 2026-06-27 | product-owner | Initial BC-6.2.018 (cache warm-hit no-HTTP invariant; genuinely new ID; D2 dimension anchor) |
+| 1.1.0 | 2026-06-27 | product-owner | F2 pass-1 fixes: (F-1) separated behavioral invariant from mechanism — 7 families via `read_cache<T>`, 2 families (project-meta, object-type-attrs) via bespoke inline warm paths; removed overclaim that all 9 route through `read_cache<T>`; (F-2) corrected test file citation from `tests/issue_commands.rs` to `tests/issue_edit_field.rs` in Source and Trace |
+| 1.2.0 | 2026-06-27 | product-owner | F2 pass-4 LOW observation fix: added "Coverage honesty note" to Trace field distinguishing TEST-PINNED families (Families 3/6/8/9 with explicit per-family `expect(1)` tests) from families whose zero-HTTP property holds by shared mechanism but lacks an individually-pinned test (Families 1/2/4/5/7). Frames the un-pinned families as candidates for future `expect(1)` coverage; does not overstate proof. No behavioral invariant, BC count, EC, Source, or CANONICAL-COUNTS changed. |
+| 1.3.0 | 2026-06-27 | product-owner | F2 pass-5 precision fix: corrected D2 paragraph to acknowledge TWO verification techniques — (i) wiremock `expect(1)` call-count pin (Families 8+9 via `requesttype_commands.rs`, Family 3 via holdout H-037) and (ii) absence-of-mount (Family 6 via `test_bc_3_4_015_warm_fields_cache_skips_field_list_http`). Previous framing falsely implied Family 6 uses `expect(1)` — it does not (confirmed by reading the test: "Deliberately do NOT mount GET /rest/api/3/field"). Coverage honesty note updated: Family 6 now correctly labeled "absence-of-mount technique" not "wiremock `expect(1)`". Trace updated to distinguish techniques per family. No behavioral invariant or BC count changed. |
 
 ---
 

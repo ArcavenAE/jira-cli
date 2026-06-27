@@ -3,7 +3,7 @@ context: bc-x
 title: "Cross-cutting (HTTP client, Runtime, Users, Teams, Worklogs, Projects, Queues, JQL, Partial-match, JSM Request Types, CI Guards)"
 total_bcs: 145   # cumulative claim (incl. range-collapsed); definitional_count below is individually-bodied headings
 definitional_count: 79   # count of `#### BC-` headings in this file
-last_updated: 2026-06-19
+last_updated: 2026-06-27
 source_pass: 3
 trace: |
   - L2: .factory/specs/domain-spec/cross-cutting.md
@@ -14,6 +14,7 @@ trace: |
   - F2 addition (2026-05-19): BC-X.8.006..007 — auth-conditional 401 hints on require_service_desk path (cache miss only): Basic-auth (is_oauth_auth==false) → API-token hint with InsufficientScope rewrite; OAuth (is_oauth_auth==true) → read:jira-work + read:servicedesk-request hint (issue #384; corrected model: gate is is_oauth_auth() alone)
   - S-QUEUE-BC-1 addition (2026-06-08): BC-X.8.008..009 — document-as-is BCs for jr queue list and jr queue view (queue traceability orphan closure)
   - DEAD-CITATION-CI F2 addition (2026-06-19): BC-X.13.001..003 — CLAUDE.md dead-citation CI guard (citation path-existence, glob/suffix/punct exclusion, ALL .factory/ excluded — re-scoped F2 Iteration 2)
+  - F2 pass-5 precision fix (2026-06-27): BC-X.10.001 Trace — removed false `expect(1)` pin claim; `resolve_queue_single_substring_is_ambiguous` uses absence-of-mount (zero `.expect(` calls confirmed), not `expect(1)`; no behavioral or count change
 ---
 
 # BC-X — Cross-cutting
@@ -717,7 +718,11 @@ This is the canonical pinnable string for `test_require_service_desk_oauth_401_s
 **Source**: `src/partial_match.rs::tests`; unit test suite (partial_match module); property tests
 **Subject**: Partial-match
 **Behavior**: Single-substring match returns `MatchResult::Ambiguous(matches)`. Callers must reject this under `--no-input`. This is the fail-closed invariant.
-**Trace**: Pass 3 BC-105 context
+
+**Edge cases**:
+- **(EC-1) Ambiguous input short-circuits before any network call (no-network pre-API property)**: `partial_match` is a pure function — it takes a `&str` input and a `&[String]` candidates slice and returns a `MatchResult` without performing any I/O. The callers (e.g., `src/cli/queue.rs::resolve_queue_by_name`, `src/cli/issue/workflow.rs` move-status resolution, `src/cli/requesttype.rs` request-type name resolution) evaluate `partial_match` BEFORE issuing any additional HTTP requests. Consequence: when the result is `MatchResult::Ambiguous`, the handler exits 64 with the disambiguation message and ZERO extra HTTP requests are issued beyond the initial list-fetch needed to populate the candidates. Wiremock integration tests can assert `expect(1)` (list fetch only, no follow-on GET/PUT/POST) to verify this no-network property. The no-network behavior is a consequence of `partial_match` being a pure function, not a separately configurable mode.
+
+**Trace**: Pass 3 BC-105 context; `src/partial_match.rs` (pure function — no I/O); `src/cli/queue.rs::resolve_queue_by_name` (ambiguous → exit 64 before queue-issues fetch); `src/cli/issue/workflow.rs` (ambiguous status name → exit 64 before transition POST); `src/cli/requesttype.rs` (ambiguous RT name → exit 64 before RT-fields fetch); `tests/queue.rs::resolve_queue_single_substring_is_ambiguous` — this test mounts ONLY the queue-list GET and asserts the Ambiguous short-circuit (`JrError::UserError` + `"matches multiple queues"` message); the second endpoint (queue-issues) is never mounted, so any follow-on request would return 404 as unmatched. The zero-follow-on-HTTP property holds STRUCTURALLY via `partial_match` purity. This test does NOT use a wiremock `expect(1)` call-count pin (confirmed: zero `.expect(` calls in the test body); adding one (as in `tests/requesttype_commands.rs::test_requesttype_list_cache_hit_no_second_http`) is recommended future coverage.
 
 ---
 
