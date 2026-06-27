@@ -173,27 +173,60 @@ Full per-issue: `cycles/cycle-001/convergence-trajectory.md`. Current: **DEAD-CI
 - PRs #547..#565 ALL MERGED. **Open PRs: NONE.**
 - Counters: BC **605**, NFR **42**, ADR **16**, Stories **95**. Holdouts **71**.
 
-**Step 3 — IDLE. Cache warm-hit + swallow coverage cycle CLOSED (PR #565 → develop @ 788bc0f). Present open items to human, await direction.**
-- **CACHE WARM-HIT + SWALLOW COVERAGE (2026-06-27):** PR #565 squash-merged → develop @ 788bc0f. 5 regression pins (BC-6.2.018 teams/resolutions/project_meta + BC-X.12.008 RT swallow). Adversary gate CLEAN. cmdb_fields + object_type_attrs flagged-skipped (documented residual). DEC-142. CLOSED.
-- **G-ADF-FOOTNOTE HOLDOUT TIER (2026-06-27):** holdout-scenarios.md spec-only. H-NEW-ADF-006 re-anchored BC-7.2.013; H-NEW-ADF-009 added (EC-6/EC-7 empty-container-pruning asymmetry); H-NEW-ADF-008 re-anchored BC-7.2.014. Holdouts 70→71. DEC-141. E2E-EDGE-CASE-GAPS epic FULLY CLOSED.
-- **E2E WIREMOCK TIER (2026-06-27):** PR #564 squash-merged → develop @ 502898f. 3 regression pins (BC-7.2.011 INV-1 no-hardBreak routing; BC-X.10.001 partial_match no-HTTP; BC-3.2.009 nested bulkTransitionInputs + all-keys-failed exit 1). F5 adversary caught CRITICAL: §2.3 normalizes \r→\n before pulldown. DEC-140. CLOSED.
-- **E2E OFFLINE-CLI-GUARD TIER (2026-06-27):** PR #563 squash-merged → develop @ 894cc9d. 5 regression pins (BC-3.4.017 + BC-7.3.010). DEC-139. CLOSED.
-- **BC-SUBCLAUSE PASS (2026-06-27):** 4 BCs + 1 EC (603→605). MISSING-BC-SUBCLAUSE-PATTERN RESOLVED. DEC-138. CLOSED.
-- **v0.6.0-dev.7 (SHIPPED):** PR #559 merged @ 342987f; tag pushed; release.yml SUCCESS; 10 assets/5 targets.
-- **D5 (optional):** `cargo update` (rustls 0.23.41 + 64 semver-compatible bumps).
-- **S-PG-MERGE-AUTH-BYPASS** (story 91, MEDIUM, draft) — merge-auth + spawn/push/loop protocol.
-- **MUTATION-CI-TIMEOUT** — draft story candidate.
-- **RELEASE-CI-NETWORK-FLAKE** — LOW, open.
+**Step 3 — IDLE. Present open backlog to human, await direction.**
+
+RECENTLY CLOSED (this session, 2026-06-27):
+- **CACHE WARM-HIT + SWALLOW COVERAGE:** PR #565 → develop @ 788bc0f. 5 pins (BC-6.2.018 + BC-X.12.008). DEC-142. CLOSED.
+- **E2E-EDGE-CASE-GAPS EPIC:** All 3 tiers closed — PR #563 (offline-CLI, DEC-139), PR #564 (wiremock, DEC-140), G-ADF-FOOTNOTE holdout spec (DEC-141). CLOSED.
+- **BC-SUBCLAUSE PASS:** 4 BCs + 1 EC (603→605). DEC-138. CLOSED.
+- **v0.6.0-dev.7 SHIPPED:** PR #559 @ 342987f; release.yml SUCCESS; 10 assets/5 targets.
+
+OPEN BACKLOG (present these to human; pick ONE):
+
+*MEDIUM priority:*
+- **S-PG-MERGE-AUTH-BYPASS** (story 91, draft) — DEC-128/DEC-133: codify delivery-agent no-self-merge / no-spawn / no-push / no-unbounded-loop + explicit orchestrator merge-auth signal (covers PG-PR-MANAGER-OVERREACH + MAINT-PG-PR-MERGE-CHANNEL).
+- **MUTATION-CI-TIMEOUT** — draft story candidate: cargo-mutants CI job exceeds 1h budget on large diffs (SEC-001 PR #553: 36 mutants, cancelled at 1h0m; non-required job). Options: per-mutant timeout, sharding, tighten `.cargo/mutants.toml`, or accept non-required.
+- **TEST-ONLY-GATE-ELIGIBILITY** — codify documented rule for when test-only / characterization-pin PRs must run the full adversarial gate vs a defined lighter tier. Until codified, default = run the gate (DEC-136).
+- **BC-7.3.010-FORBIDDEN-PATTERN-CI-GUARD** — grep-based CI guard parallel to dead-citation guard enforcing the #526 render_json invariant at CI time. LOW/draft candidate.
+
+*HOLDOUT-COVERAGE-GAPS (LOW — HIGH gaps CLOSED; MED/LOW tracked-deferred):*
+- `issue edit --field / --type / --label / --dry-run` black-box scenarios
+- `issue edit` bulk-nested-schema scenario
+- `jr issue changelog`, `jr worklog add`, `jr issue link/unlink`, `jr queue view`, `jr board view` black-box holdout scenarios
+
+*CACHE-COVERAGE-GAPS residual (LOW — narrowed by PR #565):*
+- cmdb_fields (Family 4) + object_type_attrs (Family 5) warm-hit no-HTTP wiremock — flagged-skipped (fragile multi-endpoint assets mock chains; shared `read_cache<T>` warm path covered via Jira-fields test in `tests/issue_edit_field.rs`)
+- D5 write-error resilience at project_meta/workspace `let _ =` call-site discards (model-a writers' call-site discard pattern)
+
+*Engine/CI (LOW):*
+- **S-PG-MERGE-AUTH-BYPASS** — also covers MAINT-PG-PR-MERGE-CHANNEL root cause (story 91 scope)
+- **MUTATION-CI-TIMEOUT** — raise per-mutant timeout OR shard OR tighten `.cargo/mutants.toml` scope
+- **BC-7.3.010-FORBIDDEN-PATTERN-CI-GUARD** — grep-based CI test for the render_json invariant
+- **TEST-ONLY-GATE-ELIGIBILITY** — process formalization in factory/VSDD engine (no product code change needed)
+
+*LOW/infra candidates:*
+- **RA-001** — add JRACLOUD-27893 (user pagination fixed-window) citation to CLAUDE.md Gotchas
+- **RA-002** — re-validate ADR-0013 PKCE deferral (~50 days old; Atlassian 3LO PKCE support may have changed)
+- **PERF-BASELINE** — `scripts/perf-check.sh` + hyperfine CI guard (perf baseline confirmed 2026-06-25: 7.09MB binary, `jr --help` p50 6.4ms; no regression)
+- **RELEASE-CI-NETWORK-FLAKE** — add cargo-fetch retry / network-resilience step to release.yml (Windows crates.io curl [55] HTTP2 flake; resolved by rerun)
+- **FORK-OPS cluster** — FORK-OPS-537-NITS, FORK-OPS-PHANTOM-RUNS, FORK-OPS-COMPOSITE-ACTION-SCAN, FORK-OPS-HEADBRANCH-EMPTY-GUARD, FORK-OPS-ALPHA-ORPHAN-CLEANUP (all LOW, SIGNING_ENABLED unset in canonical repo)
+- **MISSING-BC-SUBCLAUSE-PATTERN** — RESOLVED 2026-06-27; archive to blocking-issues-resolved.md if not yet done
 - DO NOT close **#429** (DEC-029, human-deferred).
 
-**Step 4 — STANDING CONSTRAINTS:**
-- All fixes through full VSDD Feature Mode (DEC-120/121/124/129/130/131/132/136/138/139). Test-only PRs must not silently skip the adversarial gate (DEC-136/TEST-ONLY-GATE-ELIGIBILITY).
-- F2-PIECEWISE-PROTOCOL [ENFORCED 2026-06-20]: consistency-validator after EACH spec-author fix in F2.
-- LESSON-F2-WORKTREE-FIRST: ALL story-scoped edits (incl. docs/) in the story worktree.
-- DEC-128 (CRITICAL): delivery sub-agents must NOT self-authorize merges, spawn fix agents, push, or enter unbounded poll loops. Explicit orchestrator per-merge authorization required.
-- DEC-133 (DEPENDABOT-ACTION-SOAK): third-party GitHub Action bumps require ≥7-day soak + SHA-pin integrity check + clean advisories before merge.
+**Step 4 — STANDING CONSTRAINTS (ALL fixes via full VSDD Feature Mode):**
+- All fixes through full VSDD Feature Mode (DEC-120/121/124/129/130/131/132/134/135/136/138/139/140/141/142). No exceptions without explicit human direction.
+- DEC-128 (CRITICAL): delivery sub-agents must NOT self-authorize merges, spawn fix sub-agents, push commits, or enter unbounded poll loops. Explicit orchestrator per-merge authorization required.
+- DEC-133 (DEPENDABOT-ACTION-SOAK): third-party GitHub Action bumps require ≥7-day soak from publication date + SHA-pin integrity check + clean advisory check before merge.
+- DEC-136/TEST-ONLY-GATE-ELIGIBILITY: test-only PRs must NOT silently skip the adversarial gate. Run gate or use a documented exemption tier. Until codified, default = run the gate.
+- F2-PIECEWISE-PROTOCOL [ENFORCED 2026-06-20]: dispatch consistency-validator after EACH spec-author fix in F2, before next adversary pass. Self-inflicted fix-cascades are the anti-pattern.
+- LESSON-F2-WORKTREE-FIRST: ALL story-scoped edits (incl. docs/, .factory/) in the story worktree.
 - CHANGELOG-per-PR hygiene: keep `[Unreleased]` populated as PRs merge.
 - Carry-forward LOW drift items in Drift Items section (non-blocking).
+- **Codified lessons (cycles/cycle-001/lessons.md):**
+  - UMBRELLA-BC-RE-ANCHOR-SWEEP: when a dedicated BC replaces an umbrella anchor, sweep ALL holdouts/artifacts citing the umbrella in the SAME pass.
+  - WIREMOCK-WARM-HIT-EXPECT-1-PATTERN: warm-hit tests must assert `expect(1)` on the mock (zero HTTP calls), not merely absence-of-error; confirms the cache short-circuit fired.
+  - MARKDOWN-SOURCE-CANNOT-DELIVER-RAW-CR: CommonMark §2.3 normalizes `\r`/`\r\n` → `\n` before pulldown tokenization; a lone `\r` never reaches `push_text` from markdown source. Empirically confirmed — claims to the contrary are false-reachability.
+  - ORCHESTRATOR-RELAYED-FIX-CAUTION: when the orchestrator relays a fix from a review finding, verify the claim is empirically reachable before accepting the fix. The adversary's perspective on the relayed fix is independent and must be taken seriously.
 
 ## Open Issues Tracker
 
