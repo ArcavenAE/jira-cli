@@ -4874,3 +4874,33 @@ _Related: DEC-140; TEST-ONLY-GATE-ELIGIBILITY (MEDIUM drift item); DEC-136; MARK
 _Recorded: 2026-06-27 — G-ADF-FOOTNOTE holdout tier delivery + E2E-EDGE-CASE-GAPS epic close. State-manager._
 _Tagged: [codified] [process-gap] [spec-hygiene] [partial-fix-regression-discipline] [sweep-obligation]_
 _Related: DEC-141; DEC-138 (BC-sub-clause pass where gap originated); MISSING-BC-SUBCLAUSE-PATTERN (RESOLVED); BC-7.2.013; BC-7.2.014; H-NEW-ADF-006; H-NEW-ADF-008; H-NEW-ADF-009._
+
+---
+
+## WIREMOCK-WARM-HIT-EXPECT-1-PATTERN (2026-06-27) [codified]
+
+**Category:** test-coverage / wiremock-discipline / warm-hit-testing
+
+**Tag:** [codified] WIREMOCK-WARM-HIT-EXPECT-1-PATTERN — the run-command-twice + `.expect(1)`-on-the-cache-populating-endpoint pattern is the canonical non-vacuous warm-hit-no-HTTP pin
+
+**Lesson:** Warm-hit no-HTTP wiremock tests must verify BOTH directions to be non-vacuous:
+
+1. **The cold run fires the endpoint** — confirmed by a positive non-empty-content assertion on the cold run output (e.g., the command returns non-empty results). Without this, the test could pass vacuously even if the command never fetches anything.
+2. **The warm run does NOT fire the endpoint** — enforced by mounting the backing endpoint with `.expect(1)` (not `.expect(0..=99)` or unbounded). When `MockServer` drops at the end of the test, wiremock automatically asserts the mount was called exactly once across both invocations. A second HTTP call on the warm path panics on drop, immediately surfacing the regression in the test log before any assertion in the test body.
+
+**Vacuity risk:** Using `.expect(0)` on the warm run would be more explicit but misses the cold-path verification. Using `.expect(1)` across both runs achieves both: if the count is 0, the cold run did not actually fetch (vacuous cold path); if the count is 2, the warm run re-fetched (warm-hit regression). Only `.expect(1)` detects both failure modes.
+
+**Deferred warm-hit families:** Warm-hit tests requiring a multi-endpoint enrichment chain (cmdb_fields/object_type_attrs require workspace discovery + CMDB field reads + AQL search all active simultaneously) are legitimately deferrable when the underlying warm path is already pinned by a simpler family on the same mechanism. The key condition for deferral: the shared `read_cache<T>` generic warm path must already be pinned by another, simpler test (e.g., the Jira-fields test `test_bc_3_4_015_warm_fields_cache_skips_field_list_http` in `tests/issue_edit_field.rs` pinning the same `read_cache<T>` code path). Document the deferral explicitly in the test file header.
+
+**ENV_MUTEX ordering invariant:** Warm-hit tests that set `JR_CACHE_DIR` env var MUST unlock `ENV_MUTEX` BEFORE `catch_unwind` scope. If the test panics inside `catch_unwind`, the mutex remains locked in the poisoned state, deadlocking subsequent tests in the same process. Correct ordering: `let _guard = ENV_MUTEX.lock().unwrap_or_else(|e| e.into_inner()); unsafe { std::env::set_var(...) }; drop(_guard); std::panic::catch_unwind(...)`. This pattern was confirmed as the MED finding resolved pre-merge in PR #565 (DEC-142).
+
+**Practical checklist for a new warm-hit no-HTTP pin:**
+1. Create a `MockServer`, mount the backing endpoint with `.expect(1)`.
+2. Run the command once (cold run); assert non-empty result to confirm the cold path actually fetches.
+3. Run the command again with the same `JR_CACHE_DIR` temp dir (warm run); no `.expect(0)` needed — the `expect(1)` on `MockServer` drop covers it.
+4. If `ENV_MUTEX` is used to set `JR_CACHE_DIR`, unlock before any `catch_unwind`.
+5. Document any skipped families in the test file header with a rationale and note which shared mechanism covers the warm path.
+
+_Recorded: 2026-06-27 — Cache warm-hit + swallow coverage delivery (PR #565, develop @ 788bc0f). State-manager._
+_Tagged: [codified] [test-coverage] [wiremock-discipline] [warm-hit-testing] [regression-hardening]_
+_Related: DEC-142; BC-6.2.018; BC-X.12.008; S-CACHE-WARM-HIT-COVERAGE-1; COVERAGE-AUDIT-FOLLOW-THROUGH (2026-06-27); CACHE-COVERAGE-GAPS-2026-06-27 (narrowed)._
