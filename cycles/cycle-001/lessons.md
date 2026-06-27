@@ -4846,3 +4846,31 @@ _Related: DEC-140; BC-7.2.011 INV-1; S-E2E-WIREMOCK-COVERAGE-1; COVERAGE-AUDIT-F
 _Recorded: 2026-06-27 — E2E wiremock tier delivery (PR #564, develop @ 502898f). State-manager._
 _Tagged: [codified] [process-gap] [adversarial-gate-value] [verify-reachability] [TEST-ONLY-GATE-ELIGIBILITY]_
 _Related: DEC-140; TEST-ONLY-GATE-ELIGIBILITY (MEDIUM drift item); DEC-136; MARKDOWN-SOURCE-CANNOT-DELIVER-RAW-CR (2026-06-27)._
+
+---
+
+## UMBRELLA-BC-RE-ANCHOR-SWEEP (2026-06-27) [codified]
+
+**Category:** process-gap / spec-hygiene / partial-fix-regression-discipline
+
+**Tag:** [codified] UMBRELLA-BC-RE-ANCHOR-SWEEP — when a dedicated BC replaces an umbrella/placeholder anchor, sweep ALL holdouts/artifacts citing the umbrella in the SAME pass and remove stale "tracked follow-up" notes
+
+**Lesson:** When a new dedicated BC is authored to replace an umbrella/placeholder anchor (e.g., BC-7.2.013 for footnote→ADF replacing BC-7.2.002; BC-7.2.014 for bare-URL autolink replacing BC-7.2.002), every holdout scenario and artifact that still cites the umbrella must be re-anchored and have its stale "tracked follow-up" note removed in the SAME pass that authors the dedicated BC.
+
+**What happened:** BC-7.2.014 (bare-URL autolink) was authored during the BC-sub-clause pass (DEC-138). At that time, H-NEW-ADF-008 (the bare-URL holdout) was still anchored to umbrella BC-7.2.002 with a stale "tracked follow-up" note. This sibling-not-updated propagation gap was NOT caught during the BC-sub-clause pass. It was only caught during the G-ADF-FOOTNOTE work (DEC-141) when both the consistency-validator and the adversary flagged it while reviewing the footnote holdout authoring. The gap required a retroactive sibling re-anchor in the same commit as H-NEW-ADF-006/009.
+
+**Root cause:** The BC-sub-clause pass focused on authoring the BCs themselves. The sweep obligation — "now re-anchor all existing holdouts pointing at the umbrella" — was not executed as a mandatory step after each new BC was authored. This created an asymmetric state: the BC existed (correct anchor available) but the holdouts still cited the old umbrella (broken anchor propagation gap).
+
+**Codified rule:** After authoring any new dedicated BC that supersedes an umbrella/placeholder:
+1. Immediately grep `holdout-scenarios.md` (and all other artifacts) for references to the old umbrella BC number.
+2. Re-anchor every cite to the dedicated BC in the SAME commit.
+3. Remove any "tracked follow-up" or "stale" notes that referenced the planned-but-not-yet-existing dedicated BC.
+4. Run `check-spec-counts.sh` and `check-bc-cumulative-counts.sh` to confirm the sweep is complete.
+
+**Pattern name:** Partial-Fix Regression Discipline — a fix that creates a dedicated artifact (here: a BC) but does not propagate the fix to all citing locations leaves a partial-fix gap. The dedicated artifact is correct; the claiming consumers are stale. Both validators will catch this on the next pass, but the gap window between BC authoring and holdout correction is a vulnerability.
+
+**Prior art:** This is the same class as the "doc-fallout cluster" lesson (PR #356 R14-R18) — a behavioral change that produces cascade findings in subsequent review rounds because sibling documentation was not updated in the same commit.
+
+_Recorded: 2026-06-27 — G-ADF-FOOTNOTE holdout tier delivery + E2E-EDGE-CASE-GAPS epic close. State-manager._
+_Tagged: [codified] [process-gap] [spec-hygiene] [partial-fix-regression-discipline] [sweep-obligation]_
+_Related: DEC-141; DEC-138 (BC-sub-clause pass where gap originated); MISSING-BC-SUBCLAUSE-PATTERN (RESOLVED); BC-7.2.013; BC-7.2.014; H-NEW-ADF-006; H-NEW-ADF-008; H-NEW-ADF-009._
