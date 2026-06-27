@@ -4321,3 +4321,25 @@ The following row was present in STATE.md Current Phase Steps before the last-5 
 | Deferred | P3–P8 + MED gaps tracked in CACHE-COVERAGE-GAPS-2026-06-27 drift item. BC sub-clause prerequisite noted for D2 wiremock no-HTTP holdouts. E2E zero cache-behavior assertions confirmed correct (D2 requires wiremock tier). |
 | develop HEAD | 5ab4e0f. |
 | Counters | BC 603 (UNCHANGED). NFR 42. ADR 16. Stories 91. Holdouts 70. |
+
+---
+
+### Burst: D4 HOLDOUT REFRESH CONVERGED (2026-06-26) — archived from Current Phase Steps
+
+| Step | Agent | Status | Output |
+|------|-------|--------|--------|
+| **D4 HOLDOUT REFRESH CONVERGED** — 10 new scenarios (H-NEW-ADF-001..008 + H-NEW-SEC-001/002); 2 stale fixed (H-NEW-MP-001, H-007); 3 adv passes; CRITICAL boundary off-by-one caught + fixed; fix-cascade (H-007) caught pass-2; LOW O-1/O-3 escalated to source pins. holdout-scenarios.md v1.1.2→1.2.0; total_holdouts 60→70. DEC-134. | state-manager | CONVERGED | holdout-scenarios.md committed to factory-artifacts. |
+
+---
+
+### Burst: E2E EDGE-CASE AUDIT (2026-06-27) — record-only
+
+| Field | Value |
+|-------|-------|
+| Event | Two-part static E2E edge-case coverage audit produced. No live run, no mutations, no code changes. |
+| Read/infra audit | `.factory/research/e2e-edge-case-audit-2026-06-27-read.md`. 27 read commands assessed. Net-new gaps: 2 HIGH (G-H1 JSON error-shape/output-channel contract pinned on only 2 read commands; G-H2 no-HTTP partial_match short-circuit — wiremock-only) + 4 MED + 4 LOW. Infra edges (pagination JRACLOUD-95368/71293, 429/Retry-After cap, 401) are UNOBSERVABLE live and ALREADY GREEN at wiremock tier. |
+| Write/state audit | `.factory/research/e2e-edge-case-audit-2026-06-27-write.md`. ~70 edges (28 covered, 7 partial, ~35 gap); 5 HIGH + 13 MED + 11 LOW. Top HIGH: G-ADF-FOOTNOTE (#472, needs BC sub-clause), G-ADF-INV1-INLINE-HTML (BC-7.2.011 INV-1, #522 regression class, wiremock body-capture), G-EDIT-FIELD-LABEL-GUARD + G-EDIT-FIELD-C1-BULK (cheap offline exit-64 guards), G-MOVE-BULK-NONIDEMPOTENT (forced-400 path, wiremock). |
+| Cross-cutting insight | Many edge cases unobservable in live E2E (ADF body-shape, cache no-HTTP, forced 429/401/400) belong at wiremock/holdout tiers. Live E2E is happy-path-by-design. Recurring blocker: ADF markdown→ADF (#471/472/474/483/489/492/522/473), cache D2 warm-hit no-HTTP, and read error-channel/partial_match lack dedicated BC sub-clauses — blocking holdout authoring (broken-anchor class). |
+| Drift items | E2E-EDGE-CASE-GAPS-2026-06-27 (MEDIUM) + MISSING-BC-SUBCLAUSE-PATTERN (MEDIUM) added to STATE.md Drift Items. DEC-137 recorded. |
+| develop HEAD | 5ab4e0f (UNCHANGED). |
+| Counters | BC 603 (UNCHANGED). NFR 42. ADR 16. Stories 92. Holdouts 70. |

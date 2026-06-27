@@ -4676,3 +4676,33 @@ _Related: DEC-135; PR #561 (develop @ 5ab4e0f); BC-6.2.009; BC-6.2.011; audit: .
 _Recorded: 2026-06-27 — F5/F3/F7 rigor backfill for PRs #560+#561. State-manager._
 _Tagged: [codified] [process-gap] [adversarial-review] [gate-discipline] [test-only]_
 _Related: DEC-136; S-D4-TEST-HARDENING-BACKFILL-1; TEST-ONLY-GATE-ELIGIBILITY (drift item); DEC-120/121/124/129/132 lineage._
+
+---
+
+## E2E-TIER-DISCIPLINE (2026-06-27) [codified]
+
+**Category:** test-coverage / E2E-scope / coverage-tier-design
+
+**Tag:** [codified] E2E-TIER-DISCIPLINE — live E2E is a happy-path smoke suite by design
+
+**Lesson:** Live E2E tests (`tests/e2e_live.rs`) are a happy-path smoke suite — not an edge-case or error-injection suite. This is correct by design, not a gap to close with more live tests. Three structural constraints make edge-case coverage impossible in live E2E:
+
+1. **ADF body-shape**: Jira Cloud normalizes and re-serializes ADF on storage. The server-stored ADF JSON does not preserve the exact node structure produced by `markdown_to_adf`. Body-shape assertions (e.g., "footnote ref and definition are discrete unmarked text nodes") must be made at the unit/wiremock tier where the full ADF is directly observable before any server transformation.
+
+2. **Cache no-HTTP**: `tests/e2e_live.rs` runs against a real Jira tenant with no HTTP request-count instrumentation. There is no way to assert that a warm-cache path issued zero HTTP calls. D2 (warm-hit no-HTTP) coverage belongs at the unit/wiremock tier (see CACHE-COVERAGE-TIER-DISCIPLINE).
+
+3. **Forced error paths**: Live Jira tenants cannot be forced to return 429 (rate-limit), 401 (expired-token), or specific 400 schema errors. These paths are ALREADY GREEN at the wiremock tier (see wiremock fixtures in `tests/`). Re-creating them in live E2E would require test-infrastructure not present (and not wanted, as it could corrupt test data).
+
+**Consequence:** The correct tier assignment for edge-case coverage is:
+- **Offline CLI tier:** CLI flag-combination guards (exit-64 paths that never reach HTTP). Cheap, always-run.
+- **Wiremock tier:** HTTP error injection (429, 401, 400 schema mismatches), body-capture assertions (ADF node shape, JSON output-channel contracts), no-HTTP cache warm-hit. Already present for many paths; gaps tracked.
+- **Holdout tier:** Behavioral contracts on complex end-to-end flows (ADF round-trip, resolution enforcement, pagination dedup). Requires a BC sub-clause anchor to be a valid holdout (broken-anchor class if BC is missing).
+- **Live E2E tier:** Happy-path smoke; new-issue create/move/edit/close on real tenant. No forced errors. No body-shape assertions. No cache assertions.
+
+**Recurring missing-BC-sub-clause gating dependency:** ADF markdown→ADF behaviors (#471/472/474/483/489/492/522/473), cache D2 warm-hit no-HTTP, and read error-channel/partial_match are shipped with full test coverage and CLAUDE.md Gotchas entries but lack dedicated BC sub-clauses. This blocks holdout authoring (a holdout without a BC anchor is technically incomplete per the factory BC-anchor rule). A spec-first pass to author these BC sub-clauses is the prerequisite for promoting these to holdout-tier coverage. Tracked as MISSING-BC-SUBCLAUSE-PATTERN drift item.
+
+**Cross-reference:** CACHE-COVERAGE-TIER-DISCIPLINE (covers the cache no-HTTP sub-case); E2E-EDGE-CASE-GAPS-2026-06-27 (gap inventory); MISSING-BC-SUBCLAUSE-PATTERN (drift item). DEC-137.
+
+_Recorded: 2026-06-27 — E2E edge-case coverage audit close. State-manager._
+_Tagged: [codified] [test-coverage] [E2E-scope] [coverage-tier-design] [happy-path-by-design]_
+_Related: DEC-137; `.factory/research/e2e-edge-case-audit-2026-06-27-read.md`; `.factory/research/e2e-edge-case-audit-2026-06-27-write.md`; CACHE-COVERAGE-TIER-DISCIPLINE (2026-06-27)._
