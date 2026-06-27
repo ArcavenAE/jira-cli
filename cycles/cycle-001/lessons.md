@@ -4647,3 +4647,32 @@ _Related: DEC-134; BC-7.2.012; PR #560 (develop @ 9657b1e); DEC-120/121/129/130 
 _Recorded: 2026-06-27 — cache-coverage audit + P1/P2 delivery close. State-manager._
 _Tagged: [codified] [test-coverage] [cache-behavior] [E2E-scope] [anchor-accuracy]_
 _Related: DEC-135; PR #561 (develop @ 5ab4e0f); BC-6.2.009; BC-6.2.011; audit: .factory/research/cache-coverage-audit-2026-06-27.md._
+
+---
+
+## TEST-ONLY-GATE-ELIGIBILITY (2026-06-27) [codified]
+
+**Category:** process-gap / adversarial-review / gate-discipline
+
+**Tag:** [codified] TEST-ONLY-GATE-ELIGIBILITY — gate-skip is a process deviation
+
+**Lesson:** Test-only PRs and characterization-pin PRs must not silently skip the fresh-context adversarial gate. PRs #560 (2 ADF regression pins) and #561 (8 cache unit tests) were merged without a pre-delivery story file (F3) and without a fresh-context adversarial review (F5). A retroactive backfill was performed per human direction:
+
+- F5 post-merge review: CLEAN (0 CRIT/HIGH/MED, 3 LOW — adversary re-derived every Expected from source, verified BC anchors BC-7.2.011/BC-6.2.009/BC-6.2.011, confirmed non-tautology). No follow-up PR required.
+- F3 story S-D4-TEST-HARDENING-BACKFILL-1 filed (10 ACs, retroactive:true).
+- F7 gate verdict: CONVERGED-WITH-NOTED-DEVIATION (F5 = 1 pass not canonical 3; justified as retroactive, test-only, LOW-novelty, zero-finding).
+
+**The process-gap is the gate-skip itself, not the outcome.** F5 confirmed the lighter flow leaked no defect in this case. But the adversary's [process-gap] observation stands: an unlucky iteration of this same pattern could ship a test with a tautological assertion, a wrong BC anchor, or a subtly inverted condition — none of which would be caught by CI alone. The adversarial gate's value is forward-looking and cheap to run relative to the cost of a silently wrong regression test staying in the codebase.
+
+**Codification (per DEC-136):**
+
+1. **Default = run the gate** for test-only and characterization-pin PRs. There is no categorical exemption for test-only changes.
+2. **If an intended gate-skip is planned**, the orchestrator MUST surface this to the human BEFORE merge — not after — with explicit justification. Retroactive reconciliation is more expensive and risks missing the window.
+3. **A documented lighter tier is acceptable** if defined with explicit criteria (e.g., "single-assertion proptest pin against a pure function already covered by 3+ passing F5 passes in the same session"). Until such a tier is formally codified, default = run the gate.
+4. **1-pass F5 is acceptable for retroactive reviews** when: (a) no defects found, (b) scope is test-only and novelty is LOW, (c) the deviation is explicitly recorded in STATE.md and the story. This is a deviation-with-rationale, not a standard. It does not lower the bar for future fresh deliveries.
+
+**Lineage:** DEC-120/121/124/129/132 all reinforce that "trivial" changes still warrant the gate — security guards, CI infra, refactors, and test-only changes alike have surfaced CRIT/HIGH defects in VSDD history. The pattern holds.
+
+_Recorded: 2026-06-27 — F5/F3/F7 rigor backfill for PRs #560+#561. State-manager._
+_Tagged: [codified] [process-gap] [adversarial-review] [gate-discipline] [test-only]_
+_Related: DEC-136; S-D4-TEST-HARDENING-BACKFILL-1; TEST-ONLY-GATE-ELIGIBILITY (drift item); DEC-120/121/124/129/132 lineage._
