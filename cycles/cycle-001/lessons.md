@@ -4772,4 +4772,28 @@ _Related: DEC-138; `.factory/research/adf-bc-external-validation-2026-06-27.md`;
 
 _Recorded: 2026-06-27 — BC-sub-clause pass resolution. State-manager._
 _Tagged: [codified] [spec-process] [BC-authoring] [holdout-readiness] [broken-anchor]_
+
+---
+
+## COVERAGE-AUDIT-FOLLOW-THROUGH (2026-06-27) [codified]
+
+**Category:** test-coverage / audit-methodology / gap-vs-bug
+
+**Tag:** [codified] COVERAGE-AUDIT-FOLLOW-THROUGH — writing the regression pin is the only way to distinguish a coverage gap from a code bug
+
+**Lesson:** The E2E edge-case audit's "offline-CLI tier, behavior present but unpinned" hypothesis was empirically confirmed (PR #563): 5 tests written across BC-3.4.017 and BC-7.3.010, all PASS without any production change. The key insight: calling something a "coverage gap" rather than a "code bug" is only a hypothesis until you write the test. The act of writing the test IS the verification.
+
+**Mechanism:** PR #563 added 2 tests to `tests/issue_edit_field.rs` (the `--field`+`--label` mutual-exclusion guard FIX-F5-001, and the C-1 multi-key bulk rejection guard) and 3 tests to `tests/json_error_shape.rs` (error-envelope shape for `issue changelog`, `queue view`, and `requesttype list`). All 5 tests PASS immediately, confirming the guards were already implemented and the gap was test coverage, not missing behavior.
+
+**Why this matters post-Seam-B refactor:** The `edit.rs` Seam-B extraction (PR #558) moved the `--field`+`--label` guard and the C-1 guard from `create.rs` into `edit.rs`. Without these regression pins, a future refactor or shard of `edit.rs` could silently drop a guard with no CI signal. Writing the pin is the only way to protect against that class of regression.
+
+**Full VSDD discipline applied:** Even for a "test-only" story, the full VSDD flow (F3 story, pre-merge fresh-context F5 adversarial review) was applied per DEC-136 (TEST-ONLY-GATE-ELIGIBILITY). The F5 review found 1 MED (exit-code documentation typo in AC-003 — `code:1` vs `code:64`) and 4 LOW, all fixed before merge. This reinforces that test-only PRs benefit from the adversarial gate: a guard-message pin that silently accepted the wrong exit code would fail to detect the regression it was meant to catch.
+
+**Practical checklist:** After any coverage audit that concludes "gap, not bug":
+1. Write the test before declaring the item closed.
+2. Run it against HEAD — if it fails, you found a bug, not a gap.
+3. If it passes, commit it as a regression pin; it now protects against the gap becoming a bug.
+
+_Recorded: 2026-06-27 — E2E offline-CLI guard + JSON error-shape coverage delivery (PR #563, develop @ 894cc9d). State-manager._
+_Tagged: [codified] [test-coverage] [audit-methodology] [gap-vs-bug] [regression-hardening]_
 _Related: DEC-138; MISSING-BC-SUBCLAUSE-PATTERN (RESOLVED); CACHE-COVERAGE-GAPS-2026-06-27 (P4/P5 unblocked); E2E-EDGE-CASE-GAPS-2026-06-27 (holdout-tier items unblocked)._
