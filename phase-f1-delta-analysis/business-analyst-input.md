@@ -15,7 +15,7 @@ inputs:
   - "tests/bulk_deadline_propagation.rs"
   - "tests/bulk_await_timeout_release_gate.rs"
   - "src/api/jira/bulk.rs"
-input-hash: "bb8e63a"
+input-hash: "a52e12f"
 status: draft
 timestamp: 2026-05-15
 ---

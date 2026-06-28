@@ -7,7 +7,7 @@ producer: state-manager
 timestamp: 2026-05-07T00:00:00
 cycle: "cycle-001"
 inputs: [STATE.md]
-input-hash: "1306f82"
+input-hash: "1808ee3"
 traces_to: STATE.md
 ---
 
@@ -4903,4 +4903,55 @@ _Related: DEC-141; DEC-138 (BC-sub-clause pass where gap originated); MISSING-BC
 
 _Recorded: 2026-06-27 — Cache warm-hit + swallow coverage delivery (PR #565, develop @ 788bc0f). State-manager._
 _Tagged: [codified] [test-coverage] [wiremock-discipline] [warm-hit-testing] [regression-hardening]_
+
+---
+
+## DEFERRAL-FRAMING-REVISIT (2026-06-28) [codified]
+
+**Category:** process / deferral-management / feasibility-assessment
+
+**Tag:** [codified] DEFERRAL-FRAMING-REVISIT — re-validate deferred-as-infeasible items with a fresh feasibility pass before accepting them as permanent gaps
+
+**Lesson:** When a deferral is framed as "infeasible" or "fragile" (rather than "explicitly deferred for scope"), a cheap F1 feasibility re-assessment should precede any decision to carry the gap forward permanently. The framing often embeds an assumption (e.g., "requires simultaneous multi-endpoint mocking") that is easily falsified with a fresh look.
+
+**Concrete instance (PR #566, DEC-143):** PR #565 flagged cmdb_fields (Family 4) and object_type_attrs (Family 5) warm-hit coverage as "fragile multi-endpoint deferral" — the concern was that these families require workspace discovery + CMDB field reads + AQL search all active simultaneously. The F1 re-assessment for PR #566 falsified this in minutes:
+
+1. Supporting endpoints (workspace discovery) can be mounted WITHOUT `.expect()` — only the cache-populating endpoint (the one whose warm path we are testing) needs `.expect(1)`.
+2. The "subprocess env-var conflict" concern (ENV_MUTEX deadlock) was a false alarm — the same `JR_CACHE_DIR` serialization pattern already used by other warm-hit tests is sufficient.
+3. A far-future TTL pre-seed of `workspace.json` neutralizes unrelated workspace-discovery calls entirely.
+
+Result: both families were pinned cleanly in PR #566 (2 tests, 15/15 CI green, 3 clean adversarial passes).
+
+**Operational rule:** Before marking any gap as "permanent / infeasible," run a quick feasibility re-assessment (F1 delta analysis scoped to just that family/mechanism). The assessment cost is low (minutes); the asymmetric benefit of confirming actual feasibility before accepting a permanent gap is high. A "fragile" label should trigger re-examination, not permanent deferral.
+
+_Recorded: 2026-06-28 — cmdb_fields/object_type_attrs warm-hit coverage delivery (PR #566, develop @ 822fa18). State-manager._
+_Tagged: [codified] [process] [deferral-management] [feasibility-assessment] [regression-hardening]_
+
+---
+
+## ADVERSARY-DISPATCH-IDENTITY-TUPLE (2026-06-28) [process-gap]
+
+**Category:** process-gap / adversarial-review / dispatch-hygiene
+
+**Tag:** [process-gap] ADVERSARY-DISPATCH-IDENTITY-TUPLE — per-story adversarial review dispatches should include a formal Worktree-Identity tuple in addition to cd-preamble + absolute paths
+
+**Lesson:** During the F5 adversarial gate for PR #566, the orchestrator adversary dispatch (pass 2) lacked the formal Worktree-Identity tuple: `{worktree-abs-path, feature-HEAD-SHA, story-id, canonical-repo-root}`. The dispatch relied on a cd-preamble and absolute paths instead.
+
+**Impact assessment (THIS cycle):** No soundness impact — this was a test-only story with no BC/ADR ground-truth reads required. All relevant file reads were worktree-rooted and the adversary found the correct files. The process gap did not affect review quality here.
+
+**Why it still matters:** For stories that require BC/ADR ground-truth reads (e.g., spec-consistency checks between the worktree version and the canonical `.factory/specs/` tree), the absence of the identity tuple creates a risk that the adversary reads from the wrong tree (main checkout vs worktree) without realizing it. The tuple makes the dispatch self-documenting and enables automated verification of which tree was read.
+
+**Recommended dispatch template addition:**
+```
+Worktree-Identity:
+  worktree_abs_path: /Users/zious/Documents/GITHUB/jira-cli/.worktrees/<story-slug>
+  feature_head_sha: <git -C .worktrees/<slug> rev-parse HEAD>
+  story_id: S-<label>
+  canonical_repo_root: /Users/zious/Documents/GITHUB/jira-cli
+```
+
+**Status:** OPEN — justified deferral. Codify in dispatch-template when next per-story adversarial review runs. Tracked as drift item ADVERSARY-DISPATCH-IDENTITY-TUPLE in STATE.md.
+
+_Recorded: 2026-06-28 — cmdb_fields/object_type_attrs warm-hit coverage delivery (PR #566, F5 pass-2 adversary observation). State-manager._
+_Tagged: [process-gap] [adversarial-review] [dispatch-hygiene] [test-only] [low-impact]_
 _Related: DEC-142; BC-6.2.018; BC-X.12.008; S-CACHE-WARM-HIT-COVERAGE-1; COVERAGE-AUDIT-FOLLOW-THROUGH (2026-06-27); CACHE-COVERAGE-GAPS-2026-06-27 (narrowed)._

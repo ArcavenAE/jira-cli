@@ -12,7 +12,7 @@ inputs:
   - "src/cli/issue/create.rs"
   - "tests/issue_bulk.rs"
   - "tests/issue_bulk_pr2.rs"
-input-hash: "bb8e63a"
+input-hash: "a52e12f"
 status: draft
 timestamp: 2026-05-15
 ---
