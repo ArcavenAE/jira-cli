@@ -5051,4 +5051,34 @@ _Related: DEC-144; DEC-120/121/124/129/132 (lineage); S-MUTATION-CI-TIMEOUT-1._
 
 _Recorded: 2026-06-28 — MUTATION-CI-TIMEOUT cycle (PR #567 merge authorization round-trip). State-manager._
 _Tagged: [process-gap] [merge-authorization] [handshake-friction] [dec-128] [low-impact]_
+
+---
+
+## BEHAVIOR-VS-CODIFICATION (2026-06-28) [codified]
+
+**Category:** process-level / audit-methodology / agent-governance
+
+**Tag:** [codified] BEHAVIOR-VS-CODIFICATION — when auditing an agent-governance gap, distinguish observed good behavior from prompt-codified guarantees
+
+**Lesson:** When auditing whether an agent-governance constraint is "closed," there are TWO distinct questions:
+1. Did the agent behave correctly this session?
+2. Is the constraint explicitly codified in the agent's prompt instructions?
+
+These are NOT equivalent. An agent that behaves well may be doing so because of session-level instructions, model conservatism, or an unusually cautious deployment — none of which persist into a future session or future agent version.
+
+Story 91's re-assessment (DEC-145) is the canonical example: pr-manager held at merge on PRs #566 and #567, refusing even orchestrator-relayed authorization. This is STRONGER behavior than the audited prompt requires. The prompt's `AUTHORIZE_MERGE=yes` standing template would permit a DEC-128-style auto-merge-against-hold recurrence. The good behavior this session was NOT attributable to the prompt text.
+
+**Correct audit methodology:**
+- Grade on the presence of explicit prompt text encoding the constraint.
+- "Agent behaved well this run" is admissible as REINFORCING evidence (lowers risk, justifies downgrade) but NOT as PROOF of codification.
+- A constraint is CODIFIED only when the prompt text, by itself, would prevent the failure mode — independent of session context or model conservatism.
+- Structural controls (tool fences, hooks, closed spawnable sets) count as PARTIAL codification — they reduce the attack surface without fully encoding the constraint in prose the agent reads at inference time.
+
+**Application:** Use this distinction in every governance audit. Explicitly state in the verdict: "CODIFIED (prompt text sufficient)" vs "PARTIAL (structural controls but prompt does not close the gap)" vs "OPEN (neither)." Never conflate behavioral evidence with codification verdicts.
+
+**Prior art:** DEC-144 (MUTATION-CI-TIMEOUT) established the analogous principle for config assumptions: "do not categorize CI-config changes as 'low-complexity' based on code simplicity — the complexity is in the assumptions about tool behavior." This lesson extends that to agent behavior: "do not categorize agent governance as 'resolved' based on observed behavior — the bar is prompt-codification."
+
+_Recorded: 2026-06-28 — S-PG-MERGE-AUTH-BYPASS re-assessment (DEC-145). State-manager._
+_Tagged: [codified] [audit-methodology] [agent-governance] [behavior-vs-codification] [dec-145]_
+_Related: DEC-128; DEC-145; S-PG-MERGE-AUTH-BYPASS (story 91); audit doc PG-MERGE-AUTH-BYPASS-mitigation-audit-2026-06-28.md._
 _Related: DEC-128; DEC-144; S-PG-MERGE-AUTH-BYPASS (story 91); PG-MERGE-AUTH-BYPASS (drift item)._

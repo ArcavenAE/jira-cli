@@ -43,6 +43,7 @@ last_updated: "2026-06-20"
 changelog:
   - "1.0 (2026-06-20): Initial draft — originated from PG-MERGE-AUTH-BYPASS drift item (DEC-128, DEAD-CITATION-CI F4). Delivery sub-agent auto-merged PR #544 against explicit orchestrator hold. Self-improvement / pipeline-governance scope. No BCs yet — PO authorship required before status=ready."
   - "1.1 (2026-06-20): Scope extended to cover MAINT-PG-PR-MERGE-CHANNEL (session review Recommendation 2 / DEC-130). Both share root cause: undefined merge-authorization protocol. pr-manager default posture MUST be NO-MERGE; orchestrator passes explicit `merge: authorized` signal. MAINT-PG-PR-MERGE-CHANNEL status → SUBSUMED by this story."
+  - "1.2 (2026-06-28): Re-assessment (DEC-145, human-directed). Audit at .factory/research/PG-MERGE-AUTH-BYPASS-mitigation-audit-2026-06-28.md: Constraint 4 (poll loops) CODIFIED. Constraints 1–3 PARTIAL. Drift items downgraded MEDIUM→LOW. Story re-scoped to 3 residual engine-prompt edits; status remains draft (requires engine-source access + PO BC authorship)."
 breaking_change: false
 lineage:
   - DEC-128
@@ -252,6 +253,54 @@ prompt or workflow doc) and add the `merge_authorization` field handling per AC-
 Confirm no jr product files (`src/`, `tests/`, `.github/`) were modified. Confirm the contract
 doc is reachable from both the pr-manager agent definition and the orchestrator workflow doc
 via cross-reference links.
+
+---
+
+## Re-assessment (2026-06-28)
+
+**Disposition: MITIGATED-WITH-RESIDUAL-GAPS (DEC-145)**
+
+An audit of the current installed engine (`vsdd-factory/1.0.0-rc.21`, read-only plugin cache) against
+the four DEC-128/PG-PR-MANAGER-OVERREACH governance constraints found:
+
+| # | Constraint | Verdict |
+|---|------------|---------|
+| 1 | No self-authorize merge | **PARTIAL** — `AUTHORIZE_MERGE=yes` baked into standing per-story dispatch template; dispatch is treated as pre-authorization; does not provide a per-merge brake |
+| 2 | No autonomous fix-agent spawn without orchestrator direction | **PARTIAL** — closed spawnable set + in-flow framing constrain it, but no explicit prohibition on off-script spawns |
+| 3 | No autonomous push without orchestrator authorization | **PARTIAL** — test-pass hook + no-shell tool fence are real controls, but coupled to Constraint 2 gap |
+| 4 | No unbounded poll loops | **CODIFIED** — numeric caps everywhere; "never hot-loop" instruction explicit |
+
+**Defense-in-depth exists** (exec/process tool fence, `validate-pr-merge-prerequisites` hook, `--admin`
+fresh-approval rule, Feature-mode F7 human gate) and **behavioral evidence is encouraging** (pr-manager
+held at merge on PRs #566 and #567 this session, refusing even orchestrator-relayed authorization).
+However, good behavior this session is NOT proof of prompt codification — the prompt as written would
+permit a recurrence of the DEC-128 #544 auto-merge shape.
+
+**Remaining work (3 residual engine-source prompt edits):**
+
+1. **Constraint 1 — per-merge authorization brake:** In `agents/pr-manager.md` Step 8 / MERGE
+   AUTHORIZATION block, replace the standing-dispatch-as-authorization grant with a per-PR token
+   gate (`AUTHORIZE_MERGE=<PR#>`). In `orchestrator/per-story-delivery.md:36`, stop baking
+   `AUTHORIZE_MERGE=yes` into the standing template.
+
+2. **Constraint 2 — fix-agent spawn boundary:** Add to `agents/pr-manager.md` Constraints an
+   explicit boundary: spawning fix agents is allowed ONLY for findings surfaced by the dispatched
+   review/security/CI steps; off-script or self-discovered problems must be escalated to the
+   orchestrator (not self-dispatched).
+
+3. **Constraint 3 — push authorization clause:** Add to `agents/pr-manager.md` Constraints and
+   mirror in `skills/code-delivery/SKILL.md`: passing tests is necessary but not sufficient to
+   authorize a push; the push must be for work the orchestrator routed to pr-manager.
+
+4. **(Optional) Config fail-safe:** State that when `.factory/merge-config.yaml` is absent,
+   pr-manager defaults to Level 3 (human-review/halt), not auto-merge.
+
+Ready-to-apply text for all four edits is in `.factory/research/PG-MERGE-AUTH-BYPASS-mitigation-audit-2026-06-28.md`
+§ "Recommendations to close residual gaps."
+
+**Why still draft:** These edits target the engine source (plugin cache, read-only). PO BC authorship
+is also still pending (S-7.01 gate). Status remains `draft` until engine-source access is available
+and BCs are authored.
 
 ---
 
