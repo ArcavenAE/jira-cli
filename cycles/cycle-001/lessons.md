@@ -7,7 +7,7 @@ producer: state-manager
 timestamp: 2026-05-07T00:00:00
 cycle: "cycle-001"
 inputs: [STATE.md]
-input-hash: "1808ee3"
+input-hash: "45354f1"
 traces_to: STATE.md
 ---
 
@@ -4955,3 +4955,100 @@ Worktree-Identity:
 _Recorded: 2026-06-28 — cmdb_fields/object_type_attrs warm-hit coverage delivery (PR #566, F5 pass-2 adversary observation). State-manager._
 _Tagged: [process-gap] [adversarial-review] [dispatch-hygiene] [test-only] [low-impact]_
 _Related: DEC-142; BC-6.2.018; BC-X.12.008; S-CACHE-WARM-HIT-COVERAGE-1; COVERAGE-AUDIT-FOLLOW-THROUGH (2026-06-27); CACHE-COVERAGE-GAPS-2026-06-27 (narrowed)._
+
+---
+
+## VERIFY-TOOL-CONFIG-SEMANTICS (2026-06-28) [codified]
+
+**Category:** process / tool-config / adversarial-verification
+
+**Tag:** [codified] VERIFY-TOOL-CONFIG-SEMANTICS — never assume a tool's config-key semantics; verify against source/docs before writing policy that depends on the behavior
+
+**Lesson:** The F5 adversarial gate for PR #567 caught a CRITICAL defect: `minimum_test_timeout` in cargo-mutants TOML configuration is a **FLOOR** (it raises the minimum per-mutant test time), not a ceiling. The PR originally used it as a ceiling to cap per-mutant execution at 240s; in reality, this key ensures each mutant's tests run for AT LEAST that duration — the opposite semantic. A mutant with a 10s test would have run for 240s (floor enforced), and the longest tests would still run unbounded. The actual ceiling mechanism is the `--timeout` CLI flag.
+
+**Detection mechanism:** A research-agent verification pass against cargo-mutants source code and documentation confirmed the CRITICAL before any fix was applied. The adversary's flagging was the trigger; the research-agent confirmation made the finding actionable with confidence.
+
+**Operational rule:** Any config knob whose behavior is asserted in a comment, policy document, or CI script MUST be source-verified against the tool's documentation or source code before the assertion is written. The cost of a 5-minute source verification is trivial compared to the cost of shipping an inverted behavior. This is especially important for:
+- Configuration keys with ambiguous names (floor/ceiling, minimum/maximum, enable/disable)
+- Tools where TOML config and CLI flags interact or overlap
+- Keys that affect time-sensitive CI budgets (incorrect behavior → either budget blowout or silent test skips)
+
+**Pair check:** when a config key is named `minimum_X` or `maximum_X`, explicitly verify: does this set the floor (minimum possible X) or the ceiling (maximum possible X)? Do not infer from the name alone.
+
+_Recorded: 2026-06-28 — MUTATION-CI-TIMEOUT cycle (PR #567, develop @ 3b122a8). State-manager._
+_Tagged: [codified] [process] [tool-config] [adversarial-verification] [ci-hardening]_
+_Related: DEC-144; S-MUTATION-CI-TIMEOUT-1; AC-002 (--timeout 240 CLI-only ceiling)._
+
+---
+
+## GROUND-CI-BUDGETS-IN-MEASURED-DATA (2026-06-28) [codified]
+
+**Category:** process / ci-budget / measurement-discipline
+
+**Tag:** [codified] GROUND-CI-BUDGETS-IN-MEASURED-DATA — always measure the CI baseline from actual CI runs before picking a timeout for a required gate; never set a budget based on assumed or intuited numbers
+
+**Lesson:** PR #567 initially set `--timeout 180` based on an assumed ~90s baseline (2× the assumed "typical long test" duration). When measured against recent green CI test-job runs, the actual baseline for the longest test in the mutation scope (bulk deadline propagation real-sleep test) was 133–145s. Setting 180s would have left only a 35–47s margin — dangerously tight for a REQUIRED gate where a false-red failure blocks all PRs.
+
+**Corrected value:** 240s = 6× the bulk deadline propagation test (~40s real-sleep) + well above the 133–145s full-suite baseline measured from recent CI runs.
+
+**How to measure:** Check recent CI test-job logs for the longest individual test execution time within the files covered by `examine_globs`. The `cargo nextest run --no-fail-fast` output (or `cargo test` timing output) from recent green CI runs is the ground truth. For cargo-mutants specifically: the per-mutant timeout should be at least 3–6× the longest single test in the mutation scope, AND well above the full scoped-file test suite baseline to avoid false-reds on slower CI runners.
+
+**Asymmetric risk:** A timeout that's too tight (false-red) is worse than one that's too loose (longer CI wall time) for REQUIRED gates. A false-red from a legitimate timeout on a real test failure is acceptable (that's the gate working). A false-red from a too-tight budget that triggers on a healthy but slow test is a process failure that blocks all PRs.
+
+_Recorded: 2026-06-28 — MUTATION-CI-TIMEOUT cycle (PR #567, develop @ 3b122a8). State-manager._
+_Tagged: [codified] [process] [ci-budget] [measurement-discipline] [ci-hardening]_
+_Related: DEC-144; S-MUTATION-CI-TIMEOUT-1; AC-002; MUTANTS-FIRST-SCOPED-PR-CALIBRATION (watch-item)._
+
+---
+
+## FULL-VSDD-CI-CONFIG-CATCHES-CRITICAL (2026-06-28) [codified]
+
+**Category:** process-validation / vsdd-discipline / ci-config
+
+**Tag:** [codified] FULL-VSDD-CI-CONFIG-CATCHES-CRITICAL — full VSDD adversarial discipline on CI-config-only changes is high-value, not ceremony; this cycle is the strongest reinforcement of DEC-120/121/124/129/132 to date
+
+**Lesson:** The MUTATION-CI-TIMEOUT cycle went through 6 F5 fix rounds and caught:
+- 1 CRITICAL defect (inverted timeout knob: `minimum_test_timeout` = floor, not ceiling)
+- 1 HIGH false-RED (base-ref-drift guard logic: empty-OVERALL-diff vs empty-SCOPED-diff distinction)
+- 1 wrong value (180s timeout based on assumed 90s baseline; real measured baseline: 133–145s)
+- Multiple documentation completeness gaps (policy doc missing several guard rationales, AC descriptions incomplete)
+
+All defects were caught by the F5 adversarial gate. None were caught by the implementer, code reviewer, or CI runs (CI couldn't catch these — the defects were in the design/logic of the guards, not in code syntax).
+
+**Key reinforcement:**
+- DEC-120 (DEAD-CITATION-CI F2: 6 iterations caught 6 real defects before code was written)
+- DEC-121 (DEAD-CITATION-CI F3: story-altitude catch that 10 F2 passes missed)
+- DEC-124 (fork-ops signing hardening: F5 caught 2 CRIT + 1 HIGH)
+- DEC-129 (DEAD-CITATION-CI F7: 8+ real defects caught on a 211-LOC CI guard)
+- DEC-132 (SEC-001 ADF recursion: off-by-one BLOCKER caught by dual code+security review)
+
+**New reinforcement:** A "trivial CI-config-only" change (adding `--timeout 240` and `ci-gate.needs: mutants`) yielded a CRITICAL defect that would have shipped a broken/inverted timeout fix without the adversarial gate. The inverted timeout would NOT have been caught by CI, code review, or even manual testing of the gate (the gate still runs; it just enforces the wrong semantic).
+
+**Takeaway for future cycles:** Do not categorize CI-config changes as "low-complexity, skip or shorten adversarial gate." The complexity is not in the code — it is in the assumptions about tool behavior. Those assumptions are exactly what fresh-context adversarial review is designed to challenge.
+
+_Recorded: 2026-06-28 — MUTATION-CI-TIMEOUT cycle (PR #567, develop @ 3b122a8). State-manager._
+_Tagged: [codified] [process-validation] [vsdd-discipline] [ci-config] [adversarial-review]_
+_Related: DEC-144; DEC-120/121/124/129/132 (lineage); S-MUTATION-CI-TIMEOUT-1._
+
+---
+
+## ORCHESTRATOR-RELAYED-MERGE-AUTH (2026-06-28) [process-gap]
+
+**Category:** process-gap / merge-authorization / handshake-friction
+
+**Tag:** [process-gap] ORCHESTRATOR-RELAYED-MERGE-AUTH — pr-manager correctly refuses coordinator-relayed merge authorization; the DEC-128 guardrail is working, but the friction adds a round-trip that should be anticipated and documented
+
+**Lesson:** During this cycle, pr-manager correctly refused merge authorization twice (PR #566, PR #567) when the orchestrator relayed the human's authorization rather than the human providing it directly. Each refusal required an additional round-trip to get the human's explicit word. This is the DEC-128 guardrail working exactly as designed: delivery sub-agents must not self-authorize merges; they must receive explicit per-merge orchestrator authorization (which in turn requires human direction).
+
+**Why this is a process-gap and not a design error:** The guardrail is correct. An orchestrator-relayed authorization is indistinguishable to pr-manager from an orchestrator-generated authorization (which is explicitly prohibited). The trust anchor must be the human, not the orchestrator chain.
+
+**What to document / anticipate:**
+1. When a human says "go ahead and merge" to the orchestrator, the orchestrator should relay this but note that pr-manager may require the human to confirm directly.
+2. The merge-authorization handshake is intentionally friction-ful. This is not a bug; it is the security posture.
+3. A future story (S-PG-MERGE-AUTH-BYPASS, story 91) may codify a cleaner merge-auth signaling protocol. Until then: expect the round-trip, do not try to engineer around it.
+
+**Operational note:** This process gap does not need a new story — it is already covered by S-PG-MERGE-AUTH-BYPASS (story 91, draft). This lesson codification ensures the friction is expected and understood by future orchestrators reading this file.
+
+_Recorded: 2026-06-28 — MUTATION-CI-TIMEOUT cycle (PR #567 merge authorization round-trip). State-manager._
+_Tagged: [process-gap] [merge-authorization] [handshake-friction] [dec-128] [low-impact]_
+_Related: DEC-128; DEC-144; S-PG-MERGE-AUTH-BYPASS (story 91); PG-MERGE-AUTH-BYPASS (drift item)._

@@ -6,3 +6,4 @@
 | 2026-05-31 | general | E2E portability: issue links, remote links, labels, bulk-edit tiers, assign/unassign | e2e-link-label-coverage.md | complete |
 | 2026-06-09 | general | Bare-URL autolink scope for markdown_to_adf (issue #473): GFM rules, converter defaults, Jira ADF link-mark requirement | issue-473-bare-url-autolink-scope.md | complete |
 | 2026-06-11 | general | ADF read-path E2E external API validation (issue #475): v3 ADF round-trip for description/comment, listItem-forbids-blockquote, server-side normalization risk, recency | issue-475-adf-e2e-external-validation.md | complete |
+| 2026-06-28 | general | Fast & required cargo-mutants in GitHub Actions CI: build cost, caching, --jobs/--shard parallelism, timeout determinism, --in-diff scope, required-gate patterns (cargo-mutants 27.1.0) | mutation-ci-perf-2026-06-28.md | complete |

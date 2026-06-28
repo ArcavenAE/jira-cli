@@ -1,0 +1,6 @@
+# Affected files — MUTATION-CI-TIMEOUT cycle
+# Change types: NEW | MODIFIED | DEPENDENT
+
+MODIFIED  .github/workflows/ci.yml
+MODIFIED  .cargo/mutants.toml
+MODIFIED  docs/specs/cargo-mutants-policy.md
