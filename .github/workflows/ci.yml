@@ -160,7 +160,7 @@ jobs:
   mutants:
     name: Mutation testing
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 90
     # PR-only — mutation testing is too slow for every push to develop/main.
     # --in-diff keeps per-PR cost bounded to changed lines only.
     if: github.event_name == 'pull_request'
@@ -175,7 +175,19 @@ jobs:
           # Need full history so `git diff origin/<base_ref>...HEAD` can resolve the
           # base ref (used by --in-diff to scope mutation testing to changed lines).
           fetch-depth: 0
-      - uses: taiki-e/install-action@aae1387a167f5eee4267fe2946da57ae49a68770  # cargo-mutants
+      - uses: taiki-e/install-action@aae1387a167f5eee4267fe2946da57ae49a68770  # install-action v2.x
+        with:
+          # Pin to cargo-mutants major v27 to protect the required gate's schema/exit-code
+          # assumptions: v27 outcomes.json top-level summary keys
+          # (caught/missed/timeout/unviable/total_mutants), exit-code mapping
+          # (0=all-caught-or-no-mutants, non-zero=survivors/harness-error), and
+          # --timeout semantics. A silent major-version bump could change these and produce
+          # a false-green or false-red without any code change in this repo.
+          # Evidence basis: v27 schema verified top-level in S-346 Pass 5 F1 refutation
+          # (.factory/cycles/cycle-001/S-346/implementation/red-gate-log.md §"Pass 5 F1
+          # empirical refutation") + timeout/exit-code semantics confirmed in
+          # .factory/research/cargo-mutants-timeout-keys-verification-2026-06-28.md
+          tool: cargo-mutants@27
       - uses: Swatinem/rust-cache@e18b497796c12c097a38f9edb9d0641fb99eee32  # v2
       - name: Run mutation tests on PR diff
         id: run-mutants
@@ -184,23 +196,51 @@ jobs:
         # Use runner.temp + run_id to avoid /tmp race conditions on concurrent jobs.
         # continue-on-error: true so the Check-kill-rate step (the sole pass/fail
         # arbiter) always runs even when cargo-mutants exits non-zero on missed mutants.
+        # --timeout 240: absolute per-mutant test ceiling. Value derived from measured
+        # ubuntu-latest baseline of 133-145s (5 green develop runs, 2026-06-28); with
+        # ~20% runner variance worst-case ~174s, 240s gives ~38% headroom. Old assumed
+        # ~90s baseline was materially wrong.
+        # See docs/specs/cargo-mutants-policy.md §Timeout Parameters.
         continue-on-error: true
         run: |
           DIFF_FILE="${{ runner.temp }}/pr-${{ github.run_id }}.diff"
-          git diff origin/${{ github.base_ref }}...HEAD > "${DIFF_FILE}"
-          cargo mutants --in-diff "${DIFF_FILE}" --jobs 4
+          # F-4: append || true so a base-ref resolution failure (git diff exits non-zero)
+          # does not abort this step before OVERALL_DIFF_LINES is exported to GITHUB_ENV.
+          # Without || true, set -eo pipefail aborts here → run_outcome=failure +
+          # outcomes.json absent → "harness crash" message in Check kill rate (mislabeled).
+          # With || true: DIFF_FILE is created empty (shell opens it before git runs),
+          # OVERALL_DIFF_LINES=0, cargo-mutants runs with an empty diff (0 mutants, exits 0),
+          # run_outcome=success + outcomes.json absent + OVERALL_DIFF_LINES=0 → precise
+          # "base-ref drift / empty diff" FAIL in Check kill rate. No false-GREEN: an empty
+          # diff still FAILs via the drift branch. The harness-crash branch is preserved for
+          # true cargo-mutants failures (run_outcome=failure + outcomes.json absent).
+          git diff origin/${{ github.base_ref }}...HEAD > "${DIFF_FILE}" || true
+
+          # F-3 (corrected, F5 fix): base-ref drift guard uses the OVERALL diff size,
+          # not per-file scoped line count. Real base-ref drift produces an EMPTY diff
+          # while a legitimate comment-only or non-scoped-file edit produces a non-empty
+          # diff that yields 0 mutants — both cases must be handled correctly.
+          # OVERALL_DIFF_LINES is computed here for the "Check kill rate" step.
+          OVERALL_DIFF_LINES=$(wc -l < "${DIFF_FILE}" | tr -d ' ')
+          echo "Overall diff lines: ${OVERALL_DIFF_LINES}"
+          echo "OVERALL_DIFF_LINES=${OVERALL_DIFF_LINES}" >> "${GITHUB_ENV}"
+
+          cargo mutants --in-diff "${DIFF_FILE}" --jobs 4 --timeout 240
       - name: Check kill rate
         # if: always() ensures this step runs regardless of whether Run-mutation-tests
         # exited non-zero. This step is the sole pass/fail arbiter for the mutants job.
         # The 90% kill-rate threshold lives here (not in .cargo/mutants.toml) for
         # CI-artifact visibility.
-        # Pass 4 gate logic: distinguish harness crash from zero-mutant clean PR using
-        # steps.run-mutants.outcome + mutants.out/outcomes.json presence. Then enforce
-        # 90% kill-rate target on (caught + missed + timeout) — timeouts count as
-        # survived per cargo-mutants v27 convention.
+        # Pass 4 gate logic (F5 corrected): distinguish harness crash from zero-mutant
+        # clean PR using steps.run-mutants.outcome + mutants.out/outcomes.json presence.
+        # Then enforce 90% kill-rate target on (caught + missed + timeout) — timeouts
+        # count as survived per cargo-mutants v27 convention.
+        # F5 fix: absent-outcomes.json + success → FAIL only when overall diff is EMPTY
+        # (genuine base-ref drift). A non-empty diff that yields 0 mutants is a
+        # legitimate comment-only, docs-only, or non-scoped-file PR — MUST PASS.
         if: always()
         run: |
-          # Pass 4 F1 fix — distinguish harness crash from zero-mutants clean PR.
+          # Pass 4 F1 fix + F5 correction — distinguish harness crash from zero-mutant run.
           #
           # cargo-mutants exit codes (v27):
           #   0 → all mutants caught OR no mutants generated
@@ -211,7 +251,9 @@ jobs:
           # matrix lets us distinguish:
           #
           #   outcome=success + outcomes.json present  → 100% caught (gate passes)
-          #   outcome=success + outcomes.json absent   → 0 mutants generated (clean PR — pass)
+          #   outcome=success + outcomes.json absent   → 0 mutants generated:
+          #     OVERALL_DIFF_LINES == 0 → FAIL (base-ref drift — empty diff)
+          #     OVERALL_DIFF_LINES  > 0 → PASS (comment-only/docs-only/non-scoped PR)
           #   outcome=failure + outcomes.json present  → missed/timeout (enforce 90% gate)
           #   outcome=failure + outcomes.json absent   → harness crash (FAIL)
 
@@ -220,7 +262,20 @@ jobs:
 
           if [ ! -f mutants.out/outcomes.json ]; then
             if [ "$run_outcome" = "success" ]; then
-              echo "OK: cargo-mutants exited 0 with no outcomes.json — 0 mutants generated from PR diff (clean/docs-only/out-of-scope)."
+              # F-3 corrected (F5 fix): base-ref drift is detected by an EMPTY overall
+              # diff, not by scoped-file line count. A non-empty diff that produces 0
+              # mutants is a LEGITIMATE outcome — the PR may touch only comments,
+              # whitespace, docs, or non-scoped files. Only an empty DIFF_FILE while the
+              # PR claims to have changes is a drift signal (base-ref resolved wrong).
+              if [ "${OVERALL_DIFF_LINES:-0}" -eq 0 ]; then
+                echo "FAIL: cargo-mutants exited 0 with no outcomes.json AND overall diff is EMPTY."
+                echo "      Possible base-ref drift (git diff origin/<base_ref>...HEAD produced an"
+                echo "      empty file, suggesting --in-diff resolved against the wrong base)."
+                echo "      Re-run the job, or check that the branch is up-to-date with its base."
+                exit 1
+              fi
+              echo "OK: 0 mutants — non-empty diff produced no mutable lines in examine_globs files"
+              echo "    (comment-only, whitespace, docs-only, or non-scoped-file PR)."
               exit 0
             else
               echo "FAIL: cargo-mutants exited non-zero AND outcomes.json missing — harness crash."
@@ -247,6 +302,51 @@ jobs:
             missed=$(jq '.missed // 0' mutants.out/outcomes.json)
             timeout=$(jq '.timeout // 0' mutants.out/outcomes.json)
             unviable=$(jq '.unviable // 0' mutants.out/outcomes.json)
+            # M-2 reconciliation: compare sum of known categories against total_mutants
+            # field (v27+). If a future cargo-mutants version adds a new outcome category,
+            # those mutants would fall outside our denominator — producing a silent false-
+            # green. This warning does NOT hard-fail (avoids coupling the required gate to
+            # an unverified future schema), but makes the discrepancy visible in job logs.
+            total_mutants=$(jq '.total_mutants // 0' mutants.out/outcomes.json)
+
+            # H-2: integer validation — guard each jq-extracted field against a
+            # non-integer value (future schema change emitting string/float/object would
+            # survive `// 0` then break `$(( ))` under set -e → false-RED). Coerce to 0
+            # on any non-integer; normal integer case is unchanged.
+            [[ "${caught}"       =~ ^[0-9]+$ ]] || caught=0
+            [[ "${missed}"       =~ ^[0-9]+$ ]] || missed=0
+            [[ "${timeout}"      =~ ^[0-9]+$ ]] || timeout=0
+            [[ "${unviable}"     =~ ^[0-9]+$ ]] || unviable=0
+            [[ "${total_mutants}" =~ ^[0-9]+$ ]] || total_mutants=0
+
+            # H-1: runtime schema-drift guard — detect when outcomes.json is valid JSON
+            # with a non-empty .outcomes array BUT all top-level summary keys parsed as 0.
+            # This is the fingerprint of a schema change that moved summary keys (e.g. into
+            # a nested "summary" object): the `// 0` fallbacks all fire silently, giving
+            # caught=missed=timeout=unviable=0 → total_outcomes=0 → PASS (false-green).
+            # A genuine 0-mutant run produces NO outcomes.json, so it never reaches this
+            # branch. A genuine all-unviable run has non-zero unviable. A genuine empty
+            # .outcomes array means no mutants were scored → not drift.
+            # Evidence basis: v27 top-level schema confirmed in S-346 Pass 5 F1 refutation
+            # (red-gate-log.md §"Pass 5 F1 empirical refutation"); drift guard activates
+            # only when the confirmed schema no longer matches.
+            _outcomes_len=$(jq '(.outcomes // []) | length' mutants.out/outcomes.json 2>/dev/null || echo 0)
+            [[ "${_outcomes_len}" =~ ^[0-9]+$ ]] || _outcomes_len=0
+            _sum_check=$((caught + missed + timeout + unviable))
+            if [ "${_outcomes_len}" -gt 0 ] && [ "${_sum_check}" -eq 0 ] && [ "${total_mutants}" -eq 0 ]; then
+              echo "FAIL: outcomes.json schema drift detected."
+              echo "      outcomes.json has ${_outcomes_len} outcome(s) in .outcomes array but all"
+              echo "      top-level summary keys (caught/missed/timeout/unviable/total_mutants) are 0."
+              echo "      The cargo-mutants output format may have changed (e.g. summary keys"
+              echo "      moved to a nested object). Pin update or schema investigation required."
+              echo "      Pin: .github/workflows/ci.yml cargo-mutants@27"
+              exit 1
+            fi
+
+            if [ "${total_mutants}" -ne 0 ] && [ "${_sum_check}" -ne "${total_mutants}" ]; then
+              echo "::warning::Schema mismatch: total_mutants=${total_mutants} but caught+missed+timeout+unviable=${_sum_check}. An unrecognized outcome category may exist in this version of cargo-mutants. Kill-rate denominator may be understated."
+              echo "WARNING: total_mutants=${total_mutants} != sum of known categories ${_sum_check}. Check cargo-mutants release notes for new outcome types."
+            fi
           else
             # F5 fix: wc -l prints "0" cleanly on empty file with exit 0; grep -c '' exits 1
             # on empty match, triggering `|| echo 0` and producing newline-embedded "0\n0"
@@ -325,7 +425,7 @@ jobs:
   ci-gate:
     name: CI Gate
     runs-on: ubuntu-latest
-    needs: [fmt, clippy, test, msrv, deny, spec-guard, check-signing-workflow-injection]
+    needs: [fmt, clippy, test, msrv, deny, spec-guard, check-signing-workflow-injection, mutants]
     if: ${{ always() }}
     steps:
       - name: Fail if any required job failed or was cancelled
