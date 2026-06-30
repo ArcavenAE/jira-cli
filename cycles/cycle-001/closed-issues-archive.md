@@ -65,3 +65,25 @@ traces_to: STATE.md
 |-------|-------|--------|----------|-------|
 | #522 | fix(adf): ADF CR/newline normalization — EC-11 (push_text/push_code) + EC-12 (text_to_adf) + CR-01 (bare \n Other-ctx) | **CLOSED — CYCLE CLOSED + MERGED** (PR #523 squash-merged → develop @ 53f6d98, 2026-06-17; #522 auto-closed). Full F1–F7: F1 EC-11+EC-12; F2 BC-7.2.011 v1.11.0; F3 S-522 19 ACs severity HIGH; F4 237→248 tests; F5 4-round/3-lens CONVERGED (caught HIGH CR-01: bare \n Other-ctx via multi-line inline HTML → Jira 400); F6 PASS (1850/0, 100k proptest, 21 mutants 16-caught/5-equivalent, audit/deny clean); F7 5/5 DELTA_CONVERGED. CI Gate PASS; pr-reviewer + security APPROVE. Remote branch fix/adf-push-text-cr-normalization-522 deleted; worktree .worktrees/S-522 cleaned up. DEC-110..119. | HIGH | BC-7.2.011 v1.11.0. 2 follow-ups folded (CLAUDE.md gotcha + mutants.toml adf.rs scope — both drift RESOLVED). S-7.02 checklist complete: LESSON-F1-SIBLING-CASE codified. |
 | #523 | PR: fix(adf): push_text/push_code/text_to_adf CR+LF normalization (BC-7.2.011, #522) | **MERGED** → develop @ 53f6d98 (2026-06-17). CI Gate PASS. Squash-merged. | — | Closes #522. |
+
+### Closed issues archived 2026-06-30 (cold-resume snapshot — two spec-only cycles DEC-146/DEC-147; develop UNCHANGED @ 3b122a8)
+
+| Issue | Title | Status | Priority | Notes |
+|-------|-------|--------|----------|-------|
+| #520 | ci: opt-in release ops (fork-friendly) | **MERGED** @ 2cb219b. Both HIGH code blockers RESOLVED (PR #535). Gate = human DEC-104 + Apple secrets. | LOW | SIGNING_ENABLED unset in canonical repo. |
+| #532 | fix(test): Login/Refresh/Logout global-`--profile` fallback ungated coverage | **CLOSED** — PR #552 → develop @ 35e20c9 (2026-06-25). Coverage tests added via S-MAINT-532. | LOW | |
+| #550 | dependabot: bump actions/checkout 6.0.3→7.0.0 | **CLOSED** — squash-merged → develop @ b856f9f (2026-06-25). 25 SHA-pins to 9c091bb # v7.0.0 across 10 workflow files. CI 15/15 green. | LOW | |
+| #554 | docs: maintenance sweep 2026-06-25 doc fixes | **CLOSED** — squash-merged → develop @ aa2cdca (2026-06-25). All DRIFT-S3-001/002/003/004 resolved. | LOW | |
+| #555 | chore: pattern hygiene — unwrap invariant docs + size-deviation records | **CLOSED** — squash-merged → develop @ 6b395d3 (2026-06-25). PF-010..014/016/017 closed. | LOW | |
+| #556 | refactor(cli): extract JSM-create into src/cli/issue/jsm_create.rs — Seam A | **CLOSED** — squash-merged → develop @ d04a7ec (2026-06-26). Behavior-preserving pure move. | LOW | |
+| #557 | dependabot: bump softprops/action-gh-release 3.0.0→3.0.1 | **CLOSED** — squash-merged → develop @ c70d8a7 (2026-06-26). Supply-chain soak PASS. DEC-133. | LOW | |
+| #558 | refactor(cli): extract EDIT cluster into src/cli/issue/edit.rs — Seam B | **CLOSED** — squash-merged → develop @ 2e3c3c2 (2026-06-26). Behavior-preserving. | LOW | |
+| #559 | chore(release): v0.6.0-dev.7 | **CLOSED** — squash-merged → develop @ 342987f (2026-06-26). 10 assets/5 targets. | LOW | |
+| #560 | test(adf): pin plain-text block-HTML and discrete footnote node shapes | **CLOSED** — squash-merged → develop @ 9657b1e (2026-06-26). 2 regression-pin tests. | LOW | |
+| #561 | test(cache): pin per-profile cache isolation and fields.json self-heal | **CLOSED** — squash-merged → develop @ 5ab4e0f (2026-06-27). 8 unit tests. DEC-136 deviation noted. | LOW | |
+| #562 | docs(test): correct stale RED-gate docstring in adf_recursion_depth.rs | **CLOSED** — squash-merged → develop @ 3d8f15b (2026-06-27). Comment-only. | LOW | |
+| #563 | test(cli): pin --field/--label & C-1 edit guards and --output json error-shape coverage | **CLOSED** — squash-merged → develop @ 894cc9d (2026-06-27). 5 regression pins. DEC-139. | LOW | |
+| #564 | test(e2e): wiremock-tier coverage for INV-1 ADF wiring, partial_match no-HTTP, bulk-move nested schema | **CLOSED** — squash-merged → develop @ 502898f (2026-06-27). 3 regression pins. DEC-140. | LOW | |
+| #565 | test(cache): warm-hit no-HTTP coverage + request-type writer swallow pins | **CLOSED** — squash-merged → develop @ 788bc0f (2026-06-27). 5 regression pins. DEC-142. | LOW | |
+| #566 | test(cache): warm-hit no-HTTP pins for cmdb_fields + object_type_attrs (BC-6.2.018) | **CLOSED** — squash-merged → develop @ 822fa18 (2026-06-28). 2 regression pins. All 9 families pinned. DEC-143. | LOW | |
+| #567 | ci(mutants): make mutation gate required with absolute --timeout 240 ceiling + false-green guards | **CLOSED** — squash-merged → develop @ 3b122a8 (2026-06-28). CRITICAL inverted-knob + HIGH false-RED caught. DEC-144. | LOW | |
