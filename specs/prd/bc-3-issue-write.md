@@ -1161,10 +1161,11 @@ The function mutates the caller's `fields` JSON object and `changed_fields` map 
    - Single match → use its `id`.
 3. Call `get_editmeta(key)` (→ `GET /rest/api/3/issue/{key}/editmeta`). If the
    resolved field ID is absent from `editmeta.fields` → `JrError::UserError` with
-   Edit-screen actionable hint ("ask a project admin to add this field to the Edit
-   screen"). Exit 64. This applies to BOTH the name-resolved path AND the
-   `customfield_NNNNN` literal bypass path. The `editmeta` response is NOT cached
-   (see non-goal note below).
+   Edit-screen actionable message (exact substrings: `"is not on the Edit screen"` and
+   `"A project admin must add it to the Edit screen"` — verified from
+   `src/cli/issue/field_resolve.rs` Step 3 error). Exit 64. This applies to BOTH the
+   name-resolved path AND the `customfield_NNNNN` literal bypass path. The `editmeta`
+   response is NOT cached (see non-goal note below).
 3b. **Operations check** (new, P3-LOW-002): inspect `editmeta.fields[id].operations`.
    If `"set"` is NOT present in the list → `JrError::UserError`: "field '<NAME>'
    does not support direct `set` via the edit API (operations: [<actual_ops>]). Use
@@ -1283,8 +1284,9 @@ not be flagged as a gap by reviewers.
   "Sum Total") → exit 64 naming the ambiguous candidates with their `customfield_NNNNN`
   IDs to help the caller use the literal bypass.
 - EC-3.4.015-3: Field found in `list_fields()` but absent from `editmeta` (not on Edit
-  screen) → exit 64 with "ask a project admin to add this field to the Edit screen for
-  this issue's project/issue type."
+  screen) → exit 64. stderr contains BOTH substrings `"is not on the Edit screen"` and
+  `"A project admin must add it to the Edit screen"` (exact substrings from
+  `src/cli/issue/field_resolve.rs` Step 3 error, verified from source).
 - EC-3.4.015-4: Number field (`schema.type: "number"`) with a non-numeric or non-finite
   `VALUE` → exit 64 with parse error message. No PUT attempted. Two distinct failure
   modes: (a) `"abc".parse::<f64>()` fails at parse → exit 64 immediately; (b) `"inf"` or

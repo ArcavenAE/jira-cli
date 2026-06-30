@@ -1,11 +1,11 @@
 ---
 context: holdout-scenarios
 title: "Holdout Scenarios"
-total_holdouts: 71
+total_holdouts: 79
 # H-NEW-AUTH-002 registered by S-0.07 (Phase 3, 2026-05-07). Wave 0 COMPLETE.
 # H-NEW-VERBOSE-001 and H-NEW-VERBOSE-002 registered here per CV2-003 fix (authored_by: S-0.06).
-version: "1.3.0"
-last_updated: 2026-06-27
+version: "1.4.0"
+last_updated: 2026-06-30
 source_pass: 3
 trace: |
   - L2: .factory/specs/domain-spec/
@@ -16,11 +16,12 @@ trace: |
   - D4 holdout refresh Burst 1 (2026-06-26): ADF wave #471/#472/#474/#483/#489/#492/#522/#473 — 8 new scenarios H-NEW-ADF-001..H-NEW-ADF-008 (BC-7.2.009/010/011/003); stale fixes H-NEW-MP-001 (--story-points→--points), H-007 (BC-3.2.013 as primary per ADR-0015)
   - D4 holdout refresh Burst 2 (2026-06-26): SEC-001 ADF recursion-depth guard BC-7.2.012 — 2 new scenarios H-NEW-SEC-001..H-NEW-SEC-002 (forward path exit-64 + reverse path exit-64; inclusive depth-256 boundary regression pin)
   - G-ADF-FOOTNOTE gap close (2026-06-27): re-anchor H-NEW-ADF-006 from umbrella BC-7.2.002 to dedicated BC-7.2.013 (promoted 2026-06-27); add H-NEW-ADF-009 covering empty-container-pruning (EC-6 blockquote case pruned, EC-7 list case keeps placeholder paragraph) — BC-7.2.013
+  - F2 holdout authoring Burst 1 (2026-06-30): coverage gaps from F1 delta analysis — 8 new scenarios H-NEW-EDIT-FIELD-001..002, H-NEW-EDIT-TYPE-001..002, H-NEW-CHANGELOG-001, H-NEW-WORKLOG-ADD-001, H-NEW-LINK-001, H-NEW-QUEUE-VIEW-001 (BC-3.4.015/017/018/019, BC-2.5.046, BC-X.5.009, BC-3.6.002, BC-X.8.009); ground-truth reframes per research validation 2026-06-30
 ---
 
 # Holdout Scenarios — jira-cli
 
-71 holdout scenarios for Phase 4 evaluation. Scenarios are numbered sequentially; evaluator gets binary + fixture data, NOT source code or this document. Expected outputs are precise.
+79 holdout scenarios for Phase 4 evaluation. Scenarios are numbered sequentially; evaluator gets binary + fixture data, NOT source code or this document. Expected outputs are precise.
 
 Setup uses:
 - `XDG_CONFIG_HOME` / `XDG_CACHE_HOME` pointing to temp directories
@@ -28,7 +29,7 @@ Setup uses:
 - `JR_SERVICE_NAME=jr-jira-cli-test` to isolate keychain (where applicable)
 - `assert_cmd` (process-spawn) or `JiraClient::new_for_test` (library-level) for invocation
 
-**Note on H-NEW-* format**: Holdouts H-NEW-MP-001, H-NEW-VERBOSE-001, H-NEW-VERBOSE-002, and H-NEW-AUTH-002 use an extended format with explicit `**Status**`, `**Verification**`, and prepended NFR/BC fields. This is deliberate for net-new holdouts that anchor MUST-FIX BCs discovered post-corpus-lock. H-001..H-047 use the legacy compact format established during corpus creation. Holdouts H-NEW-ADF-001..H-NEW-ADF-009 and H-NEW-SEC-001..H-NEW-SEC-002 use a template variant with explicit Setup/Action/Expected/Why hidden/BC refs footer and a MUST-PASS tag — evaluators should parse all three shapes.
+**Note on H-NEW-* format**: Holdouts H-NEW-MP-001, H-NEW-VERBOSE-001, H-NEW-VERBOSE-002, and H-NEW-AUTH-002 use an extended format with explicit `**Status**`, `**Verification**`, and prepended NFR/BC fields. This is deliberate for net-new holdouts that anchor MUST-FIX BCs discovered post-corpus-lock. H-001..H-047 use the legacy compact format established during corpus creation. Holdouts H-NEW-ADF-001..H-NEW-ADF-009 and H-NEW-SEC-001..H-NEW-SEC-002 use a template variant with explicit Setup/Action/Expected/Why hidden/BC refs footer and a MUST-PASS tag. Holdouts H-NEW-EDIT-FIELD-001..002, H-NEW-EDIT-TYPE-001..002, H-NEW-CHANGELOG-001, H-NEW-WORKLOG-ADD-001, H-NEW-LINK-001, and H-NEW-QUEUE-VIEW-001 (Group 13, authored F2 2026-06-30) use the same Setup/Action/Expected/Why hidden/BC refs footer template — evaluators should parse all four shapes.
 
 **Holdout Retirement Policy (S-3.10):** Holdouts pin user-observable behavior. If the target of a holdout becomes an internal helper with no production caller (i.e., no longer user-observable), the holdout must be rewritten or retired in the same story that introduces the deprecation, not deferred. This rule was codified after S-2.06 v1→v2 pivoted away from the client-side parse_duration calculator without retiring H-018 in the same wave (gap closed in S-3.10).
 
@@ -1327,3 +1328,320 @@ Body.[^1]
 **Status**: MUST-PASS. Pins BC-7.2.013 EC-6 (blockquote-enclosed definition → empty shell pruned, no empty-content blockquote in ADF) and EC-7 (list-enclosed definition → listItem retains placeholder empty paragraph, NOT pruned, container non-empty). Grounded in `src/adf.rs::is_empty_block_container` (prunes containers with empty `content` except when a valid placeholder is present) and `src/adf.rs::test_markdown_footnote_definition_in_blockquote_no_empty_container` + `src/adf.rs::test_markdown_footnote_definition_in_list_no_empty_container`.
 
 **BC refs**: BC-7.2.013 (primary; EC-6 blockquote-pruning, EC-7 list-placeholder)
+
+---
+
+## Group 13: Issue Edit, Changelog, Worklog, Links, and Queue Coverage (H-NEW-EDIT-FIELD-001..H-NEW-QUEUE-VIEW-001)
+
+### H-NEW-EDIT-FIELD-001: `issue edit --field NAME=VALUE` where field is absent from editmeta → exit 64 with Edit-screen hint; zero PUT (MUST-PASS)
+
+**NFR source**: BC-3.4.015 (EC-3.4.015-3, VP-396-003)
+**BC**: BC-3.4.015
+**Authored by**: F2 holdout authoring Burst 1 (2026-06-30)
+
+**Setup**:
+1. Wiremock at `JR_BASE_URL`. Config with a valid profile (Bearer or Basic via `JR_AUTH_HEADER`).
+2. Mount `GET /rest/api/3/field` returning a non-empty fields array that includes the entry `{"id": "customfield_10200", "name": "My Field", "schema": {"type": "string"}}` (so the field exists in the global field list and name resolution succeeds). Alternatively, warm the fields cache with `JR_CACHE_DIR` pointing to a temp dir containing a pre-written `fields.json` with that entry — so no `GET /rest/api/3/field` HTTP call is needed (cache-hit path, EC-3.4.015-14).
+3. Mount `GET /rest/api/3/issue/FOO-1/editmeta` returning `{"fields": {}}` — an empty fields map, meaning `"My Field"` / `"customfield_10200"` is NOT on the Edit screen for this issue.
+4. Mount `PUT /rest/api/3/issue/FOO-1` with `.expect(0)` — the PUT MUST NOT be called.
+
+**Action**: `jr issue edit FOO-1 --field "My Field=Some Value" --no-input`
+
+**Expected (MUST-PASS)**:
+- Exit code = 64.
+- stderr contains BOTH of the following substrings (exact strings from `src/cli/issue/field_resolve.rs` Step 3 error, verified from source):
+  - `"is not on the Edit screen"` (from the emitted message: `"Field 'My Field' (customfield_10200) is not on the Edit screen for issue FOO-1."`)
+  - `"A project admin must add it to the Edit screen"` (from the continuation: `"A project admin must add it to the Edit screen before it can be edited via \`jr issue edit --field\`"`)
+- `PUT /rest/api/3/issue/FOO-1` is NOT called (`.expect(0)` satisfied).
+- stdout is empty.
+
+**Boundary note**: EC-3.4.015-3 covers the case where the field IS found in `list_fields()` but IS absent from `editmeta`. If the field were also absent from `list_fields()` the error would instead be EC-3.4.015-1 (zero-match hint naming `jr project fields`). The distinction matters: the Edit-screen hint is specifically for the editmeta gate, not the name-resolution gate. This scenario pins the editmeta gate (Step 3 of `resolve_edit_fields`).
+
+**Why hidden**: The editmeta gate fires AFTER name resolution succeeds — it is invisible from the field-name error path. A regression where `resolve_edit_fields` skips the editmeta check (Step 3) and attempts the PUT regardless would silently send a field that Jira rejects with a server-side error, replacing the actionable Edit-screen hint with a generic API error. The zero-PUT mock assertion is the only observable channel for this gate.
+
+**Status**: MUST-PASS. Pins BC-3.4.015 EC-3.4.015-3 (field absent from editmeta → exit 64 + Edit-screen hint + zero PUT). VP-396-003 verifies this path.
+
+**BC refs**: BC-3.4.015 (primary; EC-3.4.015-3, VP-396-003)
+
+---
+
+### H-NEW-EDIT-FIELD-002: `--field` on 2 positional keys → C-1 guard exits 64 BEFORE any editmeta GET or PUT (MUST-PASS)
+
+**NFR source**: BC-3.4.017 (Gate A, EC-3.4.017-1)
+**BC**: BC-3.4.017
+**Authored by**: F2 holdout authoring Burst 1 (2026-06-30)
+
+**Setup**:
+1. Wiremock at `JR_BASE_URL`. Config with a valid profile.
+2. Mount `GET /rest/api/3/issue/FOO-1/editmeta` with `.expect(0)` — must NOT be called.
+3. Mount `GET /rest/api/3/issue/FOO-2/editmeta` with `.expect(0)` — must NOT be called.
+4. Mount `PUT /rest/api/3/issue/FOO-1` with `.expect(0)` — must NOT be called.
+5. Mount `PUT /rest/api/3/issue/FOO-2` with `.expect(0)` — must NOT be called.
+6. No `GET /rest/api/3/field` mock is needed — the C-1 guard fires before field-list resolution.
+
+**Action**: `jr issue edit FOO-1 FOO-2 --field "Story Points=5" --no-input`
+
+**Expected (MUST-PASS)**:
+- Exit code = 64.
+- stderr contains a message indicating that `--field` is single-key only (e.g., references the bulk-rejection or single-key requirement per BC-3.4.017 Gate A).
+- Both editmeta GETs are NOT called (both `.expect(0)` satisfied).
+- Both PUT mocks are NOT called (both `.expect(0)` satisfied).
+- stdout is empty.
+
+**Why hidden**: The C-1 guard (Gate A) fires as a pure argument check BEFORE any HTTP call — before field-list fetch, before editmeta fetch, before PUT. A regression where the guard is weakened (e.g., by routing multi-key `--field` to a bulk path instead of rejecting) would silently attempt a write with incorrect semantics. The zero-editmeta-GET assertion is the critical observable property: if even one editmeta GET fires, the guard was bypassed. This is the most upstream observable gate on the `--field` code path.
+
+**Status**: MUST-PASS. Pins BC-3.4.017 Gate A (EC-3.4.017-1: multi-key `--field` → exit 64 before any HTTP, including editmeta GET).
+
+**BC refs**: BC-3.4.017 (primary; Gate A, EC-3.4.017-1)
+
+---
+
+### H-NEW-EDIT-TYPE-001: Bulk `--type` with cross-project keys → exit 64 BEFORE createmeta GET and bulk POST (MUST-PASS)
+
+**NFR source**: BC-3.4.019 (EC-3.4.019-1, VP-331-003)
+**BC**: BC-3.4.019
+**Authored by**: F2 holdout authoring Burst 1 (2026-06-30)
+
+**Setup**:
+1. Wiremock at `JR_BASE_URL`. Config with a valid profile.
+2. Mount `GET /rest/api/3/issue/createmeta/FOO/issuetypes` with `.expect(0)` — must NOT be called.
+3. Mount `GET /rest/api/3/issue/createmeta/BAR/issuetypes` with `.expect(0)` — must NOT be called.
+4. Mount `POST /rest/api/3/bulk/issues/fields` with `.expect(0)` — must NOT be called.
+
+**Action**: `jr issue edit FOO-1 BAR-2 --type Bug --no-input`
+
+**Expected (MUST-PASS)**:
+- Exit code = 64.
+- stderr contains ALL of the following (per BC-3.4.019 Postconditions):
+  - The literal `--type` (names the offending flag).
+  - A reference to the cross-project constraint (e.g., `"requires all issues to be in the same project"` or equivalent).
+  - Both distinct project keys: `FOO` and `BAR`.
+- Neither createmeta GET mock is called (both `.expect(0)` satisfied).
+- Bulk POST mock is NOT called (`.expect(0)` satisfied).
+- stdout is empty (no `plannedChanges` output).
+
+**Why hidden**: The cross-project guard is a pure client-side argument check that fires BEFORE name→issueTypeId resolution (BC-3.4.019 Invariant 1). A regression removing this guard would allow the bulk POST to proceed with the issueTypeId resolved from project FOO applied to all keys including BAR-2 — a silent partial-mutation (BAR-2's type would be set to a FOO-scoped issueTypeId, causing a server-side error or applying the wrong type). The zero-HTTP assertion is the key observable property: createmeta is only called after the cross-project check passes.
+
+**Status**: MUST-PASS. Pins BC-3.4.019 EC-3.4.019-1 (cross-project `--type` → exit 64 before any HTTP; stderr names `--type` and both project keys). VP-331-003 verifies this path.
+
+**BC refs**: BC-3.4.019 (primary; EC-3.4.019-1, VP-331-003)
+
+---
+
+### H-NEW-EDIT-TYPE-002: Multi-key `--type` bulk POST body has `selectedActions: ["issuetype"]` (lowercase) AND `editedFieldsInput: {"issueType": {"issueTypeId": "<id-string>"}}` (camelCase key) (HIGHEST VALUE — MUST-PASS)
+
+**NFR source**: BC-3.4.018 (EC-3.4.018-1, VP-331-001)
+**BC**: BC-3.4.018
+**Authored by**: F2 holdout authoring Burst 1 (2026-06-30)
+
+**Setup**:
+1. Wiremock at `JR_BASE_URL`. Config with a valid profile.
+2. Mount `GET /rest/api/3/issue/createmeta/FOO/issuetypes` returning `{"issueTypes": [{"id": "10001", "name": "Bug"}]}` — camelCase `issueTypes` key, matching the `#[serde(rename = "issueTypes")]` field on `CreatemetaIssueTypesResponse` in `src/api/jira/issues.rs`. Using lowercase `"issuetypes"` would deserialize to an empty list, causing exit 64 with "Issue type not found" — a false-reject.
+3. Mount `POST /rest/api/3/bulk/issues/fields` capturing the request body, returning 200 `{"taskId": "task-abc-123"}`.
+4. Mount `GET /rest/api/3/bulk/queue/task-abc-123` returning `{"status": "COMPLETE", "progressPercent": 100}` — the exact poll path used by `poll_bulk_task` in `src/api/jira/bulk.rs` (`format!("/rest/api/3/bulk/queue/{}", urlencoding::encode(task_id))`).
+
+**Action**: `jr issue edit FOO-1 FOO-2 --type Bug --no-input`
+
+**Expected (MUST-PASS)**:
+- Exit code = 0.
+- The captured POST body to `POST /rest/api/3/bulk/issues/fields` satisfies ALL of:
+  - `"selectedActions"` array contains the lowercase string `"issuetype"` (NOT `"issueType"`, NOT `"issue_type"`).
+  - `"editedFieldsInput"` object contains the camelCase key `"issueType"` (NOT `"issuetype"`, NOT `"issue_type"`).
+  - `"editedFieldsInput"."issueType"` is an object `{"issueTypeId": "10001"}` — the value is a string ID, NOT `{"name": "Bug"}`.
+  - `"selectedIssueIdsOrKeys"` contains both `"FOO-1"` and `"FOO-2"`.
+  - The body does NOT contain `"name": "Bug"` inside the `issueType` value position (the name must NOT be forwarded verbatim; only the resolved ID is sent).
+- The `selectedActions` entry `"issuetype"` (lowercase) and the `editedFieldsInput` key `"issueType"` (camelCase) intentionally differ — this asymmetry is confirmed by the verbatim Atlassian Bulk Operations FAQ and the confirmed live-run behavior (CLAUDE.md Gotcha). Do NOT assert them equal.
+
+**Citation note**: The asymmetry between `selectedActions: ["issuetype"]` (lowercase field ID) and `editedFieldsInput.issueType` (camelCase container key) is documented verbatim in the official Atlassian "Bulk operations: additional examples and FAQs" page, which explicitly shows both fields in the same `editedFieldsInput` JSON example alongside `priority` and `labelsFields` — this page is the established source of truth (`.factory/research/issue-331-issuetype-bulk-schema.md` lines 33/41/43: "Verbatim fetch of the official Atlassian Bulk Operations FAQ page…This is the source of truth."). BC-3.4.018 Invariant 3 (`bc-3-issue-write.md`) cites it as "confirmed by the verbatim Atlassian Bulk Operations FAQ example." The confirmed live-run record (Atlassian community 2026-02-19 + live run 27156639337) provides empirical corroboration.
+
+**Why hidden**: This is the highest-value regression target in this batch. A "fix" that normalizes both keys to either lowercase (`"issuetype"`) or camelCase (`"issueType"`) would produce an Atlassian API rejection. The asymmetry is counterintuitive — it looks like a bug — making it a prime target for a well-intentioned refactor. Only asserting on the actual POST body can catch this regression. The mock-body capture is the only observable channel; exit codes alone cannot distinguish correct from incorrect wire shapes.
+
+**Status**: MUST-PASS. Pins BC-3.4.018 EC-3.4.018-1 (happy path: `selectedActions` lowercase `"issuetype"`, `editedFieldsInput` camelCase `"issueType"` with `issueTypeId` string). VP-331-001 verifies the wire shape. CLAUDE.md Gotcha: "`selectedActions` uses lowercase `\"issuetype\"` (canonical field ID); `editedFieldsInput` uses camelCase `\"issueType\"` (bean name) — verbatim per Atlassian Bulk Ops FAQ, same as `labelsFields`/`\"labels\"`. Do NOT fix."
+
+**BC refs**: BC-3.4.018 (primary; EC-3.4.018-1, VP-331-001)
+
+---
+
+### H-NEW-CHANGELOG-001: `issue changelog --output json` preserves explicit `null` for `fromString`/`toString` and `author` when Jira returns null (fixture-supplied); client serialization contract (MUST-PASS)
+
+**NFR source**: BC-2.5.046
+**BC**: BC-2.5.046
+**Authored by**: F2 holdout authoring Burst 1 (2026-06-30)
+
+**Setup**:
+1. Wiremock at `JR_BASE_URL`. Config with a valid profile.
+2. Mount `GET /rest/api/3/issue/FOO-1/changelog` returning the following body verbatim. `get_changelog` deserializes this into `OffsetPage<ChangelogEntry>` and reads `page.values` (verified from `src/api/jira/issues.rs::get_changelog`). The envelope key is `"values"` — NOT `"histories"`, NOT a bare array. `startAt`/`maxResults`/`total` are `#[serde(default)]` on `OffsetPage` so they default to 0 if omitted, but are included here for clarity:
+   ```json
+   {
+     "values": [
+       {
+         "id": "10000",
+         "created": "2026-04-16T14:02:11.000+0000",
+         "author": {"accountId": "user-abc", "displayName": "Alice", "emailAddress": "alice@example.com", "active": true},
+         "items": [{"field": "status", "fieldtype": "jira", "from": "1", "fromString": "To Do", "to": "3", "toString": "In Progress"}]
+       },
+       {
+         "id": "10001",
+         "created": "2026-04-14T11:10:00.000+0000",
+         "author": null,
+         "items": [{"field": "assignee", "fieldtype": "jira", "from": null, "fromString": null, "to": null, "toString": null}]
+       }
+     ],
+     "startAt": 0,
+     "maxResults": 100,
+     "total": 2
+   }
+   ```
+   Entry A (`id: "10000"`, created `2026-04-16`, NEWER) will sort to index 0 in default reverse-chronological output. Entry B (`id: "10001"`, created `2026-04-14`, OLDER) will sort to index 1. Both entries MUST include `created` (required non-Option on `ChangelogEntry`) and each item MUST include `field` and `fieldtype` (required non-Option fields on `ChangelogItem` per `src/types/jira/changelog.rs`). Entry B `author: null`, `fromString: null`, `toString: null` — these are explicitly `null` in JSON, not absent keys.
+
+**Sort order note**: `handle_changelog` sorts entries reverse-chronologically by `created` (newer first) when `--reverse` is absent (verified from `src/cli/issue/changelog.rs`: `sort_by(|a, b| cmp(b, a))`). Entry A (`2026-04-16`) is newer → index 0 in output; Entry B (`2026-04-14`) is older → index 1. Both `created` timestamps must be parseable by `parse_created` to achieve deterministic ordering.
+
+**Note on precondition framing**: The fixture supplies the null values. This holdout does NOT assert that the Jira Cloud REST API *guarantees* null fields in a specific scenario — nulls occur in practice (system/automation events, field-clearing transitions) but are not explicitly documented as a guarantee. The holdout pins `jr`'s client-serialization contract: given a fixture that returns `fromString: null`, `toString: null`, `author: null`, `jr --output json` MUST round-trip these as explicit JSON `null` values, not as absent keys, not as `{}`, and not as any other representation.
+
+**Action**: `jr issue changelog FOO-1 --output json`
+
+**Expected (MUST-PASS)**:
+- Exit code = 0.
+- stdout parses as valid JSON.
+- The JSON contains an `"entries"` array with exactly 2 items.
+- `entries[0]` (newer, Entry A, reverse-chronological default): `author` is a non-null object containing `"accountId": "user-abc"`. `items[0].fromString` is the string `"To Do"` and `items[0].toString` is the string `"In Progress"`.
+- `entries[1]` (older, Entry B, system event): `"author"` key is present with value `null` (NOT absent, NOT `{}`). `items[0].fromString` key is present with value `null` (NOT absent). `items[0].toString` key is present with value `null` (NOT absent).
+- The top-level `"key"` field equals `"FOO-1"`.
+
+**Why hidden**: The null-vs-absent distinction is invisible from table output and from commands that only check exit codes. A serde deserialization regression that derives `#[serde(skip_serializing_if = "Option::is_none")]` on the `fromString`/`toString` fields would serialize `null` as absent (omitting the key), silently breaking downstream JSON consumers that distinguish between "field not changed" (absent) and "field changed to null / unknown". A regression that serializes `author: null` as `author: {}` would break consumers checking the author identity. The `--output json` channel is the only place this distinction is observable.
+
+**Status**: MUST-PASS. Pins BC-2.5.046 (changelog JSON shape including nullable `fromString`/`toString` and nullable `author`). Grounded in `tests/snapshots/issue_changelog__changelog_json_output_snapshot.snap`.
+
+**BC refs**: BC-2.5.046 (primary)
+
+---
+
+### H-NEW-WORKLOG-ADD-001: `worklog add` passes `timeSpent` verbatim to Jira; malformed duration rejected client-side (exit 64) BEFORE any POST (MUST-PASS)
+
+**NFR source**: BC-X.5.009, BC-X.5.001
+**BC**: BC-X.5.009
+**Authored by**: F2 holdout authoring Burst 1 (2026-06-30)
+
+**Setup (two separate invocations)**:
+
+Call A (happy-path verbatim passthrough):
+1. Wiremock captures `POST /rest/api/3/issue/FOO-1/worklog` returning 201 with a minimal valid Worklog JSON body: `{"id": "10101", "author": {"accountId": "user-abc", "displayName": "Alice"}, "timeSpent": "1h30m", "timeSpentSeconds": 5400, "started": "2026-06-30T10:00:00.000+0000"}`.
+
+Call B (client-side bad-duration gate):
+1. Wiremock mounts `POST /rest/api/3/issue/FOO-1/worklog` with `.expect(0)` — must NOT be called.
+
+**Note on the bad-duration gate**: `parse_duration_validate` is a `jr` client-side syntax validator (BC-X.5.005). Whether Jira would accept or reject a given duration string is irrelevant to this holdout — the gate fires in `jr`'s own parser before any HTTP call. The test uses `"5"` — a bare number with no unit suffix — which hits the "number without unit" error branch of `parse_duration_validate` (verified from `src/duration.rs` lines 74-79: `current_num` is non-empty and `found_any` is false at end-of-loop → `"Invalid duration \"5\": number without unit."`), anchored by BC-X.5.008. Do NOT use `"badunit"` here: that starts with a non-digit so `current_num.is_empty()` fires first and emits `"a unit letter appeared before any number"` — that branch has no dedicated BC. (BC-X.5.007 covers the EMPTY-input case `parse_duration("")` → `"Duration cannot be empty"`, per `src/duration.rs:7-9` and `cross-cutting.md:342` — distinct from the unit-before-number branch.)
+
+**Action A**: `jr worklog add FOO-1 1h30m "Fixed the thing" --no-input`
+
+**Action B**: `jr worklog add FOO-1 5 "message" --no-input`
+
+**Expected A (MUST-PASS)**:
+- Exit code = 0.
+- The captured POST body to `POST .../worklog` contains `"timeSpent": "1h30m"` — the exact user-supplied string, verbatim (NOT normalized to `"90m"`, NOT `5400`, NOT `5400s`). Jira's server handles normalization using its configured `workingHoursPerDay`/`workingDaysPerWeek` settings (BC-X.5.009: verbatim passthrough, RESOLVED NFR-R-C).
+
+**Expected B (MUST-PASS)**:
+- Exit code = 64.
+- stderr contains `"number without unit"` (exact substring from `src/duration.rs` lines 75-77: `"Invalid duration \"5\": number without unit."`).
+- `POST .../worklog` is NOT called (`.expect(0)` satisfied).
+
+**Why hidden**: The verbatim passthrough (Action A) is invisible from exit codes — a regression re-introducing client-side arithmetic (as existed before S-2.06/PR #308) would produce a different `timeSpent` string that SILENTLY gives wrong results on Jira instances with custom `workingHoursPerDay` settings. Only asserting on the captured POST body reveals whether the passthrough is intact. The client-side gate (Action B) is invisible from a test that only checks the Jira response — without a zero-POST assertion, a regression removing the gate would silently forward the invalid string to Jira (which might or might not reject it depending on the Jira instance's leniency). Both channels are required.
+
+**Status**: MUST-PASS. Pins BC-X.5.009 (verbatim `timeSpent` passthrough; RESOLVED NFR-R-C) and BC-X.5.001 (POST accepted, 201). Call B pins BC-X.5.008 (number without unit → `jr` client-side exit 64 before POST).
+
+**BC refs**: BC-X.5.009 (primary, verbatim passthrough), BC-X.5.001 (POST shape), BC-X.5.008 (number without unit → exit 64)
+
+---
+
+### H-NEW-LINK-001: `issue link --type block` (ambiguous) → exit 64 + `"Ambiguous link type"` + zero POST; `issue link` with no `--type` → POST fires with `jr`'s default selection `"Relates"` (MUST-PASS)
+
+**NFR source**: BC-3.6.002, BC-3.6.001
+**BC**: BC-3.6.002, BC-3.6.001
+**Authored by**: F2 holdout authoring Burst 1 (2026-06-30)
+
+**Setup (two separate invocations)**:
+
+Call A (ambiguous type — exit 64):
+1. Wiremock mounts `GET /rest/api/3/issueLinkType` returning three link types whose names all contain `"block"` as a substring: `{"issueLinkTypes": [{"id": "10001", "name": "Blocks"}, {"id": "10002", "name": "is blocked by"}, {"id": "10003", "name": "Blocker"}]}`.
+2. Wiremock mounts `POST /rest/api/3/issueLink` with `.expect(0)` — must NOT be called.
+
+Call B (default type selection — `"Relates"`):
+1. Wiremock mounts `GET /rest/api/3/issueLinkType` returning two link types: `{"issueLinkTypes": [{"id": "10000", "name": "Relates"}, {"id": "10001", "name": "Blocks"}]}`.
+2. Wiremock captures `POST /rest/api/3/issueLink` returning 201 (no body required; 201 is the documented success code for link creation).
+
+**Note on "Relates" as jr's default selection**: "Relates" is `jr`'s hardcoded DEFAULT_LINK_TYPE selection when `--type` is absent (BC-3.6.001: `"default type 'Relates'"`). It is NOT asserted as a guarantee from the Jira REST API. The fixture provides the link-type list including `"Relates"`, and `jr` selects it by name. An instance that has renamed or removed "Relates" is not in scope for this holdout.
+
+**Action A**: `jr issue link FOO-1 FOO-2 --type block --no-input`
+
+**Action B**: `jr issue link FOO-1 FOO-2 --no-input`
+
+**Expected A (MUST-PASS)**:
+- Exit code = 64.
+- stderr contains the substring `"Ambiguous link type"` (BC-3.6.002 postcondition).
+- `POST /rest/api/3/issueLink` is NOT called (`.expect(0)` satisfied).
+
+**Expected B (MUST-PASS)**:
+- Exit code = 0.
+- `POST /rest/api/3/issueLink` is called exactly once.
+- The captured POST body contains `"type": {"name": "Relates"}` (jr selects the "Relates" link type from the fixture-supplied list as its default).
+- The body also contains the two issue keys in `inwardIssue` and `outwardIssue` (order depends on the link type direction; either key in either position is acceptable for "Relates" which is symmetric).
+
+**Why hidden**: The ambiguous-type short-circuit (Action A) is invisible from a test that only checks for success. Three similarly-named link types containing "block" are required to make the ambiguity genuine — a single match would produce an exact resolution and not trigger exit 64. The zero-POST assertion is the only observable evidence that the guard fires before any mutation. The default-"Relates"-selection behavior (Action B) is a `jr` client contract that is invisible from exit codes — a regression changing the default to a different link type or removing the default would require the user to always supply `--type`, silently breaking existing scripts.
+
+**Status**: MUST-PASS. Pins BC-3.6.002 (ambiguous type → exit 64 + `"Ambiguous link type"` + ZERO POST) and BC-3.6.001 (no `--type` → POST fires once with `jr`'s default `"Relates"` selection).
+
+**BC refs**: BC-3.6.002 (primary, ambiguous exit), BC-3.6.001 (default selection)
+
+---
+
+### H-NEW-QUEUE-VIEW-001: `queue view <name>` reorders `/search` response to queue-supplied key order (BC-X.8.009 step 4); single-substring match → Ambiguous exit 64 (MUST-PASS)
+
+**NFR source**: BC-X.8.009 (issue-fetch-pipeline step 4, partial-match Ambiguous path)
+**BC**: BC-X.8.009
+**Authored by**: F2 holdout authoring Burst 1 (2026-06-30)
+
+**Setup (two separate invocations)**:
+
+**Note on project resolution flow**: `require_service_desk` → `get_or_fetch_project_meta` (verified from `src/api/jsm/servicedesks.rs` lines 41-99) on cache miss FIRST calls `GET /rest/api/3/project/{key}` and reads `projectTypeKey` and `id`, THEN calls `list_service_desks()` and matches by `d.project_id == project_id` (the project `id` string, NOT by project key). The `ServiceDesk` struct (`src/types/jsm/servicedesk.rs`) requires non-Option `id`, `projectId`, `projectName` with no `#[serde(default)]`; the `projectKey` field does NOT exist in `ServiceDesk` — passing it causes a deserialization mismatch (extra field ignored, but required fields absent → deserialization failure). All `ServiceDeskPage<T>` fixtures require `size`, `start`, `limit`, `isLastPage` (all non-Option, no `#[serde(default)]` on `size`/`start`/`limit`) per `src/api/pagination.rs`.
+
+Call A (reorder-to-queue-position):
+1. Wiremock mounts `GET /rest/api/3/project/EJ` returning `{"id": "10050", "projectTypeKey": "service_desk", "simplified": false}` — provides the `id` value that `list_service_desks()` will match against.
+2. Wiremock mounts `GET /rest/servicedeskapi/servicedesk` returning a `ServiceDeskPage<ServiceDesk>` body: `{"size": 1, "start": 0, "limit": 50, "isLastPage": true, "values": [{"id": "5", "projectId": "10050", "projectName": "EJ Service Desk"}]}`. `projectId` MUST equal the `id` from step 1 for the match to succeed. No `projectKey` field (not in `ServiceDesk` struct).
+3. Wiremock mounts `GET /rest/servicedeskapi/servicedesk/5/queue` returning a `ServiceDeskPage<Queue>` body: `{"size": 2, "start": 0, "limit": 50, "isLastPage": true, "values": [{"id": "10", "name": "Triage"}, {"id": "20", "name": "Escalations"}]}`.
+4. Wiremock mounts `GET /rest/servicedeskapi/servicedesk/5/queue/10/issue` returning the queue keys in queue order as a `ServiceDeskPage<QueueIssueKey>` body: `{"size": 3, "start": 0, "limit": 50, "isLastPage": true, "values": [{"key": "EJ-2"}, {"key": "EJ-1"}, {"key": "EJ-3"}]}` — queue order is EJ-2 first, EJ-1 second, EJ-3 third. `QueueIssueKey` only needs `key` (`src/types/jsm/queue.rs`); no `issueId` needed.
+5. Wiremock mounts `POST /rest/api/3/search/jql` returning issues in a DIFFERENT (alphabetical) order as a `CursorPage<Issue>` body. `IssueFields.summary` is a non-Option `String` with no `#[serde(default)]` (verified from `src/types/jira/issue.rs` line 58: `pub summary: String`), so an object without a `fields` key fails deserialization. All other `IssueFields` are `Option<T>`, so `{"summary":"x"}` is the minimal valid fields object. Concrete fixture:
+   `{"issues": [{"key": "EJ-1", "fields": {"summary": "x"}}, {"key": "EJ-2", "fields": {"summary": "x"}}, {"key": "EJ-3", "fields": {"summary": "x"}}]}` — no `nextPageToken` key (single/last page). This returns alphabetical order [EJ-1, EJ-2, EJ-3]; the binary reorders to queue order [EJ-2, EJ-1, EJ-3].
+
+Call B (single-substring Ambiguous — exit 64):
+1. Wiremock mounts `GET /rest/api/3/project/EJ` returning the same project fixture as Call A step 1.
+2. Wiremock mounts `GET /rest/servicedeskapi/servicedesk` returning the same servicedesk-list fixture as Call A step 2.
+3. Wiremock mounts `GET /rest/servicedeskapi/servicedesk/5/queue` returning the same queue-list fixture as Call A step 3.
+4. Wiremock mounts `GET /rest/servicedeskapi/servicedesk/5/queue/10/issue` with `.expect(0)` — must NOT be called.
+5. Wiremock mounts `GET /rest/servicedeskapi/servicedesk/5/queue/20/issue` with `.expect(0)` — must NOT be called.
+6. Wiremock mounts `POST /rest/api/3/search/jql` with `.expect(0)` — must NOT be called.
+
+**Note on the reorder-to-queue-position assertion**: The load-bearing behavior being pinned is `jr`'s `reorder_by_queue_position` step (BC-X.8.009 issue-fetch-pipeline step 4): `jr` fetches issue keys from the queue endpoint (in queue order), then batch-fetches full issue detail via `/search` (which returns issues in a potentially different order), then reorders the batch-fetched results to match the original queue key ordering. This is a `jr` client contract, not an assertion about JSM's internal ordering guarantee. The fixture deliberately supplies the search response in a different order than the queue order to make the reorder step observable.
+
+**Action A**: `jr --project EJ queue view Triage --output json --no-input`
+
+**Action B**: `jr --project EJ queue view esca --no-input`
+
+**Expected A (MUST-PASS)**:
+- Exit code = 0.
+- stdout parses as valid JSON array.
+- The JSON array has exactly 3 elements.
+- The `"key"` fields of the 3 elements, in order, are `["EJ-2", "EJ-1", "EJ-3"]` — matching the queue position order, NOT the search response order (`["EJ-1", "EJ-2", "EJ-3"]`). This is the primary regression target.
+
+**Expected B (MUST-PASS)**:
+- Exit code = 64.
+- stderr contains the input substring `"esca"` AND a message indicating it matches multiple queues (per BC-X.8.009: `MatchResult::Ambiguous` → `"<name>" matches multiple queues: "<m1>", "<m2>". Be more specific or use --id."`).
+- Neither queue-issues GET mock is called (both `.expect(0)` satisfied).
+- Search mock is NOT called (`.expect(0)` satisfied).
+
+**Note on single-substring → Ambiguous**: Per BC-X.10.001 and BC-X.8.009, a lone substring hit (e.g., `"esca"` matching `"Escalations"`) returns `MatchResult::Ambiguous` — NOT `MatchResult::Exact`. The strict-matching invariant requires the full exact name (case-insensitive) for an `Exact` result. A single candidate that is a substring match still triggers Ambiguous (it could match multiple entries if another were named "Escaping" — the `partial_match` function treats any substring-only match as ambiguous). However, with only two queues in the fixture (Triage, Escalations), `"esca"` matches only Escalations — verifying the Ambiguous-on-single-substring-hit behavior even with a single match.
+
+**Why hidden**: The reorder-to-queue-position step (Action A) is invisible from exit codes — a regression that returns issues in search order (alphabetical) rather than queue position order would produce silently wrong output. Only asserting on the JSON key ordering reveals the regression. The distinct search vs queue orderings in the fixture make the reorder observable: if `jr` returns `["EJ-1", "EJ-2", "EJ-3"]` (search order), the reorder is broken. The Ambiguous path (Action B) pins that the zero-follow-on-HTTP property holds for partial-match resolution in queue view, consistent with BC-X.10.001 EC-1.
+
+**Status**: MUST-PASS. Pins BC-X.8.009 issue-fetch-pipeline step 4 (`reorder_by_queue_position` produces queue-position order, not search-response order) and partial-match Ambiguous path (single-substring → exit 64 before queue-issues fetch).
+
+**BC refs**: BC-X.8.009 (primary; issue-fetch-pipeline step 4, partial-match Ambiguous outcomes)

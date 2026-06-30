@@ -7,13 +7,31 @@ producer: state-manager
 timestamp: 2026-05-08T00:00:00
 cycle: "cycle-001"
 inputs: [STATE.md]
-input-hash: "45354f1"
+input-hash: "9ed7cb6"
 traces_to: STATE.md
 ---
 
 # Archived Session Checkpoints — cycle-001
 
 Superseded checkpoints are archived here when STATE.md is updated with a newer one.
+
+---
+
+## Checkpoint archived 2026-06-29 (Session durability snapshot — MUTATION-CI-TIMEOUT CLOSED; DEC-145 recorded)
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-06-29 |
+| **Status** | **IDLE — Session durability snapshot 2026-06-29. S-PG-MERGE-AUTH-BYPASS re-assessment recorded (2026-06-28). Both drift items (PG-MERGE-AUTH-BYPASS + PG-PR-MANAGER-OVERREACH) downgraded MEDIUM→LOW. Constraint 4 (poll loops) CODIFIED; Constraints 1–3 PARTIAL with defense-in-depth. Story 91 re-scoped to 3 residual engine-prompt edits; deferred pending engine-source access. DEC-145. MUTATION-CI-TIMEOUT CLOSED (PR #567 → develop @ 3b122a8). cargo-mutants HARD-REQUIRED; --timeout 240; 5 false-green guards. Stories 97. DEC-144. No active feature_mode_bundle. Zero story worktrees. ACTIVE WATCH-ITEM: MUTANTS-FIRST-SCOPED-PR-CALIBRATION — surface before next scoped-file delivery.** |
+| **Position** | S-PG-MERGE-AUTH-BYPASS re-assessment (2026-06-28): governance-only, develop UNCHANGED @ 3b122a8. DEC-145. Prior: MUTATION-CI-TIMEOUT cycle PR #567 → develop @ 3b122a8 (DEC-144; stories 96→97). cmdb/objtype warm-hit PR #566 @ 822fa18 (DEC-143; stories 95→96). cache warm-hit + swallow PR #565 @ 788bc0f (DEC-142; stories 94→95). v0.6.0-dev.7 shipped (PR #559 @ 342987f). |
+| **develop HEAD** | local = origin/develop = **3b122a8** (PR #567 squash-merged 2026-06-28; confirmed local==origin 2026-06-29). No fast-forward needed. |
+| **factory-artifacts HEAD** | see `git -C .factory log -1` |
+| **Activation** | activation_head: 342987f; activation_version: v0.6.0-dev.7. v0.5.0 STABLE shipped 2026-06-12. |
+| **Counters** | BC **605**. NFR **42**. ADR **16**. Stories **97**. Holdouts **71**. |
+| **Active worktrees** | NONE under `.worktrees/`. Permanent infra only: main checkout (develop) + `.factory` (factory-artifacts) + `.reference/jira-cli` (detached). ZERO story worktrees. |
+| **Open PRs (action needed)** | **NONE.** #567 merged @ 3b122a8. All CLOSED. |
+| **jira-e2e env** | JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ, JR_E2E_ENABLED=true. |
+| **Standing constraints** | Do NOT close #429 (DEC-029). All fixes through full VSDD (DEC-120/121/124/129/130/131/132/134/135/136/138/139/140/141/142/143/144). LESSON-F2-WORKTREE-FIRST. F2-PIECEWISE-PROTOCOL [ENFORCED 2026-06-20]. DEC-128 (CRITICAL). DEC-133 (DEPENDABOT-ACTION-SOAK). DEC-136. DEC-144. |
 
 ---
 

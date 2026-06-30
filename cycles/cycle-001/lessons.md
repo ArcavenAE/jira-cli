@@ -7,7 +7,7 @@ producer: state-manager
 timestamp: 2026-05-07T00:00:00
 cycle: "cycle-001"
 inputs: [STATE.md]
-input-hash: "45354f1"
+input-hash: "9ed7cb6"
 traces_to: STATE.md
 ---
 
@@ -5081,4 +5081,70 @@ Story 91's re-assessment (DEC-145) is the canonical example: pr-manager held at 
 _Recorded: 2026-06-28 — S-PG-MERGE-AUTH-BYPASS re-assessment (DEC-145). State-manager._
 _Tagged: [codified] [audit-methodology] [agent-governance] [behavior-vs-codification] [dec-145]_
 _Related: DEC-128; DEC-145; S-PG-MERGE-AUTH-BYPASS (story 91); audit doc PG-MERGE-AUTH-BYPASS-mitigation-audit-2026-06-28.md._
+
+---
+
+## 2026-06-30 — HOLDOUT-COVERAGE-GAPS cycle (DEC-146)
+
+### [codified] ORCHESTRATOR-RELAYED-FIX-CAUTION REINFORCED — reconcile relayed fixes against internal repo ground-truth before accepting
+
+During the HOLDOUT-COVERAGE-GAPS adversarial cycle, the orchestrator relayed a fix suggestion
+from a research-agent finding: "the Jira Cloud createmeta endpoint returns `values`, not
+`issueTypes`." This contradicted the repo's verbatim FAQ citation in the BC under authorship.
+The adversary (M-1 pass) independently caught the contradiction and flagged it as a BLOCKER.
+A subsequent fresh research validation run confirmed the repo's existing cite was correct: the
+FAQ document verbatim uses `issueTypes`, and the live-Jira-pinned usage in `src/cli/issue/issues.rs`
+also uses `issueTypes`. The "cite schema not FAQ" relayed fix was the defect.
+
+**Lesson (reinforces DEC-140 ORCHESTRATOR-RELAYED-FIX-CAUTION):**
+When the orchestrator relays a fix from an external source (research agent, Copilot review,
+external doc reading), treat it as a CANDIDATE, not an authoritative correction. Before
+propagating the fix into a spec or BC:
+
+1. Locate the authoritative internal ground-truth (existing BC text, CLAUDE.md Gotchas,
+   a live-Jira-pinned test, the verbatim source document being cited).
+2. Compare the relayed fix against the internal ground-truth.
+3. If they conflict, the internal repo ground-truth wins unless the external source is
+   a verbatim quote from the authoritative specification (not an inference or paraphrase).
+
+**Root cause pattern:** Research agents (including Perplexity) infer API shapes from OpenAPI
+specs, SDK docs, and community posts, not from live-validated pins. When the repo contains a
+FAQ verbatim citation, that citation is more trustworthy than a doc-reading inference.
+
+_Discovered: HOLDOUT-COVERAGE-GAPS adversarial pass (M-1), 2026-06-30._
+_Recorded: 2026-06-30. State-manager (DEC-146)._
+_Tagged: [codified] [external-research] [spec-authoring] [orchestrator-relay] [dec-146]_
+_Related: DEC-140 (ORCHESTRATOR-RELAYED-FIX-CAUTION — original); BC-3.4.015 EC-3.4.015-3 (issueTypes vs values drift)._
+
+---
+
+### [codified] REPO-EMPIRICAL-GROUND-TRUTH-BEATS-DOC-INFERENCE — trust live-verified repo facts over document-reading inference
+
+During the HOLDOUT-COVERAGE-GAPS adversarial and research phases, two independent agents
+(the adversary and a fresh research-agent run) both inferred `values` as the correct key name
+for the Jira Cloud `GET /issue/createmeta/{projectIdOrKey}/issuetypes` response body, reading
+from the OpenAPI schema. The repo's existing code (`src/api/jira/issues.rs`) uses `issueTypes`
+and the BC under authorship cited the Jira Bulk Ops FAQ which uses `issueTypes` verbatim.
+The live-Jira pin in the repo (proven correct by passing E2E tests) overrides both independent
+doc-reading inferences.
+
+**Lesson:**
+When the repo contains:
+- A live-validated test that exercises the field name (E2E or wiremock),
+- A verbatim FAQ citation, OR
+- A production code path that has been exercised successfully in live Jira,
+
+...that evidence outweighs an inference from OpenAPI schema or secondary documentation,
+even when multiple independent agents converge on the same inferred answer.
+
+**Application rule:**
+Before overriding an existing field name, constant, or behavior in a spec or BC based
+on external source research: find and examine the corresponding code path in the repo.
+If the code works in production, the code is right and the documentation inference
+should be treated as a false positive.
+
+_Discovered: HOLDOUT-COVERAGE-GAPS adversarial + research validation passes, 2026-06-30._
+_Recorded: 2026-06-30. State-manager (DEC-146)._
+_Tagged: [codified] [external-research] [spec-authoring] [empirical-ground-truth] [dec-146]_
+_Related: DEC-144 (config-key semantics must be verified against source — analogous principle for CI config); BC-3.4.015 EC-3.4.015-3; issueTypes vs values drift._
 _Related: DEC-128; DEC-144; S-PG-MERGE-AUTH-BYPASS (story 91); PG-MERGE-AUTH-BYPASS (drift item)._
