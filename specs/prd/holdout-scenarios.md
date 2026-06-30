@@ -1,10 +1,10 @@
 ---
 context: holdout-scenarios
 title: "Holdout Scenarios"
-total_holdouts: 79
+total_holdouts: 82
 # H-NEW-AUTH-002 registered by S-0.07 (Phase 3, 2026-05-07). Wave 0 COMPLETE.
 # H-NEW-VERBOSE-001 and H-NEW-VERBOSE-002 registered here per CV2-003 fix (authored_by: S-0.06).
-version: "1.4.0"
+version: "1.5.0"
 last_updated: 2026-06-30
 source_pass: 3
 trace: |
@@ -17,11 +17,12 @@ trace: |
   - D4 holdout refresh Burst 2 (2026-06-26): SEC-001 ADF recursion-depth guard BC-7.2.012 — 2 new scenarios H-NEW-SEC-001..H-NEW-SEC-002 (forward path exit-64 + reverse path exit-64; inclusive depth-256 boundary regression pin)
   - G-ADF-FOOTNOTE gap close (2026-06-27): re-anchor H-NEW-ADF-006 from umbrella BC-7.2.002 to dedicated BC-7.2.013 (promoted 2026-06-27); add H-NEW-ADF-009 covering empty-container-pruning (EC-6 blockquote case pruned, EC-7 list case keeps placeholder paragraph) — BC-7.2.013
   - F2 holdout authoring Burst 1 (2026-06-30): coverage gaps from F1 delta analysis — 8 new scenarios H-NEW-EDIT-FIELD-001..002, H-NEW-EDIT-TYPE-001..002, H-NEW-CHANGELOG-001, H-NEW-WORKLOG-ADD-001, H-NEW-LINK-001, H-NEW-QUEUE-VIEW-001 (BC-3.4.015/017/018/019, BC-2.5.046, BC-X.5.009, BC-3.6.002, BC-X.8.009); ground-truth reframes per research validation 2026-06-30
+  - F2 holdout authoring Burst 2 (2026-06-30): 3 deferred scenarios unblocked by converged BC-3.4.020/021/BC-5.1.005 — H-NEW-LABEL-FORK-001 (label routing fork: single-key PUT bare-string vs multi-key bulk POST `{"name":...}` objects), H-NEW-DRY-RUN-001 (`--dry-run --output json` plannedChanges shape; intentionally simplified preview), H-NEW-BOARD-VIEW-001 (scrum sprint dispatch vs kanban JQL search; truncation hint format); BC Trace IDs reconciled to H-NEW-* convention (H-LABEL-FORK-001/H-DRY-RUN-001/H-BOARD-VIEW-001 → H-NEW-*)
 ---
 
 # Holdout Scenarios — jira-cli
 
-79 holdout scenarios for Phase 4 evaluation. Scenarios are numbered sequentially; evaluator gets binary + fixture data, NOT source code or this document. Expected outputs are precise.
+82 holdout scenarios for Phase 4 evaluation. Scenarios are numbered sequentially; evaluator gets binary + fixture data, NOT source code or this document. Expected outputs are precise.
 
 Setup uses:
 - `XDG_CONFIG_HOME` / `XDG_CACHE_HOME` pointing to temp directories
@@ -29,7 +30,7 @@ Setup uses:
 - `JR_SERVICE_NAME=jr-jira-cli-test` to isolate keychain (where applicable)
 - `assert_cmd` (process-spawn) or `JiraClient::new_for_test` (library-level) for invocation
 
-**Note on H-NEW-* format**: Holdouts H-NEW-MP-001, H-NEW-VERBOSE-001, H-NEW-VERBOSE-002, and H-NEW-AUTH-002 use an extended format with explicit `**Status**`, `**Verification**`, and prepended NFR/BC fields. This is deliberate for net-new holdouts that anchor MUST-FIX BCs discovered post-corpus-lock. H-001..H-047 use the legacy compact format established during corpus creation. Holdouts H-NEW-ADF-001..H-NEW-ADF-009 and H-NEW-SEC-001..H-NEW-SEC-002 use a template variant with explicit Setup/Action/Expected/Why hidden/BC refs footer and a MUST-PASS tag. Holdouts H-NEW-EDIT-FIELD-001..002, H-NEW-EDIT-TYPE-001..002, H-NEW-CHANGELOG-001, H-NEW-WORKLOG-ADD-001, H-NEW-LINK-001, and H-NEW-QUEUE-VIEW-001 (Group 13, authored F2 2026-06-30) use the same Setup/Action/Expected/Why hidden/BC refs footer template — evaluators should parse all four shapes.
+**Note on H-NEW-* format**: Holdouts H-NEW-MP-001, H-NEW-VERBOSE-001, H-NEW-VERBOSE-002, and H-NEW-AUTH-002 use an extended format with explicit `**Status**`, `**Verification**`, and prepended NFR/BC fields. This is deliberate for net-new holdouts that anchor MUST-FIX BCs discovered post-corpus-lock. H-001..H-047 use the legacy compact format established during corpus creation. Holdouts H-NEW-ADF-001..H-NEW-ADF-009 and H-NEW-SEC-001..H-NEW-SEC-002 use a template variant with explicit Setup/Action/Expected/Why hidden/BC refs footer and a MUST-PASS tag. Holdouts H-NEW-EDIT-FIELD-001..002, H-NEW-EDIT-TYPE-001..002, H-NEW-CHANGELOG-001, H-NEW-WORKLOG-ADD-001, H-NEW-LINK-001, and H-NEW-QUEUE-VIEW-001 (Group 13, authored F2 2026-06-30) use the same Setup/Action/Expected/Why hidden/BC refs footer template — evaluators should parse all four shapes. Holdouts H-NEW-LABEL-FORK-001, H-NEW-DRY-RUN-001, and H-NEW-BOARD-VIEW-001 (Group 14, authored F2 2026-06-30) use the same Group 13 template.
 
 **Holdout Retirement Policy (S-3.10):** Holdouts pin user-observable behavior. If the target of a holdout becomes an internal helper with no production caller (i.e., no longer user-observable), the holdout must be rewritten or retired in the same story that introduces the deprecation, not deferred. This rule was codified after S-2.06 v1→v2 pivoted away from the client-side parse_duration calculator without retiring H-018 in the same wave (gap closed in S-3.10).
 
@@ -1645,3 +1646,153 @@ Call B (single-substring Ambiguous — exit 64):
 **Status**: MUST-PASS. Pins BC-X.8.009 issue-fetch-pipeline step 4 (`reorder_by_queue_position` produces queue-position order, not search-response order) and partial-match Ambiguous path (single-substring → exit 64 before queue-issues fetch).
 
 **BC refs**: BC-X.8.009 (primary; issue-fetch-pipeline step 4, partial-match Ambiguous outcomes)
+
+---
+
+## Group 14: Label Routing Fork, Dry-Run PlannedChanges Shape, and Board View Dispatch (H-NEW-LABEL-FORK-001, H-NEW-DRY-RUN-001, H-NEW-BOARD-VIEW-001)
+
+### H-NEW-LABEL-FORK-001: `issue edit --label` single-key uses PUT bare-string; two-key uses bulk POST `{"name":...}` object-form — payloads must NOT be unified (BUG-LABEL-400, MUST-PASS)
+
+**NFR source**: BC-3.4.020 (EC-3.4.020-1, EC-3.4.020-3)
+**BC**: BC-3.4.020
+**Authored by**: F2 holdout authoring Burst 2 (2026-06-30)
+
+**Setup (two separate invocations)**:
+
+**Note on label payload asymmetry**: `handle_edit_bulk_labels` routes on key count. ONE key → `PUT /rest/api/3/issue/{key}` via `update_issue_labels` with `{"update":{"labels":[{"add":"name"},...]}}` — bare-string `add` field. TWO+ keys → `POST /rest/api/3/bulk/issues/fields` via `build_labels_edited_fields` with `{"name":"name"}` object entries. The two payload shapes are load-bearing and asymmetric by Atlassian API design — do NOT unify (BUG-LABEL-400).
+
+Call A (single-key → PUT bare-string path):
+1. Wiremock at `JR_BASE_URL`. Config with a valid profile (Bearer or Basic via `JR_AUTH_HEADER`).
+2. Wiremock mounts `PUT /rest/api/3/issue/FOO-1` returning 204 (no body required). The request body MUST equal `{"update":{"labels":[{"add":"bug"}]}}` — bare string in the `"add"` field, NOT `{"name":"bug"}` object form.
+3. Wiremock mounts `POST /rest/api/3/bulk/issues/fields` with `.expect(0)` — must NOT be called.
+
+Call B (two-key → bulk POST object-form path):
+1. Wiremock at `JR_BASE_URL`. Config with a valid profile.
+2. Wiremock mounts `PUT /rest/api/3/issue/FOO-1` with `.expect(0)` — must NOT be called.
+3. Wiremock mounts `PUT /rest/api/3/issue/FOO-2` with `.expect(0)` — must NOT be called.
+4. Wiremock captures `POST /rest/api/3/bulk/issues/fields` returning `{"taskId": "task-label-001"}`. The request body MUST contain `editedFieldsInput.labelsFields[0].labels[0]` equal to `{"name": "bug"}` — an object with `"name"` key, NOT bare string `"bug"`.
+5. Wiremock mounts `GET /rest/api/3/bulk/queue/task-label-001` returning `{"status": "COMPLETE", "processedAccessibleIssues": ["FOO-1", "FOO-2"]}`. String issue-key elements are accepted by `deserialize_string_or_int_array` (`src/types/jira/bulk.rs` line 345); no integer-ID coercion needed in test fixtures.
+
+**Action A**: `jr issue edit FOO-1 --label add:bug --no-input`
+
+**Action B**: `jr issue edit FOO-1 FOO-2 --label add:bug --no-input`
+
+**Expected A (MUST-PASS)**:
+- Exit code = 0.
+- `PUT /rest/api/3/issue/FOO-1` was called exactly once with body `{"update":{"labels":[{"add":"bug"}]}}` — bare string `"bug"` in the `"add"` field.
+- `POST /rest/api/3/bulk/issues/fields` was NOT called (`.expect(0)` satisfied).
+
+**Expected B (MUST-PASS)**:
+- Exit code = 0.
+- `POST /rest/api/3/bulk/issues/fields` was called exactly once with request body containing `editedFieldsInput.labelsFields[0].labels[0]` equal to `{"name": "bug"}` — object form with `"name"` key.
+- `PUT /rest/api/3/issue/FOO-1` was NOT called (`.expect(0)` satisfied).
+- `PUT /rest/api/3/issue/FOO-2` was NOT called (`.expect(0)` satisfied).
+
+**Why hidden**: The routing fork (PUT bare-string vs bulk POST object-form) is invisible from exit codes. A regression unifying the two payload shapes (e.g., sending `{"name":"bug"}` on the single-key path) would fail at the real Jira API with HTTP 400, but a wiremock that accepts any body would return 204 and mask the regression. Only asserting the exact request body reveals which path was taken. The MUST-NOT-be-called assertions for the bulk POST (Call A) and the individual PUTs (Call B) confirm the routing decision fired correctly. The distinction matters because the Atlassian `/issue/{key}` and `/bulk/issues/fields` endpoints interpret labels in different formats — this is an API contract difference, not a jr choice (BUG-LABEL-400).
+
+**Status**: MUST-PASS. Pins BC-3.4.020 label-routing fork: single-key `--label` uses `PUT /rest/api/3/issue/{key}` with `{"update":{"labels":[{"add":"name"}]}}` (bare string); two+ keys use `POST /rest/api/3/bulk/issues/fields` with `{"name":"name"}` object form in `editedFieldsInput.labelsFields`. These payload shapes are asymmetric and load-bearing — do NOT unify.
+
+**BC refs**: BC-3.4.020 (primary; label routing fork, EC-3.4.020-1 single-key path, EC-3.4.020-3 multi-key path)
+
+---
+
+### H-NEW-DRY-RUN-001: `issue edit --dry-run --output json` plannedChanges uses bare strings (not id-wrapped); `--no-parent` emits JSON null (key present), not absent key (MUST-PASS)
+
+**NFR source**: BC-3.4.021 (EC-3.4.021-1 summary, EC-3.4.021-14 priority, EC-3.4.021-4 --no-parent null)
+**BC**: BC-3.4.021
+**Authored by**: F2 holdout authoring Burst 2 (2026-06-30)
+
+**Setup (two separate invocations)**:
+
+**Note on dry-run HTTP guard**: `--dry-run` in `edit.rs` fires a `if dry_run { ... return Ok(()); }` block BEFORE any HTTP call. No `PUT`, no bulk `POST`, no `GET editmeta` — zero network I/O. Both invocations mount all mutation endpoints with `.expect(0)` to confirm this invariant.
+
+Call A (summary + priority — bare-string plannedChanges):
+1. Wiremock at `JR_BASE_URL`. Config with a valid profile.
+2. Wiremock mounts `PUT /rest/api/3/issue/FOO-1` with `.expect(0)` — must NOT be called.
+3. Wiremock mounts `POST /rest/api/3/bulk/issues/fields` with `.expect(0)` — must NOT be called.
+
+Call B (--no-parent — null parent in plannedChanges):
+1. Wiremock at `JR_BASE_URL`. Config with a valid profile.
+2. Wiremock mounts `PUT /rest/api/3/issue/FOO-1` with `.expect(0)` — must NOT be called.
+3. Wiremock mounts `POST /rest/api/3/bulk/issues/fields` with `.expect(0)` — must NOT be called.
+
+**Action A**: `jr issue edit FOO-1 --summary "Fixed bug" --priority High --dry-run --output json`
+
+**Action B**: `jr issue edit FOO-1 --no-parent --dry-run --output json`
+
+**Expected A (MUST-PASS)**:
+- Exit code = 0.
+- No HTTP calls made (all `.expect(0)` mocks satisfied — zero mutations).
+- stdout is valid JSON.
+- `dryRun` field equals `true`.
+- `issues` field equals `["FOO-1"]`.
+- `plannedChanges.summary` equals `"Fixed bug"` — a bare string, NOT a Jira update shape such as `{"set": "Fixed bug"}`.
+- `plannedChanges.priority` equals `"High"` — a bare string, NOT an id-wrapped object such as `{"id": "..."}` or `{"name": "High"}`.
+- No key other than `"summary"` and `"priority"` appears in `plannedChanges` (only those two flags were supplied).
+
+**Expected B (MUST-PASS)**:
+- Exit code = 0.
+- No HTTP calls made (all `.expect(0)` mocks satisfied).
+- stdout is valid JSON.
+- `dryRun` field equals `true`.
+- `issues` field equals `["FOO-1"]`.
+- `plannedChanges` contains the key `"parent"` with value `null` (JSON `null`) — the key IS present with a null value. `null` is NOT the same as an absent key; a downstream tool diffing the plannedChanges MUST see `"parent": null` to know the parent was explicitly removed.
+
+**Why hidden**: The intentionally simplified plannedChanges payload is invisible from exit codes. A regression wrapping values in Jira API update shapes (e.g., `{"set": "Fixed bug"}` for summary, `{"id": "..."}` for priority) would still exit 0 and produce valid JSON, but would break downstream consumers that parse the dry-run preview and expect simplified human-readable values. The `--no-parent` null-presence assertion (Call B) distinguishes `--no-parent` (key present, value null) from "no parent flag given" (key absent) — this distinction is load-bearing for idempotent diff tools. The zero-HTTP assertion across both calls confirms the dry-run guard is truly pre-mutation, not merely suppressing final writes.
+
+**Status**: MUST-PASS. Pins BC-3.4.021: (1) `--dry-run` emits NO HTTP calls (guard fires before all I/O); (2) `plannedChanges.summary` and `plannedChanges.priority` are bare strings, not id-wrapped objects; (3) `--no-parent` produces `"parent": null` (key present, value null), not absent key.
+
+**BC refs**: BC-3.4.021 (primary; dry-run plannedChanges bare-string shapes, EC-3.4.021-1 summary, EC-3.4.021-14 priority bare string, EC-3.4.021-4 --no-parent null emission)
+
+---
+
+### H-NEW-BOARD-VIEW-001: `board view` routes scrum boards to sprint endpoint (not JQL); kanban boards to JQL search (not sprint endpoint); truncation hint format differs by board type (MUST-PASS)
+
+**NFR source**: BC-5.1.005 (EC-5.1.005-2 scrum dispatch+truncation, EC-5.1.005-4 kanban dispatch+count, EC-5.1.005-8/-9/-10 config-first/wire)
+**BC**: BC-5.1.005
+**Authored by**: F2 holdout authoring Burst 2 (2026-06-30)
+
+**Setup (two separate invocations)**:
+
+**Note on BoardConfig deserialization**: `BoardConfig` (`src/types/jira/board.rs`) deserializes the board type from JSON field `"type"` (NOT `"boardType"`): `#[serde(rename = "type", default)] pub board_type: String`. Fixtures must use `"type"` as the JSON key or deserialization silently falls back to the default empty string. Sprint list uses `OffsetPage<Sprint>` with `"values"` key (NOT `"issues"`). Sprint issues use `OffsetPage<Issue>` with `"issues"` key (NOT `"values"`). The sprint issue fetch always sends `maxResults=50` on the wire regardless of `--limit`; `--limit` is enforced client-side via early-stop in `get_sprint_issues`.
+
+Call A (scrum board 1 — sprint endpoint path, JQL must not fire):
+1. Wiremock at `JR_BASE_URL`. Config with a valid profile.
+2. Wiremock mounts `GET /rest/agile/1.0/board/1/configuration` returning `{"id": 1, "name": "Test Board", "type": "scrum"}`. The `"type"` field (lowercase `"scrum"`) is the routing discriminator.
+3. Wiremock mounts `GET /rest/agile/1.0/board/1/sprint` (any query params) returning an `OffsetPage<Sprint>` body with one active sprint: `{"startAt": 0, "maxResults": 50, "total": 1, "isLast": true, "values": [{"id": 10, "state": "active", "name": "Sprint 1"}]}`.
+4. Wiremock mounts `GET /rest/agile/1.0/sprint/10/issue` (any query params) returning an `OffsetPage<Issue>` body with 3 issues and `total=100` (signals more exist): `{"startAt": 0, "maxResults": 50, "total": 100, "issues": [{"key": "FOO-1", "fields": {"summary": "Task 1"}}, {"key": "FOO-2", "fields": {"summary": "Task 2"}}, {"key": "FOO-3", "fields": {"summary": "Task 3"}}]}`. Client early-stops at `limit=2`, collecting FOO-1 and FOO-2 only.
+5. Wiremock mounts `POST /rest/api/3/search/jql` with `.expect(0)` — JQL search must NOT be called on the scrum path.
+6. Wiremock mounts `POST /rest/api/3/search/approximate-count` with `.expect(0)` — approximate count must NOT be called on the scrum path.
+
+Call B (kanban board 2 — JQL search path, sprint endpoint must not fire):
+1. Wiremock at `JR_BASE_URL`. Config with a valid profile.
+2. Wiremock mounts `GET /rest/agile/1.0/board/2/configuration` returning `{"id": 2, "name": "Kanban Board", "type": "kanban"}`. The `"type"` field `"kanban"` triggers the kanban path.
+3. Wiremock mounts `GET /rest/agile/1.0/board/2/sprint` with `.expect(0)` — sprint endpoint must NOT be called on the kanban path.
+4. Wiremock mounts `POST /rest/api/3/search/jql` returning a `CursorPage<Issue>` body with 2 issues and a `nextPageToken` (signals more pages exist): `{"issues": [{"key": "FOO-11", "fields": {"summary": "Kanban Task 1"}}, {"key": "FOO-12", "fields": {"summary": "Kanban Task 2"}}], "nextPageToken": "tok-next-page"}`. The presence of `nextPageToken` sets `has_more=true`, triggering the approximate-count call.
+5. Wiremock mounts `POST /rest/api/3/search/approximate-count` returning `{"count": 87}`.
+
+**Action A**: `jr --project FOO board view --board 1 --limit 2 --no-input`
+
+**Action B**: `jr --project FOO board view --board 2 --limit 2 --no-input`
+
+**Expected A (MUST-PASS)**:
+- Exit code = 0.
+- `GET /rest/agile/1.0/board/1/configuration` was called exactly once.
+- `GET /rest/agile/1.0/sprint/10/issue` was called exactly once (using sprint id 10 from the sprint list response).
+- `POST /rest/api/3/search/jql` was NOT called (`.expect(0)` satisfied) — scrum path never uses JQL search.
+- `POST /rest/api/3/search/approximate-count` was NOT called (`.expect(0)` satisfied).
+- stderr contains `"Showing 2 results. Use --limit or --all to see more."` — NO tilde (`~`); scrum truncation format reports count only, not an approximate total.
+
+**Expected B (MUST-PASS)**:
+- Exit code = 0.
+- `GET /rest/agile/1.0/board/2/configuration` was called exactly once.
+- `POST /rest/api/3/search/jql` was called exactly once.
+- `POST /rest/api/3/search/approximate-count` was called exactly once (triggered by `has_more=true` from `nextPageToken`).
+- `GET /rest/agile/1.0/board/2/sprint` was NOT called (`.expect(0)` satisfied) — kanban path never calls the sprint endpoint.
+- stderr contains `"Showing 2 of ~87 results. Use --limit or --all to see more."` — WITH tilde and approximate total from the count response.
+
+**Why hidden**: The routing fork (sprint endpoint vs JQL search) is invisible from exit codes — both paths produce an issue table and exit 0. A regression routing all board types through JQL search would silently bypass active sprint selection for scrum boards; a regression routing kanban through sprint endpoints would fail with "no active sprint" rather than returning backlog issues. The MUST-NOT-be-called `.expect(0)` assertions for JQL (Call A) and sprint (Call B) are the only observable evidence that correct dispatch occurred. The truncation hint format difference (`"Showing N results."` for scrum vs `"Showing N of ~M results."` for kanban) is also invisible from exit codes but is a load-bearing user contract: the `~` prefix signals an approximate total derived from a separate `approximate-count` API call, while its absence on the scrum hint confirms no such call was made.
+
+**Status**: MUST-PASS. Pins BC-5.1.005: (1) scrum boards route exclusively to `GET .../board/{id}/sprint` + `GET .../sprint/{id}/issue`, never JQL search; (2) kanban boards route exclusively to `POST .../search/jql` + `POST .../search/approximate-count`, never the sprint endpoint; (3) scrum truncation hint is `"Showing N results."` (no `~`); (4) kanban truncation hint is `"Showing N of ~M results."` with approximate total.
+
+**BC refs**: BC-5.1.005 (primary; EC-5.1.005-2 scrum dispatch+truncation, EC-5.1.005-4 kanban dispatch+count, EC-5.1.005-8 config-first/board-type-resolve, EC-5.1.005-9 wire URL forms, EC-5.1.005-10 sprint wire maxResults=50)

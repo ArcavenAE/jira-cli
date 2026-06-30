@@ -14,7 +14,7 @@ inputs:
   - "src/api/auth.rs"
   - "tests/issue_create_json.rs"
   - "tests/queue.rs"
-input-hash: "a52e12f"
+input-hash: "ff86313"
 status: draft
 timestamp: 2026-05-18
 ---

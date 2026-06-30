@@ -1,15 +1,15 @@
 ---
 context: bc-index
 title: "BC Master Index"
-total_bcs: 605  # cumulative claim (incl. range-collapsed) — see preamble below; +4 added 2026-05-08 (BC-7.4.013-016, Fix-PR A); +1 added 2026-05-13 (BC-2.6.050, issue #350); +1 added 2026-05-14 (BC-2.6.051, issue #365); +1 added 2026-05-15 (BC-3.4.009, issue #340 F2); +18 added 2026-05-18 (BC-3.8.001..010 + BC-X.12.001..008, issue #288 F2+F1d); +3 added 2026-05-19 (BC-3.8.011..013, issue #288 F1d + issue #383 F2); +4 added 2026-05-19 (BC-3.8.014..015 + BC-X.8.006..007, issue #384 F2); +2 added 2026-05-20 (BC-3.8.016..017, issue #385 F2); +2 added 2026-05-20 (BC-3.4.010..011, issue #388 F2); +3 added 2026-05-21 (BC-3.4.012..014, issue #398 F2); +3 added 2026-05-22 (BC-3.4.015..017, issue #396 F2); +2 added 2026-06-01 (BC-3.4.018..019, issue #331 F2); +1 added 2026-06-03 (BC-3.2.013, jsm-resolution-required F2); +1 added 2026-06-08 (BC-7.2.006, issue #470 listItem content-model conformance); +2 added 2026-06-08 (BC-X.8.008..009, S-QUEUE-BC-1 queue list/view document-as-is); +1 added 2026-06-08 (BC-3.2.014, fix-bulk-transition-schema bulkTransitionInputs wrapper); +2 added 2026-06-08 (BC-7.2.007..008, issue #474 markdown subsup + heading-attr); +1 added 2026-06-09 (BC-7.2.009, issue #483 GFM alerts → panel); +1 added 2026-06-10 (BC-7.2.010, issue #471 GFM task lists → taskList/taskItem); +3 added 2026-06-12 (BC-6.1.014 + BC-6.2.016..017, windows-build F2); +1 added 2026-06-15 (BC-7.2.011, issue #492 block-HTML hardBreak interior newlines); +1 added 2026-06-17 (BC-2.4.043, Bundle C CR-001 list_comments anti-stall guard); +3 added 2026-06-19 (BC-X.13.001..003, DEAD-CITATION-CI F2 CLAUDE.md citation guard); +1 added 2026-06-24 (BC-7.2.012, SEC-001 ADF recursion depth limit); +2 promoted 2026-06-27 (BC-7.2.013..014, range-collapsed → individually-bodied; issues #472 #473; total_bcs unchanged); +1 added 2026-06-27 (BC-6.2.018, cache warm-hit no-HTTP invariant); +1 added 2026-06-27 (BC-7.3.010, issue #526 json-render invariant + error channel); BC-6.2.004 modified; BC-1.3.023, BC-3.3.001, BC-X.8.004, BC-3.8.009, BC-X.3.002, BC-3.8.002, BC-3.8.010, BC-3.8.011, BC-3.4.003 modified
-last_updated: 2026-06-24
+total_bcs: 608  # cumulative claim (incl. range-collapsed) — see preamble below; +4 added 2026-05-08 (BC-7.4.013-016, Fix-PR A); +1 added 2026-05-13 (BC-2.6.050, issue #350); +1 added 2026-05-14 (BC-2.6.051, issue #365); +1 added 2026-05-15 (BC-3.4.009, issue #340 F2); +18 added 2026-05-18 (BC-3.8.001..010 + BC-X.12.001..008, issue #288 F2+F1d); +3 added 2026-05-19 (BC-3.8.011..013, issue #288 F1d + issue #383 F2); +4 added 2026-05-19 (BC-3.8.014..015 + BC-X.8.006..007, issue #384 F2); +2 added 2026-05-20 (BC-3.8.016..017, issue #385 F2); +2 added 2026-05-20 (BC-3.4.010..011, issue #388 F2); +3 added 2026-05-21 (BC-3.4.012..014, issue #398 F2); +3 added 2026-05-22 (BC-3.4.015..017, issue #396 F2); +2 added 2026-06-01 (BC-3.4.018..019, issue #331 F2); +1 added 2026-06-03 (BC-3.2.013, jsm-resolution-required F2); +1 added 2026-06-08 (BC-7.2.006, issue #470 listItem content-model conformance); +2 added 2026-06-08 (BC-X.8.008..009, S-QUEUE-BC-1 queue list/view document-as-is); +1 added 2026-06-08 (BC-3.2.014, fix-bulk-transition-schema bulkTransitionInputs wrapper); +2 added 2026-06-08 (BC-7.2.007..008, issue #474 markdown subsup + heading-attr); +1 added 2026-06-09 (BC-7.2.009, issue #483 GFM alerts → panel); +1 added 2026-06-10 (BC-7.2.010, issue #471 GFM task lists → taskList/taskItem); +3 added 2026-06-12 (BC-6.1.014 + BC-6.2.016..017, windows-build F2); +1 added 2026-06-15 (BC-7.2.011, issue #492 block-HTML hardBreak interior newlines); +1 added 2026-06-17 (BC-2.4.043, Bundle C CR-001 list_comments anti-stall guard); +3 added 2026-06-19 (BC-X.13.001..003, DEAD-CITATION-CI F2 CLAUDE.md citation guard); +1 added 2026-06-24 (BC-7.2.012, SEC-001 ADF recursion depth limit); +2 promoted 2026-06-27 (BC-7.2.013..014, range-collapsed → individually-bodied; issues #472 #473; total_bcs unchanged); +1 added 2026-06-27 (BC-6.2.018, cache warm-hit no-HTTP invariant); +1 added 2026-06-27 (BC-7.3.010, issue #526 json-render invariant + error channel); +3 added 2026-06-30 (BC-3.4.020..021 + BC-5.1.005, BC-subclause-pass F2); BC-6.2.004 modified; BC-1.3.023, BC-3.3.001, BC-X.8.004, BC-3.8.009, BC-X.3.002, BC-3.8.002, BC-3.8.010, BC-3.8.011, BC-3.4.003 modified
+last_updated: 2026-06-30
 source_pass: 3
 sections:
   - bc-1-auth-identity.md (57 BCs cumulative; 46 individually-bodied)
   - bc-2-issue-read.md (94 BCs cumulative; 52 individually-bodied)
-  - bc-3-issue-write.md (107 BCs cumulative; 78 individually-bodied)
+  - bc-3-issue-write.md (109 BCs cumulative; 80 individually-bodied)
   - bc-4-assets-cmdb.md (32 BCs cumulative; 22 individually-bodied)
-  - bc-5-boards-sprints.md (35 BCs cumulative; 17 individually-bodied)
+  - bc-5-boards-sprints.md (36 BCs cumulative; 18 individually-bodied)
   - bc-6-config-cache.md (43 BCs cumulative; 33 individually-bodied)
   - bc-7-output-render.md (92 BCs cumulative; 48 individually-bodied)
   - cross-cutting.md (145 BCs cumulative; 79 individually-bodied)
@@ -213,7 +213,7 @@ R1/R4 prefix = deepening round that introduced it.
 
 ---
 
-## Section 3: Issue Write (bc-3-issue-write.md) — 107 BCs cumulative; 78 individually-bodied
+## Section 3: Issue Write (bc-3-issue-write.md) — 109 BCs cumulative; 80 individually-bodied
 
 ### 3.1 Assign (9 BCs: BC-3.1.001..009)
 
@@ -262,7 +262,7 @@ R1/R4 prefix = deepening round that introduced it.
 | BC-3.3.008 | `issue create --markdown -d '...'` converts markdown to ADF before POST | BC-212 | tests/issue_create_json.rs | MEDIUM |
 | BC-3.3.009 | `create_issue` browse URL uses `client.instance_url()` (NOT `client.base_url()`) | BC-1076 (R4) | tests/issue_commands.rs:1606-1644 | HIGH |
 
-### 3.4 Edit and Open (19 BCs: BC-3.4.001..019) [BC-3.4.010..011 added 2026-05-20 issue #388 F2; BC-3.4.012..014 added 2026-05-21 issue #398 F2; BC-3.4.015..017 added 2026-05-22 issue #396 F2; BC-3.4.018..019 added 2026-06-01 issue #331 F2; BC-3.4.003 modified 2026-05-20 issue #388 F2 annotation; BC-3.4.003 modified 2026-05-21 issue #398 F2 annotation]
+### 3.4 Edit and Open (21 BCs: BC-3.4.001..021) [BC-3.4.010..011 added 2026-05-20 issue #388 F2; BC-3.4.012..014 added 2026-05-21 issue #398 F2; BC-3.4.015..017 added 2026-05-22 issue #396 F2; BC-3.4.018..019 added 2026-06-01 issue #331 F2; BC-3.4.020..021 added 2026-06-30 BC-subclause-pass F2; BC-3.4.003 modified 2026-05-20 issue #388 F2 annotation; BC-3.4.003 modified 2026-05-21 issue #398 F2 annotation]
 
 | L3 BC ID | Summary | Pass 3 BC ID | Source | Confidence |
 |---|---|---|---|---|
@@ -271,7 +271,7 @@ R1/R4 prefix = deepening round that introduced it.
 | BC-3.4.003 | `issue edit` PUTs `/rest/api/3/issue/<key>` with ADF description; accepts 204; success output see BC-3.4.012 (table) and BC-3.4.013 (JSON) | BC-1055 (R4) | tests/issue_commands.rs:609-645 | HIGH |
 | BC-3.4.004 | `issue edit` with `markdown_to_adf("**bold text**")` → ADF marks `[{type: "strong"}]` on wire | BC-1056 (R4) | tests/issue_commands.rs:647-687 | HIGH |
 | BC-3.4.005 | `issue edit` with multiple fields sends both in body simultaneously | BC-1057 (R4) | tests/issue_commands.rs:689-727 | HIGH |
-| BC-3.4.006 | `issue edit --label add:foo --label remove:bar` interprets prefix and emits correct JSON wire shape | BC-213; issue #345; S-345 | tests/issue_create_json.rs; tests/issue_bulk.rs; tests/issue_bulk_pr2.rs; src/cli/issue/create.rs::build_labels_edited_fields; src/cli/issue/create.rs inline proptests | HIGH |
+| BC-3.4.006 | `issue edit --label add:foo --label remove:bar` interprets prefix and emits correct JSON wire shape | BC-213; issue #345; S-345 | tests/issue_create_json.rs; tests/issue_bulk.rs; tests/issue_bulk_pr2.rs; src/cli/issue/edit.rs::build_labels_edited_fields; src/cli/issue/edit.rs inline build_labels_proptests | HIGH |
 | BC-3.4.007 | `--description` and `--description-stdin` clap conflict | BC-214 | tests/cli_smoke.rs:34-48 | HIGH |
 | BC-3.4.008 | `--points X` and `--no-points` clap conflict | BC-215 | tests/cli_smoke.rs:280-287 | HIGH |
 | BC-3.4.009 | `await_bulk_task` timeout error MUST include `task_id` literal in stderr message | — (issue #340) | tests/bulk_deadline_propagation.rs; src/api/jira/bulk.rs | HIGH |
@@ -285,6 +285,8 @@ R1/R4 prefix = deepening round that introduced it.
 | BC-3.4.017 | `--field` multi-key/`--jql`-multi-issue rejection (C-1 guard, exit 64); flag-overlap hard error for `summary`/`description`/`issuetype`/`priority` (exit 64, no HTTP); `--jql` matching exactly 1 issue is allowed (single-key path); `--field` added to `REJECTED_IN_BULK` set | — (issue #396 F2) | src/cli/issue/create.rs::handle_edit (REJECTED_IN_BULK update; Gate B overlap check) | HIGH |
 | BC-3.4.018 | `issue edit KEY1 KEY2 --type <NAME>` multi-key bulk path — `editedFieldsInput["issueType"] = {"issueTypeId": "<id-string>"}` (camelCase key, string id); `selectedActions: ["issuetype"]` (lowercase, intentionally asymmetric); name resolved case-insensitively via `GET /rest/api/3/issue/createmeta/{proj}/issuetypes` (no cache); unknown name → exit 64 listing valid types; dry-run builder uses camelCase key with bare-string value (simplified, same model as priority) | — (issue #331 F2) | src/cli/issue/create.rs::handle_edit_bulk_fields; src/api/jira/issues.rs::get_issue_types_for_project (new); tests/issue_bulk_pr2.rs | HIGH |
 | BC-3.4.019 | `issue edit KEY1 KEY2 --type <NAME>` cross-project guard — when keys span >1 distinct Jira project (extracted by last-hyphen split), exit 64 with actionable message naming `--type` and the detected project keys, BEFORE any API call (no createmeta lookup, no bulk POST); per-project grouping is explicitly deferred to a future issue | — (issue #331 F2) | src/cli/issue/create.rs::handle_edit_bulk_fields (cross-project guard, pre-resolution); tests/issue_bulk_pr2.rs | HIGH |
+| BC-3.4.020 | `issue edit --label` routes single-key through `PUT /rest/api/3/issue/{key}` with bare-string labels; routes 2+ keys through `POST /rest/api/3/bulk/issues/fields` with `{"name":...}` objects — LOAD-BEARING asymmetry MUST NOT be unified (BUG-LABEL-400) | — (BC-subclause-pass F2 2026-06-30) | src/cli/issue/edit.rs::handle_edit_bulk_labels; src/api/jira/issues.rs::update_issue_labels; CLAUDE.md BUG-LABEL-400 | HIGH |
+| BC-3.4.021 | `jr issue edit --dry-run` emits `plannedChanges` JSON or table preview on stdout without issuing any mutation HTTP call; `--output json` schema is `{dryRun: true, issues: [...], plannedChanges: {...}}`; preview shapes are intentionally simplified (labels flat array, priority bare string) | — (BC-subclause-pass F2 2026-06-30) | src/cli/issue/edit.rs::handle_edit dry-run block (implementation-defined) | HIGH |
 
 ### 3.5 Comments (1 BC: BC-3.5.001)
 
@@ -381,9 +383,9 @@ R1/R4 prefix = deepening round that introduced it.
 
 ---
 
-## Section 5: Boards & Sprints (bc-5-boards-sprints.md) — 35 BCs cumulative; 17 individually-bodied
+## Section 5: Boards & Sprints (bc-5-boards-sprints.md) — 36 BCs cumulative; 18 individually-bodied
 
-### 5.1 Board Commands (4 BCs: BC-5.1.001..004)
+### 5.1 Board Commands (5 BCs: BC-5.1.001..005) [BC-5.1.005 added 2026-06-30 BC-subclause-pass F2]
 
 | L3 BC ID | Summary | Pass 3 BC ID | Source | Confidence |
 |---|---|---|---|---|
@@ -391,6 +393,7 @@ R1/R4 prefix = deepening round that introduced it.
 | BC-5.1.002 | `board view --limit --all` clap conflict | BC-408 | tests/board_commands.rs:96-106 | HIGH |
 | BC-5.1.003 | Auto-resolve board: list scrum boards for project, pick first | BC-410 | tests/sprint_commands.rs:23-61 | HIGH |
 | BC-5.1.004 | `client.get_sprint_issues(sprintId, jql, limit, fields)` with `limit=Some(3)` returns 3 issues, `has_more=true` | BC-409 | tests/board_commands.rs:23-71 | HIGH |
+| BC-5.1.005 | `jr board view` dispatches to sprint endpoints for scrum boards and JQL search for kanban boards; truncation hint emits to stderr; `--all` suppresses hint; scrum no-sprint → exit 1 | — (BC-subclause-pass F2 2026-06-30) | src/cli/board.rs::handle_view (implementation-defined) | HIGH |
 
 ### 5.2 Sprint Commands (8 BCs: BC-5.2.001..008)
 
@@ -718,17 +721,17 @@ R1/R4 prefix = deepening round that introduced it.
 |---|---|---|
 | 1: Auth & Identity | 57 | 46 |
 | 2: Issue Read | 94 | 52 |
-| 3: Issue Write | 107 | 78 |
+| 3: Issue Write | 109 | 80 |
 | 4: Assets & CMDB | 32 | 22 |
-| 5: Boards & Sprints | 35 | 17 |
-| 6: Config & Cache | 42 | 32 |
-| 7: Output Rendering | 91 | 45 |
+| 5: Boards & Sprints | 36 | 18 |
+| 6: Config & Cache | 43 | 33 |
+| 7: Output Rendering | 92 | 48 |
 | X: Cross-Cutting | 145 | 79 |
-| **Total** | **603** | **371** |
+| **Total** | **608** | **378** |
 
-**Note**: BC-X.4.009 (ADV-P1-029) is included in cross-cutting's `total_bcs` and in the sum above. Canonical total is **605** (+4 BC-7.4.013-016 added 2026-05-08 via Fix-PR A; +1 BC-2.6.050 added 2026-05-13 via issue #350; +1 BC-2.6.051 added 2026-05-14 via issue #365; +1 BC-3.4.009 added 2026-05-15 via issue #340 F2; +18 BC-3.8.001..010 + BC-X.12.001..008 added 2026-05-18 via issue #288 F2+F1d; +3 BC-3.8.011..013 added 2026-05-19 via issue #288 F1d + issue #383 F2; +4 BC-3.8.014..015 + BC-X.8.006..007 added 2026-05-19 via issue #384 F2; +2 BC-3.8.016..017 added 2026-05-20 via issue #385 F2; +2 BC-3.4.010..011 added 2026-05-20 via issue #388 F2; +3 BC-3.4.012..014 added 2026-05-21 via issue #398 F2; +3 BC-3.4.015..017 added 2026-05-22 via issue #396 F2; +2 BC-3.4.018..019 added 2026-06-01 via issue #331 F2; +1 BC-3.2.013 added 2026-06-03 via jsm-resolution-required F2; +1 BC-7.2.006 added 2026-06-08 via issue #470 listItem content-model conformance; +2 BC-X.8.008..009 added 2026-06-08 via S-QUEUE-BC-1 queue list/view document-as-is; +1 BC-3.2.014 added 2026-06-08 via fix-bulk-transition-schema bulkTransitionInputs wrapper; +2 BC-7.2.007..008 added 2026-06-08 via issue #474 markdown subsup + heading-attr; +1 BC-7.2.009 added 2026-06-09 via issue #483 GFM alerts → panel; +1 BC-7.2.010 added 2026-06-10 via issue #471 GFM task lists → taskList/taskItem; +3 BC-6.1.014 + BC-6.2.016..017 added 2026-06-12 via windows-build F2; +1 BC-7.2.011 added 2026-06-15 via issue #492 block-HTML hardBreak interior newlines; +1 BC-2.4.043 added 2026-06-17 via Bundle C CR-001 list_comments anti-stall guard; +3 BC-X.13.001..003 added 2026-06-19 via DEAD-CITATION-CI F2 CLAUDE.md citation guard; +1 BC-7.2.012 added 2026-06-24 via SEC-001 ADF recursion depth limit; +2 BC-7.2.013..014 promoted 2026-06-27 from range-collapsed to individually-bodied via issues #472 #473 (no total_bcs change); +1 BC-6.2.018 added 2026-06-27 cache warm-hit no-HTTP invariant; +1 BC-7.3.010 added 2026-06-27 issue #526 json-render invariant + error channel).
+**Note**: BC-X.4.009 (ADV-P1-029) is included in cross-cutting's `total_bcs` and in the sum above. Canonical total is **608** (+4 BC-7.4.013-016 added 2026-05-08 via Fix-PR A; +1 BC-2.6.050 added 2026-05-13 via issue #350; +1 BC-2.6.051 added 2026-05-14 via issue #365; +1 BC-3.4.009 added 2026-05-15 via issue #340 F2; +18 BC-3.8.001..010 + BC-X.12.001..008 added 2026-05-18 via issue #288 F2+F1d; +3 BC-3.8.011..013 added 2026-05-19 via issue #288 F1d + issue #383 F2; +4 BC-3.8.014..015 + BC-X.8.006..007 added 2026-05-19 via issue #384 F2; +2 BC-3.8.016..017 added 2026-05-20 via issue #385 F2; +2 BC-3.4.010..011 added 2026-05-20 via issue #388 F2; +3 BC-3.4.012..014 added 2026-05-21 via issue #398 F2; +3 BC-3.4.015..017 added 2026-05-22 via issue #396 F2; +2 BC-3.4.018..019 added 2026-06-01 via issue #331 F2; +1 BC-3.2.013 added 2026-06-03 via jsm-resolution-required F2; +1 BC-7.2.006 added 2026-06-08 via issue #470 listItem content-model conformance; +2 BC-X.8.008..009 added 2026-06-08 via S-QUEUE-BC-1 queue list/view document-as-is; +1 BC-3.2.014 added 2026-06-08 via fix-bulk-transition-schema bulkTransitionInputs wrapper; +2 BC-7.2.007..008 added 2026-06-08 via issue #474 markdown subsup + heading-attr; +1 BC-7.2.009 added 2026-06-09 via issue #483 GFM alerts → panel; +1 BC-7.2.010 added 2026-06-10 via issue #471 GFM task lists → taskList/taskItem; +3 BC-6.1.014 + BC-6.2.016..017 added 2026-06-12 via windows-build F2; +1 BC-7.2.011 added 2026-06-15 via issue #492 block-HTML hardBreak interior newlines; +1 BC-2.4.043 added 2026-06-17 via Bundle C CR-001 list_comments anti-stall guard; +3 BC-X.13.001..003 added 2026-06-19 via DEAD-CITATION-CI F2 CLAUDE.md citation guard; +1 BC-7.2.012 added 2026-06-24 via SEC-001 ADF recursion depth limit; +2 BC-7.2.013..014 promoted 2026-06-27 from range-collapsed to individually-bodied via issues #472 #473 (no total_bcs change); +1 BC-6.2.018 added 2026-06-27 cache warm-hit no-HTTP invariant; +1 BC-7.3.010 added 2026-06-27 issue #526 json-render invariant + error channel; +3 BC-3.4.020..021 + BC-5.1.005 added 2026-06-30 via BC-subclause-pass F2).
 
-Cumulative total (605) ≠ individually-bodied count (373). The difference (232) comprises range-collapsed BCs that exist in the cumulative claim but are not individually headlined in body files. This is by design — range-collapsed BCs trace to Pass 3 source material but were not individually expanded. The 4 MUST-FIX BCs are included in the individually-bodied count.
+Cumulative total (608) ≠ individually-bodied count (378). The difference (230) comprises range-collapsed BCs that exist in the cumulative claim but are not individually headlined in body files. This is by design — range-collapsed BCs trace to Pass 3 source material but were not individually expanded. The 4 MUST-FIX BCs are included in the individually-bodied count.
 
 **Process gap [process-gap]**: `scripts/check-bc-cumulative-counts.sh` currently guards 8 surfaces (per-file frontmatter, BC-INDEX headers, BC-INDEX section lines, CANONICAL-COUNTS per-file table, body preamble prose, BC-INDEX frontmatter total_bcs, CANONICAL-COUNTS Sum row, grand-total prose). The BC-INDEX Coverage Statistics body table (this section) is a 9th surface with no automated guard. Manual update required whenever BC counts change. Tracked for future script extension.
 

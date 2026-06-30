@@ -1,9 +1,9 @@
 ---
 context: bc-3
 title: "Issue Write (create/edit/move/assign/comment/link/open/remote-link)"
-total_bcs: 107   # cumulative claim (incl. range-collapsed); definitional_count below is individually-bodied headings
-definitional_count: 78   # count of `#### BC-` headings in this file
-last_updated: 2026-06-08
+total_bcs: 109   # cumulative claim (incl. range-collapsed); definitional_count below is individually-bodied headings
+definitional_count: 80   # count of `#### BC-` headings in this file
+last_updated: 2026-06-30
 source_pass: 3
 trace: |
   - L2: .factory/specs/domain-spec/bc-03-issue-write.md
@@ -63,11 +63,13 @@ trace: |
   - F2 addition (2026-06-01): BC-3.4.019 — `issue edit KEY1 KEY2 --type <NAME>` cross-project guard: when resolved keys span >1 distinct project, exit 64 with actionable message BEFORE any API call; references single-issueTypeId-per-batch constraint as rationale (issue #331 F2)
   - F2 addition (2026-06-03): BC-3.2.013 — `issue move` proactive resolution enforcement on done-category transitions (single-key only): REQUIRED resolution → mandatory (prompt or --resolution or exit 64 on --no-input; --no-resolution exits 64); OPTIONAL resolution → explicit choice required (--resolution / --no-resolution / prompt; non-interactive without either flag exits 64); breaking change to jr issue move default behavior; BC-3.2.009 retained as backstop (F2 jsm-resolution-required)
   - F2 addition (2026-06-08): BC-3.2.014 — multi-key bulk move `bulkTransitionInputs` nested wrapper wire schema (document-as-is correctness bug fix, commit acca854, live run 27156639337)
+  - F2 addition (2026-06-30): BC-3.4.020 — `issue edit --label` routing fork: single-key PUT bare-string labels vs 2+ key bulk POST `{"name":...}` objects; load-bearing asymmetry MUST NOT be unified (BUG-LABEL-400; BC-subclause-pass F2)
+  - F2 addition (2026-06-30): BC-3.4.021 — `issue edit --dry-run` `plannedChanges` output structure + `--output json` schema `{dryRun, issues, plannedChanges}`; intentionally simplified preview shapes (BC-subclause-pass F2)
 ---
 
 # BC-3 — Issue Write
 
-107 behavioral contracts across 8 subdomains: Assign (3.1), Move/Transition (3.2),
+109 behavioral contracts across 8 subdomains: Assign (3.1), Move/Transition (3.2),
 Create (3.3), Edit+Open (3.4), Comment (3.5), Links (3.6), Remote links (3.7),
 JSM Request Create + Platform-Path Inverse Warnings + Auth-Conditional 401 Hints (3.8).
 
@@ -565,48 +567,46 @@ URL is composed as `format!("{}/browse/{}", client.instance_url(), key)`. `clien
 #### BC-3.4.006: `issue edit --label add:foo --label remove:bar` interprets prefix and emits correct JSON wire shape
 
 **Confidence**: HIGH
-**Source**: `tests/issue_bulk.rs`; `tests/issue_bulk_pr2.rs`; `src/cli/issue/create.rs::build_labels_edited_fields`; `src/cli/issue/create.rs` inline `#[cfg(test)] mod build_labels_proptests`
+**Source**: `tests/issue_bulk.rs`; `tests/issue_bulk_pr2.rs`; `src/cli/issue/edit.rs::build_labels_edited_fields`; `src/cli/issue/edit.rs` inline `#[cfg(test)] mod build_labels_proptests`
 **Behavior**: `add:` and `remove:` prefixes adjust existing labels; bare label replaces.
-The label JSON builder (`build_labels_edited_fields`) produces one of two wire shapes
-depending on whether adds, removes, or both are present:
+The label JSON builder (`build_labels_edited_fields`) ALWAYS produces `{"labelsFields": [...]}` —
+top-level key is `labelsFields`, inner action key is `bulkEditMultiSelectFieldOption`. The `labelsFields`
+array ALWAYS contains element objects; there is NO object-form vs array-form dichotomy.
+`labelsAction` and a bare top-level `labels` key NEVER appear — those keys were from a stale spec
+superseded by issue #446 schema verification.
 
-- **Object-form** (single-action — only ADD, or only REMOVE):
-  ```json
-  {"labels": {"labelsAction": "ADD", "labels": [{"name": "foo"}]}}
-  ```
-  or
-  ```json
-  {"labels": {"labelsAction": "REMOVE", "labels": [{"name": "bar"}]}}
-  ```
+Wire shape (single-action ADD only):
+```json
+{
+  "labelsFields": [
+    {"fieldId":"labels","bulkEditMultiSelectFieldOption":"ADD","labels":[{"name":"foo"}]}
+  ]
+}
+```
 
-- **Array-form** (both ADD and REMOVE present — coalesced into a single bulk POST):
-  ```json
-  {"labels": [
-    {"labelsAction": "ADD",    "labels": [{"name": "foo"}]},
-    {"labelsAction": "REMOVE", "labels": [{"name": "bar"}]}
-  ]}
-  ```
+Wire shape (both ADD and REMOVE — coalesced into a single bulk POST):
+```json
+{
+  "labelsFields": [
+    {"fieldId":"labels","bulkEditMultiSelectFieldOption":"ADD","labels":[{"name":"foo"}]},
+    {"fieldId":"labels","bulkEditMultiSelectFieldOption":"REMOVE","labels":[{"name":"bar"}]}
+  ]
+}
+```
 
 **Invariants**:
-1. The ADD entry appears in the output if and only if `adds` is non-empty.
-2. The REMOVE entry appears in the output if and only if `removes` is non-empty.
+1. The ADD element appears in `labelsFields` if and only if `adds` is non-empty.
+2. The REMOVE element appears in `labelsFields` if and only if `removes` is non-empty.
 3. The caller bails on empty inputs — at least one of ADD or REMOVE is always present when `build_labels_edited_fields` is invoked.
-4. When both ADD and REMOVE entries are present, array-form is used and the ADD entry precedes the REMOVE entry.
-5. When exactly one action is present, object-form (not array-form) is used.
+4. When both ADD and REMOVE entries are present, the ADD element precedes the REMOVE element.
 
-**Schema note**: This BC pins the wire shape as currently emitted by the code. Whether
-the array-form (`[{labelsAction: "ADD", ...}, {labelsAction: "REMOVE", ...}]`) is what
-Atlassian's bulk API formally accepts is a separate correctness concern tracked in issue
-#331. Future schema-validation work (issue #331) may require updating this BC if the
-canonical shape differs.
+**Confidence rationale**: HIGH — verified against Atlassian Bulk Operations FAQ (issue #446);
+proptest `build_labels_edited_fields_invariants` in `src/cli/issue/edit.rs` module `build_labels_proptests`
+covers all four invariants against the real `labelsFields`/`bulkEditMultiSelectFieldOption` schema.
+The shape documented here agrees with BC-3.4.020 Path B (which was verified against live Jira E2E run
+26730687481).
 
-**Confidence rationale**: Confidence bumped MEDIUM → HIGH by issue #345 (S-345), which
-extracts `build_labels_edited_fields` as a named pure function and adds an inline proptest
-(`#[cfg(test)] mod build_labels_proptests` in `src/cli/issue/create.rs`) covering both shapes and all
-five invariants. The proptest follows the pattern established by `src/jql.rs`,
-`src/duration.rs`, and `src/partial_match.rs`.
-
-**Trace**: Pass 3 BC-213; issue #345; S-345
+**Trace**: Pass 3 BC-213; issue #345; issue #446 (schema fix: labelsFields/bulkEditMultiSelectFieldOption replaces stale labelsAction shape); S-345
 
 ---
 
@@ -660,7 +660,7 @@ existing wall-clock bound and `"deadline"` substring assertions.
 #### BC-3.4.010: `issue edit KEY --type X` HTTP 400 + cross-hierarchy subtask-flag mismatch → exit 1, `CROSS_HIERARCHY_HINT` on stderr (JRACLOUD-27893)
 
 **Confidence**: HIGH
-**Source**: `tests/issue_edit_type_errors.rs` (integration tests — cross-hierarchy direction paths); `src/cli/issue/create.rs::is_cross_hierarchy_type_error` (pure classifier helper); `src/cli/issue/create.rs::CROSS_HIERARCHY_HINT` (shared constant); `src/cli/issue/create.rs` inline `#[cfg(test)] mod is_cross_hierarchy_type_error_proptests` proptest for `is_cross_hierarchy_type_error`
+**Source**: `tests/issue_edit_type_errors.rs` (integration tests — cross-hierarchy direction paths); `src/cli/issue/edit.rs::is_cross_hierarchy_type_error` (pure classifier helper); `src/cli/issue/edit.rs::CROSS_HIERARCHY_HINT` (shared constant); `src/cli/issue/edit.rs` inline `#[cfg(test)] mod is_cross_hierarchy_type_error_proptests` proptest for `is_cross_hierarchy_type_error`
 **Subject**: Issue write
 **Behavior**: When `edit_issue` returns HTTP 400 AND `is_cross_hierarchy_type_error(src_subtask, tgt_subtask, err)` returns `CrossHierarchy` (i.e., both `src_subtask` and `tgt_subtask` are `Some(a)` and `Some(b)` with `a != b`, covering both standard→sub-task and sub-task→standard directions), the CLI exits 1 and emits `CROSS_HIERARCHY_HINT` on stderr. The hint wording is pinned verbatim:
 
@@ -697,7 +697,7 @@ On the `edit --type` path, the constant is emitted directly with no prepended se
 
 **Invariants**:
 1. The subtask-flag mismatch via `is_cross_hierarchy_type_error(src_subtask: Option<bool>, tgt_subtask: Option<bool>, err: &str) -> Classification` is the PRIMARY classifier — locale-independent. The pure function returns `CrossHierarchy` only when both arguments are `Some(_)` and differ. The English substring `"issue type selected is invalid"` MUST NOT be used as the sole gate (it fires on plain typos; see research addendum A1).
-2. `CROSS_HIERARCHY_HINT` is a shared named constant referenced identically from this path and from the `--no-parent` subtask-bound 400 path (gated by `no_parent && is_subtask_parent_error` in `src/cli/issue/create.rs`, call-site symbol `handle_edit`). Bug fix: replaces the prior fake `PUT /rest/api/3/issue/{key}/convert` hint. On the `--no-parent` path, the caller MUST prepend the following verbatim context sentence before the shared constant:
+2. `CROSS_HIERARCHY_HINT` is a shared named constant referenced identically from this path and from the `--no-parent` subtask-bound 400 path (gated by `no_parent && is_subtask_parent_error` in `src/cli/issue/edit.rs::handle_edit`). Bug fix: replaces the prior fake `PUT /rest/api/3/issue/{key}/convert` hint. On the `--no-parent` path, the caller MUST prepend the following verbatim context sentence before the shared constant:
 
 ```
 Sub-tasks are structurally bound to a parent; clearing it requires converting the sub-task to a standard issue.
@@ -730,14 +730,14 @@ This postcondition is verified by **T-06 in `tests/issue_edit_no_parent.rs`** (`
 - EC-3.4.010-2: sub-task→standard direction (source `subtask: true`, target `subtask: false`) → same hint, same exit code.
 - EC-3.4.010-3: The English error substring `"issue type selected is invalid"` is present in the 400 body but the flags DO match (same hierarchy, typo scenario) → hint MUST NOT fire; this is the BC-3.4.011 SameCategory path.
 
-**Trace**: issue #388 F2; `src/cli/issue/create.rs::is_cross_hierarchy_type_error`; `src/cli/issue/create.rs::CROSS_HIERARCHY_HINT`; `src/cli/issue/create.rs` inline `#[cfg(test)] mod is_cross_hierarchy_type_error_proptests` proptest for `is_cross_hierarchy_type_error`; `tests/issue_edit_type_errors.rs` (integration — cross-hierarchy direction paths)
+**Trace**: issue #388 F2; `src/cli/issue/edit.rs::is_cross_hierarchy_type_error`; `src/cli/issue/edit.rs::CROSS_HIERARCHY_HINT`; `src/cli/issue/edit.rs` inline `#[cfg(test)] mod is_cross_hierarchy_type_error_proptests` proptest for `is_cross_hierarchy_type_error`; `tests/issue_edit_type_errors.rs` (integration — cross-hierarchy direction paths)
 
 ---
 
 #### BC-3.4.011: `issue edit KEY --type X` HTTP 400 + same-hierarchy flags OR indeterminate resolution → exit 1, typo hint or raw error (no JRACLOUD-27893 hint)
 
 **Confidence**: HIGH
-**Source**: `tests/issue_edit_type_errors.rs` (integration tests — same-hierarchy typo path, indeterminate paths); `src/cli/issue/create.rs::is_cross_hierarchy_type_error` (pure classifier — `SameCategory` and `Indeterminate` return paths); `src/cli/issue/create.rs` inline `#[cfg(test)] mod is_cross_hierarchy_type_error_proptests` proptest for `is_cross_hierarchy_type_error` (primary verification for classifier properties); `src/cli/issue/create.rs::handle_edit` (caller: unresolvable name → typo hint; fetch-failure → `Indeterminate`)
+**Source**: `tests/issue_edit_type_errors.rs` (integration tests — same-hierarchy typo path, indeterminate paths); `src/cli/issue/edit.rs::is_cross_hierarchy_type_error` (pure classifier — `SameCategory` and `Indeterminate` return paths); `src/cli/issue/edit.rs` inline `#[cfg(test)] mod is_cross_hierarchy_type_error_proptests` proptest for `is_cross_hierarchy_type_error` (primary verification for classifier properties); `src/cli/issue/edit.rs::handle_edit` (caller: unresolvable name → typo hint; fetch-failure → `Indeterminate`)
 **Subject**: Issue write
 **Behavior**: When `edit_issue` returns HTTP 400 (observed by downcasting to `JrError::ApiError { status: 400, .. }` — constructed at `src/api/client.rs::parse_error` ~lines 973-997, defined in `src/error.rs`) AND `is_cross_hierarchy_type_error(src_subtask, tgt_subtask, err)` does NOT return `CrossHierarchy`, the CLI exits 1 without emitting `CROSS_HIERARCHY_HINT`. If `edit_issue` fails with a non-400 error (401, 403, 5xx, network error, etc.), NO enrichment occurs — the raw error is surfaced unchanged and neither BC-3.4.010 nor BC-3.4.011 enrichment applies; this is the R0b routing row tested by test #10. Three distinct sub-paths apply (all require the HTTP-400 gate to have fired):
 
@@ -810,14 +810,14 @@ On either Indeterminate cause:
 - Test #9 (`test_edit_type_indeterminate_get_issue_fails_surfaces_raw_error`): R1 routing row — `edit_issue` 400, then `get_issue` returns 5xx → Indeterminate (detected by `is_err()` on the `get_issue` call; project-types never called) → exit nonzero, raw error on stderr, no hint, `JRACLOUD-27893` absent, `jr api /rest/api/3/issue` absent. Distinct wiremock topology from test #4 (R2): test #9 has `get_issue` fail; test #4 has `get_issue` succeed then project-types fail. Exercises EC-3.4.011-4.
 - Test #10 (`test_edit_type_non_400_edit_error_surfaces_raw_error_no_enrichment`): R0b routing row — `edit_issue` returns e.g. HTTP 403 (a non-400 error) → exit nonzero, raw error on stderr, NEITHER the cross-hierarchy hint NOR the typo hint, `JRACLOUD-27893` absent, `jr api /rest/api/3/issue` absent. No enrichment fetch occurs (`get_issue` and `get_project_issue_types` mocks NOT mounted). Exercises BC-3.4.010 and BC-3.4.011 negative constraint: the enrichment block is entered ONLY on `status == 400`.
 
-**Trace**: issue #388 F2; `src/cli/issue/create.rs::is_cross_hierarchy_type_error` (pure classifier, `SameCategory` and `Indeterminate` variants); `src/cli/issue/create.rs` inline `#[cfg(test)] mod is_cross_hierarchy_type_error_proptests` proptest for `is_cross_hierarchy_type_error`; `src/cli/issue/create.rs::handle_edit` (unresolvable name → typo hint; fetch-failure → `Indeterminate` caller dispatch); `tests/issue_edit_type_errors.rs` (integration — same-hierarchy, indeterminate, absent-subtask-flag, and unresolvable-name paths, tests #3–#8)
+**Trace**: issue #388 F2; `src/cli/issue/edit.rs::is_cross_hierarchy_type_error` (pure classifier, `SameCategory` and `Indeterminate` variants); `src/cli/issue/edit.rs` inline `#[cfg(test)] mod is_cross_hierarchy_type_error_proptests` proptest for `is_cross_hierarchy_type_error`; `src/cli/issue/edit.rs::handle_edit` (unresolvable name → typo hint; fetch-failure → `Indeterminate` caller dispatch); `tests/issue_edit_type_errors.rs` (integration — same-hierarchy, indeterminate, absent-subtask-flag, and unresolvable-name paths, tests #3–#8)
 
 ---
 
 #### BC-3.4.012: `issue edit KEY` single-key success (table mode) echoes one stderr line per changed field in `field → value` format; resolved team name for `--team`; `(updated)` marker for description
 
 **Confidence**: HIGH
-**Source**: issue #398 F2 spec evolution; `src/cli/issue/create.rs::handle_edit` (single-key success path); `output::print_success` (existing stderr channel)
+**Source**: issue #398 F2 spec evolution; `src/cli/issue/edit.rs::handle_edit` (single-key success path); `output::print_success` (existing stderr channel)
 **Subject**: Issue write
 **Behavior**: On the single-key `issue edit KEY` success path (PUT 204), AFTER printing `"Updated <key>"` to stderr via `output::print_success`, the handler emits one additional stderr line per field that was changed in this invocation. Format is `  <field> → <value>` (two leading spaces, unicode arrow). Fields and their echo values:
 
@@ -879,14 +879,14 @@ Only fields that were actually changed in the invocation are echoed. The field-e
 - EC-3.4.012-13: `jr issue edit KEY --description "x" --summary "y"` → stderr emits, in alphabetical field-name order: `  description → (updated)` first, then `  summary → y` second. This pins that the `description` marker participates in the same BTreeMap alphabetical sort as all other keys — it is NOT moved to the end, and the `(updated)` literal is the value used in the sort position for `description`.
 - EC-3.4.012-14: `jr issue edit KEY --markdown --description "**bold**"` → table-mode echo is still `  description → (updated)` regardless of `--markdown`. The Markdown content is never surfaced in table mode; the `(updated)` marker applies uniformly to all description-change paths.
 - EC-3.4.012-15: `--team` value matches no team at all (`MatchResult::None(_)`) → `resolve_team_field` errors via `JrError::UserError` before the PUT (exit code per `src/error.rs::exit_code()`, currently 64); no team echo line is emitted and the changed-fields echo does not fire. The error text contains the stable substring `No team matching` (exact wording varies by `fetched_fresh` cache state; assert only the substring). Note: the `None` variant carries a `Vec<String>` of candidate names, unused by this contract.
-- EC-3.4.012-16: `jr issue edit KEY --description-stdin < /dev/null` → `desc_text = Some("")`. The edit proceeds — `--description-stdin` is itself a field flag so the no-fields-specified bail (the `has_any_field_change` guard, the pre-HTTP guard at `create.rs:341`) does not fire regardless of stdin content; an empty description is a valid change. (Note: there are two distinct no-fields guards in `handle_edit` — `has_any_field_change` at line 341 bails before any HTTP/JQL, and `has_updates` at line 821 bails inside the field-resolution block. The bail described in this EC is the FORMER — `has_any_field_change` — because `--description-stdin` is an unconditional flag predicate in that `let` binding.) Table-mode echo is `  description → (updated)` (same as any non-empty description). The empty description string is still converted to ADF for the PUT body. Exit code 0.
+- EC-3.4.012-16: `jr issue edit KEY --description-stdin < /dev/null` → `desc_text = Some("")`. The edit proceeds — `--description-stdin` is itself a field flag so the no-fields-specified bail (the `has_any_field_change` guard, the pre-HTTP guard at `edit.rs::has_any_field_change` ~line 106) does not fire regardless of stdin content; an empty description is a valid change. (Note: there are two distinct no-fields guards in `handle_edit` — `has_any_field_change` at ~line 106 bails before any HTTP/JQL, and `has_updates` at line 634 bails inside the field-resolution block. The bail described in this EC is the FORMER — `has_any_field_change` — because `--description-stdin` is an unconditional flag predicate in that `let` binding.) Table-mode echo is `  description → (updated)` (same as any non-empty description). The empty description string is still converted to ADF for the PUT body. Exit code 0.
 
 **Verification Properties**:
 - VP-398-001: Resolved team name in `edit` table output is the display name, not a UUID substring. Negative case (DECISION LOCKED — round 5 F-1): write a **direct unit-level assertion on `is_team_uuid`** — call `is_team_uuid("36885b3c-1bf0-4f85-a357-c5b858c31de")` (35 chars, one short of UUID length) and assert the return value is `false`. Reuse or cite the existing `is_team_uuid_rejects_wrong_length` test at `src/cli/issue/helpers.rs` (~line 617). Do NOT write an integration test routing this probe through `partial_match` — that tests `partial_match` fallback behavior, not the `is_team_uuid` predicate boundary. **PLACEMENT (DECISION LOCKED — round 7 F-1): `is_team_uuid` has no `pub` visibility — it is module-private. The `is_team_uuid` negative-case assertion is a UNIT test that MUST be placed in the `#[cfg(test)] mod tests` block inside `src/cli/issue/helpers.rs` (because `is_team_uuid` is module-private and not exported via lib.rs). Do NOT place it in `tests/`. The team-echo positive cases (verifying that a resolved display name, not a UUID, appears in stderr or JSON) remain wiremock integration tests in `tests/`.**
 - VP-398-002: Description echo is exactly `(updated)` in table output (not a content preview, not a length, not empty).
 - VP-398-004: `--no-parent` produces exactly one `changed_fields` key named `parent` with value `(cleared)` — no `no_parent` key is ever present; identically for `--no-points` → key `points` value `(cleared)`, no `no_points` key. This is verified by asserting the JSON `changed_fields` object (in `--output json` mode) contains exactly the key `parent` (not `no_parent`) with value `"(cleared)"` when `--no-parent` is used, and contains exactly the key `points` (not `no_points`) with value `"(cleared)"` when `--no-points` is used. The table-mode echo uses the same keys (`parent →`, `points →`), verified by asserting stderr does not contain `no_parent` or `no_points` as field labels.
 
-**Trace**: issue #398 F2; `src/cli/issue/create.rs::handle_edit`; `src/cli/issue/helpers.rs::resolve_team_field` (signature change to return 3-tuple; `is_team_uuid` predicate: 36-char, 8-4-4-4-12 ASCII hex groups, case-insensitive); `.factory/research/issue-398-field-echo-conventions.md`; `.factory/phase-f2-spec-evolution/prd-delta-398.md §2`
+**Trace**: issue #398 F2; `src/cli/issue/edit.rs::handle_edit`; `src/cli/issue/helpers.rs::resolve_team_field` (signature change to return 3-tuple; `is_team_uuid` predicate: 36-char, 8-4-4-4-12 ASCII hex groups, case-insensitive); `.factory/research/issue-398-field-echo-conventions.md`; `.factory/phase-f2-spec-evolution/prd-delta-398.md §2`
 
 [NEW 2026-05-21 issue #398 F2]
 [UPDATED 2026-05-21 adversarial review round 1: C-2 no-flags is pre-PUT exit-1; M-1 --label exclusion; MED-1 single-key cleared-field model; MED-2 BTreeMap/alphabetical ordering noted; MED-3 --dry-run precondition; MED-4 --jql single-match scope; MIN-2 UUID predicate pinned]
@@ -898,14 +898,14 @@ Only fields that were actually changed in the invocation are echoed. The field-e
 [UPDATED 2026-05-21 adversarial review round 8: MAJOR-1 points/parent bullet split into two-site insertion enumeration; invariant 4 f64 .to_string() scoped to --points branch only; OBS-2 concrete assertion values added to EC-3.4.012-5; OBS-4 EC-3.4.012-12 pinned as integration test (wiremock); IMP-3 EC-3.4.012-16 added (empty-stdin edge case)]
 [UPDATED 2026-05-21 adversarial review round 9: IMPORTANT-1 EC-3.4.012-12 wiremock-only note added (real Jira rejects empty summary with HTTP 400)]
 [UPDATED 2026-05-21 adversarial review round 10: IMPORTANT-3 invariant 6 added (map construction vs emission timing — map discarded on PUT error, emitted only post-204); IMPORTANT-2 EC-3.4.012-16 has_any_field_change replaced with has_updates]
-[UPDATED 2026-05-21 adversarial review round 12: EC-3.4.012-16 reverted to `has_any_field_change` — the round-10 rename to `has_updates` was an over-correction; `has_any_field_change` (create.rs:341) is the pre-HTTP no-fields guard the EC reasons about]
+[UPDATED 2026-05-21 adversarial review round 12: EC-3.4.012-16 reverted to `has_any_field_change` — the round-10 rename to `has_updates` was an over-correction; `has_any_field_change` (`edit.rs::handle_edit` ~line 106) is the pre-HTTP no-fields guard the EC reasons about]
 
 ---
 
 #### BC-3.4.013: `issue edit KEY` single-key success (JSON mode) includes `changed_fields` object in `edit_response`; `updated: true` retained; description carries the RAW user-supplied input string
 
 **Confidence**: HIGH
-**Source**: issue #398 F2 spec evolution; `src/cli/issue/json_output.rs::edit_response` (signature change); `src/cli/issue/create.rs::handle_edit` (field-resolution block where `desc_text` is captured as the raw user input — `src/adf.rs` ADF→text converter is NOT used for this field)
+**Source**: issue #398 F2 spec evolution; `src/cli/issue/json_output.rs::edit_response` (signature change); `src/cli/issue/edit.rs::handle_edit` (field-resolution block where `desc_text` is captured as the raw user input — `src/adf.rs` ADF→text converter is NOT used for this field)
 **Subject**: Issue write
 **Behavior**: On the single-key `jr issue edit KEY --output json` success path (PUT 204), the JSON payload on stdout is extended from the prior `{"key": "<key>", "updated": true}` shape to include a `changed_fields` object:
 
@@ -978,7 +978,7 @@ The deliberate asymmetry between BC-3.4.012 (table: `(updated)` marker for descr
 - EC-3.4.013-10: `--summary ""` (empty-string value) → `changed_fields["summary"] = ""`. The empty string is a valid value; the key is present in the output. Pinned by test `test_BC_3_4_013_empty_summary_in_changed_fields` (asserting the JSON `changed_fields` object contains `"summary": ""` — the key is present with an empty string value, not absent). Note: this is a wiremock-only test scenario — real Jira rejects an empty `summary` with HTTP 400 (`summary` is a system-required field), so the success-path echo is not reachable against live Jira; the test exercises the echo formatting via a mocked 204 response only.
 - EC-3.4.013-11: `jr issue edit KEY --markdown --description "**bold**"` → `changed_fields["description"]` is the literal raw string `**bold**` (raw Markdown), NOT ADF JSON and NOT plain-text-rendered. The `--markdown` flag causes `markdown_to_adf("**bold**")` to be invoked for the PUT body sent to Jira, but the raw input string `"**bold**"` is captured BEFORE that conversion and stored in `changed_fields`. The `src/adf.rs` converter is not involved in populating `changed_fields["description"]` in any way.
 - EC-3.4.013-12: `--team` value matches no team at all (`MatchResult::None(_)`) → `resolve_team_field` errors via `JrError::UserError` before the PUT (exit code per `src/error.rs::exit_code()`, currently 64); no JSON is emitted and the changed-fields echo does not fire. The error text contains the stable substring `No team matching` (exact wording varies by `fetched_fresh` cache state; assert only the substring). Note: the `None` variant carries a `Vec<String>` of candidate names, unused by this contract.
-- EC-3.4.013-13: `jr issue edit KEY --description-stdin < /dev/null` → `desc_text = Some("")`. The edit proceeds — `--description-stdin` is itself a field flag so the no-fields-specified bail (the `has_any_field_change` guard, the pre-HTTP guard at `create.rs:341`) does not fire regardless of stdin content; an empty description is a valid change. (Note: there are two distinct no-fields guards in `handle_edit` — `has_any_field_change` at line 341 bails before any HTTP/JQL, and `has_updates` at line 821 bails inside the field-resolution block. The bail described in this EC is the FORMER — `has_any_field_change` — because `--description-stdin` is an unconditional flag predicate in that `let` binding.) JSON output: `changed_fields["description"]` is `""` (empty string). The `"description"` key IS present in `changed_fields`. Exit code 0.
+- EC-3.4.013-13: `jr issue edit KEY --description-stdin < /dev/null` → `desc_text = Some("")`. The edit proceeds — `--description-stdin` is itself a field flag so the no-fields-specified bail (the `has_any_field_change` guard, the pre-HTTP guard at `edit.rs::has_any_field_change` ~line 106) does not fire regardless of stdin content; an empty description is a valid change. (Note: there are two distinct no-fields guards in `handle_edit` — `has_any_field_change` at ~line 106 bails before any HTTP/JQL, and `has_updates` at line 634 bails inside the field-resolution block. The bail described in this EC is the FORMER — `has_any_field_change` — because `--description-stdin` is an unconditional flag predicate in that `let` binding.) JSON output: `changed_fields["description"]` is `""` (empty string). The `"description"` key IS present in `changed_fields`. Exit code 0.
 
 **Verification Properties**:
 - VP-398-001: Resolved team name in `edit` JSON `changed_fields.team` is the display name, not a UUID substring. Negative case (DECISION LOCKED — round 5 F-1): write a **direct unit-level assertion on `is_team_uuid`** — call `is_team_uuid("36885b3c-1bf0-4f85-a357-c5b858c31de")` (35 chars, one short of UUID length) and assert the return value is `false`. Reuse or cite the existing `is_team_uuid_rejects_wrong_length` test at `src/cli/issue/helpers.rs` (~line 617). Do NOT write an integration test routing this probe through `partial_match` — that tests `partial_match` fallback behavior, not the `is_team_uuid` predicate boundary. **PLACEMENT (DECISION LOCKED — round 7 F-1): `is_team_uuid` has no `pub` visibility — it is module-private. The `is_team_uuid` negative-case assertion is a UNIT test that MUST be placed in the `#[cfg(test)] mod tests` block inside `src/cli/issue/helpers.rs` (because `is_team_uuid` is module-private and not exported via lib.rs). Do NOT place it in `tests/`. The team-echo positive cases (verifying that a resolved display name, not a UUID, appears in JSON `changed_fields.team`) remain wiremock integration tests in `tests/`.**
@@ -998,7 +998,7 @@ The deliberate asymmetry between BC-3.4.012 (table: `(updated)` marker for descr
 [UPDATED 2026-05-21 adversarial review round 8: MAJOR-1 parent/points table rows split into two-site insertion enumeration; f64 .to_string() scoped to --points branch only (not --no-points); MAJOR-2 invariant 4 + VP-398-003 body add test_edit_response_empty_changed_fields; IMP-3 EC-3.4.013-13 added (empty-stdin edge case, changed_fields["description"]=="")]
 [UPDATED 2026-05-21 adversarial review round 9: IMPORTANT-1 EC-3.4.013-10 wiremock-only note added (real Jira rejects empty summary with HTTP 400)]
 [UPDATED 2026-05-21 adversarial review round 10: MAJOR-1 invariant 4 pinned regenerated snapshot body ({"changed_fields": {"summary": "New title"}, "key": "TEST-1", "updated": true}); IMPORTANT-1 top-level key order note added to invariant 4 and signature paragraph; IMPORTANT-2 EC-3.4.013-13 has_any_field_change replaced with has_updates; IMPORTANT-3 invariant 6 added (map construction vs emission timing — map discarded on PUT error, emitted only post-204)]
-[UPDATED 2026-05-21 adversarial review round 12: EC-3.4.013-13 reverted to `has_any_field_change` — the round-10 rename to `has_updates` was an over-correction; `has_any_field_change` (create.rs:341) is the pre-HTTP no-fields guard the EC reasons about]
+[UPDATED 2026-05-21 adversarial review round 12: EC-3.4.013-13 reverted to `has_any_field_change` — the round-10 rename to `has_updates` was an over-correction; `has_any_field_change` (`edit.rs::handle_edit` ~line 106) is the pre-HTTP no-fields guard the EC reasons about]
 
 ---
 
@@ -1115,7 +1115,7 @@ Field echo lines are sorted in **alphabetical field-name order** (matching BC-3.
 #### BC-3.4.015: `issue edit KEY --field NAME=VALUE` (string/number/date/datetime/user field, single-key path) — resolves field name, validates against editmeta, serializes per type, PUTs; success echoes field in `changed_fields`
 
 **Confidence**: HIGH
-**Source**: issue #396 F2 spec evolution; `src/cli/issue/create.rs::handle_edit` (single-key success path, extended); `src/api/jira/issues.rs::get_editmeta` (new); `src/cli/issue/helpers.rs::resolve_edit_fields` (new, owns field-lookup and ambiguity handling); `.factory/research/issue-396-jsm-fields-validation.md`
+**Source**: issue #396 F2 spec evolution; `src/cli/issue/edit.rs::handle_edit` (single-key success path, extended); `src/api/jira/issues.rs::get_editmeta` (new); `src/cli/issue/helpers.rs::resolve_edit_fields` (new, owns field-lookup and ambiguity handling); `.factory/research/issue-396-jsm-fields-validation.md`
 **Subject**: Issue write
 
 **Description**: On the single-key `issue edit KEY --field NAME=VALUE` path, for fields
@@ -1265,8 +1265,8 @@ not be flagged as a gap by reviewers.
 9. The `editmeta` response is NEVER cached. See non-goal note above the algorithm.
 10. **`resolve_edit_fields` MUST be called INSIDE the `--dry-run` block** (before the
     `return Ok(())` short-circuit), NOT after it. The existing `--dry-run` block in
-    `src/cli/issue/create.rs:551-708` is self-contained and short-circuits with
-    `return Ok(())` at line 707. Any code placed AFTER the dry-run block never executes
+    `src/cli/issue/edit.rs` (~lines 366-559) is self-contained and short-circuits with
+    `return Ok(())` at ~line 559. Any code placed AFTER the dry-run block never executes
     under `--dry-run`. Therefore: `resolve_edit_fields` (Steps 1–6) must be invoked
     within the dry-run path so that (a) the resolved `--field` entries appear in the
     planned-changes preview table/JSON, and (b) resolution failures (zero-match, bad type,
@@ -1390,7 +1390,7 @@ not be flagged as a gap by reviewers.
   The PUT is NOT issued. The planned-changes preview (same as BC-3.4.012 EC-3.4.012-9
   behavior) reflects the resolved `--field` entries in the preview table.
   **Exit code: 0** (the dry-run block returns `Ok(())` — confirmed from source at
-  `src/cli/issue/create.rs:707`: `return Ok(());` at the end of the dry-run block).
+  `src/cli/issue/edit.rs` ~line 559: `return Ok(());` at the end of the dry-run block).
   Mirrors EC-3.4.012-9. Implementers MUST NOT place `resolve_edit_fields` after the
   dry-run `return Ok(())` — it would silently skip `--field` preview and never surface
   resolution failures under `--dry-run`.
@@ -1431,7 +1431,7 @@ not be flagged as a gap by reviewers.
 - VP-396-012 (P3-LOW-002): field present in `editmeta` but `"set"` absent from
   `operations` → exit 64 with actionable hint; no PUT.
 
-**Trace**: issue #396 F2; `src/cli/issue/create.rs::handle_edit` (resolution integration);
+**Trace**: issue #396 F2; `src/cli/issue/edit.rs::handle_edit` (resolution integration);
 `src/api/jira/issues.rs::get_editmeta` (new); `src/cli/issue/helpers.rs::resolve_edit_fields`
 (new, orchestrates resolution pipeline — owns exact-match-then-substring logic and all
 exit-64 ambiguity handling; any field-lookup helper it calls is an implementation detail
@@ -1451,7 +1451,7 @@ not spec-anchored here);
 #### BC-3.4.016: `issue edit KEY --field NAME=VALUE` (single-select `option` field) — resolves human option value to `allowedValues[].id`, sends `{"id":"<id>"}` on wire; `changed_fields` echo shows human label
 
 **Confidence**: HIGH
-**Source**: issue #396 F2 spec evolution; `src/cli/issue/create.rs::handle_edit`; `src/api/jira/issues.rs::get_editmeta`; `.factory/research/issue-396-jsm-fields-validation.md §Q2`
+**Source**: issue #396 F2 spec evolution; `src/cli/issue/edit.rs::handle_edit`; `src/api/jira/issues.rs::get_editmeta`; `.factory/research/issue-396-jsm-fields-validation.md §Q2`
 **Subject**: Issue write
 
 **Description**: When `editmeta` reports `schema.type == "option"` for the resolved
@@ -1552,7 +1552,7 @@ option `id`. Exception: when the id-bypass path fires, `changed_fields` value is
   BC-3.4.015 invariants 6–8 — the same `resolve_edit_fields` step 2/2b path is
   followed regardless of whether the field schema type is `string` or `option`.)
 
-**Trace**: issue #396 F2; `src/cli/issue/create.rs::handle_edit`;
+**Trace**: issue #396 F2; `src/cli/issue/edit.rs::handle_edit`;
 `src/api/jira/issues.rs::get_editmeta`; `.factory/research/issue-396-jsm-fields-validation.md §Q2`
 (wire format confirmed: `{"customfield_NNNNN": {"id": "..."}}` is the working shape);
 `.factory/phase-f2-spec-evolution/prd-delta-396.md §3`
@@ -1564,7 +1564,7 @@ option `id`. Exception: when the id-bypass path fires, `changed_fields` value is
 #### BC-3.4.017: `--field` multi-key/`--jql` multi-issue rejection (C-1 guard) + flag-overlap hard error for `summary`/`description`/`issuetype`/`priority`
 
 **Confidence**: HIGH
-**Source**: issue #396 F2 spec evolution; `src/cli/issue/create.rs::handle_edit` (C-1 guard, `REJECTED_IN_BULK` set); `.factory/phase-f2-spec-evolution/prd-delta-396.md §3`
+**Source**: issue #396 F2 spec evolution; `src/cli/issue/edit.rs::handle_edit` (C-1 guard, `REJECTED_IN_BULK` set); `.factory/phase-f2-spec-evolution/prd-delta-396.md §3`
 **Subject**: Issue write
 
 **Description**: Two enforcement gates ensure `--field` is not misused in contexts
@@ -1707,7 +1707,7 @@ adding bulk `--field` support would require a separate design pass.
   reaches stderr. The multi-key detection is not reached.
 - EC-3.4.017-13: `jr issue edit KEY --label add:foo --field Severity=Critical` on a single
   key → exit 64 with `--label` conflict-block error. The `--label` short-circuit at
-  `src/cli/issue/create.rs::handle_edit § "Route: labels → bulk API"` routes to `handle_edit_bulk_labels` which does not accept
+  `src/cli/issue/edit.rs::handle_edit § "Route: labels → bulk API"` routes to `handle_edit_bulk_labels` which does not accept
   `field_pairs`; without rejection before the routing decision the `--field` write silently
   drops (exit 0, data loss). The `--label` mutual-exclusion block in `handle_edit` rejects
   this combination before any HTTP call. Error: `"--label cannot be combined with --field in
@@ -1715,17 +1715,17 @@ adding bulk `--field` support would require a separate design pass.
   label + field bulk edits (see #331)."` Combined label + custom-field bulk edits tracked at
   #331. [FIX-F5-001]
 - EC-3.4.017-14: The `--label` conflict block at
-  `src/cli/issue/create.rs::handle_edit::if !labels.is_empty()` is mechanically enforced
-  complete by `test_label_conflict_block_lists_every_relevant_flag` (in `create.rs::tests`).
+  `src/cli/issue/edit.rs::handle_edit::if !labels.is_empty()` is mechanically enforced
+  complete by `test_label_conflict_block_lists_every_relevant_flag` (in `edit.rs::tests`).
   **Extraction strategy**: the meta-test parses the conflict-block source via
-  `include_str!("create.rs")` and extracts every `conflicting.push("--<flag>")` literal
+  `include_str!("edit.rs")` and extracts every `conflicting.push("--<flag>")` literal
   from the ENTIRE file (global extraction). This is safe because the local variable name
   `conflicting` is used exclusively within the `if !labels.is_empty() { ... }` block in
   `handle_edit`; if a future cycle introduces a second `conflicting` variable anywhere in
-  `create.rs`, the meta-test must be re-scoped to brace-matched extraction. A guard comment
-  MUST be added in `create.rs` at the conflict-block declaration site: `// NOTE: the variable
+  `edit.rs`, the meta-test must be re-scoped to brace-matched extraction. A guard comment
+  MUST be added in `edit.rs` at the conflict-block declaration site: `// NOTE: the variable
   name 'conflicting' is reserved for this block — test_label_conflict_block_lists_every_relevant_flag
-  uses a global scan of conflicting.push("--...") in create.rs`.
+  uses a global scan of conflicting.push("--...") in edit.rs`.
   **Expected set construction**: build a `BTreeSet<String>` (NOT `HashSet` — deterministic
   failure diffs across runs, mirrors `test_343_every_edit_field_is_categorized`) from
   `(BULK_SUPPORTED \ {"label"}) ∪ REJECTED_IN_BULK`. For each field, the kebab-case CLI
@@ -1764,7 +1764,7 @@ adding bulk `--field` support would require a separate design pass.
   `stderr.contains("--label cannot be combined with --markdown")` (that concatenation does
   not appear verbatim when `--description` precedes `--markdown` in the joined output). Note:
   the `--markdown` test uses `--label add:x --markdown --description "text"` because
-  `--markdown` alone triggers an earlier guard at `create.rs:357-363` before the conflict
+  `--markdown` alone triggers an earlier guard at `edit.rs` ~line 87 before the conflict
   block; pairing with `--description` bypasses the early guard and reaches the conflict block,
   verifying the `--markdown` row. [Issue #407]
 
@@ -1774,7 +1774,7 @@ adding bulk `--field` support would require a separate design pass.
 - VP-396-008: `--field` + `--dry-run` → success path exits 0; Gate A/B still fire;
   read-only HTTP executes for preview; PUT NOT issued; resolution failure still exits 64.
 
-**Trace**: issue #396 F2; `src/cli/issue/create.rs::handle_edit` (`REJECTED_IN_BULK`
+**Trace**: issue #396 F2; `src/cli/issue/edit.rs::handle_edit` (`REJECTED_IN_BULK`
 set update; Gate B overlap check; `has_any_field_change` update to include `--field`);
 `.factory/phase-f2-spec-evolution/prd-delta-396.md §3`
 
@@ -1819,13 +1819,13 @@ This contract governs the canonical wire shape and the name→issueTypeId resolu
 - EC-3.4.018-2: `jr issue edit FOO-1 FOO-2 --type Nonexistent --no-input` — createmeta returns `[{id: "10001", name: "Bug"}]`; name `"Nonexistent"` not found; exit 64; stderr contains `"Issue type 'Nonexistent' not found"` and lists `"Bug"` as a valid type. NO bulk POST is issued. Verified by `test_bulk_issuetype_unknown_type_name_exits_non_zero`.
 - EC-3.4.018-3: `jr issue edit FOO-1 FOO-2 --type bug --no-input` (lowercase name) — case-insensitive match against `name: "Bug"` succeeds; `issueTypeId` is resolved; bulk POST proceeds. The case of the input does not affect resolution.
 - EC-3.4.018-4: `jr issue edit FOO-1 --type Bug` (single key) — routes to `handle_edit` single-key path (PUT `/rest/api/3/issue/FOO-1`); `GET .../createmeta/.../issuetypes` is NOT called; this BC does not apply. Existing BC-3.4.003/010/011 govern.
-- EC-3.4.018-5: `jr issue edit FOO-1 FOO-2 --type Bug --dry-run --output json` — dry-run builder emits `plannedChanges` with `"issueType"` (camelCase key, matching live POST key) containing a bare string value (the name, NOT `{"issueTypeId": "..."}`). The dry-run is intentionally simplified (same model as priority); no createmeta HTTP call is issued during dry-run.
+- EC-3.4.018-5: `jr issue edit FOO-1 FOO-2 --type Bug --dry-run --output json` — `GET .../createmeta/.../issuetypes` is NOT called during dry-run (id resolution is skipped). The camelCase `"issueType"` key appears in `plannedChanges` (matching the live POST key per invariant 5 of this BC). For the complete dry-run preview shape (bare name string, intentionally simplified), see BC-3.4.021 EC-3.4.021-3, which is the canonical owner of the dry-run `--type` output shape.
 
 **Verification Properties**:
 - VP-331-001: Multi-key bulk `--type` POST body contains camelCase `"issueType"` key in `editedFieldsInput` AND `"issueTypeId"` string value AND lowercase `"issuetype"` in `selectedActions`; does NOT contain `"\"name\":"` in the issueType value position.
 - VP-331-002: Unknown type name exits 64 before any bulk POST; stderr names the invalid type and lists valid alternatives.
 
-**Trace**: issue #331 F2; `.factory/research/issue-331-issuetype-bulk-schema.md`; `src/cli/issue/create.rs::handle_edit_bulk_fields`; `src/api/jira/issues.rs::get_issue_types_for_project` (new); `tests/issue_bulk_pr2.rs` (new integration tests: `test_bulk_issuetype_body_uses_issuetype_id_not_name`, `test_bulk_issuetype_unknown_type_name_exits_non_zero`; rewrite `test_multi_key_type_update_uses_consistent_issuetype_casing` → `test_multi_key_type_update_body_uses_issue_type_id`); live E2E coverage qualitative (gated `JR_RUN_E2E`)
+**Trace**: issue #331 F2; `.factory/research/issue-331-issuetype-bulk-schema.md`; `src/cli/issue/edit.rs::handle_edit_bulk_fields`; `src/api/jira/issues.rs::get_issue_types_for_project` (new); `tests/issue_bulk_pr2.rs` (new integration tests: `test_bulk_issuetype_body_uses_issuetype_id_not_name`, `test_bulk_issuetype_unknown_type_name_exits_non_zero`; rewrite `test_multi_key_type_update_uses_consistent_issuetype_casing` → `test_multi_key_type_update_body_uses_issue_type_id`); live E2E coverage qualitative (gated `JR_RUN_E2E`)
 
 [NEW 2026-06-01 issue #331 F2]
 
@@ -1882,9 +1882,212 @@ not approved at the human gate for this issue. Error-early (this BC) is the safe
 **Verification Properties**:
 - VP-331-003: Cross-project `--type` bulk edit exits 64 before any HTTP call; stderr contains `--type` and both project keys; no createmeta and no bulk POST mocks are hit.
 
-**Trace**: issue #331 F2; `.factory/research/issue-331-issuetype-bulk-schema.md §CRITICAL per-project caveat for multi-key bulk`; `src/cli/issue/create.rs::handle_edit_bulk_fields` (cross-project guard, pre-resolution); `tests/issue_bulk_pr2.rs` (new integration test: `test_bulk_issuetype_cross_project_keys_exits_64`)
+**Trace**: issue #331 F2; `.factory/research/issue-331-issuetype-bulk-schema.md §CRITICAL per-project caveat for multi-key bulk`; `src/cli/issue/edit.rs::handle_edit` (cross-project guard at ~line 335, pre-dry-run and pre-routing); `tests/issue_bulk_pr2.rs` (new integration test: `test_bulk_issuetype_cross_project_keys_exits_64`)
 
 [NEW 2026-06-01 issue #331 F2]
+
+---
+
+#### BC-3.4.020: `issue edit --label` routes single-key through `PUT /rest/api/3/issue/{key}` with bare-string labels; routes 2+ keys through `POST /rest/api/3/bulk/issues/fields` with `{"name":...}` objects — these two paths are LOAD-BEARING asymmetric and MUST NOT be unified
+
+**Confidence**: HIGH
+**Source**: CLAUDE.md Gotcha BUG-LABEL-400; `src/cli/issue/edit.rs::handle_edit_bulk_labels` (Path A lines ~961-1001, Path B lines ~1004-1020); `src/api/jira/issues.rs::update_issue_labels` (bare-string PUT payload); live E2E run 26730687481 (bulk payload returns HTTP 400 on single-key PUT path on real Jira Cloud)
+**Subject**: Issue write (label edit routing)
+
+**Description**: `handle_edit_bulk_labels` inspects `keys.len()` to choose between two entirely
+different API endpoints with mutually incompatible payload shapes. The routing decision fires
+after `--jql` resolution, so a `--jql` query matching exactly one issue follows Path A (PUT).
+This asymmetry is confirmed by live E2E run 26730687481: the bulk `{"name":...}` payload causes
+HTTP 400 on real Jira Cloud when applied to the single-key PUT endpoint.
+
+**Preconditions**:
+1. `jr issue edit --label <spec>` is invoked with 1 to N positional keys (or `--jql` resolving to 1..N keys).
+2. At least one `--label` value is supplied.
+3. None of the `--label` mutual-exclusion flags are supplied alongside `--label`. The full set (verified from `src/cli/issue/edit.rs::handle_edit` lines 180-227, CLAUDE.md FIX-F5-001): `--summary`, `--priority`, `--type`, `--team`, `--points`, `--no-points`, `--parent`, `--no-parent`, `--description`, `--description-stdin`, `--markdown`, `--field`. Combining `--label` with any of these flags causes the block to exit 64 before this contract's routing logic fires; the block fires unconditionally on `!labels.is_empty() && !conflicting.is_empty()` (NOT only on `!field_pairs.is_empty()`) regardless of key count. This gate is **distinct from BC-3.4.017 Gate B** — Gate B covers multi-key (`--jql` or 2+ positional keys) + flag-overlap for `--summary`/`--description`/`--type`/`--priority` only; the `--label` conflict block is a separate earlier-return covering all 12 flags at any key count.
+4. `--dry-run` is NOT set. When `--dry-run` is present, `handle_edit` short-circuits at the dry-run block (`src/cli/issue/edit.rs` ~lines 366-559, verified: `if dry_run {` at line 366, `return Ok(());` at line 559) BEFORE the label-routing branch at line 603 (`if !labels.is_empty()`). No PUT or bulk POST is issued under `--dry-run`. The label dry-run preview (plannedChanges with action/name entries) is owned by BC-3.4.021 Invariant 4. Path A and Path B of this contract apply only to live, non-dry-run label edits.
+
+**Postconditions — Path A (single key, `keys.len() == 1`)**:
+1. `PUT /rest/api/3/issue/{key}` is called exactly once with Content-Type `application/json`.
+2. Request body is `{"update": {"labels": [{"add": "foo"}, {"remove": "bar"}]}}` where label values are **bare strings** (NOT `{"name":...}` objects).
+3. `add:` prefix entries produce `{"add": "name"}` operations; `remove:` prefix entries produce `{"remove": "name"}`; bare entries (no prefix) produce `{"add": "name"}`.
+4. Returns HTTP 204 → exit 0.
+5. `POST /rest/api/3/bulk/issues/fields` is NOT called.
+6. `GET .../editmeta` is NOT called (label edits skip editmeta validation).
+
+**Postconditions — Path B (multi-key, `keys.len() >= 2`)**:
+1. `POST /rest/api/3/bulk/issues/fields` is called exactly once (both ADD and REMOVE coalesce into a single POST).
+2. Request body `selectedActions` array is `["labels"]`.
+3. Request body `editedFieldsInput` is:
+   ```json
+   {
+     "labelsFields": [
+       {"fieldId":"labels","bulkEditMultiSelectFieldOption":"ADD","labels":[{"name":"foo"}]},
+       {"fieldId":"labels","bulkEditMultiSelectFieldOption":"REMOVE","labels":[{"name":"bar"}]}
+     ]
+   }
+   ```
+   where label items are `{"name":"..."}` **objects** (NOT bare strings). If only ADD entries: `labelsFields` has one element. If only REMOVE: one element. If both: two elements, ADD first, REMOVE second.
+4. `PUT /rest/api/3/issue/{key}` is NOT called.
+5. The async bulk task from PC1 is polled via `GET /rest/api/3/bulk/queue/{taskId}` (where `taskId` is read from the submit-response body at `src/api/jira/bulk.rs` lines 271-273, `bulk_edit_fields`; the poll URL is constructed at `bulk.rs` line 317) until terminal status; exit 0 on success. Equivalent to BC-3.4.018's task-polling mechanism.
+
+**Invariants**:
+1. The same `--label` spec (e.g., `--label add:foo`) produces DIFFERENT wire payloads depending on key count. This asymmetry is LOAD-BEARING and MUST NOT be unified — live Jira Cloud returns HTTP 400 if the bulk `{"name":...}` payload is sent to the single-key PUT endpoint, and vice versa. (BUG-LABEL-400)
+2. `keys.len() == 1` is determined AFTER `--jql` resolution — a `--jql` query matching exactly one issue takes Path A (PUT), not Path B (bulk POST).
+3. The routing check is `keys.len() == 1`, NOT "was `--jql` used?".
+4. The bulk POST for labels uses `labelsFields` (NOT `issueType` or `priority` field names). The `labelsFields` key and `bulkEditMultiSelectFieldOption` field name are Atlassian-defined and must not be changed.
+
+**Edge Cases**:
+- EC-3.4.020-1: One positional key → PUT path; body contains `{"add":"name"}` bare strings; bulk POST is NOT called.
+- EC-3.4.020-2: `--jql "project = FOO AND key = FOO-1"` matching exactly one issue → PUT path (not bulk), same behavior as one positional key.
+- EC-3.4.020-3: Two positional keys → bulk POST path; `labelsFields` contains `{"name":"name"}` objects; PUT is NOT called.
+- EC-3.4.020-4: `--jql "project = FOO"` matching two issues → bulk path; same `labelsFields` object shape.
+- EC-3.4.020-5: Bare label (no prefix, e.g., `--label feature`) → treated as ADD; produces `{"add":"feature"}` on PUT path; `{"name":"feature"}` under `bulkEditMultiSelectFieldOption:"ADD"` on bulk path.
+- EC-3.4.020-6: Only REMOVE entries for a single key → `{"update":{"labels":[{"remove":"x"}]}}` body (no ADD element); `labelsFields` absent.
+- EC-3.4.020-7: Only ADD entries for multiple keys → `labelsFields` has exactly one element (ADD only; no REMOVE element).
+- EC-3.4.020-8: `FOO-1 --label add:foo --label remove:bar` (single key, both ADD and REMOVE in one invocation) → PUT body `{"update":{"labels":[{"add":"foo"},{"remove":"bar"}]}}` — all adds precede all removes in the `label_ops` array REGARDLESS of CLI input order. `src/api/jira/issues.rs::update_issue_labels` (lines 478–484) iterates the `adds` array first, then the `removes` array. Contrast: dry-run `plannedChanges.labels` PRESERVES CLI input order (iterates the raw `labels` vec at `edit.rs` lines 431–443), so `--label remove:bar --label add:foo` yields `[{"action":"REMOVE","name":"bar"},{"action":"ADD","name":"foo"}]` in dry-run but `[{"add":"foo"},{"remove":"bar"}]` on the live PUT wire. Holdout mocks targeting the live path must expect adds-before-removes.
+
+**Canonical Test Vectors**:
+
+| Scenario | Keys | Input | Expected endpoint | Expected payload fragment |
+|----------|------|-------|------------------|--------------------------|
+| Single-key ADD | `FOO-1` | `--label add:bug` | `PUT /rest/api/3/issue/FOO-1` | `{"update":{"labels":[{"add":"bug"}]}}` |
+| Single-key REMOVE | `FOO-1` | `--label remove:bug` | `PUT /rest/api/3/issue/FOO-1` | `{"update":{"labels":[{"remove":"bug"}]}}` |
+| Multi-key ADD | `FOO-1 FOO-2` | `--label add:bug` | `POST .../bulk/issues/fields` | `labelsFields[0].bulkEditMultiSelectFieldOption = "ADD"`, `labels[0].name = "bug"` |
+
+**Verification Properties**:
+- VP-LABEL-FORK-001: Single-key `--label` invocation calls PUT exactly once; bulk POST mock is not hit (`.expect(0)`); PUT body contains bare-string `{"add":"..."}` (not `{"name":"..."}`).
+- VP-LABEL-FORK-002: Two-key `--label` invocation calls bulk POST exactly once; PUT mock is not hit (`.expect(0)`); bulk body `labelsFields[0].labels[0]` is an object with a `name` key (not a bare string).
+
+**Trace**: CLAUDE.md Gotcha BUG-LABEL-400; `src/cli/issue/edit.rs::handle_edit_bulk_labels`; `src/api/jira/issues.rs::update_issue_labels`; BC-3.4.006 (complementary: `build_labels_edited_fields` pure-function shape); H-NEW-LABEL-FORK-001 (holdout unblocked by this BC)
+
+[NEW 2026-06-30 BC-subclause-pass F2]
+
+---
+
+#### BC-3.4.021: `jr issue edit --dry-run` emits `plannedChanges` JSON or table preview on stdout without issuing any mutation HTTP call; `--output json` schema is `{dryRun: true, issues: [...], plannedChanges: {...}}`
+
+**Confidence**: HIGH
+**Source**: `src/cli/issue/edit.rs::handle_edit` dry-run block (implementation-defined; no external Atlassian analogue); CLAUDE.md `--dry-run is implemented on issue edit (multi-key positional + --jql-resolved sets) with --output json support`
+**Subject**: Issue write (dry-run preview)
+
+**Description**: When `--dry-run` is present, `handle_edit` emits a preview of planned changes and
+exits 0 without issuing any mutation HTTP call. The output format is INTERNAL to `jr` — there is no
+Jira Cloud API endpoint for this behavior. The `plannedChanges` field shapes are intentionally
+SIMPLIFIED previews that do NOT match the live-edit wire payloads (e.g., labels as a flat array
+instead of `labelsFields`; priority as a bare string instead of `{"priorityId":"..."}`). These
+simplifications are deliberate design choices documented in source comments.
+
+**Preconditions**:
+1. `jr issue edit KEY(s) --dry-run [flags]` is invoked.
+2. At least one field flag is supplied (the pre-HTTP zero-flag guard fires at exit 64 before the dry-run block; this BC does not apply when no flags are given).
+3. `--dry-run` is explicitly set (not inferred from any other condition).
+4. Keys may be positional or resolved via `--jql`.
+
+**Postconditions — Common (regardless of `--output`)**:
+1. No mutation HTTP call is issued: `PUT /rest/api/3/issue/{key}`, `POST /rest/api/3/bulk/issues/fields`, and `POST /rest/api/3/bulk/issues/transition` are all NOT called.
+2. `--jql` resolution fires (read-only search endpoint is called) if `--jql` is supplied.
+3. If `--field NAME=VALUE` is supplied: `GET /rest/api/3/issue/{key}/editmeta` fires (read-only field validation). A resolution failure (field absent from editmeta, unknown option value) still exits 64 — `--dry-run` does NOT suppress exit-64 resolution errors (BC-3.4.015 EC-3.4.015-19 preserved).
+4. Exit code is 0 on successful dry-run completion.
+5. Output is written to **stdout** (not stderr).
+
+**Postconditions — `--output json`**:
+1. stdout is a single pretty-printed JSON object with exactly three top-level keys:
+   ```json
+   {
+     "dryRun": true,
+     "issues": ["FOO-1", "FOO-2"],
+     "plannedChanges": { ... }
+   }
+   ```
+2. `plannedChanges` is a JSON object containing ONLY the field keys the user explicitly requested. Absent flags do NOT appear in `plannedChanges`.
+3. `plannedChanges` key names and value types per flag:
+   - `--summary "X"` → `"summary": "X"` (bare string)
+   - `--priority "High"` → `"priority": "High"` (bare string; NOT `{"priorityId":"..."}`)
+   - `--type "Bug"` → `"issueType": "Bug"` (bare string; NOT id-resolved)
+   - `--parent "FOO-0"` → `"parent": "FOO-0"` (bare string)
+   - `--no-parent` → `"parent": null` (JSON null, NOT absent key)
+   - `--points 3` → `"points": 3.0` (number)
+   - `--no-points` → `"points": null` (JSON null, NOT absent key)
+   - `--team "Backend"` → `"team": "Backend"` (bare string)
+   - `--description "X"` → `"description": "X"` (bare string; raw input, NOT ADF)
+   - `--description-stdin` → `"description": "<from stdin — not yet read in dry-run>"` (literal placeholder; stdin NOT read)
+   - `--markdown` → `"markdown": true` (boolean)
+   - `--label add:foo` → `"labels": [{"action": "ADD", "name": "foo"}]` (flat array; NOT the `labelsFields` bulk schema)
+   - `--field NAME=VALUE` (resolved) → `"<field display-name>": "<display value>"` merged into `plannedChanges` as string key/value pairs. The key is the HUMAN display name (e.g. `"Story Points"`), NOT the `customfield_NNNNN` wire ID. The value is the display value (e.g. `"5"` for a number field; the matched option label for a select field). Source: `src/cli/issue/field_resolve.rs::resolve_edit_fields` step 6 inserts `(human_name, display_value)` into `changed_fields`, which is the same map merged into `plannedChanges` via `dr_changed` at `edit.rs` lines 480–482.
+4. `dryRun: true` is always present as a boolean top-level key.
+5. `issues` is always present as a string array of the resolved keys.
+6. Output is produced via `output::render_json(&payload)` (JSON render invariant, BC-7.3.010).
+
+**Postconditions — `--output table` (default)**:
+1. stdout lines in source insertion order (only lines for explicitly-supplied flags are emitted):
+   ```
+   DRY RUN — no changes will be made.
+   Issues affected (N):
+     <KEY-1>
+   Planned changes:
+     summary → <value>
+     priority → <value>
+     labels → add:foo, remove:bar
+     type → <value>
+     parent → <value> | (clear)
+     points → <value> | (clear)
+     team → <value>
+     description → <preview>
+     markdown rendering: enabled
+     <field-name> → <value>
+   ```
+2. `--description "..."` longer than 60 Unicode codepoints → truncated to 60 codepoints with `"..."` suffix. Truncation uses `chars().count()` / `chars().take(60)` (codepoint-aware, not byte-slice).
+3. `--description-stdin` → `"  description → (read from stdin — not yet read in dry-run)"`.
+4. `--no-parent` → `"  parent → (clear)"`.
+5. `--no-points` → `"  points → (clear)"`.
+6. `--label add:foo --label remove:bar` → `"  labels → add:foo, remove:bar"` (comma-joined, prefix preserved).
+7. All output is on stdout (output-channel profile 1 for dry-run path per source comment).
+
+**Invariants**:
+1. The `plannedChanges` field shapes are INTENTIONALLY SIMPLIFIED previews that do NOT match live-edit wire payloads:
+   - `labels`: dry-run emits `[{"action":"ADD","name":"foo"}]`; live bulk POST sends `labelsFields` array with `bulkEditMultiSelectFieldOption` (see BC-3.4.006 / BC-3.4.020).
+   - `priority`: dry-run emits a bare string; live POST wraps as `{"priorityId":"<id>"}`.
+   - `issueType`: dry-run emits the type name; live POST uses `{"issueTypeId":"<id>"}`.
+   These simplifications are intentional (source comment at `edit.rs` dry-run block). Do NOT "fix" them to match live wire shapes. Note: the single-key live PUT (`src/cli/issue/edit.rs` lines 675, 681, 712) uses a THIRD distinct shape — object wrappers with name/key fields (`issuetype: {"name":t}`, `priority: {"name":p}`, `parent: {"key":parent_key}`) — so dry-run bare strings differ from BOTH the bulk POST shapes AND the single-key PUT shapes.
+2. `--dry-run` does NOT suppress exit-64 resolution errors. Only `PUT`/`POST` mutation is suppressed.
+3. `--dry-run` does NOT read stdin for `--description-stdin` — the literal placeholder string is the correct behavior, not a bug.
+4. This BC owns ONLY the dry-run preview shapes built inside `handle_edit`'s dry-run block (`src/cli/issue/edit.rs` lines ~431–559). `handle_edit_bulk_labels` (line 935) and `handle_edit_bulk_fields` (line 1059) take NO `dry_run` parameter and have NO dry-run path of their own — `handle_edit` returns `Ok(())` at line 559 (the dry-run early-return) BEFORE reaching the label-routing branch (line 603) or the multi-key-routing branch (line 618). Live wire shape ownership: live bulk label shape → BC-3.4.020 Path B (verified: BC-3.4.006 is about labels via `build_labels_edited_fields`, not priority); live multi-key `--type` bulk shape → BC-3.4.018; the live bulk `--priority` shape (`{"priorityId":"<id>"}`, `src/cli/issue/edit.rs::handle_edit_bulk_fields` line 1093) has NO dedicated owning BC; the single-key PUT field shapes (`issuetype: {"name":t}`, `priority: {"name":p}`, `parent: {"key":...}` at `edit.rs` lines 675, 681, 712) have NO dedicated owning BC — all three PUT shapes are documented inline in Invariant 1 of this BC. (Note: BC-3.4.012 owns the SUCCESS ECHO/changed_fields map, not the PUT wire payload.)
+5. Exit code 0 is unconditional after the dry-run block returns `Ok(())`.
+
+**Edge Cases**:
+- EC-3.4.021-1: `--output json --summary "X"` → `{"dryRun":true,"issues":["FOO-1"],"plannedChanges":{"summary":"X"}}`; PUT not called.
+- EC-3.4.021-2: `--output json --label add:foo --label remove:bar` → `plannedChanges.labels = [{"action":"ADD","name":"foo"},{"action":"REMOVE","name":"bar"}]` (flat array; NOT `labelsFields`).
+- EC-3.4.021-3: `--output json --type "Bug"` → `plannedChanges.issueType = "Bug"` (bare string; no id-resolution HTTP call).
+- EC-3.4.021-4: `--output json --no-parent` → `plannedChanges.parent = null` (JSON null, not absent key).
+- EC-3.4.021-5: `--output json --no-points` → `plannedChanges.points = null` (JSON null, not absent key).
+- EC-3.4.021-6: `--output json --description-stdin --dry-run` → `plannedChanges.description = "<from stdin — not yet read in dry-run>"` (literal placeholder); stdin not read.
+- EC-3.4.021-7: `--output table --description "..."` longer than 60 codepoints → truncated with `"..."` suffix in table output.
+- EC-3.4.021-8: `FOO-1 FOO-2 --summary "X" --output json --dry-run` → `issues: ["FOO-1","FOO-2"]`; bulk POST NOT called; both keys in `issues` array.
+- EC-3.4.021-9: `--field NAME=VALUE --dry-run` → editmeta GET fires; resolved key+value appear in `plannedChanges`; PUT NOT called; exit 0 (happy path). Exit 64 if field resolution fails (BC-3.4.015 EC-3.4.015-19 preserved).
+- EC-3.4.021-10: Zero field flags + `--dry-run` → exit 64 before dry-run block (pre-HTTP guard fires; precondition 2 fails; this BC does not apply).
+- EC-3.4.021-11: `--output table --no-parent` → stdout contains `"  parent → (clear)"` (not `"null"` or absent line).
+- EC-3.4.021-12: `--output json --points 0 --dry-run` → `plannedChanges.points = 0.0` (JSON number zero, NOT `null`). This is semantically distinct from `--no-points` → `plannedChanges.points = null` (EC-3.4.021-5). The `Some(f64)` branch at `edit.rs` line 454 handles `--points 0`; the explicit-null branch at line 457 handles `--no-points`. Zero-valued numbers must not be confused with cleared fields.
+- EC-3.4.021-13: `--output table --description "..."` with exactly 60 codepoints → no truncation suffix (description is emitted verbatim). With exactly 61 codepoints → the first 60 codepoints are kept and `"..."` is appended. Source: `edit.rs` line 537 uses `char_count > 60` (strict-greater): a count of exactly 60 is NOT greater than 60, so the else branch fires (no suffix). This is a codepoint boundary, not byte-length; multi-byte UTF-8 characters count as one codepoint each (`chars().count()` / `chars().take(60)`).
+- EC-3.4.021-14: `--priority High --dry-run --output json` → `plannedChanges.priority = "High"` (bare string, NOT `{"name": "High"}` or `{"priorityId": "..."}`, intentionally simplified per invariant 1). Contrast: single-key PUT body wraps priority as `{"priority":{"name":"High"}}` (Jira v3 `update` shape); bulk POST body resolves and sends `{"priorityId": "<id>"}` (name→id via `GET /rest/api/3/priority`, ADR #331). The dry-run preview emits the user-supplied name verbatim, no resolution HTTP call. Source: `src/cli/issue/edit.rs` line ~407 (`planned.insert("priority".into(), json!(p))` where `p: &String`).
+
+**Canonical Test Vectors**:
+
+| Scenario | Flags | `--output` | Expected stdout fragment | PUT called? |
+|----------|-------|------------|--------------------------|-------------|
+| Summary dry-run JSON | `FOO-1 --summary "Fix bug" --dry-run` | json | `{"dryRun":true,"issues":["FOO-1"],"plannedChanges":{"summary":"Fix bug"}}` | No |
+| Label dry-run JSON | `FOO-1 --label add:bug --dry-run` | json | `plannedChanges.labels[0] = {"action":"ADD","name":"bug"}` | No |
+| Multi-key dry-run | `FOO-1 FOO-2 --summary "X" --dry-run` | json | `issues: ["FOO-1","FOO-2"]` | No |
+| Table dry-run | `FOO-1 --summary "X" --dry-run` | table | stdout has "DRY RUN — no changes will be made." | No |
+| null parent | `FOO-1 --no-parent --dry-run` | json | `plannedChanges.parent = null` | No |
+
+**Verification Properties**:
+- VP-DRY-RUN-001: `--dry-run --output json` stdout parses as valid JSON with exactly `dryRun`, `issues`, `plannedChanges` at top level; `dryRun` is `true`; `issues` is a non-empty string array; `plannedChanges` contains only explicitly-supplied-flag keys; PUT mock is not hit.
+- VP-DRY-RUN-002: `--dry-run --output json --no-parent` → `plannedChanges.parent` is JSON null (not absent); PUT not called.
+- VP-DRY-RUN-003: `--dry-run --output json --label add:foo` → `plannedChanges.labels[0].action == "ADD"` and `.name == "foo"` (flat-array form, NOT `labelsFields`).
+
+**Trace**: `src/cli/issue/edit.rs::handle_edit` dry-run block (implementation-defined; no external Atlassian API spec); CLAUDE.md `--dry-run is implemented on issue edit`; BC-3.4.015 EC-3.4.015-19 (preserved); BC-3.4.020 (label wire asymmetry); BC-7.3.010 (JSON render invariant); H-NEW-DRY-RUN-001 (holdout unblocked by this BC)
+
+[NEW 2026-06-30 BC-subclause-pass F2]
 
 ---
 
@@ -2484,6 +2687,6 @@ When `--markdown` is absent, the guard does NOT fire — `--field description=va
 
 Sources: `src/cli/issue/snapshots/jr__cli__issue__json_output__tests__*.snap`; BC-1104..BC-1112 (R4)
 
-## Total BCs in this file: 78 individually-bodied (cumulative 107 incl. range-collapsed; see BC-INDEX.md)
+## Total BCs in this file: 80 individually-bodied (cumulative 109 incl. range-collapsed; see BC-INDEX.md)
 
-_Last updated 2026-06-08 (fix-bulk-transition-schema F2): +1 BC (BC-3.2.014) — BC-3.2.014 (multi-key bulk move `bulkTransitionInputs` nested wrapper wire schema; documents correctness bug fix commit acca854; live run 27156639337); Section 3.2 header updated to 14 contracts. Previous update 2026-06-03 (jsm-resolution-required F2): +1 BC (BC-3.2.013) — BC-3.2.013 (proactive resolution enforcement on done-category transitions: REQUIRED and OPTIONAL branches, --no-resolution flag, isConditional coverage, conservative gate, BC-3.2.009 backstop retained; single-key only; breaking change); Section 3.2 header updated to 13 contracts. Previous update 2026-06-01 (issue #331 F2): +2 BCs (BC-3.4.018..019) — BC-3.4.018 (multi-key `--type` bulk wire shape: camelCase `issueType` key, `issueTypeId` string value, name resolved via createmeta issuetypes), BC-3.4.019 (cross-project guard: keys spanning >1 project exit 64 before any API call); Section 3.4 header updated to 19 contracts. Previous update 2026-05-27 (issue #421 F2): BC-3.4.015 invariant 5 rewritten (two-stage i64-first strategy); EC-3.4.015-4b added (i64-boundary regression pin); no BC count changes (103/74 unchanged). Previous update (2026-05-25 issue #407 F2): +EC-3.4.017-14 — mechanical enforcement meta-test for BC-3.4.017 invariant 2 (conflict block completeness via `test_label_conflict_block_lists_every_relevant_flag`); BC-3.4.017 invariant 2 cross-reference added; no BC count changes (103/74 unchanged). Previous update (2026-05-22 issue #396 F2): +3 BCs (BC-3.4.015..017) — BC-3.4.015 (`issue edit --field` string/number/date/datetime/user field single-key path, with editmeta validation, fields.json cache, and dry-run invariants), BC-3.4.016 (`issue edit --field` single-select `option` field), BC-3.4.017 (`--field` multi-key/`--jql` rejection Gate A and flag-overlap Gate B); Section 3.4 header updated to 17 contracts. Previous update (2026-05-21 issue #398 F2): +3 BCs (BC-3.4.012..014) — BC-3.4.012 (issue edit table-mode success echo), BC-3.4.013 (issue edit JSON-mode success echo with changed_fields), BC-3.4.014 (issue create table-mode all-fields echo (broadened from team-only at the 2026-05-22 human-gate to mirror BC-3.4.012)); BC-3.4.003 Success output cross-reference added; Section 3.4 header updated to 14 contracts. Previous update (2026-05-20 issue #388): +2 BCs (BC-3.4.010..011): BC-3.4.010 (cross-hierarchy `edit --type` 400 → CROSS_HIERARCHY_HINT citing JRACLOUD-27893) and BC-3.4.011 (same-hierarchy/indeterminate `edit --type` 400 → typo hint or raw error, no JRACLOUD-27893 hint) added in F2 delta (issue #388). BC-3.4.003 Errors cross-reference updated (annotation only, no behavioral change). Section 3.4 header updated to 11 contracts. Previous update (2026-05-20 issue #385): +2 BCs (BC-3.8.016..017); BC-3.8.002/010/011 modified._
+_Last updated 2026-06-30 (BC-subclause-pass F2): +2 BCs (BC-3.4.020..021) — BC-3.4.020 (`issue edit --label` routing fork: single-key PUT bare-string vs 2+ key bulk POST `{"name":...}` objects; BUG-LABEL-400), BC-3.4.021 (`issue edit --dry-run` `plannedChanges` output structure + `--output json` schema `{dryRun, issues, plannedChanges}`; intentionally simplified preview shapes); Section 3.4 header updated to 21 contracts. Previous update 2026-06-08 (fix-bulk-transition-schema F2): +1 BC (BC-3.2.014) — BC-3.2.014 (multi-key bulk move `bulkTransitionInputs` nested wrapper wire schema; documents correctness bug fix commit acca854; live run 27156639337); Section 3.2 header updated to 14 contracts. Previous update 2026-06-03 (jsm-resolution-required F2): +1 BC (BC-3.2.013) — BC-3.2.013 (proactive resolution enforcement on done-category transitions: REQUIRED and OPTIONAL branches, --no-resolution flag, isConditional coverage, conservative gate, BC-3.2.009 backstop retained; single-key only; breaking change); Section 3.2 header updated to 13 contracts. Previous update 2026-06-01 (issue #331 F2): +2 BCs (BC-3.4.018..019) — BC-3.4.018 (multi-key `--type` bulk wire shape: camelCase `issueType` key, `issueTypeId` string value, name resolved via createmeta issuetypes), BC-3.4.019 (cross-project guard: keys spanning >1 project exit 64 before any API call); Section 3.4 header updated to 19 contracts. Previous update 2026-05-27 (issue #421 F2): BC-3.4.015 invariant 5 rewritten (two-stage i64-first strategy); EC-3.4.015-4b added (i64-boundary regression pin); no BC count changes (103/74 unchanged). Previous update (2026-05-25 issue #407 F2): +EC-3.4.017-14 — mechanical enforcement meta-test for BC-3.4.017 invariant 2 (conflict block completeness via `test_label_conflict_block_lists_every_relevant_flag`); BC-3.4.017 invariant 2 cross-reference added; no BC count changes (103/74 unchanged). Previous update (2026-05-22 issue #396 F2): +3 BCs (BC-3.4.015..017) — BC-3.4.015 (`issue edit --field` string/number/date/datetime/user field single-key path, with editmeta validation, fields.json cache, and dry-run invariants), BC-3.4.016 (`issue edit --field` single-select `option` field), BC-3.4.017 (`--field` multi-key/`--jql` rejection Gate A and flag-overlap Gate B); Section 3.4 header updated to 17 contracts. Previous update (2026-05-21 issue #398 F2): +3 BCs (BC-3.4.012..014) — BC-3.4.012 (issue edit table-mode success echo), BC-3.4.013 (issue edit JSON-mode success echo with changed_fields), BC-3.4.014 (issue create table-mode all-fields echo (broadened from team-only at the 2026-05-22 human-gate to mirror BC-3.4.012)); BC-3.4.003 Success output cross-reference added; Section 3.4 header updated to 14 contracts. Previous update (2026-05-20 issue #388): +2 BCs (BC-3.4.010..011): BC-3.4.010 (cross-hierarchy `edit --type` 400 → CROSS_HIERARCHY_HINT citing JRACLOUD-27893) and BC-3.4.011 (same-hierarchy/indeterminate `edit --type` 400 → typo hint or raw error, no JRACLOUD-27893 hint) added in F2 delta (issue #388). BC-3.4.003 Errors cross-reference updated (annotation only, no behavioral change). Section 3.4 header updated to 11 contracts. Previous update (2026-05-20 issue #385): +2 BCs (BC-3.8.016..017); BC-3.8.002/010/011 modified._

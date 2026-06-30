@@ -6,7 +6,7 @@ traces_to: "README.md"
 source_passes: "Pass 2 broad §2b.1 Issue subsystem + Pass 8 §2.2 BC#3 + R5 §3.3 (NEW-INV-244)"
 entity_count: 18
 invariant_count: 24
-bc_count: 107
+bc_count: 109
 risk_level: HIGH
 ---
 

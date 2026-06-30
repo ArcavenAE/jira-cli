@@ -5148,3 +5148,109 @@ _Recorded: 2026-06-30. State-manager (DEC-146)._
 _Tagged: [codified] [external-research] [spec-authoring] [empirical-ground-truth] [dec-146]_
 _Related: DEC-144 (config-key semantics must be verified against source — analogous principle for CI config); BC-3.4.015 EC-3.4.015-3; issueTypes vs values drift._
 _Related: DEC-128; DEC-144; S-PG-MERGE-AUTH-BYPASS (story 91); PG-MERGE-AUTH-BYPASS (drift item)._
+
+---
+
+### [codified] ORCHESTRATOR-RELAYED-FIX-CAUTION [REINFORCED ×2 BC-SUB-CLAUSE cycle] — orchestrator must instruct verification, never dictate specific anchors
+
+During the BC-SUB-CLAUSE + HOLDOUT cycle (DEC-147), the orchestrator relayed two unverified fixes
+that the adversary subsequently caught:
+
+**(a) "cite schema not FAQ"** — the orchestrator instructed the product-owner to update a BC
+citation from the Jira Bulk Ops FAQ to the Atlassian OpenAPI schema. The adversary discovered this
+was wrong: the repo's verbatim-FAQ citation (`issueType` camelCase/lowercase asymmetry, described
+word-for-word in the FAQ) was the ground-truth source. The schema says the opposite. Applying the
+relayed fix would have introduced a BLOCKER factual error into an already-correct BC.
+
+**(b) BC ownership map error** — the orchestrator relayed: "priority field-setting belongs to
+BC-3.4.006; single-key PUT path belongs to BC-3.4.012." Both attributions were wrong: BC-3.4.006
+governs the label single-vs-bulk endpoint fork (BUG-LABEL-400 asymmetry), not priority; BC-3.4.012
+governs the stderr edit-summary echo format, not the single-key PUT path. Applying these would have
+introduced anchor mismatch into the spec.
+
+**Root cause:**
+The orchestrator read the artifact names and made surface-level inferences about their content
+rather than instructing the product-owner to verify the actual BC body before accepting a citation.
+
+**Rule (reinforcement of prior lesson):**
+When the orchestrator believes a specific anchor, citation, or ownership mapping is correct:
+- DO instruct: "Verify BC-X.Y.ZZZ's subject against the spec body before accepting this citation."
+- DO NOT instruct: "Change the citation to BC-3.4.006" (dictating the specific anchor).
+The product-owner reads the artifact; the orchestrator does not have enough context to guarantee
+specific BC numbers point at the right content.
+
+This lesson was first codified from DEC-140 (ORCHESTRATOR-RELAYED-FIX-CAUTION); this session
+produced two independent recurrences in the same cycle, reinforcing that the relay path is
+structurally unsafe without a verification gate.
+
+_Discovered: BC-SUB-CLAUSE + HOLDOUT adversarial passes, 2026-06-30._
+_Recorded: 2026-06-30. State-manager (DEC-147)._
+_Tagged: [codified] [orchestrator-discipline] [bc-authoring] [verification] [dec-147] [reinforced]_
+_Related: DEC-140 (original ORCHESTRATOR-RELAYED-FIX-CAUTION); DEC-146 (REPO-EMPIRICAL-GROUND-TRUTH-BEATS-DOC-INFERENCE); BC-3.4.006; BC-3.4.012._
+
+---
+
+### [codified] BC-CITATION-DRIFT-AFTER-SEAM-EXTRACTION — sweep all BC citations on every module extraction
+
+During the BC-SUB-CLAUSE + HOLDOUT cycle (DEC-147), the adversarial convergence gate surfaced 21
+stale Source/Trace citations in `bc-3-issue-write.md` that pointed to `create.rs` instead of
+`edit.rs`. These citations became stale when the handle_edit cluster was extracted from create.rs
+to edit.rs in Seam B (PR #558, DEC-131). The citations survived:
+- The Seam B PR review (code-reviewer + pr-reviewer)
+- Multiple subsequent adversary passes in CACHE WARM-HIT, CMDB/OBJ-TYPE, and MUTATION-CI-TIMEOUT
+  cycles
+- The HOLDOUT-COVERAGE-GAPS adversary passes (DEC-146)
+- And were only caught by the BC-SUB-CLAUSE cycle's adversary when it specifically targeted the
+  newly-authored BCs anchored to `edit.rs`.
+
+Additionally, Seam A (PR #556, jsm_create.rs extraction) and resolve_edit_fields→field_resolve.rs
+extraction left further stale citations in BC-3.8.x and BC-3.4.014/015 that remain OPEN as
+CITATION-DEBT-FILEWIDE-2026-06-30 (see Drift Items).
+
+**Rule:**
+After every module extraction (per ADR-0012), BEFORE closing the story:
+1. `grep -r "src/cli/issue/<old_file>" .factory/specs/prd/*.md` — find all BC Source/Trace cites
+2. For each hit, check whether the cited function now lives in a different file
+3. Update all stale citations in the SAME burst as the extraction PR
+
+A CI guard (`BC-CITATION-CI-GUARD` drift item) is the long-term enforcement mechanism; until it
+ships, the grep sweep is a required manual step at story close.
+
+_Discovered: BC-SUB-CLAUSE adversarial passes, 2026-06-30._
+_Recorded: 2026-06-30. State-manager (DEC-147)._
+_Tagged: [codified] [seam-extraction] [bc-metadata] [citation-drift] [dec-147]_
+_Related: ADR-0012 (module shard rule); PR #556 (Seam A); PR #558 (Seam B); CITATION-DEBT-FILEWIDE-2026-06-30; BC-CITATION-CI-GUARD._
+
+---
+
+### [codified] DEFERRAL-PERIMETER-SCOPING — scope the convergence verdict to the deliverable; split out-of-perimeter debt
+
+During the BC-SUB-CLAUSE + HOLDOUT cycle (DEC-147), the adversarial gate surfaced BC-3.4.006's
+stale wire-shape (issue #446 drift: `labelsAction`/`labels` shape → `labelsFields`/
+`bulkEditMultiSelectFieldOption` array) and 21 handle_edit citation fixes. These were
+PRE-EXISTING defects NOT introduced by the cycle's deliverables (BC-3.4.020/021/5.1.005).
+
+An unbounded "fix everything the adversary finds" policy would have:
+- Extended the cycle indefinitely as each pass found new scope
+- Caused convergence to be gated on debt outside the cycle's control
+- Conflated "is BC-3.4.020 correct?" with "is BC-3.4.006 correct?"
+
+**Applied pattern (perimeter scoping):**
+1. Fix the in-perimeter defects (BC-3.4.006 wire-shape, 21 citation fixes) because they were
+   directly anchored by the new BCs' correctness — a reviewer reading BC-3.4.020 would follow
+   the BC-3.4.006 cross-reference and find the stale content.
+2. Split the remaining file-wide citation debt (Seam A jsm_create.rs, Seam B resolve_edit_fields)
+   into a dedicated follow-on cycle (CITATION-DEBT-FILEWIDE-2026-06-30).
+3. Declare the convergence verdict on the deliverable perimeter, not the full file.
+
+**Rule:**
+When a convergence pass surfaces defects outside the cycle's deliverable perimeter:
+- Immediately assess: "Is this defect directly cross-referenced by the deliverable, such that a
+  reader of the new spec would encounter the error?" If YES → fix in-cycle.
+- If NO → track in Drift Items as a follow-on cycle, and state the perimeter boundary explicitly
+  in the convergence log.
+
+_Discovered: BC-SUB-CLAUSE convergence passes, 2026-06-30._
+_Recorded: 2026-06-30. State-manager (DEC-147)._
+_Tagged: [codified] [convergence-discipline] [perimeter-scoping] [dec-147]_
+_Related: CITATION-DEBT-FILEWIDE-2026-06-30; BC-CITATION-CI-GUARD; DEC-130 (F2-PIECEWISE-PROTOCOL — analogous scope discipline)._
