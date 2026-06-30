@@ -2,11 +2,11 @@
 document_type: pipeline-state
 version: "2.0"
 status: complete
-timestamp: 2026-06-28T14:00:00Z
+timestamp: 2026-06-29T00:00:00Z
 phase: 3
 project: jira-cli
 mode: brownfield
-current_step: "IDLE. S-PG-MERGE-AUTH-BYPASS re-assessment recorded (2026-06-28) — both drift items downgraded MEDIUM→LOW, story re-scoped to 3 residual engine-prompt edits, DEC-145 added. Prior: MUTATION-CI-TIMEOUT cycle CLOSED — PR #567 squash-merged → develop @ 3b122a8. cargo-mutants HARD-REQUIRED (ci-gate.needs); --timeout 240; 5 false-green guards. Stories 96→97. DEC-144. develop UNCHANGED @ 3b122a8. Awaiting direction."
+current_step: "IDLE. Session durability snapshot 2026-06-29. S-PG-MERGE-AUTH-BYPASS re-assessment recorded (2026-06-28) — both drift items downgraded MEDIUM→LOW, story re-scoped to 3 residual engine-prompt edits, DEC-145. MUTATION-CI-TIMEOUT CLOSED — PR #567 @ 3b122a8. cargo-mutants HARD-REQUIRED; --timeout 240. Stories 97. DEC-144. Awaiting direction."
 maintenance_run: CLOSED
 current_cycle: "cycle-001"
 feature_mode_bundle: none
@@ -26,7 +26,7 @@ activation_version: "v0.6.0-dev.7"
 | **Product** | jr (Jira CLI) |
 | **Mode** | BROWNFIELD / Rust |
 | **Target Workspace** | develop → main |
-| **Last Updated** | 2026-06-28: S-PG-MERGE-AUTH-BYPASS re-assessment — both drift items (PG-MERGE-AUTH-BYPASS + PG-PR-MANAGER-OVERREACH) downgraded MEDIUM→LOW (1/4 constraints codified; Constraint 4 closed; 3 prompt-codification residuals deferred). DEC-145. Story 91 re-scoped. MUTATION-CI-TIMEOUT cycle CLOSED (PR #567 @ 3b122a8; DEC-144; stories 96→97). |
+| **Last Updated** | 2026-06-29: Session durability snapshot — STATE.md hardened for cold resume; local==origin confirmed (develop @ 3b122a8, factory-artifacts @ c6af2de). Prior (2026-06-28): S-PG-MERGE-AUTH-BYPASS re-assessment — both drift items (PG-MERGE-AUTH-BYPASS + PG-PR-MANAGER-OVERREACH) downgraded MEDIUM→LOW; DEC-145. MUTATION-CI-TIMEOUT CLOSED (PR #567 @ 3b122a8; DEC-144; stories 96→97). |
 | **Current Phase** | Phase 3 — IDLE (S-PG-MERGE-AUTH-BYPASS re-assessed + downgraded; MUTATION-CI-TIMEOUT CLOSED; v0.6.0-dev.7 shipped). BC **605**. NFR 42. ADR 16. Stories **97**. Holdouts **71**. |
 | **Next Phase** | Next feature cycle (open candidates: MUTANTS-SHARDING-PATH-B speed follow-up, fork signing DEC-104; S-PG-MERGE-AUTH-BYPASS story 91 re-scoped to 3 residual engine-prompt edits — deferred pending engine-source access) |
 | **Activation HEAD** | 342987f (v0.6.0-dev.7 tag); develop @ 3b122a8 (PR #567 squash-merged 2026-06-28) |
@@ -154,11 +154,11 @@ Full per-issue: `cycles/cycle-001/convergence-trajectory.md`. Current: **DEAD-CI
 
 | Field | Value |
 |-------|-------|
-| **Date** | 2026-06-28 |
-| **Status** | **IDLE — S-PG-MERGE-AUTH-BYPASS re-assessment recorded (2026-06-28). Both drift items (PG-MERGE-AUTH-BYPASS + PG-PR-MANAGER-OVERREACH) downgraded MEDIUM→LOW. Constraint 4 (poll loops) CODIFIED; Constraints 1–3 PARTIAL with defense-in-depth. Story 91 re-scoped to 3 residual engine-prompt edits; deferred pending engine-source access. DEC-145. Prior: MUTATION-CI-TIMEOUT cycle CLOSED (PR #567 → develop @ 3b122a8). cargo-mutants HARD-REQUIRED; --timeout 240; 5 false-green guards. Stories 96→97. DEC-144. No active feature_mode_bundle. Zero story worktrees.** |
+| **Date** | 2026-06-29 |
+| **Status** | **IDLE — Session durability snapshot 2026-06-29. S-PG-MERGE-AUTH-BYPASS re-assessment recorded (2026-06-28). Both drift items (PG-MERGE-AUTH-BYPASS + PG-PR-MANAGER-OVERREACH) downgraded MEDIUM→LOW. Constraint 4 (poll loops) CODIFIED; Constraints 1–3 PARTIAL with defense-in-depth. Story 91 re-scoped to 3 residual engine-prompt edits; deferred pending engine-source access. DEC-145. MUTATION-CI-TIMEOUT CLOSED (PR #567 → develop @ 3b122a8). cargo-mutants HARD-REQUIRED; --timeout 240; 5 false-green guards. Stories 97. DEC-144. No active feature_mode_bundle. Zero story worktrees. ACTIVE WATCH-ITEM: MUTANTS-FIRST-SCOPED-PR-CALIBRATION — surface before next scoped-file delivery.** |
 | **Position** | S-PG-MERGE-AUTH-BYPASS re-assessment (2026-06-28): governance-only, develop UNCHANGED @ 3b122a8. DEC-145. Prior: MUTATION-CI-TIMEOUT cycle PR #567 → develop @ 3b122a8 (DEC-144; stories 96→97). cmdb/objtype warm-hit PR #566 @ 822fa18 (DEC-143; stories 95→96). cache warm-hit + swallow PR #565 @ 788bc0f (DEC-142; stories 94→95). v0.6.0-dev.7 shipped (PR #559 @ 342987f). |
-| **develop HEAD** | origin/develop = **3b122a8** (PR #567 squash-merged 2026-06-28). Local develop may be at 822fa18 — fast-forward with `git pull`. |
-| **factory-artifacts HEAD** | see `git -C .factory log -1` |
+| **develop HEAD** | local = origin/develop = **3b122a8** (PR #567 squash-merged 2026-06-28; confirmed local==origin 2026-06-29). No fast-forward needed. |
+| **factory-artifacts HEAD** | local = origin/factory-artifacts = **c6af2de** (confirmed local==origin 2026-06-29; see `git -C .factory log -1`) |
 | **Activation** | activation_head: 342987f; activation_version: v0.6.0-dev.7. v0.5.0 STABLE shipped 2026-06-12. |
 | **Counters** | BC **605**. NFR **42**. ADR **16**. Stories **97**. Holdouts **71**. |
 | **Active worktrees** | NONE under `.worktrees/`. Permanent infra only: main checkout (develop) + `.factory` (factory-artifacts) + `.reference/jira-cli` (detached). ZERO story worktrees. |
@@ -182,6 +182,8 @@ Full per-issue: `cycles/cycle-001/convergence-trajectory.md`. Current: **DEAD-CI
 - Counters: BC **605**, NFR **42**, ADR **16**, Stories **97**. Holdouts **71**.
 
 **Step 3 — IDLE. Present open backlog to human, await direction.**
+
+> **ACTIVE WATCH-ITEM (surface BEFORE next scoped-file delivery):** MUTANTS-FIRST-SCOPED-PR-CALIBRATION (MEDIUM) — the `--timeout 240` ceiling + kill-rate arithmetic are UNEXERCISED until the first PR touching an `examine_globs` file (adf/bulk/create/issues/cache/jsm). Watch that PR for false `timeout` outcomes on healthy mutants; bump `--timeout` if needed (see Drift Items).
 
 RECENTLY CLOSED (2026-06-28):
 - **MUTATION-CI-TIMEOUT:** PR #567 → develop @ 3b122a8. cargo-mutants HARD-REQUIRED (ci-gate.needs); --timeout 240; 5 false-green guards. DEC-144. CLOSED.
