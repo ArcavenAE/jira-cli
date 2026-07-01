@@ -5254,3 +5254,103 @@ _Discovered: BC-SUB-CLAUSE convergence passes, 2026-06-30._
 _Recorded: 2026-06-30. State-manager (DEC-147)._
 _Tagged: [codified] [convergence-discipline] [perimeter-scoping] [dec-147]_
 _Related: CITATION-DEBT-FILEWIDE-2026-06-30; BC-CITATION-CI-GUARD; DEC-130 (F2-PIECEWISE-PROTOCOL — analogous scope discipline)._
+
+---
+
+### [codified] PERIMETER-SCAN-MUST-INCLUDE-INDEX-AND-TRACEABILITY — sweep the index and traceability tables, not just body files
+
+During the CITATION-DEBT-FILEWIDE cycle (DEC-148), the F1 citation-debt perimeter scan grepped
+`bc-1..bc-7` body files and found a well-defined set of stale citations in `bc-3-issue-write.md`.
+The fresh-context adversary on pass 1 immediately found the *same* citation debt one ring out:
+`BC-INDEX.md` mirrors Source/Trace citations in its per-BC summary rows, and those rows were
+equally stale. The index was not included in the F1 perimeter grep.
+
+Pass 1 fixed the BC-INDEX.md debt. Pass 2 then found the next ring: `docs/adr/0014` and several
+`docs/specs/` files that also cited the pre-extraction symbol names. That ring was scoped out as
+CITATION-DEBT-PRODUCT-FILES-2026-06-30 per DEFERRAL-PERIMETER-SCOPING (DEC-147 pattern).
+
+**Pattern observed (each fresh-context adversary catches the next uncovered ring):**
+1. Body files (bc-1..bc-7) — covered by the F1 perimeter grep.
+2. Index (BC-INDEX.md, CANONICAL-COUNTS.md) — NOT covered; adversary caught it pass 1.
+3. Surrounding product files (docs/adr, docs/specs, src rustdoc) — NOT covered; adversary caught
+   it pass 2 (scoped out as follow-on by DEFERRAL-PERIMETER-SCOPING).
+
+**Rule:**
+A citation-debt perimeter scan MUST include:
+- All `bc-*.md` body files (already done)
+- `BC-INDEX.md` (the index mirrors citations)
+- `CANONICAL-COUNTS.md` (may reference file/symbol names)
+- Traceability artifacts in `.factory/` that cross-reference BC Source/Trace symbols
+- Ideally: a single repo-wide grep for the relocated symbol names:
+  `grep -r "old_file\.rs::(old_function)" .factory/specs/prd/ docs/ src/`
+
+This closes a structural omission in the F1 citation-debt scan template.
+
+_Discovered: CITATION-DEBT-FILEWIDE adversarial pass 1, 2026-06-30._
+_Recorded: 2026-06-30. State-manager (DEC-148)._
+_Tagged: [codified] [citation-drift] [perimeter-scan] [process-gap] [dec-148]_
+_Related: BC-CITATION-CI-GUARD (mechanical enforcement); CITATION-DEBT-PRODUCT-FILES-2026-06-30; DEFERRAL-PERIMETER-SCOPING (DEC-147); BC-CITATION-DRIFT-AFTER-SEAM-EXTRACTION (DEC-147)._
+
+---
+
+### [reinforced] BC-CITATION-DRIFT-AFTER-SEAM-EXTRACTION (reinforcement 2 — DEC-148)
+
+The CITATION-DEBT-FILEWIDE cycle (DEC-148) delivered the SECOND dedicated citation-cleanup cycle
+required to fully address the ADR-0012 Seam A/B extraction debt. The first cycle (DEC-147) fixed
+the `handle_edit` cluster (21 `create.rs→edit.rs` citation fixes). This cycle fixed the JSM
+cluster (9 `create.rs→jsm_create.rs` citations in BC-3.8.x), the `resolve_edit_fields` migration
+(1 `helpers.rs→field_resolve.rs` citation), and the BC-INDEX.md mirror row gap.
+
+**Lesson reinforcement:**
+- A single citation-cleanup cycle is insufficient when multiple extractions occurred in the same
+  PR batch (Seam A + Seam B were separate PRs #556 and #558 but both landed in the same
+  development session and neither triggered an immediate BC-citation sweep).
+- The PERIMTER-SCAN-OMITS-INDEX-AND-TRACEABILITY process gap (DEC-148) extended the reach of
+  the debt into the index and product files.
+- BC-CITATION-CI-GUARD is the durable fix: a mechanical CI check that fails on stale `source:` /
+  `trace:` citations in BC bodies, parallel to `tests/claude_md_citations.rs`.
+
+**Updated Rule (first stated in DEC-147):**
+After every module extraction per ADR-0012, BEFORE closing the story, run:
+```
+grep -r "src/cli/issue/<old_file>" .factory/specs/prd/*.md BC-INDEX.md
+grep -r "<old_function>" .factory/specs/prd/*.md BC-INDEX.md docs/ src/
+```
+Fix all hits in the SAME burst as the extraction PR. If the extraction already shipped, file a
+dedicated cleanup cycle immediately rather than carrying the debt across multiple subsequent cycles.
+
+_Discovered: CITATION-DEBT-FILEWIDE cycle, 2026-06-30._
+_Recorded: 2026-06-30. State-manager (DEC-148)._
+_Tagged: [reinforced] [seam-extraction] [bc-metadata] [citation-drift] [dec-148]_
+_Related: DEC-147 (original codification); ADR-0012; PERIMETER-SCAN-MUST-INCLUDE-INDEX-AND-TRACEABILITY; BC-CITATION-CI-GUARD._
+
+---
+
+### [reinforced] ORCHESTRATOR-RELAYED-FIX-CAUTION (reinforcement 3 — DEC-148)
+
+During the CITATION-DEBT-FILEWIDE cycle (DEC-148), the orchestrator relayed the citation
+repoint map to the product-owner. The product-owner independently verified every relayed anchor
+against source before applying. Result: zero disagreements this cycle because the map was
+grep-evidenced (each old→new anchor was confirmed by grepping the actual source file for the
+symbol name).
+
+**Positive reinforcement (WHAT WORKED):**
+The orchestrator provided a grep-evidenced map (specific function names + file paths confirmed
+against the repo), not just surface-level inferences about which file "should" contain the
+function. The product-owner ran confirming checks anyway — both approaches agreed.
+
+**Contrast with prior failures (DEC-140, DEC-146, DEC-147):**
+- DEC-140: lone-`\r` false-reachability claim in a relayed fix (adversary caught it).
+- DEC-146: relayed "cite schema not FAQ" fix contradicted verbatim-FAQ ground-truth.
+- DEC-147: relayed ownership map was wrong for both BCs cited (BC-3.4.006 and BC-3.4.012).
+
+**Updated Rule:**
+The orchestrator MUST provide grep-evidenced maps for citation/anchor fixes — not inferred BC
+numbers. The product-owner MUST verify against repo artifacts regardless. Both disciplines are
+required; either alone is insufficient (DEC-147 showed the adversary catches unverified relays;
+DEC-148 shows that verify-on-receipt also works as a backstop).
+
+_Discovered: CITATION-DEBT-FILEWIDE cycle, 2026-06-30._
+_Recorded: 2026-06-30. State-manager (DEC-148)._
+_Tagged: [reinforced] [orchestrator-discipline] [bc-authoring] [verification] [dec-148]_
+_Related: DEC-140 (original); DEC-146 (reinforcement 1); DEC-147 (reinforcement 2); PERIMETER-SCAN-MUST-INCLUDE-INDEX-AND-TRACEABILITY._

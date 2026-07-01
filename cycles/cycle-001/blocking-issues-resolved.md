@@ -265,3 +265,15 @@ The items below were TRACKED/OPEN/RESOLVED in STATE.md Drift Items and are archi
 | PATTERN-HYGIENE-2026-06-25 | code hygiene | D3 bundle: PF-010/011 bare .unwrap() w/o invariant comment in src/cli/assets/schemas.rs; PF-016 src/cli/issue/create.rs 2,880 LOC; PF-017 src/cli/issue/workflow.rs 1,341 LOC. Unwrap-comment hygiene PF-008/012/013/014. | LOW | **RESOLVED — PR #555 merged 2026-06-25 (develop @ 6b395d3). PF-010..014/016/017 closed.** | 2026-06-25 |
 | SC-002-SEC-001-STORY-HOUSEKEEPING | spec coherence | D2 factory-only: S-MAINT-SEC-001 story status draft / bcs:[] post-merge #553; ADF_MAX_DEPTH=64 vs shipped MAX_ADF_DEPTH=256. Closed: BC-7.2.012 anchored in story (bcs:[BC-7.2.012]), status→done, ADF_MAX_DEPTH→MAX_ADF_DEPTH 256 corrected; F2-PIECEWISE reclassified RESOLVED-CODIFIED; adr shadow removed. | LOW | **RESOLVED — 2026-06-25; factory commit 89d94d8** | 2026-06-25 |
 | F2-PIECEWISE-PROTOCOL | phase-f2 process | Protocol: dispatch consistency-validator after EACH spec-author fix before next adversary pass. Established 2026-06-20, enforced, codified in cycles/cycle-001/lessons.md. Confirmed still enforced 2026-06-25. | LOW | **RESOLVED-CODIFIED — 2026-06-25; protocol enforced; codified in lessons.md** | 2026-06-25 |
+
+---
+
+## Resolved 2026-06-30 — CITATION-DEBT-FILEWIDE cycle CLOSED (DEC-148)
+
+CITATION-DEBT-FILEWIDE-2026-06-30 (MEDIUM drift item) was opened at the end of the BC-SUB-CLAUSE
++ HOLDOUT cycle (DEC-147) to track file-wide ADR-0012 relocation citation debt in
+`.factory/specs/prd/` files. This entry records the RESOLVED-PARTIAL closure of that item.
+
+| ID | Area | Description | Severity | Status | Resolved Date |
+|----|------|-------------|----------|--------|---------------|
+| CITATION-DEBT-FILEWIDE-2026-06-30 | spec/metadata | Pre-existing stale citations in bc-3-issue-write.md, bc-2-issue-read.md, and BC-INDEX.md from ADR-0012 Seam A/B module extractions (create.rs→edit.rs/jsm_create.rs; helpers.rs→field_resolve.rs). **RESOLVED-PARTIAL — `.factory/specs/prd/` perimeter DONE (DEC-148):** 12 relocations + BC-3.4.016 sibling-propagation add + 2 descriptor rewrites + 2 changelog symbol fixes + 1 prose fix in bc-3-issue-write.md; 1 relocation in bc-2-issue-read.md; 11 relocations + 1 symbol correction + 1 add in BC-INDEX.md. 7 adversary passes → 3 consecutive CLEAN. check scripts exit 0. **Remaining product-file ring** (docs/adr/0014:176, docs/specs/jsm-e2e-coverage:49, docs/specs/2026-05-13-search-issue-keys:129, src/api/jira/issues.rs:285 rustdoc, archived docs×2) split to CITATION-DEBT-PRODUCT-FILES-2026-06-30 (MEDIUM, OPEN) per DEC-147 DEFERRAL-PERIMETER-SCOPING. | MEDIUM | **RESOLVED-PARTIAL — DEC-148 (2026-06-30); product-file ring → CITATION-DEBT-PRODUCT-FILES-2026-06-30** | 2026-06-30 |

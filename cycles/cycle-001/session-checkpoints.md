@@ -1103,3 +1103,21 @@ _Was the active checkpoint after maintenance sweep 2026-06-22 fully closed. PRs 
 | **Open PRs (action needed)** | **NONE.** #562 merged @ 3d8f15b. #561 merged @ 5ab4e0f. All CLOSED. |
 | **jira-e2e env** | JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ, JR_E2E_ENABLED=true. |
 | **Standing constraints** | Do NOT close #429 (DEC-029). All fixes through full VSDD (DEC-120/121/124/129/130/131/132/134/135/136/138). LESSON-F2-WORKTREE-FIRST. F2-PIECEWISE-PROTOCOL [ENFORCED 2026-06-20]. DEC-128 (CRITICAL): delivery sub-agents must NOT self-authorize merges, spawn fix agents, push, or enter unbounded loops. Fork signing UNBLOCKED but INERT (DEC-104). DEC-133 (DEPENDABOT-ACTION-SOAK). DEC-136: test-only PRs must not silently skip the adversarial gate. |
+
+---
+
+## Checkpoint: 2026-06-30 — BC-SUB-CLAUSE + HOLDOUT cycle CLOSED (archived)
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-06-30 |
+| **Status** | **IDLE — durable cold-resume snapshot 2026-06-30. Two spec-only cycles closed this session; develop UNCHANGED @ 3b122a8 throughout. (1) HOLDOUT-COVERAGE-GAPS cycle (DEC-146) — 8 holdouts 71→79; BC-3.4.015 EC-3.4.015-3 drift fixed. (2) BC-SUB-CLAUSE + HOLDOUT cycle (DEC-147) — BC-3.4.020/021/5.1.005 authored (605→608); 3 holdouts 79→82 (v1.5.0); BC-3.4.006 wire-shape fixed; 21 create.rs→edit.rs citation fixes. ACTIVE WATCH-ITEM: MUTANTS-FIRST-SCOPED-PR-CALIBRATION. OPEN FOLLOW-ONS: CITATION-DEBT-FILEWIDE-2026-06-30 (MEDIUM) + BC-CITATION-CI-GUARD (LOW).** |
+| **Position** | BC-SUB-CLAUSE + HOLDOUT cycle CLOSED 2026-06-30 (DEC-147; spec-only; develop UNCHANGED @ 3b122a8). Prior: HOLDOUT-COVERAGE-GAPS CLOSED 2026-06-30 (DEC-146; holdouts 71→79). S-PG-MERGE-AUTH-BYPASS re-assessment (2026-06-28; DEC-145). MUTATION-CI-TIMEOUT PR #567 → develop @ 3b122a8 (DEC-144; stories 96→97). cmdb/objtype warm-hit PR #566 @ 822fa18 (DEC-143; stories 95→96). v0.6.0-dev.7 shipped (PR #559 @ 342987f). |
+| **develop HEAD** | local = origin/develop = **3b122a8** (PR #567 squash-merged 2026-06-28; UNCHANGED by BC-SUB-CLAUSE + HOLDOUT cycle). |
+| **factory-artifacts HEAD** | see `git -C .factory log -1` |
+| **Activation** | activation_head: 342987f; activation_version: v0.6.0-dev.7. v0.5.0 STABLE shipped 2026-06-12. |
+| **Counters** | BC **608**. NFR **42**. ADR **16**. Stories **97**. Holdouts **82**. |
+| **Active worktrees** | NONE under `.worktrees/`. Permanent infra only: main checkout (develop) + `.factory` (factory-artifacts) + `.reference/jira-cli` (detached). ZERO story worktrees. |
+| **Open PRs (action needed)** | **NONE.** All CLOSED. |
+| **jira-e2e env** | JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ, JR_E2E_ENABLED=true. |
+| **Standing constraints** | Do NOT close #429 (DEC-029). All fixes through full VSDD (DEC-120/121/124/129/130/131/132/134/135/136/138/139/140/141/142/143/144/146/147). LESSON-F2-WORKTREE-FIRST. F2-PIECEWISE-PROTOCOL [ENFORCED 2026-06-20]. DEC-128 (CRITICAL): delivery sub-agents must NOT self-authorize merges, spawn fix agents, push, or enter unbounded loops. Fork signing UNBLOCKED but INERT (DEC-104). DEC-133 (DEPENDABOT-ACTION-SOAK). DEC-136: test-only PRs must not silently skip the adversarial gate. DEC-144: verify tool config-key semantics against source. DEC-146: ORCHESTRATOR-RELAYED-FIX-CAUTION REINFORCED + REPO-EMPIRICAL-GROUND-TRUTH-BEATS-DOC-INFERENCE. DEC-147: BC-CITATION-DRIFT-AFTER-SEAM-EXTRACTION + DEFERRAL-PERIMETER-SCOPING codified. |
