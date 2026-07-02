@@ -1140,3 +1140,22 @@ _Was the active checkpoint after maintenance sweep 2026-06-22 fully closed. PRs 
 | **jira-e2e env** | JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ, JR_E2E_ENABLED=true. |
 | **Standing constraints** | Do NOT close #429 (DEC-029). All fixes through full VSDD (DEC-120/121/124/129/130/131/132/134/135/136/138/139/140/141/142/143/144/146/147/148). LESSON-F2-WORKTREE-FIRST. F2-PIECEWISE-PROTOCOL [ENFORCED 2026-06-20]. DEC-128 (CRITICAL): delivery sub-agents must NOT self-authorize merges, spawn fix agents, push, or enter unbounded loops. Fork signing UNBLOCKED but INERT (DEC-104). **DEC-133 (DEPENDABOT-ACTION-SOAK).** **DEC-136:** test-only PRs must not silently skip the adversarial gate. **DEC-144:** verify tool config-key semantics against source; ground CI budgets in measured baselines. **DEC-147:** BC-CITATION-DRIFT-AFTER-SEAM-EXTRACTION + DEFERRAL-PERIMETER-SCOPING codified. **DEC-148:** PERIMETER-SCAN-MUST-INCLUDE-INDEX-AND-TRACEABILITY. |
 | **Standing constraints** | Do NOT close #429 (DEC-029). All fixes through full VSDD (DEC-120/121/124/129/130/131/132/134/135/136/138/139/140/141/142/143/144/146/147). LESSON-F2-WORKTREE-FIRST. F2-PIECEWISE-PROTOCOL [ENFORCED 2026-06-20]. DEC-128 (CRITICAL): delivery sub-agents must NOT self-authorize merges, spawn fix agents, push, or enter unbounded loops. Fork signing UNBLOCKED but INERT (DEC-104). DEC-133 (DEPENDABOT-ACTION-SOAK). DEC-136: test-only PRs must not silently skip the adversarial gate. DEC-144: verify tool config-key semantics against source. DEC-146: ORCHESTRATOR-RELAYED-FIX-CAUTION REINFORCED + REPO-EMPIRICAL-GROUND-TRUTH-BEATS-DOC-INFERENCE. DEC-147: BC-CITATION-DRIFT-AFTER-SEAM-EXTRACTION + DEFERRAL-PERIMETER-SCOPING codified. |
+
+---
+
+## Checkpoint: 2026-07-02 — MUTANTS-EXAMINE-GLOBS PR #570 awaiting merge (archived 2026-07-02)
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-07-02 |
+| **Status** | **PR #570 OPEN — AWAITING HUMAN MERGE. MUTANTS-EXAMINE-GLOBS cycle at F7 gate (DEC-128). develop @ 39caf39. BC 608. Stories 100. Story worktree `.worktrees/S-MUTANTS-EXAMINE-GLOBS-1` ACTIVE @ 475a1aa on `ci/mutants-examine-globs-seam-b`.** |
+| **Position** | MUTANTS-EXAMINE-GLOBS cycle — PR #570 created 2026-07-02 (3 commits: 5486c34, 1da0571, 475a1aa; F5 CONVERGED 3 passes; 13/14 CI green; mutants PASS 35s 0-mutant path). Prior: CITATION-DEBT-PRODUCT-FILES SHIPPED 2026-07-02 (DEC-149; develop 3b122a8 → 39caf39; Stories 97→99). |
+| **develop HEAD** | origin/develop = **39caf39** (PR #568 squash-merged 2026-07-02, rebased onto PR #569 @ e79943b). Not updated by PR #570 — pending merge. |
+| **factory-artifacts HEAD** | see `git -C .factory log -1` |
+| **Activation** | activation_head: 342987f; activation_version: v0.6.0-dev.7. v0.5.0 STABLE shipped 2026-06-12. |
+| **Counters** | BC **608**. NFR **42**. ADR **16**. Stories **100**. Holdouts **82**. |
+| **Active worktrees** | `.worktrees/S-MUTANTS-EXAMINE-GLOBS-1` ACTIVE @ **475a1aa** (`ci/mutants-examine-globs-seam-b`). PR #570 open. Permanent infra: main checkout (develop) + `.factory` (factory-artifacts) + `.reference/jira-cli` (detached). |
+| **Open PRs (action needed)** | **PR #570** (`ci(mutants): restore scope — add edit.rs + jsm_create.rs to examine_globs`). AWAITING HUMAN MERGE. DEC-128 gate. |
+| **Post-merge TODO** | (1) cicd-setup.md AC-003 corrections; (2) CICD-SETUP-TIMEOUT-MINUTES-STALE fix; (3) DEC-150 entry; (4) lessons codification; (5) resolve MUTANTS-EXAMINE-GLOBS-STALE-AFTER-SEAM-B. |
+| **jira-e2e env** | JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ, JR_E2E_ENABLED=true. |
+| **Standing constraints** | Do NOT close #429 (DEC-029). All fixes through full VSDD (DEC-120/121/124/129/130/131/132/134/135/136/138/139/140/141/142/143/144/146/147/148/149). DEC-128 (CRITICAL). DEC-133 (DEPENDABOT-ACTION-SOAK). |

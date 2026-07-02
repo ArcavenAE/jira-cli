@@ -42,7 +42,7 @@ identifies gaps for Phase 3 remediation. No workflow files were modified.
 | `msrv` | `ubuntu-latest` | `cargo check --all-features` against `dtolnay/rust-toolchain@1.85.0` — MSRV pin verification |
 | `deny` | `ubuntu-latest` | `EmbarkStudios/cargo-deny-action@v2` — license allowlist + advisory check |
 | `coverage` | `ubuntu-latest` | `cargo llvm-cov` → `lcov.info` → Codecov upload (`fail_ci_if_error: false`) |
-| `mutants` | `ubuntu-latest` | `cargo-mutants` mutation testing — **HARD-REQUIRED** (in `ci-gate.needs` as of PR #567); scoped via `.cargo/mutants.toml::examine_globs` (expanded scope includes adf/bulk/create/issues/cache/jsm); PR-only trigger; `--in-diff <diff-file>`; cargo-mutants @27 pinned; `--timeout 240` per-mutant ceiling (CLI-only; NOT in TOML); `timeout-minutes: 90`; 90% kill-rate target; 5 false-green guards (base-ref-drift, malformed-JSON, per-field int, schema-drift, warning-only reconciliation). DEC-144. See §1.1a + `docs/specs/cargo-mutants-policy.md` for full specification. |
+| `mutants` | `ubuntu-latest` | `cargo-mutants` mutation testing — **HARD-REQUIRED** (in `ci-gate.needs` as of PR #567); scoped via `.cargo/mutants.toml::examine_globs` (scope: see `docs/specs/cargo-mutants-policy.md §Scope`; 11 files as of PR #570 2026-07-02 including edit/jsm_create/requesttype/jsm-requests/jsm-request_types); PR-only trigger; `--in-diff <diff-file>`; cargo-mutants @27 pinned; `--timeout 240` per-mutant ceiling (CLI-only; NOT in TOML); `timeout-minutes: 90`; 90% kill-rate target; 5 false-green guards (base-ref-drift, malformed-JSON, per-field int, schema-drift, warning-only reconciliation). DEC-144. See §1.1a + `docs/specs/cargo-mutants-policy.md` for full specification. |
 
 **Caching:** `Swatinem/rust-cache@v2` on `clippy`, `test`, `msrv`, `coverage` jobs.
 
@@ -73,7 +73,7 @@ if: github.event_name == 'pull_request'
 ```
 Runs on PRs to `develop` only. Does NOT run on direct push to `develop` or `main`. The `ci-gate` job checks `failure` and `cancelled` statuses only — `skipped` (push events) passes through safely, so push-to-develop is not impacted.
 
-**Scope:** Fixed in `.cargo/mutants.toml` via `examine_globs` (no `--file` flags in the CI invocation). Note: cargo-mutants v27 reads configuration from `.cargo/mutants.toml`, not `.mutants.toml` at repo root. Current scope includes `src/cli/issue/create.rs`, `src/api/jira/bulk.rs`, `src/types/jira/bulk.rs`, `src/cli/issue/edit.rs`, `src/adf.rs`, `src/api/jira/issues.rs`, `src/cache.rs`, `src/api/jsm/`. See `docs/specs/cargo-mutants-policy.md §Scope` for the authoritative list.
+**Scope:** Fixed in `.cargo/mutants.toml` via `examine_globs` (no `--file` flags in the CI invocation). Note: cargo-mutants v27 reads configuration from `.cargo/mutants.toml`, not `.mutants.toml` at repo root. Current scope: 11 files as of PR #570 (2026-07-02) — `src/cli/issue/create.rs`, `src/cli/issue/edit.rs`, `src/cli/issue/jsm_create.rs`, `src/api/jira/bulk.rs`, `src/types/jira/bulk.rs`, `src/adf.rs`, `src/api/jira/issues.rs`, `src/cache.rs`, `src/api/jsm/requests.rs`, `src/api/jsm/request_types.rs`, `src/cli/requesttype.rs`. Note: `edit.rs` was cited in prose before PR #570 but was NOT in `examine_globs` until PR #570 added it. `jsm_create.rs` and the three jsm/requesttype entries were also added by PR #570. See `docs/specs/cargo-mutants-policy.md §Scope` for the authoritative and current list.
 
 **Diff-mode:** `--in-diff <diff-file>` — only mutates lines changed in the PR diff. Note: cargo-mutants v27 requires `--in-diff` to receive a file path (not a git ref directly); the CI workflow writes the diff via `git diff origin/${{ github.base_ref }}...HEAD > "$DIFF_FILE"` before invoking cargo-mutants. The diff-file path uses `${{ runner.temp }}/pr-${{ github.run_id }}.diff` for run-unique safety. Local invocation: use `mktemp -t pr.diff.XXXXXX`. This amortizes the per-mutant cost: a PR touching 50 lines runs in minutes rather than hours. Full-file mutation (without `--in-diff`) is reserved for local baseline runs.
 
@@ -199,7 +199,7 @@ All files require review from `@Zious11`. This satisfies the "code owner approva
 | Action SHA pinning | **MISSING** | All actions use version tags (`@v6`, `@v2`, `@v7`, `@v8`, `@stable`, `@1.85.0`) rather than full SHA hashes |
 | MSRV verification in CI | **PRESENT** | `ci.yml` `msrv` job: `dtolnay/rust-toolchain@1.85.0` + `cargo check --all-features` |
 | Coverage reporting | **PRESENT** | `ci.yml` `coverage` job: `cargo llvm-cov` → Codecov |
-| Mutation testing (meta-verification layer) | **PRESENT** | `ci.yml` `mutants` job (added issue #346): `cargo-mutants` scoped to bulk + edit modules via `.cargo/mutants.toml::examine_globs`; PR-only; `--in-diff <diff-file>` mode (v27 file-path form); 90% kill-rate target (`caught / (caught + missed + timeout)`); `timeout-minutes: 60`. Policy in `docs/specs/cargo-mutants-policy.md`. |
+| Mutation testing (meta-verification layer) | **PRESENT** | `ci.yml` `mutants` job (added issue #346): `cargo-mutants` scoped to 11 modules via `.cargo/mutants.toml::examine_globs` (see §1.1a); PR-only; `--in-diff <diff-file>` mode (v27 file-path form); 90% kill-rate target (`caught / (caught + missed + timeout)`); `timeout-minutes: 90` (raised from 60 in PR #567, DEC-144). Policy in `docs/specs/cargo-mutants-policy.md`. |
 
 **Summary counts:**
 - PRESENT: 10

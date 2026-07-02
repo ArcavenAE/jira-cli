@@ -5451,3 +5451,162 @@ _Recorded: 2026-07-02. State-manager (DEC-149)._
 _Tagged: [reinforced] [perimeter-scan] [citation-debt] [dec-149]_
 _Related: DEC-148 original codification; SWEEP-WHOLE-TOUCHED-FILE-NOT-JUST-TARGET-LINE (this session); BC-CITATION-CI-GUARD._
 _Related: DEC-140 (original); DEC-146 (reinforcement 1); DEC-147 (reinforcement 2); PERIMETER-SCAN-MUST-INCLUDE-INDEX-AND-TRACEABILITY._
+
+---
+
+## 2026-07-02 — MUTANTS-EXAMINE-GLOBS cycle (DEC-150)
+
+### [codified] IMPLEMENTER-PARAPHRASE-BEYOND-SPEC (DEC-150)
+
+Implementers must not expand prose beyond what the delta analysis or story spec explicitly
+prescribes. During the MUTANTS-EXAMINE-GLOBS cycle F5 adversarial gate (round 2), a fresh-context
+adversary found an invented call-edge in the policy doc prose: the implementer wrote
+"handle_edit is called by handle_create (JSM path)" — a paraphrase that went beyond the story's
+authorized scope and introduced a false fact. `handle_create` does NOT call `handle_edit`; the
+JSM dispatch fork was extracted to `handle_jsm_create`. This is a direct instance of the
+**#361-lineage** class (cite-or-fabricate, where fabrication masquerades as synthesis).
+
+**Root cause:** The implementer synthesized from context rather than transcribing the spec. The
+orchestrator-authorized scope was to "repoint function-location entries" — not to describe
+call-graph relationships. Prose that expands beyond the authorized scope introduces unverified
+claims that are hard to spot in review (they are plausible-sounding, not obviously wrong).
+
+**Rule:**
+1. Implementers MUST stay within the authorized scope when authoring prose descriptions in
+   policy docs, story files, and governance artifacts. Adding a call-graph claim that was not
+   in the delta analysis is out of scope.
+2. Before pushing, re-read every NEW sentence against the story's file-set and AC list.
+   If the sentence makes a claim not supported by an AC or spec reference, remove it.
+3. Fresh-context adversary is the load-bearing catch for this class — it spotted the
+   invented call-edge on round 2 when round 1 missed it (single-pass reviewers are more
+   susceptible to plausible-sounding fabrication than multi-pass diverse-lens reviewers).
+
+**Relation to ORCHESTRATOR-RELAYED-FIX-CAUTION family:** ORCHESTRATOR-RELAYED-FIX-CAUTION
+(DEC-140/146/148) addresses the case where an orchestrator relays a fix suggestion that the
+implementer accepts without ground-truth verification. IMPLEMENTER-PARAPHRASE-BEYOND-SPEC
+addresses the case where the implementer self-generates a paraphrase beyond the spec with no
+external prompt. Both are "text that wasn't in the spec appears in the output" class defects.
+The diverse-lens F5 adversary is the primary mechanical catch for both.
+
+_Discovered: MUTANTS-EXAMINE-GLOBS cycle F5 round-2 adversarial gate, 2026-07-02._
+_Recorded: 2026-07-02. State-manager (DEC-150)._
+_Tagged: [codified] [implementer-discipline] [paraphrase-beyond-spec] [fabrication] [dec-150]_
+_Related: ORCHESTRATOR-RELAYED-FIX-CAUTION (DEC-140/146/148); #361-citation-validation lineage._
+
+---
+
+### [codified] FILES-MODIFIED-BACK-WRITE (DEC-150)
+
+When the orchestrator authorizes a delivery change beyond the story's file set (e.g., authorizing
+a ci.yml comment-line fix that was not in the original file_set), the story spec MUST be amended
+to reflect the actual delivered file set IN THE SAME ROUND — not left to drift and be caught later
+by a consistency validator.
+
+**What happened:** During the MUTANTS-EXAMINE-GLOBS F5 round 1, the orchestrator authorized a
+ci.yml change (comment-only line repoint). The implementer applied the ci.yml fix and updated
+files_modified in the story. However, a story-file-set drift finding (F5 round 2) revealed the
+story's `files_modified` list and AC-005 did not fully reflect the authorized ci.yml change scope
+across all three locations in the story file (files_modified YAML header, AC-005 deliverable list,
+Architecture Compliance Rules row 3). The consistency-validator caught this residual drift and
+required a story v1.2 amendment.
+
+**Rule:**
+1. When an orchestrator authorizes a mid-cycle file-set expansion, the story-writer agent
+   MUST update ALL references to the file set in the story: the YAML `files_modified:` list,
+   every AC that enumerates the delivering PR's file set, and the Architecture Compliance Rules
+   table rows that describe the change.
+2. The state-manager confirms all three are updated BEFORE the factory-artifacts commit.
+3. Do NOT defer the story-file back-write to a later round — the consistency-validator will
+   catch the drift and create unnecessary remediation rounds.
+
+_Discovered: MUTANTS-EXAMINE-GLOBS cycle F5 round-2 + consistency-validator, 2026-07-02._
+_Recorded: 2026-07-02. State-manager (DEC-150)._
+_Tagged: [codified] [story-file-discipline] [file-set-drift] [consistency] [dec-150]_
+_Related: F2-PIECEWISE-PROTOCOL (dispatch consistency-validator after each fix); story v1.2 amendment._
+
+---
+
+## 2026-07-02 — Process-Gap Dispositions (DEC-150 cycle-closing)
+
+Per S-7.02 cycle-closing checklist, the following process-gaps are dispositioned as draft-story
+candidates or justified deferrals. Each is tracked in STATE.md Drift Items.
+
+### MUTANTS-POLICY-CITATION-GUARD (LOW — draft-story candidate)
+
+**Gap:** `docs/specs/cargo-mutants-policy.md §Scope` contains a function-location table that
+cites file paths and function names. There is no CI guard (analogous to
+`tests/claude_md_citations.rs`) that verifies each cited function is actually defined in the
+cited file. A future module extraction (Seam C, or a new extraction) could silently leave stale
+function-location citations in the policy doc.
+
+**Proposed guard:** `scripts/check-cargo-mutants-policy-citations.sh` — grep each `§Scope`
+function-location row against the actual source file, assert the cited function name is defined.
+Relates to BC-CITATION-CI-GUARD (mechanical enforcement of file::symbol citations at CI time).
+
+**Disposition:** Draft-story candidate. Does not block any current delivery. Tracked as
+MUTANTS-POLICY-CITATION-GUARD in Drift Items.
+
+_Recorded: 2026-07-02. State-manager (DEC-150)._
+_Tagged: [process-gap] [draft-story-candidate] [policy-citation] [ci-guard]_
+
+---
+
+### MUTANTS-GLOB-EXISTENCE-GUARD (LOW — draft-story candidate)
+
+**Gap:** The `examine_globs` entries in `.cargo/mutants.toml` are not validated against the
+actual repo file system at CI time. A dead-glob entry (e.g., from a future refactor that moves
+or renames a file) would cause cargo-mutants to silently ignore that entry — the scope would
+shrink without any CI failure signal.
+
+**Proposed guard:** A CI assertion (e.g., in `tests/ci_gate_completeness.rs` or a new test file)
+that runs `glob::glob(pattern)` over each `examine_globs` entry and fails if any pattern
+resolves to zero files.
+
+**Disposition:** Draft-story candidate. Does not block any current delivery. Tracked as
+MUTANTS-GLOB-EXISTENCE-GUARD in Drift Items.
+
+_Recorded: 2026-07-02. State-manager (DEC-150)._
+_Tagged: [process-gap] [draft-story-candidate] [glob-validation] [examine_globs]_
+
+---
+
+### F1-SWEEP-INCLUDES-CI-YML-COMMENTS (LOW — justified deferral)
+
+**Gap:** During the MUTANTS-EXAMINE-GLOBS F5 round 1, the perimeter lens found a stale scope
+comment in `ci.yml:195` that the F1 delta analysis had missed. The F1 perimeter scan grepped
+the `.cargo/mutants.toml`, `docs/specs/cargo-mutants-policy.md`, and related spec files but did
+not include `ci.yml` in its scope-comment search. This is a narrow class of perimeter miss:
+CI workflow comment strings that serve as scope summaries.
+
+**Proposed fix:** Update the Phase F1 skill template (engine-side) to require that delta
+analysis perimeter scans include any CI workflow files that contain scope-summary comments
+referencing the modified config keys. This is an engine-skill update, not a product story.
+
+**Disposition:** Justified deferral — engine/skill-template scope. No product code or factory
+artifact change required. Deferred pending engine-source access. Tracked as
+F1-SWEEP-INCLUDES-CI-YML-COMMENTS in Drift Items.
+
+_Recorded: 2026-07-02. State-manager (DEC-150)._
+_Tagged: [process-gap] [justified-deferral] [f1-perimeter] [ci-yml-comments] [engine-skill]_
+
+---
+
+### CICD-SETUP-CLASSIFICATION (LOW — justified deferral)
+
+**Gap:** `.factory/cicd-setup.md` has an ambiguous governance classification. The policy doc
+(`docs/specs/cargo-mutants-policy.md`) calls cicd-setup.md a "historical/pending refresh"
+document while cicd-setup.md is actively cited as a CI topology reference in multiple factory
+artifacts. The classification affects how stale-citation sweep rules apply (live-governance docs
+must be swept; historical docs may be left as audit trail per SWEEP-WHOLE-TOUCHED-FILE rules).
+
+**Proposed resolution:** Adjudicate cicd-setup.md status in a future maintenance sweep:
+(a) "live-governance" → trigger a full stale-citation sweep and establish a periodic refresh
+schedule; (b) "historical-snapshot with live §1.1a extension" → document the dual-nature
+explicitly at the top of the file to guide future readers.
+
+**Disposition:** Justified deferral — classification decision requires human input on governance
+intent. No urgency; cicd-setup.md is being kept current in the factory-artifacts cycle-close
+commits. Tracked as CICD-SETUP-CLASSIFICATION in Drift Items.
+
+_Recorded: 2026-07-02. State-manager (DEC-150)._
+_Tagged: [process-gap] [justified-deferral] [cicd-setup] [governance-classification]_
