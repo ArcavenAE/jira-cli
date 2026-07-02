@@ -282,7 +282,7 @@ impl JiraClient {
     /// `BASE_ISSUE_FIELDS` incurs.
     ///
     /// Use this when the caller only needs keys (e.g., JQL-driven
-    /// bulk-edit selection at `cli/issue/create.rs::handle_edit`). For
+    /// bulk-edit selection at `cli/issue/edit.rs::handle_edit`). For
     /// body-bearing reads use [`Self::search_issues`].
     ///
     /// `has_more` is set to `true` in two cases: (1) the caller's `limit`
@@ -701,7 +701,7 @@ impl JiraClient {
     ///   Most projects have ≤50 types (one page at `maxResults=200`); pagination
     ///   is a correctness guard for large enterprise type schemes.
     /// - Project-scoped: the same type name can have different IDs in different projects.
-    /// - Call site: `handle_edit_bulk_fields` in `src/cli/issue/create.rs` only.
+    /// - Call site: `handle_edit_bulk_fields` in `src/cli/issue/edit.rs` only.
     pub(crate) async fn get_issue_types_for_project(
         &self,
         project_key: &str,
