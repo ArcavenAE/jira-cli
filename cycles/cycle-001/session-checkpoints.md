@@ -1159,3 +1159,21 @@ _Was the active checkpoint after maintenance sweep 2026-06-22 fully closed. PRs 
 | **Post-merge TODO** | (1) cicd-setup.md AC-003 corrections; (2) CICD-SETUP-TIMEOUT-MINUTES-STALE fix; (3) DEC-150 entry; (4) lessons codification; (5) resolve MUTANTS-EXAMINE-GLOBS-STALE-AFTER-SEAM-B. |
 | **jira-e2e env** | JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ, JR_E2E_ENABLED=true. |
 | **Standing constraints** | Do NOT close #429 (DEC-029). All fixes through full VSDD (DEC-120/121/124/129/130/131/132/134/135/136/138/139/140/141/142/143/144/146/147/148/149). DEC-128 (CRITICAL). DEC-133 (DEPENDABOT-ACTION-SOAK). |
+
+---
+
+## Checkpoint: 2026-07-02 — MUTANTS-EXAMINE-GLOBS SHIPPED + cycle CLOSED (archived 2026-07-02 at session wrap)
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-07-02 |
+| **Status** | **IDLE — MUTANTS-EXAMINE-GLOBS cycle SHIPPED (DEC-150). No open PRs. No story worktrees. develop @ c4b3aa9.** |
+| **Position** | MUTANTS-EXAMINE-GLOBS cycle CLOSED 2026-07-02 (DEC-150; PR #570 squash-merged by human; develop 39caf39 → c4b3aa9; Stories 99→100). Cycle-close burst applied: cicd-setup.md AC-003 corrections + 2 lessons codified + 4 process-gaps dispositioned. Prior: CITATION-DEBT-PRODUCT-FILES SHIPPED 2026-07-02 (DEC-149; develop 3b122a8 → 39caf39; Stories 97→99). |
+| **develop HEAD** | origin/develop = **c4b3aa9** (PR #570 squash-merged 2026-07-02 by human). |
+| **factory-artifacts HEAD** | see `git -C .factory log -1` |
+| **Activation** | activation_head: 342987f; activation_version: v0.6.0-dev.7. v0.5.0 STABLE shipped 2026-06-12. |
+| **Counters** | BC **608**. NFR **42**. ADR **16**. Stories **100**. Holdouts **82**. |
+| **Active worktrees** | NONE. Story worktree `.worktrees/S-MUTANTS-EXAMINE-GLOBS-1` cleaned up post-merge. Permanent infra only: main checkout (develop) + `.factory` (factory-artifacts) + `.reference/jira-cli` (detached). |
+| **Open PRs (action needed)** | NONE. |
+| **jira-e2e env** | JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ, JR_E2E_ENABLED=true. |
+| **Standing constraints** | Do NOT close #429 (DEC-029). All fixes through full VSDD (DEC-120/121/124/129/130/131/132/134/135/136/138/139/140/141/142/143/144/146/147/148/149/150). LESSON-F2-WORKTREE-FIRST. F2-PIECEWISE-PROTOCOL [ENFORCED]. DEC-128 (CRITICAL): delivery sub-agents must NOT self-authorize merges, spawn fix agents, push, or enter unbounded loops. Fork signing UNBLOCKED but INERT (DEC-104). DEC-133 (DEPENDABOT-ACTION-SOAK). DEC-136: test-only PRs must not silently skip the adversarial gate. DEC-144: verify tool config-key semantics; ground CI budgets in measured baselines. DEC-147/148/149/150: citation-sweep + implementer-paraphrase lessons codified. |

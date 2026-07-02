@@ -2,7 +2,8 @@
 document_type: pipeline-state
 version: "2.0"
 status: complete
-timestamp: 2026-07-02T22:30:00Z
+pipeline: PAUSED
+timestamp: 2026-07-02T23:00:00Z
 phase: 3
 project: jira-cli
 mode: brownfield
@@ -54,6 +55,7 @@ activation_version: "v0.6.0-dev.7"
 | **CITATION-DEBT-FILEWIDE CYCLE CLOSED** — 3-file citation repoint: bc-3-issue-write.md (12 relocations: 9× create.rs→jsm_create.rs [BC-3.8.002/003/009/015/016/017 + Canonical Guard Ordering], 2× create.rs→edit.rs [BC-3.4.010 historical], 1× helpers.rs→field_resolve.rs; +BC-3.4.016 sibling-propagation field_resolve.rs Source+Trace add; +2 descriptor rewrites [BC-3.8.016/017 Trace "very top"→"after project-key resolution step 0"]; +2 changelog symbol fixes [create.rs:341→edit.rs::has_any_field_change]; +1 prose fix [BC-3.8.002 handle_create→handle_jsm_create calls require_service_desk]); bc-2-issue-read.md (1: BC-2.6.050 create.rs::handle_edit→edit.rs::handle_edit); BC-INDEX.md (11 relocations + 1 symbol correction [BC-3.4.019 handle_edit_bulk_fields→handle_edit] + 1 field_resolve.rs add). 7 adversary passes (diverse lenses) → 3 consecutive CLEAN. consistency-validator CONSISTENT; both check scripts exit 0. DEC-148. | state-manager | COMPLETE | develop @ 3b122a8 (UNCHANGED). BC 608. Stories 97. Holdouts 82. |
 | **CITATION-DEBT-PRODUCT-FILES DELIVERED** — PR #569 (`chore(deps): bump anyhow 1.0.102→1.0.103`) squash-merged → develop @ **e79943b** (unblocked repo; Cargo.lock+CHANGELOG; all 15 CI green). PR #568 (`docs: fix ADR-0012 Seam A/B relocation citations`) squash-merged (rebase onto #569) → develop @ **39caf39** (7 doc/comment citation corrections: docs/adr/0014-jsm-request-type-dispatch.md HIGH, jsm-e2e-coverage.md MED, 2026-05-13-search-issue-keys.md MED, src/api/jira/issues.rs rustdoc LOW; no behavior change; adversary converged 3 clean passes). S-ANYHOW-RUSTSEC-2026-0190-1 + S-CITATION-DEBT-PRODUCT-FILES-1 filed (retroactive). Stories 97→99. DEC-149. 3 lessons codified (SWEEP-WHOLE-TOUCHED-FILE; NEWLY-PUBLISHED-ADVISORY-BLOCKS-UNRELATED-PRS; PERIMETER-SCAN reinforcement 2). | state-manager | COMPLETE | develop @ 39caf39. BC 608. Stories 99. Holdouts 82. |
 | **MUTANTS-EXAMINE-GLOBS CYCLE CLOSED** — F1 delta analysis (option (a) restore) → F3 story S-MUTANTS-EXAMINE-GLOBS-1 (story #100, v1.2) → F4 delivery worktree `ci/mutants-examine-globs-seam-b` (3 commits: 5486c34, 1da0571, 475a1aa) → F5 adversarial gate CONVERGED (round 1: ci.yml:195 stale scope comment MED; round 2: policy-doc false handle_create→handle_edit call-edge MED + story file-set drift MED; round 3: 3/3 PASS diverse lenses) → consistency-validator CONSISTENT (story v1.2) → PR #570 squash-merged (human 2026-07-02; DEC-128 honored); mutants job PASS 35s 0-mutant path (second 0-mutant calibration confirmation). Cycle-close: cicd-setup.md AC-003 corrections applied; 2 lessons codified (IMPLEMENTER-PARAPHRASE-BEYOND-SPEC + FILES-MODIFIED-BACK-WRITE); 4 process-gaps dispositioned. DEC-150. | state-manager | COMPLETE | develop @ c4b3aa9. BC 608. Stories 100. Holdouts 82. |
+| **SESSION WRAP (human-requested pause)** — MUTANTS-EXAMINE-GLOBS cycle CLOSED same-day (DEC-150, PR #570 → develop @ c4b3aa9); pipeline paused IDLE; no in-flight work abandoned | state-manager | COMPLETE | factory-artifacts @ 363334b + this commit. |
 
 ## Decisions Log
 
@@ -165,17 +167,16 @@ Full per-issue: `cycles/cycle-001/convergence-trajectory.md`. Current: **MUTANTS
 
 | Field | Value |
 |-------|-------|
-| **Date** | 2026-07-02 |
-| **Status** | **IDLE — MUTANTS-EXAMINE-GLOBS cycle SHIPPED (DEC-150). No open PRs. No story worktrees. develop @ c4b3aa9.** |
-| **Position** | MUTANTS-EXAMINE-GLOBS cycle CLOSED 2026-07-02 (DEC-150; PR #570 squash-merged by human; develop 39caf39 → c4b3aa9; Stories 99→100). Cycle-close burst applied: cicd-setup.md AC-003 corrections + 2 lessons codified + 4 process-gaps dispositioned. Prior: CITATION-DEBT-PRODUCT-FILES SHIPPED 2026-07-02 (DEC-149; develop 3b122a8 → 39caf39; Stories 97→99). |
-| **develop HEAD** | origin/develop = **c4b3aa9** (PR #570 squash-merged 2026-07-02 by human). |
-| **factory-artifacts HEAD** | see `git -C .factory log -1` |
-| **Activation** | activation_head: 342987f; activation_version: v0.6.0-dev.7. v0.5.0 STABLE shipped 2026-06-12. |
+| **Date** | 2026-07-02 (session wrap) |
+| **Status** | **PAUSED — IDLE. MUTANTS-EXAMINE-GLOBS cycle SHIPPED & CLOSED (DEC-150). develop @ c4b3aa9 (PR #570 human-merged). factory-artifacts @ 363334b (+ this wrap commit). No open PRs. No story worktrees (infra only: main checkout @ develop, .factory, .reference/jira-cli detached).** |
 | **Counters** | BC **608**. NFR **42**. ADR **16**. Stories **100**. Holdouts **82**. |
-| **Active worktrees** | NONE. Story worktree `.worktrees/S-MUTANTS-EXAMINE-GLOBS-1` cleaned up post-merge. Permanent infra only: main checkout (develop) + `.factory` (factory-artifacts) + `.reference/jira-cli` (detached). |
-| **Open PRs (action needed)** | NONE. |
-| **jira-e2e env** | JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ, JR_E2E_ENABLED=true. |
-| **Standing constraints** | Do NOT close #429 (DEC-029). All fixes through full VSDD (DEC-120/121/124/129/130/131/132/134/135/136/138/139/140/141/142/143/144/146/147/148/149/150). LESSON-F2-WORKTREE-FIRST. F2-PIECEWISE-PROTOCOL [ENFORCED]. DEC-128 (CRITICAL): delivery sub-agents must NOT self-authorize merges, spawn fix agents, push, or enter unbounded loops. Fork signing UNBLOCKED but INERT (DEC-104). DEC-133 (DEPENDABOT-ACTION-SOAK). DEC-136: test-only PRs must not silently skip the adversarial gate. DEC-144: verify tool config-key semantics; ground CI budgets in measured baselines. DEC-147/148/149/150: citation-sweep + implementer-paraphrase lessons codified. |
+| **Convergence counter** | None active. |
+| **In-flight work** | NONE. No abandoned sub-agent steps. |
+| **Untracked local files** | Deliberately uncommitted, session-local tooling, harmless: `.claude/pr-reviews/`, `.claude/spec-config.json`. |
+| **Pending human decisions** | None blocking. Next-cycle backlog candidates: TEST-ONLY-GATE-ELIGIBILITY (MEDIUM), BC-CITATION-CI-GUARD + MUTANTS-POLICY-CITATION-GUARD (natural pair), MUTANTS-GLOB-EXISTENCE-GUARD, RETROACTIVE-STORY-FILES-MISSING backfill, remaining LOW items per RESUME PLAN. |
+| **Standing watch-item** | MUTANTS-FIRST-SCOPED-PR-CALIBRATION — --timeout 240 code-mutant path unexercised; next code PR touching edit.rs/jsm_create.rs (now in examine_globs) will exercise it; watch for false timeouts/surviving mutants. |
+| **STATE.md size** | ~284 lines (WARNING band) — run `/vsdd-factory:compact-state` early next session before new cycle work. |
+| **Resume command** | Open a fresh session in this project and run `/vsdd-factory:next-step` (it reads this STATE.md; worktree-health check runs first per RESUME PLAN Step 1). |
 
 ## RESUME PLAN (cold-start, self-contained)
 
