@@ -5353,4 +5353,101 @@ DEC-148 shows that verify-on-receipt also works as a backstop).
 _Discovered: CITATION-DEBT-FILEWIDE cycle, 2026-06-30._
 _Recorded: 2026-06-30. State-manager (DEC-148)._
 _Tagged: [reinforced] [orchestrator-discipline] [bc-authoring] [verification] [dec-148]_
+
+---
+
+### [new] SWEEP-WHOLE-TOUCHED-FILE-NOT-JUST-TARGET-LINE (DEC-149)
+
+When fixing citations, anchors, or stale references, once you edit a file you MUST grep and fix
+ALL same-class occurrences in that ENTIRE file — not only the enumerated target lines.
+
+**Root cause:** The CITATION-DEBT-PRODUCT-FILES adversarial gate repeatedly found stale sibling
+citations on unfixed lines of files the PR had already touched:
+- `src/api/jira/issues.rs:704` — carried a stale `create.rs::handle_edit` reference on a
+  different code-comment line, while `issues.rs:285` (the explicit target) had been corrected.
+- `docs/specs/jsm-e2e-coverage.md:178` — carried a stale `create.rs` reference on a prose line
+  adjacent to the target `jsm-e2e-coverage.md:49`.
+
+The fix for target line N was correctly applied; the same stale symbol survived on lines N+129 or
+N+153 of the same file because the fix was scoped to the enumerated line, not to the file.
+
+**Rule:** When fixing stale file::symbol citations:
+1. Apply the target-line fix.
+2. Immediately grep the ENTIRE file for the old symbol (e.g. `grep -n "create.rs" <file>`).
+3. Fix all remaining hits in the same commit — distinguish present-tense current-state claims
+   (must fix) from historical/pre-split migration narrative (leave as historical record).
+4. Only close the item when `grep -c "<old_symbol>" <file>` returns 0 for present-tense occurrences.
+
+**Distinction:** Present-tense current-state claims cite where code *currently lives*. Historical
+narrative describes where code *used to live* before a module extraction — these are intentionally
+kept as audit trail (e.g., "extracted from create.rs"). The grep-and-fix rule applies only to
+present-tense citations.
+
+_Discovered: CITATION-DEBT-PRODUCT-FILES cycle, 2026-07-02._
+_Recorded: 2026-07-02. State-manager (DEC-149)._
+_Tagged: [new] [citation-discipline] [file-sweep] [dec-149]_
+_Related: PERIMETER-SCAN-MUST-INCLUDE-INDEX-AND-TRACEABILITY (DEC-148); BC-CITATION-DRIFT-AFTER-SEAM-EXTRACTION (DEC-147)._
+
+---
+
+### [new] NEWLY-PUBLISHED-ADVISORY-BLOCKS-UNRELATED-PRS (DEC-149)
+
+A freshly-published RUSTSEC advisory can turn ci-gate red on a wholly-unrelated PR because
+`cargo-deny` is part of ci-gate. This is a class of surprise blocking condition with a specific
+correct response.
+
+**What happened:** While preparing PR #568 (doc-only citation fixes), RUSTSEC-2026-0190 was
+published for `anyhow 1.0.102`. The `cargo-deny` job in ci-gate started failing on PR #568, even
+though PR #568 touched no Rust source. The advisory was for a pre-existing dependency, unrelated
+to the change being reviewed.
+
+**Correct response (two-step separation of concerns):**
+1. Fix the advisory in its own dependency-bump PR first (PR #569 — `chore(deps): bump anyhow`).
+   Keep the bump isolated: Cargo.lock + CHANGELOG only, no source changes.
+2. Merge the bump to unblock, then rebase the blocked PR on top.
+
+**Anti-patterns to avoid:**
+- Do NOT fold the dependency bump into the unrelated PR — mixes concerns and obscures the change
+  surface for reviewers.
+- Do NOT add a `cargo-deny` exception/`allow` just to unblock the PR — the advisory should be
+  fixed, not suppressed.
+- Do NOT delay the fix until the "real" PR lands — the advisory is a pre-existing repo-wide
+  blocker; fix it promptly.
+
+**Detection heuristic:** When ci-gate fails on a doc-only or test-only PR that does not touch
+`Cargo.toml`/`Cargo.lock`, check `cargo deny check advisories` first — a freshly-published
+advisory is the most likely cause.
+
+_Discovered: CITATION-DEBT-PRODUCT-FILES cycle (PR #568 blocked by RUSTSEC-2026-0190), 2026-07-02._
+_Recorded: 2026-07-02. State-manager (DEC-149)._
+_Tagged: [new] [ci-gate] [cargo-deny] [advisory] [separation-of-concerns] [dec-149]_
+
+---
+
+### [reinforced] PERIMETER-SCAN-MUST-INCLUDE-INDEX-AND-TRACEABILITY (reinforcement 2 — DEC-149)
+
+First codified DEC-148 (spec-perimeter scan). DEC-149 extends the rule to the develop-branch
+product-file ring.
+
+**What the CITATION-DEBT-PRODUCT-FILES adversary found:** After the enumerated target files were
+corrected, fresh-context adversary passes found additional stale citations on DIFFERENT lines of
+the same already-touched files (see SWEEP-WHOLE-TOUCHED-FILE-NOT-JUST-TARGET-LINE above). The
+perimeter scan that identified the original 4 target files was correct, but the fix was applied
+only to the enumerated lines, not the full file surface.
+
+**Extended rule (two dimensions):**
+1. **Breadth (DEC-148):** Citation-debt perimeter scans MUST include BC-INDEX.md +
+   CANONICAL-COUNTS + traceability/summary tables — not just bc-*.md body files or the four
+   explicitly enumerated product files. Use a repo-wide grep for the relocated symbol.
+2. **Depth (DEC-149):** When a file is included in the fix, grep and fix ALL same-class
+   occurrences in that file — not only the enumerated lines (see
+   SWEEP-WHOLE-TOUCHED-FILE-NOT-JUST-TARGET-LINE).
+
+**Durable fix:** BC-CITATION-CI-GUARD (task #11) is the mechanical enforcement path. Until that
+guard exists, the manual two-dimensional sweep is mandatory.
+
+_Discovered: CITATION-DEBT-PRODUCT-FILES cycle, 2026-07-02._
+_Recorded: 2026-07-02. State-manager (DEC-149)._
+_Tagged: [reinforced] [perimeter-scan] [citation-debt] [dec-149]_
+_Related: DEC-148 original codification; SWEEP-WHOLE-TOUCHED-FILE-NOT-JUST-TARGET-LINE (this session); BC-CITATION-CI-GUARD._
 _Related: DEC-140 (original); DEC-146 (reinforcement 1); DEC-147 (reinforcement 2); PERIMETER-SCAN-MUST-INCLUDE-INDEX-AND-TRACEABILITY._

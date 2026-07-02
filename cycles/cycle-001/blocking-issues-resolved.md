@@ -277,3 +277,16 @@ CITATION-DEBT-FILEWIDE-2026-06-30 (MEDIUM drift item) was opened at the end of t
 | ID | Area | Description | Severity | Status | Resolved Date |
 |----|------|-------------|----------|--------|---------------|
 | CITATION-DEBT-FILEWIDE-2026-06-30 | spec/metadata | Pre-existing stale citations in bc-3-issue-write.md, bc-2-issue-read.md, and BC-INDEX.md from ADR-0012 Seam A/B module extractions (create.rs→edit.rs/jsm_create.rs; helpers.rs→field_resolve.rs). **RESOLVED-PARTIAL — `.factory/specs/prd/` perimeter DONE (DEC-148):** 12 relocations + BC-3.4.016 sibling-propagation add + 2 descriptor rewrites + 2 changelog symbol fixes + 1 prose fix in bc-3-issue-write.md; 1 relocation in bc-2-issue-read.md; 11 relocations + 1 symbol correction + 1 add in BC-INDEX.md. 7 adversary passes → 3 consecutive CLEAN. check scripts exit 0. **Remaining product-file ring** (docs/adr/0014:176, docs/specs/jsm-e2e-coverage:49, docs/specs/2026-05-13-search-issue-keys:129, src/api/jira/issues.rs:285 rustdoc, archived docs×2) split to CITATION-DEBT-PRODUCT-FILES-2026-06-30 (MEDIUM, OPEN) per DEC-147 DEFERRAL-PERIMETER-SCOPING. | MEDIUM | **RESOLVED-PARTIAL — DEC-148 (2026-06-30); product-file ring → CITATION-DEBT-PRODUCT-FILES-2026-06-30** | 2026-06-30 |
+
+---
+
+## Resolved 2026-07-02 — CITATION-DEBT-PRODUCT-FILES SHIPPED (DEC-149)
+
+CITATION-DEBT-PRODUCT-FILES-2026-06-30 (MEDIUM drift item, opened DEC-147/DEC-148) tracked
+ADR-0012 relocation citation debt in PRODUCT files on the develop branch, requiring a develop PR.
+Both PRs shipped 2026-07-02 (human-merged, admin bypass, CI green throughout).
+
+| ID | Area | Description | Severity | Status | Resolved Date |
+|----|------|-------------|----------|--------|---------------|
+| CITATION-DEBT-PRODUCT-FILES-2026-06-30 | spec/metadata | ADR-0012 relocation citations in PRODUCT files: docs/adr/0014-jsm-request-type-dispatch.md:176 (HIGH — mislabeled create.rs as "canonical implementation"), docs/specs/jsm-e2e-coverage.md:49 (MED), docs/specs/2026-05-13-search-issue-keys.md:129 (MED), src/api/jira/issues.rs:285 rustdoc (LOW). **RESOLVED — PR #568** `docs: fix ADR-0012 Seam A/B relocation citations (create.rs → edit.rs / jsm_create.rs)`: 7 doc/comment-only citation corrections across 4 product files (docs/adr/0014-jsm-request-type-dispatch.md, docs/specs/jsm-e2e-coverage.md, docs/specs/2026-05-13-search-issue-keys.md, src/api/jira/issues.rs). Cleared the HIGH (ADR-0014 mislabeled create.rs). No behavior change. Adversarially converged (multiple rounds → 3 consecutive clean passes on final diff). Human-merged (admin bypass) after rebase onto #569. develop 3b122a8 → 39caf39. | MEDIUM | **RESOLVED — 2026-07-02; DEC-149; PR #568 @ 39caf39** | 2026-07-02 |
+| ANYHOW-RUSTSEC-2026-0190 | security/deps | anyhow 1.0.102 unsoundness advisory (RUSTSEC-2026-0190) discovered while preparing PR #568; freshly-published advisory was turning ci-gate red on all open PRs via cargo-deny. **RESOLVED — PR #569** `chore(deps): bump anyhow 1.0.102 → 1.0.103 (RUSTSEC-2026-0190)`: Cargo.lock + CHANGELOG only; fixed-first per human direction (separation of concerns); #568 rebased onto #569 after. develop e79943b (PR #569) → 39caf39 (PR #568). | HIGH | **RESOLVED — 2026-07-02; DEC-149; PR #569 @ e79943b** | 2026-07-02 |
