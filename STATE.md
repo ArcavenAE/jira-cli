@@ -163,7 +163,7 @@ Full per-issue: `cycles/cycle-001/convergence-trajectory.md`. Current: **DEAD-CI
 | **Date** | 2026-07-02 |
 | **Status** | **IDLE — durable cold-resume snapshot 2026-07-02. CITATION-DEBT-PRODUCT-FILES cycle SHIPPED (DEC-149); develop 3b122a8 → 39caf39. PRs #569 (anyhow RUSTSEC-2026-0190 security bump) + #568 (7 doc/comment citation corrections across 4 product files). Stories 97→99. New drift items: MUTANTS-EXAMINE-GLOBS-STALE-AFTER-SEAM-B (MEDIUM, needs-intent-decision) + two LOW doc-hygiene candidates. MUTANTS-FIRST-SCOPED-PR-CALIBRATION 0-mutant path CONFIRMED-GOOD. 3 new lessons codified.** |
 | **Position** | CITATION-DEBT-PRODUCT-FILES cycle SHIPPED 2026-07-02 (DEC-149; develop 3b122a8 → 39caf39). Prior: CITATION-DEBT-FILEWIDE cycle CLOSED 2026-06-30 (DEC-148; spec-only; develop UNCHANGED @ 3b122a8). BC-SUB-CLAUSE + HOLDOUT CLOSED 2026-06-30 (DEC-147; BC 605→608; holdouts 79→82). HOLDOUT-COVERAGE-GAPS CLOSED 2026-06-30 (DEC-146; holdouts 71→79). MUTATION-CI-TIMEOUT PR #567 → develop @ 3b122a8 (DEC-144; stories 96→97). v0.6.0-dev.7 shipped (PR #559 @ 342987f). |
-| **develop HEAD** | local = origin/develop = **39caf39** (PR #568 squash-merged 2026-07-02, rebased onto PR #569 @ e79943b). |
+| **develop HEAD** | origin/develop = **39caf39** (PR #568 squash-merged 2026-07-02, rebased onto PR #569 @ e79943b). Local checkout may lag — fast-forward with `git pull origin develop` before working. |
 | **factory-artifacts HEAD** | see `git -C .factory log -1` |
 | **Activation** | activation_head: 342987f; activation_version: v0.6.0-dev.7. v0.5.0 STABLE shipped 2026-06-12. |
 | **Counters** | BC **608**. NFR **42**. ADR **16**. Stories **99**. Holdouts **82**. |
