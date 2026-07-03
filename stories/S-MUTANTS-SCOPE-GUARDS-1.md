@@ -41,7 +41,7 @@ acceptance_criteria_count: 7
 assumption_validations: []
 risk_mitigations: []
 created: "2026-07-02"
-version: "1.30.2"
+version: "1.35.1"
 last_updated: "2026-07-03"
 breaking_change: false
 retroactive: false
@@ -56,6 +56,102 @@ origin: >
   .factory/phase-f1-delta-analysis/citation-guards-2026-07-02-delta.md §2 (Guards 2+3).
   Stories recommended: 2 (wave_order: guards-2-3-first per F1 §7). This is Story A.
 changelog:
+  - "1.35.1 (2026-07-03): Errata — Task 8's count-pin description missed the v1.35 -ge→=
+    conversion; quotes updated from `-ge 3`/`-ge 2`/`-ge 3` to `= \"3\"`/`= \"2\"`/`= \"3\"`,
+    FIND-VA-41-2 FIX tag added to the fix-tag list, and 'floors are correct' reworded to 'exact
+    counts correct (any addition or deletion of a tracked-literal line fires the pin)'."
+  - "1.35 (2026-07-03): Adversary pass 41 fixes (FIND-VA-41-1..3): FIND-VA-41-1 (MED): Fixture A
+    summary assertion tightened from generic `^[0-9]+` to `^3 stale citation(s)` — A and E are
+    now JOINTLY DESIGNATED summary-count discriminator pair (A=3, E=5); no single hardcoded
+    constant satisfies both; kills any hardcoded-constant emitter mutation. Fixture A spec,
+    AC-002 row A, F-VA-31-4 note at Fixture E, Task 8 updated. FIND-VA-41-2 (MED): count-pins
+    1-3 upgraded from `-ge` floors to exact string-`=` counts (= \"3\"/= \"2\"/= \"3\");
+    closes the comment/echo baseline-inflation hole entirely (addition OR deletion fires the pin).
+    Code block assertions, diagnostic messages (\"below floor\" → \"exact count mismatch\"),
+    occurrence-math prose (floor semantics removed, exact-count policy added, 4th assertion
+    noted as redundant defense-in-depth layer for inflation class), terminal-residual language
+    block (floors reference updated to exact counts), F-VA-31-3 paragraph rewritten (-ge operator-
+    weakening class now obsolete; residuals are deletion + coordinated value-retuning only),
+    Task 8 pin quotes updated. FIND-VA-41-3 (LOW-obs): tightening-direction mirror added to
+    HEADING-MATCHER-BROADENING residual: `^## ` → `^## Terminator` literal-tightening is
+    corpus-equivalent on Fixture I and real doc today; both directions now named (mirror of
+    F-VA-28-7), standard future-edit caveat."
+  - "1.34.1 (2026-07-03): Errata — added explicit simplified-mock rationale note to Fixture B
+    (why the mock's import list deliberately differs from the verbatim create.rs:15 quote
+    corrected in v1.34)."
+  - "1.34 (2026-07-03): Adversary pass 40 fix (F-GT-40-1): story misquoted src/cli/issue/create.rs
+    line 15 as `use super::jsm_create::{handle_jsm_create};` at three live-text sites (definition-
+    anchored-grep rationale ~line 1166, Traceability row, EC-001 row). Corrected to verbatim:
+    `use super::jsm_create::{JsmCreateArgs, handle_jsm_create};`. Fixture B printf mock (deliberate
+    simplified skeleton) left unchanged. Grep confirms no remaining elided-form occurrences in
+    live text."
+  - "1.33 (2026-07-03): Adversary pass 38 fixes (F-VA-38-1..4): F-VA-38-1 (LOW): Fixture C
+    count-pin regex `'DEAD: .* not found'` over-matched fn-not-found form; tightened to
+    `'DEAD: [^ ]* not found$'` — `$` anchor exclusively matches file-not-found format, excluding
+    `DEAD: fn not found in <file>` (which has trailing ` in <file>`). Rationale + BRE note added
+    to Fixture C spec. AC-002 row C and Task 8 updated. F-VA-38-2 (LOW): 4th post-fixture
+    self-assertion used arithmetic `-eq 0`; converted to string `= \"0\"` per FIND-VA-35-2 to
+    close the `-eq 0`→`-ge 0` vacuous-pass operator-class mutation. Assertion block, Task 8
+    note updated. F-VA-38-3 (LOW-obs): one sentence added to FIND-VA-35-2 convention block
+    stating the scope boundary — string-= covers COUNT assertions only; fixture rc assertions
+    retain arithmetic -eq (co-killed by depth assertions; no churn gain); reference F-VA-38-3.
+    F-VA-38-4 (LOW-obs): FIXTURE-DEPTH-WEAKENING family extended with two fence-recognition
+    siblings: (a) fence-OPEN tightening is transitively caught via Fixture G kill-trace (1)
+    — named for audit completeness; (b) fence-delimiter vs inline-code-delimiter confusion is
+    not fixture-distinguished on the real corpus (zero fenced blocks in real §Scope) — accepted
+    defensive residual with standard future-edit caveat."
+  - "1.32.1 (2026-07-03): Errata — Fixture G correct-grammar trace wording could imply the
+    fence-close line reaches the group machine; reworded to state the inclusive span (open line
+    + content + close line) is removed by the pre-filter, and the group machine's input is
+    re-expressed as a direct sequence: real bullet 1 → real bullet 2 → blank → ## Terminator."
+  - "1.32 (2026-07-03): Adversary pass 37 fixes (FIND-VA-37-1/FIND-VA-37-2): FIND-VA-37-1 (LOW):
+    Fixture G had no post-fence-close content so a fence-CLOSE strip-to-EOF mutation was
+    corpus-equivalent to correct behavior. Fixed by adding post-fence bullet
+    `- \`src/mock_mod2.rs\` — more serde structs` and corresponding `touch $tmp_G/src/mock_mod2.rs`
+    mock. Assertion updated from N=1 to N=2 (`^Check passed: 2 bullets parsed, 0 \\(file, fn\\)
+    pairs validated$`). Kill-trace (3) added: fence-CLOSE strip-to-EOF strips the post-fence bullet
+    too → N=1 → `2 bullets` assertion fails → RED. Kill-trace (1) (fence-skip deletion) re-derived:
+    fence-open class-4 + in-fence bullet + fence-close class-4 + post-fence bullet → N=3, fenced
+    file missing → DEAD → rc=1 → RED (and N=3 ≠ 2 doubly fails). AC-002 row G, Task 8 all updated.
+    FIND-VA-37-2 (LOW): no fixture pinned an exact count for the file-not-found offender class.
+    Fixed by adding to Fixture C a count-pin assertion `[ \"$(grep -c 'DEAD: .* not found'
+    <<<\"$output\")\" = \"2\" ] || { echo \"Fixture C FAIL: not-found offender count mismatch\";
+    exit 1; }`. Fixture C is designated the count-pinning fixture for the file-not-found class
+    (symmetric to Fixture E for the fn-not-found / shape-guard class). AC-002 row C, Task 8
+    self-verify note updated."
+  - "1.31.1 (2026-07-03): Errata — v1.31 Fixture G fence probe used plain-prose fence content,
+    which the group grammar already ignores (fence-open closes the group) — kill-trace (1) was
+    false. Fence-skip re-specified as a PRE-FILTER on the §Scope range (in-loop-after-class-4
+    is provably redundant); Fixture G fence content replaced with a bullet-shaped line
+    (`- \`src/fenced_fake.rs\` — \`fenced_fake_fn\``) so fence-skip deletion genuinely REDs:
+    without the pre-filter the in-fence bullet reaches the group machine → N=2, file missing
+    → DEAD → rc=1 → RED (not confounded by class-4). Kill-trace (2) polarity-inversion
+    re-derived: only the in-fence bullet parsed → file missing → DEAD → rc=1 → RED. Task 2
+    fence-skip bullet updated to pre-filter semantics. Fixture G header/structure/Proves,
+    AC-002 row G, Task 8 all updated."
+  - "1.31 (2026-07-03): Adversary pass 36 fixes (FIND-VA-36-1..3):
+    FIND-VA-36-1 (MED) Fixture G extended with fenced code block after the bullet — closes the
+    sole remaining unfixtured Task-2 behavior (fence-skip). New mock printf adds `\`\`\`` /
+    `some example with \`fenced_fake_fn\` inside` / `\`\`\`` after the bullet and before the
+    blank + Terminator. Fence-open line is a class-4 group terminator (closes the bullet group
+    before fence content; N=1 unchanged). `fenced_fake_fn` not extracted under correct grammar
+    → rc=0 → `^Check passed: 1 bullets parsed, 0 \\(file, fn\\) pairs validated$` assertion
+    GREEN unchanged. Fence-skip-deletion → fenced_fake_fn extracted → not in empty mock src
+    → DEAD → rc=1 → RED. Polarity-inversion → N=0 → SCOPE-EMPTY → rc=1 → RED. Updated:
+    Fixture G header/structure/Proves, AC-002 row G (two kill-traces), Task 8.
+    FIND-VA-36-2 (LOW) Duplicate-token behavior normalized and covered: (a) normative no-dedup
+    sentence added to Task 2 token-extraction — tokens NOT deduplicated before definition grep;
+    each occurrence produces its own lookup and DEAD line (rationale: AC-001 per-occurrence
+    RED count; dedup mutation silently reduces count). (b) Fixture A mock extended: third token
+    occurrence added (`handle_nonexistent_fn_selftest` duplicated → three tokens in bullet).
+    Count assertion: `= \"2\"` → `= \"3\"` (dedup mutation drops to 2 → RED). AC-002 row A
+    and Task 8 updated.
+    FIND-VA-36-3 (LOW) `&& echo` anti-idiom grep broadened: Task 8 implementer-time check
+    updated from `grep -E '&& echo'` to `grep -E '&& (echo|printf|:|true|\\{)'`; VP-1-P25
+    idiom block updated to explicitly forbid all `&&`-style positive-action assertion forms
+    (enumerating the variants); runtime-vs-implementer-time asymmetry rationale stated (runtime
+    scan would reintroduce self-match minefield VA-34-3 closed; enforcement stack: normative
+    prose + implementer-time grep + review). Both `&& echo` lines in Task 8 broadened."
   - "1.30.2 (2026-07-03): Errata — AC-002 row J's fifth kill-trace (class-4-mishandled-as-
     continuation logic mutation) was absent from the Fixture J header traces and Proves block;
     added as trace (e) and item (e) in both. Trace (e) is distinct from trace (c)'s
@@ -946,11 +1042,19 @@ body makes tests fail RED). Only then does the implementer write the bash parsin
      match — `^### Sibling Candidates` stops extraction regardless of what follows on that line,
      e.g. `### Sibling Candidates Considered and Deferred`). Stops before excluded-files
      table at lines 40–49.
-   - Skip fenced code block content (between ` ``` ` markers) within the §Scope range.
-     **Defensive only (pass-2 I-4 FIX):** the current §Scope section (lines 16–31) contains no fenced
-     code blocks; the §Whitelist-Convention section (~lines 359–388) is OUTSIDE §Scope (never
-     reached by the parser). This rule guards against future §Scope additions that include code
-     examples — it is not triggered by any current content.
+   - **Fence-skip is a PRE-FILTER on the §Scope range (v1.31.1 errata; pass-2 I-4 FIX):**
+     fenced spans (from opening ` ``` ` line through the closing ` ``` ` line, inclusive) are
+     removed from the §Scope input BEFORE the group state machine runs. Rationale: a fence-skip
+     rule applied in-loop AFTER the class-4 check is provably redundant — the fence-open line is
+     already a class-4 group terminator and would close any open group before fence content was
+     seen; only a pre-filter gives fence-skip real semantics (content between markers is genuinely
+     unreachable by the group machine). Under pre-filter, fence lines NEVER reach the class-4 rule;
+     after the fenced span is stripped, the group machine sees the real bullet, then whatever
+     follows the removed span (in Fixture G: the blank line → class-1 closes the real bullet group).
+     **Defensive coverage (pass-2 I-4 FIX):** the current §Scope section (lines 16–31) contains no
+     fenced code blocks; the §Whitelist-Convention section (~lines 359–388) is OUTSIDE §Scope
+     (never reached). This rule guards against future §Scope additions that include code examples.
+     RED-proved by Fixture G's in-fence bullet-shaped line (FIND-VA-36-1 FIX — see Fixture G).
    - **Bullet-continuation grammar (LOW-3 FIX; F-H-1 FIX; VA-34-1 FIX; VA-35-1 FIX — normative terminator list + orphan-continuation handling):**
      Bullet start matches `^- ` (ANY dash bullet within the §Scope range); continuation lines
      match `^[[:space:]]{2,}` (two or more leading spaces) AND do NOT start a new bullet (`^- `).
@@ -1011,6 +1115,14 @@ body makes tests fail RED). Only then does the implementer write the bash parsin
        (→ `build`).
      - Filter to tokens matching `^[a-z_][a-z0-9_]*$` — pure snake_case, no `*`, no `/`.
        Excludes `` `handle_edit*` `` (glob char) and any residual prose tokens.
+     - **No deduplication (FIND-VA-36-2 FIX — normative):** tokens within a bullet group are
+       NOT deduplicated before the definition grep — each occurrence of a token produces its
+       own definition-grep lookup and its own `DEAD:` line if not found. Rationale: AC-001's
+       pre-SWEEP RED evidence (two `handle_jsm_create` occurrences in the `create.rs` bullet)
+       counts per-occurrence; a sort-u / seen-guard dedup mutation would silently reduce the
+       DEAD line count and could mask real staleness. RED-proved by Fixture A's duplicated
+       token (three expected DEAD lines including two for the duplicated fn — a dedup mutation
+       drops the count to 2 → `= "3"` assertion fails → RED).
    - **`|| true` on all may-match-zero grep calls (pass-2 C-4 FIX):** with `set -euo pipefail`, any grep
      returning exit 1 (zero matches) aborts the script before all offenders are collected. Every
      grep that may legitimately return zero matches MUST be guarded with `|| true`.
@@ -1080,7 +1192,7 @@ body makes tests fail RED). Only then does the implementer write the bash parsin
      - `const/unsafe/extern "ABI"` qualifiers supported (pass-2 I-1 FIX — broadened from `async`-only).
      - `\b` replaced with `([^[:alnum:]_]|$)` (pass-2 C-3 FIX — POSIX-portable; `\b` is GNU-only).
      Does NOT match imports or call sites. A plain `grep -q "$function"` would false-green on
-     `use super::jsm_create::{handle_jsm_create};` at `src/cli/issue/create.rs:15` —
+     `use super::jsm_create::{JsmCreateArgs, handle_jsm_create};` at `src/cli/issue/create.rs:15` —
      the exact DEC-149 drift class. NEVER use plain `grep -q`.
 
    - **Missing-cited-file behavior (F-4 FIX):** If the cited source FILE does not exist at all
@@ -1188,12 +1300,21 @@ body makes tests fail RED). Only then does the implementer write the bash parsin
    ```bash
    [ <condition> ] || { echo "Fixture <X> FAIL: <description>"; exit 1; }
    ```
-   `&&`-style positive-echo assertions (`[ <cond> ] && echo "PASS"`) are **FORBIDDEN**: under
-   `set -e`, the `&&` expression returns the `[ <cond> ]` exit code to the shell. If the
-   condition is NOT met (assertion fails), the `&&` short-circuits — the RHS echo is never
-   reached — and `set -e` terminates the whole `--self-test` invocation at that fixture with
-   no diagnostic. A broken `run_check` that produces rc=0 when rc=1 is expected would kill
-   `--self-test` silently on the first failing fixture rather than printing "Fixture A FAIL: …".
+   `&&`-style positive-action assertions are **FORBIDDEN** — this includes all forms:
+   `[ <cond> ] && echo "PASS"`, `[ <cond> ] && printf "…"`, `[ <cond> ] && :`,
+   `[ <cond> ] && true`, and `[ <cond> ] && { …; }`. Under `set -e`, the `&&` expression
+   returns the `[ <cond> ]` exit code to the shell. If the condition is NOT met (assertion
+   fails), the `&&` short-circuits — the RHS is never reached — and `set -e` terminates the
+   whole `--self-test` invocation at that fixture with no diagnostic. A broken `run_check`
+   that produces rc=0 when rc=1 is expected would kill `--self-test` silently on the first
+   failing fixture rather than printing "Fixture A FAIL: …".
+   **Runtime vs implementer-time enforcement asymmetry (FIND-VA-36-3 FIX):** the `&& echo`
+   anti-idiom check in Task 8 is an IMPLEMENTER-TIME grep (run against the shipped script
+   before opening a PR). It is NOT a runtime self-assertion because scanning for `&&`-patterns
+   at runtime would reintroduce the self-match minefield that the fragment-composition fix
+   (VA-34-3) was designed to close; the runtime enforcement stack is: VP-1-P25 normative prose
+   + the implementer-time grep + human review. The implementer-time grep is broadened to cover
+   all `&&`-style forms (FIND-VA-36-3 FIX — see Task 8).
    The `|| { echo "…"; exit 1; }` form is the only idiomatic bash pattern that: (1) no-ops on
    success (short-circuits the RHS when `[ <cond> ]` is true), and (2) prints a descriptive
    diagnostic and exits 1 explicitly on failure. All fixture assertions in this spec use this
@@ -1205,6 +1326,12 @@ body makes tests fail RED). Only then does the implementer write the bash parsin
    as satisfying the assertion. String `=` rejects any mismatch: `"1" = "2"` is false.
    Canonical form: `[ "$(grep -c 'PATTERN' <<<"$output")" = "N" ]`. Floor semantics (`-ge N`)
    for the count-pin self-assertions are unchanged — this applies only to exact-count assertions.
+   **Scope boundary (F-VA-38-3):** the string-`=` upgrade covers COUNT assertions only (per-fixture
+   `grep -c` assertions AND the 4th self-assertion's `= "0"` check); fixture rc assertions (e.g.
+   `[ "$rc" -eq 1 ]`) deliberately retain arithmetic `-eq` because every rc-relaxation mutation
+   identified for those fixtures is co-killed by that fixture's count-pin or content-pin assertions
+   (defense-in-depth), and converting all ~12 rc sites would produce churn with no additional
+   RED-provability. Reference: F-VA-38-3.
 
    **F-6 FIX/MED-4-P23 FIX/F-VA-28-3 FIX — fixture-count integrity pin:** Declare `readonly EXPECTED_FIXTURES=12`
    once, immediately before initializing `fixtures_run=0` before Fixture A. After each fixture's
@@ -1229,17 +1356,20 @@ body makes tests fail RED). Only then does the implementer write the bash parsin
    counter). Intra-fixture assertion depth is guarded by per-fixture assertion comments and human
    review, not by the counter.
 
-   Fixture A (basic dead-symbol — LOW-1 FIX: IN-PROCESS semantics; L-1 FIX: hermetic isolation; L-5 FIX: two missing fns kill break-for-continue mutation):
+   Fixture A (basic dead-symbol — LOW-1 FIX: IN-PROCESS semantics; L-1 FIX: hermetic isolation; L-5 FIX: two missing fns kill break-for-continue mutation; FIND-VA-36-2 FIX: duplicated token kills dedup mutation):
    Creates tmpdir `$tmp_A`:
-   - (a) mock policy-doc written to `$tmp_A/policy.md` with exact skeleton (L-5 FIX: TWO fn names in one bullet):
+   - (a) mock policy-doc written to `$tmp_A/policy.md` with exact skeleton (L-5 FIX: TWO distinct fn names; FIND-VA-36-2 FIX: first fn name duplicated to prove no-dedup):
          ```bash
-         printf '## Scope\n- `src/adf.rs` — `handle_nonexistent_fn_selftest`, `another_missing_fn_selftest`\n\n## Terminator\n' \
+         printf '## Scope\n- `src/adf.rs` — `handle_nonexistent_fn_selftest`, `another_missing_fn_selftest`, `handle_nonexistent_fn_selftest`\n\n## Terminator\n' \
            > "$tmp_A/policy.md"
          ```
-         (two fn names in the same bullet; neither is defined in the empty stub — the guard must
-         report BOTH as DEAD; kills a `break`-for-`continue` mutation that stops after the first
-         offender in the fn-name loop)
-   - (b) mock stub source file at `$tmp_A/src/adf.rs` (empty — neither function is defined):
+         (three token occurrences in the same bullet: `handle_nonexistent_fn_selftest` appears
+         twice, `another_missing_fn_selftest` once; none are defined in the empty stub — the
+         guard must report all THREE as DEAD; kills a `break`-for-`continue` mutation (stops
+         after the first offender in the fn-name loop) AND a dedup mutation (sort-u / seen-guard
+         drops the duplicate occurrence → count falls from 3 to 2 → `= "3"` assertion fails →
+         RED))
+   - (b) mock stub source file at `$tmp_A/src/adf.rs` (empty — no functions defined):
          ```bash
          mkdir -p "$tmp_A/src"
          touch "$tmp_A/src/adf.rs"
@@ -1249,10 +1379,23 @@ body makes tests fail RED). Only then does the implementer write the bash parsin
          real `src/adf.rs` (which defines `markdown_to_adf` etc. — a plain `grep -q` on the
          real file could vacuously pass even for a nonexistent fn if the grep pattern is too broad).
    - Calls `set +e; output=$(run_check 2>&1); rc=$?; set -e` (MED-1 FIX canonical idiom).
-   - Asserts `rc=1`, that `[ "$(grep -c 'DEAD: ' <<<"$output")" = "2" ]` (exactly 2 DEAD
-     lines — one per fn name, pinning the count; string `=` closes the `-le`/`-ge`
-     relaxation operator-class family per FIND-VA-35-2/F-VA-28-3), AND that the output
-     contains both `handle_nonexistent_fn_selftest` and `another_missing_fn_selftest`.
+   - Asserts `rc=1`, that `[ "$(grep -c 'DEAD: ' <<<"$output")" = "3" ]` (exactly 3 DEAD
+     lines — two for the duplicated `handle_nonexistent_fn_selftest`, one for
+     `another_missing_fn_selftest`; string `=` closes the `-le`/`-ge` relaxation
+     operator-class family per FIND-VA-35-2/F-VA-28-3; dedup mutation drops count to 2 →
+     `= "3"` assertion fails → RED per FIND-VA-36-2), AND that the output contains both
+     `handle_nonexistent_fn_selftest` and `another_missing_fn_selftest`.
+   - Additionally asserts the summary line using the VP-1-P25 idiom with a SPECIFIC count
+     anchor (FIND-VA-41-1 FIX — A is now the second designated summary-count fixture alongside
+     E; two distinct exact values A=3 and E=5 jointly kill any hardcoded-constant summary-emitter
+     mutation, since no single constant satisfies both):
+     ```bash
+     grep -qE '^3 stale citation\(s\) found in .+ §Scope$' <<<"$output" \
+       || { echo "Fixture A FAIL: summary count mismatch (expected 3)"; exit 1; }
+     ```
+     (pins the summary offender count to exactly 3; a hardcoded-5 emitter mutation would produce
+     `^5 stale` → fails this assertion → RED; a hardcoded-3 emitter would pass A but fail E's
+     `^5` pin; any other constant fails one of the two → the pair is jointly discriminating)
 
    Fixture B (import-only false-green proof — pass-2 C-2/pass-2 I-7 FIX; v1.9.1 rationale fix):
    Uses `--src-root <dir>` for hermetic isolation. The algorithm greps the file cited IN the
@@ -1275,6 +1418,11 @@ body makes tests fail RED). Only then does the implementer write the bash parsin
          mkdir -p "$tmp_B/src/cli/issue"
          printf 'use super::jsm_create::{handle_jsm_create};\n' > "$tmp_B/src/cli/issue/create.rs"
          ```
+         The mock deliberately uses the simplified single-import form `{handle_jsm_create}` rather
+         than the real file's `{JsmCreateArgs, handle_jsm_create}` — the probe only needs AN import
+         line that is not a definition; mirroring the real line verbatim would couple the mock to
+         real-file drift for no proof value (hermetic-isolation principle, same rationale as the
+         SRC_ROOT redirect).
    - Sets internal variables `POLICY_DOC="$tmp_B/policy.md"` and `SRC_ROOT="$tmp_B"`.
      IN-PROCESS (F-2 FIX — no subprocess re-invocation; the F-H2 CLI fence fires only at
      argument-parser entry, not inside the `--self-test` handler).
@@ -1299,8 +1447,24 @@ body makes tests fail RED). Only then does the implementer write the bash parsin
      `fn_alpha`/`fn_beta` do NOT appear in the output — the file-missing path fires first.
    - Asserts `rc=1` AND that output contains BOTH `DEAD: src/foo.rs not found` AND
      `DEAD: src/bar.rs not found` (two DEAD lines).
+   - Additionally asserts the exact file-not-found offender count via the VP-1-P25 idiom
+     (FIND-VA-37-2 FIX / F-VA-38-1 FIX — C is the designated count-pinning fixture for the
+     file-not-found class, symmetric to Fixture E's role for the shape-guard / fn-not-found class):
+     ```bash
+     [ "$(grep -c 'DEAD: [^ ]* not found$' <<<"$output")" = "2" ] \
+       || { echo "Fixture C FAIL: not-found offender count mismatch"; exit 1; }
+     ```
+     (Pattern `DEAD: [^ ]* not found$`: `[^ ]*` matches a single token (no spaces — a bare filename
+     like `src/foo.rs`); `$` end-anchors the line, EXCLUSIVELY matching the file-not-found format
+     `DEAD: <file> not found` and excluding the fn-not-found format `DEAD: fn not found in <file>`
+     (which continues with ` in <file>` after `not found`, so the `$` anchor rejects it). This
+     exclusivity makes the FIND-VA-37-2 class-pinning claim exact. grep uses default BRE semantics;
+     `[^ ]*` is standard BRE — no extended-mode flag needed. `grep -c` counts matching lines; string
+     `=` per FIND-VA-35-2 exact-count idiom. A mutation that emits 1 or 3 DEAD file-not-found lines
+     instead of 2 fails this assertion → RED.)
    - Proves the "collect ALL offenders" invariant across multiple missing files AND pins the F-4
-     missing-file output format.
+     missing-file output format AND pins the exact file-not-found offender count exclusively
+     (FIND-VA-37-2 / F-VA-38-1: pattern `$`-anchored to exclude fn-not-found form).
 
    Fixture D (scope-empty — SCOPE-EMPTY guard, F-C3/F-3 MOVED FROM AC-002; L-4 FIX; F-VA-32-5 FIX: exercises SRC_ROOT default-init branch; F-VA-33-1 FIX: corrected claim — proves EXECUTION, not deletion-RED):
    - **Variable isolation (L-4 FIX; F-VA-32-5 FIX; F-VA-33-1 FIX):** Execute `unset SRC_ROOT POLICY_DOC` before
@@ -1425,8 +1589,12 @@ body makes tests fail RED). Only then does the implementer write the bash parsin
      bullet 4's full `^- ` line. Two distinct content pins (bullets 1 and 4) together ensure
      the output contains at least two DIFFERENT malformed-bullet-skipped lines; a mutation
      that emits the same static line five times fails one of the two pins.)
-   - Asserts the summary line using the VP-1-P25 idiom (F-VA-31-4 FIX — specific count anchor;
-     Fixture E is the designated count-pinning fixture; other fixtures keep the generic `^[0-9]+` form):
+   - Asserts the summary line using the VP-1-P25 idiom (F-VA-31-4 FIX / FIND-VA-41-1 FIX —
+     specific count anchor; Fixture E and Fixture A are the JOINTLY DESIGNATED summary-count
+     discriminator pair: E pins `^5`, A pins `^3`; two exact values at DIFFERENT counts kill any
+     hardcoded-constant emitter mutation — no single constant satisfies both; other fixtures keep
+     the generic `^[0-9]+` form because two distinct values suffice and more pins add maintenance
+     cost without new kill power):
      ```bash
      grep -qE '^5 stale citation\(s\) found in .+ §Scope$' <<<"$output" \
        || { echo "Fixture E FAIL: summary line not found or wrong count (expected 5)"; exit 1; }
@@ -1515,31 +1683,64 @@ body makes tests fail RED). Only then does the implementer write the bash parsin
        boundary-deletion detectable.
    - Increments `fixtures_run` ONCE (Fixture F is one fixture with two probes).
 
-   Fixture G (file-existence-only class — F-M-5 FIX: exercises the zero-fn-name path where a
-   bullet's file exists but no function names are extracted):
+   Fixture G (file-existence-only class + fence-skip coverage — F-M-5 FIX: exercises the
+   zero-fn-name path; FIND-VA-36-1 FIX / v1.31.1 errata: fenced block contains a BULLET-SHAPED
+   line so fence-skip deletion genuinely REDs; fence-skip re-specified as a PRE-FILTER;
+   FIND-VA-37-1 FIX: post-fence bullet added to kill fence-CLOSE strip-to-EOF breakage → N=2):
    - Creates tmpdir `$tmp_G`:
-     (a) mock policy-doc at `$tmp_G/policy.md` with exact skeleton:
+     (a) mock policy-doc at `$tmp_G/policy.md` with in-fence bullet-shaped line AND post-fence bullet:
          ```bash
-         printf '## Scope\n- `src/mock_mod.rs` — serde structs for X\n\n## Terminator\n' \
+         printf '## Scope\n- `src/mock_mod.rs` — serde structs for X\n```\n- `src/fenced_fake.rs` — `fenced_fake_fn`\n```\n- `src/mock_mod2.rs` — more serde structs\n\n## Terminator\n' \
            > "$tmp_G/policy.md"
          ```
-         (one bullet; file path `src/mock_mod.rs` is the first backtick-quoted `src/` token;
-         "serde structs for X" are plain prose — none are backtick-quoted — so the backtick
-         extraction step produces ONE candidate token (the file-path token `src/mock_mod.rs`);
-         the file-path-skip step consumes it; the snake_case filter never runs (no remaining
-         tokens); result: 1 bullet parsed, 0 fn names)
-     (b) mock source file at `$tmp_G/src/mock_mod.rs` — EXISTS but is EMPTY:
+         (The ```` ``` ```` delimiters are literal triple-backtick strings in a single-quoted
+         printf skeleton — no escaping needed for backticks inside bash single-quoted strings.)
+         Structure: real bullet 1 `- \`src/mock_mod.rs\` — serde structs for X`; fence-open
+         ```` ``` ````; in-fence bullet-shaped line `- \`src/fenced_fake.rs\` — \`fenced_fake_fn\``;
+         fence-close ```` ``` ````; real bullet 2 `- \`src/mock_mod2.rs\` — more serde structs`;
+         blank line; `## Terminator`.
+         **Under correct grammar (pre-filter):** the entire fenced span — the fence-open line,
+         the in-fence bullet line, and the fence-close line — is removed by the pre-filter
+         BEFORE the group state machine runs. The group machine's input is: real bullet 1 →
+         real bullet 2 → blank line (class-1) → `## Terminator`. N=2, M=0. GREEN.
+         **Kill-trace (1) fence-skip deletion:** without the pre-filter, fence lines reach the
+         group machine. Fence-open ```` ``` ```` is class-4 → closes group 1 (bullet 1,
+         mock_mod.rs). In-fence bullet `- \`src/fenced_fake.rs\`` → starts group 2 → N=2.
+         Fence-close ```` ``` ```` is class-4 → closes group 2. Post-fence bullet
+         `- \`src/mock_mod2.rs\`` → starts group 3 → N=3. Blank → class-1 → closes group 3.
+         N=3. `src/fenced_fake.rs` NOT created → `DEAD: src/fenced_fake.rs not found` →
+         rc=1 → G's rc=0 assertion fails → RED (genuine, not confounded by group grammar);
+         additionally N=3 ≠ 2 fails the summary regex → doubly RED.
+         **Kill-trace (2) polarity-inversion (parse ONLY inside fences):** only the in-fence
+         bullet is parsed → N=1 (not 2), `src/fenced_fake.rs` not created → `DEAD:
+         src/fenced_fake.rs not found` → rc=1 → RED.
+         **Kill-trace (3) fence-CLOSE breakage (strip-to-EOF):** if the pre-filter strips from
+         fence-open to EOF instead of to the matching fence-close, the post-fence real bullet
+         `- \`src/mock_mod2.rs\`` is also stripped → only N=1 parsed → output says
+         `1 bullets parsed` → `^Check passed: 2 bullets parsed` regex fails → RED.
+     (b) mock source files — both `$tmp_G/src/mock_mod.rs` AND `$tmp_G/src/mock_mod2.rs` exist
+         but are EMPTY; `src/fenced_fake.rs` is deliberately NOT created:
          ```bash
          mkdir -p "$tmp_G/src"
          touch "$tmp_G/src/mock_mod.rs"
+         touch "$tmp_G/src/mock_mod2.rs"
          ```
-         File exists, so the file-existence check passes; no fn-name loop iterations (0 fn names).
+         If fence-skip fails (kill-traces 1 or 2), the in-fence bullet is parsed and
+         `src/fenced_fake.rs` is not found → DEAD → rc=1 → RED.
    - Sets internal variables `POLICY_DOC="$tmp_G/policy.md"` and `SRC_ROOT="$tmp_G"`. IN-PROCESS.
    - Calls `set +e; output=$(run_check 2>&1); rc=$?; set -e` (MED-1 FIX canonical idiom).
    - Asserts `rc=0` AND that the captured output matches the regex
-     `^Check passed: 1 bullets parsed, 0 \(file, fn\) pairs validated$`.
+     `^Check passed: 2 bullets parsed, 0 \(file, fn\) pairs validated$`.
+     (N=2 bullets, M=0 pairs — fenced span stripped by pre-filter; both real bullets parsed,
+     both file-existence-only with empty files → zero fn names.)
    - Proves: (1) the success path emits correct N/M counts when M=0 (file-existence-only entry);
-     (2) the guard does NOT false-fail when a cited file exists but has zero fn names to verify.
+     (2) the guard does NOT false-fail when cited files exist but have zero fn names to verify;
+     (3) fence-skip (as a pre-filter) prevents the in-fence bullet from being parsed — deletion
+     causes the in-fence `- \`src/fenced_fake.rs\`` bullet to be parsed → N=3 + file missing
+     → DEAD → rc=1 → RED (FIND-VA-36-1; genuine kill, not confounded by class-4);
+     (4) polarity-inversion causes only the in-fence bullet to be parsed → N=1, file missing
+     → DEAD → rc=1 → RED; (5) fence-CLOSE strip-to-EOF breakage strips the post-fence bullet
+     too → N=1 → `^Check passed: 2 bullets parsed` fails → RED (FIND-VA-37-1).
 
    Fixture H (SCOPE-COVERAGE-FLOOR RED-provable — MED-1 FIX: the only fixture that sets CANONICAL_MODE=1
    to exercise the floor; all other fixtures leave CANONICAL_MODE unset and are exempt; F-1 FIX:
@@ -1857,15 +2058,15 @@ body makes tests fail RED). Only then does the implementer write the bash parsin
 
    **Post-fixture self-assertions (F-VA-2 FIX; F-VA-3 FIX; F1-P29 FIX; VA-34-3 FIX — run after Fixture L, before the fixtures_run check; these are NOT fixtures and MUST NOT increment `fixtures_run`):**
    ```bash
-   [ "$(grep -cF 'CI-MUTANTS-CITE-001' "${BASH_SOURCE[0]}")" -ge 3 ] \
-     || { echo "SELF-TEST FAIL: citation-id header/preamble pin below floor"; exit 1; }
-   [ "$(grep -cF 'bash -n' "${BASH_SOURCE[0]}")" -ge 2 ] \
-     || { echo "SELF-TEST FAIL: syntax-self-check pin below floor"; exit 1; }
-   [ "$(grep -cF 'grep -Eq' "${BASH_SOURCE[0]}")" -ge 3 ] \
-     || { echo "SELF-TEST FAIL: preamble-grep pin below floor"; exit 1; }
+   [ "$(grep -cF 'CI-MUTANTS-CITE-001' "${BASH_SOURCE[0]}")" = "3" ] \
+     || { echo "SELF-TEST FAIL: citation-id header/preamble exact count mismatch"; exit 1; }
+   [ "$(grep -cF 'bash -n' "${BASH_SOURCE[0]}")" = "2" ] \
+     || { echo "SELF-TEST FAIL: syntax-self-check exact count mismatch"; exit 1; }
+   [ "$(grep -cF 'grep -Eq' "${BASH_SOURCE[0]}")" = "3" ] \
+     || { echo "SELF-TEST FAIL: preamble-grep exact count mismatch"; exit 1; }
    # anti-self-match: literals composed from fragments (F-VA-30-1 lineage — never write them verbatim here)
    lit1='CI-MUTANTS-''CITE-001'; lit2='bash'' -n'; lit3='grep'' -Eq'
-   [ "$(grep -E 'FAIL:' "${BASH_SOURCE[0]}" | grep -cE "$lit1|$lit2|$lit3")" -eq 0 ] \
+   [ "$(grep -E 'FAIL:' "${BASH_SOURCE[0]}" | grep -cE "$lit1|$lit2|$lit3")" = "0" ] \
      || { echo "SELF-TEST FAIL: tracked literal found in a diagnostic string"; exit 1; }
    ```
    **VA-34-3 FIX — fourth self-assertion (runtime MUST-NOT enforcement):** the fourth assertion
@@ -1892,8 +2093,8 @@ body makes tests fail RED). Only then does the implementer write the bash parsin
    ALL diagnostic strings in the script — both the count-pin `SELF-TEST FAIL` diagnostics AND
    all fixture `Fixture <X> FAIL:` messages — MUST NOT contain any of the three tracked literals
    (`CI-MUTANTS-CITE-001`, `bash -n`, `grep -Eq`). The count-pin diagnostics use neutral phrasing
-   (`citation-id header/preamble pin below floor` / `syntax-self-check pin below floor` /
-   `preamble-grep pin below floor`). Fixture FAIL messages must also be worded to avoid these
+   (`citation-id header/preamble exact count mismatch` / `syntax-self-check exact count mismatch` /
+   `preamble-grep exact count mismatch`). Fixture FAIL messages must also be worded to avoid these
    literals. Rationale: `grep -c` counts matching LINES; any diagnostic line that contains a
    tracked literal raises the effective baseline by 1 and silently disables deletion detection for
    that pin. **This constraint is now RUNTIME-enforced by the fourth post-fixture self-assertion
@@ -1903,31 +2104,43 @@ body makes tests fail RED). Only then does the implementer write the bash parsin
    self-assertion and the Task 8 check) requires no maintenance when new fixtures are added.
    **Expected-occurrence math — each assertion contributes exactly ONE matching line:**
    `grep -c` counts matching LINES. With the diagnostic decoupled, only the pattern-argument
-   line (`grep -cF 'LITERAL' ...`) matches — the `echo` line does not. Baseline counts:
+   line (`grep -cF 'LITERAL' ...`) matches — the `echo` line does not. Exact baseline counts
+   (FIND-VA-41-2 FIX — upgraded from `-ge` floors to string-`=` exact counts; consistent with
+   FIND-VA-35-2 philosophy and the EXPECTED_FIXTURES pin):
    - `CI-MUTANTS-CITE-001` occurs exactly 3 times in a correct script: (1) the header
      comment `# CI-MUTANTS-CITE-001`, (2) the preamble `grep -Eq '^#.*CI-MUTANTS-CITE-001'`
      check line, (3) the pattern-arg of this assertion's own `grep -cF 'CI-MUTANTS-CITE-001'`
-     line (ONE line). Deleting the header comment drops to 2; deleting the preamble check
-     drops to 2. Either deletion → count < 3 → assertion fires RED.
+     line. Deleting any of (1)/(2) drops to 2 → `= "3"` fails → RED. Adding a stray literal
+     (e.g., in a comment) raises to 4 → `= "3"` fails → RED (closes the comment/echo baseline-
+     inflation hole that `-ge` floors could not catch).
    - `bash -n` occurs exactly 2 times: (1) the top-of-file `bash -n "${BASH_SOURCE[0]}"` syntax
      self-check, (2) the pattern-arg of this assertion's own `grep -cF 'bash -n'` line.
-     Deleting the top-of-file check drops to 1 → assertion fires RED.
+     Deleting (1) drops to 1 → `= "2"` fails → RED. Any addition raises to 3 → `= "2"` fails → RED.
    - `grep -Eq` occurs exactly 3 times: (1) the definition-anchored grep in the script body
      (`grep -Eq "^[[:space:]]*(pub..." "$SRC_ROOT/$file"`, see Task 2 Definition-anchored grep
      section), (2) the preamble `grep -Eq '^#.*CI-MUTANTS-CITE-001'` check line, (3) the
-     pattern-arg of this assertion's own `grep -cF 'grep -Eq'` line. Deleting the preamble
-     check drops to 2; deleting the definition-anchored grep also drops to 2. Either deletion
-     → count < 3 → assertion fires RED. The pin also guards the definition-anchored grep line
-     against accidental deletion.
-   **Floor semantics:** `-ge N` means additions never fire the floor (any incidental occurrence of
-   the string in a new comment or code line is safe); only deletions dropping below the floor are RED.
+     pattern-arg of this assertion's own `grep -cF 'grep -Eq'` line. Deleting either (1) or (2)
+     drops to 2 → `= "3"` fails → RED. Any addition raises to 4 → `= "3"` fails → RED.
+   **Exact-count policy (FIND-VA-41-2):** string `=` means any addition OR deletion of a
+   tracked-literal line fires the pin — the inflation hole (comment/echo with stray literal
+   inflating the baseline and silently disabling deletion detection) is now CLOSED. A legitimate
+   future addition of a tracked literal (e.g., a new use of `grep -Eq` in the script body) MUST
+   consciously update the pin value, mirroring the EXPECTED_FIXTURES maintenance policy. This is
+   strictly stronger than the prior `-ge` floor semantics, which accepted any count ≥ N and
+   allowed unlimited stray literals without detection.
+   **4th assertion (VA-34-3) is now a redundant second layer for the inflation class:**
+   with exact-count pins, any stray literal in any line (comment, code, echo) immediately
+   breaks the exact count → RED. The 4th assertion's `FAIL:` pre-filter catches only
+   literals inside FAIL-diagnostic lines specifically. Both layers are retained: the exact-count
+   pins are primary (catch all lines); the 4th assertion provides a distinct failure message
+   that aids diagnosis of diagnostic-wording violations specifically. Defense-in-depth.
    These count pins are static structural checks, not behavioral tests. Because they run INSIDE
    `--self-test` (not via subprocess), they do NOT constitute RED-provable behavioral coverage for
    those script elements — a mutation broadening the preamble `grep -Eq` pattern still passes all
    fixtures (the in-process model limitation, documented in Out of Scope). Their purpose is
-   early-exit detection of accidental deletion: if the header comment, preamble check, or bash -n
-   line is removed, the count drops below the floor and `--self-test` exits 1 before the real
-   guard runs in CI.
+   early-exit detection of accidental deletion or stray-literal addition: if any tracked-literal
+   line is removed or if a new occurrence appears anywhere in the script, `--self-test` exits 1
+   before the real guard runs in CI.
 
    **Temp hygiene — ordering (MED-2 FIX, pass-2 I-6; F-M-5 FIX; MED-1 FIX; MED-1-P23 FIX; MED-2-P23 FIX; F-VA-1 FIX; F-VA-27-1 FIX):** Register one EXIT trap covering all
    twelve fixture dirs (quote verbatim):
@@ -2277,15 +2490,26 @@ body makes tests fail RED). Only then does the implementer write the bash parsin
 
 8. Self-verify: read back all modified files. Confirm:
    - `check-cargo-mutants-policy-citations.sh --self-test` exits 0 (preamble checks pass; logic
-     correct on all twelve fixtures, including Fixture H SCOPE-COVERAGE-FLOOR with CANONICAL_MODE=1,
-     Fixture I `### Sibling Candidates` terminator, Fixture J multi-line continuation, Fixture K
-     file-existence-only missing-file, and Fixture L `::` strip transform). Top-of-file
+     correct on all twelve fixtures, including Fixture G fence-skip pre-filter coverage
+     (FIND-VA-36-1 FIX / v1.31.1 errata / FIND-VA-37-1 FIX: pre-fence + post-fence real bullets
+     parsed → N=2/M=0/rc=0 GREEN; fence-skip deletion → N=3/DEAD → rc=1 → RED;
+     fence-CLOSE strip-to-EOF → post-fence bullet stripped → N=1 → `2 bullets` assertion → RED),
+     Fixture H SCOPE-COVERAGE-FLOOR with
+     CANONICAL_MODE=1, Fixture I `### Sibling Candidates` terminator, Fixture J multi-line
+     continuation, Fixture K file-existence-only missing-file, and Fixture L `::` strip transform).
+     Fixture A exact-count assertion `= "3"` (three DEAD lines: two for duplicated
+     `handle_nonexistent_fn_selftest` + one for `another_missing_fn_selftest`; FIND-VA-36-2 FIX).
+     Fixture C file-not-found count-pin `= "2"` passes (`grep -c 'DEAD: [^ ]* not found$'` returns
+     2; FIND-VA-37-2 FIX / F-VA-38-1 FIX — pattern `$`-anchored to exclusively match file-not-found
+     form; designated file-not-found class count-pinning fixture).
+     Top-of-file
      `bash -n "${BASH_SOURCE[0]}"` passes (L-7/L-5 FIX); preamble `grep -Eq '^#.*CI-MUTANTS-CITE-001'`
      passes (L-4/HIGH-1 FIX).
      Post-fixture count-pin self-assertions all pass (F1-P29 FIX — tautology closed):
-     `grep -cF 'CI-MUTANTS-CITE-001' -ge 3` (header + preamble check + own line ≥ 3),
-     `grep -cF 'bash -n' -ge 2` (top-of-file check + own line ≥ 2),
-     `grep -cF 'grep -Eq' -ge 3` (definition-anchored grep + preamble check + own line ≥ 3).
+     `grep -cF 'CI-MUTANTS-CITE-001' = "3"` (header + preamble check + own line = exactly 3;
+     FIND-VA-41-2: exact count; addition raises to 4 → RED, deletion drops to 2 → RED),
+     `grep -cF 'bash -n' = "2"` (top-of-file check + own line = exactly 2),
+     `grep -cF 'grep -Eq' = "3"` (definition-anchored grep + preamble check + own line = exactly 3).
    - `cargo deny check` passes (verify `glob = 0.3` license is MIT OR Apache-2.0, which is allowed
      per `deny.toml`). (F-L-1)
    - All function names from §Scope bulleted list appear verbatim (as definitions) in their cited source files.
@@ -2314,7 +2538,15 @@ body makes tests fail RED). Only then does the implementer write the bash parsin
    - **MED-4-P23 FIX / F-VA-28-3 FIX / F-VA-1 FIX / F-VA-27-1 FIX:** bash script declares `readonly EXPECTED_FIXTURES=12` used in BOTH the
      `= "$EXPECTED_FIXTURES"` string comparison AND the `expected ${EXPECTED_FIXTURES} fixtures` message.
    - **VP-1-P25 FIX:** Every fixture assertion uses `[ <cond> ] || { echo "Fixture <X> FAIL: …"; exit 1; }`.
-     Grep the script for `&& echo` — zero hits allowed. Fixture E includes the full-content
+     Grep the script for `&& (echo|printf|:|true|\{)` (FIND-VA-36-3 FIX — broadened from `&& echo`
+     to cover all `&&`-style positive-action forms):
+     ```bash
+     grep -E '&& (echo|printf|:|true|\{)' scripts/check-cargo-mutants-policy-citations.sh
+     ```
+     must output zero lines. This is an IMPLEMENTER-TIME check (not a runtime self-assertion —
+     a runtime scan for `&&`-patterns would reintroduce the self-match minefield that VA-34-3
+     closed; enforcement stack: this normative prose + the implementer-time grep + review).
+     Fixture E includes the full-content
      offender pin `grep -qF 'DEAD: malformed bullet skipped: - not-a-backtick-path — some_fn'`
      (VP-2-P25 FIX / errata v1.20.1: full line including ` — some_fn` suffix, byte-for-byte
      with the printf skeleton — pins `$bullet_line` carries the complete `^- ` line, not a
@@ -2340,9 +2572,10 @@ body makes tests fail RED). Only then does the implementer write the bash parsin
      probes; no class-4 line sits between bullet 2 and the blank → class-1 removal alone opens
      the orphan-continuation path → leaked_after_blank_fn extracted → DEAD → rc=1 → RED; N=2,
      M=3). Fixture A
-     exact-count assertion uses string `=` (`[ "$(grep -c 'DEAD: ' <<<"$output")" = "2" ]`), not
-     arithmetic `-eq 2` (FIND-VA-35-2 FIX — closes `-le`/`-ge` relaxation operator-class family).
-     Fixture E exact-count assertion likewise uses string `=` (`= "5"`) (FIND-VA-35-2 FIX). Fixture E sets `SRC_ROOT="$tmp_E"` (LOW-3-P22 FIX); asserts exactly 5
+     mock extended to three token occurrences (FIND-VA-36-2 FIX: `handle_nonexistent_fn_selftest`
+     duplicated); exact-count assertion `= "3"` (dedup mutation drops to 2 → RED; string `=`
+     per FIND-VA-35-2 FIX — closes `-le`/`-ge` relaxation operator-class family).
+     Fixture E exact-count assertion uses string `=` (`= "5"`) (FIND-VA-35-2 FIX). Fixture E sets `SRC_ROOT="$tmp_E"` (LOW-3-P22 FIX); asserts exactly 5
      `DEAD: malformed bullet skipped:` lines (F3-P29 FIX + F-VA-31-1 FIX — 5 bullets: bullets 3,
      4, 5 kill traversal-guard deletion, whole-`\.rs$`-clause deletion, and `$`-only-anchor
      deletion respectively; count 5→4 in all three cases → RED). Fixture E summary assertion
@@ -2361,14 +2594,15 @@ body makes tests fail RED). Only then does the implementer write the bash parsin
      `src/pre_scope.rs` not created; range-start broadening → pre-Scope bullet parsed → file
      missing → DEAD → rc=1 → RED; N=1 §Scope bullet unchanged; LAST-strip → `build_fn`; first-strip
      mutation → `Mock::build_fn` fails snake_case → M=0 → RED; proves first-vs-last disambiguation).
-   - **VP-1-P25 FIX / F1-P29 FIX / F-VA-30-1 FIX / VA-34-3 FIX:** Grep the script for `&& echo` — zero hits
-     allowed. Post-fixture count-pin self-assertions confirm: `grep -cF 'CI-MUTANTS-CITE-001' -ge 3`,
-     `grep -cF 'bash -n' -ge 2`, `grep -cF 'grep -Eq' -ge 3` (F1-P29 FIX + errata v1.24.1 FIX +
-     F-VA-30-1 FIX: tautology closed; echo diagnostics decoupled from tracked literals so each
-     assertion contributes exactly ONE matching line; floors are correct). Fourth post-fixture
+   - **VP-1-P25 FIX / F1-P29 FIX / F-VA-30-1 FIX / VA-34-3 FIX / FIND-VA-36-3 FIX / FIND-VA-41-2 FIX:** Grep the script for `&& (echo|printf|:|true|\{)` (broadened per FIND-VA-36-3) — zero hits allowed (implementer-time check; see VP-1-P25 idiom block rationale). Post-fixture count-pin self-assertions confirm: `grep -cF 'CI-MUTANTS-CITE-001' = "3"`,
+     `grep -cF 'bash -n' = "2"`, `grep -cF 'grep -Eq' = "3"` (F1-P29 FIX + errata v1.24.1 FIX +
+     F-VA-30-1 FIX + FIND-VA-41-2 FIX: tautology closed; echo diagnostics decoupled from tracked
+     literals so each assertion contributes exactly ONE matching line; exact counts correct — any
+     addition or deletion of a tracked-literal line fires the pin). Fourth post-fixture
      self-assertion (VA-34-3 FIX): fragment-composed literal check (runtime MUST-NOT enforcement)
-     — asserts `grep -E 'FAIL:' ... | grep -cE "$lit1|$lit2|$lit3"` equals 0; fragment composition
-     prevents self-match; this is not a fixture (no `fixtures_run` increment).
+     — asserts `grep -E 'FAIL:' ... | grep -cE "$lit1|$lit2|$lit3"` string-equals `"0"` (string `=`
+     per FIND-VA-35-2 / F-VA-38-2 FIX: closes `-eq 0`→`-ge 0` vacuous-pass mutation); fragment
+     composition prevents self-match; this is not a fixture (no `fixtures_run` increment).
      **F-VA-30-1 / F-VA-32-4 / F-VA-33-2 / VA-34-3 MUST-NOT constraint:**
      The diagnostic-wording constraint is now RUNTIME-ENFORCED by the fourth post-fixture
      self-assertion (VA-34-3) — no diagnostic line in the script may contain a tracked literal
@@ -2447,7 +2681,7 @@ PR touching `edit.rs` exercises the non-zero-mutant path.
 | Zero `src/` changes | F1 §7 regression baseline | No production Rust source file is modified. Only scripts, one Rust integration test, and documentation files. |
 | Mutation gate passes via 0-mutant path | DEC-144 precedent | scripts/tests are not in `examine_globs`. No killable mutants in the fix PR diff. Expected ~32-34s on `--in-diff` run. |
 | `toml` crate is already a dependency | Cargo.toml inspection | `toml = "1"` is in main dependencies (not dev-only). Guard 3 test may use it without adding a new dev-dependency. |
-| Definition-anchored grep REQUIRED — no plain `grep -q` | pass-1 C-1/pass-2 C-3/pass-2 I-1 adversary findings | Guard 2 MUST use the broadened POSIX-portable regex (v1.3): `grep -Eq "^[[:space:]]*(pub(\([^)]*\))?[[:space:]]+)?((unsafe\|const\|async\|extern[[:space:]]+\"[^\"]*\")[[:space:]]+)*fn[[:space:]]+${function}([^[:alnum:]_]\|$)"`. Improvements: `const/unsafe/extern "ABI"` qualifiers covered (I-1); `\b` replaced with `([^[:alnum:]_]\|$)` (C-3, portable to BSD grep). Plain `grep -q "$function"` false-greens on `src/cli/issue/create.rs:15` (`use super::jsm_create::{handle_jsm_create};`) — the exact DEC-149 scenario. A PR using plain grep-q MUST NOT merge. |
+| Definition-anchored grep REQUIRED — no plain `grep -q` | pass-1 C-1/pass-2 C-3/pass-2 I-1 adversary findings | Guard 2 MUST use the broadened POSIX-portable regex (v1.3): `grep -Eq "^[[:space:]]*(pub(\([^)]*\))?[[:space:]]+)?((unsafe\|const\|async\|extern[[:space:]]+\"[^\"]*\")[[:space:]]+)*fn[[:space:]]+${function}([^[:alnum:]_]\|$)"`. Improvements: `const/unsafe/extern "ABI"` qualifiers covered (I-1); `\b` replaced with `([^[:alnum:]_]\|$)` (C-3, portable to BSD grep). Plain `grep -q "$function"` false-greens on `src/cli/issue/create.rs:15` (`use super::jsm_create::{JsmCreateArgs, handle_jsm_create};`) — the exact DEC-149 scenario. A PR using plain grep-q MUST NOT merge. |
 | §Scope-only parsing; fence-skip defensive | pass-1 C-1/pass-2 I-4 adversary findings | Guard 2 MUST scope parsing to `## Scope` section only (stop before `### Sibling Candidates` subsection at lines 40–49, which lists EXCLUDED files). Fence-skip within §Scope is defensive only — the current §Scope section (lines 16–31) contains no fenced code blocks; §Whitelist-Convention (~lines 359–388) is OUTSIDE §Scope and never reached. |
 
 ---
@@ -2532,14 +2766,14 @@ complete fixture specifications are in Task 2 — single source of truth). Summa
 
 | Fixture | Exit | Required output substrings | Summary-line regex |
 |---------|------|---------------------------|-------------------|
-| A — dead-symbol | 1 | `[ "$(grep -c 'DEAD: ' <<<"$output")" = "2" ]` (exactly 2 DEAD lines — one per fn name; string `=` per FIND-VA-35-2); AND output contains `handle_nonexistent_fn_selftest` AND `another_missing_fn_selftest` (L-5 FIX: both fn names must appear) | `^[0-9]+ stale citation\(s\) found in .+ §Scope$` |
+| A — dead-symbol (FIND-VA-41-1 FIX: summary count tightened) | 1 | `[ "$(grep -c 'DEAD: ' <<<"$output")" = "3" ]` (exactly 3 DEAD lines — 2 for the duplicated `handle_nonexistent_fn_selftest` + 1 for `another_missing_fn_selftest`; string `=` per FIND-VA-35-2; dedup mutation drops count to 2 → RED per FIND-VA-36-2); AND output contains `handle_nonexistent_fn_selftest` AND `another_missing_fn_selftest` (L-5 FIX: both fn names must appear) | `^3 stale citation\(s\) found in .+ §Scope$` (FIND-VA-41-1 — A+E jointly designated summary-count discriminator pair: A=3, E=5; no single hardcoded constant satisfies both) |
 | B — import-only false-green | 1 | `DEAD: `, ` not found in `, `handle_jsm_create` | `^[0-9]+ stale citation\(s\) found in .+ §Scope$` |
-| C — empty src-root | 1 | `DEAD: src/foo.rs not found` and `DEAD: src/bar.rs not found` (F-4 missing-file format; fn names do NOT appear) | `^[0-9]+ stale citation\(s\) found in .+ §Scope$` |
+| C — empty src-root (FIND-VA-37-2 FIX / F-VA-38-1 FIX: count-pin tightened) | 1 | `DEAD: src/foo.rs not found` and `DEAD: src/bar.rs not found` (F-4 missing-file format; fn names do NOT appear); exact file-not-found offender count `= "2"` pinned via `grep -c 'DEAD: [^ ]* not found$'` (pattern `$`-anchored to EXCLUSIVELY match file-not-found format, excluding fn-not-found form `DEAD: fn not found in <file>`; designated count-pinning fixture for file-not-found class) | `^[0-9]+ stale citation\(s\) found in .+ §Scope$` |
 | D — scope-empty | 1 | `SCOPE-EMPTY:` | n/a (exits before summary line) |
 | E — malformed bullets (F-VA-31-1: 5 bullets) | 1 | `grep -c 'DEAD: malformed bullet skipped:' = "5"` (exactly 5 class-specific occurrences; string `=` per FIND-VA-35-2; traversal guard deletion shifts bullet 3, dropping count to 4; `\.rs$` clause deletion shifts bullet 4, dropping count to 4; `$`-anchor deletion shifts bullet 5, dropping count to 4); AND TWO distinct full-content pins: `grep -qF 'DEAD: malformed bullet skipped: - not-a-backtick-path — some_fn'` (bullet 1, VP-2-P25) AND `grep -qF 'DEAD: malformed bullet skipped: - \`src/foo.py\` — \`some_fn\`'` (bullet 4, F-VA-32-3: kills hoisted-static-bullet_line mutation — five identical lines cannot satisfy both pins); all assertions use `\|\| { …; exit 1; }` idiom (VP-1-P25) | `^5 stale citation\(s\) found in .+ §Scope$` (F-VA-31-4 — E is the designated count-pinning fixture) |
 | F-a — success path (LOW-1/F-3/F-5/MED-2-P22 FIX) | 0 | output matches `^Check passed: 1 bullets parsed, 7 \(file, fn\) pairs validated$` (`SomeStruct` filtered — M=7 not M=8; includes pub(super)/pub(crate)/async/impl-indented forms) | n/a (exit 0; no stale-citation summary) |
 | F-b — trailing-boundary RED probe (F-VA-32-1 FIX) | 1 | `DEAD: mock_prefix not found in src/mock_prefix.rs` (cited name is strict prefix of defined name `mock_prefix_extended`; boundary `([^[:alnum:]_]\|$)` prevents substring match; boundary-deletion mutation → rc=0 → RED) | `^[0-9]+ stale citation\(s\) found in .+ §Scope$` |
-| G — file-existence-only | 0 | output matches `^Check passed: 1 bullets parsed, 0 \(file, fn\) pairs validated$` | n/a (exit 0; no stale-citation summary) |
+| G — file-existence-only + fence-skip pre-filter + post-fence bullet (FIND-VA-36-1 FIX; v1.31.1 errata; FIND-VA-37-1 FIX) | 0 | output matches `^Check passed: 2 bullets parsed, 0 \(file, fn\) pairs validated$` (N=2 bullets: real pre-fence + post-fence; M=0 pairs; in-fence bullet-shaped line stripped by pre-filter → GREEN; fence-skip deletion → N=3, in-fence file missing → DEAD → rc=1 → RED; polarity-inversion → N=1, file missing → DEAD → rc=1 → RED; fence-CLOSE strip-to-EOF → post-fence bullet stripped → N=1 → `2 bullets` assertion fails → RED (FIND-VA-37-1)) | n/a (exit 0; no stale-citation summary) |
 | H — SCOPE-COVERAGE-FLOOR RED (N=2) | 1 | `SCOPE-COVERAGE-FLOOR:` AND `expected >= 11` (pins threshold) AND `got 2` (pins count format) | n/a (exits before summary line) |
 | H — SCOPE-COVERAGE-FLOOR RED (N=5 — F-VA-28-4 FIX) | 1 | `SCOPE-COVERAGE-FLOOR:` AND `expected >= 11` AND `got 5` (second RED PIN: closes `< 11` → `< 4..10` bash mutation gap together with N=2 RED) | n/a (exits before summary line) |
 | H — SCOPE-COVERAGE-FLOOR GREEN companion (N=11) | 0 | output does NOT contain `SCOPE-COVERAGE-FLOOR:` (floor must not fire at exact threshold) | n/a (exit 0) |
@@ -2893,6 +3127,15 @@ headings); a broadening to `^#` is caught only by human review of the implementa
 policy-doc edit introduces a heading of level 1 or ≥3 inside the §Scope range that the broadened
 stop would wrongly terminate, the acceptance must be revisited and a new fixture added. Mirror of
 the VP-3-P25/F-VA-5 wording pattern for future-edit caveats.
+The **tightening direction** is also corpus-equivalent and is now named symmetrically
+(FIND-VA-41-3 — mirror of F-VA-28-7): replacing `^## ` with the literal `^## Terminator`
+produces the same result on Fixture I's Probe I-b mock (`## Terminator`) and on the real
+policy doc (whose §Scope-range terminal heading is `## Terminator`) — both terminate extraction
+at the same line. Fixture I does not RED-distinguish this direction. Accepted residual: the
+correct target is the general `^## ` stop (matches any section-level heading, not just
+`## Terminator`); a tightening to `^## Terminator` is caught only by human review. If a future
+policy-doc edit renames the terminal section heading or adds a second `## `-level heading inside
+§Scope, the tightening would fail silently — the acceptance must be revisited at that time.
 
 A third specific instance of this gap is the **SCOPE-EMPTY vs FLOOR guard-order swap
 (F-VA-33-4 — out-of-scope-observation, accepted):** swapping the order of the SCOPE-EMPTY check
@@ -2907,6 +3150,28 @@ neither is load-bearing for CI correctness. This is the accepted residual: the c
 (SCOPE-EMPTY before FLOOR) ensures N=0 produces the most specific diagnostic; the guard-order
 swap is caught only by human review.
 
+Two fence-recognition siblings of this gap are registered here (F-VA-38-4):
+
+**Fence-OPEN tightening (F-VA-38-4 — transitively covered, named):** a mutation that tightens
+the fence-open detection (e.g., requiring a language tag after the triple-backtick) would cause
+the fence-open line to go unrecognized, allowing the in-fence bullet to reach the group machine
+as a normal `^- ` bullet. Fixture G's kill-trace (1) already provides transitive coverage of
+this path: kill-trace (1) describes exactly the state where fence-skip fails and the in-fence
+bullet `- \`src/fenced_fake.rs\`` reaches the group machine → N=3 + file missing → DEAD →
+rc=1 → RED. Fence-open tightening produces the same observable failure as fence-skip deletion.
+The mutation is therefore caught (transitively via kill-trace 1); it was previously unnamed —
+this entry names it for audit completeness.
+
+**Fence-delimiter vs inline-code-delimiter confusion (F-VA-38-4 — not fixture-distinguished,
+accepted):** a mutation that confuses the fence delimiter (triple-backtick ```` ``` ````) with
+an inline code delimiter (single backtick `` ` ``) would cause triple-backtick lines to be
+mishandled, potentially treating them as continuation lines or token lines. The current real
+§Scope in `docs/specs/cargo-mutants-policy.md` contains zero fenced blocks; all fixtures using
+fenced blocks (Fixture G) are synthetic. This mutation class is not fixture-distinguished on the
+real corpus — any breakage is a defensive guard against future policy-doc edits that introduce
+fenced blocks. Accepted with the standard caveat: if a future policy-doc edit adds a fenced
+block to §Scope, this acceptance must be revisited and additional fixture coverage added.
+
 Additional residual — **preamble-grep loosening (L-1 FIX):** the in-process test model cannot kill
 pattern-weakening mutations in the preamble `grep -Eq '^#.*CI-MUTANTS-CITE-001'` check. Because
 all fixtures run in-process (no subprocess re-invocation), a mutation that broadens the regex
@@ -2919,17 +3184,18 @@ the in-process test model. Mutation testing of bash scripts is not in scope for 
 tautology closed, diagnostics decoupled, diagnostic-wording now runtime-enforced):** the four
 post-fixture self-assertions (see Task 2) were upgraded from tautological `grep -Fq` (which always
 self-matched the pattern-argument line) to count-based `grep -cF` pins (assertions 1–3) plus a
-fragment-composed runtime diagnostic-wording check (assertion 4, VA-34-3). `grep -c` counts
-matching LINES; with the echo diagnostics deliberately NOT containing the tracked literal
-(F-VA-30-1 decoupling), each count-pin assertion contributes exactly ONE matching line (the
-pattern-arg line). The floors (-ge 3 / -ge 2 / -ge 3) are therefore correct: deleting the header
-comment, preamble check, or top-of-file `bash -n` line drops the count below the floor and the
-assertion fires RED. The `--self-test` count-pin assertions prevent accidental deletion of
-`CI-MUTANTS-CITE-001`, `grep -Eq`, and `bash -n` from the script body.
-The load-bearing wording constraint (now RUNTIME-enforced by assertion 4): the echo diagnostics
-MUST NOT contain any tracked literal; reintroducing a literal into any diagnostic raises the
-effective baseline by 1 and silently disables deletion detection. Assertion 4 catches this at
-run time so the failure is not silently ignored between CI runs.
+fragment-composed runtime diagnostic-wording check (assertion 4, VA-34-3). Pins 1–3 were further
+upgraded from `-ge` floors to exact string-`=` counts (FIND-VA-41-2), closing the baseline-inflation
+hole: any stray literal in any script line now fires the pin immediately. `grep -c` counts matching
+LINES; with the diagnostic decoupled (F-VA-30-1), each pin assertion contributes exactly ONE
+matching line (the pattern-arg line). Exact counts: `= "3"` / `= "2"` / `= "3"`. Deleting the
+header comment, preamble check, or top-of-file `bash -n` line drops a count by 1 → `=` fails → RED.
+Adding any stray occurrence raises a count by 1 → `=` fails → RED. The `--self-test` count-pin
+assertions prevent accidental deletion of `CI-MUTANTS-CITE-001`, `grep -Eq`, and `bash -n` from the
+script body, and equally prevent stray additions.
+Assertion 4 (VA-34-3) is now a redundant second layer for the diagnostic-wording class: exact-count
+pins catch any literal anywhere; assertion 4 specifically targets `FAIL:` lines and provides a
+distinct diagnostic message for that sub-class. Defense-in-depth; both layers retained.
 However, `--self-test` itself is not RED-provable against deletion of those four self-assertions:
 a mutation deleting any of the four assertions would still pass all twelve fixtures (no fixture
 depends on them). This is the accepted **terminal residual**: one meta-level is pinned (the
@@ -2937,13 +3203,17 @@ assertions exist, are non-tautological, have decoupled diagnostics, and enforce 
 constraint at runtime), and the regress stops there by design. Pinning the self-assertions' own
 presence would require a fifth meta-assertion, which is infinite regress. Mutation testing of
 bash scripts is not in scope for this project; the terminal residual is accepted.
-**F-VA-31-3 — operator/threshold weakening of count-pins is also terminal residual:** mutations
-that weaken the count-pin floor operators themselves — e.g. changing `-ge 3` to `-ge 0`,
-`-ge` to `-le`, or a floor value to 0 — are accepted alongside deletion-of-pins as terminal
-residual. Symbol-binding (factoring the floor into a variable) would not help: a mutation to the
-symbol's value survives identically, and no fixture exercises count-pin failure without deleting
-script elements mid-run. This class is enumerated here so future adversary passes do not re-raise
-it as a gap; it is not fixable within the in-process test model and is accepted by design.
+**F-VA-31-3 — count-pin deletion and value-retuning are terminal residual (FIND-VA-41-2 update):**
+the prior `-ge`→`-ge 0` operator-weakening class is now **obsolete** for pins 1–3: string `=` has
+no ordered-relaxation analog (`=` → `!=` would self-RED on the current correct script immediately).
+The remaining terminal residuals for the exact-count pins are: (a) **deletion of a pin** (removing
+any of the three assertions passes all twelve fixtures — no fixture depends on them; same
+in-process-model limitation as before); (b) **coordinated value-retuning** (changing `= "3"` to
+`= "4"` in the same edit that adds a new tracked-literal occurrence — a mutation that stays
+internally consistent survives identically). Neither is fixable within the in-process test model:
+deletion would require a fifth meta-assertion (infinite regress); coordinated retuning would
+require the same. This class is enumerated here so future adversary passes do not re-raise the
+resolved operator-weakening form; the two remaining residuals are accepted by design.
 **F-VA-32-2 — ARG-PARSER-GATE-POLARITY is also terminal residual (in-process-model family):**
 the `--self-test` arg-parser gate (`[[ "$1" != "--self-test" ]] && { … exit 64; }`) can have its
 polarity inverted (e.g., `==` instead of `!=`) without any in-process fixture catching it — all
@@ -3065,7 +3335,7 @@ Story A (Guards 2+3) should deliver first as a stable reference before Story B i
 
 | ID | Source | Description | Expected Behavior | AC |
 |----|--------|-------------|-------------------|----|
-| EC-001 | F1 §6 / pass-1 C-1 adversary finding | A function name appears in an import (`use`) or call site in the cited file but NOT as a definition | Guard 2 MUST use definition-anchored grep — this EC is an ACTIVE RISK, not a conservative choice. `src/cli/issue/create.rs:15` has `use super::jsm_create::{handle_jsm_create};` — a plain `grep -q handle_jsm_create create.rs` returns true (false-green). The definition-anchored regex rejects import/call lines. See Architecture Compliance Rules. | AC-001, AC-002 Fixture B |
+| EC-001 | F1 §6 / pass-1 C-1 adversary finding | A function name appears in an import (`use`) or call site in the cited file but NOT as a definition | Guard 2 MUST use definition-anchored grep — this EC is an ACTIVE RISK, not a conservative choice. `src/cli/issue/create.rs:15` has `use super::jsm_create::{JsmCreateArgs, handle_jsm_create};` — a plain `grep -q handle_jsm_create create.rs` returns true (false-green). The definition-anchored regex rejects import/call lines. See Architecture Compliance Rules. | AC-001, AC-002 Fixture B |
 | EC-002 | F1 §6 | A function is renamed (not moved) after §Scope was last updated | Guard 2 flags it as a stale citation (correct — citation IS stale; fix the policy doc) | AC-002 |
 | EC-003 | F1 §4 | Guard 2 delivery PR itself modifies `docs/specs/cargo-mutants-policy.md` | Guard 2 must pass on the updated policy doc, not the pre-change version; AC-001 requires GREEN after fix | AC-001 |
 | EC-004 | Guard 3 | A future `examine_globs` expansion adds a file that does not yet exist in the working tree | Guard 3 test fails immediately; the expansion PR must ensure the file exists at merge time | AC-004 |
