@@ -937,17 +937,24 @@ Trajectory shorthand: `1C(sibling-omission)→fix→1C(off-branch-spec)→fix→
 | 33 | → | 3 | 0 | 0 | 2 | 1 | 0/3 | FINDINGS_REMAIN |
 | 34 | → | 4 | 0 | 0 | 2 | 2 | 0/3 | FINDINGS_REMAIN |
 | 35 | v1.30.2 | 2 | 0 | 0 | 2 | 0 | 0/3 | FINDINGS_REMAIN |
-| 36 | v1.30.2 | IN FLIGHT | — | — | — | — | 0/3 | IN FLIGHT |
+| 36 | v1.30.2→ | 3 | 0 | 0 | 1 | 2 | 0/3 | FINDINGS_REMAIN |
+| 37 | → | 2 | 0 | 0 | 0 | 2 | 0/3 | CONVERGING |
+| 38 | → | 4 | 0 | 0 | 0 | 4 | 0/3 | FINDINGS_REMAIN |
+| 39 | → | 0 | 0 | 0 | 0 | 0 | 1/3 | CLEAN-PASS (first clean of loop) |
+| 40 | → | 1 | 0 | 0 | 0 | 1 | 0/3 | REGRESSION (reset — 1L ground-truth) |
+| 41 | v1.35.1 | 3 | 0 | 0 | 2 | 1 | 0/3 | FINDINGS_REMAIN |
+| 42 | v1.35.1 | IN FLIGHT | — | — | — | — | 0/3 | IN FLIGHT (window 42–44) |
 
-**Trajectory shorthand (p23–35):** `6→7→2→4→2→7→3→1→4→5→3→4→2` — 13 passes, 13 fix rounds (+8 errata sub-versions); streak 0/3. Zero clean passes. Pass 36 in flight.
+**Trajectory shorthand (p23–41):** `6→7→2→4→2→7→3→1→4→5→3→4→2→3→2→4→0→1→3` — 19 passes since DEC-151; 18 fix rounds; streak 0/3. First CLEAN at p39 (verification-adequacy), reset at p40 (1L ground-truth). Pass 42 in flight.
 
-### Key Observations (passes 23–35)
+### Key Observations (passes 23–41)
 
 - **Fix-round regression class (process note a):** Three fix rounds reintroduced previously-closed findings: a v1.13-class tautology recurred in round 20 (before DEC-151), and false RED-claim constructs appeared in rounds 26 and 29 (after DEC-151). The fresh-context gate and consistency-validator fidelity probes are load-bearing; same-author fix verification is not sufficient to catch same-author reintroduction.
 - **Meta-lens behavior (process note b):** ADVERSARY-META-LENS-REGRESS remains OPEN as an engine item. The verification-adequacy lens generates meta-level "the story does not fully specify how to verify the guard being specified" findings inherently. In the CITATION-GUARDS context these manifest as concrete mutation windows in the guard spec (not pure recursion), so they are actionable. Human re-affirmed at pass 28: "fix and continue to full convergence" (reinforcing DEC-151).
-- **Story growth:** v1.17 ~1850 lines → v1.30.2 ~2950 lines. Spec now specifies: 12 fixtures A–L (multi-probe F/H/I/J), 9 Rust tests, 4 post-fixture self-assertions, byte-pinned regexes, ~13 documented accepted residuals in Out of Scope.
-- **Severity pattern:** CRIT/HIGH appeared only at p23 (1H), p24 (1H), and p30 (1H) — 3 isolated HIGH findings over 13 passes, none CRIT. Severity has stayed MED/LOW from p31 onward. All CRIT/HIGH closed.
+- **Story growth:** v1.17 ~1850 lines → v1.35.1 ~2950+ lines. Spec specifies: 12 fixtures A–L (multi-probe F/H/I/J), 9 Rust tests, 4 post-fixture self-assertions, byte-pinned regexes, ~13 documented accepted residuals in Out of Scope.
+- **Severity pattern (p23–41):** CRIT/HIGH appeared only at p23 (1H), p24 (1H), and p30 (1H) — 3 isolated HIGH findings over 19 passes, none CRIT. Severity has stayed MED/LOW from p31 onward. All CRIT/HIGH closed.
+- **First CLEAN pass (p39):** After 17 consecutive non-clean passes since DEC-151, p39 was the first CLEAN pass of the strict loop (verification-adequacy lens). Reset at p40 by a single LOW ground-truth finding. Confirmed the adversary can issue CLEAN verdicts — the remaining gap is three consecutive CLEANs.
 
 ### Convergence Criterion (DEC-151)
 
-3 consecutive CLEAN passes including the verification-adequacy lens required. Current streak: 0/3 as of pass 35. Resume: request pass-36 verdict from adversary, then continue loop: findings → story-writer fix round → consistency-validator → next adversary pass. On convergence, proceed to F4.
+3 consecutive CLEAN passes including the verification-adequacy lens required. Current streak: 0/3 as of pass 41. New window 42–44 in flight. Resume: request pass-42 verdict from adversary, then continue loop: findings → story-writer fix round → consistency-validator → next adversary pass. On convergence, proceed to F4.
