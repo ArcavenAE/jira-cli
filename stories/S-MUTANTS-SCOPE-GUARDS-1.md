@@ -41,7 +41,7 @@ acceptance_criteria_count: 7
 assumption_validations: []
 risk_mitigations: []
 created: "2026-07-02"
-version: "1.35.1"
+version: "1.39"
 last_updated: "2026-07-03"
 breaking_change: false
 retroactive: false
@@ -56,6 +56,69 @@ origin: >
   .factory/phase-f1-delta-analysis/citation-guards-2026-07-02-delta.md §2 (Guards 2+3).
   Stories recommended: 2 (wave_order: guards-2-3-first per F1 §7). This is Story A.
 changelog:
+  - "1.39 (2026-07-03): Adversary pass 48 fix (F-CITE-1): PR attribution paragraph (~lines
+    2894-2895) used bare source-file citation form (create.rs:19, issues.rs:27-28) for policy-doc
+    line references, violating CLAUDE.md #408 no-bare-NN-MM rule and creating ambiguity with the
+    actual src/cli/issue/create.rs source file. Rewritten to unambiguous form: 'the narrative
+    parenthetical on the create.rs bullet (policy-doc line 19) and the backtick-quoted
+    seen_keys/has_more on the issues.rs bullet (policy-doc lines 27-28)'. Sweep of whole story for
+    other file:NN patterns: create.rs:15 at lines 134/1260/2831/3499 and EC-001 table all correctly
+    reference the actual src/cli/issue/create.rs source file at line 15 (the verbatim import line);
+    no additional policy-doc-line misattributions found. 1 site converted."
+  - "1.38.1 (2026-07-03): Errata — AC-006's test-8 mutant-scenario text still described the
+    pre-v1.38 unwrap_err failure mechanism; updated to the is_err()-preface mechanism (v1.38's
+    'no AC-006 update required' claim was wrong for this line). Grep of AC-005/AC-006 for other
+    unwrap_err-mechanism analytical texts describing tests 4/5/7 mutant scenarios found no
+    additional occurrences; test 8 was the only affected site."
+  - "1.38 (2026-07-03): Adversary pass 46 fixes (F-VA-46-1..3): F-VA-46-1 (LOW): Fixture B prose
+    corrected — 'Uses --src-root <dir> for hermetic isolation' replaced with 'Uses the in-process
+    SRC_ROOT internal-variable override'; parenthetical closes misleading-coverage implication by
+    naming the ARG-PARSER-GATE-POLARITY residual (--src-root CLI flag is exercised by NO fixture).
+    F-VA-46-2 (LOW-obs): Task 2 'ALL diagnostic strings' overclaim narrowed to 'all FAIL:-prefixed
+    diagnostic lines'; non-FAIL diagnostics (e.g. SELF-TEST-FIXTURE-COUNT) acknowledged as outside
+    the 4th assertion's scan but covered by exact-count pins 1-3 file-wide. F-VA-46-3 (LOW-obs):
+    Tests 4/5/7/8 each gain assert!(result.is_err(), \"helper did not panic — expected <prefix>
+    panic\") immediately before result.unwrap_err() — diagnostic-clarity: a return-shape regression
+    now reports a meaningful message instead of the generic unwrap_err panic. Rust test count
+    unchanged at 9 (assertion lines added, no new test functions). No AC-005/AC-006 body-quoting
+    text required updating."
+  - "1.37.1 (2026-07-03): Errata — v1.37's new Task 8 AC-007 item (a) stated the FORBIDDEN Guards
+    placement (after ## Scope) as if mandated; corrected to the Task 5 mandate (after ## Spec
+    Anchor, before ## Future Path: Job Sharding (Path B)) with the MUST-NOT zone (between ## Scope
+    and ### Sibling Candidates Considered and Deferred) explicitly excluded."
+  - "1.37 (2026-07-03): Adversary pass 45 fixes (F-1..F-5-P45): F-1-P45 (LOW): Task 8 self-verify
+    gains Fixture B explicit callout — import-only false-green proof passes (rc=1, handle_jsm_create
+    DEAD, definition-anchored grep rejects import-only occurrence, SRC_ROOT hermetic). F-2-P45 (LOW):
+    Behavioral Contracts narrative reworded — AC-001–AC-005 and AC-007 trace to policy-doc sections;
+    AC-006 traces to test-naming and CHANGELOG-per-PR hygiene conventions. F-3-P45 (LOW): RED-gate
+    paragraph corrected — ALL THREE helper bodies must be todo!() stubs (panicking); Vec::new() stub
+    for validate_globs alone false-GREENs Test 1 (empty dead-list satisfies the is-empty assertion);
+    todo!() mandate and false-GREEN scenario now explicit. F-4-P45 (LOW): Task 8 gains two AC-007
+    self-verify lines: (a) ## Guards section placement in policy doc, (b) CHANGELOG [Unreleased]/###
+    Added entry with canonical string present; CLAUDE.md item tagged as AC-007 item (c) for
+    completeness. F-5-P45 (LOW-obs): File Structure Requirements intro gains one sentence declaring
+    the 8-file inventory does not map 1:1 to tasks — Task 3 owns three files by design."
+  - "1.36.1 (2026-07-03): Errata — (1) Task 8 missed the FIND-VA-42-2 Fixture D pin reference;
+    added sentence confirming three SCOPE-EMPTY pins pass (prefix + '0 bullets parsed' + 'policy
+    doc restructured'), tagged FIND-VA-42-2 FIX, after Fixture C count-pin note in the self-verify
+    list. (2) VP-1-P25's absolute 'All fixture assertions use this form' claim qualified to
+    positive-assertions-only: the canonical block now explicitly sanctions the if-block form for
+    absence assertions and points to Fixture F-a (FIND-VA-42-1) as the only current site; bare
+    &&-forms remain forbidden in both directions."
+  - "1.36 (2026-07-03): Adversary pass 42 fixes (FIND-VA-42-1..5): FIND-VA-42-1 (MED): Probe F-a
+    gains negative assertion (if-block form) verifying absence of 'stale citation' summary on clean
+    run; F-a is the designated absence-assertion site; Task 2 Probe F-a spec, AC-002 row F-a, Task 8
+    updated. FIND-VA-42-2 (LOW): Fixture D gains two additional SCOPE-EMPTY message substring pins:
+    '0 bullets parsed' and 'policy doc restructured' (VP-1-P25 idiom); Task 2 Fixture D spec,
+    AC-002 row D updated. FIND-VA-42-3 (LOW): Probe F-a second bullet added (`src/mock_second.rs`
+    — `second_probe_fn`), N=1→2, M=7→8; two new kill-traces (assign-instead-of-accumulate →
+    M=1; MAX-accumulate → M=7); Task 2 policy-doc printf, mock_second.rs creation, assertion
+    updated; AC-002 row F-a label/counts/kill-traces updated; Task 8 updated. FIND-VA-42-4 (LOW):
+    Task 2 terminator-grammar spec gains code-shape mandate: class-(4) check MUST be a separate
+    conditional branch from the continuation-regex match (preserves Fixture J kill-trace (e) distinct-
+    code-site claim). FIND-VA-42-5 (obs): GUARDS-SECTION-PLACEMENT-INVARIANT registered in Out of
+    Scope — Task 5 MUST-NOT is review-enforced; SCOPE-COVERAGE-FLOOR is the CI backstop; 'no
+    intervening ##-heading inside §Scope range' Guard-2 extension named as FOLLOW-UP STORY CANDIDATE."
   - "1.35.1 (2026-07-03): Errata — Task 8's count-pin description missed the v1.35 -ge→=
     conversion; quotes updated from `-ge 3`/`-ge 2`/`-ge 3` to `= \"3\"`/`= \"2\"`/`= \"3\"`,
     FIND-VA-41-2 FIX tag added to the fix-tag list, and 'floors are correct' reworded to 'exact
@@ -937,8 +1000,8 @@ corrupt mutation-test scope without immediate CI detection.
 ## Behavioral Contracts
 
 No BC-S.SS.NNN was authored for this cycle. The governing artifact is
-`docs/specs/cargo-mutants-policy.md`. Each AC traces to the relevant policy doc section
-rather than a BC clause.
+`docs/specs/cargo-mutants-policy.md`. AC-001–AC-005 and AC-007 trace to policy-doc sections;
+AC-006 traces to the test-naming and CHANGELOG-per-PR hygiene conventions (its governing artifacts).
 
 | Policy Section | Topic | Guards |
 |---------------|-------|--------|
@@ -972,9 +1035,13 @@ Well within 20% agent context window budget. No splitting required.
 **RED-gate staging (`tdd_mode: strict`):** Under strict TDD, tests and fixtures are authored
 first and observed failing against stubs before the implementation exists. In this story:
 Fixture A/B/C/D/E/F/G/H/I/J/K/L scripts (Task 2) are written first — a stub that unconditionally exits 0 makes
-all twelve fixtures fail RED. The test functions in Task 3 are written next (empty `validate_globs`
-body makes tests fail RED). Only then does the implementer write the bash parsing logic and the
-`validate_globs` helper to turn the suite GREEN. Per BC-5.38.001 Red Gate discipline.
+all twelve fixtures fail RED. The test functions in Task 3 are written next — ALL THREE helper
+bodies (`validate_globs`, `extract_examine_globs_or_panic`, `assert_examine_globs_coverage_floor`)
+MUST be stubbed with `todo!()` (panicking stubs) so every Rust test fails RED before implementation.
+A `Vec::new()` stub for `validate_globs` alone would false-GREEN Test 1 (which asserts the dead-Vec
+is empty — an always-empty return satisfies it); `todo!()` is mandated precisely to prevent this.
+Only then does the implementer write the bash parsing logic and all three `validate_globs`-family
+helpers to turn the suite GREEN. Per BC-5.38.001 Red Gate discipline.
 
 1. Read `docs/specs/cargo-mutants-policy.md` §Scope. The function-location format is a
    **BULLETED LIST** (lines 16–31), NOT a markdown table. Each bullet maps a source file path
@@ -1063,6 +1130,13 @@ body makes tests fail RED). Only then does the implementer write the bash parsin
      non-blank line that is neither a bullet start (`^- `) nor a continuation (`^[[:space:]]{2,}`)
      — including lines with exactly one leading space (VA-34-1 resolution); the terminating line
      is not appended to any group. RED-proved by Fixture J's 1-space sentinel.**
+     **Code-shape mandate (FIND-VA-42-4):** class (4) MUST be implemented as a SEPARATE conditional
+     branch from the continuation-regex match — NOT folded into a single combined regex or branch that
+     tests both `^[[:space:]]{2,}` and class-4 conditions simultaneously. This preserves Fixture J
+     kill-trace (e)'s distinct-code-site claim: trace (e) proves that a class-4 line is
+     correctly identified by the class-4 branch, not silently handled as a non-matching continuation.
+     (This story already mandates code shape elsewhere — the `run_check` pattern, the VP-1-P25 idiom,
+     the pre-filter fence-skip — so this is consistent with established practice. Reference FIND-VA-42-4.)
      **Orphan-continuation handling (VA-35-1 FIX):** A `^[[:space:]]{2,}` continuation line
      encountered when NO bullet group is currently open is IGNORED — not appended to anything,
      not an offender; it is prose indentation outside a group. RED-proved by Fixture J's
@@ -1317,8 +1391,12 @@ body makes tests fail RED). Only then does the implementer write the bash parsin
    all `&&`-style forms (FIND-VA-36-3 FIX — see Task 8).
    The `|| { echo "…"; exit 1; }` form is the only idiomatic bash pattern that: (1) no-ops on
    success (short-circuits the RHS when `[ <cond> ]` is true), and (2) prints a descriptive
-   diagnostic and exits 1 explicitly on failure. All fixture assertions in this spec use this
-   form; implementations MUST use it verbatim.
+   diagnostic and exits 1 explicitly on failure. All POSITIVE (presence/count) fixture assertions
+   in this spec use this OR-exit form verbatim; implementations MUST use it for all positive checks.
+   For ABSENCE assertions, the canonical complement is the if-block form:
+   `if grep -q 'pattern' <<<"$output"; then echo "Fixture X FAIL: …"; exit 1; fi` — bare
+   `&&`-forms remain forbidden in both directions. See Fixture F-a's negative assertion (FIND-VA-42-1)
+   for the only current absence-assertion site.
    **FIND-VA-35-2 FIX — exact-count comparisons use string `=` (F-VA-28-3 precedent):**
    When a fixture asserts an EXACT count via `grep -c`, use string equality `=` rather than
    arithmetic `-eq`. Rationale: arithmetic `-eq` leaves a `-le`/`-ge` relaxation
@@ -1398,7 +1476,8 @@ body makes tests fail RED). Only then does the implementer write the bash parsin
      `^5` pin; any other constant fails one of the two → the pair is jointly discriminating)
 
    Fixture B (import-only false-green proof — pass-2 C-2/pass-2 I-7 FIX; v1.9.1 rationale fix):
-   Uses `--src-root <dir>` for hermetic isolation. The algorithm greps the file cited IN the
+   Uses the in-process `SRC_ROOT` internal-variable override for hermetic isolation (the `--src-root`
+   CLI flag itself is exercised by NO fixture — see ARG-PARSER-GATE-POLARITY residual). The algorithm greps the file cited IN the
    bullet (`src/cli/issue/create.rs`), which currently holds only an import line — so even
    without `SRC_ROOT`, the grep returns DEAD today. However the fixture MUST NOT depend on
    real-repo `create.rs` content remaining stable: if `handle_jsm_create` were ever re-added
@@ -1489,9 +1568,25 @@ body makes tests fail RED). Only then does the implementer write the bash parsin
    - Sets internal variable `POLICY_DOC="$tmp_D/policy.md"`. IN-PROCESS.
      (SRC_ROOT is intentionally NOT set — see variable-isolation note above.)
    - Calls `set +e; output=$(run_check 2>&1); rc=$?; set -e` (MED-1 FIX canonical idiom).
-   - Asserts `rc=1` with captured output containing `SCOPE-EMPTY:`.
+   - Asserts `rc=1` AND two SCOPE-EMPTY message substring pins via VP-1-P25 idiom
+     (FIND-VA-42-2 FIX — mirrors Fixture H's treatment of SCOPE-COVERAGE-FLOOR message; pins
+     operative phrases verbatim from the Task 2 SCOPE-EMPTY message spec:
+     `SCOPE-EMPTY: 0 bullets parsed from §Scope — policy doc restructured or parser broken`):
+     ```bash
+     grep -qF 'SCOPE-EMPTY:' <<<"$output" \
+       || { echo "Fixture D FAIL: SCOPE-EMPTY prefix missing from output"; exit 1; }
+     grep -qF '0 bullets parsed' <<<"$output" \
+       || { echo "Fixture D FAIL: SCOPE-EMPTY message missing expected substring '0 bullets parsed'"; exit 1; }
+     grep -qF 'policy doc restructured' <<<"$output" \
+       || { echo "Fixture D FAIL: SCOPE-EMPTY message missing expected substring 'policy doc restructured'"; exit 1; }
+     ```
+     (Three pins: (a) the `SCOPE-EMPTY:` prefix already present; (b) `0 bullets parsed` — pins the
+     N=0 count representation; (c) `policy doc restructured` — pins the human-readable suggestion phrase.
+     A mutation that changes `0 bullets parsed` to `N bullets parsed` or omits the suggestion phrase
+     fails the respective pin → RED.)
    - Proves: (1) the SCOPE-EMPTY guard does not vacuously exit 0 when §Scope is empty;
-     (2) the SRC_ROOT default-init branch executes without aborting the script — the line is live
+     (2) the SCOPE-EMPTY message contains the expected count phrase and suggestion phrase (FIND-VA-42-2);
+     (3) the SRC_ROOT default-init branch executes without aborting the script — the line is live
      code, not dead code (F-VA-32-5 / F-VA-33-1 FIX: proves EXECUTION only; deletion of the
      default-init line is NOT RED-provable hermetically — see DEFAULT-INIT-UNVERIFIED in Out of Scope).
 
@@ -1618,21 +1713,27 @@ body makes tests fail RED). Only then does the implementer write the bash parsin
 
    Fixture F (two probes, one fixtures_run increment — LOW-1 FIX / F-3 FIX / F-5 FIX / MED-2-P22 FIX / F-VA-32-1 FIX):
    - Creates tmpdir `$tmp_F`.
-   - **Probe F-a (success path — LOW-1/F-3/F-5/MED-2-P22 FIX):**
-     (a) mock policy-doc at `$tmp_F/policy.md` with exact skeleton (7 snake_case fns + 1 filtered token):
+   - **Probe F-a (success path — LOW-1/F-3/F-5/MED-2-P22 FIX / FIND-VA-42-3 FIX: second bullet added for M-accumulation coverage):**
+     (a) mock policy-doc at `$tmp_F/policy.md` with TWO bullets (7 fns + 1 filtered token in bullet 1; 1 fn in bullet 2):
          ```bash
-         printf '## Scope\n- `src/mock_mod.rs` — `mock_fn_alpha`, `mock_const_fn`, `mock_unsafe_fn`, `mock_extern_fn`, `mock_scoped_async_fn`, `mock_crate_fn`, `mock_indented_fn`, `SomeStruct`\n\n## Terminator\n' \
+         printf '## Scope\n- `src/mock_mod.rs` — `mock_fn_alpha`, `mock_const_fn`, `mock_unsafe_fn`, `mock_extern_fn`, `mock_scoped_async_fn`, `mock_crate_fn`, `mock_indented_fn`, `SomeStruct`\n- `src/mock_second.rs` — `second_probe_fn`\n\n## Terminator\n' \
            > "$tmp_F/policy.md"
          ```
          `SomeStruct` is backtick-quoted but NOT snake_case — filtered by `^[a-z_][a-z0-9_]*$`;
          it contributes zero fn names and no DEAD line (proving the filter works without adding an offender).
-     (b) mock source file at `$tmp_F/src/mock_mod.rs` containing 7 fn definitions with varied qualifiers:
+         Bullet 2 (`src/mock_second.rs` / `second_probe_fn`) exercises multi-bullet M-accumulation.
+     (b) mock source files:
+         `$tmp_F/src/mock_mod.rs` containing 7 fn definitions with varied qualifiers:
          ```bash
          mkdir -p "$tmp_F/src"
          printf 'pub fn mock_fn_alpha() {}\nconst fn mock_const_fn() -> u32 { 0 }\nunsafe fn mock_unsafe_fn() {}\nextern "C" fn mock_extern_fn() {}\npub(super) async fn mock_scoped_async_fn() {}\npub(crate) fn mock_crate_fn() {}\nimpl MockStruct {\n    pub async fn mock_indented_fn() {}\n}\n' \
            > "$tmp_F/src/mock_mod.rs"
          ```
-         Each definition matches the definition-anchored grep regex:
+         `$tmp_F/src/mock_second.rs` containing 1 fn definition:
+         ```bash
+         printf 'fn second_probe_fn() {}\n' > "$tmp_F/src/mock_second.rs"
+         ```
+         Each definition in `mock_mod.rs` matches the definition-anchored grep regex:
          - `pub fn mock_fn_alpha()` — plain public fn
          - `const fn mock_const_fn()` — `const` qualifier in alternation group
          - `unsafe fn mock_unsafe_fn()` — `unsafe` qualifier in alternation group
@@ -1642,10 +1743,31 @@ body makes tests fail RED). Only then does the implementer write the bash parsin
          - `    pub async fn mock_indented_fn()` — impl-block-indented (MED-2-P22)
      - Sets `POLICY_DOC="$tmp_F/policy.md"`, `SRC_ROOT="$tmp_F"`. IN-PROCESS.
      - Calls `set +e; output_fa=$(run_check 2>&1); rc_fa=$?; set -e`.
-     - Asserts `rc_fa=0` AND output_fa matches `^Check passed: 1 bullets parsed, 7 \(file, fn\) pairs validated$`
-       using VP-1-P25 idiom. (`SomeStruct` filtered — M=7 not M=8.)
+     - Asserts `rc_fa=0` AND output_fa matches `^Check passed: 2 bullets parsed, 8 \(file, fn\) pairs validated$`
+       using VP-1-P25 idiom. (`SomeStruct` filtered — M=8 = 7 from bullet 1 + 1 from bullet 2.)
+       **Kill-traces for M-accumulation (FIND-VA-42-3):**
+       - Assign-instead-of-accumulate (`M = count` not `M += count`): after bullet 2, M is assigned 1
+         instead of accumulated to 8 → summary says `1 (file, fn) pairs` → `= 8` assertion fails → RED.
+       - MAX-accumulate (`M = max(M, count)`): after bullet 2, M is max(7, 1) = 7 → summary says `7` →
+         `= 8` assertion fails → RED.
+     - Additionally asserts ABSENCE of the negative summary line using the canonical
+       NEGATIVE-assertion idiom (FIND-VA-42-1 FIX — an if-block is the sanctioned negative-assertion
+       form per VP-1-P25's own prohibition analysis; bare `&&` is forbidden per FIND-VA-36-3, and the
+       `|| { exit 1 }` positive form cannot express absence; the if-block is the only safe form):
+       ```bash
+       if grep -q 'stale citation' <<<"$output_fa"; then
+         echo "Fixture F-a FAIL: negative summary emitted on clean run"; exit 1
+       fi
+       ```
+       (Rationale: an always-emit-both mutation — which omits the `K>0` gate and emits the stale-citation
+       summary even on a clean run — is invisible to every GREEN fixture using only positive assertions.
+       ONE absence-assertion on a GREEN fixture RED-proves this mutation; F-a is the designated
+       absence-assertion site. Other GREEN fixtures deliberately keep their positive-only assertions —
+       single-site sufficiency: more absence-assertion sites add maintenance without additional kill power.)
      - Proves: (1) definition-anchored grep succeeds for pub/const/unsafe/extern/pub(super)/pub(crate)/async-qualified
-       and impl-indented fns; (2) non-snake-case tokens filtered; (3) positive summary emitted.
+       and impl-indented fns; (2) non-snake-case tokens filtered; (3) M-count accumulated correctly across
+       multiple bullets (FIND-VA-42-3); (4) positive summary emitted with correct N=2 and M=8;
+       (5) negative summary NOT emitted on a clean run (FIND-VA-42-1).
    - **Probe F-b (trailing-boundary RED probe — F-VA-32-1 FIX: proves `([^[:alnum:]_]|$)` is necessary):**
      (a) mock policy-doc `$tmp_F/policy_f_prefix.md` with one bullet citing `mock_prefix`:
          ```bash
@@ -2090,8 +2212,12 @@ body makes tests fail RED). Only then does the implementer write the bash parsin
    diagnostic line) would contribute TWO occurrences if the diagnostic contained the literal,
    making the real baseline one higher than documented and disabling deletion detection.
    **Load-bearing wording constraint (F-VA-30-1 / F-VA-33-2 / VA-34-3 — now RUNTIME-enforced):**
-   ALL diagnostic strings in the script — both the count-pin `SELF-TEST FAIL` diagnostics AND
-   all fixture `Fixture <X> FAIL:` messages — MUST NOT contain any of the three tracked literals
+   All `FAIL:`-prefixed diagnostic lines (the fixture and self-assertion diagnostics) MUST NOT
+   contain any of the three tracked literals (F-VA-46-2: the 4th assertion's `grep -E 'FAIL:'`
+   scan is scoped to `FAIL:`-prefixed lines only; non-FAIL diagnostics such as
+   `SELF-TEST-FIXTURE-COUNT` are outside its scan but fully covered by the exact-count pins 1–3,
+   which fire on ANY tracked-literal occurrence file-wide). In full: no `FAIL:`-prefixed line may
+   contain
    (`CI-MUTANTS-CITE-001`, `bash -n`, `grep -Eq`). The count-pin diagnostics use neutral phrasing
    (`citation-id header/preamble exact count mismatch` / `syntax-self-check exact count mismatch` /
    `preamble-grep exact count mismatch`). Fixture FAIL messages must also be worded to avoid these
@@ -2254,6 +2380,7 @@ body makes tests fail RED). Only then does the implementer write the bash parsin
      `extract_examine_globs_or_panic(&value)` in `std::panic::catch_unwind(|| { ... })`;
      use the following exact Err-arm form (copy-pasteable; handles both `String` and `&'static str` panic payloads):
      ```rust
+     assert!(result.is_err(), "helper did not panic — expected MUTANTS-GLOBS-KEY-MISSING panic");
      let err = result.unwrap_err();
      let msg = err.downcast_ref::<String>().map(|s| s.as_str())
          .or_else(|| err.downcast_ref::<&str>().copied())
@@ -2279,6 +2406,7 @@ body makes tests fail RED). Only then does the implementer write the bash parsin
      let result = std::panic::catch_unwind(|| {
          assert_examine_globs_coverage_floor(&entries);
      });
+     assert!(result.is_err(), "helper did not panic — expected MUTANTS-GLOBS-COVERAGE-FLOOR panic");
      let err = result.unwrap_err();
      let msg = err.downcast_ref::<String>().map(|s| s.as_str())
          .or_else(|| err.downcast_ref::<&str>().copied())
@@ -2327,6 +2455,7 @@ body makes tests fail RED). Only then does the implementer write the bash parsin
      let result = std::panic::catch_unwind(|| {
          extract_examine_globs_or_panic(&value);
      });
+     assert!(result.is_err(), "helper did not panic — expected MUTANTS-GLOBS-KEY-MISSING panic");
      let err = result.unwrap_err();
      let msg = err.downcast_ref::<String>().map(|s| s.as_str())
          .or_else(|| err.downcast_ref::<&str>().copied())
@@ -2353,6 +2482,7 @@ body makes tests fail RED). Only then does the implementer write the bash parsin
      let result = std::panic::catch_unwind(|| {
          assert_examine_globs_coverage_floor(&entries);
      });
+     assert!(result.is_err(), "helper did not panic — expected MUTANTS-GLOBS-COVERAGE-FLOOR panic");
      let err = result.unwrap_err();
      let msg = err.downcast_ref::<String>().map(|s| s.as_str())
          .or_else(|| err.downcast_ref::<&str>().copied())
@@ -2499,9 +2629,17 @@ body makes tests fail RED). Only then does the implementer write the bash parsin
      continuation, Fixture K file-existence-only missing-file, and Fixture L `::` strip transform).
      Fixture A exact-count assertion `= "3"` (three DEAD lines: two for duplicated
      `handle_nonexistent_fn_selftest` + one for `another_missing_fn_selftest`; FIND-VA-36-2 FIX).
+     Fixture B import-only false-green proof passes: rc=1, output contains `handle_jsm_create` DEAD
+     line (definition-anchored grep rejects the import-only occurrence in the mock source);
+     `SRC_ROOT="$tmp_B"` hermetic isolation honored — the fixture's mock src tree is self-contained
+     and does not reach the real repo root (F-1-P45).
      Fixture C file-not-found count-pin `= "2"` passes (`grep -c 'DEAD: [^ ]* not found$'` returns
      2; FIND-VA-37-2 FIX / F-VA-38-1 FIX — pattern `$`-anchored to exclusively match file-not-found
      form; designated file-not-found class count-pinning fixture).
+     Fixture D SCOPE-EMPTY three-pin assertions all pass: prefix pin (`SCOPE-EMPTY:`), count-phrase
+     pin (`0 bullets parsed`), and suggestion-phrase pin (`policy doc restructured`); each uses the
+     VP-1-P25 OR-exit idiom (FIND-VA-42-2 FIX — mirrors Fixture H's SCOPE-COVERAGE-FLOOR message
+     pins; kills mutations that emit a generic message or substitute a different empty-parse phrase).
      Top-of-file
      `bash -n "${BASH_SOURCE[0]}"` passes (L-7/L-5 FIX); preamble `grep -Eq '^#.*CI-MUTANTS-CITE-001'`
      passes (L-4/HIGH-1 FIX).
@@ -2523,16 +2661,31 @@ body makes tests fail RED). Only then does the implementer write the bash parsin
      key-present-array-empty case is RED-provable; same three assertions as test 4).
    - ci.yml spec-guard job name updated to `"Spec Guards (BC counts, numeric-count lint, mutants policy scope)"`; two new steps
      present; Guard 3 has NO ci.yml step.
-   - CLAUDE.md notes reference correct script names (no invented paths).
+   - CLAUDE.md notes reference correct script names (no invented paths). (AC-007 item (c))
+   - **AC-007 (F-4-P45):** `docs/specs/cargo-mutants-policy.md` contains a `## Guards` section
+     inserted after `## Spec Anchor` and before `## Future Path: Job Sharding (Path B)` — NOT
+     between `## Scope` and `### Sibling Candidates Considered and Deferred` (the Task 5 MUST-NOT
+     zone; an intervening `##` heading there would truncate §Scope parsing). (AC-007 item (a))
+   - **AC-007 (F-4-P45):** `CHANGELOG.md` `## [Unreleased]` → `### Added` contains an entry
+     matching the canonical string from Task 6: topic prefix `**CI: mutants-policy citation guard
+     (Guard 2) + examine_globs existence guard (Guard 3) (DEC-150):**`, file paths
+     `scripts/check-cargo-mutants-policy-citations.sh` and `tests/mutants_glob_existence.rs`,
+     capability keywords `CI-MUTANTS-CITE-001`, `SCOPE-EMPTY guard`, `coverage floor`,
+     `MUTANTS-GLOBS-KEY-MISSING guard` all present (L-5 FIX: exact line-wrapping may differ).
+     (AC-007 item (b))
    - `Cargo.toml` `[dev-dependencies]` contains `glob = "0.3"` (verify the line is present).
    - `Cargo.lock` is updated and staged in the PR diff (adding a dev-dep modifies Cargo.lock;
      F-H5 FIX: this repo's CI does NOT pass `--locked`; the requirement is repo policy — Cargo.lock
      is always committed alongside Cargo.toml for downstream `--locked` consumers).
    - **F-C1 Windows check:** the glob format string uses `.replace('\\', "/")` on CARGO_MANIFEST_DIR.
      CI validates this on `windows-latest`; local macOS runs will not exercise this branch.
-   - **MED-2-P22 FIX:** Fixture F `--self-test` output matches
-     `^Check passed: 1 bullets parsed, 7 \(file, fn\) pairs validated$` (M=7; includes
-     pub(super) async fn, pub(crate) fn, impl-indented pub async fn; SomeStruct filtered).
+   - **MED-2-P22 FIX / FIND-VA-42-3 FIX:** Fixture F-a `--self-test` output matches
+     `^Check passed: 2 bullets parsed, 8 \(file, fn\) pairs validated$` (N=2 bullets: `mock_mod.rs`
+     + `mock_second.rs`; M=8: 7 pairs from `mock_mod.rs` + 1 pair from `mock_second.rs`;
+     includes pub(super) async fn, pub(crate) fn, impl-indented pub async fn; SomeStruct filtered;
+     assign-instead-of-accumulate kill-trace: M=1 → RED; MAX-accumulate kill-trace: M=7 → RED).
+     Additionally, output does NOT contain `stale citation` (negative assertion — if-block form per
+     FIND-VA-42-1; F-a is the designated absence-assertion site for clean-run summary absence).
    - **MED-1-P22 FIX:** bash Guard 2 uses `local FLOOR=11` in both comparison and message;
      Rust helper uses `const FLOOR: usize = 11` in both comparison and format string.
    - **MED-4-P23 FIX / F-VA-28-3 FIX / F-VA-1 FIX / F-VA-27-1 FIX:** bash script declares `readonly EXPECTED_FIXTURES=12` used in BOTH the
@@ -2584,10 +2737,13 @@ body makes tests fail RED). Only then does the implementer write the bash parsin
      bullet-1 pin (`DEAD: malformed bullet skipped: - not-a-backtick-path — some_fn`) AND
      bullet-4 pin (`DEAD: malformed bullet skipped: - \`src/foo.py\` — \`some_fn\``); five
      identical lines cannot satisfy both simultaneously, killing hoisted-static-bullet_line mutations.
-     Fixture F is split into two probes (F-VA-32-1 FIX): Probe F-a (existing success path, 7 pairs,
-     rc=0, verifies positive match) and Probe F-b (new RED boundary probe — `mock_prefix` cited
-     against a file defining only `mock_prefix_extended`; boundary `([^[:alnum:]_]|$)` prevents
-     substring match; boundary-deletion mutation → rc=0 → RED, proving the guard is necessary).
+     Fixture F is split into two probes (F-VA-32-1 FIX): Probe F-a (success path — FIND-VA-42-3 FIX:
+     N=2 bullets, M=8 pairs, rc=0; assign-instead-of-accumulate kill-trace: M=1 → RED; MAX-accumulate
+     kill-trace: M=7 → RED; FIND-VA-42-1 FIX: negative assertion verifies absence of `stale citation`
+     on clean run — if-block form, F-a is the designated absence-assertion site) and Probe F-b (new
+     RED boundary probe — `mock_prefix` cited against a file defining only `mock_prefix_extended`;
+     boundary `([^[:alnum:]_]|$)` prevents substring match; boundary-deletion mutation → rc=0 → RED,
+     proving the guard is necessary; F-b is unaffected by the F-a N/M changes).
      Fixture L: rc=0, output matches
      `^Check passed: 1 bullets parsed, 1 \(file, fn\) pairs validated$` (F-VA-27-1 FIX /
      F-VA-31-2 FIX / VA-34-2 FIX — mock prepends `## Purpose` section with one bullet for
@@ -2701,6 +2857,10 @@ One new crate dev-dependency: `glob = "0.3"`. One Cargo.toml change only.
 
 ## File Structure Requirements
 
+This 8-file inventory does not map 1:1 to tasks — Task 3 owns three files (test file + `Cargo.toml`
+dev-dep + `Cargo.lock`), which is deliberate: the `glob = "0.3"` dev-dependency belongs with the
+test that needs it, not split across separate tasks (F-5-P45).
+
 | File | Create / Modify | Description |
 |------|-----------------|-------------|
 | `scripts/check-cargo-mutants-policy-citations.sh` | CREATE | Guard 2: parse §Scope bulleted list; verify each (file, function) pair via definition-anchored grep; collect ALL offenders (CI-MUTANTS-CITE-001 format); `--policy-doc` + `--src-root` (self-test only) + `--self-test` flags; SCOPE-EMPTY guard; SCOPE-COVERAGE-FLOOR (CANONICAL_MODE=1 only); coverage summary; twelve fixtures (dead-symbol + import-only + empty-src-root + scope-empty + malformed-bullets + success-path + file-existence-only + SCOPE-COVERAGE-FLOOR + sibling-candidates-terminator + multi-line-continuation + file-existence-only-missing-file + colon-colon-strip); four post-fixture self-assertions (CI-MUTANTS-CITE-001 pin, preamble-grep pin, bash-n pin, diagnostic-wording runtime check). |
@@ -2740,8 +2900,8 @@ Task 5 SWEEP MUST be applied before the AC-001 GREEN validation run.
 **PR attribution (H-GT-1 FIX):** PR #568 (`docs: fix ADR-0012 Seam A/B relocation citations`)
 fixed the primary function-location citations. PR #570 (`ci(mutants): restore examine_globs
 coverage`, commit c4b3aa9) restored the `.cargo/mutants.toml` scope entries (edit.rs +
-jsm_create.rs). PR #568 left the narrative parenthetical on create.rs:19 and the backtick-quoted
-`seen_keys`/`has_more` on issues.rs:27-28 intact — this PR's Task 5 SWEEP removes them.
+jsm_create.rs). PR #568 left the narrative parenthetical on the `create.rs` bullet (policy-doc line 19) and the backtick-quoted
+`seen_keys`/`has_more` on the `issues.rs` bullet (policy-doc lines 27–28) intact — this PR's Task 5 SWEEP removes them.
 
 **Format note (pass-2 C-2 FIX; F-H-1 FIX):** `docs/specs/cargo-mutants-policy.md §Scope` is a BULLETED LIST
 (lines 16–31), NOT a markdown table. The script MUST parse ALL `^- ` dash-bullet lines in the
@@ -2769,9 +2929,9 @@ complete fixture specifications are in Task 2 — single source of truth). Summa
 | A — dead-symbol (FIND-VA-41-1 FIX: summary count tightened) | 1 | `[ "$(grep -c 'DEAD: ' <<<"$output")" = "3" ]` (exactly 3 DEAD lines — 2 for the duplicated `handle_nonexistent_fn_selftest` + 1 for `another_missing_fn_selftest`; string `=` per FIND-VA-35-2; dedup mutation drops count to 2 → RED per FIND-VA-36-2); AND output contains `handle_nonexistent_fn_selftest` AND `another_missing_fn_selftest` (L-5 FIX: both fn names must appear) | `^3 stale citation\(s\) found in .+ §Scope$` (FIND-VA-41-1 — A+E jointly designated summary-count discriminator pair: A=3, E=5; no single hardcoded constant satisfies both) |
 | B — import-only false-green | 1 | `DEAD: `, ` not found in `, `handle_jsm_create` | `^[0-9]+ stale citation\(s\) found in .+ §Scope$` |
 | C — empty src-root (FIND-VA-37-2 FIX / F-VA-38-1 FIX: count-pin tightened) | 1 | `DEAD: src/foo.rs not found` and `DEAD: src/bar.rs not found` (F-4 missing-file format; fn names do NOT appear); exact file-not-found offender count `= "2"` pinned via `grep -c 'DEAD: [^ ]* not found$'` (pattern `$`-anchored to EXCLUSIVELY match file-not-found format, excluding fn-not-found form `DEAD: fn not found in <file>`; designated count-pinning fixture for file-not-found class) | `^[0-9]+ stale citation\(s\) found in .+ §Scope$` |
-| D — scope-empty | 1 | `SCOPE-EMPTY:` | n/a (exits before summary line) |
+| D — scope-empty (FIND-VA-42-2 FIX: three SCOPE-EMPTY message substring pins) | 1 | `SCOPE-EMPTY:` prefix pin; AND `0 bullets parsed` substring pin (VP-1-P25 idiom); AND `policy doc restructured` substring pin (VP-1-P25 idiom) — two new pins kill mutations that emit a generic message or a different empty-parse message | n/a (exits before summary line) |
 | E — malformed bullets (F-VA-31-1: 5 bullets) | 1 | `grep -c 'DEAD: malformed bullet skipped:' = "5"` (exactly 5 class-specific occurrences; string `=` per FIND-VA-35-2; traversal guard deletion shifts bullet 3, dropping count to 4; `\.rs$` clause deletion shifts bullet 4, dropping count to 4; `$`-anchor deletion shifts bullet 5, dropping count to 4); AND TWO distinct full-content pins: `grep -qF 'DEAD: malformed bullet skipped: - not-a-backtick-path — some_fn'` (bullet 1, VP-2-P25) AND `grep -qF 'DEAD: malformed bullet skipped: - \`src/foo.py\` — \`some_fn\`'` (bullet 4, F-VA-32-3: kills hoisted-static-bullet_line mutation — five identical lines cannot satisfy both pins); all assertions use `\|\| { …; exit 1; }` idiom (VP-1-P25) | `^5 stale citation\(s\) found in .+ §Scope$` (F-VA-31-4 — E is the designated count-pinning fixture) |
-| F-a — success path (LOW-1/F-3/F-5/MED-2-P22 FIX) | 0 | output matches `^Check passed: 1 bullets parsed, 7 \(file, fn\) pairs validated$` (`SomeStruct` filtered — M=7 not M=8; includes pub(super)/pub(crate)/async/impl-indented forms) | n/a (exit 0; no stale-citation summary) |
+| F-a — success path (LOW-1/F-3/F-5/MED-2-P22 FIX/FIND-VA-42-3 FIX: N=1→2, M=7→8; FIND-VA-42-1 FIX: negative assertion) | 0 | output matches `^Check passed: 2 bullets parsed, 8 \(file, fn\) pairs validated$` (`SomeStruct` filtered — N=2 bullets: `mock_mod.rs` + `mock_second.rs`; M=8: 7 pairs from `mock_mod.rs` + 1 from `mock_second.rs`; includes pub(super)/pub(crate)/async/impl-indented forms; assign-instead-of-accumulate kill-trace: M=1 → RED; MAX-accumulate kill-trace: M=7 → RED); AND negative assertion: output does NOT contain `stale citation` (if-block form per FIND-VA-42-1; F-a is the designated absence-assertion site) | n/a (exit 0; no stale-citation summary) |
 | F-b — trailing-boundary RED probe (F-VA-32-1 FIX) | 1 | `DEAD: mock_prefix not found in src/mock_prefix.rs` (cited name is strict prefix of defined name `mock_prefix_extended`; boundary `([^[:alnum:]_]\|$)` prevents substring match; boundary-deletion mutation → rc=0 → RED) | `^[0-9]+ stale citation\(s\) found in .+ §Scope$` |
 | G — file-existence-only + fence-skip pre-filter + post-fence bullet (FIND-VA-36-1 FIX; v1.31.1 errata; FIND-VA-37-1 FIX) | 0 | output matches `^Check passed: 2 bullets parsed, 0 \(file, fn\) pairs validated$` (N=2 bullets: real pre-fence + post-fence; M=0 pairs; in-fence bullet-shaped line stripped by pre-filter → GREEN; fence-skip deletion → N=3, in-fence file missing → DEAD → rc=1 → RED; polarity-inversion → N=1, file missing → DEAD → rc=1 → RED; fence-CLOSE strip-to-EOF → post-fence bullet stripped → N=1 → `2 bullets` assertion fails → RED (FIND-VA-37-1)) | n/a (exit 0; no stale-citation summary) |
 | H — SCOPE-COVERAGE-FLOOR RED (N=2) | 1 | `SCOPE-COVERAGE-FLOOR:` AND `expected >= 11` (pins threshold) AND `got 2` (pins count format) | n/a (exits before summary line) |
@@ -2936,8 +3096,7 @@ key-present-empty-array identically. See AC-006 / Task 3 for the full spec.
 at exactly N=10 (adjacent to but below the threshold of 11). This complements test 5 (N=3) by
 showing the floor fires at any N < 11, not only at very small N. A mutation weakening `< 11` to
 `< 4` would still pass test 5 (N=3 < 4 = TRUE, panic fires) — but test 8 catches it: N=10 < 4
-is FALSE, so no panic fires, and test 8's `unwrap_err()` call panics with a different message,
-failing the test. Test 8 therefore closes the gap for `< 11` → `< N` mutations where 4 ≤ N ≤ 10.
+is FALSE, so no panic fires, and test 8's `assert!(result.is_err(), "helper did not panic — expected MUTANTS-GLOBS-COVERAGE-FLOOR panic")` preface panics (result is `Ok(())`), failing the test with a descriptive message before `unwrap_err()` is reached (F-VA-46-3 mechanism). Test 8 therefore closes the gap for `< 11` → `< N` mutations where 4 ≤ N ≤ 10.
 See AC-006 / Task 3 for the full spec.
 
 **F-VA-28-1 FIX — N=12 above-threshold GREEN via a dedicated ninth test:**
@@ -3064,6 +3223,17 @@ machine-read. They are validated separately by Guard 2 (policy doc §Scope) and 
 inline failure tests to Guard 3, establishing the correct pattern. The kill-rate arbiter bash itself
 (the existing mutation gate) is NOT modified — closing that item is a separate story if ever
 prioritized.
+
+**GUARDS-SECTION-PLACEMENT-INVARIANT (FIND-VA-42-5 — prose-only; CI backstop named; follow-up candidate registered).**
+The Task 5 MUST-NOT (no `## Guards` section or other `##`-level heading inserted between
+`## Scope` and `### Sibling Candidates` in `docs/specs/cargo-mutants-policy.md`) is enforced by
+human review only — no Guard 2 extension checks for intervening headings. The SCOPE-COVERAGE-FLOOR
+check (N ≥ 11) is the existing CI backstop: a `## Guards` insertion that truncates §Scope extraction
+before all 11 bullets are parsed would drop N below the floor and fail CI. Adding a "no intervening
+`##`-heading inside §Scope range" check to Guard 2 is named as a **FOLLOW-UP STORY CANDIDATE** —
+do NOT add that behavior in this story (scope discipline; it would require a new fixture and a
+policy-doc structural invariant). Until that story ships, the placement invariant is review-enforced
+with the FLOOR as the CI safety net.
 
 **Policy-doc function citations OUTSIDE §Scope (F-H1 FIX — POLICY-DOC-NON-SCOPE-CITATIONS).**
 Guard 2 deliberately parses §Scope ONLY (lines 16–31). The policy doc also contains function names
