@@ -911,3 +911,43 @@ Trajectory shorthand: `1C(sibling-omission)→fix→1C(off-branch-spec)→fix→
 - FORK-OPS-BACKFILL-TIMEOUT-PARITY: minor housekeeping, next maintenance sweep.
 
 **F7 trajectory shorthand:** `F5: 2→0→0 CONVERGED` / `F6: PASS (CI-only)` / `F7: 5/5 PASS — CONVERGED + AUTHORIZED 2026-06-19`
+
+---
+
+## CITATION-GUARDS F3 — Story A Adversarial Convergence (ongoing, 2026-07-02..2026-07-03)
+
+**Story:** S-MUTANTS-SCOPE-GUARDS-1 #101 — cargo-mutants scope + citation guards
+**Phase:** F3 strict convergence loop (DEC-151: 3 consecutive CLEAN incl. verification-adequacy lens)
+**Baseline at DEC-151 (2026-07-02):** Story v1.17 CONSISTENT (~1850 lines); 22 passes / 16 fix rounds done; streak 0/3.
+
+### Finding Progression (passes 23–35, all verification-adequacy lens)
+
+| Pass | Version | Total | CRIT | HIGH | MED | LOW | Counter | Verdict |
+|------|---------|-------|------|------|-----|-----|---------|---------|
+| 23 | v1.17→v1.18 | 6 | 0 | 1 | 4 | 1 | 0/3 | FINDINGS_REMAIN |
+| 24 | → | 7 | 0 | 1 | 3 | 3 | 0/3 | FINDINGS_REMAIN |
+| 25 | → | 2 | 0 | 0 | 0 | 2 | 0/3 | CONVERGING |
+| 26 | → | 4 | 0 | 0 | 1 | 3 | 0/3 | FINDINGS_REMAIN |
+| 27 | → | 2 | 0 | 0 | 1 | 1 | 0/3 | FINDINGS_REMAIN |
+| 28 | → | 7 | 0 | 0 | 3 | 4 | 0/3 | REGRESSION |
+| 29 | → | 3 | 0 | 0 | 2 | 1 | 0/3 | FINDINGS_REMAIN |
+| 30 | → | 1 | 0 | 1 | 0 | 0 | 0/3 | FINDINGS_REMAIN |
+| 31 | → | 4 | 0 | 0 | 3 | 1 | 0/3 | FINDINGS_REMAIN |
+| 32 | → | 5 | 0 | 0 | 1 | 4 | 0/3 | FINDINGS_REMAIN |
+| 33 | → | 3 | 0 | 0 | 2 | 1 | 0/3 | FINDINGS_REMAIN |
+| 34 | → | 4 | 0 | 0 | 2 | 2 | 0/3 | FINDINGS_REMAIN |
+| 35 | v1.30.2 | 2 | 0 | 0 | 2 | 0 | 0/3 | FINDINGS_REMAIN |
+| 36 | v1.30.2 | IN FLIGHT | — | — | — | — | 0/3 | IN FLIGHT |
+
+**Trajectory shorthand (p23–35):** `6→7→2→4→2→7→3→1→4→5→3→4→2` — 13 passes, 13 fix rounds (+8 errata sub-versions); streak 0/3. Zero clean passes. Pass 36 in flight.
+
+### Key Observations (passes 23–35)
+
+- **Fix-round regression class (process note a):** Three fix rounds reintroduced previously-closed findings: a v1.13-class tautology recurred in round 20 (before DEC-151), and false RED-claim constructs appeared in rounds 26 and 29 (after DEC-151). The fresh-context gate and consistency-validator fidelity probes are load-bearing; same-author fix verification is not sufficient to catch same-author reintroduction.
+- **Meta-lens behavior (process note b):** ADVERSARY-META-LENS-REGRESS remains OPEN as an engine item. The verification-adequacy lens generates meta-level "the story does not fully specify how to verify the guard being specified" findings inherently. In the CITATION-GUARDS context these manifest as concrete mutation windows in the guard spec (not pure recursion), so they are actionable. Human re-affirmed at pass 28: "fix and continue to full convergence" (reinforcing DEC-151).
+- **Story growth:** v1.17 ~1850 lines → v1.30.2 ~2950 lines. Spec now specifies: 12 fixtures A–L (multi-probe F/H/I/J), 9 Rust tests, 4 post-fixture self-assertions, byte-pinned regexes, ~13 documented accepted residuals in Out of Scope.
+- **Severity pattern:** CRIT/HIGH appeared only at p23 (1H), p24 (1H), and p30 (1H) — 3 isolated HIGH findings over 13 passes, none CRIT. Severity has stayed MED/LOW from p31 onward. All CRIT/HIGH closed.
+
+### Convergence Criterion (DEC-151)
+
+3 consecutive CLEAN passes including the verification-adequacy lens required. Current streak: 0/3 as of pass 35. Resume: request pass-36 verdict from adversary, then continue loop: findings → story-writer fix round → consistency-validator → next adversary pass. On convergence, proceed to F4.

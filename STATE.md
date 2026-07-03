@@ -7,7 +7,7 @@ timestamp: 2026-07-02T12:00:00Z
 phase: 3
 project: jira-cli
 mode: brownfield
-current_step: "CITATION-GUARDS F3 RESUMED under strict criterion (human decision 2026-07-02): 3 consecutive clean passes incl. verification-adequacy lens. Streak 0/3; pass 23 dispatched (verification-adequacy lens first)."
+current_step: "CITATION-GUARDS F3 strict convergence loop: pass 36 in flight vs story v1.30.2; 13 passes/13 rounds since DEC-151; streak 0/3."
 maintenance_run: CLOSED
 current_cycle: "cycle-001"
 feature_mode_bundle: CITATION-GUARDS
@@ -27,8 +27,8 @@ activation_version: "v0.6.0-dev.7"
 | **Product** | jr (Jira CLI) |
 | **Mode** | BROWNFIELD / Rust |
 | **Target Workspace** | develop → main |
-| **Last Updated** | 2026-07-02: CITATION-GUARDS cycle started — F1 delta approved; F3 Story A (S-MUTANTS-SCOPE-GUARDS-1 #101 v1.17) adversarially hardened 22 passes → HELD at F3 gate (pending human convergence decision). Prior: MUTANTS-EXAMINE-GLOBS SHIPPED (DEC-150; PR #570; develop @ c4b3aa9; Stories 99→100). |
-| **Current Phase** | Phase 3 — ACTIVE CYCLE: CITATION-GUARDS F3 gate HELD. Story #101 v1.17 CONSISTENT; CRIT/HIGH closed; 4-of-5 lenses clean. BC **608**. NFR 42. ADR 16. Stories **101** (#101 draft). Holdouts **82**. |
+| **Last Updated** | 2026-07-03: CITATION-GUARDS F3 strict convergence loop in progress — Story A v1.30.2; 35 passes / 29 rounds since v1.17 baseline; streak 0/3; pass 36 in flight. Prior: MUTANTS-EXAMINE-GLOBS SHIPPED (DEC-150; PR #570; develop @ c4b3aa9; Stories 99→100). |
+| **Current Phase** | Phase 3 — ACTIVE CYCLE: CITATION-GUARDS F3 strict convergence loop. Story #101 v1.30.2 CONSISTENT; CRIT/HIGH closed; streak 0/3; pass 36 in flight. BC **608**. NFR 42. ADR 16. Stories **101** (#101 draft). Holdouts **82**. |
 | **Next Phase** | CITATION-GUARDS F3 gate resolution → F4 delivery (develop unchanged @ c4b3aa9). After cycle: MUTANTS-SHARDING-PATH-B, fork signing DEC-104, BC-CITATION-CI-GUARD candidates. |
 | **Activation HEAD** | 342987f (v0.6.0-dev.7 tag); develop @ c4b3aa9 (PR #570 squash-merged 2026-07-02 by human) |
 
@@ -54,7 +54,7 @@ activation_version: "v0.6.0-dev.7"
 | **CITATION-DEBT-PRODUCT-FILES DELIVERED** — PR #569 (`chore(deps): bump anyhow 1.0.102→1.0.103`) squash-merged → develop @ **e79943b** (unblocked repo; Cargo.lock+CHANGELOG; all 15 CI green). PR #568 (`docs: fix ADR-0012 Seam A/B relocation citations`) squash-merged (rebase onto #569) → develop @ **39caf39** (7 doc/comment citation corrections: docs/adr/0014-jsm-request-type-dispatch.md HIGH, jsm-e2e-coverage.md MED, 2026-05-13-search-issue-keys.md MED, src/api/jira/issues.rs rustdoc LOW; no behavior change; adversary converged 3 clean passes). S-ANYHOW-RUSTSEC-2026-0190-1 + S-CITATION-DEBT-PRODUCT-FILES-1 filed (retroactive). Stories 97→99. DEC-149. 3 lessons codified (SWEEP-WHOLE-TOUCHED-FILE; NEWLY-PUBLISHED-ADVISORY-BLOCKS-UNRELATED-PRS; PERIMETER-SCAN reinforcement 2). | state-manager | COMPLETE | develop @ 39caf39. BC 608. Stories 99. Holdouts 82. |
 | **MUTANTS-EXAMINE-GLOBS CYCLE CLOSED** — F1 delta analysis (option (a) restore) → F3 story S-MUTANTS-EXAMINE-GLOBS-1 (story #100, v1.2) → F4 delivery worktree `ci/mutants-examine-globs-seam-b` (3 commits: 5486c34, 1da0571, 475a1aa) → F5 adversarial gate CONVERGED (round 1: ci.yml:195 stale scope comment MED; round 2: policy-doc false handle_create→handle_edit call-edge MED + story file-set drift MED; round 3: 3/3 PASS diverse lenses) → consistency-validator CONSISTENT (story v1.2) → PR #570 squash-merged (human 2026-07-02; DEC-128 honored); mutants job PASS 35s 0-mutant path (second 0-mutant calibration confirmation). Cycle-close: cicd-setup.md AC-003 corrections applied; 2 lessons codified (IMPLEMENTER-PARAPHRASE-BEYOND-SPEC + FILES-MODIFIED-BACK-WRITE); 4 process-gaps dispositioned. DEC-150. | state-manager | COMPLETE | develop @ c4b3aa9. BC 608. Stories 100. Holdouts 82. |
 | **SESSION WRAP (human-requested pause)** — MUTANTS-EXAMINE-GLOBS cycle CLOSED same-day (DEC-150, PR #570 → develop @ c4b3aa9); pipeline paused IDLE; no in-flight work abandoned | state-manager | COMPLETE | factory-artifacts @ 363334b + this commit. |
-| **CITATION-GUARDS CYCLE — F1+F3 IN PROGRESS, HELD AT F3 GATE** | orchestrator / story-writer / adversary | IN_PROGRESS | F1 delta approved (2-story plan: Story A S-MUTANTS-SCOPE-GUARDS-1 #101 Guards 2+3; Story B S-BC-CITATION-GUARD not yet authored). Story A adversarially hardened v1.0→v1.17: 22 fresh-context adversary passes + 16 fix rounds + consistency validation after every round. Severity decayed CRIT→MED; best clean streak 2/3, broken 3× by the verification-adequacy lens (each visit mints new meta-level mutation-window findings). Orchestrator HELD per Level-2 escalation; human decision pending on convergence criterion. |
+| **CITATION-GUARDS CYCLE — F3 STRICT CONVERGENCE LOOP IN PROGRESS** | orchestrator / story-writer / adversary | IN_PROGRESS | F1 approved; Story A S-MUTANTS-SCOPE-GUARDS-1 #101 hardened v1.0→v1.30.2: 35 fresh-context passes + 29 fix rounds (13 passes/13 rounds since DEC-151 resume); streak 0/3 (strict criterion DEC-151; all verification-adequacy lens). Story grew ~1850→~2950 lines (12 fixtures A–L, 9 Rust tests, 4 self-assertions, ~13 accepted residuals). Finding trajectory p23–35: 1H+4M+1L→1H+3M+3L→2L→1M+3L→1M+1L→3M+4L→2M+1L→1H→3M+1L→1M+4L→2M+1L→2M+2L→2M. Pass 36 in flight vs v1.30.2. Full detail: convergence-trajectory.md §CITATION-GUARDS F3. Story B S-BC-CITATION-GUARD not yet authored. |
 
 ## Decisions Log
 
@@ -144,7 +144,7 @@ None open.
 
 ## Convergence Trackers
 
-Full per-issue: `cycles/cycle-001/convergence-trajectory.md`. Current: **CITATION-GUARDS Story A F3: strict criterion (DEC-151); 22 passes / 16 rounds done; streak 0/3 resumed at pass 23.**
+Full per-issue: `cycles/cycle-001/convergence-trajectory.md`. Current: **CITATION-GUARDS Story A F3: strict criterion (DEC-151); 35 passes / 29 rounds done; streak 0/3; pass 36 in flight vs story v1.30.2. Trajectory p23–35 summarized in §CITATION-GUARDS F3 of convergence-trajectory.md.**
 
 ## Session Resume Checkpoint
 
@@ -152,19 +152,19 @@ Full per-issue: `cycles/cycle-001/convergence-trajectory.md`. Current: **CITATIO
 
 | Field | Value |
 |-------|-------|
-| **Date** | 2026-07-02 (F3 resumed) |
-| **Status** | **ACTIVE — CITATION-GUARDS F3 resumed under strict criterion (DEC-151); adversary pass 23 in flight (verification-adequacy lens). Story #101 S-MUTANTS-SCOPE-GUARDS-1 v1.17 CONSISTENT; all CRIT/HIGH closed.** |
+| **Date** | 2026-07-03 (checkpoint update) |
+| **Status** | **ACTIVE — CITATION-GUARDS F3 strict convergence loop; adversary pass 36 in flight vs story v1.30.2. Story #101 S-MUTANTS-SCOPE-GUARDS-1 v1.30.2 CONSISTENT; all CRIT/HIGH closed; streak 0/3.** |
 | **Counters** | BC **608**. NFR **42**. ADR **16**. Stories **101** (#101 draft). Holdouts **82**. |
-| **Convergence counter** | CITATION-GUARDS Story A F3: 22 passes / 16 rounds / streak 0/3 resumed at pass 23 (strict criterion, DEC-151). |
-| **In-flight work** | CITATION-GUARDS F3 pass 23 (verification-adequacy lens). Story #101 S-MUTANTS-SCOPE-GUARDS-1 v1.17 at `.factory/stories/S-MUTANTS-SCOPE-GUARDS-1.md`. Story B S-BC-CITATION-GUARD not yet authored. |
+| **Convergence counter** | CITATION-GUARDS Story A F3: 35 passes / 29 rounds / streak 0/3; pass 36 in flight (strict criterion, DEC-151). Story v1.30.2 (~2950 lines). |
+| **In-flight work** | CITATION-GUARDS F3 pass 36 (all passes verification-adequacy lens). Story #101 S-MUTANTS-SCOPE-GUARDS-1 v1.30.2 at `.factory/stories/S-MUTANTS-SCOPE-GUARDS-1.md`. Story B S-BC-CITATION-GUARD not yet authored. |
 | **Untracked local files** | Deliberately uncommitted, session-local tooling, harmless: `.claude/pr-reviews/`, `.claude/spec-config.json`. |
 | **develop branch** | UNCHANGED @ c4b3aa9 — no product-repo changes yet (F4 not started). No worktrees. No PRs. |
-| **STATE.md size** | ~247 lines (WARNING band). |
-| **Resume command** | Open a fresh session and run `/vsdd-factory:next-step` — reads STATE.md; check feature_mode_bundle: CITATION-GUARDS; resume at F3 pass 23 (verification-adequacy lens, strict criterion DEC-151). |
+| **STATE.md size** | ~246 lines (WARNING band). |
+| **Resume command** | Open a fresh session and run `/vsdd-factory:next-step` — reads STATE.md; check feature_mode_bundle: CITATION-GUARDS; resume = request pass-36 verdict from adversary, then continue loop: findings → story-writer fix round → consistency-validator → next pass; convergence = 3 consecutive CLEAN incl. verification-adequacy lens (DEC-151). |
 
 ## RESUME PLAN (cold-start, self-contained)
 
-<!-- State snapshot: HELD — CITATION-GUARDS F3 gate (Story #101 v1.17). develop @ c4b3aa9 (UNCHANGED). BC 608. Stories 101 (#101 draft). Holdouts 82. -->
+<!-- State snapshot: CITATION-GUARDS F3 strict loop in progress — Story #101 v1.30.2; 35 passes/29 rounds; streak 0/3; pass 36 in flight. develop @ c4b3aa9 (UNCHANGED). BC 608. Stories 101 (#101 draft). Holdouts 82. -->
 
 ### Steps (assume ZERO memory)
 
@@ -177,9 +177,9 @@ Full per-issue: `cycles/cycle-001/convergence-trajectory.md`. Current: **CITATIO
 - **Open PRs: NONE.**
 - Counters: BC **608**, NFR **42**, ADR **16**, Stories **101** (#101 draft). Holdouts **82**.
 
-**Step 3 — CITATION-GUARDS F3 RESUMED under strict criterion (DEC-151):**
+**Step 3 — CITATION-GUARDS F3 STRICT CONVERGENCE LOOP (DEC-151):**
 
-> **ACTIVE (DEC-151):** Story A F3 running under strict criterion — 3 consecutive clean passes including verification-adequacy lens required. Streak 0/3; pass 23 dispatched (verification-adequacy lens first). On convergence, proceed to F4.
+> **ACTIVE (DEC-151):** Story A F3 running under strict criterion — 3 consecutive clean passes including verification-adequacy lens required. 35 passes / 29 rounds done; streak 0/3; pass 36 in flight vs v1.30.2. Resume = request pass-36 verdict from adversary, then continue loop: findings → story-writer fix round → consistency-validator → next pass; convergence = 3 consecutive CLEAN incl. verification-adequacy lens.
 
 > **ACTIVE WATCH-ITEM:** MUTANTS-FIRST-SCOPED-PR-CALIBRATION — 0-mutant path confirmed ×2; code-mutant path still unexercised (edit.rs ~99 + jsm_create.rs ~9 now in scope). Watch for `timeout` outcomes on first code-change PR.
 
