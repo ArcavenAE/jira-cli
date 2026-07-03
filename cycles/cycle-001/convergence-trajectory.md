@@ -943,18 +943,26 @@ Trajectory shorthand: `1C(sibling-omission)→fix→1C(off-branch-spec)→fix→
 | 39 | → | 0 | 0 | 0 | 0 | 0 | 1/3 | CLEAN-PASS (first clean of loop) |
 | 40 | → | 1 | 0 | 0 | 0 | 1 | 0/3 | REGRESSION (reset — 1L ground-truth) |
 | 41 | v1.35.1 | 3 | 0 | 0 | 2 | 1 | 0/3 | FINDINGS_REMAIN |
-| 42 | v1.35.1 | IN FLIGHT | — | — | — | — | 0/3 | IN FLIGHT (window 42–44) |
+| 42 | v1.35.1→ | 4 | 0 | 0 | 1 | 3 | 0/3 | FINDINGS_REMAIN |
+| 43 | → | 0 | 0 | 0 | 0 | 0 | 1/3 | CLEAN-PASS |
+| 44 | → | 0 | 0 | 0 | 0 | 0 | 2/3 | CLEAN-PASS |
+| 45 | → | 4 | 0 | 0 | 0 | 4 | 0/3 | REGRESSION (reset window-2 at 2/3 — 4L) |
+| 46 | → | 3 | 0 | 0 | 0 | 3 | 0/3 | FINDINGS_REMAIN |
+| 47 | → | 0 | 0 | 0 | 0 | 0 | 1/3 | CLEAN-PASS |
+| 48 | v1.39 | 1 | 0 | 0 | 0 | 1 | 0/3 | REGRESSION (reset window-4 at 1/3 — 1L) |
+| 49 | v1.39 | IN FLIGHT | — | — | — | — | 0/3 | IN FLIGHT (window 5) |
 
-**Trajectory shorthand (p23–41):** `6→7→2→4→2→7→3→1→4→5→3→4→2→3→2→4→0→1→3` — 19 passes since DEC-151; 18 fix rounds; streak 0/3. First CLEAN at p39 (verification-adequacy), reset at p40 (1L ground-truth). Pass 42 in flight.
+**Trajectory shorthand (p23–48):** `6→7→2→4→2→7→3→1→4→5→3→4→2→3→2→4→0→1→3→4→0→0→4→3→0→1` — 26 passes since DEC-151; 22 fix rounds; streak 0/3. Zero MED+ since p42; all resets by LOWs. Pass 49 in flight (window 5).
 
-### Key Observations (passes 23–41)
+### Key Observations (passes 23–48)
 
 - **Fix-round regression class (process note a):** Three fix rounds reintroduced previously-closed findings: a v1.13-class tautology recurred in round 20 (before DEC-151), and false RED-claim constructs appeared in rounds 26 and 29 (after DEC-151). The fresh-context gate and consistency-validator fidelity probes are load-bearing; same-author fix verification is not sufficient to catch same-author reintroduction.
 - **Meta-lens behavior (process note b):** ADVERSARY-META-LENS-REGRESS remains OPEN as an engine item. The verification-adequacy lens generates meta-level "the story does not fully specify how to verify the guard being specified" findings inherently. In the CITATION-GUARDS context these manifest as concrete mutation windows in the guard spec (not pure recursion), so they are actionable. Human re-affirmed at pass 28: "fix and continue to full convergence" (reinforcing DEC-151).
-- **Story growth:** v1.17 ~1850 lines → v1.35.1 ~2950+ lines. Spec specifies: 12 fixtures A–L (multi-probe F/H/I/J), 9 Rust tests, 4 post-fixture self-assertions, byte-pinned regexes, ~13 documented accepted residuals in Out of Scope.
-- **Severity pattern (p23–41):** CRIT/HIGH appeared only at p23 (1H), p24 (1H), and p30 (1H) — 3 isolated HIGH findings over 19 passes, none CRIT. Severity has stayed MED/LOW from p31 onward. All CRIT/HIGH closed.
-- **First CLEAN pass (p39):** After 17 consecutive non-clean passes since DEC-151, p39 was the first CLEAN pass of the strict loop (verification-adequacy lens). Reset at p40 by a single LOW ground-truth finding. Confirmed the adversary can issue CLEAN verdicts — the remaining gap is three consecutive CLEANs.
+- **Story growth:** v1.17 ~1850 lines → v1.39 ~2950+ lines. Spec specifies: 12 fixtures A–L (multi-probe F/H/I/J), 9 Rust tests, 4 post-fixture self-assertions, byte-pinned regexes, ~13 documented accepted residuals in Out of Scope.
+- **Severity pattern (p23–48):** CRIT/HIGH appeared only at p23 (1H), p24 (1H), and p30 (1H). Zero MED+ since p42 (7 consecutive passes). All resets since p42 caused exclusively by LOW findings.
+- **CLEAN pass history:** p39 = first CLEAN (reset p40 by 1L); p43+p44 = window-2 (broke p45 by 4L); p47 = window-4 start (broke p48 by 1L). Four windows broken, all exclusively by LOWs.
+- **READY-for-F4 declarations:** Three independent adversary agents (at p37, p45, and p46) declared the story READY-for-F4 despite issuing findings. Strict criterion continues per DEC-151/standing directive. Human closure question OPEN: LOW-tolerant streak vs declare-converged vs strict-continue.
 
 ### Convergence Criterion (DEC-151)
 
-3 consecutive CLEAN passes including the verification-adequacy lens required. Current streak: 0/3 as of pass 41. New window 42–44 in flight. Resume: request pass-42 verdict from adversary, then continue loop: findings → story-writer fix round → consistency-validator → next adversary pass. On convergence, proceed to F4.
+3 consecutive CLEAN passes including the verification-adequacy lens required. Current streak: 0/3 as of pass 48. Window 5 (pass 49) in flight. **Human closure question OPEN** — whether LOW-only resets should continue to block convergence, given 3 independent READY-for-F4 declarations. Strict continues per standing directive until human responds.
