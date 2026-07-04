@@ -4425,3 +4425,31 @@ Extracted from STATE.md Current Phase Steps table on 2026-07-04 to make room for
 | Step | Agent | Status | Output |
 |------|-------|--------|--------|
 | **MUTANTS-EXAMINE-GLOBS CYCLE CLOSED** — F1 delta analysis (option (a) restore) → F3 story S-MUTANTS-EXAMINE-GLOBS-1 (story #100, v1.2) → F4 delivery worktree `ci/mutants-examine-globs-seam-b` (3 commits: 5486c34, 1da0571, 475a1aa) → F5 adversarial gate CONVERGED (round 1: ci.yml:195 stale scope comment MED; round 2: policy-doc false handle_create→handle_edit call-edge MED + story file-set drift MED; round 3: 3/3 PASS diverse lenses) → consistency-validator CONSISTENT (story v1.2) → PR #570 squash-merged (human 2026-07-02; DEC-128 honored); mutants job PASS 35s 0-mutant path (second 0-mutant calibration confirmation). Cycle-close: cicd-setup.md AC-003 corrections applied; 2 lessons codified (IMPLEMENTER-PARAPHRASE-BEYOND-SPEC + FILES-MODIFIED-BACK-WRITE); 4 process-gaps dispositioned. DEC-150. | state-manager | COMPLETE | develop @ c4b3aa9. BC 608. Stories 100. Holdouts 82. |
+
+---
+
+## Burst: CITATION-GUARDS Story A Delivery (2026-07-04)
+
+**Agents dispatched:** state-manager
+**Files touched:** .factory/STATE.md, .factory/stories/S-MUTANTS-SCOPE-GUARDS-1.md, .factory/stories/STORY-INDEX.md, .factory/cycles/cycle-001/burst-log.md
+**Versions bumped:** S-MUTANTS-SCOPE-GUARDS-1 v1.48 → v1.49; STORY-INDEX v1.4.51 → v1.4.52
+
+### Summary
+
+PR #572 (`ci(mutants): restore examine_globs coverage for edit.rs + jsm_create.rs after ADR-0012 Seam A/B split`) squash-merged by human to develop on 2026-07-04 (DEC-128 honored). develop advanced c4b3aa9 → ab78a2d. Post-merge cleanup confirmed: worktree `.worktrees/S-MUTANTS-SCOPE-GUARDS-1` removed, branch `ci/mutants-scope-guards` deleted. Post-merge guards verification PASS (real scan 11/21 files, self-test 0 failures, 9/9 Rust tests).
+
+Story #101 S-MUTANTS-SCOPE-GUARDS-1 status updated ready → delivered. MUTANTS-FIRST-SCOPED-PR-CALIBRATION watch-item: ×3 0-mutant path confirmations (PR #568 ~34s + PR #570 ~35s + PR #572; all CI-only/script/doc diffs, no src/ mutants). Code-mutant path remains unexercised.
+
+Cycle CITATION-GUARDS remains OPEN pending: (1) Story B S-BC-CITATION-GUARD sequencing decision; (2) cycle-close checklist execution; (3) session-review timing for the 44-pass F3 loop.
+
+### Details
+
+| Agent | Task | Output |
+|-------|------|--------|
+| state-manager | Record PR #572 merge; update STATE.md (8 sections); update story file status/version/changelog; update STORY-INDEX row + frontmatter; append burst-log | STATE.md, S-MUTANTS-SCOPE-GUARDS-1.md, STORY-INDEX.md, burst-log.md |
+
+### Archived Current Phase Step (extracted from STATE.md 2026-07-04, 5-row cap)
+
+| Step | Agent | Status | Output |
+|------|-------|--------|--------|
+| **SESSION WRAP (human-requested pause)** — MUTANTS-EXAMINE-GLOBS cycle CLOSED same-day (DEC-150, PR #570 → develop @ c4b3aa9); pipeline paused IDLE; no in-flight work abandoned | state-manager | COMPLETE | factory-artifacts @ 363334b + this commit. |

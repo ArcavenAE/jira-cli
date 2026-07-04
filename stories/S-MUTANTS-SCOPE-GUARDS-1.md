@@ -3,7 +3,7 @@ document_type: story
 story_id: "S-MUTANTS-SCOPE-GUARDS-1"
 title: "CITATION-GUARDS Story A: mutants-policy function-location guard + examine_globs file-existence guard (DEC-150)"
 wave: feature-followup
-status: ready
+status: delivered
 intent: ci-hardening
 feature_type: infrastructure
 mode: feature
@@ -41,7 +41,7 @@ acceptance_criteria_count: 7
 assumption_validations: []
 risk_mitigations: []
 created: "2026-07-02"
-version: "1.48"
+version: "1.49"
 last_updated: "2026-07-04"
 breaking_change: false
 retroactive: false
@@ -56,6 +56,8 @@ origin: >
   .factory/phase-f1-delta-analysis/citation-guards-2026-07-02-delta.md §2 (Guards 2+3).
   Stories recommended: 2 (wave_order: guards-2-3-first per F1 §7). This is Story A.
 changelog:
+  - "1.49 (2026-07-04): DELIVERED — PR #572 squash-merged to develop @ ab78a2d; 9-pass Step 4.5
+    convergence (5 fix rounds); demo evidence docs/demo-evidence/S-MUTANTS-SCOPE-GUARDS-1/."
   - "1.48 (2026-07-04): Adversary pass 63 fix (F-COH-COMP-63-A): Task 8 self-verify block
     lacked an explicit Test 8 callout (test_coverage_floor_panics_at_ten_entries_below_threshold,
     V-4-P24 FIX). Added: 'Test 8 fires RED at N=10 — panic message contains
