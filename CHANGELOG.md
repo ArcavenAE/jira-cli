@@ -8,6 +8,8 @@ All notable changes to jr will be documented here.
 
 ### Added
 
+- **CI: mutants-policy citation guard (Guard 2) + examine_globs existence guard (Guard 3) (DEC-150):** adds `scripts/check-cargo-mutants-policy-citations.sh` (validates §Scope function-location bulleted list; CI-MUTANTS-CITE-001; self-test fixtures; SCOPE-EMPTY guard) and `tests/mutants_glob_existence.rs` (validates examine_globs entries resolve to real files; coverage floor; MUTANTS-GLOBS-KEY-MISSING guard).
+
 ### Security
 
 - **Bump `anyhow` 1.0.102 → 1.0.103 (RUSTSEC-2026-0190):** Resolves an unsoundness
