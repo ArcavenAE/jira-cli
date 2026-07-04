@@ -17,6 +17,20 @@ Superseded checkpoints are archived here when STATE.md is updated with a newer o
 
 ---
 
+## Checkpoint archived 2026-07-04 (F3 CONVERGED milestone — superseded by session wrap)
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-07-04 (milestone checkpoint — F3 CONVERGED) |
+| **Status** | **F3 CONVERGED (DEC-151 strict, 2026-07-04) — window 14 (p64/65/66 CLEAN incl. verification-adequacy). Story #101 v1.48 status=ready. HELD at F4 dispatch gate pending human authorization.** |
+| **Counters** | BC **608**. NFR **42**. ADR **16**. Stories **101** (#101 ready). Holdouts **82**. |
+| **Convergence counter** | CITATION-GUARDS Story A F3: CONVERGED. 44 passes / 47 fix rounds (DEC-151 strict); story v1.48 ready. DEC-152. |
+| **In-flight work** | NONE — F3 complete. F4 dispatch authorization pending from human. Story B S-BC-CITATION-GUARD not yet authored — sequencing decision pending. |
+| **develop branch** | UNCHANGED @ c4b3aa9 — no product-repo changes yet (F4 not started). No worktrees. No PRs. |
+| **Resume command** | Open a fresh session and run `/vsdd-factory:next-step` — present F4 dispatch authorization question + Story B sequencing to human. |
+
+---
+
 ## Checkpoint archived 2026-06-29 (Session durability snapshot — MUTATION-CI-TIMEOUT CLOSED; DEC-145 recorded)
 
 | Field | Value |

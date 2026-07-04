@@ -2,8 +2,8 @@
 document_type: pipeline-state
 version: "2.0"
 status: in_progress
-pipeline: IN_PROGRESS
-timestamp: 2026-07-02T12:00:00Z
+pipeline: PAUSED
+timestamp: 2026-07-04T00:00:00Z
 phase: 3
 project: jira-cli
 mode: brownfield
@@ -49,12 +49,12 @@ activation_version: "v0.6.0-dev.7"
 <!-- Keep last 5 rows only. Archive older rows to cycles/cycle-001/burst-log.md. -->
 | Step | Agent | Status | Output |
 |------|-------|--------|--------|
-<!-- archived to cycles/cycle-001/burst-log.md: CMDB/OBJ-TYPE WARM-HIT COVERAGE DELIVERED (PR #566, 822fa18, DEC-143, Stories 95→96); MUTATION-CI-TIMEOUT CYCLE DELIVERED (PR #567, 3b122a8, DEC-144, Stories 96→97); HOLDOUT-COVERAGE-GAPS CYCLE CLOSED (DEC-146, holdouts 71→79, Stories 97, develop @ 3b122a8); BC-SUB-CLAUSE + HOLDOUT CYCLE CLOSED (DEC-147, BC 605→608, holdouts 79→82, develop @ 3b122a8) -->
-| **CITATION-DEBT-FILEWIDE CYCLE CLOSED** — 3-file citation repoint: bc-3-issue-write.md (12 relocations: 9× create.rs→jsm_create.rs [BC-3.8.002/003/009/015/016/017 + Canonical Guard Ordering], 2× create.rs→edit.rs [BC-3.4.010 historical], 1× helpers.rs→field_resolve.rs; +BC-3.4.016 sibling-propagation field_resolve.rs Source+Trace add; +2 descriptor rewrites [BC-3.8.016/017 Trace "very top"→"after project-key resolution step 0"]; +2 changelog symbol fixes [create.rs:341→edit.rs::has_any_field_change]; +1 prose fix [BC-3.8.002 handle_create→handle_jsm_create calls require_service_desk]); bc-2-issue-read.md (1: BC-2.6.050 create.rs::handle_edit→edit.rs::handle_edit); BC-INDEX.md (11 relocations + 1 symbol correction [BC-3.4.019 handle_edit_bulk_fields→handle_edit] + 1 field_resolve.rs add). 7 adversary passes (diverse lenses) → 3 consecutive CLEAN. consistency-validator CONSISTENT; both check scripts exit 0. DEC-148. | state-manager | COMPLETE | develop @ 3b122a8 (UNCHANGED). BC 608. Stories 97. Holdouts 82. |
+<!-- archived to cycles/cycle-001/burst-log.md: CMDB/OBJ-TYPE WARM-HIT COVERAGE DELIVERED (PR #566, 822fa18, DEC-143, Stories 95→96); MUTATION-CI-TIMEOUT CYCLE DELIVERED (PR #567, 3b122a8, DEC-144, Stories 96→97); HOLDOUT-COVERAGE-GAPS CYCLE CLOSED (DEC-146, holdouts 71→79, Stories 97, develop @ 3b122a8); BC-SUB-CLAUSE + HOLDOUT CYCLE CLOSED (DEC-147, BC 605→608, holdouts 79→82, develop @ 3b122a8); CITATION-DEBT-FILEWIDE CYCLE CLOSED (DEC-148, spec-only, develop @ 3b122a8, BC 608, Stories 97, Holdouts 82) -->
 | **CITATION-DEBT-PRODUCT-FILES DELIVERED** — PR #569 (`chore(deps): bump anyhow 1.0.102→1.0.103`) squash-merged → develop @ **e79943b** (unblocked repo; Cargo.lock+CHANGELOG; all 15 CI green). PR #568 (`docs: fix ADR-0012 Seam A/B relocation citations`) squash-merged (rebase onto #569) → develop @ **39caf39** (7 doc/comment citation corrections: docs/adr/0014-jsm-request-type-dispatch.md HIGH, jsm-e2e-coverage.md MED, 2026-05-13-search-issue-keys.md MED, src/api/jira/issues.rs rustdoc LOW; no behavior change; adversary converged 3 clean passes). S-ANYHOW-RUSTSEC-2026-0190-1 + S-CITATION-DEBT-PRODUCT-FILES-1 filed (retroactive). Stories 97→99. DEC-149. 3 lessons codified (SWEEP-WHOLE-TOUCHED-FILE; NEWLY-PUBLISHED-ADVISORY-BLOCKS-UNRELATED-PRS; PERIMETER-SCAN reinforcement 2). | state-manager | COMPLETE | develop @ 39caf39. BC 608. Stories 99. Holdouts 82. |
 | **MUTANTS-EXAMINE-GLOBS CYCLE CLOSED** — F1 delta analysis (option (a) restore) → F3 story S-MUTANTS-EXAMINE-GLOBS-1 (story #100, v1.2) → F4 delivery worktree `ci/mutants-examine-globs-seam-b` (3 commits: 5486c34, 1da0571, 475a1aa) → F5 adversarial gate CONVERGED (round 1: ci.yml:195 stale scope comment MED; round 2: policy-doc false handle_create→handle_edit call-edge MED + story file-set drift MED; round 3: 3/3 PASS diverse lenses) → consistency-validator CONSISTENT (story v1.2) → PR #570 squash-merged (human 2026-07-02; DEC-128 honored); mutants job PASS 35s 0-mutant path (second 0-mutant calibration confirmation). Cycle-close: cicd-setup.md AC-003 corrections applied; 2 lessons codified (IMPLEMENTER-PARAPHRASE-BEYOND-SPEC + FILES-MODIFIED-BACK-WRITE); 4 process-gaps dispositioned. DEC-150. | state-manager | COMPLETE | develop @ c4b3aa9. BC 608. Stories 100. Holdouts 82. |
 | **SESSION WRAP (human-requested pause)** — MUTANTS-EXAMINE-GLOBS cycle CLOSED same-day (DEC-150, PR #570 → develop @ c4b3aa9); pipeline paused IDLE; no in-flight work abandoned | state-manager | COMPLETE | factory-artifacts @ 363334b + this commit. |
 | **CITATION-GUARDS CYCLE — F3 CONVERGED (DEC-151 strict, 2026-07-04); HELD at F4 dispatch gate** | orchestrator / story-writer / adversary | **HELD at F4 gate** | F3 COMPLETE: Story A S-MUTANTS-SCOPE-GUARDS-1 #101 v1.48 status=ready. 44 adversary passes / 47 fix rounds (p23–66, DEC-151 strict). Window 14 (p64/65/66 CLEAN incl. verification-adequacy). 2 HIGH, ~20 MED; last MED+ at p52 (Fixture H increment gap, F4-breaking). 13 CLEANs total. DEC-152. F4 dispatch pending human authorization. Story B S-BC-CITATION-GUARD not yet authored — sequencing decision pending. Full detail: convergence-trajectory.md §CITATION-GUARDS F3. |
+| **SESSION WRAP (human-requested pause)** — F3 CONVERGED same-session (DEC-152); pipeline paused HELD at F4 dispatch gate; no in-flight work abandoned (all agents idle at wrap) | state-manager | COMPLETE | factory-artifacts @ this commit. |
 
 ## Decisions Log
 
@@ -153,19 +153,20 @@ Full per-issue: `cycles/cycle-001/convergence-trajectory.md`. Current: **CITATIO
 
 | Field | Value |
 |-------|-------|
-| **Date** | 2026-07-04 (milestone checkpoint — F3 CONVERGED) |
-| **Status** | **F3 CONVERGED (DEC-151 strict, 2026-07-04) — window 14 (p64/65/66 CLEAN incl. verification-adequacy). Story #101 v1.48 status=ready. HELD at F4 dispatch gate pending human authorization.** |
+| **Date** | 2026-07-04 (session wrap — post-F3-convergence) |
+| **Status** | **PAUSED — CITATION-GUARDS F3 CONVERGED (DEC-152); story #101 S-MUTANTS-SCOPE-GUARDS-1 v1.48 status=ready; HELD at F4 dispatch gate pending human authorization.** |
 | **Counters** | BC **608**. NFR **42**. ADR **16**. Stories **101** (#101 ready). Holdouts **82**. |
-| **Convergence counter** | CITATION-GUARDS Story A F3: CONVERGED. 44 passes / 47 fix rounds (DEC-151 strict); story v1.48 ready. DEC-152. |
-| **In-flight work** | NONE — F3 complete. F4 dispatch authorization pending from human. Story B S-BC-CITATION-GUARD not yet authored — sequencing decision pending. |
+| **Convergence counter** | DEC-151 strict SATISFIED — 44 passes (p23–p66), 47 fix rounds, window 14 = p64/p65/p66 CLEAN (p65 = verification-adequacy mandatory lens). Full trajectory: `cycles/cycle-001/convergence-trajectory.md §CITATION-GUARDS F3`. |
+| **In-flight work** | NONE — no worktrees, no PRs, develop unchanged @ c4b3aa9; all sub-agents idle at wrap. |
+| **Pending human decisions** | (1) F4 dispatch authorization for story #101 (per-story TDD delivery; DEC-128 merge-auth applies); (2) Story B S-BC-CITATION-GUARD sequencing (after Story A vs parallel); (3) session-review timing for the 44-pass loop (now vs cycle close; ADVERSARY-META-LENS-REGRESS engine item OPEN). |
 | **Untracked local files** | Deliberately uncommitted, session-local tooling, harmless: `.claude/pr-reviews/`, `.claude/spec-config.json`. |
 | **develop branch** | UNCHANGED @ c4b3aa9 — no product-repo changes yet (F4 not started). No worktrees. No PRs. |
-| **STATE.md size** | ~258 lines (WARNING band). |
-| **Resume command** | Open a fresh session and run `/vsdd-factory:next-step` — reads STATE.md; feature_mode_bundle: CITATION-GUARDS; F3 COMPLETE; resume = present F4 dispatch authorization question to human (F4 = per-story delivery for story #101 S-MUTANTS-SCOPE-GUARDS-1 v1.48); also present Story B sequencing question (S-BC-CITATION-GUARD not yet authored — author before or after F4 delivery?). |
+| **STATE.md size** | ~255 lines (WARNING band). |
+| **Resume command** | Open a fresh session and run `/vsdd-factory:next-step` — reads STATE.md; feature_mode_bundle: CITATION-GUARDS; pipeline PAUSED; resume = present F4 dispatch gate + two secondary decisions (Story B sequencing, session-review timing) to human first; on F4 authorization: dispatch per-story delivery per `per-story-delivery.md` for story #101. |
 
 ## RESUME PLAN (cold-start, self-contained)
 
-<!-- State snapshot: CITATION-GUARDS F3 CONVERGED (DEC-151 strict, 2026-07-04) — Story #101 v1.48 ready; 44 passes/47 rounds; window 14 (p64/65/66 CLEAN). HELD at F4 dispatch gate pending human authorization. develop @ c4b3aa9 (UNCHANGED). BC 608. Stories 101 (#101 ready). Holdouts 82. -->
+<!-- State snapshot: CITATION-GUARDS F3 CONVERGED (DEC-151 strict, 2026-07-04); pipeline PAUSED — Story #101 v1.48 ready; 44 passes/47 rounds; window 14 (p64/65/66 CLEAN). PAUSED at F4 dispatch gate. develop @ c4b3aa9 (UNCHANGED). BC 608. Stories 101 (#101 ready). Holdouts 82. -->
 
 ### Steps (assume ZERO memory)
 
@@ -180,7 +181,7 @@ Full per-issue: `cycles/cycle-001/convergence-trajectory.md`. Current: **CITATIO
 
 **Step 3 — CITATION-GUARDS F3 STRICT CONVERGENCE LOOP (DEC-151):**
 
-> **F3 CONVERGED (DEC-151 strict, 2026-07-04):** Story A S-MUTANTS-SCOPE-GUARDS-1 v1.48 status=ready. Window 14 (passes 64/65/66 CLEAN including verification-adequacy lens). 44 passes / 47 fix rounds total. **HELD at F4 dispatch gate — present human authorization question.** F4 = per-story delivery for story #101. Story B S-BC-CITATION-GUARD not yet authored — sequencing decision also pending human input.
+> **F3 CONVERGED (DEC-151 strict, 2026-07-04); pipeline PAUSED at F4 dispatch gate:** Story A S-MUTANTS-SCOPE-GUARDS-1 v1.48 status=ready. Window 14 (passes 64/65/66 CLEAN including verification-adequacy lens). 44 passes / 47 fix rounds total. **On human authorization: dispatch per-story delivery per `per-story-delivery.md` for story #101.** Story B S-BC-CITATION-GUARD not yet authored — sequencing decision also pending. Session-review timing for the 44-pass loop also pending (ADVERSARY-META-LENS-REGRESS engine item OPEN).
 
 > **ACTIVE WATCH-ITEM:** MUTANTS-FIRST-SCOPED-PR-CALIBRATION — 0-mutant path confirmed ×2; code-mutant path still unexercised (edit.rs ~99 + jsm_create.rs ~9 now in scope). Watch for `timeout` outcomes on first code-change PR.
 
