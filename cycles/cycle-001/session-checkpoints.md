@@ -1191,3 +1191,20 @@ _Was the active checkpoint after maintenance sweep 2026-06-22 fully closed. PRs 
 | **Open PRs (action needed)** | NONE. |
 | **jira-e2e env** | JR_E2E_ISSUE_TYPE_ALT=Bug, JR_E2E_JSM_PROJECT=EJ, JR_E2E_ENABLED=true. |
 | **Standing constraints** | Do NOT close #429 (DEC-029). All fixes through full VSDD (DEC-120/121/124/129/130/131/132/134/135/136/138/139/140/141/142/143/144/146/147/148/149/150). LESSON-F2-WORKTREE-FIRST. F2-PIECEWISE-PROTOCOL [ENFORCED]. DEC-128 (CRITICAL): delivery sub-agents must NOT self-authorize merges, spawn fix agents, push, or enter unbounded loops. Fork signing UNBLOCKED but INERT (DEC-104). DEC-133 (DEPENDABOT-ACTION-SOAK). DEC-136: test-only PRs must not silently skip the adversarial gate. DEC-144: verify tool config-key semantics; ground CI budgets in measured baselines. DEC-147/148/149/150: citation-sweep + implementer-paraphrase lessons codified. |
+
+---
+
+## Checkpoint archived 2026-07-04 (session wrap post-F3-convergence — superseded by F4 in-progress checkpoint)
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-07-04 (session wrap — post-F3-convergence) |
+| **Status** | **PAUSED — CITATION-GUARDS F3 CONVERGED (DEC-152); story #101 S-MUTANTS-SCOPE-GUARDS-1 v1.48 status=ready; HELD at F4 dispatch gate pending human authorization.** |
+| **Counters** | BC **608**. NFR **42**. ADR **16**. Stories **101** (#101 ready). Holdouts **82**. |
+| **Convergence counter** | DEC-151 strict SATISFIED — 44 passes (p23–p66), 47 fix rounds, window 14 = p64/p65/p66 CLEAN (p65 = verification-adequacy mandatory lens). Full trajectory: `cycles/cycle-001/convergence-trajectory.md §CITATION-GUARDS F3`. |
+| **In-flight work** | NONE — no worktrees, no PRs, develop unchanged @ c4b3aa9; all sub-agents idle at wrap. |
+| **Pending human decisions** | (1) F4 dispatch authorization for story #101 (per-story TDD delivery; DEC-128 merge-auth applies); (2) Story B S-BC-CITATION-GUARD sequencing (after Story A vs parallel); (3) session-review timing for the 44-pass loop (now vs cycle close; ADVERSARY-META-LENS-REGRESS engine item OPEN). |
+| **Untracked local files** | Deliberately uncommitted, session-local tooling, harmless: `.claude/pr-reviews/`, `.claude/spec-config.json`. |
+| **develop branch** | UNCHANGED @ c4b3aa9 — no product-repo changes yet (F4 not started). No worktrees. No PRs. |
+| **STATE.md size** | ~255 lines (WARNING band). |
+| **Resume command** | Open a fresh session and run `/vsdd-factory:next-step` — reads STATE.md; feature_mode_bundle: CITATION-GUARDS; pipeline PAUSED; resume = present F4 dispatch gate + two secondary decisions (Story B sequencing, session-review timing) to human first; on F4 authorization: dispatch per-story delivery per `per-story-delivery.md` for story #101. |

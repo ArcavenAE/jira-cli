@@ -1,3 +1,99 @@
+# Red Gate Log — S-MUTANTS-SCOPE-GUARDS-1 (story #101)
+
+**Date:** 2026-07-04
+**Story:** S-MUTANTS-SCOPE-GUARDS-1 (story #101) — CITATION-GUARDS: cargo-mutants policy-citation guard + glob-existence guard
+**Branch:** `ci/mutants-scope-guards`
+**Base:** develop @ c4b3aa9
+**Worktree:** `.worktrees/S-MUTANTS-SCOPE-GUARDS-1`
+**F4 dispatch authorized by:** human, 2026-07-04 (resumed session; STATE.md F4 dispatch gate cleared)
+
+## Summary
+
+Two-commit Red Gate staged per story v1.48 RED-gate staging paragraph:
+- **Commit 27a8587 (stub-architect):** `scripts/check-cargo-mutants-policy-citations.sh` no-output `run_check` stub; `tests/mutants_glob_existence.rs` with 3 `todo!()` helper bodies + 9 full test bodies; glob 0.3.3 dev-dep + Cargo.lock in same commit. `cargo check --all-targets` PASS.
+- **Commit 7e858f8 (test-writer):** 12 Guard-2 self-test fixtures (A–L) added to the guard script; 9 Guard-3 tests audited vs story v1.48, zero divergences found.
+
+Red Gate VERIFIED by orchestrator:
+- `cargo check --all-targets` — CLEAN (no compile errors)
+- `cargo test --test mutants_glob_existence` — 0 passed / 9 failed (todo!() panics, correct Red state)
+- `bash scripts/check-cargo-mutants-policy-citations.sh --self-test` — exits 1 (Fixture A FAIL vs stub, correct Red state)
+- `bash -n scripts/check-cargo-mutants-policy-citations.sh` — OK (syntax valid)
+
+## Step (a): Stubs — commit 27a8587
+
+Files introduced by stub-architect:
+- `scripts/check-cargo-mutants-policy-citations.sh` — no-output `run_check` stub; all Guard-1/2/3 logic absent; exits 0 unconditionally
+- `tests/mutants_glob_existence.rs` — 3 helper functions stubbed as `todo!()` (`load_mutants_toml`, `resolve_globs`, `check_policy_citations`); 9 test bodies fully written but calling the `todo!()` helpers
+- `Cargo.toml` — glob 0.3.3 added to dev-dependencies
+- `Cargo.lock` — updated in same commit
+
+`cargo check --all-targets` output: PASS (0 errors; `todo!()` macros are valid Rust, do not prevent compilation).
+
+## Step (b): Failing Tests — commit 7e858f8
+
+Guard-2 self-test fixtures added to `scripts/check-cargo-mutants-policy-citations.sh`:
+- Fixtures A–L (12 total) covering: cited-file-missing (A), cited-fn-missing (B), cited-file-exists-fn-present (C = PASS fixture), zero-backtick-pairs (D), multiple-valid-entries (E), mixed-valid-invalid (F), backtick-only-no-path (G), backtick-count-mismatch (H), empty-scope-section (I), no-scope-section (J), multi-fn-one-missing (K), all-fns-present (L = PASS fixture)
+
+Guard-3 tests audited vs story v1.48:
+- 9 test functions in `tests/mutants_glob_existence.rs` reviewed; zero divergences from story v1.48 acceptance criteria found
+- Tests cover: toml-parse, glob-resolution for existing/missing paths, policy-citation check for valid/stale/missing file/fn citations, --self-test invocation, script syntax check
+
+## Test Results (pre-implementation — Red state)
+
+```
+cargo test --test mutants_glob_existence
+
+running 9 tests
+test test_mutants_toml_parses_examine_globs ... FAILED (todo!() panic)
+test test_existing_glob_resolves_to_files ... FAILED (todo!() panic)
+test test_missing_glob_yields_no_files ... FAILED (todo!() panic)
+test test_policy_citation_valid_file_and_fn ... FAILED (todo!() panic)
+test test_policy_citation_stale_file ... FAILED (todo!() panic)
+test test_policy_citation_stale_fn ... FAILED (todo!() panic)
+test test_policy_citation_missing_file ... FAILED (todo!() panic)
+test test_self_test_exits_nonzero_on_stub ... FAILED (todo!() panic)
+test test_script_syntax_ok ... FAILED (todo!() panic)
+
+test result: FAILED. 0 passed; 9 failed; 0 ignored; 0 measured; 0 filtered out
+```
+
+Guard-2 self-test:
+```
+bash scripts/check-cargo-mutants-policy-citations.sh --self-test
+# Fixture A: FAIL (stub returns 0, expected nonzero on missing file)
+exit 1
+```
+
+## Failure Analysis
+
+| Test | Failure Mode | AC |
+|------|-------------|-----|
+| `test_mutants_toml_parses_examine_globs` | `todo!()` panic in `load_mutants_toml` | Guard-3 AC-001 |
+| `test_existing_glob_resolves_to_files` | `todo!()` panic in `resolve_globs` | Guard-3 AC-002 |
+| `test_missing_glob_yields_no_files` | `todo!()` panic in `resolve_globs` | Guard-3 AC-002 |
+| `test_policy_citation_valid_file_and_fn` | `todo!()` panic in `check_policy_citations` | Guard-3 AC-003 |
+| `test_policy_citation_stale_file` | `todo!()` panic in `check_policy_citations` | Guard-3 AC-003 |
+| `test_policy_citation_stale_fn` | `todo!()` panic in `check_policy_citations` | Guard-3 AC-003 |
+| `test_policy_citation_missing_file` | `todo!()` panic in `check_policy_citations` | Guard-3 AC-003 |
+| `test_self_test_exits_nonzero_on_stub` | `todo!()` panic in `check_policy_citations` | Guard-3 AC-004 |
+| `test_script_syntax_ok` | `todo!()` panic in helper | Guard-3 AC-005 |
+| Guard-2 `--self-test` Fixture A | Stub exits 0 on a missing-file fixture; expected nonzero | Guard-2 AC-002 |
+
+## Hand-off to Implementer
+
+All 9 behavioral tests fail for the right reason (todo!() panics, not build errors or wrong assertions).
+Guard-2 self-test exits 1 on Fixture A because the stub returns 0 unconditionally.
+To make each test pass, the implementer must replace the three `todo!()` stubs with real logic:
+
+1. `load_mutants_toml` — parse `.cargo/mutants.toml`, extract `examine_globs` array
+2. `resolve_globs` — for each glob pattern, resolve against repo root using glob 0.3.3 crate; return file list
+3. `check_policy_citations` — parse `docs/specs/cargo-mutants-policy.md §Scope` backtick-quoted citations; verify each `file::fn` citation exists (file present + fn defined in file)
+4. `scripts/check-cargo-mutants-policy-citations.sh` — implement Guard-1 (glob existence) + Guard-2 (policy-doc citation) logic so all 12 self-test fixtures pass
+
+Post-fix: `cargo test --test mutants_glob_existence` → 9 passed / 0 failed; `bash --self-test` exits 0.
+
+---
+
 # Red Gate Log — S-1.03 (NFR-O-A)
 
 **Date:** 2026-05-07
