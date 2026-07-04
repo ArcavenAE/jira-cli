@@ -959,20 +959,29 @@ Trajectory shorthand: `1C(sibling-omission)→fix→1C(off-branch-spec)→fix→
 | 55 | → | 3 | 0 | 0 | 0 | 3 | 0/3 | REGRESSION (reset window-7 at 2/3 — 3L; 1 dismissed as stale-date false positive) |
 | 56 | → | 4 | 0 | 0 | 0 | 4 | 0/3 | FINDINGS_REMAIN |
 | 57 | v1.44 | 1 | 0 | 0 | 0 | 1 | 0/3 | FINDINGS_REMAIN |
-| 58 | v1.44 | IN FLIGHT | — | — | — | — | 0/3 | IN FLIGHT (window 10, coherence-lens lead) |
+| 58 | v1.44→ | 4 | 0 | 0 | 0 | 4 | 0/3 | FINDINGS_REMAIN (window 10 broke at 0/3 — 4L) |
+| 59 | → | 0 | 0 | 0 | 0 | 0 | 1/3 | CLEAN-PASS |
+| 60 | → | 0 | 0 | 0 | 0 | 0 | 2/3 | CLEAN-PASS |
+| 61 | → | 3 | 0 | 0 | 0 | 3 | 0/3 | REGRESSION (reset window-11 at 2/3 — 3L) |
+| 62 | → | 3 | 0 | 0 | 0 | 3 | 0/3 | FINDINGS_REMAIN |
+| 63 | → | 1 | 0 | 0 | 0 | 1 | 0/3 | FINDINGS_REMAIN |
+| 64 | → | 0 | 0 | 0 | 0 | 0 | 1/3 | CLEAN-PASS |
+| 65 | → | 0 | 0 | 0 | 0 | 0 | 2/3 | CLEAN-PASS (verification-adequacy lens) |
+| 66 | v1.48 | 0 | 0 | 0 | 0 | 0 | 3/3 | **CLEAN-PASS — CONVERGED (window 14 closed; DEC-151 satisfied 2026-07-04)** |
 
-**Trajectory shorthand (p23–57):** `6→7→2→4→2→7→3→1→4→5→3→4→2→3→2→4→0→1→3→4→0→0→4→3→0→1→3→0→0→6→0→0→3→4→1` — 35 passes since DEC-151; 27 fix rounds; streak 0/3. 8 CLEANs total. Pass 58 in flight (window 10, coherence-lens lead).
+**Trajectory shorthand (p23–66):** `6→7→2→4→2→7→3→1→4→5→3→4→2→3→2→4→0→1→3→4→0→0→4→3→0→1→3→0→0→6→0→0→3→4→1→4→0→0→3→3→1→0→0→0` — 44 passes since DEC-151; 47 fix rounds; **CONVERGED (DEC-151 strict, 2026-07-04).** 13 CLEANs total. Story v1.48 status=ready.
 
-### Key Observations (passes 23–57)
+### Key Observations (passes 23–66 — FINAL)
 
 - **Fix-round regression class (process note a):** Three fix rounds reintroduced previously-closed findings: a v1.13-class tautology recurred in round 20 (before DEC-151), and false RED-claim constructs appeared in rounds 26 and 29 (after DEC-151). The fresh-context gate and consistency-validator fidelity probes are load-bearing; same-author fix verification is not sufficient.
-- **Meta-lens behavior (process note b):** ADVERSARY-META-LENS-REGRESS remains OPEN as an engine item. The verification-adequacy lens generates inherently recursive meta-level findings on guard-spec stories; these manifest as concrete mutation windows in this context and are actionable.
-- **Story growth:** v1.17 ~1850 lines → v1.44 ~2950+ lines. Spec specifies: 12 fixtures A–L (multi-probe F/H/I/J), 9 Rust tests, 4 post-fixture self-assertions, byte-pinned regexes, ~13 documented accepted residuals.
-- **Severity pattern (p23–57):** CRIT/HIGH at p23 (1H), p24 (1H), p30 (1H). Zero MED+ since p52 (6 consecutive passes). p52 was the last substantive break — 3M+3L catching a genuine F4-breaking gap (Fixture H increment discipline).
-- **CLEAN pass history (8 total):** p39 (reset p40 1L) → p43+p44 window-2 (reset p45 4L) → p47 window-4 (reset p48 1L) → p50+p51 window-6 (reset p52 3M+3L) → p53+p54 window-7 (reset p55 3L). Three windows reached 2/3; none reached 3/3.
-- **Coherence-lens lead strategy (from window 8):** Adopted after coherence findings decayed from 4L to 1L across recent windows. Lead-off coherence lens attempts to clear the lowest-severity residuals in fewer passes. Finding-rate decaying.
-- **READY-for-F4 declarations:** Three independent adversary agents (p37, p45, p46) declared READY-for-F4 despite issuing findings. Strict criterion continues per DEC-151/standing directive. Human closure question OPEN: LOW-tolerant streak vs declare-converged vs strict-continue.
+- **Meta-lens behavior (process note b):** ADVERSARY-META-LENS-REGRESS remains OPEN as an engine item. The verification-adequacy lens generates inherently recursive meta-level findings on guard-spec stories; these manifest as concrete mutation windows in this context and are actionable. The strict loop was terminable — window 14 succeeded — but the draw variance cost ~44 passes.
+- **Story growth:** v1.17 ~1850 lines → v1.48 ~3000+ lines. Spec specifies: 12 fixtures A–L (multi-probe F/H/I/J), 9 Rust tests, 4 post-fixture self-assertions, byte-pinned regexes, ~13 documented accepted residuals.
+- **Severity pattern (p23–66):** CRIT/HIGH at p23 (1H), p24 (1H), p30 (1H). ~20 MED findings total. Last MED+ at p52 (3M+3L; Fixture H increment discipline — the one F4-breaking gap). Last 14 passes before window 14 were all LOW or CLEAN.
+- **CLEAN pass history (13 total):** p39 → p43+p44 (window-2) → p47 (window-3/4) → p50+p51 (window-6) → p53+p54 (window-7) → p59+p60 (window-11) → p64+p65+p66 (window 14 — CONVERGED).
+- **Window-14 strategy:** Coherence-lens lead (p64) cleared remaining LOW-severity residuals; verification-adequacy lens (p65) satisfied the mandatory DEC-151 requirement; correctness/ground-truth (p66) provided the third consecutive CLEAN confirming convergence.
+- **READY-for-F4 declarations:** Three independent adversary agents (p37, p45, p46) declared READY-for-F4 despite issuing findings — accurate assessment in hindsight; the remaining findings were all LOW and took ~20 more passes under strict criterion to exhaust.
+- **Draw-variance analysis:** Strict criterion (Option C, DEC-151) required 44 passes where Option B (one non-meta pass) would likely have converged ~p29. Cost: ~15 extra passes. Benefit: caught ADVERSARY-META-LENS-REGRESS dynamics empirically, produced a fully exhausted story with zero open findings.
 
 ### Convergence Criterion (DEC-151)
 
-3 consecutive CLEAN passes including the verification-adequacy lens required. Current streak: 0/3 as of pass 57. Window 10 (pass 58, coherence-lens lead) in flight. **Human closure question OPEN** — whether LOW-only resets should block convergence given decaying finding-rate and 3 independent READY-for-F4 declarations. Strict continues per standing directive until human responds.
+**SATISFIED 2026-07-04.** Window 14 (passes 64/65/66): three consecutive CLEAN passes including the verification-adequacy lens (p65). 44 adversary passes / 47 fix rounds total. Story S-MUTANTS-SCOPE-GUARDS-1 v1.48 status=ready. DEC-152 recorded. F4 dispatch pending human authorization.
