@@ -950,19 +950,29 @@ Trajectory shorthand: `1C(sibling-omission)→fix→1C(off-branch-spec)→fix→
 | 46 | → | 3 | 0 | 0 | 0 | 3 | 0/3 | FINDINGS_REMAIN |
 | 47 | → | 0 | 0 | 0 | 0 | 0 | 1/3 | CLEAN-PASS |
 | 48 | v1.39 | 1 | 0 | 0 | 0 | 1 | 0/3 | REGRESSION (reset window-4 at 1/3 — 1L) |
-| 49 | v1.39 | IN FLIGHT | — | — | — | — | 0/3 | IN FLIGHT (window 5) |
+| 49 | v1.39→ | 3 | 0 | 0 | 0 | 3 | 0/3 | FINDINGS_REMAIN |
+| 50 | → | 0 | 0 | 0 | 0 | 0 | 1/3 | CLEAN-PASS |
+| 51 | → | 0 | 0 | 0 | 0 | 0 | 2/3 | CLEAN-PASS |
+| 52 | → | 6 | 0 | 0 | 3 | 3 | 0/3 | REGRESSION (reset window-6 at 2/3 — 3M+3L; F4-breaking gap: Fixture H increment discipline) |
+| 53 | → | 0 | 0 | 0 | 0 | 0 | 1/3 | CLEAN-PASS |
+| 54 | → | 0 | 0 | 0 | 0 | 0 | 2/3 | CLEAN-PASS |
+| 55 | → | 3 | 0 | 0 | 0 | 3 | 0/3 | REGRESSION (reset window-7 at 2/3 — 3L; 1 dismissed as stale-date false positive) |
+| 56 | → | 4 | 0 | 0 | 0 | 4 | 0/3 | FINDINGS_REMAIN |
+| 57 | v1.44 | 1 | 0 | 0 | 0 | 1 | 0/3 | FINDINGS_REMAIN |
+| 58 | v1.44 | IN FLIGHT | — | — | — | — | 0/3 | IN FLIGHT (window 10, coherence-lens lead) |
 
-**Trajectory shorthand (p23–48):** `6→7→2→4→2→7→3→1→4→5→3→4→2→3→2→4→0→1→3→4→0→0→4→3→0→1` — 26 passes since DEC-151; 22 fix rounds; streak 0/3. Zero MED+ since p42; all resets by LOWs. Pass 49 in flight (window 5).
+**Trajectory shorthand (p23–57):** `6→7→2→4→2→7→3→1→4→5→3→4→2→3→2→4→0→1→3→4→0→0→4→3→0→1→3→0→0→6→0→0→3→4→1` — 35 passes since DEC-151; 27 fix rounds; streak 0/3. 8 CLEANs total. Pass 58 in flight (window 10, coherence-lens lead).
 
-### Key Observations (passes 23–48)
+### Key Observations (passes 23–57)
 
-- **Fix-round regression class (process note a):** Three fix rounds reintroduced previously-closed findings: a v1.13-class tautology recurred in round 20 (before DEC-151), and false RED-claim constructs appeared in rounds 26 and 29 (after DEC-151). The fresh-context gate and consistency-validator fidelity probes are load-bearing; same-author fix verification is not sufficient to catch same-author reintroduction.
-- **Meta-lens behavior (process note b):** ADVERSARY-META-LENS-REGRESS remains OPEN as an engine item. The verification-adequacy lens generates meta-level "the story does not fully specify how to verify the guard being specified" findings inherently. In the CITATION-GUARDS context these manifest as concrete mutation windows in the guard spec (not pure recursion), so they are actionable. Human re-affirmed at pass 28: "fix and continue to full convergence" (reinforcing DEC-151).
-- **Story growth:** v1.17 ~1850 lines → v1.39 ~2950+ lines. Spec specifies: 12 fixtures A–L (multi-probe F/H/I/J), 9 Rust tests, 4 post-fixture self-assertions, byte-pinned regexes, ~13 documented accepted residuals in Out of Scope.
-- **Severity pattern (p23–48):** CRIT/HIGH appeared only at p23 (1H), p24 (1H), and p30 (1H). Zero MED+ since p42 (7 consecutive passes). All resets since p42 caused exclusively by LOW findings.
-- **CLEAN pass history:** p39 = first CLEAN (reset p40 by 1L); p43+p44 = window-2 (broke p45 by 4L); p47 = window-4 start (broke p48 by 1L). Four windows broken, all exclusively by LOWs.
-- **READY-for-F4 declarations:** Three independent adversary agents (at p37, p45, and p46) declared the story READY-for-F4 despite issuing findings. Strict criterion continues per DEC-151/standing directive. Human closure question OPEN: LOW-tolerant streak vs declare-converged vs strict-continue.
+- **Fix-round regression class (process note a):** Three fix rounds reintroduced previously-closed findings: a v1.13-class tautology recurred in round 20 (before DEC-151), and false RED-claim constructs appeared in rounds 26 and 29 (after DEC-151). The fresh-context gate and consistency-validator fidelity probes are load-bearing; same-author fix verification is not sufficient.
+- **Meta-lens behavior (process note b):** ADVERSARY-META-LENS-REGRESS remains OPEN as an engine item. The verification-adequacy lens generates inherently recursive meta-level findings on guard-spec stories; these manifest as concrete mutation windows in this context and are actionable.
+- **Story growth:** v1.17 ~1850 lines → v1.44 ~2950+ lines. Spec specifies: 12 fixtures A–L (multi-probe F/H/I/J), 9 Rust tests, 4 post-fixture self-assertions, byte-pinned regexes, ~13 documented accepted residuals.
+- **Severity pattern (p23–57):** CRIT/HIGH at p23 (1H), p24 (1H), p30 (1H). Zero MED+ since p52 (6 consecutive passes). p52 was the last substantive break — 3M+3L catching a genuine F4-breaking gap (Fixture H increment discipline).
+- **CLEAN pass history (8 total):** p39 (reset p40 1L) → p43+p44 window-2 (reset p45 4L) → p47 window-4 (reset p48 1L) → p50+p51 window-6 (reset p52 3M+3L) → p53+p54 window-7 (reset p55 3L). Three windows reached 2/3; none reached 3/3.
+- **Coherence-lens lead strategy (from window 8):** Adopted after coherence findings decayed from 4L to 1L across recent windows. Lead-off coherence lens attempts to clear the lowest-severity residuals in fewer passes. Finding-rate decaying.
+- **READY-for-F4 declarations:** Three independent adversary agents (p37, p45, p46) declared READY-for-F4 despite issuing findings. Strict criterion continues per DEC-151/standing directive. Human closure question OPEN: LOW-tolerant streak vs declare-converged vs strict-continue.
 
 ### Convergence Criterion (DEC-151)
 
-3 consecutive CLEAN passes including the verification-adequacy lens required. Current streak: 0/3 as of pass 48. Window 5 (pass 49) in flight. **Human closure question OPEN** — whether LOW-only resets should continue to block convergence, given 3 independent READY-for-F4 declarations. Strict continues per standing directive until human responds.
+3 consecutive CLEAN passes including the verification-adequacy lens required. Current streak: 0/3 as of pass 57. Window 10 (pass 58, coherence-lens lead) in flight. **Human closure question OPEN** — whether LOW-only resets should block convergence given decaying finding-rate and 3 independent READY-for-F4 declarations. Strict continues per standing directive until human responds.
