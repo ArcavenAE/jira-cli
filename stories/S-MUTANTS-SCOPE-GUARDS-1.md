@@ -3,7 +3,7 @@ document_type: story
 story_id: "S-MUTANTS-SCOPE-GUARDS-1"
 title: "CITATION-GUARDS Story A: mutants-policy function-location guard + examine_globs file-existence guard (DEC-150)"
 wave: feature-followup
-status: draft
+status: ready
 intent: ci-hardening
 feature_type: infrastructure
 mode: feature
@@ -41,7 +41,7 @@ acceptance_criteria_count: 7
 assumption_validations: []
 risk_mitigations: []
 created: "2026-07-02"
-version: "1.44"
+version: "1.48"
 last_updated: "2026-07-04"
 breaking_change: false
 retroactive: false
@@ -56,6 +56,76 @@ origin: >
   .factory/phase-f1-delta-analysis/citation-guards-2026-07-02-delta.md §2 (Guards 2+3).
   Stories recommended: 2 (wave_order: guards-2-3-first per F1 §7). This is Story A.
 changelog:
+  - "1.48 (2026-07-04): Adversary pass 63 fix (F-COH-COMP-63-A): Task 8 self-verify block
+    lacked an explicit Test 8 callout (test_coverage_floor_panics_at_ten_entries_below_threshold,
+    V-4-P24 FIX). Added: 'Test 8 fires RED at N=10 — panic message contains
+    MUTANTS-GLOBS-COVERAGE-FLOOR, expected >= 11, and got 10 (V-4-P24 FIX).' inserted between
+    the Test 6 and Test 9 sentences for numerical order (5→6→8→9).
+    Symmetry scan: tests 4/5/6/7/9 already had explicit callouts; tests 1/2/3 were all missing
+    explicit named lines (test 1's behavior was described at the general Guard-3 bullet but not
+    named 'Test 1'). Added three one-liner bullets before the test-4 bullet: Test 1 (all 11
+    entries resolve; validate_globs empty dead list; assert_examine_globs_coverage_floor no
+    panic), Test 2 (validate_globs non-empty dead list; content pin confirms
+    nonexistent_dummy_for_selftest; F-VA-28-5 FIX), Test 3 (inline TOML parse →
+    extract_examine_globs_or_panic happy path → validate_globs dead list non-empty; kills
+    polarity mutant; pass-3 M-1 FIX). All nine tests now have explicit named callouts."
+  - "1.47 (2026-07-04): Adversary pass 62 fixes (F-COH-COMP-63-1..3): 63-1 (LOW): Task 6
+    canonical CHANGELOG string (~line 2769) used invalid escape-form inside a single-backtick
+    code span (\\`scripts/...\\` etc.) — those escapes are not valid inside a single-backtick
+    code span and do not represent the intended CHANGELOG bytes. Converted to a fenced code block
+    (```) with ordinary backticks around file paths. AC-007(b) self-verify line already uses
+    plain code spans to describe the required keywords/prefix — no divergence after the fix.
+    63-2 (LOW): Regression Risk row 3 had 'If S-MUTANTS-EXAMINE-GLOBS-1 has NOT merged yet...'
+    — an unreachable conditional (PRs #568+#570 merged, asserted at 3 other sites). Reworded to
+    present state: 'S-MUTANTS-EXAMINE-GLOBS-1 (PRs #568+#570) is MERGED — Guard 3 validates
+    against the restored 11-entry examine_globs state; the not-yet-merged scenario is moot
+    (retained rationale: had it not merged, Guard 3 would still pass because it validates
+    whatever entries exist).'
+    63-3 (LOW): Task 3 Cargo.toml entry lacked sequencing constraint at the point of execution.
+    Added SEQUENCING sentence after the Cargo.lock commitment note: 'add this dev-dep and
+    regenerate Cargo.lock in the SAME pre-implementation commit as (or before) the test-file
+    stubs — the test file's use glob::... must compile so todo!() panics manifest as RED test
+    failures, not unresolved-import compile errors (cross-ref the RED-gate staging paragraph).'"
+  - "1.46 (2026-07-04): Adversary pass 61 fixes (F-GT-1..3): F-GT-1 (LOW): Token Budget table
+    story-spec row had version-stamped self-reference '(v1.43; grown from ~4,500 at v1.0 through
+    40+ adversarial hardening passes)' — structurally unstable under an active fix process (stales
+    at every bump). Made version-agnostic: '(current revision; grown from ~4,500 at v1.0 through
+    the adversarial hardening passes — see changelog for the evolution)'. Sweep of live prose for
+    'v1.4' and 'passes' outside frontmatter+changelog found no additional self-referential
+    version/pass-count stamps — only the Token Budget row (now fixed) and changelog entries.
+    F-GT-2 (LOW): RED-gate stub rationale overclaimed that an output-emitting stub 'would
+    false-GREEN the content assertions of the six content-assertion probes' — a single stub output
+    can match AT MOST ONE of the six distinct exact-match regexes. Reworded: 'it could false-GREEN
+    AT MOST ONE of the six content-assertion probes (their six regexes demand six distinct outputs)
+    while the others still fail — but even one incidental false-GREEN corrupts the RED-gate
+    observation, so the no-output stub is mandated.'
+    F-GT-3 (LOW): Task 2 §Scope-extraction paragraph described the Sibling Candidates subsection
+    as 'is a markdown table of EXCLUDED files' — wrong: it has a heading, brief prose, THEN the
+    table. Corrected to 'contains a markdown table of EXCLUDED files (heading, brief prose, then
+    the table)'. Grep confirmed only one anchor (Task 2 §Scope block); no Governance/Traceability
+    anchor exists with this exact phrasing."
+  - "1.45 (2026-07-04): Adversary pass 58 fixes (F-COH-COMP-58-1..4): 58-1 (LOW): Task 2 Flags
+    block `--policy-doc` entry said 'REQUIRED for self-test mode; without it, self-test would
+    circularly parse the real policy doc' — same contradiction as v1.44's --src-root fix (fixtures
+    use in-process POLICY_DOC= assignment, not the CLI flag; ARG-PARSER-GATE-POLARITY residual).
+    Reworded to designed-to-support framing; CANONICAL_MODE-gate explanation kept intact. Sweep
+    confirmed no other 'REQUIRED for' flag phrasings in live text.
+    58-2 (LOW): Task 5 §Guards template only had 2 elements per guard bullet (what it checks +
+    CI job); missing reproduce-locally and action-on-failure. Extended both Guard 2 and Guard 3
+    bullets to 4 elements (checks, CI job, reproduce-locally command, action-on-failure); added
+    4-element content-check to Task 8 AC-007(a) self-verify line (was placement-only).
+    58-3 (LOW): Helper caller lists under-enumerated. Helper 2 (extract_examine_globs_or_panic):
+    kept minimum-kill statement (tests 1 AND 4); added full caller set (tests 1, 3, 4, 5, 7, 8 —
+    verified per test body). Helper 3 (assert_examine_globs_coverage_floor): replaced 'called by
+    test 1 AND subject of catch_unwind in test 5' with full caller set (tests 1, 5, 6, 8, 9 —
+    verified; tests 6/9 use inline entry lists, not extract_examine_globs_or_panic). Added guard
+    sentence before 'This follows claude_md_citations.rs pattern': 'Removing a helper call from
+    any listed test is a spec change requiring kill-trace re-derivation — minimum-kill pair is
+    NOT a license to inline elsewhere.'
+    58-4 (LOW): AC-002 first column header renamed 'Fixture' → 'Fixture / Probe'; added one-line
+    italic note after table: '17 rows for 12 fixtures — multi-probe fixtures F (2), H (4), I (2)
+    span multiple rows; fixtures_run counts each FIXTURE once (=12), per Task 2's single-increment
+    rule.'"
   - "1.44 (2026-07-04): Adversary pass 57 fix (F-COH-COMP-57-1): Task 2 Flags block
     `--src-root` entry had 'REQUIRED for Fixture B' — contradicts Fixture B's in-process
     SRC_ROOT= assignment (F-VA-46-1) and ARG-PARSER-GATE-POLARITY residual. Reworded to:
@@ -1078,7 +1148,7 @@ AC-006 traces to the test-naming and CHANGELOG-per-PR hygiene conventions (its g
 
 | Context component | Estimated tokens |
 |---|---|
-| Story spec (this file) | ~45,000 (v1.43; grown from ~4,500 at v1.0 through 40+ adversarial hardening passes) |
+| Story spec (this file) | ~45,000 (current revision; grown from ~4,500 at v1.0 through the adversarial hardening passes — see changelog for the evolution) |
 | `docs/specs/cargo-mutants-policy.md` (full — §Scope + §CI Integration + §Guards new section) | ~4,500 |
 | `.cargo/mutants.toml` (full file, 11 examine_globs entries) | ~400 |
 | `scripts/check-signing-workflow-injection.sh` (--self-test prior-art reference) | ~1,000 |
@@ -1106,8 +1176,9 @@ assertions (F-a, G, I-a, I-b, J, L) fail their `^Check passed: ...` regexes on e
 H's two GREEN companions (N=11, N=12) carry only rc + floor-ABSENCE checks and would not fail on empty
 output in isolation — Fixture H's RED-ness comes from its N=2/N=5 rc assertions, which run first.
 An output-emitting stub variant (e.g. one that echoes a success line) is NOT sanctioned — it would
-false-GREEN the content assertions of the six content-assertion probes (F-a/G/I-a/I-b/J/L), defeating
-the RED gate discipline. The test functions in Task 3 are written next — ALL THREE helper
+false-GREEN AT MOST ONE of the six content-assertion probes (their six regexes demand six distinct
+outputs) while the others still fail — but even one incidental false-GREEN corrupts the RED-gate
+observation, so the no-output stub is mandated. The test functions in Task 3 are written next — ALL THREE helper
 bodies (`validate_globs`, `extract_examine_globs_or_panic`, `assert_examine_globs_coverage_floor`)
 MUST be stubbed with `todo!()` (panicking stubs) so every Rust test fails RED before implementation.
 A `Vec::new()` stub for `validate_globs` alone would false-GREEN Test 1 (which asserts the dead-Vec
@@ -1121,7 +1192,7 @@ Task 3). Only then does the implementer write the bash parsing logic and all thr
 1. Read `docs/specs/cargo-mutants-policy.md` §Scope. The function-location format is a
    **BULLETED LIST** (lines 16–31), NOT a markdown table. Each bullet maps a source file path
    (first backtick token) to the functions it contains. The `### Sibling Candidates Considered
-   and Deferred` subsection (lines 40–49) is a markdown table of EXCLUDED files — DO NOT parse
+   and Deferred` subsection (lines 40–49) contains a markdown table of EXCLUDED files (heading, brief prose, then the table) — DO NOT parse
    it as §Scope entries. Note the current 11-file scope list and expected (file, fn) pairs in Task 2.
 
 2. Write `scripts/check-cargo-mutants-policy-citations.sh` (Guard 2):
@@ -1142,8 +1213,9 @@ Task 3). Only then does the implementer write the bash parsing logic and all thr
      `SELF_TEST_MODE=false`). Without this, `set -u` aborts the CANONICAL_MODE gate on
      canonical CI invocations where `$self_test` was never set by a flag. `run_check` reads
      `CANONICAL_MODE` to gate the SCOPE-COVERAGE-FLOOR check.
-   - `--policy-doc <path>`: validate the given file instead of the default. REQUIRED for self-test
-     mode; without it, self-test would circularly parse the real policy doc. When `--policy-doc`
+   - `--policy-doc <path>`: validate the given file instead of the default. Designed to support
+     self-test hermetic isolation — fixtures realize this via in-process `POLICY_DOC=` assignment;
+     the CLI flag itself is not exercised by any fixture (ARG-PARSER-GATE-POLARITY residual). When `--policy-doc`
      is supplied WITHOUT `--self-test`, `CANONICAL_MODE` remains 0 — the decisive exemption is
      the `[ -z "${POLICY_DOC+x}" ]` clause in the CANONICAL_MODE gate: `POLICY_DOC` is set, so
      the clause is false and `CANONICAL_MODE` is never set to 1. When `--self-test` is ALSO
@@ -2407,6 +2479,8 @@ Task 3). Only then does the implementer write the bash parsing logic and all thr
       (`test_detect_missing_examine_globs_key_panics_with_key_missing_message`) MUST call this
       shared helper — this ensures that dropping or weakening the empty-Vec panic in the helper
       is caught by test 4's `catch_unwind` (the guard is not just a comment in test 1).
+      Full caller set: tests 1, 3, 4, 5, 7, 8 (tests 1 and 4 are the minimum-kill pair that
+      closes the L-2 mutation; tests 3/5/7/8 call it incidentally via their own parse→extract paths).
    3. `fn assert_examine_globs_coverage_floor(entries: &[String])` — **MED-1-P22 FIX: single-source
       threshold symbol.** Declare `const FLOOR: usize = 11;` at the top of the helper body. Use
       `FLOOR` in BOTH the comparison (`entries.len() < FLOOR`) AND the format string
@@ -2424,12 +2498,15 @@ Task 3). Only then does the implementer write the bash parsing logic and all thr
       FLOOR=11→FLOOR={4..10} mutation class; test 5's `assert!(msg.contains("got 3"))` confirms
       the count format but does not pin the threshold. In the Rust domain, test 6 (N=11,
       catch_unwind result is Ok) would panic if FLOOR were weakened to 12 or above.
-      This helper is called by test 1 (real entries from `.cargo/mutants.toml`) AND is the subject
-      of `catch_unwind` in test 5 (inline mock with <11 entries). Extracting the assertion into a
+      Full caller set: tests 1, 5, 6, 8, 9 (tests 1 and 5 are the minimum-kill pair — test 1
+      exercises the real path; test 5's `catch_unwind` makes deletion RED-provable; tests 6, 8, 9
+      call it via their own inline mock → floor boundary probes). Extracting the assertion into a
       shared helper makes a deletion-or-weakening mutation RED-provable via test 5 — without this,
       test 1's inlined `assert!` could be deleted or weakened and test 1 would still pass vacuously
       on real data (N=11 entries currently satisfies any N>=1 floor). The comment
       `// PIN: update when examine_globs adds/removes entries` MUST appear adjacent in the body.
+   Removing a helper call from any listed test is a spec change requiring the corresponding
+   kill-trace re-derivation — the minimum-kill pair is NOT a license to inline elsewhere.
    This follows the `tests/claude_md_citations.rs::extract_path_citations` pattern: guard
    logic lives in testable helpers, not inlined in test bodies.
 
@@ -2636,6 +2713,10 @@ Task 3). Only then does the implementer write the bash parsing logic and all thr
      automatically and must be committed (pass-2 I-5 — repo policy: Cargo.lock always committed;
      downstream `--locked` consumers require it. **F-H5 FIX:** this repo's CI does NOT pass
      `--locked`; the rationale is repo policy + downstream consumers, not local CI enforcement).
+     **SEQUENCING (RED-gate staging):** add this dev-dep and regenerate `Cargo.lock` in the SAME
+     pre-implementation commit as (or before) the test-file stubs — the test file's `use glob::...`
+     must compile so `todo!()` panics manifest as RED test failures, not unresolved-import compile
+     errors (cross-ref the RED-gate staging paragraph).
    - `toml = "1"` is already in `Cargo.toml` main dependencies (not dev-only) — no second entry.
    - **MSRV note (pass-2 I-5):** the test must compile under the project MSRV (Rust 1.85). `glob` 0.3.x
      has a low MSRV; no conflict expected. Verify with `cargo +1.85 test` if uncertain.
@@ -2679,10 +2760,16 @@ Task 3). Only then does the implementer write the bash parsing logic and all thr
      `### Sibling Candidates Considered and Deferred` (line 40) — Guard 2's own extraction logic
      uses the gap between those two headings as its §Scope parser boundary; inserting a new `## `
      heading there would truncate the bulleted list prematurely. Document both guards:
-     - Guard 2: `scripts/check-cargo-mutants-policy-citations.sh` — runs in `spec-guard` CI job;
-       validates every (file, function) pair in §Scope; exits 1 with offender list on stale citation.
-     - Guard 3: `tests/mutants_glob_existence.rs` — runs in `test` CI job; validates every
-       `examine_globs` entry resolves to a real file; fails loudly if a refactor orphans a glob.
+     - Guard 2: `scripts/check-cargo-mutants-policy-citations.sh` — checks §Scope (file, fn) pairs
+       resolve to real definitions; runs in `spec-guard` CI job; reproduce locally:
+       `bash scripts/check-cargo-mutants-policy-citations.sh` (canonical) or
+       `bash scripts/check-cargo-mutants-policy-citations.sh --self-test` (offline fixture run);
+       on failure: fix the stale citation in §Scope or, for an intentional relocation, update the
+       bullet to the new file/function.
+     - Guard 3: `tests/mutants_glob_existence.rs` — checks every `examine_globs` entry in
+       `.cargo/mutants.toml` resolves to ≥1 real file; runs in `test` CI job; reproduce locally:
+       `cargo test --test mutants_glob_existence`; on failure: fix the dead examine_globs entry
+       or update it for the file move.
 
    **SWEEP-WHOLE-TOUCHED-FILE checklist (pass-2 C-1/pass-3 H-2 FIX — this task is the SINGLE AUTHORITATIVE
    source; Task 2's SWEEP note defers here):**
@@ -2713,7 +2800,9 @@ Task 3). Only then does the implementer write the bash parsing logic and all thr
    (F-H3 FIX — CHANGELOG.md format uses `### Added` / `### Fixed` / `### Changed` / `### Security`
    sub-headers under each `## [version]` section; the entry goes under `### Added`).
    **M-GT-2 FIX — format must match CHANGELOG.md convention (bolded topic prefix):**
-   `- **CI: mutants-policy citation guard (Guard 2) + examine_globs existence guard (Guard 3) (DEC-150):** adds \`scripts/check-cargo-mutants-policy-citations.sh\` (validates §Scope function-location bulleted list; CI-MUTANTS-CITE-001; self-test fixtures; SCOPE-EMPTY guard) and \`tests/mutants_glob_existence.rs\` (validates examine_globs entries resolve to real files; coverage floor; MUTANTS-GLOBS-KEY-MISSING guard).`
+   ```
+   - **CI: mutants-policy citation guard (Guard 2) + examine_globs existence guard (Guard 3) (DEC-150):** adds `scripts/check-cargo-mutants-policy-citations.sh` (validates §Scope function-location bulleted list; CI-MUTANTS-CITE-001; self-test fixtures; SCOPE-EMPTY guard) and `tests/mutants_glob_existence.rs` (validates examine_globs entries resolve to real files; coverage floor; MUTANTS-GLOBS-KEY-MISSING guard).
+   ```
 
 7. Modify `CLAUDE.md`: Add doc-fallout notes in "AI Agent Notes" section for each guard
    (two bullets, following the `tests/claude_md_citations.rs` bullet as prior art):
@@ -2761,6 +2850,9 @@ Task 3). Only then does the implementer write the bash parsing logic and all thr
    - Guard 2 prints `Check passed: 11 bullets parsed, 21 (file, fn) pairs validated` when run against develop HEAD post-SWEEP (canonical invocation; `src/types/jira/bulk.rs` contributes 0 to M).
    - `tests/mutants_glob_existence.rs` correctly extracts all 11 current examine_globs entries;
      the coverage-floor assertion passes (FLOOR=11 symbol binding — MED-1-P22 FIX); no MUTANTS-GLOBS-KEY-MISSING panic.
+   - Test 1 (`test_resolve_all_examine_globs_entries_to_real_files`) passes GREEN — all 11 real `examine_globs` entries resolve to files; `validate_globs` returns an empty dead list; `assert_examine_globs_coverage_floor` does not panic (FLOOR=11 real-data canonical guard run).
+   - Test 2 (`test_reject_nonexistent_examine_globs_entry_returns_dead_list`) passes GREEN — `validate_globs` returns a non-empty dead list; content pin confirms `nonexistent_dummy_for_selftest` appears in the dead list (F-VA-28-5 FIX).
+   - Test 3 (`test_validate_globs_via_toml_parse_returns_dead_entry`) passes GREEN — inline TOML parse → `extract_examine_globs_or_panic` (happy path) → `validate_globs` returns non-empty dead list with `nonexistent_dummy_for_selftest`; kills `is_empty()` vs `!is_empty()` polarity mutant in `validate_globs` (pass-3 M-1 FIX).
    - `test_detect_missing_examine_globs_key_panics_with_key_missing_message` passes (F-MED-2 FIX:
      MUTANTS-GLOBS-KEY-MISSING guard is RED-provable via key-absent case; test 4 also now asserts
      `examine_globs key not found` and `is present but empty` load-bearing clauses — LOW-1-P23 FIX).
@@ -2775,7 +2867,9 @@ Task 3). Only then does the implementer write the bash parsing logic and all thr
    - **AC-007 (F-4-P45):** `docs/specs/cargo-mutants-policy.md` contains a `## Guards` section
      inserted after `## Spec Anchor` and before `## Future Path: Job Sharding (Path B)` — NOT
      between `## Scope` and `### Sibling Candidates Considered and Deferred` (the Task 5 MUST-NOT
-     zone; an intervening `##` heading there would truncate §Scope parsing). (AC-007 item (a))
+     zone; an intervening `##` heading there would truncate §Scope parsing); verify each guard bullet
+     documents all four elements: (1) what it checks, (2) which CI job runs it, (3) reproduce-locally
+     command, (4) action on failure (F-58-2 FIX). (AC-007 item (a))
    - **AC-007 (F-4-P45):** `CHANGELOG.md` `## [Unreleased]` → `### Added` contains an entry
      matching the canonical string from Task 6: topic prefix `**CI: mutants-policy citation guard
      (Guard 2) + examine_globs existence guard (Guard 3) (DEC-150):**`, file paths
@@ -2825,7 +2919,9 @@ Task 3). Only then does the implementer write the bash parsing logic and all thr
      `DEAD: src/typesonly.rs not found` (F-VA-1 FIX). Fixture L: rc=0, output matches
      `^Check passed: 1 bullets parsed, 1 \(file, fn\) pairs validated$` (F-VA-27-1 FIX). Test 5 panic message contains
      `MUTANTS-GLOBS-COVERAGE-FLOOR`, `expected >= 11` (HIGH-1-P23 FIX), and `got 3` (F-1(c) FIX).
-     Test 6 passes GREEN at N=11 — `catch_unwind` result is `Ok(())` (F-1(d) FIX). Test 9 passes
+     Test 6 passes GREEN at N=11 — `catch_unwind` result is `Ok(())` (F-1(d) FIX).
+     Test 8 fires RED at N=10 — panic message contains `MUTANTS-GLOBS-COVERAGE-FLOOR`,
+     `expected >= 11`, and `got 10` (V-4-P24 FIX). Test 9 passes
      GREEN at N=12 — `catch_unwind` result is `Ok(())` (F-VA-28-1 FIX).
      Fixture I Probe I-a output matches `^Check passed: 1 bullets parsed, 1 \(file, fn\) pairs validated$`
      (MED-1-P23 FIX — `^### Sibling Candidates` stop independently tested). Probe I-b output matches
@@ -3037,8 +3133,8 @@ cited). If Guard 2 surfaces any additional stale citation after the SWEEP, fix i
 `scripts/check-cargo-mutants-policy-citations.sh --self-test` runs TWELVE fixtures (F-3 FIX/F-MED-2 FIX/LOW-1 FIX/F-M-5 FIX/MED-1 FIX/MED-1-P23 FIX/MED-2-P23 FIX/F-VA-1 FIX/F-VA-27-1 FIX:
 complete fixture specifications are in Task 2 — single source of truth). Summary assertions:
 
-| Fixture | Exit | Required output substrings | Summary-line regex |
-|---------|------|---------------------------|-------------------|
+| Fixture / Probe | Exit | Required output substrings | Summary-line regex |
+|-----------------|------|---------------------------|-------------------|
 | A — dead-symbol (FIND-VA-41-1 FIX: summary count tightened) | 1 | `[ "$(grep -c 'DEAD: ' <<<"$output")" = "3" ]` (exactly 3 DEAD lines — 2 for the duplicated `handle_nonexistent_fn_selftest` + 1 for `another_missing_fn_selftest`; string `=` per FIND-VA-35-2; dedup mutation drops count to 2 → RED per FIND-VA-36-2); AND output contains `handle_nonexistent_fn_selftest` AND `another_missing_fn_selftest` (L-5 FIX: both fn names must appear) | `^3 stale citation\(s\) found in .+ §Scope$` (FIND-VA-41-1 — A+E jointly designated summary-count discriminator pair: A=3, E=5; no single hardcoded constant satisfies both) |
 | B — import-only false-green | 1 | `DEAD: `, ` not found in `, `handle_jsm_create` | `^[0-9]+ stale citation\(s\) found in .+ §Scope$` |
 | C — empty src-root (FIND-VA-37-2 FIX / F-VA-38-1 FIX: count-pin tightened) | 1 | `DEAD: src/foo.rs not found` and `DEAD: src/bar.rs not found` (F-4 missing-file format; fn names do NOT appear); exact file-not-found offender count `= "2"` pinned via `grep -c 'DEAD: [^ ]* not found$'` (pattern `$`-anchored to EXCLUSIVELY match file-not-found format, excluding fn-not-found form `DEAD: fn not found in <file>`; designated count-pinning fixture for file-not-found class) | `^[0-9]+ stale citation\(s\) found in .+ §Scope$` |
@@ -3056,6 +3152,8 @@ complete fixture specifications are in Task 2 — single source of truth). Summa
 | J — multi-line continuation (MED-2-P23 FIX / VA-34-1 FIX / VA-35-1 FIX; TWO bullet groups — class-1 probe independent) | 0 | output matches `^Check passed: 2 bullets parsed, 3 \(file, fn\) pairs validated$` (N=2 bullets, M=3 pairs; five kill-traces: (1) tightening `{2,}`→`{3,}` → second_fn not continuation → M=2 → RED; (2) class-1 removal INDEPENDENT — group 2 stays open → orphan 2-space becomes continuation → leaked_after_blank_fn extracted → DEAD → rc=1 → RED (no class-4 between bullet 2 and blank); (3) `{2,}`→`{1,}` loosening → 1-space sentinel becomes group 1 continuation → leaked_one_space_fn extracted → DEAD → rc=1 → RED; (4) orphan-continuation appended to last closed group → leaked_after_blank_fn extracted → DEAD → rc=1 → RED; (5) class-4 mishandled as continuation → leaked_one_space_fn extracted → DEAD → rc=1 → RED) | n/a (exit 0; no stale-citation summary) |
 | K — file-existence-only missing-file (F-VA-1 FIX) | 1 | `grep -qF 'DEAD: src/typesonly.rs not found'` (file-existence-only entry, no fn names, file absent — proves `[ -f ]` runs unconditionally; killing a refactor that gates the check on non-empty fn_names); all assertions use `\|\| { …; exit 1; }` idiom (VP-1-P25) | `^[0-9]+ stale citation\(s\) found in .+ §Scope$` |
 | L — `::` strip transform + range-start boundary (F-VA-27-1 FIX / F-VA-31-2 FIX / VA-34-2 FIX) | 0 | output matches `^Check passed: 1 bullets parsed, 1 \(file, fn\) pairs validated$` (mock has `## Purpose` pre-Scope section with one bullet for `src/pre_scope.rs` not created; N=1 §Scope bullet; M=1 pairs; LAST-strip → `build_fn` found; range-start broadening → pre-Scope bullet parsed → file missing → DEAD → rc=1 → RED) | n/a (exit 0; no stale-citation summary) |
+
+*17 rows for 12 fixtures — multi-probe fixtures F (2), H (4), I (2) span multiple rows; fixtures_run counts each FIXTURE once (=12), per Task 2's single-increment rule.*
 
 F-1 FIX note: summary-line regex uses `.+` (not a hard-coded canonical path) because all
 fixtures use `POLICY_DOC=<tmp>` (IN-PROCESS; no subprocess) — the temp path is printed, not
@@ -3311,7 +3409,7 @@ reproduce locally, and what action to take on failure.
 |------|------|-----------|
 | PRs not touching §Scope bulleted list or examine_globs | NONE | Neither guard fires on unrelated changes; both are isolated to their respective config files |
 | Guard 2 false-positive on Guard 2's own delivery PR | LOW | The delivery PR changes `scripts/` and `docs/`; no `src/` symbols are introduced. Guard 2 passes via the 0-offenders path. |
-| Guard 3 false-positive | NONE | All 11 current `examine_globs` entries resolve. If S-MUTANTS-EXAMINE-GLOBS-1 has NOT merged yet, Guard 3 still passes (it validates file existence, not function location). |
+| Guard 3 false-positive | NONE | S-MUTANTS-EXAMINE-GLOBS-1 (PRs #568+#570) is MERGED — Guard 3 validates against the restored 11-entry examine_globs state; the not-yet-merged scenario is moot (retained rationale: had it not merged, Guard 3 would still pass because it validates whatever entries exist). |
 | ci-gate false-block | NONE | No changes to ci-gate logic, timeout, or false-green guards. Guard 2 rides `spec-guard` (already in ci-gate.needs); Guard 3 rides `test` (already in ci-gate.needs). |
 | Script `set -euo pipefail` behavior | LOW | Any unhandled error in Guard 2 will exit non-zero, surfacing failures rather than hiding them. |
 
