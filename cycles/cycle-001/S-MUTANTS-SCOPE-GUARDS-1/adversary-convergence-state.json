@@ -1,0 +1,14 @@
+{
+  "story_id": "S-MUTANTS-SCOPE-GUARDS-1",
+  "story_number": 101,
+  "phase": "F4",
+  "passes_clean": 3,
+  "last_classification": "CLEAN",
+  "total_passes": 9,
+  "fix_rounds": 5,
+  "converged": true,
+  "converged_at": "2026-07-04",
+  "window": "p7-NITPICK/p8-NITPICK/p9-CLEAN",
+  "pr": "https://github.com/Zious11/jira-cli/pull/572",
+  "pr_status": "OPEN/CLEAN/HELD_DEC-128"
+}

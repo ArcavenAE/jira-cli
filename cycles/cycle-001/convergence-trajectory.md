@@ -985,3 +985,86 @@ Trajectory shorthand: `1C(sibling-omission)→fix→1C(off-branch-spec)→fix→
 ### Convergence Criterion (DEC-151)
 
 **SATISFIED 2026-07-04.** Window 14 (passes 64/65/66): three consecutive CLEAN passes including the verification-adequacy lens (p65). 44 adversary passes / 47 fix rounds total. Story S-MUTANTS-SCOPE-GUARDS-1 v1.48 status=ready. DEC-152 recorded. F4 dispatch pending human authorization.
+
+---
+
+## CITATION-GUARDS F4 — Story A Per-Story Adversarial Convergence (2026-07-04)
+
+**Story:** S-MUTANTS-SCOPE-GUARDS-1 #101 — cargo-mutants scope + citation guards
+**Phase:** F4 per-story adversarial convergence (BC-5.39.001)
+**Baseline:** Story v1.48 CONVERGED (F3 DEC-151 strict); implementation commit 376e2c8 (Guard 2 bash + Guard 3 Rust + ci.yml + policy-doc + CHANGELOG + CLAUDE.md + glob dev-dep). Red Gate PASSED @ 7e858f8.
+
+### Finding Progression (passes 1–9)
+
+| Pass | Total | CRIT | HIGH | MED | LOW | Counter | Verdict |
+|------|-------|------|------|-----|-----|---------|---------|
+| 1 | 1 | 0 | 0 | 1 | 0 | 0/3 | FINDINGS_REMAIN |
+| 2 | 2 | 0 | 0 | 2 | 0 | 0/3 | FINDINGS_REMAIN |
+| 3 | 1 | 0 | 0 | 0 | 1 | 0/3 | CONVERGING |
+| 4 | 0 | 0 | 0 | 0 | 0 | 1/3 | CLEAN-PASS |
+| 5 | 2 | 0 | 0 | 2 | 0 | 0/3 | REGRESSION (engine-BC-ID leak + stale RED divider) |
+| 6 | 1 | 0 | 0 | 1 | 0 | 0/3 | FINDINGS_REMAIN |
+| 7 | 0 | 0 | 0 | 0 | 0 | 1/3 | CLEAN-PASS (NITPICK_ONLY) |
+| 8 | 0 | 0 | 0 | 0 | 0 | 2/3 | CLEAN-PASS (NITPICK_ONLY) |
+| 9 | 0 | 0 | 0 | 0 | 0 | 3/3 | **CLEAN — CONVERGED (MERGE-READY)** |
+
+**Trajectory shorthand (p1–9):** `1→2→1→0→2→1→0→0→0` — 9 passes / 5 fix rounds; **CONVERGED 2026-07-04.**
+
+### Per-Pass Details
+
+#### Pass 1
+**Findings:** 1 (0C/0H/1M/0L) — Guards-section placement
+**Fix:** fddc65e — Moved Guards section to correct position in policy doc.
+**Counter:** 0/3
+
+#### Pass 2
+**Findings:** 2 (0C/0H/2M/0L) — 4-element template gap + stale TODO(stub) header
+**Fix:** f53ee1d — Added 4th template element; removed stale TODO(stub) header.
+**Counter:** 0/3
+
+#### Pass 3
+**Findings:** 1 (0C/0H/0M/1L) — SCOPE-COVERAGE-FLOOR wording imprecision
+**Fix:** 5740c9b — Reworded SCOPE-COVERAGE-FLOOR prose for precision.
+**Counter:** 0/3
+
+#### Pass 4
+**Findings:** 0 — CLEAN-PASS
+**Counter:** 1/3
+
+#### Pass 5 — REGRESSION
+**Findings:** 2 (0C/0H/2M/0L) — engine-BC-ID BC-5.38.001 leak in rustdoc ×5 + stale RED divider
+Root cause: stub-architect injected engine-internal BC-5.38.001 references into product rustdoc at 5 sites during Red Gate phase.
+**Fix:** ee67a02 — Removed all BC-5.38.001 references from product rustdoc; removed stale RED divider.
+**Counter:** 0/3 (reset from 1/3)
+
+#### Pass 6
+**Findings:** 1 (0C/0H/1M/0L) — CHANGELOG ### Changed → ### Added
+**Fix:** cac21ec — Moved CITATION-GUARDS delivery entry to ### Added section in CHANGELOG.
+**Counter:** 0/3
+
+#### Pass 7
+**Findings:** 0 (NITPICK_ONLY) — CLEAN-PASS
+**Counter:** 1/3
+
+#### Pass 8
+**Findings:** 0 (NITPICK_ONLY) — CLEAN-PASS
+Non-blocking observations tracked as Drift Items: F-P8-01 §Scope↔examine_globs cross-set edge unguarded (follow-up story candidate); F-P8-02 backtick-reservation convention undocumented (doc-sentence candidate).
+**Counter:** 2/3
+
+#### Pass 9 — CONVERGED (MERGE-READY)
+**Findings:** 0 — CLEAN
+**Counter:** 3/3
+
+**CONVERGED 2026-07-04.** Story #101 v1.48 implementation MERGE-READY. PR #572 (https://github.com/Zious11/jira-cli/pull/572): security CLEAN (1 LOW intentional, 5 INFO), pr-reviewer APPROVE cycle 1, CI 15/15 SUCCESS, mergeStateStatus CLEAN. HELD per DEC-128 — awaiting human code-owner approval + merge authorization.
+
+### Demos
+
+7/7 ACs demonstrated: `docs/demo-evidence/S-MUTANTS-SCOPE-GUARDS-1/` (VHS gif/webm/tape + transcripts). Commit 4535231.
+
+### Residuals Tracked in Drift Items
+
+- SCOPE-EMPTY-THREE-VS-TWO-CAUSE (LOW — story-side adjudication at cycle close)
+- SCOPE-EXAMINE-GLOBS-CROSS-SET-EDGE (LOW — pass-8 F-P8-01, follow-up story candidate)
+- BACKTICK-RESERVATION-CONVENTION (LOW — pass-8 F-P8-02, doc-sentence candidate)
+- ENGINE-BC-ID-INJECTION (LOW — engine prompt hygiene, justified deferral)
+- STORY-ENGINE-BC-CITATION (LOW — story line ~1190, cycle-close adjudication)

@@ -1194,6 +1194,23 @@ _Was the active checkpoint after maintenance sweep 2026-06-22 fully closed. PRs 
 
 ---
 
+## Checkpoint archived 2026-07-04 (F4 in-progress — Red Gate PASSED; superseded by F4-delivery-complete checkpoint)
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-07-04 (F4 in progress — Red Gate PASSED) |
+| **Status** | **IN PROGRESS — CITATION-GUARDS F4 DISPATCHED (story #101 S-MUTANTS-SCOPE-GUARDS-1 v1.48); Red Gate PASSED (commits 27a8587 stub + 7e858f8 failing tests on ci/mutants-scope-guards); implementer TDD phase active.** |
+| **Counters** | BC **608**. NFR **42**. ADR **16**. Stories **101** (#101 in progress). Holdouts **82**. |
+| **Convergence counter** | F4 in progress. F3: DEC-151 strict SATISFIED — 44 passes (p23–p66), 47 fix rounds, window 14 = p64/p65/p66 CLEAN. Full trajectory: `cycles/cycle-001/convergence-trajectory.md §CITATION-GUARDS F3`. |
+| **In-flight work** | Story #101 S-MUTANTS-SCOPE-GUARDS-1: worktree `.worktrees/S-MUTANTS-SCOPE-GUARDS-1` active, branch `ci/mutants-scope-guards` @ 7e858f8. Commits: 27a8587 (stubs) + 7e858f8 (failing tests). No PR yet. develop UNCHANGED @ c4b3aa9. |
+| **Pending human decisions** | (2) Story B S-BC-CITATION-GUARD sequencing (after Story A vs parallel); (3) session-review timing for the 44-pass loop (ADVERSARY-META-LENS-REGRESS engine item OPEN). |
+| **Untracked local files** | Deliberately uncommitted, session-local tooling, harmless: `.claude/pr-reviews/`, `.claude/spec-config.json`. |
+| **develop branch** | UNCHANGED @ c4b3aa9 — no product-repo changes yet (F4 in progress, branch not merged). Worktree: `.worktrees/S-MUTANTS-SCOPE-GUARDS-1` @ 7e858f8 (ci/mutants-scope-guards). |
+| **STATE.md size** | ~255 lines (WARNING band). |
+| **Resume command** | Open a fresh session and run `/vsdd-factory:next-step` — reads STATE.md; pipeline IN_PROGRESS; feature_mode_bundle: CITATION-GUARDS; resume = implementer dispatched for story #101 (ci/mutants-scope-guards @ 7e858f8); check implementer progress; on TDD complete dispatch F5 adversarial review; then PR per per-story-delivery.md. DEC-128 merge-auth applies. |
+
+---
+
 ## Checkpoint archived 2026-07-04 (session wrap post-F3-convergence — superseded by F4 in-progress checkpoint)
 
 | Field | Value |

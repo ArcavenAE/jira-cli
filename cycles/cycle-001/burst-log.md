@@ -4405,3 +4405,23 @@ Extracted from STATE.md Current Phase Steps table on 2026-07-04 to make room for
 | Step | Agent | Status | Output |
 |------|-------|--------|--------|
 | **CITATION-DEBT-PRODUCT-FILES DELIVERED** — PR #569 (`chore(deps): bump anyhow 1.0.102→1.0.103`) squash-merged → develop @ **e79943b** (unblocked repo; Cargo.lock+CHANGELOG; all 15 CI green). PR #568 (`docs: fix ADR-0012 Seam A/B relocation citations`) squash-merged (rebase onto #569) → develop @ **39caf39** (7 doc/comment citation corrections: docs/adr/0014-jsm-request-type-dispatch.md HIGH, jsm-e2e-coverage.md MED, 2026-05-13-search-issue-keys.md MED, src/api/jira/issues.rs rustdoc LOW; no behavior change; adversary converged 3 clean passes). S-ANYHOW-RUSTSEC-2026-0190-1 + S-CITATION-DEBT-PRODUCT-FILES-1 filed (retroactive). Stories 97→99. DEC-149. 3 lessons codified (SWEEP-WHOLE-TOUCHED-FILE; NEWLY-PUBLISHED-ADVISORY-BLOCKS-UNRELATED-PRS; PERIMETER-SCAN reinforcement 2). | state-manager | COMPLETE | develop @ 39caf39. BC 608. Stories 99. Holdouts 82. |
+
+---
+
+## Archived Phase Progress Row: HOLDOUT-COVERAGE-GAPS (extracted from STATE.md 2026-07-04)
+
+Extracted from STATE.md Phase Progress table on 2026-07-04 to make room for CITATION-GUARDS F4 row (5-row cap).
+
+| Phase | Status | Completed | Gate | Notes |
+|-------|--------|-----------|------|-------|
+| **HOLDOUT-COVERAGE-GAPS — CYCLE CLOSED — SPEC-ONLY 2026-06-30** | **COMPLETE** | **2026-06-30** | **8 new Group 13 black-box holdouts (H-NEW-EDIT-FIELD-001/002, H-NEW-EDIT-TYPE-001/002, H-NEW-CHANGELOG-001, H-NEW-WORKLOG-ADD-001, H-NEW-LINK-001, H-NEW-QUEUE-VIEW-001); holdouts 71→79 (v1.4.0). BC-3.4.015 EC-3.4.015-3 edit-screen hint drift fixed. F1→research→F2→9 adversary passes (3 diverse lenses) → 4 consecutive clean passes. DEC-146.** | develop UNCHANGED @ 3b122a8. Spec-only; no PR. Holdouts 71→79. |
+
+---
+
+## Archived Current Phase Step: MUTANTS-EXAMINE-GLOBS CYCLE CLOSED (extracted from STATE.md 2026-07-04)
+
+Extracted from STATE.md Current Phase Steps table on 2026-07-04 to make room for CITATION-GUARDS F4 DELIVERY COMPLETE row (5-row cap).
+
+| Step | Agent | Status | Output |
+|------|-------|--------|--------|
+| **MUTANTS-EXAMINE-GLOBS CYCLE CLOSED** — F1 delta analysis (option (a) restore) → F3 story S-MUTANTS-EXAMINE-GLOBS-1 (story #100, v1.2) → F4 delivery worktree `ci/mutants-examine-globs-seam-b` (3 commits: 5486c34, 1da0571, 475a1aa) → F5 adversarial gate CONVERGED (round 1: ci.yml:195 stale scope comment MED; round 2: policy-doc false handle_create→handle_edit call-edge MED + story file-set drift MED; round 3: 3/3 PASS diverse lenses) → consistency-validator CONSISTENT (story v1.2) → PR #570 squash-merged (human 2026-07-02; DEC-128 honored); mutants job PASS 35s 0-mutant path (second 0-mutant calibration confirmation). Cycle-close: cicd-setup.md AC-003 corrections applied; 2 lessons codified (IMPLEMENTER-PARAPHRASE-BEYOND-SPEC + FILES-MODIFIED-BACK-WRITE); 4 process-gaps dispositioned. DEC-150. | state-manager | COMPLETE | develop @ c4b3aa9. BC 608. Stories 100. Holdouts 82. |
