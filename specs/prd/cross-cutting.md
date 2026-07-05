@@ -1,9 +1,9 @@
 ---
 context: bc-x
 title: "Cross-cutting (HTTP client, Runtime, Users, Teams, Worklogs, Projects, Queues, JQL, Partial-match, JSM Request Types, CI Guards)"
-total_bcs: 145   # cumulative claim (incl. range-collapsed); definitional_count below is individually-bodied headings
-definitional_count: 79   # count of `#### BC-` headings in this file
-last_updated: 2026-06-27
+total_bcs: 148   # cumulative claim (incl. range-collapsed); definitional_count below is individually-bodied headings
+definitional_count: 82   # count of `#### BC-` headings in this file
+last_updated: 2026-07-05
 source_pass: 3
 trace: |
   - L2: .factory/specs/domain-spec/cross-cutting.md
@@ -15,11 +15,12 @@ trace: |
   - S-QUEUE-BC-1 addition (2026-06-08): BC-X.8.008..009 — document-as-is BCs for jr queue list and jr queue view (queue traceability orphan closure)
   - DEAD-CITATION-CI F2 addition (2026-06-19): BC-X.13.001..003 — CLAUDE.md dead-citation CI guard (citation path-existence, glob/suffix/punct exclusion, ALL .factory/ excluded — re-scoped F2 Iteration 2)
   - F2 pass-5 precision fix (2026-06-27): BC-X.10.001 Trace — removed false `expect(1)` pin claim; `resolve_queue_single_substring_is_ambiguous` uses absence-of-mount (zero `.expect(` calls confirmed), not `expect(1)`; no behavioral or count change
+  - CITATION-GUARDS Story B F2 addition (2026-07-05): BC-X.13.004..006 — Guard 1 bc-*.md Trace/Source file::symbol citation guard (S-BC-CITATION-GUARD-1, story #102)
 ---
 
 # BC-X — Cross-cutting
 
-145 behavioral contracts covering: HTTP client (X.1), Pagination (X.2), Error handling (X.3),
+148 behavioral contracts covering: HTTP client (X.1), Pagination (X.2), Error handling (X.3),
 Rate limiting (X.4), Worklogs & duration (X.5), Teams (X.6), Users (X.7), Projects & Queues (X.8),
 JQL utilities (X.9), Partial-match (X.10), Build-time (X.11), JSM Request Types (X.12),
 CI Guards (X.13).
@@ -916,8 +917,10 @@ without `--project`) is superseded; impl + tests already match the aligned form.
 
 ## BC-X.13: CI Guards
 
-3 behavioral contracts covering `tests/claude_md_citations.rs` — the doc-fallout guard
-that verifies every file-path citation in `CLAUDE.md` resolves to a real on-disk file.
+6 behavioral contracts covering Guard 0 (`tests/claude_md_citations.rs` — the CLAUDE.md doc-fallout
+guard verifying every file-path citation resolves to a real on-disk file; BC-X.13.001..003) and
+Guard 1 (`scripts/check-bc-citation-symbols.sh` — the bc-*.md Trace/Source file::symbol citation
+guard; BC-X.13.004..006; CITATION-GUARDS Story B, 2026-07-05).
 
 ---
 
@@ -1185,6 +1188,241 @@ There is NO `is_off_working_branch_allowlisted` function in the final implementa
 - Re-scope decision: DEAD-CITATION-CI F2 Iteration 2 (2026-06-19, human-approved)
 - Implementing story: S-MAINT-DEAD-CITATION-CI (F3)
 - Source: `tests/claude_md_citations.rs::extract_path_citations` (returns `Vec<(String, usize)>`; dir-prefix filter — `.factory/` absence from prefix set)
+
+---
+
+#### BC-X.13.004: Every `src/` file path cited in a `**Trace**:` or `**Source**:` field of any bc-*.md body resolves to a real on-disk file in the develop checkout; guard exits 1 listing all dead references with collect-all semantics; fail-closed SCOPE-EMPTY guard; coverage floor = floor(0.75 × N) ≈ 249 in CANONICAL_MODE
+
+**Confidence**: HIGH
+**Subject**: CI guard / Trace/Source file-existence (Guard 1)
+
+**Behavior**: `scripts/check-bc-citation-symbols.sh` (Guard 1) scans all `bc-*.md` files in `.factory/specs/prd/` by running in the `spec-guard` CI job, which simultaneously mounts the develop checkout (containing `src/`) and the `factory-artifacts` worktree (containing `.factory/specs/prd/bc-*.md`). For each `bc-*.md` file, every line matching the anchor `^\*\*(Trace|Source)\*\*:` is extracted. From those lines, all backtick-quoted `src/` citation tokens are extracted via the canonical extraction regex `` grep -oE '`src/[^` ]+`' | tr -d '`' `` (see BC-X.13.005 for the full extraction grammar and normalization pipeline). Each extracted token is normalized to a bare file path (stripping `::symbol`, `:~NN`/`:NN` suffixes, and `§ ...` via the space-stop extraction rule — see BC-X.13.005 Steps 1–3) and checked for file existence at `$src_root/$file`. Tokens with `::symbol` suffix additionally undergo a symbol-definition check (see BC-X.13.005 Step 5). Dead citations are accumulated into an offenders list without early exit — ALL citations in ALL bc-*.md files are checked before reporting (collect-all semantics, matching BC-X.13.001's approach). **Fail-closed SCOPE-EMPTY guard**: if no `bc-*.md` files are found in the bc_dir, the guard exits 1 immediately with `BC-CITE-001: no bc-*.md files found in <dir>` — the guard NEVER exits 0 vacuously on an empty corpus. **Coverage floor (CANONICAL_MODE only)**: after processing all citations, if the total count of checked `src/` citations is below `FLOOR = floor(0.75 × N)` — where N is the measured citation count on develop HEAD at delivery time; the calibration at 2026-07-05 delivery yields N ≈ 332, FLOOR ≈ 249 — the guard exits 1 with `BC-CITE-COVERAGE-FLOOR: expected >= <FLOOR> src/ citations, got <N>. Update FLOOR when citations are intentionally removed (the floor is a lower bound; additions never fire it).` This floor guards against the fail-open scenario where an extraction-logic regression (e.g., bc_dir misconfiguration or regex change) silently drops all citations and exits 0 vacuously. CANONICAL_MODE is set to 1 at script entry when neither `--self-test` nor `--bc-dir` is supplied, and 0 otherwise; it is a script-scope variable (see Invariants).
+
+**Preconditions**:
+- `scripts/check-bc-citation-symbols.sh` runs in the `spec-guard` CI job, which mounts both the develop checkout (`src/` tree available) and the `factory-artifacts` worktree (`.factory/specs/prd/bc-*.md` available); see BC-X.13.006 for CI topology
+- At least one `bc-*.md` file exists in the bc_dir (fail-closed if not — SCOPE-EMPTY guard)
+- `src/` paths cited in Trace/Source fields reference files tracked on develop HEAD at the time the citation was written
+
+**Postconditions (on success)**:
+- Guard exits 0; prints `Check passed: N citations checked` (N ≥ FLOOR when CANONICAL_MODE=1)
+- Every `src/` file path extracted from a Trace/Source line in any bc-*.md file resolves to a real file under `$src_root`
+- Every `src/file.rs::symbol` citation has the symbol present as a definition (not merely an import) in the referenced file (see BC-X.13.005 Step 5)
+
+**Postconditions (on failure)**:
+- Guard exits 1
+- Dead citations are reported as one or more of:
+  - `DEAD: <file> not found` — file path does not exist on disk
+  - `DEAD: <symbol> not found in <file>` — file exists but symbol definition absent (see BC-X.13.005)
+  - `DEAD: malformed citation skipped: <token>` — extracted token fails path shape guard (BC-X.13.005 Step 3b)
+  - `BC-CITE-COVERAGE-FLOOR: expected >= <FLOOR> src/ citations, got <N>. Update FLOOR when citations are intentionally removed (the floor is a lower bound; additions never fire it).` (CANONICAL_MODE=1 only)
+- Summary line (non-floor failures): `<K> stale citation(s) found in bc-*.md Trace/Source fields`
+- ALL dead citations across ALL bc-*.md files are reported before exit (collect-all; no early termination)
+
+**Invariants**:
+- The guard runs in the spec-guard CI job on every PR touching develop, regardless of whether the PR modifies bc-*.md files — drift is caught at the NEXT spec-guard run after the referenced file is deleted or symbol moved
+- FLOOR uses the symbol in BOTH the comparison (`[ "$total_citations" -lt "$FLOOR" ]`) AND the message interpolation (`"expected >= ${FLOOR}"`); a mutation that weakens only the comparison value (e.g., FLOOR=249→5) while leaving the message literal `"expected >= ${FLOOR}"` unchanged is caught by self-test Fixture G (AC-002 in S-BC-CITATION-GUARD-1)
+- CANONICAL_MODE is a script-scope variable, NOT a `local` inside `run_check`; the Fixture G toggle mechanism (`CANONICAL_MODE=1` set in shell scope before invoking `run_check`) requires this to work correctly — if CANONICAL_MODE were `local`, Fixture G's mutation would be a no-op and the floor guard would false-green
+
+**Edge Cases**:
+- EC-CITE-033: No bc-*.md files in bc_dir → exit 1 immediately; `BC-CITE-001: no bc-*.md files found in <dir>` (SCOPE-EMPTY guard; never false-green on empty corpus)
+- EC-CITE-034: bc-*.md files exist but have no Trace/Source lines → 0 citations extracted → CANONICAL_MODE floor guard fires (0 < FLOOR) → exit 1; non-CANONICAL_MODE → exit 0 (bc-*.md with no Trace/Source fields is unusual but not invalid)
+- EC-CITE-035: Multiple backtick-quoted `src/` tokens on one Trace/Source line → each extracted independently; all checked; all offenders accumulated (collect-all)
+- EC-CITE-036: A file cited in Trace/Source was deleted or renamed without updating the BC body → `DEAD: <file> not found` → guard fires deterministically on the next spec-guard run
+- EC-CITE-037: Total citation count drops below FLOOR in CANONICAL_MODE (e.g., large BC refactor removes many Trace/Source lines) → `BC-CITE-COVERAGE-FLOOR:` message; developer updates `local FLOOR=N` to the new validated baseline in the same commit
+
+**Canonical Test Vectors**:
+
+| Input (Trace/Source line content) | Expected outcome |
+|-----------------------------------|-----------------|
+| `**Trace**: \`src/cli/issue/edit.rs::handle_edit\`` (file exists, fn defined) | Pass — file exists, symbol check passes (BC-X.13.005) |
+| `**Trace**: \`src/cli/issue/create.rs::handle_jsm_create\`` (file exists, fn only in import) | DEAD: handle_jsm_create not found in src/cli/issue/create.rs |
+| `**Source**: \`src/cache.rs\`` (file exists, bare path) | Pass — bare file, existence check only |
+| `**Trace**: \`src/nonexistent.rs::some_fn\`` (file absent) | DEAD: src/nonexistent.rs not found |
+| No bc-*.md files in bc_dir | Exit 1; BC-CITE-001: no bc-*.md files found in \<dir\> |
+| 0 citations extracted, CANONICAL_MODE=1, FLOOR=249 | Exit 1; BC-CITE-COVERAGE-FLOOR: expected >= 249 src/ citations, got 0 |
+
+**Verification Properties**:
+- VP-BC-CITE-001: File-existence assertion — every Trace/Source `src/` citation in bc-*.md is checked against the develop src/ tree; dead citations reported collect-all; SCOPE-EMPTY guard fires on empty corpus; coverage floor fires in CANONICAL_MODE when count < FLOOR. Covered by `scripts/check-bc-citation-symbols.sh --self-test` Fixtures B, D, F, G (S-BC-CITATION-GUARD-1 AC-002).
+- VP-BC-CITE-002: Integration self-verification — guard exits 0 on develop HEAD with factory-artifacts mounted; Fixture G proves CANONICAL_MODE floor guard is active and FLOOR symbol is bound in both comparison and message.
+
+**Traceability**:
+- Implementing story: S-BC-CITATION-GUARD-1 (CITATION-GUARDS Story B, issue #102)
+- Root-cause cycle: DEC-148 (12 stale Trace/Source citations in bc-3-issue-write.md after ADR-0012 Seam A/B; ~30 adversarial passes to hand-fix)
+- F1 delta analysis: `.factory/phase-f1-delta-analysis/citation-guards-2026-07-02-delta.md §2`
+- Error taxonomy: BC-CITE-001 (Section 8 of error-taxonomy.md)
+- Source: `scripts/check-bc-citation-symbols.sh::run_check` (new file; CI script — not in `src/`)
+
+---
+
+#### BC-X.13.005: Extraction grammar for Guard 1 Trace/Source `src/` citation tokens — canonical extraction regex; `::symbol` form normalization; definition-anchored `fn`-grep for function symbols; v1-pragmatic shape-split (Type::method + constants); glob citation silent-skip; type-def/module-def checks deferred to v2
+
+**Confidence**: HIGH
+**Subject**: CI guard / Trace/Source citation extraction grammar (Guard 1)
+
+**Behavior**: The `run_check` function in `scripts/check-bc-citation-symbols.sh` applies the following pipeline to each Trace/Source line (lines matching `^\*\*(Trace|Source)\*\*:` anchor), in this exact order:
+
+**Step 1 — Extraction**: From each Trace/Source line, all backtick-quoted tokens starting with `src/` are extracted via the canonical extraction regex:
+```
+grep -oE '`src/[^` ]+`' | tr -d '`'
+```
+The `[^` ]+` stop-on-space/backtick rule naturally reduces `§`-form citations: `` `src/file.rs § "section"` `` → `src/file.rs` (stops before the space before `§`). No explicit `§` handler is needed in subsequent steps.
+
+**Step 2 — Form classification**: Each extracted token is classified:
+- **`::symbol` form**: `file="${token%%::*}"` (strip at first `::` → bare file path); `symbol="${token##*::}"` (last `::` strip → symbol name). If `file == token` (no `::`), the token has no symbol component — treat as bare-file form.
+- **`:~NN` or `:NN`/`:NN-MM` form** (line-ref suffix): `file="${token%%:*}"` (strip at first `:`); treated as bare-file form after stripping.
+- **Bare file**: `file = $token`.
+
+**Step 3 — Path shape validation**: Validate `file` against `^src/[a-zA-Z0-9_/.-]+\.rs$`; reject path-traversal (`..`). Malformed → emit `DEAD: malformed citation skipped: <token>` (continue; do NOT exit early). **Glob-citation silent-skip (EC-011 class)**: if the file component contains `*` (e.g., `src/cli/**/*.rs` from a Trace/Source line referencing a directory pattern) → silently skip with no DEAD message. This mirrors BC-X.13.002 step (a)'s glob-skip rule: glob tokens document naming patterns, not specific files, and must not be DEAD-flagged.
+
+**Step 4 — File-existence check**: `[ -f "$src_root/$file" ]` — if fails, emit `DEAD: <file> not found`; continue (do not attempt symbol check for a missing file).
+
+**Step 5 — Symbol check (`::symbol` form only)**: Strip any trailing `()` from `symbol` before classification (e.g., `cache_root()` → `cache_root`; `from_config()` → `from_config`). Then apply the v1-pragmatic shape-split (ratified by research adjudication 2026-07-05, Q4):
+
+(a) **Function / method (primary — applies to all symbols first)**: Definition-anchored grep (the canonical Guard 1 grep, preventing import-only false-greens — the DEC-148 class):
+```bash
+grep -Eq "^[[:space:]]*(pub(\([^)]*\))?[[:space:]]+)?((unsafe|const|async|extern[[:space:]]+\"[^\"]*\")[[:space:]]+)*fn[[:space:]]+${symbol}([^[:alnum:]_]|$)" \
+    "$src_root/$file"
+```
+If this grep matches → ALIVE. If it fails → proceed to shape-based routing (b)/(c).
+
+(b) **Constant (v1 addition — on fn-grep failure)**: If `symbol` matches `^[A-Z][A-Z0-9_]*$` (all-caps Rust constant convention), apply a secondary anchored grep:
+```bash
+grep -Eq "(pub[[:space:]]+)?(const|static)[[:space:]]+${symbol}[[:space:]:]" \
+    "$src_root/$file"
+```
+If this grep matches → ALIVE. If it fails → DEAD.
+
+(c) **Type::method (v1 addition — on fn-grep failure)**: If the original `::symbol` token has at least two `::` separators AND the component before the last `::` is a CamelCase identifier (suggesting a `Type::method` form such as `src/adf.rs::AdfBuilder::finish`), apply a dual check: (1) run the fn-grep on the method name (last `::` component) in the file; (2) verify the type name (CamelCase component before the last `::`) appears as a type definition: `grep -Eq "(struct|enum|type|trait|impl)[[:space:]]+${type_name}"`. If BOTH sub-checks pass → ALIVE. If either fails → DEAD.
+
+**No permissive fallback**: symbols that do not match fn-grep, UPPER_CASE constant pattern, or Type::method pattern are classified DEAD in v1. The draft's "secondary `grep -q $symbol`" fallback is intentionally NOT implemented — it false-greens on import-only occurrences (`use super::module::fn_name` matches bare `grep -q "fn_name"`), exactly reopening the DEC-148 class. Fixture C in `--self-test` proves import-only occurrences are correctly DEAD.
+
+**v2 deferrals (explicitly out of scope for v1, per Q4 v1-pragmatic resolution)**:
+- Standalone CamelCase type citations without `::` (struct/enum/type/trait standalone definitions)
+- Module-path citations (e.g., `src/adf.rs::tests` → `mod tests`)
+- Macro citations (`macro_rules! sym`)
+These fall through to DEAD in v1. The `Out of Scope §6` in S-BC-CITATION-GUARD-1 documents this as an accepted LOW residual.
+
+**Preconditions**:
+- Called from within `run_check` with a valid `src_root` pointing to the develop checkout
+- The anchor filter `^\*\*(Trace|Source)\*\*:` has already been applied; only Trace/Source lines are processed
+- `set -euo pipefail` is active; all `grep` calls that may return exit 1 (zero matches) are guarded with `|| true` to prevent unintended script abort under `pipefail`
+
+**Postconditions**:
+- Every extracted token is classified ALIVE or DEAD
+- Import-only occurrences of a function name are classified DEAD (fn-grep requires a definition, not a use-site — the DEC-148 class)
+- Trailing `()` on symbol names does not affect classification (stripped before Step 5 classification)
+- Glob-containing file paths (`*` in path component) are silently skipped — no DEAD message, no false positive
+- `§`-form citations are treated as bare-file existence checks (no symbol verification) — the `§` and trailing section text never reach Steps 2–5
+
+**Invariants**:
+- The canonical extraction regex `` grep -oE '`src/[^` ]+`' `` is the single source-of-truth extraction pattern; it appears in the script exactly once as the authoritative call (analogous to BC-X.13.002's single-fixpoint principle; Story A F-VA-33-3 finding)
+- The fn-grep regex uses POSIX ERE (`-E`, not `-P`), POSIX character classes (`[[:space:]]`, `[[:alnum:]]`), and `([^[:alnum:]_]|$)` (not `\b`) for word boundary — BSD grep / macOS portability required (spec-guard runs on ubuntu-latest; `--self-test` SHOULD also pass on macOS for local verification)
+- The symbol boundary anchor `([^[:alnum:]_]|$)` prevents substring false-greens: `handle_foobar` is NOT matched by a citation checking for `handle_foo`
+
+**Edge Cases**:
+- EC-CITE-038: `src/cli/issue/edit.rs::handle_edit` — `fn handle_edit` is defined in the file → fn-grep matches → ALIVE
+- EC-CITE-039: `src/cli/issue/create.rs::handle_jsm_create` — appears only as `use super::jsm_create::{JsmCreateArgs, handle_jsm_create};` → fn-grep fails; not UPPER_CASE; not Type::method → DEAD (the DEC-148 class; Fixture C in `--self-test` pins this)
+- EC-CITE-040: `src/adf.rs::AdfBuilder::finish` — Type::method form; method `finish` fn-grep passes; type `AdfBuilder` struct found → ALIVE via (c)
+- EC-CITE-041: `src/cli/issue/edit.rs::CROSS_HIERARCHY_HINT` — matches UPPER_CASE pattern → const/static anchored grep → ALIVE via (b)
+- EC-CITE-042: `src/cache.rs::cache_root()` — trailing `()` stripped → `cache_root` → fn-grep matches → ALIVE
+- EC-CITE-043 (glob skip / EC-011 class): `src/cli/**/*.rs` from a bc-*.md Trace/Source line (e.g., bc-7-output-render.md:677 BC-7.3.010) → shape guard detects `*` in path component → silently skipped; no DEAD message; no false positive (research cross-cutting finding F1, 2026-07-05)
+- EC-CITE-044: `src/adf.rs:~120` → `:~120` suffix stripped at Step 2 → bare file `src/adf.rs` → file-existence check only; Step 5 does not run
+- EC-CITE-045: `` `src/file.rs § "some section"` `` → space-stop in Step 1 extracts `src/file.rs` only; `§ "some section"` is never seen by Steps 2–5 → bare-file check only
+
+**Canonical Test Vectors** (for `run_check` Step 5 unit coverage via `--self-test`):
+
+| Token | Form | Step 5 path | Expected |
+|-------|------|-------------|---------|
+| `src/cli/issue/edit.rs::handle_edit` | ::symbol (function) | fn-grep: `fn handle_edit` | ALIVE |
+| `src/cli/issue/create.rs::handle_jsm_create` | ::symbol (import only) | fn-grep fails; not UPPER_CASE; not Type::method → DEAD | DEAD (Fixture C) |
+| `src/adf.rs::AdfBuilder::finish` | Type::method | fn-grep on `finish` + type def for `AdfBuilder` | ALIVE |
+| `src/cli/issue/edit.rs::CROSS_HIERARCHY_HINT` | constant (UPPER_CASE) | const/static anchored grep | ALIVE |
+| `src/cache.rs::cache_root()` | fn with trailing `()` | strip `()` → fn-grep `fn cache_root` | ALIVE |
+| `src/cli/**/*.rs` | glob | shape guard: `*` in path → silently skip | SKIPPED (no DEAD) |
+| `src/adf.rs:~120` | line-ref | stripped at Step 2 → bare file | file-exists check only (Fixture E analog) |
+
+**Verification Properties**:
+- VP-BC-CITE-001: Extraction grammar coverage — Fixtures A (dead symbol), C (import-only DEAD), E (§-form file-only check), F (success path with fn defined) in `scripts/check-bc-citation-symbols.sh --self-test` cover the primary grammar branches. Glob-skip (EC-043), trailing-`()` strip (EC-042), and Type::method (EC-040) are covered by AC-002 Fixtures F variant and the import-only proof. See S-BC-CITATION-GUARD-1 AC-002.
+
+**Traceability**:
+- Implementing story: S-BC-CITATION-GUARD-1 (CITATION-GUARDS Story B, issue #102)
+- Root-cause analysis: F1 delta analysis §6 — file-existence alone too weak; must check symbol definition; import-only false-green was the DEC-148 root cause
+- Research adjudication: `.factory/research/story-b-open-questions-2026-07-05.md` Q4 — v1-pragmatic shape-split (Type::method + constants mandatory; type-def/module-def deferred v2); permissive fallback explicitly rejected
+- Source: `scripts/check-bc-citation-symbols.sh::run_check` Steps 1–5 (new file; CI script — not in `src/`)
+
+---
+
+#### BC-X.13.006: Guard 1 is GREEN on develop HEAD; RED on stale citation introduction; scope limited to bc-*.md Trace/Source fields; BC-INDEX.md and tests/ citations excluded; CI topology via spec-guard job dual-worktree (develop + factory-artifacts)
+
+**Confidence**: HIGH
+**Subject**: CI guard / Guard 1 scope, CI topology, self-verifiability
+
+**Behavior**: Guard 1 (`scripts/check-bc-citation-symbols.sh`) has the following scope, CI topology, and verifiability properties:
+
+**Scope**: The guard scans ONLY lines matching the anchor `^\*\*(Trace|Source)\*\*:` in `bc-*.md` files — lines that begin with exactly `**Trace**:` or `**Source**:` (no leading whitespace; exact markdown bold markup). Citations in BC body prose (Description, Preconditions, Postconditions, Invariants, Examples, Canonical Test Vectors sections), BC frontmatter YAML, and BC-INDEX.md are NOT scanned. `tests/` citation paths on Trace/Source lines are NOT extracted — only `src/`-prefixed backtick tokens are in scope (BC-X.13.005 Step 1 canonical regex enforces this programmatically).
+
+**BC-INDEX.md exclusion (structural)**: BC-INDEX.md is NOT scanned by Guard 1. Rationale: BC-INDEX.md has zero lines matching the `^\*\*(Trace|Source)\*\*:` anchor — the BC-INDEX uses section-header and pipe-table format, not Trace/Source field format. The scope exclusion is both a deliberate design choice and a structural fact (zero extractions would result regardless). BC-INDEX.md citation health is a manual review concern (PERIMETER-SCAN-OMITS-INDEX-AND-TRACEABILITY drift item, partially addressed). See research cross-cutting finding F2 (2026-07-05).
+
+**CI topology (spec-guard dual-worktree)**: Guard 1 runs as two sequential steps in the existing `spec-guard` CI job (confirmed by F1 §3 against live `.github/workflows/ci.yml`):
+1. `--self-test` step: runs all 7 self-test fixtures offline using hermetic temp dirs; exits 0 if all pass, 1 if any fail
+2. Canonical step: runs Guard 1 against the real factory-artifacts and develop src/ tree
+
+The `spec-guard` job already mounts the `factory-artifacts` worktree via `git worktree add .factory origin/factory-artifacts` before the BC-count steps — Guard 1 inherits this dual-mount. This is CI topology option (a) from F1 §3; options (b) (pre-commit only) and (c) (new dual-checkout job) are rejected. No new CI job is created; no `ci-gate.needs` change is needed — `spec-guard` is already in `ci-gate.needs` per DEC-096/097.
+
+**Self-test fixture suite**: 7 fixtures (A–G) embedded in `scripts/check-bc-citation-symbols.sh --self-test` cover all key failure modes (Fixture A: dead symbol; B: dead file; C: import-only false-green prevention; D: Source-field extraction; E: §-form file-only; F: success path; G: coverage-floor RED probe). `--self-test` step ALWAYS executes BEFORE the canonical step in CI.
+
+**GREEN on develop HEAD**: Running `bash scripts/check-bc-citation-symbols.sh` from the repo root with `.factory/specs/prd/` mounted exits 0 on develop HEAD (post-DEC-148 cleanup). All bc-*.md Trace/Source `src/` citations are alive.
+
+**RED on stale citation**: If a PR moves a function without updating bc-*.md Trace/Source fields (e.g., a Seam extraction as in ADR-0012), the next spec-guard run emits `DEAD: <symbol> not found in <old-file>` and exits 1, blocking CI. The guard fires on the PR introducing the drift, not only PRs touching bc-*.md.
+
+**Preconditions**:
+- `spec-guard` job mounts both develop checkout and factory-artifacts worktree
+- `scripts/check-bc-citation-symbols.sh` is present in the develop checkout at `scripts/`
+- The `--self-test` step runs and passes before the canonical step (enforced by CI step ordering)
+
+**Postconditions (on GREEN)**:
+- Guard exits 0; prints `Check passed: N citations checked` (N ≥ FLOOR)
+- No stale `src/` citations exist in any bc-*.md Trace/Source field on develop HEAD
+- All 7 self-test fixtures pass
+
+**Postconditions (on RED)**:
+- Guard exits 1; developer receives actionable `DEAD:` offender list
+- The `--self-test` step failing independently provides a distinct failure signal when the fixture suite itself regresses vs when a real citation is stale
+
+**Invariants**:
+- `--self-test` step ALWAYS runs BEFORE the canonical step in CI; fixture-suite regression fails visibly rather than silently corrupting the canonical run (MUTANTS-ARBITER-OFFLINE-SELFTEST precedent from Story A)
+- Guard 1 delivers ZERO changes to `src/` files — the F4 delivery is bash script + CI YAML + CLAUDE.md + CHANGELOG only; no Rust source mutations; no `cargo test` regression possible
+- `tests/` citation paths on Trace/Source lines are excluded from extraction — the `#492-PG-TRACE-TESTS` drift item (tests/ citation hygiene) remains OPEN after Guard 1 delivery
+- BC-INDEX.md has zero `^\*\*(Trace|Source)\*\*:` lines — the scope exclusion is both deliberate and structural; the anchor pattern enforces it mechanically
+
+**Edge Cases**:
+- EC-CITE-046: Guard runs on a PR that does NOT modify bc-*.md (e.g., a pure Rust source refactor) → Guard 1 still runs in spec-guard; if the refactor moved a cited symbol, the guard catches the staleness → exit 1 (desired behavior; cross-PR drift detection)
+- EC-CITE-047: Guard runs on develop HEAD where all citations are alive → exit 0; `Check passed: N citations checked` with N ≥ FLOOR
+- EC-CITE-048: A stale citation is introduced (file renamed, symbol moved) in a PR → guard fires → exit 1 with `DEAD:` offender list → CI blocked
+- EC-CITE-049: BC-INDEX.md has zero `^\*\*(Trace|Source)\*\*:` lines → excluded by anchor pattern; no extraction; no false positive (research cross-cutting finding F2)
+- EC-CITE-050: `tests/issue_commands.rs:1646-1703` appears on a Trace/Source line → NOT extracted; canonical regex only matches `src/`-prefixed backtick tokens; excluded from scope
+
+**Canonical Test Vectors**:
+
+| Scenario | Expected behavior |
+|----------|-------------------|
+| `bash scripts/check-bc-citation-symbols.sh --self-test` (all 7 fixtures pass) | Exit 0; `All self-test fixtures passed (7/7)` |
+| `bash scripts/check-bc-citation-symbols.sh` on develop HEAD (factory-artifacts mounted) | Exit 0; `Check passed: N citations checked` (N ≥ 249) |
+| PR moves `fn handle_jsm_create` from `create.rs` to `jsm_create.rs` without updating bc-*.md | Guard fires: `DEAD: handle_jsm_create not found in src/cli/issue/create.rs`; exit 1 |
+| BC-INDEX.md has no Trace/Source lines | Zero extractions from BC-INDEX.md; no DEAD messages; guard unaffected |
+| `tests/claude_md_citations.rs::some_test` on a bc-*.md Trace/Source line | NOT extracted; `src/`-only scope enforced by canonical regex |
+
+**Verification Properties**:
+- VP-BC-CITE-002: Integration self-verification — `scripts/check-bc-citation-symbols.sh --self-test` exits 0 with all 7 fixtures passing; canonical run exits 0 on develop HEAD with factory-artifacts mounted; Fixture A proves dead-symbol detection; Fixture C proves import-only is DEAD; Fixture G proves CANONICAL_MODE floor guard is active. See S-BC-CITATION-GUARD-1 AC-001/AC-002/AC-005/AC-006.
+
+**Traceability**:
+- Implementing story: S-BC-CITATION-GUARD-1 (CITATION-GUARDS Story B, issue #102)
+- CI topology: F1 delta analysis §3 — option (a) spec-guard dual-worktree confirmed; DEC-129 lesson (Rust test in `test` job cannot access factory-artifacts) applied
+- Scope decision: F1 §6 — `src/`-only; `tests/` excluded; BC-INDEX.md excluded (structural zero-Trace/Source lines; research cross-cutting finding F2)
+- Prior art: `scripts/check-cargo-mutants-policy-citations.sh` (S-MUTANTS-SCOPE-GUARDS-1, self-test fixture idiom)
+- Source: `scripts/check-bc-citation-symbols.sh` (new file; CI script — not in `src/`); `.github/workflows/ci.yml` `spec-guard` job (modified)
+
+[NEW 2026-07-05 CITATION-GUARDS Story B S-BC-CITATION-GUARD-1 issue #102] Guard 1 bc-*.md Trace/Source file::symbol citation guard, extending the BC-X.13 CI-guards subsystem established by DEAD-CITATION-CI.
 
 ---
 
