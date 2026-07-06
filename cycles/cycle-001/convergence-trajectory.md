@@ -1068,3 +1068,128 @@ Non-blocking observations tracked as Drift Items: F-P8-01 §Scope↔examine_glob
 - BACKTICK-RESERVATION-CONVENTION (LOW — pass-8 F-P8-02, doc-sentence candidate)
 - ENGINE-BC-ID-INJECTION (LOW — engine prompt hygiene, justified deferral)
 - STORY-ENGINE-BC-CITATION (LOW — story line ~1190, cycle-close adjudication)
+
+---
+
+## CITATION-GUARDS Story B F3 — Adversarial Convergence (2026-07-06)
+
+**Story:** S-BC-CITATION-GUARD-1 (story #102)
+**Criterion:** DEC-153 standard — 3 consecutive clean diverse-lens passes (verification-adequacy observations = LOW-informational, non-streak-resetting)
+**Outcome:** CONVERGED (DEC-155, 2026-07-06) — 15 passes / 9 fix rounds / clean window passes 13/14/15
+
+### Finding Progression
+
+| Pass | Findings | CRIT | HIGH | MED | LOW | Counter | Verdict |
+|------|----------|------|------|-----|-----|---------|---------|
+| p1 | 7 | 0 | 2 | 5 | 0 | 0/3 | FINDINGS_REMAIN |
+| p2 | 7 | 2 | 1 | 4 | 0 | 0/3 | FINDINGS_REMAIN |
+| p3 | 2 | 1 | 0 | 1 | 0 | 0/3 | FINDINGS_REMAIN |
+| p4 | 3 | 1 | 1 | 1 | 0 | 0/3 | FINDINGS_REMAIN |
+| p5 | 3 | 0 | 0 | 3 | 0 | 0/3 | FINDINGS_REMAIN |
+| p6 | 1 | 0 | 0 | 1 | 0 | 0/3 | FINDINGS_REMAIN |
+| p7 | 0 | 0 | 0 | 0 | 0 | 1/3 | NITPICK_ONLY / CLEAN |
+| p8 | 1 | 0 | 0 | 1 | 0 | 0/3 | FINDINGS_REMAIN |
+| p9 | 0 | 0 | 0 | 0 | 0 | 1/3 | NITPICK_ONLY / CLEAN |
+| p10 | 1 | 0 | 0 | 1 | 0 | 0/3 | FINDINGS_REMAIN |
+| p11 | 1 | 0 | 0 | 1 | 0 | 0/3 | FINDINGS_REMAIN |
+| p12 | 1 | 0 | 0 | 1 | 0 | 0/3 | FINDINGS_REMAIN |
+| p13 | 0 | 0 | 0 | 0 | 0 | 1/3 | CLEAN |
+| p14 | 0 | 0 | 0 | 0 | 0 | 2/3 | CLEAN |
+| p15 | 0 | 0 | 0 | 0 | 0 | 3/3 | CLEAN — CONVERGED |
+
+### Trajectory Shorthand
+
+`2H5M → 2C1H4M → 1C1M → 1C1H1M → 3M → 1M → NITPICK_ONLY → 1M → NITPICK_ONLY → 1M → 1M → 1M → CLEAN → CLEAN → CLEAN` — **CONVERGED** at pass 15 (2026-07-06)
+
+### Per-Pass Details
+
+#### Pass 1
+**Findings:** 7 (0C/2H/5M/0L)
+**Fix:** v1.1→v1.2 — F-B1-01..10 (FLOOR scope, CI job name, Task 4/AC-006 rewrite, fixture skeletons, grep -oE pin, self-test echo, const/static grep, anti-self-match, glob pre-check)
+**Counter:** 0/3
+
+#### Pass 2
+**Findings:** 7 (2C/1H/4M/0L) — incl. F-B2-03 jointly-unsatisfiable ratified-design contradiction → DEC-154 grammar extension (Option A: 3 new branches added to 7-branch dispatch)
+**Fix:** v1.2→v1.3 — F-B2-01..09 + DEC-154 Option A: single-pass regex → two-pass extractor; Fixture E reworked; FLOOR 249→244; 3 new branches (b)(c)(e); fixtures I/J/K added (7→10)
+**Counter:** 0/3
+
+#### Pass 3
+**Findings:** 2 (1C/0H/1M/0L)
+**Fix:** v1.3→v1.5 (v1.4 intermediate errata) — F-B3-01..06: strip-from-first-(, branch (d) ^[[:space:]]* anchor, N=331/FLOOR=248, Fixture J/F kill coverage, EC-CITE-059; v1.4 Task 7 fixture count 7→10
+**Counter:** 0/3
+
+#### Pass 4
+**Findings:** 3 (1C/1H/1M/0L)
+**Fix:** v1.5→v1.6 — F-B4-CRIT-01: count pin 3→4; F-B4-H-01: space-args sub-probe; F-B4-M-01: pipefail guard; Task 0 worktree preface
+**Counter:** 0/3
+
+#### Pass 5
+**Findings:** 3 (0C/0H/3M/0L)
+**Fix:** v1.6→v1.7 — F-P5-01..07: RED-gate rc=1 group corrected (E removed); 'four'→'five' post-fixture self-assertions; Fixture J kill-trace (b) removed; Task 8 label; --bc-dir documented; AC-002 trace corrected; Fixture G bullet rewritten
+**Counter:** 0/3
+
+#### Pass 6
+**Findings:** 1 (0C/0H/1M/0L)
+**Fix:** v1.7→v1.8 — F-P6-01 Fixture D skeleton; F-P6-02 type_name derivation; 3 LOW clarity touches
+**Counter:** 0/3
+
+#### Pass 7 (NITPICK_ONLY — CLEAN)
+**Findings:** 0 — CLEAN-PASS (NITPICK_ONLY observations; non-streak-resetting per DEC-153)
+**Counter:** 1/3
+
+#### Pass 8
+**Findings:** 1 (0C/0H/1M/0L)
+**Fix:** v1.8→v1.9 — F-B8-M-01: bc-1-auth-identity.md filename drift ×4 sites; F-B8-L-01: Task 0 rationale DEAD-vs-missed precision
+**Counter:** 0/3 (reset from 1/3)
+
+#### Pass 9 (NITPICK_ONLY — CLEAN)
+**Findings:** 0 — CLEAN-PASS (NITPICK_ONLY observations; non-streak-resetting per DEC-153)
+**Counter:** 1/3
+
+#### Pass 10
+**Findings:** 1 (0C/0H/1M/0L) — registration-surface drift (BC-INDEX/CANONICAL-COUNTS/STORY-INDEX count mismatch)
+**Fix:** spec count fixes — stale 145/608 breakdown note + exhaustive stale-count sweep; Coverage-Statistics counts 608/378→611/381
+**Counter:** 0/3 (reset from 1/3)
+
+#### Pass 11
+**Findings:** 1 (0C/0H/1M/0L) — residual registration-surface drift
+**Fix:** additional count-propagation sweep
+**Counter:** 0/3
+
+#### Pass 12
+**Findings:** 1 (0C/0H/1M/0L) — FLOOR ≈249→≈248 (post-Task-0-hygiene, N≈331); F-P12-02 LOW
+**Fix:** v1.9 story row refresh; FLOOR ≈249→≈248 surface updates
+**Counter:** 0/3
+
+#### Pass 13 — CLEAN
+**Findings:** 0 — CLEAN-PASS
+**Counter:** 1/3
+
+#### Pass 14 — CLEAN
+**Findings:** 0 — CLEAN-PASS
+**Counter:** 2/3
+
+#### Pass 15 — CLEAN — CONVERGED
+**Findings:** 0 — CLEAN-PASS
+**Counter:** 3/3
+
+**CONVERGED 2026-07-06 (DEC-155).** Story #102 v1.10 status=ready. HELD at F4 dispatch gate pending human authorization.
+
+### Notable Findings
+
+- **2 CRIT:** (1) class-15 two-pass token pipeline — single-pass regex silently dropped §-form and comma-space line-ref tokens; corrected to two-pass extractor (DEC-154 F-B2-02). (2) count-pin off-by-one — BC-CITE-001 pin=3 should be 4 (header comment + preamble grep + Step-1 echo + own assertion line).
+- **3 HIGH:** F-B1-01 FLOOR scope (local→script-scope, single recalibration touchpoint); F-B1-02 CI job name stale baseline; F-B2-02 single-pass → two-pass extractor (DEC-154).
+- **~12 MED:** incl. F-B2-03 jointly-unsatisfiable ratified-design contradiction (§-form strip + branch (e) CamelCase couldn't coexist under old grammar → DEC-154 Option A grammar extension resolved it); fixture kill-trace gaps; branch (d) anchor missing; strip-from-first-( subsumes bare (); registration-surface drift passes 10-12 (BC-INDEX/CANONICAL-COUNTS/STORY-INDEX count drift).
+- **DEC-154 (pass-2 mid-loop research adjudication):** F-B2-03 exposed a jointly-unsatisfiable constraint between two ratified design choices. Human adjudicated Option A: add 3 branches (b `::tests` mod-grep, c `::tests::testfn` composition, e standalone CamelCase type-def) to the 7-branch dispatch. No ratified choices removed.
+- **Dominant late-stage leak class (passes 10-12):** Registration-surface drift (BC-INDEX / CANONICAL-COUNTS / STORY-INDEX count fields not updated when story evolved). Reinforces SWEEP-WHOLE-TOUCHED-FILE + the BC-INDEX 9th-surface guard gap (pass-12 F-P12-01).
+
+### Comparison vs Story A F3
+
+| Metric | Story A F3 (DEC-151 strict) | Story B F3 (DEC-153 standard) |
+|--------|----------------------------|-------------------------------|
+| Total passes | 44 | 15 |
+| Fix rounds | 47 | 9 |
+| Clean window | 14 | 13/14/15 |
+| Criterion | 3 consecutive clean incl. verification-adequacy lens | 3 consecutive clean diverse-lens (verification-adequacy = LOW-informational) |
+
+Supports ADVERSARY-META-LENS-REGRESS engine item: strict criterion (incl. recursive meta-lens) generated 3× more passes for similar story complexity.

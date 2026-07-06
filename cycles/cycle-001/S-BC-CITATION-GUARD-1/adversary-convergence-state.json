@@ -1,0 +1,37 @@
+{
+  "story_id": "S-BC-CITATION-GUARD-1",
+  "story_title": "CITATION-GUARDS Story B: BC-body Trace/Source file::symbol citation guard",
+  "phase": "F3",
+  "criterion": "DEC-153 standard — 3 consecutive clean diverse-lens passes (verification-adequacy = LOW-informational, non-streak-resetting)",
+  "converged": true,
+  "total_passes": 15,
+  "fix_rounds": 9,
+  "passes_clean": 3,
+  "clean_window": [13, 14, 15],
+  "last_pass_verdict": "CLEAN",
+  "convergence_decision": "DEC-155",
+  "convergence_date": "2026-07-06",
+  "story_version_at_convergence": "1.10",
+  "story_status_at_convergence": "ready",
+  "mid_loop_adjudications": [
+    {
+      "decision": "DEC-154",
+      "pass": 2,
+      "description": "Grammar extension Option A — F-B2-03 exposed jointly-unsatisfiable ratified-design constraint; added 3 branches (b ::tests mod-grep, c ::tests::testfn composition, e standalone CamelCase type-def) to 7-branch dispatch"
+    }
+  ],
+  "notable_finding_classes": [
+    "CRIT: class-15 two-pass token pipeline (single-pass dropped §-form + comma-space tokens)",
+    "CRIT: BC-CITE-001 count-pin off-by-one (3→4)",
+    "HIGH: FLOOR scope local→script-scope (single recalibration touchpoint)",
+    "HIGH: CI job name stale baseline",
+    "HIGH: single-pass → two-pass extractor (DEC-154 F-B2-02)",
+    "MED (dominant late-stage, passes 10-12): registration-surface drift (BC-INDEX/CANONICAL-COUNTS/STORY-INDEX count fields not updated)"
+  ],
+  "comparison_story_a": {
+    "total_passes": 44,
+    "fix_rounds": 47,
+    "criterion": "DEC-151 strict (incl. verification-adequacy lens as streak-resetting)",
+    "note": "Standard criterion converged 3x faster; supports ADVERSARY-META-LENS-REGRESS engine item"
+  }
+}

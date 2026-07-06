@@ -3,7 +3,7 @@ document_type: story
 story_id: "S-BC-CITATION-GUARD-1"
 title: "CITATION-GUARDS Story B: BC-body Trace/Source file::symbol citation guard (DEC-148)"
 wave: feature-followup
-status: draft
+status: ready
 intent: ci-hardening
 feature_type: infrastructure
 mode: feature
@@ -47,7 +47,7 @@ acceptance_criteria_count: 7
 assumption_validations: []
 risk_mitigations: []
 created: "2026-07-04"
-version: "1.9"
+version: "1.10"
 last_updated: "2026-07-06"
 breaking_change: false
 retroactive: false
@@ -60,6 +60,7 @@ origin: >
   F1 delta analysis citation-guards-2026-07-02-delta.md §2 (BC-CITATION-CI-GUARD / Guard 1).
   Stories recommended: 2 (wave_order: guards-2-3-first per F1 §7). This is Story B.
 changelog:
+  - "1.10 (2026-07-06): F3 CONVERGED under DEC-153 standard criterion — 15 fresh-context adversary passes, 9 fix rounds (v1.1→v1.9); clean window = passes 13/14/15 (CLEAN×3). Status → ready. Recorded as DEC-155."
   - "1.9 (2026-07-06): F3 pass-8 fixes (bc-1-auth-identity.md filename drift ×4 sites; Task 0 rationale DEAD-vs-missed precision)."
   - "1.8 (2026-07-06): F3 pass-6 fixes (F-P6-01 Fixture D skeleton, F-P6-02 type_name derivation, 3 LOW clarity touches)."
   - "1.7 (2026-07-06): F3 pass-5 coherence fixes (F-P5-01..07). F-P5-01 (MED): RED-gate
