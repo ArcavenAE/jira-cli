@@ -47,7 +47,7 @@ acceptance_criteria_count: 7
 assumption_validations: []
 risk_mitigations: []
 created: "2026-07-04"
-version: "1.7"
+version: "1.8"
 last_updated: "2026-07-06"
 breaking_change: false
 retroactive: false
@@ -60,6 +60,7 @@ origin: >
   F1 delta analysis citation-guards-2026-07-02-delta.md §2 (BC-CITATION-CI-GUARD / Guard 1).
   Stories recommended: 2 (wave_order: guards-2-3-first per F1 §7). This is Story B.
 changelog:
+  - "1.8 (2026-07-06): F3 pass-6 fixes (F-P6-01 Fixture D skeleton, F-P6-02 type_name derivation, 3 LOW clarity touches)."
   - "1.7 (2026-07-06): F3 pass-5 coherence fixes (F-P5-01..07). F-P5-01 (MED): RED-gate
     staging rc=1 group corrected: E removed from {A,B,C,D,E,G,J} → {A,B,C,D,G,J}; rc=0-with-
     content group is {E,F,I,K} (E expects rc=0 + '1 citations checked'). F-P5-02 (MED):
@@ -185,7 +186,7 @@ files_modified:
 
 # S-BC-CITATION-GUARD-1 — CITATION-GUARDS Story B: BC-body Trace/Source file::symbol Citation Guard
 
-**Status:** DRAFT — F3 initial decomposition (2026-07-04); BCs anchored F2 2026-07-05 (BC-X.13.004..006); v1.2 F3 pass-1 fixes applied 2026-07-06 (F-B1-01..10); v1.3 F3 pass-2 fixes applied 2026-07-06 (F-B2-01..09, DEC-154 Option A grammar extension, FLOOR=244, 10 fixtures); v1.4 Task 7 self-verify fixture count 7→10 consistency fix; v1.5 F3 pass-3 fixes applied 2026-07-06 (F-B3-01..06: strip-from-first-paren, branch (d) anchor, N=331/FLOOR=248, Fixture J/F kill coverage, EC-CITE-059); v1.6 F3 pass-4 fixes applied 2026-07-06 (F-B4-CRIT-01: count pin 3→4, F-B4-H-01: space-args sub-probe, F-B4-M-01: pipefail guard, Task 0 worktree preface); v1.7 F3 pass-5 coherence fixes applied 2026-07-06 (F-P5-01..07).
+**Status:** DRAFT — F3 initial decomposition (2026-07-04); BCs anchored F2 2026-07-05 (BC-X.13.004..006); v1.2 F3 pass-1 fixes applied 2026-07-06 (F-B1-01..10); v1.3 F3 pass-2 fixes applied 2026-07-06 (F-B2-01..09, DEC-154 Option A grammar extension, FLOOR=244, 10 fixtures); v1.4 Task 7 self-verify fixture count 7→10 consistency fix; v1.5 F3 pass-3 fixes applied 2026-07-06 (F-B3-01..06: strip-from-first-paren, branch (d) anchor, N=331/FLOOR=248, Fixture J/F kill coverage, EC-CITE-059); v1.6 F3 pass-4 fixes applied 2026-07-06 (F-B4-CRIT-01: count pin 3→4, F-B4-H-01: space-args sub-probe, F-B4-M-01: pipefail guard, Task 0 worktree preface); v1.7 F3 pass-5 coherence fixes applied 2026-07-06 (F-P5-01..07); v1.8 F3 pass-6 fixes applied 2026-07-06 (F-P6-01 Fixture D skeleton, F-P6-02 type_name derivation, 3 LOW clarity touches).
 
 **Origin:** DEC-148 citation-debt-filewide cycle. After ADR-0012 Seam A/B extracted
 `handle_jsm_create` to `src/cli/issue/jsm_create.rs` and `handle_edit` to
@@ -614,6 +615,8 @@ observation. The no-output stub mandates all fixtures to be RED before implement
       method name (last `::` component); (2) verify the type name (CamelCase component before
       last `::`) appears as a type definition:
       ```bash
+      type_name="${token%::*}"; type_name="${type_name##*::}"  # component before last ::
+      # CAUTION: ${token##*::} alone would yield the METHOD name (last :: component), not the type name.
       grep -Eq "(struct|enum|type|trait|impl)[[:space:]]+${type_name}" "$src_root/$file"
       ```
       If BOTH sub-checks pass: ALIVE. If either fails: DEAD.
@@ -716,8 +719,8 @@ observation. The no-output stub mandates all fixtures to be RED before implement
    `scripts/check-cargo-mutants-policy-citations.sh` bullet added by Story A PR #572):
    - `scripts/check-bc-citation-symbols.sh` — runs in spec-guard CI job; validates `src/` file
      and symbol citations in `**Trace**:`/`**Source**:` fields of `.factory/specs/prd/bc-*.md`
-     bodies; exits 1 with `BC-CITE-001` offender list if any citation is stale. `--bc-dir` +
-     `--src-root` (self-test only) + `--self-test` flags for offline verification.
+     bodies; exits 1 with `BC-CITE-001` offender list if any citation is stale. `--bc-dir`
+     (designed-to-support) + `--src-root` (self-test only) + `--self-test` flags for offline verification.
      (DEC-148 Guard 1)
 
 7. **Self-verify:** Read back all modified files. Confirm:
@@ -786,7 +789,7 @@ must output zero lines.
 | G | Coverage-floor RED probe: (1) bc dir with ONE citation total (well below FLOOR); (2) second sub-probe with 100 citations (still below FLOOR=248) — both with CANONICAL_MODE=1; `unset CANONICAL_MODE` after all G assertions (Story A Fixture H precedent + F-B2-06) | Both probes: `rc=1`; output contains `BC-CITE-COVERAGE-FLOOR:`; output contains `expected >= ${FLOOR}` (no hardcoded integer); single `fixtures_run` increment for entire G | (a) Omit CANONICAL_MODE gate → floor never fires → `rc=0` → RED; (b) FLOOR mutation `-lt "$FLOOR"` → `-lt "5"` → 100-citation probe: 100 > 5 → rc=0 → assertion `[ "$rc" -eq 1 ]` fails → caught; (c) CANONICAL_MODE as `local` in run_check → floor false-greens → RED |
 | I | `::tests` module-path ALIVE (EC-CITE-052): `src/mock_i.rs::tests` — mock `mock_i.rs` defines `mod tests { }` | `rc=0`; output matches `^Check passed: [0-9]+ citations checked$` | (a) Omit mod-tests anchored grep → symbol `tests` falls through all branches → DEAD → `rc=1` → RED; proves branch (b) is required; (b) Polarity swap on branch (b): invert mod-tests return so a matching `mod tests` block returns DEAD → symbol `tests`, file has `mod tests { }` → normally ALIVE but swap → DEAD → `rc=1` → assertion `[ "$rc" -eq 0 ]` fails → RED |
 | J | `::tests` module-path negative DEAD (EC-CITE-053): `src/mock_j.rs::nonexistent_mod` — file has bare text `nonexistent_mod` (no `mod` keyword), symbol not a definition | `rc=1`; output contains `DEAD:` | (a) Add permissive `grep -q "$symbol"` fallback → bare text `nonexistent_mod` in file matches → `rc=0` → RED; proves no-permissive-fallback is enforced (requires non-empty mock — empty file would not trigger permissive fallback, failing to kill mutation). Branch (b) polarity swap is caught by Fixture I (symbol=tests, normally ALIVE → swap → DEAD → rc≠0 → RED) — J's symbol `nonexistent_mod` never enters branch (b) (fails the `^tests$` entry guard), so polarity-swap kill does not apply here. |
-| K | Standalone CamelCase type ALIVE (EC-CITE-054): `src/mock_k.rs::MockKStruct` — mock `mock_k.rs` defines `pub struct MockKStruct { }` | `rc=0`; output matches `^Check passed: [0-9]+ citations checked$` | (a) Omit type-def anchored grep → symbol `MockKStruct` falls through all branches → DEAD → `rc=1` → RED; proves branch (e) is required |
+| K | Standalone CamelCase type ALIVE (EC-CITE-054): `src/mock_k.rs::MockKStruct` — mock `mock_k.rs` defines `pub struct MockKStruct { }` | `rc=0`; output matches `^Check passed: [0-9]+ citations checked$` | (a) Omit type-def anchored grep → symbol `MockKStruct` falls through all branches → DEAD → `rc=1` → RED; proves branch (e) is required; (b) Polarity swap on branch (e): invert type-def return so a matching type definition returns DEAD → symbol `MockKStruct`, file has `pub struct MockKStruct { }` → normally ALIVE but swap → DEAD → `rc=1` → assertion `[ "$rc" -eq 0 ]` fails → RED |
 
 **Hermetic fixture setup skeletons (F-B1-04 + DEC-154 additions):**
 
@@ -822,6 +825,12 @@ printf 'use super::jsm_create::{JsmCreateArgs, handle_jsm_create};\n' \
     > "$tmp_C/src/cli/issue/create.rs"
 set +e; BC_DIR="$tmp_C" SRC_ROOT="$tmp_C" output=$(run_check 2>&1); rc=$?; set -e
 
+# Fixture D — Source-field extraction (dead-file on **Source** line, not **Trace**)
+mkdir -p "$tmp_D/src"
+printf '**Source**: `src/nonexistent_source_selftest.rs::source_fn`\n' > "$tmp_D/bc-mock.md"
+# $tmp_D/src/nonexistent_source_selftest.rs intentionally NOT created
+set +e; BC_DIR="$tmp_D" SRC_ROOT="$tmp_D" output=$(run_check 2>&1); rc=$?; set -e
+
 # Fixture E — two-pass extraction / §-form (F-B2-02/07 differential signal)
 # Pass 1 extracts full token `src/mock_e.rs § "some section"` (backtick-only stop);
 # Pass 2 splits at space → `src/mock_e.rs`; file-existence check runs; no symbol check.
@@ -837,6 +846,9 @@ printf '**Trace**: `src/mock_f.rs::mock_f_fn_selftest`\n**Source**: `src/mock_f.
     > "$tmp_F/bc-mock.md"
 printf 'fn mock_f_fn_selftest() {}\n' > "$tmp_F/src/mock_f.rs"
 set +e; BC_DIR="$tmp_F" SRC_ROOT="$tmp_F" output=$(run_check 2>&1); rc=$?; set -e
+# NOTE: assert this invocation's rc/output BEFORE the sub-probes below overwrite them.
+# Each invocation gets its own rc/output variables; the second run_check call reassigns
+# `output` and `rc` — assertions for this first invocation must precede that point.
 
 # Fixture F sub-probe (1): pub(crate) const MAX_ADF_DEPTH (EC-CITE-051, F-B2-01+F-B3-02 fixed)
 # Citation MUST reference src/mock_f.rs (the mock file), NOT src/adf.rs (F-B2-01 fix).
