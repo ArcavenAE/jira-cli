@@ -47,7 +47,7 @@ acceptance_criteria_count: 7
 assumption_validations: []
 risk_mitigations: []
 created: "2026-07-04"
-version: "1.6"
+version: "1.7"
 last_updated: "2026-07-06"
 breaking_change: false
 retroactive: false
@@ -60,6 +60,23 @@ origin: >
   F1 delta analysis citation-guards-2026-07-02-delta.md §2 (BC-CITATION-CI-GUARD / Guard 1).
   Stories recommended: 2 (wave_order: guards-2-3-first per F1 §7). This is Story B.
 changelog:
+  - "1.7 (2026-07-06): F3 pass-5 coherence fixes (F-P5-01..07). F-P5-01 (MED): RED-gate
+    staging rc=1 group corrected: E removed from {A,B,C,D,E,G,J} → {A,B,C,D,G,J}; rc=0-with-
+    content group is {E,F,I,K} (E expects rc=0 + '1 citations checked'). F-P5-02 (MED):
+    'four post-fixture self-assertions' → 'five' at AC-002 and File Structure (Task 3
+    enumerates BC-CITE-001 count pin; anti-self-match; bash -n pin; grep -oE pin; fixtures_run
+    integrity pin = 5). F-P5-03 (MED): Fixture J kill-trace (b) removed (unsound: symbol
+    nonexistent_mod never enters branch (b) due to ^tests$ guard); note added pointing to
+    Fixture I for polarity-swap kill; Fixture I gains kill-trace (b) (polarity-swap explicitly
+    listed). F-P5-04 (LOW): 'Task 8 (formerly Task 7)' → 'Task 7' in AC-001 sequencing note
+    (no renumbering occurred; tasks are 0–7). F-P5-05 (LOW-MED): --bc-dir documented as
+    designed-to-support-only per ARG-PARSER-GATE-POLARITY convention; fixture harness uses
+    BC_DIR= env path (tested path); CANONICAL_MODE=1 floor-active behavior for standalone
+    --bc-dir invocation noted. F-P5-06 (LOW): AC-002 trace 'Fixture A→EC-CITE-039/dead-symbol'
+    corrected to BC-X.13.005 fn-grep NO-MATCH/dead-symbol (no dedicated EC); EC-CITE-039
+    anchors to Fixture C (import-only DEC-148 class) only. F-P5-07 (LOW): RED-gate Fixture G
+    bullet rewritten to remove self-contradiction ('passes rc assertion initially'); now uses
+    consistent 'stub rc=0, assertion expects rc=1, fails → RED' model throughout."
   - "1.6 (2026-07-06): F3 pass-4 fixes (F-B4-CRIT-01 pin=4, F-B4-H-01 space-args sub-probe,
     F-B4-M-01 pipefail guard, Task 0 worktree preface). F-B4-CRIT-01 (CRIT): BC-CITE-001
     count pin corrected 3→4 (header comment + preamble grep + Step-1 echo + own assertion
@@ -168,7 +185,7 @@ files_modified:
 
 # S-BC-CITATION-GUARD-1 — CITATION-GUARDS Story B: BC-body Trace/Source file::symbol Citation Guard
 
-**Status:** DRAFT — F3 initial decomposition (2026-07-04); BCs anchored F2 2026-07-05 (BC-X.13.004..006); v1.2 F3 pass-1 fixes applied 2026-07-06 (F-B1-01..10); v1.3 F3 pass-2 fixes applied 2026-07-06 (F-B2-01..09, DEC-154 Option A grammar extension, FLOOR=244, 10 fixtures); v1.4 Task 7 self-verify fixture count 7→10 consistency fix; v1.5 F3 pass-3 fixes applied 2026-07-06 (F-B3-01..06: strip-from-first-paren, branch (d) anchor, N=331/FLOOR=248, Fixture J/F kill coverage, EC-CITE-059); v1.6 F3 pass-4 fixes applied 2026-07-06 (F-B4-CRIT-01: count pin 3→4, F-B4-H-01: space-args sub-probe, F-B4-M-01: pipefail guard, Task 0 worktree preface).
+**Status:** DRAFT — F3 initial decomposition (2026-07-04); BCs anchored F2 2026-07-05 (BC-X.13.004..006); v1.2 F3 pass-1 fixes applied 2026-07-06 (F-B1-01..10); v1.3 F3 pass-2 fixes applied 2026-07-06 (F-B2-01..09, DEC-154 Option A grammar extension, FLOOR=244, 10 fixtures); v1.4 Task 7 self-verify fixture count 7→10 consistency fix; v1.5 F3 pass-3 fixes applied 2026-07-06 (F-B3-01..06: strip-from-first-paren, branch (d) anchor, N=331/FLOOR=248, Fixture J/F kill coverage, EC-CITE-059); v1.6 F3 pass-4 fixes applied 2026-07-06 (F-B4-CRIT-01: count pin 3→4, F-B4-H-01: space-args sub-probe, F-B4-M-01: pipefail guard, Task 0 worktree preface); v1.7 F3 pass-5 coherence fixes applied 2026-07-06 (F-P5-01..07).
 
 **Origin:** DEC-148 citation-debt-filewide cycle. After ADR-0012 Seam A/B extracted
 `handle_jsm_create` to `src/cli/issue/jsm_create.rs` and `handle_edit` to
@@ -295,14 +312,14 @@ BCs anchored F2 2026-07-05. This story extends the BC-X.13 CI-guards subsystem i
 **RED-gate staging (`tdd_mode: strict`):** Under strict TDD, the bash self-test fixture suite
 (Task 3 `--self-test` block) is written first against a stub `run_check() { return 0; }` that
 emits no output. Under the no-output stub ALL ten fixtures fail RED:
-- Fixtures A, B, C, D, E, G, J (all expecting `rc=1`) fail their `[ "$rc" -eq 1 ]` assertions.
+- Fixtures A, B, C, D, G, J (all expecting `rc=1`) fail their `[ "$rc" -eq 1 ]` assertions.
 - Fixtures F, I, K (expecting `rc=0`) pass the rc check BUT fail their content assertion
   (`^Check passed:` regex against empty output).
 - Fixture E (expecting `rc=0` AND output contains `1 citations checked`) fails the content
   assertion (empty output has no `citations checked`).
-- Fixture G passes rc assertion initially (stub returns 0), but CANONICAL_MODE=1 means the stub
-  does not fire the floor guard — rc=0 fails `[ "$rc" -eq 1 ]` → RED.
-- Fixture G second probe similarly fails: stub rc=0 but assertion expects rc=1 → RED.
+- Fixture G: CANONICAL_MODE=1 is set but stub returns rc=0 (floor guard never fires) →
+  assertion expects rc=1, fails → RED.
+- Fixture G second probe: stub rc=0 but assertion expects rc=1 → RED.
 
 An output-emitting stub is NOT sanctioned (same rationale as Story A): it could incidentally
 satisfy Fixture F's content assertion while leaving others RED, corrupting the RED-gate
@@ -388,9 +405,13 @@ observation. The no-output stub mandates all fixtures to be RED before implement
      # ... argument parsing ...
      if [ "$self_test" = "0" ] && [ -z "${BC_DIR+x}" ]; then CANONICAL_MODE=1; fi
      ```
-   - `--bc-dir <path>`: override the BC directory (default: `.factory/specs/prd`). Designed to
-     support self-test fixture isolation via in-process `BC_DIR=` assignment; the CLI flag
-     itself is designed-to-support (analogous to `--policy-doc` in Story A).
+   - `--bc-dir <path>`: override the BC directory (default: `.factory/specs/prd`).
+     **Designed-to-support only** (same ARG-PARSER-GATE-POLARITY convention as `--policy-doc`
+     in Story A). The fixture harness uses the in-process `BC_DIR=…` env assignment — that is
+     the tested code path; the `--bc-dir` CLI flag itself is not exercised by any fixture. Note:
+     standalone CLI use of `--bc-dir` without a `BC_DIR` env var leaves `CANONICAL_MODE=1`
+     (floor guard active), because the CANONICAL_MODE check (`[ -z "${BC_DIR+x}" ]`) tests the
+     env var, not the CLI flag — documented behavior, not a target of any fixture.
    - `--src-root <dir>`: override the source root for file-existence and symbol grep. Without
      `--self-test`, this is a usage error (exit 64) to prevent accidental redirect of a real
      guard run to a temp directory. Exit message text (pinned to Story A form, F-B2-09):
@@ -736,7 +757,7 @@ truly-dead citation clusters (EC-CITE-058) survive in `factory-artifacts` from b
 existed — these are correctly flagged by the guard. They MUST be resolved in the Task 0
 factory-artifacts commit (citation hygiene) BEFORE the canonical guard can reach GREEN. If any
 NEW stale citations have been introduced since the DEC-148 cleanup, the guard will report them
-as additional findings — Task 8 (formerly Task 7) self-verify step will catch this before the
+as additional findings — Task 7 self-verify step will catch this before the
 PR is opened.
 
 ---
@@ -744,7 +765,7 @@ PR is opened.
 ### AC-002 — Self-test fixture table
 
 `scripts/check-bc-citation-symbols.sh --self-test` exits 0. The `--self-test` block runs
-all ten fixtures (A–K) and four post-fixture self-assertions using hermetic temp directories.
+all ten fixtures (A–K) and five post-fixture self-assertions using hermetic temp directories.
 
 **Fixture assertion idiom (VP-1-P25 from Story A — apply here):**
 All fixture assertions MUST use the form `[ <cond> ] || { echo "Fixture X FAIL: …"; exit 1; }`.
@@ -763,8 +784,8 @@ must output zero lines.
 | E | Two-pass extraction: `**Trace**: `src/mock_e.rs § "some section"`` — mock `mock_e.rs` exists (touch, empty); F-B2-02/07 differential signal | `rc=0`; output contains `1 citations checked` (proves Pass 1 extracted the space-containing token, Pass 2 reduced it to bare path, file-existence check ran — NOT silently dropped) | (a) Use old single-pass regex `[^` ]+` (stop-on-space) → § form token SILENTLY DROPPED → `0 citations checked` in output → assertion fails → RED; (b) Apply symbol grep to §-form token → grepping empty file fails → `rc=1` → RED; proves §-form is file-existence-only and that the token IS extracted |
 | F | Success path: `**Trace**: `src/mock_f.rs::mock_f_fn_selftest`` + `**Source**: `src/mock_f.rs`` — mock `mock_f.rs` defines `fn mock_f_fn_selftest() {}`; sub-probes: (1) `src/mock_f.rs::MAX_ADF_DEPTH` with `pub(crate) const MAX_ADF_DEPTH: usize = 256;` (EC-CITE-051, anchored branch (d)); (2) `src/mock_f.rs::mock_f_fn_selftest(args: T)` fn citation with space-args form (EC-CITE-059, Step-5 strip: Pass 2 space-split → `mock_f_fn_selftest(args:`; strip-from-first-`(` → `mock_f_fn_selftest`); negative probe: mock containing ONLY `    // pub const MAX_ADF_DEPTH: usize = 256` doc-comment line MUST classify DEAD under anchored form | `rc=0` for all positive probes; output matches `^Check passed: [0-9]+ citations checked$`; negative probe `rc=1` (DEAD) | (a) Inverted polarity (return 1 on success) → `rc=1` → RED; (b) Omit success summary line → content assertion fails → RED; (c) [group-removal] Sub-probe: omit `(\([^)]*\))?` group → `pub(crate) const MAX_ADF_DEPTH:` from line-start no longer matches simplified `(pub[[:space:]]+)?` pattern → DEAD → `rc=1` → caught (EC-CITE-051); [anchor-removal] remove `^[[:space:]]*` anchor → negative probe's doc-comment line `    // pub const MAX_ADF_DEPTH:` matches unanchored form → false-ALIVE → `rc=0` → RED; (d) Delete Step-5 strip (`%%\(*`) → Pass 2 space-split gives `mock_f_fn_selftest(args:` → unstripped symbol `mock_f_fn_selftest(args:` has unbalanced `(` → fn-grep ERE is malformed → grep exits 2 → DEAD → `rc=1` → caught (EC-CITE-059); bare `()` form would NOT kill this mutation (empty parens = valid ERE group → grep exits 0 on the balanced group) |
 | G | Coverage-floor RED probe: (1) bc dir with ONE citation total (well below FLOOR); (2) second sub-probe with 100 citations (still below FLOOR=248) — both with CANONICAL_MODE=1; `unset CANONICAL_MODE` after all G assertions (Story A Fixture H precedent + F-B2-06) | Both probes: `rc=1`; output contains `BC-CITE-COVERAGE-FLOOR:`; output contains `expected >= ${FLOOR}` (no hardcoded integer); single `fixtures_run` increment for entire G | (a) Omit CANONICAL_MODE gate → floor never fires → `rc=0` → RED; (b) FLOOR mutation `-lt "$FLOOR"` → `-lt "5"` → 100-citation probe: 100 > 5 → rc=0 → assertion `[ "$rc" -eq 1 ]` fails → caught; (c) CANONICAL_MODE as `local` in run_check → floor false-greens → RED |
-| I | `::tests` module-path ALIVE (EC-CITE-052): `src/mock_i.rs::tests` — mock `mock_i.rs` defines `mod tests { }` | `rc=0`; output matches `^Check passed: [0-9]+ citations checked$` | (a) Omit mod-tests anchored grep → symbol `tests` falls through all branches → DEAD → `rc=1` → RED; proves branch (b) is required |
-| J | `::tests` module-path negative DEAD (EC-CITE-053): `src/mock_j.rs::nonexistent_mod` — file has bare text `nonexistent_mod` (no `mod` keyword), symbol not a definition | `rc=1`; output contains `DEAD:` | (a) Add permissive `grep -q "$symbol"` fallback → bare text `nonexistent_mod` in file matches → `rc=0` → RED; proves no-permissive-fallback is enforced (requires non-empty mock — empty file would not trigger permissive fallback, failing to kill mutation); (b) Branch (b) polarity swap: invert mod-tests return (ALIVE when not found) → mod-tests grep for `mod tests` fails → returns ALIVE → `rc=0` → assertion `[ "$rc" -eq 1 ]` fails → caught |
+| I | `::tests` module-path ALIVE (EC-CITE-052): `src/mock_i.rs::tests` — mock `mock_i.rs` defines `mod tests { }` | `rc=0`; output matches `^Check passed: [0-9]+ citations checked$` | (a) Omit mod-tests anchored grep → symbol `tests` falls through all branches → DEAD → `rc=1` → RED; proves branch (b) is required; (b) Polarity swap on branch (b): invert mod-tests return so a matching `mod tests` block returns DEAD → symbol `tests`, file has `mod tests { }` → normally ALIVE but swap → DEAD → `rc=1` → assertion `[ "$rc" -eq 0 ]` fails → RED |
+| J | `::tests` module-path negative DEAD (EC-CITE-053): `src/mock_j.rs::nonexistent_mod` — file has bare text `nonexistent_mod` (no `mod` keyword), symbol not a definition | `rc=1`; output contains `DEAD:` | (a) Add permissive `grep -q "$symbol"` fallback → bare text `nonexistent_mod` in file matches → `rc=0` → RED; proves no-permissive-fallback is enforced (requires non-empty mock — empty file would not trigger permissive fallback, failing to kill mutation). Branch (b) polarity swap is caught by Fixture I (symbol=tests, normally ALIVE → swap → DEAD → rc≠0 → RED) — J's symbol `nonexistent_mod` never enters branch (b) (fails the `^tests$` entry guard), so polarity-swap kill does not apply here. |
 | K | Standalone CamelCase type ALIVE (EC-CITE-054): `src/mock_k.rs::MockKStruct` — mock `mock_k.rs` defines `pub struct MockKStruct { }` | `rc=0`; output matches `^Check passed: [0-9]+ citations checked$` | (a) Omit type-def anchored grep → symbol `MockKStruct` falls through all branches → DEAD → `rc=1` → RED; proves branch (e) is required |
 
 **Hermetic fixture setup skeletons (F-B1-04 + DEC-154 additions):**
@@ -926,7 +947,7 @@ Stay at 10 fixtures to remain in BC lockstep.
   `readonly` before first fixture).
 
 (traces to BC-X.13.004, BC-X.13.005, BC-X.13.006 — all three contracts exercised across the
-fixture suite; Fixture A→EC-CITE-039/dead-symbol, B→EC-CITE-036/dead-file, C→EC-CITE-039/
+fixture suite; Fixture A→BC-X.13.005 fn-grep NO-MATCH/dead-symbol (no dedicated EC), B→EC-CITE-036/dead-file, C→EC-CITE-039/
 import-only, D→BC-X.13.004 precondition/Source-field scan, E→EC-CITE-045+EC-CITE-057/two-pass-
 extraction-differential, F→BC-X.13.004 postcondition/success-path+EC-CITE-051/pub(crate)-const+
 EC-CITE-059/fn-with-paren-strip+F-neg/anchor-negative-probe, G→EC-CITE-037/coverage-floor+
@@ -1158,7 +1179,7 @@ job (not a Rust integration test). This is option (a) confirmed by F1 §3.
 
 | File | Create / Modify | Description |
 |------|-----------------|-------------|
-| `scripts/check-bc-citation-symbols.sh` | CREATE | Guard 1: scan `**Trace**:`/`**Source**:` lines in bc-*.md bodies; two-pass extractor (DEC-154 F-B2-02); strip-from-first-`(` (EC-CITE-059); 7-branch symbol dispatch with `^[[:space:]]*` anchor on branch (d) (F-B3-02); SCOPE-EMPTY guard; BC-CITE-COVERAGE-FLOOR guard (CANONICAL_MODE only, FLOOR=248); **ten self-test fixtures (A–K)** embedded in `--self-test` block; four post-fixture self-assertions; `BC-CITE-001` error class literal pinned in header comment. |
+| `scripts/check-bc-citation-symbols.sh` | CREATE | Guard 1: scan `**Trace**:`/`**Source**:` lines in bc-*.md bodies; two-pass extractor (DEC-154 F-B2-02); strip-from-first-`(` (EC-CITE-059); 7-branch symbol dispatch with `^[[:space:]]*` anchor on branch (d) (F-B3-02); SCOPE-EMPTY guard; BC-CITE-COVERAGE-FLOOR guard (CANONICAL_MODE only, FLOOR=248); **ten self-test fixtures (A–K)** embedded in `--self-test` block; five post-fixture self-assertions; `BC-CITE-001` error class literal pinned in header comment. |
 | `.github/workflows/ci.yml` | MODIFY | spec-guard job: update `name:` to `"Spec Guards (BC counts, numeric-count lint, citation checks, mutants policy scope)"`; append `--self-test` step + canonical step for Guard 1 AFTER the existing `check-cargo-mutants-policy-citations (Guard 2, DEC-150)` step (currently last). No other job changes. No `ci-gate.needs` change. |
 | `CHANGELOG.md` | MODIFY | Add `[Unreleased] → ### Added` entry per CHANGELOG-per-PR hygiene. |
 | `CLAUDE.md` | MODIFY | Add doc-fallout bullet in AI Agent Notes for `scripts/check-bc-citation-symbols.sh`. |
