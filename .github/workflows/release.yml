@@ -235,3 +235,46 @@ jobs:
             jr-*.tar.gz
             jr-*.zip
             jr-*.sha256
+
+  attest:
+    name: Attest build provenance
+    needs: release
+    # Runs after `release` uploads assets to the GitHub release. Downloads
+    # the finalized release-page assets (not the pre-upload workspace
+    # artifacts) so the attestation applies to the exact bytes users
+    # download. `!cancelled()` skips a partial attestation if the workflow
+    # is cancelled mid-run.
+    if: |
+      !cancelled()
+      && needs.release.result == 'success'
+    permissions:
+      # `contents: read` is enough for `gh release download`; the write
+      # scopes below are for the attestation itself.
+      contents: read
+      # `attestations: write` is NEVER inherited — must be declared on
+      # the job.
+      id-token: write
+      attestations: write
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@9af89fc71515a100421586dfdb3dc9c984fbf411 # v2.19.4
+        with:
+          egress-policy: audit
+
+      - name: Download release assets
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          mkdir -p release-assets
+          gh release download "${GITHUB_REF_NAME}" \
+            --repo "${{ github.repository }}" \
+            --dir release-assets
+          echo "Assets to be attested:"
+          ls -la release-assets/
+
+      - name: Attest release artifacts
+        uses: actions/attest-build-provenance@a2bbfa25375fe432b6a289bc6b6cd05ecd0c4c32 # v4.1.0
+        with:
+          subject-path: 'release-assets/*'
