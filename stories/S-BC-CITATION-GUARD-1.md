@@ -47,7 +47,7 @@ acceptance_criteria_count: 7
 assumption_validations: []
 risk_mitigations: []
 created: "2026-07-04"
-version: "1.8"
+version: "1.9"
 last_updated: "2026-07-06"
 breaking_change: false
 retroactive: false
@@ -60,6 +60,7 @@ origin: >
   F1 delta analysis citation-guards-2026-07-02-delta.md §2 (BC-CITATION-CI-GUARD / Guard 1).
   Stories recommended: 2 (wave_order: guards-2-3-first per F1 §7). This is Story B.
 changelog:
+  - "1.9 (2026-07-06): F3 pass-8 fixes (bc-1-auth-identity.md filename drift ×4 sites; Task 0 rationale DEAD-vs-missed precision)."
   - "1.8 (2026-07-06): F3 pass-6 fixes (F-P6-01 Fixture D skeleton, F-P6-02 type_name derivation, 3 LOW clarity touches)."
   - "1.7 (2026-07-06): F3 pass-5 coherence fixes (F-P5-01..07). F-P5-01 (MED): RED-gate
     staging rc=1 group corrected: E removed from {A,B,C,D,E,G,J} → {A,B,C,D,G,J}; rc=0-with-
@@ -175,7 +176,7 @@ files_modified:
   # HYGIENE BUNDLE (EC-CITE-058) — factory-artifacts commit in same story cycle (Task 0),
   # BEFORE product PR is opened; AC-001's canonical run reads this factory-artifacts state:
   - .factory/specs/prd/bc-7-output-render.md    # MODIFY — citation hygiene: src/cli/auth.rs::handle_login etc. → src/cli/auth/<login|switch|logout|remove|status|…>.rs::fn (7-8 tokens)
-  - .factory/specs/prd/bc-1-auth.md             # MODIFY — citation hygiene: src/cli/auth.rs::auth_json_response etc. → real paths; src/cli/snapshots/jr__cli__auth__tests__list_table_snapshot.snap → src/cli/auth/tests/snapshots/…
+  - .factory/specs/prd/bc-1-auth-identity.md     # MODIFY — citation hygiene: src/cli/auth.rs::auth_json_response etc. → real paths; src/cli/snapshots/jr__cli__auth__tests__list_table_snapshot.snap → src/cli/auth/tests/snapshots/…
   - .factory/specs/prd/bc-4-assets-cmdb.md      # MODIFY — citation hygiene: src/cli/assets.rs:303-321 → src/cli/assets/<mod|search|view|…>.rs:NN-MM (verify current file per refactored layout)
   - .factory/specs/prd/bc-3-issue-write.md      # MODIFY — continuation-line re-flow: L1434-1441 and L1555-1559 multi-line Trace fields → single-line (class 16 pre-fix, avoids multi-line stitching grammar work)
   # NOT in this F4 delivery (F2 artifacts authored separately; PO already committed):
@@ -186,7 +187,7 @@ files_modified:
 
 # S-BC-CITATION-GUARD-1 — CITATION-GUARDS Story B: BC-body Trace/Source file::symbol Citation Guard
 
-**Status:** DRAFT — F3 initial decomposition (2026-07-04); BCs anchored F2 2026-07-05 (BC-X.13.004..006); v1.2 F3 pass-1 fixes applied 2026-07-06 (F-B1-01..10); v1.3 F3 pass-2 fixes applied 2026-07-06 (F-B2-01..09, DEC-154 Option A grammar extension, FLOOR=244, 10 fixtures); v1.4 Task 7 self-verify fixture count 7→10 consistency fix; v1.5 F3 pass-3 fixes applied 2026-07-06 (F-B3-01..06: strip-from-first-paren, branch (d) anchor, N=331/FLOOR=248, Fixture J/F kill coverage, EC-CITE-059); v1.6 F3 pass-4 fixes applied 2026-07-06 (F-B4-CRIT-01: count pin 3→4, F-B4-H-01: space-args sub-probe, F-B4-M-01: pipefail guard, Task 0 worktree preface); v1.7 F3 pass-5 coherence fixes applied 2026-07-06 (F-P5-01..07); v1.8 F3 pass-6 fixes applied 2026-07-06 (F-P6-01 Fixture D skeleton, F-P6-02 type_name derivation, 3 LOW clarity touches).
+**Status:** DRAFT — F3 initial decomposition (2026-07-04); BCs anchored F2 2026-07-05 (BC-X.13.004..006); v1.2 F3 pass-1 fixes applied 2026-07-06 (F-B1-01..10); v1.3 F3 pass-2 fixes applied 2026-07-06 (F-B2-01..09, DEC-154 Option A grammar extension, FLOOR=244, 10 fixtures); v1.4 Task 7 self-verify fixture count 7→10 consistency fix; v1.5 F3 pass-3 fixes applied 2026-07-06 (F-B3-01..06: strip-from-first-paren, branch (d) anchor, N=331/FLOOR=248, Fixture J/F kill coverage, EC-CITE-059); v1.6 F3 pass-4 fixes applied 2026-07-06 (F-B4-CRIT-01: count pin 3→4, F-B4-H-01: space-args sub-probe, F-B4-M-01: pipefail guard, Task 0 worktree preface); v1.7 F3 pass-5 coherence fixes applied 2026-07-06 (F-P5-01..07); v1.8 F3 pass-6 fixes applied 2026-07-06 (F-P6-01 Fixture D skeleton, F-P6-02 type_name derivation, 3 LOW clarity touches); v1.9 F3 pass-8 fixes applied 2026-07-06 (F-B8-M-01: bc-1-auth-identity.md filename drift ×4 sites; F-B8-L-01: Task 0 rationale DEAD-vs-missed precision).
 
 **Origin:** DEC-148 citation-debt-filewide cycle. After ADR-0012 Seam A/B extracted
 `handle_jsm_create` to `src/cli/issue/jsm_create.rs` and `handle_edit` to
@@ -334,14 +335,10 @@ observation. The no-output stub mandates all fixtures to be RED before implement
    is opened. AC-001's canonical guard run reads the `factory-artifacts` state mounted by the
    spec-guard CI job.
 
-   **Why:** The guard (once built) correctly flags three truly-dead citation clusters and two
-   multi-line Trace fields as DEAD. These are NOT grammar failures — they are citation hygiene
-   issues that accumulated before Guard 1 existed (adjudication §1.3 EC-CITE-058). Fixing them
-   in the factory-artifacts commit is the cleanest path: no BC semantics change, just path
-   corrections.
+   **Why:** The guard (once built) correctly flags the three truly-dead citation clusters as DEAD, and silently misses the tokens on the two bc-3 multi-line Trace fields (continuation lines lack the `^\*\*(Trace|Source)\*\*:` anchor); Task 0 addresses both classes. These are NOT grammar failures — they are citation hygiene issues that accumulated before Guard 1 existed (adjudication §1.3 EC-CITE-058). Fixing them in the factory-artifacts commit is the cleanest path: no BC semantics change, just path corrections.
 
    **(i) Dead `src/cli/auth.rs::*` citations (~7-8 tokens across bc-7-output-render.md and
-   bc-1-auth.md):** The `auth` module was refactored to a directory (`src/cli/auth/mod.rs` +
+   bc-1-auth-identity.md):** The `auth` module was refactored to a directory (`src/cli/auth/mod.rs` +
    siblings). For each citation of the form `src/cli/auth.rs::fn_name`, locate the function
    in `src/cli/auth/<file>.rs` via `grep -r "fn fn_name" src/cli/auth/` and update the
    citation to `src/cli/auth/<file>.rs::fn_name`. Affected functions from adjudication §1.3:
@@ -354,7 +351,7 @@ observation. The no-output stub mandates all fixtures to be RED before implement
    `grep -n "relevant_function_or_struct" src/cli/assets/` and update the citation to the real
    `src/cli/assets/<file>.rs:NN-MM` path. Verify on develop HEAD.
 
-   **(iii) Moved snapshot path (bc-1-auth.md):**
+   **(iii) Moved snapshot path (bc-1-auth-identity.md):**
    `src/cli/snapshots/jr__cli__auth__tests__list_table_snapshot.snap` →
    `src/cli/auth/tests/snapshots/jr__cli__auth__tests__list_table_snapshot.snap`
    (verified via glob in adjudication §1.3; exact destination confirmed by `find src/cli/auth`).
@@ -1196,7 +1193,7 @@ job (not a Rust integration test). This is option (a) confirmed by F1 §3.
 | `CHANGELOG.md` | MODIFY | Add `[Unreleased] → ### Added` entry per CHANGELOG-per-PR hygiene. |
 | `CLAUDE.md` | MODIFY | Add doc-fallout bullet in AI Agent Notes for `scripts/check-bc-citation-symbols.sh`. |
 | `.factory/specs/prd/bc-7-output-render.md` | MODIFY (Task 0) | Citation hygiene: `src/cli/auth.rs::*` → real `src/cli/auth/<file>.rs::fn` paths (EC-CITE-058). |
-| `.factory/specs/prd/bc-1-auth.md` | MODIFY (Task 0) | Citation hygiene: `src/cli/auth.rs::*` paths + snapshot path relocation (EC-CITE-058). |
+| `.factory/specs/prd/bc-1-auth-identity.md` | MODIFY (Task 0) | Citation hygiene: `src/cli/auth.rs::*` paths + snapshot path relocation (EC-CITE-058). |
 | `.factory/specs/prd/bc-4-assets-cmdb.md` | MODIFY (Task 0) | Citation hygiene: `src/cli/assets.rs:303-321` → real path in `src/cli/assets/` (EC-CITE-058). |
 | `.factory/specs/prd/bc-3-issue-write.md` | MODIFY (Task 0) | Continuation-line Trace re-flow at approx L1434-1441 and L1555-1559 (EC-CITE-058 class 16). |
 
