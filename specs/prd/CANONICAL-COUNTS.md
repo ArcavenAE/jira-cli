@@ -61,8 +61,8 @@ Breakdown:
 - 381 of 611 are individually-bodied (have a `#### BC-` heading)
 - 230 are range-collapsed (counted in cumulative claim, no individual heading)
 - BC-X.4.009 (ADV-P1-029) is a `#### BC-` heading in cross-cutting.md; it is
-  included in cross-cutting's `total_bcs: 145` and in the **608 sum**.
-  It does NOT add +1 beyond the 608.
+  included in cross-cutting's `total_bcs: 148` and in the **611 sum**.
+  It does NOT add +1 beyond the 611.
 
 _Historical note (archived; historical total was 566; current canonical: see Sum row above (611)): Passes 10-13 involved a 541/542 count confusion around BC-X.4.009. All 542 claims were corrected to 541 at Pass 13. Subsequent additions (BC-7.4.013-016, BC-2.6.050-051, BC-3.4.009, BC-3.8.001-010, BC-X.12.001-008) brought the total to 566. See git history for the full audit trail._
 
