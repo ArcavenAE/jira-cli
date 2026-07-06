@@ -740,7 +740,7 @@ All snapshots from `src/cli/issue/snapshots/` and `src/cli/snapshots/`. Keys are
 #### BC-7.4.013: `auth login --output json` emits `{"profile": <name>, "action": "login", "ok": true}` to stdout on success
 
 **Confidence**: HIGH
-**Source**: `src/cli/auth.rs::handle_login` (JSON branch); `src/cli/auth.rs::auth_json_response`
+**Source**: `src/cli/auth/login.rs::handle_login` (JSON branch); `src/cli/auth/mod.rs::auth_json_response`
 **Subject**: JSON output shape — auth login
 **Behavior**: When `--output json` is set and `jr auth login` completes successfully, stdout receives exactly the JSON object `{"action": "login", "ok": true, "profile": "<profile-name>"}` (keys sorted alphabetically in insta output). The `profile` field reflects the profile name that was logged in. No other output is written to stdout. Human-readable success text is suppressed when `--output json` is active.
 
@@ -749,8 +749,8 @@ All snapshots from `src/cli/issue/snapshots/` and `src/cli/snapshots/`. Keys are
 ```
 
 Field types: `profile` is `string`, `action` is `string` literal `"login"`, `ok` is `bool` literal `true`.
-**Production code**: `src/cli/auth.rs::handle_login` (JSON branch); helper `auth_json_response(profile_name, "login")`
-**Snapshot test**: `src/cli/snapshots/jr__cli__auth__tests__auth_login_json_shape.snap`
+**Production code**: `src/cli/auth/login.rs::handle_login` (JSON branch); helper `auth_json_response(profile_name, "login")`
+**Snapshot test**: `src/cli/auth/tests/snapshots/jr__cli__auth__tests__auth_login_json_shape.snap`
 **Trace**: S-2.07 v2.0.0 (BC-7.4.013, added 2026-05-08 by Fix-PR A)
 
 ---
@@ -758,7 +758,7 @@ Field types: `profile` is `string`, `action` is `string` literal `"login"`, `ok`
 #### BC-7.4.014: `auth switch --output json` emits `{"profile": <name>, "action": "switch", "ok": true}` to stdout on success
 
 **Confidence**: HIGH
-**Source**: `src/cli/auth.rs::handle_switch` (JSON branch); `src/cli/auth.rs::auth_json_response`
+**Source**: `src/cli/auth/switch.rs::handle_switch` (JSON branch); `src/cli/auth/mod.rs::auth_json_response`
 **Subject**: JSON output shape — auth switch
 **Behavior**: When `--output json` is set and `jr auth switch <profile>` completes successfully, stdout receives exactly the JSON object `{"action": "switch", "ok": true, "profile": "<profile-name>"}` (keys sorted alphabetically). The `profile` field reflects the profile switched to. Human-readable success text is suppressed when `--output json` is active.
 
@@ -767,8 +767,8 @@ Field types: `profile` is `string`, `action` is `string` literal `"login"`, `ok`
 ```
 
 Field types: `profile` is `string`, `action` is `string` literal `"switch"`, `ok` is `bool` literal `true`.
-**Production code**: `src/cli/auth.rs::handle_switch` (JSON branch); helper `auth_json_response(profile_name, "switch")`
-**Snapshot test**: `src/cli/snapshots/jr__cli__auth__tests__auth_switch_json_shape.snap`
+**Production code**: `src/cli/auth/switch.rs::handle_switch` (JSON branch); helper `auth_json_response(profile_name, "switch")`
+**Snapshot test**: `src/cli/auth/tests/snapshots/jr__cli__auth__tests__auth_switch_json_shape.snap`
 **Trace**: S-2.07 v2.0.0 (BC-7.4.014, added 2026-05-08 by Fix-PR A)
 
 ---
@@ -776,7 +776,7 @@ Field types: `profile` is `string`, `action` is `string` literal `"switch"`, `ok
 #### BC-7.4.015: `auth logout --output json` emits `{"profile": <name>, "action": "logout", "ok": true}` to stdout on success
 
 **Confidence**: HIGH
-**Source**: `src/cli/auth.rs::handle_logout` (JSON branch); `src/cli/auth.rs::auth_json_response`
+**Source**: `src/cli/auth/logout.rs::handle_logout` (JSON branch); `src/cli/auth/mod.rs::auth_json_response`
 **Subject**: JSON output shape — auth logout
 **Behavior**: When `--output json` is set and `jr auth logout` completes successfully, stdout receives exactly the JSON object `{"action": "logout", "ok": true, "profile": "<profile-name>"}` (keys sorted alphabetically). The `profile` field reflects the profile logged out. Human-readable success text is suppressed when `--output json` is active.
 
@@ -785,8 +785,8 @@ Field types: `profile` is `string`, `action` is `string` literal `"switch"`, `ok
 ```
 
 Field types: `profile` is `string`, `action` is `string` literal `"logout"`, `ok` is `bool` literal `true`.
-**Production code**: `src/cli/auth.rs::handle_logout` (JSON branch); helper `auth_json_response(profile_name, "logout")`
-**Snapshot test**: `src/cli/snapshots/jr__cli__auth__tests__auth_logout_json_shape.snap`
+**Production code**: `src/cli/auth/logout.rs::handle_logout` (JSON branch); helper `auth_json_response(profile_name, "logout")`
+**Snapshot test**: `src/cli/auth/tests/snapshots/jr__cli__auth__tests__auth_logout_json_shape.snap`
 **Trace**: S-2.07 v2.0.0 (BC-7.4.015, added 2026-05-08 by Fix-PR A)
 
 ---
@@ -794,7 +794,7 @@ Field types: `profile` is `string`, `action` is `string` literal `"logout"`, `ok
 #### BC-7.4.016: `auth remove --output json` emits `{"profile": <name>, "action": "remove", "ok": true}` to stdout on success
 
 **Confidence**: HIGH
-**Source**: `src/cli/auth.rs::handle_remove` (JSON branch); `src/cli/auth.rs::auth_json_response`
+**Source**: `src/cli/auth/remove.rs::handle_remove` (JSON branch); `src/cli/auth/mod.rs::auth_json_response`
 **Subject**: JSON output shape — auth remove
 **Behavior**: When `--output json` is set and `jr auth remove <profile>` completes successfully, stdout receives exactly the JSON object `{"action": "remove", "ok": true, "profile": "<profile-name>"}` (keys sorted alphabetically). The `profile` field reflects the profile removed. Human-readable success text is suppressed when `--output json` is active.
 
@@ -803,8 +803,8 @@ Field types: `profile` is `string`, `action` is `string` literal `"logout"`, `ok
 ```
 
 Field types: `profile` is `string`, `action` is `string` literal `"remove"`, `ok` is `bool` literal `true`.
-**Production code**: `src/cli/auth.rs::handle_remove` (JSON branch); helper `auth_json_response(profile_name, "remove")`
-**Snapshot test**: `src/cli/snapshots/jr__cli__auth__tests__auth_remove_json_shape.snap`
+**Production code**: `src/cli/auth/remove.rs::handle_remove` (JSON branch); helper `auth_json_response(profile_name, "remove")`
+**Snapshot test**: `src/cli/auth/tests/snapshots/jr__cli__auth__tests__auth_remove_json_shape.snap`
 **Trace**: S-2.07 v2.0.0 (BC-7.4.016, added 2026-05-08 by Fix-PR A)
 
 ---

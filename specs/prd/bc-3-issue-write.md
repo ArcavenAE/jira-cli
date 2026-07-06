@@ -1431,16 +1431,7 @@ not be flagged as a gap by reviewers.
 - VP-396-012 (P3-LOW-002): field present in `editmeta` but `"set"` absent from
   `operations` → exit 64 with actionable hint; no PUT.
 
-**Trace**: issue #396 F2; `src/cli/issue/edit.rs::handle_edit` (resolution integration);
-`src/api/jira/issues.rs::get_editmeta` (new); `src/cli/issue/field_resolve.rs::resolve_edit_fields`
-(new, orchestrates resolution pipeline — owns exact-match-then-substring logic and all
-exit-64 ambiguity handling; any field-lookup helper it calls is an implementation detail
-not spec-anchored here);
-`src/types/jira/editmeta.rs` (new — `EditMeta`, `EditMetaField`, `EditMetaFieldSchema`,
-`AllowedValue`); `src/cache.rs::FieldsCache` / `read_fields_cache` / `write_fields_cache`
-(new, mirrors `CmdbFieldsCache` / `cmdb_fields.json` pattern; best-effort writer);
-`.factory/research/issue-396-jsm-fields-validation.md`;
-`.factory/phase-f2-spec-evolution/prd-delta-396.md §3 and §5`
+**Trace**: issue #396 F2; `src/cli/issue/edit.rs::handle_edit` (resolution integration); `src/api/jira/issues.rs::get_editmeta` (new); `src/cli/issue/field_resolve.rs::resolve_edit_fields` (new, orchestrates resolution pipeline — owns exact-match-then-substring logic and all exit-64 ambiguity handling; any field-lookup helper it calls is an implementation detail not spec-anchored here); `src/types/jira/editmeta.rs` (new — `EditMeta`, `EditMetaField`, `EditMetaFieldSchema`, `AllowedValue`); `src/cache.rs::FieldsCache` / `read_fields_cache` / `write_fields_cache` (new, mirrors `CmdbFieldsCache` / `cmdb_fields.json` pattern; best-effort writer); `.factory/research/issue-396-jsm-fields-validation.md`; `.factory/phase-f2-spec-evolution/prd-delta-396.md §3 and §5`
 
 [NEW 2026-05-22 issue #396 F2]
 [AMENDED 2026-05-22 F2 cache gap: field-list cache (fields.json, 7-day TTL, best-effort writer) specified; editmeta non-goal stated; EC-3.4.015-14..16 added; invariants 6-9 added; VP-396-006 cited]
@@ -1552,11 +1543,7 @@ option `id`. Exception: when the id-bypass path fires, `changed_fields` value is
   BC-3.4.015 invariants 6–8 — the same `resolve_edit_fields` step 2/2b path is
   followed regardless of whether the field schema type is `string` or `option`.)
 
-**Trace**: issue #396 F2; `src/cli/issue/edit.rs::handle_edit`;
-`src/cli/issue/field_resolve.rs::resolve_edit_fields` (option-arm: id-bypass, case-insensitive exact→substring on allowedValues, ambiguity/empty errors);
-`src/api/jira/issues.rs::get_editmeta`; `.factory/research/issue-396-jsm-fields-validation.md §Q2`
-(wire format confirmed: `{"customfield_NNNNN": {"id": "..."}}` is the working shape);
-`.factory/phase-f2-spec-evolution/prd-delta-396.md §3`
+**Trace**: issue #396 F2; `src/cli/issue/edit.rs::handle_edit`; `src/cli/issue/field_resolve.rs::resolve_edit_fields` (option-arm: id-bypass, case-insensitive exact→substring on allowedValues, ambiguity/empty errors); `src/api/jira/issues.rs::get_editmeta`; `.factory/research/issue-396-jsm-fields-validation.md §Q2` (wire format confirmed: `{"customfield_NNNNN": {"id": "..."}}` is the working shape); `.factory/phase-f2-spec-evolution/prd-delta-396.md §3`
 
 [NEW 2026-05-22 issue #396 F2]
 

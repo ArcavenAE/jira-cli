@@ -160,7 +160,7 @@ Asset search & view (4.2), Asset enrichment — MUST-FIX (4.3), Error handling (
 #### BC-4.2.008: `assets tickets --open` filters `status.colorName != "green"` (client-side)
 
 **Confidence**: MEDIUM
-**Source**: `src/cli/assets.rs:303-321`; unit tests
+**Source**: `src/cli/assets/tickets.rs::filter_tickets`; unit tests
 **Behavior**: Tickets with no status are included under `--open`, excluded under `--status`. Client-side color filter.
 **Trace**: Pass 3 BC-314
 

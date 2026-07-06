@@ -162,7 +162,7 @@ Embedded OAuth app (1.3), Token keychain (1.4), OAuth state machine (1.5), Auth 
 #### BC-1.2.013: `auth logout` deletes only `<profile>:oauth-access-token` and `<profile>:oauth-refresh-token`
 
 **Confidence**: HIGH (PROMOTED from MEDIUM in R1)
-**Source**: `src/api/auth.rs:24-32, 88-97`; `src/cli/auth.rs::handle_logout`
+**Source**: `src/api/auth.rs:24-32, 88-97`; `src/cli/auth/logout.rs::handle_logout`
 **Subject**: Auth & Identity
 **Behavior**: Deletes `<profile>:oauth-access-token` and `<profile>:oauth-refresh-token` via `delete_credential`. Profile config entry preserved. Shared keys (`email`, `api-token`, `oauth_client_id`, `oauth_client_secret`) untouched. Re-login uses preserved API-token/OAuth credentials.
 **Trace**: Pass 3 BC-013-R
@@ -172,7 +172,7 @@ Embedded OAuth app (1.3), Token keychain (1.4), OAuth state machine (1.5), Auth 
 #### BC-1.2.014: `auth remove <name>` performs three-step delete: config entry, OAuth tokens, cache directory
 
 **Confidence**: HIGH (PROMOTED from MEDIUM in R1)
-**Source**: `src/cli/auth.rs::handle_remove`; `src/cache.rs:82-88`; `tests/auth_profiles.rs:120-140`
+**Source**: `src/cli/auth/remove.rs::handle_remove`; `src/cache.rs:82-88`; `tests/auth_profiles.rs:120-140`
 **Subject**: Auth & Identity
 **Behavior**: Three-step: (1) remove `[profiles.<name>]` from config, (2) delete `<name>:oauth-*` keychain keys, (3) `cache::clear_profile_cache(name)` removes `~/.cache/jr/v1/<name>/`. Step (3) is no-op if dir absent. All three are best-effort; partial state does not cascade. Errors if name == active (exit 64 first).
 **Trace**: Pass 3 BC-014-R
@@ -254,7 +254,7 @@ Embedded OAuth app (1.3), Token keychain (1.4), OAuth state machine (1.5), Auth 
 #### BC-1.3.022: `OAuthAppSource` resolution chain: Flag > Env > Keychain > Embedded > Prompt > None
 
 **Confidence**: HIGH (PROMOTED from MEDIUM in R1)
-**Source**: `src/api/auth_embedded.rs:46-57`; `src/cli/auth.rs::peek_oauth_app_source`
+**Source**: `src/api/auth_embedded.rs:46-57`; `src/cli/auth/status.rs::peek_oauth_app_source`
 **Subject**: Auth & Identity
 **Behavior**: First non-None-equivalent source wins; lower-priority sources never short-circuit higher. `auth status` reports source via this chain.
 **Trace**: Pass 3 BC-022-R
@@ -511,7 +511,7 @@ Embedded OAuth app (1.3), Token keychain (1.4), OAuth state machine (1.5), Auth 
 #### BC-1.6.046: `auth list` table snapshot: 4 columns, active profile with `* ` prefix
 
 **Confidence**: HIGH
-**Source**: `src/cli/snapshots/jr__cli__auth__tests__list_table_snapshot.snap`
+**Source**: `src/cli/auth/tests/snapshots/jr__cli__auth__tests__list_table_snapshot.snap`
 **Subject**: Auth & Identity
 **Behavior**: Columns: `NAME, URL, AUTH, STATUS`. Active profile prefixed `* ` (asterisk-space). Inactive: `  ` (2 spaces). 3-profile fixture: default* (api_token), sandbox (oauth), staging (api_token). All STATUS cells `configured`.
 **Trace**: Pass 3 BC-1115 (R4)
