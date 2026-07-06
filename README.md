@@ -35,6 +35,41 @@ To install a specific version:
 curl -fsSL https://raw.githubusercontent.com/Zious11/jira-cli/main/install.sh | sh -s -- v0.5.0
 ```
 
+### Install with mise
+
+If you manage tool versions with [mise](https://mise.jdx.dev/), you can pin
+`jr` alongside the rest of your project's tools:
+
+```bash
+mise use github:<owner>/jira-cli@latest
+```
+
+Replace `<owner>` with the GitHub owner of the repository (or fork) you
+want to install releases from — for the canonical upstream that's this
+repository's owner; for a downstream distribution that publishes its own
+signed builds, use that fork's owner.
+
+To track prerelease builds cut from `develop` (`v*-dev.*`, `v*-beta.*`,
+`v*-rc.*`), opt in per-tool in your `mise.toml`:
+
+```toml
+[tools]
+"github:<owner>/jira-cli" = { version = "latest", prerelease = true }
+```
+
+mise's `github:` backend auto-selects the release asset matching your OS
+and architecture, extracts the `jr` binary onto your `PATH`, and (once
+per-release attestations are published) natively verifies GitHub Artifact
+Attestations and SLSA provenance in Rust without invoking `gh` or
+`slsa-verifier`.
+
+If mise-installed `jr` refuses to launch on macOS with a Gatekeeper
+warning, clear the quarantine attribute:
+
+```bash
+xattr -d com.apple.quarantine "$(mise which jr)"
+```
+
 ### From source
 
 ```bash
