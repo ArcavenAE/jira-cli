@@ -1225,3 +1225,20 @@ _Was the active checkpoint after maintenance sweep 2026-06-22 fully closed. PRs 
 | **develop branch** | UNCHANGED @ c4b3aa9 — no product-repo changes yet (F4 not started). No worktrees. No PRs. |
 | **STATE.md size** | ~255 lines (WARNING band). |
 | **Resume command** | Open a fresh session and run `/vsdd-factory:next-step` — reads STATE.md; feature_mode_bundle: CITATION-GUARDS; pipeline PAUSED; resume = present F4 dispatch gate + two secondary decisions (Story B sequencing, session-review timing) to human first; on F4 authorization: dispatch per-story delivery per `per-story-delivery.md` for story #101. |
+
+---
+
+### Checkpoint — 2026-07-04 (Story B draft authored; HELD at F2/F3 gate)
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-07-04 (Story B S-BC-CITATION-GUARD-1 draft authored; registered as story #102) |
+| **Status** | **HELD AT F2/F3 GATE — Story B S-BC-CITATION-GUARD-1 v1.0 draft authored; CITATION-GUARDS cycle OPEN; no in-flight work; pending human decisions before F2/F3 dispatch.** |
+| **Counters** | BC **608**. NFR **42**. ADR **16**. Stories **102** (#101 delivered, #102 draft). Holdouts **82**. |
+| **Convergence counter** | Story A F4 COMPLETE: 9 passes/5 fix rounds, window CLEAN. Story A F3: DEC-151 strict — 44 passes/47 rounds, window 14 CLEAN. Story B: not yet started (HELD). Full trajectories: `cycles/cycle-001/convergence-trajectory.md §CITATION-GUARDS F4`. |
+| **In-flight work** | NONE — no open PRs, no active worktrees. develop @ ab78a2d. |
+| **Pending human decisions** | (1) Story B BC governance — formal BCs vs policy-doc-only; (2) F3 convergence criterion for Story B (apply DEC-151 strict or a lighter criterion — DEC-151 question); (3) FLOOR=30 calibration confirmation (default used in Story B draft; verify correct for BC-citation guard scope); (4) session-review timing = at cycle close (orchestrator default per human non-response, reversible). |
+| **Cycle-close checklist** | After Story B resolution: (a) story-review for the 44-pass F3 loop (ADVERSARY-META-LENS-REGRESS engine item OPEN); (b) CITATION-GUARDS cycle-close checklist; (c) open-question disposition (SCOPE-EMPTY-THREE-VS-TWO-CAUSE, STORY-ENGINE-BC-CITATION, BC governance items). |
+| **develop branch** | ab78a2d (PR #572 squash-merged 2026-07-04 by human). |
+| **STATE.md size** | ~275 lines (WARNING band). |
+| **Resume command** | Open a fresh session and run `/vsdd-factory:next-step` — reads STATE.md; pipeline IN_PROGRESS; feature_mode_bundle: CITATION-GUARDS; Story B S-BC-CITATION-GUARD-1 #102 v1.0 DRAFT at HELD/F2 gate; next = human decisions on BC governance + F3 criterion + FLOOR calibration, then F2 spec evolution + F3 story refinement. |
