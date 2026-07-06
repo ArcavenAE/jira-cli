@@ -1340,8 +1340,8 @@ The `[<[:space:](]` end-anchor handles: generics (`struct Foo<T>`), unit-struct 
 **Edge Cases**:
 - EC-CITE-038: `src/cli/issue/edit.rs::handle_edit` — `fn handle_edit` is defined in the file → fn-grep matches → ALIVE
 - EC-CITE-039: `src/cli/issue/create.rs::handle_jsm_create` — appears only as `use super::jsm_create::{JsmCreateArgs, handle_jsm_create};` → fn-grep fails; not UPPER_CASE; not Type::method → DEAD (the DEC-148 class; Fixture C in `--self-test` pins this)
-- EC-CITE-040: `src/adf.rs::AdfBuilder::finish` — Type::method form; method `finish` fn-grep passes; type `AdfBuilder` struct found → ALIVE via (c)
-- EC-CITE-041: `src/cli/issue/edit.rs::CROSS_HIERARCHY_HINT` — matches UPPER_CASE pattern → const/static anchored grep → ALIVE via (b)
+- EC-CITE-040: `src/adf.rs::AdfBuilder::finish` — Type::method form; method `finish` fn-grep passes; type `AdfBuilder` struct found → ALIVE via (f)
+- EC-CITE-041: `src/cli/issue/edit.rs::CROSS_HIERARCHY_HINT` — matches UPPER_CASE pattern → const/static anchored grep → ALIVE via (d)
 - EC-CITE-042: `src/cache.rs::cache_root()` — trailing `()` stripped → `cache_root` → fn-grep matches → ALIVE
 - EC-CITE-043 (glob skip / EC-011 class): `src/cli/**/*.rs` from a bc-*.md Trace/Source line (e.g., bc-7-output-render.md:677 BC-7.3.010) → shape guard detects `*` in path component → silently skipped; no DEAD message; no false positive (research cross-cutting finding F1, 2026-07-05)
 - EC-CITE-044: `src/adf.rs:~120` → `:~120` suffix stripped at Step 2 → bare file `src/adf.rs` → file-existence check only; Step 5 does not run
