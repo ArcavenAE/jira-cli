@@ -47,7 +47,7 @@ acceptance_criteria_count: 7
 assumption_validations: []
 risk_mitigations: []
 created: "2026-07-04"
-version: "1.5"
+version: "1.6"
 last_updated: "2026-07-06"
 breaking_change: false
 retroactive: false
@@ -60,6 +60,18 @@ origin: >
   F1 delta analysis citation-guards-2026-07-02-delta.md §2 (BC-CITATION-CI-GUARD / Guard 1).
   Stories recommended: 2 (wave_order: guards-2-3-first per F1 §7). This is Story B.
 changelog:
+  - "1.6 (2026-07-06): F3 pass-4 fixes (F-B4-CRIT-01 pin=4, F-B4-H-01 space-args sub-probe,
+    F-B4-M-01 pipefail guard, Task 0 worktree preface). F-B4-CRIT-01 (CRIT): BC-CITE-001
+    count pin corrected 3→4 (header comment + preamble grep + Step-1 echo + own assertion
+    line = 4; composed-fragment anti-self-match line does NOT count by design); F-B4-H-01
+    (HIGH): Fixture F sub-probe (2) citation changed from `mock_f_fn_selftest()` to
+    space-args form `mock_f_fn_selftest(args: T)` (per corrected EC-CITE-059); kill-trace
+    (d) rewritten accurately (Pass 2 space-split → unbalanced `(` → malformed ERE → grep
+    exits 2 → caught); one-sentence ()-vs-(args: asymmetry rationale added (empty parens =
+    valid ERE group → would NOT catch mutation); mock fn body `fn mock_f_fn_selftest() {}`
+    unchanged; F-B4-M-01 (MED): `|| true` appended to Pass-1 pipeline with pipefail
+    rationale sentence (zero matches legitimate → flows to SCOPE-EMPTY/floor guards);
+    Task 0 preface: one sentence added naming factory-artifacts worktree convention."
   - "1.5 (2026-07-06): F3 pass-3 fixes (F-B3-01..06) — F-B3-01 (CRIT): Step 5 strip rewritten
     as strip-from-first-( (`symbol=${symbol%%\\(*}` subsumes bare () and (args...) forms;
     EC-CITE-059 added; Pass 2 example updated); F-B3-02 (MED): branch (d) const/static grep
@@ -156,7 +168,7 @@ files_modified:
 
 # S-BC-CITATION-GUARD-1 — CITATION-GUARDS Story B: BC-body Trace/Source file::symbol Citation Guard
 
-**Status:** DRAFT — F3 initial decomposition (2026-07-04); BCs anchored F2 2026-07-05 (BC-X.13.004..006); v1.2 F3 pass-1 fixes applied 2026-07-06 (F-B1-01..10); v1.3 F3 pass-2 fixes applied 2026-07-06 (F-B2-01..09, DEC-154 Option A grammar extension, FLOOR=244, 10 fixtures); v1.4 Task 7 self-verify fixture count 7→10 consistency fix; v1.5 F3 pass-3 fixes applied 2026-07-06 (F-B3-01..06: strip-from-first-paren, branch (d) anchor, N=331/FLOOR=248, Fixture J/F kill coverage, EC-CITE-059).
+**Status:** DRAFT — F3 initial decomposition (2026-07-04); BCs anchored F2 2026-07-05 (BC-X.13.004..006); v1.2 F3 pass-1 fixes applied 2026-07-06 (F-B1-01..10); v1.3 F3 pass-2 fixes applied 2026-07-06 (F-B2-01..09, DEC-154 Option A grammar extension, FLOOR=244, 10 fixtures); v1.4 Task 7 self-verify fixture count 7→10 consistency fix; v1.5 F3 pass-3 fixes applied 2026-07-06 (F-B3-01..06: strip-from-first-paren, branch (d) anchor, N=331/FLOOR=248, Fixture J/F kill coverage, EC-CITE-059); v1.6 F3 pass-4 fixes applied 2026-07-06 (F-B4-CRIT-01: count pin 3→4, F-B4-H-01: space-args sub-probe, F-B4-M-01: pipefail guard, Task 0 worktree preface).
 
 **Origin:** DEC-148 citation-debt-filewide cycle. After ADR-0012 Seam A/B extracted
 `handle_jsm_create` to `src/cli/issue/jsm_create.rs` and `handle_edit` to
@@ -297,9 +309,12 @@ satisfy Fixture F's content assertion while leaving others RED, corrupting the R
 observation. The no-output stub mandates all fixtures to be RED before implementation begins.
 
 0. **Apply citation hygiene fixes (EC-CITE-058 — pre-AC-001 GREEN prerequisite, factory-artifacts
-   commit in same story cycle).** These factory-side edits MUST be committed to the
-   `factory-artifacts` branch BEFORE the product PR is opened. AC-001's canonical guard run
-   reads the `factory-artifacts` state mounted by the spec-guard CI job.
+   commit in same story cycle).** The hygiene edits are made in a factory-artifacts worktree
+   (e.g. `git worktree add ../jira-cli-fa factory-artifacts`), NOT on a develop checkout where
+   `.factory/` is unmounted — then committed/pushed there BEFORE the product PR opens. These
+   factory-side edits MUST be committed to the `factory-artifacts` branch BEFORE the product PR
+   is opened. AC-001's canonical guard run reads the `factory-artifacts` state mounted by the
+   spec-guard CI job.
 
    **Why:** The guard (once built) correctly flags three truly-dead citation clusters and two
    multi-line Trace fields as DEAD. These are NOT grammar failures — they are citation hygiene
@@ -449,8 +464,11 @@ observation. The no-output stub mandates all fixtures to be RED before implement
    **Pass 1** — extract every full backtick-quoted token beginning with `src/`, including
    internal spaces (backtick-only stop — `[^`]+`, NOT `[^` ]+`):
    ```bash
-   grep -oE '`src/[^`]+`' | tr -d '`'
+   grep -oE '`src/[^`]+`' | tr -d '`' || true
    ```
+   The `|| true` guard prevents `set -euo pipefail` abort when a Trace/Source line has no
+   backtick-quoted `src/` tokens — zero matches is a legitimate outcome (flows to
+   SCOPE-EMPTY/floor guards; consistent with the `|| true` in Step 2).
    This is the **canonical extraction regex** — single source of truth (one call site in the
    script; counted by the post-fixture `grep -cF 'grep -oE'` pin). The `[^`]+` pattern stops
    only at a backtick, recovering tokens that contain internal spaces (comma-space line-ref
@@ -743,7 +761,7 @@ must output zero lines.
 | C | Import-only false-green: `src/cli/issue/create.rs::handle_jsm_create` — mock `create.rs` has only `use super::jsm_create::{JsmCreateArgs, handle_jsm_create};` (import) | `rc=1`; `handle_jsm_create` DEAD (import not a definition) | (a) Plain `grep -q "handle_jsm_create"` → matches import → `rc=0` → RED; proves definition-anchored grep is required |
 | D | Source-field extraction: `**Source**: `src/nonexistent_source_selftest.rs::source_fn`` (Source field, not Trace) — file NOT created | `rc=1`; output contains dead citation | (a) Scan only `**Trace**:` lines, skip `**Source**:` → `rc=0` → RED; proves both field types are scanned |
 | E | Two-pass extraction: `**Trace**: `src/mock_e.rs § "some section"`` — mock `mock_e.rs` exists (touch, empty); F-B2-02/07 differential signal | `rc=0`; output contains `1 citations checked` (proves Pass 1 extracted the space-containing token, Pass 2 reduced it to bare path, file-existence check ran — NOT silently dropped) | (a) Use old single-pass regex `[^` ]+` (stop-on-space) → § form token SILENTLY DROPPED → `0 citations checked` in output → assertion fails → RED; (b) Apply symbol grep to §-form token → grepping empty file fails → `rc=1` → RED; proves §-form is file-existence-only and that the token IS extracted |
-| F | Success path: `**Trace**: `src/mock_f.rs::mock_f_fn_selftest`` + `**Source**: `src/mock_f.rs`` — mock `mock_f.rs` defines `fn mock_f_fn_selftest() {}`; sub-probes: (1) `src/mock_f.rs::MAX_ADF_DEPTH` with `pub(crate) const MAX_ADF_DEPTH: usize = 256;` (EC-CITE-051, anchored branch (d)); (2) `src/mock_f.rs::mock_f_fn_selftest()` fn citation with trailing `()` (EC-CITE-059, Step-5 strip); negative probe: mock containing ONLY `    // pub const MAX_ADF_DEPTH: usize = 256` doc-comment line MUST classify DEAD under anchored form | `rc=0` for all positive probes; output matches `^Check passed: [0-9]+ citations checked$`; negative probe `rc=1` (DEAD) | (a) Inverted polarity (return 1 on success) → `rc=1` → RED; (b) Omit success summary line → content assertion fails → RED; (c) [group-removal] Sub-probe: omit `(\([^)]*\))?` group → `pub(crate) const MAX_ADF_DEPTH:` from line-start no longer matches simplified `(pub[[:space:]]+)?` pattern → DEAD → `rc=1` → caught (EC-CITE-051); [anchor-removal] remove `^[[:space:]]*` anchor → negative probe's doc-comment line `    // pub const MAX_ADF_DEPTH:` matches unanchored form → false-ALIVE → `rc=0` → RED; (d) Delete Step-5 strip (`%%\(*`) → fn citation `mock_f_fn_selftest()` yields unstripped symbol `mock_f_fn_selftest()` → malformed ERE → DEAD → `rc=1` → caught (EC-CITE-059) |
+| F | Success path: `**Trace**: `src/mock_f.rs::mock_f_fn_selftest`` + `**Source**: `src/mock_f.rs`` — mock `mock_f.rs` defines `fn mock_f_fn_selftest() {}`; sub-probes: (1) `src/mock_f.rs::MAX_ADF_DEPTH` with `pub(crate) const MAX_ADF_DEPTH: usize = 256;` (EC-CITE-051, anchored branch (d)); (2) `src/mock_f.rs::mock_f_fn_selftest(args: T)` fn citation with space-args form (EC-CITE-059, Step-5 strip: Pass 2 space-split → `mock_f_fn_selftest(args:`; strip-from-first-`(` → `mock_f_fn_selftest`); negative probe: mock containing ONLY `    // pub const MAX_ADF_DEPTH: usize = 256` doc-comment line MUST classify DEAD under anchored form | `rc=0` for all positive probes; output matches `^Check passed: [0-9]+ citations checked$`; negative probe `rc=1` (DEAD) | (a) Inverted polarity (return 1 on success) → `rc=1` → RED; (b) Omit success summary line → content assertion fails → RED; (c) [group-removal] Sub-probe: omit `(\([^)]*\))?` group → `pub(crate) const MAX_ADF_DEPTH:` from line-start no longer matches simplified `(pub[[:space:]]+)?` pattern → DEAD → `rc=1` → caught (EC-CITE-051); [anchor-removal] remove `^[[:space:]]*` anchor → negative probe's doc-comment line `    // pub const MAX_ADF_DEPTH:` matches unanchored form → false-ALIVE → `rc=0` → RED; (d) Delete Step-5 strip (`%%\(*`) → Pass 2 space-split gives `mock_f_fn_selftest(args:` → unstripped symbol `mock_f_fn_selftest(args:` has unbalanced `(` → fn-grep ERE is malformed → grep exits 2 → DEAD → `rc=1` → caught (EC-CITE-059); bare `()` form would NOT kill this mutation (empty parens = valid ERE group → grep exits 0 on the balanced group) |
 | G | Coverage-floor RED probe: (1) bc dir with ONE citation total (well below FLOOR); (2) second sub-probe with 100 citations (still below FLOOR=248) — both with CANONICAL_MODE=1; `unset CANONICAL_MODE` after all G assertions (Story A Fixture H precedent + F-B2-06) | Both probes: `rc=1`; output contains `BC-CITE-COVERAGE-FLOOR:`; output contains `expected >= ${FLOOR}` (no hardcoded integer); single `fixtures_run` increment for entire G | (a) Omit CANONICAL_MODE gate → floor never fires → `rc=0` → RED; (b) FLOOR mutation `-lt "$FLOOR"` → `-lt "5"` → 100-citation probe: 100 > 5 → rc=0 → assertion `[ "$rc" -eq 1 ]` fails → caught; (c) CANONICAL_MODE as `local` in run_check → floor false-greens → RED |
 | I | `::tests` module-path ALIVE (EC-CITE-052): `src/mock_i.rs::tests` — mock `mock_i.rs` defines `mod tests { }` | `rc=0`; output matches `^Check passed: [0-9]+ citations checked$` | (a) Omit mod-tests anchored grep → symbol `tests` falls through all branches → DEAD → `rc=1` → RED; proves branch (b) is required |
 | J | `::tests` module-path negative DEAD (EC-CITE-053): `src/mock_j.rs::nonexistent_mod` — file has bare text `nonexistent_mod` (no `mod` keyword), symbol not a definition | `rc=1`; output contains `DEAD:` | (a) Add permissive `grep -q "$symbol"` fallback → bare text `nonexistent_mod` in file matches → `rc=0` → RED; proves no-permissive-fallback is enforced (requires non-empty mock — empty file would not trigger permissive fallback, failing to kill mutation); (b) Branch (b) polarity swap: invert mod-tests return (ALIVE when not found) → mod-tests grep for `mod tests` fails → returns ALIVE → `rc=0` → assertion `[ "$rc" -eq 1 ]` fails → caught |
@@ -805,11 +823,14 @@ printf '**Trace**: `src/mock_f.rs::MAX_ADF_DEPTH`\n' >> "$tmp_F/bc-mock.md"
 printf 'pub(crate) const MAX_ADF_DEPTH: usize = 256;\n' >> "$tmp_F/src/mock_f.rs"
 # rerun: must be ALIVE via anchored const/static grep (^[[:space:]]* anchor + (\([^)]*\))? group)
 
-# Fixture F sub-probe (2): fn citation with trailing () (EC-CITE-059, F-B3-05)
-# Exercises Step-5 strip-from-first-( — `symbol%%\(*` strips `()` → `mock_f_fn_selftest`
-# A mutation deleting the strip leaves `mock_f_fn_selftest()` → malformed ERE → DEAD → caught
-printf '**Trace**: `src/mock_f.rs::mock_f_fn_selftest()`\n' >> "$tmp_F/bc-mock.md"
-# mock_f_fn_selftest is already defined above; () citation tests the strip path
+# Fixture F sub-probe (2): fn citation with space-args form (EC-CITE-059, F-B4-H-01 corrected)
+# Citation `mock_f_fn_selftest(args: T)`: Pass 2 space-split → `mock_f_fn_selftest(args:`;
+# strip-from-first-( removes `(args:` → `mock_f_fn_selftest`; fn-grep finds definition → ALIVE.
+# Under delete-strip mutation: unstripped `mock_f_fn_selftest(args:` has unbalanced `(` →
+# fn-grep ERE is malformed → grep exits 2 → DEAD → rc=1 → caught (EC-CITE-059).
+# Bare `()` form would NOT kill this mutation: empty parens = valid ERE group → grep exits 0.
+printf '**Trace**: `src/mock_f.rs::mock_f_fn_selftest(args: T)`\n' >> "$tmp_F/bc-mock.md"
+# mock_f_fn_selftest is defined above as `fn mock_f_fn_selftest() {}`; body stays unchanged
 
 set +e; BC_DIR="$tmp_F" SRC_ROOT="$tmp_F" output=$(run_check 2>&1); rc=$?; set -e
 # All citations checked (fn, bare, const, fn-with-paren); rc=0; output matches "^Check passed:"
@@ -881,8 +902,8 @@ the BC's K=10 pin. Do NOT add L/M without first updating BC-X.13.006 (PO decisio
 Stay at 10 fixtures to remain in BC lockstep.
 
 **Post-fixture self-assertions (NOT fixtures; do NOT increment `fixtures_run`):**
-- `[ "$(grep -cF 'BC-CITE-001' "${BASH_SOURCE[0]}")" = "3" ]` — exact count pin (header comment
-  + preamble check + own assertion line = 3; addition raises to 4 → RED, deletion drops to 2 → RED).
+- `[ "$(grep -cF 'BC-CITE-001' "${BASH_SOURCE[0]}")" = "4" ]` — exact count pin (header comment
+  + preamble grep + Step-1 echo + own assertion line = 4; the composed-fragment `lit1='BC-CITE-''001'` anti-self-match line does NOT count by design; addition raises to 5 → RED, deletion drops to 3 → RED).
 - Composed-fragment anti-self-match (Story A precedent, `check-cargo-mutants-policy-citations.sh:572-574`):
   `lit1='BC-CITE-''001'` then `[ "$(grep -E 'FAIL:' "${BASH_SOURCE[0]}" | grep -cF "$lit1")" = "0" ]` —
   enforces mechanically that no `FAIL:` diagnostic line contains the literal `BC-CITE-001`
