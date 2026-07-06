@@ -44,7 +44,7 @@ acceptance_criteria_count: 7
 assumption_validations: []
 risk_mitigations: []
 created: "2026-07-04"
-version: "1.3"
+version: "1.4"
 last_updated: "2026-07-06"
 breaking_change: false
 retroactive: false
@@ -57,6 +57,7 @@ origin: >
   F1 delta analysis citation-guards-2026-07-02-delta.md §2 (BC-CITATION-CI-GUARD / Guard 1).
   Stories recommended: 2 (wave_order: guards-2-3-first per F1 §7). This is Story B.
 changelog:
+  - "1.4 (2026-07-06): consistency fix — Task 7 self-verify fixture count 7→10 (v1.3 sweep miss)."
   - "1.3 (2026-07-06): F3 pass-2 fixes (F-B2-01..09) + DEC-154 Option A grammar extension.
     F-B2-01 (CRIT) Fixture F sub-probe path mismatch fixed: citation src/adf.rs::MAX_ADF_DEPTH
     → src/mock_f.rs::MAX_ADF_DEPTH (mock const written to mock file, not adf.rs). F-B2-02/07
@@ -138,7 +139,7 @@ files_modified:
 
 # S-BC-CITATION-GUARD-1 — CITATION-GUARDS Story B: BC-body Trace/Source file::symbol Citation Guard
 
-**Status:** DRAFT — F3 initial decomposition (2026-07-04); BCs anchored F2 2026-07-05 (BC-X.13.004..006); v1.2 F3 pass-1 fixes applied 2026-07-06 (F-B1-01..10); v1.3 F3 pass-2 fixes applied 2026-07-06 (F-B2-01..09, DEC-154 Option A grammar extension, FLOOR=244, 10 fixtures).
+**Status:** DRAFT — F3 initial decomposition (2026-07-04); BCs anchored F2 2026-07-05 (BC-X.13.004..006); v1.2 F3 pass-1 fixes applied 2026-07-06 (F-B1-01..10); v1.3 F3 pass-2 fixes applied 2026-07-06 (F-B2-01..09, DEC-154 Option A grammar extension, FLOOR=244, 10 fixtures); v1.4 Task 7 self-verify fixture count 7→10 consistency fix.
 
 **Origin:** DEC-148 citation-debt-filewide cycle. After ADR-0012 Seam A/B extracted
 `handle_jsm_create` to `src/cli/issue/jsm_create.rs` and `handle_edit` to
@@ -655,8 +656,8 @@ observation. The no-output stub mandates all fixtures to be RED before implement
      (DEC-148 Guard 1)
 
 7. **Self-verify:** Read back all modified files. Confirm:
-   - `scripts/check-bc-citation-symbols.sh --self-test` exits 0 (all 7 fixtures pass; preamble
-     checks pass; `fixtures_run = "7"`).
+   - `scripts/check-bc-citation-symbols.sh --self-test` exits 0 (all 10 fixtures pass; preamble
+     checks pass; `fixtures_run = "10"`).
    - `scripts/check-bc-citation-symbols.sh` (canonical run) exits 0 on develop HEAD with
      `.factory/specs/prd/` mounted (spec-guard job context). If run locally: set
      `BC_DIR=.factory/specs/prd` and run from repo root.
