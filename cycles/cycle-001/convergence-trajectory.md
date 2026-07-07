@@ -1274,8 +1274,11 @@ Supports ADVERSARY-META-LENS-REGRESS engine item: strict criterion (incl. recurs
 | 14 | 2026-07-07 | 0 | 0 | 0 | 0 | 0 | 1/3 | CLEAN-PASS |
 | 15 | 2026-07-07 | 2 | 0 | 0 | 0 | 2 | 0/3 | FINDINGS_REMAIN |
 | 16 | 2026-07-07 | 3 | 0 | 0 | 0 | 3 | 0/3 | FINDINGS_REMAIN |
+| 17 | 2026-07-07 | 0 | 0 | 0 | 0 | 0 | 1/3 | CLEAN-PASS |
+| 18 | 2026-07-07 | 0 | 0 | 0 | 0 | 0 | 2/3 | CLEAN-PASS |
+| 19 | 2026-07-07 | 0 | 0 | 0 | 0 | 0 | 3/3 | FULL CONVERGENCE |
 
-**Trajectory:** →3→4→5→5→0→1→0→4→1→0→3→1→1→0→2→3 — STREAK 0/3 (STRICT, DEC-158). Pass 17 (verification-adequacy final) dispatched.
+**Trajectory:** →3→4→5→5→0→1→0→4→1→0→3→1→1→0→2→3→0→0→0 — **STRICT CONVERGED** (19 passes / 13 fix rounds, DEC-158/DEC-159). Window: passes 17/18/19 CLEAN×3. Human-approved 2026-07-07.
 
 ### Pass 1 (2026-07-07) — Coherence / Registration Lens
 
@@ -1421,6 +1424,33 @@ All pass 13 fixes verified. Voice harmonization confirmed consistent. No new fin
 
 ---
 
+### Pass 17 (2026-07-07) — Verification-Adequacy Lens (final)
+
+**Findings:** 0 — CLEAN-PASS
+**Convergence counter:** 1 of 3 (STRICT)
+
+STREAK 1/3. 2 NITPICKs (below LOW threshold, non-resetting): (a) mutation-survival table in verification-delta-571.md lists 23 probe mutations with all survivors disclosed and design-attested (annotation-drop mutant, future-mark allowlist); (b) EC-4 (`^\`x\'^` adjacency vacuousness) carry-forward noted for F3 story empirical confirmation step. Neither rises to a spec defect. All pass 16 fixes verified propagated cleanly.
+
+---
+
+### Pass 18 (2026-07-07) — Evaluator-Simulation Lens
+
+**Findings:** 0 — CLEAN-PASS
+**Convergence counter:** 2 of 3 (STRICT)
+
+STREAK 2/3. 3 NITPICKs carried to F3 as story notes (non-resetting): (a) H-NEW-ADF-010 Call B pre-fix composition ambiguity — F3 story must specify empirical Red Gate test confirming [subsup, code] double-emission before fix; (b) H-NEW-ADF-010 Call E JSM-isolation note is advisory, not a test precondition — F3 story must gate it as skip-if-no-service-desk; (c) PANEL-ANCHOR boundary case (annotation mark in panel context) carries a 1-sentence design-attest in prd-delta but no VP; VP-571-005 covers it adequately per cross-reference. All 5 holdout calls traced end-to-end through spec ↔ VP ↔ holdout fixture ↔ test function chain. No spec gaps found.
+
+---
+
+### Pass 19 (2026-07-07) — Full-Spectrum Final-Gate Lens
+
+**Findings:** 0 — FULL CONVERGENCE
+**Convergence counter:** 3 of 3 (STRICT)
+
+**STRICT CONVERGED. Window: passes 17/18/19 CLEAN×3.** 2 NITPICKs (non-resetting): (a) spec-changelog v1.3.25 trailing whitespace on one line — cosmetic; (b) BC-7.2.015 band-range comment upper bound 058 is conservative vs actual mark-type count — design-attested. Zero fix-shear: no new changes introduced by pass 19. F3-ready without invention: story-writer can proceed directly from prd-delta-571.md + verification-delta-571.md + H-NEW-ADF-010. DEC-159 recorded. F3 story decomposition dispatched.
+
+---
+
 ### Notable Findings (F2 ADF-CODE-MARK-EXCLUSIVITY)
 
 - **1 CRIT (pass 2):** H-NEW-ADF-010 Call E fixture inexecutable — 3 sub-defects (ADF literal wrong, fixture schema non-conforming, JSM isolation absent). Root cause: holdout scenario authored with insufficient attention to JSM-specific execution context.
@@ -1431,6 +1461,7 @@ All pass 13 fixes verified. Voice harmonization confirmed consistent. No new fin
 - **PHASE-DOC-RETRO-ANNOTATION (pass 11):** F1 artifacts need retro-annotation when F2 decisions supersede F1 scope; F2 skill template update candidate.
 - **Core contract finding-free since pass 12:** passes 13-16 residual tier = instruction-layer polish only (LOW, non-substantive).
 - **Pre-existing items surfaced (passes 15/16):** H-NEW-JSM-RT-001-FIXTURE-NONDESERIALIZABLE (projectKey vs projectId); HOLDOUT-GROUP-8-DUPLICATE-HEADING.
+- **STRICT CONVERGED at pass 19 (2026-07-07):** window 17/18/19 CLEAN×3; DEC-159; human-approved; F3 dispatched. Total: 19 passes / 13 fix rounds. Accepted residuals disclosed in-spec: EC-2/3/4 + Calls B/E pre-fix composition protocol-guarded; annotation-drop mutant; future-mark allowlist design-attested. Comparative: this STRICT F2 = 19 passes vs Story B STANDARD F3 = 15 passes vs Story A STRICT F3 = 44 passes (ADVERSARY-META-LENS-REGRESS data point).
 
 ## Frontmatter Fields (extracted from STATE.md)
 

@@ -7,7 +7,7 @@ producer: state-manager
 timestamp: 2026-05-08T00:00:00
 cycle: "cycle-001"
 inputs: [STATE.md]
-input-hash: "9ed7cb6"
+input-hash: "f27344f"
 traces_to: STATE.md
 ---
 
@@ -1316,3 +1316,37 @@ _Was the active checkpoint after maintenance sweep 2026-06-22 fully closed. PRs 
 | **Untracked local files** | Deliberately uncommitted, session-local tooling, harmless: `.claude/pr-reviews/`, `.claude/spec-config.json`. |
 | **STATE.md size** | ~280 lines (WARNING band). |
 | **Resume command** | Open a fresh session; run `/vsdd-factory:next-step`. Pipeline PAUSED (IDLE). Resolve pending decisions before dispatching next cycle. MUTANTS-FIRST-SCOPED-PR-CALIBRATION watch: ×4 0-mutant confirmations; code-mutant path still unexercised. |
+
+---
+
+## Session Resume Checkpoint (2026-07-07) — ADF-CODE-MARK-EXCLUSIVITY F2 ONGOING DEC-158 STREAK-0/3-STRICT pass-17 dispatched
+
+*Archived from STATE.md on 2026-07-07 when F2 CONVERGED (DEC-159) burst replaced this checkpoint.*
+
+### Spec Versions
+
+| Artifact | Version |
+|----------|---------|
+| prd.md | v1.3.25 |
+| BC count | 612 |
+| Holdout scenarios | 83 |
+| Stories | 102 |
+
+### State
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-07-07 |
+| **Position** | ADF-CODE-MARK-EXCLUSIVITY F2 ONGOING (STRICT, DEC-158). 16 adversary passes / 13 fix rounds. STREAK 0/3 STRICT (window reset at p16: 3L). Pass-17 dispatched (VA: 23-probe mutation-survival table). BC-7.2.015 + BC-7.2.007 EC-2 + H-NEW-ADF-010 + VP-571-001..005 + PANEL-ANCHOR in spec. develop @ 0d8a8a5 UNCHANGED. |
+| **Convergence counter** | ADF-CODE-MARK-EXCLUSIVITY F2: ONGOING (STRICT, DEC-158). trajectory →3→4→5→5→0→1→0→4→1→0→3→1→1→0→2→3 (passes 1-16; last delta=3 at p16). STREAK 0/3 STRICT. Clean passes: 5/7/10/14. |
+| **Next step** | Pass-17 result pending (VA lens). If CLEAN: dispatch pass-18 (evaluator-simulation). If findings: fix + reset streak. Need 3 consecutive clean diverse-lens passes for STRICT convergence (DEC-158). |
+
+### Resume Prompt
+
+```
+Open a fresh session; run /vsdd-factory:next-step. ADF-CODE-MARK F2 in progress
+(STRICT, DEC-158) — adversary pass-17 (VA lens: 23-probe mutation-survival table)
+dispatched. If pass-17 CLEAN, dispatch pass-18 (evaluator-simulation lens). If
+findings, fix and reset streak. Need 3 consecutive clean diverse-lens passes for
+STRICT convergence. Counters: BC 612, Holdouts 83, Stories 102. develop @ 0d8a8a5.
+```

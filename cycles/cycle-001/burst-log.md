@@ -4574,3 +4574,51 @@ Rows displaced to make room for DEC-158 + passes 6-16 summary + pass-17-dispatch
 | **CITATION-GUARDS CYCLE CLOSED (DEC-156, 2026-07-07)** — PR #592 squash-merged by human (DEC-128 honored); develop ab78a2d → 0d8a8a5. Story #102 v1.13 status=delivered. DEC-156 recorded. 2 new lessons codified. BC-CITATION-CI-GUARD drift CLOSED. BC-INDEX-9TH-SURFACE + COMPANION-LINT drift items added. | state-manager | COMPLETE | develop @ 0d8a8a5. BC 611. Stories 102. Holdouts 82. |
 | **ADF-CODE-MARK-EXCLUSIVITY CYCLE OPENED + F1 DELTA ANALYSIS COMPLETE (2026-07-07)** — Cycle opened for issue #571. Mechanism: `src/adf.rs::push_code` clones active_marks + appends code mark. F1 artifacts: impact-boundary-571.md, artifact-mapping-571.md, adf-code-mark-2026-07-07-delta.md, affected-files-571.txt, research/issue-571-adf-code-mark-exclusivity-2026-07-07.md. HELD — 5 scope questions presented to human. | architect + BA + state-manager | COMPLETE | F1 artifacts committed. develop @ 0d8a8a5 UNCHANGED. |
 | **ADF-CODE-MARK-EXCLUSIVITY F1 GATE APPROVED — DEC-157 recorded (2026-07-07)** — Human approved 5-point scope: (1) emit-site filter only; (2) no node-splitting; (3) apply_marks read-tolerance retained; (4) standalone BC-7.2.015; (5) STANDARD criterion (DEC-153 precedent). H-NEW-ADF-010 authorized (F2, calls A-E incl. JSM Call E). F2 dispatch authorized. | state-manager | COMPLETE | DEC-157. develop @ 0d8a8a5 UNCHANGED. |
+
+---
+
+## Burst: ADF-CODE-MARK-EXCLUSIVITY F2 CONVERGED STRICT + F3 DISPATCHED (2026-07-07)
+
+**Parent-commit:** dbca795f45b4c95aa5ff160ec01c1b39cb51d3ea
+
+**Adversary verdict:** F2 CONVERGED STRICT (DEC-159) — Window 17/18/19 CLEAN×3. P17 CLEAN (VA lens: 2 NITPICK — mutation-survival table 23-probe all-survivors-disclosed + EC-4 adjacency; non-resetting per DEC-158). P18 CLEAN (evaluator-simulation: 3 NITPICK carried to F3 — Call B Red Gate empirical confirm; Call E JSM-isolation skip gate; PANEL-ANCHOR VP-571-005 coverage adequate). P19 CLEAN (full-spectrum final-gate: 2 NITPICK design-attested — trailing whitespace cosmetic + band-range comment). Zero fix-shear. Human-approved 2026-07-07. Total: 19 fresh-context passes / 13 fix rounds.
+
+**Files touched (Dim-1): 4 unique files**
+
+- .factory/STATE.md
+- .factory/cycles/cycle-001/convergence-trajectory.md
+- .factory/cycles/cycle-001/burst-log.md
+- .factory/cycles/cycle-001/session-checkpoints.md
+
+**Codifications:** DEC-159 recorded — ADF-CODE-MARK-EXCLUSIVITY F2 STRICT convergence gate closed (human-approved 2026-07-07). BC-7.2.015 + BC-7.2.007 EC-2 amended + H-NEW-ADF-010 (5 calls, 3-rung empirical ladder) + VP-571-001..005 + PANEL-ANCHOR at spec v1.3.25. Accepted residuals disclosed in-spec. F3 DISPATCHED under STRICT story-convergence criterion (human ruling, DEC-159). Comparative data point for ADVERSARY-META-LENS-REGRESS: STRICT F2=19 passes vs STANDARD F3 Story B=15 passes vs STRICT F3 Story A=44 passes.
+
+**Dim-2 Attestation:** STATE.md structure verified: banner 277 lines (wc -l confirmed). trajectory-tail →3→0→0→0 present in current_step (frontmatter) AND Last Updated cell (Project Metadata table) — both required sites per D-453(d). DEC-159 recorded in Decisions Log. Phase Progress: 5 rows (≤5 cap satisfied). Current Phase Steps: 5 rows (≤5 cap satisfied). No open blocking issues. convergence-trajectory.md passes 17-19 rows appended; trajectory shorthand updated to STRICT CONVERGED annotation.
+
+**Dim-5 Attestation:** STATE.md = 277 lines — within 500-line hard cap (budget margin 223 lines). convergence-trajectory.md, burst-log.md, and session-checkpoints.md are append-only cycle files with no line-count cap.
+
+**Dim-6 Attestation:** STATE.md frontmatter YAML valid (timestamp ISO-8601 format 2026-07-08T00:37:00Z). All required frontmatter fields present. Burst heading format canonical per D-421(e)+D-438(d)+D-439(a). Session checkpoint archived in standard table format. No formatting anomalies detected.
+
+**Dim-7 Attestation:** All STATE.md PostToolUse hooks PASS: validate-dispatch-advance (D-chain cite D-27893 present in current_step), validate-trajectory-tail-cell-completeness (trajectory-tail →3→0→0→0 in current_step AND Last Updated cell), validate-state-structure (banner line count = actual line count, fix-burst row present in Phase Progress). PreToolUse timestamp-refresh hook PASS (timestamp advanced to 2026-07-08T00:37:00Z). trajectory-tail →3→0→0→0.
+
+**Closes:** DEC-159 (ADF-CODE-MARK-EXCLUSIVITY F2 STRICT convergence gate closed, human-approved 2026-07-07). F3 story #103 (S-ADF-CODE-MARK-1) authoring dispatched.
+
+### Details
+
+| Agent | Task | Output |
+|-------|------|--------|
+| state-manager | Append passes 17-19 to convergence-trajectory.md; update STATE.md (DEC-159, Phase Progress, Current Phase Steps, Session Resume Checkpoint, Last Updated trajectory-tail); commit + push | This commit |
+
+### Archived Phase Progress Rows (from STATE.md, 5-row cap, F2 CONVERGED burst)
+
+Rows displaced to make room for F2-passes-6-16 + F2-passes-17-19 + F3-DISPATCHED rows and to restore fix-burst-4.
+
+| Phase | Status | Completed | Gate | Notes |
+|-------|--------|-----------|------|-------|
+| **ADF-CODE-MARK-EXCLUSIVITY F2 — SPEC DELTA AUTHORED + PASSES 1-5 COMPLETE (fix rounds 1-4, 2026-07-07)** | **COMPLETE** | **2026-07-07** | **Spec delta authored (BC-7.2.015 + BC-7.2.007 EC-2 + H-NEW-ADF-010, v1.3.25). P1(3M: calls A-E holdout-ladder); P2(CRIT Call-E RT-id + 4M); P3(5M: PANEL-ANCHOR + VP-571-001..005 + reverse-path); P4(5M rebound); P5(0). 4 fix rounds: holdout-ladder + VP-571-001..005 + PANEL-ANCHOR + call deduplication. trajectory →3→4→5→5→0. STREAK 0/3 STRICT.** | BC 612. Holdouts 83. spec v1.3.25. |
+
+### Archived Current Phase Steps (from STATE.md, 5-row cap, F2 CONVERGED burst)
+
+| Step | Agent | Status | Output |
+|------|-------|--------|--------|
+| **ADF-CODE-MARK-EXCLUSIVITY F2 SPEC DELTA AUTHORED — PO authored BC-7.2.015 + BC-7.2.007 EC-2 + H-NEW-ADF-010 (2026-07-07)** — Spec-author produced prd-delta-571.md (BC-7.2.015 "push_code MUST NOT emit code mark alongside non-code marks" + BC-7.2.007 EC-2 MODIFY + H-NEW-ADF-010 holdout, 5-call empirical ladder A-E) + verification-delta-571.md (VP-571-001..005 + PANEL-ANCHOR). spec v1.3.25. BC +1 → 612. Holdouts +1 → 83. F2 dispatch authorized. | spec-author (PO) | COMPLETE | spec v1.3.25. BC 612. Holdouts 83. |
+| **ADF-CODE-MARK-EXCLUSIVITY F2 PASSES 1-5 / FIX ROUNDS 1-4 COMPLETE (2026-07-07)** — P1(3M: calls A-E missing holdout ladder); P2(CRIT Call-E RT-id resolve + 4M); P3(5M: PANEL-ANCHOR + VP-571-001..005 + reverse-path not read-only); P4(5M rebound after fix-round 3); P5(0M). 4 fix rounds: holdout-ladder spec + VP-571-001..005 + PANEL-ANCHOR + call deduplication. trajectory →3→4→5→5→0. STREAK 0/3 STRICT (clean at p5). | adversary (×5) + spec-author (×4 rounds) | COMPLETE | trajectory-tail →4→5→5→0. STREAK 0/3 STRICT (clean p5). |
