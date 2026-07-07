@@ -1297,3 +1297,22 @@ _Was the active checkpoint after maintenance sweep 2026-06-22 fully closed. PRs 
 | **Untracked local files** | Deliberately uncommitted, session-local tooling, harmless: `.claude/pr-reviews/`, `.claude/spec-config.json`. |
 | **STATE.md size** | ~280 lines (WARNING band). |
 | **Resume command** | Open a fresh session and run `/vsdd-factory:next-step` — reads STATE.md; pipeline IN_PROGRESS; CITATION-GUARDS CYCLE CLOSED (DEC-156); session review pending completion; then next-backlog gate (MUTANTS-SHARDING-PATH-B, fork signing DEC-104, post-cycle candidates). |
+
+---
+
+## Checkpoint: 2026-07-07 — PIPELINE IDLE (CITATION-GUARDS CYCLE FULLY CLOSED DEC-156; session review complete)
+
+*Archived from STATE.md Session Resume Checkpoint on 2026-07-07 when ADF-CODE-MARK-EXCLUSIVITY cycle-open burst replaced this checkpoint.*
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-07-07 (CITATION-GUARDS CYCLE FULLY CLOSED — DEC-156; session review complete; pipeline IDLE) |
+| **Status** | **PIPELINE IDLE.** CITATION-GUARDS CYCLE FULLY CLOSED (DEC-156). Session review complete (`cycles/cycle-001/CITATION-GUARDS-session-review.md`). Both stories #101+#102 delivered. No open PRs, no active worktrees. factory-artifacts fully pushed. |
+| **Counters** | BC **611**. NFR **42**. ADR **16**. Stories **102** (both #101 + #102 delivered). Holdouts **82**. |
+| **Convergence counter** | Story B F4: CONVERGED (4 passes/2 fix rounds). Story B F3: CONVERGED (DEC-153 standard, DEC-155 — 15 passes/9 fix rounds). Story A F4: 9 passes/5 fix rounds CLEAN. Full trajectories: `cycles/cycle-001/convergence-trajectory.md`. |
+| **In-flight work** | NONE. develop @ 0d8a8a5. factory-artifacts fully pushed. No open PRs. Worktree `.worktrees/S-BC-CITATION-GUARD-1` may be removed (PR merged). |
+| **Pending decisions** | (1) Ratify session-review criterion recommendation: STANDARD default / STRICT opt-in (closes ADVERSARY-META-LENS-REGRESS). (2) Select next backlog item: MEDIUM candidates: S-PG-MERGE-AUTH-BYPASS residuals, TEST-ONLY-GATE-ELIGIBILITY, BC-7.3.010-FORBIDDEN-PATTERN-CI-GUARD, MUTANTS-SHARDING-PATH-B; new cycle candidates: BC-INDEX-9TH-SURFACE guard, COMPANION-LINT single-line-trace, SEC-001/002 Guard-1 hardening. |
+| **develop branch** | 0d8a8a5 (PR #592 squash-merged 2026-07-07 by human). Both CITATION-GUARDS PRs merged. |
+| **Untracked local files** | Deliberately uncommitted, session-local tooling, harmless: `.claude/pr-reviews/`, `.claude/spec-config.json`. |
+| **STATE.md size** | ~280 lines (WARNING band). |
+| **Resume command** | Open a fresh session; run `/vsdd-factory:next-step`. Pipeline PAUSED (IDLE). Resolve pending decisions before dispatching next cycle. MUTANTS-FIRST-SCOPED-PR-CALIBRATION watch: ×4 0-mutant confirmations; code-mutant path still unexercised. |

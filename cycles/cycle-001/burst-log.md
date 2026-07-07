@@ -4510,3 +4510,39 @@ NOTE: Two agent timeouts occurred during test-writer/implementer dispatches; res
 | Step | Agent | Status | Output |
 |------|-------|--------|--------|
 | **CITATION-GUARDS F4 DELIVERY COMPLETE — PR #572 OPEN/HELD** — TDD implementation 376e2c8 (Guard 2 bash + Guard 3 Rust + ci.yml + policy-doc §Guards + §Scope SWEEP + CHANGELOG + CLAUDE.md + glob dev-dep). Per-story adversarial (BC-5.39.001): 9 passes / 5 fix rounds — p1 MED Guards-section (fddc65e); p2 2×MED template+stub-header (f53ee1d); p3 LOW floor-wording (5740c9b); p5 2×MED engine-BC-ID leak ×5 + stale divider (ee67a02); p6 MED CHANGELOG Changed→Added (cac21ec); p7+p8 NITPICK_ONLY; p9 CLEAN. Demos 4535231 (7/7 ACs). PR #572: security CLEAN (1 LOW intentional, 5 INFO); pr-reviewer APPROVE cycle 1; CI 15/15 SUCCESS; mergeStateStatus CLEAN. HELD per DEC-128 — awaiting human code-owner approval + merge authorization. | state-manager | COMPLETE | PR #572 OPEN. develop UNCHANGED @ c4b3aa9. |
+
+---
+
+## Burst: 2026-07-07 — ADF-CODE-MARK-EXCLUSIVITY cycle opened; F1 delta analysis complete
+
+**Summary:** Recovery + F1-complete state update. ADF-CODE-MARK-EXCLUSIVITY cycle opened for issue #571 (`markdown_to_adf` emits `strong+code` ADF → Jira HTTP 400). Research confirmed claims; root cause identified at `src/adf.rs::push_code`. F1 artifacts produced by architect (impact-boundary-571.md) and BA (artifact-mapping-571.md); assembled delta (adf-code-mark-2026-07-07-delta.md) and affected-files-571.txt. Mechanism reconciled: emit-site allowlist filter in `push_code` (post-finish-pass alternative rejected; S-522 CR/LF concern refuted). BC delta: BC-7.2.007 EC-2 MODIFY + BC-7.2.015 ADD + H-NEW-ADF-010 holdout candidate. Reverse path retained as read-tolerance. Single file changed in F4: `src/adf.rs`. HELD at F1 human approval gate — 5 scope questions presented (node-splitting exclusion, reverse-path retention, standalone BC-7.2.015, STANDARD criterion, holdout authoring).
+
+**Prior-dispatch partial edits recovered:** frontmatter (status/pipeline/timestamp/current_step/feature_mode_bundle) was partially applied; Phase Progress table, Current Phase Steps, Session Resume Checkpoint, RESUME PLAN, and Historical Content were not yet updated by the prior dispatch.
+
+### Archived Phase Progress Row (from STATE.md, 5-row cap, ADF-CODE-MARK-EXCLUSIVITY cycle open)
+
+| Phase | Status | Completed | Gate | Notes |
+|-------|--------|-----------|------|-------|
+| **MUTANTS-EXAMINE-GLOBS — PR #570 SHIPPED — CYCLE CLOSED 2026-07-02** | **COMPLETE** | **2026-07-02** | **F1 delta analysis (option (a) restore) → F3 story #100 (S-MUTANTS-EXAMINE-GLOBS-1 v1.2) → F4 worktree ci/mutants-examine-globs-seam-b (3 commits: 5486c34, 1da0571, 475a1aa) → F5 CONVERGED (2 fix rounds + 3 clean diverse-lens passes; rounds 1+2: ci.yml:195 comment MED + policy-doc handle_create→handle_edit MED + story file-set drift MED, all fixed; round 3 diverse-lens CLEAN) → consistency-validator CONSISTENT (story v1.2) → PR #570 squash-merged (human, 2026-07-02; DEC-128 honored); mutants job PASS 35s via 0-mutant path (second 0-mutant calibration confirmation). DEC-150.** | develop 39caf39 → c4b3aa9. Policy-doc + CI-config only; no src change. Stories 99→100. Scope ~594→~702 mutants (+18%). |
+
+### Archived Current Phase Steps (from STATE.md, 5-row cap, ADF-CODE-MARK-EXCLUSIVITY cycle open)
+
+| Step | Agent | Status | Output |
+|------|-------|--------|--------|
+| **CITATION-GUARDS STORY B DRAFT AUTHORED — S-BC-CITATION-GUARD-1 #102 registered** — Story B (Guard 1, arch option (a) spec-guard dual-worktree step) v1.0 draft authored by story-writer; registered in STORY-INDEX.md as story #102 (depends_on:[], bundle: CITATION-GUARDS, 8 pts, 7 ACs). HELD at F2/F3 gate — pending human decisions: (1) BC governance (formal BCs vs policy-doc-only); (2) F3 convergence criterion (DEC-151 question); (3) FLOOR=30 calibration confirmation. | state-manager | COMPLETE | Stories 102. develop @ ab78a2d. BC 608. Holdouts 82. |
+| **CITATION-GUARDS STORY B F2 COMPLETE — BC-X.13.004..006 authored + story v1.1 ratified (2026-07-06)** — DEC-153 ratified all 5 human design decisions. PO authored BC-X.13.004..006 (32 ECs, BC 608→611, commit 9287bc6); story-writer produced story v1.1 with BC anchoring + ratified research revisions (f4b2f48; 2 API-stall retries before success). Unpushed commits staged. Research archived to research/story-b-open-questions-2026-07-05.md. code-delivery/S-MUTANTS-SCOPE-GUARDS-1/ (Story A PR artifacts) also committed. All artifacts pushed to factory-artifacts. | state-manager | COMPLETE | BC 611. Stories #102 v1.1. develop @ ab78a2d UNCHANGED. factory-artifacts pushed. |
+
+### Details
+
+| Agent | Task | Output |
+|-------|------|--------|
+| state-manager | Recovery: inspect partial edits, repair STATE.md, complete F1-state update, atomic commit | This commit |
+
+### Archived Phase Progress Rows — STORY-A and STORY-B F3 (from STATE.md, 5-row cap, 2026-07-07)
+
+Rows archived to make room for pass-1 and fix-burst PENDING rows in Phase Progress table.
+
+| Phase | Status | Completed | Gate | Notes |
+|-------|--------|-----------|------|-------|
+| **CITATION-GUARDS — STORY A DELIVERED — PR #572 MERGED 2026-07-04** | **COMPLETE** | **2026-07-04** | F4 per-story adversarial: 9 passes, 5 fix rounds, CONVERGED (p7 NITPICK/p8 NITPICK/p9 CLEAN). PR #572 squash-merged by human (DEC-128 honored); develop c4b3aa9 → ab78a2d; post-merge guards green. Story #101 v1.49 delivered. DEC-152. | develop @ ab78a2d. PR #572 MERGED. BC 608. Stories 101. Holdouts 82. |
+| **CITATION-GUARDS STORY B F3 CONVERGED — story #102 v1.10 ready (2026-07-06)** | **COMPLETE** | **2026-07-06** | F3 CONVERGED (DEC-155). 15 passes / 9 fix rounds / clean window passes 13/14/15 (DEC-153 standard criterion). Story v1.10 status=ready. 2 CRIT, 3 HIGH, ~12 MED finding classes. | develop @ ab78a2d UNCHANGED. |

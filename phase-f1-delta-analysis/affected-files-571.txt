@@ -1,0 +1,35 @@
+# Affected files — issue #571 ADF code-mark exclusivity
+# Generated: 2026-07-07
+# Format: STATUS PATH
+# STATUS values: MODIFIED, NEW, NOT_CHANGED
+#
+# MODIFIED = will be changed in this feature cycle (F4)
+# NOT_CHANGED = regression baseline; must stay green
+# NEW = does not exist yet; will be created in F2 (spec/holdout) or F4 (tests)
+
+MODIFIED      src/adf.rs
+
+NOT_CHANGED   src/cli/issue/create.rs
+NOT_CHANGED   src/cli/issue/edit.rs
+NOT_CHANGED   src/cli/issue/workflow.rs
+NOT_CHANGED   src/api/jsm/requests.rs
+NOT_CHANGED   src/cli/worklog.rs
+NOT_CHANGED   src/cli/issue/comments.rs
+NOT_CHANGED   src/cli/issue/view.rs
+NOT_CHANGED   src/cli/issue/jsm_create.rs
+NOT_CHANGED   src/api/jira/issues.rs
+NOT_CHANGED   src/api/jira/bulk.rs
+NOT_CHANGED   src/config.rs
+NOT_CHANGED   src/cache.rs
+NOT_CHANGED   src/output.rs
+NOT_CHANGED   src/error.rs
+NOT_CHANGED   src/lib.rs
+NOT_CHANGED   src/main.rs
+NOT_CHANGED   .github/workflows/ci.yml
+NOT_CHANGED   Cargo.toml
+NOT_CHANGED   CLAUDE.md
+
+# Spec files updated in F2 (not F4 product code):
+# .factory/specs/prd/bc-7-output-render.md  (BC-7.2.007 EC-2 MODIFY + BC-7.2.015 ADD)
+# .factory/specs/prd/holdout-scenarios.md   (H-NEW-ADF-010 ADD)
+# .factory/specs/prd/CANONICAL-COUNTS.md    (total count increment)
