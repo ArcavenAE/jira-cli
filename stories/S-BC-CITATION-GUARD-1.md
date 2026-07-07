@@ -22,9 +22,12 @@ blocks: []
 behavioral_contracts: ["BC-X.13.004", "BC-X.13.005", "BC-X.13.006"]
 # BC status: anchored F2 2026-07-05; DEC-154 Option A deltas committed 2026-07-06 (commit
 # 125f081); F3 pass-3 BC fixes b85c4bb 2026-07-06 (N=331/FLOOR=248, strip-from-first-paren,
-# branch (d) ^[[:space:]]* anchor, EC-CITE-059). BC-X.13.004: file-existence + SCOPE-EMPTY
-# guard + coverage floor = floor(0.75 × N) ≈ 248 in CANONICAL_MODE (N=331 post-Task-0-hygiene
-# census; pre-hygiene DEC-154: N=326, FLOOR=244); collect-all semantics;
+# branch (d) ^[[:space:]]* anchor, EC-CITE-059); F-01 two-tier shape guard 7575e54 2026-07-06
+# (N=309/FLOOR=231, two-tier baseline 2b09313: 304 .rs + 5 .snap; pre-two-tier: N=331,
+# FLOOR=248; EC-CITE-060). BC-X.13.004: file-existence + SCOPE-EMPTY
+# guard + coverage floor = floor(0.75 × N) ≈ 231 in CANONICAL_MODE (N=309 two-tier baseline
+# 2b09313; pre-two-tier post-Task-0-hygiene census: N=331, FLOOR=248; pre-hygiene DEC-154:
+# N=326, FLOOR=244); collect-all semantics;
 # EC-CITE-058 hygiene dependency. BC-X.13.005: two-pass extraction (F-B2-02); 7-branch
 # symbol dispatch: (a) fn-grep primary; (b) ::tests mod-grep; (c) ::tests::testfn composition;
 # (d) UPPER_CASE const/static with ^[[:space:]]* anchor; (e) standalone CamelCase type-def;
@@ -47,7 +50,7 @@ acceptance_criteria_count: 7
 assumption_validations: []
 risk_mitigations: []
 created: "2026-07-04"
-version: "1.10"
+version: "1.11"
 last_updated: "2026-07-06"
 breaking_change: false
 retroactive: false
@@ -60,6 +63,7 @@ origin: >
   F1 delta analysis citation-guards-2026-07-02-delta.md §2 (BC-CITATION-CI-GUARD / Guard 1).
   Stories recommended: 2 (wave_order: guards-2-3-first per F1 §7). This is Story B.
 changelog:
+  - "1.11 (2026-07-06): F-01 two-tier shape guard lockstep (BC 7575e54; EC-CITE-060; N=309/FLOOR=231; Fixture B .snap sub-probe)."
   - "1.10 (2026-07-06): F3 CONVERGED under DEC-153 standard criterion — 15 fresh-context adversary passes, 9 fix rounds (v1.1→v1.9); clean window = passes 13/14/15 (CLEAN×3). Status → ready. Recorded as DEC-155."
   - "1.9 (2026-07-06): F3 pass-8 fixes (bc-1-auth-identity.md filename drift ×4 sites; Task 0 rationale DEAD-vs-missed precision)."
   - "1.8 (2026-07-06): F3 pass-6 fixes (F-P6-01 Fixture D skeleton, F-P6-02 type_name derivation, 3 LOW clarity touches)."
@@ -188,7 +192,7 @@ files_modified:
 
 # S-BC-CITATION-GUARD-1 — CITATION-GUARDS Story B: BC-body Trace/Source file::symbol Citation Guard
 
-**Status:** DRAFT — F3 initial decomposition (2026-07-04); BCs anchored F2 2026-07-05 (BC-X.13.004..006); v1.2 F3 pass-1 fixes applied 2026-07-06 (F-B1-01..10); v1.3 F3 pass-2 fixes applied 2026-07-06 (F-B2-01..09, DEC-154 Option A grammar extension, FLOOR=244, 10 fixtures); v1.4 Task 7 self-verify fixture count 7→10 consistency fix; v1.5 F3 pass-3 fixes applied 2026-07-06 (F-B3-01..06: strip-from-first-paren, branch (d) anchor, N=331/FLOOR=248, Fixture J/F kill coverage, EC-CITE-059); v1.6 F3 pass-4 fixes applied 2026-07-06 (F-B4-CRIT-01: count pin 3→4, F-B4-H-01: space-args sub-probe, F-B4-M-01: pipefail guard, Task 0 worktree preface); v1.7 F3 pass-5 coherence fixes applied 2026-07-06 (F-P5-01..07); v1.8 F3 pass-6 fixes applied 2026-07-06 (F-P6-01 Fixture D skeleton, F-P6-02 type_name derivation, 3 LOW clarity touches); v1.9 F3 pass-8 fixes applied 2026-07-06 (F-B8-M-01: bc-1-auth-identity.md filename drift ×4 sites; F-B8-L-01: Task 0 rationale DEAD-vs-missed precision).
+**Status:** DRAFT — F3 initial decomposition (2026-07-04); BCs anchored F2 2026-07-05 (BC-X.13.004..006); v1.2 F3 pass-1 fixes applied 2026-07-06 (F-B1-01..10); v1.3 F3 pass-2 fixes applied 2026-07-06 (F-B2-01..09, DEC-154 Option A grammar extension, FLOOR=244, 10 fixtures); v1.4 Task 7 self-verify fixture count 7→10 consistency fix; v1.5 F3 pass-3 fixes applied 2026-07-06 (F-B3-01..06: strip-from-first-paren, branch (d) anchor, N=331/FLOOR=248, Fixture J/F kill coverage, EC-CITE-059); v1.6 F3 pass-4 fixes applied 2026-07-06 (F-B4-CRIT-01: count pin 3→4, F-B4-H-01: space-args sub-probe, F-B4-M-01: pipefail guard, Task 0 worktree preface); v1.7 F3 pass-5 coherence fixes applied 2026-07-06 (F-P5-01..07); v1.8 F3 pass-6 fixes applied 2026-07-06 (F-P6-01 Fixture D skeleton, F-P6-02 type_name derivation, 3 LOW clarity touches); v1.9 F3 pass-8 fixes applied 2026-07-06 (F-B8-M-01: bc-1-auth-identity.md filename drift ×4 sites; F-B8-L-01: Task 0 rationale DEAD-vs-missed precision); v1.11 F-01 two-tier shape guard lockstep (BC 7575e54; EC-CITE-060; N=309/FLOOR=231; Fixture B .snap sub-probe).
 
 **Origin:** DEC-148 citation-debt-filewide cycle. After ADR-0012 Seam A/B extracted
 `handle_jsm_create` to `src/cli/issue/jsm_create.rs` and `handle_edit` to
@@ -218,7 +222,8 @@ Anchored BC IDs (authored and committed in F2 2026-07-05; DEC-154 Option A delta
 2026-07-06, commit 125f081):
 - **BC-X.13.004:** Every `src/` file path in a `**Trace**:` or `**Source**:` line in any
   `bc-*.md` body resolves to a real on-disk file in the develop checkout; SCOPE-EMPTY guard;
-  coverage floor = floor(0.75 × N) ≈ 248 in CANONICAL_MODE (N=331, post-Task-0-hygiene census;
+  coverage floor = floor(0.75 × N) ≈ 231 in CANONICAL_MODE (N=309, two-tier baseline on
+  2b09313: 304 .rs + 5 .snap; pre-two-tier post-Task-0-hygiene census: N=331, FLOOR=248;
   pre-hygiene DEC-154 values: N=326, FLOOR=244; implementer remeasures at delivery);
   collect-all semantics; EC-CITE-058 hygiene dependency.
 - **BC-X.13.005:** Extraction grammar for Trace/Source `src/` citation tokens — two-pass
@@ -286,8 +291,8 @@ BCs anchored F2 2026-07-05. This story extends the BC-X.13 CI-guards subsystem i
 
 | BC ID | Contract topic | EC-CITE refs |
 |-------|---------------|-------------|
-| BC-X.13.004 | File-existence + SCOPE-EMPTY guard + coverage floor = floor(0.75 × N) ≈ 248 in CANONICAL_MODE (N=331, post-Task-0-hygiene census; pre-hygiene: N=326, FLOOR=244); collect-all semantics; `DEAD:` offender accumulation; EC-CITE-058 hygiene dependency | EC-CITE-033, EC-CITE-034, EC-CITE-035, EC-CITE-036, EC-CITE-037, EC-CITE-058 |
-| BC-X.13.005 | Extraction grammar: two-pass extractor (DEC-154 F-B2-02); `::symbol` 7-branch shape-split — (a) fn-grep primary; (b) `::tests` mod-grep; (c) `::tests::testfn` composition; (d) UPPER_CASE const/static with `^[[:space:]]*` anchor; (e) standalone CamelCase type-def; (f) Type::method dual-check; strip-from-first-`(` (subsumes bare `()` and `(args...)`); glob silent-skip; no permissive fallback | EC-CITE-038, EC-CITE-039, EC-CITE-040, EC-CITE-041, EC-CITE-042, EC-CITE-043, EC-CITE-044, EC-CITE-045, EC-CITE-051, EC-CITE-052, EC-CITE-053, EC-CITE-054, EC-CITE-055, EC-CITE-056, EC-CITE-057, EC-CITE-059 |
+| BC-X.13.004 | File-existence + SCOPE-EMPTY guard + coverage floor = floor(0.75 × N) ≈ 231 in CANONICAL_MODE (N=309, two-tier baseline on 2b09313: 304 .rs + 5 .snap; pre-two-tier post-Task-0-hygiene census: N=331, FLOOR=248; pre-hygiene: N=326, FLOOR=244); collect-all semantics; `DEAD:` offender accumulation; EC-CITE-058 hygiene dependency | EC-CITE-033, EC-CITE-034, EC-CITE-035, EC-CITE-036, EC-CITE-037, EC-CITE-058 |
+| BC-X.13.005 | Extraction grammar: two-pass extractor (DEC-154 F-B2-02); two-tier shape guard (F-01): any-extension `^src/[a-zA-Z0-9_/.-]+\.[a-zA-Z0-9]+$` — `.rs` → tier (i) full pipeline; non-`.rs` → tier (ii) file-existence-only (counted in N); `::symbol` 7-branch shape-split — (a) fn-grep primary; (b) `::tests` mod-grep; (c) `::tests::testfn` composition; (d) UPPER_CASE const/static with `^[[:space:]]*` anchor; (e) standalone CamelCase type-def; (f) Type::method dual-check; strip-from-first-`(` (subsumes bare `()` and `(args...)`); glob silent-skip; no permissive fallback | EC-CITE-038, EC-CITE-039, EC-CITE-040, EC-CITE-041, EC-CITE-042, EC-CITE-043, EC-CITE-044, EC-CITE-045, EC-CITE-051, EC-CITE-052, EC-CITE-053, EC-CITE-054, EC-CITE-055, EC-CITE-056, EC-CITE-057, EC-CITE-059, EC-CITE-060 |
 | BC-X.13.006 | Guard 1 scope (bc-*.md Trace/Source only; BC-INDEX structural exclusion — zero Trace/Source lines); CI topology (spec-guard dual-worktree); GREEN on develop HEAD; RED on stale citation; 10 fixtures (A–K); "All self-test fixtures passed (10/10)" | EC-CITE-046, EC-CITE-047, EC-CITE-048, EC-CITE-049, EC-CITE-050 |
 
 ---
@@ -432,7 +437,8 @@ observation. The no-output stub mandates all fixtures to be RED before implement
 
    Script-scope variable (declared at top of script, OUTSIDE `run_check` — F-B1-01):
    ```bash
-   FLOOR=248  # floor(0.75 × N); N ≈ 331 (post-Task-0-hygiene census; F-B3-03).
+   FLOOR=231  # floor(0.75 × N); N ≈ 309 (two-tier baseline on 2b09313: 304 .rs + 5 .snap; F-01).
+              # Pre-two-tier post-Task-0-hygiene census (author census): N=331, FLOOR=248.
               # Pre-hygiene DEC-154 census: N=326, FLOOR=244.
               # Script-scope (NOT local) — single recalibration touchpoint (BC-X.13.004 invariant).
               # Implementer MUST run canonical mode on develop HEAD, record N, set FLOOR=floor(0.75*N).
@@ -531,14 +537,26 @@ observation. The no-output stub mandates all fixtures to be RED before implement
    fi
    ```
 
-   b. **File-path shape guard:** Validate `file` against `^src/[a-zA-Z0-9_/.-]+\.rs$` and
-      reject path-traversal (`..`). Malformed → emit `DEAD: malformed citation skipped: $token`
-      and continue.
+   b. **File-path shape guard:** Validate `file` against `^src/[a-zA-Z0-9_/.-]+\.[a-zA-Z0-9]+$`
+      (any extension); reject path-traversal (`..`). Truly-malformed tokens (containing `..` or
+      failing this shape — e.g. missing extension, illegal characters) → emit
+      `DEAD: malformed citation skipped: $token` and continue.
+
+      **Tier assignment (Step 3b — applied immediately after shape guard passes and glob tokens
+      are skipped):**
+      - **Tier (i) — `.rs` tokens:** proceed to file-existence check (step c), then full symbol
+        dispatch (step d) for `::symbol` forms.
+      - **Tier (ii) — non-`.rs` `src/` tokens** (e.g., `.snap`, `.json`, `.toml`): proceed to
+        file-existence check (step c) only. If absent → `DEAD: $file not found`. Symbol check
+        (step d) is **not run** — the symbol grammar (`fn`/`mod`/`struct`/`const` grep anchors)
+        is Rust-specific and does not apply to non-Rust files. Token **counts toward
+        `total_citations` / N** identically to `.rs` tokens.
 
    c. **File-existence check:** `[ -f "$src_root/$file" ]` → if fails, emit
-      `DEAD: $file not found` and continue.
+      `DEAD: $file not found` and continue (applies to both tier (i) and tier (ii)).
 
-   d. **Symbol check (only for `::symbol` form):** Strip from the first `(` onward from `symbol`
+   d. **Symbol check (only for `::symbol` form; tier (i) `.rs` tokens — tier (ii) tokens skip
+      this step entirely):** Strip from the first `(` onward from `symbol`
       before classification (`symbol="${symbol%%\(*}"` — subsumes bare `()` and `(args...)`,
       e.g., `cache_root()` → `cache_root`; `add_comment(internal: bool)` → `add_comment`;
       EC-CITE-042, EC-CITE-059). Then apply the
@@ -639,8 +657,9 @@ observation. The no-output stub mandates all fixtures to be RED before implement
    ```
    `FLOOR` is set via the formula `floor(0.75 × N)` where N is the total `src/` citation count
    measured by running the script in canonical mode on develop HEAD at delivery time. Calibration
-   at 2026-07-06 (post-Task-0-hygiene census, F-B3-03): N ≈ 331, FLOOR ≈ 248 (pre-hygiene
-   DEC-154 census: N=326, FLOOR=244; implementer remeasures at delivery).
+   at 2026-07-06 (two-tier baseline on 2b09313, F-01): N ≈ 309, FLOOR ≈ 231 (pre-two-tier
+   post-Task-0-hygiene census: N=331, FLOOR=248; pre-hygiene DEC-154 census: N=326, FLOOR=244;
+   implementer remeasures at delivery).
    The implementer MUST run the script in canonical mode on develop HEAD, record N, and set
    `FLOOR=floor(0.75 × N)` at script scope (NOT `local`
    inside `run_check` — see scope invariants above) before submitting the PR. The FLOOR is a
@@ -665,7 +684,7 @@ observation. The no-output stub mandates all fixtures to be RED before implement
    - Fixtures use hermetic temp dirs: `BC_DIR`, `SRC_ROOT` set to temp paths.
    - `fixtures_run` counter (initialized to 0; incremented once per fixture, including sub-probed
      fixtures; checked after all fixtures against `readonly EXPECTED_FIXTURES=10`).
-   - Cleanup trap: `trap 'rm -rf "${tmp_A:-}" ... "${tmp_K:-}" "${tmp_G2:-}" "${tmp_F_neg:-}"' EXIT`.
+   - Cleanup trap: `trap 'rm -rf "${tmp_A:-}" ... "${tmp_K:-}" "${tmp_G2:-}" "${tmp_F_neg:-}" "${tmp_B_snap_pos:-}" "${tmp_B_snap_neg:-}"' EXIT`.
    - **CANONICAL_MODE hygiene (F-B2-06):** add `unset CANONICAL_MODE` at the TOP of the
      `--self-test` block (before any fixture), plus the explicit invariant: "CANONICAL_MODE MUST
      NOT be set during Fixtures A–F/I–K; Fixture G sets it inline and unsets it after."
@@ -728,7 +747,7 @@ observation. The no-output stub mandates all fixtures to be RED before implement
      `.factory/specs/prd/` mounted (spec-guard job context). If run locally: set
      `BC_DIR=.factory/specs/prd` and run from repo root.
    - Guard emits `Check passed: N citations checked` where N ≥ FLOOR (implementer verifies:
-     run in canonical mode on develop HEAD; N ≥ FLOOR ≈ 248 at 2026-07-06 calibration, post-Task-0-hygiene).
+     run in canonical mode on develop HEAD; N ≥ FLOOR ≈ 231 at 2026-07-06 calibration, two-tier baseline F-01).
    - ci.yml spec-guard job `name:` updated; two new steps present in correct position.
    - CHANGELOG `### Added` entry contains `BC-CITE-001`, `Trace`, `Source`, `bc-*.md`,
      `definition-anchored`, `DEC-148` keywords.
@@ -779,12 +798,12 @@ must output zero lines.
 | Fixture | Description | Expected behavior | Kill-trace |
 |---------|-------------|-------------------|------------|
 | A | Dead-symbol: `src/adf.rs::nonexistent_fn_selftest` — file exists (touch), symbol NOT defined | `rc=1`; output contains `DEAD: nonexistent_fn_selftest not found in src/adf.rs` | (a) Omit definition-anchored grep → fn-check never runs → `rc=0` → RED |
-| B | Dead-file: `src/nonexistent_file_selftest.rs::some_fn` — file NOT created | `rc=1`; output contains `DEAD: src/nonexistent_file_selftest.rs not found` | (a) Omit file-existence check → script tries symbol grep on missing file → error → RED differently; (b) correct: file-existence check fires first → clean DEAD message |
+| B | Dead-file: `src/nonexistent_file_selftest.rs::some_fn` — file NOT created; **tier-(ii) sub-probes (EC-CITE-060):** positive: `.snap` file exists (`src/mock_b.snap` present) → ALIVE, counted; negative: `.snap` file absent (`src/missing_b.snap` not created) → `DEAD: src/missing_b.snap not found` | Main: `rc=1`; output contains `DEAD: src/nonexistent_file_selftest.rs not found`; positive sub-probe: `rc=0`, output contains `1 citations checked`; negative sub-probe: `rc=1`, output contains `DEAD: src/missing_b.snap not found` | (a) Omit file-existence check → script tries symbol grep on missing file → error → RED differently; (b) file-existence check fires first → clean DEAD message; (c) [tier-ii kill] Shape guard uses old `\.rs$` pattern — `.snap` extension rejected → `DEAD: malformed citation skipped: src/mock_b.snap` instead of ALIVE → positive sub-probe `rc=1` → RED; proves any-extension shape guard (`\.[a-zA-Z0-9]+$`) required |
 | C | Import-only false-green: `src/cli/issue/create.rs::handle_jsm_create` — mock `create.rs` has only `use super::jsm_create::{JsmCreateArgs, handle_jsm_create};` (import) | `rc=1`; `handle_jsm_create` DEAD (import not a definition) | (a) Plain `grep -q "handle_jsm_create"` → matches import → `rc=0` → RED; proves definition-anchored grep is required |
 | D | Source-field extraction: `**Source**: `src/nonexistent_source_selftest.rs::source_fn`` (Source field, not Trace) — file NOT created | `rc=1`; output contains dead citation | (a) Scan only `**Trace**:` lines, skip `**Source**:` → `rc=0` → RED; proves both field types are scanned |
 | E | Two-pass extraction: `**Trace**: `src/mock_e.rs § "some section"`` — mock `mock_e.rs` exists (touch, empty); F-B2-02/07 differential signal | `rc=0`; output contains `1 citations checked` (proves Pass 1 extracted the space-containing token, Pass 2 reduced it to bare path, file-existence check ran — NOT silently dropped) | (a) Use old single-pass regex `[^` ]+` (stop-on-space) → § form token SILENTLY DROPPED → `0 citations checked` in output → assertion fails → RED; (b) Apply symbol grep to §-form token → grepping empty file fails → `rc=1` → RED; proves §-form is file-existence-only and that the token IS extracted |
 | F | Success path: `**Trace**: `src/mock_f.rs::mock_f_fn_selftest`` + `**Source**: `src/mock_f.rs`` — mock `mock_f.rs` defines `fn mock_f_fn_selftest() {}`; sub-probes: (1) `src/mock_f.rs::MAX_ADF_DEPTH` with `pub(crate) const MAX_ADF_DEPTH: usize = 256;` (EC-CITE-051, anchored branch (d)); (2) `src/mock_f.rs::mock_f_fn_selftest(args: T)` fn citation with space-args form (EC-CITE-059, Step-5 strip: Pass 2 space-split → `mock_f_fn_selftest(args:`; strip-from-first-`(` → `mock_f_fn_selftest`); negative probe: mock containing ONLY `    // pub const MAX_ADF_DEPTH: usize = 256` doc-comment line MUST classify DEAD under anchored form | `rc=0` for all positive probes; output matches `^Check passed: [0-9]+ citations checked$`; negative probe `rc=1` (DEAD) | (a) Inverted polarity (return 1 on success) → `rc=1` → RED; (b) Omit success summary line → content assertion fails → RED; (c) [group-removal] Sub-probe: omit `(\([^)]*\))?` group → `pub(crate) const MAX_ADF_DEPTH:` from line-start no longer matches simplified `(pub[[:space:]]+)?` pattern → DEAD → `rc=1` → caught (EC-CITE-051); [anchor-removal] remove `^[[:space:]]*` anchor → negative probe's doc-comment line `    // pub const MAX_ADF_DEPTH:` matches unanchored form → false-ALIVE → `rc=0` → RED; (d) Delete Step-5 strip (`%%\(*`) → Pass 2 space-split gives `mock_f_fn_selftest(args:` → unstripped symbol `mock_f_fn_selftest(args:` has unbalanced `(` → fn-grep ERE is malformed → grep exits 2 → DEAD → `rc=1` → caught (EC-CITE-059); bare `()` form would NOT kill this mutation (empty parens = valid ERE group → grep exits 0 on the balanced group) |
-| G | Coverage-floor RED probe: (1) bc dir with ONE citation total (well below FLOOR); (2) second sub-probe with 100 citations (still below FLOOR=248) — both with CANONICAL_MODE=1; `unset CANONICAL_MODE` after all G assertions (Story A Fixture H precedent + F-B2-06) | Both probes: `rc=1`; output contains `BC-CITE-COVERAGE-FLOOR:`; output contains `expected >= ${FLOOR}` (no hardcoded integer); single `fixtures_run` increment for entire G | (a) Omit CANONICAL_MODE gate → floor never fires → `rc=0` → RED; (b) FLOOR mutation `-lt "$FLOOR"` → `-lt "5"` → 100-citation probe: 100 > 5 → rc=0 → assertion `[ "$rc" -eq 1 ]` fails → caught; (c) CANONICAL_MODE as `local` in run_check → floor false-greens → RED |
+| G | Coverage-floor RED probe: (1) bc dir with ONE citation total (well below FLOOR); (2) second sub-probe with 100 citations (still below FLOOR=231) — both with CANONICAL_MODE=1; `unset CANONICAL_MODE` after all G assertions (Story A Fixture H precedent + F-B2-06) | Both probes: `rc=1`; output contains `BC-CITE-COVERAGE-FLOOR:`; output contains `expected >= ${FLOOR}` (no hardcoded integer); single `fixtures_run` increment for entire G | (a) Omit CANONICAL_MODE gate → floor never fires → `rc=0` → RED; (b) FLOOR mutation `-lt "$FLOOR"` → `-lt "5"` → 100-citation probe: 100 > 5 → rc=0 → assertion `[ "$rc" -eq 1 ]` fails → caught; (c) CANONICAL_MODE as `local` in run_check → floor false-greens → RED |
 | I | `::tests` module-path ALIVE (EC-CITE-052): `src/mock_i.rs::tests` — mock `mock_i.rs` defines `mod tests { }` | `rc=0`; output matches `^Check passed: [0-9]+ citations checked$` | (a) Omit mod-tests anchored grep → symbol `tests` falls through all branches → DEAD → `rc=1` → RED; proves branch (b) is required; (b) Polarity swap on branch (b): invert mod-tests return so a matching `mod tests` block returns DEAD → symbol `tests`, file has `mod tests { }` → normally ALIVE but swap → DEAD → `rc=1` → assertion `[ "$rc" -eq 0 ]` fails → RED |
 | J | `::tests` module-path negative DEAD (EC-CITE-053): `src/mock_j.rs::nonexistent_mod` — file has bare text `nonexistent_mod` (no `mod` keyword), symbol not a definition | `rc=1`; output contains `DEAD:` | (a) Add permissive `grep -q "$symbol"` fallback → bare text `nonexistent_mod` in file matches → `rc=0` → RED; proves no-permissive-fallback is enforced (requires non-empty mock — empty file would not trigger permissive fallback, failing to kill mutation). Branch (b) polarity swap is caught by Fixture I (symbol=tests, normally ALIVE → swap → DEAD → rc≠0 → RED) — J's symbol `nonexistent_mod` never enters branch (b) (fails the `^tests$` entry guard), so polarity-swap kill does not apply here. |
 | K | Standalone CamelCase type ALIVE (EC-CITE-054): `src/mock_k.rs::MockKStruct` — mock `mock_k.rs` defines `pub struct MockKStruct { }` | `rc=0`; output matches `^Check passed: [0-9]+ citations checked$` | (a) Omit type-def anchored grep → symbol `MockKStruct` falls through all branches → DEAD → `rc=1` → RED; proves branch (e) is required; (b) Polarity swap on branch (e): invert type-def return so a matching type definition returns DEAD → symbol `MockKStruct`, file has `pub struct MockKStruct { }` → normally ALIVE but swap → DEAD → `rc=1` → assertion `[ "$rc" -eq 0 ]` fails → RED |
@@ -815,6 +834,27 @@ mkdir -p "$tmp_B/src"
 printf '**Source**: `src/nonexistent_file_selftest.rs::some_fn`\n' > "$tmp_B/bc-mock.md"
 # $tmp_B/src/nonexistent_file_selftest.rs intentionally NOT created
 set +e; BC_DIR="$tmp_B" SRC_ROOT="$tmp_B" output=$(run_check 2>&1); rc=$?; set -e
+
+# Fixture B sub-probe (EC-CITE-060) — tier (ii) .snap positive (file exists → ALIVE)
+# Shape guard accepts `.snap` extension ([a-zA-Z0-9]+ matches `snap`); Step 4 file-existence
+# passes; Step 5 symbol check skipped; token counted toward N.
+# Kill: old `\.rs$` guard → DEAD: malformed citation skipped: src/mock_b.snap → rc=1 → RED.
+mkdir -p "$tmp_B_snap_pos/src"
+printf '**Trace**: `src/mock_b.snap`\n' > "$tmp_B_snap_pos/bc-mock.md"
+touch "$tmp_B_snap_pos/src/mock_b.snap"   # .snap file exists → tier (ii) file-existence passes → ALIVE
+set +e; BC_DIR="$tmp_B_snap_pos" SRC_ROOT="$tmp_B_snap_pos" output_b_pos=$(run_check 2>&1); rc_b_pos=$?; set -e
+[ "$rc_b_pos" -eq 0 ] || { echo "Fixture B sub-probe (snap-positive) FAIL: expected rc=0, got rc=$rc_b_pos; output=$output_b_pos"; exit 1; }
+printf '%s' "$output_b_pos" | grep -q '1 citations checked' || { echo "Fixture B sub-probe (snap-positive) FAIL: expected '1 citations checked' in output; output=$output_b_pos"; exit 1; }
+
+# Fixture B sub-probe (EC-CITE-060) — tier (ii) .snap negative (file absent → DEAD: not found)
+# Shape guard accepts `.snap`; Step 4 file-existence fails → DEAD: src/missing_b.snap not found.
+mkdir -p "$tmp_B_snap_neg/src"
+printf '**Trace**: `src/missing_b.snap`\n' > "$tmp_B_snap_neg/bc-mock.md"
+# $tmp_B_snap_neg/src/missing_b.snap intentionally NOT created
+set +e; BC_DIR="$tmp_B_snap_neg" SRC_ROOT="$tmp_B_snap_neg" output_b_neg=$(run_check 2>&1); rc_b_neg=$?; set -e
+[ "$rc_b_neg" -eq 1 ] || { echo "Fixture B sub-probe (snap-negative) FAIL: expected rc=1, got rc=$rc_b_neg"; exit 1; }
+printf '%s' "$output_b_neg" | grep -qF 'DEAD: src/missing_b.snap not found' || { echo "Fixture B sub-probe (snap-negative) FAIL: expected DEAD message in output; output=$output_b_neg"; exit 1; }
+# (Both snap sub-probes share Fixture B's fixtures_run increment — count once total)
 
 # Fixture C — import-only (fn in use statement, NOT a definition)
 mkdir -p "$tmp_C/src/cli/issue"
@@ -886,7 +926,7 @@ CANONICAL_MODE=1   # toggle floor guard ON for this fixture (script-scope variab
 set +e; BC_DIR="$tmp_G" SRC_ROOT="$tmp_G" output=$(run_check 2>&1); rc=$?; set -e
 # ... assertions: rc=1; "BC-CITE-COVERAGE-FLOOR:"; "expected >= ${FLOOR}" ...
 
-# G second probe: 100 citations (below FLOOR=248); kill-trace tests FLOOR literal mutation
+# G second probe: 100 citations (below FLOOR=231); kill-trace tests FLOOR literal mutation
 mkdir -p "$tmp_G2/src"
 { for i in $(seq 1 100); do printf '**Trace**: `src/mock_g2.rs::mock_g2_fn`\n'; done; } \
     > "$tmp_G2/bc-mock.md"
@@ -957,7 +997,7 @@ Stay at 10 fixtures to remain in BC lockstep.
   `readonly` before first fixture).
 
 (traces to BC-X.13.004, BC-X.13.005, BC-X.13.006 — all three contracts exercised across the
-fixture suite; Fixture A→BC-X.13.005 fn-grep NO-MATCH/dead-symbol (no dedicated EC), B→EC-CITE-036/dead-file, C→EC-CITE-039/
+fixture suite; Fixture A→BC-X.13.005 fn-grep NO-MATCH/dead-symbol (no dedicated EC), B→EC-CITE-036/dead-file+EC-CITE-060/.snap-tier-ii-sub-probes, C→EC-CITE-039/
 import-only, D→BC-X.13.004 precondition/Source-field scan, E→EC-CITE-045+EC-CITE-057/two-pass-
 extraction-differential, F→BC-X.13.004 postcondition/success-path+EC-CITE-051/pub(crate)-const+
 EC-CITE-059/fn-with-paren-strip+F-neg/anchor-negative-probe, G→EC-CITE-037/coverage-floor+
@@ -969,9 +1009,13 @@ fallback-kill, K→EC-CITE-054/CamelCase-ALIVE)
 ### AC-003 — Error output formats
 
 When citations fail, the script emits lines in the following formats:
-- `DEAD: $file not found` — file does not exist on disk
-- `DEAD: $symbol not found in $file` — file exists but symbol definition absent
-- `DEAD: malformed citation skipped: $token` — extracted token fails path shape guard
+- `DEAD: $file not found` — file does not exist on disk; applies to **both tier (i) `.rs`
+  tokens and tier (ii) non-`.rs` tokens** (the same file-existence check runs for both tiers)
+- `DEAD: $symbol not found in $file` — file exists but symbol definition absent; applies to
+  **tier (i) `.rs` tokens only** — tier (ii) tokens skip Step 5 symbol check entirely
+- `DEAD: malformed citation skipped: $token` — extracted token fails the path shape guard
+  (`^src/[a-zA-Z0-9_/.-]+\.[a-zA-Z0-9]+$`) or contains path-traversal (`..`); occurs before
+  tier assignment
 - `BC-CITE-COVERAGE-FLOOR: expected >= ${FLOOR} src/ citations, got ${N}. Update FLOOR when
   citations are intentionally removed (the floor is a lower bound; additions never fire it).`
   (CANONICAL_MODE=1 only)
@@ -981,7 +1025,7 @@ analogous to Story A's definition-anchored grep). The script does NOT exit early
 citation — all citations in all bc-*.md files are checked before reporting. Summary line:
 `$K stale citation(s) found in bc-*.md Trace/Source fields` (where K = offender count).
 
-(traces to BC-X.13.004 postconditions: collect-all DEAD output formats; BC-X.13.005 postconditions: symbol classification ALIVE/DEAD; EC-CITE-033, EC-CITE-035)
+(traces to BC-X.13.004 postconditions: collect-all DEAD output formats; BC-X.13.005 postconditions: symbol classification ALIVE/DEAD; two-tier Step 3b (EC-CITE-060): `DEAD: not found` applies to both tiers; `DEAD: symbol not found` only tier (i); malformed only for shape-guard failures; EC-CITE-033, EC-CITE-035, EC-CITE-060)
 
 ---
 
@@ -1013,10 +1057,11 @@ citations (e.g., due to a bc_dir misconfiguration or a future bc-*.md glob expan
 and exits 0 vacuously. **FLOOR calibration:** the implementer MUST run the script in canonical
 mode on develop HEAD, record N (the actual citation count), and set `FLOOR=floor(0.75 × N)` as a
 script-scope assignment at script top (NOT `local` inside `run_check` — see Task 2 scope
-invariants). Calibration at 2026-07-06 (post-Task-0-hygiene census, F-B3-03)
-yields N ≈ 331, FLOOR ≈ 248 (pre-hygiene DEC-154 census: N=326, FLOOR=244; implementer
-remeasures at delivery). The formula gives ~25% headroom for legitimate BC edits while still
-catching catastrophic extraction dropout (EC-CITE-037).
+invariants). Calibration at 2026-07-06 (two-tier baseline on 2b09313, F-01)
+yields N ≈ 309, FLOOR ≈ 231 (pre-two-tier post-Task-0-hygiene census: N=331, FLOOR=248;
+pre-hygiene DEC-154 census: N=326, FLOOR=244; implementer remeasures at delivery). The formula
+gives ~25% headroom for legitimate BC edits while still catching catastrophic extraction dropout
+(EC-CITE-037).
 
 **FLOOR scope invariant (BC-X.13.004 invariant, F-B1-01):** `FLOOR` MUST be a script-scope
 variable, NOT a `local` inside `run_check`. The single recalibration touchpoint is the
@@ -1118,10 +1163,11 @@ Story A delivered Guards 2 and 3. Key lessons that apply to Guard 1:
    Story A HARDCODES the integer literal `expected >= 11` directly in its Fixture H assertions
    (lines 433 and 456 of `scripts/check-cargo-mutants-policy-citations.sh`). This works for
    Story A because the floor value `11` is static and unlikely to change. Story B deliberately
-   deviates: because FLOOR is calibrated from a large measured count (N ≈ 331 → FLOOR ≈ 248,
-   post-Task-0-hygiene census F-B3-03; pre-hygiene DEC-154 census: N=326, FLOOR=244;
-   implementer remeasures at delivery), hardcoding the integer in the Fixture G assertion
-   would require a two-site update every time FLOOR is recalibrated. Instead, Story B declares
+   deviates: because FLOOR is calibrated from a large measured count (N ≈ 309 → FLOOR ≈ 231,
+   two-tier baseline on 2b09313, F-01; pre-two-tier author census: N=331, FLOOR=248;
+   pre-hygiene DEC-154: N=326, FLOOR=244; implementer remeasures at delivery), hardcoding
+   the integer in the Fixture G assertion would require a two-site update every time FLOOR
+   is recalibrated. Instead, Story B declares
    `FLOOR` as a script-scope variable (NOT `local` inside `run_check`) and writes Fixture G's
    assertion as `grep -qF "expected >= ${FLOOR}"` (variable reference). This assertion is sound
    BECAUSE `FLOOR` is script-scope: the `--self-test` block can read the same `FLOOR` value that
@@ -1189,7 +1235,7 @@ job (not a Rust integration test). This is option (a) confirmed by F1 §3.
 
 | File | Create / Modify | Description |
 |------|-----------------|-------------|
-| `scripts/check-bc-citation-symbols.sh` | CREATE | Guard 1: scan `**Trace**:`/`**Source**:` lines in bc-*.md bodies; two-pass extractor (DEC-154 F-B2-02); strip-from-first-`(` (EC-CITE-059); 7-branch symbol dispatch with `^[[:space:]]*` anchor on branch (d) (F-B3-02); SCOPE-EMPTY guard; BC-CITE-COVERAGE-FLOOR guard (CANONICAL_MODE only, FLOOR=248); **ten self-test fixtures (A–K)** embedded in `--self-test` block; five post-fixture self-assertions; `BC-CITE-001` error class literal pinned in header comment. |
+| `scripts/check-bc-citation-symbols.sh` | CREATE | Guard 1: scan `**Trace**:`/`**Source**:` lines in bc-*.md bodies; two-pass extractor (DEC-154 F-B2-02); two-tier shape guard (F-01): any-extension `^src/[a-zA-Z0-9_/.-]+\.[a-zA-Z0-9]+$`; `.rs` → tier (i) full pipeline; non-`.rs` → tier (ii) file-existence-only (counts toward N); strip-from-first-`(` (EC-CITE-059); 7-branch symbol dispatch with `^[[:space:]]*` anchor on branch (d) (F-B3-02); SCOPE-EMPTY guard; BC-CITE-COVERAGE-FLOOR guard (CANONICAL_MODE only, FLOOR=231); **ten self-test fixtures (A–K, Fixture B gains .snap sub-probes EC-CITE-060)** embedded in `--self-test` block; five post-fixture self-assertions; `BC-CITE-001` error class literal pinned in header comment. |
 | `.github/workflows/ci.yml` | MODIFY | spec-guard job: update `name:` to `"Spec Guards (BC counts, numeric-count lint, citation checks, mutants policy scope)"`; append `--self-test` step + canonical step for Guard 1 AFTER the existing `check-cargo-mutants-policy-citations (Guard 2, DEC-150)` step (currently last). No other job changes. No `ci-gate.needs` change. |
 | `CHANGELOG.md` | MODIFY | Add `[Unreleased] → ### Added` entry per CHANGELOG-per-PR hygiene. |
 | `CLAUDE.md` | MODIFY | Add doc-fallout bullet in AI Agent Notes for `scripts/check-bc-citation-symbols.sh`. |
@@ -1213,7 +1259,7 @@ deltas committed 125f081); NOT part of this F4 delivery.
 | EC-002 | Symbol is a constant (UPPER_CASE), Type::method, standalone CamelCase type, `::tests` module-path, or `::tests::testfn`; fn with trailing `()` or `(args...)` stripped before classification | Strip-from-first-`(` applied first (`symbol="${symbol%%\(*}"` — subsumes bare `()` and `(args...)` forms; EC-CITE-042, EC-CITE-059). Then 7-branch dispatch: (a) fn-grep primary; (b) `^tests$` → mod-tests grep (EC-CITE-052); (c) `^tests::[a-z_]…` → mod-tests+fn-grep composition (EC-CITE-056); (d) UPPER_CASE `^[A-Z][A-Z0-9_]*$` → anchored const/static grep `^[[:space:]]*(pub(\([^)]*\))?[[:space:]]+)?` (anchor prevents mid-line false-greens; group captures `pub(crate)`; EC-CITE-041, EC-CITE-051); (e) CamelCase `^[A-Z][A-Za-z0-9_]*$` (no further `::`) → type-def grep with `struct|enum|type|trait|union` (EC-CITE-054); (f) Type::method (two+ `::`, CamelCase before last `::`) → fn-grep on method + type-presence check (EC-CITE-040). No permissive `grep -q "$symbol"` fallback — that reopens the DEC-148 import-only false-green class. Symbols not matching any branch → DEAD. |
 | EC-003 | `§` form citation: `` `src/file.rs § "section"` `` — Pass 1 extracts full token; Pass 2 splits at space → bare path | Token reduced to `src/file.rs` (Pass 2 space-split); file-existence check only; no symbol check (census: 0 §-form tokens on Trace/Source lines in corpus; coverage via Fixture E) |
 | EC-004 | `:~NN` form citation: `` `src/file.rs:~120` `` | Token `src/file.rs:~120` extracted; `:~120` stripped → `src/file.rs`; file-existence check only |
-| EC-005 | Coverage floor: total `src/` citations < FLOOR (≈248, calibrated floor(0.75 × N), N≈331) in CANONICAL_MODE | Exit 1, `BC-CITE-COVERAGE-FLOOR: expected >= ${FLOOR}` (Fixture G; EC-CITE-037) |
+| EC-005 | Coverage floor: total `src/` citations < FLOOR (≈231, calibrated floor(0.75 × N), N≈309 two-tier baseline) in CANONICAL_MODE | Exit 1, `BC-CITE-COVERAGE-FLOOR: expected >= ${FLOOR}` (Fixture G; EC-CITE-037) |
 | EC-006 | No bc-*.md files found in BC_DIR | Exit 1 immediately with `BC-CITE-001: no bc-*.md files found`; fail-closed (no false-green) |
 | EC-007 | Trace/Source line with multiple citations (comma-separated backtick tokens) | Each backtick token extracted independently; all checked; all offenders reported |
 | EC-008 | Citation on a non-Trace/Source body line | NOT extracted (Fixture F covers the non-extraction of ordinary body lines) |
@@ -1305,6 +1351,13 @@ all symbol classes found in the corpus. Symbols that fall through all 7 are clas
 These are VERY LOW residual risks after DEC-154. The macro and Type::method-correlation
 deferrals have zero current corpus impact.
 
+**Symbol validation for non-`.rs` files (permanently out of scope — tier (ii) is existence-only,
+F-01):** Tier (ii) handles non-`.rs` `src/` tokens (e.g., `.snap`, `.json`, `.toml`) with
+file-existence-only validation. Step 5 symbol check is permanently NOT run for tier (ii) tokens
+— the symbol grammar (`fn`/`mod`/`struct`/`const` grep anchors) is Rust-specific and does not
+apply to non-Rust files. Any `::symbol` suffix on a non-`.rs` citation is nonsensical; the
+guard ignores it at Step 3b tier assignment. This is a design constraint, not a v2 deferral.
+
 ### 7. Companion-lint follow-up: check-bc-single-line-trace.sh (F-B3-06)
 
 The Task 0 hygiene work (EC-CITE-058) establishes the convention that `**Trace**:` and `**Source**:` fields must be on a single line; a future F5 follow-up story candidate is `check-bc-single-line-trace.sh` — a mechanical companion lint that enforces the single-line Trace/Source convention and flags any multi-line continuation blocks before they silently drop tokens under the two-pass extractor.
@@ -1329,7 +1382,8 @@ backtick-quote any remaining unquoted forms, but NOT in this story.
   assignment at the TOP of the script (the single recalibration touchpoint — NOT `local` inside
   `run_check`). The floor message includes `"Update FLOOR when citations are intentionally
   removed"` as a reminder. Update in the SAME commit as the BC edit. Current baseline:
-  N ≈ 331, FLOOR ≈ 248 (post-Task-0-hygiene census, F-B3-03; pre-hygiene: N=326, FLOOR=244;
+  N ≈ 309, FLOOR ≈ 231 (two-tier baseline on 2b09313, F-01: 304 .rs + 5 .snap; pre-two-tier
+  post-Task-0-hygiene census: N=331, FLOOR=248; pre-hygiene: N=326, FLOOR=244;
   implementer remeasures at delivery).
 - **BC-INDEX.md stale citations (out-of-scope residual):** Run manual `grep -r
   'src/cli/issue/create.rs\|src/cli/issue/helpers.rs' .factory/specs/prd/BC-INDEX.md`
@@ -1342,6 +1396,7 @@ backtick-quote any remaining unquoted forms, but NOT in this story.
 - **FLOOR calibration at delivery:** The implementer MUST run `scripts/check-bc-citation-symbols.sh`
   in canonical mode on develop HEAD, record N, and update the script-scope `FLOOR=N` assignment
   at the TOP of the script (single recalibration touchpoint — NOT `local` inside `run_check`)
-  before submitting the PR. Current calibration: N ≈ 331, FLOOR ≈ 248 (post-Task-0-hygiene
-  census, F-B3-03; pre-hygiene: N=326, FLOOR=244; implementer remeasures at delivery). Document
-  the measured N in the CHANGELOG entry.
+  before submitting the PR. Current calibration (two-tier baseline on 2b09313, F-01):
+  N ≈ 309, FLOOR ≈ 231 (304 .rs + 5 .snap; pre-two-tier post-Task-0-hygiene census: N=331,
+  FLOOR=248; pre-hygiene: N=326, FLOOR=244; implementer remeasures at delivery). Document
+  the measured N (expected ≈ 309, FLOOR ≈ 231 at two-tier baseline) in the CHANGELOG entry.
