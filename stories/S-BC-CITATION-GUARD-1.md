@@ -50,8 +50,8 @@ acceptance_criteria_count: 7
 assumption_validations: []
 risk_mitigations: []
 created: "2026-07-04"
-version: "1.11"
-last_updated: "2026-07-06"
+version: "1.12"
+last_updated: "2026-07-07"
 breaking_change: false
 retroactive: false
 origin: >
@@ -63,6 +63,7 @@ origin: >
   F1 delta analysis citation-guards-2026-07-02-delta.md §2 (BC-CITATION-CI-GUARD / Guard 1).
   Stories recommended: 2 (wave_order: guards-2-3-first per F1 §7). This is Story B.
 changelog:
+  - "1.12 (2026-07-07): pass-2 obs fixes — Step-2 two-variable pattern canonized (BC lockstep); --bc-dir CANONICAL_MODE note corrected."
   - "1.11 (2026-07-06): F-01 two-tier shape guard lockstep (BC 7575e54; EC-CITE-060; N=309/FLOOR=231; Fixture B .snap sub-probe)."
   - "1.10 (2026-07-06): F3 CONVERGED under DEC-153 standard criterion — 15 fresh-context adversary passes, 9 fix rounds (v1.1→v1.9); clean window = passes 13/14/15 (CLEAN×3). Status → ready. Recorded as DEC-155."
   - "1.9 (2026-07-06): F3 pass-8 fixes (bc-1-auth-identity.md filename drift ×4 sites; Task 0 rationale DEAD-vs-missed precision)."
@@ -192,7 +193,7 @@ files_modified:
 
 # S-BC-CITATION-GUARD-1 — CITATION-GUARDS Story B: BC-body Trace/Source file::symbol Citation Guard
 
-**Status:** DRAFT — F3 initial decomposition (2026-07-04); BCs anchored F2 2026-07-05 (BC-X.13.004..006); v1.2 F3 pass-1 fixes applied 2026-07-06 (F-B1-01..10); v1.3 F3 pass-2 fixes applied 2026-07-06 (F-B2-01..09, DEC-154 Option A grammar extension, FLOOR=244, 10 fixtures); v1.4 Task 7 self-verify fixture count 7→10 consistency fix; v1.5 F3 pass-3 fixes applied 2026-07-06 (F-B3-01..06: strip-from-first-paren, branch (d) anchor, N=331/FLOOR=248, Fixture J/F kill coverage, EC-CITE-059); v1.6 F3 pass-4 fixes applied 2026-07-06 (F-B4-CRIT-01: count pin 3→4, F-B4-H-01: space-args sub-probe, F-B4-M-01: pipefail guard, Task 0 worktree preface); v1.7 F3 pass-5 coherence fixes applied 2026-07-06 (F-P5-01..07); v1.8 F3 pass-6 fixes applied 2026-07-06 (F-P6-01 Fixture D skeleton, F-P6-02 type_name derivation, 3 LOW clarity touches); v1.9 F3 pass-8 fixes applied 2026-07-06 (F-B8-M-01: bc-1-auth-identity.md filename drift ×4 sites; F-B8-L-01: Task 0 rationale DEAD-vs-missed precision); v1.11 F-01 two-tier shape guard lockstep (BC 7575e54; EC-CITE-060; N=309/FLOOR=231; Fixture B .snap sub-probe).
+**Status:** DRAFT — F3 initial decomposition (2026-07-04); BCs anchored F2 2026-07-05 (BC-X.13.004..006); v1.2 F3 pass-1 fixes applied 2026-07-06 (F-B1-01..10); v1.3 F3 pass-2 fixes applied 2026-07-06 (F-B2-01..09, DEC-154 Option A grammar extension, FLOOR=244, 10 fixtures); v1.4 Task 7 self-verify fixture count 7→10 consistency fix; v1.5 F3 pass-3 fixes applied 2026-07-06 (F-B3-01..06: strip-from-first-paren, branch (d) anchor, N=331/FLOOR=248, Fixture J/F kill coverage, EC-CITE-059); v1.6 F3 pass-4 fixes applied 2026-07-06 (F-B4-CRIT-01: count pin 3→4, F-B4-H-01: space-args sub-probe, F-B4-M-01: pipefail guard, Task 0 worktree preface); v1.7 F3 pass-5 coherence fixes applied 2026-07-06 (F-P5-01..07); v1.8 F3 pass-6 fixes applied 2026-07-06 (F-P6-01 Fixture D skeleton, F-P6-02 type_name derivation, 3 LOW clarity touches); v1.9 F3 pass-8 fixes applied 2026-07-06 (F-B8-M-01: bc-1-auth-identity.md filename drift ×4 sites; F-B8-L-01: Task 0 rationale DEAD-vs-missed precision); v1.11 F-01 two-tier shape guard lockstep (BC 7575e54; EC-CITE-060; N=309/FLOOR=231; Fixture B .snap sub-probe); v1.12 pass-2 obs fixes — Step-2 two-variable pattern canonized (BC lockstep); --bc-dir CANONICAL_MODE note corrected.
 
 **Origin:** DEC-148 citation-debt-filewide cycle. After ADR-0012 Seam A/B extracted
 `handle_jsm_create` to `src/cli/issue/jsm_create.rs` and `handle_edit` to
@@ -413,9 +414,9 @@ observation. The no-output stub mandates all fixtures to be RED before implement
      **Designed-to-support only** (same ARG-PARSER-GATE-POLARITY convention as `--policy-doc`
      in Story A). The fixture harness uses the in-process `BC_DIR=…` env assignment — that is
      the tested code path; the `--bc-dir` CLI flag itself is not exercised by any fixture. Note:
-     standalone CLI use of `--bc-dir` without a `BC_DIR` env var leaves `CANONICAL_MODE=1`
-     (floor guard active), because the CANONICAL_MODE check (`[ -z "${BC_DIR+x}" ]`) tests the
-     env var, not the CLI flag — documented behavior, not a target of any fixture.
+     standalone CLI use of `--bc-dir` sets the `BC_DIR` shell variable, so
+     `[ -z "${BC_DIR+x}" ]` is false → CANONICAL_MODE stays 0 (floor OFF — user override
+     skips floor) — documented behavior, not a target of any fixture.
    - `--src-root <dir>`: override the source root for file-existence and symbol grep. Without
      `--self-test`, this is a usage error (exit 64) to prevent accidental redirect of a real
      guard run to a temp directory. Exit message text (pinned to Story A form, F-B2-09):
