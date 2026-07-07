@@ -54,17 +54,20 @@ count 381 → 382; range-collapsed unchanged at 230.
 - `.factory/phase-f2-spec-evolution/prd-delta-571.md` (NEW): authoritative F2
   PRD-delta record for ADF-CODE-MARK-EXCLUSIVITY cycle.
 
+- `.factory/phase-f2-spec-evolution/verification-delta-571.md` (NEW): VP-571-001..005 verification properties for BC-7.2.015; consumed by F3 story.
+
 ### Impact Assessment
 
 | Artifact | Change Type | Notes |
 |----------|-------------|-------|
 | `bc-7-output-render.md` | MODIFIED | +1 BC (BC-7.2.015 new); BC-7.2.007 EC-2 updated |
 | `BC-INDEX.md` | MODIFIED | 611 → 612 total_bcs; new BC-7.2.015 row; range shifted |
-| `CANONICAL-COUNTS.md` | MODIFIED | All 8 count surfaces updated atomically (DEC-155) |
+| `CANONICAL-COUNTS.md` | MODIFIED | All guarded count surfaces (8 per check-bc-cumulative-counts.sh) plus unguarded body/prose surfaces updated atomically (19 surface rows; see prd-delta-571.md Count Propagation table) |
 | `bc-07-output-render.md` (domain-spec) | MODIFIED | bc_count 92 → 93 (L2/L3 alignment) |
 | `holdout-scenarios.md` | MODIFIED | 82 → 83 holdouts; new H-NEW-ADF-010 MUST-PASS |
 | `spec-changelog.md` | MODIFIED | This entry |
 | `prd-delta-571.md` | NEW | Authoritative F2 PRD-delta record |
+| `verification-delta-571.md` | NEW | VP-571-001..005 verification properties for BC-7.2.015 |
 
 ### Files NOT Changed
 

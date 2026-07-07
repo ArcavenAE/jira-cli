@@ -4555,3 +4555,22 @@ Rows displaced to make room for F1 gate approval + F2 spec-delta steps.
 |------|-------|--------|--------|
 | **CITATION-GUARDS STORY B F3 CONVERGED — story #102 v1.10 ready (2026-07-06)** — DEC-155 recorded. 15 fresh-context adversary passes (incl. 2 research adjudications: DEC-154 grammar extension), 9 fix rounds (v1.1→v1.9). Clean window: passes 13/14/15 CLEAN×3 (DEC-153 standard criterion). Story v1.10: status=ready. Finding classes: 2 CRIT, 3 HIGH, ~12 MED. Convergence trajectory appended to cycles/cycle-001/convergence-trajectory.md. | state-manager | COMPLETE | Stories #102 v1.10 ready. develop @ ab78a2d UNCHANGED. |
 | **CITATION-GUARDS STORY B F4 DELIVERY COMPLETE — PR #592 OPEN/HELD (DEC-128)** — Task 0: 12+ dead citations rewritten (2b09313); Red Gate PASSED (stubs 0867823 + fixtures/self-assertions a440814; RED verified). Impl f3fc670. Two-tier shape guard spec amendment: F-01 MED resolved (EC-CITE-060; N=309=304 .rs+5 .snap; FLOOR=231; story v1.11 fd8e378; code 7706cc1). Pass-2 obs (NITPICK_ONLY): story v1.12 f353ab3. Step 4.5 CONVERGED: 4 passes / 2 fix rounds / window p2/p3/p4 NITPICK/NITPICK/CLEAN. All 7 ACs PASS. Demos b52be90 (21 files, 7/7 ACs, VHS). PR #592: CI 15/15, security 2 LOW, pr-reviewer APPROVE cycle 1. HELD per DEC-128. | state-manager | COMPLETE | PR #592 OPEN. develop UNCHANGED @ ab78a2d. |
+
+### Archived Phase Progress Rows — ADF-CODE-MARK-EXCLUSIVITY checkpoint #2 (from STATE.md, 5-row cap, 2026-07-07)
+
+Rows archived to make room for passes 6-16 / fix rounds 5-13 summary and pass-17-dispatched rows.
+
+| Phase | Status | Completed | Gate | Notes |
+|-------|--------|-----------|------|-------|
+| **CITATION-GUARDS CYCLE CLOSED — BOTH STORIES DELIVERED (DEC-156, 2026-07-07)** | **COMPLETE** | **2026-07-07** | **Story A (PR #572 @ ab78a2d) + Story B (PR #592 @ 0d8a8a5) both merged. Guard family complete: CLAUDE.md citations + mutants-policy/examine_globs + BC-body Trace/Source citations (BC-X.13.001..006). 309 citations enforced in CI. DEC-156.** | develop @ 0d8a8a5. BC 611. Stories 102 (both delivered). Holdouts 82. |
+| **ADF-CODE-MARK-EXCLUSIVITY CYCLE OPENED + F1 GATE APPROVED (DEC-157, 2026-07-07)** | **COMPLETE** | **2026-07-07** | **F1: emit-site allowlist filter in push_code. F1 gate (DEC-157): no node-splitting; apply_marks read-tolerance retained; standalone BC-7.2.015; STANDARD criterion; H-NEW-ADF-010 authorized (calls A-E incl. JSM Call E). F2 dispatch authorized.** | develop @ 0d8a8a5 UNCHANGED. BC 611. |
+
+### Archived Current Phase Steps — ADF-CODE-MARK-EXCLUSIVITY checkpoint #2 (from STATE.md, 5-row cap, 2026-07-07)
+
+Rows displaced to make room for DEC-158 + passes 6-16 summary + pass-17-dispatched rows.
+
+| Step | Agent | Status | Output |
+|------|-------|--------|--------|
+| **CITATION-GUARDS CYCLE CLOSED (DEC-156, 2026-07-07)** — PR #592 squash-merged by human (DEC-128 honored); develop ab78a2d → 0d8a8a5. Story #102 v1.13 status=delivered. DEC-156 recorded. 2 new lessons codified. BC-CITATION-CI-GUARD drift CLOSED. BC-INDEX-9TH-SURFACE + COMPANION-LINT drift items added. | state-manager | COMPLETE | develop @ 0d8a8a5. BC 611. Stories 102. Holdouts 82. |
+| **ADF-CODE-MARK-EXCLUSIVITY CYCLE OPENED + F1 DELTA ANALYSIS COMPLETE (2026-07-07)** — Cycle opened for issue #571. Mechanism: `src/adf.rs::push_code` clones active_marks + appends code mark. F1 artifacts: impact-boundary-571.md, artifact-mapping-571.md, adf-code-mark-2026-07-07-delta.md, affected-files-571.txt, research/issue-571-adf-code-mark-exclusivity-2026-07-07.md. HELD — 5 scope questions presented to human. | architect + BA + state-manager | COMPLETE | F1 artifacts committed. develop @ 0d8a8a5 UNCHANGED. |
+| **ADF-CODE-MARK-EXCLUSIVITY F1 GATE APPROVED — DEC-157 recorded (2026-07-07)** — Human approved 5-point scope: (1) emit-site filter only; (2) no node-splitting; (3) apply_marks read-tolerance retained; (4) standalone BC-7.2.015; (5) STANDARD criterion (DEC-153 precedent). H-NEW-ADF-010 authorized (F2, calls A-E incl. JSM Call E). F2 dispatch authorized. | state-manager | COMPLETE | DEC-157. develop @ 0d8a8a5 UNCHANGED. |

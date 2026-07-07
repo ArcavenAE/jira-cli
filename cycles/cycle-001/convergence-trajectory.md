@@ -1263,8 +1263,19 @@ Supports ADVERSARY-META-LENS-REGRESS engine item: strict criterion (incl. recurs
 | 3 | 2026-07-07 | 5 | 0 | 0 | 1 | 4 | 0/3 | FINDINGS_REMAIN |
 | 4 | 2026-07-07 | 5 | 0 | 0 | 2 | 3 | 0/3 | FINDINGS_REMAIN |
 | 5 | 2026-07-07 | 0 | 0 | 0 | 0 | 0 | 1/3 | CLEAN-PASS |
+| 6 | 2026-07-07 | 1 | 0 | 0 | 0 | 1 | 0/3 | FINDINGS_REMAIN |
+| 7 | 2026-07-07 | 0 | 0 | 0 | 0 | 0 | 1/3 | CLEAN-PASS |
+| 8 | 2026-07-07 | 4 | 0 | 0 | 4 | 0 | 0/3 | FINDINGS_REMAIN |
+| 9 | 2026-07-07 | 1 | 0 | 0 | 1 | 0 | 0/3 | FINDINGS_REMAIN |
+| 10 | 2026-07-07 | 0 | 0 | 0 | 0 | 0 | 1/3 | CLEAN-PASS |
+| 11 | 2026-07-07 | 3 | 0 | 0 | 3 | 0 | 0/3 | FINDINGS_REMAIN |
+| 12 | 2026-07-07 | 1 | 0 | 0 | 1 | 0 | 0/3 | FINDINGS_REMAIN |
+| 13 | 2026-07-07 | 1 | 0 | 0 | 0 | 1 | 0/3 | FINDINGS_REMAIN |
+| 14 | 2026-07-07 | 0 | 0 | 0 | 0 | 0 | 1/3 | CLEAN-PASS |
+| 15 | 2026-07-07 | 2 | 0 | 0 | 0 | 2 | 0/3 | FINDINGS_REMAIN |
+| 16 | 2026-07-07 | 3 | 0 | 0 | 0 | 3 | 0/3 | FINDINGS_REMAIN |
 
-**Trajectory:** →3→4→5→5→0 — STREAK 1/3. Pass 6 (spec-ecosystem coherence) dispatched.
+**Trajectory:** →3→4→5→5→0→1→0→4→1→0→3→1→1→0→2→3 — STREAK 0/3 (STRICT, DEC-158). Pass 17 (verification-adequacy final) dispatched.
 
 ### Pass 1 (2026-07-07) — Coherence / Registration Lens
 
@@ -1311,9 +1322,119 @@ STREAK 1/3. One LOW-informational observation: VA-OBS-5-1 noted that the verific
 
 ---
 
+### Pass 6 (2026-07-07) — Spec-Ecosystem Coherence Lens
+
+**Findings:** 1 (0C/0H/0M/1L)
+**Convergence counter:** 0 of 3 (STRICT reset from 1/3 — DEC-158; LOW resets under STRICT criterion)
+
+LOW: BC-INDEX-9TH-SURFACE RECURRENCE×3 — subsection-sum row in BC-INDEX.md Coverage Statistics not updated to reflect BC-7.2.015 addition (10th unguarded field; 9th was the Coverage Statistics column count from pass 4). Fixed. This is the third recurrence of the BC-INDEX-9TH-SURFACE drift item. Process gap TWIN-ARTIFACT-SWEEP flagged: fix for the subsection-sum field was not propagated to the sibling BC-INDEX holdout-total column.
+
+---
+
+### Pass 7 (2026-07-07)
+
+**Findings:** 0 — CLEAN-PASS
+**Convergence counter:** 1 of 3 (STRICT)
+
+All pass 6 fixes verified. Subsection-sum propagation clean. No new findings.
+
+---
+
+### Pass 8 (2026-07-07) — Test-Writer Lens
+
+**Findings:** 4 (0C/0H/4M/0L)
+**Convergence counter:** 0 of 3 (STRICT reset from 1/3)
+
+4 MED from test-writer lens: MED-1: VP cross-references in verification-delta-571.md do not specify the exact test-function names for VP assertions (BC-7.2.015 ECs 1-5); wording tightened to name concrete test functions. MED-2: H-NEW-ADF-010 Call B missing assertion on active_marks length after push_code clears incompatible marks — exact expected count not stated. MED-3: H-NEW-ADF-010 Call C does not specify whether link mark is preserved in the output ADF or only that no error is thrown; asserted preserved. MED-4: TWIN-ARTIFACT-SWEEP instance — test spec update not propagated to verification-delta companion section. All fixed.
+
+---
+
+### Pass 9 (2026-07-07) — Implementer Lens
+
+**Findings:** 1 (0C/0H/1M/0L)
+**Convergence counter:** 0 of 3 (STRICT)
+
+MED: Implementer lens finding — BC-7.2.015 EC-2 allowlist direction (retain `link`/`annotation`, strip `strong`/`em`/`strike`/`subsup`/`text`) not reflected in the push_code spec prose with sufficient precision for an implementer reading without cross-referencing BC-7.2.007 EC-2; wording tightened in prd-delta-571.md. TWIN-ARTIFACT-SWEEP instance — prd-delta fix not propagated to bc-07-output-render.md domain spec entry; fixed.
+
+---
+
+### Pass 10 (2026-07-07)
+
+**Findings:** 0 — CLEAN-PASS
+**Convergence counter:** 1 of 3 (STRICT)
+
+All pass 9 fixes verified. TWIN-ARTIFACT-SWEEP propagation confirmed. No new findings.
+
+---
+
+### Pass 11 (2026-07-07) — Story-Writer Lens
+
+**Findings:** 3 (0C/0H/3M/0L)
+**Convergence counter:** 0 of 3 (STRICT reset from 1/3)
+
+3 MED from story-writer lens: MED-1: PHASE-DOC-RETRO-ANNOTATION pattern — F1 impact-boundary-571.md does not carry a retro-annotation noting that DEC-157 scope decision on point (2) (no node-splitting) supersedes its original scope comment; note added. MED-2: F1 artifact-mapping-571.md story file list does not include CLAUDE.md gotcha update (contradicts prd-delta-571.md EC-5 which makes it in-scope); annotated. MED-3: verification-delta-571.md VP numbering in the VP-INDEX cross-reference table stale after p8 fix — updated. All fixed.
+
+---
+
+### Pass 12 (2026-07-07) — Security Lens
+
+**Findings:** 1 (0C/0H/1M/0L)
+**Convergence counter:** 0 of 3 (STRICT reset)
+
+MED: Security lens — BC-7.2.015 EC-1 guard description ("MUST filter active_marks before appending code mark") does not specify atomicity: if push_code panics mid-filter, active_marks could be left in a partially-stripped state for the next call. EC-1 amended to specify filter-then-append as a single contiguous operation with no intermediate observable state. This is the last MEDIUM finding on the core contract; residual finding tier from this pass forward is instruction-layer polish only.
+
+---
+
+### Pass 13 (2026-07-07)
+
+**Findings:** 1 (0C/0H/0M/1L)
+**Convergence counter:** 0 of 3 (STRICT reset — LOW resets under STRICT criterion, DEC-158)
+
+LOW: Instruction-layer polish — prd-delta-571.md introductory sentence uses passive voice for the mechanism description ("marks are filtered") vs active ("push_code filters marks before appending"); wording harmonized to active voice consistent with the rest of the spec corpus. Non-substantive; no BC logic change.
+
+---
+
+### Pass 14 (2026-07-07)
+
+**Findings:** 0 — CLEAN-PASS
+**Convergence counter:** 1 of 3 (STRICT)
+
+All pass 13 fixes verified. Voice harmonization confirmed consistent. No new findings.
+
+---
+
+### Pass 15 (2026-07-07)
+
+**Findings:** 2 (0C/0H/0M/2L)
+**Convergence counter:** 0 of 3 (STRICT reset — LOWs reset under STRICT criterion, DEC-158)
+
+2 LOW instruction-layer polish: LOW-1: BC-7.2.015 EC-3 note on nested code marks (`\`\`x\`\``) says "not addressed" but passes 3 fixed this already — note now stale; removed. LOW-2: H-NEW-JSM-RT-001 holdout scenario body uses `projectKey` field in fixture JSON but the Atlassian API returns `projectId`; identified as pre-existing defect H-NEW-JSM-RT-001-FIXTURE-NONDESERIALIZABLE (same class as this cycle's Call E CRIT from pass 2); recorded as drift item, no spec change here.
+
+---
+
+### Pass 16 (2026-07-07)
+
+**Findings:** 3 (0C/0H/0M/3L)
+**Convergence counter:** 0 of 3 (STRICT reset — LOWs reset under STRICT criterion, DEC-158)
+
+3 LOW instruction-layer polish: LOW-1: HOLDOUT-GROUP-8-DUPLICATE-HEADING — Group 8 in holdout-scenarios.md has a duplicate heading label (two scenarios share the same heading text); recorded as pre-existing drift item, no spec change. LOW-2: prd-delta-571.md title casing inconsistency (one heading uses title case, rest use sentence case); harmonized. LOW-3: BC-7.2.015 band-range comment "BC-7.2.016..058" in prd-delta is mathematically correct but lacks rationale for the upper bound; brief parenthetical added. All fixed. Pass 17 (verification-adequacy final) dispatched.
+
+---
+
 ### Notable Findings (F2 ADF-CODE-MARK-EXCLUSIVITY)
 
 - **1 CRIT (pass 2):** H-NEW-ADF-010 Call E fixture inexecutable — 3 sub-defects (ADF literal wrong, fixture schema non-conforming, JSM isolation absent). Root cause: holdout scenario authored with insufficient attention to JSM-specific execution context.
 - **1 MED (pass 3, adjudicated deferred):** F1↔F2 CLAUDE.md scope contradiction — deferred to F3 story per LESSON-F2-WORKTREE-FIRST; prd-delta-571.md EC-5 is authoritative.
-- **BC-INDEX-9TH-SURFACE recurrence (pass 4):** 2nd recurrence of Coverage Statistics row not updated. Confirmed process gap; guard-extension candidate.
-- **SPEC-CHANGELOG-RESYNC (pass 4):** spec-changelog goes stale across fix rounds; new process-gap candidate for F2 skill template.
+- **BC-INDEX-9TH-SURFACE recurrence×3 (passes 1/4/6):** holdout-total (p1), Coverage Statistics count (p4), subsection-sum (p6). Third recurrence confirms guard-extension as priority. Candidate: 10-surface cumulative-counts guard update.
+- **TWIN-ARTIFACT-SWEEP (passes 8/9/11):** 3 instances of fix-round changes not propagated to mirroring artifacts. Codified as process gap; fix rounds must include a mirroring-artifact sweep step.
+- **SPEC-CHANGELOG-RESYNC (pass 4):** spec-changelog goes stale across F2 fix rounds; F2 skill template update candidate.
+- **PHASE-DOC-RETRO-ANNOTATION (pass 11):** F1 artifacts need retro-annotation when F2 decisions supersede F1 scope; F2 skill template update candidate.
+- **Core contract finding-free since pass 12:** passes 13-16 residual tier = instruction-layer polish only (LOW, non-substantive).
+- **Pre-existing items surfaced (passes 15/16):** H-NEW-JSM-RT-001-FIXTURE-NONDESERIALIZABLE (projectKey vs projectId); HOLDOUT-GROUP-8-DUPLICATE-HEADING.
+
+## Frontmatter Fields (extracted from STATE.md)
+
+<!-- When compacting STATE.md, adversary_pass_* frontmatter fields are
+     converted to rows in the Finding Progression table above.
+     Original field format: adversary_pass_N_findings: "description"
+     Original field format: adversary_pass_N_date: "YYYY-MM-DD" -->

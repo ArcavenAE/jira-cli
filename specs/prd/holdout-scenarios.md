@@ -1385,6 +1385,7 @@ For EVERY `POST /rest/api/3/issue` captured body: walk the `fields.description` 
 1. exit code = 0; exactly one POST fired.
 2. `fields.description` contains exactly one text node whose text is `"code"` and whose `marks` array contains BOTH `{"type":"code"}` AND a `link` mark entry with `attrs.href == "https://example.com"` — the `link` mark is a permitted co-mark and MUST be preserved.
 3. The marks array contains NO typographic mark entries.
+(Retention anchor — GREEN pre-fix AND post-fix; catches a mutant that drops `link` from the allowlist, not a pre-fix→post-fix regression pin.)
 
 **Call D — surrounding strong nodes retain marks; inner code node is stripped**:
 1. exit code = 0; exactly one POST fired.
@@ -1406,6 +1407,10 @@ For EVERY `POST /rest/api/3/issue` captured body: walk the `fields.description` 
 **Status**: MUST-PASS. Pins BC-7.2.015 (code-mark exclusivity at emission time) EC-1 (strong stripped), EC-4 (subsup stripped; primary issue #571 regression target), EC-5 (link preserved), EC-6 (surrounding non-code text retains marks), and JSM-path parity (Call E). Grounded in `src/adf.rs::push_code` (sole emit site for code marks).
 
 **BC refs**: BC-7.2.015 (primary; EC-1 strong-stripped, EC-4 subsup-stripped, EC-5 link-preserved, EC-6 mixed-range, Call-E JSM-path parity)
+
+**Test file placement**: Calls A–D → `tests/adf_code_mark_exclusivity.rs` (mirrors dedicated-ADF-BC pattern: `tests/adf_inline_html_inv1_e2e.rs` for BC-7.2.011, `tests/adf_recursion_depth.rs` for BC-7.2.012); Call E → `tests/issue_create_jsm.rs` (existing JSM-create anchor).
+
+**Empirical-check propagation (F4)**: Calls B and E use the input `` ^\`code\`^ `` whose pre-fix composition (subsup wrapping a code span) is empirically unconfirmed at spec time — the same risk class as VP-571-002 EC-4. The VP-571-002 EC-4 empirical check (F4 Red-Gate protocol) is the adjudicator; its outcome BINDS Calls B and E. Fallback ladder: (i) if the check confirms a subsup-composing input, Calls B and E adopt that input byte-for-byte; (ii) if NO subsup+code composition is producible by pulldown-cmark at all, Call B's input is replaced with the proven strong form (same class as Call A but distinct assertion value: text `"code"` instead of `"hello"`, same `[{"type":"code"}]` expected marks), the "primary #571 regression target" label moves to Call A, and subsup coverage for H-NEW-ADF-010 is recorded as schema-derived only — mirroring the EC-4 demotion in `bc-7-output-render.md` §BC-7.2.015; Call E follows the same substitution (its purpose is JSM-path parity, which any composing input serves — the substituted strong form suffices); (iii) if the confirmed composing input is a mixed-range shape (e.g. `` ^a `b` c^ ``), Calls B and E adopt it AND their Expected sections are rewritten to enumerate the resulting multi-node topology analogously to Call D — surrounding text nodes retain `[subsup]`, the code node carries `[code]` only; the single-text-node assertion MUST NOT be retained with a mixed-range input (assertion-topology update per this rung applies to both the holdout Expected sections and, by consistency, the EC-4 unit anchor if it adopts a mixed-range input). Do NOT preemptively rewrite these inputs; `` ^\`code\`^ `` composition is itself unverified (spaces inside superscript spans are questionable in pulldown); the F4 empirical check is the adjudicator.
 
 ---
 

@@ -181,6 +181,18 @@ citation is required; the symbol exists today and the DEC-148 guard already vali
 | `.github/workflows/ci.yml` | No CI topology change required |
 | Any `.factory/specs/prd/` BC file | F2 updates these; F1 does not modify specs |
 
+> **[SUPERSEDED IN PART — F2 R6, 2026-07-07]:** Test-file placement was finalized in
+> `holdout-scenarios.md` §H-NEW-ADF-010 "Test file placement" during F2's 9 fix rounds.
+> The authoritative files-modified list for F3/F4 is:
+> - `src/adf.rs` — MODIFIED (push_code filter + unit tests)
+> - `CLAUDE.md` — MODIFIED (drop "not guarded here" clause from subsup gotcha)
+> - `tests/adf_code_mark_exclusivity.rs` — NEW (Calls A–D: forward unit tests for all
+>   excluded typographic+code combos + link+code preserved)
+> - `tests/issue_create_jsm.rs` — MODIFIED (Call E: H-NEW-ADF-010 integration holdout)
+>
+> The original table above is the F1 record; this note supersedes the test-file placement
+> entries only. The call-site `src/cli/` files remain NOT changed.
+
 ---
 
 ## 6. BC Delta Summary
@@ -374,3 +386,12 @@ Single story `S-571`. TDD order:
 3. Add new tests for em, strike, subsup, link+code, mixed range.
 4. Update `apply_marks` docstring.
 5. Confirm all S-522 CR/LF normalization tests still pass.
+
+> **[SUPERSEDED — F2 VP-571-002, 2026-07-07]:** The authoritative F4 task ordering is
+> the "F4 Red-Gate empirical-check checklist" and task-order section in
+> `.factory/phase-f2-spec-evolution/verification-delta-571.md`. Key change: ALL forward
+> anchors (existing-test rewrite + EC-1 through EC-6 + control) must be authored AND run
+> against pre-fix HEAD to capture per-anchor RED/GREEN evidence BEFORE the `push_code`
+> filter is applied. The 5-step order above applies the filter at step 2, which destroys
+> the pre-fix observation window needed to confirm each test genuinely fails before the
+> fix (Red Gate discipline, BC-5.38.001). Follow the F2 checklist, not the order above.
