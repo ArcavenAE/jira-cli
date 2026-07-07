@@ -1,13 +1,13 @@
 ---
 document_type: pipeline-state
 version: "2.0"
-status: in_progress
-pipeline: IN_PROGRESS
-timestamp: 2026-07-07T00:00:00Z
+status: paused
+pipeline: PAUSED
+timestamp: 2026-07-07T12:00:00Z
 phase: 3
 project: jira-cli
 mode: brownfield
-current_step: "CITATION-GUARDS CYCLE CLOSED (DEC-156) — both stories delivered; session review dispatched (final pending item)."
+current_step: "CITATION-GUARDS CYCLE FULLY CLOSED (DEC-156) — session review complete (cycles/cycle-001/CITATION-GUARDS-session-review.md). Pipeline IDLE. Pending human decision: ratify session-review criterion recommendation (STANDARD default / STRICT opt-in — closes ADVERSARY-META-LENS-REGRESS)."
 maintenance_run: CLOSED
 current_cycle: "cycle-001"
 feature_mode_bundle: CITATION-GUARDS
@@ -27,9 +27,9 @@ activation_version: "v0.6.0-dev.7"
 | **Product** | jr (Jira CLI) |
 | **Mode** | BROWNFIELD / Rust |
 | **Target Workspace** | develop → main |
-| **Last Updated** | 2026-07-07: CITATION-GUARDS CYCLE CLOSED (DEC-156) — PR #592 squash-merged @ 0d8a8a5; develop ab78a2d → 0d8a8a5; Story #102 v1.13 status=delivered; post-merge guard verification PASS (self-test 10/10; canonical 309 checked); 2 lessons codified (ORCHESTRATOR-EMPIRICAL-REFUTATION, REGISTRATION-SURFACE-SWEEP); BC-CITATION-CI-GUARD drift CLOSED. Prior: 2026-07-06: F4 delivery complete — Task 0 hygiene (2b09313), impl f3fc670, two-tier shape guard (EC-CITE-060; N=309/FLOOR=231). |
-| **Current Phase** | Phase 3 — CITATION-GUARDS CYCLE CLOSED (DEC-156, 2026-07-07). Both stories delivered (PR #572 @ ab78a2d + PR #592 @ 0d8a8a5). BC **611**. NFR 42. ADR 16. Stories **102** (both #101 + #102 delivered). Holdouts **82**. Session review dispatched. |
-| **Next Phase** | Session-review completion (dispatched). Then next-backlog gate: MUTANTS-SHARDING-PATH-B, fork signing DEC-104, post-cycle candidates. |
+| **Last Updated** | 2026-07-07: CITATION-GUARDS CYCLE FULLY CLOSED (DEC-156) — session review complete (cycles/cycle-001/CITATION-GUARDS-session-review.md); pipeline IDLE. Prior: PR #592 squash-merged @ 0d8a8a5; Story #102 v1.13 status=delivered; post-merge guard verification PASS (self-test 10/10; canonical 309 checked); 2 lessons codified (ORCHESTRATOR-EMPIRICAL-REFUTATION, REGISTRATION-SURFACE-SWEEP); BC-CITATION-CI-GUARD drift CLOSED. |
+| **Current Phase** | Phase 3 — **PIPELINE IDLE** (between cycles). CITATION-GUARDS CYCLE FULLY CLOSED (DEC-156, 2026-07-07). Both stories delivered (PR #572 @ ab78a2d + PR #592 @ 0d8a8a5). BC **611**. NFR 42. ADR 16. Stories **102** (both #101 + #102 delivered). Holdouts **82**. Session review complete. |
+| **Next Phase** | **Pending human decision:** (1) ratify session-review criterion recommendation (STANDARD default / STRICT opt-in — closes ADVERSARY-META-LENS-REGRESS); (2) select next backlog item. MEDIUM candidates: S-PG-MERGE-AUTH-BYPASS residuals, TEST-ONLY-GATE-ELIGIBILITY, BC-7.3.010-FORBIDDEN-PATTERN-CI-GUARD, MUTANTS-SHARDING-PATH-B. New candidates from this cycle: BC-INDEX-9TH-SURFACE guard, COMPANION-LINT single-line-trace, SEC-001/002 Guard-1 hardening. |
 | **Activation HEAD** | 342987f (v0.6.0-dev.7 tag); develop @ 0d8a8a5 (PR #592 squash-merged 2026-07-07 by human; CITATION-GUARDS CYCLE CLOSED DEC-156) |
 
 ## Phase Progress
@@ -166,39 +166,41 @@ Full per-issue: `cycles/cycle-001/convergence-trajectory.md`. Current: **CITATIO
 
 | Field | Value |
 |-------|-------|
-| **Date** | 2026-07-07 (CITATION-GUARDS CYCLE CLOSED — DEC-156; both stories delivered; develop @ 0d8a8a5) |
-| **Status** | **CITATION-GUARDS CYCLE CLOSED. Story A (PR #572 @ ab78a2d) + Story B (PR #592 @ 0d8a8a5) both DELIVERED. Guard family complete. Session review dispatched (final pending item before next-backlog gate).** |
+| **Date** | 2026-07-07 (CITATION-GUARDS CYCLE FULLY CLOSED — DEC-156; session review complete; pipeline IDLE) |
+| **Status** | **PIPELINE IDLE.** CITATION-GUARDS CYCLE FULLY CLOSED (DEC-156). Session review complete (`cycles/cycle-001/CITATION-GUARDS-session-review.md`). Both stories #101+#102 delivered. No open PRs, no active worktrees. factory-artifacts fully pushed. |
 | **Counters** | BC **611**. NFR **42**. ADR **16**. Stories **102** (both #101 + #102 delivered). Holdouts **82**. |
 | **Convergence counter** | Story B F4: CONVERGED (4 passes/2 fix rounds). Story B F3: CONVERGED (DEC-153 standard, DEC-155 — 15 passes/9 fix rounds). Story A F4: 9 passes/5 fix rounds CLEAN. Full trajectories: `cycles/cycle-001/convergence-trajectory.md`. |
-| **In-flight work** | NONE. develop @ 0d8a8a5. factory-artifacts pushed (this commit). Worktree `.worktrees/S-BC-CITATION-GUARD-1` may be removed (PR merged). |
-| **Pending** | Session-review completion (dispatched). Then next-backlog gate. |
+| **In-flight work** | NONE. develop @ 0d8a8a5. factory-artifacts fully pushed. No open PRs. Worktree `.worktrees/S-BC-CITATION-GUARD-1` may be removed (PR merged). |
+| **Pending decisions** | (1) Ratify session-review criterion recommendation: STANDARD default / STRICT opt-in (closes ADVERSARY-META-LENS-REGRESS). (2) Select next backlog item: MEDIUM candidates: S-PG-MERGE-AUTH-BYPASS residuals, TEST-ONLY-GATE-ELIGIBILITY, BC-7.3.010-FORBIDDEN-PATTERN-CI-GUARD, MUTANTS-SHARDING-PATH-B; new cycle candidates: BC-INDEX-9TH-SURFACE guard, COMPANION-LINT single-line-trace, SEC-001/002 Guard-1 hardening. |
 | **develop branch** | 0d8a8a5 (PR #592 squash-merged 2026-07-07 by human). Both CITATION-GUARDS PRs merged. |
 | **Untracked local files** | Deliberately uncommitted, session-local tooling, harmless: `.claude/pr-reviews/`, `.claude/spec-config.json`. |
 | **STATE.md size** | ~280 lines (WARNING band). |
-| **Resume command** | Open a fresh session and run `/vsdd-factory:next-step` — reads STATE.md; pipeline IN_PROGRESS; CITATION-GUARDS CYCLE CLOSED (DEC-156); session review pending completion; then next-backlog gate (MUTANTS-SHARDING-PATH-B, fork signing DEC-104, post-cycle candidates). |
+| **Resume command** | Open a fresh session; run `/vsdd-factory:next-step`. Pipeline PAUSED (IDLE). Resolve pending decisions before dispatching next cycle. MUTANTS-FIRST-SCOPED-PR-CALIBRATION watch: ×4 0-mutant confirmations; code-mutant path still unexercised. |
 
 ## RESUME PLAN (cold-start, self-contained)
 
-<!-- State snapshot: CITATION-GUARDS CYCLE CLOSED (DEC-156, 2026-07-07); both stories #101+#102 delivered; PR #592 merged @ 0d8a8a5; BC 611; Stories 102 both delivered; session review dispatched. develop @ 0d8a8a5. Holdouts 82. -->
+<!-- State snapshot: CITATION-GUARDS CYCLE FULLY CLOSED (DEC-156, 2026-07-07); session review complete; pipeline IDLE. Both stories #101+#102 delivered; PR #592 merged @ 0d8a8a5; BC 611; Stories 102 both delivered. develop @ 0d8a8a5. Holdouts 82. -->
 
 ### Steps (assume ZERO memory)
 
 **Step 1 (BLOCKING):** Run `vsdd-factory:factory-worktree-health`. Then read `.factory/STATE.md` (this file).
 
 **Step 2 — Verify position:**
-- develop @ **0d8a8a5** (PR #592 squash-merged 2026-07-07 by human; CITATION-GUARDS CYCLE CLOSED). Tag v0.6.0-dev.7 @ 342987f.
+- develop @ **0d8a8a5** (PR #592 squash-merged 2026-07-07 by human; CITATION-GUARDS CYCLE FULLY CLOSED). Tag v0.6.0-dev.7 @ 342987f.
 - factory-artifacts: see `git -C .factory log -1`.
 - No active feature worktrees (`.worktrees/S-BC-CITATION-GUARD-1` may be removed — PR merged). Permanent infra: main checkout @ develop, `.factory` @ factory-artifacts, `.reference/jira-cli` detached.
 - **Open PRs: NONE.**
 - Counters: BC **611**, NFR **42**, ADR **16**, Stories **102** (both #101 + #102 delivered). Holdouts **82**.
 
-**Step 3 — CITATION-GUARDS CYCLE CLOSED (DEC-156, 2026-07-07):**
+**Step 3 — PIPELINE IDLE (between cycles):**
 
-> **CYCLE CLOSED:** S-BC-CITATION-GUARD-1 #102 v1.13 delivered (PR #592 @ 0d8a8a5). Guard family complete: BC-X.13.001..006. Post-merge guard verification PASS (self-test 10/10; canonical 309 checked). DEC-156 recorded. 2 new lessons codified. BC-CITATION-CI-GUARD CLOSED. Session review dispatched.
+> **CYCLE FULLY CLOSED (DEC-156):** S-BC-CITATION-GUARD-1 #102 v1.13 delivered (PR #592 @ 0d8a8a5). Guard family complete: BC-X.13.001..006. Session review complete (`cycles/cycle-001/CITATION-GUARDS-session-review.md`). factory-artifacts fully pushed.
 >
-> **CURRENT TASK:** Await session-review completion. Then next-backlog gate. MUTANTS-FIRST-SCOPED-PR-CALIBRATION watch: ×4 0-mutant confirmations now (PR #592 scripts/ only); code-mutant path still unexercised.
+> **PENDING HUMAN DECISIONS BEFORE NEXT CYCLE:**
+> 1. Ratify session-review criterion recommendation: STANDARD default / STRICT opt-in (closes ADVERSARY-META-LENS-REGRESS).
+> 2. Select next backlog item (MEDIUM: S-PG-MERGE-AUTH-BYPASS residuals, TEST-ONLY-GATE-ELIGIBILITY, BC-7.3.010-FORBIDDEN-PATTERN-CI-GUARD, MUTANTS-SHARDING-PATH-B; new candidates: BC-INDEX-9TH-SURFACE guard, COMPANION-LINT single-line-trace, SEC-001/002 Guard-1 hardening).
 
-> **ACTIVE WATCH-ITEM:** MUTANTS-FIRST-SCOPED-PR-CALIBRATION — 0-mutant path confirmed ×3 (×2 prior + PR #572); code-mutant path still unexercised. PR #592 is Guard 1 bash (scripts/ only, no src/ mutations) — this will be the 4th 0-mutant confirmation. The first real code-mutant test will come when `edit.rs`/`jsm_create.rs` are touched in a future PR.
+> **ACTIVE WATCH-ITEM:** MUTANTS-FIRST-SCOPED-PR-CALIBRATION — 0-mutant path confirmed ×4 (PR #568 + #570 + #572 + #592); code-mutant path still unexercised. The first real code-mutant test will come when `edit.rs`/`jsm_create.rs` are touched in a future PR.
 
 RECENTLY CLOSED (2026-07-02):
 - **MUTANTS-EXAMINE-GLOBS CYCLE:** PR #570 → develop @ c4b3aa9. DEC-150. CLOSED.
@@ -263,3 +265,4 @@ OPEN BACKLOG (after CITATION-GUARDS closes):
 | MUTANTS-EXAMINE-GLOBS F1 delta analysis 2026-07-02 | `phase-f1-delta-analysis/mutants-examine-globs-2026-07-02-delta.md` |
 | CITATION-GUARDS F1 delta analysis 2026-07-02 | `phase-f1-delta-analysis/citation-guards-2026-07-02-delta.md` |
 | CITATION-GUARDS Story B design open-questions research 2026-07-05 (DEC-153 adjudication) | `research/story-b-open-questions-2026-07-05.md` |
+| CITATION-GUARDS session review (DEC-156 cycle close, 2026-07-07) | `cycles/cycle-001/CITATION-GUARDS-session-review.md` |

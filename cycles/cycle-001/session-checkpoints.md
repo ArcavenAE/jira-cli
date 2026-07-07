@@ -1278,3 +1278,22 @@ _Was the active checkpoint after maintenance sweep 2026-06-22 fully closed. PRs 
 | **Untracked local files** | Deliberately uncommitted, session-local tooling, harmless: `.claude/pr-reviews/`, `.claude/spec-config.json`. |
 | **STATE.md size** | ~290 lines (WARNING band). |
 | **Resume command** | Open a fresh session and run `/vsdd-factory:next-step` — reads STATE.md; pipeline IN_PROGRESS; feature_mode_bundle: CITATION-GUARDS; Story B #102 v1.12 F4 COMPLETE; PR #592 OPEN/CLEAN; HELD at DEC-128 — awaiting human merge authorization. MUTANTS-FIRST-SCOPED-PR-CALIBRATION watch: ×3 0-mutant confirmations, code-mutant path unexercised. |
+
+---
+
+## Checkpoint: 2026-07-07 — CITATION-GUARDS CYCLE CLOSED (DEC-156)
+
+*Archived from STATE.md Session Resume Checkpoint on 2026-07-07 when final cycle-wrap burst replaced this checkpoint.*
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-07-07 (CITATION-GUARDS CYCLE CLOSED — DEC-156; both stories delivered; develop @ 0d8a8a5) |
+| **Status** | **CITATION-GUARDS CYCLE CLOSED. Story A (PR #572 @ ab78a2d) + Story B (PR #592 @ 0d8a8a5) both DELIVERED. Guard family complete. Session review dispatched (final pending item before next-backlog gate).** |
+| **Counters** | BC **611**. NFR **42**. ADR **16**. Stories **102** (both #101 + #102 delivered). Holdouts **82**. |
+| **Convergence counter** | Story B F4: CONVERGED (4 passes/2 fix rounds). Story B F3: CONVERGED (DEC-153 standard, DEC-155 — 15 passes/9 fix rounds). Story A F4: 9 passes/5 fix rounds CLEAN. Full trajectories: `cycles/cycle-001/convergence-trajectory.md`. |
+| **In-flight work** | NONE. develop @ 0d8a8a5. factory-artifacts pushed (this commit). Worktree `.worktrees/S-BC-CITATION-GUARD-1` may be removed (PR merged). |
+| **Pending** | Session-review completion (dispatched). Then next-backlog gate. |
+| **develop branch** | 0d8a8a5 (PR #592 squash-merged 2026-07-07 by human). Both CITATION-GUARDS PRs merged. |
+| **Untracked local files** | Deliberately uncommitted, session-local tooling, harmless: `.claude/pr-reviews/`, `.claude/spec-config.json`. |
+| **STATE.md size** | ~280 lines (WARNING band). |
+| **Resume command** | Open a fresh session and run `/vsdd-factory:next-step` — reads STATE.md; pipeline IN_PROGRESS; CITATION-GUARDS CYCLE CLOSED (DEC-156); session review pending completion; then next-backlog gate (MUTANTS-SHARDING-PATH-B, fork signing DEC-104, post-cycle candidates). |
