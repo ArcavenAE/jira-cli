@@ -6,13 +6,13 @@ traces_to: "README.md"
 source_passes: "Pass 2 broad §2a.2 Errors + §2a.3 Value objects + R1 §3.6 T-09 ADF + Pass 8 §2.2 BC#13,14"
 entity_count: 16
 invariant_count: 18
-bc_count: 92
+bc_count: 93
 risk_level: HIGH
 ---
 
 # BC-07: Output Rendering & Error Handling
 
-Covers all output formatting (table and JSON), ADF rendering, the `JrError` type, and the runtime concerns of `main.rs`. The ADF renderer alone is 1,826 LOC and accounts for 52 BCs in the pass-3 contract index (51 original + BC-7.2.006 added 2026-06-08 via issue #470).
+Covers all output formatting (table and JSON), ADF rendering, the `JrError` type, and the runtime concerns of `main.rs`. The ADF renderer alone is 1,826 LOC and accounts for the ADF rendering subdomain (BC-7.2.001..015 individually-bodied plus the range-collapsed band; see bc-7-output-render.md frontmatter for the canonical count).
 
 ---
 
@@ -124,7 +124,7 @@ Covers all output formatting (table and JSON), ADF rendering, the `JrError` type
 
 - **`JrError`** is the single error type aggregating all domain errors. Exit codes are the public contract (`exit_code()` method).
 - **`JiraClient`** is the single HTTP-layer aggregate. The L3 bifurcation (validated vs raw) is an internal design choice, not a public boundary.
-- **ADF renderer** (`adf.rs`) is a self-contained subdomain (1,826 LOC, 52 BCs). No external dependencies beyond `pulldown-cmark` and `serde_json`.
+- **ADF renderer** (`adf.rs`) is a self-contained subdomain (1,826 LOC; see bc-7-output-render.md frontmatter for canonical BC count). No external dependencies beyond `pulldown-cmark` and `serde_json`.
 
 ---
 

@@ -1251,3 +1251,69 @@ Supports ADVERSARY-META-LENS-REGRESS engine item: strict criterion (incl. recurs
 | Fix rounds | 5 | 2 |
 | Clean window | 7/8/9 | 2/3/4 |
 | PR | #572 MERGED | #592 OPEN (HELD DEC-128) |
+
+---
+
+## ADF-CODE-MARK-EXCLUSIVITY F2 — Adversarial Spec Review
+
+| Pass | Date | Total | CRIT | HIGH | MED | LOW | Counter | Verdict |
+|------|------|-------|------|------|-----|-----|---------|---------|
+| 1 | 2026-07-07 | 3 | 0 | 0 | 2 | 1 | 0/3 | FINDINGS_REMAIN |
+| 2 | 2026-07-07 | 4 | 1 | 0 | 1 | 2 | 0/3 | FINDINGS_REMAIN |
+| 3 | 2026-07-07 | 5 | 0 | 0 | 1 | 4 | 0/3 | FINDINGS_REMAIN |
+| 4 | 2026-07-07 | 5 | 0 | 0 | 2 | 3 | 0/3 | FINDINGS_REMAIN |
+| 5 | 2026-07-07 | 0 | 0 | 0 | 0 | 0 | 1/3 | CLEAN-PASS |
+
+**Trajectory:** →3→4→5→5→0 — STREAK 1/3. Pass 6 (spec-ecosystem coherence) dispatched.
+
+### Pass 1 (2026-07-07) — Coherence / Registration Lens
+
+**Findings:** 3 (0C/0H/2M/1L)
+**Convergence counter:** 0 of 3
+
+MED-1: BC-7.2.015 EC numbering inconsistency — ECs numbered 1-5 in body but referenced as EC-2/EC-3 in prd-delta summary prose; alignment fix applied. MED-2: H-NEW-ADF-010 holdout-scenarios.md registration missing scenario body — only index row added; full scenario body authored and registered. LOW-1: prd-delta-571.md version header mismatch with spec-changelog; version reconciled. Consistency-validator dispatched after each fix: CONSISTENT.
+
+---
+
+### Pass 2 (2026-07-07) — Verification-Adequacy / Holdout Coverage Lens
+
+**Findings:** 4 (1C/0H/1M/2L)
+**Convergence counter:** 0 of 3
+
+CRIT: H-NEW-ADF-010 Call E fixture inexecutable — 3 sub-defects: (a) ADF literal uses wrong mark type in expected output; (b) fixture format uses inline JSON not conforming to holdout schema; (c) JSM-specific isolation missing (Call E tests JSM path which requires service-desk context not captured in fixture). All 3 sub-defects fixed; Call E fixture rewritten with correct ADF literal, proper schema, JSM isolation note. MED: BC-7.2.015 verification-delta VP reference inconsistent with VP-INDEX — VP number updated. LOW-1: H-NEW-ADF-010 calls A-D missing explicit pre-condition for active_marks state setup. LOW-2: verification-delta-571.md missing cross-reference back to prd-delta-571.md. All fixed. Consistency-validator: CONSISTENT.
+
+---
+
+### Pass 3 (2026-07-07) — Implementability / Edge-Cases Lens
+
+**Findings:** 5 (0C/0H/1M/4L)
+**Convergence counter:** 0 of 3
+
+MED: F1 delta analysis (impact-boundary-571.md) states CLAUDE.md gotcha update is out-of-scope for F4, but prd-delta-571.md BC-7.2.015 EC-5 specifies the CLAUDE.md gotcha as a deliverable. Contradiction adjudicated: LESSON-F2-WORKTREE-FIRST applies — CLAUDE.md update is in-scope for F4 and must appear in story file list; prd-delta-571.md EC-5 is authoritative; impact-boundary-571.md carries a stale note that is superseded. Deferred to F3 story decomposition to capture correctly. LOW-1: BC-7.2.015 EC-3 does not specify the exact set of marks in the allowlist (retain: link, annotation; strip: strong, em, strike, subsup, text) — wording tightened. LOW-2: BC-7.2.015 EC-4 edge case for nested code marks (``x``) not addressed. LOW-3: H-NEW-ADF-010 Call A missing assertion on active_marks state after push_code returns. LOW-4: verification-delta missing note on ^`x`^ pulldown adjacency behavior (pass 5 follow-up noted). All 4 LOWs fixed.
+
+---
+
+### Pass 4 (2026-07-07) — Hostile Misreading / Cross-Artifact Lens
+
+**Findings:** 5 (0C/0H/2M/3L)
+**Convergence counter:** 0 of 3
+
+MED-1: BC-INDEX.md Coverage Statistics row (9th surface) not updated to reflect BC-7.2.015 addition and BC-7.2.007 EC-2 amendment — stale coverage count. Fixed: BC-INDEX.md Coverage Statistics row updated. This is a RECURRENCE of drift item BC-INDEX-9TH-SURFACE (recurrence count now 2). MED-2: spec-changelog.md (v1.3.24 → v1.3.25) entry does not reflect rounds 2, 3, 4 fix content — only round 1 changes described. Fixed: spec-changelog re-synced to v1.3.25 with all 4 fix rounds summarized. LOW-1: D-chain validator false-positive on "JRACLOUD-27893" matched as "D-27893" (substring match without word boundary) — noted as process gap D-CHAIN-VALIDATOR-SUBSTRING-FALSE-POSITIVE; no spec change. LOW-2: bc-07-output-render.md domain spec BC-7.2.015 entry missing allowlist direction (only says "code mark strips incompatible marks" not "retains link/annotation"). Fixed. LOW-3: CANONICAL-COUNTS.md BC-7 section total not updated from 7 to 8 after BC-7.2.015 addition. Fixed.
+
+---
+
+### Pass 5 (2026-07-07) — Evaluator-Simulation / Ground-Truth Lens
+
+**Findings:** 0 — CLEAN-PASS
+**Convergence counter:** 1 of 3
+
+STREAK 1/3. One LOW-informational observation: VA-OBS-5-1 noted that the verification-delta does not include a performance/regression note for push_code hot-path (called on every inline code span); adjudicated as LOW-informational (not a spec defect — performance is addressed in CLAUDE.md gotcha noting no behavioral change to existing code paths). Non-resetting per DEC-153 (VA observations below MEDIUM are informational only). Pass 6 (spec-ecosystem coherence lens) dispatched.
+
+---
+
+### Notable Findings (F2 ADF-CODE-MARK-EXCLUSIVITY)
+
+- **1 CRIT (pass 2):** H-NEW-ADF-010 Call E fixture inexecutable — 3 sub-defects (ADF literal wrong, fixture schema non-conforming, JSM isolation absent). Root cause: holdout scenario authored with insufficient attention to JSM-specific execution context.
+- **1 MED (pass 3, adjudicated deferred):** F1↔F2 CLAUDE.md scope contradiction — deferred to F3 story per LESSON-F2-WORKTREE-FIRST; prd-delta-571.md EC-5 is authoritative.
+- **BC-INDEX-9TH-SURFACE recurrence (pass 4):** 2nd recurrence of Coverage Statistics row not updated. Confirmed process gap; guard-extension candidate.
+- **SPEC-CHANGELOG-RESYNC (pass 4):** spec-changelog goes stale across fix rounds; new process-gap candidate for F2 skill template.

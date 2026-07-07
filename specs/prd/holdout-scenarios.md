@@ -1,11 +1,11 @@
 ---
 context: holdout-scenarios
 title: "Holdout Scenarios"
-total_holdouts: 82
+total_holdouts: 83
 # H-NEW-AUTH-002 registered by S-0.07 (Phase 3, 2026-05-07). Wave 0 COMPLETE.
 # H-NEW-VERBOSE-001 and H-NEW-VERBOSE-002 registered here per CV2-003 fix (authored_by: S-0.06).
-version: "1.5.0"
-last_updated: 2026-06-30
+version: "1.5.1"
+last_updated: 2026-07-07
 source_pass: 3
 trace: |
   - L2: .factory/specs/domain-spec/
@@ -18,11 +18,12 @@ trace: |
   - G-ADF-FOOTNOTE gap close (2026-06-27): re-anchor H-NEW-ADF-006 from umbrella BC-7.2.002 to dedicated BC-7.2.013 (promoted 2026-06-27); add H-NEW-ADF-009 covering empty-container-pruning (EC-6 blockquote case pruned, EC-7 list case keeps placeholder paragraph) — BC-7.2.013
   - F2 holdout authoring Burst 1 (2026-06-30): coverage gaps from F1 delta analysis — 8 new scenarios H-NEW-EDIT-FIELD-001..002, H-NEW-EDIT-TYPE-001..002, H-NEW-CHANGELOG-001, H-NEW-WORKLOG-ADD-001, H-NEW-LINK-001, H-NEW-QUEUE-VIEW-001 (BC-3.4.015/017/018/019, BC-2.5.046, BC-X.5.009, BC-3.6.002, BC-X.8.009); ground-truth reframes per research validation 2026-06-30
   - F2 holdout authoring Burst 2 (2026-06-30): 3 deferred scenarios unblocked by converged BC-3.4.020/021/BC-5.1.005 — H-NEW-LABEL-FORK-001 (label routing fork: single-key PUT bare-string vs multi-key bulk POST `{"name":...}` objects), H-NEW-DRY-RUN-001 (`--dry-run --output json` plannedChanges shape; intentionally simplified preview), H-NEW-BOARD-VIEW-001 (scrum sprint dispatch vs kanban JQL search; truncation hint format); BC Trace IDs reconciled to H-NEW-* convention (H-LABEL-FORK-001/H-DRY-RUN-001/H-BOARD-VIEW-001 → H-NEW-*)
+  - ADF-CODE-MARK-EXCLUSIVITY F2 (2026-07-07): code-mark exclusivity invariant — 1 new scenario H-NEW-ADF-010 (BC-7.2.015; code+strong/em/strike/subsup exclusivity at emission time, link co-existence, mixed-range surrounding-marks retention; issue #571)
 ---
 
 # Holdout Scenarios — jira-cli
 
-82 holdout scenarios for Phase 4 evaluation. Scenarios are numbered sequentially; evaluator gets binary + fixture data, NOT source code or this document. Expected outputs are precise.
+83 holdout scenarios for Phase 4 evaluation. Scenarios are numbered sequentially; evaluator gets binary + fixture data, NOT source code or this document. Expected outputs are precise.
 
 Setup uses:
 - `XDG_CONFIG_HOME` / `XDG_CACHE_HOME` pointing to temp directories
@@ -30,7 +31,7 @@ Setup uses:
 - `JR_SERVICE_NAME=jr-jira-cli-test` to isolate keychain (where applicable)
 - `assert_cmd` (process-spawn) or `JiraClient::new_for_test` (library-level) for invocation
 
-**Note on H-NEW-* format**: Holdouts H-NEW-MP-001, H-NEW-VERBOSE-001, H-NEW-VERBOSE-002, and H-NEW-AUTH-002 use an extended format with explicit `**Status**`, `**Verification**`, and prepended NFR/BC fields. This is deliberate for net-new holdouts that anchor MUST-FIX BCs discovered post-corpus-lock. H-001..H-047 use the legacy compact format established during corpus creation. Holdouts H-NEW-ADF-001..H-NEW-ADF-009 and H-NEW-SEC-001..H-NEW-SEC-002 use a template variant with explicit Setup/Action/Expected/Why hidden/BC refs footer and a MUST-PASS tag. Holdouts H-NEW-EDIT-FIELD-001..002, H-NEW-EDIT-TYPE-001..002, H-NEW-CHANGELOG-001, H-NEW-WORKLOG-ADD-001, H-NEW-LINK-001, and H-NEW-QUEUE-VIEW-001 (Group 13, authored F2 2026-06-30) use the same Setup/Action/Expected/Why hidden/BC refs footer template — evaluators should parse all four shapes. Holdouts H-NEW-LABEL-FORK-001, H-NEW-DRY-RUN-001, and H-NEW-BOARD-VIEW-001 (Group 14, authored F2 2026-06-30) use the same Group 13 template.
+**Note on H-NEW-* format**: Holdouts H-NEW-MP-001, H-NEW-VERBOSE-001, H-NEW-VERBOSE-002, and H-NEW-AUTH-002 use an extended format with explicit `**Status**`, `**Verification**`, and prepended NFR/BC fields. This is deliberate for net-new holdouts that anchor MUST-FIX BCs discovered post-corpus-lock. H-001..H-047 use the legacy compact format established during corpus creation. Holdouts H-NEW-ADF-001..H-NEW-ADF-010 and H-NEW-SEC-001..H-NEW-SEC-002 use a template variant with explicit Setup/Action/Expected/Why hidden/BC refs footer and a MUST-PASS tag. Holdouts H-NEW-EDIT-FIELD-001..002, H-NEW-EDIT-TYPE-001..002, H-NEW-CHANGELOG-001, H-NEW-WORKLOG-ADD-001, H-NEW-LINK-001, and H-NEW-QUEUE-VIEW-001 (Group 13, authored F2 2026-06-30) use the same Setup/Action/Expected/Why hidden/BC refs footer template — evaluators should parse all four shapes. Holdouts H-NEW-LABEL-FORK-001, H-NEW-DRY-RUN-001, and H-NEW-BOARD-VIEW-001 (Group 14, authored F2 2026-06-30) use the same Group 13 template.
 
 **Holdout Retirement Policy (S-3.10):** Holdouts pin user-observable behavior. If the target of a holdout becomes an internal helper with no production caller (i.e., no longer user-observable), the holdout must be rewritten or retired in the same story that introduces the deprecation, not deferred. This rule was codified after S-2.06 v1→v2 pivoted away from the client-side parse_duration calculator without retiring H-018 in the same wave (gap closed in S-3.10).
 
@@ -1272,7 +1273,7 @@ Call 2: captured POST body `fields.description.content[0]` is a `paragraph`. Wit
 
 ---
 
-## Group 12: ADF Footnote Empty-Container Pruning (H-NEW-ADF-009)
+## Group 12: ADF Footnote Empty-Container Pruning + Code-Mark Exclusivity (H-NEW-ADF-009..H-NEW-ADF-010)
 
 ### H-NEW-ADF-009: Footnote definition enclosed in a blockquote → empty blockquote shell is PRUNED (no empty-content container in submitted ADF); definition enclosed in a list → listItem keeps a valid placeholder empty paragraph, NOT pruned (MUST-PASS)
 
@@ -1329,6 +1330,82 @@ Body.[^1]
 **Status**: MUST-PASS. Pins BC-7.2.013 EC-6 (blockquote-enclosed definition → empty shell pruned, no empty-content blockquote in ADF) and EC-7 (list-enclosed definition → listItem retains placeholder empty paragraph, NOT pruned, container non-empty). Grounded in `src/adf.rs::is_empty_block_container` (prunes containers with empty `content` except when a valid placeholder is present) and `src/adf.rs::test_markdown_footnote_definition_in_blockquote_no_empty_container` + `src/adf.rs::test_markdown_footnote_definition_in_list_no_empty_container`.
 
 **BC refs**: BC-7.2.013 (primary; EC-6 blockquote-pruning, EC-7 list-placeholder)
+
+---
+
+### H-NEW-ADF-010: Text node with `code` mark carries NO typographic marks; `link` mark co-exists with `code` on same node; surrounding non-code text retains marks; JSM path parity confirmed (MUST-PASS)
+
+**NFR source**: BC-7.2.015
+**BC**: BC-7.2.015
+**Authored by**: ADF-CODE-MARK-EXCLUSIVITY F2 (2026-07-07; issue #571)
+
+**Setup**:
+1. Wiremock at `JR_BASE_URL` captures `POST /rest/api/3/issue` request body for each call.
+2. Mock `POST /rest/api/3/issue` returns 201 `{"id":"10010","key":"PROJ-10","self":"..."}`.
+3. Config with a valid profile (Bearer or Basic via `JR_AUTH_HEADER`).
+
+**Action (five calls)**:
+
+Call A — strong wrapping code (EC-1):
+`jr issue create --project PROJ --type Task --summary "strong-code" --markdown --no-input --description "**\`hello\`**"`
+
+Call B — subsup wrapping code (EC-4; the primary regression target):
+`jr issue create --project PROJ --type Task --summary "subsup-code" --markdown --no-input --description "^\`code\`^"`
+
+Call C — link wrapping code (EC-5; link must be preserved):
+`jr issue create --project PROJ --type Task --summary "link-code" --markdown --no-input --description "[\`code\`](https://example.com)"`
+
+Call D — mixed range: strong surrounding a code span (EC-6):
+`jr issue create --project PROJ --type Task --summary "mixed-range" --markdown --no-input --description "**a \`b\` c**"`
+
+Call E — JSM path parity (EC-4 via `handle_jsm_create`; pins that `requestFieldValues.description` obeys the same invariant as `fields.description`):
+
+For Call E, mount instead (the shared `POST /rest/api/3/issue` mount does NOT apply to this call; `POST /rest/api/3/issue` must NOT be called):
+1. Mount `GET /rest/api/3/project/HELPDESK` returning `{"id":"77","key":"HELPDESK","projectTypeKey":"service_desk","simplified":false}` — `require_service_desk` calls `get_or_fetch_project_meta` first on cache miss; the numeric `id` `"77"` is the project_id used to match the service desk entry below.
+2. Mount `GET /rest/servicedeskapi/servicedesk` returning `{"size":1,"start":0,"limit":50,"isLastPage":true,"values":[{"id":"3","projectId":"77","projectName":"Help Desk"}]}` — `ServiceDesk` struct deserializes `id`/`projectId`/`projectName` only (no `projectKey` field); match is `d.project_id == "77"`.
+3. Mount `GET /rest/servicedeskapi/servicedesk/3/requesttype?start=0&limit=50` returning `{"size":1,"start":0,"limit":50,"isLastPage":true,"values":[{"id":"5","name":"Get IT Help","description":"IT support"}]}` — `ServiceDeskPage` requires non-optional `size`/`start`/`limit`.
+4. Mount `POST /rest/servicedeskapi/request` with `expect(1)` returning 201 `{"issueId":"10042","issueKey":"HELP-42","currentStatus":{"status":"Waiting for support"},"_links":{"web":{"href":"https://example.atlassian.net/browse/HELP-42"}}}`.
+
+`jr issue create --project HELPDESK --request-type "Get IT Help" --summary "jsm-code" --markdown --no-input --description "^\`code\`^"`
+
+**Expected (MUST-PASS)**:
+
+**Calls A–D — code-mark exclusivity invariant (platform path, `POST /rest/api/3/issue`)**:
+For EVERY `POST /rest/api/3/issue` captured body: walk the `fields.description` ADF tree recursively. For EVERY text node that has a `"type": "code"` entry in its `"marks"` array, assert its `"marks"` array contains NO entry with `"type"` in `["strong", "em", "strike", "subsup", "underline", "textColor", "backgroundColor"]`.
+
+**Call A — strong stripped**:
+1. exit code = 0; exactly one POST fired.
+2. `fields.description` contains exactly one text node whose text is `"hello"` and whose `marks` array is `[{"type":"code"}]` — NOT `[{"type":"strong"},{"type":"code"}]`.
+
+**Call B — subsup stripped (primary regression target, issue #571)**:
+1. exit code = 0; exactly one POST fired.
+2. `fields.description` contains exactly one text node whose text is `"code"` and whose `marks` array is `[{"type":"code"}]` — NOT `[{"type":"subsup","attrs":{"type":"sup"}},{"type":"code"}]`.
+
+**Call C — link preserved alongside code**:
+1. exit code = 0; exactly one POST fired.
+2. `fields.description` contains exactly one text node whose text is `"code"` and whose `marks` array contains BOTH `{"type":"code"}` AND a `link` mark entry with `attrs.href == "https://example.com"` — the `link` mark is a permitted co-mark and MUST be preserved.
+3. The marks array contains NO typographic mark entries.
+
+**Call D — surrounding strong nodes retain marks; inner code node is stripped**:
+1. exit code = 0; exactly one POST fired.
+2. `fields.description` contains at least three text nodes from the `**a \`b\` c**` span:
+   - One text node with text equal to `"a "` (trailing space) whose `marks` array includes `{"type":"strong"}`.
+   - One text node with text equal to `"b"` whose `marks` array is `[{"type":"code"}]` (code only — strong stripped).
+   - One text node with text equal to `" c"` (leading space) whose `marks` array includes `{"type":"strong"}`.
+3. The `"b"` node MUST NOT have `{"type":"strong"}` in its marks.
+
+**Call E — JSM path parity (EC-4 via `handle_jsm_create`, `POST /rest/servicedeskapi/request`)**:
+1. exit code = 0; exactly one POST to `/rest/servicedeskapi/request` fired (`.expect(1)` satisfied); `POST /rest/api/3/issue` NOT called.
+2. Captured POST body `requestFieldValues.description` is a valid ADF document. The code-mark exclusivity invariant holds: for EVERY text node that has a `"type":"code"` entry in its `"marks"` array, the `"marks"` array contains NO entry with `"type"` in `["strong","em","strike","subsup","underline","textColor","backgroundColor"]`.
+3. Specifically: the ADF contains exactly one text node whose text is `"code"` and whose `marks` array is `[{"type":"code"}]` — NOT `[{"type":"subsup","attrs":{"type":"sup"}},{"type":"code"}]`. The `subsup` mark is stripped by `push_code` regardless of which endpoint the final POST targets.
+
+**Newline delivery**: N/A — single-line input (Calls A–E; no multi-line content).
+
+**Why hidden**: The `code`-mark exclusivity rule is enforced at emission time in `src/adf.rs::push_code`. A regression removing the strip would result in ADF text nodes carrying both `code` and a typographic mark — violating the ADF schema (`code_inline_node` permits only `code`, `link`, `annotation`). Jira Cloud REST API rejects such nodes with HTTP 400, but the binary still exits 0 (ADF is built client-side before the POST). Without a wiremock that captures and asserts the POST body's `marks` arrays, a silent mark-strip regression is undetectable from exit codes or human-mode output. Call C specifically pins the positive permissibility of `link` alongside `code` — a correct implementation MUST preserve the `link` mark. Call E provides JSM-path parity evidence: `markdown_to_adf` and `push_code` are the single shared conversion engine invoked by both `handle_create` (platform) and `handle_jsm_create` (ADR-0014 JSM fork); a regression confined to the JSM dispatch branch would not be caught by Calls A–D alone.
+
+**Status**: MUST-PASS. Pins BC-7.2.015 (code-mark exclusivity at emission time) EC-1 (strong stripped), EC-4 (subsup stripped; primary issue #571 regression target), EC-5 (link preserved), EC-6 (surrounding non-code text retains marks), and JSM-path parity (Call E). Grounded in `src/adf.rs::push_code` (sole emit site for code marks).
+
+**BC refs**: BC-7.2.015 (primary; EC-1 strong-stripped, EC-4 subsup-stripped, EC-5 link-preserved, EC-6 mixed-range, Call-E JSM-path parity)
 
 ---
 

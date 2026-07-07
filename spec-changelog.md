@@ -7,6 +7,74 @@ project: "jr (jira-cli)"
 
 Track all spec version changes. Most recent version first.
 
+## [1.3.25] - 2026-07-07
+
+### Type: MINOR
+
+### Summary
+
+F2 spec delta for ADF-CODE-MARK-EXCLUSIVITY (issue #571). Adds BC-7.2.015 (new
+positive mark-coexistence invariant: a `code`-marked text node emitted by
+`markdown_to_adf` may only additionally carry `link` and/or `annotation` marks;
+all typographic marks stripped at emit time in `src/adf.rs::push_code`). Modifies
+BC-7.2.007 EC-2 to replace the "not guarded here, tracked as a follow-up" clause
+with a description of the now-enforced behavior and a pointer to BC-7.2.015. Adds
+holdout scenario H-NEW-ADF-010 (MUST-PASS black-box wiremock POST-body assertion
+for code-mark exclusivity; five sub-calls covering strong-stripped, subsup-stripped,
+link-preserved, mixed-range, and JSM-path parity via POST /rest/servicedeskapi/request
+(Call E)). BC count 611 → 612; individually-bodied
+count 381 → 382; range-collapsed unchanged at 230.
+
+### Changed Requirements
+
+- `.factory/specs/prd/bc-7-output-render.md` (MODIFIED): `total_bcs` 92 → 93,
+  `definitional_count` 48 → 49, `last_updated` 2026-07-07; new BC-7.2.015 body
+  inserted after BC-7.2.014; BC-7.2.007 EC-2 updated with [UPDATED 2026-07-07
+  issue #571] tag replacing the "not guarded here" clause.
+
+- `.factory/specs/prd/BC-INDEX.md` (MODIFIED): `total_bcs` 611 → 612; bc-7
+  section header 92 → 93 cumulative / 48 → 49 individually-bodied; `sections:`
+  entry updated; new BC-7.2.015 row added; range-collapsed row shifted
+  BC-7.2.015..057 → BC-7.2.016..059; grand-total prose and summary table updated.
+
+- `.factory/specs/prd/CANONICAL-COUNTS.md` (MODIFIED): definitional count table
+  bc-7 48 → 49, Total 381 → 382; total_bcs table bc-7 92 → 93, Sum 611 → 612;
+  grand total prose 611 → 612 + BC-7.2.015 citation; Note 611 → 612; Breakdown
+  612/382 updated; L2 alignment table bc-07 92 → 93 + note updated.
+
+- `.factory/specs/domain-spec/bc-07-output-render.md` (MODIFIED): `bc_count`
+  92 → 93.
+
+- `.factory/specs/prd/holdout-scenarios.md` (MODIFIED): `total_holdouts` 82 → 83;
+  version 1.5.0 → 1.5.1; `last_updated` 2026-07-07; new H-NEW-ADF-010 scenario
+  added to Group 12; Group 12 header updated; format note and history trace updated.
+
+- `.factory/spec-changelog.md` (MODIFIED): this entry (v1.3.24 → v1.3.25).
+
+- `.factory/phase-f2-spec-evolution/prd-delta-571.md` (NEW): authoritative F2
+  PRD-delta record for ADF-CODE-MARK-EXCLUSIVITY cycle.
+
+### Impact Assessment
+
+| Artifact | Change Type | Notes |
+|----------|-------------|-------|
+| `bc-7-output-render.md` | MODIFIED | +1 BC (BC-7.2.015 new); BC-7.2.007 EC-2 updated |
+| `BC-INDEX.md` | MODIFIED | 611 → 612 total_bcs; new BC-7.2.015 row; range shifted |
+| `CANONICAL-COUNTS.md` | MODIFIED | All 8 count surfaces updated atomically (DEC-155) |
+| `bc-07-output-render.md` (domain-spec) | MODIFIED | bc_count 92 → 93 (L2/L3 alignment) |
+| `holdout-scenarios.md` | MODIFIED | 82 → 83 holdouts; new H-NEW-ADF-010 MUST-PASS |
+| `spec-changelog.md` | MODIFIED | This entry |
+| `prd-delta-571.md` | NEW | Authoritative F2 PRD-delta record |
+
+### Files NOT Changed
+
+- BC files other than `bc-7-output-render.md` — no contract changes
+- `nfr-catalog.md`, `error-taxonomy.md`, `edge-case-catalog.md` — unchanged
+- All `src/` production files — no behavioral change (F4 owns implementation)
+- All `tests/` files — no Rust test changes (F4 owns test authoring)
+
+---
+
 ## [1.3.24] - 2026-06-18
 
 ### Type: PATCH
@@ -1161,6 +1229,49 @@ Initial L3 PRD release. Brownfield Phase 1 Burst 2 — 540 behavioral contracts 
 ### New Requirements
 
 All initial requirements (BC-1.*.* through BC-7.*.*, BC-X.*.*). See README.md Document Map.
+
+### Impact Assessment
+
+- **Affected stories:** None (initial release)
+- **Migration needed:** NO
+
+---
+
+<!-- Template guide — copy the section below to add a new version entry above; keep reverse chronological order. Do NOT delete these placeholders — required by validate-template-compliance. -->
+
+## [X.Y.Z] - YYYY-MM-DD
+
+### Type: MAJOR / MINOR / PATCH
+
+### Summary
+
+[One-sentence summary of what changed and why.]
+
+### Changed Requirements
+
+- `file.md` (MODIFIED/NEW): description of change.
+
+### Impact Assessment
+
+| Artifact | Change Type | Notes |
+|----------|-------------|-------|
+| `file.md` | MODIFIED | Description |
+
+---
+
+<!-- Initial-release template placeholder (do not delete): -->
+
+## [1.0.0] - YYYY-MM-DD
+
+### Type: MAJOR
+
+### Summary
+
+Initial spec release. Baseline for all subsequent versions.
+
+### New Requirements
+
+[All initial requirements listed]
 
 ### Impact Assessment
 

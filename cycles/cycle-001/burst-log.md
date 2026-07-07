@@ -4546,3 +4546,12 @@ Rows archived to make room for pass-1 and fix-burst PENDING rows in Phase Progre
 |-------|--------|-----------|------|-------|
 | **CITATION-GUARDS — STORY A DELIVERED — PR #572 MERGED 2026-07-04** | **COMPLETE** | **2026-07-04** | F4 per-story adversarial: 9 passes, 5 fix rounds, CONVERGED (p7 NITPICK/p8 NITPICK/p9 CLEAN). PR #572 squash-merged by human (DEC-128 honored); develop c4b3aa9 → ab78a2d; post-merge guards green. Story #101 v1.49 delivered. DEC-152. | develop @ ab78a2d. PR #572 MERGED. BC 608. Stories 101. Holdouts 82. |
 | **CITATION-GUARDS STORY B F3 CONVERGED — story #102 v1.10 ready (2026-07-06)** | **COMPLETE** | **2026-07-06** | F3 CONVERGED (DEC-155). 15 passes / 9 fix rounds / clean window passes 13/14/15 (DEC-153 standard criterion). Story v1.10 status=ready. 2 CRIT, 3 HIGH, ~12 MED finding classes. | develop @ ab78a2d UNCHANGED. |
+
+### Archived Current Phase Steps (from STATE.md, 5-row cap, ADF-CODE-MARK-EXCLUSIVITY F2 checkpoint 2026-07-07)
+
+Rows displaced to make room for F1 gate approval + F2 spec-delta steps.
+
+| Step | Agent | Status | Output |
+|------|-------|--------|--------|
+| **CITATION-GUARDS STORY B F3 CONVERGED — story #102 v1.10 ready (2026-07-06)** — DEC-155 recorded. 15 fresh-context adversary passes (incl. 2 research adjudications: DEC-154 grammar extension), 9 fix rounds (v1.1→v1.9). Clean window: passes 13/14/15 CLEAN×3 (DEC-153 standard criterion). Story v1.10: status=ready. Finding classes: 2 CRIT, 3 HIGH, ~12 MED. Convergence trajectory appended to cycles/cycle-001/convergence-trajectory.md. | state-manager | COMPLETE | Stories #102 v1.10 ready. develop @ ab78a2d UNCHANGED. |
+| **CITATION-GUARDS STORY B F4 DELIVERY COMPLETE — PR #592 OPEN/HELD (DEC-128)** — Task 0: 12+ dead citations rewritten (2b09313); Red Gate PASSED (stubs 0867823 + fixtures/self-assertions a440814; RED verified). Impl f3fc670. Two-tier shape guard spec amendment: F-01 MED resolved (EC-CITE-060; N=309=304 .rs+5 .snap; FLOOR=231; story v1.11 fd8e378; code 7706cc1). Pass-2 obs (NITPICK_ONLY): story v1.12 f353ab3. Step 4.5 CONVERGED: 4 passes / 2 fix rounds / window p2/p3/p4 NITPICK/NITPICK/CLEAN. All 7 ACs PASS. Demos b52be90 (21 files, 7/7 ACs, VHS). PR #592: CI 15/15, security 2 LOW, pr-reviewer APPROVE cycle 1. HELD per DEC-128. | state-manager | COMPLETE | PR #592 OPEN. develop UNCHANGED @ ab78a2d. |

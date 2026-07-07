@@ -2,7 +2,7 @@
 document_type: canonical-counts
 product: jr (jira-cli)
 generated: "2026-05-04"
-last_verified: "2026-07-05 (BC-X.13.004..006 added Guard 1 bc-*.md Trace/Source citation guard; CITATION-GUARDS Story B S-BC-CITATION-GUARD-1 issue #102; 611 total)"
+last_verified: "2026-07-07 (BC-7.2.015 added ADF code-mark exclusivity issue #571; BC-7.2.007 EC-2 modified; 612 total)"
 ---
 
 # Canonical Counts — jr (jira-cli) L3 PRD
@@ -25,9 +25,9 @@ re-run to verify. Disputes go here first.
 | bc-4-assets-cmdb.md | 22 | 22 | YES |
 | bc-5-boards-sprints.md | 18 | 18 | YES |
 | bc-6-config-cache.md | 33 | 33 | YES |
-| bc-7-output-render.md | 48 | 48 | YES |
+| bc-7-output-render.md | 49 | 49 | YES |
 | cross-cutting.md | 82 | 82 | YES |
-| **Total individually-bodied** | **381** | — | — |
+| **Total individually-bodied** | **382** | — | — |
 
 Verification command:
 ```bash
@@ -46,25 +46,25 @@ done
 | bc-4-assets-cmdb.md | 32 |
 | bc-5-boards-sprints.md | 36 |
 | bc-6-config-cache.md | 43 |
-| bc-7-output-render.md | 92 |
+| bc-7-output-render.md | 93 |
 | cross-cutting.md | 148 |
-| **Sum** | **611** |
+| **Sum** | **612** |
 
 ### Grand total
 
-**Canonical grand total: 611** (+4 BC-7.4.013-016 added 2026-05-08 via Fix-PR A `28b0f35`; +1 BC-2.6.050 added 2026-05-13 via issue #350; +1 BC-2.6.051 added 2026-05-14 via issue #365; +1 BC-3.4.009 added 2026-05-15 via issue #340 F2; +18 BC-3.8.001..010 + BC-X.12.001..008 added 2026-05-18 via issue #288 F2+F1d; +3 BC-3.8.011..013 added 2026-05-19 via issue #288 F1d + issue #383 F2; +4 BC-3.8.014..015 + BC-X.8.006..007 added 2026-05-19 via issue #384 F2; +2 BC-3.8.016..017 added 2026-05-20 via issue #385 F2; +2 BC-3.4.010..011 added 2026-05-20 via issue #388 F2; +3 BC-3.4.012..014 added 2026-05-21 via issue #398 F2; +3 BC-3.4.015..017 added 2026-05-22 via issue #396 F2; +2 BC-3.4.018..019 added 2026-06-01 via issue #331 F2; +1 BC-3.2.013 added 2026-06-03 via jsm-resolution-required F2; +1 BC-7.2.006 added 2026-06-08 via issue #470 listItem content-model conformance; +2 BC-X.8.008..009 added 2026-06-08 via S-QUEUE-BC-1 queue list/view document-as-is; +1 BC-3.2.014 added 2026-06-08 via fix-bulk-transition-schema bulkTransitionInputs wrapper; +2 BC-7.2.007..008 added 2026-06-08 via issue #474 markdown subsup + heading-attr; +1 BC-7.2.009 added 2026-06-09 via issue #483 GFM alerts → panel; +1 BC-7.2.010 added 2026-06-10 via issue #471 GFM task lists → taskList/taskItem; +3 BC-6.1.014 + BC-6.2.016..017 added 2026-06-12 via windows-build F2; +1 BC-7.2.011 added 2026-06-15 via issue #492 block-HTML hardBreak interior newlines; +1 BC-2.4.043 added 2026-06-17 via Bundle C CR-001 list_comments anti-stall guard; +3 BC-X.13.001..003 added 2026-06-19 via DEAD-CITATION-CI F2 CLAUDE.md citation guard; +1 BC-7.2.012 added 2026-06-24 via SEC-001 ADF recursion depth limit; +2 BC-7.2.013..014 promoted 2026-06-27 range-collapsed→individually-bodied via issues #472 #473 (definitional_count +2, total_bcs unchanged); +1 BC-6.2.018 added 2026-06-27 cache warm-hit no-HTTP invariant; +1 BC-7.3.010 added 2026-06-27 issue #526 json-render invariant + error channel; +3 BC-3.4.020..021 + BC-5.1.005 added 2026-06-30 via BC-subclause-pass F2; +3 BC-X.13.004..006 added 2026-07-05 via CITATION-GUARDS Story B Guard 1 S-BC-CITATION-GUARD-1 issue #102)
+**Canonical grand total: 612** (+4 BC-7.4.013-016 added 2026-05-08 via Fix-PR A `28b0f35`; +1 BC-2.6.050 added 2026-05-13 via issue #350; +1 BC-2.6.051 added 2026-05-14 via issue #365; +1 BC-3.4.009 added 2026-05-15 via issue #340 F2; +18 BC-3.8.001..010 + BC-X.12.001..008 added 2026-05-18 via issue #288 F2+F1d; +3 BC-3.8.011..013 added 2026-05-19 via issue #288 F1d + issue #383 F2; +4 BC-3.8.014..015 + BC-X.8.006..007 added 2026-05-19 via issue #384 F2; +2 BC-3.8.016..017 added 2026-05-20 via issue #385 F2; +2 BC-3.4.010..011 added 2026-05-20 via issue #388 F2; +3 BC-3.4.012..014 added 2026-05-21 via issue #398 F2; +3 BC-3.4.015..017 added 2026-05-22 via issue #396 F2; +2 BC-3.4.018..019 added 2026-06-01 via issue #331 F2; +1 BC-3.2.013 added 2026-06-03 via jsm-resolution-required F2; +1 BC-7.2.006 added 2026-06-08 via issue #470 listItem content-model conformance; +2 BC-X.8.008..009 added 2026-06-08 via S-QUEUE-BC-1 queue list/view document-as-is; +1 BC-3.2.014 added 2026-06-08 via fix-bulk-transition-schema bulkTransitionInputs wrapper; +2 BC-7.2.007..008 added 2026-06-08 via issue #474 markdown subsup + heading-attr; +1 BC-7.2.009 added 2026-06-09 via issue #483 GFM alerts → panel; +1 BC-7.2.010 added 2026-06-10 via issue #471 GFM task lists → taskList/taskItem; +3 BC-6.1.014 + BC-6.2.016..017 added 2026-06-12 via windows-build F2; +1 BC-7.2.011 added 2026-06-15 via issue #492 block-HTML hardBreak interior newlines; +1 BC-2.4.043 added 2026-06-17 via Bundle C CR-001 list_comments anti-stall guard; +3 BC-X.13.001..003 added 2026-06-19 via DEAD-CITATION-CI F2 CLAUDE.md citation guard; +1 BC-7.2.012 added 2026-06-24 via SEC-001 ADF recursion depth limit; +2 BC-7.2.013..014 promoted 2026-06-27 range-collapsed→individually-bodied via issues #472 #473 (definitional_count +2, total_bcs unchanged); +1 BC-6.2.018 added 2026-06-27 cache warm-hit no-HTTP invariant; +1 BC-7.3.010 added 2026-06-27 issue #526 json-render invariant + error channel; +3 BC-3.4.020..021 + BC-5.1.005 added 2026-06-30 via BC-subclause-pass F2; +3 BC-X.13.004..006 added 2026-07-05 via CITATION-GUARDS Story B Guard 1 S-BC-CITATION-GUARD-1 issue #102; +1 BC-7.2.015 added 2026-07-07 via ADF-CODE-MARK-EXCLUSIVITY F2 issue #571)
 
-_Note: BC-INDEX.md `total_bcs` header updated to 611 to match this file. CANONICAL-COUNTS.md carries the per-file sum as the primary source of truth. (+2 new IDs added 2026-06-27: BC-6.2.018 cache warm-hit no-HTTP invariant; BC-7.3.010 issue #526 json-render invariant + error channel. +2 definitional_count-only promotions 2026-06-27: BC-7.2.013/014 range-collapsed→individually-bodied issues #472/#473. +3 new IDs added 2026-06-30: BC-3.4.020 label routing fork, BC-3.4.021 dry-run plannedChanges schema, BC-5.1.005 board view scrum/kanban dispatch; BC-subclause-pass F2. +3 new IDs added 2026-07-05: BC-X.13.004/005/006 Guard 1 bc-*.md Trace/Source citation guard; CITATION-GUARDS Story B S-BC-CITATION-GUARD-1 issue #102.)_
+_Note: BC-INDEX.md `total_bcs` header updated to 612 to match this file. CANONICAL-COUNTS.md carries the per-file sum as the primary source of truth. (+2 new IDs added 2026-06-27: BC-6.2.018 cache warm-hit no-HTTP invariant; BC-7.3.010 issue #526 json-render invariant + error channel. +2 definitional_count-only promotions 2026-06-27: BC-7.2.013/014 range-collapsed→individually-bodied issues #472/#473. +3 new IDs added 2026-06-30: BC-3.4.020 label routing fork, BC-3.4.021 dry-run plannedChanges schema, BC-5.1.005 board view scrum/kanban dispatch; BC-subclause-pass F2. +3 new IDs added 2026-07-05: BC-X.13.004/005/006 Guard 1 bc-*.md Trace/Source citation guard; CITATION-GUARDS Story B S-BC-CITATION-GUARD-1 issue #102. +1 new ID added 2026-07-07: BC-7.2.015 ADF code-mark exclusivity issue #571.)_
 
 Breakdown:
-- 611 = sum of per-file `total_bcs` values (canonical; see per-file table above)
-- 381 of 611 are individually-bodied (have a `#### BC-` heading)
+- 612 = sum of per-file `total_bcs` values (canonical; see per-file table above)
+- 382 of 612 are individually-bodied (have a `#### BC-` heading)
 - 230 are range-collapsed (counted in cumulative claim, no individual heading)
 - BC-X.4.009 (ADV-P1-029) is a `#### BC-` heading in cross-cutting.md; it is
-  included in cross-cutting's `total_bcs: 148` and in the **611 sum**.
+  included in cross-cutting's `total_bcs: 148` and in the **612 sum**.
   It does NOT add +1 beyond the 611.
 
-_Historical note (archived; historical total was 566; current canonical: see Sum row above (611)): Passes 10-13 involved a 541/542 count confusion around BC-X.4.009. All 542 claims were corrected to 541 at Pass 13. Subsequent additions (BC-7.4.013-016, BC-2.6.050-051, BC-3.4.009, BC-3.8.001-010, BC-X.12.001-008) brought the total to 566. See git history for the full audit trail._
+_Historical note (archived; historical total was 566; current canonical: see Sum row above (612)): Passes 10-13 involved a 541/542 count confusion around BC-X.4.009. All 542 claims were corrected to 541 at Pass 13. Subsequent additions (BC-7.4.013-016, BC-2.6.050-051, BC-3.4.009, BC-3.8.001-010, BC-X.12.001-008) brought the total to 566. See git history for the full audit trail._
 
 ### L2 domain-spec bc_count vs L3 total_bcs alignment (ADV-P17-003)
 
@@ -79,7 +79,7 @@ bc_count in L2 represents the same cumulative claim (individually-bodied + range
 | bc-04-assets-cmdb.md | 32 | bc-4-assets-cmdb.md | 32 | YES (was 44) |
 | bc-05-boards-sprints.md | 36 | bc-5-boards-sprints.md | 36 | YES (bumped 2026-06-30; +1 BC BC-5.1.005 added BC-subclause-pass F2) |
 | bc-06-config-cache.md | 43 | bc-6-config-cache.md | 43 | YES (bumped 2026-06-27; +1 BC-6.2.018 added cache warm-hit no-HTTP invariant) |
-| bc-07-output-render.md | 92 | bc-7-output-render.md | 92 | YES (bumped 2026-06-27; +1 BC-7.3.010 added issue #526 json-render invariant + error channel) |
+| bc-07-output-render.md | 93 | bc-7-output-render.md | 93 | YES (bumped 2026-07-07; +1 BC-7.2.015 added issue #571 ADF code-mark exclusivity) |
 
 Note: bc-01/04/05 aligned at Pass 17. bc-02/03/06/07 had PENDING drift; all four bumped 2026-06-17 (Maintenance Bundle B, SC-01).
 
@@ -107,16 +107,24 @@ Note: NFR-O-K was merged into NFR-S-D at adversary Pass 7 (no net change). NFR-S
 
 ## Holdout Scenarios
 
-**Canonical holdout total: 57**
+**Canonical holdout total: 83**
 
 Verification command:
 ```bash
 grep -c '^### H-' .factory/specs/prd/holdout-scenarios.md
 ```
 
-Expected: 57 (H-001..H-047 + H-NEW-MP-001 + H-NEW-VERBOSE-001 + H-NEW-VERBOSE-002 + H-NEW-AUTH-002 + H-NEW-JSM-RT-001 + H-NEW-JSM-RT-002 + H-NEW-JSM-RT-003 + H-NEW-JSM-RT-004 + H-NEW-JSM-RT-005 + H-NEW-JSM-RT-006 + H-NEW-JSM-RT-007)
+Expected: 83 (H-001..H-047 + H-NEW-MP-001 + H-NEW-VERBOSE-001 + H-NEW-VERBOSE-002 + H-NEW-AUTH-002 + H-NEW-JSM-RT-001..H-NEW-JSM-RT-007 + H-CITE-001..H-CITE-003 + H-NEW-ADF-001..H-NEW-ADF-008 + H-NEW-SEC-001..H-NEW-SEC-002 + H-NEW-ADF-009..H-NEW-ADF-010 + H-NEW-EDIT-FIELD-001..H-NEW-EDIT-FIELD-002 + H-NEW-EDIT-TYPE-001..H-NEW-EDIT-TYPE-002 + H-NEW-CHANGELOG-001 + H-NEW-WORKLOG-ADD-001 + H-NEW-LINK-001 + H-NEW-QUEUE-VIEW-001 + H-NEW-LABEL-FORK-001 + H-NEW-DRY-RUN-001 + H-NEW-BOARD-VIEW-001)
 
-_Note: holdout-scenarios.md frontmatter `total_holdouts: 57` counts all holdout entries including ones without `### H-` headings; the grep count of `### H-` headings is 57 because H-NEW-* holdouts use the extended format. The frontmatter count (57) is authoritative. (+2 since last verified: H-NEW-JSM-RT-006 + H-NEW-JSM-RT-007 added 2026-05-20 via issue #385 F2)_
+Groups added since last reconciliation (57 → 83):
+- Group 8 (CI Citation Guard, 2026-06-19): H-CITE-001..H-CITE-003 (BC-X.13.001..003; S-MAINT-DEAD-CITATION-CI) — +3
+- Group 10 (ADF Markdown→ADF Feature Wave, D4 Burst 1 2026-06-26): H-NEW-ADF-001..H-NEW-ADF-008 (BC-7.2.009/010/011/003) — +8
+- Group 11 (SEC-001 ADF Recursion-Depth Guard, D4 Burst 2 2026-06-26): H-NEW-SEC-001..H-NEW-SEC-002 (BC-7.2.012) — +2
+- Group 12 (ADF Footnote Pruning + Code-Mark Exclusivity, 2026-06-27/2026-07-07): H-NEW-ADF-009 (BC-7.2.013) + H-NEW-ADF-010 (BC-7.2.015; extended with Call E JSM-path parity 2026-07-07) — +2
+- Group 13 (Issue Edit / Changelog / Worklog / Links / Queue, F2 Burst 1 2026-06-30): H-NEW-EDIT-FIELD-001..H-NEW-EDIT-FIELD-002 + H-NEW-EDIT-TYPE-001..H-NEW-EDIT-TYPE-002 + H-NEW-CHANGELOG-001 + H-NEW-WORKLOG-ADD-001 + H-NEW-LINK-001 + H-NEW-QUEUE-VIEW-001 — +8
+- Group 14 (Label Routing Fork / Dry-Run / Board View, F2 Burst 2 2026-06-30): H-NEW-LABEL-FORK-001 + H-NEW-DRY-RUN-001 + H-NEW-BOARD-VIEW-001 — +3
+
+_Note: holdout-scenarios.md frontmatter `total_holdouts: 83` counts all holdout entries; the grep count of `^### H-` headings also returns 83. The frontmatter count (83) is authoritative. Last reconciled: 2026-07-07 (ADF-CODE-MARK-EXCLUSIVITY F2; +H-NEW-ADF-010 extended with Call E JSM-path parity)._
 
 ---
 
