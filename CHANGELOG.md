@@ -8,6 +8,12 @@ All notable changes to jr will be documented here.
 
 ### Added
 
+- **CI: BC-body Trace/Source citation guard (Guard 1) (DEC-148):** adds
+  `scripts/check-bc-citation-symbols.sh` (BC-CITE-001; validates `src/` file and symbol
+  citations in `**Trace**:`/`**Source**:` fields of all `bc-*.md` bodies; definition-anchored
+  symbol grep; self-test fixtures; coverage-floor guard) as a step in the `spec-guard` CI job.
+  Prevents the Seam-extraction citation-drift class (DEC-147/148/149).
+  Calibration: measured N=309 citations (304 `.rs` + 5 `.snap`) on factory-artifacts @ 2b09313; FLOOR=231 = floor(0.75 × 309); non-.rs `src/` citations receive file-existence-only validation (tier ii).
 - **CI: mutants-policy citation guard (Guard 2) + examine_globs existence guard (Guard 3) (DEC-150):** adds `scripts/check-cargo-mutants-policy-citations.sh` (validates §Scope function-location bulleted list; CI-MUTANTS-CITE-001; self-test fixtures; SCOPE-EMPTY guard) and `tests/mutants_glob_existence.rs` (validates examine_globs entries resolve to real files; coverage floor; MUTANTS-GLOBS-KEY-MISSING guard).
 
 ### Security
