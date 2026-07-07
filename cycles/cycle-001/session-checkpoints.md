@@ -1242,3 +1242,20 @@ _Was the active checkpoint after maintenance sweep 2026-06-22 fully closed. PRs 
 | **develop branch** | ab78a2d (PR #572 squash-merged 2026-07-04 by human). |
 | **STATE.md size** | ~275 lines (WARNING band). |
 | **Resume command** | Open a fresh session and run `/vsdd-factory:next-step` — reads STATE.md; pipeline IN_PROGRESS; feature_mode_bundle: CITATION-GUARDS; Story B S-BC-CITATION-GUARD-1 #102 v1.0 DRAFT at HELD/F2 gate; next = human decisions on BC governance + F3 criterion + FLOOR calibration, then F2 spec evolution + F3 story refinement. |
+
+---
+
+## Checkpoint: 2026-07-06 — Story B F3 CONVERGED (DEC-155)
+
+*Archived from STATE.md Session Resume Checkpoint on 2026-07-06 when Story B F4 delivery burst replaced this checkpoint.*
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-07-06 (Story B F3 CONVERGED — DEC-155; story #102 v1.10 ready; HELD at F4 dispatch gate) |
+| **Status** | F3 CONVERGED — Story B S-BC-CITATION-GUARD-1 v1.10 ready (DEC-155, 2026-07-06). HELD at F4 dispatch gate pending human authorization. |
+| **Counters** | BC 611. NFR 42. ADR 16. Stories 102 (#101 delivered, #102 v1.10 ready). Holdouts 82. |
+| **Convergence counter** | Story B F3: CONVERGED (DEC-153 standard criterion, DEC-155 — 15 passes/9 fix rounds; clean window passes 13/14/15). Story A complete: F4 9 passes/5 fix rounds CLEAN; F3 DEC-151 strict 44 passes/47 rounds window 14 CLEAN. |
+| **In-flight work** | NONE — no open PRs, no active worktrees. develop @ ab78a2d. factory-artifacts pushed. |
+| **Pending** | F4 dispatch authorization for story #102 (DEC-128 merge-auth applies). Session-review at cycle close after Story B ships. |
+| **develop branch** | ab78a2d (PR #572 squash-merged 2026-07-04 by human). No open PRs. |
+| **STATE.md size** | ~300 lines (WARNING band). |

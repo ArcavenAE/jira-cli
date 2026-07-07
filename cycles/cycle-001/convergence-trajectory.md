@@ -1193,3 +1193,61 @@ Non-blocking observations tracked as Drift Items: F-P8-01 §Scope↔examine_glob
 | Criterion | 3 consecutive clean incl. verification-adequacy lens | 3 consecutive clean diverse-lens (verification-adequacy = LOW-informational) |
 
 Supports ADVERSARY-META-LENS-REGRESS engine item: strict criterion (incl. recursive meta-lens) generated 3× more passes for similar story complexity.
+
+## CITATION-GUARDS Story B F4 — Per-Story Adversarial Convergence (2026-07-06)
+
+**Story:** S-BC-CITATION-GUARD-1 (story #102)
+**Phase:** F4 per-story adversarial convergence (BC-5.39.001)
+**Baseline:** Story v1.10 CONVERGED (F3 DEC-155 standard); Task 0 hygiene commit 2b09313 (12+ dead citations rewritten); Red Gate PASSED (stubs 0867823 + 10 fixtures + 5 self-assertions a440814; RED verified — self-test exit 1, canonical stub silent); Implementation f3fc670 (Guard 1 bash).
+
+### Finding Progression (passes 1–4)
+
+| Pass | Total | CRIT | HIGH | MED | LOW | Counter | Verdict |
+|------|-------|------|------|-----|-----|---------|---------|
+| p1 | 1 | 0 | 0 | 1 | 0 | 0/3 | FINDINGS_REMAIN |
+| p2 | 0 | 0 | 0 | 0 | 0 | 1/3 | NITPICK_ONLY / CLEAN |
+| p3 | 0 | 0 | 0 | 0 | 0 | 2/3 | NITPICK_ONLY / CLEAN |
+| p4 | 0 | 0 | 0 | 0 | 0 | 3/3 | **CLEAN — CONVERGED** |
+
+**Trajectory shorthand (p1–4):** `1M → NITPICK_ONLY → NITPICK_ONLY → CLEAN` — 4 passes / 2 fix rounds; **CONVERGED 2026-07-06.**
+
+### Per-Pass Details
+
+#### Pass 1
+**Findings:** 1 (0C/0H/1M/0L) — F-01 MED: undeclared non-.rs silent-skip vs spec (adversary claimed .snap paths do not exist; REFUTED empirically by orchestrator — all 5 .snap paths verified present)
+**Fix (round 1):** Two-tier shape guard spec amendment: EC-CITE-060; non-.rs src/ citations get file-existence tier (counted); N=309 (304 .rs + 5 .snap); FLOOR=231. Commits: BC spec 7575e54, story v1.11 fd8e378, code 7706cc1; CHANGELOG consolidation 126666a.
+**Counter:** 0/3
+
+#### Pass 2 (NITPICK_ONLY — CLEAN)
+**Findings:** 0 BLOCKING — NITPICK_ONLY observations only: Step-2 two-variable pattern canonization; --bc-dir CANONICAL_MODE note corrected
+**Fix (round 2):** story v1.12 f353ab3; spec canonize two-variable Step-2 pattern + fix --bc-dir note.
+**Counter:** 1/3
+
+#### Pass 3 (NITPICK_ONLY — CLEAN)
+**Findings:** 0 — CLEAN-PASS (NITPICK_ONLY only; non-streak-resetting)
+**Counter:** 2/3
+
+#### Pass 4 — CLEAN — CONVERGED
+**Findings:** 0 — CLEAN-PASS
+**Counter:** 3/3
+
+**CONVERGED 2026-07-06.** Story #102 v1.12. All 7 ACs PASS. Demos b52be90 (21 files, 7/7 ACs, VHS). PR #592 OPEN/CLEAN (CI 15/15 SUCCESS; security 2 LOW advisory: SEC-001-GUARD1-ERE-PREFLIGHT + SEC-002-GUARD1-BCDIR-DASH — follow-up candidates; pr-reviewer APPROVE cycle 1). HELD at DEC-128 merge gate.
+
+### Notable Findings
+
+- **1 MED (pass 1):** F-01 — undeclared non-.rs silent-skip; adversary's .snap-nonexistence claim REFUTED empirically; resolved via two-tier shape guard spec amendment (EC-CITE-060). Net: non-.rs src/ citations now receive file-existence tier (counted at full weight, not silently skipped).
+- **pass-2 NITPICK_ONLY (non-streak-resetting):** Step-2 two-variable pattern canonized in spec/story; --bc-dir CANONICAL_MODE note corrected.
+
+### Security Review Advisories (2 LOW — follow-up candidates)
+
+- **SEC-001-GUARD1-ERE-PREFLIGHT:** Guard 1 bash script has no ERE-injection preflight guard on identifier-shaped CLI args in branches (a) and (f). LOW — follow-up story candidate.
+- **SEC-002-GUARD1-BCDIR-DASH:** Guard 1 bash script has no leading-dash flag-value guard on `--bc-dir` arg. LOW — follow-up story candidate.
+
+### Comparison vs Story A F4
+
+| Metric | Story A F4 | Story B F4 |
+|--------|-----------|-----------|
+| Total passes | 9 | 4 |
+| Fix rounds | 5 | 2 |
+| Clean window | 7/8/9 | 2/3/4 |
+| PR | #572 MERGED | #592 OPEN (HELD DEC-128) |

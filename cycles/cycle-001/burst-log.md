@@ -4453,3 +4453,60 @@ Cycle CITATION-GUARDS remains OPEN pending: (1) Story B S-BC-CITATION-GUARD sequ
 | Step | Agent | Status | Output |
 |------|-------|--------|--------|
 | **SESSION WRAP (human-requested pause)** — MUTANTS-EXAMINE-GLOBS cycle CLOSED same-day (DEC-150, PR #570 → develop @ c4b3aa9); pipeline paused IDLE; no in-flight work abandoned | state-manager | COMPLETE | factory-artifacts @ 363334b + this commit. |
+
+---
+
+## Burst: CITATION-GUARDS Story B F4 Delivery (2026-07-06)
+
+**Agents dispatched:** stub-architect, test-writer, implementer, adversary (×4), security-reviewer, pr-reviewer, demo-recorder, state-manager
+**Files touched (factory):** `.factory/STATE.md`, `.factory/cycles/cycle-001/S-BC-CITATION-GUARD-1/adversary-convergence-state.json`, `.factory/cycles/cycle-001/convergence-trajectory.md`, `.factory/cycles/cycle-001/burst-log.md`, `.factory/specs/prd/bc-x-citation-guard.md` (EC-CITE-060 two-tier shape guard), `.factory/stories/S-BC-CITATION-GUARD-1.md` (v1.10→v1.11→v1.12)
+**Versions bumped:** S-BC-CITATION-GUARD-1 v1.10 → v1.12; BC spec + EC-CITE-060 added
+
+### Summary
+
+F4 delivery for story #102 (S-BC-CITATION-GUARD-1) complete up to the DEC-128 merge gate. Key delivery events:
+
+**Task 0 Hygiene (2b09313):** 12+ dead citations rewritten in factory specs (auth.rs/assets.rs module-split fallout + snapshot paths); 2 bc-3 multi-line Trace re-flows. Factory commit (previously staged; pushed in this burst).
+
+**Red Gate (2 commits):**
+- 0867823: no-output stub (Guard 1 bash — exits 0, no output; Guard 1 tests RED verified: 0 lines self-test assertion fails with exit 1)
+- a440814: 10 fixture files + 5 self-assertions added; RED fully verified (self-test exit 1, canonical stub silent)
+
+NOTE: Two agent timeouts occurred during test-writer/implementer dispatches; resumed/re-dispatched fresh with no partial-edit damage.
+
+**Implementation f3fc670:** Guard 1 bash (`scripts/check-bc-citations.sh`) fully implemented. Two-tier citation checking: `.rs` files → function-existence tier; non-.rs src/ files → file-existence tier. N computed from actual repo (304 .rs + 5 .snap = 309). FLOOR=231 (≈ 75% × 309). CHANGELOG and CLAUDE.md updated.
+
+**Step 4.5 Pass 1 → F-01 MED:** Adversary flagged undeclared non-.rs silent-skip vs spec (adversary also claimed .snap paths do not exist — REFUTED by orchestrator empirical verification: all 5 .snap paths exist and are valid). Root finding (non-.rs spec gap) valid and resolved via:
+- BC spec amendment 7575e54: EC-CITE-060 — two-tier shape guard formalized; non-.rs src/ citations get file-existence tier (counted)
+- Story v1.11 fd8e378: lockstep with EC-CITE-060; FLOOR recalibrated to 231 (N=309)
+- Code 7706cc1: implementation updated to match two-tier spec
+- CHANGELOG consolidation 126666a
+
+**Step 4.5 Pass 2 → NITPICK_ONLY (round 2):** Observations only — Step-2 two-variable pattern and --bc-dir CANONICAL_MODE note. Fixed: f353ab3 (spec), story v1.12.
+
+**Step 4.5 CONVERGED:** Passes 3 and 4 CLEAN. Total: 4 passes / 2 fix rounds / window p2/p3/p4 NITPICK_ONLY/NITPICK_ONLY/CLEAN. All 7 ACs PASS.
+
+**Demos b52be90:** 21 files, 7/7 ACs, VHS terminal recording.
+
+**PR #592:** CI 15/15 SUCCESS. Security review: 2 LOW advisories (SEC-001-GUARD1-ERE-PREFLIGHT — pre-dispatch identifier-shape guard in branches a/f; SEC-002-GUARD1-BCDIR-DASH — leading-dash flag-value guard). pr-reviewer APPROVE cycle 1. HELD at DEC-128 — human authorization pending.
+
+**New Drift Items (LOW):** SEC-001-GUARD1-ERE-PREFLIGHT, SEC-002-GUARD1-BCDIR-DASH, GUARD1-BCDIR-CWD-RELATIVE (bc_dir default cwd-relative vs REPO_ROOT-anchored asymmetry, PASS3-Obs-2).
+
+### Details
+
+| Agent | Task | Output |
+|-------|------|--------|
+| stub-architect | Generate no-output stubs for Guard 1 bash | 0867823 |
+| test-writer | Author 10 fixture files + 5 self-assertions; verify RED | a440814 |
+| implementer | Guard 1 bash implementation (two-tier shape guard) | f3fc670, 7706cc1 |
+| adversary (×4) | Per-story adversarial review (BC-5.39.001) | 4 passes; 2 fix rounds |
+| security-reviewer | Guard 1 bash security review | 2 LOW advisories |
+| pr-reviewer | Final fresh-eyes PR review | APPROVE cycle 1 |
+| demo-recorder | VHS terminal recording | b52be90 (21 files, 7/7 ACs) |
+| state-manager | Record F4 burst; update STATE.md + cycle files; commit + push | This commit |
+
+### Archived Current Phase Step (extracted from STATE.md 2026-07-06, 5-row cap)
+
+| Step | Agent | Status | Output |
+|------|-------|--------|--------|
+| **CITATION-GUARDS F4 DELIVERY COMPLETE — PR #572 OPEN/HELD** — TDD implementation 376e2c8 (Guard 2 bash + Guard 3 Rust + ci.yml + policy-doc §Guards + §Scope SWEEP + CHANGELOG + CLAUDE.md + glob dev-dep). Per-story adversarial (BC-5.39.001): 9 passes / 5 fix rounds — p1 MED Guards-section (fddc65e); p2 2×MED template+stub-header (f53ee1d); p3 LOW floor-wording (5740c9b); p5 2×MED engine-BC-ID leak ×5 + stale divider (ee67a02); p6 MED CHANGELOG Changed→Added (cac21ec); p7+p8 NITPICK_ONLY; p9 CLEAN. Demos 4535231 (7/7 ACs). PR #572: security CLEAN (1 LOW intentional, 5 INFO); pr-reviewer APPROVE cycle 1; CI 15/15 SUCCESS; mergeStateStatus CLEAN. HELD per DEC-128 — awaiting human code-owner approval + merge authorization. | state-manager | COMPLETE | PR #572 OPEN. develop UNCHANGED @ c4b3aa9. |

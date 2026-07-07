@@ -33,5 +33,50 @@
     "fix_rounds": 47,
     "criterion": "DEC-151 strict (incl. verification-adequacy lens as streak-resetting)",
     "note": "Standard criterion converged 3x faster; supports ADVERSARY-META-LENS-REGRESS engine item"
+  },
+  "f4_implementation": {
+    "phase": "F4 per-story adversarial (BC-5.39.001)",
+    "criterion": "NITPICK_ONLY passes count toward clean window; CLEAN = converged",
+    "converged": true,
+    "total_passes": 4,
+    "fix_rounds": 2,
+    "clean_window": [2, 3, 4],
+    "window_verdicts": ["NITPICK_ONLY", "NITPICK_ONLY", "CLEAN"],
+    "last_pass_verdict": "CLEAN",
+    "convergence_date": "2026-07-06",
+    "story_version_at_convergence": "1.12",
+    "pr": "https://github.com/Zious11/jira-cli/pull/592",
+    "pr_ci_status": "15/15 SUCCESS",
+    "pr_state": "OPEN — HELD at DEC-128 merge gate",
+    "acs_passing": 7,
+    "key_commits": {
+      "red_gate_stub": "0867823",
+      "red_gate_fixtures": "a440814",
+      "implementation": "f3fc670",
+      "two_tier_spec_amendment": "7575e54",
+      "story_v1_11": "fd8e378",
+      "code_two_tier": "7706cc1",
+      "pass2_obs_fix": "f353ab3",
+      "demos": "b52be90"
+    },
+    "spec_amendment": {
+      "decision_ref": "EC-CITE-060",
+      "description": "Two-tier shape guard: non-.rs src/ citations get file-existence tier (counted); N=309 (304 .rs + 5 .snap); FLOOR=231",
+      "task0_hygiene_commit": "2b09313",
+      "task0_summary": "12+ dead citations rewritten (auth.rs/assets.rs module-split fallout + snapshot paths); 2 bc-3 multi-line Trace re-flows"
+    },
+    "notable_findings": [
+      "F-01 MED (pass 1): undeclared non-.rs silent-skip vs spec — adversary .snap-nonexistence claim REFUTED empirically (all 5 .snap paths exist); resolved via two-tier shape guard spec amendment (EC-CITE-060)",
+      "pass-2 obs (NITPICK_ONLY): Step-2 two-variable pattern canonized; --bc-dir CANONICAL_MODE note corrected"
+    ],
+    "security_review": {
+      "findings": 2,
+      "sev_low": 2,
+      "finding_ids": [
+        "SEC-001-GUARD1-ERE-PREFLIGHT: no ERE-injection preflight guard on identifier-shaped CLI args (branches a/f) — follow-up candidate",
+        "SEC-002-GUARD1-BCDIR-DASH: no leading-dash flag-value guard on --bc-dir arg — follow-up candidate"
+      ]
+    },
+    "pr_reviewer": "APPROVE cycle 1"
   }
 }
