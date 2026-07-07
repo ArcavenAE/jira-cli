@@ -5610,3 +5610,48 @@ commits. Tracked as CICD-SETUP-CLASSIFICATION in Drift Items.
 
 _Recorded: 2026-07-02. State-manager (DEC-150)._
 _Tagged: [process-gap] [justified-deferral] [cicd-setup] [governance-classification]_
+
+---
+
+### ORCHESTRATOR-EMPIRICAL-REFUTATION [codified DEC-156]
+
+**Lesson:** When an adversary pass makes factual claims that drive a design decision — especially
+claims about file existence or path validity — the orchestrator must run a 30-second empirical
+check (e.g., `ls`, `find`, or `grep`) to verify the claim BEFORE routing a fix to the
+implementer.
+
+**Origin:** CITATION-GUARDS Story B, Step-4.5 pass-1: the adversary claimed 4 of 5 `.snap`
+path citations in BC bodies were nonexistent. A quick empirical check (`find src/cli/auth/tests/snapshots/`)
+refuted this, changing the resolution from lossy (skip `.snap` citations as out-of-scope) to
+strictly-better (`.snap` citations counted in tier-ii file-existence-only pass, contributing to
+N=309 two-tier baseline). The empirical check caught a category error in the adversary's
+reasoning about file paths.
+
+**Rule:** Verify adversary factual claims that drive design decisions. Factual errors by
+adversaries (file nonexistent, function undefined, test absent) should be checked empirically
+with a direct shell command before the orchestrator accepts them as justification for a spec
+change. The cost of a 30-second shell check is always less than the cost of a lossy fix round.
+
+_Recorded: 2026-07-07. State-manager (DEC-156)._
+_Tagged: [orchestrator-discipline] [adversary-verification] [empirical-check] [codified]_
+
+---
+
+### REGISTRATION-SURFACE-SWEEP [codified DEC-156]
+
+**Lesson:** When an adversary or reviewer finds a count-bearing numeric claim in one file that
+is stale, do an exhaustive sweep of ALL files that carry the same count IMMEDIATELY in that
+same fix round — do not wait for the next adversary pass to discover the next stale surface.
+
+**Origin:** CITATION-GUARDS Story B F3, passes 10/11/12 each found one more stale count
+registration surface (BC-INDEX rows, Coverage stats table, CANONICAL-COUNTS breakdown) after
+the count changed. Each discovery required a new fix round. An exhaustive sweep at the FIRST
+discovery (pass 10) would have closed all three in one round, saving 2 additional fix rounds.
+
+**Rule:** At the first count-staleness finding, run a corpus-wide grep for the old count across
+all likely carrier files: STATE.md, BC-INDEX.md, CANONICAL-COUNTS.md, ARCH-INDEX.md, prd.md,
+and any spec file that was recently touched. Fix ALL matches in the same round. This is the
+S-7.02 Defensive Sweep Discipline applied prospectively to adversarial findings.
+
+_Recorded: 2026-07-07. State-manager (DEC-156)._
+_Tagged: [sweep-discipline] [count-propagation] [adversary-efficiency] [codified]_

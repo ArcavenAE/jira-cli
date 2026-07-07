@@ -3,7 +3,7 @@ document_type: story
 story_id: "S-BC-CITATION-GUARD-1"
 title: "CITATION-GUARDS Story B: BC-body Trace/Source file::symbol citation guard (DEC-148)"
 wave: feature-followup
-status: ready
+status: delivered
 intent: ci-hardening
 feature_type: infrastructure
 mode: feature
@@ -50,7 +50,7 @@ acceptance_criteria_count: 7
 assumption_validations: []
 risk_mitigations: []
 created: "2026-07-04"
-version: "1.12"
+version: "1.13"
 last_updated: "2026-07-07"
 breaking_change: false
 retroactive: false
@@ -63,6 +63,7 @@ origin: >
   F1 delta analysis citation-guards-2026-07-02-delta.md §2 (BC-CITATION-CI-GUARD / Guard 1).
   Stories recommended: 2 (wave_order: guards-2-3-first per F1 §7). This is Story B.
 changelog:
+  - "1.13 (2026-07-07): DELIVERED — PR #592 squash-merged by human to develop @ 0d8a8a5 (DEC-128 honored); post-merge guard verification PASS (self-test 10/10; canonical 309 checked). Recorded as DEC-156."
   - "1.12 (2026-07-07): pass-2 obs fixes — Step-2 two-variable pattern canonized (BC lockstep); --bc-dir CANONICAL_MODE note corrected."
   - "1.11 (2026-07-06): F-01 two-tier shape guard lockstep (BC 7575e54; EC-CITE-060; N=309/FLOOR=231; Fixture B .snap sub-probe)."
   - "1.10 (2026-07-06): F3 CONVERGED under DEC-153 standard criterion — 15 fresh-context adversary passes, 9 fix rounds (v1.1→v1.9); clean window = passes 13/14/15 (CLEAN×3). Status → ready. Recorded as DEC-155."

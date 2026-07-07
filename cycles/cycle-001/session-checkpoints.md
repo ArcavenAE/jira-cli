@@ -1259,3 +1259,22 @@ _Was the active checkpoint after maintenance sweep 2026-06-22 fully closed. PRs 
 | **Pending** | F4 dispatch authorization for story #102 (DEC-128 merge-auth applies). Session-review at cycle close after Story B ships. |
 | **develop branch** | ab78a2d (PR #572 squash-merged 2026-07-04 by human). No open PRs. |
 | **STATE.md size** | ~300 lines (WARNING band). |
+
+---
+
+## Checkpoint: 2026-07-06 — Story B F4 DELIVERY COMPLETE (PR #592 OPEN/HELD)
+
+*Archived from STATE.md Session Resume Checkpoint on 2026-07-07 when CITATION-GUARDS cycle-close burst replaced this checkpoint.*
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-07-06 (Story B F4 DELIVERY COMPLETE — PR #592 OPEN/CLEAN; HELD at DEC-128 merge gate) |
+| **Status** | **F4 DELIVERY COMPLETE — Story B S-BC-CITATION-GUARD-1 v1.12 F4 complete. PR #592 OPEN/CLEAN (CI 15/15 SUCCESS). HELD at DEC-128 merge gate — awaiting human authorization.** |
+| **Counters** | BC **611**. NFR **42**. ADR **16**. Stories **102** (#101 delivered, #102 v1.12 F4 complete, PR #592 HELD). Holdouts **82**. |
+| **Convergence counter** | Story B F4: CONVERGED (BC-5.39.001, 4 passes/2 fix rounds, window p2/p3/p4 NITPICK/NITPICK/CLEAN). Story B F3: CONVERGED (DEC-153 standard, DEC-155 — 15 passes/9 fix rounds). Story A F4: 9 passes/5 fix rounds CLEAN; PR #572 MERGED. Full trajectories: `cycles/cycle-001/convergence-trajectory.md`. |
+| **In-flight work** | PR #592 OPEN at `.worktrees/S-BC-CITATION-GUARD-1` (worktree active — do NOT delete until PR merged). develop @ ab78a2d. factory-artifacts pushed. |
+| **Pending** | Human DEC-128 authorization to merge PR #592. Then cycle-close checklist → session-review. |
+| **develop branch** | ab78a2d (PR #572 squash-merged 2026-07-04 by human). PR #592 OPEN (story B F4, HELD). |
+| **Untracked local files** | Deliberately uncommitted, session-local tooling, harmless: `.claude/pr-reviews/`, `.claude/spec-config.json`. |
+| **STATE.md size** | ~290 lines (WARNING band). |
+| **Resume command** | Open a fresh session and run `/vsdd-factory:next-step` — reads STATE.md; pipeline IN_PROGRESS; feature_mode_bundle: CITATION-GUARDS; Story B #102 v1.12 F4 COMPLETE; PR #592 OPEN/CLEAN; HELD at DEC-128 — awaiting human merge authorization. MUTANTS-FIRST-SCOPED-PR-CALIBRATION watch: ×3 0-mutant confirmations, code-mutant path unexercised. |
