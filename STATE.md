@@ -4,14 +4,14 @@ level: ops
 version: "2.0"
 status: active
 producer: state-manager
-timestamp: 2026-07-08T15:33:00Z
+timestamp: 2026-07-08T18:00:00Z
 phase: 3
 inputs: []
 input-hash: "[live-state]"
 traces_to: ""
 project: jira-cli
 mode: brownfield
-current_step: "ADF-CODE-MARK-EXCLUSIVITY (issue #571): F4 DELIVERED — PR #593 squash-merged by human @ 7ba4cf4 (2026-07-08, DEC-128 honored). Story #103 v1.9 delivered. Issue #571 closed. F5 DISPATCHED — p1/p2 CLEAN; p3 1 LOW MISSING-CHANGELOG-ENTRY fix-PR docs/571-changelog-code-mark-exclusivity in flight (streak reset 0/3 STRICT). D-chain cite D-27893 latest brownfield. BC 612. Holdouts 83. spec v1.3.25. trajectory-tail →0→0→0→1. DEC-161."
+current_step: "ADF-CODE-MARK-EXCLUSIVITY F5 p3 fix-PR #594 (docs/571-changelog-code-mark-exclusivity): review lifecycle COMPLETE — pr-reviewer APPROVE (0 blocking, 1 advisory CI-checkbox); security 0 findings (CHANGELOG-only); 15/15 CI green incl. CI Gate; HELD for human squash-merge (DEC-128; issuecomment-4915878037). Next: human merges #594 → worktree cleanup (.worktrees/FIX-571-CHANGELOG) → F5 p4 fresh adversary on merged develop (streak 0/3 STRICT). D-chain cite D-27893 latest brownfield. BC 612. Holdouts 83. spec v1.3.25. trajectory-tail →0→0→0→1. DEC-161."
 maintenance_run: CLOSED
 current_cycle: "cycle-001"
 feature_mode_bundle: ADF-CODE-MARK-EXCLUSIVITY
@@ -25,7 +25,7 @@ activation_version: "v0.6.0-dev.7"
 
 <!--
   STATE.md SIZE BUDGET (per D-421(c)):
-  Hard cap (500 lines) margin from soft-target = 500 - 281 = 219; margin from actual = 500 - 281 = 219 (D-446(c) dual-margin form). 281 lines (wc-l).
+  Hard cap (500 lines) margin from soft-target = 500 - 283 = 217; margin from actual = 500 - 283 = 217 (D-446(c) dual-margin form). 283 lines (wc-l).
   Hard cap: 500 lines.
 -->
 
@@ -38,9 +38,9 @@ activation_version: "v0.6.0-dev.7"
 | **Product** | jr (Jira CLI) |
 | **Mode** | BROWNFIELD / Rust |
 | **Target Workspace** | develop → main |
-| **Last Updated** | 2026-07-08: ADF-CODE-MARK-EXCLUSIVITY F4 DELIVERED — PR #593 squash-merged by human @ 7ba4cf4 (DEC-128 honored). Story #103 v1.9. Issue #571 closed. F5: p1/p2 CLEAN; p3 1 LOW fix-PR in flight. BC 612. Holdouts 83. spec v1.3.25. trajectory-tail →0→0→0→1. DEC-161. |
-| **Current Phase** | Phase 3 — **ADF-CODE-MARK-EXCLUSIVITY F5 IN PROGRESS** (issue #571 CLOSED). F4 DELIVERED (DEC-161): PR #593 @ 7ba4cf4. Story #103 v1.9. F5 = scoped adversarial on merged develop @ 7ba4cf4 (STRICT): p1 CLEAN, p2 CLEAN, p3 1 LOW (MISSING-CHANGELOG-ENTRY; fix-PR in flight; streak 0/3). BC **612**. NFR 42. ADR 16. Stories **103**. Holdouts **83**. |
-| **Next Phase** | F5 scoped adversarial review — p3 fix-PR merge pending; then p4+ to STRICT convergence. |
+| **Last Updated** | 2026-07-08: F5 p3 fix-PR #594 review lifecycle COMPLETE — pr-reviewer APPROVE (0 blocking, 1 advisory CI-checkbox); 15/15 CI green incl. CI Gate; HELD for human squash-merge (DEC-128). BC 612. Holdouts 83. trajectory-tail →0→0→0→1. |
+| **Current Phase** | Phase 3 — **ADF-CODE-MARK-EXCLUSIVITY F5 IN PROGRESS** (issue #571 CLOSED). F4 DELIVERED (DEC-161): PR #593 @ 7ba4cf4. Story #103 v1.9. F5: p1 CLEAN, p2 CLEAN, p3 1 LOW fix-PR #594 review APPROVE (0 blocking, 1 advisory CI-checkbox; 15/15 CI green; HELD for human squash-merge DEC-128; issuecomment-4915878037). Streak 0/3 STRICT. BC **612**. NFR 42. ADR 16. Stories **103**. Holdouts **83**. |
+| **Next Phase** | F5 scoped adversarial review — human merges fix-PR #594 → worktree cleanup (.worktrees/FIX-571-CHANGELOG) → F5 p4 fresh adversary on merged develop (streak 0/3 STRICT). |
 | **Activation HEAD** | 342987f (v0.6.0-dev.7 tag); develop @ 7ba4cf4 (PR #593 squash-merged 2026-07-08 by human; ADF-CODE-MARK F4 DELIVERED DEC-161) |
 
 ## Phase Progress
@@ -53,7 +53,7 @@ activation_version: "v0.6.0-dev.7"
 | **F3 story S-ADF-CODE-MARK-1 (#103) v1.7 authored — adversarial convergence loop complete (2026-07-07/08)** | **COMPLETE** | **2026-07-08** | **Story-writer authored v1.0→v1.7 across 6 fix rounds under STRICT criterion. 10 fresh-context adversary passes. 12 ACs, 4 pts.** | Story #103 v1.7. |
 | **pass-8 adversary: F3 S-ADF-CODE-MARK-1 window STRICT CONVERGED — DEC-160 (2026-07-08)** | **COMPLETE** | **2026-07-08** | **10 passes / 6 fix rounds. Window 8/9/10 CLEAN×3 STRICT. DEC-160.** | F3 trajectory-tail →1→0→0→0. |
 | **ADF-CODE-MARK F4 DELIVERED — PR #593 squash-merged by human @ 7ba4cf4 (2026-07-08, DEC-128 honored). DEC-161.** | **COMPLETE** | **2026-07-08** | **8 commits. Step 4.5 CONVERGED STRICT (window F4-p2/F4-p3/F4-p4). 992 lib + 49 integration + 256-case proptest. Mutation gate PASS 5m32s (MUTANTS-FIRST-SCOPED-PR-CALIBRATION resolved). Security 1 LOW. pr-reviewer APPROVE. 12/12 AC demos. Issue #571 closed.** | develop @ 7ba4cf4. DEC-161. |
-| **ADF-CODE-MARK F5 DISPATCHED — p1 CLEAN, p2 CLEAN, p3 1 LOW MISSING-CHANGELOG-ENTRY (streak reset 0/3 STRICT). Fix-PR in flight.** | **IN PROGRESS** | **2026-07-08** | **p1 CLEAN (post-merge integrity; spec-drift 24/24). p2 CLEAN. p3 1 LOW (MISSING-CHANGELOG-ENTRY; fix-PR docs/571-changelog-code-mark-exclusivity in flight). 1024-case proptest stress PASS.** | develop @ 7ba4cf4. |
+| **ADF-CODE-MARK F5 IN PROGRESS — p1 CLEAN, p2 CLEAN, p3 1 LOW MISSING-CHANGELOG-ENTRY fix-PR #594 review APPROVE (HELD human merge DEC-128). Streak 0/3 STRICT.** | **IN PROGRESS** | **2026-07-08** | **p1 CLEAN (post-merge integrity; spec-drift 24/24). p2 CLEAN. p3 1 LOW (MISSING-CHANGELOG-ENTRY; fix-PR #594 review COMPLETE — pr-reviewer APPROVE, 0 blocking, 1 advisory CI-checkbox; 15/15 CI green; HELD for human squash-merge DEC-128; issuecomment-4915878037). 1024-case proptest stress PASS.** | develop @ 7ba4cf4. |
 
 ## Current Phase Steps
 
@@ -65,7 +65,7 @@ activation_version: "v0.6.0-dev.7"
 | **F3 adversarial passes 1-7 / 6 fix rounds + 2 preemptive catches — streak 0/3 (2026-07-07/08)** — P1(1M+2L→v1.1). Preemptive-1→v1.2. P2(2L→v1.3). P3(1L+2NIT→v1.4). P4: CLEAN. P5(1L+3VA→v1.5). P6(3L→v1.6). P7(1M→v1.7). | adversary+story-writer | COMPLETE | trajectory →3→2→1→0→1→3→1. |
 | **F3 adversarial passes 8-10 STRICT CONVERGED — DEC-160 (2026-07-08)** — P8: CLEAN. P9: CLEAN (40+ trace sites). P10: CLEAN (novelty NONE). Window 8/9/10. DEC-160. | adversary+state-manager | COMPLETE | trajectory-tail →1→0→0→0. |
 | **F4 DELIVERED — ADF-CODE-MARK-EXCLUSIVITY PR #593 @ 7ba4cf4 (2026-07-08, DEC-128 honored). DEC-161.** — Story #103 v1.9. Red Gate 8 RED anchors CONFIRMED-INPUT. Issue #571 closed. | state-manager | COMPLETE | DEC-161. Story #103 v1.9. |
-| **F5 DISPATCHED — p1 CLEAN, p2 CLEAN, p3 1 LOW MISSING-CHANGELOG-ENTRY (streak 0/3 STRICT). Fix-PR docs/571-changelog-code-mark-exclusivity in flight. 1024-case proptest PASS.** | adversary+state-manager | IN PROGRESS | trajectory →0→0→1. Streak 0/3. |
+| **F5 p3 fix-PR #594 review lifecycle COMPLETE — pr-reviewer APPROVE (0 blocking, 1 advisory CI-checkbox fixed); security 0 findings; 15/15 CI green incl. CI Gate; HELD for human squash-merge (DEC-128; issuecomment-4915878037). Next: human merge → worktree cleanup → F5 p4 fresh adversary (streak 0/3 STRICT).** | pr-manager+pr-reviewer+state-manager | IN PROGRESS | trajectory →0→0→1. Streak 0/3. HELD for human. |
 
 ## Decisions Log
 
@@ -78,7 +78,7 @@ activation_version: "v0.6.0-dev.7"
 | DEC-158 | **F2 convergence criterion STRICT + scope rulings (2026-07-07, human): STRICT — any delta-attributable LOW resets; VA-informational exempt per DEC-153. Opportunistic pre-existing repairs ride cycle. BC-INDEX-9TH-SURFACE guard-extension candidate.** | Human ratified mid-cycle checkpoint #2 after 11 uncommitted F2 rounds. | Feature Mode / ADF-CODE-MARK-EXCLUSIVITY F2 | 2026-07-07 |
 | DEC-159 | **ADF-CODE-MARK-EXCLUSIVITY F2 CONVERGED (STRICT, 2026-07-07, human-approved): 19 passes / 13 fix rounds; clean window 17+18+19. Final: BC-7.2.015 + BC-7.2.007 EC-2 + H-NEW-ADF-010 + VP-571-001..005 + PANEL-ANCHOR. BC 612, holdouts 83, spec v1.3.25. F3 criterion: STRICT.** | F2 gate closed; STRICT convergence confirmed; F3 dispatched. | Feature Mode / ADF-CODE-MARK-EXCLUSIVITY F2 | 2026-07-07 |
 | DEC-160 | **ADF-CODE-MARK F3 CONVERGED (STRICT) — S-ADF-CODE-MARK-1 (#103) v1.7: 10 passes / 6 fix rounds + 2 preemptive catches. Window 8+9+10 CLEAN. HELD at F3 human gate pending authorization. Criterion-comparison: F3 STRICT = 10 passes.** | F3 STRICT convergence confirmed; HELD for human authorization. | Feature Mode / ADF-CODE-MARK-EXCLUSIVITY F3 | 2026-07-08 |
-| DEC-161 | **ADF-CODE-MARK F4 DELIVERY RECORD (2026-07-08, human merge, DEC-128 honored): PR #593 @ 7ba4cf4. Story #103 v1.9 delivered. 8 commits. Step 4.5 CONVERGED STRICT (window F4-p2/F4-p3/F4-p4). 992 lib + 49 integration + 256-case proptest. Mutation gate PASS 5m32s (FIRST real code-diff exercise — calibration validated; MUTANTS-FIRST-SCOPED-PR-CALIBRATION RESOLVED). Security 1 LOW (SEC-001). pr-reviewer APPROVE cycle 1. 12/12 AC demos. Issue #571 closed. F5 DISPATCHED: p1 CLEAN, p2 CLEAN, p3 1 LOW MISSING-CHANGELOG-ENTRY (fix-PR docs/571-changelog-code-mark-exclusivity in flight; streak 0/3 STRICT). 1024-case proptest stress PASS. New drift: STORY-TEMPLATE-CHANGELOG-TASK, ADVERSARY-VERDICT-VS-CONTRACT-DISCREPANCY.** | F4 delivery + process ledger + F5 state for ADF-CODE-MARK-EXCLUSIVITY. | Feature Mode / ADF-CODE-MARK-EXCLUSIVITY F4 | 2026-07-08 |
+| DEC-161 | **ADF-CODE-MARK F4 DELIVERY RECORD (2026-07-08, human merge, DEC-128 honored): PR #593 @ 7ba4cf4. Story #103 v1.9 delivered. 8 commits. Step 4.5 CONVERGED STRICT (window F4-p2/F4-p3/F4-p4). 992 lib + 49 integration + 256-case proptest. Mutation gate PASS 5m32s (FIRST real code-diff exercise — calibration validated; MUTANTS-FIRST-SCOPED-PR-CALIBRATION RESOLVED). Security 1 LOW (SEC-001). pr-reviewer APPROVE cycle 1. 12/12 AC demos. Issue #571 closed. F5 DISPATCHED: p1 CLEAN, p2 CLEAN, p3 1 LOW MISSING-CHANGELOG-ENTRY (fix-PR #594 review COMPLETE — APPROVE, HELD for human squash-merge DEC-128; streak 0/3 STRICT). 1024-case proptest stress PASS. New drift: STORY-TEMPLATE-CHANGELOG-TASK, ADVERSARY-VERDICT-VS-CONTRACT-DISCREPANCY.** | F4 delivery + process ledger + F5 state for ADF-CODE-MARK-EXCLUSIVITY. | Feature Mode / ADF-CODE-MARK-EXCLUSIVITY F4 | 2026-07-08 |
 
 ## Skip Log
 
@@ -177,15 +177,15 @@ None open.
 
 Current project index versions: BC-INDEX v6.12 / VP-INDEX v0.82 / STORY-INDEX v1.02 / ARCH-INDEX v0.16
 
-Trajectory (ADF-CODE-MARK-EXCLUSIVITY F2): →3→4→5→5→0→1→0→4→1→0→3→1→1→0→2→3→0→0→0 (passes 1-19; STRICT CONVERGED, DEC-158/DEC-159). F3: 3→2→1→0→1→3→1→0→0→0 (passes 1-10; STRICT CONVERGED, DEC-160). F4 Step-4.5: →1→0→0→0 (STRICT CONVERGED, DEC-161, window F4-p2/F4-p3/F4-p4). F5 Step-4.5 in progress: →0→0→1 (passes p1-p3; p3 1 LOW MISSING-CHANGELOG-ENTRY; streak 0/3 STRICT).
+Trajectory (ADF-CODE-MARK-EXCLUSIVITY F2): →3→4→5→5→0→1→0→4→1→0→3→1→1→0→2→3→0→0→0 (passes 1-19; STRICT CONVERGED, DEC-158/DEC-159). F3: 3→2→1→0→1→3→1→0→0→0 (passes 1-10; STRICT CONVERGED, DEC-160). F4 Step-4.5: →1→0→0→0 (STRICT CONVERGED, DEC-161, window F4-p2/F4-p3/F4-p4). F5 Step-4.5 in progress: →0→0→1 (passes p1-p3; p3 1 LOW MISSING-CHANGELOG-ENTRY; fix-PR #594 review APPROVE — HELD for human merge; streak 0/3 STRICT).
 
-ADF-CODE-MARK-EXCLUSIVITY: F4 DELIVERED (DEC-161) — PR #593 @ 7ba4cf4 (2026-07-08). Story #103 v1.9. F5 DISPATCHED (scoped adversarial, STRICT): p1 CLEAN, p2 CLEAN, p3 1 LOW MISSING-CHANGELOG-ENTRY (fix-PR docs/571-changelog-code-mark-exclusivity in flight; streak 0/3). 1024-case proptest stress PASS. BC 612. Holdouts 83. Full trajectories: `cycles/cycle-001/convergence-trajectory.md`.
+ADF-CODE-MARK-EXCLUSIVITY: F4 DELIVERED (DEC-161) — PR #593 @ 7ba4cf4 (2026-07-08). Story #103 v1.9. F5 IN PROGRESS (scoped adversarial, STRICT): p1 CLEAN, p2 CLEAN, p3 1 LOW MISSING-CHANGELOG-ENTRY fix-PR #594 reviewed APPROVE (HELD for human squash-merge DEC-128). Streak 0/3. 1024-case proptest stress PASS. BC 612. Holdouts 83. Full trajectories: `cycles/cycle-001/convergence-trajectory.md`.
 
 ## Concurrent Cycles
 
 | Cycle | Status | Notes |
 |-------|--------|-------|
-| ADF-CODE-MARK-EXCLUSIVITY (issue #571) | F4 DELIVERED (DEC-161) — F5 p3 LOW fix-PR in flight | PR #593 @ 7ba4cf4; story #103 v1.9; issue #571 CLOSED; F5: p1/p2 CLEAN, p3 1 LOW MISSING-CHANGELOG-ENTRY, fix-PR docs/571-changelog-code-mark-exclusivity |
+| ADF-CODE-MARK-EXCLUSIVITY (issue #571) | F4 DELIVERED (DEC-161) — F5 IN PROGRESS (p3 fix-PR #594 HELD for human merge) | PR #593 @ 7ba4cf4; story #103 v1.9; issue #571 CLOSED; F5: p1/p2 CLEAN, p3 1 LOW fix-PR #594 review APPROVE (HELD DEC-128; issuecomment-4915878037); streak 0/3 STRICT |
 
 ## Session Resume Checkpoint
 
@@ -193,20 +193,20 @@ ADF-CODE-MARK-EXCLUSIVITY: F4 DELIVERED (DEC-161) — PR #593 @ 7ba4cf4 (2026-07
 
 | Field | Value |
 |-------|-------|
-| **Date** | 2026-07-08 (ADF-CODE-MARK-EXCLUSIVITY F4 DELIVERED DEC-161; F5 p3 LOW fix-PR in flight; streak 0/3 STRICT) trajectory-tail →0→0→0→1 |
-| **Status** | **F4 DELIVERED (DEC-161). F5 IN PROGRESS — p1/p2 CLEAN; p3 1 LOW MISSING-CHANGELOG-ENTRY.** Story #103 v1.9. Issue #571 CLOSED. Fix-PR docs/571-changelog-code-mark-exclusivity in flight. |
+| **Date** | 2026-07-08 (ADF-CODE-MARK-EXCLUSIVITY F5 p3 fix-PR #594 review COMPLETE; HELD for human squash-merge DEC-128; streak 0/3 STRICT) trajectory-tail →0→0→0→1 |
+| **Status** | **F4 DELIVERED (DEC-161). F5 IN PROGRESS — p1/p2 CLEAN; p3 fix-PR #594 review APPROVE (0 blocking, 1 advisory CI-checkbox; 15/15 CI green; HELD for human squash-merge per DEC-128; issuecomment-4915878037).** Story #103 v1.9. Issue #571 CLOSED. |
 | **Counters** | BC **612**. NFR **42**. ADR **16**. Stories **103**. Holdouts **83**. |
-| **Convergence counter** | ADF-CODE-MARK F5 Step-4.5: STRICT in progress. Trajectory →0→0→1. Streak 0/3. F4: STRICT CONVERGED (DEC-161). F3: STRICT CONVERGED (DEC-160). F2: STRICT CONVERGED (DEC-159). Full trajectories: `cycles/cycle-001/convergence-trajectory.md`. |
-| **In-flight work** | F5 scoped adversarial — p3 1 LOW (MISSING-CHANGELOG-ENTRY); fix-PR docs/571-changelog-code-mark-exclusivity in flight. No other open PRs. |
-| **Pending decisions** | None — F4 delivered; F5 p3 fix-PR pending merge; then p4+ to STRICT convergence. |
+| **Convergence counter** | ADF-CODE-MARK F5 Step-4.5: STRICT in progress. Trajectory →0→0→1. Streak 0/3 (fix-PR #594 HELD; resets on p4 pass). F4: STRICT CONVERGED (DEC-161). F3: STRICT CONVERGED (DEC-160). F2: STRICT CONVERGED (DEC-159). Full trajectories: `cycles/cycle-001/convergence-trajectory.md`. |
+| **In-flight work** | F5 scoped adversarial — p3 1 LOW fix-PR #594 review COMPLETE; HELD for human squash-merge (DEC-128; issuecomment-4915878037). No other open PRs. |
+| **Pending decisions** | None — F4 delivered; F5 p3 fix-PR #594 HELD for human merge; then worktree cleanup + F5 p4 fresh adversary (streak 0/3 STRICT). |
 | **develop branch** | 7ba4cf4 (PR #593 squash-merged 2026-07-08; ADF-CODE-MARK F4 DELIVERED). Issue #571 CLOSED. |
 | **Untracked local files** | Deliberately uncommitted, session-local tooling: `.claude/pr-reviews/`, `.claude/spec-config.json`. |
-| **STATE.md size** | ~282 lines (OK band). |
-| **Resume command** | Open fresh session; read `.factory/STATE.md`; run `/vsdd-factory:next-step`. ADF-CODE-MARK F5: p3 fix-PR docs/571-changelog-code-mark-exclusivity (MISSING-CHANGELOG-ENTRY); streak 0/3 STRICT; 1024-case proptest stress PASS. |
+| **STATE.md size** | ~283 lines (OK band). |
+| **Resume command** | Open fresh session; read `.factory/STATE.md`; run `/vsdd-factory:next-step`. ADF-CODE-MARK F5: fix-PR #594 HELD for human squash-merge (issuecomment-4915878037); after merge → worktree cleanup (.worktrees/FIX-571-CHANGELOG) → F5 p4 fresh adversary on merged develop (streak 0/3 STRICT). |
 
 ## RESUME PLAN (cold-start, self-contained)
 
-<!-- State snapshot: ADF-CODE-MARK-EXCLUSIVITY F4 DELIVERED (DEC-161, 2026-07-08). F5 DISPATCHED (STRICT): p1/p2 CLEAN; p3 1 LOW MISSING-CHANGELOG-ENTRY fix-PR in flight (streak 0/3). develop @ 7ba4cf4. BC 612; Stories 103. Holdouts 83. -->
+<!-- State snapshot: ADF-CODE-MARK-EXCLUSIVITY F5 p3 fix-PR #594 review COMPLETE (APPROVE, HELD for human squash-merge DEC-128, 2026-07-08). develop @ 7ba4cf4. BC 612; Stories 103. Holdouts 83. -->
 
 ### Steps (assume ZERO memory)
 
@@ -215,8 +215,8 @@ ADF-CODE-MARK-EXCLUSIVITY: F4 DELIVERED (DEC-161) — PR #593 @ 7ba4cf4 (2026-07
 **Step 2 — Verify position:**
 - develop @ **7ba4cf4** (PR #593 squash-merged 2026-07-08; ADF-CODE-MARK F4 DELIVERED DEC-161; issue #571 CLOSED).
 - factory-artifacts: see `git -C .factory log -1`.
-- No active feature worktrees.
-- **Open PRs:** fix-PR docs/571-changelog-code-mark-exclusivity (MISSING-CHANGELOG-ENTRY from F5-p3).
+- No active feature worktrees (except .worktrees/FIX-571-CHANGELOG — pending cleanup after #594 merge).
+- **Open PRs:** fix-PR #594 docs/571-changelog-code-mark-exclusivity — HELD for human squash-merge (DEC-128; issuecomment-4915878037). Review COMPLETE — pr-reviewer APPROVE.
 - Counters: BC **612**, NFR **42**, ADR **16**, Stories **103**. Holdouts **83**.
 
 **Step 3 — ADF-CODE-MARK-EXCLUSIVITY F5 IN PROGRESS:**
@@ -225,9 +225,9 @@ ADF-CODE-MARK-EXCLUSIVITY: F4 DELIVERED (DEC-161) — PR #593 @ 7ba4cf4 (2026-07
 >
 > **F4 STATUS: DELIVERED (DEC-161). PR #593 @ 7ba4cf4. Story #103 v1.9.**
 >
-> **F5 STATUS: IN PROGRESS — p1 CLEAN, p2 CLEAN, p3 1 LOW MISSING-CHANGELOG-ENTRY. Streak 0/3 STRICT. Fix-PR docs/571-changelog-code-mark-exclusivity in flight.**
+> **F5 STATUS: IN PROGRESS — p1 CLEAN, p2 CLEAN, p3 1 LOW MISSING-CHANGELOG-ENTRY. Fix-PR #594 review COMPLETE (APPROVE, HELD for human squash-merge DEC-128; issuecomment-4915878037). Streak 0/3 STRICT.**
 >
-> **1024-CASE PROPTEST STRESS:** PASS (orchestrator-run post-merge).
+> **NEXT:** Human merges #594 → worktree cleanup (.worktrees/FIX-571-CHANGELOG) → F5 p4 fresh adversary on merged develop (streak 0/3 STRICT).
 
 **Step 4 — STANDING CONSTRAINTS (ALL fixes via full VSDD Feature Mode):**
 - All fixes through full VSDD Feature Mode. No exceptions without explicit human direction.
@@ -279,4 +279,5 @@ OPEN BACKLOG (after ADF-CODE-MARK-EXCLUSIVITY closes):
 | ADF-CODE-MARK-EXCLUSIVITY F2 spec delta (issue #571, 2026-07-07) | `phase-f2-spec-evolution/prd-delta-571.md` |
 | ADF-CODE-MARK-EXCLUSIVITY F3 story convergence (issue #571, 2026-07-07/08) | `stories/S-ADF-CODE-MARK-1.md` (story #103 v1.9, 12 ACs, 4 pts) |
 | ADF-CODE-MARK-EXCLUSIVITY F3 sidecar learning (2026-07-08) | `sidecar-learning.md` (process-gap reinforcements: TWIN-ARTIFACT-SWEEP 4th+5th, UPSTREAM-GAP-PROPAGATES-TO-STORY 1st) |
-| ADF-CODE-MARK-EXCLUSIVITY F4 delivery + F5 trajectory (2026-07-08) | `cycles/cycle-001/burst-log.md` (F4 DELIVERED burst + F5 p1-p3), `cycles/cycle-001/convergence-trajectory.md` (F4 Step-4.5) |
+| ADF-CODE-MARK-EXCLUSIVITY F4 delivery + F5 p1-p3 trajectory (2026-07-08) | `cycles/cycle-001/burst-log.md` (F4 DELIVERED burst + F5 p1-p3), `cycles/cycle-001/convergence-trajectory.md` (F4 Step-4.5) |
+| ADF-CODE-MARK-EXCLUSIVITY F5 p3 fix-PR #594 review artifacts (2026-07-08) | `code-delivery/docs-571-changelog/pr-review.md`, `code-delivery/docs-571-changelog/pr-description.md` |

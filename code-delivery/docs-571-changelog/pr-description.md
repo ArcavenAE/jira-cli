@@ -250,7 +250,7 @@ generated-at: "2026-07-08T00:00:00"
 
 ## Pre-Merge Checklist
 
-- [ ] All CI status checks passing (`ci-gate`)
+- [x] All CI status checks passing (`ci-gate`)
 - [x] No source, test, or binary artifacts touched
 - [x] Entry format matches #522/#492 precedent (bold-lead, BC citation, PR back-ref)
 - [x] BC-7.2.015 and #593 back-reference present in entry
