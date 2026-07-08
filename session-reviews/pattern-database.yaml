@@ -1,0 +1,100 @@
+# Pattern Database — cross-cycle recurrence tracking
+# Seeded: 2026-07-08 (first session review for this project, cycle-001, issue #571)
+# Maintained by: session-reviewer agent after each cycle close
+
+patterns:
+
+  - id: TWIN-ARTIFACT-SWEEP
+    first_observed: 2026-07-07
+    occurrences: 5
+    affected_cycles:
+      - "cycle-001 (ADF-CODE-MARK-EXCLUSIVITY: F2 ×3 + F3 ×2)"
+    status: open
+    linked_proposal: IP-571-03
+    description: >
+      Fix rounds must propagate spec changes to ALL mirroring artifacts simultaneously.
+      F2/F3 fix-round protocol lacks a mandatory sibling-sweep step (grep/diff before commit).
+      Each miss costs one additional adversary pass to catch.
+    severity: LOW
+    pattern_class: process-gap
+    drift_item_ref: TWIN-ARTIFACT-SWEEP
+
+  - id: F2-19-PASS-CEILING
+    first_observed: 2026-07-07
+    occurrences: 3
+    affected_cycles:
+      - "cycle-001 (issues #385, #365, #571 — all hit ~19 passes)"
+    status: open
+    linked_proposal: IP-571-02
+    description: >
+      F2 pass count hits approximately 19 under STRICT criterion for complex spec evolution.
+      Pattern: core contract converges by pass ~12, then a second convergence wave on
+      instruction-layer consistency (band arithmetic, index drift, changelog re-sync) consumes
+      the remaining passes. Contributing factor: criterion selected mid-cycle rather than at F1 gate.
+    severity: MEDIUM
+    pattern_class: convergence
+    drift_item_ref: ADVERSARY-META-LENS-REGRESS
+
+  - id: MISSING-CHANGELOG-ENTRY
+    first_observed: 2026-07-08
+    occurrences: 2
+    affected_cycles:
+      - "cycle-001 (F5-p3, issue #571 — PR #593 merged without CHANGELOG entry)"
+    status: open
+    linked_proposal: IP-571-04
+    description: >
+      Story template lacks a mandatory CHANGELOG delivery task. PR merged without a CHANGELOG.md
+      entry; caught by F5 adversary in pass 3. Second occurrence of this class — first was
+      caught earlier and not formally tracked.
+    severity: LOW
+    pattern_class: template-gap
+    drift_item_ref: STORY-TEMPLATE-CHANGELOG-TASK
+
+  - id: SPEC-CHANGELOG-RESYNC
+    first_observed: 2026-07-07
+    occurrences: 1
+    affected_cycles:
+      - "cycle-001 (ADF-CODE-MARK-EXCLUSIVITY F2 — caused resets at R4-F-MED-2 and R11-F-LOW-1)"
+    status: open
+    linked_proposal: IP-571-08
+    description: >
+      spec-changelog.md goes stale across F2 fix rounds because the fix-round protocol
+      has no mandatory re-sync step. Each time the spec evolves in a fix round, the
+      spec-changelog falls out of sync, and the next adversary pass detects the drift
+      as a resetting finding.
+    severity: LOW
+    pattern_class: process-gap
+    drift_item_ref: SPEC-CHANGELOG-RESYNC
+
+  - id: SESSION-REVIEW-NEVER-RUN
+    first_observed: 2026-07-08
+    occurrences: 1
+    affected_cycles:
+      - "cycle-001 (all cycles 2026-05-04..2026-07-08; 400+ sessions)"
+    status: open
+    linked_proposal: IP-571-09
+    description: >
+      The /session-review synthesis step was never triggered across 400+ sessions spanning
+      2026-05-04 through 2026-07-08. The factory's learning loop was broken: sidecar-learning.md
+      accumulated entries but no synthesis, no pattern database, no benchmarks, no improvement
+      backlog. Resolved for the ADF-CODE-MARK-EXCLUSIVITY cycle (2026-07-08) — first synthesis run.
+    severity: HIGH
+    pattern_class: process-gap
+    resolution_note: "First synthesis run completed 2026-07-08; infrastructure seeded."
+
+  - id: F2-MIDCYCLE-CRITERION-UPGRADE
+    first_observed: 2026-07-07
+    occurrences: 1
+    affected_cycles:
+      - "cycle-001 (ADF-CODE-MARK-EXCLUSIVITY, DEC-158 — escalated after 11 rounds)"
+    status: open
+    linked_proposal: IP-571-02
+    description: >
+      Convergence criterion was escalated mid-cycle (STANDARD→STRICT) after 11 rounds
+      following a human checkpoint (DEC-158). The 11 pre-escalation rounds were conducted
+      under de facto STRICT without the rule being formalized, causing inconsistent streak
+      counting and potentially costing 2–3 extra passes. Criterion should be selected
+      definitively at F1 gate time, not mid-F2.
+    severity: LOW
+    pattern_class: gate-gap
+    drift_item_ref: null

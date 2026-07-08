@@ -1,0 +1,43 @@
+# Benchmark Seeds — first-run baselines
+# Cycle: cycle-001 (ADF-CODE-MARK-EXCLUSIVITY, issue #571)
+# Seeded: 2026-07-08 (first session review for this project)
+# Note: All values are raw baselines with no prior benchmark for comparison.
+
+metadata:
+  first_review_cycle: cycle-001
+  first_review_issue: 571
+  first_review_date: 2026-07-08
+  note: >
+    First session review for this project. All values are initial measurements.
+    Future reviews should compare against these baselines.
+
+metrics:
+  # Phase pass counts (STRICT criterion)
+  f2_passes_strict_single_bc: 19          # Issues #385, #365, #571 all hit ~19 (recurring ceiling)
+  f3_passes_strict_12_acs: 10             # Fewer than 44-pass CITATION-GUARDS Story A (positive signal)
+  f4_step45_passes_strict: 4
+  f5_passes_strict: 6
+
+  # Gate quality
+  f6_findings_requiring_fix_pr: 0         # Unusually clean for a cycle adding a new BC
+  f4_pr_reviewer_approve_cycle: 1         # Approved on cycle 1, zero blocking findings
+
+  # Behavioral verification
+  f7_holdout_mean_satisfaction: 1.00      # 7 scenarios; zero must-pass below 0.6
+  f7_mutation_kill_rate_pct: 100          # 1/1 mutant killed in 4.2s
+  f7_proptest_cases: 2000                 # VP-571-001 @ PROPTEST_CASES=2000 PASS
+
+  # Regression
+  full_regression_count_at_f7: 2007       # 2007 pass / 0 fail / 93 ignored
+  regression_new_tests_added: 55          # +55 vs pre-bundle baseline
+
+  # Cycle-level
+  new_drift_items_per_cycle: 8            # Drift items added during this cycle
+  total_calendar_hours_f1_to_release: ~30 # Wall clock 2026-07-07 ~14:00Z to 2026-07-08 ~21:00Z
+  f2_fix_rounds: 13
+  f3_fix_rounds: 6
+  f4_commits: 8
+
+  # Meta
+  session_review_first_run: "2026-07-08 (cycle-001, issue #571)"
+  cost_summary_available: false           # cost-summary.md not initialized; see IP-571-01
