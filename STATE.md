@@ -4,14 +4,15 @@ level: ops
 version: "2.0"
 status: active
 producer: state-manager
-timestamp: 2026-07-08T18:30:00Z
+timestamp: 2026-07-08T18:40:00Z
 phase: 3
+pipeline: PAUSED
 inputs: []
 input-hash: "[live-state]"
 traces_to: ""
 project: jira-cli
 mode: brownfield
-current_step: "RELEASE v0.6.0-dev.8 TAGGED (2026-07-08): PR #596 squash-merged @ 159e1be (DEC-128 honored); annotated tag v0.6.0-dev.8 pushed on develop @ 159e1be; Release workflow run 28969465350 in progress; bump branch cleaned up local+remote. ADF-CODE-MARK-EXCLUSIVITY cycle FULLY COMPLETE (DEC-163). Pipeline IDLE — awaiting next work intake. trajectory-tail →1→0→0→0. D-chain cite D-27893 latest brownfield. BC 612. Holdouts 83. spec v1.3.25."
+current_step: "SESSION WRAP (2026-07-08): Human-requested /wrap pause burst. ADF-CODE-MARK-EXCLUSIVITY cycle FULLY COMPLETE (DEC-163). Release v0.6.0-dev.8 tagged @ 159e1be; workflow run 28969465350 was in progress at wrap time. No mid-TDD stories. No active worktrees. Pipeline PAUSED — awaiting session resume. Open PRs (not factory-blocking): #595/#591 dependabot, #574/#573 standalone. F5-OBS-001/002 deferred. trajectory-tail →1→0→0→0. D-chain cite D-27893 latest brownfield. BC 612. Holdouts 83. spec v1.3.25."
 maintenance_run: CLOSED
 current_cycle: "cycle-001"
 feature_mode_bundle: ADF-CODE-MARK-EXCLUSIVITY
@@ -25,7 +26,7 @@ activation_version: "v0.6.0-dev.8"
 
 <!--
   STATE.md SIZE BUDGET (per D-421(c)):
-  Hard cap (500 lines) margin from soft-target = 500 - 291 = 209; margin from actual = 500 - 291 = 209 (D-446(c) dual-margin form). 291 lines (wc-l).
+  Hard cap (500 lines) margin from soft-target = 500 - 294 = 206; margin from actual = 500 - 294 = 206 (D-446(c) dual-margin form). 294 lines (wc-l).
   Hard cap: 500 lines.
 -->
 
@@ -38,9 +39,9 @@ activation_version: "v0.6.0-dev.8"
 | **Product** | jr (Jira CLI) |
 | **Mode** | BROWNFIELD / Rust |
 | **Target Workspace** | develop → main |
-| **Last Updated** | 2026-07-08: RELEASE v0.6.0-dev.8 TAGGED — PR #596 squash-merged @ 159e1be (DEC-128 honored); annotated tag v0.6.0-dev.8 pushed on develop; workflow run 28969465350 in progress; bump branch cleaned up local+remote. ADF-CODE-MARK-EXCLUSIVITY FULLY COMPLETE (DEC-163). Pipeline IDLE. BC 612. Holdouts 83. trajectory-tail →1→0→0→0. |
-| **Current Phase** | Phase 3 — **ADF-CODE-MARK-EXCLUSIVITY FULLY COMPLETE (DEC-163, 2026-07-08)**. Release v0.6.0-dev.8 TAGGED @ 159e1be; GitHub Actions pre-release workflow run 28969465350 in progress. BC **612**. NFR 42. ADR 16. Stories **103**. Holdouts **83**. Pipeline **IDLE**. |
-| **Next Phase** | IDLE — awaiting next work intake. Candidates: F5-OBS deferrals per Drift Items targets; dependabot PRs #595/#591 open; standalone PRs #574/#573 awaiting merge. |
+| **Last Updated** | 2026-07-08: SESSION WRAP — human-requested /wrap pause after release v0.6.0-dev.8 tagged @ 159e1be; ADF-CODE-MARK-EXCLUSIVITY FULLY COMPLETE (DEC-163). Pipeline PAUSED. BC 612. Holdouts 83. trajectory-tail →1→0→0→0. |
+| **Current Phase** | Phase 3 — **ADF-CODE-MARK-EXCLUSIVITY FULLY COMPLETE (DEC-163, 2026-07-08)**. Release v0.6.0-dev.8 TAGGED @ 159e1be; workflow run 28969465350 was in progress at wrap time. BC **612**. NFR 42. ADR 16. Stories **103**. Holdouts **83**. Pipeline **PAUSED**. |
+| **Next Phase** | PAUSED — resume via `/vsdd-factory:next-step`; first verify release run 28969465350 completed and binaries published (https://github.com/Zious11/jira-cli/actions/runs/28969465350). Next candidates: F5-OBS deferrals; dependabot PRs #595/#591 (DEC-133 soak); standalone PRs #574/#573. |
 | **Activation HEAD** | 159e1be (v0.6.0-dev.8 tag); develop @ 159e1be (PR #596 squash-merged 2026-07-08; release tagged; ADF-CODE-MARK F4 @ 7ba4cf4; issue #571 CLOSED) |
 
 ## Phase Progress
@@ -58,14 +59,14 @@ activation_version: "v0.6.0-dev.8"
 ## Current Phase Steps
 
 <!-- Keep last 5 rows only. Archive older rows to cycles/cycle-001/burst-log.md. -->
-<!-- archived: CITATION-GUARDS rows + F1 GATE APPROVED + SPEC DELTA row + PASSES 1-5 row + DEC-158 row + PASSES 6-16 row + PASSES 17-19 row + DEC-159 row (archived F4 DELIVERED burst) + F3 story v1.7 row (archived F6 hardening burst) + F3 adversary passes 1-7 row (archived F7 evidence burst) + F3 adversary passes 8-10 row (archived F7-AUTHORIZED burst) -->
+<!-- archived: CITATION-GUARDS rows + F1 GATE APPROVED + SPEC DELTA row + PASSES 1-5 row + DEC-158 row + PASSES 6-16 row + PASSES 17-19 row + DEC-159 row (archived F4 DELIVERED burst) + F3 story v1.7 row (archived F6 hardening burst) + F3 adversary passes 1-7 row (archived F7 evidence burst) + F3 adversary passes 8-10 row (archived F7-AUTHORIZED burst) + F5 CONVERGED row (archived session-wrap pause burst) -->
 | Step | Agent | Status | Output |
 |------|-------|--------|--------|
-| **F5 CONVERGED (STRICT, DEC-162, 2026-07-08) — fix-PR #594 squash-merged @ d7875e6 (DEC-128); p4 CLEAN, p5 CLEAN (informational obs NON-DEFECT), p6 CLEAN. Window p4/p5/p6 CLEAN×3. Two deferral items: F5-OBS-001 (BC-7.2.015 lossiness cross-list), F5-OBS-002 (push_code silent-strip observability). Next: F6 targeted hardening.** | adversary+state-manager | COMPLETE | trajectory →0→1→0→0→0. STRICT CONVERGED 3/3. DEC-162. |
 | **F6 TARGETED HARDENING COMPLETE (2026-07-08) — automated gate PASS. Zero FIX-F6 findings. GO for F7.** — Proptest VP-571-001 @ PROPTEST_CASES=2000 PASS (Kani substitute). Fuzz justified-skip. Mutation 100% kill (1/1, --in-diff 0d8a8a5..d7875e6). cargo deny+audit 0 vulns/347 crates. Semgrep justified-skip. Regression 2007/0/93. Clippy+fmt clean. DTU 7b N/A. a11y 7d N/A. | formal-verifier | COMPLETE | Phase F6 complete. Artifacts: `.factory/phase-f6-hardening/`. |
 | **F7 AUTHORIZED (2026-07-08, human) — bundle ADF-CODE-MARK-EXCLUSIVITY CONVERGED AND CLOSED. DEC-163.** — 5/5 PASS. S-7.02 SATISFIED: zero [process-gap] findings F5 p1-p6; F5-OBS-001/002 in Drift Items. Release v0.6.0-dev.8 initiated. | state-manager | COMPLETE | DEC-163. Bundle CLOSED. |
 | **RELEASE v0.6.0-dev.8 IN PROGRESS (2026-07-08)** — PR #596 (chore/bump-v0.6.0-dev.8 → develop) open. Cargo.toml 0.6.0-dev.7→0.6.0-dev.8. Local gates green. Remaining: human merges #596 → annotated tag v0.6.0-dev.8 on develop → GitHub Actions pre-release build → cleanup bump branch. | state-manager | COMPLETE | Superseded by next step. |
 | **RELEASE v0.6.0-dev.8 TAGGED (2026-07-08) — PR #596 squash-merged @ 159e1be (DEC-128 honored); annotated tag v0.6.0-dev.8 pushed on develop @ 159e1be; workflow run 28969465350 in progress; bump branch cleaned up local+remote. ADF-CODE-MARK-EXCLUSIVITY cycle FULLY COMPLETE (DEC-163). Pipeline IDLE.** | state-manager | COMPLETE | develop @ 159e1be. Pipeline IDLE — awaiting next work intake. |
+| **SESSION WRAP/PAUSE (2026-07-08) — human-requested /wrap; ADF-CODE-MARK-EXCLUSIVITY FULLY COMPLETE (DEC-163); release v0.6.0-dev.8 tagged @ 159e1be; workflow run 28969465350 in progress at wrap time; pipeline PAUSED pending session resume.** | state-manager | COMPLETE | develop @ 159e1be. Pipeline PAUSED. |
 
 ## Decisions Log
 
@@ -183,13 +184,13 @@ Current project index versions: BC-INDEX v6.12 / VP-INDEX v0.82 / STORY-INDEX v1
 
 Trajectory (ADF-CODE-MARK-EXCLUSIVITY F2): →3→4→5→5→0→1→0→4→1→0→3→1→1→0→2→3→0→0→0 (passes 1-19; STRICT CONVERGED, DEC-158/DEC-159). F3: 3→2→1→0→1→3→1→0→0→0 (passes 1-10; STRICT CONVERGED, DEC-160). F4 Step-4.5: →1→0→0→0 (STRICT CONVERGED, DEC-161, window F4-p2/F4-p3/F4-p4). F5 Step-4.5: →0→0→1→0→0→0 (passes p1-p6; STRICT CONVERGED, DEC-162, window p4/p5/p6). Trajectory-tail →1→0→0→0.
 
-ADF-CODE-MARK-EXCLUSIVITY: **FULLY COMPLETE (2026-07-08) — bundle CONVERGED AND CLOSED (DEC-163). S-7.02 SATISFIED. Release v0.6.0-dev.8 TAGGED @ 159e1be. Pipeline IDLE.** F6 TARGETED HARDENING COMPLETE. F5 CONVERGED (DEC-162). Fix-PR #594 @ d7875e6. Two justified deferrals: F5-OBS-001/002. BC 612. Holdouts 83. Full trajectories: `cycles/cycle-001/convergence-trajectory.md`.
+ADF-CODE-MARK-EXCLUSIVITY: **FULLY COMPLETE (2026-07-08) — bundle CONVERGED AND CLOSED (DEC-163). S-7.02 SATISFIED. Release v0.6.0-dev.8 TAGGED @ 159e1be. Pipeline PAUSED (session wrap).** F6 TARGETED HARDENING COMPLETE. F5 CONVERGED (DEC-162). Fix-PR #594 @ d7875e6. Two justified deferrals: F5-OBS-001/002. BC 612. Holdouts 83. Full trajectories: `cycles/cycle-001/convergence-trajectory.md`.
 
 ## Concurrent Cycles
 
 | Cycle | Status | Notes |
 |-------|--------|-------|
-| ADF-CODE-MARK-EXCLUSIVITY (issue #571) | **FULLY COMPLETE (2026-07-08) — CONVERGED AND CLOSED (DEC-163). Release v0.6.0-dev.8 TAGGED @ 159e1be.** | PR #593 @ 7ba4cf4; fix-PR #594 @ d7875e6; story #103 v1.9; issue #571 CLOSED; F5 trajectory →0→0→1→0→0→0; window p4/p5/p6 CLEAN×3; two deferrals F5-OBS-001/002; F6 automated gate PASS; zero FIX-F6 findings; F7 5/5 PASS; S-7.02 SATISFIED. PR #596 squash-merged @ 159e1be; annotated tag pushed; workflow run 28969465350 in progress; bump branch cleaned up. Pipeline IDLE. |
+| ADF-CODE-MARK-EXCLUSIVITY (issue #571) | **FULLY COMPLETE (2026-07-08) — CONVERGED AND CLOSED (DEC-163). Release v0.6.0-dev.8 TAGGED @ 159e1be. Pipeline PAUSED (session wrap).** | PR #593 @ 7ba4cf4; fix-PR #594 @ d7875e6; story #103 v1.9; issue #571 CLOSED; F5 trajectory →0→0→1→0→0→0; window p4/p5/p6 CLEAN×3; two deferrals F5-OBS-001/002; F6 automated gate PASS; zero FIX-F6 findings; F7 5/5 PASS; S-7.02 SATISFIED. PR #596 squash-merged @ 159e1be; annotated tag pushed; workflow run 28969465350 in progress; bump branch cleaned up. Pipeline PAUSED. |
 
 ## Session Resume Checkpoint
 
@@ -197,20 +198,22 @@ ADF-CODE-MARK-EXCLUSIVITY: **FULLY COMPLETE (2026-07-08) — bundle CONVERGED AN
 
 | Field | Value |
 |-------|-------|
-| **Date** | 2026-07-08 (RELEASE v0.6.0-dev.8 TAGGED — ADF-CODE-MARK-EXCLUSIVITY cycle FULLY COMPLETE; pipeline IDLE) |
-| **Status** | **ADF-CODE-MARK-EXCLUSIVITY FULLY COMPLETE (DEC-163, 2026-07-08, human). S-7.02 SATISFIED: zero [process-gap] findings F5 p1-p6; F5-OBS-001/002 in Drift Items. RELEASE COMPLETE: v0.6.0-dev.8 PR #596 squash-merged @ 159e1be (DEC-128 honored); annotated tag v0.6.0-dev.8 pushed on develop @ 159e1be; GitHub Actions pre-release workflow run 28969465350 in progress; bump branch cleaned up local+remote. Pipeline IDLE — awaiting next work intake.** Story #103 v1.9. Issue #571 CLOSED. develop @ 159e1be. |
+| **Date** | 2026-07-08 (SESSION WRAP — human-requested /wrap pause; ADF-CODE-MARK-EXCLUSIVITY FULLY COMPLETE; pipeline PAUSED) |
+| **Status** | **ADF-CODE-MARK-EXCLUSIVITY FULLY COMPLETE (DEC-163, 2026-07-08). S-7.02 SATISFIED: zero [process-gap] findings F5 p1-p6; F5-OBS-001/002 in Drift Items. RELEASE COMPLETE: v0.6.0-dev.8 PR #596 squash-merged @ 159e1be (DEC-128 honored); annotated tag v0.6.0-dev.8 pushed on develop @ 159e1be. Release workflow run 28969465350 was in progress at wrap time — verify build/binaries on resume: https://github.com/Zious11/jira-cli/actions/runs/28969465350. Pipeline PAUSED (human-requested /wrap).** Story #103 v1.9. Issue #571 CLOSED. develop @ 159e1be. |
 | **Counters** | BC **612**. NFR **42**. ADR **16**. Stories **103**. Holdouts **83**. |
-| **Convergence counter** | ADF-CODE-MARK FULLY COMPLETE: CONVERGED AND CLOSED (DEC-163). F6: TARGETED HARDENING COMPLETE. F5: STRICT CONVERGED (DEC-162). Trajectory →0→0→1→0→0→0. Window p4/p5/p6 CLEAN×3. Trajectory-tail →1→0→0→0. Full trajectories: `cycles/cycle-001/convergence-trajectory.md`. |
-| **In-flight work** | None. Release v0.6.0-dev.8 tagged and pre-release workflow in progress (non-blocking). |
-| **Pending decisions** | None. DEC-163 updated to record release completion. |
+| **Convergence counter** | ADF-CODE-MARK FULLY COMPLETE: CONVERGED AND CLOSED (DEC-163). F5: STRICT CONVERGED (DEC-162). Trajectory-tail →1→0→0→0. Full trajectories: `cycles/cycle-001/convergence-trajectory.md`. |
+| **In-flight work** | None. No stories mid-TDD. No active story worktrees. No abandoned sub-agent steps. Release run 28969465350 was in progress at wrap time (non-blocking). |
+| **Open PRs (not factory-blocking)** | Dependabot #595 (clap_complete), #591 (open crate) — CI-green, pending DEC-133 soak check. Standalone #574 (ci/attest-provenance), #573 (docs/mise-install) — CI-green, awaiting human merge. |
+| **Pending/deferred** | F5-OBS-001 (BC-7.2.015 lossiness cross-list → next spec-maintenance sweep). F5-OBS-002 (push_code silent-strip no runtime warning → v2 backlog). See Drift Items. |
+| **Optional next actions** | Session-review (`/vsdd-factory:session-review`) not yet run for this cycle. CLAUDE_AUTOCOMPACT_PCT_OVERRIDE missing from `.claude/settings.json` — recommend adding `"70"`. |
 | **develop branch** | 159e1be (PR #596 squash-merged 2026-07-08; release v0.6.0-dev.8 tagged; ADF-CODE-MARK F4 @ 7ba4cf4; issue #571 CLOSED). |
-| **Untracked local files** | Deliberately uncommitted, session-local tooling: `.claude/pr-reviews/`, `.claude/spec-config.json`. |
-| **STATE.md size** | ~291 lines (OK band). |
-| **Resume command** | Open fresh session; read `.factory/STATE.md`; run `/vsdd-factory:next-step`. ADF-CODE-MARK: FULLY COMPLETE (DEC-163). RELEASE: v0.6.0-dev.8 TAGGED @ 159e1be. Pipeline IDLE — next candidates: F5-OBS deferrals; dependabot PRs #595/#591; standalone PRs #574/#573. |
+| **Untracked local files** | Deliberately uncommitted, session-local tooling: `.claude/pr-reviews/`, `.claude/spec-config.json`. Not pipeline artifacts. |
+| **STATE.md size** | ~294 lines (OK band). |
+| **Resume command** | Open fresh session; read `.factory/STATE.md`; run `/vsdd-factory:next-step`. FIRST: verify release run 28969465350 completed and binaries published (https://github.com/Zious11/jira-cli/actions/runs/28969465350). ADF-CODE-MARK: FULLY COMPLETE (DEC-163). RELEASE: v0.6.0-dev.8 TAGGED @ 159e1be. Pipeline PAUSED — next candidates: F5-OBS deferrals; dependabot PRs #595/#591 (DEC-133 soak); standalone PRs #574/#573. |
 
 ## RESUME PLAN (cold-start, self-contained)
 
-<!-- State snapshot: ADF-CODE-MARK-EXCLUSIVITY FULLY COMPLETE (DEC-163, 2026-07-08). develop @ 159e1be (release v0.6.0-dev.8 tagged). BC 612; Stories 103. Holdouts 83. No active feature worktrees. Pipeline IDLE. -->
+<!-- State snapshot: ADF-CODE-MARK-EXCLUSIVITY FULLY COMPLETE (DEC-163, 2026-07-08). develop @ 159e1be (release v0.6.0-dev.8 tagged). BC 612; Stories 103. Holdouts 83. No active feature worktrees. Pipeline PAUSED (session wrap 2026-07-08). -->
 
 ### Steps (assume ZERO memory)
 
@@ -219,20 +222,20 @@ ADF-CODE-MARK-EXCLUSIVITY: **FULLY COMPLETE (2026-07-08) — bundle CONVERGED AN
 **Step 2 — Verify position:**
 - develop @ **159e1be** (PR #596 squash-merged 2026-07-08; release v0.6.0-dev.8 tagged; ADF-CODE-MARK F4 @ 7ba4cf4; issue #571 CLOSED).
 - factory-artifacts: see `git -C .factory log -1`.
-- No active feature worktrees. Release v0.6.0-dev.8 tagged. GitHub Actions pre-release workflow run 28969465350 in progress (non-blocking).
+- No active feature worktrees. **Verify release workflow run 28969465350 completed + binaries published** (https://github.com/Zious11/jira-cli/actions/runs/28969465350) — was in-progress at session wrap.
 - Counters: BC **612**, NFR **42**, ADR **16**, Stories **103**. Holdouts **83**.
 
-**Step 3 — PIPELINE IDLE:**
+**Step 3 — PIPELINE PAUSED:**
 
 > **BUNDLE: ADF-CODE-MARK-EXCLUSIVITY FULLY COMPLETE** (DEC-163, 2026-07-08, human authorized).
 >
-> **RELEASE STATUS: v0.6.0-dev.8 TAGGED @ 159e1be. Pre-release workflow run 28969465350 in progress (non-blocking). Bump branch cleaned up local+remote.**
+> **RELEASE STATUS: v0.6.0-dev.8 TAGGED @ 159e1be. Verify run 28969465350 completed + binaries published on resume.**
 >
 > **NEXT WORK INTAKE candidates (in rough priority order):**
-> 1. Dependabot PRs #595/#591 — check DEC-133 soak status (≥7-day soak required) before merging.
-> 2. Standalone PRs #574/#573 — awaiting merge.
-> 3. F5-OBS deferrals: F5-OBS-001 (BC-7.2.015 cross-list, next spec-maintenance sweep) / F5-OBS-002 (v2 backlog).
-> 4. MEDIUM Drift Items: S-PG-MERGE-AUTH-BYPASS (story 91); TEST-ONLY-GATE-ELIGIBILITY; BC-7.3.010-FORBIDDEN-PATTERN-CI-GUARD; ADVERSARY-VERDICT-VS-CONTRACT-DISCREPANCY.
+> 1. Verify release run 28969465350 completed + binaries published before proceeding.
+> 2. Dependabot PRs #595/#591 — check DEC-133 soak status (≥7-day soak required) before merging.
+> 3. Standalone PRs #574/#573 — awaiting merge.
+> 4. F5-OBS deferrals + MEDIUM Drift Items (F5-OBS-001/002; S-PG-MERGE-AUTH-BYPASS; TEST-ONLY-GATE-ELIGIBILITY; BC-7.3.010-FORBIDDEN-PATTERN-CI-GUARD; ADVERSARY-VERDICT-VS-CONTRACT-DISCREPANCY).
 
 **Step 4 — STANDING CONSTRAINTS (ALL fixes via full VSDD Feature Mode):**
 - All fixes through full VSDD Feature Mode. No exceptions without explicit human direction.

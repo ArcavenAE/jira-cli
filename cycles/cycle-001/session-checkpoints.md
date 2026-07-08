@@ -7,13 +7,32 @@ producer: state-manager
 timestamp: 2026-05-08T00:00:00
 cycle: "cycle-001"
 inputs: [STATE.md]
-input-hash: "83b8da3"
+input-hash: "e20bc8a"
 traces_to: STATE.md
 ---
 
 # Archived Session Checkpoints — cycle-001
 
 Superseded checkpoints are archived here when STATE.md is updated with a newer one.
+
+---
+
+## Checkpoint archived 2026-07-08 (RELEASE v0.6.0-dev.8 TAGGED — ADF-CODE-MARK-EXCLUSIVITY FULLY COMPLETE; pipeline IDLE — superseded by session wrap/pause)
+
+_Was the active checkpoint after release v0.6.0-dev.8 PR #596 squash-merged @ 159e1be (DEC-128 honored); annotated tag v0.6.0-dev.8 pushed on develop @ 159e1be; GitHub Actions pre-release workflow run 28969465350 in progress; bump branch cleaned up local+remote. ADF-CODE-MARK-EXCLUSIVITY cycle FULLY COMPLETE (DEC-163). Pipeline IDLE — awaiting next work intake. Superseded when human-requested session wrap (/wrap pause burst) recorded pipeline PAUSED._
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-07-08 (RELEASE v0.6.0-dev.8 TAGGED — ADF-CODE-MARK-EXCLUSIVITY cycle FULLY COMPLETE; pipeline IDLE) |
+| **Status** | **ADF-CODE-MARK-EXCLUSIVITY FULLY COMPLETE (DEC-163, 2026-07-08, human). S-7.02 SATISFIED: zero [process-gap] findings F5 p1-p6; F5-OBS-001/002 in Drift Items. RELEASE COMPLETE: v0.6.0-dev.8 PR #596 squash-merged @ 159e1be (DEC-128 honored); annotated tag v0.6.0-dev.8 pushed on develop @ 159e1be; GitHub Actions pre-release workflow run 28969465350 in progress; bump branch cleaned up local+remote. Pipeline IDLE — awaiting next work intake.** Story #103 v1.9. Issue #571 CLOSED. develop @ 159e1be. |
+| **Counters** | BC **612**. NFR **42**. ADR **16**. Stories **103**. Holdouts **83**. |
+| **Convergence counter** | ADF-CODE-MARK FULLY COMPLETE: CONVERGED AND CLOSED (DEC-163). F6: TARGETED HARDENING COMPLETE. F5: STRICT CONVERGED (DEC-162). Trajectory →0→0→1→0→0→0. Window p4/p5/p6 CLEAN×3. Trajectory-tail →1→0→0→0. Full trajectories: `cycles/cycle-001/convergence-trajectory.md`. |
+| **In-flight work** | None. Release v0.6.0-dev.8 tagged and pre-release workflow in progress (non-blocking). |
+| **Pending decisions** | None. DEC-163 updated to record release completion. |
+| **develop branch** | 159e1be (PR #596 squash-merged 2026-07-08; release v0.6.0-dev.8 tagged; ADF-CODE-MARK F4 @ 7ba4cf4; issue #571 CLOSED). |
+| **Untracked local files** | Deliberately uncommitted, session-local tooling: `.claude/pr-reviews/`, `.claude/spec-config.json`. |
+| **STATE.md size** | ~291 lines (OK band). |
+| **Resume command** | Open fresh session; read `.factory/STATE.md`; run `/vsdd-factory:next-step`. ADF-CODE-MARK: FULLY COMPLETE (DEC-163). RELEASE: v0.6.0-dev.8 TAGGED @ 159e1be. Pipeline IDLE — next candidates: F5-OBS deferrals; dependabot PRs #595/#591; standalone PRs #574/#573. |
 
 ---
 
