@@ -4,14 +4,14 @@ level: ops
 version: "2.0"
 status: active
 producer: state-manager
-timestamp: 2026-07-08T23:38:00Z
+timestamp: 2026-07-09T00:01:00Z
 phase: 3
 inputs: []
 input-hash: "[live-state]"
 traces_to: ""
 project: jira-cli
 mode: brownfield
-current_step: "ADF-CODE-MARK-EXCLUSIVITY F6 TARGETED HARDENING COMPLETE (2026-07-08) — automated gate PASS: proptest VP-571-001 @ PROPTEST_CASES=2000 PASS (Kani substitute, justified); fuzz justified-skip (no cargo-fuzz; proptest substitute); mutation 100% kill (1/1 mutant, --in-diff 0d8a8a5..d7875e6); cargo deny+audit clean (0 vulns/347 crates); semgrep justified-skip (not installed); full regression 2007 pass/0 fail/93 ignored; clippy+fmt clean; DTU 7b N/A (pure-core); a11y 7d N/A (CLI-only). Zero FIX-F6 findings. GO for F7. trajectory-tail →1→0→0→0. D-chain cite D-27893 latest brownfield. BC 612. Holdouts 83. spec v1.3.25."
+current_step: "ADF-CODE-MARK-EXCLUSIVITY F7 EVIDENCE PACKAGE COMPLETE (2026-07-08) — 5/5 dimensions PASS: spec novelty ~0; mutation 100% kill; F5 3/3 STRICT CLEAN; proptest VP-571-001 @ 2000 cases PASS; holdout mean 1.00 (7 scenarios). Regression 2007/0/93. Consistency audit CONSISTENT (3 scripts exit 0; 312 citations). Drift check resolved (11 bookkeeping bumps; 2 UNRESOLVABLE documented). Convergence report + traceability delta written. AWAITING HUMAN F7 AUTHORIZATION. trajectory-tail →1→0→0→0. D-chain cite D-27893 latest brownfield. BC 612. Holdouts 83. spec v1.3.25."
 maintenance_run: CLOSED
 current_cycle: "cycle-001"
 feature_mode_bundle: ADF-CODE-MARK-EXCLUSIVITY
@@ -25,7 +25,7 @@ activation_version: "v0.6.0-dev.7"
 
 <!--
   STATE.md SIZE BUDGET (per D-421(c)):
-  Hard cap (500 lines) margin from soft-target = 500 - 284 = 216; margin from actual = 500 - 284 = 216 (D-446(c) dual-margin form). 284 lines (wc-l).
+  Hard cap (500 lines) margin from soft-target = 500 - 285 = 215; margin from actual = 500 - 285 = 215 (D-446(c) dual-margin form). 285 lines (wc-l).
   Hard cap: 500 lines.
 -->
 
@@ -38,34 +38,34 @@ activation_version: "v0.6.0-dev.7"
 | **Product** | jr (Jira CLI) |
 | **Mode** | BROWNFIELD / Rust |
 | **Target Workspace** | develop → main |
-| **Last Updated** | 2026-07-08: F6 TARGETED HARDENING COMPLETE — automated gate PASS. Proptest VP-571-001 @ PROPTEST_CASES=2000 PASS (Kani substitute); fuzz/semgrep justified-skip; mutation 100% kill (1/1); cargo deny+audit 0 vulns/347 crates; full regression 2007/0/93; clippy+fmt clean. Zero FIX-F6. GO for F7. BC 612. Holdouts 83. trajectory-tail →1→0→0→0. |
-| **Current Phase** | Phase 3 — **ADF-CODE-MARK-EXCLUSIVITY F6 TARGETED HARDENING COMPLETE** (2026-07-08). F5 CONVERGED (DEC-162) @ d7875e6. F4 DELIVERED (DEC-161): PR #593 @ 7ba4cf4. Story #103 v1.9. BC **612**. NFR 42. ADR 16. Stories **103**. Holdouts **83**. |
-| **Next Phase** | F7 delta convergence — 5-dimensional check + input-hash drift check + fresh consistency audit + final human gate. |
+| **Last Updated** | 2026-07-08: F7 EVIDENCE PACKAGE COMPLETE — 5/5 dimensions PASS. Regression 2007/0/93; consistency audit CONSISTENT; drift check resolved (11 bumps, 2 UNRESOLVABLE). Convergence report + traceability delta committed. AWAITING HUMAN F7 AUTHORIZATION. BC 612. Holdouts 83. trajectory-tail →1→0→0→0. |
+| **Current Phase** | Phase 3 — **ADF-CODE-MARK-EXCLUSIVITY F7 EVIDENCE PACKAGE COMPLETE** (2026-07-08). F6 TARGETED HARDENING COMPLETE (2026-07-08). F5 CONVERGED (DEC-162) @ d7875e6. F4 DELIVERED (DEC-161): PR #593 @ 7ba4cf4. Story #103 v1.9. BC **612**. NFR 42. ADR 16. Stories **103**. Holdouts **83**. |
+| **Next Phase** | Human F7 authorization gate → bundle ADF-CODE-MARK-EXCLUSIVITY CLOSED + optional release routing. |
 | **Activation HEAD** | 342987f (v0.6.0-dev.7 tag); develop @ d7875e6 (fix-PR #594 squash-merged 2026-07-08; F5 CONVERGED DEC-162; ADF-CODE-MARK F4 @ 7ba4cf4; issue #571 CLOSED) |
 
 ## Phase Progress
 
 <!-- Keep last 5 rows only. Archive older rows to cycles/cycle-001/burst-log.md. -->
-<!-- archived: Phase 0–2 + Feature cycles 2026-05-04..2026-07-07 + CITATION-GUARDS rows + F1 GATE APPROVED row + F2 SPEC DELTA row + pass-5 adversary row + fix burst 4 row + DEC-158 row + F2 passes 6-16 row (archived F4 DELIVERED burst) + F2 passes 17-19 row (archived F6 hardening burst) -->
+<!-- archived: Phase 0–2 + Feature cycles 2026-05-04..2026-07-07 + CITATION-GUARDS rows + F1 GATE APPROVED row + F2 SPEC DELTA row + pass-5 adversary row + fix burst 4 row + DEC-158 row + F2 passes 6-16 row (archived F4 DELIVERED burst) + F2 passes 17-19 row (archived F6 hardening burst) + F3 adversary 1-7 row (archived F7 evidence burst) -->
 | Phase | Status | Completed | Gate | Notes |
 |-------|--------|-----------|------|-------|
-| **F3 story S-ADF-CODE-MARK-1 (#103) v1.7 authored — adversarial convergence loop complete (2026-07-07/08)** | **COMPLETE** | **2026-07-08** | **Story-writer authored v1.0→v1.7 across 6 fix rounds under STRICT criterion. 10 fresh-context adversary passes. 12 ACs, 4 pts.** | Story #103 v1.7. |
 | **pass-8 adversary: F3 S-ADF-CODE-MARK-1 window STRICT CONVERGED — DEC-160 (2026-07-08)** | **COMPLETE** | **2026-07-08** | **10 passes / 6 fix rounds. Window 8/9/10 CLEAN×3 STRICT. DEC-160.** | F3 trajectory-tail →1→0→0→0. |
 | **ADF-CODE-MARK F4 DELIVERED — PR #593 squash-merged by human @ 7ba4cf4 (2026-07-08, DEC-128 honored). DEC-161.** | **COMPLETE** | **2026-07-08** | **8 commits. Step 4.5 CONVERGED STRICT (window F4-p2/F4-p3/F4-p4). 992 lib + 49 integration + 256-case proptest. Mutation gate PASS 5m32s (MUTANTS-FIRST-SCOPED-PR-CALIBRATION resolved). Security 1 LOW. pr-reviewer APPROVE. 12/12 AC demos. Issue #571 closed.** | develop @ 7ba4cf4. DEC-161. |
 | **ADF-CODE-MARK F5 CONVERGED (STRICT, DEC-162) — 6 passes, window p4/p5/p6 CLEAN×3. Fix-PR #594 @ d7875e6. Two deferral items: F5-OBS-001/002.** | **COMPLETE** | **2026-07-08** | **STRICT CONVERGED. Trajectory →0→0→1→0→0→0. p3 1 LOW (MISSING-CHANGELOG-ENTRY) fixed via fix-PR #594 squash-merged @ d7875e6 (DEC-128 honored). p4/p5/p6 CLEAN×3. p5 informational (spec-changelog range-shift) verified NON-DEFECT. No [process-gap] findings any pass. DEC-162.** | develop @ d7875e6. F6 next. |
 | **ADF-CODE-MARK-EXCLUSIVITY F6 TARGETED HARDENING COMPLETE (2026-07-08) — automated gate PASS. Zero FIX-F6 findings.** | **COMPLETE** | **2026-07-08** | **Proptest VP-571-001 @ PROPTEST_CASES=2000 PASS (Kani substitute, justified). Fuzz justified-skip (no cargo-fuzz; proptest substitute). Mutation 100% kill (1/1 mutant, --in-diff 0d8a8a5..d7875e6). cargo deny+audit clean (0 vulns/347 crates). Semgrep justified-skip (not installed). Full regression 2007 pass/0 fail/93 ignored. Clippy+fmt clean. DTU 7b N/A (pure-core). a11y 7d N/A (CLI-only). GO for F7.** | Zero FIX-F6 findings. F7 next. |
+| **ADF-CODE-MARK-EXCLUSIVITY F7 EVIDENCE PACKAGE COMPLETE (2026-07-08) — 5/5 dimensions PASS. AWAITING HUMAN F7 AUTHORIZATION.** | **COMPLETE** | **2026-07-08** | **Spec novelty ~0; mutation 100% kill; F5 3/3 STRICT CLEAN; proptest VP-571-001 @ 2000 cases PASS; holdout mean 1.00 (7 scenarios). Regression 2007/0/93. Consistency audit CONSISTENT (3 scripts exit 0; 312 citations). Drift check: 11 bookkeeping bumps; 2 UNRESOLVABLE documented. Convergence report + traceability delta committed. Deferrals F5-OBS-001/002 human-approved.** | AWAITING HUMAN F7 AUTHORIZATION. |
 
 ## Current Phase Steps
 
 <!-- Keep last 5 rows only. Archive older rows to cycles/cycle-001/burst-log.md. -->
-<!-- archived: CITATION-GUARDS rows + F1 GATE APPROVED + SPEC DELTA row + PASSES 1-5 row + DEC-158 row + PASSES 6-16 row + PASSES 17-19 row + DEC-159 row (archived F4 DELIVERED burst) + F3 story v1.7 row (archived F6 hardening burst) -->
+<!-- archived: CITATION-GUARDS rows + F1 GATE APPROVED + SPEC DELTA row + PASSES 1-5 row + DEC-158 row + PASSES 6-16 row + PASSES 17-19 row + DEC-159 row (archived F4 DELIVERED burst) + F3 story v1.7 row (archived F6 hardening burst) + F3 adversary passes 1-7 row (archived F7 evidence burst) -->
 | Step | Agent | Status | Output |
 |------|-------|--------|--------|
-| **F3 adversarial passes 1-7 / 6 fix rounds + 2 preemptive catches — streak 0/3 (2026-07-07/08)** — P1(1M+2L→v1.1). Preemptive-1→v1.2. P2(2L→v1.3). P3(1L+2NIT→v1.4). P4: CLEAN. P5(1L+3VA→v1.5). P6(3L→v1.6). P7(1M→v1.7). | adversary+story-writer | COMPLETE | trajectory →3→2→1→0→1→3→1. |
 | **F3 adversarial passes 8-10 STRICT CONVERGED — DEC-160 (2026-07-08)** — P8: CLEAN. P9: CLEAN (40+ trace sites). P10: CLEAN (novelty NONE). Window 8/9/10. DEC-160. | adversary+state-manager | COMPLETE | trajectory-tail →1→0→0→0. |
 | **F4 DELIVERED — ADF-CODE-MARK-EXCLUSIVITY PR #593 @ 7ba4cf4 (2026-07-08, DEC-128 honored). DEC-161.** — Story #103 v1.9. Red Gate 8 RED anchors CONFIRMED-INPUT. Issue #571 closed. | state-manager | COMPLETE | DEC-161. Story #103 v1.9. |
 | **F5 CONVERGED (STRICT, DEC-162, 2026-07-08) — fix-PR #594 squash-merged @ d7875e6 (DEC-128); p4 CLEAN, p5 CLEAN (informational obs NON-DEFECT), p6 CLEAN. Window p4/p5/p6 CLEAN×3. Two deferral items: F5-OBS-001 (BC-7.2.015 lossiness cross-list), F5-OBS-002 (push_code silent-strip observability). Next: F6 targeted hardening.** | adversary+state-manager | COMPLETE | trajectory →0→1→0→0→0. STRICT CONVERGED 3/3. DEC-162. |
 | **F6 TARGETED HARDENING COMPLETE (2026-07-08) — automated gate PASS. Zero FIX-F6 findings. GO for F7.** — Proptest VP-571-001 @ PROPTEST_CASES=2000 PASS (Kani substitute). Fuzz justified-skip. Mutation 100% kill (1/1, --in-diff 0d8a8a5..d7875e6). cargo deny+audit 0 vulns/347 crates. Semgrep justified-skip. Regression 2007/0/93. Clippy+fmt clean. DTU 7b N/A. a11y 7d N/A. | formal-verifier | COMPLETE | Phase F6 complete. Artifacts: `.factory/phase-f6-hardening/`. |
+| **F7 EVIDENCE PACKAGE COMPLETE (2026-07-08) — 5/5 PASS. AWAITING HUMAN F7 AUTHORIZATION.** — Spec novelty ~0; mutation 100% kill; F5 3/3 STRICT CLEAN; proptest VP-571-001 @ 2000 cases PASS; holdout mean 1.00 (7 scenarios). Regression 2007/0/93. Consistency audit CONSISTENT (3 scripts exit 0; 312 citations). Drift: 11 bookkeeping bumps; 2 UNRESOLVABLE documented. Convergence report `issue-571-delta-convergence-report.md` (input-hash 4dc9f48) committed. | state-manager | COMPLETE | AWAITING HUMAN F7 AUTHORIZATION. Phase F7 artifacts: `.factory/phase-f7-convergence/issue-571-delta-convergence-report.md`. |
 
 ## Decisions Log
 
@@ -182,13 +182,13 @@ Current project index versions: BC-INDEX v6.12 / VP-INDEX v0.82 / STORY-INDEX v1
 
 Trajectory (ADF-CODE-MARK-EXCLUSIVITY F2): →3→4→5→5→0→1→0→4→1→0→3→1→1→0→2→3→0→0→0 (passes 1-19; STRICT CONVERGED, DEC-158/DEC-159). F3: 3→2→1→0→1→3→1→0→0→0 (passes 1-10; STRICT CONVERGED, DEC-160). F4 Step-4.5: →1→0→0→0 (STRICT CONVERGED, DEC-161, window F4-p2/F4-p3/F4-p4). F5 Step-4.5: →0→0→1→0→0→0 (passes p1-p6; STRICT CONVERGED, DEC-162, window p4/p5/p6). Trajectory-tail →1→0→0→0.
 
-ADF-CODE-MARK-EXCLUSIVITY: F6 TARGETED HARDENING COMPLETE (2026-07-08) — automated gate PASS. F5 CONVERGED (DEC-162, 2026-07-08) — STRICT, window p4/p5/p6 CLEAN×3. Fix-PR #594 @ d7875e6. Two justified deferrals: F5-OBS-001/002. BC 612. Holdouts 83. F7 NEXT. Full trajectories: `cycles/cycle-001/convergence-trajectory.md`.
+ADF-CODE-MARK-EXCLUSIVITY: **F7 EVIDENCE PACKAGE COMPLETE (2026-07-08) — 5/5 PASS. AWAITING HUMAN F7 AUTHORIZATION.** F6 TARGETED HARDENING COMPLETE. F5 CONVERGED (DEC-162). Fix-PR #594 @ d7875e6. Two justified deferrals: F5-OBS-001/002. BC 612. Holdouts 83. Full trajectories: `cycles/cycle-001/convergence-trajectory.md`.
 
 ## Concurrent Cycles
 
 | Cycle | Status | Notes |
 |-------|--------|-------|
-| ADF-CODE-MARK-EXCLUSIVITY (issue #571) | F6 TARGETED HARDENING COMPLETE (2026-07-08) — F7 NEXT | PR #593 @ 7ba4cf4; fix-PR #594 @ d7875e6; story #103 v1.9; issue #571 CLOSED; F5 trajectory →0→0→1→0→0→0; window p4/p5/p6 CLEAN×3; two deferrals F5-OBS-001/002; F6 automated gate PASS; zero FIX-F6 findings |
+| ADF-CODE-MARK-EXCLUSIVITY (issue #571) | **F7 EVIDENCE PACKAGE COMPLETE (2026-07-08) — AWAITING HUMAN F7 AUTHORIZATION** | PR #593 @ 7ba4cf4; fix-PR #594 @ d7875e6; story #103 v1.9; issue #571 CLOSED; F5 trajectory →0→0→1→0→0→0; window p4/p5/p6 CLEAN×3; two deferrals F5-OBS-001/002; F6 automated gate PASS; zero FIX-F6 findings; F7 5/5 PASS; convergence report committed (input-hash 4dc9f48) |
 
 ## Session Resume Checkpoint
 
@@ -196,20 +196,20 @@ ADF-CODE-MARK-EXCLUSIVITY: F6 TARGETED HARDENING COMPLETE (2026-07-08) — autom
 
 | Field | Value |
 |-------|-------|
-| **Date** | 2026-07-08 (ADF-CODE-MARK-EXCLUSIVITY F6 TARGETED HARDENING COMPLETE — automated gate PASS; zero FIX-F6 findings; full regression 2007/0/93; mutation 100% kill; GO for F7) |
-| **Status** | **F6 TARGETED HARDENING COMPLETE (2026-07-08). Automated gate PASS. Proptest VP-571-001 @ PROPTEST_CASES=2000 PASS (Kani substitute). Fuzz justified-skip (no cargo-fuzz; proptest substitute). Mutation 100% kill (1/1 mutant, --in-diff 0d8a8a5..d7875e6). cargo deny+audit 0 vulns/347 crates. Full regression 2007/0/93. Clippy+fmt clean. DTU 7b N/A (pure-core). a11y 7d N/A (CLI-only). Zero FIX-F6 findings. F7 delta convergence NEXT.** Story #103 v1.9. Issue #571 CLOSED. develop @ d7875e6. |
+| **Date** | 2026-07-08 (ADF-CODE-MARK-EXCLUSIVITY F7 EVIDENCE PACKAGE COMPLETE — 5/5 dimensions PASS; AWAITING HUMAN F7 AUTHORIZATION) |
+| **Status** | **F7 EVIDENCE PACKAGE COMPLETE (2026-07-08). 5/5 dimensions PASS. Regression 2007/0/93. Consistency audit CONSISTENT (3 scripts exit 0; 312 citations). Drift check resolved (11 bookkeeping bumps; 2 UNRESOLVABLE documented). Convergence report `issue-571-delta-convergence-report.md` (input-hash 4dc9f48) + traceability delta committed to factory-artifacts. Deferrals F5-OBS-001/002 human-approved. AWAITING HUMAN F7 AUTHORIZATION.** Story #103 v1.9. Issue #571 CLOSED. develop @ d7875e6. |
 | **Counters** | BC **612**. NFR **42**. ADR **16**. Stories **103**. Holdouts **83**. |
-| **Convergence counter** | ADF-CODE-MARK F6: TARGETED HARDENING COMPLETE (2026-07-08). F5: STRICT CONVERGED (DEC-162). Trajectory →0→0→1→0→0→0. Window p4/p5/p6 CLEAN×3. F4: STRICT CONVERGED (DEC-161). F3: STRICT CONVERGED (DEC-160). F2: STRICT CONVERGED (DEC-159). Full trajectories: `cycles/cycle-001/convergence-trajectory.md`. |
-| **In-flight work** | None. F6 COMPLETE. F7 not yet started. |
-| **Pending decisions** | None open — F6 complete; F7 delta convergence is the mechanical next step. |
+| **Convergence counter** | ADF-CODE-MARK F7: EVIDENCE PACKAGE COMPLETE (2026-07-08). 5/5 PASS. AWAITING HUMAN AUTHORIZATION. F6: TARGETED HARDENING COMPLETE. F5: STRICT CONVERGED (DEC-162). Trajectory →0→0→1→0→0→0. Window p4/p5/p6 CLEAN×3. Full trajectories: `cycles/cycle-001/convergence-trajectory.md`. |
+| **In-flight work** | None. F7 evidence package committed. Awaiting human authorization. |
+| **Pending decisions** | Human F7 authorization gate for ADF-CODE-MARK-EXCLUSIVITY bundle close. |
 | **develop branch** | d7875e6 (fix-PR #594 squash-merged 2026-07-08; F5 CONVERGED DEC-162; ADF-CODE-MARK F4 @ 7ba4cf4; Issue #571 CLOSED). |
 | **Untracked local files** | Deliberately uncommitted, session-local tooling: `.claude/pr-reviews/`, `.claude/spec-config.json`. |
-| **STATE.md size** | ~284 lines (OK band). |
-| **Resume command** | Open fresh session; read `.factory/STATE.md`; run `/vsdd-factory:next-step`. ADF-CODE-MARK: F6 COMPLETE — F7 delta convergence next (5-dimensional check + input-hash drift check + fresh consistency audit + final human gate). |
+| **STATE.md size** | ~291 lines (OK band). |
+| **Resume command** | Open fresh session; read `.factory/STATE.md`; run `/vsdd-factory:next-step`. ADF-CODE-MARK: F7 EVIDENCE PACKAGE COMPLETE — AWAITING HUMAN F7 AUTHORIZATION. Human authorizes → bundle CLOSED + optional release routing. |
 
 ## RESUME PLAN (cold-start, self-contained)
 
-<!-- State snapshot: ADF-CODE-MARK-EXCLUSIVITY F6 TARGETED HARDENING COMPLETE (2026-07-08). develop @ d7875e6. BC 612; Stories 103. Holdouts 83. No active worktrees. -->
+<!-- State snapshot: ADF-CODE-MARK-EXCLUSIVITY F7 EVIDENCE PACKAGE COMPLETE (2026-07-08). develop @ d7875e6. BC 612; Stories 103. Holdouts 83. No active worktrees. AWAITING HUMAN F7 AUTHORIZATION. -->
 
 ### Steps (assume ZERO memory)
 
@@ -221,13 +221,13 @@ ADF-CODE-MARK-EXCLUSIVITY: F6 TARGETED HARDENING COMPLETE (2026-07-08) — autom
 - No active feature worktrees. No open PRs.
 - Counters: BC **612**, NFR **42**, ADR **16**, Stories **103**. Holdouts **83**.
 
-**Step 3 — ADF-CODE-MARK-EXCLUSIVITY F7 NEXT:**
+**Step 3 — ADF-CODE-MARK-EXCLUSIVITY F7 AWAITING HUMAN AUTHORIZATION:**
 
 > **CYCLE: ADF-CODE-MARK-EXCLUSIVITY** (issue #571 CLOSED — fix merged @ 7ba4cf4; changelog fix @ d7875e6).
 >
-> **F6 STATUS: TARGETED HARDENING COMPLETE (2026-07-08). Automated gate PASS. Zero FIX-F6 findings.**
+> **F7 STATUS: EVIDENCE PACKAGE COMPLETE (2026-07-08). 5/5 PASS. AWAITING HUMAN AUTHORIZATION.**
 >
-> **NEXT:** F7 delta convergence — 5-dimensional check + input-hash drift check + fresh consistency audit + final human gate.
+> **NEXT:** Present F7 evidence to human. On authorization: bundle CLOSED. Route to optional release (next batched develop→main). Start next backlog item per OPEN BACKLOG below.
 
 **Step 4 — STANDING CONSTRAINTS (ALL fixes via full VSDD Feature Mode):**
 - All fixes through full VSDD Feature Mode. No exceptions without explicit human direction.
@@ -282,3 +282,4 @@ OPEN BACKLOG (after ADF-CODE-MARK-EXCLUSIVITY closes):
 | ADF-CODE-MARK-EXCLUSIVITY F4 delivery + F5 p1-p6 trajectory (2026-07-08) | `cycles/cycle-001/burst-log.md` (F4 DELIVERED burst + F5 p1-p3), `cycles/cycle-001/convergence-trajectory.md` (F4 Step-4.5 + F5 full) |
 | ADF-CODE-MARK-EXCLUSIVITY F5 fix-PR #594 review artifacts (2026-07-08) | `code-delivery/docs-571-changelog/pr-review.md`, `code-delivery/docs-571-changelog/pr-description.md` |
 | ADF-CODE-MARK-EXCLUSIVITY F6 targeted hardening artifacts (2026-07-08) | `phase-f6-hardening/` (kani-results.md, fuzz-results.md, mutation-results.md, security-scan-results.md, summary.md) |
+| ADF-CODE-MARK-EXCLUSIVITY F7 delta convergence artifacts (2026-07-08) | `phase-f7-convergence/issue-571-delta-convergence-report.md` (input-hash 4dc9f48), `phase-f7-convergence/issue-571-traceability-chain-delta.md` (input-hash 1aa2d75) |

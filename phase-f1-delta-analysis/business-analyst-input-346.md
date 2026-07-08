@@ -11,7 +11,7 @@ inputs:
   - ".factory/architecture/cross-cutting.md"
   - ".factory/STATE.md"
   - ".github/workflows/ci.yml"
-input-hash: "ff86313"
+input-hash: "b468ada"
 status: draft
 timestamp: 2026-05-16
 ---

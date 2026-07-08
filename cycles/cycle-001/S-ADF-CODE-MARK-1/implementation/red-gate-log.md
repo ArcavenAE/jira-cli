@@ -10,7 +10,7 @@ inputs:
   - ".factory/stories/S-ADF-CODE-MARK-1.md"
   - ".factory/specs/prd/bc-7-output-render.md"
   - ".factory/phase-f2-spec-evolution/verification-delta-571.md"
-input-hash: "29a9ca1"
+input-hash: "429c68d"
 traces_to: "BC-7.2.015"
 test_writer_agent: "claude-sonnet-4-6"
 red_gate_verified: true
