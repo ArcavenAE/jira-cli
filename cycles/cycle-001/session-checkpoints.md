@@ -7,13 +7,29 @@ producer: state-manager
 timestamp: 2026-05-08T00:00:00
 cycle: "cycle-001"
 inputs: [STATE.md]
-input-hash: "f27344f"
+input-hash: "5a8bd6b"
 traces_to: STATE.md
 ---
 
 # Archived Session Checkpoints — cycle-001
 
 Superseded checkpoints are archived here when STATE.md is updated with a newer one.
+
+---
+
+## Checkpoint archived 2026-07-08 (ADF-CODE-MARK F5 p3 fix-PR #594 review COMPLETE; HELD for human merge — superseded by F5 CONVERGED)
+
+_Was the active checkpoint after F5 pass 3 (1 LOW: MISSING-CHANGELOG-ENTRY) fix-PR #594 review lifecycle completed (pr-reviewer APPROVE, 0 blocking, 1 advisory CI-checkbox; 15/15 CI green; HELD for human squash-merge per DEC-128). develop @ 7ba4cf4. Superseded when fix-PR #594 was squash-merged @ d7875e6 and F5 CONVERGED (window p4/p5/p6 CLEAN×3; DEC-162)._
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-07-08 (ADF-CODE-MARK-EXCLUSIVITY F5 p3 fix-PR #594 review COMPLETE; HELD for human squash-merge DEC-128; streak 0/3 STRICT) trajectory-tail →0→0→0→1 |
+| **Status** | **F4 DELIVERED (DEC-161). F5 IN PROGRESS — p1/p2 CLEAN; p3 fix-PR #594 review APPROVE (0 blocking, 1 advisory CI-checkbox; 15/15 CI green; HELD for human squash-merge per DEC-128; issuecomment-4915878037).** Story #103 v1.9. Issue #571 CLOSED. |
+| **Counters** | BC **612**. NFR **42**. ADR **16**. Stories **103**. Holdouts **83**. |
+| **Convergence counter** | ADF-CODE-MARK F5 Step-4.5: STRICT in progress. Trajectory →0→0→1. Streak 0/3 (fix-PR #594 HELD; resets on p4 pass). F4: STRICT CONVERGED (DEC-161). F3: STRICT CONVERGED (DEC-160). F2: STRICT CONVERGED (DEC-159). Full trajectories: `cycles/cycle-001/convergence-trajectory.md`. |
+| **In-flight work** | F5 scoped adversarial — p3 1 LOW fix-PR #594 review COMPLETE; HELD for human squash-merge (DEC-128; issuecomment-4915878037). No other open PRs. |
+| **develop branch** | 7ba4cf4 (PR #593 squash-merged 2026-07-08; ADF-CODE-MARK F4 DELIVERED). Issue #571 CLOSED. |
+| **Resume command** | Fix-PR #594 HELD for human squash-merge (issuecomment-4915878037); after merge → worktree cleanup (.worktrees/FIX-571-CHANGELOG) → F5 p4 fresh adversary on merged develop (streak 0/3 STRICT). |
 
 ---
 

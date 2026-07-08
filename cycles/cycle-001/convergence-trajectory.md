@@ -1657,6 +1657,88 @@ STREAK 2/3. Perimeter-totality lens: all call sites of push_code verified agains
 
 ---
 
+## F5 Scoped Adversarial — ADF-CODE-MARK-EXCLUSIVITY (2026-07-08)
+
+Criterion: **STRICT** (same as F2/F3/F4). Window requirement: 3 consecutive clean passes. Passes run across develop @ 7ba4cf4 (p1–p3, post-PR-#593) then develop @ d7875e6 (p4–p6, post-fix-PR-#594). All passes fresh-context, rotated attack emphases.
+
+| Pass | Date | Total | CRIT | HIGH | MED | LOW | NIT | Counter | Verdict |
+|------|------|-------|------|------|-----|-----|-----|---------|---------|
+| p1 | 2026-07-08 | 0 | 0 | 0 | 0 | 0 | 0 | 1/3 | CLEAN-PASS |
+| p2 | 2026-07-08 | 0 | 0 | 0 | 0 | 0 | 0 | 2/3 | CLEAN-PASS |
+| p3 | 2026-07-08 | 1 | 0 | 0 | 0 | 1 | 0 | 0/3 | FINDINGS_REMAIN |
+| p4 | 2026-07-08 | 0 | 0 | 0 | 0 | 0 | 0 | 1/3 | CLEAN-PASS |
+| p5 | 2026-07-08 | 0 | 0 | 0 | 0 | 0 | 0 | 2/3 | CLEAN-PASS |
+| p6 | 2026-07-08 | 0 | 0 | 0 | 0 | 0 | 0 | 3/3 | FULL CONVERGENCE |
+
+Trajectory shorthand: `0→0→1→0→0→0` — **STRICT CONVERGED** at p6 (window p4/p5/p6 CLEAN×3). Trajectory-tail: →0→1→0→0→0.
+
+---
+
+### Pass p1 (2026-07-08)
+
+**Findings:** 0 — CLEAN-PASS
+**Convergence counter:** 1 of 3 (STRICT)
+
+STREAK 1/3. Post-merge integrity lens on develop @ 7ba4cf4. Spec-drift check 24/24 artifacts CLEAN. BC-7.2.015 emit-site filter confirmed present; apply_marks read-tolerance retained (BC-7.2.007 EC-2 write-strict/read-lenient). All 12 ACs verified against merged implementation. 1024-case proptest stress PASS.
+
+---
+
+### Pass p2 (2026-07-08)
+
+**Findings:** 0 — CLEAN-PASS
+**Convergence counter:** 2 of 3 (STRICT)
+
+STREAK 2/3. BC-coverage + CLAUDE.md completeness lens. VP-571-001..005 all satisfied. CLAUDE.md gotcha (clause-b splice, code-mark exclusivity, BC-7.2.015) verified complete and accurate. No cross-reference gaps found in BC-7.2.007 EC-2 amendment.
+
+---
+
+### Pass p3 (2026-07-08)
+
+**Findings:** 1 LOW — FINDINGS_REMAIN
+**Convergence counter:** 0 of 3 (STREAK RESET from 2/3)
+
+Changelog coverage lens. **1 LOW: MISSING-CHANGELOG-ENTRY** — PR #593 merged to develop without a CHANGELOG.md entry for the BC-7.2.015 code-mark exclusivity fix. Not a spec gap; a delivery completeness gap. Fix: fix-PR #594 (branch docs/571-changelog-code-mark-exclusivity) adding the CHANGELOG.md entry. Fix-PR #594 squash-merged by human @ d7875e6 (2026-07-08, DEC-128 honored). Worktree .worktrees/FIX-571-CHANGELOG removed; branches docs/571-changelog-code-mark-exclusivity + fix/571-adf-code-mark-exclusivity deleted local+remote.
+
+---
+
+### Pass p4 (2026-07-08)
+
+**Findings:** 0 — CLEAN-PASS
+**Convergence counter:** 1 of 3 (STRICT, on develop @ d7875e6)
+
+STREAK 1/3. Post-fix-PR-#594 full-delta lens on merged develop @ d7875e6. CHANGELOG.md entry for BC-7.2.015 present and accurate. All prior pass-p1/p2 findings still clean. No new gaps introduced by #594 (docs-only PR). 1024-case proptest stress PASS confirmed unchanged.
+
+---
+
+### Pass p5 (2026-07-08)
+
+**Findings:** 0 — CLEAN-PASS
+**Convergence counter:** 2 of 3 (STRICT)
+
+STREAK 2/3. Spec-changelog arithmetic + BC-7.2.015 spec-coverage lens. **Informational observation (non-finding):** spec-changelog.md range-shift arithmetic for the BC-7.2.015 row — adversary noted range-shift wording; orchestrator verified entry is a literal record of the actual edit; pre-change row confirmed at factory commit b5c0f6c. **Adjudication: NON-DEFECT** — entry is correct; no fix needed. Zero actionable findings. No [process-gap] findings in this pass.
+
+---
+
+### Pass p6 (2026-07-08)
+
+**Findings:** 0 — FULL CONVERGENCE
+**Convergence counter:** 3 of 3 (STRICT)
+
+**STRICT CONVERGED. Window: p4 / p5 / p6 CLEAN×3.** Final-gate wide-spectrum lens: six attack emphases rotated across p1–p6 (post-merge integrity, BC-coverage, changelog, post-fix integrity, spec-arithmetic, final-gate wide). Zero actionable findings. Novelty: NONE. No [process-gap] findings in any pass — cycle-closing checklist step 2/3 satisfied vacuously. Two deferral items identified and human-approved: F5-OBS-001 (BC-7.2.015 lossiness not cross-listed in BC-7.2.011 five-case catalogue; documented elsewhere) and F5-OBS-002 (no runtime warning on typographic-mark strip in push_code; silent strip is correct product call). DEC-162 recorded. F6 DISPATCHED.
+
+---
+
+### Notable Findings (F5 Scoped Adversarial ADF-CODE-MARK-EXCLUSIVITY)
+
+- **1 LOW (p3):** MISSING-CHANGELOG-ENTRY — PR #593 lacked a CHANGELOG.md entry; fixed via fix-PR #594 squash-merged @ d7875e6. Drift item STORY-TEMPLATE-CHANGELOG-TASK remains open (engine-side template fix needed).
+- **p5 informational observation (NON-DEFECT):** spec-changelog range-shift arithmetic verified correct per factory commit b5c0f6c; orchestrator adjudicated non-actionable.
+- **No [process-gap] findings in any pass:** cycle-closing checklist step 2/3 satisfied vacuously across all 6 passes.
+- **Deferral F5-OBS-001 (LOW):** BC-7.2.015 lossiness not cross-listed in BC-7.2.011 five-case lossy round-trip catalogue. Already documented in BC-7.2.007 EC-2 + CLAUDE.md. Target: next spec-maintenance sweep.
+- **Deferral F5-OBS-002 (LOW):** No runtime stderr warning when push_code strips typographic marks. Silent strip is correct product call vs pre-fix HTTP 400. Target: v2 backlog as --verbose observability enhancement.
+- **STRICT CONVERGED at p6 (2026-07-08):** Window p4/p5/p6 CLEAN×3. Total: 6 passes / 1 fix round (fix-PR #594). DEC-162. F6 DISPATCHED.
+
+---
+
 ## Frontmatter Fields (extracted from STATE.md)
 
 <!-- When compacting STATE.md, adversary_pass_* frontmatter fields are
