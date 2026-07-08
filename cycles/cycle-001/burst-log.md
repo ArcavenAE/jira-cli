@@ -4722,3 +4722,45 @@ Row displaced to make room for F4 DELIVERED row.
 | Step | Agent | Status | Output |
 |------|-------|--------|--------|
 | **DEC-159 recorded — ADF-CODE-MARK-EXCLUSIVITY F2 STRICT CONVERGENCE GATE (2026-07-07)** — 19 fresh-context passes / 13 fix rounds; clean window 17/18/19 CLEAN×3. BC-7.2.015 + BC-7.2.007 EC-2 amended + H-NEW-ADF-010 (5 calls, 3-rung empirical ladder) + VP-571-001..005 + PANEL-ANCHOR. Accepted residuals disclosed in-spec. F3 criterion: STRICT. Comparative: STRICT F2=19 vs STANDARD F3 Story B=15 vs STRICT F3 Story A=44 (ADVERSARY-META-LENS-REGRESS data point). | state-manager | COMPLETE | DEC-159. F3 DISPATCHED. |
+
+---
+
+## Burst: ADF-CODE-MARK-EXCLUSIVITY F7 AUTHORIZED + RELEASE v0.6.0-dev.8 IN PROGRESS (2026-07-08)
+
+**Parent-commit:** dd9a295373e02e6077d553f2cbfc6256f4861059 (factory(f7): ADF-CODE-MARK-EXCLUSIVITY F7 evidence package complete — AWAITING HUMAN AUTHORIZATION)
+
+**Adversary verdict:** F7 AUTHORIZED (human, 2026-07-08) — 5/5 dimensions PASS: spec novelty ~0; mutation 100% kill; F5 3/3 STRICT CLEAN; proptest VP-571-001 @ 2000 cases PASS; holdout mean 1.00 (7 scenarios). Regression 2007/0/93. Consistency audit CONSISTENT (3 scripts exit 0; 312 citations). Drift check resolved (11 bumps, 2 UNRESOLVABLE). Bundle CONVERGED AND CLOSED. DEC-163. Cycle-closing checklist S-7.02 SATISFIED: zero [process-gap] findings across F5 p1-p6; F5-OBS-001/002 already in Drift Items.
+
+**Files touched (Dim-1): 3 unique files**
+
+- .factory/STATE.md
+- .factory/cycles/cycle-001/burst-log.md
+- .factory/cycles/cycle-001/session-checkpoints.md
+
+**Codifications:** DEC-163 recorded — ADF-CODE-MARK-EXCLUSIVITY F7 AUTHORIZED (human, 2026-07-08), bundle CONVERGED AND CLOSED. Cycle-closing checklist S-7.02 SATISFIED: zero [process-gap] findings F5 p1-p6; both LOW deferrals (F5-OBS-001/002) already in Drift Items. Release v0.6.0-dev.8 PR #596 (chore/bump-v0.6.0-dev.8 → develop) opened; Cargo.toml 0.6.0-dev.7→0.6.0-dev.8; local gates green.
+
+**Dim-2 Attestation:** STATE.md structure verified. DEC-163 recorded in Decisions Log. Phase Progress updated: F7 AUTHORIZED/CLOSED row replaces AWAITING-AUTHORIZATION row; RELEASE IN PROGRESS row added; pass-8-adversary F3 row archived to burst-log. Current Phase Steps updated: F7 AUTHORIZED step replaces AWAITING step; RELEASE IN PROGRESS step added; F3-adversary-passes-8-10 step archived. Concurrent Cycles updated: ADF-CODE-MARK-EXCLUSIVITY status CONVERGED AND CLOSED. Session Resume Checkpoint updated; prior checkpoint archived to session-checkpoints.md. current_step and Last Updated reflect bundle CLOSED + release PR #596 awaiting merge. 5-row cap honored in both tables.
+
+**Dim-5 Attestation:** STATE.md ~291 lines — within 500-line hard cap. burst-log.md and session-checkpoints.md are append-only cycle files with no line-count cap. Archived rows properly recorded in burst-log.md with section headers.
+
+**Dim-6 Attestation:** STATE.md frontmatter YAML valid (timestamp ISO-8601 format 2026-07-08T18:00:00Z). All required frontmatter fields present. Burst heading format canonical. Session checkpoint in standard table format. No formatting anomalies detected.
+
+**Dim-7 Attestation:** State-manager bookkeeping burst — no adversarial gate applicable (bookkeeping-only burst; F7 gate closed by human authorization). trajectory-tail →1→0→0→0 present in current_step AND Last Updated cell per D-453(d). D-chain cite D-27893 present in current_step. STATE.md size within hard cap. PreToolUse timestamp-refresh hook PASS (timestamp advanced to 2026-07-08T18:00:00Z).
+
+**Closes:** DEC-163 (ADF-CODE-MARK-EXCLUSIVITY F7 AUTHORIZED by human — bundle CONVERGED AND CLOSED). Release v0.6.0-dev.8 PR #596 opened (in-progress; pending human merge + annotated tag + GitHub Actions pre-release build).
+
+### Archived Phase Progress Rows (from STATE.md, 5-row cap, F7-AUTHORIZED burst)
+
+Row displaced to make room for RELEASE IN PROGRESS row (D-435(b) adversary-pass row preserved; F4 DELIVERED row archived instead).
+
+| Phase | Status | Completed | Gate | Notes |
+|-------|--------|-----------|------|-------|
+| **ADF-CODE-MARK F4 DELIVERED — PR #593 squash-merged by human @ 7ba4cf4 (2026-07-08, DEC-128 honored). DEC-161.** | **COMPLETE** | **2026-07-08** | **8 commits. Step 4.5 CONVERGED STRICT (window F4-p2/F4-p3/F4-p4). 992 lib + 49 integration + 256-case proptest. Mutation gate PASS 5m32s (MUTANTS-FIRST-SCOPED-PR-CALIBRATION resolved). Security 1 LOW. pr-reviewer APPROVE. 12/12 AC demos. Issue #571 closed.** | develop @ 7ba4cf4. DEC-161. |
+
+### Archived Current Phase Steps (from STATE.md, 5-row cap, F7-AUTHORIZED burst)
+
+Row displaced to make room for RELEASE IN PROGRESS step.
+
+| Step | Agent | Status | Output |
+|------|-------|--------|--------|
+| **F3 adversarial passes 8-10 STRICT CONVERGED — DEC-160 (2026-07-08)** — P8: CLEAN. P9: CLEAN (40+ trace sites). P10: CLEAN (novelty NONE). Window 8/9/10. DEC-160. | adversary+state-manager | COMPLETE | trajectory-tail →1→0→0→0. |

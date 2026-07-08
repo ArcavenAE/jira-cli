@@ -7,7 +7,7 @@ producer: state-manager
 timestamp: 2026-05-08T00:00:00
 cycle: "cycle-001"
 inputs: [STATE.md]
-input-hash: "f6091e8"
+input-hash: "83b8da3"
 traces_to: STATE.md
 ---
 
@@ -1366,3 +1366,21 @@ dispatched. If pass-17 CLEAN, dispatch pass-18 (evaluator-simulation lens). If
 findings, fix and reset streak. Need 3 consecutive clean diverse-lens passes for
 STRICT convergence. Counters: BC 612, Holdouts 83, Stories 102. develop @ 0d8a8a5.
 ```
+
+---
+
+### Checkpoint archived: 2026-07-08 — ADF-CODE-MARK-EXCLUSIVITY F7 EVIDENCE PACKAGE COMPLETE (AWAITING HUMAN F7 AUTHORIZATION)
+
+(Displaced by: F7 AUTHORIZED + RELEASE v0.6.0-dev.8 IN PROGRESS checkpoint, 2026-07-08)
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-07-08 (ADF-CODE-MARK-EXCLUSIVITY F7 EVIDENCE PACKAGE COMPLETE — 5/5 dimensions PASS; AWAITING HUMAN F7 AUTHORIZATION) |
+| **Status** | **F7 EVIDENCE PACKAGE COMPLETE (2026-07-08). 5/5 dimensions PASS. Regression 2007/0/93. Consistency audit CONSISTENT (3 scripts exit 0; 312 citations). Drift check resolved (11 bookkeeping bumps; 2 UNRESOLVABLE documented). Convergence report `issue-571-delta-convergence-report.md` (input-hash 4dc9f48) + traceability delta committed to factory-artifacts. Deferrals F5-OBS-001/002 human-approved. AWAITING HUMAN F7 AUTHORIZATION.** Story #103 v1.9. Issue #571 CLOSED. develop @ d7875e6. |
+| **Counters** | BC **612**. NFR **42**. ADR **16**. Stories **103**. Holdouts **83**. |
+| **Convergence counter** | ADF-CODE-MARK F7: EVIDENCE PACKAGE COMPLETE (2026-07-08). 5/5 PASS. AWAITING HUMAN AUTHORIZATION. F6: TARGETED HARDENING COMPLETE. F5: STRICT CONVERGED (DEC-162). Trajectory →0→0→1→0→0→0. Window p4/p5/p6 CLEAN×3. |
+| **In-flight work** | None. F7 evidence package committed. Awaiting human authorization. |
+| **Pending decisions** | Human F7 authorization gate for ADF-CODE-MARK-EXCLUSIVITY bundle close. |
+| **develop branch** | d7875e6 (fix-PR #594 squash-merged 2026-07-08; F5 CONVERGED DEC-162; ADF-CODE-MARK F4 @ 7ba4cf4; Issue #571 CLOSED). |
+| **Untracked local files** | Deliberately uncommitted, session-local tooling: `.claude/pr-reviews/`, `.claude/spec-config.json`. |
+| **Resume command** | Open fresh session; read `.factory/STATE.md`; run `/vsdd-factory:next-step`. ADF-CODE-MARK: F7 EVIDENCE PACKAGE COMPLETE — AWAITING HUMAN F7 AUTHORIZATION. Human authorizes → bundle CLOSED + optional release routing. |
