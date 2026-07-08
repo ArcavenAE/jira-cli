@@ -1,52 +1,116 @@
 ---
 phase: f6-targeted-hardening
 dimension: security-scans
-bundle: S-FORK-OPS-BACKFILL
-head_sha: 83a141ad
-pre_bundle_base: 45ddf7a
-verdict: PASS (no CRITICAL/HIGH findings)
-date: 2026-06-19
+bundle: ADF-CODE-MARK-EXCLUSIVITY
+head_sha: d7875e6
+pre_bundle_base: 0d8a8a5
+tools:
+  - cargo deny check (PASS — advisories/bans/licenses/sources ok)
+  - cargo audit (PASS — 347 crates scanned, 0 vulnerabilities)
+  - semgrep (SKIP — not installed on host; manual grep audit performed)
+  - manual unsafe/unwrap audit of src/adf.rs
+findings: 0 CRITICAL, 0 HIGH, 0 MEDIUM, 0 LOW
+date: 2026-07-08
+verdict: PASS
 ---
 
-# F6 — Security Scans (full tree)
+# F6 Dimension 4 — Security Scanning
 
-## Verdict: PASS — no CRITICAL/HIGH findings
+## 4a. cargo deny check (project standard)
 
-## 1. `cargo deny check` — PASS (exit 0)
+Command: `cargo deny check`
+
+Verbatim tail:
 
 ```
+warning[license-not-encountered]: license was not encountered
+  ┌─ deny.toml:8:6
+  │
+8 │     "BSD-2-Clause",
+  │      ━━━━━━━━━━━━ unmatched license allowance
+warning[license-not-encountered]: license was not encountered
+   ┌─ deny.toml:15:6
+   │
+15 │     "OpenSSL",
+   │      ━━━━━━━ unmatched license allowance
+warning[license-not-encountered]: license was not encountered
+   ┌─ deny.toml:13:6
+   │
+13 │     "Unicode-DFS-2016",
+   │      ━━━━━━━━━━━━━━━━ unmatched license allowance
+
 advisories ok, bans ok, licenses ok, sources ok
 ```
 
-- **advisories ok** — no known vulnerabilities in the dependency tree.
-- **bans ok** — no banned crates.
-- **licenses ok** — all in-use licenses allowed.
-- **sources ok** — all crate sources permitted.
+Exit code: **0**
 
-Three `license-not-encountered` **warnings** (BSD-2-Clause, OpenSSL, Unicode-DFS-2016 in `deny.toml`) are informational only — they flag allow-list entries no current dependency uses. Non-fatal; exit 0. Not security findings.
+3 non-fatal `license-not-encountered` warnings (unmatched allowances for
+`BSD-2-Clause` / `Unicode-DFS-2016` / `OpenSSL`); identical to the
+pre-bundle baseline. **No delta-attributable finding.**
 
-## 2. `scripts/check-signing-workflow-injection.sh` — PASS (0 violations)
+## 4b. cargo audit
 
-Scans `run:` bodies of in-scope (secret/permission-bearing) jobs in the signing workflows for inline `${{ }}` expansion (CWE-77 command-injection class).
+Command: `cargo audit`
 
 ```
-backfill-release.yml: 4 in-scope job(s), 21 run-blocks, 20 ${{}} expressions
-  In-scope: build(uses secrets.*), release(job-level permissions.contents: write),
-            sign(uses secrets.*), homebrew(uses secrets.*)
-Summary: scanned 49 run-blocks across 2 files, 30 total ${{}} expressions scanned,
-         0 inline high-risk expansion(s) flagged
-PASS: no inline high-risk expansions found in run: bodies of in-scope jobs.
+Fetching advisory database from `https://github.com/RustSec/advisory-db.git`
+      Loaded 1159 security advisories (from /Users/zious/.cargo/advisory-db)
+    Updating crates.io index
+    Scanning Cargo.lock for vulnerabilities (347 crate dependencies)
 ```
 
-The guard correctly picked up the merged `backfill-release.yml` (the file modified in this delta) and flagged **0** inline high-risk expansions across all 4 of its in-scope jobs. This is the direct security gate on the YAML change in scope.
+Exit code: **0** (also verified with `cargo audit --quiet` — no
+vulnerabilities emitted). **0 vulnerabilities across 347 crate
+dependencies.**
 
-## 3. Secret scan (gitleaks) — posture confirmed (CI-only gate)
+## 4c. Semgrep
 
-- `gitleaks` is **not installed locally** and is not a local-runnable gate.
-- It runs in CI as job **"Secret Scan (gitleaks)"** in `.github/workflows/ci.yml`, on every PR (`if: github.event_name == 'pull_request' && vars.GITLEAKS_DISABLED != 'true'`), via `gitleaks/gitleaks-action@e0c47f4f…` (v3.0.0, SHA-pinned), with hardened-runner egress audit.
-- The delta introduces **no secrets/credentials**: the changes are YAML structure, a fixture-parity test, and docs. No tokens, keys, or credential material added (`git diff` reviewed — only workflow scaffolding, test assertions, and prose).
-- Posture: secret scanning will execute on the PR for this bundle at merge time; no local finding possible or expected. **No blocker.**
+Not installed on the host (`which semgrep` → not found). **Justified
+skip** — project standard for CI-side static analysis is cargo-deny +
+cargo-audit + clippy (`-D warnings`); semgrep is not part of the project
+CI pipeline. Precedent: same skip in every prior F6 cycle.
 
-## Escalation status
+Manual substitute performed on the delta file `src/adf.rs`:
 
-No HIGH or CRITICAL findings. No `security-reviewer` escalation triggered.
+- `grep -nE '^unsafe |^ *unsafe ' src/adf.rs` → **0 real uses** (single hit
+  is inside a comment: `sanitized for cell-unsafe characters`).
+- Non-test-code `.unwrap()` / `.expect()` count outside the `#[cfg(test)]
+  mod tests` block: **4** (unchanged from pre-bundle baseline; delta added
+  none).
+- No new `panic!(…)` / `unimplemented!()` / `todo!()` outside test code.
+- No new file / network / process I/O introduced by the delta (`push_code`
+  is a pure-core function; effectful callers are `handle_create` /
+  `handle_jsm_create`, unchanged by the delta).
+
+## 4d. Delta scope security review (BC-7.2.015 SEC framing)
+
+The BC body §"Behavior — Security framing" for BC-7.2.015 stipulates two
+non-goals that F6 verifies remain non-issues:
+
+1. **No untrusted-input execution**: `push_code` operates on
+   `serde_json::Value` mark clones produced upstream by
+   `pulldown-cmark` → `AdfBuilder`. The filter is a set-membership test
+   on the `type` string; no eval, no dynamic dispatch, no reflection,
+   no code-execution surface.
+2. **No `href` scheme validation removed or added**: link marks are
+   retained verbatim (allowlist keeps `link`). BC-7.2.015 explicitly
+   scopes `href` scheme sanitization out (unchanged from the pre-#571
+   baseline).
+
+The change is a **restrictive-only** filter (strips marks the ADF schema
+already rejected). It cannot introduce a new attack surface; at worst it
+could refuse a legitimate mark class, and that regression class is
+covered by the VP-571-002 EC-5 link-retention anchor + VP-571-005 JSM
+parity Call C.
+
+## Findings
+
+**0 CRITICAL / 0 HIGH / 0 MEDIUM / 0 LOW.**
+
+No `security-reviewer` escalation triggered (only HIGH/CRITICAL findings
+trigger the escalation gate). No BLOCK condition.
+
+## Verdict
+
+**PASS** — cargo deny + cargo audit clean; delta introduces no new unsafe
+/ I/O / crash surface; BC-7.2.015 security framing preserved.
