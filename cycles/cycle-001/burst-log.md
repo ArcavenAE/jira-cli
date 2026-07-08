@@ -4764,3 +4764,47 @@ Row displaced to make room for RELEASE IN PROGRESS step.
 | Step | Agent | Status | Output |
 |------|-------|--------|--------|
 | **F3 adversarial passes 8-10 STRICT CONVERGED — DEC-160 (2026-07-08)** — P8: CLEAN. P9: CLEAN (40+ trace sites). P10: CLEAN (novelty NONE). Window 8/9/10. DEC-160. | adversary+state-manager | COMPLETE | trajectory-tail →1→0→0→0. |
+
+---
+
+## Burst: IP-571 PROPOSAL DISPOSITION — SESSION-REVIEW LOOP CLOSED (2026-07-08)
+
+**Parent-commit:** (previous factory-artifacts HEAD; see `git -C .factory log -2 --format='%h %s'`)
+
+**Adversary verdict:** N/A — bookkeeping-only burst (state-manager records human routing decision).
+
+**Files touched (Dim-1): 5 unique files**
+
+- .factory/STATE.md
+- .factory/session-reviews/improvement-proposals-issue-571.md
+- .factory/session-reviews/pattern-database.yaml
+- .factory/session-reviews/improvement-backlog.md
+- .factory/session-reviews/review-2026-07-08-issue-571.md
+
+**Codifications:** DEC-164 recorded — SESSION-REVIEW IP-571 DISPOSITION (2026-07-08, human): all 13 proposals adjudicated engine-side and routed to drbothen/vsdd-factory as 9 new issues (#576-#584) + 3 comments (#507/#428/#298). Dedupe survey of 364 upstream issues performed first. No proposals deferred or rejected. First session review for this project complete; pattern DB + benchmarks seeded.
+
+**Dim-2 Attestation:** STATE.md structure verified. DEC-164 recorded in Decisions Log. Phase Progress updated: SESSION-REVIEW PROPOSALS ROUTED UPSTREAM row added; F6 TARGETED HARDENING row archived (oldest non-required row; pass-8 adversary row preserved per D-435(b)); 5-row cap honored. Current Phase Steps updated: SESSION-REVIEW PROPOSALS ROUTED UPSTREAM step added; F7 AUTHORIZED step archived (oldest); 5-row cap honored. Archive comments updated. Concurrent Cycles updated: ADF-CODE-MARK-EXCLUSIVITY status reflects session-review loop CLOSED. Session Resume Checkpoint updated: Status, Optional next actions, Resume command, size. RESUME PLAN Step 3 updated: SESSION-REVIEW STATUS LOOP CLOSED; NEXT WORK INTAKE removes IP-571 proposals. Historical Content table updated: IP-571 disposition burst row added. Improvement-proposals frontmatter: status → routed-upstream; all 13 decisions recorded. Pattern-database: upstream_ref added to all 6 patterns. Improvement-backlog: status updated to empty, note added. Session-review frontmatter: status → complete.
+
+**Dim-5 Attestation:** STATE.md 298 lines — banner updated to 298 (wc-l). Within 500-line hard cap. burst-log.md is append-only; no cap. Archived rows recorded below.
+
+**Dim-6 Attestation:** STATE.md frontmatter YAML valid (timestamp ISO-8601 2026-07-08T23:33:00Z). All required frontmatter fields present. Burst heading canonical. D-435(b) adversary-pass row (pass-8) preserved in Phase Progress.
+
+**Dim-7 Attestation:** Bookkeeping burst — no adversary gate applicable. trajectory-tail →1→0→0→0 in current_step. D-chain cite D-27893 in current_step.
+
+**Closes:** DEC-164 (SESSION-REVIEW IP-571 DISPOSITION — session-review loop fully CLOSED).
+
+### Archived Phase Progress Rows (from STATE.md, 5-row cap, IP-571 disposition burst)
+
+Row displaced to make room for SESSION-REVIEW PROPOSALS ROUTED UPSTREAM row. Note: pass-8 adversary row preserved per D-435(b); oldest non-required row (F6 TARGETED HARDENING) archived instead.
+
+| Phase | Status | Completed | Gate | Notes |
+|-------|--------|-----------|------|-------|
+| **ADF-CODE-MARK-EXCLUSIVITY F6 TARGETED HARDENING COMPLETE (2026-07-08) — automated gate PASS. Zero FIX-F6 findings.** | **COMPLETE** | **2026-07-08** | **Proptest VP-571-001 @ PROPTEST_CASES=2000 PASS (Kani substitute, justified). Fuzz justified-skip (no cargo-fuzz; proptest substitute). Mutation 100% kill (1/1 mutant, --in-diff 0d8a8a5..d7875e6). cargo deny+audit clean (0 vulns/347 crates). Semgrep justified-skip (not installed). Full regression 2007 pass/0 fail/93 ignored. Clippy+fmt clean. DTU 7b N/A (pure-core). a11y 7d N/A (CLI-only). GO for F7.** | Zero FIX-F6 findings. F7 next. |
+
+### Archived Current Phase Steps (from STATE.md, 5-row cap, IP-571 disposition burst)
+
+Row displaced to make room for SESSION-REVIEW PROPOSALS ROUTED UPSTREAM step.
+
+| Step | Agent | Status | Output |
+|------|-------|--------|--------|
+| **F7 AUTHORIZED (2026-07-08, human) — bundle ADF-CODE-MARK-EXCLUSIVITY CONVERGED AND CLOSED. DEC-163.** — 5/5 PASS. S-7.02 SATISFIED: zero [process-gap] findings F5 p1-p6; F5-OBS-001/002 in Drift Items. Release v0.6.0-dev.8 initiated. | state-manager | COMPLETE | DEC-163. Bundle CLOSED. |

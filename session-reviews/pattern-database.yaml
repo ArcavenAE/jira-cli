@@ -11,6 +11,7 @@ patterns:
       - "cycle-001 (ADF-CODE-MARK-EXCLUSIVITY: F2 ×3 + F3 ×2)"
     status: open
     linked_proposal: IP-571-03
+    upstream_ref: "drbothen/vsdd-factory#507 comment (2026-07-08)"
     description: >
       Fix rounds must propagate spec changes to ALL mirroring artifacts simultaneously.
       F2/F3 fix-round protocol lacks a mandatory sibling-sweep step (grep/diff before commit).
@@ -26,6 +27,7 @@ patterns:
       - "cycle-001 (issues #385, #365, #571 — all hit ~19 passes)"
     status: open
     linked_proposal: IP-571-02
+    upstream_ref: "drbothen/vsdd-factory#578 + drbothen/vsdd-factory#579 (2026-07-08)"
     description: >
       F2 pass count hits approximately 19 under STRICT criterion for complex spec evolution.
       Pattern: core contract converges by pass ~12, then a second convergence wave on
@@ -42,6 +44,7 @@ patterns:
       - "cycle-001 (F5-p3, issue #571 — PR #593 merged without CHANGELOG entry)"
     status: open
     linked_proposal: IP-571-04
+    upstream_ref: "drbothen/vsdd-factory#580 (2026-07-08)"
     description: >
       Story template lacks a mandatory CHANGELOG delivery task. PR merged without a CHANGELOG.md
       entry; caught by F5 adversary in pass 3. Second occurrence of this class — first was
@@ -57,6 +60,7 @@ patterns:
       - "cycle-001 (ADF-CODE-MARK-EXCLUSIVITY F2 — caused resets at R4-F-MED-2 and R11-F-LOW-1)"
     status: open
     linked_proposal: IP-571-08
+    upstream_ref: "drbothen/vsdd-factory#428 comment (2026-07-08)"
     description: >
       spec-changelog.md goes stale across F2 fix rounds because the fix-round protocol
       has no mandatory re-sync step. Each time the spec evolves in a fix round, the
@@ -73,6 +77,7 @@ patterns:
       - "cycle-001 (all cycles 2026-05-04..2026-07-08; 400+ sessions)"
     status: open
     linked_proposal: IP-571-09
+    upstream_ref: "drbothen/vsdd-factory#584 (2026-07-08)"
     description: >
       The /session-review synthesis step was never triggered across 400+ sessions spanning
       2026-05-04 through 2026-07-08. The factory's learning loop was broken: sidecar-learning.md
@@ -89,6 +94,7 @@ patterns:
       - "cycle-001 (ADF-CODE-MARK-EXCLUSIVITY, DEC-158 — escalated after 11 rounds)"
     status: open
     linked_proposal: IP-571-02
+    upstream_ref: "drbothen/vsdd-factory#578 (2026-07-08)"
     description: >
       Convergence criterion was escalated mid-cycle (STANDARD→STRICT) after 11 rounds
       following a human checkpoint (DEC-158). The 11 pre-escalation rounds were conducted
