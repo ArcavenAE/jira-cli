@@ -634,10 +634,11 @@ feature_followup_standalone:
 
   - id: S-ADF-CODE-MARK-1
     title: "ADF code-mark exclusivity: push_code allowlist filter strips typographic marks (issue #571)"
-    status: ready
-    pr: null
-    merge_sha: null
-    merged_at: null
+    status: completed
+    pr: 593
+    merge_sha: "7ba4cf4"
+    merged_at: "2026-07-08"
+    merged_via: "squash-merge by human (DEC-128 honored)"
     depends_on: []
     bc_anchors: [BC-7.2.015, BC-7.2.007]
     ec_anchors: [EC-1, EC-2, EC-3, EC-4, EC-5, EC-6, EC-7, BC-7.2.007-EC-2]
@@ -647,6 +648,7 @@ feature_followup_standalone:
     criticality: MEDIUM
     implementation_strategy: tdd
     tdd_mode: strict
-    phase: F3
+    phase: F4
     f3_approved_at: "2026-07-08"
-    notes: "F3 CONVERGED STRICT (DEC-160): 10 passes / 6 fix rounds, window p8/p9/p10 on v1.7; story v1.8 status=ready (human gate 2026-07-08). F4 dispatched via deliver-story; Step 4.5 criterion STRICT (human ruling). Files: src/adf.rs + CLAUDE.md + tests/adf_code_mark_exclusivity.rs (NEW) + tests/issue_create_jsm.rs. Empirical-check ladder (CONFIRMED-INPUT/MIXED-RANGE/DEMOTE) governs EC-2/3/4 + holdout Calls B/E. module_criticality: HIGH (src/adf.rs)."
+    f4_delivered_at: "2026-07-08"
+    notes: "DELIVERED 2026-07-08. PR #593 squash-merged by human @ 7ba4cf4 (DEC-128 honored); issue #571 auto-closed. Red Gate verified (8 RED anchors, all empirical outcomes CONFIRMED-INPUT — 29-pass protocol-guarded uncertainty resolved positively). 8 commits. Step 4.5 CONVERGED STRICT (4 passes, window p2/p3/p4: hostile-inputs, perimeter-totality, final-gate). 992 lib + 49 integration + 256-case proptest green. Mutation gate PASS 5m32s (FIRST real code-diff exercise of mutants CI job — calibration validated; predicted survivors limited to 2 spec-accepted classes). Security 1 LOW (SEC-001 test-helper recursion, mitigated). pr-reviewer APPROVE cycle 1 zero findings. 12/12 AC demos (VHS). In-flight process catches: AGENT-CLAIM-VS-FMT-EVIDENCE (test-writer claimed fmt-clean inaccurately; caught pre-push), demo-recorder unstaged-file flag worked, implementer stop-and-report guard worked (fmt reflow false-alarm correctly escalated), story-index 'cycle closed' overstatement caught + fixed. F3 CONVERGED STRICT (DEC-160): 10 passes / 6 fix rounds, window p8/p9/p10 on v1.7. Files: src/adf.rs + CLAUDE.md + tests/adf_code_mark_exclusivity.rs (NEW) + tests/issue_create_jsm.rs. F5 DISPATCHED (scoped adversarial on merged state, STRICT)."

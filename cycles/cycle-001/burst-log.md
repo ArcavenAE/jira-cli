@@ -4677,3 +4677,48 @@ Rows displaced to make room for F3 passes 1-7 summary + F3 CONVERGED + HELD rows
 | **DEC-158 ratified — F2 STRICT criterion + Q1/Q2/Q3 scope rulings (2026-07-07)** — Human ratified: Q1=STRICT (any delta-attributable LOW resets streak; VA-informational observations exempt per DEC-153); Q2=yes (opportunistic pre-existing repairs ride the cycle); Q3=yes (consolidate unguarded-count-surface findings into BC-INDEX-9TH-SURFACE guard-extension candidate). Supersedes STANDARD for this F2 loop. | state-manager | COMPLETE | DEC-158. develop @ 0d8a8a5 UNCHANGED. |
 | **ADF-CODE-MARK-EXCLUSIVITY F2 PASSES 6-16 / FIX ROUNDS 5-13 COMPLETE — STREAK 0/3 STRICT (2026-07-07)** — Passes 7/10/14 CLEAN; resets at p6(1L-BC-INDEX-9TH-SURFACE×3), p8(4M-test-writer+TWIN-ARTIFACT-SWEEP), p9(1M-implementer+TWIN-ARTIFACT-SWEEP), p11(3M-story-writer+PHASE-DOC-RETRO-ANNOTATION+TWIN-ARTIFACT-SWEEP), p12(1M-security), p13(1L), p15(2L), p16(3L). Core contract clean since p12; residual = instruction-layer polish. Pre-existing banked: H-NEW-JSM-RT-001-FIXTURE-NONDESERIALIZABLE, HOLDOUT-GROUP-8-DUPLICATE-HEADING. | state-manager | COMPLETE | trajectory-tail →1→0→2→3. STREAK 0/3 STRICT. |
 | **ADF-CODE-MARK-EXCLUSIVITY F2 PASSES 17-19 CONVERGED STRICT — DEC-159 (2026-07-07)** — P17 CLEAN (VA lens, 2 NITPICK: mutation-survival table 23-probe all-survivors-disclosed; EC-4 adjacency carry-forward). P18 CLEAN (evaluator-simulation, 3 NITPICK carried to F3: Call B pre-fix empirical Red Gate; Call E JSM-isolation skip gate; PANEL-ANCHOR VP-571-005 coverage adequate). P19 CLEAN (full-spectrum final-gate, 2 NITPICK: trailing whitespace cosmetic; band-range comment design-attested). Zero fix-shear. DEC-159 recorded. Human-approved 2026-07-07. | state-manager | COMPLETE | trajectory-tail →3→0→0→0. STRICT CONVERGED. BC 612. Holdouts 83. |
+
+---
+
+## Burst: ADF-CODE-MARK F4 DELIVERED — PR #593 @ 7ba4cf4 (2026-07-08)
+
+**Parent-commit:** de924d8b366287bb8b99a1b385ffe9ba1366bf84
+
+**Adversary verdict:** Step 4.5 STRICT CONVERGED — window F4-p2/F4-p3/F4-p4 CLEAN×3. F4-p1: 1 LOW adjudicated-accepted + 2 NIT non-resetting. Trajectory: 1→0→0→0. DEC-161.
+
+**Files touched (Dim-1): 6 unique files**
+
+- .factory/sprint-state.yaml
+- .factory/STATE.md
+- .factory/cycles/cycle-001/burst-log.md
+- .factory/cycles/cycle-001/convergence-trajectory.md
+- .factory/stories/S-ADF-CODE-MARK-1.md (already updated by story-writer — status delivered, v1.9)
+- .factory/stories/STORY-INDEX.md (already updated by story-writer — status delivered, v1.9)
+
+**Codifications:** DEC-161 (F4 delivery record + MUTANTS-FIRST-SCOPED-PR-CALIBRATION resolved). MUTANTS-FIRST-SCOPED-PR-CALIBRATION drift item closed — first code-diff mutation run PASS 5m32s, calibration validated.
+
+**Dim-2 Attestation:** Delivery verification — develop 0d8a8a5 → 7ba4cf4 (PR #593 squash-merged by human; DEC-128 honored). 9/9 BC-7.2.015 anchors green on post-merge smoke. `git -C /Users/zious/Documents/GITHUB/jira-cli log -1 --format="%H"` → 7ba4cf4. Sprint-state.yaml grep: `status: completed` present at S-ADF-CODE-MARK-1 entry.
+
+**Dim-5 Attestation:** Story S-ADF-CODE-MARK-1 v1.9 artifact present at `.factory/stories/S-ADF-CODE-MARK-1.md`; convergence-trajectory.md F4 section appended (passes F4-p1..F4-p4); burst-log.md entry complete with all 9 required blocks. All factory-artifacts files staged.
+
+**Dim-6 Attestation:** 992 lib + 49 integration + 256-case proptest green (post-merge CI 9/9). `cargo clippy -- -D warnings` → exit 0. `cargo fmt --all -- --check` → exit 0 (verified pre-merge in PR #593 CI run).
+
+**Dim-7 Attestation:** Mutation gate PASS 5m32s (first real code-diff exercise of mutants CI job; calibration validated; predicted survivors limited to 2 spec-accepted classes). 12/12 AC demos captured (VHS). pr-reviewer APPROVE cycle 1 zero findings. Security 1 LOW (SEC-001 test-helper recursion, mitigated, accepted).
+
+**Closes:** DEC-161. issue #571 (auto-closed by PR #593 merge). S-ADF-CODE-MARK-1 story #103 delivered. BC-7.2.007 EC-2 deferral from issue #474 closed. MUTANTS-FIRST-SCOPED-PR-CALIBRATION watch-item closed.
+
+### Archived Phase Progress Rows (from STATE.md, 5-row cap, F4 DELIVERED burst)
+
+Row displaced to make room for F4 DELIVERED row.
+
+| Phase | Status | Completed | Gate | Notes |
+|-------|--------|-----------|------|-------|
+| **F2 passes 6-16 / fix rounds 5-13 complete — STREAK 0/3 STRICT (2026-07-07)** | **COMPLETE** | **2026-07-07** | **P6(1L-BC-INDEX-9TH-SURFACE×3): fixed. P7: CLEAN. P8(4M-test-writer): fixed+TWIN-ARTIFACT-SWEEP×1. P9(1M-implementer): fixed+TWIN-ARTIFACT-SWEEP×1. P10: CLEAN. P11(3M-story-writer): fixed+PHASE-DOC-RETRO-ANNOTATION+TWIN-ARTIFACT-SWEEP×1. P12(1M-security-final-MED): fixed. P13(1L): fixed. P14: CLEAN. P15(2L)+H-NEW-JSM-RT-001-FIXTURE-NONDESERIALIZABLE surfaced. P16(3L)+HOLDOUT-GROUP-8-DUPLICATE-HEADING surfaced. Core contract clean since p12.** | trajectory →3→4→5→5→0→1→0→4→1→0→3→1→1→0→2→3. STREAK 0/3 STRICT. |
+
+### Archived Current Phase Steps (from STATE.md, 5-row cap, F4 DELIVERED burst)
+
+Row displaced to make room for F4 DELIVERED row.
+
+| Step | Agent | Status | Output |
+|------|-------|--------|--------|
+| **DEC-159 recorded — ADF-CODE-MARK-EXCLUSIVITY F2 STRICT CONVERGENCE GATE (2026-07-07)** — 19 fresh-context passes / 13 fix rounds; clean window 17/18/19 CLEAN×3. BC-7.2.015 + BC-7.2.007 EC-2 amended + H-NEW-ADF-010 (5 calls, 3-rung empirical ladder) + VP-571-001..005 + PANEL-ANCHOR. Accepted residuals disclosed in-spec. F3 criterion: STRICT. Comparative: STRICT F2=19 vs STANDARD F3 Story B=15 vs STRICT F3 Story A=44 (ADVERSARY-META-LENS-REGRESS data point). | state-manager | COMPLETE | DEC-159. F3 DISPATCHED. |

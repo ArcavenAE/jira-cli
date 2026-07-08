@@ -5,7 +5,7 @@ story_id: "S-ADF-CODE-MARK-1"
 epic_id: "none"
 title: "ADF code-mark exclusivity: push_code allowlist filter strips typographic marks (issue #571)"
 wave: feature-followup
-status: ready
+status: delivered
 intent: adf-correctness
 feature_type: bug-fix
 mode: feature
@@ -44,7 +44,7 @@ assumption_validations: []
 risk_mitigations:
   - "Red-Gate empirical-check protocol for EC-2/EC-3/EC-4 (pulldown-cmark composition unconfirmed) — three-rung adjudication ladder in Task 0 + Task 3; phase-perimeter clause authorizes same-PR spec-companion commit if demotion occurs (precedent: PR #592)"
 created: "2026-07-07"
-version: "1.8"
+version: "1.9"
 last_updated: "2026-07-08"
 breaking_change: false
 retroactive: false
@@ -63,6 +63,7 @@ origin: >
   adf-code-mark-2026-07-07-delta.md. F2 artifacts: .factory/phase-f2-spec-evolution/
   prd-delta-571.md + verification-delta-571.md.
 changelog:
+  - "1.9 (2026-07-08): DELIVERED — PR #593 squash-merged by human @ 7ba4cf4 (DEC-128 honored). F4 full delivery: Red Gate verified (8 RED anchors, all CONFIRMED-INPUT), 8 commits, Step 4.5 CONVERGED STRICT (4 passes, window p2/p3/p4), 992 lib + 49 integration tests green, mutation gate PASS (first real code-diff exercise), security 1 LOW, pr-reviewer APPROVE cycle 1, 12/12 AC demos. Closes issue #571 and the BC-7.2.007 EC-2 follow-up deferred from #474."
   - "1.8 (2026-07-08): F3 gate approved (human) — status draft→ready. F3 CONVERGED under STRICT (DEC-160): 10 passes / 6 fix rounds, clean window p8/p9/p10 on v1.7. F4 dispatch authorized; Step 4.5 criterion: STRICT (human ruling)."
   - "1.7 (2026-07-07): F3 adversarial pass 6 (1 MED). Task 6 item 2 + AC-008 item 3 both extended to enumerate twin comment refreshes: test_render_marks_code_and_strong AND test_render_strong_with_code_applies_code_innermost both carry stale write-path comments that must be reframed to read-tolerance for externally-produced ADF (assertion bodies untouched, MUST-STAY-GREEN). VP-571-004 obligation extended in parallel (same finding, F3 pass 7 per team-lead note)."
   - "1.6 (2026-07-07): F3 adversarial pass 5 fixes (4 applied, 2 accepted-as-is). LOW-1: Task 4 reworded 'Do NOT touch apply_marks' → 'Do NOT touch the SEMANTICS of … apply_marks (its docstring refresh is Task 6)'. LOW-2: Demo Plan expanded to cover all 12 ACs — AC-001..AC-009 via cargo test --lib, AC-010/AC-011 via integration test runs, AC-012 via claude_md_citations.rs pass + CLAUDE.md diff hunk. LOW-3: AC-009 + Task 8 case cap aligned to VP-571-001 upstream: default ~256 cases; cap to 128 only on CI flake pressure (was unconditionally 128). NITPICK-1: Architecture Compliance Rules grep expectation amended — multiple matches expected; exactly 1 must be outside #[cfg(test)] mod tests (currently push_code). Pass-6 NITPICK-2/3: accepted per standard holdout-delegation pattern."

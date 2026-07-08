@@ -1592,6 +1592,71 @@ STREAK 2/3. Transcription totality: 40+ trace sites (AC→BC, AC→VP, Task→AC
 
 ---
 
+## F4 Step 4.5 — ADF-CODE-MARK-EXCLUSIVITY S-ADF-CODE-MARK-1 (2026-07-08)
+
+Criterion: **STRICT** (human ruling, same as F2 and F3). Window requirement: 3 consecutive clean passes. Passes run on merged develop @ 7ba4cf4 (post-PR-#593).
+
+| Pass | Date | Total | CRIT | HIGH | MED | LOW | NIT | Counter | Verdict |
+|------|------|-------|------|------|-----|-----|-----|---------|---------|
+| F4-p1 | 2026-07-08 | 1 | 0 | 0 | 0 | 1 | 2 | 0/3 | FINDINGS_REMAIN |
+| F4-p2 | 2026-07-08 | 0 | 0 | 0 | 0 | 0 | 0 | 1/3 | CLEAN-PASS |
+| F4-p3 | 2026-07-08 | 0 | 0 | 0 | 0 | 0 | 0 | 2/3 | CLEAN-PASS |
+| F4-p4 | 2026-07-08 | 0 | 0 | 0 | 0 | 0 | 0 | 3/3 | FULL CONVERGENCE |
+
+Trajectory shorthand: `1→0→0→0` — **STRICT CONVERGED** at F4-p4 (window F4-p2/F4-p3/F4-p4).
+
+---
+
+### Pass F4-p1 (2026-07-08)
+
+**Findings:** 1 LOW + 2 NIT — FINDINGS_REMAIN
+**Convergence counter:** 0 of 3 (STRICT)
+
+LOW (adjudicated-accepted): wrapper-cardinality — existing test structure covers cardinality of stripped marks implicitly; an explicit count assertion would be test-hardening-grade, not a spec gap. Adjudication: accepted per story AC-009 scope (behavioral outcomes, not assertion form). STREAK RESET.
+NIT-1 (non-resetting): helper-form preference — test helper extraction noted as style observation.
+NIT-2 (non-resetting): triplication pattern across 3 test sites — coherent, deliberate; accepted per implementation plan.
+
+---
+
+### Pass F4-p2 (2026-07-08)
+
+**Findings:** 0 — CLEAN-PASS
+**Convergence counter:** 1 of 3 (STRICT)
+
+STREAK 1/3. Hostile-inputs lens: adversarial probe inputs (malformed mark sets, empty marks, nested overlapping marks, solo-code paths, link+code combos, annotation+code combos) all traced end-to-end through push_code allowlist filter. All 8 RED-Gate anchors resolved as CONFIRMED-INPUT. No gaps found. H-NEW-ADF-010 Calls A–E verified against implementation.
+
+---
+
+### Pass F4-p3 (2026-07-08)
+
+**Findings:** 0 — CLEAN-PASS
+**Convergence counter:** 2 of 3 (STRICT)
+
+STREAK 2/3. Perimeter-totality lens: all call sites of push_code verified against allowlist filter application. BC-7.2.015 enforcement perimeter traced across all 12 ACs. BC-7.2.007 EC-2 amendment (write-strict, read-lenient) verified — apply_marks reverse path retains intentional tolerance. VP-571-001..005 all satisfied against merged implementation. CLAUDE.md gotcha entry verified present.
+
+---
+
+### Pass F4-p4 (2026-07-08)
+
+**Findings:** 0 — FULL CONVERGENCE
+**Convergence counter:** 3 of 3 (STRICT)
+
+**STRICT CONVERGED. Window: F4-p2 / F4-p3 / F4-p4 CLEAN×3.** Final-gate + mutant-forecast lens: zero new findings. Mutation gate PASS 5m32s — FIRST real code-diff exercise of the mutants CI job; calibration validated; predicted survivors limited to 2 spec-accepted classes (allowlist-constant mutation, identity-case code+code mutation). All 992 lib + 49 integration + 256-case proptest green. pr-reviewer APPROVE cycle 1 zero findings. 12/12 AC demos captured (VHS). Story v1.9 status=delivered. DEC-161 recorded. Issue #571 CLOSED. F5 DISPATCHED.
+
+---
+
+### Notable Findings (F4 Step 4.5 S-ADF-CODE-MARK-1)
+
+- **1 LOW (F4-p1):** Wrapper-cardinality — adjudicated-accepted; test structure covers this implicitly per AC-009 scope.
+- **2 NIT (F4-p1, non-resetting):** Helper-form preference + triplication pattern; accepted per implementation plan.
+- **MUTANTS-FIRST-SCOPED-PR-CALIBRATION resolved:** F4 was the first code-diff mutation run; calibration validated; 0-mutant path CONFIRMED-GOOD upgraded to code-mutant path CONFIRMED-GOOD.
+- **AGENT-CLAIM-VS-FMT-EVIDENCE catch:** Test-writer claimed fmt-clean inaccurately; caught pre-push by orchestrator verification batteries.
+- **Implementer stop-and-report guard worked:** Fmt-reflow false-alarm correctly escalated rather than silently applied.
+- **Story-index overstatement caught + fixed:** Story-index "cycle closed" claim corrected pre-commit.
+- **STRICT CONVERGED at F4-p4 (2026-07-08):** Window F4-p2/F4-p3/F4-p4 CLEAN×3. Total: 4 passes / 1 fix round. Criterion comparison: F4 STRICT = 4 passes vs F3 STRICT = 10 passes vs F2 STRICT = 19 passes.
+
+---
+
 ## Frontmatter Fields (extracted from STATE.md)
 
 <!-- When compacting STATE.md, adversary_pass_* frontmatter fields are
