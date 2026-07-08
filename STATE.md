@@ -4,14 +4,14 @@ level: ops
 version: "2.0"
 status: active
 producer: state-manager
-timestamp: 2026-07-08T00:37:00Z
+timestamp: 2026-07-08T01:55:00Z
 phase: 3
 inputs: []
 input-hash: "[live-state]"
 traces_to: ""
 project: jira-cli
 mode: brownfield
-current_step: "ADF-CODE-MARK-EXCLUSIVITY (issue #571): F2 CONVERGED STRICT (DEC-159, 19 passes/13 fix rounds, window 17/18/19). Human-approved 2026-07-07. F3 DISPATCHED — story-writer authoring S-ADF-CODE-MARK-1 (story #103). D-chain cite D-27893 latest brownfield. BC 612. Holdouts 83. spec v1.3.25. trajectory-tail →3→0→0→0."
+current_step: "ADF-CODE-MARK-EXCLUSIVITY (issue #571): F3 CONVERGED STRICT (DEC-160, 10 passes/6 fix rounds, window 8/9/10). HELD at F3 human gate — story #103 v1.7 awaiting status:ready + F4 dispatch. D-chain cite D-27893 latest brownfield. BC 612. Holdouts 83. spec v1.3.25. trajectory-tail →1→0→0→0."
 maintenance_run: CLOSED
 current_cycle: "cycle-001"
 feature_mode_bundle: ADF-CODE-MARK-EXCLUSIVITY
@@ -25,7 +25,7 @@ activation_version: "v0.6.0-dev.7"
 
 <!--
   STATE.md SIZE BUDGET (per D-421(c)):
-  Hard cap (500 lines) margin from soft-target = 500 - 277 = 223; margin from actual = 500 - 277 = 223 (D-446(c) dual-margin form). 277 lines (wc-l).
+  Hard cap (500 lines) margin from soft-target = 500 - 283 = 217; margin from actual = 500 - 283 = 217 (D-446(c) dual-margin form). 283 lines (wc-l).
   Hard cap: 500 lines.
 -->
 
@@ -38,34 +38,34 @@ activation_version: "v0.6.0-dev.7"
 | **Product** | jr (Jira CLI) |
 | **Mode** | BROWNFIELD / Rust |
 | **Target Workspace** | develop → main |
-| **Last Updated** | 2026-07-07: ADF-CODE-MARK-EXCLUSIVITY F2 CONVERGED STRICT (DEC-159) — 19 passes / 13 fix rounds; window 17/18/19 CLEAN×3; human-approved. F3 DISPATCHED — story-writer authoring S-ADF-CODE-MARK-1 (story #103, STRICT criterion). BC 612. Holdouts 83. spec v1.3.25. trajectory-tail →3→0→0→0. |
-| **Current Phase** | Phase 3 — **ADF-CODE-MARK-EXCLUSIVITY F3 IN PROGRESS** (issue #571). F2 CONVERGED STRICT (DEC-159): BC-7.2.015 ADD + BC-7.2.007 EC-2 MODIFY + H-NEW-ADF-010 (5 calls) + VP-571-001..005. spec v1.3.25. BC **612**. NFR 42. ADR 16. Stories **102** + story #103 in authoring. Holdouts **83**. |
-| **Next Phase** | F3 story decomposition in progress (story-writer authoring S-ADF-CODE-MARK-1, story #103). STRICT story-convergence criterion (human ruling, DEC-159). After F3 CONVERGED + human gate: F4 delta implementation. |
+| **Last Updated** | 2026-07-08: ADF-CODE-MARK-EXCLUSIVITY F3 CONVERGED STRICT (DEC-160) — 10 passes / 6 fix rounds; window 8/9/10 CLEAN×3; HELD at F3 human gate. Story #103 v1.7. BC 612. Holdouts 83. spec v1.3.25. trajectory-tail →1→0→0→0. |
+| **Current Phase** | Phase 3 — **ADF-CODE-MARK-EXCLUSIVITY HELD AT F3 HUMAN GATE** (issue #571). F3 CONVERGED STRICT (DEC-160): story #103 v1.7 awaiting human authorization for status:ready + F4 dispatch. F2 CONVERGED STRICT (DEC-159): BC-7.2.015 + BC-7.2.007 EC-2 + H-NEW-ADF-010 + VP-571-001..005. spec v1.3.25. BC **612**. NFR 42. ADR 16. Stories **103** (story #103 HELD at F3 gate). Holdouts **83**. |
+| **Next Phase** | F4 delta implementation — pending human authorization at F3 gate. After human authorizes: promote S-ADF-CODE-MARK-1 to status:ready, dispatch F4. |
 | **Activation HEAD** | 342987f (v0.6.0-dev.7 tag); develop @ 0d8a8a5 (PR #592 squash-merged 2026-07-07 by human; CITATION-GUARDS CYCLE CLOSED DEC-156) |
 
 ## Phase Progress
 
 <!-- Keep last 5 rows only. Archive older rows to cycles/cycle-001/burst-log.md. -->
-<!-- archived: Phase 0–2 + Feature cycles 2026-05-04..2026-07-07 + CITATION-GUARDS rows + F1 GATE APPROVED row + F2 SPEC DELTA row (checkpoint #2) + pass-5 adversary row (archived checkpoint #3 burst) -->
+<!-- archived: Phase 0–2 + Feature cycles 2026-05-04..2026-07-07 + CITATION-GUARDS rows + F1 GATE APPROVED row + F2 SPEC DELTA row (checkpoint #2) + pass-5 adversary row (archived checkpoint #3 burst) + fix burst 4 row + DEC-158 row (archived DEC-160 burst) -->
 | Phase | Status | Completed | Gate | Notes |
 |-------|--------|-----------|------|-------|
-| **fix burst 4 (ADF-CODE-MARK-EXCLUSIVITY F2 — after pass-4, 2026-07-07)** | **COMPLETE** | **2026-07-07** | **4th fix round: BC-INDEX Coverage Statistics row updated (BC-INDEX-9TH-SURFACE RECURRENCE×2) + spec-changelog re-synced to v1.3.25. Pass-4 findings (2M+3L) all resolved. All 4 F2 fix rounds closed.** | BC 612. Holdouts 83. spec v1.3.25. develop @ 0d8a8a5 UNCHANGED. |
-| **DEC-158 recorded — F2 STRICT criterion + scope rulings ratified (2026-07-07)** | **COMPLETE** | **2026-07-07** | **Human ratified Q1=STRICT (any delta-attributable LOW resets; VA-informational exempt per DEC-153); Q2=yes opportunistic pre-existing repairs; Q3=yes consolidate unguarded-count-surface into BC-INDEX-9TH-SURFACE guard-extension candidate. DEC-158.** | Supersedes STANDARD criterion for this F2 loop. |
 | **F2 passes 6-16 / fix rounds 5-13 complete — STREAK 0/3 STRICT (2026-07-07)** | **COMPLETE** | **2026-07-07** | **P6(1L-BC-INDEX-9TH-SURFACE×3): fixed. P7: CLEAN. P8(4M-test-writer): fixed+TWIN-ARTIFACT-SWEEP×1. P9(1M-implementer): fixed+TWIN-ARTIFACT-SWEEP×1. P10: CLEAN. P11(3M-story-writer): fixed+PHASE-DOC-RETRO-ANNOTATION+TWIN-ARTIFACT-SWEEP×1. P12(1M-security-final-MED): fixed. P13(1L): fixed. P14: CLEAN. P15(2L)+H-NEW-JSM-RT-001-FIXTURE-NONDESERIALIZABLE surfaced. P16(3L)+HOLDOUT-GROUP-8-DUPLICATE-HEADING surfaced. Core contract clean since p12.** | trajectory →3→4→5→5→0→1→0→4→1→0→3→1→1→0→2→3. STREAK 0/3 STRICT. |
 | **F2 passes 17-19 CONVERGED STRICT — ADF-CODE-MARK-EXCLUSIVITY F2 GATE CLOSED (DEC-159, 2026-07-07)** | **COMPLETE** | **2026-07-07** | **P17: CLEAN (VA lens, 2 NITPICK non-resetting). P18: CLEAN (evaluator-simulation, 3 NITPICK carried to F3). P19: CLEAN (full-spectrum final-gate, 2 NITPICK). Window 17/18/19 = STRICT CONVERGED. DEC-159. Human-approved 2026-07-07.** | trajectory →…→2→3→0→0→0. BC 612. Holdouts 83. spec v1.3.25. develop @ 0d8a8a5 UNCHANGED. |
-| **F3 story authoring DISPATCHED — ADF-CODE-MARK-EXCLUSIVITY (2026-07-07)** | **IN_PROGRESS** | **2026-07-07** | **Story-writer authoring S-ADF-CODE-MARK-1 (story #103, next free story number). STRICT story-convergence criterion applies (human ruling, DEC-159). Carry-forward: CLAUDE.md gotcha update + EC-4 empirical Red Gate confirmation.** | Story #103 in authoring. develop @ 0d8a8a5 UNCHANGED. |
+| **F3 story S-ADF-CODE-MARK-1 (#103) v1.7 authored — adversarial convergence loop complete (2026-07-07/08)** | **COMPLETE** | **2026-07-08** | **Story-writer authored S-ADF-CODE-MARK-1 v1.0→v1.7 across 6 fix rounds under STRICT criterion. 10 fresh-context adversary passes total. 12 ACs, 4 pts.** | Story #103 v1.7. develop @ 0d8a8a5 UNCHANGED. |
+| **pass-8 adversary: F3 S-ADF-CODE-MARK-1 window STRICT CONVERGED — DEC-160 (2026-07-08)** | **COMPLETE** | **2026-07-08** | **10 passes / 6 fix rounds + 2 preemptive catches. pass-8 CLEAN (parallel-edit agreement); pass-9 CLEAN (transcription totality, 40+ trace sites); pass-10 CLEAN (full-spectrum, novelty NONE). Window 8/9/10 CLEAN×3 STRICT. DEC-160.** | F3 trajectory →1→0→0→0. develop @ 0d8a8a5 UNCHANGED. |
+| **HELD at F3 human gate — S-ADF-CODE-MARK-1 story #103 v1.7 (2026-07-08)** | **HELD** | **2026-07-08** | **Awaiting human authorization to promote story to status:ready + dispatch F4 delta implementation. Process gaps reinforced: TWIN-ARTIFACT-SWEEP (4th+5th instances), UPSTREAM-GAP-PROPAGATES-TO-STORY.** | F4 pending human gate. develop @ 0d8a8a5 UNCHANGED. |
 
 ## Current Phase Steps
 
 <!-- Keep last 5 rows only. Archive older rows to cycles/cycle-001/burst-log.md. -->
-<!-- archived: CITATION-GUARDS rows + F1 GATE APPROVED + F1 DELTA ANALYSIS rows (checkpoint #2) + SPEC DELTA AUTHORED row + PASSES 1-5 row (archived checkpoint #3 burst) -->
+<!-- archived: CITATION-GUARDS rows + F1 GATE APPROVED + F1 DELTA ANALYSIS rows (checkpoint #2) + SPEC DELTA AUTHORED row + PASSES 1-5 row (archived checkpoint #3 burst) + DEC-158 row + PASSES 6-16 row + PASSES 17-19 row (archived DEC-160 burst) -->
 | Step | Agent | Status | Output |
 |------|-------|--------|--------|
-| **DEC-158 ratified — F2 STRICT criterion + Q1/Q2/Q3 scope rulings (2026-07-07)** — Human ratified: Q1=STRICT (any delta-attributable LOW resets streak; VA-informational exempt per DEC-153); Q2=yes (opportunistic pre-existing repairs ride the cycle); Q3=yes (consolidate unguarded-count-surface findings into BC-INDEX-9TH-SURFACE guard-extension candidate). Supersedes STANDARD for this F2 loop. | state-manager | COMPLETE | DEC-158. develop @ 0d8a8a5 UNCHANGED. |
-| **ADF-CODE-MARK-EXCLUSIVITY F2 PASSES 6-16 / FIX ROUNDS 5-13 COMPLETE — STREAK 0/3 STRICT (2026-07-07)** — Passes 7/10/14 CLEAN; resets at p6(1L-BC-INDEX-9TH-SURFACE×3), p8(4M-test-writer+TWIN-ARTIFACT-SWEEP), p9(1M-implementer+TWIN-ARTIFACT-SWEEP), p11(3M-story-writer+PHASE-DOC-RETRO-ANNOTATION+TWIN-ARTIFACT-SWEEP), p12(1M-security), p13(1L), p15(2L), p16(3L). Core contract clean since p12; residual = instruction-layer polish. Pre-existing banked: H-NEW-JSM-RT-001-FIXTURE-NONDESERIALIZABLE, HOLDOUT-GROUP-8-DUPLICATE-HEADING. | state-manager | COMPLETE | trajectory-tail →1→0→2→3. STREAK 0/3 STRICT. |
-| **ADF-CODE-MARK-EXCLUSIVITY F2 PASSES 17-19 CONVERGED STRICT — DEC-159 (2026-07-07)** — P17 CLEAN (VA lens, 2 NITPICK: mutation-survival table 23-probe all-survivors-disclosed; EC-4 adjacency carry-forward). P18 CLEAN (evaluator-simulation, 3 NITPICK carried to F3: Call B pre-fix empirical Red Gate; Call E JSM-isolation skip gate; PANEL-ANCHOR VP-571-005 coverage adequate). P19 CLEAN (full-spectrum final-gate, 2 NITPICK: trailing whitespace cosmetic; band-range comment design-attested). Zero fix-shear. DEC-159 recorded. Human-approved 2026-07-07. | state-manager | COMPLETE | trajectory-tail →3→0→0→0. STRICT CONVERGED. BC 612. Holdouts 83. |
 | **DEC-159 recorded — ADF-CODE-MARK-EXCLUSIVITY F2 STRICT CONVERGENCE GATE (2026-07-07)** — 19 fresh-context passes / 13 fix rounds; clean window 17/18/19 CLEAN×3. BC-7.2.015 + BC-7.2.007 EC-2 amended + H-NEW-ADF-010 (5 calls, 3-rung empirical ladder) + VP-571-001..005 + PANEL-ANCHOR. Accepted residuals disclosed in-spec. F3 criterion: STRICT. Comparative: STRICT F2=19 vs STANDARD F3 Story B=15 vs STRICT F3 Story A=44 (ADVERSARY-META-LENS-REGRESS data point). | state-manager | COMPLETE | DEC-159. F3 DISPATCHED. |
-| **F3 story authoring DISPATCHED — S-ADF-CODE-MARK-1 (story #103, 2026-07-07)** — Story-writer authoring S-ADF-CODE-MARK-1 under STRICT story-convergence criterion (human ruling per DEC-159). F3 carry-forward: (1) CLAUDE.md gotcha update in file list (prd-delta EC-5 authoritative); (2) Red Gate empirical confirm pre-fix [subsup, code] for `^`x`^`; if vacuous expand Call B or demote EC-4; (3) Call E JSM-isolation skip gate. | story-writer | IN_PROGRESS | Story #103 in authoring. develop @ 0d8a8a5 UNCHANGED. |
+| **F3 story S-ADF-CODE-MARK-1 (#103) v1.0→v1.7 authored under STRICT criterion (2026-07-07/08)** — Story-writer authored v1.0 per F2 CONVERGED spec (prd-delta-571.md v1.3.25); adversarial convergence loop completed. | story-writer | COMPLETE | Story #103 v1.7 authored. 12 ACs, 4 pts. |
+| **F3 adversarial passes 1-7 / 6 fix rounds + 2 preemptive catches — streak 0/3 STRICT (2026-07-07/08)** — P1(1M+2L: severity-misclass, topology, baseline AC→v1.1). Preemptive-1 before p2: rung-taxonomy→v1.2. P2(2L: MIXED-RANGE, jr_cmd_with_xdg→v1.3). P3(1L+2NIT→v1.4). P4: CLEAN. P5(1L+3VA: EC-anchor typo, gaming vectors→v1.5). P6(3L: wording/demo-plan/cases-cap→v1.6). P7(1M: twin stale-comment+VP-571-004 companion→v1.7). | adversary+story-writer | COMPLETE | trajectory →3→2→1→0→1→3→1. STREAK 0/3 STRICT. |
+| **F3 adversarial passes 8-10 STRICT CONVERGED — DEC-160 (2026-07-08)** — P8: CLEAN (parallel-edit agreement). P9: CLEAN (transcription totality, 40+ trace sites). P10: CLEAN (full-spectrum final gate, novelty NONE). Window 8/9/10 CLEAN×3. DEC-160. | adversary+state-manager | COMPLETE | trajectory-tail →1→0→0→0. F3 STRICT CONVERGED. |
+| **HELD at F3 human gate — S-ADF-CODE-MARK-1 story #103 v1.7 (2026-07-08)** — DEC-160. Promotion to status:ready + F4 dispatch pending human authorization. Process gaps reinforced: TWIN-ARTIFACT-SWEEP (4th+5th instances: code-comment twins, parallel-edit twins), UPSTREAM-GAP-PROPAGATES-TO-STORY (VP-571-004). | state-manager | HELD | F4 pending human gate. |
 
 ## Decisions Log
 
@@ -77,6 +77,7 @@ activation_version: "v0.6.0-dev.7"
 | DEC-157 | **ADF-CODE-MARK-EXCLUSIVITY F1 gate approved 2026-07-07 (human): 5-point scope ratified — (1) emit-site filter in `src/adf.rs::push_code` only; (2) no node-splitting; (3) `apply_marks` reverse-path read-tolerance retained; (4) standalone BC-7.2.015 approved (bandable BC-7.2.016..058); (5) STANDARD convergence criterion (DEC-153 precedent; 3 consecutive clean diverse-lens passes). H-NEW-ADF-010 authorized (F2, calls A-E incl. JSM Call E).** | Human gate cleared; F2 dispatch authorized. All 5 scope questions answered affirmatively. | Feature Mode / ADF-CODE-MARK-EXCLUSIVITY | 2026-07-07 |
 | DEC-158 | **F2 convergence criterion STRICT + scope rulings (2026-07-07, human): Q1=STRICT — any delta-attributable LOW resets streak; VA-informational observations exempt per DEC-153 (same as DEC-153 precedent). Q2=yes — opportunistic pre-existing repairs ride the cycle. Q3=yes — consolidate unguarded-count-surface findings (BC-INDEX-9TH-SURFACE, holdout-total, subsection-sum) into BC-INDEX-9TH-SURFACE guard-extension candidate.** | Human ratified mid-cycle checkpoint #2 after 11 uncommitted F2 rounds (passes 6-16 + fix rounds 5-13). Supersedes STANDARD criterion for this F2 loop only. | Feature Mode / ADF-CODE-MARK-EXCLUSIVITY F2 | 2026-07-07 |
 | DEC-159 | **ADF-CODE-MARK-EXCLUSIVITY F2 CONVERGED (STRICT, 2026-07-07, human-approved): 19 fresh-context passes / 13 fix rounds; clean window passes 17 (VA: 23-probe mutation-survival table, all survivors disclosed) + 18 (evaluator-simulation: all 5 holdout calls traced end-to-end) + 19 (full-spectrum final-gate: zero fix-shear, F3-ready without invention). Final state: BC-7.2.015 + BC-7.2.007 EC-2 amended + H-NEW-ADF-010 (5 calls, 3-rung empirical ladder) + VP-571-001..005 + PANEL-ANCHOR; BC 612, holdouts 83, spec v1.3.25. Accepted residuals disclosed in-spec: EC-2/3/4 + Calls B/E pre-fix composition protocol-guarded; annotation-drop mutant; future-mark allowlist design-attested. F3 criterion: STRICT (human ruling). Comparative data for ADVERSARY-META-LENS-REGRESS: this STRICT F2 loop = 19 passes vs Story B STANDARD F3 = 15 passes vs Story A STRICT F3 = 44 passes.** | ADF-CODE-MARK-EXCLUSIVITY F2 gate closed; STRICT convergence confirmed + human-approved; F3 dispatched under STRICT story-convergence criterion. | Feature Mode / ADF-CODE-MARK-EXCLUSIVITY F2 | 2026-07-07 |
+| DEC-160 | **ADF-CODE-MARK F3 CONVERGED under STRICT — S-ADF-CODE-MARK-1 (#103) v1.7: 10 passes / 6 fix rounds + 2 preemptive orchestrator catches (rung-taxonomy, template-required-fields). Window 8 (parallel-edit agreement) + 9 (transcription totality, 40+ trace sites) + 10 (full-spectrum, novelty NONE). Notable catches: severity misclassification (p1 MED), AC-002 EC-anchor typo (p5), 3 AC-gaming vectors (p5), twin stale-comment from F2 spec (VP-571-004 companion amended, p7). Story-tightening precedent (cases cap, p6). HELD at F3 human gate — promotion to status:ready + F4 dispatch pending human authorization. Criterion-comparison: F3 STRICT = 10 passes vs F2 STRICT = 19 passes.** | F3 STRICT convergence confirmed; HELD for human authorization before F4 dispatch. Process gaps reinforced: TWIN-ARTIFACT-SWEEP (4th+5th instances), UPSTREAM-GAP-PROPAGATES-TO-STORY (1st instance: VP-571-004 single-test scope reached story before being caught). | Feature Mode / ADF-CODE-MARK-EXCLUSIVITY F3 | 2026-07-08 |
 
 ## Skip Log
 
@@ -163,24 +164,25 @@ None open.
 | SPEC-CHANGELOG-RESYNC | process-gap | spec-changelog.md goes stale across F2 fix rounds; no mandatory final-round re-sync step in F2 skill template. ADF-CODE-MARK F2 pass-4. | LOW | OPEN — F2-skill template update candidate |
 | ADVERSARY-WRITE-TOOL-MISMATCH | process-gap | F2 adversary agent has read-only tools but phase-f2 skill asks it to write review files; reviews returned inline. ADF-CODE-MARK F2. | LOW | OPEN — skill template / agent config fix candidate |
 | D-CHAIN-VALIDATOR-SUBSTRING-FALSE-POSITIVE | process-gap | D-chain validator matched "D-27893" inside "JRACLOUD-27893" — substring false positive. Validator should require word-boundary matching. ADF-CODE-MARK F2 pass-4. | LOW | OPEN — validator regex hardening candidate |
-| TWIN-ARTIFACT-SWEEP | process-gap | Fix rounds must propagate spec changes to ALL mirroring artifacts (prd-delta + domain-spec + BC-INDEX + CANONICAL-COUNTS). 3 instances in ADF-CODE-MARK F2 (passes 8/9/11). | LOW | OPEN — F2-skill template update candidate |
+| TWIN-ARTIFACT-SWEEP | process-gap | Fix rounds must propagate spec changes to ALL mirroring artifacts (prd-delta + domain-spec + BC-INDEX + CANONICAL-COUNTS). 3 instances in ADF-CODE-MARK F2 (passes 8/9/11) + 2 instances in ADF-CODE-MARK F3 (p7: code-comment twins; p8: parallel-edit twins / VP-571-004 companion). **RECURRENCE COUNT: 5.** | LOW | OPEN — F2-skill template update candidate |
 | PHASE-DOC-RETRO-ANNOTATION | process-gap | F1 delta analysis artifacts (impact-boundary, artifact-mapping) need retro-annotation when F2 decisions supersede F1 scope. Pattern: F1 superseding notes. ADF-CODE-MARK F2 pass-11. | LOW | OPEN — F2 skill template update candidate |
 | H-NEW-JSM-RT-001-FIXTURE-NONDESERIALIZABLE | holdout pre-existing | H-NEW-JSM-RT-001 holdout fixture JSON uses `projectKey` field but Atlassian API returns `projectId` — deserialization failure. Same class as this cycle's Call E CRIT (pass 2). ADF-CODE-MARK F2 pass-15. | LOW | OPEN — future holdout sweep candidate |
 | HOLDOUT-GROUP-8-DUPLICATE-HEADING | doc hygiene | Group 8 in holdout-scenarios.md has a duplicate heading label (two scenarios share the same heading text). ADF-CODE-MARK F2 pass-16. | LOW | OPEN — doc hygiene fix candidate |
+| UPSTREAM-GAP-PROPAGATES-TO-STORY | process-gap | F2 spec incomplete scope claim transcribed faithfully by story-writer; adversary catches it at F3. VP-571-004 single-test scope reached story before being caught — gap traveled from F2 spec → F3 story without interception. ADF-CODE-MARK F3 pass-7. 1st instance. | LOW | OPEN — F2/F3-skill template update candidate |
 
 ## Convergence Status
 
 Current project index versions: BC-INDEX v6.12 / VP-INDEX v0.82 / STORY-INDEX v1.02 / ARCH-INDEX v0.16
 
-Trajectory (ADF-CODE-MARK-EXCLUSIVITY F2): →3→4→5→5→0→1→0→4→1→0→3→1→1→0→2→3→0→0→0 (passes 1-19; STRICT CONVERGED, DEC-158/DEC-159)
+Trajectory (ADF-CODE-MARK-EXCLUSIVITY F2): →3→4→5→5→0→1→0→4→1→0→3→1→1→0→2→3→0→0→0 (passes 1-19; STRICT CONVERGED, DEC-158/DEC-159). F3 S-ADF-CODE-MARK-1 trajectory: 3→2→1→0→1→3→1→0→0→0 (passes 1-10; STRICT CONVERGED, DEC-160, window 8/9/10).
 
-ADF-CODE-MARK-EXCLUSIVITY: F2 CONVERGED (STRICT, DEC-159) — 19 passes / 13 fix rounds; window 17/18/19 CLEAN×3; human-approved 2026-07-07. F3 story decomposition DISPATCHED (story-writer authoring S-ADF-CODE-MARK-1, story #103, STRICT criterion). BC-7.2.015 + BC-7.2.007 EC-2 + H-NEW-ADF-010 + VP-571-001..005. BC 612. Holdouts 83. spec v1.3.25. Prior cycle (CITATION-GUARDS): Story B F4 CONVERGED (4 passes/2 fix rounds); Story B F3 CONVERGED (DEC-153 standard, DEC-155 — 15 passes/9 fix rounds). Full trajectories: `cycles/cycle-001/convergence-trajectory.md`.
+ADF-CODE-MARK-EXCLUSIVITY: F3 CONVERGED STRICT (DEC-160) — 10 passes / 6 fix rounds; window 8/9/10 CLEAN×3; HELD at F3 human gate 2026-07-08. Story #103 v1.7 awaiting human authorization for status:ready + F4 dispatch. F2 CONVERGED (STRICT, DEC-159): BC-7.2.015 + BC-7.2.007 EC-2 + H-NEW-ADF-010 + VP-571-001..005. BC 612. Holdouts 83. spec v1.3.25. Prior cycle (CITATION-GUARDS): Story B F4 CONVERGED (4 passes/2 fix rounds); Story B F3 CONVERGED (DEC-153 standard, DEC-155 — 15 passes/9 fix rounds). Full trajectories: `cycles/cycle-001/convergence-trajectory.md`.
 
 ## Concurrent Cycles
 
 | Cycle | Status | Notes |
 |-------|--------|-------|
-| ADF-CODE-MARK-EXCLUSIVITY (issue #571) | F2 CONVERGED (STRICT) — F3 DISPATCHED | 19 passes/13 fix rounds; window 17/18/19 CLEAN×3 (DEC-159); human-approved; story #103 being authored |
+| ADF-CODE-MARK-EXCLUSIVITY (issue #571) | F3 CONVERGED (STRICT) — HELD at F3 human gate | 10 passes/6 fix rounds; window 8/9/10 CLEAN×3 (DEC-160); HELD — story #103 v1.7 awaiting human authorization for status:ready + F4 dispatch |
 
 ## Session Resume Checkpoint
 
@@ -188,20 +190,20 @@ ADF-CODE-MARK-EXCLUSIVITY: F2 CONVERGED (STRICT, DEC-159) — 19 passes / 13 fix
 
 | Field | Value |
 |-------|-------|
-| **Date** | 2026-07-07 (ADF-CODE-MARK-EXCLUSIVITY F2 CONVERGED STRICT — 19 passes/13 fix rounds; window 17/18/19 CLEAN; DEC-159; human-approved; F3 DISPATCHED) trajectory-tail →3→0→0→0 |
-| **Status** | **F2 CONVERGED (STRICT, DEC-159). F3 DISPATCHED.** BC-7.2.015 + BC-7.2.007 EC-2 + H-NEW-ADF-010 + VP-571-001..005. story-writer authoring S-ADF-CODE-MARK-1 (story #103). STRICT story-convergence to follow. |
-| **Counters** | BC **612**. NFR **42**. ADR **16**. Stories **102** + story #103 in authoring. Holdouts **83**. |
-| **Convergence counter** | ADF-CODE-MARK-EXCLUSIVITY F2: STRICT CONVERGED (DEC-158/DEC-159). trajectory →3→4→5→5→0→1→0→4→1→0→3→1→1→0→2→3→0→0→0. Window 17/18/19 CLEAN×3. Clean passes: 5/7/10/14/17/18/19. Full trajectories: `cycles/cycle-001/convergence-trajectory.md`. |
-| **In-flight work** | F3 story decomposition in progress — story-writer authoring S-ADF-CODE-MARK-1 (story #103, STRICT criterion). develop @ 0d8a8a5 UNCHANGED. factory-artifacts: this burst commit. No open PRs. No active feature worktrees. |
-| **Pending decisions** | None open. F3 story pending completion + human review (STRICT story-convergence criterion applies). |
-| **develop branch** | 0d8a8a5 (PR #592 squash-merged 2026-07-07; CITATION-GUARDS CYCLE CLOSED DEC-156). ADF-CODE-MARK-EXCLUSIVITY not yet in develop (F3 story in authoring). |
+| **Date** | 2026-07-08 (ADF-CODE-MARK-EXCLUSIVITY F3 CONVERGED STRICT — 10 passes/6 fix rounds; window 8/9/10 CLEAN; DEC-160; HELD at F3 human gate) trajectory-tail →1→0→0→0 |
+| **Status** | **F3 CONVERGED STRICT (DEC-160). HELD AT F3 HUMAN GATE.** Story #103 v1.7 awaiting human authorization for status:ready + F4 dispatch. BC-7.2.015 + BC-7.2.007 EC-2 + H-NEW-ADF-010 + VP-571-001..005. |
+| **Counters** | BC **612**. NFR **42**. ADR **16**. Stories **103** (story #103 HELD at F3 gate). Holdouts **83**. |
+| **Convergence counter** | ADF-CODE-MARK-EXCLUSIVITY F3 S-ADF-CODE-MARK-1: STRICT CONVERGED (DEC-160). F3 trajectory 3→2→1→0→1→3→1→0→0→0. Window 8/9/10 CLEAN×3. F2 trajectory →3→4→5→5→0→1→0→4→1→0→3→1→1→0→2→3→0→0→0 (DEC-158/DEC-159). Full trajectories: `cycles/cycle-001/convergence-trajectory.md`. |
+| **In-flight work** | HELD at F3 human gate — S-ADF-CODE-MARK-1 story #103 v1.7. Promotion to status:ready + F4 dispatch pending human authorization. develop @ 0d8a8a5 UNCHANGED. factory-artifacts: this burst commit. No open PRs. No active feature worktrees. |
+| **Pending decisions** | F3 human gate: authorize promotion to status:ready + F4 delta implementation dispatch. |
+| **develop branch** | 0d8a8a5 (PR #592 squash-merged 2026-07-07; CITATION-GUARDS CYCLE CLOSED DEC-156). ADF-CODE-MARK-EXCLUSIVITY not yet in develop (F4 pending human gate). |
 | **Untracked local files** | Deliberately uncommitted, session-local tooling, harmless: `.claude/pr-reviews/`, `.claude/spec-config.json`. |
-| **STATE.md size** | ~277 lines (OK band). |
-| **Resume command** | Open a fresh session; read `.factory/STATE.md`; run `/vsdd-factory:next-step`. ADF-CODE-MARK F3 in progress — story-writer authoring S-ADF-CODE-MARK-1 (story #103, STRICT criterion). MUTANTS-FIRST-SCOPED-PR-CALIBRATION: src/adf.rs in scope for F4 = first code-mutant path candidate. |
+| **STATE.md size** | ~283 lines (OK band). |
+| **Resume command** | Open a fresh session; read `.factory/STATE.md`; run `/vsdd-factory:next-step`. ADF-CODE-MARK F3 CONVERGED STRICT (DEC-160) — HELD at F3 human gate. Await human authorization for F4. MUTANTS-FIRST-SCOPED-PR-CALIBRATION: src/adf.rs in scope for F4 = first code-mutant path candidate. |
 
 ## RESUME PLAN (cold-start, self-contained)
 
-<!-- State snapshot: ADF-CODE-MARK-EXCLUSIVITY F3 IN PROGRESS (2026-07-07); F2 CONVERGED STRICT (DEC-159). F3 story #103 (S-ADF-CODE-MARK-1) being authored. develop @ 0d8a8a5. BC 612; Stories 102 delivered + #103 in authoring. Holdouts 83. -->
+<!-- State snapshot: ADF-CODE-MARK-EXCLUSIVITY HELD AT F3 HUMAN GATE (2026-07-08). DEC-160. F3 story #103 (S-ADF-CODE-MARK-1) v1.7 CONVERGED STRICT — awaiting human authorization for status:ready + F4 dispatch. develop @ 0d8a8a5. BC 612; Stories 103 (story #103 HELD at F3 gate). Holdouts 83. -->
 
 ### Steps (assume ZERO memory)
 
@@ -212,17 +214,19 @@ ADF-CODE-MARK-EXCLUSIVITY: F2 CONVERGED (STRICT, DEC-159) — 19 passes / 13 fix
 - factory-artifacts: see `git -C .factory log -1`.
 - No active feature worktrees.
 - **Open PRs: NONE.**
-- Counters: BC **612**, NFR **42**, ADR **16**, Stories **102** + #103 in authoring. Holdouts **83**.
+- Counters: BC **612**, NFR **42**, ADR **16**, Stories **103** (story #103 HELD at F3 gate). Holdouts **83**.
 
-**Step 3 — ADF-CODE-MARK-EXCLUSIVITY F3 IN PROGRESS:**
+**Step 3 — ADF-CODE-MARK-EXCLUSIVITY HELD AT F3 HUMAN GATE:**
 
 > **CYCLE: ADF-CODE-MARK-EXCLUSIVITY** (issue #571 — `markdown_to_adf` emits `strong+code` ADF → Jira HTTP 400).
 >
 > **F2 STATUS: CONVERGED (STRICT, DEC-158/DEC-159). 19 passes / 13 fix rounds. Window 17/18/19 CLEAN×3. Human-approved 2026-07-07.**
 >
-> **F3 STATUS: DISPATCHED — story-writer authoring S-ADF-CODE-MARK-1 (story #103). STRICT story-convergence criterion applies (human ruling, DEC-159).**
+> **F3 STATUS: CONVERGED STRICT (DEC-160). 10 passes / 6 fix rounds. Window 8/9/10 CLEAN×3. HELD at F3 human gate.**
 >
-> **F3 CARRY-FORWARD FROM F2:**
+> **PENDING: Human authorization to promote S-ADF-CODE-MARK-1 (story #103 v1.7) to status:ready + dispatch F4 delta implementation.**
+>
+> **F3 CARRY-FORWARD TO F4:**
 > 1. CLAUDE.md gotcha update (`^`x`^` behavior) MUST be in story file list (F4 applies it) — prd-delta-571.md EC-5 authoritative.
 > 2. Red Gate must empirically confirm pre-fix [subsup, code] emission for `^`x`^`; if vacuous, expand Call B scope or demote EC-4.
 > 3. Call E JSM-isolation: skip gate if no service-desk context (pass 18 carry-forward).
@@ -275,3 +279,5 @@ OPEN BACKLOG (after ADF-CODE-MARK-EXCLUSIVITY closes):
 | ADF-CODE-MARK-EXCLUSIVITY research (issue #571, 2026-07-07) | `research/issue-571-adf-code-mark-exclusivity-2026-07-07.md` |
 | ADF-CODE-MARK-EXCLUSIVITY F1 delta analysis (issue #571, 2026-07-07) | `phase-f1-delta-analysis/impact-boundary-571.md`, `artifact-mapping-571.md`, `adf-code-mark-2026-07-07-delta.md`, `affected-files-571.txt` |
 | ADF-CODE-MARK-EXCLUSIVITY F2 spec delta (issue #571, 2026-07-07) | `phase-f2-spec-evolution/prd-delta-571.md`, `phase-f2-spec-evolution/verification-delta-571.md` |
+| ADF-CODE-MARK-EXCLUSIVITY F3 story convergence (issue #571, 2026-07-07/08) | `stories/S-ADF-CODE-MARK-1.md` (story #103 v1.7, 12 ACs, 4 pts) |
+| ADF-CODE-MARK-EXCLUSIVITY F3 sidecar learning (2026-07-08) | `sidecar-learning.md` (process-gap reinforcements: TWIN-ARTIFACT-SWEEP 4th+5th, UPSTREAM-GAP-PROPAGATES-TO-STORY 1st) |

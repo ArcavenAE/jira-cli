@@ -1463,6 +1463,135 @@ STREAK 2/3. 3 NITPICKs carried to F3 as story notes (non-resetting): (a) H-NEW-A
 - **Pre-existing items surfaced (passes 15/16):** H-NEW-JSM-RT-001-FIXTURE-NONDESERIALIZABLE (projectKey vs projectId); HOLDOUT-GROUP-8-DUPLICATE-HEADING.
 - **STRICT CONVERGED at pass 19 (2026-07-07):** window 17/18/19 CLEAN×3; DEC-159; human-approved; F3 dispatched. Total: 19 passes / 13 fix rounds. Accepted residuals disclosed in-spec: EC-2/3/4 + Calls B/E pre-fix composition protocol-guarded; annotation-drop mutant; future-mark allowlist design-attested. Comparative: this STRICT F2 = 19 passes vs Story B STANDARD F3 = 15 passes vs Story A STRICT F3 = 44 passes (ADVERSARY-META-LENS-REGRESS data point).
 
+## F3 S-ADF-CODE-MARK-1 — Story Adversarial Review (ADF-CODE-MARK-EXCLUSIVITY)
+
+| Pass | Date | Total | CRIT | HIGH | MED | LOW | Counter | Verdict |
+|------|------|-------|------|------|-----|-----|---------|---------|
+| 1 | 2026-07-07 | 3 | 0 | 0 | 1 | 2 | 0/3 | FINDINGS_REMAIN |
+| 2 | 2026-07-07 | 2 | 0 | 0 | 0 | 2 | 0/3 | FINDINGS_REMAIN |
+| 3 | 2026-07-07 | 1 | 0 | 0 | 0 | 1 | 0/3 | FINDINGS_REMAIN |
+| 4 | 2026-07-07 | 0 | 0 | 0 | 0 | 0 | 1/3 | CLEAN-PASS |
+| 5 | 2026-07-07 | 1 | 0 | 0 | 0 | 1 | 0/3 | FINDINGS_REMAIN |
+| 6 | 2026-07-07 | 3 | 0 | 0 | 0 | 3 | 0/3 | FINDINGS_REMAIN |
+| 7 | 2026-07-07 | 1 | 0 | 0 | 1 | 0 | 0/3 | FINDINGS_REMAIN |
+| 8 | 2026-07-08 | 0 | 0 | 0 | 0 | 0 | 1/3 | CLEAN-PASS |
+| 9 | 2026-07-08 | 0 | 0 | 0 | 0 | 0 | 2/3 | CLEAN-PASS |
+| 10 | 2026-07-08 | 0 | 0 | 0 | 0 | 0 | 3/3 | FULL CONVERGENCE |
+
+**Trajectory:** 3→2→1→0→1→3→1→0→0→0 — **STRICT CONVERGED** (Pass 10, 2026-07-08). Window 8/9/10 CLEAN×3. DEC-160.
+
+Note: STRICT criterion (DEC-159 ruling) — any delta-attributable LOW resets streak; VA-informational observations exempt per DEC-153/DEC-158. 2 preemptive orchestrator catches recorded (not adversary findings): rung-taxonomy collision (before pass 2) and template-required-fields block honored (pass 3 adjudication).
+
+### Pass 1 (2026-07-07)
+
+**Findings:** 3 (0C/0H/1M/2L)
+**Convergence counter:** 0 of 3
+
+MED-01: severity misclassification — story frontmatter severity HIGH vs. actual MEDIUM (bug has workaround; no data loss; module_criticality HIGH unchanged); corrected to MEDIUM. LOW-01: topology surfacing — Task 3 topology-obligation sub-note added for EC-2/EC-3/EC-4 anchors (only EC-4 carries Call B/E propagation obligation). LOW-02: baseline AC — AC-003 extended to surface test_bc_7_2_015_plain_code_baseline as control/baseline anchor (GREEN pre/post). All fixed in story v1.1.
+
+---
+
+### Pass 2 (2026-07-07) — includes 1 preemptive orchestrator catch (rung-taxonomy collision)
+
+**Findings:** 2 (0C/0H/0M/2L)
+**Convergence counter:** 0 of 3
+
+Preemptive catch before adversary dispatched: rung-taxonomy collision — Task 0 and Task 3 used numbered rung references (rung-1/rung-2/rung-3) that collided with H-NEW-ADF-010's own ladder numbering; renamed to named outcomes (CONFIRMED-INPUT/MIXED-RANGE/DEMOTE) throughout Task 0 + Task 3; holdout mapping sentence added. Story v1.2 authored preemptively by orchestrator.
+
+LOW-1: MIXED-RANGE spec-companion clause — Task 0 MIXED-RANGE branch had spec-companion obligation but Task 3 sub-note lacked the matching mirror line; extended. LOW-2: jr_cmd_with_xdg reword — Task 9 Call E isolation used cross-file helper pattern not applicable to integration-test binaries; reworded to inline .env() TempDir pattern. Also: grep pattern fix ('\"type\":\"code\"' → '\"type\": \"code\"' with space) + File Structure footnote for conditional spec-companion file additions. All fixed in story v1.3.
+
+---
+
+### Pass 3 (2026-07-07) — includes preemptive orchestrator note (template-required-fields block honored)
+
+**Findings:** 1 (0C/0H/0M/1L) + 2 NITs (non-resetting under STRICT)
+**Convergence counter:** 0 of 3
+
+LOW: AC-011 mis-cite — '(test-hardening note 3)' → '(see Task 0 ladder and Task 3 topology-obligation sub-note)'. Fixed in story v1.4.
+
+NITPICK-1 (epic_id): epic_id = "none" flagged as non-standard. KEPT — field is required by story-template.md line 5; removal would trip validate-template-compliance hook. Orchestrator preemptive note: template-required-fields block honored (NITs non-resetting). NITPICK-2 (phase): similarly required by template line 10. Both KEPT.
+
+---
+
+### Pass 4 (2026-07-07) — pre-v1.5
+
+**Findings:** 0 — CLEAN-PASS (reset-void)
+**Convergence counter:** 1 of 3 (STRICT)
+
+STREAK 1/3. All pass 3 fixes verified. Story v1.4 clean on fresh-context pass. No new findings.
+
+---
+
+### Pass 5 (2026-07-07)
+
+**Findings:** 1 (0C/0H/0M/1L) + 3 VA-informational (exempt per DEC-153/DEC-158)
+**Convergence counter:** 0 of 3 (STRICT reset — LOW resets under STRICT criterion)
+
+LOW: AC-002 header mis-anchor — 'BC-7.2.007 EC-1' → 'BC-7.2.007 EC-2 pre-#571 write-strict clause' (AC-002 traces to EC-2, not EC-1). Fixed in story v1.5.
+
+VA-1 (informational): proptest weight-uniformity sentence added (~5% floor per branch) — AC-009 clarification. VA-2 (informational): Task 2 evidence form pinned to mandatory 'Red-Gate pre-fix evidence' PR description section. VA-3 (informational): Task 3 topology sub-note extended 'for the EC-4 anchor' → 'for the EC-2/EC-3/EC-4 anchors'. Three VA observations = 3 AC-gaming vectors identified and closed in v1.5.
+
+---
+
+### Pass 6 (2026-07-07)
+
+**Findings:** 3 (0C/0H/0M/3L)
+**Convergence counter:** 0 of 3 (STRICT reset — LOWs reset under STRICT criterion)
+
+LOW-1: wording precision — Task 4 'Do NOT touch apply_marks' → 'Do NOT touch the SEMANTICS of … apply_marks (its docstring refresh is Task 6)'. LOW-2: Demo Plan coverage — expanded to cover all 12 ACs explicitly (AC-001..AC-009 via cargo test --lib, AC-010/AC-011 via integration test runs, AC-012 via claude_md_citations.rs pass + CLAUDE.md diff hunk). LOW-3: case cap — AC-009 + Task 8 case cap aligned to VP-571-001 upstream: default ~256 cases; cap to 128 only on CI flake pressure (story-tightening-beyond-upstream precedent). Also: Architecture Compliance Rules grep multi-match note added. All fixed in story v1.6.
+
+---
+
+### Pass 7 (2026-07-07)
+
+**Findings:** 1 (0C/0H/1M/0L)
+**Convergence counter:** 0 of 3 (STRICT reset — MED resets)
+
+MED: twin stale-comment gap propagated FROM F2 spec (TWIN-ARTIFACT-SWEEP 4th instance) — both test_render_marks_code_and_strong AND test_render_strong_with_code_applies_code_innermost carry stale write-path comments claiming "write path emits [strong, code]"; AC-008 item 3 and Task 6 item 2 only listed the first test; sibling test was missing from both. Also: VP-571-004 single-test scope propagated from F2 spec to F3 story (UPSTREAM-GAP-PROPAGATES-TO-STORY 1st instance). Fixed: Task 6 item 2 + AC-008 item 3 both extended to enumerate twin comment refreshes. VP-571-004 obligation extended in companion amendment (verification-delta-571.md). Story v1.7.
+
+---
+
+### Pass 8 (2026-07-08)
+
+**Findings:** 0 — CLEAN-PASS
+**Convergence counter:** 1 of 3 (STRICT)
+
+STREAK 1/3. Parallel-edit agreement: all adversary review axes concurred CLEAN. All pass 7 fixes (twin comment enumeration, VP-571-004 companion amendment) verified propagated consistently across story body, AC texts, and task sequences.
+
+---
+
+### Pass 9 (2026-07-08)
+
+**Findings:** 0 — CLEAN-PASS
+**Convergence counter:** 2 of 3 (STRICT)
+
+STREAK 2/3. Transcription totality: 40+ trace sites (AC→BC, AC→VP, Task→AC, holdout mapping, spec-companion trigger conditions) verified with zero-gap coverage. No discrepancies between story body, frontmatter anchors, and spec artifacts (prd-delta-571.md, verification-delta-571.md, holdout-scenarios.md Call B/E).
+
+---
+
+### Pass 10 (2026-07-08)
+
+**Findings:** 0 — FULL CONVERGENCE
+**Convergence counter:** 3 of 3 (STRICT)
+
+**STRICT CONVERGED. Window: passes 8/9/10 CLEAN×3.** Full-spectrum final gate (novelty NONE): 8 diverse lenses all clean. No new findings introduced. Story v1.7 is implementation-ready pending human authorization. DEC-160 recorded. Criterion comparison: F3 STRICT = 10 passes vs F2 STRICT = 19 passes. Pipeline HELD at F3 human gate.
+
+---
+
+### Notable Findings (F3 S-ADF-CODE-MARK-1)
+
+- **1 MED (pass 1):** Severity misclassification HIGH→MEDIUM corrected (bug has workaround; no data loss).
+- **1 MED (pass 7):** Twin stale-comment gap propagated FROM F2 spec (TWIN-ARTIFACT-SWEEP 4th instance). VP-571-004 extended in companion amendment.
+- **Preemptive catch 1 (pass 2 pre-dispatch):** Rung-taxonomy collision between Task 0/Task 3 numbered rungs and H-NEW-ADF-010 holdout ladder; resolved before adversary ran.
+- **Preemptive catch 2 (pass 3 adjudication):** Template-required-fields block honored — epic_id and phase fields KEPT despite NITPICK flag (story-template.md requires them at frontmatter lines 5 + 10).
+- **UPSTREAM-GAP-PROPAGATES-TO-STORY (1st tracked instance):** VP-571-004 single-test scope propagated from F2 spec to F3 story before being caught at pass 7. Pattern: F2 spec has an incomplete scope claim; story-writer transcribes it faithfully; adversary catches it. Codified as new process-gap class.
+- **TWIN-ARTIFACT-SWEEP (4th+5th instances, F3):** Pass 7 (code-comment twins: AC-008 + Task 6 both needed sibling test enumerated). Story itself is the parallel-edit artifact from the F2 spec companion miss.
+- **3 AC-gaming vectors closed (pass 5):** VA-1/2/3 closed weight-uniformity gap, evidence-form gap, and scope-extension gap for EC-2/EC-3/EC-4 topology.
+- **Story-tightening-beyond-upstream precedent (pass 6):** Case cap (AC-009 + Task 8) was unconditionally 128 in story; VP-571-001 upstream says default ~256. Aligned to upstream (story MUST NOT over-constrain the implementation spec); story-tightening-beyond-upstream is valid per existing precedent.
+- **STRICT CONVERGED at pass 10 (2026-07-08):** Window 8/9/10 CLEAN×3; DEC-160; HELD at F3 human gate. Total: 10 passes / 6 fix rounds. Criterion comparison: F3 STRICT = 10 passes vs F2 STRICT = 19 passes.
+
+---
+
 ## Frontmatter Fields (extracted from STATE.md)
 
 <!-- When compacting STATE.md, adversary_pass_* frontmatter fields are

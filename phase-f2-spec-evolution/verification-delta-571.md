@@ -705,18 +705,50 @@ describe the code-innermost behavior as read-tolerance, not as a write-path
 mirror. VP-571-004 does not enforce docstring content; that's an F5
 adversarial-review concern.
 
-**Stale-comment refresh (F4 obligation)**: F4 MUST also refresh the stale
-explanatory comment/docstring inside `test_render_marks_code_and_strong`
-in `src/adf.rs::tests` — that test's inline commentary today claims the
-write path emits `[strong, code]`, which is FALSE post-fix (the write path
-now strips `strong` at the emit site in `push_code`; `[strong, code]` is
-only reachable from externally-produced or legacy ADF). The test's
-`assert!`/`assert_eq!` bodies themselves stay green because they feed
+**Stale-comment refresh (F4 obligation) — TWO tests, not one**: F4 MUST
+refresh the stale explanatory comments inside **both** reverse-path
+sibling tests in `src/adf.rs::tests`. Both carry the same class of
+historically-accurate-but-post-fix-inaccurate write-path claim; both
+`assert!`/`assert_eq!` bodies remain green (they feed
 hand-constructed ADF into the reverse-path renderer, bypassing
-`markdown_to_adf` entirely — but the surrounding comment describing "why
-this input shape is realistic" becomes wrong once the fix lands. Rewrite
-the comment to describe the input as "externally-produced or legacy ADF
-that we must render tolerantly" instead of "what the write path emits".
+`markdown_to_adf` entirely) — but the surrounding comments describing
+"what the write path emits / why this input shape is realistic" become
+wrong once the fix lands. The assertion bodies are **untouched —
+MUST-STAY-GREEN**; only the surrounding explanatory comments are
+refreshed to read-tolerance framing.
+
+Enumerated targets (both under `#[cfg(test)] mod tests` in `src/adf.rs`):
+
+1. **`test_render_marks_code_and_strong`** — inline commentary today
+   claims the write path emits `[strong, code]` (or an equivalent
+   phrasing of "what the write path emits"). Post-fix this is FALSE:
+   the write path strips `strong` at the emit site in `push_code`;
+   `[code, strong]` is only reachable from externally-produced or
+   legacy ADF. Rewrite the comment to describe the input as
+   "externally-produced or legacy ADF that we must render tolerantly"
+   instead of "what the write path emits".
+
+2. **`test_render_strong_with_code_applies_code_innermost`**
+   (`src/adf.rs` ~line 6666) — inline commentary today reads
+   `// Matches the write-path's marks ordering: strong + code produces`
+   `// marks = [strong, code]. Output must be **``code``** not **`` `` `` code `` `` ``**.`
+   Same falsehood class as (1): post-fix the write path emits neither
+   `[strong, code]` nor `[code, strong]` on any code text node, so the
+   "matches the write-path's marks ordering" claim is historically
+   inaccurate. Rewrite to the same read-tolerance framing — the input
+   is "externally-produced or legacy ADF with `strong+code` on the
+   same node; `adf_to_text` renders it tolerantly with `code` applied
+   innermost via `apply_marks`, regardless of mark-array position"
+   — and preserve the operative rendering-shape statement ("output
+   must be `` **`code`** `` not `**code**`"), since that IS what the
+   test asserts and remains true post-fix.
+
+Do NOT touch the `let adf = json!({...})` hand-constructed input, the
+`marks: [{"type": "strong"}, {"type": "code"}]` shape, or the
+`assert_eq!` call in either test — those are the reverse-path
+read-tolerance evidence the VP-571-004 retention checkpoint depends on.
+The refresh is a documentation-only edit inside the two tests'
+comment/docstring lines.
 
 **No new VP-scoped test is required for this VP** — it is a "keep existing
 tests green" checkpoint, not a new-assertion checkpoint. It appears in the
