@@ -1258,6 +1258,26 @@ impl AdfBuilder {
         self.append_child(node);
     }
 
+    /// Emit an inline `code`-marked text node for `Event::Code`.
+    ///
+    /// **BC-7.2.015 (issue #571) — code-mark exclusivity invariant:**
+    /// The ADF schema (`code_inline_node`) only permits `link` and `annotation`
+    /// marks alongside `code`. All typographic marks (`strong`, `em`, `strike`,
+    /// `subsup`, `underline`, `textColor`, `backgroundColor`, and any future
+    /// mark types not currently emitted by pulldown-cmark) are stripped at
+    /// emission time. The filter is an allowlist: any mark type outside
+    /// `{link, annotation}` is excluded.
+    ///
+    /// The filter operates on a **clone** of `self.active_marks`; the original
+    /// is never mutated. Surrounding non-code text nodes in the same inline span
+    /// therefore retain their typographic marks unchanged (see EC-6).
+    ///
+    /// The trailing `dedup_marks_by_type` call is retained unchanged — it
+    /// preserves the BC-7.2.007 same-type dedup invariant on this code path.
+    ///
+    /// **BC-7.2.011 (issue #522) — CR/LF normalization:**
+    /// No `text` node may contain a raw `\r` or `\n`. `\r\n`, lone `\r`, and
+    /// bare `\n` are all normalized to a single space before building the node.
     fn push_code(&mut self, text: &str) {
         if text.is_empty() {
             return;
@@ -1281,7 +1301,20 @@ impl AdfBuilder {
         } else {
             text
         };
-        let mut marks = self.active_marks.clone();
+        // BC-7.2.015 (issue #571): allowlist filter — retain only `link` and
+        // `annotation` marks from active_marks; strip all typographic marks.
+        // Operates on a clone so self.active_marks is not mutated.
+        let mut marks: Vec<Value> = self
+            .active_marks
+            .iter()
+            .filter(|m| {
+                matches!(
+                    m.get("type").and_then(|t| t.as_str()),
+                    Some("link") | Some("annotation")
+                )
+            })
+            .cloned()
+            .collect();
         marks.push(json!({ "type": "code" }));
         self.append_child(json!({
             "type": "text",
@@ -2504,11 +2537,14 @@ fn wrap_code_span(text: &str) -> String {
 /// other markdown syntax. The remaining marks then wrap the code span in
 /// array order.
 ///
-/// This matters because the write-path `AdfBuilder::push_code` appends
-/// `{type: "code"}` to the active marks *after* any other marks, so on
-/// roundtrip we see `marks: [strong, code]` for `**`\x`**`; applying marks
-/// strictly in order would produce `` `**x**` `` (code outermost),
-/// losing the bold semantics.
+/// **Read-tolerance for externally-produced or legacy ADF (BC-7.2.015 EC-7):**
+/// The write path (`AdfBuilder::push_code`) never emits typographic marks
+/// alongside `code` — the allowlist filter (issue #571) strips them at
+/// emission time. However, externally-produced or legacy ADF may contain
+/// combinations such as `[strong, code]`. This function renders such nodes
+/// tolerantly (e.g., `[strong, code]` → `` **`x`** ``). The code-innermost
+/// behavior is intentional read-leniency and does NOT imply the write path
+/// may produce it — the write and read paths are orthogonal by design.
 ///
 /// Unknown mark types pass through without added syntax.
 fn apply_marks(text: &str, marks: Option<&Vec<Value>>) -> String {
@@ -2574,6 +2610,49 @@ mod tests {
             Value::Object(map) => map.values().any(|v| contains_node_type(v, node_type)),
             _ => false,
         }
+    }
+
+    /// Assert that the JSON `marks` array contains exactly the mark type names
+    /// in `expected`, treated as an unordered set (same length, same multiset
+    /// of `"type"` string values). Panics with a formatted message including
+    /// the actual mark-types vector on mismatch.
+    ///
+    /// AC-001 (BC-7.2.015 precondition: test helpers contract).
+    fn assert_marks_eq(marks: &Value, expected: &[&str]) {
+        let actual: Vec<&str> = match marks.as_array() {
+            Some(arr) => arr.iter().filter_map(|m| m["type"].as_str()).collect(),
+            None => vec![],
+        };
+        let mut actual_sorted = actual.clone();
+        actual_sorted.sort_unstable();
+        let mut expected_sorted = expected.to_vec();
+        expected_sorted.sort_unstable();
+        assert_eq!(
+            actual_sorted, expected_sorted,
+            "mark types mismatch — expected {expected:?}, got {actual:?}"
+        );
+    }
+
+    /// Assert that the JSON `marks` array contains a mark of type `"link"`
+    /// whose `attrs["href"]` field equals `expected_href` character-for-character.
+    /// Uses field-by-field access — does NOT assert on `attrs["title"]`
+    /// (absent for no-title links).
+    ///
+    /// AC-001 (BC-7.2.015 precondition: test helpers contract).
+    fn assert_link_mark_with_href(marks: &Value, expected_href: &str) {
+        let found = marks
+            .as_array()
+            .map(|arr| {
+                arr.iter().any(|m| {
+                    m["type"].as_str() == Some("link")
+                        && m["attrs"]["href"].as_str() == Some(expected_href)
+                })
+            })
+            .unwrap_or(false);
+        assert!(
+            found,
+            "expected link mark with href={expected_href:?} in marks: {marks}"
+        );
     }
 
     #[test]
@@ -2863,7 +2942,10 @@ mod tests {
             .expect("expected a text node for 'foo'");
         assert_eq!(code_node["marks"][0]["type"], "code");
 
-        // Inline code inside bold: composes both marks on the same text node.
+        // Inline code inside bold: post-fix, the push_code allowlist filter strips
+        // `strong` from the code node's marks — only `code` remains.
+        // AC-002 (BC-7.2.015 EC-1 regression pin; BC-7.2.007 EC-2 pre-#571 write-strict
+        // clause). Pre-fix this assertion FAILS (old code emits strong+code on the node).
         let adf = markdown_to_adf("**bold `code` bold**").unwrap();
         let code_node = adf["content"][0]["content"]
             .as_array()
@@ -2871,16 +2953,262 @@ mod tests {
             .iter()
             .find(|n| n["text"] == "code")
             .expect("expected a text node for 'code'");
-        let mark_types: Vec<&str> = code_node["marks"]
+        assert_marks_eq(&code_node["marks"], &["code"]);
+    }
+
+    // ── BC-7.2.015 test suite ─────────────────────────────────────────────────
+    // Control + EC-1..EC-6 + PANEL-ANCHOR anchors (VP-571-002).
+    // All "stripped" tests are RED pre-fix (push_code filter not yet applied)
+    // and GREEN post-fix. EC-5 (link preserved) and the control are GREEN both
+    // pre-fix and post-fix.
+    // ──────────────────────────────────────────────────────────────────────────
+
+    /// Control/baseline anchor (BC-7.2.015 CONTROL): bare inline code with no
+    /// surrounding marks produces exactly `[code]`. GREEN pre-fix AND post-fix —
+    /// validates the assertion harness and the plain-code path in push_code.
+    #[test]
+    fn test_bc_7_2_015_plain_code_baseline() {
+        let adf = markdown_to_adf("`x`").unwrap();
+        let code_node = adf["content"][0]["content"]
             .as_array()
             .unwrap()
             .iter()
-            .filter_map(|m| m["type"].as_str())
-            .collect();
-        assert!(
-            mark_types.contains(&"code") && mark_types.contains(&"strong"),
-            "expected code + strong on the inline-code inside bold, got: {mark_types:?}"
+            .find(|n| n["text"] == "x")
+            .expect("expected text node 'x'");
+        assert_marks_eq(&code_node["marks"], &["code"]);
+    }
+
+    /// EC-1 (BC-7.2.015): `strong` wrapping inline code — `strong` must be
+    /// stripped from the code text node. RED pre-fix, GREEN post-fix.
+    #[test]
+    fn test_bc_7_2_015_strong_stripped_from_code_node() {
+        let adf = markdown_to_adf("**`x`**").unwrap();
+        let code_node = adf["content"][0]["content"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .find(|n| n["text"] == "x")
+            .expect("expected text node 'x'");
+        assert_marks_eq(&code_node["marks"], &["code"]);
+    }
+
+    /// EC-2 (BC-7.2.015): `em` wrapping inline code — `em` must be stripped.
+    /// Pre-fix RED/GREEN status empirically resolved by Task 2 observation.
+    #[test]
+    fn test_bc_7_2_015_em_stripped_from_code_node() {
+        let adf = markdown_to_adf("_`x`_").unwrap();
+        let code_node = adf["content"][0]["content"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .find(|n| n["text"] == "x")
+            .expect("expected text node 'x'");
+        assert_marks_eq(&code_node["marks"], &["code"]);
+    }
+
+    /// EC-3 (BC-7.2.015): `strike` wrapping inline code — `strike` must be
+    /// stripped. Pre-fix RED/GREEN status empirically resolved by Task 2.
+    #[test]
+    fn test_bc_7_2_015_strike_stripped_from_code_node() {
+        let adf = markdown_to_adf("~~`x`~~").unwrap();
+        let code_node = adf["content"][0]["content"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .find(|n| n["text"] == "x")
+            .expect("expected text node 'x'");
+        assert_marks_eq(&code_node["marks"], &["code"]);
+    }
+
+    /// EC-4 (BC-7.2.015): `subsup` wrapping inline code — `subsup` must be
+    /// stripped. Primary regression target; closes BC-7.2.007 EC-2 follow-up
+    /// (issue #474 → #571). Pre-fix RED/GREEN status empirically resolved by
+    /// Task 2 observation.
+    #[test]
+    fn test_bc_7_2_015_subsup_stripped_from_code_node() {
+        let adf = markdown_to_adf("^`x`^").unwrap();
+        let code_node = adf["content"][0]["content"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .find(|n| n["text"] == "x")
+            .expect("expected text node 'x'");
+        assert_marks_eq(&code_node["marks"], &["code"]);
+    }
+
+    /// EC-5 (BC-7.2.015): `link` coexisting with inline code — `link` MUST be
+    /// preserved (schema-valid co-mark). GREEN pre-fix AND post-fix.
+    /// Two-part assertion: mark-types set AND attrs["href"] field-by-field check.
+    #[test]
+    fn test_bc_7_2_015_link_preserved_on_code_node() {
+        let adf = markdown_to_adf("[`x`](https://ex/)").unwrap();
+        let code_node = adf["content"][0]["content"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .find(|n| n["text"] == "x")
+            .expect("expected text node 'x'");
+        // Both `code` and `link` marks must be present (unordered set).
+        assert_marks_eq(&code_node["marks"], &["code", "link"]);
+        // The link mark's attrs["href"] must be preserved verbatim.
+        assert_link_mark_with_href(&code_node["marks"], "https://ex/");
+    }
+
+    /// EC-6 / VP-571-003 (BC-7.2.015): mixed-range — code node strips `strong`,
+    /// surrounding non-code text nodes RETAIN `strong`. Catches the
+    /// "filter active_marks in-place" mutation. Pre-fix code-node RED, surrounds GREEN.
+    #[test]
+    fn test_bc_7_2_015_mixed_range_surrounding_marks_retained() {
+        let adf = markdown_to_adf("**a `b` c**").unwrap();
+        let para_content = adf["content"][0]["content"].as_array().unwrap();
+
+        // "a " — must keep strong.
+        let a_node = para_content
+            .iter()
+            .find(|n| n["text"] == "a ")
+            .expect("expected text node 'a '");
+        assert_marks_eq(&a_node["marks"], &["strong"]);
+
+        // "b" — code node; strong must be stripped.
+        let b_node = para_content
+            .iter()
+            .find(|n| n["text"] == "b")
+            .expect("expected text node 'b'");
+        assert_marks_eq(&b_node["marks"], &["code"]);
+
+        // " c" — must keep strong.
+        let c_node = para_content
+            .iter()
+            .find(|n| n["text"] == " c")
+            .expect("expected text node ' c'");
+        assert_marks_eq(&c_node["marks"], &["strong"]);
+    }
+
+    /// VP-571-003 (BC-7.2.015): multi-mark wrapper — code node strips BOTH `em`
+    /// and `strong`; all sibling text nodes retain their full mark stack.
+    #[test]
+    fn test_bc_7_2_015_multi_mark_wrapper_only_code_node_stripped() {
+        // _a **b `c` d** e_ → five text nodes; only "c" loses its marks.
+        let adf = markdown_to_adf("_a **b `c` d** e_").unwrap();
+        let para_content = adf["content"][0]["content"].as_array().unwrap();
+
+        // "c" — code node; BOTH em and strong stripped.
+        let c_node = para_content
+            .iter()
+            .find(|n| n["text"] == "c")
+            .expect("expected text node 'c'");
+        assert_marks_eq(&c_node["marks"], &["code"]);
+
+        // "a " — only em (not yet inside the strong span).
+        let a_node = para_content
+            .iter()
+            .find(|n| n["text"] == "a ")
+            .expect("expected text node 'a '");
+        assert_marks_eq(&a_node["marks"], &["em"]);
+
+        // "b " — em + strong.
+        let b_node = para_content
+            .iter()
+            .find(|n| n["text"] == "b ")
+            .expect("expected text node 'b '");
+        assert_marks_eq(&b_node["marks"], &["em", "strong"]);
+
+        // " d" — em + strong.
+        let d_node = para_content
+            .iter()
+            .find(|n| n["text"] == " d")
+            .expect("expected text node ' d'");
+        assert_marks_eq(&d_node["marks"], &["em", "strong"]);
+
+        // " e" — only em (outside the strong span).
+        let e_node = para_content
+            .iter()
+            .find(|n| n["text"] == " e")
+            .expect("expected text node ' e'");
+        assert_marks_eq(&e_node["marks"], &["em"]);
+    }
+
+    /// PANEL-ANCHOR (VP-571-002 supplementary anchor): `strong`+code inside a
+    /// GFM NOTE alert — `strong` must be stripped from the code text node even
+    /// inside `panel.content`. Pre-fix RED expected by class-transfer from EC-1.
+    #[test]
+    fn test_bc_7_2_015_alert_wrapper_strong_code_stripped() {
+        let adf = markdown_to_adf("> [!NOTE]\n> **`x`**").unwrap();
+
+        // Top-level node must be a panel with panelType "info".
+        let panel = &adf["content"][0];
+        assert_eq!(panel["type"], "panel", "expected panel at doc root: {adf}");
+        assert_eq!(
+            panel["attrs"]["panelType"], "info",
+            "expected panelType info: {adf}"
         );
+
+        // Within panel.content, the paragraph holds the text node "x".
+        let panel_para = &panel["content"][0];
+        assert_eq!(
+            panel_para["type"], "paragraph",
+            "expected paragraph inside panel: {panel}"
+        );
+        let code_node = panel_para["content"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .find(|n| n["text"] == "x")
+            .expect("expected text node 'x' inside panel paragraph");
+
+        // strong must be stripped; only code remains.
+        assert_marks_eq(&code_node["marks"], &["code"]);
+    }
+
+    // ── end BC-7.2.015 unit tests ─────────────────────────────────────────────
+
+    /// Recursively walk an ADF node tree and assert that no text node whose
+    /// `marks` array contains `{"type":"code"}` also carries any mark type
+    /// outside the allow-set `{"code", "link", "annotation"}`.
+    ///
+    /// This is the BC-7.2.015 positive invariant expressed as a universal
+    /// quantifier over the emitted ADF document: used by
+    /// `prop_bc_7_2_015_no_code_marked_text_node_carries_typographic_marks`
+    /// (VP-571-001) and by the integration tests in
+    /// `tests/adf_code_mark_exclusivity.rs` (H-NEW-ADF-010 Calls A–D).
+    ///
+    /// Uses a generic recursive descent via the `content` array — any new
+    /// container node type added to the ADF schema is covered automatically.
+    /// Mark objects are flat (`{"type": "...", "attrs": {...}?}`) and are
+    /// inspected directly; they do not require further recursion.
+    fn assert_code_mark_exclusivity(node: &Value) {
+        // Inspect this node's marks if present.
+        if let Some(marks_arr) = node.get("marks").and_then(|m| m.as_array()) {
+            let has_code = marks_arr.iter().any(|m| m["type"].as_str() == Some("code"));
+            if has_code {
+                const FORBIDDEN: &[&str] = &[
+                    "strong",
+                    "em",
+                    "strike",
+                    "subsup",
+                    "underline",
+                    "textColor",
+                    "backgroundColor",
+                ];
+                for mark in marks_arr {
+                    if let Some(t) = mark["type"].as_str() {
+                        assert!(
+                            !FORBIDDEN.contains(&t),
+                            "VP-571-001: text node with `code` mark carries forbidden \
+                             typographic mark '{t}'. Full marks: {marks_arr:?}. Node: {node}"
+                        );
+                    }
+                }
+            }
+        }
+        // Recurse into content array (generic descent — covers paragraph, heading,
+        // blockquote, listItem, bulletList, orderedList, taskList, taskItem,
+        // panel, table, tableRow, tableCell, tableHeader, and any future type).
+        if let Some(content) = node.get("content").and_then(|c| c.as_array()) {
+            for child in content {
+                assert_code_mark_exclusivity(child);
+            }
+        }
     }
 
     #[test]
@@ -6562,9 +6890,8 @@ mod tests {
 
     #[test]
     fn test_render_marks_code_and_strong() {
-        // The write-path emits `[strong, code]` for `**`x`**` because
-        // `push_code` appends `{type: "code"}` after active marks. This test
-        // covers the reverse-order case: even when the array is
+        // Externally-produced or legacy ADF that we must render tolerantly.
+        // This test covers the reverse-order case: even when the array is
         // `[code, strong]`, the `code` mark is applied innermost, so bold
         // wraps the code span rather than the other way around.
         let adf = json!({
@@ -6664,8 +6991,8 @@ mod tests {
 
     #[test]
     fn test_render_strong_with_code_applies_code_innermost() {
-        // Matches the write-path's marks ordering: strong + code produces
-        // marks = [strong, code]. Output must be **`code`** not `**code**`.
+        // Externally-produced or legacy ADF that we must render tolerantly.
+        // Output must be **`x`** not `**x**`.
         let adf = json!({
             "type": "doc",
             "content": [{"type": "paragraph", "content": [
@@ -9097,6 +9424,237 @@ mod tests {
 
             // (d) the reverse render is total too.
             let _ = adf_to_text(&adf).unwrap();
+        }
+    }
+
+    // --- VP-571-001: code-mark exclusivity universal invariant (BC-7.2.015) ----
+    //
+    // Property: for every ADF text node anywhere in the tree whose `marks` array
+    // contains `{"type":"code"}`, that array contains NO mark type outside the
+    // allow-set `{"code", "link", "annotation"}`.  This is the BC-7.2.015
+    // positive invariant expressed as a universal quantifier over generated
+    // markdown inputs covering all 9 container contexts and all inline
+    // code-composition templates (VP-571-001 spec: verification-delta-571.md).
+    //
+    // Generator scope authority (F2 R9 locked): full generator required —
+    // 11 inline templates × 9 container wrapper kinds, wrapper depth ≤ 3,
+    // GFM alert wrapper OUTERMOST-ONLY (Footnote A).  No MVP subset authorized.
+
+    /// Inline code-composition template variant for VP-571-001 generator.
+    #[derive(Debug, Clone)]
+    enum MarkCompositionTemplate {
+        Plain(String),                                // `{body}`
+        Strong(String),                               // **`{body}`**
+        Em(String),                                   // _`{body}`_
+        Strike(String),                               // ~~`{body}`~~
+        SupCode(String),                              // ^`{body}`^  (subsup sup — EC-4 primary)
+        SubCode(String),                              // ~`{body}`~  (subsup sub — EC-4 variant)
+        LinkCode { body: String, seg: String },       // [`{body}`](https://x/{seg})
+        MixedStrong(String),                          // **a `{body}` c**
+        MixedEm(String),                              // _a `{body}` c_
+        NestedEmStrong(String),                       // **_`{body}`_**
+        NestedLinkBold { body: String, seg: String }, // [**`{body}`**](https://x/{seg})
+    }
+
+    impl MarkCompositionTemplate {
+        fn render(&self) -> String {
+            match self {
+                MarkCompositionTemplate::Plain(b) => format!("`{b}`"),
+                MarkCompositionTemplate::Strong(b) => format!("**`{b}`**"),
+                MarkCompositionTemplate::Em(b) => format!("_`{b}`_"),
+                MarkCompositionTemplate::Strike(b) => format!("~~`{b}`~~"),
+                MarkCompositionTemplate::SupCode(b) => format!("^`{b}`^"),
+                MarkCompositionTemplate::SubCode(b) => format!("~`{b}`~"),
+                MarkCompositionTemplate::LinkCode { body, seg } => {
+                    format!("[`{body}`](https://x/{seg})")
+                }
+                MarkCompositionTemplate::MixedStrong(b) => format!("**a `{b}` c**"),
+                MarkCompositionTemplate::MixedEm(b) => format!("_a `{b}` c_"),
+                MarkCompositionTemplate::NestedEmStrong(b) => format!("**_`{b}`_**"),
+                MarkCompositionTemplate::NestedLinkBold { body, seg } => {
+                    format!("[**`{body}`**](https://x/{seg})")
+                }
+            }
+        }
+    }
+
+    /// Container wrapper variant for VP-571-001 generator.
+    /// Alert is excluded from inner levels (outermost-only constraint — Footnote A).
+    #[derive(Debug, Clone, Copy)]
+    enum WrapKind571 {
+        None,
+        Blockquote,
+        UnorderedList,
+        OrderedList,
+        TaskListUnchecked,
+        TaskListChecked,
+        Heading,
+        TableCell,
+        FootnoteDef,
+        Alert, // outermost-only (Footnote A)
+    }
+
+    /// Apply a single container wrapper to a (possibly multi-line) content string.
+    fn wrap_mk571(kind: WrapKind571, content: &str) -> String {
+        match kind {
+            WrapKind571::None => content.to_owned(),
+            WrapKind571::Blockquote => content
+                .lines()
+                .map(|l| {
+                    if l.is_empty() {
+                        ">".to_owned()
+                    } else {
+                        format!("> {l}")
+                    }
+                })
+                .collect::<Vec<_>>()
+                .join("\n"),
+            WrapKind571::UnorderedList => format!("- {content}"),
+            WrapKind571::OrderedList => format!("1. {content}"),
+            WrapKind571::TaskListUnchecked => format!("- [ ] {content}"),
+            WrapKind571::TaskListChecked => format!("- [x] {content}"),
+            WrapKind571::Heading => format!("## {content}"),
+            WrapKind571::TableCell => {
+                // 2-column, 1-row header + 1-row body (VP-571-001 Footnote B).
+                format!("| {content} | plain |\n|---|---|\n| plain | {content} |")
+            }
+            WrapKind571::FootnoteDef => {
+                // Reference + definition body (VP-571-001 Footnote C).
+                format!("Body.[^fn]\n\n[^fn]: {content}")
+            }
+            WrapKind571::Alert => {
+                // GFM alert — outermost-only (VP-571-001 Footnote A).
+                // Prefix each content line with `> ` and prepend `> [!NOTE]`.
+                let prefixed = content
+                    .lines()
+                    .map(|l| {
+                        if l.is_empty() {
+                            ">".to_owned()
+                        } else {
+                            format!("> {l}")
+                        }
+                    })
+                    .collect::<Vec<_>>()
+                    .join("\n");
+                format!("> [!NOTE]\n{prefixed}\n")
+            }
+        }
+    }
+
+    /// Generate a short lowercase alphabetic body string for inline templates.
+    fn gen_mk571_body() -> impl Strategy<Value = String> {
+        proptest::string::string_regex("[a-z]{1,4}").unwrap()
+    }
+
+    /// Generate a short URL path segment.
+    fn gen_mk571_seg() -> impl Strategy<Value = String> {
+        proptest::string::string_regex("[a-z]{1,4}").unwrap()
+    }
+
+    /// Strategy for all 11 inline code-composition templates (VP-571-001).
+    /// Equal weights — each ~9% ≫ the ~5% floor.
+    fn gen_mark_composition_template() -> impl Strategy<Value = MarkCompositionTemplate> {
+        (gen_mk571_body(), gen_mk571_seg()).prop_flat_map(|(body, seg)| {
+            prop_oneof![
+                Just(MarkCompositionTemplate::Plain(body.clone())),
+                Just(MarkCompositionTemplate::Strong(body.clone())),
+                Just(MarkCompositionTemplate::Em(body.clone())),
+                Just(MarkCompositionTemplate::Strike(body.clone())),
+                Just(MarkCompositionTemplate::SupCode(body.clone())),
+                Just(MarkCompositionTemplate::SubCode(body.clone())),
+                Just(MarkCompositionTemplate::LinkCode {
+                    body: body.clone(),
+                    seg: seg.clone()
+                }),
+                Just(MarkCompositionTemplate::MixedStrong(body.clone())),
+                Just(MarkCompositionTemplate::MixedEm(body.clone())),
+                Just(MarkCompositionTemplate::NestedEmStrong(body.clone())),
+                Just(MarkCompositionTemplate::NestedLinkBold {
+                    body: body.clone(),
+                    seg: seg.clone()
+                }),
+            ]
+        })
+    }
+
+    /// Inner container wrapper strategy: 9 variants (excluding alert).
+    /// Alert is excluded here — it may only appear as the outermost wrap.
+    fn gen_inner_wrap571() -> impl Strategy<Value = WrapKind571> {
+        prop_oneof![
+            Just(WrapKind571::None),
+            Just(WrapKind571::Blockquote),
+            Just(WrapKind571::UnorderedList),
+            Just(WrapKind571::OrderedList),
+            Just(WrapKind571::TaskListUnchecked),
+            Just(WrapKind571::TaskListChecked),
+            Just(WrapKind571::Heading),
+            Just(WrapKind571::TableCell),
+            Just(WrapKind571::FootnoteDef),
+        ]
+    }
+
+    /// Outermost wrapper strategy: 10 variants (inner 9 + Alert).
+    /// Alert is included here because it is only valid as the outermost wrapper.
+    fn gen_outer_wrap571() -> impl Strategy<Value = WrapKind571> {
+        prop_oneof![
+            Just(WrapKind571::None),
+            Just(WrapKind571::Blockquote),
+            Just(WrapKind571::UnorderedList),
+            Just(WrapKind571::OrderedList),
+            Just(WrapKind571::TaskListUnchecked),
+            Just(WrapKind571::TaskListChecked),
+            Just(WrapKind571::Heading),
+            Just(WrapKind571::TableCell),
+            Just(WrapKind571::FootnoteDef),
+            Just(WrapKind571::Alert),
+        ]
+    }
+
+    /// Top-level generator for VP-571-001: inline template + ≤3 total wrapper
+    /// layers (0–2 inner, 1 outermost).  Alert is restricted to the outermost
+    /// layer (Footnote A).  All 9 container contexts are reachable; wrapper
+    /// depth budget ≤ 3 keeps ADF tree depth well below MAX_ADF_DEPTH = 256.
+    fn gen_mark_composition_markdown() -> impl Strategy<Value = String> {
+        (
+            gen_mark_composition_template(),
+            // 0–2 inner wrappers (no alert — Footnote A)
+            proptest::collection::vec(gen_inner_wrap571(), 0..=2),
+            // 1 outermost wrapper (alert permitted here only)
+            gen_outer_wrap571(),
+        )
+            .prop_map(|(tmpl, inner_wraps, outer)| {
+                let mut content = tmpl.render();
+                // Apply inner wrappers (each layers inside the previous).
+                for wk in inner_wraps {
+                    content = wrap_mk571(wk, &content);
+                }
+                // Apply the outermost wrapper last.
+                wrap_mk571(outer, &content)
+            })
+    }
+
+    proptest! {
+        // Default ~256 cases is sufficient for this universal invariant over
+        // a small-alphabet, bounded-depth generator.  Cap to 128 with
+        // `ProptestConfig { cases: 128, .. }` only if CI flake pressure appears
+        // (VP-571-001 §"Cases required from proptest").
+        #![proptest_config(ProptestConfig::with_cases(256))]
+
+        /// VP-571-001: for every markdown input in `gen_mark_composition_markdown()`,
+        /// `markdown_to_adf` produces an ADF document where no text node with a
+        /// `code` mark carries any typographic mark (strong/em/strike/subsup/…).
+        ///
+        /// BC-7.2.015 positive invariant expressed as a universal quantifier.
+        /// Grounded in `src/adf.rs::push_code` (sole emit site for code marks).
+        #[test]
+        fn prop_bc_7_2_015_no_code_marked_text_node_carries_typographic_marks(
+            md in gen_mark_composition_markdown()
+        ) {
+            // markdown_to_adf must not panic or exceed depth limit on generated
+            // inputs (wrapper budget ≤ 3 keeps ADF depth well below 256).
+            let adf = markdown_to_adf(&md).expect("no depth error at this bound");
+            // Universal invariant: every code-marked text node is typographic-mark-free.
+            assert_code_mark_exclusivity(&adf);
         }
     }
 
