@@ -631,3 +631,22 @@ feature_followup_standalone:
     phase: F3
     f3_approved_at: "2026-06-16"
     notes: "F3 COMPLETE (2026-06-16). Story S-522 created. 1 SP xsmall; 4–6 LOC in src/adf.rs::push_text and push_code. Closes the pre-existing CR-normalization gap on the generic markdown_to_adf parser path (deferred from S-492 / issue #492). Key deliverables: (1) rename+de-ignore+invert test_lone_cr_survives_pre_existing_492_oos; (2) flip prop_492_arbitrary_string_holds_core_invariants strict_cr false→true; (3) add 3 new focused unit tests; (4) two-pass replace guard in push_text + push_code. No new BCs — BC-7.2.011 EC-11 authored in F2 by product-owner. No count drift. Leaf story (no downstream dependents). Awaiting F4 dispatch."
+
+  - id: S-ADF-CODE-MARK-1
+    title: "ADF code-mark exclusivity: push_code allowlist filter strips typographic marks (issue #571)"
+    status: ready
+    pr: null
+    merge_sha: null
+    merged_at: null
+    depends_on: []
+    bc_anchors: [BC-7.2.015, BC-7.2.007]
+    ec_anchors: [EC-1, EC-2, EC-3, EC-4, EC-5, EC-6, EC-7, BC-7.2.007-EC-2]
+    holdout_anchors: [H-NEW-ADF-010]
+    issue: 571
+    points: 4
+    criticality: MEDIUM
+    implementation_strategy: tdd
+    tdd_mode: strict
+    phase: F3
+    f3_approved_at: "2026-07-08"
+    notes: "F3 CONVERGED STRICT (DEC-160): 10 passes / 6 fix rounds, window p8/p9/p10 on v1.7; story v1.8 status=ready (human gate 2026-07-08). F4 dispatched via deliver-story; Step 4.5 criterion STRICT (human ruling). Files: src/adf.rs + CLAUDE.md + tests/adf_code_mark_exclusivity.rs (NEW) + tests/issue_create_jsm.rs. Empirical-check ladder (CONFIRMED-INPUT/MIXED-RANGE/DEMOTE) governs EC-2/3/4 + holdout Calls B/E. module_criticality: HIGH (src/adf.rs)."
