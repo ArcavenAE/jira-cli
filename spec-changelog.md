@@ -7,6 +7,61 @@ project: "jr (jira-cli)"
 
 Track all spec version changes. Most recent version first.
 
+## [1.3.26] - 2026-07-09
+
+### Type: PATCH
+
+### Summary
+
+BC/VP amendments for issue #589 (SOH-BUGS-1 bundle, F1 gate approved 2026-07-09).
+`AllowedValue.id` typed `Option<String>` in `src/types/jira/editmeta.rs` to
+accommodate GDPR-era user/group picker fields that carry `accountId` instead of `id`.
+
+No new BCs added; no BC count surfaces changed. EC-3.4.016-8 added to BC-3.4.016
+(id=None matched option entry → exit 64). VP-589-001 added to BC-3.4.015.
+VP-396-002 and VP-396-008 clarified/extended in BC-3.4.016, BC-3.4.015, and
+BC-3.4.017 respectively.
+
+Note: EC numbering — the delta analysis proposed EC-3.4.016-5 for the id=None case,
+but EC-3.4.016-5 through EC-3.4.016-7 were already defined in the original F2 creation
+(case-insensitive matching, uppercase matching, exact-over-substring precedence). Per
+the append-only numbering rule, the new id-absent edge case is assigned EC-3.4.016-8
+(next sequential). The delta analysis had a counting error.
+
+### Changed Requirements
+
+- `.factory/specs/prd/bc-3-issue-write.md` (MODIFIED): `last_updated` 2026-06-30 →
+  2026-07-09; frontmatter trace section extended with three F1 amendment entries
+  (BC-3.4.015, BC-3.4.016, BC-3.4.017 SOH-BUGS-1 amendments); BC-3.4.015 VP-396-008
+  extended (idless allowedValues dry-run sub-case); BC-3.4.015 VP-589-001 added;
+  BC-3.4.015 Trace updated (AllowedValue.id Option<String> note + research reference);
+  BC-3.4.015 amendment log entry added; BC-3.4.016 Step 1 id-bypass amended (id=None
+  excluded); BC-3.4.016 Invariant 4 extended (id=None excluded from bypass); BC-3.4.016
+  EC-3.4.016-8 added (id-absent matched entry → exit 64; load-bearing substrings
+  "no machine-readable id" and "--field"); BC-3.4.016 VP-396-002 clarified (non-None id
+  required for {"id":...} wire form); BC-3.4.016 Trace updated; BC-3.4.016 amendment
+  log entry added; BC-3.4.017 VP-396-008 extended (idless allowedValues sub-case);
+  BC-3.4.017 amendment log entry added.
+
+- `.factory/phase-f2-spec-evolution/verification-delta-589.md` (NEW): VP-589-001 test
+  strategy, VP-396-002 clarification test strategy (EC-3.4.016-8), VP-396-008 extension
+  test strategy (idless × dry-run). Consumed by F4 test-writer for issue #589 story.
+
+- `.factory/spec-changelog.md` (MODIFIED): this entry (v1.3.25 → v1.3.26).
+
+### Impact Assessment
+
+| Dimension | Detail |
+|-----------|--------|
+| BC count | UNCHANGED — 612 total, 80 individually-bodied in bc-3 |
+| EC added | EC-3.4.016-8 (one new edge case in BC-3.4.016) |
+| VP added | VP-589-001 (new, in BC-3.4.015) |
+| VP clarified | VP-396-002 (BC-3.4.016 §Verification Properties) |
+| VP extended | VP-396-008 (BC-3.4.015 and BC-3.4.017 §Verification Properties) |
+| Scripts | check-spec-counts.sh — unchanged count surfaces; check-bc-cumulative-counts.sh — no count delta |
+
+---
+
 ## [1.3.25] - 2026-07-07
 
 ### Type: MINOR

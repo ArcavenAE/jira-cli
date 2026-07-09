@@ -1,0 +1,27 @@
+# Affected files — Bundle SOH-BUGS-1
+# Format: PREFIX:path
+# Prefixes: MODIFIED (source change), TEST (test-only change), BASELINE (regression guard, not changed)
+# Generated: 2026-07-09
+
+# --- Issue #589: AllowedValue.id Optional ---
+
+MODIFIED:#589:src/types/jira/editmeta.rs
+MODIFIED:#589:src/cli/issue/field_resolve.rs
+TEST:#589:tests/issue_edit_field.rs
+MODIFIED:#589:.factory/specs/prd/bc-3-issue-write.md
+
+BASELINE:#589:src/cli/issue/edit.rs
+BASELINE:#589:src/api/jira/issues.rs
+BASELINE:#589:src/types/jira/mod.rs
+BASELINE:#589:src/cli/issue/create.rs
+BASELINE:#589:src/cli/issue/jsm_create.rs
+BASELINE:#589:src/cli/issue/workflow.rs
+
+# --- Issue #590/#582: HttpMethod case-insensitive ---
+
+MODIFIED:#590:src/cli/mod.rs
+TEST:#590:src/cli/api.rs
+
+BASELINE:#590:src/cli/api.rs
+BASELINE:#590:tests/cli_handler.rs
+BASELINE:#590:src/api/client.rs

@@ -3,7 +3,7 @@ context: bc-3
 title: "Issue Write (create/edit/move/assign/comment/link/open/remote-link)"
 total_bcs: 109   # cumulative claim (incl. range-collapsed); definitional_count below is individually-bodied headings
 definitional_count: 80   # count of `#### BC-` headings in this file
-last_updated: 2026-06-30
+last_updated: 2026-07-09
 source_pass: 3
 trace: |
   - L2: .factory/specs/domain-spec/bc-03-issue-write.md
@@ -59,6 +59,9 @@ trace: |
   - F2 amended (2026-05-22, adversary pass 3): BC-3.4.015 — Step 3b (operations/"set" check + exit 64 hint) added; EC-3.4.015-19 (resolution failure under --dry-run exits 64); EC-3.4.015-20 (operations lacks "set"); EC-3.4.015-18 exit code pinned to 0; VP-396-011 (user/date/datetime wire) and VP-396-012 (operations check) added; VP-396-008 one-liner updated
   - F2 modified (2026-05-25): BC-3.4.017 — EC-3.4.017-14 added (mechanical enforcement meta-test for invariant 2 completeness); invariant 2 cross-reference added (issue #407 F2)
   - F2 amended (2026-05-27): BC-3.4.015 — invariant 5 rewritten to describe two-stage i64-first strategy (no behavioral change for previously-correct inputs); EC-3.4.015-4b added (i64-boundary regression pin: "9223372036854775808" and "-9223372036854775809" MUST emit f64 wire form) (issue #421)
+  - F1 amended (2026-07-09, issue #589 SOH-BUGS-1): BC-3.4.015 — VP-396-008 extended (dry-run succeeds when editmeta has idless allowedValues on non-targeted fields; AllowedValue.id typed Option<String>); VP-589-001 added (deserialization succeeds for id-absent allowedValues entries on non-targeted fields; targeted string-type edit proceeds normally)
+  - F1 amended (2026-07-09, issue #589 SOH-BUGS-1): BC-3.4.016 — EC-3.4.016-8 added (id=None matched entry → exit 64 with actionable message; load-bearing substrings: "no machine-readable id", "--field"); Step 1 id-bypass amended (id=None entries excluded silently, fall through to label matching); Invariant 4 extended (id=None never triggers id-bypass); VP-396-002 clarified ({"id":...} wire form applies only when matched entry has non-None id)
+  - F1 amended (2026-07-09, issue #589 SOH-BUGS-1): BC-3.4.017 — VP-396-008 extended (idless allowedValues on non-targeted fields; dry-run succeeds sub-case)
   - F2 addition (2026-06-01): BC-3.4.018 — `issue edit KEY1 KEY2 --type <NAME>` multi-key bulk wire shape: selectedActions=["issuetype"] (lowercase), editedFieldsInput["issueType"]={"issueTypeId":"<id-string>"} (camelCase key, id-based value); name→id resolved via GET /rest/api/3/issue/createmeta/{proj}/issuetypes; unknown type name exits 64; dry-run builder consistency pin (issue #331 F2)
   - F2 addition (2026-06-01): BC-3.4.019 — `issue edit KEY1 KEY2 --type <NAME>` cross-project guard: when resolved keys span >1 distinct project, exit 64 with actionable message BEFORE any API call; references single-issueTypeId-per-batch constraint as rationale (issue #331 F2)
   - F2 addition (2026-06-03): BC-3.2.013 — `issue move` proactive resolution enforcement on done-category transitions (single-key only): REQUIRED resolution → mandatory (prompt or --resolution or exit 64 on --no-input; --no-resolution exits 64); OPTIONAL resolution → explicit choice required (--resolution / --no-resolution / prompt; non-interactive without either flag exits 64); breaking change to jr issue move default behavior; BC-3.2.009 retained as backstop (F2 jsm-resolution-required)
@@ -1422,7 +1425,10 @@ not be flagged as a gap by reviewers.
 - VP-396-007: Cache-write failure (`write_fields_cache` I/O error) → `warning:` line on
   stderr, exit 0, resolution and PUT succeed (best-effort swallow positively tested).
 - VP-396-008: `--field` + `--dry-run` → success path exits 0; read-only HTTP (cache,
-  `editmeta`) fires; PUT NOT issued; resolution failure under `--dry-run` still exits 64.
+  `editmeta`) fires; PUT NOT issued; resolution failure under `--dry-run` still exits 64;
+  dry-run succeeds when editmeta contains allowedValues entries with absent `id` on
+  non-targeted fields (AllowedValue.id is Option<String>; absent entries do not fail
+  deserialization). See VP-589-001 for the standalone deserialization assertion.
 - VP-396-009: Multi-`--field` partial-failure and PUT-failure discard `changed_fields`.
 - VP-396-010: Number field `f64` wire serialization — integer inputs produce exact integer
   JSON output (`5` → `5`, NOT `5.0`).
@@ -1430,12 +1436,17 @@ not be flagged as a gap by reviewers.
   bare-string pass-through are present on wire; claimed in BC-3.4.015 Step 4.
 - VP-396-012 (P3-LOW-002): field present in `editmeta` but `"set"` absent from
   `operations` → exit 64 with actionable hint; no PUT.
+- VP-589-001: editmeta response with allowedValues entries lacking `id` on any
+  non-targeted field deserializes without serde error; a targeted string-type field
+  edit proceeds normally (AllowedValue.id typed as Option<String>). Covers GDPR-era
+  user/group picker fields where Jira omits `id` from allowedValues entries.
 
-**Trace**: issue #396 F2; `src/cli/issue/edit.rs::handle_edit` (resolution integration); `src/api/jira/issues.rs::get_editmeta` (new); `src/cli/issue/field_resolve.rs::resolve_edit_fields` (new, orchestrates resolution pipeline — owns exact-match-then-substring logic and all exit-64 ambiguity handling; any field-lookup helper it calls is an implementation detail not spec-anchored here); `src/types/jira/editmeta.rs` (new — `EditMeta`, `EditMetaField`, `EditMetaFieldSchema`, `AllowedValue`); `src/cache.rs::FieldsCache` / `read_fields_cache` / `write_fields_cache` (new, mirrors `CmdbFieldsCache` / `cmdb_fields.json` pattern; best-effort writer); `.factory/research/issue-396-jsm-fields-validation.md`; `.factory/phase-f2-spec-evolution/prd-delta-396.md §3 and §5`
+**Trace**: issue #396 F2; `src/cli/issue/edit.rs::handle_edit` (resolution integration); `src/api/jira/issues.rs::get_editmeta` (new); `src/cli/issue/field_resolve.rs::resolve_edit_fields` (new, orchestrates resolution pipeline — owns exact-match-then-substring logic and all exit-64 ambiguity handling; any field-lookup helper it calls is an implementation detail not spec-anchored here); `src/types/jira/editmeta.rs` (new — `EditMeta`, `EditMetaField`, `EditMetaFieldSchema`, `AllowedValue`; `AllowedValue.id` typed `Option<String>` per issue #589 SOH-BUGS-1); `src/cache.rs::FieldsCache` / `read_fields_cache` / `write_fields_cache` (new, mirrors `CmdbFieldsCache` / `cmdb_fields.json` pattern; best-effort writer); `.factory/research/issue-396-jsm-fields-validation.md`; `.factory/research/issue-589-editmeta-allowedvalue-id-2026-07-08.md`; `.factory/phase-f2-spec-evolution/prd-delta-396.md §3 and §5`
 
 [NEW 2026-05-22 issue #396 F2]
 [AMENDED 2026-05-22 F2 cache gap: field-list cache (fields.json, 7-day TTL, best-effort writer) specified; editmeta non-goal stated; EC-3.4.015-14..16 added; invariants 6-9 added; VP-396-006 cited]
 [AMENDED 2026-05-22 adversary pass 3: Step 3b (operations/"set" check) added; EC-3.4.015-19 (resolution failure under --dry-run, exit 64) added; EC-3.4.015-18 exit code pinned to 0; VP-396-011 (user/date/datetime wire) and VP-396-012 (operations check) added]
+[AMENDED 2026-07-09 issue #589 SOH-BUGS-1: VP-396-008 extended (dry-run succeeds when editmeta contains idless allowedValues on non-targeted fields; AllowedValue.id typed Option<String>); VP-589-001 added (deserialization succeeds for id-absent allowedValues entries; targeted string-type edit proceeds normally); Trace updated with AllowedValue.id Option<String> note and research file reference]
 
 ---
 
@@ -1463,9 +1474,11 @@ field-name resolution reads from `fields.json` before falling back to `GET
 detected):
 
 1. If `VALUE` matches an `allowedValues[].id` exactly (numeric string comparison) →
-   use that `id` as-is (id-bypass path). The `changed_fields` echo value is `VALUE`
-   (the raw literal, not a reverse-looked-up label — no label resolution occurs on
-   the id-bypass path).
+   use that `id` as-is (id-bypass path). Entries where `id` is absent (`None`) are
+   silently excluded from this comparison and fall through to label matching (Step 2);
+   they do not participate in the id-bypass regardless of the input value. The
+   `changed_fields` echo value is `VALUE` (the raw literal, not a reverse-looked-up
+   label — no label resolution occurs on the id-bypass path).
 2. Otherwise: perform case-insensitive exact match on `allowedValues[].value`.
    If no exact match, perform case-insensitive substring match.
    - Zero matches → `JrError::UserError` listing allowed values (e.g., "Allowed values:
@@ -1507,7 +1520,9 @@ option `id`. Exception: when the id-bypass path fires, `changed_fields` value is
 3. The option `id` is never exposed in the `changed_fields` echo (for the name-match
    path). The id appears only on the wire and in the server's response.
 4. The id-bypass path (when `VALUE` is an exact numeric match to an `allowedValues[].id`)
-   does not perform a reverse lookup — the echo value is the raw id.
+   does not perform a reverse lookup — the echo value is the raw id. Entries where `id`
+   is absent (`None`) are excluded from the id-bypass comparison — they never trigger
+   this path regardless of the input value.
 
 **Edge Cases**:
 - EC-3.4.016-1: `allowedValues` is empty or absent for the `option`-type field → exit
@@ -1533,19 +1548,33 @@ option `id`. Exception: when the id-bypass path fires, `changed_fields` value is
 - EC-3.4.016-7: Exact match takes precedence over substring: `"High"` with `VALUE="High"`
   (exact) → uses exact-match result, even if "High" is also a substring of "High Priority".
   Ambiguity is evaluated only when there is no exact match.
+- EC-3.4.016-8: `resolve_edit_fields` matches an option by label/value (exact or
+  substring path) but the matched `allowedValues` entry has no `id` field (`id=None`) —
+  a wire payload `{"id": ...}` cannot be constructed. Exit 64 with message:
+  "option '<VALUE>' has no machine-readable id and cannot be set via --field. This
+  typically occurs with user/group picker fields. Use the Jira UI or the field's native
+  picker to set this value." Load-bearing substrings in the exit-64 message:
+  `"no machine-readable id"` and `"--field"`. This covers id-absent option entries
+  introduced by GDPR accountId migration and plugin-defined fields. The id-bypass
+  path (Step 1) is unaffected — id=None entries are silently excluded from id-bypass
+  comparison before this EC can fire.
 
 **Verification Properties**:
-- VP-396-002: Option field resolves to `{"id": ...}` on wire; `changed_fields` echo
-  shows human label (not id); case-insensitive matching; option-id bypass.
+- VP-396-002: Option field resolves to `{"id": ...}` on wire (requires the matched
+  allowedValues entry to have a non-None id — EC-3.4.016-8 exits 64 when id is
+  absent); `changed_fields` echo shows human label (not id); case-insensitive
+  matching; option-id bypass.
 - VP-396-006: Warm `fields.json` cache (non-stale) → no `GET /rest/api/3/field` HTTP
   call; field-name resolution for option fields proceeds from cache; `editmeta` fetch
   and PUT still execute normally. (BC-3.4.016 inherits the cache-first behavior from
   BC-3.4.015 invariants 6–8 — the same `resolve_edit_fields` step 2/2b path is
   followed regardless of whether the field schema type is `string` or `option`.)
 
-**Trace**: issue #396 F2; `src/cli/issue/edit.rs::handle_edit`; `src/cli/issue/field_resolve.rs::resolve_edit_fields` (option-arm: id-bypass, case-insensitive exact→substring on allowedValues, ambiguity/empty errors); `src/api/jira/issues.rs::get_editmeta`; `.factory/research/issue-396-jsm-fields-validation.md §Q2` (wire format confirmed: `{"customfield_NNNNN": {"id": "..."}}` is the working shape); `.factory/phase-f2-spec-evolution/prd-delta-396.md §3`
+**Trace**: issue #396 F2; `src/cli/issue/edit.rs::handle_edit`; `src/cli/issue/field_resolve.rs::resolve_edit_fields` (option-arm: id-bypass, case-insensitive exact→substring on allowedValues, ambiguity/empty errors; id=None entries excluded from id-bypass per issue #589 SOH-BUGS-1); `src/api/jira/issues.rs::get_editmeta`; `src/types/jira/editmeta.rs::AllowedValue` (id field typed Option<String> per issue #589 SOH-BUGS-1); `.factory/research/issue-396-jsm-fields-validation.md §Q2` (wire format confirmed: `{"customfield_NNNNN": {"id": "..."}}` is the working shape); `.factory/research/issue-589-editmeta-allowedvalue-id-2026-07-08.md`; `.factory/phase-f2-spec-evolution/prd-delta-396.md §3`
 
 [NEW 2026-05-22 issue #396 F2]
+[AMENDED 2026-05-22 adversary pass 1: EC-3.4.016-4 id/label collision note; VP-396-006 added to Verification Properties]
+[AMENDED 2026-07-09 issue #589 SOH-BUGS-1: EC-3.4.016-8 added (id=None matched entry → exit 64; load-bearing substrings "no machine-readable id" and "--field"); Step 1 id-bypass amended (id=None entries excluded silently, fall through to label matching); Invariant 4 extended (id=None never triggers id-bypass); VP-396-002 clarified ({"id":...} wire form requires non-None id); Trace updated with AllowedValue.id Option<String> and research file reference]
 
 ---
 
@@ -1760,13 +1789,16 @@ adding bulk `--field` support would require a separate design pass.
 - VP-396-005: Multi-key/`--jql`-multi-issue rejection exits 64; flag-overlap hard error
   for `summary`, `description`, `issuetype`, `priority` exits 64 before any HTTP call.
 - VP-396-008: `--field` + `--dry-run` → success path exits 0; Gate A/B still fire;
-  read-only HTTP executes for preview; PUT NOT issued; resolution failure still exits 64.
+  read-only HTTP executes for preview; PUT NOT issued; resolution failure still exits 64;
+  dry-run succeeds when editmeta contains allowedValues entries with absent `id` on
+  non-targeted fields (issue #589 SOH-BUGS-1; AllowedValue.id is Option<String>).
 
 **Trace**: issue #396 F2; `src/cli/issue/edit.rs::handle_edit` (`REJECTED_IN_BULK`
 set update; Gate B overlap check; `has_any_field_change` update to include `--field`);
 `.factory/phase-f2-spec-evolution/prd-delta-396.md §3`
 
 [NEW 2026-05-22 issue #396 F2]
+[AMENDED 2026-07-09 issue #589 SOH-BUGS-1: VP-396-008 extended (dry-run succeeds when editmeta contains idless allowedValues entries on non-targeted fields)]
 
 ---
 
