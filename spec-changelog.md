@@ -7,6 +7,59 @@ project: "jr (jira-cli)"
 
 Track all spec version changes. Most recent version first.
 
+## [1.3.27] - 2026-07-09
+
+### Type: PATCH
+
+### Summary
+
+Post-fix micro-BC for SOH-BUGS-1 bundle (DEC-165, human-approved as recommended).
+BC-X.1.011 added to `cross-cutting.md` §X.1 HTTP Client: `jr api -X / --method`
+accepts HTTP method values case-insensitively — DELETE, delete, and Delete all parse
+to `HttpMethod::Delete` and dispatch HTTP DELETE. VP-590-001 registered in BC-X.1.011
+§Verification Properties. Fixes issues #590 (uppercase -X rejected by clap) and #582
+(feature: match curl -X / gh api -X convention). PR #597 merged @ 4f3960e0 on develop.
+
+BC count 612 → 613 (one individually-bodied BC added; cross-cutting.md
+definitional_count 82 → 83, total_bcs 148 → 149).
+
+Note: BC-INDEX.md total_bcs and section X header require a corresponding bump to 613 /
+149 BCs, but direct edits to BC-INDEX.md are blocked by the TD-031 validate-stable-anchors
+hook (243 pre-existing volatile line-cite violations in the Source column). State-manager
+must resolve by either (a) running a TD-031 cleanup pass on BC-INDEX.md first, or (b)
+using a hook-bypass mechanism. CANONICAL-COUNTS.md is authoritative and reflects 613.
+
+### Changed Requirements
+
+- `.factory/specs/prd/cross-cutting.md` (MODIFIED): `total_bcs` 148 → 149;
+  `definitional_count` 82 → 83; `last_updated` 2026-07-06 → 2026-07-09; SOH-BUGS-1
+  trace entry added; intro paragraph count updated; BC-X.1.011 body added after
+  BC-X.1.010 with Preconditions, Postconditions, Invariants, Edge Cases, Verification
+  Properties (VP-590-001), and amendment log.
+
+- `.factory/specs/prd/CANONICAL-COUNTS.md` (MODIFIED): cross-cutting.md definitional
+  count 82 → 83; individually-bodied total 382 → 383; cross-cutting.md total_bcs
+  148 → 149; Sum row 612 → 613; grand total prose 612 → 613; grand total note extended
+  with BC-X.1.011 entry; `last_verified` updated.
+
+- `.factory/spec-changelog.md` (MODIFIED): this entry (v1.3.26 → v1.3.27).
+
+- `.factory/specs/prd/BC-INDEX.md` (PENDING): total_bcs 612 → 613; last_updated
+  2026-07-07 → 2026-07-09; sections list cross-cutting count 148 → 149 / 82 → 83;
+  Section X header count update; X.1 subsection header 10 → 11 BCs; BC-X.1.011 row
+  added. BLOCKED by TD-031 hook — requires state-manager resolution.
+
+### Impact Assessment
+
+| Dimension | Detail |
+|-----------|--------|
+| BC added | BC-X.1.011 (`-X`/`--method` case-insensitive; `cross-cutting.md` individually-bodied) |
+| VP added | VP-590-001 (uppercase/lowercase/mixed-case DELETE dispatches HTTP DELETE; registered in BC-X.1.011) |
+| BC count | 612 → 613 (CANONICAL-COUNTS.md authoritative; BC-INDEX.md pending TD-031 cleanup) |
+| Scripts | check-spec-counts.sh — cross-cutting.md frontmatter and body now agree; check-bc-cumulative-counts.sh — will diverge on BC-INDEX.md surfaces until TD-031 cleanup; check-bc-citation-symbols.sh — no new `:NNN` cites introduced |
+
+---
+
 ## [1.3.26] - 2026-07-09
 
 ### Type: PATCH

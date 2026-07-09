@@ -1,9 +1,9 @@
 ---
 context: bc-x
 title: "Cross-cutting (HTTP client, Runtime, Users, Teams, Worklogs, Projects, Queues, JQL, Partial-match, JSM Request Types, CI Guards)"
-total_bcs: 148   # cumulative claim (incl. range-collapsed); definitional_count below is individually-bodied headings
-definitional_count: 82   # count of `#### BC-` headings in this file
-last_updated: 2026-07-06
+total_bcs: 149   # cumulative claim (incl. range-collapsed); definitional_count below is individually-bodied headings
+definitional_count: 83   # count of `#### BC-` headings in this file
+last_updated: 2026-07-09
 source_pass: 3
 trace: |
   - L2: .factory/specs/domain-spec/cross-cutting.md
@@ -18,11 +18,12 @@ trace: |
   - CITATION-GUARDS Story B F2 addition (2026-07-05): BC-X.13.004..006 — Guard 1 bc-*.md Trace/Source file::symbol citation guard (S-BC-CITATION-GUARD-1, story #102)
   - DEC-154 Option A spec update (2026-07-06): BC-X.13.005 — extend v1 grammar (3 branches: ::tests, ::tests::testfn, standalone CamelCase); space-tolerant two-pass extraction (F-B2-02); BC-X.13.004 — FLOOR recalibration N=326, FLOOR=244; BC-X.13.006 — fixture count 7→10 (A–K)
   - F-01 two-tier shape guard (2026-07-06, story #102 Step-4.5 pass-1): BC-X.13.005 Step 3 rewrite — shape guard now `^src/[a-zA-Z0-9_/.-]+\.[a-zA-Z0-9]+$` (any extension); non-.rs src/ tokens routed to tier (ii) file-existence-only (counts toward N); .rs tokens continue full pipeline tier (i); truly-malformed DEAD-malformed unchanged; EC-CITE-060 added (tier-ii .snap positive pin); EC-CITE-058 updated (.snap mechanism corrected); BC-X.13.004 N=309 FLOOR=231 (two-tier baseline 2b09313); BC-X.13.006 test vector N ≥ 231
+  - SOH-BUGS-1 post-fix micro-BC (2026-07-09): BC-X.1.011 — `-X`/`--method` case-insensitive HTTP method parsing; VP-590-001 registered (issues #590/#582, PR #597)
 ---
 
 # BC-X — Cross-cutting
 
-148 behavioral contracts covering: HTTP client (X.1), Pagination (X.2), Error handling (X.3),
+149 behavioral contracts covering: HTTP client (X.1), Pagination (X.2), Error handling (X.3),
 Rate limiting (X.4), Worklogs & duration (X.5), Teams (X.6), Users (X.7), Projects & Queues (X.8),
 JQL utilities (X.9), Partial-match (X.10), Build-time (X.11), JSM Request Types (X.12),
 CI Guards (X.13).
@@ -122,6 +123,40 @@ CI Guards (X.13).
 **Source**: `src/api/client.rs` (R4 §4.1 verification)
 **Behavior**: 9 high-level methods use `self.send(request)` (auth at line 195). 2 raw methods use `self.client.execute(req)` after `self.request()` injects header. No method bypasses.
 **Trace**: Pass 4 R4 §4.1
+
+---
+
+#### BC-X.1.011: `-X` / `--method` flag accepts HTTP method values case-insensitively; help text renders lowercase canonical variants
+
+**Confidence**: HIGH
+**Source**: `src/cli/mod.rs` § `#[arg(short = 'X', long, value_enum, ignore_case = true, default_value_t = api::HttpMethod::Get)]`
+**Subject**: CLI arg parsing / `jr api` passthrough
+**Behavior**: The `-X` / `--method` clap argument on `jr api` accepts the five HTTP methods in any capitalisation — `DELETE`, `delete`, and `Delete` all parse to `HttpMethod::Delete` and dispatch the corresponding HTTP verb via `From<HttpMethod> for reqwest::Method`. The `ignore_case = true` attribute is set on the `#[arg]` annotation in `src/cli/mod.rs`, NOT on the `HttpMethod` enum definition in `src/cli/api.rs`. Help text (`[possible values: get, post, put, patch, delete]`) remains lowercase because clap renders enum variant names, not user-supplied input — `ignore_case = true` has no effect on help rendering.
+
+**Preconditions**: clap `#[arg(value_enum, ignore_case = true)]` annotation present on `-X`/`--method` in `src/cli/mod.rs`.
+
+**Postconditions**:
+1. Any capitalisation of a valid HTTP method string (DELETE/delete/Delete, GET/get, POST/post, PUT/put, PATCH/patch) is accepted by clap without a parse error (exit 2 eliminated for case-variant inputs).
+2. The accepted input maps to the corresponding `HttpMethod` variant; `From<HttpMethod> for reqwest::Method` dispatch behaviour is unchanged.
+3. Help text under `--method` still renders `[possible values: get, post, put, patch, delete]` (lowercase); `ignore_case = true` does not alter help rendering.
+
+**Invariants**:
+- `HttpMethod` enum definition in `src/cli/api.rs` is NOT modified; case-insensitivity is purely a clap parse-time attribute on the arg, not on the enum.
+- Invalid method strings (e.g., `-X FOO`) continue to be rejected by clap with exit 2; `ignore_case = true` relaxes capitalisation only, not enum membership.
+
+**Edge Cases**:
+- EC-X.1.011-1 (`-X DELETE` uppercase): clap parse succeeds; `HttpMethod::Delete` dispatched; HTTP DELETE sent; exit 0.
+- EC-X.1.011-2 (`-X delete` lowercase): regression guard — unchanged from pre-fix behaviour; still dispatches HTTP DELETE; exit 0.
+- EC-X.1.011-3 (`-X Delete` mixed-case): clap parse succeeds; `HttpMethod::Delete` dispatched; HTTP DELETE sent; exit 0.
+- EC-X.1.011-4 (other uppercase methods — `-X PATCH`, `-X GET`, etc.): identical mechanism; all parse correctly via `ignore_case`; no test written per-method (scope is DELETE per VP-590-001; other methods are the same code path).
+- EC-X.1.011-5 (`-X FOO` invalid method): still rejected with clap error exit 2; `ignore_case = true` has no effect on enum membership.
+
+**Verification Properties**:
+- VP-590-001: uppercase/lowercase/mixed-case parse to `HttpMethod::Delete` and dispatch HTTP DELETE — `tests/cli_handler.rs::test_parse_api_method_uppercase_delete_dispatches_http_delete`, `tests/cli_handler.rs::test_parse_api_method_lowercase_delete_dispatches_http_delete`, `tests/cli_handler.rs::test_parse_api_method_mixedcase_delete_dispatches_http_delete` all succeed; wiremock server records exactly one DELETE request per invocation.
+
+**Trace**: issues #590 (bug: uppercase -X rejected by clap), #582 (feature: match `curl -X` / `gh api -X` convention); PR #597 merged @ 4f3960e0 on develop; S-SOH-590-1 (SOH-BUGS-1 bundle); post-fix micro-BC per DEC-165 (human-approved as recommended)
+
+[NEW 2026-07-09 post-fix micro-BC per DEC-165, issues #590/#582, PR #597]
 
 ---
 

@@ -652,3 +652,23 @@ feature_followup_standalone:
     f3_approved_at: "2026-07-08"
     f4_delivered_at: "2026-07-08"
     notes: "DELIVERED 2026-07-08. PR #593 squash-merged by human @ 7ba4cf4 (DEC-128 honored); issue #571 auto-closed. Red Gate verified (8 RED anchors, all empirical outcomes CONFIRMED-INPUT — 29-pass protocol-guarded uncertainty resolved positively). 8 commits. Step 4.5 CONVERGED STRICT (4 passes, window p2/p3/p4: hostile-inputs, perimeter-totality, final-gate). 992 lib + 49 integration + 256-case proptest green. Mutation gate PASS 5m32s (FIRST real code-diff exercise of mutants CI job — calibration validated; predicted survivors limited to 2 spec-accepted classes). Security 1 LOW (SEC-001 test-helper recursion, mitigated). pr-reviewer APPROVE cycle 1 zero findings. 12/12 AC demos (VHS). In-flight process catches: AGENT-CLAIM-VS-FMT-EVIDENCE (test-writer claimed fmt-clean inaccurately; caught pre-push), demo-recorder unstaged-file flag worked, implementer stop-and-report guard worked (fmt reflow false-alarm correctly escalated), story-index 'cycle closed' overstatement caught + fixed. F3 CONVERGED STRICT (DEC-160): 10 passes / 6 fix rounds, window p8/p9/p10 on v1.7. Files: src/adf.rs + CLAUDE.md + tests/adf_code_mark_exclusivity.rs (NEW) + tests/issue_create_jsm.rs. F5 DISPATCHED (scoped adversarial on merged state, STRICT)."
+
+  - id: S-SOH-590-1
+    title: "case-insensitive HTTP method on jr api -X — add ignore_case = true to --method #[arg] (closes #590, #582)"
+    status: completed
+    pr: 597
+    merge_sha: "4f3960e0"
+    merged_at: "2026-07-09"
+    merged_via: "squash-merge by human (DEC-128 honored)"
+    depends_on: []
+    bc_anchors: []
+    ec_anchors: []
+    holdout_anchors: []
+    issue: 590
+    points: 1
+    criticality: LOW
+    implementation_strategy: quick-dev
+    tdd_mode: standard
+    phase: quick-dev
+    f4_delivered_at: "2026-07-09"
+    notes: "DELIVERED 2026-07-09. PR #597 squash-merged by human @ 4f3960e0 (DEC-128 honored); issues #590 and #582 close on release. Red Gate verified (commit cec775e): test_parse_api_method_uppercase_delete_dispatches_http_delete FAILED (clap invalid value 'DELETE', exit 2); test_parse_api_method_mixed_case_dispatches_http_delete FAILED (clap exit 2, tip similar value 'delete'); test_parse_api_method_lowercase_delete_dispatches_http_delete PASSED (pre-existing path, regression pin). Green at cb3b471 (3/3 PASS). Full suite 2010/0/93. pr-reviewer APPROVE cycle 1. CI 15/15. BC-X.1.011 + VP-590-001 authored by PO (spec v1.3.27); BC-INDEX.md update deferred: TD-031 validate-stable-anchors hook lockout (drift item BC-INDEX-TD031-EDIT-LOCKOUT). Bundle SOH-BUGS-1 story 104 of 105 complete."
