@@ -572,7 +572,7 @@ R1/R4 prefix = deepening round that introduced it.
 | BC-X.1.008 | `send_raw` non-cloneable body returns `anyhow::Error` with explicit message (NOT panic) | BC-1402b (R1) | src/api/client.rs:267-272 | HIGH |
 | BC-X.1.009 | 429-exhausted warning always emitted to stderr (not verbose-gated) | BC-1404; BC-1404-R (R1) | src/api/client.rs:233-237, 309-313 | HIGH |
 | BC-X.1.010 | All HTTP methods inject auth header — no bypass | Pass 4 R4 §4.1 | src/api/client.rs | HIGH |
-| BC-X.1.011 | `jr api -X`/`--method` accepts HTTP method values case-insensitively | — (S-SOH-589) | src/cli/mod.rs § --method arg + tests/cli_handler.rs::test_parse_api_method_uppercase_delete_dispatches_http_delete | HIGH |
+| BC-X.1.011 | `jr api -X`/`--method` accepts HTTP method values case-insensitively | — (S-SOH-590) | src/cli/mod.rs § --method arg + tests/cli_handler.rs::test_parse_api_method_uppercase_delete_dispatches_http_delete | HIGH |
 
 ### X.2 Pagination (6 BCs: BC-X.2.001..006)
 

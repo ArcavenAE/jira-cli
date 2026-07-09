@@ -11,7 +11,7 @@
 
 Red Gate verified 2026-07-09 by orchestrator.
 
-- **Test commit cec775e (Red Gate state):** `test_parse_api_method_uppercase_delete_dispatches_http_delete` FAILED — clap invalid value `'DELETE'`, exit 2, no HTTP dispatch. `test_parse_api_method_mixed_case_dispatches_http_delete` FAILED — clap exit 2, tip similar value `'delete'`. `test_parse_api_method_lowercase_delete_dispatches_http_delete` PASSED — pre-existing path (clap enum `delete` already accepted, HTTP DELETE dispatched correctly).
+- **Test commit cec775e (Red Gate state):** `test_parse_api_method_uppercase_delete_dispatches_http_delete` FAILED — clap invalid value `'DELETE'`, exit 2, no HTTP dispatch. `test_parse_api_method_mixedcase_delete_dispatches_http_delete` FAILED — clap exit 2, tip similar value `'delete'`. `test_parse_api_method_lowercase_delete_dispatches_http_delete` PASSED — pre-existing path (clap enum `delete` already accepted, HTTP DELETE dispatched correctly).
 - **Green Gate at cb3b471:** all 3 tests PASS.
 - **Full suite at Green Gate:** 2010 passed / 0 failed / 93 ignored.
 
@@ -20,7 +20,7 @@ Red Gate verified 2026-07-09 by orchestrator.
 | Test | State | Failure Mode | AC |
 |------|-------|-------------|-----|
 | `test_parse_api_method_uppercase_delete_dispatches_http_delete` | FAIL | clap exits 2: invalid value `'DELETE'` for `--method <METHOD>`. No HTTP dispatch reached. | AC-001 (uppercase) |
-| `test_parse_api_method_mixed_case_dispatches_http_delete` | FAIL | clap exits 2: invalid value `'dElEtE'` for `--method <METHOD>`. Tip: similar value `'delete'`. No HTTP dispatch reached. | AC-002 (mixedcase) |
+| `test_parse_api_method_mixedcase_delete_dispatches_http_delete` | FAIL | clap exits 2: invalid value `'dElEtE'` for `--method <METHOD>`. Tip: similar value `'delete'`. No HTTP dispatch reached. | AC-002 (mixedcase) |
 | `test_parse_api_method_lowercase_delete_dispatches_http_delete` | PASS | Pre-existing path: clap enum `delete` (lowercase) already accepted; HTTP DELETE dispatched correctly. Inverted regression-pin passes vacuously. | AC-003 (regression) |
 
 ### Failure Analysis — AC-001 (uppercase)
@@ -42,7 +42,7 @@ Fix: added `ignore_case = true` to the `#[arg(short = 'X', long = "method", ...)
 | Test | State | Notes |
 |------|-------|-------|
 | `test_parse_api_method_uppercase_delete_dispatches_http_delete` | PASS | `DELETE` now accepted; HTTP DELETE dispatched; wiremock 200 returned. |
-| `test_parse_api_method_mixed_case_dispatches_http_delete` | PASS | `dElEtE` now accepted; HTTP DELETE dispatched. |
+| `test_parse_api_method_mixedcase_delete_dispatches_http_delete` | PASS | `dElEtE` now accepted; HTTP DELETE dispatched. |
 | `test_parse_api_method_lowercase_delete_dispatches_http_delete` | PASS | Regression-pin holds; lowercase path unaffected. |
 
 Full suite: 2010 passed / 0 failed / 93 ignored. Zero regressions.

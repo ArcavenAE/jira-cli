@@ -4,7 +4,7 @@ level: ops
 version: "2.0"
 status: active
 producer: state-manager
-timestamp: 2026-07-09T22:15:00Z
+timestamp: 2026-07-09T23:02:00Z
 phase: 3
 pipeline: ACTIVE
 inputs: []
@@ -12,7 +12,7 @@ input-hash: "[live-state]"
 traces_to: ""
 project: jira-cli
 mode: brownfield
-current_step: "SOH-BUGS-1 BOTH STORIES DELIVERED (2026-07-09): S-SOH-590-1 PR #597 @ 4f3960e0; S-SOH-589-1 PR #601 @ 081187ae (7-pass STRICT Step-4.5, window p5/p6/p7); fix-PR #602 clippy-1.97 unblock @ bf3b3382 (reactive maintenance, human-approved). Issues #589/#590/#582 close at next release. develop lint-green --all-targets. NEXT: bundle convergence check (F7-lite) then release routing decision. trajectory-tail →1→0→0→0. D-chain cite D-27893 latest brownfield."
+current_step: "SOH-BUGS-1 F7-LITE CONVERGED (2026-07-09): holdout 1.00 (6/6); consistency CONSISTENT (3 bookkeeping gaps fixed); all dimensions PASS. AWAITING HUMAN BUNDLE-CLOSURE GATE. Issues #589/#590/#582 close at next release. trajectory-tail →1→0→0→0. D-chain cite D-27893 latest brownfield."
 maintenance_run: CLOSED
 current_cycle: "cycle-001"
 feature_mode_bundle: SOH-BUGS-1
