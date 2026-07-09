@@ -672,3 +672,23 @@ feature_followup_standalone:
     phase: quick-dev
     f4_delivered_at: "2026-07-09"
     notes: "DELIVERED 2026-07-09. PR #597 squash-merged by human @ 4f3960e0 (DEC-128 honored); issues #590 and #582 close on release. Red Gate verified (commit cec775e): test_parse_api_method_uppercase_delete_dispatches_http_delete FAILED (clap invalid value 'DELETE', exit 2); test_parse_api_method_mixed_case_dispatches_http_delete FAILED (clap exit 2, tip similar value 'delete'); test_parse_api_method_lowercase_delete_dispatches_http_delete PASSED (pre-existing path, regression pin). Green at cb3b471 (3/3 PASS). Full suite 2010/0/93. pr-reviewer APPROVE cycle 1. CI 15/15. BC-X.1.011 + VP-590-001 authored by PO (spec v1.3.27); BC-INDEX.md update deferred: TD-031 validate-stable-anchors hook lockout (drift item BC-INDEX-TD031-EDIT-LOCKOUT). Bundle SOH-BUGS-1 story 104 of 105 complete."
+
+  - id: S-SOH-589-1
+    title: "tolerate id-absent editmeta allowedValues in issue edit --field — AllowedValue.id String→Option<String>, 7 Option-aware call sites (closes #589)"
+    status: completed
+    pr: 601
+    merge_sha: "081187ae"
+    merged_at: "2026-07-09"
+    merged_via: "squash-merge by human (DEC-128 honored)"
+    depends_on: []
+    bc_anchors: ["BC-3.4.015", "BC-3.4.016", "BC-3.4.017"]
+    ec_anchors: ["EC-3.4.016-8"]
+    holdout_anchors: ["VP-589-001"]
+    issue: 589
+    points: 2
+    criticality: HIGH
+    implementation_strategy: standard
+    tdd_mode: strict
+    phase: standard-bug-fix
+    f4_delivered_at: "2026-07-09"
+    notes: "DELIVERED 2026-07-09. PR #601 squash-merged by human @ 081187ae (DEC-128 honored); issue #589 closes on release. Red Gate verified (commits 1e9c770/614963f): 4 tests FAILED with genuine serde 'missing field id' assertion errors; 56 pre-existing tests green. Green at 86907e5 (4/4 PASS). Full suite 2016/0/93. pr-reviewer APPROVE cycle 1. Fix-PR #602 @ bf3b3382 (clippy 1.97 lints: useless_borrows_in_formatting x2 + question_mark x1 — reactive maintenance, human-approved). CI unblocked post-fix-PR. Step 4.5 STRICT CONVERGED: 7 passes / 4 fix rounds; trajectory 3→4→0→1→0→0→0; window p5/p6/p7 CLEAN×3; zero human overrides. DEC-166. Bundle SOH-BUGS-1 both stories complete."

@@ -87,13 +87,13 @@ is silently accepted.
 
 **Regression guard** (confirms id-present path still works):
 
-The happy-path test from VP-396-001 (`test_BC_3_4_015_field_string_value_appears_in_table_echo`)
-remains a valid regression guard — all existing 44 tests in `tests/issue_edit_field.rs`
-supply `allowedValues` entries WITH `"id"`, so they collectively guard the id-present
-path.
+The happy-path test from VP-396-001 (`test_bc_3_4_015_field_string_value_appears_in_table_echo`)
+remains a valid regression guard — all pre-existing issue_edit_field tests in
+`tests/issue_edit_field.rs` supply `allowedValues` entries WITH `"id"`, so they
+collectively guard the id-present path.
 
 **Suggested test names**:
-- `test_BC_3_4_015_editmeta_idless_allowed_values_on_non_targeted_field_succeeds`
+- `test_bc_3_4_015_editmeta_idless_allowed_values_on_non_targeted_field_succeeds`
 
 ---
 
@@ -129,7 +129,7 @@ The one-liner in BC-3.4.016 §Verification Properties has been updated to note:
 8. Assert PUT mock was NOT called.
 
 **Suggested test names**:
-- `test_BC_3_4_016_option_idless_allowed_value_exits_64_with_actionable_message`
+- `test_bc_3_4_016_option_idless_allowed_value_exits_64_with_actionable_message`
 
 ---
 
@@ -154,7 +154,7 @@ Properties has been extended to cover the idless allowedValues dry-run sub-case:
 5. Assert the planned-changes preview includes `Severity → Critical`.
 
 **Suggested test names**:
-- `test_BC_3_4_015_field_dry_run_idless_nontargeted_allowedvalues_exits_0`
+- `test_bc_3_4_015_field_dry_run_idless_nontargeted_allowedvalues_exits_0`
 
 ---
 
@@ -177,3 +177,6 @@ VP-589-001 permanent record: BC-3.4.015 §Verification Properties.
 VP-396-002 permanent record (amended): BC-3.4.016 §Verification Properties.
 VP-396-008 permanent record (amended): BC-3.4.015 §Verification Properties AND
 BC-3.4.017 §Verification Properties.
+
+[AMENDED 2026-07-09 TWIN-ARTIFACT-SWEEP: all 4 suggested test-name references lowercased to match actual implemented names (test_bc_3_4_015_* / test_bc_3_4_016_*) per test-naming-convention.md new-test rule]
+[AMENDED 2026-07-09 COUNT-FREE: replaced stale numeric test count "44" with count-free phrasing "all pre-existing issue_edit_field tests" per BC-body Trace/Source convention (PG-365-1)]

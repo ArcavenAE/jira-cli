@@ -58,9 +58,9 @@ Do NOT write an integration test that routes this probe through `partial_match` 
 
 **Test placement (DECISION LOCKED — round 7 F-1)**: `is_team_uuid` in `src/cli/issue/helpers.rs` has no `pub` visibility — it is module-private and is not exported via `lib.rs`. The `is_team_uuid` negative-case assertion is a UNIT test that MUST be placed in the `#[cfg(test)] mod tests` block INSIDE `src/cli/issue/helpers.rs`. Do NOT place it in `tests/`. The team-echo positive cases (verifying that a resolved display name, not a UUID, appears in stderr or JSON `changed_fields`) remain wiremock integration tests in `tests/`.
 
-**Suggested test name**: `test_BC_3_4_012_team_echo_is_resolved_name_not_uuid` (table),
-`test_BC_3_4_013_team_echo_is_resolved_name_not_uuid` (JSON),
-`test_BC_3_4_014_create_team_echo_is_resolved_name_not_uuid` (create table),
+**Suggested test name**: `test_bc_3_4_012_team_echo_is_resolved_name_not_uuid` (table),
+`test_bc_3_4_013_team_echo_is_resolved_name_not_uuid` (JSON),
+`test_bc_3_4_014_create_team_echo_is_resolved_name_not_uuid` (create table),
 `test_is_team_uuid_rejects_35_char_hex_string` (negative unit test — cite or alias the existing `is_team_uuid_rejects_wrong_length` test).
 
 ---
@@ -92,8 +92,8 @@ two output channels. This asymmetry must NOT silently collapse in either directi
 3. Assert `changed_fields.description` IS exactly `"Some longer description text"` (the raw input).
 4. Assert `changed_fields.description` does NOT contain raw ADF JSON structure.
 
-**Suggested test names**: `test_BC_3_4_012_description_echo_is_updated_marker_not_content`,
-`test_BC_3_4_013_description_echo_is_raw_input_string_not_marker`.
+**Suggested test names**: `test_bc_3_4_012_description_echo_is_updated_marker_not_content`,
+`test_bc_3_4_013_description_echo_is_raw_input_string_not_marker`.
 
 **VP-398-002 sub-case — stdin trailing-newline not normalized**:
 
@@ -110,7 +110,7 @@ This test isolates the specific claim in EC-3.4.013-3: the raw bytes from stdin 
 
 **Applies to**: BC-3.4.013 (JSON mode verifies the exact value; BC-3.4.012 table mode is unaffected since it always shows `(updated)` regardless of content).
 
-**Suggested test name**: `test_BC_3_4_013_description_stdin_trailing_newline_preserved_in_changed_fields`.
+**Suggested test name**: `test_bc_3_4_013_description_stdin_trailing_newline_preserved_in_changed_fields`.
 
 **Durability note**: The description table/JSON asymmetry tested by VP-398-002 depends on the CLAUDE.md Gotcha entry mandated for the implementation phase (see prd-delta-398.md §6 "Description asymmetry documentation"). Without that entry, a future maintainer may "fix" the asymmetry by making both channels consistent, silently breaking this VP. The VP-398-002 test suite is necessary but not sufficient — the Gotcha entry is the institutional guard that keeps the asymmetry intentional and documented. The exact Gotcha text is pinned in prd-delta-398.md §6 (DECISION LOCKED — round 5 F-4). Adding that Gotcha entry is a tracked acceptance criterion of the F3 implementation story — not aspirational.
 
@@ -142,8 +142,8 @@ is never reached. All VP-398-003 tests MUST use at least one valid field flag.
 - The existing `test_edit` unit test in `src/cli/issue/json_output.rs` MUST be updated to pass a **non-empty** `BTreeMap` to `edit_response` for `changed_fields`. The existing insta snapshot file `jr__cli__issue__json_output__tests__edit.snap` MUST be regenerated to reflect this non-empty shape. The snapshot file keeps its current name — the "existing no-prefix tests are not renamed" convention applies (`test_edit` has no prefix and is not renamed).
 - A **new** test `test_edit_response_empty_changed_fields` MUST be added (applying the new-test naming convention) to cover the empty-`BTreeMap` case. This test calls `edit_response` with an empty `BTreeMap<String, String>` and asserts that the resulting JSON has `"updated": true` and `"changed_fields": {}`. This new test does NOT use an insta snapshot — it asserts the shape directly to avoid snapshot churn for a trivial edge case.
 
-**Suggested test names**: `test_BC_3_4_013_updated_true_present_with_summary_changed_fields`,
-`test_BC_3_4_013_updated_true_present_with_priority_changed_fields`,
+**Suggested test names**: `test_bc_3_4_013_updated_true_present_with_summary_changed_fields`,
+`test_bc_3_4_013_updated_true_present_with_priority_changed_fields`,
 `test_edit_response_empty_changed_fields` (new test for empty-map case).
 
 ---
@@ -175,9 +175,9 @@ value `(cleared)`; no `no_points` key.
 (total_bcs, definitional_count, BC-INDEX, CANONICAL-COUNTS). It verifies the MED-1 locked
 decision from prd-delta-398.md §6: single map keys for cleared-field cases.
 
-**Suggested test names**: `test_BC_3_4_013_no_parent_key_is_parent_not_no_parent`,
-`test_BC_3_4_013_no_points_key_is_points_not_no_points`,
-`test_BC_3_4_012_no_parent_table_echo_uses_parent_key`.
+**Suggested test names**: `test_bc_3_4_013_no_parent_key_is_parent_not_no_parent`,
+`test_bc_3_4_013_no_points_key_is_points_not_no_points`,
+`test_bc_3_4_012_no_parent_table_echo_uses_parent_key`.
 
 ---
 
@@ -211,7 +211,7 @@ When multiple fields are set, the echo lines must appear in alphabetical field-n
 
 **Note on VP-398-001 and VP-398-005 relationship**: VP-398-001 verifies that the echoed team name is the display name (not UUID) across all three BCs (012, 013, 014). VP-398-005 verifies (A) the error-exit behavior and (B) the alphabetical ordering of the create echo. Both VPs apply to BC-3.4.014 in different aspects — they are complementary, not redundant.
 
-**Suggested test names**: `test_BC_3_4_014_create_unresolvable_team_no_input_exits_64` (part A), `test_BC_3_4_014_create_all_fields_echo_alphabetical_order` (part B).
+**Suggested test names**: `test_bc_3_4_014_create_unresolvable_team_no_input_exits_64` (part A), `test_bc_3_4_014_create_all_fields_echo_alphabetical_order` (part B).
 
 ---
 
@@ -236,7 +236,7 @@ same decision was applied to the create path.
 
 **Placement**: Wiremock integration test in `tests/` (create path uses POST to a real mock URL; can be co-located with existing `issue_create_json.rs` or a new `issue_create_echo.rs` test file — story-writer's decision).
 
-**Suggested test name**: `test_BC_3_4_014_create_description_echo_is_updated_marker`.
+**Suggested test name**: `test_bc_3_4_014_create_description_echo_is_updated_marker`.
 
 ---
 

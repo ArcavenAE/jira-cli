@@ -65,9 +65,9 @@ success paths. The key in `changed_fields` is the human field name (or the
    when name lookup is bypassed).
 
 **Suggested test names**:
-- `test_BC_3_4_015_field_string_value_appears_in_table_echo`
-- `test_BC_3_4_015_field_string_value_appears_in_json_changed_fields`
-- `test_BC_3_4_015_customfield_literal_bypass_skips_list_fields`
+- `test_bc_3_4_015_field_string_value_appears_in_table_echo`
+- `test_bc_3_4_015_field_string_value_appears_in_json_changed_fields`
+- `test_bc_3_4_015_customfield_literal_bypass_skips_list_fields`
 
 ---
 
@@ -114,9 +114,9 @@ label because no `allowedValues[].value` lookup occurred. This is the same patte
 the `customfield_NNNNN` bypass not resolving to a human name.
 
 **Suggested test names**:
-- `test_BC_3_4_016_option_field_resolves_to_id_on_wire_and_label_in_echo`
-- `test_BC_3_4_016_option_field_case_insensitive_resolution`
-- `test_BC_3_4_016_option_field_id_bypass`
+- `test_bc_3_4_016_option_field_resolves_to_id_on_wire_and_label_in_echo`
+- `test_bc_3_4_016_option_field_case_insensitive_resolution`
+- `test_bc_3_4_016_option_field_id_bypass`
 
 ---
 
@@ -152,8 +152,8 @@ default).
 3. Assert `list_fields()` was NOT called (literal bypass: no `GET /rest/api/3/field` mock needed).
 
 **Suggested test names**:
-- `test_BC_3_4_015_field_absent_from_editmeta_exits_64_with_hint`
-- `test_BC_3_4_015_customfield_literal_absent_from_editmeta_exits_64`
+- `test_bc_3_4_015_field_absent_from_editmeta_exits_64_with_hint`
+- `test_bc_3_4_015_customfield_literal_absent_from_editmeta_exits_64`
 
 ---
 
@@ -185,8 +185,8 @@ issue for v2 support). No PUT must be issued.
 2. Assert exit code 64. Assert hint. Assert PUT not called.
 
 **Suggested test names**:
-- `test_BC_3_4_015_array_type_field_exits_64_with_hint`
-- `test_BC_3_4_015_any_type_field_exits_64_with_hint`
+- `test_bc_3_4_015_array_type_field_exits_64_with_hint`
+- `test_bc_3_4_015_any_type_field_exits_64_with_hint`
 
 ---
 
@@ -242,11 +242,11 @@ call, which would violate the "no HTTP before the guard" invariant). Only `summa
 `description`, `issuetype`, and `priority` are in scope for v1.
 
 **Suggested test names**:
-- `test_BC_3_4_017_field_multi_key_rejected_exit_64`
-- `test_BC_3_4_017_field_jql_multi_issue_rejected_exit_64`
-- `test_BC_3_4_017_field_summary_overlap_exits_64_no_http`
-- `test_BC_3_4_017_field_description_overlap_exits_64_no_http`
-- `test_BC_3_4_017_field_issuetype_overlap_exits_64_no_http`
+- `test_bc_3_4_017_field_multi_key_rejected_exit_64`
+- `test_bc_3_4_017_field_jql_multi_issue_rejected_exit_64`
+- `test_bc_3_4_017_field_summary_overlap_exits_64_no_http`
+- `test_bc_3_4_017_field_description_overlap_exits_64_no_http`
+- `test_bc_3_4_017_field_issuetype_overlap_exits_64_no_http`
 
 ---
 
@@ -297,8 +297,8 @@ the temp dir before invoking the handler.
    run (cache hit after first-run write).
 
 **Suggested test names**:
-- `test_BC_3_4_015_warm_fields_cache_skips_field_list_http`
-- `test_BC_3_4_015_cold_cache_fetches_and_populates_fields_cache`
+- `test_bc_3_4_015_warm_fields_cache_skips_field_list_http`
+- `test_bc_3_4_015_cold_cache_fetches_and_populates_fields_cache`
 
 ---
 
@@ -351,8 +351,8 @@ parent is read-only. The integration-test approach requires injecting a failing
 cache writer or making the cache directory read-only before invoking the binary.
 
 **Suggested test names**:
-- `test_BC_3_4_015_cache_write_failure_warns_and_exits_0`
-- `test_BC_3_4_015_cache_write_failure_warning_on_stderr_not_stdout`
+- `test_bc_3_4_015_cache_write_failure_warns_and_exits_0`
+- `test_bc_3_4_015_cache_write_failure_warning_on_stderr_not_stdout`
 - `test_write_fields_cache_swallows_io_error_and_returns_ok`
 
 ---
@@ -405,9 +405,9 @@ dry-run block (confirmed — this is exit 0).
 7. Assert no planned-changes preview is emitted to stdout.
 
 **Suggested test names**:
-- `test_BC_3_4_015_field_dry_run_exits_0_no_put`
-- `test_BC_3_4_015_field_dry_run_resolution_failure_exits_64`
-- `test_BC_3_4_017_gate_a_fires_under_dry_run`
+- `test_bc_3_4_015_field_dry_run_exits_0_no_put`
+- `test_bc_3_4_015_field_dry_run_resolution_failure_exits_64`
+- `test_bc_3_4_017_gate_a_fires_under_dry_run`
 
 ---
 
@@ -444,8 +444,8 @@ surfaces normally and `changed_fields` is discarded (not echoed).
 7. Assert table mode stderr contains NO `  Severity → Critical` echo line.
 
 **Suggested test names**:
-- `test_BC_3_4_015_field_partial_resolution_failure_no_put`
-- `test_BC_3_4_015_field_put_failure_discards_changed_fields`
+- `test_bc_3_4_015_field_partial_resolution_failure_no_put`
+- `test_bc_3_4_015_field_put_failure_discards_changed_fields`
 
 ---
 
@@ -482,9 +482,9 @@ integer-preservation behavior for the `--field` number path.
 3. Assert exit code 64. Assert stderr mentions the parse error. Assert PUT not called.
 
 **Suggested test names**:
-- `test_BC_3_4_015_number_field_integer_wire_form`
-- `test_BC_3_4_015_number_field_scientific_notation_wire_form`
-- `test_BC_3_4_015_number_field_nan_rejected_exit_64`
+- `test_bc_3_4_015_number_field_integer_wire_form`
+- `test_bc_3_4_015_number_field_scientific_notation_wire_form`
+- `test_bc_3_4_015_number_field_nan_rejected_exit_64`
 
 ---
 
@@ -535,9 +535,9 @@ This VP exercises all three pass-through types.
    fail, catching the regression.
 
 **Suggested test names**:
-- `test_BC_3_4_015_user_field_wire_shape_account_id`
-- `test_BC_3_4_015_date_field_bare_string_pass_through`
-- `test_BC_3_4_015_datetime_field_bare_string_pass_through`
+- `test_bc_3_4_015_user_field_wire_shape_account_id`
+- `test_bc_3_4_015_date_field_bare_string_pass_through`
+- `test_bc_3_4_015_datetime_field_bare_string_pass_through`
 
 ---
 
@@ -570,8 +570,8 @@ that appear on the Edit screen but cannot be set via the API.
 2. Assert exit code 64. Assert hint. Assert PUT not called.
 
 **Suggested test names**:
-- `test_BC_3_4_015_operations_lacks_set_exits_64`
-- `test_BC_3_4_015_empty_operations_exits_64`
+- `test_bc_3_4_015_operations_lacks_set_exits_64`
+- `test_bc_3_4_015_empty_operations_exits_64`
 
 ---
 
