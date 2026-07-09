@@ -1403,3 +1403,24 @@ STRICT convergence. Counters: BC 612, Holdouts 83, Stories 102. develop @ 0d8a8a
 | **develop branch** | d7875e6 (fix-PR #594 squash-merged 2026-07-08; F5 CONVERGED DEC-162; ADF-CODE-MARK F4 @ 7ba4cf4; Issue #571 CLOSED). |
 | **Untracked local files** | Deliberately uncommitted, session-local tooling: `.claude/pr-reviews/`, `.claude/spec-config.json`. |
 | **Resume command** | Open fresh session; read `.factory/STATE.md`; run `/vsdd-factory:next-step`. ADF-CODE-MARK: F7 EVIDENCE PACKAGE COMPLETE — AWAITING HUMAN F7 AUTHORIZATION. Human authorizes → bundle CLOSED + optional release routing. |
+
+
+---
+
+### Checkpoint archived: 2026-07-09 — SOH-BUGS-1 FULLY COMPLETE + RELEASED (DEC-167); e2e repair pending
+
+(Displaced by: SESSION WRAP 2026-07-10 checkpoint)
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-07-09 (SOH-BUGS-1 FULLY COMPLETE — release v0.6.0-dev.9 @ b2ce3169; PR #603; run 29051718553; issues #589/#590/#582 CLOSED; DEC-167) |
+| **Status** | **SOH-BUGS-1 FULLY COMPLETE + RELEASED (2026-07-09, DEC-167). PR #603 @ b2ce3169 squash-merged; tag v0.6.0-dev.9 pushed; workflow run 29051718553 SUCCESS (10 assets). Issues #589 CLOSED, #590 CLOSED, #582 CLOSED (all verified). F7-lite 7/7 PASS; holdout 1.00 (6/6 wire-level); consistency CONSISTENT (gaps G1-G3 fixed). DEC-128 honored ×4. RELEASING-MD-MISSING drift recorded. develop @ b2ce3169.** |
+| **Counters** | BC **613**. NFR **42**. ADR **16**. Stories **105**. Holdouts **83**. |
+| **Convergence counter** | SOH-BUGS-1 FULLY COMPLETE (DEC-167). F7-lite holdout 1.00. Trajectory-tail →1→0→0→0. Full trajectories: `cycles/cycle-001/convergence-trajectory.md`. |
+| **In-flight work** | None. No stories mid-TDD. No active story worktrees. No abandoned sub-agent steps. |
+| **Open PRs (not factory-blocking)** | Dependabot #595 (clap_complete, soak from 2026-07-08 — NOT eligible per DEC-133), #591 (open crate, soak from 2026-07-06 — NOT eligible per DEC-133). Standalone #574 (ci/attest-provenance), #573 (docs/mise-install) — CHANGES_REQUESTED, awaiting arcaven revisions. |
+| **Pending/deferred** | F5-OBS-001 (BC-7.2.015 lossiness cross-list → next spec-maintenance sweep). F5-OBS-002 (push_code silent-strip → v2 backlog). TD-031-FULL-CLEANUP (243 pre-existing cites; follow-up story candidate). RELEASING-MD-MISSING (doc backlog). See Drift Items. |
+| **develop branch** | b2ce3169 (PR #603 squash-merged 2026-07-09; SOH-BUGS-1 FULLY COMPLETE; release v0.6.0-dev.9; issues #589/#590/#582 CLOSED). |
+| **Untracked local files** | Deliberately uncommitted, session-local tooling: `.claude/pr-reviews/`, `.claude/spec-config.json`. Not pipeline artifacts. |
+| **STATE.md size** | ~315 lines (OK band). |
+| **Resume command** | Open fresh session; read `.factory/STATE.md`; run `/vsdd-factory:next-step`. SOH-BUGS-1 FULLY COMPLETE (DEC-167). Release v0.6.0-dev.9 SHIPPED @ b2ce3169. Pipeline IDLE — next intake candidates: sackofhacks features (P1 #575/#576/#577); dependabot soak; arcaven PR revisions. |

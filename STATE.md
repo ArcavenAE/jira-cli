@@ -4,15 +4,15 @@ level: ops
 version: "2.0"
 status: active
 producer: state-manager
-timestamp: 2026-07-10T00:41:00Z
+timestamp: 2026-07-10T01:15:00Z
 phase: 3
-pipeline: ACTIVE
+pipeline: PAUSED
 inputs: []
 input-hash: "[live-state]"
 traces_to: ""
 project: jira-cli
 mode: brownfield
-current_step: "SOH-BUGS-1 FULLY COMPLETE (DEC-167, 2026-07-09): release v0.6.0-dev.9 SHIPPED @ b2ce3169 (run 29051718553, 10 assets); issues #589/#590/#582 CLOSED. Pipeline IDLE — next intake candidates: sackofhacks features (P1 #575/#576/#577; #577 security-adjacent jsdPublic footgun); dependabot #591 soak-eligible ~07-13, #595 ~07-15 (DEC-133); arcaven PR revisions (#573/#574 CHANGES_REQUESTED); upstream engine-bug batch (write-stall, hook conflict, BC-INDEX cleanup); F5-OBS deferrals. trajectory-tail →1→0→0→0. D-chain cite D-27893 latest brownfield."
+current_step: "SOH-BUGS-1 FULLY COMPLETE (DEC-167, 2026-07-09): release v0.6.0-dev.9 SHIPPED @ b2ce3169 (run 29051718553, 10 assets); issues #589/#590/#582 CLOSED. Pipeline IDLE — next intake candidates: sackofhacks features (P1 #575/#576/#577; #577 security-adjacent jsdPublic footgun); dependabot #591 soak-eligible ~07-13, #595 ~07-15 (DEC-133); arcaven PR revisions (#573/#574 CHANGES_REQUESTED); upstream engine-bug batch (write-stall, hook conflict, BC-INDEX cleanup); F5-OBS deferrals. trajectory-tail →1→0→0→0. D-chain cite D-27893 latest brownfield. SESSION WRAP 2026-07-10: pipeline PAUSED (human /wrap). RESUME INTENT: work on issues — first action is issues-intake decision (sackofhacks #575-#588, P1 #575/#576/#577)."
 maintenance_run: CLOSED
 current_cycle: "cycle-001"
 feature_mode_bundle: SOH-BUGS-1
@@ -26,7 +26,7 @@ activation_version: "v0.6.0-dev.9"
 
 <!--
   STATE.md SIZE BUDGET (per D-421(c)):
-  Hard cap (500 lines) margin from soft-target = 500 - 315 = 185; margin from actual = 500 - 315 = 185 (D-446(c) dual-margin form). 315 lines (wc-l).
+  Hard cap (500 lines) margin from soft-target = 500 - 316 = 184; margin from actual = 500 - 316 = 184 (D-446(c) dual-margin form). 316 lines (wc-l).
   Hard cap: 500 lines.
 -->
 
@@ -66,6 +66,7 @@ activation_version: "v0.6.0-dev.9"
 | **S-SOH-590-1 DELIVERED (2026-07-09) — PR #597 @ 4f3960e0 (DEC-128 honored). Quick-dev: Red Gate at cec775e (3 tests: 2 FAIL uppercase/mixedcase, 1 PASS lowercase); Green at cb3b471 (3/3, 2010/0/93). APPROVE cycle 1. CI 15/15. BC-X.1.011 + VP-590-001 (spec v1.3.27). TD-031 BC-INDEX lockout (see drift).** | implementer + pr-manager + state-manager | COMPLETE | `cycles/cycle-001/S-SOH-590-1/implementation/red-gate-log.md`; `stories/S-SOH-590-1.md` updated to completed; `sprint-state.yaml` updated. |
 | **S-SOH-589-1 DELIVERED (2026-07-09) — PR #601 @ 081187ae (DEC-128 honored); fix-PR #602 @ bf3b3382 (clippy 1.97 unblock, APPROVE cycle 2). Step-4.5 STRICT: 7 passes / 4 fix rounds; trajectory 3→4→0→1→0→0→0; window p5/p6/p7 CLEAN×3. 6/6 AC demos (local). 2016/0/93. DEC-166.** | implementer + pr-manager + state-manager | COMPLETE | `cycles/cycle-001/S-SOH-589-1/implementation/red-gate-log.md`; `cycles/cycle-001/S-SOH-589-1/implementation/step-4-5-convergence.md`; `stories/S-SOH-589-1.md` updated to completed; `sprint-state.yaml` updated. |
 | **SOH-BUGS-1 CLOSED (2026-07-09) — release v0.6.0-dev.9 SHIPPED @ b2ce3169 (run 29051718553, 10 assets); issues #589/#590/#582 CLOSED. DEC-167. RELEASING-MD-MISSING drift recorded.** | state-manager | COMPLETE | PR #603 @ b2ce3169; tag v0.6.0-dev.9; workflow run 29051718553 SUCCESS; 10 assets. |
+| **SESSION WRAP (2026-07-10) — human /wrap after SOH-BUGS-1 completion + v0.6.0-dev.9 release + e2e repair (run 29055766599). Pipeline PAUSED. Resume intent: issues intake.** | state-manager | COMPLETE | Pipeline PAUSED per human /wrap. E2E repaired. RESUME INTENT: issues-intake (sackofhacks P1 #575/#576/#577). |
 
 ## Decisions Log
 
@@ -186,7 +187,7 @@ None open.
 | CLAUDE-MD-CLIPPY-ALL-TARGETS-DRIFT | doc hygiene | CLAUDE.md documents `cargo clippy -- -D warnings` but CI runs `cargo clippy --all-targets -- -D warnings`; caused fix-PR #602 cycle-1 REQUEST_CHANGES on S-SOH-589-1. Fix candidate: 1-line CLAUDE.md update via pipeline. | LOW | OPEN — pipeline doc fix candidate |
 | PERMISSION-LAUNDERING-REFUSAL-WORKING | positive control | 2026-07-09: peer agent refused relayed gh-write after permission denial, surfaced to human; DEC-128 defense working as designed. No action needed. | LOW | CLOSED — positive control datapoint |
 | RELEASING-MD-MISSING | doc backlog | No RELEASING.md in repo root — release skill prompts on every release until canonical procedure is documented; draft from dev.8/dev.9 precedent. | LOW | OPEN — doc backlog candidate |
-| E2E-TOKEN-EXPIRED-2026-07 | e2e-infra | Live-Jira E2E failing since 2026-07-04 (signatures: code-2 not-authenticated + 400 no-permission); JR_E2E_API_TOKEN expiry suspected per runbook §9; human rotating; non-blocking but site keepalive at risk. | MEDIUM | OPEN — awaiting human token rotation |
+| E2E-TOKEN-EXPIRED-2026-07 | e2e-infra | Live-Jira E2E failing since 2026-07-04 (signatures: code-2 not-authenticated + 400 no-permission); JR_E2E_API_TOKEN expiry suspected per runbook §9; human rotating; non-blocking but site keepalive at risk. | MEDIUM | RESOLVED 2026-07-10 — human rotated JR_E2E_API_TOKEN; verified by e2e run 29055766599 SUCCESS (full live suite green). |
 
 ## Convergence Status
 
@@ -209,21 +210,21 @@ ADF-CODE-MARK-EXCLUSIVITY: **FULLY COMPLETE (2026-07-08, DEC-163). S-7.02 SATISF
 
 | Field | Value |
 |-------|-------|
-| **Date** | 2026-07-09 (SOH-BUGS-1 FULLY COMPLETE — release v0.6.0-dev.9 @ b2ce3169; PR #603; run 29051718553; issues #589/#590/#582 CLOSED; DEC-167) |
-| **Status** | **SOH-BUGS-1 FULLY COMPLETE + RELEASED (2026-07-09, DEC-167). PR #603 @ b2ce3169 squash-merged; tag v0.6.0-dev.9 pushed; workflow run 29051718553 SUCCESS (10 assets). Issues #589 CLOSED, #590 CLOSED, #582 CLOSED (all verified). F7-lite 7/7 PASS; holdout 1.00 (6/6 wire-level); consistency CONSISTENT (gaps G1-G3 fixed). DEC-128 honored ×4. RELEASING-MD-MISSING drift recorded. ALSO OPEN: arcaven PRs #573+#574 CHANGES_REQUESTED; dependabot #595/#591 soak check pending.** develop @ b2ce3169. |
+| **Date** | 2026-07-10 (WRAP — SOH-BUGS-1 FULLY COMPLETE DEC-167; release v0.6.0-dev.9; e2e repaired run 29055766599; pipeline PAUSED) |
+| **Status** | **SESSION PAUSED (2026-07-10, human /wrap). SOH-BUGS-1 FULLY COMPLETE (DEC-167) + release v0.6.0-dev.9 SHIPPED @ b2ce3169 (run 29051718553, 10 assets) + issues #589/#590/#582 CLOSED + e2e REPAIRED (run 29055766599 SUCCESS, full live suite green). develop @ b2ce3169. Pipeline PAUSED.** |
 | **Counters** | BC **613**. NFR **42**. ADR **16**. Stories **105**. Holdouts **83**. |
-| **Convergence counter** | SOH-BUGS-1 FULLY COMPLETE (DEC-167). F7-lite holdout 1.00. Trajectory-tail →1→0→0→0. Full trajectories: `cycles/cycle-001/convergence-trajectory.md`. |
-| **In-flight work** | None. No stories mid-TDD. No active story worktrees. No abandoned sub-agent steps. |
-| **Open PRs (not factory-blocking)** | Dependabot #595 (clap_complete, soak from 2026-07-08 — NOT eligible per DEC-133), #591 (open crate, soak from 2026-07-06 — NOT eligible per DEC-133). Standalone #574 (ci/attest-provenance), #573 (docs/mise-install) — CHANGES_REQUESTED, awaiting arcaven revisions. |
-| **Pending/deferred** | F5-OBS-001 (BC-7.2.015 lossiness cross-list → next spec-maintenance sweep). F5-OBS-002 (push_code silent-strip → v2 backlog). TD-031-FULL-CLEANUP (243 pre-existing cites; follow-up story candidate). RELEASING-MD-MISSING (doc backlog). See Drift Items. |
+| **Convergence counter** | SOH-BUGS-1 FULLY COMPLETE (DEC-167). F7-lite holdout 1.00. Trajectory-tail →1→0→0→0. E2E run 29055766599 SUCCESS (full live suite green). |
+| **In-flight work** | NONE. No stories mid-TDD. No active story worktrees. No factory PRs in-progress. Product repo clean (session-local `.claude/pr-reviews/` + `.claude/spec-config.json` untracked, deliberate). |
+| **Open PRs (not factory-blocking)** | Dependabot #595 (clap_complete, soak eligible ~2026-07-15, DEC-133), #591 (open crate, soak eligible ~2026-07-13, DEC-133). Standalone #574 (ci/attest-provenance), #573 (docs/mise-install) — CHANGES_REQUESTED, awaiting arcaven revisions. |
+| **Pending decisions** | None blocking. RESUME INTENT (human, explicit): "work on issues" — present issues-intake options first: sackofhacks P1 #575 (--fields CSV) / #576 (attachment tree) / #577 (comment CRUD, security-adjacent jsdPublic footgun — recommend leading). Also: arcaven #573/#574 revisions; dependabot soaks; upstream engine-bug batch (STATE-MANAGER-MONOLITHIC-WRITE-STALL, PR-MANAGER-HOOK-VS-DEC-128-CONFLICT, TD-031-FULL-CLEANUP); optional SOH-BUGS-1 session-review. |
 | **develop branch** | b2ce3169 (PR #603 squash-merged 2026-07-09; SOH-BUGS-1 FULLY COMPLETE; release v0.6.0-dev.9; issues #589/#590/#582 CLOSED). |
 | **Untracked local files** | Deliberately uncommitted, session-local tooling: `.claude/pr-reviews/`, `.claude/spec-config.json`. Not pipeline artifacts. |
-| **STATE.md size** | ~315 lines (OK band). |
-| **Resume command** | Open fresh session; read `.factory/STATE.md`; run `/vsdd-factory:next-step`. SOH-BUGS-1 FULLY COMPLETE (DEC-167). Release v0.6.0-dev.9 SHIPPED @ b2ce3169. Pipeline IDLE — next intake candidates: sackofhacks features (P1 #575/#576/#577); dependabot #595/#591 soak; arcaven PR revisions (#573/#574). ADF-CODE-MARK: FULLY COMPLETE (DEC-163). |
+| **STATE.md size** | ~316 lines (OK band). |
+| **Resume command** | Open fresh session; factory-worktree-health; read `.factory/STATE.md`; present issues-intake gate to human. RESUME INTENT: "work on issues" — sackofhacks P1 first (#577 security-adjacent sd.public.comment footgun, #575 --fields CSV, #576 attachment tree). |
 
 ## RESUME PLAN (cold-start, self-contained)
 
-<!-- State snapshot: SOH-BUGS-1 FULLY COMPLETE + RELEASED (2026-07-09, DEC-167). PR #603 @ b2ce3169; tag v0.6.0-dev.9; run 29051718553 SUCCESS (10 assets). Issues #589/#590/#582 CLOSED. F7-lite 7/7 PASS. ADF-CODE-MARK-EXCLUSIVITY FULLY COMPLETE (DEC-163, 2026-07-08). develop @ b2ce3169 (PR #603 squash-merged 2026-07-09). BC 613; Stories 105. Holdouts 83. No active feature worktrees. Pipeline IDLE — new intake next. External-PR reviews: #573+#574 CHANGES_REQUESTED. -->
+<!-- State snapshot: SESSION PAUSED (2026-07-10, human /wrap). SOH-BUGS-1 FULLY COMPLETE + RELEASED (DEC-167, 2026-07-09). Release v0.6.0-dev.9 @ b2ce3169; issues #589/#590/#582 CLOSED; e2e repaired (run 29055766599 SUCCESS). ADF-CODE-MARK-EXCLUSIVITY FULLY COMPLETE (DEC-163). develop @ b2ce3169. BC 613; Stories 105. Holdouts 83. No active worktrees. Pipeline PAUSED. RESUME INTENT: issues intake (sackofhacks P1 #575/#576/#577). -->
 
 ### Steps (assume ZERO memory)
 
