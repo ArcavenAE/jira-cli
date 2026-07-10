@@ -16,8 +16,8 @@ _Note: entry date extended to 2026-07-10 via pass-12+ remediations._
 
 F2 spec evolution for SOH-COMMENT-CRUD-1 bundle (GitHub issue #577: `jr issue comment
 delete/edit/view`). DEC-168 human gate approved 2026-07-09. Adds 11 new BCs
-(BC-3.5.002..BC-3.5.012) to `bc-3-issue-write.md §3.5`, plus 4 holdout scenarios
-(H-NEW-COMMENT-001..H-NEW-COMMENT-004) to `holdout-scenarios.md`. Key design resolution:
+(BC-3.5.002..BC-3.5.012) to `bc-3-issue-write.md §3.5`, plus 5 holdout scenarios
+(H-NEW-COMMENT-001..H-NEW-COMMENT-005) to `holdout-scenarios.md`. Key design resolution:
 `comment edit` default is body-only PUT (no `"properties"` key — the footgun claim was
 REFUTED by research); `--public` always-confirm semantics (Option a — no GET required);
 `comment delete` 404 exits 64 + surfaces error body (NOT idempotent); CLI breaking change
@@ -452,6 +452,15 @@ and agrees at 624. All 8 cumulative-count surfaces now agree.
   F4 (LOW, field-7 modality fix): BC-3.5.010 item 7 — "MAY propagate an `adf_to_text` error" → "that produces an `adf_to_text` error propagates per EC-3.5.010-2 (currently only the recursion depth-guard; exit 64)" (modality: MUST, not MAY).
   F5 (LOW, add-asymmetry note): EC-3.5.009-2 — note appended clarifying that `comment add`'s three-body-source resolution retains legacy priority order (positional > `--file` > `--stdin`) WITHOUT clap `conflicts_with` — deliberate asymmetry; aligning `add` to clap-level mutual exclusion is a follow-up story candidate.
   VP count stays 24. No BC/holdout count change.
+  Adversary pass-26 remediation (same-version, 3 LOW):
+  F1 (LOW, summary paragraph holdout count): spec-changelog.md §Summary — "plus 4 holdout scenarios (H-NEW-COMMENT-001..H-NEW-COMMENT-004)" → "plus 5 holdout scenarios (H-NEW-COMMENT-001..H-NEW-COMMENT-005)".
+  F2 (LOW, L2 §1 Ubiquitous Language + §3 Invariants): bc-03-issue-write.md (TD-031 Python shell): (a) `--internal` row ~30 — "Flag on `issue comment` that adds" → "Flag on `issue comment add` (append path) and `issue comment edit` (PUT path) that adds"; (b) INV-WRITE-006 row ~102 — "Comment `--internal` adds" → "`issue comment add --internal` (and `edit --internal`) adds".
+  F3 (LOW, ADF-trimming claim): bc-3-issue-write.md — two occurrences of "Whitespace trimming applies only to the EC-3.5.009-5 emptiness gate and [to] the ADF conversion input, not to the JSON echo channel" rewritten to the Option-A ruling: "Whitespace trimming applies only to the EC-3.5.009-5 emptiness gate; both the JSON echo channel AND the ADF conversion input receive the raw pre-trim source string byte-for-byte (symmetric with comment add's legacy behavior)." Affected sites: BC-3.5.005 Byte-for-byte echo pin (~line 2277) and VP-577-023 (~line 2289). EC-3.5.009-5 wording and BC-3.5.005 pipeline pin step 4 were checked and require no change (neither asserts ADF conversion receives a trimmed value).
+  VP count stays 24. No BC/holdout count change.
+  Adversary pass-25 remediation (same-version, 1 LOW + 1 informational preempt):
+  Fix 1 (LOW, changelog CANONICAL-COUNTS.md bullet): spec-changelog.md CANONICAL-COUNTS.md bullet — three corrections: (a) "83 → 87" → "83 → 88"; (b) "H-NEW-COMMENT-001..004" → "H-NEW-COMMENT-001..005"; (c) "Last reconciled 2026-07-09" → "Last reconciled 2026-07-10". Brings changelog bullet into alignment with the actual CANONICAL-COUNTS.md file content.
+  Fix 2 (informational preempt, mixed-case variant): VP-577-020 extended with mixed-case invocation line: `jr issue comment LS FOO-1` → exit 2; stderr contains `"jr issue comments"` (pins the EC-3.5.012-1 pass-24 F3 `eq_ignore_ascii_case` rule). Trace updated to reference adversary pass-25. VP count stays 24.
+  No BC/holdout count change.
 
 - `.factory/specs/prd/holdout-scenarios.md` (MODIFIED): `total_holdouts` 83 → 88;
   `version` 1.5.1 → 1.5.2; `last_updated` updated; trace entry added for
@@ -465,8 +474,8 @@ and agrees at 624. All 8 cumulative-count surfaces now agree.
   bc-3 definitional count 80 → 91; total individually-bodied 383 → 394; bc-3 total_bcs
   109 → 120; Sum 613 → 624; Grand total 613 → 624 (note extended); breakdown 613/383 →
   624/394; BC-X.4.009 references updated; L2 alignment table bc-03 109 → 120; holdout
-  section canonical total 83 → 87 (Expected list extended with H-NEW-COMMENT-001..004;
-  Group 15 entry added; trailing note frontmatter 83→87, Last reconciled 2026-07-09).
+  section canonical total 83 → 88 (Expected list extended with H-NEW-COMMENT-001..005;
+  Group 15 entry added; trailing note frontmatter 83→88, Last reconciled 2026-07-10).
 
 - `.factory/specs/prd/BC-INDEX.md` (MODIFIED): total_bcs 613 → 624; bc-3 section
   "109 BCs cumulative; 80 individually-bodied" → "120 BCs cumulative; 91

@@ -27,7 +27,7 @@ Covers the write side of the Issue domain: `jr issue create`, `edit`, `move`, `a
 | **`partial_match`** | Shared resolver used by transitions, status names, resolution names, link types, and user names. Single-substring → `Ambiguous` → prompt or error. |
 | **Link type** | `IssueLinkType` with `name`, `inward`, `outward`. Default link name is `"Relates"`. |
 | **Remote link** | A URL-based link to an external resource (`POST /rest/api/3/issue/<key>/remotelink`). Not an issue-to-issue link. |
-| **`--internal`** | Flag on `issue comment` that adds `{key:"sd.public.comment", value:{internal:true}}` property. Silent no-op on non-JSM projects. |
+| **`--internal`** | Flag on `issue comment add` (append path) and `issue comment edit` (PUT path) that adds `{key:"sd.public.comment", value:{internal:true}}` property. Silent no-op on non-JSM projects. |
 | **ADF description** | Issue descriptions and comment bodies are Atlassian Document Format JSON. `jr` converts plain text or markdown to ADF on write. |
 | **Write-op JSON shape** | The JSON returned by write commands varies per operation: `{key, status, transitioned}` for move; `{key}` for create; `{changed: bool}` for assign; `{linked: bool}` for link; `{unlinked: bool}` for unlink; `{updated: bool}` for edit. Four distinct boolean names — inconsistency noted (P5R1-AP-05). |
 
@@ -99,7 +99,7 @@ Covers the write side of the Issue domain: `jr issue create`, `edit`, `move`, `a
 | INV-WRITE-003 | Resolution resolver does NOT auto-promote single substring hits. `MatchResult::Ambiguous` always errors; only `Exact` (case-insensitive) resolves. | `workflow.rs:65-79`, Pass 2 INV-10 |
 | INV-WRITE-004 | `issue assign` is idempotent: checks current assignee before write. Exits 0 with `changed:false` if target == current. | `cli/issue/workflow.rs`, CLAUDE.md |
 | INV-WRITE-005 | 400 "resolution required" from Jira is rewritten to a user-facing hint suggesting `--resolution`. | `workflow.rs:357-377` |
-| INV-WRITE-006 | Comment `--internal` adds `{key:"sd.public.comment", value:{internal:true}}` to `properties[]`. On non-JSM projects, Jira silently ignores the property — no error. | `api/jira/issues.rs:181-198`, NEW-INV-257 (per Pass 8 §2.2 BC#10) |
+| INV-WRITE-006 | `issue comment add --internal` (and `edit --internal`) adds `{key:"sd.public.comment", value:{internal:true}}` to `properties[]`. On non-JSM projects, Jira silently ignores the property — no error. | `api/jira/issues.rs:181-198`, NEW-INV-257 (per Pass 8 §2.2 BC#10) |
 | INV-WRITE-007 | `issue unlink` without `--type` filter removes ALL links between k1 and k2. With `--type`, removes only matching-type links. Re-running on already-unlinked is a no-op (filter empties out). | `cli/issue/links.rs`, Pass 2 §2b.1 |
 | INV-WRITE-008 | `sprint add`/`sprint remove` cap at `MAX_SPRINT_ISSUES = 50` per call. Exceeding this count errors with an explicit message before any API call. | `cli/sprint.rs:35-41,55-61,107` |
 | INV-WRITE-009 | ~~`worklog add` hardcodes `8h/day, 5d/week` as duration parsing parameters (`parse_duration(dur, 8, 5)`). Jira instance time-tracking settings are ignored. This is NFR-R-C (MEDIUM).~~ **RESOLVED 2026-05-08 — S-2.06 v2.0.0 — `worklog add` now sends `timeSpent` string; Jira server applies its own working-hours config. See DEC-010.** | `cli/worklog.rs::handle_add` + `src/api/jira/worklogs.rs::add_worklog` |
