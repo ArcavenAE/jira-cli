@@ -278,6 +278,55 @@ and agrees at 624. All 8 cumulative-count surfaces now agree.
   VP-577-015 list-token case; confirms EC-3.5.012-1 two-sub-case discrimination covers ls
   alias). BC-3.5.012 Trace updated with pass-8 L3 reference.
   VP count 19 → 20 (VP-577-020 added). No BC count change.
+  Adversary pass-9 remediation (same-version, 1 MEDIUM / 2 LOW):
+  F1 (MEDIUM): EC-3.5.008-3 causal wording replaced with prescriptive normative rule —
+  the handler MUST treat --stdin as implying no_input=true at handler-start independent
+  of TTY detection (a y/N prompt after stdin consumed to EOF reads a dead fd; silent-cancel
+  of a state-changing intent is unacceptable); relying on the "stdin is pipe → auto-flip"
+  inference fails when JR_STDIN_IS_TTY=1 suppresses the auto-flip with a real pipe stdin.
+  VP-577-017 extended with second variant: same invocation with JR_STDIN_IS_TTY=1 set
+  (seam active) → still exit 64 (proves the --stdin flag-based branch fires independently
+  of TTY-detection state). BC-3.5.008 Trace updated with pass-9 F1 reference.
+  F2 (LOW): BC-3.5.005 Response 200 JSON bullet — one-line key-order disclaimer appended
+  after the changed_fields.visibility sentence, mirroring EC-3.5.003-2 pattern: "(Key order
+  shown matches serde_json default alphabetical emission (Value::Object uses BTreeMap); JSON
+  key order is not semantically load-bearing but examples match the wire.)"
+  F3 (LOW): BC-3.5.010 Response 404 — Response 403 one-liner added immediately after:
+  "Response 403 (if surfaced by endpoint variant) → same treatment: exit 64 + surface body."
+  Mirrors BC-3.5.004's 403 clause; ensures comment view exits 64 user-actionably on
+  scope-related 403, symmetric with delete.
+  VP count stays 20 (VP-577-017 modified, none added). No BC count change.
+  Adversary pass-10 remediation (same-version, 1 MEDIUM): spec-changelog.md Mainline
+  refactor risk row — tests/e2e_live.rs flat-form call site enumeration completed from
+  2 ranges to 5 (~lines 2513-2548, 3756, 4823-4859, 6090-6099, 9687-9695); non-authoritative
+  disclaimer appended per #408 citation-form convention; binding obligation is EC-3.5.012-2's
+  ALL-sites clause; F4 story MUST re-enumerate via grep at delivery time. No BC/VP/holdout
+  count change.
+  Adversary pass-11 remediation (same-version, 2 MEDIUM / 2 LOW):
+  F1 (MEDIUM): Two occurrences of interact_on(&Term::stdout()) replaced with
+  interact_on(&Term::stderr()) — BC-3.5.003 Implementation note and BC-3.5.006 delivery
+  item (c). Rationale sentence added to both sites: Term::stderr() writes the prompt to
+  stderr per the prompt-to-stderr invariant (EC-3.5.003-2 / EC-3.5.008-2) while dialoguer
+  still reads input from stdin (stdin path is independent of the Term used for output).
+  Verified: zero Term::stdout() references remain in §3.5. BC-3.5.003 and BC-3.5.006
+  Trace lines updated.
+  F2 (MEDIUM): BC-3.5.004 Implementation note — output-mode clause added: text mode emits
+  two separate stderr lines; --output json mode routes both into H-020 {"error":...,"code":...}
+  envelope with newline JSON-escaped as \n; envelope MUST NOT be bypassed; VP-577-004 /
+  H-NEW-COMMENT-003 / H-NEW-COMMENT-004 assertions are mode-agnostic. Behavior bullet 404
+  (~line 2196) qualified with "(text mode; JSON mode carries both in the single H-020 envelope
+  error field)". H-NEW-COMMENT-003 Expected and H-NEW-COMMENT-004 Expected B both qualified
+  with same parenthetical. BC-3.5.004 Trace updated.
+  F3 (LOW): CANONICAL-COUNTS.md note (line 57) — stale "requires update to 624 (blocked by
+  TD-031...)" text replaced with the current state: "BC-INDEX.md total_bcs header was bumped
+  to 624 in v1.3.28 via a sanctioned Python shell edit (TD-031 bypassed per established
+  workaround). CANONICAL-COUNTS.md remains the primary source of truth; TD-031 line-cite
+  violations tracked separately for cleanup."
+  F4 (LOW): BC-3.5.006 delivery item (b) — compound-cell sentence rewritten as explicit
+  Scenario 3, labeled "NOT a substitute for Scenario 2"; preceding 2-step and 5-step probes
+  labeled Scenario 2 and Scenario 1 respectively; "All three scenarios live in the same
+  gated e2e test function" replaces "Both probe steps..." BC-3.5.006 Trace updated.
+  VP count stays 20. No BC/holdout count change.
 
 - `.factory/specs/prd/holdout-scenarios.md` (MODIFIED): `total_holdouts` 83 → 87;
   `version` 1.5.1 → 1.5.2; `last_updated` updated; trace entry added for
@@ -316,7 +365,7 @@ and agrees at 624. All 8 cumulative-count surfaces now agree.
 | Design decision | --public always-confirm (Option a; DEC-168 open point resolved; recorded in BC-3.5.007) |
 | Scripts | check-spec-counts.sh — bc-3 frontmatter and body agree; check-bc-cumulative-counts.sh — all 8 surfaces agree (BC-INDEX.md MODIFIED); check-bc-citation-symbols.sh — all §3.5 citations use existing anchors |
 | ADR recommendation | No new ADR warranted — breaking CLI change (comment→subcommand group) is documented via BC-3.5.012 + CHANGELOG entry in S-577-1 PR. The pattern is a CLI evolution, not an architectural decision. ADR-0012 already covers the shard extraction trigger; no new ADR needed. |
-| Mainline refactor risk | EC-3.5.012-1 requires changing `src/main.rs` `Cli::parse()` → `try_parse()` (or equivalent) to intercept `ErrorKind::InvalidSubcommand` under `issue comment` and inject the "comment add" hint. This modifies the whole-CLI clap error path, creating regression risk for all other clap error surfaces. The implementing story (S-577-1) MUST include regression-test obligations for: BC-3.4.011 (cross-hierarchy `--type` 400 hint), BC-3.7.003/004 (remote-link error paths), BC-3.8.010 (JSM create error paths), and `--help` snapshot tests. Additionally, the `tests/e2e_cli_surface_guard.rs` SURFACE table MUST be updated in the same PR: the existing single row `(&["issue","comment"], &["--output","--internal","--file","--stdin","--markdown"])` MUST be replaced with four rows — one each for `comment add`, `comment delete`, `comment edit`, and `comment view` — each carrying its own flag set. Also, existing `tests/e2e_live.rs` call sites using the old flat comment form (~lines 2513-2548, 3756) ride the EC-3.5.012-2 obligation and MUST be updated to the `comment add` form in the same PR as the CLI refactor. |
+| Mainline refactor risk | EC-3.5.012-1 requires changing `src/main.rs` `Cli::parse()` → `try_parse()` (or equivalent) to intercept `ErrorKind::InvalidSubcommand` under `issue comment` and inject the "comment add" hint. This modifies the whole-CLI clap error path, creating regression risk for all other clap error surfaces. The implementing story (S-577-1) MUST include regression-test obligations for: BC-3.4.011 (cross-hierarchy `--type` 400 hint), BC-3.7.003/004 (remote-link error paths), BC-3.8.010 (JSM create error paths), and `--help` snapshot tests. Additionally, the `tests/e2e_cli_surface_guard.rs` SURFACE table MUST be updated in the same PR: the existing single row `(&["issue","comment"], &["--output","--internal","--file","--stdin","--markdown"])` MUST be replaced with four rows — one each for `comment add`, `comment delete`, `comment edit`, and `comment view` — each carrying its own flag set. Also, existing `tests/e2e_live.rs` call sites using the old flat comment form (~lines 2513-2548, 3756, 4823-4859 (--file/--stdin/--markdown channel tests), 6090-6099, 9687-9695) ride the EC-3.5.012-2 obligation and MUST be updated to the `comment add` form in the same PR as the CLI refactor. Line numbers are approximate and NON-authoritative (per the #408 citation-form convention) — the binding obligation is EC-3.5.012-2's ALL-sites clause; the F4 story MUST re-enumerate via `grep -n '"issue", *"comment"' tests/e2e_live.rs` at delivery time and update every match. |
 
 ---
 

@@ -1968,7 +1968,7 @@ Call B (kanban board 2 — JQL search path, sprint endpoint must not fire):
 **Expected (MUST-PASS)**:
 - Exit code = 64.
 - `DELETE /rest/api/3/issue/FOO-1/comment/10001` was called exactly once.
-- stderr contains BOTH: (a) the preamble substring `"comment not found or permission denied"` AND (b) the Jira error text `"Comment with id '10001' does not exist."` (on a separate stderr line following the preamble).
+- stderr contains BOTH: (a) the preamble substring `"comment not found or permission denied"` AND (b) the Jira error text `"Comment with id '10001' does not exist."` (on a separate stderr line following the preamble; text mode; JSON mode carries both in the single H-020 envelope error field).
 - stdout is empty (no success message emitted on error path).
 
 **Why hidden**: The key contract is that 404 from `comment delete` is NOT treated as idempotent success. A regression that maps 404 → exit 0 (the F1 draft behavior) would pass all exit-code checks while silently swallowing permission failures. The only observable evidence is the non-zero exit code and the surfaced error body. Exit code alone (64) is the primary signal; the error body surfacing (stderr contains Jira message) confirms the "surface error body" part of BC-3.5.004.
@@ -2013,7 +2013,7 @@ Call B (view 404 — deleted or missing comment):
 **Expected B (MUST-PASS)**:
 - Exit code = 64.
 - stderr contains `"comment not found"` (load-bearing preamble substring; confirms the 404 is mapped to exit 64 with the correct preamble from BC-3.5.010 Response 404).
-- stderr contains `"Comment with id '99999' does not exist."` (on a separate line following the preamble; mirrors H-NEW-COMMENT-003 body-surfacing assertion).
+- stderr contains `"Comment with id '99999' does not exist."` (on a separate line following the preamble; text mode; JSON mode carries both in the single H-020 envelope error field; mirrors H-NEW-COMMENT-003 body-surfacing assertion).
 - stdout is empty.
 
 **Why hidden**: Call A validates the `?expand=properties` query parameter is always sent (without it, `sd.public.comment` would be absent even on JSM comments), and that the `properties` array passes through `output::render_json` intact. A regression omitting `?expand=properties` would exit 0 but produce JSON with `"properties": []`, silently dropping the visibility state. Call B validates the 404→exit-64 mapping (not exit 1, not a panic).
