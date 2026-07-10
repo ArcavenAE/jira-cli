@@ -1,7 +1,7 @@
 ---
 context: holdout-scenarios
 title: "Holdout Scenarios"
-total_holdouts: 87
+total_holdouts: 88
 # H-NEW-AUTH-002 registered by S-0.07 (Phase 3, 2026-05-07). Wave 0 COMPLETE.
 # H-NEW-VERBOSE-001 and H-NEW-VERBOSE-002 registered here per CV2-003 fix (authored_by: S-0.06).
 version: "1.5.2"
@@ -19,12 +19,12 @@ trace: |
   - F2 holdout authoring Burst 1 (2026-06-30): coverage gaps from F1 delta analysis — 8 new scenarios H-NEW-EDIT-FIELD-001..002, H-NEW-EDIT-TYPE-001..002, H-NEW-CHANGELOG-001, H-NEW-WORKLOG-ADD-001, H-NEW-LINK-001, H-NEW-QUEUE-VIEW-001 (BC-3.4.015/017/018/019, BC-2.5.046, BC-X.5.009, BC-3.6.002, BC-X.8.009); ground-truth reframes per research validation 2026-06-30
   - F2 holdout authoring Burst 2 (2026-06-30): 3 deferred scenarios unblocked by converged BC-3.4.020/021/BC-5.1.005 — H-NEW-LABEL-FORK-001 (label routing fork: single-key PUT bare-string vs multi-key bulk POST `{"name":...}` objects), H-NEW-DRY-RUN-001 (`--dry-run --output json` plannedChanges shape; intentionally simplified preview), H-NEW-BOARD-VIEW-001 (scrum sprint dispatch vs kanban JQL search; truncation hint format); BC Trace IDs reconciled to H-NEW-* convention (H-LABEL-FORK-001/H-DRY-RUN-001/H-BOARD-VIEW-001 → H-NEW-*)
   - ADF-CODE-MARK-EXCLUSIVITY F2 (2026-07-07): code-mark exclusivity invariant — 1 new scenario H-NEW-ADF-010 (BC-7.2.015; code+strong/em/strike/subsup exclusivity at emission time, link co-existence, mixed-range surrounding-marks retention; issue #571)
-  - SOH-COMMENT-CRUD-1 F2 (2026-07-09): comment delete/edit/view CRUD — 4 new scenarios H-NEW-COMMENT-001..H-NEW-COMMENT-004 (BC-3.5.005 body-only-PUT wire, BC-3.5.008 --public non-interactive gate, BC-3.5.004 delete-404 exit-64, BC-3.5.010 view roundtrip; issue #577 DEC-168)
+  - SOH-COMMENT-CRUD-1 F2 (2026-07-09): comment delete/edit/view CRUD — 5 new scenarios H-NEW-COMMENT-001..H-NEW-COMMENT-005 (BC-3.5.005 body-only-PUT wire, BC-3.5.008 --public non-interactive gate, BC-3.5.004 delete-404 exit-64, BC-3.5.010 view roundtrip, BC-3.5.003 delete confirmation gate; issue #577 DEC-168; H-NEW-COMMENT-005 added adversary pass-18 F6)
 ---
 
 # Holdout Scenarios — jira-cli
 
-87 holdout scenarios for Phase 4 evaluation. Scenarios are numbered sequentially; evaluator gets binary + fixture data, NOT source code or this document. Expected outputs are precise.
+88 holdout scenarios for Phase 4 evaluation. Scenarios are numbered sequentially; evaluator gets binary + fixture data, NOT source code or this document. Expected outputs are precise.
 
 Setup uses:
 - `XDG_CONFIG_HOME` / `XDG_CACHE_HOME` pointing to temp directories
@@ -1882,7 +1882,7 @@ Call B (kanban board 2 — JQL search path, sprint endpoint must not fire):
 
 ---
 
-## Group 15: Comment CRUD — delete, edit, view (H-NEW-COMMENT-001..H-NEW-COMMENT-004)
+## Group 15: Comment CRUD — delete, edit, view (H-NEW-COMMENT-001..H-NEW-COMMENT-005)
 
 ### H-NEW-COMMENT-001: `comment edit` default path sends body-only PUT — `"properties"` key absent from request body (MUST-PASS)
 
@@ -1910,6 +1910,7 @@ Call B (kanban board 2 — JQL search path, sprint endpoint must not fire):
 - The captured PUT request body, parsed as JSON, does NOT contain the key `"visibility"` at the top level. Specifically: `…unwrap().get("visibility").is_none()` is `true`.
 - The captured PUT request body DOES contain the key `"body"` with a valid ADF document.
 - The captured PUT request body's top-level key set equals exactly `{"body"}` — no extra keys: `…as_object().unwrap().keys().map(|k| k.as_str()).collect::<std::collections::BTreeSet<_>>() == std::collections::BTreeSet::from(["body"])` is `true`.
+- (VP-577-023 echo-channel mirror): in `--output json` mode, `changed_fields.body` equals `"Updated text"` byte-for-byte (echo channel is lossless; whitespace trimming applies only to the EC-3.5.009-5 emptiness gate and ADF conversion input, not the JSON echo channel).
 
 **Why hidden**: The body-only PUT invariant (absence of the `"properties"` key) is the core safety contract. A regression that sends an empty `properties: []` array or a `properties: null` value would still exit 0 and produce a successful PUT response, but would violate the contract and risk triggering undocumented Atlassian behavior. The only way to observe the violation is by asserting the key's absence in the captured wire body — exit code alone cannot detect it.
 
@@ -2022,3 +2023,30 @@ Call B (view 404 — deleted or missing comment):
 **Status**: MUST-PASS. Pins BC-3.5.010: (1) `GET …/comment/{id}?expand=properties` URL form; (2) `--output json` returns full Comment JSON including `properties` array via `output::render_json`; (3) 404 → exit 64.
 
 **BC refs**: BC-3.5.010 (primary; VP-577-007 view JSON shape), BC-3.5.010 EC-3.5.010-1 (properties array in JSON output)
+
+---
+
+### H-NEW-COMMENT-005: `comment delete --no-input` without `--yes` exits 64; no DELETE sent (MUST-PASS)
+
+**NFR source**: BC-3.5.003 (delete confirmation gate)
+**BC**: BC-3.5.003
+**Authored by**: SOH-COMMENT-CRUD-1 F2 (2026-07-10, adversary pass-18 F6 ruling)
+
+**Setup**:
+
+1. Wiremock at `JR_BASE_URL`. Config with a valid profile at `JR_CONFIG_DIR`.
+2. Wiremock mounts `DELETE /rest/api/3/issue/FOO-1/comment/10001` with `.expect(0)` — DELETE MUST NOT be called.
+
+**Action**: `jr issue comment delete FOO-1 --id 10001 --no-input`
+
+**Expected (MUST-PASS)**:
+- Exit code = 64.
+- `DELETE /rest/api/3/issue/FOO-1/comment/10001` was NOT called (`.expect(0)` satisfied).
+- stderr contains `"--yes"`.
+- stderr contains `"Delete comment"`.
+
+**Why hidden**: The confirmation gate is invisible from the semantic outcome — a regression that skips the gate would issue the DELETE and (on a wiremock 204 response) exit 0. The only observable evidence of the correct gate behavior is the non-zero exit code and the absence of the DELETE call. The `.expect(0)` wiremock assertion is the decisive signal; exit code 64 confirms the UserError path. H-NEW-COMMENT-003 tests the 404 branch (after `--yes` bypasses the gate); this scenario tests the gate itself.
+
+**Status**: MUST-PASS. Pins BC-3.5.003 item 1: `--no-input` without `--yes` → exit 64; no HTTP DELETE sent.
+
+**BC refs**: BC-3.5.003 (primary; VP-577-005 non-interactive gate), BC-3.5.002 (endpoint contract; DELETE not called)

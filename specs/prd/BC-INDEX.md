@@ -301,7 +301,7 @@ R1/R4 prefix = deepening round that introduced it.
 | BC-3.5.007 | `comment edit --public` sends properties:[{key:"sd.public.comment",value:{internal:false}}]; always-confirm | NEW #577 | src/api/jira/issues.rs::add_comment (sibling; relocates at F4) | MEDIUM-HIGH |
 | BC-3.5.008 | `comment edit --public` confirmation gate: --no-input without --yes → exit 64; interactive y/N | NEW #577 | src/cli/issue/workflow.rs::handle_comment (relocates at F4) | HIGH |
 | BC-3.5.009 | `comment edit` body sources: --file/--stdin/positional/--markdown; missing body → exit 64 | NEW #577 | src/cli/issue/workflow.rs::handle_comment (relocates at F4) | HIGH |
-| BC-3.5.010 | `comment view <KEY> --id <ID>` GET with ?expand=properties; table+JSON output; 404 → exit 64 | NEW #577 | src/api/jira/issues.rs::add_comment (sibling; relocates at F4) | HIGH |
+| BC-3.5.010 | `comment view <KEY> --id <ID>` GET with ?expand=properties; key-value + JSON output; 404 → exit 64 | NEW #577 | src/api/jira/issues.rs::add_comment (sibling; relocates at F4) | HIGH |
 | BC-3.5.011 | --internal and --public mutually exclusive on comment edit; clap conflicts_with → exit 2 | NEW #577 | src/cli/mod.rs | HIGH |
 | BC-3.5.012 | CLI breaking change: comment → subcommand group (add/delete/edit/view); old flat form → exit 2 + migration hint | NEW #577 | src/cli/mod.rs | HIGH |
 
