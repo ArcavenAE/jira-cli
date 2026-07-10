@@ -1,0 +1,74 @@
+{
+  "pr_number": 324,
+  "id_registry": {
+    "src/cli/issue/create.rs::style::null literal style inconsistency between --no-points and --no-parent": {
+      "original_id": "S1",
+      "original_severity": "suggestion",
+      "current_id": "S1",
+      "current_severity": "suggestion",
+      "first_seen_review": 0,
+      "first_seen_timestamp": "2026-05-09T00:00:00Z"
+    },
+    "src/cli/issue/create.rs::error-handling::--no-parent + --label combo skips subtask convert-hint": {
+      "original_id": "S2",
+      "original_severity": "suggestion",
+      "current_id": "S2",
+      "current_severity": "suggestion",
+      "first_seen_review": 0,
+      "first_seen_timestamp": "2026-05-09T00:00:00Z"
+    },
+    "src/cli/issue/create.rs::robustness::is_subtask_parent_error second clause could false-positive": {
+      "original_id": "S3",
+      "original_severity": "suggestion",
+      "current_id": "S3",
+      "current_severity": "suggestion",
+      "first_seen_review": 0,
+      "first_seen_timestamp": "2026-05-09T00:00:00Z"
+    }
+  },
+  "next_id_counters": {
+    "critical": 1,
+    "important": 1,
+    "suggestion": 4,
+    "tech_debt": 1
+  },
+  "reviews": [
+    {
+      "timestamp": "2026-05-09T00:00:00Z",
+      "commit_sha": "43521d4f85bc79ceb4937b6a377c0b5aa8e3990d",
+      "verdict": "APPROVE",
+      "findings": [
+        {
+          "composite_key": "src/cli/issue/create.rs::style::null literal style inconsistency between --no-points and --no-parent",
+          "id": "S1",
+          "severity": "suggestion",
+          "category": "style",
+          "agent": "code-reviewer",
+          "title": "Null literal style inconsistency between --no-points and --no-parent",
+          "file": "src/cli/issue/create.rs",
+          "line": "295"
+        },
+        {
+          "composite_key": "src/cli/issue/create.rs::error-handling::--no-parent + --label combo skips subtask convert-hint",
+          "id": "S2",
+          "severity": "suggestion",
+          "category": "error-handling",
+          "agent": "silent-failure-hunter",
+          "title": "--no-parent + --label combo skips subtask convert-hint",
+          "file": "src/cli/issue/create.rs",
+          "line": "312-357"
+        },
+        {
+          "composite_key": "src/cli/issue/create.rs::robustness::is_subtask_parent_error second clause could false-positive",
+          "id": "S3",
+          "severity": "suggestion",
+          "category": "robustness",
+          "agent": "code-reviewer",
+          "title": "is_subtask_parent_error second clause could false-positive",
+          "file": "src/cli/issue/create.rs",
+          "line": "385"
+        }
+      ]
+    }
+  ]
+}
