@@ -1909,6 +1909,7 @@ Call B (kanban board 2 — JQL search path, sprint endpoint must not fire):
 - The captured PUT request body, parsed as JSON, does NOT contain the key `"properties"` at the top level. Specifically: `serde_json::from_str::<serde_json::Value>(&captured_body).unwrap().get("properties").is_none()` is `true`.
 - The captured PUT request body, parsed as JSON, does NOT contain the key `"visibility"` at the top level. Specifically: `…unwrap().get("visibility").is_none()` is `true`.
 - The captured PUT request body DOES contain the key `"body"` with a valid ADF document.
+- The captured PUT request body's top-level key set equals exactly `{"body"}` — no extra keys: `…as_object().unwrap().keys().map(|k| k.as_str()).collect::<std::collections::BTreeSet<_>>() == std::collections::BTreeSet::from(["body"])` is `true`.
 
 **Why hidden**: The body-only PUT invariant (absence of the `"properties"` key) is the core safety contract. A regression that sends an empty `properties: []` array or a `properties: null` value would still exit 0 and produce a successful PUT response, but would violate the contract and risk triggering undocumented Atlassian behavior. The only way to observe the violation is by asserting the key's absence in the captured wire body — exit code alone cannot detect it.
 
@@ -2006,7 +2007,7 @@ Call B (view 404 — deleted or missing comment):
 - Exit code = 0.
 - `GET /rest/api/3/issue/FOO-1/comment/10001?expand=properties` was called (URL contains `expand=properties`).
 - stdout is valid JSON (parseable by `serde_json`).
-- The JSON contains top-level keys `"id"`, `"author"`, `"body"`, `"created"`, `"properties"`.
+- The JSON contains top-level keys `"id"`, `"author"`, `"body"`, `"created"` (the `"properties"` key may be present or absent depending on the Jira instance; the `jq` assertion below confirms its presence in this specific JSM fixture).
 - `jq '.properties[0].value.internal'` on stdout equals `true` (JSON boolean).
 - stdout is pretty-printed (contains at least one `\n` character) — JSON render invariant #526.
 

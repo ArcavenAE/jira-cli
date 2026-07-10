@@ -361,6 +361,28 @@ and agrees at 624. All 8 cumulative-count surfaces now agree.
   F6 (LOW): BC-3.5.010 JSON passthrough example — renderedBody replaced with jsdPublic;
   clarifier added (renderedBody appears only with ?expand=renderedBody, not requested this cycle).
   VP count 20 → 21 (VP-577-021 added). No BC/holdout count change.
+  Adversary pass-14 remediation (same-version, 3 MEDIUM / 2 LOW):
+  F1 (MEDIUM, core-invariant hardening): (a) BC-3.5.005 note (ii) rewritten — options (b)/(c)
+  cover properties field only in simplest form; achieving "ONLY body" key-set with reused
+  Comment struct additionally requires skip_serializing_if on id/author/created; PREFERRED is
+  option (a) separate PUT request struct. (b) VP-577-001 strengthened to positive key-set
+  containment: keys == exactly {"body"}; VP-577-002/003: keys == exactly {"body","properties"}.
+  (c) H-NEW-COMMENT-001 Expected: key-set assertion added (keys == {"body"}).
+  F2 (MEDIUM, VP-577-017 untestable): (a) VP-577-017 setup note added: stdin MUST be non-empty
+  so step-2 empty-body check passes; EC-3.5.008-3 targeted message emitted at step-3 gate.
+  (b) EC-3.5.008-3 clarifier added: "at handler-start" means no_input flag mutation happens
+  at handler-start; enforcement still flows through pipeline order (step 2 fires before step 3).
+  F3 (MEDIUM, JSON key collision): changed_fields.visibility renamed changed_fields.jsm_internal
+  (boolean: true/false; absent when neither flag passed) in BC-3.5.005 JSON example, description
+  text, and EC-3.5.008-2 confirm-path. Human echo stays " (visibility: internal/public)" per
+  BC-3.4.013 human/machine asymmetry precedent.
+  F4 (LOW, hint wording): JSDCLOUD-6050 hint rewording in EC-3.5.006-1 and EC-3.5.007-1:
+  "…best-effort on JSM projects — …; no-op on non-JSM projects." (replace_all, 2 occurrences).
+  F5 (LOW, properties optionality): (a) EC-3.5.010-1 extended: properties OPTIONAL — may be
+  absent entirely on non-JSM issues; Value passthrough preserves either shape; consumers MUST
+  treat properties as OPTIONAL. (b) H-NEW-COMMENT-004 Expected A: "properties" dropped from
+  required top-level key set; jq assertion already implies presence for JSM fixture.
+  VP count stays 21 (modifications only). No BC/holdout count change.
 
 - `.factory/specs/prd/holdout-scenarios.md` (MODIFIED): `total_holdouts` 83 → 87;
   `version` 1.5.1 → 1.5.2; `last_updated` updated; trace entry added for
