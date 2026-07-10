@@ -1,8 +1,8 @@
 ---
 context: bc-3
 title: "Issue Write (create/edit/move/assign/comment/link/open/remote-link)"
-total_bcs: 109   # cumulative claim (incl. range-collapsed); definitional_count below is individually-bodied headings
-definitional_count: 80   # count of `#### BC-` headings in this file
+total_bcs: 120   # cumulative claim (incl. range-collapsed); definitional_count below is individually-bodied headings
+definitional_count: 91   # count of `#### BC-` headings in this file
 last_updated: 2026-07-09
 source_pass: 3
 trace: |
@@ -68,11 +68,12 @@ trace: |
   - F2 addition (2026-06-08): BC-3.2.014 — multi-key bulk move `bulkTransitionInputs` nested wrapper wire schema (document-as-is correctness bug fix, commit acca854, live run 27156639337)
   - F2 addition (2026-06-30): BC-3.4.020 — `issue edit --label` routing fork: single-key PUT bare-string labels vs 2+ key bulk POST `{"name":...}` objects; load-bearing asymmetry MUST NOT be unified (BUG-LABEL-400; BC-subclause-pass F2)
   - F2 addition (2026-06-30): BC-3.4.021 — `issue edit --dry-run` `plannedChanges` output structure + `--output json` schema `{dryRun, issues, plannedChanges}`; intentionally simplified preview shapes (BC-subclause-pass F2)
+  - F2 addition (2026-07-09, issue #577 SOH-COMMENT-CRUD-1, DEC-168): BC-3.5.002..BC-3.5.012 — comment delete/edit/view CRUD and CLI subcommand group refactor: delete endpoint+confirmation+404-exit-64; edit body-only-PUT invariant, --internal/--public explicit properties, --public always-confirm, body sources, mutual-exclusion; view GET+display+JSON; CLI breaking change (comment→subcommand group, add canonical form, old flat form → clap error with migration hint)
 ---
 
 # BC-3 — Issue Write
 
-109 behavioral contracts across 8 subdomains: Assign (3.1), Move/Transition (3.2),
+120 behavioral contracts across 8 subdomains: Assign (3.1), Move/Transition (3.2),
 Create (3.3), Edit+Open (3.4), Comment (3.5), Links (3.6), Remote links (3.7),
 JSM Request Create + Platform-Path Inverse Warnings + Auth-Conditional 401 Hints (3.8).
 
@@ -2111,7 +2112,7 @@ simplifications are deliberate design choices documented in source comments.
 
 ---
 
-### 3.5 Comments
+### 3.5 Comments (12 BCs: BC-3.5.001..BC-3.5.012)
 
 #### BC-3.5.001: `issue comment <key> --internal` adds `sd.public.comment` property
 
@@ -2119,6 +2120,402 @@ simplifications are deliberate design choices documented in source comments.
 **Source**: `src/api/jira/issues.rs::add_comment(internal: bool)`
 **Behavior**: `properties: [{key:"sd.public.comment", value:{internal:true}}]`. Non-JSM: silently ignored.
 **Trace**: Pass 3 BC-219
+
+---
+
+#### BC-3.5.002: `comment delete <KEY> --id <ID>` sends `DELETE /rest/api/3/issue/{key}/comment/{id}`; 204 → exit 0
+
+**Confidence**: HIGH
+**Source**: `src/api/jira/issues.rs::add_comment` (sibling; `delete_comment` added at F4; citations updated at delivery); `src/cli/issue/workflow.rs::handle_comment` (relocates to interactions.rs under PF-017 at F4; citations updated at delivery)
+**Subject**: Issue write
+**Origin**: NEW FEATURE (issue #577 SOH-COMMENT-CRUD-1)
+
+On a 204 response, exit 0. Output channel profile 4 (Symmetric — stdout for `--output json` success data; stderr for human-readable errors and prompts in either mode):
+
+- **Human output** (stderr, via `output::print_success` per state-changing-command convention): `Deleted comment <ID> on <KEY>.`
+- **JSON output** (`--output json`, stdout via `output::render_json`): `{"deleted": true, "id": "<ID>", "key": "<KEY>"}` (3 keys alphabetical).
+
+The `--id` flag accepts a `String` (Jira comment IDs are not guaranteed to be `u64`; research Claim 3 verdict: treat as opaque string).
+
+**EC-3.5.002-1** (shared --id validation, applies to BC-3.5.002/005/010): Before any API call, `--id` MUST match `^[0-9A-Za-z_-]+$`. A value that does not match → exit 64; stderr: `"invalid comment id: <VALUE>"`. This prevents URL-path injection via the `--id` path segment.
+
+**Verification Properties**:
+
+**VP-577-009**: wiremock: DELETE returns 204 → exit 0; `--output json` stdout parses as JSON with keys `"deleted"` (true), `"id"`, `"key"`.
+
+**Trace**: F2 spec evolution (2026-07-09, DEC-168; issue #577 SOH-COMMENT-CRUD-1)
+
+---
+
+#### BC-3.5.003: `comment delete` requires `--yes` in non-interactive mode; prompts interactively; `--yes` bypasses
+
+**Confidence**: HIGH
+**Source**: `src/cli/issue/workflow.rs::handle_comment` (relocates to interactions.rs under PF-017 at F4; citations updated at delivery)
+**Subject**: Issue write
+
+Confirmation mechanics:
+
+1. **Non-interactive** (`--no-input` OR stdin not a TTY) without `--yes` → exit 64 (`UserError`); stderr: `"Delete comment <ID> on <KEY>? Use --yes to confirm."` No HTTP DELETE sent.
+2. **Interactive** (TTY, `--no-input` absent), no `--yes` → `y/N` prompt: `"Delete comment <ID> on <KEY>? [y/N] "`. Default is N (cancel). Selecting N or pressing Enter → exit 0 (cancelled, no DELETE). Selecting Y → proceed.
+3. **`--yes` present** → proceed without prompt regardless of TTY state.
+
+**EC-3.5.003-1**: Interactive-mode default is N (cancel without action), not Y. Pressing Enter alone cancels. This differs from some confirmation patterns in other CLIs; it matches the safety convention in this codebase where destructive operations default to cancel.
+
+**EC-3.5.003-2**: `--output json` × interactive confirmation matrix:
+
+- The y/N prompt is always written to **stderr** regardless of `--output json` (prompts are diagnostic, not data).
+- **Cancel path** (user selects N or presses Enter in interactive mode): `--output json` → stdout `{"cancelled": true, "deleted": false}` (via `output::render_json`), exit 0. Human mode → no stdout, exit 0. `id` and `key` are deliberately omitted from the cancel envelope: the operation was cancelled before any HTTP call, so no server confirmation exists. (Key order shown matches `serde_json` default alphabetical emission; JSON key order is not semantically load-bearing but examples match the wire.)
+- **Confirm path** (user selects Y or `--yes` is present): output is identical to the direct `--yes` path (BC-3.5.002).
+
+**Verification Properties**:
+
+**VP-577-005**: `--no-input` mode without `--yes` → exit 64; assert no HTTP DELETE was sent (wiremock `.expect(0)` on the DELETE route).
+
+**VP-577-013**: `comment delete FOO-1 --id 10001 --output json` in interactive mode; user selects N (cancel) → exit 0; stdout parses as JSON `{"cancelled": true, "deleted": false}`; no HTTP DELETE sent (wiremock `.expect(0)`).
+
+**Trace**: F2 spec evolution (2026-07-09, DEC-168 ruling 3; adversary pass-2 MEDIUM-1 remediation; issue #577 SOH-COMMENT-CRUD-1)
+
+---
+
+#### BC-3.5.004: `comment delete` 404 → exit 64; surfaces Jira error body — NOT idempotent
+
+**Confidence**: HIGH
+**Source**: `src/cli/issue/workflow.rs::handle_comment` (relocates to interactions.rs under PF-017 at F4; citations updated at delivery); `src/api/jira/issues.rs::add_comment` (sibling; `delete_comment` added at F4; citations updated at delivery)
+**Subject**: Issue write
+
+**SUPERSEDES F1 draft BC-3.5.004** (F1 proposed idempotent exit 0 on 404; DEC-168 ruling 3 overrides).
+
+Jira intentionally conflates 404 (nonexistent comment) with permission-equivalent 403 into a single 404 status code to avoid resource-existence disclosure (research verdict: Claim 3 CONFIRMED). Silent idempotent success would mask permission failures, which are operationally significant.
+
+Behavior:
+
+- **204** → success (BC-3.5.002).
+- **404** → exit 64 (`UserError`); stderr: `"comment not found or permission denied: <KEY>#<ID>"`. Append the Jira response body on a separate stderr line following the preamble (e.g., the `errorMessages` string from `{"errorMessages":["Comment with id '10001' does not exist."]}`).
+- **403** (if surfaced by endpoint variant) → same treatment: exit 64 + surface body.
+- **Other 4xx/5xx** → propagate via `JrError::ApiError`; exit 1.
+
+**EC-3.5.004-1**: The Jira response body is surfaced on 404 to help the user distinguish "wrong comment ID" from "insufficient permission" when both produce the same HTTP status.
+
+**EC-3.5.004-2** (429-retry edge, accepted): A 404 arriving on a retry after a 429 rate-limit on DELETE is indistinguishable from a genuine not-found and exits 64; this is an accepted low-risk edge (no retry-state special-casing this cycle). Test-writer MUST NOT attempt to guard this edge. Operational experience: a user with JSM portal visibility may lack "Delete own/all comments" on the service project → confusing 404 where a 403-flavored message would be more informative. The raw body gives the operator the extra signal.
+
+**Implementation note (404 body-surfacing mechanism)**: The CONTRACT is a two-line stderr output: line 1 = preamble (`"comment not found or permission denied: <KEY>#<ID>"`); line 2 = the Jira error body (e.g., the `errorMessages` string extracted from `{"errorMessages":["Comment with id '10001' does not exist."]}`). The recommended mechanism is catching the API error and matching `err.downcast_ref::<JrError>()` for `ApiError { status: 404, message }` — `message` already carries the extracted `errorMessages` text via `src/api/client.rs` `parse_error` plumbing. A distinct API-layer error signature is acceptable if the two-line stderr CONTRACT is preserved. This same mechanism applies to BC-3.5.010 `comment view` 404 handling (cross-referenced there).
+
+**Verification Properties**:
+
+**VP-577-004**: wiremock: DELETE returns 404 with body `{"errorMessages":["Comment with id '10001' does not exist."]}` → exit 64; stderr contains BOTH (a) the preamble substring `"comment not found or permission denied"` AND (b) the Jira error text `"Comment with id '10001' does not exist."` (on a separate line following the preamble).
+
+**Trace**: F2 spec evolution (2026-07-09, DEC-168 ruling 3; research verdict Claim 3; issue #577 SOH-COMMENT-CRUD-1)
+
+---
+
+#### BC-3.5.005: `comment edit` default body-only PUT — the `"properties"` key MUST NOT be present in the PUT body when neither `--internal` nor `--public` is passed
+
+**Confidence**: HIGH
+**Source**: `src/api/jira/issues.rs::add_comment` (sibling; `update_comment` added at F4; citations updated at delivery); `src/cli/issue/workflow.rs::handle_comment` (relocates to interactions.rs under PF-017 at F4; citations updated at delivery)
+**Subject**: Issue write
+
+**Core safety invariant. DEC-168 ruling 1.**
+
+When `jr issue comment edit <KEY> --id <ID> [body source] [--markdown]` is invoked WITHOUT `--internal` or `--public`, the HTTP PUT body sent to `PUT /rest/api/3/issue/{key}/comment/{id}` MUST contain ONLY the `"body"` field (an ADF document). The `"properties"` key MUST NOT be present — not as an empty array, not as `null`, not as any value.
+
+Wire shape (body-only):
+```json
+{
+  "body": { "version": 1, "type": "doc", "content": [ ... ] }
+}
+```
+
+**Rationale**: Research (Claim 1 REFUTED) confirmed that Jira preserves `sd.public.comment` when `properties` is omitted from the PUT body. The dangerous path is explicitly sending a `properties` array the caller does not fully control. Body-only PUT is therefore the safe default. This is the inversion of the original footgun claim in the issue.
+
+**EC-3.5.005-1**: Non-JSM issue — the invariant applies identically. Whether the issue is a JSM project or a software project, the PUT body is body-only when no visibility flag is set. On non-JSM issues, `sd.public.comment` is absent from the comment's `properties` array; there is nothing to preserve and nothing to inject.
+
+**EC-3.5.005-2** (--id validation cross-reference): `--id` input MUST be validated per EC-3.5.002-1 (shared rule; applies to BC-3.5.002/005/010) before any HTTP call. Input not matching `^[0-9A-Za-z_-]+$` → exit 64; stderr: `"invalid comment id: <VALUE>"`.
+
+**Edit pipeline — validation ordering** (pin for implementers): The `comment edit` handler MUST execute steps in the following order: (1) `--id` regex validation per EC-3.5.002-1; (2) body-source resolution and empty/whitespace check per EC-3.5.009-5 (see also BC-3.5.009); (3) `--public` confirmation gate if applicable (BC-3.5.008); (4) ADF conversion (`text_to_adf` or `markdown_to_adf`); (5) HTTP PUT. Steps 1–3 MUST complete before any ADF conversion or HTTP call. This mirrors the ordering in the existing `handle_comment` body-resolution pattern where body resolution precedes the API call. Note: EC-3.5.009-5 (empty body) and BC-3.5.008 (--public gate) each contain a cross-reference to this ordering pin.
+
+**Implementation note**: Two hazards, both violate the "key MUST NOT be present" invariant, both caught by VP-577-001:
+
+(i) `Option<Vec<CommentProperty>>` where `None` serializes as `"properties": null` (key present, null value).
+
+(ii) Reusing the response `Comment` struct as the PUT request body — `src/types/jira/issue.rs::Comment.properties` is `Vec<EntityProperty>` with `#[serde(default)]` and no `skip_serializing_if`, so `Vec::new()` serializes as `"properties": []` (key present, empty array).
+
+Implementations MUST choose one of: (a) a separate request struct that omits the `properties` field entirely (preferred); (b) `Option<Vec<...>>` with `#[serde(skip_serializing_if = "Option::is_none")]`; or (c) `Vec<...>` with `#[serde(skip_serializing_if = "Vec::is_empty")]`. Do NOT reuse the response `Comment` struct as the PUT request body without adding `skip_serializing_if`.
+
+**Response 200 output** (canonical for all three `comment edit` variants — default, `--internal`, `--public`):
+
+- **Human success** (stderr, via `output::print_success` per state-changing-command convention): `"Updated comment <ID> on <KEY>."` When `--internal` was passed, append `" (visibility: internal)"`; when `--public` was passed and confirmed, append `" (visibility: public)"`.
+- **JSON output** (`--output json`, stdout via `output::render_json`):
+  ```json
+  {
+    "updated": true,
+    "id": "<ID>",
+    "key": "<KEY>",
+    "changed_fields": {
+      "body": "<raw user-supplied input string>",
+      "visibility": "internal"
+    }
+  }
+  ```
+  `changed_fields.body` carries the **raw user-supplied input string** from the body source (file content, stdin content, or positional text argument) — NOT `"(updated)"`, NOT an ADF round-trip. This is the lossless machine channel per the #398 echo-asymmetry precedent (BC-3.4.013: human echoes a marker, machine channel is lossless). `changed_fields.visibility` (`"internal"` or `"public"`) is present ONLY when `--internal` or `--public` was passed; when neither flag was used, the key is omitted entirely.
+- **Cancel path**: when `--public` confirmation is cancelled, see BC-3.5.008 EC-3.5.008-2 (`{"cancelled": true, "updated": false}` in JSON mode, exit 0).
+- **No-truncation note**: `changed_fields.body` is the raw user-supplied input without truncation; downstream consumers must handle arbitrarily large values (mirrors BC-3.4.013 lossless channel precedent).
+
+**Verification Properties**:
+
+**VP-577-001**: wiremock captures the PUT request body; assert the body parses as JSON and does NOT contain the key `"properties"` at the top level. Specifically: `serde_json::from_str::<serde_json::Value>(&body).unwrap().get("properties").is_none()` must be `true`.
+
+**Trace**: F2 spec evolution (2026-07-09, DEC-168 ruling 1; research verdict Claim 1 REFUTED-footgun; issue #577 SOH-COMMENT-CRUD-1)
+
+---
+
+#### BC-3.5.006: `comment edit --internal` explicitly sends `properties:[{"key":"sd.public.comment","value":{"internal":true}}]` in the PUT body
+
+**Confidence**: MEDIUM-HIGH
+**Source**: `src/api/jira/issues.rs::add_comment` (sibling; `update_comment` added at F4; citations updated at delivery); `src/cli/issue/workflow.rs::handle_comment` (relocates to interactions.rs under PF-017 at F4; citations updated at delivery)
+**Subject**: Issue write
+
+When `--internal` is passed, the PUT body to `PUT /rest/api/3/issue/{key}/comment/{id}` MUST include:
+```json
+{
+  "body": { ... },
+  "properties": [{ "key": "sd.public.comment", "value": { "internal": true } }]
+}
+```
+
+The `value.internal` field MUST be a JSON boolean (`true`), NOT a string (`"true"`). (Research red flag: JSDCLOUD-9766 showed a string form in the importer context; the REST community pattern uses boolean — BOOLEAN is the correct form for the PUT endpoint.)
+
+No confirmation required (`--internal` reduces visibility; not an exposure risk).
+
+> **RESOLVED (HIGH-3 MERGE verdict, human-approved 2026-07-09)**: Jira's comment-PUT `properties` array is MERGE semantics (unlisted entity properties preserved) — research verdict medium-high confidence (`.factory/research/issue-577-properties-merge-replace-2026-07-09.md`; per-key CRUD architecture, no bulk endpoints for comment properties, zero property-loss reports across years of community single-key usage). Direct-array pattern as specced is confirmed safe. Definitive empirical probe DEFERRED to a gated e2e follow-up (see delivery-task note below); if that probe ever refutes MERGE, the `--internal`/`--public` wire shape must be revised to read-modify-write.
+
+**Delivery-task obligation (implementing story, F4)**: The story MUST include: (a) a `CLAUDE.md` gotcha documenting the MERGE verdict, citing `.factory/research/issue-577-properties-merge-replace-2026-07-09.md`, and explicitly stating the do-not-default-to-sending-properties rule (BC-3.5.005); and (b) a gated e2e test in `tests/e2e_live.rs` implementing the 5-step MERGE probe from `.factory/research/issue-577-properties-merge-replace-2026-07-09.md § "Proposed empirical probe"` against project EJ (`JR_E2E_JSM_PROJECT`), self-cleaning via `jsm_self_close` convention.
+
+**EC-3.5.006-1** (JSDCLOUD-6050 caveat): When `--internal` is passed, emit a stderr hint before the PUT is sent: `"note: visibility change is best-effort — verify in the portal (JSDCLOUD-6050)."` This hint is informational; it does NOT affect exit code and is not suppressed by `--no-input`.
+
+**EC-3.5.006-2** (Non-JSM behavior): On a non-JSM issue, the `sd.public.comment` property is sent verbatim in the PUT body; Jira silently ignores it (mirrors BC-3.5.001 behavior). No hint or warning fires.
+
+**Verification Properties**:
+
+**VP-577-002**: wiremock captures the PUT request body; assert `serde_json::from_str::<serde_json::Value>(&body).unwrap()["properties"][0]["value"]["internal"]` equals `true` (JSON boolean, not string).
+
+**Trace**: F2 spec evolution (2026-07-09, DEC-168 ruling 1; research verdict Claim 7 PARTIALLY VALIDATED; adversary pass-3 HIGH-3 + MEDIUM-1 remediation; HIGH-3 closure: MERGE verdict human-approved 2026-07-09, probe deferred to gated e2e; issue #577 SOH-COMMENT-CRUD-1)
+
+---
+
+#### BC-3.5.007: `comment edit --public` explicitly sends `properties:[{"key":"sd.public.comment","value":{"internal":false}}]`; always requires confirmation
+
+**Confidence**: MEDIUM-HIGH
+**Source**: `src/api/jira/issues.rs::add_comment` (sibling; `update_comment` added at F4; citations updated at delivery); `src/cli/issue/workflow.rs::handle_comment` (relocates to interactions.rs under PF-017 at F4; citations updated at delivery)
+**Subject**: Issue write
+
+When `--public` is passed, the PUT body MUST include:
+```json
+{
+  "body": { ... },
+  "properties": [{ "key": "sd.public.comment", "value": { "internal": false } }]
+}
+```
+
+The `value.internal` field MUST be a JSON boolean (`false`), NOT a string (`"false"`).
+
+**Confirmation always required.** Making a JSM comment publicly visible to the customer is a high-stakes, potentially irreversible action. Confirmation fires on every `--public` invocation regardless of the comment's current visibility state (no GET of current state required).
+
+**Design decision (DEC-168 open point): Option (a) — always confirm when `--public` is passed.**
+
+Rationale: (1) Option (b) (confirm only if currently internal) would reintroduce a GET roundtrip that DEC-168 explicitly eliminated; if the GET fails, a new failure mode is introduced. (2) Option (c) (no confirmation) is inappropriate given the data-exposure risk. (3) Always confirming is the simplest, most predictable design. `--yes` is the scripting escape hatch. This matches the `comment delete` confirmation pattern (BC-3.5.003). The confirmation prompt also provides an in-band reminder of the JSDCLOUD-6050 best-effort caveat.
+
+**EC-3.5.007-1** (JSDCLOUD-6050 caveat): When `--public` is passed and the user confirms (or `--yes` is present), emit a stderr hint before the PUT is sent: `"note: visibility change is best-effort — verify in the portal (JSDCLOUD-6050)."` This hint does NOT fire when the user cancels at the confirmation prompt.
+
+**EC-3.5.007-2** (Non-JSM behavior): On a non-JSM issue, the `sd.public.comment` property is sent verbatim in the PUT body; Jira silently ignores it (mirrors BC-3.5.001 behavior). No hint or warning fires.
+
+> **RESOLVED (HIGH-3 MERGE verdict, human-approved 2026-07-09)**: Jira's comment-PUT `properties` array is MERGE semantics (unlisted entity properties preserved) — research verdict medium-high confidence (`.factory/research/issue-577-properties-merge-replace-2026-07-09.md`; per-key CRUD architecture, no bulk endpoints for comment properties, zero property-loss reports across years of community single-key usage). Direct-array pattern as specced is confirmed safe. Definitive empirical probe DEFERRED to a gated e2e follow-up (delivery-task obligation in BC-3.5.006); if that probe ever refutes MERGE, the `--internal`/`--public` wire shape must be revised to read-modify-write.
+
+**Verification Properties**:
+
+**VP-577-003**: wiremock captures the PUT request body; assert `serde_json::from_str::<serde_json::Value>(&body).unwrap()["properties"][0]["value"]["internal"]` equals `false` (JSON boolean, not string `"false"`).
+
+**Trace**: F2 spec evolution (2026-07-09, DEC-168 ruling 1 and open design point Option a; research verdict Claim 7 PARTIALLY VALIDATED; adversary pass-3 HIGH-3 + MEDIUM-1 remediation; HIGH-3 closure: MERGE verdict human-approved 2026-07-09, probe deferred to gated e2e; issue #577 SOH-COMMENT-CRUD-1)
+
+---
+
+#### BC-3.5.008: `comment edit --public` confirmation gate
+
+**Confidence**: HIGH
+**Source**: `src/cli/issue/workflow.rs::handle_comment` (relocates to interactions.rs under PF-017 at F4; citations updated at delivery)
+**Subject**: Issue write
+
+Confirmation mechanics for `--public` (mirrors BC-3.5.003 delete-confirmation pattern; step 3 in the BC-3.5.005 edit pipeline ordering pin — fires AFTER `--id` validation and body-source resolution):
+
+1. **Non-interactive** (`--no-input` OR stdin not a TTY) without `--yes` → exit 64 (`UserError`); stderr: `"This will set the comment's visibility to public. Use --yes to confirm."` No HTTP PUT sent.
+2. **Interactive** (TTY, `--no-input` absent), no `--yes` → `y/N` prompt: `"Set this comment's visibility to public? [y/N] "`. Default is N (cancel). N or Enter → exit 0 (cancelled, no PUT). Y → proceed. (Project-agnostic wording — same CWE-1021 lineage as SEC-577-001 fix on item 1.)
+3. **`--yes` present** → proceed without prompt; JSDCLOUD-6050 hint (EC-3.5.007-1) fires before the PUT.
+
+**EC-3.5.008-1**: `--yes` bypasses the confirmation gate but does NOT suppress the JSDCLOUD-6050 stderr hint (EC-3.5.007-1). The hint is informational, not confirmatory, and always fires on the `--public` path when the PUT is sent.
+
+**EC-3.5.008-2**: `--output json` × interactive confirmation matrix:
+
+- The y/N prompt is always written to **stderr** regardless of `--output json`.
+- **Cancel path** (user selects N or presses Enter in interactive mode): `--output json` → stdout `{"cancelled": true, "updated": false}` (via `output::render_json`), exit 0. Human mode → no stdout, exit 0. `id` and `key` are deliberately omitted from the cancel envelope: the operation was cancelled before any HTTP call, so no server confirmation exists. (Key order shown matches `serde_json` default alphabetical emission; JSON key order is not semantically load-bearing but examples match the wire.)
+- **Confirm path** (Y or `--yes`): output follows BC-3.5.005 Response 200 output with `changed_fields.visibility: "public"`.
+
+**EC-3.5.008-3**: When `--stdin` is used as the body source, stdin is a pipe (not a TTY), which auto-enables `--no-input`. Therefore `--public --stdin` without `--yes` takes the non-interactive branch (item 1) and exits 64. The targeted stderr hint for this path is: `"--stdin disables interactive prompts — pass --yes to confirm the visibility change."` (replaces the generic item 1 message on this specific code path). Both the generic non-interactive message (item 1) and this targeted hint MUST contain the substring `--yes` (load-bearing pin).
+
+**Verification Properties**:
+
+**VP-577-006**: `--no-input` + `--public`, without `--yes` → exit 64; assert no HTTP PUT was sent (wiremock `.expect(0)` on the PUT route).
+
+**Trace**: F2 spec evolution (2026-07-09, DEC-168 open design point Option a; adversary pass-2 MEDIUM-1 + LOW-2 remediation; issue #577 SOH-COMMENT-CRUD-1)
+
+---
+
+#### BC-3.5.009: `comment edit` body source flags — `--file`, `--stdin`, positional text, `--markdown`
+
+**Confidence**: HIGH
+**Source**: `src/cli/issue/workflow.rs::handle_comment` (relocates to interactions.rs under PF-017 at F4; citations updated at delivery); `src/adf.rs::markdown_to_adf`; `src/adf.rs::text_to_adf`
+**Subject**: Issue write
+
+Body source options for `comment edit`, mirroring `comment add` (BC-3.5.001 add path):
+
+- `--file PATH`: read body text from the file at PATH. Apply `--markdown` transformation if set.
+- `--stdin`: read body text from stdin. Apply `--markdown` transformation if set.
+- Positional `<text>` argument: inline body text. Apply `--markdown` transformation if set.
+- `--markdown`: convert the body via `src/adf.rs::markdown_to_adf`; without it, `src/adf.rs::text_to_adf` is used.
+
+At least one body source (`--file`, `--stdin`, or positional text) MUST be provided. If no source is given → exit 64; hint: `"body is required — use --file, --stdin, or pass text as a positional argument."` No HTTP call made.
+
+**EC-3.5.009-1**: `--file PATH` where PATH does not exist → exit 64 (`JrError::UserError`); stderr: `"file not found: <PATH>"`. No HTTP call made.
+
+**Rationale (deliberate divergence from `comment add`)**: `comment add`'s current `--file` not-found path exits 1 via `bail!` (pre-existing behavior, out of F2 scope). `comment edit` MUST exit 64 via explicit `NotFound → JrError::UserError` mapping — the tighter exit code is intentional. Aligning the `add` path to exit 64 is a **follow-up story candidate**; do NOT copy the `add` `bail!` pattern into `edit` to achieve false symmetry.
+
+**EC-3.5.009-2**: `--file` and `--stdin` are mutually exclusive (clap `conflicts_with` rejects during argument parsing, before any handler dispatch or HTTP call); exit 2.
+
+**EC-3.5.009-3**: `--file` and positional text are mutually exclusive (clap `conflicts_with` rejects during argument parsing, before any handler dispatch or HTTP call); exit 2.
+
+**EC-3.5.009-4**: `--stdin` and positional text are mutually exclusive (clap `conflicts_with` rejects during argument parsing, before any handler dispatch or HTTP call); exit 2.
+
+**EC-3.5.009-5**: An empty or whitespace-only body from ANY source (file, stdin, or positional text) → exit 64; stderr: `"comment body cannot be empty."` No HTTP PUT sent. This prevents `comment edit` from silently blanking an existing comment's content. (Step 2 in the BC-3.5.005 edit pipeline ordering pin — body-source resolution and empty check MUST fire before the `--public` confirmation gate.)
+
+**Verification Properties**:
+
+**VP-577-011**: `comment edit FOO-1 --id 10001 --file /nonexistent/path.txt` → exit 64; no HTTP PUT sent (wiremock `.expect(0)` on the PUT route).
+
+**VP-577-012**: `comment edit FOO-1 --id 10001 "   "` (whitespace-only positional body) → exit 64; stderr contains `"comment body cannot be empty"`; no HTTP PUT sent (wiremock `.expect(0)` on the PUT route).
+
+**Trace**: F2 spec evolution (2026-07-09, DEC-168 ruling 4 — scope confirmed; adversary pass-1 MEDIUM-3/MEDIUM-4 remediation; issue #577 SOH-COMMENT-CRUD-1)
+
+---
+
+#### BC-3.5.010: `comment view <KEY> --id <ID>` sends `GET /rest/api/3/issue/{key}/comment/{id}?expand=properties`; renders comment details
+
+**Confidence**: HIGH
+**Source**: `src/api/jira/issues.rs::add_comment` (sibling; `get_comment` added at F4; citations updated at delivery); `src/cli/issue/workflow.rs::handle_comment` (relocates to interactions.rs under PF-017 at F4; citations updated at delivery)
+**Subject**: Issue write
+
+Endpoint: `GET /rest/api/3/issue/{key}/comment/{id}?expand=properties`
+
+The `?expand=properties` query parameter is required to include the `properties` array in the response (research verdict Claim 4 CONFIRMED; Claim 2 CONFIRMED). Without it, `sd.public.comment` is absent even on JSM comments.
+
+**--id validation**: This endpoint shares the `--id` validation rule EC-3.5.002-1 (applies to BC-3.5.002/005/010): `--id` MUST match `^[0-9A-Za-z_-]+$` before any HTTP call; exit 64 on mismatch.
+
+**Response 200 — Human output** (profile 3, Mixed — stdout for data, stderr for errors and hints):
+
+Display comment details via plain key-value lines (NOT a comfy-table multi-row layout) to stdout, in the following field order:
+1. `ID:` — the comment ID string from the `id` field.
+2. `Author:` — display name from the comment's `author.displayName` field.
+3. `Created:` — ISO 8601 timestamp from `created`.
+4. `Updated:` — ISO 8601 timestamp from `updated` (always present in Jira comment responses; lossless display).
+5. `Visibility:` — `"Internal"` if `sd.public.comment.internal == true`; `"Public"` if `false`; `"N/A"` if the property is absent or the `properties` array is empty.
+6. Body — rendered below the header fields via `adf_to_text`, separated by a blank line.
+
+Routing: the handler delegates to a dedicated `render_comment_view` function (or equivalent) in `src/cli/issue/workflow.rs::handle_comment` (relocates to `interactions.rs` under PF-017 at F4).
+
+**Response 200 — JSON output** (`--output json`):
+
+The raw Jira response is deserialized as `serde_json::Value` and routed through `output::render_json` (pretty-printed, per JSON render invariant #526). **No typed `Comment` round-trip** — the Value passthrough preserves every field returned by Jira, including fields not present in `src/types/jira/issue.rs::Comment` (e.g., `"self"`, `"updateAuthor"`, `"renderedBody"`). The `properties` array is included as returned by the API (may be empty `[]` for non-JSM issues).
+
+**Response 404** → exit 64 (`UserError`); stderr: `"comment not found or permission denied: <KEY>#<ID>"`. Surface Jira response body if present (research verdict: Claim 3 CONFIRMED — Jira conflates 404 and permission-equivalent 403 for comment endpoints to avoid resource-existence disclosure; same rationale as BC-3.5.004). See BC-3.5.004 implementation note for the recommended `downcast_ref::<JrError>()` body-surfacing mechanism — applies identically here.
+
+**EC-3.5.010-1**: `--output json` returns the full `Comment` JSON shape including the `properties` array. The `properties` array may be empty (`[]`) for non-JSM issues, or contain `[{"key":"sd.public.comment","value":{"internal":true}}]` for JSM internal comments. Both cases pass through `output::render_json` unchanged.
+
+**EC-3.5.010-2**: ADF body in the comment is rendered via `adf_to_text` in human mode. If `adf_to_text` fails with any error EXCEPT the recursion depth-guard error, the fallback is to show the raw JSON representation of the `body` field rather than crashing. However, the recursion depth-guard error (`JrError::UserError("nesting too deep")`, BC-7.2.012 / SEC-001) MUST propagate to exit 64 — the `comment view` path is NOT a carve-out from `MAX_ADF_DEPTH`. Implementation: match on error kind before deciding fallback vs. propagation.
+
+**Verification Properties**:
+
+**VP-577-007**: `comment view FOO-1 --id 10001 --output json` against a wiremock returning a JSM internal comment → exit 0; stdout is valid JSON parseable by `serde_json`; top-level keys include `"id"`, `"author"`, `"body"`, `"created"`, `"properties"`; `jq '.properties[0].value.internal'` equals `true`; AND the captured wiremock request URL contains the query parameter `expand=properties` (wiremock request-capture assertion, mirroring H-NEW-COMMENT-004 Setup A).
+
+**VP-577-016**: `comment view FOO-1 --id 10001 --output json` against a wiremock response that includes a `"self"` URL field (a standard Jira API field absent from the typed `Comment` struct) → the `"self"` key survives in stdout JSON (lossless `serde_json::Value` passthrough confirmed; no typed round-trip lossy drop). Parse-level test against wiremock fixture.
+
+**Trace**: F2 spec evolution (2026-07-09, DEC-168 ruling 4; research verdicts Claim 4 CONFIRMED, Claim 2 CONFIRMED; adversary pass-3 MEDIUM-2 + MEDIUM-3 + LOW-1 remediation; issue #577 SOH-COMMENT-CRUD-1)
+
+---
+
+#### BC-3.5.011: `--internal` and `--public` are mutually exclusive on `comment edit`; exit 2
+
+**Confidence**: HIGH
+**Source**: `src/cli/mod.rs` (clap `conflicts_with` annotation on `CommentSubcommand::Edit`)
+**Subject**: Issue write
+
+`--internal` and `--public` are mutually exclusive options on `jr issue comment edit`, enforced by clap `conflicts_with`. Passing both → clap `conflicts_with` rejects the combination during argument parsing, before any handler dispatch or HTTP call; exit 2.
+
+**EC-3.5.011-1**: The clap error for `--internal --public` will contain "cannot be used with" language (clap default message). No custom error handler is required; the invariant is that the process exits 2.
+
+**Verification Properties**:
+
+**VP-577-010**: `jr issue comment edit FOO-1 --id 10001 --internal --public "text"` → exit 2; stderr contains `"cannot be used with"` (clap default mutual-exclusion message); no HTTP call made. Parse-level test (wiremock-free).
+
+**Trace**: F2 spec evolution (2026-07-09, DEC-168 ruling 1; adversary pass-1 MEDIUM-6 remediation; issue #577 SOH-COMMENT-CRUD-1)
+
+---
+
+#### BC-3.5.012: `jr issue comment` becomes a subcommand group; old flat form produces clap error with migration hint
+
+**Confidence**: HIGH
+**Source**: `src/cli/mod.rs` (`IssueCommand::Comment(CommentSubcommand)`); `src/cli/issue/mod.rs` (dispatch); `src/cli/issue/workflow.rs::handle_comment` (handlers relocate to interactions.rs under PF-017 at F4; citations updated at delivery)
+**Subject**: Issue write
+
+**Breaking CLI change. DEC-168 ruling 2: Option A clean break.**
+
+`IssueCommand::Comment` changes from a leaf variant (with positional `message` argument) to a subcommand group (`Comment(CommentSubcommand)`) with variants:
+
+- `Add` — canonical form of the existing `comment add` behavior, byte-for-byte identical to the old `jr issue comment <KEY> <text>`. Preserves all existing fields: positional message, `--file`, `--stdin`, `--internal`, `--markdown`.
+- `Delete` — new (BC-3.5.002..BC-3.5.004).
+- `Edit` — new (BC-3.5.005..BC-3.5.011).
+- `View` — new (BC-3.5.010).
+
+The old flat form `jr issue comment <KEY> "text"` is NOT preserved as a compatibility shim. clap's subcommand dispatch interprets the KEY as an unknown subcommand name and produces a usage error.
+
+**EC-3.5.012-1**: The custom hint fires on **any** `ErrorKind::InvalidSubcommand` under `jr issue comment`, with two sub-cases:
+
+- **`list` or `ls` token** (`jr issue comment list …` or `jr issue comment ls …`): exit 2 AND stderr contains `"jr issue comments"` (the plural form — directs to `IssueCommand::Comments`, the existing command for listing all comments on an issue).
+- **All other invalid tokens** (including the flat form `jr issue comment KEY "text"`, KEY-only form `jr issue comment FOO-1`, and typos like `jr issue comment addd KEY`): exit 2 AND stderr contains `"use \`jr issue comment add\` instead"` (load-bearing substring — asserted by VP-577-008).
+
+Because clap 4 does NOT print the parent subcommand's `about`/`long_about` text in `InvalidSubcommand` errors (verified against compiled `jr`), the hint MUST be injected by custom error handling — e.g., intercepting the clap error kind and inspecting the attempted subcommand token in a `try_parse` path or equivalent. The mechanism is the implementer's choice; the two-sub-case invariant above is binding.
+
+**Implementation note (sub-case discrimination)**: The recommended approach is to inspect the raw `argv` BEFORE delegating to clap's default rendering — looking for the `issue comment <token>` shape to identify the attempted subcommand token and branch between the two sub-cases. Walking the clap `Error` context iterator is an acceptable alternative if argv inspection proves brittle across clap versions. Either way, the discrimination logic MUST be isolated from the rendering path so non-`InvalidSubcommand` errors are never intercepted.
+
+**Invariant (clap rendering preservation)**: The try_parse error handler MUST preserve clap's default rendering for every non-`InvalidSubcommand` error kind (`ArgumentConflict`, `MissingRequiredArgument`, `UnknownArgument`, and all others) byte-identically to pre-refactor behavior. The handler intercepts `InvalidSubcommand` ONLY; all other clap error kinds pass through unmodified.
+
+In contrast, a **bare** `jr issue comment` with no arguments (`ErrorKind::MissingSubcommand`) → clap's built-in subcommand listing is the migration guidance and NO custom hint is injected. The listing already enumerates `add`, `delete`, `edit`, `view`, which IS the migration hint. This asymmetry is intentional: MissingSubcommand is the "don't know what to type" case; InvalidSubcommand is the "typed the wrong thing" case where specific direction adds value.
+
+`IssueCommand::Comments` (plural, `jr issue comments <KEY>`) is KEPT unchanged and NOT merged into the new subcommand group. Help text for `jr issue comment` SHOULD mention: "to list all comments, use `jr issue comments`" (or equivalent phrasing directing to the plural form).
+
+**EC-3.5.012-2**: `jr issue comment add FOO-1 "text"` (new canonical form) → behavior byte-for-byte identical to the former `jr issue comment FOO-1 "text"`. All existing tests updated to use the `comment add` form in the same PR as story S-577-1.
+
+**EC-3.5.012-3**: `CommentSubcommand::Add` positional `<message>` MUST carry `allow_hyphen_values = true` (CLAUDE.md invariant — applied to all positional free-text write-command inputs). `jr issue comment add FOO-1 "- [ ] task"` MUST parse successfully; the leading dash MUST NOT be interpreted as an unknown flag. Regression pin: a parse-level test asserting this input parses without clap error.
+
+**EC-3.5.012-4**: `comment edit` and `comment delete` do NOT support `--dry-run` in this cycle (parity gap with `issue edit` BC-3.4.021 acknowledged). Passing `--dry-run` to either subcommand → exit 2 (clap unknown flag). Adding dry-run support to comment operations is a **follow-up story candidate**.
+
+**CHANGELOG requirement**: A "Breaking Changes" entry documenting the rename from `jr issue comment` to `jr issue comment add` is REQUIRED in the same PR as the CLI surface refactor (story S-577-1). Minimum version bump: next minor boundary per project convention (e.g., 0.6.x → 0.7.0).
+
+**Verification Properties**:
+
+**VP-577-008**: `jr issue comment FOO-1 "some text"` (old flat form, InvalidSubcommand) → exit 2; stderr contains the exact substring `"use \`jr issue comment add\` instead"` (load-bearing marker text). Parse-level test (wiremock-free; no network call made).
+
+**VP-577-014**: `jr issue comment` (bare, no subcommand, MissingSubcommand) → exit 2; stderr contains clap's subcommand listing (names `add`, `delete`, `edit`, `view`); stderr does NOT contain the prefix `"use \`jr issue comment"` (the shared marker prefix — confirms no custom InvalidSubcommand hint was injected on the MissingSubcommand path). Parse-level test (wiremock-free).
+
+**VP-577-015**: `jr issue comment list FOO-1` (list token, InvalidSubcommand) → exit 2; stderr contains `"jr issue comments"` (the plural form hint). Parse-level test (wiremock-free; no network call made).
+
+**Trace**: F2 spec evolution (2026-07-09, DEC-168 ruling 2 Option A; adversary pass-1 HIGH-1 + LOW-1; adversary pass-2 MEDIUM-2 + LOW-3 + MEDIUM-4 remediation; adversary pass-3 HIGH-2 + MEDIUM-4 + LOW-4 remediation; issue #577 SOH-COMMENT-CRUD-1)
 
 ---
 
@@ -2708,6 +3105,6 @@ When `--markdown` is absent, the guard does NOT fire — `--field description=va
 
 Sources: `src/cli/issue/snapshots/jr__cli__issue__json_output__tests__*.snap`; BC-1104..BC-1112 (R4)
 
-## Total BCs in this file: 80 individually-bodied (cumulative 109 incl. range-collapsed; see BC-INDEX.md)
+## Total BCs in this file: 91 individually-bodied (cumulative 120 incl. range-collapsed; see BC-INDEX.md)
 
-_Last updated 2026-06-30 (BC-subclause-pass F2): +2 BCs (BC-3.4.020..021) — BC-3.4.020 (`issue edit --label` routing fork: single-key PUT bare-string vs 2+ key bulk POST `{"name":...}` objects; BUG-LABEL-400), BC-3.4.021 (`issue edit --dry-run` `plannedChanges` output structure + `--output json` schema `{dryRun, issues, plannedChanges}`; intentionally simplified preview shapes); Section 3.4 header updated to 21 contracts. Previous update 2026-06-08 (fix-bulk-transition-schema F2): +1 BC (BC-3.2.014) — BC-3.2.014 (multi-key bulk move `bulkTransitionInputs` nested wrapper wire schema; documents correctness bug fix commit acca854; live run 27156639337); Section 3.2 header updated to 14 contracts. Previous update 2026-06-03 (jsm-resolution-required F2): +1 BC (BC-3.2.013) — BC-3.2.013 (proactive resolution enforcement on done-category transitions: REQUIRED and OPTIONAL branches, --no-resolution flag, isConditional coverage, conservative gate, BC-3.2.009 backstop retained; single-key only; breaking change); Section 3.2 header updated to 13 contracts. Previous update 2026-06-01 (issue #331 F2): +2 BCs (BC-3.4.018..019) — BC-3.4.018 (multi-key `--type` bulk wire shape: camelCase `issueType` key, `issueTypeId` string value, name resolved via createmeta issuetypes), BC-3.4.019 (cross-project guard: keys spanning >1 project exit 64 before any API call); Section 3.4 header updated to 19 contracts. Previous update 2026-05-27 (issue #421 F2): BC-3.4.015 invariant 5 rewritten (two-stage i64-first strategy); EC-3.4.015-4b added (i64-boundary regression pin); no BC count changes (103/74 unchanged). Previous update (2026-05-25 issue #407 F2): +EC-3.4.017-14 — mechanical enforcement meta-test for BC-3.4.017 invariant 2 (conflict block completeness via `test_label_conflict_block_lists_every_relevant_flag`); BC-3.4.017 invariant 2 cross-reference added; no BC count changes (103/74 unchanged). Previous update (2026-05-22 issue #396 F2): +3 BCs (BC-3.4.015..017) — BC-3.4.015 (`issue edit --field` string/number/date/datetime/user field single-key path, with editmeta validation, fields.json cache, and dry-run invariants), BC-3.4.016 (`issue edit --field` single-select `option` field), BC-3.4.017 (`--field` multi-key/`--jql` rejection Gate A and flag-overlap Gate B); Section 3.4 header updated to 17 contracts. Previous update (2026-05-21 issue #398 F2): +3 BCs (BC-3.4.012..014) — BC-3.4.012 (issue edit table-mode success echo), BC-3.4.013 (issue edit JSON-mode success echo with changed_fields), BC-3.4.014 (issue create table-mode all-fields echo (broadened from team-only at the 2026-05-22 human-gate to mirror BC-3.4.012)); BC-3.4.003 Success output cross-reference added; Section 3.4 header updated to 14 contracts. Previous update (2026-05-20 issue #388): +2 BCs (BC-3.4.010..011): BC-3.4.010 (cross-hierarchy `edit --type` 400 → CROSS_HIERARCHY_HINT citing JRACLOUD-27893) and BC-3.4.011 (same-hierarchy/indeterminate `edit --type` 400 → typo hint or raw error, no JRACLOUD-27893 hint) added in F2 delta (issue #388). BC-3.4.003 Errors cross-reference updated (annotation only, no behavioral change). Section 3.4 header updated to 11 contracts. Previous update (2026-05-20 issue #385): +2 BCs (BC-3.8.016..017); BC-3.8.002/010/011 modified._
+_Last updated 2026-07-09 (issue #577 SOH-COMMENT-CRUD-1 F2, DEC-168): +11 BCs (BC-3.5.002..BC-3.5.012) — comment delete (BC-3.5.002..BC-3.5.004: endpoint/exit-codes, confirmation, 404-exit-64+body-surface), comment edit (BC-3.5.005..BC-3.5.009: body-only-PUT invariant, --internal wire, --public wire+always-confirm, --public confirmation gate, body sources), comment view (BC-3.5.010: GET+expand=properties, table+JSON, 404-exit-64), mutual exclusion (BC-3.5.011), CLI breaking change (BC-3.5.012: comment→subcommand group, old flat form → clap error with migration hint); §3.5 header updated to 12 contracts. Previous update 2026-06-30 (BC-subclause-pass F2): +2 BCs (BC-3.4.020..021) — BC-3.4.020 (`issue edit --label` routing fork: single-key PUT bare-string vs 2+ key bulk POST `{"name":...}` objects; BUG-LABEL-400), BC-3.4.021 (`issue edit --dry-run` `plannedChanges` output structure + `--output json` schema `{dryRun, issues, plannedChanges}`; intentionally simplified preview shapes); Section 3.4 header updated to 21 contracts. Previous update 2026-06-08 (fix-bulk-transition-schema F2): +1 BC (BC-3.2.014) — BC-3.2.014 (multi-key bulk move `bulkTransitionInputs` nested wrapper wire schema; documents correctness bug fix commit acca854; live run 27156639337); Section 3.2 header updated to 14 contracts. Previous update 2026-06-03 (jsm-resolution-required F2): +1 BC (BC-3.2.013) — BC-3.2.013 (proactive resolution enforcement on done-category transitions: REQUIRED and OPTIONAL branches, --no-resolution flag, isConditional coverage, conservative gate, BC-3.2.009 backstop retained; single-key only; breaking change); Section 3.2 header updated to 13 contracts. Previous update 2026-06-01 (issue #331 F2): +2 BCs (BC-3.4.018..019) — BC-3.4.018 (multi-key `--type` bulk wire shape: camelCase `issueType` key, `issueTypeId` string value, name resolved via createmeta issuetypes), BC-3.4.019 (cross-project guard: keys spanning >1 project exit 64 before any API call); Section 3.4 header updated to 19 contracts. Previous update 2026-05-27 (issue #421 F2): BC-3.4.015 invariant 5 rewritten (two-stage i64-first strategy); EC-3.4.015-4b added (i64-boundary regression pin); no BC count changes (103/74 unchanged). Previous update (2026-05-25 issue #407 F2): +EC-3.4.017-14 — mechanical enforcement meta-test for BC-3.4.017 invariant 2 (conflict block completeness via `test_label_conflict_block_lists_every_relevant_flag`); BC-3.4.017 invariant 2 cross-reference added; no BC count changes (103/74 unchanged). Previous update (2026-05-22 issue #396 F2): +3 BCs (BC-3.4.015..017) — BC-3.4.015 (`issue edit --field` string/number/date/datetime/user field single-key path, with editmeta validation, fields.json cache, and dry-run invariants), BC-3.4.016 (`issue edit --field` single-select `option` field), BC-3.4.017 (`--field` multi-key/`--jql` rejection Gate A and flag-overlap Gate B); Section 3.4 header updated to 17 contracts. Previous update (2026-05-21 issue #398 F2): +3 BCs (BC-3.4.012..014) — BC-3.4.012 (issue edit table-mode success echo), BC-3.4.013 (issue edit JSON-mode success echo with changed_fields), BC-3.4.014 (issue create table-mode all-fields echo (broadened from team-only at the 2026-05-22 human-gate to mirror BC-3.4.012)); BC-3.4.003 Success output cross-reference added; Section 3.4 header updated to 14 contracts. Previous update (2026-05-20 issue #388): +2 BCs (BC-3.4.010..011): BC-3.4.010 (cross-hierarchy `edit --type` 400 → CROSS_HIERARCHY_HINT citing JRACLOUD-27893) and BC-3.4.011 (same-hierarchy/indeterminate `edit --type` 400 → typo hint or raw error, no JRACLOUD-27893 hint) added in F2 delta (issue #388). BC-3.4.003 Errors cross-reference updated (annotation only, no behavioral change). Section 3.4 header updated to 11 contracts. Previous update (2026-05-20 issue #385): +2 BCs (BC-3.8.016..017); BC-3.8.002/010/011 modified._

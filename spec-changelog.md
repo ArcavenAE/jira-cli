@@ -7,6 +7,210 @@ project: "jr (jira-cli)"
 
 Track all spec version changes. Most recent version first.
 
+## [1.3.28] - 2026-07-09
+
+### Type: MINOR
+
+### Summary
+
+F2 spec evolution for SOH-COMMENT-CRUD-1 bundle (GitHub issue #577: `jr issue comment
+delete/edit/view`). DEC-168 human gate approved 2026-07-09. Adds 11 new BCs
+(BC-3.5.002..BC-3.5.012) to `bc-3-issue-write.md §3.5`, plus 4 holdout scenarios
+(H-NEW-COMMENT-001..H-NEW-COMMENT-004) to `holdout-scenarios.md`. Key design resolution:
+`comment edit` default is body-only PUT (no `"properties"` key — the footgun claim was
+REFUTED by research); `--public` always-confirm semantics (Option a — no GET required);
+`comment delete` 404 exits 64 + surfaces error body (NOT idempotent); CLI breaking change
+(`comment` → subcommand group with `add`/`delete`/`edit`/`view`).
+
+BC count 613 → 624 (11 individually-bodied BCs added; bc-3-issue-write.md
+definitional_count 80 → 91, total_bcs 109 → 120).
+
+Note: BC-INDEX.md requires update to 624 total_bcs and bc-3 section count (120/91), but
+direct edits are BLOCKED by the TD-031 validate-stable-anchors hook (243 pre-existing
+volatile line-cite violations). State-manager must resolve. CANONICAL-COUNTS.md is
+authoritative and reflects 624.
+
+### New Requirements
+
+- `.factory/specs/prd/bc-3-issue-write.md` (MODIFIED): `total_bcs` 109 → 120;
+  `definitional_count` 80 → 91; `last_updated` updated; frontmatter trace entry added for
+  SOH-COMMENT-CRUD-1 F2; intro count 109 → 120; §3.5 header updated to "12 BCs:
+  BC-3.5.001..BC-3.5.012"; BC-3.5.002..BC-3.5.012 bodies added (delete endpoint, delete
+  confirmation, delete 404-exit-64, edit body-only-PUT invariant, edit --internal wire,
+  edit --public wire+always-confirm, edit --public confirmation gate, edit body sources,
+  comment view, mutual exclusion, CLI breaking change); footer updated to 91/120.
+  Security-review corrections (same-version, SEC-577-001..004): BC-3.5.008 item 1
+  non-interactive message corrected (CWE-1021 — removed false JSM/internal assumption);
+  EC-3.5.009-4 added (CWE-1283 — --stdin/positional mutual exclusion via clap
+  conflicts_with → exit 2); EC-3.5.006-1 hint timing unified to "before the PUT is sent"
+  (was "after submission") matching EC-3.5.007-1; BC-3.5.005 implementation note added
+  (Option<Vec<...>> serde derive emits "properties": null footgun, recommend
+  #[serde(skip_serializing_if = "Option::is_none")]). No BC count change (EC-3.5.009-4
+  is a new EC within existing BC-3.5.009).
+  Adversary pass-1 remediation (same-version, HIGH-1/HIGH-2/MEDIUM-1..6/LOW-1):
+  HIGH-1: EC-3.5.012-1 rewritten — custom error handler required to inject "comment add"
+  hint on InvalidSubcommand (clap 4 does not propagate about/long_about to error output);
+  VP-577-008 added (exit 2 + stderr "comment add" substring, parse-level).
+  HIGH-2: BC-3.5.005 implementation note extended to cover Vec::new() → "properties":[]
+  hazard from reusing response Comment struct; "Do NOT reuse" sentence added; three
+  compliant options enumerated.
+  MEDIUM-1: BC-3.5.008 item 2 interactive prompt reworded project-agnostic ("Set this
+  comment's visibility to public?" — removes JSM "customer" assumption, CWE-1021 lineage).
+  MEDIUM-2: BC-3.5.002 output profile 5 → 4 (Symmetric); BC-3.5.010 output profile 2 →
+  3 (Mixed — 404 errors go to stderr, disqualifying Read-only).
+  MEDIUM-3: EC-3.5.009-1 extended with deliberate-divergence rationale (edit exits 64 via
+  UserError; add bail!→exit-1 is follow-up story candidate); VP-577-011 added.
+  MEDIUM-4: EC-3.5.009-5 added (empty/whitespace body → exit 64, no PUT); VP-577-012 added.
+  MEDIUM-5: BC-3.5.010 Response 404 harmonized with BC-3.5.004 ("not found or permission
+  denied", surface Jira body, Claim 3 CONFIRMED cross-reference).
+  MEDIUM-6: VP-577-009 added to BC-3.5.002 (DELETE 204 → exit 0 + JSON shape);
+  VP-577-010 added to BC-3.5.011 (--internal --public → exit 2, parse-level).
+  LOW-1: EC-3.5.012-3 added (CommentSubcommand::Add allow_hyphen_values=true invariant;
+  regression pin for "- [ ] task" parse).
+  No BC count change (all additions are ECs/VPs within existing BC bodies).
+  Adversary pass-2 remediation (same-version, HIGH-1/HIGH-2/MEDIUM-1..4/LOW-1..4):
+  HIGH-1: BC-3.5.002 human output channel corrected stdout → stderr (output::print_success
+  per state-changing-command convention).
+  HIGH-2: BC-3.5.005 Response 200 output section added (canonical for all edit variants:
+  stderr print_success "Updated comment <ID> on <KEY>." + optional visibility marker;
+  JSON envelope {updated,id,key,changed_fields{body=raw-input,visibility?}}; cancel-path
+  cross-ref; BC-3.4.013 echo-asymmetry precedent cited).
+  MEDIUM-1: BC-3.5.003 EC-3.5.003-2 added (--output json × confirmation matrix: prompt
+  always stderr; cancel → JSON {deleted:false,cancelled:true} stdout exit 0; confirm → same
+  as --yes); BC-3.5.008 EC-3.5.008-2 added (same pattern, {updated:false,cancelled:true});
+  VP-577-013 added (cancel-in-JSON-mode, delete path).
+  MEDIUM-2+LOW-3: EC-3.5.012-1 extended — hint fires on ALL InvalidSubcommand (flat form,
+  KEY-only, typo); bare `jr issue comment` (MissingSubcommand) → NO custom hint (clap
+  listing IS the migration hint; intentional asymmetry documented); VP-577-014 added
+  (MissingSubcommand → clap listing, no custom hint asserted, parse-level); spec-changelog
+  Impact Assessment updated with mainline-refactor risk note.
+  MEDIUM-3: BC-3.5.004 "append on separate stderr line" wording pinned; VP-577-004
+  strengthened to assert BOTH preamble + Jira error text; H-NEW-COMMENT-003 Expected
+  strengthened to match.
+  MEDIUM-4: EC-3.5.012-4 added (--dry-run not supported on comment edit/delete this cycle;
+  follow-up story candidate; passes --dry-run → exit 2 clap unknown flag).
+  LOW-1: BC-3.5.011 reworded "during argument parsing, before any handler dispatch or HTTP
+  call"; EC-3.5.009-2/3/4 given same phrasing.
+  LOW-2: BC-3.5.008 EC-3.5.008-3 added (--stdin → pipe → --no-input auto-enables → --public
+  requires --yes; targeted hint "--stdin disables interactive prompts — pass --yes to confirm
+  the visibility change.").
+  LOW-4: CANONICAL-COUNTS.md historical note stale parenthetical (612) → (624).
+  No BC count change (ECs/VPs/notes within existing bodies).
+  Adversary pass-3 remediation (same-version, HIGH-1/HIGH-2/HIGH-3/MEDIUM-1..5/LOW-1..4):
+  HIGH-1: 16 stale Source-field citations fixed (non-existent interactions.rs symbols and
+  delete/update/get_comment functions → existing anchors workflow.rs::handle_comment and
+  add_comment, with "relocates at F4" note); check-bc-citation-symbols.sh passes 334
+  citations checked.
+  HIGH-2: EC-3.5.012-1 rewritten — two sub-cases: list/ls token → hint directs to
+  "jr issue comments" (plural); all other tokens → "use `jr issue comment add` instead"
+  (load-bearing pin); try_parse invariant added (non-InvalidSubcommand error kinds pass
+  through unmodified byte-identically to pre-refactor); IssueCommand::Comments KEPT clause
+  added; VP-577-015 added (list-token hint "jr issue comments" in stderr, exit 2,
+  parse-level).
+  HIGH-3: PENDING-RESEARCH marker block added to BC-3.5.006 and BC-3.5.007 (Jira PUT
+  properties-array merge-vs-replace semantics; implementation BLOCKED until research
+  resolves; research/issue-577-properties-merge-replace-2026-07-09.md).
+  HIGH-3 closure (human-ruled, same-version): Research verdict MERGE (medium-high
+  confidence); local live probe blocked (EJ on E2E sandbox, not local profile instance;
+  zero mutations made). Human approved deferral of definitive empirical probe to gated
+  CI e2e follow-up. PENDING-RESEARCH marker blocks in BC-3.5.006 and BC-3.5.007 replaced
+  with RESOLVED notes documenting the MERGE verdict, confirmed-safe direct-array pattern,
+  deferred probe obligation, and the read-modify-write fallback if probe refutes MERGE.
+  Delivery-task obligation added to BC-3.5.006: implementing story MUST include (a)
+  CLAUDE.md gotcha (MERGE verdict + research citation + do-not-default-to-sending-properties
+  rule) and (b) gated e2e test in tests/e2e_live.rs implementing the 5-step MERGE probe
+  from research/issue-577-properties-merge-replace-2026-07-09.md against EJ project
+  (JR_E2E_JSM_PROJECT), self-cleaning via jsm_self_close. Trace lines updated in both
+  BCs. No BC count change.
+  MEDIUM-1: EC-3.5.006-2 and EC-3.5.007-2 added (Non-JSM behavior: property sent verbatim,
+  Jira silently ignores; no hint fires — mirrors BC-3.5.001).
+  MEDIUM-2: BC-3.5.010 JSON output changed to serde_json::Value passthrough (lossless, no
+  typed round-trip); VP-577-016 added ("self" Jira-only field survives stdout JSON).
+  MEDIUM-3: BC-3.5.010 human render mechanism pinned (plain key-value lines, NOT
+  comfy-table; field order: Author, Created, Visibility, body via adf_to_text; routing
+  to dedicated render_comment_view function).
+  MEDIUM-4: try_parse invariant clause added to EC-3.5.012-1 (clap rendering preservation
+  for non-InvalidSubcommand error kinds); VP-577-010 strengthened (assert stderr contains
+  "cannot be used with").
+  MEDIUM-5: EC-3.5.004-2 added (429-retry 404 edge accepted; no retry-state
+  special-casing this cycle).
+  LOW-1: EC-3.5.005-2 added and BC-3.5.010 --id validation note added (cross-reference
+  EC-3.5.002-1 shared rule across BC-3.5.002/005/010).
+  LOW-2: No-truncation note added to BC-3.5.005 Response 200 output (changed_fields.body
+  carries raw input without truncation; mirrors BC-3.4.013 lossless channel precedent).
+  LOW-3: EC-3.5.008-3 load-bearing pin added (both non-interactive hints MUST contain
+  substring "--yes").
+  LOW-4: VP-577-008 marker text pinned ("use `jr issue comment add` instead" exact
+  substring); VP-577-014 negative assertion rewritten (does NOT contain shared prefix
+  "use `jr issue comment"); Trace lines updated.
+  No BC count change (all additions are ECs/VPs/notes within existing bodies).
+  Adversary pass-4 remediation (same-version, 6 MEDIUM / 4 LOW):
+  M1: Cancel envelope key order fixed to serde_json alphabetical in EC-3.5.003-2
+  ({"cancelled":true,"deleted":false}), EC-3.5.008-2 ({"cancelled":true,"updated":false}),
+  BC-3.5.005 cancel-path cross-ref, and VP-577-013; key-order note added to both primary
+  ECs ("matches serde_json default alphabetical; not semantically load-bearing").
+  M2: Mainline-refactor-risk row in Impact Assessment extended: SURFACE table obligation
+  (four rows replacing single comment row in tests/e2e_cli_surface_guard.rs) and
+  tests/e2e_live.rs flat-form call sites (~lines 2513-2548, 3756) update obligation.
+  M3: VP-577-007 strengthened — additionally asserts captured wiremock request URL
+  contains query parameter "expand=properties".
+  M4: BC-3.5.005 edit pipeline validation ordering note added (1: --id regex; 2: body
+  resolve + empty check; 3: --public gate; 4: ADF conversion; 5: HTTP PUT); cross-refs
+  added to BC-3.5.008 intro and EC-3.5.009-5.
+  M5: BC-3.5.004 implementation note added (404 body-surfacing via downcast_ref::<JrError>
+  for ApiError{status:404,message} — message carries extracted errorMessages via
+  client.rs::parse_error; cross-ref from BC-3.5.010 Response 404 clause).
+  M6: EC-3.5.010-2 narrowed — malformed-ADF fallback to raw JSON display applies EXCEPT
+  for the recursion depth-guard error (JrError::UserError "nesting too deep"; BC-7.2.012
+  / SEC-001), which MUST propagate to exit 64; comment view is NOT a MAX_ADF_DEPTH
+  carve-out.
+  L1+L2: BC-3.5.010 human render field order updated to ID → Author → Created → Updated
+  → Visibility → body (ID added as first field; Updated added between Created and
+  Visibility; both lossless display).
+  L3: EC-3.5.012-1 implementation note added (argv inspection as recommended
+  sub-case discrimination mechanism; clap Error context iterator as acceptable
+  alternative; discrimination logic MUST be isolated from rendering path).
+  L4: All four unprefixed research/issue-577-properties-merge-replace-2026-07-09.md
+  references in §3.5 prefixed with .factory/ (3 lines × occurrences; replace_all).
+  No BC count change (all additions are ECs/VPs/notes within existing bodies).
+
+- `.factory/specs/prd/holdout-scenarios.md` (MODIFIED): `total_holdouts` 83 → 87;
+  `version` 1.5.1 → 1.5.2; `last_updated` updated; trace entry added for
+  SOH-COMMENT-CRUD-1; intro count 83 → 87; Group 15 added with H-NEW-COMMENT-001
+  (body-only PUT wire assert, BC-3.5.005), H-NEW-COMMENT-002 (--public non-interactive
+  gate, BC-3.5.008), H-NEW-COMMENT-003 (delete 404 → exit 64 + body surfaced, BC-3.5.004),
+  H-NEW-COMMENT-004 (view roundtrip + 404 exit 64, BC-3.5.010).
+
+- `.factory/specs/prd/CANONICAL-COUNTS.md` (MODIFIED): `last_verified` updated;
+  bc-3 definitional count 80 → 91; total individually-bodied 383 → 394; bc-3 total_bcs
+  109 → 120; Sum 613 → 624; Grand total 613 → 624 (note extended); breakdown 613/383 →
+  624/394; BC-X.4.009 references updated; L2 alignment table bc-03 109 → 120; holdout
+  section canonical total 83 → 87 (Expected list extended with H-NEW-COMMENT-001..004;
+  Group 15 entry added; trailing note frontmatter 83→87, Last reconciled 2026-07-09).
+
+- `.factory/specs/prd/BC-INDEX.md` (PENDING): total_bcs 613 → 624; bc-3 section
+  "109 BCs cumulative; 80 individually-bodied" → "120 BCs cumulative; 91
+  individually-bodied"; §3.5 subsection header + table rows for BC-3.5.002..BC-3.5.012.
+  BLOCKED by TD-031 stable-anchor hook — requires state-manager resolution.
+
+- `.factory/spec-changelog.md` (MODIFIED): this entry (v1.3.27 → v1.3.28).
+
+### Impact Assessment
+
+| Dimension | Detail |
+|-----------|--------|
+| BCs added | BC-3.5.002..BC-3.5.012 (11 individually-bodied BCs in bc-3-issue-write.md §3.5) |
+| Holdouts added | H-NEW-COMMENT-001..H-NEW-COMMENT-004 (Group 15, holdout-scenarios.md) |
+| VPs added | VP-577-001 (body-only PUT wire), VP-577-002 (--internal wire), VP-577-003 (--public wire), VP-577-004 (delete-404 exit-64), VP-577-005 (delete non-interactive gate), VP-577-006 (--public non-interactive gate), VP-577-007 (view JSON shape), VP-577-008 (BC-3.5.012 InvalidSubcommand exit-2 + "use `jr issue comment add` instead"), VP-577-009 (BC-3.5.002 DELETE 204 JSON shape), VP-577-010 (BC-3.5.011 --internal --public exit-2 + "cannot be used with"), VP-577-011 (BC-3.5.009 --file not-found exit-64), VP-577-012 (BC-3.5.009 whitespace body exit-64), VP-577-013 (BC-3.5.003 cancel-in-JSON-mode envelope), VP-577-014 (BC-3.5.012 MissingSubcommand clap listing, no custom hint), VP-577-015 (BC-3.5.012 list-token hint "jr issue comments", exit-2), VP-577-016 (BC-3.5.010 lossless JSON passthrough — "self" Jira-only field survives) |
+| BC count | 613 → 624 (CANONICAL-COUNTS.md authoritative; BC-INDEX.md pending TD-031 cleanup) |
+| Breaking change | CLI: `jr issue comment KEY "text"` → `jr issue comment add KEY "text"` (BC-3.5.012) |
+| Design decision | --public always-confirm (Option a; DEC-168 open point resolved; recorded in BC-3.5.007) |
+| Scripts | check-spec-counts.sh — bc-3 frontmatter and body now agree; check-bc-cumulative-counts.sh — will diverge on BC-INDEX.md surfaces until TD-031 cleanup |
+| ADR recommendation | No new ADR warranted — breaking CLI change (comment→subcommand group) is documented via BC-3.5.012 + CHANGELOG entry in S-577-1 PR. The pattern is a CLI evolution, not an architectural decision. ADR-0012 already covers the shard extraction trigger; no new ADR needed. |
+| Mainline refactor risk | EC-3.5.012-1 requires changing `src/main.rs` `Cli::parse()` → `try_parse()` (or equivalent) to intercept `ErrorKind::InvalidSubcommand` under `issue comment` and inject the "comment add" hint. This modifies the whole-CLI clap error path, creating regression risk for all other clap error surfaces. The implementing story (S-577-1) MUST include regression-test obligations for: BC-3.4.011 (cross-hierarchy `--type` 400 hint), BC-3.7.003/004 (remote-link error paths), BC-3.8.010 (JSM create error paths), and `--help` snapshot tests. Additionally, the `tests/e2e_cli_surface_guard.rs` SURFACE table MUST be updated in the same PR: the existing single row `(&["issue","comment"], &["--output","--internal","--file","--stdin","--markdown"])` MUST be replaced with four rows — one each for `comment add`, `comment delete`, `comment edit`, and `comment view` — each carrying its own flag set. Also, existing `tests/e2e_live.rs` call sites using the old flat comment form (~lines 2513-2548, 3756) ride the EC-3.5.012-2 obligation and MUST be updated to the `comment add` form in the same PR as the CLI refactor. |
+
+---
+
 ## [1.3.27] - 2026-07-09
 
 ### Type: PATCH

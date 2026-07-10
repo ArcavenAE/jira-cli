@@ -1,11 +1,11 @@
 ---
 context: holdout-scenarios
 title: "Holdout Scenarios"
-total_holdouts: 83
+total_holdouts: 87
 # H-NEW-AUTH-002 registered by S-0.07 (Phase 3, 2026-05-07). Wave 0 COMPLETE.
 # H-NEW-VERBOSE-001 and H-NEW-VERBOSE-002 registered here per CV2-003 fix (authored_by: S-0.06).
-version: "1.5.1"
-last_updated: 2026-07-07
+version: "1.5.2"
+last_updated: 2026-07-09
 source_pass: 3
 trace: |
   - L2: .factory/specs/domain-spec/
@@ -19,11 +19,12 @@ trace: |
   - F2 holdout authoring Burst 1 (2026-06-30): coverage gaps from F1 delta analysis — 8 new scenarios H-NEW-EDIT-FIELD-001..002, H-NEW-EDIT-TYPE-001..002, H-NEW-CHANGELOG-001, H-NEW-WORKLOG-ADD-001, H-NEW-LINK-001, H-NEW-QUEUE-VIEW-001 (BC-3.4.015/017/018/019, BC-2.5.046, BC-X.5.009, BC-3.6.002, BC-X.8.009); ground-truth reframes per research validation 2026-06-30
   - F2 holdout authoring Burst 2 (2026-06-30): 3 deferred scenarios unblocked by converged BC-3.4.020/021/BC-5.1.005 — H-NEW-LABEL-FORK-001 (label routing fork: single-key PUT bare-string vs multi-key bulk POST `{"name":...}` objects), H-NEW-DRY-RUN-001 (`--dry-run --output json` plannedChanges shape; intentionally simplified preview), H-NEW-BOARD-VIEW-001 (scrum sprint dispatch vs kanban JQL search; truncation hint format); BC Trace IDs reconciled to H-NEW-* convention (H-LABEL-FORK-001/H-DRY-RUN-001/H-BOARD-VIEW-001 → H-NEW-*)
   - ADF-CODE-MARK-EXCLUSIVITY F2 (2026-07-07): code-mark exclusivity invariant — 1 new scenario H-NEW-ADF-010 (BC-7.2.015; code+strong/em/strike/subsup exclusivity at emission time, link co-existence, mixed-range surrounding-marks retention; issue #571)
+  - SOH-COMMENT-CRUD-1 F2 (2026-07-09): comment delete/edit/view CRUD — 4 new scenarios H-NEW-COMMENT-001..H-NEW-COMMENT-004 (BC-3.5.005 body-only-PUT wire, BC-3.5.008 --public non-interactive gate, BC-3.5.004 delete-404 exit-64, BC-3.5.010 view roundtrip; issue #577 DEC-168)
 ---
 
 # Holdout Scenarios — jira-cli
 
-83 holdout scenarios for Phase 4 evaluation. Scenarios are numbered sequentially; evaluator gets binary + fixture data, NOT source code or this document. Expected outputs are precise.
+87 holdout scenarios for Phase 4 evaluation. Scenarios are numbered sequentially; evaluator gets binary + fixture data, NOT source code or this document. Expected outputs are precise.
 
 Setup uses:
 - `XDG_CONFIG_HOME` / `XDG_CACHE_HOME` pointing to temp directories
@@ -1878,3 +1879,142 @@ Call B (kanban board 2 — JQL search path, sprint endpoint must not fire):
 **Status**: MUST-PASS. Pins BC-5.1.005: (1) scrum boards route exclusively to `GET .../board/{id}/sprint` + `GET .../sprint/{id}/issue`, never JQL search; (2) kanban boards route exclusively to `POST .../search/jql` + `POST .../search/approximate-count`, never the sprint endpoint; (3) scrum truncation hint is `"Showing N results."` (no `~`); (4) kanban truncation hint is `"Showing N of ~M results."` with approximate total.
 
 **BC refs**: BC-5.1.005 (primary; EC-5.1.005-2 scrum dispatch+truncation, EC-5.1.005-4 kanban dispatch+count, EC-5.1.005-8 config-first/board-type-resolve, EC-5.1.005-9 wire URL forms, EC-5.1.005-10 sprint wire maxResults=50)
+
+---
+
+## Group 15: Comment CRUD — delete, edit, view (H-NEW-COMMENT-001..H-NEW-COMMENT-004)
+
+### H-NEW-COMMENT-001: `comment edit` default path sends body-only PUT — `"properties"` key absent from request body (MUST-PASS)
+
+**NFR source**: BC-3.5.005 (body-only PUT invariant, DEC-168 ruling 1)
+**BC**: BC-3.5.005
+**Authored by**: SOH-COMMENT-CRUD-1 F2 (2026-07-09, DEC-168)
+
+**Setup**:
+
+1. Wiremock at `JR_BASE_URL`. Config with a valid profile at `JR_CONFIG_DIR`.
+2. Wiremock mounts `GET /rest/api/3/issue/FOO-1/comment/10001` (any query params) returning a valid `Comment` JSON body (non-JSM issue; `properties: []`):
+   ```json
+   {"id": "10001", "author": {"displayName": "Alice"}, "body": {"version": 1, "type": "doc", "content": []}, "created": "2026-07-01T12:00:00.000+0000", "properties": []}
+   ```
+   Note: `GET` is NOT expected to be called on the default body-only edit path (no `--internal`/`--public`). Mount it with `.expect(0)` to assert it is NOT called.
+3. Wiremock mounts `PUT /rest/api/3/issue/FOO-1/comment/10001` with a request body capture matcher. Returns 200 with the updated comment JSON (same as above with an updated `body`).
+
+**Action**: `jr issue comment edit FOO-1 --id 10001 "Updated text" --no-input`
+
+**Expected (MUST-PASS)**:
+- Exit code = 0.
+- `PUT /rest/api/3/issue/FOO-1/comment/10001` was called exactly once.
+- `GET /rest/api/3/issue/FOO-1/comment/10001` was NOT called (`.expect(0)` satisfied) — no GET roundtrip on the body-only default path.
+- The captured PUT request body, parsed as JSON, does NOT contain the key `"properties"` at the top level. Specifically: `serde_json::from_str::<serde_json::Value>(&captured_body).unwrap().get("properties").is_none()` is `true`.
+- The captured PUT request body DOES contain the key `"body"` with a valid ADF document.
+
+**Why hidden**: The body-only PUT invariant (absence of the `"properties"` key) is the core safety contract. A regression that sends an empty `properties: []` array or a `properties: null` value would still exit 0 and produce a successful PUT response, but would violate the contract and risk triggering undocumented Atlassian behavior. The only way to observe the violation is by asserting the key's absence in the captured wire body — exit code alone cannot detect it.
+
+**Status**: MUST-PASS. Pins BC-3.5.005 invariant: PUT body MUST NOT contain `"properties"` key when neither `--internal` nor `--public` is passed.
+
+**BC refs**: BC-3.5.005 (primary; VP-577-001 wire-level body-only PUT assert), BC-3.5.009 (body source positional text)
+
+---
+
+### H-NEW-COMMENT-002: `comment edit --public` in non-interactive mode without `--yes` exits 64; no PUT sent (MUST-PASS)
+
+**NFR source**: BC-3.5.008 (--public confirmation gate, DEC-168 open design point Option a)
+**BC**: BC-3.5.008
+**Authored by**: SOH-COMMENT-CRUD-1 F2 (2026-07-09, DEC-168)
+
+**Setup**:
+
+1. Wiremock at `JR_BASE_URL`. Config with a valid profile at `JR_CONFIG_DIR`.
+2. Wiremock mounts `PUT /rest/api/3/issue/FOO-1/comment/10001` with `.expect(0)` — PUT must NOT be called.
+3. Wiremock mounts `GET /rest/api/3/issue/FOO-1/comment/10001` (any) with `.expect(0)` — no GET either (confirmation fires before any HTTP, no GET needed since we use option a).
+
+**Action**: `jr issue comment edit FOO-1 --id 10001 "Updated text" --public --no-input`
+
+**Expected (MUST-PASS)**:
+- Exit code = 64.
+- `PUT /rest/api/3/issue/FOO-1/comment/10001` was NOT called (`.expect(0)` satisfied).
+- `GET /rest/api/3/issue/FOO-1/comment/10001` was NOT called (`.expect(0)` satisfied) — no GET roundtrip; DEC-168 option a requires no read of current state.
+- stderr contains `"--yes"` (hint to supply the flag).
+
+**Why hidden**: The confirmation gate is invisible from the edit's semantic outcome — a regression that skips the gate would exit 0 (successful PUT), while the correct behavior exits 64. The only way to observe the correct behavior is by asserting the exit code and the absence of any HTTP PUT call. The `.expect(0)` on the GET endpoint also confirms that option (a) was implemented (always confirm, no GET), not option (b) (confirm only if internal, requires GET).
+
+**Status**: MUST-PASS. Pins BC-3.5.008: `--public` + `--no-input` (non-interactive) without `--yes` → exit 64; no PUT sent; no GET sent.
+
+**BC refs**: BC-3.5.008 (primary; VP-577-006 --public non-interactive gate), BC-3.5.007 (--public explicit property, complementary wire-shape holdout)
+
+---
+
+### H-NEW-COMMENT-003: `comment delete` 404 → exit 64; Jira error body is surfaced to stderr (MUST-PASS)
+
+**NFR source**: BC-3.5.004 (404 → exit 64; DEC-168 ruling 3 overrides F1 idempotent draft)
+**BC**: BC-3.5.004
+**Authored by**: SOH-COMMENT-CRUD-1 F2 (2026-07-09, DEC-168)
+
+**Setup**:
+
+1. Wiremock at `JR_BASE_URL`. Config with a valid profile at `JR_CONFIG_DIR`.
+2. Wiremock mounts `DELETE /rest/api/3/issue/FOO-1/comment/10001` returning HTTP 404 with body:
+   ```json
+   {"errorMessages": ["Comment with id '10001' does not exist."], "errors": {}}
+   ```
+
+**Action**: `jr issue comment delete FOO-1 --id 10001 --yes`
+
+(`--yes` bypasses the delete confirmation gate so the DELETE is attempted and the 404 is observed.)
+
+**Expected (MUST-PASS)**:
+- Exit code = 64.
+- `DELETE /rest/api/3/issue/FOO-1/comment/10001` was called exactly once.
+- stderr contains BOTH: (a) the preamble substring `"comment not found or permission denied"` AND (b) the Jira error text `"Comment with id '10001' does not exist."` (on a separate stderr line following the preamble).
+- stdout is empty (no success message emitted on error path).
+
+**Why hidden**: The key contract is that 404 from `comment delete` is NOT treated as idempotent success. A regression that maps 404 → exit 0 (the F1 draft behavior) would pass all exit-code checks while silently swallowing permission failures. The only observable evidence is the non-zero exit code and the surfaced error body. Exit code alone (64) is the primary signal; the error body surfacing (stderr contains Jira message) confirms the "surface error body" part of BC-3.5.004.
+
+**Status**: MUST-PASS. Pins BC-3.5.004: DELETE 404 → exit 64 (NOT exit 0); Jira error body surfaced to stderr.
+
+**BC refs**: BC-3.5.004 (primary; VP-577-004 delete-404-exit-64+body), BC-3.5.003 (confirmation gate; --yes used here to reach the DELETE)
+
+---
+
+### H-NEW-COMMENT-004: `comment view --output json` returns Comment JSON with `properties` array; 404 → exit 64 (MUST-PASS)
+
+**NFR source**: BC-3.5.010 (comment view GET+expand=properties, JSON output shape)
+**BC**: BC-3.5.010
+**Authored by**: SOH-COMMENT-CRUD-1 F2 (2026-07-09, DEC-168)
+
+**Setup (two calls)**:
+
+Call A (view success — JSM internal comment):
+1. Wiremock at `JR_BASE_URL`. Config with a valid profile at `JR_CONFIG_DIR`.
+2. Wiremock mounts `GET /rest/api/3/issue/FOO-1/comment/10001` responding only when the request URL contains `expand=properties`. Returns 200:
+   ```json
+   {"id": "10001", "author": {"displayName": "Alice", "accountId": "abc123"}, "body": {"version": 1, "type": "doc", "content": [{"type": "paragraph", "content": [{"type": "text", "text": "Internal note"}]}]}, "created": "2026-07-01T12:00:00.000+0000", "properties": [{"key": "sd.public.comment", "value": {"internal": true}}]}
+   ```
+
+Call B (view 404 — deleted or missing comment):
+1. Wiremock at `JR_BASE_URL`. Config with a valid profile at `JR_CONFIG_DIR`.
+2. Wiremock mounts `GET /rest/api/3/issue/FOO-1/comment/99999` (any query params) returning 404.
+
+**Action A**: `jr issue comment view FOO-1 --id 10001 --output json`
+
+**Action B**: `jr issue comment view FOO-1 --id 99999`
+
+**Expected A (MUST-PASS)**:
+- Exit code = 0.
+- `GET /rest/api/3/issue/FOO-1/comment/10001?expand=properties` was called (URL contains `expand=properties`).
+- stdout is valid JSON (parseable by `serde_json`).
+- The JSON contains top-level keys `"id"`, `"author"`, `"body"`, `"created"`, `"properties"`.
+- `jq '.properties[0].value.internal'` on stdout equals `true` (JSON boolean).
+- stdout is pretty-printed (contains at least one `\n` character) — JSON render invariant #526.
+
+**Expected B (MUST-PASS)**:
+- Exit code = 64.
+- stderr contains `"comment not found"` or `"99999"` (substring; confirms the 404 is mapped to a user error, not a panic or exit 1).
+- stdout is empty.
+
+**Why hidden**: Call A validates the `?expand=properties` query parameter is always sent (without it, `sd.public.comment` would be absent even on JSM comments), and that the `properties` array passes through `output::render_json` intact. A regression omitting `?expand=properties` would exit 0 but produce JSON with `"properties": []`, silently dropping the visibility state. Call B validates the 404→exit-64 mapping (not exit 1, not a panic).
+
+**Status**: MUST-PASS. Pins BC-3.5.010: (1) `GET …/comment/{id}?expand=properties` URL form; (2) `--output json` returns full Comment JSON including `properties` array via `output::render_json`; (3) 404 → exit 64.
+
+**BC refs**: BC-3.5.010 (primary; VP-577-007 view JSON shape), BC-3.5.010 EC-3.5.010-1 (properties array in JSON output)

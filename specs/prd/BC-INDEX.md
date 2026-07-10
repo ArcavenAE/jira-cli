@@ -1,13 +1,13 @@
 ---
 context: bc-index
 title: "BC Master Index"
-total_bcs: 613  # cumulative claim (incl. range-collapsed) — see preamble below; +4 added 2026-05-08 (BC-7.4.013-016, Fix-PR A); +1 added 2026-05-13 (BC-2.6.050, issue #350); +1 added 2026-05-14 (BC-2.6.051, issue #365); +1 added 2026-05-15 (BC-3.4.009, issue #340 F2); +18 added 2026-05-18 (BC-3.8.001..010 + BC-X.12.001..008, issue #288 F2+F1d); +3 added 2026-05-19 (BC-3.8.011..013, issue #288 F1d + issue #383 F2); +4 added 2026-05-19 (BC-3.8.014..015 + BC-X.8.006..007, issue #384 F2); +2 added 2026-05-20 (BC-3.8.016..017, issue #385 F2); +2 added 2026-05-20 (BC-3.4.010..011, issue #388 F2); +3 added 2026-05-21 (BC-3.4.012..014, issue #398 F2); +3 added 2026-05-22 (BC-3.4.015..017, issue #396 F2); +2 added 2026-06-01 (BC-3.4.018..019, issue #331 F2); +1 added 2026-06-03 (BC-3.2.013, jsm-resolution-required F2); +1 added 2026-06-08 (BC-7.2.006, issue #470 listItem content-model conformance); +2 added 2026-06-08 (BC-X.8.008..009, S-QUEUE-BC-1 queue list/view document-as-is); +1 added 2026-06-08 (BC-3.2.014, fix-bulk-transition-schema bulkTransitionInputs wrapper); +2 added 2026-06-08 (BC-7.2.007..008, issue #474 markdown subsup + heading-attr); +1 added 2026-06-09 (BC-7.2.009, issue #483 GFM alerts → panel); +1 added 2026-06-10 (BC-7.2.010, issue #471 GFM task lists → taskList/taskItem); +3 added 2026-06-12 (BC-6.1.014 + BC-6.2.016..017, windows-build F2); +1 added 2026-06-15 (BC-7.2.011, issue #492 block-HTML hardBreak interior newlines); +1 added 2026-06-17 (BC-2.4.043, Bundle C CR-001 list_comments anti-stall guard); +3 added 2026-06-19 (BC-X.13.001..003, DEAD-CITATION-CI F2 CLAUDE.md citation guard); +1 added 2026-06-24 (BC-7.2.012, SEC-001 ADF recursion depth limit); +2 promoted 2026-06-27 (BC-7.2.013..014, range-collapsed → individually-bodied; issues #472 #473; total_bcs unchanged); +1 added 2026-06-27 (BC-6.2.018, cache warm-hit no-HTTP invariant); +1 added 2026-06-27 (BC-7.3.010, issue #526 json-render invariant + error channel); +3 added 2026-06-30 (BC-3.4.020..021 + BC-5.1.005, BC-subclause-pass F2); BC-6.2.004 modified; BC-1.3.023, BC-3.3.001, BC-X.8.004, BC-3.8.009, BC-X.3.002, BC-3.8.002, BC-3.8.010, BC-3.8.011, BC-3.4.003 modified; +3 added 2026-07-05 (BC-X.13.004..006, CITATION-GUARDS Story B Guard 1 S-BC-CITATION-GUARD-1 issue #102); +1 added 2026-07-07 (BC-7.2.015, issue #571 ADF code-mark exclusivity — push_code emit-site typographic-mark filter); BC-7.2.007 EC-2 modified; +1 added 2026-07-09 (BC-X.1.011, S-SOH-589 jr api --method case-insensitivity)
-last_updated: 2026-07-09  # BC-X.1.011 added via sanctioned shell edit (TD-031 lockout)
+total_bcs: 624  # cumulative claim (incl. range-collapsed) — see preamble below; +4 added 2026-05-08 (BC-7.4.013-016, Fix-PR A); +1 added 2026-05-13 (BC-2.6.050, issue #350); +1 added 2026-05-14 (BC-2.6.051, issue #365); +1 added 2026-05-15 (BC-3.4.009, issue #340 F2); +18 added 2026-05-18 (BC-3.8.001..010 + BC-X.12.001..008, issue #288 F2+F1d); +3 added 2026-05-19 (BC-3.8.011..013, issue #288 F1d + issue #383 F2); +4 added 2026-05-19 (BC-3.8.014..015 + BC-X.8.006..007, issue #384 F2); +2 added 2026-05-20 (BC-3.8.016..017, issue #385 F2); +2 added 2026-05-20 (BC-3.4.010..011, issue #388 F2); +3 added 2026-05-21 (BC-3.4.012..014, issue #398 F2); +3 added 2026-05-22 (BC-3.4.015..017, issue #396 F2); +2 added 2026-06-01 (BC-3.4.018..019, issue #331 F2); +1 added 2026-06-03 (BC-3.2.013, jsm-resolution-required F2); +1 added 2026-06-08 (BC-7.2.006, issue #470 listItem content-model conformance); +2 added 2026-06-08 (BC-X.8.008..009, S-QUEUE-BC-1 queue list/view document-as-is); +1 added 2026-06-08 (BC-3.2.014, fix-bulk-transition-schema bulkTransitionInputs wrapper); +2 added 2026-06-08 (BC-7.2.007..008, issue #474 markdown subsup + heading-attr); +1 added 2026-06-09 (BC-7.2.009, issue #483 GFM alerts → panel); +1 added 2026-06-10 (BC-7.2.010, issue #471 GFM task lists → taskList/taskItem); +3 added 2026-06-12 (BC-6.1.014 + BC-6.2.016..017, windows-build F2); +1 added 2026-06-15 (BC-7.2.011, issue #492 block-HTML hardBreak interior newlines); +1 added 2026-06-17 (BC-2.4.043, Bundle C CR-001 list_comments anti-stall guard); +3 added 2026-06-19 (BC-X.13.001..003, DEAD-CITATION-CI F2 CLAUDE.md citation guard); +1 added 2026-06-24 (BC-7.2.012, SEC-001 ADF recursion depth limit); +2 promoted 2026-06-27 (BC-7.2.013..014, range-collapsed → individually-bodied; issues #472 #473; total_bcs unchanged); +1 added 2026-06-27 (BC-6.2.018, cache warm-hit no-HTTP invariant); +1 added 2026-06-27 (BC-7.3.010, issue #526 json-render invariant + error channel); +3 added 2026-06-30 (BC-3.4.020..021 + BC-5.1.005, BC-subclause-pass F2); BC-6.2.004 modified; BC-1.3.023, BC-3.3.001, BC-X.8.004, BC-3.8.009, BC-X.3.002, BC-3.8.002, BC-3.8.010, BC-3.8.011, BC-3.4.003 modified; +3 added 2026-07-05 (BC-X.13.004..006, CITATION-GUARDS Story B Guard 1 S-BC-CITATION-GUARD-1 issue #102); +1 added 2026-07-07 (BC-7.2.015, issue #571 ADF code-mark exclusivity — push_code emit-site typographic-mark filter); BC-7.2.007 EC-2 modified; +1 added 2026-07-09 (BC-X.1.011, S-SOH-589 jr api --method case-insensitivity); +11 added 2026-07-09 (BC-3.5.002..BC-3.5.012, SOH-COMMENT-CRUD-1 F2 DEC-168 comment delete/edit/view issue #577)
+last_updated: 2026-07-09  # BC-3.5.002..BC-3.5.012 added via sanctioned shell edit (TD-031 lockout); BC-X.1.011 also via sanctioned shell edit
 source_pass: 3
 sections:
   - bc-1-auth-identity.md (57 BCs cumulative; 46 individually-bodied)
   - bc-2-issue-read.md (94 BCs cumulative; 52 individually-bodied)
-  - bc-3-issue-write.md (109 BCs cumulative; 80 individually-bodied)
+  - bc-3-issue-write.md (120 BCs cumulative; 91 individually-bodied)
   - bc-4-assets-cmdb.md (32 BCs cumulative; 22 individually-bodied)
   - bc-5-boards-sprints.md (36 BCs cumulative; 18 individually-bodied)
   - bc-6-config-cache.md (43 BCs cumulative; 33 individually-bodied)
@@ -213,7 +213,7 @@ R1/R4 prefix = deepening round that introduced it.
 
 ---
 
-## Section 3: Issue Write (bc-3-issue-write.md) — 109 BCs cumulative; 80 individually-bodied
+## Section 3: Issue Write (bc-3-issue-write.md) — 120 BCs cumulative; 91 individually-bodied
 
 ### 3.1 Assign (9 BCs: BC-3.1.001..009)
 
@@ -288,11 +288,22 @@ R1/R4 prefix = deepening round that introduced it.
 | BC-3.4.020 | `issue edit --label` routes single-key through `PUT /rest/api/3/issue/{key}` with bare-string labels; routes 2+ keys through `POST /rest/api/3/bulk/issues/fields` with `{"name":...}` objects — LOAD-BEARING asymmetry MUST NOT be unified (BUG-LABEL-400) | — (BC-subclause-pass F2 2026-06-30) | src/cli/issue/edit.rs::handle_edit_bulk_labels; src/api/jira/issues.rs::update_issue_labels; CLAUDE.md BUG-LABEL-400 | HIGH |
 | BC-3.4.021 | `jr issue edit --dry-run` emits `plannedChanges` JSON or table preview on stdout without issuing any mutation HTTP call; `--output json` schema is `{dryRun: true, issues: [...], plannedChanges: {...}}`; preview shapes are intentionally simplified (labels flat array, priority bare string) | — (BC-subclause-pass F2 2026-06-30) | src/cli/issue/edit.rs::handle_edit dry-run block (implementation-defined) | HIGH |
 
-### 3.5 Comments (1 BC: BC-3.5.001)
+### 3.5 Comments (12 BCs: BC-3.5.001..BC-3.5.012)
 
 | L3 BC ID | Summary | Pass 3 BC ID | Source | Confidence |
 |---|---|---|---|---|
 | BC-3.5.001 | `issue comment <key> --internal` adds `sd.public.comment` property | BC-219 | src/api/jira/issues.rs | HIGH |
+| BC-3.5.002 | `comment delete <KEY> --id <ID>` sends DELETE /rest/api/3/issue/{key}/comment/{id}; 204 → exit 0 | NEW #577 | src/api/jira/issues.rs::delete_comment | HIGH |
+| BC-3.5.003 | `comment delete` requires --yes non-interactive; y/N interactive; --yes bypasses | NEW #577 | src/cli/issue/interactions.rs::handle_comment_delete | HIGH |
+| BC-3.5.004 | `comment delete` 404 → exit 64 + Jira error body surfaced (NOT idempotent) | NEW #577 | src/cli/issue/interactions.rs::handle_comment_delete | HIGH |
+| BC-3.5.005 | `comment edit` body-only PUT invariant: no "properties" key in PUT body when neither --internal nor --public | NEW #577 | src/api/jira/issues.rs::update_comment | HIGH |
+| BC-3.5.006 | `comment edit --internal` sends properties:[{key:"sd.public.comment",value:{internal:true}}] | NEW #577 | src/api/jira/issues.rs::update_comment | MEDIUM-HIGH |
+| BC-3.5.007 | `comment edit --public` sends properties:[{key:"sd.public.comment",value:{internal:false}}]; always-confirm | NEW #577 | src/api/jira/issues.rs::update_comment | MEDIUM-HIGH |
+| BC-3.5.008 | `comment edit --public` confirmation gate: --no-input without --yes → exit 64; interactive y/N | NEW #577 | src/cli/issue/interactions.rs::handle_comment_edit | HIGH |
+| BC-3.5.009 | `comment edit` body sources: --file/--stdin/positional/--markdown; missing body → exit 64 | NEW #577 | src/cli/issue/interactions.rs::handle_comment_edit | HIGH |
+| BC-3.5.010 | `comment view <KEY> --id <ID>` GET with ?expand=properties; table+JSON output; 404 → exit 64 | NEW #577 | src/api/jira/issues.rs::get_comment | HIGH |
+| BC-3.5.011 | --internal and --public mutually exclusive on comment edit; clap conflicts_with → exit 2 | NEW #577 | src/cli/mod.rs | HIGH |
+| BC-3.5.012 | CLI breaking change: comment → subcommand group (add/delete/edit/view); old flat form → exit 2 + migration hint | NEW #577 | src/cli/mod.rs | HIGH |
 
 ### 3.6 Links (5 BCs: BC-3.6.001..005)
 
