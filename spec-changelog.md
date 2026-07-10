@@ -383,6 +383,25 @@ and agrees at 624. All 8 cumulative-count surfaces now agree.
   treat properties as OPTIONAL. (b) H-NEW-COMMENT-004 Expected A: "properties" dropped from
   required top-level key set; jq assertion already implies presence for JSM fixture.
   VP count stays 21 (modifications only). No BC/holdout count change.
+  Adversary pass-15 remediation (same-version, 2 LOW):
+  F1 (LOW): BC-3.5.010 fields 3 and 4 — graceful-degradation "or null" added to both:
+  `Created:` now reads "render `\"N/A\"` if the field is absent or null (uncommon in practice
+  but graceful-degradation safe)"; `Updated:` updated to match same phrasing (was "render N/A
+  if the field is absent"). Symmetrical null-guard across all six display fields.
+  F2 (LOW): BC-3.5.005 Response 200 — variant clarifier appended immediately after the JSON
+  code block: "(The example above illustrates the --internal case; in the default body-only
+  variant changed_fields contains only body and the jsm_internal key is omitted entirely;
+  in the --public confirmed variant jsm_internal is false.)"
+  VP count stays 21. No BC/holdout count change.
+  Adversary pass-16 remediation (same-version, 2 LOW):
+  F1 (LOW): BC-3.5.005 Implementation note opening sentence — count updated from
+  "Two hazards, both violate..." to "Three hazards, all violating the 'key MUST NOT
+  be present' invariant, all three caught by VP-577-001's key-set assertion:" (the
+  (i)/(ii)/(iii) body was already correct; only the count sentence changed).
+  F2 (LOW): BC-3.5.010 field 1 (`ID:`) — graceful-degradation clause added:
+  "render `\"N/A\"` if the field is absent or null (uncommon in practice but
+  graceful-degradation safe)." Completes symmetrical null-guard across all six display fields.
+  VP count stays 21. No BC/holdout count change.
 
 - `.factory/specs/prd/holdout-scenarios.md` (MODIFIED): `total_holdouts` 83 → 87;
   `version` 1.5.1 → 1.5.2; `last_updated` updated; trace entry added for

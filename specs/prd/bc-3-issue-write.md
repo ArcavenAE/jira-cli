@@ -2236,7 +2236,7 @@ Wire shape (body-only):
 
 **Edit pipeline — validation ordering** (pin for implementers): The `comment edit` handler MUST execute steps in the following order: (1) `--id` regex validation per EC-3.5.002-1; (2) body-source resolution and empty/whitespace check per EC-3.5.009-5 (see also BC-3.5.009); (3) `--public` confirmation gate if applicable (BC-3.5.008); (4) ADF conversion (`text_to_adf` or `markdown_to_adf`); (5) HTTP PUT. Steps 1–3 MUST complete before any ADF conversion or HTTP call. This mirrors the ordering in the existing `handle_comment` body-resolution pattern where body resolution precedes the API call. Note: EC-3.5.009-5 (empty body) and BC-3.5.008 (--public gate) each contain a cross-reference to this ordering pin. **JSDCLOUD-6050 hint timing**: The JSDCLOUD-6050 stderr hint (EC-3.5.006-1 / EC-3.5.007-1) fires after step 4 (ADF conversion) succeeds and BEFORE step 5 (HTTP PUT). If step 4 fails (e.g., `markdown_to_adf` returns an error), the hint does NOT fire — the handler exits with the ADF error instead.
 
-**Implementation note**: Two hazards, both violate the "key MUST NOT be present" invariant, both caught by VP-577-001:
+**Implementation note**: Three hazards, all violating the "key MUST NOT be present" invariant, all three caught by VP-577-001's key-set assertion:
 
 (i) `Option<Vec<CommentProperty>>` where `None` serializes as `"properties": null` (key present, null value).
 
@@ -2261,6 +2261,7 @@ Implementations MUST choose one of: (a) a separate PUT request struct that inclu
     "updated": true
   }
   ```
+  (The example above illustrates the --internal case; in the default body-only variant changed_fields contains only body and the jsm_internal key is omitted entirely; in the --public confirmed variant jsm_internal is false.)
   `changed_fields.body` carries the **raw user-supplied input string** from the body source (file content, stdin content, or positional text argument) — NOT `"(updated)"`, NOT an ADF round-trip. This is the lossless machine channel per the #398 echo-asymmetry precedent (BC-3.4.013: human echoes a marker, machine channel is lossless). `changed_fields.jsm_internal` (boolean: `true` when `--internal` was passed, `false` when `--public` was passed) is present ONLY when `--internal` or `--public` was passed; when neither flag was used, the key is omitted entirely. **Human/machine asymmetry (BC-3.4.013 precedent)**: the human echo marker stays `" (visibility: internal)"` / `" (visibility: public)"` — human channel is not updated to match the machine key name, per established echo-asymmetry precedent. (Key order shown matches `serde_json` default alphabetical emission (`Value::Object` uses `BTreeMap`); `"body"` sorts before `"jsm_internal"` — JSON key order is not semantically load-bearing but examples match the wire.)
 - **Cancel path**: when `--public` confirmation is cancelled, see BC-3.5.008 EC-3.5.008-2 (`{"cancelled": true, "updated": false}` in JSON mode, exit 0).
 - **No-truncation note**: `changed_fields.body` is the raw user-supplied input without truncation; downstream consumers must handle arbitrarily large values (mirrors BC-3.4.013 lossless channel precedent).
@@ -2432,10 +2433,10 @@ The `?expand=properties` query parameter is required to include the `properties`
 **Response 200 — Human output** (profile 3, Mixed — stdout for data, stderr for errors and hints):
 
 Display comment details via plain key-value lines (NOT a comfy-table multi-row layout) to stdout, in the following field order:
-1. `ID:` — the comment ID string from the `id` field.
+1. `ID:` — the comment ID string from the `id` field; render `"N/A"` if the field is absent or null (uncommon in practice but graceful-degradation safe).
 2. `Author:` — display name from the comment's `author.displayName` field; render `"Unknown"` if the `author` key is absent, `null`, or its `displayName` is missing.
-3. `Created:` — ISO 8601 timestamp from `created`.
-4. `Updated:` — ISO 8601 timestamp from `updated`; render N/A if the field is absent (uncommon in practice but graceful-degradation safe).
+3. `Created:` — ISO 8601 timestamp from `created`; render `"N/A"` if the field is absent or null (uncommon in practice but graceful-degradation safe).
+4. `Updated:` — ISO 8601 timestamp from `updated`; render `"N/A"` if the field is absent or null (uncommon in practice but graceful-degradation safe).
 5. `JSM internal:` — `"Yes"` if `sd.public.comment.internal == true`; `"No"` if `false`; `"N/A"` if the property is absent or the `properties` array is empty. If the property is present but its `value.internal` sub-key is absent, null, or not a JSON boolean (e.g., stringly-typed `"true"` per JSDCLOUD-9766), render `"N/A"`. Do NOT panic; graceful-degradation-safe like fields 2/4/6.
 6. `Restricted:` — value from the Jira `visibility` field (`{"type": "role"|"group", "value": "<name>"}`): display `<name>` if present; `"None"` if the `visibility` key is absent or null. Distinct from JSM internal/public flag — this is Jira's comment-level role/group restriction.
 7. Body — rendered below the header fields via `adf_to_text`, separated by a blank line.
@@ -2446,7 +2447,7 @@ Routing: the handler delegates to a dedicated `render_comment_view` function (or
 
 **Response 200 — JSON output** (`--output json`):
 
-The raw Jira response is deserialized as `serde_json::Value` and routed through `output::render_json` (pretty-printed, per JSON render invariant #526). **No typed `Comment` round-trip** — the Value passthrough preserves every field returned by Jira, including fields not present in `src/types/jira/issue.rs::Comment` (e.g., `"self"`, `"updateAuthor"`, `"jsdPublic"`). (`renderedBody` appears only with `?expand=renderedBody`, which `jr` does not request this cycle.) The `properties` array is included as returned by the API (may be empty `[]` for non-JSM issues).
+The raw Jira response is deserialized as `serde_json::Value` and routed through `output::render_json` (pretty-printed, per JSON render invariant #526). **No typed `Comment` round-trip** — the Value passthrough preserves every field returned by Jira, including fields not present in `src/types/jira/issue.rs::Comment` (e.g., `"self"`, `"updateAuthor"`, `"jsdPublic"`). (`renderedBody` appears only with `?expand=renderedBody`, which `jr` does not request this cycle.) The `properties` key is passed through as returned by the API (absent entirely or empty `[]` on non-JSM issues; populated for JSM issues) — see EC-3.5.010-1.
 
 **Response 404** → exit 64 (`UserError`); stderr: `"comment not found or permission denied: <KEY>#<ID>"`. Surface Jira response body if present (research verdict: Claim 3 CONFIRMED — Jira conflates 404 and permission-equivalent 403 for comment endpoints to avoid resource-existence disclosure; same rationale as BC-3.5.004). See BC-3.5.004 implementation note for the recommended `downcast_ref::<JrError>()` body-surfacing mechanism — applies identically here.
 
