@@ -5,7 +5,7 @@ total_holdouts: 88
 # H-NEW-AUTH-002 registered by S-0.07 (Phase 3, 2026-05-07). Wave 0 COMPLETE.
 # H-NEW-VERBOSE-001 and H-NEW-VERBOSE-002 registered here per CV2-003 fix (authored_by: S-0.06).
 version: "1.5.2"
-last_updated: 2026-07-09
+last_updated: 2026-07-10
 source_pass: 3
 trace: |
   - L2: .factory/specs/domain-spec/
@@ -1910,7 +1910,7 @@ Call B (kanban board 2 — JQL search path, sprint endpoint must not fire):
 - The captured PUT request body, parsed as JSON, does NOT contain the key `"visibility"` at the top level. Specifically: `…unwrap().get("visibility").is_none()` is `true`.
 - The captured PUT request body DOES contain the key `"body"` with a valid ADF document.
 - The captured PUT request body's top-level key set equals exactly `{"body"}` — no extra keys: `…as_object().unwrap().keys().map(|k| k.as_str()).collect::<std::collections::BTreeSet<_>>() == std::collections::BTreeSet::from(["body"])` is `true`.
-- (VP-577-023 echo-channel mirror): in `--output json` mode, `changed_fields.body` equals `"Updated text"` byte-for-byte (echo channel is lossless; whitespace trimming applies only to the EC-3.5.009-5 emptiness gate and ADF conversion input, not the JSON echo channel).
+- Byte-for-byte JSON-echo behavior is verified separately by VP-577-023 (BC-3.5.005) and is not asserted by this holdout (the Action runs without `--output json`).
 
 **Why hidden**: The body-only PUT invariant (absence of the `"properties"` key) is the core safety contract. A regression that sends an empty `properties: []` array or a `properties: null` value would still exit 0 and produce a successful PUT response, but would violate the contract and risk triggering undocumented Atlassian behavior. The only way to observe the violation is by asserting the key's absence in the captured wire body — exit code alone cannot detect it.
 

@@ -46,7 +46,7 @@ Covers the write side of the Issue domain: `jr issue create`, `edit`, `move`, `a
 | `IssueLinkTypesResponse` | `types/jira/issue.rs:50-54` | `issue_link_types: Vec<IssueLinkType>` | — |
 | `CachedResolution` | `cache.rs:202-208` | `id: String` (non-optional), `name: String`, `description: Option<String>` | `id` non-optional — resolutions without id are dropped on cache write (with stderr count warning). |
 | `ResolutionsCache` | `cache.rs:210-220` | `resolutions: Vec<CachedResolution>`, `fetched_at: DateTime<Utc>` | Whole-file `resolutions.json`, 7-day TTL. |
-| `Comment` | (see BC-02) | — | Write side: `POST /rest/api/3/issue/<key>/comment`. ADF body from text/markdown/file/stdin. |
+| `Comment` | (see BC-02) | — | Add via POST .../comment; delete via DELETE .../comment/<id>; edit via PUT .../comment/<id> (body-only default; --internal/--public adds sd.public.comment property; visibility key never sent); view via GET .../comment/<id>?expand=properties. ADF body from text/markdown/file/stdin. |
 | `Worklog` | `types/jira/worklog.rs:6-16` | `id: Option<String>`, `author: Option<User>`, `time_spent_seconds: Option<u64>`, `time_spent: Option<String>`, `comment: Option<Value>` (ADF), `started: Option<String>` | Write: `POST /worklog`. List: `GET /worklog` (non-paginated — NFR-R-A). |
 | `User` | (see BC-02) | — | Assignee resolution target for `issue assign`. |
 | `IssueType` | (see BC-02) | — | Input for `issue create --type`, `issue edit --type`. |
