@@ -1895,7 +1895,7 @@ Call B (kanban board 2 — JQL search path, sprint endpoint must not fire):
 1. Wiremock at `JR_BASE_URL`. Config with a valid profile at `JR_CONFIG_DIR`.
 2. Wiremock mounts `GET /rest/api/3/issue/FOO-1/comment/10001` (any query params) returning a valid `Comment` JSON body (non-JSM issue; `properties: []`):
    ```json
-   {"id": "10001", "author": {"displayName": "Alice"}, "body": {"version": 1, "type": "doc", "content": []}, "created": "2026-07-01T12:00:00.000+0000", "properties": []}
+   {"id": "10001", "author": {"displayName": "Alice"}, "body": {"version": 1, "type": "doc", "content": []}, "created": "2026-07-01T12:00:00.000+0000", "updated": "2026-07-01T12:00:00.000+0000", "properties": []}
    ```
    Note: `GET` is NOT expected to be called on the default body-only edit path (no `--internal`/`--public`). Mount it with `.expect(0)` to assert it is NOT called.
 3. Wiremock mounts `PUT /rest/api/3/issue/FOO-1/comment/10001` with a request body capture matcher. Returns 200 with the updated comment JSON (same as above with an updated `body`).
@@ -1989,7 +1989,7 @@ Call A (view success — JSM internal comment):
 1. Wiremock at `JR_BASE_URL`. Config with a valid profile at `JR_CONFIG_DIR`.
 2. Wiremock mounts `GET /rest/api/3/issue/FOO-1/comment/10001` responding only when the request URL contains `expand=properties`. Returns 200:
    ```json
-   {"id": "10001", "author": {"displayName": "Alice", "accountId": "abc123"}, "body": {"version": 1, "type": "doc", "content": [{"type": "paragraph", "content": [{"type": "text", "text": "Internal note"}]}]}, "created": "2026-07-01T12:00:00.000+0000", "properties": [{"key": "sd.public.comment", "value": {"internal": true}}]}
+   {"id": "10001", "author": {"displayName": "Alice", "accountId": "abc123"}, "body": {"version": 1, "type": "doc", "content": [{"type": "paragraph", "content": [{"type": "text", "text": "Internal note"}]}]}, "created": "2026-07-01T12:00:00.000+0000", "updated": "2026-07-01T12:00:00.000+0000", "properties": [{"key": "sd.public.comment", "value": {"internal": true}}]}
    ```
 
 Call B (view 404 — deleted or missing comment):
@@ -2010,7 +2010,7 @@ Call B (view 404 — deleted or missing comment):
 
 **Expected B (MUST-PASS)**:
 - Exit code = 64.
-- stderr contains `"comment not found"` or `"99999"` (substring; confirms the 404 is mapped to a user error, not a panic or exit 1).
+- stderr contains `"comment not found"` (load-bearing preamble substring; confirms the 404 is mapped to exit 64 with the correct preamble from BC-3.5.010 Response 404).
 - stdout is empty.
 
 **Why hidden**: Call A validates the `?expand=properties` query parameter is always sent (without it, `sd.public.comment` would be absent even on JSM comments), and that the `properties` array passes through `output::render_json` intact. A regression omitting `?expand=properties` would exit 0 but produce JSON with `"properties": []`, silently dropping the visibility state. Call B validates the 404→exit-64 mapping (not exit 1, not a panic).

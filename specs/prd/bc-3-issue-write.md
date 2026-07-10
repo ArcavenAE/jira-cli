@@ -2114,12 +2114,13 @@ simplifications are deliberate design choices documented in source comments.
 
 ### 3.5 Comments (12 BCs: BC-3.5.001..BC-3.5.012)
 
-#### BC-3.5.001: `issue comment <key> --internal` adds `sd.public.comment` property
+#### BC-3.5.001: `issue comment add <key> --internal` adds `sd.public.comment` property
 
 **Confidence**: HIGH
 **Source**: `src/api/jira/issues.rs::add_comment(internal: bool)`
 **Behavior**: `properties: [{key:"sd.public.comment", value:{internal:true}}]`. Non-JSM: silently ignored.
-**Trace**: Pass 3 BC-219
+**Note**: The canonical CLI form is `jr issue comment add <KEY> <text> --internal` (BC-3.5.012 subcommand group refactor; the old flat `jr issue comment <KEY>` form is removed).
+**Trace**: Pass 3 BC-219; adversary pass-5 M2 title update (2026-07-09)
 
 ---
 
@@ -2171,9 +2172,11 @@ Confirmation mechanics:
 
 **VP-577-005**: `--no-input` mode without `--yes` → exit 64; assert no HTTP DELETE was sent (wiremock `.expect(0)` on the DELETE route).
 
-**VP-577-013**: `comment delete FOO-1 --id 10001 --output json` in interactive mode; user selects N (cancel) → exit 0; stdout parses as JSON `{"cancelled": true, "deleted": false}`; no HTTP DELETE sent (wiremock `.expect(0)`).
+**VP-577-013**: `comment delete FOO-1 --id 10001 --output json` in interactive mode; user selects N (cancel) → exit 0; stdout parses as JSON `{"cancelled": true, "deleted": false}`; no HTTP DELETE sent (wiremock `.expect(0)`). **Seam note**: the interactive branch (TTY path) is unreachable in wiremock tests without the `JR_STDIN_IS_TTY` debug seam — set this env var to `"1"` to force `jr` to treat stdin as a TTY in debug builds; see the implementation note below.
 
-**Trace**: F2 spec evolution (2026-07-09, DEC-168 ruling 3; adversary pass-2 MEDIUM-1 remediation; issue #577 SOH-COMMENT-CRUD-1)
+**Implementation note (interactive-branch test seam)**: Interactive-branch tests (VP-577-013 and any analogous y/N prompt test) use the `JR_STDIN_IS_TTY` debug seam: when set to `"1"` in a debug build (`#[cfg(debug_assertions)]`), `jr` treats stdin as a TTY regardless of the actual fd state. Release builds ignore this env var entirely. A release-gate regression test is required per the established `JR_*` seam pattern (mirrors `JR_BASE_URL`, `JR_CONFIG_DIR` etc.). The `CLAUDE.md` doc line for `JR_STDIN_IS_TTY` MUST ship in the same commit as the seam implementation, per the codified doc-fallout rule.
+
+**Trace**: F2 spec evolution (2026-07-09, DEC-168 ruling 3; adversary pass-2 MEDIUM-1 remediation; adversary pass-6 MEDIUM-1 JR_STDIN_IS_TTY seam; issue #577 SOH-COMMENT-CRUD-1)
 
 ---
 
@@ -2231,7 +2234,7 @@ Wire shape (body-only):
 
 **EC-3.5.005-2** (--id validation cross-reference): `--id` input MUST be validated per EC-3.5.002-1 (shared rule; applies to BC-3.5.002/005/010) before any HTTP call. Input not matching `^[0-9A-Za-z_-]+$` → exit 64; stderr: `"invalid comment id: <VALUE>"`.
 
-**Edit pipeline — validation ordering** (pin for implementers): The `comment edit` handler MUST execute steps in the following order: (1) `--id` regex validation per EC-3.5.002-1; (2) body-source resolution and empty/whitespace check per EC-3.5.009-5 (see also BC-3.5.009); (3) `--public` confirmation gate if applicable (BC-3.5.008); (4) ADF conversion (`text_to_adf` or `markdown_to_adf`); (5) HTTP PUT. Steps 1–3 MUST complete before any ADF conversion or HTTP call. This mirrors the ordering in the existing `handle_comment` body-resolution pattern where body resolution precedes the API call. Note: EC-3.5.009-5 (empty body) and BC-3.5.008 (--public gate) each contain a cross-reference to this ordering pin.
+**Edit pipeline — validation ordering** (pin for implementers): The `comment edit` handler MUST execute steps in the following order: (1) `--id` regex validation per EC-3.5.002-1; (2) body-source resolution and empty/whitespace check per EC-3.5.009-5 (see also BC-3.5.009); (3) `--public` confirmation gate if applicable (BC-3.5.008); (4) ADF conversion (`text_to_adf` or `markdown_to_adf`); (5) HTTP PUT. Steps 1–3 MUST complete before any ADF conversion or HTTP call. This mirrors the ordering in the existing `handle_comment` body-resolution pattern where body resolution precedes the API call. Note: EC-3.5.009-5 (empty body) and BC-3.5.008 (--public gate) each contain a cross-reference to this ordering pin. **JSDCLOUD-6050 hint timing**: The JSDCLOUD-6050 stderr hint (EC-3.5.006-1 / EC-3.5.007-1) fires after step 4 (ADF conversion) succeeds and BEFORE step 5 (HTTP PUT). If step 4 fails (e.g., `markdown_to_adf` returns an error), the hint does NOT fire — the handler exits with the ADF error instead.
 
 **Implementation note**: Two hazards, both violate the "key MUST NOT be present" invariant, both caught by VP-577-001:
 
@@ -2247,13 +2250,13 @@ Implementations MUST choose one of: (a) a separate request struct that omits the
 - **JSON output** (`--output json`, stdout via `output::render_json`):
   ```json
   {
-    "updated": true,
-    "id": "<ID>",
-    "key": "<KEY>",
     "changed_fields": {
       "body": "<raw user-supplied input string>",
       "visibility": "internal"
-    }
+    },
+    "id": "<ID>",
+    "key": "<KEY>",
+    "updated": true
   }
   ```
   `changed_fields.body` carries the **raw user-supplied input string** from the body source (file content, stdin content, or positional text argument) — NOT `"(updated)"`, NOT an ADF round-trip. This is the lossless machine channel per the #398 echo-asymmetry precedent (BC-3.4.013: human echoes a marker, machine channel is lossless). `changed_fields.visibility` (`"internal"` or `"public"`) is present ONLY when `--internal` or `--public` was passed; when neither flag was used, the key is omitted entirely.
@@ -2264,7 +2267,9 @@ Implementations MUST choose one of: (a) a separate request struct that omits the
 
 **VP-577-001**: wiremock captures the PUT request body; assert the body parses as JSON and does NOT contain the key `"properties"` at the top level. Specifically: `serde_json::from_str::<serde_json::Value>(&body).unwrap().get("properties").is_none()` must be `true`.
 
-**Trace**: F2 spec evolution (2026-07-09, DEC-168 ruling 1; research verdict Claim 1 REFUTED-footgun; issue #577 SOH-COMMENT-CRUD-1)
+> **RESOLVED (visibility PRESERVED verdict, 2026-07-09)**: Body-only PUT does NOT clear an existing role/group visibility restriction — restriction changes ONLY when the caller explicitly includes a `visibility` object in the PUT body (verdict medium-high confidence; `.factory/research/issue-577-visibility-put-semantics-2026-07-09.md`; load-bearing evidence: Atlassian's child-comment-visibility-400 announcement is only coherent under PRESERVED semantics; patch-shaped PUT convention, zero restriction-loss reports across community usage, GET-symmetry argument). `jr` NEVER sends a `visibility` key on `comment edit` in this cycle (no restriction-editing surface exposed). Definitive empirical check rides the deferred EJ probe — extended to include the 2-step visibility check (see delivery-task obligation in BC-3.5.006); if the probe ever refutes PRESERVED, the edit wire shape must preserve visibility via read-modify-write.
+
+**Trace**: F2 spec evolution (2026-07-09, DEC-168 ruling 1; research verdict Claim 1 REFUTED-footgun; adversary pass-5 M6b marker (since resolved — PRESERVED verdict 2026-07-09); issue #577 SOH-COMMENT-CRUD-1)
 
 ---
 
@@ -2288,11 +2293,11 @@ No confirmation required (`--internal` reduces visibility; not an exposure risk)
 
 > **RESOLVED (HIGH-3 MERGE verdict, human-approved 2026-07-09)**: Jira's comment-PUT `properties` array is MERGE semantics (unlisted entity properties preserved) — research verdict medium-high confidence (`.factory/research/issue-577-properties-merge-replace-2026-07-09.md`; per-key CRUD architecture, no bulk endpoints for comment properties, zero property-loss reports across years of community single-key usage). Direct-array pattern as specced is confirmed safe. Definitive empirical probe DEFERRED to a gated e2e follow-up (see delivery-task note below); if that probe ever refutes MERGE, the `--internal`/`--public` wire shape must be revised to read-modify-write.
 
-**Delivery-task obligation (implementing story, F4)**: The story MUST include: (a) a `CLAUDE.md` gotcha documenting the MERGE verdict, citing `.factory/research/issue-577-properties-merge-replace-2026-07-09.md`, and explicitly stating the do-not-default-to-sending-properties rule (BC-3.5.005); and (b) a gated e2e test in `tests/e2e_live.rs` implementing the 5-step MERGE probe from `.factory/research/issue-577-properties-merge-replace-2026-07-09.md § "Proposed empirical probe"` against project EJ (`JR_E2E_JSM_PROJECT`), self-cleaning via `jsm_self_close` convention.
+**Delivery-task obligation (implementing story, F4)**: The story MUST include: (a) a `CLAUDE.md` gotcha documenting the MERGE verdict, citing `.factory/research/issue-577-properties-merge-replace-2026-07-09.md`, and explicitly stating the do-not-default-to-sending-properties rule (BC-3.5.005); and (b) a gated e2e test in `tests/e2e_live.rs` implementing the 5-step MERGE probe from `.factory/research/issue-577-properties-merge-replace-2026-07-09.md § "Proposed empirical probe"` against project EJ (`JR_E2E_JSM_PROJECT`), self-cleaning via `jsm_self_close` convention. The probe MUST also include the 2-step visibility extension from `.factory/research/issue-577-visibility-put-semantics-2026-07-09.md`: (1) create a JSM comment with a role/group visibility restriction; (2) perform a body-only PUT and re-GET; assert the restriction survives (confirming the PRESERVED verdict). Both probe steps live in the same gated e2e test function and self-clean via `jsm_self_close`. Additionally: (c) a `JR_STDIN_IS_TTY` debug seam (`#[cfg(debug_assertions)]`-gated, release builds ignore) enabling interactive-branch tests (VP-577-013 and analogous y/N prompt tests); the seam implementation MUST be accompanied in the same commit by a release-gate regression test (mirrors the `JR_BASE_URL`/`JR_CONFIG_DIR` gate pattern) and a `CLAUDE.md` doc line for `JR_STDIN_IS_TTY` (codified doc-fallout rule).
 
-**EC-3.5.006-1** (JSDCLOUD-6050 caveat): When `--internal` is passed, emit a stderr hint before the PUT is sent: `"note: visibility change is best-effort — verify in the portal (JSDCLOUD-6050)."` This hint is informational; it does NOT affect exit code and is not suppressed by `--no-input`.
+**EC-3.5.006-1** (JSDCLOUD-6050 caveat): When `--internal` is passed, emit a stderr hint before the PUT is sent: `"note: visibility change is best-effort — verify in the portal (JSDCLOUD-6050)."` This hint is informational; it does NOT affect exit code and is not suppressed by `--no-input`. **Timing cross-note**: fires after ADF conversion succeeds (step 4 in BC-3.5.005 edit pipeline ordering pin), before HTTP PUT (step 5); does not fire if step 4 fails.
 
-**EC-3.5.006-2** (Non-JSM behavior): On a non-JSM issue, the `sd.public.comment` property is sent verbatim in the PUT body; Jira silently ignores it (mirrors BC-3.5.001 behavior). No hint or warning fires.
+**EC-3.5.006-2** (Non-JSM behavior): On a non-JSM issue, the `sd.public.comment` property is sent verbatim in the PUT body; Jira silently ignores it (mirrors BC-3.5.001 behavior). The JSDCLOUD-6050 hint from EC-3.5.006-1 still fires (`jr` does not detect JSM vs non-JSM at write time; the hint is informational and harmless on non-JSM projects). No additional non-JSM-specific warning is emitted.
 
 **Verification Properties**:
 
@@ -2324,11 +2329,11 @@ The `value.internal` field MUST be a JSON boolean (`false`), NOT a string (`"fal
 
 Rationale: (1) Option (b) (confirm only if currently internal) would reintroduce a GET roundtrip that DEC-168 explicitly eliminated; if the GET fails, a new failure mode is introduced. (2) Option (c) (no confirmation) is inappropriate given the data-exposure risk. (3) Always confirming is the simplest, most predictable design. `--yes` is the scripting escape hatch. This matches the `comment delete` confirmation pattern (BC-3.5.003). The confirmation prompt also provides an in-band reminder of the JSDCLOUD-6050 best-effort caveat.
 
-**EC-3.5.007-1** (JSDCLOUD-6050 caveat): When `--public` is passed and the user confirms (or `--yes` is present), emit a stderr hint before the PUT is sent: `"note: visibility change is best-effort — verify in the portal (JSDCLOUD-6050)."` This hint does NOT fire when the user cancels at the confirmation prompt.
+**EC-3.5.007-1** (JSDCLOUD-6050 caveat): When `--public` is passed and the user confirms (or `--yes` is present), emit a stderr hint before the PUT is sent: `"note: visibility change is best-effort — verify in the portal (JSDCLOUD-6050)."` This hint does NOT fire when the user cancels at the confirmation prompt. **Timing cross-note**: fires after ADF conversion succeeds (step 4 in BC-3.5.005 edit pipeline ordering pin), before HTTP PUT (step 5); does not fire if step 4 fails or if the confirmation is cancelled.
 
-**EC-3.5.007-2** (Non-JSM behavior): On a non-JSM issue, the `sd.public.comment` property is sent verbatim in the PUT body; Jira silently ignores it (mirrors BC-3.5.001 behavior). No hint or warning fires.
+**EC-3.5.007-2** (Non-JSM behavior): On a non-JSM issue, the `sd.public.comment` property is sent verbatim in the PUT body; Jira silently ignores it (mirrors BC-3.5.001 behavior). The JSDCLOUD-6050 hint from EC-3.5.007-1 still fires (`jr` does not detect JSM vs non-JSM at write time; the hint is informational and harmless on non-JSM projects). No additional non-JSM-specific warning is emitted.
 
-> **RESOLVED (HIGH-3 MERGE verdict, human-approved 2026-07-09)**: Jira's comment-PUT `properties` array is MERGE semantics (unlisted entity properties preserved) — research verdict medium-high confidence (`.factory/research/issue-577-properties-merge-replace-2026-07-09.md`; per-key CRUD architecture, no bulk endpoints for comment properties, zero property-loss reports across years of community single-key usage). Direct-array pattern as specced is confirmed safe. Definitive empirical probe DEFERRED to a gated e2e follow-up (delivery-task obligation in BC-3.5.006); if that probe ever refutes MERGE, the `--internal`/`--public` wire shape must be revised to read-modify-write.
+> **RESOLVED (HIGH-3 MERGE verdict)**: MERGE semantics: see the RESOLVED block in BC-3.5.006 (verdict + probe deferral apply identically here).
 
 **Verification Properties**:
 
@@ -2364,7 +2369,9 @@ Confirmation mechanics for `--public` (mirrors BC-3.5.003 delete-confirmation pa
 
 **VP-577-006**: `--no-input` + `--public`, without `--yes` → exit 64; assert no HTTP PUT was sent (wiremock `.expect(0)` on the PUT route).
 
-**Trace**: F2 spec evolution (2026-07-09, DEC-168 open design point Option a; adversary pass-2 MEDIUM-1 + LOW-2 remediation; issue #577 SOH-COMMENT-CRUD-1)
+**VP-577-017**: `--public --stdin` without `--yes` (stdin is a pipe → auto-enables `--no-input`) → exit 64; stderr contains BOTH `"--stdin"` AND `"--yes"` (the targeted EC-3.5.008-3 message); wiremock `.expect(0)` on the PUT route — zero PUT calls.
+
+**Trace**: F2 spec evolution (2026-07-09, DEC-168 open design point Option a; adversary pass-2 MEDIUM-1 + LOW-2 remediation; adversary pass-5 L1 VP-577-017; issue #577 SOH-COMMENT-CRUD-1)
 
 ---
 
@@ -2395,6 +2402,8 @@ At least one body source (`--file`, `--stdin`, or positional text) MUST be provi
 
 **EC-3.5.009-5**: An empty or whitespace-only body from ANY source (file, stdin, or positional text) → exit 64; stderr: `"comment body cannot be empty."` No HTTP PUT sent. This prevents `comment edit` from silently blanking an existing comment's content. (Step 2 in the BC-3.5.005 edit pipeline ordering pin — body-source resolution and empty check MUST fire before the `--public` confirmation gate.)
 
+**EC-3.5.009-6** (visibility-only edit unsupported): `comment edit` does NOT support changing only the visibility of a comment without also supplying a body. `--internal` and `--public` are always paired with a body source (this is enforced by EC-3.5.009 at the arg-parsing level — at least one body source is always required). An attempt to pass `--internal` or `--public` without any body source hits the existing exit 64 guard from EC-3.5.009's "At least one body source MUST be provided" rule. This is a deliberate scope decision for F2; a visibility-only edit path (no body resubmission) is a **follow-up story candidate** (M6b closure: `visibility` PRESERVED verdict confirmed — see BC-3.5.005 RESOLVED block; the scope exclusion remains regardless).
+
 **Verification Properties**:
 
 **VP-577-011**: `comment edit FOO-1 --id 10001 --file /nonexistent/path.txt` → exit 64; no HTTP PUT sent (wiremock `.expect(0)` on the PUT route).
@@ -2423,9 +2432,12 @@ Display comment details via plain key-value lines (NOT a comfy-table multi-row l
 1. `ID:` — the comment ID string from the `id` field.
 2. `Author:` — display name from the comment's `author.displayName` field.
 3. `Created:` — ISO 8601 timestamp from `created`.
-4. `Updated:` — ISO 8601 timestamp from `updated` (always present in Jira comment responses; lossless display).
-5. `Visibility:` — `"Internal"` if `sd.public.comment.internal == true`; `"Public"` if `false`; `"N/A"` if the property is absent or the `properties` array is empty.
-6. Body — rendered below the header fields via `adf_to_text`, separated by a blank line.
+4. `Updated:` — ISO 8601 timestamp from `updated`; render N/A if the field is absent (uncommon in practice but graceful-degradation safe).
+5. `JSM internal:` — `"Yes"` if `sd.public.comment.internal == true`; `"No"` if `false`; `"N/A"` if the property is absent or the `properties` array is empty.
+6. `Restricted:` — value from the Jira `visibility` field (`{"type": "role"|"group", "value": "<name>"}`): display `<name>` if present; `"None"` if the `visibility` key is absent or null. Distinct from JSM internal/public flag — this is Jira's comment-level role/group restriction.
+7. Body — rendered below the header fields via `adf_to_text`, separated by a blank line.
+
+The human render path accesses all fields via `serde_json::Value` (same code path as JSON output; no typed `Comment` round-trip; the typed `Comment` struct is NOT extended this cycle).
 
 Routing: the handler delegates to a dedicated `render_comment_view` function (or equivalent) in `src/cli/issue/workflow.rs::handle_comment` (relocates to `interactions.rs` under PF-017 at F4).
 
@@ -2437,7 +2449,7 @@ The raw Jira response is deserialized as `serde_json::Value` and routed through 
 
 **EC-3.5.010-1**: `--output json` returns the full `Comment` JSON shape including the `properties` array. The `properties` array may be empty (`[]`) for non-JSM issues, or contain `[{"key":"sd.public.comment","value":{"internal":true}}]` for JSM internal comments. Both cases pass through `output::render_json` unchanged.
 
-**EC-3.5.010-2**: ADF body in the comment is rendered via `adf_to_text` in human mode. If `adf_to_text` fails with any error EXCEPT the recursion depth-guard error, the fallback is to show the raw JSON representation of the `body` field rather than crashing. However, the recursion depth-guard error (`JrError::UserError("nesting too deep")`, BC-7.2.012 / SEC-001) MUST propagate to exit 64 — the `comment view` path is NOT a carve-out from `MAX_ADF_DEPTH`. Implementation: match on error kind before deciding fallback vs. propagation.
+**EC-3.5.010-2**: ADF body in the comment is rendered via `adf_to_text` in human mode. Any `adf_to_text` error propagates to exit 64 (the recursion depth-guard, BC-7.2.012 / SEC-001, is currently the only error kind in the reverse-render path).
 
 **Verification Properties**:
 
@@ -2515,7 +2527,9 @@ In contrast, a **bare** `jr issue comment` with no arguments (`ErrorKind::Missin
 
 **VP-577-015**: `jr issue comment list FOO-1` (list token, InvalidSubcommand) → exit 2; stderr contains `"jr issue comments"` (the plural form hint). Parse-level test (wiremock-free; no network call made).
 
-**Trace**: F2 spec evolution (2026-07-09, DEC-168 ruling 2 Option A; adversary pass-1 HIGH-1 + LOW-1; adversary pass-2 MEDIUM-2 + LOW-3 + MEDIUM-4 remediation; adversary pass-3 HIGH-2 + MEDIUM-4 + LOW-4 remediation; issue #577 SOH-COMMENT-CRUD-1)
+**VP-577-018**: `jr issue comment add FOO-1 "- [ ] task"` → parses without clap error (exit code is NOT 2); the leading-dash body text is accepted as a positional argument. Parse-level test (wiremock-free; no network call required — the test need not exercise the HTTP path; formalizes EC-3.5.012-3's `allow_hyphen_values` regression pin).
+
+**Trace**: F2 spec evolution (2026-07-09, DEC-168 ruling 2 Option A; adversary pass-1 HIGH-1 + LOW-1; adversary pass-2 MEDIUM-2 + LOW-3 + MEDIUM-4 remediation; adversary pass-3 HIGH-2 + MEDIUM-4 + LOW-4 remediation; adversary pass-5 L2 VP-577-018; issue #577 SOH-COMMENT-CRUD-1)
 
 ---
 
