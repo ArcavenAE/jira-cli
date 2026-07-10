@@ -4896,3 +4896,21 @@ Row displaced to make room for EXTERNAL-PR REVIEW BURST step.
 | Step | Agent | Status | Output |
 |------|-------|--------|--------|
 | **SESSION WRAP/PAUSE — SOH-BUGS-1 INTAKE COMPLETE (2026-07-08/09). Research validated: #589 AllowedValue.id (editmeta.rs, 7 sites); #590 clap ValueEnum case (cli/mod.rs). Bundle SOH-BUGS-1 approved. F1 PENDING. Factory PAUSED for human gate.** | state-manager | COMPLETE | `.factory/research/issue-589-editmeta-allowedvalue-id-2026-07-08.md`, `.factory/research/issue-590-http-method-case-2026-07-08.md` |
+
+---
+
+## Archived Phase Progress row (2026-07-09, SOH-COMMENT-CRUD-1 intake burst)
+
+Displaced to make room for SOH-COMMENT-CRUD-1 INTAKE row per keep-5 rule.
+
+| Phase | Status | Completed | Gate | Notes |
+|-------|--------|-----------|------|-------|
+| **pass-8 adversary: F3 S-ADF-CODE-MARK-1 window STRICT CONVERGED — DEC-160 (2026-07-08)** | **COMPLETE** | **2026-07-08** | **10 passes / 6 fix rounds. Window 8/9/10 CLEAN×3 STRICT. DEC-160.** | F3 trajectory-tail →1→0→0→0. |
+
+### Archived Current Phase Steps row (SOH-COMMENT-CRUD-1 intake burst)
+
+Displaced to make room for SOH-COMMENT-CRUD-1 INTAKE step row per keep-5 rule.
+
+| Step | Agent | Status | Output |
+|------|-------|--------|--------|
+| **SOH-BUGS-1 F1 APPROVED + SPEC DELTA + STORIES 104/105 (2026-07-09) — DEC-165; EC-3.4.016-8; VP-589-001; spec v1.3.26; STORY-INDEX v1.4.59. Delivery next.** | architect + business-analyst + product-owner + story-writer | COMPLETE | `phase-f1-delta-analysis/delta-analysis-soh-bugs-1.md`; `phase-f2-spec-evolution/verification-delta-589.md`; `specs/prd/bc-3-issue-write.md`; `stories/S-SOH-590-1.md` + `S-SOH-589-1.md`. |

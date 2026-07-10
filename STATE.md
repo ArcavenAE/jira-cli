@@ -4,18 +4,18 @@ level: ops
 version: "2.0"
 status: active
 producer: state-manager
-timestamp: 2026-07-10T01:15:00Z
+timestamp: 2026-07-10T04:02:00Z
 phase: 3
-pipeline: PAUSED
+pipeline: ACTIVE
 inputs: []
 input-hash: "[live-state]"
 traces_to: ""
 project: jira-cli
 mode: brownfield
-current_step: "SOH-BUGS-1 FULLY COMPLETE (DEC-167, 2026-07-09): release v0.6.0-dev.9 SHIPPED @ b2ce3169 (run 29051718553, 10 assets); issues #589/#590/#582 CLOSED. Pipeline IDLE — next intake candidates: sackofhacks features (P1 #575/#576/#577; #577 security-adjacent jsdPublic footgun); dependabot #591 soak-eligible ~07-13, #595 ~07-15 (DEC-133); arcaven PR revisions (#573/#574 CHANGES_REQUESTED); upstream engine-bug batch (write-stall, hook conflict, BC-INDEX cleanup); F5-OBS deferrals. trajectory-tail →1→0→0→0. D-chain cite D-27893 latest brownfield. SESSION WRAP 2026-07-10: pipeline PAUSED (human /wrap). RESUME INTENT: work on issues — first action is issues-intake decision (sackofhacks #575-#588, P1 #575/#576/#577)."
+current_step: "SOH-COMMENT-CRUD-1 F1 APPROVED (DEC-168, 2026-07-09) — F2 spec evolution next. Research (18 citations) REFUTED jsdPublic footgun claim. 4 human rulings: (1) edit default body-only PUT; (2) CLI Option A clean break; (3) delete 404→exit 64; (4) scope ~7 stories ~21pts. pipeline ACTIVE. trajectory-tail →1→0→0→0. D-chain cite D-27893 latest brownfield."
 maintenance_run: CLOSED
 current_cycle: "cycle-001"
-feature_mode_bundle: SOH-BUGS-1
+feature_mode_bundle: SOH-COMMENT-CRUD-1
 dtu_required: false
 phase_2_status: APPROVED
 phase_2_approved_at: 2026-05-07
@@ -26,7 +26,7 @@ activation_version: "v0.6.0-dev.9"
 
 <!--
   STATE.md SIZE BUDGET (per D-421(c)):
-  Hard cap (500 lines) margin from soft-target = 500 - 316 = 184; margin from actual = 500 - 316 = 184 (D-446(c) dual-margin form). 316 lines (wc-l).
+  Hard cap (500 lines) margin from soft-target = 500 - 314 = 186; margin from actual = 500 - 314 = 186 (D-446(c) dual-margin form). 314 lines (wc-l).
   Hard cap: 500 lines.
 -->
 
@@ -50,11 +50,11 @@ activation_version: "v0.6.0-dev.9"
 <!-- archived: Phase 0–2 + Feature cycles 2026-05-04..2026-07-07 + CITATION-GUARDS rows + F1 GATE APPROVED row + F2 SPEC DELTA row + pass-5 adversary row + fix burst 4 row + DEC-158 row + F2 passes 6-16 row (archived F4 DELIVERED burst) + F2 passes 17-19 row (archived F6 hardening burst) + F3 adversary 1-7 row (archived F7 evidence burst) + F4 DELIVERED row (archived F7-AUTHORIZED burst) + F5 CONVERGED row (archived session-review burst) + F6 TARGETED HARDENING row (archived IP-571 disposition burst) + F7 AUTHORIZED row (archived external-PR review burst) + RELEASE v0.6.0-dev.8 COMPLETE row (archived SOH-BUGS-1 intake burst) + SESSION RESUME + SESSION-REVIEW COMPLETE row (archived SOH-BUGS-1 F1 gate burst) + SESSION-REVIEW PROPOSALS ROUTED UPSTREAM row (archived S-SOH-590-1 DELIVERED burst) + EXTERNAL-PR REVIEW BURST row + SOH-BUGS-1 INTAKE row (archived SOH-BUGS-1 DELIVERY CLOSE burst) -->
 | Phase | Status | Completed | Gate | Notes |
 |-------|--------|-----------|------|-------|
-| **pass-8 adversary: F3 S-ADF-CODE-MARK-1 window STRICT CONVERGED — DEC-160 (2026-07-08)** | **COMPLETE** | **2026-07-08** | **10 passes / 6 fix rounds. Window 8/9/10 CLEAN×3 STRICT. DEC-160.** | F3 trajectory-tail →1→0→0→0. |
 | **SOH-BUGS-1 F1 APPROVED + SPEC DELTA + STORIES 104/105 (2026-07-09) — DEC-165; EC-3.4.016-8; VP-589-001; spec v1.3.26; STORY-INDEX v1.4.59; delivery next.** | **COMPLETE** | **2026-07-09** | **architect + business-analyst + product-owner + story-writer. DEC-165: scope approved — #589 standard bug-fix (HIGH, story 105, 2pts); #590 quick-dev (LOW, story 104, 1pt). BC 612 unchanged (EC additions). Stories 105 total.** | `phase-f1-delta-analysis/delta-analysis-soh-bugs-1.md`; `specs/prd/bc-3-issue-write.md` (EC-3.4.016-8); `stories/S-SOH-590-1.md` + `S-SOH-589-1.md`. |
 | **S-SOH-590-1 DELIVERED (2026-07-09) — PR #597 @ 4f3960e0; APPROVE cycle 1; CI 15/15; BC-X.1.011; TD-031 BC-INDEX lockout drifted.** | **COMPLETE** | **2026-07-09** | **quick-dev; Red Gate verified; pr-reviewer APPROVE; CI 15/15; spec v1.3.27. BC-INDEX TD-031 lockout: index count frozen @ 612 (canonical 613); cumulative-counts exits 1 until cleanup.** | `cycles/cycle-001/S-SOH-590-1/implementation/red-gate-log.md`; `stories/S-SOH-590-1.md`. |
 | **S-SOH-589-1 DELIVERED (2026-07-09) — PR #601 @ 081187ae (DEC-128 honored); fix-PR #602 @ bf3b3382 (clippy 1.97 unblock); Step-4.5 STRICT 7-pass window p5/p6/p7; 6/6 AC demos; 2016/0/93. DEC-166.** | **COMPLETE** | **2026-07-09** | **standard bug-fix; Red Gate 1e9c770/614963f (4 serde FAIL); Green 86907e5; APPROVE cycle 1; DEC-166. Bundle SOH-BUGS-1 BOTH STORIES DELIVERED. Convergence check next.** | `cycles/cycle-001/S-SOH-589-1/implementation/red-gate-log.md`; `cycles/cycle-001/S-SOH-589-1/implementation/step-4-5-convergence.md`. |
 | **SOH-BUGS-1 CLOSED + RELEASE v0.6.0-dev.9 (2026-07-09) — DEC-167; PR #603 @ b2ce3169 (DEC-128 honored ×4); tag pushed; run 29051718553 SUCCESS; 10 assets; issues #589/#590/#582 CLOSED.** | **COMPLETE** | **2026-07-09** | **F7-lite 7/7 PASS; holdout 1.00 (6/6 wire-level); consistency CONSISTENT (gaps G1-G3 fixed); S-7.02 SATISFIED. Release per dev.8 precedent. RELEASING-MD-MISSING drift recorded.** | SOH-BUGS-1 trajectory-tail →1→0→0→0. DEC-167. |
+| **SOH-COMMENT-CRUD-1 INTAKE + F1 APPROVED (2026-07-09) — DEC-168; research REFUTED jsdPublic footgun; 4 human rulings; F2 next.** | **COMPLETE** | **2026-07-09** | **architect + research-agent; human gate 4/4 rulings approved.** | `phase-f1-delta-analysis/delta-analysis-577-comment-crud.md`; `research/issue-577-comment-crud-jsdpublic-2026-07-09.md`. |
 
 ## Current Phase Steps
 
@@ -62,11 +62,11 @@ activation_version: "v0.6.0-dev.9"
 <!-- archived: CITATION-GUARDS rows + F1 GATE APPROVED + SPEC DELTA row + PASSES 1-5 row + DEC-158 row + PASSES 6-16 row + PASSES 17-19 row + DEC-159 row (archived F4 DELIVERED burst) + F3 story v1.7 row (archived F6 hardening burst) + F3 adversary passes 1-7 row (archived F7 evidence burst) + F3 adversary passes 8-10 row (archived F7-AUTHORIZED burst) + F5 CONVERGED row (archived session-wrap pause burst) + F6 TARGETED HARDENING row (archived session-review burst) + F7 AUTHORIZED row (archived IP-571 disposition burst) + RELEASE IN PROGRESS row (archived external-PR review burst) + RELEASE v0.6.0-dev.8 TAGGED row (archived SOH-BUGS-1 intake burst) + SESSION WRAP/PAUSE row (archived SOH-BUGS-1 F1 gate burst) + SESSION RESUME + SESSION-REVIEW COMPLETE row (archived S-SOH-590-1 DELIVERED burst) + SESSION-REVIEW PROPOSALS ROUTED UPSTREAM row + EXTERNAL-PR REVIEW BURST row + INTAKE row (archived SOH-BUGS-1 DELIVERY CLOSE burst) -->
 | Step | Agent | Status | Output |
 |------|-------|--------|--------|
-| **SOH-BUGS-1 F1 APPROVED + SPEC DELTA + STORIES 104/105 (2026-07-09) — DEC-165; EC-3.4.016-8; VP-589-001; spec v1.3.26; STORY-INDEX v1.4.59. Delivery next.** | architect + business-analyst + product-owner + story-writer | COMPLETE | `phase-f1-delta-analysis/delta-analysis-soh-bugs-1.md`; `phase-f2-spec-evolution/verification-delta-589.md`; `specs/prd/bc-3-issue-write.md`; `stories/S-SOH-590-1.md` + `S-SOH-589-1.md`. |
 | **S-SOH-590-1 DELIVERED (2026-07-09) — PR #597 @ 4f3960e0 (DEC-128 honored). Quick-dev: Red Gate at cec775e (3 tests: 2 FAIL uppercase/mixedcase, 1 PASS lowercase); Green at cb3b471 (3/3, 2010/0/93). APPROVE cycle 1. CI 15/15. BC-X.1.011 + VP-590-001 (spec v1.3.27). TD-031 BC-INDEX lockout (see drift).** | implementer + pr-manager + state-manager | COMPLETE | `cycles/cycle-001/S-SOH-590-1/implementation/red-gate-log.md`; `stories/S-SOH-590-1.md` updated to completed; `sprint-state.yaml` updated. |
 | **S-SOH-589-1 DELIVERED (2026-07-09) — PR #601 @ 081187ae (DEC-128 honored); fix-PR #602 @ bf3b3382 (clippy 1.97 unblock, APPROVE cycle 2). Step-4.5 STRICT: 7 passes / 4 fix rounds; trajectory 3→4→0→1→0→0→0; window p5/p6/p7 CLEAN×3. 6/6 AC demos (local). 2016/0/93. DEC-166.** | implementer + pr-manager + state-manager | COMPLETE | `cycles/cycle-001/S-SOH-589-1/implementation/red-gate-log.md`; `cycles/cycle-001/S-SOH-589-1/implementation/step-4-5-convergence.md`; `stories/S-SOH-589-1.md` updated to completed; `sprint-state.yaml` updated. |
 | **SOH-BUGS-1 CLOSED (2026-07-09) — release v0.6.0-dev.9 SHIPPED @ b2ce3169 (run 29051718553, 10 assets); issues #589/#590/#582 CLOSED. DEC-167. RELEASING-MD-MISSING drift recorded.** | state-manager | COMPLETE | PR #603 @ b2ce3169; tag v0.6.0-dev.9; workflow run 29051718553 SUCCESS; 10 assets. |
 | **SESSION WRAP (2026-07-10) — human /wrap after SOH-BUGS-1 completion + v0.6.0-dev.9 release + e2e repair (run 29055766599). Pipeline PAUSED. Resume intent: issues intake.** | state-manager | COMPLETE | Pipeline PAUSED per human /wrap. E2E repaired. RESUME INTENT: issues-intake (sackofhacks P1 #575/#576/#577). |
+| **SOH-COMMENT-CRUD-1 INTAKE + F1 APPROVED (2026-07-09) — DEC-168. F2 spec evolution next: product-owner BC delta per 4 rulings → consistency-validator → security-reviewer → adversary ≥3 clean.** | architect + research-agent + state-manager | COMPLETE | `phase-f1-delta-analysis/delta-analysis-577-comment-crud.md`; `research/issue-577-comment-crud-jsdpublic-2026-07-09.md`. |
 
 ## Decisions Log
 
@@ -86,6 +86,7 @@ activation_version: "v0.6.0-dev.9"
 | DEC-165 | **SOH-BUGS-1 F1 GATE (2026-07-09, human): scope approved as recommended — #589 minimum-viable (AllowedValue.id Option<String> only, 7 sites, EC-3.4.016-8, VP-589-001) standard bug-fix route; #590/#582 quick-dev with optional micro-BC X.1.011 post-fix. Both bugs externally reported (sackofhacks), validated pre-intake (research + offline repro). EC numbering deviation from delta analysis (-5 → -8) per append-only rule.** | Human gate cleared; validated external bug reports; two stories, two PRs. | Feature Mode / SOH-BUGS-1 F1 | 2026-07-09 |
 | DEC-166 | **SOH-BUGS-1 DELIVERY RECORD (2026-07-09, human merges, DEC-128 honored ×3): S-SOH-590-1 (story 104, quick-dev) PR #597 @ 4f3960e0; S-SOH-589-1 (story 105, standard route) PR #601 @ 081187ae — Red Gate verified, Step 4.5 STRICT 7 passes/4 fix rounds window p5/p6/p7, pr-reviewer APPROVE cycle 1, security clean, 6/6 AC demos (local per .gitignore), suite 2016/0/93. Reactive fix-PR #602 (Rust 1.97 lints: useless_borrows_in_formatting ×2 + question_mark ×1) @ bf3b3382, review converged cycle 2 — unblocked ALL PR CI. TD-031 BC-INDEX lockout mitigated via sanctioned shell edit @ 909ce10 (DRIFT-002 unblocked; 243-cite cleanup still open). BC 613. Stories 105.** | Bundle delivery + reactive CI unblock record. | Feature Mode / SOH-BUGS-1 | 2026-07-09 |
 | DEC-167 | **SOH-BUGS-1 CONVERGED AND CLOSED + RELEASE v0.6.0-dev.9 (2026-07-09, human): F7-lite 7/7 PASS (holdout 1.00 6/6 wire-level; consistency CONSISTENT, gaps G1-G3 fixed; S-7.02 SATISFIED). Release per dev.8 precedent: PR #603 @ b2ce3169 (DEC-128 honored ×4 this bundle), tag v0.6.0-dev.9, run 29051718553 SUCCESS, 10 assets. Issues #589 CLOSED, #590 CLOSED, #582 CLOSED (all verified 2026-07-09). RELEASING.md absent — backlog candidate RELEASING-MD-MISSING recorded.** | Human closed bundle at convergence gate + authorized release. | Feature Mode / SOH-BUGS-1 F7 + Release | 2026-07-09 |
+| DEC-168 | **SOH-COMMENT-CRUD-1 F1 GATE (2026-07-09, human): issue #577 approved. Research REFUTED footgun — Jira PRESERVES sd.public.comment on body-only PUT (JSDCLOUD-6050 caveat on explicit writes; 404/403 conflated on DELETE; write:jira-work covers edit+delete, no re-consent). Rulings: (1) edit default = body-only PUT, no properties array; --internal/--public explicit opt-in (supersedes architect GET-preserve-PUT draft BC-3.5.005/006); (2) CLI Option A clean break: comment → add/delete/edit/view subgroup, old flat form errors with hint, CHANGELOG breaking entry; (3) delete 404 → exit 64 + surface Jira body (no silent idempotency); (4) scope: standard route ~7 stories ~21pts, supersede DEFERRED P2, PF-017 interactions.rs shard IN, handle_open OUT, security-reviewer REQUIRED at F2.** | Human gate cleared with research-informed design corrections to external feature request. | Feature Mode / SOH-COMMENT-CRUD-1 F1 | 2026-07-09 |
 
 ## Skip Log
 
@@ -203,6 +204,7 @@ ADF-CODE-MARK-EXCLUSIVITY: **FULLY COMPLETE (2026-07-08, DEC-163). S-7.02 SATISF
 |-------|--------|-------|
 | ADF-CODE-MARK-EXCLUSIVITY (issue #571) | **FULLY COMPLETE (2026-07-08) — CONVERGED AND CLOSED (DEC-163). Release v0.6.0-dev.8 TAGGED @ 159e1be. Session-review loop CLOSED (DEC-164).** | PR #593 @ 7ba4cf4; fix-PR #594 @ d7875e6; story #103 v1.9; issue #571 CLOSED; F5 trajectory →0→0→1→0→0→0; window p4/p5/p6 CLEAN×3; two deferrals F5-OBS-001/002; F6 gate PASS; F7 5/5 PASS; S-7.02 SATISFIED. PR #596 @ 159e1be; workflow run 28969465350 SUCCESS (10 assets). |
 | SOH-BUGS-1 (issues #589 + #590/#582) | **FULLY COMPLETE (2026-07-09, DEC-167) — CONVERGED AND CLOSED. Release v0.6.0-dev.9 @ b2ce3169 (PR #603; run 29051718553; 10 assets).** | PRs #597/#601/#602/#603. Issues #589/#590/#582 CLOSED (verified 2026-07-09). F7-lite 7/7 PASS. DEC-167. RELEASING-MD-MISSING drift recorded. |
+| SOH-COMMENT-CRUD-1 (issue #577) | **F1 APPROVED (DEC-168, 2026-07-09) — F2 spec evolution IN PROGRESS.** | Research + delta-analysis artifacts; 4 human rulings; footgun claim refuted; no OAuth scope change needed. |
 
 ## Session Resume Checkpoint
 
@@ -210,13 +212,13 @@ ADF-CODE-MARK-EXCLUSIVITY: **FULLY COMPLETE (2026-07-08, DEC-163). S-7.02 SATISF
 
 | Field | Value |
 |-------|-------|
-| **Date** | 2026-07-10 (WRAP — SOH-BUGS-1 FULLY COMPLETE DEC-167; release v0.6.0-dev.9; e2e repaired run 29055766599; pipeline PAUSED) |
-| **Status** | **SESSION PAUSED (2026-07-10, human /wrap). SOH-BUGS-1 FULLY COMPLETE (DEC-167) + release v0.6.0-dev.9 SHIPPED @ b2ce3169 (run 29051718553, 10 assets) + issues #589/#590/#582 CLOSED + e2e REPAIRED (run 29055766599 SUCCESS, full live suite green). develop @ b2ce3169. Pipeline PAUSED.** |
+| **Date** | 2026-07-09 (RESUMED — SOH-COMMENT-CRUD-1 F1 APPROVED DEC-168; F2 spec evolution dispatching) |
+| **Status** | **SESSION ACTIVE. SOH-COMMENT-CRUD-1 (issue #577) F1 APPROVED (DEC-168). F2 next: product-owner spec delta → consistency-validator → security-reviewer → adversary ≥3 clean passes.** |
 | **Counters** | BC **613**. NFR **42**. ADR **16**. Stories **105**. Holdouts **83**. |
 | **Convergence counter** | SOH-BUGS-1 FULLY COMPLETE (DEC-167). F7-lite holdout 1.00. Trajectory-tail →1→0→0→0. E2E run 29055766599 SUCCESS (full live suite green). |
 | **In-flight work** | NONE. No stories mid-TDD. No active story worktrees. No factory PRs in-progress. Product repo clean (session-local `.claude/pr-reviews/` + `.claude/spec-config.json` untracked, deliberate). |
-| **Open PRs (not factory-blocking)** | Dependabot #595 (clap_complete, soak eligible ~2026-07-15, DEC-133), #591 (open crate, soak eligible ~2026-07-13, DEC-133). Standalone #574 (ci/attest-provenance), #573 (docs/mise-install) — CHANGES_REQUESTED, awaiting arcaven revisions. |
-| **Pending decisions** | None blocking. RESUME INTENT (human, explicit): "work on issues" — present issues-intake options first: sackofhacks P1 #575 (--fields CSV) / #576 (attachment tree) / #577 (comment CRUD, security-adjacent jsdPublic footgun — recommend leading). Also: arcaven #573/#574 revisions; dependabot soaks; upstream engine-bug batch (STATE-MANAGER-MONOLITHIC-WRITE-STALL, PR-MANAGER-HOOK-VS-DEC-128-CONFLICT, TD-031-FULL-CLEANUP); optional SOH-BUGS-1 session-review. |
+| **Open PRs (not factory-blocking)** | Dependabot: #599 (clap_complete 4.6.7, supersedes #595), #598 (rand 0.10.2), #600 (codeql-action, DEC-133 soak), #591 (open, soak ~07-13). Standalone #574/#573 CHANGES_REQUESTED awaiting arcaven. |
+| **Pending decisions** | Open F2 design point: --public confirmation semantics (confirm-if-currently-internal needs a GET; spec author proposes, adversary pressures). STATE-MANAGER-MONOLITHIC-WRITE-STALL recurred ×2 this burst (5 total) — upstream engine fix urgency raised. |
 | **develop branch** | b2ce3169 (PR #603 squash-merged 2026-07-09; SOH-BUGS-1 FULLY COMPLETE; release v0.6.0-dev.9; issues #589/#590/#582 CLOSED). |
 | **Untracked local files** | Deliberately uncommitted, session-local tooling: `.claude/pr-reviews/`, `.claude/spec-config.json`. Not pipeline artifacts. |
 | **STATE.md size** | ~316 lines (OK band). |
@@ -246,11 +248,7 @@ ADF-CODE-MARK-EXCLUSIVITY: **FULLY COMPLETE (2026-07-08, DEC-163). S-7.02 SATISF
 >
 > **Release:** PR #603 @ b2ce3169 (DEC-128 honored); tag v0.6.0-dev.9; workflow run 29051718553 SUCCESS (10 assets). F7-lite 7/7 PASS; holdout 1.00 (6/6 wire-level); consistency CONSISTENT (gaps G1-G3 fixed). S-7.02 SATISFIED.
 >
-> **NEXT STEP: NEW INTAKE** (pipeline IDLE):
-> 1. Sackofhacks features P1: #575/#576/#577 (note #577 has security-adjacent jsdPublic footgun — review carefully at intake).
-> 2. Dependabot PRs #595/#591 — check DEC-133 soak status (#591 eligible ~2026-07-13, #595 ~2026-07-15).
-> 3. Standalone PRs #574/#573 — CHANGES_REQUESTED; re-review on arcaven push.
-> 4. F5-OBS deferrals + MEDIUM Drift Items; RELEASING-MD-MISSING doc backlog.
+> **NEXT STEP: SOH-COMMENT-CRUD-1 F2 SPEC EVOLUTION** (DEC-168): product-owner BC delta in specs/prd/bc-3-issue-write.md §3.5 per 4 rulings → consistency-validator (F2-PIECEWISE-PROTOCOL) → security-reviewer pass → adversarial spec convergence ≥3 clean passes STRICT. Then F3 stories.
 
 **Step 4 — STANDING CONSTRAINTS (ALL fixes via full VSDD Feature Mode):**
 - All fixes through full VSDD Feature Mode. No exceptions without explicit human direction.
