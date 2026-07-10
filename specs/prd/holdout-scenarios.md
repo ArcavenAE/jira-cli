@@ -1907,6 +1907,7 @@ Call B (kanban board 2 — JQL search path, sprint endpoint must not fire):
 - `PUT /rest/api/3/issue/FOO-1/comment/10001` was called exactly once.
 - `GET /rest/api/3/issue/FOO-1/comment/10001` was NOT called (`.expect(0)` satisfied) — no GET roundtrip on the body-only default path.
 - The captured PUT request body, parsed as JSON, does NOT contain the key `"properties"` at the top level. Specifically: `serde_json::from_str::<serde_json::Value>(&captured_body).unwrap().get("properties").is_none()` is `true`.
+- The captured PUT request body, parsed as JSON, does NOT contain the key `"visibility"` at the top level. Specifically: `…unwrap().get("visibility").is_none()` is `true`.
 - The captured PUT request body DOES contain the key `"body"` with a valid ADF document.
 
 **Why hidden**: The body-only PUT invariant (absence of the `"properties"` key) is the core safety contract. A regression that sends an empty `properties: []` array or a `properties: null` value would still exit 0 and produce a successful PUT response, but would violate the contract and risk triggering undocumented Atlassian behavior. The only way to observe the violation is by asserting the key's absence in the captured wire body — exit code alone cannot detect it.
@@ -1936,6 +1937,7 @@ Call B (kanban board 2 — JQL search path, sprint endpoint must not fire):
 - `PUT /rest/api/3/issue/FOO-1/comment/10001` was NOT called (`.expect(0)` satisfied).
 - `GET /rest/api/3/issue/FOO-1/comment/10001` was NOT called (`.expect(0)` satisfied) — no GET roundtrip; DEC-168 option a requires no read of current state.
 - stderr contains `"--yes"` (hint to supply the flag).
+- stderr contains `"visibility to public"` (load-bearing SEC-577-001 CWE-1021 wording pin — confirms the non-interactive message uses project-agnostic phrasing).
 
 **Why hidden**: The confirmation gate is invisible from the edit's semantic outcome — a regression that skips the gate would exit 0 (successful PUT), while the correct behavior exits 64. The only way to observe the correct behavior is by asserting the exit code and the absence of any HTTP PUT call. The `.expect(0)` on the GET endpoint also confirms that option (a) was implemented (always confirm, no GET), not option (b) (confirm only if internal, requires GET).
 
@@ -1994,7 +1996,7 @@ Call A (view success — JSM internal comment):
 
 Call B (view 404 — deleted or missing comment):
 1. Wiremock at `JR_BASE_URL`. Config with a valid profile at `JR_CONFIG_DIR`.
-2. Wiremock mounts `GET /rest/api/3/issue/FOO-1/comment/99999` (any query params) returning 404.
+2. Wiremock mounts `GET /rest/api/3/issue/FOO-1/comment/99999` (any query params) returning 404 with body `{"errorMessages":["Comment with id '99999' does not exist."],"errors":{}}`.
 
 **Action A**: `jr issue comment view FOO-1 --id 10001 --output json`
 
@@ -2011,6 +2013,7 @@ Call B (view 404 — deleted or missing comment):
 **Expected B (MUST-PASS)**:
 - Exit code = 64.
 - stderr contains `"comment not found"` (load-bearing preamble substring; confirms the 404 is mapped to exit 64 with the correct preamble from BC-3.5.010 Response 404).
+- stderr contains `"Comment with id '99999' does not exist."` (on a separate line following the preamble; mirrors H-NEW-COMMENT-003 body-surfacing assertion).
 - stdout is empty.
 
 **Why hidden**: Call A validates the `?expand=properties` query parameter is always sent (without it, `sd.public.comment` would be absent even on JSM comments), and that the `properties` array passes through `output::render_json` intact. A regression omitting `?expand=properties` would exit 0 but produce JSON with `"properties": []`, silently dropping the visibility state. Call B validates the 404→exit-64 mapping (not exit 1, not a panic).

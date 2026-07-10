@@ -2174,9 +2174,9 @@ Confirmation mechanics:
 
 **VP-577-013**: `comment delete FOO-1 --id 10001 --output json` in interactive mode; user selects N (cancel) → exit 0; stdout parses as JSON `{"cancelled": true, "deleted": false}`; no HTTP DELETE sent (wiremock `.expect(0)`). **Seam note**: the interactive branch (TTY path) is unreachable in wiremock tests without the `JR_STDIN_IS_TTY` debug seam — set this env var to `"1"` to force `jr` to treat stdin as a TTY in debug builds; see the implementation note below.
 
-**Implementation note (interactive-branch test seam)**: Interactive-branch tests (VP-577-013 and any analogous y/N prompt test) use the `JR_STDIN_IS_TTY` debug seam: when set to `"1"` in a debug build (`#[cfg(debug_assertions)]`), `jr` treats stdin as a TTY regardless of the actual fd state. Release builds ignore this env var entirely. A release-gate regression test is required per the established `JR_*` seam pattern (mirrors `JR_BASE_URL`, `JR_CONFIG_DIR` etc.). The `CLAUDE.md` doc line for `JR_STDIN_IS_TTY` MUST ship in the same commit as the seam implementation, per the codified doc-fallout rule.
+**Implementation note (interactive-branch test seam)**: Interactive-branch tests (VP-577-013 and any analogous y/N prompt test) use the `JR_STDIN_IS_TTY` debug seam: when set to `"1"` in a debug build (`#[cfg(debug_assertions)]`), `jr` treats stdin as a TTY regardless of the actual fd state. Release builds ignore this env var entirely. A release-gate regression test is required per the established `JR_*` seam pattern (mirrors `JR_BASE_URL`, `JR_CONFIG_DIR` etc.). The `CLAUDE.md` doc line for `JR_STDIN_IS_TTY` MUST ship in the same commit as the seam implementation, per the codified doc-fallout rule. **Dialoguer plumbing obligation**: Interactive prompts MUST be constructed so piped stdin drives the interaction under the seam — use `interact_on(&Term::stdout())` or equivalent (NOT the default `/dev/tty` attachment which bypasses piped stdin entirely). A `#[cfg(debug_assertions)]` conditional prompt implementation is an acceptable alternative. **The seam MUST also gate `src/main.rs`'s auto-`--no-input` check (`std::io::stdin().is_terminal()` at the top of main) so piped stdin under `JR_STDIN_IS_TTY=1` does not trigger the auto-flip. Applying the seam only at the prompt site is insufficient — `cli.no_input` would be forced `true` before the handler runs, routing to the non-interactive exit-64 branch instead of the interactive y/N branch VP-577-013 exercises.** This is an F4 implementation-validation obligation: the implementing story MUST prove the seam+prompt combination works in a wiremock subprocess test before relying on VP-577-013.
 
-**Trace**: F2 spec evolution (2026-07-09, DEC-168 ruling 3; adversary pass-2 MEDIUM-1 remediation; adversary pass-6 MEDIUM-1 JR_STDIN_IS_TTY seam; issue #577 SOH-COMMENT-CRUD-1)
+**Trace**: F2 spec evolution (2026-07-09, DEC-168 ruling 3; adversary pass-2 MEDIUM-1 remediation; adversary pass-6 MEDIUM-1 JR_STDIN_IS_TTY seam; adversary pass-8 L1 seam-scope; issue #577 SOH-COMMENT-CRUD-1)
 
 ---
 
@@ -2244,6 +2244,8 @@ Wire shape (body-only):
 
 Implementations MUST choose one of: (a) a separate request struct that omits the `properties` field entirely (preferred); (b) `Option<Vec<...>>` with `#[serde(skip_serializing_if = "Option::is_none")]`; or (c) `Vec<...>` with `#[serde(skip_serializing_if = "Vec::is_empty")]`. Do NOT reuse the response `Comment` struct as the PUT request body without adding `skip_serializing_if`.
 
+(iii) The same three-pattern rule applies to any `visibility` field on the PUT request struct. `jr` NEVER sends a `visibility` key on `comment edit` this cycle (no restriction-editing surface exposed). The PREFERRED pattern is omitting the `visibility` field from the request struct entirely — do NOT include it as an `Option<...>` field unless `skip_serializing_if = "Option::is_none"` is also present.
+
 **Response 200 output** (canonical for all three `comment edit` variants — default, `--internal`, `--public`):
 
 - **Human success** (stderr, via `output::print_success` per state-changing-command convention): `"Updated comment <ID> on <KEY>."` When `--internal` was passed, append `" (visibility: internal)"`; when `--public` was passed and confirmed, append `" (visibility: public)"`.
@@ -2265,7 +2267,7 @@ Implementations MUST choose one of: (a) a separate request struct that omits the
 
 **Verification Properties**:
 
-**VP-577-001**: wiremock captures the PUT request body; assert the body parses as JSON and does NOT contain the key `"properties"` at the top level. Specifically: `serde_json::from_str::<serde_json::Value>(&body).unwrap().get("properties").is_none()` must be `true`.
+**VP-577-001**: wiremock captures the PUT request body; assert the body parses as JSON and does NOT contain the key `"properties"` at the top level AND does NOT contain the key `"visibility"` at the top level. Specifically: `serde_json::from_str::<serde_json::Value>(&body).unwrap().get("properties").is_none()` must be `true`, AND `…unwrap().get("visibility").is_none()` must be `true` (both absence assertions in the same wire test).
 
 > **RESOLVED (visibility PRESERVED verdict, 2026-07-09)**: Body-only PUT does NOT clear an existing role/group visibility restriction — restriction changes ONLY when the caller explicitly includes a `visibility` object in the PUT body (verdict medium-high confidence; `.factory/research/issue-577-visibility-put-semantics-2026-07-09.md`; load-bearing evidence: Atlassian's child-comment-visibility-400 announcement is only coherent under PRESERVED semantics; patch-shaped PUT convention, zero restriction-loss reports across community usage, GET-symmetry argument). `jr` NEVER sends a `visibility` key on `comment edit` in this cycle (no restriction-editing surface exposed). Definitive empirical check rides the deferred EJ probe — extended to include the 2-step visibility check (see delivery-task obligation in BC-3.5.006); if the probe ever refutes PRESERVED, the edit wire shape must preserve visibility via read-modify-write.
 
@@ -2293,7 +2295,7 @@ No confirmation required (`--internal` reduces visibility; not an exposure risk)
 
 > **RESOLVED (HIGH-3 MERGE verdict, human-approved 2026-07-09)**: Jira's comment-PUT `properties` array is MERGE semantics (unlisted entity properties preserved) — research verdict medium-high confidence (`.factory/research/issue-577-properties-merge-replace-2026-07-09.md`; per-key CRUD architecture, no bulk endpoints for comment properties, zero property-loss reports across years of community single-key usage). Direct-array pattern as specced is confirmed safe. Definitive empirical probe DEFERRED to a gated e2e follow-up (see delivery-task note below); if that probe ever refutes MERGE, the `--internal`/`--public` wire shape must be revised to read-modify-write.
 
-**Delivery-task obligation (implementing story, F4)**: The story MUST include: (a) a `CLAUDE.md` gotcha documenting the MERGE verdict, citing `.factory/research/issue-577-properties-merge-replace-2026-07-09.md`, and explicitly stating the do-not-default-to-sending-properties rule (BC-3.5.005); and (b) a gated e2e test in `tests/e2e_live.rs` implementing the 5-step MERGE probe from `.factory/research/issue-577-properties-merge-replace-2026-07-09.md § "Proposed empirical probe"` against project EJ (`JR_E2E_JSM_PROJECT`), self-cleaning via `jsm_self_close` convention. The probe MUST also include the 2-step visibility extension from `.factory/research/issue-577-visibility-put-semantics-2026-07-09.md`: (1) create a JSM comment with a role/group visibility restriction; (2) perform a body-only PUT and re-GET; assert the restriction survives (confirming the PRESERVED verdict). Both probe steps live in the same gated e2e test function and self-clean via `jsm_self_close`. Additionally: (c) a `JR_STDIN_IS_TTY` debug seam (`#[cfg(debug_assertions)]`-gated, release builds ignore) enabling interactive-branch tests (VP-577-013 and analogous y/N prompt tests); the seam implementation MUST be accompanied in the same commit by a release-gate regression test (mirrors the `JR_BASE_URL`/`JR_CONFIG_DIR` gate pattern) and a `CLAUDE.md` doc line for `JR_STDIN_IS_TTY` (codified doc-fallout rule).
+**Delivery-task obligation (implementing story, F4)**: The story MUST include: (a) a `CLAUDE.md` gotcha documenting the MERGE verdict, citing `.factory/research/issue-577-properties-merge-replace-2026-07-09.md`, and explicitly stating the do-not-default-to-sending-properties rule (BC-3.5.005); and (b) a gated e2e test in `tests/e2e_live.rs` implementing the 5-step MERGE probe from `.factory/research/issue-577-properties-merge-replace-2026-07-09.md § "Proposed empirical probe"` against project EJ (`JR_E2E_JSM_PROJECT`), self-cleaning via `jsm_self_close` convention. The probe MUST also include the 2-step visibility extension from `.factory/research/issue-577-visibility-put-semantics-2026-07-09.md`: (1) create a JSM comment with a role/group visibility restriction; (2) perform a body-only PUT and re-GET; assert the restriction survives (confirming the PRESERVED verdict). For the compound cell, step (2) MUST use a comment carrying BOTH a role/group restriction AND a `jr.test.marker` property; the PUT body is `{"body": ..., "properties": [{"key": "sd.public.comment", "value": {"internal": false}}]}` with NO `visibility` key; re-GET; assert BOTH the restriction AND `jr.test.marker` survive (closes the weakest safety-table cell: MERGE for properties does not interfere with PRESERVED for visibility when both are present simultaneously). Both probe steps live in the same gated e2e test function and self-clean via `jsm_self_close`. Additionally: (c) a `JR_STDIN_IS_TTY` debug seam (`#[cfg(debug_assertions)]`-gated, release builds ignore) enabling interactive-branch tests (VP-577-013 and analogous y/N prompt tests); the seam implementation MUST be accompanied in the same commit by a release-gate regression test (mirrors the `JR_BASE_URL`/`JR_CONFIG_DIR` gate pattern) and a `CLAUDE.md` doc line for `JR_STDIN_IS_TTY` (codified doc-fallout rule); interactive prompts MUST use `interact_on(&Term::stdout())` or equivalent (NOT default `/dev/tty` attachment) so piped stdin drives the interaction under the seam; a `#[cfg(debug_assertions)]` conditional prompt is an acceptable alternative; the seam MUST also gate `src/main.rs`'s auto-`--no-input` check (`std::io::stdin().is_terminal()` at the top of main) so piped stdin under `JR_STDIN_IS_TTY=1` does not trigger the auto-flip (applying the seam only at the prompt site is insufficient — `cli.no_input` would be forced `true` before the handler runs, routing to the non-interactive exit-64 branch instead of the interactive y/N branch VP-577-013 exercises); the F4 story MUST prove the seam+prompt combination works in a wiremock subprocess test before relying on VP-577-013.
 
 **EC-3.5.006-1** (JSDCLOUD-6050 caveat): When `--internal` is passed, emit a stderr hint before the PUT is sent: `"note: visibility change is best-effort — verify in the portal (JSDCLOUD-6050)."` This hint is informational; it does NOT affect exit code and is not suppressed by `--no-input`. **Timing cross-note**: fires after ADF conversion succeeds (step 4 in BC-3.5.005 edit pipeline ordering pin), before HTTP PUT (step 5); does not fire if step 4 fails.
 
@@ -2301,9 +2303,9 @@ No confirmation required (`--internal` reduces visibility; not an exposure risk)
 
 **Verification Properties**:
 
-**VP-577-002**: wiremock captures the PUT request body; assert `serde_json::from_str::<serde_json::Value>(&body).unwrap()["properties"][0]["value"]["internal"]` equals `true` (JSON boolean, not string).
+**VP-577-002**: wiremock captures the PUT request body; assert (a) `serde_json::from_str::<serde_json::Value>(&body).unwrap()["properties"][0]["value"]["internal"]` equals `true` (JSON boolean, not string); AND (b) the body does NOT contain the key `"visibility"` at the top level — `…unwrap().get("visibility").is_none()` must be `true`. The visibility absence assertion is the `--internal` case of the BC-3.5.005 note-(iii) invariant: `jr` NEVER sends a `visibility` key on any `comment edit` path this cycle.
 
-**Trace**: F2 spec evolution (2026-07-09, DEC-168 ruling 1; research verdict Claim 7 PARTIALLY VALIDATED; adversary pass-3 HIGH-3 + MEDIUM-1 remediation; HIGH-3 closure: MERGE verdict human-approved 2026-07-09, probe deferred to gated e2e; issue #577 SOH-COMMENT-CRUD-1)
+**Trace**: F2 spec evolution (2026-07-09, DEC-168 ruling 1; research verdict Claim 7 PARTIALLY VALIDATED; adversary pass-3 HIGH-3 + MEDIUM-1 remediation; HIGH-3 closure: MERGE verdict human-approved 2026-07-09, probe deferred to gated e2e; adversary pass-8 M1 VP-577-002 visibility-absence; issue #577 SOH-COMMENT-CRUD-1)
 
 ---
 
@@ -2337,9 +2339,9 @@ Rationale: (1) Option (b) (confirm only if currently internal) would reintroduce
 
 **Verification Properties**:
 
-**VP-577-003**: wiremock captures the PUT request body; assert `serde_json::from_str::<serde_json::Value>(&body).unwrap()["properties"][0]["value"]["internal"]` equals `false` (JSON boolean, not string `"false"`).
+**VP-577-003**: wiremock captures the PUT request body; assert (a) `serde_json::from_str::<serde_json::Value>(&body).unwrap()["properties"][0]["value"]["internal"]` equals `false` (JSON boolean, not string `"false"`); AND (b) the body does NOT contain the key `"visibility"` at the top level — `…unwrap().get("visibility").is_none()` must be `true`. The visibility absence assertion is the `--public` case of the BC-3.5.005 note-(iii) invariant: `jr` NEVER sends a `visibility` key on any `comment edit` path this cycle.
 
-**Trace**: F2 spec evolution (2026-07-09, DEC-168 ruling 1 and open design point Option a; research verdict Claim 7 PARTIALLY VALIDATED; adversary pass-3 HIGH-3 + MEDIUM-1 remediation; HIGH-3 closure: MERGE verdict human-approved 2026-07-09, probe deferred to gated e2e; issue #577 SOH-COMMENT-CRUD-1)
+**Trace**: F2 spec evolution (2026-07-09, DEC-168 ruling 1 and open design point Option a; research verdict Claim 7 PARTIALLY VALIDATED; adversary pass-3 HIGH-3 + MEDIUM-1 remediation; HIGH-3 closure: MERGE verdict human-approved 2026-07-09, probe deferred to gated e2e; adversary pass-8 M1 VP-577-003 visibility-absence; issue #577 SOH-COMMENT-CRUD-1)
 
 ---
 
@@ -2430,7 +2432,7 @@ The `?expand=properties` query parameter is required to include the `properties`
 
 Display comment details via plain key-value lines (NOT a comfy-table multi-row layout) to stdout, in the following field order:
 1. `ID:` — the comment ID string from the `id` field.
-2. `Author:` — display name from the comment's `author.displayName` field.
+2. `Author:` — display name from the comment's `author.displayName` field; render `"Unknown"` if the `author` key is absent, `null`, or its `displayName` is missing.
 3. `Created:` — ISO 8601 timestamp from `created`.
 4. `Updated:` — ISO 8601 timestamp from `updated`; render N/A if the field is absent (uncommon in practice but graceful-degradation safe).
 5. `JSM internal:` — `"Yes"` if `sd.public.comment.internal == true`; `"No"` if `false`; `"N/A"` if the property is absent or the `properties` array is empty.
@@ -2513,7 +2515,7 @@ In contrast, a **bare** `jr issue comment` with no arguments (`ErrorKind::Missin
 
 **EC-3.5.012-2**: `jr issue comment add FOO-1 "text"` (new canonical form) → behavior byte-for-byte identical to the former `jr issue comment FOO-1 "text"`. All existing tests updated to use the `comment add` form in the same PR as story S-577-1.
 
-**EC-3.5.012-3**: `CommentSubcommand::Add` positional `<message>` MUST carry `allow_hyphen_values = true` (CLAUDE.md invariant — applied to all positional free-text write-command inputs). `jr issue comment add FOO-1 "- [ ] task"` MUST parse successfully; the leading dash MUST NOT be interpreted as an unknown flag. Regression pin: a parse-level test asserting this input parses without clap error.
+**EC-3.5.012-3**: `CommentSubcommand::Add` positional `<message>` MUST carry `allow_hyphen_values = true` (CLAUDE.md invariant — applied to all positional free-text write-command inputs). `jr issue comment add FOO-1 "- [ ] task"` MUST parse successfully; the leading dash MUST NOT be interpreted as an unknown flag. `CommentSubcommand::Edit` positional `<text>` MUST ALSO carry `allow_hyphen_values = true` for the same reason — `jr issue comment edit FOO-1 --id 10001 "- update"` MUST parse successfully. Regression pins: VP-577-018 (add path) and VP-577-019 (edit path).
 
 **EC-3.5.012-4**: `comment edit` and `comment delete` do NOT support `--dry-run` in this cycle (parity gap with `issue edit` BC-3.4.021 acknowledged). Passing `--dry-run` to either subcommand → exit 2 (clap unknown flag). Adding dry-run support to comment operations is a **follow-up story candidate**.
 
@@ -2527,9 +2529,13 @@ In contrast, a **bare** `jr issue comment` with no arguments (`ErrorKind::Missin
 
 **VP-577-015**: `jr issue comment list FOO-1` (list token, InvalidSubcommand) → exit 2; stderr contains `"jr issue comments"` (the plural form hint). Parse-level test (wiremock-free; no network call made).
 
-**VP-577-018**: `jr issue comment add FOO-1 "- [ ] task"` → parses without clap error (exit code is NOT 2); the leading-dash body text is accepted as a positional argument. Parse-level test (wiremock-free; no network call required — the test need not exercise the HTTP path; formalizes EC-3.5.012-3's `allow_hyphen_values` regression pin).
+**VP-577-018**: `jr issue comment add FOO-1 "- [ ] task"` → parses without clap error (exit code is NOT 2); the leading-dash body text is accepted as a positional argument. Parse-level test (wiremock-free; no network call required — the test need not exercise the HTTP path; formalizes EC-3.5.012-3's `allow_hyphen_values` regression pin for the add path).
 
-**Trace**: F2 spec evolution (2026-07-09, DEC-168 ruling 2 Option A; adversary pass-1 HIGH-1 + LOW-1; adversary pass-2 MEDIUM-2 + LOW-3 + MEDIUM-4 remediation; adversary pass-3 HIGH-2 + MEDIUM-4 + LOW-4 remediation; adversary pass-5 L2 VP-577-018; issue #577 SOH-COMMENT-CRUD-1)
+**VP-577-019**: `jr issue comment edit FOO-1 --id 10001 "- update"` → parses without clap error (exit code is NOT 2); the leading-dash positional `<text>` is accepted without being treated as an unknown flag. Parse-level test (wiremock-free; formalizes EC-3.5.012-3's `allow_hyphen_values` regression pin for the edit path).
+
+**VP-577-020**: `jr issue comment ls FOO-1` (`ls` alias token, `InvalidSubcommand`) → exit 2; stderr contains `"jr issue comments"` (the plural-form hint directing to `IssueCommand::Comments`). Parse-level test (wiremock-free; no network call made). Mirrors VP-577-015 (`list` token); confirms the EC-3.5.012-1 two-sub-case discrimination covers both the `list` and `ls` alias tokens.
+
+**Trace**: F2 spec evolution (2026-07-09, DEC-168 ruling 2 Option A; adversary pass-1 HIGH-1 + LOW-1; adversary pass-2 MEDIUM-2 + LOW-3 + MEDIUM-4 remediation; adversary pass-3 HIGH-2 + MEDIUM-4 + LOW-4 remediation; adversary pass-5 L2 VP-577-018; adversary pass-7 F3 VP-577-019; adversary pass-8 L3 VP-577-020; issue #577 SOH-COMMENT-CRUD-1)
 
 ---
 

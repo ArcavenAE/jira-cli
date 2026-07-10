@@ -233,6 +233,51 @@ and agrees at 624. All 8 cumulative-count surfaces now agree.
   timestamp from `updated`; render N/A if the field is absent (uncommon in practice but
   graceful-degradation safe)."
   VP count stays 18 (VP-577-013 modified, none added). No BC count change.
+  Adversary pass-7 remediation (same-version, 2 MEDIUM / 5 LOW):
+  F1 (MEDIUM): VP-577-001 extended — second wire assertion added: PUT body MUST also not
+  contain "visibility" key (.get("visibility").is_none() == true); same assertion added
+  to H-NEW-COMMENT-001 Expected.
+  F2 (MEDIUM): BC-3.5.005 Implementation note — symmetrical bullet (iii) added: same
+  three-pattern rule applies to any visibility field on the PUT request struct; PREFERRED
+  pattern is omitting visibility from the request struct entirely.
+  F3 (LOW/MEDIUM): EC-3.5.012-3 extended — CommentSubcommand::Edit positional <text>
+  MUST also carry allow_hyphen_values = true (file-wide CLAUDE.md invariant); VP-577-019
+  added (edit path regression pin: `comment edit FOO-1 --id 10001 "- update"` parses
+  without clap error). VP count 18 → 19.
+  F4 (LOW): BC-3.5.010 field 2 — fallback clause added: render "Unknown" if author is
+  absent, null, or its displayName is missing (parallel to fields 4/5/6).
+  F5 (LOW): BC-3.5.003 Implementation note + BC-3.5.006 delivery item (c) — dialoguer
+  plumbing clause added: interactive prompts MUST use interact_on(&Term::stdout()) or
+  equivalent (NOT /dev/tty); cfg(debug_assertions) conditional prompt acceptable; F4 story
+  MUST prove seam+prompt combination works in wiremock subprocess test.
+  F6 (LOW): BC-3.5.006 delivery-task probe extended — compound step: comment with BOTH
+  role/group restriction AND jr.test.marker; PUT with properties:[sd.public.comment] + NO
+  visibility key; re-GET; assert BOTH restriction AND marker survive (closes weakest safety
+  cell).
+  F7 (LOW): H-NEW-COMMENT-002 Expected — additional assert: stderr contains "visibility
+  to public" (SEC-577-001 CWE-1021 wording pin).
+  VP count 18 → 19 (VP-577-019 added). No BC count change.
+  Adversary pass-8 remediation (same-version, 1 MEDIUM / 3 LOW):
+  M1: VP-577-002 (BC-3.5.006) and VP-577-003 (BC-3.5.007) — second wire assertion added to
+  each: PUT body MUST also not contain "visibility" key at top level (.get("visibility").is_none()
+  == true); the assertion covers all three comment edit paths (body-only, --internal, --public)
+  per the BC-3.5.005 note-(iii) NEVER-sends-visibility invariant. Trace lines for BC-3.5.006
+  and BC-3.5.007 updated with pass-8 M1 reference.
+  L1: BC-3.5.003 Implementation note + BC-3.5.006 delivery item (c) — seam scope extended:
+  the JR_STDIN_IS_TTY seam MUST also gate src/main.rs's auto---no-input check
+  (std::io::stdin().is_terminal()) so piped stdin under JR_STDIN_IS_TTY=1 does not trigger
+  the auto-flip; applying the seam only at the prompt site is insufficient (cli.no_input
+  would be forced true before the handler runs, routing to the non-interactive exit-64 branch
+  instead of the interactive y/N branch VP-577-013 exercises). BC-3.5.003 Trace updated.
+  L2: H-NEW-COMMENT-004 Setup Call B — wiremock mount extended to return body
+  {"errorMessages":["Comment with id '99999' does not exist."],"errors":{}};
+  Expected B — second bullet added: stderr contains "Comment with id '99999' does not exist."
+  (on separate line following preamble; mirrors H-NEW-COMMENT-003 body-surfacing pattern).
+  L3: VP-577-020 added to BC-3.5.012 — `jr issue comment ls FOO-1` (ls alias token,
+  InvalidSubcommand) → exit 2; stderr contains "jr issue comments" (plural hint; mirrors
+  VP-577-015 list-token case; confirms EC-3.5.012-1 two-sub-case discrimination covers ls
+  alias). BC-3.5.012 Trace updated with pass-8 L3 reference.
+  VP count 19 → 20 (VP-577-020 added). No BC count change.
 
 - `.factory/specs/prd/holdout-scenarios.md` (MODIFIED): `total_holdouts` 83 → 87;
   `version` 1.5.1 → 1.5.2; `last_updated` updated; trace entry added for
@@ -265,7 +310,7 @@ and agrees at 624. All 8 cumulative-count surfaces now agree.
 |-----------|--------|
 | BCs added | BC-3.5.002..BC-3.5.012 (11 individually-bodied BCs in bc-3-issue-write.md §3.5) |
 | Holdouts added | H-NEW-COMMENT-001..H-NEW-COMMENT-004 (Group 15, holdout-scenarios.md) |
-| VPs added | VP-577-001 (body-only PUT wire), VP-577-002 (--internal wire), VP-577-003 (--public wire), VP-577-004 (delete-404 exit-64), VP-577-005 (delete non-interactive gate), VP-577-006 (--public non-interactive gate), VP-577-007 (view JSON shape + expand=properties URL assert), VP-577-008 (BC-3.5.012 InvalidSubcommand exit-2 + "use `jr issue comment add` instead"), VP-577-009 (BC-3.5.002 DELETE 204 JSON shape), VP-577-010 (BC-3.5.011 --internal --public exit-2 + "cannot be used with"), VP-577-011 (BC-3.5.009 --file not-found exit-64), VP-577-012 (BC-3.5.009 whitespace body exit-64), VP-577-013 (BC-3.5.003 cancel-in-JSON-mode envelope), VP-577-014 (BC-3.5.012 MissingSubcommand clap listing, no custom hint), VP-577-015 (BC-3.5.012 list-token hint "jr issue comments", exit-2), VP-577-016 (BC-3.5.010 lossless JSON passthrough — "self" Jira-only field survives), VP-577-017 (BC-3.5.008 --public --stdin without --yes → exit 64; stderr contains "--stdin" AND "--yes"; zero PUT), VP-577-018 (BC-3.5.012 EC-3.5.012-3 allow_hyphen_values — `comment add FOO-1 "- [ ] task"` parses without clap error) |
+| VPs added | VP-577-001 (body-only PUT wire — properties + visibility absence), VP-577-002 (--internal wire), VP-577-003 (--public wire), VP-577-004 (delete-404 exit-64), VP-577-005 (delete non-interactive gate), VP-577-006 (--public non-interactive gate), VP-577-007 (view JSON shape + expand=properties URL assert), VP-577-008 (BC-3.5.012 InvalidSubcommand exit-2 + "use `jr issue comment add` instead"), VP-577-009 (BC-3.5.002 DELETE 204 JSON shape), VP-577-010 (BC-3.5.011 --internal --public exit-2 + "cannot be used with"), VP-577-011 (BC-3.5.009 --file not-found exit-64), VP-577-012 (BC-3.5.009 whitespace body exit-64), VP-577-013 (BC-3.5.003 cancel-in-JSON-mode envelope + JR_STDIN_IS_TTY seam), VP-577-014 (BC-3.5.012 MissingSubcommand clap listing, no custom hint), VP-577-015 (BC-3.5.012 list-token hint "jr issue comments", exit-2), VP-577-016 (BC-3.5.010 lossless JSON passthrough — "self" Jira-only field survives), VP-577-017 (BC-3.5.008 --public --stdin without --yes → exit 64; stderr contains "--stdin" AND "--yes"; zero PUT), VP-577-018 (BC-3.5.012 EC-3.5.012-3 allow_hyphen_values — `comment add FOO-1 "- [ ] task"` parses without clap error), VP-577-019 (BC-3.5.012 EC-3.5.012-3 allow_hyphen_values — `comment edit FOO-1 --id 10001 "- update"` parses without clap error), VP-577-020 (BC-3.5.012 EC-3.5.012-1 ls-alias-token hint — `jr issue comment ls FOO-1` → exit 2; stderr contains "jr issue comments" plural-form hint; mirrors VP-577-015) |
 | BC count | 613 → 624 (CANONICAL-COUNTS.md authoritative; BC-INDEX.md MODIFIED via sanctioned shell edit — all surfaces now agree) |
 | Breaking change | CLI: `jr issue comment KEY "text"` → `jr issue comment add KEY "text"` (BC-3.5.012) |
 | Design decision | --public always-confirm (Option a; DEC-168 open point resolved; recorded in BC-3.5.007) |
