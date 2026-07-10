@@ -114,7 +114,7 @@ Covers the write side of the Issue domain: `jr issue create`, `edit`, `move`, `a
 | INV-WRITE-018 | `sprint add`/`sprint remove` scrum-only check is done via `board_type == "scrum"` (same as `issue list`). Kanban → error (not silent degrade). | `cli/sprint.rs` |
 | INV-WRITE-019 | Resolutions cache is loaded lazily: only when `--resolution` flag is provided on `issue move`. | `cli/issue/workflow.rs` |
 | INV-WRITE-020 | `issue assign --unassign` sends `{accountId: null}` via Jira assignee endpoint. This is the canonical unassign mechanism. | `cli/issue/workflow.rs` |
-| INV-WRITE-021 | `issue comment add` reads message from: positional arg → `--file <path>` → `--stdin`. Exactly one source must be present in `--no-input` mode. | `cli/issue/workflow.rs::handle_comment` |
+| INV-WRITE-021 | `issue comment add` reads message from: `--stdin` → `--file <path>` → positional arg. Exactly one source must be present in `--no-input` mode. | `cli/issue/workflow.rs::handle_comment` |
 | INV-WRITE-022 | Auth subcommands (login/switch/logout/remove/refresh) lack JSON output paths. Only text output. 5 of N commands without `--output json` support. Gap noted in Pass 5 R2-T2. | `cli/auth.rs` |
 | INV-WRITE-023 | `issue remote-link` title defaults to the URL when `--title` is not provided. | `cli/issue/links.rs::handle_remote_link` |
 | INV-WRITE-024 | `issue link` default link type is `"Relates"` when `--type` is not provided. | `cli/mod.rs`, `cli/issue/links.rs` |
