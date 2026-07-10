@@ -76,7 +76,7 @@ Covers the write side of the Issue domain: `jr issue create`, `edit`, `move`, `a
 | `issue edit <key>` | `PUT /rest/api/3/issue/<key>` | No (replaces/modifies state) | Computes field deltas. Labels use `add:`/`remove:` prefixes. |
 | `issue move <key> [status]` | `GET /transitions` + `GET /issue` + `POST /transitions` | **Yes** | Exits 0 with `transitioned:false` if already in target. Number beats name for transition selection. |
 | `issue assign <key>` | `PUT /rest/api/3/issue/<key>/assignee` | **Yes** | Exits 0 with `changed:false` if target == current. `--unassign` sends `{accountId:null}`. |
-| `issue comment add <key>` | `POST /rest/api/3/issue/<key>/comment` | No (creates new comment each call) | `--internal` adds JSM property (silent no-op on non-JSM). |
+| `issue comment add <key> <body-source>` | `POST /rest/api/3/issue/<key>/comment` | No (creates new comment each call) | `--internal` adds JSM property (silent no-op on non-JSM). `<body-source>` is one of: positional text, `--file <path>`, or `--stdin`. |
 | `issue comment delete <key> --id <id>` | `DELETE /rest/api/3/issue/<key>/comment/<id>` | No (404 if already deleted) | Requires confirmation prompt or `--yes`. |
 | `issue comment edit <key> --id <id> <body-source>` | `PUT /rest/api/3/issue/<key>/comment/<id>` | No | Body-only by default; `--internal`/`--public` adds properties. |
 | `issue comment view <key> --id <id>` | `GET /rest/api/3/issue/<key>/comment/<id>?expand=properties` | Yes (read-only) | Human: key-value render. JSON: `serde_json::Value` passthrough. |
@@ -114,7 +114,7 @@ Covers the write side of the Issue domain: `jr issue create`, `edit`, `move`, `a
 | INV-WRITE-018 | `sprint add`/`sprint remove` scrum-only check is done via `board_type == "scrum"` (same as `issue list`). Kanban → error (not silent degrade). | `cli/sprint.rs` |
 | INV-WRITE-019 | Resolutions cache is loaded lazily: only when `--resolution` flag is provided on `issue move`. | `cli/issue/workflow.rs` |
 | INV-WRITE-020 | `issue assign --unassign` sends `{accountId: null}` via Jira assignee endpoint. This is the canonical unassign mechanism. | `cli/issue/workflow.rs` |
-| INV-WRITE-021 | `issue comment add` reads message from: `--stdin` → `--file <path>` → positional arg. Exactly one source must be present in `--no-input` mode. | `cli/issue/workflow.rs::handle_comment` |
+| INV-WRITE-021 | `issue comment add` reads message from: `--stdin` → `--file <path>` → positional arg. At least one body source MUST be provided in ANY mode (interactive or `--no-input`); when multiple are supplied, resolution follows the priority order above (`--stdin` > `--file` > positional) — supplying multiple sources is NOT an error (matches `handle_comment`'s if/else-if chain). | `cli/issue/workflow.rs::handle_comment` |
 | INV-WRITE-022 | Auth subcommands (login/switch/logout/remove/refresh) lack JSON output paths. Only text output. 5 of N commands without `--output json` support. Gap noted in Pass 5 R2-T2. | `cli/auth.rs` |
 | INV-WRITE-023 | `issue remote-link` title defaults to the URL when `--title` is not provided. | `cli/issue/links.rs::handle_remote_link` |
 | INV-WRITE-024 | `issue link` default link type is `"Relates"` when `--type` is not provided. | `cli/mod.rs`, `cli/issue/links.rs` |

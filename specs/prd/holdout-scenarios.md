@@ -1897,7 +1897,7 @@ Call B (kanban board 2 — JQL search path, sprint endpoint must not fire):
    ```json
    {"id": "10001", "author": {"displayName": "Alice"}, "body": {"version": 1, "type": "doc", "content": []}, "created": "2026-07-01T12:00:00.000+0000", "updated": "2026-07-01T12:00:00.000+0000", "properties": []}
    ```
-   Note: `GET` is NOT expected to be called on the default body-only edit path (no `--internal`/`--public`). Mount it with `.expect(0)` to assert it is NOT called.
+   Note: `GET` is NOT expected to be called on this path — the invocation passes no visibility flags (`--internal`/`--public` are absent). Per DEC-168, `GET` is never called on any edit path regardless of visibility flags; the `.expect(0)` mount asserts this invariant holds for this specific invocation.
 3. Wiremock mounts `PUT /rest/api/3/issue/FOO-1/comment/10001` with a request body capture matcher. Returns 200 with the updated comment JSON (same as above with an updated `body`).
 
 **Action**: `jr issue comment edit FOO-1 --id 10001 "Updated text" --no-input`
