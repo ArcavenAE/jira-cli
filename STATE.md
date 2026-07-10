@@ -4,15 +4,15 @@ level: ops
 version: "2.0"
 status: active
 producer: state-manager
-timestamp: 2026-07-10T04:02:00Z
+timestamp: 2026-07-10T23:05:00Z
 phase: 3
-pipeline: ACTIVE
+pipeline: PAUSED
 inputs: []
 input-hash: "[live-state]"
 traces_to: ""
 project: jira-cli
 mode: brownfield
-current_step: "SOH-COMMENT-CRUD-1 F1 APPROVED (DEC-168, 2026-07-09) — F2 spec evolution next. Research (18 citations) REFUTED jsdPublic footgun claim. 4 human rulings: (1) edit default body-only PUT; (2) CLI Option A clean break; (3) delete 404→exit 64; (4) scope ~7 stories ~21pts. pipeline ACTIVE. trajectory-tail →1→0→0→0. D-chain cite D-27893 latest brownfield."
+current_step: "SOH-COMMENT-CRUD-1 F2 adversarial convergence IN PROGRESS — PAUSED by human /wrap. 32 adversary passes / 37 fix rounds; pass-32 verdict RECEIVED at wrap (1 HIGH + 3 LOW — see adversarial-review/pass-32-577.md); fix round 38 NOT dispatched. Full STRICT (twice human-confirmed). Spec v1.3.28 @ aa6a5c7. RESUME: fix round 38 → CV → pass 33."
 maintenance_run: CLOSED
 current_cycle: "cycle-001"
 feature_mode_bundle: SOH-COMMENT-CRUD-1
@@ -26,7 +26,7 @@ activation_version: "v0.6.0-dev.9"
 
 <!--
   STATE.md SIZE BUDGET (per D-421(c)):
-  Hard cap (500 lines) margin from soft-target = 500 - 314 = 186; margin from actual = 500 - 314 = 186 (D-446(c) dual-margin form). 314 lines (wc-l).
+  Hard cap (500 lines) margin from soft-target = 500 - 313 = 187; margin from actual = 500 - 313 = 187 (D-446(c) dual-margin form). 313 lines (wc-l).
   Hard cap: 500 lines.
 -->
 
@@ -62,11 +62,11 @@ activation_version: "v0.6.0-dev.9"
 <!-- archived: CITATION-GUARDS rows + F1 GATE APPROVED + SPEC DELTA row + PASSES 1-5 row + DEC-158 row + PASSES 6-16 row + PASSES 17-19 row + DEC-159 row (archived F4 DELIVERED burst) + F3 story v1.7 row (archived F6 hardening burst) + F3 adversary passes 1-7 row (archived F7 evidence burst) + F3 adversary passes 8-10 row (archived F7-AUTHORIZED burst) + F5 CONVERGED row (archived session-wrap pause burst) + F6 TARGETED HARDENING row (archived session-review burst) + F7 AUTHORIZED row (archived IP-571 disposition burst) + RELEASE IN PROGRESS row (archived external-PR review burst) + RELEASE v0.6.0-dev.8 TAGGED row (archived SOH-BUGS-1 intake burst) + SESSION WRAP/PAUSE row (archived SOH-BUGS-1 F1 gate burst) + SESSION RESUME + SESSION-REVIEW COMPLETE row (archived S-SOH-590-1 DELIVERED burst) + SESSION-REVIEW PROPOSALS ROUTED UPSTREAM row + EXTERNAL-PR REVIEW BURST row + INTAKE row (archived SOH-BUGS-1 DELIVERY CLOSE burst) -->
 | Step | Agent | Status | Output |
 |------|-------|--------|--------|
-| **S-SOH-590-1 DELIVERED (2026-07-09) — PR #597 @ 4f3960e0 (DEC-128 honored). Quick-dev: Red Gate at cec775e (3 tests: 2 FAIL uppercase/mixedcase, 1 PASS lowercase); Green at cb3b471 (3/3, 2010/0/93). APPROVE cycle 1. CI 15/15. BC-X.1.011 + VP-590-001 (spec v1.3.27). TD-031 BC-INDEX lockout (see drift).** | implementer + pr-manager + state-manager | COMPLETE | `cycles/cycle-001/S-SOH-590-1/implementation/red-gate-log.md`; `stories/S-SOH-590-1.md` updated to completed; `sprint-state.yaml` updated. |
 | **S-SOH-589-1 DELIVERED (2026-07-09) — PR #601 @ 081187ae (DEC-128 honored); fix-PR #602 @ bf3b3382 (clippy 1.97 unblock, APPROVE cycle 2). Step-4.5 STRICT: 7 passes / 4 fix rounds; trajectory 3→4→0→1→0→0→0; window p5/p6/p7 CLEAN×3. 6/6 AC demos (local). 2016/0/93. DEC-166.** | implementer + pr-manager + state-manager | COMPLETE | `cycles/cycle-001/S-SOH-589-1/implementation/red-gate-log.md`; `cycles/cycle-001/S-SOH-589-1/implementation/step-4-5-convergence.md`; `stories/S-SOH-589-1.md` updated to completed; `sprint-state.yaml` updated. |
 | **SOH-BUGS-1 CLOSED (2026-07-09) — release v0.6.0-dev.9 SHIPPED @ b2ce3169 (run 29051718553, 10 assets); issues #589/#590/#582 CLOSED. DEC-167. RELEASING-MD-MISSING drift recorded.** | state-manager | COMPLETE | PR #603 @ b2ce3169; tag v0.6.0-dev.9; workflow run 29051718553 SUCCESS; 10 assets. |
 | **SESSION WRAP (2026-07-10) — human /wrap after SOH-BUGS-1 completion + v0.6.0-dev.9 release + e2e repair (run 29055766599). Pipeline PAUSED. Resume intent: issues intake.** | state-manager | COMPLETE | Pipeline PAUSED per human /wrap. E2E repaired. RESUME INTENT: issues-intake (sackofhacks P1 #575/#576/#577). |
 | **SOH-COMMENT-CRUD-1 INTAKE + F1 APPROVED (2026-07-09) — DEC-168. F2 spec evolution next: product-owner BC delta per 4 rulings → consistency-validator → security-reviewer → adversary ≥3 clean.** | architect + research-agent + state-manager | COMPLETE | `phase-f1-delta-analysis/delta-analysis-577-comment-crud.md`; `research/issue-577-comment-crud-jsdpublic-2026-07-09.md`. |
+| **SESSION WRAP (2026-07-10) — human /wrap during F2 adversarial convergence. Pipeline PAUSED. Pass-32 verdict received at wrap (1H+3L, filed to adversarial-review/pass-32-577.md); fix round 38 deferred to resume.** | state-manager | COMPLETE | STATE.md checkpoint; WIP chain 18f24cc..aa6a5c7 pushed. |
 
 ## Decisions Log
 
@@ -212,17 +212,16 @@ ADF-CODE-MARK-EXCLUSIVITY: **FULLY COMPLETE (2026-07-08, DEC-163). S-7.02 SATISF
 
 | Field | Value |
 |-------|-------|
-| **Date** | 2026-07-09 (RESUMED — SOH-COMMENT-CRUD-1 F1 APPROVED DEC-168; F2 spec evolution dispatching) |
-| **Status** | **SESSION ACTIVE. SOH-COMMENT-CRUD-1 (issue #577) F1 APPROVED (DEC-168). F2 next: product-owner spec delta → consistency-validator → security-reviewer → adversary ≥3 clean passes.** |
-| **Counters** | BC **613**. NFR **42**. ADR **16**. Stories **105**. Holdouts **83**. |
-| **Convergence counter** | SOH-BUGS-1 FULLY COMPLETE (DEC-167). F7-lite holdout 1.00. Trajectory-tail →1→0→0→0. E2E run 29055766599 SUCCESS (full live suite green). |
-| **In-flight work** | NONE. No stories mid-TDD. No active story worktrees. No factory PRs in-progress. Product repo clean (session-local `.claude/pr-reviews/` + `.claude/spec-config.json` untracked, deliberate). |
-| **Open PRs (not factory-blocking)** | Dependabot: #599 (clap_complete 4.6.7, supersedes #595), #598 (rand 0.10.2), #600 (codeql-action, DEC-133 soak), #591 (open, soak ~07-13). Standalone #574/#573 CHANGES_REQUESTED awaiting arcaven. |
-| **Pending decisions** | Open F2 design point: --public confirmation semantics (confirm-if-currently-internal needs a GET; spec author proposes, adversary pressures). STATE-MANAGER-MONOLITHIC-WRITE-STALL recurred ×2 this burst (5 total) — upstream engine fix urgency raised. |
-| **develop branch** | b2ce3169 (PR #603 squash-merged 2026-07-09; SOH-BUGS-1 FULLY COMPLETE; release v0.6.0-dev.9; issues #589/#590/#582 CLOSED). |
-| **Untracked local files** | Deliberately uncommitted, session-local tooling: `.claude/pr-reviews/`, `.claude/spec-config.json`. Not pipeline artifacts. |
-| **STATE.md size** | ~316 lines (OK band). |
-| **Resume command** | Open fresh session; factory-worktree-health; read `.factory/STATE.md`; present issues-intake gate to human. RESUME INTENT: "work on issues" — sackofhacks P1 first (#577 security-adjacent sd.public.comment footgun, #575 --fields CSV, #576 attachment tree). |
+| **Date** | 2026-07-10 (WRAP — mid-F2 adversarial convergence, SOH-COMMENT-CRUD-1 issue #577) |
+| **Status** | **SESSION PAUSED (human /wrap). SOH-COMMENT-CRUD-1 in F2 SPEC EVOLUTION adversarial loop — NOT converged. 32 adversary passes, 16 CV passes, 37 fix rounds, ~134 findings fixed. Full STRICT (3 consecutive zero-finding passes) never opened; twice human-confirmed to continue.** |
+| **Position** | Pass-32 verdict RECEIVED at wrap: 1 HIGH + 3 LOW — full report at `adversarial-review/pass-32-577.md`. Fix round 38 NOT dispatched. Spec v1.3.28 fully committed @ aa6a5c7: 12 BCs (BC-3.5.001..012), VP-577-001..024, holdouts 88 (Group 15 ×5), L2 bc-03 evolved (120/25), BC 624 all 8 surfaces, 3 research files (footgun REFUTED; properties MERGE; visibility PRESERVED — medium-high, compound EJ probe deferred to F4 gated e2e, per-comment DELETE cleanup). All 3 spec guards green (334 citations). |
+| **Key rulings** | DEC-168 (F1 gate, 4 rulings). Full STRICT twice confirmed (pass-6, pass-14 checkpoints). MERGE+PRESERVED verdicts accepted with deferred EJ probe (local probe blocked — EJ not on local profile; zero mutations). Reversed orchestrator rulings (code-verified): 403-scope carve-out added p28 REMOVED p29; body-source priority corrected to --stdin>--file>positional; trim-to-ADF matches add. |
+| **Counters** | BC **624**. Stories 105 (F3 for #577 NOT started). Holdouts **88**. VP-577 family 24. Spec v1.3.28. L2 bc-03 120/25. |
+| **In-flight** | NO stories mid-TDD, NO worktrees, NO factory PRs. All F2 work pushed on factory-artifacts @ aa6a5c7 (intake 18f24cc + 15 WIP checkpoints; 17c4dfc mis-commit reverted b164d06/redone 24ef249; stray develop commit cleaned, never pushed). |
+| **Follow-up story candidates** | Recorded in v1.3.28 Follow-up Obligations + BC notes: L2-BCCOUNT-9TH-SURFACE guard; EC-3.5.012-5 try_parse regressions; method-agnostic 403-scope hint; Levenshtein typo hints; add body-source clap alignment; add file-not-found exit alignment; broader IO remaps; visibility-only edit; --dry-run for edit/delete; JR_STDIN_IS_TTY seam+CLAUDE.md+release-gate (F4 in-scope). |
+| **Process-gap ledger (cycle close / upstream)** | WRITE-STALL ×7 total (timestamp hook forces monolithic writes); WRONG-CWD-COMMIT near-miss (cwd guard now standard); idle-without-report ×4 (final-SendMessage clause fix); VERDICT-COUNT-DISCREPANCY ×5; FALSE-PREMISE-CODE-CLAIM (file:line rule fix); additive-pass entrenchment (defect-only-pass proposal); TWIN-ARTIFACT-SWEEP ×7; BC-bodies+BC-INDEX transactional citations; "sibling fields same question" research checklist. |
+| **Pending decisions** | None blocking. Full STRICT stands. Intake queue untouched: sackofhacks #575/#576 + P2s; dependabot #591 soak ~07-13, #598/#599/#600 (DEC-133); arcaven #573/#574 CHANGES_REQUESTED. |
+| **Resume command** | Fresh session → factory-worktree-health → read STATE.md → read adversarial-review/pass-32-577.md → dispatch FIX ROUND 38 (4 findings) to a product-owner spec author → CV targeted verify → adversary pass 33 (fresh context; include the standard brief: full perimeter, Full STRICT verdict contract, file:line rule, final-SendMessage clause). Loop until 3 consecutive zero-finding passes → F2 human gate → F3 stories. |
 
 ## RESUME PLAN (cold-start, self-contained)
 
@@ -248,7 +247,7 @@ ADF-CODE-MARK-EXCLUSIVITY: **FULLY COMPLETE (2026-07-08, DEC-163). S-7.02 SATISF
 >
 > **Release:** PR #603 @ b2ce3169 (DEC-128 honored); tag v0.6.0-dev.9; workflow run 29051718553 SUCCESS (10 assets). F7-lite 7/7 PASS; holdout 1.00 (6/6 wire-level); consistency CONSISTENT (gaps G1-G3 fixed). S-7.02 SATISFIED.
 >
-> **NEXT STEP: SOH-COMMENT-CRUD-1 F2 SPEC EVOLUTION** (DEC-168): product-owner BC delta in specs/prd/bc-3-issue-write.md §3.5 per 4 rulings → consistency-validator (F2-PIECEWISE-PROTOCOL) → security-reviewer pass → adversarial spec convergence ≥3 clean passes STRICT. Then F3 stories.
+> **NEXT STEP: SOH-COMMENT-CRUD-1 F2 fix round 38** (pass-32 findings: 1H+3L in adversarial-review/pass-32-577.md) → CV verify → adversary pass 33 → … Full STRICT to 3 clean → F2 gate → F3 stories.
 
 **Step 4 — STANDING CONSTRAINTS (ALL fixes via full VSDD Feature Mode):**
 - All fixes through full VSDD Feature Mode. No exceptions without explicit human direction.

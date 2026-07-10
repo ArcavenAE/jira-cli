@@ -4914,3 +4914,21 @@ Displaced to make room for SOH-COMMENT-CRUD-1 INTAKE step row per keep-5 rule.
 | Step | Agent | Status | Output |
 |------|-------|--------|--------|
 | **SOH-BUGS-1 F1 APPROVED + SPEC DELTA + STORIES 104/105 (2026-07-09) — DEC-165; EC-3.4.016-8; VP-589-001; spec v1.3.26; STORY-INDEX v1.4.59. Delivery next.** | architect + business-analyst + product-owner + story-writer | COMPLETE | `phase-f1-delta-analysis/delta-analysis-soh-bugs-1.md`; `phase-f2-spec-evolution/verification-delta-589.md`; `specs/prd/bc-3-issue-write.md`; `stories/S-SOH-590-1.md` + `S-SOH-589-1.md`. |
+
+---
+
+## Archived Phase Progress row (2026-07-10, SESSION WRAP F2-convergence burst)
+
+Displaced to make room for SESSION WRAP (F2 convergence) row per keep-5 rule.
+
+| Phase | Status | Completed | Gate | Notes |
+|-------|--------|-----------|------|-------|
+| **SOH-BUGS-1 F1 APPROVED + SPEC DELTA + STORIES 104/105 (2026-07-09) — DEC-165; EC-3.4.016-8; VP-589-001; spec v1.3.26; STORY-INDEX v1.4.59; delivery next.** | **COMPLETE** | **2026-07-09** | **architect + business-analyst + product-owner + story-writer. DEC-165: scope approved — #589 minimum-viable (AllowedValue.id Option<String> only, 7 sites, EC-3.4.016-8, VP-589-001) standard bug-fix route; #590 quick-dev (LOW, story 104, 1pt). BC 612 unchanged (EC additions). Stories 105 total.** | `phase-f1-delta-analysis/delta-analysis-soh-bugs-1.md`; `specs/prd/bc-3-issue-write.md` (EC-3.4.016-8); `stories/S-SOH-590-1.md` + `S-SOH-589-1.md`. |
+
+### Archived Current Phase Steps row (SESSION WRAP F2-convergence burst)
+
+Displaced to make room for SESSION WRAP (F2 convergence) step row per keep-5 rule.
+
+| Step | Agent | Status | Output |
+|------|-------|--------|--------|
+| **S-SOH-590-1 DELIVERED (2026-07-09) — PR #597 @ 4f3960e0 (DEC-128 honored). Quick-dev: Red Gate at cec775e (3 tests: 2 FAIL uppercase/mixedcase, 1 PASS lowercase); Green at cb3b471 (3/3, 2010/0/93). APPROVE cycle 1. CI 15/15. BC-X.1.011 + VP-590-001 (spec v1.3.27). TD-031 BC-INDEX lockout (see drift).** | implementer + pr-manager + state-manager | COMPLETE | `cycles/cycle-001/S-SOH-590-1/implementation/red-gate-log.md`; `stories/S-SOH-590-1.md` updated to completed; `sprint-state.yaml` updated. |

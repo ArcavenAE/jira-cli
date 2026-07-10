@@ -1424,3 +1424,23 @@ STRICT convergence. Counters: BC 612, Holdouts 83, Stories 102. develop @ 0d8a8a
 | **Untracked local files** | Deliberately uncommitted, session-local tooling: `.claude/pr-reviews/`, `.claude/spec-config.json`. Not pipeline artifacts. |
 | **STATE.md size** | ~315 lines (OK band). |
 | **Resume command** | Open fresh session; read `.factory/STATE.md`; run `/vsdd-factory:next-step`. SOH-BUGS-1 FULLY COMPLETE (DEC-167). Release v0.6.0-dev.9 SHIPPED @ b2ce3169. Pipeline IDLE — next intake candidates: sackofhacks features (P1 #575/#576/#577); dependabot soak; arcaven PR revisions. |
+
+---
+
+### Checkpoint archived: 2026-07-09 — SOH-COMMENT-CRUD-1 F1 APPROVED (DEC-168); F2 spec evolution IN PROGRESS
+
+(Displaced by: SESSION WRAP 2026-07-10 — SOH-COMMENT-CRUD-1 F2 adversarial convergence pass-32/37 rounds, spec v1.3.28)
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-07-09 (RESUMED — SOH-COMMENT-CRUD-1 F1 APPROVED DEC-168; F2 spec evolution dispatching) |
+| **Status** | **SESSION ACTIVE. SOH-COMMENT-CRUD-1 (issue #577) F1 APPROVED (DEC-168). F2 next: product-owner spec delta → consistency-validator → security-reviewer → adversary ≥3 clean passes.** |
+| **Counters** | BC **613**. NFR **42**. ADR **16**. Stories **105**. Holdouts **83**. |
+| **Convergence counter** | SOH-BUGS-1 FULLY COMPLETE (DEC-167). F7-lite holdout 1.00. Trajectory-tail →1→0→0→0. E2E run 29055766599 SUCCESS (full live suite green). |
+| **In-flight work** | NONE. No stories mid-TDD. No active story worktrees. No factory PRs in-progress. Product repo clean (session-local `.claude/pr-reviews/` + `.claude/spec-config.json` untracked, deliberate). |
+| **Open PRs (not factory-blocking)** | Dependabot: #599 (clap_complete 4.6.7, supersedes #595), #598 (rand 0.10.2), #600 (codeql-action, DEC-133 soak), #591 (open, soak ~07-13). Standalone #574/#573 CHANGES_REQUESTED awaiting arcaven. |
+| **Pending decisions** | Open F2 design point: --public confirmation semantics (confirm-if-currently-internal needs a GET; spec author proposes, adversary pressures). STATE-MANAGER-MONOLITHIC-WRITE-STALL recurred ×2 this burst (5 total) — upstream engine fix urgency raised. |
+| **develop branch** | b2ce3169 (PR #603 squash-merged 2026-07-09; SOH-BUGS-1 FULLY COMPLETE; release v0.6.0-dev.9; issues #589/#590/#582 CLOSED). |
+| **Untracked local files** | Deliberately uncommitted, session-local tooling: `.claude/pr-reviews/`, `.claude/spec-config.json`. Not pipeline artifacts. |
+| **STATE.md size** | ~316 lines (OK band). |
+| **Resume command** | Open fresh session; factory-worktree-health; read `.factory/STATE.md`; present issues-intake gate to human. RESUME INTENT: "work on issues" — sackofhacks P1 first (#577 security-adjacent sd.public.comment footgun, #575 --fields CSV, #576 attachment tree). |
