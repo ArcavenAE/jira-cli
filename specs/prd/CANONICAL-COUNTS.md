@@ -2,7 +2,7 @@
 document_type: canonical-counts
 product: jr (jira-cli)
 generated: "2026-05-04"
-last_verified: "2026-07-09 (BC-3.5.002..BC-3.5.012 added SOH-COMMENT-CRUD-1 F2 DEC-168 issue #577 comment delete/edit/view + CLI subcommand group; +11 individually-bodied BCs; 624 total)"
+last_verified: "2026-07-10 (BC-3.5.002..BC-3.5.012 added SOH-COMMENT-CRUD-1 F2 DEC-168 issue #577 comment delete/edit/view + CLI subcommand group; +11 individually-bodied BCs; 624 total; pass-12+ remediations completed 2026-07-10)"
 ---
 
 # Canonical Counts — jr (jira-cli) L3 PRD
@@ -75,7 +75,7 @@ bc_count in L2 represents the same cumulative claim (individually-bodied + range
 |---------|----------------------------|---------|--------------|----------|
 | bc-01-auth-identity.md | 57 | bc-1-auth-identity.md | 57 | YES |
 | bc-02-issue-read.md | 94 | bc-2-issue-read.md | 94 | YES (bumped 2026-06-17; +1 BC-2.4.043 added 2026-06-17 Bundle C CR-001) |
-| bc-03-issue-write.md | 120 | bc-3-issue-write.md | 120 | YES (bumped 2026-07-09; +11 BCs BC-3.5.002..012 added SOH-COMMENT-CRUD-1 F2 DEC-168) |
+| bc-03-issue-write.md | 120 | bc-3-issue-write.md | 120 | YES (bumped 2026-07-10; +11 BCs BC-3.5.002..012 added SOH-COMMENT-CRUD-1 F2 DEC-168) |
 | bc-04-assets-cmdb.md | 32 | bc-4-assets-cmdb.md | 32 | YES (was 44) |
 | bc-05-boards-sprints.md | 36 | bc-5-boards-sprints.md | 36 | YES (bumped 2026-06-30; +1 BC BC-5.1.005 added BC-subclause-pass F2) |
 | bc-06-config-cache.md | 43 | bc-6-config-cache.md | 43 | YES (bumped 2026-06-27; +1 BC-6.2.018 added cache warm-hit no-HTTP invariant) |

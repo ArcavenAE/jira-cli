@@ -8,6 +8,7 @@ project: "jr (jira-cli)"
 Track all spec version changes. Most recent version first.
 
 ## [1.3.28] - 2026-07-09
+_Note: entry date extended to 2026-07-10 via pass-12+ remediations._
 
 ### Type: MINOR
 
@@ -327,6 +328,39 @@ and agrees at 624. All 8 cumulative-count surfaces now agree.
   labeled Scenario 2 and Scenario 1 respectively; "All three scenarios live in the same
   gated e2e test function" replaces "Both probe steps..." BC-3.5.006 Trace updated.
   VP count stays 20. No BC/holdout count change.
+  Adversary pass-12 remediation (same-version, 1 HIGH):
+  HIGH-1 (L2/L3 drift — bc-03 domain-spec bc_count 109 vs L3 total_bcs 120):
+  bc-03-issue-write.md frontmatter bumped bc_count 109 → 120; spec-changelog.md
+  Changed Requirements section added with the bc-03 entry; Follow-up Obligations
+  section added with L2-BCCOUNT-9TH-SURFACE guard-extension note; CANONICAL-COUNTS.md
+  L2 alignment row date corrected 2026-07-09 → 2026-07-10 (actual bump date).
+  Root cause: CANONICAL-COUNTS.md L2 alignment table was prematurely marked YES at
+  initial F2 spec time, before the L2 domain-spec frontmatter was actually bumped.
+  No BC/VP/holdout count change.
+  Adversary pass-13 preemptive fix round 17 (CV pass 13 GAP B-ii, delta-attributable):
+  §4 Operations table: `issue comment <key>` row renamed `issue comment add <key>` (Option A
+  clean break); three rows added: `issue comment delete <key> --id <id>`,
+  `issue comment edit <key> --id <id> <body-source>`, `issue comment view <key> --id <id>`.
+  §5 Invariants: INV-WRITE-021 command form updated to `issue comment add`; INV-WRITE-025
+  added: comment edit operations submit only explicitly-changed fields; properties/visibility
+  keys absent from PUT body unless explicit flag passed (MERGE/PRESERVED semantics).
+  `invariant_count` 24 → 25. No BC/VP/holdout count change.
+  Adversary pass-13 remediation (same-version, 1 MEDIUM-HIGH / 1 MEDIUM / 4 LOW):
+  F1 (MEDIUM-HIGH, INV-WRITE-025): rewritten as two-clause form — visibility key absent
+  unconditionally (no restriction-editing surface this cycle); properties key absent unless
+  --internal/--public passed; MERGE/PRESERVED semantics preserved.
+  F2 (MEDIUM): VP-577-021 added to BC-3.5.010 — human-mode render pin: exact label byte-order
+  (ID/Author/Created/Updated/JSM internal: Yes/Restricted: None) + body after blank-line
+  separator. BC-3.5.010 Trace updated.
+  F3 (LOW): CANONICAL-COUNTS.md frontmatter last_verified bumped to 2026-07-10 with
+  pass-12+ note; spec-changelog v1.3.28 header note line added.
+  F4 (LOW): BC-3.5.010 field 5 — JSDCLOUD-9766 stringly-typed boolean graceful-degradation
+  clause added (absent/null/non-boolean value.internal → render N/A; do NOT panic).
+  F5 (LOW): BC-3.5.005 — byte-for-byte echo pin added after no-truncation note (whitespace
+  trimming applies only to EC-3.5.009-5 gate and ADF input, not JSON echo channel).
+  F6 (LOW): BC-3.5.010 JSON passthrough example — renderedBody replaced with jsdPublic;
+  clarifier added (renderedBody appears only with ?expand=renderedBody, not requested this cycle).
+  VP count 20 → 21 (VP-577-021 added). No BC/holdout count change.
 
 - `.factory/specs/prd/holdout-scenarios.md` (MODIFIED): `total_holdouts` 83 → 87;
   `version` 1.5.1 → 1.5.2; `last_updated` updated; trace entry added for
@@ -353,13 +387,21 @@ and agrees at 624. All 8 cumulative-count surfaces now agree.
 
 - `.factory/spec-changelog.md` (MODIFIED): this entry (v1.3.27 → v1.3.28).
 
+### Changed Requirements
+
+- `.factory/specs/domain-spec/bc-03-issue-write.md` (MODIFIED): `bc_count` 109 → 120 (L2/L3 alignment for +11 BCs BC-3.5.002..012); §4 Operations table updated — `issue comment <key>` row renamed to `issue comment add <key>` (Option A clean break); three rows added (`issue comment delete <key> --id <id>`, `issue comment edit <key> --id <id> <body-source>`, `issue comment view <key> --id <id>`); §5 Invariants: INV-WRITE-021 command form updated (`issue comment` → `issue comment add`); INV-WRITE-025 added (comment edit body-only PUT safety — properties/visibility absent from PUT body unless explicit flag passed; MERGE/PRESERVED semantics); `invariant_count` 24 → 25.
+
+### Follow-up Obligations
+
+- **Guard-extension follow-up (L2-BCCOUNT-9TH-SURFACE)**: extend `scripts/check-bc-cumulative-counts.sh` to assert L2 domain-spec `bc_count` == L3 `total_bcs` per file (9th surface) + update the `CLAUDE.md` 8-surfaces description — follow-up story candidate; recurrence class of BC-INDEX-9TH-SURFACE.
+
 ### Impact Assessment
 
 | Dimension | Detail |
 |-----------|--------|
 | BCs added | BC-3.5.002..BC-3.5.012 (11 individually-bodied BCs in bc-3-issue-write.md §3.5) |
 | Holdouts added | H-NEW-COMMENT-001..H-NEW-COMMENT-004 (Group 15, holdout-scenarios.md) |
-| VPs added | VP-577-001 (body-only PUT wire — properties + visibility absence), VP-577-002 (--internal wire), VP-577-003 (--public wire), VP-577-004 (delete-404 exit-64), VP-577-005 (delete non-interactive gate), VP-577-006 (--public non-interactive gate), VP-577-007 (view JSON shape + expand=properties URL assert), VP-577-008 (BC-3.5.012 InvalidSubcommand exit-2 + "use `jr issue comment add` instead"), VP-577-009 (BC-3.5.002 DELETE 204 JSON shape), VP-577-010 (BC-3.5.011 --internal --public exit-2 + "cannot be used with"), VP-577-011 (BC-3.5.009 --file not-found exit-64), VP-577-012 (BC-3.5.009 whitespace body exit-64), VP-577-013 (BC-3.5.003 cancel-in-JSON-mode envelope + JR_STDIN_IS_TTY seam), VP-577-014 (BC-3.5.012 MissingSubcommand clap listing, no custom hint), VP-577-015 (BC-3.5.012 list-token hint "jr issue comments", exit-2), VP-577-016 (BC-3.5.010 lossless JSON passthrough — "self" Jira-only field survives), VP-577-017 (BC-3.5.008 --public --stdin without --yes → exit 64; stderr contains "--stdin" AND "--yes"; zero PUT), VP-577-018 (BC-3.5.012 EC-3.5.012-3 allow_hyphen_values — `comment add FOO-1 "- [ ] task"` parses without clap error), VP-577-019 (BC-3.5.012 EC-3.5.012-3 allow_hyphen_values — `comment edit FOO-1 --id 10001 "- update"` parses without clap error), VP-577-020 (BC-3.5.012 EC-3.5.012-1 ls-alias-token hint — `jr issue comment ls FOO-1` → exit 2; stderr contains "jr issue comments" plural-form hint; mirrors VP-577-015) |
+| VPs added | VP-577-001 (body-only PUT wire — properties + visibility absence), VP-577-002 (--internal wire), VP-577-003 (--public wire), VP-577-004 (delete-404 exit-64), VP-577-005 (delete non-interactive gate), VP-577-006 (--public non-interactive gate), VP-577-007 (view JSON shape + expand=properties URL assert), VP-577-008 (BC-3.5.012 InvalidSubcommand exit-2 + "use `jr issue comment add` instead"), VP-577-009 (BC-3.5.002 DELETE 204 JSON shape), VP-577-010 (BC-3.5.011 --internal --public exit-2 + "cannot be used with"), VP-577-011 (BC-3.5.009 --file not-found exit-64), VP-577-012 (BC-3.5.009 whitespace body exit-64), VP-577-013 (BC-3.5.003 cancel-in-JSON-mode envelope + JR_STDIN_IS_TTY seam), VP-577-014 (BC-3.5.012 MissingSubcommand clap listing, no custom hint), VP-577-015 (BC-3.5.012 list-token hint "jr issue comments", exit-2), VP-577-016 (BC-3.5.010 lossless JSON passthrough — "self" Jira-only field survives), VP-577-017 (BC-3.5.008 --public --stdin without --yes → exit 64; stderr contains "--stdin" AND "--yes"; zero PUT), VP-577-018 (BC-3.5.012 EC-3.5.012-3 allow_hyphen_values — `comment add FOO-1 "- [ ] task"` parses without clap error), VP-577-019 (BC-3.5.012 EC-3.5.012-3 allow_hyphen_values — `comment edit FOO-1 --id 10001 "- update"` parses without clap error), VP-577-020 (BC-3.5.012 EC-3.5.012-1 ls-alias-token hint — `jr issue comment ls FOO-1` → exit 2; stderr contains "jr issue comments" plural-form hint; mirrors VP-577-015), VP-577-021 (BC-3.5.010 human-mode render pin — `comment view FOO-1 --id 10001` NO --output json → exit 0; stdout field labels ID/Author/Created/Updated/JSM internal: Yes/Restricted: None in byte order; body after blank-line separator) |
 | BC count | 613 → 624 (CANONICAL-COUNTS.md authoritative; BC-INDEX.md MODIFIED via sanctioned shell edit — all surfaces now agree) |
 | Breaking change | CLI: `jr issue comment KEY "text"` → `jr issue comment add KEY "text"` (BC-3.5.012) |
 | Design decision | --public always-confirm (Option a; DEC-168 open point resolved; recorded in BC-3.5.007) |

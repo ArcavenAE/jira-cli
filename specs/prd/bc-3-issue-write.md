@@ -2264,6 +2264,7 @@ Implementations MUST choose one of: (a) a separate request struct that omits the
   `changed_fields.body` carries the **raw user-supplied input string** from the body source (file content, stdin content, or positional text argument) — NOT `"(updated)"`, NOT an ADF round-trip. This is the lossless machine channel per the #398 echo-asymmetry precedent (BC-3.4.013: human echoes a marker, machine channel is lossless). `changed_fields.visibility` (`"internal"` or `"public"`) is present ONLY when `--internal` or `--public` was passed; when neither flag was used, the key is omitted entirely. (Key order shown matches `serde_json` default alphabetical emission (`Value::Object` uses `BTreeMap`); JSON key order is not semantically load-bearing but examples match the wire.)
 - **Cancel path**: when `--public` confirmation is cancelled, see BC-3.5.008 EC-3.5.008-2 (`{"cancelled": true, "updated": false}` in JSON mode, exit 0).
 - **No-truncation note**: `changed_fields.body` is the raw user-supplied input without truncation; downstream consumers must handle arbitrarily large values (mirrors BC-3.4.013 lossless channel precedent).
+- **Byte-for-byte echo pin**: `changed_fields.body` echoes the pre-trim source string byte-for-byte. Whitespace trimming applies only to the EC-3.5.009-5 emptiness gate and to the ADF conversion input, not to the JSON echo channel.
 
 **Verification Properties**:
 
@@ -2435,7 +2436,7 @@ Display comment details via plain key-value lines (NOT a comfy-table multi-row l
 2. `Author:` — display name from the comment's `author.displayName` field; render `"Unknown"` if the `author` key is absent, `null`, or its `displayName` is missing.
 3. `Created:` — ISO 8601 timestamp from `created`.
 4. `Updated:` — ISO 8601 timestamp from `updated`; render N/A if the field is absent (uncommon in practice but graceful-degradation safe).
-5. `JSM internal:` — `"Yes"` if `sd.public.comment.internal == true`; `"No"` if `false`; `"N/A"` if the property is absent or the `properties` array is empty.
+5. `JSM internal:` — `"Yes"` if `sd.public.comment.internal == true`; `"No"` if `false`; `"N/A"` if the property is absent or the `properties` array is empty. If the property is present but its `value.internal` sub-key is absent, null, or not a JSON boolean (e.g., stringly-typed `"true"` per JSDCLOUD-9766), render `"N/A"`. Do NOT panic; graceful-degradation-safe like fields 2/4/6.
 6. `Restricted:` — value from the Jira `visibility` field (`{"type": "role"|"group", "value": "<name>"}`): display `<name>` if present; `"None"` if the `visibility` key is absent or null. Distinct from JSM internal/public flag — this is Jira's comment-level role/group restriction.
 7. Body — rendered below the header fields via `adf_to_text`, separated by a blank line.
 
@@ -2445,7 +2446,7 @@ Routing: the handler delegates to a dedicated `render_comment_view` function (or
 
 **Response 200 — JSON output** (`--output json`):
 
-The raw Jira response is deserialized as `serde_json::Value` and routed through `output::render_json` (pretty-printed, per JSON render invariant #526). **No typed `Comment` round-trip** — the Value passthrough preserves every field returned by Jira, including fields not present in `src/types/jira/issue.rs::Comment` (e.g., `"self"`, `"updateAuthor"`, `"renderedBody"`). The `properties` array is included as returned by the API (may be empty `[]` for non-JSM issues).
+The raw Jira response is deserialized as `serde_json::Value` and routed through `output::render_json` (pretty-printed, per JSON render invariant #526). **No typed `Comment` round-trip** — the Value passthrough preserves every field returned by Jira, including fields not present in `src/types/jira/issue.rs::Comment` (e.g., `"self"`, `"updateAuthor"`, `"jsdPublic"`). (`renderedBody` appears only with `?expand=renderedBody`, which `jr` does not request this cycle.) The `properties` array is included as returned by the API (may be empty `[]` for non-JSM issues).
 
 **Response 404** → exit 64 (`UserError`); stderr: `"comment not found or permission denied: <KEY>#<ID>"`. Surface Jira response body if present (research verdict: Claim 3 CONFIRMED — Jira conflates 404 and permission-equivalent 403 for comment endpoints to avoid resource-existence disclosure; same rationale as BC-3.5.004). See BC-3.5.004 implementation note for the recommended `downcast_ref::<JrError>()` body-surfacing mechanism — applies identically here.
 
@@ -2461,7 +2462,9 @@ The raw Jira response is deserialized as `serde_json::Value` and routed through 
 
 **VP-577-016**: `comment view FOO-1 --id 10001 --output json` against a wiremock response that includes a `"self"` URL field (a standard Jira API field absent from the typed `Comment` struct) → the `"self"` key survives in stdout JSON (lossless `serde_json::Value` passthrough confirmed; no typed round-trip lossy drop). Parse-level test against wiremock fixture.
 
-**Trace**: F2 spec evolution (2026-07-09, DEC-168 ruling 4; research verdicts Claim 4 CONFIRMED, Claim 2 CONFIRMED; adversary pass-3 MEDIUM-2 + MEDIUM-3 + LOW-1 remediation; issue #577 SOH-COMMENT-CRUD-1)
+**VP-577-021**: `comment view FOO-1 --id 10001` (NO `--output json`) against a wiremock fixture returning a JSM-internal comment → exit 0; stdout contains each of the exact labels `"ID:"`, `"Author:"`, `"Created:"`, `"Updated:"`, `"JSM internal: Yes"`, `"Restricted: None"` in that byte order; body text appears after a blank-line separator following the key-value header block.
+
+**Trace**: F2 spec evolution (2026-07-09, DEC-168 ruling 4; research verdicts Claim 4 CONFIRMED, Claim 2 CONFIRMED; adversary pass-3 MEDIUM-2 + MEDIUM-3 + LOW-1 remediation; adversary pass-13 F2 VP-577-021; issue #577 SOH-COMMENT-CRUD-1)
 
 ---
 
