@@ -7,6 +7,38 @@ project: "jr (jira-cli)"
 
 Track all spec version changes. Most recent version first.
 
+## [1.3.40] - 2026-07-11
+
+### Type: PATCH
+
+### Summary
+
+F2 gate closure DEC-170 fix round 49 for SOH-COMMENT-CRUD-1 bundle (issue #577). Human-ruled: no full re-convergence needed — mechanical mirror of ratified items (f)/(g). Two delivery obligations added to EC-3.5.012-5 as items (h) and (i). VP count unchanged at 30.
+
+### Changes
+
+- `.factory/specs/prd/bc-3-issue-write.md` (MODIFIED):
+  Gate closure (DEC-170 consistency-audit ruling): EC-3.5.012-5 extended with two new items appended after item (g):
+  (h) `docs/specs/json-output-shapes.md` registry rows — the canonical JSON-shape registry MUST gain rows for all four comment-CRUD `--output json` shapes (comment add, delete, edit, view) in the same PR as the CLI refactor. Comment-add row registers the CURRENT full `Comment`-struct serialization (`{id, body, author, created, properties}`; no `key` field; byte-identical to pre-refactor per EC-3.5.012-2), noted as predating the BC-pinned key-set convention. VP-577-009/023 BTreeSet pins are the source of truth for the delete/edit rows only. (CV round-49 catch: original item stated `{"key","id"}` for comment add — corrected; orchestrator false-premise acknowledged.)
+  (i) `docs/specs/comment-crud.md` feature spec creation — MUST be created in the same PR as the CLI refactor, following `docs/specs/issue-move-resolution.md` precedent (ADR-0004); minimum content specified (old→new CLI form table, --public gate, body-only-PUT guarantee, allow_hyphen_values remapping, interactions.rs shard pointer).
+  Both items carry attribution note: "(added at F2 gate closure per DEC-170 consistency-audit ruling, 2026-07-11)".
+  BC-3.5.012 Trace updated. Frontmatter trace entry added for fix round 49.
+  VP count unchanged: 30. No BC count change.
+
+- `.factory/spec-changelog.md` (MODIFIED): this entry (v1.3.39 → v1.3.40).
+
+### Impact Assessment
+
+| Dimension | Detail |
+|-----------|--------|
+| EC extended in-place | EC-3.5.012-5 items (h) and (i) added |
+| VP count | 30 (unchanged) |
+| BC count | 624 (unchanged) |
+| Holdout count | 88 (unchanged) |
+| Severity floor | Gate closure (human-ruled; mechanical mirror of ratified items f/g) |
+
+---
+
 ## [1.3.39] - 2026-07-11
 
 ### Type: PATCH
