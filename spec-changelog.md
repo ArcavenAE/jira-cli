@@ -7,6 +7,37 @@ project: "jr (jira-cli)"
 
 Track all spec version changes. Most recent version first.
 
+## [1.3.36] - 2026-07-11
+
+### Type: PATCH
+
+### Summary
+
+Adversary pass-40 fix round 45 (hygiene pass) for SOH-COMMENT-CRUD-1 bundle (issue #577). Three LOW findings fixed. One premise corrected (SEC-577-001 was always defined). VP count unchanged at 30 (all in-place).
+
+### Changes
+
+- `.factory/specs/prd/bc-3-issue-write.md` (MODIFIED):
+  F-01 (LOW, routing-sentence mis-anchor): BC-3.5.010 routing sentence rewritten — `handle_comment_view` is the F4-added handler (sibling to `handle_comment`); added relocates qualifier; renamed function reference from `::handle_comment` to `::handle_comment_view`. BC-3.5.010 Trace updated.
+  F-02 (LOW, PREMISE CORRECTED — SEC-577-001 citation pointer): First SEC-577-001 cite (BC-3.5.007 rationale paragraph) extended with definitional pointer `(defined in .factory/phase-f2-spec-evolution/security-review-577.md § SEC-577-001)`. Premise correction noted: SEC-577-001 was always defined; this fix is a citation pointer, not a definition addition. Other two citing sites left as bare ID references (resolve via first). BC-3.5.007 Trace updated.
+  F-03 (LOW, sibling-VP asymmetry harmonized): VP-577-013 extended in-place — `parsed stdout top-level object keys == BTreeSet::from(["cancelled", "deleted"])` (exact key-set; pins EC-3.5.003-2's id/key-omitted-from-cancel-envelope rule). Harmonizes with VP-577-029 which already uses BTreeSet notation. BC-3.5.003 Trace updated.
+  Frontmatter trace entry added for adversary pass-40 fix round 45.
+  VP count unchanged: 30. No BC count change.
+
+- `.factory/spec-changelog.md` (MODIFIED): this entry (v1.3.35 → v1.3.36).
+
+### Impact Assessment
+
+| Dimension | Detail |
+|-----------|--------|
+| VPs extended in-place | VP-577-013 (BTreeSet key-set) |
+| VP count | 30 (unchanged) |
+| BC count | 624 (unchanged) |
+| Holdout count | 88 (unchanged) |
+| Premise correction | SEC-577-001 was always defined in security-review-577.md; fix adds citation pointer only |
+
+---
+
 ## [1.3.35] - 2026-07-11
 
 ### Type: PATCH
