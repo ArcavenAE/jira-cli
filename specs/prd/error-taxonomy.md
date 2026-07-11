@@ -1,13 +1,14 @@
 ---
 context: error-taxonomy
 title: "Error Taxonomy"
-last_updated: 2026-07-06
+last_updated: 2026-07-11
 source_pass: 3
 trace: |
   - L2: .factory/specs/domain-spec/
   - Source broad: .factory/semport/jira-cli/jira-cli-pass-3-behavioral-contracts.md §2.X error sections
   - Source R1: .factory/semport/jira-cli/jira-cli-pass-3-deep-r1.md §3.1 (JrError variants)
   - Source P8: .factory/semport/jira-cli/jira-cli-pass-8-deep-synthesis.md §6.1 (design patterns)
+  - F2 amendment (2026-07-11, issue #577 SOH-COMMENT-CRUD-1, adversary pass-44 fix round 47 F-2): Section 3 — comment 403/404 override rows added (UserError exit 64, body surfaced; BC-3.5.004/BC-3.5.005/BC-3.5.010); TD-031 pre-existing violation corrected (volatile line cite replaced with stable symbol anchor src/api/client.rs::extract_error_message); pre-existing table-cell pipe escaped in BC-CITE-001 False-positive risk row
 ---
 
 # Error Taxonomy — jira-cli
@@ -57,7 +58,7 @@ When `--output json` is active AND a `JrError` is raised, output goes to **stder
 
 ## Section 2: `extract_error_message` 7-Step Precedence Chain
 
-Source: `src/api/client.rs:448-490` (`extract_error_message` function). Corrected from broad pass per CONV-ABS-004; further corrected per ADV-P2-001 (empty body returns literal string, not None; no nested messages[] level; no errorDescription).
+Source: `src/api/client.rs::extract_error_message`. Corrected from broad pass per CONV-ABS-004; further corrected per ADV-P2-001 (empty body returns literal string, not None; no nested messages[] level; no errorDescription).
 
 | Priority | Condition | Behavior |
 |---|---|---|
@@ -88,7 +89,9 @@ Source: `src/api/client.rs:448-490` (`extract_error_message` function). Correcte
 | 401 (general) | `NotAuthenticated` | 2 | `"Not authenticated. Run: jr auth login"` |
 | 401 with scope mismatch | `InsufficientScope` | 2 | `"Insufficient token scope. <details>. Run: jr auth login"` |
 | 403 | `ApiError(403, ...)` | 1 | `"Forbidden"` or extracted body message |
+| 403 — `comment delete/edit/view` | `UserError(...)` | 64 | `"comment not found or permission denied: <KEY>#<ID>"` + Jira body on separate line (BC-3.5.004/BC-3.5.005/BC-3.5.010 override) |
 | 404 | `ApiError(404, ...)` | 1 | `"Not found: <resource>"` |
+| 404 — `comment delete/edit/view` | `UserError(...)` | 64 | `"comment not found or permission denied: <KEY>#<ID>"` + Jira body on separate line (BC-3.5.004/BC-3.5.005/BC-3.5.010 override) |
 | 409 | `ApiError(409, ...)` | 1 | Extracted message |
 | 422 | `ApiError(422, ...)` | 1 | Extracted message |
 | 429 | Retry (up to MAX_RETRIES=3) | — | Final retry → return 429 response to caller (NOT error for `send_raw`) |
@@ -199,7 +202,7 @@ Two HTTP dispatch paths with different error semantics:
 | **When raised** | One or more backtick-quoted path tokens in CLAUDE.md match the in-scope grammar (known directory prefix OR ROOT_FILES exact-match, plus recognized extension) but do NOT resolve to a real file at `Path::new(CARGO_MANIFEST_DIR).join(&citation)` |
 | **Message format** | Lead line: `CLAUDE.md cites file paths that do not exist on disk:` — then one `  <path> (line {n})` per dead reference where `{n}` is the real 1-based line number in CLAUDE.md (e.g. `  src/foo.rs (line 142)`) — then `Fix the citation or restore the file.` — then `Note: .factory/, glob, and symbol-form tokens are auto-excluded. Root-level files (Cargo.toml, CLAUDE.md, etc.) are checked.` |
 | **Actionability** | Each dead citation is listed on its own line, prefixed with two spaces, followed by ` (line {n})` where `{n}` is the actual 1-based line number of the citation in CLAUDE.md. Line numbers are computed from the `(path, line)` pairs returned by `extract_path_citations(doc: &str) -> Vec<(String, usize)>` filtered by `!Path::exists()`. The developer can: (a) open CLAUDE.md at line `{n}`, (b) restore the deleted/renamed file, or (c) update the citation to the new path. There is NO allowlist — `.factory/` paths are always excluded by the dir-prefix filter; `.factory/` citations never trigger this error. Bare-filename shorthands (e.g., `ci.yml`, `adf.rs`) that are not in ROOT_FILES also never trigger this error. |
-| **False-positive risk** | LOW when the guard is correctly implemented per BC-X.13.002 (glob/brace-glob skip, suffix strip, trailing-punct trim, dir-prefix filter + ROOT_FILES inclusion with curated exact-match set) and BC-X.13.003 (all `.factory/` excluded). A false positive means a token was incorrectly classified as in-scope; the fix is a ROOT_FILES exclusion or suffix-strip update in `extract_path_citations`. |
+| **False-positive risk** | LOW when the guard is correctly implemented per BC-X.13.002 (glob/brace-glob skip, suffix strip, trailing-punct trim, dir-prefix filter + ROOT_FILES inclusion with curated exact-match set) and BC-X.13.003 (all `.factory/` excluded via dir-prefix filter). A false positive means a token was incorrectly classified as in-scope; the fix is a ROOT_FILES exclusion or suffix-strip update in `extract_path_citations`. |
 | **Tracing BCs** | BC-X.13.001 (core path-existence, canonical failure message), BC-X.13.002 (normalization pipeline), BC-X.13.003 (ALL `.factory/` excluded via dir-prefix filter) |
 
 ### BC-CITE-001: bc-*.md Trace/Source dead file or symbol citation
@@ -215,5 +218,5 @@ Two HTTP dispatch paths with different error semantics:
 | **When raised** | One or more backtick-quoted `src/` citation tokens in a `**Trace**:` or `**Source**:` field of any bc-*.md file: (a) reference a file that does not exist under the develop checkout `src/` tree (applies to both tier (i) `.rs` and tier (ii) non-`.rs` tokens per BC-X.13.005 Step 3b); OR (b) contain a `::symbol` suffix whose symbol definition is absent in the referenced file (tier (i) `.rs` tokens only; import-only occurrences are DEAD — the DEC-148 class); OR (c) the total citation count in CANONICAL_MODE falls below `FLOOR = floor(0.75 × N)` ≈ 231 (extraction-dropout guard; F-01 two-tier recalibration: N=309, FLOOR=231 on 2b09313; pre-two-tier post-Task-0-hygiene census: N=331, FLOOR=248; pre-hygiene DEC-154 values: N=326, FLOOR=244) |
 | **Message format** | One or more of: `DEAD: <file> not found` (file absent on disk); `DEAD: <symbol> not found in <file>` (symbol definition absent in file; import-only does NOT count); `DEAD: malformed citation skipped: <token>` (path shape guard rejected token — contains `..` or non-allowed characters); `BC-CITE-COVERAGE-FLOOR: expected >= <FLOOR> src/ citations, got <N>. Update FLOOR when citations are intentionally removed (the floor is a lower bound; additions never fire it).` (CANONICAL_MODE floor guard only); Summary line: `<K> stale citation(s) found in bc-*.md Trace/Source fields` |
 | **Actionability** | (a) Dead-file: update the `**Trace**:` or `**Source**:` field in the bc-*.md body to cite the new file path after a rename or Seam extraction (ADR-0012 class), or restore the file. (b) Dead-symbol: update the citation to the new function/symbol name and/or new file path where it now lives. (c) Floor fired: if citations were legitimately reduced below FLOOR (e.g., large BC refactor), update the script-scope `FLOOR=N` assignment at the top of `scripts/check-bc-citation-symbols.sh` (the single recalibration touchpoint — it is NOT a `local` variable inside `run_check`) to the new measured baseline (run `bash scripts/check-bc-citation-symbols.sh` in canonical mode to measure N), and commit in the same PR as the BC edit. Run `bash scripts/check-bc-citation-symbols.sh --self-test` locally to confirm all 10 fixtures still pass. |
-| **False-positive risk** | LOW. The fn-anchored grep uses `([^[:alnum:]_]|$)` word-boundary suffix preventing partial-name false-greens. Glob tokens (path contains `*`) are silently skipped, not DEAD-flagged. The FLOOR is calibrated at floor(0.75 × N) giving ~25% legitimate-churn headroom. DEC-154 Option A extends grammar with 3 branches (::tests, ::tests::testfn, standalone CamelCase) eliminating the class-8/9/10 grammar gaps. |
+| **False-positive risk** | LOW. The fn-anchored grep uses `([^[:alnum:]_]\|$)` word-boundary suffix preventing partial-name false-greens. Glob tokens (path contains `*`) are silently skipped, not DEAD-flagged. The FLOOR is calibrated at floor(0.75 × N) giving ~25% legitimate-churn headroom. DEC-154 Option A extends grammar with 3 branches (::tests, ::tests::testfn, standalone CamelCase) eliminating the class-8/9/10 grammar gaps. |
 | **Tracing BCs** | BC-X.13.004 (file-existence + SCOPE-EMPTY guard + coverage floor), BC-X.13.005 (extraction grammar + definition-anchored symbol check + v1-pragmatic shape-split + DEC-154 3 new branches), BC-X.13.006 (scope + CI topology + 10-fixture self-test) |

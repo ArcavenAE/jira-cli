@@ -7,6 +7,38 @@ project: "jr (jira-cli)"
 
 Track all spec version changes. Most recent version first.
 
+## [1.3.38] - 2026-07-11
+
+### Type: PATCH
+
+### Summary
+
+Adversary pass-44 (user-journey lens) fix round 47 for SOH-COMMENT-CRUD-1 bundle (issue #577). Two LOW findings fixed. Streak reset 2/3→0/3 under Full STRICT. VP count unchanged at 30.
+
+### Changes
+
+- `.factory/specs/prd/bc-3-issue-write.md` (MODIFIED):
+  F-1 (LOW, VP-577-006 mis-specified invocation): VP-577-006 (BC-3.5.008) rewritten — invocation changed to non-empty body (`jr issue comment edit FOO-1 --id 10001 "Updated text" --public --no-input`) with a setup note clarifying that exit-64 must come from step-3 `--public` gate, NOT step-2 body gate. Stderr substrings asserted: "visibility to public" AND "--yes". Distinguishes the two gate conditions per EC-3.5.008-1 (which pins that `--yes` does NOT suppress the JSDCLOUD-6050 hint). BC-3.5.008 Trace updated.
+  Frontmatter trace entry added for adversary pass-44 fix round 47.
+  VP count unchanged: 30 (in-place rewrite). No BC count change.
+
+- `.factory/specs/prd/error-taxonomy.md` (MODIFIED):
+  F-2 (LOW, error-taxonomy coherence): Section 3 — two override rows added for comment operations: 403 and 404 both map to `UserError(...)` exit 64 with message pattern `"comment not found or permission denied: <KEY>#<ID>"` + Jira body on separate line (BC-3.5.004/BC-3.5.005/BC-3.5.010 override). Pre-existing TD-031 violation fixed: volatile line cite `src/api/client.rs:448-490` replaced with stable symbol anchor `src/api/client.rs::extract_error_message`. Pre-existing table-cell pipe escaped in BC-CITE-001 False-positive risk row (`[^[:alnum:]_]|$` → `[^[:alnum:]_]\|$`). Pre-existing intra-table wording alignment: CI-CITE-001 False-positive risk cell now reads 'excluded via dir-prefix filter', matching the Tracing BCs cell in the same row-set. Frontmatter trace entry added.
+
+- `.factory/spec-changelog.md` (MODIFIED): this entry (v1.3.37 → v1.3.38).
+
+### Impact Assessment
+
+| Dimension | Detail |
+|-----------|--------|
+| VPs rewritten in-place | VP-577-006 (BC-3.5.008) |
+| VP count | 30 (unchanged) |
+| BC count | 624 (unchanged) |
+| Holdout count | 88 (unchanged) |
+| Severity floor | 2 LOW (2-finding pass) |
+
+---
+
 ## [1.3.37] - 2026-07-11
 
 ### Type: PATCH
