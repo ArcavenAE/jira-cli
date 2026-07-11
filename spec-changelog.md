@@ -7,6 +7,42 @@ project: "jr (jira-cli)"
 
 Track all spec version changes. Most recent version first.
 
+## [1.3.34] - 2026-07-11
+
+### Type: PATCH
+
+### Summary
+
+Adversary pass-38 fix round 43 + human ratifications R-1/R-2 for SOH-COMMENT-CRUD-1 bundle (issue #577). Three findings fixed — 1 MEDIUM + 2 LOW. Two human-ratified rulings baked in. No BC count change. VP count unchanged at 28 (all extensions in-place).
+
+### Changes
+
+- `.factory/specs/prd/bc-3-issue-write.md` (MODIFIED):
+  F-01 (MEDIUM, EDIT JSON key-sets unpinned): VP-577-023 extended with top-level key-set assertion (`BTreeSet::from(["changed_fields","id","key","updated"])`). VP-577-026 variants 1/2 extended with `changed_fields` key-set assertion (`BTreeSet::from(["body","jsm_internal"])`); variant 3 extended with `BTreeSet::from(["body"])`. All in-place, no new VP numbers. BC-3.5.005 Trace updated.
+  F-02 (LOW, DELETE human stderr unpinned): VP-577-009 extended with human-mode variant — `jr issue comment delete FOO-1 --id 10001 --yes` → exit 0; stderr contains `"Deleted comment 10001 on FOO-1"`; stdout empty. In-place, no new VP number. BC-3.5.002 Trace updated.
+  F-03 (LOW, VP-577-007 vs H-NEW-COMMENT-004 key-list disagreement): VP-577-007 updated to include `"updated"` in required top-level keys (union with H-NEW-COMMENT-004 fixture). BC-3.5.010 Trace updated.
+  R-1 (human-ratified 2026-07-11): EC-3.5.008-4 and VP-577-028 gate language removed ("ORCHESTRATOR RULING", "F2 human gate required before closing"); replaced with ratification note citing research `.factory/research/issue-577-yes-flag-noop-convention-2026-07-11.md` (9/9 CLIs LENIENT). BC-3.5.008 Trace updated.
+  R-2 (human-approved follow-up candidate 2026-07-11): "Stray-confirmation-flag stderr hint" follow-up story candidate added after EC-3.5.012-4 — emit `"note: --yes has no effect without --public"` on stderr; consider house-wide pattern for --no-resolution/--no-input.
+  Frontmatter trace entry added for adversary pass-38 fix round 43.
+  VP count unchanged: 28 (all extensions in-place). No BC count change.
+
+- `.factory/specs/prd/holdout-scenarios.md` (MODIFIED):
+  F-03: H-NEW-COMMENT-004 Expected A line — `"properties"` key changed from "may be present or absent" to required assertion ("this fixture guarantees `properties` is present"). Scenario count unchanged (88).
+
+- `.factory/spec-changelog.md` (MODIFIED): this entry (v1.3.33 → v1.3.34).
+
+### Impact Assessment
+
+| Dimension | Detail |
+|-----------|--------|
+| VPs extended in-place | VP-577-009, VP-577-023, VP-577-026 (variants 1/2/3); VP-577-007, VP-577-028 gate-language update |
+| VP count | 28 (unchanged) |
+| BC count | 624 (unchanged) |
+| Holdout count | 88 (unchanged) |
+| Human ratifications | R-1: EC-3.5.008-4 --yes silent-no-op ratified (was orchestrator ruling + gate); R-2: stray-flag hint follow-up story candidate approved |
+
+---
+
 ## [1.3.33] - 2026-07-10
 
 ### Type: PATCH

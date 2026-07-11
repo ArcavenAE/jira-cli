@@ -2008,7 +2008,7 @@ Call B (view 404 — deleted or missing comment):
 - Exit code = 0.
 - `GET /rest/api/3/issue/FOO-1/comment/10001?expand=properties` was called (URL contains `expand=properties`).
 - stdout is valid JSON (parseable by `serde_json`).
-- The JSON contains top-level keys `"id"`, `"author"`, `"body"`, `"created"`, `"updated"` (the `"properties"` key may be present or absent depending on the Jira instance; the `jq` assertion below confirms its presence in this specific JSM fixture).
+- The JSON contains top-level keys `"id"`, `"author"`, `"body"`, `"created"`, `"updated"`, AND `"properties"` — this fixture guarantees `properties` is present (the `jq` assertion below confirms it).
 - `jq '.properties[0].value.internal'` on stdout equals `true` (JSON boolean).
 - stdout is pretty-printed (contains at least one `\n` character) — JSON render invariant #526.
 
