@@ -7,6 +7,35 @@ project: "jr (jira-cli)"
 
 Track all spec version changes. Most recent version first.
 
+## [1.3.37] - 2026-07-11
+
+### Type: PATCH
+
+### Summary
+
+Adversary pass-41 fix round 46 (single-finding pass) for SOH-COMMENT-CRUD-1 bundle (issue #577). One LOW finding fixed: VP-577-002 and VP-577-003 extended with assertion (d) pinning the `sd.public.comment` property key name and single-element array cardinality. VP count unchanged at 30.
+
+### Changes
+
+- `.factory/specs/prd/bc-3-issue-write.md` (MODIFIED):
+  F-01 (LOW, properties key unpinned): VP-577-002 (BC-3.5.006) and VP-577-003 (BC-3.5.007) each extended in-place with assertion (d): `parsed["properties"].as_array().unwrap().len() == 1 && parsed["properties"][0]["key"] == "sd.public.comment"` must be `true`. Pins the exact property key name and single-element array cardinality — a key-name typo (e.g. `sd_public_comment`) or stray second array entry would pass assertions (a)–(c) while the JSM visibility change silently no-ops server-side. BC-3.5.006 Trace and BC-3.5.007 Trace updated.
+  Frontmatter trace entry added for adversary pass-41 fix round 46.
+  VP count unchanged: 30 (in-place extensions). No BC count change.
+
+- `.factory/spec-changelog.md` (MODIFIED): this entry (v1.3.36 → v1.3.37).
+
+### Impact Assessment
+
+| Dimension | Detail |
+|-----------|--------|
+| VPs extended in-place | VP-577-002 (assertion d), VP-577-003 (assertion d) |
+| VP count | 30 (unchanged) |
+| BC count | 624 (unchanged) |
+| Holdout count | 88 (unchanged) |
+| Severity floor | 1 LOW (single-finding pass) |
+
+---
+
 ## [1.3.36] - 2026-07-11
 
 ### Type: PATCH
