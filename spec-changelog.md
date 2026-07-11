@@ -7,6 +7,37 @@ project: "jr (jira-cli)"
 
 Track all spec version changes. Most recent version first.
 
+## [1.3.32] - 2026-07-10
+
+### Type: PATCH
+
+### Summary
+
+Adversary pass-36 fix round 41 for SOH-COMMENT-CRUD-1 bundle (issue #577). Four findings fixed — 1 MEDIUM + 3 LOW. No BC count change. VP count unchanged at 28 (VP-577-027 and VP-577-028 reformulated in place, no additions or removals).
+
+### Changes
+
+- `.factory/specs/prd/bc-3-issue-write.md` (MODIFIED):
+  F-1 (MEDIUM, VP-577-028 second variant tautological): VP-577-028 second variant replaced — old variant asserted `--help` output lacks `requires --public` (tautological: clap's `requires()` does not render into help text). New variant: runtime clap-requires probe — `jr issue comment edit FOO-1 --id 10001 "" --yes` (empty-string positional, WITHOUT `--public`) → exit 64; stderr contains `"comment body cannot be empty"` (EC-3.5.009-5 handler-level path); exit code is 64 NOT 2 (proving clap accepted `--yes` without `--public`, i.e., `requires("public")` was not applied at parse time). BC-3.5.008 Trace updated.
+  F-2 (LOW, field-6 rung (b) empty-string gap): BC-3.5.010 field 6 rung (b) condition broadened from "absent/null/non-string" to "not a non-empty string (i.e., absent, null, non-string, or empty string)" so `{"type":"role","value":"","identifier":"X"}` correctly displays `"id=X"` rather than falling through to rung (c). BC-3.5.010 Trace updated.
+  F-3 (LOW, VP-577-027 wiremock matcher fragility): VP-577-027 reformulated — old assertion used dual-mount hit-count discrimination (depends on undocumented wiremock-rs raw-vs-decoded path-matching semantics). New assertion: mount with method-only matcher; inspect `mock_server.received_requests().await[0].url` and assert path contains `MY%20KEY-1` (raw percent-encoded bytes). BC-3.5.002 Trace updated.
+  F-4 (LOW, EC-3.5.002-2 site-ordering misleading): EC-3.5.002-2 reordered — old text named `src/api/client.rs` first (generic HTTP layer, no path templates). New text names the per-endpoint helper first: "Encoding is applied at the per-endpoint helper (e.g., `src/api/jira/issues.rs::add_comment`…) — not duplicated by each handler; `src/api/client.rs` is a generic HTTP layer and does not hold path templates." BC-3.5.002 Trace updated.
+  Frontmatter trace entry added for adversary pass-36 fix round 41.
+  VP count unchanged: 28 (VP-577-027 and VP-577-028 reformulated in place). No BC count change.
+
+- `.factory/spec-changelog.md` (MODIFIED): this entry (v1.3.31 → v1.3.32).
+
+### Impact Assessment
+
+| Dimension | Detail |
+|-----------|--------|
+| VPs reformulated | VP-577-027 (wiremock URL inspection); VP-577-028 second variant (runtime probe) |
+| VP count | 28 (unchanged) |
+| BC count | 624 (unchanged) |
+| Holdout count | 88 (unchanged) |
+
+---
+
 ## [1.3.31] - 2026-07-10
 
 ### Type: PATCH
