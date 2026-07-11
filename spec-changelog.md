@@ -7,6 +7,39 @@ project: "jr (jira-cli)"
 
 Track all spec version changes. Most recent version first.
 
+## [1.3.29] - 2026-07-10
+
+### Type: PATCH
+
+### Summary
+
+Adversary pass-32 fix round 38 for SOH-COMMENT-CRUD-1 bundle (issue #577). Four findings fixed — 1 HIGH + 3 LOW. No BC count change. VP count 24 → 25 (VP-577-025 added).
+
+### Changes
+
+- `.factory/specs/prd/bc-3-issue-write.md` (MODIFIED):
+  F1 (HIGH, cleanup-mandate conflict): BC-3.5.006 Delivery-task obligation ~line 2319 — stale sentence-1 clause `, self-cleaning via \`jsm_self_close\` convention` replaced with forward-reference `, self-cleaning per the per-comment DELETE rule stated below`. Eliminates the contradiction with the authoritative NOT-via-jsm_self_close rule stated later in the same paragraph. BC-3.5.006 Trace updated.
+  F2 (LOW, human-echo markers unpinned): VP-577-025 added to BC-3.5.005 Verification Properties (after VP-577-024) — `jr issue comment edit FOO-1 --id 10001 "Updated text" --internal` → exit 0; stderr contains `"(marked internal)"`; second variant `--public --yes` → stderr contains `"(marked public)"`. Pin reference added to BC-3.5.005 Response 200 output Human success line and EC-3.5.008-2 Confirm path line. BC-3.5.005 Trace updated.
+  F3 (LOW, sequencing constraint unstated): BC-3.5.006 Delivery-task obligation — **Sequencing constraint (delivery PR, F3)** note added after "comment-DELETE step is mandatory in either flow": `jr issue comment delete` ships in the SAME story; delete subcommand MUST be implemented before or alongside the e2e probe function; raw-API-DELETE fallback permitted but drops CLI regression signal; story PR MUST declare which pattern is used.
+  F4 (LOW, BC-3.4.011 wrongly listed): EC-3.5.012-5 — BC-3.4.011 removed from item (a); items (b)-(f) renumbered to (a)-(e); rationale note appended. BC-3.5.012 Trace updated.
+  Frontmatter trace entry added for adversary pass-32 fix round 38.
+  VP count 24 → 25 (VP-577-025 added). No BC/holdout count change.
+
+- `.factory/spec-changelog.md` (MODIFIED): this entry (v1.3.28 → v1.3.29). Follow-up Obligations bullet updated: "BC-3.4.011 hint," removed from the EC-3.5.012-5 regression list.
+
+- `.factory/STATE.md` (MODIFIED): Counters row updated — VP-577 family 24 → 25; Spec v1.3.28 → v1.3.29.
+
+### Impact Assessment
+
+| Dimension | Detail |
+|-----------|--------|
+| VPs added | VP-577-025 (BC-3.5.005 human echo marker pin — `--internal` → stderr "(marked internal)"; `--public --yes` → "(marked public)") |
+| VP count | 24 → 25 |
+| BC count | 624 (unchanged) |
+| Holdout count | 88 (unchanged) |
+
+---
+
 ## [1.3.28] - 2026-07-09
 _Note: entry date extended to 2026-07-10 via pass-12+ remediations._
 
@@ -525,7 +558,7 @@ and agrees at 624. All 8 cumulative-count surfaces now agree.
 ### Follow-up Obligations
 
 - **Guard-extension follow-up (L2-BCCOUNT-9TH-SURFACE)**: extend `scripts/check-bc-cumulative-counts.sh` to assert L2 domain-spec `bc_count` == L3 `total_bcs` per file (9th surface) + update the `CLAUDE.md` 8-surfaces description — follow-up story candidate; recurrence class of BC-INDEX-9TH-SURFACE.
-- **try_parse regression obligations (EC-3.5.012-5)**: S-577-1 story MUST include regression tests for all clap error surfaces affected by the `try_parse()` refactor — BC-3.4.011 hint, BC-3.7.003/004, BC-3.8.010, `--help` snapshots, `e2e_cli_surface_guard.rs` SURFACE table 4-row split, `e2e_live.rs` flat-form sweep (EC-3.5.012-2); see EC-3.5.012-5.
+- **try_parse regression obligations (EC-3.5.012-5)**: S-577-1 story MUST include regression tests for all clap error surfaces affected by the `try_parse()` refactor — BC-3.7.003/004, BC-3.8.010, `--help` snapshots, `e2e_cli_surface_guard.rs` SURFACE table 4-row split, `e2e_live.rs` flat-form sweep (EC-3.5.012-2); see EC-3.5.012-5. (BC-3.4.011 removed at pass-32 F4 — post-clap HTTP-400 handling, orthogonal to parse-time intercept.)
 - **Method-agnostic OAuth-scope 403 hint**: general-purpose `parse_error` branch with corrected Display wording (current `InsufficientScope` Display is POST-specific and unsuitable for comment CRUD verbs) — follow-up story candidate.
 
 ### Impact Assessment
@@ -540,7 +573,7 @@ and agrees at 624. All 8 cumulative-count surfaces now agree.
 | Design decision | --public always-confirm (Option a; DEC-168 open point resolved; recorded in BC-3.5.007) |
 | Scripts | check-spec-counts.sh — bc-3 frontmatter and body agree; check-bc-cumulative-counts.sh — all 8 surfaces agree (BC-INDEX.md MODIFIED); check-bc-citation-symbols.sh — all §3.5 citations use existing anchors |
 | ADR recommendation | No new ADR warranted — breaking CLI change (comment→subcommand group) is documented via BC-3.5.012 + CHANGELOG entry in S-577-1 PR. The pattern is a CLI evolution, not an architectural decision. ADR-0012 already covers the shard extraction trigger; no new ADR needed. |
-| Mainline refactor risk | EC-3.5.012-1 requires changing `src/main.rs` `Cli::parse()` → `try_parse()` (or equivalent) to intercept `ErrorKind::InvalidSubcommand` under `issue comment` and inject the "comment add" hint. This modifies the whole-CLI clap error path, creating regression risk for all other clap error surfaces. The implementing story (S-577-1) MUST include regression-test obligations for: BC-3.4.011 (cross-hierarchy `--type` 400 hint), BC-3.7.003/004 (remote-link error paths), BC-3.8.010 (JSM create error paths), and `--help` snapshot tests. Additionally, the `tests/e2e_cli_surface_guard.rs` SURFACE table MUST be updated in the same PR: the existing single row `(&["issue","comment"], &["--output","--internal","--file","--stdin","--markdown"])` MUST be replaced with four rows — one each for `comment add`, `comment delete`, `comment edit`, and `comment view` — each carrying its own flag set. Also, existing `tests/e2e_live.rs` call sites using the old flat comment form (~lines 2513-2548, 3756, 4823-4859 (--file/--stdin/--markdown channel tests), 6090-6099, 9687-9695) ride the EC-3.5.012-2 obligation and MUST be updated to the `comment add` form in the same PR as the CLI refactor. Line numbers are approximate and NON-authoritative (per the #408 citation-form convention) — the binding obligation is EC-3.5.012-2's ALL-sites clause; the F4 story MUST re-enumerate via `grep -n '"issue", *"comment"' tests/e2e_live.rs` at delivery time and update every match. |
+| Mainline refactor risk | EC-3.5.012-1 requires changing `src/main.rs` `Cli::parse()` → `try_parse()` (or equivalent) to intercept `ErrorKind::InvalidSubcommand` under `issue comment` and inject the "comment add" hint. This modifies the whole-CLI clap error path, creating regression risk for all other clap error surfaces. The implementing story (S-577-1) MUST include regression-test obligations for: BC-3.4.011 (cross-hierarchy `--type` 400 hint) [removed from regression-test obligations at adversary pass-32 F4, v1.3.29 — post-clap HTTP-400 handling, orthogonal to the parse-time intercept], BC-3.7.003/004 (remote-link error paths), BC-3.8.010 (JSM create error paths), and `--help` snapshot tests. Additionally, the `tests/e2e_cli_surface_guard.rs` SURFACE table MUST be updated in the same PR: the existing single row `(&["issue","comment"], &["--output","--internal","--file","--stdin","--markdown"])` MUST be replaced with four rows — one each for `comment add`, `comment delete`, `comment edit`, and `comment view` — each carrying its own flag set. Also, existing `tests/e2e_live.rs` call sites using the old flat comment form (~lines 2513-2548, 3756, 4823-4859 (--file/--stdin/--markdown channel tests), 6090-6099, 9687-9695) ride the EC-3.5.012-2 obligation and MUST be updated to the `comment add` form in the same PR as the CLI refactor. Line numbers are approximate and NON-authoritative (per the #408 citation-form convention) — the binding obligation is EC-3.5.012-2's ALL-sites clause; the F4 story MUST re-enumerate via `grep -n '"issue", *"comment"' tests/e2e_live.rs` at delivery time and update every match. |
 
 ---
 
