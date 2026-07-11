@@ -7,6 +7,37 @@ project: "jr (jira-cli)"
 
 Track all spec version changes. Most recent version first.
 
+## [1.3.33] - 2026-07-10
+
+### Type: PATCH
+
+### Summary
+
+Adversary pass-37 fix round 42 for SOH-COMMENT-CRUD-1 bundle (issue #577). Four findings fixed — 1 MEDIUM + 3 LOW. No BC count change. VP count unchanged at 28 (VP-577-009 and VP-577-021 reformulated/extended in place; no new VP numbers assigned).
+
+### Changes
+
+- `.factory/specs/prd/bc-3-issue-write.md` (MODIFIED):
+  F-01 (MEDIUM, BC-3.5.012 subcommand-to-BC map wrong): `Edit` variant changed from `BC-3.5.005..BC-3.5.011` (incorrectly included BC-3.5.010 which is View) to `BC-3.5.005..BC-3.5.009, BC-3.5.011` (explicit non-contiguous list). View line unchanged. BC-3.5.012 Trace updated.
+  F-02 (LOW, VP-577-009 key-set assertion weak): VP-577-009 reformulated to BTreeSet exact-set pattern — `serde_json` parsed object keys == `BTreeSet::from(["deleted", "id", "key"])` (mirrors VP-577-001/002/003 pattern). BC-3.5.002 Trace updated.
+  F-03 (LOW, label-value separator unspecified): Normative sentence added to BC-3.5.010 after field enumeration: "All field lines (fields 1–6) render as `<label> <value>` — single space between the label's colon and the first character of the value, LF line terminator." VP-577-021 extended with third variant (in-place, no new VP number): property-absent fixture → stdout contains `"JSM internal: N/A"` (byte-level pin for N/A render path and separator rule). BC-3.5.010 Trace updated.
+  F-04 (LOW, EC-3.5.010-2 catch-all binds future error kinds): EC-3.5.010-2 split into (a) `JrError::UserError` from `adf_to_text` (currently only depth-guard, BC-7.2.012/SEC-001) propagates unchanged; exit 64; (b) any other future error kind NOT covered this cycle, MUST be re-classified when introduced. Field-7 cross-reference updated from `EC-3.5.010-2 (currently only the recursion depth-guard; exit 64)` to `EC-3.5.010-2 (a)`. BC-3.5.010 Trace updated.
+  Frontmatter trace entry added for adversary pass-37 fix round 42.
+  VP count unchanged: 28 (VP-577-009 reformulated; VP-577-021 extended in place). No BC count change.
+
+- `.factory/spec-changelog.md` (MODIFIED): this entry (v1.3.32 → v1.3.33).
+
+### Impact Assessment
+
+| Dimension | Detail |
+|-----------|--------|
+| VPs reformulated/extended | VP-577-009 (BTreeSet exact key-set); VP-577-021 third variant (N/A byte-level pin) |
+| VP count | 28 (unchanged) |
+| BC count | 624 (unchanged) |
+| Holdout count | 88 (unchanged) |
+
+---
+
 ## [1.3.32] - 2026-07-10
 
 ### Type: PATCH
