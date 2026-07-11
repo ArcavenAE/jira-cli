@@ -7,6 +7,41 @@ project: "jr (jira-cli)"
 
 Track all spec version changes. Most recent version first.
 
+## [1.3.31] - 2026-07-10
+
+### Type: PATCH
+
+### Summary
+
+Adversary pass-35 fix round 40 for SOH-COMMENT-CRUD-1 bundle (issue #577). Six findings fixed — 1 HIGH + 3 MEDIUM + 2 LOW. No BC count change. VP count 26 → 28 (VP-577-027, VP-577-028 added). Contains one ORCHESTRATOR RULING (F-A4 `--yes` silent no-op; F2 human gate required before closing).
+
+### Changes
+
+- `.factory/specs/prd/bc-3-issue-write.md` (MODIFIED):
+  F-A1 (HIGH, migration-documentation gap): EC-3.5.012-5 extended — items (f) and (g) appended: (f) `README.md` §Commands table and all `jr issue comment …` examples MUST be updated to `jr issue comment add` form in the same PR as the CLI refactor (explicit obligation because `tests/claude_md_citations.rs` guards paths only, not command-example text); (g) `CLAUDE.md` "allow_hyphen_values on free-text CLI args" bullet MUST be updated to cite `issue comment add` (positional message) AND `issue comment edit` (positional text) per EC-3.5.012-3. BC-3.5.012 Trace updated.
+  F-A2 (MEDIUM, exit-code contract gap — 401 missing from Other-4xx/5xx): "Other 4xx/5xx" refined to "Other 4xx/5xx (except 401)" in BC-3.5.004, BC-3.5.005 Response 404/403, and BC-3.5.010 Response 404/403. Each clause now explicitly states: "**401** → framework auth-error path (`JrError::NotAuthenticated` / `JrError::InsufficientScope`); exit 2 per error-taxonomy.md §Section 3." BC-3.5.004, BC-3.5.005, and BC-3.5.010 Traces updated.
+  F-A3 (MEDIUM, URL-encoding obligation unstated): EC-3.5.002-2 added (after EC-3.5.002-1) — KEY URL-percent-encoding via `urlencoding::encode` normative obligation for all comment-family endpoint paths; `--id` value needs no further encoding after EC-3.5.002-1 regex pass. VP-577-027 added (KEY URL-encoding pin — wiremock at `MY%20KEY-1` receives one hit; un-encoded route receives zero). BC-3.5.002 Trace updated.
+  F-A4 (MEDIUM, ORCHESTRATOR RULING — F2 human gate required): EC-3.5.008-4 added — `--yes` accepted silently without error when `--public` is absent; clap MUST NOT define `--yes` as `requires("public")`; rationale: ADR-0015 `--no-resolution` accepted-silently precedent. VP-577-028 added (`--yes` silent-no-op pin + clap no-requires variant). BC-3.5.008 Trace updated.
+  F-A5 (LOW, Ctrl+C/EOF handling unspecified): EC-3.5.003-3 added to BC-3.5.003 — dialoguer Err on delete confirmation prompt → `JrError::Interrupted`; exit 130. EC-3.5.008-5 added to BC-3.5.008 — same rule for `--public` confirmation prompt. BC-3.5.003 and BC-3.5.008 Traces updated.
+  F-A6 (LOW, unknown-type silent-None gap): BC-3.5.010 field 6 `Restricted:` ladder extended from three rungs to four — rung (c) added: if `type` is any non-null, non-empty string AND either `value` or `identifier` is non-null/non-empty → display `<type>:<value-or-identifier>` (defensive rendering for unknown restriction kinds); rung (d) is now the "None" fallback (was rung (c)). BC-3.5.010 Trace updated.
+  Frontmatter trace entry added for adversary pass-35 fix round 40.
+  VP count 26 → 28 (VP-577-027 + VP-577-028 added). No BC count change.
+
+- `.factory/spec-changelog.md` (MODIFIED): this entry (v1.3.30 → v1.3.31).
+
+### Impact Assessment
+
+| Dimension | Detail |
+|-----------|--------|
+| VPs added | VP-577-027 (BC-3.5.002 KEY URL-encoding pin); VP-577-028 (BC-3.5.008 --yes silent-no-op + clap no-requires pin — ORCHESTRATOR RULING, F2 human gate required) |
+| VP count | 26 → 28 |
+| BC count | 624 (unchanged) |
+| Holdout count | 88 (unchanged) |
+| F2 human gate | F-A4 (EC-3.5.008-4 `--yes` silent no-op on non-`--public` paths, interpretation (ii)) requires F2 human sign-off before closing issue #577 |
+| Mainline refactor risk | EC-3.5.012-5 (try_parse() refactor — items (f)+(g) add README.md + CLAUDE.md doc obligations) |
+
+---
+
 ## [1.3.30] - 2026-07-10
 
 ### Type: PATCH
