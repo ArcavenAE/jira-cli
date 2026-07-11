@@ -7,6 +7,35 @@ project: "jr (jira-cli)"
 
 Track all spec version changes. Most recent version first.
 
+## [1.3.30] - 2026-07-10
+
+### Type: PATCH
+
+### Summary
+
+Adversary pass-34 fix round 39 for SOH-COMMENT-CRUD-1 bundle (issue #577). Two findings fixed — 1 MEDIUM + 1 LOW. No BC count change. VP count 25 → 26 (VP-577-026 added).
+
+### Changes
+
+- `.factory/specs/prd/bc-3-issue-write.md` (MODIFIED):
+  F-577-A (MEDIUM, VP coverage gap): VP-577-026 added to BC-3.5.005 Verification Properties (after VP-577-025) — three parse-level variants pinning `changed_fields.jsm_internal`: (1) `--internal` → `Bool(true)` boolean not string; (2) `--public --yes` → `Bool(false)` boolean not string; (3) default body-only → key ENTIRELY ABSENT (`contains_key("jsm_internal")` is false). Pin back-reference added to BC-3.5.005 Response 200 JSON schema paragraph (after "key is omitted entirely."). Pin back-reference added to EC-3.5.008-2 Confirm path (variant 2). BC-3.5.005 Trace updated. Rationale: #398 VP-398-002/004 lossless-machine-channel precedent.
+  F-577-B (LOW, graceful-degradation gap, research-adjudicated): BC-3.5.010 field 6 `Restricted:` ladder extended from two rungs to three — (a) `value` present → display `<value>` (unchanged); (b) `value` absent/null/non-string BUT `identifier` present → display `"id=<identifier>"` (new rung; distinguishable marker, not bare "None"); (c) both absent → "None" (unchanged). Research citation added: `.factory/research/issue-577-visibility-identifier-shape-2026-07-10.md` — Q1 VALIDATED high (identifier formally in schema); Q2 INCONCLUSIVE-leans-rare (mechanism supported, no Atlassian GET-response example with identifier-only found); defensive rendering chosen. VP-577-021 "Restricted: None" assertion unaffected (fixture has visibility absent → rung (c) unchanged). BC-3.5.010 Trace updated.
+  Frontmatter trace entry added for adversary pass-34 fix round 39.
+  VP count 25 → 26 (VP-577-026 added). No BC/holdout count change.
+
+- `.factory/spec-changelog.md` (MODIFIED): this entry (v1.3.29 → v1.3.30).
+
+### Impact Assessment
+
+| Dimension | Detail |
+|-----------|--------|
+| VPs added | VP-577-026 (BC-3.5.005 jsm_internal boolean-type + key-absence parse pin — three variants: `--internal` Bool(true), `--public --yes` Bool(false), default key-absent) |
+| VP count | 25 → 26 |
+| BC count | 624 (unchanged) |
+| Holdout count | 88 (unchanged) |
+
+---
+
 ## [1.3.29] - 2026-07-10
 
 ### Type: PATCH
