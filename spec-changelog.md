@@ -7,6 +7,40 @@ project: "jr (jira-cli)"
 
 Track all spec version changes. Most recent version first.
 
+## [1.3.35] - 2026-07-11
+
+### Type: PATCH
+
+### Summary
+
+Adversary pass-39 fix round 44 (exhaustive promise→pin coverage sweep) for SOH-COMMENT-CRUD-1 bundle (issue #577). Five findings fixed — 1 MEDIUM + 4 LOW — plus one marginal item to drain the class. VP count 28 → 30 (VP-577-029, VP-577-030 added). No BC count change.
+
+### Changes
+
+- `.factory/specs/prd/bc-3-issue-write.md` (MODIFIED):
+  F1 (LOW, EDIT human-mode stderr unpinned): VP-577-023 extended with human-mode variant — `jr issue comment edit FOO-1 --id 10001 "Updated text"` → exit 0; stderr contains `"Updated comment 10001 on FOO-1"`; stdout empty. In-place, no new VP number. BC-3.5.005 Trace updated.
+  F4 (LOW, VP-577-025 JSDCLOUD-6050 unpinned): VP-577-025 both variants extended — first variant (`--internal`) adds `"JSDCLOUD-6050"` stderr assertion (EC-3.5.006-1 hint pin); second variant (`--public --yes`) adds `"JSDCLOUD-6050"` assertion AND states it simultaneously proves EC-3.5.008-1's hint-not-suppressed-by---yes rule. In-place, no new VP number. BC-3.5.005 Trace updated.
+  F2 (LOW, interactive cancel JSON key-set unpinned): NEW VP-577-029 added to BC-3.5.008 — interactive (`JR_STDIN_IS_TTY=1`) + `--public` + user selects N + `--output json` → exit 0; stdout keys == `BTreeSet::from(["cancelled","updated"])`; `cancelled==true`, `updated==false`; wiremock `.expect(0)`. Mirrors VP-577-013. BC-3.5.008 Trace updated.
+  F3 (LOW, EOF/interrupt coverage gap): NEW VP-577-030 added to BC-3.5.008 — two variants: (1) delete prompt EOF → exit 130, DELETE `.expect(0)`; (2) `--public` prompt EOF → exit 130, PUT `.expect(0)`. Pins EC-3.5.003-3 + EC-3.5.008-5 delivery with `interact_on(&Term::stderr())` + `JrError::Interrupted` requirements. BC-3.5.008 Trace updated.
+  F5 (MEDIUM, field-6 rung a/b/c unpinned): VP-577-021 extended with variants 4/5/6 — (4) `{"type":"role","value":"Administrators"}` → stdout contains `"Restricted: Administrators"` (rung a); (5) `{"type":"role","value":"","identifier":"admin-role-id"}` → `"Restricted: id=admin-role-id"` (rung b); (6) `{"type":"team","value":"AlphaTeam","identifier":"team-123"}` → `"Restricted: team:AlphaTeam"` (rung c). In-place, no new VP number. BC-3.5.010 Trace updated.
+  M1 (marginal, JSM internal: No unpinned): VP-577-021 extended with variant 7 — `properties:[{"key":"sd.public.comment","value":{"internal":false}}]` → stdout contains `"JSM internal: No"`. In-place, no new VP number. BC-3.5.010 Trace updated.
+  Frontmatter trace entry added for adversary pass-39 fix round 44. `last_updated` bumped to 2026-07-11.
+  VP count: 28 → 30 (VP-577-029, VP-577-030 new). No BC count change.
+
+- `.factory/spec-changelog.md` (MODIFIED): this entry (v1.3.34 → v1.3.35).
+
+### Impact Assessment
+
+| Dimension | Detail |
+|-----------|--------|
+| VPs added | VP-577-029 (BC-3.5.008), VP-577-030 (BC-3.5.008) |
+| VPs extended in-place | VP-577-023, VP-577-025 (both variants), VP-577-021 (variants 4/5/6/7) |
+| VP count | 28 → 30 |
+| BC count | 624 (unchanged) |
+| Holdout count | 88 (unchanged) |
+
+---
+
 ## [1.3.34] - 2026-07-11
 
 ### Type: PATCH
