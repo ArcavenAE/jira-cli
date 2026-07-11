@@ -7,6 +7,35 @@ project: "jr (jira-cli)"
 
 Track all spec version changes. Most recent version first.
 
+## [1.3.39] - 2026-07-11
+
+### Type: PATCH
+
+### Summary
+
+Adversary pass-45 fix round 48 for SOH-COMMENT-CRUD-1 bundle (issue #577). One LOW finding fixed: VP-577-006 setup note had a gate mis-cite introduced in round 47 — corrected bodyless-invocation gate reference from EC-3.5.009-5 to BC-3.5.009 body-required rule with verbatim message. VP count unchanged at 30.
+
+### Changes
+
+- `.factory/specs/prd/bc-3-issue-write.md` (MODIFIED):
+  F-1 (LOW, VP-577-006 setup-note gate mis-cite — introduced round 47): VP-577-006 setup note parenthetical corrected. The bodyless counterfactual (`jr issue comment edit FOO-1 --id 10001 --public --no-input`, no positional/--file/--stdin) fires BC-3.5.009's body-REQUIRED gate (no source supplied at all), NOT EC-3.5.009-5 (which fires only when a source IS present but resolves to empty/whitespace). Changed: `(EC-3.5.009-5, "comment body cannot be empty")` → `(BC-3.5.009 body-required rule, "body is required — use --file, --stdin, or pass text as a positional argument.")`. Verbatim message sourced from BC-3.5.009 body. BC-3.5.008 Trace updated.
+  Frontmatter trace entry added for adversary pass-45 fix round 48.
+  VP count unchanged: 30 (in-place correction). No BC count change.
+
+- `.factory/spec-changelog.md` (MODIFIED): this entry (v1.3.38 → v1.3.39).
+
+### Impact Assessment
+
+| Dimension | Detail |
+|-----------|--------|
+| VPs corrected in-place | VP-577-006 setup note (BC-3.5.008) |
+| VP count | 30 (unchanged) |
+| BC count | 624 (unchanged) |
+| Holdout count | 88 (unchanged) |
+| Severity floor | 1 LOW (single-finding pass; corrects round-47-introduced mis-cite) |
+
+---
+
 ## [1.3.38] - 2026-07-11
 
 ### Type: PATCH
