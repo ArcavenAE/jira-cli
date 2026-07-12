@@ -7,7 +7,7 @@ producer: state-manager
 timestamp: 2026-05-07T00:00:00
 cycle: "cycle-001"
 inputs: [STATE.md]
-input-hash: "60d5dfd"
+input-hash: "abd5c48"
 traces_to: STATE.md
 ---
 
@@ -5655,3 +5655,29 @@ S-7.02 Defensive Sweep Discipline applied prospectively to adversarial findings.
 
 _Recorded: 2026-07-07. State-manager (DEC-156)._
 _Tagged: [sweep-discipline] [count-propagation] [adversary-efficiency] [codified]_
+
+---
+
+### PG-F3-1 FALSE-PRECEDENT-CITATION-WITHOUT-CODE-VERIFICATION [process-gap]
+
+**Lesson:** Citing a file::fn as a precedent (e.g. `interact_on`, `Confirm` vs `Select` mislabel in `handle_move`) without first grepping/reading the actual source leads to false precedents that survive multiple adversary passes.
+
+**Origin:** SOH-COMMENT-CRUD-1 F3. False `interact_on` citation survived to pass 21; Confirm-vs-Select mislabel survived to pass 26. Each required a dedicated fix round once the adversary found it.
+
+**Rule:** Story-writer checklist must mandate `grep`/`Read` of every cited `file::fn` before finalizing AC/task text. Empirical verification is required — adversary reading is not a substitute for source-of-truth verification at authoring time.
+
+_Recorded: 2026-07-12. State-manager (CP-63, F3 gate audit)._
+_Tagged: [process-gap] [story-writer] [citation-discipline] [codified] — deferred to engine backlog — see STATE.md Drift Items_
+
+---
+
+### PG-F3-2 AC-TO-TEST-FN-COUNT-DERIVATION-MULTI-VARIANT [process-gap]
+
+**Lesson:** When an AC covers multiple implementation variants (e.g. S-577-6 with 11 ACs but 15 test functions), deriving a single count at the AC level causes accounting gaps caught late by the adversary.
+
+**Origin:** SOH-COMMENT-CRUD-1 F3. S-577-6 11 ACs vs 15 fns mismatch caught at pass 25, requiring fix round 24b for reconciliation.
+
+**Rule:** Story-writer should enumerate per-variant test-fn names explicitly in AC bodies (e.g. `test_<verb>_<subject>_<outcome>` stubs), letting the aggregate count emerge from the listing rather than being estimated top-down. This makes the count self-documenting and independently verifiable by the adversary without requiring AC arithmetic.
+
+_Recorded: 2026-07-12. State-manager (CP-63, F3 gate audit)._
+_Tagged: [process-gap] [story-writer] [test-fn-accounting] [codified] — deferred to engine backlog — see STATE.md Drift Items_
