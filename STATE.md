@@ -4,7 +4,7 @@ level: ops
 version: "2.0"
 status: active
 producer: state-manager
-timestamp: 2026-07-11T08:30:00Z
+timestamp: 2026-07-11T08:45:00Z
 phase: 3
 pipeline: PAUSED
 inputs: []
@@ -12,7 +12,7 @@ input-hash: "[live-state]"
 traces_to: ""
 project: jira-cli
 mode: brownfield
-current_step: "SOH-COMMENT-CRUD-1 F3 adversarial convergence IN PROGRESS — pass-10 2 findings (1H migration-inventory + 1L count-precision) fixed in round 11 (CV CONSISTENT; 17/17 audit hits dispositioned). Awaiting F3 adversary pass 11. STRICT; streak 0/3; F3 trajectory →8→10→9→5→4→4→2→3→2→2."
+current_step: "SOH-COMMENT-CRUD-1 F3 adversarial convergence IN PROGRESS — pass-11 1 finding (1M stub-clippy contradiction) fixed in round 12 (CV all-CLOSED incl. PSI sweep). Awaiting F3 adversary pass 12. STRICT; streak 0/3; F3 trajectory →8→10→9→5→4→4→2→3→2→2→1 (single-MEDIUM floor)."
 maintenance_run: CLOSED
 current_cycle: "cycle-001"
 feature_mode_bundle: SOH-COMMENT-CRUD-1
@@ -39,8 +39,8 @@ activation_version: "v0.6.0-dev.9"
 | **Product** | jr (Jira CLI) |
 | **Mode** | BROWNFIELD / Rust |
 | **Target Workspace** | develop → main |
-| **Last Updated** | 2026-07-11: F3 pass-10 (1H/1L) fixed round 11 — flat-form inventory completed (6+2), count precision. Pass 11 next. |
-| **Current Phase** | Phase 3 — **SOH-COMMENT-CRUD-1 F3 adversary loop (2026-07-11)**. Spec v1.3.40. Stories **111**. F3 trajectory →8→10→9→5→4→4→2→3→2→2. Pass-11 next. BC **624**. Holdouts **88**. VP **30**. |
+| **Last Updated** | 2026-07-11: F3 pass-11 (1M) fixed round 12 — underscore-prefix stub convention. Pass 12 next. |
+| **Current Phase** | Phase 3 — **SOH-COMMENT-CRUD-1 F3 adversary loop (2026-07-11)**. Spec v1.3.40. Stories **111**. F3 adversary loop. F3 trajectory →8→10→9→5→4→4→2→3→2→2→1. Pass-12 next. BC **624**. Holdouts **88**. VP **30**. |
 | **Next Phase** | CV targeted verify → adversary pass-33 → Full STRICT target (3 consecutive zero-finding passes) → F2 human gate → F3 stories. |
 | **Activation HEAD** | b2ce3169 (PR #603 squash-merged 2026-07-09; SOH-BUGS-1 FULLY COMPLETE; release v0.6.0-dev.9; issues #589/#590/#582 CLOSED) |
 
@@ -54,7 +54,7 @@ activation_version: "v0.6.0-dev.9"
 | **SOH-COMMENT-CRUD-1 F2 passes 46+47 CLEAN (2026-07-11) — 0 findings each; STRICT streak 2/3 (second window); spec v1.3.39 unchanged.** | **COMPLETE** | **2026-07-11** | **adversary (CLEAN ×2).** | `adversarial-review/pass-46-577.md`; `adversarial-review/pass-47-577.md`. |
 | **SOH-COMMENT-CRUD-1 F2 STRICT CONVERGED (2026-07-11) — window p46/p47/p48 CLEAN×3; 48 passes / 48 fix rounds; spec v1.3.39.** | **COMPLETE** | **2026-07-11** | **adversary (CONVERGED).** | `phase-f2-spec-evolution/f2-convergence-record-577.md`; `adversarial-review/pass-48-577.md`. |
 | **SOH-COMMENT-CRUD-1 F2 GATE APPROVED (DEC-170, 2026-07-11) — v1.3.40 items h+i; consistency-audit gaps folded; F3 stories AUTHORIZED.** | **COMPLETE** | **2026-07-11** | **human gate.** | `phase-f2-spec-evolution/f2-convergence-record-577.md`; `specs/prd/bc-3-issue-write.md` v1.3.40. |
-| **SOH-COMMENT-CRUD-1 F3 pass 10 + fix round 11 (2026-07-11) — 1H/1L fixed (flat-form migration inventory: 6+2 hits dispositioned, 17/17 audit; count-precision 23 ACs/24 fns); CV CONSISTENT.** | **COMPLETE** | **2026-07-11** | **adversary + consistency-validator.** | `adversarial-review/f3-pass-10-577.md`; stories updated. |
+| **SOH-COMMENT-CRUD-1 F3 pass 11 + fix round 12 (2026-07-11) — 1M fixed (todo!() stubs underscore-prefix convention; PSI sweep; +2 OBS pre-empted); CV all-CLOSED.** | **COMPLETE** | **2026-07-11** | **adversary + consistency-validator.** | `adversarial-review/f3-pass-11-577.md`; stories updated. |
 
 ## Current Phase Steps
 
@@ -215,15 +215,15 @@ ADF-CODE-MARK-EXCLUSIVITY: **FULLY COMPLETE (2026-07-08, DEC-163). S-7.02 SATISF
 | Field | Value |
 |-------|-------|
 | **Date** | 2026-07-10 (RESUMED — fix round 38 complete, mid-F2 adversarial convergence, SOH-COMMENT-CRUD-1 issue #577) |
-| **Status** | **SESSION ACTIVE (resumed 2026-07-10). SOH-COMMENT-CRUD-1 F3: 10 adversary passes, 12 CV rounds, 11 fix rounds. F3 pass 11 next.** |
-| **Position** | F3 pass-10 fixed (flat-form migration inventory drained via 17-hit audit). NEXT: F3 adversary pass 11; STRICT to 3 clean → F3 human gate → F4. |
+| **Status** | **SESSION ACTIVE (resumed 2026-07-10). SOH-COMMENT-CRUD-1 F3: 11 adversary passes, 13 CV rounds, 12 fix rounds. F3 pass 12 next.** |
+| **Position** | F3 pass-11 fixed (stub-clippy). Gate note banked: spec coarse S-577-1 delete-owner phrasing superseded via dependency chain. NEXT: F3 adversary pass 12; STRICT to 3 clean → F3 human gate → F4. |
 | **Key rulings** | DEC-168 (F1 gate, 4 rulings). Full STRICT three times confirmed (pass-6, pass-14, pass-38 checkpoints). MERGE+PRESERVED verdicts accepted with deferred EJ probe (local probe blocked — EJ not on local profile; zero mutations). Reversed orchestrator rulings (code-verified): 403-scope carve-out added p28 REMOVED p29; body-source priority corrected to --stdin>--file>positional; trim-to-ADF matches add; F-A4 --yes silent-no-op RATIFIED (DEC-169, 2026-07-11, research-backed). |
 | **Counters** | BC **624**. Stories **111** (F3 for #577 drafted). Holdouts **88**. VP-577 family 30. Spec v1.3.40. L2 bc-03 120/25. |
 | **In-flight** | NO stories mid-TDD, NO worktrees, NO factory PRs. All F2 work pushed on factory-artifacts @ aa6a5c7 (intake 18f24cc + 15 WIP checkpoints; 17c4dfc mis-commit reverted b164d06/redone 24ef249; stray develop commit cleaned, never pushed). |
 | **Follow-up story candidates** | Recorded in v1.3.28 Follow-up Obligations + BC notes: L2-BCCOUNT-9TH-SURFACE guard; EC-3.5.012-5 try_parse regressions; method-agnostic 403-scope hint; Levenshtein typo hints; add body-source clap alignment; add file-not-found exit alignment; broader IO remaps; visibility-only edit; --dry-run for edit/delete; JR_STDIN_IS_TTY seam+CLAUDE.md+release-gate (F4 in-scope). |
 | **Process-gap ledger (cycle close / upstream)** | WRITE-STALL ×10 total (3 this burst: PO ×2 + SM ×1) (timestamp hook forces monolithic writes); WRONG-CWD-COMMIT near-miss (cwd guard now standard); idle-without-report ×4 (final-SendMessage clause fix); VERDICT-COUNT-DISCREPANCY ×5; FALSE-PREMISE-CODE-CLAIM (file:line rule fix); additive-pass entrenchment (defect-only-pass proposal); TWIN-ARTIFACT-SWEEP ×7; BC-bodies+BC-INDEX transactional citations; "sibling fields same question" research checklist. |
 | **Pending decisions** | None blocking. Full STRICT stands. Intake queue untouched: sackofhacks #575/#576 + P2s; dependabot #591 soak ~07-13, #598/#599/#600 (DEC-133); arcaven #573/#574 CHANGES_REQUESTED. |
-| **Resume command** | Fresh session → factory-worktree-health → read STATE.md → F3 adversary pass 11. |
+| **Resume command** | Fresh session → factory-worktree-health → read STATE.md → F3 adversary pass 12. |
 
 ## RESUME PLAN (cold-start, self-contained)
 
