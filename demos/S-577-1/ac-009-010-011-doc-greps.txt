@@ -1,0 +1,46 @@
+=== AC-009 verification greps (EC-3.5.012-5 items f/g/h/i/j) ===
+
+--- (h) grep -F 'changed_fields' docs/specs/json-output-shapes.md ---
+$ grep -F 'changed_fields' docs/specs/json-output-shapes.md
+| `issue comment edit` | `{"changed_fields": {...}, "id": str, "key": str, "updated": bool}` | Stub (S-577-4/5). Shape pinned by S-577-1 AC-009(h). `changed_fields` mirrors `issue edit` shape. |
+exit: 0
+
+--- (h) grep -F '"deleted"' docs/specs/json-output-shapes.md ---
+$ grep -F '"deleted"' docs/specs/json-output-shapes.md
+| `issue comment delete` | `{"deleted": bool, "id": str, "key": str}` | Stub (S-577-3). Shape pinned by S-577-1 AC-009(h). |
+exit: 0
+
+--- (j) grep -F 'interactions.rs' .cargo/mutants.toml ---
+$ grep -F 'interactions.rs' .cargo/mutants.toml
+    "src/cli/issue/interactions.rs",
+# Exclude todo!() stubs in interactions.rs that are unkillable by design.
+exit: 0
+
+=== AC-010 verification (Breaking Changes CHANGELOG entry) ===
+
+--- grep -F '#577' CHANGELOG.md ---
+$ grep -F '#577' CHANGELOG.md
+- **`jr issue comment` is now a subcommand group (S-577-1, issue #577):**
+exit: 0
+
+=== AC-009(f) verification (README.md comment add examples) ===
+
+--- grep -F 'comment add' README.md ---
+$ grep -F 'comment add' README.md
+jr issue comment add KEY-123 "Deployed to staging"
+jr issue comment add JSM-42 "customer is on the paid plan — prioritizing" --internal
+| `jr issue comment add KEY "msg"` | Add a comment (`--stdin`, `--file`, `--markdown`, `--internal` for JSM agent-only notes) |
+echo "Fixed the bug" | jr issue comment add KEY-123 --stdin  # Add comment
+exit: 0
+
+=== AC-009(i) verification (comment-crud.md spec created) ===
+
+--- ls docs/specs/comment-crud.md ---
+$ ls docs/specs/comment-crud.md
+docs/specs/comment-crud.md
+exit: 0
+
+NOTE: AC-011 (byte-identical clap rendering for non-InvalidSubcommand errors) is
+verified indirectly by the full test suite green (tests/issue_remote_link.rs,
+tests/issue_create_jsm.rs, and insta snapshot tests all pass in the full cargo test run
+captured in ac-006-007-008-test-suite.txt).

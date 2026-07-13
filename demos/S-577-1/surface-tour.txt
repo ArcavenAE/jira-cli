@@ -1,0 +1,52 @@
+=== New-surface tour ===
+
+--- jr issue comment --help ---
+$ jr issue comment --help
+Comment operations: add, delete, edit, view. To list all comments on an issue, use `jr issue comments`
+
+Usage: jr issue comment [OPTIONS] <COMMAND>
+
+Commands:
+  add     Add a comment (canonical form; replaces the old flat `jr issue comment KEY text`)
+  delete  Delete a comment by ID — requires --yes or interactive confirmation
+  edit    Edit a comment body (optionally set visibility)
+  view    View a single comment by ID
+  help    Print this message or the help of the given subcommand(s)
+
+Options:
+      --output <OUTPUT>    Output format [default: table] [possible values: table, json]
+      --project <PROJECT>  Override project key
+      --no-color           Disable colored output
+      --no-input           Disable interactive prompts (auto-enabled when stdin is not a TTY)
+      --verbose            verbose mode (method + URL only; use --verbose-bodies for full body inspection)
+      --verbose-bodies     print full HTTP request/response bodies to stderr (PII warning emitted; use with care -- see CLAUDE.md)
+      --profile <PROFILE>  Override the active profile (precedence: this flag > JR_PROFILE > config > "default")
+  -h, --help               Print help
+exit: 0
+
+--- jr issue comment add --help ---
+$ jr issue comment add --help
+Add a comment (canonical form; replaces the old flat `jr issue comment KEY text`)
+
+Usage: jr issue comment add [OPTIONS] <KEY> [MESSAGE]
+
+Arguments:
+  <KEY>      Issue key
+  [MESSAGE]  Comment text (leading-dash values accepted)
+
+Options:
+      --markdown           Interpret input as Markdown
+      --file <FILE>        Read comment from file
+      --stdin              Read comment from stdin (for piping)
+      --internal           Mark comment as internal -- agent-only, not visible to the customer on the JSM portal.
+                           Without this flag the comment is a public reply (the default). No-op on standard
+                           (non-JSM) projects, where Jira ignores the `sd.public.comment` property
+      --output <OUTPUT>    Output format [default: table] [possible values: table, json]
+      --project <PROJECT>  Override project key
+      --no-color           Disable colored output
+      --no-input           Disable interactive prompts (auto-enabled when stdin is not a TTY)
+      --verbose            verbose mode (method + URL only; use --verbose-bodies for full body inspection)
+      --verbose-bodies     print full HTTP request/response bodies to stderr (PII warning emitted; use with care -- see CLAUDE.md)
+      --profile <PROFILE>  Override the active profile (precedence: this flag > JR_PROFILE > config > "default")
+  -h, --help               Print help
+exit: 0

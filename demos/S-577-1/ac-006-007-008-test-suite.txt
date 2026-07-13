@@ -1,0 +1,49 @@
+=== AC-006/007: cargo test --test cli_smoke -- test_bc_3_5 --nocapture ===
+
+$ cd .worktrees/S-577-1 && cargo test --test cli_smoke -- test_bc_3_5 --nocapture
+
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.12s
+     Running tests/cli_smoke.rs (target/debug/deps/cli_smoke-6c6e3c39c20c6f14)
+
+running 12 tests
+test test_bc_3_5_012_comment_add_allows_leading_dash_body ... ok
+test test_bc_3_5_012_comment_edit_allows_leading_dash_body ... ok
+test test_bc_3_5_009_ec2_edit_file_and_stdin_exit_2 ... ok
+test test_bc_3_5_011_edit_internal_and_public_both_exit_2 ... ok
+test test_bc_3_5_012_non_comment_invalid_subcommand_no_migration_hint ... ok
+test test_bc_3_5_009_ec3_edit_file_and_positional_exit_2 ... ok
+test test_bc_3_5_012_bare_comment_emits_clap_listing_not_custom_hint ... ok
+test test_bc_3_5_009_ec4_edit_stdin_and_positional_exit_2 ... ok
+test test_bc_3_5_012_old_flat_comment_form_exits_2_with_migration_hint ... ok
+test test_bc_3_5_012_comment_list_token_emits_plural_hint ... ok
+test test_bc_3_5_012_global_flag_before_comment_uses_context_interception ... ok
+test test_bc_3_5_012_comment_ls_mixed_case_emits_plural_hint ... ok
+
+test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 44 filtered out; finished in 0.85s
+
+=== AC-007: cargo test --test e2e_cli_surface_guard -- --nocapture ===
+
+$ cargo test --test e2e_cli_surface_guard -- --nocapture
+
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.12s
+     Running tests/e2e_cli_surface_guard.rs (target/debug/deps/e2e_cli_surface_guard-f4ee811a8414d192)
+
+running 10 tests
+test test_parse_args_single_line_extracts_path ... ok
+test test_parse_args_deduplicates_identical_invocations ... ok
+test test_parse_args_multi_line_extracts_path_and_flags ... ok
+test test_parse_args_multiple_invocations_in_source ... ok
+test test_parse_args_stops_path_at_variable ... ok
+test test_parser_paths_are_subset_of_surface_table ... ok
+test test_e2e_live_flags_are_subset_of_surface_table ... ok
+test test_guard_detects_nonexistent_subcommand_path ... ok
+test test_guard_detects_nonexistent_flag_me_on_issue_assign ... ok
+test test_e2e_cli_surface_all_paths_and_flags_exist ... ok
+
+test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.93s
+
+NOTE: AC-008 (e2e_live.rs flat-form sweep) is verified transitively by
+test_parser_paths_are_subset_of_surface_table above — that test confirms every
+e2e_live.rs comment invocation uses a path in the new SURFACE table (which has 4 rows:
+comment add/delete/edit/view), so any unpatched flat "issue comment" site would fail.
+All 10 tests green = AC-007 and AC-008 both satisfied.

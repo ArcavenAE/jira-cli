@@ -1,0 +1,24 @@
+=== AC-013: Global-flag interleave + negative test ===
+
+--- EC-011 positive: jr --output json issue comment FOO-1 "text" ---
+$ jr --output json issue comment FOO-1 "text"
+error: use `jr issue comment add` instead
+       `jr issue comment KEY "text"` is no longer valid; the comment command is now a subcommand group.
+exit: 2
+
+--- EC-010 negative: jr issue foo BAR-1 (no migration hint) ---
+$ jr issue foo BAR-1
+error: unrecognized subcommand 'foo'
+
+Usage: jr issue [OPTIONS] <COMMAND>
+
+For more information, try '--help'.
+exit: 2
+
+NOTE (positive): Global flag --output json precedes the subcommand; the intercept
+correctly fires using err.context() (not argv positional scanning). Migration hint
+rendered correctly despite the flag reordering.
+
+NOTE (negative): "unrecognized subcommand 'foo'" — clap default rendering. The
+migration hint ("use `jr issue comment add`") does NOT appear. Intercept scoped
+correctly to "issue comment" sub-path only.

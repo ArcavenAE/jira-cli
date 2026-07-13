@@ -1,0 +1,5 @@
+# F4 Wave A Convergence Record — SOH-COMMENT-CRUD-1 (issue #577) — CONVERGED 2026-07-13
+Merged: bbe54e9 (S-577-2), 907a795 (S-577-1), 69877ff (fix1: comment-crud.md visibility mechanism), 729b8c4 (fix2: --yes gate direction + coverage attribution + full-file sweep; fresh-eyes APPROVED pre-merge).
+Wave-level integration convergence: 5 passes — pass 1: 1M (comment-crud.md visibility-field contradiction vs merged properties wire shape — integration-only class, invisible to per-story loops); pass 2: 1M+1L (--yes gate INVERTED vs security-sensitive --public confirmation contract; coverage misattribution); passes 3/4/5 CLEAN (3/3 STRICT). Empirical highlights: fresh 2034/0 suite run; 14-case intercept injection probe; holdout anchor integrity; relocation byte-identity proven end-to-end vs mock; raw-id zero-live-callers confirmed.
+Fix PRs #613 + #614 (user-merged). Worktrees cleaned. develop tip: 729b8c4.
+Wave-B preflight verified: S-577-3 dependencies all present on develop (API methods, delete stub, exclude_re state).

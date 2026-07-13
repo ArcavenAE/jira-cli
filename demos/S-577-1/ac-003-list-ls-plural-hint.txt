@@ -1,0 +1,19 @@
+=== AC-003: list/ls/LS token emits plural hint ===
+
+--- Invocation 1: jr issue comment list FOO-1 ---
+$ jr issue comment list FOO-1
+error: to list all comments, use `jr issue comments` (plural)
+exit: 2
+
+--- Invocation 2: jr issue comment ls FOO-1 ---
+$ jr issue comment ls FOO-1
+error: to list all comments, use `jr issue comments` (plural)
+exit: 2
+
+--- Invocation 3: jr issue comment LS FOO-1 ---
+$ jr issue comment LS FOO-1
+error: to list all comments, use `jr issue comments` (plural)
+exit: 2
+
+NOTE: All three exit 2. All three contain "jr issue comments" (plural).
+Case-insensitive matching confirmed: "LS" (uppercase) triggers the same hint as "ls".

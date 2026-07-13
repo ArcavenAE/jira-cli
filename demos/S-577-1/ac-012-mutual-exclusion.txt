@@ -1,0 +1,21 @@
+=== AC-012: Mutual exclusion conflicts ===
+
+--- EC-3.5.009-2: --file + --stdin conflict ---
+$ jr issue comment edit FOO-1 --id 10001 --file /tmp/body.txt --stdin
+error: the argument '--file <FILE>' cannot be used with '--stdin'
+
+Usage: jr issue comment edit --id <ID> --file <FILE> <KEY> [TEXT]
+
+For more information, try '--help'.
+exit: 2
+
+--- BC-3.5.011 clap self-check: --internal + --public conflict ---
+$ jr issue comment edit FOO-1 --id 10001 "body text" --internal --public
+error: the argument '--internal' cannot be used with '--public'
+
+Usage: jr issue comment edit --id <ID> --internal <KEY> <TEXT>
+
+For more information, try '--help'.
+exit: 2
+
+NOTE: Both conflicts detected at parse level (exit 2), no HTTP call made.

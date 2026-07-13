@@ -1,0 +1,5 @@
+=== AC-001: jr issue comment FOO-1 "some text" ===
+$ jr issue comment FOO-1 "some text"
+error: use `jr issue comment add` instead
+       `jr issue comment KEY "text"` is no longer valid; the comment command is now a subcommand group.
+exit: 2

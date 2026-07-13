@@ -1,0 +1,17 @@
+=== AC-004/005: leading-dash body parse accepted (non-exit-2 confirms parse OK) ===
+
+--- AC-004: jr issue comment add FOO-1 "- [ ] task" ---
+$ JR_AUTH_HEADER='Basic dGVzdDp0ZXN0' jr issue comment add FOO-1 "- [ ] task"
+Error: No Jira instance configured for profile "default". Run "jr auth login --profile default" or "jr init".
+exit: 78
+
+--- AC-005: jr issue comment edit FOO-1 --id 10001 "- update" ---
+$ JR_AUTH_HEADER='Basic dGVzdDp0ZXN0' jr issue comment edit FOO-1 --id 10001 "- update"
+Error: No Jira instance configured for profile "default". Run "jr auth login --profile default" or "jr init".
+exit: 78
+
+NOTE: exit 78 (EX_CONFIG — no configured Jira instance), NOT exit 2 (clap parse failure).
+The binary progressed past clap parse (leading-dash "- [ ] task" and "- update" were
+accepted as positional values by allow_hyphen_values = true) and reached the config
+lookup phase. This is the proof of parse acceptance — a parse rejection would have
+exited 2 before touching config. AC-004 and AC-005 requirements satisfied.

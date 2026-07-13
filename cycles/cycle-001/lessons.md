@@ -5720,3 +5720,41 @@ _Tagged: [process-gap] [relocation-story] [bc-citation-sweep] [spec-guards] [cod
 
 _Recorded: 2026-07-13. State-manager (CP-65, F4 wave A)._
 _Tagged: [process-gap] [story-writer] [lint-feasibility] [clippy-too-many-args] [codified] — deferred to engine backlog — see STATE.md Drift Items_
+---
+
+### PG-F4-4 CROSS-STORY-DOC-CONTRADICTION [process-gap]
+
+**Lesson:** Per-story convergence loops cannot see the UNION of doc artifacts across stories. A doc artifact that spans multiple stories (e.g. comment-crud.md, updated by both S-577-1 and S-577-2) can contain a contradiction that is invisible to each individual story's adversarial loop because each story only sees its own slice.
+
+**Origin:** SOH-COMMENT-CRUD-1 F4 wave A integration review. Pass 1 found a contradiction in comment-crud.md: the visibility-field description (written by S-577-1) contradicted the actual wire shape delivered by S-577-2. Neither per-story loop caught it. Wave-level integration review caught it as designed.
+
+**Rule:** Doc artifacts that span multiple stories need a union-audit obligation at the wave-level integration review. This is a known architectural gap — per-story loops are the wrong scope for cross-story doc consistency. Engine note: codify as a mandatory wave-level union-audit step in the integration review checklist.
+
+_Recorded: 2026-07-13. State-manager (CP-66, F4 wave A close)._
+_Tagged: [process-gap] [cross-story-docs] [wave-integration] [union-audit] [codified] — deferred to engine backlog — see STATE.md Drift Items_
+
+---
+
+### PG-F4-5 DOC-FIX-WHOLE-ARTIFACT-AUDIT-AND-DOCS-FRESH-EYES [process-gap]
+
+**Lesson (two sub-lessons, same root):**
+
+**(a) Doc-fix instructions must mandate whole-artifact audit, not site enumeration.** Fix-1 for wave A (#613) was given as site-specific instructions, which left adjacent defects (including an INVERTED security-gate description — the --yes bypass described as blocking rather than passing). These were caught only in pass 2, requiring a second fix PR (#614). The fix instruction should have said "audit the whole artifact for consistency with the merged wire shape" rather than listing specific lines to change.
+
+**(b) Docs-only PRs must still get fresh-eyes review.** The proportionality exception (docs = lighter review) was applied to PR #613, which preceded 2 residual defects — one a MEDIUM (inverted security gate description) and one a LOW (coverage misattribution). The review proportionality exception is RETIRED this session. All PRs get fresh-eyes review pre-merge. (Codified as DEC-173.)
+
+**Origin:** SOH-COMMENT-CRUD-1 F4 wave A integration passes 1-2 (fix PRs #613 and #614).
+
+**Rule:** (a) All doc-fix instructions must mandate whole-artifact audit — never enumerate only the sites the fixer is aware of. (b) All PRs, including docs-only, require fresh-eyes review before merge.
+
+_Recorded: 2026-07-13. State-manager (CP-66, F4 wave A close)._
+_Tagged: [process-gap] [doc-fix-scope] [fresh-eyes-all-prs] [proportionality-retired] [codified] — deferred to engine backlog — see STATE.md Drift Items_
+
+---
+
+### OPERATIONAL-NOTE: SUBAGENT-FORCE-PUSH-MERGE-AUTHORIZATION [classifier-boundary]
+
+**Note:** Subagent force-push and PR-merge operations require in-session user authorization. During wave A close, the orchestrator executed an authorized force-push directly (AskUserQuestion consent obtained). User elected personal GitHub merges for all remaining PRs in this bundle (standing decision, DEC-173). This is not a process gap — the DEC-128 constraint was honored throughout. This note records the classifier boundary for clarity: orchestrator may execute authorized push operations; merge operations are user-only for this bundle.
+
+_Recorded: 2026-07-13. State-manager (CP-66, F4 wave A close)._
+_Tagged: [operational-note] [classifier-boundary] [dec-128] [authorization]_
