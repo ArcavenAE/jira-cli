@@ -5681,3 +5681,42 @@ _Tagged: [process-gap] [story-writer] [citation-discipline] [codified] — defer
 
 _Recorded: 2026-07-12. State-manager (CP-63, F3 gate audit)._
 _Tagged: [process-gap] [story-writer] [test-fn-accounting] [codified] — deferred to engine backlog — see STATE.md Drift Items_
+
+---
+
+### PG-F4-1 IMPLEMENTER-PREMATURE-PUSH-AND-IMPROVISED-DEVIATIONS [process-gap]
+
+**Lesson:** Implementer agent pushed commits and opened PR #610 prematurely, skipping Step 4.5 convergence, demos, and pr-manager handoff. It also improvised 3 story deviations (D1/D2/D3) in-flight rather than stopping to report, requiring an out-of-band ratification step.
+
+**Origin:** SOH-COMMENT-CRUD-1 F4 wave A, S-577-1 TDD cycle. D1 (enum-param signatures), D2 (ContextKind::Usage intercept), D3 (tightened bare-comment assertion) were all discovered in-flight. The deviations were ratified (DEC-172), but the protocol violation stands as a process gap.
+
+**Rule:** Implementer prompt must hard-forbid push/PR creation until Step 4.5 convergence is achieved and demos are complete. On discovering any deviation from spec, implementer MUST STOP and report to orchestrator — it must NOT proceed with improvised deviations regardless of confidence in correctness.
+
+_Recorded: 2026-07-13. State-manager (CP-65, F4 wave A)._
+_Tagged: [process-gap] [implementer-discipline] [premature-push] [deviation-protocol] [codified] — deferred to engine backlog — see STATE.md Drift Items_
+
+---
+
+### PG-F4-2 RELOCATION-STORY-MISSING-BC-CITATION-SWEEP [process-gap]
+
+**Lesson:** Relocation stories (moving a handler to a new file) must include a BC-citation sweep in their File Structure section. S-577-1's handle_comment relocation broke 10 BC Source citations in the spec, tripping the Spec Guards CI guard.
+
+**Origin:** SOH-COMMENT-CRUD-1 F4 wave A, S-577-1. BC citation fix required a separate factory-artifacts commit (45b4f86) after the issue was discovered post-implementation.
+
+**Rule:** Any story that relocates a file or function must include a "BC-citation sweep" task: grep bc-*.md + CLAUDE.md for all citations of the moved file/fn, update every stale Source/Trace field in the same story PR. This is a mandatory task, not optional cleanup.
+
+_Recorded: 2026-07-13. State-manager (CP-65, F4 wave A)._
+_Tagged: [process-gap] [relocation-story] [bc-citation-sweep] [spec-guards] [codified] — deferred to engine backlog — see STATE.md Drift Items_
+
+---
+
+### PG-F4-3 STORY-PINNED-SIGNATURES-NEED-LINT-FEASIBILITY-CHECK [process-gap]
+
+**Lesson:** Story-pinned function signatures need lint-feasibility validation at story-write time. S-577-1 pinned 8- and 12-parameter function forms that tripped clippy::too_many_arguments (threshold >7), forcing an in-flight D1 deviation (enum-param wrapper) despite 29 spec review passes at F3.
+
+**Origin:** SOH-COMMENT-CRUD-1 F4 wave A, S-577-1. The signature issue was never caught in F3 adversarial review because the adversary is spec-focused, not compile-focused.
+
+**Rule:** Story-writer must check all pinned fn signatures against clippy::too_many_arguments (threshold 7 params). Functions with ≥8 pinned params are clippy violations — refactor to struct/enum param form at story-write time, not after implementation starts.
+
+_Recorded: 2026-07-13. State-manager (CP-65, F4 wave A)._
+_Tagged: [process-gap] [story-writer] [lint-feasibility] [clippy-too-many-args] [codified] — deferred to engine backlog — see STATE.md Drift Items_

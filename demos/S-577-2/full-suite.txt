@@ -1,0 +1,14 @@
+$ cargo test --test comment_crud_api
+   Compiling jr v0.6.0-dev.9 (/Users/zious/Documents/GITHUB/jira-cli/.worktrees/S-577-2)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 2.51s
+     Running tests/comment_crud_api.rs (target/debug/deps/comment_crud_api-d9ac62d954dffabb)
+
+running 6 tests
+test test_delete_comment_204_returns_ok ... ok
+test test_update_comment_body_only_no_properties_key ... ok
+test test_update_comment_internal_properties_wire_shape ... ok
+test test_get_comment_sends_expand_properties_query_param ... ok
+test test_update_comment_public_properties_wire_shape ... ok
+test test_delete_comment_encodes_key_with_space_in_url ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
