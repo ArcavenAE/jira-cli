@@ -2139,7 +2139,7 @@ simplifications are deliberate design choices documented in source comments.
 #### BC-3.5.002: `comment delete <KEY> --id <ID>` sends `DELETE /rest/api/3/issue/{key}/comment/{id}`; 204 → exit 0
 
 **Confidence**: HIGH
-**Source**: `src/api/jira/issues.rs::add_comment` (sibling; `delete_comment` added at F4; citations updated at delivery); `src/cli/issue/workflow.rs::handle_comment` (relocates to interactions.rs under PF-017 at F4; citations updated at delivery)
+**Source**: `src/api/jira/issues.rs::add_comment` (sibling; `delete_comment` added at F4; citations updated at delivery); `src/cli/issue/interactions.rs::handle_comment_add`
 **Subject**: Issue write
 **Origin**: NEW FEATURE (issue #577 SOH-COMMENT-CRUD-1)
 
@@ -2172,7 +2172,7 @@ The `--id` flag accepts a `String` (Jira comment IDs are not guaranteed to be `u
 #### BC-3.5.003: `comment delete` requires `--yes` in non-interactive mode; prompts interactively; `--yes` bypasses
 
 **Confidence**: HIGH
-**Source**: `src/cli/issue/workflow.rs::handle_comment` (relocates to interactions.rs under PF-017 at F4; citations updated at delivery)
+**Source**: `src/cli/issue/interactions.rs::handle_comment_add`
 **Subject**: Issue write
 
 Confirmation mechanics:
@@ -2210,7 +2210,7 @@ Confirmation mechanics:
 #### BC-3.5.004: `comment delete` 404 → exit 64; surfaces Jira error body — NOT idempotent
 
 **Confidence**: HIGH
-**Source**: `src/cli/issue/workflow.rs::handle_comment` (relocates to interactions.rs under PF-017 at F4; citations updated at delivery); `src/api/jira/issues.rs::add_comment` (sibling; `delete_comment` added at F4; citations updated at delivery)
+**Source**: `src/cli/issue/interactions.rs::handle_comment_add`; `src/api/jira/issues.rs::add_comment` (sibling; `delete_comment` added at F4; citations updated at delivery)
 **Subject**: Issue write
 
 **SUPERSEDES F1 draft BC-3.5.004** (F1 proposed idempotent exit 0 on 404; DEC-168 ruling 3 overrides).
@@ -2241,7 +2241,7 @@ Behavior:
 #### BC-3.5.005: `comment edit` default body-only PUT — the `"properties"` key MUST NOT be present in the PUT body when neither `--internal` nor `--public` is passed
 
 **Confidence**: HIGH
-**Source**: `src/api/jira/issues.rs::add_comment` (sibling; `update_comment` added at F4; citations updated at delivery); `src/cli/issue/workflow.rs::handle_comment` (relocates to interactions.rs under PF-017 at F4; citations updated at delivery)
+**Source**: `src/api/jira/issues.rs::add_comment` (sibling; `update_comment` added at F4; citations updated at delivery); `src/cli/issue/interactions.rs::handle_comment_add`
 **Subject**: Issue write
 
 **Core safety invariant. DEC-168 ruling 1.**
@@ -2326,7 +2326,7 @@ All three variants: Wiremock mounts PUT returning 200. Pins `changed_fields.jsm_
 #### BC-3.5.006: `comment edit --internal` explicitly sends `properties:[{"key":"sd.public.comment","value":{"internal":true}}]` in the PUT body
 
 **Confidence**: MEDIUM-HIGH
-**Source**: `src/api/jira/issues.rs::add_comment` (sibling; `update_comment` added at F4; citations updated at delivery); `src/cli/issue/workflow.rs::handle_comment` (relocates to interactions.rs under PF-017 at F4; citations updated at delivery)
+**Source**: `src/api/jira/issues.rs::add_comment` (sibling; `update_comment` added at F4; citations updated at delivery); `src/cli/issue/interactions.rs::handle_comment_add`
 **Subject**: Issue write
 
 When `--internal` is passed, the PUT body to `PUT /rest/api/3/issue/{key}/comment/{id}` MUST include:
@@ -2360,7 +2360,7 @@ No confirmation required (`--internal` reduces visibility; not an exposure risk)
 #### BC-3.5.007: `comment edit --public` explicitly sends `properties:[{"key":"sd.public.comment","value":{"internal":false}}]`; always requires confirmation
 
 **Confidence**: MEDIUM-HIGH
-**Source**: `src/api/jira/issues.rs::add_comment` (sibling; `update_comment` added at F4; citations updated at delivery); `src/cli/issue/workflow.rs::handle_comment` (relocates to interactions.rs under PF-017 at F4; citations updated at delivery)
+**Source**: `src/api/jira/issues.rs::add_comment` (sibling; `update_comment` added at F4; citations updated at delivery); `src/cli/issue/interactions.rs::handle_comment_add`
 **Subject**: Issue write
 
 When `--public` is passed, the PUT body MUST include:
@@ -2396,7 +2396,7 @@ Rationale: (1) Option (b) (confirm only if currently internal) would reintroduce
 #### BC-3.5.008: `comment edit --public` confirmation gate
 
 **Confidence**: HIGH
-**Source**: `src/cli/issue/workflow.rs::handle_comment` (relocates to interactions.rs under PF-017 at F4; citations updated at delivery)
+**Source**: `src/cli/issue/interactions.rs::handle_comment_add`
 **Subject**: Issue write
 
 Confirmation mechanics for `--public` (mirrors BC-3.5.003 delete-confirmation pattern; step 3 in the BC-3.5.005 edit pipeline ordering pin — fires AFTER `--id` validation and body-source resolution):
@@ -2441,7 +2441,7 @@ Both variants: `interact_on(&Term::stderr())` MUST be used unconditionally (all 
 #### BC-3.5.009: `comment edit` body source flags — `--file`, `--stdin`, positional text, `--markdown`
 
 **Confidence**: HIGH
-**Source**: `src/cli/issue/workflow.rs::handle_comment` (relocates to interactions.rs under PF-017 at F4; citations updated at delivery); `src/adf.rs::markdown_to_adf`; `src/adf.rs::text_to_adf`
+**Source**: `src/cli/issue/interactions.rs::handle_comment_add`; `src/adf.rs::markdown_to_adf`; `src/adf.rs::text_to_adf`
 **Subject**: Issue write
 
 Body source options for `comment edit`, mirroring `comment add` (BC-3.5.001 add path):
@@ -2480,7 +2480,7 @@ At least one body source (`--file`, `--stdin`, or positional text) MUST be provi
 #### BC-3.5.010: `comment view <KEY> --id <ID>` sends `GET /rest/api/3/issue/{key}/comment/{id}?expand=properties`; renders comment details
 
 **Confidence**: HIGH
-**Source**: `src/api/jira/issues.rs::add_comment` (sibling; `get_comment` added at F4; citations updated at delivery); `src/cli/issue/workflow.rs::handle_comment` (relocates to interactions.rs under PF-017 at F4; citations updated at delivery)
+**Source**: `src/api/jira/issues.rs::add_comment` (sibling; `get_comment` added at F4; citations updated at delivery); `src/cli/issue/interactions.rs::handle_comment_add`
 **Subject**: Issue write
 
 Endpoint: `GET /rest/api/3/issue/{key}/comment/{id}?expand=properties`
@@ -2553,7 +2553,7 @@ The raw Jira response is deserialized as `serde_json::Value` and routed through 
 #### BC-3.5.012: `jr issue comment` becomes a subcommand group; old flat form produces clap error with migration hint
 
 **Confidence**: HIGH
-**Source**: `src/cli/mod.rs` (`IssueCommand::Comment(CommentSubcommand)`); `src/cli/issue/mod.rs` (dispatch); `src/cli/issue/workflow.rs::handle_comment` (handlers relocate to interactions.rs under PF-017 at F4; citations updated at delivery)
+**Source**: `src/cli/mod.rs` (`IssueCommand::Comment(CommentSubcommand)`); `src/cli/issue/mod.rs` (dispatch); `src/cli/issue/interactions.rs::handle_comment_add`
 **Subject**: Issue write
 
 **Breaking CLI change. DEC-168 ruling 2: Option A clean break.**
