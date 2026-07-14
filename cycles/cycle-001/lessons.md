@@ -5758,3 +5758,40 @@ _Tagged: [process-gap] [doc-fix-scope] [fresh-eyes-all-prs] [proportionality-ret
 
 _Recorded: 2026-07-13. State-manager (CP-66, F4 wave A close)._
 _Tagged: [operational-note] [classifier-boundary] [dec-128] [authorization]_
+
+---
+
+### PG-F4-1 RECURRENCE: PARTIAL-COMPLIANCE [process-gap]
+
+**Lesson (recurrence note):** PG-F4-1 was codified in CP-65 (implementer hard-forbidden from push/PR/improvise). In S-577-3 delivery, the implementer correctly refrained from pushing or opening a PR (the hard-stop trigger) but improvised the deviation D-1 in-flight without first dispatching a STOP-and-report to orchestrator. Deviation was later ratified (DEC-174) but the report-first mandate was not followed.
+
+**Compliance grade:** PARTIAL — did NOT push (correct), did NOT open PR (correct), but did NOT report deviation before proceeding (violation of STOP-and-report; deviation was reported retrospectively, not proactively).
+
+**Rule (reaffirmed):** Any runtime divergence from the story spec — including testing-library limitation discoveries — must STOP and surface immediately before the implementer adapts. The implementer should never silently adopt an equivalent and continue; the orchestrator and human gate must ratify the equivalence first.
+
+_Recorded: 2026-07-13. State-manager (CP-67, session wrap)._
+_Tagged: [process-gap] [implementer-discipline] [stop-and-report] [deviation-d1] [recurrence] — deferred to engine backlog — see STATE.md Drift Items_
+
+---
+
+### PG-F4-6 VALIDATE-PR-REVIEW-POSTED-HOOK-UNSATISFIABLE [process-gap]
+
+**Lesson:** The validate-pr-review-posted hook fires before the user performs the squash-merge on GitHub. When the fresh-eyes reviewer submits a COMMENTED verdict (not APPROVED/CHANGES_REQUESTED), the hook cannot distinguish COMMENTED-as-approve-equivalent from a reviewer still engaged. The hook rejects COMMENTED and demands an APPROVED verdict, but same-account reviews on GitHub do not allow the APPROVED radio button — COMMENTED is the highest attainable verdict in that configuration.
+
+**Origin:** S-577-3 fresh-eyes review returned COMMENTED. Hook blocked until workaround applied. COMMENTED = approve-equivalent per DEC-173 precedent (established at wave A for same-account reviews).
+
+**Rule:** The validate-pr-review-posted hook must be extended to accept COMMENTED as a passing verdict when the pr-reviewer is on the same account as the PR author. Until the engine-side fix ships, orchestrators must bypass the hook via explicit user authorization when a COMMENTED verdict is received from a same-account reviewer.
+
+_Recorded: 2026-07-13. State-manager (CP-67, session wrap)._
+_Tagged: [process-gap] [hook-eligibility] [same-account-review] [commented-approve-equivalent] [codified] — deferred to engine backlog — see STATE.md Drift Items_
+
+---
+
+### BANKED-NIT: BC-3.5.002-TRAILING-PERIOD [banked-nit]
+
+**Nit:** BC-3.5.002 (comment add spec) is missing a trailing period on its final sentence. Identified during S-577-3 fresh-eyes review. Not worth a standalone fix PR; carry to next spec-maintenance sweep or bundle-close finalization.
+
+**Location:** `.factory/specs/prd/bc-3-issue-write.md` BC-3.5.002 final sentence.
+
+_Recorded: 2026-07-13. State-manager (CP-67, session wrap)._
+_Tagged: [banked-nit] [bc-3-issue-write] [spec-hygiene] — defer to bundle-close or next spec-maintenance sweep_

@@ -1,0 +1,22 @@
+$ cargo test --test comment_delete -- test_bc_3_5_002_ec2_delete_key_url_encoding --nocapture
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.11s
+     Running tests/comment_delete.rs (target/debug/deps/comment_delete-a48e25ddc26a7ed2)
+
+running 1 test
+test test_bc_3_5_002_ec2_delete_key_url_encoding ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 9 filtered out; finished in 0.73s
+
+---
+
+AC-008 assertions verified in test body:
+  Invocation: jr issue comment delete "MY KEY-1" --id 10001 --yes
+  (space in key; wiremock uses loose method("DELETE") matcher, any path)
+
+  - exit code == 0 (204 from mock)
+  - server.received_requests().await[0].url inspected server-side
+  - url_str contains "MY%20KEY-1" (space encoded to %20)
+  - url_str does NOT contain "MY KEY-1" (raw space absent from URL)
+
+Note: URL encoding is performed by delete_comment in src/api/jira/issues.rs (S-577-2),
+not in the handler. This test pins the wire-level URL shape end-to-end.

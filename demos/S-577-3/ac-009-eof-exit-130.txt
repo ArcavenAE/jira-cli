@@ -1,0 +1,26 @@
+$ cargo test --test comment_delete -- test_bc_3_5_003_ec3_delete_prompt_eof_exits_130 --nocapture
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.11s
+     Running tests/comment_delete.rs (target/debug/deps/comment_delete-a48e25ddc26a7ed2)
+
+running 1 test
+test test_bc_3_5_003_ec3_delete_prompt_eof_exits_130 ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 9 filtered out; finished in 0.73s
+
+---
+
+AC-009 assertions verified in test body:
+  Invocation: jr issue comment delete FOO-1 --id 10001
+  Environment: JR_STDIN_IS_TTY=1
+  Stdin: "" (empty — EOF immediately; write_stdin(""))
+
+  The JR_STDIN_IS_TTY=1 seam suppresses the auto-no-input flip so the interactive
+  prompt fires. stdin().lock().read_line() returns Ok(0) (EOF) which the handler
+  maps to JrError::Interrupted per DEC-174 (do NOT use dialoguer::interact_on —
+  piped-stderr NotConnected failure; manual eprint! + read_line is unconditional).
+
+  - exit code == 130 (JrError::Interrupted, from error.rs::exit_code())
+  - DELETE mock .expect(0) verified — EOF hits before any HTTP call
+
+Without JR_STDIN_IS_TTY=1, piped stdin auto-sets no_input=true → exit 64
+(no-input gate), NOT exit 130. The seam is required for this test path.

@@ -1,0 +1,36 @@
+$ cargo test --test comment_delete -- test_bc_3_5_002_delete_204_human_output_yes --nocapture
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.12s
+     Running tests/comment_delete.rs (target/debug/deps/comment_delete-a48e25ddc26a7ed2)
+
+running 1 test
+test test_bc_3_5_002_delete_204_human_output_yes ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 9 filtered out; finished in 0.71s
+
+---
+
+AC-001 assertions verified in test body:
+  - exit code == 0 (wiremock returns 204)
+  - stderr contains "Deleted comment 10001 on FOO-1"
+  - stdout is empty (Symmetric output profile — no data on human success path)
+  - DELETE mock .expect(1) verified (wiremock mock server guard)
+
+---
+
+$ cargo test --test comment_delete -- test_bc_3_5_002_delete_204_json_output_key_set --nocapture
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.11s
+     Running tests/comment_delete.rs (target/debug/deps/comment_delete-a48e25ddc26a7ed2)
+
+running 1 test
+test test_bc_3_5_002_delete_204_json_output_key_set ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 9 filtered out; finished in 0.71s
+
+---
+
+AC-002 assertions verified in test body:
+  - exit code == 0
+  - stdout parses as valid JSON
+  - top-level key set == {"deleted", "id", "key"} (exact, via BTreeSet comparison)
+  - deleted == true
+  - DELETE mock .expect(1) verified

@@ -1,0 +1,22 @@
+$ cargo test --test comment_delete -- test_bc_3_5_002_ec1_delete_invalid_id_regex_exits_64 --nocapture
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.11s
+     Running tests/comment_delete.rs (target/debug/deps/comment_delete-a48e25ddc26a7ed2)
+
+running 1 test
+test test_bc_3_5_002_ec1_delete_invalid_id_regex_exits_64 ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 9 filtered out; finished in 0.70s
+
+---
+
+AC-006 assertions verified in test body:
+  Invocation: jr issue comment delete FOO-1 --id "../evil" --yes
+  (also covers EC-002: --id "10001;x" via char scan — ";" not in [0-9A-Za-z_-])
+
+  Validation: validate_comment_id() uses manual char scan — id.chars().all(|c|
+  c.is_ascii_alphanumeric() || c == '_' || c == '-') with explicit empty guard.
+  No regex crate, no once_cell. Path traversal "../evil" fails on '/'.
+
+  - exit code == 64 (JrError::UserError)
+  - stderr contains "invalid comment id"
+  - DELETE mock .expect(0) verified — validation fires BEFORE HTTP (pipeline step 1)

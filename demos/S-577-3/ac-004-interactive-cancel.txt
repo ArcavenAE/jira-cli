@@ -1,0 +1,27 @@
+$ cargo test --test comment_delete -- test_bc_3_5_003_interactive_cancel_json_key_set --nocapture
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.11s
+     Running tests/comment_delete.rs (target/debug/deps/comment_delete-a48e25ddc26a7ed2)
+
+running 1 test
+test test_bc_3_5_003_interactive_cancel_json_key_set ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 9 filtered out; finished in 0.71s
+
+---
+
+AC-004 assertions verified in test body:
+  Invocation: jr issue comment delete FOO-1 --id 10001 --output json
+  Environment: JR_STDIN_IS_TTY=1 (set via Command::env in test subprocess)
+  Stdin: "N\n" (piped via write_stdin)
+
+  The JR_STDIN_IS_TTY=1 seam suppresses the auto-no-input flip that normally fires
+  when stdin is not a TTY — the subprocess receives piped stdin but the seam prevents
+  cli.no_input from being set true, so the interactive prompt fires.
+
+  - exit code == 0 (cancel is not an error)
+  - stdout parses as valid JSON
+  - top-level key set == {"cancelled", "deleted"} (exact — "id" and "key" absent
+    because no HTTP call confirmed them server-side, per EC-3.5.003-2)
+  - cancelled == true
+  - deleted == false
+  - DELETE mock .expect(0) verified — zero DELETE calls (cancel before HTTP)

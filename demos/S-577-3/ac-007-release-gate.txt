@@ -1,0 +1,29 @@
+$ cargo test --test jr_stdin_is_tty_release_gate -- --nocapture
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.12s
+     Running tests/jr_stdin_is_tty_release_gate.rs (target/debug/deps/jr_stdin_is_tty_release_gate-fc759a619e8df627)
+
+running 1 test
+test test_jr_stdin_is_tty_cfg_gate_present_in_main_source ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+---
+
+AC-007 (seam + gate) assertions:
+  File: tests/jr_stdin_is_tty_release_gate.rs
+  Test: test_jr_stdin_is_tty_cfg_gate_present_in_main_source
+
+  Uses adjacency-window approach (mirrors tests/base_url_release_gate.rs pattern):
+  1. Locates the JR_STDIN_IS_TTY env-var read line in src/main.rs via include_str!
+  2. Searches a 5-line window above the env-var read
+  3. Asserts #[cfg(debug_assertions)] appears within that window
+
+  Verifies the seam is excluded from release binaries. The two-independent-presence-
+  check pattern is NOT used (cannot catch an un-gated read with a cfg elsewhere).
+
+  CLAUDE.md entry:
+  "JR_STDIN_IS_TTY env var forces TTY mode in debug builds (interactive-branch test seam;
+   when set to "1", suppresses the src/main.rs auto-no-input flip that fires on non-TTY
+   stdin; release builds ignore this env var). Gated via #[cfg(debug_assertions)] at
+   src/main.rs (seam scope). Pinned by tests/jr_stdin_is_tty_release_gate.rs."
+   [entry present in worktree CLAUDE.md AI Agent Notes section]
