@@ -11,17 +11,41 @@ All notable changes to jr will be documented here.
   `jr issue comment add KEY "message"`. Invoking the flat form now exits 2 with a
   migration hint: `error: use \`jr issue comment add\` instead`.
   The `add` subcommand accepts the same flags (`--stdin`, `--file`, `--markdown`,
-  `--internal`). New subcommands `delete`, `edit`, and `view` are stubs
-  (implemented in S-577-3/4/5/6).
+  `--internal`). New subcommands `delete` (S-577-3), `edit` (body-only, S-577-4), and `view`
+  (S-577-6) are all fully implemented in this release.
 
 ### Added
 
+- **`jr issue comment edit` — body sources + body-only PUT (S-577-4, issue #577):**
+  `jr issue comment edit KEY --id ID [BODY | --file F | --stdin]` updates a comment's
+  body via a body-only PUT request (`{"body": <adf>}` — no `"properties"` key in the
+  default path). Four body sources are supported: positional text, `--file`, `--stdin`,
+  and `--markdown` (modifier). Guards: `--id` charset validation (exit 64),
+  file-not-found → exit 64 (explicit remap, not exit 1), empty/whitespace body → exit 64.
+  `--output json` returns `{changed_fields:{body:<raw-pre-trim>},id,key,updated:true}`.
+  Human mode prints `"Updated comment ID on KEY"` to stderr.
+  404/403 → exit 64 with dual-line preamble + Jira error body surface.
+
 - **`jr issue comment add/delete/edit/view` subcommand group (S-577-1):**
   `jr issue comment` is now a subcommand group. `add` is fully implemented
-  (replaces the old flat form). `delete`, `edit`, and `view` are stubs to be
-  completed in follow-on stories. Interaction handlers extracted from
-  `workflow.rs` to a new `src/cli/issue/interactions.rs` shard per ADR-0012 /
-  PF-017.
+  (replaces the old flat form). `edit` (body-only, S-577-4) and `view` (S-577-6)
+  are also fully implemented in this release. `delete` (S-577-3) is likewise fully
+  implemented (y/N confirmation gate, `--yes` bypass, 404/403 exit 64).
+  Interaction handlers extracted from `workflow.rs` to a new
+  `src/cli/issue/interactions.rs` shard per ADR-0012 / PF-017.
+
+- **`jr issue comment view KEY --id ID` — read a single comment (S-577-6, #577):**
+  `jr issue comment view FOO-1 --id 10001` fetches the comment with
+  `GET /rest/api/3/issue/{key}/comment/{id}?expand=properties` and renders six
+  labeled fields (ID, Author, Created, Updated, JSM internal, Restricted) plus
+  an unlabeled body block rendered via ADF-to-text. The `JSM internal:` field
+  shows `Yes`/`No`/`N/A` from the `sd.public.comment` entity property. The
+  `Restricted:` field uses a 4-rung ladder (role/group value, `id=<identifier>`,
+  `<type>:<value>`, or `None`). `--output json` passes the raw API response
+  through losslessly (`serde_json::Value` passthrough — no typed round-trip that
+  would silently drop extra fields). Invalid `--id` charset exits 64; 404/403
+  exits 64 with Jira's error body surfaced. (Over-deep comment bodies are
+  rejected at the JSON parse layer, exit 1.)
 
 - **CI: BC-body Trace/Source citation guard (Guard 1) (DEC-148):** adds
   `scripts/check-bc-citation-symbols.sh` (BC-CITE-001; validates `src/` file and symbol
