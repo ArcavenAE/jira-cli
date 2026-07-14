@@ -1,0 +1,66 @@
+AC-005: 4-rung Restricted ladder — 4 test functions (rung_a, rung_b, rung_c, rung_d)
+
+---
+
+$ cargo test --test comment_view -- test_bc_3_5_010_restricted_ladder_rung_a --nocapture
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.11s
+     Running tests/comment_view.rs (target/debug/deps/comment_view-5e3fdd45a54cd9b2)
+
+running 1 test
+test test_bc_3_5_010_restricted_ladder_rung_a ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 14 filtered out; finished in 0.68s
+
+Rung (a) assertions: visibility.type="role", value="Software Engineers", identifier="sr-engineers"
+  → stdout contains "Restricted: Software Engineers"
+  (non-empty value wins; identifier ignored on rung a)
+
+---
+
+$ cargo test --test comment_view -- test_bc_3_5_010_restricted_ladder_rung_b --nocapture
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.11s
+     Running tests/comment_view.rs (target/debug/deps/comment_view-5e3fdd45a54cd9b2)
+
+running 1 test
+test test_bc_3_5_010_restricted_ladder_rung_b ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 14 filtered out; finished in 0.71s
+
+Rung (b) assertions: visibility.type="group", value="", identifier="sr-engineers"
+  → stdout contains "Restricted: id=sr-engineers"
+  (empty value + non-empty identifier → id= prefix)
+
+---
+
+$ cargo test --test comment_view -- test_bc_3_5_010_restricted_ladder_rung_c --nocapture
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.11s
+     Running tests/comment_view.rs (target/debug/deps/comment_view-5e3fdd45a54cd9b2)
+
+running 1 test
+test test_bc_3_5_010_restricted_ladder_rung_c ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 14 filtered out; finished in 0.70s
+
+Rung (c) assertions: visibility.type="Team", value="AlphaTeam", identifier="some-uuid"
+  → stdout contains "Restricted: Team:AlphaTeam"
+  (non-role/non-group type with non-empty value → <type>:<value>)
+
+Unit-level sub-case (c-id) covered by lib-unit tests in interactions.rs #[cfg(test)]:
+  test_format_restricted_field_rung_c_id_uses_identifier_when_value_empty
+  Fixture: type="Team", value="", identifier="AlphaTeam"
+  → returns "Team:AlphaTeam" (value-OR-identifier preference)
+
+---
+
+$ cargo test --test comment_view -- test_bc_3_5_010_restricted_ladder_rung_d --nocapture
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.11s
+     Running tests/comment_view.rs (target/debug/deps/comment_view-5e3fdd45a54cd9b2)
+
+running 1 test
+test test_bc_3_5_010_restricted_ladder_rung_d ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 14 filtered out; finished in 0.70s
+
+Rung (d) assertions: no "visibility" field in response
+  → stdout contains "Restricted: None"
+  (fallback catch-all; also covered in AC-001 base render)

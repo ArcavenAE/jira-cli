@@ -5795,3 +5795,44 @@ _Tagged: [process-gap] [hook-eligibility] [same-account-review] [commented-appro
 
 _Recorded: 2026-07-13. State-manager (CP-67, session wrap)._
 _Tagged: [banked-nit] [bc-3-issue-write] [spec-hygiene] — defer to bundle-close or next spec-maintenance sweep_
+
+---
+
+### PG-F4-7 SPEC-ENUMERATED-VARIANTS-WITHOUT-ENUMERATED-TESTS [process-gap]
+
+**Lesson:** When a story spec enumerates variants (e.g., N error conditions) but doesn't list per-variant test-function names, the accounting gap surfaces at adversary pass time. The adversary counts from the spec's stated variant list and disagrees with the implementer's actual test count — both can be right but neither can prove it quickly. This recurs: F3-pass-25 (AC-to-test-fn count dispute on S-577-6 ACs) + wave-C passes 1 and 2 on S-577-4 (404-preamble error variant without named test fn) and S-577-6 (fallback-token variant without named test fn).
+
+**Origin:** F4 wave-C: S-577-6 pass-1 MEDIUM (fallback token variant), S-577-4 pass-1 MEDIUM (404-preamble variant). Both fixed in pass-1 fix rounds. RECURRENCE 3.
+
+**Rule:** Story-writer must enumerate per-variant test-function names in AC bodies (e.g., `- [ ] test_edit_returns_404_on_missing_comment`). The count emerges from listing; the adversary can verify by `cargo test -- --list`. Stories that enumerate variants without named tests are incomplete.
+
+_Recorded: 2026-07-14. State-manager (wave-C burst, TD-VSDD-053)._
+_Tagged: [process-gap] [story-writer-discipline] [ac-to-test-mapping] [recurrence-3] [codified] — deferred to vsdd-factory engine (story-writer checklist update); outside product repo scope — see STATE.md Drift Items_
+
+---
+
+### PG-F4-8 RESUMED-SUBAGENT-IN-WRONG-WORKTREE [process-gap]
+
+**Lesson:** When a sub-agent is resumed (via SendMessage) after a context switch, it may not have reliable memory of which worktree it was working in. In one instance, the implementer agent wrote stray commits to `.worktrees/S-577-4` instead of `.worktrees/S-577-6` (its assigned worktree) — the commits were caught by the orchestrator and cleaned up, but required an extra fix round. The worktree assignment is not self-evident from inside an agent's context; the agent must verify.
+
+**Origin:** F4 wave-C: implementer resumed on S-577-6 story but ran in S-577-4 worktree. Caught at adversary pass 1 for S-577-6. Fixed in pass-2 fix round.
+
+**Rule:** Every resume prompt must include: (1) the explicit worktree path (`.worktrees/<story-id>`), (2) the branch name (`feat/<slug>`), (3) a mandatory pre-commit guard: run `git -C .worktrees/<story-id> rev-parse --abbrev-ref HEAD` and assert it equals the expected branch before any `git commit`. Any mismatch: STOP and report to orchestrator before proceeding.
+
+_Recorded: 2026-07-14. State-manager (wave-C burst, TD-VSDD-053)._
+_Tagged: [process-gap] [implementer-discipline] [worktree-identity] [resume-guard] [codified] — deferred to vsdd-factory engine (implementer resume checklist); outside product repo scope — see STATE.md Drift Items_
+
+---
+
+### POSITIVE-CONTROL-EMPIRICAL-MUTATION-AND-CLI-PROBES [positive-control]
+
+**Observation:** F4 wave-C produced two complementary positive-control data points:
+
+1. **cargo-mutants empirical (S-577-4):** diff-mutants run caught all 7/7 injected mutants with zero survivors. Confirms the test suite has real discriminatory power on the wave-C edit-core implementation, not just coverage numbers. This is the second diff-mutants PASS (after ADF-CODE-MARK F4, DEC-161), extending the calibration baseline.
+
+2. **Live CLI probes (S-577-6):** All 11/11 AC demos passed against a local dev binary (`cargo run`), covering the full comment-view handler surface (table output, JSON output, --public/--internal filtering, pagination, error paths). Confirms the story's test suite covers real wire behavior, not just unit-test mocks.
+
+**Note:** These positive controls do not override the adversarial gate — they are complementary. A passing positive control reduces the prior probability that a MEDIUM adversary finding is a false positive, but the adversary gate remains authoritative.
+
+_Recorded: 2026-07-14. State-manager (wave-C burst, TD-VSDD-053)._
+_Tagged: [positive-control] [cargo-mutants] [cli-probes] [calibration] [s-577-4] [s-577-6]_

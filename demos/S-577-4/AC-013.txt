@@ -1,0 +1,21 @@
+$ cargo test --test comment_edit -- test_bc_3_5_005_edit_500_exits_1_not_64 --nocapture
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.11s
+     Running tests/comment_edit.rs (target/debug/deps/comment_edit-10ad5a4b953c7ecc)
+
+running 1 test
+test test_bc_3_5_005_edit_500_exits_1_not_64 ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 12 filtered out; finished in 0.70s
+
+---
+
+Step-4.5 coverage extension: AC-013 (500-guard mutation-kill test)
+  Kills two guard mutations in the 404/403 re-wrap block at interactions.rs:
+    (1) replacing guard `*status == 404 || *status == 403` with `true` — any ApiError would get exit 64
+    (2) replacing `== 403` with `!= 403` — 500 would match `500 != 403` = true → incorrect exit 64
+
+AC-013 assertions verified in test body:
+  - wiremock returns 500 {"errorMessages":["Internal server error"]}
+  - exit code == 1 (not 64; 500 propagates through Err(e) → JrError::ApiError → exit 1)
+  - stderr does NOT contain "comment not found or permission denied"
+    (500 is neither 404 nor 403; the 404/403 preamble re-wrap must NOT fire)

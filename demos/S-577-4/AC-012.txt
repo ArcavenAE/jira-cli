@@ -1,0 +1,22 @@
+$ cargo test --test comment_edit -- test_bc_3_5_009_edit_markdown_source --nocapture
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.11s
+     Running tests/comment_edit.rs (target/debug/deps/comment_edit-10ad5a4b953c7ecc)
+
+running 1 test
+test test_bc_3_5_009_edit_markdown_source ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 12 filtered out; finished in 0.69s
+
+---
+
+Step-4.5 coverage extension: AC-012 (markdown fork wire test)
+  Kills the converter-swap mutant on the markdown fork (if/else branch in handle_comment_edit).
+
+AC-012 assertions verified in test body:
+  - jr issue comment edit FOO-1 --id 10001 "**bold**" --markdown --output json
+  - exit code == 0 (wiremock returns 200)
+  - exactly 1 PUT request received
+  - PUT ADF wire body: body.content[0].content[0].marks contains a mark with type == "strong"
+    (proves markdown_to_adf was called — text_to_adf("**bold**") would emit literal text with no marks)
+  - text node text == "bold" (markdown parsed, asterisk delimiters stripped — NOT "**bold**" literal)
+  Distinguishability: markdown_to_adf → text "bold" + strong mark; text_to_adf → text "**bold**" + no marks.

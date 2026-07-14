@@ -1,0 +1,18 @@
+$ cargo test --test comment_edit -- test_bc_3_5_005_ec1_put_request_has_only_body_key --nocapture
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.11s
+     Running tests/comment_edit.rs (target/debug/deps/comment_edit-10ad5a4b953c7ecc)
+
+running 1 test
+test test_bc_3_5_005_ec1_put_request_has_only_body_key ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 12 filtered out; finished in 0.70s
+
+---
+
+AC-003 assertions verified in test body (wire-level inspection):
+  - exit code == 0 (wiremock returns 200)
+  - exactly 1 PUT request received by wiremock
+  - PUT request body parsed as JSON object
+  - body_json.get("properties").is_none() == true (no "properties" key — body-only invariant EC-3.5.005-1)
+  - body_json.get("body").is_some() == true ("body" key present)
+  - body_json keys.len() == 1 (exactly one top-level key)

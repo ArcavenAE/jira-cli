@@ -1,0 +1,18 @@
+$ cargo test --test comment_view -- test_bc_3_5_010_body_absent_empty_block_stdout_ends_restricted_none --nocapture
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.11s
+     Running tests/comment_view.rs (target/debug/deps/comment_view-5e3fdd45a54cd9b2)
+
+running 1 test
+test test_bc_3_5_010_body_absent_empty_block_stdout_ends_restricted_none ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 14 filtered out; finished in 0.70s
+
+---
+
+AC-011 assertions verified in test body:
+  - Fixture: no "body" field, no "visibility", no "properties"
+  - exit code == 0
+  - Byte-level pin (VP-577-021 variant 2):
+    stdout.ends_with("Restricted: None\n\n")
+    — structural blank-line separator always renders; nothing follows when body absent
+  - No panic on absent body field

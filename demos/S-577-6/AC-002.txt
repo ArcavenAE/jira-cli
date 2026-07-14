@@ -1,0 +1,15 @@
+$ cargo test --test comment_view -- test_bc_3_5_010_jsm_internal_yes_when_internal_true --nocapture
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.11s
+     Running tests/comment_view.rs (target/debug/deps/comment_view-5e3fdd45a54cd9b2)
+
+running 1 test
+test test_bc_3_5_010_jsm_internal_yes_when_internal_true ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 14 filtered out; finished in 0.73s
+
+---
+
+AC-002 assertions verified in test body:
+  - exit code == 0
+  - Fixture: properties[0].key == "sd.public.comment", value.internal == true
+  - stdout contains "JSM internal: Yes"

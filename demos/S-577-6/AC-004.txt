@@ -1,0 +1,15 @@
+$ cargo test --test comment_view -- test_bc_3_5_010_jsm_internal_na_when_no_properties --nocapture
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.11s
+     Running tests/comment_view.rs (target/debug/deps/comment_view-5e3fdd45a54cd9b2)
+
+running 1 test
+test test_bc_3_5_010_jsm_internal_na_when_no_properties ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 14 filtered out; finished in 0.70s
+
+---
+
+AC-004 assertions verified in test body:
+  - exit code == 0
+  - Fixture: no "properties" field in response (absent, not empty array)
+  - stdout contains "JSM internal: N/A"

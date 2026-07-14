@@ -1,0 +1,18 @@
+$ cargo test --test comment_edit -- test_bc_3_5_009_ec1_file_not_found_exits_64 --nocapture
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.11s
+     Running tests/comment_edit.rs (target/debug/deps/comment_edit-10ad5a4b953c7ecc)
+
+running 1 test
+test test_bc_3_5_009_ec1_file_not_found_exits_64 ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 12 filtered out; finished in 0.69s
+
+---
+
+AC-006 assertions verified in test body:
+  - jr issue comment edit FOO-1 --id 10001 --file /no/such/file.md
+  - exit code == 64 (explicit JrError::UserError remap for NotFound — NOT exit 1)
+  - stderr contains "file not found" (EC-3.5.009-1 message)
+  - exit code != 1 (explicitly asserted; default ApiError path must NOT fire)
+  - wiremock PUT mock has .expect(0) — wiremock auto-verifies 0 PUT requests on drop
+    (confirms no HTTP call was made before the file-read error)

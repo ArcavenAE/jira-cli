@@ -1,0 +1,16 @@
+$ cargo test --test comment_edit -- test_bc_3_5_005_edit_changed_fields_body_is_raw_pre_trim --nocapture
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.11s
+     Running tests/comment_edit.rs (target/debug/deps/comment_edit-10ad5a4b953c7ecc)
+
+running 1 test
+test test_bc_3_5_005_edit_changed_fields_body_is_raw_pre_trim ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 12 filtered out; finished in 0.68s
+
+---
+
+AC-002 assertions verified in test body:
+  - exit code == 0 (wiremock returns 200; input "  hello world  " with leading/trailing spaces)
+  - changed_fields.body == "  hello world  " (raw pre-trim input preserved in JSON echo)
+  - wire PUT body ADF: body.content[0].content[0].text == "hello world" (trimmed per BC-3.5.005 ~2295 pin)
+  Two channels are intentionally asymmetric: JSON lossless, ADF trimmed.

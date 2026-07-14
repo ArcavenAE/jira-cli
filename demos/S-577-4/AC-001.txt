@@ -1,0 +1,21 @@
+$ cargo test --test comment_edit -- test_bc_3_5_005_edit_response_exact_key_set --nocapture
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.11s
+     Running tests/comment_edit.rs (target/debug/deps/comment_edit-10ad5a4b953c7ecc)
+
+running 1 test
+test test_bc_3_5_005_edit_response_exact_key_set ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 12 filtered out; finished in 0.70s
+
+---
+
+AC-001 assertions verified in test body (JSON mode variant):
+  - exit code == 0 (wiremock returns 200 on PUT /rest/api/3/issue/FOO-1/comment/10001)
+  - stdout parses as valid JSON object
+  - top-level key set == BTreeSet::from(["changed_fields", "id", "key", "updated"]) (exact)
+  - changed_fields sub-key set == BTreeSet::from(["body"]) (exactly 1 key; no "jsm_internal")
+
+AC-001 assertions verified in test body (human mode variant):
+  - exit code == 0
+  - stderr contains "Updated comment 10001 on FOO-1"
+  - stdout is empty (Symmetric output profile)

@@ -1,0 +1,45 @@
+AC-007: adf_to_text failure → exit 64 (EC-3.5.010-2a) — two-tier test
+
+NOTE: the >256-deep wiremock fixture approach is unproducible. A ≥129-deep JSON body is
+rejected by serde_json::from_slice (serde default recursion limit = 128; called in
+client.rs::get) before adf_to_text is called — resulting in JrError::Json → exit 1, NOT
+exit 64. The adf_to_text depth-guard exit-64 path is therefore unreachable via the
+HTTP/wiremock boundary. EC-3.5.010-2(a) is pinned at unit level per tier (i).
+
+---
+
+TIER (i): Unit-level propagation test — lib tier (interactions.rs #[cfg(test)])
+
+$ cargo test --lib -- test_bc_3_5_010_ec2a_adf_error_propagates_exit64 --nocapture
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.11s
+     Running unittests src/lib.rs (target/debug/deps/jr-6f55a7f73b733fab)
+
+running 1 test
+test cli::issue::interactions::tests::test_bc_3_5_010_ec2a_adf_error_propagates_exit64 ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 1015 filtered out; finished in 0.04s
+
+Tier (i) assertions:
+  - Programmatically constructs a serde_json::Value ADF node with nesting depth > 256
+    (construction bypasses serde 128-limit; uses depth counting, not MAX_ADF_DEPTH constant)
+  - Calls adf_to_text(&deep_node) directly
+  - Returns Err(...) with the depth-guard error
+  - handler maps it to UserError / exit-64 class
+
+---
+
+TIER (ii): Subprocess boundary-behavior test — tests/comment_view.rs
+
+$ cargo test --test comment_view -- test_bc_3_5_010_ec2a_deep_json_parse_error_exits_1 --nocapture
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.10s
+     Running tests/comment_view.rs (target/debug/deps/comment_view-5e3fdd45a54cd9b2)
+
+running 1 test
+test test_bc_3_5_010_ec2a_deep_json_parse_error_exits_1 ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 14 filtered out; finished in 0.69s
+
+Tier (ii) assertions:
+  - Wiremock returns a 129-deep nested JSON body (built as raw string to bypass json! macro limit)
+  - serde_json recursion limit (128) fires first → JrError::Json → exit 1 (NOT exit 64)
+  - Pins the boundary behavior: adf_to_text path is unreachable via HTTP boundary

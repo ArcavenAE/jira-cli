@@ -1,0 +1,16 @@
+$ cargo test --test comment_edit -- test_bc_3_5_009_ec5_empty_whitespace_body_exits_64 --nocapture
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.11s
+     Running tests/comment_edit.rs (target/debug/deps/comment_edit-10ad5a4b953c7ecc)
+
+running 1 test
+test test_bc_3_5_009_ec5_empty_whitespace_body_exits_64 ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 12 filtered out; finished in 0.71s
+
+---
+
+AC-007 assertions verified in test body:
+  - jr issue comment edit FOO-1 --id 10001 "   " (all-whitespace positional body)
+  - exit code == 64 (EC-3.5.009-5 empty body guard)
+  - stderr contains "comment body cannot be empty" (load-bearing substring)
+  - wiremock PUT mock has .expect(0) — no HTTP PUT call made

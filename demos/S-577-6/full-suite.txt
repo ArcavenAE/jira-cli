@@ -1,0 +1,33 @@
+$ cargo test --test comment_view -- --nocapture
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.18s
+     Running tests/comment_view.rs (target/debug/deps/comment_view-5e3fdd45a54cd9b2)
+
+running 15 tests
+test test_bc_3_5_002_ec1_view_invalid_id_regex_exits_64 ... ok
+test test_bc_3_5_010_404_exits_64_with_body_surface ... ok
+test test_bc_3_5_010_ec2a_deep_json_parse_error_exits_1 ... ok
+test test_bc_3_5_010_restricted_ladder_rung_c ... ok
+test test_bc_3_5_010_restricted_ladder_rung_a ... ok
+test test_bc_3_5_010_jsm_internal_no_when_internal_false ... ok
+test test_bc_3_5_010_jsm_internal_yes_when_internal_true ... ok
+test test_bc_3_5_010_body_rendered_with_blank_line_separator ... ok
+test test_bc_3_5_010_jsm_internal_na_when_no_properties ... ok
+test test_bc_3_5_010_restricted_ladder_rung_b ... ok
+test test_bc_3_5_010_ec1_json_output_passthrough ... ok
+test test_bc_3_5_010_restricted_ladder_rung_d ... ok
+test test_bc_3_5_010_view_human_render_all_seven_fields ... ok
+test test_bc_3_5_010_degraded_fixture_fallback_tokens ... ok
+test test_bc_3_5_010_body_absent_empty_block_stdout_ends_restricted_none ... ok
+
+test result: ok. 15 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.71s
+
+---
+
+$ cargo test --lib -- test_bc_3_5_010_ec2a_adf_error_propagates_exit64 --nocapture
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.11s
+     Running unittests src/lib.rs (target/debug/deps/jr-6f55a7f73b733fab)
+
+running 1 test
+test cli::issue::interactions::tests::test_bc_3_5_010_ec2a_adf_error_propagates_exit64 ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 1015 filtered out; finished in 0.04s

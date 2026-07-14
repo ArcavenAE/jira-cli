@@ -1,0 +1,20 @@
+$ cargo test --test comment_edit 2>&1
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.11s
+     Running tests/comment_edit.rs (target/debug/deps/comment_edit-10ad5a4b953c7ecc)
+
+running 13 tests
+test test_bc_3_5_009_ec1_file_not_found_exits_64 ... ok
+test test_bc_3_5_002_ec1_edit_invalid_id_regex_exits_64 ... ok
+test test_bc_3_5_009_ec5_empty_whitespace_body_exits_64 ... ok
+test test_bc_3_5_009_no_body_source_exits_64 ... ok
+test test_bc_3_5_005_edit_500_exits_1_not_64 ... ok
+test test_bc_3_5_009_edit_markdown_source ... ok
+test test_bc_3_5_005_ec1_put_request_has_only_body_key ... ok
+test test_bc_3_5_005_put_404_exits_64_with_dual_stderr ... ok
+test test_bc_3_5_005_edit_changed_fields_body_is_raw_pre_trim ... ok
+test test_bc_3_5_005_jsm_internal_absent_in_default_path ... ok
+test test_bc_3_5_009_edit_stdin_body_source ... ok
+test test_bc_3_5_009_edit_file_body_source ... ok
+test test_bc_3_5_005_edit_response_exact_key_set ... ok
+
+test result: ok. 13 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.85s

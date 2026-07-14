@@ -1,0 +1,16 @@
+$ cargo test --test comment_edit -- test_bc_3_5_002_ec1_edit_invalid_id_regex_exits_64 --nocapture
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.11s
+     Running tests/comment_edit.rs (target/debug/deps/comment_edit-10ad5a4b953c7ecc)
+
+running 1 test
+test test_bc_3_5_002_ec1_edit_invalid_id_regex_exits_64 ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 12 filtered out; finished in 0.72s
+
+---
+
+AC-008 assertions verified in test body:
+  - jr issue comment edit FOO-1 --id "10001;x" "body" (semicolon not in allowed charset ^[0-9A-Za-z_-]+$)
+  - exit code == 64 (EC-3.5.002-1 shared id validation — fires before any body-source resolution)
+  - stderr contains "invalid comment id"
+  - wiremock PUT mock has .expect(0) — no HTTP PUT call made (validate_comment_id fires first)

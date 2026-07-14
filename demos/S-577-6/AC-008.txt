@@ -1,0 +1,16 @@
+$ cargo test --test comment_view -- test_bc_3_5_010_404_exits_64_with_body_surface --nocapture
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.10s
+     Running tests/comment_view.rs (target/debug/deps/comment_view-5e3fdd45a54cd9b2)
+
+running 1 test
+test test_bc_3_5_010_404_exits_64_with_body_surface ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 14 filtered out; finished in 0.70s
+
+---
+
+AC-008 assertions verified in test body:
+  - Wiremock returns 404 with body {"errorMessages": ["Comment not found."]}
+  - exit code == 64
+  - stderr contains "comment not found or permission denied" (preamble)
+  - stderr contains "Comment not found." (Jira body text surfaced)

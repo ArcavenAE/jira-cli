@@ -1,0 +1,23 @@
+$ cargo test --test comment_view -- test_bc_3_5_010_ec1_json_output_passthrough --nocapture
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.11s
+     Running tests/comment_view.rs (target/debug/deps/comment_view-5e3fdd45a54cd9b2)
+
+running 1 test
+test test_bc_3_5_010_ec1_json_output_passthrough ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 14 filtered out; finished in 0.69s
+
+---
+
+AC-009 assertions verified in test body (VP-577-016 + VP-577-007):
+
+(a) VP-577-016 — "self" field survives passthrough:
+  - exit code == 0
+  - stdout parses as valid JSON
+  - parsed JSON contains "self" key (lossless serde_json::Value passthrough confirmed;
+    no typed-struct round-trip lossy drop)
+
+(b) VP-577-007 — expand=properties URL + internal flag:
+  - wiremock mock requires query_param("expand", "properties") to match
+  - request URL received by wiremock contains "expand=properties"
+  - stdout JSON: properties[0].value.internal == true
