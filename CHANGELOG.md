@@ -11,8 +11,8 @@ All notable changes to jr will be documented here.
   `jr issue comment add KEY "message"`. Invoking the flat form now exits 2 with a
   migration hint: `error: use \`jr issue comment add\` instead`.
   The `add` subcommand accepts the same flags (`--stdin`, `--file`, `--markdown`,
-  `--internal`). New subcommands `delete`, `edit`, and `view` are stubs
-  (implemented in S-577-3/4/5/6).
+  `--internal`). New subcommands `delete` (S-577-3), `edit` (body-only, S-577-4), and `view`
+  (S-577-6) are all fully implemented in this release.
 
 ### Added
 
@@ -28,10 +28,11 @@ All notable changes to jr will be documented here.
 
 - **`jr issue comment add/delete/edit/view` subcommand group (S-577-1):**
   `jr issue comment` is now a subcommand group. `add` is fully implemented
-  (replaces the old flat form). `delete`, `edit`, and `view` are stubs to be
-  completed in follow-on stories. Interaction handlers extracted from
-  `workflow.rs` to a new `src/cli/issue/interactions.rs` shard per ADR-0012 /
-  PF-017.
+  (replaces the old flat form). `edit` (body-only, S-577-4) and `view` (S-577-6)
+  are also fully implemented in this release. `delete` (S-577-3) is likewise fully
+  implemented (y/N confirmation gate, `--yes` bypass, 404/403 exit 64).
+  Interaction handlers extracted from `workflow.rs` to a new
+  `src/cli/issue/interactions.rs` shard per ADR-0012 / PF-017.
 
 - **`jr issue comment view KEY --id ID` — read a single comment (S-577-6, #577):**
   `jr issue comment view FOO-1 --id 10001` fetches the comment with
