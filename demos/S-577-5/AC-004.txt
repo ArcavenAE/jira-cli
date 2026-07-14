@@ -1,0 +1,16 @@
+$ cargo test --test comment_edit -- test_bc_3_5_007_changed_fields_jsm_internal_false --nocapture
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.11s
+     Running tests/comment_edit.rs (target/debug/deps/comment_edit-10ad5a4b953c7ecc)
+
+running 1 test
+test test_bc_3_5_007_changed_fields_jsm_internal_false ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 25 filtered out; finished in 0.69s
+
+---
+
+AC-004 assertions verified in test body (BC-3.5.007, VP-577-026 variant 2):
+  - exit code == 0 (--public --yes)
+  - stdout parses as valid JSON
+  - changed_fields.jsm_internal == false (boolean, not string)
+  - changed_fields key-set == {"body", "jsm_internal"} (exact; VP-577-026 variant 2 pin)

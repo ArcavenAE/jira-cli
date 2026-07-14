@@ -1,0 +1,38 @@
+$ cargo test --test comment_edit
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.15s
+     Running tests/comment_edit.rs (target/debug/deps/comment_edit-10ad5a4b953c7ecc)
+
+running 26 tests
+test test_bc_3_5_008_ec4_yes_without_public_runtime_probe_exit64 ... ok
+test test_bc_3_5_005_edit_500_exits_1_not_64 ... ok
+test test_bc_3_5_002_ec1_edit_invalid_id_regex_exits_64 ... ok
+test test_bc_3_5_005_put_404_exits_64_with_dual_stderr ... ok
+test test_bc_3_5_008_ec4_yes_without_public_is_silent_noop ... ok
+test test_bc_3_5_006_jsdcloud_hint_appears_on_internal ... ok
+test test_bc_3_5_007_changed_fields_jsm_internal_false ... ok
+test test_bc_3_5_007_public_puts_properties_false ... ok
+test test_bc_3_5_005_ec1_put_request_has_only_body_key ... ok
+test test_bc_3_5_006_internal_puts_properties_true ... ok
+test test_bc_3_5_007_jsdcloud_hint_appears_on_public_yes ... ok
+test test_bc_3_5_005_jsm_internal_absent_in_default_path ... ok
+test test_bc_3_5_005_edit_changed_fields_body_is_raw_pre_trim ... ok
+test test_bc_3_5_006_changed_fields_jsm_internal_true ... ok
+test test_bc_3_5_008_ec5_public_prompt_eof_exits_130 ... ok
+test test_bc_3_5_009_ec5_empty_whitespace_body_exits_64 ... ok
+test test_bc_3_5_008_public_no_input_without_yes_exits_64 ... ok
+test test_bc_3_5_009_no_body_source_exits_64 ... ok
+test test_bc_3_5_008_ec3_stdin_without_yes_public_exits_64 ... ok
+test test_bc_3_5_009_ec1_file_not_found_exits_64 ... ok
+test test_bc_3_5_011_internal_and_public_clap_exit_2 ... ok
+test test_bc_3_5_009_edit_markdown_source ... ok
+test test_bc_3_5_009_edit_stdin_body_source ... ok
+test test_bc_3_5_009_edit_file_body_source ... ok
+test test_bc_3_5_008_public_interactive_cancel_json_key_set ... ok
+test test_bc_3_5_005_edit_response_exact_key_set ... ok
+
+test result: ok. 26 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.83s
+
+---
+
+26/26 tests pass (13 from S-577-4 + 13 from S-577-5; AC-010 has two variants → 13 test fns).
+23 ACs total: 11 from S-577-4 + 12 from S-577-5.

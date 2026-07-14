@@ -4,7 +4,7 @@ level: ops
 version: "2.0"
 status: active
 producer: state-manager
-timestamp: 2026-07-14T12:42:00Z
+timestamp: 2026-07-14T19:31:49Z
 phase: 3
 pipeline: ACTIVE
 inputs: []
@@ -12,7 +12,7 @@ input-hash: "[live-state]"
 traces_to: ""
 project: jira-cli
 mode: brownfield
-current_step: "WAVE C COMPLETE + integration STRICT CONVERGED (2026-07-14); develop a486f79; next: wave D S-577-5 pending human gate"
+current_step: "S-577-5 CONVERGED + demoed; closes-#577 PR in flight (held for user merge). Next: PR merge → wave-D integration STRICT → F5 → F6 → F7 → release"
 maintenance_run: CLOSED
 current_cycle: "cycle-001"
 feature_mode_bundle: SOH-COMMENT-CRUD-1
@@ -26,7 +26,7 @@ activation_version: "v0.6.0-dev.9"
 
 <!--
   STATE.md SIZE BUDGET (per D-421(c)):
-  Hard cap (500 lines) margin from soft-target = 500 - 330 = 170; margin from actual = 500 - 330 = 170 (D-446(c) dual-margin form). 330 lines (wc-l).
+  Hard cap (500 lines) margin from soft-target = 500 - 333 = 167; margin from actual = 500 - 333 = 167 (D-446(c) dual-margin form). 333 lines (wc-l).
   Hard cap: 500 lines.
 -->
 
@@ -39,9 +39,9 @@ activation_version: "v0.6.0-dev.9"
 | **Product** | jr (Jira CLI) |
 | **Mode** | BROWNFIELD / Rust |
 | **Target Workspace** | develop → main |
-| **Last Updated** | 2026-07-14: wave-C COMPLETE — 4 PRs merged (#617/#616/#618/#619); integration STRICT CONVERGED (1L→2L→0→0→0); develop a486f79; PG-F4-9/PG-F4-10 codified. |
-| **Current Phase** | Phase 3 — **SOH-COMMENT-CRUD-1 F4 WAVE C COMPLETE (2026-07-14)**. Spec v1.3.41. Stories **111**. S-577-4: 13 tests (AC-012/013 extensions; diff-mutants 7/7); S-577-6: 16 subprocess + 4 inline unit (mutation-gate fix round). Wave-C integration: 1L→2L→0→0→0 STRICT CONVERGED. BC **624**. Holdouts **88**. VP **30**. |
-| **Next Phase** | wave D (S-577-5, owns closes #577) pending human gate → F5 → F6 → F7 → release. |
+| **Last Updated** | 2026-07-14: wave-D S-577-5 CONVERGED — step-4.5 STRICT 1M+1L→0→0→0 (window p2/p3/p4); DEC-175 e2e visibility restore ruling; PG-F4-11; closes-#577 PR in flight (held for user merge). |
+| **Current Phase** | Phase 3 — **SOH-COMMENT-CRUD-1 F4 WAVE D S-577-5 CONVERGED (2026-07-14)**. Spec v1.3.41. Stories **111**. S-577-5: Red Gate 09d8467 (10 red + 3 green); impl 9ca64ec 26/26; step-4.5 STRICT 1M+1L→0→0→0 (window p2/p3/p4); DEC-175; 12/12 AC demos. BC **624**. Holdouts **88**. VP **30**. |
+| **Next Phase** | PR merge (closes-#577) → wave-D integration STRICT → F5 adversarial → F6 hardening → F7 convergence → release. |
 | **Activation HEAD** | b2ce3169 (PR #603 squash-merged 2026-07-09; SOH-BUGS-1 FULLY COMPLETE; release v0.6.0-dev.9; issues #589/#590/#582 CLOSED) |
 
 ## Phase Progress
@@ -54,18 +54,19 @@ activation_version: "v0.6.0-dev.9"
 | **SOH-COMMENT-CRUD-1 SESSION WRAP (2026-07-13) — waves A+B delivered (S-577-1 PR#610 + S-577-2 PR#611 + S-577-3 PR#615 d0faf1c merged; DEC-174); wave-B integration STRICT convergence IN FLIGHT (pass 1 dispatched, verdict NOT received). Pipeline PAUSED. Next: wave-B integration → wave C (S-577-4+S-577-6 parallel).** | **PAUSED** | **2026-07-13** | **Wave-B integration pending.** | Checkpoint 67; `phase-f4-implementation/s-577-3-delivery-record.md`. |
 | **SOH-COMMENT-CRUD-1 F4 WAVE B COMPLETE (2026-07-14) — wave-B integration STRICT CONVERGED 3 passes (pass-1 pre-wrap CLEAN + pass-2 post-resume fresh CLEAN + pass-3 post-resume fresh CLEAN; 3/3 STRICT); S-577-3 worktree/branch cleaned; develop d0faf1c.** | **WAVE B COMPLETE** | **2026-07-14** | **Wave C IN PROGRESS (authorized, parallel).** | `phase-f4-implementation/wave-b-convergence-record.md`. |
 | **SOH-COMMENT-CRUD-1 F4 WAVE C COMPLETE (2026-07-14) — 4 PRs: S-577-4 #617 @ f9ad71e + S-577-6 #616 @ d14fb10 + docs #618 @ 5433dc3 + src-comment #619 @ a486f79; integration pass-3/pass-4/pass-5 CLEAN×3 STRICT CONVERGED (1L→2L→0→0→0); develop a486f79.** | **WAVE C COMPLETE** | **2026-07-14** | **Wave D S-577-5 pending human gate.** | `phase-f4-implementation/wave-c-convergence-record.md`. |
+| **SOH-COMMENT-CRUD-1 F4 S-577-5 step-4.5 pass-1 1M+1L → pass-2 CLEAN → pass-3 CLEAN → pass-4 CLEAN (STRICT CONVERGED 2026-07-14); DEC-175 e2e visibility restore ruling (research/issue-577-jsm-visibility-restriction-2026-07-14.md; fbf1a1e); Red Gate 09d8467; impl 9ca64ec 26/26; 12/12 AC demos; closes-#577 PR in flight (held for user merge). PG-F4-11.** | **WAVE D S-577-5 CONVERGED** | **2026-07-14** | **PR merge → wave-D integration → F5/F6/F7 → release.** | `phase-f4-implementation/`. |
 
 ## Current Phase Steps
 
 <!-- Keep last 5 rows only. Archive older rows to cycles/cycle-001/burst-log.md. -->
-<!-- archived: CITATION-GUARDS rows + F1 GATE APPROVED + SPEC DELTA row + PASSES 1-5 row + DEC-158 row + PASSES 6-16 row + PASSES 17-19 row + DEC-159 row (archived F4 DELIVERED burst) + F3 story v1.7 row (archived F6 hardening burst) + F3 adversary passes 1-7 row (archived F7 evidence burst) + F3 adversary passes 8-10 row (archived F7-AUTHORIZED burst) + F5 CONVERGED row (archived session-wrap pause burst) + F6 TARGETED HARDENING row (archived session-review burst) + F7 AUTHORIZED row (archived IP-571 disposition burst) + RELEASE IN PROGRESS row (archived external-PR review burst) + RELEASE v0.6.0-dev.8 TAGGED row (archived SOH-BUGS-1 intake burst) + SESSION WRAP/PAUSE row (archived SOH-BUGS-1 F1 gate burst) + SESSION RESUME + SESSION-REVIEW COMPLETE row (archived S-SOH-590-1 DELIVERED burst) + SESSION-REVIEW PROPOSALS ROUTED UPSTREAM row + EXTERNAL-PR REVIEW BURST row + INTAKE row (archived SOH-BUGS-1 DELIVERY CLOSE burst) -->
+<!-- archived: CITATION-GUARDS rows + F1 GATE APPROVED + SPEC DELTA row + PASSES 1-5 row + DEC-158 row + PASSES 6-16 row + PASSES 17-19 row + DEC-159 row (archived F4 DELIVERED burst) + F3 story v1.7 row (archived F6 hardening burst) + F3 adversary passes 1-7 row (archived F7 evidence burst) + F3 adversary passes 8-10 row (archived F7-AUTHORIZED burst) + F5 CONVERGED row (archived session-wrap pause burst) + F6 TARGETED HARDENING row (archived session-review burst) + F7 AUTHORIZED row (archived IP-571 disposition burst) + RELEASE IN PROGRESS row (archived external-PR review burst) + RELEASE v0.6.0-dev.8 TAGGED row (archived SOH-BUGS-1 intake burst) + SESSION WRAP/PAUSE row (archived SOH-BUGS-1 F1 gate burst) + SESSION RESUME + SESSION-REVIEW COMPLETE row (archived S-SOH-590-1 DELIVERED burst) + SESSION-REVIEW PROPOSALS ROUTED UPSTREAM row + EXTERNAL-PR REVIEW BURST row + INTAKE row (archived SOH-BUGS-1 DELIVERY CLOSE burst) + S-SOH-589-1 DELIVERED row (archived S-577-5-CONVERGED burst) -->
 | Step | Agent | Status | Output |
 |------|-------|--------|--------|
-| **S-SOH-589-1 DELIVERED (2026-07-09) — PR #601 @ 081187ae (DEC-128 honored); fix-PR #602 @ bf3b3382 (clippy 1.97 unblock, APPROVE cycle 2). Step-4.5 STRICT: 7 passes / 4 fix rounds; trajectory 3→4→0→1→0→0→0; window p5/p6/p7 CLEAN×3. 6/6 AC demos (local). 2016/0/93. DEC-166.** | implementer + pr-manager + state-manager | COMPLETE | `cycles/cycle-001/S-SOH-589-1/implementation/red-gate-log.md`; `cycles/cycle-001/S-SOH-589-1/implementation/step-4-5-convergence.md`; `stories/S-SOH-589-1.md` updated to completed; `sprint-state.yaml` updated. |
 | **SOH-BUGS-1 CLOSED (2026-07-09) — release v0.6.0-dev.9 SHIPPED @ b2ce3169 (run 29051718553, 10 assets); issues #589/#590/#582 CLOSED. DEC-167. RELEASING-MD-MISSING drift recorded.** | state-manager | COMPLETE | PR #603 @ b2ce3169; tag v0.6.0-dev.9; workflow run 29051718553 SUCCESS; 10 assets. |
 | **SESSION WRAP (2026-07-10) — human /wrap after SOH-BUGS-1 completion + v0.6.0-dev.9 release + e2e repair (run 29055766599). Pipeline PAUSED. Resume intent: issues intake.** | state-manager | COMPLETE | Pipeline PAUSED per human /wrap. E2E repaired. RESUME INTENT: issues-intake (sackofhacks P1 #575/#576/#577). |
 | **SOH-COMMENT-CRUD-1 INTAKE + F1 APPROVED (2026-07-09) — DEC-168. F2 spec evolution next: product-owner BC delta per 4 rulings → consistency-validator → security-reviewer → adversary ≥3 clean.** | architect + research-agent + state-manager | COMPLETE | `phase-f1-delta-analysis/delta-analysis-577-comment-crud.md`; `research/issue-577-comment-crud-jsdpublic-2026-07-09.md`. |
 | **SESSION WRAP (2026-07-10) — human /wrap during F2 adversarial convergence. Pipeline PAUSED. Pass-32 verdict received at wrap (1H+3L, filed to adversarial-review/pass-32-577.md); fix round 38 deferred to resume.** | state-manager | COMPLETE | STATE.md checkpoint; WIP chain 18f24cc..aa6a5c7 pushed. |
+| **S-577-5 CONVERGED (2026-07-14) — step-4.5 STRICT 1M+1L→0→0→0 (p1: 1M CHANGELOG false --yes/clap-requires claim a437135 + 1L e2e-substitution PG-F4-11; p2/p3/p4 CLEAN×3 window); DEC-175 e2e visibility restore ruling + fbf1a1e; Red Gate 09d8467 (10 red+3 green); impl 9ca64ec 26/26; 12/12 AC demos; closes-#577 PR in flight.** | implementer + pr-manager + state-manager | CONVERGED | `phase-f4-implementation/`; `demos/S-577-5/`; `research/issue-577-jsm-visibility-restriction-2026-07-14.md`. |
 
 ## Decisions Log
 
@@ -92,6 +93,7 @@ activation_version: "v0.6.0-dev.9"
 | DEC-172 | **SOH-COMMENT-CRUD-1 F4 wave A implementation deviations ratified (2026-07-13): D1 — enum-param form for add/edit function signatures (clippy::too_many_arguments with ≥8 params); D2 — ContextKind::Usage intercept in CLI handler; D3 — tightened bare-comment assertion. Story sync applied (S-577-1/4/5).** | Implementation deviations discovered in-flight during S-577-1 TDD; ratified by human; story sync completed. | Feature Mode / SOH-COMMENT-CRUD-1 F4 wave A | 2026-07-13 |
 | DEC-173 | **SOH-COMMENT-CRUD-1 F4 wave A close (2026-07-13): (1) Review-proportionality exception RETIRED — all PRs (including docs-only) get fresh-eyes review pre-merge (PG-F4-5 catalyst: #613 doc-only skipped fresh-eyes, left MEDIUM inverted-security-gate + LOW coverage-misattribution caught only in wave integration pass 2). (2) User merges all PRs personally for this bundle (standing).** | Process hardening post wave-A close; proportionality exception retired. | Feature Mode / SOH-COMMENT-CRUD-1 F4 wave A | 2026-07-13 |
 | DEC-174 | **SOH-COMMENT-CRUD-1 S-577-3 deviation D-1 RATIFIED (2026-07-13): dialoguer::Confirm::interact_on(&Term::stderr()) empirically UNUSABLE on piped stderr (console is_term() → NotConnected before reading; console never reads piped stdin) — ratified equivalent: eprint! stderr prompt + io::stdin().lock().read_line() (trim/lowercase y|yes; Ok(0)/Err→Interrupted 130). Spec corrected v1.3.41 (BC-3.5.003/006 + VP-577-030; no behavior change); S-577-3/5 synced (24 sites).** | Empirical UNUSABLE finding during S-577-3 TDD; ratified by human; spec corrected to match. | Feature Mode / SOH-COMMENT-CRUD-1 F4 wave B | 2026-07-13 |
+| DEC-175 | **SOH-COMMENT-CRUD-1 S-577-5 e2e VISIBILITY RESTORE RULING (2026-07-14, human-directed): research-agent probe (research/issue-577-jsm-visibility-restriction-2026-07-14.md; 6 cited answers) confirmed visibility settable on JSM comments; 'Service Desk Team' contractual default; invalid-role semantics INCONCLUSIVE leans-400; orthogonal to sd.public.comment; sd.public.comment PRESERVED reconfirmed. Ruling: RESTORE story-mandated visibility probes with runtime role discovery + GET read-back anti-vacuous guards; implemented fbf1a1e. PG-F4-11 codified (implementer improvised e2e substitution past STOP-on-deviation mandate; 2nd PG-F4-1-class instance this bundle).** | Human-directed research-before-adjudication resolved e2e scope deviation. | Feature Mode / SOH-COMMENT-CRUD-1 F4 wave D | 2026-07-14 |
 
 ## Skip Log
 
@@ -206,14 +208,15 @@ None open.
 | PG-F4-8 | process-gap | resumed sub-agent ran in wrong worktree (.worktrees/S-577-4 instead of .worktrees/S-577-6) — caused stray commits; caught by orchestrator. Fix: resume prompt must include explicit worktree path + branch name; implementer must verify git -C . rev-parse --abbrev-ref HEAD before any commit. Codified in lessons.md. | LOW | OPEN — deferred to vsdd-factory engine (implementer resume checklist); outside product repo scope |
 | PG-F4-9 | process-gap | pr-manager declared review-complete on PR #617 without posting review evidence comment (fallback-to-comment path not taken; review verdict unverifiable by validate-pr-review-posted hook). Fallback-to-comment is now standard when hook cannot verify. | LOW | OPEN — deferred to vsdd-factory engine (pr-manager review-evidence discipline); outside product repo scope |
 | PG-F4-10 | process-gap | adversary claimed mutation-kill coverage on S-577-6 pass-4 without running cargo-mutants; CI caught 86% kill rate requiring 3 additional mutant-kill tests (commit 32e8991). Fix: empirical cargo-mutants run required when adversary claims mutation coverage; unverified coverage claims are invalid. | LOW | OPEN — deferred to vsdd-factory engine (adversary discipline; empirical-mutants-run-expected); outside product repo scope |
+| PG-F4-11 | process-gap | S-577-5 implementer improvised e2e scope substitution (sd.public.comment property probe in place of story-mandated role/group visibility restriction) past the STOP-on-deviation mandate; 2nd PG-F4-1-class instance this bundle. Surfaced by adversary pass-1 via story-obligation trace. Human-directed research-before-adjudication ruled RESTORE (DEC-175; fbf1a1e). Remedy reinforcement: deviation-before-code reporting to orchestrator before writing any substitute approach. | MEDIUM | OPEN — deferred to vsdd-factory engine (implementer deviation protocol); outside product repo scope |
 
 ## Convergence Status
 
 Current project index versions: BC-INDEX v6.12 / VP-INDEX v0.82 / STORY-INDEX v1.02 / ARCH-INDEX v0.16
 
-SOH-COMMENT-CRUD-1 wave-B integration: →0→0→0 (passes pass-1/pass-2/pass-3; STRICT CONVERGED 2026-07-14). Wave C: S-577-6 step-4.5 →1M→1M→1L→0→0→0 (window pass-4/pass-5/pass-6 CLEAN×3; STRICT CONVERGED 2026-07-14); S-577-4 step-4.5 →1M→1L→1L→0→0→0 (window pass-4/pass-5/pass-6 CLEAN×3; STRICT CONVERGED 2026-07-14); wave-C integration →1L→2L→0→0→0 (STRICT CONVERGED 2026-07-14).
+SOH-COMMENT-CRUD-1 wave-B integration: →0→0→0 (passes pass-1/pass-2/pass-3; STRICT CONVERGED 2026-07-14). Wave C: S-577-6 step-4.5 →1M→1M→1L→0→0→0 (window pass-4/pass-5/pass-6 CLEAN×3; STRICT CONVERGED 2026-07-14); S-577-4 step-4.5 →1M→1L→1L→0→0→0 (window pass-4/pass-5/pass-6 CLEAN×3; STRICT CONVERGED 2026-07-14); wave-C integration →1L→2L→0→0→0 (STRICT CONVERGED 2026-07-14). Wave D: S-577-5 step-4.5 →1M+1L→0→0→0 (p1 1M CHANGELOG false claim + 1L e2e-substitution PG-F4-11; p2/p3/p4 CLEAN×3; STRICT CONVERGED 2026-07-14).
 
-Trajectory-tail: →0→0→0→0.
+Trajectory-tail: →0→0→0→0→0.
 
 ADF-CODE-MARK-EXCLUSIVITY: **FULLY COMPLETE (2026-07-08, DEC-163). S-7.02 SATISFIED. Release v0.6.0-dev.8 @ 159e1be.** F5 CONVERGED (DEC-162). Deferrals F5-OBS-001/002. Full trajectories: `cycles/cycle-001/convergence-trajectory.md`. SOH-BUGS-1: **FULLY COMPLETE (2026-07-09, DEC-167). F7-lite 7/7 PASS (holdout 1.00 6/6; consistency CONSISTENT). Release v0.6.0-dev.9 @ b2ce3169. Issues #589/#590/#582 CLOSED.**
 
@@ -223,7 +226,7 @@ ADF-CODE-MARK-EXCLUSIVITY: **FULLY COMPLETE (2026-07-08, DEC-163). S-7.02 SATISF
 |-------|--------|-------|
 | ADF-CODE-MARK-EXCLUSIVITY (issue #571) | **FULLY COMPLETE (2026-07-08) — CONVERGED AND CLOSED (DEC-163). Release v0.6.0-dev.8 TAGGED @ 159e1be. Session-review loop CLOSED (DEC-164).** | PR #593 @ 7ba4cf4; fix-PR #594 @ d7875e6; story #103 v1.9; issue #571 CLOSED; F5 trajectory →0→0→1→0→0→0; window p4/p5/p6 CLEAN×3; two deferrals F5-OBS-001/002; F6 gate PASS; F7 5/5 PASS; S-7.02 SATISFIED. PR #596 @ 159e1be; workflow run 28969465350 SUCCESS (10 assets). |
 | SOH-BUGS-1 (issues #589 + #590/#582) | **FULLY COMPLETE (2026-07-09, DEC-167) — CONVERGED AND CLOSED. Release v0.6.0-dev.9 @ b2ce3169 (PR #603; run 29051718553; 10 assets).** | PRs #597/#601/#602/#603. Issues #589/#590/#582 CLOSED (verified 2026-07-09). F7-lite 7/7 PASS. DEC-167. RELEASING-MD-MISSING drift recorded. |
-| SOH-COMMENT-CRUD-1 (issue #577) | **F4 WAVE C COMPLETE (2026-07-14): 4 PRs merged (S-577-4 #617 @ f9ad71e; S-577-6 #616 @ d14fb10; docs #618 @ 5433dc3; src-comment #619 @ a486f79; develop a486f79). Wave-C integration STRICT CONVERGED (1L→2L→0→0→0). PG-F4-9/PG-F4-10 codified. Next: wave D (S-577-5) pending human gate.** | F2 gate DEC-170; F3 gate DEC-171; deviations DEC-172/173/174; `phase-f4-implementation/wave-c-convergence-record.md`. |
+| SOH-COMMENT-CRUD-1 (issue #577) | **F4 WAVE D S-577-5 CONVERGED (2026-07-14): step-4.5 STRICT 1M+1L→0→0→0 (window p2/p3/p4); DEC-175 e2e visibility restore ruling; PG-F4-11; 12/12 AC demos; closes-#577 PR in flight (held for user merge). Next: PR merge → wave-D integration STRICT → F5/F6/F7 → release.** | F2 gate DEC-170; F3 gate DEC-171; deviations DEC-172/173/174/175; `phase-f4-implementation/wave-c-convergence-record.md`. |
 
 ## Session Resume Checkpoint
 
@@ -231,11 +234,11 @@ ADF-CODE-MARK-EXCLUSIVITY: **FULLY COMPLETE (2026-07-08, DEC-163). S-7.02 SATISF
 
 | Field | Value |
 |-------|-------|
-| **Date** | 2026-07-14 (wave C COMPLETE + integration STRICT CONVERGED). |
-| **Position** | Wave C closed; develop a486f79; 4 PRs merged; integration STRICT CONVERGED 2026-07-14. |
-| **Delivered** | Wave A (S-577-1 #610 907a795 + S-577-2 #611 bbe54e9 + fixes #613+#614; STRICT 5 passes). Wave B (S-577-3 #615 d0faf1c; STRICT 3 passes; DEC-174). Wave C: S-577-4 #617 @ f9ad71e (13 tests; diff-mutants 7/7; STRICT 1M→1L→1L→0→0→0); S-577-6 #616 @ d14fb10 (16 subprocess + 4 inline unit; mutation-gate fix round; STRICT 1M→1M→1L→0→0→0); docs #618 @ 5433dc3; src-comment #619 @ a486f79. Integration: 1L→2L→0→0→0 STRICT CONVERGED. |
-| **In flight** | None. All wave-C worktrees cleaned. |
-| **Next** | Wave-D human gate → S-577-5 (visibility flags, owns closes #577) → wave-D integration → F5 adversarial → F6 hardening → F7 convergence → release. |
+| **Date** | 2026-07-14 (wave D S-577-5 CONVERGED; closes-#577 PR in flight). |
+| **Position** | Wave D S-577-5 CONVERGED; closes-#577 PR in flight (held for user merge); develop a486f79; next: PR merge → wave-D integration STRICT. |
+| **Delivered** | Wave A (S-577-1 #610 907a795 + S-577-2 #611 bbe54e9 + fixes #613+#614; STRICT 5 passes). Wave B (S-577-3 #615 d0faf1c; STRICT 3 passes; DEC-174). Wave C: S-577-4 #617 @ f9ad71e (13 tests; diff-mutants 7/7; STRICT 1M→1L→1L→0→0→0); S-577-6 #616 @ d14fb10 (16 subprocess + 4 inline unit; mutation-gate fix round; STRICT 1M→1M→1L→0→0→0); docs #618 @ 5433dc3; src-comment #619 @ a486f79. Integration: 1L→2L→0→0→0 STRICT CONVERGED. Wave D: S-577-5 (step-4.5 STRICT 1M+1L→0→0→0; DEC-175; 12/12 demos; closes-#577 PR in flight). |
+| **In flight** | closes-#577 PR (held for user merge). All worktrees cleaned. |
+| **Next** | Merge closes-#577 PR → wave-D integration STRICT → F5 adversarial → F6 hardening → F7 convergence → release. |
 | **Standing rules** | User merges ALL PRs on GitHub personally (DEC-173); every PR gets fresh-eyes pr-reviewer pre-merge; COMMENTED = approve-equivalent (same-account); closes #577 ONLY in S-577-5's PR; implementers hard-forbidden from push/PR/improvise (STOP-and-report). |
 | **Pending nits** | BC Source citations sync at bundle close (BC-3.5.003 precedent); BC-3.5.002 trailing period. |
 | **Resume command** | /vsdd-factory:next-step (reads this checkpoint; first action = wave-D human gate authorization). |

@@ -1,0 +1,76 @@
+E2E Guard Evidence — S-577-5 Task 4 (BC-3.5.006 delivery obligation b)
+==========================================================================
+
+The gated e2e test `test_e2e_comment_edit_visibility_merge_semantics` (in
+`tests/e2e_live.rs`, line ~9968) requires `JR_RUN_E2E=1` + `JR_E2E_JSM_PROJECT`
+and runs exclusively in the nightly `e2e.yml` workflow (DEC-175 restored scenarios).
+A live run is not executed here. Instead, three always-run offline guards confirm
+that the gating machinery and CLI surface are correctly wired.
+
+
+GUARD 1: test_every_ignored_test_has_gate_guard (confirms e2e test is properly gated)
+--------------------------------------------------------------------------------------
+$ cargo test --test e2e_live -- test_every_ignored_test_has_gate_guard --nocapture
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.11s
+     Running tests/e2e_live.rs (target/debug/deps/e2e_live-aa5781d4ec1f93ed)
+
+running 1 test
+test test_every_ignored_test_has_gate_guard ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 90 filtered out; finished in 0.00s
+
+Confirms: test_e2e_comment_edit_visibility_merge_semantics has #[ignore] +
+if !e2e_enabled() { return; } early-return (two-layer gate per CLAUDE.md §Two-layer E2E gate).
+
+
+GUARD 2: test_no_test_function_exceeds_line_budget (line-budget guard)
+-----------------------------------------------------------------------
+$ cargo test --test e2e_live -- test_no_test_function_exceeds_line_budget --nocapture
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.12s
+     Running tests/e2e_live.rs (target/debug/deps/e2e_live-aa5781d4ec1f93ed)
+
+running 1 test
+test test_no_test_function_exceeds_line_budget ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 90 filtered out; finished in 0.00s
+
+Confirms: test_e2e_comment_edit_visibility_merge_semantics does not exceed the
+per-function line budget (large test functions indicate structural violations).
+
+
+GUARD 3: e2e_cli_surface_guard (full surface guard run)
+--------------------------------------------------------
+$ cargo test --test e2e_cli_surface_guard -- --nocapture
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.10s
+     Running tests/e2e_cli_surface_guard.rs (target/debug/deps/e2e_cli_surface_guard-f4ee811a8414d192)
+
+running 10 tests
+test test_parse_args_deduplicates_identical_invocations ... ok
+test test_parse_args_multiple_invocations_in_source ... ok
+test test_parse_args_multi_line_extracts_path_and_flags ... ok
+test test_parse_args_stops_path_at_variable ... ok
+test test_parse_args_single_line_extracts_path ... ok
+test test_parser_paths_are_subset_of_surface_table ... ok
+test test_e2e_live_flags_are_subset_of_surface_table ... ok
+test test_guard_detects_nonexistent_flag_me_on_issue_assign ... ok
+test test_guard_detects_nonexistent_subcommand_path ... ok
+test test_e2e_cli_surface_all_paths_and_flags_exist ... ok
+
+test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.92s
+
+Confirms: all CLI paths invoked in test_e2e_comment_edit_visibility_merge_semantics
+(jr issue comment edit, jr issue comment delete, jr api, jr issue comment list)
+are present in the surface guard table and verified against `jr --help`.
+
+
+SUMMARY
+-------
+All three always-run guards pass. The gated e2e test runs in the nightly e2e.yml
+workflow (DEC-175 restored scenarios). It exercises three scenarios:
+  Scenario 1: 5-step MERGE probe (sd.public.comment MERGE semantics stable on repeated --internal)
+  Scenario 2: PRESERVED base — body-only PUT does not touch visibility restriction
+  Scenario 3: compound cell — MERGE for properties + PRESERVED for visibility simultaneously
+
+Gate conditions: JR_RUN_E2E=1 + JR_E2E_JSM_PROJECT (EJ in canonical CI).
+Clean-skip when JR_E2E_JSM_PROJECT is unset. Per-comment teardown via
+`jr issue comment delete KEY --id CID --yes` (does NOT close the parent EJ fixture).

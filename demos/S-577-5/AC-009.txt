@@ -1,0 +1,25 @@
+$ cargo test --test comment_edit -- test_bc_3_5_008_ec3_stdin_without_yes_public_exits_64 --nocapture
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.11s
+     Running tests/comment_edit.rs (target/debug/deps/comment_edit-10ad5a4b953c7ecc)
+
+running 1 test
+test test_bc_3_5_008_ec3_stdin_without_yes_public_exits_64 ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 25 filtered out; finished in 0.72s
+
+---
+
+AC-009 assertions verified in test body (BC-3.5.008, VP-577-017, EC-3.5.008-3):
+  Variant 1 (--stdin flag, pipe stdin, no JR_STDIN_IS_TTY):
+    - stdin fed non-empty body "body" via pipe (EC-3.5.009-5 body-empty gate passes)
+    - exit code == 64
+    - stderr contains "--stdin" (VP-577-017 dual-pin, first substring)
+    - stderr contains "--yes" (VP-577-017 dual-pin, second substring)
+    - wiremock PUT has .expect(0); confirmed 0 PUT requests
+
+  Variant 2 (--stdin flag, JR_STDIN_IS_TTY=1, TTY-detection suppressed):
+    - JR_STDIN_IS_TTY=1 set; auto-flip suppressed
+    - exit code == 64 (--stdin flag-based branch fires independently of TTY-detection)
+    - same stderr assertions ("--stdin" AND "--yes")
+    - zero PUT calls
+    - proves EC-3.5.008-3: --stdin implies no_input independently of is_terminal()

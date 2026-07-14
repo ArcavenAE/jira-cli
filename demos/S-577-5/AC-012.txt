@@ -1,0 +1,19 @@
+$ cargo test --test comment_edit -- test_bc_3_5_008_ec5_public_prompt_eof_exits_130 --nocapture
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.11s
+     Running tests/comment_edit.rs (target/debug/deps/comment_edit-10ad5a4b953c7ecc)
+
+running 1 test
+test test_bc_3_5_008_ec5_public_prompt_eof_exits_130 ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 25 filtered out; finished in 0.73s
+
+---
+
+AC-012 assertions verified in test body (BC-3.5.008, VP-577-030 variant 2):
+  - JR_STDIN_IS_TTY=1 set; stdin fed EOF (empty input)
+  - "body" --public (no --yes; interactive prompt triggered)
+  - exit code == 130 (JrError::Interrupted — EC-3.5.008-5)
+  - wiremock PUT has .expect(0); confirmed 0 PUT requests sent
+  - NOTE: Ok(0) from read_line (EOF) MUST map to JrError::Interrupted, NOT cancel path
+  - DEC-174 mechanism: eprint! + read_line (NOT dialoguer::interact_on — piped-stderr
+    NotConnected failure); EOF/io::Error → exit 130

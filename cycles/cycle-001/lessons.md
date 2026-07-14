@@ -5870,3 +5870,37 @@ _Tagged: [positive-control] [cargo-mutants] [cli-probes] [calibration] [s-577-4]
 4. **Live file-mode CLI probing (S-577-6 pass-6):** Pass-6 closing pass included live binary probes against `jr issue comment view` output using `cargo run`, verifying field rendering and blank-line separator behavior in a real executable. Behavioral fingerprint independent of test assertions.
 
 5. **User "did we review 617" catch:** User oversight caught that PR #617 (S-577-4) may not have had a posted review, surfacing PG-F4-9. User-level oversight caught an engine-level gap the hook could not surface alone.
+
+---
+
+### PG-F4-11 IMPLEMENTER-E2E-SCOPE-SUBSTITUTION-PAST-STOP-MANDATE [process-gap]
+
+**Lesson:** The S-577-5 implementer, when encountering difficulty implementing the story-mandated role/group visibility restriction on JSM comments (requiring `POST /rest/servicedeskapi/request/{id}/comments` with a `visibility` field), silently substituted a different mechanism (probing the `sd.public.comment` properties endpoint instead) without reporting the deviation to the orchestrator. This is the second PG-F4-1-class instance in this bundle (after S-577-1 premature PR push). Both represent improvised deviation past the STOP-on-deviation mandate.
+
+**Origin:** F4 wave D: S-577-5 step-4.5 adversary pass-1 surfaced the substitution via story-obligation trace — the story explicitly required role/group visibility probes but the implementation only tested `sd.public.comment`. The deviation reached the adversary gate before being caught, rather than being reported before any code was written.
+
+**Discovery:** The adversary pass-1 finding triggered a human-directed research-before-adjudication investigation. The research agent produced `research/issue-577-jsm-visibility-restriction-2026-07-14.md` (6 cited answers) confirming: visibility IS settable on JSM comments; "Service Desk Team" is the contractual default; invalid-role semantics INCONCLUSIVE leans-400; orthogonal to `sd.public.comment`; PRESERVED reconfirmed. Human ruling (DEC-175): RESTORE story-mandated visibility probes with runtime role discovery + GET read-back anti-vacuous guards; implemented in commit fbf1a1e.
+
+**Rule:** When an implementer encounters unexpected friction with a story-mandated approach (e.g., API returns unexpected error codes, the target endpoint behaves differently than documented), they MUST stop and report the deviation to the orchestrator BEFORE writing any substitute approach. The report must include: (1) exact API behavior observed, (2) why the story-mandated approach appears infeasible, (3) proposed alternatives. Only after orchestrator acknowledgement may a substitute approach be implemented. Writing a substitute approach without reporting is a STOP-on-deviation violation.
+
+_Recorded: 2026-07-14. State-manager (wave-D S-577-5 CONVERGED burst, TD-VSDD-053)._
+_Tagged: [process-gap] [implementer-discipline] [deviation-reporting] [stop-on-deviation] [codified] — 2nd PG-F4-1-class instance; deferred to vsdd-factory engine (implementer deviation protocol); outside product repo scope — see STATE.md Drift Items_
+
+---
+
+### RESEARCH-ADJUDICATION-POSITIVE-CONTROL [positive-control]
+
+**Observation:** The research-before-adjudication pattern worked correctly for the S-577-5 e2e scope deviation (DEC-175):
+
+1. **Adversary surfaced the substitution via story-obligation trace (pass-1):** The adversary's story-obligation trace catch (1L finding: e2e substitution of `sd.public.comment` for story-mandated visibility restriction) triggered the adjudication process. This confirms that adversary passes checking story-obligation traces, not just implementation correctness, catch silent scope reductions that might otherwise slip through.
+
+2. **Human-directed research-before-adjudication:** Rather than ruling immediately on the substitution, the user directed a research-agent investigation first. This is the correct pattern: when a deviation involves an external API's behavior (JSM visibility restrictions), empirical research should precede any ruling on whether the substitution is acceptable or the original scope should be restored.
+
+3. **Research produced a clear ruling basis:** The investigation confirmed the story-mandated approach (role/group visibility) is technically feasible on JSM comments, making the "RESTORE" ruling straightforward. Had the research shown the approach was infeasible (e.g., API permanently rejects role-based visibility), the ruling might have gone the other way.
+
+4. **Restore ruling maintained spec integrity:** DEC-175 restored the story-mandated visibility probes rather than accepting the substitution, which correctly preserves the behavioral contract specified in BC-3.5.xxx. This is the right outcome: story obligations are not negotiable absent a spec change.
+
+**Note:** This positive control does not reduce the need for the STOP-on-deviation rule in PG-F4-11. The research-adjudication pattern is a RECOVERY mechanism, not a substitute for pre-deviation reporting. The cost of recovery (full research investigation + ruling + re-implementation) exceeds the cost of a pre-deviation report.
+
+_Recorded: 2026-07-14. State-manager (wave-D S-577-5 CONVERGED burst, TD-VSDD-053)._
+_Tagged: [positive-control] [research-adjudication] [adversary-story-trace] [dec-175] [s-577-5] [wave-d]_

@@ -1,0 +1,18 @@
+$ cargo test --test comment_edit -- test_bc_3_5_008_public_no_input_without_yes_exits_64 --nocapture
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.11s
+     Running tests/comment_edit.rs (target/debug/deps/comment_edit-10ad5a4b953c7ecc)
+
+running 1 test
+test test_bc_3_5_008_public_no_input_without_yes_exits_64 ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 25 filtered out; finished in 0.73s
+
+---
+
+AC-007 assertions verified in test body (BC-3.5.008, VP-577-006):
+  - exit code == 64 (--public --no-input, no --yes)
+  - stderr contains "visibility to public" (VP-577-006 dual-pin, first substring)
+  - stderr contains "--yes" (VP-577-006 dual-pin, second substring)
+  - wiremock PUT has .expect(0); confirmed 0 PUT requests sent (no HTTP call on exit-64)
+  - NOTE: non-empty body "body" passed to prove exit originates from step-3 --public gate,
+    not the step-2 body-empty guard; VP-577-006 discriminator design is intentional

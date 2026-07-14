@@ -1,0 +1,35 @@
+$ cargo test --test comment_edit -- test_bc_3_5_008_ec4_yes_without_public_is_silent_noop --nocapture
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.13s
+     Running tests/comment_edit.rs (target/debug/deps/comment_edit-10ad5a4b953c7ecc)
+
+running 1 test
+test test_bc_3_5_008_ec4_yes_without_public_is_silent_noop ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 25 filtered out; finished in 0.70s
+
+$ cargo test --test comment_edit -- test_bc_3_5_008_ec4_yes_without_public_runtime_probe_exit64 --nocapture
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.11s
+     Running tests/comment_edit.rs (target/debug/deps/comment_edit-10ad5a4b953c7ecc)
+
+running 1 test
+test test_bc_3_5_008_ec4_yes_without_public_runtime_probe_exit64 ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 25 filtered out; finished in 0.71s
+
+---
+
+AC-010 assertions verified in test body (BC-3.5.008, VP-577-028, EC-3.5.008-4):
+  PRE-SATISFIED: AC-010 is pre-satisfied by S-577-4's body-only path (clap accepts --yes).
+  These tests act as regression guards confirming the pre-satisfied contract is preserved.
+
+  Variant 1 (test_bc_3_5_008_ec4_yes_without_public_is_silent_noop):
+    - "body" --yes (no --public) → exit 0
+    - body-only PUT succeeds; --yes is a silent no-op
+    - no error, no clap rejection
+    - clap MUST NOT have requires("public") on --yes
+
+  Variant 2 (test_bc_3_5_008_ec4_yes_without_public_runtime_probe_exit64):
+    - "" --yes (empty body, no --public) → exit 64
+    - stderr contains "comment body cannot be empty"
+    - exit 64 (handler-level guard) NOT exit 2 (clap-level) proves requires("public") absent
+    - exit-64-vs-2 discrimination is the operative test signal (VP-577-028 rationale)

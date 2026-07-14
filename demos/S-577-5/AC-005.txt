@@ -1,0 +1,17 @@
+$ cargo test --test comment_edit -- test_bc_3_5_006_jsdcloud_hint_appears_on_internal --nocapture
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.13s
+     Running tests/comment_edit.rs (target/debug/deps/comment_edit-10ad5a4b953c7ecc)
+
+running 1 test
+test test_bc_3_5_006_jsdcloud_hint_appears_on_internal ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 25 filtered out; finished in 0.75s
+
+---
+
+AC-005 assertions verified in test body (BC-3.5.006, VP-577-025 variant 1):
+  - exit code == 0
+  - stderr contains "JSDCLOUD-6050" (load-bearing substring; VP-577-025 v1)
+  - stderr contains "(marked internal)" (BC-3.5.005 human-channel echo marker; Table mode)
+  - hint fires to stderr regardless of output format (--output json not used here)
+  - NOTE: JSDCLOUD-6050 hint fires BEFORE the PUT on the --internal path (EC-3.5.006-1)

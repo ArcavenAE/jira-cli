@@ -1,0 +1,18 @@
+$ cargo test --test comment_edit -- test_bc_3_5_011_internal_and_public_clap_exit_2 --nocapture
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.11s
+     Running tests/comment_edit.rs (target/debug/deps/comment_edit-10ad5a4b953c7ecc)
+
+running 1 test
+test test_bc_3_5_011_internal_and_public_clap_exit_2 ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 25 filtered out; finished in 0.70s
+
+---
+
+AC-011 assertions verified in test body (BC-3.5.011, VP-577-010):
+  PRE-SATISFIED: AC-011 is pre-satisfied by S-577-1's clap conflicts_with definition.
+  This test acts as a regression guard confirming the pre-satisfied contract is preserved.
+
+  - "body" --internal --public → exit 2 (clap-level error; NOT a runtime handler guard)
+  - stderr contains "cannot be used with" (VP-577-010 discriminator for clap error message)
+  - clap conflicts_with enforced at parse time, before any handler code executes
