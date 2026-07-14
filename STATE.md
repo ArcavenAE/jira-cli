@@ -4,15 +4,15 @@ level: ops
 version: "2.0"
 status: active
 producer: state-manager
-timestamp: 2026-07-13T23:59:00Z
+timestamp: 2026-07-14T12:34:00Z
 phase: 3
-pipeline: PAUSED
+pipeline: ACTIVE
 inputs: []
 input-hash: "[live-state]"
 traces_to: ""
 project: jira-cli
 mode: brownfield
-current_step: "SOH-COMMENT-CRUD-1 F4 WAVES A+B DELIVERED (PAUSED) — Wave A: S-577-1 PR#610 907a795 + S-577-2 PR#611 bbe54e9 merged; Wave B: S-577-3 PR#615 d0faf1c merged (DEC-174). Wave-B integration convergence IN FLIGHT (pass 1 dispatched, verdict NOT received). develop tip: d0faf1c. Next: wave-B integration STRICT → wave C (S-577-4+S-577-6 parallel)."
+current_step: "SOH-COMMENT-CRUD-1 F4 WAVE B COMPLETE + wave C IN PROGRESS (2026-07-14) — wave-B integration STRICT CONVERGED (3 passes CLEAN×3); S-577-3 worktree cleaned; wave C authorized + launched: S-577-4 (feat/comment-edit-core, Red Gate 21e5740) + S-577-6 (feat/comment-view-handler) off d0faf1c."
 maintenance_run: CLOSED
 current_cycle: "cycle-001"
 feature_mode_bundle: SOH-COMMENT-CRUD-1
@@ -26,7 +26,7 @@ activation_version: "v0.6.0-dev.9"
 
 <!--
   STATE.md SIZE BUDGET (per D-421(c)):
-  Hard cap (500 lines) margin from soft-target = 500 - 313 = 187; margin from actual = 500 - 313 = 187 (D-446(c) dual-margin form). 313 lines (wc-l).
+  Hard cap (500 lines) margin from soft-target = 500 - 327 = 173; margin from actual = 500 - 327 = 173 (D-446(c) dual-margin form). 327 lines (wc-l).
   Hard cap: 500 lines.
 -->
 
@@ -39,9 +39,9 @@ activation_version: "v0.6.0-dev.9"
 | **Product** | jr (Jira CLI) |
 | **Mode** | BROWNFIELD / Rust |
 | **Target Workspace** | develop → main |
-| **Last Updated** | 2026-07-13: F4 waves A+B DELIVERED — S-577-3 PR#615 d0faf1c (DEC-174); wave-B integration IN FLIGHT; pipeline PAUSED (session wrap). |
-| **Current Phase** | Phase 3 — **SOH-COMMENT-CRUD-1 F4 waves A+B DELIVERED, PAUSED (2026-07-13)**. Spec v1.3.41. Stories **111**. Wave-B integration IN FLIGHT (pass 1 dispatched). develop d0faf1c. AC counts 13/5/9/11/12/11. BC **624**. Holdouts **88**. VP **30**. |
-| **Next Phase** | wave-B integration STRICT → wave C (S-577-4 edit + S-577-6 view, PARALLEL) → wave D (S-577-5 visibility, owns closes #577) → F5 scoped adversarial → F6 targeted hardening → F7 delta convergence → release. |
+| **Last Updated** | 2026-07-14: wave-B integration STRICT CONVERGED (3 passes CLEAN×3, d0faf1c); wave C authorized + IN PROGRESS (S-577-4 fix-round 1: 1 MEDIUM; S-577-6 fix-round 1: 1 MEDIUM). |
+| **Current Phase** | Phase 3 — **SOH-COMMENT-CRUD-1 F4 WAVE B COMPLETE; wave C IN PROGRESS (2026-07-14)**. Spec v1.3.41. Stories **111**. Wave C: S-577-4 (edit) + S-577-6 (view) PARALLEL off d0faf1c — both Step 4.5 fix-round 1. AC counts 13/5/9/11/12/11. BC **624**. Holdouts **88**. VP **30**. |
+| **Next Phase** | wave C (S-577-4+S-577-6 PARALLEL, IN PROGRESS, fix-round 1) → wave D (S-577-5 visibility, owns closes #577) → F5 scoped adversarial → F6 targeted hardening → F7 delta convergence → release. |
 | **Activation HEAD** | b2ce3169 (PR #603 squash-merged 2026-07-09; SOH-BUGS-1 FULLY COMPLETE; release v0.6.0-dev.9; issues #589/#590/#582 CLOSED) |
 
 ## Phase Progress
@@ -50,11 +50,11 @@ activation_version: "v0.6.0-dev.9"
 <!-- archived: Phase 0–2 + Feature cycles 2026-05-04..2026-07-07 + CITATION-GUARDS rows + F1 GATE APPROVED row + F2 SPEC DELTA row + pass-5 adversary row + fix burst 4 row + DEC-158 row + F2 passes 6-16 row (archived F4 DELIVERED burst) + F2 passes 17-19 row (archived F6 hardening burst) + F3 adversary 1-7 row (archived F7 evidence burst) + F4 DELIVERED row (archived F7-AUTHORIZED burst) + F5 CONVERGED row (archived session-review burst) + F6 TARGETED HARDENING row (archived IP-571 disposition burst) + F7 AUTHORIZED row (archived external-PR review burst) + RELEASE v0.6.0-dev.8 COMPLETE row (archived SOH-BUGS-1 intake burst) + SESSION RESUME + SESSION-REVIEW COMPLETE row (archived SOH-BUGS-1 F1 gate burst) + SESSION-REVIEW PROPOSALS ROUTED UPSTREAM row (archived S-SOH-590-1 DELIVERED burst) + EXTERNAL-PR REVIEW BURST row + SOH-BUGS-1 INTAKE row (archived SOH-BUGS-1 DELIVERY CLOSE burst) + SOH-BUGS-1 F1 APPROVED row (archived fix-round-38 burst) + S-SOH-590-1 DELIVERED row (archived passes-33-34 fix-round-39 burst) + S-SOH-589-1 DELIVERED row (archived pass-35 fix-round-40 burst) + SOH-BUGS-1 CLOSED row (archived pass-36 fix-round-41 burst) + SOH-COMMENT-CRUD-1 INTAKE+F1 row (archived pass-37 fix-round-42 burst) + pass-32 fix-round-38 row (archived checkpoint-DEC-169 burst) + passes-33-34 fix-round-39 row (archived pass-39 fix-round-44 burst) + pass-35 fix-round-40 row (archived pass-40 fix-round-45 burst) + pass-36 fix-round-41 row (archived pass-41 fix-round-46 burst) + pass-37 fix-round-42 row (archived pass-42 CLEAN burst) + checkpoint-DEC-169+pass-38 fix-round-43 row (archived pass-44 fix-round-47 burst) + pass-39 fix-round-44 row (archived pass-45 fix-round-48 burst) + pass-40 fix-round-45 row (archived pass-46 CLEAN burst) + pass-41 fix-round-46 row (archived pass-48 CONVERGED burst) + passes-42+43 CLEAN row (archived F2-gate-approved burst) + pass-44 fix-round-47 row (archived F3-stories-created burst) + F2 pass-45 fix-round-48 row (archived checkpoint-55 burst) + F2 passes-46+47 CLEAN row (archived checkpoint-55 burst) + F2 STRICT CONVERGED row (archived checkpoint-56 burst) + F2 GATE APPROVED row (archived checkpoint-57 burst) + F3 pass-20 fix-round-20 row (archived checkpoint-58 burst) + F3 pass-21 fix-round-21 row (archived checkpoint-59 burst) + F3 pass-22 fix-round-22 row (archived checkpoint-60 burst) + F3 pass-23 fix-round-23 row (archived checkpoint-61 burst) + F3 pass-24 CLEAN row (archived checkpoint-62 burst) + F3 pass-25 fix-round-24+24b row (archived checkpoint-63 burst) + F3 pass-26 fix-round-25 row (archived checkpoint-64 burst) + F3 pass-27 CLEAN row (archived checkpoint-65 burst) + F3 pass-28 CLEAN row (archived checkpoint-66 burst) + F3 STRICT CONVERGED row (archived checkpoint-67 burst) -->
 | Phase | Status | Completed | Gate | Notes |
 |-------|--------|-----------|------|-------|
-| **SOH-COMMENT-CRUD-1 F3 gate prep COMPLETE (2026-07-12) — perimeter audit 1 LOW fixed (round 26, mutants.toml examine_globs — AC-009(j)); EC (a)-(i) all mapped; SEC items remediated; holdouts bidirectional-correct; drift check done; 2 process-gaps codified.** | **GATE PREP COMPLETE** | **2026-07-12** | **F3 human gate pending.** | `phase-f3-story-decomposition/f3-gate-audit-577.md`. |
 | **SOH-COMMENT-CRUD-1 F3 GATE APPROVED (DEC-171, 2026-07-13) → F4 wave A authorized (S-577-1 + S-577-2). 4 human rulings: package APPROVED; delete-S-577-3 supersession ACCEPTED; BC-3.5.011 split CONFIRMED; drift residue ACCEPTED.** | **F3 GATE APPROVED** | **2026-07-13** | **F4 wave A starts.** | DEC-171. |
 | **SOH-COMMENT-CRUD-1 F4 wave A progress (2026-07-13) — S-577-2 MERGED PR #611 (bbe54e9); S-577-1 Step 4.5 pass 1 done (D1/D2/D3 ratified DEC-172, story sync applied); PR #610 DRAFT; PG-F4-1/2/3 codified.** | **IN PROGRESS** | **2026-07-13** | **S-577-1 pass 2 pending.** | `phase-f4-implementation/s-577-2-delivery-record.md`. |
 | **SOH-COMMENT-CRUD-1 F4 WAVE A COMPLETE (2026-07-13) — S-577-1 PR #610 (907a795) + S-577-2 PR #611 (bbe54e9) + fix PRs #613+#614 merged; wave integration STRICT 5 passes (3/4/5 CLEAN). develop 729b8c4. DEC-173 (fresh-eyes all PRs; user merges).** | **WAVE A COMPLETE** | **2026-07-13** | **Wave B starts.** | `phase-f4-implementation/wave-a-convergence-record.md`. |
 | **SOH-COMMENT-CRUD-1 SESSION WRAP (2026-07-13) — waves A+B delivered (S-577-1 PR#610 + S-577-2 PR#611 + S-577-3 PR#615 d0faf1c merged; DEC-174); wave-B integration STRICT convergence IN FLIGHT (pass 1 dispatched, verdict NOT received). Pipeline PAUSED. Next: wave-B integration → wave C (S-577-4+S-577-6 parallel).** | **PAUSED** | **2026-07-13** | **Wave-B integration pending.** | Checkpoint 67; `phase-f4-implementation/s-577-3-delivery-record.md`. |
+| **SOH-COMMENT-CRUD-1 F4 WAVE B COMPLETE (2026-07-14) — wave-B integration STRICT CONVERGED 3 passes (pass-1 pre-wrap CLEAN + pass-2 post-resume fresh CLEAN + pass-3 post-resume fresh CLEAN; 3/3 STRICT); S-577-3 worktree/branch cleaned; develop d0faf1c.** | **WAVE B COMPLETE** | **2026-07-14** | **Wave C IN PROGRESS (authorized, parallel).** | `phase-f4-implementation/wave-b-convergence-record.md`. |
 
 ## Current Phase Steps
 
@@ -208,7 +208,9 @@ None open.
 
 Current project index versions: BC-INDEX v6.12 / VP-INDEX v0.82 / STORY-INDEX v1.02 / ARCH-INDEX v0.16
 
-Trajectory (ADF-CODE-MARK-EXCLUSIVITY F2): →3→4→5→5→0→1→0→4→1→0→3→1→1→0→2→3→0→0→0 (passes 1-19; STRICT CONVERGED, DEC-158/DEC-159). F3: 3→2→1→0→1→3→1→0→0→0 (passes 1-10; STRICT CONVERGED, DEC-160). F4 Step-4.5: →1→0→0→0 (STRICT CONVERGED, DEC-161, window F4-p2/F4-p3/F4-p4). F5 Step-4.5: →0→0→1→0→0→0 (passes p1-p6; STRICT CONVERGED, DEC-162, window p4/p5/p6). Trajectory-tail →1→0→0→0. SOH-BUGS-1 S-SOH-589-1 Step-4.5: 3→4→0→1→0→0→0 (passes p1-p7; STRICT CONVERGED, DEC-166, window p5/p6/p7).
+SOH-COMMENT-CRUD-1 wave-B integration: →0→0→0 (passes pass-1/pass-2/pass-3; STRICT CONVERGED 2026-07-14).
+
+Trajectory-tail: →0→0→0→0.
 
 ADF-CODE-MARK-EXCLUSIVITY: **FULLY COMPLETE (2026-07-08, DEC-163). S-7.02 SATISFIED. Release v0.6.0-dev.8 @ 159e1be.** F5 CONVERGED (DEC-162). Deferrals F5-OBS-001/002. Full trajectories: `cycles/cycle-001/convergence-trajectory.md`. SOH-BUGS-1: **FULLY COMPLETE (2026-07-09, DEC-167). F7-lite 7/7 PASS (holdout 1.00 6/6; consistency CONSISTENT). Release v0.6.0-dev.9 @ b2ce3169. Issues #589/#590/#582 CLOSED.**
 
@@ -218,7 +220,7 @@ ADF-CODE-MARK-EXCLUSIVITY: **FULLY COMPLETE (2026-07-08, DEC-163). S-7.02 SATISF
 |-------|--------|-------|
 | ADF-CODE-MARK-EXCLUSIVITY (issue #571) | **FULLY COMPLETE (2026-07-08) — CONVERGED AND CLOSED (DEC-163). Release v0.6.0-dev.8 TAGGED @ 159e1be. Session-review loop CLOSED (DEC-164).** | PR #593 @ 7ba4cf4; fix-PR #594 @ d7875e6; story #103 v1.9; issue #571 CLOSED; F5 trajectory →0→0→1→0→0→0; window p4/p5/p6 CLEAN×3; two deferrals F5-OBS-001/002; F6 gate PASS; F7 5/5 PASS; S-7.02 SATISFIED. PR #596 @ 159e1be; workflow run 28969465350 SUCCESS (10 assets). |
 | SOH-BUGS-1 (issues #589 + #590/#582) | **FULLY COMPLETE (2026-07-09, DEC-167) — CONVERGED AND CLOSED. Release v0.6.0-dev.9 @ b2ce3169 (PR #603; run 29051718553; 10 assets).** | PRs #597/#601/#602/#603. Issues #589/#590/#582 CLOSED (verified 2026-07-09). F7-lite 7/7 PASS. DEC-167. RELEASING-MD-MISSING drift recorded. |
-| SOH-COMMENT-CRUD-1 (issue #577) | **F4 waves A+B DELIVERED; PAUSED (2026-07-13, checkpoint 67). Wave B: S-577-3 PR#615 d0faf1c merged; DEC-174; 6-pass converged. Wave-B integration IN FLIGHT (pass 1 dispatched). DEC-173.** | F2 gate DEC-170; F3 gate DEC-171; deviations DEC-172; proportionality DEC-173; DEC-174; `phase-f4-implementation/s-577-3-delivery-record.md`. |
+| SOH-COMMENT-CRUD-1 (issue #577) | **F4 waves A+B COMPLETE + wave-B integration STRICT CONVERGED (2026-07-14); wave C IN PROGRESS (authorized, parallel). S-577-4 fix-round 1 (1 MEDIUM 404-preamble); S-577-6 fix-round 1 (1 MEDIUM fallback-token).** | F2 gate DEC-170; F3 gate DEC-171; deviations DEC-172/173/174; `phase-f4-implementation/wave-b-convergence-record.md`. |
 
 ## Session Resume Checkpoint
 

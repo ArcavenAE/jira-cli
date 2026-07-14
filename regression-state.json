@@ -1,1 +1,1 @@
-{"status":"pass","timestamp":"2026-07-13T23:57:26Z","command":"cd /tmp/waveB-p1 && cargo test --test comment_delete --test jr_stdin_is_tty_release_gate 2>&1 | grep -E \"test result:|Running|FAILED\""}
+{"status":"pass","timestamp":"2026-07-14T01:25:52Z","command":"cd /Users/zious/Documents/GITHUB/jira-cli/.worktrees/S-577-6 && cargo test 2>&1 | tail -20"}

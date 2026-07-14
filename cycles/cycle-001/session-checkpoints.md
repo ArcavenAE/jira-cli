@@ -1444,3 +1444,20 @@ STRICT convergence. Counters: BC 612, Holdouts 83, Stories 102. develop @ 0d8a8a
 | **Untracked local files** | Deliberately uncommitted, session-local tooling: `.claude/pr-reviews/`, `.claude/spec-config.json`. Not pipeline artifacts. |
 | **STATE.md size** | ~316 lines (OK band). |
 | **Resume command** | Open fresh session; factory-worktree-health; read `.factory/STATE.md`; present issues-intake gate to human. RESUME INTENT: "work on issues" — sackofhacks P1 first (#577 security-adjacent sd.public.comment footgun, #575 --fields CSV, #576 attachment tree). |
+
+---
+
+### Checkpoint archived: 2026-07-13 — SOH-COMMENT-CRUD-1 F4 waves A+B DELIVERED; wave-B integration IN FLIGHT
+
+(Displaced by: wave-B integration STRICT CONVERGED 2026-07-14 burst)
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-07-13 (wrap). |
+| **Position** | F4 delta implementation, bundle SOH-COMMENT-CRUD-1 (#577), phase 3 frontmatter. |
+| **Delivered** | Wave A (S-577-2 PR#611 bbe54e9; S-577-1 PR#610 907a795; fixes #613 69877ff + #614 729b8c4; wave STRICT converged 5 passes). Wave B (S-577-3 PR#615 d0faf1c; 6-pass converged; DEC-174; post-merge CI run 29294142657 GREEN). |
+| **In flight at wrap** | (1) wave-B integration convergence at streak 1/3 (pass 1 CLEAN, recorded; dismissed non-finding: delete's single-line blocking stdin read vs add's spawn_blocking adjudicated justified) — resume dispatches passes 2 and 3 (fresh contexts); criterion 3 consecutive CLEAN; re-dispatch fresh adversary against git diff 729b8c4...origin/develop with settled list from wave-a/b records + DEC-174 + comment-crud.md-staleness-deferred adjudication. (2) S-577-3 worktree cleanup pending (.worktrees/S-577-3, branch merged, tree clean — devops removes worktree + local branch). |
+| **Next after wave-B convergence** | wave C — S-577-4 (edit core) + S-577-6 (view) in PARALLEL worktrees off develop ≥d0faf1c; both edit interactions.rs + mutants.toml exclude_re (each removes its name; LAST lander deletes entire entry + comment block); S-577-4 consumes DEC-174 prompt precedent; then wave D S-577-5 (visibility; owns closes #577); then wave-level convergences, F5 adversarial, F6 hardening, F7 convergence, release. Wave-C preflight verified: (a) exclude_re same-line edit by BOTH stories → second lander WILL hit rebase conflict; stories carry conditional resolution instructions — implementers must honor at conflict time (designed choreography, merge-safe); (b) validate_comment_id is module-private in interactions.rs — directly callable by edit/view handlers, no visibility change needed (matches story call forms verbatim); (c) stale stub-marker class now includes json-output-shapes.md "Stub (S-577-3)" and CHANGELOG "delete ... are stubs" — same deferred-to-bundle-close class as comment-crud.md (shapes/behavior MATCH shipped output; labels only); do not re-file in later wave passes. |
+| **Standing rules** | User merges ALL PRs on GitHub personally (notify + watcher); every PR gets fresh-eyes pr-reviewer pre-merge (DEC-173); COMMENTED verdict = approve-equivalent (same-account); closes #577 ONLY in S-577-5's PR; implementers hard-forbidden from push/PR/improvise (STOP-and-report); orchestrator may execute user-authorized git ops directly (AskUserQuestion consent precedent). |
+| **Pending nits** | comment-crud.md finalization at bundle close (delete/edit/view stub markers); BC-3.5.002 trailing period; autocompact settings key advisory. |
+| **Resume command** | /vsdd-factory:next-step (reads this checkpoint; first actions = clean S-577-3 worktree, dispatch wave-B integration passes 2 and 3 fresh). |

@@ -4932,3 +4932,13 @@ Displaced to make room for SESSION WRAP (F2 convergence) step row per keep-5 rul
 | Step | Agent | Status | Output |
 |------|-------|--------|--------|
 | **S-SOH-590-1 DELIVERED (2026-07-09) — PR #597 @ 4f3960e0 (DEC-128 honored). Quick-dev: Red Gate at cec775e (3 tests: 2 FAIL uppercase/mixedcase, 1 PASS lowercase); Green at cb3b471 (3/3, 2010/0/93). APPROVE cycle 1. CI 15/15. BC-X.1.011 + VP-590-001 (spec v1.3.27). TD-031 BC-INDEX lockout (see drift).** | implementer + pr-manager + state-manager | COMPLETE | `cycles/cycle-001/S-SOH-590-1/implementation/red-gate-log.md`; `stories/S-SOH-590-1.md` updated to completed; `sprint-state.yaml` updated. |
+
+---
+
+## Archived Phase Progress row (2026-07-14, wave-B-convergence burst)
+
+Displaced to make room for WAVE B COMPLETE (2026-07-14) row per keep-5 rule.
+
+| Phase | Status | Completed | Gate | Notes |
+|-------|--------|-----------|------|-------|
+| **SOH-COMMENT-CRUD-1 F3 gate prep COMPLETE (2026-07-12) — perimeter audit 1 LOW fixed (round 26, mutants.toml examine_globs — AC-009(j)); EC (a)-(i) all mapped; SEC items remediated; holdouts bidirectional-correct; drift check done; 2 process-gaps codified.** | **GATE PREP COMPLETE** | **2026-07-12** | **F3 human gate pending.** | `phase-f3-story-decomposition/f3-gate-audit-577.md`. |
