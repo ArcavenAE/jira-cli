@@ -5824,6 +5824,32 @@ _Tagged: [process-gap] [implementer-discipline] [worktree-identity] [resume-guar
 
 ---
 
+### PG-F4-9 PR-MANAGER-REVIEW-COMPLETE-WITHOUT-EVIDENCE [process-gap]
+
+**Lesson:** pr-manager declared review-complete on PR #617 (S-577-4 edit core) without posting a review evidence comment to the PR. The `validate-pr-review-posted` hook could not verify the review because no comment was present. The fallback path (record review verdict as a comment) was not taken.
+
+**Origin:** F4 wave-C: S-577-4 PR #617 review cycle. User had to ask "did we review 617?" before the gap was surfaced. The review verdict was claimed verbally but not posted to the PR thread.
+
+**Rule:** When the `validate-pr-review-posted` hook fails to find a posted review comment, pr-manager MUST use the fallback-to-comment path: post the review summary as a PR comment (via `gh pr comment`) before declaring review-complete. Review verdicts that live only in agent context are unverifiable and do not satisfy the hook.
+
+_Recorded: 2026-07-14. State-manager (wave-C close burst, TD-VSDD-053)._
+_Tagged: [process-gap] [pr-manager-discipline] [review-evidence] [hook-compliance] [codified] — deferred to vsdd-factory engine (pr-manager checklist + fallback-to-comment standard); outside product repo scope — see STATE.md Drift Items_
+
+---
+
+### PG-F4-10 ADVERSARY-MUTATION-COVERAGE-CLAIM-WITHOUT-EMPIRICAL-RUN [process-gap]
+
+**Lesson:** The adversary for S-577-6 pass-4 claimed mutation-kill coverage was adequate without having actually run `cargo-mutants`. CI subsequently caught an 86% kill rate (not 100%), requiring 3 additional mutant-kill tests (commit 32e8991) and a full mutation-gate fix round before the PR could merge. The adversary's claimed coverage was invalid.
+
+**Origin:** F4 wave-C: S-577-6 step-4.5 pass-4 adversary review. Adversary stated mutation coverage was adequate; CI proved otherwise. Required an additional fix round (CI 86%→PASS).
+
+**Rule:** When an adversary review pass assesses mutation coverage, the adversary MUST run `cargo mutants --in-diff <diff-file>` (or equivalent) and report the actual outcome. A coverage claim without an empirical run is an unverified assertion and MUST be treated as NOT-PASS by the orchestrator. "Looks well-covered" is not a mutation result.
+
+_Recorded: 2026-07-14. State-manager (wave-C close burst, TD-VSDD-053)._
+_Tagged: [process-gap] [adversary-discipline] [mutation-testing] [empirical-run-required] [codified] — deferred to vsdd-factory engine (adversary checklist + mutation-run mandate); outside product repo scope — see STATE.md Drift Items_
+
+---
+
 ### POSITIVE-CONTROL-EMPIRICAL-MUTATION-AND-CLI-PROBES [positive-control]
 
 **Observation:** F4 wave-C produced two complementary positive-control data points:
@@ -5836,3 +5862,11 @@ _Tagged: [process-gap] [implementer-discipline] [worktree-identity] [resume-guar
 
 _Recorded: 2026-07-14. State-manager (wave-C burst, TD-VSDD-053)._
 _Tagged: [positive-control] [cargo-mutants] [cli-probes] [calibration] [s-577-4] [s-577-6]_
+
+**Wave-C close positive controls (additional, wave-C-COMPLETE burst, TD-VSDD-053):**
+
+3. **Adversary empirical cargo-mutants run (S-577-4 pass-3):** The adversary independently ran `cargo-mutants --in-diff` on the S-577-4 diff during pass-3 and confirmed all mutants killed — the first wave where the adversary ran mutation testing independently. Extends calibration baseline beyond implementer/CI runs.
+
+4. **Live file-mode CLI probing (S-577-6 pass-6):** Pass-6 closing pass included live binary probes against `jr issue comment view` output using `cargo run`, verifying field rendering and blank-line separator behavior in a real executable. Behavioral fingerprint independent of test assertions.
+
+5. **User "did we review 617" catch:** User oversight caught that PR #617 (S-577-4) may not have had a posted review, surfacing PG-F4-9. User-level oversight caught an engine-level gap the hook could not surface alone.

@@ -4,7 +4,7 @@ level: ops
 version: "2.0"
 status: active
 producer: state-manager
-timestamp: 2026-07-14T12:39:00Z
+timestamp: 2026-07-14T12:42:00Z
 phase: 3
 pipeline: ACTIVE
 inputs: []
@@ -12,7 +12,7 @@ input-hash: "[live-state]"
 traces_to: ""
 project: jira-cli
 mode: brownfield
-current_step: "SOH-COMMENT-CRUD-1 F4 WAVE C BOTH STORIES CONVERGED (2026-07-14) — S-577-6 PR #616 OPEN HELD for user merge (DEC-128/DEC-173); S-577-4 PR staged (pending #616 merge); PG-F4-7/PG-F4-8 codified; wave-C integration STRICT pending."
+current_step: "WAVE C COMPLETE + integration STRICT CONVERGED (2026-07-14); develop a486f79; next: wave D S-577-5 pending human gate"
 maintenance_run: CLOSED
 current_cycle: "cycle-001"
 feature_mode_bundle: SOH-COMMENT-CRUD-1
@@ -26,7 +26,7 @@ activation_version: "v0.6.0-dev.9"
 
 <!--
   STATE.md SIZE BUDGET (per D-421(c)):
-  Hard cap (500 lines) margin from soft-target = 500 - 329 = 171; margin from actual = 500 - 329 = 171 (D-446(c) dual-margin form). 329 lines (wc-l).
+  Hard cap (500 lines) margin from soft-target = 500 - 330 = 170; margin from actual = 500 - 330 = 170 (D-446(c) dual-margin form). 330 lines (wc-l).
   Hard cap: 500 lines.
 -->
 
@@ -39,22 +39,21 @@ activation_version: "v0.6.0-dev.9"
 | **Product** | jr (Jira CLI) |
 | **Mode** | BROWNFIELD / Rust |
 | **Target Workspace** | develop → main |
-| **Last Updated** | 2026-07-14: wave-C BOTH STORIES CONVERGED — S-577-6 PR #616 OPEN HELD; S-577-4 PR staged; PG-F4-7/PG-F4-8 codified; STATE-MANAGER-MONOLITHIC-WRITE-STALL occurrences 4-5. |
-| **Current Phase** | Phase 3 — **SOH-COMMENT-CRUD-1 F4 WAVE C CONVERGED (2026-07-14)**. Spec v1.3.41. Stories **111**. S-577-6: pass-1/pass-2/pass-3 fix-rounds → pass-4/pass-5/pass-6 CLEAN×3 STRICT; PR #616. S-577-4: pass-1/pass-2/pass-3 fix-rounds → pass-4/pass-5/pass-6 CLEAN×3 STRICT; diff-mutants 7/7. AC 13/5/9/11/12/11. BC **624**. Holdouts **88**. VP **30**. |
-| **Next Phase** | user merge #616 → S-577-4 rebase+PR → wave-C integration STRICT (3 clean) → wave D (S-577-5, owns closes #577) → F5 → F6 → F7 → release. |
+| **Last Updated** | 2026-07-14: wave-C COMPLETE — 4 PRs merged (#617/#616/#618/#619); integration STRICT CONVERGED (1L→2L→0→0→0); develop a486f79; PG-F4-9/PG-F4-10 codified. |
+| **Current Phase** | Phase 3 — **SOH-COMMENT-CRUD-1 F4 WAVE C COMPLETE (2026-07-14)**. Spec v1.3.41. Stories **111**. S-577-4: 13 tests (AC-012/013 extensions; diff-mutants 7/7); S-577-6: 16 subprocess + 4 inline unit (mutation-gate fix round). Wave-C integration: 1L→2L→0→0→0 STRICT CONVERGED. BC **624**. Holdouts **88**. VP **30**. |
+| **Next Phase** | wave D (S-577-5, owns closes #577) pending human gate → F5 → F6 → F7 → release. |
 | **Activation HEAD** | b2ce3169 (PR #603 squash-merged 2026-07-09; SOH-BUGS-1 FULLY COMPLETE; release v0.6.0-dev.9; issues #589/#590/#582 CLOSED) |
 
 ## Phase Progress
 
 <!-- Keep last 5 rows only. Archive older rows to cycles/cycle-001/burst-log.md. -->
-<!-- archived: Phase 0–2 + Feature cycles 2026-05-04..2026-07-07 + CITATION-GUARDS rows + F1 GATE APPROVED row + F2 SPEC DELTA row + pass-5 adversary row + fix burst 4 row + DEC-158 row + F2 passes 6-16 row (archived F4 DELIVERED burst) + F2 passes 17-19 row (archived F6 hardening burst) + F3 adversary 1-7 row (archived F7 evidence burst) + F4 DELIVERED row (archived F7-AUTHORIZED burst) + F5 CONVERGED row (archived session-review burst) + F6 TARGETED HARDENING row (archived IP-571 disposition burst) + F7 AUTHORIZED row (archived external-PR review burst) + RELEASE v0.6.0-dev.8 COMPLETE row (archived SOH-BUGS-1 intake burst) + SESSION RESUME + SESSION-REVIEW COMPLETE row (archived SOH-BUGS-1 F1 gate burst) + SESSION-REVIEW PROPOSALS ROUTED UPSTREAM row (archived S-SOH-590-1 DELIVERED burst) + EXTERNAL-PR REVIEW BURST row + SOH-BUGS-1 INTAKE row (archived SOH-BUGS-1 DELIVERY CLOSE burst) + SOH-BUGS-1 F1 APPROVED row (archived fix-round-38 burst) + S-SOH-590-1 DELIVERED row (archived passes-33-34 fix-round-39 burst) + S-SOH-589-1 DELIVERED row (archived pass-35 fix-round-40 burst) + SOH-BUGS-1 CLOSED row (archived pass-36 fix-round-41 burst) + SOH-COMMENT-CRUD-1 INTAKE+F1 row (archived pass-37 fix-round-42 burst) + pass-32 fix-round-38 row (archived checkpoint-DEC-169 burst) + passes-33-34 fix-round-39 row (archived pass-39 fix-round-44 burst) + pass-35 fix-round-40 row (archived pass-40 fix-round-45 burst) + pass-36 fix-round-41 row (archived pass-41 fix-round-46 burst) + pass-37 fix-round-42 row (archived pass-42 CLEAN burst) + checkpoint-DEC-169+pass-38 fix-round-43 row (archived pass-44 fix-round-47 burst) + pass-39 fix-round-44 row (archived pass-45 fix-round-48 burst) + pass-40 fix-round-45 row (archived pass-46 CLEAN burst) + pass-41 fix-round-46 row (archived pass-48 CONVERGED burst) + passes-42+43 CLEAN row (archived F2-gate-approved burst) + pass-44 fix-round-47 row (archived F3-stories-created burst) + F2 pass-45 fix-round-48 row (archived checkpoint-55 burst) + F2 passes-46+47 CLEAN row (archived checkpoint-55 burst) + F2 STRICT CONVERGED row (archived checkpoint-56 burst) + F2 GATE APPROVED row (archived checkpoint-57 burst) + F3 pass-20 fix-round-20 row (archived checkpoint-58 burst) + F3 pass-21 fix-round-21 row (archived checkpoint-59 burst) + F3 pass-22 fix-round-22 row (archived checkpoint-60 burst) + F3 pass-23 fix-round-23 row (archived checkpoint-61 burst) + F3 pass-24 CLEAN row (archived checkpoint-62 burst) + F3 pass-25 fix-round-24+24b row (archived checkpoint-63 burst) + F3 pass-26 fix-round-25 row (archived checkpoint-64 burst) + F3 pass-27 CLEAN row (archived checkpoint-65 burst) + F3 pass-28 CLEAN row (archived checkpoint-66 burst) + F3 STRICT CONVERGED row (archived checkpoint-67 burst) + SOH-COMMENT-CRUD-1 F3 GATE APPROVED row (archived wave-C burst) -->
+<!-- archived: Phase 0–2 + Feature cycles 2026-05-04..2026-07-07 + CITATION-GUARDS rows + F1 GATE APPROVED row + F2 SPEC DELTA row + pass-5 adversary row + fix burst 4 row + DEC-158 row + F2 passes 6-16 row (archived F4 DELIVERED burst) + F2 passes 17-19 row (archived F6 hardening burst) + F3 adversary 1-7 row (archived F7 evidence burst) + F4 DELIVERED row (archived F7-AUTHORIZED burst) + F5 CONVERGED row (archived session-review burst) + F6 TARGETED HARDENING row (archived IP-571 disposition burst) + F7 AUTHORIZED row (archived external-PR review burst) + RELEASE v0.6.0-dev.8 COMPLETE row (archived SOH-BUGS-1 intake burst) + SESSION RESUME + SESSION-REVIEW COMPLETE row (archived SOH-BUGS-1 F1 gate burst) + SESSION-REVIEW PROPOSALS ROUTED UPSTREAM row (archived S-SOH-590-1 DELIVERED burst) + EXTERNAL-PR REVIEW BURST row + SOH-BUGS-1 INTAKE row (archived SOH-BUGS-1 DELIVERY CLOSE burst) + SOH-BUGS-1 F1 APPROVED row (archived fix-round-38 burst) + S-SOH-590-1 DELIVERED row (archived passes-33-34 fix-round-39 burst) + S-SOH-589-1 DELIVERED row (archived pass-35 fix-round-40 burst) + SOH-BUGS-1 CLOSED row (archived pass-36 fix-round-41 burst) + SOH-COMMENT-CRUD-1 INTAKE+F1 row (archived pass-37 fix-round-42 burst) + pass-32 fix-round-38 row (archived checkpoint-DEC-169 burst) + passes-33-34 fix-round-39 row (archived pass-39 fix-round-44 burst) + pass-35 fix-round-40 row (archived pass-40 fix-round-45 burst) + pass-36 fix-round-41 row (archived pass-41 fix-round-46 burst) + pass-37 fix-round-42 row (archived pass-42 CLEAN burst) + checkpoint-DEC-169+pass-38 fix-round-43 row (archived pass-44 fix-round-47 burst) + pass-39 fix-round-44 row (archived pass-45 fix-round-48 burst) + pass-40 fix-round-45 row (archived pass-46 CLEAN burst) + pass-41 fix-round-46 row (archived pass-48 CONVERGED burst) + passes-42+43 CLEAN row (archived F2-gate-approved burst) + pass-44 fix-round-47 row (archived F3-stories-created burst) + F2 pass-45 fix-round-48 row (archived checkpoint-55 burst) + F2 passes-46+47 CLEAN row (archived checkpoint-55 burst) + F2 STRICT CONVERGED row (archived checkpoint-56 burst) + F2 GATE APPROVED row (archived checkpoint-57 burst) + F3 pass-20 fix-round-20 row (archived checkpoint-58 burst) + F3 pass-21 fix-round-21 row (archived checkpoint-59 burst) + F3 pass-22 fix-round-22 row (archived checkpoint-60 burst) + F3 pass-23 fix-round-23 row (archived checkpoint-61 burst) + F3 pass-24 CLEAN row (archived checkpoint-62 burst) + F3 pass-25 fix-round-24+24b row (archived checkpoint-63 burst) + F3 pass-26 fix-round-25 row (archived checkpoint-64 burst) + F3 pass-27 CLEAN row (archived checkpoint-65 burst) + F3 pass-28 CLEAN row (archived checkpoint-66 burst) + F3 STRICT CONVERGED row (archived checkpoint-67 burst) + SOH-COMMENT-CRUD-1 F3 GATE APPROVED row (archived wave-C burst) + F4 wave-A progress row + F4 wave-C pass-4/5/6 STRICT row (archived wave-C-COMPLETE burst) -->
 | Phase | Status | Completed | Gate | Notes |
 |-------|--------|-----------|------|-------|
-| **SOH-COMMENT-CRUD-1 F4 wave A progress (2026-07-13) — S-577-2 MERGED PR #611 (bbe54e9); S-577-1 Step 4.5 pass 1 done (D1/D2/D3 ratified DEC-172, story sync applied); PR #610 DRAFT; PG-F4-1/2/3 codified.** | **IN PROGRESS** | **2026-07-13** | **S-577-1 pass 2 pending.** | `phase-f4-implementation/s-577-2-delivery-record.md`. |
 | **SOH-COMMENT-CRUD-1 F4 WAVE A COMPLETE (2026-07-13) — S-577-1 PR #610 (907a795) + S-577-2 PR #611 (bbe54e9) + fix PRs #613+#614 merged; wave integration STRICT 5 passes (3/4/5 CLEAN). develop 729b8c4. DEC-173 (fresh-eyes all PRs; user merges).** | **WAVE A COMPLETE** | **2026-07-13** | **Wave B starts.** | `phase-f4-implementation/wave-a-convergence-record.md`. |
 | **SOH-COMMENT-CRUD-1 SESSION WRAP (2026-07-13) — waves A+B delivered (S-577-1 PR#610 + S-577-2 PR#611 + S-577-3 PR#615 d0faf1c merged; DEC-174); wave-B integration STRICT convergence IN FLIGHT (pass 1 dispatched, verdict NOT received). Pipeline PAUSED. Next: wave-B integration → wave C (S-577-4+S-577-6 parallel).** | **PAUSED** | **2026-07-13** | **Wave-B integration pending.** | Checkpoint 67; `phase-f4-implementation/s-577-3-delivery-record.md`. |
 | **SOH-COMMENT-CRUD-1 F4 WAVE B COMPLETE (2026-07-14) — wave-B integration STRICT CONVERGED 3 passes (pass-1 pre-wrap CLEAN + pass-2 post-resume fresh CLEAN + pass-3 post-resume fresh CLEAN; 3/3 STRICT); S-577-3 worktree/branch cleaned; develop d0faf1c.** | **WAVE B COMPLETE** | **2026-07-14** | **Wave C IN PROGRESS (authorized, parallel).** | `phase-f4-implementation/wave-b-convergence-record.md`. |
-| **pass-4 CLEAN / pass-5 CLEAN / pass-6 CLEAN (S-577-6 + S-577-4 step-4.5 STRICT window; wave C 2026-07-14) — PR #616 OPEN HELD DEC-128/DEC-173; S-577-4 PR staged; fix 0f48818/9a82e84 (S-577-6) + 26e99ff/ef69662 (S-577-4); demos 11/11+13/13. F4 WAVE C BOTH STORIES CONVERGED.** | **WAVE C CONVERGED** | **2026-07-14** | **User merge #616; S-577-4 rebase+PR; wave-C integration → wave D.** | `phase-f4-implementation/`. |
+| **SOH-COMMENT-CRUD-1 F4 WAVE C COMPLETE (2026-07-14) — 4 PRs: S-577-4 #617 @ f9ad71e + S-577-6 #616 @ d14fb10 + docs #618 @ 5433dc3 + src-comment #619 @ a486f79; integration pass-3/pass-4/pass-5 CLEAN×3 STRICT CONVERGED (1L→2L→0→0→0); develop a486f79.** | **WAVE C COMPLETE** | **2026-07-14** | **Wave D S-577-5 pending human gate.** | `phase-f4-implementation/wave-c-convergence-record.md`. |
 
 ## Current Phase Steps
 
@@ -179,7 +178,7 @@ None open.
 | SPEC-CHANGELOG-RESYNC | process-gap | spec-changelog.md goes stale across F2 fix rounds; no mandatory final-round re-sync in F2 skill. | LOW | OPEN — F2-skill template update candidate |
 | ADVERSARY-WRITE-TOOL-MISMATCH | process-gap | F2 adversary agent has read-only tools but skill asks it to write review files. | LOW | OPEN — skill template / agent config fix candidate |
 | D-CHAIN-VALIDATOR-SUBSTRING-FALSE-POSITIVE | process-gap | D-chain validator matched "D-27893" inside "JRACLOUD-27893" — needs word-boundary matching. | LOW | OPEN — validator regex hardening candidate |
-| TWIN-ARTIFACT-SWEEP | process-gap | Fix rounds must propagate spec changes to ALL mirroring artifacts. RECURRENCE COUNT: 5 (F2×3 + F3×2). | LOW | OPEN — F2-skill template update candidate |
+| TWIN-ARTIFACT-SWEEP | process-gap | Fix rounds must propagate spec changes to ALL mirroring artifacts. RECURRENCE COUNT: 6 (F2×3 + F3×2 + F4×1); wave-C stub-label family required 4 sweeps across 3 layers (docs/CLAUDE.md/src); remedy: repo-wide label grep as single delivery step. | LOW | OPEN — F2-skill template update candidate |
 | PHASE-DOC-RETRO-ANNOTATION | process-gap | F1 artifacts need retro-annotation when F2 decisions supersede F1 scope. | LOW | OPEN — F2 skill template update candidate |
 | H-NEW-JSM-RT-001-FIXTURE-NONDESERIALIZABLE | holdout pre-existing | H-NEW-JSM-RT-001 fixture uses `projectKey` but API returns `projectId`. | LOW | OPEN — future holdout sweep candidate |
 | HOLDOUT-GROUP-8-DUPLICATE-HEADING | doc hygiene | Group 8 has duplicate heading label (two scenarios share the same heading text). | LOW | OPEN — doc hygiene fix candidate |
@@ -205,12 +204,14 @@ None open.
 | PG-F4-6 | process-gap | validate-pr-review-posted hook unsatisfiable when same-account COMMENTED verdict; hook fires before human squash; COMMENTED = approve-equivalent per precedent (DEC-173). Codified in lessons.md. | LOW | OPEN — deferred to vsdd-factory engine (hook eligibility rule); outside product repo scope |
 | PG-F4-7 | process-gap | spec-enumerated variants without enumerated test-fn names cause accounting gaps (RECURRENCE 3: F3-pass-25 + 2× F4 wave-C). Fix: story-writer must enumerate per-variant test-fn names in AC bodies so count emerges from listing. Codified in lessons.md. | LOW | OPEN — deferred to vsdd-factory engine (story-writer checklist); outside product repo scope |
 | PG-F4-8 | process-gap | resumed sub-agent ran in wrong worktree (.worktrees/S-577-4 instead of .worktrees/S-577-6) — caused stray commits; caught by orchestrator. Fix: resume prompt must include explicit worktree path + branch name; implementer must verify git -C . rev-parse --abbrev-ref HEAD before any commit. Codified in lessons.md. | LOW | OPEN — deferred to vsdd-factory engine (implementer resume checklist); outside product repo scope |
+| PG-F4-9 | process-gap | pr-manager declared review-complete on PR #617 without posting review evidence comment (fallback-to-comment path not taken; review verdict unverifiable by validate-pr-review-posted hook). Fallback-to-comment is now standard when hook cannot verify. | LOW | OPEN — deferred to vsdd-factory engine (pr-manager review-evidence discipline); outside product repo scope |
+| PG-F4-10 | process-gap | adversary claimed mutation-kill coverage on S-577-6 pass-4 without running cargo-mutants; CI caught 86% kill rate requiring 3 additional mutant-kill tests (commit 32e8991). Fix: empirical cargo-mutants run required when adversary claims mutation coverage; unverified coverage claims are invalid. | LOW | OPEN — deferred to vsdd-factory engine (adversary discipline; empirical-mutants-run-expected); outside product repo scope |
 
 ## Convergence Status
 
 Current project index versions: BC-INDEX v6.12 / VP-INDEX v0.82 / STORY-INDEX v1.02 / ARCH-INDEX v0.16
 
-SOH-COMMENT-CRUD-1 wave-B integration: →0→0→0 (passes pass-1/pass-2/pass-3; STRICT CONVERGED 2026-07-14). Wave C: S-577-6 →1M→1M→1L→0→0→0 (window pass-4/pass-5/pass-6 CLEAN×3; STRICT CONVERGED 2026-07-14); S-577-4 →1M→1L→1L→0→0→0 (window pass-4/pass-5/pass-6 CLEAN×3; STRICT CONVERGED 2026-07-14).
+SOH-COMMENT-CRUD-1 wave-B integration: →0→0→0 (passes pass-1/pass-2/pass-3; STRICT CONVERGED 2026-07-14). Wave C: S-577-6 step-4.5 →1M→1M→1L→0→0→0 (window pass-4/pass-5/pass-6 CLEAN×3; STRICT CONVERGED 2026-07-14); S-577-4 step-4.5 →1M→1L→1L→0→0→0 (window pass-4/pass-5/pass-6 CLEAN×3; STRICT CONVERGED 2026-07-14); wave-C integration →1L→2L→0→0→0 (STRICT CONVERGED 2026-07-14).
 
 Trajectory-tail: →0→0→0→0.
 
@@ -222,7 +223,7 @@ ADF-CODE-MARK-EXCLUSIVITY: **FULLY COMPLETE (2026-07-08, DEC-163). S-7.02 SATISF
 |-------|--------|-------|
 | ADF-CODE-MARK-EXCLUSIVITY (issue #571) | **FULLY COMPLETE (2026-07-08) — CONVERGED AND CLOSED (DEC-163). Release v0.6.0-dev.8 TAGGED @ 159e1be. Session-review loop CLOSED (DEC-164).** | PR #593 @ 7ba4cf4; fix-PR #594 @ d7875e6; story #103 v1.9; issue #571 CLOSED; F5 trajectory →0→0→1→0→0→0; window p4/p5/p6 CLEAN×3; two deferrals F5-OBS-001/002; F6 gate PASS; F7 5/5 PASS; S-7.02 SATISFIED. PR #596 @ 159e1be; workflow run 28969465350 SUCCESS (10 assets). |
 | SOH-BUGS-1 (issues #589 + #590/#582) | **FULLY COMPLETE (2026-07-09, DEC-167) — CONVERGED AND CLOSED. Release v0.6.0-dev.9 @ b2ce3169 (PR #603; run 29051718553; 10 assets).** | PRs #597/#601/#602/#603. Issues #589/#590/#582 CLOSED (verified 2026-07-09). F7-lite 7/7 PASS. DEC-167. RELEASING-MD-MISSING drift recorded. |
-| SOH-COMMENT-CRUD-1 (issue #577) | **F4 WAVE C BOTH STORIES CONVERGED (2026-07-14): S-577-6 step-4.5 STRICT (pass-4/5/6 CLEAN×3; PR #616 OPEN HELD DEC-128/DEC-173; demos 11/11; fix 0f48818/9a82e84); S-577-4 step-4.5 STRICT (pass-4/5/6 CLEAN×3; PR staged; demos 13/13; fix 26e99ff/ef69662; diff-mutants 7/7). PG-F4-7/PG-F4-8 codified. wave-C integration STRICT pending (3 clean).** | F2 gate DEC-170; F3 gate DEC-171; deviations DEC-172/173/174; `phase-f4-implementation/wave-b-convergence-record.md`. |
+| SOH-COMMENT-CRUD-1 (issue #577) | **F4 WAVE C COMPLETE (2026-07-14): 4 PRs merged (S-577-4 #617 @ f9ad71e; S-577-6 #616 @ d14fb10; docs #618 @ 5433dc3; src-comment #619 @ a486f79; develop a486f79). Wave-C integration STRICT CONVERGED (1L→2L→0→0→0). PG-F4-9/PG-F4-10 codified. Next: wave D (S-577-5) pending human gate.** | F2 gate DEC-170; F3 gate DEC-171; deviations DEC-172/173/174; `phase-f4-implementation/wave-c-convergence-record.md`. |
 
 ## Session Resume Checkpoint
 
@@ -230,14 +231,14 @@ ADF-CODE-MARK-EXCLUSIVITY: **FULLY COMPLETE (2026-07-08, DEC-163). S-7.02 SATISF
 
 | Field | Value |
 |-------|-------|
-| **Date** | 2026-07-14 (wave-C BOTH STORIES CONVERGED). |
-| **Position** | F4 delta implementation, bundle SOH-COMMENT-CRUD-1 (#577), phase 3 frontmatter. Wave C converged. PR #616 OPEN HELD for user merge. S-577-4 PR staged (pending #616 merge). |
-| **Delivered** | Wave A (S-577-2 PR#611 bbe54e9; S-577-1 PR#610 907a795; fixes #613+#614; STRICT 5 passes). Wave B (S-577-3 PR#615 d0faf1c; STRICT 3 passes; DEC-174). S-577-6 wave-C (step-4.5 STRICT pass-4/5/6 CLEAN×3; PR #616 HELD; demos 11/11; fix 0f48818/245d57d/9a82e84; security LOW_RISK+2INFO). S-577-4 wave-C (step-4.5 STRICT pass-4/5/6 CLEAN×3; PR staged; demos 13/13; fix 26e99ff/1956141/c675174/ef69662; diff-mutants 7/7). |
-| **In flight** | (1) PR #616 (S-577-6) OPEN HELD — user merges. (2) S-577-4 PR staged — needs rebase off #616 merge, then user PR + review. (3) mutation job for S-577-4 pending (diff-mutants 7/7 already PASS; full-CI mutation run optional). |
-| **Next** | User merges #616 → S-577-4 rebase+PR (user opens) → wave-C integration STRICT (3 consecutive CLEAN adversary passes against combined diff) → wave D S-577-5 (visibility, owns closes #577) → wave-E integrations → F5 adversarial → F6 hardening → F7 convergence → release. |
-| **Standing rules** | User merges ALL PRs on GitHub personally (DEC-173); every PR gets fresh-eyes pr-reviewer pre-merge; COMMENTED = approve-equivalent (same-account); closes #577 ONLY in S-577-5's PR; implementers hard-forbidden from push/PR/improvise (STOP-and-report); orchestrator may execute user-authorized git ops directly. |
-| **Pending nits** | comment-crud.md finalization at bundle close (delete/edit/view stub markers); BC-3.5.002 trailing period; autocompact settings key advisory. |
-| **Resume command** | /vsdd-factory:next-step (reads this checkpoint; first action = user merge #616, then S-577-4 rebase+PR). |
+| **Date** | 2026-07-14 (wave C COMPLETE + integration STRICT CONVERGED). |
+| **Position** | Wave C closed; develop a486f79; 4 PRs merged; integration STRICT CONVERGED 2026-07-14. |
+| **Delivered** | Wave A (S-577-1 #610 907a795 + S-577-2 #611 bbe54e9 + fixes #613+#614; STRICT 5 passes). Wave B (S-577-3 #615 d0faf1c; STRICT 3 passes; DEC-174). Wave C: S-577-4 #617 @ f9ad71e (13 tests; diff-mutants 7/7; STRICT 1M→1L→1L→0→0→0); S-577-6 #616 @ d14fb10 (16 subprocess + 4 inline unit; mutation-gate fix round; STRICT 1M→1M→1L→0→0→0); docs #618 @ 5433dc3; src-comment #619 @ a486f79. Integration: 1L→2L→0→0→0 STRICT CONVERGED. |
+| **In flight** | None. All wave-C worktrees cleaned. |
+| **Next** | Wave-D human gate → S-577-5 (visibility flags, owns closes #577) → wave-D integration → F5 adversarial → F6 hardening → F7 convergence → release. |
+| **Standing rules** | User merges ALL PRs on GitHub personally (DEC-173); every PR gets fresh-eyes pr-reviewer pre-merge; COMMENTED = approve-equivalent (same-account); closes #577 ONLY in S-577-5's PR; implementers hard-forbidden from push/PR/improvise (STOP-and-report). |
+| **Pending nits** | BC Source citations sync at bundle close (BC-3.5.003 precedent); BC-3.5.002 trailing period. |
+| **Resume command** | /vsdd-factory:next-step (reads this checkpoint; first action = wave-D human gate authorization). |
 
 ## RESUME PLAN (cold-start, self-contained)
 
