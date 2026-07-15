@@ -4,7 +4,7 @@ level: ops
 version: "2.0"
 status: active
 producer: state-manager
-timestamp: 2026-07-15T09:00:00Z
+timestamp: 2026-07-15T10:00:00Z
 phase: 3
 pipeline: ACTIVE
 inputs: []
@@ -39,7 +39,7 @@ activation_version: "v0.6.0-dev.9"
 | **Product** | jr (Jira CLI) |
 | **Mode** | BROWNFIELD / Rust |
 | **Target Workspace** | develop → main |
-| **Last Updated** | 2026-07-14: F6 PASS all dimensions GO — mutation adjudicated 100% (0 missed; 20 timeout isolated), VP 30/30, security clean, regression 2102/0; gate GO; F7 delta convergence DISPATCHED; trajectory-tail →1L→0→0→0. |
+| **Last Updated** | 2026-07-14: F6 PASS all dimensions GO — mutation adjudicated 100% (0 missed; 20 timeout isolated), VP 30/30, security clean, regression 2102/0; gate GO; F7 delta convergence DISPATCHED; trajectory-tail →1L→0→0→0; audit gaps fixed (story statuses S-577-1/2/3, BC-INDEX sources, delivery records). |
 | **Current Phase** | Phase 3 — **SOH-COMMENT-CRUD-1 F6 PASS (GO); F7 delta convergence IN FLIGHT**. Spec v1.3.41. Stories **111**. develop @ ae2e3db. BC **624**. Holdouts **88**. VP **30**. |
 | **Next Phase** | F7 gate → release v0.6.0-dev.10. |
 | **Activation HEAD** | b2ce3169 (PR #603 squash-merged 2026-07-09; SOH-BUGS-1 FULLY COMPLETE; release v0.6.0-dev.9; issues #589/#590/#582 CLOSED) |
@@ -143,7 +143,7 @@ None open.
 | DOC-LINE-DRIFT-CANDIDATE-1 | doc hygiene | `docs/specs/2026-05-13-search-issue-keys.md:7` cites stale line range. | LOW | OPEN — line-cite drift candidate |
 | PERIMETER-SCAN-OMITS-INDEX-AND-TRACEABILITY | process-gap | F1 perimeter scan must include BC-INDEX.md + CANONICAL-COUNTS + traceability artifacts. | LOW | OPEN — codification pending |
 | BC-CITATION-CI-GUARD | process-gap | No CI guard validates file::symbol citations in BC bodies. | LOW | CLOSED — Guard 1 delivered (PR #592, DEC-156). |
-| BC-INDEX-9TH-SURFACE | process-gap | BC-INDEX.md coverage statistics not covered by check-bc-cumulative-counts.sh. RECURRENCE COUNT: 3. | LOW | OPEN — guard-extension candidate |
+| BC-INDEX-9TH-SURFACE | process-gap | BC-INDEX.md coverage statistics not covered by check-bc-cumulative-counts.sh. RECURRENCE COUNT: 4 (+1: BC-3.5.002..010 Source-column staleness \"(relocates at F4)\" — second instance of unguarded-BC-INDEX-cells root cause; remedy candidate: extend check-bc-citation-symbols.sh to BC-INDEX Source column). | LOW | OPEN — guard-extension candidate |
 | COMPANION-LINT-CHECK-BC-SINGLE-LINE-TRACE | process-gap | Guard 1 does not enforce single-line Trace/Source fields. | LOW | OPEN — follow-up story candidate |
 | BC-X5008-STALE-LINE-CITE | BC metadata | BC-X.5.008 Source cites stale line range. DEC-146. | LOW | OPEN — LOW BC-metadata fix candidate |
 | PF-008-ASSET-ID-RESULT-HARDENING | code hygiene | Result-propagation hardening at `src/api/assets/linked.rs` + `src/cli/issue/list.rs`. | LOW | OPEN — tracked deferral |

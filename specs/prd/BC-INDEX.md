@@ -293,15 +293,15 @@ R1/R4 prefix = deepening round that introduced it.
 | L3 BC ID | Summary | Pass 3 BC ID | Source | Confidence |
 |---|---|---|---|---|
 | BC-3.5.001 | `issue comment add <key> --internal` adds `sd.public.comment` property | BC-219 | src/api/jira/issues.rs | HIGH |
-| BC-3.5.002 | `comment delete <KEY> --id <ID>` sends DELETE /rest/api/3/issue/{key}/comment/{id}; 204 → exit 0 | NEW #577 | src/api/jira/issues.rs::add_comment (sibling; relocates at F4) | HIGH |
-| BC-3.5.003 | `comment delete` requires --yes non-interactive; y/N interactive; --yes bypasses | NEW #577 | src/cli/issue/workflow.rs::handle_comment (relocates at F4) | HIGH |
-| BC-3.5.004 | `comment delete` 404 → exit 64 + Jira error body surfaced (NOT idempotent) | NEW #577 | src/cli/issue/workflow.rs::handle_comment (relocates at F4) | HIGH |
-| BC-3.5.005 | `comment edit` body-only PUT invariant: no "properties" key in PUT body when neither --internal nor --public | NEW #577 | src/api/jira/issues.rs::add_comment (sibling; relocates at F4) | HIGH |
-| BC-3.5.006 | `comment edit --internal` sends properties:[{key:"sd.public.comment",value:{internal:true}}] | NEW #577 | src/api/jira/issues.rs::add_comment (sibling; relocates at F4) | MEDIUM-HIGH |
-| BC-3.5.007 | `comment edit --public` sends properties:[{key:"sd.public.comment",value:{internal:false}}]; always-confirm | NEW #577 | src/api/jira/issues.rs::add_comment (sibling; relocates at F4) | MEDIUM-HIGH |
-| BC-3.5.008 | `comment edit --public` confirmation gate: --no-input without --yes → exit 64; interactive y/N | NEW #577 | src/cli/issue/workflow.rs::handle_comment (relocates at F4) | HIGH |
-| BC-3.5.009 | `comment edit` body sources: --file/--stdin/positional/--markdown; missing body → exit 64 | NEW #577 | src/cli/issue/workflow.rs::handle_comment (relocates at F4) | HIGH |
-| BC-3.5.010 | `comment view <KEY> --id <ID>` GET with ?expand=properties; key-value + JSON output; 404 → exit 64 | NEW #577 | src/api/jira/issues.rs::add_comment (sibling; relocates at F4) | HIGH |
+| BC-3.5.002 | `comment delete <KEY> --id <ID>` sends DELETE /rest/api/3/issue/{key}/comment/{id}; 204 → exit 0 | NEW #577 | src/api/jira/issues.rs::delete_comment | HIGH |
+| BC-3.5.003 | `comment delete` requires --yes non-interactive; y/N interactive; --yes bypasses | NEW #577 | src/cli/issue/interactions.rs::handle_comment_delete | HIGH |
+| BC-3.5.004 | `comment delete` 404 → exit 64 + Jira error body surfaced (NOT idempotent) | NEW #577 | src/cli/issue/interactions.rs::handle_comment_delete | HIGH |
+| BC-3.5.005 | `comment edit` body-only PUT invariant: no "properties" key in PUT body when neither --internal nor --public | NEW #577 | src/api/jira/issues.rs::update_comment | HIGH |
+| BC-3.5.006 | `comment edit --internal` sends properties:[{key:"sd.public.comment",value:{internal:true}}] | NEW #577 | src/api/jira/issues.rs::update_comment | MEDIUM-HIGH |
+| BC-3.5.007 | `comment edit --public` sends properties:[{key:"sd.public.comment",value:{internal:false}}]; always-confirm | NEW #577 | src/api/jira/issues.rs::update_comment | MEDIUM-HIGH |
+| BC-3.5.008 | `comment edit --public` confirmation gate: --no-input without --yes → exit 64; interactive y/N | NEW #577 | src/cli/issue/interactions.rs::handle_comment_edit | HIGH |
+| BC-3.5.009 | `comment edit` body sources: --file/--stdin/positional/--markdown; missing body → exit 64 | NEW #577 | src/cli/issue/interactions.rs::handle_comment_edit | HIGH |
+| BC-3.5.010 | `comment view <KEY> --id <ID>` GET with ?expand=properties; key-value + JSON output; 404 → exit 64 | NEW #577 | src/api/jira/issues.rs::get_comment | HIGH |
 | BC-3.5.011 | --internal and --public mutually exclusive on comment edit; clap conflicts_with → exit 2 | NEW #577 | src/cli/mod.rs | HIGH |
 | BC-3.5.012 | CLI breaking change: comment → subcommand group (add/delete/edit/view); old flat form → exit 2 + migration hint | NEW #577 | src/cli/mod.rs | HIGH |
 
