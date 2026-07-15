@@ -2080,7 +2080,8 @@ Call B (two attachments):
 
 **Expected A (MUST-PASS)**:
 - Exit code = 0.
-- stdout contains an empty-state message (e.g., `"No attachments"` substring) OR an empty table with column headers only.
+- stdout is empty (no table, no message — pipe-friendly).
+- stderr contains `"No attachments on FOO-1"` (the zero-attachment canonical hint per EC-2.7.001-1).
 - stdout does NOT contain any attachment data rows.
 
 **Expected B (MUST-PASS)**:
@@ -2092,7 +2093,7 @@ Call B (two attachments):
 
 **Why hidden**: The zero-attachment edge case must produce a graceful empty-state exit-0 response, not an error or panic. The null-author rendering pins BC-2.7.001 EC-2.7.001-3 — a regression that panics on null displayName would be invisible to any test not explicitly exercising that fixture.
 
-**Status**: MUST-PASS. Pins BC-2.7.001: (1) zero-attachment issue → exit 0, empty-state; (2) null author → `(anonymous)` in table.
+**Status**: MUST-PASS. Pins BC-2.7.001: (1) zero-attachment issue → exit 0, empty stdout, stderr hint `"No attachments on <KEY>."` (EC-2.7.001-1); (2) null author → `(anonymous)` in table.
 
 **BC refs**: BC-2.7.001 (primary), BC-2.7.001 EC-2.7.001-3 (null author)
 
@@ -2107,8 +2108,8 @@ Call B (two attachments):
 **Setup**:
 
 1. Wiremock at `JR_BASE_URL`. Config with a valid profile at `JR_CONFIG_DIR`. Temp working directory `WORK_DIR`.
-2. Wiremock mounts `GET /rest/api/3/issue/FOO-1` returning the issue with one attachment: `{"id":"10001","filename":"notes.txt","size":12,"mimeType":"text/plain","content":"<JR_BASE_URL>/rest/api/3/attachment/content/10001"}` (content URL points at wiremock base URL, NOT an external host).
-3. Wiremock mounts `GET /rest/api/3/attachment/content/10001` returning HTTP 200 body `"hello world\n"` (12 bytes) with `Content-Type: text/plain`.
+2. Wiremock mounts `GET /rest/api/3/attachment/10001` returning the attachment metadata: `{"id":"10001","filename":"notes.txt","size":12,"mimeType":"text/plain","contentUrl":"<JR_BASE_URL>/rest/api/3/attachment/content/10001"}` (step 1 of BC-2.7.007 two-step wire path).
+3. Wiremock mounts `GET /rest/api/3/attachment/content/10001` returning HTTP 200 body `"hello world\n"` (12 bytes) with `Content-Type: text/plain` (step 2 — streaming download).
 
 **Action**: `jr issue attachment download FOO-1 --id 10001` with cwd = `WORK_DIR`.
 
@@ -2119,8 +2120,8 @@ Call B (two attachments):
 - stdout or stderr contains a success message referencing `notes.txt`.
 
 **Setup (error path)**:
-4. Wiremock mounts `GET /content/10002` returning HTTP 500 mid-stream (or: HTTP 200 followed by a connection drop before body is complete).
-5. Wiremock mounts `GET /rest/api/3/issue/FOO-2` with attachment `{"id":"10002","filename":"broken.bin"}`.
+4. Wiremock mounts `GET /rest/api/3/attachment/10002` returning the attachment metadata: `{"id":"10002","filename":"broken.bin","size":100,"mimeType":"application/octet-stream","contentUrl":"<JR_BASE_URL>/rest/api/3/attachment/content/10002"}` (metadata step 1 — must succeed).
+5. Wiremock mounts `GET /rest/api/3/attachment/content/10002` returning HTTP 500 mid-stream (or: HTTP 200 followed by a connection drop before body is complete) (step 2 — triggers the EC-2.7.007-4 error + cleanup path).
 
 **Action (error path)**: `jr issue attachment download FOO-2 --id 10002` with cwd = `WORK_DIR`.
 
@@ -2133,7 +2134,7 @@ Call B (two attachments):
 
 **Status**: MUST-PASS. Pins BC-2.7.007: (1) write-to-temp+atomic-rename on success; (2) temp file cleaned on error (EC-2.7.007-4); (3) no partial file remains after error.
 
-**BC refs**: BC-2.7.007 (primary), BC-2.7.007 EC-2.7.007-4 (error mid-stream cleanup)
+**BC refs**: BC-2.7.007 (primary; two-step wire path: metadata GET then content GET), BC-2.7.007 EC-2.7.007-1 (metadata 404 → canonical not-found), BC-2.7.007 EC-2.7.007-4 (error mid-stream cleanup)
 
 ---
 
@@ -2174,8 +2175,6 @@ Call B (two attachments):
 **NFR source**: BC-3.9.001 (upload wire), BC-3.9.017 (--replace-existing), BC-3.9.018 (--replace-existing zero-match)
 **BC**: BC-3.9.001, BC-3.9.017, BC-3.9.018
 **Authored by**: SOH-ATTACHMENTS-1 F2 (2026-07-15, adversary pass-1 human ruling R3)
-
-**Debug-build requirement**: `JR_STDIN_IS_TTY=1` is a debug-build-only test seam (see CLAUDE.md `JR_STDIN_IS_TTY` entry). This scenario MUST be run against a debug binary (`cargo test --test ...`); release binaries ignore the env var and the interactive-TTY branch is unreachable in release mode. CI integration tests run in debug mode by default so this is not a practical restriction, but evaluators must not inadvertently test against a release binary.
 
 **Setup (three calls)**:
 
@@ -2296,8 +2295,15 @@ Call C (non-interactive, no `--yes`):
    - `{"id":"50001","filename":"old1.log","size":100,"created":"<T_old1>"}` (now-14d → selected by --older-than 7d)
    - `{"id":"50002","filename":"old2.log","size":200,"created":"<T_old2>"}` (now-10d → selected)
    - `{"id":"50003","filename":"new.log","size":300,"created":"<T_new>"}` (now-1d → NOT selected)
-3. Wiremock mounts `DELETE /rest/api/3/attachment/50001` and `DELETE /rest/api/3/attachment/50002` each returning 204.
-4. For the dry-run call, both DELETE mounts have `.expect(0)` — neither must be called during dry-run.
+**Dry-run setup** (actions below must use this isolated wiremock):
+3. Wiremock mounts `DELETE /rest/api/3/attachment/50001` with `.expect(0)` (MUST NOT be called).
+4. Wiremock mounts `DELETE /rest/api/3/attachment/50002` with `.expect(0)` (MUST NOT be called).
+
+**Isolation requirement**: After verifying the dry-run action, TEAR DOWN this wiremock instance (verify `.expect(0)` assertions are satisfied) and create a FRESH wiremock server for the real-delete action. The `.expect(0)` mounts from the dry-run setup MUST NOT be present when the real-delete action runs — otherwise the real DELETE calls will violate the `.expect(0)` assertion.
+
+**Real-delete setup** (fresh wiremock; steps 1–2 same as above, then):
+3b. Wiremock mounts `DELETE /rest/api/3/attachment/50001` returning 204.
+4b. Wiremock mounts `DELETE /rest/api/3/attachment/50002` returning 204.
 
 **Action (dry-run)**: `jr issue attachment delete --issue FOO-4 --older-than 7d --dry-run --output json`
 

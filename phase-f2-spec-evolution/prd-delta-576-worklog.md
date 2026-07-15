@@ -409,3 +409,105 @@ holdout-scenarios.md `### H-` actual count: 95 (total_holdouts frontmatter still
 - `check-spec-counts.sh`: `OK: all spec counts verified.`
 
 **Files edited:** `bc-3-issue-write.md` (4 sub-changes via Python/Bash, TD-031). `prd-delta-576-worklog.md` (this entry).
+
+---
+
+## Adversary Pass-3 Fix Round (COMPLETE)
+
+**Date**: 2026-07-15
+**Findings dispatched**: 18 (HIGH: 3; MED-HIGH/MED: 8; LOW: 7)
+**New BC IDs issued**: 0
+**BC count post-round**: 657 (UNCHANGED)
+**Holdout count post-round**: 95 (UNCHANGED)
+
+### Disposition Table
+
+| Finding | Severity | File(s) | Action | Result |
+|---------|----------|---------|--------|--------|
+| P3-001 | HIGH | bc-3-issue-write.md | EC-3.9.010-4: 404s skip-continue (excluded from count/ids); first NON-404 stops batch | DONE |
+| P3-002 | HIGH | bc-2-issue-read.md, bc-3-issue-write.md, holdout-scenarios.md | EC-2.7.001-1: empty stdout + stderr "No attachments on \<KEY\>."; EC-2.7.008-1 unified; BC-2.7.001 body updated; H-NEW-ATTACHMENT-001 Expected A rewritten | DONE |
+| P3-003 | HIGH | bc-3-issue-write.md | BC-3.9.019: dedicated `parse_age_duration` fn; d=24h clock-hours, w=7×24h; cite duration.rs syntax-style only; EC-3.9.019-8 boundary-test pin 1d=24h | DONE |
+| P3-004 | MED-HIGH | bc-2-issue-read.md, holdout-scenarios.md | BC-2.7.007: two-step wire path (metadata GET then streaming); KEY not server-verified on --id; H-NEW-ATTACHMENT-002 mocks updated | DONE |
+| P3-005 | MED | bc-2-issue-read.md, bc-3-issue-write.md | EC-2.7.007-7/EC-2.7.008-6: download JSON shapes; table rows added to JSON Output Shape Contracts in bc-3 | DONE |
+| P3-006 | MED | prd-delta-576.md | Scope table S3 → BC-3.9.017/018; S4 → BC-3.9.015/016/019/020 | DONE |
+| P3-007 | MED | bc-3-issue-write.md | BC-3.9.006: split 4xx — non-auth=64, 401=2, 403=1; EC-3.9.006-4/5 added | DONE |
+| P3-008 | MED | bc-3-issue-write.md | BC-3.9.020: multi-AID dry-run per-AID metadata fan-out; metadata failure → "(metadata unavailable)" | DONE |
+| P3-009 | MED | bc-3-issue-write.md | EC-3.9.015-5: Ok(0) at EOF (not Err); removed false BC-3.5.003 citation; divergence note added | DONE |
+| P3-010 | MED | bc-3-issue-write.md | BC-3.9.016: --issue requires --older-than (exit 2); bare delete no-args (exit 2); EC-3.9.016-9/10 added | DONE |
+| P3-011 | MED | bc-2-issue-read.md, bc-3-issue-write.md | BC-2.7.002 authority note (canonical for all attachment serializations); BC-3.9.009 cross-ref to BC-2.7.002 curated form | DONE |
+| P3-012 | LOW | bc-3-issue-write.md | BC-3.9.020: plain `upload --dry-run` without `--replace-existing` → clap exit 2; EC-3.9.020-6 added | DONE |
+| P3-013 | LOW | bc-2-issue-read.md | EC-2.7.007-1: "Attachment \<AID\> not found or not accessible."; metadata step 404/403 | DONE |
+| P3-014 | LOW | bc-2-issue-read.md, bc-3-issue-write.md | BC-2.7.012 body + table row; EC-3.9.008-2: canonical not-found string prepended + Jira body appended | DONE |
+| P3-015 | LOW | bc-3-issue-write.md | BC-3.9.020 single-ID dry-run: JSON mode emits `{"attachments":[…],"dryRun":true,"ids":["<AID>"]}`; EC-3.9.020-3 updated | DONE |
+| P3-016 | LOW | bc-3-issue-write.md | BC-3.9.020 upload --replace-existing --dry-run story-assignment: "deferred to S5" → "ships with S3" (table + body + sources) | DONE |
+| P3-017 | LOW | holdout-scenarios.md | H-NEW-ATTACHMENT-006: two-isolated-wiremock-setups note added with explicit tear-down requirement | DONE |
+| P3-018 | LOW | holdout-scenarios.md | H-NEW-ATTACHMENT-004: spurious "Debug-build requirement" paragraph removed | DONE |
+
+**Guard results (post-P3):**
+- `check-bc-cumulative-counts.sh`: `OK: all cumulative BC counts verified (657 total across 8 files; Surface H footer checked where present).`
+- `check-spec-counts.sh`: `OK: all spec counts verified.`
+
+**Files edited:** `bc-3-issue-write.md` (20 sub-changes), `bc-2-issue-read.md` (10 sub-changes), `holdout-scenarios.md` (7 sub-changes), `prd-delta-576.md` (2 sub-changes). All via Python/Bash inline scripts (TD-031 workaround). `prd-delta-576-worklog.md` (this entry).
+
+---
+
+## R12 (GAP-R11-001..008 + Full BC-INDEX Sweep) Fix Round (COMPLETE)
+
+**Date**: 2026-07-15
+**Findings dispatched**: 8 (GAP-R11-001..008) + full BC-INDEX<>body fidelity sweep for all 33 attachment BCs
+**New BC IDs issued**: 0
+**BC count post-round**: 657 (UNCHANGED)
+**Holdout count post-round**: 95 (UNCHANGED)
+
+### Disposition Table
+
+| Finding | Severity | File(s) | Action | Result |
+|---------|----------|---------|--------|--------|
+| GAP-R11-001 | HIGH | bc-3-issue-write.md | BC-3.9.001 body: wire API fields (including "self") preserved as API facts; added note that jr output uses the curated form (BC-2.7.002 authority) without "self"; BC-3.9.007: "used directly" -> "derives ... curated form (BC-2.7.002 authority)" | DONE |
+| GAP-R11-002 | HIGH | BC-INDEX.md | BC-3.9.015 row: "EOF Ok(0) = cancel exit 0"; added deliberate divergence note from BC-3.5.003 (dialoguer -> exit 130; this BC uses read_line -> exit 0) | DONE |
+| GAP-R11-003 | MED | bc-3-issue-write.md | EC-3.9.019-3: canonical invalid-duration string added; dropped stale duration.rs-error forward-reference | DONE |
+| GAP-R11-004 | MED | BC-INDEX.md | BC-3.9.019 row: parse_age_duration + calendar semantics (d=24 clock-hours, w=7x24h) + BTreeMap key order (count < deleted < ids) | DONE |
+| GAP-R11-005 | MED | BC-INDEX.md | BC-3.9.020 row: BTreeMap key order (attachments < dryRun < ids); single-ID --dry-run JSON mode | DONE |
+| GAP-R11-006 | LOW | bc-3-issue-write.md | JSON Output Shape Contracts table -- upload row: self OMITTED, content renamed contentUrl, author included, alphabetical key order (id, filename, mimeType, size, created, author, contentUrl) | DONE |
+| GAP-R11-007 | INFO | bc-3-issue-write.md | BC-3.9.019 section heading corrected to parse_age_duration + calendar; Source field updated (duration.rs = syntax-style precedent only) | DONE |
+| GAP-R11-008 | INFO | CANONICAL-COUNTS.md | L68: "(624)" -> "(624 -- historical, now 657)" | DONE |
+
+### BC-INDEX <> Body Fidelity Sweep (33 attachment BCs)
+
+7 BC-INDEX rows updated during sweep:
+
+| BC-INDEX Row | What was corrected |
+|---|---|
+| BC-2.7.007 | Two-step wire path description; canonical not-found string; download JSON shape added |
+| BC-3.9.006 | 401 -> exit 2; 403 -> exit 1 (split 4xx exit codes) |
+| BC-3.9.007 | "curated form (BC-2.7.002)" -- cross-ref to authority |
+| BC-3.9.009 | Curated fields listed (self OMITTED, content->contentUrl) |
+| BC-3.9.015 | (Same as GAP-R11-002 above) |
+| BC-3.9.019 | (Same as GAP-R11-004 above) |
+| BC-3.9.020 | (Same as GAP-R11-005 above) |
+
+Sweep result: 33 rows checked; 4 apparent drifts all confirmed as false positives from regex-pattern-in-literal-string matching in sweep script. All rows verified correct by direct grep.
+
+**Guard results (post-R12 + sweep):**
+- `check-bc-cumulative-counts.sh`: `OK: all cumulative BC counts verified (657 total across 8 files; Surface H footer checked where present).`
+- `check-spec-counts.sh`: `OK: all spec counts verified.`
+
+**Files edited:** `bc-3-issue-write.md` (6 sub-changes), `BC-INDEX.md` (7 row updates), `CANONICAL-COUNTS.md` (1 change). All via Python/Bash inline scripts (TD-031 workaround). `prd-delta-576-worklog.md` (this entry).
+
+---
+
+## GAP-R13-001 Micro-fix — 2026-07-15
+
+**Constraint:** no new BC IDs, no count changes. Both guards must exit 0.
+
+| Finding | Severity | File(s) | Action | Result |
+|---------|----------|---------|--------|--------|
+| GAP-R13-001 | LOW | bc-3-issue-write.md, BC-INDEX.md | Inner array-element key order corrected from {id,filename} to {filename,id} (f < i, BTreeMap alphabetical) at all 4 affected sites: (1) shape-table delete --dry-run annotation extended to "3 keys alphabetical at all depths"; (2) shape-table upload --replace-existing --dry-run: wouldDelete element {"id","filename"} -> {"filename","id"}, annotation extended; (3) BC-3.9.020 body path-c JSON shape: same inner key fix + depth annotation; (4) BC-3.9.020 body N>0 JSON: {"id","filename"} -> {"filename","id"} + depth annotation. BC-INDEX.md BC-3.9.020 row: {id,filename} -> {filename,id}, BTreeMap annotation extended to "at all depths". Single-key {"id":"<AID>"} metadata-unavailable row confirmed correct (no change needed). | DONE |
+
+**BC / holdout count invariant confirmed:** 657 BCs / 95 holdouts -- UNCHANGED.
+
+**Guard results (post-GAP-R13-001):**
+- `check-bc-cumulative-counts.sh`: `OK: all cumulative BC counts verified (657 total across 8 files; Surface H footer checked where present).`
+- `check-spec-counts.sh`: `OK: all spec counts verified.`
+
+**Files edited:** `bc-3-issue-write.md` (4 sub-changes), `BC-INDEX.md` (1 row update). All via Python/Bash inline scripts (TD-031 workaround). `prd-delta-576-worklog.md` (this entry).

@@ -547,11 +547,11 @@ Table columns (in display order):
 | Created | `attachment.created` | ISO 8601 string; displayed as-is (no parsing or TZ conversion) |
 | Author | `attachment.author.displayName` | Falls back to `attachment.author.accountId` when `displayName` is absent |
 
-When the issue has zero attachments the handler exits 0 with no table and empty stdout; this is not an error.
+When the issue has zero attachments, the handler exits 0 with no table, empty stdout (pipe-friendly), and emits `"No attachments on <KEY>."` to stderr (profile 2 hint — same canonical string as EC-2.7.001-1 and EC-2.7.008-1); this is not an error.
 
 **Thumbnail omitted**: the `thumbnail` field (pre-signed short-TTL URL) present in some Jira attachment metadata is NOT included in the table. Only the six columns listed above are displayed in this slice.
 
-**EC-2.7.001-1** (zero attachments): `attachment list <KEY>` on a valid issue with no attachments → exit 0, empty stdout, no stderr output.
+**EC-2.7.001-1** (zero attachments): `attachment list <KEY>` on a valid issue with no attachments → exit 0, empty stdout (pipe-friendly; no table, no message on stdout); stderr: `"No attachments on <KEY>."` (profile 2 hint — human mode; JSON mode: empty stdout `[]` per BC-2.7.002, no stderr, exit 0).
 
 **EC-2.7.001-2** (filter-count hint): when any `--filter` flag is active and reduces the displayed row count, a hint is emitted to stderr: `"Showing N of M attachments."` (N = filtered count, M = total from API). When no filter is active this hint is suppressed.
 
@@ -599,6 +599,8 @@ Empty issue → `[]` array, exit 0, no error.
 **Null author in JSON**: when `attachment.author` is absent or null, the JSON element emits `"author": null` (not an omitted key and not an empty object). This is consistent with the Jira API's own null representation for missing sub-objects.
 
 All `--output json` paths MUST route through `output::render_json` or `output::print_output` — never `serde_json::to_string_pretty` or direct compact printing (JSON render invariant #526).
+
+**Authority for all attachment-object serializations**: the curated form defined in this BC is the single canonical attachment-object JSON shape for ALL `jr` attachment operations — list, download, upload, and bulk responses all use this shape. BC-3.9.009 (upload JSON output) cross-references this BC as the authority. The `"self"` field MUST be omitted and `"content"` MUST be renamed to `"contentUrl"` across every code path that serializes a Jira attachment object.
 
 **Trace**: F2 spec evolution (SOH-ATTACHMENTS-1 2026-07-15; #585 absorbed — research §7 VERIFIED; DEC-179 ratified design)
 
@@ -707,7 +709,9 @@ When `<KEY>` does not exist or the authenticated user lacks Browse Projects perm
 
 **Selector required (clap required-group)**: `jr issue attachment download <KEY>` without any selector (`--id`, `--all`, or `--newest`) is rejected by clap at parse time — the three selector flags form a required mutually-exclusive group. clap exits 2 with a usage hint listing all three options. This is enforced at the CLI layer; no HTTP call is made.
 
-**Wire path**: `GET /rest/api/3/attachment/content/{id}` — the platform content endpoint. This path is uniform for both platform and JSM issues. The servicedeskapi `links.content` URLs MUST NOT be used for download: JSDCLOUD-10841 (confirmed in research §P2-6 of `.factory/research/issue-576-attachments-api-2026-07-15.md`) shows these URLs return 404.
+**Wire path (two-step)**:
+1. `GET /rest/api/3/attachment/{id}` — metadata fetch (read-only). Response is the attachment metadata object (curated fields from BC-2.7.002: `id`, `filename`, `mimeType`, `size`, `created`, `author`, `contentUrl`). Yields the canonical `filename` for BC-2.7.010 naming. **The `<KEY>` argument is NOT server-verified on the `--id` path** — the AID is authoritative; `<KEY>` is accepted for CLI-surface uniformity but `jr` does not issue a separate key-ownership check.
+2. `GET /rest/api/3/attachment/content/{id}` — streaming download. This path is uniform for both platform and JSM issues. The servicedeskapi `links.content` URLs MUST NOT be used for download: JSDCLOUD-10841 (confirmed in research §P2-6 of `.factory/research/issue-576-attachments-api-2026-07-15.md`) shows these URLs return 404.
 
 **Redirect following**: Jira Cloud redirects this endpoint (302/303) to a pre-signed CDN URL (`media.atlassian.com` or AWS). The reqwest client MUST rely on its default redirect policy (up to 10 redirects). reqwest 0.13.4 strips `Authorization`, `Cookie`, and `Proxy-Authorization` headers on cross-host redirects — VERIFIED in research §1c and independently corroborated by GHSA-9857-6MW7-FQ2M (which explicitly states the reqwest backend compares `prev_url.host_str()` to `curr_url.host_str()` and strips sensitive headers on cross-domain hops). No custom `RedirectPolicy` is needed. **CRITICAL**: `?redirect=false` MUST NOT be used — JRACLOUD-97046 (research §6) causes encoded or broken responses for some file formats when this query parameter is present.
 
@@ -725,7 +729,7 @@ On success, a completion hint is emitted to stderr: `"Downloaded: <path> (<size_
 
 **EC-2.7.007-6** (`--out <PATH>` with missing parent directory): if the user-specified `--out <PATH>` names a file in a parent directory that does not exist, `jr` exits 64 before any download: `"Output directory does not exist: <parent>"`. The handler does NOT create parent directories automatically.
 
-**EC-2.7.007-1** (AID does not exist): `GET /rest/api/3/attachment/content/{id}` returns 404 → exit 64: `"Attachment <AID> not found."` (see BC-2.7.012 for full error taxonomy).
+**EC-2.7.007-1** (AID does not exist or not accessible): `GET /rest/api/3/attachment/{id}` (metadata step 1) returns 404 or 403 → exit 64: `"Attachment <AID> not found or not accessible."` (canonical not-found string — aligns with BC-2.7.012, BC-3.9.008 EC-3.9.008-2, BC-3.9.015 EC-3.9.015-6); no streaming request issued; no file created. (see BC-2.7.012 for full error taxonomy).
 
 **EC-2.7.007-2** (JSM issue uniform behavior): downloading an attachment from a JSM issue uses the exact same platform content endpoint as a non-JSM issue. There is no JSM-specific code path for download. JSDCLOUD-10841 confirms the servicedeskapi links are unreliable; the platform endpoint is the correct single code path.
 
@@ -733,6 +737,7 @@ On success, a completion hint is emitted to stderr: `"Downloaded: <path> (<size_
 
 **EC-2.7.007-4** (error mid-stream): temporary file deleted; exit 1; `"Download failed: <reason>"` on stderr; final path not written.
 **EC-2.7.007-5** (Ctrl+C / SIGINT mid-stream): temporary file deleted; exit 130; no final path written.
+**EC-2.7.007-7** (`--output json` success shape for `--id`): `{"downloaded":[{"filename":"<name>","id":"<AID>","path":"<written path>","size":N}]}`; one-element `downloaded` array; inner keys in alphabetical order (`filename` < `id` < `path` < `size`); stdout only; exit 0. `path` is the absolute or relative path actually written (per BC-2.7.010). `size` is the byte count written. No stderr output in JSON mode.
 
 **CLI flags** (pinned for e2e surface guard): `<KEY>` (positional, required); `--id <AID>` (single download); `--all` (batch); `--newest <N>` (top-N); `--out <PATH>` (single-file path override); `--out-dir <DIR>` (batch target directory); `--force` (overwrite existing); `--filter <FILTER>` (repeatable); `--output json`; `--no-input`.
 
@@ -752,13 +757,14 @@ On success, a completion hint is emitted to stderr: `"Downloaded: <path> (<size_
 
 On completion a summary hint emits to stderr: `"Downloaded N of M attachments to <dir>."` (N = successful, M = total).
 
-**EC-2.7.008-1** (empty attachment list): issue has no attachments → exit 0; stderr: `"No attachments found on <KEY>."`
+**EC-2.7.008-1** (empty attachment list): issue has no attachments → exit 0; stderr: `"No attachments on <KEY>."` (canonical string — unified with EC-2.7.001-1; "found" removed for consistency)
 
 **EC-2.7.008-2** (directory does not exist): if `--out-dir <DIR>` is specified and the directory does not exist → exit 64 before any download: `"Output directory does not exist: <DIR>"`. The handler does NOT create the directory automatically.
 
 **EC-2.7.008-3** (`--id` and `--all` mutual exclusion): clap enforces `conflicts_with` → exit 2 when both are supplied simultaneously.
 **EC-2.7.008-4** (`--out-dir` path exists but is not a directory): exit 64: `"Not a directory: <PATH>"`. A regular file at the specified path is rejected; the handler requires a directory.
 **EC-2.7.008-5** (`--out-dir` path does not exist): supersedes EC-2.7.008-2 wording clarification — same exit 64: `"Output directory does not exist: <DIR>"`.
+**EC-2.7.008-6** (`--output json` success shape for `--all` / `--newest N`): `{"downloaded":[{"filename":"<name>","id":"<AID>","path":"<written path>","size":N},…]}`; N-element `downloaded` array (one entry per file written; files skipped due to collision or `--filter` are NOT in the array); inner keys alphabetical; stdout only; exit 0. No stderr hints (truncation, skips) in JSON mode. Shape aligns with EC-2.7.007-7 for a uniform download response type.
 
 
 
@@ -865,7 +871,7 @@ Since step 4 of sanitization already strips `../`, `/`, `\`, `:`, the join will 
 
 **Unknown issue key**: when `<KEY>` does not exist or is inaccessible, `GET /rest/api/3/issue/{key}?fields=attachment` returns 404. Handler exits 64: `"Issue <KEY> not found or not accessible."`
 
-**Unknown attachment ID**: when `--id <AID>` references a non-existent attachment, `GET /rest/api/3/attachment/content/{id}` returns 404. Handler exits 64: `"Attachment <AID> not found."`
+**Unknown attachment ID**: when `--id <AID>` references a non-existent attachment, `GET /rest/api/3/attachment/{id}` (metadata step 1, per BC-2.7.007 two-step wire path) returns 404 or 403. Handler exits 64: `"Attachment <AID> not found or not accessible."` (canonical string).
 
 **Match-by-ID invariant** (JRACLOUD-96384 + JRACLOUD-78388, both confirmed in research §6): attachment operations MUST identify attachments by their numeric `id`, not by `filename`. Multiple attachments with the same `filename` on one issue are legal in Jira (JRACLOUD-96384); filename-based matching is ambiguous and unreliable. There is also no reliable REST mapping from a comment to the attachments it contains (JRACLOUD-78388). `--id <AID>` is the sole selector for single-file download operations.
 
@@ -874,7 +880,7 @@ Since step 4 of sanitization already strips `../`, `/`, `\`, `:`, the join will 
 | Condition | Exit code | stderr |
 |-----------|-----------|--------|
 | KEY 404 | 64 | `"Issue <KEY> not found or not accessible."` |
-| AID 404 from content endpoint | 64 | `"Attachment <AID> not found."` |
+| AID 404/403 from metadata endpoint (`GET /attachment/{id}`) | 64 | `"Attachment <AID> not found or not accessible."` |
 | KEY or AID 401 | 2 | Not authenticated + `jr auth login` hint |
 | KEY or AID 5xx | 1 | `API error (<N>)` |
 | Network error | 1 | Connectivity hint |

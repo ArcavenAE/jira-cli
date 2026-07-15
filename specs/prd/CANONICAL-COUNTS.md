@@ -65,7 +65,7 @@ Breakdown:
   It does NOT add +1 beyond the 656.
   _(Note updated 2026-07-15 SOH-ATTACHMENTS-1 adversary pass-1 round B: 657 total after +6 BCs BC-3.9.015..020; was 651 before round B; was 149/624/623 before BC-X.8.010 — NEW-004 correction)_
 
-_Historical note (archived; historical total was 566; current canonical: see Sum row above (624)): Passes 10-13 involved a 541/542 count confusion around BC-X.4.009. All 542 claims were corrected to 541 at Pass 13. Subsequent additions (BC-7.4.013-016, BC-2.6.050-051, BC-3.4.009, BC-3.8.001-010, BC-X.12.001-008) brought the total to 566. See git history for the full audit trail._
+_Historical note (archived; historical total was 566; current canonical: see Sum row above (624 — historical, now 657 — see per-file table above for current totals)): Passes 10-13 involved a 541/542 count confusion around BC-X.4.009. All 542 claims were corrected to 541 at Pass 13. Subsequent additions (BC-7.4.013-016, BC-2.6.050-051, BC-3.4.009, BC-3.8.001-010, BC-X.12.001-008) brought the total to 566. See git history for the full audit trail._
 
 ### L2 domain-spec bc_count vs L3 total_bcs alignment (ADV-P17-003)
 

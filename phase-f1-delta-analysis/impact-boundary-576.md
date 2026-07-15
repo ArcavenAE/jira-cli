@@ -717,3 +717,27 @@ Steps 3 and 4 are both mutations; both happen after step 1. The BC for `--replac
 > 4. Upload new file(s) via multipart POST
 >
 > The safety invariant "no destructive call before a pending confirmation gate" is preserved in both orderings — step 3 (DELETE) still follows step 2 (gate) in the settled form. The list-first change is a UX improvement, not a safety regression: it allows the gate to be a no-op when there are no filename matches, and it allows the confirmation prompt to name what will be deleted.
+
+### R3.9 Function inventory additions (pass-3 P3-003 + P3-004)
+
+#### R3.9a: `parse_age_duration` — new function (P3-003)
+
+BC-3.9.019 specifies a dedicated duration parser for `--older-than` with explicit calendar-semantics arithmetic. This is **not** `src/duration.rs` reused directly — `duration.rs` converts strings to seconds for worklog display and does not expose a `string → chrono::Duration` conversion. The new function owns its own arithmetic:
+
+| Aspect | Detail |
+|--------|--------|
+| **Signature** | `parse_age_duration(s: &str) -> Result<chrono::Duration, JrError>` |
+| **Semantics** | `w` = 7 × 24 h; `d` = 24 h; `h` = 1 h; `m` = 1 min (identical unit set to `duration.rs`; no month unit — P2-008 correction applies here too) |
+| **Syntax style** | Mirrors `duration.rs` family (e.g., `7d`, `2w`, `4h`, `30m`; no whitespace between value and unit required) — cite `duration.rs` in the rustdoc for the convention reference, but call into `parse_age_duration`, not `duration.rs`, at the `--older-than` call site |
+| **Location** | Implementer's choice at S4: either inline in `src/cli/issue/attachments.rs` (private helper) or as a sibling `pub(crate) fn` in `src/duration.rs` if the calendar-semantics variant is deemed broadly reusable. The function inventory for `src/api/jira/attachments.rs` is NOT affected — this is a CLI-layer concern |
+| **Error** | Unknown unit or malformed input → `JrError::UserError` with a message citing the accepted units (`w`, `d`, `h`, `m`); mirrors `duration.rs` error style |
+
+**S4 story plan note:** allocate scope for `parse_age_duration` alongside the `--older-than` handler path. If placed in `src/duration.rs`, add `"src/duration.rs"` to `.cargo/mutants.toml` `examine_globs` (it is currently absent — the `parse_age_duration` branch logic is HIGH-value for mutation testing).
+
+#### R3.9b: Single `--id` download pinned to metadata-GET-first (P3-004)
+
+The single-file download flow (`attachment download <KEY> --id <AID>`) is pinned to **metadata-GET-first**: call `get_attachment_metadata(client, aid)` (recorded in R3.7) to retrieve `filename`, `mimeType`, `size`, and `content` URL before streaming the file. This allows the handler to:
+- Derive the default output filename (`<sha1>_<sanitized-basename>`) without a separate list call
+- Emit a useful progress/confirmation line to stderr before the download begins
+
+**No new function needed** — `get_attachment_metadata` from R3.7 is the sole addition. The S2 story plan must invoke `get_attachment_metadata` as the first step of `handle_attachment_download` when `--id` is supplied, then stream via `get_attachment_content`. The revised function call sequence for single `--id` download is: `get_attachment_metadata` → path construction + overwrite check → `get_attachment_content` (streaming write).

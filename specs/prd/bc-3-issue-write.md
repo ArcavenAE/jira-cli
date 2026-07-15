@@ -3204,15 +3204,17 @@ When `--markdown` is absent, the guard does NOT fire — `--field description=va
 | `unlink` | `{"count": 2, "unlinked": true}` | `count: 0` when no match |
 | `remote-link` | `{"id": 10000, "key": "TEST-1", "self": <url>, "title": <title>, "url": <url>}` | 5 keys |
 | `create` | `{"key": "FOO-123"}` | minimal |
-| `attachment upload` (platform POST path) | `[{"id":"10042","filename":"foo.pdf","mimeType":"application/pdf","self":"...","size":43008,"created":"2026-07-15T..."}]` | array; one element per file; from server response; BC-3.9.009 |
+| `attachment download --id <AID>` | `{"downloaded":[{"filename":"<name>","id":"<AID>","path":"<written path>","size":N}]}` | 1-element `downloaded` array; inner keys alphabetical (filename<id<path<size); BC-2.7.007 |
+| `attachment download --all` / `--newest N` | `{"downloaded":[{"filename":"<name>","id":"<AID>","path":"<written path>","size":N},…]}` | N-element `downloaded` array; same inner shape; BC-2.7.008/BC-2.7.009 |
+| `attachment upload` (platform POST path) | `[{"author":{...},"contentUrl":"https://…/rest/api/3/attachment/content/10042","created":"2026-07-15T...","filename":"foo.pdf","id":"10042","mimeType":"application/pdf","size":43008}]` | curated form (BC-2.7.002): `"self"` omitted, `"content"`→`"contentUrl"`; keys alphabetical; one element per file; BC-3.9.009 |
 | `attachment delete` (single AID) | `{"deleted":true,"id":"<AID>"}` | 2 keys alphabetical; BC-3.9.010 |
 | `attachment delete` (bulk AIDs) | `{"count":N,"deleted":true,"ids":["<AID1>","<AID2>",...]}` | 3 keys alphabetical; BC-3.9.010 |
 | `attachment delete` (cancel / --no) | `{"cancelled":true,"deleted":false}` | 2 keys alphabetical; BC-3.9.015 |
-| `attachment delete --dry-run` (preview) | `{"attachments":[...],"dryRun":true,"ids":[...]}` | 3 keys alphabetical; BC-3.9.020 |
-| `attachment upload --replace-existing --dry-run` | `{"dryRun":true,"wouldDelete":[{"id":"<AID>","filename":"<name>"}],"wouldUpload":[{"filename":"<name>"}]}` | 3 keys alphabetical (dryRun < wouldDelete < wouldUpload); BC-3.9.020 path c; S5 deferred |
+| `attachment delete --dry-run` (preview) | `{"attachments":[...],"dryRun":true,"ids":[...]}` | 3 keys alphabetical at all depths; BC-3.9.020 |
+| `attachment upload --replace-existing --dry-run` | `{"dryRun":true,"wouldDelete":[{"filename":"<name>","id":"<AID>"}],"wouldUpload":[{"filename":"<name>"}]}` | 3 keys alphabetical at all depths (dryRun < wouldDelete < wouldUpload; filename < id within elements); BC-3.9.020 path c; ships with S3 |
 | `attachment upload --public` | (P2-3c deferred — update after S5 live-capture; see BC-3.9.011) | shape TBD |
 
-Sources: `src/cli/issue/snapshots/jr__cli__issue__json_output__tests__*.snap`; BC-1104..BC-1112 (R4); BC-3.9.009, BC-3.9.010, BC-3.9.015, BC-3.9.020 paths a/b (delete dry-run) + BC-3.9.020 path c (upload --replace-existing --dry-run, S5 deferred) (SOH-ATTACHMENTS-1 F2 additions)
+Sources: `src/cli/issue/snapshots/jr__cli__issue__json_output__tests__*.snap`; BC-1104..BC-1112 (R4); BC-3.9.009, BC-3.9.010, BC-3.9.015, BC-3.9.020 paths a/b (delete dry-run) + BC-3.9.020 path c (upload --replace-existing --dry-run, ships with S3); BC-2.7.007, BC-2.7.008/009 (download --id / --all / --newest, SOH-ATTACHMENTS-1 F2 additions)
 
 
 ### 3.9 Attachment Write (20 BCs: BC-3.9.001..BC-3.9.020)
@@ -3239,7 +3241,7 @@ On HTTP 400 (bad request): exit 1; the Jira error body is surfaced on stderr ver
 
 **File argument form (`allow_hyphen_values`)**: The `<FILE>...` positional arguments carry `allow_hyphen_values = true` (CLAUDE.md convention for write-command free-text inputs). This allows file paths beginning with a dash (e.g., `-file.pdf`) without being misinterpreted as flags. Use `--` before the first `<FILE>` to unambiguously terminate flag parsing when paths start with `--`. Stdin upload via `-` is NOT supported in this slice.
 
-A successful upload returns HTTP 200 with a JSON array of attachment objects. Each element contains at minimum: `"id"` (string), `"filename"` (string), `"self"` (URL string), `"size"` (integer, bytes), `"mimeType"` (string), `"created"` (ISO 8601 string). Human (table) output: one row per attachment, columns Filename / Size / ID / Created. JSON output: the array, pretty-printed via `output::render_json` (#526 invariant).
+A successful upload returns HTTP 200 with a JSON array of attachment objects. The Jira API response includes fields such as `"id"`, `"filename"`, `"self"` (URL string), `"size"`, `"mimeType"`, `"created"`, and `"content"` (the download URL) — these are the raw API wire fields and are documented here as facts. **jr's output serialization** uses the curated form defined in BC-2.7.002 / BC-3.9.009: `"self"` is OMITTED; `"content"` is RENAMED to `"contentUrl"`. Human (table) output: one row per attachment, columns Filename / Size / ID / Created. JSON output: the curated array, pretty-printed via `output::render_json` (#526 invariant).
 
 Output channel: Profile 4 (Symmetric) — stdout for JSON or success data, stderr for errors and progress hints.
 
@@ -3367,13 +3369,17 @@ A `temporaryAttachmentId` obtained from `POST .../attachTemporaryFile` has an ap
 
 If the second step (`POST .../request/{issueKey}/attachment`) fails AFTER one or more step-1 calls have already succeeded, `jr` MUST NOT attempt to surface, cache, or offer to reuse the orphaned `temporaryAttachmentId`(s). On second-step failure:
 
-- HTTP 4xx: exit 64 (client error — likely the issue key is wrong or the serviceDeskId cache is stale).
+- HTTP 4xx (excluding 401 and 403): exit 64 (client error — likely the issue key is wrong or the serviceDeskId cache is stale).
+- HTTP 401: exit 2 (not authenticated — standard house taxonomy per BC-3.9.012; `jr auth login` hint on stderr).
+- HTTP 403: exit 1 (permission denied — standard house taxonomy per BC-3.9.012; Jira error body surfaced).
 - HTTP 5xx: exit 1 (server error).
 - In both cases: stderr appends a generic retry hint: `"Temporary attachment IDs may have expired. Try the upload again."` — no Atlassian response-body error string is pattern-matched (P2-2 finding: Cloud step-2 error strings are undocumented and must not be relied on).
 
 The ~1-hour TTL is informational context for the retry hint wording; `jr` implements no timer, no expiry check, and no proactive re-issue of step 1.
 
 **EC-3.9.006-1** (step-2 400): exit 64; generic retry hint on stderr.
+**EC-3.9.006-4** (step-2 401): exit 2; not-authenticated hint; generic retry hint on stderr.
+**EC-3.9.006-5** (step-2 403): exit 1; Jira error body surfaced; generic retry hint on stderr.
 **EC-3.9.006-2** (step-2 5xx): exit 1; generic retry hint on stderr.
 **EC-3.9.006-3** (both steps succeed): no TTL concern; BC-3.9.007 governs post-upload echo.
 
@@ -3389,7 +3395,7 @@ The ~1-hour TTL is informational context for the retry hint wording; `jr` implem
 
 After a successful upload, `jr` echoes metadata from the server response directly — no secondary fetch from the issue's `fields.attachment` array is performed.
 
-**Platform POST path** (BC-3.9.001, BC-3.9.002): The `POST /rest/api/3/issue/{key}/attachments` response body IS the created attachment array. `jr` uses this response array directly for human/JSON output (table or `output::render_json`). No second fetch is required.
+**Platform POST path** (BC-3.9.001, BC-3.9.002): The `POST /rest/api/3/issue/{key}/attachments` response body IS the created attachment array. `jr` derives its success echo from this response array, serialized in the curated form (BC-2.7.002 authority: `"self"` omitted, `"content"` renamed to `"contentUrl"`). The raw API wire fields are documented in BC-3.9.001 as facts; the output is the curated form. No second fetch is required.
 
 **servicedeskapi two-step path** (`--public`/`--internal`, BC-3.9.003/004): The response schema from `POST /rest/servicedeskapi/request/{id}/attachment` is INCONCLUSIVE for Atlassian Cloud (P2-3c in `.factory/research/issue-576-attachments-api-2026-07-15.md` §P2-3c). The exact JSON structure has not been confirmed from live data. **Delivery obligation (S5)**: The S5 implementer MUST issue a live E2E request against the `EJ` test project, capture the response body verbatim, and update this BC body and BC-3.9.011 with the confirmed schema before S5 is marked complete.
 
@@ -3418,7 +3424,7 @@ After a successful upload, `jr` echoes metadata from the server response directl
 Output channel: Profile 4 (Symmetric) — stdout for success data/JSON, stderr for errors.
 
 **EC-3.9.008-1** (valid AID, 204): exit 0; human echo `"Deleted attachment <AID>."`; JSON `{"deleted":true,"id":"<AID>"}`.
-**EC-3.9.008-2** (AID not found, 404): exit 64; Jira error body on stderr.
+**EC-3.9.008-2** (AID not found, 404): exit 64; stderr begins with canonical string `"Attachment <AID> not found or not accessible."` followed by the Jira error body as detail (DEC-168 format: prepend canonical string, append server body).
 **EC-3.9.008-3** (server returns 404/403 due to ownership mismatch): `jr` surfaces the server response without special-casing.
 **EC-3.9.008-4** (insufficient permissions, 403): exit 1; Jira error body surfaced on stderr.
 
@@ -3434,7 +3440,7 @@ Output channel: Profile 4 (Symmetric) — stdout for success data/JSON, stderr f
 
 When `--output json` is supplied, `jr issue attachment upload` returns a JSON array where each element represents one successfully uploaded file, sourced from the Jira platform POST response.
 
-Each element contains at minimum: `"id"` (string), `"filename"` (string), `"self"` (string URL), `"size"` (integer, bytes), `"mimeType"` (string), `"created"` (ISO 8601 string). The `"author"` sub-object may be present depending on the Jira response schema.
+The attachment-object shape for each element is the **curated form** defined in BC-2.7.002: `{id, filename, mimeType, size, created, author, contentUrl}`. Specifically: the raw Jira `"self"` field is OMITTED; the raw `"content"` field is renamed to `"contentUrl"` (same rename convention as the list output). This curated form is the canonical attachment-object JSON shape across all `jr` attachment operations — upload, list, and download JSON outputs all use this shape. See BC-2.7.002 for field-level documentation.
 
 The array is pretty-printed via `output::render_json` or `output::print_output` (JSON render invariant #526). Direct `serde_json::to_string_pretty` calls are forbidden at this call site. The output is pretty-printed (not compact).
 
@@ -3463,7 +3469,7 @@ All shapes are pretty-printed via `output::render_json` (#526 invariant). On err
 **EC-3.9.010-1** (single AID, success): `{"deleted":true,"id":"<AID>"}` — 2 keys.
 **EC-3.9.010-2** (multiple AIDs, all success): `{"count":N,"deleted":true,"ids":[...]}` — 3 keys.
 **EC-3.9.010-3** (error path): `JrError` JSON shape; not the deleted shape.
-**EC-3.9.010-4** (partial bulk failure): first failure stops batch; error JSON for the failing AID; already-deleted AIDs are not reversed.
+**EC-3.9.010-4** (partial bulk failure): on multi-AID bulk delete, a 404 response to any individual DELETE is treated as already-deleted (benign race — consistent with BC-3.9.013 multi-delete 404 exception); the 404'd AID is EXCLUDED from the success `count` and `ids` (it was not deleted by this invocation); iteration continues. The first NON-404 failure (403, 401, 5xx, network) stops the batch immediately; error is surfaced (error JSON in JSON mode, stderr in human mode); already-deleted AIDs are not reversed.
 
 **Trace**: F2 spec evolution (2026-07-15 SOH-ATTACHMENTS-1, DEC-179 OQ-7 ruling — ID-only delete, no KEY positional); JSON render invariant #526; BC-3.9.008 (delete semantics); BTreeMap-key ordering convention (established by BC-3.4.013, `issue edit` JSON shape)
 
@@ -3598,7 +3604,7 @@ The confirmation gate for `jr issue attachment upload --public` uses the DEC-174
 
 **Gate mechanics (DEC-174 canonical pattern)**:
 
-1. **Interactive TTY path** (stdin is a TTY AND `--no-input` is absent AND `--yes` is absent): write the prompt to stderr using `eprint!` (NOT `eprintln!`) with a trailing space and no newline: `"Delete attachment <filename> (<AID>)? [y/N] "`. Where `<filename>` is retrieved via `GET /rest/api/3/attachment/{id}` (one extra GET before the prompt to fetch display metadata). Read one line via `io::stdin().lock().read_line(&mut buf)`. Accepted affirmative responses (case-insensitive, after trim): `"y"`, `"yes"`. Any other value including empty string (Enter alone) or EOF (Ctrl+D, resulting in `Err`) is treated as cancellation.
+1. **Interactive TTY path** (stdin is a TTY AND `--no-input` is absent AND `--yes` is absent): write the prompt to stderr using `eprint!` (NOT `eprintln!`) with a trailing space and no newline: `"Delete attachment <filename> (<AID>)? [y/N] "`. Where `<filename>` is retrieved via `GET /rest/api/3/attachment/{id}` (one extra GET before the prompt to fetch display metadata). Read one line via `io::stdin().lock().read_line(&mut buf)`. Accepted affirmative responses (case-insensitive, after trim): `"y"`, `"yes"`. Any other value including empty string (Enter alone), EOF (Ctrl+D — `read_line` returns `Ok(0)` bytes read, buffer empty), or any IO error from `read_line` is treated as cancellation.
 2. **Non-interactive path** (`--no-input` OR stdin not a TTY): DO NOT present prompt. Exit 64 immediately; stderr: `"Use --yes to confirm deletion without a prompt."` (or equivalent `--yes` hint phrasing). No `DELETE` API call is made.
 3. **`--yes` flag**: bypasses the gate entirely. No stdin read. `DELETE` proceeds directly.
 4. **`--yes` on a non-gated operation**: silent no-op per DEC-169 leniency — `--yes` is accepted and ignored when no confirmation gate is triggered.
@@ -3617,7 +3623,7 @@ The confirmation gate for `jr issue attachment upload --public` uses the DEC-174
 **EC-3.9.015-2** (interactive, 'n' or empty): exit 0; `"Deletion cancelled."` to stderr; JSON: `{"cancelled":true,"deleted":false}`.
 **EC-3.9.015-3** (non-interactive, no `--yes`): exit 64; stderr `--yes` hint; NO DELETE issued.
 **EC-3.9.015-4** (`--yes`, interactive or non-interactive): gate skipped; DELETE proceeds immediately; no stdin read.
-**EC-3.9.015-5** (EOF / Ctrl+D on prompt read): treated as cancellation — `Err` from `read_line` is caught and routed to the cancel path; exit 0; `"Deletion cancelled."` to stderr; JSON: `{"cancelled":true,"deleted":false}`. Mirrors BC-3.9.014 EC-3.9.014-2 (upload --public cancel on EOF) and BC-3.5.003 (comment delete precedent). Exit 130 is reserved for SIGINT/Ctrl+C (handled by the runtime, not by `read_line` EOF).
+**EC-3.9.015-5** (EOF / Ctrl+D on prompt read): `read_line` returns `Ok(0)` (zero bytes read, buffer empty) on EOF — NOT an `Err`. Both `Ok(0)` (EOF) and any `Err` (IO error) are routed to the cancel path; exit 0; `"Deletion cancelled."` to stderr; JSON: `{"cancelled":true,"deleted":false}`. **DIVERGENCE from BC-3.5.003 (comment delete, `dialoguer::Confirm`)**: BC-3.5.003 uses `dialoguer` which signals EOF → exit 130; BC-3.9.015 uses `read_line` which returns `Ok(0)` on EOF, treated as empty input (default-N = cancel = exit 0). This divergence is deliberate: under the `read_line` mechanism, EOF is indistinguishable from pressing Enter on an empty line (default-N), so EOF = cancel exit 0 is the correct mapping. The "mirrors BC-3.5.003" claim is INCORRECT and REMOVED. Exit 130 is reserved for SIGINT/Ctrl+C (handled by the runtime).
 **EC-3.9.015-6** (metadata GET returns 404): exit 64; `"Attachment <AID> not found or not accessible."`; no DELETE issued.
 
 **Trace**: F2 spec evolution (2026-07-15 SOH-ATTACHMENTS-1, DEC-179); impact-boundary-576.md R3.3 (human ruling: y/N + --yes gate for single-ID delete); BC-3.5.002/BC-3.5.003 (comment delete mirror pattern); DEC-174 (eprint!+read_line canonical interactive-prompt mechanism); DEC-169 (--yes leniency on non-gated operations); adversary pass-1 human ruling R2 (2026-07-15)
@@ -3649,6 +3655,8 @@ The confirmation gate for `jr issue attachment upload --public` uses the DEC-174
 - `delete <AID>` (no `--issue`, no `--older-than`) → valid single-ID form; confirmation gate per BC-3.9.015.
 - `delete <AID1> <AID2> ...` (2+ positional AIDs, no `--issue`, no `--older-than`) → valid multi-AID bulk form; requires `--yes` (or `--dry-run` per EC-3.9.016-7).
 - `delete --older-than 7d` (no `--issue`, no positional AID) → exit 2 (clap `requires` constraint); clap error to stderr.
+- `delete --issue FOO-1` (no `--older-than`, no positional AID) → exit 2 (clap `requires` constraint; `--issue` requires `--older-than`); clap error to stderr.
+- `delete` (no positional AID, no flags at all) → exit 2 (clap required-group error; must supply at least one of: positional `<AID>`, or both `--issue` + `--older-than`); clap error to stderr.
 
 **EC-3.9.016-1** (bulk, no `--yes`, no `--dry-run`): exit 64; stderr `"--older-than requires --yes to confirm bulk deletion."`; no API calls.
 **EC-3.9.016-2** (bulk, `--yes`): proceed to BC-3.9.019 wire behavior.
@@ -3658,6 +3666,8 @@ The confirmation gate for `jr issue attachment upload --public` uses the DEC-174
 **EC-3.9.016-6** (multi-AID bulk, `--yes`): proceed to BC-3.9.008 for each AID serially; JSON shape per BC-3.9.010.
 **EC-3.9.016-7** (multi-AID bulk, `--dry-run`, no `--yes`): valid; dry-run exempt from `--yes` gate (mirrors EC-3.9.016-3); BC-3.9.020 output shape.
 **EC-3.9.016-8** (multi-AID bulk, no `--yes`, no `--dry-run`): exit 64; stderr `"--yes is required to delete multiple attachments without a confirmation prompt."`; no API calls.
+**EC-3.9.016-9** (`--issue` without `--older-than`): exit 2 (clap `requires` constraint; reciprocal of EC-3.9.016-5); clap error to stderr; no application code reached.
+**EC-3.9.016-10** (bare `delete`, no AID, no flags): exit 2 (clap required-group error; no valid form supplied); clap error to stderr.
 
 **Trace**: F2 spec evolution (2026-07-15 SOH-ATTACHMENTS-1, DEC-179); impact-boundary-576.md R3.2/R3.3/R3.4 (bulk gate + clap mutual-exclusion + ID-only delete signature); adversary pass-1 human ruling R1 (2026-07-15); DEC-169 (--yes leniency)
 
@@ -3719,17 +3729,17 @@ When `jr issue attachment upload <KEY> <FILE> --replace-existing` is invoked and
 
 ---
 
-#### BC-3.9.019: `attachment delete --issue <KEY> --older-than <duration>` — `src/duration.rs` parser; ISO 8601 `created` compared client-side via `chrono`; invalid duration → exit 64; `--output json` bulk-delete shape
+#### BC-3.9.019: `attachment delete --issue <KEY> --older-than <duration>` — dedicated `parse_age_duration` (d=24h clock-hours, w=7×24h calendar; `src/duration.rs` syntax-style precedent only); ISO 8601 `created` compared client-side via `chrono`; invalid duration → exit 64; `--output json` bulk-delete shape
 
 **Confidence**: HIGH
-**Source**: `src/cli/issue/attachments.rs::handle_attachment_delete` (implementation pending — story S4); `src/duration.rs` (existing duration parser, same family as worklog add --duration)
+**Source**: `src/cli/issue/attachments.rs::handle_attachment_delete` (implementation pending — story S4); `src/duration.rs::parse_age_duration` (implementation pending — dedicated calendar-semantics parser; `src/duration.rs` cited as syntax-style precedent only; must NOT reuse worklog-day conversions)
 **Subject**: Issue write (attachment delete — --older-than duration parsing + comparison semantics + JSON shape)
 
 `jr issue attachment delete --issue <KEY> --older-than <duration> --yes` selects all attachments on the issue whose `created` timestamp is older than `duration` relative to the invocation time, then issues a `DELETE` for each.
 
 **`--issue <KEY>` is required** for the `--older-than` form. Enforced by clap `requires` constraint at parse time. `--older-than` without `--issue` → exit 2 (clap error); no application code reached.
 
-**Duration parsing**: The `<duration>` argument is parsed via `src/duration.rs` — the same unit family used by `worklog add --duration`. Accepted unit suffixes: `m` (minutes), `h` (hours), `d` (days), `w` (weeks). `m` means minutes, NOT months. Seconds (`s`) are not supported. Example valid values: `30m`, `2h`, `7d`, `2w`, `30d`. An unrecognized or malformed duration string → exit 64; stderr: the standard `duration.rs` error message (or equivalent: `"invalid duration: '<VALUE>'. Use formats like 30m, 2h, 1d, 7d, 2w."`).
+**Duration parsing (calendar semantics)**: The `<duration>` argument is parsed by a dedicated `parse_age_duration` function (e.g., `src/duration.rs::parse_age_duration` or equivalent) that converts the string to a `chrono::Duration`. Accepted unit suffixes: `m` (minutes = 60 seconds), `h` (hours = 3600 seconds), `d` (days = 24 clock-hours, NOT an 8-hour Jira workday), `w` (weeks = 7 calendar days = 7×24h, NOT a 5-workday week). `m` means minutes, NOT months. Seconds (`s`) are not supported. Example valid values: `30m`, `2h`, `7d`, `2w`, `30d`. `src/duration.rs` is cited as the **syntax-style precedent only** (same `w/d/h/m` suffix convention); `parse_age_duration` performs its own arithmetic and MUST NOT reuse `duration.rs`'s worklog-day conversions (which may use an 8-hour day). Boundary test requirement: a unit test MUST assert that `parse_age_duration("1d") == chrono::Duration::hours(24)` (not 8 hours or 28800 seconds). An unrecognized or malformed duration string → exit 64; stderr: `"invalid duration: '<VALUE>'. Use formats like 30m, 2h, 1d, 7d, 2w."` (no reference to `duration.rs` error message which may differ).
 
 **Client-side comparison**: each attachment's `created` field (ISO 8601 string, e.g., `"2026-01-01T12:00:00.000+0000"`) is parsed via `chrono`. The cutoff is `now() - duration`. Attachments where `created < cutoff` are selected. A `created` value that cannot be parsed → skip that attachment with a stderr warning; does NOT abort the operation.
 
@@ -3747,7 +3757,8 @@ When `jr issue attachment upload <KEY> <FILE> --replace-existing` is invoked and
 
 **EC-3.9.019-1** (valid duration, N > 0, `--yes`): N deletions; success output above.
 **EC-3.9.019-2** (valid duration, 0 matches): exit 0; zero-match echo + JSON.
-**EC-3.9.019-3** (invalid/malformed duration): exit 64; duration.rs error message.
+**EC-3.9.019-3** (invalid/malformed duration): exit 64; stderr: `"invalid duration: '<VALUE>'. Use formats like 30m, 2h, 1d, 7d, 2w."` (canonical error string from `parse_age_duration`; no reference to `duration.rs` error message, which may differ).
+**EC-3.9.019-8** (1d=24h boundary pin): `parse_age_duration("1d")` MUST produce `chrono::Duration::hours(24)`. A unit test in `src/` MUST assert this. Worklog-style 1d=8h is WRONG for this function.
 **EC-3.9.019-4** (`--older-than` without `--issue`): exit 2 (clap `requires` constraint); mirrors EC-3.9.016-5.
 **EC-3.9.019-5** (missing `--yes`): exit 64 per BC-3.9.016 gate.
 **EC-3.9.019-6** (malformed `created` on one attachment): skip + stderr warning; continue with remaining attachments.
@@ -3763,28 +3774,34 @@ When `jr issue attachment upload <KEY> <FILE> --replace-existing` is invoked and
 **Source**: `src/cli/issue/attachments.rs::handle_attachment_delete` (implementation pending — story S4)
 **Subject**: Issue write (attachment delete — dry-run preview for multi-attachment paths)
 
-`--dry-run` is meaningful on multi-attachment paths: (a) `--older-than` bulk delete — previews which attachments would be deleted; (b) multi-AID bulk delete (`delete <AID>...`) — previews the AID list; (c) `upload --replace-existing` — previews which existing same-filename attachments would be deleted AND which files would be uploaded, without issuing any `DELETE` or `POST` requests. On path (c), the output includes a "would-delete" section (matching existing entries by basename) and a "would-upload" section (the supplied files); JSON shape: `{"dryRun":true,"wouldDelete":[{"id":"<AID>","filename":"<name>"}],"wouldUpload":[{"filename":"<name>"}]}`; deferred to S5 implementation (spec contract established for BC coverage). `--dry-run` does NOT require `--yes` (the operation is read-only; BC-3.9.016 explicitly exempts `--dry-run` from the bulk `--yes` gate).
+`upload --dry-run` without `--replace-existing` is rejected by clap (exit 2). `--dry-run` on upload requires `--replace-existing` — the only upload operation with a meaningful preview (no deletes to preview = no point to the dry-run). Enforced at parse time to avoid silent no-op confusion.
+
+`--dry-run` is meaningful on multi-attachment paths: (a) `--older-than` bulk delete — previews which attachments would be deleted; (b) multi-AID bulk delete (`delete <AID>...`) — previews the AID list, with per-AID metadata fan-out (see below); (c) `upload --replace-existing` — previews which existing same-filename attachments would be deleted AND which files would be uploaded, without issuing any `DELETE` or `POST` requests. On path (c), the output includes a "would-delete" section (matching existing entries by basename) and a "would-upload" section (the supplied files); JSON shape: `{"dryRun":true,"wouldDelete":[{"filename":"<name>","id":"<AID>"}],"wouldUpload":[{"filename":"<name>"}]}`; ships with S3 (the --replace-existing story; Source: `src/cli/issue/attachments.rs::handle_attachment_upload` — implementation pending story S3). `--dry-run` does NOT require `--yes` (the operation is read-only; BC-3.9.016 explicitly exempts `--dry-run` from the bulk `--yes` gate).
+
+**Multi-AID `--dry-run` metadata fan-out (path b)**: for multi-AID bulk dry-run, `jr` performs per-AID `GET /rest/api/3/attachment/{id}` metadata fetches (one per supplied AID, serially or concurrently) to populate the filename column in the preview table and the `filename` key in JSON output. These are read-only GET requests permitted in dry-run. A metadata fetch failure for an AID (404, network error, etc.) yields a row with the id and `"(metadata unavailable)"` in the filename column; in JSON mode the row is `{"id":"<AID>"}` (no `"filename"` key when unavailable). The AID is still included in the `ids` array (it was specified by the user; the dry-run preview includes it regardless of metadata availability).
 
 **Multi-attachment `--dry-run`** (with `--older-than`):
 - Perform the list step and apply the same selection logic (duration filter per BC-3.9.019) without any mutations.
 - Human mode: print a table with columns `[ID, Filename, Size, Created]` for each attachment that would be deleted. Final line: `"<N> attachment(s) would be deleted. Run without --dry-run to confirm."`. Exit 0.
 - `--output json` shape (via `output::render_json`, #526 invariant):
-  - N > 0: `{"attachments": [{"id": "<AID>", "filename": "<name>"}], "dryRun": true, "ids": ["<AID1>", "<AID2>"]}`
+  - N > 0: `{"attachments": [{"filename": "<name>", "id": "<AID>"}], "dryRun": true, "ids": ["<AID1>", "<AID2>"]}` (BTreeMap alphabetical at all depths: outer attachments < dryRun < ids; inner filename < id)
   - Zero matches: `{"attachments": [], "dryRun": true, "ids": []}`
 - `--yes` is NOT required for `--dry-run` (BC-3.9.016 exemption). `--yes` alongside `--dry-run` is accepted silently (DEC-169 leniency); `--dry-run` governs; no mutations.
 
 **Single-ID `--dry-run`** (positional `<AID>` form):
 - `--dry-run` has no actionable meaning for single-ID delete (the user has already specified the exact attachment; there is nothing to preview). The flag is accepted without error.
-- Behavior: emit to stderr `"--dry-run has no effect on single-ID delete; omit the flag."`. Exit 0. NO `DELETE` call is issued. NO confirmation gate (BC-3.9.015) is triggered.
-- `--yes --dry-run` on single-ID: `--dry-run` governs; same stderr hint + exit 0.
+- Human mode: emit to stderr `"--dry-run has no effect on single-ID delete; omit the flag."`. Exit 0. NO `DELETE` call is issued. NO confirmation gate (BC-3.9.015) is triggered.
+- JSON mode (`--output json`): emit `{"attachments":[{"id":"<AID>"}],"dryRun":true,"ids":["<AID>"]}` to stdout (no `"filename"` key — no metadata fetch on single-ID dry-run; one-element arrays); NO stderr hint in JSON mode. JSON mode never produces empty stdout.
+- `--yes --dry-run` on single-ID: `--dry-run` governs; same behavior as above.
 
 **`--dry-run` is not a substitute for `--yes` on mutations**: on multi-attachment paths, `--dry-run` (no `--yes`) is a valid read-only preview; `--yes` (no `--dry-run`) runs the real deletion (requires `--yes` per BC-3.9.016); `--dry-run --yes` together runs the preview only (DEC-169 governs `--yes`).
 
 **EC-3.9.020-1** (multi `--dry-run`, N > 0): table + count line; JSON `{"attachments":[...],"dryRun":true,"ids":[...]}`; no mutations; exit 0.
 **EC-3.9.020-2** (multi `--dry-run`, 0 matches): zero-match output; JSON `{"attachments":[],"dryRun":true,"ids":[]}`; exit 0.
-**EC-3.9.020-3** (single-ID `--dry-run`): stderr hint; no DELETE; no gate; exit 0.
+**EC-3.9.020-3** (single-ID `--dry-run`): human: stderr hint, no DELETE, no gate, exit 0. JSON mode: `{"attachments":[{"id":"<AID>"}],"dryRun":true,"ids":["<AID>"]}` to stdout; no stderr hint; exit 0.
 **EC-3.9.020-4** (`--dry-run --older-than`, no `--yes`): valid; dry-run exempt from `--yes` gate (BC-3.9.016 EC-3.9.016-3).
 **EC-3.9.020-5** (`--dry-run --yes` together): `--dry-run` governs; `--yes` silent no-op (DEC-169); no mutations.
+**EC-3.9.020-6** (`upload --dry-run` without `--replace-existing`): exit 2 (clap `requires` constraint); clap error to stderr; no application code reached.
 
 **Trace**: F2 spec evolution (2026-07-15 SOH-ATTACHMENTS-1, DEC-179); impact-boundary-576.md R3.2 (--dry-run scope + output shape); BC-3.4.021 (`issue edit --dry-run` output precedent); adversary pass-1 human ruling R1 (2026-07-15); #526 JSON render invariant
 

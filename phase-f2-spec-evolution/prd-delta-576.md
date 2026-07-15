@@ -30,8 +30,8 @@ BC-2.7.002. All design decisions ratified by DEC-179.
 |-------|---------|------------|
 | S1 | `jr issue attachment list` (list + filter) | BC-2.7.001..006 |
 | S2 | `jr issue attachment download` (single/batch/newest) | BC-2.7.007..012 |
-| S3 | `jr issue attachment upload` (platform POST) | BC-3.9.001..002, BC-3.9.009, BC-3.9.012 |
-| S4 | `jr issue attachment delete` | BC-3.9.008, BC-3.9.010, BC-3.9.013 |
+| S3 | `jr issue attachment upload` (platform POST + `--replace-existing`) | BC-3.9.001..002, BC-3.9.009, BC-3.9.012, BC-3.9.017, BC-3.9.018 |
+| S4 | `jr issue attachment delete` | BC-3.9.008, BC-3.9.010, BC-3.9.013, BC-3.9.015, BC-3.9.016, BC-3.9.019, BC-3.9.020 |
 | S5 | `jr issue attachment upload --public/--internal` (JSM visibility) | BC-3.9.003..007, BC-3.9.011, BC-3.9.014, BC-X.8.010 |
 
 ---
