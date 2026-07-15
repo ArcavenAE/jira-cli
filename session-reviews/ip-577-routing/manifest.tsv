@@ -1,0 +1,12 @@
+ACTION	TARGET	TITLE	BODYFILE	LABELS
+comment	507	-	01-comment-507-ip577-01.md	-
+create	-	process-gap(adversary): mutation-coverage claims must be backed by an empirical cargo-mutants run — unverified claims are invalid	02-create-ip577-02.md	enhancement
+comment	521	-	03-comment-521-ip577-03.md	-
+create	-	process-gap(story-writer): story spec must enumerate per-variant test-function names in AC bodies — recurrence 3 in one bundle	04-create-ip577-04.md	enhancement
+comment	649	-	05-comment-649-ip577-05.md	-
+create	-	process-gap(formal-verifier): bundle-scoped mutation runs need --timeout 480 or --jobs 2 — 240s cap causes timeout-adjudication overhead on large diffs	06-create-ip577-06.md	enhancement
+create	-	process-gap(implementer): resume prompt must include explicit worktree path + branch name + mandatory pre-commit branch assertion	07-create-ip577-07.md	enhancement
+comment	651	-	08-comment-651-ip577-08.md	-
+comment	443	-	09-comment-443-ip577-09.md	-
+comment	507	-	10-comment-507-ip577-10.md	-
+create	-	process-gap(story-writer): relocation stories must include a BC Source citation sweep task — 9 stale citations survived full bundle until F7 consistency audit	11-create-ip577-11.md	enhancement
