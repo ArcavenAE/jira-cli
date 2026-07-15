@@ -41,33 +41,47 @@ If you manage tool versions with [mise](https://mise.jdx.dev/), you can pin
 `jr` alongside the rest of your project's tools:
 
 ```bash
-mise use github:<owner>/jira-cli@latest
+mise use github:Zious11/jira-cli@latest
 ```
 
-Replace `<owner>` with the GitHub owner of the repository (or fork) you
-want to install releases from — for the canonical upstream that's this
-repository's owner; for a downstream distribution that publishes its own
-signed builds, use that fork's owner.
+Replace `Zious11` with a fork's owner if you install from a downstream
+distribution that publishes its own signed releases.
 
-To track prerelease builds cut from `develop` (`v*-dev.*`, `v*-beta.*`,
-`v*-rc.*`), opt in per-tool in your `mise.toml`:
+mise's `github:` backend auto-selects the release asset matching your OS
+and architecture and extracts the `jr` binary (assuming
+[`mise activate`](https://mise.jdx.dev/getting-started.html) is set up in
+your shell profile, this puts `jr` on your `PATH`). Once releases ship
+GitHub Artifact Attestations (planned — see
+[#574](https://github.com/Zious11/jira-cli/pull/574)), mise verifies them
+natively without invoking `gh` or `slsa-verifier`.
+
+To track prerelease builds cut from `develop` (currently `v*-dev.*`), opt
+in per-tool in your `mise.toml`:
 
 ```toml
 [tools]
-"github:<owner>/jira-cli" = { version = "latest", prerelease = true }
+"github:Zious11/jira-cli" = { version = "latest", prerelease = true }
 ```
 
-mise's `github:` backend auto-selects the release asset matching your OS
-and architecture, extracts the `jr` binary onto your `PATH`, and (once
-per-release attestations are published) natively verifies GitHub Artifact
-Attestations and SLSA provenance in Rust without invoking `gh` or
-`slsa-verifier`.
+Windows users need `prerelease = true` for now: the current stable
+(`v0.5.0`) shipped without a Windows asset, so a plain `@latest` resolves
+to a release with no matching download until a Windows binary lands on a
+stable tag (planned for `v0.6.0`).
 
 If mise-installed `jr` refuses to launch on macOS with a Gatekeeper
-warning, clear the quarantine attribute:
+warning, clear the quarantine attribute. When mise is active in your
+shell, `mise which jr` resolves the shim:
 
 ```bash
 xattr -d com.apple.quarantine "$(mise which jr)"
+```
+
+If mise is not yet active in this shell, `mise which jr` prints nothing —
+resolve the install directory directly instead, which does not require
+activation:
+
+```bash
+xattr -d com.apple.quarantine "$(mise where 'github:Zious11/jira-cli')/jr"
 ```
 
 ### From source
