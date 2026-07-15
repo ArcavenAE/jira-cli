@@ -4990,3 +4990,22 @@ Displaced to make room for SOH-ATTACHMENTS-1 F2 AUTHORING COMPLETE (2026-07-15) 
 | Phase | Status | Completed | Gate | Notes |
 |-------|--------|-----------|------|-------|
 | **F7 DELTA CONVERGENCE APPROVED (D-176, 2026-07-15) — 5/5 dimensions PASS (spec v1.3.41 synced; tests 2102/0 + VP 30/30 + mutation adjudicated 100%; F5 STRICT; F6 GO; docs audit-consistent); S-7.02 SATISFIED (PG-F4-1..11 justified deferrals); consistency CONSISTENT (3 LOW gaps fixed); drift check 11 bumped; release v0.6.0-dev.10 AUTHORIZED.** | **F7 APPROVED** | **2026-07-15** | **Release v0.6.0-dev.10 → session review.** | `phase-f7-convergence/issue-577-delta-convergence-report.md` |
+
+
+---
+
+## Archived Phase Progress row (2026-07-15, adversary pass-1 remediation burst)
+
+Displaced to make room for SOH-ATTACHMENTS-1 F2 ADVERSARY PASS-1 REMEDIATED (2026-07-15) row per keep-5 rule.
+
+| Phase | Status | Completed | Gate | Notes |
+|-------|--------|-----------|------|-------|
+| pass-review: session review COMPLETE — 11 proposals IP-577-01..11; 5 new patterns seeded in pattern-database.yaml; improvement-backlog.md updated; artifacts committed to factory-artifacts. | **SESSION REVIEW COMPLETE** | **2026-07-15** | **Awaiting IP-577 proposal disposition by human.** | `session-reviews/review-2026-07-15-issue-577.md`, `session-reviews/improvement-proposals-issue-577.md`. |
+
+### Archived Current Phase Steps row (adversary pass-1 remediation burst)
+
+Displaced to make room for SOH-ATTACHMENTS-1 adversary pass-1 remediation step row per keep-5 rule.
+
+| Step | Agent | Status | Output |
+|------|-------|--------|--------|
+| **F5 SCOPED ADVERSARIAL CONVERGED (STRICT, 2026-07-14): 5 passes; p2 1L README cmd table fix PR #622 @ ae2e3db bd3ac83 (user-merged); p3/p4/p5 CLEAN×3; p4 H-NEW-COMMENT-001..005 all PASS; p5 adversarial input crafting + cargo-doc/MSRV + #526 sweep; p5 obs CHANGELOG/comment-crud.md MERGE claim vs deferred EJ probe — F7-tracked cluster settled; F6 DISPATCHED (fv-F6-577; artifacts → phase-f6-hardening/577/).** | formal-verifier + state-manager | IN PROGRESS | `phase-f6-hardening/577/`; develop @ ae2e3db. |

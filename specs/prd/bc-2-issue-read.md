@@ -549,9 +549,15 @@ Table columns (in display order):
 
 When the issue has zero attachments the handler exits 0 with no table and empty stdout; this is not an error.
 
+**Thumbnail omitted**: the `thumbnail` field (pre-signed short-TTL URL) present in some Jira attachment metadata is NOT included in the table. Only the six columns listed above are displayed in this slice.
+
 **EC-2.7.001-1** (zero attachments): `attachment list <KEY>` on a valid issue with no attachments → exit 0, empty stdout, no stderr output.
 
+**EC-2.7.001-3** (null/missing author): when `attachment.author` is absent or null (system-generated or anonymous attachment), the Author column displays `"(anonymous)"` in the table.
+
 **EC-2.7.001-2** (filter-count hint): when any `--filter` flag is active and reduces the displayed row count, a hint is emitted to stderr: `"Showing N of M attachments."` (N = filtered count, M = total from API). When no filter is active this hint is suppressed.
+
+**CLI flags** (pinned for e2e surface guard): `<KEY>` (positional, required); `--filter <FILTER>` (repeatable; key=value form); `--output json`; `--no-input`; `--profile <NAME>`; `--no-color`.
 
 **Trace**: F2 spec evolution (SOH-ATTACHMENTS-1 2026-07-15; DEC-179 ratified design; research §1a VERIFIED — no dedicated list endpoint)
 
@@ -584,10 +590,13 @@ When the issue has zero attachments the handler exits 0 with no table and empty 
 
 Field notes:
 - `size` is a raw `u64` integer (bytes), never a human-formatted string (contrast with the table in BC-2.7.001).
-- `contentUrl` is the stable authenticated Jira content endpoint (`/rest/api/3/attachment/content/{id}`) — it is an indirection that 303-redirects to a pre-signed media URL at request time; it is NOT itself an expiring signed URL. Surfacing this field satisfies issue #585 (absorbed into SOH-ATTACHMENTS-1 Story 1; close #585 as fixed-by #576 after Story 1 ships). **Research basis**: research §7 VERIFIED — the `content` field is already present in `fields.attachment[]` and is a stable Jira endpoint.
+- `contentUrl` is the stable authenticated Jira content endpoint (`/rest/api/3/attachment/content/{id}`) — it is an indirection that 303-redirects to a pre-signed media URL at request time; it is NOT itself an expiring signed URL. Surfacing this field satisfies issue #585 (absorbed into SOH-ATTACHMENTS-1 Story 1; close #585 as fixed-by #576 after Story 1 ships). **Research basis**: research §7 VERIFIED — the `content` field is already present in `fields.attachment[]` and is a stable Jira endpoint. **Field name rationale**: `jr` exposes this as `contentUrl` (not the raw Jira API field name `content`) for clarity — `content` alone is ambiguous in a JSON context; `contentUrl` makes the type (URL) self-evident. This is a `jr` display convention documented here.
 - `author` mirrors the existing `User` serde shape from `src/types/jira/user.rs`.
+- `thumbnail` / `thumbnailUrl` fields that may appear in some Jira attachment objects are **omitted** from both the table output (BC-2.7.001) and this JSON output in this slice. They are not surfaced because thumbnail availability is instance-dependent and the pre-signed thumbnail URL has a short TTL unsuitable for offline use.
 
 Empty issue → `[]` array, exit 0, no error.
+
+**Null author in JSON**: when `attachment.author` is absent or null, the JSON element emits `"author": null` (not an omitted key and not an empty object). This is consistent with the Jira API's own null representation for missing sub-objects.
 
 All `--output json` paths MUST route through `output::render_json` or `output::print_output` — never `serde_json::to_string_pretty` or direct compact printing (JSON render invariant #526).
 
@@ -609,6 +618,8 @@ Glob semantics: `*` matches any character sequence (including `/`); `?` matches 
 
 After filtering, the table is rendered (BC-2.7.001) with only matching rows. When `--output json` is combined with `--filter mime=`, the JSON array contains only matching elements (BC-2.7.002 shape unchanged). The filter-count hint (EC-2.7.001-2) fires when the filter reduces row count.
 
+**Filter composition with download commands**: `--filter mime=<glob>` (and all `--filter` flags) also applies to `jr issue attachment download --all` and `--newest N`. The filter runs before top-N selection: `--newest 3 --filter mime=image/*` yields the 3 most recently created images (see BC-2.7.008/BC-2.7.009).
+
 **EC-2.7.003-1** (zero matches): empty table or `[]` JSON, exit 0. Hint fires: `"Showing 0 of M attachments."`
 
 **Trace**: F2 spec evolution (SOH-ATTACHMENTS-1 2026-07-15; DEC-179 ratified design)
@@ -628,6 +639,8 @@ After filtering, the table is rendered (BC-2.7.001) with only matching rows. Whe
 The filter matches against the raw `filename` as returned by Jira. This BC governs display/filter behavior only; CWE-22 sanitization for disk writes is covered by BC-2.7.011.
 
 Multiple `--filter` flags combine with AND semantics: `--filter mime=image/* --filter name=screenshot*` retains only images whose filename starts with "screenshot".
+
+**Filter composition with download commands**: same as BC-2.7.003 — `--filter name=<glob>` also applies to `--all` and `--newest N` download paths (filter-before-select order).
 
 **EC-2.7.004-1** (zero matches): same as EC-2.7.003-1.
 
@@ -651,6 +664,8 @@ The `size` field from API metadata is authoritative; no hard-coded instance cap 
 
 Multiple `--filter` flags combine with AND semantics (see BC-2.7.004).
 
+**Filter composition with download commands**: same as BC-2.7.003 — `--filter size-max=<bytes>` also applies to `--all` and `--newest N` download paths (filter-before-select order).
+
 **EC-2.7.005-1** (parse error): if `<bytes>` is not a valid non-negative integer → exit 64 before any HTTP call; message includes the invalid value and states that `--filter size-max` expects a byte count integer.
 
 **Trace**: F2 spec evolution (SOH-ATTACHMENTS-1 2026-07-15; research §3a INCONCLUSIVE ruling — no hard-coded cap)
@@ -673,6 +688,9 @@ When `<KEY>` does not exist or the authenticated user lacks Browse Projects perm
 | 401 | 2 | Not authenticated + `jr auth login` hint |
 | 5xx | 1 | `API error (<N>)` |
 | Network error | 1 | Connectivity hint |
+| Disk full (ENOSPC) writing to temp file | 1 | `"Disk full: not enough space to write <path>"` |
+| Permission denied on target directory (EACCES / read-only FS) | 1 | `"Permission denied: cannot write to <dir>"` |
+| Target directory not writable (other OS write error) | 1 | OS error message surfaced on stderr |
 
 **Trace**: F2 spec evolution (SOH-ATTACHMENTS-1 2026-07-15; DEC-179 ratified design; follows BC-2.3.033/034 universal error pattern)
 
@@ -687,6 +705,8 @@ When `<KEY>` does not exist or the authenticated user lacks Browse Projects perm
 
 `jr issue attachment download <KEY> --id <AID>` downloads a single attachment to disk.
 
+**Selector required (clap required-group)**: `jr issue attachment download <KEY>` without any selector (`--id`, `--all`, or `--newest`) is rejected by clap at parse time — the three selector flags form a required mutually-exclusive group. clap exits 2 with a usage hint listing all three options. This is enforced at the CLI layer; no HTTP call is made.
+
 **Wire path**: `GET /rest/api/3/attachment/content/{id}` — the platform content endpoint. This path is uniform for both platform and JSM issues. The servicedeskapi `links.content` URLs MUST NOT be used for download: JSDCLOUD-10841 (confirmed in research §P2-6 of `.factory/research/issue-576-attachments-api-2026-07-15.md`) shows these URLs return 404.
 
 **Redirect following**: Jira Cloud redirects this endpoint (302/303) to a pre-signed CDN URL (`media.atlassian.com` or AWS). The reqwest client MUST rely on its default redirect policy (up to 10 redirects). reqwest 0.13.4 strips `Authorization`, `Cookie`, and `Proxy-Authorization` headers on cross-host redirects — VERIFIED in research §1c and independently corroborated by GHSA-9857-6MW7-FQ2M (which explicitly states the reqwest backend compares `prev_url.host_str()` to `curr_url.host_str()` and strips sensitive headers on cross-domain hops). No custom `RedirectPolicy` is needed. **CRITICAL**: `?redirect=false` MUST NOT be used — JRACLOUD-97046 (research §6) causes encoded or broken responses for some file formats when this query parameter is present.
@@ -699,11 +719,22 @@ When `<KEY>` does not exist or the authenticated user lacks Browse Projects perm
 
 On success, a completion hint is emitted to stderr: `"Downloaded: <path> (<size_human>)."` Nothing is written to stdout (profile 3).
 
+**Write-to-temp + atomic-rename**: The download MUST write to a temporary file in the same directory as the final path (e.g., `<final_path>.partial` or a random `tmp_<random>_<basename>` name) and only rename it to the final path on successful stream completion. This prevents an interrupted download from leaving a truncated file that would block a retry (the overwrite-refuse guard checks for the FINAL path, not the `.partial` file). On any error (network failure, disk error, process signal), the temporary file MUST be deleted before `jr` exits; the final path is NOT written.
+
+**Ctrl+C / SIGINT during download** (exit 130): if the user interrupts the download mid-stream, the partial file is cleaned up (deleted), the final path is not written, and `jr` exits 130 (standard signal-interrupt exit code). Exit 130 is consistent with `JrError::Interrupted` (maps to exit code 130 in `src/error.rs`).
+
+**EC-2.7.007-6** (`--out <PATH>` with missing parent directory): if the user-specified `--out <PATH>` names a file in a parent directory that does not exist, `jr` exits 64 before any download: `"Output directory does not exist: <parent>"`. The handler does NOT create parent directories automatically.
+
 **EC-2.7.007-1** (AID does not exist): `GET /rest/api/3/attachment/content/{id}` returns 404 → exit 64: `"Attachment <AID> not found."` (see BC-2.7.012 for full error taxonomy).
 
 **EC-2.7.007-2** (JSM issue uniform behavior): downloading an attachment from a JSM issue uses the exact same platform content endpoint as a non-JSM issue. There is no JSM-specific code path for download. JSDCLOUD-10841 confirms the servicedeskapi links are unreliable; the platform endpoint is the correct single code path.
 
 **EC-2.7.007-3** (credential-stripping regression guard — SEC-576-003 CWE-522): A wiremock integration test MUST assert that `GET /rest/api/3/attachment/content/{id}` following a cross-host 302/303 redirect does NOT include an `Authorization` header on the redirect-target request. Use a two-server wiremock setup (one for the Jira API endpoint, one for the simulated CDN redirect target). This guards against a future `JiraClient` refactor adding a custom `RedirectPolicy` that silently forwards bearer/Basic credentials to CDN hosts.
+
+**EC-2.7.007-4** (error mid-stream): temporary file deleted; exit 1; `"Download failed: <reason>"` on stderr; final path not written.
+**EC-2.7.007-5** (Ctrl+C / SIGINT mid-stream): temporary file deleted; exit 130; no final path written.
+
+**CLI flags** (pinned for e2e surface guard): `<KEY>` (positional, required); `--id <AID>` (single download); `--all` (batch); `--newest <N>` (top-N); `--out <PATH>` (single-file path override); `--out-dir <DIR>` (batch target directory); `--force` (overwrite existing); `--filter <FILTER>` (repeatable); `--output json`; `--no-input`.
 
 **Trace**: F2 spec evolution (SOH-ATTACHMENTS-1 2026-07-15; DEC-179 ratified design; research §1b–1d VERIFIED; JSDCLOUD-10841 §P2-6 VERIFIED — platform endpoint for JSM; JRACLOUD-97046 §6 no-redirect-false; GHSA-9857-6MW7-FQ2M corroboration); SEC-576-003 (CWE-522 credential-stripping wiremock test requirement added 2026-07-15)
 
@@ -726,6 +757,10 @@ On completion a summary hint emits to stderr: `"Downloaded N of M attachments to
 **EC-2.7.008-2** (directory does not exist): if `--out-dir <DIR>` is specified and the directory does not exist → exit 64 before any download: `"Output directory does not exist: <DIR>"`. The handler does NOT create the directory automatically.
 
 **EC-2.7.008-3** (`--id` and `--all` mutual exclusion): clap enforces `conflicts_with` → exit 2 when both are supplied simultaneously.
+**EC-2.7.008-4** (`--out-dir` path exists but is not a directory): exit 64: `"Not a directory: <PATH>"`. A regular file at the specified path is rejected; the handler requires a directory.
+**EC-2.7.008-5** (`--out-dir` path does not exist): supersedes EC-2.7.008-2 wording clarification — same exit 64: `"Output directory does not exist: <DIR>"`.
+
+
 
 **Trace**: F2 spec evolution (SOH-ATTACHMENTS-1 2026-07-15; DEC-179 ratified design)
 
@@ -770,6 +805,8 @@ When no `--out <PATH>` is specified, the default output filename for a downloade
 
 **Rationale for SHA-1 prefix**: idempotency (re-running `attachment download` on the same attachment ID always produces the same filename) and collision-resistance between two attachments sharing the same sanitized basename. The prefix is NOT a file-integrity hash.
 
+**Combined-name length cap**: the full default filename `<sha1(40)>_<basename>` is at most 255 bytes total. The SHA-1 hex string is exactly 40 bytes plus the `_` separator = 41 bytes; BC-2.7.011 step 5 caps the sanitized basename at 214 bytes (214 + 41 = 255). This keeps the combined filename within the POSIX `NAME_MAX` and Windows NTFS per-component limit. Call sites that bypass BC-2.7.010 naming (e.g., `--out <PATH>`) receive sanitized names that are still at most 214 bytes from BC-2.7.011 — always within the limit.
+
 **Examples**:
 - `id="10042"`, `filename="report.pdf"` → `<sha1("10042")>_report.pdf`
 - `id="10042"`, `filename="../../../etc/passwd"` → sanitized basename is `passwd` → `<sha1("10042")>_passwd`
@@ -794,7 +831,7 @@ The `filename` field in Jira attachment metadata is **attacker-controllable**: a
 2. **Pseudo-name rejection**: if the extracted basename as a `Path` component equals `"."` or `".."`, return `None`. Empty string after OsStr conversion also returns `None`.
 3. **NUL byte rejection**: if the name contains a NUL byte (`\0`), return `None`. NUL terminates strings in OS path APIs and is never a valid filename character on any supported platform.
 4. **Character scrub** (defensive-depth): replace any remaining `/`, `\`, or `:` in the string with `_`. These are path separators on various platforms and MUST NOT appear in a filename component even after step 1 (guards against encoding edge cases on Windows UNC and drive-letter paths).
-5. **Length cap**: truncate to a maximum of 255 bytes to prevent filesystem errors on very long Jira-supplied filenames.
+5. **Length cap** (UTF-8-safe truncation for the sanitized basename): truncate to at most **214 bytes** on a valid UTF-8 character boundary (Rust `floor_char_boundary` semantics — never split a multi-byte codepoint). Rationale for 214 bytes: the default output path in BC-2.7.010 prepends a 41-byte SHA-1 prefix (`<40 hex chars>_`); 214 + 41 = 255, which fits within the POSIX/Windows NTFS filename component limit. If the `--out <PATH>` override is used (no SHA-1 prefix), the sanitized name is still capped at 214 bytes (conservative; avoids a second cap calculation per call site).
 5.5. **Trailing whitespace/dot strip** (SEC-576-007 — Windows predictability): strip trailing ASCII whitespace characters and trailing `.` from the basename after the length cap. Windows silently removes trailing dots and spaces from filename components on write; stripping them makes the sanitized output identical on Windows and POSIX, preventing unpredictable collision between two Jira attachments whose names differ only by trailing characters.
 
 Return `Some(sanitized_name)` if all steps produce a non-empty string; otherwise `None`.
@@ -810,9 +847,11 @@ Return `Some(sanitized_name)` if all steps produce a non-empty string; otherwise
 
 Since step 4 of sanitization already strips `../`, `/`, `\`, `:`, the join will in practice always satisfy the `starts_with` assertion. The check is defense-in-depth against any encoding edge case not caught by steps 1–4. If `starts_with` returns `false`, skip with a warning: `"warning: skipping attachment <AID> — path escape detected after sanitization."` This skip-case is a defensive guard only; it should not occur for any name produced by the five-step algorithm above.
 
+**Coverage/mutation exemption note**: The `starts_with` false branch is intentionally unreachable via any current Jira API-supplied filename after steps 1–5. This branch exists as defense-in-depth against future encoding edge cases or platform differences not covered by the step 1–5 guarantee. A mutation testing or line-coverage exemption for this specific branch is acceptable; annotate the branch with a comment referencing this BC (e.g., `// BC-2.7.011 defense-in-depth: unreachable via API-supplied filenames after sanitization steps 1-5`).
+
 **Naive blacklist approaches are INSUFFICIENT**: do NOT rely on string-stripping `../` patterns alone — such blacklists are bypassable. The algorithm above is the required standard mitigation (research §4 of `.factory/research/issue-576-attachments-api-2026-07-15.md`, VERIFIED HIGH; OWASP/PortSwigger/CWE-31/22 first-principles).
 
-**Unit test coverage required**: at minimum: `../../etc/passwd`, `/etc/passwd`, `C:\Windows\system32\foo.exe`, `"."`, `".."`, empty string, NUL-containing string, a normal filename, a filename exceeding 255 bytes, a filename containing `:` (Windows drive path), `"CON"` (Windows device name → `Some("CON")`), `"NUL"` (Windows device name → `Some("NUL")`), `"COM1"` (Windows device name → `Some("COM1")`), and `"nul.txt"` (Windows device name with extension → `Some("nul.txt")`). The test matrix confirms that `sanitize_attachment_filename` returns `Some(name)` for device names — the BC-2.7.010 SHA-1 prefix (not this function) is what prevents on-disk device-name collisions on Windows (SEC-576-001 caller note above).
+**Unit test coverage required**: at minimum: `../../etc/passwd`, `/etc/passwd`, `C:\Windows\system32\foo.exe`, `"."`, `".."`, empty string, NUL-containing string, a normal filename, a filename exceeding 255 bytes, a filename containing `:` (Windows drive path), `"CON"` (Windows device name → `Some("CON")`), `"NUL"` (Windows device name → `Some("NUL")`), `"COM1"` (Windows device name → `Some("COM1")`), and `"nul.txt"` (Windows device name with extension → `Some("nul.txt")`), and a filename containing a multi-byte UTF-8 codepoint at the truncation boundary (e.g., a 214-byte ASCII prefix followed by a 3-byte UTF-8 char `"é"` — the char must be dropped, not split, so the output is the 214-byte prefix without truncation artifact). The test matrix confirms that `sanitize_attachment_filename` returns `Some(name)` for device names — the BC-2.7.010 SHA-1 prefix (not this function) is what prevents on-disk device-name collisions on Windows (SEC-576-001 caller note above).
 
 **Trace**: F2 spec evolution (SOH-ATTACHMENTS-1 2026-07-15; research §4 CWE-22 VERIFIED HIGH; DEC-179 SQ-1 resolved; OWASP/CWE-22/CWE-31 first-principles); SEC-576-001 (CWE-22 Windows device-name caller note + unit test matrix added 2026-07-15); SEC-576-002 (CWE-22 corrected two-step containment check procedure added 2026-07-15); SEC-576-007 (trailing-whitespace/dot strip step 5.5 added 2026-07-15)
 

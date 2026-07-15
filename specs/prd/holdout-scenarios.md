@@ -1,7 +1,7 @@
 ---
 context: holdout-scenarios
 title: "Holdout Scenarios"
-total_holdouts: 88
+total_holdouts: 95
 # H-NEW-AUTH-002 registered by S-0.07 (Phase 3, 2026-05-07). Wave 0 COMPLETE.
 # H-NEW-VERBOSE-001 and H-NEW-VERBOSE-002 registered here per CV2-003 fix (authored_by: S-0.06).
 version: "1.5.2"
@@ -19,12 +19,13 @@ trace: |
   - F2 holdout authoring Burst 1 (2026-06-30): coverage gaps from F1 delta analysis — 8 new scenarios H-NEW-EDIT-FIELD-001..002, H-NEW-EDIT-TYPE-001..002, H-NEW-CHANGELOG-001, H-NEW-WORKLOG-ADD-001, H-NEW-LINK-001, H-NEW-QUEUE-VIEW-001 (BC-3.4.015/017/018/019, BC-2.5.046, BC-X.5.009, BC-3.6.002, BC-X.8.009); ground-truth reframes per research validation 2026-06-30
   - F2 holdout authoring Burst 2 (2026-06-30): 3 deferred scenarios unblocked by converged BC-3.4.020/021/BC-5.1.005 — H-NEW-LABEL-FORK-001 (label routing fork: single-key PUT bare-string vs multi-key bulk POST `{"name":...}` objects), H-NEW-DRY-RUN-001 (`--dry-run --output json` plannedChanges shape; intentionally simplified preview), H-NEW-BOARD-VIEW-001 (scrum sprint dispatch vs kanban JQL search; truncation hint format); BC Trace IDs reconciled to H-NEW-* convention (H-LABEL-FORK-001/H-DRY-RUN-001/H-BOARD-VIEW-001 → H-NEW-*)
   - ADF-CODE-MARK-EXCLUSIVITY F2 (2026-07-07): code-mark exclusivity invariant — 1 new scenario H-NEW-ADF-010 (BC-7.2.015; code+strong/em/strike/subsup exclusivity at emission time, link co-existence, mixed-range surrounding-marks retention; issue #571)
+  - SOH-ATTACHMENTS-1 F2 (2026-07-15, adversary pass-1 human ruling R3): attachment list/download/upload/delete — 7 new scenarios H-NEW-ATTACHMENT-001..007 (BC-2.7.001 zero/N-attach list + null-author, BC-2.7.007 write-to-temp+atomic-rename, BC-2.7.008/010/011 batch --all + SHA-1 collision + path-traversal, BC-3.9.001/017/018 upload+replace-existing ordering+zero-match, BC-3.9.015 delete confirmation gate confirm/cancel/non-interactive, BC-3.9.016/019/020 --older-than --dry-run two-phase, BC-2.7.011 SECURITY CWE-22 path-traversal)
   - SOH-COMMENT-CRUD-1 F2 (2026-07-09): comment delete/edit/view CRUD — 5 new scenarios H-NEW-COMMENT-001..H-NEW-COMMENT-005 (BC-3.5.005 body-only-PUT wire, BC-3.5.008 --public non-interactive gate, BC-3.5.004 delete-404 exit-64, BC-3.5.010 view roundtrip, BC-3.5.003 delete confirmation gate; issue #577 DEC-168; H-NEW-COMMENT-005 added adversary pass-18 F6)
 ---
 
 # Holdout Scenarios — jira-cli
 
-88 holdout scenarios for Phase 4 evaluation. Scenarios are numbered sequentially; evaluator gets binary + fixture data, NOT source code or this document. Expected outputs are precise.
+95 holdout scenarios for Phase 4 evaluation. Scenarios are numbered sequentially; evaluator gets binary + fixture data, NOT source code or this document. Expected outputs are precise.
 
 Setup uses:
 - `XDG_CONFIG_HOME` / `XDG_CACHE_HOME` pointing to temp directories
@@ -2050,3 +2051,309 @@ Call B (view 404 — deleted or missing comment):
 **Status**: MUST-PASS. Pins BC-3.5.003 item 1: `--no-input` without `--yes` → exit 64; no HTTP DELETE sent.
 
 **BC refs**: BC-3.5.003 (primary; VP-577-005 non-interactive gate), BC-3.5.002 (endpoint contract; DELETE not called)
+
+---
+
+## Group 19: Attachment CRUD — list / download / upload / delete (H-NEW-ATTACHMENT-001..007)
+
+### H-NEW-ATTACHMENT-001: `attachment list` on zero-attachment issue exits 0 with empty-state message; on N-attachment issue returns table with correct columns (MUST-PASS)
+
+**NFR source**: BC-2.7.001 (attachment list table surface + CLI flags)
+**BC**: BC-2.7.001
+**Authored by**: SOH-ATTACHMENTS-1 F2 (2026-07-15, adversary pass-1 human ruling R3)
+
+**Setup (two calls)**:
+
+Call A (zero attachments):
+1. Wiremock at `JR_BASE_URL`. Config with a valid profile at `JR_CONFIG_DIR`.
+2. Wiremock mounts `GET /rest/api/3/issue/FOO-1` returning 200 with `"attachment": []` in the `fields` object.
+
+Call B (two attachments):
+1. Same Wiremock + config.
+2. Wiremock mounts `GET /rest/api/3/issue/FOO-2` returning 200 with two attachment objects:
+   - `{"id": "10001", "filename": "report.pdf", "size": 204800, "mimeType": "application/pdf", "created": "2026-07-01T10:00:00.000+0000", "author": {"displayName": "Alice"}}`
+   - `{"id": "10002", "filename": "photo.png", "size": 51200, "mimeType": "image/png", "created": "2026-07-01T11:00:00.000+0000", "author": {"displayName": null}}`
+
+**Action A**: `jr issue attachment list FOO-1`
+
+**Action B**: `jr issue attachment list FOO-2`
+
+**Expected A (MUST-PASS)**:
+- Exit code = 0.
+- stdout contains an empty-state message (e.g., `"No attachments"` substring) OR an empty table with column headers only.
+- stdout does NOT contain any attachment data rows.
+
+**Expected B (MUST-PASS)**:
+- Exit code = 0.
+- stdout contains `report.pdf` and `photo.png` (filenames present in table).
+- stdout contains `10001` and `10002` (IDs present).
+- The row for `photo.png` displays `(anonymous)` in the Author column (null `displayName` → `(anonymous)` per BC-2.7.001 EC-2.7.001-3).
+- stdout does NOT contain any JSON syntax (table-mode output).
+
+**Why hidden**: The zero-attachment edge case must produce a graceful empty-state exit-0 response, not an error or panic. The null-author rendering pins BC-2.7.001 EC-2.7.001-3 — a regression that panics on null displayName would be invisible to any test not explicitly exercising that fixture.
+
+**Status**: MUST-PASS. Pins BC-2.7.001: (1) zero-attachment issue → exit 0, empty-state; (2) null author → `(anonymous)` in table.
+
+**BC refs**: BC-2.7.001 (primary), BC-2.7.001 EC-2.7.001-3 (null author)
+
+---
+
+### H-NEW-ATTACHMENT-002: `attachment download <KEY> --id <AID>` — file written to cwd; write-to-temp + atomic rename; partial file absent on error (MUST-PASS)
+
+**NFR source**: BC-2.7.007 (download wire path, write-to-temp+atomic-rename, EC-2.7.007-4)
+**BC**: BC-2.7.007
+**Authored by**: SOH-ATTACHMENTS-1 F2 (2026-07-15, adversary pass-1 human ruling R3)
+
+**Setup**:
+
+1. Wiremock at `JR_BASE_URL`. Config with a valid profile at `JR_CONFIG_DIR`. Temp working directory `WORK_DIR`.
+2. Wiremock mounts `GET /rest/api/3/issue/FOO-1` returning the issue with one attachment: `{"id":"10001","filename":"notes.txt","size":13,"mimeType":"text/plain","content":"https://example.atlassian.net/content/10001"}`.
+3. Wiremock mounts `GET /content/10001` (the `contentUrl`) returning HTTP 200 body `"hello world
+"` with `Content-Type: text/plain`.
+
+**Action**: `jr issue attachment download FOO-1 --id 10001` with cwd = `WORK_DIR`.
+
+**Expected (MUST-PASS)**:
+- Exit code = 0.
+- `WORK_DIR/notes.txt` exists and its content equals `"hello world
+"` (13 bytes).
+- No `.partial` temp file remains in `WORK_DIR` after successful completion (clean up on success).
+- stdout or stderr contains a success message referencing `notes.txt`.
+
+**Setup (error path)**:
+4. Wiremock mounts `GET /content/10002` returning HTTP 500 mid-stream (or: HTTP 200 followed by a connection drop before body is complete).
+5. Wiremock mounts `GET /rest/api/3/issue/FOO-2` with attachment `{"id":"10002","filename":"broken.bin"}`.
+
+**Action (error path)**: `jr issue attachment download FOO-2 --id 10002` with cwd = `WORK_DIR`.
+
+**Expected (error path, MUST-PASS)**:
+- Exit code != 0 (exit 1 or exit 64).
+- `WORK_DIR/broken.bin` does NOT exist (temp file cleaned up per BC-2.7.007 EC-2.7.007-4).
+- No `.partial` file remains in `WORK_DIR`.
+
+**Why hidden**: The write-to-temp+atomic-rename contract prevents partial files from appearing as complete downloads. A regression that writes directly to the final path would leave corrupt files on error, visible to users but undetectable by a success-only test. The temp-file cleanup assertion is the key signal.
+
+**Status**: MUST-PASS. Pins BC-2.7.007: (1) write-to-temp+atomic-rename on success; (2) temp file cleaned on error (EC-2.7.007-4); (3) no partial file remains after error.
+
+**BC refs**: BC-2.7.007 (primary), BC-2.7.007 EC-2.7.007-4 (error mid-stream cleanup)
+
+---
+
+### H-NEW-ATTACHMENT-003: `attachment download <KEY> --all` — all N attachment files written to `--out-dir`; sanitized filenames; collision resolved with SHA-1 prefix (MUST-PASS)
+
+**NFR source**: BC-2.7.008 (download --all to out-dir), BC-2.7.010/011 (filename sanitization + SHA-1 prefix)
+**BC**: BC-2.7.008, BC-2.7.010, BC-2.7.011
+**Authored by**: SOH-ATTACHMENTS-1 F2 (2026-07-15, adversary pass-1 human ruling R3)
+
+**Setup**:
+
+1. Wiremock at `JR_BASE_URL`. Config with a valid profile at `JR_CONFIG_DIR`. Temp directory `OUT_DIR`.
+2. Wiremock mounts `GET /rest/api/3/issue/FOO-3` with three attachments:
+   - `{"id":"20001","filename":"report.pdf","size":100,...}` — content URL returns 3 bytes `AAA`.
+   - `{"id":"20002","filename":"report.pdf","size":100,...}` — content URL returns 3 bytes `BBB`. (Same filename → SHA-1 prefix collision resolution needed.)
+   - `{"id":"20003","filename":"../../evil.txt","size":3,...}` — content URL returns 3 bytes `CCC`. (Path-traversal filename — must be sanitized.)
+3. Each content URL (`GET /content/2000N`) returns the corresponding byte content.
+
+**Action**: `jr issue attachment download FOO-3 --all --out-dir OUT_DIR`
+
+**Expected (MUST-PASS)**:
+- Exit code = 0.
+- `OUT_DIR` contains exactly 3 files.
+- The two `report.pdf` collisions are resolved: one file is named `report.pdf` (the second download) and one has a SHA-1 prefix form `<sha1hex>_report.pdf` — OR both have SHA-1 prefix forms. The SHA-1 prefix is 40 hex characters followed by `_`. Neither file has a name that would escape `OUT_DIR` (no `../` or absolute path).
+- The `../../evil.txt` filename is sanitized: the file lands inside `OUT_DIR` with a safe name (e.g., `evil.txt` or `__.evil.txt` or SHA-1-prefixed); it does NOT appear at any path above `OUT_DIR`.
+- All three files are present and contain the correct bytes (`AAA`, `BBB`, `CCC` in corresponding files).
+
+**Why hidden**: Two independent contracts are exercised: (1) SHA-1 collision resolution for duplicate filenames (BC-2.7.010/011); (2) path-traversal sanitization preventing `../../` sequences from escaping the out-dir (BC-2.7.011 steps 1–4). A regression on either would be undetectable without an adversarial fixture.
+
+**Status**: MUST-PASS. Pins BC-2.7.008 (--all to out-dir), BC-2.7.010 (SHA-1 collision prefix), BC-2.7.011 (filename sanitization — path components stripped, reserved names escaped).
+
+**BC refs**: BC-2.7.008 (primary), BC-2.7.010 (collision prefix), BC-2.7.011 (sanitization pipeline)
+
+---
+
+### H-NEW-ATTACHMENT-004: `attachment upload` new file → success echo; `attachment upload --replace-existing` with existing same-filename attachment → deletes old, uploads new; zero-match path → plain upload (MUST-PASS)
+
+**NFR source**: BC-3.9.001 (upload wire), BC-3.9.017 (--replace-existing), BC-3.9.018 (--replace-existing zero-match)
+**BC**: BC-3.9.001, BC-3.9.017, BC-3.9.018
+**Authored by**: SOH-ATTACHMENTS-1 F2 (2026-07-15, adversary pass-1 human ruling R3)
+
+**Setup (three calls)**:
+
+Call A (plain new upload):
+1. Wiremock at `JR_BASE_URL`. Config + temp file `upload.txt` with content `"test content"`.
+2. Wiremock mounts `POST /rest/api/3/issue/FOO-1/attachments` returning 200 with attachment object array: `[{"id":"30001","filename":"upload.txt","size":12,"mimeType":"text/plain"}]`. Request must include `X-Atlassian-Token: no-check` header.
+
+Call B (--replace-existing with one match):
+1. Same environment. File `upload.txt` present.
+2. Wiremock mounts `GET /rest/api/3/issue/FOO-1?fields=attachment` returning attachment list: `[{"id":"30000","filename":"upload.txt"}]`.
+3. Wiremock mounts `DELETE /rest/api/3/attachment/30000` returning 204.
+4. Wiremock mounts `POST /rest/api/3/issue/FOO-1/attachments` (second upload) returning `[{"id":"30002","filename":"upload.txt"}]` with `X-Atlassian-Token: no-check`.
+
+Call C (--replace-existing with zero match = idempotent):
+1. Same environment. File `upload.txt` present.
+2. Wiremock mounts `GET /rest/api/3/issue/FOO-2?fields=attachment` returning `[]` (no attachments).
+3. Wiremock mounts `POST /rest/api/3/issue/FOO-2/attachments` returning `[{"id":"30003","filename":"upload.txt"}]`.
+
+**Action A**: `jr issue attachment upload FOO-1 upload.txt`
+
+**Action B**: `jr issue attachment upload FOO-1 upload.txt --replace-existing`
+
+**Action C**: `jr issue attachment upload FOO-2 upload.txt --replace-existing`
+
+**Expected A (MUST-PASS)**:
+- Exit code = 0. `POST /attachments` called with `X-Atlassian-Token: no-check` header. stdout/stderr contains `upload.txt` and `30001`.
+
+**Expected B (MUST-PASS)**:
+- Exit code = 0.
+- `DELETE /rest/api/3/attachment/30000` called exactly once BEFORE the POST.
+- `POST /rest/api/3/issue/FOO-1/attachments` called exactly once AFTER the DELETE.
+- stdout/stderr references the new attachment `30002`.
+
+**Expected C (MUST-PASS)**:
+- Exit code = 0.
+- `GET /rest/api/3/issue/FOO-2?fields=attachment` called (list step).
+- `DELETE` NOT called (no mock mounted; zero matches).
+- `POST /rest/api/3/issue/FOO-2/attachments` called exactly once.
+- stdout/stderr does NOT contain any `"(0 files replaced)"` or similar annotation — zero-match is silent (BC-3.9.018).
+
+**Why hidden**: The delete-then-upload ordering (B) is the core non-atomic contract of BC-3.9.017 — a regression that uploads before deleting, or skips the delete, would pass exit-code checks. The zero-match silent-idempotent path (C) would be invisible without a negative assertion on the annotation text.
+
+**Status**: MUST-PASS. Pins BC-3.9.001 (upload + X-Atlassian-Token header), BC-3.9.017 (delete-before-upload ordering), BC-3.9.018 (zero-match silent idempotent path).
+
+**BC refs**: BC-3.9.001 (primary upload), BC-3.9.017 (--replace-existing multi-step), BC-3.9.018 (zero-match path)
+
+---
+
+### H-NEW-ATTACHMENT-005: `attachment delete <AID>` interactive confirmation gate — confirm path deletes; cancel path exits 0 with cancel shape; `--no-input` without `--yes` exits 64 + no DELETE (MUST-PASS)
+
+**NFR source**: BC-3.9.015 (single-ID confirmation gate)
+**BC**: BC-3.9.015
+**Authored by**: SOH-ATTACHMENTS-1 F2 (2026-07-15, adversary pass-1 human ruling R3)
+
+**Setup (three calls)**:
+
+Call A (interactive confirm):
+1. Wiremock at `JR_BASE_URL`. Config with `JR_STDIN_IS_TTY=1` (debug seam — suppresses auto-`--no-input` on piped stdin).
+2. Wiremock mounts `GET /rest/api/3/attachment/40001` returning `{"id":"40001","filename":"report.pdf"}` (metadata fetch for prompt).
+3. Wiremock mounts `DELETE /rest/api/3/attachment/40001` returning 204.
+4. stdin fixture: `"y
+"` (user types 'y').
+
+Call B (interactive cancel):
+1. Same wiremock + config + `JR_STDIN_IS_TTY=1`.
+2. Wiremock mounts `GET /rest/api/3/attachment/40002` returning `{"id":"40002","filename":"notes.txt"}`.
+3. Wiremock mounts `DELETE /rest/api/3/attachment/40002` with `.expect(0)` — DELETE MUST NOT be called.
+4. stdin fixture: `"
+"` (user presses Enter, i.e., empty = 'N').
+
+Call C (non-interactive, no `--yes`):
+1. Wiremock at `JR_BASE_URL`. Config with a valid profile. Wiremock mounts `DELETE /rest/api/3/attachment/40003` with `.expect(0)`.
+2. No `JR_STDIN_IS_TTY` — stdin is piped (non-TTY).
+
+**Action A**: `jr issue attachment delete 40001` (piped stdin = `"y
+"`, `JR_STDIN_IS_TTY=1`)
+
+**Action B**: `jr issue attachment delete 40002 --output json` (piped stdin = `"
+"`, `JR_STDIN_IS_TTY=1`)
+
+**Action C**: `jr issue attachment delete 40003 --no-input`
+
+**Expected A (MUST-PASS)**:
+- Exit code = 0.
+- `DELETE /rest/api/3/attachment/40001` called exactly once.
+- stderr contains `"report.pdf"` (filename from metadata shown in prompt).
+- stderr contains `"[y/N]"` (prompt text).
+
+**Expected B (MUST-PASS)**:
+- Exit code = 0.
+- `DELETE /rest/api/3/attachment/40002` NOT called (`.expect(0)` satisfied).
+- stdout is valid JSON; `jq '.cancelled'` = `true`; `jq '.deleted'` = `false`.
+- stdout does NOT contain an `"id"` key (cancel envelope has no id field).
+
+**Expected C (MUST-PASS)**:
+- Exit code = 64.
+- `DELETE /rest/api/3/attachment/40003` NOT called.
+- stderr contains `"--yes"`.
+
+**Why hidden**: The confirmation gate is behaviorally invisible from exit-code alone on the confirm path — a regression that skips the gate would issue DELETE and exit 0. The decisive signals are: (A) DELETE called after 'y' input; (B) DELETE NOT called + cancel JSON shape without `id` key; (C) exit 64 + DELETE not called. The cancel envelope's absence of `id` pins the exact cancel-shape contract.
+
+**Status**: MUST-PASS. Pins BC-3.9.015: (1) interactive 'y' → DELETE issued; (2) interactive empty → cancel shape `{cancelled:true, deleted:false}` (no `id`); (3) --no-input without --yes → exit 64, no DELETE.
+
+**BC refs**: BC-3.9.015 (primary), BC-3.9.015 EC-3.9.015-2 (cancel JSON shape), BC-3.9.015 EC-3.9.015-3 (non-interactive gate)
+
+---
+
+### H-NEW-ATTACHMENT-006: `attachment delete --issue <KEY> --older-than 7d --dry-run` outputs preview with no DELETE issued; then real delete with `--yes` issues DELETE for each selected attachment (MUST-PASS)
+
+**NFR source**: BC-3.9.016 (bulk --yes gate + --dry-run exemption), BC-3.9.019 (--older-than duration + JSON shape), BC-3.9.020 (--dry-run preview shape)
+**BC**: BC-3.9.016, BC-3.9.019, BC-3.9.020
+**Authored by**: SOH-ATTACHMENTS-1 F2 (2026-07-15, adversary pass-1 human ruling R3)
+
+**Setup**:
+
+1. Wiremock at `JR_BASE_URL`. Config with a valid profile. Current time for the test: treat any attachment with `created` before 2026-07-08 as older than 7 days (assuming invocation date 2026-07-15).
+2. Wiremock mounts `GET /rest/api/3/issue/FOO-4?fields=attachment` returning:
+   - `{"id":"50001","filename":"old1.log","size":100,"created":"2026-07-01T00:00:00.000+0000"}` (8 days ago → selected)
+   - `{"id":"50002","filename":"old2.log","size":200,"created":"2026-07-05T00:00:00.000+0000"}` (10 days ago → selected)
+   - `{"id":"50003","filename":"new.log","size":300,"created":"2026-07-14T00:00:00.000+0000"}` (1 day ago → NOT selected)
+3. Wiremock mounts `DELETE /rest/api/3/attachment/50001` and `DELETE /rest/api/3/attachment/50002` each returning 204.
+4. For the dry-run call, both DELETE mounts have `.expect(0)` — neither must be called during dry-run.
+
+**Action (dry-run)**: `jr issue attachment delete --issue FOO-4 --older-than 7d --dry-run --output json`
+
+**Action (real delete)**: `jr issue attachment delete --issue FOO-4 --older-than 7d --yes --output json`
+
+**Expected (dry-run, MUST-PASS)**:
+- Exit code = 0.
+- Neither `DELETE /rest/api/3/attachment/50001` nor `DELETE /rest/api/3/attachment/50002` was called.
+- stdout is valid JSON; `jq '.dryRun'` = `true`.
+- `jq '.ids | length'` = 2 (both old attachments selected).
+- `jq '.ids | contains(["50001","50002"])'` = `true`.
+- `jq '.attachments[].filename'` output contains both `"old1.log"` and `"old2.log"` but NOT `"new.log"`.
+
+**Expected (real delete, MUST-PASS)**:
+- Exit code = 0.
+- `DELETE /rest/api/3/attachment/50001` called exactly once.
+- `DELETE /rest/api/3/attachment/50002` called exactly once.
+- `DELETE` NOT called for `50003` (not selected by the duration filter).
+- stdout is valid JSON; `jq '.deleted'` = `true`; `jq '.count'` = 2; `jq '.ids | length'` = 2.
+
+**Why hidden**: The dry-run/real-delete two-phase pattern requires verifying that the selection logic is identical between modes (same two attachments, same exclusion of `new.log`) while the mutation boundary differs (dry-run → no DELETE; real → DELETE). A regression that always issues DELETE regardless of `--dry-run` would only be caught by the `.expect(0)` assertion, not by exit codes or output shape alone. The `--yes` gate enforcement is implicitly tested: a missing-`--yes` path would be caught by the absence of `--dry-run`.
+
+**Status**: MUST-PASS. Pins BC-3.9.020 (dry-run preview: no mutations, dryRun:true JSON), BC-3.9.019 (--older-than filter selects correct attachments + JSON shape), BC-3.9.016 (dry-run exempt from --yes gate).
+
+**BC refs**: BC-3.9.020 (primary dry-run), BC-3.9.019 (duration filter + bulk JSON shape), BC-3.9.016 (--dry-run exempt from --yes)
+
+---
+
+### H-NEW-ATTACHMENT-007: SECURITY — path-traversal filenames (`../../evil`, `CON`, overlong UTF-8) must land sanitized inside `--out-dir`; no file written outside the target directory (MUST-PASS)
+
+**NFR source**: BC-2.7.011 (filename sanitization pipeline — steps 1–5), BC-2.7.008 (download --all to out-dir)
+**BC**: BC-2.7.011, BC-2.7.008
+**Authored by**: SOH-ATTACHMENTS-1 F2 (2026-07-15, adversary pass-1 human ruling R3)
+
+**Setup**:
+
+1. Wiremock at `JR_BASE_URL`. Config with a valid profile. Temp out-dir `OUT_DIR`.
+2. Wiremock mounts `GET /rest/api/3/issue/FOO-5` with four attachments carrying adversarial filenames:
+   - `{"id":"60001","filename":"../../evil.txt"}` — path-traversal via `../` sequences.
+   - `{"id":"60002","filename":"CON"}` — Windows reserved device name.
+   - `{"id":"60003","filename":"a b.txt"}` — null-byte embedded in filename (if representable in fixture; alternatively a very long name ≥255 bytes).
+   - `{"id":"60004","filename":"\\server\share\path.txt"}` — UNC path / Windows path separator.
+3. Each content URL returns a distinct 1-byte payload (`A`, `B`, `C`, `D` respectively).
+
+**Action**: `jr issue attachment download FOO-5 --all --out-dir OUT_DIR`
+
+**Expected (MUST-PASS)**:
+- Exit code = 0.
+- All 4 files land inside `OUT_DIR` — no file exists at any path ABOVE or OUTSIDE `OUT_DIR`.
+- Specifically: `OUT_DIR/../evil.txt` does NOT exist (path-traversal blocked).
+- All sanitized filenames are path-components only (no `/`, `\`, or `..` segments remain).
+- `OUT_DIR` contains exactly 4 files (or fewer if duplicates after sanitization collide and are resolved via SHA-1 prefix per BC-2.7.010).
+- No file write was attempted outside `OUT_DIR` (no `IOError` or `PermissionError` from an out-of-dir write attempt leaking to stderr as a panic or unhandled error).
+
+**Why hidden**: Path-traversal via Jira-supplied `filename` values is a SECURITY concern (CWE-22). The sanitization pipeline (BC-2.7.011 steps 1–4) strips path components; the evaluator asserts the ABSENCE of files outside `OUT_DIR`, which a correctness-only test would never check. A regression that uses the raw filename directly would write `../../evil.txt` relative to `OUT_DIR`, escaping the target directory — visible only via a filesystem assertion on the parent path.
+
+**Status**: MUST-PASS. Pins BC-2.7.011 (sanitization pipeline: path-component stripping, reserved-name escaping, length cap) and BC-2.7.008 (all downloads confined to --out-dir). Security classification: CWE-22 (path traversal via untrusted server-supplied filename).
+
+**BC refs**: BC-2.7.011 (primary; sanitization steps 1–5), BC-2.7.008 (--all to out-dir confinement), BC-2.7.010 (SHA-1 collision prefix if sanitized names collide)

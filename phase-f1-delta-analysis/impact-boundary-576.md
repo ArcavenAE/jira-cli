@@ -589,3 +589,95 @@ These obligations are delivery gates for S5, not F1 blockers.
 | OQ-7 | `delete <AID>` without `--issue KEY` | Recommendation unchanged: ID-only correct |
 | OQ-8 | `--public` confirmation gate | **RATIFIED 2026-07-15** — gate required; `eprint!+read_line` pattern (DEC-174, NOT dialoguer::Confirm); non-interactive → exit 64 + `--yes` hint; `--yes` without `--public` = silent no-op (DEC-169); cancel shape `{"cancelled": true, "uploaded": false}`. F2 spec must cite BC-3.5.007 + DEC-169 + DEC-174 and mirror `handle_comment_edit` --public branch. |
 | OQ-9 | `--internal` flag on platform (non-JSM) issues | **RATIFIED 2026-07-15** — silent no-op; rationale: a non-JSM issue has no customer portal, so the attachment is already internal by nature; explicitly asserting `--internal` is coherent and harmless (DEC-169 / `--no-resolution` leniency family). Contrast: `--public` on non-JSM stays exit 64 (impossible intent — no portal to publish to). |
+
+---
+
+## Revision 3 — Adversary-pass-1 scope repair + human rulings
+
+- **Revision date:** 2026-07-15
+- **Trigger:** Adversary pass 1 (ADV-576-P1-001, ADV-576-P1-003, ADV-576-P1-004) + human rulings at the adversary-pass-1 checkpoint
+
+### R3.1 Command-path confirmation (ADV-576-P1-001)
+
+The subcommand path `jr issue attachment <verb>` is confirmed for ALL verbs: `list`, `download`, `upload`, `delete`. There is no alternative nesting (e.g., `jr attachment` at the top level). This is the only surface registered in `IssueCommand::Attachment { command: Box<AttachmentSubcommand> }` and in the `SURFACE` table of `tests/e2e_cli_surface_guard.rs`. All dispatch wiring, SURFACE entries, and BC identifiers in Rev 1 and Rev 2 are consistent with this path — no correction needed to prior revisions.
+
+### R3.2 Silent-drop repair: `--replace-existing`, `--older-than`, `--dry-run` IN SCOPE (ADV-576-P1-003)
+
+Adversary pass 1 flagged that these three flags, present in the Rev 1 BC estimate (BC-3.9.003, BC-3.9.007, BC-3.9.010), were not explicitly carried forward in Rev 2's story narrative and perimeter scan. **Human ruling (2026-07-15):** all three are IN SCOPE for this bundle.
+
+**`--replace-existing` on upload (BC-3.9.003 repaired + extended):**
+
+The replace-existing flow deletes same-filename existing attachments before uploading. JRACLOUD-96384 (confirmed; §6 of the research file) documents that Jira matches media references to attachments by `filename` (ambiguous when names collide), and JRACLOUD-78388 confirms there is no REST mapping from a comment to the attachment it embeds. Consequence for the delete-then-upload implementation:
+- "Same filename" lookup retrieves all `fields.attachment[]` entries whose `filename` matches (case-sensitive; Jira filenames are stored verbatim)
+- Per OQ-6 ruling: delete ALL matching entries (last-write-wins; no error on multiple matches)
+- The delete → upload sequence is **non-atomic**: a concurrent upload between the two steps can produce a duplicate. This is an accepted limitation — the spec MUST document the race and must NOT assert atomicity. BC-3.9.003 will require an EC (edge-case clause) noting the non-atomic race and citing JRACLOUD-96384/-78388.
+
+**`--older-than` on bulk delete (BC-3.9.007 repaired):**
+
+The duration argument uses the existing `src/duration.rs` parser conventions (e.g., `7d`, `2w`, `1M`) — same family as `worklog add --duration`. The BC must cite `duration.rs` and its accepted unit set. Client-side comparison: filter `fields.attachment[].created` where `(now - created) > duration`. The `created` field is ISO 8601 string — parse with `chrono` (already a transitive dep via `src/cli/issue/changelog.rs` usage).
+
+**`--dry-run` on bulk delete (BC-3.9.010 repaired):**
+
+`--dry-run` with `--older-than` (or when applied to the future `--all` batch-delete variant if that is added): list affected IDs without issuing any DELETE requests. Output: table of `[id, filename, size, created]` rows to stdout; `--output json` shape: `{"dryRun": true, "ids": [str], "attachments": [{id, filename}]}`. No HTTP mutations. Applies only to multi-attachment paths (`--older-than`, future `--all`); `--dry-run` on a single-ID delete is a no-op with a stderr hint ("--dry-run has no effect on single-ID delete; omit the flag").
+
+### R3.3 Delete confirmation gate (ADV-576-P1-004)
+
+**Human ruling (2026-07-15):** `attachment delete` gains the house y/N + `--yes` confirmation gate, mirroring `comment delete` (BC-3.5.002 / BC-3.5.003 precedent), NOT the `--public` upload gate:
+
+- **Single-ID delete (interactive TTY):** `eprint!` the prompt ("Delete attachment <filename> (<id>)? [y/N]") + `stdin read_line`; same DEC-174 `eprint!+read_line` pattern
+- **Single-ID delete (non-interactive, `--no-input` or non-TTY):** exit 64 with a `--yes` hint
+- **`--yes` flag:** bypasses gate for single-ID delete
+- **Bulk delete (`--older-than`):** always requires `--yes` (no interactive prompt for bulk — the gate is mandatory-explicit, same rationale as OQ-4); missing `--yes` → exit 64 with "`--older-than` requires `--yes` to confirm bulk deletion"
+- **`--yes` without a gated operation:** silent no-op (DEC-169 leniency)
+- **Cancel path JSON shape:** `{"cancelled": true, "deleted": false}` (consistent with comment delete cancel; no `id`/`key` in cancel shape)
+
+**Precedent for F2 spec authors:** BC-3.5.002 (delete endpoint + exit codes), BC-3.5.003 (confirmation gate mechanic), DEC-169 (leniency), DEC-174 (`eprint!+read_line`). Mirror `src/cli/issue/interactions.rs::handle_comment_delete`.
+
+### R3.4 Delete signature confirmed: ID-only (OQ-7 settled)
+
+OQ-7 ruling from Rev 2 is confirmed by adversary pass: `jr issue attachment delete <AID>` takes the attachment ID as a bare positional — no `--issue KEY` required for single delete (the Jira `DELETE /rest/api/3/attachment/{id}` endpoint takes only an attachment ID; the issue key is not part of the API call). The `--issue <KEY> --older-than <duration>` form requires the key for the attachment list lookup. These two forms are mutually exclusive:
+
+- `delete <AID>` — single ID, positional
+- `delete --issue <KEY> --older-than <duration>` — bulk by age, requires `--issue KEY`
+
+clap should enforce mutual exclusion between the positional `<AID>` and `--issue`/`--older-than`.
+
+### R3.5 Revised BC estimate
+
+The following new BCs are required beyond the ~27 from Rev 2. They extend Section 3.9; no new section needed.
+
+| New BC | Subject |
+|--------|---------|
+| BC-3.9.015 | `attachment delete <AID>` interactive confirmation gate: `eprint!+read_line` (DEC-174); non-interactive → exit 64 + `--yes` hint; `--yes` bypasses; cancel shape `{"cancelled": true, "deleted": false}` |
+| BC-3.9.016 | `attachment delete --older-than` always requires `--yes` (no interactive prompt for bulk); missing `--yes` → exit 64; `--dry-run` previews without mutating |
+| BC-3.9.017 | `attachment upload --replace-existing` same-filename lookup: delete ALL entries with matching filename before uploading (OQ-6 ruling: last-write-wins); non-atomic race with concurrent uploads documented in spec (JRACLOUD-96384/-78388); BC MUST NOT assert atomicity |
+| BC-3.9.018 | `attachment upload --replace-existing` when no same-filename attachment exists: upload proceeds without error (idempotent flag) |
+| BC-3.9.019 | `attachment delete --older-than <duration>` duration parsing via `src/duration.rs` conventions; `created` ISO 8601 compared client-side via `chrono`; `--output json` bulk-delete shape: `{"deleted": true, "count": N, "ids": [str]}` |
+| BC-3.9.020 | `attachment delete --dry-run` (with `--older-than` or future `--all` path): lists affected IDs without mutation; `--output json` shape: `{"dryRun": true, "ids": [str], "attachments": [{id, filename}]}`; `--dry-run` on single-ID delete → stderr hint + exit 0 (no-op) |
+
+**+6 new BCs.** Revised Section 3.9 total: 20 BCs (14 from Rev 2 + 6 new).
+
+**Revised grand total: ~651 + 6 = ~657 individually-bodied BCs.**
+
+Holdout additions (~7 new scenarios, authored in F2 per ruling): delete-gate cancel path; bulk-delete `--yes` missing → exit 64; `--dry-run` bulk preview shape; `--replace-existing` with 0 / 1 / N same-filename hits; `--older-than` duration edge cases; `--replace-existing` non-atomic race documentation check.
+
+### R3.6 Story-shape note
+
+S3 (upload) and S4 (delete) are materially larger after this repair:
+
+- **S3** now owns `--replace-existing` with the non-atomic race documentation obligation (BC-3.9.017, BC-3.9.018) in addition to the core multipart upload (BC-3.9.001–3.9.005)
+- **S4** now owns the delete confirmation gate (BC-3.9.015), the `--older-than` + `--dry-run` path (BC-3.9.016, BC-3.9.019, BC-3.9.020), and the bulk `--yes`-required guard
+
+Whether S4 should be split (e.g., S4a single-ID delete + S4b bulk `--older-than`/`--dry-run`) is an **F3 story-decomposition decision** — not resolved at F1. The BC coverage is settled; the story boundary is the implementer's scoping call at F3.
+
+Wave shape and story count (5 stories) are otherwise unchanged from Rev 2. Estimated delivery revised to **7–9 developer-days** (upward from 6–8) to account for the restored scope.
+
+### R3.7 Retro-annotation: 5th function in `src/api/jira/attachments.rs` (NEW-R6-005)
+
+The §1.1 function table in Rev 1 lists four functions. A fifth is required for the delete confirmation gate (BC-3.9.015): the pre-prompt metadata fetch that supplies `filename` for the confirmation message ("Delete attachment `<filename>` (`<id>`)? [y/N]").
+
+| Function | Endpoint | Notes |
+|----------|----------|-------|
+| `get_attachment_metadata(client, aid)` | `GET /rest/api/3/attachment/{id}` | Returns JSON metadata only (not bytes); confirmed by research §1a — "the attachment itself is not returned"; used by `handle_attachment_delete` before issuing DELETE to populate the confirmation prompt |
+
+The full revised function list for `src/api/jira/attachments.rs` (5 functions): `list_attachments`, `get_attachment_content`, `get_attachment_metadata`, `upload_attachment`, `delete_attachment`. S4 story plan must allocate implementation scope for this function alongside the delete handler.

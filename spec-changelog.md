@@ -7,6 +7,39 @@ project: "jr (jira-cli)"
 
 Track all spec version changes. Most recent version first.
 
+## [1.3.45] - 2026-07-15
+
+### Type: MINOR
+
+### Summary
+
+Adversary pass-1 fix rounds A+B for SOH-ATTACHMENTS-1 (issues #576 + #585). Round A: 20 corrections to existing BC text (command path sweep ADV-001; delete signature ADV-002; write-to-temp ADV-006/007; retry-rebuild ADV-008; 214-byte UTF-8 truncation ADV-009/010; selector-required ADV-012; --older-than/--replace-existing/--dry-run scope clarifications ADV-014/015; error-string normalization ADV-016/017/018/019/020/021/022; non-JSM terminology ADV-005/ADV-003). Round B: 6 new BCs (BC-3.9.015..020) + 7 new holdout scenarios (H-NEW-ATTACHMENT-001..007) per scope expansion ruling R1/R2/R3 (2026-07-15 adversary-pass-1 checkpoint).
+
+### Changes
+
+- `.factory/specs/prd/bc-3-issue-write.md` (MODIFIED): 6 new BCs appended (BC-3.9.015..020) — delete confirmation gate (BC-3.9.015, DEC-174 mirror of BC-3.5.002/003), bulk --older-than always-requires-yes + clap mutual-exclusion (BC-3.9.016), --replace-existing non-atomic delete-all-same-filename (BC-3.9.017, JRACLOUD-96384/-78388), --replace-existing zero-match idempotent (BC-3.9.018), --older-than duration-rs + chrono client-side comparison + bulk JSON shape (BC-3.9.019), --dry-run multi-attachment preview + JSON shape + single-ID stderr hint (BC-3.9.020); Section 3.9 now 20 contracts; round A: 20 body-text corrections (ADV-001..022); total_bcs 134→140 / definitional_count 105→111.
+- `.factory/specs/prd/holdout-scenarios.md` (MODIFIED): 7 new scenarios appended as Group 19 (H-NEW-ATTACHMENT-001..007) — list zero/N attach, download write-to-temp, batch --all path-traversal, upload+replace-existing ordering, delete gate confirm/cancel/non-interactive, --older-than --dry-run two-phase, SECURITY CWE-22 path-traversal; total_holdouts 88→95.
+- `.factory/specs/prd/BC-INDEX.md` (MODIFIED): 6 rows added (BC-3.9.015..020, Source attachments.rs family pending S3/S4); Section 3/3.9 headers updated; frontmatter total_bcs 651→657; index_version v6.13→v6.14; Coverage Statistics table updated.
+- `.factory/specs/prd/CANONICAL-COUNTS.md` (MODIFIED): bc-3 rows 134→140 / 105→111; Sum 651→657; grand-total prose updated; L2 alignment row updated.
+- `.factory/phase-f2-spec-evolution/prd-delta-576.md` (MODIFIED): frontmatter spec_version_after 1.3.44→1.3.45, holdout_count_after 88→95, bc_count_after 651→657; BC Enumeration Section 3.9 extended with 6 new rows; Scope Note marked DELIVERED.
+- `.factory/spec-changelog.md` (MODIFIED): this entry (v1.3.44→v1.3.45).
+
+### Impact Assessment
+
+| Dimension | Detail |
+|-----------|--------|
+| BCs added | 6 (BC-3.9.015..020) |
+| BCs modified (round A body-text) | 20 corrections to existing BCs (ADV-001..022) |
+| BC count | 651→657 |
+| VP count | 30 (unchanged) |
+| Holdout scenarios added | 7 (H-NEW-ATTACHMENT-001..007) |
+| Holdout count | 88→95 |
+| Spec version | 1.3.44→1.3.45 |
+| Scope ruling | R1: --replace-existing/--older-than/--dry-run IN scope; R2: delete y/N + --yes gate; R3: holdouts |
+| Severity floor | MINOR (new BCs + new holdouts + scope expansion; no architectural change) |
+
+---
+
 ## [1.3.44] - 2026-07-15
 
 ### Type: PATCH

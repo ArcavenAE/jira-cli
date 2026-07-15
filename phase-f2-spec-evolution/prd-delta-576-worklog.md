@@ -200,3 +200,153 @@ Method: Python inline (Bash tool) for both bc-2 and bc-3 (TD-031 blocked on both
 No footer line exists — cross-cutting.md uses frontmatter (`total_bcs: 150`, `definitional_count: 84`). Both values carry the correct 84/150 values. No action.
 
 **BC count unchanged: 651. Spec version unchanged at 1.3.44. Both guards exit 0.**
+
+---
+
+## Adversary Pass 1 Fix Round A — corrections to existing BC text (COMPLETE)
+
+Source: adversary pass-1 findings; human rulings R1/R2/R3 (R1: --replace-existing/--older-than/--dry-run IN scope for round B; R2: delete gets y/N + --yes gate in round B; R3: holdout scenarios in round B). Fix round A = corrections to EXISTING BC text only; no new BCs; no count changes.
+Method: Python inline (Bash tool) for bc-2 and bc-3 (TD-031 blocked); Edit tool for prd-delta-576.md.
+
+### Finding Dispositions
+
+| Finding | Severity | File(s) Touched | Status | What changed |
+|---------|----------|----------------|--------|-------------|
+| ADV-001 (HIGH) | HIGH | bc-3-issue-write.md, cross-cutting.md, prd-delta-576.md | APPLIED | SWEEP: all `jr attachment` → `jr issue attachment`; 9 hits in bc-3, 1 in cross-cutting, 9 in prd-delta (incl. 1 line-split residual); zero-residual confirmed |
+| ADV-002 (HIGH) | HIGH | bc-3-issue-write.md | APPLIED | BC-3.9.008 body rewritten: ID-only delete (no KEY positional), OQ-7 ruling noted, success echo updated to `"Deleted attachment <AID>."`, KEY-ownership paragraph removed; BC-3.9.010/013 Traces updated with OQ-7 reference |
+| ADV-005 (MED) | MED | bc-3-issue-write.md | APPLIED | BC-3.9.012 `--public` non-JSM error string: `"--public is only supported on JSM issues."` → `"--public is only supported on Jira Service Management (JSM) issues."` (matches BC-3.9.005 canonical) |
+| ADV-006 (MED) | MED | bc-2-issue-read.md | APPLIED | BC-2.7.007: write-to-temp+atomic-rename clause added; cleanup-on-error clause; EC-2.7.007-4 (error mid-stream → temp deleted, exit 1); EC-2.7.007-5 (Ctrl+C/SIGINT → temp deleted, exit 130) |
+| ADV-007 (MED) | MED | bc-2-issue-read.md | APPLIED | BC-2.7.012: ENOSPC, EACCES/read-only, other OS write error rows added to error taxonomy table |
+| ADV-008 (MED) | MED | bc-3-issue-write.md | APPLIED | BC-3.9.001: retry-interaction clause added (streaming non-cloneable; rebuild from file path per attempt; fresh ReaderStream; mid-stream 429 impossible; JiraClient retry loop not applicable; cite ADR-0017) |
+| ADV-009 (MED) | MED | bc-2-issue-read.md | APPLIED | BC-2.7.011 step 5: 255-byte cap → UTF-8-safe 214-byte cap (floor_char_boundary semantics); multi-byte truncation boundary test case added to unit test matrix |
+| ADV-010 (MED) | MED | bc-2-issue-read.md | APPLIED | BC-2.7.011 step 5: cap changed to 214 bytes (41-byte SHA-1 prefix consumed); BC-2.7.010: combined-name length cap note added (214 + 41 = 255 ≤ NAME_MAX) |
+| ADV-011 (MED) | MED | bc-3-issue-write.md | APPLIED | BC-3.9.001: allow_hyphen_values rationale added; `--` separator note; EC-3.9.001-6 (stdin/`-` as FILE → exit 64) |
+| ADV-012 (MED) | MED | bc-2-issue-read.md | APPLIED | BC-2.7.007: selector-required (clap required-group) clause added; bare `jr issue attachment download <KEY>` with no selector → clap exit 2 |
+| ADV-014 (LOW) | LOW | bc-2-issue-read.md | APPLIED | BC-2.7.003/004/005: filter composition with --all and --newest noted in each BC body |
+| ADV-015 (LOW) | LOW | bc-2-issue-read.md | APPLIED | BC-2.7.007: EC-2.7.007-6 (--out missing parent dir → exit 64); BC-2.7.008: EC-2.7.008-4 (out-dir exists but not-a-directory → exit 64), EC-2.7.008-5 (clarification note) |
+| ADV-016 (LOW) | LOW | bc-3-issue-write.md | APPLIED | BC-3.9.012 issue-404 string: `"Issue <KEY> not found."` → `"Issue <KEY> not found or not accessible."` |
+| ADV-017 (LOW) | LOW | bc-3-issue-write.md | APPLIED | JSON Output Shape Contracts table: upload array row + delete single/bulk rows added; --public row stays deferred |
+| ADV-018 (LOW) | LOW | bc-2-issue-read.md | APPLIED | BC-2.7.002: contentUrl rename-clause added (jr convention: contentUrl not content); thumbnail omitted note added to BC-2.7.001 and BC-2.7.002 |
+| ADV-019 (LOW) | LOW | bc-2-issue-read.md | APPLIED | BC-2.7.001: EC-2.7.001-3 (null/missing author → "(anonymous)" in table); BC-2.7.002: null author → `"author": null` JSON note |
+| ADV-020 (LOW) | LOW | bc-2-issue-read.md | APPLIED | BC-2.7.001: CLI flags enumeration clause added (list surface); BC-2.7.007: CLI flags enumeration clause added (download surface) |
+| ADV-021 (LOW) | LOW | bc-3-issue-write.md | APPLIED | BC-3.9.010: bulk-delete partial-failure non-atomicity stated; exit code follows HTTP error; per-AID result lines in human mode; no partial-success JSON shape |
+| ADV-022 (INFO) | INFO | bc-2-issue-read.md, bc-3-issue-write.md | APPLIED | BC-2.7.011: containment-check coverage/mutation exemption note (intentionally unreachable, defense-in-depth); BC-3.9.011: EJ-teardown note (must delete attachment or use disposable ticket; jsm_self_close alone insufficient) |
+| ADV-003 residue | INFO | prd-delta-576.md | APPLIED | Scope Note section added: R1 ruling — --replace-existing/--older-than/--dry-run IN scope for round B; NOT silently out of scope |
+
+**BC count unchanged: 651. Spec version unchanged at 1.3.44. Both guards exit 0.**
+
+### Zero-residual proof for ADV-001
+
+`grep -rn "\bjr attachment\b" .factory/specs/prd/ .factory/phase-f2-spec-evolution/prd-delta-576.md | grep -v "consistency-report|security-review|worklog" | grep -v "jr issue attachment"` → (no output)
+
+---
+
+## Adversary Pass 1 Fix Round B — NEW BCs + holdout scenarios (COMPLETE)
+
+Source: team-lead round B dispatch. Method: Python inline (Bash tool) for bc-3 (TD-031 hook); direct append for holdout-scenarios.md.
+Counts intentionally NOT updated — round C will sync all 8 surfaces.
+
+### Part 1 — 6 new BCs appended to bc-3-issue-write.md Section 3.9
+
+| BC ID | Title (abbreviated) |
+|-------|---------------------|
+| BC-3.9.015 | `attachment delete <AID>` interactive confirmation gate — eprint!+read_line (DEC-174); non-interactive exit 64 + --yes hint; --yes bypass; cancel shape `{"cancelled":true,"deleted":false}` |
+| BC-3.9.016 | `attachment delete --older-than` always requires --yes (no interactive prompt for bulk); missing --yes → exit 64; clap mutual-exclusion positional-AID vs --issue/--older-than forms |
+| BC-3.9.017 | `attachment upload --replace-existing` — same-filename list + delete ALL matching (OQ-6); non-atomic race documented (JRACLOUD-96384/-78388); MUST NOT assert atomicity |
+| BC-3.9.018 | `attachment upload --replace-existing` zero-match — idempotent plain upload; silent (no annotation); flag no-op on delete phase |
+| BC-3.9.019 | `attachment delete --older-than <duration>` — duration.rs parser; ISO 8601 created compared client-side via chrono; invalid duration exit 64; bulk-delete JSON shape `{deleted,count,ids}` |
+| BC-3.9.020 | `attachment delete --dry-run` — multi-attachment preview without mutations; JSON `{dryRun,ids,attachments}`; single-ID --dry-run = stderr hint + exit 0 no-op |
+
+Section 3.9 now has 20 BCs (BC-3.9.001..020). bc-3-issue-write.md `#### BC-` actual count: 111 (definitional_count frontmatter still 105 — pending round C).
+
+### Part 2 — 7 new holdout scenarios appended to holdout-scenarios.md (Group 19)
+
+| Holdout ID | Title (abbreviated) |
+|------------|---------------------|
+| H-NEW-ATTACHMENT-001 | attachment list: zero-attachment issue exits 0 + empty state; N-attachment issue shows table with correct columns + null-author → (anonymous) |
+| H-NEW-ATTACHMENT-002 | attachment download --id: file written to cwd; write-to-temp+atomic rename; partial file absent on error (EC-2.7.007-4) |
+| H-NEW-ATTACHMENT-003 | attachment download --all: all N files written to --out-dir; SHA-1 collision prefix for duplicate filenames; path-traversal filename ../../evil sanitized |
+| H-NEW-ATTACHMENT-004 | upload new + upload --replace-existing with one match (delete-before-upload ordering); --replace-existing zero-match = silent idempotent plain upload (BC-3.9.018) |
+| H-NEW-ATTACHMENT-005 | attachment delete interactive gate: confirm path → DELETE issued; cancel path → exit 0 + `{cancelled:true,deleted:false}` (no id key); --no-input without --yes → exit 64, no DELETE |
+| H-NEW-ATTACHMENT-006 | --older-than --dry-run: no DELETE issued + dryRun:true JSON; then real --yes delete: DELETEs issued for selected attachments only; selection logic identical in both modes |
+| H-NEW-ATTACHMENT-007 | SECURITY (CWE-22): path-traversal filenames (../../evil, CON, UNC path) land sanitized inside --out-dir; no file written outside target directory |
+
+holdout-scenarios.md `### H-` actual count: 95 (total_holdouts frontmatter still 88 — pending round C).
+
+
+---
+
+## Round C — Integrate (count sync + guard green) — 2026-07-15
+
+**Trigger:** Team-lead dispatch (Round B accepted, BC-3.9.015 metadata-fetch GET ratified).
+
+**Objective:** Sync all 8 count surfaces to 657 BCs / 95 holdouts. Both guards must exit 0.
+
+| File | Changes |
+|---|---|
+| `spec-changelog.md` | [1.3.45] entry inserted (MINOR; adversary pass-1 rounds A+B; 651→657 BCs, 88→95 holdouts) |
+| `prd-delta-576.md` | frontmatter spec_version_after→1.3.45, holdout_count_after→95, bc_count_after→657; BC enumeration Section 3.9 header 14→20; Scope Note marked DELIVERED round B |
+| `bc-3-issue-write.md` | frontmatter total_bcs 134→140, definitional_count 105→111; trace v1.3.45; preamble 134→140; Section 3.9 header 14→20; footer 105→111 cumulative 134→140; adversary pass-1 history narrative |
+| `holdout-scenarios.md` | frontmatter total_holdouts 88→95; trace entry; preamble 88→95; Group 19 format note |
+| `CANONICAL-COUNTS.md` | bc-3 definitional 105→111, total 134→140; Sum 651→657; grand total 651→657; L2 alignment row; last_verified |
+| `BC-INDEX.md` | frontmatter total_bcs 651→657, index_version v6.13→v6.14; sections: bc-3 140/111; Section 3 header 134→140/105→111; Section 3.9 header 14→20; 6 rows BC-3.9.015..020 appended; Coverage Statistics Section 3 134→140/105→111, Total 651→657/421→427; body-note +6 adversary-pass-1 |
+
+**Guard results:**
+- `check-bc-cumulative-counts.sh`: `OK: all cumulative BC counts verified (657 total across 8 files; Surface H footer checked where present).`
+- `check-spec-counts.sh`: `OK: all spec counts verified.`
+
+**Final state:** 657 BCs (140 in Section 3), 95 holdouts, spec v1.3.45, BC-INDEX v6.14. Round C complete.
+
+
+---
+
+## Round R6 Polish — 2026-07-15
+
+**Trigger:** Team-lead dispatch (3 LOW + 2 INFO from consistency-report-576-r6.md; 4 items assigned).
+
+**Objective:** Apply NEW-R6-001..004 polish to bc-3-issue-write.md. Counts unchanged — guards must stay at 657/95.
+
+| Item | Change |
+|---|---|
+| NEW-R6-001 | Section 3.9 header: `(14 BCs: BC-3.9.001..BC-3.9.014)` → `(20 BCs: BC-3.9.001..BC-3.9.020)` |
+| NEW-R6-002 | JSON Output Shape Contracts table: 2 rows added — `attachment delete` cancel shape (BC-3.9.015) `{"cancelled":true,"deleted":false}`; `attachment delete --dry-run` preview shape (BC-3.9.020) `{"attachments":[...],"dryRun":true,"ids":[...]}`; Sources line updated (+BC-3.9.015, BC-3.9.020) |
+| NEW-R6-003 | BC-3.9.019 shapes corrected to BTreeMap alphabetical (c<d<i): N>0 `{"count":N,"deleted":true,"ids":[...]}`, zero `{"count":0,"deleted":false,"ids":[]}`; BC-3.9.020 shapes corrected to alphabetical (a<d<i): N>0 `{"attachments":[...],"dryRun":true,"ids":[...]}`, zero `{"attachments":[],"dryRun":true,"ids":[]}`, EC-3.9.020-1 abbreviated form, EC-3.9.020-2 compact zero form |
+| NEW-R6-004 | Exit-code hedge settled as exit 2 (clap `requires`): BC-3.9.016 body example + EC-3.9.016-5; BC-3.9.019 body para + EC-3.9.019-4 |
+
+**Guard results (counts unchanged):**
+- `check-bc-cumulative-counts.sh`: `OK: all cumulative BC counts verified (657 total across 8 files; Surface H footer checked where present).`
+- `check-spec-counts.sh`: `OK: all spec counts verified.`
+
+**Files edited:** `.factory/specs/prd/bc-3-issue-write.md` only (13 string replacements via Python/Bash, TD-031).
+
+
+---
+
+## Round R7 Polish — 2026-07-15
+
+**Trigger:** Team-lead dispatch (2 LOW + 2 INFO from consistency-report-576-r7.md; 4 items + post-edit stale-number sweep).
+
+**Objective:** Fix CANONICAL-COUNTS.md count-narrative surfaces and BC-INDEX.md date; full stale-number sweep of CANONICAL-COUNTS.md for 88/421/424/649/650/651.
+
+| Item | Change | File |
+|---|---|---|
+| R7-001 | `Total individually-bodied` table row: 421 → 427 | CANONICAL-COUNTS.md L30 |
+| R7-002 | Holdout section: Canonical total 88→95; Expected line 88→95 + H-NEW-ATTACHMENT-001..007 appended; Groups range (57→88)→(57→95); Group 19 entry added (H-NEW-ATTACHMENT-001..007, +7, SOH-ATTACHMENTS-1 adversary pass-1 round B, 2026-07-15); reconciliation footnote 88→95, date 2026-07-10→2026-07-15 | CANONICAL-COUNTS.md L111/118/120/127/129 |
+| R7-003 | BC-X.4.009 note: `in the **651 sum**` → `in the **657 sum**`; `beyond the 650` → `beyond the 656` | CANONICAL-COUNTS.md L64/65 |
+| R7-004 | Body-note: `+11 SOH-COMMENT-CRUD-1 added 2026-07-11..14` → `added 2026-07-09` | BC-INDEX.md L794 |
+
+**Stale-number sweep results (CANONICAL-COUNTS.md, targets: 88/421/424/649/650/651):**
+- 88: all 4 hits were stale-current → all fixed (R7-002)
+- 421: 1 hit was stale-current → fixed (R7-001)
+- 424: 0 hits
+- 649: 0 hits
+- 650: 1 hit was stale-current → fixed (R7-003b)
+- 651: 2 hits remaining — both LEGITIMATE HISTORICAL:
+  - L57: "BC-INDEX.md `total_bcs` header was bumped to 651 in v1.3.43..." (historical event description)
+  - L66: "was 651 before round B" (inline history note in BC-X.4.009 correction block)
+
+**Guard results:**
+- `check-bc-cumulative-counts.sh`: `OK: all cumulative BC counts verified (657 total across 8 files; Surface H footer checked where present).`
+- `check-spec-counts.sh`: `OK: all spec counts verified.`
+
+**Files edited:** `CANONICAL-COUNTS.md` (8 changes via Python/Bash, TD-031); `BC-INDEX.md` (1 change via Python/Bash, TD-031).

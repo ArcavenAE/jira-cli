@@ -5,11 +5,11 @@ issues: "#576, #585"
 phase: F2
 authored: 2026-07-15
 spec_version_before: 1.3.42
-spec_version_after: 1.3.44
+spec_version_after: 1.3.45
 bc_count_before: 624
-bc_count_after: 651
+bc_count_after: 657
 holdout_count_before: 88
-holdout_count_after: 88
+holdout_count_after: 95
 ---
 
 # PRD Delta — SOH-ATTACHMENTS-1 Attachment Read/Write (issues #576 + #585)
@@ -18,8 +18,8 @@ holdout_count_after: 88
 
 F2 spec evolution for the SOH-ATTACHMENTS-1 feature bundle (issues #576 + #585). Adds 27
 new individually-bodied BCs across three BC files, establishing the full aspirational
-behavioral specification for `jr attachment list`, `jr attachment download`, `jr attachment
-upload`, and `jr attachment delete`. Issue #585 (contentUrl surface) is absorbed into
+behavioral specification for `jr issue attachment list`, `jr issue attachment download`, `jr issue attachment
+upload`, and `jr issue attachment delete`. Issue #585 (contentUrl surface) is absorbed into
 BC-2.7.002. All design decisions ratified by DEC-179.
 
 ---
@@ -28,11 +28,11 @@ BC-2.7.002. All design decisions ratified by DEC-179.
 
 | Story | Feature | BC coverage |
 |-------|---------|------------|
-| S1 | `jr attachment list` (list + filter) | BC-2.7.001..006 |
-| S2 | `jr attachment download` (single/batch/newest) | BC-2.7.007..012 |
-| S3 | `jr attachment upload` (platform POST) | BC-3.9.001..002, BC-3.9.009, BC-3.9.012 |
-| S4 | `jr attachment delete` | BC-3.9.008, BC-3.9.010, BC-3.9.013 |
-| S5 | `jr attachment upload --public/--internal` (JSM visibility) | BC-3.9.003..007, BC-3.9.011, BC-3.9.014, BC-X.8.010 |
+| S1 | `jr issue attachment list` (list + filter) | BC-2.7.001..006 |
+| S2 | `jr issue attachment download` (single/batch/newest) | BC-2.7.007..012 |
+| S3 | `jr issue attachment upload` (platform POST) | BC-3.9.001..002, BC-3.9.009, BC-3.9.012 |
+| S4 | `jr issue attachment delete` | BC-3.9.008, BC-3.9.010, BC-3.9.013 |
+| S5 | `jr issue attachment upload --public/--internal` (JSM visibility) | BC-3.9.003..007, BC-3.9.011, BC-3.9.014, BC-X.8.010 |
 
 ---
 
@@ -59,7 +59,7 @@ BC-2.7.002. All design decisions ratified by DEC-179.
 
 ### Section 3.9 — Attachment Write (bc-3-issue-write.md)
 
-14 new individually-bodied BCs appended as `### 3.9 Attachment Write`.
+20 individually-bodied BCs in `### 3.9 Attachment Write` (14 original + 6 added adversary pass-1 round B).
 
 | BC ID | Title |
 |-------|-------|
@@ -77,6 +77,12 @@ BC-2.7.002. All design decisions ratified by DEC-179.
 | BC-3.9.012 | Upload error taxonomy |
 | BC-3.9.013 | Delete error taxonomy |
 | BC-3.9.014 | --public confirmation gate mechanics: eprint!+read_line, NOT dialoguer |
+| BC-3.9.015 | delete single-ID confirmation gate: eprint!+read_line; non-interactive exit 64; --yes bypass; cancel `{"cancelled":true,"deleted":false}` |
+| BC-3.9.016 | --older-than always requires --yes (no interactive prompt for bulk); --dry-run exempt; clap mutual-exclusion positional-AID vs --issue/--older-than |
+| BC-3.9.017 | --replace-existing: delete-ALL-same-filename (OQ-6) then upload; non-atomic race documented (JRACLOUD-96384/-78388); MUST NOT assert atomicity |
+| BC-3.9.018 | --replace-existing zero-match: skip delete phase; silent idempotent plain upload |
+| BC-3.9.019 | --older-than: --issue KEY required; duration.rs parser; chrono client-side comparison; invalid duration exit 64; bulk JSON `{"deleted":true,"count":N,"ids":[]}` |
+| BC-3.9.020 | --dry-run multi-attachment preview: no mutations; JSON `{"dryRun":true,"ids":[...],"attachments":[{id,filename}]}`; single-ID --dry-run = stderr hint + exit 0 |
 
 ### BC-X.8.010 — serviceDeskId cache (cross-cutting.md)
 
@@ -105,12 +111,18 @@ All the following were ratified at the F1 gate (DEC-179):
 
 ---
 
+## Scope Note — Human Ruling R1 (ADV-003 from Adversary Pass 1) [DELIVERED: Round B BCs authored 2026-07-15]
+
+Human ruling R1 (recorded 2026-07-15, adversary pass-1 finding ADV-003): the flags `--replace-existing`, `--older-than`, and `--dry-run` for `jr issue attachment delete` are **IN SCOPE** for SOH-ATTACHMENTS-1. These flags are intentionally deferred to fix round B (new BCs); they are NOT silently out of scope. This package is intentionally partial for those three flags; their BCs will be authored in round B before story decomposition.
+
+---
+
 ## Deferred Probe Obligations
 
 Two BCs carry explicit delivery obligations gated on S5 live E2E capture:
 
 - **BC-3.9.007 EC-3.9.007-2 + BC-3.9.011** (P2-3c INCONCLUSIVE): The response schema of `POST /rest/servicedeskapi/request/{id}/attachment` on Atlassian Cloud is unpublished and unconfirmed. The S5 implementer MUST:
-  1. Issue a live E2E request against the `EJ` test project with `jr attachment upload <JSM-KEY> <file> --public --yes`.
+  1. Issue a live E2E request against the `EJ` test project with `jr issue attachment upload <JSM-KEY> <file> --public --yes`.
   2. Capture the response body verbatim.
   3. Update BC-3.9.007 EC-3.9.007-2 and BC-3.9.011 with the confirmed schema.
   4. Add a row to the `## JSON Output Shape Contracts` table in bc-3-issue-write.md for `attachment upload --public`.
@@ -191,3 +203,59 @@ Full CREATE sub-burst details in: `.factory/phase-f2-spec-evolution/prd-delta-57
 - Sub-burst 2: BC-3.9.001..014 (bc-3-issue-write.md)
 - Sub-burst 3: BC-X.8.010 (cross-cutting.md)
 - INTEGRATE: BC-INDEX.md, CANONICAL-COUNTS.md, frontmatter totals, spec-changelog, this file
+
+---
+
+## Consistency Review Round 3 Finding Dispositions
+
+| Finding ID | Severity | File(s) Touched | Change | Status |
+|------------|----------|----------------|--------|--------|
+| NEW-R3-002 | LOW | bc-3-issue-write.md | BC-3.9.007 JSDCLOUD-10841 paragraph: `(BC-2.7.005)` → `(BC-2.7.007)` (wrong cross-ref); zero-residual sweep confirmed | APPLIED |
+| NEW-R3-001 | LOW | prd-delta-576.md | Frontmatter `spec_version_after: 1.3.43` → `1.3.44` | APPLIED |
+
+BC count unchanged: 651. Both guards exit 0.
+
+---
+
+## Consistency Review Round 4 Finding Dispositions
+
+| Finding ID | Severity | File(s) Touched | Change | Status |
+|------------|----------|----------------|--------|--------|
+| NEW-R4-001 | LOW | bc-2-issue-read.md | Footer BC count/style: "52 (representative set; BC-INDEX.md carries all 94)" → "64 individually-bodied (cumulative 106 incl. range-collapsed; see BC-INDEX.md)" | APPLIED |
+| NEW-R4-003 | LOW | bc-3-issue-write.md | Footer Last-updated narrative: prepended 2026-07-15 SOH-ATTACHMENTS-1 F2 entry; relabelled prior entry as "Previous update 2026-07-09". Count line (105/134) left unchanged — already updated by CREATE burst | APPLIED |
+| NEW-R4-002 | INFO | CANONICAL-COUNTS.md | ADR count update (27→28) — DEFERRED to state-manager; not assigned to spec-steward | DEFERRED |
+
+BC count unchanged: 651. Both guards exit 0.
+
+---
+
+## Adversary Pass 1 Fix Round A Finding Dispositions
+
+Source: adversary pass-1 findings. Human rulings: R1 (--replace-existing/--older-than/--dry-run IN scope, round B), R2 (delete y/N + --yes gate, round B), R3 (holdout scenarios, round B). Fix round A = corrections to existing BC text only; no new BCs; no count changes.
+
+| Finding | Severity | File(s) Touched | Status | What changed |
+|---------|----------|----------------|--------|-------------|
+| ADV-001 (HIGH) | HIGH | bc-3-issue-write.md, cross-cutting.md, prd-delta-576.md | APPLIED | SWEEP: all `jr attachment` → `jr issue attachment`; 9 hits in bc-3, 1 in cross-cutting, 9 in prd-delta (incl. 1 line-split residual); zero-residual confirmed |
+| ADV-002 (HIGH) | HIGH | bc-3-issue-write.md | APPLIED | BC-3.9.008 body rewritten: ID-only delete (no KEY positional), OQ-7 ruling noted, success echo updated to `"Deleted attachment <AID>."`, KEY-ownership paragraph removed; BC-3.9.010/013 Traces updated with OQ-7 reference |
+| ADV-005 (MED) | MED | bc-3-issue-write.md | APPLIED | BC-3.9.012 `--public` non-JSM error: `"--public is only supported on JSM issues."` → `"--public is only supported on Jira Service Management (JSM) issues."` |
+| ADV-006 (MED) | MED | bc-2-issue-read.md | APPLIED | BC-2.7.007: write-to-temp+atomic-rename clause; cleanup-on-error; EC-2.7.007-4 (error mid-stream → temp deleted, exit 1); EC-2.7.007-5 (Ctrl+C/SIGINT → temp deleted, exit 130) |
+| ADV-007 (MED) | MED | bc-2-issue-read.md | APPLIED | BC-2.7.012: ENOSPC, EACCES/read-only, other-OS-write-error rows added to error taxonomy table |
+| ADV-008 (MED) | MED | bc-3-issue-write.md | APPLIED | BC-3.9.001: retry-interaction clause — streaming non-cloneable; rebuild from file path per attempt; fresh ReaderStream; mid-stream 429 impossible; JiraClient retry loop not applicable; cite ADR-0017 |
+| ADV-009 (MED) | MED | bc-2-issue-read.md | APPLIED | BC-2.7.011 step 5: 255-byte cap → UTF-8-safe 214-byte cap (floor_char_boundary semantics); multi-byte truncation boundary test case added |
+| ADV-010 (MED) | MED | bc-2-issue-read.md | APPLIED | BC-2.7.011 step 5: cap 214 bytes (41-byte SHA-1 prefix); BC-2.7.010: combined-name length cap note (214 + 41 = 255 ≤ NAME_MAX) |
+| ADV-011 (MED) | MED | bc-3-issue-write.md | APPLIED | BC-3.9.001: allow_hyphen_values rationale; `--` separator note; EC-3.9.001-6 (stdin/`-` as FILE → exit 64) |
+| ADV-012 (MED) | MED | bc-2-issue-read.md | APPLIED | BC-2.7.007: selector-required (clap required-group) clause; bare `jr issue attachment download <KEY>` with no selector → clap exit 2 |
+| ADV-014 (LOW) | LOW | bc-2-issue-read.md | APPLIED | BC-2.7.003/004/005: filter composition with --all and --newest noted in each BC body |
+| ADV-015 (LOW) | LOW | bc-2-issue-read.md | APPLIED | BC-2.7.007: EC-2.7.007-6 (--out missing parent dir → exit 64); BC-2.7.008: EC-2.7.008-4 (out-dir exists but not-a-directory → exit 64), EC-2.7.008-5 (clarification) |
+| ADV-016 (LOW) | LOW | bc-3-issue-write.md | APPLIED | BC-3.9.012 issue-404 string: `"Issue <KEY> not found."` → `"Issue <KEY> not found or not accessible."` |
+| ADV-017 (LOW) | LOW | bc-3-issue-write.md | APPLIED | JSON Output Shape Contracts table: upload array row + delete single/bulk rows added; `--public` row stays deferred |
+| ADV-018 (LOW) | LOW | bc-2-issue-read.md | APPLIED | BC-2.7.002: contentUrl rename clause; thumbnail omitted note added to BC-2.7.001 and BC-2.7.002 |
+| ADV-019 (LOW) | LOW | bc-2-issue-read.md | APPLIED | BC-2.7.001: EC-2.7.001-3 (null/missing author → "(anonymous)" in table); BC-2.7.002: null author → `"author": null` JSON note |
+| ADV-020 (LOW) | LOW | bc-2-issue-read.md | APPLIED | BC-2.7.001: CLI flags enumeration clause (list surface); BC-2.7.007: CLI flags enumeration clause (download surface) |
+| ADV-021 (LOW) | LOW | bc-3-issue-write.md | APPLIED | BC-3.9.010: bulk-delete partial-failure non-atomicity stated; exit code follows HTTP error; per-AID error lines in human mode; no partial-success JSON shape |
+| ADV-022 (INFO) | INFO | bc-2-issue-read.md, bc-3-issue-write.md | APPLIED | BC-2.7.011: containment-check coverage/mutation exemption note (intentionally unreachable); BC-3.9.011: EJ-teardown obligation (must delete uploaded attachment; jsm_self_close alone insufficient) |
+| ADV-003 residue | INFO | prd-delta-576.md | APPLIED | Scope Note section added before Deferred Probe Obligations: R1 ruling — --replace-existing/--older-than/--dry-run IN scope for round B; NOT silently out of scope |
+
+**BC count unchanged: 651. Spec version unchanged at 1.3.44. Both guards exit 0.**
+
+**Zero-residual proof for ADV-001:** `grep -rn "\bjr attachment\b" .factory/specs/prd/ .factory/phase-f2-spec-evolution/prd-delta-576.md | grep -v "jr issue attachment"` → (no output)

@@ -1,8 +1,8 @@
 ---
 context: bc-3
 title: "Issue Write (create/edit/move/assign/comment/link/open/remote-link)"
-total_bcs: 134   # cumulative claim (incl. range-collapsed); definitional_count below is individually-bodied headings
-definitional_count: 105   # count of `#### BC-` headings in this file
+total_bcs: 140   # cumulative claim (incl. range-collapsed); definitional_count below is individually-bodied headings
+definitional_count: 111   # count of `#### BC-` headings in this file
 last_updated: 2026-07-15
 source_pass: 3
 trace: |
@@ -83,12 +83,13 @@ trace: |
   - F2 gate closure DEC-170 fix round 49 (2026-07-11, spec v1.3.40): BC-3.5.012 EC-3.5.012-5 items (h)+(i) added — (h) docs/specs/json-output-shapes.md registry rows for all four comment-CRUD JSON shapes (VP-577-009/023 BTreeSet pins as source of truth); (i) docs/specs/comment-crud.md feature spec creation obligation following issue-move-resolution.md precedent (ADR-0004); BC-3.5.012 Trace updated; VP count unchanged (30)
   - v1.3.41 — DEC-174 mechanism-rationale correction in BC-3.5.003/006 delivery obligations + VP-577-030 (interact_on → ratified manual stderr-prompt equivalent); no behavioral change (2026-07-13, spec v1.3.41): BC-3.5.003 + BC-3.5.006 delivery-task obligations reworded — false claim that `dialoguer::interact_on(&Term::stderr())` reads from stdin replaced with ratified mechanism (DEC-174: `eprint!` prompt to stderr + `io::stdin().lock().read_line()`; `_interact_on` returns `Err(NotConnected)` on piped stderr before reading any input; empirically proven in F4); VP-577-030 updated to reference ratified mechanism; no BC/EC/VP behavioral semantics changed; BC and VP counts unchanged (120/30)
   - v1.3.42 — BC-3.5.006 deferred EJ probe obligation SATISFIED (2026-07-15): scheduled nightly run 29398774009 (2026-07-15T07:51Z, develop @ 56d5126, conclusion=success) executed `tests/e2e_live.rs::test_e2e_comment_edit_visibility_merge_semantics` green — MERGE verdict (Scenarios 1+3) and PRESERVED verdict (Scenario 2) confirmed live against EJ JSM project; delivery-task obligation item (b) marked SATISFIED; RESOLVED blocks in BC-3.5.006 body updated; no BC/EC/VP behavioral semantics changed; counts unchanged (120/30)
+  - v1.3.45 — adversary pass-1 fix rounds A+B (2026-07-15, SOH-ATTACHMENTS-1): round A 20 corrections to existing BC text (ADV-001..022: command path, delete signature, write-to-temp, retry-rebuild, 214-byte UTF-8 truncation, selector-required, scope clarifications, error-string normalization, non-JSM terminology); round B +6 BCs (BC-3.9.015..020: delete confirmation gate DEC-174, bulk --older-than always-yes + clap mutual-exclusion, --replace-existing non-atomic JRACLOUD-96384/-78388, --replace-existing zero-match idempotent, --older-than duration.rs + chrono, --dry-run preview); scope expansion per human ruling R1/R2; total_bcs 134→140 / definitional_count 105→111
   - v1.3.43 — SOH-ATTACHMENTS-1 F2 addition (2026-07-15, DEC-179): Section 3.9 Attachment Write added (BC-3.9.001..014) — 14 individually-bodied BCs covering platform upload POST (X-Atlassian-Token, streaming, no client-size cap, 413/400), JSM default (internal by default P2-4a), --public two-step (DEC-174 gate), --internal two-step (OQ-9 non-JSM silent no-op), --public non-JSM exit 64, temporaryAttachmentId TTL, post-upload echo (P2-3c deferred S5), attachment delete (DEC-168/BC-3.5.004 precedent), JSON output shapes, error taxonomies, confirmation gate (eprint!+read_line, NOT dialoguer); counts: total_bcs 120→134 / definitional_count 91→105 / VP count unchanged (30)
 ---
 
 # BC-3 — Issue Write
 
-134 behavioral contracts across 9 subdomains: Assign (3.1), Move/Transition (3.2),
+140 behavioral contracts across 9 subdomains: Assign (3.1), Move/Transition (3.2),
 Create (3.3), Edit+Open (3.4), Comment (3.5), Links (3.6), Remote links (3.7),
 JSM Request Create + Platform-Path Inverse Warnings + Auth-Conditional 401 Hints (3.8),
 Attachment Write (3.9).
@@ -3203,11 +3204,17 @@ When `--markdown` is absent, the guard does NOT fire — `--field description=va
 | `unlink` | `{"count": 2, "unlinked": true}` | `count: 0` when no match |
 | `remote-link` | `{"id": 10000, "key": "TEST-1", "self": <url>, "title": <title>, "url": <url>}` | 5 keys |
 | `create` | `{"key": "FOO-123"}` | minimal |
+| `attachment upload` (platform POST path) | `[{"id":"10042","filename":"foo.pdf","mimeType":"application/pdf","self":"...","size":43008,"created":"2026-07-15T..."}]` | array; one element per file; from server response; BC-3.9.009 |
+| `attachment delete` (single AID) | `{"deleted":true,"id":"<AID>"}` | 2 keys alphabetical; BC-3.9.010 |
+| `attachment delete` (bulk AIDs) | `{"count":N,"deleted":true,"ids":["<AID1>","<AID2>",...]}` | 3 keys alphabetical; BC-3.9.010 |
+| `attachment delete` (cancel / --no) | `{"cancelled":true,"deleted":false}` | 2 keys alphabetical; BC-3.9.015 |
+| `attachment delete --dry-run` (preview) | `{"attachments":[...],"dryRun":true,"ids":[...]}` | 3 keys alphabetical; BC-3.9.020 |
+| `attachment upload --public` | (P2-3c deferred — update after S5 live-capture; see BC-3.9.011) | shape TBD |
 
-Sources: `src/cli/issue/snapshots/jr__cli__issue__json_output__tests__*.snap`; BC-1104..BC-1112 (R4)
+Sources: `src/cli/issue/snapshots/jr__cli__issue__json_output__tests__*.snap`; BC-1104..BC-1112 (R4); BC-3.9.009, BC-3.9.010, BC-3.9.015, BC-3.9.020 (SOH-ATTACHMENTS-1 F2 additions)
 
 
-### 3.9 Attachment Write (14 BCs: BC-3.9.001..BC-3.9.014)
+### 3.9 Attachment Write (20 BCs: BC-3.9.001..BC-3.9.020)
 
 ---
 
@@ -3217,7 +3224,7 @@ Sources: `src/cli/issue/snapshots/jr__cli__issue__json_output__tests__*.snap`; B
 **Source**: `src/cli/issue/attachments.rs::handle_attachment_upload` (implementation pending — story S3); `src/api/jira/attachments.rs::upload_attachments` (implementation pending — story S3); `tests/attachment_upload.rs` (implementation pending — story S3)
 **Subject**: Issue write (attachment upload — platform path)
 
-`jr attachment upload <KEY> <FILE>...` issues `POST /rest/api/3/issue/{key}/attachments` with a `multipart/form-data` body. Each file is a separate `file`-named part (the Jira API requires the field name `"file"` — any other name produces a 400). The header `X-Atlassian-Token: no-check` MUST be included on every upload request; Jira's CSRF protection rejects attachment uploads without it (HTTP 403 "Websudo required"). This header is load-bearing.
+`jr issue attachment upload <KEY> <FILE>...` issues `POST /rest/api/3/issue/{key}/attachments` with a `multipart/form-data` body. Each file is a separate `file`-named part (the Jira API requires the field name `"file"` — any other name produces a 400). The header `X-Atlassian-Token: no-check` MUST be included on every upload request; Jira's CSRF protection rejects attachment uploads without it (HTTP 403 "Websudo required"). This header is load-bearing.
 
 Files are streamed from disk using `tokio_util::io::ReaderStream` — bytes are not buffered in memory before transmission. This allows uploads of large files without exhausting process memory.
 
@@ -3227,6 +3234,10 @@ Multiple files supplied on one invocation are uploaded in a single multipart POS
 
 On HTTP 400 (bad request): exit 1; the Jira error body is surfaced on stderr verbatim (may indicate unsupported MIME type, quota exceeded, malformed part, etc.).
 
+**Retry-interaction for streaming uploads (ADR-0017)**: `reqwest`'s `RequestBuilder::try_clone()` returns `None` for multipart requests containing streamed `ReaderStream` bodies — the stream cursor is not rewindable after a partial send. Consequently, the standard `JiraClient` retry loop does NOT apply to upload requests. Any 429/Retry-After handling for `POST /rest/api/3/issue/{key}/attachments` MUST rebuild the entire multipart request from the file path on each attempt: a fresh `tokio::fs::File::open(path)` and a new `ReaderStream` per retry. A mid-stream 429 is not possible because Jira processes the response only after the full body is received. The upload handler in `src/api/jira/attachments.rs::upload_attachments` must implement its own per-attempt request construction; it MUST NOT delegate retry to the generic `JiraClient` retry wrapper. Detail: ADR-0017.
+
+**File argument form (`allow_hyphen_values`)**: The `<FILE>...` positional arguments carry `allow_hyphen_values = true` (CLAUDE.md convention for write-command free-text inputs). This allows file paths beginning with a dash (e.g., `-file.pdf`) without being misinterpreted as flags. Use `--` before the first `<FILE>` to unambiguously terminate flag parsing when paths start with `--`. Stdin upload via `-` is NOT supported in this slice.
+
 A successful upload returns HTTP 200 with a JSON array of attachment objects. Each element contains at minimum: `"id"` (string), `"filename"` (string), `"self"` (URL string), `"size"` (integer, bytes), `"mimeType"` (string), `"created"` (ISO 8601 string). Human (table) output: one row per attachment, columns Filename / Size / ID / Created. JSON output: the array, pretty-printed via `output::render_json` (#526 invariant).
 
 Output channel: Profile 4 (Symmetric) — stdout for JSON or success data, stderr for errors and progress hints.
@@ -3235,6 +3246,8 @@ Output channel: Profile 4 (Symmetric) — stdout for JSON or success data, stder
 **EC-3.9.001-2** (multi-file): Multiple `<FILE>` arguments → single multipart POST with multiple `file` parts; server returns an array with one element per file.
 **EC-3.9.001-3** (empty file): A zero-byte file is valid; `jr` does not reject it client-side. Server behavior depends on Jira configuration.
 **EC-3.9.001-4** (file path not found): If any supplied `<FILE>` path does not resolve to a readable file → exit 64 before any HTTP; stderr `"file not found: <path>"`. The check is performed before any multipart construction.
+
+**EC-3.9.001-6** (stdin or `-` as FILE): If any `<FILE>` argument is the literal string `"-"`, exit 64 before any HTTP: `"stdin upload is not supported; provide a file path."` The `-` shorthand for stdin is explicitly rejected in this slice.
 
 **EC-3.9.001-5** (X-Atlassian-Token regression guard — SEC-576-005 CWE-352): A wiremock integration test MUST assert that every `POST /rest/api/3/issue/{key}/attachments` upload request includes the header `X-Atlassian-Token: no-check`. A regression omitting this header produces HTTP 403 silently in live testing; the wiremock test catches it at CI time.
 
@@ -3250,7 +3263,7 @@ Output channel: Profile 4 (Symmetric) — stdout for JSON or success data, stder
 **Source**: `src/cli/issue/attachments.rs::handle_attachment_upload` (implementation pending — story S3)
 **Subject**: Issue write (attachment upload — JSM default path)
 
-When `jr attachment upload <KEY> <FILE>...` is issued against a JSM issue key and neither `--public` nor `--internal` is specified, `jr` uses the platform POST endpoint (`POST /rest/api/3/issue/{key}/attachments`) — the same path as BC-3.9.001.
+When `jr issue attachment upload <KEY> <FILE>...` is issued against a JSM issue key and neither `--public` nor `--internal` is specified, `jr` uses the platform POST endpoint (`POST /rest/api/3/issue/{key}/attachments`) — the same path as BC-3.9.001.
 
 Per research finding P2-4a (`.factory/research/issue-576-attachments-api-2026-07-15.md` §P2-4a), platform-POST attachments on a JSM issue are INTERNAL by default — not customer-visible on the service portal. This is a safe default: an agent accidentally uploading a sensitive file does not immediately expose it to the customer.
 
@@ -3271,7 +3284,7 @@ The platform POST path is the default for ALL issue keys regardless of project t
 **Source**: `src/cli/issue/attachments.rs::handle_attachment_upload` (implementation pending — story S5); `src/api/jsm/attachments.rs::attach_temporary_file` (implementation pending — story S5); `src/api/jsm/attachments.rs::post_request_attachment` (implementation pending — story S5); `tests/attachment_upload_jsm.rs` (implementation pending — story S5)
 **Subject**: Issue write (attachment upload — JSM public path)
 
-When `--public` is supplied, `jr attachment upload <KEY> <FILE>... --public` routes to the servicedeskapi two-step flow:
+When `--public` is supplied, `jr issue attachment upload <KEY> <FILE>... --public` routes to the servicedeskapi two-step flow:
 
 **Step 1 — temporaryAttachmentId per file**: For each `<FILE>`, POST `/rest/servicedeskapi/servicedesk/{sdId}/attachTemporaryFile` with the file as a multipart body. Obtains one `temporaryAttachmentId` per file. The `sdId` is resolved via the serviceDeskId lookup chain: `GET /rest/api/3/issue/{key}` → `fields.project.key` → paginated `GET /rest/servicedeskapi/servicedesk` → match `projectKey`. This mapping is cached per `(profile, projectKey)` with a 7-day TTL (BC-X.8.010). The `POST .../attachTemporaryFile` request MUST include `X-Atlassian-Token: no-check` (same CSRF requirement as BC-3.9.001; SEC-576-005 parallel — a wiremock test MUST assert this header is present on step-1 POSTs).
 
@@ -3394,22 +3407,20 @@ After a successful upload, `jr` echoes metadata from the server response directl
 **Source**: `src/cli/issue/attachments.rs::handle_attachment_delete` (implementation pending — story S4); `src/api/jira/attachments.rs::delete_attachment` (implementation pending — story S4); `tests/attachment_delete.rs` (implementation pending — story S4)
 **Subject**: Issue write (attachment delete)
 
-`jr attachment delete <KEY> <AID>` issues `DELETE /rest/api/3/attachment/{id}` where `<AID>` is the attachment's numeric ID string.
+`jr issue attachment delete <AID>...` issues `DELETE /rest/api/3/attachment/{id}` for each supplied `<AID>`. One or more numeric attachment IDs may be supplied as positional arguments; for a single AID the command issues one DELETE. **OQ-7 ruling (DEC-179)**: the delete command takes only attachment ID(s) as positional arguments — there is NO `<KEY>` argument. The server enforces issue ownership; no client-side KEY validation is performed.
 
-**HTTP 204 (success)**: exit 0. Human output: `"Deleted attachment <AID> from <KEY>."`. JSON output (with `--output json`): see BC-3.9.010.
+**HTTP 204 (success)**: exit 0. Human output: `"Deleted attachment <AID>."`. JSON output (with `--output json`): see BC-3.9.010.
 
 **HTTP 404 (attachment not found)**: exit 64. The Jira error body is surfaced on stderr (NOT silent exit 0). This is the DEC-168 precedent: 404 on a targeted delete of a specific resource ID means the caller provided a wrong ID — the missing attachment is a user error, not an already-completed idempotent operation. The Jira error body typically contains the reason (e.g., "Attachment does not exist") and provides actionable context. Direct precedent: BC-3.5.004 (comment delete 404 surfaces body + exit 64, same reasoning).
 
-The `<KEY>` argument is used for display (confirmation message) and for issue existence validation only; the actual `DELETE` call uses only the attachment `id`. `jr` does NOT validate that the attachment belongs to the specified `<KEY>` before issuing the DELETE — the server enforces ownership. If the attachment belongs to a different issue, the server returns 404 or 403; `jr` surfaces the response normally.
-
 Output channel: Profile 4 (Symmetric) — stdout for success data/JSON, stderr for errors.
 
-**EC-3.9.008-1** (valid AID, 204): exit 0; human echo; JSON `{"deleted":true,"id":"<AID>"}`.
+**EC-3.9.008-1** (valid AID, 204): exit 0; human echo `"Deleted attachment <AID>."`; JSON `{"deleted":true,"id":"<AID>"}`.
 **EC-3.9.008-2** (AID not found, 404): exit 64; Jira error body on stderr.
-**EC-3.9.008-3** (AID belongs to different issue): Server returns 404 or 403; `jr` surfaces the response error without special-casing.
+**EC-3.9.008-3** (server returns 404/403 due to ownership mismatch): `jr` surfaces the server response without special-casing.
 **EC-3.9.008-4** (insufficient permissions, 403): exit 1; Jira error body surfaced on stderr.
 
-**Trace**: F2 spec evolution (2026-07-15 SOH-ATTACHMENTS-1, DEC-179); DEC-168 (404 on delete = exit 64, NOT silent exit 0); BC-3.5.004 (comment delete 404 exit-64 + body-surface precedent)
+**Trace**: F2 spec evolution (2026-07-15 SOH-ATTACHMENTS-1, DEC-179 OQ-7 ruling — ID-only delete, no KEY positional); DEC-168 (404 on delete = exit 64, NOT silent exit 0); BC-3.5.004 (comment delete 404 exit-64 + body-surface precedent)
 
 ---
 
@@ -3419,7 +3430,7 @@ Output channel: Profile 4 (Symmetric) — stdout for success data/JSON, stderr f
 **Source**: `src/cli/issue/attachments.rs::handle_attachment_upload` (implementation pending — story S3); `output::render_json` (existing)
 **Subject**: Issue write (attachment upload — JSON output shape)
 
-When `--output json` is supplied, `jr attachment upload` returns a JSON array where each element represents one successfully uploaded file, sourced from the Jira platform POST response.
+When `--output json` is supplied, `jr issue attachment upload` returns a JSON array where each element represents one successfully uploaded file, sourced from the Jira platform POST response.
 
 Each element contains at minimum: `"id"` (string), `"filename"` (string), `"self"` (string URL), `"size"` (integer, bytes), `"mimeType"` (string), `"created"` (ISO 8601 string). The `"author"` sub-object may be present depending on the Jira response schema.
 
@@ -3440,10 +3451,10 @@ The array is pretty-printed via `output::render_json` or `output::print_output` 
 **Source**: `src/cli/issue/attachments.rs::handle_attachment_delete` (implementation pending — story S4); `output::render_json` (existing)
 **Subject**: Issue write (attachment delete — JSON output shape)
 
-When `--output json` is supplied, `jr attachment delete` returns:
+When `--output json` is supplied, `jr issue attachment delete` returns:
 
 - **Single AID delete**: `{"deleted": true, "id": "<AID>"}` — two keys, alphabetical (BTreeMap-ordered per project convention).
-- **Bulk delete** (multiple `<AID>` arguments): `{"count": N, "deleted": true, "ids": ["<AID1>", "<AID2>", ...]}` — `count` = number of successfully deleted attachments; `ids` = AID strings in the order supplied on the command line. If any single DELETE fails mid-batch, `jr` surfaces the first failure with the error JSON shape (from `JrError`) and stops; no partial-success shape is emitted.
+- **Bulk delete** (multiple `<AID>` arguments): `{"count": N, "deleted": true, "ids": ["<AID1>", "<AID2>", ...]}` — `count` = number of successfully deleted attachments; `ids` = AID strings in the order supplied on the command line. If any single DELETE fails mid-batch, `jr` stops at the first failure and surfaces the error. **Non-atomic, non-reversible**: AIDs already deleted by earlier iterations are NOT reversed. The exit code follows the HTTP response of the failing AID: 404 → exit 64 (`JrError::UserError`), 401 → exit 2, 403/5xx → exit 1. In human mode: the per-AID error message is written to stderr; in JSON mode: the `JrError` error shape is emitted to stdout, NOT the `{"count":N,...}` success shape. No partial-success envelope is emitted.
 
 All shapes are pretty-printed via `output::render_json` (#526 invariant). On error (404, 401, etc.): the JSON error shape from `JrError`, NOT the success shape.
 
@@ -3452,7 +3463,7 @@ All shapes are pretty-printed via `output::render_json` (#526 invariant). On err
 **EC-3.9.010-3** (error path): `JrError` JSON shape; not the deleted shape.
 **EC-3.9.010-4** (partial bulk failure): first failure stops batch; error JSON for the failing AID; already-deleted AIDs are not reversed.
 
-**Trace**: F2 spec evolution (2026-07-15 SOH-ATTACHMENTS-1, DEC-179); JSON render invariant #526; BC-3.9.008 (delete semantics); BTreeMap-key ordering convention (established by BC-3.4.013, `issue edit` JSON shape)
+**Trace**: F2 spec evolution (2026-07-15 SOH-ATTACHMENTS-1, DEC-179 OQ-7 ruling — ID-only delete, no KEY positional); JSON render invariant #526; BC-3.9.008 (delete semantics); BTreeMap-key ordering convention (established by BC-3.4.013, `issue edit` JSON shape)
 
 ---
 
@@ -3469,6 +3480,8 @@ This BC is a **deferred-probe contract**. The response schema from `POST /rest/s
 2. Update this BC body with the confirmed schema, including the key names and types in the response array/object.
 3. Update BC-3.9.007 EC-3.9.007-2 with the confirmed shape.
 4. Add a row to the `## JSON Output Shape Contracts` table at the end of this file for `attachment upload --public`.
+
+**EJ-teardown obligation**: The E2E probe test that exercises this BC MUST delete the uploaded attachment after capture (via `jr issue attachment delete <AID>`), or use a disposable ticket. `jsm_self_close` alone closes the JSM ticket but leaves the attachment file as customer-visible residue — the attachment persists independently of the ticket status. Failure to clean up leaves a PII-risk artifact on the `EJ` test portal.
 
 **Known constraint regardless of shape**: The output MUST route through `output::render_json` (#526 invariant). No direct `serde_json::to_string_pretty` calls.
 
@@ -3487,13 +3500,13 @@ This BC is a **deferred-probe contract**. The response schema from `POST /rest/s
 **Source**: `src/cli/issue/attachments.rs::handle_attachment_upload` (implementation pending — story S3/S5); `src/error.rs::JrError` (existing)
 **Subject**: Issue write (attachment upload — error taxonomy)
 
-Error exits for `jr attachment upload`:
+Error exits for `jr issue attachment upload`:
 
 | Error condition | HTTP / local | Exit code | Stderr content |
 |---|---|---|---|
 | File path not found | local (before any HTTP) | 64 | `"file not found: <path>"` |
-| Issue key not found | 404 on issue meta fetch | 64 | `"Issue <KEY> not found."` |
-| `--public` on non-JSM issue | local (after meta fetch) | 64 | `"--public is only supported on JSM issues."` (BC-3.9.005) |
+| Issue key not found | 404 on issue meta fetch | 64 | `"Issue <KEY> not found or not accessible."` |
+| `--public` on non-JSM issue | local (after meta fetch) | 64 | `"--public is only supported on Jira Service Management (JSM) issues."` (BC-3.9.005) |
 | Non-interactive without `--yes` (`--public`) | local | 64 | hint to use `--yes` (BC-3.9.014) |
 | Attachment too large | 413 | 1 | `"Attachment too large: the file exceeds the server-configured limit."` |
 | CSRF header missing (should not happen) | 403 from Jira | 1 | `"API error (403)"` |
@@ -3516,7 +3529,7 @@ Error exits for `jr attachment upload`:
 **Source**: `src/cli/issue/attachments.rs::handle_attachment_delete` (implementation pending — story S4); `src/error.rs::JrError` (existing)
 **Subject**: Issue write (attachment delete — error taxonomy)
 
-Error exits for `jr attachment delete`:
+Error exits for `jr issue attachment delete`:
 
 | Error condition | HTTP | Exit code | Stderr content |
 |---|---|---|---|
@@ -3532,7 +3545,7 @@ Error exits for `jr attachment delete`:
 **EC-3.9.013-2** (403): exit 1; Jira body on stderr.
 **EC-3.9.013-3** (non-numeric AID): sent verbatim; server 400/404 governs.
 
-**Trace**: F2 spec evolution (2026-07-15 SOH-ATTACHMENTS-1, DEC-179); DEC-168 (404 delete = exit 64 + surface body); BC-3.5.004 (comment delete precedent); BC-3.9.008 (delete contract)
+**Trace**: F2 spec evolution (2026-07-15 SOH-ATTACHMENTS-1, DEC-179 OQ-7 ruling — ID-only delete, no KEY positional); DEC-168 (404 delete = exit 64 + surface body); BC-3.5.004 (comment delete precedent); BC-3.9.008 (delete contract)
 
 ---
 
@@ -3542,7 +3555,7 @@ Error exits for `jr attachment delete`:
 **Source**: `src/cli/issue/attachments.rs::handle_attachment_upload` (implementation pending — story S5)
 **Subject**: Issue write (attachment upload — confirmation gate mechanics)
 
-The confirmation gate for `jr attachment upload --public` uses the DEC-174 interactive-prompt mechanism: `eprint!` (NOT `eprintln!`) to stderr, followed by `io::stdin().lock().read_line(&mut buf)`. `dialoguer::Confirm` MUST NOT be used — it returns `Err(NotConnected)` on piped stderr and fails before reading user input.
+The confirmation gate for `jr issue attachment upload --public` uses the DEC-174 interactive-prompt mechanism: `eprint!` (NOT `eprintln!`) to stderr, followed by `io::stdin().lock().read_line(&mut buf)`. `dialoguer::Confirm` MUST NOT be used — it returns `Err(NotConnected)` on piped stderr and fails before reading user input.
 
 **Prompt text** (stderr, trailing space, no newline — `eprint!`, not `eprintln!`):
 - N ≤ 3 files: `"Upload <filename1>, <filename2>, ... to <KEY> as customer-visible (public)? [y/N] "`
@@ -3568,6 +3581,190 @@ The confirmation gate for `jr attachment upload --public` uses the DEC-174 inter
 
 ---
 
-## Total BCs in this file: 105 individually-bodied (cumulative 134 incl. range-collapsed; see BC-INDEX.md)
+---
 
-_Last updated 2026-07-15 (SOH-ATTACHMENTS-1 F2, DEC-179, issues #576+#585): +14 BCs (BC-3.9.001..BC-3.9.014) — attachment upload platform POST (BC-3.9.001: multipart, `X-Atlassian-Token: no-check`, streaming, no client-side cap, 413/400 handling), JSM upload no-flag path (BC-3.9.002: platform POST = internal by default, P2-4a), `--public` servicedeskapi two-step + DEC-174 confirmation gate (BC-3.9.003), `--internal` two-step public:false + OQ-9 non-JSM silent no-op (BC-3.9.004), `--public` non-JSM exit 64 (BC-3.9.005), temporaryAttachmentId ~1h TTL + stale-ID self-healing (BC-3.9.006, BC-X.8.010), post-upload echo + P2-3c deferred probe obligation (BC-3.9.007, BC-3.9.011), attachment delete DELETE/id + 404 = exit 64 + surface body (BC-3.9.008, DEC-168 precedent), JSON shapes (BC-3.9.009..010), upload/delete error taxonomies (BC-3.9.012..013), `--public` confirmation gate mechanics eprint!+read_line NOT dialoguer (BC-3.9.014, DEC-174); Section 3.9 header added (14 contracts); spec versions v1.3.43 (BCs) + v1.3.44 (security fix round, SEC-576-001..007). Previous update 2026-07-09 (issue #577 SOH-COMMENT-CRUD-1 F2, DEC-168): +11 BCs (BC-3.5.002..BC-3.5.012) — comment delete (BC-3.5.002..BC-3.5.004: endpoint/exit-codes, confirmation, 404-exit-64+body-surface), comment edit (BC-3.5.005..BC-3.5.009: body-only-PUT invariant, --internal wire, --public wire+always-confirm, --public confirmation gate, body sources), comment view (BC-3.5.010: GET+expand=properties, table+JSON, 404-exit-64), mutual exclusion (BC-3.5.011), CLI breaking change (BC-3.5.012: comment→subcommand group, old flat form → clap error with migration hint); §3.5 header updated to 12 contracts. Previous update 2026-06-30 (BC-subclause-pass F2): +2 BCs (BC-3.4.020..021) — BC-3.4.020 (`issue edit --label` routing fork: single-key PUT bare-string vs 2+ key bulk POST `{"name":...}` objects; BUG-LABEL-400), BC-3.4.021 (`issue edit --dry-run` `plannedChanges` output structure + `--output json` schema `{dryRun, issues, plannedChanges}`; intentionally simplified preview shapes); Section 3.4 header updated to 21 contracts. Previous update 2026-06-08 (fix-bulk-transition-schema F2): +1 BC (BC-3.2.014) — BC-3.2.014 (multi-key bulk move `bulkTransitionInputs` nested wrapper wire schema; documents correctness bug fix commit acca854; live run 27156639337); Section 3.2 header updated to 14 contracts. Previous update 2026-06-03 (jsm-resolution-required F2): +1 BC (BC-3.2.013) — BC-3.2.013 (proactive resolution enforcement on done-category transitions: REQUIRED and OPTIONAL branches, --no-resolution flag, isConditional coverage, conservative gate, BC-3.2.009 backstop retained; single-key only; breaking change); Section 3.2 header updated to 13 contracts. Previous update 2026-06-01 (issue #331 F2): +2 BCs (BC-3.4.018..019) — BC-3.4.018 (multi-key `--type` bulk wire shape: camelCase `issueType` key, `issueTypeId` string value, name resolved via createmeta issuetypes), BC-3.4.019 (cross-project guard: keys spanning >1 project exit 64 before any API call); Section 3.4 header updated to 19 contracts. Previous update 2026-05-27 (issue #421 F2): BC-3.4.015 invariant 5 rewritten (two-stage i64-first strategy); EC-3.4.015-4b added (i64-boundary regression pin); no BC count changes (103/74 unchanged). Previous update (2026-05-25 issue #407 F2): +EC-3.4.017-14 — mechanical enforcement meta-test for BC-3.4.017 invariant 2 (conflict block completeness via `test_label_conflict_block_lists_every_relevant_flag`); BC-3.4.017 invariant 2 cross-reference added; no BC count changes (103/74 unchanged). Previous update (2026-05-22 issue #396 F2): +3 BCs (BC-3.4.015..017) — BC-3.4.015 (`issue edit --field` string/number/date/datetime/user field single-key path, with editmeta validation, fields.json cache, and dry-run invariants), BC-3.4.016 (`issue edit --field` single-select `option` field), BC-3.4.017 (`--field` multi-key/`--jql` rejection Gate A and flag-overlap Gate B); Section 3.4 header updated to 17 contracts. Previous update (2026-05-21 issue #398 F2): +3 BCs (BC-3.4.012..014) — BC-3.4.012 (issue edit table-mode success echo), BC-3.4.013 (issue edit JSON-mode success echo with changed_fields), BC-3.4.014 (issue create table-mode all-fields echo (broadened from team-only at the 2026-05-22 human-gate to mirror BC-3.4.012)); BC-3.4.003 Success output cross-reference added; Section 3.4 header updated to 14 contracts. Previous update (2026-05-20 issue #388): +2 BCs (BC-3.4.010..011): BC-3.4.010 (cross-hierarchy `edit --type` 400 → CROSS_HIERARCHY_HINT citing JRACLOUD-27893) and BC-3.4.011 (same-hierarchy/indeterminate `edit --type` 400 → typo hint or raw error, no JRACLOUD-27893 hint) added in F2 delta (issue #388). BC-3.4.003 Errors cross-reference updated (annotation only, no behavioral change). Section 3.4 header updated to 11 contracts. Previous update (2026-05-20 issue #385): +2 BCs (BC-3.8.016..017); BC-3.8.002/010/011 modified._
+#### BC-3.9.015: `attachment delete <AID>` interactive confirmation gate — `eprint!+read_line` (DEC-174); non-interactive → exit 64 + `--yes` hint; `--yes` bypasses; cancel shape `{"cancelled":true,"deleted":false}`
+
+**Confidence**: HIGH
+**Source**: `src/cli/issue/attachments.rs::handle_attachment_delete` (implementation pending — story S4)
+**Subject**: Issue write (attachment delete — single-ID confirmation gate)
+
+`jr issue attachment delete <AID>` requires explicit user confirmation before issuing `DELETE /rest/api/3/attachment/{id}`. This mirrors the `comment delete` gate pattern (BC-3.5.002, BC-3.5.003, DEC-174). The gate fires on every single-ID delete; `--yes` is the non-interactive bypass.
+
+**Gate mechanics (DEC-174 canonical pattern)**:
+
+1. **Interactive TTY path** (stdin is a TTY AND `--no-input` is absent AND `--yes` is absent): write the prompt to stderr using `eprint!` (NOT `eprintln!`) with a trailing space and no newline: `"Delete attachment <filename> (<AID>)? [y/N] "`. Where `<filename>` is retrieved via `GET /rest/api/3/attachment/{id}` (one extra GET before the prompt to fetch display metadata). Read one line via `io::stdin().lock().read_line(&mut buf)`. Accepted affirmative responses (case-insensitive, after trim): `"y"`, `"yes"`. Any other value including empty string (Enter alone) or EOF (Ctrl+D, resulting in `Err`) is treated as cancellation.
+2. **Non-interactive path** (`--no-input` OR stdin not a TTY): DO NOT present prompt. Exit 64 immediately; stderr: `"Use --yes to confirm deletion without a prompt."` (or equivalent `--yes` hint phrasing). No `DELETE` API call is made.
+3. **`--yes` flag**: bypasses the gate entirely. No stdin read. `DELETE` proceeds directly.
+4. **`--yes` on a non-gated operation**: silent no-op per DEC-169 leniency — `--yes` is accepted and ignored when no confirmation gate is triggered.
+
+**Cancel path** (interactive 'n', empty, or EOF):
+- Human mode: exit 0; stderr `"Deletion cancelled."`.
+- JSON mode (`--output json`): exit 0; stdout `{"cancelled": true, "deleted": false}` via `output::render_json` (#526 invariant). No `id` field in the cancel envelope — mirrors the comment delete cancel shape (BC-3.5.003).
+
+**Confirm path** (user selects Y, or `--yes` supplied): `DELETE /rest/api/3/attachment/{id}` is issued; success per BC-3.9.008; error taxonomy per BC-3.9.013.
+
+**Metadata-fetch failure**: if the pre-prompt `GET /rest/api/3/attachment/{id}` returns 404, exit 64 immediately: `"Attachment <AID> not found or not accessible."` — mirrors BC-3.9.013 / BC-3.9.008 pre-flight guard; no DELETE issued.
+
+**Output channel invariant**: all gate prompts are written to STDERR only. STDOUT is clean — no prompt text; `--output json` piping is unaffected.
+
+**EC-3.9.015-1** (interactive, 'y'): gate consumed from stdin; DELETE issued; success per BC-3.9.008/BC-3.9.010.
+**EC-3.9.015-2** (interactive, 'n' or empty): exit 0; `"Deletion cancelled."` to stderr; JSON: `{"cancelled":true,"deleted":false}`.
+**EC-3.9.015-3** (non-interactive, no `--yes`): exit 64; stderr `--yes` hint; NO DELETE issued.
+**EC-3.9.015-4** (`--yes`, interactive or non-interactive): gate skipped; DELETE proceeds immediately; no stdin read.
+**EC-3.9.015-5** (EOF / Ctrl+D on prompt read): `Err` from `read_line` → `JrError::Interrupted`; exit 130.
+**EC-3.9.015-6** (metadata GET returns 404): exit 64; `"Attachment <AID> not found or not accessible."`; no DELETE issued.
+
+**Trace**: F2 spec evolution (2026-07-15 SOH-ATTACHMENTS-1, DEC-179); impact-boundary-576.md R3.3 (human ruling: y/N + --yes gate for single-ID delete); BC-3.5.002/BC-3.5.003 (comment delete mirror pattern); DEC-174 (eprint!+read_line canonical interactive-prompt mechanism); DEC-169 (--yes leniency on non-gated operations); adversary pass-1 human ruling R2 (2026-07-15)
+
+---
+
+#### BC-3.9.016: `attachment delete --issue <KEY> --older-than <duration>` always requires `--yes` (no interactive prompt for bulk); missing `--yes` → exit 64; clap mutual-exclusion between positional-AID form and `--issue`/`--older-than` form
+
+**Confidence**: HIGH
+**Source**: `src/cli/issue/attachments.rs::handle_attachment_delete` (implementation pending — story S4)
+**Subject**: Issue write (attachment delete — bulk --older-than mandatory --yes gate)
+
+The `--issue <KEY> --older-than <duration>` bulk-delete path ALWAYS requires explicit `--yes` — no interactive prompt is offered for bulk deletion. `--yes` is mandatory-explicit for this path (same rationale as bulk operations elsewhere: the scope of a bulk destructive operation must be explicitly acknowledged upfront).
+
+**`--yes` requirement:**
+
+- `jr issue attachment delete --issue FOO-1 --older-than 7d` (no `--yes`) → exit 64; stderr: `"--older-than requires --yes to confirm bulk deletion."`. No API calls made.
+- `jr issue attachment delete --issue FOO-1 --older-than 7d --yes` → proceeds; see BC-3.9.019 for duration parsing and wire behavior.
+- `jr issue attachment delete --issue FOO-1 --older-than 7d --dry-run` (no `--yes`) → `--dry-run` takes precedence over the `--yes` gate — dry-run is read-only (no mutations), so `--yes` is NOT required for a dry-run preview. See BC-3.9.020 for dry-run output shape.
+- `jr issue attachment delete --issue FOO-1 --older-than 7d --dry-run --yes` → `--dry-run` governs; `--yes` accepted silently (DEC-169 leniency); no mutations.
+
+**clap mutual-exclusion** (positional `<AID>` form is incompatible with `--issue`/`--older-than` form):
+- `delete <AID> --issue FOO-1` → clap exit 2 (positional AID conflicts with `--issue`).
+- `delete <AID> --older-than 7d` → clap exit 2 (positional AID conflicts with `--older-than`).
+- `delete --issue FOO-1 --older-than 7d` (no positional AID) → valid bulk form; requires `--yes`.
+- `delete <AID>` (no `--issue`, no `--older-than`) → valid single-ID form; confirmation gate per BC-3.9.015.
+- `delete --older-than 7d` (no `--issue`, no positional AID) → exit 2 (clap `requires` constraint); clap error to stderr.
+
+**EC-3.9.016-1** (bulk, no `--yes`, no `--dry-run`): exit 64; stderr `"--older-than requires --yes to confirm bulk deletion."`; no API calls.
+**EC-3.9.016-2** (bulk, `--yes`): proceed to BC-3.9.019 wire behavior.
+**EC-3.9.016-3** (bulk, `--dry-run`, no `--yes`): dry-run permitted without `--yes`; no mutations; BC-3.9.020 output shape.
+**EC-3.9.016-4** (positional AID + `--issue` or `--older-than`): clap exit 2 (argument conflict).
+**EC-3.9.016-5** (`--older-than` without `--issue`): exit 2 (clap `requires` constraint); clap error to stderr; no application code reached.
+
+**Trace**: F2 spec evolution (2026-07-15 SOH-ATTACHMENTS-1, DEC-179); impact-boundary-576.md R3.2/R3.3/R3.4 (bulk gate + clap mutual-exclusion + ID-only delete signature); adversary pass-1 human ruling R1 (2026-07-15); DEC-169 (--yes leniency)
+
+---
+
+#### BC-3.9.017: `attachment upload --replace-existing` — same-filename lookup + delete ALL matching entries; non-atomic race window documented; MUST NOT assert atomicity (JRACLOUD-96384, JRACLOUD-78388)
+
+**Confidence**: HIGH
+**Source**: `src/cli/issue/attachments.rs::handle_attachment_upload` (implementation pending — story S3)
+**Subject**: Issue write (attachment upload — --replace-existing conflict resolution)
+
+`jr issue attachment upload <KEY> <FILE> --replace-existing` performs a delete-then-upload sequence:
+
+1. **List step**: `GET /rest/api/3/issue/{key}?fields=attachment` to retrieve `fields.attachment[]`. Filter entries where `attachment.filename` equals the basename of `<FILE>` (case-sensitive string equality; Jira stores filenames verbatim).
+2. **Delete step**: For EVERY matching entry, issue `DELETE /rest/api/3/attachment/{id}` serially. OQ-6 ruling: when multiple entries share the same filename, delete ALL (last-write-wins semantics; no error on multiple matches). Per-entry error handling: a 404 on DELETE is treated as already-deleted (skip silently); a 403/401/5xx on any DELETE aborts the sequence — the error is surfaced per BC-3.9.013 and the upload does NOT proceed (remaining same-filename entries may still exist on abort).
+3. **Upload step**: once all matching entries are deleted (or none existed), proceed with upload per BC-3.9.001 (platform path) or BC-3.9.003/BC-3.9.004 (JSM path with any additional visibility flags present). No confirmation gate is added to `--replace-existing` itself — any applicable visibility gate (from `--public`, BC-3.9.003/BC-3.9.014) fires normally.
+
+**Non-atomic race window — documented; MUST NOT assert atomicity:**
+
+The delete → upload sequence is NOT atomic. A concurrent upload between step 2 completion and step 3 can create a new attachment with the same filename, resulting in a duplicate. This is an accepted and documented limitation. The implementation MUST NOT add retry logic asserting post-upload uniqueness by filename. Upstream constraints: JRACLOUD-96384 (Jira matches media references by filename — ambiguous on collision); JRACLOUD-78388 (no REST mapping from comment body to specific attachment by ID — the race consequence is unresolvable without the attachment ID of the concurrent upload).
+
+**EC-3.9.017-1** (single matching entry found): delete it, then upload; success per BC-3.9.007/BC-3.9.009.
+**EC-3.9.017-2** (N > 1 matching entries, OQ-6): delete all N serially, then upload; human echo confirms deletions + upload.
+**EC-3.9.017-3** (no matching entry): BC-3.9.018 path (idempotent plain upload).
+**EC-3.9.017-4** (DELETE returns 404): treat as already-deleted; continue to next or to upload step.
+**EC-3.9.017-5** (DELETE returns 403/401/5xx): abort sequence; surface error per BC-3.9.013; no upload proceeds.
+**EC-3.9.017-6** (list step fails): abort; no deletes, no upload; exit per BC-3.9.012/BC-3.9.013.
+**EC-3.9.017-7** (non-atomic race — concurrent upload between delete and upload): accepted documented limitation; no retry; no error emitted.
+
+**Trace**: F2 spec evolution (2026-07-15 SOH-ATTACHMENTS-1, DEC-179); impact-boundary-576.md R3.2 (--replace-existing scope + non-atomic race + JRACLOUD-96384/-78388 citations); OQ-6 ruling (delete ALL matching entries, last-write-wins); adversary pass-1 human ruling R1 (2026-07-15)
+
+---
+
+#### BC-3.9.018: `attachment upload --replace-existing` with no same-filename match — idempotent plain upload; zero-match is silent; flag accepted as no-op on the delete phase
+
+**Confidence**: HIGH
+**Source**: `src/cli/issue/attachments.rs::handle_attachment_upload` (implementation pending — story S3)
+**Subject**: Issue write (attachment upload — --replace-existing idempotent zero-match path)
+
+When `jr issue attachment upload <KEY> <FILE> --replace-existing` is invoked and the list step (BC-3.9.017 step 1) finds ZERO existing attachments whose filename matches `<FILE>`, the `--replace-existing` flag has no effect on the delete phase. The delete phase is skipped entirely. The upload proceeds identically to a plain `jr issue attachment upload <KEY> <FILE>` invocation (platform path per BC-3.9.001 or JSM path per BC-3.9.003/BC-3.9.004).
+
+**Zero-match behavior is silent**: no warning, no informational message, no `"(0 files replaced)"` annotation in either human or JSON output. The flag is idempotent — its absence of effect when no matching attachment exists is intentional and unannounced.
+
+**Output shape**: identical to plain upload (BC-3.9.009 JSON shape; BC-3.9.007 human echo). No additional `"replaced"`, `"deletedCount"`, or equivalent field is added to the JSON output for the zero-match case.
+
+**EC-3.9.018-1** (zero matching filenames): skip delete phase; upload per BC-3.9.001/003/004; output per BC-3.9.007/009.
+**EC-3.9.018-2** (zero-match JSON output): identical to plain upload JSON — no extra keys.
+**EC-3.9.018-3** (zero-match human output): identical to plain upload echo — no extra annotation.
+
+**Trace**: F2 spec evolution (2026-07-15 SOH-ATTACHMENTS-1, DEC-179); impact-boundary-576.md R3.2 (--replace-existing idempotent no-match path); OQ-6 ruling; adversary pass-1 human ruling R1 (2026-07-15)
+
+---
+
+#### BC-3.9.019: `attachment delete --issue <KEY> --older-than <duration>` — `src/duration.rs` parser; ISO 8601 `created` compared client-side via `chrono`; invalid duration → exit 64; `--output json` bulk-delete shape
+
+**Confidence**: HIGH
+**Source**: `src/cli/issue/attachments.rs::handle_attachment_delete` (implementation pending — story S4); `src/duration.rs` (existing duration parser, same family as worklog add --duration)
+**Subject**: Issue write (attachment delete — --older-than duration parsing + comparison semantics + JSON shape)
+
+`jr issue attachment delete --issue <KEY> --older-than <duration> --yes` selects all attachments on the issue whose `created` timestamp is older than `duration` relative to the invocation time, then issues a `DELETE` for each.
+
+**`--issue <KEY>` is required** for the `--older-than` form. Enforced by clap `requires` constraint at parse time. `--older-than` without `--issue` → exit 2 (clap error); no application code reached.
+
+**Duration parsing**: The `<duration>` argument is parsed via `src/duration.rs` — the same unit family used by `worklog add --duration`. Accepted unit suffixes: `h` (hours), `d` (days), `w` (weeks). Example valid values: `2h`, `7d`, `2w`, `30d`. An unrecognized or malformed duration string → exit 64; stderr: the standard `duration.rs` error message (or equivalent: `"invalid duration: '<VALUE>'. Use formats like 2h, 1d, 7d, 2w."`).
+
+**Client-side comparison**: each attachment's `created` field (ISO 8601 string, e.g., `"2026-01-01T12:00:00.000+0000"`) is parsed via `chrono`. The cutoff is `now() - duration`. Attachments where `created < cutoff` are selected. A `created` value that cannot be parsed → skip that attachment with a stderr warning; does NOT abort the operation.
+
+**Wire**: selected attachments are deleted serially via `DELETE /rest/api/3/attachment/{id}` per BC-3.9.008. `--yes` is required per BC-3.9.016; absent `--yes` → exit 64. `--dry-run` preempts mutation; see BC-3.9.020.
+
+**Human output**: per-deleted-attachment echo lines. Summary: `"Deleted N attachment(s) older than <duration> from <KEY>."`. Zero-match: `"No attachments older than <duration> found on <KEY>."` + exit 0.
+
+**`--output json` shape** (via `output::render_json`, #526 invariant):
+- N > 0 matches deleted: `{"count": N, "deleted": true, "ids": ["<AID1>", "<AID2>", ...]}`
+- Zero matches: `{"count": 0, "deleted": false, "ids": []}`
+
+**EC-3.9.019-1** (valid duration, N > 0, `--yes`): N deletions; success output above.
+**EC-3.9.019-2** (valid duration, 0 matches): exit 0; zero-match echo + JSON.
+**EC-3.9.019-3** (invalid/malformed duration): exit 64; duration.rs error message.
+**EC-3.9.019-4** (`--older-than` without `--issue`): exit 2 (clap `requires` constraint); mirrors EC-3.9.016-5.
+**EC-3.9.019-5** (missing `--yes`): exit 64 per BC-3.9.016 gate.
+**EC-3.9.019-6** (malformed `created` on one attachment): skip + stderr warning; continue with remaining attachments.
+**EC-3.9.019-7** (partial DELETE failure mid-sequence): stop; surface error; JSON mode: `JrError` error shape, NOT success shape.
+
+**Trace**: F2 spec evolution (2026-07-15 SOH-ATTACHMENTS-1, DEC-179); impact-boundary-576.md R3.2 (--older-than scope + duration.rs citation + chrono client-side comparison); `src/duration.rs` (existing parser, worklog add --duration precedent); adversary pass-1 human ruling R1 (2026-07-15)
+
+---
+
+#### BC-3.9.020: `attachment delete --dry-run` — multi-attachment paths list affected IDs without mutation; `--output json` shape via `output::render_json`; single-ID `--dry-run` = stderr hint + exit 0 (no-op)
+
+**Confidence**: HIGH
+**Source**: `src/cli/issue/attachments.rs::handle_attachment_delete` (implementation pending — story S4)
+**Subject**: Issue write (attachment delete — dry-run preview for multi-attachment paths)
+
+`--dry-run` is meaningful only on multi-attachment paths (`--older-than` or a future `--all` batch-delete path). On those paths it outputs a preview of what WOULD be deleted without issuing any `DELETE` requests. `--dry-run` does NOT require `--yes` (the operation is read-only; BC-3.9.016 explicitly exempts `--dry-run` from the bulk `--yes` gate).
+
+**Multi-attachment `--dry-run`** (with `--older-than`):
+- Perform the list step and apply the same selection logic (duration filter per BC-3.9.019) without any mutations.
+- Human mode: print a table with columns `[ID, Filename, Size, Created]` for each attachment that would be deleted. Final line: `"<N> attachment(s) would be deleted. Run without --dry-run to confirm."`. Exit 0.
+- `--output json` shape (via `output::render_json`, #526 invariant):
+  - N > 0: `{"attachments": [{"id": "<AID>", "filename": "<name>"}], "dryRun": true, "ids": ["<AID1>", "<AID2>"]}`
+  - Zero matches: `{"attachments": [], "dryRun": true, "ids": []}`
+- `--yes` is NOT required for `--dry-run` (BC-3.9.016 exemption). `--yes` alongside `--dry-run` is accepted silently (DEC-169 leniency); `--dry-run` governs; no mutations.
+
+**Single-ID `--dry-run`** (positional `<AID>` form):
+- `--dry-run` has no actionable meaning for single-ID delete (the user has already specified the exact attachment; there is nothing to preview). The flag is accepted without error.
+- Behavior: emit to stderr `"--dry-run has no effect on single-ID delete; omit the flag."`. Exit 0. NO `DELETE` call is issued. NO confirmation gate (BC-3.9.015) is triggered.
+- `--yes --dry-run` on single-ID: `--dry-run` governs; same stderr hint + exit 0.
+
+**`--dry-run` is not a substitute for `--yes` on mutations**: on multi-attachment paths, `--dry-run` (no `--yes`) is a valid read-only preview; `--yes` (no `--dry-run`) runs the real deletion (requires `--yes` per BC-3.9.016); `--dry-run --yes` together runs the preview only (DEC-169 governs `--yes`).
+
+**EC-3.9.020-1** (multi `--dry-run`, N > 0): table + count line; JSON `{"attachments":[...],"dryRun":true,"ids":[...]}`; no mutations; exit 0.
+**EC-3.9.020-2** (multi `--dry-run`, 0 matches): zero-match output; JSON `{"attachments":[],"dryRun":true,"ids":[]}`; exit 0.
+**EC-3.9.020-3** (single-ID `--dry-run`): stderr hint; no DELETE; no gate; exit 0.
+**EC-3.9.020-4** (`--dry-run --older-than`, no `--yes`): valid; dry-run exempt from `--yes` gate (BC-3.9.016 EC-3.9.016-3).
+**EC-3.9.020-5** (`--dry-run --yes` together): `--dry-run` governs; `--yes` silent no-op (DEC-169); no mutations.
+
+**Trace**: F2 spec evolution (2026-07-15 SOH-ATTACHMENTS-1, DEC-179); impact-boundary-576.md R3.2 (--dry-run scope + output shape); BC-3.4.021 (`issue edit --dry-run` output precedent); adversary pass-1 human ruling R1 (2026-07-15); #526 JSON render invariant
+
+
+## Total BCs in this file: 111 individually-bodied (cumulative 140 incl. range-collapsed; see BC-INDEX.md)
+
+_Last updated 2026-07-15 (SOH-ATTACHMENTS-1 adversary pass-1 fix rounds A+B, DEC-179): +6 BCs (BC-3.9.015..020) — delete confirmation gate (BC-3.9.015, DEC-174 mirror), bulk --older-than always-requires-yes + clap mutual-exclusion (BC-3.9.016), --replace-existing non-atomic delete-ALL + race documented (BC-3.9.017, JRACLOUD-96384/-78388), --replace-existing zero-match idempotent (BC-3.9.018), --older-than duration.rs + chrono client-side + bulk JSON (BC-3.9.019), --dry-run preview + JSON + single-ID hint (BC-3.9.020); Section 3.9 now 20 contracts; spec v1.3.45. Previous update 2026-07-15 (SOH-ATTACHMENTS-1 F2, DEC-179, issues #576+#585): +14 BCs (BC-3.9.001..BC-3.9.014) — attachment upload platform POST (BC-3.9.001: multipart, `X-Atlassian-Token: no-check`, streaming, no client-side cap, 413/400 handling), JSM upload no-flag path (BC-3.9.002: platform POST = internal by default, P2-4a), `--public` servicedeskapi two-step + DEC-174 confirmation gate (BC-3.9.003), `--internal` two-step public:false + OQ-9 non-JSM silent no-op (BC-3.9.004), `--public` non-JSM exit 64 (BC-3.9.005), temporaryAttachmentId ~1h TTL + stale-ID self-healing (BC-3.9.006, BC-X.8.010), post-upload echo + P2-3c deferred probe obligation (BC-3.9.007, BC-3.9.011), attachment delete DELETE/id + 404 = exit 64 + surface body (BC-3.9.008, DEC-168 precedent), JSON shapes (BC-3.9.009..010), upload/delete error taxonomies (BC-3.9.012..013), `--public` confirmation gate mechanics eprint!+read_line NOT dialoguer (BC-3.9.014, DEC-174); Section 3.9 header added (14 contracts); spec versions v1.3.43 (BCs) + v1.3.44 (security fix round, SEC-576-001..007). Previous update 2026-07-09 (issue #577 SOH-COMMENT-CRUD-1 F2, DEC-168): +11 BCs (BC-3.5.002..BC-3.5.012) — comment delete (BC-3.5.002..BC-3.5.004: endpoint/exit-codes, confirmation, 404-exit-64+body-surface), comment edit (BC-3.5.005..BC-3.5.009: body-only-PUT invariant, --internal wire, --public wire+always-confirm, --public confirmation gate, body sources), comment view (BC-3.5.010: GET+expand=properties, table+JSON, 404-exit-64), mutual exclusion (BC-3.5.011), CLI breaking change (BC-3.5.012: comment→subcommand group, old flat form → clap error with migration hint); §3.5 header updated to 12 contracts. Previous update 2026-06-30 (BC-subclause-pass F2): +2 BCs (BC-3.4.020..021) — BC-3.4.020 (`issue edit --label` routing fork: single-key PUT bare-string vs 2+ key bulk POST `{"name":...}` objects; BUG-LABEL-400), BC-3.4.021 (`issue edit --dry-run` `plannedChanges` output structure + `--output json` schema `{dryRun, issues, plannedChanges}`; intentionally simplified preview shapes); Section 3.4 header updated to 21 contracts. Previous update 2026-06-08 (fix-bulk-transition-schema F2): +1 BC (BC-3.2.014) — BC-3.2.014 (multi-key bulk move `bulkTransitionInputs` nested wrapper wire schema; documents correctness bug fix commit acca854; live run 27156639337); Section 3.2 header updated to 14 contracts. Previous update 2026-06-03 (jsm-resolution-required F2): +1 BC (BC-3.2.013) — BC-3.2.013 (proactive resolution enforcement on done-category transitions: REQUIRED and OPTIONAL branches, --no-resolution flag, isConditional coverage, conservative gate, BC-3.2.009 backstop retained; single-key only; breaking change); Section 3.2 header updated to 13 contracts. Previous update 2026-06-01 (issue #331 F2): +2 BCs (BC-3.4.018..019) — BC-3.4.018 (multi-key `--type` bulk wire shape: camelCase `issueType` key, `issueTypeId` string value, name resolved via createmeta issuetypes), BC-3.4.019 (cross-project guard: keys spanning >1 project exit 64 before any API call); Section 3.4 header updated to 19 contracts. Previous update 2026-05-27 (issue #421 F2): BC-3.4.015 invariant 5 rewritten (two-stage i64-first strategy); EC-3.4.015-4b added (i64-boundary regression pin); no BC count changes (103/74 unchanged). Previous update (2026-05-25 issue #407 F2): +EC-3.4.017-14 — mechanical enforcement meta-test for BC-3.4.017 invariant 2 (conflict block completeness via `test_label_conflict_block_lists_every_relevant_flag`); BC-3.4.017 invariant 2 cross-reference added; no BC count changes (103/74 unchanged). Previous update (2026-05-22 issue #396 F2): +3 BCs (BC-3.4.015..017) — BC-3.4.015 (`issue edit --field` string/number/date/datetime/user field single-key path, with editmeta validation, fields.json cache, and dry-run invariants), BC-3.4.016 (`issue edit --field` single-select `option` field), BC-3.4.017 (`--field` multi-key/`--jql` rejection Gate A and flag-overlap Gate B); Section 3.4 header updated to 17 contracts. Previous update (2026-05-21 issue #398 F2): +3 BCs (BC-3.4.012..014) — BC-3.4.012 (issue edit table-mode success echo), BC-3.4.013 (issue edit JSON-mode success echo with changed_fields), BC-3.4.014 (issue create table-mode all-fields echo (broadened from team-only at the 2026-05-22 human-gate to mirror BC-3.4.012)); BC-3.4.003 Success output cross-reference added; Section 3.4 header updated to 14 contracts. Previous update (2026-05-20 issue #388): +2 BCs (BC-3.4.010..011): BC-3.4.010 (cross-hierarchy `edit --type` 400 → CROSS_HIERARCHY_HINT citing JRACLOUD-27893) and BC-3.4.011 (same-hierarchy/indeterminate `edit --type` 400 → typo hint or raw error, no JRACLOUD-27893 hint) added in F2 delta (issue #388). BC-3.4.003 Errors cross-reference updated (annotation only, no behavioral change). Section 3.4 header updated to 11 contracts. Previous update (2026-05-20 issue #385): +2 BCs (BC-3.8.016..017); BC-3.8.002/010/011 modified._

@@ -719,7 +719,7 @@ This is the canonical pinnable string for `test_require_service_desk_oauth_401_s
 **Source**: `src/cache.rs::read_service_desk_id_cache` (implementation pending — story S5); `src/cache.rs::write_service_desk_id_cache` (implementation pending — story S5); `src/api/jsm/attachments.rs::attach_temporary_file` (implementation pending — story S5)
 **Subject**: X.8 Projects & Queues (JSM serviceDeskId cache for attachment upload)
 
-When `jr attachment upload <KEY> --public` (or `--internal`) resolves the serviceDeskId for a JSM issue, the result is cached under `~/.cache/jr/v1/<profile>/service_desk_id_<projectKey>.json` with a 7-day TTL. The cache maps a `(profile, projectKey)` pair to the resolved `serviceDeskId` string (the `id` field from `GET /rest/servicedeskapi/servicedesk`).
+When `jr issue attachment upload <KEY> --public` (or `--internal`) resolves the serviceDeskId for a JSM issue, the result is cached under `~/.cache/jr/v1/<profile>/service_desk_id_<projectKey>.json` with a 7-day TTL. The cache maps a `(profile, projectKey)` pair to the resolved `serviceDeskId` string (the `id` field from `GET /rest/servicedeskapi/servicedesk`).
 
 **Resolution chain** (on cache miss or stale): `GET /rest/api/3/issue/{key}` → extract `fields.project.key` → paginated `GET /rest/servicedeskapi/servicedesk` → match `projectKey` → extract `id`. The resolved ID is then written to the cache.
 
