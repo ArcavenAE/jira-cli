@@ -4,9 +4,9 @@ level: ops
 version: "2.0"
 status: active
 producer: state-manager
-timestamp: 2026-07-15T03:12:03Z
+timestamp: 2026-07-15T07:30:00Z
 phase: 3
-pipeline: ACTIVE
+pipeline: PAUSED
 inputs: []
 input-hash: "[live-state]"
 traces_to: ""
@@ -59,14 +59,14 @@ activation_version: "v0.6.0-dev.9"
 ## Current Phase Steps
 
 <!-- Keep last 5 rows only. Archive older rows to cycles/cycle-001/burst-log.md. -->
-<!-- archived: CITATION-GUARDS rows + F1 GATE APPROVED + SPEC DELTA row + PASSES 1-5 row + DEC-158 row + PASSES 6-16 row + PASSES 17-19 row + DEC-159 row (archived F4 DELIVERED burst) + F3 story v1.7 row (archived F6 hardening burst) + F3 adversary passes 1-7 row (archived F7 evidence burst) + F3 adversary passes 8-10 row (archived F7-AUTHORIZED burst) + F5 CONVERGED row (archived session-wrap pause burst) + F6 TARGETED HARDENING row (archived session-review burst) + F7 AUTHORIZED row (archived IP-571 disposition burst) + RELEASE IN PROGRESS row (archived external-PR review burst) + RELEASE v0.6.0-dev.8 TAGGED row (archived SOH-BUGS-1 intake burst) + SESSION WRAP/PAUSE row (archived SOH-BUGS-1 F1 gate burst) + SESSION RESUME + SESSION-REVIEW COMPLETE row (archived S-SOH-590-1 DELIVERED burst) + SESSION-REVIEW PROPOSALS ROUTED UPSTREAM row + EXTERNAL-PR REVIEW BURST row + INTAKE row (archived SOH-BUGS-1 DELIVERY CLOSE burst) + S-SOH-589-1 DELIVERED row (archived S-577-5-CONVERGED burst) + SESSION WRAP (2026-07-10) row [SOH-BUGS-1 /wrap] (archived F4-COMPLETE burst) + SOH-COMMENT-CRUD-1 INTAKE+F1 APPROVED row (archived F5-CONVERGED burst) + SESSION WRAP (2026-07-10) step row (archived RELEASE COMPLETE burst) -->
+<!-- archived: CITATION-GUARDS rows + F1 GATE APPROVED + SPEC DELTA row + PASSES 1-5 row + DEC-158 row + PASSES 6-16 row + PASSES 17-19 row + DEC-159 row (archived F4 DELIVERED burst) + F3 story v1.7 row (archived F6 hardening burst) + F3 adversary passes 1-7 row (archived F7 evidence burst) + F3 adversary passes 8-10 row (archived F7-AUTHORIZED burst) + F5 CONVERGED row (archived session-wrap pause burst) + F6 TARGETED HARDENING row (archived session-review burst) + F7 AUTHORIZED row (archived IP-571 disposition burst) + RELEASE IN PROGRESS row (archived external-PR review burst) + RELEASE v0.6.0-dev.8 TAGGED row (archived SOH-BUGS-1 intake burst) + SESSION WRAP/PAUSE row (archived SOH-BUGS-1 F1 gate burst) + SESSION RESUME + SESSION-REVIEW COMPLETE row (archived S-SOH-590-1 DELIVERED burst) + SESSION-REVIEW PROPOSALS ROUTED UPSTREAM row + EXTERNAL-PR REVIEW BURST row + INTAKE row (archived SOH-BUGS-1 DELIVERY CLOSE burst) + S-SOH-589-1 DELIVERED row (archived S-577-5-CONVERGED burst) + SESSION WRAP (2026-07-10) row [SOH-BUGS-1 /wrap] (archived F4-COMPLETE burst) + SOH-COMMENT-CRUD-1 INTAKE+F1 APPROVED row (archived F5-CONVERGED burst) + SESSION WRAP (2026-07-10) step row (archived RELEASE COMPLETE burst) + S-577-5 CONVERGED row (archived SESSION WRAP 2026-07-15 burst) -->
 | Step | Agent | Status | Output |
 |------|-------|--------|--------|
-| **S-577-5 CONVERGED (2026-07-14) — step-4.5 STRICT 1M+1L→0→0→0 (p1: 1M CHANGELOG false --yes/clap-requires claim a437135 + 1L e2e-substitution PG-F4-11; p2/p3/p4 CLEAN×3 window); DEC-175 e2e visibility restore ruling + fbf1a1e; Red Gate 09d8467 (10 red+3 green); impl 9ca64ec 26/26; 12/12 AC demos; closes-#577 PR in flight.** | implementer + pr-manager + state-manager | CONVERGED | `phase-f4-implementation/`; `demos/S-577-5/`; `research/issue-577-jsm-visibility-restriction-2026-07-14.md`. |
 | **PR #621 @ f4ab77b MERGED (docs/577-s5-deferral-sweep; commits 31b174c+7c97f5e); wave-D integration STRICT CONVERGED (pass-1 2L→passes 2/3/4 CLEAN×3); F4 PHASE COMPLETE (11 PRs; issue #577 CLOSED 2026-07-14). Guard scripts green (spec-counts OK, bc-cumulative 624/8 surfaces, 334 citations); whole-bundle sweep clean.** | state-manager | COMPLETE | develop @ f4ab77b; F4 bundle closed; F5 dispatched. |
 | **F4 PHASE COMPLETE (2026-07-14) — wave-D STRICT CONVERGED; 5 stories, 4 waves A-D, 11 PRs, issue #577 CLOSED; F5 scoped adversarial DISPATCHED (pass 1 in flight).** | state-manager | IN PROGRESS | F5 p1 dispatched; all worktrees cleaned; develop @ f4ab77b. |
 | **F5 SCOPED ADVERSARIAL CONVERGED (STRICT, 2026-07-14): 5 passes; p2 1L README cmd table fix PR #622 @ ae2e3db bd3ac83 (user-merged); p3/p4/p5 CLEAN×3; p4 H-NEW-COMMENT-001..005 all PASS; p5 adversarial input crafting + cargo-doc/MSRV + #526 sweep; p5 obs CHANGELOG/comment-crud.md MERGE claim vs deferred EJ probe — F7-tracked cluster settled; F6 DISPATCHED (fv-F6-577; artifacts → phase-f6-hardening/577/).** | formal-verifier + state-manager | IN PROGRESS | `phase-f6-hardening/577/`; develop @ ae2e3db. |
 | **RELEASE v0.6.0-dev.10 SHIPPED (2026-07-15): bump PR #623 @ 56d5126 (user-merged; fresh-eyes APPROVE posted); annotated tag v0.6.0-dev.10 on develop @ 56d5126; workflow run 29385074375 SUCCESS (10 assets). Bundle SOH-COMMENT-CRUD-1 FULLY COMPLETE (D-168..D-176, 5 stories, 4 waves, 13 PRs #610..#623, issue #577 CLOSED). Session review DISPATCHED.** | state-manager | COMPLETE | develop @ 56d5126; all worktrees cleaned; pipeline at steady state (3 permanent worktrees). |
+| **SESSION WRAP (2026-07-15) — human /wrap at clean rest point post-D-177 cycle close. Pipeline PAUSED. Resume intent: next intake / steady-state.** | state-manager | COMPLETE | Pipeline PAUSED at rest. |
 
 ## Decisions Log
 
@@ -237,40 +237,40 @@ ADF-CODE-MARK-EXCLUSIVITY: **FULLY COMPLETE (2026-07-08, DEC-163). S-7.02 SATISF
 
 | Field | Value |
 |-------|-------|
-| **Date** | 2026-07-15 (IP-577 11/11 ROUTED-UPSTREAM (D-177); SOH-COMMENT-CRUD-1 cycle FULLY CLOSED; develop @ 56d5126). |
-| **Position** | Pipeline AT REST — SOH-COMMENT-CRUD-1 cycle FULLY CLOSED incl. session-review loop (D-177). develop @ 56d5126. Awaiting next intake. |
-| **Delivered** | Wave A (S-577-1 #610 907a795 + S-577-2 #611 bbe54e9 + fixes #613+#614; STRICT 5 passes). Wave B (S-577-3 #615 d0faf1c; STRICT 3 passes). Wave C: S-577-4 #617 @ f9ad71e; S-577-6 #616 @ d14fb10; docs #618 @ 5433dc3; src-comment #619 @ a486f79; integration 1L→2L→0→0→0 STRICT CONVERGED. Wave D: S-577-5 PR #620 @ 4dcec9f (closes #577, MERGED); docs PR #621 @ f4ab77b (31b174c+7c97f5e, MERGED); integration →2L→0→0→0 STRICT CONVERGED. F4 PHASE COMPLETE. |
-| **In flight** | None — cycle FULLY CLOSED (D-177). IP-577 11/11 ROUTED-UPSTREAM. |
-| **Next** | Await next intake. Residuals: EJ nightly probe (BC-3.5.006), stderr-hint story candidate (DEC-169), BC-INDEX Source guard (BC-INDEX-9TH-SURFACE), mutation-timeout calibration (now upstream #654). |
-| **Standing rules** | User merges ALL PRs on GitHub personally (DEC-173); every PR gets fresh-eyes pr-reviewer pre-merge; COMMENTED = approve-equivalent (same-account); implementers hard-forbidden from push/PR/improvise (STOP-and-report). |
-| **Pending nits** | BC-3.5.002 trailing period (cosmetic). |
-| **Resume command** | /vsdd-factory:next-step or new issue intake. |
+| **Date** | 2026-07-15 (wrap — pipeline PAUSED at clean rest point post-D-177 cycle close). |
+| **Position** | Pipeline AT REST + PAUSED. SOH-COMMENT-CRUD-1 FULLY CLOSED (D-177). develop @ 56d5126 (v0.6.0-dev.10 released, run 29385074375, 10 assets). No convergence loop active. Nothing in flight. No worktrees beyond the 3 permanent. |
+| **Delivered** | Wave A (S-577-1 #610 907a795 + S-577-2 #611 bbe54e9 + fixes #613+#614; STRICT 5 passes). Wave B (S-577-3 #615 d0faf1c; STRICT 3 passes). Wave C: S-577-4 #617 @ f9ad71e; S-577-6 #616 @ d14fb10; docs #618 @ 5433dc3; src-comment #619 @ a486f79; integration STRICT CONVERGED. Wave D: S-577-5 PR #620 @ 4dcec9f (closes #577); docs PR #621 @ f4ab77b; integration STRICT CONVERGED. F4 PHASE COMPLETE. F5 STRICT. F6 GO. F7 APPROVED D-176. Release PR #623 @ 56d5126. IP-577 11/11 ROUTED-UPSTREAM (D-177). |
+| **In flight** | None — cycle FULLY CLOSED (D-177). Pipeline PAUSED. |
+| **Residuals (next session)** | (1) EJ nightly probe — first green nightly e2e run of test_e2e_comment_edit_visibility_merge_semantics completes BC-3.5.006, then reconcile CHANGELOG MERGE-claim wording vs comment-crud.md:109; (2) stderr-hint follow-up story candidate (DEC-169 item 3); (3) BC-INDEX Source-column guard extension (upstream #656-adjacent, local candidate); (4) MUTANTS-BUNDLE-TIMEOUT-CALIBRATION (upstream #654); (5) advisory: CLAUDE_AUTOCOMPACT_PCT_OVERRIDE absent from .claude/settings.json (recommend 70 per ADR-026); (6) STATE.md compact-state optional next session. |
+| **Standing rules** | User merges ALL PRs on GitHub personally (DEC-173); every PR gets fresh-eyes pr-reviewer pre-merge with POSTED evidence; COMMENTED = approve-equivalent (same-account); implementers hard-forbidden from push/PR/improvise (STOP-and-report). DEC-128 in force. |
+| **Pending human decisions** | None. |
+| **Resume command** | /vsdd-factory:next-step (or new issue intake / maintenance trigger). |
 
 ## RESUME PLAN (cold-start, self-contained)
 
-<!-- State snapshot: CYCLE FULLY CLOSED (D-177, 2026-07-15). SOH-COMMENT-CRUD-1 FULLY CLOSED incl. session-review loop. IP-577 11/11 ROUTED-UPSTREAM. develop @ 56d5126. BC 624; Stories 111. Holdouts 88. VP 30. No active feature worktrees. Pipeline AT REST. RESUME INTENT: next intake / steady-state. -->
+<!-- State snapshot: CYCLE FULLY CLOSED (D-177, 2026-07-15). SOH-COMMENT-CRUD-1 FULLY CLOSED incl. session-review loop. IP-577 11/11 ROUTED-UPSTREAM. develop @ 56d5126. BC 624; Stories 111. Holdouts 88. VP 30. No active feature worktrees. Pipeline AT REST + PAUSED. RESUME INTENT: next intake / steady-state. -->
 
 ### Steps (assume ZERO memory)
 
 **Step 1 (BLOCKING):** Run `vsdd-factory:factory-worktree-health`. Then read `.factory/STATE.md` (this file).
 
 **Step 2 — Verify position:**
-- develop @ **b2ce3169** (PR #603 squash-merged 2026-07-09; SOH-BUGS-1 FULLY COMPLETE; release v0.6.0-dev.9; issues #589/#590/#582 CLOSED).
+- develop @ **56d5126** (PR #623 squash-merged 2026-07-15; SOH-COMMENT-CRUD-1 FULLY COMPLETE; release v0.6.0-dev.10; issue #577 CLOSED).
 - factory-artifacts: see `git -C .factory log -1`.
 - No active feature worktrees.
-- Counters: BC **613**, NFR **42**, ADR **16**, Stories **105**. Holdouts **83**.
+- Counters: BC **624**, NFR **42**, ADR **16**, Stories **111**. Holdouts **88**. VP **30**.
 
-**Step 3 — COMPLETED BUNDLE: SOH-BUGS-1 FULLY COMPLETE + RELEASED (2026-07-09, DEC-167):**
+**Step 3 — COMPLETED BUNDLE: SOH-COMMENT-CRUD-1 FULLY COMPLETE + RELEASED (2026-07-15, DEC-176):**
 
-> **BUNDLE: SOH-BUGS-1 — issues #589 + #590/#582. FULLY COMPLETE + RELEASED (2026-07-09, DEC-167).**
+> **BUNDLE: SOH-COMMENT-CRUD-1 — issue #577. FULLY COMPLETE + RELEASED (2026-07-15, DEC-176).**
 >
-> **Story 104 S-SOH-590-1:** PR #597 @ 4f3960e0 (quick-dev, DEC-128 honored). BC-X.1.011 + VP-590-001. Issues #590+#582 CLOSED.
+> **5 stories (S-577-1..5), 4 waves A-D, 13 PRs (#610..#623). F7 5/5 PASS. S-7.02 SATISFIED. Issue #577 CLOSED (2026-07-14).**
 >
-> **Story 105 S-SOH-589-1:** PR #601 @ 081187ae (standard, DEC-128 honored). Step-4.5 STRICT 7 passes/4 fix rounds (3→4→0→1→0→0→0, window p5/p6/p7). 6/6 AC demos (local). 2016/0/93. fix-PR #602 @ bf3b3382 (Rust 1.97). Issue #589 CLOSED.
+> **Release:** PR #623 @ 56d5126 (DEC-128 honored); tag v0.6.0-dev.10; workflow run 29385074375 SUCCESS (10 assets). F7 5/5 PASS; consistency CONSISTENT (3 LOW gaps fixed). S-7.02 SATISFIED.
 >
-> **Release:** PR #603 @ b2ce3169 (DEC-128 honored); tag v0.6.0-dev.9; workflow run 29051718553 SUCCESS (10 assets). F7-lite 7/7 PASS; holdout 1.00 (6/6 wire-level); consistency CONSISTENT (gaps G1-G3 fixed). S-7.02 SATISFIED.
+> **Session review:** IP-577 11/11 ROUTED-UPSTREAM (D-177) — 5 new issues #652-#656 + 6 comments; SOH-COMMENT-CRUD-1 cycle FULLY CLOSED.
 >
-> **NEXT STEP: SOH-COMMENT-CRUD-1 F2 fix round 38** (pass-32 findings: 1H+3L in adversarial-review/pass-32-577.md) → CV verify → adversary pass 33 → … Full STRICT to 3 clean → F2 gate → F3 stories.
+> **NEXT STEP: next issue intake** — run `/vsdd-factory:next-step` or present new issue for intake. Pipeline PAUSED.
 
 **Step 4 — STANDING CONSTRAINTS (ALL fixes via full VSDD Feature Mode):**
 - All fixes through full VSDD Feature Mode. No exceptions without explicit human direction.

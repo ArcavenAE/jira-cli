@@ -1461,3 +1461,20 @@ STRICT convergence. Counters: BC 612, Holdouts 83, Stories 102. develop @ 0d8a8a
 | **Standing rules** | User merges ALL PRs on GitHub personally (notify + watcher); every PR gets fresh-eyes pr-reviewer pre-merge (DEC-173); COMMENTED verdict = approve-equivalent (same-account); closes #577 ONLY in S-577-5's PR; implementers hard-forbidden from push/PR/improvise (STOP-and-report); orchestrator may execute user-authorized git ops directly (AskUserQuestion consent precedent). |
 | **Pending nits** | comment-crud.md finalization at bundle close (delete/edit/view stub markers); BC-3.5.002 trailing period; autocompact settings key advisory. |
 | **Resume command** | /vsdd-factory:next-step (reads this checkpoint; first actions = clean S-577-3 worktree, dispatch wave-B integration passes 2 and 3 fresh). |
+
+---
+
+### Checkpoint archived: 2026-07-15 — SOH-COMMENT-CRUD-1 FULLY CLOSED (D-177); pipeline AT REST
+
+(Displaced by: SESSION WRAP 2026-07-15 — human /wrap at clean rest point post-D-177 cycle close; pipeline PAUSED)
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-07-15 (IP-577 11/11 ROUTED-UPSTREAM (D-177); SOH-COMMENT-CRUD-1 cycle FULLY CLOSED; develop @ 56d5126). |
+| **Position** | Pipeline AT REST — SOH-COMMENT-CRUD-1 cycle FULLY CLOSED incl. session-review loop (D-177). develop @ 56d5126. Awaiting next intake. |
+| **Delivered** | Wave A (S-577-1 #610 907a795 + S-577-2 #611 bbe54e9 + fixes #613+#614; STRICT 5 passes). Wave B (S-577-3 #615 d0faf1c; STRICT 3 passes). Wave C: S-577-4 #617 @ f9ad71e; S-577-6 #616 @ d14fb10; docs #618 @ 5433dc3; src-comment #619 @ a486f79; integration 1L→2L→0→0→0 STRICT CONVERGED. Wave D: S-577-5 PR #620 @ 4dcec9f (closes #577, MERGED); docs PR #621 @ f4ab77b (31b174c+7c97f5e, MERGED); integration →2L→0→0→0 STRICT CONVERGED. F4 PHASE COMPLETE. |
+| **In flight** | None — cycle FULLY CLOSED (D-177). IP-577 11/11 ROUTED-UPSTREAM. |
+| **Next** | Await next intake. Residuals: EJ nightly probe (BC-3.5.006), stderr-hint story candidate (DEC-169), BC-INDEX Source guard (BC-INDEX-9TH-SURFACE), mutation-timeout calibration (now upstream #654). |
+| **Standing rules** | User merges ALL PRs on GitHub personally (DEC-173); every PR gets fresh-eyes pr-reviewer pre-merge; COMMENTED = approve-equivalent (same-account); implementers hard-forbidden from push/PR/improvise (STOP-and-report). |
+| **Pending nits** | BC-3.5.002 trailing period (cosmetic). |
+| **Resume command** | /vsdd-factory:next-step or new issue intake. |
