@@ -238,23 +238,30 @@ jobs:
 
   attest:
     name: Attest build provenance
-    needs: release
-    # Runs after `release` uploads assets to the GitHub release. Downloads
-    # the finalized release-page assets (not the pre-upload workspace
-    # artifacts) so the attestation applies to the exact bytes users
-    # download. `!cancelled()` skips a partial attestation if the workflow
-    # is cancelled mid-run.
-    if: |
-      !cancelled()
-      && needs.release.result == 'success'
+    needs: build
+    # Fork opt-in gate, matching this repo's release-ops convention
+    # (SIGNING_ENABLED, HOMEBREW_TAP_REPO, RELEASE_GAP_FILL_ENABLED,
+    # SYNC_UPSTREAM_REPO — see docs/specs/fork-friendly-release-ops.md).
+    # Forks carry this file verbatim as a no-op unless they opt in.
+    # Attestations require `id-token: write` and publish the workflow's
+    # commit SHA to the public Rekor transparency log; they are
+    # unavailable on GHES and on private forks without GitHub Enterprise
+    # Cloud. Gating keeps the file byte-identical downstream while never
+    # hard-failing a fork's release.
+    if: vars.ATTESTATIONS_ENABLED == 'true'
+    # Runs in PARALLEL with `release` (both `needs: build`), not upstream
+    # of it. Both fan in from the same immutable `build` artifacts, so the
+    # attested bytes are identical to what `release` uploads verbatim
+    # (softprops copies them unchanged) — the attestation is created from
+    # the built bytes, not re-downloaded from the release page, so there is
+    # no publish-then-attest window (TOCTOU / CWE-362). It is deliberately
+    # NOT a `needs:` of `release`: with the fork gate above, a skipped
+    # `attest` would otherwise cascade and skip the fork's entire release.
     permissions:
-      # `contents: read` is enough for `gh release download`; the write
-      # scopes below are for the attestation itself.
-      contents: read
-      # `attestations: write` is NEVER inherited — must be declared on
-      # the job.
+      # attest-build-provenance needs all three; none is inherited.
       id-token: write
       attestations: write
+      contents: read
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -263,18 +270,25 @@ jobs:
         with:
           egress-policy: audit
 
-      - name: Download release assets
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          mkdir -p release-assets
-          gh release download "${GITHUB_REF_NAME}" \
-            --repo "${{ github.repository }}" \
-            --dir release-assets
-          echo "Assets to be attested:"
-          ls -la release-assets/
-
-      - name: Attest release artifacts
-        uses: actions/attest-build-provenance@a2bbfa25375fe432b6a289bc6b6cd05ecd0c4c32 # v4.1.0
+      - name: Fan in the built artifacts (same objects `release` uploads)
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c  # v8
         with:
-          subject-path: 'release-assets/*'
+          merge-multiple: true
+          path: release-assets
+
+      # Attest the archives only. The `.sha256` sidecars are integrity
+      # metadata already covered by the archive attestation; attesting
+      # them would be circular.
+      #
+      # Coverage boundary: this attests the bytes produced by release.yml.
+      # The fork-optional `sign-and-publish.yml` re-signs the darwin
+      # binaries and emits `.pkg`/`.dmg` with DIFFERENT digests after
+      # notarization — those are not covered here and need their own attest
+      # step in that workflow (after codesign/notarize, before upload),
+      # gated on the same variable. Out of scope for this PR.
+      - name: Attest build provenance
+        uses: actions/attest-build-provenance@0f67c3f4856b2e3261c31976d6725780e5e4c373 # v4.1.1
+        with:
+          subject-path: |
+            release-assets/*.tar.gz
+            release-assets/*.zip
