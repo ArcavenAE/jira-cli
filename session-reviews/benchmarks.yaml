@@ -41,3 +41,57 @@ metrics:
   # Meta
   session_review_first_run: "2026-07-08 (cycle-001, issue #571)"
   cost_summary_available: false           # cost-summary.md not initialized; see IP-571-01
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Cycle: SOH-COMMENT-CRUD-1 (issue #577) — session review 2026-07-15
+# Prior baseline cycle: ADF-CODE-MARK-EXCLUSIVITY (issue #571)
+# Note: metrics reflect a 6-story multi-BC bundle vs #571's single-story cycle.
+#       Direct per-metric comparisons are context-dependent.
+# ─────────────────────────────────────────────────────────────────────────────
+metrics_577:
+  # Phase pass counts (STRICT criterion)
+  f2_passes_strict: 48                    # Longest in project history; 2.5× #571 baseline of 19
+  f2_passes_strict_per_bc_ratio: ~4.4    # 48 passes / 11 BCs (scope-adjusted context metric)
+  f3_passes_strict: ~9                   # Cumulative p20–p28; comparable to #571's 10
+  f4_step45_total_adversary_contexts: 7  # 4 waves: wave-A(1) + wave-B(1) + wave-C(3) + wave-D(2)
+  f4_step45_total_pass_instances: ~33    # Sum across all 7 adversary contexts
+  f5_passes_strict: 5                    # 1 fix-PR (#622 README); cleaner than #571's 6
+
+  # Gate quality
+  f6_findings_requiring_fix_pr: 0        # Clean gate; mutation adjudicated 100% (no fix-PR required)
+  f4_pr_reviewer_approve_cycle: 1        # All PRs approved cycle 1 (docs-only review exception RETIRED)
+  f2_mid_cycle_checkpoints: 1            # DEC-169 pass-38 (--yes no-op + feature shape; research-validated)
+
+  # Behavioral verification
+  f7_holdout_mean_satisfaction: 1.00     # 5 MUST-PASS scenarios (H-NEW-COMMENT-001..005)
+  f7_holdout_scenarios: 5
+  f7_mutation_kill_rate_raw_pct: 66.1    # Below 90% threshold due to timeout calibration issue
+  f7_mutation_kill_rate_adjudicated_pct: 100  # 0 missed; 20 timeouts proven caught (3 isolation probes)
+  f7_mutation_mutants_generated: 60
+  f7_mutation_mutants_timeout: 20        # All in handle_comment_edit/view class; calibration artifact
+  f7_proptest_cases: 4000                # Delta probe of 3 pure fns (fuzz justified-skip)
+
+  # Regression
+  full_regression_count_at_f7: 2102      # 2102 pass / 0 fail / 94 ignored
+  regression_new_tests_added: 86         # vs pre-bundle baseline of 2016
+
+  # Cycle-level
+  new_bcs_this_cycle: 11                 # BC-3.5.002..012
+  new_vps_this_cycle: 30                 # VP-577-001..030
+  new_stories_this_cycle: 6             # S-577-1..6; 4 delivery waves (A-D)
+  new_prs_f4_f5: 12                      # #610–#622 (11 F4 + 1 F5 README fix)
+  new_drift_items_per_cycle: ~16         # PG-F3-1/2 + PG-F4-1..11 + MUTANTS-BUNDLE-TIMEOUT-CALIBRATION + BC-INDEX-9TH-SURFACE +1 + TWIN-ARTIFACT-SWEEP +1
+  process_gap_drift_items: 13            # PG-F3-1/2 + PG-F4-1..11 (all engine-side deferrals)
+  total_calendar_days_f1_to_f7: ~6       # 2026-07-09 F1 gate → 2026-07-15 F7 approved; includes session wrap pause
+  f2_fix_rounds: 48                      # 1 fix round per pass under STRICT (round-49 mechanical, non-convergence)
+  f3_fix_rounds: ~6                      # Reconstructed from F3 adversary trajectory
+  f4_waves: 4
+  f4_deviations_ratified: 4             # DEC-172 D1/D2/D3, DEC-174 dialoguer, DEC-175 visibility restore
+  stop_on_deviation_violations: 2        # PG-F4-1 (wave A) + PG-F4-11 (wave D)
+  resolved_by_shipping_fix_sweeps: 6     # 4 wave-C + 1 wave-D + 1 wave-D BC Source; 3 PRs/commits
+  state_manager_monolithic_stalls: "3+"  # Recurring; Bash-python workaround now standard
+  human_gate_decisions: 9               # DEC-168..176
+
+  # Meta
+  cost_summary_available: false          # cost-summary.md still not initialized; see IP-571-01 (3rd cycle)
+  cost_estimate_tokens: "~8–12M"         # Full F1→F7 arc estimate from F7 convergence report

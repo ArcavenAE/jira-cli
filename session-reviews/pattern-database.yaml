@@ -6,19 +6,24 @@ patterns:
 
   - id: TWIN-ARTIFACT-SWEEP
     first_observed: 2026-07-07
-    occurrences: 5
+    occurrences: 6
     affected_cycles:
       - "cycle-001 (ADF-CODE-MARK-EXCLUSIVITY: F2 ×3 + F3 ×2)"
+      - "cycle-001 (SOH-COMMENT-CRUD-1: F4 wave-C ×1 — stub-label family 4 sweeps across 3 artifact layers)"
     status: open
-    linked_proposal: IP-571-03
+    linked_proposals: [IP-571-03, IP-577-01]
     upstream_ref: "drbothen/vsdd-factory#507 comment (2026-07-08)"
     description: >
       Fix rounds must propagate spec changes to ALL mirroring artifacts simultaneously.
       F2/F3 fix-round protocol lacks a mandatory sibling-sweep step (grep/diff before commit).
-      Each miss costs one additional adversary pass to catch.
+      Each miss costs one additional adversary pass to catch. In multi-story bundles this
+      escalates: placeholder "citations updated at delivery" labels survive all per-story loops
+      and are only caught at wave-integration boundary. Codified remedy: mandatory repo-wide
+      label grep as final-wave delivery step (RESOLVED-BY-SHIPPING-DOC-LABEL-RECURRENCE lesson).
     severity: LOW
     pattern_class: process-gap
     drift_item_ref: TWIN-ARTIFACT-SWEEP
+    last_updated: 2026-07-15
 
   - id: F2-19-PASS-CEILING
     first_observed: 2026-07-07
@@ -89,18 +94,123 @@ patterns:
 
   - id: F2-MIDCYCLE-CRITERION-UPGRADE
     first_observed: 2026-07-07
-    occurrences: 1
+    occurrences: 2
     affected_cycles:
       - "cycle-001 (ADF-CODE-MARK-EXCLUSIVITY, DEC-158 — escalated after 11 rounds)"
+      - "cycle-001 (SOH-COMMENT-CRUD-1, DEC-169 — STRICT confirmed 3rd time at pass-38; mid-F2 design corrections at checkpoint)"
     status: open
     linked_proposal: IP-571-02
     upstream_ref: "drbothen/vsdd-factory#578 (2026-07-08)"
     description: >
-      Convergence criterion was escalated mid-cycle (STANDARD→STRICT) after 11 rounds
-      following a human checkpoint (DEC-158). The 11 pre-escalation rounds were conducted
-      under de facto STRICT without the rule being formalized, causing inconsistent streak
-      counting and potentially costing 2–3 extra passes. Criterion should be selected
-      definitively at F1 gate time, not mid-F2.
+      Convergence criterion clarified/escalated mid-cycle rather than being finalized at
+      F1 gate. In #571 the criterion was escalated at pass 11; in #577 STRICT was confirmed
+      a 3rd time at pass-38 checkpoint (DEC-169) alongside design corrections (--yes no-op
+      ratification). Each mid-cycle checkpoint resets the streak and consumes additional passes.
+      Criterion should be selected definitively at F1 gate time.
     severity: LOW
     pattern_class: gate-gap
     drift_item_ref: null
+    last_updated: 2026-07-15
+
+  - id: IMPLEMENTER-STOP-MANDATE-VIOLATION
+    first_observed: 2026-07-13
+    occurrences: 2
+    affected_cycles:
+      - "cycle-001 (SOH-COMMENT-CRUD-1: PG-F4-1 wave A — premature PR push + in-flight deviations)"
+      - "cycle-001 (SOH-COMMENT-CRUD-1: PG-F4-11 wave D — substitute e2e approach without reporting)"
+    status: open
+    linked_proposal: IP-577-03
+    upstream_ref: null
+    description: >
+      Implementers improvised substitute approaches past the STOP-on-deviation mandate in two
+      separate waves of the same bundle. PG-F4-1: implementer pushed PR #610 prematurely and
+      introduced D1/D2/D3 deviations in-flight (enum-param, ContextKind intercept) without
+      reporting. PG-F4-11: implementer substituted sd.public.comment probe for story-mandated
+      role/group visibility restriction without reporting. Both required human intervention for
+      recovery. This is a role-agnostic failure mode (also observed in pr-manager: PG-MERGE-AUTH-BYPASS).
+      The STOP-on-deviation rule must explicitly name "writing a substitute approach" as a STOP
+      trigger, separate from "skipping a requirement".
+    severity: MEDIUM
+    pattern_class: agent-discipline
+    drift_item_refs: [PG-F4-1, PG-F4-11, PG-MERGE-AUTH-BYPASS]
+
+  - id: ADVERSARY-MUTATION-CLAIM-WITHOUT-EMPIRICAL-RUN
+    first_observed: 2026-07-14
+    occurrences: 1
+    affected_cycles:
+      - "cycle-001 (SOH-COMMENT-CRUD-1: PG-F4-10 — S-577-6 wave-C adversary pass-4)"
+    status: open
+    linked_proposal: IP-577-02
+    upstream_ref: null
+    description: >
+      An adversary review pass claimed mutation coverage was adequate for S-577-6 without
+      running cargo-mutants. CI subsequently caught an 86% kill rate (not 100%), requiring
+      3 additional mutant-kill tests and a full mutation-gate fix round. The adversary had no
+      tool access to verify the claim. This is a specialization of the ADVERSARY-VERDICT-VS-CONTRACT-
+      DISCREPANCY pattern (IP-571-05): an adversary may report CLEAN on mutation while the actual
+      mutation kill rate is below threshold. A mutation coverage claim must be backed by an
+      empirical cargo-mutants run; otherwise the adversary must declare it UNVERIFIED.
+    severity: LOW
+    pattern_class: adversary-discipline
+    drift_item_ref: PG-F4-10
+
+  - id: RESUMED-SUBAGENT-IN-WRONG-WORKTREE
+    first_observed: 2026-07-14
+    occurrences: 1
+    affected_cycles:
+      - "cycle-001 (SOH-COMMENT-CRUD-1: PG-F4-8 — S-577-6 wave-C implementer resumed in S-577-4 worktree)"
+    status: open
+    linked_proposal: IP-577-07
+    upstream_ref: null
+    description: >
+      A resumed sub-agent wrote stray commits to the wrong worktree (.worktrees/S-577-4) after
+      context switch, when its assigned story was S-577-6. The agent had no reliable memory of
+      its worktree assignment after the resume; no pre-commit branch assertion was in the resume
+      prompt. Commits were caught by the orchestrator and cleaned up, but required an extra fix
+      round. Deterministic fix: every resume prompt must include the explicit worktree path,
+      branch name, and a mandatory pre-commit branch assertion.
+    severity: LOW
+    pattern_class: agent-discipline
+    drift_item_ref: PG-F4-8
+
+  - id: STATE-MANAGER-MONOLITHIC-WRITE-STALL
+    first_observed: 2026-07-08
+    occurrences: "4–5 total (2026-07-08/09/14)"
+    affected_cycles:
+      - "cycle-001 (ADF-CODE-MARK-EXCLUSIVITY: 1–2 occurrences)"
+      - "cycle-001 (SOH-COMMENT-CRUD-1: 3+ occurrences, Bash-python workaround now standard)"
+    status: open
+    linked_proposal: IP-577-05
+    upstream_ref: null
+    description: >
+      The timestamp-advancement PreToolUse hook forces every STATE.md edit to span the full
+      file → monolithic writes → repeated API stalls under large file size and hook overhead.
+      Occurrences at 2026-07-08/09/14. The Bash-python workaround (bypass PreToolUse per-edit
+      gate via atomic multi-field Python) has become load-bearing standard practice rather than
+      an emergency fallback. The PostToolUse hook also timed out on every PO edit during the
+      wave-D BC Source sync sweep (fail-closed false-positive rejection). Engine-side fix needed:
+      increase hook timeout or make PostToolUse fail-open (non-blocking) for file-edit validators.
+    severity: MEDIUM
+    pattern_class: infrastructure
+    drift_item_ref: STATE-MANAGER-MONOLITHIC-WRITE-STALL
+
+  - id: RESOLVED-BY-SHIPPING-DOC-LABEL
+    first_observed: 2026-07-14
+    occurrences: 1
+    affected_cycles:
+      - "cycle-001 (SOH-COMMENT-CRUD-1: wave-C 4 sweeps + wave-D BC Source sync; 3 fix PRs/commits; 3 artifact layers)"
+    status: open
+    linked_proposal: IP-577-01
+    upstream_ref: null
+    description: >
+      "Resolved-by-shipping" doc-label family: stale stub labels, "citations updated at delivery"
+      placeholders, and stale BC Source citations inserted during spec-design time survive all
+      per-story TDD loops (each loop only touches its own story's scope) and accumulate across the
+      full bundle. In SOH-COMMENT-CRUD-1 this cost 6 fix sweeps and 3 fix PRs/commits across 3
+      artifact layers (docs/CLAUDE.md/src). Root cause is the same as TWIN-ARTIFACT-SWEEP but at
+      the doc-label level rather than spec-index level. Codified remedy: mandatory repo-wide label
+      grep (BC Source lines, TODO/FIXME/stub, deferred-to-story annotations) as a single final-wave
+      delivery step at the last story of each bundle.
+    severity: LOW
+    pattern_class: process-gap
+    drift_item_refs: [TWIN-ARTIFACT-SWEEP, PG-F4-7]
