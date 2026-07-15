@@ -16,7 +16,7 @@ holdout_count_after: 95
 
 ## Summary
 
-F2 spec evolution for the SOH-ATTACHMENTS-1 feature bundle (issues #576 + #585). Adds 27
+F2 spec evolution for the SOH-ATTACHMENTS-1 feature bundle (issues #576 + #585). Adds 33
 new individually-bodied BCs across three BC files, establishing the full aspirational
 behavioral specification for `jr issue attachment list`, `jr issue attachment download`, `jr issue attachment
 upload`, and `jr issue attachment delete`. Issue #585 (contentUrl surface) is absorbed into
@@ -81,8 +81,8 @@ BC-2.7.002. All design decisions ratified by DEC-179.
 | BC-3.9.016 | --older-than always requires --yes (no interactive prompt for bulk); --dry-run exempt; clap mutual-exclusion positional-AID vs --issue/--older-than |
 | BC-3.9.017 | --replace-existing: delete-ALL-same-filename (OQ-6) then upload; non-atomic race documented (JRACLOUD-96384/-78388); MUST NOT assert atomicity |
 | BC-3.9.018 | --replace-existing zero-match: skip delete phase; silent idempotent plain upload |
-| BC-3.9.019 | --older-than: --issue KEY required; duration.rs parser; chrono client-side comparison; invalid duration exit 64; bulk JSON `{"deleted":true,"count":N,"ids":[]}` |
-| BC-3.9.020 | --dry-run multi-attachment preview: no mutations; JSON `{"dryRun":true,"ids":[...],"attachments":[{id,filename}]}`; single-ID --dry-run = stderr hint + exit 0 |
+| BC-3.9.019 | --older-than: --issue KEY required; duration.rs parser; chrono client-side comparison; invalid duration exit 64; bulk JSON `{"count":N,"deleted":true,"ids":[]}` |
+| BC-3.9.020 | --dry-run multi-attachment preview: no mutations; JSON `{"attachments":[{id,filename}],"dryRun":true,"ids":[...]}`; single-ID --dry-run = stderr hint + exit 0 |
 
 ### BC-X.8.010 — serviceDeskId cache (cross-cutting.md)
 
@@ -157,7 +157,7 @@ Applied from `.factory/phase-f2-spec-evolution/security-review-576.md` (verdict:
 | SEC-576-006 | LOW (correctness) | BC-X.8.010 | Added stale-ID self-healing clause: delete cache + retry once on step-1 404/403 | APPLIED |
 | SEC-576-007 | INFO (CWE-22) | BC-2.7.011 | Added step 5.5: trailing whitespace/dot strip for Windows predictability | APPLIED |
 
-Spec version bumped to 1.3.44 by this fix round. BC count unchanged at 651.
+Spec version bumped to 1.3.44 by this fix round. BC count at this round: 651 (pre-adversary-pass-1 round B; adversary pass-1 round B subsequently added BC-3.9.015..020 → 657).
 
 ---
 
@@ -176,7 +176,7 @@ CONS-576-005 routed to security reviewer.
 | CONS-576-006 | LOW | impact-boundary-576.md | §R2.2 annotation: --internal non-JSM exit-64 clause superseded by OQ-9 silent no-op | APPLIED |
 | CONS-576-007 | INFO | spec-changelog.md | [1.3.43] ADR-0017 reference: "planned" → "Accepted 2026-07-15" with path | APPLIED |
 
-BC count unchanged: 651. Spec version unchanged at 1.3.44. Both guards exit 0.
+BC count at this round: 651 (pre-adversary-pass-1 round B). Spec version: 1.3.44. Both guards exit 0.
 
 ---
 
@@ -191,7 +191,7 @@ Applied from `.factory/phase-f2-spec-evolution/consistency-report-576-r2.md` (ve
 | NEW-004 | LOW | CANONICAL-COUNTS.md | BC-X.4.009 counting note: total_bcs 149→150; "624 sum" → "651 sum"; "623" → "650" | APPLIED |
 | NEW-005 | LOW | impact-boundary-576.md | §R2.3 BC-3.9.012 row: PHASE-DOC-RETRO-ANNOTATION added — "same JSM-only gate as --public" superseded by OQ-9 for --internal; BC-3.9.004 is correct current spec | APPLIED |
 
-BC count unchanged: 651. Spec version unchanged at 1.3.44. Both guards exit 0.
+BC count at this round: 651 (pre-adversary-pass-1 round B). Spec version: 1.3.44. Both guards exit 0.
 
 ---
 
@@ -213,7 +213,7 @@ Full CREATE sub-burst details in: `.factory/phase-f2-spec-evolution/prd-delta-57
 | NEW-R3-002 | LOW | bc-3-issue-write.md | BC-3.9.007 JSDCLOUD-10841 paragraph: `(BC-2.7.005)` → `(BC-2.7.007)` (wrong cross-ref); zero-residual sweep confirmed | APPLIED |
 | NEW-R3-001 | LOW | prd-delta-576.md | Frontmatter `spec_version_after: 1.3.43` → `1.3.44` | APPLIED |
 
-BC count unchanged: 651. Both guards exit 0.
+BC count at this round: 651 (pre-adversary-pass-1 round B). Both guards exit 0.
 
 ---
 
@@ -225,7 +225,7 @@ BC count unchanged: 651. Both guards exit 0.
 | NEW-R4-003 | LOW | bc-3-issue-write.md | Footer Last-updated narrative: prepended 2026-07-15 SOH-ATTACHMENTS-1 F2 entry; relabelled prior entry as "Previous update 2026-07-09". Count line (105/134) left unchanged — already updated by CREATE burst | APPLIED |
 | NEW-R4-002 | INFO | CANONICAL-COUNTS.md | ADR count update (27→28) — DEFERRED to state-manager; not assigned to spec-steward | DEFERRED |
 
-BC count unchanged: 651. Both guards exit 0.
+BC count at this round: 651 (pre-adversary-pass-1 round B). Both guards exit 0.
 
 ---
 
@@ -256,6 +256,6 @@ Source: adversary pass-1 findings. Human rulings: R1 (--replace-existing/--older
 | ADV-022 (INFO) | INFO | bc-2-issue-read.md, bc-3-issue-write.md | APPLIED | BC-2.7.011: containment-check coverage/mutation exemption note (intentionally unreachable); BC-3.9.011: EJ-teardown obligation (must delete uploaded attachment; jsm_self_close alone insufficient) |
 | ADV-003 residue | INFO | prd-delta-576.md | APPLIED | Scope Note section added before Deferred Probe Obligations: R1 ruling — --replace-existing/--older-than/--dry-run IN scope for round B; NOT silently out of scope |
 
-**BC count unchanged: 651. Spec version unchanged at 1.3.44. Both guards exit 0.**
+**BC count at this round: 651 (adversary pass-1 round B subsequently added BC-3.9.015..020 → 657). Spec version: 1.3.44 at this round. Both guards exit 0.**
 
 **Zero-residual proof for ADV-001:** `grep -rn "\bjr attachment\b" .factory/specs/prd/ .factory/phase-f2-spec-evolution/prd-delta-576.md | grep -v "jr issue attachment"` → (no output)

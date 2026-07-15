@@ -350,3 +350,62 @@ holdout-scenarios.md `### H-` actual count: 95 (total_holdouts frontmatter still
 - `check-spec-counts.sh`: `OK: all spec counts verified.`
 
 **Files edited:** `CANONICAL-COUNTS.md` (8 changes via Python/Bash, TD-031); `BC-INDEX.md` (1 change via Python/Bash, TD-031).
+
+---
+
+## Adversary Pass-2 Fix Round (P2) — 2026-07-15
+
+**Constraint:** no new BC IDs, no count changes. BC count stays 657. Both guards must exit 0.
+
+| Finding | Severity | Description | File(s) | Status |
+|---------|----------|-------------|---------|--------|
+| P2-001 | HIGH | BC-3.9.016: extend to three forms (single-AID → BC-3.9.015 gate; multi-AID bulk → `--yes` required; --older-than bulk → `--yes` required); header updated; opening paragraph updated; --yes section extended with multi-AID examples; clap-form updated; EC-3.9.016-6/7/8 added | bc-3-issue-write.md | APPLIED |
+| P2-002 | HIGH | BC-3.9.015 EC-3.9.015-5: EOF / Ctrl+D = cancel (exit 0, "Deletion cancelled.", JSON `{"cancelled":true,"deleted":false}`) — NOT exit 130. Mirrors BC-3.9.014 and BC-3.5.003 precedent | bc-3-issue-write.md | APPLIED |
+| P2-003 | HIGH | BC-3.9.017: 3-step → 4-step with Gate step (step 2) firing ALL confirmation gates BEFORE step 3 (delete). Invariant added: no destructive call while any confirmation gate is pending. EC-3.9.017-8 added (gate cancelled → no DELETEs) | bc-3-issue-write.md | APPLIED |
+| P2-004 | HIGH | H-NEW-ATTACHMENT-006: hard-coded 2026-07-01/05/14 dates + "assuming invocation date 2026-07-15" replaced with relative `T_now - 14d / 10d / 1d` timestamps | holdout-scenarios.md | APPLIED |
+| P2-005 | HIGH | H-NEW-ATTACHMENT-002: mock topology fixed — `GET /rest/api/3/issue/FOO-1` content URL changed from `https://example.atlassian.net/content/10001` → `<JR_BASE_URL>/rest/api/3/attachment/content/10001`; `GET /rest/api/3/attachment/content/10001` mounted on wiremock | holdout-scenarios.md | APPLIED |
+| P2-006 | MEDIUM | BC-3.9.017: multiple `<FILE>` args with `--replace-existing` — delete phase matches union of all supplied basenames; duplicates deduplicated into a single match set | bc-3-issue-write.md | APPLIED |
+| P2-007 | MEDIUM | BC-3.9.013: multi-delete 404-skip exception note added. EC-3.9.019-7: 404 on DELETE = skip (benign race), not abort; only non-404 errors abort | bc-3-issue-write.md | APPLIED |
+| P2-008 | MEDIUM | BC-3.9.019: duration units corrected — `m` (minutes) added; "m is NOT months" explicit note; seconds (`s`) excluded; error-hint examples updated to include `30m` | bc-3-issue-write.md | APPLIED |
+| P2-009 | MEDIUM | BC-3.9.012: CSRF 403 row reframed (implementation error, not "should not happen"); new row added for permission-denied 403 (distinct from CSRF) | bc-3-issue-write.md | APPLIED |
+| P2-010 | MEDIUM | BC-3.9.001 EC-3.9.001-4: `is_file()` check added — rejects directories, device nodes, FIFOs; separate error messages for missing vs. non-regular-file | bc-3-issue-write.md | APPLIED |
+| P2-011 | MEDIUM | H-NEW-ATTACHMENT-005: debug-build preamble note added (`JR_STDIN_IS_TTY=1` is debug-only seam; evaluator must not test against release binary) | holdout-scenarios.md | APPLIED |
+| P2-012 | MEDIUM | prd-delta-576.md Summary: "Adds 27 new individually-bodied BCs" → "Adds 33" (12 BC-2.7 + 14 original BC-3.9 + 1 BC-X.8.010 + 6 round B = 33) | prd-delta-576.md | APPLIED |
+| P2-013 | MEDIUM | BC-3.9.017: partial-failure consequence paragraph added before ECs — prior deletes permanent, upload not issued, issue may have fewer attachments; --dry-run usage note | bc-3-issue-write.md | APPLIED |
+| P2-014 | MEDIUM | H-NEW-ATTACHMENT-007: null-byte entry → overlong (≥255-byte) name; RFC 7159 §8.2 NUL note added; UNC path properly escaped (`\\\\server\\share\\path.txt`) | holdout-scenarios.md | APPLIED |
+| P2-015 | LOW | H-NEW-ATTACHMENT-002 Expected: `(13 bytes)` → `(12 bytes)` ("hello world\n" = 12 bytes) | holdout-scenarios.md | APPLIED |
+| P2-016 | LOW | BC-3.9.019: `--older-than 0d` footgun note added (selects ALL attachments); pre-deletion stderr summary added; no-seconds explicit note | bc-3-issue-write.md | APPLIED |
+| P2-018 | LOW | BC-3.9.020: `upload --replace-existing --dry-run` coverage restored — previews would-delete + would-upload; JSON `{"dryRun":true,"wouldDelete":[...],"wouldUpload":[...]}` | bc-3-issue-write.md | APPLIED |
+| P2-019 | LOW | EC-3.9.001-5/-6 swapped to numeric order (bc-3); EC-2.7.001-2/-3 swapped to numeric order (bc-2); H-NEW-ATTACHMENT-003: both `report.pdf` files MUST carry SHA-1 prefix form (batch `--all` always SHA-1-prefixes) | bc-3-issue-write.md, bc-2-issue-read.md, holdout-scenarios.md | APPLIED |
+| P2-021 | INFO | prd-delta-576.md: 6 × "BC count unchanged: 651" annotated as historical (round B subsequently → 657); BC Enumeration table BC-3.9.019 and BC-3.9.020 JSON key order fixed to BTreeMap alphabetical | prd-delta-576.md | APPLIED |
+| P2-017 | INFO | (Not assigned to spec-steward per team-lead dispatch) | — | N/A |
+| P2-020 | INFO | (Not assigned to spec-steward per team-lead dispatch) | — | N/A |
+
+**BC / holdout count invariant confirmed:** 657 BCs / 95 holdouts — UNCHANGED (no new BC IDs issued in this round, as required).
+
+**Guard results (post-P2):**
+- `check-bc-cumulative-counts.sh`: `OK: all cumulative BC counts verified (657 total across 8 files; Surface H footer checked where present).`
+- `check-spec-counts.sh`: `OK: all spec counts verified.`
+
+**Files edited:** `bc-3-issue-write.md` (19 sub-changes), `bc-2-issue-read.md` (1 EC swap), `holdout-scenarios.md` (6 changes, binary-mode for null-byte fixture), `prd-delta-576.md` (9 changes). `prd-delta-576-worklog.md` (this entry). All edits via Python/Bash (TD-031 workaround).
+
+---
+
+## Consistency Review Round 9 (R9) Fix Round — 2026-07-15
+
+**Constraint:** no new BC IDs, no count changes. BC count stays 657. Both guards must exit 0.
+
+| Finding | Severity | Status | What changed |
+|---------|----------|--------|-------------|
+| R9-001 | MED | APPLIED | JSON Output Shape Contracts table: 7th row added — `attachment upload --replace-existing --dry-run` → `{"dryRun":true,"wouldDelete":[{"id":"<AID>","filename":"<name>"}],"wouldUpload":[{"filename":"<name>"}]}` (3 keys alphabetical: dryRun < wouldDelete < wouldUpload; BC-3.9.020 path c; S5 deferred). Sources line updated to include `BC-3.9.020 path c (upload --replace-existing --dry-run, S5 deferred)`. File: bc-3-issue-write.md |
+| R9-002 | LOW | APPLIED | (a) BC-3.9.003: EC-3.9.003-5 added — when invoked from BC-3.9.017 step 4 (--replace-existing path), the confirmation gate is NOT re-presented (already resolved at step 2; if gate was cancelled in step 2, BC-3.9.003 is never reached); only servicedeskapi wire steps execute; one gate per invocation, ever. (b) BC-3.9.017 step 4: extended with explicit gate-suppression note cross-referencing BC-3.9.003 EC-3.9.003-5. File: bc-3-issue-write.md |
+| R9-003 | LOW | APPLIED | impact-boundary-576.md R3.8b PHASE-DOC-RETRO-ANNOTATION added by architect — settled ordering list-first→gate→delete→upload (BC-3.9.017 steps 1–4); gate-first ordering from original R3.8b superseded at F2; safety invariant preserved (no destructive call before pending gate). |
+| R8-001 carry-forward claim | — | REFUTED | Team-lead grepped CANONICAL-COUNTS.md line 128 and confirmed Group-19 citation is present; no action taken. |
+
+**BC / holdout count invariant confirmed:** 657 BCs / 95 holdouts — UNCHANGED.
+
+**Guard results (post-R9):**
+- `check-bc-cumulative-counts.sh`: `OK: all cumulative BC counts verified (657 total across 8 files; Surface H footer checked where present).`
+- `check-spec-counts.sh`: `OK: all spec counts verified.`
+
+**Files edited:** `bc-3-issue-write.md` (4 sub-changes via Python/Bash, TD-031). `prd-delta-576-worklog.md` (this entry).

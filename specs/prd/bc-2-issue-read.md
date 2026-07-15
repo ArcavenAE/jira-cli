@@ -553,9 +553,9 @@ When the issue has zero attachments the handler exits 0 with no table and empty 
 
 **EC-2.7.001-1** (zero attachments): `attachment list <KEY>` on a valid issue with no attachments → exit 0, empty stdout, no stderr output.
 
-**EC-2.7.001-3** (null/missing author): when `attachment.author` is absent or null (system-generated or anonymous attachment), the Author column displays `"(anonymous)"` in the table.
-
 **EC-2.7.001-2** (filter-count hint): when any `--filter` flag is active and reduces the displayed row count, a hint is emitted to stderr: `"Showing N of M attachments."` (N = filtered count, M = total from API). When no filter is active this hint is suppressed.
+
+**EC-2.7.001-3** (null/missing author): when `attachment.author` is absent or null (system-generated or anonymous attachment), the Author column displays `"(anonymous)"` in the table.
 
 **CLI flags** (pinned for e2e surface guard): `<KEY>` (positional, required); `--filter <FILTER>` (repeatable; key=value form); `--output json`; `--no-input`; `--profile <NAME>`; `--no-color`.
 

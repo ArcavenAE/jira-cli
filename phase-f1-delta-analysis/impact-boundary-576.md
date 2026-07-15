@@ -614,7 +614,7 @@ The replace-existing flow deletes same-filename existing attachments before uplo
 
 **`--older-than` on bulk delete (BC-3.9.007 repaired):**
 
-The duration argument uses the existing `src/duration.rs` parser conventions (e.g., `7d`, `2w`, `1M`) — same family as `worklog add --duration`. The BC must cite `duration.rs` and its accepted unit set. Client-side comparison: filter `fields.attachment[].created` where `(now - created) > duration`. The `created` field is ISO 8601 string — parse with `chrono` (already a transitive dep via `src/cli/issue/changelog.rs` usage).
+The duration argument uses the existing `src/duration.rs` parser conventions (e.g., `7d`, `2w`, `4h`) — same family as `worklog add --duration`. **[P2-008 retro-correction 2026-07-15: `duration.rs` accepts `w`, `d`, `h`, `m` (minutes) ONLY — no months (`M`); the earlier example `1M` was wrong and is removed.]** The BC must cite `duration.rs` and its accepted unit set. Client-side comparison: filter `fields.attachment[].created` where `(now - created) > duration`. The `created` field is ISO 8601 string — parse with `chrono` (already a transitive dep via `src/cli/issue/changelog.rs` usage).
 
 **`--dry-run` on bulk delete (BC-3.9.010 repaired):**
 
@@ -681,3 +681,39 @@ The §1.1 function table in Rev 1 lists four functions. A fifth is required for 
 | `get_attachment_metadata(client, aid)` | `GET /rest/api/3/attachment/{id}` | Returns JSON metadata only (not bytes); confirmed by research §1a — "the attachment itself is not returned"; used by `handle_attachment_delete` before issuing DELETE to populate the confirmation prompt |
 
 The full revised function list for `src/api/jira/attachments.rs` (5 functions): `list_attachments`, `get_attachment_content`, `get_attachment_metadata`, `upload_attachment`, `delete_attachment`. S4 story plan must allocate implementation scope for this function alongside the delete handler.
+
+### R3.8 Orchestrator pattern-extension rulings (adversary pass 2 checkpoint) — FLAG FOR HUMAN REVIEW AT F2
+
+Two rulings made at the adversary-pass-2 checkpoint extend existing house patterns. Both are marked for explicit human confirmation at the F2 spec gate before being encoded in BCs.
+
+#### R3.8a: Multi-positional delete is bulk → `--yes` required (ADV-576-P2-001)
+
+**Ruling (orchestrator, 2026-07-15; FLAG FOR HUMAN REVIEW AT F2):**
+`jr issue attachment delete <AID> <AID> ...` with 2 or more positional IDs is treated as a **bulk operation** and requires `--yes`, mirroring the `--older-than` rule (R3.3). A single positional ID keeps the interactive y/N gate; 2+ IDs require the explicit non-interactive flag.
+
+**Rationale:** The house pattern for bulk destructive operations (e.g., `issue edit` with multiple keys, `attachment delete --older-than`) is mandatory-explicit `--yes` — no interactive prompt for bulk, because prompting once for N deletions is misleading about scope. Extending that pattern to multi-positional delete is consistent and prevents accidental mass deletion. The clap variant collapses the positional `<AID>` to `num_args = 1..` and the handler branches on `aids.len()`.
+
+**BC implication:** BC-3.9.015 (delete gate) will need an EC clause: `(EC-3.9.015-1) aids.len() == 1 → interactive gate or non-interactive exit 64; (EC-3.9.015-2) aids.len() >= 2 → `--yes` required, missing → exit 64`. JSON success shape for multi-ID: `{"deleted": true, "count": N, "ids": [str]}` (same as bulk `--older-than`).
+
+#### R3.8b: No destructive call before a pending confirmation gate (ADV-576-P2-003)
+
+**Ruling (orchestrator, 2026-07-15; FLAG FOR HUMAN REVIEW AT F2):**
+The `--replace-existing` delete phase (delete same-filename attachments before re-uploading) MUST execute AFTER any pending confirmation gate has been resolved — it may not issue DELETE calls before the user has confirmed (or `--yes` has been supplied). This applies specifically to the interaction between `attachment upload --public --replace-existing`: the `--public` confirmation gate fires first; only after the user confirms (or `--yes` bypasses) does the delete-then-upload sequence proceed.
+
+**Rationale (ADV-576-P2-003):** A destructive HTTP call (DELETE) interleaved before a gate check creates a data-loss window: if the user cancels at the `--public` prompt after the old attachments have already been deleted but before the new upload, the issue is left with no attachments. The invariant "no destructive call precedes any pending confirmation gate" closes this ordering hazard. It is consistent with the existing house invariant for `comment delete` (confirmation before any HTTP mutation).
+
+**Implementation constraint for `handle_attachment_upload`:** the handler ordering must be:
+1. Resolve `--public` gate (confirm or `--yes` check) — if present
+2. If `--replace-existing`: fetch `fields.attachment[]`, identify same-filename entries (GET, read-only)
+3. If `--replace-existing` and gate passed: issue DELETE for each matched attachment
+4. Upload new file(s) via multipart POST
+
+Steps 3 and 4 are both mutations; both happen after step 1. The BC for `--replace-existing` (BC-3.9.017) must encode this ordering as an invariant.
+
+> **[PHASE-DOC-RETRO-ANNOTATION 2026-07-15, R9-003 LOW]** The gate-first ordering above (gate → list → delete → upload) was superseded during BC-3.9.017 finalisation. The settled ordering in BC-3.9.017 is **list-first → gate → delete → upload**:
+> 1. If `--replace-existing`: fetch `fields.attachment[]`, identify same-filename entries (GET, read-only)
+> 2. Resolve `--public` gate — if present; MAY be skipped when step 1 finds zero matches (no destructive work to confirm); prompt CAN display what will be deleted, drawn from step 1 results
+> 3. If `--replace-existing` and gate passed: issue DELETE for each matched attachment
+> 4. Upload new file(s) via multipart POST
+>
+> The safety invariant "no destructive call before a pending confirmation gate" is preserved in both orderings — step 3 (DELETE) still follows step 2 (gate) in the settled form. The list-first change is a UX improvement, not a safety regression: it allows the gate to be a no-op when there are no filename matches, and it allows the confirmation prompt to name what will be deleted.

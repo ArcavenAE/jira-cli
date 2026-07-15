@@ -3209,9 +3209,10 @@ When `--markdown` is absent, the guard does NOT fire — `--field description=va
 | `attachment delete` (bulk AIDs) | `{"count":N,"deleted":true,"ids":["<AID1>","<AID2>",...]}` | 3 keys alphabetical; BC-3.9.010 |
 | `attachment delete` (cancel / --no) | `{"cancelled":true,"deleted":false}` | 2 keys alphabetical; BC-3.9.015 |
 | `attachment delete --dry-run` (preview) | `{"attachments":[...],"dryRun":true,"ids":[...]}` | 3 keys alphabetical; BC-3.9.020 |
+| `attachment upload --replace-existing --dry-run` | `{"dryRun":true,"wouldDelete":[{"id":"<AID>","filename":"<name>"}],"wouldUpload":[{"filename":"<name>"}]}` | 3 keys alphabetical (dryRun < wouldDelete < wouldUpload); BC-3.9.020 path c; S5 deferred |
 | `attachment upload --public` | (P2-3c deferred — update after S5 live-capture; see BC-3.9.011) | shape TBD |
 
-Sources: `src/cli/issue/snapshots/jr__cli__issue__json_output__tests__*.snap`; BC-1104..BC-1112 (R4); BC-3.9.009, BC-3.9.010, BC-3.9.015, BC-3.9.020 (SOH-ATTACHMENTS-1 F2 additions)
+Sources: `src/cli/issue/snapshots/jr__cli__issue__json_output__tests__*.snap`; BC-1104..BC-1112 (R4); BC-3.9.009, BC-3.9.010, BC-3.9.015, BC-3.9.020 paths a/b (delete dry-run) + BC-3.9.020 path c (upload --replace-existing --dry-run, S5 deferred) (SOH-ATTACHMENTS-1 F2 additions)
 
 
 ### 3.9 Attachment Write (20 BCs: BC-3.9.001..BC-3.9.020)
@@ -3245,11 +3246,11 @@ Output channel: Profile 4 (Symmetric) — stdout for JSON or success data, stder
 **EC-3.9.001-1** (single file): A single-file upload produces a response array with one element; table shows one row.
 **EC-3.9.001-2** (multi-file): Multiple `<FILE>` arguments → single multipart POST with multiple `file` parts; server returns an array with one element per file.
 **EC-3.9.001-3** (empty file): A zero-byte file is valid; `jr` does not reject it client-side. Server behavior depends on Jira configuration.
-**EC-3.9.001-4** (file path not found): If any supplied `<FILE>` path does not resolve to a readable file → exit 64 before any HTTP; stderr `"file not found: <path>"`. The check is performed before any multipart construction.
-
-**EC-3.9.001-6** (stdin or `-` as FILE): If any `<FILE>` argument is the literal string `"-"`, exit 64 before any HTTP: `"stdin upload is not supported; provide a file path."` The `-` shorthand for stdin is explicitly rejected in this slice.
+**EC-3.9.001-4** (file path not found / not a regular file): If any supplied `<FILE>` path does not exist, is a directory, or is any non-regular-file (checked via `is_file()` — rejects block/char devices, symlinks to directories, FIFOs) → exit 64 before any HTTP; stderr `"file not found: <path>"` (missing) or `"not a regular file: <path>"` (exists but not a regular file). The `is_file()` check prevents accidental directory ingestion. The check is performed before any multipart construction.
 
 **EC-3.9.001-5** (X-Atlassian-Token regression guard — SEC-576-005 CWE-352): A wiremock integration test MUST assert that every `POST /rest/api/3/issue/{key}/attachments` upload request includes the header `X-Atlassian-Token: no-check`. A regression omitting this header produces HTTP 403 silently in live testing; the wiremock test catches it at CI time.
+
+**EC-3.9.001-6** (stdin or `-` as FILE): If any `<FILE>` argument is the literal string `"-"`, exit 64 before any HTTP: `"stdin upload is not supported; provide a file path."` The `-` shorthand for stdin is explicitly rejected in this slice.
 
 **Multipart filename encoding (SQ-6 resolution — SEC-576-004 CWE-93)**: reqwest 0.13's `multipart::Part` applies percent-encoding to the filename value in the `Content-Disposition` header. The implementer MUST include a unit test with filenames containing `;`, `"`, and `\r\n` and assert the resulting multipart POST body has a well-formed `Content-Disposition` header (no CRLF injection, no boundary escape). This resolves SQ-6 from `.factory/phase-f1-delta-analysis/impact-boundary-576.md`, to be verified at Story 3 delivery.
 
@@ -3304,6 +3305,7 @@ Output channel: Profile 4 (Symmetric). On success: human mode echoes "Uploaded N
 **EC-3.9.003-2** (single file, `--yes`): One temporaryAttachmentId; second-step body `{"temporaryAttachmentIds":["<id>"],"public":true}`.
 **EC-3.9.003-3** (multiple files, `--yes`): One step-1 POST per file in order; second-step body `{"temporaryAttachmentIds":["<id1>","<id2>",...],"public":true}`.
 **EC-3.9.003-4** (cancel at prompt, interactive): exit 0; human "Upload cancelled."; JSON `{"cancelled":true,"uploaded":false}`.
+**EC-3.9.003-5** (invoked from BC-3.9.017 `--replace-existing` step 4): the confirmation gate defined in this BC is NOT re-presented. The gate has already been resolved at BC-3.9.017 step 2 (gate step) — if cancelled there, BC-3.9.003 is never reached; if passed there, proceeding to step 4 implies the gate is already satisfied. Only the servicedeskapi wire steps (step 1: `attachTemporaryFile`; step 2: `post_request_attachment`) execute on this call path. Gate state: RESOLVED (do not prompt again). One gate per invocation, ever.
 
 **Trace**: F2 spec evolution (2026-07-15 SOH-ATTACHMENTS-1, DEC-179); DEC-174 (interactive prompt mechanism: eprint!+read_line, NOT dialoguer); DEC-169 (leniency: --yes without --public = silent no-op); `.factory/research/issue-576-attachments-api-2026-07-15.md` §P2-3, §P2-4; BC-3.5.007 (comment edit --public confirmation pattern); BC-X.8.010 (serviceDeskId cache); SEC-576-005 (CWE-352 X-Atlassian-Token step-1 wiremock test added 2026-07-15)
 
@@ -3509,7 +3511,8 @@ Error exits for `jr issue attachment upload`:
 | `--public` on non-JSM issue | local (after meta fetch) | 64 | `"--public is only supported on Jira Service Management (JSM) issues."` (BC-3.9.005) |
 | Non-interactive without `--yes` (`--public`) | local | 64 | hint to use `--yes` (BC-3.9.014) |
 | Attachment too large | 413 | 1 | `"Attachment too large: the file exceeds the server-configured limit."` |
-| CSRF header missing (should not happen) | 403 from Jira | 1 | `"API error (403)"` |
+| CSRF token absent (implementation error — `X-Atlassian-Token: no-check` MUST be present per BC-3.9.001) | 403 | 1 | Jira error body surfaced |
+| Insufficient permissions (user lacks write scope or attachment permissions) | 403 | 1 | Jira error body surfaced |
 | Generic bad request | 400 | 1 | Jira error body surfaced |
 | Not authenticated | 401 | 2 | `"Not authenticated. Run \`jr auth login\`."` |
 | Server error | 5xx | 1 | `"API error (N)"` |
@@ -3540,6 +3543,8 @@ Error exits for `jr issue attachment delete`:
 | Network failure | — | 1 | `"Could not reach <instance>: <reason>"` |
 
 `jr` does NOT validate AID format client-side (e.g., numeric check). Non-numeric or malformed AIDs are sent to the server; the server returns 400 or 404 and `jr` surfaces the response normally.
+
+**Multi-delete 404 exception (bulk and --replace-existing paths)**: on multi-attachment delete paths (`--older-than`, multi-AID bulk per BC-3.9.016, `--replace-existing` delete phase per BC-3.9.017), a 404 response to an individual `DELETE` is treated as already-deleted (benign race condition) and is silently skipped; iteration continues. Exit 64 on 404 applies only to single-AID targeted deletes (BC-3.9.008). Non-404 errors (403, 5xx, network) on any delete attempt abort the sequence and surface the error.
 
 **EC-3.9.013-1** (AID 404): exit 64; Jira error body on stderr (NOT silent exit 0 — DEC-168).
 **EC-3.9.013-2** (403): exit 1; Jira body on stderr.
@@ -3612,20 +3617,20 @@ The confirmation gate for `jr issue attachment upload --public` uses the DEC-174
 **EC-3.9.015-2** (interactive, 'n' or empty): exit 0; `"Deletion cancelled."` to stderr; JSON: `{"cancelled":true,"deleted":false}`.
 **EC-3.9.015-3** (non-interactive, no `--yes`): exit 64; stderr `--yes` hint; NO DELETE issued.
 **EC-3.9.015-4** (`--yes`, interactive or non-interactive): gate skipped; DELETE proceeds immediately; no stdin read.
-**EC-3.9.015-5** (EOF / Ctrl+D on prompt read): `Err` from `read_line` → `JrError::Interrupted`; exit 130.
+**EC-3.9.015-5** (EOF / Ctrl+D on prompt read): treated as cancellation — `Err` from `read_line` is caught and routed to the cancel path; exit 0; `"Deletion cancelled."` to stderr; JSON: `{"cancelled":true,"deleted":false}`. Mirrors BC-3.9.014 EC-3.9.014-2 (upload --public cancel on EOF) and BC-3.5.003 (comment delete precedent). Exit 130 is reserved for SIGINT/Ctrl+C (handled by the runtime, not by `read_line` EOF).
 **EC-3.9.015-6** (metadata GET returns 404): exit 64; `"Attachment <AID> not found or not accessible."`; no DELETE issued.
 
 **Trace**: F2 spec evolution (2026-07-15 SOH-ATTACHMENTS-1, DEC-179); impact-boundary-576.md R3.3 (human ruling: y/N + --yes gate for single-ID delete); BC-3.5.002/BC-3.5.003 (comment delete mirror pattern); DEC-174 (eprint!+read_line canonical interactive-prompt mechanism); DEC-169 (--yes leniency on non-gated operations); adversary pass-1 human ruling R2 (2026-07-15)
 
 ---
 
-#### BC-3.9.016: `attachment delete --issue <KEY> --older-than <duration>` always requires `--yes` (no interactive prompt for bulk); missing `--yes` → exit 64; clap mutual-exclusion between positional-AID form and `--issue`/`--older-than` form
+#### BC-3.9.016: Bulk `attachment delete` always requires `--yes` (no interactive prompt); missing `--yes` → exit 64; three forms: single-AID (BC-3.9.015 gate), multi-AID bulk (`--yes` required), `--issue`/`--older-than` bulk (`--yes` required)
 
 **Confidence**: HIGH
 **Source**: `src/cli/issue/attachments.rs::handle_attachment_delete` (implementation pending — story S4)
 **Subject**: Issue write (attachment delete — bulk --older-than mandatory --yes gate)
 
-The `--issue <KEY> --older-than <duration>` bulk-delete path ALWAYS requires explicit `--yes` — no interactive prompt is offered for bulk deletion. `--yes` is mandatory-explicit for this path (same rationale as bulk operations elsewhere: the scope of a bulk destructive operation must be explicitly acknowledged upfront).
+`jr issue attachment delete` has three invocation forms: (1) `delete <AID>` (single AID) — governed exclusively by BC-3.9.015's confirmation gate; (2) `delete <AID> <AID>...` (2 or more positional AIDs) — multi-AID bulk form; (3) `delete --issue <KEY> --older-than <duration>` — --older-than bulk form. Both bulk forms (2 and 3) ALWAYS require explicit `--yes` — no interactive prompt is offered. `--yes` is mandatory-explicit for bulk paths (same rationale as bulk operations elsewhere: the scope of a bulk destructive operation must be explicitly acknowledged upfront).
 
 **`--yes` requirement:**
 
@@ -3633,12 +3638,16 @@ The `--issue <KEY> --older-than <duration>` bulk-delete path ALWAYS requires exp
 - `jr issue attachment delete --issue FOO-1 --older-than 7d --yes` → proceeds; see BC-3.9.019 for duration parsing and wire behavior.
 - `jr issue attachment delete --issue FOO-1 --older-than 7d --dry-run` (no `--yes`) → `--dry-run` takes precedence over the `--yes` gate — dry-run is read-only (no mutations), so `--yes` is NOT required for a dry-run preview. See BC-3.9.020 for dry-run output shape.
 - `jr issue attachment delete --issue FOO-1 --older-than 7d --dry-run --yes` → `--dry-run` governs; `--yes` accepted silently (DEC-169 leniency); no mutations.
+- `jr issue attachment delete 40001 40002` (2 AIDs, no `--yes`) → exit 64; stderr: `"--yes is required to delete multiple attachments without a confirmation prompt."`. No API calls made.
+- `jr issue attachment delete 40001 40002 --yes` → proceeds; deletes each AID serially per BC-3.9.008.
+- `jr issue attachment delete 40001 40002 --dry-run` (no `--yes`) → valid; dry-run is read-only; BC-3.9.020 output shape.
 
 **clap mutual-exclusion** (positional `<AID>` form is incompatible with `--issue`/`--older-than` form):
 - `delete <AID> --issue FOO-1` → clap exit 2 (positional AID conflicts with `--issue`).
 - `delete <AID> --older-than 7d` → clap exit 2 (positional AID conflicts with `--older-than`).
 - `delete --issue FOO-1 --older-than 7d` (no positional AID) → valid bulk form; requires `--yes`.
 - `delete <AID>` (no `--issue`, no `--older-than`) → valid single-ID form; confirmation gate per BC-3.9.015.
+- `delete <AID1> <AID2> ...` (2+ positional AIDs, no `--issue`, no `--older-than`) → valid multi-AID bulk form; requires `--yes` (or `--dry-run` per EC-3.9.016-7).
 - `delete --older-than 7d` (no `--issue`, no positional AID) → exit 2 (clap `requires` constraint); clap error to stderr.
 
 **EC-3.9.016-1** (bulk, no `--yes`, no `--dry-run`): exit 64; stderr `"--older-than requires --yes to confirm bulk deletion."`; no API calls.
@@ -3646,6 +3655,9 @@ The `--issue <KEY> --older-than <duration>` bulk-delete path ALWAYS requires exp
 **EC-3.9.016-3** (bulk, `--dry-run`, no `--yes`): dry-run permitted without `--yes`; no mutations; BC-3.9.020 output shape.
 **EC-3.9.016-4** (positional AID + `--issue` or `--older-than`): clap exit 2 (argument conflict).
 **EC-3.9.016-5** (`--older-than` without `--issue`): exit 2 (clap `requires` constraint); clap error to stderr; no application code reached.
+**EC-3.9.016-6** (multi-AID bulk, `--yes`): proceed to BC-3.9.008 for each AID serially; JSON shape per BC-3.9.010.
+**EC-3.9.016-7** (multi-AID bulk, `--dry-run`, no `--yes`): valid; dry-run exempt from `--yes` gate (mirrors EC-3.9.016-3); BC-3.9.020 output shape.
+**EC-3.9.016-8** (multi-AID bulk, no `--yes`, no `--dry-run`): exit 64; stderr `"--yes is required to delete multiple attachments without a confirmation prompt."`; no API calls.
 
 **Trace**: F2 spec evolution (2026-07-15 SOH-ATTACHMENTS-1, DEC-179); impact-boundary-576.md R3.2/R3.3/R3.4 (bulk gate + clap mutual-exclusion + ID-only delete signature); adversary pass-1 human ruling R1 (2026-07-15); DEC-169 (--yes leniency)
 
@@ -3660,8 +3672,13 @@ The `--issue <KEY> --older-than <duration>` bulk-delete path ALWAYS requires exp
 `jr issue attachment upload <KEY> <FILE> --replace-existing` performs a delete-then-upload sequence:
 
 1. **List step**: `GET /rest/api/3/issue/{key}?fields=attachment` to retrieve `fields.attachment[]`. Filter entries where `attachment.filename` equals the basename of `<FILE>` (case-sensitive string equality; Jira stores filenames verbatim).
-2. **Delete step**: For EVERY matching entry, issue `DELETE /rest/api/3/attachment/{id}` serially. OQ-6 ruling: when multiple entries share the same filename, delete ALL (last-write-wins semantics; no error on multiple matches). Per-entry error handling: a 404 on DELETE is treated as already-deleted (skip silently); a 403/401/5xx on any DELETE aborts the sequence — the error is surfaced per BC-3.9.013 and the upload does NOT proceed (remaining same-filename entries may still exist on abort).
-3. **Upload step**: once all matching entries are deleted (or none existed), proceed with upload per BC-3.9.001 (platform path) or BC-3.9.003/BC-3.9.004 (JSM path with any additional visibility flags present). No confirmation gate is added to `--replace-existing` itself — any applicable visibility gate (from `--public`, BC-3.9.003/BC-3.9.014) fires normally.
+2. **Gate step (fire ALL pending confirmation gates BEFORE any destructive call)**: if `--public` is present, fire the BC-3.9.014 confirmation gate now — before any DELETE. If the user cancels, abort: exit 0; human `"Upload cancelled."`; JSON `{"cancelled":true,"uploaded":false}`; no DELETEs issued. This step is a no-op when no gate is applicable (no `--public` flag, or `--yes` supplied bypasses the gate).
+3. **Delete step**: for EVERY matching entry, issue `DELETE /rest/api/3/attachment/{id}` serially. OQ-6 ruling: when multiple entries share the same filename, delete ALL (last-write-wins semantics; no error on multiple matches). Per-entry error handling: a 404 on DELETE is treated as already-deleted (skip silently); a 403/401/5xx on any DELETE aborts the sequence — the error is surfaced per BC-3.9.013 and the upload does NOT proceed (remaining same-filename entries may still exist on abort).
+4. **Upload step**: proceed with upload per BC-3.9.001 (platform path) or BC-3.9.003/BC-3.9.004 (JSM path). The `--public` gate (if applicable) has already fired in step 2. **Gate suppression**: when routing to BC-3.9.003 on this step, the confirmation gate defined in BC-3.9.003 MUST NOT be re-presented — it was already resolved in step 2. Only the servicedeskapi wire steps execute (BC-3.9.003 EC-3.9.003-5). One gate per invocation, ever.
+
+**Invariant**: no destructive API call (DELETE or multipart POST) may be issued while any applicable confirmation gate remains pending. This prevents the data-loss footgun where a user sees a confirmation prompt AFTER their existing attachments have already been deleted.
+
+**Multiple `<FILE>` arguments with `--replace-existing`**: when two or more `<FILE>` arguments are supplied, the delete phase (step 3) matches EVERY supplied file's basename as a union: e.g., `upload FOO-1 a.pdf b.pdf --replace-existing` deletes existing attachments matching `a.pdf` AND existing attachments matching `b.pdf`. Duplicate basenames among the `<FILE>` arguments are deduplicated: `upload FOO-1 a.pdf a.pdf --replace-existing` produces an effective match set of `{a.pdf}` (single entry). All union matches are deleted before the multi-file upload proceeds.
 
 **Non-atomic race window — documented; MUST NOT assert atomicity:**
 
@@ -3670,10 +3687,13 @@ The delete → upload sequence is NOT atomic. A concurrent upload between step 2
 **EC-3.9.017-1** (single matching entry found): delete it, then upload; success per BC-3.9.007/BC-3.9.009.
 **EC-3.9.017-2** (N > 1 matching entries, OQ-6): delete all N serially, then upload; human echo confirms deletions + upload.
 **EC-3.9.017-3** (no matching entry): BC-3.9.018 path (idempotent plain upload).
+**Partial-failure consequence (accepted and documented)**: if step 3 (delete) aborts mid-sequence after some but not all matching attachments are deleted (due to a non-404 error), step 4 (upload) does NOT proceed. The issue is left with fewer same-filename attachments than before — the already-deleted entries are permanently gone. This is a known, accepted limitation of the non-atomic design. **Usage note**: run `jr issue attachment list <KEY>` to review the current attachment state, or use `--dry-run` if available, before running `--replace-existing` on issues with many same-filename attachments.
+
 **EC-3.9.017-4** (DELETE returns 404): treat as already-deleted; continue to next or to upload step.
 **EC-3.9.017-5** (DELETE returns 403/401/5xx): abort sequence; surface error per BC-3.9.013; no upload proceeds.
 **EC-3.9.017-6** (list step fails): abort; no deletes, no upload; exit per BC-3.9.012/BC-3.9.013.
 **EC-3.9.017-7** (non-atomic race — concurrent upload between delete and upload): accepted documented limitation; no retry; no error emitted.
+**EC-3.9.017-8** (gate cancelled in step 2): user cancels `--public` confirmation gate; exit 0; `"Upload cancelled."`; no DELETEs issued; no upload; mirrors BC-3.9.014 EC-3.9.014-2.
 
 **Trace**: F2 spec evolution (2026-07-15 SOH-ATTACHMENTS-1, DEC-179); impact-boundary-576.md R3.2 (--replace-existing scope + non-atomic race + JRACLOUD-96384/-78388 citations); OQ-6 ruling (delete ALL matching entries, last-write-wins); adversary pass-1 human ruling R1 (2026-07-15)
 
@@ -3709,9 +3729,13 @@ When `jr issue attachment upload <KEY> <FILE> --replace-existing` is invoked and
 
 **`--issue <KEY>` is required** for the `--older-than` form. Enforced by clap `requires` constraint at parse time. `--older-than` without `--issue` → exit 2 (clap error); no application code reached.
 
-**Duration parsing**: The `<duration>` argument is parsed via `src/duration.rs` — the same unit family used by `worklog add --duration`. Accepted unit suffixes: `h` (hours), `d` (days), `w` (weeks). Example valid values: `2h`, `7d`, `2w`, `30d`. An unrecognized or malformed duration string → exit 64; stderr: the standard `duration.rs` error message (or equivalent: `"invalid duration: '<VALUE>'. Use formats like 2h, 1d, 7d, 2w."`).
+**Duration parsing**: The `<duration>` argument is parsed via `src/duration.rs` — the same unit family used by `worklog add --duration`. Accepted unit suffixes: `m` (minutes), `h` (hours), `d` (days), `w` (weeks). `m` means minutes, NOT months. Seconds (`s`) are not supported. Example valid values: `30m`, `2h`, `7d`, `2w`, `30d`. An unrecognized or malformed duration string → exit 64; stderr: the standard `duration.rs` error message (or equivalent: `"invalid duration: '<VALUE>'. Use formats like 30m, 2h, 1d, 7d, 2w."`).
 
 **Client-side comparison**: each attachment's `created` field (ISO 8601 string, e.g., `"2026-01-01T12:00:00.000+0000"`) is parsed via `chrono`. The cutoff is `now() - duration`. Attachments where `created < cutoff` are selected. A `created` value that cannot be parsed → skip that attachment with a stderr warning; does NOT abort the operation.
+
+**`--older-than 0d` / `0h` / `0m` footgun**: a zero duration computes a cutoff of `now()`, selecting ALL attachments (every `created` timestamp is before the current moment). Use with caution — `--older-than 0d --yes` deletes every attachment on the issue. A `--dry-run` preview is strongly recommended before running with a zero or very short duration.
+
+**Pre-deletion stderr summary** (non-dry-run bulk mode, fires after list step and before first DELETE): `"Deleting N attachment(s) older than <duration> from <KEY>."` (N = count of selected attachments). Suppressed on dry-run paths.
 
 **Wire**: selected attachments are deleted serially via `DELETE /rest/api/3/attachment/{id}` per BC-3.9.008. `--yes` is required per BC-3.9.016; absent `--yes` → exit 64. `--dry-run` preempts mutation; see BC-3.9.020.
 
@@ -3727,7 +3751,7 @@ When `jr issue attachment upload <KEY> <FILE> --replace-existing` is invoked and
 **EC-3.9.019-4** (`--older-than` without `--issue`): exit 2 (clap `requires` constraint); mirrors EC-3.9.016-5.
 **EC-3.9.019-5** (missing `--yes`): exit 64 per BC-3.9.016 gate.
 **EC-3.9.019-6** (malformed `created` on one attachment): skip + stderr warning; continue with remaining attachments.
-**EC-3.9.019-7** (partial DELETE failure mid-sequence): stop; surface error; JSON mode: `JrError` error shape, NOT success shape.
+**EC-3.9.019-7** (partial DELETE failure mid-sequence): 404 on any individual DELETE → already-deleted (benign race) → skip silently, continue. Any other error (403, 5xx, network) → stop; surface error; JSON mode: `JrError` error shape, NOT success shape. Mirrors BC-3.9.013 multi-delete 404 exception.
 
 **Trace**: F2 spec evolution (2026-07-15 SOH-ATTACHMENTS-1, DEC-179); impact-boundary-576.md R3.2 (--older-than scope + duration.rs citation + chrono client-side comparison); `src/duration.rs` (existing parser, worklog add --duration precedent); adversary pass-1 human ruling R1 (2026-07-15)
 
@@ -3739,7 +3763,7 @@ When `jr issue attachment upload <KEY> <FILE> --replace-existing` is invoked and
 **Source**: `src/cli/issue/attachments.rs::handle_attachment_delete` (implementation pending — story S4)
 **Subject**: Issue write (attachment delete — dry-run preview for multi-attachment paths)
 
-`--dry-run` is meaningful only on multi-attachment paths (`--older-than` or a future `--all` batch-delete path). On those paths it outputs a preview of what WOULD be deleted without issuing any `DELETE` requests. `--dry-run` does NOT require `--yes` (the operation is read-only; BC-3.9.016 explicitly exempts `--dry-run` from the bulk `--yes` gate).
+`--dry-run` is meaningful on multi-attachment paths: (a) `--older-than` bulk delete — previews which attachments would be deleted; (b) multi-AID bulk delete (`delete <AID>...`) — previews the AID list; (c) `upload --replace-existing` — previews which existing same-filename attachments would be deleted AND which files would be uploaded, without issuing any `DELETE` or `POST` requests. On path (c), the output includes a "would-delete" section (matching existing entries by basename) and a "would-upload" section (the supplied files); JSON shape: `{"dryRun":true,"wouldDelete":[{"id":"<AID>","filename":"<name>"}],"wouldUpload":[{"filename":"<name>"}]}`; deferred to S5 implementation (spec contract established for BC coverage). `--dry-run` does NOT require `--yes` (the operation is read-only; BC-3.9.016 explicitly exempts `--dry-run` from the bulk `--yes` gate).
 
 **Multi-attachment `--dry-run`** (with `--older-than`):
 - Perform the list step and apply the same selection logic (duration filter per BC-3.9.019) without any mutations.

@@ -2107,16 +2107,14 @@ Call B (two attachments):
 **Setup**:
 
 1. Wiremock at `JR_BASE_URL`. Config with a valid profile at `JR_CONFIG_DIR`. Temp working directory `WORK_DIR`.
-2. Wiremock mounts `GET /rest/api/3/issue/FOO-1` returning the issue with one attachment: `{"id":"10001","filename":"notes.txt","size":13,"mimeType":"text/plain","content":"https://example.atlassian.net/content/10001"}`.
-3. Wiremock mounts `GET /content/10001` (the `contentUrl`) returning HTTP 200 body `"hello world
-"` with `Content-Type: text/plain`.
+2. Wiremock mounts `GET /rest/api/3/issue/FOO-1` returning the issue with one attachment: `{"id":"10001","filename":"notes.txt","size":12,"mimeType":"text/plain","content":"<JR_BASE_URL>/rest/api/3/attachment/content/10001"}` (content URL points at wiremock base URL, NOT an external host).
+3. Wiremock mounts `GET /rest/api/3/attachment/content/10001` returning HTTP 200 body `"hello world\n"` (12 bytes) with `Content-Type: text/plain`.
 
 **Action**: `jr issue attachment download FOO-1 --id 10001` with cwd = `WORK_DIR`.
 
 **Expected (MUST-PASS)**:
 - Exit code = 0.
-- `WORK_DIR/notes.txt` exists and its content equals `"hello world
-"` (13 bytes).
+- `WORK_DIR/notes.txt` exists and its content equals `"hello world\n"` (12 bytes).
 - No `.partial` temp file remains in `WORK_DIR` after successful completion (clean up on success).
 - stdout or stderr contains a success message referencing `notes.txt`.
 
@@ -2159,7 +2157,7 @@ Call B (two attachments):
 **Expected (MUST-PASS)**:
 - Exit code = 0.
 - `OUT_DIR` contains exactly 3 files.
-- The two `report.pdf` collisions are resolved: one file is named `report.pdf` (the second download) and one has a SHA-1 prefix form `<sha1hex>_report.pdf` — OR both have SHA-1 prefix forms. The SHA-1 prefix is 40 hex characters followed by `_`. Neither file has a name that would escape `OUT_DIR` (no `../` or absolute path).
+- The two `report.pdf` collisions are resolved with SHA-1 prefixes: BOTH files MUST carry SHA-1 prefix forms `<sha1hex>_report.pdf` (40 hex characters + `_`). The `--all` batch mode always SHA-1-prefixes colliding filenames — a regression that leaves one file named `report.pdf` (un-prefixed) fails this assertion. Neither file has a name that would escape `OUT_DIR` (no `../` or absolute path).
 - The `../../evil.txt` filename is sanitized: the file lands inside `OUT_DIR` with a safe name (e.g., `evil.txt` or `__.evil.txt` or SHA-1-prefixed); it does NOT appear at any path above `OUT_DIR`.
 - All three files are present and contain the correct bytes (`AAA`, `BBB`, `CCC` in corresponding files).
 
@@ -2176,6 +2174,8 @@ Call B (two attachments):
 **NFR source**: BC-3.9.001 (upload wire), BC-3.9.017 (--replace-existing), BC-3.9.018 (--replace-existing zero-match)
 **BC**: BC-3.9.001, BC-3.9.017, BC-3.9.018
 **Authored by**: SOH-ATTACHMENTS-1 F2 (2026-07-15, adversary pass-1 human ruling R3)
+
+**Debug-build requirement**: `JR_STDIN_IS_TTY=1` is a debug-build-only test seam (see CLAUDE.md `JR_STDIN_IS_TTY` entry). This scenario MUST be run against a debug binary (`cargo test --test ...`); release binaries ignore the env var and the interactive-TTY branch is unreachable in release mode. CI integration tests run in debug mode by default so this is not a practical restriction, but evaluators must not inadvertently test against a release binary.
 
 **Setup (three calls)**:
 
@@ -2291,11 +2291,11 @@ Call C (non-interactive, no `--yes`):
 
 **Setup**:
 
-1. Wiremock at `JR_BASE_URL`. Config with a valid profile. Current time for the test: treat any attachment with `created` before 2026-07-08 as older than 7 days (assuming invocation date 2026-07-15).
+1. Wiremock at `JR_BASE_URL`. Config with a valid profile. Let `T_now` = wall time at test-setup. Compute: `T_old1 = T_now - 14d`, `T_old2 = T_now - 10d`, `T_new = T_now - 1d` (formatted as ISO 8601 with `+0000` offset, e.g. via `chrono`). Using relative offsets ensures the test remains valid on any invocation date without clock drift.
 2. Wiremock mounts `GET /rest/api/3/issue/FOO-4?fields=attachment` returning:
-   - `{"id":"50001","filename":"old1.log","size":100,"created":"2026-07-01T00:00:00.000+0000"}` (8 days ago → selected)
-   - `{"id":"50002","filename":"old2.log","size":200,"created":"2026-07-05T00:00:00.000+0000"}` (10 days ago → selected)
-   - `{"id":"50003","filename":"new.log","size":300,"created":"2026-07-14T00:00:00.000+0000"}` (1 day ago → NOT selected)
+   - `{"id":"50001","filename":"old1.log","size":100,"created":"<T_old1>"}` (now-14d → selected by --older-than 7d)
+   - `{"id":"50002","filename":"old2.log","size":200,"created":"<T_old2>"}` (now-10d → selected)
+   - `{"id":"50003","filename":"new.log","size":300,"created":"<T_new>"}` (now-1d → NOT selected)
 3. Wiremock mounts `DELETE /rest/api/3/attachment/50001` and `DELETE /rest/api/3/attachment/50002` each returning 204.
 4. For the dry-run call, both DELETE mounts have `.expect(0)` — neither must be called during dry-run.
 
@@ -2338,8 +2338,8 @@ Call C (non-interactive, no `--yes`):
 2. Wiremock mounts `GET /rest/api/3/issue/FOO-5` with four attachments carrying adversarial filenames:
    - `{"id":"60001","filename":"../../evil.txt"}` — path-traversal via `../` sequences.
    - `{"id":"60002","filename":"CON"}` — Windows reserved device name.
-   - `{"id":"60003","filename":"a b.txt"}` — null-byte embedded in filename (if representable in fixture; alternatively a very long name ≥255 bytes).
-   - `{"id":"60004","filename":"\\server\share\path.txt"}` — UNC path / Windows path separator.
+   - `{"id":"60003","filename":"aaa…a.txt"}` — overlong name: 251 `a` characters + `.txt` = 255 bytes total (at the length-cap boundary); tests the length-truncation step of the sanitization pipeline. **Note**: null bytes (`\u0000`) are not representable in JSON string values per RFC 7159 §8.2 and cannot appear in a JSON fixture; the overlong-name test exercises the length-cap step instead.
+   - `{"id":"60004","filename":"\\\\server\\share\\path.txt"}` — UNC path with Windows path separators (JSON-escaped value: `\\server\share\path.txt`); tests that `\\` and `\` separators are stripped by the path-component step.
 3. Each content URL returns a distinct 1-byte payload (`A`, `B`, `C`, `D` respectively).
 
 **Action**: `jr issue attachment download FOO-5 --all --out-dir OUT_DIR`

@@ -5009,3 +5009,22 @@ Displaced to make room for SOH-ATTACHMENTS-1 adversary pass-1 remediation step r
 | Step | Agent | Status | Output |
 |------|-------|--------|--------|
 | **F5 SCOPED ADVERSARIAL CONVERGED (STRICT, 2026-07-14): 5 passes; p2 1L README cmd table fix PR #622 @ ae2e3db bd3ac83 (user-merged); p3/p4/p5 CLEAN×3; p4 H-NEW-COMMENT-001..005 all PASS; p5 adversarial input crafting + cargo-doc/MSRV + #526 sweep; p5 obs CHANGELOG/comment-crud.md MERGE claim vs deferred EJ probe — F7-tracked cluster settled; F6 DISPATCHED (fv-F6-577; artifacts → phase-f6-hardening/577/).** | formal-verifier + state-manager | IN PROGRESS | `phase-f6-hardening/577/`; develop @ ae2e3db. |
+
+
+---
+
+## Archived Phase Progress row (2026-07-15, adversary pass-2 remediation burst)
+
+Displaced to make room for SOH-ATTACHMENTS-1 F2 ADVERSARY PASS-2 REMEDIATED (2026-07-15) row per keep-5 rule.
+
+| Phase | Status | Completed | Gate | Notes |
+|-------|--------|-----------|------|-------|
+| pass-disposition: IP-577 11/11 ROUTED-UPSTREAM (D-177) — 5 new issues #652-#656 + 6 comments on #507(×2)/#521/#649/#651/#443; SOH-COMMENT-CRUD-1 cycle FULLY CLOSED. | **CYCLE FULLY CLOSED** | **2026-07-15** | **Pipeline at rest.** | `session-reviews/ip-577-routing/manifest.tsv`; upstream drbothen/vsdd-factory #652-#656. |
+
+### Archived Current Phase Steps row (adversary pass-2 remediation burst)
+
+Displaced to make room for SOH-ATTACHMENTS-1 adversary pass-2 remediation step row per keep-5 rule.
+
+| Step | Agent | Status | Output |
+|------|-------|--------|--------|
+| **RELEASE v0.6.0-dev.10 SHIPPED (2026-07-15): bump PR #623 @ 56d5126 (user-merged; fresh-eyes APPROVE posted); annotated tag v0.6.0-dev.10 on develop @ 56d5126; workflow run 29385074375 SUCCESS (10 assets). Bundle SOH-COMMENT-CRUD-1 FULLY COMPLETE (D-168..D-176, 5 stories, 4 waves, 13 PRs #610..#623, issue #577 CLOSED). Session review DISPATCHED.** | state-manager | COMPLETE | develop @ 56d5126; all worktrees cleaned; pipeline at steady state (3 permanent worktrees). |
