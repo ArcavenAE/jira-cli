@@ -4961,3 +4961,21 @@ Displaced to make room for STEADY-STATE BURST step row per keep-5 rule.
 |------|-------|--------|--------|
 | **PR #621 @ f4ab77b MERGED (docs/577-s5-deferral-sweep; commits 31b174c+7c97f5e); wave-D integration STRICT CONVERGED (pass-1 2L→passes 2/3/4 CLEAN×3); F4 PHASE COMPLETE (11 PRs; issue #577 CLOSED 2026-07-14). Guard scripts green (spec-counts OK, bc-cumulative 624/8 surfaces, 334 citations); whole-bundle sweep clean.** | state-manager | COMPLETE | develop @ f4ab77b; F4 bundle closed; F5 dispatched. |
 
+
+---
+
+## Archived Phase Progress row (2026-07-15, SOH-ATTACHMENTS-1 F1 burst)
+
+Displaced to make room for SOH-ATTACHMENTS-1 INTAKE + F1 APPROVED (2026-07-15) row per keep-5 rule.
+
+| Phase | Status | Completed | Gate | Notes |
+|-------|--------|-----------|------|-------|
+| **F6 PASS (GO, 2026-07-14) — mutation adjudicated 100% (0 missed; 20 timeout proven isolated), VP 30/30, security clean, regression 2102/0/94; trajectory-tail →1L→0→0→0→F6-GO; develop ae2e3db; F7 dispatched.** | **F6 PASS** | **2026-07-14** | **F7 delta convergence in flight.** | `phase-f6-hardening/577/summary.md` |
+
+### Archived Current Phase Steps row (SOH-ATTACHMENTS-1 F1 burst)
+
+Displaced to make room for SOH-ATTACHMENTS-1 F1 GATE APPROVED step row per keep-5 rule.
+
+| Step | Agent | Status | Output |
+|------|-------|--------|--------|
+| **F4 PHASE COMPLETE (2026-07-14) — wave-D STRICT CONVERGED; 5 stories, 4 waves A-D, 11 PRs, issue #577 CLOSED; F5 scoped adversarial DISPATCHED (pass 1 in flight).** | state-manager | IN PROGRESS | F5 p1 dispatched; all worktrees cleaned; develop @ f4ab77b. |
