@@ -7,6 +7,78 @@ project: "jr (jira-cli)"
 
 Track all spec version changes. Most recent version first.
 
+## [1.3.44] - 2026-07-15
+
+### Type: PATCH
+
+### Summary
+
+Security review fix round for SOH-ATTACHMENTS-1 (issues #576 + #585). Applies spec-text updates for findings SEC-576-001 through SEC-576-007 from `.factory/phase-f2-spec-evolution/security-review-576.md`. No BC count change (body-text additions only). No implementation exists; changes are spec additions before story decomposition.
+
+### Changes
+
+- `.factory/specs/prd/bc-2-issue-read.md` (MODIFIED):
+  - BC-2.7.007: Added EC-2.7.007-3 (SEC-576-003 CWE-522) — wiremock test MUST assert `Authorization` is absent from redirect-target request (two-server setup). Trace updated.
+  - BC-2.7.011: Replaced containment check paragraph with correct two-step procedure: `canonicalize(out_dir)` then `starts_with(resolved_dir)` (SEC-576-002 MEDIUM CWE-22) — resolves the non-existent-path `canonicalize` ambiguity. Added Windows device-name caller note (SEC-576-001 LOW CWE-22) after caller contract. Extended unit test matrix with `"CON"`, `"NUL"`, `"COM1"`, `"nul.txt"` (SEC-576-001). Added step 5.5 trailing-whitespace/dot strip for Windows predictability (SEC-576-007 INFO). Trace updated.
+
+- `.factory/specs/prd/bc-3-issue-write.md` (MODIFIED):
+  - BC-3.9.001: Added EC-3.9.001-5 (SEC-576-005 CWE-352) — wiremock test MUST assert `X-Atlassian-Token: no-check` on every upload POST. Added multipart filename encoding note (SEC-576-004 CWE-93) — reqwest percent-encodes filenames; unit test for `;`, `"`, `\r\n` required (SQ-6 resolution). Trace updated.
+  - BC-3.9.003: Added parallel X-Atlassian-Token note inline in Step 1 (SEC-576-005) — `attachTemporaryFile` also requires `X-Atlassian-Token: no-check`; wiremock test MUST assert header on step-1 POSTs. Trace updated.
+
+- `.factory/specs/prd/cross-cutting.md` (MODIFIED):
+  - BC-X.8.010: Added stale-ID self-healing clause (SEC-576-006) — if cached sdId causes step-1 HTTP 404/403, delete cache entry and retry resolution once; surface second failure. Trace updated.
+
+- `.factory/spec-changelog.md` (MODIFIED): this entry (v1.3.43 → v1.3.44).
+
+### Impact Assessment
+
+| Dimension | Detail |
+|-----------|--------|
+| BCs modified (body text) | BC-2.7.007, BC-2.7.011, BC-3.9.001, BC-3.9.003, BC-X.8.010 |
+| BC count | 651 (unchanged) |
+| VP count | 30 (unchanged) |
+| Holdout count | 88 (unchanged) |
+| Security findings applied | SEC-576-001 (LOW), SEC-576-002 (MEDIUM), SEC-576-003 (LOW), SEC-576-004 (LOW), SEC-576-005 (LOW), SEC-576-006 (LOW), SEC-576-007 (INFO) |
+| Severity floor | PATCH (spec-text additions; no architectural change; no BC numbering change) |
+
+---
+
+## [1.3.43] - 2026-07-15
+
+### Type: MINOR
+
+### Summary
+
+F2 spec evolution for SOH-ATTACHMENTS-1 (issues #576 + #585). Adds 27 new individually-bodied BCs: Section 2.7 (Attachment Read, 12 BCs), Section 3.9 (Attachment Write, 14 BCs), and BC-X.8.010 (serviceDeskId cache). Ratified design per DEC-179.
+
+### Changes
+
+- `.factory/specs/prd/bc-2-issue-read.md` (MODIFIED): Section 2.7 Attachment Read added (BC-2.7.001..012) — attachment list (table+JSON, filters, error taxonomy), attachment download (single/batch/newest, streaming, redirect-following, CWE-22 sanitization, SHA-1 default path, JSDCLOUD-10841 JSM uniform endpoint). `total_bcs: 94 → 106`, `definitional_count: 52 → 64`.
+
+- `.factory/specs/prd/bc-3-issue-write.md` (MODIFIED): Section 3.9 Attachment Write added (BC-3.9.001..014) — platform upload POST (X-Atlassian-Token, streaming, no client-size cap, 413/400), JSM default (internal by default P2-4a), --public two-step (DEC-174 confirmation gate), --internal two-step (OQ-9 non-JSM silent no-op), --public non-JSM exit 64, temporaryAttachmentId TTL, post-upload echo (P2-3c deferred S5), attachment delete (DEC-168/BC-3.5.004 precedent), JSON output shapes, error taxonomies, confirmation gate (eprint!+read_line, NOT dialoguer). `total_bcs: 120 → 134`, `definitional_count: 91 → 105`.
+
+- `.factory/specs/prd/cross-cutting.md` (MODIFIED): BC-X.8.010 added — `(profile, projectKey) → serviceDeskId` cache; model-b writer (swallow+eprintln warn, return Ok(())); 7-day TTL; deserialize failure = cache miss; used by JSM attachment upload --public/--internal path. `total_bcs: 149 → 150`, `definitional_count: 83 → 84`.
+
+- `.factory/specs/prd/BC-INDEX.md` (MODIFIED): Sections 2.7 and 3.9 rows added; BC-X.8.010 row added; all section and frontmatter counts bumped; index_version v6.12 → v6.13; `total_bcs: 624 → 651`.
+
+- `.factory/specs/prd/CANONICAL-COUNTS.md` (MODIFIED): Per-file tables, Sum row, grand-total prose, L2 alignment table, cache-type count all updated; `624 → 651`.
+
+- `.factory/spec-changelog.md` (MODIFIED): this entry (v1.3.42 → v1.3.43).
+
+### Impact Assessment
+
+| Dimension | Detail |
+|-----------|--------|
+| New BCs | BC-2.7.001..012 (Section 2.7), BC-3.9.001..014 (Section 3.9), BC-X.8.010 |
+| BC count | 624 → 651 (+27) |
+| VP count | 30 (unchanged) |
+| Holdout count | 88 (unchanged) |
+| ADR reference | DEC-179 (F1 gate approval); ADR-0017 Accepted 2026-07-15 (`.factory/specs/architecture/decisions/ADR-0017-first-multipart-streaming-http-surface.md` — multipart/streaming HTTP surface) [CONS-576-007 correction: was "planned", ADR exists Accepted on same date] |
+| Deferred probes | BC-3.9.007/BC-3.9.011 (P2-3c INCONCLUSIVE — S5 live-capture obligation on EJ) |
+| Severity floor | MINOR (new feature — aspirational BCs for stories S1–S5; no implementation yet) |
+
+---
+
 ## [1.3.40] - 2026-07-11
 
 ### Type: PATCH

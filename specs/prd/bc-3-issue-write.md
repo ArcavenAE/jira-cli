@@ -1,8 +1,8 @@
 ---
 context: bc-3
 title: "Issue Write (create/edit/move/assign/comment/link/open/remote-link)"
-total_bcs: 120   # cumulative claim (incl. range-collapsed); definitional_count below is individually-bodied headings
-definitional_count: 91   # count of `#### BC-` headings in this file
+total_bcs: 134   # cumulative claim (incl. range-collapsed); definitional_count below is individually-bodied headings
+definitional_count: 105   # count of `#### BC-` headings in this file
 last_updated: 2026-07-15
 source_pass: 3
 trace: |
@@ -83,13 +83,15 @@ trace: |
   - F2 gate closure DEC-170 fix round 49 (2026-07-11, spec v1.3.40): BC-3.5.012 EC-3.5.012-5 items (h)+(i) added — (h) docs/specs/json-output-shapes.md registry rows for all four comment-CRUD JSON shapes (VP-577-009/023 BTreeSet pins as source of truth); (i) docs/specs/comment-crud.md feature spec creation obligation following issue-move-resolution.md precedent (ADR-0004); BC-3.5.012 Trace updated; VP count unchanged (30)
   - v1.3.41 — DEC-174 mechanism-rationale correction in BC-3.5.003/006 delivery obligations + VP-577-030 (interact_on → ratified manual stderr-prompt equivalent); no behavioral change (2026-07-13, spec v1.3.41): BC-3.5.003 + BC-3.5.006 delivery-task obligations reworded — false claim that `dialoguer::interact_on(&Term::stderr())` reads from stdin replaced with ratified mechanism (DEC-174: `eprint!` prompt to stderr + `io::stdin().lock().read_line()`; `_interact_on` returns `Err(NotConnected)` on piped stderr before reading any input; empirically proven in F4); VP-577-030 updated to reference ratified mechanism; no BC/EC/VP behavioral semantics changed; BC and VP counts unchanged (120/30)
   - v1.3.42 — BC-3.5.006 deferred EJ probe obligation SATISFIED (2026-07-15): scheduled nightly run 29398774009 (2026-07-15T07:51Z, develop @ 56d5126, conclusion=success) executed `tests/e2e_live.rs::test_e2e_comment_edit_visibility_merge_semantics` green — MERGE verdict (Scenarios 1+3) and PRESERVED verdict (Scenario 2) confirmed live against EJ JSM project; delivery-task obligation item (b) marked SATISFIED; RESOLVED blocks in BC-3.5.006 body updated; no BC/EC/VP behavioral semantics changed; counts unchanged (120/30)
+  - v1.3.43 — SOH-ATTACHMENTS-1 F2 addition (2026-07-15, DEC-179): Section 3.9 Attachment Write added (BC-3.9.001..014) — 14 individually-bodied BCs covering platform upload POST (X-Atlassian-Token, streaming, no client-size cap, 413/400), JSM default (internal by default P2-4a), --public two-step (DEC-174 gate), --internal two-step (OQ-9 non-JSM silent no-op), --public non-JSM exit 64, temporaryAttachmentId TTL, post-upload echo (P2-3c deferred S5), attachment delete (DEC-168/BC-3.5.004 precedent), JSON output shapes, error taxonomies, confirmation gate (eprint!+read_line, NOT dialoguer); counts: total_bcs 120→134 / definitional_count 91→105 / VP count unchanged (30)
 ---
 
 # BC-3 — Issue Write
 
-120 behavioral contracts across 8 subdomains: Assign (3.1), Move/Transition (3.2),
+134 behavioral contracts across 9 subdomains: Assign (3.1), Move/Transition (3.2),
 Create (3.3), Edit+Open (3.4), Comment (3.5), Links (3.6), Remote links (3.7),
-JSM Request Create + Platform-Path Inverse Warnings + Auth-Conditional 401 Hints (3.8).
+JSM Request Create + Platform-Path Inverse Warnings + Auth-Conditional 401 Hints (3.8),
+Attachment Write (3.9).
 
 ---
 
@@ -3204,6 +3206,368 @@ When `--markdown` is absent, the guard does NOT fire — `--field description=va
 
 Sources: `src/cli/issue/snapshots/jr__cli__issue__json_output__tests__*.snap`; BC-1104..BC-1112 (R4)
 
-## Total BCs in this file: 91 individually-bodied (cumulative 120 incl. range-collapsed; see BC-INDEX.md)
 
-_Last updated 2026-07-09 (issue #577 SOH-COMMENT-CRUD-1 F2, DEC-168): +11 BCs (BC-3.5.002..BC-3.5.012) — comment delete (BC-3.5.002..BC-3.5.004: endpoint/exit-codes, confirmation, 404-exit-64+body-surface), comment edit (BC-3.5.005..BC-3.5.009: body-only-PUT invariant, --internal wire, --public wire+always-confirm, --public confirmation gate, body sources), comment view (BC-3.5.010: GET+expand=properties, table+JSON, 404-exit-64), mutual exclusion (BC-3.5.011), CLI breaking change (BC-3.5.012: comment→subcommand group, old flat form → clap error with migration hint); §3.5 header updated to 12 contracts. Previous update 2026-06-30 (BC-subclause-pass F2): +2 BCs (BC-3.4.020..021) — BC-3.4.020 (`issue edit --label` routing fork: single-key PUT bare-string vs 2+ key bulk POST `{"name":...}` objects; BUG-LABEL-400), BC-3.4.021 (`issue edit --dry-run` `plannedChanges` output structure + `--output json` schema `{dryRun, issues, plannedChanges}`; intentionally simplified preview shapes); Section 3.4 header updated to 21 contracts. Previous update 2026-06-08 (fix-bulk-transition-schema F2): +1 BC (BC-3.2.014) — BC-3.2.014 (multi-key bulk move `bulkTransitionInputs` nested wrapper wire schema; documents correctness bug fix commit acca854; live run 27156639337); Section 3.2 header updated to 14 contracts. Previous update 2026-06-03 (jsm-resolution-required F2): +1 BC (BC-3.2.013) — BC-3.2.013 (proactive resolution enforcement on done-category transitions: REQUIRED and OPTIONAL branches, --no-resolution flag, isConditional coverage, conservative gate, BC-3.2.009 backstop retained; single-key only; breaking change); Section 3.2 header updated to 13 contracts. Previous update 2026-06-01 (issue #331 F2): +2 BCs (BC-3.4.018..019) — BC-3.4.018 (multi-key `--type` bulk wire shape: camelCase `issueType` key, `issueTypeId` string value, name resolved via createmeta issuetypes), BC-3.4.019 (cross-project guard: keys spanning >1 project exit 64 before any API call); Section 3.4 header updated to 19 contracts. Previous update 2026-05-27 (issue #421 F2): BC-3.4.015 invariant 5 rewritten (two-stage i64-first strategy); EC-3.4.015-4b added (i64-boundary regression pin); no BC count changes (103/74 unchanged). Previous update (2026-05-25 issue #407 F2): +EC-3.4.017-14 — mechanical enforcement meta-test for BC-3.4.017 invariant 2 (conflict block completeness via `test_label_conflict_block_lists_every_relevant_flag`); BC-3.4.017 invariant 2 cross-reference added; no BC count changes (103/74 unchanged). Previous update (2026-05-22 issue #396 F2): +3 BCs (BC-3.4.015..017) — BC-3.4.015 (`issue edit --field` string/number/date/datetime/user field single-key path, with editmeta validation, fields.json cache, and dry-run invariants), BC-3.4.016 (`issue edit --field` single-select `option` field), BC-3.4.017 (`--field` multi-key/`--jql` rejection Gate A and flag-overlap Gate B); Section 3.4 header updated to 17 contracts. Previous update (2026-05-21 issue #398 F2): +3 BCs (BC-3.4.012..014) — BC-3.4.012 (issue edit table-mode success echo), BC-3.4.013 (issue edit JSON-mode success echo with changed_fields), BC-3.4.014 (issue create table-mode all-fields echo (broadened from team-only at the 2026-05-22 human-gate to mirror BC-3.4.012)); BC-3.4.003 Success output cross-reference added; Section 3.4 header updated to 14 contracts. Previous update (2026-05-20 issue #388): +2 BCs (BC-3.4.010..011): BC-3.4.010 (cross-hierarchy `edit --type` 400 → CROSS_HIERARCHY_HINT citing JRACLOUD-27893) and BC-3.4.011 (same-hierarchy/indeterminate `edit --type` 400 → typo hint or raw error, no JRACLOUD-27893 hint) added in F2 delta (issue #388). BC-3.4.003 Errors cross-reference updated (annotation only, no behavioral change). Section 3.4 header updated to 11 contracts. Previous update (2026-05-20 issue #385): +2 BCs (BC-3.8.016..017); BC-3.8.002/010/011 modified._
+### 3.9 Attachment Write (14 BCs: BC-3.9.001..BC-3.9.014)
+
+---
+
+#### BC-3.9.001: Platform `attachment upload` — multipart POST to `/rest/api/3/issue/{key}/attachments`; `X-Atlassian-Token: no-check` mandatory; streaming; no client-side size cap; graceful 413/400
+
+**Confidence**: HIGH
+**Source**: `src/cli/issue/attachments.rs::handle_attachment_upload` (implementation pending — story S3); `src/api/jira/attachments.rs::upload_attachments` (implementation pending — story S3); `tests/attachment_upload.rs` (implementation pending — story S3)
+**Subject**: Issue write (attachment upload — platform path)
+
+`jr attachment upload <KEY> <FILE>...` issues `POST /rest/api/3/issue/{key}/attachments` with a `multipart/form-data` body. Each file is a separate `file`-named part (the Jira API requires the field name `"file"` — any other name produces a 400). The header `X-Atlassian-Token: no-check` MUST be included on every upload request; Jira's CSRF protection rejects attachment uploads without it (HTTP 403 "Websudo required"). This header is load-bearing.
+
+Files are streamed from disk using `tokio_util::io::ReaderStream` — bytes are not buffered in memory before transmission. This allows uploads of large files without exhausting process memory.
+
+Multiple files supplied on one invocation are uploaded in a single multipart POST, one `file`-named part per file, in the order supplied on the command line.
+
+`jr` enforces NO client-side file-size cap. The attachment size limit is instance-configured and not knowable from the client side (sources conflict on the default figure; research §3a verdict: INCONCLUSIVE — do not hard-code a size assumption; rely on graceful 413/400 handling). When the server rejects the upload due to size, the response is HTTP 413 (Payload Too Large); `jr` exits 1 with the message: `"Attachment too large: the file exceeds the server-configured limit."` No numeric limit is stated in the error — the limit is instance-specific and not published by `jr`.
+
+On HTTP 400 (bad request): exit 1; the Jira error body is surfaced on stderr verbatim (may indicate unsupported MIME type, quota exceeded, malformed part, etc.).
+
+A successful upload returns HTTP 200 with a JSON array of attachment objects. Each element contains at minimum: `"id"` (string), `"filename"` (string), `"self"` (URL string), `"size"` (integer, bytes), `"mimeType"` (string), `"created"` (ISO 8601 string). Human (table) output: one row per attachment, columns Filename / Size / ID / Created. JSON output: the array, pretty-printed via `output::render_json` (#526 invariant).
+
+Output channel: Profile 4 (Symmetric) — stdout for JSON or success data, stderr for errors and progress hints.
+
+**EC-3.9.001-1** (single file): A single-file upload produces a response array with one element; table shows one row.
+**EC-3.9.001-2** (multi-file): Multiple `<FILE>` arguments → single multipart POST with multiple `file` parts; server returns an array with one element per file.
+**EC-3.9.001-3** (empty file): A zero-byte file is valid; `jr` does not reject it client-side. Server behavior depends on Jira configuration.
+**EC-3.9.001-4** (file path not found): If any supplied `<FILE>` path does not resolve to a readable file → exit 64 before any HTTP; stderr `"file not found: <path>"`. The check is performed before any multipart construction.
+
+**EC-3.9.001-5** (X-Atlassian-Token regression guard — SEC-576-005 CWE-352): A wiremock integration test MUST assert that every `POST /rest/api/3/issue/{key}/attachments` upload request includes the header `X-Atlassian-Token: no-check`. A regression omitting this header produces HTTP 403 silently in live testing; the wiremock test catches it at CI time.
+
+**Multipart filename encoding (SQ-6 resolution — SEC-576-004 CWE-93)**: reqwest 0.13's `multipart::Part` applies percent-encoding to the filename value in the `Content-Disposition` header. The implementer MUST include a unit test with filenames containing `;`, `"`, and `\r\n` and assert the resulting multipart POST body has a well-formed `Content-Disposition` header (no CRLF injection, no boundary escape). This resolves SQ-6 from `.factory/phase-f1-delta-analysis/impact-boundary-576.md`, to be verified at Story 3 delivery.
+
+**Trace**: F2 spec evolution (2026-07-15 SOH-ATTACHMENTS-1, DEC-179); `.factory/research/issue-576-attachments-api-2026-07-15.md` §P2-1; Jira Cloud REST API v3 `POST /rest/api/3/issue/{issueIdOrKey}/attachments`; SEC-576-004 (CWE-93 multipart encoding test added 2026-07-15); SEC-576-005 (CWE-352 X-Atlassian-Token wiremock test added 2026-07-15)
+
+---
+
+#### BC-3.9.002: Upload to JSM issue with no visibility flag → platform POST, internal by default (safe default; P2-4a confirmed)
+
+**Confidence**: HIGH
+**Source**: `src/cli/issue/attachments.rs::handle_attachment_upload` (implementation pending — story S3)
+**Subject**: Issue write (attachment upload — JSM default path)
+
+When `jr attachment upload <KEY> <FILE>...` is issued against a JSM issue key and neither `--public` nor `--internal` is specified, `jr` uses the platform POST endpoint (`POST /rest/api/3/issue/{key}/attachments`) — the same path as BC-3.9.001.
+
+Per research finding P2-4a (`.factory/research/issue-576-attachments-api-2026-07-15.md` §P2-4a), platform-POST attachments on a JSM issue are INTERNAL by default — not customer-visible on the service portal. This is a safe default: an agent accidentally uploading a sensitive file does not immediately expose it to the customer.
+
+No service desk discovery is performed on this path. No servicedeskapi calls are made. No confirmation gate is presented. Behavior is byte-for-byte identical to uploading to a non-JSM issue.
+
+The platform POST path is the default for ALL issue keys regardless of project type when no visibility flag is supplied.
+
+**EC-3.9.002-1** (non-JSM issue, no flag): Same platform POST path; no difference in wire behavior between JSM and non-JSM issues on this path.
+**EC-3.9.002-2** (--public or --internal supplied): Routing forks per BC-3.9.003 or BC-3.9.004 respectively; this BC does not apply.
+
+**Trace**: F2 spec evolution (2026-07-15 SOH-ATTACHMENTS-1, DEC-179); `.factory/research/issue-576-attachments-api-2026-07-15.md` §P2-4a (CONFIRMED: platform-POST is internal by default on JSM issues — refutes footgun hypothesis from Part 1)
+
+---
+
+#### BC-3.9.003: `--public` flag → servicedeskapi two-step (attachTemporaryFile + request attachment) with confirmation gate (DEC-174); `--yes` bypass; non-interactive exit 64
+
+**Confidence**: HIGH
+**Source**: `src/cli/issue/attachments.rs::handle_attachment_upload` (implementation pending — story S5); `src/api/jsm/attachments.rs::attach_temporary_file` (implementation pending — story S5); `src/api/jsm/attachments.rs::post_request_attachment` (implementation pending — story S5); `tests/attachment_upload_jsm.rs` (implementation pending — story S5)
+**Subject**: Issue write (attachment upload — JSM public path)
+
+When `--public` is supplied, `jr attachment upload <KEY> <FILE>... --public` routes to the servicedeskapi two-step flow:
+
+**Step 1 — temporaryAttachmentId per file**: For each `<FILE>`, POST `/rest/servicedeskapi/servicedesk/{sdId}/attachTemporaryFile` with the file as a multipart body. Obtains one `temporaryAttachmentId` per file. The `sdId` is resolved via the serviceDeskId lookup chain: `GET /rest/api/3/issue/{key}` → `fields.project.key` → paginated `GET /rest/servicedeskapi/servicedesk` → match `projectKey`. This mapping is cached per `(profile, projectKey)` with a 7-day TTL (BC-X.8.010). The `POST .../attachTemporaryFile` request MUST include `X-Atlassian-Token: no-check` (same CSRF requirement as BC-3.9.001; SEC-576-005 parallel — a wiremock test MUST assert this header is present on step-1 POSTs).
+
+**Step 2 — make public**: POST `/rest/servicedeskapi/request/{issueKey}/attachment` with body `{"temporaryAttachmentIds": ["<id1>", ...], "public": true}`.
+
+**Confirmation gate (DEC-174 pattern — NOT `dialoguer::Confirm`)**: Before step 1, `jr` presents a confirmation prompt. See BC-3.9.014 for the exact prompt mechanics (eprint! to stderr + io::stdin().lock().read_line, matching BC-3.5.007/BC-3.5.008 precedent).
+
+- **Interactive mode**: Prompt presented; user must type `y`/`yes` to proceed; any other input (including empty/EOF) → "Upload cancelled." on human stdout; `{"cancelled":true,"uploaded":false}` on JSON stdout; exit 0.
+- **Non-interactive mode** (`--no-input` OR stdin is not a TTY): exit 64 before any HTTP; stderr: `"Use --yes to confirm uploading <N> file(s) to <KEY> as customer-visible, or run interactively."` (substring-matchable wording; `--yes` hint is mandatory per BC-3.5.007 pattern).
+- **`--yes` flag**: Skip the confirmation gate; proceed directly to step 1 without reading stdin.
+
+`--public` on a non-JSM issue → exit 64 (BC-3.9.005 governs; no servicedeskapi calls).
+
+Output channel: Profile 4 (Symmetric). On success: human mode echoes "Uploaded N file(s) to <KEY> [public]."; JSON mode returns the upload result (see BC-3.9.011 for shape; P2-3c deferred).
+
+**EC-3.9.003-1** (`--yes` without `--public`): Silent no-op per DEC-169 leniency convention — `--yes` alone does not trigger the confirmation gate or change upload routing; platform POST path proceeds as normal.
+**EC-3.9.003-2** (single file, `--yes`): One temporaryAttachmentId; second-step body `{"temporaryAttachmentIds":["<id>"],"public":true}`.
+**EC-3.9.003-3** (multiple files, `--yes`): One step-1 POST per file in order; second-step body `{"temporaryAttachmentIds":["<id1>","<id2>",...],"public":true}`.
+**EC-3.9.003-4** (cancel at prompt, interactive): exit 0; human "Upload cancelled."; JSON `{"cancelled":true,"uploaded":false}`.
+
+**Trace**: F2 spec evolution (2026-07-15 SOH-ATTACHMENTS-1, DEC-179); DEC-174 (interactive prompt mechanism: eprint!+read_line, NOT dialoguer); DEC-169 (leniency: --yes without --public = silent no-op); `.factory/research/issue-576-attachments-api-2026-07-15.md` §P2-3, §P2-4; BC-3.5.007 (comment edit --public confirmation pattern); BC-X.8.010 (serviceDeskId cache); SEC-576-005 (CWE-352 X-Atlassian-Token step-1 wiremock test added 2026-07-15)
+
+---
+
+#### BC-3.9.004: `--internal` flag → servicedeskapi two-step with `public:false`; no confirmation gate; non-JSM issue = SILENT NO-OP (OQ-9 ruling)
+
+**Confidence**: HIGH
+**Source**: `src/cli/issue/attachments.rs::handle_attachment_upload` (implementation pending — story S5); `src/api/jsm/attachments.rs::post_request_attachment` (implementation pending — story S5)
+**Subject**: Issue write (attachment upload — JSM internal explicit path)
+
+When `--internal` is supplied on a JSM issue, `jr` routes to the servicedeskapi two-step flow identical to BC-3.9.003 but with `"public": false` in the second-step body:
+
+**Step 1**: POST `.../attachTemporaryFile` per file (same as BC-3.9.003).
+**Step 2**: POST `.../request/{issueKey}/attachment` with `{"temporaryAttachmentIds": [...], "public": false}`.
+
+**No confirmation gate**: `--internal` does NOT trigger any interactive prompt. Internal attachments are the safe default on JSM (attachments are non-customer-visible); a confirmation gate would add friction without a safety benefit. The upload proceeds immediately.
+
+**Non-JSM silent no-op (OQ-9 ruling)**: When `--internal` is supplied and the issue is NOT a JSM issue (no service desk project), `jr` falls back silently to the platform POST path (BC-3.9.001). No error is emitted, no warning is written. Rationale: platform POST is already internal by default (P2-4a); `--internal` expresses intent that is already satisfied — silently. This is the OQ-9 design ruling from DEC-179.
+
+**Mutual exclusion**: `--internal` and `--public` are clap `conflicts_with` → exit 2 (clap error) if both are supplied.
+
+**EC-3.9.004-1** (non-JSM, `--internal`): Platform POST executes; no servicedeskapi calls issued; no warning emitted; exit 0 on success.
+**EC-3.9.004-2** (JSM, `--internal`): Two-step executed; `"public":false` in the second POST body; no confirmation prompt.
+**EC-3.9.004-3** (`--internal` + `--public` together): clap mutual-exclusion conflict → exit 2; clap-generated error message; no HTTP.
+
+**Trace**: F2 spec evolution (2026-07-15 SOH-ATTACHMENTS-1, DEC-179 OQ-9 ruling); DEC-169 (leniency convention); `.factory/research/issue-576-attachments-api-2026-07-15.md` §P2-4a
+
+---
+
+#### BC-3.9.005: `--public` on non-JSM issue → exit 64 with actionable message; no servicedeskapi calls
+
+**Confidence**: HIGH
+**Source**: `src/cli/issue/attachments.rs::handle_attachment_upload` (implementation pending — story S5)
+**Subject**: Issue write (attachment upload — --public non-JSM guard)
+
+When `--public` is supplied and the issue is NOT a JSM service desk issue, `jr` exits 64 with a message on stderr. No servicedeskapi calls are issued; no file upload occurs.
+
+Stderr message (CANONICAL SOURCE — substring-matchable by tests): `"--public is only supported on Jira Service Management (JSM) issues."`
+
+The project-type check is performed after fetching the issue meta (to determine `fields.project.key`) but before any attachment API calls.
+
+**Divergence from `--internal` behavior**: `--internal` on a non-JSM issue is a silent no-op (BC-3.9.004 OQ-9); `--public` on a non-JSM issue is exit 64. Rationale: making an attachment customer-visible requires a servicedeskapi flow — there is no silent fallback that preserves the `--public` semantic. Exiting 64 prevents a misleading "upload succeeded" message when the public-visibility intent was not fulfilled.
+
+**EC-3.9.005-1** (platform issue, `--public`): exit 64; no attachment uploaded; canonical message on stderr.
+**EC-3.9.005-2** (issue key not found): superseded by EC-3.9.012-2 — issue-not-found exit-64 fires before project-type determination.
+
+**Trace**: F2 spec evolution (2026-07-15 SOH-ATTACHMENTS-1, DEC-179); OQ-9 ruling (--internal non-JSM = silent no-op; --public non-JSM = exit 64 — asymmetric by design)
+
+---
+
+#### BC-3.9.006: temporaryAttachmentId lifecycle (~1 h TTL); second-step failure → generic retry hint; no ID caching or reuse across invocations
+
+**Confidence**: MEDIUM-HIGH
+**Source**: `src/api/jsm/attachments.rs::post_request_attachment` (implementation pending — story S5)
+**Subject**: Issue write (attachment upload — JSM temp-ID lifecycle)
+
+A `temporaryAttachmentId` obtained from `POST .../attachTemporaryFile` has an approximate 1-hour server-side TTL per Atlassian documentation. `jr` does NOT cache or reuse temporary attachment IDs across invocations; each upload invocation performs both steps (step 1 → step 2) within the same sequential request sequence.
+
+If the second step (`POST .../request/{issueKey}/attachment`) fails AFTER one or more step-1 calls have already succeeded, `jr` MUST NOT attempt to surface, cache, or offer to reuse the orphaned `temporaryAttachmentId`(s). On second-step failure:
+
+- HTTP 4xx: exit 64 (client error — likely the issue key is wrong or the serviceDeskId cache is stale).
+- HTTP 5xx: exit 1 (server error).
+- In both cases: stderr appends a generic retry hint: `"Temporary attachment IDs may have expired. Try the upload again."` — no Atlassian response-body error string is pattern-matched (P2-2 finding: Cloud step-2 error strings are undocumented and must not be relied on).
+
+The ~1-hour TTL is informational context for the retry hint wording; `jr` implements no timer, no expiry check, and no proactive re-issue of step 1.
+
+**EC-3.9.006-1** (step-2 400): exit 64; generic retry hint on stderr.
+**EC-3.9.006-2** (step-2 5xx): exit 1; generic retry hint on stderr.
+**EC-3.9.006-3** (both steps succeed): no TTL concern; BC-3.9.007 governs post-upload echo.
+
+**Trace**: F2 spec evolution (2026-07-15 SOH-ATTACHMENTS-1, DEC-179); `.factory/research/issue-576-attachments-api-2026-07-15.md` §P2-2 (Cloud step-2 error strings undocumented — do NOT pattern-match)
+
+---
+
+#### BC-3.9.007: Post-upload echo from server response; platform path uses direct response; servicedeskapi path schema deferred (P2-3c); JSDCLOUD-10841 content-URL ban
+
+**Confidence**: MEDIUM (servicedeskapi response schema unconfirmed; P2-3c deferred)
+**Source**: `src/cli/issue/attachments.rs::handle_attachment_upload` (implementation pending — story S3/S5)
+**Subject**: Issue write (attachment upload — post-upload echo)
+
+After a successful upload, `jr` echoes metadata from the server response directly — no secondary fetch from the issue's `fields.attachment` array is performed.
+
+**Platform POST path** (BC-3.9.001, BC-3.9.002): The `POST /rest/api/3/issue/{key}/attachments` response body IS the created attachment array. `jr` uses this response array directly for human/JSON output (table or `output::render_json`). No second fetch is required.
+
+**servicedeskapi two-step path** (`--public`/`--internal`, BC-3.9.003/004): The response schema from `POST /rest/servicedeskapi/request/{id}/attachment` is INCONCLUSIVE for Atlassian Cloud (P2-3c in `.factory/research/issue-576-attachments-api-2026-07-15.md` §P2-3c). The exact JSON structure has not been confirmed from live data. **Delivery obligation (S5)**: The S5 implementer MUST issue a live E2E request against the `EJ` test project, capture the response body verbatim, and update this BC body and BC-3.9.011 with the confirmed schema before S5 is marked complete.
+
+**JSDCLOUD-10841 content-URL ban**: The `links.content` URL that may appear in servicedeskapi responses for attachments MUST NOT be used for download or verification — that URL returns HTTP 404. The authoritative download endpoint is the platform endpoint: `GET /rest/api/3/attachment/content/{id}` (BC-2.7.007). Any content URL from servicedeskapi is informational only.
+
+**EC-3.9.007-1** (platform upload echo): Response array from POST is used directly; no secondary GET to the issue's attachment list.
+**EC-3.9.007-2** (servicedeskapi upload echo, P2-3c pending): Output shape TBD; JSON output MUST route through `output::render_json` once schema is confirmed (BC-3.9.011).
+**EC-3.9.007-3** (JSDCLOUD-10841): `links.content` URL from servicedeskapi MUST NOT be used; `GET /rest/api/3/attachment/content/{id}` is authoritative for downloads.
+
+**Trace**: F2 spec evolution (2026-07-15 SOH-ATTACHMENTS-1, DEC-179); `.factory/research/issue-576-attachments-api-2026-07-15.md` §P2-3c (INCONCLUSIVE — live capture obligation on S5); JSDCLOUD-10841 (servicedeskapi `links.content` returns 404)
+
+---
+
+#### BC-3.9.008: `attachment delete` → `DELETE /rest/api/3/attachment/{id}`; HTTP 204 = success; 404 = exit 64 + surface Jira body (DEC-168 precedent; mirrors BC-3.5.004)
+
+**Confidence**: HIGH
+**Source**: `src/cli/issue/attachments.rs::handle_attachment_delete` (implementation pending — story S4); `src/api/jira/attachments.rs::delete_attachment` (implementation pending — story S4); `tests/attachment_delete.rs` (implementation pending — story S4)
+**Subject**: Issue write (attachment delete)
+
+`jr attachment delete <KEY> <AID>` issues `DELETE /rest/api/3/attachment/{id}` where `<AID>` is the attachment's numeric ID string.
+
+**HTTP 204 (success)**: exit 0. Human output: `"Deleted attachment <AID> from <KEY>."`. JSON output (with `--output json`): see BC-3.9.010.
+
+**HTTP 404 (attachment not found)**: exit 64. The Jira error body is surfaced on stderr (NOT silent exit 0). This is the DEC-168 precedent: 404 on a targeted delete of a specific resource ID means the caller provided a wrong ID — the missing attachment is a user error, not an already-completed idempotent operation. The Jira error body typically contains the reason (e.g., "Attachment does not exist") and provides actionable context. Direct precedent: BC-3.5.004 (comment delete 404 surfaces body + exit 64, same reasoning).
+
+The `<KEY>` argument is used for display (confirmation message) and for issue existence validation only; the actual `DELETE` call uses only the attachment `id`. `jr` does NOT validate that the attachment belongs to the specified `<KEY>` before issuing the DELETE — the server enforces ownership. If the attachment belongs to a different issue, the server returns 404 or 403; `jr` surfaces the response normally.
+
+Output channel: Profile 4 (Symmetric) — stdout for success data/JSON, stderr for errors.
+
+**EC-3.9.008-1** (valid AID, 204): exit 0; human echo; JSON `{"deleted":true,"id":"<AID>"}`.
+**EC-3.9.008-2** (AID not found, 404): exit 64; Jira error body on stderr.
+**EC-3.9.008-3** (AID belongs to different issue): Server returns 404 or 403; `jr` surfaces the response error without special-casing.
+**EC-3.9.008-4** (insufficient permissions, 403): exit 1; Jira error body surfaced on stderr.
+
+**Trace**: F2 spec evolution (2026-07-15 SOH-ATTACHMENTS-1, DEC-179); DEC-168 (404 on delete = exit 64, NOT silent exit 0); BC-3.5.004 (comment delete 404 exit-64 + body-surface precedent)
+
+---
+
+#### BC-3.9.009: `attachment upload --output json` shape — array of attachment objects; `output::render_json` required (#526 invariant)
+
+**Confidence**: HIGH
+**Source**: `src/cli/issue/attachments.rs::handle_attachment_upload` (implementation pending — story S3); `output::render_json` (existing)
+**Subject**: Issue write (attachment upload — JSON output shape)
+
+When `--output json` is supplied, `jr attachment upload` returns a JSON array where each element represents one successfully uploaded file, sourced from the Jira platform POST response.
+
+Each element contains at minimum: `"id"` (string), `"filename"` (string), `"self"` (string URL), `"size"` (integer, bytes), `"mimeType"` (string), `"created"` (ISO 8601 string). The `"author"` sub-object may be present depending on the Jira response schema.
+
+The array is pretty-printed via `output::render_json` or `output::print_output` (JSON render invariant #526). Direct `serde_json::to_string_pretty` calls are forbidden at this call site. The output is pretty-printed (not compact).
+
+**EC-3.9.009-1** (single file): Array with one element.
+**EC-3.9.009-2** (multiple files): Array with one element per file, in upload order.
+**EC-3.9.009-3** (#526 invariant): MUST route through `output::render_json`; direct `serde_json::to_string_pretty` is forbidden.
+**EC-3.9.009-4** (`--public`/`--internal` JSON shape): deferred to BC-3.9.011 (P2-3c); this BC covers the platform POST path only.
+
+**Trace**: F2 spec evolution (2026-07-15 SOH-ATTACHMENTS-1, DEC-179); JSON render invariant #526 (`output::render_json` required for all `--output json` paths)
+
+---
+
+#### BC-3.9.010: `attachment delete --output json` shape — single `{"deleted":true,"id":"<AID>"}` or bulk `{"count":N,"deleted":true,"ids":[...]}`; BTreeMap-ordered keys
+
+**Confidence**: HIGH
+**Source**: `src/cli/issue/attachments.rs::handle_attachment_delete` (implementation pending — story S4); `output::render_json` (existing)
+**Subject**: Issue write (attachment delete — JSON output shape)
+
+When `--output json` is supplied, `jr attachment delete` returns:
+
+- **Single AID delete**: `{"deleted": true, "id": "<AID>"}` — two keys, alphabetical (BTreeMap-ordered per project convention).
+- **Bulk delete** (multiple `<AID>` arguments): `{"count": N, "deleted": true, "ids": ["<AID1>", "<AID2>", ...]}` — `count` = number of successfully deleted attachments; `ids` = AID strings in the order supplied on the command line. If any single DELETE fails mid-batch, `jr` surfaces the first failure with the error JSON shape (from `JrError`) and stops; no partial-success shape is emitted.
+
+All shapes are pretty-printed via `output::render_json` (#526 invariant). On error (404, 401, etc.): the JSON error shape from `JrError`, NOT the success shape.
+
+**EC-3.9.010-1** (single AID, success): `{"deleted":true,"id":"<AID>"}` — 2 keys.
+**EC-3.9.010-2** (multiple AIDs, all success): `{"count":N,"deleted":true,"ids":[...]}` — 3 keys.
+**EC-3.9.010-3** (error path): `JrError` JSON shape; not the deleted shape.
+**EC-3.9.010-4** (partial bulk failure): first failure stops batch; error JSON for the failing AID; already-deleted AIDs are not reversed.
+
+**Trace**: F2 spec evolution (2026-07-15 SOH-ATTACHMENTS-1, DEC-179); JSON render invariant #526; BC-3.9.008 (delete semantics); BTreeMap-key ordering convention (established by BC-3.4.013, `issue edit` JSON shape)
+
+---
+
+#### BC-3.9.011: `attachment upload --public --output json` shape — deferred-probe contract; P2-3c live-capture obligation on S5
+
+**Confidence**: MEDIUM (servicedeskapi response schema unconfirmed; P2-3c)
+**Source**: implementation pending — story S5; live-capture obligation: S5 implementer must update this BC
+**Subject**: Issue write (attachment upload — --public/--internal JSON output shape)
+
+This BC is a **deferred-probe contract**. The response schema from `POST /rest/servicedeskapi/request/{id}/attachment` is INCONCLUSIVE for Atlassian Cloud (P2-3c in `.factory/research/issue-576-attachments-api-2026-07-15.md` §P2-3c). The exact JSON shape of a successful `--public` or `--internal` upload response has not been confirmed from live data.
+
+**Delivery obligation (S5)**: The S5 implementer MUST:
+1. Issue a live E2E request against the `EJ` test project with `--public` and capture the response body verbatim.
+2. Update this BC body with the confirmed schema, including the key names and types in the response array/object.
+3. Update BC-3.9.007 EC-3.9.007-2 with the confirmed shape.
+4. Add a row to the `## JSON Output Shape Contracts` table at the end of this file for `attachment upload --public`.
+
+**Known constraint regardless of shape**: The output MUST route through `output::render_json` (#526 invariant). No direct `serde_json::to_string_pretty` calls.
+
+**Precedent**: BC-3.5.006 (`jr issue comment edit --internal` wire shape confirmed via live probe; same deferred-probe pattern).
+
+**EC-3.9.011-1** (P2-3c placeholder): JSON shape TBD; update this BC after S5 live capture.
+**EC-3.9.011-2** (#526 invariant): Whatever the confirmed shape, MUST use `output::render_json`.
+
+**Trace**: F2 spec evolution (2026-07-15 SOH-ATTACHMENTS-1, DEC-179); `.factory/research/issue-576-attachments-api-2026-07-15.md` §P2-3c (INCONCLUSIVE — live capture required in S5); BC-3.5.006 (deferred-probe pattern precedent)
+
+---
+
+#### BC-3.9.012: Upload error taxonomy — file-not-found exit 64; 413 actionable message; 401/5xx/network standard exits
+
+**Confidence**: HIGH
+**Source**: `src/cli/issue/attachments.rs::handle_attachment_upload` (implementation pending — story S3/S5); `src/error.rs::JrError` (existing)
+**Subject**: Issue write (attachment upload — error taxonomy)
+
+Error exits for `jr attachment upload`:
+
+| Error condition | HTTP / local | Exit code | Stderr content |
+|---|---|---|---|
+| File path not found | local (before any HTTP) | 64 | `"file not found: <path>"` |
+| Issue key not found | 404 on issue meta fetch | 64 | `"Issue <KEY> not found."` |
+| `--public` on non-JSM issue | local (after meta fetch) | 64 | `"--public is only supported on JSM issues."` (BC-3.9.005) |
+| Non-interactive without `--yes` (`--public`) | local | 64 | hint to use `--yes` (BC-3.9.014) |
+| Attachment too large | 413 | 1 | `"Attachment too large: the file exceeds the server-configured limit."` |
+| CSRF header missing (should not happen) | 403 from Jira | 1 | `"API error (403)"` |
+| Generic bad request | 400 | 1 | Jira error body surfaced |
+| Not authenticated | 401 | 2 | `"Not authenticated. Run \`jr auth login\`."` |
+| Server error | 5xx | 1 | `"API error (N)"` |
+| Network failure | — | 1 | `"Could not reach <instance>: <reason>"` |
+
+**EC-3.9.012-1** (file-not-found): exit 64; first missing file stops execution; no HTTP issued.
+**EC-3.9.012-2** (issue key 404): exit 64; fires before attachment POST.
+**EC-3.9.012-3** (413): exit 1; message does NOT state a numeric size limit.
+
+**Trace**: F2 spec evolution (2026-07-15 SOH-ATTACHMENTS-1, DEC-179); `src/error.rs::JrError` exit-code mapping
+
+---
+
+#### BC-3.9.013: Delete error taxonomy — AID 404 exit 64 + surface body (DEC-168); 401/403/5xx/network standard exits
+
+**Confidence**: HIGH
+**Source**: `src/cli/issue/attachments.rs::handle_attachment_delete` (implementation pending — story S4); `src/error.rs::JrError` (existing)
+**Subject**: Issue write (attachment delete — error taxonomy)
+
+Error exits for `jr attachment delete`:
+
+| Error condition | HTTP | Exit code | Stderr content |
+|---|---|---|---|
+| Attachment not found | 404 | 64 | Jira error body surfaced (DEC-168; BC-3.9.008) |
+| Insufficient permissions | 403 | 1 | Jira error body surfaced |
+| Not authenticated | 401 | 2 | `"Not authenticated. Run \`jr auth login\`."` |
+| Server error | 5xx | 1 | `"API error (N)"` |
+| Network failure | — | 1 | `"Could not reach <instance>: <reason>"` |
+
+`jr` does NOT validate AID format client-side (e.g., numeric check). Non-numeric or malformed AIDs are sent to the server; the server returns 400 or 404 and `jr` surfaces the response normally.
+
+**EC-3.9.013-1** (AID 404): exit 64; Jira error body on stderr (NOT silent exit 0 — DEC-168).
+**EC-3.9.013-2** (403): exit 1; Jira body on stderr.
+**EC-3.9.013-3** (non-numeric AID): sent verbatim; server 400/404 governs.
+
+**Trace**: F2 spec evolution (2026-07-15 SOH-ATTACHMENTS-1, DEC-179); DEC-168 (404 delete = exit 64 + surface body); BC-3.5.004 (comment delete precedent); BC-3.9.008 (delete contract)
+
+---
+
+#### BC-3.9.014: `--public` upload confirmation gate mechanics — `eprint!` to stderr + `io::stdin().lock().read_line()`; NOT `dialoguer::Confirm`; mirrors BC-3.5.007/BC-3.5.008
+
+**Confidence**: HIGH
+**Source**: `src/cli/issue/attachments.rs::handle_attachment_upload` (implementation pending — story S5)
+**Subject**: Issue write (attachment upload — confirmation gate mechanics)
+
+The confirmation gate for `jr attachment upload --public` uses the DEC-174 interactive-prompt mechanism: `eprint!` (NOT `eprintln!`) to stderr, followed by `io::stdin().lock().read_line(&mut buf)`. `dialoguer::Confirm` MUST NOT be used — it returns `Err(NotConnected)` on piped stderr and fails before reading user input.
+
+**Prompt text** (stderr, trailing space, no newline — `eprint!`, not `eprintln!`):
+- N ≤ 3 files: `"Upload <filename1>, <filename2>, ... to <KEY> as customer-visible (public)? [y/N] "`
+- N > 3 files: `"Upload <N> files to <KEY> as customer-visible (public)? [y/N] "`
+
+**Accepted affirmative responses** (case-insensitive): `"y"`, `"yes"`. Any other input including empty string (user pressed Enter) or EOF (Ctrl+D) is treated as 'n'.
+
+**Non-interactive path** (`--no-input` OR stdin is not a TTY): the gate is NOT presented; `jr` exits 64 immediately with the hint message. No servicedeskapi calls are issued.
+
+**`--yes` flag**: bypasses the gate entirely; no stdin read; upload proceeds directly.
+
+**Output channel invariant**: all gate text is written to STDERR only. STDOUT remains clean — it must not contain any prompt text, ensuring `--output json` piping is unaffected.
+
+**Direct precedents**: BC-3.5.007 (comment edit `--public` confirmation contract) and BC-3.5.008 (comment edit confirmation gate mechanics detail) — this BC mirrors those contracts for the attachment upload context.
+
+**EC-3.9.014-1** (interactive, 'y'): Gate consumed from stdin; step 1 + step 2 proceed.
+**EC-3.9.014-2** (interactive, 'n' or empty): exit 0; human "Upload cancelled."; JSON `{"cancelled":true,"uploaded":false}`.
+**EC-3.9.014-3** (non-interactive, no `--yes`): exit 64; hint to use `--yes`.
+**EC-3.9.014-4** (`--yes`, non-interactive): gate skipped; upload proceeds immediately; no stdin read.
+**EC-3.9.014-5** (N ≤ 3 files): prompt lists individual filenames; N > 3 → "N files" summary.
+
+**Trace**: F2 spec evolution (2026-07-15 SOH-ATTACHMENTS-1, DEC-179); DEC-174 (eprint!+read_line, NOT dialoguer — ratified interactive-prompt mechanism); BC-3.5.007 (comment edit --public confirmation contract); BC-3.5.008 (confirmation gate mechanics precedent)
+
+---
+
+## Total BCs in this file: 105 individually-bodied (cumulative 134 incl. range-collapsed; see BC-INDEX.md)
+
+_Last updated 2026-07-15 (SOH-ATTACHMENTS-1 F2, DEC-179, issues #576+#585): +14 BCs (BC-3.9.001..BC-3.9.014) — attachment upload platform POST (BC-3.9.001: multipart, `X-Atlassian-Token: no-check`, streaming, no client-side cap, 413/400 handling), JSM upload no-flag path (BC-3.9.002: platform POST = internal by default, P2-4a), `--public` servicedeskapi two-step + DEC-174 confirmation gate (BC-3.9.003), `--internal` two-step public:false + OQ-9 non-JSM silent no-op (BC-3.9.004), `--public` non-JSM exit 64 (BC-3.9.005), temporaryAttachmentId ~1h TTL + stale-ID self-healing (BC-3.9.006, BC-X.8.010), post-upload echo + P2-3c deferred probe obligation (BC-3.9.007, BC-3.9.011), attachment delete DELETE/id + 404 = exit 64 + surface body (BC-3.9.008, DEC-168 precedent), JSON shapes (BC-3.9.009..010), upload/delete error taxonomies (BC-3.9.012..013), `--public` confirmation gate mechanics eprint!+read_line NOT dialoguer (BC-3.9.014, DEC-174); Section 3.9 header added (14 contracts); spec versions v1.3.43 (BCs) + v1.3.44 (security fix round, SEC-576-001..007). Previous update 2026-07-09 (issue #577 SOH-COMMENT-CRUD-1 F2, DEC-168): +11 BCs (BC-3.5.002..BC-3.5.012) — comment delete (BC-3.5.002..BC-3.5.004: endpoint/exit-codes, confirmation, 404-exit-64+body-surface), comment edit (BC-3.5.005..BC-3.5.009: body-only-PUT invariant, --internal wire, --public wire+always-confirm, --public confirmation gate, body sources), comment view (BC-3.5.010: GET+expand=properties, table+JSON, 404-exit-64), mutual exclusion (BC-3.5.011), CLI breaking change (BC-3.5.012: comment→subcommand group, old flat form → clap error with migration hint); §3.5 header updated to 12 contracts. Previous update 2026-06-30 (BC-subclause-pass F2): +2 BCs (BC-3.4.020..021) — BC-3.4.020 (`issue edit --label` routing fork: single-key PUT bare-string vs 2+ key bulk POST `{"name":...}` objects; BUG-LABEL-400), BC-3.4.021 (`issue edit --dry-run` `plannedChanges` output structure + `--output json` schema `{dryRun, issues, plannedChanges}`; intentionally simplified preview shapes); Section 3.4 header updated to 21 contracts. Previous update 2026-06-08 (fix-bulk-transition-schema F2): +1 BC (BC-3.2.014) — BC-3.2.014 (multi-key bulk move `bulkTransitionInputs` nested wrapper wire schema; documents correctness bug fix commit acca854; live run 27156639337); Section 3.2 header updated to 14 contracts. Previous update 2026-06-03 (jsm-resolution-required F2): +1 BC (BC-3.2.013) — BC-3.2.013 (proactive resolution enforcement on done-category transitions: REQUIRED and OPTIONAL branches, --no-resolution flag, isConditional coverage, conservative gate, BC-3.2.009 backstop retained; single-key only; breaking change); Section 3.2 header updated to 13 contracts. Previous update 2026-06-01 (issue #331 F2): +2 BCs (BC-3.4.018..019) — BC-3.4.018 (multi-key `--type` bulk wire shape: camelCase `issueType` key, `issueTypeId` string value, name resolved via createmeta issuetypes), BC-3.4.019 (cross-project guard: keys spanning >1 project exit 64 before any API call); Section 3.4 header updated to 19 contracts. Previous update 2026-05-27 (issue #421 F2): BC-3.4.015 invariant 5 rewritten (two-stage i64-first strategy); EC-3.4.015-4b added (i64-boundary regression pin); no BC count changes (103/74 unchanged). Previous update (2026-05-25 issue #407 F2): +EC-3.4.017-14 — mechanical enforcement meta-test for BC-3.4.017 invariant 2 (conflict block completeness via `test_label_conflict_block_lists_every_relevant_flag`); BC-3.4.017 invariant 2 cross-reference added; no BC count changes (103/74 unchanged). Previous update (2026-05-22 issue #396 F2): +3 BCs (BC-3.4.015..017) — BC-3.4.015 (`issue edit --field` string/number/date/datetime/user field single-key path, with editmeta validation, fields.json cache, and dry-run invariants), BC-3.4.016 (`issue edit --field` single-select `option` field), BC-3.4.017 (`--field` multi-key/`--jql` rejection Gate A and flag-overlap Gate B); Section 3.4 header updated to 17 contracts. Previous update (2026-05-21 issue #398 F2): +3 BCs (BC-3.4.012..014) — BC-3.4.012 (issue edit table-mode success echo), BC-3.4.013 (issue edit JSON-mode success echo with changed_fields), BC-3.4.014 (issue create table-mode all-fields echo (broadened from team-only at the 2026-05-22 human-gate to mirror BC-3.4.012)); BC-3.4.003 Success output cross-reference added; Section 3.4 header updated to 14 contracts. Previous update (2026-05-20 issue #388): +2 BCs (BC-3.4.010..011): BC-3.4.010 (cross-hierarchy `edit --type` 400 → CROSS_HIERARCHY_HINT citing JRACLOUD-27893) and BC-3.4.011 (same-hierarchy/indeterminate `edit --type` 400 → typo hint or raw error, no JRACLOUD-27893 hint) added in F2 delta (issue #388). BC-3.4.003 Errors cross-reference updated (annotation only, no behavioral change). Section 3.4 header updated to 11 contracts. Previous update (2026-05-20 issue #385): +2 BCs (BC-3.8.016..017); BC-3.8.002/010/011 modified._

@@ -1,18 +1,19 @@
 ---
 context: bc-index
 title: "BC Master Index"
-total_bcs: 624  # cumulative claim (incl. range-collapsed) — see preamble below; +4 added 2026-05-08 (BC-7.4.013-016, Fix-PR A); +1 added 2026-05-13 (BC-2.6.050, issue #350); +1 added 2026-05-14 (BC-2.6.051, issue #365); +1 added 2026-05-15 (BC-3.4.009, issue #340 F2); +18 added 2026-05-18 (BC-3.8.001..010 + BC-X.12.001..008, issue #288 F2+F1d); +3 added 2026-05-19 (BC-3.8.011..013, issue #288 F1d + issue #383 F2); +4 added 2026-05-19 (BC-3.8.014..015 + BC-X.8.006..007, issue #384 F2); +2 added 2026-05-20 (BC-3.8.016..017, issue #385 F2); +2 added 2026-05-20 (BC-3.4.010..011, issue #388 F2); +3 added 2026-05-21 (BC-3.4.012..014, issue #398 F2); +3 added 2026-05-22 (BC-3.4.015..017, issue #396 F2); +2 added 2026-06-01 (BC-3.4.018..019, issue #331 F2); +1 added 2026-06-03 (BC-3.2.013, jsm-resolution-required F2); +1 added 2026-06-08 (BC-7.2.006, issue #470 listItem content-model conformance); +2 added 2026-06-08 (BC-X.8.008..009, S-QUEUE-BC-1 queue list/view document-as-is); +1 added 2026-06-08 (BC-3.2.014, fix-bulk-transition-schema bulkTransitionInputs wrapper); +2 added 2026-06-08 (BC-7.2.007..008, issue #474 markdown subsup + heading-attr); +1 added 2026-06-09 (BC-7.2.009, issue #483 GFM alerts → panel); +1 added 2026-06-10 (BC-7.2.010, issue #471 GFM task lists → taskList/taskItem); +3 added 2026-06-12 (BC-6.1.014 + BC-6.2.016..017, windows-build F2); +1 added 2026-06-15 (BC-7.2.011, issue #492 block-HTML hardBreak interior newlines); +1 added 2026-06-17 (BC-2.4.043, Bundle C CR-001 list_comments anti-stall guard); +3 added 2026-06-19 (BC-X.13.001..003, DEAD-CITATION-CI F2 CLAUDE.md citation guard); +1 added 2026-06-24 (BC-7.2.012, SEC-001 ADF recursion depth limit); +2 promoted 2026-06-27 (BC-7.2.013..014, range-collapsed → individually-bodied; issues #472 #473; total_bcs unchanged); +1 added 2026-06-27 (BC-6.2.018, cache warm-hit no-HTTP invariant); +1 added 2026-06-27 (BC-7.3.010, issue #526 json-render invariant + error channel); +3 added 2026-06-30 (BC-3.4.020..021 + BC-5.1.005, BC-subclause-pass F2); BC-6.2.004 modified; BC-1.3.023, BC-3.3.001, BC-X.8.004, BC-3.8.009, BC-X.3.002, BC-3.8.002, BC-3.8.010, BC-3.8.011, BC-3.4.003 modified; +3 added 2026-07-05 (BC-X.13.004..006, CITATION-GUARDS Story B Guard 1 S-BC-CITATION-GUARD-1 issue #102); +1 added 2026-07-07 (BC-7.2.015, issue #571 ADF code-mark exclusivity — push_code emit-site typographic-mark filter); BC-7.2.007 EC-2 modified; +1 added 2026-07-09 (BC-X.1.011, S-SOH-589 jr api --method case-insensitivity); +11 added 2026-07-09 (BC-3.5.002..BC-3.5.012, SOH-COMMENT-CRUD-1 F2 DEC-168 comment delete/edit/view issue #577)
-last_updated: 2026-07-10  # BC-3.5.002..BC-3.5.012 added via sanctioned shell edit (TD-031 lockout); BC-X.1.011 also via sanctioned shell edit; pass-17 F2 wording fix 2026-07-10
+total_bcs: 651  # cumulative claim (incl. range-collapsed) — see preamble below; +4 added 2026-05-08 (BC-7.4.013-016, Fix-PR A); +1 added 2026-05-13 (BC-2.6.050, issue #350); +1 added 2026-05-14 (BC-2.6.051, issue #365); +1 added 2026-05-15 (BC-3.4.009, issue #340 F2); +18 added 2026-05-18 (BC-3.8.001..010 + BC-X.12.001..008, issue #288 F2+F1d); +3 added 2026-05-19 (BC-3.8.011..013, issue #288 F1d + issue #383 F2); +4 added 2026-05-19 (BC-3.8.014..015 + BC-X.8.006..007, issue #384 F2); +2 added 2026-05-20 (BC-3.8.016..017, issue #385 F2); +2 added 2026-05-20 (BC-3.4.010..011, issue #388 F2); +3 added 2026-05-21 (BC-3.4.012..014, issue #398 F2); +3 added 2026-05-22 (BC-3.4.015..017, issue #396 F2); +2 added 2026-06-01 (BC-3.4.018..019, issue #331 F2); +1 added 2026-06-03 (BC-3.2.013, jsm-resolution-required F2); +1 added 2026-06-08 (BC-7.2.006, issue #470 listItem content-model conformance); +2 added 2026-06-08 (BC-X.8.008..009, S-QUEUE-BC-1 queue list/view document-as-is); +1 added 2026-06-08 (BC-3.2.014, fix-bulk-transition-schema bulkTransitionInputs wrapper); +2 added 2026-06-08 (BC-7.2.007..008, issue #474 markdown subsup + heading-attr); +1 added 2026-06-09 (BC-7.2.009, issue #483 GFM alerts → panel); +1 added 2026-06-10 (BC-7.2.010, issue #471 GFM task lists → taskList/taskItem); +3 added 2026-06-12 (BC-6.1.014 + BC-6.2.016..017, windows-build F2); +1 added 2026-06-15 (BC-7.2.011, issue #492 block-HTML hardBreak interior newlines); +1 added 2026-06-17 (BC-2.4.043, Bundle C CR-001 list_comments anti-stall guard); +3 added 2026-06-19 (BC-X.13.001..003, DEAD-CITATION-CI F2 CLAUDE.md citation guard); +1 added 2026-06-24 (BC-7.2.012, SEC-001 ADF recursion depth limit); +2 promoted 2026-06-27 (BC-7.2.013..014, range-collapsed → individually-bodied; issues #472 #473; total_bcs unchanged); +1 added 2026-06-27 (BC-6.2.018, cache warm-hit no-HTTP invariant); +1 added 2026-06-27 (BC-7.3.010, issue #526 json-render invariant + error channel); +3 added 2026-06-30 (BC-3.4.020..021 + BC-5.1.005, BC-subclause-pass F2); BC-6.2.004 modified; BC-1.3.023, BC-3.3.001, BC-X.8.004, BC-3.8.009, BC-X.3.002, BC-3.8.002, BC-3.8.010, BC-3.8.011, BC-3.4.003 modified; +3 added 2026-07-05 (BC-X.13.004..006, CITATION-GUARDS Story B Guard 1 S-BC-CITATION-GUARD-1 issue #102); +1 added 2026-07-07 (BC-7.2.015, issue #571 ADF code-mark exclusivity — push_code emit-site typographic-mark filter); BC-7.2.007 EC-2 modified; +1 added 2026-07-09 (BC-X.1.011, S-SOH-589 jr api --method case-insensitivity); +11 added 2026-07-09 (BC-3.5.002..BC-3.5.012, SOH-COMMENT-CRUD-1 F2 DEC-168 comment delete/edit/view issue #577); +27 added 2026-07-15 (BC-2.7.001..012 + BC-3.9.001..014 + BC-X.8.010, SOH-ATTACHMENTS-1 F2 DEC-179 issues #576 #585)
+last_updated: 2026-07-15  # BC-2.7.001..012 + BC-3.9.001..014 + BC-X.8.010 added via sanctioned Python/Bash (TD-031 lockout); SOH-ATTACHMENTS-1 F2 DEC-179 issues #576 #585; BC-INDEX v6.13
+index_version: v6.13
 source_pass: 3
 sections:
   - bc-1-auth-identity.md (57 BCs cumulative; 46 individually-bodied)
-  - bc-2-issue-read.md (94 BCs cumulative; 52 individually-bodied)
-  - bc-3-issue-write.md (120 BCs cumulative; 91 individually-bodied)
+  - bc-2-issue-read.md (106 BCs cumulative; 64 individually-bodied)
+  - bc-3-issue-write.md (134 BCs cumulative; 105 individually-bodied)
   - bc-4-assets-cmdb.md (32 BCs cumulative; 22 individually-bodied)
   - bc-5-boards-sprints.md (36 BCs cumulative; 18 individually-bodied)
   - bc-6-config-cache.md (43 BCs cumulative; 33 individually-bodied)
   - bc-7-output-render.md (93 BCs cumulative; 49 individually-bodied)
-  - cross-cutting.md (149 BCs cumulative; 83 individually-bodied)
+  - cross-cutting.md (150 BCs cumulative; 84 individually-bodied)
   - nfr-catalog.md (42 NFR items, not counted in BC total; NFR-O-K merged into NFR-S-D per ADV-P7-002)
 ---
 
@@ -127,7 +128,7 @@ R1/R4 prefix = deepening round that introduced it.
 
 ---
 
-## Section 2: Issue Read (bc-2-issue-read.md) — 94 BCs cumulative; 52 individually-bodied
+## Section 2: Issue Read (bc-2-issue-read.md) — 106 BCs cumulative; 64 individually-bodied [BC-2.7.001..012 added 2026-07-15 SOH-ATTACHMENTS-1 F2 DEC-179]
 
 ### 2.1 JQL Composition (17 BCs: BC-2.1.001..017)
 
@@ -211,9 +212,27 @@ R1/R4 prefix = deepening round that introduced it.
 | BC-2.6.050 | `client.search_issue_keys(jql, limit)` posts `/rest/api/3/search/jql` with body `fields: ["key"]` and returns `KeySearchResult { keys, has_more }` | — (issue #350) | tests/search_issue_keys.rs | HIGH |
 | BC-2.6.051 | `client.search_issues(jql, limit, fields)` deduplicates results in-place on all exit paths (JRACLOUD-95368 mitigation, per-iteration HashSet retain keyed on issue.key) | — (issue #365) | tests/rate_limit_cap_tests.rs | HIGH |
 
+
+### 2.7 Attachment Read (12 BCs: BC-2.7.001..012) [Added 2026-07-15 SOH-ATTACHMENTS-1 F2 DEC-179 issues #576 #585]
+
+| L3 BC ID | Summary | Pass 3 BC ID | Source | Confidence |
+|---|---|---|---|---|
+| BC-2.7.001 | `attachment list <KEY>` renders table: id, filename, mimeType, size (human-readable), created, author; output channel profile 2 (stdout data, stderr hints) | — (SOH-ATTACHMENTS-1 F2) | src/cli/issue/attachments.rs (pending S1) | HIGH |
+| BC-2.7.002 | `attachment list --output json` returns array of attachment objects including `contentUrl` field; JSON render invariant #526 (`output::render_json`); closes #585 contentUrl surface | — (SOH-ATTACHMENTS-1 F2) | src/cli/issue/attachments.rs (pending S1) | HIGH |
+| BC-2.7.003 | `--filter mime=<glob>` client-side mimeType filter; glob case-insensitive; AND-combined with other filters | — (SOH-ATTACHMENTS-1 F2) | src/cli/issue/attachments.rs (pending S1) | HIGH |
+| BC-2.7.004 | `--filter name=<glob>` client-side filename filter; JRACLOUD-96384 match-by-id note (display name unreliable for matching) | — (SOH-ATTACHMENTS-1 F2) | src/cli/issue/attachments.rs (pending S1) | HIGH |
+| BC-2.7.005 | `--filter size-max=<bytes>` client-side size filter; no hard-coded cap; non-numeric input → exit 64 | — (SOH-ATTACHMENTS-1 F2) | src/cli/issue/attachments.rs (pending S1) | HIGH |
+| BC-2.7.006 | Unknown/inaccessible KEY → exit 64; full error taxonomy: 404 issue-not-found, 401 not-authenticated, 5xx API error, network failure | — (SOH-ATTACHMENTS-1 F2) | src/cli/issue/attachments.rs (pending S1) | HIGH |
+| BC-2.7.007 | Single-file download via `GET /rest/api/3/attachment/content/{id}`; redirect-following (reqwest default, GHSA-9857-6MW7-FQ2M strips auth on cross-host); no `?redirect=false` (JRACLOUD-97046 breaks some formats); streaming to disk; overwrite-refuse + `--force`; JSM and non-JSM issues use same endpoint (JSDCLOUD-10841) | — (SOH-ATTACHMENTS-1 F2) | src/cli/issue/attachments.rs (pending S2) | HIGH |
+| BC-2.7.008 | `--all` batch download: saves each attachment to `--out-dir`; fail-soft per-file on collision (skip, warn); `--out-dir` must exist (exit 64 if absent); `--id` and `--all` are mutually exclusive | — (SOH-ATTACHMENTS-1 F2) | src/cli/issue/attachments.rs (pending S2) | HIGH |
+| BC-2.7.009 | `--newest N` selects top-N attachments by `created` desc; filter applied before top-N selection; N > count → graceful (return all); non-numeric/zero N → exit 64 | — (SOH-ATTACHMENTS-1 F2) | src/cli/issue/attachments.rs (pending S2) | HIGH |
+| BC-2.7.010 | Default output filename `<sha1-of-attachment-id>_<sanitized-basename>`; SHA-1 of the numeric attachment ID (not content) for idempotency; `--out <PATH>` overrides naming entirely | — (SOH-ATTACHMENTS-1 F2) | src/cli/issue/attachments.rs (pending S2) | HIGH |
+| BC-2.7.011 | `sanitize_attachment_filename` CWE-22 path-traversal mitigation: 5.5-step algorithm (basename extraction, pseudo-name `.`/`..` reject, NUL-byte reject, char scrub `/`/`\`/`:` → `_` only, 255-byte cap, trailing-dot/whitespace strip SEC-576-007); containment: `canonicalize(out_dir)` then `Path::starts_with` — NOT `canonicalize` on joined path (SEC-576-002 corrected procedure); Windows device-name caller note (SEC-576-001); naive blacklist INSUFFICIENT — see body | — (SOH-ATTACHMENTS-1 F2) | src/cli/issue/attachments.rs (pending S2) | HIGH |
+| BC-2.7.012 | Unknown KEY or AID → exit 64; match-by-id invariant (JRACLOUD-96384/-78388: always identify attachments by `id`, never filename); full error taxonomy table (404/401/5xx/network) | — (SOH-ATTACHMENTS-1 F2) | src/cli/issue/attachments.rs (pending S2) | HIGH |
+
 ---
 
-## Section 3: Issue Write (bc-3-issue-write.md) — 120 BCs cumulative; 91 individually-bodied
+## Section 3: Issue Write (bc-3-issue-write.md) — 134 BCs cumulative; 105 individually-bodied [BC-3.9.001..014 added 2026-07-15 SOH-ATTACHMENTS-1 F2 DEC-179]
 
 ### 3.1 Assign (9 BCs: BC-3.1.001..009)
 
@@ -345,6 +364,26 @@ R1/R4 prefix = deepening round that introduced it.
 | BC-3.8.015 | OAuth 401 on JSM POST (`handle_jsm_create`) → `write:servicedesk-request` hint via `InsufficientScope` scope-mismatch path (deterministic); `NotAuthenticated` post-refresh path is pre-existing, out of #384 test scope; gated on `client.is_oauth_auth() == true` | — (issue #384 F2) | tests/issue_create_jsm.rs | HIGH |
 | BC-3.8.016 | `--request-type ""` (empty string or whitespace-only after trim) exits 64 with "request type cannot be empty" before `partial_match` or numeric bypass; no HTTP issued | — (issue #385 F2) | tests/issue_create_jsm.rs; src/cli/issue/jsm_create.rs::handle_jsm_create | HIGH |
 | BC-3.8.017 | `--markdown` + `--field description=<value>` combination rejected at parse-time in `handle_jsm_create`; exit 64; no HTTP; desync rationale: "may result in a JSM 400 error or silently dropped ADF formatting" (NOT asserted as certain) | — (issue #385 F2) | tests/issue_create_jsm.rs; src/cli/issue/jsm_create.rs::handle_jsm_create | HIGH |
+
+
+### 3.9 Attachment Write (14 BCs: BC-3.9.001..014) [Added 2026-07-15 SOH-ATTACHMENTS-1 F2 DEC-179 issues #576 #585]
+
+| L3 BC ID | Summary | Pass 3 BC ID | Source | Confidence |
+|---|---|---|---|---|
+| BC-3.9.001 | Platform upload `POST /rest/api/3/issue/{key}/attachments`; multipart `file`-named parts; `X-Atlassian-Token: no-check` mandatory (CSRF bypass); streaming via ReaderStream; no client-side size cap; graceful 413 (actionable message) / 400 (Jira body surfaced); output channel profile 4 | — (SOH-ATTACHMENTS-1 F2) | src/cli/issue/attachments.rs (pending S3) | HIGH |
+| BC-3.9.002 | Upload to JSM issue with no visibility flag → platform POST (internal by default per P2-4a; safe default; no servicedeskapi calls) | — (SOH-ATTACHMENTS-1 F2) | src/cli/issue/attachments.rs (pending S3) | HIGH |
+| BC-3.9.003 | `--public` → servicedeskapi two-step (attachTemporaryFile + request/{key}/attachment public:true); serviceDeskId resolved via (profile, projectKey) cache (BC-X.8.010); DEC-174 confirmation gate (eprint!+read_line, NOT dialoguer); --yes bypass; non-interactive exit 64 with --yes hint; cancel → `{"cancelled":true,"uploaded":false}` | — (SOH-ATTACHMENTS-1 F2) | src/cli/issue/attachments.rs (pending S5) | HIGH |
+| BC-3.9.004 | `--internal` → two-step public:false; no confirmation gate; non-JSM issue = SILENT NO-OP (OQ-9 ruling — platform POST is already internal); --internal + --public → clap exit 2 | — (SOH-ATTACHMENTS-1 F2) | src/cli/issue/attachments.rs (pending S5) | HIGH |
+| BC-3.9.005 | `--public` on non-JSM issue → exit 64; canonical message "–-public is only supported on Jira Service Management (JSM) issues."; no servicedeskapi calls; asymmetric from --internal (which is silent no-op on non-JSM) | — (SOH-ATTACHMENTS-1 F2) | src/cli/issue/attachments.rs (pending S5) | HIGH |
+| BC-3.9.006 | temporaryAttachmentId ~1h TTL; second-step failure → generic retry hint "Temporary attachment IDs may have expired. Try the upload again."; no pattern-matching Cloud error strings (P2-2); no ID caching or reuse across invocations | — (SOH-ATTACHMENTS-1 F2) | src/api/jsm/attachments.rs (pending S5) | MEDIUM-HIGH |
+| BC-3.9.007 | Post-upload echo: platform POST response array used directly (no secondary fetch); servicedeskapi response schema INCONCLUSIVE (P2-3c) — S5 live-capture obligation on EJ; JSDCLOUD-10841: `links.content` from servicedeskapi returns 404 — always use platform `/rest/api/3/attachment/content/{id}` | — (SOH-ATTACHMENTS-1 F2) | src/cli/issue/attachments.rs (pending S3/S5) | MEDIUM |
+| BC-3.9.008 | `attachment delete` → `DELETE /rest/api/3/attachment/{id}`; 204 = exit 0 with echo; 404 = exit 64 + surface Jira body (NOT silent exit 0 — DEC-168; mirrors BC-3.5.004 comment delete precedent) | — (SOH-ATTACHMENTS-1 F2) | src/cli/issue/attachments.rs (pending S4) | HIGH |
+| BC-3.9.009 | `attachment upload --output json`: array of attachment objects (id, filename, self, size, mimeType, created); `output::render_json` required (#526 invariant); platform POST path only | — (SOH-ATTACHMENTS-1 F2) | src/cli/issue/attachments.rs (pending S3) | HIGH |
+| BC-3.9.010 | `attachment delete --output json`: single `{"deleted":true,"id":"<AID>"}` or bulk `{"count":N,"deleted":true,"ids":[...]}` (BTreeMap-ordered keys); partial-batch failure → first-failure error JSON, no partial-success shape | — (SOH-ATTACHMENTS-1 F2) | src/cli/issue/attachments.rs (pending S4) | HIGH |
+| BC-3.9.011 | `attachment upload --public --output json` shape: DEFERRED-PROBE contract — P2-3c INCONCLUSIVE; S5 implementer must capture live EJ response and update this BC; #526 invariant applies regardless | — (SOH-ATTACHMENTS-1 F2) | src/cli/issue/attachments.rs (pending S5) | MEDIUM |
+| BC-3.9.012 | Upload error taxonomy: file-not-found exit 64; issue-key 404 exit 64; --public non-JSM exit 64; non-interactive-no-yes exit 64; 413 exit 1 (actionable, no numeric limit); 403 exit 1; 400 exit 1 (Jira body); 401 exit 2; 5xx exit 1; network exit 1 | — (SOH-ATTACHMENTS-1 F2) | src/cli/issue/attachments.rs (pending S3/S5) | HIGH |
+| BC-3.9.013 | Delete error taxonomy: AID 404 exit 64 + Jira body surfaced (DEC-168); 403 exit 1; 401 exit 2; 5xx exit 1; network exit 1; non-numeric AID sent verbatim to server | — (SOH-ATTACHMENTS-1 F2) | src/cli/issue/attachments.rs (pending S4) | HIGH |
+| BC-3.9.014 | `--public` confirmation gate mechanics: `eprint!` to stderr (NOT `eprintln!`) + `io::stdin().lock().read_line()`; NOT `dialoguer::Confirm`; DEC-174 ratified mechanism; prompt lists ≤3 filenames or "N files" summary; accepted 'y'/'yes' (case-insensitive); any other input → cancel; mirrors BC-3.5.007/BC-3.5.008 | — (SOH-ATTACHMENTS-1 F2) | src/cli/issue/attachments.rs (pending S5) | HIGH |
 
 ---
 
@@ -567,7 +606,7 @@ R1/R4 prefix = deepening round that introduced it.
 
 ---
 
-## Section X: Cross-Cutting Utilities (cross-cutting.md) — 149 BCs cumulative; 83 individually-bodied
+## Section X: Cross-Cutting Utilities (cross-cutting.md) — 150 BCs cumulative; 84 individually-bodied [BC-X.8.010 added 2026-07-15 SOH-ATTACHMENTS-1 F2 DEC-179]
 
 ### X.1 HTTP Client (11 BCs: BC-X.1.001..011)
 
@@ -653,7 +692,7 @@ R1/R4 prefix = deepening round that introduced it.
 | BC-X.7.005 | `user view <id>` → 404 → friendly `"User with accountId '<id>' not found"` exit 64 | BC-1132i (R4) | tests/user_commands.rs | HIGH |
 | BC-X.7.006 | `user search --all` advances startAt by REQUESTED maxResults (JRACLOUD-71293 workaround) | BC-1119 (R4) | tests/user_pagination.rs:202-247 | HIGH |
 
-### X.8 Projects & Queues (9 BCs: BC-X.8.001..009) [BC-X.8.006..007 added 2026-05-19 issue #384 F2; BC-X.8.008..009 added 2026-06-08 S-QUEUE-BC-1]
+### X.8 Projects & Queues (10 BCs: BC-X.8.001..010) [BC-X.8.006..007 added 2026-05-19 issue #384 F2; BC-X.8.008..009 added 2026-06-08 S-QUEUE-BC-1; BC-X.8.010 added 2026-07-15 SOH-ATTACHMENTS-1 F2]
 
 | L3 BC ID | Summary | Pass 3 BC ID | Source | Confidence |
 |---|---|---|---|---|
@@ -666,6 +705,7 @@ R1/R4 prefix = deepening round that introduced it.
 | BC-X.8.007 | OAuth 401 from `require_service_desk` (cache miss — project GET or service-desk list GET) → read-side scope hint (`read:jira-work` + `read:servicedesk-request`); gated by `client.is_oauth_auth() == true` | — (issue #384 F2) | tests/issue_create_jsm.rs | HIGH |
 | BC-X.8.008 | `jr queue list` auto-paginates `GET /rest/servicedeskapi/servicedesk/{sdId}/queue?includeCount=true` in pages of 50; renders `["Queue", "Issues"]` table (em-dash when issue_count is None); `--output json` returns Vec<Queue> array; empty list is valid success | — (S-QUEUE-BC-1) | tests/queue.rs; src/cli/queue.rs::handle_list; src/api/jsm/queues.rs::list_queues | HIGH |
 | BC-X.8.009 | `jr queue view` resolves queue by `--id` (string pass-through, bypasses name resolution) or positional name (via `partial_match`; single-substring → Ambiguous exit 64; ExactMultiple → exit 64; None → exit 64; neither supplied → exit 64); fetches issue keys in queue order up to DEFAULT_LIMIT (30); batch-fetches full issues via `key IN (...)` JQL; reorders to queue position; issues absent from search silently omitted; output is Issue objects not Queue objects | — (S-QUEUE-BC-1) | tests/queue.rs; src/cli/queue.rs::handle_view; src/api/jsm/queues.rs::get_queue_issue_keys | HIGH |
+| BC-X.8.010 | `(profile, projectKey) → serviceDeskId` cache: model-b writer (swallow disk-write errors with `eprintln!("warning: …")`, return `Ok(())`); 7-day TTL; `v1/` root; deserialize failure = cache miss (self-heals); used ONLY by JSM attachment upload `--public`/`--internal` path; `write_cmdb_fields_cache` precedent | — (SOH-ATTACHMENTS-1 F2) | src/cache.rs (pending S5) | HIGH |
 
 ### X.9 JQL Utilities (4 BCs: BC-X.9.001..004)
 
@@ -736,18 +776,18 @@ R1/R4 prefix = deepening round that introduced it.
 | Section | BC Count (cumulative) | Individually-bodied |
 |---|---|---|
 | 1: Auth & Identity | 57 | 46 |
-| 2: Issue Read | 94 | 52 |
-| 3: Issue Write | 109 | 80 |
+| 2: Issue Read | 106 | 64 |
+| 3: Issue Write | 134 | 105 |
 | 4: Assets & CMDB | 32 | 22 |
 | 5: Boards & Sprints | 36 | 18 |
 | 6: Config & Cache | 43 | 33 |
 | 7: Output Rendering | 93 | 49 |
-| X: Cross-Cutting | 148 | 82 |
-| **Total** | **613** | **383** |
+| X: Cross-Cutting | 150 | 84 |
+| **Total** | **651** | **421** |
 
-**Note**: BC-X.4.009 (ADV-P1-029) is included in cross-cutting's `total_bcs` and in the sum above. Canonical total is **613** (+4 BC-7.4.013-016 added 2026-05-08 via Fix-PR A; +1 BC-2.6.050 added 2026-05-13 via issue #350; +1 BC-2.6.051 added 2026-05-14 via issue #365; +1 BC-3.4.009 added 2026-05-15 via issue #340 F2; +18 BC-3.8.001..010 + BC-X.12.001..008 added 2026-05-18 via issue #288 F2+F1d; +3 BC-3.8.011..013 added 2026-05-19 via issue #288 F1d + issue #383 F2; +4 BC-3.8.014..015 + BC-X.8.006..007 added 2026-05-19 via issue #384 F2; +2 BC-3.8.016..017 added 2026-05-20 via issue #385 F2; +2 BC-3.4.010..011 added 2026-05-20 via issue #388 F2; +3 BC-3.4.012..014 added 2026-05-21 via issue #398 F2; +3 BC-3.4.015..017 added 2026-05-22 via issue #396 F2; +2 BC-3.4.018..019 added 2026-06-01 via issue #331 F2; +1 BC-3.2.013 added 2026-06-03 via jsm-resolution-required F2; +1 BC-7.2.006 added 2026-06-08 via issue #470 listItem content-model conformance; +2 BC-X.8.008..009 added 2026-06-08 via S-QUEUE-BC-1 queue list/view document-as-is; +1 BC-3.2.014 added 2026-06-08 via fix-bulk-transition-schema bulkTransitionInputs wrapper; +2 BC-7.2.007..008 added 2026-06-08 via issue #474 markdown subsup + heading-attr; +1 BC-7.2.009 added 2026-06-09 via issue #483 GFM alerts → panel; +1 BC-7.2.010 added 2026-06-10 via issue #471 GFM task lists → taskList/taskItem; +3 BC-6.1.014 + BC-6.2.016..017 added 2026-06-12 via windows-build F2; +1 BC-7.2.011 added 2026-06-15 via issue #492 block-HTML hardBreak interior newlines; +1 BC-2.4.043 added 2026-06-17 via Bundle C CR-001 list_comments anti-stall guard; +3 BC-X.13.001..003 added 2026-06-19 via DEAD-CITATION-CI F2 CLAUDE.md citation guard; +1 BC-7.2.012 added 2026-06-24 via SEC-001 ADF recursion depth limit; +2 BC-7.2.013..014 promoted 2026-06-27 from range-collapsed to individually-bodied via issues #472 #473 (no total_bcs change); +1 BC-6.2.018 added 2026-06-27 cache warm-hit no-HTTP invariant; +1 BC-7.3.010 added 2026-06-27 issue #526 json-render invariant + error channel; +3 BC-3.4.020..021 + BC-5.1.005 added 2026-06-30 via BC-subclause-pass F2; +3 BC-X.13.004..006 added 2026-07-05 via CITATION-GUARDS Story B Guard 1 S-BC-CITATION-GUARD-1 issue #102; +1 BC-7.2.015 added 2026-07-07 via issue #571 ADF code-mark exclusivity; +1 BC-X.1.011 added 2026-07-09 via S-SOH-589 jr api --method case-insensitivity).
+**Note**: BC-X.4.009 (ADV-P1-029) is included in cross-cutting's `total_bcs` and in the sum above. Canonical total is **651** (+4 BC-7.4.013-016 added 2026-05-08 via Fix-PR A; +1 BC-2.6.050 added 2026-05-13 via issue #350; +1 BC-2.6.051 added 2026-05-14 via issue #365; +1 BC-3.4.009 added 2026-05-15 via issue #340 F2; +18 BC-3.8.001..010 + BC-X.12.001..008 added 2026-05-18 via issue #288 F2+F1d; +3 BC-3.8.011..013 added 2026-05-19 via issue #288 F1d + issue #383 F2; +4 BC-3.8.014..015 + BC-X.8.006..007 added 2026-05-19 via issue #384 F2; +2 BC-3.8.016..017 added 2026-05-20 via issue #385 F2; +2 BC-3.4.010..011 added 2026-05-20 via issue #388 F2; +3 BC-3.4.012..014 added 2026-05-21 via issue #398 F2; +3 BC-3.4.015..017 added 2026-05-22 via issue #396 F2; +2 BC-3.4.018..019 added 2026-06-01 via issue #331 F2; +1 BC-3.2.013 added 2026-06-03 via jsm-resolution-required F2; +1 BC-7.2.006 added 2026-06-08 via issue #470 listItem content-model conformance; +2 BC-X.8.008..009 added 2026-06-08 via S-QUEUE-BC-1 queue list/view document-as-is; +1 BC-3.2.014 added 2026-06-08 via fix-bulk-transition-schema bulkTransitionInputs wrapper; +2 BC-7.2.007..008 added 2026-06-08 via issue #474 markdown subsup + heading-attr; +1 BC-7.2.009 added 2026-06-09 via issue #483 GFM alerts → panel; +1 BC-7.2.010 added 2026-06-10 via issue #471 GFM task lists → taskList/taskItem; +3 BC-6.1.014 + BC-6.2.016..017 added 2026-06-12 via windows-build F2; +1 BC-7.2.011 added 2026-06-15 via issue #492 block-HTML hardBreak interior newlines; +1 BC-2.4.043 added 2026-06-17 via Bundle C CR-001 list_comments anti-stall guard; +3 BC-X.13.001..003 added 2026-06-19 via DEAD-CITATION-CI F2 CLAUDE.md citation guard; +1 BC-7.2.012 added 2026-06-24 via SEC-001 ADF recursion depth limit; +2 BC-7.2.013..014 promoted 2026-06-27 from range-collapsed to individually-bodied via issues #472 #473 (no total_bcs change); +1 BC-6.2.018 added 2026-06-27 cache warm-hit no-HTTP invariant; +1 BC-7.3.010 added 2026-06-27 issue #526 json-render invariant + error channel; +3 BC-3.4.020..021 + BC-5.1.005 added 2026-06-30 via BC-subclause-pass F2; +3 BC-X.13.004..006 added 2026-07-05 via CITATION-GUARDS Story B Guard 1 S-BC-CITATION-GUARD-1 issue #102; +1 BC-7.2.015 added 2026-07-07 via issue #571 ADF code-mark exclusivity; +1 BC-X.1.011 added 2026-07-09 via S-SOH-589 jr api --method case-insensitivity; +11 SOH-COMMENT-CRUD-1 added 2026-07-11..14 via DEC-168 comment delete/edit/view issue #577; +27 SOH-ATTACHMENTS-1 F2 added 2026-07-15 via DEC-179 issues #576 #585).
 
-Cumulative total (613) ≠ individually-bodied count (383). The difference (230) comprises range-collapsed BCs that exist in the cumulative claim but are not individually headlined in body files. This is by design — range-collapsed BCs trace to Pass 3 source material but were not individually expanded. The 4 MUST-FIX BCs are included in the individually-bodied count.
+Cumulative total (651) ≠ individually-bodied count (421). The difference (230) comprises range-collapsed BCs that exist in the cumulative claim but are not individually headlined in body files. This is by design — range-collapsed BCs trace to Pass 3 source material but were not individually expanded. The 4 MUST-FIX BCs are included in the individually-bodied count.
 
 **Process gap [process-gap]**: `scripts/check-bc-cumulative-counts.sh` currently guards 8 surfaces (per-file frontmatter, BC-INDEX headers, BC-INDEX section lines, CANONICAL-COUNTS per-file table, body preamble prose, BC-INDEX frontmatter total_bcs, CANONICAL-COUNTS Sum row, grand-total prose). The BC-INDEX Coverage Statistics body table (this section) is a 9th surface with no automated guard. Manual update required whenever BC counts change. Tracked for future script extension.
 

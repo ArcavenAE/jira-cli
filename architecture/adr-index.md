@@ -1,18 +1,36 @@
+---
+document_type: architecture-section
+level: L3
+section: "adr-index"
+version: "1.0"
+status: active
+producer: architect
+timestamp: 2026-07-15T00:00:00
+phase: 1b
+inputs: []
+input-hash: "[live-state]"
+traces_to: ARCH-INDEX.md
+---
+
 # ADR Index — jr (jira-cli)
 
 > **CANONICAL ADR LOCATION (post-SC-03 / PR #549):** All ADRs (0001–0016) now live in
 > `docs/adr/` in the main checkout. The `.factory/architecture/adr/` shadow directory has
 > been removed (DRIFT-S3-003 resolved 2026-06-25). Do NOT create new files under
-> `.factory/architecture/adr/` — use `docs/adr/` for all new ADRs.
+> `.factory/architecture/adr/` — use `docs/adr/` for ADRs 0001–0016.
+> **ADR-0017+** use the VSDD-factory canonical path:
+> `.factory/specs/architecture/decisions/ADR-NNNN-<slug>.md` (per artifact-path-registry.yaml).
 
-**traces_to:** README.md
 **Canonical ADR location (all 0001–0016):** `docs/adr/` (single source of truth post-#549/SC-03)
+**Canonical ADR location (0017+):** `.factory/specs/architecture/decisions/` (VSDD artifact-path-registry)
 **Pre-SC-03 source ADRs (0001–0006):** `.reference/jira-cli/docs/adr/` (historical reference only)
 **Factory-only ADRs:** none; `.factory/architecture/adr/` shadow directory removed 2026-06-25
 
 ---
 
-## ADR Summary Table
+## [Section Content]
+
+### ADR Summary Table
 
 | ADR | Title | Status | Architecture Section |
 |-----|-------|--------|---------------------|
@@ -32,6 +50,7 @@
 | [ADR-0014](../../../docs/adr/0014-jsm-request-type-dispatch.md) | JSM Request Creation Dispatch Fork in `jr issue create` | **Accepted** | component-graph.md §api_jsm, cross-cutting.md §10 |
 | [ADR-0015](../../../docs/adr/0015-proactive-resolution-enforcement.md) | Proactive Resolution Enforcement on Done-Category Transitions | **Accepted** | — (feature ADR) |
 | [ADR-0016](../../../docs/adr/0016-windows-build-target.md) | Windows Build Target (x86_64-msvc, .zip, AppData Paths, WCM, CI) | **Accepted** (amended 2026-06-13 F-WIN-F3-001: Decision 3 separate-clippy-matrix corrected; amended 2026-06-13 F-WIN-F3-003: Decision 2 primary zip clarified — **superseded same day by C-V3 re-amendment**: `zip` not on PATH; Compress-Archive (pwsh) is now primary; amended 2026-06-13 C-V2(b): Decision 5b deny.toml note corrected — windows-sys 0.60 skip is REQUIRED, not conditional) | cycles/cycle-001/windows-build/architecture-delta.md |
+| [ADR-0017](../../../.factory/specs/architecture/decisions/ADR-0017-first-multipart-streaming-http-surface.md) | First multipart/streaming HTTP surface: reqwest multipart+stream features + tokio-util direct dependency | **Accepted** (2026-07-15; gate DEC-179 item 7) | .factory/specs/architecture/ARCH-INDEX.md §SS-03, SS-09 |
 
 ---
 

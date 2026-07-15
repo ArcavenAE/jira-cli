@@ -4979,3 +4979,14 @@ Displaced to make room for SOH-ATTACHMENTS-1 F1 GATE APPROVED step row per keep-
 | Step | Agent | Status | Output |
 |------|-------|--------|--------|
 | **F4 PHASE COMPLETE (2026-07-14) — wave-D STRICT CONVERGED; 5 stories, 4 waves A-D, 11 PRs, issue #577 CLOSED; F5 scoped adversarial DISPATCHED (pass 1 in flight).** | state-manager | IN PROGRESS | F5 p1 dispatched; all worktrees cleaned; develop @ f4ab77b. |
+
+
+---
+
+## Archived Phase Progress row (2026-07-15, SOH-ATTACHMENTS-1 F2 authoring burst)
+
+Displaced to make room for SOH-ATTACHMENTS-1 F2 AUTHORING COMPLETE (2026-07-15) row per keep-5 rule.
+
+| Phase | Status | Completed | Gate | Notes |
+|-------|--------|-----------|------|-------|
+| **F7 DELTA CONVERGENCE APPROVED (D-176, 2026-07-15) — 5/5 dimensions PASS (spec v1.3.41 synced; tests 2102/0 + VP 30/30 + mutation adjudicated 100%; F5 STRICT; F6 GO; docs audit-consistent); S-7.02 SATISFIED (PG-F4-1..11 justified deferrals); consistency CONSISTENT (3 LOW gaps fixed); drift check 11 bumped; release v0.6.0-dev.10 AUTHORIZED.** | **F7 APPROVED** | **2026-07-15** | **Release v0.6.0-dev.10 → session review.** | `phase-f7-convergence/issue-577-delta-convergence-report.md` |

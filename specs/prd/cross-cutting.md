@@ -1,9 +1,9 @@
 ---
 context: bc-x
 title: "Cross-cutting (HTTP client, Runtime, Users, Teams, Worklogs, Projects, Queues, JQL, Partial-match, JSM Request Types, CI Guards)"
-total_bcs: 149   # cumulative claim (incl. range-collapsed); definitional_count below is individually-bodied headings
-definitional_count: 83   # count of `#### BC-` headings in this file
-last_updated: 2026-07-09
+total_bcs: 150   # cumulative claim (incl. range-collapsed); definitional_count below is individually-bodied headings
+definitional_count: 84   # count of `#### BC-` headings in this file
+last_updated: 2026-07-15
 source_pass: 3
 trace: |
   - L2: .factory/specs/domain-spec/cross-cutting.md
@@ -19,11 +19,12 @@ trace: |
   - DEC-154 Option A spec update (2026-07-06): BC-X.13.005 — extend v1 grammar (3 branches: ::tests, ::tests::testfn, standalone CamelCase); space-tolerant two-pass extraction (F-B2-02); BC-X.13.004 — FLOOR recalibration N=326, FLOOR=244; BC-X.13.006 — fixture count 7→10 (A–K)
   - F-01 two-tier shape guard (2026-07-06, story #102 Step-4.5 pass-1): BC-X.13.005 Step 3 rewrite — shape guard now `^src/[a-zA-Z0-9_/.-]+\.[a-zA-Z0-9]+$` (any extension); non-.rs src/ tokens routed to tier (ii) file-existence-only (counts toward N); .rs tokens continue full pipeline tier (i); truly-malformed DEAD-malformed unchanged; EC-CITE-060 added (tier-ii .snap positive pin); EC-CITE-058 updated (.snap mechanism corrected); BC-X.13.004 N=309 FLOOR=231 (two-tier baseline 2b09313); BC-X.13.006 test vector N ≥ 231
   - SOH-BUGS-1 post-fix micro-BC (2026-07-09): BC-X.1.011 — `-X`/`--method` case-insensitive HTTP method parsing; VP-590-001 registered (issues #590/#582, PR #597)
+  - SOH-ATTACHMENTS-1 F2 addition (2026-07-15): BC-X.8.010 — `(profile, projectKey) → serviceDeskId` cache; model-b writer (swallow+eprintln warn, return Ok(())); 7-day TTL; v1/ root; deserialize failure = cache miss; used by JSM attachment upload --public/--internal path (DEC-179, issues #576 #585)
 ---
 
 # BC-X — Cross-cutting
 
-149 behavioral contracts covering: HTTP client (X.1), Pagination (X.2), Error handling (X.3),
+150 behavioral contracts covering: HTTP client (X.1), Pagination (X.2), Error handling (X.3),
 Rate limiting (X.4), Worklogs & duration (X.5), Teams (X.6), Users (X.7), Projects & Queues (X.8),
 JQL utilities (X.9), Partial-match (X.10), Build-time (X.11), JSM Request Types (X.12),
 CI Guards (X.13).
@@ -708,6 +709,44 @@ This is the canonical pinnable string for `test_require_service_desk_oauth_401_s
 **Source**: S-QUEUE-BC-1 document-as-is; `src/cli/queue.rs::handle_view`; `src/cli/queue.rs::resolve_queue_by_name`; `src/api/jsm/queues.rs::get_queue_issue_keys`; `src/cli/mod.rs::DEFAULT_LIMIT`
 
 [NEW 2026-06-08 S-QUEUE-BC-1] Closes traceability orphan: `jr queue view` was implemented but had no individually-bodied BC. Document-as-is: no aspirational behavior — all details verified against source and test files.
+
+---
+
+
+#### BC-X.8.010: `(profile, projectKey) → serviceDeskId` cache — model-b writer; 7-day TTL; deserialize failure = cache miss; used by JSM attachment upload `--public`/`--internal` path
+
+**Confidence**: HIGH
+**Source**: `src/cache.rs::read_service_desk_id_cache` (implementation pending — story S5); `src/cache.rs::write_service_desk_id_cache` (implementation pending — story S5); `src/api/jsm/attachments.rs::attach_temporary_file` (implementation pending — story S5)
+**Subject**: X.8 Projects & Queues (JSM serviceDeskId cache for attachment upload)
+
+When `jr attachment upload <KEY> --public` (or `--internal`) resolves the serviceDeskId for a JSM issue, the result is cached under `~/.cache/jr/v1/<profile>/service_desk_id_<projectKey>.json` with a 7-day TTL. The cache maps a `(profile, projectKey)` pair to the resolved `serviceDeskId` string (the `id` field from `GET /rest/servicedeskapi/servicedesk`).
+
+**Resolution chain** (on cache miss or stale): `GET /rest/api/3/issue/{key}` → extract `fields.project.key` → paginated `GET /rest/servicedeskapi/servicedesk` → match `projectKey` → extract `id`. The resolved ID is then written to the cache.
+
+**Cache writer (model-b)**: `write_service_desk_id_cache` swallows disk-write errors with `eprintln!("warning: failed to write service_desk_id cache: {e}")` and returns `Ok(())`. A failed write MUST NOT propagate an error to the caller — the upload proceeds even if the cache write fails. The call site uses `.ok()` to discard the infallible result. This is the model-b pattern, following `write_cmdb_fields_cache` and `write_object_type_attr_cache` as precedents.
+
+**Deserialize failure = cache miss**: If the cached file exists but fails to deserialize (corrupted, schema change, wrong type), the reader treats it as a cache miss and re-fetches via the paginated `GET /rest/servicedeskapi/servicedesk`. Self-healing: the newly fetched value overwrites the corrupted cache entry.
+
+**Versioned root**: Cache file path uses `~/.cache/jr/v1/<profile>/` (the established v1 root). A future schema bump increments to `v2/`, orphaning stale `v1/` files cleanly.
+
+**Scope**: this cache is used ONLY by the JSM attachment upload path (`--public`/`--internal`). Other serviceDeskId resolution paths (e.g., `queue list/view`, `requesttype list/fields`) use their own resolution mechanisms and are not affected.
+
+**Inputs**: `profile: &str`; `project_key: &str`.
+**Outputs/Effects** (cache hit): returns the cached `serviceDeskId` string; no HTTP issued. (cache miss/stale): runs resolution chain; writes result to cache (model-b: write failure is a warning, not an error); returns the resolved ID.
+**Errors**: Resolution-chain HTTP errors propagate normally (401 → exit 2, 404 → exit 64, 5xx → exit 1). Cache-write failure → warning on stderr; upload proceeds.
+
+**Stale-ID self-healing (SEC-576-006)**: If a cached `serviceDeskId` is used and the step-1 `POST .../attachTemporaryFile` returns HTTP 404 or 403, the implementation MUST:
+
+1. Delete the cache entry for `(profile, projectKey)`.
+2. Re-run the full resolution chain once (paginated `GET /rest/servicedeskapi/servicedesk` → match `projectKey` → cache the new ID).
+3. Re-attempt step 1 with the re-resolved ID.
+4. If the re-resolved ID also returns 404 or 403, surface the second HTTP error to the user (exit 64).
+
+This self-healing prevents a permanent failure loop after a Jira service desk reconfiguration that changes the `serviceDeskId`. The retry is a single-attempt guard — it does not loop. A step-1 failure with a freshly resolved ID is surfaced immediately as a genuine error, not a cache issue.
+
+[NEW 2026-07-15 SOH-ATTACHMENTS-1 F2] BC-X.8.010 codifies the serviceDeskId cache introduced for the JSM attachment upload `--public`/`--internal` flow. Model-b writer (swallow+warn) follows the precedent of `write_cmdb_fields_cache` (S-525/CR-007) and `write_object_type_attr_cache`. Delivery obligation: S5 implementer must add `read_service_desk_id_cache` / `write_service_desk_id_cache` to `src/cache.rs` following the model-b pattern.
+
+**Trace**: F2 spec evolution (2026-07-15 SOH-ATTACHMENTS-1, DEC-179); CLAUDE.md §"Cache-write error handling — two models"; `src/cache.rs::write_cmdb_fields_cache` (model-b precedent); BC-3.9.003/BC-3.9.004 (caller context); SEC-576-006 (stale-ID self-healing clause added 2026-07-15)
 
 ---
 

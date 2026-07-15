@@ -1,21 +1,23 @@
 ---
 context: bc-2
 title: "Issue Read (list/view/comments/changelog)"
-total_bcs: 94   # cumulative claim (incl. range-collapsed); definitional_count below is individually-bodied headings
-definitional_count: 52   # count of `#### BC-` headings in this file
-last_updated: 2026-06-17
+total_bcs: 106   # cumulative claim (incl. range-collapsed); definitional_count below is individually-bodied headings
+definitional_count: 64   # count of `#### BC-` headings in this file
+last_updated: 2026-07-15
 source_pass: 3
 trace: |
   - L2: .factory/specs/domain-spec/bc-02-issue-read.md
   - Source broad: .factory/semport/jira-cli/jira-cli-pass-3-behavioral-contracts.md §2.2
   - Source R1: .factory/semport/jira-cli/jira-cli-pass-3-deep-r1.md §3.2
   - Source R4: .factory/semport/jira-cli/jira-cli-pass-3-deep-r4.md §3.1
+  - SOH-ATTACHMENTS-1 F2 addition (2026-07-15): BC-2.7.001..012 — Attachment Read: attachment list (table+JSON, filters mime/name/size-max), attachment download (single/batch/newest, streaming, redirect-following, CWE-22 sanitization, SHA-1 default path, JSDCLOUD-10841 JSM uniform), error taxonomy (DEC-179, issues #576 #585)
 ---
 
 # BC-2 — Issue Read (list / view / comments / changelog)
 
-94 behavioral contracts across 6 subdomains: JQL composition (2.1), Issue list
-behavior (2.2), Issue view (2.3), Comments (2.4), Changelog (2.5), API layer (2.6).
+106 behavioral contracts across 7 subdomains: JQL composition (2.1), Issue list
+behavior (2.2), Issue view (2.3), Comments (2.4), Changelog (2.5), API layer (2.6),
+Attachment Read (2.7).
 
 ---
 
@@ -523,6 +525,325 @@ behavior (2.2), Issue view (2.3), Comments (2.4), Changelog (2.5), API layer (2.
 
 ---
 
+### 2.7 Attachment Read
+
+#### BC-2.7.001: `attachment list <KEY>` table columns — id, filename, mimeType, size (human-readable), created, author
+
+**Confidence**: HIGH
+**Source**: `src/cli/issue/attachments.rs::handle_attachment_list` (implementation pending — SOH-ATTACHMENTS-1 Story 1); `src/api/jira/attachments.rs::list_attachments` (implementation pending)
+**Subject**: Issue read
+**Output channel profile**: 2 (Read-only) — table data to stdout; filter-count hint to stderr; no stderr output when no filter is active.
+
+`jr issue attachment list <KEY>` fetches `GET /rest/api/3/issue/{key}?fields=attachment` and renders the `fields.attachment[]` array as a comfy-table on stdout. There is no dedicated Jira "list attachments" endpoint; all attachment metadata is returned in a single response via the issue field projection (no cursor pagination for this call — confirmed in research §1a of `.factory/research/issue-576-attachments-api-2026-07-15.md`).
+
+Table columns (in display order):
+
+| Column | Source field | Notes |
+|--------|-------------|-------|
+| ID | `attachment.id` | Numeric string |
+| Filename | `attachment.filename` | Raw as returned by Jira; untrusted for disk write (see BC-2.7.011) |
+| Type | `attachment.mimeType` | MIME type string |
+| Size | `attachment.size` | Human-readable formatted (e.g., `42.0 KB`, `1.2 MB`); raw bytes in JSON output (BC-2.7.002) |
+| Created | `attachment.created` | ISO 8601 string; displayed as-is (no parsing or TZ conversion) |
+| Author | `attachment.author.displayName` | Falls back to `attachment.author.accountId` when `displayName` is absent |
+
+When the issue has zero attachments the handler exits 0 with no table and empty stdout; this is not an error.
+
+**EC-2.7.001-1** (zero attachments): `attachment list <KEY>` on a valid issue with no attachments → exit 0, empty stdout, no stderr output.
+
+**EC-2.7.001-2** (filter-count hint): when any `--filter` flag is active and reduces the displayed row count, a hint is emitted to stderr: `"Showing N of M attachments."` (N = filtered count, M = total from API). When no filter is active this hint is suppressed.
+
+**Trace**: F2 spec evolution (SOH-ATTACHMENTS-1 2026-07-15; DEC-179 ratified design; research §1a VERIFIED — no dedicated list endpoint)
+
+---
+
+#### BC-2.7.002: `attachment list <KEY> --output json` shape — `[{id, filename, mimeType, size, created, author, contentUrl}]`
+
+**Confidence**: HIGH
+**Source**: `src/cli/issue/attachments.rs::handle_attachment_list` (implementation pending — SOH-ATTACHMENTS-1 Story 1); `src/api/jira/attachments.rs::list_attachments` (implementation pending); `src/output.rs::render_json`
+**Subject**: Issue read
+
+`attachment list --output json` routes through `output::render_json` (JSON render invariant #526). The output is a JSON array; each element:
+
+```json
+[
+  {
+    "id": "10042",
+    "filename": "screenshot.png",
+    "mimeType": "image/png",
+    "size": 43008,
+    "created": "2026-07-10T14:23:11.000+0000",
+    "author": {
+      "accountId": "62abc123...",
+      "displayName": "Alice Operator"
+    },
+    "contentUrl": "https://mysite.atlassian.net/rest/api/3/attachment/content/10042"
+  }
+]
+```
+
+Field notes:
+- `size` is a raw `u64` integer (bytes), never a human-formatted string (contrast with the table in BC-2.7.001).
+- `contentUrl` is the stable authenticated Jira content endpoint (`/rest/api/3/attachment/content/{id}`) — it is an indirection that 303-redirects to a pre-signed media URL at request time; it is NOT itself an expiring signed URL. Surfacing this field satisfies issue #585 (absorbed into SOH-ATTACHMENTS-1 Story 1; close #585 as fixed-by #576 after Story 1 ships). **Research basis**: research §7 VERIFIED — the `content` field is already present in `fields.attachment[]` and is a stable Jira endpoint.
+- `author` mirrors the existing `User` serde shape from `src/types/jira/user.rs`.
+
+Empty issue → `[]` array, exit 0, no error.
+
+All `--output json` paths MUST route through `output::render_json` or `output::print_output` — never `serde_json::to_string_pretty` or direct compact printing (JSON render invariant #526).
+
+**Trace**: F2 spec evolution (SOH-ATTACHMENTS-1 2026-07-15; #585 absorbed — research §7 VERIFIED; DEC-179 ratified design)
+
+---
+
+#### BC-2.7.003: `attachment list <KEY> --filter mime=<glob>` client-side mimeType filter
+
+**Confidence**: HIGH
+**Source**: `src/cli/issue/attachments.rs::handle_attachment_list` (implementation pending — SOH-ATTACHMENTS-1 Story 1)
+**Subject**: Issue read
+
+`--filter mime=<glob>` applies a client-side filter retaining only rows whose `mimeType` field matches the glob pattern. The full attachment list is fetched from the API before filtering; no server-side filter is applied.
+
+Glob semantics: `*` matches any character sequence (including `/`); `?` matches any single character; matching is case-insensitive. Examples:
+- `--filter mime=image/*` → retains `image/png`, `image/jpeg`, `image/gif`, etc.
+- `--filter mime=application/pdf` → exact match (glob-interpreted but no wildcards)
+
+After filtering, the table is rendered (BC-2.7.001) with only matching rows. When `--output json` is combined with `--filter mime=`, the JSON array contains only matching elements (BC-2.7.002 shape unchanged). The filter-count hint (EC-2.7.001-2) fires when the filter reduces row count.
+
+**EC-2.7.003-1** (zero matches): empty table or `[]` JSON, exit 0. Hint fires: `"Showing 0 of M attachments."`
+
+**Trace**: F2 spec evolution (SOH-ATTACHMENTS-1 2026-07-15; DEC-179 ratified design)
+
+---
+
+#### BC-2.7.004: `attachment list <KEY> --filter name=<glob>` client-side filename filter
+
+**Confidence**: HIGH
+**Source**: `src/cli/issue/attachments.rs::handle_attachment_list` (implementation pending — SOH-ATTACHMENTS-1 Story 1)
+**Subject**: Issue read
+
+`--filter name=<glob>` applies a client-side filter retaining only rows whose `filename` field matches the glob pattern. Semantics mirror BC-2.7.003 (glob, case-insensitive, client-side). Examples:
+- `--filter name=*.png` → PNG files only
+- `--filter name=screenshot*` → files starting with "screenshot"
+
+The filter matches against the raw `filename` as returned by Jira. This BC governs display/filter behavior only; CWE-22 sanitization for disk writes is covered by BC-2.7.011.
+
+Multiple `--filter` flags combine with AND semantics: `--filter mime=image/* --filter name=screenshot*` retains only images whose filename starts with "screenshot".
+
+**EC-2.7.004-1** (zero matches): same as EC-2.7.003-1.
+
+**EC-2.7.004-2** (JRACLOUD-96384 note): when multiple attachments share the same `filename`, all matching rows are returned. Downstream callers performing download or delete operations MUST reference attachments by `id`, not by `filename`, because filename collisions are legal in Jira and filename-based matching is ambiguous (JRACLOUD-96384, confirmed in research §6 of `.factory/research/issue-576-attachments-api-2026-07-15.md`).
+
+**Trace**: F2 spec evolution (SOH-ATTACHMENTS-1 2026-07-15; research §6 JRACLOUD-96384 match-by-id invariant VERIFIED)
+
+---
+
+#### BC-2.7.005: `attachment list <KEY> --filter size-max=<bytes>` client-side size filter
+
+**Confidence**: HIGH
+**Source**: `src/cli/issue/attachments.rs::handle_attachment_list` (implementation pending — SOH-ATTACHMENTS-1 Story 1)
+**Subject**: Issue read
+
+`--filter size-max=<bytes>` applies a client-side filter retaining only rows whose `size` (bytes, `u64`) is less than or equal to the given byte limit. The argument is a raw non-negative integer. Examples:
+- `--filter size-max=10485760` → files at most 10 MB
+- `--filter size-max=0` → zero-byte attachments only (valid edge case)
+
+The `size` field from API metadata is authoritative; no hard-coded instance cap is assumed or enforced here (research §3a INCONCLUSIVE on cloud attachment cap; Rev 2 §R2.5 SQ-5 ruling — no hard-coded cap).
+
+Multiple `--filter` flags combine with AND semantics (see BC-2.7.004).
+
+**EC-2.7.005-1** (parse error): if `<bytes>` is not a valid non-negative integer → exit 64 before any HTTP call; message includes the invalid value and states that `--filter size-max` expects a byte count integer.
+
+**Trace**: F2 spec evolution (SOH-ATTACHMENTS-1 2026-07-15; research §3a INCONCLUSIVE ruling — no hard-coded cap)
+
+---
+
+#### BC-2.7.006: `attachment list <KEY>` on unknown or inaccessible KEY → exit 64
+
+**Confidence**: HIGH
+**Source**: `src/cli/issue/attachments.rs::handle_attachment_list` (implementation pending — SOH-ATTACHMENTS-1 Story 1); `src/api/jira/attachments.rs::list_attachments` (implementation pending)
+**Subject**: Issue read
+
+When `<KEY>` does not exist or the authenticated user lacks Browse Projects permission, `GET /rest/api/3/issue/{key}?fields=attachment` returns 404. The handler maps this to `JrError::UserError` (exit 64).
+
+**Error paths**:
+
+| Condition | Exit code | stderr |
+|-----------|-----------|--------|
+| KEY 404 (not found / no access) | 64 | `"Issue <KEY> not found or not accessible."` |
+| 401 | 2 | Not authenticated + `jr auth login` hint |
+| 5xx | 1 | `API error (<N>)` |
+| Network error | 1 | Connectivity hint |
+
+**Trace**: F2 spec evolution (SOH-ATTACHMENTS-1 2026-07-15; DEC-179 ratified design; follows BC-2.3.033/034 universal error pattern)
+
+---
+
+#### BC-2.7.007: `attachment download <KEY> --id <AID>` single-file download; `--out <PATH>` path override
+
+**Confidence**: HIGH
+**Source**: `src/cli/issue/attachments.rs::handle_attachment_download` (implementation pending — SOH-ATTACHMENTS-1 Story 2); `src/api/jira/attachments.rs::get_attachment_content` (implementation pending)
+**Subject**: Issue read
+**Output channel profile**: 3 (Mixed) — no stdout data; progress/completion hints to stderr; errors to stderr.
+
+`jr issue attachment download <KEY> --id <AID>` downloads a single attachment to disk.
+
+**Wire path**: `GET /rest/api/3/attachment/content/{id}` — the platform content endpoint. This path is uniform for both platform and JSM issues. The servicedeskapi `links.content` URLs MUST NOT be used for download: JSDCLOUD-10841 (confirmed in research §P2-6 of `.factory/research/issue-576-attachments-api-2026-07-15.md`) shows these URLs return 404.
+
+**Redirect following**: Jira Cloud redirects this endpoint (302/303) to a pre-signed CDN URL (`media.atlassian.com` or AWS). The reqwest client MUST rely on its default redirect policy (up to 10 redirects). reqwest 0.13.4 strips `Authorization`, `Cookie`, and `Proxy-Authorization` headers on cross-host redirects — VERIFIED in research §1c and independently corroborated by GHSA-9857-6MW7-FQ2M (which explicitly states the reqwest backend compares `prev_url.host_str()` to `curr_url.host_str()` and strips sensitive headers on cross-domain hops). No custom `RedirectPolicy` is needed. **CRITICAL**: `?redirect=false` MUST NOT be used — JRACLOUD-97046 (research §6) causes encoded or broken responses for some file formats when this query parameter is present.
+
+**Streaming**: response bytes are streamed to disk via `Response::bytes_stream()` + incremental write (e.g., `tokio::io::copy`). The full body is never buffered in memory, guarding against OOM for large attachments. Requires the reqwest `stream` feature in `Cargo.toml` (Rev 2 §R2.1).
+
+**Output path**: the default filename uses the SHA-1-prefix + sanitized-basename scheme from BC-2.7.010. `--out <PATH>` overrides the default with an explicit file path; the user-supplied path is NOT sanitized against CWE-22 (trusted input from the operator).
+
+**Overwrite behavior** (DEC-179 ruling 3): if the computed or specified output path already exists as a regular file, the handler MUST refuse with exit 64: `"File already exists: <path>. Use --force to overwrite."` The `--force` flag bypasses this check and overwrites silently. This prevents accidental data loss for idempotent re-runs.
+
+On success, a completion hint is emitted to stderr: `"Downloaded: <path> (<size_human>)."` Nothing is written to stdout (profile 3).
+
+**EC-2.7.007-1** (AID does not exist): `GET /rest/api/3/attachment/content/{id}` returns 404 → exit 64: `"Attachment <AID> not found."` (see BC-2.7.012 for full error taxonomy).
+
+**EC-2.7.007-2** (JSM issue uniform behavior): downloading an attachment from a JSM issue uses the exact same platform content endpoint as a non-JSM issue. There is no JSM-specific code path for download. JSDCLOUD-10841 confirms the servicedeskapi links are unreliable; the platform endpoint is the correct single code path.
+
+**EC-2.7.007-3** (credential-stripping regression guard — SEC-576-003 CWE-522): A wiremock integration test MUST assert that `GET /rest/api/3/attachment/content/{id}` following a cross-host 302/303 redirect does NOT include an `Authorization` header on the redirect-target request. Use a two-server wiremock setup (one for the Jira API endpoint, one for the simulated CDN redirect target). This guards against a future `JiraClient` refactor adding a custom `RedirectPolicy` that silently forwards bearer/Basic credentials to CDN hosts.
+
+**Trace**: F2 spec evolution (SOH-ATTACHMENTS-1 2026-07-15; DEC-179 ratified design; research §1b–1d VERIFIED; JSDCLOUD-10841 §P2-6 VERIFIED — platform endpoint for JSM; JRACLOUD-97046 §6 no-redirect-false; GHSA-9857-6MW7-FQ2M corroboration); SEC-576-003 (CWE-522 credential-stripping wiremock test requirement added 2026-07-15)
+
+---
+
+#### BC-2.7.008: `attachment download <KEY> --all` batch download to `--out-dir <DIR>`; default dir is cwd
+
+**Confidence**: HIGH
+**Source**: `src/cli/issue/attachments.rs::handle_attachment_download` (implementation pending — SOH-ATTACHMENTS-1 Story 2)
+**Subject**: Issue read
+
+`jr issue attachment download <KEY> --all` downloads all attachments on the issue to a directory. Default target is the current working directory; `--out-dir <DIR>` overrides. The handler first fetches the full attachment list (same `GET /rest/api/3/issue/{key}?fields=attachment` call as `attachment list`), then downloads each attachment sequentially using the BC-2.7.007 wire path. Each file is named using BC-2.7.010 (SHA-1-prefix + sanitized-basename) within the target directory.
+
+**Overwrite behavior with `--all`**: without `--force`, per-file collision is handled fail-soft — the colliding file is skipped with a per-file stderr warning (e.g., `"Skipping <filename>: file already exists. Use --force to overwrite."`). The download continues for remaining attachments. With `--force`, existing files are overwritten silently.
+
+On completion a summary hint emits to stderr: `"Downloaded N of M attachments to <dir>."` (N = successful, M = total).
+
+**EC-2.7.008-1** (empty attachment list): issue has no attachments → exit 0; stderr: `"No attachments found on <KEY>."`
+
+**EC-2.7.008-2** (directory does not exist): if `--out-dir <DIR>` is specified and the directory does not exist → exit 64 before any download: `"Output directory does not exist: <DIR>"`. The handler does NOT create the directory automatically.
+
+**EC-2.7.008-3** (`--id` and `--all` mutual exclusion): clap enforces `conflicts_with` → exit 2 when both are supplied simultaneously.
+
+**Trace**: F2 spec evolution (SOH-ATTACHMENTS-1 2026-07-15; DEC-179 ratified design)
+
+---
+
+#### BC-2.7.009: `attachment download <KEY> --newest N` — select most-recent N attachments by `created` date, then download
+
+**Confidence**: HIGH
+**Source**: `src/cli/issue/attachments.rs::handle_attachment_download` (implementation pending — SOH-ATTACHMENTS-1 Story 2)
+**Subject**: Issue read
+
+`jr issue attachment download <KEY> --newest N` downloads at most N attachments, selecting the N most recently created (by `attachment.created` descending). Because Jira's ISO 8601 timestamp format (`2026-07-10T14:23:11.000+0000`) is lexicographically sortable descending, lexicographic sort is correct for this field.
+
+**Behavior**: fetch full attachment list → apply any `--filter` flags (mime/name/size-max) → sort by `created` descending → take first N → download each using BC-2.7.007 wire path and BC-2.7.010 output naming.
+
+`--filter` applies BEFORE the top-N selection: `--newest 3 --filter mime=image/*` = the 3 most recently added images.
+
+If the issue has fewer than N attachments after filtering, all available attachments are downloaded (not an error; N > available count is handled gracefully).
+
+`--newest N` is mutually exclusive with `--id` (clap `conflicts_with` → exit 2). `--newest N` combined with `--all` is rejected (clap `conflicts_with` → exit 2). Overwrite and `--force` behavior follow BC-2.7.007/BC-2.7.008.
+
+**EC-2.7.009-1** (invalid N): N at or below 0, or non-integer → exit 64 before any HTTP call: `"--newest requires a positive integer."` N = 0 is rejected (zero-download is ambiguous, not silently accepted).
+
+**Trace**: F2 spec evolution (SOH-ATTACHMENTS-1 2026-07-15; DEC-179 ratified design)
+
+---
+
+#### BC-2.7.010: Default download output path — `<sha1-of-id>_<sanitized-basename>` in target directory
+
+**Confidence**: HIGH
+**Source**: `src/cli/issue/attachments.rs::handle_attachment_download` (implementation pending — SOH-ATTACHMENTS-1 Story 2)
+**Subject**: Issue read
+
+When no `--out <PATH>` is specified, the default output filename for a downloaded attachment is:
+
+```
+<sha1-of-id>_<sanitized-basename>
+```
+
+- `<sha1-of-id>`: the full 40-character lowercase hex-encoded SHA-1 of the attachment `id` string (NOT a content hash — the attachment ID is stable, yielding deterministic naming without reading file content first).
+- `<sanitized-basename>`: the result of `sanitize_attachment_filename(attachment.filename)` per BC-2.7.011. If sanitization returns `None`, the attachment is skipped with a warning (BC-2.7.011 caller contract).
+
+**Rationale for SHA-1 prefix**: idempotency (re-running `attachment download` on the same attachment ID always produces the same filename) and collision-resistance between two attachments sharing the same sanitized basename. The prefix is NOT a file-integrity hash.
+
+**Examples**:
+- `id="10042"`, `filename="report.pdf"` → `<sha1("10042")>_report.pdf`
+- `id="10042"`, `filename="../../../etc/passwd"` → sanitized basename is `passwd` → `<sha1("10042")>_passwd`
+
+When `--out <PATH>` is supplied on the single-file path (BC-2.7.007), SHA-1-prefix naming is bypassed entirely and the explicit path is used. The user-supplied path is NOT sanitized (trusted operator input).
+
+**Trace**: F2 spec evolution (SOH-ATTACHMENTS-1 2026-07-15; DEC-179 ratified design; #576 SHA-1-prefix proposal incorporated)
+
+---
+
+#### BC-2.7.011: Filename sanitization (CWE-22 path traversal mitigation) — `sanitize_attachment_filename(name: &str) -> Option<String>`
+
+**Confidence**: HIGH
+**Source**: `src/cli/issue/attachments.rs::sanitize_attachment_filename` (implementation pending — SOH-ATTACHMENTS-1 Story 2)
+**Subject**: Issue read (security invariant — applies to all attachment download paths)
+
+The `filename` field in Jira attachment metadata is **attacker-controllable**: any user who can attach to an issue controls this value, and JSM portals accept customer uploads. When this field is used to construct a local path, it MUST be sanitized before use.
+
+**Required algorithm** (`sanitize_attachment_filename(name: &str) -> Option<String>`):
+
+1. **Basename extraction**: apply `Path::new(name).file_name()` — strips any directory component (`../../etc/passwd` becomes `passwd`; `/etc/passwd` becomes `passwd`; `C:\Windows\system32\calc.exe` becomes `calc.exe`). If `file_name()` returns `None` (path ends in `..` or reduces to empty), return `None` (reject).
+2. **Pseudo-name rejection**: if the extracted basename as a `Path` component equals `"."` or `".."`, return `None`. Empty string after OsStr conversion also returns `None`.
+3. **NUL byte rejection**: if the name contains a NUL byte (`\0`), return `None`. NUL terminates strings in OS path APIs and is never a valid filename character on any supported platform.
+4. **Character scrub** (defensive-depth): replace any remaining `/`, `\`, or `:` in the string with `_`. These are path separators on various platforms and MUST NOT appear in a filename component even after step 1 (guards against encoding edge cases on Windows UNC and drive-letter paths).
+5. **Length cap**: truncate to a maximum of 255 bytes to prevent filesystem errors on very long Jira-supplied filenames.
+5.5. **Trailing whitespace/dot strip** (SEC-576-007 — Windows predictability): strip trailing ASCII whitespace characters and trailing `.` from the basename after the length cap. Windows silently removes trailing dots and spaces from filename components on write; stripping them makes the sanitized output identical on Windows and POSIX, preventing unpredictable collision between two Jira attachments whose names differ only by trailing characters.
+
+Return `Some(sanitized_name)` if all steps produce a non-empty string; otherwise `None`.
+
+**Caller contract**: if `sanitize_attachment_filename` returns `None`, the caller MUST skip that attachment and emit a per-file stderr warning: `"warning: skipping attachment <AID> — filename '<raw>' could not be sanitized safely."` The overall download operation continues for remaining attachments (fail-soft per-file).
+
+**Windows device-name caller note (SEC-576-001 — CWE-22)**: The sanitized name returned by `sanitize_attachment_filename` may match a Windows reserved device base-name (`CON`, `NUL`, `PRN`, `AUX`, `COM1`–`COM9`, `LPT1`–`LPT9`). Any call site that writes the result to disk MUST ensure the final on-disk filename contains at least one non-device-name character before the extension dot. The SHA-1 prefix applied in BC-2.7.010 (`<sha1>_CON`, `<sha1>_NUL`, etc.) satisfies this requirement — `<sha1>_CON` is NOT a Windows reserved name. Call sites that bypass BC-2.7.010 naming (e.g., `--out <PATH>`) use trusted operator-supplied paths and are not subject to this note.
+
+**Defense-in-depth containment check (SEC-576-002 — CWE-22, corrected procedure)**: after joining the sanitized name with the target directory, the implementer MUST use the following two-step procedure. Do NOT call `canonicalize()` on the joined path — `std::fs::canonicalize` returns `Err` for non-existent paths, which would cause every new download to be treated as a containment failure:
+
+1. `let resolved_dir = out_dir.canonicalize()?` — canonicalize `out_dir` (which is guaranteed to exist; BC-2.7.008 EC-2.7.008-2 enforces this pre-condition before any download begins).
+2. Assert `resolved_dir.join(&sha1_filename).starts_with(&resolved_dir)` — `Path::starts_with` is component-based (not a string-prefix check), so it correctly evaluates containment for a file that does not yet exist on disk.
+
+Since step 4 of sanitization already strips `../`, `/`, `\`, `:`, the join will in practice always satisfy the `starts_with` assertion. The check is defense-in-depth against any encoding edge case not caught by steps 1–4. If `starts_with` returns `false`, skip with a warning: `"warning: skipping attachment <AID> — path escape detected after sanitization."` This skip-case is a defensive guard only; it should not occur for any name produced by the five-step algorithm above.
+
+**Naive blacklist approaches are INSUFFICIENT**: do NOT rely on string-stripping `../` patterns alone — such blacklists are bypassable. The algorithm above is the required standard mitigation (research §4 of `.factory/research/issue-576-attachments-api-2026-07-15.md`, VERIFIED HIGH; OWASP/PortSwigger/CWE-31/22 first-principles).
+
+**Unit test coverage required**: at minimum: `../../etc/passwd`, `/etc/passwd`, `C:\Windows\system32\foo.exe`, `"."`, `".."`, empty string, NUL-containing string, a normal filename, a filename exceeding 255 bytes, a filename containing `:` (Windows drive path), `"CON"` (Windows device name → `Some("CON")`), `"NUL"` (Windows device name → `Some("NUL")`), `"COM1"` (Windows device name → `Some("COM1")`), and `"nul.txt"` (Windows device name with extension → `Some("nul.txt")`). The test matrix confirms that `sanitize_attachment_filename` returns `Some(name)` for device names — the BC-2.7.010 SHA-1 prefix (not this function) is what prevents on-disk device-name collisions on Windows (SEC-576-001 caller note above).
+
+**Trace**: F2 spec evolution (SOH-ATTACHMENTS-1 2026-07-15; research §4 CWE-22 VERIFIED HIGH; DEC-179 SQ-1 resolved; OWASP/CWE-22/CWE-31 first-principles); SEC-576-001 (CWE-22 Windows device-name caller note + unit test matrix added 2026-07-15); SEC-576-002 (CWE-22 corrected two-step containment check procedure added 2026-07-15); SEC-576-007 (trailing-whitespace/dot strip step 5.5 added 2026-07-15)
+
+---
+
+#### BC-2.7.012: `attachment download` on unknown KEY or unknown AID → exit 64 with informative error
+
+**Confidence**: HIGH
+**Source**: `src/cli/issue/attachments.rs::handle_attachment_download` (implementation pending — SOH-ATTACHMENTS-1 Story 2); `src/api/jira/attachments.rs::get_attachment_content` (implementation pending)
+**Subject**: Issue read
+
+**Unknown issue key**: when `<KEY>` does not exist or is inaccessible, `GET /rest/api/3/issue/{key}?fields=attachment` returns 404. Handler exits 64: `"Issue <KEY> not found or not accessible."`
+
+**Unknown attachment ID**: when `--id <AID>` references a non-existent attachment, `GET /rest/api/3/attachment/content/{id}` returns 404. Handler exits 64: `"Attachment <AID> not found."`
+
+**Match-by-ID invariant** (JRACLOUD-96384 + JRACLOUD-78388, both confirmed in research §6): attachment operations MUST identify attachments by their numeric `id`, not by `filename`. Multiple attachments with the same `filename` on one issue are legal in Jira (JRACLOUD-96384); filename-based matching is ambiguous and unreliable. There is also no reliable REST mapping from a comment to the attachments it contains (JRACLOUD-78388). `--id <AID>` is the sole selector for single-file download operations.
+
+**Error path taxonomy**:
+
+| Condition | Exit code | stderr |
+|-----------|-----------|--------|
+| KEY 404 | 64 | `"Issue <KEY> not found or not accessible."` |
+| AID 404 from content endpoint | 64 | `"Attachment <AID> not found."` |
+| KEY or AID 401 | 2 | Not authenticated + `jr auth login` hint |
+| KEY or AID 5xx | 1 | `API error (<N>)` |
+| Network error | 1 | Connectivity hint |
+
+**Trace**: F2 spec evolution (SOH-ATTACHMENTS-1 2026-07-15; DEC-179 ratified design; research §6 JRACLOUD-96384/-78388 VERIFIED)
+
+---
+
 ## Error Path Summary
 
 All issue-read errors follow the universal pattern (BC-X.3.012):
@@ -533,4 +854,4 @@ All issue-read errors follow the universal pattern (BC-X.3.012):
 
 Pass 3 sources: `tests/issue_list_errors.rs`, `tests/issue_view_errors.rs`, `tests/comments.rs`
 
-## Total BCs in this file: 52 (representative set; BC-INDEX.md carries all 94)
+## Total BCs in this file: 64 individually-bodied (cumulative 106 incl. range-collapsed; see BC-INDEX.md)

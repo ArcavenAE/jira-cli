@@ -451,7 +451,7 @@ Platform `POST /rest/api/3/issue/{key}/attachments` on a JSM issue is **INTERNAL
 - `attachment upload <KEY> --file <PATH>` with no visibility flag → **platform POST** (works on both JSM and non-JSM; safe/internal result on JSM; no servicedeskapi call)
 - `attachment upload <KEY> --file <PATH> --public` → **servicedeskapi two-step** (attachTemporaryFile → request/{id}/attachment with `public: true`); requires JSM project; requires confirmation gate (see SQ-7)
 - `attachment upload <KEY> --file <PATH> --internal` → **servicedeskapi two-step** with `public: false`; requires JSM project; no confirmation gate (internal is the safe direction)
-- `--public` or `--internal` on a non-JSM issue → exit 64 with clear message: "`--public/--internal` requires a Jira Service Management project"; the raw servicedeskapi 404 MUST be intercepted and replaced with this user-visible message (P2-4b).
+- `--public` or `--internal` on a non-JSM issue → exit 64 with clear message: "`--public/--internal` requires a Jira Service Management project"; the raw servicedeskapi 404 MUST be intercepted and replaced with this user-visible message (P2-4b). **[PHASE-DOC-RETRO-ANNOTATION 2026-07-15 — CONS-576-006: The `--internal` on non-JSM case above is SUPERSEDED BY OQ-9 (later in this document, §Open Questions table). OQ-9 was RATIFIED 2026-07-15: `--internal` on non-JSM = silent no-op (not exit 64). Rationale: platform POST is already internal by default (P2-4a); asserting `--internal` on a non-JSM issue is coherent and harmless — DEC-169 leniency family. `--public` on non-JSM remains exit 64 (unchanged). BC-3.9.004 implements the OQ-9 ruling correctly. This annotation is informational; the original R2.2 text is preserved for audit trail.]**
 
 The `--internal` flag on upload is symmetric with `comment edit --internal` even though it mirrors the default — it provides an explicit opt-in for scripts that want to assert internal visibility on JSM uploads without relying on the platform-default.
 
@@ -464,7 +464,7 @@ The `--internal` flag on upload is symmetric with `comment edit --internal` even
 | BC | Subject |
 |----|---------|
 | BC-3.9.011 | `attachment upload --public <KEY>` routes through servicedeskapi two-step; `--public` requires a JSM project (exit 64 with clear message on non-JSM; intercepted 404) |
-| BC-3.9.012 | `attachment upload --internal <KEY>` routes through servicedeskapi two-step with `public: false`; same JSM-only gate as `--public` |
+| BC-3.9.012 | `attachment upload --internal <KEY>` routes through servicedeskapi two-step with `public: false`; same JSM-only gate as `--public` **[PHASE-DOC-RETRO-ANNOTATION 2026-07-15 — NEW-005/CONS-576-006: "same JSM-only gate as `--public`" SUPERSEDED BY OQ-9 for the `--internal` case. `--internal` on non-JSM = silent no-op, NOT exit 64. `--public` on non-JSM remains exit 64. See §R2.2 CONS-576-006 annotation and §OQ-9 RATIFIED row. BC-3.9.004 is the correct current spec for `--internal` non-JSM behavior.]** |
 | BC-3.9.013 | `attachment upload --public` interactive confirmation gate: "This will make the attachment visible on the customer portal. Continue? [y/N]"; `--yes` bypasses (mirror BC-3.5.007) |
 | BC-3.9.014 | `attachment upload --public --output json` shape: array with an `internal: false` (or `public: true`) boolean indicating portal visibility; shape finalized after live EJ e2e capture (P2-3c INCONCLUSIVE delivery obligation) |
 
