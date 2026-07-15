@@ -4942,3 +4942,22 @@ Displaced to make room for WAVE B COMPLETE (2026-07-14) row per keep-5 rule.
 | Phase | Status | Completed | Gate | Notes |
 |-------|--------|-----------|------|-------|
 | **SOH-COMMENT-CRUD-1 F3 gate prep COMPLETE (2026-07-12) — perimeter audit 1 LOW fixed (round 26, mutants.toml examine_globs — AC-009(j)); EC (a)-(i) all mapped; SEC items remediated; holdouts bidirectional-correct; drift check done; 2 process-gaps codified.** | **GATE PREP COMPLETE** | **2026-07-12** | **F3 human gate pending.** | `phase-f3-story-decomposition/f3-gate-audit-577.md`. |
+
+---
+
+## Archived Phase Progress row (2026-07-15, steady-state burst)
+
+Displaced to make room for STEADY-STATE BURST COMPLETE row per keep-5 rule.
+
+| Phase | Status | Completed | Gate | Notes |
+|-------|--------|-----------|------|-------|
+| **pass-1 CLEAN → pass-2 1L README cmd table (fix #622 @ ae2e3db bd3ac83 user-merged) → pass-3 CLEAN → pass-4 CLEAN (H-NEW-COMMENT-001..005 all PASS) → pass-5 CLEAN; F5 SCOPED ADVERSARIAL CONVERGED (STRICT, 2026-07-14); trajectory →1L→0→0→0; develop ae2e3db; F6 hardening DISPATCHED (fv-F6-577; phase-f6-hardening/577/).** | **F5 CONVERGED** | **2026-07-14** | **F6 targeted hardening in flight.** | `phase-f5-adversarial/` |
+
+### Archived Current Phase Steps row (steady-state burst)
+
+Displaced to make room for STEADY-STATE BURST step row per keep-5 rule.
+
+| Step | Agent | Status | Output |
+|------|-------|--------|--------|
+| **PR #621 @ f4ab77b MERGED (docs/577-s5-deferral-sweep; commits 31b174c+7c97f5e); wave-D integration STRICT CONVERGED (pass-1 2L→passes 2/3/4 CLEAN×3); F4 PHASE COMPLETE (11 PRs; issue #577 CLOSED 2026-07-14). Guard scripts green (spec-counts OK, bc-cumulative 624/8 surfaces, 334 citations); whole-bundle sweep clean.** | state-manager | COMPLETE | develop @ f4ab77b; F4 bundle closed; F5 dispatched. |
+
