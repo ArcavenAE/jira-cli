@@ -536,6 +536,8 @@ Attachment Read (2.7).
 
 `jr issue attachment list <KEY>` fetches `GET /rest/api/3/issue/{key}?fields=attachment` and renders the `fields.attachment[]` array as a comfy-table on stdout. There is no dedicated Jira "list attachments" endpoint; all attachment metadata is returned in a single response via the issue field projection (no cursor pagination for this call — confirmed in research §1a of `.factory/research/issue-576-attachments-api-2026-07-15.md`).
 
+**ASSUMPTION — completeness of `fields.attachment`**: `fields.attachment` is returned COMPLETE (not paginated) in this single response. The current Jira Cloud REST API v3 schema does not paginate the attachment field. **S1 delivery obligation**: the S1 implementer MUST live-verify against an issue with more than 100 attachments, OR document the maximum attachment count per issue if explicitly bounded by Atlassian documentation, before S1 delivery. The correctness of `--all`, `--newest N`, and `--older-than` (BC-3.9.019) depends entirely on this completeness assumption — a partial list would silently miss attachments. BC-3.9.019 cites this clause.
+
 Table columns (in display order):
 
 | Column | Source field | Notes |
@@ -717,29 +719,35 @@ When `<KEY>` does not exist or the authenticated user lacks Browse Projects perm
 
 **Streaming**: response bytes are streamed to disk via `Response::bytes_stream()` + incremental write (e.g., `tokio::io::copy`). The full body is never buffered in memory, guarding against OOM for large attachments. Requires the reqwest `stream` feature in `Cargo.toml` (Rev 2 §R2.1).
 
-**Output path**: the default filename uses the SHA-1-prefix + sanitized-basename scheme from BC-2.7.010. `--out <PATH>` overrides the default with an explicit file path; the user-supplied path is NOT sanitized against CWE-22 (trusted input from the operator).
+**Output path**: for single `--id` without `--out`, the default filename is the bare sanitized basename (no SHA-1 prefix) — see BC-2.7.010 (single-id bare naming rule) and the degenerate-name fallback (id-as-filename when sanitization yields None). `--out <PATH>` overrides the default with an explicit file path; the user-supplied path is NOT sanitized against CWE-22 (trusted input from the operator).
 
 **Overwrite behavior** (DEC-179 ruling 3): if the computed or specified output path already exists as a regular file, the handler MUST refuse with exit 64: `"File already exists: <path>. Use --force to overwrite."` The `--force` flag bypasses this check and overwrites silently. This prevents accidental data loss for idempotent re-runs.
 
 On success, a completion hint is emitted to stderr: `"Downloaded: <path> (<size_human>)."` Nothing is written to stdout (profile 3).
 
-**Write-to-temp + atomic-rename**: The download MUST write to a temporary file in the same directory as the final path (e.g., `<final_path>.partial` or a random `tmp_<random>_<basename>` name) and only rename it to the final path on successful stream completion. This prevents an interrupted download from leaving a truncated file that would block a retry (the overwrite-refuse guard checks for the FINAL path, not the `.partial` file). On any error (network failure, disk error, process signal), the temporary file MUST be deleted before `jr` exits; the final path is NOT written.
+**Write-to-temp + atomic-rename**: The download MUST write to a temporary file named `tmp_<random>_<basename>` in the same directory as the final path (where `<random>` is a process-unique random string and `<basename>` is the final filename). The deterministic `.partial` suffix MUST NOT be used — a fixed name collides when two `jr` processes download to the same directory concurrently. Only on successful stream completion does `jr` atomically rename the temporary file to the final path. This prevents an interrupted download from leaving a truncated file at the final path that would block a retry (the overwrite-refuse guard checks for the FINAL path, not the temp file). On any error (network failure, disk error, process signal), the temporary file MUST be deleted before `jr` exits; the final path is NOT written.
 
 **Ctrl+C / SIGINT during download** (exit 130): if the user interrupts the download mid-stream, the partial file is cleaned up (deleted), the final path is not written, and `jr` exits 130 (standard signal-interrupt exit code). Exit 130 is consistent with `JrError::Interrupted` (maps to exit code 130 in `src/error.rs`).
 
 **EC-2.7.007-6** (`--out <PATH>` with missing parent directory): if the user-specified `--out <PATH>` names a file in a parent directory that does not exist, `jr` exits 64 before any download: `"Output directory does not exist: <parent>"`. The handler does NOT create parent directories automatically.
 
-**EC-2.7.007-1** (AID does not exist or not accessible): `GET /rest/api/3/attachment/{id}` (metadata step 1) returns 404 or 403 → exit 64: `"Attachment <AID> not found or not accessible."` (canonical not-found string — aligns with BC-2.7.012, BC-3.9.008 EC-3.9.008-2, BC-3.9.015 EC-3.9.015-6); no streaming request issued; no file created. (see BC-2.7.012 for full error taxonomy).
+**EC-2.7.007-1** (AID does not exist — 404): `GET /rest/api/3/attachment/{id}` (metadata step 1) returns 404 → exit 64: `"Attachment <AID> not found or not accessible."` (canonical not-found string — aligns with BC-2.7.012, BC-3.9.008 EC-3.9.008-2, BC-3.9.015 EC-3.9.015-6); no streaming request issued; no file created. (see BC-2.7.012 for full error taxonomy).
+
+**EC-2.7.007-1b** (AID permission denied — 403): `GET /rest/api/3/attachment/{id}` (metadata step 1) returns 403 → exit 1: `"Permission denied: cannot access attachment <AID>."` (NOT the canonical not-found string — 403 means the attachment exists but is inaccessible, which is a distinct condition; consistent with the 403 = exit 1 mapping across all attachment operations); no streaming request issued; no file created.
 
 **EC-2.7.007-2** (JSM issue uniform behavior): downloading an attachment from a JSM issue uses the exact same platform content endpoint as a non-JSM issue. There is no JSM-specific code path for download. JSDCLOUD-10841 confirms the servicedeskapi links are unreliable; the platform endpoint is the correct single code path.
 
-**EC-2.7.007-3** (credential-stripping regression guard — SEC-576-003 CWE-522): A wiremock integration test MUST assert that `GET /rest/api/3/attachment/content/{id}` following a cross-host 302/303 redirect does NOT include an `Authorization` header on the redirect-target request. Use a two-server wiremock setup (one for the Jira API endpoint, one for the simulated CDN redirect target). This guards against a future `JiraClient` refactor adding a custom `RedirectPolicy` that silently forwards bearer/Basic credentials to CDN hosts.
+**EC-2.7.007-3** (credential-stripping regression guard — SEC-576-003 CWE-522): A wiremock integration test MUST assert that `GET /rest/api/3/attachment/content/{id}` following a cross-host 302/303 redirect does NOT include an `Authorization` header on the redirect-target request. Use a two-server wiremock setup (one for the Jira API endpoint, one for the simulated CDN redirect target). **The two wiremock servers MUST use DISTINCT HOST STRINGS** (e.g., `127.0.0.1` for the Jira API server and a second address such as `[::1]` or a distinct loopback hostname for the CDN target). Using the same host at different ports (e.g., two `127.0.0.1` instances on different ports) would make the assertion vacuous: reqwest's cross-host check compares `host_str()` output which IGNORES port numbers, so a same-host-different-port redirect would NOT strip `Authorization` headers — the test would pass while the credential-stripping invariant goes untested. This guards against a future `JiraClient` refactor adding a custom `RedirectPolicy` that silently forwards bearer/Basic credentials to CDN hosts.
 
 **EC-2.7.007-4** (error mid-stream): temporary file deleted; exit 1; `"Download failed: <reason>"` on stderr; final path not written.
 **EC-2.7.007-5** (Ctrl+C / SIGINT mid-stream): temporary file deleted; exit 130; no final path written.
+
+**EC-2.7.007-8** (concurrent downloads, same out-dir): if two `jr` processes download the same attachment to the same output directory simultaneously, each writes to its own uniquely-named `tmp_<random>_<basename>` file. There is no interleaving of temp files. When both rename to the final path, the last successful rename wins (standard OS atomic-rename semantics); the earlier written file is silently overwritten. This is safe: both processes produce identical bytes (same source URL), so the last rename wins without data loss. No locking between processes is required.
 **EC-2.7.007-7** (`--output json` success shape for `--id`): `{"downloaded":[{"filename":"<name>","id":"<AID>","path":"<written path>","size":N}]}`; one-element `downloaded` array; inner keys in alphabetical order (`filename` < `id` < `path` < `size`); stdout only; exit 0. `path` is the absolute or relative path actually written (per BC-2.7.010). `size` is the byte count written. No stderr output in JSON mode.
 
-**CLI flags** (pinned for e2e surface guard): `<KEY>` (positional, required); `--id <AID>` (single download); `--all` (batch); `--newest <N>` (top-N); `--out <PATH>` (single-file path override); `--out-dir <DIR>` (batch target directory); `--force` (overwrite existing); `--filter <FILTER>` (repeatable); `--output json`; `--no-input`.
+**Observability** (`--verbose` / `--verbose-bodies`): `--verbose` logs method + URL only (unchanged CLAUDE.md rule SD-003). `--verbose-bodies` MUST NOT attempt to materialize the streaming response body — the body is a potentially large binary stream and buffering it for logging would defeat the OOM-safety design of streaming download. On a download response, `--verbose-bodies` MUST log response headers and the final written byte count ONLY (e.g., `<download body: N bytes written to <path>>`), never content. The PII warning that `--verbose-bodies` emits extends to attachment content by extension (attachment payloads may contain credentials, personal data, or confidential documents).
+
+**CLI flags** (pinned for e2e surface guard): `<KEY>` (positional, required); `--id <AID>` (single download); `--all` (batch); `--newest <N>` (top-N); `--out <PATH>` (single-file path override); `--out-dir <DIR>` (batch target directory); `--force` (overwrite existing); `--filter <FILTER>` (repeatable); `--output json`; `--no-input`; `--profile <NAME>`; `--no-color`.
 
 **Trace**: F2 spec evolution (SOH-ATTACHMENTS-1 2026-07-15; DEC-179 ratified design; research §1b–1d VERIFIED; JSDCLOUD-10841 §P2-6 VERIFIED — platform endpoint for JSM; JRACLOUD-97046 §6 no-redirect-false; GHSA-9857-6MW7-FQ2M corroboration); SEC-576-003 (CWE-522 credential-stripping wiremock test requirement added 2026-07-15)
 
@@ -751,7 +759,7 @@ On success, a completion hint is emitted to stderr: `"Downloaded: <path> (<size_
 **Source**: `src/cli/issue/attachments.rs::handle_attachment_download` (implementation pending — SOH-ATTACHMENTS-1 Story 2)
 **Subject**: Issue read
 
-`jr issue attachment download <KEY> --all` downloads all attachments on the issue to a directory. Default target is the current working directory; `--out-dir <DIR>` overrides. The handler first fetches the full attachment list (same `GET /rest/api/3/issue/{key}?fields=attachment` call as `attachment list`), then downloads each attachment sequentially using the BC-2.7.007 wire path. Each file is named using BC-2.7.010 (SHA-1-prefix + sanitized-basename) within the target directory.
+`jr issue attachment download <KEY> --all` downloads all attachments on the issue to a directory. Default target is the current working directory; `--out-dir <DIR>` overrides. The handler first fetches the full attachment list (same `GET /rest/api/3/issue/{key}?fields=attachment` call as `attachment list`). **Batch metadata source**: filename, size, and `contentUrl` for each attachment are taken directly from `fields.attachment[]` in this list response. The per-attachment step-1 `GET /rest/api/3/attachment/{id}` metadata fetch used by single-`--id` download (BC-2.7.007) is SKIPPED on batch paths — that step is only needed on the single-ID path to obtain the canonical filename when no list is available. The handler then issues the streaming step-2 `GET /rest/api/3/attachment/content/{id}` for each attachment (the download step from BC-2.7.007 wire path). H-NEW-ATTACHMENT-003 and H-NEW-ATTACHMENT-007 holdout mock topologies correctly reflect this: they mount only the issue-fetch GET and per-attachment content GETs, not per-attachment metadata GETs. Each file is named using BC-2.7.010 (batch path: `<sha1-of-id>_<sanitized-basename>`) within the target directory.
 
 **Overwrite behavior with `--all`**: without `--force`, per-file collision is handled fail-soft — the colliding file is skipped with a per-file stderr warning (e.g., `"Skipping <filename>: file already exists. Use --force to overwrite."`). The download continues for remaining attachments. With `--force`, existing files are overwritten silently.
 
@@ -780,7 +788,7 @@ On completion a summary hint emits to stderr: `"Downloaded N of M attachments to
 
 `jr issue attachment download <KEY> --newest N` downloads at most N attachments, selecting the N most recently created (by `attachment.created` descending). Because Jira's ISO 8601 timestamp format (`2026-07-10T14:23:11.000+0000`) is lexicographically sortable descending, lexicographic sort is correct for this field.
 
-**Behavior**: fetch full attachment list → apply any `--filter` flags (mime/name/size-max) → sort by `created` descending → take first N → download each using BC-2.7.007 wire path and BC-2.7.010 output naming.
+**Behavior**: fetch full attachment list (same `GET /rest/api/3/issue/{key}?fields=attachment` as `attachment list`) → apply any `--filter` flags (mime/name/size-max) → sort by `created` descending → take first N → issue step-2 streaming `GET /rest/api/3/attachment/content/{id}` for each selected attachment. **Batch metadata source**: filename, size, and `contentUrl` are taken from `fields.attachment[]` in the list response. The per-attachment step-1 `GET /rest/api/3/attachment/{id}` metadata fetch is SKIPPED (same as BC-2.7.008) — that step is single-`--id`-only. Output naming follows BC-2.7.010.
 
 `--filter` applies BEFORE the top-N selection: `--newest 3 --filter mime=image/*` = the 3 most recently added images.
 
@@ -794,30 +802,41 @@ If the issue has fewer than N attachments after filtering, all available attachm
 
 ---
 
-#### BC-2.7.010: Default download output path — `<sha1-of-id>_<sanitized-basename>` in target directory
+#### BC-2.7.010: Default download output path — batch: `<sha1-of-id>_<sanitized-basename>`; single-`--id`: bare sanitized basename; id-as-filename degenerate fallback
 
 **Confidence**: HIGH
 **Source**: `src/cli/issue/attachments.rs::handle_attachment_download` (implementation pending — SOH-ATTACHMENTS-1 Story 2)
 **Subject**: Issue read
 
-When no `--out <PATH>` is specified, the default output filename for a downloaded attachment is:
+When no `--out <PATH>` is specified, the default output filename depends on the selector used:
 
+**Single-`--id` path (bare naming)**: the default filename is the bare result of `sanitize_attachment_filename(attachment.filename)` (BC-2.7.011 pipeline). No SHA-1 prefix. Filename is human-readable; overwrite-refuse (`--force`) handles collisions on re-runs (BC-2.7.007). This aligns with peer conventions (e.g., `curl` default, `gh` download).
+
+**Batch paths (`--all` / `--newest N`) — SHA-1-prefix naming**:
 ```
 <sha1-of-id>_<sanitized-basename>
 ```
+- `<sha1-of-id>`: full 40-character lowercase hex-encoded SHA-1 of the attachment `id` string (NOT a content hash — ID is stable; deterministic naming without reading file content).
+- `<sanitized-basename>`: result of `sanitize_attachment_filename(attachment.filename)` per BC-2.7.011.
 
-- `<sha1-of-id>`: the full 40-character lowercase hex-encoded SHA-1 of the attachment `id` string (NOT a content hash — the attachment ID is stable, yielding deterministic naming without reading file content first).
-- `<sanitized-basename>`: the result of `sanitize_attachment_filename(attachment.filename)` per BC-2.7.011. If sanitization returns `None`, the attachment is skipped with a warning (BC-2.7.011 caller contract).
+**Rationale for SHA-1 prefix on batch paths**: collision-resistance when an issue has multiple attachments sharing the same sanitized basename (e.g., two files both named `report.pdf`); idempotency (re-running `--all` produces the same filenames, allowing `--force` to overwrite predictably). On single-`--id`, there is only one file; collisions are handled by the overwrite-refuse guard; the prefix is unnecessary and reduces usability.
 
-**Rationale for SHA-1 prefix**: idempotency (re-running `attachment download` on the same attachment ID always produces the same filename) and collision-resistance between two attachments sharing the same sanitized basename. The prefix is NOT a file-integrity hash.
+**Single-vs-batch asymmetry (deliberate)**: the two modes intentionally differ. Peer-convention alignment (bare for targeted download) and deduplication-safety (prefixed for batch) are both served. This is the research-backed ruling (Part 3 of `.factory/research/issue-576-attachments-api-2026-07-15.md`).
 
-**Combined-name length cap**: the full default filename `<sha1(40)>_<basename>` is at most 255 bytes total. The SHA-1 hex string is exactly 40 bytes plus the `_` separator = 41 bytes; BC-2.7.011 step 5 caps the sanitized basename at 214 bytes (214 + 41 = 255). This keeps the combined filename within the POSIX `NAME_MAX` and Windows NTFS per-component limit. Call sites that bypass BC-2.7.010 naming (e.g., `--out <PATH>`) receive sanitized names that are still at most 214 bytes from BC-2.7.011 — always within the limit.
+**Degenerate-name fallback** (both modes): if `sanitize_attachment_filename` returns `None` or an empty string (rejects path-traversal, NUL bytes, etc.), the fallback filename is the raw attachment `id` string. This matches the `curl` `default` behaviour analogue — an attachment without a usable name is saved under its stable numeric ID. The id string is always a safe filename (numeric-only, no path components). The fallback is NOT subject to BC-2.7.011 (the id needs no sanitization). Emit a stderr informational note: `"warning: using id as filename for attachment <AID> — original name '<raw>' could not be sanitized."` (distinct wording from the "skipping" warning in BC-2.7.011 caller contract; this fallback writes a file rather than skipping).
 
-**Examples**:
-- `id="10042"`, `filename="report.pdf"` → `<sha1("10042")>_report.pdf`
-- `id="10042"`, `filename="../../../etc/passwd"` → sanitized basename is `passwd` → `<sha1("10042")>_passwd`
+**Combined-name length cap (batch)**: `<sha1(40)>_<basename>` is at most 255 bytes (41-byte prefix + 214-byte cap from BC-2.7.011 step 5 = 255). **Single-id**: bare name is capped at 214 bytes (BC-2.7.011 step 5) — conservative, fits within 255 bytes.
 
-When `--out <PATH>` is supplied on the single-file path (BC-2.7.007), SHA-1-prefix naming is bypassed entirely and the explicit path is used. The user-supplied path is NOT sanitized (trusted operator input).
+**Examples (single-`--id`)**:
+- `id="10042"`, `filename="notes.txt"` → `notes.txt` (bare)
+- `id="10042"`, `filename="../../../etc/passwd"` → sanitized → `passwd` (bare)
+- `id="10042"`, `filename=".."` → sanitization returns `None` → fallback `10042`
+
+**Examples (batch)**:
+- `id="20001"`, `filename="report.pdf"` → `<sha1("20001")>_report.pdf`
+- `id="20002"`, `filename="report.pdf"` → `<sha1("20002")>_report.pdf` (distinct prefix prevents collision)
+
+When `--out <PATH>` is supplied on the single-file path (BC-2.7.007), all default naming is bypassed and the explicit path is used. The user-supplied path is NOT sanitized (trusted operator input).
 
 **Trace**: F2 spec evolution (SOH-ATTACHMENTS-1 2026-07-15; DEC-179 ratified design; #576 SHA-1-prefix proposal incorporated)
 
@@ -837,18 +856,18 @@ The `filename` field in Jira attachment metadata is **attacker-controllable**: a
 2. **Pseudo-name rejection**: if the extracted basename as a `Path` component equals `"."` or `".."`, return `None`. Empty string after OsStr conversion also returns `None`.
 3. **NUL byte rejection**: if the name contains a NUL byte (`\0`), return `None`. NUL terminates strings in OS path APIs and is never a valid filename character on any supported platform.
 4. **Character scrub** (defensive-depth): replace any remaining `/`, `\`, or `:` in the string with `_`. These are path separators on various platforms and MUST NOT appear in a filename component even after step 1 (guards against encoding edge cases on Windows UNC and drive-letter paths).
-5. **Length cap** (UTF-8-safe truncation for the sanitized basename): truncate to at most **214 bytes** on a valid UTF-8 character boundary (Rust `floor_char_boundary` semantics — never split a multi-byte codepoint). Rationale for 214 bytes: the default output path in BC-2.7.010 prepends a 41-byte SHA-1 prefix (`<40 hex chars>_`); 214 + 41 = 255, which fits within the POSIX/Windows NTFS filename component limit. If the `--out <PATH>` override is used (no SHA-1 prefix), the sanitized name is still capped at 214 bytes (conservative; avoids a second cap calculation per call site).
+5. **Length cap** (UTF-8-safe truncation for the sanitized basename): truncate to at most **214 bytes** on a valid UTF-8 character boundary (Rust `floor_char_boundary` semantics — never split a multi-byte codepoint). Rationale for 214 bytes: batch paths (BC-2.7.010) prepend a 41-byte SHA-1 prefix (`<40 hex chars>_`); 214 + 41 = 255 = POSIX/Windows NTFS filename component limit. Single-`--id` bare paths and `--out <PATH>` overrides carry no prefix and could in principle allow up to 255 bytes, but 214 bytes is retained as a conservative uniform cap — avoids a dual cap-calculation per call site and leaves headroom for OS metadata.
 5.5. **Trailing whitespace/dot strip** (SEC-576-007 — Windows predictability): strip trailing ASCII whitespace characters and trailing `.` from the basename after the length cap. Windows silently removes trailing dots and spaces from filename components on write; stripping them makes the sanitized output identical on Windows and POSIX, preventing unpredictable collision between two Jira attachments whose names differ only by trailing characters.
 
 Return `Some(sanitized_name)` if all steps produce a non-empty string; otherwise `None`.
 
 **Caller contract**: if `sanitize_attachment_filename` returns `None`, the caller MUST skip that attachment and emit a per-file stderr warning: `"warning: skipping attachment <AID> — filename '<raw>' could not be sanitized safely."` The overall download operation continues for remaining attachments (fail-soft per-file).
 
-**Windows device-name caller note (SEC-576-001 — CWE-22)**: The sanitized name returned by `sanitize_attachment_filename` may match a Windows reserved device base-name (`CON`, `NUL`, `PRN`, `AUX`, `COM1`–`COM9`, `LPT1`–`LPT9`). Any call site that writes the result to disk MUST ensure the final on-disk filename contains at least one non-device-name character before the extension dot. The SHA-1 prefix applied in BC-2.7.010 (`<sha1>_CON`, `<sha1>_NUL`, etc.) satisfies this requirement — `<sha1>_CON` is NOT a Windows reserved name. Call sites that bypass BC-2.7.010 naming (e.g., `--out <PATH>`) use trusted operator-supplied paths and are not subject to this note.
+**Windows device-name caller note (SEC-576-001 — CWE-22)**: The sanitized name returned by `sanitize_attachment_filename` may match a Windows reserved device base-name (`CON`, `NUL`, `PRN`, `AUX`, `COM1`–`COM9`, `LPT1`–`LPT9`). Any call site that writes the result to disk MUST ensure the final on-disk filename is not a bare device name before the extension dot. **Batch paths** (BC-2.7.010): the SHA-1 prefix (`<sha1>_CON`, `<sha1>_NUL`, etc.) satisfies this requirement automatically — `<sha1>_CON` is NOT a Windows reserved name. **Single-`--id` bare naming** (BC-2.7.010): the implementation call site MUST apply a device-name escape before writing (e.g., prepend `_` when the sanitized basename before the first `.` is a reserved device name). **`--out <PATH>` override**: uses trusted operator-supplied paths and is NOT subject to this note (the operator is responsible for their path choice).
 
 **Defense-in-depth containment check (SEC-576-002 — CWE-22, corrected procedure)**: after joining the sanitized name with the target directory, the implementer MUST use the following two-step procedure. Do NOT call `canonicalize()` on the joined path — `std::fs::canonicalize` returns `Err` for non-existent paths, which would cause every new download to be treated as a containment failure:
 
-1. `let resolved_dir = out_dir.canonicalize()?` — canonicalize `out_dir` (which is guaranteed to exist; BC-2.7.008 EC-2.7.008-2 enforces this pre-condition before any download begins).
+1. `let resolved_dir = out_dir.canonicalize()?` — canonicalize `out_dir` (which is guaranteed to exist: (a) `--all`/`--newest` batch paths enforce existence via BC-2.7.008 EC-2.7.008-2 before any download begins; (b) single-`--id` without `--out` defaults `out_dir` to the current working directory — `canonicalize(cwd)` trivially succeeds since cwd always exists; (c) `--out <PATH>` sets `out_dir` to the specified file's parent directory — the parent-existence check in BC-2.7.007 EC-2.7.007-6 fires before this step).
 2. Assert `resolved_dir.join(&sha1_filename).starts_with(&resolved_dir)` — `Path::starts_with` is component-based (not a string-prefix check), so it correctly evaluates containment for a file that does not yet exist on disk.
 
 Since step 4 of sanitization already strips `../`, `/`, `\`, `:`, the join will in practice always satisfy the `starts_with` assertion. The check is defense-in-depth against any encoding edge case not caught by steps 1–4. If `starts_with` returns `false`, skip with a warning: `"warning: skipping attachment <AID> — path escape detected after sanitization."` This skip-case is a defensive guard only; it should not occur for any name produced by the five-step algorithm above.
@@ -857,7 +876,7 @@ Since step 4 of sanitization already strips `../`, `/`, `\`, `:`, the join will 
 
 **Naive blacklist approaches are INSUFFICIENT**: do NOT rely on string-stripping `../` patterns alone — such blacklists are bypassable. The algorithm above is the required standard mitigation (research §4 of `.factory/research/issue-576-attachments-api-2026-07-15.md`, VERIFIED HIGH; OWASP/PortSwigger/CWE-31/22 first-principles).
 
-**Unit test coverage required**: at minimum: `../../etc/passwd`, `/etc/passwd`, `C:\Windows\system32\foo.exe`, `"."`, `".."`, empty string, NUL-containing string, a normal filename, a filename exceeding 255 bytes, a filename containing `:` (Windows drive path), `"CON"` (Windows device name → `Some("CON")`), `"NUL"` (Windows device name → `Some("NUL")`), `"COM1"` (Windows device name → `Some("COM1")`), and `"nul.txt"` (Windows device name with extension → `Some("nul.txt")`), and a filename containing a multi-byte UTF-8 codepoint at the truncation boundary (e.g., a 214-byte ASCII prefix followed by a 3-byte UTF-8 char `"é"` — the char must be dropped, not split, so the output is the 214-byte prefix without truncation artifact). The test matrix confirms that `sanitize_attachment_filename` returns `Some(name)` for device names — the BC-2.7.010 SHA-1 prefix (not this function) is what prevents on-disk device-name collisions on Windows (SEC-576-001 caller note above).
+**Unit test coverage required**: at minimum: `../../etc/passwd`, `/etc/passwd`, `C:\Windows\system32\foo.exe`, `"."`, `".."`, empty string, NUL-containing string, a normal filename, a filename exceeding 255 bytes, a filename containing `:` (Windows drive path), `"CON"` (Windows device name → `Some("CON")`), `"NUL"` (Windows device name → `Some("NUL")`), `"COM1"` (Windows device name → `Some("COM1")`), and `"nul.txt"` (Windows device name with extension → `Some("nul.txt")`), and a filename containing a multi-byte UTF-8 codepoint at the truncation boundary (e.g., a 214-byte ASCII prefix followed by a 3-byte UTF-8 char `"é"` — the char must be dropped, not split, so the output is the 214-byte prefix without truncation artifact). The test matrix confirms that `sanitize_attachment_filename` returns `Some(name)` for device names — the call-site device-name escape (SEC-576-001 caller note above, not this function) is what prevents on-disk device-name collisions on Windows for both batch (SHA-1 prefix) and single-id bare (explicit `_`-prefix escape at call site) paths.
 
 **Trace**: F2 spec evolution (SOH-ATTACHMENTS-1 2026-07-15; research §4 CWE-22 VERIFIED HIGH; DEC-179 SQ-1 resolved; OWASP/CWE-22/CWE-31 first-principles); SEC-576-001 (CWE-22 Windows device-name caller note + unit test matrix added 2026-07-15); SEC-576-002 (CWE-22 corrected two-step containment check procedure added 2026-07-15); SEC-576-007 (trailing-whitespace/dot strip step 5.5 added 2026-07-15)
 
@@ -871,7 +890,9 @@ Since step 4 of sanitization already strips `../`, `/`, `\`, `:`, the join will 
 
 **Unknown issue key**: when `<KEY>` does not exist or is inaccessible, `GET /rest/api/3/issue/{key}?fields=attachment` returns 404. Handler exits 64: `"Issue <KEY> not found or not accessible."`
 
-**Unknown attachment ID**: when `--id <AID>` references a non-existent attachment, `GET /rest/api/3/attachment/{id}` (metadata step 1, per BC-2.7.007 two-step wire path) returns 404 or 403. Handler exits 64: `"Attachment <AID> not found or not accessible."` (canonical string).
+**Unknown attachment ID**: when `--id <AID>` references a non-existent attachment, `GET /rest/api/3/attachment/{id}` (metadata step 1, per BC-2.7.007 two-step wire path) returns 404 → handler exits 64: `"Attachment <AID> not found or not accessible."` (canonical not-found string). A 403 response instead exits 1: `"Permission denied: cannot access attachment <AID>."` (403 = exists-but-inaccessible, not missing; consistent with 403 = exit 1 across all attachment operations).
+
+**404 body-surfacing asymmetry (deliberate read-vs-write divergence)**: A 404 from the download metadata endpoint (`GET /rest/api/3/attachment/{id}`) emits the canonical string ONLY — the Jira error body is NOT appended. This diverges from `attachment delete` (BC-3.9.008), where a 404 surfaces the Jira error body per DEC-168. Rationale: delete is a write operation targeting a specific user-named resource (DEC-168: 404 on a targeted delete is a user error requiring the Jira body context); download metadata fetch is a read operation where the canonical string is sufficient and the Jira body would add no actionable information.
 
 **Match-by-ID invariant** (JRACLOUD-96384 + JRACLOUD-78388, both confirmed in research §6): attachment operations MUST identify attachments by their numeric `id`, not by `filename`. Multiple attachments with the same `filename` on one issue are legal in Jira (JRACLOUD-96384); filename-based matching is ambiguous and unreliable. There is also no reliable REST mapping from a comment to the attachments it contains (JRACLOUD-78388). `--id <AID>` is the sole selector for single-file download operations.
 
@@ -880,7 +901,8 @@ Since step 4 of sanitization already strips `../`, `/`, `\`, `:`, the join will 
 | Condition | Exit code | stderr |
 |-----------|-----------|--------|
 | KEY 404 | 64 | `"Issue <KEY> not found or not accessible."` |
-| AID 404/403 from metadata endpoint (`GET /attachment/{id}`) | 64 | `"Attachment <AID> not found or not accessible."` |
+| AID 404 from metadata endpoint (`GET /attachment/{id}`) | 64 | `"Attachment <AID> not found or not accessible."` |
+| AID 403 from metadata endpoint (`GET /attachment/{id}`) | 1 | `"Permission denied: cannot access attachment <AID>."` |
 | KEY or AID 401 | 2 | Not authenticated + `jr auth login` hint |
 | KEY or AID 5xx | 1 | `API error (<N>)` |
 | Network error | 1 | Connectivity hint |

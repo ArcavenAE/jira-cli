@@ -504,3 +504,131 @@ cross-check on 2026-07-15:
 4. **`tokio-util` is already transitive** — promoting to a direct dep is low-risk;
    still surface the reqwest `multipart`+`stream` feature adds in the ADR + PR
    `cargo deny` gate.
+
+---
+
+# Part 3 — single-download naming convention (2026-07-15)
+
+Targeted probe for a design ruling: for **single-file** download by ID
+(`jr issue attachment download KEY --id AID`, no `--out`), should the saved
+filename be the **bare server-provided basename** or **`<sha1-of-id>_<basename>`
+prefixed** (as batch mode is)? BC currently says prefixed; the holdout scenario
+says bare. Same untrusted-input / no-product-code / no-commit constraints.
+
+## Part 3 verdict table
+
+| # | Claim | Verdict | Confidence |
+|---|-------|---------|------------|
+| P3-1 | Bare server/URL/key basename is the UNIVERSAL peer default for single-file download without an explicit output path | VERIFIED | High |
+| P3-1b | NO peer CLI (gh, curl -O, wget, aws s3 cp) prefixes a hash/ID for single-file download | VERIFIED | High |
+| P3-1c | ankitpokhrel/jira-cli has no documented attachment-download subcommand (no precedent to mirror) | VERIFIED (absence) | Medium-High |
+| P3-2 | Peer collision behavior is split: overwrite-by-default (curl -O, aws s3 cp), no-clobber opt-in (wget -nc, curl --no-clobber/--skip-existing); `curl -OJ` REFUSES-if-exists (server-name path) unless `--clobber` | VERIFIED | High |
+| P3-2b | Numbered-suffix rename (`file.1`) is NOT a documented default of any of the four for a single explicit download | VERIFIED | Medium-High |
+| P3-3 | Documented security guidance: treat a server-supplied filename as untrusted; basename-strip at minimum; prefer a self-generated name in security-sensitive contexts | VERIFIED | High |
+| P3-3b | curl CVE-2016-0754 = Windows `-J` colon/ADS path-traversal (real filename-trust CVE); CVE-2019-5443 is NOT about filenames (Windows OpenSSL engine) — do not cite it for filename trust | VERIFIED | High |
+
+## P3-1 — Peer naming convention (bare basename is universal)
+
+For a single-file download with no explicit output path, **every** comparable
+tool uses the **bare server/URL/key-provided basename** in the target directory;
+**none** prefix a hash or ID:
+- **`gh release download` / `gh run download`** — saves assets/artifacts under
+  their GitHub-provided names into cwd (or `--dir`); no documented prefixing.
+- **`curl -O`** — filename from the URL path (or the server's
+  `Content-Disposition` name with `-J`); `-o` for an explicit name. No prefix.
+  (curl 8.10+ falls back to right-most dir segment, then literal `default`, only
+  when the URL has no filename part.)
+- **`wget`** — trailing URL segment; `-O` to override. No prefix.
+- **`aws s3 cp s3://bucket/key .`** — writes the **key basename** into the
+  destination dir (mimics Unix `cp`). No prefix.
+- **`ankitpokhrel/jira-cli`** — has **no documented attachment-download
+  subcommand** (attachment I/O is done out-of-band via REST + curl in the
+  ecosystem), so there is no peer Jira-CLI precedent either way; the general Jira
+  REST download pattern uses the attachment's `filename` or an explicit `--output`.
+- Sources: everything.curl.dev (URL-named downloads, content-disposition);
+  GNU wget manual §Download-Options; AWS S3 `cp` docs / tutorials;
+  gh release download reference; Atlassian REST download KBs.
+
+## P3-2 — Collision handling (peer split; our refuse+`--force` matches the safe camp)
+
+- **Overwrite-by-default:** `aws s3 cp` (replaces the object/file); `curl -O` and
+  `wget` overwrite unless a no-clobber control is set.
+- **No-clobber opt-in:** `wget -nc`/`--no-clobber` (skips existing);
+  `curl --no-clobber` / `--skip-existing`.
+- **Refuse-if-exists (notable):** `curl -OJ` (server-supplied `Content-Disposition`
+  name) will **not overwrite an existing local file unless `--clobber`** — a
+  deliberately conservative default *specifically because the name came from the
+  server*. This is the closest peer analogue to our situation (name from Jira
+  metadata), and it lands on **refuse**.
+- **Numbered-suffix rename** (`file.1`, `file (1).txt`) is **not** a documented
+  default of any of the four for a single explicit download (wget only appends
+  `.N` in recursive/index-fallback cases, not for a named single fetch).
+- **Our existing `overwrite-refuse + --force`** therefore matches the most
+  security-conscious peer behavior (`curl -OJ`), and is the right default to keep.
+
+## P3-3 — Security guidance on trusting server-supplied filenames
+
+- curl's own docs/advisories treat a `Content-Disposition` / server filename as
+  **advisory, untrusted metadata**: strip path components, use only the basename,
+  and do not rely on it being safe for placement/overwrite; prefer a
+  self-generated name when storing in a security-sensitive context.
+- **CVE-2016-0754** (confirmed): curl on Windows did not sanitize `:` in a
+  server-chosen remote name (`-J`), enabling path-traversal / NTFS
+  alternate-data-stream writes — a real filename-trust CVE; advisory says use `-J`
+  judiciously.
+- **CVE-2019-5443** (confirmed): a Windows OpenSSL-engine code-injection issue in
+  curl-for-Windows — **NOT** about download filenames. Do not cite it for
+  filename-trust rationale (misattribution guard, per our citation discipline).
+- This reinforces Part 1 §4: basename sanitization is mandatory regardless of the
+  prefix decision; the hash/ID prefix is **not** a security control (the
+  `<basename>` half is still attacker-influenced and must be sanitized either way).
+
+## RECOMMENDATION — bare sanitized basename for single `--id` download
+
+**Resolve the BC-vs-holdout conflict in favor of the holdout: single-file
+`download --id` (no `--out`) should save as the BARE, sanitized server-provided
+basename — NOT `<sha1>_`-prefixed. Keep the `<sha1-of-id>_` prefix in BATCH mode
+only.** Rationale:
+
+1. **Principle of least surprise + unanimous peer convention.** The user named one
+   specific attachment; they expect `report.pdf`, exactly as `gh`, `curl -O`,
+   `wget`, and `aws s3 cp` all behave. A `a1b2c3_report.pdf` output for a
+   single deliberate fetch would be a surprise no peer tool produces.
+2. **The prefix's only justification is batch dedup, which is absent here.** The
+   `<sha1-of-id>_` scheme exists in batch mode to guarantee idempotent re-runs and
+   collision-free naming when many attachments (possibly sharing a filename) land
+   in one directory. With a single user-chosen `--id`, there is one file and no
+   dedup requirement — the justification does not carry over.
+3. **Collision is already handled by the existing refuse+`--force` gate**, which
+   matches the most conservative peer default (`curl -OJ` refuse-if-exists). The
+   prefix is not needed for collision safety in single mode.
+4. **The prefix is not a security control.** Path-traversal safety comes from
+   basename sanitization (Part 1 §4 / P3-3), which applies to both the bare and
+   prefixed forms. Dropping the prefix loses no safety.
+
+**Guard rails to keep with the bare-basename ruling:**
+- Still apply full basename sanitization (Part 1 §4): `Path::file_name()`, reject
+  `.`/`..`/empty, char scrub, canonicalize-and-contain against the target dir.
+- If the sanitized basename is empty/degenerate, fall back to a deterministic name
+  (e.g. the attachment id) rather than failing — analogous to curl's `default`
+  fallback.
+- `--out <PATH>` remains the explicit override (peer-equivalent to `curl -o` /
+  `gh --dir`); `--force` keeps overwriting the refuse default.
+- **Batch mode (`--all` / `--newest`) is unchanged** — retains `<sha1-of-id>_<basename>`
+  for its stated dedup/idempotency requirement.
+
+**Counter-argument considered and rejected:** "single and batch should be
+consistent (always prefix)." Consistency loses here because (a) the two modes have
+genuinely different requirements (one deliberate file vs. a bulk dedup'd dump), and
+(b) matching the universal single-file peer convention is worth more to users than
+internal cross-mode uniformity. The asymmetry is defensible and should be
+documented (one CLAUDE.md gotcha line), the same way other intentional asymmetries
+in this codebase are pinned.
+
+## Part 3 — open items for intake
+
+1. **Action:** update the BC to match the holdout (bare basename for single
+   `--id`), or explicitly re-affirm the holdout as authoritative — the two must be
+   reconciled before F-phase test-writing so the test suite isn't self-contradictory.
+2. Document the single-vs-batch naming asymmetry as a one-line gotcha when the
+   feature lands (single = bare sanitized basename; batch = `<sha1>_` prefixed).

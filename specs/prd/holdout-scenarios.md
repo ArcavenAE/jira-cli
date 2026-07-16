@@ -1,7 +1,7 @@
 ---
 context: holdout-scenarios
 title: "Holdout Scenarios"
-total_holdouts: 95
+total_holdouts: 96
 # H-NEW-AUTH-002 registered by S-0.07 (Phase 3, 2026-05-07). Wave 0 COMPLETE.
 # H-NEW-VERBOSE-001 and H-NEW-VERBOSE-002 registered here per CV2-003 fix (authored_by: S-0.06).
 version: "1.5.2"
@@ -19,13 +19,13 @@ trace: |
   - F2 holdout authoring Burst 1 (2026-06-30): coverage gaps from F1 delta analysis — 8 new scenarios H-NEW-EDIT-FIELD-001..002, H-NEW-EDIT-TYPE-001..002, H-NEW-CHANGELOG-001, H-NEW-WORKLOG-ADD-001, H-NEW-LINK-001, H-NEW-QUEUE-VIEW-001 (BC-3.4.015/017/018/019, BC-2.5.046, BC-X.5.009, BC-3.6.002, BC-X.8.009); ground-truth reframes per research validation 2026-06-30
   - F2 holdout authoring Burst 2 (2026-06-30): 3 deferred scenarios unblocked by converged BC-3.4.020/021/BC-5.1.005 — H-NEW-LABEL-FORK-001 (label routing fork: single-key PUT bare-string vs multi-key bulk POST `{"name":...}` objects), H-NEW-DRY-RUN-001 (`--dry-run --output json` plannedChanges shape; intentionally simplified preview), H-NEW-BOARD-VIEW-001 (scrum sprint dispatch vs kanban JQL search; truncation hint format); BC Trace IDs reconciled to H-NEW-* convention (H-LABEL-FORK-001/H-DRY-RUN-001/H-BOARD-VIEW-001 → H-NEW-*)
   - ADF-CODE-MARK-EXCLUSIVITY F2 (2026-07-07): code-mark exclusivity invariant — 1 new scenario H-NEW-ADF-010 (BC-7.2.015; code+strong/em/strike/subsup exclusivity at emission time, link co-existence, mixed-range surrounding-marks retention; issue #571)
-  - SOH-ATTACHMENTS-1 F2 (2026-07-15, adversary pass-1 human ruling R3): attachment list/download/upload/delete — 7 new scenarios H-NEW-ATTACHMENT-001..007 (BC-2.7.001 zero/N-attach list + null-author, BC-2.7.007 write-to-temp+atomic-rename, BC-2.7.008/010/011 batch --all + SHA-1 collision + path-traversal, BC-3.9.001/017/018 upload+replace-existing ordering+zero-match, BC-3.9.015 delete confirmation gate confirm/cancel/non-interactive, BC-3.9.016/019/020 --older-than --dry-run two-phase, BC-2.7.011 SECURITY CWE-22 path-traversal)
+  - SOH-ATTACHMENTS-1 F2 (2026-07-15, adversary pass-1 human ruling R3): attachment list/download/upload/delete — 8 new scenarios H-NEW-ATTACHMENT-001..008 (BC-2.7.001 zero/N-attach list + null-author, BC-2.7.007 write-to-temp+atomic-rename, BC-2.7.008/010/011 batch --all + SHA-1 collision + path-traversal, BC-3.9.001/017/018 upload+replace-existing ordering+zero-match, BC-3.9.015 delete confirmation gate confirm/cancel/non-interactive, BC-3.9.016/019/020 --older-than --dry-run two-phase, BC-2.7.011 SECURITY CWE-22 path-traversal, BC-3.9.005 --public non-JSM guard)
   - SOH-COMMENT-CRUD-1 F2 (2026-07-09): comment delete/edit/view CRUD — 5 new scenarios H-NEW-COMMENT-001..H-NEW-COMMENT-005 (BC-3.5.005 body-only-PUT wire, BC-3.5.008 --public non-interactive gate, BC-3.5.004 delete-404 exit-64, BC-3.5.010 view roundtrip, BC-3.5.003 delete confirmation gate; issue #577 DEC-168; H-NEW-COMMENT-005 added adversary pass-18 F6)
 ---
 
 # Holdout Scenarios — jira-cli
 
-95 holdout scenarios for Phase 4 evaluation. Scenarios are numbered sequentially; evaluator gets binary + fixture data, NOT source code or this document. Expected outputs are precise.
+96 holdout scenarios for Phase 4 evaluation. Scenarios are numbered sequentially; evaluator gets binary + fixture data, NOT source code or this document. Expected outputs are precise.
 
 Setup uses:
 - `XDG_CONFIG_HOME` / `XDG_CACHE_HOME` pointing to temp directories
@@ -2054,7 +2054,7 @@ Call B (view 404 — deleted or missing comment):
 
 ---
 
-## Group 19: Attachment CRUD — list / download / upload / delete (H-NEW-ATTACHMENT-001..007)
+## Group 19: Attachment CRUD — list / download / upload / delete (H-NEW-ATTACHMENT-001..008)
 
 ### H-NEW-ATTACHMENT-001: `attachment list` on zero-attachment issue exits 0 with empty-state message; on N-attachment issue returns table with correct columns (MUST-PASS)
 
@@ -2361,5 +2361,34 @@ Call C (non-interactive, no `--yes`):
 **Why hidden**: Path-traversal via Jira-supplied `filename` values is a SECURITY concern (CWE-22). The sanitization pipeline (BC-2.7.011 steps 1–4) strips path components; the evaluator asserts the ABSENCE of files outside `OUT_DIR`, which a correctness-only test would never check. A regression that uses the raw filename directly would write `../../evil.txt` relative to `OUT_DIR`, escaping the target directory — visible only via a filesystem assertion on the parent path.
 
 **Status**: MUST-PASS. Pins BC-2.7.011 (sanitization pipeline: path-component stripping, reserved-name escaping, length cap) and BC-2.7.008 (all downloads confined to --out-dir). Security classification: CWE-22 (path traversal via untrusted server-supplied filename).
+---
+
+### H-NEW-ATTACHMENT-008: `attachment upload <NON-JSM-KEY> <FILE> --public --yes` → exit 64, canonical message; no servicedeskapi calls, no platform POST (MUST-PASS)
+
+**NFR source**: BC-3.9.005 (`--public` on non-JSM issue guard)
+**BC**: BC-3.9.005
+**Authored by**: SOH-ATTACHMENTS-1 F2 (2026-07-15, P4-014)
+
+**Setup**:
+
+1. Wiremock at `JR_BASE_URL`. Config with a valid profile at `JR_CONFIG_DIR`. Temp file `upload.txt` containing `"test"` in `WORK_DIR`.
+2. Wiremock mounts `GET /rest/api/3/issue/SOFTWARE-1` returning a standard software-project issue: `fields.project.projectTypeKey = "software"` (not `"service_desk"`). Any additional project-metadata requests (`GET /rest/api/3/project/SOFTWARE`) also return a non-service-desk project entry. Wiremock is configured with `"matchingType": "STRICT"` (unmatched requests return 500) — the test verifies ZERO requests to any `/rest/servicedeskapi/...` path.
+3. Wiremock asserts ZERO requests to `POST /rest/api/3/issue/SOFTWARE-1/attachments` (platform POST must not fire).
+
+**Action**: `jr issue attachment upload SOFTWARE-1 upload.txt --public --yes`
+
+**Expected (MUST-PASS)**:
+- Exit code = 64.
+- stderr contains the canonical string: `"--public is only supported on Jira Service Management (JSM) issues."` (BC-3.9.005 CANONICAL SOURCE — substring-matchable).
+- stdout is empty.
+- Zero requests to any `/rest/servicedeskapi/...` path (Wiremock strict-mode assertion via 0 unmatched servicedeskapi requests).
+- Zero requests to `POST /rest/api/3/issue/SOFTWARE-1/attachments` (platform POST not issued — no upload occurs before the guard fires).
+
+**Why hidden**: The `--public` guard on a non-JSM issue MUST fire before any upload attempt. A regression that skips the project-type check and attempts the servicedeskapi temporary-file POST would either (a) fail with a different exit code/message (if Wiremock strict-mode returns 500 for the unexpected servicedeskapi request) or (b) succeed with exit 0 if Wiremock accidentally mounts a servicedeskapi stub. The strict-mode zero-servicedeskapi-call assertion is the decisive signal — a success-only test would not detect it. The `--yes` flag bypasses the `--public` confirmation gate (BC-3.9.014) so the test is deterministic without TTY emulation.
+
+**Status**: MUST-PASS. Pins BC-3.9.005 (`--public` on non-JSM issue: exit 64, canonical message, no servicedeskapi calls, no platform POST). Negative-assertion holdout; purely offline (no real Jira required).
+
+**BC refs**: BC-3.9.005 (primary — `--public` non-JSM guard), BC-3.9.012 (upload error taxonomy: `--public` non-JSM row → exit 64), BC-3.9.014 (`--yes` bypasses `--public` confirmation gate, making test deterministic)
+
 
 **BC refs**: BC-2.7.011 (primary; sanitization steps 1–5), BC-2.7.008 (--all to out-dir confinement), BC-2.7.010 (SHA-1 collision prefix if sanitized names collide)

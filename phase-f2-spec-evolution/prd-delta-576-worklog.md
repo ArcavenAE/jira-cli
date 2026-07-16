@@ -511,3 +511,82 @@ Sweep result: 33 rows checked; 4 apparent drifts all confirmed as false positive
 - `check-spec-counts.sh`: `OK: all spec counts verified.`
 
 **Files edited:** `bc-3-issue-write.md` (4 sub-changes), `BC-INDEX.md` (1 row update). All via Python/Bash inline scripts (TD-031 workaround). `prd-delta-576-worklog.md` (this entry).
+
+---
+
+## Adversary Pass-4 Fix Round (P4-002..016, excluding P4-001/P4-014 HELD) — 2026-07-15
+
+**Constraint:** no new BC IDs, no count changes. Both guards must exit 0.
+**P4-001 and P4-014**: HELD per team-lead dispatch. P4-001 (single-download filename) pending research probe. P4-014 (holdout addition) bundled with P4-001 resolution (holdout count change requires joint authorization).
+
+### Disposition Table
+
+| Finding | Severity | File(s) | Action | Result |
+|---------|----------|---------|--------|--------|
+| P4-002 | MED | bc-2-issue-read.md | BC-2.7.008: added explicit "Batch metadata source" paragraph — filename/size/contentUrl from fields.attachment[], step-1 per-attachment GET skipped; cited H-003/H-007 topology confirmation. BC-2.7.009: same explicit note with cite to list fetch and skip of step-1 | DONE |
+| P4-003 | MED | bc-2-issue-read.md | EC-2.7.007-1 split: 404->exit 64 canonical string; new EC-2.7.007-1b: 403->exit 1 permission-denied. BC-2.7.012 unknown-AID prose split. BC-2.7.012 taxonomy table: single row split into two rows (404/64/canonical; 403/1/permission-denied) | DONE |
+| P4-004 | MED | bc-2-issue-read.md | EC-2.7.007-3: added DISTINCT HOST STRINGS requirement with rationale (reqwest host_str() ignores port; same-host-different-port = vacuous assertion) | DONE |
+| P4-005 | MED | bc-2-issue-read.md, bc-3-issue-write.md | BC-2.7.007: added Observability clause (--verbose-bodies logs headers+byte count only, never content; PII warning extends to attachments). BC-3.9.001: added Observability clause (--verbose-bodies logs placeholder "<streaming multipart body: N bytes from <path>>"; must not buffer stream) | DONE |
+| P4-006 | MED | bc-2-issue-read.md, bc-3-issue-write.md | BC-2.7.001: added ASSUMPTION clause (fields.attachment complete, not paginated; S1 delivery obligation: live-verify >100 attachment issue). BC-3.9.019: added Completeness dependency cross-ref to BC-2.7.001 ASSUMPTION | DONE |
+| P4-007 | MED | bc-2-issue-read.md | BC-2.7.007 Write-to-temp: mandated tmp_<random>_<basename>; removed .partial option; added EC-2.7.007-8 (concurrent downloads same out-dir: unique temps, last rename wins, no locking required) | DONE |
+| P4-008 | MED | bc-3-issue-write.md | BC-3.9.010: added Zero-count semantics paragraph (count=0 -> deleted:false; canonical shape {"count":0,"deleted":false,"ids":[]}; BC-3.9.019 as authority). EC-3.9.010-4: added all-404 edge case note (all AIDs 404 -> count=0, deleted:false, exit 0) | DONE |
+| P4-009 | MED | cross-cutting.md | BC-X.8.010 self-heal step 4: replaced blanket exit 64 with per-status mapping (404->64; 403->1; 401->2; 5xx/network->1) | DONE |
+| P4-010 | MED | bc-3-issue-write.md | BC-3.9.001: added CLI flags enumeration (KEY, FILE..., --public, --internal, --yes, --replace-existing, --dry-run, --output json, --no-input, --profile, --no-color). BC-3.9.016: added CLI flags enumeration (AID..., --issue, --older-than, --yes, --dry-run, --output json, --no-input, --profile, --no-color) | DONE |
+| P4-011 | LOW | prd-delta-576.md | BC Enumeration table: BC-3.9.020 row annotated "S4 (path c ships with S3)"; BC-3.9.012 row annotated "S3 (--public rows activate at S5)"; BC-3.9.017 row annotated "S3 (step-2 gate interaction completes at S5)" | DONE |
+| P4-012 | LOW | bc-3-issue-write.md | BC-3.9.003 step 1: added streaming-retry rebuild cross-ref to BC-3.9.001 (ADR-0017) | DONE |
+| P4-013 | LOW | bc-2-issue-read.md | BC-2.7.007 CLI flags: added --profile <NAME> and --no-color (now matches BC-2.7.001 pin style) | DONE |
+| P4-014 | LOW | — | HELD — holdout count change; will be authorized jointly with P4-001 resolution | HELD |
+| P4-015 | LOW | bc-2-issue-read.md | BC-2.7.011 containment precondition: expanded to cover three cases (a) --all/--newest out-dir EC-2.7.008-2; (b) single-id to cwd (cwd always exists, canonicalize trivially succeeds); (c) --out <PATH> parent-dir check EC-2.7.007-6 | DONE |
+| P4-016 | INFO | bc-2-issue-read.md | BC-2.7.012: added 404 body-surfacing asymmetry note (delete 404 surfaces Jira body per DEC-168; download metadata 404 = canonical string only; deliberate read-vs-write divergence) | DONE |
+
+**BC / holdout count invariant confirmed:** 657 BCs / 95 holdouts -- UNCHANGED.
+
+**Guard results (post-P4):**
+- `check-bc-cumulative-counts.sh`: `OK: all cumulative BC counts verified (657 total across 8 files; Surface H footer checked where present).`
+- `check-spec-counts.sh`: `OK: all spec counts verified.`
+
+**Files edited:** `bc-2-issue-read.md` (11 sub-changes), `bc-3-issue-write.md` (7 sub-changes), `cross-cutting.md` (1 sub-change), `prd-delta-576.md` (3 sub-changes). All via Python/Bash inline scripts (TD-031 workaround). `prd-delta-576-worklog.md` (this entry).
+
+
+---
+
+## P4-001 Resolution + P4-014 (2026-07-15 session continuation, research-backed)
+
+**Team-lead dispatch**: P4-001 resolution (research Part 3 ruling: bare basename for single --id) + P4-014 (now authorized: author H-NEW-ATTACHMENT-008). Joint holdout integration (95→96).
+**Constraint**: no new BC IDs; holdout count changes from 95→96; both guards must exit 0.
+
+### P4-001 Research-Backed Ruling Summary
+
+Single `--id` download → **bare sanitized basename** (no SHA-1 prefix). Rationale: curl convention (targeted single-file download should produce a human-readable filename); overwrite-refuse (`--force`) handles single-file collisions; the SHA-1 prefix exists to handle inter-attachment deduplication in batch paths where multiple attachments may share the same sanitized basename. Single-vs-batch asymmetry is deliberate and documented. Degenerate fallback: if sanitization returns None/empty → use attachment id as filename (curl `default` analogue; numeric id is always a safe filesystem name).
+
+**H-NEW-ATTACHMENT-002 confirmed correct as-is**: holdout already expected bare `notes.txt` (no SHA-1 prefix). No rewrite needed.
+
+### Disposition Table
+
+| Finding | Severity | File(s) | Action | Result |
+|---------|----------|---------|--------|--------|
+| P4-001 | HIGH | bc-2-issue-read.md, BC-INDEX.md | BC-2.7.010: heading updated; body rewritten to distinguish single-`--id` (bare sanitized basename) vs batch (SHA-1-prefix + sanitized-basename); degenerate-name fallback added (id-as-filename when sanitization yields None/empty; stderr info note: "warning: using id as filename for attachment <AID>…"); single-vs-batch asymmetry noted as deliberate (peer-convention + research Part 3). BC-2.7.007: output path sentence updated to "bare sanitized basename (no SHA-1 prefix)" with BC-2.7.010 cross-ref. Batch paths reference updated to "batch path: `<sha1-of-id>_<sanitized-basename>`". BC-2.7.011 step 5: rationale updated (214 bytes = shared uniform cap for both naming modes; batch 41+214=255; single-id 214 conservative ≤ 255). SEC-576-001 caller note: split into batch path (SHA-1 prefix satisfies device-name req) vs single-id bare path (implementation call site MUST apply `_`-prefix escape for Windows device names). Unit test matrix sentence updated to reflect call-site responsibility. BC-INDEX BC-2.7.007 row: added "default filename = bare sanitized basename (no SHA-1 prefix — single-id bare naming per BC-2.7.010)". BC-INDEX BC-2.7.010 row: full rewrite describing single-id bare / batch SHA-1 / degenerate fallback. | DONE |
+| P4-014 | LOW | holdout-scenarios.md, CANONICAL-COUNTS.md, prd-delta-576.md | H-NEW-ATTACHMENT-008 authored: `upload <non-JSM-KEY> <FILE> --public --yes` → exit 64, canonical string `"--public is only supported on JSM issues."`, zero servicedeskapi calls, zero platform POST; wiremock strict-mode; --yes bypasses confirmation gate (deterministic); BC refs BC-3.9.005/012/014. holdout-scenarios.md: frontmatter 95→96; preamble 95→96; Group 19 header `..007` → `..008`; H-008 appended after H-007. CANONICAL-COUNTS.md: holdout total 95→96; expected list updated (+H-NEW-ATTACHMENT-008); Group 19 entry extended (+8, cite BC-3.9.005); reconciliation note updated. prd-delta BC-3.9.005 row: annotated "*Holdout: H-NEW-ATTACHMENT-008 (P4-014)*". | DONE |
+
+**BC / holdout count change:** 657 BCs (UNCHANGED) / 96 holdouts (95→96 + H-NEW-ATTACHMENT-008).
+
+**Guard results (post-P4-001+P4-014): see below in report.**
+
+**Files edited:** `bc-2-issue-read.md` (BC-2.7.010 full rewrite; BC-2.7.007 output path + batch ref; BC-2.7.011 step 5 + SEC-576-001 + unit test matrix), `BC-INDEX.md` (BC-2.7.007 + BC-2.7.010 rows), `holdout-scenarios.md` (frontmatter + preamble + Group 19 header + H-008 body), `CANONICAL-COUNTS.md` (holdout total + expected list + Group 19 + reconciliation note), `prd-delta-576.md` (BC-3.9.005 holdout pin). All via Python/Bash inline scripts (TD-031 workaround). `prd-delta-576-worklog.md` (this entry).
+
+
+---
+
+## R14 Micro-Pass (2026-07-15, 6 single-value edits)
+
+| Finding | File | Change | Result |
+|---------|------|--------|--------|
+| GAP-R14-001 | prd-delta-576.md | frontmatter `holdout_count_after: 95` → `96` | DONE |
+| GAP-R14-002 | holdout-scenarios.md | Group 19 intro prose "7 new scenarios H-NEW-ATTACHMENT-001..007" → "8 new scenarios H-NEW-ATTACHMENT-001..008" (+ appended BC-3.9.005 to topic list) | DONE |
+| GAP-R14-003 | CANONICAL-COUNTS.md | reconciliation range "(57 → 95)" → "(57 → 96)" | DONE |
+| GAP-R14-004 | BC-INDEX.md | BC-2.7.007 row: appended "403 → exit 1 permission-denied (EC-2.7.007-1b)" | DONE |
+| GAP-R14-005 | BC-INDEX.md | BC-2.7.012 row: "(404/401/5xx/network)" → "(404/403/401/5xx/network)" | DONE |
+| GAP-R14-006 | prd-delta-576.md | CONS-576-005 row: "DEFERRED" → "RESOLVED (security-review-576.md verdict: APPROVE, status: final)" | DONE |
+
+**BC / holdout count: 657 BCs / 96 holdouts — UNCHANGED.**
+Guards: `check-spec-counts.sh`: OK. `check-bc-cumulative-counts.sh`: OK (657 / 8 files).

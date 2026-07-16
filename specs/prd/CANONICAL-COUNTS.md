@@ -108,16 +108,16 @@ Note: NFR-O-K was merged into NFR-S-D at adversary Pass 7 (no net change). NFR-S
 
 ## Holdout Scenarios
 
-**Canonical holdout total: 95**
+**Canonical holdout total: 96**
 
 Verification command:
 ```bash
 grep -c '^### H-' .factory/specs/prd/holdout-scenarios.md
 ```
 
-Expected: 95 (H-001..H-047 + H-NEW-MP-001 + H-NEW-VERBOSE-001 + H-NEW-VERBOSE-002 + H-NEW-AUTH-002 + H-NEW-JSM-RT-001..H-NEW-JSM-RT-007 + H-CITE-001..H-CITE-003 + H-NEW-ADF-001..H-NEW-ADF-008 + H-NEW-SEC-001..H-NEW-SEC-002 + H-NEW-ADF-009..H-NEW-ADF-010 + H-NEW-EDIT-FIELD-001..H-NEW-EDIT-FIELD-002 + H-NEW-EDIT-TYPE-001..H-NEW-EDIT-TYPE-002 + H-NEW-CHANGELOG-001 + H-NEW-WORKLOG-ADD-001 + H-NEW-LINK-001 + H-NEW-QUEUE-VIEW-001 + H-NEW-LABEL-FORK-001 + H-NEW-DRY-RUN-001 + H-NEW-BOARD-VIEW-001 + H-NEW-COMMENT-001..H-NEW-COMMENT-005 + H-NEW-ATTACHMENT-001..H-NEW-ATTACHMENT-007)
+Expected: 96 (H-001..H-047 + H-NEW-MP-001 + H-NEW-VERBOSE-001 + H-NEW-VERBOSE-002 + H-NEW-AUTH-002 + H-NEW-JSM-RT-001..H-NEW-JSM-RT-007 + H-CITE-001..H-CITE-003 + H-NEW-ADF-001..H-NEW-ADF-008 + H-NEW-SEC-001..H-NEW-SEC-002 + H-NEW-ADF-009..H-NEW-ADF-010 + H-NEW-EDIT-FIELD-001..H-NEW-EDIT-FIELD-002 + H-NEW-EDIT-TYPE-001..H-NEW-EDIT-TYPE-002 + H-NEW-CHANGELOG-001 + H-NEW-WORKLOG-ADD-001 + H-NEW-LINK-001 + H-NEW-QUEUE-VIEW-001 + H-NEW-LABEL-FORK-001 + H-NEW-DRY-RUN-001 + H-NEW-BOARD-VIEW-001 + H-NEW-COMMENT-001..H-NEW-COMMENT-005 + H-NEW-ATTACHMENT-001..H-NEW-ATTACHMENT-008)
 
-Groups added since last reconciliation (57 → 95):
+Groups added since last reconciliation (57 → 96):
 - Group 8 (CI Citation Guard, 2026-06-19): H-CITE-001..H-CITE-003 (BC-X.13.001..003; S-MAINT-DEAD-CITATION-CI) — +3
 - Group 10 (ADF Markdown→ADF Feature Wave, D4 Burst 1 2026-06-26): H-NEW-ADF-001..H-NEW-ADF-008 (BC-7.2.009/010/011/003) — +8
 - Group 11 (SEC-001 ADF Recursion-Depth Guard, D4 Burst 2 2026-06-26): H-NEW-SEC-001..H-NEW-SEC-002 (BC-7.2.012) — +2
@@ -125,9 +125,9 @@ Groups added since last reconciliation (57 → 95):
 - Group 13 (Issue Edit / Changelog / Worklog / Links / Queue, F2 Burst 1 2026-06-30): H-NEW-EDIT-FIELD-001..H-NEW-EDIT-FIELD-002 + H-NEW-EDIT-TYPE-001..H-NEW-EDIT-TYPE-002 + H-NEW-CHANGELOG-001 + H-NEW-WORKLOG-ADD-001 + H-NEW-LINK-001 + H-NEW-QUEUE-VIEW-001 — +8
 - Group 14 (Label Routing Fork / Dry-Run / Board View, F2 Burst 2 2026-06-30): H-NEW-LABEL-FORK-001 + H-NEW-DRY-RUN-001 + H-NEW-BOARD-VIEW-001 — +3
 - Group 15 (Comment CRUD, SOH-COMMENT-CRUD-1 F2 2026-07-09/2026-07-10, DEC-168): H-NEW-COMMENT-001..H-NEW-COMMENT-005 (BC-3.5.005/008/004/010/003; issue #577) — +5
-- Group 19 (Attachment Write, SOH-ATTACHMENTS-1 adversary pass-1 round B, 2026-07-15): H-NEW-ATTACHMENT-001..H-NEW-ATTACHMENT-007 (BC-2.7.001/007/008/010/011 + BC-3.9.001/015..020; issues #576 #585) — +7
+- Group 19 (Attachment Write, SOH-ATTACHMENTS-1 adversary pass-1 round B + P4-014, 2026-07-15): H-NEW-ATTACHMENT-001..H-NEW-ATTACHMENT-008 (BC-2.7.001/007/008/010/011 + BC-3.9.001/005/015..020; issues #576 #585) — +8
 
-_Note: holdout-scenarios.md frontmatter `total_holdouts: 95` counts all holdout entries; the grep count of `^### H-` headings also returns 95. The frontmatter count (95) is authoritative. Last reconciled: 2026-07-15 (SOH-ATTACHMENTS-1 adversary pass-1 round B; +H-NEW-ATTACHMENT-001..007)._
+_Note: holdout-scenarios.md frontmatter `total_holdouts: 96` counts all holdout entries; the grep count of `^### H-` headings also returns 96. The frontmatter count (96) is authoritative. Last reconciled: 2026-07-15 (SOH-ATTACHMENTS-1 P4-014; +H-NEW-ATTACHMENT-008 — BC-3.9.005 --public non-JSM guard)._
 
 ---
 

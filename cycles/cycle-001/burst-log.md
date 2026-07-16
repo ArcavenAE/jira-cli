@@ -5028,3 +5028,22 @@ Displaced to make room for SOH-ATTACHMENTS-1 adversary pass-2 remediation step r
 | Step | Agent | Status | Output |
 |------|-------|--------|--------|
 | **RELEASE v0.6.0-dev.10 SHIPPED (2026-07-15): bump PR #623 @ 56d5126 (user-merged; fresh-eyes APPROVE posted); annotated tag v0.6.0-dev.10 on develop @ 56d5126; workflow run 29385074375 SUCCESS (10 assets). Bundle SOH-COMMENT-CRUD-1 FULLY COMPLETE (D-168..D-176, 5 stories, 4 waves, 13 PRs #610..#623, issue #577 CLOSED). Session review DISPATCHED.** | state-manager | COMPLETE | develop @ 56d5126; all worktrees cleaned; pipeline at steady state (3 permanent worktrees). |
+
+
+---
+
+## Archived Phase Progress row (2026-07-16, adversary-pass-4 remediation burst)
+
+Displaced to make room for SOH-ATTACHMENTS-1 F2 ADVERSARY PASS-4 REMEDIATED (2026-07-16) row per keep-5 rule.
+
+| Phase | Status | Completed | Gate | Notes |
+|-------|--------|-----------|------|-------|
+| **SOH-ATTACHMENTS-1 F2 AUTHORING COMPLETE (2026-07-15) — 27 BCs (2.7×12, 3.9×14, X.8.010) via 3 create/integrate sub-bursts; ADR-0017 Accepted (post-audit: 2 directed + 4 audit fixes); security-review-576 SPEC-CHANGES-REQUIRED → 7 findings APPLIED → re-verified APPROVE final; consistency piecewise trajectory 7→6→2→3(INFO)→CONSISTENT (r1..r5); guards green 651/8 surfaces throughout. Gate: adversarial convergence in flight.** | **F2 AUTHORING COMPLETE** | **2026-07-15** | **Adversarial convergence in flight.** | `phase-f2-spec-evolution/prd-delta-576.md`, `phase-f2-spec-evolution/security-review-576.md`, `specs/architecture/decisions/ADR-0017-first-multipart-streaming-http-surface.md` |
+
+### Archived Current Phase Steps row (adversary-pass-4 remediation burst)
+
+Displaced to make room for SOH-ATTACHMENTS-1 adversary pass-4 remediation step row per keep-5 rule.
+
+| Step | Agent | Status | Output |
+|------|-------|--------|--------|
+| **SOH-ATTACHMENTS-1 F1 GATE APPROVED (DEC-179, 2026-07-15) — issues #576+#585; research 2 parts (attachments API, JSM visibility); delta analysis Rev 2 (5 stories, 1 wave, ~27 BCs); gate DEC-179; F2 spec evolution DISPATCHED.** | state-manager | IN PROGRESS | `research/issue-576-attachments-api-2026-07-15.md`; `phase-f1-delta-analysis/impact-boundary-576.md`; F2 in flight. |

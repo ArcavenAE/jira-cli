@@ -740,7 +740,7 @@ When `jr issue attachment upload <KEY> --public` (or `--internal`) resolves the 
 1. Delete the cache entry for `(profile, projectKey)`.
 2. Re-run the full resolution chain once (paginated `GET /rest/servicedeskapi/servicedesk` → match `projectKey` → cache the new ID).
 3. Re-attempt step 1 with the re-resolved ID.
-4. If the re-resolved ID also returns 404 or 403, surface the second HTTP error to the user (exit 64).
+4. If the re-resolved ID also fails, apply per-status exit mapping: 404 → exit 64 (service desk not found / attachment API not accessible: `"Service desk for <projectKey> not found after refresh."`); 403 → exit 1 (permission denied); 401 → exit 2 (not authenticated); 5xx / network → exit 1 with API error or connectivity message. The blanket exit 64 for all second-failure codes is INCORRECT — 403 is a permission error (exit 1), not a user input error (exit 64).
 
 This self-healing prevents a permanent failure loop after a Jira service desk reconfiguration that changes the `serviceDeskId`. The retry is a single-attempt guard — it does not loop. A step-1 failure with a freshly resolved ID is surfaced immediately as a genuine error, not a cache issue.
 

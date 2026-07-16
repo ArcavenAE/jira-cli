@@ -44,7 +44,7 @@ Four HTTP call implementations against the Jira REST Attachment API:
 | `upload_attachment(client, key, paths)` | `POST /rest/api/3/issue/{key}/attachments` | POST multipart; requires `X-Atlassian-Token: no-check` |
 | `delete_attachment(client, aid)` | `DELETE /rest/api/3/attachment/{id}` | DELETE (empty 204) |
 
-`list_attachments` does not paginate — Jira returns the full `fields.attachment` array in one call (no cursor or pagination envelope; confirmed by Jira REST API v3 schema). `get_attachment_content` streams bytes to disk rather than buffering in memory (use `reqwest::Response::bytes_stream()` + `tokio::io::copy`); avoids OOM for large attachments.
+`list_attachments` does not paginate — Jira returns the full `fields.attachment` array in one call (no cursor or pagination envelope; confirmed by Jira REST API v3 schema). **[P4-006 retro-annotation 2026-07-15: this claim is OVERSTATED — the research never validated the >100-attachment boundary; the v3 schema confirms no pagination envelope but does not document behaviour at large N. Downgrade to: ASSUMED complete per current API schema; NOT verified at large N. S1 delivery obligation: live-verify against a >100-attachment issue or document the unverified bound. BC-2.7.001 assumption clause governs.]** `get_attachment_content` streams bytes to disk rather than buffering in memory (use `reqwest::Response::bytes_stream()` + `tokio::io::copy`); avoids OOM for large attachments.
 
 #### `src/cli/issue/attachments.rs` — **NEW**
 
@@ -741,3 +741,16 @@ The single-file download flow (`attachment download <KEY> --id <AID>`) is pinned
 - Emit a useful progress/confirmation line to stderr before the download begins
 
 **No new function needed** — `get_attachment_metadata` from R3.7 is the sole addition. The S2 story plan must invoke `get_attachment_metadata` as the first step of `handle_attachment_download` when `--id` is supplied, then stream via `get_attachment_content`. The revised function call sequence for single `--id` download is: `get_attachment_metadata` → path construction + overwrite check → `get_attachment_content` (streaming write).
+
+### R3.10 Single `--id` download filename convention (P4-001 ruling)
+
+**Ruling (2026-07-15):** The default output filename for a single `--id` download is the **bare sanitized basename** — no SHA-1 prefix. The SHA-1 `<sha1>_<sanitized-basename>` convention from BC-2.7.010 applies to **batch-only** paths (`--all`, `--newest N`). The single-vs-batch asymmetry is deliberate.
+
+| Mode | Default filename | Rationale |
+|------|-----------------|-----------|
+| `download --id <AID>` | `<sanitized-basename>` | Peer tool convention (unanimous across `gh`, `curl`, browser downloads); a user downloading one known file expects the bare name, not a hash prefix |
+| `download --all` / `--newest N` | `<sha1>_<sanitized-basename>` | Batch idempotency: SHA-1 prefix prevents silent overwrite on re-run when two attachments share a filename; also prevents collision between same-name attachments on different issues |
+
+**Degenerate-name fallback:** if the sanitized basename is empty (e.g., filename was entirely path-separators or control characters and nothing survives sanitization), fall back to the attachment ID as the filename (`<aid>` for single; `<sha1>_<aid>` for batch). This ensures the output path is always non-empty and deterministic.
+
+**BC-2.7.010 scope correction:** BC-2.7.010 as recorded in Rev 1 states "default output path is `<sha1>_<sanitized-basename>`" without distinguishing single vs. batch. The F2 spec must split this into two sub-clauses: `(EC-2.7.010-1) single --id → bare sanitized basename (+ degenerate fallback to AID)` and `(EC-2.7.010-2) batch → <sha1>_<sanitized-basename>`. BC-2.7.010 total BC count is unchanged; only its invariant text is refined.

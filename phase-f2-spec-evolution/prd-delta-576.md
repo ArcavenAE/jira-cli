@@ -9,7 +9,7 @@ spec_version_after: 1.3.45
 bc_count_before: 624
 bc_count_after: 657
 holdout_count_before: 88
-holdout_count_after: 95
+holdout_count_after: 96
 ---
 
 # PRD Delta — SOH-ATTACHMENTS-1 Attachment Read/Write (issues #576 + #585)
@@ -67,22 +67,22 @@ BC-2.7.002. All design decisions ratified by DEC-179.
 | BC-3.9.002 | JSM upload, no flag → platform POST (internal by default, P2-4a) |
 | BC-3.9.003 | --public → servicedeskapi two-step; DEC-174 confirmation gate; --yes bypass |
 | BC-3.9.004 | --internal → two-step public:false; no gate; non-JSM = silent no-op (OQ-9) |
-| BC-3.9.005 | --public on non-JSM → exit 64 |
+| BC-3.9.005 | --public on non-JSM → exit 64 | *Holdout: H-NEW-ATTACHMENT-008 (P4-014)* |
 | BC-3.9.006 | temporaryAttachmentId ~1h TTL; second-step failure retry hint |
 | BC-3.9.007 | Post-upload echo; P2-3c deferred; JSDCLOUD-10841 ban |
 | BC-3.9.008 | attachment delete → DELETE/id; 404 = exit 64 + body (DEC-168) |
 | BC-3.9.009 | attachment upload --output json shape; #526 invariant |
 | BC-3.9.010 | attachment delete --output json shape |
 | BC-3.9.011 | --public --output json deferred-probe (P2-3c); S5 obligation |
-| BC-3.9.012 | Upload error taxonomy |
+| BC-3.9.012 | Upload error taxonomy; S3 (--public non-JSM exit 64 row and non-interactive without --yes row activate at S5 — --public path is S5-only) |
 | BC-3.9.013 | Delete error taxonomy |
 | BC-3.9.014 | --public confirmation gate mechanics: eprint!+read_line, NOT dialoguer |
 | BC-3.9.015 | delete single-ID confirmation gate: eprint!+read_line; non-interactive exit 64; --yes bypass; cancel `{"cancelled":true,"deleted":false}` |
 | BC-3.9.016 | --older-than always requires --yes (no interactive prompt for bulk); --dry-run exempt; clap mutual-exclusion positional-AID vs --issue/--older-than |
-| BC-3.9.017 | --replace-existing: delete-ALL-same-filename (OQ-6) then upload; non-atomic race documented (JRACLOUD-96384/-78388); MUST NOT assert atomicity |
+| BC-3.9.017 | --replace-existing: delete-ALL-same-filename (OQ-6) then upload; non-atomic race documented (JRACLOUD-96384/-78388); MUST NOT assert atomicity; S3 (step-2 gate interaction with --public confirmation gate completes at S5) |
 | BC-3.9.018 | --replace-existing zero-match: skip delete phase; silent idempotent plain upload |
 | BC-3.9.019 | --older-than: --issue KEY required; duration.rs parser; chrono client-side comparison; invalid duration exit 64; bulk JSON `{"count":N,"deleted":true,"ids":[]}` |
-| BC-3.9.020 | --dry-run multi-attachment preview: no mutations; JSON `{"attachments":[{id,filename}],"dryRun":true,"ids":[...]}`; single-ID --dry-run = stderr hint + exit 0 |
+| BC-3.9.020 | --dry-run multi-attachment preview: no mutations; JSON `{"attachments":[{filename,id}],"dryRun":true,"ids":[...]}`; single-ID --dry-run = stderr hint + exit 0; S4 (path c — upload --replace-existing --dry-run — ships with S3) |
 
 ### BC-X.8.010 — serviceDeskId cache (cross-cutting.md)
 
@@ -172,7 +172,7 @@ CONS-576-005 routed to security reviewer.
 | CONS-576-002 | LOW | bc-3-issue-write.md | All BC-3.9.x Source citations: interactions.rs/issues.rs/jsm/requests.rs → attachments.rs/jira/attachments.rs/jsm/attachments.rs | APPLIED |
 | CONS-576-003 | LOW | cross-cutting.md | BC-X.8.010 Source: jsm/requests.rs::attach_temporary_file → jsm/attachments.rs::attach_temporary_file | APPLIED |
 | CONS-576-004 | LOW | BC-INDEX.md | All 11 remaining Section 2.7 rows Source: interactions.rs → attachments.rs | APPLIED |
-| CONS-576-005 | LOW | (routed to security reviewer) | security-review-576.md verdict annotation | DEFERRED |
+| CONS-576-005 | LOW | (routed to security reviewer) | security-review-576.md verdict annotation | RESOLVED (security-review-576.md verdict: APPROVE, status: final) |
 | CONS-576-006 | LOW | impact-boundary-576.md | §R2.2 annotation: --internal non-JSM exit-64 clause superseded by OQ-9 silent no-op | APPLIED |
 | CONS-576-007 | INFO | spec-changelog.md | [1.3.43] ADR-0017 reference: "planned" → "Accepted 2026-07-15" with path | APPLIED |
 
