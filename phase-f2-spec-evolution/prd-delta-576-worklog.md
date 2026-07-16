@@ -745,3 +745,20 @@ Guards: `check-spec-counts.sh`: OK. `check-bc-cumulative-counts.sh`: OK (657 / 8
 
 **BC / holdout count: 657 BCs / 96 holdouts — UNCHANGED.**
 Guards: `check-spec-counts.sh`: OK. `check-bc-cumulative-counts.sh`: OK (657 / 8 files).
+
+---
+
+### Round P10 — 2026-07-16
+
+**Adversary pass 10 fix round (2 LOW + 1 INFO)**
+
+| Finding | Severity | Status | Summary |
+|---|---|---|---|
+| P10-001 | LOW | APPLIED | BC-3.9.001 gains Content-Disposition filename clause: part filename value MUST be `Path::file_name(<FILE>)` (basename); Jira derives `attachment.filename` verbatim from this value. BC-3.9.017 step 1 gains cross-ref: "the invariant that `attachment.filename == basename(<FILE>)` is pinned by BC-3.9.001's Content-Disposition filename clause." |
+| P10-002 | LOW | APPLIED | EC-2.7.007-7 and EC-2.7.008-6 (download manifest JSON paths) gain "Output MUST route through `output::render_json` (#526 invariant)." These were the only attachment JSON paths missing the #526 sentence. |
+| P10-003 | INFO | APPLIED | EC-2.7.009-1: `--newest` pinned with `allow_negative_numbers = true` (clap config) so `-5` reaches handler as valid i64 → exit 64. Without this flag, negative values would be intercepted by clap as unknown flags (exit 2), contradicting the documented exit-64 path. |
+
+**Changelog-sync (self-administered)**: v1.3.50 PATCH entry inserted in `spec-changelog.md`; `prd-delta-576.md` `spec_version_after` → 1.3.50; bc-3-issue-write.md frontmatter: v1.3.50 trace prepended + `_Last updated` prepended.
+
+**BC / holdout count: 657 BCs / 96 holdouts — UNCHANGED.**
+Guards: `check-spec-counts.sh`: OK. `check-bc-cumulative-counts.sh`: OK (657 / 8 files).

@@ -7,6 +7,25 @@ project: "jr (jira-cli)"
 
 Track all spec version changes. Most recent version first.
 
+## [1.3.50] - 2026-07-16
+
+### Type: PATCH
+
+**Summary**: Adversary pass 10 (P10) fix round — Content-Disposition filename invariant pinned; #526 render_json obligation added to download manifest EC paths; allow_negative_numbers clap pin for --newest.
+
+**Changes**:
+
+- `.factory/specs/prd/bc-3-issue-write.md` (MODIFIED): P10-001 — BC-3.9.001 gains explicit Content-Disposition filename clause: part filename value MUST be `Path::file_name(<FILE>)` (basename); Jira derives `attachment.filename` verbatim from this value. BC-3.9.017 step 1 gains cross-ref pinning the match correctness on this invariant.
+- `.factory/specs/prd/bc-2-issue-read.md` (MODIFIED): P10-002 — EC-2.7.007-7 and EC-2.7.008-6 gain "Output MUST route through `output::render_json` (#526 invariant)" sentence (the two download-manifest JSON paths previously missing it). P10-003 — EC-2.7.009-1 gains `allow_negative_numbers = true` clap pin: without it, `-5` would be intercepted as an unknown flag (clap exit 2), not reach the handler for the documented exit-64 path.
+
+**Impact**:
+
+| Dimension | Value |
+|---|---|
+| BC count | 657 (unchanged) |
+| Holdout count | 96 (unchanged) |
+| Spec version | 1.3.49→1.3.50 |
+
 ## [1.3.49] - 2026-07-16
 
 ### Type: MINOR

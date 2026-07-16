@@ -746,7 +746,7 @@ On success, a completion hint is emitted to stderr: `"Downloaded: <path> (<size_
 **EC-2.7.007-5** (Ctrl+C / SIGINT mid-stream): temporary file (`tmp_<random>`) deleted; exit 130; no final path written.
 
 **EC-2.7.007-8** (concurrent downloads, same out-dir): if two `jr` processes download the same attachment to the same output directory simultaneously, each writes to its own uniquely-named `tmp_<random>` file. There is no interleaving of temp files. When both rename to the final path, the last successful rename wins (standard OS atomic-rename semantics); the earlier written file is silently overwritten. This is safe: both processes produce identical bytes (same source URL), so the last rename wins without data loss. No locking between processes is required.
-**EC-2.7.007-7** (`--output json` success shape for `--id`): `{"downloaded":[{"filename":"<name>","id":"<AID>","path":"<written path>","size":N}]}`; one-element `downloaded` array; inner keys in alphabetical order (`filename` < `id` < `path` < `size`); stdout only; exit 0. `path` is the absolute or relative path actually written (per BC-2.7.010). `size` is the byte count written. No stderr output in JSON mode.
+**EC-2.7.007-7** (`--output json` success shape for `--id`): `{"downloaded":[{"filename":"<name>","id":"<AID>","path":"<written path>","size":N}]}`; one-element `downloaded` array; inner keys in alphabetical order (`filename` < `id` < `path` < `size`); stdout only; exit 0. `path` is the absolute or relative path actually written (per BC-2.7.010). `size` is the byte count written. No stderr output in JSON mode. Output MUST route through `output::render_json` (#526 invariant).
 
 **Observability** (`--verbose` / `--verbose-bodies`): `--verbose` logs method + URL only (unchanged CLAUDE.md rule SD-003). `--verbose-bodies` MUST NOT attempt to materialize the streaming response body — the body is a potentially large binary stream and buffering it for logging would defeat the OOM-safety design of streaming download. On a download response, `--verbose-bodies` MUST log response headers and the final written byte count ONLY (e.g., `<download body: N bytes written to <path>>`), never content. The PII warning that `--verbose-bodies` emits extends to attachment content by extension (attachment payloads may contain credentials, personal data, or confidential documents).
 
@@ -775,7 +775,7 @@ On completion a summary hint emits to stderr: `"Downloaded N of M attachments to
 **EC-2.7.008-3** (`--id` and `--all` mutual exclusion): clap enforces `conflicts_with` → exit 2 when both are supplied simultaneously.
 **EC-2.7.008-4** (`--out-dir` path exists but is not a directory): exit 64: `"Not a directory: <PATH>"`. A regular file at the specified path is rejected; the handler requires a directory.
 **EC-2.7.008-5** (`--out-dir` path does not exist): supersedes EC-2.7.008-2 wording clarification — same exit 64: `"Output directory does not exist: <DIR>"`.
-**EC-2.7.008-6** (`--output json` success shape for `--all` / `--newest N`): `{"downloaded":[{"filename":"<name>","id":"<AID>","path":"<written path>","size":N},…]}`; N-element `downloaded` array (one entry per file written; files skipped due to collision or `--filter` are NOT in the array); inner keys alphabetical; stdout only; exit 0. No stderr hints (truncation, skips) in JSON mode. Shape aligns with EC-2.7.007-7 for a uniform download response type.
+**EC-2.7.008-6** (`--output json` success shape for `--all` / `--newest N`): `{"downloaded":[{"filename":"<name>","id":"<AID>","path":"<written path>","size":N},…]}`; N-element `downloaded` array (one entry per file written; files skipped due to collision or `--filter` are NOT in the array); inner keys alphabetical; stdout only; exit 0. No stderr hints (truncation, skips) in JSON mode. Shape aligns with EC-2.7.007-7 for a uniform download response type. Output MUST route through `output::render_json` (#526 invariant).
 
 
 
@@ -799,7 +799,7 @@ If the issue has fewer than N attachments after filtering, all available attachm
 
 `--newest N` is mutually exclusive with `--id` (clap `conflicts_with` → exit 2). `--newest N` combined with `--all` is rejected (clap `conflicts_with` → exit 2). Overwrite and `--force` behavior follow BC-2.7.007/BC-2.7.008.
 
-**EC-2.7.009-1** (N ≤ 0 — clap parses `--newest` as a signed integer i64; app validates N ≥ 1): if clap parses a valid i64 value and the handler finds N ≤ 0, exit 64 before any HTTP call: `"--newest requires a positive integer."` N = 0 is rejected (zero-download is ambiguous, not silently accepted).
+**EC-2.7.009-1** (N ≤ 0 — clap parses `--newest` as a signed integer i64; app validates N ≥ 1): `--newest` MUST be declared with `allow_negative_numbers = true` so that negative values (e.g. `-5`) reach the handler as a valid i64 rather than being intercepted by clap as an unknown flag (clap exit 2). The handler validates N ≥ 1; if it finds N ≤ 0, exit 64 before any HTTP call: `"--newest requires a positive integer."` N = 0 is rejected (zero-download is ambiguous, not silently accepted).
 **EC-2.7.009-2** (non-integer value for `--newest`): clap cannot parse the value as i64 → clap exit 2 with a usage error; no HTTP call. Message is clap-generated (not controlled by `jr` application code).
 
 **Trace**: F2 spec evolution (SOH-ATTACHMENTS-1 2026-07-15; DEC-179 ratified design)
