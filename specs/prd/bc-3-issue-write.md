@@ -3638,7 +3638,7 @@ The confirmation gate for `jr issue attachment upload --public` uses the DEC-174
 
 **Confirm path** (user selects Y, or `--yes` supplied): `DELETE /rest/api/3/attachment/{id}` is issued; success per BC-3.9.008; error taxonomy per BC-3.9.013.
 
-**Metadata-fetch failure**: if the pre-prompt `GET /rest/api/3/attachment/{id}` returns 404, exit 64 immediately: `"Attachment <AID> not found or not accessible."` — mirrors BC-3.9.013 / BC-3.9.008 pre-flight guard; no DELETE issued.
+**Metadata-fetch failure**: if the pre-prompt `GET /rest/api/3/attachment/{id}` returns 404, exit 64 immediately: `"Attachment <AID> not found or not accessible."` — aligns with the read-path 404 convention (canonical string only, per BC-2.7.012's read-vs-write divergence); differs from BC-3.9.008's DELETE 404 (canonical + Jira body per DEC-168) because the pre-prompt fetch is a read GET, not a write operation; no DELETE issued.
 
 **Output channel invariant**: all gate prompts are written to STDERR only. STDOUT is clean — no prompt text; `--output json` piping is unaffected.
 

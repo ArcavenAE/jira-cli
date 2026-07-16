@@ -693,9 +693,6 @@ When `<KEY>` does not exist or the authenticated user lacks Browse Projects perm
 | 401 | 2 | Not authenticated + `jr auth login` hint |
 | 5xx | 1 | `API error (<N>)` |
 | Network error | 1 | Connectivity hint |
-| Disk full (ENOSPC) writing to temp file | 1 | `"Disk full: not enough space to write <path>"` |
-| Permission denied on target directory (EACCES / read-only FS) | 1 | `"Permission denied: cannot write to <dir>"` |
-| Target directory not writable (other OS write error) | 1 | OS error message surfaced on stderr |
 
 **Trace**: F2 spec evolution (SOH-ATTACHMENTS-1 2026-07-15; DEC-179 ratified design; follows BC-2.3.033/034 universal error pattern)
 
@@ -766,7 +763,7 @@ On success, a completion hint is emitted to stderr: `"Downloaded: <path> (<size_
 
 `jr issue attachment download <KEY> --all` downloads all attachments on the issue to a directory. Default target is the current working directory; `--out-dir <DIR>` overrides. The handler first fetches the full attachment list (same `GET /rest/api/3/issue/{key}?fields=attachment` call as `attachment list`). **Batch metadata source**: filename, size, and `contentUrl` for each attachment are taken directly from `fields.attachment[]` in this list response. The per-attachment step-1 `GET /rest/api/3/attachment/{id}` metadata fetch used by single-`--id` download (BC-2.7.007) is SKIPPED on batch paths — that step is only needed on the single-ID path to obtain the canonical filename when no list is available. The handler then issues the streaming step-2 `GET /rest/api/3/attachment/content/{id}` for each attachment (the download step from BC-2.7.007 wire path). H-NEW-ATTACHMENT-003 and H-NEW-ATTACHMENT-007 holdout mock topologies correctly reflect this: they mount only the issue-fetch GET and per-attachment content GETs, not per-attachment metadata GETs. Each file is named using BC-2.7.010 (batch path: `<sha1-of-id>_<sanitized-basename>`) within the target directory.
 
-**Overwrite behavior with `--all`**: without `--force`, per-file collision is handled fail-soft — the colliding file is skipped with a per-file stderr warning (e.g., `"Skipping <filename>: file already exists. Use --force to overwrite."`). The download continues for remaining attachments. With `--force`, existing files are overwritten silently.
+**Overwrite behavior with `--all`**: without `--force`, per-file collision is handled fail-soft — the colliding file is skipped with a per-file stderr warning (e.g., `"Skipping <filename>: file already exists. Use --force to overwrite."`). The download continues for remaining attachments. With `--force`, existing files are overwritten silently. **Collision-skip is a NON-ERROR**: the overall exit code is 0 even if some files were skipped for being pre-existing (same class as `--filter` exclusions). Exit 1 is scoped exclusively to content-GET/stream failures (EC-2.7.008-7/8).
 
 On completion a summary hint emits to stderr: `"Downloaded N of M attachments to <dir>."` (N = successful, M = total).
 
@@ -779,7 +776,7 @@ On completion a summary hint emits to stderr: `"Downloaded N of M attachments to
 **EC-2.7.008-3** (`--id` and `--all` mutual exclusion): clap enforces `conflicts_with` → exit 2 when both are supplied simultaneously.
 **EC-2.7.008-4** (`--out-dir` path exists but is not a directory): exit 64: `"Not a directory: <PATH>"`. A regular file at the specified path is rejected; the handler requires a directory.
 **EC-2.7.008-5** (`--out-dir` path does not exist): supersedes EC-2.7.008-2 wording clarification — same exit 64: `"Output directory does not exist: <DIR>"`.
-**EC-2.7.008-6** (`--output json` success shape for `--all` / `--newest N`): `{"downloaded":[{"filename":"<name>","id":"<AID>","path":"<written path>","size":N},…]}`; N-element `downloaded` array (one entry per file written; files skipped due to collision or `--filter` are NOT in the array); inner keys alphabetical; stdout only; exit 0 (all succeeded) or exit 1 (partial failure — per EC-2.7.008-7/8; the manifest is still emitted even when exit code is 1). No stderr hints (truncation, skips) in JSON mode. Shape aligns with EC-2.7.007-7 for a uniform download response type. Output MUST route through `output::render_json` (#526 invariant).
+**EC-2.7.008-6** (`--output json` success shape for `--all` / `--newest N`): `{"downloaded":[{"filename":"<name>","id":"<AID>","path":"<written path>","size":N},…]}`; N-element `downloaded` array (one entry per file written; files skipped due to collision or `--filter` are NOT in the array); inner keys alphabetical; stdout only; exit 0 (all attempted downloads either succeeded or were skipped as pre-existing — collision-skips are NON-ERROR, same class as `--filter` exclusions) or exit 1 (content-GET/stream failure — per EC-2.7.008-7/8; the manifest is still emitted even when exit code is 1). No stderr hints (truncation, skips) in JSON mode. Shape aligns with EC-2.7.007-7 for a uniform download response type. Output MUST route through `output::render_json` (#526 invariant).
 
 
 
@@ -922,6 +919,9 @@ Since step 4 of sanitization already strips `../`, `/`, `\`, `:`, the join will 
 | KEY or AID 401 | 2 | Not authenticated + `jr auth login` hint |
 | KEY or AID 5xx | 1 | `API error (<N>)` (single mode; batch mode: per-file fail-soft per BC-2.7.008) |
 | Network error | 1 | Connectivity hint (single mode; batch mode: per-file fail-soft per BC-2.7.008) |
+| Disk full (ENOSPC) writing to temp file | 1 | `"Disk full: not enough space to write <path>"` (single mode; batch mode: per-file fail-soft per BC-2.7.008) |
+| Permission denied on target directory (EACCES / read-only FS) | 1 | `"Permission denied: cannot write to <dir>"` (single mode; batch mode: per-file fail-soft per BC-2.7.008) |
+| Target directory not writable (other OS write error) | 1 | OS error message surfaced on stderr (single mode; batch mode: per-file fail-soft per BC-2.7.008) |
 
 **Trace**: F2 spec evolution (SOH-ATTACHMENTS-1 2026-07-15; DEC-179 ratified design; research §6 JRACLOUD-96384/-78388 VERIFIED)
 

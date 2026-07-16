@@ -1478,3 +1478,20 @@ STRICT convergence. Counters: BC 612, Holdouts 83, Stories 102. develop @ 0d8a8a
 | **Standing rules** | User merges ALL PRs on GitHub personally (DEC-173); every PR gets fresh-eyes pr-reviewer pre-merge; COMMENTED = approve-equivalent (same-account); implementers hard-forbidden from push/PR/improvise (STOP-and-report). |
 | **Pending nits** | BC-3.5.002 trailing period (cosmetic). |
 | **Resume command** | /vsdd-factory:next-step or new issue intake. |
+
+---
+
+### Checkpoint archived: 2026-07-16 — SOH-ATTACHMENTS-1 F2 pass-12 REMEDIATED; pass-13 DISPATCHED
+
+(Displaced by: SESSION WRAP 2026-07-16 — human /wrap mid-F2-adversarial-loop; pass-13 remediated + committed this wrap; r23 written but unread)
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-07-16 (SOH-ATTACHMENTS-1 F2 adversary pass-12 REMEDIATED; pass-13 DISPATCHED; spec v1.3.52). |
+| **Position** | SOH-ATTACHMENTS-1 F1 APPROVED (DEC-179). F2 spec evolution in flight — adversary passes 1-12 remediated; pass 13 in flight. develop @ 56d5126 (v0.6.0-dev.10). BC 657; Stories 111; Holdouts 96; VP 30. No feature worktrees yet. Spec v1.3.52. |
+| **Delivered** | Wave A (S-577-1 #610 907a795 + S-577-2 #611 bbe54e9 + fixes #613+#614; STRICT 5 passes). Wave B (S-577-3 #615 d0faf1c; STRICT 3 passes). Wave C: S-577-4 #617 @ f9ad71e; S-577-6 #616 @ d14fb10; docs #618 @ 5433dc3; src-comment #619 @ a486f79; integration STRICT CONVERGED. Wave D: S-577-5 PR #620 @ 4dcec9f (closes #577); docs PR #621 @ f4ab77b; integration STRICT CONVERGED. F4 PHASE COMPLETE. F5 STRICT. F6 GO. F7 APPROVED D-176. Release PR #623 @ 56d5126. IP-577 11/11 ROUTED-UPSTREAM (D-177). |
+| **In flight** | F2 spec evolution (phase-f2-spec-evolution/ — in flight for SOH-ATTACHMENTS-1; adversary pass 13 dispatched). |
+| **Residuals (next session)** | (1) ~~EJ nightly probe~~ RESOLVED — nightly run 29398774009 ok on develop @ 56d5126; BC-3.5.006 SATISFIED (spec v1.3.42; PR #625 HELD for human merge; CHANGELOG MERGE-claim now empirically backed; comment-crud.md reconciled via PR #625); (2) stderr-hint follow-up story candidate (DEC-169 item 3); (3) BC-INDEX Source-column guard extension (upstream #656-adjacent, local candidate); (4) MUTANTS-BUNDLE-TIMEOUT-CALIBRATION (upstream #654); (5) advisory: CLAUDE_AUTOCOMPACT_PCT_OVERRIDE absent from .claude/settings.json (recommend 70 per ADR-026); (6) STATE.md compact-state optional next session. |
+| **Standing rules** | User merges ALL PRs on GitHub personally (DEC-173); every PR gets fresh-eyes pr-reviewer pre-merge with POSTED evidence; COMMENTED = approve-equivalent (same-account); implementers hard-forbidden from push/PR/improvise (STOP-and-report). DEC-128 in force. |
+| **Pending human decisions** | Merge PR #625 (docs/577-ej-probe-closeout; CI 14/14 green; HELD); merge #591 (MERGE-READY); #574 — approve held Actions run + contributor rebase; #598/#599 eligible 2026-07-16; #612 eligible 2026-07-20; #624 eligible 2026-07-22. FOUR orchestrator pattern-extension rulings for human ratification at F2 gate: (1) multi-AID delete → --yes bulk rule (ADV-576-P2-001; encoded in BC-3.9.016 + impact-boundary R3.8); (2) no-destructive-call-before-gate invariant (ADV-576-P2-003; encoded in BC-3.9.017 step 2 + impact-boundary R3.8b); (3) P4-001 bare-basename ruling (research-backed, orchestrator-adopted) — confirm at F2 gate; (4) R3.11 EOF→130 alignment (P5-001; supersedes the P2-era direction — EOF is exit 130, not cancel-exit-0). |
+| **Resume command** | /vsdd-factory:next-step (or new issue intake / maintenance trigger). |

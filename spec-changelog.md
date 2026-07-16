@@ -7,6 +7,27 @@ project: "jr (jira-cli)"
 
 Track all spec version changes. Most recent version first.
 
+## [1.3.53] - 2026-07-16
+
+### Type: PATCH
+
+**Summary**: Adversary pass 13 (P13) fix round — disk-write error rows relocated from BC-2.7.006 to BC-2.7.012; collision-skip NON-ERROR clause added to BC-2.7.008; BC-3.9.015 metadata-fetch 404 wording softened.
+
+**Changes**:
+
+- `.factory/specs/prd/bc-2-issue-read.md` (MODIFIED): P13-001 — three disk-write error rows (ENOSPC, EACCES/read-only, other OS write error) removed from BC-2.7.006's table (they are impossible on a read-only list command) and added to BC-2.7.012's download error taxonomy with the "(single mode; batch mode: per-file fail-soft per BC-2.7.008)" qualifier consistent with the 5xx/network rows. P13-002 — BC-2.7.008 Overwrite paragraph gains "Collision-skip is a NON-ERROR" clause; EC-2.7.008-6 "all succeeded" phrase updated to "all attempted downloads either succeeded or were skipped as pre-existing — collision-skips are NON-ERROR".
+- `.factory/specs/prd/bc-3-issue-write.md` (MODIFIED): P13-003 — BC-3.9.015 Metadata-fetch failure paragraph softened: "mirrors BC-3.9.013 / BC-3.9.008 pre-flight guard" replaced with "aligns with the read-path 404 convention (canonical string only, per BC-2.7.012's read-vs-write divergence); differs from BC-3.9.008's DELETE 404 (canonical + Jira body per DEC-168) because the pre-prompt fetch is a read GET".
+- `.factory/specs/prd/BC-INDEX.md` (MODIFIED): BC-2.7.012 description updated to list disk-write-ENOSPC/EACCES/other error classes (P13-001 relocated from BC-2.7.006).
+- `.factory/phase-f2-spec-evolution/prd-delta-576.md` (MODIFIED): ADV-007 disposition line gains bracketed correction note: "originally misapplied to BC-2.7.006; relocated to BC-2.7.012 at P13-001".
+
+**Impact**:
+
+| Dimension | Value |
+|---|---|
+| BC count | 657 (unchanged) |
+| Holdout count | 96 (unchanged) |
+| Spec version | 1.3.52→1.3.53 |
+
 ## [1.3.52] - 2026-07-16
 
 ### Type: PATCH

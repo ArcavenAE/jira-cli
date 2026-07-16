@@ -796,3 +796,21 @@ Guards: `check-spec-counts.sh`: OK. `check-bc-cumulative-counts.sh`: OK (657 / 8
 
 **BC / holdout count: 657 BCs / 96 holdouts — UNCHANGED.**
 Guards: `check-spec-counts.sh`: OK. `check-bc-cumulative-counts.sh`: OK (657 / 8 files).
+
+
+---
+
+### Round P13 — 2026-07-16
+
+**Adversary pass 13 fix round (1 MED + 1 LOW + 1 INFO)**
+
+| Finding | Severity | Status | Summary |
+|---|---|---|---|
+| P13-001 | MED | APPLIED | Three disk-write error rows (ENOSPC, EACCES/read-only, other OS write error) removed from BC-2.7.006's table (impossible on a read-only list command; ADV-007 was originally misapplied) and added to BC-2.7.012's download error taxonomy with per-batch-mode qualifier. BC-INDEX.md BC-2.7.012 row updated to name disk-write classes. prd-delta-576.md ADV-007 disposition gains bracketed correction note. |
+| P13-002 | LOW | APPLIED | BC-2.7.008 Overwrite paragraph gains explicit "Collision-skip is a NON-ERROR" clause: exit 0 applies even when files are skipped as pre-existing (same class as `--filter` exclusions); exit 1 scoped exclusively to content-GET/stream failures (EC-2.7.008-7/8). EC-2.7.008-6 "all succeeded" phrase updated to name the collision-skip case explicitly. H-003 Call A Expected "Exit code = 0" already correct (no collision skips in that fixture) — no change needed. |
+| P13-003 | INFO | APPLIED | BC-3.9.015 "Metadata-fetch failure" paragraph softened: "mirrors BC-3.9.013 / BC-3.9.008 pre-flight guard" replaced with "aligns with the read-path 404 convention (canonical string only, per BC-2.7.012's read-vs-write divergence); differs from BC-3.9.008's DELETE 404 (canonical + Jira body per DEC-168) because the pre-prompt fetch is a read GET, not a write operation". |
+
+**Changelog-sync (self-administered)**: v1.3.53 PATCH entry inserted in `spec-changelog.md`; `prd-delta-576.md` `spec_version_after` → 1.3.53.
+
+**BC / holdout count: 657 BCs / 96 holdouts — UNCHANGED.**
+Guards: `check-spec-counts.sh`: OK. `check-bc-cumulative-counts.sh`: OK (657 / 8 files).
