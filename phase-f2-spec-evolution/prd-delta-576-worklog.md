@@ -590,3 +590,40 @@ Single `--id` download → **bare sanitized basename** (no SHA-1 prefix). Ration
 
 **BC / holdout count: 657 BCs / 96 holdouts — UNCHANGED.**
 Guards: `check-spec-counts.sh`: OK. `check-bc-cumulative-counts.sh`: OK (657 / 8 files).
+
+
+---
+
+## P5 Fix Round (2026-07-15, 10 findings, adversary pass-5)
+
+**Constraint**: no new BC IDs; counts stay 657 BCs / 96 holdouts; both guards must exit 0.
+
+| Finding | Sev | File(s) | Action | Result |
+|---------|-----|---------|--------|--------|
+| P5-001 | HIGH | bc-3-issue-write.md, BC-INDEX.md | BC-3.9.015 step-1: removed EOF from cancel grouping; added explicit three-way branch (y/yes→proceed; empty-Enter→cancel exit 0; Ok(0)/Err→JrError::Interrupted exit 130). Cancel path header: removed "or EOF". EC-3.9.015-5: full rewrite — Ok(0) IS distinguishable from empty-Enter (Ok(n) n≥1); EOF/IO-error → exit 130; "deliberate divergence from BC-3.5.003" note REMOVED (now mirrors BC-3.5.003/EC-3.5.003-3). BC-3.9.014: EOF/IO-error exception added (Ok(0)/Err → exit 130, not cancel). BC-INDEX BC-3.9.015 row: divergence note removed; three-way branch noted; P5-001 ruling cited. H-NEW-ATTACHMENT-005: no Ctrl+D test present → no update needed (cancel expectations still hold). R3.8a: no EOF mention confirmed → no annotation needed. | DONE |
+| P5-002 | MED | bc-2-issue-read.md | BC-2.7.007 write-to-temp scheme: `tmp_<random>_<basename>` → `tmp_<random>` (no basename embed; NAME_MAX overflow risk eliminated). EC-2.7.007-4/5/8: updated `tmp_<random>` reference. | DONE |
+| P5-003 | MED | holdout-scenarios.md | H-NEW-ATTACHMENT-002: "No .partial temp file remains" → "No tmp_* temp file remains" (success and error paths + status line). | DONE |
+| P5-004 | MED | holdout-scenarios.md | Moved stray BC refs line (BC-2.7.011/008/010) from below H-008 to its correct location at the end of H-007 before the --- separator. H-008 now has only its own refs line. | DONE |
+| P5-005 | LOW | bc-2-issue-read.md | BC-2.7.007 profile line: "no stdout data; progress/completion hints to stderr; errors to stderr" → "human mode writes no stdout data (completion hints and errors to stderr); --output json writes the download manifest to stdout (EC-2.7.007-7 shape)". | DONE |
+| P5-006 | LOW | bc-2-issue-read.md | BC-2.7.003: added EC-2.7.003-2 (unknown filter key or missing '=' → exit 64, two message variants; applies to entire --filter family across list and download; no HTTP call). | DONE |
+| P5-007 | LOW | bc-3-issue-write.md | BC-3.9.019: duration.rs characterization corrected — "syntax-style precedent only; must NOT reuse worklog-day conversions" → "performs no arithmetic — syntax-validator and format utility only; parse_age_duration owns ALL arithmetic". | DONE |
+| P5-008 | LOW | bc-2-issue-read.md | BC-2.7.009: lexicographic sort claim removed; replaced with chrono-parse (`chrono::DateTime<FixedOffset>`) with note that uniform offset MUST NOT be assumed (different attachments may carry distinct offsets). | DONE |
+| P5-009 | INFO | bc-3-issue-write.md | BC-3.9.010: scripting note added after EC-3.9.010-4 — single vs bulk shapes differ deliberately (comment-delete precedent); branch on `.count` presence; contrast with download's uniform array. | DONE |
+| P5-010 | INFO | bc-2-issue-read.md | EC-2.7.009-1 split into: EC-2.7.009-1 (N≤0, valid i64 → app exit 64) + EC-2.7.009-2 (non-integer → clap exit 2). | DONE |
+
+**BC / holdout count: 657 BCs / 96 holdouts — UNCHANGED.**
+Guards: `check-spec-counts.sh`: OK. `check-bc-cumulative-counts.sh`: OK (657 / 8 files).
+
+
+---
+
+## R15 Micro-Fix (2026-07-16, 1 finding, GAP-R15-001)
+
+**Constraint**: no new BC IDs; counts stay 657 BCs / 96 holdouts; both guards must exit 0.
+
+| Finding | Sev | File(s) | Action | Result |
+|---------|-----|---------|--------|--------|
+| GAP-R15-001 | LOW | bc-3-issue-write.md | EC-3.5.003-3 and EC-3.5.008-5: stale "dialoguer::Error" heading/body terminology replaced with ratified DEC-174 mechanism language — `io::stdin().lock().read_line()` returning `Ok(0)` (EOF) or `Err(_)` (IO error) → `JrError::Interrupted` exit 130; three-way branch documented; GAP-R15-001 marker added; Trace fields for BC-3.5.003 and BC-3.5.008 appended with sync note. Frontmatter: v1.3.46 entry added; last_updated bumped to 2026-07-16. Behavior unchanged — exit 130 on EOF/interrupt was always the intent; only the mechanism terminology changed. | DONE |
+
+**BC / holdout count: 657 BCs / 96 holdouts — UNCHANGED.**
+Guards: `check-spec-counts.sh`: OK. `check-bc-cumulative-counts.sh`: OK (657 / 8 files).

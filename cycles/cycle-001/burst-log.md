@@ -5047,3 +5047,22 @@ Displaced to make room for SOH-ATTACHMENTS-1 adversary pass-4 remediation step r
 | Step | Agent | Status | Output |
 |------|-------|--------|--------|
 | **SOH-ATTACHMENTS-1 F1 GATE APPROVED (DEC-179, 2026-07-15) — issues #576+#585; research 2 parts (attachments API, JSM visibility); delta analysis Rev 2 (5 stories, 1 wave, ~27 BCs); gate DEC-179; F2 spec evolution DISPATCHED.** | state-manager | IN PROGRESS | `research/issue-576-attachments-api-2026-07-15.md`; `phase-f1-delta-analysis/impact-boundary-576.md`; F2 in flight. |
+
+
+---
+
+## Archived Phase Progress row (2026-07-16, adversary-pass-5 remediation burst)
+
+Displaced to make room for SOH-ATTACHMENTS-1 F2 ADVERSARY PASS-5 REMEDIATED (2026-07-16) row per keep-5 rule.
+
+| Phase | Status | Completed | Gate | Notes |
+|-------|--------|-----------|------|-------|
+| **SOH-ATTACHMENTS-1 INTAKE + F1 APPROVED (2026-07-15) — research 2 parts (issue-576-attachments-api-2026-07-15.md); delta analysis Rev 2 (impact-boundary-576.md); gate DEC-179; F2 dispatched.** | **F1 APPROVED** | **2026-07-15** | **F2 spec evolution in flight.** | `research/issue-576-attachments-api-2026-07-15.md`, `phase-f1-delta-analysis/impact-boundary-576.md` |
+
+### Archived Current Phase Steps row (adversary-pass-5 remediation burst)
+
+Displaced to make room for SOH-ATTACHMENTS-1 adversary pass-5 remediation step row per keep-5 rule.
+
+| Step | Agent | Status | Output |
+|------|-------|--------|--------|
+| **STEADY-STATE BURST (2026-07-15): EJ probe VERIFIED (nightly run 29398774009; BC-3.5.006 SATISFIED; spec v1.3.42; PR #625 CI 14/14 green; HELD independent-review guard); 7-PR triage complete — #591 MERGE-READY; #598/#599 HOLD-SOAK-2026-07-16; #612 HOLD-SOAK-2026-07-20; #624 HOLD-SOAK-2026-07-22; #573 fresh APPROVE (pr-review-2.md); #574 APPROVE-pending-rebase + security APPROVE; DEC-178; 2 drift items added.** | state-manager | COMPLETE | develop @ 56d5126; pipeline PAUSED pending human PR actions. |

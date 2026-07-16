@@ -470,6 +470,19 @@ The `--internal` flag on upload is symmetric with `comment edit --internal` even
 
 **Estimated: 14 BCs in Section 3.9** (10 from Rev 1 + 4 JSM visibility)
 
+> **[PLANNED→AUTHORED ID DRIFT retro-annotation 2026-07-15 (PG-F3-1 verify-before-cite class):** The four planned IDs above do NOT match the authored IDs in `bc-3-issue-write.md`. The PO reorganized the Section 3.9 numbering when authoring — inserting additional BCs earlier in the sequence caused all four R2.3 planned IDs to shift. Full mapping (verified against `#### BC-3.9.0NN` headings in the authored spec):
+>
+> | Planned (this table) | Authored (`bc-3-issue-write.md`) | Subject |
+> |----------------------|----------------------------------|---------|
+> | BC-3.9.011 | **BC-3.9.003** | `--public` flag → servicedeskapi two-step routing + JSM-only gate |
+> | BC-3.9.012 | **BC-3.9.004** | `--internal` flag → servicedeskapi two-step; non-JSM = silent no-op (OQ-9) |
+> | BC-3.9.013 | **BC-3.9.014** | `--public` interactive confirmation gate mechanics (DEC-174) |
+> | BC-3.9.014 | **BC-3.9.011** | `--public --output json` shape — deferred-probe contract (P2-3c) |
+>
+> The R3.5 planned BCs (BC-3.9.015–020) match authored IDs exactly and are NOT affected.
+>
+> **Lesson (PG-F3-1):** planning tables record intent at estimation time; authored IDs are ground truth and must be re-verified against the spec file post-authoring before being cited in any downstream artifact (stories, F3 test stubs, F4 implementation notes, or this analysis). Any citation of a Section 3.9.011–014 BC in this document that predates this annotation should be read as citing the authored ID per the mapping above.]
+
 #### Cross-cutting addition for serviceDeskId cache
 
 | BC | Subject |
@@ -488,7 +501,7 @@ The `--internal` flag on upload is symmetric with `comment edit --internal` even
 
 Rationale:
 - S5 requires two new files (`src/api/jsm/attachments.rs`, `src/types/jsm/attachment.rs`) that are independent of S3's multipart platform upload code
-- S5 has a INCONCLUSIVE response schema (P2-3c) that blocks finalizing BC-3.9.014 until the live EJ e2e run — this gated obligation fits a standalone story better than embedding it inside S3
+- S5 has a INCONCLUSIVE response schema (P2-3c) that blocks finalizing BC-3.9.014 **[PLANNED ID — authored as BC-3.9.011; see R2.3 drift annotation]** until the live EJ e2e run — this gated obligation fits a standalone story better than embedding it inside S3
 - S5 introduces serviceDeskId resolution cache (`src/cache.rs` writer) — a cross-cutting concern that should be reviewed independently of multipart upload
 - S5's confirmation gate (SQ-7) is a new UX pattern for upload operations — isolating it in S5 keeps S3 focused on the core multipart machinery
 - Folding would make S3 a multi-concern story with disparate review surface (platform multipart + JSM two-step + cache + confirmation gate)
@@ -533,7 +546,7 @@ Original Rev 1 recommendation (compiled-in 10 MB default) is withdrawn. Research
 - **`--yes` without `--public`:** silent no-op (DEC-169 leniency convention — the flag is accepted and ignored when no visibility-gated operation is being performed)
 - **Cancel path:** returns the cancelled JSON shape consistent with `comment edit --public` cancel: `{"cancelled": true, "uploaded": false}` (no `id`/`key` in cancel shape)
 
-**Precedent BCs for F2 spec authors:** BC-3.5.007 (the `comment edit --public` always-confirm rule), DEC-169 (leniency convention for `--yes` without a gated flag), DEC-174 (ratified `eprint!+read_line` interactive pattern vs. `dialoguer::Confirm`). The F2 spec for BC-3.9.013 MUST cite all three and mirror the exact implementation pattern from `src/cli/issue/interactions.rs::handle_comment_edit` (the `--public` branch).
+**Precedent BCs for F2 spec authors:** BC-3.5.007 (the `comment edit --public` always-confirm rule), DEC-169 (leniency convention for `--yes` without a gated flag), DEC-174 (ratified `eprint!+read_line` interactive pattern vs. `dialoguer::Confirm`). The F2 spec for BC-3.9.013 **[PLANNED ID — authored as BC-3.9.014; see R2.3 drift annotation]** MUST cite all three and mirror the exact implementation pattern from `src/cli/issue/interactions.rs::handle_comment_edit` (the `--public` branch).
 
 ---
 
@@ -545,7 +558,7 @@ Story 5 (JSM `--public` upload) incurs these e2e obligations beyond the standard
 |-----------|----------|
 | S5 upload live run against EJ project | `JR_E2E_JSM_PROJECT`-gated test; `--public` variant creates an attachment visible on portal; `--internal` variant creates internal attachment |
 | Post-upload verify via platform endpoint | After JSM upload, verify via `GET /rest/api/3/issue/{key}?fields=attachment` (NOT via servicedeskapi `links.content` — JSDCLOUD-10841 makes those unreliable; P2-6) |
-| Capture live `request/{id}/attachment` response shape | Pin serde struct for BC-3.9.014 from real response; INCONCLUSIVE in research (P2-3c) |
+| Capture live `request/{id}/attachment` response shape | Pin serde struct for BC-3.9.014 **[PLANNED ID — authored as BC-3.9.011; see R2.3 drift annotation]** from real response; INCONCLUSIVE in research (P2-3c) |
 | `jsm_self_close` teardown | All JSM write tests created by S5 must use `jsm_self_close` convention (dynamic transition discovery + resolution; `JR_E2E_JSM_RESOLUTION` env override; fail-silent teardown) — same convention as existing JSM create tests |
 
 These obligations are delivery gates for S5, not F1 blockers.
@@ -722,7 +735,7 @@ Steps 3 and 4 are both mutations; both happen after step 1. The BC for `--replac
 
 #### R3.9a: `parse_age_duration` — new function (P3-003)
 
-BC-3.9.019 specifies a dedicated duration parser for `--older-than` with explicit calendar-semantics arithmetic. This is **not** `src/duration.rs` reused directly — `duration.rs` converts strings to seconds for worklog display and does not expose a `string → chrono::Duration` conversion. The new function owns its own arithmetic:
+BC-3.9.019 specifies a dedicated duration parser for `--older-than` with explicit calendar-semantics arithmetic. This is **not** `src/duration.rs` reused directly — `duration.rs` provides **no string→quantity conversion at all** (syntax-validate + format only; it performs no arithmetic). **[P5-007 retro-correction 2026-07-15: the earlier phrasing "converts strings to seconds for worklog display" was wrong — `duration.rs` is a syntax-validate + format-only module with no arithmetic; `parse_age_duration` owns all arithmetic.]** The new function owns its own arithmetic:
 
 | Aspect | Detail |
 |--------|--------|
@@ -754,3 +767,21 @@ The single-file download flow (`attachment download <KEY> --id <AID>`) is pinned
 **Degenerate-name fallback:** if the sanitized basename is empty (e.g., filename was entirely path-separators or control characters and nothing survives sanitization), fall back to the attachment ID as the filename (`<aid>` for single; `<sha1>_<aid>` for batch). This ensures the output path is always non-empty and deterministic.
 
 **BC-2.7.010 scope correction:** BC-2.7.010 as recorded in Rev 1 states "default output path is `<sha1>_<sanitized-basename>`" without distinguishing single vs. batch. The F2 spec must split this into two sub-clauses: `(EC-2.7.010-1) single --id → bare sanitized basename (+ degenerate fallback to AID)` and `(EC-2.7.010-2) batch → <sha1>_<sanitized-basename>`. BC-2.7.010 total BC count is unchanged; only its invariant text is refined.
+
+### R3.11 EOF behavior reversal for confirmation gates (P5-001) — FLAG FOR HUMAN REVIEW AT F2
+
+**Ruling reversal (2026-07-15, pass-5):** The P2-era direction for `delete` and `--public` gates stated EOF=cancel-exit-0 by analogy with what was believed to be `dialoguer::Confirm` behavior. That premise was **FALSE**: `comment delete` uses `eprint!+read_line` (DEC-174), not `dialoguer`, and maps EOF → `Interrupted` exit 130 per EC-3.5.003-3 (pinned by VP-577-030).
+
+**Settled ruling:** all attachment confirmation gates mirror the sibling (`handle_comment_delete`) exactly:
+
+| Input at the `[y/N]` prompt | Behavior |
+|-----------------------------|----------|
+| `y` / `Y` (Enter) | proceed |
+| Anything else / bare Enter | cancel → exit 0; JSON: `{"cancelled": true, ...}` |
+| EOF (`read_line` returns `Ok(0)`) | `JrError::Interrupted` → exit 130 |
+
+The distinction between empty-Enter (cancel, exit 0) and EOF (exit 130) is load-bearing for scripting: a shell pipe closing unexpectedly is an interruption, not a user cancel. EC-3.5.003-3 is the existing precedent; the F2 spec for BC-3.9.015 (delete gate) and BC-3.9.014 (`--public` gate) MUST reproduce this three-way branch verbatim.
+
+**Scope of the reversal:** R3.8a/b do not carry explicit EOF wording (checked — no annotation needed there). The affected design inputs are the `[y/N]` gate sections in R3.3 (delete gate) and SQ-7 / OQ-8 (`--public` gate). Neither states EOF=cancel-exit-0 explicitly in the file, so no retro-annotation to those sections is required; this R3.11 note is the sole correction record.
+
+**Implementation note for F2 spec authors:** the `read_line` arm that returns `Ok(0)` (zero bytes read = EOF) must map to `return Err(JrError::Interrupted)`, identical to the pattern in `src/cli/issue/interactions.rs::handle_comment_delete`. The `Interrupted` variant already carries exit code 130 via `JrError::exit_code()`.

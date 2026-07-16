@@ -2116,7 +2116,7 @@ Call B (two attachments):
 **Expected (MUST-PASS)**:
 - Exit code = 0.
 - `WORK_DIR/notes.txt` exists and its content equals `"hello world\n"` (12 bytes).
-- No `.partial` temp file remains in `WORK_DIR` after successful completion (clean up on success).
+- No `tmp_*` temp file remains in `WORK_DIR` after successful completion (temp renamed away on atomic rename).
 - stdout or stderr contains a success message referencing `notes.txt`.
 
 **Setup (error path)**:
@@ -2128,11 +2128,11 @@ Call B (two attachments):
 **Expected (error path, MUST-PASS)**:
 - Exit code != 0 (exit 1 or exit 64).
 - `WORK_DIR/broken.bin` does NOT exist (temp file cleaned up per BC-2.7.007 EC-2.7.007-4).
-- No `.partial` file remains in `WORK_DIR`.
+- No `tmp_*` file remains in `WORK_DIR` (temp cleaned up per BC-2.7.007 EC-2.7.007-4).
 
 **Why hidden**: The write-to-temp+atomic-rename contract prevents partial files from appearing as complete downloads. A regression that writes directly to the final path would leave corrupt files on error, visible to users but undetectable by a success-only test. The temp-file cleanup assertion is the key signal.
 
-**Status**: MUST-PASS. Pins BC-2.7.007: (1) write-to-temp+atomic-rename on success; (2) temp file cleaned on error (EC-2.7.007-4); (3) no partial file remains after error.
+**Status**: MUST-PASS. Pins BC-2.7.007: (1) write-to-temp+atomic-rename on success; (2) temp file cleaned on error (EC-2.7.007-4); (3) no tmp_* temp file remains after error.
 
 **BC refs**: BC-2.7.007 (primary; two-step wire path: metadata GET then content GET), BC-2.7.007 EC-2.7.007-1 (metadata 404 → canonical not-found), BC-2.7.007 EC-2.7.007-4 (error mid-stream cleanup)
 
@@ -2361,6 +2361,8 @@ Call C (non-interactive, no `--yes`):
 **Why hidden**: Path-traversal via Jira-supplied `filename` values is a SECURITY concern (CWE-22). The sanitization pipeline (BC-2.7.011 steps 1–4) strips path components; the evaluator asserts the ABSENCE of files outside `OUT_DIR`, which a correctness-only test would never check. A regression that uses the raw filename directly would write `../../evil.txt` relative to `OUT_DIR`, escaping the target directory — visible only via a filesystem assertion on the parent path.
 
 **Status**: MUST-PASS. Pins BC-2.7.011 (sanitization pipeline: path-component stripping, reserved-name escaping, length cap) and BC-2.7.008 (all downloads confined to --out-dir). Security classification: CWE-22 (path traversal via untrusted server-supplied filename).
+
+**BC refs**: BC-2.7.011 (primary; sanitization steps 1–5), BC-2.7.008 (--all to out-dir confinement), BC-2.7.010 (SHA-1 collision prefix if sanitized names collide)
 ---
 
 ### H-NEW-ATTACHMENT-008: `attachment upload <NON-JSM-KEY> <FILE> --public --yes` → exit 64, canonical message; no servicedeskapi calls, no platform POST (MUST-PASS)
@@ -2390,5 +2392,3 @@ Call C (non-interactive, no `--yes`):
 
 **BC refs**: BC-3.9.005 (primary — `--public` non-JSM guard), BC-3.9.012 (upload error taxonomy: `--public` non-JSM row → exit 64), BC-3.9.014 (`--yes` bypasses `--public` confirmation gate, making test deterministic)
 
-
-**BC refs**: BC-2.7.011 (primary; sanitization steps 1–5), BC-2.7.008 (--all to out-dir confinement), BC-2.7.010 (SHA-1 collision prefix if sanitized names collide)

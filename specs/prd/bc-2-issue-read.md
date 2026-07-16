@@ -625,6 +625,7 @@ After filtering, the table is rendered (BC-2.7.001) with only matching rows. Whe
 **Filter composition with download commands**: `--filter mime=<glob>` (and all `--filter` flags) also applies to `jr issue attachment download --all` and `--newest N`. The filter runs before top-N selection: `--newest 3 --filter mime=image/*` yields the 3 most recently created images (see BC-2.7.008/BC-2.7.009).
 
 **EC-2.7.003-1** (zero matches): empty table or `[]` JSON, exit 0. Hint fires: `"Showing 0 of M attachments."`
+**EC-2.7.003-2** (unknown filter key or missing `=` — applies to the entire `--filter` family across `attachment list` and `attachment download`): if a `--filter` value does not contain `=`, exit 64 before any HTTP call: `"Invalid filter '<VALUE>': expected key=value form. Accepted keys: mime=, name=, size-max=."`. If `=` is present but the key before it is not `mime`, `name`, or `size-max`, exit 64: `"Unknown filter key '<KEY>'. Accepted keys: mime=, name=, size-max=."`. This validation is a clap-or-application pre-flight check; no HTTP call is issued on either path.
 
 **Trace**: F2 spec evolution (SOH-ATTACHMENTS-1 2026-07-15; DEC-179 ratified design)
 
@@ -705,7 +706,7 @@ When `<KEY>` does not exist or the authenticated user lacks Browse Projects perm
 **Confidence**: HIGH
 **Source**: `src/cli/issue/attachments.rs::handle_attachment_download` (implementation pending — SOH-ATTACHMENTS-1 Story 2); `src/api/jira/attachments.rs::get_attachment_content` (implementation pending)
 **Subject**: Issue read
-**Output channel profile**: 3 (Mixed) — no stdout data; progress/completion hints to stderr; errors to stderr.
+**Output channel profile**: 3 (Mixed) — human mode writes no stdout data (completion hints and errors to stderr); `--output json` writes the download manifest to stdout (EC-2.7.007-7 shape).
 
 `jr issue attachment download <KEY> --id <AID>` downloads a single attachment to disk.
 
@@ -725,7 +726,7 @@ When `<KEY>` does not exist or the authenticated user lacks Browse Projects perm
 
 On success, a completion hint is emitted to stderr: `"Downloaded: <path> (<size_human>)."` Nothing is written to stdout (profile 3).
 
-**Write-to-temp + atomic-rename**: The download MUST write to a temporary file named `tmp_<random>_<basename>` in the same directory as the final path (where `<random>` is a process-unique random string and `<basename>` is the final filename). The deterministic `.partial` suffix MUST NOT be used — a fixed name collides when two `jr` processes download to the same directory concurrently. Only on successful stream completion does `jr` atomically rename the temporary file to the final path. This prevents an interrupted download from leaving a truncated file at the final path that would block a retry (the overwrite-refuse guard checks for the FINAL path, not the temp file). On any error (network failure, disk error, process signal), the temporary file MUST be deleted before `jr` exits; the final path is NOT written.
+**Write-to-temp + atomic-rename**: The download MUST write to a temporary file named `tmp_<random>` in the same directory as the final path (where `<random>` is a process-unique random string; NO basename is embedded). A deterministic or basename-derived name (e.g., `.partial` suffix, `tmp_<random>_<basename>`) MUST NOT be used — a fixed name collides when two processes download to the same directory concurrently, and embedding the basename risks overflowing `NAME_MAX` when the sanitized basename is near the 214-byte cap (41-byte SHA-1 prefix + random token + basename can exceed 255 bytes on the temp filename even when the final name fits). Only on successful stream completion does `jr` atomically rename the temporary file to the final path. This prevents an interrupted download from leaving a truncated file at the final path that would block a retry (the overwrite-refuse guard checks for the FINAL path, not the temp file). On any error (network failure, disk error, process signal), the temporary file MUST be deleted before `jr` exits; the final path is NOT written.
 
 **Ctrl+C / SIGINT during download** (exit 130): if the user interrupts the download mid-stream, the partial file is cleaned up (deleted), the final path is not written, and `jr` exits 130 (standard signal-interrupt exit code). Exit 130 is consistent with `JrError::Interrupted` (maps to exit code 130 in `src/error.rs`).
 
@@ -739,10 +740,10 @@ On success, a completion hint is emitted to stderr: `"Downloaded: <path> (<size_
 
 **EC-2.7.007-3** (credential-stripping regression guard — SEC-576-003 CWE-522): A wiremock integration test MUST assert that `GET /rest/api/3/attachment/content/{id}` following a cross-host 302/303 redirect does NOT include an `Authorization` header on the redirect-target request. Use a two-server wiremock setup (one for the Jira API endpoint, one for the simulated CDN redirect target). **The two wiremock servers MUST use DISTINCT HOST STRINGS** (e.g., `127.0.0.1` for the Jira API server and a second address such as `[::1]` or a distinct loopback hostname for the CDN target). Using the same host at different ports (e.g., two `127.0.0.1` instances on different ports) would make the assertion vacuous: reqwest's cross-host check compares `host_str()` output which IGNORES port numbers, so a same-host-different-port redirect would NOT strip `Authorization` headers — the test would pass while the credential-stripping invariant goes untested. This guards against a future `JiraClient` refactor adding a custom `RedirectPolicy` that silently forwards bearer/Basic credentials to CDN hosts.
 
-**EC-2.7.007-4** (error mid-stream): temporary file deleted; exit 1; `"Download failed: <reason>"` on stderr; final path not written.
-**EC-2.7.007-5** (Ctrl+C / SIGINT mid-stream): temporary file deleted; exit 130; no final path written.
+**EC-2.7.007-4** (error mid-stream): temporary file (`tmp_<random>`) deleted; exit 1; `"Download failed: <reason>"` on stderr; final path not written.
+**EC-2.7.007-5** (Ctrl+C / SIGINT mid-stream): temporary file (`tmp_<random>`) deleted; exit 130; no final path written.
 
-**EC-2.7.007-8** (concurrent downloads, same out-dir): if two `jr` processes download the same attachment to the same output directory simultaneously, each writes to its own uniquely-named `tmp_<random>_<basename>` file. There is no interleaving of temp files. When both rename to the final path, the last successful rename wins (standard OS atomic-rename semantics); the earlier written file is silently overwritten. This is safe: both processes produce identical bytes (same source URL), so the last rename wins without data loss. No locking between processes is required.
+**EC-2.7.007-8** (concurrent downloads, same out-dir): if two `jr` processes download the same attachment to the same output directory simultaneously, each writes to its own uniquely-named `tmp_<random>` file. There is no interleaving of temp files. When both rename to the final path, the last successful rename wins (standard OS atomic-rename semantics); the earlier written file is silently overwritten. This is safe: both processes produce identical bytes (same source URL), so the last rename wins without data loss. No locking between processes is required.
 **EC-2.7.007-7** (`--output json` success shape for `--id`): `{"downloaded":[{"filename":"<name>","id":"<AID>","path":"<written path>","size":N}]}`; one-element `downloaded` array; inner keys in alphabetical order (`filename` < `id` < `path` < `size`); stdout only; exit 0. `path` is the absolute or relative path actually written (per BC-2.7.010). `size` is the byte count written. No stderr output in JSON mode.
 
 **Observability** (`--verbose` / `--verbose-bodies`): `--verbose` logs method + URL only (unchanged CLAUDE.md rule SD-003). `--verbose-bodies` MUST NOT attempt to materialize the streaming response body — the body is a potentially large binary stream and buffering it for logging would defeat the OOM-safety design of streaming download. On a download response, `--verbose-bodies` MUST log response headers and the final written byte count ONLY (e.g., `<download body: N bytes written to <path>>`), never content. The PII warning that `--verbose-bodies` emits extends to attachment content by extension (attachment payloads may contain credentials, personal data, or confidential documents).
@@ -786,7 +787,7 @@ On completion a summary hint emits to stderr: `"Downloaded N of M attachments to
 **Source**: `src/cli/issue/attachments.rs::handle_attachment_download` (implementation pending — SOH-ATTACHMENTS-1 Story 2)
 **Subject**: Issue read
 
-`jr issue attachment download <KEY> --newest N` downloads at most N attachments, selecting the N most recently created (by `attachment.created` descending). Because Jira's ISO 8601 timestamp format (`2026-07-10T14:23:11.000+0000`) is lexicographically sortable descending, lexicographic sort is correct for this field.
+`jr issue attachment download <KEY> --newest N` downloads at most N attachments, selecting the N most recently created (by `attachment.created` descending). The `created` field is parsed as a `chrono::DateTime<FixedOffset>` before sorting; lexicographic sort MUST NOT be used (consistent with BC-3.9.019 which also mandates `chrono` for `created` comparison). Fixtures typically use the `+0000` offset, but the implementation MUST NOT assume a uniform offset — different attachments on the same issue may carry distinct UTC offsets, making lexicographic comparison incorrect in the general case.
 
 **Behavior**: fetch full attachment list (same `GET /rest/api/3/issue/{key}?fields=attachment` as `attachment list`) → apply any `--filter` flags (mime/name/size-max) → sort by `created` descending → take first N → issue step-2 streaming `GET /rest/api/3/attachment/content/{id}` for each selected attachment. **Batch metadata source**: filename, size, and `contentUrl` are taken from `fields.attachment[]` in the list response. The per-attachment step-1 `GET /rest/api/3/attachment/{id}` metadata fetch is SKIPPED (same as BC-2.7.008) — that step is single-`--id`-only. Output naming follows BC-2.7.010.
 
@@ -796,7 +797,8 @@ If the issue has fewer than N attachments after filtering, all available attachm
 
 `--newest N` is mutually exclusive with `--id` (clap `conflicts_with` → exit 2). `--newest N` combined with `--all` is rejected (clap `conflicts_with` → exit 2). Overwrite and `--force` behavior follow BC-2.7.007/BC-2.7.008.
 
-**EC-2.7.009-1** (invalid N): N at or below 0, or non-integer → exit 64 before any HTTP call: `"--newest requires a positive integer."` N = 0 is rejected (zero-download is ambiguous, not silently accepted).
+**EC-2.7.009-1** (N ≤ 0 — clap parses `--newest` as a signed integer i64; app validates N ≥ 1): if clap parses a valid i64 value and the handler finds N ≤ 0, exit 64 before any HTTP call: `"--newest requires a positive integer."` N = 0 is rejected (zero-download is ambiguous, not silently accepted).
+**EC-2.7.009-2** (non-integer value for `--newest`): clap cannot parse the value as i64 → clap exit 2 with a usage error; no HTTP call. Message is clap-generated (not controlled by `jr` application code).
 
 **Trace**: F2 spec evolution (SOH-ATTACHMENTS-1 2026-07-15; DEC-179 ratified design)
 
