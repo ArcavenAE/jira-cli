@@ -3,7 +3,7 @@ context: bc-2
 title: "Issue Read (list/view/comments/changelog)"
 total_bcs: 106   # cumulative claim (incl. range-collapsed); definitional_count below is individually-bodied headings
 definitional_count: 64   # count of `#### BC-` headings in this file
-last_updated: 2026-07-15
+last_updated: 2026-07-16
 source_pass: 3
 trace: |
   - L2: .factory/specs/domain-spec/bc-02-issue-read.md
@@ -712,6 +712,8 @@ When `<KEY>` does not exist or the authenticated user lacks Browse Projects perm
 
 **Selector required (clap required-group)**: `jr issue attachment download <KEY>` without any selector (`--id`, `--all`, or `--newest`) is rejected by clap at parse time — the three selector flags form a required mutually-exclusive group. clap exits 2 with a usage hint listing all three options. This is enforced at the CLI layer; no HTTP call is made.
 
+**AID validation (P7-001, CWE-88)**: before issuing any HTTP request, `jr` validates `<AID>` against `^[0-9]+$`. A non-numeric or path-traversal-shaped AID (e.g., `"10001/../../issue/X"`) → exit 64; stderr: `"invalid attachment id: '<VALUE>' (must be numeric)"`; no HTTP calls issued. This fires before step 1 below.
+
 **Wire path (two-step)**:
 1. `GET /rest/api/3/attachment/{id}` — metadata fetch (read-only). Response is the attachment metadata object (curated fields from BC-2.7.002: `id`, `filename`, `mimeType`, `size`, `created`, `author`, `contentUrl`). Yields the canonical `filename` for BC-2.7.010 naming. **The `<KEY>` argument is NOT server-verified on the `--id` path** — the AID is authoritative; `<KEY>` is accepted for CLI-surface uniformity but `jr` does not issue a separate key-ownership check.
 2. `GET /rest/api/3/attachment/content/{id}` — streaming download. This path is uniform for both platform and JSM issues. The servicedeskapi `links.content` URLs MUST NOT be used for download: JSDCLOUD-10841 (confirmed in research §P2-6 of `.factory/research/issue-576-attachments-api-2026-07-15.md`) shows these URLs return 404.
@@ -825,7 +827,7 @@ When no `--out <PATH>` is specified, the default output filename depends on the 
 
 **Single-vs-batch asymmetry (deliberate)**: the two modes intentionally differ. Peer-convention alignment (bare for targeted download) and deduplication-safety (prefixed for batch) are both served. This is the research-backed ruling (Part 3 of `.factory/research/issue-576-attachments-api-2026-07-15.md`).
 
-**Degenerate-name fallback** (both modes): if `sanitize_attachment_filename` returns `None` or an empty string (rejects path-traversal, NUL bytes, etc.), the fallback filename is the raw attachment `id` string. This matches the `curl` `default` behaviour analogue — an attachment without a usable name is saved under its stable numeric ID. The id string is always a safe filename (numeric-only, no path components). The fallback is NOT subject to BC-2.7.011 (the id needs no sanitization). Emit a stderr informational note: `"warning: using id as filename for attachment <AID> — original name '<raw>' could not be sanitized."` (distinct wording from the "skipping" warning in BC-2.7.011 caller contract; this fallback writes a file rather than skipping).
+**Degenerate-name fallback (R3.10 ruling)**: if `sanitize_attachment_filename` returns `None` or an empty string (rejects path-traversal, NUL bytes, etc.), the fallback depends on mode: **single-`--id` mode** → raw attachment `id` string (bare, no prefix — consistent with single-id bare naming); **batch mode (`--all`/`--newest N`)** → `<sha1-of-id>_<id>` (SHA-1 prefix of the id + raw id — consistent with the normal batch naming scheme, and zero special-cases in batch collision logic). In both cases the id string is always a safe filename (numeric-only, no path components). The fallback is NOT subject to BC-2.7.011 (the id needs no sanitization). Emit a stderr informational note: `"warning: using id as filename for attachment <AID> — original name '<raw>' could not be sanitized."` (distinct wording from the "skipping" warning in BC-2.7.011 caller contract; this fallback writes a file rather than skipping).
 
 **Combined-name length cap (batch)**: `<sha1(40)>_<basename>` is at most 255 bytes (41-byte prefix + 214-byte cap from BC-2.7.011 step 5 = 255). **Single-id**: bare name is capped at 214 bytes (BC-2.7.011 step 5) — conservative, fits within 255 bytes.
 
@@ -837,6 +839,7 @@ When no `--out <PATH>` is specified, the default output filename depends on the 
 **Examples (batch)**:
 - `id="20001"`, `filename="report.pdf"` → `<sha1("20001")>_report.pdf`
 - `id="20002"`, `filename="report.pdf"` → `<sha1("20002")>_report.pdf` (distinct prefix prevents collision)
+- `id="20003"`, `filename=".."` → sanitization returns `None` → fallback `<sha1("20003")>_20003` (batch degenerate: SHA-1 prefix + raw id, R3.10)
 
 When `--out <PATH>` is supplied on the single-file path (BC-2.7.007), all default naming is bypassed and the explicit path is used. The user-supplied path is NOT sanitized (trusted operator input).
 
@@ -902,6 +905,7 @@ Since step 4 of sanitization already strips `../`, `/`, `\`, `:`, the join will 
 
 | Condition | Exit code | stderr |
 |-----------|-----------|--------|
+| Invalid `--id` AID (non-numeric, e.g. path-traversal) | 64 | `"invalid attachment id: '<VALUE>' (must be numeric)"` (no HTTP) |
 | KEY 404 | 64 | `"Issue <KEY> not found or not accessible."` |
 | AID 404 from metadata endpoint (`GET /attachment/{id}`) | 64 | `"Attachment <AID> not found or not accessible."` |
 | AID 403 from metadata endpoint (`GET /attachment/{id}`) | 1 | `"Permission denied: cannot access attachment <AID>."` |

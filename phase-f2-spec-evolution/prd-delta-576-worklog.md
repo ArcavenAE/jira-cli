@@ -659,3 +659,35 @@ Guards: `check-spec-counts.sh`: OK. `check-bc-cumulative-counts.sh`: OK (657 / 8
 
 **BC / holdout count: 657 BCs / 96 holdouts — UNCHANGED.**
 Guards: `check-spec-counts.sh`: OK. `check-bc-cumulative-counts.sh`: OK (657 / 8 files).
+
+---
+
+## P7 Fix Round (2026-07-16, 3 findings + 1 minor fold-in, adversary pass-7)
+
+**Constraint**: no new BC IDs; counts stay 657 BCs / 96 holdouts; both guards must exit 0.
+
+| Finding | Sev | File(s) | Action | Result |
+|---------|-----|---------|--------|--------|
+| P7-001 | MED (CWE-88) | bc-3-issue-write.md, bc-2-issue-read.md, BC-INDEX.md, holdout-scenarios.md | REVERSED BC-3.9.013 "does NOT validate" stance. Added `^[0-9]+$` AID validation BEFORE any API call across ALL AID surfaces: BC-3.9.008 (delete, new AID validation paragraph + note before HTTP 204), BC-3.9.013 (taxonomy — reversed "sent verbatim" text; added invalid-AID table row; rewrote EC-3.9.013-3), BC-3.9.015 (gate — AID validation fires before pre-prompt metadata GET), BC-3.9.016 (multi-AID bulk — validation before --yes check), BC-3.9.020 path-b (dry-run metadata fan-out — validation first, even on dry-run), BC-2.7.007 (download --id — validation before wire-path step 1), BC-2.7.012 (download taxonomy — added invalid-AID table row). Canonical exit-64 string: `"invalid attachment id: '<VALUE>' (must be numeric)"`. Updated BC-INDEX rows for all 7 surfaces. Extended H-007 with malicious-AID exit-64 zero-HTTP assertion (holdout count UNCHANGED — extended existing scenario, no new scenario added). | DONE |
+| P7-002 | LOW | bc-3-issue-write.md | BC-3.9.018 gate suppression: added "Gate suppression on --public zero-match path" paragraph stating BC-3.9.014 gate resolves at BC-3.9.017 step 2 MUST NOT re-fire; added EC-3.9.018-4 (gate suppression EC); extended EC-3.9.003-5 to cover both step-4 path (BC-3.9.017) and zero-match path (BC-3.9.018); restated "One gate per invocation, ever." | DONE |
+| P7-003 | LOW | bc-2-issue-read.md, BC-INDEX.md | BC-2.7.010 degenerate-name fallback: fixed "both modes → raw id" sentence to R3.10 ruling: single-id → raw `<aid>` (bare); batch → `<sha1-of-id>_<aid>` (SHA-1 prefix + raw id; consistent with normal batch scheme, zero special-cases). Added batch degenerate example to Examples table. BC-INDEX BC-2.7.010 row updated. | DONE |
+| Minor fold-in | INFO | cross-cutting.md | BC-X.8.010 self-heal claim: softened "no new reader/writer functions" to "no new cache FILE or cache-family functions; the single-entry invalidation is an inline read-modify-write of project_meta.json (or a small private helper) — implementer's choice at S5." | DONE |
+
+**BC / holdout count: 657 BCs / 96 holdouts — UNCHANGED.**
+Guards: `check-spec-counts.sh`: OK. `check-bc-cumulative-counts.sh`: OK (657 / 8 files).
+
+---
+
+## R17 Micro-Fix (2026-07-16, 2 findings, GAP-R17-001 + GAP-R17-002)
+
+**Constraint**: no new BC IDs; counts stay 657 BCs / 96 holdouts; both guards must exit 0.
+
+| Finding | Sev | File(s) | Action | Result |
+|---------|-----|---------|--------|--------|
+| GAP-R17-001 | LOW | bc-3-issue-write.md (BC-3.9.015), bc-2-issue-read.md (BC-2.7.007, BC-2.7.012) | Unified invalid-AID placeholder to `<VALUE>` at 3 outlier sites (all 9 body occurrences now read `"invalid attachment id: '<VALUE>' (must be numeric)"`). Sanity-checked with regex: zero residual `<AID>` in canonical error strings. | DONE |
+| GAP-R17-002 | LOW | spec-changelog.md, bc-3-issue-write.md, bc-2-issue-read.md, prd-delta-576.md | spec-changelog.md: [1.3.47] MINOR entry inserted before [1.3.46] — P7 CWE-88 AID-validation + P7-002 gate suppression + P7-003 batch fallback + minor fold-in + GAP-R17-001 placeholder sync. bc-3: v1.3.47 trace line appended to frontmatter; `_Last updated` prepended with 2026-07-16 P7 summary; spec v1.3.47. bc-2: frontmatter `last_updated` 2026-07-15→2026-07-16. prd-delta-576.md: `spec_version_after` 1.3.46→1.3.47. | DONE |
+
+**Self-note (per team-lead instruction)**: from now on, every fix round that touches BC bodies ends with a changelog-sync check as part of this agent's round checklist (self-administered, don't wait for the validator).
+
+**BC / holdout count: 657 BCs / 96 holdouts — UNCHANGED.**
+Guards: `check-spec-counts.sh`: OK. `check-bc-cumulative-counts.sh`: OK (657 / 8 files).

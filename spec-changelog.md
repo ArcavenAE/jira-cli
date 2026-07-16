@@ -7,6 +7,38 @@ project: "jr (jira-cli)"
 
 Track all spec version changes. Most recent version first.
 
+## [1.3.47] - 2026-07-16
+
+### Type: MINOR
+
+### Summary
+
+P7 adversary fix round (SOH-ATTACHMENTS-1): CWE-88 AID validation contract established across 7 attachment surfaces (delete + download); EC-3.9.018-4 gate suppression pinned; EC-3.9.003-5 extended to zero-match path; batch degenerate fallback corrected (R3.10); BC-X.8.010 self-heal language softened; GAP-R17-001 placeholder sync `<AID>`→`<VALUE>` (3 sites).
+
+### Changes
+
+- `.factory/specs/prd/bc-3-issue-write.md` (MODIFIED): P7-001 — BC-3.9.008 AID validation paragraph; BC-3.9.013 "does NOT validate" reversed, invalid-AID table row added, EC-3.9.013-3 rewritten (zero HTTP); BC-3.9.015 AID validation preamble; BC-3.9.016 multi-AID AID validation clause; BC-3.9.020 path-b AID validation. P7-002 — BC-3.9.018 gate suppression paragraph + EC-3.9.018-4; EC-3.9.003-5 extended to zero-match path. BC-X.8.010 minor fold-in. GAP-R17-001 BC-3.9.015 placeholder `<AID>`→`<VALUE>`. Frontmatter: v1.3.47 trace entry added; `_Last updated` prepended.
+- `.factory/specs/prd/bc-2-issue-read.md` (MODIFIED): P7-001 — BC-2.7.007 AID validation before wire-path step 1; BC-2.7.012 invalid-AID taxonomy row. P7-003 — BC-2.7.010 degenerate batch fallback corrected (`<sha1>_<aid>`, R3.10); batch degenerate example added. GAP-R17-001 BC-2.7.007 + BC-2.7.012 placeholders `<AID>`→`<VALUE>`. Frontmatter: `last_updated` 2026-07-15→2026-07-16.
+- `.factory/specs/prd/BC-INDEX.md` (MODIFIED): rows updated for BC-2.7.007, BC-2.7.010, BC-2.7.012, BC-3.9.008, BC-3.9.013, BC-3.9.015, BC-3.9.016, BC-3.9.020 (P7-001/P7-003 notes).
+- `.factory/specs/prd/cross-cutting.md` (MODIFIED): BC-X.8.010 self-heal clause softened — "no new cache FILE or cache-family functions; implementer's choice at S5".
+- `.factory/specs/prd/holdout-scenarios.md` (MODIFIED): H-007 extended with malicious-AID exit-64 zero-HTTP wiremock assertion (P7-001); holdout count unchanged (96).
+- `.factory/phase-f2-spec-evolution/prd-delta-576.md` (MODIFIED): `spec_version_after` 1.3.46→1.3.47.
+- `.factory/spec-changelog.md` (MODIFIED): this entry.
+
+### Impact Assessment
+
+| Dimension | Detail |
+|-----------|--------|
+| BCs added | 0 |
+| BCs modified | 9 (BC-3.9.008, BC-3.9.013, BC-3.9.015, BC-3.9.016, BC-3.9.018, BC-3.9.020, BC-2.7.007, BC-2.7.010, BC-2.7.012) + 2 EC extensions (EC-3.9.018-4 new, EC-3.9.003-5 extended) + 1 BC-X cross-cutting (BC-X.8.010) |
+| BC count | 140 (bc-3); 657 cumulative (unchanged) |
+| VP count | 30 (unchanged) |
+| Holdout count | 96 (unchanged — H-007 extended, no new scenario) |
+| Spec version | 1.3.46→1.3.47 |
+| Severity floor | MINOR (behavioral contract added: CWE-88 AID validation) |
+
+---
+
 ## [1.3.46] - 2026-07-16
 
 ### Type: PATCH

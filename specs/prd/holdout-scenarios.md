@@ -104,6 +104,9 @@ Setup uses:
 **Why hidden**: ADR-0015 made resolution enforcement proactive (pre-POST interception) rather than reactive (post-POST 400 rewrite). The gate fires whenever a done-category transition's `fields` map contains a `"resolution"` key (OR `is_conditional == true`), independent of the `required` boolean — `required` only selects the REQUIRED-vs-OPTIONAL error wording in interactive mode, not whether the gate fires at all. The exit code and stderr substrings (`--resolution`, `jr issue resolutions`) are asserted branch-agnostically and hold identically for both the REQUIRED branch (workflow.rs ~674-679) and the OPTIONAL branch (~718-731). BC-3.2.009 reactive backstop (POST→400 rewrite) is preserved but no longer the primary path for single-key moves.
 **BC refs**: BC-3.2.013 (proactive, primary), BC-3.2.009 (reactive fallback)
 
+**Extended assertion (P7-001, CWE-88 — malicious-AID exit-64 zero-HTTP guard)**: On any attachment command that accepts a user-supplied `<AID>` positional argument (`attachment delete <AID>`, `attachment download <KEY> --id <AID>`), a path-traversal-shaped AID (e.g., `"10001/../../issue/FOO-1"`) or any non-numeric value (e.g., `"abc"`, `"../secret"`) → exit 64; stderr contains `"invalid attachment id: '...' (must be numeric)"`; **zero HTTP calls** issued. Assert with wiremock `expect(0)` on `GET /rest/api/3/attachment/...` and `DELETE /rest/api/3/attachment/...`. Validation fires before any gate, before the pre-prompt metadata GET, and before any streaming request — regardless of `--dry-run`, `--yes`, or `--no-input` flags.
+**BC refs (extended)**: BC-3.9.013 EC-3.9.013-3 (delete taxonomy — P7-001); BC-3.9.008 (delete AID validation); BC-3.9.015 (gate fires after validation); BC-3.9.016 (multi-AID bulk); BC-3.9.020 path-b (dry-run); BC-2.7.007 (download --id); BC-2.7.012 (download taxonomy)
+
 ---
 
 ### H-008: `issue list --status prog` (single-substring) errors without firing JQL search

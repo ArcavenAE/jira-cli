@@ -5085,3 +5085,22 @@ Displaced to make room for SOH-ATTACHMENTS-1 adversary pass-6 remediation step r
 | Step | Agent | Status | Output |
 |------|-------|--------|--------|
 | **SESSION WRAP (2026-07-15) — human /wrap at clean rest point post-D-177 cycle close. Pipeline PAUSED. Resume intent: next intake / steady-state.** | state-manager | COMPLETE | Pipeline PAUSED at rest. |
+
+
+---
+
+## Archived Phase Progress row (2026-07-16, adversary-pass-7 remediation burst)
+
+Displaced to make room for SOH-ATTACHMENTS-1 F2 ADVERSARY PASS-7 REMEDIATED (2026-07-16) row per keep-5 rule.
+
+| Phase | Status | Completed | Gate | Notes |
+|-------|--------|-----------|------|-------|
+| **SOH-ATTACHMENTS-1 F2 ADVERSARY PASS-6 REMEDIATED (2026-07-16) — p6 NOT-CLEAN 5 (1M/2L/2I); P6-001 servicedesk resolution corrected to projectId matching via get_or_fetch_project_meta reuse (research hedge resolved to the supported half); P6-004 BC-X.8.010 → reuse-contract (no new cache family; Cache Types 7); JSM-detection mechanism named (projectTypeKey); consistency r16 2 gaps (WITHDRAWN residue + missing [1.3.46]) → fixed; ARCHITECT OVER-REACH incident: recorded BC-X.8.010 WITHDRAWN beyond the rewrite ruling, corrected same burst; counts 657/96, spec v1.3.46; guards green. Gate: adversary pass 7 in flight; trajectory 22→21→18→16→10→5.** | **ADVERSARY PASS-6 REMEDIATED** | **2026-07-16** | **Adversary pass 7 in flight.** | `phase-f2-spec-evolution/consistency-report-576-r16.md`; BC 657; holdouts 96; spec v1.3.46. |
+
+### Archived Current Phase Steps row (adversary-pass-7 remediation burst)
+
+Displaced to make room for SOH-ATTACHMENTS-1 adversary pass-7 remediation step row per keep-5 rule.
+
+| Step | Agent | Status | Output |
+|------|-------|--------|--------|
+| **SOH-ATTACHMENTS-1 F2 ADVERSARY PASS-6 REMEDIATED (2026-07-16): 5 findings (1M/2L/2I); P6-001 servicedesk projectId resolution corrected (get_or_fetch_project_meta reuse; research hedge resolved); P6-004 BC-X.8.010 rewrite to reuse-contract (no new cache family; Cache Types 7); JSM-detection mechanism named (projectTypeKey); ARCHITECT OVER-REACH self-correction (WITHDRAWN claim → corrected to REUSE same burst); consistency r16 2 gaps → fixed; guards green. Pass 7 DISPATCHED.** | adversary + state-manager | COMPLETE | `phase-f2-spec-evolution/consistency-report-576-r16.md`; BC 657; holdouts 96; spec v1.3.46. |
