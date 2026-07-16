@@ -7,6 +7,25 @@ project: "jr (jira-cli)"
 
 Track all spec version changes. Most recent version first.
 
+## [1.3.51] - 2026-07-16
+
+### Type: MINOR
+
+**Summary**: Adversary pass 11 (P11) fix round — batch download fail-soft-continue policy defined; --out/--out-dir clap bindings pinned; H-NEW-ATTACHMENT-003 Call B added.
+
+**Changes**:
+
+- `.factory/specs/prd/bc-2-issue-read.md` (MODIFIED): P11-001 — BC-2.7.008 gains explicit fail-soft-continue policy paragraph: per-file content-GET failure → stderr warning + temp-delete + exclude from manifest + continue; exit 0 all-succeed / exit 1 any-fail; manifest still emitted on partial failure (exit-1 + valid-stdout noted). EC-2.7.008-6 updated to clarify exit 0/1 behavior. New ECs: EC-2.7.008-7 (some-fail-some-succeed exit 1 + partial manifest), EC-2.7.008-8 (all-fail exit 1 + empty array). BC-2.7.009 gains cross-reference to BC-2.7.008 fail-soft policy. BC-2.7.012 5xx/network rows gain "(single mode; batch mode: per-file fail-soft per BC-2.7.008)" qualifier. P11-002 — EC-2.7.007-9 added: `--out` requires `--id` (clap `requires` → exit 2). EC-2.7.008-9 added: `--out-dir` requires `--all` or `--newest` (clap `requires_one_of` → exit 2). BC-2.7.007 CLI flags clause updated to note both requires bindings.
+- `.factory/specs/prd/holdout-scenarios.md` (MODIFIED): H-NEW-ATTACHMENT-003 extended with Call B: one content-GET returns 500 → fail-soft exit 1 + partial manifest in JSON mode + failed entry excluded. Why/Status/BC-refs updated to reference Call B and EC-2.7.008-7.
+
+**Impact**:
+
+| Dimension | Value |
+|---|---|
+| BC count | 657 (unchanged) |
+| Holdout count | 96 (unchanged) |
+| Spec version | 1.3.50→1.3.51 |
+
 ## [1.3.50] - 2026-07-16
 
 ### Type: PATCH

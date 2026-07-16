@@ -748,9 +748,11 @@ On success, a completion hint is emitted to stderr: `"Downloaded: <path> (<size_
 **EC-2.7.007-8** (concurrent downloads, same out-dir): if two `jr` processes download the same attachment to the same output directory simultaneously, each writes to its own uniquely-named `tmp_<random>` file. There is no interleaving of temp files. When both rename to the final path, the last successful rename wins (standard OS atomic-rename semantics); the earlier written file is silently overwritten. This is safe: both processes produce identical bytes (same source URL), so the last rename wins without data loss. No locking between processes is required.
 **EC-2.7.007-7** (`--output json` success shape for `--id`): `{"downloaded":[{"filename":"<name>","id":"<AID>","path":"<written path>","size":N}]}`; one-element `downloaded` array; inner keys in alphabetical order (`filename` < `id` < `path` < `size`); stdout only; exit 0. `path` is the absolute or relative path actually written (per BC-2.7.010). `size` is the byte count written. No stderr output in JSON mode. Output MUST route through `output::render_json` (#526 invariant).
 
+**EC-2.7.007-9** (`--out` without `--id` — clap binding): `--out <PATH>` MUST be declared with `requires = "id"` (clap `requires` → exit 2 when `--out` is supplied without `--id`). `--out` combined with `--all` or `--newest` is invalid: batch downloads write to a directory (`--out-dir`), not a single file path.
+
 **Observability** (`--verbose` / `--verbose-bodies`): `--verbose` logs method + URL only (unchanged CLAUDE.md rule SD-003). `--verbose-bodies` MUST NOT attempt to materialize the streaming response body — the body is a potentially large binary stream and buffering it for logging would defeat the OOM-safety design of streaming download. On a download response, `--verbose-bodies` MUST log response headers and the final written byte count ONLY (e.g., `<download body: N bytes written to <path>>`), never content. The PII warning that `--verbose-bodies` emits extends to attachment content by extension (attachment payloads may contain credentials, personal data, or confidential documents).
 
-**CLI flags** (pinned for e2e surface guard): `<KEY>` (positional, required); `--id <AID>` (single download); `--all` (batch); `--newest <N>` (top-N); `--out <PATH>` (single-file path override); `--out-dir <DIR>` (batch target directory); `--force` (overwrite existing); `--filter <FILTER>` (repeatable); `--output json`; `--no-input`; `--profile <NAME>`; `--no-color`.
+**CLI flags** (pinned for e2e surface guard): `<KEY>` (positional, required); `--id <AID>` (single download); `--all` (batch); `--newest <N>` (top-N); `--out <PATH>` (single-file path override; requires `--id`, clap `requires` — EC-2.7.007-9); `--out-dir <DIR>` (batch target directory; requires `--all` or `--newest`, clap `requires_one_of` — EC-2.7.008-9); `--force` (overwrite existing); `--filter <FILTER>` (repeatable); `--output json`; `--no-input`; `--profile <NAME>`; `--no-color`.
 
 **Trace**: F2 spec evolution (SOH-ATTACHMENTS-1 2026-07-15; DEC-179 ratified design; research §1b–1d VERIFIED; JSDCLOUD-10841 §P2-6 VERIFIED — platform endpoint for JSM; JRACLOUD-97046 §6 no-redirect-false; GHSA-9857-6MW7-FQ2M corroboration); SEC-576-003 (CWE-522 credential-stripping wiremock test requirement added 2026-07-15)
 
@@ -768,6 +770,8 @@ On success, a completion hint is emitted to stderr: `"Downloaded: <path> (<size_
 
 On completion a summary hint emits to stderr: `"Downloaded N of M attachments to <dir>."` (N = successful, M = total).
 
+**Per-file download error policy (fail-soft-continue)**: A per-file content-GET failure (403, 404, 5xx, network error, or mid-stream abort on `GET /rest/api/3/attachment/content/{id}`) on a batch path (`--all` / `--newest`) does NOT abort the batch. For each failed file: (1) a stderr warning is emitted: `"warning: failed to download attachment <AID>: <reason>"`; (2) any in-progress temporary file for that attachment is deleted (same temp-delete mechanics as EC-2.7.007-4 for the single-ID path); (3) the failed attachment is excluded from the `downloaded` array in JSON mode and from the N count in the summary. The batch continues with the remaining attachments. **Final exit code**: 0 if all files succeeded; 1 if ANY file failed (including all-fail). In `--output json` mode on partial failure, the manifest is still emitted to stdout (partial `downloaded` array) while exit code is 1 — callers MUST NOT assume a non-zero exit code implies no stdout output on download commands.
+
 **EC-2.7.008-1** (empty attachment list): issue has no attachments → exit 0; stderr: `"No attachments on <KEY>."` (canonical string — unified with EC-2.7.001-1; "found" removed for consistency)
 
 **EC-2.7.008-2** (directory does not exist): if `--out-dir <DIR>` is specified and the directory does not exist → exit 64 before any download: `"Output directory does not exist: <DIR>"`. The handler does NOT create the directory automatically.
@@ -775,9 +779,15 @@ On completion a summary hint emits to stderr: `"Downloaded N of M attachments to
 **EC-2.7.008-3** (`--id` and `--all` mutual exclusion): clap enforces `conflicts_with` → exit 2 when both are supplied simultaneously.
 **EC-2.7.008-4** (`--out-dir` path exists but is not a directory): exit 64: `"Not a directory: <PATH>"`. A regular file at the specified path is rejected; the handler requires a directory.
 **EC-2.7.008-5** (`--out-dir` path does not exist): supersedes EC-2.7.008-2 wording clarification — same exit 64: `"Output directory does not exist: <DIR>"`.
-**EC-2.7.008-6** (`--output json` success shape for `--all` / `--newest N`): `{"downloaded":[{"filename":"<name>","id":"<AID>","path":"<written path>","size":N},…]}`; N-element `downloaded` array (one entry per file written; files skipped due to collision or `--filter` are NOT in the array); inner keys alphabetical; stdout only; exit 0. No stderr hints (truncation, skips) in JSON mode. Shape aligns with EC-2.7.007-7 for a uniform download response type. Output MUST route through `output::render_json` (#526 invariant).
+**EC-2.7.008-6** (`--output json` success shape for `--all` / `--newest N`): `{"downloaded":[{"filename":"<name>","id":"<AID>","path":"<written path>","size":N},…]}`; N-element `downloaded` array (one entry per file written; files skipped due to collision or `--filter` are NOT in the array); inner keys alphabetical; stdout only; exit 0 (all succeeded) or exit 1 (partial failure — per EC-2.7.008-7/8; the manifest is still emitted even when exit code is 1). No stderr hints (truncation, skips) in JSON mode. Shape aligns with EC-2.7.007-7 for a uniform download response type. Output MUST route through `output::render_json` (#526 invariant).
 
 
+
+**EC-2.7.008-7** (some-fail-some-succeed — fail-soft exit code): if one or more content-GET/stream steps fail while others succeed, exit code is 1; `downloaded` array in JSON mode contains only the successful entries (failed attachments excluded); stderr per-file warnings emitted for each failure; summary prints actual `N` of `M` where N < M. Temp file deleted per failure (EC-2.7.007-4 mechanics).
+
+**EC-2.7.008-8** (all-fail): if every content-GET step fails, exit 1; `downloaded` array is empty (`[]`) in JSON mode; summary prints `"Downloaded 0 of M attachments to <dir>."` Per-file stderr warnings still emitted for each failure.
+
+**EC-2.7.008-9** (`--out-dir` without `--all` or `--newest` — clap binding): `--out-dir` MUST be declared with `requires_one_of(["all", "newest"])` (clap `requires_one_of` → exit 2 when `--out-dir` is supplied without either `--all` or `--newest`). Supplying `--out-dir` with `--id` is invalid: a single-file download writes to an explicit `--out <PATH>` or defaults to the current directory.
 
 **Trace**: F2 spec evolution (SOH-ATTACHMENTS-1 2026-07-15; DEC-179 ratified design)
 
@@ -797,7 +807,7 @@ On completion a summary hint emits to stderr: `"Downloaded N of M attachments to
 
 If the issue has fewer than N attachments after filtering, all available attachments are downloaded (not an error; N > available count is handled gracefully).
 
-`--newest N` is mutually exclusive with `--id` (clap `conflicts_with` → exit 2). `--newest N` combined with `--all` is rejected (clap `conflicts_with` → exit 2). Overwrite and `--force` behavior follow BC-2.7.007/BC-2.7.008.
+`--newest N` is mutually exclusive with `--id` (clap `conflicts_with` → exit 2). `--newest N` combined with `--all` is rejected (clap `conflicts_with` → exit 2). Overwrite and `--force` behavior follow BC-2.7.007/BC-2.7.008. Per-file content-GET errors on `--newest` batch downloads follow BC-2.7.008's fail-soft-continue policy (EC-2.7.008-7/8): per-file warning + temp-delete + continue; exit 1 if any file failed.
 
 **EC-2.7.009-1** (N ≤ 0 — clap parses `--newest` as a signed integer i64; app validates N ≥ 1): `--newest` MUST be declared with `allow_negative_numbers = true` so that negative values (e.g. `-5`) reach the handler as a valid i64 rather than being intercepted by clap as an unknown flag (clap exit 2). The handler validates N ≥ 1; if it finds N ≤ 0, exit 64 before any HTTP call: `"--newest requires a positive integer."` N = 0 is rejected (zero-download is ambiguous, not silently accepted).
 **EC-2.7.009-2** (non-integer value for `--newest`): clap cannot parse the value as i64 → clap exit 2 with a usage error; no HTTP call. Message is clap-generated (not controlled by `jr` application code).
@@ -910,8 +920,8 @@ Since step 4 of sanitization already strips `../`, `/`, `\`, `:`, the join will 
 | AID 404 from metadata endpoint (`GET /attachment/{id}`) | 64 | `"Attachment <AID> not found or not accessible."` |
 | AID 403 from metadata endpoint (`GET /attachment/{id}`) | 1 | `"Permission denied: cannot access attachment <AID>."` |
 | KEY or AID 401 | 2 | Not authenticated + `jr auth login` hint |
-| KEY or AID 5xx | 1 | `API error (<N>)` |
-| Network error | 1 | Connectivity hint |
+| KEY or AID 5xx | 1 | `API error (<N>)` (single mode; batch mode: per-file fail-soft per BC-2.7.008) |
+| Network error | 1 | Connectivity hint (single mode; batch mode: per-file fail-soft per BC-2.7.008) |
 
 **Trace**: F2 spec evolution (SOH-ATTACHMENTS-1 2026-07-15; DEC-179 ratified design; research §6 JRACLOUD-96384/-78388 VERIFIED)
 

@@ -762,3 +762,20 @@ Guards: `check-spec-counts.sh`: OK. `check-bc-cumulative-counts.sh`: OK (657 / 8
 
 **BC / holdout count: 657 BCs / 96 holdouts — UNCHANGED.**
 Guards: `check-spec-counts.sh`: OK. `check-bc-cumulative-counts.sh`: OK (657 / 8 files).
+
+
+---
+
+### Round P11 — 2026-07-16
+
+**Adversary pass 11 fix round (1 MED + 1 LOW)**
+
+| Finding | Severity | Status | Summary |
+|---|---|---|---|
+| P11-001 | MED | APPLIED | BC-2.7.008 gains explicit fail-soft-continue policy: per-file content-GET failure → stderr warning `"warning: failed to download attachment <AID>: <reason>"` + temp-delete + exclude from manifest + continue. Final exit 0 (all-succeed) / exit 1 (any-fail). Manifest still emitted in JSON mode on partial failure (exit-1 + valid-stdout noted). EC-2.7.008-6 updated. New ECs: EC-2.7.008-7 (some-fail exit 1 + partial manifest), EC-2.7.008-8 (all-fail exit 1 + empty array). BC-2.7.009 cross-references BC-2.7.008 fail-soft policy. BC-2.7.012 5xx/network rows gain "(single mode; batch mode: per-file fail-soft per BC-2.7.008)" qualifier. H-NEW-ATTACHMENT-003 extended with Call B (one 500 content-GET → fail-soft exit 1 + partial manifest + failed entry excluded). |
+| P11-002 | LOW | APPLIED | EC-2.7.007-9 added: `--out <PATH>` requires `--id` (clap `requires` → exit 2). EC-2.7.008-9 added: `--out-dir <DIR>` requires `--all` or `--newest` (clap `requires_one_of` → exit 2). BC-2.7.007 CLI flags clause updated to note both requires bindings. |
+
+**Changelog-sync (self-administered)**: v1.3.51 MINOR entry inserted in `spec-changelog.md`; `prd-delta-576.md` `spec_version_after` → 1.3.51.
+
+**BC / holdout count: 657 BCs / 96 holdouts — UNCHANGED.**
+Guards: `check-spec-counts.sh`: OK. `check-bc-cumulative-counts.sh`: OK (657 / 8 files).

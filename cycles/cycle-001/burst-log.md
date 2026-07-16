@@ -5104,3 +5104,21 @@ Displaced to make room for SOH-ATTACHMENTS-1 adversary pass-7 remediation step r
 | Step | Agent | Status | Output |
 |------|-------|--------|--------|
 | **SOH-ATTACHMENTS-1 F2 ADVERSARY PASS-6 REMEDIATED (2026-07-16): 5 findings (1M/2L/2I); P6-001 servicedesk projectId resolution corrected (get_or_fetch_project_meta reuse; research hedge resolved); P6-004 BC-X.8.010 rewrite to reuse-contract (no new cache family; Cache Types 7); JSM-detection mechanism named (projectTypeKey); ARCHITECT OVER-REACH self-correction (WITHDRAWN claim → corrected to REUSE same burst); consistency r16 2 gaps → fixed; guards green. Pass 7 DISPATCHED.** | adversary + state-manager | COMPLETE | `phase-f2-spec-evolution/consistency-report-576-r16.md`; BC 657; holdouts 96; spec v1.3.46. |
+
+---
+
+## Archived Phase Progress row (2026-07-16, adversary-pass-11 remediation burst)
+
+Displaced to make room for SOH-ATTACHMENTS-1 F2 ADVERSARY PASS-11 REMEDIATED (2026-07-16) row per keep-5 rule.
+
+| Phase | Status | Completed | Gate | Notes |
+|-------|--------|-----------|------|-------|
+| **SOH-ATTACHMENTS-1 F2 ADVERSARY PASS-2 REMEDIATED (2026-07-15) — p2 NOT-CLEAN 21 (5H/9M/5L/2I; headline: ADV-576-P2-003 replace-existing deleted before --public gate — data-loss ordering fixed via no-destructive-call-before-gate invariant; P2-001 multi-AID delete form reconciled → --yes bulk rule; 2 holdouts made executable); fix round 19 applied + 2 architect items; consistency r9 (1M/2L) → r10 CONSISTENT (quote-verified closures); counts stable 657/95, v1.3.45; guards green. Gate: adversary pass 3 in flight.** | **ADVERSARY PASS-2 REMEDIATED** | **2026-07-15** | **Adversary pass 3 in flight.** | `phase-f2-spec-evolution/consistency-report-576-r9.md`; BC 657; holdouts 95; spec v1.3.45. |
+
+### Archived Current Phase Steps row (adversary-pass-11 remediation burst)
+
+Displaced to make room for SOH-ATTACHMENTS-1 adversary pass-11 remediation step row per keep-5 rule.
+
+| Step | Agent | Status | Output |
+|------|-------|--------|--------|
+| **SOH-ATTACHMENTS-1 F2 ADVERSARY PASS-2 REMEDIATED (2026-07-15): 21 findings (5H/9M/5L/2I); headline ADV-576-P2-003 (replace-existing gate ordering — data-loss fix); P2-001 multi-AID delete reconciled to --yes bulk rule; 2 holdouts made executable; fix round 19 applied + 2 architect retro-annotation items; consistency r9 (3 findings: 1M/2L) → r10 CONSISTENT (all 3 R9 verified by direct quote; R8-001 definitively refuted); guards green. Pass 3 DISPATCHED.** | adversary + state-manager | COMPLETE | `phase-f2-spec-evolution/consistency-report-576-r9.md` + `consistency-report-576-r10.md`; BC 657; holdouts 95; spec v1.3.45. |
