@@ -1,5 +1,7 @@
 class JrD < Formula
-  desc "Fast, keyboard-driven Jira CLI with offline support and fuzzy search (dev ch)"
+  # Homebrew desc audit: <= 80 chars (incl. any channel suffix), capitalized,
+  # no leading article, must not start with the formula name, no trailing period.
+  desc "Keyboard-driven Jira CLI with offline support and fuzzy search (dev)"
   homepage "https://github.com/REPO_PLACEHOLDER"
   version "VERSION_PLACEHOLDER"
   license "MIT"
