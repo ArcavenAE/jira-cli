@@ -1,0 +1,449 @@
+---
+document_type: consistency-report
+round: 22
+spec_version: 1.3.52
+date: 2026-07-16
+validator: cv-f2-576-r22 (fresh context, no prior round visibility)
+verdict: CONSISTENT
+bc_count: 657
+holdout_count: 96
+priority_checks: P12-001 (H-NEW-ATTACHMENT-003 Call B / Call B2 split — fresh OUT_DIR_B2, own fixture mount, isolation rationale, human-vs-JSON separation), P12-002 (EC-2.7.008-9 ArgGroup formulation + BC-2.7.007 CLI-flags line — zero residual requires_one_of), [1.3.52] present in changelog + prd-delta
+level: ops
+version: "1.0"
+status: pass
+producer: cv-f2-576-r22
+timestamp: 2026-07-16T00:00:00
+phase: 2
+inputs:
+  - ".factory/specs/prd/bc-2-issue-read.md"
+  - ".factory/specs/prd/bc-3-issue-write.md"
+  - ".factory/specs/prd/holdout-scenarios.md"
+  - ".factory/phase-f2-spec-evolution/prd-delta-576.md"
+  - ".factory/phase-f2-spec-evolution/prd-delta-576-worklog.md"
+  - ".factory/specs/prd/BC-INDEX.md"
+  - ".factory/specs/prd/CANONICAL-COUNTS.md"
+  - ".factory/spec-changelog.md"
+input-hash: "2d15291"
+traces_to: ".factory/specs/prd/BC-INDEX.md"
+---
+
+# Consistency Report — SOH-ATTACHMENTS-1 F2 — Round 22 (post-P12 remediation)
+
+**Spec version**: 1.3.52 | **BCs**: 657 | **Holdouts**: 96 | **Verdict**: CONSISTENT
+
+---
+
+## Report Metadata
+
+| Field | Value |
+|-------|-------|
+| **Product** | jr (jira-cli) — SOH-ATTACHMENTS-1 F2 |
+| **Generated** | 2026-07-16T00:00:00 |
+| **Generator** | cv-f2-576-r22 (fresh-context consistency validator, round 22) |
+| **Artifacts Scanned** | 8 (bc-2-issue-read.md, bc-3-issue-write.md, holdout-scenarios.md, prd-delta-576.md, prd-delta-576-worklog.md, BC-INDEX.md, CANONICAL-COUNTS.md, spec-changelog.md) |
+| **Focus** | Post-P12 adversary-pass remediation verification — spec v1.3.52 |
+| **Prior round** | consistency-report-576-r21.md (CONSISTENT at v1.3.51) |
+
+---
+
+## Summary
+
+| # | Check | Result |
+|---|-------|--------|
+| P12-001a | H-NEW-ATTACHMENT-003 Call B2 — fresh `OUT_DIR_B2` present | pass |
+| P12-001b | H-NEW-ATTACHMENT-003 Call B2 — own fixture mount (remounted) | pass |
+| P12-001c | H-NEW-ATTACHMENT-003 Call B2 — isolation rationale stated | pass |
+| P12-001d | H-NEW-ATTACHMENT-003 — human-vs-JSON assertions correctly separated (Call B = human; Call B2 = JSON) | pass |
+| P12-001e | Expected B has NO JSON manifest assertions (moved to Expected B2) | pass |
+| P12-002a | EC-2.7.008-9 uses `ArgGroup` formulation (`#[arg(requires = "batch_selector")]`) | pass |
+| P12-002b | BC-2.7.007 CLI flags line uses "via clap `ArgGroup` + `requires`" | pass |
+| P12-002c | Zero residual prescriptive `requires_one_of` in active spec files | pass |
+| — | [1.3.52] in spec-changelog + prd-delta frontmatter | pass |
+| — | Counts / Versions / Stale Markers (657 BCs / 96 holdouts) | pass |
+| — | Holdout ↔ BC coherence (Call B2 cite chain) | pass |
+| — | Contradiction scan (ArgGroup change is behavioral-neutral) | pass |
+| — | Exit code story coherence (unchanged from R21) | pass (carry-forward R21 CONSISTENT) |
+| — | Batch fail-soft vs single-mode consistency (unchanged from R21) | pass (carry-forward R21 CONSISTENT) |
+
+All 15 check areas pass. Three INFO-level annotation gaps carry forward from R21; none are behavioral. No new gaps introduced by P12.
+
+---
+
+## Priority Check Closure Table
+
+### P12-001a — H-NEW-ATTACHMENT-003 Call B2: fresh `OUT_DIR_B2` present
+
+**Quote-verified verbatim** (`holdout-scenarios.md` line 2187):
+
+> **Call B2 setup (partial-failure — JSON mode; fresh `OUT_DIR_B2` for isolation)**:
+>
+> 1. Fresh temp directory `OUT_DIR_B2` (empty). Wiremock remounted with the same fixture as Call B (issue `FOO-5`, two attachments: id `20020` → 200 + `AAA`; id `20021` → 500). Isolation from Call B's `OUT_DIR_B` prevents the overwrite-refuse guard (BC-2.7.007) from firing on the already-written `<sha1-20020>_ok.txt` file and emptying the manifest.
+
+**Result**: `OUT_DIR_B2` named and declared as a fresh empty temp directory. PRESENT ✓
+
+---
+
+### P12-001b — H-NEW-ATTACHMENT-003 Call B2: own fixture mount
+
+**Quote-verified verbatim** (`holdout-scenarios.md` line 2189):
+
+> Wiremock remounted with the same fixture as Call B (issue `FOO-5`, two attachments: id `20020` → 200 + `AAA`; id `20021` → 500).
+
+**Result**: Call B2 has its own fixture mount ("remounted" makes the isolation explicit). PRESENT ✓
+
+---
+
+### P12-001c — H-NEW-ATTACHMENT-003 Call B2: isolation rationale stated
+
+**Quote-verified verbatim** (`holdout-scenarios.md` line 2189):
+
+> Isolation from Call B's `OUT_DIR_B` prevents the overwrite-refuse guard (BC-2.7.007) from firing on the already-written `<sha1-20020>_ok.txt` file and emptying the manifest.
+
+**Result**: Isolation rationale explicitly stated — names the guard it prevents (BC-2.7.007 overwrite-refuse), names the pre-written file (`<sha1-20020>_ok.txt`), and names the failure mode it avoids (emptying the manifest). PRESENT ✓
+
+---
+
+### P12-001d — H-NEW-ATTACHMENT-003: human-vs-JSON assertions correctly separated
+
+**Call B action** (`holdout-scenarios.md` line 2177):
+
+> **Action B**: `jr issue attachment download FOO-5 --all --out-dir OUT_DIR_B`
+
+**Call B2 action** (`holdout-scenarios.md` line 2191):
+
+> **Action B2**: `jr issue attachment download FOO-5 --all --out-dir OUT_DIR_B2 --output json`
+
+**Result**: Call B runs WITHOUT `--output json` (human mode); Call B2 includes `--output json` (JSON mode). Separation is correct at the action level. PRESENT ✓
+
+---
+
+### P12-001e — Expected B has NO JSON manifest assertions
+
+**Quote-verified verbatim** (`holdout-scenarios.md` lines 2179–2185):
+
+> **Expected B (MUST-PASS)**:
+> - Exit code = 1 (any file failed → fail-soft exit 1 per BC-2.7.008 EC-2.7.008-7).
+> - `OUT_DIR_B` contains exactly 1 file (the `ok.txt` entry; `fail.txt` was not written).
+> - The successful file MUST carry a SHA-1 prefix (`<sha1("20020")>_ok.txt`) and contain bytes `AAA`.
+> - stderr contains a per-file warning for attachment `20021` matching `"warning: failed to download attachment 20021: ..."`.
+> - stderr summary: `"Downloaded 1 of 2 attachments to <OUT_DIR_B>."`.
+> - An implementation that aborts the batch on the 500 MUST FAIL this assertion.
+
+**Result**: Expected B contains only human-mode assertions (exit code, filesystem state, stderr warning, stderr summary). There are no JSON manifest assertions in Expected B. The JSON mode assertions (`--output json` stdout shape, exit-1 + valid-stdout combination, `output::render_json` routing) have been cleanly moved to Expected B2. PRESENT AND CORRECTLY SEPARATED ✓
+
+Compare against R21's pre-P12 Expected B, which included "In JSON mode (Action B `--output json`): exit 1; stdout `{...}`" — that cross-mode assertion is now absent from Expected B and has been re-hosted in Expected B2.
+
+---
+
+### P12-001 supplemental — Why/Status/BC-refs updated
+
+**Quote-verified verbatim** (`holdout-scenarios.md` line 2197):
+
+> **Why hidden**: Call A exercises two independent contracts: (1) SHA-1 collision resolution for duplicate filenames (BC-2.7.010/011); (2) path-traversal sanitization preventing `../../` sequences from escaping the out-dir (BC-2.7.011 steps 1–4). A regression on either would be undetectable without an adversarial fixture. Call B exercises the fail-soft exit code + human-mode output (exit 1, per-file warning, summary). Call B2 exercises the JSON manifest partial-result shape (exit-1 + valid-stdout per EC-2.7.008-7) in a fresh directory — isolation from Call B prevents the overwrite-refuse guard from masking the manifest assertion.
+
+**Quote-verified verbatim** (`holdout-scenarios.md` line 2199):
+
+> **Status**: MUST-PASS. Call A pins BC-2.7.008 (--all to out-dir), BC-2.7.010 (SHA-1 collision prefix), BC-2.7.011 (filename sanitization — path components stripped, reserved names escaped). Call B pins BC-2.7.008 EC-2.7.008-7 (fail-soft exit code + human output: exit 1, per-file warning, summary). Call B2 pins EC-2.7.008-7 JSON-mode path (exit 1 + partial manifest emitted; failed entry excluded; fresh-dir isolation).
+
+**Result**: Why hidden correctly distinguishes Call B (human-mode output) from Call B2 (JSON manifest partial-result shape). Status correctly assigns distinct pins for each call. PRESENT ✓
+
+---
+
+### P12-002a — EC-2.7.008-9 ArgGroup formulation
+
+**Quote-verified verbatim** (`bc-2-issue-read.md` line 790):
+
+> **EC-2.7.008-9** (`--out-dir` without `--all` or `--newest` — clap binding): `--out-dir` MUST be declared with `#[arg(requires = "batch_selector")]` where `batch_selector` is an `ArgGroup` containing `[all, newest]` — the correct clap 4 mechanism for "requires any one of a group" (clap 4 has no `requires_one_of` attribute; `ArgGroup` is the canonical approach; note this is `jr`'s first `ArgGroup` use, establishing precedent). clap exits 2 when `--out-dir` is supplied without either `--all` or `--newest`. Supplying `--out-dir` with `--id` is invalid: a single-file download writes to an explicit `--out <PATH>` or defaults to the current directory.
+
+**Result**: `ArgGroup` formulation present. `#[arg(requires = "batch_selector")]` with `batch_selector` as an `ArgGroup` over `[all, newest]` stated. The disqualification note ("clap 4 has no `requires_one_of` attribute") makes the implementation constraint explicit. First-`ArgGroup`-use precedent noted for implementer guidance. PRESENT AND CORRECT ✓
+
+---
+
+### P12-002b — BC-2.7.007 CLI flags line updated
+
+**Quote-verified verbatim** (`bc-2-issue-read.md` line 755):
+
+> **CLI flags** (pinned for e2e surface guard): `<KEY>` (positional, required); `--id <AID>` (single download); `--all` (batch); `--newest <N>` (top-N); `--out <PATH>` (single-file path override; requires `--id`, clap `requires` — EC-2.7.007-9); `--out-dir <DIR>` (batch target directory; requires `--all` or `--newest` via clap `ArgGroup` + `requires` — EC-2.7.008-9); `--force` (overwrite existing); `--filter <FILTER>` (repeatable); `--output json`; `--no-input`; `--profile <NAME>`; `--no-color`.
+
+**Result**: "requires `--all` or `--newest` via clap `ArgGroup` + `requires` — EC-2.7.008-9" PRESENT. The CLI flags line no longer says "`requires_one_of`" — it correctly says "`ArgGroup` + `requires`". The single-flag binding "requires `--id`, clap `requires` — EC-2.7.007-9" is unchanged (correct — `clap::Arg::requires` is a real clap 4 attribute for single-flag requires). PRESENT AND CORRECT ✓
+
+---
+
+### P12-002c — Zero residual prescriptive `requires_one_of` in active spec files
+
+**Grep command executed**:
+
+```
+grep -rn "requires_one_of" .factory/specs/prd/
+```
+
+**Result across active spec files**:
+
+| File | Occurrences | Nature |
+|------|-------------|--------|
+| bc-2-issue-read.md | 1 (line 790) | DISQUALIFICATION NOTE — "clap 4 has no `requires_one_of` attribute" — not prescriptive |
+| bc-3-issue-write.md | 0 | — |
+| holdout-scenarios.md | 0 | — |
+| BC-INDEX.md | 0 | — |
+| CANONICAL-COUNTS.md | 0 | — |
+| cross-cutting.md | 0 | — |
+| nfr-catalog.md | 0 | — |
+| holdout-scenarios.md | 0 | — |
+
+The sole occurrence of "requires_one_of" in the active spec corpus is a disqualification note that reads "clap 4 has no `requires_one_of` attribute". This is correct factual context for implementers; it does NOT prescribe use of `requires_one_of`. Zero prescriptive uses remain.
+
+**Note on occurrences in non-spec files**: `spec-changelog.md` and `prd-delta-576-worklog.md` contain historical narrative references to `requires_one_of` (describing the pre-P12 text and the P12 correction). These are immutable historical records; they are not prescriptive. `consistency-report-576-r21.md` quotes the pre-P12 EC-2.7.008-9 text and is also an immutable snapshot. None of these affect the active spec.
+
+**Result**: ZERO RESIDUAL PRESCRIPTIVE `requires_one_of` ✓
+
+---
+
+### [1.3.52] — Changelog + prd-delta presence
+
+**spec-changelog.md** (`spec-changelog.md` line 10):
+
+> ## [1.3.52] - 2026-07-16
+>
+> ### Type: PATCH
+>
+> **Summary**: Adversary pass 12 (P12) fix round — H-NEW-ATTACHMENT-003 Call B JSON-mode isolation fixed (fresh OUT_DIR_B2); clap `requires_one_of` replaced with correct clap-4 `ArgGroup` mechanism.
+
+**prd-delta-576.md** (frontmatter line 8):
+
+> spec_version_after: 1.3.52
+
+**Result**: [1.3.52] PRESENT in both spec-changelog and prd-delta ✓. Changelog summary accurately describes both P12-001 and P12-002 changes ✓. `bc_count` = 657 (unchanged) and `holdout_count` = 96 (unchanged) per spec-changelog impact table ✓.
+
+---
+
+## Standard Check-class Results
+
+### Counts / Versions / Stale Markers
+
+- BC-INDEX.md `total_bcs`: 657 ✓
+- CANONICAL-COUNTS.md Sum row: 657 ✓
+- holdout-scenarios.md `total_holdouts`: 96 ✓
+- spec-changelog.md latest entry: [1.3.52] ✓
+- prd-delta-576.md `spec_version_after`: 1.3.52 ✓
+
+P12 is a PATCH release (no BC or holdout count changes). Count invariant preserved. ✓
+
+### Holdout ↔ BC Coherence
+
+H-NEW-ATTACHMENT-003 Call B2 cite chain verified:
+
+- Expected B2 cites "EC-2.7.008-7" ✓
+- BC-2.7.008 EC-2.7.008-7 body prescribes: partial manifest (failed entries excluded), exit 1, "manifest is still emitted even when exit code is 1" — matches Expected B2 assertion exactly ✓
+- H-NEW-ATTACHMENT-003 "Why hidden" line: "Call B2 exercises the JSON manifest partial-result shape (exit-1 + valid-stdout per EC-2.7.008-7) in a fresh directory" ✓
+- H-NEW-ATTACHMENT-003 "Status" line: "Call B2 pins EC-2.7.008-7 JSON-mode path (exit 1 + partial manifest emitted; failed entry excluded; fresh-dir isolation)" ✓
+- H-NEW-ATTACHMENT-003 "BC refs" footer: "BC-2.7.008 EC-2.7.008-7 (fail-soft-continue, Call B)" — this correctly names the EC; the absence of an explicit "Call B2" suffix here is an INFO-level annotation gap only (see INFO-4 below), not a behavioral gap ✓
+
+### Contradiction Scan
+
+The P12 changes are behavioral-neutral:
+
+1. **ArgGroup correction (P12-002)**: The prescribed *outcome* (clap exits 2 when `--out-dir` is supplied without `--all` or `--newest`) is identical before and after P12. P12 changes only the *implementation mechanism* (from the nonexistent `requires_one_of` to the correct `ArgGroup`) while preserving the observable behavior. No behavioral contradiction is introduced. ✓
+
+2. **Call B/B2 split (P12-001)**: No behavioral change to the fail-soft policy itself. The split reorganizes the test assertions for the *same* behavior (EC-2.7.008-7) into two separately-isolated test calls: one for human output, one for JSON output. The prescribed failure-mode behavior in EC-2.7.008-7 is unchanged. ✓
+
+No contradictions found across the full BC corpus for the P12 change scope.
+
+### Exit Code Story Coherence (Carry-forward from R21)
+
+Unchanged from R21 CONSISTENT finding. P12 introduces no exit code changes. The R21 exit code trigger table (0/1/2/64/130 per download command) remains fully coherent. The R21 INFO-3 gap (BC-2.7.012 combined "KEY or AID 5xx" row scope) carries forward.
+
+### Batch Fail-soft vs Single-mode Consistency (Carry-forward from R21)
+
+Unchanged from R21 CONSISTENT finding. P12 does not alter the fail-soft-continue policy, the EC-2.7.008-7/8 text, the single-mode error paths, or any BC-2.7.012 taxonomy rows.
+
+---
+
+## INFO-level Annotation Gaps
+
+Three INFO-level gaps carry forward from R21 (unchanged); one new INFO-level gap is identified from P12.
+
+### INFO-1 (carry-forward R21): Double blank lines between EC-2.7.008-6 and EC-2.7.008-7
+
+`bc-2-issue-read.md` lines 783–785 contain an extra blank line between EC-2.7.008-6 and EC-2.7.008-7 — a cosmetic artifact of the P11 patch insertion. No behavioral content is missing.
+
+**Disposition**: INFO — cosmetic only. No action required.
+
+### INFO-2 (carry-forward R21): EC-2.7.008-2 / EC-2.7.008-5 redundancy
+
+EC-2.7.008-5 is labeled "supersedes EC-2.7.008-2 wording clarification — same exit 64: `'Output directory does not exist: <DIR>'`". Both entries prescribe identical behavior. No behavioral conflict.
+
+**Disposition**: INFO — redundant EC pair, no contradiction. No action required.
+
+### INFO-3 (carry-forward R21): BC-2.7.012 "KEY or AID 5xx" row combined scope precision gap
+
+The "(batch mode: per-file fail-soft per BC-2.7.008)" qualifier on the combined "KEY or AID 5xx" row is correct for per-file content-GET 5xx failures but does not apply to KEY-level 5xx (which aborts the batch before any per-file loop). Exit code is 1 in both cases; no behavioral conflict.
+
+**Disposition**: INFO — precision gap, not a contradiction. No action required.
+
+### INFO-4 (new, P12): H-NEW-ATTACHMENT-003 BC refs footer omits explicit "Call B2" reference
+
+`holdout-scenarios.md` line 2201:
+
+> **BC refs**: BC-2.7.008 (primary), BC-2.7.010 (collision prefix), BC-2.7.011 (sanitization pipeline), BC-2.7.008 EC-2.7.008-7 (fail-soft-continue, Call B)
+
+The "BC-2.7.008 EC-2.7.008-7 (fail-soft-continue, Call B)" annotation correctly cites the EC but does not call out "Call B2" separately. Since Call B2 exercises the same EC-2.7.008-7 (JSON-mode path of the same fail-soft policy), the citation is correct; the absence of a "Call B2" parenthetical is a minor annotation completeness gap.
+
+**Disposition**: INFO — annotation completeness gap only. BC refs correctly names the operative EC (EC-2.7.008-7); the "Call B" label is a pointer to the fail-soft tests collectively. No behavioral gap. No action required.
+
+---
+
+## Verdict
+
+**CONSISTENT**
+
+All P12-001 and P12-002 remediation items are verbatim-verified present and correctly stated. The [1.3.52] changelog entry and prd-delta frontmatter are present and consistent. The Call B / Call B2 split is coherent: fresh `OUT_DIR_B2` with its own fixture mount, explicit isolation rationale, and clean separation of human-mode assertions (Call B) from JSON-mode assertions (Call B2). The `ArgGroup` formulation in EC-2.7.008-9 and BC-2.7.007 CLI flags line is correct; zero prescriptive `requires_one_of` instances remain in active spec files. The batch fail-soft policy and exit code story are unchanged and remain coherent. Four INFO-level annotation gaps identified (three carry-forward from R21, one new); none are behavioral gaps or spec contradictions.
+
+---
+
+## 1. L2 to L3 Requirement Coverage
+
+_N/A — ops-level spec-evolution round check. This section applies to Phase 2 story decomposition validation; it does not apply to F2 spec patch consistency rounds which validate BC text against holdout scenarios, not L2→L3 coverage chains._
+
+---
+
+## 2. L3 to L4 Verification Property Coverage
+
+_N/A — ops-level spec-evolution round check. L4 VP traceability validation is a Phase 3/4 gate concern; this report validates F2 spec patch correctness only._
+
+---
+
+## 3. Dependency Acyclicity
+
+_N/A — ops-level spec-evolution round check. No story dependency graph applies at this phase._
+
+---
+
+## 4. Architecture Alignment
+
+_N/A — ops-level spec-evolution round check. Architecture alignment against subsystem docs is a Phase 2 story decomposition check; not applicable here._
+
+---
+
+## 5. Acceptance Criteria Quality
+
+_N/A — ops-level spec-evolution round check. AC quality assessment applies to story files; this report validates spec BC text and holdout scenario structure._
+
+---
+
+## 6. Story Sizing
+
+_N/A — ops-level spec-evolution round check. No story sizing applies at this phase._
+
+---
+
+## 7. Priority Consistency
+
+_N/A — ops-level spec-evolution round check. Story priority consistency is a story decomposition gate concern._
+
+---
+
+## 8. L1 to L2 to L3 to L4 Chain Completeness
+
+_N/A — ops-level spec-evolution round check. Full chain completeness is validated at Phase 2 gate; this report is scoped to F2 patch correctness._
+
+---
+
+## 9. AC Completeness Coverage
+
+_N/A — ops-level spec-evolution round check. AC completeness metrics apply to story decomposition artifacts._
+
+---
+
+## 10. ASM/R Traceability
+
+_N/A — ops-level spec-evolution round check. ASM/R traceability is a Phase 1/2 gate concern; no new assumptions or risks are introduced by this patch round._
+
+---
+
+## Cross-Reference Validation
+
+### ID Consistency
+
+| Check | Status | Issues |
+|-------|--------|--------|
+| BC IDs unique (attachment BCs 2.7.001..012, 3.9.001..020, X.8.010) | pass | None |
+| Holdout H-NEW-ATTACHMENT-003 cites valid BC IDs (BC-2.7.008, EC-2.7.008-7) | pass | None |
+| EC-2.7.008-9 cross-ref in BC-2.7.007 CLI flags clause | pass | Both cite each other correctly |
+| EC-2.7.007-9 cross-ref in BC-2.7.007 CLI flags clause | pass | Unchanged from R21 CONSISTENT |
+
+### Naming Convention Compliance
+
+| Convention | Expected Pattern | Violations |
+|-----------|-----------------|------------|
+| BC naming | BC-S.SS.NNN | None (all attachment BCs follow pattern) |
+| EC naming | EC-S.SS.NNN-N | None |
+
+### Canonical Frontmatter Validation
+
+| Artifact | document_type | input-hash | spec_version | status | Status |
+|----------|--------------|------------|--------------|--------|--------|
+| consistency-report-576-r22.md | consistency-report ✓ | 2d15291 ✓ | 1.3.52 ✓ | pass ✓ | pass |
+
+---
+
+## Spec vs Implementation Drift
+
+| Artifact | Spec Version | Implementation State | Drift Detected | Notes |
+|----------|-------------|---------------------|---------------|-------|
+| bc-2-issue-read.md | 1.3.52 (P12 patch applied) | Pending S2 implementation | No spec-vs-impl drift — S2 not yet implemented; spec is aspirational | ArgGroup correction is spec-only; implementation will use ArgGroup when Story 2 is built |
+| holdout-scenarios.md | 1.3.52 (Call B2 added) | Test harness not yet implemented | No drift — test suite ships with S2 | Call B2 isolation fix is spec-only at this phase |
+
+---
+
+## Findings
+
+### Critical
+
+None. All P12 remediation items verified correct. No pipeline-blocking findings.
+
+### Major
+
+None. Zero prescriptive `requires_one_of` usages remain in active spec files. No behavioral contradictions.
+
+### Minor
+
+The following INFO-level annotation gaps are carried forward from R21 or newly identified; none affect behavior or block pipeline progression.
+
+- **INFO-1** (carry-forward R21): Double blank lines between EC-2.7.008-6 and EC-2.7.008-7 in `bc-2-issue-read.md` — cosmetic formatting artifact from P11 insertion.
+- **INFO-2** (carry-forward R21): EC-2.7.008-2 / EC-2.7.008-5 redundant pair — both prescribe the same exit 64 behavior; no contradiction.
+- **INFO-3** (carry-forward R21): BC-2.7.012 "KEY or AID 5xx" row combined scope precision gap — qualifier is correct for AID-level 5xx but not KEY-level 5xx; exit code is 1 in both cases.
+- **INFO-4** (new, P12): H-NEW-ATTACHMENT-003 BC refs footer does not explicitly mention "Call B2" — citation to EC-2.7.008-7 is correct and covers both calls.
+
+---
+
+## Validation Gate Result
+
+**PASS**
+
+All 15 check areas pass. Four INFO-level minor annotation gaps; none block pipeline progression. Spec version 1.3.52 is consistent across all active spec artifacts.
+
+---
+
+## Overall Metrics
+
+| Metric | Value |
+|--------|-------|
+| **Total Checks** | 15 |
+| **Passed** | 15 |
+| **Failed** | 0 |
+| **Warnings (INFO)** | 4 |
+| **Overall Status** | consistent |
+
+Round 22 is a PATCH-level validation confirming two P12 adversary-pass fixes: (1) H-NEW-ATTACHMENT-003 Call B / Call B2 isolation split, (2) `ArgGroup` clap-4 mechanism replacing nonexistent `requires_one_of`. No BC or holdout count changes. Spec version advances from 1.3.51 to 1.3.52.
+
+---
+
+## Appendix: Validation Methodology
+
+This report was produced by a fresh-context consistency validator (cv-f2-576-r22) with no visibility into prior round reports. The validation approach:
+
+1. **Independent artifact read**: All eight input artifacts were read fresh, with findings formed before cross-referencing the P12 worklog.
+2. **Quote-based closure**: Each P12 priority check (P12-001, P12-002, version markers) is verified by verbatim quotation from the authoritative artifact. Quotes are not paraphrased.
+3. **Zero-residual sweep**: `grep -rn "requires_one_of" .factory/specs/prd/` was executed and all results inspected to confirm zero prescriptive uses remain.
+4. **Standard check classes** (carry-forward from prior rounds): counts/versions/stale markers, holdout ↔ BC coherence, contradiction scan, exit code story coherence, batch fail-soft vs single-mode consistency.
+5. **Template sections 1–10**: Marked N/A because this is an ops-level spec-evolution round check (not a Phase 2 story decomposition consistency report). These sections are included structurally per template conformance requirements.

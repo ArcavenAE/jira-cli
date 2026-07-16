@@ -2166,7 +2166,7 @@ Call B (two attachments):
 - The `../../evil.txt` filename is sanitized: the file lands inside `OUT_DIR` with a safe name (e.g., `evil.txt` or `__.evil.txt` or SHA-1-prefixed); it does NOT appear at any path above `OUT_DIR`.
 - All three files are present and contain the correct bytes (`AAA`, `BBB`, `CCC` in corresponding files).
 
-**Call B setup (partial-failure — one content-GET returns 500)**:
+**Call B setup (partial-failure — human mode; `OUT_DIR_B`)**:
 
 1. Wiremock at `JR_BASE_URL`. Config with a valid profile at `JR_CONFIG_DIR`. Temp directory `OUT_DIR_B` (empty).
 2. Wiremock mounts `GET /rest/api/3/issue/FOO-5?fields=attachment` returning two attachments:
@@ -2176,20 +2176,27 @@ Call B (two attachments):
 
 **Action B**: `jr issue attachment download FOO-5 --all --out-dir OUT_DIR_B`
 
-**Action B (JSON mode)**: `jr issue attachment download FOO-5 --all --out-dir OUT_DIR_B --output json`
-
 **Expected B (MUST-PASS)**:
 - Exit code = 1 (any file failed → fail-soft exit 1 per BC-2.7.008 EC-2.7.008-7).
 - `OUT_DIR_B` contains exactly 1 file (the `ok.txt` entry; `fail.txt` was not written).
 - The successful file MUST carry a SHA-1 prefix (`<sha1("20020")>_ok.txt`) and contain bytes `AAA`.
 - stderr contains a per-file warning for attachment `20021` matching `"warning: failed to download attachment 20021: ..."`.
 - stderr summary: `"Downloaded 1 of 2 attachments to <OUT_DIR_B>."`.
-- In JSON mode (Action B `--output json`): exit 1; stdout `{"downloaded":[{"filename":"<sha1-of-20020>_ok.txt","id":"20020","path":"<path>","size":3}]}`; the `fail.txt` entry (`"id":"20021"`) is absent from `downloaded`; the JSON manifest is emitted despite exit 1 (exit-1 + valid-stdout combination per EC-2.7.008-7). Output routes through `output::render_json` (#526).
-- An implementation that either (a) aborts the batch on the 500 or (b) includes `"id":"20021"` in `downloaded` MUST FAIL this assertion.
+- An implementation that aborts the batch on the 500 MUST FAIL this assertion.
 
-**Why hidden**: Call A exercises two independent contracts: (1) SHA-1 collision resolution for duplicate filenames (BC-2.7.010/011); (2) path-traversal sanitization preventing `../../` sequences from escaping the out-dir (BC-2.7.011 steps 1–4). A regression on either would be undetectable without an adversarial fixture. Call B exercises the fail-soft-continue policy (BC-2.7.008 EC-2.7.008-7): an implementation that aborts on the first 5xx, or includes the failed entry in the JSON manifest, would pass simple success-only tests but fail this holdout.
+**Call B2 setup (partial-failure — JSON mode; fresh `OUT_DIR_B2` for isolation)**:
 
-**Status**: MUST-PASS. Call A pins BC-2.7.008 (--all to out-dir), BC-2.7.010 (SHA-1 collision prefix), BC-2.7.011 (filename sanitization — path components stripped, reserved names escaped). Call B pins BC-2.7.008 EC-2.7.008-7 (fail-soft-continue: partial failure → exit 1, partial manifest, failed entry excluded).
+1. Fresh temp directory `OUT_DIR_B2` (empty). Wiremock remounted with the same fixture as Call B (issue `FOO-5`, two attachments: id `20020` → 200 + `AAA`; id `20021` → 500). Isolation from Call B's `OUT_DIR_B` prevents the overwrite-refuse guard (BC-2.7.007) from firing on the already-written `<sha1-20020>_ok.txt` file and emptying the manifest.
+
+**Action B2**: `jr issue attachment download FOO-5 --all --out-dir OUT_DIR_B2 --output json`
+
+**Expected B2 (MUST-PASS)**:
+- Exit code = 1; stdout `{"downloaded":[{"filename":"<sha1-of-20020>_ok.txt","id":"20020","path":"<path>","size":3}]}`; the `fail.txt` entry (`"id":"20021"`) is absent from `downloaded`; the JSON manifest is emitted despite exit 1 (exit-1 + valid-stdout combination per EC-2.7.008-7). Output routes through `output::render_json` (#526).
+- An implementation that includes `"id":"20021"` in `downloaded` MUST FAIL this assertion.
+
+**Why hidden**: Call A exercises two independent contracts: (1) SHA-1 collision resolution for duplicate filenames (BC-2.7.010/011); (2) path-traversal sanitization preventing `../../` sequences from escaping the out-dir (BC-2.7.011 steps 1–4). A regression on either would be undetectable without an adversarial fixture. Call B exercises the fail-soft exit code + human-mode output (exit 1, per-file warning, summary). Call B2 exercises the JSON manifest partial-result shape (exit-1 + valid-stdout per EC-2.7.008-7) in a fresh directory — isolation from Call B prevents the overwrite-refuse guard from masking the manifest assertion.
+
+**Status**: MUST-PASS. Call A pins BC-2.7.008 (--all to out-dir), BC-2.7.010 (SHA-1 collision prefix), BC-2.7.011 (filename sanitization — path components stripped, reserved names escaped). Call B pins BC-2.7.008 EC-2.7.008-7 (fail-soft exit code + human output: exit 1, per-file warning, summary). Call B2 pins EC-2.7.008-7 JSON-mode path (exit 1 + partial manifest emitted; failed entry excluded; fresh-dir isolation).
 
 **BC refs**: BC-2.7.008 (primary), BC-2.7.010 (collision prefix), BC-2.7.011 (sanitization pipeline), BC-2.7.008 EC-2.7.008-7 (fail-soft-continue, Call B)
 

@@ -7,6 +7,25 @@ project: "jr (jira-cli)"
 
 Track all spec version changes. Most recent version first.
 
+## [1.3.52] - 2026-07-16
+
+### Type: PATCH
+
+**Summary**: Adversary pass 12 (P12) fix round — H-NEW-ATTACHMENT-003 Call B JSON-mode isolation fixed (fresh OUT_DIR_B2); clap `requires_one_of` replaced with correct clap-4 `ArgGroup` mechanism.
+
+**Changes**:
+
+- `.factory/specs/prd/holdout-scenarios.md` (MODIFIED): P12-001 — H-NEW-ATTACHMENT-003 Call B restructured: human-mode action (OUT_DIR_B) and JSON-mode action split into Call B + Call B2; Call B2 uses fresh `OUT_DIR_B2` with its own fixture mount to prevent the overwrite-refuse guard from firing on the already-written file and producing a vacuous empty-manifest assertion. Why/Status updated.
+- `.factory/specs/prd/bc-2-issue-read.md` (MODIFIED): P12-002 — EC-2.7.008-9 and BC-2.7.007 CLI flags line: `requires_one_of` (clap 4 nonexistent) replaced with correct mechanism: `#[arg(requires = "batch_selector")]` where `batch_selector` is an `ArgGroup` over `[all, newest]`. First `ArgGroup` use in `jr` noted.
+
+**Impact**:
+
+| Dimension | Value |
+|---|---|
+| BC count | 657 (unchanged) |
+| Holdout count | 96 (unchanged) |
+| Spec version | 1.3.51→1.3.52 |
+
 ## [1.3.51] - 2026-07-16
 
 ### Type: MINOR

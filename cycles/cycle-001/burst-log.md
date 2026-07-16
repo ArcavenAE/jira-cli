@@ -5122,3 +5122,22 @@ Displaced to make room for SOH-ATTACHMENTS-1 adversary pass-11 remediation step 
 | Step | Agent | Status | Output |
 |------|-------|--------|--------|
 | **SOH-ATTACHMENTS-1 F2 ADVERSARY PASS-2 REMEDIATED (2026-07-15): 21 findings (5H/9M/5L/2I); headline ADV-576-P2-003 (replace-existing gate ordering — data-loss fix); P2-001 multi-AID delete reconciled to --yes bulk rule; 2 holdouts made executable; fix round 19 applied + 2 architect retro-annotation items; consistency r9 (3 findings: 1M/2L) → r10 CONSISTENT (all 3 R9 verified by direct quote; R8-001 definitively refuted); guards green. Pass 3 DISPATCHED.** | adversary + state-manager | COMPLETE | `phase-f2-spec-evolution/consistency-report-576-r9.md` + `consistency-report-576-r10.md`; BC 657; holdouts 95; spec v1.3.45. |
+
+
+---
+
+## Archived Phase Progress row (2026-07-16, adversary-pass-12 remediation burst)
+
+Displaced to make room for SOH-ATTACHMENTS-1 F2 ADVERSARY PASS-12 REMEDIATED (2026-07-16) row per keep-5 rule.
+
+| Phase | Status | Completed | Gate | Notes |
+|-------|--------|-----------|------|-------|
+| **SOH-ATTACHMENTS-1 F2 ADVERSARY PASS-7 REMEDIATED (2026-07-16) — p7 NOT-CLEAN 3 (1M/2L); P7-001 CWE-88 AID path-injection guard added across 7 BC surfaces + H-007 assertion (server-sourced AIDs = untrusted, mirrors comment-family EC-3.5.002-1); P7-002 gate-suppression completed for the zero-match path (one-gate-per-invocation now spans 3 texts); P7-003 batch degenerate fallback pinned <sha1>_<aid> per R3.10; consistency r17 keystones all quote-closed, 2 LOW metadata fixed; spec v1.3.47; SPEC-CHANGELOG-RESYNC 3rd instance → PO now self-administers changelog-sync per round; counts 657/96; guards green. Gate: adversary pass 8 in flight; trajectory-tail →16→10→5→3.** | **ADVERSARY PASS-7 REMEDIATED** | **2026-07-16** | **Adversary pass 8 in flight.** | `phase-f2-spec-evolution/consistency-report-576-r17.md`; BC 657; holdouts 96; spec v1.3.47. |
+
+### Archived Current Phase Steps row (adversary-pass-12 remediation burst)
+
+Displaced to make room for SOH-ATTACHMENTS-1 adversary pass-12 remediation step row per keep-5 rule.
+
+| Step | Agent | Status | Output |
+|------|-------|--------|--------|
+| **SOH-ATTACHMENTS-1 F2 ADVERSARY PASS-7 REMEDIATED (2026-07-16): 3 findings (1M/2L); P7-001 CWE-88 AID path-injection guard across 7 BC surfaces + H-007 assertion (server-sourced AIDs = untrusted); P7-002 gate-suppression for zero-match path (one-gate-per-invocation spans 3 texts); P7-003 batch degenerate fallback <sha1>_<aid> per R3.10; consistency r17 2 LOW → fixed; spec v1.3.47; guards green. Pass 8 DISPATCHED.** | adversary + state-manager | COMPLETE | `phase-f2-spec-evolution/consistency-report-576-r17.md`; BC 657; holdouts 96; spec v1.3.47. |

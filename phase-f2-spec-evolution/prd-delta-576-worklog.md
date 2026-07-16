@@ -779,3 +779,20 @@ Guards: `check-spec-counts.sh`: OK. `check-bc-cumulative-counts.sh`: OK (657 / 8
 
 **BC / holdout count: 657 BCs / 96 holdouts — UNCHANGED.**
 Guards: `check-spec-counts.sh`: OK. `check-bc-cumulative-counts.sh`: OK (657 / 8 files).
+
+
+---
+
+### Round P12 — 2026-07-16
+
+**Adversary pass 12 fix round (1 MED + 1 LOW)**
+
+| Finding | Severity | Status | Summary |
+|---|---|---|---|
+| P12-001 | MED | APPLIED | H-NEW-ATTACHMENT-003 Call B restructured: original single call (Action B + Action B JSON mode in the same OUT_DIR_B) split into Call B (human mode, OUT_DIR_B) + Call B2 (JSON mode, fresh OUT_DIR_B2). Fresh directory prevents the overwrite-refuse guard firing on the already-written file, which would empty the manifest and make a spec-correct implementation FAIL the holdout. Call B2 setup paragraph explains the isolation rationale. Why/Status updated to reference Call B2. |
+| P12-002 | LOW | APPLIED | EC-2.7.008-9 and BC-2.7.007 CLI flags line: `requires_one_of(["all", "newest"])` (clap 4 nonexistent) replaced at both sites with the correct clap 4 mechanism — `#[arg(requires = "batch_selector")]` where `batch_selector` is an `ArgGroup` containing `[all, newest]`. First `ArgGroup` use in `jr` noted as precedent. EC-2.7.007-9's `requires = "id"` left unchanged (real clap 4 attribute, verified). |
+
+**Changelog-sync (self-administered)**: v1.3.52 PATCH entry inserted in `spec-changelog.md`; `prd-delta-576.md` `spec_version_after` → 1.3.52.
+
+**BC / holdout count: 657 BCs / 96 holdouts — UNCHANGED.**
+Guards: `check-spec-counts.sh`: OK. `check-bc-cumulative-counts.sh`: OK (657 / 8 files).
