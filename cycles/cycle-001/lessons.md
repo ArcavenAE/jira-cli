@@ -5987,3 +5987,33 @@ _Tagged: [process-gap] [hook-pressure] [forbidden-file-edit] [engine-side] [writ
 
 _Recorded: 2026-07-16. State-manager (adversary-pass-16 remediation burst, TD-VSDD-053)._
 _Tagged: [process-gap] [twin-artifact-sweep] [recurrence-7] [bc-index] [mechanical-grep] [error-taxonomy] [perimeter-scan]_
+
+---
+
+### STOP-AND-REPORT-POSITIVE-CONTROL-P17 [positive-control]
+
+**Observation (P17 burst, 2026-07-16):** The product-owner identified a fourth function-name site during the P17 fix round (P17-002 had explicitly cited three sites in SQ-1, SQ-2, and the impact-boundary) and — rather than silently fixing it — STOPPED and explicitly ASKED the orchestrator whether the fourth site (SQ-3 prose ~line 267) was in scope. The orchestrator confirmed it was in scope and directed the fix. The three-micro-fix set was then self-administered with the PO correctly verifying arithmetic before committing.
+
+**Why this is a positive control:** This is exactly the STOP-and-report behavior required by the STOP-on-deviation mandate (PG-F4-1 family). The PO correctly recognized: (1) the adversary finding named three sites but a fourth existed; (2) silently fixing it would constitute out-of-scope improvisation; (3) the correct action is to surface it and ask. Contrast with the PG-F4-11 pattern (implementer wrote substitute approach without reporting). The hardened-dispatch protocol that mandates STOP-on-deviation is working as designed.
+
+**Also positive:** The orchestrator's same-burst confirmation of the INFO-11 tracking-record "three sites"→"four sites" update and the INFO-12 BC-3.9.003 Trace P17-003 citation as micro-fixes — both were surfaced by the consistency-validator r27 and addressed without requiring a separate fix round (self-administered micro-fixes within the same burst).
+
+_Recorded: 2026-07-16. State-manager (adversary-pass-17 remediation burst, TD-VSDD-053)._
+_Tagged: [positive-control] [stop-and-report] [po-discipline] [hardened-dispatch] [pg-f4-1-family] [micro-fix] [codified]_
+
+---
+
+### TWIN-ARTIFACT-SWEEP-RECURRENCE-8 [process-gap]
+
+**Observation (P17-001, 2026-07-16):** BC-3.9.014 Source field still said "S5" after the P16-002/R3.13 reallocation changed the allocation to "S3". The PO fix for P16-002 correctly updated the BC body text (allocation from S5→S3), but did NOT update the Source field — a classic twin-artifact miss of the fix-echo class. The adversary caught it as P17-001 (MEDIUM). This is the 8th recurrence of the TWIN-ARTIFACT-SWEEP class.
+
+**Newly identified mirror surface:** The Source field of a reallocated BC is a mirror surface for allocation changes. Whenever a fix round changes a BC's `depends_on`/allocation (R3.x), the Source field must also be swept. This surface was not in the prior mechanical sweep checklist.
+
+**Rule (reinforcement + extension):** The mechanical-sweep checklist after any BC body edit must include:
+1. BC-INDEX row sync (grep `BC-X.Y.NNN` against BC-INDEX.md) — established at recurrence 7.
+2. Source field sweep for all BCs whose allocation changed in the current fix round — NEW from recurrence 8.
+
+**Mitigation results for P17:** The mechanical-grep dispatch was applied in-round for P17 and synced 5 BC-INDEX rows proactively. Zero BC-INDEX findings from the consistency-validator r27. The mitigation is working; the new Source-field surface is now added to the sweep list for future rounds.
+
+_Recorded: 2026-07-16. State-manager (adversary-pass-17 remediation burst, TD-VSDD-053)._
+_Tagged: [process-gap] [twin-artifact-sweep] [recurrence-8] [source-field] [allocation-change] [bc-index] [mechanical-grep] [fix-echo] [codified] — deferred to vsdd-factory engine (F2-skill template update); outside product repo scope — see STATE.md Drift Items_

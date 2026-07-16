@@ -41,7 +41,7 @@ Four HTTP call implementations against the Jira REST Attachment API:
 |----------|----------|--------|
 | `list_attachments(client, key)` | `GET /rest/api/3/issue/{key}?fields=attachment` | GET |
 | `get_attachment_content(client, aid)` | `GET /rest/api/3/attachment/content/{id}` | GET (returns bytes) |
-| `upload_attachment(client, key, paths)` | `POST /rest/api/3/issue/{key}/attachments` | POST multipart; requires `X-Atlassian-Token: no-check` |
+| `upload_attachments(client, key, paths)` | `POST /rest/api/3/issue/{key}/attachments` | POST multipart; requires `X-Atlassian-Token: no-check` | <!-- name aligned to BC body, P17-002 -->
 | `delete_attachment(client, aid)` | `DELETE /rest/api/3/attachment/{id}` | DELETE (empty 204) |
 
 `list_attachments` does not paginate — Jira returns the full `fields.attachment` array in one call (no cursor or pagination envelope; confirmed by Jira REST API v3 schema). **[P4-006 retro-annotation 2026-07-15: this claim is OVERSTATED — the research never validated the >100-attachment boundary; the v3 schema confirms no pagination envelope but does not document behaviour at large N. Downgrade to: ASSUMED complete per current API schema; NOT verified at large N. S1 delivery obligation: live-verify against a >100-attachment issue or document the unverified bound. BC-2.7.001 assumption clause governs.]** `get_attachment_content` streams bytes to disk rather than buffering in memory (use `reqwest::Response::bytes_stream()` + `tokio::io::copy`); avoids OOM for large attachments.
@@ -264,7 +264,7 @@ Jira's API returns `filename` as a string from the server. A malicious or miscon
 
 ### SQ-3: `X-Atlassian-Token: no-check` on upload
 
-Jira's XSRF protection requires this header on `POST /rest/api/3/issue/{key}/attachments`. Without it, the upload returns 403 Forbidden. This is an Atlassian API requirement, not a security risk in `jr` itself — but it must be added explicitly in `upload_attachment` and tested with a wiremock integration test that asserts the header is present.
+Jira's XSRF protection requires this header on `POST /rest/api/3/issue/{key}/attachments`. Without it, the upload returns 403 Forbidden. This is an Atlassian API requirement, not a security risk in `jr` itself — but it must be added explicitly in `upload_attachments` and tested with a wiremock integration test that asserts the header is present. <!-- name aligned to BC body, P17-002 -->
 
 ### SQ-4: Overwrite semantics on download
 
@@ -403,7 +403,7 @@ Two API call implementations for the JSM two-step flow:
 | Function | Endpoint | Notes |
 |----------|----------|-------|
 | `attach_temporary_file(client, service_desk_id, paths)` | `POST /rest/servicedeskapi/servicedesk/{sdId}/attachTemporaryFile` | Multipart; `X-Atlassian-Token: no-check`; returns `Vec<TempAttachment>` |
-| `attach_to_request(client, issue_key, temp_ids, public)` | `POST /rest/servicedeskapi/request/{issueKey}/attachment` | JSON body; `additionalComment` omitted (optional per P2-3b) |
+| `post_request_attachment(client, issue_key, temp_ids, public)` | `POST /rest/servicedeskapi/request/{issueKey}/attachment` | JSON body; `additionalComment` omitted (optional per P2-3b) | <!-- name aligned to BC body, P17-002 -->
 
 The `serviceDeskId` is resolved by the caller (the upload handler) via the existing `require_service_desk` path in `src/api/jsm/servicedesks.rs` — no new serviceDeskId resolution function needed; the existing `get_or_fetch_project_meta` chain is reused. **[P6-001/P6-004 retro-correction 2026-07-15: (1) the internal match is by `projectId` (numeric), NOT `projectKey` string — `get_or_fetch_project_meta` calls `GET /rest/api/3/project/{key}` to extract the numeric `project_id`, then matches service desks by `d.project_id == project_id`; the `project_key` is only the cache-lookup key for `project_meta.json`. (2) No new cache is needed — the existing `ProjectMeta.service_desk_id` field is ALREADY stored in the `project_meta.json` cache by `get_or_fetch_project_meta`; BC-X.8.010 as originally planned (new dedicated cache family) is WITHDRAWN — P6-004 simplification. **[SUBSEQUENTLY REVISED — see R2.3/lines 490-492: BC-X.8.010 IS REWRITTEN TO REUSE, not withdrawn; BC survives as the resolution+self-heal reuse-contract; counts 657/96 unchanged]** `require_service_desk` already avoids the repeated paginated scan via the existing `ProjectMeta` cache.]**
 
@@ -693,7 +693,7 @@ The §1.1 function table in Rev 1 lists four functions. A fifth is required for 
 |----------|----------|-------|
 | `get_attachment_metadata(client, aid)` | `GET /rest/api/3/attachment/{id}` | Returns JSON metadata only (not bytes); confirmed by research §1a — "the attachment itself is not returned"; used by `handle_attachment_delete` before issuing DELETE to populate the confirmation prompt |
 
-The full revised function list for `src/api/jira/attachments.rs` (5 functions): `list_attachments`, `get_attachment_content`, `get_attachment_metadata`, `upload_attachment`, `delete_attachment`. S4 story plan must allocate implementation scope for this function alongside the delete handler.
+The full revised function list for `src/api/jira/attachments.rs` (5 functions): `list_attachments`, `get_attachment_content`, `get_attachment_metadata`, `upload_attachments`, `delete_attachment`. S4 story plan must allocate implementation scope for this function alongside the delete handler. <!-- upload_attachments plural — name aligned to BC body, P17-002 -->
 
 ### R3.8 Orchestrator pattern-extension rulings (adversary pass 2 checkpoint) — FLAG FOR HUMAN REVIEW AT F2
 

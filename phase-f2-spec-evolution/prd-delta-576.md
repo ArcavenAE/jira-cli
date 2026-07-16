@@ -5,7 +5,7 @@ issues: "#576, #585"
 phase: F2
 authored: 2026-07-15
 spec_version_before: 1.3.42
-spec_version_after: 1.3.56
+spec_version_after: 1.3.57
 bc_count_before: 624
 bc_count_after: 657
 holdout_count_before: 88
@@ -30,9 +30,9 @@ BC-2.7.002. All design decisions ratified by DEC-179.
 |-------|---------|------------|
 | S1 | `jr issue attachment list` (list + filter) | BC-2.7.001..006 |
 | S2 | `jr issue attachment download` (single/batch/newest) | BC-2.7.007..012 |
-| S3 | `jr issue attachment upload` (platform POST + `--replace-existing` + `--dry-run` path-c) | BC-3.9.001..002, BC-3.9.009, BC-3.9.012, BC-3.9.014, BC-3.9.017, BC-3.9.018, BC-3.9.020 (path-c: `--replace-existing --dry-run` + EC-3.9.020-6 clap guard). **BC-3.9.014 gate mechanics ship with S3** (earliest gate consumer, required by BC-3.9.017 step 2's ≥1-match gate; S5 consumes them for the `--public`/combined variants — S5 `depends_on` S3; F3 must encode this edge). [P16-002 ORCHESTRATOR RULING: BC-3.9.014 reallocated S5→S3] |
+| S3 | `jr issue attachment upload` (platform POST + `--replace-existing` + `--dry-run` path-c) | BC-3.9.001..002, BC-3.9.009, BC-3.9.012, BC-3.9.014, BC-3.9.017, BC-3.9.018, BC-3.9.020 (path-c: `--replace-existing --dry-run` + EC-3.9.020-6 clap guard). **BC-3.9.014 gate mechanics ship with S3** (earliest gate consumer, required by BC-3.9.017 step 2's ≥1-match gate; S5 consumes them for the `--public`/combined variants — S5 `depends_on` S3; F3 must encode this edge). [P16-002 ORCHESTRATOR RULING: BC-3.9.014 reallocated S5→S3] **BC-3.9.007 scope note (P17-005)**: BC-3.9.007 EC-3.9.007-1 platform-echo clause is exercised in S3 (BC-3.9.001 + BC-3.9.009 ship with S3; earliest-consumer principle per R3.13). |
 | S4 | `jr issue attachment delete` | BC-3.9.008, BC-3.9.010, BC-3.9.013, BC-3.9.015, BC-3.9.016, BC-3.9.019, BC-3.9.020 |
-| S5 | `jr issue attachment upload --public/--internal` (JSM visibility) | BC-3.9.003..007, BC-3.9.011, BC-X.8.010. **BC-3.9.014 gate mechanics consumed here** for `--public` standalone (consumer 1) and combined `--public`+≥1-match (consumer 3) — gate mechanics ship with S3 (above); S5 depends_on S3 for this. **EC-3.9.020-7 path-c `--public` annotation**: the `"visibility":"public"` annotation on `wouldUpload` entries in `--replace-existing --dry-run --public` (path-c) is activated only when `--public` is supplied; its end-to-end behavior is verified in S5 — S3 implements the annotation plumbing keyed on the flag. [P16-002 ORCHESTRATOR RULING] |
+| S5 | `jr issue attachment upload --public/--internal` (JSM visibility) | BC-3.9.003..007, BC-3.9.011, BC-X.8.010. **BC-3.9.014 gate mechanics consumed here** for `--public` standalone (consumer 1) and combined `--public`+≥1-match (consumer 3) — gate mechanics ship with S3 (above); S5 depends_on S3 for this. **EC-3.9.020-7 path-c `--public` annotation**: the `"visibility":"public"` annotation on `wouldUpload` entries in `--replace-existing --dry-run --public` (path-c) is activated only when `--public` is supplied; its end-to-end behavior is verified in S5 — S3 implements the annotation plumbing keyed on the flag. [P16-002 ORCHESTRATOR RULING] **BC-3.9.007 scope note (P17-005)**: S5 owns JSM echo clauses (EC-3.9.007-2, P2-3c deferred); platform-echo clause (EC-3.9.007-1) ships with S3. |
 
 ---
 
@@ -318,3 +318,21 @@ Source: Adversary Pass 16 (Consistency Review). 2 MEDIUM / 3 LOW / 1 INFO findin
 | P16-INFO | INFO | impact-boundary-576.md | APPLIED | edge-case-catalog.md inline-EC convention accepted as deliberate (no content action required). Disposition documented alongside error-taxonomy.md omission in R3.14 perimeter-scan retro-annotation. |
 
 **BC count at this round: 657 (unchanged). Holdout count: 98 (unchanged). VP count: 33 (unchanged). Spec version: 1.3.56. Both guards exit 0.**
+
+---
+
+## Adversary Pass 17 Fix Round Finding Dispositions
+
+Source: Adversary Pass 17 (Consistency Review). 1 MEDIUM / 4 LOW / 2 INFO findings. Spec version bump: 1.3.56 → 1.3.57. No new BCs. Holdouts: 98 (unchanged). VPs: 33 (unchanged).
+
+| Finding | Severity | File(s) Touched | Status | What changed |
+|---------|----------|----------------|--------|-------------|
+| P17-001 (MEDIUM) | MEDIUM | bc-3-issue-write.md | APPLIED | BC-3.9.014 Source field corrected: `::handle_attachment_upload (implementation pending — story S5)` → `src/cli/issue/attachments.rs (implementation pending — story S3, gate mechanics; consumed by S5 --public/combined per R3.13)`. Aligns with R3.13 reallocation and BC-INDEX.md row already updated in P16. |
+| P17-002 (LOW) | LOW | impact-boundary-576.md | APPLIED | §1.1 table: `upload_attachment(client, key, paths)` → `upload_attachments(client, key, paths)` (plural; name aligned to BC body). R2.1 table: `attach_to_request(client, issue_key, temp_ids, public)` → `post_request_attachment(client, issue_key, temp_ids, public)` (name aligned to BC body). R3.7 full function list: `upload_attachment` → `upload_attachments`; SQ-3 prose: `upload_attachment` → `upload_attachments`. All four sites (§1.1 table, SQ-3 prose, R2.1 table, R3.7 list) annotated "(name aligned to BC body, P17-002)". |
+| P17-003 (LOW) | LOW | bc-3-issue-write.md | APPLIED | EC-3.9.003-5 extended with Step-0 suppression clause: when BC-3.9.003 is entered from BC-3.9.017 step 4, Step 0 (issue GET) is SKIPPED — existence validated by BC-3.9.017 step 1's `?fields=attachment` GET; project meta resolved at BC-3.9.017 step 0; exactly ONE issue GET per invocation on the combined path. Holdouts H-NEW-ATTACHMENT-004/008/009 verified coherent (none exercise the `--replace-existing --public` combined path; no fixture alignment needed). |
+| P17-004 (LOW) | LOW | bc-3-issue-write.md | APPLIED | EC-3.9.017-9 extended with two sub-variants (A) `--replace-existing` only: existing message; (B) combined `--public` + ≥1 match: `"Use --yes to confirm uploading as customer-visible (public) and deleting existing same-filename attachments."` BC-3.9.014 Non-interactive path section extended with three message variants enumerated explicitly (symmetric with three interactive prompt variants): (1) `--public` only; (2) `--replace-existing` ≥1 match no `--public`; (3) combined. |
+| P17-005 (LOW) | LOW | bc-3-issue-write.md, prd-delta-576.md | APPLIED | BC-3.9.007 EC-3.9.007-1 extended with allocation note: exercised in S3 (BC-3.9.001 + BC-3.9.009; R3.13 earliest-consumer principle); S5 owns JSM echo clauses (EC-3.9.007-2). prd-delta-576.md Scope table: S3 row note added (BC-3.9.007 EC-3.9.007-1 platform-echo ships with S3). S5 row note added (S5 owns EC-3.9.007-2 JSM echo clauses). |
+| P17-006 (INFO) | INFO | bc-3-issue-write.md | APPLIED | Upload cancel row added to JSON Output Shape Contracts table: `attachment upload (cancel)` → `{"cancelled":true,"uploaded":false}` (2 keys alphabetical; BC-3.9.003/BC-3.9.014/BC-3.9.017). Placed between `--replace-existing --dry-run` row and `--public` row. |
+| P17-007 (INFO) | INFO | bc-2-issue-read.md | APPLIED | EC-2.7.009-1 annotated: appended `(arg-level \`Arg::allow_negative_numbers\`, clap 4 — verified against docs.rs 4.6.1, P17-007)`. Confirms the arg-level method is available in clap 4.6.1 (the version pinned in Cargo.lock). |
+
+**BC count at this round: 657 (unchanged). Holdout count: 98 (unchanged). VP count: 33 (unchanged). Spec version: 1.3.57. Both guards exit 0.**

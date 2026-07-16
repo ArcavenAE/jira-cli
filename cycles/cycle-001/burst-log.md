@@ -5179,3 +5179,22 @@ Displaced to make room for SOH-ATTACHMENTS-1 adversary pass-16 remediation step 
 | Step | Agent | Status | Output |
 |------|-------|--------|--------|
 | **SOH-ATTACHMENTS-1 F2 ADVERSARY PASS-11 REMEDIATED (2026-07-16): 2 findings (1M/1L); P11-001 batch per-file download-error policy (fail-soft-continue; EC-2.7.008-7/8; H-003 Call B partial-failure fixture added); P11-002 --out/--out-dir selector clap bindings pinned (EC-2.7.007-9/EC-2.7.008-9); consistency r21 CONSISTENT (3rd consecutive zero-action round); spec v1.3.51; guards green. Pass 12 DISPATCHED.** | adversary + state-manager | COMPLETE | `phase-f2-spec-evolution/consistency-report-576-r21.md`; BC 657; holdouts 96; spec v1.3.51. |
+
+
+---
+
+## Archived Phase Progress row (2026-07-16, adversary-pass-17 remediation burst)
+
+Displaced to make room for SOH-ATTACHMENTS-1 F2 ADVERSARY PASS-17 REMEDIATED (2026-07-16) row per keep-5 rule.
+
+| Phase | Status | Completed | Gate | Notes |
+|-------|--------|-----------|------|-------|
+| **SOH-ATTACHMENTS-1 F2 ADVERSARY PASS-11 REMEDIATED (2026-07-16) — p11 NOT-CLEAN 2 (1M/1L); P11-001 batch per-file download-error policy (fail-soft-continue, EC-2.7.008-7/8, H-003 Call B partial-failure fixture); P11-002 --out/--out-dir selector bindings; consistency r19/r20/r21 all CONSISTENT; spec v1.3.51; counts 657/96; guards green. Gate: adversary pass 12 in flight.** | **ADVERSARY PASS-11 REMEDIATED** | **2026-07-16** | **Adversary pass 12 in flight.** | `phase-f2-spec-evolution/consistency-report-576-r21.md`; BC 657; holdouts 96; spec v1.3.51. |
+
+### Archived Current Phase Steps row (adversary-pass-17 remediation burst)
+
+Displaced to make room for SOH-ATTACHMENTS-1 adversary pass-17 remediation step row per keep-5 rule.
+
+| Step | Agent | Status | Output |
+|------|-------|--------|--------|
+| **SOH-ATTACHMENTS-1 F2 ADVERSARY PASS-12 REMEDIATED (2026-07-16): 2 findings (1M/1L, fix-echo class); P12-001 H-003 Call B/B2 holdout isolation split (shared-dir false-negative in H-003 Call B → separate Call B2 partial-failure scenario); P12-002 clap-4 ArgGroup correction (requires_one_of does not exist — ArgGroup::new().required(false).conflicts_with_all formulation web-verified); consistency r22 CONSISTENT (4th consecutive zero-action round); spec v1.3.52; guards green. Pass 13 DISPATCHED.** | adversary + state-manager | COMPLETE | `phase-f2-spec-evolution/consistency-report-576-r22.md`; BC 657; holdouts 96; spec v1.3.52. |

@@ -7,6 +7,29 @@ project: "jr (jira-cli)"
 
 Track all spec version changes. Most recent version first.
 
+## [1.3.57] - 2026-07-16
+
+### Type: PATCH
+
+**Summary**: Adversary pass 17 (P17) fix round — BC-3.9.014 Source corrected S5→S3 (P17-001); `upload_attachments`/`post_request_attachment` function names aligned in impact-boundary-576.md (P17-002); EC-3.9.003-5 extended with Step-0 suppression on `--replace-existing --public` combined path (P17-003); combined non-interactive exit-64 message added to EC-3.9.017-9 sub-variant B and BC-3.9.014 Non-interactive path section (P17-004); BC-3.9.007 EC-3.9.007-1 S3/S5 allocation note added to body and prd-delta-576.md Scope table (P17-005); upload-cancel JSON shape added to JSON Output Shape Contracts table (P17-006); EC-2.7.009-1 annotated with `Arg::allow_negative_numbers` clap 4.6.1 confirmation (P17-007).
+
+**Changes**:
+
+- `.factory/specs/prd/bc-3-issue-write.md` (MODIFIED): P17-001 — BC-3.9.014 Source field: `::handle_attachment_upload (pending story S5)` → `src/cli/issue/attachments.rs (pending story S3, gate mechanics; consumed by S5 --public/combined per R3.13)`. P17-003 — EC-3.9.003-5 extended with Step-0 suppression clause: when BC-3.9.003 entered from BC-3.9.017 step 4, Step 0 (issue GET) SKIPPED — existence already validated by BC-3.9.017 step 1's `?fields=attachment` GET; ONE issue GET per invocation on combined path. P17-004a — EC-3.9.017-9 rewritten with two sub-variants: (A) no `--public` → existing message; (B) combined `--public` + ≥1 match → `"Use --yes to confirm uploading as customer-visible (public) and deleting existing same-filename attachments."` P17-004b — BC-3.9.014 Non-interactive path section extended with three message variants enumerated (symmetric with three interactive prompt variants). P17-005 — BC-3.9.007 EC-3.9.007-1 extended with allocation note (exercised in S3; S5 owns EC-3.9.007-2). P17-006 — Upload cancel row added to JSON Output Shape Contracts table (`{"cancelled":true,"uploaded":false}`; BC-3.9.003/014/017). Footer updated with P17 round note.
+- `.factory/specs/prd/bc-2-issue-read.md` (MODIFIED): P17-007 — EC-2.7.009-1 annotated with `(arg-level \`Arg::allow_negative_numbers\`, clap 4 — verified against docs.rs 4.6.1, P17-007)`.
+- `.factory/phase-f1-delta-analysis/impact-boundary-576.md` (MODIFIED): P17-002 — §1.1 table: `upload_attachment` → `upload_attachments`; SQ-3 prose: `upload_attachment` → `upload_attachments`; R2.1 table: `attach_to_request` → `post_request_attachment`; R3.7 full function list: `upload_attachment` → `upload_attachments`. All four sites (§1.1 table, SQ-3 prose, R2.1 table, R3.7 list) annotated "(name aligned to BC body, P17-002)".
+- `.factory/phase-f2-spec-evolution/prd-delta-576.md` (MODIFIED): P17-005 — Scope table S3 row: BC-3.9.007 EC-3.9.007-1 platform-echo ships with S3 note added. S5 row: S5 owns EC-3.9.007-2 JSM echo clauses note added. `spec_version_after` 1.3.56→1.3.57. P17 fix-round finding dispositions section appended.
+- `.factory/specs/prd/BC-INDEX.md` (MODIFIED): TWIN-ARTIFACT-SWEEP — BC-2.7.009 row (P17-007 annotation); BC-3.9.003 row (P17-003 Step-0 suppression); BC-3.9.007 row (P17-005 S3/S5 allocation); BC-3.9.014 row (P17-001 Source + P17-004 message variants); BC-3.9.017 row (P17-004 sub-variant B). `last_updated` updated; index_version v6.16→v6.17.
+
+**Impact**:
+
+| Dimension | Value |
+|---|---|
+| BC count | 657 (unchanged) |
+| Holdout count | 98 (unchanged) |
+| VP count | 33 (unchanged) |
+| Spec version | 1.3.56→1.3.57 |
+
 ## [1.3.56] - 2026-07-16
 
 ### Type: PATCH
