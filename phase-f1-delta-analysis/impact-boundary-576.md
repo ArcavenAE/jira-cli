@@ -405,7 +405,7 @@ Two API call implementations for the JSM two-step flow:
 | `attach_temporary_file(client, service_desk_id, paths)` | `POST /rest/servicedeskapi/servicedesk/{sdId}/attachTemporaryFile` | Multipart; `X-Atlassian-Token: no-check`; returns `Vec<TempAttachment>` |
 | `attach_to_request(client, issue_key, temp_ids, public)` | `POST /rest/servicedeskapi/request/{issueKey}/attachment` | JSON body; `additionalComment` omitted (optional per P2-3b) |
 
-The `serviceDeskId` is resolved by the caller (the upload handler) via the existing `require_service_desk` path in `src/api/jsm/servicedesks.rs` — no new serviceDeskId resolution function needed; the existing `get_or_fetch_project_meta` + match-on-projectKey chain is reused. A `(profile, projectKey) → serviceDeskId` cache entry (7-day TTL, model-b swallow+warn writer, BC-X.8.010 candidate) is recommended to avoid a paginated `/servicedesk` scan on every `--public` upload.
+The `serviceDeskId` is resolved by the caller (the upload handler) via the existing `require_service_desk` path in `src/api/jsm/servicedesks.rs` — no new serviceDeskId resolution function needed; the existing `get_or_fetch_project_meta` chain is reused. **[P6-001/P6-004 retro-correction 2026-07-15: (1) the internal match is by `projectId` (numeric), NOT `projectKey` string — `get_or_fetch_project_meta` calls `GET /rest/api/3/project/{key}` to extract the numeric `project_id`, then matches service desks by `d.project_id == project_id`; the `project_key` is only the cache-lookup key for `project_meta.json`. (2) No new cache is needed — the existing `ProjectMeta.service_desk_id` field is ALREADY stored in the `project_meta.json` cache by `get_or_fetch_project_meta`; BC-X.8.010 as originally planned (new dedicated cache family) is WITHDRAWN — P6-004 simplification. **[SUBSEQUENTLY REVISED — see R2.3/lines 490-492: BC-X.8.010 IS REWRITTEN TO REUSE, not withdrawn; BC survives as the resolution+self-heal reuse-contract; counts 657/96 unchanged]** `require_service_desk` already avoids the repeated paginated scan via the existing `ProjectMeta` cache.]**
 
 #### Additional dispatch surfaces touched (JSM side)
 
@@ -434,7 +434,7 @@ Rev 1 listed only `"multipart"`. The `"stream"` feature addition and `tokio-util
 | `src/api/jsm/mod.rs` | TOUCHED-DISPATCH | not present |
 | `Cargo.toml` | TOUCHED-CARGO (multipart + stream + tokio-util) | multipart only |
 | `src/api/jsm/servicedesks.rs` | DEPENDENT (call site only; no modifications to existing functions) | not listed |
-| `src/cache.rs` | TOUCHED for serviceDeskId cache (model-b writer, new `write_service_desk_id_cache` / `read_service_desk_id_cache` functions; BC-X.8.010 candidate) | NOT AFFECTED |
+| `src/cache.rs` | TOUCHED for serviceDeskId cache (model-b writer, new `write_service_desk_id_cache` / `read_service_desk_id_cache` functions; BC-X.8.010 candidate) **[P6-004 retro-correction 2026-07-15: NOT TOUCHED — no new cache functions needed. Existing `ProjectMeta.service_desk_id` in `project_meta.json` already caches the serviceDeskId via `write_project_meta`/`read_project_meta`. Classification changes to NOT AFFECTED.]** | NOT AFFECTED |
 
 All Rev 1 classifications are otherwise unchanged.
 
@@ -487,9 +487,9 @@ The `--internal` flag on upload is symmetric with `comment edit --internal` even
 
 | BC | Subject |
 |----|---------|
-| BC-X.8.010 | `(profile, projectKey) → serviceDeskId` cache: 7-day TTL; model-b writer (swallow+warn on disk-write failure; mirrors `write_cmdb_fields_cache`); cache miss → paginated `GET /rest/servicedeskapi/servicedesk` scan with `projectKey` match; used by `attach_temporary_file` caller path |
+| BC-X.8.010 | `(profile, projectKey) → serviceDeskId` cache: 7-day TTL; model-b writer (swallow+warn on disk-write failure; mirrors `write_cmdb_fields_cache`); cache miss → paginated `GET /rest/servicedeskapi/servicedesk` scan with `projectKey` match; used by `attach_temporary_file` caller path **[P6-001/P6-004 retro-correction 2026-07-15: BC-X.8.010 IS REWRITTEN TO REUSE (not withdrawn). (1) The resolution chain matches by `projectId` (numeric), not `projectKey` string — `get_or_fetch_project_meta` fetches `GET /rest/api/3/project/{key}` to get the numeric id, then matches `d.project_id == project_id`; `project_key` is only the outer HashMap cache key. (2) No new cache FILE or writer — the existing `ProjectMeta.service_desk_id` already covers this via `write_project_meta`/`read_project_meta` in `project_meta.json`. BC-X.8.010 SURVIVES as the contract for: (a) serviceDeskId resolution reading through the existing `get_or_fetch_project_meta` cache-backed path, and (b) SEC-576-006 stale-ID self-heal semantics (invalidate project-meta entry → re-resolve once → per-status mapping). BC-X.8.010 must still be authored in `cross-cutting.md`; counts unchanged: 657 BCs / 96 holdouts; `### X.8` = 10 BCs.]** |
 
-**Net new individually-bodied BCs: ~27** (12 Section 2.7 + 14 Section 3.9 + 1 BC-X.8.010)
+**Net new individually-bodied BCs: ~27** (12 Section 2.7 + 14 Section 3.9 + 1 BC-X.8.010) **[P6-004 retro-correction 2026-07-15: BC-X.8.010 REWRITTEN TO REUSE — BC retained; counts unchanged: ~27 net new (12 + 14 + 1).]**
 
 **Revised grand total: 624 → ~651.**
 
@@ -502,7 +502,7 @@ The `--internal` flag on upload is symmetric with `comment edit --internal` even
 Rationale:
 - S5 requires two new files (`src/api/jsm/attachments.rs`, `src/types/jsm/attachment.rs`) that are independent of S3's multipart platform upload code
 - S5 has a INCONCLUSIVE response schema (P2-3c) that blocks finalizing BC-3.9.014 **[PLANNED ID — authored as BC-3.9.011; see R2.3 drift annotation]** until the live EJ e2e run — this gated obligation fits a standalone story better than embedding it inside S3
-- S5 introduces serviceDeskId resolution cache (`src/cache.rs` writer) — a cross-cutting concern that should be reviewed independently of multipart upload
+- S5 introduces serviceDeskId resolution cache (`src/cache.rs` writer) **[P6-004 retro-correction 2026-07-15: S5 does NOT introduce a new cache — it reuses the existing `ProjectMeta.service_desk_id` cache via `get_or_fetch_project_meta`/`require_service_desk`. `src/cache.rs` is NOT touched by S5.]** — a cross-cutting concern that should be reviewed independently of multipart upload
 - S5's confirmation gate (SQ-7) is a new UX pattern for upload operations — isolating it in S5 keeps S3 focused on the core multipart machinery
 - Folding would make S3 a multi-concern story with disparate review surface (platform multipart + JSM two-step + cache + confirmation gate)
 
@@ -570,12 +570,12 @@ These obligations are delivery gates for S5, not F1 blockers.
 | Artifact | Rev 2 addition |
 |----------|---------------|
 | `docs/specs/attachments.md` | Must add JSM two-step flow design, `--public`/`--internal` flag semantics, serviceDeskId resolution strategy, confirmation gate spec, and EJ e2e delivery obligations |
-| `.factory/specs/prd/cross-cutting.md` | Add `BC-X.8.010` (serviceDeskId cache); update `### X.8` section header from `(9 BCs: BC-X.8.001..009)` to `(10 BCs: BC-X.8.001..010)` |
-| `.factory/specs/prd/BC-INDEX.md` | Update `### X.8` section count; add BC-X.8.010 to the listing |
-| `.factory/specs/prd/CANONICAL-COUNTS.md` | Grand total revised: 624 → ~651 (+27 individually-bodied) |
+| `.factory/specs/prd/cross-cutting.md` | Add `BC-X.8.010` (serviceDeskId cache); update `### X.8` section header from `(9 BCs: BC-X.8.001..009)` to `(10 BCs: BC-X.8.001..010)` **[P6-004 retro-correction 2026-07-15: BC-X.8.010 REWRITTEN TO REUSE — BC retained as the resolution+self-heal contract; authored with reuse of `get_or_fetch_project_meta`+`ProjectMeta.service_desk_id`; no new cache functions. `cross-cutting.md` still touched; `### X.8` updates to 10 BCs as planned.]** |
+| `.factory/specs/prd/BC-INDEX.md` | Update `### X.8` section count; add BC-X.8.010 to the listing **[P6-004 retro-correction 2026-07-15: BC-X.8.010 REWRITTEN TO REUSE — BC retained; `BC-INDEX.md` `### X.8` entry still added as planned.]** |
+| `.factory/specs/prd/CANONICAL-COUNTS.md` | Grand total revised: 624 → ~651 (+27 individually-bodied) **[P6-004 retro-correction 2026-07-15: BC-X.8.010 REWRITTEN TO REUSE — BC retained; grand total 624 → ~651 unchanged (657 BCs / 96 holdouts).]** |
 | `tests/e2e_cli_surface_guard.rs` | Add SURFACE entries for `attachment upload --public`, `attachment upload --internal`, `attachment upload --yes` |
 | `.cargo/mutants.toml` | Add `"src/api/jsm/attachments.rs"` to `examine_globs` — HIGH-value: two-step orchestration, `public` boolean routing, service-desk-not-found intercepted-404 guard |
-| `CLAUDE.md` Gotchas | Add: (a) `attachment upload` default = platform POST (internal on JSM); `--public` = servicedeskapi two-step; (b) serviceDeskId cache model-b writer in `src/cache.rs`; (c) JSDCLOUD-10841 — use platform content endpoint for download even for JSM issues; (d) temp attachment TTL ≈ 1 hour (non-issue for CLI's back-to-back two-step; surface expiry failures as "temporary upload expired — retry" hint) |
+| `CLAUDE.md` Gotchas | Add: (a) `attachment upload` default = platform POST (internal on JSM); `--public` = servicedeskapi two-step; (b) serviceDeskId cache model-b writer in `src/cache.rs` **[P6-004 retro-correction 2026-07-15: item (b) REWRITTEN TO REUSE — no new cache writer. CLAUDE.md Gotcha should read: `--public` upload resolves serviceDeskId via the existing `get_or_fetch_project_meta`+`require_service_desk` cache-backed path (`ProjectMeta.service_desk_id` in `project_meta.json`); no new `src/cache.rs` function. BC-X.8.010 documents the resolution+stale-ID-self-heal contract.]**; (c) JSDCLOUD-10841 — use platform content endpoint for download even for JSM issues; (d) temp attachment TTL ≈ 1 hour (non-issue for CLI's back-to-back two-step; surface expiry failures as "temporary upload expired — retry" hint) |
 
 ---
 

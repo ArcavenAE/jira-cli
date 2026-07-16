@@ -713,40 +713,36 @@ This is the canonical pinnable string for `test_require_service_desk_oauth_401_s
 ---
 
 
-#### BC-X.8.010: `(profile, projectKey) → serviceDeskId` cache — model-b writer; 7-day TTL; deserialize failure = cache miss; used by JSM attachment upload `--public`/`--internal` path
+#### BC-X.8.010: JSM attachment upload resolves `serviceDeskId` via existing `ProjectMeta` cache (`project_meta.json`, (profile, projectKey)-scoped, 7-day TTL); `serviceDesk.projectId == project.id` match; no new cache file [P6-001/P6-004 correction]
 
 **Confidence**: HIGH
-**Source**: `src/cache.rs::read_service_desk_id_cache` (implementation pending — story S5); `src/cache.rs::write_service_desk_id_cache` (implementation pending — story S5); `src/api/jsm/attachments.rs::attach_temporary_file` (implementation pending — story S5)
-**Subject**: X.8 Projects & Queues (JSM serviceDeskId cache for attachment upload)
+**Source**: `src/api/jsm/servicedesks.rs::get_or_fetch_project_meta`; `src/cache.rs::read_project_meta` / `src/cache.rs::write_project_meta`; `src/types/jsm/servicedesk.rs::ServiceDesk` (field `project_id` from `#[serde(rename = "projectId")]`); `src/api/jsm/attachments.rs::attach_temporary_file` (implementation pending — story S5)
+**Subject**: X.8 Projects & Queues (JSM serviceDeskId resolution for attachment upload)
 
-When `jr issue attachment upload <KEY> --public` (or `--internal`) resolves the serviceDeskId for a JSM issue, the result is cached under `~/.cache/jr/v1/<profile>/service_desk_id_<projectKey>.json` with a 7-day TTL. The cache maps a `(profile, projectKey)` pair to the resolved `serviceDeskId` string (the `id` field from `GET /rest/servicedeskapi/servicedesk`).
+When `jr issue attachment upload <KEY> --public` (or `--internal`) needs the `serviceDeskId` for the target JSM project, it calls the EXISTING `get_or_fetch_project_meta` function (`src/api/jsm/servicedesks.rs`) — shared with `jr queue`, `jr requesttype`, and other JSM commands. No new cache file family is introduced.
 
-**Resolution chain** (on cache miss or stale): `GET /rest/api/3/issue/{key}` → extract `fields.project.key` → paginated `GET /rest/servicedeskapi/servicedesk` → match `projectKey` → extract `id`. The resolved ID is then written to the cache.
+**Resolution chain** (on cache miss or stale): `get_or_fetch_project_meta(client, project_key)` where `project_key` is extracted from `fields.project.key` in the issue GET: (1) fetches `GET /rest/api/3/project/{project_key}` → extracts `projectTypeKey` + `project.id`; (2) if `projectTypeKey == "service_desk"`: paginates `GET /rest/servicedeskapi/servicedesk` → finds entry where `serviceDesk.projectId == project.id` (the `ServiceDesk` struct in `src/types/jsm/servicedesk.rs` has `project_id: String` from `#[serde(rename = "projectId")]` — there is NO `projectKey` field; **P6-001 correction**: prior spec incorrectly said "match `projectKey`") → extracts `serviceDesk.id` as the `serviceDeskId`; (3) writes `ProjectMeta { project_type, project_id, service_desk_id: Some(id), ... }` to `project_meta.json` via `cache::write_project_meta`; (4) returns the `ProjectMeta`.
 
-**Cache writer (model-b)**: `write_service_desk_id_cache` swallows disk-write errors with `eprintln!("warning: failed to write service_desk_id cache: {e}")` and returns `Ok(())`. A failed write MUST NOT propagate an error to the caller — the upload proceeds even if the cache write fails. The call site uses `.ok()` to discard the infallible result. This is the model-b pattern, following `write_cmdb_fields_cache` and `write_object_type_attr_cache` as precedents.
-
-**Deserialize failure = cache miss**: If the cached file exists but fails to deserialize (corrupted, schema change, wrong type), the reader treats it as a cache miss and re-fetches via the paginated `GET /rest/servicedeskapi/servicedesk`. Self-healing: the newly fetched value overwrites the corrupted cache entry.
-
-**Versioned root**: Cache file path uses `~/.cache/jr/v1/<profile>/` (the established v1 root). A future schema bump increments to `v2/`, orphaning stale `v1/` files cleanly.
-
-**Scope**: this cache is used ONLY by the JSM attachment upload path (`--public`/`--internal`). Other serviceDeskId resolution paths (e.g., `queue list/view`, `requesttype list/fields`) use their own resolution mechanisms and are not affected.
-
-**Inputs**: `profile: &str`; `project_key: &str`.
-**Outputs/Effects** (cache hit): returns the cached `serviceDeskId` string; no HTTP issued. (cache miss/stale): runs resolution chain; writes result to cache (model-b: write failure is a warning, not an error); returns the resolved ID.
-**Errors**: Resolution-chain HTTP errors propagate normally (401 → exit 2, 404 → exit 64, 5xx → exit 1). Cache-write failure → warning on stderr; upload proceeds.
+**Cache**: the existing `project_meta.json` (CANONICAL-COUNTS Cache Types item 2 — NOT a new separate file), keyed by `(profile, project_key)`, read via `cache::read_project_meta` and written via `cache::write_project_meta`. The 7-day TTL is enforced per `ProjectMeta.fetched_at`. No new cache family, no new reader/writer functions. The model-b discussion from the original draft is **MOOT** — the existing `write_project_meta` writer already handles disk-write errors; no additional model-b function is needed. No independent-expiry drift: the shared ProjectMeta cache serves all JSM commands.
 
 **Stale-ID self-healing (SEC-576-006)**: If a cached `serviceDeskId` is used and the step-1 `POST .../attachTemporaryFile` returns HTTP 404 or 403, the implementation MUST:
 
-1. Delete the cache entry for `(profile, projectKey)`.
-2. Re-run the full resolution chain once (paginated `GET /rest/servicedeskapi/servicedesk` → match `projectKey` → cache the new ID).
-3. Re-attempt step 1 with the re-resolved ID.
-4. If the re-resolved ID also fails, apply per-status exit mapping: 404 → exit 64 (service desk not found / attachment API not accessible: `"Service desk for <projectKey> not found after refresh."`); 403 → exit 1 (permission denied); 401 → exit 2 (not authenticated); 5xx / network → exit 1 with API error or connectivity message. The blanket exit 64 for all second-failure codes is INCORRECT — 403 is a permission error (exit 1), not a user input error (exit 64).
+1. Invalidate the `project_meta.json` cache entry for `(profile, project_key)` — delete the entry from the map and re-write the file (triggering a cache miss on the next `read_project_meta` call).
+2. Re-call `get_or_fetch_project_meta` once (cache miss path: re-resolves via `GET /rest/api/3/project/{key}` + paginated `GET /rest/servicedeskapi/servicedesk`).
+3. Re-attempt step 1 with the re-resolved `serviceDeskId`.
+4. If the re-resolved ID also fails, apply per-status exit mapping: 404 → exit 64 (`"Service desk for <projectKey> not found after refresh."`); 403 → exit 1 (permission denied); 401 → exit 2 (not authenticated); 5xx / network → exit 1. The blanket exit 64 for all second-failure codes is INCORRECT — 403 is a permission error (exit 1), not a user input error (exit 64).
 
-This self-healing prevents a permanent failure loop after a Jira service desk reconfiguration that changes the `serviceDeskId`. The retry is a single-attempt guard — it does not loop. A step-1 failure with a freshly resolved ID is surfaced immediately as a genuine error, not a cache issue.
+The retry is a single-attempt guard — it does not loop.
 
-[NEW 2026-07-15 SOH-ATTACHMENTS-1 F2] BC-X.8.010 codifies the serviceDeskId cache introduced for the JSM attachment upload `--public`/`--internal` flow. Model-b writer (swallow+warn) follows the precedent of `write_cmdb_fields_cache` (S-525/CR-007) and `write_object_type_attr_cache`. Delivery obligation: S5 implementer must add `read_service_desk_id_cache` / `write_service_desk_id_cache` to `src/cache.rs` following the model-b pattern.
+**Scope**: governs `serviceDeskId` resolution for the JSM attachment upload path (`--public`/`--internal`). Other JSM commands (`queue`, `requesttype`, etc.) use the same `get_or_fetch_project_meta` function and `project_meta.json` cache; they are not separately affected by this BC.
 
-**Trace**: F2 spec evolution (2026-07-15 SOH-ATTACHMENTS-1, DEC-179); CLAUDE.md §"Cache-write error handling — two models"; `src/cache.rs::write_cmdb_fields_cache` (model-b precedent); BC-3.9.003/BC-3.9.004 (caller context); SEC-576-006 (stale-ID self-healing clause added 2026-07-15)
+**Inputs**: `project_key: &str` (extracted from `fields.project.key` in the issue GET response).
+**Outputs/Effects** (cache hit): returns `ProjectMeta.service_desk_id`; no HTTP issued. (cache miss/stale): resolution chain runs; `ProjectMeta` written to cache; resolved `serviceDeskId` returned.
+**Errors**: resolution-chain HTTP errors propagate normally (401 → exit 2, 404 → exit 64, 5xx → exit 1).
+
+[P6-001/P6-004 correction 2026-07-16 SOH-ATTACHMENTS-1]: rewritten from a bespoke `service_desk_id_<projectKey>.json` cache design (original F2 draft) to REUSE the existing `ProjectMeta` cache via `get_or_fetch_project_meta`. Pre-code-audit original incorrectly described a new cache family and incorrectly stated "match `projectKey`" — the Jira `ServiceDesk` API response field is `projectId`, not `projectKey` (source-verified: `src/types/jsm/servicedesk.rs`). Delivery obligation revised: story S5 implementer reuses existing `read_project_meta` / `write_project_meta`; no new `read/write_service_desk_id_cache` functions to be added.
+
+**Trace**: F2 spec evolution (2026-07-15 SOH-ATTACHMENTS-1, DEC-179); P6-001/P6-004 correction 2026-07-16 (projectId field + reuse get_or_fetch_project_meta + reuse ProjectMeta cache); `src/api/jsm/servicedesks.rs::get_or_fetch_project_meta`; `src/types/jsm/servicedesk.rs::ServiceDesk.project_id`; `src/cache.rs::ProjectMeta`; BC-3.9.003/BC-3.9.004 (caller context); SEC-576-006 (stale-ID self-healing clause)
 
 ---
 

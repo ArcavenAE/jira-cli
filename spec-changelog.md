@@ -7,6 +7,32 @@ project: "jr (jira-cli)"
 
 Track all spec version changes. Most recent version first.
 
+## [1.3.46] - 2026-07-16
+
+### Type: PATCH
+
+### Summary
+
+GAP-R15-001 terminology sync in EC-3.5.003-3 + EC-3.5.008-5 (bc-3-issue-write.md): stale "dialoguer::Error" terminology replaced with ratified DEC-174 mechanism language (`io::stdin().lock().read_line()` returning `Ok(0)` (EOF) or `Err(_)` (IO error) → `JrError::Interrupted` exit 130). No behavioral change — exit 130 on EOF/interrupt was always the contract; only the mechanism terminology changed.
+
+### Changes
+
+- `.factory/specs/prd/bc-3-issue-write.md` (MODIFIED): EC-3.5.003-3 heading + body reworded — "dialoguer Err → JrError::Interrupted" → "EOF / IO-error on delete prompt → JrError::Interrupted, exit 130"; `read_line` `Ok(0)`/`Err(_)` language replaces `dialoguer::Error`; `Ok(0)`-vs-`Ok(n)` distinguishability sentence added (matches EC-3.9.015-5 phrasing from P5-001); GAP-R15-001 marker added to heading. EC-3.5.008-5 same treatment. BC-3.5.003 and BC-3.5.008 Trace fields appended with GAP-R15-001 sync note. Frontmatter: `last_updated` 2026-07-15→2026-07-16; v1.3.46 trace entry added.
+
+### Impact Assessment
+
+| Dimension | Detail |
+|-----------|--------|
+| BCs added | 0 |
+| BCs modified | 2 (EC-3.5.003-3, EC-3.5.008-5 — terminology only; no behavioral change) |
+| BC count | 140 (bc-3 unchanged); 657 cumulative (unchanged) |
+| VP count | 30 (unchanged) |
+| Holdout count | 96 (unchanged) |
+| Spec version | 1.3.45→1.3.46 |
+| Severity floor | PATCH (terminology sync; no behavioral change) |
+
+---
+
 ## [1.3.45] - 2026-07-15
 
 ### Type: MINOR

@@ -627,3 +627,35 @@ Guards: `check-spec-counts.sh`: OK. `check-bc-cumulative-counts.sh`: OK (657 / 8
 
 **BC / holdout count: 657 BCs / 96 holdouts — UNCHANGED.**
 Guards: `check-spec-counts.sh`: OK. `check-bc-cumulative-counts.sh`: OK (657 / 8 files).
+
+
+---
+
+## P6 Fix Round (2026-07-16, 5 findings, adversary pass-6)
+
+**Constraint**: no new BC IDs; counts stay 657 BCs / 96 holdouts; both guards must exit 0.
+
+| Finding | Sev | File(s) | Action | Result |
+|---------|-----|---------|--------|--------|
+| P6-001 | MED | bc-3-issue-write.md, cross-cutting.md, BC-INDEX.md | BC-3.9.003 step-1 resolution chain: "match projectKey" → "match serviceDesk.projectId == project.id"; prescribe REUSE of existing `get_or_fetch_project_meta` (NOT a bespoke walk). BC-X.8.010: see P6-004 combined rewrite. BC-INDEX BC-3.9.003 row updated. Source verification: `src/types/jsm/servicedesk.rs::ServiceDesk` has `project_id` from `#[serde(rename = "projectId")]`; no `projectKey` field. | DONE |
+| P6-004 | INFO | cross-cutting.md, BC-INDEX.md, CANONICAL-COUNTS.md | BC-X.8.010: full rewrite from bespoke `service_desk_id_<projectKey>.json` cache design to REUSE existing `ProjectMeta` cache via `get_or_fetch_project_meta`. Heading rewritten. Resolution chain corrected (projectId match). Model-b discussion removed (MOOT — no new cache functions). Self-heal step-1 updated: invalidate project_meta entry (not service_desk_id cache). Delivery obligation revised: no new read/write_service_desk_id_cache. BC-INDEX BC-X.8.010 row rewritten. CANONICAL-COUNTS Cache Types 8→7 (item 8 removed; item 2 annotated with SOH-ATTACHMENTS-1 role). | DONE |
+| P6-002 | LOW | bc-3-issue-write.md, BC-INDEX.md | BC-3.9.005: added JSM detection mechanism — `projectTypeKey == "service_desk"` via `ProjectMeta.project_type` from `get_or_fetch_project_meta`; zero servicedeskapi calls stated explicitly; H-NEW-ATTACHMENT-008 compatibility noted (--yes bypasses confirmation gate, not exit-64 guard). BC-INDEX BC-3.9.005 row updated. | DONE |
+| P6-003 | LOW | bc-2-issue-read.md | BC-2.7.002 authority enumeration: removed `download` from list. Download JSON is the distinct `{"downloaded":[...]}` manifest (EC-2.7.007-7), not an attachment-object array. Authority now covers list + upload (platform POST + bulk echo) only. | DONE |
+| P6-005 | INFO | prd-delta-576.md | Scope table S3 row: added BC-3.9.020 (path-c: `--replace-existing --dry-run` + EC-3.9.020-6 clap guard). S4 row unchanged (retains BC-3.9.020 for paths a/b). | DONE |
+
+**BC / holdout count: 657 BCs / 96 holdouts — UNCHANGED.**
+Guards: `check-spec-counts.sh`: OK. `check-bc-cumulative-counts.sh`: OK (657 / 8 files).
+
+
+---
+
+## R16 Micro-Fix (2026-07-16, 1 finding, GAP-R16-002)
+
+**Constraint**: no new BC IDs; counts stay 657 BCs / 96 holdouts; both guards must exit 0.
+
+| Finding | Sev | File(s) | Action | Result |
+|---------|-----|---------|--------|--------|
+| GAP-R16-002 | LOW | spec-changelog.md, prd-delta-576.md | spec-changelog.md: [1.3.46] PATCH entry inserted before [1.3.45] — GAP-R15-001 terminology sync (EC-3.5.003-3 + EC-3.5.008-5, dialoguer→read_line Ok(0)/Err, DEC-174; behavior unchanged); follows existing PATCH-entry format. prd-delta-576.md: frontmatter `spec_version_after: 1.3.45` → `1.3.46`. | DONE |
+
+**BC / holdout count: 657 BCs / 96 holdouts — UNCHANGED.**
+Guards: `check-spec-counts.sh`: OK. `check-bc-cumulative-counts.sh`: OK (657 / 8 files).

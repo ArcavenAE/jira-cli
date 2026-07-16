@@ -182,15 +182,14 @@ Location: `.factory/architecture/security-decisions/`
 
 ## Cache Types
 
-**8 distinct cache files** (per cache.rs):
+**7 distinct cache files** (per cache.rs) [P6-004 correction: serviceDeskId reuses existing `project_meta.json` via `get_or_fetch_project_meta` — no new cache file family added; count reverted 8→7]:
 1. team list
-2. project meta
+2. project meta (`project_meta.json` — also carries `service_desk_id` for JSM attachment upload via `get_or_fetch_project_meta`; added SOH-ATTACHMENTS-1 role noted; no new file)
 3. workspace ID (hybrid: reads env + cache)
 4. CMDB fields
 5. object-type attributes
 6. resolutions
 7. fields list (`fields.json` — `FieldsCache`; added issue #396 F2 for `--field` name resolution; best-effort writer; 7-day TTL)
-8. serviceDeskId (`service_desk_id_<projectKey>.json` — per (profile, projectKey); model-b writer; 7-day TTL; used by JSM attachment upload --public/--internal; added SOH-ATTACHMENTS-1 F2 DEC-179)
 
 All use 7-day TTL. Root path (platform-conditional per BC-6.2.016): `~/.cache/jr/v1/<profile>/` (Unix/macOS) or `%LOCALAPPDATA%\jr\v1\<profile>\` (Windows).
 

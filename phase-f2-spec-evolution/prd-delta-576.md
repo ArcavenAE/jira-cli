@@ -5,7 +5,7 @@ issues: "#576, #585"
 phase: F2
 authored: 2026-07-15
 spec_version_before: 1.3.42
-spec_version_after: 1.3.45
+spec_version_after: 1.3.46
 bc_count_before: 624
 bc_count_after: 657
 holdout_count_before: 88
@@ -30,7 +30,7 @@ BC-2.7.002. All design decisions ratified by DEC-179.
 |-------|---------|------------|
 | S1 | `jr issue attachment list` (list + filter) | BC-2.7.001..006 |
 | S2 | `jr issue attachment download` (single/batch/newest) | BC-2.7.007..012 |
-| S3 | `jr issue attachment upload` (platform POST + `--replace-existing`) | BC-3.9.001..002, BC-3.9.009, BC-3.9.012, BC-3.9.017, BC-3.9.018 |
+| S3 | `jr issue attachment upload` (platform POST + `--replace-existing` + `--dry-run` path-c) | BC-3.9.001..002, BC-3.9.009, BC-3.9.012, BC-3.9.017, BC-3.9.018, BC-3.9.020 (path-c: `--replace-existing --dry-run` + EC-3.9.020-6 clap guard) |
 | S4 | `jr issue attachment delete` | BC-3.9.008, BC-3.9.010, BC-3.9.013, BC-3.9.015, BC-3.9.016, BC-3.9.019, BC-3.9.020 |
 | S5 | `jr issue attachment upload --public/--internal` (JSM visibility) | BC-3.9.003..007, BC-3.9.011, BC-3.9.014, BC-X.8.010 |
 

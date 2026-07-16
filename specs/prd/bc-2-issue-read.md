@@ -602,7 +602,7 @@ Empty issue → `[]` array, exit 0, no error.
 
 All `--output json` paths MUST route through `output::render_json` or `output::print_output` — never `serde_json::to_string_pretty` or direct compact printing (JSON render invariant #526).
 
-**Authority for all attachment-object serializations**: the curated form defined in this BC is the single canonical attachment-object JSON shape for ALL `jr` attachment operations — list, download, upload, and bulk responses all use this shape. BC-3.9.009 (upload JSON output) cross-references this BC as the authority. The `"self"` field MUST be omitted and `"content"` MUST be renamed to `"contentUrl"` across every code path that serializes a Jira attachment object.
+**Authority for all attachment-object serializations**: the curated form defined in this BC is the single canonical attachment-object JSON shape for `jr` attachment **list** and **upload** (platform POST + bulk echo) responses. **`download` is excluded**: the download JSON shape is the distinct `{"downloaded":[...]}` manifest defined in BC-2.7.007 (EC-2.7.007-7), not an attachment-object array. [P6-003 correction] BC-3.9.009 (upload JSON output) cross-references this BC as the authority. The `"self"` field MUST be omitted and `"content"` MUST be renamed to `"contentUrl"` across every code path that serializes a Jira attachment object.
 
 **Trace**: F2 spec evolution (SOH-ATTACHMENTS-1 2026-07-15; #585 absorbed — research §7 VERIFIED; DEC-179 ratified design)
 

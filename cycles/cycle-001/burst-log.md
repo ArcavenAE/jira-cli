@@ -5066,3 +5066,22 @@ Displaced to make room for SOH-ATTACHMENTS-1 adversary pass-5 remediation step r
 | Step | Agent | Status | Output |
 |------|-------|--------|--------|
 | **STEADY-STATE BURST (2026-07-15): EJ probe VERIFIED (nightly run 29398774009; BC-3.5.006 SATISFIED; spec v1.3.42; PR #625 CI 14/14 green; HELD independent-review guard); 7-PR triage complete — #591 MERGE-READY; #598/#599 HOLD-SOAK-2026-07-16; #612 HOLD-SOAK-2026-07-20; #624 HOLD-SOAK-2026-07-22; #573 fresh APPROVE (pr-review-2.md); #574 APPROVE-pending-rebase + security APPROVE; DEC-178; 2 drift items added.** | state-manager | COMPLETE | develop @ 56d5126; pipeline PAUSED pending human PR actions. |
+
+
+---
+
+## Archived Phase Progress row (2026-07-16, adversary-pass-6 remediation burst)
+
+Displaced to make room for SOH-ATTACHMENTS-1 F2 ADVERSARY PASS-6 REMEDIATED (2026-07-16) row per keep-5 rule.
+
+| Phase | Status | Completed | Gate | Notes |
+|-------|--------|-----------|------|-------|
+| steady-state burst (2026-07-15): (a) EJ probe VERIFIED green: nightly run 29398774009 ok on develop @ 56d5126; BC-3.5.006 SATISFIED (spec v1.3.42); docs PR #625 (docs/577-ej-probe-closeout, commit ea0689b) CI 14/14 green, HELD for human review+merge (independent-review guard: classifier blocked pr-manager + orchestrator reviewer dispatch). (b) PR triage: #591 MERGE-READY; #598/#599 HOLD-SOAK-UNTIL-2026-07-16 (rebase comments posted); #612 HOLD-SOAK-UNTIL-2026-07-20 (SHA-pin ✓); #624 HOLD-SOAK-UNTIL-2026-07-22 (SHA-pin ✓); #573 fresh review APPROVE @ 046ee4fe (pr-review-2.md); #574 fresh code+security APPROVE-pending-rebase (pr-review-2.md + security-review-2.md; CHANGELOG conflict, Actions run pending). DEC-178 (all-dependabot-soak). | STEADY-STATE BURST COMPLETE | 2026-07-15 | Pipeline PAUSED pending human PR actions. | `code-delivery/PR-573/pr-review-2.md`, `code-delivery/PR-574/pr-review-2.md`, `code-delivery/PR-574/security-review-2.md` |
+
+### Archived Current Phase Steps row (adversary-pass-6 remediation burst)
+
+Displaced to make room for SOH-ATTACHMENTS-1 adversary pass-6 remediation step row per keep-5 rule.
+
+| Step | Agent | Status | Output |
+|------|-------|--------|--------|
+| **SESSION WRAP (2026-07-15) — human /wrap at clean rest point post-D-177 cycle close. Pipeline PAUSED. Resume intent: next intake / steady-state.** | state-manager | COMPLETE | Pipeline PAUSED at rest. |
