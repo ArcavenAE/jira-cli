@@ -5,7 +5,7 @@ total_holdouts: 96
 # H-NEW-AUTH-002 registered by S-0.07 (Phase 3, 2026-05-07). Wave 0 COMPLETE.
 # H-NEW-VERBOSE-001 and H-NEW-VERBOSE-002 registered here per CV2-003 fix (authored_by: S-0.06).
 version: "1.5.2"
-last_updated: 2026-07-10
+last_updated: 2026-07-16
 source_pass: 3
 trace: |
   - L2: .factory/specs/domain-spec/
@@ -105,7 +105,8 @@ Setup uses:
 **BC refs**: BC-3.2.013 (proactive, primary), BC-3.2.009 (reactive fallback)
 
 **Extended assertion (P7-001, CWE-88 — malicious-AID exit-64 zero-HTTP guard)**: On any attachment command that accepts a user-supplied `<AID>` positional argument (`attachment delete <AID>`, `attachment download <KEY> --id <AID>`), a path-traversal-shaped AID (e.g., `"10001/../../issue/FOO-1"`) or any non-numeric value (e.g., `"abc"`, `"../secret"`) → exit 64; stderr contains `"invalid attachment id: '...' (must be numeric)"`; **zero HTTP calls** issued. Assert with wiremock `expect(0)` on `GET /rest/api/3/attachment/...` and `DELETE /rest/api/3/attachment/...`. Validation fires before any gate, before the pre-prompt metadata GET, and before any streaming request — regardless of `--dry-run`, `--yes`, or `--no-input` flags.
-**BC refs (extended)**: BC-3.9.013 EC-3.9.013-3 (delete taxonomy — P7-001); BC-3.9.008 (delete AID validation); BC-3.9.015 (gate fires after validation); BC-3.9.016 (multi-AID bulk); BC-3.9.020 path-b (dry-run); BC-2.7.007 (download --id); BC-2.7.012 (download taxonomy)
+**Extended assertion (P8-001, sanitize→None — R3.10 fallback writes id-as-filename, never skips)**: On any batch download (`attachment download <KEY> --all`), a server-supplied attachment whose filename sanitizes to `None` (e.g., filename `".."` — stripped entirely by BC-2.7.011 step 1) MUST result in a file written inside `OUT_DIR` under the degenerate fallback name (`<sha1-of-id>_<id>` in batch mode, per BC-2.7.010 R3.10). Assert: `OUT_DIR` contains a file whose name matches `<sha1(id)>_<id>` (40-hex prefix + `_` + numeric id string); the attachment is NOT skipped (1 file written, not 0 files); stderr contains `"warning: using id as filename for attachment"`. This assertion distinguishes the corrected behavior (write fallback) from the prior spec (skip), which would leave the file absent from `OUT_DIR`.
+**BC refs (extended)**: BC-3.9.013 EC-3.9.013-3 (delete taxonomy — P7-001); BC-3.9.008 (delete AID validation); BC-3.9.015 (gate fires after validation); BC-3.9.016 (multi-AID bulk); BC-3.9.020 path-b (dry-run); BC-2.7.007 (download --id); BC-2.7.012 (download taxonomy); BC-2.7.011 caller-contract (P8-001); BC-2.7.010 R3.10 (degenerate-name fallback)
 
 ---
 
@@ -2161,7 +2162,7 @@ Call B (two attachments):
 **Expected (MUST-PASS)**:
 - Exit code = 0.
 - `OUT_DIR` contains exactly 3 files.
-- The two `report.pdf` collisions are resolved with SHA-1 prefixes: BOTH files MUST carry SHA-1 prefix forms `<sha1hex>_report.pdf` (40 hex characters + `_`). The `--all` batch mode always SHA-1-prefixes colliding filenames — a regression that leaves one file named `report.pdf` (un-prefixed) fails this assertion. Neither file has a name that would escape `OUT_DIR` (no `../` or absolute path).
+- ALL three files in `OUT_DIR` MUST carry SHA-1 prefix forms (40 hex characters + `_` + basename). Batch mode SHA-1-prefixes EVERY file unconditionally — including non-colliding files. Specifically: BOTH `report.pdf` entries MUST appear as `<sha1("20001")>_report.pdf` and `<sha1("20002")>_report.pdf` (distinct 40-hex prefixes). The sanitized `../../evil.txt` entry (id `20003`) MUST also carry a SHA-1 prefix (e.g., `<sha1("20003")>_evil.txt` or the degenerate fallback `<sha1("20003")>_20003` if sanitization returns `None`). An implementation that only SHA-1-prefixes on collision (leaving non-colliding files bare) MUST FAIL this assertion. Neither file has a name that would escape `OUT_DIR` (no `../` or absolute path).
 - The `../../evil.txt` filename is sanitized: the file lands inside `OUT_DIR` with a safe name (e.g., `evil.txt` or `__.evil.txt` or SHA-1-prefixed); it does NOT appear at any path above `OUT_DIR`.
 - All three files are present and contain the correct bytes (`AAA`, `BBB`, `CCC` in corresponding files).
 
@@ -2358,7 +2359,7 @@ Call C (non-interactive, no `--yes`):
 - All 4 files land inside `OUT_DIR` — no file exists at any path ABOVE or OUTSIDE `OUT_DIR`.
 - Specifically: `OUT_DIR/../evil.txt` does NOT exist (path-traversal blocked).
 - All sanitized filenames are path-components only (no `/`, `\`, or `..` segments remain).
-- `OUT_DIR` contains exactly 4 files (or fewer if duplicates after sanitization collide and are resolved via SHA-1 prefix per BC-2.7.010).
+- `OUT_DIR` contains exactly 4 files (or fewer if sanitized names collide after sanitization). ALL files in `OUT_DIR` MUST carry SHA-1 prefix forms (40 hex characters + `_` + sanitized basename), since batch mode SHA-1-prefixes EVERY file unconditionally — not only colliding files. An implementation that only SHA-1-prefixes on collision MUST FAIL this assertion.
 - No file write was attempted outside `OUT_DIR` (no `IOError` or `PermissionError` from an out-of-dir write attempt leaking to stderr as a panic or unhandled error).
 
 **Why hidden**: Path-traversal via Jira-supplied `filename` values is a SECURITY concern (CWE-22). The sanitization pipeline (BC-2.7.011 steps 1–4) strips path components; the evaluator asserts the ABSENCE of files outside `OUT_DIR`, which a correctness-only test would never check. A regression that uses the raw filename directly would write `../../evil.txt` relative to `OUT_DIR`, escaping the target directory — visible only via a filesystem assertion on the parent path.

@@ -7,6 +7,26 @@ project: "jr (jira-cli)"
 
 Track all spec version changes. Most recent version first.
 
+## [1.3.48] - 2026-07-16
+
+### Type: MINOR
+
+**Summary**: Adversary pass 8 (P8) fix round — destruction invariant generalization; sanitize→None fallback reconciliation; AID validation uniformity; holdout tightening.
+
+**Changes**:
+
+- `.factory/specs/prd/bc-2-issue-read.md` (MODIFIED): P8-001 — BC-2.7.011 caller contract reversed: prior "MUST skip + skip-warning" replaced by R3.10 degenerate-name fallback (write the file, not skip; single-id: bare `<id>`; batch: `<sha1>_<id>`; corrected wording for stderr note). Correction marker added.
+- `.factory/specs/prd/bc-3-issue-write.md` (MODIFIED): P8-002 — BC-3.9.017 gains explicit eligibility pre-flight step 0 (non-JSM `--public` rejection derivable from key prefix + cached `get_or_fetch_project_meta`; zero DELETEs on exit 64); invariant restated to cover "confirmation gate OR eligibility guard remains unresolved". BC-3.9.005 gains `--replace-existing` path note + EC-3.9.005-3 (non-JSM `--public --replace-existing` → exit 64, zero DELETEs, zero upload, pre-flight fires). P8-003 — BC-3.9.012 400-row qualified as platform path + BC-3.9.006 cross-ref added; BC-3.9.006 step-2 4xx rationale reworded (expired temporaryAttachmentId / malformed body replaces stale-sdId). P8-004 — BC-3.9.020 single-ID dry-run gains AID `^[0-9]+$` validation bullet (fires before hint; invalid → exit 64; no hint emitted).
+- `.factory/specs/prd/holdout-scenarios.md` (MODIFIED): P8-001 — H-007 extended with sanitize→None fixture (filename `".."`, batch fallback `<sha1>_<id>`, write not skip); BC refs updated. P8-005 — H-NEW-ATTACHMENT-003 + H-NEW-ATTACHMENT-007 Expected sections updated: SHA-1 prefix is UNCONDITIONAL on all batch files, not only colliding ones; assertion now rejects implementations that only SHA-1-prefix on collision.
+
+**Impact**:
+
+| Dimension | Value |
+|---|---|
+| BC count | 657 (unchanged) |
+| Holdout count | 96 (unchanged — H-007 extended, not new) |
+| Spec version | 1.3.47→1.3.48 |
+
 ## [1.3.47] - 2026-07-16
 
 ### Type: MINOR

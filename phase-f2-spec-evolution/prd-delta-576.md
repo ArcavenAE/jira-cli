@@ -5,7 +5,7 @@ issues: "#576, #585"
 phase: F2
 authored: 2026-07-15
 spec_version_before: 1.3.42
-spec_version_after: 1.3.47
+spec_version_after: 1.3.48
 bc_count_before: 624
 bc_count_after: 657
 holdout_count_before: 88

@@ -591,6 +591,25 @@ Single `--id` download → **bare sanitized basename** (no SHA-1 prefix). Ration
 **BC / holdout count: 657 BCs / 96 holdouts — UNCHANGED.**
 Guards: `check-spec-counts.sh`: OK. `check-bc-cumulative-counts.sh`: OK (657 / 8 files).
 
+---
+
+### Round P8 — 2026-07-16
+
+**Adversary pass 8 fix round (5 findings + changelog-sync)**
+
+| Finding | Severity | Status | Summary |
+|---|---|---|---|
+| P8-001 | MED | APPLIED | BC-2.7.011 caller contract reversed: `None` → R3.10 fallback (write `<aid>` bare or `<sha1>_<id>`), NOT skip. Correction marker added. Grep confirmed zero residual skip-semantics. H-007 extended: sanitize→None fixture (filename `".."`) asserts fallback file written in `OUT_DIR`, not absent. |
+| P8-002 | MED | APPLIED | BC-3.9.017 gains step 0 eligibility pre-flight (non-JSM `--public` exit 64 before list GET; project key derived from issue key prefix + cached `get_or_fetch_project_meta`; zero DELETEs on exit). Destruction invariant restated: "confirmation gate OR eligibility guard remains unresolved." BC-3.9.005 gains `--replace-existing` path note + EC-3.9.005-3 (non-JSM --public --replace-existing → exit 64, zero DELETEs, zero upload). |
+| P8-003 | LOW | APPLIED | BC-3.9.012 400 row qualified as "platform path" with BC-3.9.006 cross-ref for servicedeskapi step-2 400→64. BC-3.9.006 step-2 4xx rationale reworded: "expired temporaryAttachmentId / malformed body" (stale-sdId rationale was inapt — step 2 keys off issueKey). |
+| P8-004 | LOW | APPLIED | BC-3.9.020 single-ID dry-run path gains AID `^[0-9]+$` validation bullet (fires before hint; invalid → exit 64; no dry-run hint emitted). Completes P7-001 AID-validation uniformity claim. |
+| P8-005 | LOW | APPLIED | H-NEW-ATTACHMENT-003 + H-NEW-ATTACHMENT-007 Expected sections updated: SHA-1 prefix asserted on ALL batch files unconditionally (not only colliding ones). Implementations prefixing only on collision now FAIL these holdouts. |
+
+**Changelog-sync (self-administered)**: v1.3.48 MINOR entry inserted in `spec-changelog.md`; `prd-delta-576.md` `spec_version_after` → 1.3.48; bc-3-issue-write.md frontmatter: v1.3.48 trace appended + `_Last updated` prepended.
+
+**BC / holdout count: 657 BCs / 96 holdouts — UNCHANGED.**
+Guards: `check-spec-counts.sh`: OK. `check-bc-cumulative-counts.sh`: OK (657 / 8 files).
+
 
 ---
 
@@ -688,6 +707,24 @@ Guards: `check-spec-counts.sh`: OK. `check-bc-cumulative-counts.sh`: OK (657 / 8
 | GAP-R17-002 | LOW | spec-changelog.md, bc-3-issue-write.md, bc-2-issue-read.md, prd-delta-576.md | spec-changelog.md: [1.3.47] MINOR entry inserted before [1.3.46] — P7 CWE-88 AID-validation + P7-002 gate suppression + P7-003 batch fallback + minor fold-in + GAP-R17-001 placeholder sync. bc-3: v1.3.47 trace line appended to frontmatter; `_Last updated` prepended with 2026-07-16 P7 summary; spec v1.3.47. bc-2: frontmatter `last_updated` 2026-07-15→2026-07-16. prd-delta-576.md: `spec_version_after` 1.3.46→1.3.47. | DONE |
 
 **Self-note (per team-lead instruction)**: from now on, every fix round that touches BC bodies ends with a changelog-sync check as part of this agent's round checklist (self-administered, don't wait for the validator).
+
+**BC / holdout count: 657 BCs / 96 holdouts — UNCHANGED.**
+Guards: `check-spec-counts.sh`: OK. `check-bc-cumulative-counts.sh`: OK (657 / 8 files).
+
+---
+
+### Round R18 — 2026-07-16
+
+**R18 micro-pass (2 LOW + 1 INFO)**
+
+| Item | Sev | Status | Summary |
+|---|---|---|---|
+| GAP-R18-001 | LOW | APPLIED | BC-3.9.018 line ~3748: stale P7-era invariant quote `"no destructive API call may be issued while any applicable confirmation gate remains pending"` updated to P8-002 canonical form `"no destructive API call (DELETE or upload POST) may be issued while ANY confirmation gate OR eligibility guard remains unresolved"`. Exactly 1 occurrence replaced; assertion confirms old text absent. |
+| GAP-R18-002 | LOW | APPLIED | holdout-scenarios.md frontmatter `last_updated: 2026-07-10` → `2026-07-16`. |
+| GAP-R18-003 | INFO | NO-OP | bc-2-issue-read.md trace convention verified: the `trace:` YAML block uses L2/Source/F2-addition bullet style (no numbered `v1.3.X` version-trace entries, no `_Last updated` paragraph). bc-3 is the only file in this set with that versioned convention. No action taken. Evidence: grep for `v1\.3\.` and `_Last updated` in bc-2 returns zero hits. |
+| GAP-R18-004 | — | ACCEPTED-HISTORICAL | Team-lead disposition: no action. |
+
+**Self-changelog check**: no BC body or holdout count changes in R18 — spec-changelog sync is a SKIP (v1.3.48 already covers the P8 substantive changes; R18 is mechanical sync only per the changelog convention for micro-passes that touch no behavioral semantics).
 
 **BC / holdout count: 657 BCs / 96 holdouts — UNCHANGED.**
 Guards: `check-spec-counts.sh`: OK. `check-bc-cumulative-counts.sh`: OK (657 / 8 files).
