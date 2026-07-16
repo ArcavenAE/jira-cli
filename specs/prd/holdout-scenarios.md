@@ -2375,7 +2375,7 @@ Call C (non-interactive, no `--yes`):
 **Setup**:
 
 1. Wiremock at `JR_BASE_URL`. Config with a valid profile. Temp out-dir `OUT_DIR`.
-2. Wiremock mounts `GET /rest/api/3/issue/FOO-5` with four attachments carrying adversarial filenames:
+2. Wiremock mounts `GET /rest/api/3/issue/FOO-5?fields=attachment` with four attachments carrying adversarial filenames: [P16-004: canonical `?fields=attachment` query-param form; aligns with H-NEW-ATTACHMENT-001/003/010 fixtures (P15-INFO-1 sweep)]
    - `{"id":"60001","filename":"../../evil.txt"}` — path-traversal via `../` sequences.
    - `{"id":"60002","filename":"CON"}` — Windows reserved device name.
    - `{"id":"60003","filename":"aaa…a.txt"}` — overlong name: 251 `a` characters + `.txt` = 255 bytes total (at the length-cap boundary); tests the length-truncation step of the sanitization pipeline. **Note**: null bytes (`\u0000`) are not representable in JSON string values per RFC 7159 §8.2 and cannot appear in a JSON fixture; the overlong-name test exercises the length-cap step instead.
@@ -2408,7 +2408,7 @@ Call C (non-interactive, no `--yes`):
 **Setup**:
 
 1. Wiremock at `JR_BASE_URL`. Config with a valid profile at `JR_CONFIG_DIR`. Temp file `upload.txt` containing `"test"` in `WORK_DIR`.
-2. Wiremock mounts `GET /rest/api/3/issue/SOFTWARE-1` returning a standard software-project issue: `fields.project.projectTypeKey = "software"` (not `"service_desk"`). Any additional project-metadata requests (`GET /rest/api/3/project/SOFTWARE`) also return a non-service-desk project entry. Wiremock is configured with `"matchingType": "STRICT"` (unmatched requests return 500) — the test verifies ZERO requests to any `/rest/servicedeskapi/...` path.
+2. Wiremock mounts `GET /rest/api/3/issue/SOFTWARE-1` returning a standard software-project issue body (provides existence validation and `fields.project.key = "SOFTWARE"` for project-type lookup; per BC-3.9.003 Step 0, this GET validates existence only — `projectTypeKey` is NOT read from `fields.project` here). Wiremock mounts `GET /rest/api/3/project/SOFTWARE` returning a non-service-desk project entry with `projectTypeKey = "software"` — this is the authoritative source for projectTypeKey determination via `get_or_fetch_project_meta` (NOT the embedded `fields.project.projectTypeKey` in the issue GET; P16-003 alignment). Wiremock is configured with `"matchingType": "STRICT"` (unmatched requests return 500) — the test verifies ZERO requests to any `/rest/servicedeskapi/...` path.
 3. Wiremock asserts ZERO requests to `POST /rest/api/3/issue/SOFTWARE-1/attachments` (platform POST must not fire).
 
 **Action**: `jr issue attachment upload SOFTWARE-1 upload.txt --public --yes`
@@ -2437,8 +2437,8 @@ Call C (non-interactive, no `--yes`):
 **Setup**:
 
 1. Wiremock at `JR_BASE_URL`. Config with a valid JSM-profile at `JR_CONFIG_DIR`. Temp file `upload.txt` containing `"test"` in `WORK_DIR`.
-2. Wiremock mounts `GET /rest/api/3/issue/EJ-1` returning a valid JSM service-desk issue: `fields.project.projectTypeKey = "service_desk"`.
-3. Wiremock mounts `GET /rest/api/3/project/EJ` + `GET /rest/servicedeskapi/servicedesk` returning a valid service desk with `serviceDeskId = "1"`.
+2. Wiremock mounts `GET /rest/api/3/issue/EJ-1` returning a valid JSM issue body (provides existence validation and `fields.project.key = "EJ"` for project-type lookup; per BC-3.9.003 Step 0, this GET validates existence only — `projectTypeKey` is NOT read from `fields.project` in the issue GET; P16-003 alignment).
+3. Wiremock mounts `GET /rest/api/3/project/EJ` returning `{"id":"10050","projectTypeKey":"service_desk","simplified":false}` (authoritative source for `projectTypeKey` via `get_or_fetch_project_meta`) + `GET /rest/servicedeskapi/servicedesk` returning a valid service desk with `serviceDeskId = "1"`.
 4. Wiremock asserts ZERO requests to `POST /rest/servicedeskapi/servicedesk/1/attachTemporaryFile` (the upload step must never be reached when the gate gets EOF).
 5. Use `JR_STDIN_IS_TTY=1` debug seam to force the interactive TTY branch. Pipe an **empty file** (zero bytes, EOF immediately) to stdin: `printf '' | jr issue attachment upload EJ-1 upload.txt --public`.
 

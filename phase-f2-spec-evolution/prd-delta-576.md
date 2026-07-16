@@ -5,7 +5,7 @@ issues: "#576, #585"
 phase: F2
 authored: 2026-07-15
 spec_version_before: 1.3.42
-spec_version_after: 1.3.55
+spec_version_after: 1.3.56
 bc_count_before: 624
 bc_count_after: 657
 holdout_count_before: 88
@@ -30,9 +30,9 @@ BC-2.7.002. All design decisions ratified by DEC-179.
 |-------|---------|------------|
 | S1 | `jr issue attachment list` (list + filter) | BC-2.7.001..006 |
 | S2 | `jr issue attachment download` (single/batch/newest) | BC-2.7.007..012 |
-| S3 | `jr issue attachment upload` (platform POST + `--replace-existing` + `--dry-run` path-c) | BC-3.9.001..002, BC-3.9.009, BC-3.9.012, BC-3.9.017, BC-3.9.018, BC-3.9.020 (path-c: `--replace-existing --dry-run` + EC-3.9.020-6 clap guard) |
+| S3 | `jr issue attachment upload` (platform POST + `--replace-existing` + `--dry-run` path-c) | BC-3.9.001..002, BC-3.9.009, BC-3.9.012, BC-3.9.014, BC-3.9.017, BC-3.9.018, BC-3.9.020 (path-c: `--replace-existing --dry-run` + EC-3.9.020-6 clap guard). **BC-3.9.014 gate mechanics ship with S3** (earliest gate consumer, required by BC-3.9.017 step 2's ≥1-match gate; S5 consumes them for the `--public`/combined variants — S5 `depends_on` S3; F3 must encode this edge). [P16-002 ORCHESTRATOR RULING: BC-3.9.014 reallocated S5→S3] |
 | S4 | `jr issue attachment delete` | BC-3.9.008, BC-3.9.010, BC-3.9.013, BC-3.9.015, BC-3.9.016, BC-3.9.019, BC-3.9.020 |
-| S5 | `jr issue attachment upload --public/--internal` (JSM visibility) | BC-3.9.003..007, BC-3.9.011, BC-3.9.014, BC-X.8.010 |
+| S5 | `jr issue attachment upload --public/--internal` (JSM visibility) | BC-3.9.003..007, BC-3.9.011, BC-X.8.010. **BC-3.9.014 gate mechanics consumed here** for `--public` standalone (consumer 1) and combined `--public`+≥1-match (consumer 3) — gate mechanics ship with S3 (above); S5 depends_on S3 for this. **EC-3.9.020-7 path-c `--public` annotation**: the `"visibility":"public"` annotation on `wouldUpload` entries in `--replace-existing --dry-run --public` (path-c) is activated only when `--public` is supplied; its end-to-end behavior is verified in S5 — S3 implements the annotation plumbing keyed on the flag. [P16-002 ORCHESTRATOR RULING] |
 
 ---
 
@@ -301,3 +301,20 @@ Source: Adversary Pass 15 (Consistency Review). 2 MEDIUM / 5 LOW / 2 INFO findin
 | P15-INFO-2 (INFO) | INFO | — | NO ACTION | Dry-run metadata asymmetry is documented and deliberate (`wouldDelete` lists existing; `wouldUpload` lists intended; no round-trip guarantee). No spec change required. |
 
 **BC count at this round: 657 (unchanged). Holdout count: 98 (+1). VP count: 33 (unchanged). Spec version: 1.3.55. Both guards exit 0.**
+
+---
+
+## Adversary Pass 16 Fix Round Finding Dispositions
+
+Source: Adversary Pass 16 (Consistency Review). 2 MEDIUM / 3 LOW / 1 INFO findings. Spec version bump: 1.3.55 → 1.3.56. No new BCs. Holdouts: 98 (unchanged). VPs: 33 (unchanged).
+
+| Finding | Severity | File(s) Touched | Status | What changed |
+|---------|----------|----------------|--------|-------------|
+| P16-001 ([process-gap]) | MEDIUM | error-taxonomy.md, impact-boundary-576.md | APPLIED | error-taxonomy.md: 4 new override rows added after existing `404 — comment delete/edit/view` row: (1) `404 — attachment list` (read-path canonical only; BC-2.7.006); (2) `404 — attachment download` (canonical only; BC-2.7.012/EC-2.7.007-1); (3) `404 — attachment delete` split two-sub-case row (DELETE 404 canonical+body per DEC-168 BC-3.9.008/013; pre-prompt metadata-GET 404 canonical only BC-3.9.015; multi/bulk 404 benign-skip exception BC-3.9.013); (4) first 413 row in product (`attachment upload` — `"Attachment too large…"` + exit 1; BC-3.9.001/BC-3.9.012). `last_updated` updated to 2026-07-16. impact-boundary-576.md: R3.14 added documenting that error-taxonomy.md and edge-case-catalog.md were omitted from F1 §3.2 perimeter scan (process-gap retro-annotation; inline-EC convention accepted for edge-case-catalog.md; prevention note). |
+| P16-002 (ORCHESTRATOR RULING) | MEDIUM | prd-delta-576.md (Scope table), impact-boundary-576.md | APPLIED | prd-delta-576.md Scope table: BC-3.9.014 reallocated S5→S3 (gate mechanics ship with S3, the earliest consumer via BC-3.9.017 step 2's ≥1-match gate; S5 consumes them for `--public`/combined variants; F3 must encode S5 depends_on S3). S3 row updated with BC-3.9.014 and note. S5 row updated with note referencing gate mechanics from S3. impact-boundary-576.md: R3.13 added (ORCHESTRATOR RULING — BC-3.9.014 S3/S5 allocation; rationale: S3 is earliest gate consumer; EC-3.9.020-7 path-c note; spec impact summary). |
+| P16-003 (LOW) | LOW | bc-3-issue-write.md, holdout-scenarios.md | APPLIED | bc-3-issue-write.md BC-3.9.003: Step 0 added (issue existence validation: `GET /rest/api/3/issue/{key}`; 404→exit 64 EC-3.9.012-2; `fields.project.key` passed to `get_or_fetch_project_meta`). projectTypeKey source pinned to `get_or_fetch_project_meta` (NOT issue GET's embedded `fields.project.projectTypeKey`). Key-derivation asymmetry vs BC-3.9.017 step 0 documented (BC-3.9.017 derives project key from key-string prefix because no issue GET has run yet; BC-3.9.003 uses issue GET first then `fields.project.key`; paths are guaranteed-equivalent; "deliberately equivalent" note extended). BC-3.9.003 Trace updated. holdout-scenarios.md: H-NEW-ATTACHMENT-008 step 2 fixture wording updated (projectTypeKey from `GET /rest/api/3/project/SOFTWARE` via `get_or_fetch_project_meta`, NOT from issue GET). H-NEW-ATTACHMENT-009 step 2 fixture wording updated similarly (`GET /rest/api/3/project/EJ`). |
+| P16-004 (LOW) | LOW | holdout-scenarios.md | APPLIED | H-NEW-ATTACHMENT-007 step-2 mount: `GET /rest/api/3/issue/FOO-5` → `GET /rest/api/3/issue/FOO-5?fields=attachment` (canonical query-param form; aligns with P15-INFO-1 convention). |
+| P16-005 (LOW) | LOW | bc-3-issue-write.md | APPLIED | BC-3.9.015 Metadata-fetch failure clause extended from 404-only to full taxonomy: 403 → exit 1 (`"Permission denied: cannot access attachment <AID>."` aligned with BC-2.7.012); 401 → exit 2 (`JrError::NotAuthenticated`; standard auth taxonomy; `jr auth login` hint); 5xx/network → exit 1 (standard API/transport taxonomy §1). All fire BEFORE the confirmation prompt; gate never presented on metadata-fetch failure. BC-3.9.015 Trace updated. |
+| P16-INFO | INFO | impact-boundary-576.md | APPLIED | edge-case-catalog.md inline-EC convention accepted as deliberate (no content action required). Disposition documented alongside error-taxonomy.md omission in R3.14 perimeter-scan retro-annotation. |
+
+**BC count at this round: 657 (unchanged). Holdout count: 98 (unchanged). VP count: 33 (unchanged). Spec version: 1.3.56. Both guards exit 0.**

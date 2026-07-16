@@ -5160,3 +5160,22 @@ Displaced to make room for SOH-ATTACHMENTS-1 adversary pass-14 remediation step 
 | Step | Agent | Status | Output |
 |------|-------|--------|--------|
 | **SOH-ATTACHMENTS-1 F2 ADVERSARY PASS-9 REMEDIATED (2026-07-16): 3 findings (1M/2L); P9-001 three-tier author fallback chain fully specified (displayName→accountId→"(anonymous)"); P9-002 step-0 citation arity fixed + key-derivation-equivalence note; P9-003 fixture wire-shape corrected; consistency r19 CONSISTENT (zero gaps); spec v1.3.49; guards green. Pass 10 DISPATCHED.** | adversary + state-manager | COMPLETE | `phase-f2-spec-evolution/consistency-report-576-r19.md`; BC 657; holdouts 96; spec v1.3.49. |
+
+
+---
+
+## Archived Phase Progress row (2026-07-16, adversary-pass-16 remediation burst)
+
+Displaced to make room for SOH-ATTACHMENTS-1 F2 ADVERSARY PASS-16 REMEDIATED (2026-07-16) row per keep-5 rule.
+
+| Phase | Status | Completed | Gate | Notes |
+|-------|--------|-----------|------|-------|
+| **SOH-ATTACHMENTS-1 F2 ADVERSARY PASS-10 REMEDIATED (2026-07-16) — p10 NOT-CLEAN 3 (0M!/2L/1I — severity floor reached); three pinpoint invariant pins applied; consistency r19+r20 both CONSISTENT zero-action; spec v1.3.50; counts 657/96; guards green. Gate: adversary pass 11 in flight — first CLEAN candidate.** | **ADVERSARY PASS-10 REMEDIATED** | **2026-07-16** | **Adversary pass 11 in flight.** | `phase-f2-spec-evolution/consistency-report-576-r20.md`; BC 657; holdouts 96; spec v1.3.50. |
+
+### Archived Current Phase Steps row (adversary-pass-16 remediation burst)
+
+Displaced to make room for SOH-ATTACHMENTS-1 adversary pass-16 remediation step row per keep-5 rule.
+
+| Step | Agent | Status | Output |
+|------|-------|--------|--------|
+| **SOH-ATTACHMENTS-1 F2 ADVERSARY PASS-11 REMEDIATED (2026-07-16): 2 findings (1M/1L); P11-001 batch per-file download-error policy (fail-soft-continue; EC-2.7.008-7/8; H-003 Call B partial-failure fixture added); P11-002 --out/--out-dir selector clap bindings pinned (EC-2.7.007-9/EC-2.7.008-9); consistency r21 CONSISTENT (3rd consecutive zero-action round); spec v1.3.51; guards green. Pass 12 DISPATCHED.** | adversary + state-manager | COMPLETE | `phase-f2-spec-evolution/consistency-report-576-r21.md`; BC 657; holdouts 96; spec v1.3.51. |

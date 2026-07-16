@@ -1,7 +1,7 @@
 ---
 context: error-taxonomy
 title: "Error Taxonomy"
-last_updated: 2026-07-11
+last_updated: 2026-07-16
 source_pass: 3
 trace: |
   - L2: .factory/specs/domain-spec/
@@ -9,6 +9,7 @@ trace: |
   - Source R1: .factory/semport/jira-cli/jira-cli-pass-3-deep-r1.md §3.1 (JrError variants)
   - Source P8: .factory/semport/jira-cli/jira-cli-pass-8-deep-synthesis.md §6.1 (design patterns)
   - F2 amendment (2026-07-11, issue #577 SOH-COMMENT-CRUD-1, adversary pass-44 fix round 47 F-2): Section 3 — comment 403/404 override rows added (UserError exit 64, body surfaced; BC-3.5.004/BC-3.5.005/BC-3.5.010); TD-031 pre-existing violation corrected (volatile line cite replaced with stable symbol anchor src/api/client.rs::extract_error_message); pre-existing table-cell pipe escaped in BC-CITE-001 False-positive risk row
+  - F2 amendment (2026-07-16, issue #576 SOH-ATTACHMENTS-1, adversary pass-16 fix round 16 P16-001): Section 3 — attachment 404 override rows added (BC-2.7.006/BC-2.7.012/BC-3.9.008/BC-3.9.013/BC-3.9.015); first 413 surface added (attachment upload, BC-3.9.001/BC-3.9.012); perimeter-scan [process-gap] recorded in impact-boundary-576.md
 ---
 
 # Error Taxonomy — jira-cli
@@ -92,6 +93,10 @@ Source: `src/api/client.rs::extract_error_message`. Corrected from broad pass pe
 | 403 — `comment delete/edit/view` | `UserError(...)` | 64 | `"comment not found or permission denied: <KEY>#<ID>"` + Jira body on separate line (BC-3.5.004/BC-3.5.005/BC-3.5.010 override) |
 | 404 | `ApiError(404, ...)` | 1 | `"Not found: <resource>"` |
 | 404 — `comment delete/edit/view` | `UserError(...)` | 64 | `"comment not found or permission denied: <KEY>#<ID>"` + Jira body on separate line (BC-3.5.004/BC-3.5.005/BC-3.5.010 override) |
+| 404 — `attachment list` (issue KEY) | `UserError(...)` | 64 | `"Issue <KEY> not found or not accessible."` (canonical string only; Jira body NOT surfaced; BC-2.7.006) |
+| 404 — `attachment download` (KEY or AID) | `UserError(...)` | 64 | `"Issue <KEY> not found or not accessible."` or `"Attachment <AID> not found or not accessible."` (canonical string only; Jira body NOT surfaced — read-path convention; BC-2.7.012 / EC-2.7.007-1) |
+| 404 — `attachment delete` (single AID, DELETE or pre-prompt metadata-GET) | `UserError(...)` | 64 | DELETE 404: canonical string + Jira body surfaced (DEC-168; BC-3.9.008/BC-3.9.013). Pre-prompt metadata-GET 404: canonical string only, no body (BC-3.9.015 — read GET, not write). Multi/bulk/`--replace-existing` 404 = benign-skip exception, NOT exit 64 (BC-3.9.013) |
+| 413 — `attachment upload` | `ApiError(413, ...)` | 1 | `"Attachment too large: the file exceeds the server-configured limit."` (no numeric limit stated; first 413 surface in the product; BC-3.9.001/BC-3.9.012) |
 | 409 | `ApiError(409, ...)` | 1 | Extracted message |
 | 422 | `ApiError(422, ...)` | 1 | Extracted message |
 | 429 | Retry (up to MAX_RETRIES=3) | — | Final retry → return 429 response to caller (NOT error for `send_raw`) |

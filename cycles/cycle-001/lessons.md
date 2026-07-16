@@ -5972,3 +5972,18 @@ _Tagged: [positive-control] [spec-changelog-resync] [mitigation-working] [codifi
 
 _Recorded: 2026-07-16. State-manager (adversary-pass-15 remediation burst, TD-VSDD-053)._
 _Tagged: [process-gap] [hook-pressure] [forbidden-file-edit] [engine-side] [write-scope-violation] [po-state-manager-boundary]_
+
+---
+
+### TWIN-ARTIFACT-SWEEP-RECURRENCE-7 [process-gap]
+
+**Observation (P16 burst, 2026-07-16):** The product-owner fix round for adversary pass 16 declared "no further propagation identified" after updating spec body files, while 4 BC-INDEX rows remained stale (body-updated but index rows not synced). These were caught by consistency-validator r26 (INFO-10), not by the PO twin-artifact sweep. This is the 7th recurrence of the TWIN-ARTIFACT-SWEEP class.
+
+**Root cause:** The PO sweep uses judgment to identify mirroring artifacts, but BC-INDEX rows for body-updated BCs require a mechanical grep step to identify all affected rows — judgment alone misses them because the index is a separate file from the spec body.
+
+**Rule (reinforcement):** BC-INDEX row sync after any BC body edit requires a mechanical grep — `grep -n "BC-3.9.NNN\|BC-X.Y.NNN"` against BC-INDEX.md — not a judgment call about "further propagation." The PO twin-artifact sweep checklist must include this step explicitly.
+
+**Also recorded this burst:** error-taxonomy.md as override-registry pattern: error-taxonomy.md §3 functions as a product-level override registry for the default exit-code taxonomy. When a new command surface violates the default taxonomy (e.g., attachment 404 → exit 64 not exit 1), a new override row in error-taxonomy.md §3 is the correct remediation vehicle — same pattern used in #577 precedent. The F1 perimeter scan must include error-taxonomy.md to catch taxonomy contradictions before they survive 16 adversary passes.
+
+_Recorded: 2026-07-16. State-manager (adversary-pass-16 remediation burst, TD-VSDD-053)._
+_Tagged: [process-gap] [twin-artifact-sweep] [recurrence-7] [bc-index] [mechanical-grep] [error-taxonomy] [perimeter-scan]_

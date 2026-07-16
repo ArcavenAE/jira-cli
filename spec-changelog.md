@@ -7,6 +7,29 @@ project: "jr (jira-cli)"
 
 Track all spec version changes. Most recent version first.
 
+## [1.3.56] - 2026-07-16
+
+### Type: PATCH
+
+**Summary**: Adversary pass 16 (P16) fix round — error-taxonomy.md 4 new override rows (attachment list/download/delete 404, first 413 upload row); BC-3.9.014 reallocated S5→S3 (gate mechanics ship with earliest consumer); BC-3.9.003 Step 0 added (issue GET + projectTypeKey source pinned to `get_or_fetch_project_meta`); H-NEW-ATTACHMENT-007 ?fields=attachment fix; BC-3.9.015 metadata-fetch-failure clause extended (403/401/5xx); impact-boundary-576.md R3.13 + R3.14 retro-annotations.
+
+**Changes**:
+
+- `.factory/specs/prd/error-taxonomy.md` (MODIFIED): P16-001 — 4 new override rows added after `404 — comment delete/edit/view` row: (1) `404 — attachment list` (issue KEY): read-path canonical string only; BC-2.7.006. (2) `404 — attachment download` (KEY or AID): canonical string only; BC-2.7.012/EC-2.7.007-1. (3) `404 — attachment delete` (split two-sub-case row): DELETE 404 → canonical + Jira body surfaced (DEC-168; BC-3.9.008/BC-3.9.013); pre-prompt metadata-GET 404 → canonical only (BC-3.9.015); multi/bulk/`--replace-existing` 404 → benign-skip exception (BC-3.9.013). (4) `413 — attachment upload` (first 413 row in product): `"Attachment too large: the file exceeds the server-configured limit."` exit 1; BC-3.9.001/BC-3.9.012. `last_updated` updated to 2026-07-16. P16-001 F2 amendment trace added.
+- `.factory/phase-f2-spec-evolution/prd-delta-576.md` (MODIFIED): P16-002 — Scope table BC-3.9.014 reallocated S5→S3 (ORCHESTRATOR RULING): S3 row updated with BC-3.9.014 and note (gate mechanics ship with S3 as earliest consumer via BC-3.9.017 step 2; S5 consumes for `--public`/combined variants; S5 depends_on S3 edge noted for F3). S5 row updated with note referencing gate mechanics from S3. `spec_version_after` 1.3.55→1.3.56. P16 fix-round dispositions section appended.
+- `.factory/specs/prd/bc-3-issue-write.md` (MODIFIED): P16-003 — BC-3.9.003: Step 0 added (`GET /rest/api/3/issue/{key}` existence validation; 404→exit 64 EC-3.9.012-2; `fields.project.key` passed to `get_or_fetch_project_meta`; projectTypeKey source pinned to `get_or_fetch_project_meta` NOT issue GET embedded fields; key-derivation asymmetry vs BC-3.9.017 step 0 documented + "deliberately equivalent" note extended). BC-3.9.003 Trace updated. P16-005 — BC-3.9.015 Metadata-fetch failure clause extended: 403→exit 1 (`"Permission denied: cannot access attachment <AID>."`); 401→exit 2 (`JrError::NotAuthenticated`; `jr auth login` hint); 5xx/network→exit 1 (§1 taxonomy). All fire before gate presentation. BC-3.9.015 Trace updated.
+- `.factory/specs/prd/holdout-scenarios.md` (MODIFIED): P16-004 — H-NEW-ATTACHMENT-007 step-2 mount: `GET /rest/api/3/issue/FOO-5` → `GET /rest/api/3/issue/FOO-5?fields=attachment`. P16-003 reconciliation — H-NEW-ATTACHMENT-008 step 2 fixture wording updated (projectTypeKey from `GET /rest/api/3/project/SOFTWARE` via `get_or_fetch_project_meta`, NOT issue GET embedded fields). H-NEW-ATTACHMENT-009 step 2 fixture wording updated similarly (`GET /rest/api/3/project/EJ`).
+- `.factory/phase-f1-delta-analysis/impact-boundary-576.md` (MODIFIED): P16-002 — R3.13 added (ORCHESTRATOR RULING — BC-3.9.014 S3/S5 allocation: S3 is earliest consumer via BC-3.9.017 step 2; EC-3.9.020-7 path-c `--public` annotation note; spec impact). P16-001/INFO — R3.14 added (process-gap perimeter-scan retro-annotation: error-taxonomy.md and edge-case-catalog.md omitted from F1 §3.2; inline-EC convention disposition; prevention note for future F1 scans).
+
+**Impact**:
+
+| Dimension | Value |
+|---|---|
+| BC count | 657 (unchanged) |
+| Holdout count | 98 (unchanged) |
+| VP count | 33 (unchanged) |
+| Spec version | 1.3.55→1.3.56 |
+
 ## [1.3.55] - 2026-07-16
 
 ### Type: PATCH

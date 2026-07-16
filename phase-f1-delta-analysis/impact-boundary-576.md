@@ -805,3 +805,28 @@ The distinction between empty-Enter (cancel, exit 0) and EOF (exit 130) is load-
 **DEC-180 precedent basis**: (1) R3.8b invariant (no destructive call before any pending gate); (2) R3.3 (delete gate precedent: one-entry confirmation for interactive single-ID delete); (3) "one gate per invocation, ever" (OQ-8 / P7-002 ruling).
 
 **Spec impact**: BC-3.9.017 step 2 rewritten (P15-002); EC-3.9.017-9..12 added; BC-3.9.014 expanded to THREE consumers; EC-3.9.003-5 extended; EC-3.9.020-7 extended; BC-3.9.018 zero-match alignment noted; VP-576-003 `--yes` rationale updated; H-NEW-ATTACHMENT-010 added (holdouts 97→98).
+
+---
+
+### R3.13 BC-3.9.014 S3/S5 allocation (P16-002 ORCHESTRATOR RULING)
+
+**Ruling (P16-002, adversary pass-16, 2026-07-16)**: BC-3.9.014 (confirmation-gate mechanics, THREE consumers) is reallocated from S5 to **S3** — the earliest gate consumer in wave order ships the shared mechanics; S5 (--public/--internal) consumes them.
+
+**Rationale**: BC-3.9.014 is consumed by three story-spanning paths: (1) `--public` standalone (S5 consumer); (2) `--replace-existing` ≥1-match gate (S3 consumer, BC-3.9.017 step 2 per R3.12/P15-002); (3) combined `--public` + ≥1-match gate (S5 consumer, but depends on replace-existing gate mechanics from S3). Gate mechanics must ship with S3 (the earliest consumer) or the S3 test matrix is incomplete. S5 depends_on S3 for this shared machinery; F3 must encode this dependency edge (S5 `depends_on` S3).
+
+**EC-3.9.020-7 path-c note**: the `--public`-specific `"visibility":"public"` annotation on `wouldUpload` entries in `--replace-existing --dry-run --public` (EC-3.9.020-7 path-c) activates only when `--public` is supplied; its end-to-end behavior is verified in S5. S3 implements the annotation plumbing keyed on the flag; S5 exercises the `--public`-triggered branch.
+
+**Spec impact**: prd-delta-576.md Scope table S3 row gains BC-3.9.014; S5 row loses BC-3.9.014; explicit depends_on notes added to both rows.
+
+---
+
+### R3.14 Perimeter-scan omission retro-annotation (P16-001 [process-gap])
+
+**Retro-annotation (P16-001, adversary pass-16, 2026-07-16)**: The F1 §3.2 perimeter scan (above) omitted two cross-cutting spec artifacts from the "Required change" sweep:
+
+| Artifact omitted | Disposition |
+|-----------------|-------------|
+| `.factory/specs/prd/error-taxonomy.md` | NOT listed in §3.2 — this is the recurrence of the `PERIMETER-SCAN-OMITS-INDEX-AND-TRACEABILITY` family (same gap class as the BC-INDEX omission in earlier passes). error-taxonomy.md carries override rows for all 403/404 divergences from the default taxonomy; attachment 404/413 paths introduced in this bundle required new override rows. **Remediated in P16-001**: four new rows added (attachment list 404, attachment download 404, attachment delete 404 two-sub-cases, attachment upload 413). |
+| `.factory/specs/prd/edge-case-catalog.md` | NOT listed in §3.2 — inline-EC convention accepted for this bundle: all EC-* entries live inline in BC bodies (not in a separate edge-case-catalog.md file). No content action required for this bundle; the inline convention is the established pattern for SOH-ATTACHMENTS-1. |
+
+**Prevention note**: future F1 perimeter scans MUST include `error-taxonomy.md` and `edge-case-catalog.md` (with their disposition) in the §3.2 table alongside BC-INDEX.md, CANONICAL-COUNTS.md, and holdout-scenarios.md.
