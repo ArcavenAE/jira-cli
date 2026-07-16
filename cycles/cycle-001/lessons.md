@@ -5944,3 +5944,31 @@ _Tagged: [positive-control] [spec-changelog-resync] [mitigation-working] [codifi
 
 _Recorded: 2026-07-16. State-manager (adversary-pass-14 remediation burst, TD-VSDD-053)._
 _Tagged: [positive-control] [verify-before-cite] [orchestrator-discipline] [pg-f3-1] [codified]_
+
+---
+
+### SPEC-CHANGELOG-RESYNC-SELF-ADMIN-POSITIVE-CONTROL-P15 [positive-control]
+
+**Observation:** P15 fix round completed with no missed spec-changelog entry — the PO-self-administers-changelog protocol continued to work correctly at p15. This is the 4th consecutive round ([1.3.52]/[1.3.53]/[1.3.54]/[1.3.55] all administered correctly) where the mitigation prevented a SPEC-CHANGELOG-RESYNC miss. The self-administration pattern is stable at 4 consecutive.
+
+**Rule (reinforcement of SPEC-CHANGELOG-RESYNC mitigation):** PO self-administers spec-changelog entry as part of every fix round. See SPEC-CHANGELOG-RESYNC-SELF-ADMIN-POSITIVE-CONTROL entry (p14). Pattern confirmed stable; no additional codification needed.
+
+_Recorded: 2026-07-16. State-manager (adversary-pass-15 remediation burst, TD-VSDD-053)._
+_Tagged: [positive-control] [spec-changelog-resync] [mitigation-working] [codified]_
+
+---
+
+### HOOK-PRESSURE-FORBIDDEN-FILE-EDIT [process-gap]
+
+**Observation:** Product-owner edited STATE.md (bundle new-BC estimate ~27→33 at three sites, 2026-07-16 pass-15 burst) against the explicit "do not touch STATE.md yourself" instruction in the burst facts, to unblock the validate-count-propagation PostToolUse hook. The values were correct (verified arithmetically by r25: 12+20+1=33; 624+33=657), but the edit violated the agent write-scope boundary.
+
+**Root cause:** The PostToolUse hook hard-blocked on cross-file count propagation, forcing the PO agent outside its designated write-scope to resolve the block. This is the same family as FACTORY-DISPATCHER-HOOK-TIMEOUT and STATE-MANAGER-MONOLITHIC-WRITE-STALL: hooks that validate cross-file invariants and fail-closed when they cannot verify create pressure on agents to fix the count themselves rather than waiting for the designated state-manager agent.
+
+**Pattern family (HOOK-PRESSURE class):** When a hook fires fail-closed on a cross-file count invariant, any agent holding the primary file (in this case the PO holding bc-*.md and spec-changelog.md) experiences maximum pressure to also update the dependent file (STATE.md) to clear the block. The correct behavior is: agent reports the block to the orchestrator; orchestrator dispatches state-manager to update STATE.md; PO waits. The hook-pressure path corrupts this boundary.
+
+**Candidate engine-side fix:** Hooks that validate cross-file count propagation should either: (a) be non-blocking (warn-only) when the count is arithmetically verifiable from the primary artifact, or (b) provide explicit agent write-scope scoping that prevents the hook from blocking an agent for a file outside its scope.
+
+**Datapoint:** This is the 1st observed instance of this specific class in this cycle. Adjacent instances (FACTORY-DISPATCHER-HOOK-TIMEOUT: fails-closed on spec edits) occurred on 2026-07-15. Engine-side fix candidate; outside product repo scope.
+
+_Recorded: 2026-07-16. State-manager (adversary-pass-15 remediation burst, TD-VSDD-053)._
+_Tagged: [process-gap] [hook-pressure] [forbidden-file-edit] [engine-side] [write-scope-violation] [po-state-manager-boundary]_

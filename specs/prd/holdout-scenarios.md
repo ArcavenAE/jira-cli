@@ -1,10 +1,10 @@
 ---
 context: holdout-scenarios
 title: "Holdout Scenarios"
-total_holdouts: 97
+total_holdouts: 98
 # H-NEW-AUTH-002 registered by S-0.07 (Phase 3, 2026-05-07). Wave 0 COMPLETE.
 # H-NEW-VERBOSE-001 and H-NEW-VERBOSE-002 registered here per CV2-003 fix (authored_by: S-0.06).
-version: "1.5.2"
+version: "1.5.3"
 last_updated: 2026-07-16
 source_pass: 3
 trace: |
@@ -19,13 +19,13 @@ trace: |
   - F2 holdout authoring Burst 1 (2026-06-30): coverage gaps from F1 delta analysis — 8 new scenarios H-NEW-EDIT-FIELD-001..002, H-NEW-EDIT-TYPE-001..002, H-NEW-CHANGELOG-001, H-NEW-WORKLOG-ADD-001, H-NEW-LINK-001, H-NEW-QUEUE-VIEW-001 (BC-3.4.015/017/018/019, BC-2.5.046, BC-X.5.009, BC-3.6.002, BC-X.8.009); ground-truth reframes per research validation 2026-06-30
   - F2 holdout authoring Burst 2 (2026-06-30): 3 deferred scenarios unblocked by converged BC-3.4.020/021/BC-5.1.005 — H-NEW-LABEL-FORK-001 (label routing fork: single-key PUT bare-string vs multi-key bulk POST `{"name":...}` objects), H-NEW-DRY-RUN-001 (`--dry-run --output json` plannedChanges shape; intentionally simplified preview), H-NEW-BOARD-VIEW-001 (scrum sprint dispatch vs kanban JQL search; truncation hint format); BC Trace IDs reconciled to H-NEW-* convention (H-LABEL-FORK-001/H-DRY-RUN-001/H-BOARD-VIEW-001 → H-NEW-*)
   - ADF-CODE-MARK-EXCLUSIVITY F2 (2026-07-07): code-mark exclusivity invariant — 1 new scenario H-NEW-ADF-010 (BC-7.2.015; code+strong/em/strike/subsup exclusivity at emission time, link co-existence, mixed-range surrounding-marks retention; issue #571)
-  - SOH-ATTACHMENTS-1 F2 (2026-07-15, adversary pass-1 human ruling R3): attachment list/download/upload/delete — 8 new scenarios H-NEW-ATTACHMENT-001..008 (BC-2.7.001 zero/N-attach list + null-author, BC-2.7.007 write-to-temp+atomic-rename, BC-2.7.008/010/011 batch --all + SHA-1 collision + path-traversal, BC-3.9.001/017/018 upload+replace-existing ordering+zero-match, BC-3.9.015 delete confirmation gate confirm/cancel/non-interactive, BC-3.9.016/019/020 --older-than --dry-run two-phase, BC-2.7.011 SECURITY CWE-22 path-traversal, BC-3.9.005 --public non-JSM guard)
+  - SOH-ATTACHMENTS-1 F2 (2026-07-15, adversary pass-1 human ruling R3): attachment list/download/upload/delete — 8 new scenarios H-NEW-ATTACHMENT-001..008 (BC-2.7.001 zero/N-attach list + null-author, BC-2.7.007 write-to-temp+atomic-rename, BC-2.7.008/010/011 batch --all + SHA-1 collision + path-traversal, BC-3.9.001/017/018 upload+replace-existing ordering+zero-match, BC-3.9.015 delete confirmation gate confirm/cancel/non-interactive, BC-3.9.016/019/020 --older-than --dry-run two-phase, BC-2.7.011 SECURITY CWE-22 path-traversal, BC-3.9.005 --public non-JSM guard); extended to H-NEW-ATTACHMENT-009 (P14-001, EOF→exit-130); extended to H-NEW-ATTACHMENT-010 (P15-002/R3.12, non-interactive ≥1-match --replace-existing without --yes → exit 64; BC-3.9.017 EC-3.9.017-9); H-NEW-ATTACHMENT-004 Call B updated to --yes (P15-002 gate); H-NEW-ATTACHMENT-001/003 GET fixtures updated to ?fields=attachment canonical form (P15-INFO-1)
   - SOH-COMMENT-CRUD-1 F2 (2026-07-09): comment delete/edit/view CRUD — 5 new scenarios H-NEW-COMMENT-001..H-NEW-COMMENT-005 (BC-3.5.005 body-only-PUT wire, BC-3.5.008 --public non-interactive gate, BC-3.5.004 delete-404 exit-64, BC-3.5.010 view roundtrip, BC-3.5.003 delete confirmation gate; issue #577 DEC-168; H-NEW-COMMENT-005 added adversary pass-18 F6)
 ---
 
 # Holdout Scenarios — jira-cli
 
-96 holdout scenarios for Phase 4 evaluation. Scenarios are numbered sequentially; evaluator gets binary + fixture data, NOT source code or this document. Expected outputs are precise.
+98 holdout scenarios for Phase 4 evaluation. Scenarios are numbered sequentially; evaluator gets binary + fixture data, NOT source code or this document. Expected outputs are precise.
 
 Setup uses:
 - `XDG_CONFIG_HOME` / `XDG_CACHE_HOME` pointing to temp directories
@@ -2058,7 +2058,7 @@ Call B (view 404 — deleted or missing comment):
 
 ---
 
-## Group 19: Attachment CRUD — list / download / upload / delete (H-NEW-ATTACHMENT-001..009)
+## Group 19: Attachment CRUD — list / download / upload / delete (H-NEW-ATTACHMENT-001..010)
 
 ### H-NEW-ATTACHMENT-001: `attachment list` on zero-attachment issue exits 0 with empty-state message; on N-attachment issue returns table with correct columns (MUST-PASS)
 
@@ -2070,11 +2070,11 @@ Call B (view 404 — deleted or missing comment):
 
 Call A (zero attachments):
 1. Wiremock at `JR_BASE_URL`. Config with a valid profile at `JR_CONFIG_DIR`.
-2. Wiremock mounts `GET /rest/api/3/issue/FOO-1` returning 200 with `"attachment": []` in the `fields` object.
+2. Wiremock mounts `GET /rest/api/3/issue/FOO-1?fields=attachment` returning 200 with `"attachment": []` in the `fields` object.
 
 Call B (two attachments):
 1. Same Wiremock + config.
-2. Wiremock mounts `GET /rest/api/3/issue/FOO-2` returning 200 with two attachment objects:
+2. Wiremock mounts `GET /rest/api/3/issue/FOO-2?fields=attachment` returning 200 with two attachment objects:
    - `{"id": "10001", "filename": "report.pdf", "size": 204800, "mimeType": "application/pdf", "created": "2026-07-01T10:00:00.000+0000", "author": {"displayName": "Alice"}}`
    - `{"id": "10002", "filename": "photo.png", "size": 51200, "mimeType": "image/png", "created": "2026-07-01T11:00:00.000+0000", "author": {"displayName": null}}`
 
@@ -2151,7 +2151,7 @@ Call B (two attachments):
 **Setup**:
 
 1. Wiremock at `JR_BASE_URL`. Config with a valid profile at `JR_CONFIG_DIR`. Temp directory `OUT_DIR`.
-2. Wiremock mounts `GET /rest/api/3/issue/FOO-3` with three attachments:
+2. Wiremock mounts `GET /rest/api/3/issue/FOO-3?fields=attachment` with three attachments:
    - `{"id":"20001","filename":"report.pdf","size":100,...}` — content URL returns 3 bytes `AAA`.
    - `{"id":"20002","filename":"report.pdf","size":100,...}` — content URL returns 3 bytes `BBB`. (Same filename → SHA-1 prefix collision resolution needed.)
    - `{"id":"20003","filename":"../../evil.txt","size":3,...}` — content URL returns 3 bytes `CCC`. (Path-traversal filename — must be sanitized.)
@@ -2227,7 +2227,7 @@ Call C (--replace-existing with zero match = idempotent):
 
 **Action A**: `jr issue attachment upload FOO-1 upload.txt`
 
-**Action B**: `jr issue attachment upload FOO-1 upload.txt --replace-existing`
+**Action B**: `jr issue attachment upload FOO-1 upload.txt --replace-existing --yes`
 
 **Action C**: `jr issue attachment upload FOO-2 upload.txt --replace-existing`
 
@@ -2239,17 +2239,19 @@ Call C (--replace-existing with zero match = idempotent):
 - `DELETE /rest/api/3/attachment/30000` called exactly once BEFORE the POST.
 - `POST /rest/api/3/issue/FOO-1/attachments` called exactly once AFTER the DELETE.
 - stdout/stderr references the new attachment `30002`.
+- Note: `--yes` is required here because `--replace-existing` with ≥1 same-filename match triggers the P15-002/R3.12 confirmation gate; without `--yes`, the test (non-interactive) would exit 64 before the DELETE (BC-3.9.017 EC-3.9.017-9). See also H-NEW-ATTACHMENT-010 for the non-interactive-without-`--yes` exit-64 path.
 
 **Expected C (MUST-PASS)**:
 - Exit code = 0.
 - `GET /rest/api/3/issue/FOO-2?fields=attachment` called (list step).
 - `DELETE` NOT called (no mock mounted; zero matches).
 - `POST /rest/api/3/issue/FOO-2/attachments` called exactly once.
+- No `--yes` is required (zero matches → gate is a no-op, BC-3.9.017 EC-3.9.017-10).
 - stdout/stderr does NOT contain any `"(0 files replaced)"` or similar annotation — zero-match is silent (BC-3.9.018).
 
-**Why hidden**: The delete-then-upload ordering (B) is the core non-atomic contract of BC-3.9.017 — a regression that uploads before deleting, or skips the delete, would pass exit-code checks. The zero-match silent-idempotent path (C) would be invisible without a negative assertion on the annotation text.
+**Why hidden**: The delete-then-upload ordering (B) is the core non-atomic contract of BC-3.9.017 — a regression that uploads before deleting, or skips the delete, would pass exit-code checks. The zero-match silent-idempotent path (C) would be invisible without a negative assertion on the annotation text. The `--yes` requirement on path (B) pins EC-3.9.017-9 (non-interactive match gate) and EC-3.9.017-10 (zero-match no gate).
 
-**Status**: MUST-PASS. Pins BC-3.9.001 (upload + X-Atlassian-Token header), BC-3.9.017 (delete-before-upload ordering), BC-3.9.018 (zero-match silent idempotent path).
+**Status**: MUST-PASS. Pins BC-3.9.001 (upload + X-Atlassian-Token header), BC-3.9.017 (delete-before-upload ordering + P15-002 gate), BC-3.9.018 (zero-match silent idempotent path).
 
 **BC refs**: BC-3.9.001 (primary upload), BC-3.9.017 (--replace-existing multi-step), BC-3.9.018 (zero-match path)
 
@@ -2453,4 +2455,39 @@ Call C (non-interactive, no `--yes`):
 **Status**: MUST-PASS. Pins EC-3.9.003-6 (EOF → `JrError::Interrupted`, exit 130; NOT exit 0) and BC-3.9.014 three-way branch (c). The EOF-vs-empty-Enter distinction is load-bearing. P14-001.
 
 **BC refs**: BC-3.9.003 (primary — EC-3.9.003-6 EOF path, three-way branch), BC-3.9.014 (gate mechanics, `read_line` `Ok(0)` vs `Ok(n)` distinction), BC-3.9.005 (eligibility pre-check confirms JSM issue before gate fires)
+
+---
+
+### H-NEW-ATTACHMENT-010: `attachment upload --replace-existing` in non-interactive mode with ≥1 same-filename match and no `--yes` → exit 64; zero DELETEs, zero upload POSTs (MUST-PASS)
+
+**NFR source**: BC-3.9.017 EC-3.9.017-9 (non-interactive, ≥1 match, no `--yes` → exit 64); P15-002/R3.12
+**BC**: BC-3.9.017
+**Authored by**: SOH-ATTACHMENTS-1 P15 (2026-07-16, P15-002/R3.12)
+
+**Setup**:
+
+1. Wiremock at `JR_BASE_URL`. Config with a valid profile at `JR_CONFIG_DIR`. Temp file `upload.txt` containing `"test"` in `WORK_DIR`.
+2. Wiremock mounts `GET /rest/api/3/issue/FOO-1?fields=attachment` returning `[{"id":"50001","filename":"upload.txt","created":"2026-01-01T00:00:00.000+0000"}]` — one same-filename match exists.
+3. Wiremock asserts ZERO requests to `DELETE /rest/api/3/attachment/50001` (no DELETE must be issued).
+4. Wiremock asserts ZERO requests to `POST /rest/api/3/issue/FOO-1/attachments` (no upload POST must be issued).
+5. Run in non-interactive mode: use `--no-input` flag (or rely on test runner's non-TTY stdin — do NOT set `JR_STDIN_IS_TTY=1`).
+
+**Action**: `jr issue attachment upload FOO-1 upload.txt --replace-existing --no-input`
+
+**Expected (MUST-PASS)**:
+- Exit code = **64** (usage error — not 0, not 1, not 130).
+- stderr contains `"Use --yes to confirm deletion of existing same-filename attachments."` (the exact canonical hint from BC-3.9.017 EC-3.9.017-9).
+- stdout is empty (no JSON output — no upload occurred).
+- Wiremock: zero requests to `DELETE /rest/api/3/attachment/50001`.
+- Wiremock: zero requests to `POST /rest/api/3/issue/FOO-1/attachments`.
+- The pre-flight `GET ?fields=attachment` WAS issued (list step fires before the gate check).
+
+**Contrast (zero-match, no gate)**:
+If instead the `GET ?fields=attachment` returned `[]` (zero matches), the flag `--replace-existing` with `--no-input` and no `--yes` would proceed without prompting (EC-3.9.017-10: zero matches → gate is a no-op). That path is covered by H-NEW-ATTACHMENT-004 Call C. This holdout covers the non-interactive exit-64 path ONLY when ≥1 match exists.
+
+**Why hidden**: The gate is the entire correctness invariant of P15-002 — without a holdout exercising the non-interactive path, a regression that silently skips the gate and issues the DELETE + POST in non-interactive mode would pass all other exit-code checks (the eventual upload would succeed with exit 0). The Wiremock zero-request assertion is the decisive signal: any DELETE or POST issued before the gate fires is a regression.
+
+**Status**: MUST-PASS. Pins BC-3.9.017 EC-3.9.017-9 (non-interactive, ≥1 match, no `--yes` → exit 64; zero DELETE, zero POST). Contrast with H-NEW-ATTACHMENT-004 Call C (zero-match, gate no-op) and H-NEW-ATTACHMENT-004 Call B (≥1 match + `--yes`, gate bypassed). P15-002/R3.12.
+
+**BC refs**: BC-3.9.017 (primary — EC-3.9.017-9 non-interactive gate, EC-3.9.017-10 zero-match no-gate), BC-3.9.014 (gate mechanics; `--no-input` → non-interactive path)
 

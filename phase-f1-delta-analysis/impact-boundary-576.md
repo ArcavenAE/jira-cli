@@ -787,3 +787,21 @@ The distinction between empty-Enter (cancel, exit 0) and EOF (exit 130) is load-
 **PHASE-DOC-RETRO-ANNOTATION (P14-001, 2026-07-16):** The claim "Neither states EOF=cancel-exit-0 explicitly in the file" was **FALSE** at the time of this ruling. BC-3.9.003 (the `--public` gate BC, in the F2 spec written in the same session that produced this ruling) DID explicitly state "any other input (including empty/EOF) → exit 0" — meaning EOF was explicitly stated to produce exit 0 (cancel). This ruling should have noted that BC-3.9.003 required a retro-annotation; it did not. Corrected by P14-001: BC-3.9.003 was updated to the correct three-way branch (EOF → exit 130), and this annotation records that R3.11's "sole correction record" claim was incomplete. The retro-annotation obligation that was missed in the original ruling is now satisfied by this note.
 
 **Implementation note for F2 spec authors:** the `read_line` arm that returns `Ok(0)` (zero bytes read = EOF) must map to `return Err(JrError::Interrupted)`, identical to the pattern in `src/cli/issue/interactions.rs::handle_comment_delete`. The `Interrupted` variant already carries exit code 130 via `JrError::exit_code()`.
+
+### R3.12 `--replace-existing` ≥1-match confirmation gate (P15-002/R3.12)
+
+**Orchestrator ruling (P15-002, adversary pass-15, 2026-07-16)**: `attachment upload --replace-existing` MUST require a confirmation gate whenever the pre-flight `GET ?fields=attachment` (BC-3.9.017 step 1) finds ≥1 same-filename attachment that would be deleted.
+
+**Ruling**: This is a **pattern-extension** of R3.8b ("no destructive call before a pending confirmation gate") and R3.3 (delete confirmation gate precedent). The delete-then-upload sequence in BC-3.9.017 steps 3–4 is a destructive operation (irreversible DELETE), and the pre-P15 spec had an ungated path that could silently destroy existing attachments in non-interactive mode. The same principle that requires a gate for `attachment delete` (R3.3) and `--older-than` (R3.8a) applies to `--replace-existing` with a non-empty match list.
+
+**Gate mechanics** (follows BC-3.9.014 DEC-174 pattern):
+- **Interactive, ≥1 match, no `--public`**: prompt listing would-delete entries (filename + AID); `[y/N]`; cancel → exit 0.
+- **Interactive, `--public` + ≥1 match**: ONE combined prompt covering both consequences (public visibility + would-delete list); single cancel → exit 0. NOT two separate gates ("one gate per invocation, ever").
+- **Non-interactive** (`--no-input` or stdin not a TTY), ≥1 match, no `--yes`: exit 64 before any DELETE; canonical message `"Use --yes to confirm deletion of existing same-filename attachments."`.
+- **`--yes`**: single-bypass for all gate conditions regardless of what triggered it.
+- **Zero matches**: gate is a no-op — `--replace-existing` with zero same-filename matches proceeds without prompting; always non-interactive-safe.
+- **`--dry-run`**: gate suppressed for all consumers (no destructive call will be issued; BC-3.9.020 EC-3.9.020-7 extended).
+
+**DEC-180 precedent basis**: (1) R3.8b invariant (no destructive call before any pending gate); (2) R3.3 (delete gate precedent: one-entry confirmation for interactive single-ID delete); (3) "one gate per invocation, ever" (OQ-8 / P7-002 ruling).
+
+**Spec impact**: BC-3.9.017 step 2 rewritten (P15-002); EC-3.9.017-9..12 added; BC-3.9.014 expanded to THREE consumers; EC-3.9.003-5 extended; EC-3.9.020-7 extended; BC-3.9.018 zero-match alignment noted; VP-576-003 `--yes` rationale updated; H-NEW-ATTACHMENT-010 added (holdouts 97→98).

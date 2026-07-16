@@ -690,11 +690,12 @@ When `<KEY>` does not exist or the authenticated user lacks Browse Projects perm
 | Condition | Exit code | stderr |
 |-----------|-----------|--------|
 | KEY 404 (not found / no access) | 64 | `"Issue <KEY> not found or not accessible."` |
+| 403 | 1 | `"Permission denied: cannot access issue <KEY>."` |
 | 401 | 2 | Not authenticated + `jr auth login` hint |
 | 5xx | 1 | `API error (<N>)` |
 | Network error | 1 | Connectivity hint |
 
-**Trace**: F2 spec evolution (SOH-ATTACHMENTS-1 2026-07-15; DEC-179 ratified design; follows BC-2.3.033/034 universal error pattern)
+**Trace**: F2 spec evolution (SOH-ATTACHMENTS-1 2026-07-15; DEC-179 ratified design; follows BC-2.3.033/034 universal error pattern); P15-005 (403 row added — consistent with BC-2.7.012 403 = exit 1)
 
 ---
 
@@ -747,9 +748,13 @@ On success, a completion hint is emitted to stderr: `"Downloaded: <path> (<size_
 
 **EC-2.7.007-9** (`--out` without `--id` — clap binding): `--out <PATH>` MUST be declared with `requires = "id"` (clap `requires` → exit 2 when `--out` is supplied without `--id`). `--out` combined with `--all` or `--newest` is invalid: batch downloads write to a directory (`--out-dir`), not a single file path.
 
+**EC-2.7.007-10** (`--filter` with `--id` — clap conflict): `--filter <FILTER>` MUST be declared with `conflicts_with = "id"` (clap `conflicts_with` → exit 2 when `--filter` is supplied together with `--id`). `--filter` applies only to `--all` and `--newest N` batch paths; it has no defined semantics on the single-ID path (the AID already uniquely identifies one attachment). Applies to all `--filter` variants (mime/name/size-max). P15-004.
+
+**EC-2.7.007-11** (`--out <PATH>` names an existing directory): if the user-specified `--out <PATH>` resolves to a path that already exists as a **directory**, `jr` exits 64 before any download: `"output path is a directory: <PATH>"`. Checked pre-download in the same pre-flight family as the overwrite-refuse guard (BC-2.7.007 Overwrite behavior). No file is created and no streaming request is issued. P15-006.
+
 **Observability** (`--verbose` / `--verbose-bodies`): `--verbose` logs method + URL only (unchanged CLAUDE.md rule SD-003). `--verbose-bodies` MUST NOT attempt to materialize the streaming response body — the body is a potentially large binary stream and buffering it for logging would defeat the OOM-safety design of streaming download. On a download response, `--verbose-bodies` MUST log response headers and the final written byte count ONLY (e.g., `<download body: N bytes written to <path>>`), never content. The PII warning that `--verbose-bodies` emits extends to attachment content by extension (attachment payloads may contain credentials, personal data, or confidential documents).
 
-**CLI flags** (pinned for e2e surface guard): `<KEY>` (positional, required); `--id <AID>` (single download); `--all` (batch); `--newest <N>` (top-N); `--out <PATH>` (single-file path override; requires `--id`, clap `requires` — EC-2.7.007-9); `--out-dir <DIR>` (batch target directory; requires `--all` or `--newest` via clap `ArgGroup` + `requires` — EC-2.7.008-9); `--force` (overwrite existing); `--filter <FILTER>` (repeatable); `--output json`; `--no-input`; `--profile <NAME>`; `--no-color`.
+**CLI flags** (pinned for e2e surface guard): `<KEY>` (positional, required); `--id <AID>` (single download); `--all` (batch); `--newest <N>` (top-N); `--out <PATH>` (single-file path override; requires `--id`, clap `requires` — EC-2.7.007-9); `--out-dir <DIR>` (batch target directory; requires `--all` or `--newest` via clap `ArgGroup` + `requires` — EC-2.7.008-9); `--force` (overwrite existing); `--filter <FILTER>` (repeatable; `conflicts_with = "id"` — exit 2 when combined with `--id` — EC-2.7.007-10); `--output json`; `--no-input`; `--profile <NAME>`; `--no-color`.
 
 **Trace**: F2 spec evolution (SOH-ATTACHMENTS-1 2026-07-15; DEC-179 ratified design; research §1b–1d VERIFIED; JSDCLOUD-10841 §P2-6 VERIFIED — platform endpoint for JSM; JRACLOUD-97046 §6 no-redirect-false; GHSA-9857-6MW7-FQ2M corroboration); SEC-576-003 (CWE-522 credential-stripping wiremock test requirement added 2026-07-15)
 
@@ -786,7 +791,9 @@ On completion a summary hint emits to stderr: `"Downloaded N of M attachments to
 
 **EC-2.7.008-9** (`--out-dir` without `--all` or `--newest` — clap binding): `--out-dir` MUST be declared with `#[arg(requires = "batch_selector")]` where `batch_selector` is an `ArgGroup` containing `[all, newest]` — the correct clap 4 mechanism for "requires any one of a group" (clap 4 has no `requires_one_of` attribute; `ArgGroup` is the canonical approach; note this is `jr`'s first `ArgGroup` use, establishing precedent). clap exits 2 when `--out-dir` is supplied without either `--all` or `--newest`. Supplying `--out-dir` with `--id` is invalid: a single-file download writes to an explicit `--out <PATH>` or defaults to the current directory.
 
-**Trace**: F2 spec evolution (SOH-ATTACHMENTS-1 2026-07-15; DEC-179 ratified design)
+**EC-2.7.008-10** (filtered-to-zero on a non-empty issue): when `--all` is used with one or more `--filter` flags and the filter set matches zero attachments from a non-empty issue (i.e., the issue has ≥1 attachments but none pass the filter), the behavior is **distinct** from EC-2.7.008-1 (empty-issue path): → exit 0; stderr: `"No attachments matched the filter on <KEY>."` (canonical string; different from `"No attachments on <KEY>."` which is the empty-issue message); JSON mode: stdout `{"downloaded":[]}` (empty array, consistent with EC-2.7.008-6 uniform `downloaded` array shape); no download requests issued. P15-007.
+
+**Trace**: F2 spec evolution (SOH-ATTACHMENTS-1 2026-07-15; DEC-179 ratified design); P15-007 (EC-2.7.008-10 filtered-to-zero non-empty)
 
 ---
 
@@ -809,7 +816,9 @@ If the issue has fewer than N attachments after filtering, all available attachm
 **EC-2.7.009-1** (N ≤ 0 — clap parses `--newest` as a signed integer i64; app validates N ≥ 1): `--newest` MUST be declared with `allow_negative_numbers = true` so that negative values (e.g. `-5`) reach the handler as a valid i64 rather than being intercepted by clap as an unknown flag (clap exit 2). The handler validates N ≥ 1; if it finds N ≤ 0, exit 64 before any HTTP call: `"--newest requires a positive integer."` N = 0 is rejected (zero-download is ambiguous, not silently accepted).
 **EC-2.7.009-2** (non-integer value for `--newest`): clap cannot parse the value as i64 → clap exit 2 with a usage error; no HTTP call. Message is clap-generated (not controlled by `jr` application code).
 
-**Trace**: F2 spec evolution (SOH-ATTACHMENTS-1 2026-07-15; DEC-179 ratified design)
+**EC-2.7.009-3** (filtered-to-zero on a non-empty issue): when `--newest N` is used with one or more `--filter` flags and the filter set matches zero attachments from a non-empty issue (i.e., the issue has ≥1 attachments but none pass the filter), the behavior is distinct from the empty-issue case: → exit 0; stderr: `"No attachments matched the filter on <KEY>."` (canonical string; matches EC-2.7.008-10; different from the empty-issue message); JSON mode: stdout `{"downloaded":[]}` (empty array); no download requests issued. P15-007.
+
+**Trace**: F2 spec evolution (SOH-ATTACHMENTS-1 2026-07-15; DEC-179 ratified design); P15-007 (EC-2.7.009-3 filtered-to-zero non-empty)
 
 ---
 

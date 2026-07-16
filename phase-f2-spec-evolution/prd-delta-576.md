@@ -5,11 +5,11 @@ issues: "#576, #585"
 phase: F2
 authored: 2026-07-15
 spec_version_before: 1.3.42
-spec_version_after: 1.3.54
+spec_version_after: 1.3.55
 bc_count_before: 624
 bc_count_after: 657
 holdout_count_before: 88
-holdout_count_after: 97
+holdout_count_after: 98
 ---
 
 # PRD Delta — SOH-ATTACHMENTS-1 Attachment Read/Write (issues #576 + #585)
@@ -281,3 +281,23 @@ Source: Adversary Pass 14 (Consistency Review). 1 HIGH / 2 MEDIUM / 6 LOW / 2 IN
 | P14-011 (INFO) | INFO | bc-3-issue-write.md | APPLIED | Double `---` separator before BC-3.9.015 removed (only one is needed between BCs). |
 
 **BC count at this round: 657 (unchanged). Holdout count: 97 (+1). VP count: 33 (+3). Spec version: 1.3.54. Both guards exit 0.**
+
+---
+
+## Adversary Pass 15 Fix Round Finding Dispositions
+
+Source: Adversary Pass 15 (Consistency Review). 2 MEDIUM / 5 LOW / 2 INFO findings. Spec version bump: 1.3.54 → 1.3.55. No new BCs. Holdouts: 97 → 98 (+1 H-NEW-ATTACHMENT-010). VPs: 33 (unchanged).
+
+| Finding | Severity | File(s) Touched | Status | What changed |
+|---------|----------|----------------|--------|-------------|
+| P15-001 (MEDIUM) | MEDIUM | BC-INDEX.md | APPLIED | BC-2.7.011 row: "255-byte cap" → "214-byte cap" (alignment with BC-2.7.011 body and VP which consistently state the 214-byte platform limit). Sweep found no other 255-byte-cap references in .factory/. |
+| P15-002 (MEDIUM) | MEDIUM | bc-3-issue-write.md, holdout-scenarios.md, impact-boundary-576.md | APPLIED | BC-3.9.017 step 2 rewritten: `--replace-existing` ≥1 same-filename match → confirmation gate required (R3.12). EC-3.9.017-9..12 added (non-interactive exit 64; zero-match gate no-op; combined `--public`+match single-prompt; `--yes` single-bypass). BC-3.9.014 expanded to THREE consumers with additional prompt variant text. EC-3.9.003-5 extended to cover three entry points. EC-3.9.020-7 extended to cover ALL gate consumers on dry-run. BC-3.9.018 zero-match P15-002 alignment note. VP-576-003 `--yes` rationale updated. H-NEW-ATTACHMENT-004 Call B updated to `--replace-existing --yes`. H-NEW-ATTACHMENT-010 added (holdout 98). R3.12 added to impact-boundary-576.md. |
+| P15-003 (LOW) | LOW | BC-INDEX.md | APPLIED | BC-3.9.005 row: en-dash "–-public" → ASCII "--public". |
+| P15-004 (LOW) | LOW | bc-2-issue-read.md, BC-INDEX.md | APPLIED | BC-2.7.007 `--filter` flag note updated to encode `conflicts_with = "id"` — clap exits 2 when `--filter` and `--id` are combined. EC-2.7.007-10 added. |
+| P15-005 (LOW) | LOW | bc-2-issue-read.md | APPLIED | BC-2.7.006 error table: 403 row added (`Permission denied: cannot access issue <KEY>.`, exit 1). |
+| P15-006 (LOW) | LOW | bc-2-issue-read.md | APPLIED | BC-2.7.007: EC-2.7.007-11 added (`--out <PATH>` naming an existing directory → exit 64 `"output path is a directory: <PATH>"`). |
+| P15-007 (LOW) | LOW | bc-2-issue-read.md | APPLIED | BC-2.7.008: EC-2.7.008-10 added (batch download filtered-to-zero on non-empty issue: `"No attachments matched the filter on <KEY>."` + exit 0; JSON `{"downloaded":[]}`). BC-2.7.009: EC-2.7.009-3 added (same behavior for `--newest` path). |
+| P15-INFO-1 (INFO) | INFO | holdout-scenarios.md | APPLIED | H-NEW-ATTACHMENT-001 Call A/B setup and H-NEW-ATTACHMENT-003 setup: `GET /rest/api/3/issue/FOO-N` → `GET /rest/api/3/issue/FOO-N?fields=attachment` (canonical query-param form alignment). |
+| P15-INFO-2 (INFO) | INFO | — | NO ACTION | Dry-run metadata asymmetry is documented and deliberate (`wouldDelete` lists existing; `wouldUpload` lists intended; no round-trip guarantee). No spec change required. |
+
+**BC count at this round: 657 (unchanged). Holdout count: 98 (+1). VP count: 33 (unchanged). Spec version: 1.3.55. Both guards exit 0.**

@@ -814,3 +814,11 @@ Guards: `check-spec-counts.sh`: OK. `check-bc-cumulative-counts.sh`: OK (657 / 8
 
 **BC / holdout count: 657 BCs / 96 holdouts — UNCHANGED.**
 Guards: `check-spec-counts.sh`: OK. `check-bc-cumulative-counts.sh`: OK (657 / 8 files).
+
+---
+
+### P14/P15 worklog note
+
+P14 and P15 fix-round dispositions are recorded in `prd-delta-576.md` fix-round sections only; worklog entries for those rounds were not created at the time.
+
+**Worklog discontinued as of P14.** All subsequent fix-round dispositions are recorded in `prd-delta-576.md` exclusively. See `phase-f2-spec-evolution/prd-delta-576.md` for P14 and P15 details.

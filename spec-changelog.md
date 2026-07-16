@@ -7,6 +7,30 @@ project: "jr (jira-cli)"
 
 Track all spec version changes. Most recent version first.
 
+## [1.3.55] - 2026-07-16
+
+### Type: PATCH
+
+**Summary**: Adversary pass 15 (P15) fix round — `--replace-existing` ≥1-match confirmation gate added (R3.12/P15-002); BC-INDEX.md 214-byte cap + en-dash fixes; BC-2.7.006 403 row; BC-2.7.007 --filter conflicts_with + directory-path EC; BC-2.7.008/009 filtered-to-zero EC; H-NEW-ATTACHMENT-010 added; holdout GET fixtures aligned to ?fields=attachment.
+
+**Changes**:
+
+- `.factory/specs/prd/bc-3-issue-write.md` (MODIFIED): P15-002 — BC-3.9.017 step 2 completely rewritten: ≥1 same-filename match now triggers confirmation gate (DEC-174/BC-3.9.014 mechanics). EC-3.9.017-9 added (non-interactive ≥1-match no-`--yes` → exit 64; zero DELETE, zero POST). EC-3.9.017-10 added (gate fires ONLY on nonempty match; zero-match always non-interactive-safe). EC-3.9.017-11 added (combined `--public`+≥1-match → ONE combined prompt; not two gates). EC-3.9.017-12 added (`--yes` single-bypass for all gate conditions). BC-3.9.017 EC-3.9.017-8 updated (covers all cancel paths). VP-576-003 `--yes` requirement rationale updated. BC-3.9.014 heading + body expanded to THREE consumers with additional prompt variant text for replace-existing and combined paths. EC-3.9.003-5 extended to cover three BC-3.9.017 entry points (≥1-match+public, ≥1-match no-public, zero-match). EC-3.9.020-7 extended to cover ALL three gate consumers on dry-run (not just `--public`). BC-3.9.018 P15-002 zero-match alignment paragraph added. BC-3.9.017 Trace + BC-3.9.014 Trace updated. Footer updated with P15 round entry.
+- `.factory/specs/prd/bc-2-issue-read.md` (MODIFIED): P15-004 — BC-2.7.007 `--filter` flag note updated + EC-2.7.007-10 added (conflicts_with "id" → exit 2). P15-005 — BC-2.7.006 error table 403 row added (Permission denied + exit 1). P15-006 — BC-2.7.007 EC-2.7.007-11 added (`--out <PATH>` naming directory → exit 64). P15-007 — BC-2.7.008 EC-2.7.008-10 added (filtered-to-zero non-empty → "No attachments matched the filter on <KEY>." + exit 0; JSON `{"downloaded":[]}`). BC-2.7.009 EC-2.7.009-3 added (same for --newest path).
+- `.factory/specs/prd/BC-INDEX.md` (MODIFIED): P15-001 — BC-2.7.011 row "255-byte cap" → "214-byte cap". P15-003 — BC-3.9.005 row en-dash "–-public" → ASCII "--public". BC-3.9.017 row updated to summarise new gate. `index_version` bumped v6.14→v6.15.
+- `.factory/specs/prd/holdout-scenarios.md` (MODIFIED): P15-INFO-1 — H-NEW-ATTACHMENT-001 Call A/B and H-NEW-ATTACHMENT-003 setup GET fixtures updated to `?fields=attachment` canonical form. P15-002 — H-NEW-ATTACHMENT-004 Call B Action updated to `--replace-existing --yes`; Expected B note added explaining why `--yes` is required. H-NEW-ATTACHMENT-010 added (non-interactive ≥1-match --replace-existing without `--yes` → exit 64; pins EC-3.9.017-9). Group 19 header updated ..009 → ..010. `total_holdouts` 97→98. Version 1.5.2→1.5.3. Preamble count updated 96→98. Trace line updated.
+- `.factory/phase-f1-delta-analysis/impact-boundary-576.md` (MODIFIED): R3.12 section added (--replace-existing ≥1-match confirmation gate ruling; DEC-180 precedent basis; gate mechanics; spec impact summary).
+- `.factory/phase-f2-spec-evolution/prd-delta-576.md` (MODIFIED): P15 fix-round section appended with all 9 finding dispositions. Frontmatter: `spec_version_after` 1.3.54→1.3.55; `holdout_count_after` 97→98.
+
+**Impact**:
+
+| Dimension | Value |
+|---|---|
+| BC count | 657 (unchanged) |
+| Holdout count | 98 (+1: H-NEW-ATTACHMENT-010) |
+| VP count | 33 (unchanged) |
+| Spec version | 1.3.54→1.3.55 |
+
 ## [1.3.54] - 2026-07-16
 
 ### Type: PATCH
