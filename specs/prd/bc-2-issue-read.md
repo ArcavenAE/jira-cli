@@ -28,7 +28,7 @@ Attachment Read (2.7).
 #### BC-2.1.001: `issue list` cursor-paginates via `POST /rest/api/3/search/jql`
 
 **Confidence**: HIGH
-**Source**: `tests/issue_commands.rs:7-31, 130-166`
+**Source**: `tests/issue_commands.rs:~7-31, 130-166`
 **Subject**: Issue read
 **Behavior**: `client.search_issues(jql, limit, fields)` posts to `/rest/api/3/search/jql`; returns `{issues: Vec<Issue>, has_more: bool}`. Pagination via `nextPageToken` cursor.
 **Trace**: Pass 3 BC-101
@@ -38,7 +38,7 @@ Attachment Read (2.7).
 #### BC-2.1.002: `--jql X` wraps in parens, strips ORDER BY, re-appends `ORDER BY updated DESC`
 
 **Confidence**: HIGH
-**Source**: `src/cli/issue/list.rs:36-52`; `tests/all_flag_behavior.rs:54-66`; unit tests covering `build_jql_base_parts` variants
+**Source**: `src/cli/issue/list.rs:~36-52`; `tests/all_flag_behavior.rs:~54-66`; unit tests covering `build_jql_base_parts` variants
 **Subject**: Issue read
 **Behavior**: `build_jql_base_parts(jql, project_key)` calls `jql::strip_order_by(jql)`, wraps in parens. Order-by slot is ALWAYS `"updated DESC"` — user's `ORDER BY rank ASC` is silently replaced. `--jql "priority = Highest ORDER BY created DESC" --project PROJ` → `(project = "PROJ") AND (priority = Highest) ORDER BY updated DESC`.
 **Edge cases**: user ORDER BY is stripped, never preserved.
@@ -49,7 +49,7 @@ Attachment Read (2.7).
 #### BC-2.1.003: Scrum board with active sprint → JQL `sprint = <id> ORDER BY rank ASC`
 
 **Confidence**: HIGH
-**Source**: `src/cli/issue/list.rs:278-282`; `tests/all_flag_behavior.rs:347-352`
+**Source**: `src/cli/issue/list.rs:~278-282`; `tests/all_flag_behavior.rs:~347-352`
 **Subject**: Issue read
 **Behavior**: When no `--jql` AND board_id+scrum+active-sprint: `sprint = {sprint.id}` + order by `rank ASC`. Sprint ID from `client.list_sprints(bid, Some("active"))`.
 **Trace**: Pass 3 BC-126 (R1)
@@ -59,7 +59,7 @@ Attachment Read (2.7).
 #### BC-2.1.004: Kanban board → `project = "X" AND statusCategory != Done ORDER BY rank ASC`
 
 **Confidence**: HIGH
-**Source**: `src/cli/issue/list.rs:302-310`; `tests/all_flag_behavior.rs:497-516, 542-562`
+**Source**: `src/cli/issue/list.rs:~302-310`; `tests/all_flag_behavior.rs:~497-516, 542-562`
 **Subject**: Issue read
 **Behavior**: Body-match pins literal composed JQL. The `statusCategory != Done` is server-side (not `--open` flag).
 **Trace**: Pass 3 BC-127 (R1)
@@ -69,7 +69,7 @@ Attachment Read (2.7).
 #### BC-2.1.005: No board_id → `project = "X" ORDER BY updated DESC`
 
 **Confidence**: HIGH
-**Source**: `src/cli/issue/list.rs:331-338`; `tests/all_flag_behavior.rs:42-86`
+**Source**: `src/cli/issue/list.rs:~331-338`; `tests/all_flag_behavior.rs:~42-86`
 **Trace**: Pass 3 BC-128 (R1)
 
 ---
@@ -77,7 +77,7 @@ Attachment Read (2.7).
 #### BC-2.1.006: No project AND no filters AND no `--jql` → exit 64 listing all 13 filter sources
 
 **Confidence**: HIGH
-**Source**: `src/cli/issue/list.rs:344-351`
+**Source**: `src/cli/issue/list.rs:~344-351`
 **Subject**: Issue read
 **Behavior**: stderr contains literal `"No project or filters specified. Use --project, --assignee, --reporter, --status, --open, --team, --recent, --created-after, --created-before, --updated-after, --updated-before, --asset, or --jql. You can also set a default project in .jr.toml or run \"jr init\"."`.
 **Error taxonomy**: `JrError::UserError` (exit 64).
@@ -88,7 +88,7 @@ Attachment Read (2.7).
 #### BC-2.1.007: `build_filter_clauses` emits in stable order: assignee, reporter, status, open, team, recent, asset, created-after/before, updated-after/before
 
 **Confidence**: HIGH
-**Source**: `src/cli/issue/list.rs:613-649`; unit tests covering `build_jql_parts_*` clause variants
+**Source**: `src/cli/issue/list.rs:~613-649`; unit tests covering `build_jql_parts_*` clause variants
 **Subject**: Issue read
 **Behavior**: Each `Some` flag pushes clause in listed order. Final JQL: `parts.join(" AND ")`. Order stable across invocations. Key clause shapes:
 - `assignee = currentUser()` (for `--assignee me`)
@@ -103,7 +103,7 @@ Attachment Read (2.7).
 #### BC-2.1.008: `--recent <duration>` validated by `jql::validate_duration` (NOT `duration::parse_duration`); combined units rejected
 
 **Confidence**: HIGH
-**Source**: `src/cli/issue/list.rs:90-92`; `src/jql.rs:16-34`
+**Source**: `src/cli/issue/list.rs:~90-92`; `src/jql.rs:~16-34`
 **Subject**: Issue read
 **Behavior**: `validate_duration("4w2d")` → Err. `--recent 4w2d` → `JrError::UserError("Invalid duration '4w2d'. Use a number followed by y, M, w, d, h, or m (e.g., 7d, 4w, 2M).")`. Pre-HTTP validation.
 **Trace**: Pass 3 BC-131 (R1)
@@ -113,7 +113,7 @@ Attachment Read (2.7).
 #### BC-2.1.009: `--created-after/before` and `--updated-after/before` validated via `jql::validate_date` BEFORE any HTTP
 
 **Confidence**: HIGH
-**Source**: `src/cli/issue/list.rs:95-114`
+**Source**: `src/cli/issue/list.rs:~95-114`
 **Subject**: Issue read
 **Behavior**: Format: `YYYY-MM-DD`. On invalid: `Invalid date "<X>". Expected format: YYYY-MM-DD (e.g., 2026-03-18).` All four validators run before HTTP.
 **Trace**: Pass 3 BC-132 (R1)
@@ -123,7 +123,7 @@ Attachment Read (2.7).
 #### BC-2.1.010: `--created-before` and `--updated-before` use `date + Days::new(1)` for end-day-inclusive semantics
 
 **Confidence**: HIGH
-**Source**: `src/cli/issue/list.rs:118-126`
+**Source**: `src/cli/issue/list.rs:~118-126`
 **Subject**: Issue read
 **Behavior**: User passes `--created-before 2026-03-31`; emitted clause is `created < "2026-04-01"`. Pinned by unit test `build_jql_parts_created_date_range`.
 **Trace**: Pass 3 BC-133 (R1)
@@ -133,7 +133,7 @@ Attachment Read (2.7).
 #### BC-2.1.011: `--asset KEY` resolves via CMDB fields; if NO CMDB fields → exit 64 with JSM plan message
 
 **Confidence**: HIGH
-**Source**: `src/cli/issue/list.rs:168-183`
+**Source**: `src/cli/issue/list.rs:~168-183`
 **Subject**: Issue read
 **Behavior**: On `cmdb_fields.is_empty()`: `JrError::UserError("--asset requires Assets custom fields on this Jira instance. Assets requires a paid Jira Service Management plan.")`.
 **Trace**: Pass 3 BC-134 (R1)
@@ -143,7 +143,7 @@ Attachment Read (2.7).
 #### BC-2.1.012: `--asset KEY` ambiguous AQL result → exit 64 `Multiple assets match`; NO issue search fired
 
 **Confidence**: HIGH
-**Source**: `tests/assets.rs:1480-1573`; `src/cli/issue/list.rs:128-133`
+**Source**: `tests/assets.rs:~1480-1573`; `src/cli/issue/list.rs:~128-133`
 **Subject**: Issue read
 **Behavior**: Test asserts `stderr.contains("Multiple assets match")` + both candidate labels + `expect(0)` on `/rest/api/3/search/jql`. Exit 64.
 **Trace**: Pass 3 BC-135 (R1)
@@ -153,7 +153,7 @@ Attachment Read (2.7).
 #### BC-2.1.013: `--status <single-substring>` → exit 64 `Ambiguous status`; NO JQL search fired
 
 **Confidence**: HIGH
-**Source**: `tests/issue_list_errors.rs:368-422`; `src/cli/issue/list.rs:222-247`
+**Source**: `tests/issue_list_errors.rs:~368-422`; `src/cli/issue/list.rs:~222-247`
 **Subject**: Issue read
 **Behavior**: `Mock::expect(0)` on `POST /rest/api/3/search/jql`. stderr `Ambiguous status "prog". Matches: In Progress`. Exit 64.
 **Trace**: Pass 3 BC-105, BC-136 (R1)
@@ -163,7 +163,7 @@ Attachment Read (2.7).
 #### BC-2.1.014: `--status NOMATCH` → `JrError::UserError` listing available statuses alphabetically
 
 **Confidence**: HIGH
-**Source**: `src/cli/issue/list.rs:234-246`
+**Source**: `src/cli/issue/list.rs:~234-246`
 **Subject**: Issue read
 **Behavior**: `MatchResult::None(all)` constructs full error: `"No status matching \"X\" for project Y. Available: <comma-joined alphabetical list>"`. List always sorted.
 **Trace**: Pass 3 BC-138 (R1)
@@ -173,7 +173,7 @@ Attachment Read (2.7).
 #### BC-2.1.015: `--status <ExactMultiple>` treated as Exact (case-variant duplicates)
 
 **Confidence**: HIGH
-**Source**: `src/cli/issue/list.rs:223-226`
+**Source**: `src/cli/issue/list.rs:~223-226`
 **Trace**: Pass 3 BC-137 (R1)
 
 ---
@@ -181,7 +181,7 @@ Attachment Read (2.7).
 #### BC-2.1.016: `--assets` column auto-enabled when `--asset KEY` filter is set
 
 **Confidence**: HIGH
-**Source**: `src/cli/issue/list.rs:86-87`
+**Source**: `src/cli/issue/list.rs:~86-87`
 **Subject**: Issue read
 **Behavior**: `let show_assets = show_assets || asset_key.is_some();`
 **Trace**: Pass 3 BC-145 (R1)
@@ -191,7 +191,7 @@ Attachment Read (2.7).
 #### BC-2.1.017: `--assets` with no CMDB fields → stderr warning, no asset column
 
 **Confidence**: HIGH
-**Source**: `src/cli/issue/list.rs:357-371`
+**Source**: `src/cli/issue/list.rs:~357-371`
 **Behavior**: stderr: `"warning: --assets ignored. No Assets custom fields found on this Jira instance."`.
 **Trace**: Pass 3 BC-146 (R1)
 
@@ -202,9 +202,9 @@ Attachment Read (2.7).
 #### BC-2.2.018: `--all` passes `maxResults=50`; default passes `maxResults=30`
 
 **Confidence**: HIGH
-**Source**: `tests/all_flag_behavior.rs:42-145`
+**Source**: `tests/all_flag_behavior.rs:~42-145`
 **Subject**: Issue read
-**Behavior**: `maxResults=50` for `--all`; `maxResults=30` for default. Pinned by request body match. `src/api/jira/issues.rs:50`: `max_per_page = limit.unwrap_or(50).min(100)`.
+**Behavior**: `maxResults=50` for `--all`; `maxResults=30` for default. Pinned by request body match. `src/api/jira/issues.rs:~50`: `max_per_page = limit.unwrap_or(50).min(100)`.
 **Trace**: Pass 3 BC-103, BC-141 (R1)
 
 ---
@@ -212,7 +212,7 @@ Attachment Read (2.7).
 #### BC-2.2.019: Truncation triggers second HTTP `POST /rest/api/3/search/approximate-count`
 
 **Confidence**: HIGH
-**Source**: `tests/all_flag_behavior.rs:88-145`; body-match pins `"jql": "(project = CAP)"`
+**Source**: `tests/all_flag_behavior.rs:~88-145`; body-match pins `"jql": "(project = CAP)"`
 **Subject**: Issue read
 **Behavior**: When `--all` NOT set AND results > limit: issues `POST /search/approximate-count` with ORDER BY-stripped JQL. Stderr: `Showing 30 of ~42`. With `--all`: no truncation hint AND no count call.
 **Trace**: Pass 3 BC-104, BC-140 (R1)
@@ -222,7 +222,7 @@ Attachment Read (2.7).
 #### BC-2.2.020: `--all` + `--limit N` clap conflict: `cannot be used with`
 
 **Confidence**: HIGH
-**Source**: `tests/cli_smoke.rs:300-307`
+**Source**: `tests/cli_smoke.rs:~300-307`
 **Trace**: Pass 3 BC-142 (R1)
 
 ---
@@ -230,7 +230,7 @@ Attachment Read (2.7).
 #### BC-2.2.021: `--points` with no story_points_field_id → silently ignored, stderr warning
 
 **Confidence**: HIGH
-**Source**: `src/cli/issue/list.rs:756-770`
+**Source**: `src/cli/issue/list.rs:~756-770`
 **Subject**: Issue read
 **Behavior**: stderr: `"warning: --points ignored. Story points field not configured. Run "jr init" or set story_points_field_id under [profiles.<name>] in ~/.config/jr/config.toml"`. Non-fatal; list proceeds without points column. Note: message must reference `[profiles.<name>]` not the deprecated `[fields]` section.
 **Related**: BC-6.3.001 (multi-profile fields MUST-FIX); the error message text updated here is one of the pinned-text changes required by that fix.
@@ -241,7 +241,7 @@ Attachment Read (2.7).
 #### BC-2.2.022: `--points` with configured field → pushes `customfield_NNNNN` onto request `extra` fields list
 
 **Confidence**: HIGH
-**Source**: `src/cli/issue/list.rs:147-149, 656-668`
+**Source**: `src/cli/issue/list.rs:~147-149, 656-668`
 **Trace**: Pass 3 BC-144 (R1)
 
 ---
@@ -249,7 +249,7 @@ Attachment Read (2.7).
 #### BC-2.2.023: Asset enrichment deduplicates by `(workspace_id, object_id)` before per-asset GETs
 
 **Confidence**: HIGH
-**Source**: `src/cli/issue/list.rs:397-411`
+**Source**: `src/cli/issue/list.rs:~397-411`
 **Subject**: Issue read
 **Behavior**: `to_enrich: HashMap<(String, String), ()>` collects unique workspace/object pairs. Per-asset GETs issued once per unique key via `join_all` (concurrent). Mitigates partial N+1.
 **Trace**: Pass 3 BC-147 (R1)
@@ -259,7 +259,7 @@ Attachment Read (2.7).
 #### BC-2.2.024: board_id 404 → exit 64 with `Board 42 not found or not accessible` + board_id hint + `--jql` hint
 
 **Confidence**: HIGH
-**Source**: `tests/issue_list_errors.rs:21-76`
+**Source**: `tests/issue_list_errors.rs:~21-76`
 **Error taxonomy**: `JrError::UserError`.
 **Trace**: Pass 3 BC-106
 
@@ -268,7 +268,7 @@ Attachment Read (2.7).
 #### BC-2.2.025: board config 5xx → exit 1 with `Failed to fetch config for board 42` + `--jql` hint
 
 **Confidence**: HIGH
-**Source**: `tests/issue_list_errors.rs:78-130`
+**Source**: `tests/issue_list_errors.rs:~78-130`
 **Trace**: Pass 3 BC-107
 
 ---
@@ -276,7 +276,7 @@ Attachment Read (2.7).
 #### BC-2.2.026: Sprint list 5xx → exit 1 with `Failed to list sprints for board 42` + `--jql` hint
 
 **Confidence**: HIGH
-**Source**: `tests/issue_list_errors.rs:132-194`
+**Source**: `tests/issue_list_errors.rs:~132-194`
 **Trace**: Pass 3 BC-108
 
 ---
@@ -284,7 +284,7 @@ Attachment Read (2.7).
 #### BC-2.2.027: No active sprint → falls back to project-scoped JQL without error
 
 **Confidence**: HIGH
-**Source**: `tests/issue_list_errors.rs:196-263`
+**Source**: `tests/issue_list_errors.rs:~196-263`
 **Subject**: Issue read
 **Behavior**: Empty `state=active` sprint list → falls back to `project = PROJ` JQL. No error, no warning (silent degrade per state machine §2.5 of Pass 8 synthesis).
 **Trace**: Pass 3 BC-109
@@ -294,7 +294,7 @@ Attachment Read (2.7).
 #### BC-2.2.028: `search_issues` default fields list: 16 fields in EXACT order
 
 **Confidence**: HIGH
-**Source**: `tests/issue_commands.rs:967-1022`
+**Source**: `tests/issue_commands.rs:~967-1022`
 **Subject**: Issue read
 **Behavior**: `summary, status, issuetype, priority, assignee, reporter, project, description, created, updated, resolution, components, fixVersions, labels, parent, issuelinks`. Body partial-JSON match asserts EXACT array.
 **Trace**: Pass 3 BC-1063 (R4)
@@ -304,7 +304,7 @@ Attachment Read (2.7).
 #### BC-2.2.029: `search_issues` with cursor continuation token sets `has_more = true`
 
 **Confidence**: HIGH
-**Source**: `tests/issue_commands.rs:264-310`
+**Source**: `tests/issue_commands.rs:~264-310`
 **Trace**: Pass 3 BC-1047, BC-1048 (R4)
 
 ---
@@ -312,7 +312,7 @@ Attachment Read (2.7).
 #### BC-2.2.030: `search_issues` JQL body includes literal composed string with double-quoted project key
 
 **Confidence**: HIGH
-**Source**: `tests/issue_commands.rs:492-524`
+**Source**: `tests/issue_commands.rs:~492-524`
 **Behavior**: `project = "PROJ" AND (priority = Highest) ORDER BY updated DESC` pinned by body partial-match.
 **Trace**: Pass 3 BC-1052 (R4)
 
@@ -321,7 +321,7 @@ Attachment Read (2.7).
 #### BC-2.2.031: `client.approximate_count(jql)` POSTs to `/rest/api/3/search/approximate-count`; 5xx propagates as Err
 
 **Confidence**: HIGH
-**Source**: `tests/issue_commands.rs:337-386`
+**Source**: `tests/issue_commands.rs:~337-386`
 **Behavior**: Returns `u64`. Zero and 42 boundary cases tested. Server error → Err.
 **Trace**: Pass 3 BC-1050 (R4)
 
@@ -332,7 +332,7 @@ Attachment Read (2.7).
 #### BC-2.3.032: `issue view <key>` GETs `/rest/api/3/issue/<key>` with `--output json` returning raw JSON
 
 **Confidence**: HIGH
-**Source**: `tests/issue_commands.rs:33-53`
+**Source**: `tests/issue_commands.rs:~33-53`
 **Trace**: Pass 3 BC-112
 
 ---
@@ -340,7 +340,7 @@ Attachment Read (2.7).
 #### BC-2.3.033: `issue view` 5xx → exit 1 + `API error (500)` + no panic
 
 **Confidence**: HIGH
-**Source**: `tests/issue_view_errors.rs:18-56`
+**Source**: `tests/issue_view_errors.rs:~18-56`
 **Trace**: Pass 3 BC-113; BC-1135a (R4)
 
 ---
@@ -348,7 +348,7 @@ Attachment Read (2.7).
 #### BC-2.3.034: `issue view` 401 → exit 2 + `Not authenticated` + `jr auth login`
 
 **Confidence**: HIGH
-**Source**: `tests/issue_view_errors.rs:58-100`
+**Source**: `tests/issue_view_errors.rs:~58-100`
 **Trace**: Pass 3 BC-114; BC-1135b (R4)
 
 ---
@@ -356,7 +356,7 @@ Attachment Read (2.7).
 #### BC-2.3.035: Corrupt `teams.json` cache is non-fatal; UUID + "name not cached" hint shown inline
 
 **Confidence**: HIGH
-**Source**: `tests/issue_view_errors.rs:142-206`
+**Source**: `tests/issue_view_errors.rs:~142-206`
 **Subject**: Issue read
 **Behavior**: Truncated `teams.json` (`{"teams": [`) → `read_cache` returns `Ok(None)` (parse-fail = cache miss). Issue view exits 0. Team row shows raw UUID + `(name not cached — run 'jr team list --refresh')`. stderr NOT contain `panic`.
 **Trace**: Pass 3 BC-115; BC-1135d (R4); Top-30 BC rank #26
@@ -366,7 +366,7 @@ Attachment Read (2.7).
 #### BC-2.3.036: `get_issue` deserializes: created, updated, reporter, resolution, components, fix_versions (all nullable)
 
 **Confidence**: HIGH
-**Source**: `tests/issue_commands.rs:526-577, 579-607`
+**Source**: `tests/issue_commands.rs:~526-577, 579-607`
 **Behavior**: Full fixture: all fields present. Minimal fixture: all return `None` (NOT panic). RFC3339+0000 timestamps, camelCase JSON paths.
 **Trace**: Pass 3 BC-1053, BC-1054 (R4)
 
@@ -375,7 +375,7 @@ Attachment Read (2.7).
 #### BC-2.3.037: `get_issue` with parent + links deserializes `fields.parent.key`, `fields.issuelinks[0].link_type.name`
 
 **Confidence**: HIGH
-**Source**: `tests/issue_commands.rs:208-231`
+**Source**: `tests/issue_commands.rs:~208-231`
 **Trace**: Pass 3 BC-1044 (R4)
 
 ---
@@ -383,7 +383,7 @@ Attachment Read (2.7).
 #### BC-2.3.038: `IssueFields::story_points("customfield_X")` returns None for non-numeric values
 
 **Confidence**: HIGH
-**Source**: `src/types/jira/issue.rs:83-85`
+**Source**: `src/types/jira/issue.rs:~83-85`
 **Trace**: Pass 3 BC-124
 
 ---
@@ -393,7 +393,7 @@ Attachment Read (2.7).
 #### BC-2.4.039: `issue comments <key>` paginates at 100/page with `expand=properties`
 
 **Confidence**: HIGH
-**Source**: `tests/comments.rs:9-46, 73-158`
+**Source**: `tests/comments.rs:~9-46, 73-158`
 **Subject**: Issue read
 **Behavior**: `maxResults=100`. `--limit N` → `maxResults=N`. Paginates via startAt until total reached.
 **Trace**: Pass 3 BC-116
@@ -403,7 +403,7 @@ Attachment Read (2.7).
 #### BC-2.4.040: `issue comments` 5xx → exit 1 + `API error (500)`
 
 **Confidence**: HIGH
-**Source**: `tests/comments.rs:163-200`
+**Source**: `tests/comments.rs:~163-200`
 **Trace**: Pass 3 BC-117
 
 ---
@@ -411,7 +411,7 @@ Attachment Read (2.7).
 #### BC-2.4.041: `issue comments --internal` adds `sd.public.comment` property (JSM-aware)
 
 **Confidence**: MEDIUM
-**Source**: `src/api/jira/issues.rs:181-198`
+**Source**: `src/api/jira/issues.rs:~181-198`
 **Behavior**: `properties: [{key:"sd.public.comment", value:{internal:true}}]` on write. Read shape preserves `EntityProperty[]`. Non-JSM: Jira silently ignores.
 **Trace**: Pass 3 BC-118
 
@@ -420,7 +420,7 @@ Attachment Read (2.7).
 #### BC-2.4.042: `client.list_comments(key, None)` lists ALL comments via offset pagination
 
 **Confidence**: HIGH
-**Source**: `tests/comments.rs:104-158`
+**Source**: `tests/comments.rs:~104-158`
 **Behavior**: Advances `startAt` by 100 until total reached.
 **Trace**: Pass 3 BC-122
 
@@ -482,7 +482,7 @@ Attachment Read (2.7).
 #### BC-2.6.047: `client.search_issues` with story-points extra field: deserializes `Some(5.0)` for issue with field, `None` without
 
 **Confidence**: HIGH
-**Source**: `tests/issue_commands.rs:130-166`
+**Source**: `tests/issue_commands.rs:~130-166`
 **Trace**: Pass 3 BC-1041 (R4)
 
 ---
@@ -490,7 +490,7 @@ Attachment Read (2.7).
 #### BC-2.6.048: `client.find_story_points_field_id()` returns fields with name == "Story Points" from `/rest/api/3/field`
 
 **Confidence**: HIGH
-**Source**: `tests/issue_commands.rs:168-186`
+**Source**: `tests/issue_commands.rs:~168-186`
 **Trace**: Pass 3 BC-1042 (R4)
 
 ---
@@ -498,7 +498,7 @@ Attachment Read (2.7).
 #### BC-2.6.049: `search_users` accepts FOUR distinct response shapes (bare array, paginated, empty, error)
 
 **Confidence**: HIGH
-**Source**: `tests/issue_commands.rs:388-490`
+**Source**: `tests/issue_commands.rs:~388-490`
 **Subject**: Issue read
 **Behavior**: Bare array `[{...}]`; `{values: [...]}` paginated envelope; `[]`; error shape → Err. Via serde-untagged enum. Unrecognized shapes do NOT default to empty — they error.
 **Trace**: Pass 3 BC-1051 (R4); Top-30 BC rank #20
@@ -532,7 +532,7 @@ Attachment Read (2.7).
 **Confidence**: HIGH
 **Source**: `src/cli/issue/attachments.rs::handle_attachment_list` (implementation pending — SOH-ATTACHMENTS-1 Story 1); `src/api/jira/attachments.rs::list_attachments` (implementation pending)
 **Subject**: Issue read
-**Output channel profile**: 2 (Read-only) — table data to stdout; filter-count hint to stderr; no stderr output when no filter is active.
+**Output channel profile**: 2 (Read-only) — table data to stdout; filter-count hint to stderr; no filter-count hint on stderr when no filter is active.
 
 `jr issue attachment list <KEY>` fetches `GET /rest/api/3/issue/{key}?fields=attachment` and renders the `fields.attachment[]` array as a comfy-table on stdout. There is no dedicated Jira "list attachments" endpoint; all attachment metadata is returned in a single response via the issue field projection (no cursor pagination for this call — confirmed in research §1a of `.factory/research/issue-576-attachments-api-2026-07-15.md`).
 
@@ -890,7 +890,9 @@ Since step 4 of sanitization already strips `../`, `/`, `\`, `:`, the join will 
 
 **Unit test coverage required**: at minimum: `../../etc/passwd`, `/etc/passwd`, `C:\Windows\system32\foo.exe`, `"."`, `".."`, empty string, NUL-containing string, a normal filename, a filename exceeding 255 bytes, a filename containing `:` (Windows drive path), `"CON"` (Windows device name → `Some("CON")`), `"NUL"` (Windows device name → `Some("NUL")`), `"COM1"` (Windows device name → `Some("COM1")`), and `"nul.txt"` (Windows device name with extension → `Some("nul.txt")`), and a filename containing a multi-byte UTF-8 codepoint at the truncation boundary (e.g., a 214-byte ASCII prefix followed by a 3-byte UTF-8 char `"é"` — the char must be dropped, not split, so the output is the 214-byte prefix without truncation artifact). The test matrix confirms that `sanitize_attachment_filename` returns `Some(name)` for device names — the call-site device-name escape (SEC-576-001 caller note above, not this function) is what prevents on-disk device-name collisions on Windows for both batch (SHA-1 prefix) and single-id bare (explicit `_`-prefix escape at call site) paths.
 
-**Trace**: F2 spec evolution (SOH-ATTACHMENTS-1 2026-07-15; research §4 CWE-22 VERIFIED HIGH; DEC-179 SQ-1 resolved; OWASP/CWE-22/CWE-31 first-principles); SEC-576-001 (CWE-22 Windows device-name caller note + unit test matrix added 2026-07-15); SEC-576-002 (CWE-22 corrected two-step containment check procedure added 2026-07-15); SEC-576-007 (trailing-whitespace/dot strip step 5.5 added 2026-07-15)
+**VP-576-001**: `sanitize_attachment_filename` property-based test — for every input in the required test matrix (BC-2.7.011 "Unit test coverage required" list): assert (1) no `Some(name)` result contains `/`, `\`, `:`, or a NUL byte; (2) `Some(name)` length in bytes is ≤ 214; (3) all `Some(name)` values are valid UTF-8 (no truncated multi-byte codepoints — `std::str::from_utf8` succeeds); (4) the specific cases `"."`, `".."`, empty string, and NUL-byte inputs each return `None`; (5) `"../../etc/passwd"` returns `Some("passwd")`; (6) `"/etc/passwd"` returns `Some("passwd")`; (7) a 214-byte ASCII prefix + 3-byte UTF-8 char returns `Some(214-byte prefix)` (char dropped, not split). Additional containment assertion for any `Some(name)`: `resolved_dir.join(&name).starts_with(&resolved_dir)` must hold for any `out_dir = TempDir::new()`. Pins BC-2.7.011 steps 1–5 and the defense-in-depth containment check. P14-007.
+
+**Trace**: F2 spec evolution (SOH-ATTACHMENTS-1 2026-07-15; research §4 CWE-22 VERIFIED HIGH; DEC-179 SQ-1 resolved; OWASP/CWE-22/CWE-31 first-principles); SEC-576-001 (CWE-22 Windows device-name caller note + unit test matrix added 2026-07-15); SEC-576-002 (CWE-22 corrected two-step containment check procedure added 2026-07-15); SEC-576-007 (trailing-whitespace/dot strip step 5.5 added 2026-07-15); P14-007 (VP-576-001 added)
 
 ---
 

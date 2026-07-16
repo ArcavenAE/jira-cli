@@ -5922,3 +5922,25 @@ _Tagged: [positive-control] [research-adjudication] [adversary-story-trace] [dec
 
 _Recorded: 2026-07-14. State-manager (wave-D PR-merged + BC-sync burst, TD-VSDD-053)._
 _Tagged: [process-gap] [twin-artifact-sweep] [pg-f4-7] [resolved-by-shipping] [bc-source-sync] [wave-d] [hook-timeout-observation]_
+
+---
+
+### SPEC-CHANGELOG-RESYNC-SELF-ADMIN-POSITIVE-CONTROL [positive-control]
+
+**Observation:** P14 fix round completed with no missed spec-changelog entry — the PO-self-administers-changelog protocol (introduced as a mitigation after the 3rd recurrence in p7) continued to work correctly at p14. This is the 2nd+ consecutive round where the mitigation prevented a SPEC-CHANGELOG-RESYNC miss. Both [1.3.53] (p13 fix round) and [1.3.54] (p14 fix round) were administered correctly. The self-administration pattern is stable.
+
+**Rule (reinforcement of SPEC-CHANGELOG-RESYNC mitigation):** PO self-administers spec-changelog entry as part of every fix round. The PO must check spec-changelog.md before closing each fix round and verify the correct [X.Y.Z] entry exists. Do not defer this check to the burst-close sweep.
+
+_Recorded: 2026-07-16. State-manager (adversary-pass-14 remediation burst, TD-VSDD-053)._
+_Tagged: [positive-control] [spec-changelog-resync] [mitigation-working] [codified]_
+
+---
+
+### VERIFY-BEFORE-CITE-ORCHESTRATOR-POSITIVE-CONTROL [positive-control]
+
+**Observation:** Pass-14 introduced a HIGH finding (P14-001) — an EOF contradiction that 13 prior passes had missed. The orchestrator empirically verified the relevant quotes before routing the finding, confirming the VERIFY-BEFORE-CITE discipline applies at the orchestrator level as well as the story-writer and adversary levels. The orchestrator independently read BC-3.9.003 and BC-3.9.014 from the artifact text before accepting the P14-001 finding. This matches the PG-F3-1 codified rule: verify-before-cite applies to orchestrators too.
+
+**Rule (reinforcement of PG-F3-1 verify-before-cite):** VERIFY-BEFORE-CITE applies to all agents including orchestrators. When an adversary finding references a specific artifact state (e.g., "BC-3.9.003 says exit 0 on EOF"), the orchestrator must independently read the artifact before routing the finding. Adversary findings are hypotheses, not verified facts. The orchestrator is not exempt from this discipline simply because it is orchestrating rather than implementing.
+
+_Recorded: 2026-07-16. State-manager (adversary-pass-14 remediation burst, TD-VSDD-053)._
+_Tagged: [positive-control] [verify-before-cite] [orchestrator-discipline] [pg-f3-1] [codified]_

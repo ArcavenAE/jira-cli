@@ -5141,3 +5141,22 @@ Displaced to make room for SOH-ATTACHMENTS-1 adversary pass-12 remediation step 
 | Step | Agent | Status | Output |
 |------|-------|--------|--------|
 | **SOH-ATTACHMENTS-1 F2 ADVERSARY PASS-7 REMEDIATED (2026-07-16): 3 findings (1M/2L); P7-001 CWE-88 AID path-injection guard across 7 BC surfaces + H-007 assertion (server-sourced AIDs = untrusted); P7-002 gate-suppression for zero-match path (one-gate-per-invocation spans 3 texts); P7-003 batch degenerate fallback <sha1>_<aid> per R3.10; consistency r17 2 LOW → fixed; spec v1.3.47; guards green. Pass 8 DISPATCHED.** | adversary + state-manager | COMPLETE | `phase-f2-spec-evolution/consistency-report-576-r17.md`; BC 657; holdouts 96; spec v1.3.47. |
+
+
+---
+
+## Archived Phase Progress row (2026-07-16, adversary-pass-14 remediation burst)
+
+Displaced to make room for SOH-ATTACHMENTS-1 F2 ADVERSARY PASS-14 REMEDIATED (2026-07-16) row per keep-5 rule.
+
+| Phase | Status | Completed | Gate | Notes |
+|-------|--------|-----------|------|-------|
+| **SOH-ATTACHMENTS-1 F2 ADVERSARY PASS-8 REMEDIATED (2026-07-16) — p8 NOT-CLEAN 5 (2M/3L); P8-001 sanitize→None MUST-contradiction → R3.10 write-fallback wins; P8-002 non-JSM --public + --replace-existing data-loss corner → step-0 eligibility pre-flight + generalized invariant (no destructive call while ANY gate OR eligibility guard unresolved); P8-004 AID-validation uniformity completed; P8-005 holdouts assert unconditional batch SHA-1; consistency r18 keystones + step-renumbering all clean, 2L+1I fixed, 1 accepted-historical; PO self-administered changelog (v1.3.48) worked as designed; counts 657/96; guards green. Gate: adversary pass 9 in flight.** | **ADVERSARY PASS-8 REMEDIATED** | **2026-07-16** | **Adversary pass 9 in flight.** | `phase-f2-spec-evolution/consistency-report-576-r18.md`; BC 657; holdouts 96; spec v1.3.48. |
+
+### Archived Current Phase Steps row (adversary-pass-14 remediation burst)
+
+Displaced to make room for SOH-ATTACHMENTS-1 adversary pass-14 remediation step row per keep-5 rule.
+
+| Step | Agent | Status | Output |
+|------|-------|--------|--------|
+| **SOH-ATTACHMENTS-1 F2 ADVERSARY PASS-9 REMEDIATED (2026-07-16): 3 findings (1M/2L); P9-001 three-tier author fallback chain fully specified (displayName→accountId→"(anonymous)"); P9-002 step-0 citation arity fixed + key-derivation-equivalence note; P9-003 fixture wire-shape corrected; consistency r19 CONSISTENT (zero gaps); spec v1.3.49; guards green. Pass 10 DISPATCHED.** | adversary + state-manager | COMPLETE | `phase-f2-spec-evolution/consistency-report-576-r19.md`; BC 657; holdouts 96; spec v1.3.49. |

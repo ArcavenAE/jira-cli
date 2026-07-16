@@ -1,7 +1,7 @@
 ---
 context: holdout-scenarios
 title: "Holdout Scenarios"
-total_holdouts: 96
+total_holdouts: 97
 # H-NEW-AUTH-002 registered by S-0.07 (Phase 3, 2026-05-07). Wave 0 COMPLETE.
 # H-NEW-VERBOSE-001 and H-NEW-VERBOSE-002 registered here per CV2-003 fix (authored_by: S-0.06).
 version: "1.5.2"
@@ -2058,7 +2058,7 @@ Call B (view 404 — deleted or missing comment):
 
 ---
 
-## Group 19: Attachment CRUD — list / download / upload / delete (H-NEW-ATTACHMENT-001..008)
+## Group 19: Attachment CRUD — list / download / upload / delete (H-NEW-ATTACHMENT-001..009)
 
 ### H-NEW-ATTACHMENT-001: `attachment list` on zero-attachment issue exits 0 with empty-state message; on N-attachment issue returns table with correct columns (MUST-PASS)
 
@@ -2423,4 +2423,34 @@ Call C (non-interactive, no `--yes`):
 **Status**: MUST-PASS. Pins BC-3.9.005 (`--public` on non-JSM issue: exit 64, canonical message, no servicedeskapi calls, no platform POST). Negative-assertion holdout; purely offline (no real Jira required).
 
 **BC refs**: BC-3.9.005 (primary — `--public` non-JSM guard), BC-3.9.012 (upload error taxonomy: `--public` non-JSM row → exit 64), BC-3.9.014 (`--yes` bypasses `--public` confirmation gate, making test deterministic)
+
+---
+
+### H-NEW-ATTACHMENT-009: `attachment upload <JSM-KEY> <FILE> --public` with EOF at the confirmation prompt → exit 130 (`JrError::Interrupted`), NOT exit 0 (cancel path) (MUST-PASS)
+
+**NFR source**: BC-3.9.003 EC-3.9.003-6 (EOF at `--public` gate → `JrError::Interrupted`, exit 130); BC-3.9.014 three-way branch (c)
+**BC**: BC-3.9.003, BC-3.9.014
+**Authored by**: SOH-ATTACHMENTS-1 P14 (2026-07-16, P14-001)
+
+**Setup**:
+
+1. Wiremock at `JR_BASE_URL`. Config with a valid JSM-profile at `JR_CONFIG_DIR`. Temp file `upload.txt` containing `"test"` in `WORK_DIR`.
+2. Wiremock mounts `GET /rest/api/3/issue/EJ-1` returning a valid JSM service-desk issue: `fields.project.projectTypeKey = "service_desk"`.
+3. Wiremock mounts `GET /rest/api/3/project/EJ` + `GET /rest/servicedeskapi/servicedesk` returning a valid service desk with `serviceDeskId = "1"`.
+4. Wiremock asserts ZERO requests to `POST /rest/servicedeskapi/servicedesk/1/attachTemporaryFile` (the upload step must never be reached when the gate gets EOF).
+5. Use `JR_STDIN_IS_TTY=1` debug seam to force the interactive TTY branch. Pipe an **empty file** (zero bytes, EOF immediately) to stdin: `printf '' | jr issue attachment upload EJ-1 upload.txt --public`.
+
+**Action**: `printf '' | JR_STDIN_IS_TTY=1 jr issue attachment upload EJ-1 upload.txt --public` (no `--yes`; stdin returns EOF immediately with 0 bytes read)
+
+**Expected (MUST-PASS)**:
+- Exit code = **130** (JrError::Interrupted — NOT 0, NOT 64, NOT 1).
+- stderr does NOT contain `"Upload cancelled."` (that is the branch (b) cancel message; EOF branch (c) emits no cancel message).
+- stdout is empty (no JSON cancel envelope on exit 130).
+- Zero requests to any `/rest/servicedeskapi/...` path (Wiremock assertion: no upload POST issued before or after the gate).
+
+**Why hidden**: The EOF path (branch (c)) and the cancel path (branch (b)) both produce no stdout, making them indistinguishable to an output-only observer. The decisive signal is the exit code: exit 0 (cancel) vs exit 130 (interrupted). A regression that conflates `Ok(0)` EOF with `Ok(n)` empty-Enter (the prior erroneous behavior described in BC-3.9.003 before P14-001) would exit 0 instead of 130 — this holdout catches exactly that regression. The `JR_STDIN_IS_TTY=1` seam is required to force the interactive branch regardless of the test runner's stdin pipe state.
+
+**Status**: MUST-PASS. Pins EC-3.9.003-6 (EOF → `JrError::Interrupted`, exit 130; NOT exit 0) and BC-3.9.014 three-way branch (c). The EOF-vs-empty-Enter distinction is load-bearing. P14-001.
+
+**BC refs**: BC-3.9.003 (primary — EC-3.9.003-6 EOF path, three-way branch), BC-3.9.014 (gate mechanics, `read_line` `Ok(0)` vs `Ok(n)` distinction), BC-3.9.005 (eligibility pre-check confirms JSM issue before gate fires)
 

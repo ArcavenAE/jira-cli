@@ -158,7 +158,7 @@ Following the append-only rule, the next free BC IDs at each section boundary ar
 | BC-3.9.005 | `attachment upload`: file not found or not readable → exit 64 before HTTP |
 | BC-3.9.006 | `attachment delete <AID> [--yes]` interactive confirmation; `--yes` bypasses |
 | BC-3.9.007 | `attachment delete --issue <KEY> --older-than <duration>` bulk date-filtered delete; `--dry-run` previews affected IDs |
-| BC-3.9.008 | `attachment delete` idempotency: 404 from DELETE endpoint → exit 0 (attachment already gone; same pattern as `issue assign` idempotency) |
+| BC-3.9.008 | `attachment delete` idempotency: 404 from DELETE endpoint → exit 0 (attachment already gone; same pattern as `issue assign` idempotency) — **PHASE-DOC-RETRO-ANNOTATION (P14-004, 2026-07-16):** superseded by DEC-168. The shipped BC-3.9.008 specifies exit 64 + surface Jira body on 404, not exit 0. This F1-delta row was written before DEC-168 was ratified. Do not revert BC-3.9.008 toward exit 0 based on this row. |
 | BC-3.9.009 | `attachment delete --output json` shape: `{"deleted": true, "id": str}` (single) or `{"deleted": true, "count": N, "ids": [str]}` (bulk) |
 | BC-3.9.010 | `attachment delete --dry-run` output: table of IDs that would be deleted; no HTTP mutation; `--output json` shape: `{"dryRun": true, "ids": [str]}` |
 
@@ -174,7 +174,7 @@ Range-collapsed BCs (error shapes, filter combinations) will add to cumulative t
 | JSON render invariant (#526) | All `--output json` paths in attachments.rs MUST route through `output::render_json` or `output::print_output` |
 | `--no-input` | `attachment delete` interactive prompt must be suppressed; `--yes` is the non-interactive equivalent |
 | Exit codes | 64 = issue/attachment not found; 1 = network error; 2 = auth error; 130 = Ctrl+C |
-| Idempotency | `attachment delete` on a 404 → exit 0 (documented above as BC-3.9.008) |
+| Idempotency | `attachment delete` on a 404 → exit 0 (documented above as BC-3.9.008) — **PHASE-DOC-RETRO-ANNOTATION (P14-004, 2026-07-16):** superseded by DEC-168; shipped BC-3.9.008 is exit 64 + surface body. |
 | Output channel profiles | See §1.1 classification; list = profile 2 (read-only); download = profile 3 (mixed); upload/delete = profile 4 (symmetric) |
 | `allow_hyphen_values` | Not needed — `--file <PATH>` is a path, not free text; paths starting with `-` are a deliberate edge case out of scope |
 
@@ -186,7 +186,7 @@ Range-collapsed BCs (error shapes, filter combinations) will add to cumulative t
 
 | Artifact | Required change |
 |----------|----------------|
-| `docs/specs/attachments.md` | **NEW** — feature spec required before F2 (policy: spec before implementation) |
+| `docs/specs/attachments.md` | **NEW** — feature spec required before F2 (policy: spec before implementation) — **PHASE-DOC-RETRO-ANNOTATION (P14-008, 2026-07-16):** this row originally implied the spec is required BEFORE F2 delivery. Clarification: `docs/specs/attachments.md` is an **F4 delivery obligation** — it must exist by the time the feature ships (story close), not necessarily before F2 spec-writing begins. F2 (PRD BCs) can proceed without it; F4 (implementation PR) must create it per ADR-0004 precedent. |
 | `docs/specs/json-output-shapes.md` | Add rows: `attachment list`, `attachment download` (no JSON output; download writes files, not JSON), `attachment upload`, `attachment delete` (single + bulk) |
 | `CHANGELOG.md` | New entry under next release tag: `feat(issue): attachment list/download/upload/delete subcommand tree (#576)` |
 
@@ -783,5 +783,7 @@ The single-file download flow (`attachment download <KEY> --id <AID>`) is pinned
 The distinction between empty-Enter (cancel, exit 0) and EOF (exit 130) is load-bearing for scripting: a shell pipe closing unexpectedly is an interruption, not a user cancel. EC-3.5.003-3 is the existing precedent; the F2 spec for BC-3.9.015 (delete gate) and BC-3.9.014 (`--public` gate) MUST reproduce this three-way branch verbatim.
 
 **Scope of the reversal:** R3.8a/b do not carry explicit EOF wording (checked — no annotation needed there). The affected design inputs are the `[y/N]` gate sections in R3.3 (delete gate) and SQ-7 / OQ-8 (`--public` gate). Neither states EOF=cancel-exit-0 explicitly in the file, so no retro-annotation to those sections is required; this R3.11 note is the sole correction record.
+
+**PHASE-DOC-RETRO-ANNOTATION (P14-001, 2026-07-16):** The claim "Neither states EOF=cancel-exit-0 explicitly in the file" was **FALSE** at the time of this ruling. BC-3.9.003 (the `--public` gate BC, in the F2 spec written in the same session that produced this ruling) DID explicitly state "any other input (including empty/EOF) → exit 0" — meaning EOF was explicitly stated to produce exit 0 (cancel). This ruling should have noted that BC-3.9.003 required a retro-annotation; it did not. Corrected by P14-001: BC-3.9.003 was updated to the correct three-way branch (EOF → exit 130), and this annotation records that R3.11's "sole correction record" claim was incomplete. The retro-annotation obligation that was missed in the original ruling is now satisfied by this note.
 
 **Implementation note for F2 spec authors:** the `read_line` arm that returns `Ok(0)` (zero bytes read = EOF) must map to `return Err(JrError::Interrupted)`, identical to the pattern in `src/cli/issue/interactions.rs::handle_comment_delete`. The `Interrupted` variant already carries exit code 130 via `JrError::exit_code()`.

@@ -7,6 +7,31 @@ project: "jr (jira-cli)"
 
 Track all spec version changes. Most recent version first.
 
+## [1.3.54] - 2026-07-16
+
+### Type: PATCH
+
+**Summary**: Adversary pass 14 (P14) fix round — EOF contradiction resolved (BC-3.9.003 three-way branch; exit 130 not exit 0); guard-precedence EC added; cancel channel corrected to stderr; BC-3.9.012 error row wording; BC-3.9.020 retitled + --dry-run gate suppression; VP-576-001..003 added; H-NEW-ATTACHMENT-009 added; impact-boundary-576.md retro-annotations.
+
+**Changes**:
+
+- `.factory/specs/prd/bc-3-issue-write.md` (MODIFIED): P14-001 — BC-3.9.003 interactive-mode bullet rewritten as three-way branch: (a) y/yes → proceed; (b) other/empty-Enter → "Upload cancelled." on stderr + cancel JSON + exit 0; (c) EOF `Ok(0)` or IO `Err(_)` → `JrError::Interrupted` exit 130 (NOT exit 0). EC-3.9.003-4 updated (branch b, stderr). EC-3.9.003-6 added (EOF → exit 130 pin). P14-002 — EC-3.9.003-7 added: non-JSM eligibility check (BC-3.9.005) fires BEFORE non-interactive gate (guard evaluation order: JSM eligibility → interactive/non-interactive → `--yes`). P14-003 — BC-3.9.003 cancel channel corrected (stdout → stderr). EC-3.9.014-2 updated ("non-EOF branch (b)", "on stderr"). BC-3.9.015 cancel-channel divergence note added (attachment delete emits "Deletion cancelled." to stderr; comment-family table-mode emits nothing per `interactions.rs`). P14-005 — BC-3.9.012 error row trigger column: "404 on issue meta fetch" → "404 from the upload POST (platform path) or from the issue GET (`--public` / `--replace-existing` paths)". P14-007 — VP-576-002 added in BC-3.9.015 (delete gate wiremock confirm+cancel). VP-576-003 added in BC-3.9.017 (ordering invariant: DELETE before POST). Preamble + footer VP count updated 30→33. P14-009 — BC-3.9.020 path (c) gains explicit `--public` gate suppression text + EC-3.9.020-7 (gate SUPPRESSED on dry-run; preview JSON includes `"visibility":"public"` in wouldUpload). P14-010 — BC-3.9.020 retitled to "`attachment --dry-run` (delete multi-path + upload `--replace-existing`)" + Source updated. P14-011 — double `---` separator before BC-3.9.015 removed.
+- `.factory/specs/prd/bc-2-issue-read.md` (MODIFIED): P14-006 — BC-2.7.001 output-channel profile line: "no stderr output when no filter is active" → "no filter-count hint on stderr when no filter is active" (removes contradiction with EC-2.7.001-1). Also: 46 pre-existing TD-031 volatile line cites converted from `:NNN` to `:~NNN` to clear hook blocker. P14-007 — VP-576-001 added in BC-2.7.011 (sanitize_attachment_filename property-based test; pins steps 1–5 and containment check).
+- `.factory/specs/prd/holdout-scenarios.md` (MODIFIED): P14-001 — H-NEW-ATTACHMENT-009 added (--public EOF at confirmation prompt → exit 130, NOT exit 0; pins EC-3.9.003-6 and BC-3.9.014 branch (c)). Group 19 header updated to ..009. `total_holdouts` frontmatter: 96 → 97.
+- `.factory/phase-f1-delta-analysis/impact-boundary-576.md` (MODIFIED): P14-001 — R3.11 "Scope of the reversal" paragraph retro-annotated: the claim "neither states EOF=cancel-exit-0 explicitly" was false (BC-3.9.003 DID state it; correction via P14-001). P14-004 — §2.2 BC-3.9.008 row retro-annotated (404 → exit 0 superseded by DEC-168). §2.3 NFR Idempotency row retro-annotated (same). P14-008 — §3.1 `docs/specs/attachments.md` row retro-annotated: F4 delivery obligation (not required before F2).
+- `.factory/phase-f2-spec-evolution/prd-delta-576.md` (MODIFIED): P14 fix-round section appended with all 11 finding dispositions. Frontmatter: `spec_version_after` 1.3.53→1.3.54; `holdout_count_after` 96→97. Pre-existing table cell-count violation at line 70 (unescaped `|` in BC-3.9.005 row) fixed.
+- `.factory/specs/prd/BC-INDEX.md` (MODIFIED): `last_updated` field updated; VP count note added (30→33).
+- `.factory/specs/prd/CANONICAL-COUNTS.md` (MODIFIED): Canonical holdout total 96→97; H-NEW-ATTACHMENT-009 added to expected list; Group 19 entry updated.
+
+**Impact**:
+
+| Dimension | Value |
+|---|---|
+| BC count | 657 (unchanged) |
+| Holdout count | 97 (+1: H-NEW-ATTACHMENT-009) |
+| VP count | 33 (+3: VP-576-001..003) |
+| Spec version | 1.3.53→1.3.54 |
+
 ## [1.3.53] - 2026-07-16
 
 ### Type: PATCH
