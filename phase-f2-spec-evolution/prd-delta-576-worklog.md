@@ -728,3 +728,20 @@ Guards: `check-spec-counts.sh`: OK. `check-bc-cumulative-counts.sh`: OK (657 / 8
 
 **BC / holdout count: 657 BCs / 96 holdouts — UNCHANGED.**
 Guards: `check-spec-counts.sh`: OK. `check-bc-cumulative-counts.sh`: OK (657 / 8 files).
+
+---
+
+### Round P9 — 2026-07-16
+
+**Adversary pass 9 fix round (3 findings)**
+
+| Finding | Severity | Status | Summary |
+|---|---|---|---|
+| P9-001 | MED | APPLIED | EC-2.7.001-3 extended: `"(anonymous)"` now fires for (a) absent/null `attachment.author` AND (b) author present but both `displayName` and `accountId` absent/null. Full resolution chain `displayName → accountId → "(anonymous)"` stated. Table footnote updated to name all three tiers. BC-2.7.002 "Null author in JSON" gains partial-author note (no `"(anonymous)"` in JSON mode — pass-through). H-NEW-ATTACHMENT-001 Call B Expected/Why/Status/BC-refs updated to cite extended EC-2.7.001-3 exhausted-fallback-chain path. |
+| P9-002 | LOW | APPLIED | BC-3.9.017 step 0: `get_or_fetch_project_meta(client, config, "FOO")` → correct 2-arg live signature `get_or_fetch_project_meta(client, "FOO")` (profile via `client.profile_name()`; cite `src/api/jsm/servicedesks.rs:41`). Key-derivation equivalence note added: string-prefix derivation (step 0 pre-flight) is deliberately equivalent to `fields.project.key` (later paths); canonical single statement in step 0. |
+| P9-003 | LOW | APPLIED | H-NEW-ATTACHMENT-002 step-2 and step-4 fixtures: `"contentUrl"` → `"content"` (raw Jira wire field name per research §1a). BC-2.7.007 step 1 reworded: raw API field `"content"` separated from `jr` curated name `"contentUrl"` (BC-2.7.002 convention); clarifies download flow ignores step-1 field and constructs URL from id. |
+
+**Changelog-sync (self-administered)**: v1.3.49 MINOR entry inserted in `spec-changelog.md`; `prd-delta-576.md` `spec_version_after` → 1.3.49; bc-3-issue-write.md frontmatter: v1.3.49 trace appended + `_Last updated` prepended.
+
+**BC / holdout count: 657 BCs / 96 holdouts — UNCHANGED.**
+Guards: `check-spec-counts.sh`: OK. `check-bc-cumulative-counts.sh`: OK (657 / 8 files).

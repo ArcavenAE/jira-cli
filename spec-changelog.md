@@ -7,6 +7,26 @@ project: "jr (jira-cli)"
 
 Track all spec version changes. Most recent version first.
 
+## [1.3.49] - 2026-07-16
+
+### Type: MINOR
+
+**Summary**: Adversary pass 9 (P9) fix round — anonymous author fallback chain fully specified; get_or_fetch_project_meta signature corrected; raw/curated content URL field names clarified.
+
+**Changes**:
+
+- `.factory/specs/prd/bc-2-issue-read.md` (MODIFIED): P9-001 — EC-2.7.001-3 extended: "(anonymous)" now fires for (a) absent/null `attachment.author` AND (b) author present but both `displayName` and `accountId` absent/null; full resolution chain documented (`displayName → accountId → "(anonymous)"`). Table footnote (Author column) updated to name all three tiers. BC-2.7.002 "Null author in JSON" gains partial-author note (no `"(anonymous)"` substitution in JSON mode — pass-through). P9-003 — BC-2.7.007 step 1 reworded to separate raw Jira API field `"content"` from `jr` curated name `"contentUrl"` (BC-2.7.002 convention); clarifies the download flow ignores the step-1 field and constructs the URL from the id.
+- `.factory/specs/prd/bc-3-issue-write.md` (MODIFIED): P9-002 — BC-3.9.017 step 0: `get_or_fetch_project_meta(client, config, ...)` → correct 2-arg live signature `get_or_fetch_project_meta(client, project_key)` (profile via `client.profile_name()`; `src/api/jsm/servicedesks.rs:41`); key-derivation equivalence note added (string-prefix derivation here == `fields.project.key` in later paths; canonical single statement).
+- `.factory/specs/prd/holdout-scenarios.md` (MODIFIED): P9-001 — H-NEW-ATTACHMENT-001 Call B Expected/Why/Status/BC-refs updated to cite the extended EC-2.7.001-3 exhausted-fallback-chain path (author present, `displayName` null, `accountId` absent). P9-003 — H-NEW-ATTACHMENT-002 step-2 and step-4 wiremock fixtures: `"contentUrl"` → `"content"` (raw Jira wire field name).
+
+**Impact**:
+
+| Dimension | Value |
+|---|---|
+| BC count | 657 (unchanged) |
+| Holdout count | 96 (unchanged) |
+| Spec version | 1.3.48→1.3.49 |
+
 ## [1.3.48] - 2026-07-16
 
 ### Type: MINOR

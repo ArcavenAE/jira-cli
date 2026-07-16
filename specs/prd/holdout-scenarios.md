@@ -2092,14 +2092,14 @@ Call B (two attachments):
 - Exit code = 0.
 - stdout contains `report.pdf` and `photo.png` (filenames present in table).
 - stdout contains `10001` and `10002` (IDs present).
-- The row for `photo.png` displays `(anonymous)` in the Author column (null `displayName` → `(anonymous)` per BC-2.7.001 EC-2.7.001-3).
+- The row for `photo.png` displays `(anonymous)` in the Author column (`displayName` is null and no `accountId` is present — exhausted fallback chain `displayName → accountId → "(anonymous)"` per BC-2.7.001 EC-2.7.001-3).
 - stdout does NOT contain any JSON syntax (table-mode output).
 
-**Why hidden**: The zero-attachment edge case must produce a graceful empty-state exit-0 response, not an error or panic. The null-author rendering pins BC-2.7.001 EC-2.7.001-3 — a regression that panics on null displayName would be invisible to any test not explicitly exercising that fixture.
+**Why hidden**: The zero-attachment edge case must produce a graceful empty-state exit-0 response, not an error or panic. The second attachment (author present, `displayName` null, no `accountId`) pins the EC-2.7.001-3 exhausted-fallback-chain path. A regression that panics on null `displayName` OR renders `accountId` when it is also absent would be invisible to any test not explicitly exercising this fixture.
 
-**Status**: MUST-PASS. Pins BC-2.7.001: (1) zero-attachment issue → exit 0, empty stdout, stderr hint `"No attachments on <KEY>."` (EC-2.7.001-1); (2) null author → `(anonymous)` in table.
+**Status**: MUST-PASS. Pins BC-2.7.001: (1) zero-attachment issue → exit 0, empty stdout, stderr hint `"No attachments on <KEY>."` (EC-2.7.001-1); (2) author present with `displayName` null and `accountId` absent → exhausted fallback chain → `"(anonymous)"` in table (EC-2.7.001-3).
 
-**BC refs**: BC-2.7.001 (primary), BC-2.7.001 EC-2.7.001-3 (null author)
+**BC refs**: BC-2.7.001 (primary), BC-2.7.001 EC-2.7.001-3 (author present, displayName null, accountId absent → exhausted fallback chain → "(anonymous)")
 
 ---
 
@@ -2112,7 +2112,7 @@ Call B (two attachments):
 **Setup**:
 
 1. Wiremock at `JR_BASE_URL`. Config with a valid profile at `JR_CONFIG_DIR`. Temp working directory `WORK_DIR`.
-2. Wiremock mounts `GET /rest/api/3/attachment/10001` returning the attachment metadata: `{"id":"10001","filename":"notes.txt","size":12,"mimeType":"text/plain","contentUrl":"<JR_BASE_URL>/rest/api/3/attachment/content/10001"}` (step 1 of BC-2.7.007 two-step wire path).
+2. Wiremock mounts `GET /rest/api/3/attachment/10001` returning the attachment metadata: `{"id":"10001","filename":"notes.txt","size":12,"mimeType":"text/plain","content":"<JR_BASE_URL>/rest/api/3/attachment/content/10001"}` (step 1 of BC-2.7.007 two-step wire path).
 3. Wiremock mounts `GET /rest/api/3/attachment/content/10001` returning HTTP 200 body `"hello world\n"` (12 bytes) with `Content-Type: text/plain` (step 2 — streaming download).
 
 **Action**: `jr issue attachment download FOO-1 --id 10001` with cwd = `WORK_DIR`.
@@ -2124,7 +2124,7 @@ Call B (two attachments):
 - stdout or stderr contains a success message referencing `notes.txt`.
 
 **Setup (error path)**:
-4. Wiremock mounts `GET /rest/api/3/attachment/10002` returning the attachment metadata: `{"id":"10002","filename":"broken.bin","size":100,"mimeType":"application/octet-stream","contentUrl":"<JR_BASE_URL>/rest/api/3/attachment/content/10002"}` (metadata step 1 — must succeed).
+4. Wiremock mounts `GET /rest/api/3/attachment/10002` returning the attachment metadata: `{"id":"10002","filename":"broken.bin","size":100,"mimeType":"application/octet-stream","content":"<JR_BASE_URL>/rest/api/3/attachment/content/10002"}` (metadata step 1 — must succeed).
 5. Wiremock mounts `GET /rest/api/3/attachment/content/10002` returning HTTP 500 mid-stream (or: HTTP 200 followed by a connection drop before body is complete) (step 2 — triggers the EC-2.7.007-4 error + cleanup path).
 
 **Action (error path)**: `jr issue attachment download FOO-2 --id 10002` with cwd = `WORK_DIR`.

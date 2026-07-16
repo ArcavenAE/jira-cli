@@ -547,7 +547,7 @@ Table columns (in display order):
 | Type | `attachment.mimeType` | MIME type string |
 | Size | `attachment.size` | Human-readable formatted (e.g., `42.0 KB`, `1.2 MB`); raw bytes in JSON output (BC-2.7.002) |
 | Created | `attachment.created` | ISO 8601 string; displayed as-is (no parsing or TZ conversion) |
-| Author | `attachment.author.displayName` | Falls back to `attachment.author.accountId` when `displayName` is absent |
+| Author | `attachment.author.displayName` | Falls back to `attachment.author.accountId` when `displayName` is absent or null; falls back to `"(anonymous)"` when both are absent or null (full chain: displayName → accountId → "(anonymous)") |
 
 When the issue has zero attachments, the handler exits 0 with no table, empty stdout (pipe-friendly), and emits `"No attachments on <KEY>."` to stderr (profile 2 hint — same canonical string as EC-2.7.001-1 and EC-2.7.008-1); this is not an error.
 
@@ -557,7 +557,7 @@ When the issue has zero attachments, the handler exits 0 with no table, empty st
 
 **EC-2.7.001-2** (filter-count hint): when any `--filter` flag is active and reduces the displayed row count, a hint is emitted to stderr: `"Showing N of M attachments."` (N = filtered count, M = total from API). When no filter is active this hint is suppressed.
 
-**EC-2.7.001-3** (null/missing author): when `attachment.author` is absent or null (system-generated or anonymous attachment), the Author column displays `"(anonymous)"` in the table.
+**EC-2.7.001-3** (null/missing author or exhausted fallback chain): the Author column displays `"(anonymous)"` when: (a) `attachment.author` is absent or null (system-generated or anonymous attachment); OR (b) `attachment.author` is present but both `displayName` and `accountId` are absent or null (exhausted fallback chain). Full resolution chain: (1) `attachment.author.displayName` if present and non-null; (2) else `attachment.author.accountId` if present and non-null; (3) else `"(anonymous)"`. This covers the H-NEW-ATTACHMENT-001 Call B fixture (author present, `displayName` null, no `accountId`).
 
 **CLI flags** (pinned for e2e surface guard): `<KEY>` (positional, required); `--filter <FILTER>` (repeatable; key=value form); `--output json`; `--no-input`; `--profile <NAME>`; `--no-color`.
 
@@ -598,7 +598,7 @@ Field notes:
 
 Empty issue → `[]` array, exit 0, no error.
 
-**Null author in JSON**: when `attachment.author` is absent or null, the JSON element emits `"author": null` (not an omitted key and not an empty object). This is consistent with the Jira API's own null representation for missing sub-objects.
+**Null author in JSON**: when `attachment.author` is absent or null, the JSON element emits `"author": null` (not an omitted key and not an empty object). This is consistent with the Jira API's own null representation for missing sub-objects. **Partial-author case** (author present but `displayName` and `accountId` both absent or null): the JSON element emits the `author` object as received from the API — no `"(anonymous)"` substitution is applied in JSON mode. The resolution chain in EC-2.7.001-3 is a table-rendering convention only; JSON mode is pass-through.
 
 All `--output json` paths MUST route through `output::render_json` or `output::print_output` — never `serde_json::to_string_pretty` or direct compact printing (JSON render invariant #526).
 
@@ -715,7 +715,7 @@ When `<KEY>` does not exist or the authenticated user lacks Browse Projects perm
 **AID validation (P7-001, CWE-88)**: before issuing any HTTP request, `jr` validates `<AID>` against `^[0-9]+$`. A non-numeric or path-traversal-shaped AID (e.g., `"10001/../../issue/X"`) → exit 64; stderr: `"invalid attachment id: '<VALUE>' (must be numeric)"`; no HTTP calls issued. This fires before step 1 below.
 
 **Wire path (two-step)**:
-1. `GET /rest/api/3/attachment/{id}` — metadata fetch (read-only). Response is the attachment metadata object (curated fields from BC-2.7.002: `id`, `filename`, `mimeType`, `size`, `created`, `author`, `contentUrl`). Yields the canonical `filename` for BC-2.7.010 naming. **The `<KEY>` argument is NOT server-verified on the `--id` path** — the AID is authoritative; `<KEY>` is accepted for CLI-surface uniformity but `jr` does not issue a separate key-ownership check.
+1. `GET /rest/api/3/attachment/{id}` — metadata fetch (read-only). The Jira API response includes a `"content"` field (the stable content URL); `jr` renames this to `"contentUrl"` in its curated output (BC-2.7.002 convention). The download flow does NOT read this field from the step-1 response — it constructs the content URL from the attachment id directly (see step 2). The metadata response is used solely to obtain the canonical `filename` for BC-2.7.010 naming. (Curated `jr` output fields from BC-2.7.002: `id`, `filename`, `mimeType`, `size`, `created`, `author`, `contentUrl`.) **The `<KEY>` argument is NOT server-verified on the `--id` path** — the AID is authoritative; `<KEY>` is accepted for CLI-surface uniformity but `jr` does not issue a separate key-ownership check.
 2. `GET /rest/api/3/attachment/content/{id}` — streaming download. This path is uniform for both platform and JSM issues. The servicedeskapi `links.content` URLs MUST NOT be used for download: JSDCLOUD-10841 (confirmed in research §P2-6 of `.factory/research/issue-576-attachments-api-2026-07-15.md`) shows these URLs return 404.
 
 **Redirect following**: Jira Cloud redirects this endpoint (302/303) to a pre-signed CDN URL (`media.atlassian.com` or AWS). The reqwest client MUST rely on its default redirect policy (up to 10 redirects). reqwest 0.13.4 strips `Authorization`, `Cookie`, and `Proxy-Authorization` headers on cross-host redirects — VERIFIED in research §1c and independently corroborated by GHSA-9857-6MW7-FQ2M (which explicitly states the reqwest backend compares `prev_url.host_str()` to `curr_url.host_str()` and strips sensitive headers on cross-domain hops). No custom `RedirectPolicy` is needed. **CRITICAL**: `?redirect=false` MUST NOT be used — JRACLOUD-97046 (research §6) causes encoded or broken responses for some file formats when this query parameter is present.
