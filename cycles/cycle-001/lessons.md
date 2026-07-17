@@ -6379,3 +6379,21 @@ _Tagged: [process-gap] [cross-shard] [invariant-wiring] [reachability] [security
 
 _Trigger: P30-002 (2026-07-17); §3.9 pre-deletion summary straggler after §2.7 closed at r35; full §3.9 enumeration (24 entries) recorded same burst._
 _Tagged: [process-gap] [taxonomy-closure] [output-channel] [enumeration-scope] [feature-bundle-perimeter] [hint-vs-error] [p30] [codified]_
+
+
+---
+
+### [convergence] SEVERITY-INTEGRITY: Orchestrator must not downgrade adversary-assigned severity to bank a clean pass
+
+**Observation (P33-001, 2026-07-17):** Adversary pass 33 produced a single finding: P33-001 (LOW) — bc-3-issue-write.md footer pass-narrative stale (most-recent named pass-30, omitting P31; sequence jumped P30→P24, omitting P26/P27/P28). The adversary explicitly classified this as audit-trail-only (ZERO BEHAVIORAL: "the behavioral specification is fully converged"). The orchestrator experienced pressure to re-classify P33-001 as INFO or cosmetic to achieve a nominally "clean" pass and advance the STRICT streak — but declined. The LOW was kept as LOW.
+
+**Principle (SEVERITY-INTEGRITY):** The orchestrator must never downgrade a finding assigned by the adversary in order to bank a clean pass or advance the STRICT convergence streak. The convergence metric's entire value derives from its honesty. Downgrading a LOW to INFO to achieve 0/0/0/0 is metric-gaming: the true pass was 0/0/1/0 (one LOW finding). A banked "clean" pass with a suppressed LOW would undercount the loop, corrupt the trajectory, and potentially cause premature F2 gate authorization on a spec that still had an audit-trail integrity gap.
+
+**Corollary — BEHAVIORAL-VS-AUDIT-TRAIL distinction:** The adversary's "ZERO BEHAVIORAL / audit-trail-only" characterization is a severity-rationale (explaining why the finding is LOW rather than MEDIUM), not a reclassification to INFO. The orchestrator should understand this as: "this finding is real and must be fixed, but it does not contradict behavioral requirements — it is an audit-trail gap." The fix is still mandatory. The finding still counts toward the trajectory.
+
+**Corollary — STRICT streak resets correctly:** Because P33-001 was counted, the STRICT streak remains 0/3 after pass 33. If the finding had been suppressed, the streak would have been incremented to 1/3 based on false data. A streak built on suppressed findings would authorize F2 gate on a spec with latent integrity gaps.
+
+**Datapoint — P33:** Pass 33 is the first pass in the SOH-ATTACHMENTS-1 F2 loop with zero behavioral findings. This is a genuine convergence milestone. The adversary's verdict ("the behavioral specification is fully converged") is meaningful precisely because it was earned honestly — all 33 passes were accounted at their true severity. The one remaining LOW was an audit-trail finding that the orchestrator fixed in the same burst without suppressing.
+
+_Trigger: P33-001 (2026-07-17); orchestrator declined to downgrade LOW; BEHAVIORAL CONVERGENCE MILESTONE; STRICT streak kept honest at 0/3._
+_Tagged: [convergence] [severity-integrity] [metric-honesty] [strict-streak] [adversary-protocol] [p33] [codified]_

@@ -5418,3 +5418,40 @@ Displaced to make room for SOH-ATTACHMENTS-1 adversary pass-31 remediation step 
 **Convergence:** Trajectory p1..p31 = 22,21,18,16,10,5,3,5,3,3,2,2,3,9,7,5,5,5,4,6,6,3,3,2,2,3,3,2,1,3,2. STRICT streak 0/3 (DEC-183). Severity ≤LOW in 3 of last 4 passes. Next: adversary pass 32.
 
 **Files committed:** `phase-f2-spec-evolution/prd-delta-576.md`, `phase-f2-spec-evolution/consistency-report-576-r40.md` (new), `sidecar-learning.md`, `spec-changelog.md`, `specs/prd/BC-INDEX.md`, `specs/prd/bc-2-issue-read.md`, `specs/prd/bc-3-issue-write.md`, `specs/prd/holdout-scenarios.md`, `cycles/cycle-001/burst-log.md`, `STATE.md`.
+
+
+### Archived Phase Progress row (adversary-pass-33 remediation burst)
+
+Displaced to make room for SOH-ATTACHMENTS-1 adversary pass-33 remediation phase-progress row per keep-5 rule.
+
+| Phase | Status | Completed | Gate | Notes |
+|-------|--------|-----------|------|-------|
+| **SOH-ATTACHMENTS-1 F2 ADVERSARY PASS-28 REMEDIATED (2026-07-17, fresh context, blind, v1.3.67; NOT-CLEAN 2M; narrowest severity band of the loop; P28-001 (M) EC-3.9.020-8 (P23-authored) imported "step-0 issue GET" language into the --replace-existing path which has none (string-prefix derivation; only project-meta fetch fires; non-JSM skips servicedesk pagination); P28-002 (M) H-NEW-ATTACHMENT-009 Expected bullet 4 forbade "any /rest/servicedeskapi/... request" while ITS OWN setup step 3 mounts the servicedesk GET that fires pre-gate — mount-vs-assertion internal contradiction; false-Phase-4-failure class; source-verified against servicedesks.rs by the adversary. Fix: P28-001 EC-3.9.020-8 corrected terminal sentence + BC-3.9.020 Trace + BC-INDEX row; P28-002 H-NEW-ATTACHMENT-009 bullet 4 narrowed to POST-only + parenthetical acknowledging GET + licensing BCs (BC-3.9.003 step 1 / BC-X.8.010 / BC-3.9.014) + holdout frontmatter v1.5.4→v1.5.5 + trace; PROACTIVE mount-vs-assertion sweep 12 Group-19 holdouts + VP-576-002/003/005 — 0 additional contradictions (class exhaustively closed); +1 micro-fix (r38 INFO-NEW-9: bc-3 frontmatter v1.3.68 trace entry). Spec v1.3.67→v1.3.68; counts 657/100/35 UNCHANGED; BC-INDEX v6.27→v6.28; r38 CONSISTENT (K-1 EC-3.9.020-8 ↔ BC-3.9.017 ↔ BC-X.8.010 ↔ EC-3.9.005-3 coherent no-issue-GET story; K-2 H-009 bullet 4 internally coherent with setup mounts + VP-576-005 style; K-3 exactly-one-issue-GET 4 paths; echo-breaker 2 items + spot audit 5/5; guards exit 0). STRICT streak 0/3 (DEC-183). Pass 29 next.** | **ADVERSARY PASS-28 REMEDIATED** | **2026-07-17** | **Adversary pass 29 next.** | `phase-f2-spec-evolution/consistency-report-576-r38.md`; BC 657; holdouts 100; VP 35; spec v1.3.68. |
+
+### Archived Current Phase Steps row (adversary-pass-33 remediation burst)
+
+Displaced to make room for SOH-ATTACHMENTS-1 adversary pass-33 remediation step row per keep-5 rule.
+
+| Step | Agent | Status | Output |
+|------|-------|--------|--------|
+| **SOH-ATTACHMENTS-1 F2 ADVERSARY PASS-28 REMEDIATED (2026-07-17): 2M only (narrowest severity band of the loop); P28-001 (M) EC-3.9.020-8 "step-0 issue GET" language in --replace-existing path (none exists; string-prefix derivation only; project-meta fetch only; non-JSM skips servicedesk pagination) → corrected + BC-3.9.020 Trace + BC-INDEX row; P28-002 (M) H-NEW-ATTACHMENT-009 Expected bullet 4 "any /rest/servicedeskapi/..." assertion contradicted own setup step 3 servicedesk GET mount (mount-vs-assertion internal contradiction; false-Phase-4-failure class) → narrowed to POST-only + parenthetical GET acknowledged + licensing BCs + holdout frontmatter v1.5.4→v1.5.5 + trace; PROACTIVE sweep 12 Group-19 holdouts + VP-576-002/003/005 = 0 additional contradictions (class exhaustively closed); micro-fix INFO-NEW-9 (bc-3 frontmatter v1.3.68 trace); spec v1.3.67→v1.3.68; BC 657/holdouts 100/VP 35 UNCHANGED; BC-INDEX v6.27→v6.28; r38 CONSISTENT (K-1 EC-3.9.020-8 ↔ BC-3.9.017 ↔ BC-X.8.010 ↔ EC-3.9.005-3 coherent; K-2 H-009 internally coherent with mounts; K-3 EXACTLY-ONE-ISSUE-GET 4 paths; echo-breaker 2 items + spot audit 5/5; guards exit 0). STRICT streak 0/3 (DEC-183). Pass 29 next.** | adversary + product-owner + consistency-validator + state-manager | COMPLETE | `phase-f2-spec-evolution/consistency-report-576-r38.md`; BC 657; holdouts 100; VP 35; spec v1.3.68. |
+
+
+---
+
+## SOH-ATTACHMENTS-1 F2 ADVERSARY PASS-33 REMEDIATION BURST (2026-07-17)
+
+**What happened:** Adversary pass 33 returned NOT-CLEAN — 1 LOW only, ZERO BEHAVIORAL FINDINGS. This is the behavioral convergence milestone: the adversary stated "The behavioral specification is fully converged: zero contradictions, ambiguities, fixture defects, count/index drift, or convention violations in any behavioral surface." The single finding was P33-001 (L, audit-trail-only): bc-3-issue-write.md footer pass-narrative was stale — "Last updated" named pass-30 as most recent, skipped P25-P29, and omitted P31/P32. The orchestrator explicitly declined to downgrade this LOW to "informational" to bank a CLEAN pass; STRICT accounting was kept honest. Next pass (34) is the CLEAN candidate.
+
+**Finding:**
+- P33-001 (L, audit-trail-only): bc-3 footer "Last updated" stale — named pass-30 most-recent (omitting P31); sequence jumped P30→P24 (omitting P26/P27/P28). Fix: footer rebuilt from an EVIDENCE MATRIX: P26 (v1.3.66 trace entry: P26-004 BC-3.9.019 Source softened), P27 (v1.3.67 trace entry: P27-001 JSON Output Shape Contracts filename/path notes), P28 (v1.3.68 trace entry: P28-001 EC-3.9.020-8 corrected) — all confirmed bc-3 was touched. P30 (v1.3.70 trace entry: P30-001/002/I01) and P31 (v1.3.71 trace entry: P31-003) similarly confirmed. P25, P29, P32 confirmed absent: no frontmatter trace entries and zero body Trace citations for P25/P29; P32 only touched bc-2-issue-read.md. Footer corrected: P33 entry at top, P31 entry second, P28/P27/P26 inserted between P30 and P24. Spec v1.3.72→v1.3.73.
+
+**SCOPED VERIFICATION in lieu of full CV:** Metadata-only fix (footer narrative and frontmatter trace only; no BC body content, no BC-INDEX rows). Precedent: burst-29 (one-line deletion) and burst-32 (one-sentence addition). BC-INDEX NOT bumped (footer-only; no rows changed). Both guards exit 0 (verified by orchestrator grep).
+
+**CHECKLIST EXTENSION:** bc-3 footer prepend joins the standing per-round checklist for any bc-3-body-touching round. This is the footer-currency sibling of the frontmatter-trace obligation; 2nd instance of the footer-currency class. Tracked in FRONTMATTER-TRACE-OMISSION drift item.
+
+**SEVERITY-INTEGRITY note (process):** Orchestrator must not downgrade adversary finding severities to bank a clean pass. The LOW classification of P33-001 was accurate (audit-trail defect; no behavioral impact). Downgrading to "informational" to clear the streak threshold would corrupt the metric. Value of the STRICT convergence score is its honesty. P33 is a datapoint: even audit-trail findings count.
+
+**Convergence:** Trajectory p1..p33 = 22,21,18,16,10,5,3,5,3,3,2,2,3,9,7,5,5,5,4,6,6,3,3,2,2,3,3,2,1,3,2,1,1. STRICT streak 0/3 (DEC-183). BEHAVIORAL CONVERGENCE MILESTONE: first pass with zero behavioral findings — defect stream has fully exited behavioral content. Next: adversary pass 34 (CLEAN candidate).
+
+**Files committed:** `phase-f2-spec-evolution/prd-delta-576.md`, `sidecar-learning.md`, `spec-changelog.md`, `specs/prd/bc-3-issue-write.md`, `cycles/cycle-001/burst-log.md`, `cycles/cycle-001/lessons.md`, `STATE.md`.

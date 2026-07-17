@@ -7,6 +7,37 @@ project: "jr (jira-cli)"
 
 Track all spec version changes. Most recent version first.
 
+## [1.3.73] - 2026-07-17
+
+### Type: PATCH
+
+### Summary
+
+Adversary pass 33 (P33) fix round — 1 LOW finding (footer-currency class). P33-001: bc-3-issue-write.md footer pass-narrative was stale — "Last updated" named pass-30 (omitting P31) and the sequence jumped 30→24 (omitting P26/P27/P28). Footer corrected: P31 entry added at top; P28/P27/P26 entries inserted between P30 and P24; P25/P29/P32 confirmed absent from bc-3 and not added. No BC-INDEX row changes (footer-only fix).
+
+### Changed Requirements
+
+- `.factory/specs/prd/bc-3-issue-write.md` (MODIFIED): P33-001 — footer corrected (P33/P31 at top; P28/P27/P26 inserted between P30 and P24; spec v1.3.70 annotation added to P30 entry); frontmatter trace entry v1.3.73 added.
+- `.factory/phase-f2-spec-evolution/prd-delta-576.md` (MODIFIED): `spec_version_after` 1.3.72→1.3.73; P33 dispositions section appended.
+
+### Impact Assessment
+
+| Artifact | Change Type | Notes |
+|---|---|---|
+| bc-3-issue-write.md | Modified | P33-001 footer narrative corrected; frontmatter trace v1.3.73 |
+| prd-delta-576.md | Modified | spec_version_after 1.3.73; P33 dispositions |
+| BC-INDEX.md | No change | Footer-only fix — no BC rows updated; no frontmatter bump owed |
+
+### Count Verification
+
+| Metric | Before | After | Delta |
+|---|---|---|---|
+| BC total | 657 | 657 | 0 |
+| Holdout total | 100 | 100 | 0 |
+| VP total | 35 | 35 | 0 |
+
+---
+
 ## [1.3.72] - 2026-07-17
 
 ### Type: PATCH

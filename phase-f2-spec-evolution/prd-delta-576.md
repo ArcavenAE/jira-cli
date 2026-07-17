@@ -5,7 +5,7 @@ issues: "#576, #585"
 phase: F2
 authored: 2026-07-15
 spec_version_before: 1.3.42
-spec_version_after: 1.3.72
+spec_version_after: 1.3.73
 bc_count_before: 624
 bc_count_after: 657
 holdout_count_before: 88
@@ -597,3 +597,17 @@ Source: Adversary Pass 30. 1 MEDIUM / 2 LOW / 1 INFO finding. Spec version bump:
 | P32-001 (LOW) | LOW | bc-2-issue-read.md, BC-INDEX.md | APPLIED | BC-2.7.007 `--out` pre-flight ordering pinned. The `--out` unconditional step-1 paragraph never stated whether the local pre-flight checks (EC-2.7.007-6 parent-exists, EC-2.7.007-11 path-is-directory, overwrite-refuse) fire before or after the step-1 metadata GET. A double-fault (404 AID + bad `--out`) would yield nondeterministic stderr across conforming implementations. ORCHESTRATOR RULING: local checks fire first (fail cheap/offline first; AID-regex-before-HTTP precedent). Ordering sentence appended to the `--out` UNCONDITIONAL two-step paragraph: "On the `--out` path, the local pre-flight checks (EC-2.7.007-6 parent-exists, EC-2.7.007-11 path-is-directory, overwrite-refuse) fire BEFORE the step-1 metadata GET — fail cheap/offline first (AID-regex-before-HTTP precedent, P32-001); on a double-fault the local check's message wins." BC-2.7.007 Trace and BC-INDEX row updated. **Holdout double-fault check**: H-002 and H-003 are auth/profile holdouts unrelated to attachment download — neither asserts a double-fault stderr message. No other H-NEW-ATTACHMENT-* holdout constructs a double-fault fixture. List B is EMPTY (no holdout assertion changes). |
 
 **BC count at this round: 657 (unchanged). Holdout count: 100 (unchanged). VP count: 35 (unchanged). Spec version: 1.3.72. Both guards exit 0.**
+
+---
+
+## P33 Dispositions (adversary pass 33, 2026-07-17) — 1 LOW (footer-currency class)
+
+| Finding | Severity | Artifacts | Status | Resolution |
+|---|---|---|---|---|
+| P33-001 (LOW) | LOW | bc-3-issue-write.md | APPLIED | bc-3 footer corrected. The footer pass-narrative was stale: (a) "Last updated" named pass-30 as most-recent, omitting P31 (confirmed in frontmatter trace v1.3.71). (b) Sequence jumped directly 30→24, omitting P26/P27/P28 — all three confirmed by frontmatter trace (v1.3.66, v1.3.67, v1.3.68 respectively). P25 and P29 confirmed absent from bc-3 (no frontmatter trace entries and zero body Trace citations). P32 confirmed absent from bc-3 (only touched bc-2-issue-read.md). Fix: (1) New "Last updated" entry for P33 (this correction) added at top. (2) P31 entry inserted as second entry. (3) P28/P27/P26 entries inserted between P30 and P24. (4) spec v1.3.70 annotation added to end of P30 entry. bc-3 frontmatter trace entry v1.3.73 added. No BC-INDEX row changes owed (footer-only fix — no BC body or BC-INDEX row content changed). |
+
+**ECHO-BREAKER LIST A (spec changes):** bc-3 footer: "Last updated" advanced from pass-30 to pass-33 (this correction); P31 entry added; P28/P27/P28 entries inserted between P30 and P24; P25/P29/P32 confirmed absent and not added. bc-3 frontmatter trace: v1.3.73 entry added.
+
+**ECHO-BREAKER LIST B (holdout assertion changes): EMPTY.** No holdout assertions changed; footer corrections are metadata-only.
+
+**BC count at this round: 657 (unchanged). Holdout count: 100 (unchanged). VP count: 35 (unchanged). Spec version: 1.3.73. Both guards exit 0.**
