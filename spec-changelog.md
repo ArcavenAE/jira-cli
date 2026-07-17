@@ -7,6 +7,41 @@ project: "jr (jira-cli)"
 
 Track all spec version changes. Most recent version first.
 
+## [1.3.59] - 2026-07-16
+
+### Type: PATCH
+
+### Summary
+
+Adversary pass 19 (P19) fix round — MEDIUM: BC-2.7.002 canonical attachment-object JSON shape pinned as BTreeMap-alphabetical at all depths; example reordered and ordering clause added (P19-001); LOW: EC-2.7.001-2 filter-count hint JSON-mode clause added citing empirical house behavior in `handle_list`/`handle_view`; deliberate asymmetry with EC-2.7.001-1 zero-attachment hint documented (P19-002); EC-2.7.007-5 SIGINT cleanup downgraded to best-effort MUST with tokio ctrl_c implementation note (P19-003); BC-3.9.001 `--dry-run` CLI-flags entry annotated with clap-requires constraint (P19-004); INFO: BC-3.9.001 4-column vs 6-column table asymmetry documented (P19-I1); P19-I2 pre-existing duplicate BC-2.4.043/BC-2.5.043 recorded as spec-maintenance drift (no action).
+
+### Changed Requirements
+
+- `.factory/specs/prd/bc-2-issue-read.md` (MODIFIED): P19-001 — BC-2.7.002 title updated to alphabetical key order (`{author, contentUrl, created, filename, id, mimeType, size}`); JSON example reordered; BTreeMap-canonical ordering clause + implementation consequence note added. BC-2.7.007 curated-fields cross-reference updated to alphabetical order. P19-002 — EC-2.7.001-2 extended with explicit JSON-mode clause (hint fires in all modes, mirroring `src/cli/issue/list.rs::handle_list` ~line 580 empirical behavior) + asymmetry explanation vs EC-2.7.001-1. P19-003 — EC-2.7.007-5 downgraded from bare MUST to best-effort MUST; implementation note citing `src/main.rs:~393` tokio ctrl_c select! arm; Drop-guard inapplicability noted; not holdout/VP-pinned noted.
+- `.factory/specs/prd/bc-3-issue-write.md` (MODIFIED): P19-004 — BC-3.9.001 CLI-flags `--dry-run` annotated with `(requires --replace-existing — EC-3.9.020-6, clap requires, exit 2)`; Trace updated. P19-I1 — BC-3.9.001 human-table spec note added: 4-column upload echo deliberately differs from 6-column list table. P19-001 — BC-3.9.009 body key enumeration updated to alphabetical order with P19-001 citation.
+- `.factory/specs/prd/BC-INDEX.md` (MODIFIED): BC-2.7.002 row (P19-001 alphabetical key order); BC-3.9.001 row (P19-004 --dry-run annotation; P19-I1 4-column note); BC-3.9.009 row (P19-001 key order); `last_updated` and `index_version` v6.18→v6.19 updated.
+- `.factory/phase-f2-spec-evolution/prd-delta-576.md` (MODIFIED): GAP-P19-FWD-001 — `spec_version_after` 1.3.58→1.3.59; P19 fix-round finding dispositions section appended.
+- `.factory/phase-f1-delta-analysis/impact-boundary-576.md` (MODIFIED): INFO-15 — BC-3.9.004 row annotated: key order is illustrative; shape INCONCLUSIVE pending S5 live capture; if curated per BC-2.7.002, BTreeMap-alphabetical applies.
+
+### Impact Assessment
+
+| Artifact | Change Type | Notes |
+|----------|-------------|-------|
+| `bc-2-issue-read.md` | MODIFIED | BC-2.7.002 key order + clause; EC-2.7.001-2 JSON-mode; EC-2.7.007-5 best-effort |
+| `bc-3-issue-write.md` | MODIFIED | BC-3.9.001 CLI flags + table note; BC-3.9.009 key order |
+| `BC-INDEX.md` | MODIFIED | Three row syncs; v6.18→v6.19 |
+| `prd-delta-576.md` | MODIFIED | spec_version_after 1.3.58→1.3.59; P19 dispositions section |
+| `impact-boundary-576.md` | MODIFIED | BC-3.9.004 row INCONCLUSIVE annotation |
+
+| Dimension | Value |
+|---|---|
+| BC count | 657 (unchanged) |
+| Holdout count | 98 (unchanged) |
+| VP count | 33 (unchanged) |
+| Spec version | 1.3.58→1.3.59 |
+
+---
+
 ## [1.3.58] - 2026-07-16
 
 ### Type: PATCH

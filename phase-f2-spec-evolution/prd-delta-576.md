@@ -5,7 +5,7 @@ issues: "#576, #585"
 phase: F2
 authored: 2026-07-15
 spec_version_before: 1.3.42
-spec_version_after: 1.3.58
+spec_version_after: 1.3.59
 bc_count_before: 624
 bc_count_after: 657
 holdout_count_before: 88
@@ -354,3 +354,21 @@ Source: Adversary Pass 18 (Consistency Review). 1 HIGH / 1 MEDIUM / 3 LOW / 2 IN
 | P18-I2 (INFO) | INFO | ADR-0017-first-multipart-streaming-http-surface.md | APPLIED | §Decision item 3: feature note added — `io-util` transitively enables `io`; `io` alone is the minimal feature flag for `ReaderStream`; implementer may use either. |
 
 **BC count at this round: 657 (unchanged). Holdout count: 98 (unchanged). VP count: 33 (unchanged). Spec version: 1.3.58.**
+
+---
+
+## Adversary Pass 19 Fix Round Finding Dispositions
+
+Source: Adversary Pass 19 (Consistency Review r29). 1 MEDIUM / 3 LOW / 2 INFO findings. Spec version bump: 1.3.58 → 1.3.59. No new BCs. Holdouts: 98 (unchanged). VPs: 33 (unchanged).
+
+| Finding | Severity | File(s) Touched | Status | What changed |
+|---------|----------|----------------|--------|-------------|
+| P19-001 (MEDIUM) | MEDIUM | bc-2-issue-read.md, bc-3-issue-write.md, BC-INDEX.md, impact-boundary-576.md | APPLIED | BC-2.7.002 title, JSON example, and curated-fields cross-ref updated to BTreeMap-alphabetical key order: `{author, contentUrl, created, filename, id, mimeType, size}`; authoritative ordering clause added (cites `preserve_order` NOT enabled in this crate; bare struct declaration order does NOT guarantee alphabetical JSON emission). BC-3.9.009 body key sequence updated to alphabetical with P19-001 citation. BC-INDEX.md rows for BC-2.7.002 and BC-3.9.009 updated. impact-boundary-576.md BC-2.7.002 table row (§2.1) updated (TWIN-ARTIFACT-SWEEP). |
+| P19-002 (LOW) | LOW | bc-2-issue-read.md | APPLIED | EC-2.7.001-2 extended with JSON-mode clause: filter-count hint fires unconditionally in all output modes (empirical: `src/cli/issue/list.rs::handle_list` ~line 580 `eprintln!` fires after `output::print_output` with no `output_format` guard; corroborated by `src/cli/board.rs::handle_view` ~line 283). Deliberate-asymmetry note added: EC-2.7.001-1 zero-attachment hint IS suppressed in JSON mode (empty `[]` is self-describing); EC-2.7.001-2 filter-count hint is NOT suppressed (filtered JSON array gives no indication of total count). |
+| P19-003 (LOW) | LOW | bc-2-issue-read.md | APPLIED | EC-2.7.007-5 downgraded from bare MUST to best-effort MUST. Implementation-strategy note added: cleanup runs in the `tokio::signal::ctrl_c()` select! arm at `src/main.rs:~393` (calls `std::process::exit(130)`); does NOT run via Drop guards — release profile uses `panic = abort` and `std::process::exit()` does not invoke destructors. Not holdout/VP-pinned: SIGINT timing is non-deterministic in CI; EC-2.7.007-4 and H-NEW-ATTACHMENT-002 are the tested proxies for temp-file correctness. |
+| P19-004 (LOW) | LOW | bc-3-issue-write.md | APPLIED | BC-3.9.001 CLI flags line: `--dry-run` annotated with `(requires --replace-existing — EC-3.9.020-6, clap requires, exit 2)`. BC-3.9.001 Trace field updated with P19-004 annotation. |
+| P19-I1 (INFO) | INFO | bc-3-issue-write.md | APPLIED | BC-3.9.001 human-table spec: explicit note added that the 4-column upload echo table (Filename / Size / ID / Created) deliberately differs from the 6-column list table (BC-2.7.001: ID / Filename / Type / Size / Created / Author) — upload echo is a minimal confirmation of what was just sent; list is the full read metadata surface. |
+| P19-I2 (INFO) | INFO | — | NO ACTION (recorded) | Pre-existing duplicate BC number 043: BC-2.4.043 = list_comments anti-stall guard (§2.4 Comments); BC-2.5.043 = changelog `--field` filter (§2.5 Changelog). Numbering collision from Bundle-C parallel surface expansion; distinct bodies, no semantic overlap. Spec-maintenance drift item; renumbering is out-of-scope for a fix round. Ledgered for orchestrator. |
+| GAP-P19-FWD-001 (MEDIUM, CV r29 gap) | MEDIUM | prd-delta-576.md (this file), spec-changelog.md, impact-boundary-576.md | APPLIED | prd-delta-576.md: `spec_version_after` 1.3.58→1.3.59; P19 dispositions section appended. spec-changelog.md [1.3.59]: prd-delta-576.md + impact-boundary-576.md added to Changed Requirements; BC/holdout/VP count rows added to Impact Assessment. impact-boundary-576.md BC-3.9.004 row: INFO-15 illustrative/INCONCLUSIVE annotation. |
+
+**BC count at this round: 657 (unchanged). Holdout count: 98 (unchanged). VP count: 33 (unchanged). Spec version: 1.3.59. Both guards exit 0.**

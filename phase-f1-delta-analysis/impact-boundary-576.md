@@ -133,7 +133,7 @@ Following the append-only rule, the next free BC IDs at each section boundary ar
 | BC | Subject |
 |----|---------|
 | BC-2.7.001 | `attachment list` table columns: id, filename, mimeType, size (human), created, author |
-| BC-2.7.002 | `attachment list --output json` shape: `[{id, filename, mimeType, size, created, author, contentUrl}]` |
+| BC-2.7.002 | `attachment list --output json` shape: `[{author, contentUrl, created, filename, id, mimeType, size}]` (BTreeMap-alphabetical — P19-001) |
 | BC-2.7.003 | `attachment list --filter mime=<glob>` client-side mimeType filter |
 | BC-2.7.004 | `attachment list --filter name=<glob>` client-side filename filter |
 | BC-2.7.005 | `attachment list --filter size-max=<bytes>` client-side size filter |
@@ -154,7 +154,7 @@ Following the append-only rule, the next free BC IDs at each section boundary ar
 | BC-3.9.001 | `attachment upload <KEY> --file <PATH>` multipart POST; `X-Atlassian-Token: no-check` header REQUIRED |
 | BC-3.9.002 | Multiple `--file` flags supported; each is a separate multipart part in one POST |
 | BC-3.9.003 | `attachment upload --replace-existing`: delete same-filename existing attachment(s) before uploading |
-| BC-3.9.004 | `attachment upload --output json` shape: `[{id, filename, mimeType, size, contentUrl}]` (array; one element per uploaded file) |
+| BC-3.9.004 | `attachment upload --output json` shape: `[{id, filename, mimeType, size, contentUrl}]` (array; one element per uploaded file) **(key order shown is illustrative; shape INCONCLUSIVE pending S5 live capture — if curated per BC-2.7.002, BTreeMap-alphabetical applies, P19-001)** |
 | BC-3.9.005 | `attachment upload`: file not found or not readable → exit 64 before HTTP |
 | BC-3.9.006 | `attachment delete <AID> [--yes]` interactive confirmation; `--yes` bypasses |
 | BC-3.9.007 | `attachment delete --issue <KEY> --older-than <duration>` bulk date-filtered delete; `--dry-run` previews affected IDs |

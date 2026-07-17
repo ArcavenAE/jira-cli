@@ -6052,3 +6052,33 @@ _Tagged: [process-gap] [fix-echo] [echo-breaker] [convergence] [plateau] [p18] [
 
 _Recorded: 2026-07-16. State-manager (adversary-pass-18 remediation burst, TD-VSDD-053)._
 _Tagged: [process-gap] [cv-false-positive-closure] [3rd-datapoint] [verbatim-quote] [consistency-validator] [engine-side]_
+
+---
+
+### ECHO-BREAKER-FIRST-VALIDATION [positive-control / convergence]
+
+**Observation (adversary-pass-19, 2026-07-16):** Adversary pass 19 ran as the first pass under the echo-breaker regime adopted in DEC-182 (pass-18 checkpoint). Zero findings were generated in P18-authored text; instead, a latent 18-pass-old MEDIUM surfaced (BC-2.7.002 struct-order example vs shape-table "keys alphabetical" contradiction). The convergence trajectory confirmed the regime worked: p19 broke the plateau (5,5,5→4) with a genuine, mechanically-verifiable finding rather than a fix-echo.
+
+**Why this is a positive control:** The echo-breaker protocol redirects adversary attention from recently-licensed text toward older residue. BC-2.7.002 alphabetical ordering was a pre-existing latent contradiction; 18 passes did not surface it because the adversary's scan perimeter was occupied with newer text. Once the echo-breaker licenses the recent text explicitly, the adversary focuses on uncovered terrain.
+
+**How to apply:** Once the echo-breaker protocol is adopted, the adversary's scan should explicitly skip sentences enumerated in the fix-round's ECHO-BREAKER list. The finding count becomes a reliable signal of genuine remaining residue — not fix-echo artifacts. This validates the protocol as a convergence accelerator, not merely a plateau diagnostic.
+
+_Recorded: 2026-07-16. State-manager (adversary-pass-19 remediation burst, TD-VSDD-053)._
+_Tagged: [echo-breaker] [positive-control] [convergence] [plateau-broken] [latent-finding] [p19] [codified]_
+
+---
+
+### PRD-DELTA-DISPOSITIONS-OBLIGATION [process-gap]
+
+**Observation (GAP-P19-FWD-001, CV r29, 2026-07-16):** The PO fix round for adversary-pass-19 applied all behavioral changes correctly (all P19 priority checks passed verbatim-verified), but did not apply the prd-delta tracking obligations: (a) frontmatter `spec_version_after` not bumped from 1.3.58 to 1.3.59, and (b) P19 dispositions section absent from prd-delta-576.md. This was the first gap after 10 consecutive CONSISTENT rounds, caught by the CV changelog cross-check (the spec-changelog [1.3.59] Changed Requirements did not list prd-delta-576.md).
+
+**Root cause:** The prd-delta tracking obligations are not surfaced by the spec-counts guard or BC-cumulative-counts guard. They require an explicit per-round PO checklist step. Every prior fix round (P14–P18) updated both obligations; P19 broke the streak because the checklist was not self-administered. The spec-changelog sync check catches the missing entry only if prd-delta is included in the Changed Requirements — a catch-at-CV, not a proactive PO mechanism.
+
+**How to apply:** The PO per-round checklist must explicitly include:
+1. Spec-changelog: verify entry present for the new version with correct date, summary, and Changed Requirements list (including prd-delta-576.md when it was modified).
+2. prd-delta frontmatter: bump `spec_version_after` to the new spec version.
+3. prd-delta dispositions section: append finding-disposition table following the P14–P18 pattern, ending with the "BC count at this round:" closing line.
+These three are coequal tracking obligations — none is optional or deferrable to burst-close. The CV changelog cross-check is the backstop; the PO checklist is the primary mechanism.
+
+_Recorded: 2026-07-16. State-manager (adversary-pass-19 remediation burst, TD-VSDD-053)._
+_Tagged: [process-gap] [prd-delta] [dispositions] [per-round-checklist] [cv-changelog-cross-check] [gap-p19-fwd-001] [codified]_

@@ -1520,3 +1520,43 @@ Step contents:
 - Session ended at 2026-07-17T00:15:06Z (awaiting /session-review)
 - Session ended at 2026-07-17T00:16:40Z (awaiting /session-review)
 - Session ended at 2026-07-17T00:16:45Z (awaiting /session-review)
+- Session ended at 2026-07-17T00:28:05Z (awaiting /session-review)
+- Session ended at 2026-07-17T00:28:11Z (awaiting /session-review)
+- Session ended at 2026-07-17T00:37:06Z (awaiting /session-review)
+- Session ended at 2026-07-17T00:37:12Z (awaiting /session-review)
+- Session ended at 2026-07-17T00:53:10Z (awaiting /session-review)
+- Session ended at 2026-07-17T00:53:19Z (awaiting /session-review)
+- Session ended at 2026-07-17T01:13:10Z (awaiting /session-review)
+- Session ended at 2026-07-17T01:13:15Z (awaiting /session-review)
+- Session ended at 2026-07-17T01:17:40Z (awaiting /session-review)
+- Session ended at 2026-07-17T01:17:45Z (awaiting /session-review)
+
+## 2026-07-16 — Echo-Breaker First Validation (adversary-pass-19)
+
+**Trigger:** Adversary pass 19 ran under the echo-breaker regime adopted in DEC-182 (pass-18 checkpoint). Zero findings in P18-authored text; instead, a latent 18-pass-old MEDIUM surfaced (BC-2.7.002 struct-order example vs shape-table "keys alphabetical" contradiction).
+
+**Pattern:** When an adversary pass operates under the echo-breaker protocol, attention is structurally redirected away from recently-authored text (which the fix-round echo-breaker list licenses explicitly) and toward older residue that previous passes did not examine. P19 found a MEDIUM that had survived 18 passes undetected — not because 18 passes missed it, but because it wasn't in the adversary's scan perimeter until the echo-breaker redirected focus.
+
+**Why this is a positive control:** The echo-breaker protocol is working as designed. By requiring the fix round to enumerate and license every new sentence, the following adversary pass cannot generate echo-findings from that text. Instead, the adversary finds genuine residue. The convergence trajectory confirmed this: p19 broke the plateau (5,5,5→4) with a MEDIUM that was independently verifiable (BTreeMap alphabetical is a mechanical property, not an interpretation).
+
+**How to apply:** Once the echo-breaker protocol is adopted, the adversary's scan should explicitly skip sentences appearing in the fix-round's ECHO-BREAKER list. The adversary's finding count is a reliable signal of remaining genuine residue — not an artifact of echoing prior fixes.
+
+_Recorded: 2026-07-16. State-manager (adversary-pass-19 remediation burst, TD-VSDD-053)._
+_Tagged: [echo-breaker] [positive-control] [convergence] [plateau-broken] [latent-finding] [p19] [codified]_
+
+---
+
+## 2026-07-16 — PRD-Delta Dispositions Obligation (GAP-P19-FWD-001)
+
+**Trigger:** Consistency-validator r29 identified GAP-P19-FWD-001 (MEDIUM): prd-delta-576.md frontmatter `spec_version_after` not updated from 1.3.58 to 1.3.59; P19 fix-round dispositions section absent. Every prior fix round (P14–P18) updated both. The first gap after 10 consecutive CONSISTENT rounds was a tracking-obligation miss, caught by the CV changelog cross-check.
+
+**Root cause:** The PO fix round applied all behavioral changes correctly (all P19 priority checks passed) but did not apply the prd-delta tracking obligations. The spec-changelog [1.3.59] Changed Requirements did not list prd-delta-576.md, confirming the omission was not tracked. The prd-delta dispositions section and frontmatter bump are a per-round ritual that requires an explicit checklist entry — they are not surfaced by the spec-counts or BC-cumulative-counts guards.
+
+**How to apply:** The PO per-round checklist must include:
+1. Spec-changelog: verify entry present with correct version, date, and Changed Requirements list.
+2. prd-delta frontmatter: bump `spec_version_after` to the new version.
+3. prd-delta dispositions section: append a finding-disposition table following the P14–P18 pattern.
+These three items are coequal tracking obligations — none can be deferred to the burst-close sweep. The CV changelog cross-check is the backstop, not the primary mechanism.
+
+_Recorded: 2026-07-16. State-manager (adversary-pass-19 remediation burst, TD-VSDD-053)._
+_Tagged: [process-gap] [prd-delta] [dispositions] [per-round-checklist] [cv-changelog-cross-check] [gap-p19-fwd-001] [codified]_

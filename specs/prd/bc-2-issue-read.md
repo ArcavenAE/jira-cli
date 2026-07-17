@@ -11,6 +11,7 @@ trace: |
   - Source R1: .factory/semport/jira-cli/jira-cli-pass-3-deep-r1.md §3.2
   - Source R4: .factory/semport/jira-cli/jira-cli-pass-3-deep-r4.md §3.1
   - SOH-ATTACHMENTS-1 F2 addition (2026-07-15): BC-2.7.001..012 — Attachment Read: attachment list (table+JSON, filters mime/name/size-max), attachment download (single/batch/newest, streaming, redirect-following, CWE-22 sanitization, SHA-1 default path, JSDCLOUD-10841 JSM uniform), error taxonomy (DEC-179, issues #576 #585)
+  - SOH-ATTACHMENTS-1 adversary pass-19 (2026-07-16): BC-2.7.002 BTreeMap-alphabetical key order clause + example reorder (P19-001); EC-2.7.001-2 JSON-mode filter-count hint clause (P19-002); EC-2.7.007-5 best-effort MUST + tokio ctrl_c implementation note (P19-003); spec v1.3.59
 ---
 
 # BC-2 — Issue Read (list / view / comments / changelog)
@@ -555,7 +556,7 @@ When the issue has zero attachments, the handler exits 0 with no table, empty st
 
 **EC-2.7.001-1** (zero attachments): `attachment list <KEY>` on a valid issue with no attachments → exit 0, empty stdout (pipe-friendly; no table, no message on stdout); stderr: `"No attachments on <KEY>."` (profile 2 hint — human mode; JSON mode: empty stdout `[]` per BC-2.7.002, no stderr, exit 0).
 
-**EC-2.7.001-2** (filter-count hint): when any `--filter` flag is active and reduces the displayed row count, a hint is emitted to stderr: `"Showing N of M attachments."` (N = filtered count, M = total from API). When no filter is active this hint is suppressed.
+**EC-2.7.001-2** (filter-count hint): when any `--filter` flag is active and reduces the displayed row count, a hint is emitted to stderr: `"Showing N of M attachments."` (N = filtered count, M = total from API). When no filter is active this hint is suppressed. **JSON mode**: the hint fires in `--output json` mode as well — emitted to stderr via `eprintln!` unconditionally after the JSON array is written to stdout. This mirrors the empirical house behavior in `src/cli/issue/list.rs::handle_list` (the `eprintln!` at ~line 580 fires after `output::print_output` regardless of `output_format`) and `src/cli/board.rs::handle_view` (~line 283). **Deliberate asymmetry with EC-2.7.001-1**: the zero-attachment hint from EC-2.7.001-1 IS suppressed in JSON mode (the empty `[]` array is self-describing and unambiguous); the filter-count hint here is NOT suppressed because a filtered JSON array gives no indication of the total — without the hint, a script would see a smaller array than expected with no context. (P19-002)
 
 **EC-2.7.001-3** (null/missing author or exhausted fallback chain): the Author column displays `"(anonymous)"` when: (a) `attachment.author` is absent or null (system-generated or anonymous attachment); OR (b) `attachment.author` is present but both `displayName` and `accountId` are absent or null (exhausted fallback chain). Full resolution chain: (1) `attachment.author.displayName` if present and non-null; (2) else `attachment.author.accountId` if present and non-null; (3) else `"(anonymous)"`. This covers the H-NEW-ATTACHMENT-001 Call B fixture (author present, `displayName` null, no `accountId`).
 
@@ -565,7 +566,7 @@ When the issue has zero attachments, the handler exits 0 with no table, empty st
 
 ---
 
-#### BC-2.7.002: `attachment list <KEY> --output json` shape — `[{id, filename, mimeType, size, created, author, contentUrl}]`
+#### BC-2.7.002: `attachment list <KEY> --output json` shape — `[{author, contentUrl, created, filename, id, mimeType, size}]`
 
 **Confidence**: HIGH
 **Source**: `src/cli/issue/attachments.rs::handle_attachment_list` (implementation pending — SOH-ATTACHMENTS-1 Story 1); `src/api/jira/attachments.rs::list_attachments` (implementation pending); `src/output.rs::render_json`
@@ -576,16 +577,16 @@ When the issue has zero attachments, the handler exits 0 with no table, empty st
 ```json
 [
   {
-    "id": "10042",
-    "filename": "screenshot.png",
-    "mimeType": "image/png",
-    "size": 43008,
-    "created": "2026-07-10T14:23:11.000+0000",
     "author": {
       "accountId": "62abc123...",
       "displayName": "Alice Operator"
     },
-    "contentUrl": "https://mysite.atlassian.net/rest/api/3/attachment/content/10042"
+    "contentUrl": "https://mysite.atlassian.net/rest/api/3/attachment/content/10042",
+    "created": "2026-07-10T14:23:11.000+0000",
+    "filename": "screenshot.png",
+    "id": "10042",
+    "mimeType": "image/png",
+    "size": 43008
   }
 ]
 ```
@@ -597,6 +598,8 @@ Field notes:
 - `thumbnail` / `thumbnailUrl` fields that may appear in some Jira attachment objects are **omitted** from both the table output (BC-2.7.001) and this JSON output in this slice. They are not surfaced because thumbnail availability is instance-dependent and the pre-signed thumbnail URL has a short TTL unsuitable for offline use.
 
 Empty issue → `[]` array, exit 0, no error.
+
+**JSON key ordering (BTreeMap-canonical — P19-001)**: the canonical attachment-object JSON shape has BTreeMap-ordered (alphabetical) keys at all depths: `author` < `contentUrl` < `created` < `filename` < `id` < `mimeType` < `size` at the top level; `accountId` < `displayName` within the `author` object. This is consistent with BC-3.9.010 (delete shapes, BTreeMap-ordered) and the EC-2.7.007-7 download manifest inner key ordering (`filename` < `id` < `path` < `size`). Implementation consequence: serialize via a type that yields alphabetical key order — e.g., a `BTreeMap`-backed serializer or `serde_json::Map` without the `preserve_order` feature (which is NOT enabled in this crate). Bare struct-declaration order does NOT guarantee alphabetical JSON emission.
 
 **Null author in JSON**: when `attachment.author` is absent or null, the JSON element emits `"author": null` (not an omitted key and not an empty object). This is consistent with the Jira API's own null representation for missing sub-objects. **Partial-author case** (author present but `displayName` and `accountId` both absent or null): the JSON element emits the `author` object as received from the API — no `"(anonymous)"` substitution is applied in JSON mode. The resolution chain in EC-2.7.001-3 is a table-rendering convention only; JSON mode is pass-through.
 
@@ -713,7 +716,7 @@ When `<KEY>` does not exist or the authenticated user lacks Browse Projects perm
 **AID validation (P7-001, CWE-88)**: before issuing any HTTP request, `jr` validates `<AID>` against `^[0-9]+$`. A non-numeric or path-traversal-shaped AID (e.g., `"10001/../../issue/X"`) → exit 64; stderr: `"invalid attachment id: '<VALUE>' (must be numeric)"`; no HTTP calls issued. This fires before step 1 below.
 
 **Wire path (two-step)**:
-1. `GET /rest/api/3/attachment/{id}` — metadata fetch (read-only). The Jira API response includes a `"content"` field (the stable content URL); `jr` renames this to `"contentUrl"` in its curated output (BC-2.7.002 convention). The download flow does NOT read this field from the step-1 response — it constructs the content URL from the attachment id directly (see step 2). The metadata response is used solely to obtain the canonical `filename` for BC-2.7.010 naming. (Curated `jr` output fields from BC-2.7.002: `id`, `filename`, `mimeType`, `size`, `created`, `author`, `contentUrl`.) **The `<KEY>` argument is NOT server-verified on the `--id` path** — the AID is authoritative; `<KEY>` is accepted for CLI-surface uniformity but `jr` does not issue a separate key-ownership check.
+1. `GET /rest/api/3/attachment/{id}` — metadata fetch (read-only). The Jira API response includes a `"content"` field (the stable content URL); `jr` renames this to `"contentUrl"` in its curated output (BC-2.7.002 convention). The download flow does NOT read this field from the step-1 response — it constructs the content URL from the attachment id directly (see step 2). The metadata response is used solely to obtain the canonical `filename` for BC-2.7.010 naming. (Curated `jr` output fields from BC-2.7.002: `author`, `contentUrl`, `created`, `filename`, `id`, `mimeType`, `size` — BTreeMap-alphabetical order per P19-001.) **The `<KEY>` argument is NOT server-verified on the `--id` path** — the AID is authoritative; `<KEY>` is accepted for CLI-surface uniformity but `jr` does not issue a separate key-ownership check.
 2. `GET /rest/api/3/attachment/content/{id}` — streaming download. This path is uniform for both platform and JSM issues. The servicedeskapi `links.content` URLs MUST NOT be used for download: JSDCLOUD-10841 (confirmed in research §P2-6 of `.factory/research/issue-576-attachments-api-2026-07-15.md`) shows these URLs return 404.
 
 **Redirect following**: Jira Cloud redirects this endpoint (302/303) to a pre-signed CDN URL (`media.atlassian.com` or AWS). The reqwest client MUST rely on its default redirect policy (up to 10 redirects). reqwest 0.13.4 strips `Authorization`, `Cookie`, and `Proxy-Authorization` headers on cross-host redirects — VERIFIED in research §1c and independently corroborated by GHSA-9857-6MW7-FQ2M (which explicitly states the reqwest backend compares `prev_url.host_str()` to `curr_url.host_str()` and strips sensitive headers on cross-domain hops). No custom `RedirectPolicy` is needed. **CRITICAL**: `?redirect=false` MUST NOT be used — JRACLOUD-97046 (research §6) causes encoded or broken responses for some file formats when this query parameter is present.
@@ -741,7 +744,7 @@ On success, a completion hint is emitted to stderr: `"Downloaded: <path> (<size_
 **EC-2.7.007-3** (credential-stripping regression guard — SEC-576-003 CWE-522): A wiremock integration test MUST assert that `GET /rest/api/3/attachment/content/{id}` following a cross-host 302/303 redirect does NOT include an `Authorization` header on the redirect-target request. Use a two-server wiremock setup (one for the Jira API endpoint, one for the simulated CDN redirect target). **The two wiremock servers MUST use DISTINCT HOST STRINGS** (e.g., `127.0.0.1` for the Jira API server and a second address such as `[::1]` or a distinct loopback hostname for the CDN target). Using the same host at different ports (e.g., two `127.0.0.1` instances on different ports) would make the assertion vacuous: reqwest's cross-host check compares `host_str()` output which IGNORES port numbers, so a same-host-different-port redirect would NOT strip `Authorization` headers — the test would pass while the credential-stripping invariant goes untested. This guards against a future `JiraClient` refactor adding a custom `RedirectPolicy` that silently forwards bearer/Basic credentials to CDN hosts.
 
 **EC-2.7.007-4** (error mid-stream): temporary file (`tmp_<random>`) deleted; exit 1; `"Download failed: <reason>"` on stderr; final path not written.
-**EC-2.7.007-5** (Ctrl+C / SIGINT mid-stream): temporary file (`tmp_<random>`) deleted; exit 130; no final path written.
+**EC-2.7.007-5** (Ctrl+C / SIGINT mid-stream): best-effort MUST — temporary file (`tmp_<random>`) is deleted when possible; exit 130; no final path written. **Implementation-strategy note**: cleanup runs in the existing `tokio::signal::ctrl_c()` select! arm at `src/main.rs:~393` (the `tokio::select!` race that calls `std::process::exit(130)` on signal receipt); it does NOT run via `Drop` guards — the release profile uses `panic = abort` and `std::process::exit()` does not invoke destructors, so `Drop` is unreliable on the abort/signal path. The practical cleanup mechanism is explicit pre-exit deletion within the signal-handling code path. **Not holdout/VP-pinned**: this path is not deterministically testable in CI (signal timing dependent); the error-path cleanup (EC-2.7.007-4, H-NEW-ATTACHMENT-002) is the tested proxy for temp-file correctness. (P19-003)
 
 **EC-2.7.007-8** (concurrent downloads, same out-dir): if two `jr` processes download the same attachment to the same output directory simultaneously, each writes to its own uniquely-named `tmp_<random>` file. There is no interleaving of temp files. When both rename to the final path, the last successful rename wins (standard OS atomic-rename semantics); the earlier written file is silently overwritten. This is safe: both processes produce identical bytes (same source URL), so the last rename wins without data loss. No locking between processes is required.
 **EC-2.7.007-7** (`--output json` success shape for `--id`): `{"downloaded":[{"filename":"<name>","id":"<AID>","path":"<written path>","size":N}]}`; one-element `downloaded` array; inner keys in alphabetical order (`filename` < `id` < `path` < `size`); stdout only; exit 0. `path` is the output path as-constructed by `jr` — NOT canonicalized, NOT made absolute (BC-2.7.010 path-non-determinism note; P18-004). `size` is the byte count written. No stderr output in JSON mode. Output MUST route through `output::render_json` (#526 invariant).
