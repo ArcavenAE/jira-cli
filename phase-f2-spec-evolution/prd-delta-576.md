@@ -5,7 +5,7 @@ issues: "#576, #585"
 phase: F2
 authored: 2026-07-15
 spec_version_before: 1.3.42
-spec_version_after: 1.3.66
+spec_version_after: 1.3.67
 bc_count_before: 624
 bc_count_after: 657
 holdout_count_before: 88
@@ -471,3 +471,18 @@ Source: Adversary Pass 26 (second consecutive zero-MEDIUM pass). 3 LOW + 1 INFO 
 | P26-004 (INFO) | INFO | bc-3-issue-write.md, BC-INDEX.md | APPLIED | BC-3.9.019 Source field softened: `src/duration.rs::parse_age_duration` hard-citation replaced with `parse_age_duration` (S4 location TBD — `src/cli/issue/attachments.rs` private helper or `src/duration.rs` pub(crate) sibling, per impact-boundary R3.9a). BC-3.9.019 Trace updated (P26-004). BC-INDEX.md BC-3.9.019 row updated with location-TBD note. |
 
 **BC count at this round: 657 (unchanged). Holdout count: 100 (unchanged). VP count: 35 (unchanged). Spec version: 1.3.66. Both guards exit 0.**
+
+---
+
+## Adversary Pass 27 Fix Round Finding Dispositions
+
+Source: Adversary Pass 27. 1 MEDIUM / 2 LOW / 1 INFO findings. Spec version bump: 1.3.66 → 1.3.67. No new BCs. Holdouts: 100 (unchanged). VPs: 35 (unchanged).
+
+| Finding ID | Severity | File(s) Touched | Status | Change |
+|------------|----------|----------------|--------|--------|
+| P27-001 (MEDIUM) | MEDIUM | bc-2-issue-read.md, holdout-scenarios.md, bc-3-issue-write.md, BC-INDEX.md | APPLIED | ORCHESTRATOR RULING option (b): `downloaded[].filename` = RAW Jira `attachment.filename` (pre-sanitization); on-disk basename (post-sanitization, post-SHA-1-prefix in batch mode) is recoverable from `path`. Deliberate pairing: `filename` = what Jira calls it; `path` = where it landed. Changes: (1) EC-2.7.007-7: explicit `filename` semantics clause appended — RAW name; on-disk basename in `path`; deliberate pairing documented; BC-2.7.007 Trace updated (P27-001). (2) EC-2.7.008-6: same `filename` semantics clause appended; BC-2.7.008 Trace updated (P27-001). (3) H-NEW-ATTACHMENT-003 Call B2 Expected B2: manifest corrected — `"filename":"ok.txt"` (RAW Jira name, NOT `<sha1-of-20020>_ok.txt`); discriminating assertion added: `jq '.downloaded[0].filename'` = `"ok.txt"` AND `basename(path)` = `<sha1("20020")>_ok.txt` (these two MUST differ); additional MUST-FAIL bullet added for SHA-1-prefixed `filename`; Why-hidden and Status sections updated. Sweep confirmed: no other Group-19 manifest assertions carry sha1-prefixed `filename` values; H-007 and other scenarios reference sha1 forms only in filesystem paths (on-disk names), not in JSON manifest `filename` fields. (4) JSON Output Shape Contracts table download rows (~bc-3-issue-write.md:3219-3220): Notes column updated — `filename` = RAW Jira name; `path` basename = on-disk name; deliberate pairing cited. (5) BC-INDEX.md BC-2.7.007 and BC-2.7.008 rows updated with P27-001 notes. |
+| P27-002 (LOW) | LOW | holdout-scenarios.md | APPLIED | H-NEW-ATTACHMENT-007 fixture description corrected: `id="60003"` overlong name (251 `a` + `.txt` = 255 bytes) was described as "(at the length-cap boundary)" — corrected to "(exceeds the 214-byte sanitizer cap — BC-2.7.011 step 5; truncated to 214, then 41-byte SHA-1 prefix = 255-byte on-disk name at NAME_MAX)". Missing length-cap assertion added to Expected section: "the on-disk basename after the SHA-1 prefix underscore is ≤ 214 bytes" (pins BC-2.7.011 step 5 — assert `len(basename(path).split('_', 1)[1].encode('utf-8')) <= 214`). H-NEW-ATTACHMENT-007 Status updated with P27-002 citation. Licensing BC: BC-2.7.011 step 5. |
+| P27-003 (LOW) | LOW | bc-2-issue-read.md, BC-INDEX.md | APPLIED | ORCHESTRATOR RULING: collision-skip warning = HINT, suppressed in JSON mode. EC-2.7.008-6 channel policy extended: "Collision-skip warnings (P27-003): collision-skip warnings are NON-ERROR hints — suppressed in `--output json` mode (same class as the `Downloaded N of M` summary and `--filter` exclusions which are silent; the manifest's omission of the skipped file IS the machine signal, consistent with EC-2.7.008-10 filtered-to-zero precedent). Human mode unchanged." BC-2.7.008 Trace updated (P27-003). BC-INDEX.md BC-2.7.008 row updated with P27-003 collision-skip hint classification note. |
+| P27-INFO-1 (INFO) | INFO | — | NO ACTION | Single-vs-multi dry-run metadata asymmetry is deliberate and already documented as P15-INFO-2 family. No spec change required. |
+
+**BC count at this round: 657 (unchanged). Holdout count: 100 (unchanged). VP count: 35 (unchanged). Spec version: 1.3.67. Both guards exit 0.**

@@ -6244,3 +6244,26 @@ Adversary P25-001 identified that the JSON-mode stderr policy for batch partial 
 **Mnemonic:** hints = informational prose for humans (suppress in JSON); errors = failure signals for all consumers (never suppress). When in doubt, classify as ERROR — suppressing a failure is worse than emitting an extra line.
 
 _Discovered: P25-001 (2026-07-17); proactive closure via CV K-1 at r35 (same burst)_
+
+---
+
+## SOH-ATTACHMENTS-1 F2 Adversary Pass 27 — Process Lessons (2026-07-17)
+
+### [codified] HOLDOUT-REACHABILITY-FROM-SPEC: Every holdout Expected value must be derivable by an implementer reading only the BCs
+
+**Observation (P27-001, 2026-07-17):** Adversary pass 27 found that a holdout Expected value pinned semantics ("raw Jira filename") that were absent from the BCs. The holdout assertion was correct as a matter of product intent, but it was a hidden specification — an implementer who read only the BCs could not derive this behavior. This is the exact defect class that holdout evaluation exists to prevent producing: if a holdout asserts behavior not reachable from the spec, a correct spec-compliant implementation will fail the holdout at Phase-4 evaluation, creating a false failure.
+
+**Root cause:** The holdout was authored with implementation knowledge (the correct behavior is known from API analysis), without verifying that the authoritative BC (BC-2.7.002) explicitly stated the key semantics. BC-2.7.002 was the authority clause, but its text did not yet discriminate between "filename" (raw Jira name for display/download) and "path" (the on-disk output path including sanitization and SHA-1 prefix for batch). The holdout pinned "raw Jira name" as the Expected value for filename, but the BC text was silent on this distinction.
+
+**Principle (HOLDOUT-REACHABILITY-FROM-SPEC):** Every holdout Expected value must be derivable by an implementer reading ONLY the BCs — no implementation knowledge, no API exploration results, no protocol-level understanding outside the spec. A holdout that pins behavior absent from any BC is a spec gap, not extra coverage. The holdout Expected value is correct only if the BC text is sufficient to derive it.
+
+**Remedy (P27-001):** Filename-semantics clauses were added to BC-2.7.002 (and relevant neighboring BCs) making the filename=raw-Jira-name / path=on-disk-name distinction explicit in the spec body. The holdout was corrected from the (already-correct) raw-Jira-name value to include a discriminating filename-vs-path assertion, so both the filename and the path fields are independently verified. This closes the spec gap AND makes the assertion more precise.
+
+**Detection trigger:** The P27-001 adversary finding cited a contradiction between what BC-2.7.002 said and what the holdout Expected value implied. A "contradiction between holdout Expected and BC text" is the canonical symptom: if the holdout asserts X but the BC either says ¬X or says nothing about X, the holdout fails HOLDOUT-REACHABILITY-FROM-SPEC.
+
+**Complementary rule:** FIXTURE-COMPLETENESS-ENUMERATION (P23-001 class) catches omissions — expected calls absent from the fixture. HOLDOUT-REACHABILITY-FROM-SPEC catches semantic mismatches — expected values pinning behavior absent from the authoritative BC. Both rules apply: a holdout scenario is valid only if (a) every mandated call is present (completeness) AND (b) every Expected value is derivable from BC text alone (reachability).
+
+**Family relation:** This is in the fixture-completeness family alongside P21-002 (added-forbidden), P23-001 (omitted-mandated), and GAP-P24-002-001 (mis-landed-row). All share the pattern "what you think the artifact asserts vs. what it actually asserts relative to the authoritative BC." HOLDOUT-REACHABILITY-FROM-SPEC is the semantic-derivability sub-class.
+
+_Trigger: P27-001 (2026-07-17); remedy: filename-semantics clauses added to BC-2.7.002 + holdout corrected + discriminating assertion added._
+_Tagged: [process-gap] [holdout] [spec-gap] [reachability-from-spec] [fixture-completeness-family] [hidden-holdout-vs-bc] [p27] [codified]_

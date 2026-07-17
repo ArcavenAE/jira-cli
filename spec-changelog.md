@@ -7,6 +7,44 @@ project: "jr (jira-cli)"
 
 Track all spec version changes. Most recent version first.
 
+## [1.3.67] - 2026-07-17
+
+### Type: PATCH
+
+### Summary
+
+Adversary pass 27 (P27) fix round — 1 MEDIUM + 2 LOW + 1 INFO findings. MEDIUM (P27-001): `downloaded[].filename` semantics were ambiguous — ruling: option (b), `filename` = RAW Jira `attachment.filename` (pre-sanitization); on-disk basename (post-sanitization, post-SHA-1-prefix in batch mode) is recoverable from `path`; EC-2.7.007-7 and EC-2.7.008-6 both receive explicit definition clauses; H-NEW-ATTACHMENT-003 Call B2 manifest corrected (`"filename":"ok.txt"` not the SHA-1-prefixed form) + discriminating assertion added; JSON Output Shape Contracts table download rows note added; BC-INDEX rows updated. LOW (P27-002): H-NEW-ATTACHMENT-007 overlong-name fixture description mischaracterized 255 bytes as "the length-cap boundary" — corrected to "exceeds the 214-byte sanitizer cap (BC-2.7.011 step 5); truncated to 214, then 41-byte SHA-1 prefix = 255-byte on-disk name at NAME_MAX"; missing length-cap assertion added (on-disk basename after SHA-1 prefix ≤ 214 bytes). LOW (P27-003): collision-skip warning JSON-mode classification clarified — NON-ERROR hint, suppressed in `--output json` mode (same class as `Downloaded N of M` summary and `--filter` exclusions; manifest omission IS the machine signal); EC-2.7.008-6 channel policy updated. INFO (P27-INFO-1): no action (single-vs-multi dry-run metadata asymmetry is deliberate; already noted as P15-INFO-2 family).
+
+### Changed Requirements
+
+- `.factory/specs/prd/bc-2-issue-read.md` (MODIFIED): P27-001 — EC-2.7.007-7 `filename` semantics clause added; EC-2.7.008-6 `filename` semantics clause added; P27-003 — EC-2.7.008-6 collision-skip hint classification sentence added; BC-2.7.007 and BC-2.7.008 Trace fields updated; frontmatter trace v1.3.67 entry added.
+- `.factory/specs/prd/holdout-scenarios.md` (MODIFIED): P27-001 — H-NEW-ATTACHMENT-003 Call B2 manifest `filename` corrected to `"ok.txt"` (RAW Jira name); discriminating filename-vs-path assertion added; Why-hidden and Status updated. P27-002 — H-NEW-ATTACHMENT-007 overlong-name fixture description corrected (255 = exceeds 214-byte cap + 41-byte prefix); length-cap assertion added; Status updated. Frontmatter version 1.5.3→1.5.4; trace entry added.
+- `.factory/specs/prd/bc-3-issue-write.md` (MODIFIED): P27-001 — JSON Output Shape Contracts table `attachment download --id` and `attachment download --all`/`--newest N` rows: `filename`/`path` semantics notes added.
+- `.factory/specs/prd/BC-INDEX.md` (MODIFIED): P27-001 — BC-2.7.007 row: filename-raw/path-on-disk note added. BC-2.7.008 row: filename-raw + collision-skip hint classification notes added (P27-001, P27-003). `last_updated`, `index_version` v6.26→v6.27 updated.
+- `.factory/phase-f2-spec-evolution/prd-delta-576.md` (MODIFIED): `spec_version_after` 1.3.66→1.3.67; P27 dispositions section appended.
+
+### Impact Assessment
+
+| Artifact | Change Type | Notes |
+|---|---|---|
+| bc-2-issue-read.md | Modified | EC-2.7.007-7 filename semantics (P27-001); EC-2.7.008-6 filename semantics + collision-skip hint (P27-001, P27-003) |
+| holdout-scenarios.md | Modified | H-003 B2 manifest filename raw (P27-001); H-007 description + assertion (P27-002) |
+| bc-3-issue-write.md | Modified | JSON Output Shape Contracts download rows filename/path notes (P27-001) |
+| BC-INDEX.md | Modified | BC-2.7.007 filename-raw note; BC-2.7.008 filename-raw + collision-skip notes; index_version v6.27 |
+| prd-delta-576.md | Modified | spec_version_after 1.3.67; P27 dispositions section |
+
+| Dimension | Value |
+|---|---|
+| BC count | 657 (unchanged) |
+| Holdout count | 100 (unchanged) |
+| VP count | 35 (unchanged) |
+| New BCs | 0 |
+| New VPs | 0 |
+| New Holdouts | 0 |
+| Spec version | 1.3.66→1.3.67 |
+
+---
+
 ## [1.3.66] - 2026-07-17
 
 ### Type: PATCH
