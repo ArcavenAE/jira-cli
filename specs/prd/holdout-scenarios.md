@@ -4,7 +4,7 @@ title: "Holdout Scenarios"
 total_holdouts: 100
 # H-NEW-AUTH-002 registered by S-0.07 (Phase 3, 2026-05-07). Wave 0 COMPLETE.
 # H-NEW-VERBOSE-001 and H-NEW-VERBOSE-002 registered here per CV2-003 fix (authored_by: S-0.06).
-version: "1.5.6"
+version: "1.5.7"
 last_updated: 2026-07-17
 source_pass: 3
 trace: |
@@ -25,6 +25,7 @@ trace: |
   - SOH-ATTACHMENTS-1 adversary pass-28 (2026-07-17, P28): H-NEW-ATTACHMENT-009 Expected bullet 4 narrowed — "zero requests to any /rest/servicedeskapi/..." replaced with POST-only assertion: zero requests to POST .../attachTemporaryFile and POST .../request/{key}/attachment; GET /rest/servicedeskapi/servicedesk meta-resolution IS expected to fire (mounted in setup step 3; asserted absent only are the upload POSTs); licensing BC added (BC-3.9.003 step 1 / BC-X.8.010 for the GET; BC-3.9.014 gate for the POST absence); Status updated with P28-002 citation; holdout count unchanged (100)
   - SOH-ATTACHMENTS-1 adversary pass-31 (2026-07-17, P31): H-NEW-ATTACHMENT-002 error-path Expected exit-code tightened — "Exit code != 0 (exit 1 or exit 64)" → "Exit code = 1 (EC-2.7.007-4 mid-stream error; BC-2.7.012 5xx row)" (P31-001); holdout count unchanged (100)
   - SOH-ATTACHMENTS-1 adversary pass-35 (2026-07-17, P35): H-NEW-ATTACHMENT-002 Expected bullet 4 tightened — "stdout or stderr contains a success message" → "stderr contains a progress/completion message" (BC-2.7.007 profile 3: nothing on stdout in human mode; P35-003); H-NEW-ATTACHMENT-004 Expected A bullet 1 tightened — "stdout/stderr contains" → "stdout contains" (BC-3.9.001 profile 4: human echo to stdout; P35-003); Status lines for both scenarios updated with P35-003 citations; holdout count unchanged (100)
+  - SOH-ATTACHMENTS-1 adversary pass-36 (2026-07-17, P36): H-NEW-ATTACHMENT-004 Expected B bullet 4 tightened — "stdout/stderr references the new attachment `30002`" → "stdout references the new attachment `30002`" (BC-3.9.001 profile 4: human echo to stdout; P36-001); H-NEW-ATTACHMENT-004 Status line updated with P36-001 citation; Expected C "stdout/stderr does NOT contain" confirmed as a legitimate two-channel negative assertion — left unchanged; holdout count unchanged (100)
 ---
 
 # Holdout Scenarios — jira-cli
@@ -2250,7 +2251,7 @@ Call C (--replace-existing with zero match = idempotent):
 - Exit code = 0.
 - `DELETE /rest/api/3/attachment/30000` called exactly once BEFORE the POST.
 - `POST /rest/api/3/issue/FOO-1/attachments` called exactly once AFTER the DELETE.
-- stdout/stderr references the new attachment `30002`.
+- stdout references the new attachment `30002` (BC-3.9.001 profile 4: human echo to stdout; P36-001).
 - Note: `--yes` is required here because `--replace-existing` with ≥1 same-filename match triggers the P15-002/R3.12 confirmation gate; without `--yes`, the test (non-interactive) would exit 64 before the DELETE (BC-3.9.017 EC-3.9.017-9). See also H-NEW-ATTACHMENT-010 for the non-interactive-without-`--yes` exit-64 path.
 
 **Expected C (MUST-PASS)**:
@@ -2263,7 +2264,7 @@ Call C (--replace-existing with zero match = idempotent):
 
 **Why hidden**: The delete-then-upload ordering (B) is the core non-atomic contract of BC-3.9.017 — a regression that uploads before deleting, or skips the delete, would pass exit-code checks. The zero-match silent-idempotent path (C) would be invisible without a negative assertion on the annotation text. The `--yes` requirement on path (B) pins EC-3.9.017-9 (non-interactive match gate) and EC-3.9.017-10 (zero-match no gate).
 
-**Status**: MUST-PASS. Pins BC-3.9.001 (upload + X-Atlassian-Token header), BC-3.9.017 (delete-before-upload ordering + P15-002 gate), BC-3.9.018 (zero-match silent idempotent path). P35-003 (Expected A bullet 1 tightened to stdout-only channel assertion per BC-3.9.001 profile 4).
+**Status**: MUST-PASS. Pins BC-3.9.001 (upload + X-Atlassian-Token header), BC-3.9.017 (delete-before-upload ordering + P15-002 gate), BC-3.9.018 (zero-match silent idempotent path). P35-003 (Expected A bullet 1 tightened to stdout-only channel assertion per BC-3.9.001 profile 4); P36-001 (Expected B bullet 4 tightened to stdout-only channel assertion per BC-3.9.001 profile 4).
 
 **BC refs**: BC-3.9.001 (primary upload), BC-3.9.017 (--replace-existing multi-step), BC-3.9.018 (zero-match path)
 

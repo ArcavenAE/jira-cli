@@ -5,7 +5,7 @@ issues: "#576, #585"
 phase: F2
 authored: 2026-07-15
 spec_version_before: 1.3.42
-spec_version_after: 1.3.75
+spec_version_after: 1.3.76
 bc_count_before: 624
 bc_count_after: 657
 holdout_count_before: 88
@@ -645,3 +645,30 @@ Source: Adversary Pass 30. 1 MEDIUM / 2 LOW / 1 INFO finding. Spec version bump:
 **ECHO-BREAKER LIST B (holdout assertion changes):** H-NEW-ATTACHMENT-002 Expected bullet 4: "stdout or stderr contains a success message referencing `notes.txt`." → "stderr contains a progress/completion message referencing `notes.txt` (BC-2.7.007 profile 3: nothing on stdout in human mode; all progress and hints go to stderr; P35-003)." H-NEW-ATTACHMENT-004 Expected A bullet 1: "Exit code = 0. `POST /attachments` called with `X-Atlassian-Token: no-check` header. stdout/stderr contains `upload.txt` and `30001`." → "Exit code = 0. `POST /attachments` called with `X-Atlassian-Token: no-check` header. stdout contains `upload.txt` and `30001` (BC-3.9.001 profile 4: human echo to stdout; P35-003)."
 
 **BC count at this round: 657 (unchanged). Holdout count: 100 (unchanged). VP count: 35 (unchanged). Spec version: 1.3.75. Both guards exit 0.**
+
+---
+
+## P36 Dispositions (adversary pass 36, 2026-07-17) — 1 LOW / 1 INFO
+
+### Class-Exhaustion Sweep (channel-disjunction, Group 19 + VP-576-*)
+
+Grep of `"stdout/stderr"` and `"stdout or stderr"` in holdout-scenarios.md and VP-576 files produced the following hits after P35-003:
+
+| Line | Site | Assertion type | Disposition |
+|---|---|---|---|
+| frontmatter trace ~27 | P35-003 trace narrative | Not an assertion (metadata prose) | Leave — no change |
+| H-NEW-ATTACHMENT-004 Expected B ~2253 | `stdout/stderr references the new attachment \`30002\`` | POSITIVE — over-permissive | **TIGHTENED to stdout-only (P36-001; BC-3.9.001 profile 4)** |
+| H-NEW-ATTACHMENT-004 Expected C ~2262 | `stdout/stderr does NOT contain any \`"(0 files replaced)"\`` | NEGATIVE — two-channel is stricter, not looser | Legitimate negative; adversary confirmed leave unchanged |
+
+No VP-576-* files contained `stdout/stderr` or `stdout or stderr` disjunctions. Class exhausted.
+
+| Finding | Severity | Artifacts | Status | Resolution |
+|---|---|---|---|---|
+| P36-001 (LOW) | LOW | holdout-scenarios.md | APPLIED | H-NEW-ATTACHMENT-004 Expected B bullet 4: "stdout/stderr references the new attachment `30002`." tightened to "stdout references the new attachment `30002` (BC-3.9.001 profile 4: human echo to stdout; P36-001).". H-NEW-ATTACHMENT-004 Status line updated with P36-001 citation. Expected C `stdout/stderr does NOT contain` confirmed as a legitimate two-channel negative — left unchanged (adversary confirmed). holdout-scenarios.md frontmatter: trace entry v1.5.7 added; version bumped 1.5.6→1.5.7. |
+| P36-002 (INFO) | INFO | bc-3-issue-write.md, BC-INDEX.md | APPLIED | BC-3.9.015 step 3 one-liner added: "On the `--yes` path the pre-prompt metadata GET is NOT issued (its sole purpose is the prompt filename) — DELETE only, per BC-3.9.008." BC-3.9.015 Trace updated with P36-002 citation. BC-INDEX BC-3.9.015 row updated with `--yes path skips metadata GET (P36-002)` note; VP citations row updated with P36-002. BC-INDEX frontmatter: `last_updated` advanced to P36; `index_version` v6.32→v6.33. bc-3 frontmatter: trace entry v1.3.76 added. bc-3 footer: P36-002 update prepended. |
+
+**ECHO-BREAKER LIST A (spec changes):** holdout-scenarios.md: H-NEW-ATTACHMENT-004 Expected B bullet 4 tightened to stdout-only (P36-001); H-NEW-ATTACHMENT-004 Status updated with P36-001 citation; frontmatter trace entry v1.5.7 added; version bumped 1.5.6→1.5.7. bc-3-issue-write.md: BC-3.9.015 step 3 --yes-path metadata-GET skip clause added (P36-002); BC-3.9.015 Trace updated (P36-002); frontmatter trace entry v1.3.76 added; footer P36-002 prepended. BC-INDEX.md: BC-3.9.015 row updated with --yes path note (P36-002); VP citations updated; last_updated advanced; index_version v6.32→v6.33. prd-delta-576.md: spec_version_after 1.3.75→1.3.76; P36 dispositions appended. spec-changelog.md: [1.3.76] entry added.
+
+**ECHO-BREAKER LIST B (holdout assertion changes):** H-NEW-ATTACHMENT-004 Expected B bullet 4: "stdout/stderr references the new attachment `30002`." → "stdout references the new attachment `30002` (BC-3.9.001 profile 4: human echo to stdout; P36-001)." H-NEW-ATTACHMENT-004 Expected C `stdout/stderr does NOT contain` — NEGATIVE assertion, left unchanged (confirmed legitimate).
+
+**BC count at this round: 657 (unchanged). Holdout count: 100 (unchanged). VP count: 35 (unchanged). Spec version: 1.3.76. Both guards exit 0.**

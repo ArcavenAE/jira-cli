@@ -7,6 +7,40 @@ project: "jr (jira-cli)"
 
 Track all spec version changes. Most recent version first.
 
+## [1.3.76] - 2026-07-17
+
+### Type: PATCH
+
+### Summary
+
+Adversary pass 36 (P36) fix round — 1 LOW / 1 INFO findings + class-exhaustion sweep. P36-001: H-NEW-ATTACHMENT-004 Expected B channel assertion tightened to stdout-only (BC-3.9.001 profile 4); Expected C two-channel negative confirmed legitimate (left unchanged). Class-exhaustion sweep of all Group-19 + VP-576-* `stdout/stderr` disjunctions completed: one POSITIVE tightened (P36-001), one NEGATIVE confirmed correct. P36-002: BC-3.9.015 step 3 clarified — on the `--yes` path the pre-prompt metadata GET is NOT issued (DELETE only, per BC-3.9.008).
+
+### Changed Requirements
+
+- `.factory/specs/prd/holdout-scenarios.md` (MODIFIED): P36-001 — H-NEW-ATTACHMENT-004 Expected B bullet 4 tightened to stdout-only; Status line updated; frontmatter trace entry + version 1.5.6→1.5.7.
+- `.factory/specs/prd/bc-3-issue-write.md` (MODIFIED): P36-002 — BC-3.9.015 step 3 --yes-path metadata-GET skip clause added; BC-3.9.015 Trace updated; frontmatter trace entry v1.3.76; footer P36-002 prepended.
+- `.factory/specs/prd/BC-INDEX.md` (MODIFIED): P36-002 — BC-3.9.015 row updated with --yes path note; last_updated advanced; index_version v6.32→v6.33.
+- `.factory/phase-f2-spec-evolution/prd-delta-576.md` (MODIFIED): `spec_version_after` 1.3.75→1.3.76; class-exhaustion table + P36 dispositions appended.
+
+### Impact Assessment
+
+| Artifact | Change Type | Notes |
+|---|---|---|
+| holdout-scenarios.md | Modified | P36-001 H-NEW-ATTACHMENT-004 Expected B stdout-only; v1.5.7 |
+| bc-3-issue-write.md | Modified | P36-002 BC-3.9.015 step 3 --yes path clarification; v1.3.76 |
+| BC-INDEX.md | Modified | P36-002 BC-3.9.015 row + index_version v6.33 |
+| prd-delta-576.md | Modified | spec_version_after 1.3.76; class-exhaustion table; P36 dispositions |
+
+### Count Verification
+
+| Metric | Before | After | Delta |
+|---|---|---|---|
+| BC total | 657 | 657 | 0 |
+| Holdout total | 100 | 100 | 0 |
+| VP total | 35 | 35 | 0 |
+
+---
+
 ## [1.3.75] - 2026-07-17
 
 ### Type: PATCH

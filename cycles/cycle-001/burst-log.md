@@ -5493,3 +5493,41 @@ Displaced to make room for SOH-ATTACHMENTS-1 adversary pass-35 remediation step 
 **Convergence:** Trajectory p1..p35 = 22,21,18,16,10,5,3,5,3,3,2,2,3,9,7,5,5,5,4,6,6,3,3,2,2,3,3,2,1,3,2,1,1,5,1. STRICT streak 0/3 (DEC-183). Three of the last four fresh adversaries verified all authoritative surfaces clean; residual findings confined to F1-doc annotation coverage and assertion precision. Next: adversary pass 36 (CLEAN candidate).
 
 **Files committed:** `phase-f1-delta-analysis/impact-boundary-576.md`, `phase-f2-spec-evolution/prd-delta-576.md`, `sidecar-learning.md`, `spec-changelog.md`, `specs/prd/holdout-scenarios.md`, `cycles/cycle-001/burst-log.md`, `STATE.md`.
+
+---
+
+### Archived Phase Progress row (adversary-pass-36 remediation burst)
+
+Displaced to make room for SOH-ATTACHMENTS-1 adversary pass-36 remediation Phase Progress row per keep-5 rule.
+
+| Phase | Status | Completed | Gate | Notes |
+|-------|--------|-----------|------|-------|
+| **SOH-ATTACHMENTS-1 F2 ADVERSARY PASS-31 REMEDIATED (2026-07-17, fresh context, blind, v1.3.70; NOT-CLEAN 2L+1I (zero MEDIUM+); P31-001 (L) H-002 exit assertion over-permissive ("1 or 64" where only exit 1 is conformant per BC-2.7.001 + H-002 B1 Expected — exit 64 is reserved for user-input validation errors, not mid-stream HTTP failures) → tightened to conformant-derivable exit-only; P31-002 (L) manifest size semantics diverged single-vs-batch under a "uniform type" claim → ORCHESTRATOR RULING: size = bytes-written-to-disk uniformly (manifest reports disk truth; P27-001 filename/path philosophy; P26-003 partial struct makes API-sourcing impossible on single-ID); P31-003 (I) post-retry 401/5xx enumeration aligned with BC-X.8.010 step 4. Fix round 31 all applied; FULL standing checklist honored proactively (frontmatter traces both files, BC-INDEX frontmatter bump v6.29→v6.30, changelog count table, dispositions) — zero tracking gaps this round. Spec v1.3.70→v1.3.71; counts 657/100/35 UNCHANGED; BC-INDEX v6.29→v6.30. r40 CONSISTENT (0 gaps, 0 new INFO; INFO-11 retired stale (both cited surfaces already read "four sites" — quote-verified); all three keystones PASS (K-1 uniform-size story coherent; K-2 H-002 tightening conformant-derivable; K-3 post-retry enumeration complete + verbatim-aligned); guards exit 0). STRICT streak 0/3 (DEC-183). trajectory-tail →2→1→3→2. Pass 32 next.** | **ADVERSARY PASS-31 REMEDIATED** | **2026-07-17** | **Adversary pass 32 next.** | BC 657; holdouts 100; VP 35; spec v1.3.71; BC-INDEX v6.30. |
+
+### Archived Current Phase Steps row (adversary-pass-36 remediation burst)
+
+Displaced to make room for SOH-ATTACHMENTS-1 adversary pass-36 remediation step row per keep-5 rule.
+
+| Step | Agent | Status | Output |
+|------|-------|--------|--------|
+| **SOH-ATTACHMENTS-1 F2 ADVERSARY PASS-31 REMEDIATED (2026-07-17): 2L+1I (zero MEDIUM+); P31-001 (L) H-002 exit assertion over-permissive ("1 or 64") → tightened to conformant-derivable exit 1 only; P31-002 (L) manifest size semantics single-vs-batch divergence → RULING: size = bytes-written-to-disk uniformly; P31-003 (I) post-retry 401/5xx enumeration gap aligned BC-X.8.010 step 4; full standing checklist honored proactively (frontmatter traces both files, BC-INDEX bump v6.29→v6.30, changelog count table, dispositions) — zero tracking gaps this round; spec v1.3.70→v1.3.71; BC 657/holdouts 100/VP 35 UNCHANGED; BC-INDEX v6.29→v6.30; r40 CONSISTENT (0 gaps, 0 new INFO; INFO-11 RETIRED stale; 3 keystones PASS; guards exit 0); STRICT streak 0/3 (DEC-183). trajectory-tail →2→1→3→2. Pass 32 next.** | adversary + product-owner + consistency-validator + state-manager | COMPLETE | BC 657; holdouts 100; VP 35; spec v1.3.71; BC-INDEX v6.30. |
+
+---
+
+## SOH-ATTACHMENTS-1 F2 ADVERSARY PASS-36 REMEDIATION BURST (2026-07-17)
+
+**What happened:** Adversary pass 36 returned NOT-CLEAN — 1 LOW + 1 INFO. P36-001 (LOW) was the un-swept sibling of P35-003: H-NEW-ATTACHMENT-004 Expected B bullet 4 ("stdout/stderr references the new attachment `30002`") used the same over-permissive stdout/stderr disjunction that P35-003 had tightened in Expected A and H-002. Pass 35 fixed the direct flagged sites (Expected A in H-004 and bullet 4 in H-002) but did not sweep adjacent bullets in the same scenario — Expected B remained. This is the 2nd instance of the site-scoped-fix-leaves-sibling pattern. P36-002 (INFO) was a wire-count implicit: BC-3.9.015 step 3 did not explicitly state that the `--yes` path skips the pre-prompt metadata GET (the GET serves only to provide the filename for the interactive prompt — DELETE-only path has no need for it).
+
+**Findings:**
+- P36-001 (LOW): H-NEW-ATTACHMENT-004 Expected B bullet 4 — "stdout/stderr references the new attachment `30002`" — over-permissive channel disjunction (same class as P35-003). Fix: tightened to "stdout references the new attachment `30002` (BC-3.9.001 profile 4: human echo to stdout; P36-001)." H-NEW-ATTACHMENT-004 Status line updated with P36-001 citation. holdout frontmatter: trace entry v1.5.7 added; version bumped 1.5.6→1.5.7.
+- P36-002 (INFO): BC-3.9.015 step 3 — `--yes` path metadata-GET wire count implicit. Fix: one-liner pin added: "On the `--yes` path the pre-prompt metadata GET is NOT issued (its sole purpose is the prompt filename) — DELETE only, per BC-3.9.008." BC-3.9.015 Trace updated with P36-002 citation. BC-INDEX BC-3.9.015 row updated with `--yes path skips metadata GET (P36-002)` note; VP citations row updated. BC-INDEX frontmatter: `last_updated` advanced; `index_version` v6.32→v6.33. bc-3 frontmatter: trace entry v1.3.76 added; footer P36-002 prepended.
+
+**CLASS EXHAUSTION sweep (channel-disjunction, Group-19 + VP-576-*):** Mechanical grep of `stdout/stderr` and `stdout or stderr` in holdout-scenarios.md and VP-576-* files produced 3 hits after P35-003: (1) P35-003 trace narrative in prd-delta (metadata prose — leave); (2) H-NEW-ATTACHMENT-004 Expected B ~line 2253 (POSITIVE — over-permissive → tightened P36-001); (3) H-NEW-ATTACHMENT-004 Expected C ~line 2262 (NEGATIVE — two-channel negative assertion, confirmed legitimate, leave unchanged per adversary). No VP-576-* files contained disjunctions. Class mechanically exhausted.
+
+**SCOPED VERIFICATION in lieu of full CV:** Two one-line edits (one holdout assertion tighten, one BC step-3 one-liner) + assertion tighten. No BC body content added/removed (BC count unchanged). BC-INDEX bump v6.32→v6.33 (one row + frontmatter only). Both guards exit 0. Precedent: burst-29/32/33/35. Spec v1.3.75→v1.3.76.
+
+**TRANSIENT-FAILURE RECOVERY:** The PO died mid-round on an API stream-idle timeout; resumed via the codified verify-before-retry recipe (re-read target regions before re-attempting); completed cleanly with no double-insertions. HOOK-TIMEOUT-RESUME-DISCIPLINE family 3rd successful recovery (positive datapoint; no drift found on resume; CV double-insertion sweep clean).
+
+**Convergence:** Trajectory p1..p36 = 22,21,18,16,10,5,3,5,3,3,2,2,3,9,7,5,5,5,4,6,6,3,3,2,2,3,3,2,1,3,2,1,1,5,1,1. STRICT streak 0/3 (DEC-183). Channel-disjunction class MECHANICALLY EXHAUSTED this round (first class-exhaustion since mount-vs-assertion at P28). Next: adversary pass 37 (CLEAN candidate).
+
+**Files committed:** `phase-f2-spec-evolution/prd-delta-576.md`, `sidecar-learning.md`, `spec-changelog.md`, `specs/prd/BC-INDEX.md`, `specs/prd/bc-3-issue-write.md`, `specs/prd/holdout-scenarios.md`, `cycles/cycle-001/burst-log.md`, `cycles/cycle-001/lessons.md`, `STATE.md`.

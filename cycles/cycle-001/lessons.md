@@ -6420,3 +6420,30 @@ _Tagged: [convergence] [severity-integrity] [metric-honesty] [strict-streak] [ad
 
 _Trigger: P34-003 (2026-07-17); prd-delta ADR-ledger write-back miss; new class first instance._
 _Tagged: [process-gap] [write-back] [adjudication] [prd-delta] [state-md] [burst-close-checklist] [p34] [codified]_
+
+
+---
+
+## SOH-ATTACHMENTS-1 F2 Adversary Pass 36 — Process Lessons (2026-07-17)
+
+### [codified] SIBLING-SWEEP-ON-ASSERTION-FIX: When tightening an assertion, mechanically sweep the entire scenario AND the class in the same round
+
+**Observation (P36-001, 2026-07-17):** Adversary pass 36 found that H-NEW-ATTACHMENT-004 Expected B bullet 4 — "stdout/stderr references the new attachment `30002`" — was an over-permissive channel disjunction, identical in type to the P35-003 finding in the same scenario (Expected A bullet 1 and Expected B bullet 4 are adjacent bullets in the same holdout, H-NEW-ATTACHMENT-004). Pass 35 tightened Expected A (the direct fix site) but did not sweep adjacent bullets in the same scenario. Pass 36 caught the sibling bullet. This is the second instance of the site-scoped-fix-leaves-sibling pattern (the first was the bc-3 footer pass-narrative in P33-001, where naming pass-30 as most-recent left P31 also omitted).
+
+**Root cause:** Fix rounds operate on the minimum sufficient change (the flagged site). When P35-003 was applied, the PO fixed Expected A and Updated the Status line, but did not check whether other Expected bullets in the same holdout scenario contained the same "stdout/stderr" disjunction pattern. The fix was site-scoped, not scenario-scoped. Similarly, the class-exhaustion sweep was deferred to the following pass rather than being performed in the same round as the original fix.
+
+**Principle (SIBLING-SWEEP-ON-ASSERTION-FIX):** When an assertion is tightened in a fix round (e.g., "stdout/stderr" → "stdout"), the fix round MUST also:
+1. **Scenario sweep:** Check ALL other Expected bullets (A/B/C/D/…) in the SAME holdout scenario for the same pattern. Fix any additional over-permissive disjunctions in the same burst.
+2. **Class sweep:** Mechanically grep the entire artifact (holdout-scenarios.md, VP files) for the same disjunction pattern (e.g., `stdout/stderr` or `stdout or stderr`). For each hit, classify as POSITIVE (over-permissive → tighten) or NEGATIVE (stricter or two-channel-negative → leave unchanged). Document the disposition table in the fix round's echo-breaker or P-dispositions section.
+3. **Class-exhaustion record:** If the sweep confirms no remaining hits of the same class, record "class exhausted this round" in the prd-delta dispositions section. This prevents any future pass from rediscovering the same class.
+
+**Corollary — NEGATIVE two-channel assertions are legitimate:** A negative assertion of the form "stdout/stderr does NOT contain X" is a two-channel negative — it is CORRECT to check both channels, because the invariant is that X appears on NEITHER channel. This is not an over-permissive disjunction. It should be confirmed-legitimate and left unchanged (as P36-001 did for Expected C). Document the confirmation explicitly.
+
+**Relationship to TWIN-ARTIFACT-SWEEP and TAXONOMY-CLOSURE-SCOPE:** SIBLING-SWEEP-ON-ASSERTION-FIX operates at the scenario and class level for assertion correctness; TWIN-ARTIFACT-SWEEP operates at the artifact-mirror level (BC-INDEX / bc-3 body); TAXONOMY-CLOSURE-SCOPE operates at the output-channel enumeration level. All three are sweep-breadth obligations triggered by a specific fix site.
+
+**2nd instance of site-scoped-fix-leaves-sibling pattern:** The first instance (P33-001) involved a footer pass-narrative where fixing one omission (P31) left adjacent omissions (P26/P27/P28). The remedy there was the EVIDENCE MATRIX method. The remedy here is the scenario-scope sweep. Both share the root cause: the fix was scoped to the exact flagged site without checking the surrounding context for the same defect class.
+
+**Remedy (P36-001):** H-NEW-ATTACHMENT-004 Expected B bullet 4 tightened to stdout-only (BC-3.9.001 profile 4). A class-exhaustion grep was performed against all Group-19 holdouts and VP-576-* files; one POSITIVE tightened, one NEGATIVE confirmed-legitimate, no residue. Class mechanically exhausted as of this round.
+
+_Trigger: P36-001 (2026-07-17); H-NEW-ATTACHMENT-004 Expected B sweep-sibling of P35-003 Expected A; 2nd instance of site-scoped-fix-leaves-sibling pattern._
+_Tagged: [sweep] [assertion-tightening] [holdout] [scenario-scope] [class-exhaustion] [channel-disjunction] [sibling-sweep] [p36] [codified]_
