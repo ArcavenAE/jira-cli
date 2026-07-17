@@ -7,6 +7,42 @@ project: "jr (jira-cli)"
 
 Track all spec version changes. Most recent version first.
 
+## [1.3.71] - 2026-07-17
+
+### Type: PATCH
+
+### Summary
+
+Adversary pass 31 (P31) fix round — 2 LOW + 1 INFO finding. LOW (P31-001): H-NEW-ATTACHMENT-002 error-path Expected exit-code over-permissive — tightened from "Exit code != 0 (exit 1 or exit 64)" to "Exit code = 1 (EC-2.7.007-4 mid-stream error; BC-2.7.012 5xx row)". LOW (P31-002): manifest `size` semantics — batch `downloaded[].size` is bytes written to disk (identical to EC-2.7.007-7), NOT the list-reported `fields.attachment[].size`; BC-2.7.008 Batch metadata source sentence scoped; EC-2.7.008-6 `size` semantics sentence added; "Shape aligns" → "Shape and field semantics align". INFO (P31-003): BC-3.9.012 step-1 carve-out post-retry 401/5xx/network sentence added to eliminate "first occurrence" ambiguity.
+
+### Changed Requirements
+
+- `.factory/specs/prd/holdout-scenarios.md` (MODIFIED): P31-001 — H-NEW-ATTACHMENT-002 error-path Expected exit-code tightened to "Exit code = 1 (EC-2.7.007-4 mid-stream error; BC-2.7.012 5xx row)"; holdout trace entry added.
+- `.factory/specs/prd/bc-2-issue-read.md` (MODIFIED): P31-002 — BC-2.7.008 Batch metadata source sentence scoped (list response for NAMING/filtering/pre-download; manifest `size` = written-bytes per EC-2.7.008-6, NOT list-reported); EC-2.7.008-6 `size` semantics sentence added; "Shape aligns" → "Shape and field semantics align"; BC-2.7.008 Trace updated; frontmatter trace entry v1.3.71 added.
+- `.factory/specs/prd/bc-3-issue-write.md` (MODIFIED): P31-003 — BC-3.9.012 step-1 carve-out: post-retry 401/5xx/network sentence added (maps per BC-X.8.010 step 4: 401 → exit 2; 5xx/network → exit 1 — same universal codes as first-occurrence); BC-3.9.012 Trace updated; frontmatter trace entry v1.3.71 added.
+- `.factory/specs/prd/BC-INDEX.md` (MODIFIED): BC-2.7.008 row synced with P31-002; BC-3.9.012 row synced with P31-003; frontmatter `last_updated` and `index_version` bumped to v6.30.
+- `.factory/phase-f2-spec-evolution/prd-delta-576.md` (MODIFIED): `spec_version_after` 1.3.70→1.3.71; P31 dispositions section appended.
+
+### Impact Assessment
+
+| Artifact | Change Type | Notes |
+|---|---|---|
+| holdout-scenarios.md | Modified | P31-001 H-NEW-ATTACHMENT-002 exit-code tightened (List-B) |
+| bc-2-issue-read.md | Modified | P31-002 BC-2.7.008 Batch metadata source scope + EC-2.7.008-6 `size` semantics |
+| bc-3-issue-write.md | Modified | P31-003 BC-3.9.012 step-1 carve-out post-retry 401/5xx/network sentence |
+| BC-INDEX.md | Modified | BC-2.7.008 and BC-3.9.012 row sync |
+| prd-delta-576.md | Modified | spec_version_after 1.3.71; P31 dispositions |
+
+### Count Verification
+
+| Metric | Before | After | Delta |
+|---|---|---|---|
+| BC total | 657 | 657 | 0 |
+| Holdout total | 100 | 100 | 0 |
+| VP total | 35 | 35 | 0 |
+
+---
+
 ## [1.3.70] - 2026-07-17
 
 ### Type: PATCH

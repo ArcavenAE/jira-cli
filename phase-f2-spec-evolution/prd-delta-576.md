@@ -5,7 +5,7 @@ issues: "#576, #585"
 phase: F2
 authored: 2026-07-15
 spec_version_before: 1.3.42
-spec_version_after: 1.3.70
+spec_version_after: 1.3.71
 bc_count_before: 624
 bc_count_after: 657
 holdout_count_before: 88
@@ -575,3 +575,15 @@ Source: Adversary Pass 30. 1 MEDIUM / 2 LOW / 1 INFO finding. Spec version bump:
 | BC-3.9.020 | `"--dry-run has no effect on single-ID delete; omit the flag."` | HINT | suppressed | explicitly stated: "NO stderr hint in JSON mode" |
 
 **BC count at this round: 657 (unchanged). Holdout count: 100 (unchanged). VP count: 35 (unchanged). Spec version: 1.3.70. Both guards exit 0.**
+
+---
+
+## P31 Dispositions (adversary pass 31, 2026-07-17) — 2 LOW + 1 INFO
+
+| Finding | Severity | Artifacts | Status | Resolution |
+|---|---|---|---|---|
+| P31-001 (LOW) | LOW | holdout-scenarios.md | APPLIED | H-NEW-ATTACHMENT-002 error-path Expected exit-code tightened. The scenario mounts a metadata-200/content-500 response — exactly one conformant code: exit 1 (EC-2.7.007-4 mid-stream error; BC-2.7.012 5xx row). Changed "Exit code != 0 (exit 1 or exit 64)" → "Exit code = 1 (EC-2.7.007-4 mid-stream error; BC-2.7.012 5xx row)". Holdout trace entry added. |
+| P31-002 (LOW) | LOW | bc-2-issue-read.md, BC-INDEX.md | APPLIED | Manifest `size` semantics established as bytes written to disk (uniform across single and batch). Three changes: (1) EC-2.7.008-6: `size` semantics sentence added — `downloaded[].size` is the byte count written to disk, identical to EC-2.7.007-7, NOT the list-reported `fields.attachment[].size`; in normal operation the two coincide (atomic rename fires only on complete stream) but written-bytes is authoritative. (2) BC-2.7.008 Batch metadata source sentence scoped — list response supplies filename/size/contentUrl for NAMING, filtering, and pre-download purposes; manifest `size` field is written-bytes per EC-2.7.008-6. (3) "Shape aligns with EC-2.7.007-7 for a uniform download response type" → "Shape and field semantics align with EC-2.7.007-7 for a uniform download response type" (now true for both shape and field semantics). BC-2.7.008 Trace and BC-INDEX row updated. |
+| P31-003 (INFO) | INFO | bc-3-issue-write.md, BC-INDEX.md | APPLIED | BC-3.9.012 step-1 carve-out extended. Added sentence: "A post-retry 401/5xx/network response maps per BC-X.8.010 step 4 (401 → exit 2; 5xx/network → exit 1) — the same universal codes as first-occurrence." This eliminates the ambiguity in "first occurrence" phrasing which could be misread as those codes only applying once. The carve-out previously covered only 403/404 post-retry; 401/5xx/network were stated to map on first-occurrence without clarifying what happens post-retry (they map identically). BC-3.9.012 Trace and BC-INDEX row updated. |
+
+**BC count at this round: 657 (unchanged). Holdout count: 100 (unchanged). VP count: 35 (unchanged). Spec version: 1.3.71. Both guards exit 0.**

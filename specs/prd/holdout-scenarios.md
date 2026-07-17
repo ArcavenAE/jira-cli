@@ -23,6 +23,7 @@ trace: |
   - SOH-COMMENT-CRUD-1 F2 (2026-07-09): comment delete/edit/view CRUD — 5 new scenarios H-NEW-COMMENT-001..H-NEW-COMMENT-005 (BC-3.5.005 body-only-PUT wire, BC-3.5.008 --public non-interactive gate, BC-3.5.004 delete-404 exit-64, BC-3.5.010 view roundtrip, BC-3.5.003 delete confirmation gate; issue #577 DEC-168; H-NEW-COMMENT-005 added adversary pass-18 F6)
   - SOH-ATTACHMENTS-1 adversary pass-27 (2026-07-17, P27): H-NEW-ATTACHMENT-003 Call B2 `filename` corrected to RAW Jira name `ok.txt` (pre-sanitization, pre-SHA-1-prefix); discriminating `filename`-vs-`path` assertion added (P27-001); H-NEW-ATTACHMENT-007 overlong-name fixture description corrected (255 bytes = exceeds 214-byte sanitizer cap + 41-byte SHA-1 prefix; was "at the length-cap boundary"); missing length-cap assertion added (on-disk basename after SHA-1 prefix ≤ 214 bytes; P27-002); holdout count unchanged (100)
   - SOH-ATTACHMENTS-1 adversary pass-28 (2026-07-17, P28): H-NEW-ATTACHMENT-009 Expected bullet 4 narrowed — "zero requests to any /rest/servicedeskapi/..." replaced with POST-only assertion: zero requests to POST .../attachTemporaryFile and POST .../request/{key}/attachment; GET /rest/servicedeskapi/servicedesk meta-resolution IS expected to fire (mounted in setup step 3; asserted absent only are the upload POSTs); licensing BC added (BC-3.9.003 step 1 / BC-X.8.010 for the GET; BC-3.9.014 gate for the POST absence); Status updated with P28-002 citation; holdout count unchanged (100)
+  - SOH-ATTACHMENTS-1 adversary pass-31 (2026-07-17, P31): H-NEW-ATTACHMENT-002 error-path Expected exit-code tightened — "Exit code != 0 (exit 1 or exit 64)" → "Exit code = 1 (EC-2.7.007-4 mid-stream error; BC-2.7.012 5xx row)" (P31-001); holdout count unchanged (100)
 ---
 
 # Holdout Scenarios — jira-cli
@@ -2134,7 +2135,7 @@ Call B (two attachments):
 **Action (error path)**: `jr issue attachment download FOO-2 --id 10002` with cwd = `WORK_DIR`.
 
 **Expected (error path, MUST-PASS)**:
-- Exit code != 0 (exit 1 or exit 64).
+- Exit code = 1 (EC-2.7.007-4 mid-stream error; BC-2.7.012 5xx row).
 - `WORK_DIR/broken.bin` does NOT exist (temp file cleaned up per BC-2.7.007 EC-2.7.007-4).
 - No `tmp_*` file remains in `WORK_DIR` (temp cleaned up per BC-2.7.007 EC-2.7.007-4).
 

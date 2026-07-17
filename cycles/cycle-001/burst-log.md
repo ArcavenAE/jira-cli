@@ -5379,3 +5379,42 @@ Displaced to make room for SOH-ATTACHMENTS-1 adversary pass-29 remediation step 
 **Convergence:** Trajectory p1..p29 = 22,21,18,16,10,5,3,5,3,3,2,2,3,9,7,5,5,5,4,6,6,3,3,2,2,3,3,2,1. STRICT streak 0/3. Pass 29 is the strongest convergence signal of the loop (single working-doc cosmetic; zero canonical-surface findings). Next: adversary pass 30 — first pass with a realistic genuine-CLEAN shot.
 
 **Files committed:** `phase-f2-spec-evolution/prd-delta-576.md`, `spec-changelog.md`, `sidecar-learning.md`, `STATE.md`.
+
+
+---
+
+## Archived Phase Progress row (adversary-pass-31 remediation burst)
+
+Displaced to make room for SOH-ATTACHMENTS-1 F2 ADVERSARY PASS-31 REMEDIATED row per keep-5 rule.
+
+| Phase | Status | Completed | Gate | Notes |
+|-------|--------|-----------|------|-------|
+| **SOH-ATTACHMENTS-1 F2 ADVERSARY PASS-26 REMEDIATED (2026-07-17, fresh context, blind, v1.3.65; SECOND consecutive zero-MEDIUM pass; r36 ZERO NEW ITEMS — first such round of the loop) — 3L+1I; P26-001 (L) BC-2.7.012 missing KEY-403 row (symmetry gap from P15-005; taxonomy row 95 sub-variant mis-attributed to list BC — BC-2.7.006 vs BC-2.7.012 origin distinction; citation re-pointed BC-2.7.006→BC-2.7.012; row 94 keeps BC-2.7.006); P26-002 (L) H-003 bullet-2 bare examples contradicted bullet-1's unconditional SHA-1 mandate → bare examples struck (SHA-1 prefix is unconditional for ALL batch downloads; no bare-basename exception); P26-003 (L) metadata-fixture vs shared-struct typing tension → RULING: option (b) partial struct (only filename required) + Option typing for created/author fields; impact-boundary §1.1 PHASE-DOC-RETRO-ANNOTATION; H-002 fixture satisfiability preserved; P26-004 (I) BC-3.9.019 Source pre-committed hard R3.9a-open path → softened to TBD; spec v1.3.66; counts 657/100/35 UNCHANGED; BC-INDEX v6.25→v6.26; r36 CONSISTENT (K-1 full 403-sub-variant ownership audit: every 403 path has exactly one BC home + one taxonomy citation, no orphans/double-attribution; K-2..K-4 coherent; INFO-13 (carried r28-r35) RESOLVED by citation re-point; ZERO NEW ITEMS of any kind — first such round of the loop; guards exit 0). STRICT streak 0/3 (DEC-183). Pass 27 next.** | **ADVERSARY PASS-26 REMEDIATED** | **2026-07-17** | **Adversary pass 27 next.** | `phase-f2-spec-evolution/consistency-report-576-r36.md`; BC 657; holdouts 100; VP 35; spec v1.3.66. |
+
+### Archived Current Phase Steps row (adversary-pass-31 remediation burst)
+
+Displaced to make room for SOH-ATTACHMENTS-1 adversary pass-31 remediation step row per keep-5 rule.
+
+| Step | Agent | Status | Output |
+|------|-------|--------|--------|
+| **SOH-ATTACHMENTS-1 F2 ADVERSARY PASS-26 REMEDIATED (2026-07-17): 3L+1I (2nd consecutive zero-MEDIUM; r36 ZERO NEW ITEMS); P26-001 (L) BC-2.7.012 KEY-403 row added (symmetry gap from P15-005; taxonomy row 95 citation re-pointed BC-2.7.006→BC-2.7.012; BC-INDEX BC-2.7.012 row + Trace + bc-2 Trace updated); P26-002 (L) H-003 bullet-2 bare examples struck (SHA-1 unconditional per bullet-1; no bare-basename exception in batch path); P26-003 (L) metadata-fixture partial-struct ruling: option (b) partial struct, only filename required + Option<String> created/author; impact-boundary §1.1 PHASE-DOC-RETRO-ANNOTATION; H-002 fixture satisfiability verified; P26-004 (I) BC-3.9.019 Source hard path softened to TBD; spec v1.3.66; BC 657/holdouts 100/VP 35 UNCHANGED; BC-INDEX v6.25→v6.26; r36 CONSISTENT (K-1 403-ownership audit: every 403 path singularly attributed; INFO-13 RESOLVED; ZERO NEW ITEMS; guards exit 0). STRICT streak 0/3 (DEC-183). Pass 27 next.** | adversary + product-owner + consistency-validator + state-manager | COMPLETE | `phase-f2-spec-evolution/consistency-report-576-r36.md`; BC 657; holdouts 100; VP 35; spec v1.3.66. |
+
+
+---
+
+## SOH-ATTACHMENTS-1 F2 ADVERSARY PASS-31 REMEDIATION BURST (2026-07-17)
+
+**What happened:** Adversary pass 31 returned NOT-CLEAN — 2 LOW + 1 INFO (zero MEDIUM+). Severity remained at or below LOW for the third time in the last four passes (p29=1L, p30=1M+2L+1I, p31=2L+1I). The adversary recommended "one more pass after fix to confirm convergence." All three findings were instances of already-codified defect classes. The product-owner honored the full standing checklist proactively this round — frontmatter traces in both bc-2 and bc-3, BC-INDEX frontmatter bump v6.29→v6.30, spec-changelog count table, dispositions section — resulting in zero tracking gaps (first round with full proactive compliance).
+
+**Findings:**
+- P31-001 (L): H-NEW-ATTACHMENT-002 error-path exit assertion over-permissive — "Exit code != 0 (exit 1 or exit 64)". Exit 64 is reserved for user-input validation errors before any HTTP request fires; a mid-stream content-GET 500 is licensed only by EC-2.7.007-4 and BC-2.7.012 5xx row → exit 1. Only one conformant exit code exists for this fixture configuration. Fix: assertion tightened to "Exit code = 1 (EC-2.7.007-4 mid-stream error; BC-2.7.012 5xx row)"; holdout frontmatter trace entry added.
+- P31-002 (L): Manifest `size` field semantics diverged between single-ID and batch paths under a "uniform type" claim. ORCHESTRATOR RULING: size = bytes-written-to-disk uniformly across both paths (manifest reports disk truth; P27-001 filename/path philosophy; P26-003 partial struct makes API-sourcing impossible on single-ID). Fix: BC-2.7.008 batch metadata source scoped; EC-2.7.008-6 `size` semantics sentence added; "Shape aligns" → "Shape and field semantics align".
+- P31-003 (I): BC-3.9.012 step-1 carve-out post-retry 401/5xx/network enumeration gap. Fix: carve-out now explicitly enumerates post-retry 401/5xx/network → BC-X.8.010 step 4 in addition to P30-001 post-retry 404/403; combined carve-out complete and BC-X.8.010 step 4 cited as authoritative source for all second-failure exit codes.
+
+**r40 CONSISTENT — 0 gaps, 0 new INFO:** INFO-11 RETIRED stale — CV fresh search confirmed both cited surfaces (spec-changelog [1.3.57] line 512 + prd-delta P17-002 line 331) already read "All four sites"; discrepancy text not locatable. Carried-INFO ledger 8→7: INFO-1/2/3/6/8/15/NEW-5. K-1 (uniform-size story coherent across BC-2.7.008/EC-2.7.008-6/"Shape and field semantics align"), K-2 (H-002 tightening conformant-derivable), K-3 (post-retry carve-out complete + verbatim-aligned BC-X.8.010 step 4) all PASS. Guards exit 0.
+
+**S-7.02 observation — no new lesson required:** All three findings were instances of already-codified defect classes (holdout over-permissive assertion, size-semantics ruling, enumeration completeness). No novel defect class. **Positive datapoint:** First round with full proactive standing-checklist compliance (frontmatter traces + BC-INDEX bump + changelog count table + dispositions all self-administered without CV prompting). FRONTMATTER-TRACE-OMISSION + BC-INDEX-FRONTMATTER-BUMP standing obligations demonstrably self-sustaining.
+
+**Convergence:** Trajectory p1..p31 = 22,21,18,16,10,5,3,5,3,3,2,2,3,9,7,5,5,5,4,6,6,3,3,2,2,3,3,2,1,3,2. STRICT streak 0/3 (DEC-183). Severity ≤LOW in 3 of last 4 passes. Next: adversary pass 32.
+
+**Files committed:** `phase-f2-spec-evolution/prd-delta-576.md`, `phase-f2-spec-evolution/consistency-report-576-r40.md` (new), `sidecar-learning.md`, `spec-changelog.md`, `specs/prd/BC-INDEX.md`, `specs/prd/bc-2-issue-read.md`, `specs/prd/bc-3-issue-write.md`, `specs/prd/holdout-scenarios.md`, `cycles/cycle-001/burst-log.md`, `STATE.md`.
