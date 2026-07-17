@@ -5,7 +5,7 @@ issues: "#576, #585"
 phase: F2
 authored: 2026-07-15
 spec_version_before: 1.3.42
-spec_version_after: 1.3.71
+spec_version_after: 1.3.72
 bc_count_before: 624
 bc_count_after: 657
 holdout_count_before: 88
@@ -587,3 +587,13 @@ Source: Adversary Pass 30. 1 MEDIUM / 2 LOW / 1 INFO finding. Spec version bump:
 | P31-003 (INFO) | INFO | bc-3-issue-write.md, BC-INDEX.md | APPLIED | BC-3.9.012 step-1 carve-out extended. Added sentence: "A post-retry 401/5xx/network response maps per BC-X.8.010 step 4 (401 → exit 2; 5xx/network → exit 1) — the same universal codes as first-occurrence." This eliminates the ambiguity in "first occurrence" phrasing which could be misread as those codes only applying once. The carve-out previously covered only 403/404 post-retry; 401/5xx/network were stated to map on first-occurrence without clarifying what happens post-retry (they map identically). BC-3.9.012 Trace and BC-INDEX row updated. |
 
 **BC count at this round: 657 (unchanged). Holdout count: 100 (unchanged). VP count: 35 (unchanged). Spec version: 1.3.71. Both guards exit 0.**
+
+---
+
+## P32 Dispositions (adversary pass 32, 2026-07-17) — 1 LOW
+
+| Finding | Severity | Artifacts | Status | Resolution |
+|---|---|---|---|---|
+| P32-001 (LOW) | LOW | bc-2-issue-read.md, BC-INDEX.md | APPLIED | BC-2.7.007 `--out` pre-flight ordering pinned. The `--out` unconditional step-1 paragraph never stated whether the local pre-flight checks (EC-2.7.007-6 parent-exists, EC-2.7.007-11 path-is-directory, overwrite-refuse) fire before or after the step-1 metadata GET. A double-fault (404 AID + bad `--out`) would yield nondeterministic stderr across conforming implementations. ORCHESTRATOR RULING: local checks fire first (fail cheap/offline first; AID-regex-before-HTTP precedent). Ordering sentence appended to the `--out` UNCONDITIONAL two-step paragraph: "On the `--out` path, the local pre-flight checks (EC-2.7.007-6 parent-exists, EC-2.7.007-11 path-is-directory, overwrite-refuse) fire BEFORE the step-1 metadata GET — fail cheap/offline first (AID-regex-before-HTTP precedent, P32-001); on a double-fault the local check's message wins." BC-2.7.007 Trace and BC-INDEX row updated. **Holdout double-fault check**: H-002 and H-003 are auth/profile holdouts unrelated to attachment download — neither asserts a double-fault stderr message. No other H-NEW-ATTACHMENT-* holdout constructs a double-fault fixture. List B is EMPTY (no holdout assertion changes). |
+
+**BC count at this round: 657 (unchanged). Holdout count: 100 (unchanged). VP count: 35 (unchanged). Spec version: 1.3.72. Both guards exit 0.**

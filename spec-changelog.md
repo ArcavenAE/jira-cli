@@ -7,6 +7,38 @@ project: "jr (jira-cli)"
 
 Track all spec version changes. Most recent version first.
 
+## [1.3.72] - 2026-07-17
+
+### Type: PATCH
+
+### Summary
+
+Adversary pass 32 (P32) fix round — 1 LOW finding. LOW (P32-001): BC-2.7.007 never pinned the relative order of the local `--out` pre-flight checks (EC-2.7.007-6 parent-exists, EC-2.7.007-11 path-is-directory, overwrite-refuse) vs the unconditional step-1 metadata GET; a double-fault (404 AID + bad `--out`) produced nondeterministic stderr. Ordering pinned: local checks fire BEFORE step-1 metadata GET (fail cheap/offline first; AID-regex-before-HTTP precedent); on double-fault the local check's message wins.
+
+### Changed Requirements
+
+- `.factory/specs/prd/bc-2-issue-read.md` (MODIFIED): P32-001 — ordering sentence added to BC-2.7.007 `--out` unconditional step-1 paragraph; BC-2.7.007 Trace updated with P32-001; frontmatter trace entry v1.3.72 added.
+- `.factory/specs/prd/BC-INDEX.md` (MODIFIED): BC-2.7.007 row synced with P32-001; frontmatter `last_updated` and `index_version` bumped to v6.31.
+- `.factory/phase-f2-spec-evolution/prd-delta-576.md` (MODIFIED): `spec_version_after` 1.3.71→1.3.72; P32 dispositions section appended.
+
+### Impact Assessment
+
+| Artifact | Change Type | Notes |
+|---|---|---|
+| bc-2-issue-read.md | Modified | P32-001 BC-2.7.007 `--out` pre-flight ordering sentence |
+| BC-INDEX.md | Modified | BC-2.7.007 row sync; frontmatter → v6.31 |
+| prd-delta-576.md | Modified | spec_version_after 1.3.72; P32 dispositions |
+
+### Count Verification
+
+| Metric | Before | After | Delta |
+|---|---|---|---|
+| BC total | 657 | 657 | 0 |
+| Holdout total | 100 | 100 | 0 |
+| VP total | 35 | 35 | 0 |
+
+---
+
 ## [1.3.71] - 2026-07-17
 
 ### Type: PATCH
