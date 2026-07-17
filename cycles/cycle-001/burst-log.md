@@ -5285,3 +5285,22 @@ Displaced to make room for SOH-ATTACHMENTS-1 adversary pass-22 remediation step 
 | Step | Agent | Status | Output |
 |------|-------|--------|--------|
 | **SOH-ATTACHMENTS-1 F2 ADVERSARY PASS-17 REMEDIATED (2026-07-16): 5 findings (1M/4L) + 2I + 3 micro-fixes; P17-001 (M) BC-3.9.014 Source S5→S3 fix-echo (twin-artifact recurrence 8; mechanical-grep dispatch: 5 rows synced in-round); P17-002 (L) function-name drift 4 sites; P17-003 (L) Step-0 double-GET suppression ruling; P17-004 (L) combined non-interactive exit-64 message (deletion + public visibility); P17-005 (L) BC-3.9.007 scope notes (path-c); P17-006/007 (I) JSON-shape table + clap arg-level; BC-INDEX micro-fix v6.16→v6.17 (5 rows); r27 CONSISTENT (9th consecutive zero-action; INFO-7/10/11/12 resolved); spec v1.3.57; guards green. Pass 18 next.** | adversary + product-owner + consistency-validator + state-manager | COMPLETE | `phase-f2-spec-evolution/consistency-report-576-r27.md`; BC 657; holdouts 98; VP 33; spec v1.3.57. |
+
+
+---
+
+## Archived Phase Progress row (adversary-pass-24 remediation burst)
+
+Displaced to make room for SOH-ATTACHMENTS-1 F2 ADVERSARY PASS-24 REMEDIATED row per keep-5 rule.
+
+| Phase | Status | Completed | Gate | Notes |
+|-------|--------|-----------|------|-------|
+| **SOH-ATTACHMENTS-1 F2 ADVERSARY PASS-19 REMEDIATED + r29 GAP CLOSED (2026-07-16, fresh context, blind, echo-breaker v1) — 1M+3L+3I; P19-001 (M) latent BTreeMap-alphabetical key-ordering contradiction (BC-2.7.002 struct-order example vs shape-table "keys alphabetical" missed by 18 prior passes) → BTreeMap-canonical, ordering clause added, BC-2.7.007+BC-3.9.009 key enumerations updated, BC-INDEX rows updated, impact-boundary row updated; P19-002 (L) EC-2.7.001-2 JSON-mode filter-count hint fires unconditionally (list.rs ~580 + board.rs ~283; asymmetry with EC-2.7.001-1 documented); P19-003 (L) EC-2.7.007-5 best-effort MUST + impl note (src/main.rs:~393 ctrl_c + panic=abort); P19-004 (L) BC-3.9.001 --dry-run annotation (clap requires EC-3.9.020-6, exit 2); I1 4-col vs 6-col table note; I2 BC-043 duplicate ledgered (spec-maintenance; out of scope); I3 no-action; GAP-P19-FWD-001 CLOSED same burst (prd-delta frontmatter 1.3.58→1.3.59 + P19 dispositions section + spec-changelog count rows + impact-boundary INFO-15 INCONCLUSIVE annotation); BC-INDEX v6.18→v6.19; spec v1.3.59 (657/98/33 unchanged); echo-breaker audit 11/11 clean (zero echo findings); trajectory-tail →4 (plateau broken); guards green.** | **ADVERSARY PASS-19 REMEDIATED** | **2026-07-16** | **Adversary pass 20 next.** | `phase-f2-spec-evolution/consistency-report-576-r29.md`; BC 657; holdouts 98; VP 33; spec v1.3.59. |
+
+### Archived Current Phase Steps row (adversary-pass-24 remediation burst)
+
+Displaced to make room for SOH-ATTACHMENTS-1 adversary pass-24 remediation step row per keep-5 rule.
+
+| Step | Agent | Status | Output |
+|------|-------|--------|--------|
+| **SOH-ATTACHMENTS-1 F2 ADVERSARY PASS-19 REMEDIATED + r29 GAP CLOSED (2026-07-16): 1M+3L+3I; P19-001 (M) latent BTreeMap-alphabetical key-ordering contradiction (BC-2.7.002 struct-order example vs shape-table "keys alphabetical", missed 18 passes) → BTreeMap-canonical, ordering clause added, BC-2.7.007 cross-ref updated, BC-3.9.009 key enumeration updated, BC-INDEX rows BC-2.7.002+BC-3.9.009 updated, impact-boundary BC-2.7.002 row updated; P19-002 (L) EC-2.7.001-2 JSON-mode filter-count hint fires unconditionally (list.rs ~580 + board.rs ~283 citations; asymmetry with EC-2.7.001-1 documented); P19-003 (L) EC-2.7.007-5 SIGINT best-effort MUST + implementation note (src/main.rs:~393 ctrl_c select! + panic=abort license; not holdout/VP-pinned); P19-004 (L) BC-3.9.001 --dry-run annotation (requires --replace-existing; EC-3.9.020-6; clap requires; exit 2); I1 4-column vs 6-column upload echo vs list table asymmetry note; I2 BC-043 duplicate BC number ledgered (out of scope); I3 no-action; GAP-P19-FWD-001 CLOSED same burst (prd-delta frontmatter 1.3.58→1.3.59 + P19 dispositions section + spec-changelog count rows + impact-boundary BC-3.9.004 INFO-15 INCONCLUSIVE annotation); BC-INDEX v6.19; spec v1.3.59; guards exit 0; echo-breaker audit 11/11 clean — zero echo findings (first pass under regime); plateau broken (→4); pass 20 next.** | adversary + product-owner + consistency-validator + state-manager | COMPLETE | `phase-f2-spec-evolution/consistency-report-576-r29.md`; BC 657; holdouts 98; VP 33; spec v1.3.59. |

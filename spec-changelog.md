@@ -7,6 +7,43 @@ project: "jr (jira-cli)"
 
 Track all spec version changes. Most recent version first.
 
+## [1.3.64] - 2026-07-17
+
+### Type: PATCH
+
+### Summary
+
+Adversary pass 24 (P24) fix round — MEDIUM: BC-3.9.009 over-swept download into the curated attachment-object shape; sentence "canonical attachment-object JSON shape across all `jr` attachment operations — upload, list, and download JSON outputs all use this shape" narrowed to "...for `jr` attachment upload and list operations — upload and list JSON outputs use this shape (download is excluded — it uses the distinct `{"downloaded":[...]}` manifest per the BC-2.7.002 authority clause and BC-2.7.007 EC-2.7.007-7)"; grep-confirmed the claim was isolated to one site in bc-3-issue-write.md:~3474; no other primary artifact repeated "download ... curated shape" normatively (P24-001); LOW: VP-576-004 missing story-allocation note; RULING mirrors P23-003 pattern + R3.13 earliest-consumer principle — annotated VP-576-004: "list half verified at S1 (BC-2.7.002 home); upload-platform-POST half verified at S3 (BC-3.9.009); full cross-path test lands at S3 — S3 depends_on S1 for shared curated-serialization plumbing (earliest consumer S1 ships it, per R3.13); NOT part of S1 acceptance matrix as a whole; S1 matrix includes only the list half"; one-line notes mirrored into prd-delta S1 and S3 rows (P24-002; r34 gap-closure: S3 note mis-landed in S5 row during P24 round — r34 added it to S3 row; S5 row note retained as accurate context, wording says "lands at S3", does not claim S5-verification).
+
+### Changed Requirements
+
+- `.factory/specs/prd/bc-3-issue-write.md` (MODIFIED): P24-001 — BC-3.9.009 body sentence narrowed (download exclusion explicit, BC-2.7.002 authority clause + BC-2.7.007 EC-2.7.007-7 cross-ref added). Frontmatter trace v1.3.64 entry added. Footer updated (spec v1.3.64).
+- `.factory/specs/prd/bc-2-issue-read.md` (MODIFIED): P24-002 — VP-576-004 story-allocation annotation added ("list half S1; upload-platform-POST half S3; full cross-path test S3; S3 depends_on S1; R3.13; NOT S1 acceptance matrix as a whole").
+- `.factory/specs/prd/BC-INDEX.md` (MODIFIED): P24-001 — BC-3.9.009 row: P24-001 download-exclusion note added. `last_updated`, `index_version` v6.23→v6.24 updated.
+- `.factory/phase-f2-spec-evolution/prd-delta-576.md` (MODIFIED): `spec_version_after` 1.3.63→1.3.64; S1 scope row VP-576-004 allocation note added; S3 scope row VP-576-004 note added (r34 gap-closure: note had mis-landed in S5 row during P24 round; S5 row note retained as accurate context); P24 dispositions section appended.
+- `.factory/specs/prd/bc-2-issue-read.md` (MODIFIED, r34): frontmatter trace v1.3.64 entry added; `last_updated` updated to 2026-07-17. (Note: v1.3.63 entry is NOT owed — P23 did not touch bc-2-issue-read.md.)
+
+### Impact Assessment
+
+| Artifact | Change Type | Notes |
+|---|---|---|
+| bc-3-issue-write.md | Modified | BC-3.9.009 download-exclusion fix (P24-001) |
+| bc-2-issue-read.md | Modified | VP-576-004 story-allocation annotation (P24-002) |
+| BC-INDEX.md | Modified | BC-3.9.009 row P24-001 note; index_version v6.24 |
+| prd-delta-576.md | Modified | spec_version_after 1.3.64; S1+S3 scope rows; P24 dispositions section |
+
+| Dimension | Value |
+|---|---|
+| BC count | 657 (unchanged) |
+| Holdout count | 100 (unchanged) |
+| VP count | 35 (unchanged) |
+| New BCs | 0 |
+| New VPs | 0 |
+| New Holdouts | 0 |
+| Spec version | 1.3.63→1.3.64 |
+
+---
+
 ## [1.3.63] - 2026-07-17
 
 ### Type: PATCH

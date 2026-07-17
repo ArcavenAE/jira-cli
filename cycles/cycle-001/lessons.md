@@ -6208,3 +6208,19 @@ Adversary P23-002 identified that `--dry-run` interaction with eligibility guard
 **Mnemonic:** gates = consent checks (suppressed on dry-run); guards = validity checks (never suppressed).
 
 _Discovered: P23-002 (2026-07-17); orchestrator ruling per DEC-182(b) invariant family_
+
+---
+
+### [codified] MIS-LANDED-ROW-VERIFICATION: Scope-table notes must be verified at the specific row claimed in dispositions
+
+Adversary P24-002 identified that a VP-576-004 story-allocation note was placed in the S5 Scope-table row instead of the S3 row. Fix-round dispositions and the spec-changelog both claimed the note was added to S3 (false tracking claims). The behavioral content itself was correct; only its row placement was wrong. The consistency validator caught it in r34 as GAP-P24-002-001.
+
+**Rule (MIS-LANDED-ROW-VERIFICATION):** When a spec fix claims "added note to Story S-N row in Scope table," the CV must verify the note's physical row position against the actual `depends_on`/story-allocation row in the table — not merely that the note text exists somewhere in the document. Row-level verification is the working control; file-level grep (note present in document) is insufficient.
+
+**Correction pattern (accuracy-over-tidiness):** The mis-landing is recorded in the tracking record accurately (correction noted, not erased). Tracking claims that said "S3" when the note was actually in S5 are corrected to reflect what actually happened. The S3 row was updated in the same burst; the S5 note was retained as accurate context for that story slice.
+
+**Sub-class taxonomy:** This is a "mis-landed-row" sub-class of the TWIN-ARTIFACT DRIFT pattern — a placement error (wrong row, correct document) rather than a missing/forbidden content error. Distinct from: (a) P21-002 forbidden-call (wrong call present) and (b) P23-001 omitted-mandated (correct call absent). All three involve the same "what you think landed vs. what actually landed" family but at different granularity levels (call set, document, row).
+
+**CV obligation:** When a fix-round disposition cites a specific Scope-table row (e.g., "S3 row"), the next consistency report must verify row placement with a targeted grep using the story ID as anchor (e.g., `grep -A2 "| S3 |"`) rather than a document-level content search.
+
+_Discovered: GAP-P24-002-001 (2026-07-17, r34 GAPS-FOUND); root cause: fix-round verification checked text presence but not row placement_

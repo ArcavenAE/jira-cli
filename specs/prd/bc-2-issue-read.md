@@ -3,7 +3,7 @@ context: bc-2
 title: "Issue Read (list/view/comments/changelog)"
 total_bcs: 106   # cumulative claim (incl. range-collapsed); definitional_count below is individually-bodied headings
 definitional_count: 64   # count of `#### BC-` headings in this file
-last_updated: 2026-07-16
+last_updated: 2026-07-17
 source_pass: 3
 trace: |
   - L2: .factory/specs/domain-spec/bc-02-issue-read.md
@@ -15,6 +15,7 @@ trace: |
   - SOH-ATTACHMENTS-1 adversary pass-20 (2026-07-16): BC-2.7.007 `--out` unconditional step-1 clause added — step 1 always issued even with `--out`; pre-stream existence validation; one extra GET accepted cost (P20-003); VP-576-004 attachment-object JSON transformation pin added to BC-2.7.002 — `"self"` OMITTED, `"content"` RENAMED to `"contentUrl"` (P20-006); spec v1.3.60
   - SOH-ATTACHMENTS-1 adversary pass-21 (2026-07-16): BC-2.7.012 KEY-404 batch-paths-only annotation — `--id` does not server-verify KEY per BC-2.7.007 (P21-006); spec v1.3.61
   - SOH-ATTACHMENTS-1 adversary pass-22 (2026-07-16): BC-2.7.012 body prose "Unknown issue key" sentence prepended with batch-only caveat; BC-2.7.012 Trace field updated with P22-003 citation (P22-003); spec v1.3.62
+  - v1.3.64 — P24 adversary fix round (2026-07-17, SOH-ATTACHMENTS-1): VP-576-004 story-allocation annotation added (P24-002): list half verified at S1 (BC-2.7.002 home); upload-platform-POST half verified at S3 (BC-3.9.009); full cross-path test lands at S3 — S3 depends_on S1 for shared curated-serialization plumbing (R3.13 earliest-consumer principle); NOT part of S1 acceptance matrix as a whole; S1 matrix includes only the list half. (Note: v1.3.63 entry is NOT owed — P23 did not touch bc-2-issue-read.md.)
 ---
 
 # BC-2 — Issue Read (list / view / comments / changelog)
@@ -612,7 +613,7 @@ All `--output json` paths MUST route through `output::render_json` or `output::p
 
 **Trace**: F2 spec evolution (SOH-ATTACHMENTS-1 2026-07-15; #585 absorbed — research §7 VERIFIED; DEC-179 ratified design)
 
-**VP-576-004**: curated attachment-object JSON transformation pin — `jr issue attachment list <KEY> --output json` and `jr issue attachment upload <KEY> <FILE> --output json` via wiremock: inspect every JSON object in the returned array and assert: (1) NO element contains a `"self"` key — the Jira API `"self"` field MUST be omitted from `jr` output; (2) every element contains a `"contentUrl"` key and NO element contains a `"content"` key — the Jira API `"content"` field MUST be renamed to `"contentUrl"`. These two invariants hold for ALL serialization paths — list (BC-2.7.002) and upload platform POST (BC-3.9.009). A regression that passes `"self"` through or emits `"content"` instead of `"contentUrl"` MUST fail these assertions. Pins BC-2.7.002 authority clause ("the `'self'` field MUST be omitted and `'content'` MUST be renamed to `'contentUrl'` across every code path that serializes a Jira attachment object"); cross-references BC-3.9.009 (upload JSON output authority). P20-006.
+**VP-576-004**: curated attachment-object JSON transformation pin — `jr issue attachment list <KEY> --output json` and `jr issue attachment upload <KEY> <FILE> --output json` via wiremock: inspect every JSON object in the returned array and assert: (1) NO element contains a `"self"` key — the Jira API `"self"` field MUST be omitted from `jr` output; (2) every element contains a `"contentUrl"` key and NO element contains a `"content"` key — the Jira API `"content"` field MUST be renamed to `"contentUrl"`. These two invariants hold for ALL serialization paths — list (BC-2.7.002) and upload platform POST (BC-3.9.009). A regression that passes `"self"` through or emits `"content"` instead of `"contentUrl"` MUST fail these assertions. Pins BC-2.7.002 authority clause ("the `'self'` field MUST be omitted and `'content'` MUST be renamed to `'contentUrl'` across every code path that serializes a Jira attachment object"); cross-references BC-3.9.009 (upload JSON output authority). P20-006. **Story allocation (P24-002)**: list half verified at S1 (BC-2.7.002 home); upload-platform-POST half verified at S3 (BC-3.9.009); the full cross-path test lands at S3 — S3 depends_on S1 for the shared curated-serialization plumbing (earliest consumer S1 ships it, per the R3.13 principle). NOT part of the S1 acceptance matrix as a whole; the S1 matrix includes only the list half.
 
 ---
 
