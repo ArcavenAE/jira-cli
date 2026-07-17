@@ -7,6 +7,64 @@ project: "jr (jira-cli)"
 
 Track all spec version changes. Most recent version first.
 
+## [1.3.79] - 2026-07-17
+
+### Type: PATCH
+
+### Summary
+
+Scoped pre-gate round 1.3.78→1.3.79 (GAP-AUDIT-576-001, DEC-170 mechanical-mirror precedent): per-story delivery-obligation notes added to Scope table rows S1–S5 in prd-delta-576.md. Notes enumerate obligations from impact-boundary §3.1 (spec artifacts), §3.3 (CI/guard artifacts), and §3.4 (CLAUDE.md updates): S1 — `README.md` command-table row, `CHANGELOG.md` entry, `e2e_cli_surface_guard.rs` SURFACE entries (list), `json-output-shapes.md` list rows, CLAUDE.md §3.4(1) architecture src-tree addition; S2 — surface guard (download), `json-output-shapes.md` manifest row, CLAUDE.md §3.4(2c) filename-sanitization gotcha, CLAUDE.md §3.4(2d) redirect-behavior gotcha; S3 — `.cargo/mutants.toml` examine_globs, `json-output-shapes.md` upload shapes row, CLAUDE.md §3.4(2a) `X-Atlassian-Token` gotcha, CLAUDE.md §3.4(2b) multipart feature gotcha, `docs/specs/attachments.md` F4 obligation (P14-008); S4 — surface guard (delete), `json-output-shapes.md` delete shapes rows (single + bulk + dry-run); S5 — surface guard (JSM upload flags), `json-output-shapes.md` JSM upload shape placeholder (BC-3.9.011 P2-3c deferred probe). No behavioral changes; no BC/holdout/VP count changes.
+
+### Changed Requirements
+
+- `.factory/phase-f2-spec-evolution/prd-delta-576.md` (MODIFIED): Scope table S1–S5 rows — per-story delivery-obligation notes added; `spec_version_after` 1.3.78→1.3.79; SCOPED-ROUND-1 dispositions appended.
+
+### Impact Assessment
+
+| Artifact | Change Type | Notes |
+|---|---|---|
+| prd-delta-576.md | Modified | S1–S5 delivery obligations; spec_version_after 1.3.79; SCOPED-ROUND-1 section |
+| BC-INDEX.md | Verified, NO change | Counts 657/100/35 unchanged; no index_version bump |
+
+- BCs: 657 (unchanged)
+- Holdouts: 100 (unchanged)
+- VPs: 35 (unchanged)
+
+---
+
+## [1.3.78] - 2026-07-17
+
+### Type: PATCH
+
+### Summary
+
+Closing micro-round 1.3.77→1.3.78 (SOH-ATTACHMENTS-1 F2 gate cosmetics fold). Folds 7 window-carried cosmetics (P38-I1 through P40-I3) and 3 older stable cosmetics (INFO-1, INFO-3 accepted-carried, INFO-NEW-5). P38-I1: BC-2.7.002 `303-redirects` → `302/303-redirects` for parity with BC-2.7.007. P39-I1: impact-boundary-576.md §2.2 table-head annotation added (Rev-1 planning estimates caveat; PG-F3-1). P39-I2: EC-2.7.001-2 N==M clause — hint fires only when displayed count is reduced. P39-I3: H-NEW-ATTACHMENT-007 id 60004 description corrected — backslashes neutralized by step-4 char-scrub on Unix, not step-1 file_name(). P40-I1: VP-576-003 assertion (b) self-contradictory parenthetical replaced. P40-I2: BC-3.9.008 AID validation CWE-88/CWE-22 dual-mapping note. P40-I3: dry-run path-b/c holdout disposition only. INFO-1: triple blank lines after EC-2.7.008-6 collapsed to one. INFO-NEW-5: BC-3.9.009 Trace P24-001 citation appended. INFO-2/INFO-3/INFO-6/INFO-8/INFO-15: accepted-carried.
+
+### Changed Requirements
+
+- `.factory/specs/prd/bc-2-issue-read.md` (MODIFIED): P38-I1 — BC-2.7.002 `302/303-redirects` parity; P39-I2 — EC-2.7.001-2 N==M clause; INFO-1 — triple blank lines collapsed; frontmatter trace v1.3.78 added.
+- `.factory/phase-f1-delta-analysis/impact-boundary-576.md` (MODIFIED): P39-I1 — §2.2 table-head annotation added.
+- `.factory/specs/prd/holdout-scenarios.md` (MODIFIED): P39-I3 — H-NEW-ATTACHMENT-007 id 60004 description corrected; frontmatter trace + version 1.5.7→1.5.8.
+- `.factory/specs/prd/bc-3-issue-write.md` (MODIFIED): P40-I1 — VP-576-003 assertion (b) reworded; P40-I2 — BC-3.9.008 CWE-88/CWE-22 dual-mapping note; INFO-NEW-5 — BC-3.9.009 Trace P24-001 appended; frontmatter trace v1.3.78; footer closing round prepended.
+- `.factory/phase-f2-spec-evolution/prd-delta-576.md` (MODIFIED): `spec_version_after` 1.3.77→1.3.78; CLOSING-ROUND dispositions section appended.
+
+### Impact Assessment
+
+| Artifact | Change Type | Notes |
+|---|---|---|
+| bc-2-issue-read.md | Modified | P38-I1, P39-I2, INFO-1; v1.3.78 |
+| impact-boundary-576.md | Modified | P39-I1 §2.2 annotation |
+| holdout-scenarios.md | Modified | P39-I3 id 60004 description; v1.5.8 |
+| bc-3-issue-write.md | Modified | P40-I1, P40-I2, INFO-NEW-5; v1.3.78 |
+| prd-delta-576.md | Modified | spec_version_after 1.3.78; CLOSING-ROUND dispositions |
+| BC-INDEX.md | Verified, NO change | Counts 657/100/35 unchanged; no index_version bump |
+
+- BCs: 657 (unchanged)
+- Holdouts: 100 (unchanged)
+- VPs: 35 (unchanged)
+
+---
+
 ## [1.3.77] - 2026-07-17
 
 ### Type: PATCH

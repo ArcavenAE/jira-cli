@@ -130,6 +130,8 @@ Following the append-only rule, the next free BC IDs at each section boundary ar
 
 ### 2.2 BC estimate by subsection
 
+> **(Rev-1 planning estimates — subjects for 001..010 diverge from authored IDs; authored BC bodies are ground truth per PG-F3-1 caveat; see R2.3 for the 011-014 mapping; P39-I1)**
+
 #### Section 2.7 — Attachment Read (list + download)
 
 | BC | Subject |

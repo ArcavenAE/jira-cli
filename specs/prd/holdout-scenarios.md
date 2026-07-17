@@ -4,7 +4,7 @@ title: "Holdout Scenarios"
 total_holdouts: 100
 # H-NEW-AUTH-002 registered by S-0.07 (Phase 3, 2026-05-07). Wave 0 COMPLETE.
 # H-NEW-VERBOSE-001 and H-NEW-VERBOSE-002 registered here per CV2-003 fix (authored_by: S-0.06).
-version: "1.5.7"
+version: "1.5.8"
 last_updated: 2026-07-17
 source_pass: 3
 trace: |
@@ -26,6 +26,7 @@ trace: |
   - SOH-ATTACHMENTS-1 adversary pass-31 (2026-07-17, P31): H-NEW-ATTACHMENT-002 error-path Expected exit-code tightened — "Exit code != 0 (exit 1 or exit 64)" → "Exit code = 1 (EC-2.7.007-4 mid-stream error; BC-2.7.012 5xx row)" (P31-001); holdout count unchanged (100)
   - SOH-ATTACHMENTS-1 adversary pass-35 (2026-07-17, P35): H-NEW-ATTACHMENT-002 Expected bullet 4 tightened — "stdout or stderr contains a success message" → "stderr contains a progress/completion message" (BC-2.7.007 profile 3: nothing on stdout in human mode; P35-003); H-NEW-ATTACHMENT-004 Expected A bullet 1 tightened — "stdout/stderr contains" → "stdout contains" (BC-3.9.001 profile 4: human echo to stdout; P35-003); Status lines for both scenarios updated with P35-003 citations; holdout count unchanged (100)
   - SOH-ATTACHMENTS-1 adversary pass-36 (2026-07-17, P36): H-NEW-ATTACHMENT-004 Expected B bullet 4 tightened — "stdout/stderr references the new attachment `30002`" → "stdout references the new attachment `30002`" (BC-3.9.001 profile 4: human echo to stdout; P36-001); H-NEW-ATTACHMENT-004 Status line updated with P36-001 citation; Expected C "stdout/stderr does NOT contain" confirmed as a legitimate two-channel negative assertion — left unchanged; holdout count unchanged (100)
+  - SOH-ATTACHMENTS-1 closing micro-round 1.3.77→1.3.78 (2026-07-17, P39-I3): H-NEW-ATTACHMENT-007 id 60004 fixture description corrected — on Unix backslashes are neutralized by step-4 char-scrub (`\`→`_`), not step-1 `file_name()`; assertion unchanged, satisfiable either way (P39-I3); version 1.5.7→1.5.8; holdout count unchanged (100)
 ---
 
 # Holdout Scenarios — jira-cli
@@ -2392,7 +2393,7 @@ Call C (non-interactive, no `--yes`):
    - `{"id":"60001","filename":"../../evil.txt"}` — path-traversal via `../` sequences.
    - `{"id":"60002","filename":"CON"}` — Windows reserved device name.
    - `{"id":"60003","filename":"aaa…a.txt"}` — overlong name: 251 `a` characters + `.txt` = 255 bytes total (exceeds the 214-byte sanitizer cap — BC-2.7.011 step 5; truncated to 214, then 41-byte SHA-1 prefix = 255-byte on-disk name at NAME_MAX); tests the length-truncation step of the sanitization pipeline. **Note**: null bytes (`\u0000`) are not representable in JSON string values per RFC 7159 §8.2 and cannot appear in a JSON fixture; the overlong-name test exercises the length-cap step instead.
-   - `{"id":"60004","filename":"\\\\server\\share\\path.txt"}` — UNC path with Windows path separators (JSON-escaped value: `\\server\share\path.txt`); tests that `\\` and `\` separators are stripped by the path-component step.
+   - `{"id":"60004","filename":"\\\\server\\share\\path.txt"}` — UNC path with Windows path separators (JSON-escaped value: `\\server\share\path.txt`); tests that `\\` and `\` separators are neutralized on Unix by the step-4 char-scrub (`\`→`_`), not step-1 `file_name()` — assertion unchanged, satisfiable either way. P39-I3.
 3. Each content URL returns a distinct 1-byte payload (`A`, `B`, `C`, `D` respectively).
 
 **Action**: `jr issue attachment download FOO-5 --all --out-dir OUT_DIR`
