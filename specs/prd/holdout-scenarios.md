@@ -2165,7 +2165,7 @@ Call B (two attachments):
 - Exit code = 0.
 - `OUT_DIR` contains exactly 3 files.
 - ALL three files in `OUT_DIR` MUST carry SHA-1 prefix forms (40 hex characters + `_` + basename). Batch mode SHA-1-prefixes EVERY file unconditionally — including non-colliding files. Specifically: BOTH `report.pdf` entries MUST appear as `<sha1("20001")>_report.pdf` and `<sha1("20002")>_report.pdf` (distinct 40-hex prefixes). The sanitized `../../evil.txt` entry (id `20003`) MUST also carry a SHA-1 prefix (e.g., `<sha1("20003")>_evil.txt` or the degenerate fallback `<sha1("20003")>_20003` if sanitization returns `None`). An implementation that only SHA-1-prefixes on collision (leaving non-colliding files bare) MUST FAIL this assertion. Neither file has a name that would escape `OUT_DIR` (no `../` or absolute path).
-- The `../../evil.txt` filename is sanitized: the file lands inside `OUT_DIR` with a safe name (e.g., `evil.txt` or `__.evil.txt` or SHA-1-prefixed); it does NOT appear at any path above `OUT_DIR`.
+- The `../../evil.txt` filename is sanitized: the file lands inside `OUT_DIR` with a safe SHA-1-prefixed name (`<sha1("20003")>_evil.txt` (basename sanitized to `evil.txt`, then batch SHA-1 prefix applied)); it does NOT appear at any path above `OUT_DIR`.
 - All three files are present and contain the correct bytes (`AAA`, `BBB`, `CCC` in corresponding files).
 
 **Call B setup (partial-failure — human mode; `OUT_DIR_B`)**:

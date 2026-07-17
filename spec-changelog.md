@@ -7,6 +7,48 @@ project: "jr (jira-cli)"
 
 Track all spec version changes. Most recent version first.
 
+## [1.3.66] - 2026-07-17
+
+### Type: PATCH
+
+### Summary
+
+Adversary pass 26 (P26) fix round — 3 LOW + 1 INFO findings (second consecutive zero-MEDIUM-and-above pass). LOW: BC-2.7.012 error table missing KEY-403 row for batch download paths; row added (`"Permission denied: cannot access issue <KEY>."`, exit 1, batch paths only `--all`/`--newest`; mirrors BC-2.7.006 P15-005); error-taxonomy row 95 issue-GET sub-variant citation re-pointed from BC-2.7.006 to BC-2.7.012 (P26-001). LOW: H-NEW-ATTACHMENT-003 Expected A bullet 2 bare examples `evil.txt` and `__.evil.txt` contradicted bullet 1's unconditional-SHA-1-prefix mandate; struck bare examples, replaced with SHA-1-prefixed form only (`<sha1("20003")>_evil.txt`, basename sanitized to `evil.txt`, then batch SHA-1 prefix applied) (P26-002). LOW: BC-2.7.007 step 1 partial-struct absent-tolerance clause added — metadata deserialization uses a PARTIAL struct requiring only `filename`; all other fields (`created`, `author`, `mimeType`, `size`, `content`) are absent-tolerant; impact-boundary-576.md §1.1 PHASE-DOC-RETRO-ANNOTATION added — `created` and `author` are `Option` in the shipped design; shared LIST-path struct and download metadata partial struct share the same Rust type via `Option` typing; H-002 fixtures left AS-IS (confirmed correct under ruling) (P26-003). INFO: BC-3.9.019 Source field softened — `src/duration.rs::parse_age_duration` hard-citation replaced with `parse_age_duration` (S4 location TBD — `src/cli/issue/attachments.rs` private helper or `src/duration.rs` pub(crate) sibling, per impact-boundary R3.9a) (P26-004).
+
+### Changed Requirements
+
+- `.factory/specs/prd/bc-2-issue-read.md` (MODIFIED): P26-001 — BC-2.7.012 error table: KEY-403 batch-paths-only row added; BC-2.7.012 Trace updated. P26-003 — BC-2.7.007 step 1: partial-struct absent-tolerance clause added; BC-2.7.007 Trace updated. Frontmatter trace v1.3.66 entry added.
+- `.factory/specs/prd/error-taxonomy.md` (MODIFIED): P26-001 — row 95 issue-GET sub-variant citation changed from `BC-2.7.006` to `BC-2.7.012 batch paths only`.
+- `.factory/specs/prd/holdout-scenarios.md` (MODIFIED): P26-002 — H-NEW-ATTACHMENT-003 Expected A bullet 2: bare examples struck; SHA-1-prefixed form only retained.
+- `.factory/specs/prd/bc-3-issue-write.md` (MODIFIED): P26-004 — BC-3.9.019 Source field softened (parse_age_duration location TBD); BC-3.9.019 Trace updated. Frontmatter trace v1.3.66 entry added.
+- `.factory/specs/prd/BC-INDEX.md` (MODIFIED): P26-001 — BC-2.7.012 row KEY-403 note added. P26-003 — BC-2.7.007 row partial-struct note added. P26-004 — BC-3.9.019 row location-TBD note added. `last_updated`, `index_version` v6.25→v6.26 updated.
+- `.factory/phase-f2-spec-evolution/prd-delta-576.md` (MODIFIED): `spec_version_after` 1.3.65→1.3.66; P26 dispositions section appended.
+- `.factory/phase-f1-delta-analysis/impact-boundary-576.md` (MODIFIED): P26-003 — §1.1 `src/types/jira/attachment.rs`: PHASE-DOC-RETRO-ANNOTATION added (`created`/`author` are `Option`; partial struct for step-1 metadata fetch).
+
+### Impact Assessment
+
+| Artifact | Change Type | Notes |
+|---|---|---|
+| bc-2-issue-read.md | Modified | BC-2.7.012 KEY-403 batch row (P26-001); BC-2.7.007 step-1 partial-struct clause (P26-003) |
+| error-taxonomy.md | Modified | Row 95 issue-GET citation re-pointed to BC-2.7.012 (P26-001) |
+| holdout-scenarios.md | Modified | H-NEW-ATTACHMENT-003 bullet 2 bare examples struck (P26-002) |
+| bc-3-issue-write.md | Modified | BC-3.9.019 Source softened — parse_age_duration location TBD (P26-004) |
+| BC-INDEX.md | Modified | BC-2.7.007 partial-struct note; BC-2.7.012 KEY-403 note; BC-3.9.019 location-TBD note; index_version v6.26 |
+| prd-delta-576.md | Modified | spec_version_after 1.3.66; P26 dispositions section |
+| impact-boundary-576.md | Modified | §1.1 PHASE-DOC-RETRO-ANNOTATION Option typing + partial struct (P26-003) |
+
+| Dimension | Value |
+|---|---|
+| BC count | 657 (unchanged) |
+| Holdout count | 100 (unchanged) |
+| VP count | 35 (unchanged) |
+| New BCs | 0 |
+| New VPs | 0 |
+| New Holdouts | 0 |
+| Spec version | 1.3.65→1.3.66 |
+
+---
+
 ## [1.3.65] - 2026-07-17
 
 ### Type: PATCH

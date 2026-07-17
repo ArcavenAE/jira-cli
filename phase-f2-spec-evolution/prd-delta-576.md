@@ -5,7 +5,7 @@ issues: "#576, #585"
 phase: F2
 authored: 2026-07-15
 spec_version_before: 1.3.42
-spec_version_after: 1.3.65
+spec_version_after: 1.3.66
 bc_count_before: 624
 bc_count_after: 657
 holdout_count_before: 88
@@ -456,3 +456,18 @@ Source: Adversary Pass 25. 2 LOW + 1 INFO findings (first zero-MEDIUM-and-above 
 | P25-I01 (INFO) | INFO | impact-boundary-576.md | APPLIED | R3.9b PHASE-DOC-RETRO-ANNOTATION added: BC-2.7.007 step 1 constructs the content URL from the attachment id directly and does NOT read the metadata `content` field; metadata is used solely to obtain the canonical `filename`. The `content`-URL-from-metadata path described in R3.9b was superseded by the id-direct-construction rule during F2 spec finalisation. |
 
 **BC count at this round: 657 (unchanged). Holdout count: 100 (unchanged). VP count: 35 (unchanged). Spec version: 1.3.65. Both guards exit 0.**
+
+---
+
+## Adversary Pass 26 Fix Round Finding Dispositions
+
+Source: Adversary Pass 26 (second consecutive zero-MEDIUM pass). 3 LOW + 1 INFO findings. Spec version bump: 1.3.65 → 1.3.66. No new BCs. Holdouts: 100 (unchanged). VPs: 35 (unchanged).
+
+| Finding ID | Severity | File(s) Touched | Status | Change |
+|------------|----------|----------------|--------|--------|
+| P26-001 (LOW) | LOW | bc-2-issue-read.md, error-taxonomy.md, BC-INDEX.md | APPLIED | BC-2.7.012 error table: KEY-403 batch-paths-only row added after KEY-404 row — `"Permission denied: cannot access issue <KEY>."`, exit 1, batch paths only (`--all`/`--newest`); mirrors BC-2.7.006 P15-005 row; error-taxonomy row 95 issue-GET sub-variant citation changed from `BC-2.7.006` to `BC-2.7.012 batch paths only` (BC-2.7.006 kept for row 94 attachment-list); BC-2.7.012 Trace updated (P26-001). BC-INDEX.md BC-2.7.012 row updated. |
+| P26-002 (LOW) | LOW | holdout-scenarios.md | APPLIED | H-NEW-ATTACHMENT-003 Expected A bullet 2: bare examples `evil.txt` and `__.evil.txt` struck; replaced with SHA-1-prefixed form only: `<sha1("20003")>_evil.txt` (basename sanitized to `evil.txt`, then batch SHA-1 prefix applied). Contradicts bullet 1's unconditional-SHA-1-prefix mandate eliminated; both bullets now consistent with BC-2.7.010 batch naming. |
+| P26-003 (LOW) | LOW | bc-2-issue-read.md, impact-boundary-576.md, BC-INDEX.md | APPLIED | RULING: option (b), partial struct + Option typing. (1) BC-2.7.007 step 1: partial-struct absent-tolerance clause added — metadata deserialization uses a PARTIAL struct requiring only `filename` (id implied by the request); all other fields (`created`, `author`, `mimeType`, `size`, `content`) are absent-tolerant — the step's sole purpose is canonical-filename retrieval, and fixtures/servers may omit metadata fields. BC-2.7.007 Trace updated (P26-003). (2) impact-boundary-576.md §1.1 `src/types/jira/attachment.rs` description: PHASE-DOC-RETRO-ANNOTATION added — `created` and `author` are `Option` in the shipped design; deserialization MUST tolerate null/absent `author` (BC-2.7.002 null-author) and absent `created`; the LIST-path full struct and the download metadata partial struct share the same Rust type via `Option` typing; the step-1 metadata fetch uses the partial form (P26-003). (3) H-002 fixtures left AS-IS (confirmed correct under ruling). BC-INDEX.md BC-2.7.007 row updated. |
+| P26-004 (INFO) | INFO | bc-3-issue-write.md, BC-INDEX.md | APPLIED | BC-3.9.019 Source field softened: `src/duration.rs::parse_age_duration` hard-citation replaced with `parse_age_duration` (S4 location TBD — `src/cli/issue/attachments.rs` private helper or `src/duration.rs` pub(crate) sibling, per impact-boundary R3.9a). BC-3.9.019 Trace updated (P26-004). BC-INDEX.md BC-3.9.019 row updated with location-TBD note. |
+
+**BC count at this round: 657 (unchanged). Holdout count: 100 (unchanged). VP count: 35 (unchanged). Spec version: 1.3.66. Both guards exit 0.**

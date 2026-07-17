@@ -33,6 +33,8 @@ content (direct download URL), thumbnail (optional)
 
 The `content` URL field (issue #585) is included here — #585 closes-as-fixed-by-#576 with no separate story. This struct is `#[derive(Debug, Clone, Serialize, Deserialize)]`; `size` is `u64`; `created` is `String` (ISO 8601, not parsed); `author` reuses the existing `User` type from `src/types/jira/user.rs` (already re-exported via `types/jira/mod.rs`).
 
+> **[PHASE-DOC-RETRO-ANNOTATION (P26-003, 2026-07-17)]** The typing above describes the shared LIST-path struct. In the shipped design: `created` and `author` are `Option` in the shared struct — deserialization MUST tolerate null/absent `author` (see BC-2.7.002 null-author clause) and absent `created`. The shared LIST-path struct may still require what BC-2.7.002's curated output needs, but deserialization is absent-tolerant on these fields. Additionally, the per-attachment step-1 `GET /rest/api/3/attachment/{id}` metadata fetch (BC-2.7.007 single-`--id` path) uses a PARTIAL form of this struct requiring only `filename` (id implied by the request); all other fields (`created`, `author`, `mimeType`, `size`, `content`) are absent-tolerant on that step — the step's sole purpose is canonical-filename retrieval (BC-2.7.007 step 1, P26-003). The LIST-path full struct and the download metadata partial struct share the same Rust type via `Option` typing.
+
 #### `src/api/jira/attachments.rs` — **NEW**
 
 Four HTTP call implementations against the Jira REST Attachment API:
