@@ -5531,3 +5531,42 @@ Displaced to make room for SOH-ATTACHMENTS-1 adversary pass-36 remediation step 
 **Convergence:** Trajectory p1..p36 = 22,21,18,16,10,5,3,5,3,3,2,2,3,9,7,5,5,5,4,6,6,3,3,2,2,3,3,2,1,3,2,1,1,5,1,1. STRICT streak 0/3 (DEC-183). Channel-disjunction class MECHANICALLY EXHAUSTED this round (first class-exhaustion since mount-vs-assertion at P28). Next: adversary pass 37 (CLEAN candidate).
 
 **Files committed:** `phase-f2-spec-evolution/prd-delta-576.md`, `sidecar-learning.md`, `spec-changelog.md`, `specs/prd/BC-INDEX.md`, `specs/prd/bc-3-issue-write.md`, `specs/prd/holdout-scenarios.md`, `cycles/cycle-001/burst-log.md`, `cycles/cycle-001/lessons.md`, `STATE.md`.
+
+---
+
+### Archived Phase Progress row (adversary-pass-40 CLEAN burst)
+
+Displaced to make room for SOH-ATTACHMENTS-1 F2 STRICT CONVERGED Phase Progress row per keep-5 rule.
+
+| Phase | Status | Completed | Gate | Notes |
+|-------|--------|-----------|------|-------|
+| **SOH-ATTACHMENTS-1 F2 ADVERSARY PASS-35 REMEDIATED (2026-07-17, fresh context, blind, v1.3.74; NOT-CLEAN 1L+2I; ZERO findings in any authoritative surface (BCs/holdouts/counts/taxonomies/cross-shard invariants all verified clean — "exceptionally polished" per adversary); P35-001 (L, borderline INFO) R3.9b bullet "Derive the default output filename (`<sha1>_<sanitized-basename>`)" stale for single-id download — self-corrected by R3.10 six lines later; retro-annotation added (PHASE-DOC-RETRO-ANNOTATION); P35-002 (I) F1 illustrative JSON shapes pre-BTreeMap key ordering, unannotated → inline note added to R3.2 + parenthetical cross-refs added to R3.5 BC-3.9.019/BC-3.9.020 rows; P35-003 (I) two holdout channel assertions over-permissive ("stdout or stderr") vs profile discipline → tightened: H-NEW-ATTACHMENT-002 Expected bullet 4 → stderr-only per BC-2.7.007 profile 3; H-NEW-ATTACHMENT-004 Expected A bullet 1 → stdout-only per BC-3.9.001 profile 4; Status lines updated; retroactive P31-001 citation added to H-002 Status (spotted during edit); BC-INDEX correctly NOT bumped (no BC bodies changed); full standing checklist honored; spec v1.3.74→v1.3.75; counts 657/100/35 UNCHANGED; SCOPED VERIFICATION (annotation/assertion-tightening round; burst-29/32/33 precedent); STRICT streak 0/3 (DEC-183). trajectory-tail →1→1→5→1. Pass 36 next — CLEAN candidate.** | **ADVERSARY PASS-35 REMEDIATED** | **2026-07-17** | **Adversary pass 36 next — CLEAN candidate.** | BC 657; holdouts 100; VP 35; spec v1.3.75; BC-INDEX v6.32. |
+
+### Archived Current Phase Steps row (adversary-pass-40 CLEAN burst)
+
+Displaced to make room for SOH-ATTACHMENTS-1 F2 STRICT CONVERGED step row per keep-5 rule.
+
+| Step | Agent | Status | Output |
+|------|-------|--------|--------|
+| **SOH-ATTACHMENTS-1 F2 ADVERSARY PASS-35 REMEDIATED (2026-07-17): 1L+2I (zero MEDIUM; zero authoritative-surface findings — "exceptionally polished" per adversary); P35-001 (L, borderline INFO) R3.9b SHA-1 prefix stale for single-id — PHASE-DOC-RETRO-ANNOTATION added; P35-002 (I) F1 JSON shapes unannotated → inline notes + BC-3.9.019/BC-3.9.020 cross-refs added; P35-003 (I) two holdout channel assertions over-permissive → H-NEW-ATTACHMENT-002 bullet 4 tightened to stderr-only (BC-2.7.007 profile 3) + H-NEW-ATTACHMENT-004 Expected A bullet 1 tightened to stdout-only (BC-3.9.001 profile 4); retroactive P31-001 citation added to H-002 Status; BC-INDEX NOT bumped (no BC bodies changed); full standing checklist honored; spec v1.3.74→v1.3.75; BC 657/holdouts 100/VP 35 UNCHANGED; SCOPED VERIFICATION (annotation/assertion-tightening round; burst-29/32/33 precedent); STRICT streak 0/3 (DEC-183). trajectory-tail →1→1→5→1. Pass 36 next — CLEAN candidate.** | adversary + product-owner + state-manager | COMPLETE | BC 657; holdouts 100; VP 35; spec v1.3.75; BC-INDEX v6.32. |
+
+---
+
+## SOH-ATTACHMENTS-1 F2 ADVERSARY PASS-40 CLEAN BURST — FULL STRICT CONVERGENCE (2026-07-17)
+
+**What happened:** Adversary pass 40 (fresh context, blind, v1.3.77 unchanged) returned CLEAN — the THIRD consecutive zero-finding pass, completing the window p38/p39/p40 CLEAN×3 required for FULL STRICT CONVERGENCE per DEC-181/DEC-183. Zero findings at LOW or above. Three INFO cosmetics reported and CARRIED: P40-I1 (VP-576-003 parenthetical imprecision — "partial match" vs "longest matching prefix" in scenario narrative), P40-I2 (CWE-88-vs-CWE-22 citation-precision nit — adversary noted CWE-88 argument-injection as an additional applicable class; product carries CWE-22 path-traversal as the primary citation; nit carried), P40-I3 (optional path-b/path-c dry-run holdout coverage observation — existing coverage deemed sufficient; carried). Adversary source-verified all code claims: servicedesks.rs:41 (require_service_desk call-site), servicedesk.rs:6-7 (ServiceDesk struct fields), interactions.rs:191 (handle_attachment_delete), main.rs:391-395 (Ctrl+C handler), error.rs:95 (exit code 130). Verified every holdout Expected derivable from BC text alone. All F1/F2 divergences retro-annotated. Adversary verdict: "exceptionally consistent."
+
+**FULL STRICT CONVERGENCE RECORD:**
+- Window: p38/p39/p40 CLEAN×3 per DEC-181 criterion (re-confirmed DEC-183)
+- Total passes: 40 / Fix rounds: 37
+- Spec trajectory: v1.3.42 → v1.3.77 (35 spec versions across 37 fix rounds)
+- Finding trajectory: 22,21,18,16,10,5,3,5,3,3,2,2,3,9,7,5,5,5,4,6,6,3,3,2,2,3,3,2,1,3,2,1,1,5,1,1,1,0,0,0
+- Counts final: BC 657 / holdouts 100 / VP 35 / BC-INDEX v6.33
+- Class exhaustions reached: mount-vs-assertion (P28), cross-shard invariant wiring (P30), channel-disjunction (P36), WITHDRAWN-DESIGN (P37)
+- Gate docket: CLEAR (DEC-182 ratified all five rulings mid-loop)
+
+**Carried cosmetics at window close (foldable in pre-gate micro-round):** P38-I1 + P39-I1/I2/I3 + P40-I1/I2/I3 + 7 older stable cosmetics (INFO-1/2/3/6/8/15/NEW-5).
+
+**Next:** Pre-gate sequence — (1) closing micro-round folds carried cosmetics; (2) /vsdd-factory:check-input-drift; (3) fresh-context consistency audit; (4) F2 gate presentation to human with structured review questions.
+
+**Files committed:** `sidecar-learning.md`, `cycles/cycle-001/burst-log.md`, `STATE.md`.
