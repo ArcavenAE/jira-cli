@@ -7,6 +7,40 @@ project: "jr (jira-cli)"
 
 Track all spec version changes. Most recent version first.
 
+## [1.3.63] - 2026-07-17
+
+### Type: PATCH
+
+### Summary
+
+Adversary pass 23 (P23) fix round — MEDIUM: VP-576-005 omitted the mandated servicedesk-list mount; on a guaranteed BC-X.8.010 cache miss `get_or_fetch_project_meta` issues both `GET /rest/api/3/project/{key}` AND `GET /rest/servicedeskapi/servicedesk`; the second call was vaguely attributed to mount (1) via "+ service desk meta" with no separate mount number or licensing BC clause; fixed by adding explicit mount (2) for the servicedesk-list GET (returning a valid service desk with `projectId == "10050"` matching mount (1)'s `id` per H-NEW-ATTACHMENT-009 wording; match is `serviceDesk.projectId == project.id` NOT `projectKey` per BC-3.9.003 P6-001 correction); mounts renumbered (1)-(7) (mount (4) is test-env step); wire-completeness ECHO-BREAKER LIST-B enumeration added (6 HTTP calls × licensing BC clause each) (P23-001); LOW: ORCHESTRATOR RULING encoded — eligibility guards (BC-3.9.005, BC-3.9.017 step 0 validity checks) are NOT dry-run-suppressed (fire before any list GET unconditionally even on `--dry-run`), contrasting with BC-3.9.014 confirmation gates which ARE suppressed; EC-3.9.020-7 extended with "GATES vs ELIGIBILITY GUARDS" distinction sentence; new EC-3.9.020-8 added (`--replace-existing --dry-run --public` on non-JSM → eligibility guard fires at step 0, exit 64, no preview); EC-3.9.005-3 extended with dry-run non-suppression cross-ref; BC-3.9.005 and BC-3.9.020 Traces updated (P23-002); LOW: VP-576-005 annotated with story allocation — "verified in S5 (S5 depends_on S3); textual home BC-3.9.017; NOT part of S3 acceptance matrix (contrast VP-576-003)"; prd-delta-576.md S5 scope row mirrored (P23-003); INFO: JSON Output Shape Contracts table `--replace-existing --dry-run` row appended with `--public` `"visibility":"public"` wouldUpload note per EC-3.9.020-7 (P23-004).
+
+### Changed Requirements
+
+- `.factory/specs/prd/bc-3-issue-write.md` (MODIFIED): P23-001 — VP-576-005 full replacement: explicit mount (2) for `GET /rest/servicedeskapi/servicedesk` added; mounts renumbered (1)-(7); wire-completeness ECHO-BREAKER LIST-B enumeration added; story-allocation annotation added. P23-002 — EC-3.9.020-7 extended with GATES vs ELIGIBILITY GUARDS distinction; EC-3.9.020-8 added (new EC); EC-3.9.005-3 extended with dry-run non-suppression cross-ref; BC-3.9.005 Trace updated; BC-3.9.020 Trace updated. P23-004 — JSON Output Shape Contracts `--replace-existing --dry-run` row: `--public` annotation appended. Frontmatter trace v1.3.63 entry added. Footer updated (spec v1.3.63).
+- `.factory/specs/prd/BC-INDEX.md` (MODIFIED): P23-001/P23-003 — BC-3.9.017 row: servicedesk-list mount fix note + S5 allocation note added. P23-002 — BC-3.9.005 row: EC-3.9.005-3 dry-run cross-ref added. BC-3.9.020 row: EC-3.9.020-8 + GATES vs ELIGIBILITY GUARDS note added. `last_updated`, `index_version` v6.22→v6.23 updated.
+- `.factory/phase-f2-spec-evolution/prd-delta-576.md` (MODIFIED): `spec_version_after` 1.3.62→1.3.63; S5 scope row VP-576-005 allocation note added; P23 dispositions section appended.
+
+### Impact Assessment
+
+| Artifact | Change Type | Notes |
+|---|---|---|
+| bc-3-issue-write.md | Modified | VP-576-005 wire fix (7 mounts + LIST-B); EC-3.9.020-7 GATES/GUARDS; EC-3.9.020-8 new; EC-3.9.005-3 dry-run note; JSON table row annotation |
+| BC-INDEX.md | Modified | BC-3.9.005, BC-3.9.017, BC-3.9.020 rows; index_version v6.23 |
+| prd-delta-576.md | Modified | spec_version_after 1.3.63; S5 scope row; P23 dispositions section |
+
+| Dimension | Value |
+|---|---|
+| BC count | 657 (unchanged) |
+| Holdout count | 100 (unchanged) |
+| VP count | 35 (unchanged) |
+| New BCs | 0 |
+| New VPs | 0 |
+| New Holdouts | 0 |
+| Spec version | 1.3.62→1.3.63 |
+
+---
+
 ## [1.3.62] - 2026-07-16
 
 ### Type: PATCH
@@ -18,7 +52,7 @@ Adversary pass 22 (P22) fix round — MEDIUM: BC-3.9.003 non-interactive bullet 
 ### Changed Requirements
 
 - `.factory/specs/prd/bc-3-issue-write.md` (MODIFIED): P22-001 — BC-3.9.003 non-interactive mode bullet corrected ("exit 64 before any HTTP" → "exit 64 before any servicedeskapi call and before any upload POST — Step-0 issue GET and project-meta resolution already ran"). BC-3.9.012 table row trigger for non-interactive-no-yes corrected ("local" → "local (after Step-0 issue GET + meta fetch)"). BC-3.9.003 Trace updated (P22-001). Frontmatter trace v1.3.62 entry added. Footer updated (spec v1.3.62). P22-002 — EC-3.9.016-6 reworded: "proceed to BC-3.9.008" → "issue the DELETE wire call of BC-3.9.008"; 404 handling per BC-3.9.013 bulk exception (benign skip) added.
-- `.factory/specs/prd/bc-2-issue-read.md` (MODIFIED): P22-003 — BC-2.7.012 "Unknown issue key" body prose prepended with batch-only caveat. Frontmatter trace v1.3.62 entry added.
+- `.factory/specs/prd/bc-2-issue-read.md` (MODIFIED): P22-003 — BC-2.7.012 "Unknown issue key" body prose prepended with batch-only caveat; BC-2.7.012 Trace field updated with P22-003 citation. Frontmatter trace v1.3.62 entry added (includes Trace-citation note).
 - `.factory/specs/prd/BC-INDEX.md` (MODIFIED): P22-001 — BC-3.9.003 row: non-interactive trigger note added. BC-3.9.012 row: trigger column note added. P22-002 — BC-3.9.016 row: EC-3.9.016-6 404-handling note added. P22-003 — BC-2.7.012 row: body-prose caveat note added. `last_updated`, `index_version` v6.21→v6.22 updated.
 - `.factory/phase-f2-spec-evolution/prd-delta-576.md` (MODIFIED): `spec_version_after` 1.3.61→1.3.62; P22 dispositions section appended.
 

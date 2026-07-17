@@ -14,7 +14,7 @@ trace: |
   - SOH-ATTACHMENTS-1 adversary pass-19 (2026-07-16): BC-2.7.002 BTreeMap-alphabetical key order clause + example reorder (P19-001); EC-2.7.001-2 JSON-mode filter-count hint clause (P19-002); EC-2.7.007-5 best-effort MUST + tokio ctrl_c implementation note (P19-003); spec v1.3.59
   - SOH-ATTACHMENTS-1 adversary pass-20 (2026-07-16): BC-2.7.007 `--out` unconditional step-1 clause added — step 1 always issued even with `--out`; pre-stream existence validation; one extra GET accepted cost (P20-003); VP-576-004 attachment-object JSON transformation pin added to BC-2.7.002 — `"self"` OMITTED, `"content"` RENAMED to `"contentUrl"` (P20-006); spec v1.3.60
   - SOH-ATTACHMENTS-1 adversary pass-21 (2026-07-16): BC-2.7.012 KEY-404 batch-paths-only annotation — `--id` does not server-verify KEY per BC-2.7.007 (P21-006); spec v1.3.61
-  - SOH-ATTACHMENTS-1 adversary pass-22 (2026-07-16): BC-2.7.012 body prose "Unknown issue key" sentence prepended with batch-only caveat (P22-003); spec v1.3.62
+  - SOH-ATTACHMENTS-1 adversary pass-22 (2026-07-16): BC-2.7.012 body prose "Unknown issue key" sentence prepended with batch-only caveat; BC-2.7.012 Trace field updated with P22-003 citation (P22-003); spec v1.3.62
 ---
 
 # BC-2 — Issue Read (list / view / comments / changelog)

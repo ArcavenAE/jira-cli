@@ -6173,3 +6173,38 @@ _Tagged: [process-gap] [phrase-class-sweep] [concept-change] [stale-wording] [gr
 
 _Recorded: 2026-07-17. State-manager (adversary-pass-22 remediation burst, TD-VSDD-053)._
 _Tagged: [process-gap] [cv-false-positive-closure] [4th-datapoint] [stale-context-read] [re-read-at-claim-time] [verbatim-quote] [consistency-validator] [engine-side]_
+
+
+---
+
+## SOH-ATTACHMENTS-1 F2 Adversary Pass 23 — Process Lessons (2026-07-17)
+
+### [codified] FIXTURE-COMPLETENESS-ENUMERATION: List B must enumerate full expected call set
+
+Two consecutive adversary passes found defects in the same VP-576-005 fixture: P21-002 added a forbidden HTTP call (violating EC-3.9.003-5 one-issue-GET invariant), and P23-001 omitted a mandated HTTP call (GET /rest/servicedeskapi/servicedesk, required by BC-X.8.010 cache-miss GET-2). The sentence-level echo-breaker protocol (List A) missed both because fixtures are not prose sentences. The initial List B extension after P21 only required that each PRESENT mount be licensed by a named BC clause ("call-count licensing") — this caught forbidden additions but not omissions.
+
+**Rule (FIXTURE-COMPLETENESS-ENUMERATION):** The echo-breaker List B requirement mandates COMPLETENESS enumeration: the full expected HTTP call set is INDEPENDENTLY DERIVED from the wire contract (BC steps + EC clauses, cache-miss assumptions explicit) and embedded in the fixture body as an explicit enumeration (i)-(vi) with one licensing BC/EC per call. The consistency validator independently recomputes the call set and compares against the fixture's enumeration. A fixture is valid only if: (a) every present mount is licensed (no forbidden) AND (b) every mandated call is present (no omitted).
+
+**Sub-classes:**
+- (a) added-forbidden: mount present but unlicensed/prohibited by a wire-contract clause — catches P21-002 class
+- (b) omitted-mandated: call absent but required by wire contract — catches P23-001 class; only caught by completeness enumeration
+
+**First-round recomputation result (r33 PASS):** Independently derived 6 HTTP calls = fixture's 6 enumerated calls exactly. Mitigation working.
+
+_Discovered: P23-001 (2026-07-17); root cause: sentence-level List B could not detect omissions_
+
+---
+
+### [codified] GUARDS-VS-GATES-DISTINCTION: eligibility guards fire on dry-run; gates do not
+
+Adversary P23-002 identified that `--dry-run` interaction with eligibility guards was unspecified, creating a potential false-preview hazard (user might expect to see a "would upload" preview even when `--public` is used on a non-JSM project).
+
+**Rule (GUARDS-VS-GATES-DISTINCTION):** Dry-run suppression applies EXCLUSIVELY to BC-3.9.014 confirmation gates (consent checks). Eligibility guards (BC-3.9.005 non-JSM exit-64 check; BC-3.9.017 step-0 validity checks) fire unconditionally before any list GET, even on `--dry-run`. Rationale: gates protect against accidental destruction (no destruction on dry-run → no gate); eligibility guards protect against invalid flag combinations (invalid regardless of destructiveness → always fire).
+
+**Encoded as:** EC-3.9.020-8 (new EC for `--replace-existing --dry-run --public` on non-JSM → exit 64, no preview) + EC-3.9.020-7 GATES vs ELIGIBILITY GUARDS distinction sentence + EC-3.9.005-3 dry-run cross-ref extension.
+
+**Orchestrator ruling:** This is a pattern-extension within the ratified DEC-182(b) invariant family (no-destructive-call-before-gate invariant); it does not require a new gate docket item.
+
+**Mnemonic:** gates = consent checks (suppressed on dry-run); guards = validity checks (never suppressed).
+
+_Discovered: P23-002 (2026-07-17); orchestrator ruling per DEC-182(b) invariant family_
