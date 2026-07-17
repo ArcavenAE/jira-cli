@@ -6017,3 +6017,38 @@ _Tagged: [positive-control] [stop-and-report] [po-discipline] [hardened-dispatch
 
 _Recorded: 2026-07-16. State-manager (adversary-pass-17 remediation burst, TD-VSDD-053)._
 _Tagged: [process-gap] [twin-artifact-sweep] [recurrence-8] [source-field] [allocation-change] [bc-index] [mechanical-grep] [fix-echo] [codified] — deferred to vsdd-factory engine (F2-skill template update); outside product repo scope — see STATE.md Drift Items_
+
+---
+
+### ECHO-BREAKER-PROTOCOL-ADOPTION [process-gap / convergence]
+
+**Observation (pass-18 checkpoint, 2026-07-16, DEC-182):** The SOH-ATTACHMENTS-1 F2 adversarial loop reached a finding plateau at 9,7,5,5,5 (passes 14-18) with fix-echo dominance: P18-001 (HIGH) was authored entirely by the P17 fix round (JSON-shape table upload-cancel row over-claimed non-interactive exit-0; BC mandates exit 64). High severity authored by a fix round signals that fixes are introducing new content not licensed by any BC clause.
+
+**Root cause:** Fix rounds were writing new sentences (e.g., table cells, annotations) based on intent rather than strictly paraphrasing BC clauses. New content contains claims the adversary can verify against BCs — and when those claims exceed what the BC says, a finding results. The fix-echo sub-class is distinct from the twin-artifact-sweep class: twin-artifact is about propagation to mirror files; fix-echo is about new text in the primary artifact exceeding its licensing BC.
+
+**Protocol adopted (DEC-182):** Every fix round must now deliver an ECHO-BREAKER list alongside the fix: enumerate each newly-authored sentence (or table cell) and state the specific BC clause, EC number, or existing holdout text that licenses the claim. The following consistency round audits a sample (6 of 11 sentences in P18's audit). A sentence with no licensing clause must be removed or rewritten to match the clause.
+
+**First-round result (P18 fix round):** 11-sentence list delivered. Consistency r28 audited 6/6 sampled sentences: all licensed. P18-001 HIGH resolved. Zero findings from the echo-breaker audit in r28.
+
+**Trigger for harder checkpoint:** if p19-p20 still plateau (~5 findings each), human convergence checkpoint before further passes (DEC-182 commitment).
+
+_Recorded: 2026-07-16. State-manager (adversary-pass-18 remediation burst + DEC-182 checkpoint, TD-VSDD-053)._
+_Tagged: [process-gap] [fix-echo] [echo-breaker] [convergence] [plateau] [p18] [dec-182] [codified]_
+
+---
+
+### CV-FALSE-POSITIVE-CLOSURE-3RD-DATAPOINT [process-gap]
+
+**Observation (r28, 2026-07-16):** Consistency r28 carried INFO-11 and INFO-12 as open items. Orchestrator quote-verified both were already micro-fixed in burst-17 (r27 applied them; the fixes are intact in the current file). This is the 3rd datapoint in the CV-FALSE-POSITIVE-CLOSURE class, but with an **inverted direction**: the first two datapoints were resolved items carried as open; this datapoint is a resolved item carried as open again, but caught because the orchestrator had explicit quote-verification from the prior burst.
+
+**Pattern summary across 3 datapoints:**
+- r6: ADR-count/holdout items claimed resolved when holdout section not updated (open carried as resolved).
+- r9: R8-001 carried forward as open via misquoted citation fragment (resolved-but-misquoted carried as open).
+- r28: INFO-11/12 carried as open when both were burst-17 micro-fixes, intact (resolved carried as open).
+
+**Remedy (reinforced):** Both closure claims AND carry-forward claims require verbatim artifact quotes. When a CV marks an item resolved, it must quote the exact text that satisfies the criterion. When a CV carries an item forward, it must quote the text that still fails the criterion. Unverified verdicts in either direction are unreliable.
+
+**Verdict unaffected:** r28 CONSISTENT verdict was correct — INFO-11/12 being carried as open did not change the CONSISTENT verdict since they were non-blocking INFO items. But the pattern is a reliability signal for the CV agent's per-item tracking logic.
+
+_Recorded: 2026-07-16. State-manager (adversary-pass-18 remediation burst, TD-VSDD-053)._
+_Tagged: [process-gap] [cv-false-positive-closure] [3rd-datapoint] [verbatim-quote] [consistency-validator] [engine-side]_

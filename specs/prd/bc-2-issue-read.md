@@ -625,7 +625,7 @@ After filtering, the table is rendered (BC-2.7.001) with only matching rows. Whe
 **Filter composition with download commands**: `--filter mime=<glob>` (and all `--filter` flags) also applies to `jr issue attachment download --all` and `--newest N`. The filter runs before top-N selection: `--newest 3 --filter mime=image/*` yields the 3 most recently created images (see BC-2.7.008/BC-2.7.009).
 
 **EC-2.7.003-1** (zero matches): empty table or `[]` JSON, exit 0. Hint fires: `"Showing 0 of M attachments."`
-**EC-2.7.003-2** (unknown filter key or missing `=` — applies to the entire `--filter` family across `attachment list` and `attachment download`): if a `--filter` value does not contain `=`, exit 64 before any HTTP call: `"Invalid filter '<VALUE>': expected key=value form. Accepted keys: mime=, name=, size-max=."`. If `=` is present but the key before it is not `mime`, `name`, or `size-max`, exit 64: `"Unknown filter key '<KEY>'. Accepted keys: mime=, name=, size-max=."`. This validation is a clap-or-application pre-flight check; no HTTP call is issued on either path.
+**EC-2.7.003-2** (unknown filter key or missing `=` — applies to the entire `--filter` family across `attachment list` and `attachment download`): if a `--filter` value does not contain `=`, exit 64 before any HTTP call: `"Invalid filter '<VALUE>': expected key=value form. Accepted keys: mime=, name=, size-max=."`. If `=` is present but the key before it is not `mime`, `name`, or `size-max`, exit 64: `"Unknown filter key '<KEY>'. Accepted keys: mime=, name=, size-max=."`. This validation is an application pre-flight check; no HTTP call is issued on either path.
 
 **Trace**: F2 spec evolution (SOH-ATTACHMENTS-1 2026-07-15; DEC-179 ratified design)
 
@@ -744,7 +744,7 @@ On success, a completion hint is emitted to stderr: `"Downloaded: <path> (<size_
 **EC-2.7.007-5** (Ctrl+C / SIGINT mid-stream): temporary file (`tmp_<random>`) deleted; exit 130; no final path written.
 
 **EC-2.7.007-8** (concurrent downloads, same out-dir): if two `jr` processes download the same attachment to the same output directory simultaneously, each writes to its own uniquely-named `tmp_<random>` file. There is no interleaving of temp files. When both rename to the final path, the last successful rename wins (standard OS atomic-rename semantics); the earlier written file is silently overwritten. This is safe: both processes produce identical bytes (same source URL), so the last rename wins without data loss. No locking between processes is required.
-**EC-2.7.007-7** (`--output json` success shape for `--id`): `{"downloaded":[{"filename":"<name>","id":"<AID>","path":"<written path>","size":N}]}`; one-element `downloaded` array; inner keys in alphabetical order (`filename` < `id` < `path` < `size`); stdout only; exit 0. `path` is the absolute or relative path actually written (per BC-2.7.010). `size` is the byte count written. No stderr output in JSON mode. Output MUST route through `output::render_json` (#526 invariant).
+**EC-2.7.007-7** (`--output json` success shape for `--id`): `{"downloaded":[{"filename":"<name>","id":"<AID>","path":"<written path>","size":N}]}`; one-element `downloaded` array; inner keys in alphabetical order (`filename` < `id` < `path` < `size`); stdout only; exit 0. `path` is the output path as-constructed by `jr` — NOT canonicalized, NOT made absolute (BC-2.7.010 path-non-determinism note; P18-004). `size` is the byte count written. No stderr output in JSON mode. Output MUST route through `output::render_json` (#526 invariant).
 
 **EC-2.7.007-9** (`--out` without `--id` — clap binding): `--out <PATH>` MUST be declared with `requires = "id"` (clap `requires` → exit 2 when `--out` is supplied without `--id`). `--out` combined with `--all` or `--newest` is invalid: batch downloads write to a directory (`--out-dir`), not a single file path.
 
@@ -781,7 +781,7 @@ On completion a summary hint emits to stderr: `"Downloaded N of M attachments to
 **EC-2.7.008-3** (`--id` and `--all` mutual exclusion): clap enforces `conflicts_with` → exit 2 when both are supplied simultaneously.
 **EC-2.7.008-4** (`--out-dir` path exists but is not a directory): exit 64: `"Not a directory: <PATH>"`. A regular file at the specified path is rejected; the handler requires a directory.
 **EC-2.7.008-5** (`--out-dir` path does not exist): supersedes EC-2.7.008-2 wording clarification — same exit 64: `"Output directory does not exist: <DIR>"`.
-**EC-2.7.008-6** (`--output json` success shape for `--all` / `--newest N`): `{"downloaded":[{"filename":"<name>","id":"<AID>","path":"<written path>","size":N},…]}`; N-element `downloaded` array (one entry per file written; files skipped due to collision or `--filter` are NOT in the array); inner keys alphabetical; stdout only; exit 0 (all attempted downloads either succeeded or were skipped as pre-existing — collision-skips are NON-ERROR, same class as `--filter` exclusions) or exit 1 (content-GET/stream failure — per EC-2.7.008-7/8; the manifest is still emitted even when exit code is 1). No stderr hints (truncation, skips) in JSON mode. Shape aligns with EC-2.7.007-7 for a uniform download response type. Output MUST route through `output::render_json` (#526 invariant).
+**EC-2.7.008-6** (`--output json` success shape for `--all` / `--newest N`): `{"downloaded":[{"filename":"<name>","id":"<AID>","path":"<written path>","size":N},…]}`; N-element `downloaded` array (one entry per file written; files skipped due to collision or `--filter` are NOT in the array); inner keys alphabetical; stdout only; exit 0 (all attempted downloads either succeeded or were skipped as pre-existing — collision-skips are NON-ERROR, same class as `--filter` exclusions) or exit 1 (content-GET/stream failure — per EC-2.7.008-7/8; the manifest is still emitted even when exit code is 1). No stderr hints (truncation, skips) in JSON mode. `path` is the output path as-constructed by `jr` — NOT canonicalized, NOT made absolute (BC-2.7.010 path-non-determinism note; P18-004). Shape aligns with EC-2.7.007-7 for a uniform download response type. Output MUST route through `output::render_json` (#526 invariant).
 
 
 
@@ -859,7 +859,9 @@ When no `--out <PATH>` is specified, the default output filename depends on the 
 
 When `--out <PATH>` is supplied on the single-file path (BC-2.7.007), all default naming is bypassed and the explicit path is used. The user-supplied path is NOT sanitized (trusted operator input).
 
-**Trace**: F2 spec evolution (SOH-ATTACHMENTS-1 2026-07-15; DEC-179 ratified design; #576 SHA-1-prefix proposal incorporated)
+**`path` field non-determinism (P18-004 ruling)**: the `path` value in the download JSON manifest (EC-2.7.007-7 / EC-2.7.008-6) is the output path exactly as constructed by `jr`: the user-supplied `--out` value verbatim, or the out-dir joined with the final filename (BC-2.7.010 naming rules above). The path is NOT canonicalized and NOT made absolute. Consequently: snapshot tests MUST redact or normalize `path` (e.g., via a TempDir root substitution); exact-match assertions on `path` are only valid with a controlled current working directory.
+
+**Trace**: F2 spec evolution (SOH-ATTACHMENTS-1 2026-07-15; DEC-179 ratified design; #576 SHA-1-prefix proposal incorporated); P18-004 (path-non-determinism ruling added)
 
 ---
 

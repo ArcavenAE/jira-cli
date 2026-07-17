@@ -75,7 +75,10 @@ Specifically:
    already-transitive crate to a direct dependency for `tokio_util::io::ReaderStream`. This
    converts a `tokio::fs::File` (or any `AsyncRead`) into a `Stream<Item = Bytes>` compatible
    with a reqwest multipart `Part::stream()`. No new crate enters the supply chain — only
-   the version resolution becomes explicit.
+   the version resolution becomes explicit. **Feature note (P18-I2)**: the `io-util` feature
+   transitively enables the `io` feature; `io` alone is the minimal feature flag for
+   `ReaderStream`. An implementer may declare `features = ["io"]` instead — `io-util` is
+   sufficient and is the conservative explicit choice.
 
 Cargo.toml is NOT modified by this ADR delivery — the dependency additions are deferred to the
 Story 3 delivery slot per the SOH-ATTACHMENTS-1 wave schedule.

@@ -37,6 +37,8 @@ Setup uses:
 
 **Holdout Retirement Policy (S-3.10):** Holdouts pin user-observable behavior. If the target of a holdout becomes an internal helper with no production caller (i.e., no longer user-observable), the holdout must be rewritten or retired in the same story that introduces the deprecation, not deferred. This rule was codified after S-2.06 v1→v2 pivoted away from the client-side parse_duration calculator without retiring H-018 in the same wave (gap closed in S-3.10).
 
+**Group numbering taxonomy (P18-005):** Group numbers are historical non-contiguous identifiers assigned at the time each cluster was authored. Groups 16, 17, and 18 are unused (reserved). Do NOT renumber existing groups — renumbering would invalidate historical references in research files, spec-changelog, and adversary reports. Two "Group 8" headers exist (one for H-NEW-AUTH-002, one for CI citation scenarios H-CITE-001..003); the second is retitled "Group 8b" to resolve the duplicate heading. This is a documentation fix only — no scenario IDs are changed.
+
 ---
 
 ## Group 1: Foundational / Mixed Edge Cases (H-001..H-029)
@@ -820,7 +822,7 @@ Note: the step-2 conflict guard does not inspect the `--request-type` value at a
 
 ---
 
-## Group 8: CI Citation Guard (H-CITE-001..H-CITE-003)
+## Group 8b: CI Citation Guard (H-CITE-001..H-CITE-003)
 
 ### H-CITE-001: Citation guard catches a dead `src/` citation and emits CI-CITE-001 detection (MUST-PASS)
 

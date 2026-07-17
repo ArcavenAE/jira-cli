@@ -7,6 +7,32 @@ project: "jr (jira-cli)"
 
 Track all spec version changes. Most recent version first.
 
+## [1.3.58] - 2026-07-16
+
+### Type: PATCH
+
+**Summary**: Adversary pass 18 (P18) fix round — HIGH: attachment upload cancel row label scoped to interactive-only (P18-001); MEDIUM: three 403 canonical-string override rows added to error-taxonomy.md for attachment list/download/delete pre-prompt metadata-GET (P18-002); R3.14 retro-annotated in impact-boundary-576.md; LOW: EC-2.7.003-2 "clap-or-" removed (P18-003); BC-2.7.010 path-non-determinism ruling + EC-2.7.007-7/EC-2.7.008-6 cross-refs (P18-004); holdout group taxonomy note + Group 8b dedup heading (P18-005); INFO: JSON Output Shape Contracts table header S1–S5 pending note (P18-I1); ADR-0017 §Decision item 3 io-util/io feature annotation (P18-I2).
+
+**Changes**:
+
+- `.factory/specs/prd/bc-3-issue-write.md` (MODIFIED): P18-001 — attachment upload cancel row label: removed "or non-interactive without `--yes`" clause (non-interactive path exits 64, not the cancel shape); scoped to "(cancel — interactive 'n' or empty)". P18-I1 — JSON Output Shape Contracts table header: added parenthetical "(attachment rows pending S1–S5 delivery — spec-only today)".
+- `.factory/specs/prd/bc-2-issue-read.md` (MODIFIED): P18-003 — EC-2.7.003-2: "clap-or-application pre-flight check" → "application pre-flight check" (clap value_parser rejects at exit 2, not 64; the validation is application-level). P18-004 — EC-2.7.007-7: `path` description updated to "as-constructed by jr — NOT canonicalized, NOT made absolute". EC-2.7.008-6: same cross-reference added. BC-2.7.010 Trace: added path-non-determinism ruling paragraph (P18-004 pin).
+- `.factory/specs/prd/error-taxonomy.md` (MODIFIED): P18-002 — three 403 override rows added after comment-family 403 row: `403 — attachment list` (BC-2.7.006; exit 1; canonical issue string); `403 — attachment download` (BC-2.7.012/EC-2.7.007-1b; exit 1; canonical issue or attachment string); `403 — attachment delete pre-prompt metadata-GET` (BC-3.9.015; exit 1; canonical attachment string).
+- `.factory/phase-f1-delta-analysis/impact-boundary-576.md` (MODIFIED): P18-002 — R3.14 disposition row for error-taxonomy.md retro-annotated: "all 403/404 divergences" claim corrected; three missing 403 rows (list/download/delete pre-prompt) were absent until P18-002.
+- `.factory/specs/architecture/decisions/ADR-0017-first-multipart-streaming-http-surface.md` (MODIFIED): P18-I2 — §Decision item 3: feature note added: `io-util` transitively enables `io`; `io` alone is the minimal feature flag for `ReaderStream`; implementer may use either.
+- `.factory/specs/prd/holdout-scenarios.md` (MODIFIED): P18-005 — taxonomy note added near top: group numbers are historical non-contiguous identifiers; groups 16–18 unused/reserved; do NOT renumber. Second "## Group 8" header retitled "## Group 8b: CI Citation Guard" to resolve duplicate heading. CANONICAL-COUNTS.md Group 8b reference updated.
+- `.factory/specs/prd/CANONICAL-COUNTS.md` (MODIFIED): P18-005 — "Group 8 (CI Citation Guard…)" entry retitled to "Group 8b".
+- `.factory/specs/prd/BC-INDEX.md` (MODIFIED): TWIN-ARTIFACT-SWEEP — BC-2.7.003 row (P18-003); BC-2.7.006 row (P18-002 403 taxonomy); BC-2.7.010 row (P18-004 path-non-determinism); BC-2.7.012 row (P18-002 403 taxonomy); BC-3.9.015 row (P18-002 403 taxonomy). `last_updated` and `index_version` v6.17→v6.18 updated.
+
+**Impact**:
+
+| Dimension | Value |
+|---|---|
+| BC count | 657 (unchanged) |
+| Holdout count | 98 (unchanged) |
+| VP count | 33 (unchanged) |
+| Spec version | 1.3.57→1.3.58 |
+
 ## [1.3.57] - 2026-07-16
 
 ### Type: PATCH

@@ -5198,3 +5198,22 @@ Displaced to make room for SOH-ATTACHMENTS-1 adversary pass-17 remediation step 
 | Step | Agent | Status | Output |
 |------|-------|--------|--------|
 | **SOH-ATTACHMENTS-1 F2 ADVERSARY PASS-12 REMEDIATED (2026-07-16): 2 findings (1M/1L, fix-echo class); P12-001 H-003 Call B/B2 holdout isolation split (shared-dir false-negative in H-003 Call B → separate Call B2 partial-failure scenario); P12-002 clap-4 ArgGroup correction (requires_one_of does not exist — ArgGroup::new().required(false).conflicts_with_all formulation web-verified); consistency r22 CONSISTENT (4th consecutive zero-action round); spec v1.3.52; guards green. Pass 13 DISPATCHED.** | adversary + state-manager | COMPLETE | `phase-f2-spec-evolution/consistency-report-576-r22.md`; BC 657; holdouts 96; spec v1.3.52. |
+
+
+---
+
+## Archived Phase Progress row (2026-07-16, adversary-pass-18 remediation burst)
+
+Displaced to make room for SOH-ATTACHMENTS-1 F2 ADVERSARY PASS-18 REMEDIATED + DEC-182 CHECKPOINT row per keep-5 rule.
+
+| Phase | Status | Completed | Gate | Notes |
+|-------|--------|-----------|------|-------|
+| **SOH-ATTACHMENTS-1 F2 ADVERSARY PASS-12 REMEDIATED (2026-07-16) — p12 NOT-CLEAN 2 (1M/1L, fix-echo class: both in P11's new text); P12-001 holdout shared-dir false-negative → Call B/B2 split; P12-002 nonexistent clap API cited → ArgGroup formulation (web-verified); consistency r19-r22 all CONSISTENT; spec v1.3.52; counts 657/96; guards green. Gate: adversary pass 13 in flight — fix-echo-tail test; checkpoint with human if echoes persist.** | **ADVERSARY PASS-12 REMEDIATED** | **2026-07-16** | **Adversary pass 13 in flight.** | `phase-f2-spec-evolution/consistency-report-576-r22.md`; BC 657; holdouts 96; spec v1.3.52. |
+
+### Archived Current Phase Steps row (adversary-pass-18 remediation burst)
+
+Displaced to make room for SOH-ATTACHMENTS-1 adversary pass-18 remediation + DEC-182 checkpoint step row per keep-5 rule.
+
+| Step | Agent | Status | Output |
+|------|-------|--------|--------|
+| **SESSION WRAP (2026-07-16) — human /wrap mid-F2-adversarial-loop: P13 (1M+1L+1I incl. 12-pass-old misapplied-fix catch) REMEDIATED + committed this wrap (spec v1.3.53; guards green); consistency r23 → CONSISTENT (5th consecutive zero-action; 6 INFO cosmetics carried); loop at clean rest point; pipeline PAUSED. Full STRICT convergence criterion CONFIRMED at P13 human checkpoint (DEC-181). Next action on resume: dispatch adversary pass 14 (fresh context, blind to prior passes, primary-artifact perimeter).** | state-manager (wrap) | COMPLETE | `phase-f2-spec-evolution/consistency-report-576-r23.md`; BC 657; holdouts 96; spec v1.3.53. |

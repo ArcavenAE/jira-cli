@@ -91,6 +91,9 @@ Source: `src/api/client.rs::extract_error_message`. Corrected from broad pass pe
 | 401 with scope mismatch | `InsufficientScope` | 2 | `"Insufficient token scope. <details>. Run: jr auth login"` |
 | 403 | `ApiError(403, ...)` | 1 | `"Forbidden"` or extracted body message |
 | 403 — `comment delete/edit/view` | `UserError(...)` | 64 | `"comment not found or permission denied: <KEY>#<ID>"` + Jira body on separate line (BC-3.5.004/BC-3.5.005/BC-3.5.010 override) |
+| 403 — `attachment list` | `ApiError(403, ...)` | 1 | `"Permission denied: cannot access issue <KEY>."` (canonical string only; Jira body NOT surfaced; BC-2.7.006) |
+| 403 — `attachment download` (issue GET or AID metadata-GET) | `ApiError(403, ...)` | 1 | `"Permission denied: cannot access issue <KEY>."` (issue 403) or `"Permission denied: cannot access attachment <AID>."` (AID 403); canonical string only; Jira body NOT surfaced (issue-GET sub-variant: BC-2.7.006; AID metadata-GET sub-variant: BC-2.7.012 / EC-2.7.007-1b) |
+| 403 — `attachment delete` pre-prompt metadata-GET | `ApiError(403, ...)` | 1 | `"Permission denied: cannot access attachment <AID>."` (canonical string only; Jira body NOT surfaced — read GET, not write; BC-3.9.015) |
 | 404 | `ApiError(404, ...)` | 1 | `"Not found: <resource>"` |
 | 404 — `comment delete/edit/view` | `UserError(...)` | 64 | `"comment not found or permission denied: <KEY>#<ID>"` + Jira body on separate line (BC-3.5.004/BC-3.5.005/BC-3.5.010 override) |
 | 404 — `attachment list` (issue KEY) | `UserError(...)` | 64 | `"Issue <KEY> not found or not accessible."` (canonical string only; Jira body NOT surfaced; BC-2.7.006) |

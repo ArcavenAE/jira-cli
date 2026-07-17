@@ -118,7 +118,7 @@ grep -c '^### H-' .factory/specs/prd/holdout-scenarios.md
 Expected: 98 (H-001..H-047 + H-NEW-MP-001 + H-NEW-VERBOSE-001 + H-NEW-VERBOSE-002 + H-NEW-AUTH-002 + H-NEW-JSM-RT-001..H-NEW-JSM-RT-007 + H-CITE-001..H-CITE-003 + H-NEW-ADF-001..H-NEW-ADF-008 + H-NEW-SEC-001..H-NEW-SEC-002 + H-NEW-ADF-009..H-NEW-ADF-010 + H-NEW-EDIT-FIELD-001..H-NEW-EDIT-FIELD-002 + H-NEW-EDIT-TYPE-001..H-NEW-EDIT-TYPE-002 + H-NEW-CHANGELOG-001 + H-NEW-WORKLOG-ADD-001 + H-NEW-LINK-001 + H-NEW-QUEUE-VIEW-001 + H-NEW-LABEL-FORK-001 + H-NEW-DRY-RUN-001 + H-NEW-BOARD-VIEW-001 + H-NEW-COMMENT-001..H-NEW-COMMENT-005 + H-NEW-ATTACHMENT-001..H-NEW-ATTACHMENT-010)
 
 Groups added since last reconciliation (57 → 96):
-- Group 8 (CI Citation Guard, 2026-06-19): H-CITE-001..H-CITE-003 (BC-X.13.001..003; S-MAINT-DEAD-CITATION-CI) — +3
+- Group 8b (CI Citation Guard, 2026-06-19): H-CITE-001..H-CITE-003 (BC-X.13.001..003; S-MAINT-DEAD-CITATION-CI) — +3 (retitled from "Group 8" to "Group 8b" to resolve duplicate heading; P18-005)
 - Group 10 (ADF Markdown→ADF Feature Wave, D4 Burst 1 2026-06-26): H-NEW-ADF-001..H-NEW-ADF-008 (BC-7.2.009/010/011/003) — +8
 - Group 11 (SEC-001 ADF Recursion-Depth Guard, D4 Burst 2 2026-06-26): H-NEW-SEC-001..H-NEW-SEC-002 (BC-7.2.012) — +2
 - Group 12 (ADF Footnote Pruning + Code-Mark Exclusivity, 2026-06-27/2026-07-07): H-NEW-ADF-009 (BC-7.2.013) + H-NEW-ADF-010 (BC-7.2.015; extended with Call E JSM-path parity 2026-07-07) — +2

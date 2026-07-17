@@ -5,7 +5,7 @@ issues: "#576, #585"
 phase: F2
 authored: 2026-07-15
 spec_version_before: 1.3.42
-spec_version_after: 1.3.57
+spec_version_after: 1.3.58
 bc_count_before: 624
 bc_count_after: 657
 holdout_count_before: 88
@@ -336,3 +336,21 @@ Source: Adversary Pass 17 (Consistency Review). 1 MEDIUM / 4 LOW / 2 INFO findin
 | P17-007 (INFO) | INFO | bc-2-issue-read.md | APPLIED | EC-2.7.009-1 annotated: appended `(arg-level \`Arg::allow_negative_numbers\`, clap 4 — verified against docs.rs 4.6.1, P17-007)`. Confirms the arg-level method is available in clap 4.6.1 (the version pinned in Cargo.lock). |
 
 **BC count at this round: 657 (unchanged). Holdout count: 98 (unchanged). VP count: 33 (unchanged). Spec version: 1.3.57. Both guards exit 0.**
+
+---
+
+## Adversary Pass 18 Fix Round Finding Dispositions
+
+Source: Adversary Pass 18 (Consistency Review). 1 HIGH / 1 MEDIUM / 3 LOW / 2 INFO findings. Spec version bump: 1.3.57 → 1.3.58. No new BCs. Holdouts: 98 (unchanged). VPs: 33 (unchanged).
+
+| Finding | Severity | File(s) Touched | Status | What changed |
+|---------|----------|----------------|--------|-------------|
+| P18-001 (HIGH) | HIGH | bc-3-issue-write.md | APPLIED | JSON Output Shape Contracts table: attachment upload cancel row label corrected — removed "or non-interactive without `--yes`" clause (non-interactive path exits 64 per EC-3.9.014-3, not the exit-0 cancel shape); label now "(cancel — interactive 'n' or empty)" matching interactive-only scope. |
+| P18-002 (MEDIUM) | MEDIUM | error-taxonomy.md, impact-boundary-576.md | APPLIED | Three 403 canonical-string override rows added to error-taxonomy.md §3 (after comment-family 403 row): `403 — attachment list` (BC-2.7.006; exit 1; canonical issue string; Jira body NOT surfaced); `403 — attachment download` (BC-2.7.012/EC-2.7.007-1b; exit 1; canonical issue or attachment string); `403 — attachment delete pre-prompt metadata-GET` (BC-3.9.015; exit 1; canonical attachment string). R3.14 note in impact-boundary-576.md retro-annotated: P16-001 "all 403/404 divergences" claim was false — three 403 rows were absent until P18-002. |
+| P18-003 (LOW) | LOW | bc-2-issue-read.md | APPLIED | EC-2.7.003-2: "clap-or-application pre-flight check" → "application pre-flight check". Rationale: this validation exits 64; a clap value_parser rejection exits 2 — "clap-or-" was inaccurate and contradicted the mandated exit code. |
+| P18-004 (LOW) | LOW | bc-2-issue-read.md | APPLIED | BC-2.7.010: path-non-determinism ruling paragraph added — `path` value is as-constructed by `jr` (verbatim `--out`, or out-dir + filename), NOT canonicalized, NOT made absolute; snapshot tests must redact/normalize; exact-match only with controlled cwd. EC-2.7.007-7 and EC-2.7.008-6 `path` descriptions updated with P18-004 cross-reference. |
+| P18-005 (LOW) | LOW | holdout-scenarios.md, CANONICAL-COUNTS.md | APPLIED | Group numbering taxonomy note added near top of holdout-scenarios.md: groups 16–18 unused/reserved; do NOT renumber. Second "## Group 8: CI Citation Guard" header retitled "## Group 8b: CI Citation Guard" to resolve duplicate heading. CANONICAL-COUNTS.md Group 8 entry updated to Group 8b. HOLDOUT-GROUP-8-DUPLICATE-HEADING drift item closed. |
+| P18-I1 (INFO) | INFO | bc-3-issue-write.md | APPLIED | JSON Output Shape Contracts table header: added parenthetical "(attachment rows pending S1–S5 delivery — spec-only today)". |
+| P18-I2 (INFO) | INFO | ADR-0017-first-multipart-streaming-http-surface.md | APPLIED | §Decision item 3: feature note added — `io-util` transitively enables `io`; `io` alone is the minimal feature flag for `ReaderStream`; implementer may use either. |
+
+**BC count at this round: 657 (unchanged). Holdout count: 98 (unchanged). VP count: 33 (unchanged). Spec version: 1.3.58.**
