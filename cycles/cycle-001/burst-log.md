@@ -5570,3 +5570,96 @@ Displaced to make room for SOH-ATTACHMENTS-1 F2 STRICT CONVERGED step row per ke
 **Next:** Pre-gate sequence — (1) closing micro-round folds carried cosmetics; (2) /vsdd-factory:check-input-drift; (3) fresh-context consistency audit; (4) F2 gate presentation to human with structured review questions.
 
 **Files committed:** `sidecar-learning.md`, `cycles/cycle-001/burst-log.md`, `STATE.md`.
+
+---
+
+### Archived Phase Progress row (pre-gate-sequence burst)
+
+Displaced to make room for SOH-ATTACHMENTS-1 F2 PRE-GATE SEQUENCE COMPLETE Phase Progress row per keep-5 rule.
+
+| Phase | Status | Completed | Gate | Notes |
+|-------|--------|-----------|------|-------|
+| **SOH-ATTACHMENTS-1 F2 ADVERSARY PASS-36 REMEDIATED (2026-07-17, fresh context, blind, v1.3.75; NOT-CLEAN 1L+1I; P36-001 (L) H-NEW-ATTACHMENT-004 Expected B bullet 4 "stdout/stderr references the new attachment '30002'" — over-permissive channel disjunction (P35-003 sweep-sibling; same scenario H-004, adjacent bullet) → tightened to stdout-only (BC-3.9.001 profile 4); class-exhaustion sweep: all Group-19 + VP-576-* `stdout/stderr` disjunctions greppedμ — 1 POSITIVE tightened, 1 NEGATIVE confirmed-legitimate (Expected C two-channel negative); channel-disjunction class MECHANICALLY EXHAUSTED; P36-002 (I) BC-3.9.015 step 3 `--yes`-path metadata-GET wire count implicit → one-liner pin added; BC-INDEX v6.32→v6.33; holdout frontmatter v1.5.7; spec v1.3.75→v1.3.76; SCOPED VERIFICATION (burst-29/32/33/35 precedent); TRANSIENT-FAILURE RECOVERY: API stream-idle timeout mid-round; PO resumed via codified verify-before-retry recipe (re-read target regions before re-attempting); completed cleanly with no double-insertions (HOOK-TIMEOUT-RESUME-DISCIPLINE 3rd successful recovery); STRICT streak 0/3 (DEC-183). trajectory-tail →1→5→1→1. Pass 37 next — CLEAN candidate.** | **ADVERSARY PASS-36 REMEDIATED** | **2026-07-17** | **Adversary pass 37 next — CLEAN candidate.** | BC 657; holdouts 100; VP 35; spec v1.3.76; BC-INDEX v6.33; holdout frontmatter v1.5.7. |
+
+### Archived Current Phase Steps row (pre-gate-sequence burst)
+
+Displaced to make room for SOH-ATTACHMENTS-1 F2 PRE-GATE SEQUENCE COMPLETE step row per keep-5 rule.
+
+| Step | Agent | Status | Output |
+|------|-------|--------|--------|
+| **SOH-ATTACHMENTS-1 F2 ADVERSARY PASS-36 REMEDIATED (2026-07-17): 1L+1I; P36-001 (L) H-NEW-ATTACHMENT-004 Expected B bullet 4 over-permissive channel disjunction → tightened to stdout-only (BC-3.9.001 profile 4); channel-disjunction class MECHANICALLY EXHAUSTED (grep sweep: 1 POSITIVE tightened, 1 NEGATIVE confirmed-legitimate Expected C two-channel negative; class closed); P36-002 (I) BC-3.9.015 step 3 --yes path skips metadata GET → one-liner pin added; BC-INDEX v6.32→v6.33; holdout frontmatter v1.5.7; spec v1.3.75→v1.3.76; SCOPED VERIFICATION; TRANSIENT-FAILURE RECOVERY (HOOK-TIMEOUT-RESUME-DISCIPLINE 3rd positive recovery; completed cleanly; no double-insertions); STRICT streak 0/3 (DEC-183). trajectory-tail →1→5→1→1. Pass 37 next — CLEAN candidate.** | adversary + product-owner + state-manager | COMPLETE | BC 657; holdouts 100; VP 35; spec v1.3.76; BC-INDEX v6.33; holdout frontmatter v1.5.7. |
+
+---
+
+## SOH-ATTACHMENTS-1 F2 PRE-GATE SEQUENCE BURST (2026-07-17)
+
+**What happened:** Pre-gate sequence executed in full. Four steps completed: (1) closing micro-round v1.3.77→v1.3.78 dispositioned the 14-item carried-cosmetics ledger; (2) input-drift CLEAN; (3) fresh-context pre-gate consistency audit (gate-audit-576.md) found 2 LOW + 1 INFO gaps — none blocking; (4) scoped-round-1 v1.3.78→v1.3.79 applied delivery-obligation notes. Spec finalized at v1.3.79; all guards exit 0. F2 GATE-READY declared.
+
+**Closing micro-round v1.3.77→v1.3.78 (14-item carried-cosmetics ledger):**
+- 8 FOLDED: P38-I1, P39-I1/I2/I3, P40-I1/I2, INFO-1, INFO-NEW-5 (none load-bearing per adversary review)
+- 4 ACCEPTED-CARRIED: INFO-2/3/6/15 (verified non-load-bearing; remain in cosmetics ledger)
+- 1 N/A: INFO-8
+- 1 DISPOSITION-ONLY: P40-I3 dry-run path-b/path-c holdout coverage → F3 test-matrix obligation
+
+**Input-drift check (`/vsdd-factory:check-input-drift`):**
+- 0 DRIFT findings (CLEAN)
+- 3 living bookkeeping hashes bumped: cycles/* burst-log, session-checkpoints, lessons → 3bf79c1
+- 43 point-in-time snapshots classified intentionally-stale per DEC-170/171/176 precedent
+
+**Fresh-context pre-gate consistency audit (gate-audit-576.md):**
+- GAP-AUDIT-576-001 (LOW): delivery obligations not promoted to Scope table → RESOLVED by scoped-round-1
+- GAP-AUDIT-576-002 (LOW): pre-F4 security spot-check BC-3.9.015..020 + CWE-88 AID validation → recorded as PRE-F4 obligation (drift item); superseded by DEC-184 full re-review
+- INFO-AUDIT-576-001: STATE.md version stale → fixed same burst
+
+**Scoped-round-1 v1.3.78→v1.3.79:**
+- Per-story delivery-obligation notes added to all five prd-delta Scope rows (DEC-170 mechanical-mirror precedent)
+- Guards exit 0; counts 657/100/35 UNCHANGED; BC-INDEX v6.33 UNCHANGED
+
+**Final package:** spec v1.3.79; BC 657/holdouts 100/VP 35; BC-INDEX v6.33; holdout frontmatter v1.5.8. GATE-READY declared.
+
+**Files committed:** `phase-f2-spec-evolution/prd-delta-576.md`, `phase-f2-spec-evolution/gate-audit-576.md`, `spec-changelog.md`, `specs/prd/holdout-scenarios.md`, `cycles/cycle-001/burst-log.md`, `sidecar-learning.md`, `STATE.md`.
+
+---
+
+### Archived Phase Progress row (gate-approval burst)
+
+Displaced to make room for SOH-ATTACHMENTS-1 F2 GATE APPROVED Phase Progress row per keep-5 rule.
+
+| Phase | Status | Completed | Gate | Notes |
+|-------|--------|-----------|------|-------|
+| **SOH-ATTACHMENTS-1 F2 ADVERSARY PASS-37 REMEDIATED (2026-07-17, fresh context, blind, v1.3.76; NOT-CLEAN 1L+1I; zero behavioral findings in any authoritative surface; P37-001 (L, materially dangerous doc-drift) prd-delta BC-Enumeration paragraph + cross-cutting frontmatter still described WITHDRAWN pre-P6 BC-X.8.010 design (bespoke serviceDeskId cache + model-b writer) that the authored BC forbids — S5 implementer reading canonical-design doc could have built the forbidden cache family; P37-002 (I) BC-3.9.014 one-liner still --public-scoped (pre-R3.12); both fixed in-place; WITHDRAWN-DESIGN CLASS EXHAUSTION: 8-hit grep disposition table (3 fixed, 5 correctly left: authored body, historical records, unrelated correct usage; BC-INDEX row verified already correct, no bump); spec v1.3.76→v1.3.77; counts 657/100/35 UNCHANGED; BC-INDEX v6.33 (unchanged); SCOPED VERIFICATION (summary-surface corrections; burst-29/32/33/35/36 precedent); STRICT streak 0/3 (DEC-183). trajectory-tail →5→1→1→1. Pass 38 next — CLEAN candidate.** | **ADVERSARY PASS-37 REMEDIATED** | **2026-07-17** | **Adversary pass 38 next — CLEAN candidate.** | BC 657; holdouts 100; VP 35; spec v1.3.77; BC-INDEX v6.33. |
+
+### Archived Current Phase Steps row (gate-approval burst)
+
+Displaced to make room for SOH-ATTACHMENTS-1 F2 GATE APPROVED step row per keep-5 rule.
+
+| Step | Agent | Status | Output |
+|------|-------|--------|--------|
+| **SOH-ATTACHMENTS-1 F2 ADVERSARY PASS-37 REMEDIATED (2026-07-17): 1L+1I (zero behavioral findings in any authoritative surface); P37-001 (L, materially dangerous doc-drift) prd-delta BC-Enumeration + cross-cutting frontmatter still described WITHDRAWN pre-P6 BC-X.8.010 design (bespoke serviceDeskId cache + model-b writer); both summary surfaces corrected to reuse design with P6-001/P6-004 citations; WITHDRAWN-DESIGN CLASS EXHAUSTION: 8-hit grep disposition table (3 fixed, 5 correctly left: authored BC body, historical records, unrelated correct usage); BC-INDEX row verified already correct, no bump; P37-002 (I) BC-3.9.014 one-liner still --public-scoped (pre-R3.12) → corrected; spec v1.3.76→v1.3.77; BC 657/holdouts 100/VP 35 UNCHANGED; BC-INDEX v6.33 (unchanged); SCOPED VERIFICATION (summary-surface corrections; burst-29/32/33/35/36 precedent); STRICT streak 0/3 (DEC-183). trajectory-tail →5→1→1→1. Pass 38 next — CLEAN candidate.** | adversary + product-owner + state-manager | COMPLETE | BC 657; holdouts 100; VP 35; spec v1.3.77; BC-INDEX v6.33. |
+
+---
+
+## SOH-ATTACHMENTS-1 F2 GATE APPROVAL BURST — DEC-184 (2026-07-17)
+
+**What happened:** Human reviewed the F2 spec package at v1.3.79 and issued DEC-184 gate approval with four structured rulings. Security posture upgraded from the recorded GAP-AUDIT-576-002 scoped spot-check to a full security re-review of v1.3.79 dispatched BEFORE F3. F3 BLOCKED pending security-review-576-v2 verdict.
+
+**DEC-184 four rulings:**
+1. **F2 APPROVED + F3 AUTHORIZED:** F2 spec package v1.3.79 APPROVED. F3 authorized (5 stories S1-S5, 1 wave; depends_on S3→S1, S5→S3).
+2. **Six post-DEC-182 tail rulings RATIFIED:** R3.13 earliest-consumer gate-mechanics allocation; guards-vs-gates dry-run distinction (EC-3.9.020-7/8); manifest filename=RAW/path=on-disk pairing (P27-001); manifest size=bytes-written uniformly (P31-002); --out local-pre-flights-before-metadata-GET fail-cheap ordering (P32-001); hint-vs-error stderr taxonomy (P25/P27/P30 family).
+3. **SECURITY UPGRADED:** PRE-F4-SECURITY-SPOTCHECK-576 SUPERSEDED — full security re-review v1.3.79 dispatched BEFORE F3 (not scoped spot-check; security-reviewer dispatched; report: `phase-f2-spec-evolution/security-review-576-v2.md`); F3 BLOCKED pending verdict; APPROVE/APPROVE-WITH-NOTES unblocks; SPEC-CHANGES-REQUIRED triggers fix round + re-verify.
+4. **F3 convergence criterion: FULL STRICT** (3 consecutive zero-finding passes; DEC-183 criterion unchanged).
+
+**STATE.md updates:**
+- `current_step` updated to F2 GATE APPROVED + security re-review IN FLIGHT; trajectory-tail →1→0→0→0
+- SIZE BUDGET: 397→400 lines
+- Last Updated: gate approval + security re-review dispatched + F3 authorized
+- Current Phase / Next Phase: updated to reflect gate approval + security block
+- Phase Progress: ADVERSARY PASS-37 REMEDIATED archived → GATE APPROVED row added (5-row cap maintained)
+- Current Phase Steps: ADVERSARY PASS-37 step archived → GATE APPROVED step added
+- Decisions Log: DEC-184 added
+- Drift Items: PRE-F4-SECURITY-SPOTCHECK-576 → SUPERSEDED-BY-DEC-184-FULL-RE-REVIEW
+- Convergence Status: F2 GATE APPROVED note prepended
+- Session Resume Checkpoint: Date, Position, In flight, Pending human, Notes updated
+- RESUME PLAN: NEXT STEP updated to await security-review-576-v2 verdict
+
+**Files committed:** `cycles/cycle-001/burst-log.md`, `STATE.md`.
