@@ -19,7 +19,8 @@ trace: |
   - DEC-154 Option A spec update (2026-07-06): BC-X.13.005 — extend v1 grammar (3 branches: ::tests, ::tests::testfn, standalone CamelCase); space-tolerant two-pass extraction (F-B2-02); BC-X.13.004 — FLOOR recalibration N=326, FLOOR=244; BC-X.13.006 — fixture count 7→10 (A–K)
   - F-01 two-tier shape guard (2026-07-06, story #102 Step-4.5 pass-1): BC-X.13.005 Step 3 rewrite — shape guard now `^src/[a-zA-Z0-9_/.-]+\.[a-zA-Z0-9]+$` (any extension); non-.rs src/ tokens routed to tier (ii) file-existence-only (counts toward N); .rs tokens continue full pipeline tier (i); truly-malformed DEAD-malformed unchanged; EC-CITE-060 added (tier-ii .snap positive pin); EC-CITE-058 updated (.snap mechanism corrected); BC-X.13.004 N=309 FLOOR=231 (two-tier baseline 2b09313); BC-X.13.006 test vector N ≥ 231
   - SOH-BUGS-1 post-fix micro-BC (2026-07-09): BC-X.1.011 — `-X`/`--method` case-insensitive HTTP method parsing; VP-590-001 registered (issues #590/#582, PR #597)
-  - SOH-ATTACHMENTS-1 F2 addition (2026-07-15): BC-X.8.010 — `(profile, projectKey) → serviceDeskId` cache; model-b writer (swallow+eprintln warn, return Ok(())); 7-day TTL; v1/ root; deserialize failure = cache miss; used by JSM attachment upload --public/--internal path (DEC-179, issues #576 #585)
+  - SOH-ATTACHMENTS-1 F2 addition (2026-07-15): BC-X.8.010 — JSM attachment upload resolves serviceDeskId via the EXISTING ProjectMeta cache (`get_or_fetch_project_meta`; `project_meta.json`) — NO new cache file, NO new writer (model-b discussion MOOT); SEC-576-006 self-heal; P6-001/P6-004 correction (DEC-179, issues #576 #585)
+  - SOH-ATTACHMENTS-1 adversary pass-37 fix round (2026-07-17): BC-X.8.010 frontmatter description corrected from withdrawn pre-P6 design to reuse design (P37-001b)
 ---
 
 # BC-X — Cross-cutting

@@ -6447,3 +6447,29 @@ _Tagged: [process-gap] [write-back] [adjudication] [prd-delta] [state-md] [burst
 
 _Trigger: P36-001 (2026-07-17); H-NEW-ATTACHMENT-004 Expected B sweep-sibling of P35-003 Expected A; 2nd instance of site-scoped-fix-leaves-sibling pattern._
 _Tagged: [sweep] [assertion-tightening] [holdout] [scenario-scope] [class-exhaustion] [channel-disjunction] [sibling-sweep] [p36] [codified]_
+
+
+---
+
+## SOH-ATTACHMENTS-1 F2 Adversary Pass 37 — Process Lessons (2026-07-17)
+
+### [codified] WITHDRAWN-DESIGN-SUMMARY-SWEEP: When a BC design is corrected mid-loop, ALL summary surfaces describing the old design must be swept in the same correcting round
+
+**Observation (P37-001, 2026-07-17):** Adversary pass 37 found that two summary surfaces — (1) the BC-Enumeration paragraph in `prd-delta-576.md` and (2) the cross-cutting frontmatter — still described the WITHDRAWN pre-P6 BC-X.8.010 design (bespoke `serviceDeskId` cache family + model-b writer). The authored BC-X.8.010 body had been corrected during pass 6 to the reuse-based design (using the existing `require_service_desk` function and its cached `service_desk_id` resolution), but two summary surfaces that paraphrased the old design were not updated in that same burst. They persisted for 31 passes, creating a materially dangerous doc-drift: an S5 implementer reading either summary surface instead of the canonical BC body could have built the explicitly-forbidden cache family.
+
+**Root cause:** Fix rounds that withdraw or redesign a BC concentrate on the authoritative BC body and its immediate mirrors (BC-INDEX row, Trace/Source fields). They often miss secondary summary surfaces — prd-delta enumeration paragraphs, impact-boundary planning notes, cross-cutting frontmatter descriptions — that paraphrase the design in prose. These summary surfaces are not in the standard twin-artifact sweep checklist because they describe design intent rather than mirroring BC count or allocation data.
+
+**Principle (WITHDRAWN-DESIGN-SUMMARY-SWEEP):** When a BC design is WITHDRAWN, SUPERSEDED, or substantially CORRECTED during an F2 fix round, the fix round MUST include an explicit summary-surface sweep in addition to the standard twin-artifact sweep:
+1. **prd-delta enumeration paragraphs:** Search the BC-Enumeration section for any paragraph that describes the old design by name, behavior, or structure. Update or remove it.
+2. **impact-boundary planning notes and R-section references:** Check R-section text (R3.x, etc.) for references to the old design. Add a retro-annotation if the design changed post-F1.
+3. **cross-cutting frontmatter and BC body introduction paragraphs:** Check whether the BC's own introductory prose or the cross-cutting frontmatter still names the old approach. Update with the corrected design and a P6-NNN citation.
+4. **WITHDRAWN-DESIGN class exhaustion grep:** After fixing all known sites, grep the canonical artifact set for the key identifiers of the old design (function names, cache family names, unique phrases) to confirm no residue. Document the disposition table: each hit classified as FIXED, CORRECTLY-LEFT (authored body, historical record, unrelated correct usage), or NEW-FIX.
+
+**Distinction from TWIN-ARTIFACT-SWEEP:** TWIN-ARTIFACT-SWEEP covers spec-body changes propagating to BC-INDEX count/source rows and allocation columns. WITHDRAWN-DESIGN-SUMMARY-SWEEP covers design-narrative prose — paragraphs in prd-delta, planning notes, frontmatter — that paraphrase the design rather than enumerate it. Both are write-back obligations; they operate on different artifact classes.
+
+**Distinction from ADJUDICATION-WRITE-BACK:** ADJUDICATION-WRITE-BACK covers resolved STATE.md decisions (e.g., ADR-ledger "DEFERRED" → resolved) propagating back to prd-delta ledger entries. WITHDRAWN-DESIGN-SUMMARY-SWEEP covers spec-design corrections propagating to prose paraphrases. Both share the root "write-back to the artifact with the open claim" pattern; the trigger is different (resolution vs. design change).
+
+**Class-exhaustion record (P37, 2026-07-17):** 8-hit grep across prd-delta + cross-cutting + impact-boundary for `serviceDeskId cache` / `bespoke.*cache` / `BC-X.8.010 step (1)` identifiers. 3 sites fixed (prd-delta BC-Enumeration paragraph, cross-cutting frontmatter ×2); 5 correctly left (authored BC-X.8.010 body [authoritative], prd-delta `pass-6` historical record, impact-boundary R3.5 Note [historical planning note], unrelated correct usage of `service_desk_id` as a local variable). BC-INDEX row verified already correct (no bump needed). WITHDRAWN-DESIGN class mechanically exhausted as of P37.
+
+_Trigger: P37-001 (2026-07-17); prd-delta + cross-cutting still described WITHDRAWN pre-P6 BC-X.8.010 design 31 passes after the correction; materially dangerous doc-drift; write-back/twin-artifact family._
+_Tagged: [process-gap] [write-back] [withdrawn-design] [summary-sweep] [prd-delta] [cross-cutting] [class-exhaustion] [p37] [codified]_

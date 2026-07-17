@@ -7,6 +7,33 @@ project: "jr (jira-cli)"
 
 Track all spec version changes. Most recent version first.
 
+## [1.3.77] - 2026-07-17
+
+### Type: PATCH
+
+### Summary
+
+Adversary pass 37 (P37) fix round — 1 LOW / 1 INFO findings + withdrawn-design class-exhaustion sweep. P37-001: two summary surfaces still described the withdrawn pre-P6 BC-X.8.010 design (bespoke serviceDeskId cache + model-b writer) — prd-delta-576.md heading + table row corrected to reuse design; cross-cutting.md frontmatter corrected to reuse design; BC-INDEX.md row verified already correct. P37-002: BC-3.9.014 one-liner expanded to name all three upload-confirmation-gate consumers.
+
+### Changed Requirements
+
+- `.factory/phase-f2-spec-evolution/prd-delta-576.md` (MODIFIED): P37-001a — BC-X.8.010 heading + table row corrected to reuse design; P37-002 — BC-3.9.014 one-liner expanded; `spec_version_after` 1.3.76→1.3.77; P37 dispositions appended.
+- `.factory/specs/prd/cross-cutting.md` (MODIFIED): P37-001b — frontmatter line 22 corrected from withdrawn pre-P6 design to reuse design; trace entry added.
+
+### Impact Assessment
+
+| Artifact | Change Type | Notes |
+|---|---|---|
+| prd-delta-576.md | Modified | P37-001a + P37-002; spec_version_after 1.3.77 |
+| cross-cutting.md | Modified | P37-001b frontmatter corrected; trace entry added |
+| BC-INDEX.md | Verified, NO change | BC-X.8.010 row already correct; no index_version bump |
+
+- BCs: 657 (unchanged)
+- Holdouts: 100 (unchanged)
+- VPs: 35 (unchanged)
+
+---
+
 ## [1.3.76] - 2026-07-17
 
 ### Type: PATCH

@@ -5,7 +5,7 @@ issues: "#576, #585"
 phase: F2
 authored: 2026-07-15
 spec_version_before: 1.3.42
-spec_version_after: 1.3.76
+spec_version_after: 1.3.77
 bc_count_before: 624
 bc_count_after: 657
 holdout_count_before: 88
@@ -76,7 +76,7 @@ BC-2.7.002. All design decisions ratified by DEC-179.
 | BC-3.9.011 | --public --output json deferred-probe (P2-3c); S5 obligation |
 | BC-3.9.012 | Upload error taxonomy; S3 (--public non-JSM exit 64 row and non-interactive without --yes row activate at S5 — --public path is S5-only) |
 | BC-3.9.013 | Delete error taxonomy |
-| BC-3.9.014 | --public confirmation gate mechanics: eprint!+read_line, NOT dialoguer |
+| BC-3.9.014 | upload confirmation gate mechanics (THREE consumers: --public standalone, --replace-existing ≥1-match, combined; DEC-174 eprint!+read_line, NOT dialoguer) |
 | BC-3.9.015 | delete single-ID confirmation gate: eprint!+read_line; non-interactive exit 64; --yes bypass; cancel `{"cancelled":true,"deleted":false}` |
 | BC-3.9.016 | --older-than always requires --yes (no interactive prompt for bulk); --dry-run exempt; clap mutual-exclusion positional-AID vs --issue/--older-than |
 | BC-3.9.017 | --replace-existing: delete-ALL-same-filename (OQ-6) then upload; non-atomic race documented (JRACLOUD-96384/-78388); MUST NOT assert atomicity; S3 (step-2 gate interaction with --public confirmation gate completes at S5) |
@@ -84,13 +84,13 @@ BC-2.7.002. All design decisions ratified by DEC-179.
 | BC-3.9.019 | --older-than: --issue KEY required; duration.rs parser; chrono client-side comparison; invalid duration exit 64; bulk JSON `{"count":N,"deleted":true,"ids":[]}` |
 | BC-3.9.020 | --dry-run multi-attachment preview: no mutations; JSON `{"attachments":[{filename,id}],"dryRun":true,"ids":[...]}`; single-ID --dry-run = stderr hint + exit 0; S4 (path c — upload --replace-existing --dry-run — ships with S3) |
 
-### BC-X.8.010 — serviceDeskId cache (cross-cutting.md)
+### BC-X.8.010 — serviceDeskId reuse via existing ProjectMeta cache (cross-cutting.md)
 
 1 new individually-bodied BC inserted in `### X.8 Projects & Queues` between BC-X.8.009 and `### X.9`.
 
 | BC ID | Title |
 |-------|-------|
-| BC-X.8.010 | (profile, projectKey) → serviceDeskId cache; model-b writer; 7-day TTL; deserialize failure = cache miss |
+| BC-X.8.010 | JSM attachment upload resolves serviceDeskId via EXISTING `get_or_fetch_project_meta` / `project_meta.json`; NO new cache file; NO new writer (model-b discussion MOOT); SEC-576-006 self-heal; P6-001/P6-004 correction |
 
 ---
 
@@ -672,3 +672,33 @@ No VP-576-* files contained `stdout/stderr` or `stdout or stderr` disjunctions. 
 **ECHO-BREAKER LIST B (holdout assertion changes):** H-NEW-ATTACHMENT-004 Expected B bullet 4: "stdout/stderr references the new attachment `30002`." → "stdout references the new attachment `30002` (BC-3.9.001 profile 4: human echo to stdout; P36-001)." H-NEW-ATTACHMENT-004 Expected C `stdout/stderr does NOT contain` — NEGATIVE assertion, left unchanged (confirmed legitimate).
 
 **BC count at this round: 657 (unchanged). Holdout count: 100 (unchanged). VP count: 35 (unchanged). Spec version: 1.3.76. Both guards exit 0.**
+
+---
+
+## P37 Adversary Fix Round — SOH-ATTACHMENTS-1 F2 (2026-07-17)
+
+**Withdrawn-design class exhaustion sweep — `model-b` / `serviceDeskId cache` / `service_desk_id`:**
+
+| Location | Hit | Class | Disposition |
+|---|---|---|---|
+| prd-delta-576.md:87 | `### BC-X.8.010 — serviceDeskId cache` | WITHDRAWN DESIGN — summary surface | **FIXED (P37-001a)** |
+| prd-delta-576.md:93 | `(profile, projectKey) → serviceDeskId cache; model-b writer; 7-day TTL...` | WITHDRAWN DESIGN — summary surface | **FIXED (P37-001a)** |
+| cross-cutting.md:22 | frontmatter description with `model-b writer (swallow+eprintln warn, return Ok(()));  7-day TTL; v1/ root...` | WITHDRAWN DESIGN — summary surface | **FIXED (P37-001b)** |
+| cross-cutting.md:726 | `model-b discussion... MOOT` in authored BC body | AUTHORED BC — correct reuse design language | Leave — no change |
+| prd-delta-576.md:454 | `consistent with model-b cache-writer warning convention` in historical P25-001 disposition | HISTORICAL RECORD — point-in-time | Leave — no change |
+| bc-2-issue-read.md:801 | `consistent with the model-b cache-writer warning convention` (general pattern reference) | CORRECT USAGE — unrelated to BC-X.8.010 | Leave — no change |
+| prd-delta-576-worklog.md:88 | `model-b writer...` in historical worklog | HISTORICAL RECORD — separate worklog artifact | Leave — no change |
+| BC-INDEX.md BC-X.8.010 row | `JSM attachment upload resolves serviceDeskId via EXISTING get_or_fetch_project_meta...` | AUTHORED CORRECT — already reuse design | Leave — no change; no v6.33→v6.34 bump needed |
+
+Class exhausted. 3 withdrawn-design residue hits fixed; all other hits confirmed correct or historical.
+
+| Finding | Severity | Artifacts | Status | Resolution |
+|---|---|---|---|---|
+| P37-001 (LOW) | LOW | prd-delta-576.md, cross-cutting.md | APPLIED | prd-delta-576.md line 87 heading corrected from `BC-X.8.010 — serviceDeskId cache` to `BC-X.8.010 — serviceDeskId reuse via existing ProjectMeta cache`. prd-delta-576.md line 93 table row corrected from `(profile, projectKey) → serviceDeskId cache; model-b writer; 7-day TTL; deserialize failure = cache miss` to `JSM attachment upload resolves serviceDeskId via EXISTING get_or_fetch_project_meta / project_meta.json; NO new cache file; NO new writer (model-b discussion MOOT); SEC-576-006 self-heal; P6-001/P6-004 correction`. cross-cutting.md frontmatter line 22 corrected from withdrawn pre-P6 design description to reuse design (P37-001b); trace entry added. BC-INDEX.md BC-X.8.010 row verified already correct — no change, no index_version bump. |
+| P37-002 (INFO) | INFO | prd-delta-576.md | APPLIED | BC-3.9.014 one-liner updated from `--public confirmation gate mechanics: eprint!+read_line, NOT dialoguer` to `upload confirmation gate mechanics (THREE consumers: --public standalone, --replace-existing ≥1-match, combined; DEC-174 eprint!+read_line, NOT dialoguer)`. |
+
+**ECHO-BREAKER LIST A (spec changes):** prd-delta-576.md: BC-3.9.014 one-liner updated (P37-002); BC-X.8.010 heading corrected to reuse design (P37-001a); BC-X.8.010 table row corrected to reuse design (P37-001a); spec_version_after 1.3.76→1.3.77; P37 dispositions appended. cross-cutting.md: frontmatter line 22 corrected from withdrawn design to reuse design (P37-001b); trace entry added. spec-changelog.md: [1.3.77] entry added. BC-INDEX.md: BC-X.8.010 row verified correct — NO changes.
+
+**ECHO-BREAKER LIST B (holdout assertion changes):** None. No holdout assertions changed in P37.
+
+**BC count at this round: 657 (unchanged). Holdout count: 100 (unchanged). VP count: 35 (unchanged). Spec version: 1.3.77. Both guards exit 0.**
