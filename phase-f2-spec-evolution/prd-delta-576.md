@@ -5,7 +5,7 @@ issues: "#576, #585"
 phase: F2
 authored: 2026-07-15
 spec_version_before: 1.3.42
-spec_version_after: 1.3.67
+spec_version_after: 1.3.68
 bc_count_before: 624
 bc_count_after: 657
 holdout_count_before: 88
@@ -484,5 +484,42 @@ Source: Adversary Pass 27. 1 MEDIUM / 2 LOW / 1 INFO findings. Spec version bump
 | P27-002 (LOW) | LOW | holdout-scenarios.md | APPLIED | H-NEW-ATTACHMENT-007 fixture description corrected: `id="60003"` overlong name (251 `a` + `.txt` = 255 bytes) was described as "(at the length-cap boundary)" — corrected to "(exceeds the 214-byte sanitizer cap — BC-2.7.011 step 5; truncated to 214, then 41-byte SHA-1 prefix = 255-byte on-disk name at NAME_MAX)". Missing length-cap assertion added to Expected section: "the on-disk basename after the SHA-1 prefix underscore is ≤ 214 bytes" (pins BC-2.7.011 step 5 — assert `len(basename(path).split('_', 1)[1].encode('utf-8')) <= 214`). H-NEW-ATTACHMENT-007 Status updated with P27-002 citation. Licensing BC: BC-2.7.011 step 5. |
 | P27-003 (LOW) | LOW | bc-2-issue-read.md, BC-INDEX.md | APPLIED | ORCHESTRATOR RULING: collision-skip warning = HINT, suppressed in JSON mode. EC-2.7.008-6 channel policy extended: "Collision-skip warnings (P27-003): collision-skip warnings are NON-ERROR hints — suppressed in `--output json` mode (same class as the `Downloaded N of M` summary and `--filter` exclusions which are silent; the manifest's omission of the skipped file IS the machine signal, consistent with EC-2.7.008-10 filtered-to-zero precedent). Human mode unchanged." BC-2.7.008 Trace updated (P27-003). BC-INDEX.md BC-2.7.008 row updated with P27-003 collision-skip hint classification note. |
 | P27-INFO-1 (INFO) | INFO | — | NO ACTION | Single-vs-multi dry-run metadata asymmetry is deliberate and already documented as P15-INFO-2 family. No spec change required. |
+
+**BC count at this round: 657 (unchanged). Holdout count: 100 (unchanged). VP count: 35 (unchanged). Spec version: 1.3.67. Both guards exit 0.**
+
+---
+
+## Adversary Pass 28 Fix Round Finding Dispositions
+
+Source: Adversary Pass 28. 2 MEDIUM findings. Spec version bump: 1.3.67 → 1.3.68. No new BCs. Holdouts: 100 (unchanged). VPs: 35 (unchanged).
+
+| Finding ID | Severity | File(s) Touched | Status | Change |
+|------------|----------|----------------|--------|--------|
+| P28-001 (MEDIUM) | MEDIUM | bc-3-issue-write.md, BC-INDEX.md | APPLIED | EC-3.9.020-8 wire enumeration corrected: the terminal sentence "no HTTP calls beyond step-0 issue GET and meta fetch" replaced with accurate description of what fires on the `--replace-existing --dry-run --public` non-JSM path. The `--replace-existing` path (BC-3.9.017 step 0) derives the project key from the issue-key string prefix — no issue GET has run yet at that pre-flight point. The only HTTP call is the project-meta fetch (`GET /rest/api/3/project/{key}` — cache-miss); the `GET /rest/servicedeskapi/servicedesk` pagination does NOT fire because the project is NOT `service_desk`. New wording: "no HTTP calls beyond the project-meta fetch (`GET /rest/api/3/project/{key}` — cache-miss; no `GET /rest/servicedeskapi/servicedesk` pagination since the project is NOT `service_desk`); no issue GET occurs on the `--replace-existing` step-0 path (project key derived from the issue-key string prefix per BC-3.9.017 step 0)." BC-3.9.020 Trace updated with P28-001 citation. BC-INDEX.md BC-3.9.020 row updated with P28-001 wire-enumeration corrected note. Sweep confirmed: the phrase "step-0 issue GET" appeared only in bc-3-issue-write.md:~3895 (the corrected EC body) and in `.factory/phase-f2-spec-evolution/consistency-report-576-r33.md` (historical snapshot — not authoritative; left as-is). |
+| P28-002 (MEDIUM) | MEDIUM | holdout-scenarios.md | APPLIED | H-NEW-ATTACHMENT-009 Expected bullet 4 narrowed — the over-broad "Zero requests to any `/rest/servicedeskapi/...` path" assertion contradicted the scenario's own setup step 3 which mounts `GET /rest/servicedeskapi/servicedesk` (the JSM meta-resolution call that fires BEFORE the gate during `get_or_fetch_project_meta`). Replaced with POST-only assertion: "Zero requests to the upload POSTs — `POST .../attachTemporaryFile` and `POST .../request/{key}/attachment` — before or after the gate. (The `GET /rest/servicedeskapi/servicedesk` meta-resolution call DOES fire before the gate during JSM detection — it is mounted in setup step 3; assert only that the upload POSTs are absent.)" Licensing BC added (BC-3.9.003 step 1 / BC-X.8.010 for the GET; BC-3.9.014 gate for the POST absence). Mirrors VP-576-005 cancel-variant's servicedeskapi-POST-only assertion style. Status updated with P28-002 citation. Holdout frontmatter: version 1.5.4→1.5.5; trace entry added. |
+
+**Mount-vs-Assertion Sweep (P28-002 proactive sweep — all Group-19 holdouts + VP-576-002/003/005):**
+
+| Scenario | Zero/no-requests assertions | Mounts in setup that could be violated | Verdict |
+|---|---|---|---|
+| H-NEW-ATTACHMENT-001 | None | N/A | OK |
+| H-NEW-ATTACHMENT-002 | None | N/A | OK |
+| H-NEW-ATTACHMENT-003 | None on forbidden paths | N/A | OK |
+| H-NEW-ATTACHMENT-004 | "DELETE NOT called (no mock mounted)" Call C | No DELETE mounted on Call C path; GET ?fields + POST mounted | OK |
+| H-NEW-ATTACHMENT-005 | `.expect(0)` on DELETE in cancel/non-interactive paths | DELETE mount with `.expect(0)` is the mechanism; no servicedeskapi assertions | OK |
+| H-NEW-ATTACHMENT-006 | `.expect(0)` on DELETE mounts for dry-run path | Correctly isolated by wiremock teardown between calls | OK |
+| H-NEW-ATTACHMENT-007 | None on servicedeskapi | N/A | OK |
+| H-NEW-ATTACHMENT-008 | "Zero requests to any `/rest/servicedeskapi/...` path" | No servicedeskapi mounts; non-JSM project → servicedesk GET never fires | OK |
+| H-NEW-ATTACHMENT-009 | WAS: "Zero requests to any `/rest/servicedeskapi/...`" — setup step 3 mounts `GET /rest/servicedeskapi/servicedesk` which DOES fire pre-gate | CONTRADICTION → FIXED by P28-002 (narrowed to POST-only assertion) | FIXED |
+| H-NEW-ATTACHMENT-010 | "Zero requests to DELETE" and "Zero requests to POST /attachments" | No DELETE or POST mounts for this non-interactive exit-64 path | OK |
+| H-NEW-ATTACHMENT-011 | "Wiremock strict-mode: zero requests to any `/rest/servicedeskapi/...` path" | No servicedeskapi mounts; non-JSM project → servicedesk GET never fires | OK |
+| H-NEW-ATTACHMENT-012 | None on forbidden paths | N/A | OK |
+| VP-576-002 | `.expect(0)` on DELETE in cancel variant; no servicedeskapi zero-claim | Separate metadata GET + DELETE mounts; no servicedeskapi | OK |
+| VP-576-003 | "(b) zero requests to any `/rest/servicedeskapi/...`" | FOO key → non-JSM; no servicedeskapi mounts → GET never fires | OK |
+| VP-576-005 | "(c) cancel variant: ZERO servicedeskapi POST requests" | Mount (2) is GET /servicedeskapi/servicedesk (fires pre-gate at step 0); assertion scoped to POSTs only — consistent | OK |
+
+Additional contradictions found: **0** (only H-NEW-ATTACHMENT-009 had the P28-002 defect class; all others are consistent).
+
+**BC count at this round: 657 (unchanged). Holdout count: 100 (unchanged). VP count: 35 (unchanged). Spec version: 1.3.68. Both guards exit 0.**
 
 **BC count at this round: 657 (unchanged). Holdout count: 100 (unchanged). VP count: 35 (unchanged). Spec version: 1.3.67. Both guards exit 0.**

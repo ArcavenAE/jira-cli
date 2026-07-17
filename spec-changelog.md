@@ -7,6 +7,42 @@ project: "jr (jira-cli)"
 
 Track all spec version changes. Most recent version first.
 
+## [1.3.68] - 2026-07-17
+
+### Type: PATCH
+
+### Summary
+
+Adversary pass 28 (P28) fix round — 2 MEDIUM findings. MEDIUM (P28-001): EC-3.9.020-8 wire enumeration was wrong — the phrase "no HTTP calls beyond step-0 issue GET and meta fetch" mischaracterized the `--replace-existing` step-0 path, which derives the project key from the issue-key string prefix and has NO issue GET at that point. Corrected to: only the project-meta fetch (`GET /rest/api/3/project/{key}`) fires; no `GET /rest/servicedeskapi/servicedesk` pagination since the project is NOT `service_desk`; no issue GET on the `--replace-existing` step-0 path. BC-3.9.020 Trace + BC-INDEX row updated. Sweep: phrase appeared in one other location (consistency-report-576-r33.md — historical snapshot, not authoritative; left as-is). MEDIUM (P28-002): H-NEW-ATTACHMENT-009 Expected bullet 4 asserted "Zero requests to any `/rest/servicedeskapi/...` path" but the scenario's own setup step 3 mounts `GET /rest/servicedeskapi/servicedesk` (the JSM meta-resolution call that fires BEFORE the gate during `get_or_fetch_project_meta`). Narrowed to POST-only assertion: zero requests to the upload POSTs only (`POST .../attachTemporaryFile` and `POST .../request/{key}/attachment`); GET call acknowledged as expected. Mount-vs-assertion sweep of all 12 Group-19 holdouts + VP-576-002/003/005 found no additional contradictions.
+
+### Changed Requirements
+
+- `.factory/specs/prd/bc-3-issue-write.md` (MODIFIED): P28-001 — EC-3.9.020-8 terminal sentence corrected (wire enumeration: project-meta fetch only; no issue GET; no servicedeskapi pagination for non-JSM); BC-3.9.020 Trace updated with P28-001 citation.
+- `.factory/specs/prd/holdout-scenarios.md` (MODIFIED): P28-002 — H-NEW-ATTACHMENT-009 Expected bullet 4 narrowed (POST-only servicedeskapi assertion; GET acknowledged in parenthetical; licensing BCs added); Status updated with P28-002 citation; frontmatter version 1.5.4→1.5.5; trace entry added.
+- `.factory/specs/prd/BC-INDEX.md` (MODIFIED): P28-001 — BC-3.9.020 row: EC-3.9.020-8 note updated with P28-001 wire-enumeration corrected annotation; `last_updated`, `index_version` v6.27→v6.28 updated.
+- `.factory/phase-f2-spec-evolution/prd-delta-576.md` (MODIFIED): `spec_version_after` 1.3.67→1.3.68; P28 dispositions section appended (P28-001 + P28-002 + mount-vs-assertion sweep table).
+
+### Impact Assessment
+
+| Artifact | Change Type | Notes |
+|---|---|---|
+| bc-3-issue-write.md | Modified | EC-3.9.020-8 wire enumeration corrected (P28-001) |
+| holdout-scenarios.md | Modified | H-NEW-ATTACHMENT-009 bullet 4 POST-only assertion (P28-002) |
+| BC-INDEX.md | Modified | BC-3.9.020 row P28-001 note; index_version v6.28 |
+| prd-delta-576.md | Modified | spec_version_after 1.3.68; P28 dispositions section |
+
+| Dimension | Value |
+|---|---|
+| BC count | 657 (unchanged) |
+| Holdout count | 100 (unchanged) |
+| VP count | 35 (unchanged) |
+| New BCs | 0 |
+| New VPs | 0 |
+| New Holdouts | 0 |
+| Spec version | 1.3.67→1.3.68 |
+
+---
+
 ## [1.3.67] - 2026-07-17
 
 ### Type: PATCH

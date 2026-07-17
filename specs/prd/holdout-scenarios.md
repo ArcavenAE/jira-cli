@@ -4,7 +4,7 @@ title: "Holdout Scenarios"
 total_holdouts: 100
 # H-NEW-AUTH-002 registered by S-0.07 (Phase 3, 2026-05-07). Wave 0 COMPLETE.
 # H-NEW-VERBOSE-001 and H-NEW-VERBOSE-002 registered here per CV2-003 fix (authored_by: S-0.06).
-version: "1.5.4"
+version: "1.5.5"
 last_updated: 2026-07-17
 source_pass: 3
 trace: |
@@ -22,6 +22,7 @@ trace: |
   - SOH-ATTACHMENTS-1 F2 (2026-07-15, adversary pass-1 human ruling R3): attachment list/download/upload/delete — 8 new scenarios H-NEW-ATTACHMENT-001..008 (BC-2.7.001 zero/N-attach list + null-author, BC-2.7.007 write-to-temp+atomic-rename, BC-2.7.008/010/011 batch --all + SHA-1 collision + path-traversal, BC-3.9.001/017/018 upload+replace-existing ordering+zero-match, BC-3.9.015 delete confirmation gate confirm/cancel/non-interactive, BC-3.9.016/019/020 --older-than --dry-run two-phase, BC-2.7.011 SECURITY CWE-22 path-traversal, BC-3.9.005 --public non-JSM guard); extended to H-NEW-ATTACHMENT-009 (P14-001, EOF→exit-130); extended to H-NEW-ATTACHMENT-010 (P15-002/R3.12, non-interactive ≥1-match --replace-existing without --yes → exit 64; BC-3.9.017 EC-3.9.017-9); H-NEW-ATTACHMENT-004 Call B updated to --yes (P15-002 gate); H-NEW-ATTACHMENT-001/003 GET fixtures updated to ?fields=attachment canonical form (P15-INFO-1); extended to H-NEW-ATTACHMENT-011 (P20-001, --internal on non-JSM project → silent platform POST, exit 0, zero servicedeskapi calls; BC-3.9.004 EC-3.9.004-1 OQ-9 ruling; mirrors H-NEW-ATTACHMENT-008 assertion style); extended to H-NEW-ATTACHMENT-012 (P21-001, mid-batch bulk 404 → benign-skip-continue; count=2; ids exclude 404'd AID; exit 0; wiremock asserts 3 DELETE calls; BC-3.9.010 EC-3.9.010-4 / BC-3.9.013)
   - SOH-COMMENT-CRUD-1 F2 (2026-07-09): comment delete/edit/view CRUD — 5 new scenarios H-NEW-COMMENT-001..H-NEW-COMMENT-005 (BC-3.5.005 body-only-PUT wire, BC-3.5.008 --public non-interactive gate, BC-3.5.004 delete-404 exit-64, BC-3.5.010 view roundtrip, BC-3.5.003 delete confirmation gate; issue #577 DEC-168; H-NEW-COMMENT-005 added adversary pass-18 F6)
   - SOH-ATTACHMENTS-1 adversary pass-27 (2026-07-17, P27): H-NEW-ATTACHMENT-003 Call B2 `filename` corrected to RAW Jira name `ok.txt` (pre-sanitization, pre-SHA-1-prefix); discriminating `filename`-vs-`path` assertion added (P27-001); H-NEW-ATTACHMENT-007 overlong-name fixture description corrected (255 bytes = exceeds 214-byte sanitizer cap + 41-byte SHA-1 prefix; was "at the length-cap boundary"); missing length-cap assertion added (on-disk basename after SHA-1 prefix ≤ 214 bytes; P27-002); holdout count unchanged (100)
+  - SOH-ATTACHMENTS-1 adversary pass-28 (2026-07-17, P28): H-NEW-ATTACHMENT-009 Expected bullet 4 narrowed — "zero requests to any /rest/servicedeskapi/..." replaced with POST-only assertion: zero requests to POST .../attachTemporaryFile and POST .../request/{key}/attachment; GET /rest/servicedeskapi/servicedesk meta-resolution IS expected to fire (mounted in setup step 3; asserted absent only are the upload POSTs); licensing BC added (BC-3.9.003 step 1 / BC-X.8.010 for the GET; BC-3.9.014 gate for the POST absence); Status updated with P28-002 citation; holdout count unchanged (100)
 ---
 
 # Holdout Scenarios — jira-cli
@@ -2458,11 +2459,11 @@ Call C (non-interactive, no `--yes`):
 - Exit code = **130** (JrError::Interrupted — NOT 0, NOT 64, NOT 1).
 - stderr does NOT contain `"Upload cancelled."` (that is the branch (b) cancel message; EOF branch (c) emits no cancel message).
 - stdout is empty (no JSON cancel envelope on exit 130).
-- Zero requests to any `/rest/servicedeskapi/...` path (Wiremock assertion: no upload POST issued before or after the gate).
+- Zero requests to the upload POSTs — `POST .../attachTemporaryFile` and `POST .../request/{key}/attachment` — before or after the gate. (The `GET /rest/servicedeskapi/servicedesk` meta-resolution call DOES fire before the gate during JSM detection — it is mounted in setup step 3; assert only that the upload POSTs are absent.) Licensing BC: BC-3.9.003 step 1 / BC-X.8.010 (the GET); BC-3.9.014 gate (the POST absence).
 
 **Why hidden**: The EOF path (branch (c)) and the cancel path (branch (b)) both produce no stdout, making them indistinguishable to an output-only observer. The decisive signal is the exit code: exit 0 (cancel) vs exit 130 (interrupted). A regression that conflates `Ok(0)` EOF with `Ok(n)` empty-Enter (the prior erroneous behavior described in BC-3.9.003 before P14-001) would exit 0 instead of 130 — this holdout catches exactly that regression. The `JR_STDIN_IS_TTY=1` seam is required to force the interactive branch regardless of the test runner's stdin pipe state.
 
-**Status**: MUST-PASS. Pins EC-3.9.003-6 (EOF → `JrError::Interrupted`, exit 130; NOT exit 0) and BC-3.9.014 three-way branch (c). The EOF-vs-empty-Enter distinction is load-bearing. P14-001.
+**Status**: MUST-PASS. Pins EC-3.9.003-6 (EOF → `JrError::Interrupted`, exit 130; NOT exit 0) and BC-3.9.014 three-way branch (c). The EOF-vs-empty-Enter distinction is load-bearing. P14-001; P28-002 (Expected bullet 4 narrowed to POST-only servicedeskapi assertion; GET /rest/servicedeskapi/servicedesk IS expected to fire per setup step 3).
 
 **BC refs**: BC-3.9.003 (primary — EC-3.9.003-6 EOF path, three-way branch), BC-3.9.014 (gate mechanics, `read_line` `Ok(0)` vs `Ok(n)` distinction), BC-3.9.005 (eligibility pre-check confirms JSM issue before gate fires)
 

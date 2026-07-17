@@ -6267,3 +6267,65 @@ _Discovered: P25-001 (2026-07-17); proactive closure via CV K-1 at r35 (same bur
 
 _Trigger: P27-001 (2026-07-17); remedy: filename-semantics clauses added to BC-2.7.002 + holdout corrected + discriminating assertion added._
 _Tagged: [process-gap] [holdout] [spec-gap] [reachability-from-spec] [fixture-completeness-family] [hidden-holdout-vs-bc] [p27] [codified]_
+
+
+---
+
+## SOH-ATTACHMENTS-1 F2 Adversary Pass 28 — Process Lessons (2026-07-17)
+
+### [codified] MOUNT-VS-ASSERTION-COHERENCE: Every zero-request/no-X-issued assertion must be checked against the scenario's own setup mounts AND the wire contract
+
+**Observation (P28-002, 2026-07-17):** Adversary pass 28 found that H-NEW-ATTACHMENT-009 Expected bullet 4 asserted "Zero requests to any `/rest/servicedeskapi/...` path" while the scenario's own setup step 3 explicitly mounts `GET /rest/servicedeskapi/servicedesk`. This is a mount-vs-assertion internal contradiction: the assertion rules out a call that the fixture itself sets up and expects to fire. A spec-compliant implementation that correctly issues the servicedesk GET (as required by BC-X.8.010 during JSM detection) would fail this holdout at Phase-4 evaluation — a false-Phase-4-failure class defect.
+
+**Root cause:** The holdout assertion was authored with coarse scope ("any servicedeskapi path") motivated by the correct intuition that upload POSTs should not fire. But the coarse assertion over-reached to include the servicedesk GET that fires pre-gate during `get_or_fetch_project_meta` — a call that is required by the wire contract (BC-X.8.010 step (2)) for JSM project detection. The assertion was verified against product intent but not against the scenario's own mounts or the wire contract.
+
+**Principle (MOUNT-VS-ASSERTION-COHERENCE):** Every zero-request or "no-X-issued" assertion in a holdout or verification property must be checked against TWO sources:
+1. **The scenario's own setup mounts:** If a mount is present in setup for call X, and the assertion says "zero requests to X," that is an internal contradiction — the assertion will always fail a correct implementation. Fix: either remove the mount (if X should not fire) or narrow the assertion to exclude X (if X correctly fires pre-assertion-point).
+2. **The wire contract:** If the BC/EC steps mandate call X on this path, and the assertion says "zero requests to X," that is a spec-vs-assertion contradiction. Fix: narrow the assertion to the subset of calls that should NOT fire, or add explicit carve-out language.
+
+**Detection mechanism:** Read the scenario's setup mounts and independently derive the expected HTTP call set from the wire contract (FIXTURE-COMPLETENESS-ENUMERATION rule). A zero-request assertion is valid only if: (a) the call is absent from setup mounts AND (b) the call is not mandated by the wire contract on this path.
+
+**Remedy (P28-002):** H-NEW-ATTACHMENT-009 bullet 4 was narrowed from "Zero requests to any `/rest/servicedeskapi/...` path" to "Zero requests to the upload POSTs — `POST .../attachTemporaryFile` and `POST .../request/{key}/attachment`" with a parenthetical explicitly acknowledging "The `GET /rest/servicedeskapi/servicedesk` meta-resolution call DOES fire before the gate during JSM detection — it is mounted in setup step 3; assert only that the upload POSTs are absent." Licensing BCs were added for each class of call.
+
+**Exhaustive sweep (proactive, same burst):** All 12 Group-19 holdouts + VP-576-002/003/005 were audited for the mount-vs-assertion class. Disposition table with per-scenario OK/FIXED verdicts constructed. Result: 0 additional contradictions found. The mount-vs-assertion sub-class is exhaustively closed as of P28.
+
+**Closure mechanism:** The reliable closure mechanism is an explicit enumeration table: for each scenario with a zero-request or no-X assertion, list: (a) the assertion scope, (b) the setup mounts present, (c) the wire-contract mandated calls. A contradiction exists if any mount falls within the assertion scope, or if any wire-contract-mandated call falls within the assertion scope. After P28 exhaustive sweep, all scenarios in scope had no contradictions (confirmed by consistency validator r38 spot audit of 5 representative items).
+
+**Family relation:** MOUNT-VS-ASSERTION-COHERENCE is a sub-class of FIXTURE-COMPLETENESS (RECURRENCE COUNT: 12 in TWIN-ARTIFACT). It complements:
+- FIXTURE-COMPLETENESS-ENUMERATION (P23-001): omitted mandated calls from fixture mounts
+- HOLDOUT-REACHABILITY-FROM-SPEC (P27-001): Expected value not derivable from BC text alone
+- MIS-LANDED-ROW-VERIFICATION (GAP-P24-002-001): note placed in wrong Scope-table row
+
+All four share the pattern "what you think the artifact asserts vs. what the authoritative wire contract requires." MOUNT-VS-ASSERTION-COHERENCE is specifically about the internal consistency between a scenario's assertions and its own mounts/wire contract.
+
+**Trigger pattern:** "Zero requests to any `/rest/servicedeskapi/...`" (or similar coarse zero-assertions) when the scenario involves a JSM project — the JSM meta-resolution chain (BC-X.8.010) unconditionally fires servicedesk GET during `get_or_fetch_project_meta` on JSM projects. Any zero-servicedeskapi assertion on a JSM scenario must be narrowed to specific call types.
+
+_Trigger: P28-002 (2026-07-17); sweep: 12 Group-19 holdouts + VP-576-002/003/005 = 0 residue; class closed._
+_Tagged: [process-gap] [holdout] [fixture-coherence] [mount-vs-assertion] [zero-request-assertion] [jsm-meta-resolution] [fixture-completeness-family] [p28] [codified] [class-closed]_
+
+
+---
+
+### [codified] FRONTMATTER-TRACE-OBLIGATION-STANDING: bc-3 frontmatter trace entry is a per-round checklist obligation when bc-3 body is modified (3rd-occurrence → checklist-standing)
+
+**Observation (r37 INFO-NEW-8 → r38 INFO-NEW-9, 2026-07-17):** Two consecutive rounds identified missing bc-3 frontmatter trace entries:
+- r37 INFO-NEW-8: P27-001 modified bc-3 body (rows 3219-3220) but no v1.3.67 trace entry was added. Micro-fixed same burst (P28).
+- r38 INFO-NEW-9: P28-001 modified bc-3 body (EC-3.9.020-8 + BC-3.9.020 Trace) but no v1.3.68 trace entry was added.
+
+This is the 3rd occurrence of a frontmatter-trace omission class (1st: P21 bc-2 frontmatter at r31; 2nd: P27 bc-3 frontmatter at r37; 3rd: P28 bc-3 frontmatter at r38). Per the 3rd-occurrence rule, this triggers a CHECKLIST-STANDING mitigation.
+
+**Rule (FRONTMATTER-TRACE-OBLIGATION-STANDING):** Every fix round that modifies bc-3 body content MUST include an explicit frontmatter trace entry addition as a per-round checklist step. This is not deferred to a burst-close sweep or a subsequent consistency round. The trace entry must:
+1. Record the spec version (e.g., `v1.3.68`)
+2. Name the round (e.g., `P28 adversary fix round (2026-07-17, SOH-ATTACHMENTS-1)`)
+3. State `0 new BCs` (or the actual count)
+4. Describe the bc-3 body change concisely
+5. Note the BC count: `BC count unchanged (140/35)`
+
+The same obligation applies to bc-2 (analogously). The pattern that generates the omission: PO focuses on the spec-changelog Changed Requirements table (which records the file as MODIFIED) without also adding the bc-3/bc-2 frontmatter trace entry for the corresponding version.
+
+**Checklist integration:** The per-round PO checklist must include: "After any bc-3 body edit: (a) add v1.3.XX trace entry to bc-3 frontmatter. After any bc-2 body edit: (b) add v1.3.XX trace entry to bc-2 frontmatter. Verify against spec-changelog Changed Requirements table."
+
+**Effective immediately:** This is a standing obligation as of P28 remediation burst (2026-07-17). Future CV rounds that find a missing trace entry for bc-3/bc-2 when body changes are present will classify as LOW GAP (not INFO) due to the checklist-standing obligation.
+
+_Trigger: 3rd occurrence (r37 INFO-NEW-8 + r38 INFO-NEW-9); checklist-standing mitigation per 3rd-occurrence rule._
+_Tagged: [process-gap] [frontmatter-trace] [bc-3] [bc-2] [per-round-checklist] [3rd-occurrence] [checklist-standing] [codified]_
