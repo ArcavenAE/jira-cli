@@ -5248,3 +5248,21 @@ Displaced to make room for SOH-ATTACHMENTS-1 adversary pass-20 remediation + hum
 |------|-------|--------|--------|
 | **SOH-ATTACHMENTS-1 F2 ADVERSARY PASS-15 REMEDIATED (2026-07-16): 7 findings (2M/5L/2I); P15-001 BC-INDEX BC-2.7.011 "255→214-byte cap" regression (RECURRENCE COUNT 9); P15-002/R3.12 --replace-existing ≥1-match confirmation gate (step-2 rewrite; EC-3.9.017-9..12; BC-3.9.014 THREE consumers; impact-boundary R3.12 added; H-NEW-ATTACHMENT-010 added; holdouts 97→98); P15-003..007 LOW pinpoint fixes; INFO-1 fixture alignment applied; r25 CONSISTENT (7th consecutive zero-action; INFO-8/9 resolved this burst); spec v1.3.55; guards green. Pass 16 DISPATCHED.** | adversary + product-owner + consistency-validator + state-manager | COMPLETE | `phase-f2-spec-evolution/consistency-report-576-r25.md`; BC 657; holdouts 98; VP 33; spec v1.3.55. |
 
+
+---
+
+## Archived Phase Progress row (2026-07-17, adversary-pass-21 remediation burst)
+
+Displaced to make room for SOH-ATTACHMENTS-1 F2 ADVERSARY PASS-21 REMEDIATED row per keep-5 rule.
+
+| Phase | Status | Completed | Gate | Notes |
+|-------|--------|-----------|------|-------|
+| **SOH-ATTACHMENTS-1 F2 ADVERSARY PASS-15 REMEDIATED (2026-07-16) — p15 NOT-CLEAN 7 (2M/5L/2I); P15-001 (M) BC-INDEX BC-2.7.011 "214-byte cap" regression (BC-INDEX-9TH-SURFACE RECURRENCE COUNT now 9); P15-002 (M) ungated --replace-existing data-loss asymmetry → R3.12 ≥1-match confirmation gate (BC-3.9.017 step-2 rewrite; EC-3.9.017-9..12; BC-3.9.014 THREE consumers; EC-3.9.003-5/EC-3.9.020-7 extended; BC-3.9.018 zero-match alignment; VP-576-003 updated; H-NEW-ATTACHMENT-010 +1 holdout 97→98; impact-boundary R3.12 added); P15-003..007 (L) en-dash; --filter/--id conflict; 403 row; --out directory exit 64; filtered-to-zero batch; r25 CONSISTENT (7th consecutive zero-action; INFO-8/9 new non-blocking); spec v1.3.55; counts 657/98/33VP; guards green.** | **ADVERSARY PASS-15 REMEDIATED** | **2026-07-16** | **Adversary pass 16 in flight.** | `phase-f2-spec-evolution/consistency-report-576-r25.md`; BC 657; holdouts 98; VP 33; spec v1.3.55. |
+
+### Archived Current Phase Steps row (adversary-pass-21 remediation burst)
+
+Displaced to make room for SOH-ATTACHMENTS-1 adversary pass-21 remediation step row per keep-5 rule.
+
+| Step | Agent | Status | Output |
+|------|-------|--------|--------|
+| **SOH-ATTACHMENTS-1 F2 ADVERSARY PASS-16 REMEDIATED (2026-07-16): 6 findings (2M/3L/1I); P16-001 (M) error-taxonomy.md §3 contradicted 4 attachment BCs + 413 absent — 4 override rows added; P16-002 (M) R3.13 BC-3.9.014 reallocated S5→S3; P16-003 (L) BC-3.9.003 Step-0 + projectTypeKey pin; P16-004 (L) H-007 fixture aligned; P16-005 (L) BC-3.9.015 taxonomy 403/401/5xx; BC-INDEX micro-fix v6.15→v6.16 (4 rows + INFO-7 retitle); r26 CONSISTENT (8th consecutive zero-action; INFO-7/9/10 resolved); spec v1.3.56; guards green. Pass 17 next.** | adversary + product-owner + consistency-validator + state-manager | COMPLETE | `phase-f2-spec-evolution/consistency-report-576-r26.md`; BC 657; holdouts 98; VP 33; spec v1.3.56. |

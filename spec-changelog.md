@@ -7,6 +7,40 @@ project: "jr (jira-cli)"
 
 Track all spec version changes. Most recent version first.
 
+## [1.3.61] - 2026-07-16
+
+### Type: PATCH
+
+### Summary
+
+Adversary pass 21 (P21) fix round — HIGH: BC-3.9.010 bulk-delete body contradicted EC-3.9.010-4 on bulk 404: paragraph rewrote "stops at first failure / 404 → exit 64" to correctly state 404 is NOT a failure on the bulk path (benign-skip per EC-3.9.010-4/BC-3.9.013); single-vs-bulk 404 divergence cross-ref added; holdout H-NEW-ATTACHMENT-012 added (mid-batch 3-AID delete with middle 404 → count=2, 404'd AID excluded from ids, exit 0, wiremock asserts 3 DELETEs) (P21-001); MEDIUM: VP-576-005 fixture violated the one-issue-GET invariant — plain GET /rest/api/3/issue/EJ-1 removed (BC-3.9.017 step 0 derives project key from string prefix, no plain issue GET); mounts renumbered; strict-mode zero-plain-GET assertion added per EC-3.9.003-5 P17-003 (P21-002); LOW: holdout-scenarios.md Group 19 header range bumped to ..012 (P21-003); BC-3.9.004 branch-(a) HTTP sequence expanded from "project GET (cache-miss only)" to BC-X.8.010 full resolution (up to 2 cache-miss GETs: GET /rest/api/3/project/{key} + GET /rest/servicedeskapi/servicedesk pagination for serviceDeskId) (P21-004); EC-3.9.004-4 added (Step-0 suppression when entered from BC-3.9.017 step 4 on --replace-existing --internal path — symmetric with EC-3.9.003-5 P17-003); BC-3.9.017 step 4 cross-ref BC-3.9.004 EC-3.9.004-4 added (P21-005); INFO: BC-2.7.012 KEY-404 row annotated "(batch paths only — --id does not server-verify KEY per BC-2.7.007)" (P21-006).
+
+### Changed Requirements
+
+- `.factory/specs/prd/bc-3-issue-write.md` (MODIFIED): P21-001 — BC-3.9.010 bulk-delete paragraph rewritten (404 NOT a failure on bulk path; benign-skip per EC-3.9.010-4/BC-3.9.013; 404'd AID excluded from count/ids; iteration continues; first NON-404 failure stops batch; "404 → exit 64" removed from bulk enumeration; single-vs-bulk 404 divergence cross-ref to BC-3.9.008/BC-3.9.013 added). P21-002 — VP-576-005: plain `GET /rest/api/3/issue/EJ-1` mount removed; mounts renumbered (1) project GET (2) ?fields=attachment GET; strict-mode zero-plain-GET assertion (d) added; pins BC-3.9.017 step 0 string-prefix derivation and EC-3.9.003-5 P17-003. P21-004 — BC-3.9.004 branch-(a) HTTP sequence: "project GET (cache-miss only)" expanded to "project-meta resolution per BC-X.8.010 (up to 2 cache-miss GETs: GET /rest/api/3/project/{key} + GET /rest/servicedeskapi/servicedesk pagination for serviceDeskId)". P21-005 — EC-3.9.004-4 added (Step-0 suppression when entered from BC-3.9.017 step 4; symmetric with EC-3.9.003-5 P17-003); BC-3.9.017 step 4 cross-ref BC-3.9.004 EC-3.9.004-4 added. Trace and footer updated (v1.3.61 entry).
+- `.factory/specs/prd/bc-2-issue-read.md` (MODIFIED): P21-006 — BC-2.7.012 KEY-404 row annotated "(batch paths only — `--id` does not server-verify KEY per BC-2.7.007)".
+- `.factory/specs/prd/holdout-scenarios.md` (MODIFIED): P21-001 — total_holdouts 99→100; body preamble 99→100; trace entry for H-NEW-ATTACHMENT-012 added; H-NEW-ATTACHMENT-012 holdout body added (mid-batch bulk 404 benign-skip-continue: 3 AIDs, middle 404, count=2, ids exclude 404'd AID, exit 0, wiremock asserts 3 DELETE calls; pins EC-3.9.010-4/BC-3.9.013). P21-003 — Group 19 header range bumped from ..010 to ..012.
+- `.factory/specs/prd/CANONICAL-COUNTS.md` (MODIFIED): P21-001 — holdout total 99→100; enumeration updated (H-NEW-ATTACHMENT-001..H-NEW-ATTACHMENT-012); Group 19 line updated (+12, P21-001 note added); reconciliation note updated.
+- `.factory/specs/prd/BC-INDEX.md` (MODIFIED): P21-001 — BC-3.9.010 row: bulk-404 benign-skip language added; single-vs-bulk divergence noted. P21-004/P21-005 — BC-3.9.004 row: branch-(a) HTTP sequence updated (BC-X.8.010 servicedesk pagination); EC-3.9.004-4 Step-0 suppression noted. P21-006 — BC-2.7.012 row: KEY-404 batch-paths-only annotation added. `last_updated`, `index_version` v6.20→v6.21 updated (holdout 99→100, VP 35 unchanged).
+- `.factory/phase-f2-spec-evolution/prd-delta-576.md` (MODIFIED): `spec_version_after` 1.3.60→1.3.61; `holdout_count_after` 99→100; P21 dispositions section appended.
+
+### Impact Assessment
+
+| Artifact | Change Type | Notes |
+|---|---|---|
+| bc-3-issue-write.md | Modified | BC-3.9.010 body corrected (bulk-404 benign-skip); VP-576-005 fixture corrected; BC-3.9.004 branch-(a) wire sequence; EC-3.9.004-4 added; BC-3.9.017 step 4 cross-ref |
+| bc-2-issue-read.md | Modified | BC-2.7.012 KEY-404 annotation |
+| holdout-scenarios.md | Modified | H-NEW-ATTACHMENT-012 added; Group 19 header; total 99→100 |
+| CANONICAL-COUNTS.md | Modified | Holdout total 99→100 |
+| BC-INDEX.md | Modified | BC-3.9.010, BC-3.9.004, BC-2.7.012 rows; index_version v6.21 |
+
+| Dimension | Value |
+|---|---|
+| BC count | 657 (unchanged) |
+| Holdout count | 99→100 (+1 H-NEW-ATTACHMENT-012) |
+| VP count | 35 (unchanged) |
+| Spec version | 1.3.60→1.3.61 |
+
 ## [1.3.60] - 2026-07-16
 
 ### Type: PATCH

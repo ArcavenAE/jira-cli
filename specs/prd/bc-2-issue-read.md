@@ -12,6 +12,8 @@ trace: |
   - Source R4: .factory/semport/jira-cli/jira-cli-pass-3-deep-r4.md §3.1
   - SOH-ATTACHMENTS-1 F2 addition (2026-07-15): BC-2.7.001..012 — Attachment Read: attachment list (table+JSON, filters mime/name/size-max), attachment download (single/batch/newest, streaming, redirect-following, CWE-22 sanitization, SHA-1 default path, JSDCLOUD-10841 JSM uniform), error taxonomy (DEC-179, issues #576 #585)
   - SOH-ATTACHMENTS-1 adversary pass-19 (2026-07-16): BC-2.7.002 BTreeMap-alphabetical key order clause + example reorder (P19-001); EC-2.7.001-2 JSON-mode filter-count hint clause (P19-002); EC-2.7.007-5 best-effort MUST + tokio ctrl_c implementation note (P19-003); spec v1.3.59
+  - SOH-ATTACHMENTS-1 adversary pass-20 (2026-07-16): BC-2.7.007 `--out` unconditional step-1 clause added — step 1 always issued even with `--out`; pre-stream existence validation; one extra GET accepted cost (P20-003); VP-576-004 attachment-object JSON transformation pin added to BC-2.7.002 — `"self"` OMITTED, `"content"` RENAMED to `"contentUrl"` (P20-006); spec v1.3.60
+  - SOH-ATTACHMENTS-1 adversary pass-21 (2026-07-16): BC-2.7.012 KEY-404 batch-paths-only annotation — `--id` does not server-verify KEY per BC-2.7.007 (P21-006); spec v1.3.61
 ---
 
 # BC-2 — Issue Read (list / view / comments / changelog)
@@ -933,7 +935,7 @@ Since step 4 of sanitization already strips `../`, `/`, `\`, `:`, the join will 
 | Condition | Exit code | stderr |
 |-----------|-----------|--------|
 | Invalid `--id` AID (non-numeric, e.g. path-traversal) | 64 | `"invalid attachment id: '<VALUE>' (must be numeric)"` (no HTTP) |
-| KEY 404 | 64 | `"Issue <KEY> not found or not accessible."` |
+| KEY 404 (batch paths only — `--id` does not server-verify KEY per BC-2.7.007) | 64 | `"Issue <KEY> not found or not accessible."` |
 | AID 404 from metadata endpoint (`GET /attachment/{id}`) | 64 | `"Attachment <AID> not found or not accessible."` |
 | AID 403 from metadata endpoint (`GET /attachment/{id}`) | 1 | `"Permission denied: cannot access attachment <AID>."` |
 | KEY or AID 401 | 2 | Not authenticated + `jr auth login` hint |
@@ -943,7 +945,7 @@ Since step 4 of sanitization already strips `../`, `/`, `\`, `:`, the join will 
 | Permission denied on target directory (EACCES / read-only FS) | 1 | `"Permission denied: cannot write to <dir>"` (single mode; batch mode: per-file fail-soft per BC-2.7.008) |
 | Target directory not writable (other OS write error) | 1 | OS error message surfaced on stderr (single mode; batch mode: per-file fail-soft per BC-2.7.008) |
 
-**Trace**: F2 spec evolution (SOH-ATTACHMENTS-1 2026-07-15; DEC-179 ratified design; research §6 JRACLOUD-96384/-78388 VERIFIED)
+**Trace**: F2 spec evolution (SOH-ATTACHMENTS-1 2026-07-15; DEC-179 ratified design; research §6 JRACLOUD-96384/-78388 VERIFIED); P21-006 (KEY-404 batch-paths-only annotation — `--id` does not server-verify KEY per BC-2.7.007)
 
 ---
 

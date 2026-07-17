@@ -5,11 +5,11 @@ issues: "#576, #585"
 phase: F2
 authored: 2026-07-15
 spec_version_before: 1.3.42
-spec_version_after: 1.3.60
+spec_version_after: 1.3.61
 bc_count_before: 624
 bc_count_after: 657
 holdout_count_before: 88
-holdout_count_after: 99
+holdout_count_after: 100
 ---
 
 # PRD Delta — SOH-ATTACHMENTS-1 Attachment Read/Write (issues #576 + #585)
@@ -390,3 +390,18 @@ Source: Adversary Pass 20. 1 MEDIUM / 5 LOW / 1 INFO findings. Spec version bump
 | P20-007 (INFO) | INFO | — | NO ACTION (recorded) | BC-NUMBER-043-DUPLICATE drift item (pre-existing BC-2.4.043/BC-2.5.043 numbering collision from P19-I2). Already ledgered. No action this round. |
 
 **BC count at this round: 657 (unchanged). Holdout count: 99 (+1 H-NEW-ATTACHMENT-011). VP count: 35 (+2: VP-576-004, VP-576-005). Spec version: 1.3.60. Both guards exit 0.**
+
+## Adversary Pass 21 Fix Round Finding Dispositions
+
+Source: Adversary Pass 21. 1 HIGH / 1 MEDIUM / 3 LOW / 1 INFO findings. Spec version bump: 1.3.60 → 1.3.61. No new BCs. Holdouts: 99→100 (+1 H-NEW-ATTACHMENT-012). VPs: 35 (unchanged).
+
+| Finding ID | Severity | File(s) Touched | Status | Change |
+|------------|----------|----------------|--------|--------|
+| P21-001 (HIGH) | HIGH | bc-3-issue-write.md, holdout-scenarios.md, CANONICAL-COUNTS.md, BC-INDEX.md | APPLIED | BC-3.9.010 bulk-delete paragraph rewritten: "If any single DELETE fails mid-batch, jr stops at the first failure" replaced with correct statement that 404 is NOT a failure on bulk path — benign-skip per EC-3.9.010-4/BC-3.9.013; 404'd AID excluded from count/ids; iteration continues; first NON-404 failure stops batch; "404 → exit 64" removed from bulk enumeration; single-vs-bulk 404 divergence cross-ref sentence added (BC-3.9.008 exits 64 on single-AID 404; BC-3.9.013 benign-skip on bulk — intentionally asymmetric). H-NEW-ATTACHMENT-012 holdout added (3-AID bulk delete; middle AID 40002 returns 404; count=2; ids=["40001","40003"]; exit 0; wiremock asserts 3 DELETE calls; pins EC-3.9.010-4/BC-3.9.013). Holdout count 99→100. |
+| P21-002 (MEDIUM) | MEDIUM | bc-3-issue-write.md | APPLIED | VP-576-005: plain `GET /rest/api/3/issue/EJ-1` mount (1) removed — BC-3.9.017 step 0 derives project key from issue-key string prefix (`EJ-1`→`EJ`) without an issue GET; EC-3.9.003-5 P17-003 mandates exactly ONE issue GET per invocation (the `?fields=attachment` GET at step 1). Mounts renumbered: (1) GET /rest/api/3/project/EJ, (2) GET /rest/api/3/issue/EJ-1?fields=attachment, (3)–(5) remainder. Assert (d) added: wiremock strict mode verifies ZERO plain GET /rest/api/3/issue/EJ-1 requests without query parameters. |
+| P21-003 (LOW) | LOW | holdout-scenarios.md | APPLIED | Group 19 header range bumped from "(H-NEW-ATTACHMENT-001..010)" to "(H-NEW-ATTACHMENT-001..012)" — header was already behind H-NEW-ATTACHMENT-011 (added P20-001); corrected to reflect both 011 and new 012. |
+| P21-004 (LOW) | LOW | bc-3-issue-write.md, BC-INDEX.md | APPLIED | BC-3.9.004 branch-(a) HTTP sequence: "project GET (cache-miss only)" expanded to "project-meta resolution per BC-X.8.010 (up to 2 cache-miss GETs: GET /rest/api/3/project/{key} + GET /rest/servicedeskapi/servicedesk pagination for serviceDeskId)". Branch (b) non-JSM sequence verified correct (only project GET, no servicedesk pagination) — left unchanged. BC-INDEX.md BC-3.9.004 row updated. |
+| P21-005 (LOW) | LOW | bc-3-issue-write.md, BC-INDEX.md | APPLIED | EC-3.9.004-4 added to BC-3.9.004 (Step-0 suppression when entered from BC-3.9.017 step 4 on `--replace-existing --internal` path — existence validated by step 1 `?fields=attachment` GET; ONE issue GET per invocation; symmetric with EC-3.9.003-5 P17-003 on `--replace-existing --public` path). BC-3.9.017 step 4 text extended: "Step-0 suppression on `--internal` path (BC-3.9.004 EC-3.9.004-4)" cross-ref added. BC-3.9.004 Trace and BC-INDEX row updated. |
+| P21-006 (INFO) | INFO | bc-2-issue-read.md, BC-INDEX.md | APPLIED | BC-2.7.012 KEY-404 row: annotation "(batch paths only — `--id` does not server-verify KEY per BC-2.7.007)" added to KEY-404 condition cell. BC-INDEX.md BC-2.7.012 row updated with equivalent annotation. |
+
+**BC count at this round: 657 (unchanged). Holdout count: 100 (+1 H-NEW-ATTACHMENT-012). VP count: 35 (unchanged). Spec version: 1.3.61. Both guards exit 0.**

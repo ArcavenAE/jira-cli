@@ -6100,3 +6100,39 @@ _Tagged: [process-gap] [prd-delta] [dispositions] [per-round-checklist] [cv-chan
 
 _Recorded: 2026-07-17. State-manager (adversary-pass-20 remediation burst, TD-VSDD-053)._
 _Tagged: [process-gap] [hook-timeout] [safe-resume] [verify-before-retry] [double-insertion-sweep] [fail-closed] [escalation] [codified]_
+
+---
+
+### ECHO-BREAKER-FIXTURE-EXTENSION [process-gap / convergence]
+
+**Observation (adversary-pass-21, 2026-07-17, P21-002 MEDIUM):** Adversary pass 21 surfaced a fixture-echo finding that the sentence-level echo-breaker (List A) missed: VP-576-005's wiremock mount posted a plain issue GET request that the wire contract explicitly forbids (EC-3.9.003-5 one-issue-GET invariant). The echo-breaker protocol adopted in DEC-182 required newly-authored *sentences* to carry licensing BC clauses — but a fixture mount is not a sentence; it is a wiremock stub definition or HTTP call count assertion. The adversary caught P21-002 as MEDIUM because the fixture mount was authored during the P20 fix round and violated an EC clause, yet the echo-breaker list for P20 did not include fixture mounts. This is a distinct sub-class of the fix-echo family (TWIN-ARTIFACT-SWEEP recurrence 9): ECHO-BREAKER-SENTENCE targets new prose; ECHO-BREAKER-FIXTURE targets new wiremock mounts, HTTP call sequences, and call-count assertions.
+
+**Protocol extension adopted (2026-07-17, within DEC-183 remit — no criterion change):** List B is added to the echo-breaker protocol alongside the existing List A (sentences). Every fix round must deliver:
+- **List A:** each newly-authored sentence (or table cell) in spec text + the BC clause or EC number that licenses the claim.
+- **List B:** each newly-authored wiremock mount, HTTP call/response stub, or call-count assertion in VP or holdout bodies + the wire-sequence clause (EC number) that licenses that specific call being present, absent, or counted at that position.
+
+The following consistency-validator round audits ALL of List B (not a sample — List B is typically shorter than List A and is precision-critical for protocol correctness) plus a sample of List A.
+
+**First-round result (r31):** List B delivered and CV-verified clean. Zero fixture-echo findings from r31.
+
+**Why fixtures are higher-risk than sentences:** A fixture mount that violates a wire contract produces a test that passes for the wrong reason (the mock accepts calls the real API would reject, or expects calls in the wrong order). This is harder to detect than a prose claim: prose claims can be verified by re-reading the BC; fixture correctness requires tracing the call sequence through the EC clauses. The echo-breaker List B requirement forces that trace to happen at fix-round time rather than adversary-pass time.
+
+**How to apply:** When authoring a fix round, for each new fixture mount or call-count assertion in VP/holdout bodies: (1) identify which wire-sequence step (EC-N.N.NNN-N) governs that call being present at that position; (2) record it in List B as `fixture_id: EC-N.N.NNN-N (one-sentence description of what that clause licenses)`; (3) if no EC clause licenses the call at that position, the mount violates the wire contract and must be removed or the EC extended. A List B item without a licensing clause is a blocker, not a footnote.
+
+_Recorded: 2026-07-17. State-manager (adversary-pass-21 remediation burst, TD-VSDD-053)._
+_Tagged: [process-gap] [echo-breaker] [fixture-echo] [list-b] [wire-contract] [convergence] [p21] [new-sub-class] [codified]_
+
+---
+
+### BULK-404-BODY-EC-CONTRADICTION [process-gap / spec-integrity]
+
+**Observation (adversary-pass-21, 2026-07-17, P21-001 HIGH pre-existing latent):** BC-3.9.010's body paragraph directly contradicted its own normative EC clauses (EC-3.9.010-4), BC-3.9.013, and the error-taxonomy on bulk 404 behavior: the body said "stop immediately and exit 64" while the canon said "benign-skip-continue, all-404→exit 0." The contradiction had survived 20 adversary passes because: (1) body paragraphs that summarize EC behavior are a distinct mirror surface — the adversary typically verifies BCs against ECs clause-by-clause, but a paragraph in the same BC body that contradicts its own EC subsection falls in a scan-perimeter gap between self-same-file and cross-file checks; (2) bulk 404 is a destructive-operation-control-flow edge case with no holdout coverage, so no holdout test exercised the contradiction. The finding was classified HIGH (destructive-op hazard) because an implementer following the body would produce a different abort-on-first-404 behavior than an implementer following the EC clauses, with no way to know which was correct without checking the cross-references. Orchestrator quote-verified BC-3.9.013 and EC-3.9.010-4 before routing the fix.
+
+**Why body paragraphs are a mirror surface:** A BC body often contains an introductory summary paragraph that paraphrases the intent before the normative EC subsections. That summary can silently diverge from the ECs as ECs are updated during adversary passes. This is the same class as BC-INDEX rows that summarize BC bodies (TWIN-ARTIFACT-SWEEP) and spec-changelog entries that summarize BC counts (SPEC-CHANGELOG-RESYNC) — a paraphrase that was true when written becomes stale when the underlying normative text is updated. Body paragraphs are harder to catch because they live in the same file as the ECs they mirror, so a cross-file sweep misses them.
+
+**Candidate for the mechanical sweep list:** Body paragraphs that summarize EC behavior should be added to the PO per-round checklist for any fix that modifies EC behavior. The fix-round checklist should include: "If any EC subsection in the modified BC was changed, re-read the body paragraph immediately above the EC list and verify it still accurately summarizes the updated ECs." This is a preventive step, not a reactive scan.
+
+**Single-vs-bulk divergence cross-ref (load-bearing):** The fix added an explicit "intentionally asymmetric MUST NOT be unified" cross-reference between single-key 404 (exit 64, surfaced error) and bulk 404 (benign skip, continue, all-404→exit 0). This cross-ref is required because the two behaviors look like a bug to a future reader — the divergence is a deliberate product decision (bulk destructive ops must complete the non-erroring items; single-key ops surface errors immediately). Without the cross-ref, a future spec revision or implementer might "normalize" them, which would break the bulk-delete resumption contract.
+
+_Recorded: 2026-07-17. State-manager (adversary-pass-21 remediation burst, TD-VSDD-053)._
+_Tagged: [process-gap] [spec-integrity] [body-ec-contradiction] [mirror-surface] [bulk-404] [destructive-op] [p21] [pre-existing-latent] [high] [codified]_

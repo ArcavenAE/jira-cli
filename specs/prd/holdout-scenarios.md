@@ -1,7 +1,7 @@
 ---
 context: holdout-scenarios
 title: "Holdout Scenarios"
-total_holdouts: 99
+total_holdouts: 100
 # H-NEW-AUTH-002 registered by S-0.07 (Phase 3, 2026-05-07). Wave 0 COMPLETE.
 # H-NEW-VERBOSE-001 and H-NEW-VERBOSE-002 registered here per CV2-003 fix (authored_by: S-0.06).
 version: "1.5.3"
@@ -19,13 +19,13 @@ trace: |
   - F2 holdout authoring Burst 1 (2026-06-30): coverage gaps from F1 delta analysis — 8 new scenarios H-NEW-EDIT-FIELD-001..002, H-NEW-EDIT-TYPE-001..002, H-NEW-CHANGELOG-001, H-NEW-WORKLOG-ADD-001, H-NEW-LINK-001, H-NEW-QUEUE-VIEW-001 (BC-3.4.015/017/018/019, BC-2.5.046, BC-X.5.009, BC-3.6.002, BC-X.8.009); ground-truth reframes per research validation 2026-06-30
   - F2 holdout authoring Burst 2 (2026-06-30): 3 deferred scenarios unblocked by converged BC-3.4.020/021/BC-5.1.005 — H-NEW-LABEL-FORK-001 (label routing fork: single-key PUT bare-string vs multi-key bulk POST `{"name":...}` objects), H-NEW-DRY-RUN-001 (`--dry-run --output json` plannedChanges shape; intentionally simplified preview), H-NEW-BOARD-VIEW-001 (scrum sprint dispatch vs kanban JQL search; truncation hint format); BC Trace IDs reconciled to H-NEW-* convention (H-LABEL-FORK-001/H-DRY-RUN-001/H-BOARD-VIEW-001 → H-NEW-*)
   - ADF-CODE-MARK-EXCLUSIVITY F2 (2026-07-07): code-mark exclusivity invariant — 1 new scenario H-NEW-ADF-010 (BC-7.2.015; code+strong/em/strike/subsup exclusivity at emission time, link co-existence, mixed-range surrounding-marks retention; issue #571)
-  - SOH-ATTACHMENTS-1 F2 (2026-07-15, adversary pass-1 human ruling R3): attachment list/download/upload/delete — 8 new scenarios H-NEW-ATTACHMENT-001..008 (BC-2.7.001 zero/N-attach list + null-author, BC-2.7.007 write-to-temp+atomic-rename, BC-2.7.008/010/011 batch --all + SHA-1 collision + path-traversal, BC-3.9.001/017/018 upload+replace-existing ordering+zero-match, BC-3.9.015 delete confirmation gate confirm/cancel/non-interactive, BC-3.9.016/019/020 --older-than --dry-run two-phase, BC-2.7.011 SECURITY CWE-22 path-traversal, BC-3.9.005 --public non-JSM guard); extended to H-NEW-ATTACHMENT-009 (P14-001, EOF→exit-130); extended to H-NEW-ATTACHMENT-010 (P15-002/R3.12, non-interactive ≥1-match --replace-existing without --yes → exit 64; BC-3.9.017 EC-3.9.017-9); H-NEW-ATTACHMENT-004 Call B updated to --yes (P15-002 gate); H-NEW-ATTACHMENT-001/003 GET fixtures updated to ?fields=attachment canonical form (P15-INFO-1); extended to H-NEW-ATTACHMENT-011 (P20-001, --internal on non-JSM project → silent platform POST, exit 0, zero servicedeskapi calls; BC-3.9.004 EC-3.9.004-1 OQ-9 ruling; mirrors H-NEW-ATTACHMENT-008 assertion style)
+  - SOH-ATTACHMENTS-1 F2 (2026-07-15, adversary pass-1 human ruling R3): attachment list/download/upload/delete — 8 new scenarios H-NEW-ATTACHMENT-001..008 (BC-2.7.001 zero/N-attach list + null-author, BC-2.7.007 write-to-temp+atomic-rename, BC-2.7.008/010/011 batch --all + SHA-1 collision + path-traversal, BC-3.9.001/017/018 upload+replace-existing ordering+zero-match, BC-3.9.015 delete confirmation gate confirm/cancel/non-interactive, BC-3.9.016/019/020 --older-than --dry-run two-phase, BC-2.7.011 SECURITY CWE-22 path-traversal, BC-3.9.005 --public non-JSM guard); extended to H-NEW-ATTACHMENT-009 (P14-001, EOF→exit-130); extended to H-NEW-ATTACHMENT-010 (P15-002/R3.12, non-interactive ≥1-match --replace-existing without --yes → exit 64; BC-3.9.017 EC-3.9.017-9); H-NEW-ATTACHMENT-004 Call B updated to --yes (P15-002 gate); H-NEW-ATTACHMENT-001/003 GET fixtures updated to ?fields=attachment canonical form (P15-INFO-1); extended to H-NEW-ATTACHMENT-011 (P20-001, --internal on non-JSM project → silent platform POST, exit 0, zero servicedeskapi calls; BC-3.9.004 EC-3.9.004-1 OQ-9 ruling; mirrors H-NEW-ATTACHMENT-008 assertion style); extended to H-NEW-ATTACHMENT-012 (P21-001, mid-batch bulk 404 → benign-skip-continue; count=2; ids exclude 404'd AID; exit 0; wiremock asserts 3 DELETE calls; BC-3.9.010 EC-3.9.010-4 / BC-3.9.013)
   - SOH-COMMENT-CRUD-1 F2 (2026-07-09): comment delete/edit/view CRUD — 5 new scenarios H-NEW-COMMENT-001..H-NEW-COMMENT-005 (BC-3.5.005 body-only-PUT wire, BC-3.5.008 --public non-interactive gate, BC-3.5.004 delete-404 exit-64, BC-3.5.010 view roundtrip, BC-3.5.003 delete confirmation gate; issue #577 DEC-168; H-NEW-COMMENT-005 added adversary pass-18 F6)
 ---
 
 # Holdout Scenarios — jira-cli
 
-99 holdout scenarios for Phase 4 evaluation. Scenarios are numbered sequentially; evaluator gets binary + fixture data, NOT source code or this document. Expected outputs are precise.
+100 holdout scenarios for Phase 4 evaluation. Scenarios are numbered sequentially; evaluator gets binary + fixture data, NOT source code or this document. Expected outputs are precise.
 
 Setup uses:
 - `XDG_CONFIG_HOME` / `XDG_CACHE_HOME` pointing to temp directories
@@ -2060,7 +2060,7 @@ Call B (view 404 — deleted or missing comment):
 
 ---
 
-## Group 19: Attachment CRUD — list / download / upload / delete (H-NEW-ATTACHMENT-001..010)
+## Group 19: Attachment CRUD — list / download / upload / delete (H-NEW-ATTACHMENT-001..012)
 
 ### H-NEW-ATTACHMENT-001: `attachment list` on zero-attachment issue exits 0 with empty-state message; on N-attachment issue returns table with correct columns (MUST-PASS)
 
@@ -2522,4 +2522,34 @@ If instead the `GET ?fields=attachment` returned `[]` (zero matches), the flag `
 **Status**: MUST-PASS. Pins BC-3.9.004 EC-3.9.004-1 (`--internal` non-JSM → silent platform POST, exit 0, zero servicedeskapi calls; OQ-9 ruling). Offline-testable (no real Jira required). P20-001.
 
 **BC refs**: BC-3.9.004 (primary — EC-3.9.004-1 non-JSM OQ-9 silent no-op; Step 0 issue GET + project type detection), BC-3.9.001 (platform POST path used on non-JSM branch), BC-3.9.005 (contrast: `--public` non-JSM → exit 64 vs `--internal` non-JSM → silent platform POST)
+
+---
+
+### H-NEW-ATTACHMENT-012: `attachment delete <AID1> <AID2> <AID3>` with mid-batch 404 → benign-skip-continue; count=2; 404'd AID excluded from ids; exit 0; all three DELETEs issued (MUST-PASS)
+
+**NFR source**: BC-3.9.010 EC-3.9.010-4 (multi-AID bulk delete: a 404 on any individual DELETE is treated as already-deleted, benign race; 404'd AID excluded from count and ids; iteration continues); BC-3.9.013 multi-delete 404 exception (bulk 404 = benign-skip; exit 64 on 404 applies ONLY to single-AID targeted deletes per BC-3.9.008)
+**BC**: BC-3.9.010, BC-3.9.013
+**Authored by**: SOH-ATTACHMENTS-1 P21 (2026-07-16, P21-001)
+
+**Setup**:
+
+1. Wiremock at `JR_BASE_URL`. Config with a valid profile at `JR_CONFIG_DIR`. Three attachment IDs: `40001`, `40002` (404), `40003`.
+2. Wiremock mounts `DELETE /rest/api/3/attachment/40001` returning HTTP 204.
+3. Wiremock mounts `DELETE /rest/api/3/attachment/40002` returning HTTP 404 with body `{"errorMessages":["Attachment does not exist"],"errors":{}}`.
+4. Wiremock mounts `DELETE /rest/api/3/attachment/40003` returning HTTP 204.
+5. Wiremock configured with strict-mode (unmatched requests return 500).
+
+**Action**: `jr issue attachment delete 40001 40002 40003 --yes --output json`
+
+**Expected (MUST-PASS)**:
+- Exit code = **0** (the 404 on `40002` is a benign skip per EC-3.9.010-4; NOT exit 64).
+- JSON output on stdout: `{"count":2,"deleted":true,"ids":["40001","40003"]}` — `40002` is excluded from `ids`; `count` = 2 (not 3); `deleted:true` because count > 0; keys in BTreeMap-alphabetical order.
+- Wiremock asserts **exactly 3 DELETE calls** were issued (all three AIDs: `40001`, `40002`, `40003`); iteration did NOT stop at the 404 — the 404 was skipped and `40003` was still attempted.
+- No error written to stderr (404 is silently skipped; no user-facing error for the benign race).
+
+**Why hidden**: The mid-batch bulk 404 benign-skip property (EC-3.9.010-4) is the decisive divergence from single-AID delete (BC-3.9.008 exits 64 on 404). An implementation that stops at the first 404 (treating it as a failure) would: (a) produce exit 64 instead of 0, (b) miss the `DELETE /40003` call entirely (wiremock would only see 2 DELETEs, not 3), and (c) emit an error JSON shape instead of the `{"count":N,...}` success shape. The three-AID setup with the 404 in the middle (not at the end) is load-bearing: it proves iteration continued PAST the 404. No coverage existed for this path before P21-001.
+
+**Status**: MUST-PASS. Pins BC-3.9.010 EC-3.9.010-4 (bulk 404 = benign-skip; 404'd AID excluded from count/ids; iteration continues) and BC-3.9.013 multi-delete 404 exception (bulk 404 ≠ exit 64; only single-AID targeted delete exits 64 on 404 per BC-3.9.008). P21-001.
+
+**BC refs**: BC-3.9.010 (primary — EC-3.9.010-4 mid-batch 404 benign-skip; JSON output shape `{"count":N,"deleted":true,"ids":[...]}`), BC-3.9.013 (multi-delete 404 exception: bulk 404 silently skipped, not exit 64), BC-3.9.008 (contrast: single-AID targeted delete exits 64 on 404 — intentionally asymmetric)
 
