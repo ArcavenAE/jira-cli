@@ -755,6 +755,8 @@ The single-file download flow (`attachment download <KEY> --id <AID>`) is pinned
 
 **No new function needed** — `get_attachment_metadata` from R3.7 is the sole addition. The S2 story plan must invoke `get_attachment_metadata` as the first step of `handle_attachment_download` when `--id` is supplied, then stream via `get_attachment_content`. The revised function call sequence for single `--id` download is: `get_attachment_metadata` → path construction + overwrite check → `get_attachment_content` (streaming write).
 
+> **[PHASE-DOC-RETRO-ANNOTATION (P25-I01, 2026-07-17)]** The claim "retrieve `filename`, `mimeType`, `size`, and `content` URL" is **superseded in the shipped spec**: BC-2.7.007 step 1 constructs the content URL from the attachment id directly and does NOT read the metadata `content` field; metadata is used solely to obtain the canonical `filename` for BC-2.7.010 naming. The `content`-URL-from-metadata path described here was superseded by the id-direct-construction rule during F2 spec finalisation. Do not implement content-URL extraction from the step-1 metadata response; use the id-constructed URL per BC-2.7.007 step 2.
+
 ### R3.10 Single `--id` download filename convention (P4-001 ruling)
 
 **Ruling (2026-07-15):** The default output filename for a single `--id` download is the **bare sanitized basename** — no SHA-1 prefix. The SHA-1 `<sha1>_<sanitized-basename>` convention from BC-2.7.010 applies to **batch-only** paths (`--all`, `--newest N`). The single-vs-batch asymmetry is deliberate.

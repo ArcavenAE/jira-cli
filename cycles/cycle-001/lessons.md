@@ -6224,3 +6224,23 @@ Adversary P24-002 identified that a VP-576-004 story-allocation note was placed 
 **CV obligation:** When a fix-round disposition cites a specific Scope-table row (e.g., "S3 row"), the next consistency report must verify row placement with a targeted grep using the story ID as anchor (e.g., `grep -A2 "| S3 |"`) rather than a document-level content search.
 
 _Discovered: GAP-P24-002-001 (2026-07-17, r34 GAPS-FOUND); root cause: fix-round verification checked text presence but not row placement_
+
+---
+
+### [codified] HINT-VS-ERROR-CHANNEL-TAXONOMY: Classify every stderr emission as hint (JSON-suppressible) or error (unconditional); complete enumeration per output surface is the closure mechanism
+
+Adversary P25-001 identified that the JSON-mode stderr policy for batch partial failure was under-specified: it was unclear whether per-file failure messages emitted during `jr issue attachment list` (batch partial failure) were hints (suppressed in `--output json`) or errors (emitted unconditionally in all modes). The adversary finding was classified LOW because the output spec existed in skeleton form but lacked the explicit hint-vs-error classification.
+
+**Rule (HINT-VS-ERROR-CHANNEL-TAXONOMY):** Every stderr-emitting clause in a spec output surface must be explicitly classified as one of two types:
+- **HINT** (suppressible): informational messages that aid human users but are not needed by machine consumers; these are suppressed when `--output json` is active. Rationale must be stated per-clause (e.g., "JSON consumers receive structured data, not summary prose").
+- **ERROR** (unconditional): failure signals that must reach the caller regardless of output mode; these are emitted to stderr in both human and JSON modes. Follows model-b convention: per-file failure warnings = ERRORS.
+
+**Orchestrator ruling (P25-001):** "Downloaded N of M" summary line = HINT (JSON-suppressed; JSON consumers have the structured list). Per-file failure warnings (e.g., "warning: failed to fetch attachment X") = ERRORS (unconditional; machine consumers must see partial failures to handle them correctly; model-b convention precedent from `write_cmdb_fields_cache`).
+
+**Closure mechanism:** The only reliable closure mechanism is COMPLETE ENUMERATION per output surface — listing every stderr-emitting clause, with its type and rationale, in one place. Partial enumeration leaves stragglers. The K-1 check (§2.7 full taxonomy enumeration) was the tool that surfaced the last ambiguous straggler (INFO-NEW-6: filtered-to-zero message) before the adversary pass could.
+
+**Proactive-closure validation:** At r35, the CV ran FULL §2.7 STDERR-CLAUSE TAXONOMY ENUMERATION (K-1). This surfaced INFO-NEW-6 (filtered-to-zero message unclassified). The orchestrator ruled it HINT/JSON-suppressed and the PO micro-fixed it in the same burst — BEFORE adversary pass 26. This validated the taxonomy-enumeration proactive-closure pattern: a complete enumeration check catches the last ambiguous case earlier and cheaper than an adversary pass.
+
+**Mnemonic:** hints = informational prose for humans (suppress in JSON); errors = failure signals for all consumers (never suppress). When in doubt, classify as ERROR — suppressing a failure is worse than emitting an extra line.
+
+_Discovered: P25-001 (2026-07-17); proactive closure via CV K-1 at r35 (same burst)_

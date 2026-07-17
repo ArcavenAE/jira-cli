@@ -5,7 +5,7 @@ issues: "#576, #585"
 phase: F2
 authored: 2026-07-15
 spec_version_before: 1.3.42
-spec_version_after: 1.3.64
+spec_version_after: 1.3.65
 bc_count_before: 624
 bc_count_after: 657
 holdout_count_before: 88
@@ -444,3 +444,15 @@ Source: Adversary Pass 24. 1 MEDIUM / 1 LOW findings. Spec version bump: 1.3.63 
 | P24-002 (LOW) | LOW | bc-2-issue-read.md, prd-delta-576.md | APPLIED | VP-576-004 annotated with story allocation (mirrors P23-003 pattern + R3.13 earliest-consumer principle): "list half verified at S1 (BC-2.7.002 home); upload-platform-POST half verified at S3 (BC-3.9.009); the full cross-path test lands at S3 — S3 depends_on S1 for the shared curated-serialization plumbing (earliest consumer S1 ships it, per the R3.13 principle). NOT part of the S1 acceptance matrix as a whole; the S1 matrix includes only the list half." prd-delta-576.md S1 scope row: VP-576-004 allocation one-liner added. S3 scope row: VP-576-004 full cross-path test landing note added (r34 gap-closure: note initially mis-landed in S5 row during P24 round; r34 added it to S3 row; S5 row note retained as accurate contextual info for S5 implementers — its wording says "lands at S3", does NOT claim S5-verification). |
 
 **BC count at this round: 657 (unchanged). Holdout count: 100 (unchanged). VP count: 35 (unchanged). Spec version: 1.3.64. Both guards exit 0.**
+
+## Adversary Pass 25 Fix Round Finding Dispositions
+
+Source: Adversary Pass 25. 2 LOW + 1 INFO findings (first zero-MEDIUM-and-above pass). Spec version bump: 1.3.64 → 1.3.65. No new BCs. Holdouts: 100 (unchanged). VPs: 35 (unchanged).
+
+| Finding ID | Severity | File(s) Touched | Status | Change |
+|------------|----------|----------------|--------|--------|
+| P25-001 (LOW) | LOW | bc-2-issue-read.md, holdout-scenarios.md, BC-INDEX.md | APPLIED | ORCHESTRATOR RULING (hint-vs-error distinction): In `--output json` mode on partial batch failure — (a) per-file failure warnings ARE emitted to stderr (failures are ERRORS, not hints; consistent with model-b cache-writer warning convention); (b) `Downloaded N of M` summary is NOT emitted in JSON mode (it is a HINT; covered by EC-2.7.008-6's no-hints rule). Changes: (1) EC-2.7.008-6 "No stderr hints" sentence replaced with two-part hint-vs-error clause (per-file warnings unconditional; summary suppressed in JSON mode); (2) EC-2.7.008-7 "summary prints actual N of M" mode-scoped to human mode only; (3) Per-file download error policy paragraph point (3) updated — "from the N count in the summary" scoped to "human-mode summary"; (4) BC-2.7.008 Trace updated with P25-001 citation. H-NEW-ATTACHMENT-003 Call B2 Expected B2: three new assertions added — stderr CONTAINS per-file warning for AID 20021; stderr does NOT contain "Downloaded"; two additional MUST-FAIL bullets. Why-hidden and Status sections updated. BC-INDEX.md BC-2.7.008 row updated. ECHO-BREAKER LIST-B: H-NEW-ATTACHMENT-003 Call B2 stderr assertions licensing BC: EC-2.7.008-6 (P25-001). |
+| P25-002 (LOW) | LOW | bc-2-issue-read.md, BC-INDEX.md | APPLIED | BC-2.7.011 containment step-1 case (c) reworded — pure does-not-apply exclusion for `--out <PATH>`: the user-supplied path is trusted operator input (BC-2.7.007/BC-2.7.010); neither step 1 (`canonicalize(out_dir)`) nor step 2 (`starts_with`) of the containment check applies to `--out`-supplied paths. Verification per instruction: the temp-file-placement section (Write-to-temp + atomic-rename in BC-2.7.007) does NOT reference `canonicalize(out_dir)` for the `--out` path — simplified to pure does-not-apply exclusion (instruction branch taken). Old case (c) implied the containment check ran on the `--out` path, contradicting BC-2.7.007/BC-2.7.010's trusted-operator-input ruling. BC-2.7.011 Trace updated with P25-002 citation. BC-INDEX.md BC-2.7.011 row updated. |
+| P25-I01 (INFO) | INFO | impact-boundary-576.md | APPLIED | R3.9b PHASE-DOC-RETRO-ANNOTATION added: BC-2.7.007 step 1 constructs the content URL from the attachment id directly and does NOT read the metadata `content` field; metadata is used solely to obtain the canonical `filename`. The `content`-URL-from-metadata path described in R3.9b was superseded by the id-direct-construction rule during F2 spec finalisation. |
+
+**BC count at this round: 657 (unchanged). Holdout count: 100 (unchanged). VP count: 35 (unchanged). Spec version: 1.3.65. Both guards exit 0.**

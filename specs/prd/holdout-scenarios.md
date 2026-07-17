@@ -2194,13 +2194,17 @@ Call B (two attachments):
 
 **Expected B2 (MUST-PASS)**:
 - Exit code = 1; stdout `{"downloaded":[{"filename":"<sha1-of-20020>_ok.txt","id":"20020","path":"<path>","size":3}]}`; the `fail.txt` entry (`"id":"20021"`) is absent from `downloaded`; the JSON manifest is emitted despite exit 1 (exit-1 + valid-stdout combination per EC-2.7.008-7). Output routes through `output::render_json` (#526).
+- stderr CONTAINS a line matching `"warning: failed to download attachment 20021: ..."` (per-file failure warning is an ERROR, not a hint — fires unconditionally in JSON mode per EC-2.7.008-6 JSON-mode stderr policy, P25-001; licensing BC: EC-2.7.008-6).
+- stderr does NOT contain `"Downloaded"` (the `Downloaded N of M` summary is a HINT — suppressed in JSON mode per EC-2.7.008-6 JSON-mode stderr policy, P25-001).
 - An implementation that includes `"id":"20021"` in `downloaded` MUST FAIL this assertion.
+- An implementation that omits the per-file warning for attachment 20021 from stderr in JSON mode MUST FAIL this assertion.
+- An implementation that emits `"Downloaded"` to stderr in JSON mode MUST FAIL this assertion.
 
-**Why hidden**: Call A exercises two independent contracts: (1) SHA-1 collision resolution for duplicate filenames (BC-2.7.010/011); (2) path-traversal sanitization preventing `../../` sequences from escaping the out-dir (BC-2.7.011 steps 1–4). A regression on either would be undetectable without an adversarial fixture. Call B exercises the fail-soft exit code + human-mode output (exit 1, per-file warning, summary). Call B2 exercises the JSON manifest partial-result shape (exit-1 + valid-stdout per EC-2.7.008-7) in a fresh directory — isolation from Call B prevents the overwrite-refuse guard from masking the manifest assertion.
+**Why hidden**: Call A exercises two independent contracts: (1) SHA-1 collision resolution for duplicate filenames (BC-2.7.010/011); (2) path-traversal sanitization preventing `../../` sequences from escaping the out-dir (BC-2.7.011 steps 1–4). A regression on either would be undetectable without an adversarial fixture. Call B exercises the fail-soft exit code + human-mode output (exit 1, per-file warning, summary). Call B2 exercises the JSON manifest partial-result shape (exit-1 + valid-stdout per EC-2.7.008-7) AND the JSON-mode stderr policy (EC-2.7.008-6, P25-001): per-file failure warnings ARE emitted in JSON mode (ERRORS, not hints); the `Downloaded N of M` summary is NOT emitted (HINT, suppressed). A fresh directory isolates Call B2 from Call B's overwrite-refuse guard.
 
-**Status**: MUST-PASS. Call A pins BC-2.7.008 (--all to out-dir), BC-2.7.010 (SHA-1 collision prefix), BC-2.7.011 (filename sanitization — path components stripped, reserved names escaped). Call B pins BC-2.7.008 EC-2.7.008-7 (fail-soft exit code + human output: exit 1, per-file warning, summary). Call B2 pins EC-2.7.008-7 JSON-mode path (exit 1 + partial manifest emitted; failed entry excluded; fresh-dir isolation).
+**Status**: MUST-PASS. Call A pins BC-2.7.008 (--all to out-dir), BC-2.7.010 (SHA-1 collision prefix), BC-2.7.011 (filename sanitization — path components stripped, reserved names escaped). Call B pins BC-2.7.008 EC-2.7.008-7 (fail-soft exit code + human output: exit 1, per-file warning, summary). Call B2 pins EC-2.7.008-7 JSON-mode path (exit 1 + partial manifest emitted; failed entry excluded; fresh-dir isolation) and EC-2.7.008-6 JSON-mode stderr policy (P25-001: per-file warning unconditional in JSON mode; `Downloaded` summary absent from stderr in JSON mode).
 
-**BC refs**: BC-2.7.008 (primary), BC-2.7.010 (collision prefix), BC-2.7.011 (sanitization pipeline), BC-2.7.008 EC-2.7.008-7 (fail-soft-continue, Call B)
+**BC refs**: BC-2.7.008 (primary), BC-2.7.010 (collision prefix), BC-2.7.011 (sanitization pipeline), BC-2.7.008 EC-2.7.008-7 (fail-soft-continue, Call B), BC-2.7.008 EC-2.7.008-6 (JSON-mode stderr policy, Call B2, P25-001)
 
 ---
 

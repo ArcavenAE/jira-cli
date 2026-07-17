@@ -7,6 +7,44 @@ project: "jr (jira-cli)"
 
 Track all spec version changes. Most recent version first.
 
+## [1.3.65] - 2026-07-17
+
+### Type: PATCH
+
+### Summary
+
+Adversary pass 25 (P25) fix round — 2 LOW + 1 INFO findings (first zero-MEDIUM-and-above pass). LOW: JSON-mode stderr policy clarified for batch partial failure: per-file failure warnings ARE emitted to stderr in JSON mode (they are ERRORS, not hints — consistent with model-b cache-writer warning convention); the `Downloaded N of M` summary is NOT emitted in JSON mode (it is a HINT, suppressed by the EC-2.7.008-6 no-hints rule); EC-2.7.008-6 "No stderr hints" sentence replaced with two-part hint-vs-error clause; EC-2.7.008-7 "summary prints actual N of M" scoped to human mode only; Per-file download error policy point (3) scoped to human-mode summary; H-NEW-ATTACHMENT-003 Call B2 Expected B2 extended with three new assertions (stderr CONTAINS per-file warning for AID 20021; stderr does NOT contain "Downloaded"; two MUST-FAIL bullets); Why-hidden + Status + BC-refs sections updated (P25-001). LOW: BC-2.7.011 containment step-1 case (c) reworded — pure does-not-apply exclusion for `--out <PATH>`: the user-supplied path is trusted operator input (BC-2.7.007/BC-2.7.010); neither step 1 (`canonicalize(out_dir)`) nor step 2 (`starts_with`) of the containment check applies to `--out`-supplied paths; old wording implied the containment check ran on the `--out` path, contradicting the trusted-operator-input ruling; temp-file-placement section verified — does NOT reference `canonicalize(out_dir)` for `--out` → pure does-not-apply exclusion taken (P25-002). INFO: R3.9b in impact-boundary-576.md annotated with PHASE-DOC-RETRO-ANNOTATION — BC-2.7.007 step 1 constructs the content URL from the attachment id directly and does NOT read the metadata `content` field; metadata is used solely for the canonical filename (P25-I01).
+
+### Changed Requirements
+
+- `.factory/specs/prd/bc-2-issue-read.md` (MODIFIED): P25-001 — EC-2.7.008-6: "No stderr hints" sentence replaced with hint-vs-error two-part clause (per-file warnings unconditional; summary suppressed in JSON mode). EC-2.7.008-7: "summary prints actual N of M" scoped to human mode only with JSON-mode note. Per-file download error policy point (3): "summary" scoped to "human-mode summary" with JSON-mode note. BC-2.7.008 Trace updated with P25-001 citation. Frontmatter trace v1.3.65 entry added. P25-002 — BC-2.7.011 containment step-1 case (c) reworded: pure does-not-apply exclusion for `--out <PATH>` (neither step 1 nor step 2 applies; trusted operator input). BC-2.7.011 Trace updated with P25-002 citation.
+- `.factory/specs/prd/holdout-scenarios.md` (MODIFIED): P25-001 — H-NEW-ATTACHMENT-003 Call B2 Expected B2: three new assertions added (stderr CONTAINS per-file warning for AID 20021 per EC-2.7.008-6; stderr does NOT contain "Downloaded"; two MUST-FAIL bullets). Why-hidden updated. Status updated with EC-2.7.008-6 JSON-mode stderr policy pin. BC-refs updated with EC-2.7.008-6 Call B2 entry. ECHO-BREAKER LIST-B: licensing BC for new assertions is EC-2.7.008-6 (P25-001).
+- `.factory/specs/prd/BC-INDEX.md` (MODIFIED): P25-001 — BC-2.7.008 row: JSON-mode hint-vs-error policy note added. P25-002 — BC-2.7.011 row: containment-check `--out` does-not-apply note added. `last_updated`, `index_version` v6.24→v6.25 updated.
+- `.factory/phase-f2-spec-evolution/prd-delta-576.md` (MODIFIED): `spec_version_after` 1.3.64→1.3.65; P25 dispositions section appended.
+- `.factory/phase-f1-delta-analysis/impact-boundary-576.md` (MODIFIED): P25-I01 — R3.9b: PHASE-DOC-RETRO-ANNOTATION added (BC-2.7.007 step 1 constructs content URL from id directly; metadata `content` field NOT read; metadata used solely for canonical filename).
+
+### Impact Assessment
+
+| Artifact | Change Type | Notes |
+|---|---|---|
+| bc-2-issue-read.md | Modified | EC-2.7.008-6 hint-vs-error policy (P25-001); EC-2.7.008-7 human-mode summary scope (P25-001); BC-2.7.011 case (c) does-not-apply reword (P25-002) |
+| holdout-scenarios.md | Modified | H-NEW-ATTACHMENT-003 Call B2 stderr assertions (P25-001) |
+| BC-INDEX.md | Modified | BC-2.7.008 row P25-001 note; BC-2.7.011 row P25-002 note; index_version v6.25 |
+| prd-delta-576.md | Modified | spec_version_after 1.3.65; P25 dispositions section |
+| impact-boundary-576.md | Modified | R3.9b PHASE-DOC-RETRO-ANNOTATION (P25-I01) |
+
+| Dimension | Value |
+|---|---|
+| BC count | 657 (unchanged) |
+| Holdout count | 100 (unchanged) |
+| VP count | 35 (unchanged) |
+| New BCs | 0 |
+| New VPs | 0 |
+| New Holdouts | 0 |
+| Spec version | 1.3.64→1.3.65 |
+
+---
+
 ## [1.3.64] - 2026-07-17
 
 ### Type: PATCH
