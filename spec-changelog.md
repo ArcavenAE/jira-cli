@@ -7,6 +7,45 @@ project: "jr (jira-cli)"
 
 Track all spec version changes. Most recent version first.
 
+## [1.3.60] - 2026-07-16
+
+### Type: PATCH
+
+### Summary
+
+Adversary pass 20 (P20) fix round — MEDIUM: BC-3.9.004 wire sequence unspecified + zero holdout coverage: added Step 0 inheritance (inherits BC-3.9.003 Step 0: issue GET existence validation + BC-3.9.005 `get_or_fetch_project_meta` detection mechanism); full HTTP sequence enumerated for (a) JSM branch and (b) non-JSM OQ-9 silent no-op branch; H-NEW-ATTACHMENT-011 added (BC-3.9.004 EC-3.9.004-1 offline pin; mirrors H-NEW-ATTACHMENT-008 assertion style; P20-001); LOW: BC-3.9.014 N≤3 prompt template `, ...` removed — ≤3 variant lists ALL filenames comma-separated, no trailing ellipsis (P20-002); BC-2.7.007 `--out` unconditional step-1 clause added — step 1 always issued even when `--out` is present; rationale: pre-stream existence validation; one extra GET is the accepted cost (P20-003); impact-boundary-576.md §1.1 download row retro-annotated — `--output json` manifest to stdout (EC-2.7.007-7) documented; human mode remains no-stdout-data (P20-004); prd-delta-576.md S3/S5 Scope table BC-3.9.017 split note added — non-public `--replace-existing` ships S3; combined `--public` ECs (EC-3.9.017-11/12) are S5-realized (P20-005); VP-576-004 (attachment-object JSON transformation pin: `"self"` OMITTED, `"content"` RENAMED to `"contentUrl"`) added to BC-2.7.002; VP-576-005 (combined-gate single-prompt pin: `--replace-existing --public` ≥1 match → ONE prompt; `--yes` bypasses both; cancel → zero DELETE + zero POST) added to BC-3.9.017; VP count 33→35 (P20-006); INFO: P20-007 ledgered as BC-NUMBER-043-DUPLICATE drift item, no action.
+
+### Changed Requirements
+
+- `.factory/specs/prd/bc-3-issue-write.md` (MODIFIED): P20-001 — BC-3.9.004 restructured with Step 0 inheritance (issue GET + `get_or_fetch_project_meta` detection, inheriting BC-3.9.003 Step 0 + BC-3.9.005 mechanism); explicit (a) JSM branch and (b) non-JSM OQ-9 silent no-op branch with full HTTP sequences enumerated; Trace updated. P20-002 — BC-3.9.014 N≤3 prompt template: `, ...` removed; `<filenameN>` placeholder added (all files listed, no ellipsis). P20-006 — VP-576-005 added after VP-576-003 in BC-3.9.017 (combined-gate single-prompt pin; anchor BC-3.9.017, cross-ref EC-3.9.017-11/12). Footer updated (VP count 33→35; P20 round note prepended). Frontmatter trace: v1.3.60 entry added.
+- `.factory/specs/prd/bc-2-issue-read.md` (MODIFIED): P20-003 — BC-2.7.007 Wire path section: `--out` unconditional step-1 clause added (step 1 always issued even with `--out`; rationale: pre-stream existence validation; accepted cost one extra GET). P20-006 — VP-576-004 added after BC-2.7.002 Trace (curated attachment-object JSON transformation pin: `"self"` OMITTED and `"content"` RENAMED to `"contentUrl"` across all jr serializations; anchor BC-2.7.002, cross-ref BC-3.9.009).
+- `.factory/specs/prd/holdout-scenarios.md` (MODIFIED): P20-001 — total_holdouts 98→99; body preamble 98→99; trace entry for H-NEW-ATTACHMENT-011 added; H-NEW-ATTACHMENT-011 holdout body added (BC-3.9.004 EC-3.9.004-1 offline pin: `--internal` on non-JSM → silent platform POST, exit 0, zero servicedeskapi calls; mirrors H-NEW-ATTACHMENT-008 assertion style).
+- `.factory/specs/prd/CANONICAL-COUNTS.md` (MODIFIED): P20-001 — holdout total 98→99; enumeration updated to include H-NEW-ATTACHMENT-011.
+- `.factory/specs/prd/BC-INDEX.md` (MODIFIED): P20-001 — BC-3.9.004 row updated (Step 0 inheritance + wire sequence for (a) JSM and (b) non-JSM branches); P20-003 — BC-2.7.007 row updated (`--out` unconditional step-1 note); `last_updated` and `index_version` v6.19→v6.20 updated (VP count 33→35, holdout 98→99 noted).
+- `.factory/phase-f2-spec-evolution/prd-delta-576.md` (MODIFIED): `spec_version_after` 1.3.59→1.3.60; `holdout_count_after` 98→99; S3 row: BC-3.9.017 split note added; S5 row: BC-3.9.017 split note added; P20 dispositions section appended.
+- `.factory/phase-f1-delta-analysis/impact-boundary-576.md` (MODIFIED): P20-004 — §1.1 download row retro-annotated per PHASE-DOC-RETRO-ANNOTATION pattern (superseded: delivered spec adds `--output json` manifest to stdout, EC-2.7.007-7; human mode remains no-stdout-data).
+
+### Impact Assessment
+
+| Artifact | Change Type | Notes |
+|----------|-------------|-------|
+| `bc-3-issue-write.md` | MODIFIED | BC-3.9.004 wire sequence + branches; BC-3.9.014 prompt template fix; VP-576-005; footer; frontmatter trace |
+| `bc-2-issue-read.md` | MODIFIED | BC-2.7.007 --out clause; VP-576-004 |
+| `holdout-scenarios.md` | MODIFIED | H-NEW-ATTACHMENT-011; total 98→99 |
+| `CANONICAL-COUNTS.md` | MODIFIED | Holdout count 98→99; enumeration |
+| `BC-INDEX.md` | MODIFIED | BC-3.9.004/BC-2.7.007 rows; v6.19→v6.20; VP 33→35 |
+| `prd-delta-576.md` | MODIFIED | spec_version 1.3.59→1.3.60; holdout 98→99; S3/S5 split notes; P20 dispositions |
+| `impact-boundary-576.md` | MODIFIED | §1.1 download row retro-annotation |
+
+| Dimension | Value |
+|---|---|
+| BC count | 657 (unchanged) |
+| Holdout count | 98→99 (+1 H-NEW-ATTACHMENT-011) |
+| VP count | 33→35 (+2: VP-576-004, VP-576-005) |
+| Spec version | 1.3.59→1.3.60 |
+
+---
+
 ## [1.3.59] - 2026-07-16
 
 ### Type: PATCH

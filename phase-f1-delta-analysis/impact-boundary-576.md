@@ -53,7 +53,7 @@ Four handler functions dispatched from `cli/issue/mod.rs`:
 | Handler | Command | Output channel profile |
 |---------|---------|----------------------|
 | `handle_attachment_list` | `jr issue attachment list <KEY>` | Read-only (profile 2): table to stdout; hints/filter-count to stderr |
-| `handle_attachment_download` | `jr issue attachment download <KEY>` | Mixed (profile 3): no stdout data; progress/path hints to stderr; errors to stderr |
+| `handle_attachment_download` | `jr issue attachment download <KEY>` | Mixed (profile 3): no stdout data *(superseded: delivered spec adds --output json manifest to stdout, EC-2.7.007-7; human mode remains no-stdout-data)*; progress/path hints to stderr; errors to stderr |
 | `handle_attachment_upload` | `jr issue attachment upload <KEY>` | Symmetric (profile 4): JSON result to stdout (`--output json`); human echo to stdout; errors to stderr |
 | `handle_attachment_delete` | `jr issue attachment delete` | Symmetric (profile 4): JSON result to stdout; human confirmation to stderr |
 

@@ -6082,3 +6082,21 @@ These three are coequal tracking obligations — none is optional or deferrable 
 
 _Recorded: 2026-07-16. State-manager (adversary-pass-19 remediation burst, TD-VSDD-053)._
 _Tagged: [process-gap] [prd-delta] [dispositions] [per-round-checklist] [cv-changelog-cross-check] [gap-p19-fwd-001] [codified]_
+
+---
+
+### HOOK-TIMEOUT-RESUME-DISCIPLINE [process-gap / safe-resume]
+
+**Observation (adversary-pass-20 fix round, 2026-07-17):** The validate-factory-path-root / validate-input-hash / validate-template-compliance PostToolUse hook fired fail-closed "plugin timed out" on EVERY Edit of the fix round — a 2nd major occurrence (1st was adversary-pass-15 fix round, 2026-07-15, where it fired on 5 consecutive edits). In both cases the edits persisted on disk despite the hook timeout. PO executed textbook STOP-and-report on first block; orchestrator confirmed the known-transient pattern and authorized resume with verify-before-retry discipline.
+
+**Validated safe-resume path (confirmed this burst):**
+1. **Verify-content-persisted-before-retry:** Before retrying or re-issuing any edit, read the file or search for the expected content to confirm the edit landed on disk. A hook timeout does NOT mean the edit was reverted — the PostToolUse hook fires AFTER the tool executes. Retrying without verification risks double-insertion.
+2. **CV double-insertion sweep:** After any hook-timeout-affected burst, the following consistency-validator round must explicitly include a double-insertion sweep (check every modified section for accidental duplicate content). r30 ran this sweep for pass-20 and found no double-insertions — confirmed clean.
+3. **Escalation threshold:** Two consecutive bursts where hook timeouts fire on EVERY edit (vs. isolated transient) is grounds for escalation. This burst crossed that threshold → severity escalated LOW→MEDIUM in FACTORY-DISPATCHER-HOOK-TIMEOUT drift item; engine-side fix increasingly urgent.
+
+**Why this matters:** Fail-closed hook timeouts with persisted edits are the most dangerous class of tool failure because they can masquerade as failures when the edit succeeded. Without verify-before-retry, an agent retries the same edit → double-insertion → CV catches it next round → additional fix round. The verify-before-retry + CV double-insertion sweep is a complete mitigation that costs one extra read per resumed edit and one extra CV sweep, but guarantees correctness.
+
+**How to apply:** Any time a PostToolUse hook fires "plugin timed out" on an edit: (1) immediately Read the edited section to confirm the content is present, (2) if present, proceed as if the edit succeeded (do not retry), (3) brief the next consistency-validator dispatch to include a double-insertion sweep, (4) if absent, retry once, then escalate if still failing.
+
+_Recorded: 2026-07-17. State-manager (adversary-pass-20 remediation burst, TD-VSDD-053)._
+_Tagged: [process-gap] [hook-timeout] [safe-resume] [verify-before-retry] [double-insertion-sweep] [fail-closed] [escalation] [codified]_

@@ -5,11 +5,11 @@ issues: "#576, #585"
 phase: F2
 authored: 2026-07-15
 spec_version_before: 1.3.42
-spec_version_after: 1.3.59
+spec_version_after: 1.3.60
 bc_count_before: 624
 bc_count_after: 657
 holdout_count_before: 88
-holdout_count_after: 98
+holdout_count_after: 99
 ---
 
 # PRD Delta — SOH-ATTACHMENTS-1 Attachment Read/Write (issues #576 + #585)
@@ -30,9 +30,9 @@ BC-2.7.002. All design decisions ratified by DEC-179.
 |-------|---------|------------|
 | S1 | `jr issue attachment list` (list + filter) | BC-2.7.001..006 |
 | S2 | `jr issue attachment download` (single/batch/newest) | BC-2.7.007..012 |
-| S3 | `jr issue attachment upload` (platform POST + `--replace-existing` + `--dry-run` path-c) | BC-3.9.001..002, BC-3.9.009, BC-3.9.012, BC-3.9.014, BC-3.9.017, BC-3.9.018, BC-3.9.020 (path-c: `--replace-existing --dry-run` + EC-3.9.020-6 clap guard). **BC-3.9.014 gate mechanics ship with S3** (earliest gate consumer, required by BC-3.9.017 step 2's ≥1-match gate; S5 consumes them for the `--public`/combined variants — S5 `depends_on` S3; F3 must encode this edge). [P16-002 ORCHESTRATOR RULING: BC-3.9.014 reallocated S5→S3] **BC-3.9.007 scope note (P17-005)**: BC-3.9.007 EC-3.9.007-1 platform-echo clause is exercised in S3 (BC-3.9.001 + BC-3.9.009 ship with S3; earliest-consumer principle per R3.13). |
+| S3 | `jr issue attachment upload` (platform POST + `--replace-existing` + `--dry-run` path-c) | BC-3.9.001..002, BC-3.9.009, BC-3.9.012, BC-3.9.014, BC-3.9.017, BC-3.9.018, BC-3.9.020 (path-c: `--replace-existing --dry-run` + EC-3.9.020-6 clap guard). **BC-3.9.014 gate mechanics ship with S3** (earliest gate consumer, required by BC-3.9.017 step 2's ≥1-match gate; S5 consumes them for the `--public`/combined variants — S5 `depends_on` S3; F3 must encode this edge). [P16-002 ORCHESTRATOR RULING: BC-3.9.014 reallocated S5→S3] **BC-3.9.007 scope note (P17-005)**: BC-3.9.007 EC-3.9.007-1 platform-echo clause is exercised in S3 (BC-3.9.001 + BC-3.9.009 ship with S3; earliest-consumer principle per R3.13). **BC-3.9.017 split note (P20-005)**: non-public `--replace-existing` path (EC-3.9.017-1..10) ships with S3; combined `--public` ECs (EC-3.9.017-11/12) and the step-4 BC-3.9.003 public-routing are S5-realized (S5 depends_on S3 for gate mechanics). |
 | S4 | `jr issue attachment delete` | BC-3.9.008, BC-3.9.010, BC-3.9.013, BC-3.9.015, BC-3.9.016, BC-3.9.019, BC-3.9.020 |
-| S5 | `jr issue attachment upload --public/--internal` (JSM visibility) | BC-3.9.003..007, BC-3.9.011, BC-X.8.010. **BC-3.9.014 gate mechanics consumed here** for `--public` standalone (consumer 1) and combined `--public`+≥1-match (consumer 3) — gate mechanics ship with S3 (above); S5 depends_on S3 for this. **EC-3.9.020-7 path-c `--public` annotation**: the `"visibility":"public"` annotation on `wouldUpload` entries in `--replace-existing --dry-run --public` (path-c) is activated only when `--public` is supplied; its end-to-end behavior is verified in S5 — S3 implements the annotation plumbing keyed on the flag. [P16-002 ORCHESTRATOR RULING] **BC-3.9.007 scope note (P17-005)**: S5 owns JSM echo clauses (EC-3.9.007-2, P2-3c deferred); platform-echo clause (EC-3.9.007-1) ships with S3. |
+| S5 | `jr issue attachment upload --public/--internal` (JSM visibility) | BC-3.9.003..007, BC-3.9.011, BC-X.8.010. **BC-3.9.014 gate mechanics consumed here** for `--public` standalone (consumer 1) and combined `--public`+≥1-match (consumer 3) — gate mechanics ship with S3 (above); S5 depends_on S3 for this. **EC-3.9.020-7 path-c `--public` annotation**: the `"visibility":"public"` annotation on `wouldUpload` entries in `--replace-existing --dry-run --public` (path-c) is activated only when `--public` is supplied; its end-to-end behavior is verified in S5 — S3 implements the annotation plumbing keyed on the flag. [P16-002 ORCHESTRATOR RULING] **BC-3.9.007 scope note (P17-005)**: S5 owns JSM echo clauses (EC-3.9.007-2, P2-3c deferred); platform-echo clause (EC-3.9.007-1) ships with S3. **BC-3.9.017 split note (P20-005)**: combined `--public` ECs (EC-3.9.017-11/12: combined single-prompt, `--yes` bypass) and the step-4 BC-3.9.003 `--public` routing are S5-realized; S5 depends_on S3 for the underlying `--replace-existing` delete-and-upload mechanics. |
 
 ---
 
@@ -372,3 +372,21 @@ Source: Adversary Pass 19 (Consistency Review r29). 1 MEDIUM / 3 LOW / 2 INFO fi
 | GAP-P19-FWD-001 (MEDIUM, CV r29 gap) | MEDIUM | prd-delta-576.md (this file), spec-changelog.md, impact-boundary-576.md | APPLIED | prd-delta-576.md: `spec_version_after` 1.3.58→1.3.59; P19 dispositions section appended. spec-changelog.md [1.3.59]: prd-delta-576.md + impact-boundary-576.md added to Changed Requirements; BC/holdout/VP count rows added to Impact Assessment. impact-boundary-576.md BC-3.9.004 row: INFO-15 illustrative/INCONCLUSIVE annotation. |
 
 **BC count at this round: 657 (unchanged). Holdout count: 98 (unchanged). VP count: 33 (unchanged). Spec version: 1.3.59. Both guards exit 0.**
+
+---
+
+## Adversary Pass 20 Fix Round Finding Dispositions
+
+Source: Adversary Pass 20. 1 MEDIUM / 5 LOW / 1 INFO findings. Spec version bump: 1.3.59 → 1.3.60. No new BCs. Holdouts: 98→99 (+1 H-NEW-ATTACHMENT-011). VPs: 33→35 (+2: VP-576-004, VP-576-005).
+
+| Finding ID | Severity | File(s) Touched | Status | Change |
+|------------|----------|----------------|--------|--------|
+| P20-001 (MEDIUM) | MEDIUM | bc-3-issue-write.md, holdout-scenarios.md, CANONICAL-COUNTS.md, BC-INDEX.md | APPLIED | BC-3.9.004 restructured: Step 0 added (inherits BC-3.9.003 Step 0: issue GET existence validation + BC-3.9.005 `get_or_fetch_project_meta` detection mechanism); full HTTP sequence enumerated for (a) JSM branch and (b) non-JSM OQ-9 silent no-op branch; Trace updated. H-NEW-ATTACHMENT-011 holdout added (BC-3.9.004 EC-3.9.004-1: `--internal` non-JSM → silent platform POST, exit 0, zero servicedeskapi calls; offline-testable; mirrors H-NEW-ATTACHMENT-008 assertion style). Holdout count 98→99. |
+| P20-002 (LOW) | LOW | bc-3-issue-write.md | APPLIED | BC-3.9.014 N≤3 prompt template: `, ...` removed; `<filenameN>` placeholder used — ≤3 variant lists ALL filenames comma-separated, no trailing ellipsis. |
+| P20-003 (LOW) | LOW | bc-2-issue-read.md, BC-INDEX.md | APPLIED | BC-2.7.007 Wire path section: explicit clause added — `--out <PATH>` does NOT skip step 1; `GET /rest/api/3/attachment/{id}` (step 1, metadata fetch) is issued unconditionally; rationale: uniform wire story + pre-stream existence validation before any bytes written; accepted cost: one extra GET. BC-INDEX.md BC-2.7.007 row updated. |
+| P20-004 (LOW) | LOW | impact-boundary-576.md | APPLIED | §1.1 download row retro-annotated per PHASE-DOC-RETRO-ANNOTATION pattern: "(superseded: delivered spec adds --output json manifest to stdout, EC-2.7.007-7; human mode remains no-stdout-data)". |
+| P20-005 (LOW) | LOW | prd-delta-576.md (this file) | APPLIED | Scope table S3 row: BC-3.9.017 split note added (non-public `--replace-existing` path ships with S3; combined `--public` ECs EC-3.9.017-11/12 and step-4 BC-3.9.003 routing are S5-realized; S5 depends_on S3). Scope table S5 row: BC-3.9.017 split note added (combined `--public` ECs EC-3.9.017-11/12 are S5-realized; S5 depends_on S3 for underlying mechanics). |
+| P20-006 (LOW) | LOW | bc-2-issue-read.md, bc-3-issue-write.md, BC-INDEX.md | APPLIED | VP-576-004 added to BC-2.7.002 (curated attachment-object JSON transformation pin: `"self"` OMITTED and `"content"` RENAMED to `"contentUrl"` in every jr serialization — list + upload; anchor BC-2.7.002, cross-ref BC-3.9.009). VP-576-005 added to BC-3.9.017 (combined-gate single-prompt pin: `--replace-existing --public` with ≥1 match fires EXACTLY ONE prompt; `--yes` bypasses both; cancel issues zero DELETE + zero POST; anchor BC-3.9.017, cross-ref EC-3.9.017-11/12). VP count 33→35. |
+| P20-007 (INFO) | INFO | — | NO ACTION (recorded) | BC-NUMBER-043-DUPLICATE drift item (pre-existing BC-2.4.043/BC-2.5.043 numbering collision from P19-I2). Already ledgered. No action this round. |
+
+**BC count at this round: 657 (unchanged). Holdout count: 99 (+1 H-NEW-ATTACHMENT-011). VP count: 35 (+2: VP-576-004, VP-576-005). Spec version: 1.3.60. Both guards exit 0.**

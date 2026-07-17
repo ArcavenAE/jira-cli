@@ -5228,3 +5228,23 @@ Displaced to make room for SOH-ATTACHMENTS-1 adversary pass-19 remediation + r29
 | Step | Agent | Status | Output |
 |------|-------|--------|--------|
 | **SOH-ATTACHMENTS-1 F2 ADVERSARY PASS-14 REMEDIATED (2026-07-16, resumed): 9 findings (1H/2M/6L+2I); P14-001 EOF→exit-130 (BC-3.9.003 three-way branch; EC-3.9.003-6 EOF pin; EC-3.9.003-7 guard-precedence); P14-003 cancel unified to stderr (3 sites; BC-3.9.015 divergence note); P14-007 VP-576-001..003 + H-NEW-ATTACHMENT-009 added (holdouts 96→97); P14-009/010 BC-3.9.020 retitled + EC-3.9.020-7 gate-suppression; BC-INDEX :NNN cite sweeps; spec v1.3.54; guards green. Pass 15 DISPATCHED.** | adversary + product-owner + consistency-validator + state-manager | COMPLETE | `phase-f2-spec-evolution/consistency-report-576-r24.md`; BC 657; holdouts 97; VP 33; spec v1.3.54. |
+
+
+---
+
+## Archived Phase Progress row (2026-07-17, adversary-pass-20 remediation burst)
+
+Displaced to make room for SOH-ATTACHMENTS-1 F2 ADVERSARY PASS-20 REMEDIATED + HUMAN RULING row per keep-5 rule.
+
+| Phase | Status | Completed | Gate | Notes |
+|-------|--------|-----------|------|-------|
+| **SOH-ATTACHMENTS-1 F2 ADVERSARY PASS-14 REMEDIATED (2026-07-16, resumed session) — p14 NOT-CLEAN 9 (1H/2M/6L+2I); P14-001 (HIGH) EOF contradiction BC-3.9.003 (exit 0) vs BC-3.9.014 (exit 130) — three-way branch added, EC-3.9.003-6 EOF pin, EC-3.9.003-7 guard-precedence; P14-003 cancel-channel unified to stderr (3 sites); P14-007 VP-576-001..003 + H-NEW-ATTACHMENT-009 added (holdouts 96→97); P14-009/010 BC-3.9.020 retitled + gate-suppression + EC-3.9.020-7; TD-031 BC-INDEX 243-bare-cite + bc-2 46-cite sweeps; consistency r24 CONSISTENT (6th consecutive zero-action; INFO-5 RESOLVED + INFO-7 new); spec v1.3.54; counts 657/97/33VP; guards green.** | **ADVERSARY PASS-14 REMEDIATED** | **2026-07-16** | **Adversary pass 15 next.** | `phase-f2-spec-evolution/consistency-report-576-r24.md`; BC 657; holdouts 97; VP 33; spec v1.3.54. |
+
+### Archived Current Phase Steps row (adversary-pass-20 remediation burst)
+
+Displaced to make room for SOH-ATTACHMENTS-1 adversary pass-20 remediation + human ruling step row per keep-5 rule.
+
+| Step | Agent | Status | Output |
+|------|-------|--------|--------|
+| **SOH-ATTACHMENTS-1 F2 ADVERSARY PASS-15 REMEDIATED (2026-07-16): 7 findings (2M/5L/2I); P15-001 BC-INDEX BC-2.7.011 "255→214-byte cap" regression (RECURRENCE COUNT 9); P15-002/R3.12 --replace-existing ≥1-match confirmation gate (step-2 rewrite; EC-3.9.017-9..12; BC-3.9.014 THREE consumers; impact-boundary R3.12 added; H-NEW-ATTACHMENT-010 added; holdouts 97→98); P15-003..007 LOW pinpoint fixes; INFO-1 fixture alignment applied; r25 CONSISTENT (7th consecutive zero-action; INFO-8/9 resolved this burst); spec v1.3.55; guards green. Pass 16 DISPATCHED.** | adversary + product-owner + consistency-validator + state-manager | COMPLETE | `phase-f2-spec-evolution/consistency-report-576-r25.md`; BC 657; holdouts 98; VP 33; spec v1.3.55. |
+
