@@ -1745,3 +1745,37 @@ STREAK 2/3. Spec-changelog arithmetic + BC-7.2.015 spec-coverage lens. **Informa
      converted to rows in the Finding Progression table above.
      Original field format: adversary_pass_N_findings: "description"
      Original field format: adversary_pass_N_date: "YYYY-MM-DD" -->
+
+---
+
+## SOH-ATTACHMENTS-1 F2 Security-Fix-and-Reverify Consistency Rounds (2026-07-17)
+
+### Consistency Round r43 (2026-07-17)
+
+**Result:** GAPS-FOUND — 2 LOW + 1 INFO
+**Round type:** Scoped piecewise (post-security-fix-round confirmation)
+**Spec version at review:** v1.3.80 (post SEC-576 fix round)
+
+- **GAP-R43-001 (LOW):** Six stale BC-INDEX rows — BC-2.7.008, BC-2.7.010, BC-2.7.011, BC-3.9.015, BC-3.9.017 rows in BC-INDEX.md had not been updated to reflect the 4 security remediation edits applied in the fix round. Body content correct; index not synced.
+- **GAP-R43-002 (LOW):** Allocation sentence in the display-sanitization clause still read "S2 earliest consumer" — incorrect per DEC-184 R3.13 (S1 = list-table cells in BC-2.7.001; S3+S4 = confirmation prompts). Needed correction to S1 with scope clarification.
+- **INFO-R43-001 (INFO):** Stale count line in prd-delta-576.md dispositions section — carried over from an earlier pass, no longer accurate. Removal indicated.
+- All 4 security remediations PASS verbatim: SEC-576-011/009/008/010 all present and correct in spec bodies.
+- Echo-breaker check: CLEAN. No echo of pre-fix wording.
+
+Report: `phase-f2-spec-evolution/consistency-report-576-r43.md`.
+
+---
+
+### Consistency Round r44 (2026-07-17)
+
+**Result:** CONSISTENT
+**Round type:** Scoped confirmation (post-r43-micro-fix)
+**Spec version at review:** v1.3.81 (post r43 micro-fix)
+
+All r43 gaps CLOSED:
+- GAP-R43-001: BC-INDEX v6.33→v6.34 — 6 rows refreshed; all 4 security-remediation BC rows correctly reflected.
+- GAP-R43-002: Allocation sentence corrected to S1; DEC-184 R3.13 wording honored; NEW-576-V3-001 FOLDED.
+- INFO-R43-001: Stale count line removed from prd-delta-576.md.
+No S2-earliest-consumer residue found. Version surfaces complete (spec v1.3.81, BC-INDEX v6.34 consistent across frontmatter and body). Guards exit 0.
+
+Report: `phase-f2-spec-evolution/consistency-report-576-r44.md`.

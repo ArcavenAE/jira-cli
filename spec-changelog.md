@@ -7,6 +7,63 @@ project: "jr (jira-cli)"
 
 Track all spec version changes. Most recent version first.
 
+## [1.3.81] - 2026-07-17
+
+### Type: PATCH
+
+### Summary
+
+r43 micro-fix round (SOH-ATTACHMENTS-1 F2 gate housekeeping, spec_version_checked: 1.3.80). Closes 2 LOW gaps and folds 3 INFO findings from `consistency-report-576-r43.md` and `security-review-576-v2-reverify.md`. GAP-R43-001 (LOW): BC-INDEX rows updated for all 6 BCs modified in v1.3.80 — BC-2.7.007 (EC-2.7.007-12 + `?redirect=false` body clause), BC-2.7.008 (SEC-576-011 display-sanitization cross-ref), BC-2.7.010 (SEC-576-008 trust assumption + SEC-576-011 cross-ref), BC-2.7.011 (SEC-576-011 CWE-116 display-sanitization primary clause alongside CWE-22 pipeline — most critical), BC-3.9.015 (SEC-576-011 cross-ref step 1), BC-3.9.017 (SEC-576-011 cross-ref step 2); BC-INDEX version bumped v6.33→v6.34. GAP-R43-002 (LOW) + NEW-576-V3-001 (INFO fold): BC-2.7.011 display-sanitization primary clause corrected — earliest consumer S2→S1 (BC-2.7.001 list table cells ship with S1 per prd-delta Scope table; `display_sanitize_filename` helper required by S1); S3 added to allocation guidance alongside S4 ("S3 and S4 story-writers must allocate display-sanitization at confirmation prompt call sites per DEC-184 R3.13"). NEW-576-V3-002 (INFO): Unicode bidi/line-terminator out-of-scope scope note appended to BC-2.7.011 display-sanitization primary clause ("this sanitization covers ASCII control characters 0x00–0x1F and 0x7F only; Unicode bidirectional control characters... are outside this sanitization scope — accepted residual"). INFO-R43-001: stale duplicate closing-count line "Spec version: 1.3.79" removed from prd-delta-576.md SEC-576-V2-ROUND section. No new BCs, holdouts, or VPs.
+
+### Changed Requirements
+
+- `.factory/specs/prd/bc-2-issue-read.md` (MODIFIED): BC-2.7.011 display-sanitization primary clause — earliest consumer S2→S1; S3 added to allocation guidance; Unicode bidi out-of-scope scope note appended (NEW-576-V3-002); BC-2.7.011 Trace field updated; frontmatter trace v1.3.81 added.
+- `.factory/specs/prd/BC-INDEX.md` (MODIFIED): BC-2.7.007 row (EC-2.7.007-12 + `?redirect=false` body clause); BC-2.7.008 row (SEC-576-011 cross-ref); BC-2.7.010 row (SEC-576-008 + SEC-576-011 cross-ref); BC-2.7.011 row (SEC-576-011 CWE-116 primary clause + earliest-consumer S1 correction); BC-3.9.015 row (SEC-576-011 cross-ref step 1); BC-3.9.017 row (SEC-576-011 cross-ref step 2); index_version v6.33→v6.34; last_updated updated.
+- `.factory/phase-f2-spec-evolution/prd-delta-576.md` (MODIFIED): stale duplicate closing-count line "Spec version: 1.3.79" removed (INFO-R43-001); `spec_version_after` 1.3.80→1.3.81; R43-ROUND dispositions appended.
+
+### Impact Assessment
+
+| Artifact | Change Type | Notes |
+|---|---|---|
+| bc-2-issue-read.md | Modified | BC-2.7.011 primary clause + Trace + frontmatter trace |
+| BC-INDEX.md | Modified | 6 rows updated; v6.33→v6.34 |
+| prd-delta-576.md | Modified | Stale line removed; spec_version_after 1.3.81; R43-ROUND dispositions |
+
+- BCs: 657 (unchanged)
+- Holdouts: 100 (unchanged)
+- VPs: 35 (unchanged)
+
+---
+
+## [1.3.80] - 2026-07-17
+
+### Type: PATCH
+
+### Summary
+
+Security fix round SEC-576-v2 (SOH-ATTACHMENTS-1 F2 gate, spec_version_reviewed: 1.3.79). Applies all four findings from `security-review-576-v2.md` (verdict: SPEC-CHANGES-REQUIRED). SEC-576-009 (LOW, CWE-22): `?redirect=false` prohibition promoted from "Redirect following" body paragraph into BC-2.7.007 step 2 wire path body clause — makes the prohibition explicit at the point of construction to prevent F3 implementer ambiguity. SEC-576-010 (INFO): EC-2.7.007-12 added — numbered EC for the single-id overwrite-refuse pre-flight (`--out <PATH>` targets existing regular file without `--force`; exit 64 pre-HTTP; §2.7 taxonomy compliant). SEC-576-008 (INFO): BC-2.7.010 degenerate-name fallback paragraph extended with a trust assumption note — batch-mode `fields.attachment[].id` values carry no client-side `^[0-9]+$` validation; single-id holds by construction via AID validation; compromised server outside threat model. SEC-576-011 (MEDIUM, CWE-116): primary display-sanitization clause added to BC-2.7.011 — all server-supplied `filename` values written to a TTY MUST have ASCII control characters 0x00–0x1F and 0x7F replaced with `?` (display-only; RAW value retained in JSON/disk/API); earliest consumer S2; `display_sanitize_filename` helper pattern prescribed. SEC-576-011 cross-references added to BC-2.7.008 (collision-skip warning), BC-2.7.010 (degenerate-name warning), BC-3.9.015 step 1 (delete confirmation prompt), and BC-3.9.017 step 2 (--replace-existing prompt). No new BCs, holdouts, or VPs.
+
+### Changed Requirements
+
+- `.factory/specs/prd/bc-2-issue-read.md` (MODIFIED): BC-2.7.007 step 2 `?redirect=false` body clause (SEC-576-009); EC-2.7.007-12 added (SEC-576-010); BC-2.7.010 server-ID trust assumption note and display-sanitization cross-reference (SEC-576-008, SEC-576-011); BC-2.7.011 display-sanitization primary clause (SEC-576-011); BC-2.7.007/BC-2.7.008/BC-2.7.010/BC-2.7.011 Trace fields updated; frontmatter trace v1.3.80 added.
+- `.factory/specs/prd/bc-3-issue-write.md` (MODIFIED): BC-3.9.015 step 1 display-sanitization cross-reference (SEC-576-011); BC-3.9.017 step 2 display-sanitization cross-reference (SEC-576-011); BC-3.9.015 and BC-3.9.017 Trace fields updated; frontmatter trace v1.3.80 added.
+- `.factory/phase-f2-spec-evolution/prd-delta-576.md` (MODIFIED): `spec_version_after` 1.3.79→1.3.80; SEC-576-V2-ROUND dispositions section appended.
+
+### Impact Assessment
+
+| Artifact | Change Type | Notes |
+|---|---|---|
+| bc-2-issue-read.md | Modified | SEC-576-009/010/008/011 clauses + Trace + frontmatter trace |
+| bc-3-issue-write.md | Modified | SEC-576-011 cross-references + Trace + frontmatter trace |
+| prd-delta-576.md | Modified | spec_version_after 1.3.80; SEC-576-V2-ROUND dispositions |
+| BC-INDEX.md | Verified, NO change | No BC rows modified; v6.33 unchanged |
+
+- BCs: 657 (unchanged)
+- Holdouts: 100 (unchanged)
+- VPs: 35 (unchanged)
+
+---
+
 ## [1.3.79] - 2026-07-17
 
 ### Type: PATCH

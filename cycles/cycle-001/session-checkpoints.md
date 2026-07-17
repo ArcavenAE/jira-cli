@@ -1513,3 +1513,19 @@ STRICT convergence. Counters: BC 612, Holdouts 83, Stories 102. develop @ 0d8a8a
 | **Notes** | Main-repo untracked `.claude/pr-reviews/` + `.claude/spec-config.json` are session-local, deliberately untracked. Backup `*.backup-*` files in `phase-f2-spec-evolution/` deliberately untracked. Worktree `.worktrees/docs-577-ej-probe` (ea0689b, PR #625) intact pending human merge — cleanup after merge. Standing rules unchanged (DEC-128/173; user merges all PRs). **F2 GATE APPROVED (DEC-184)** — full security re-review dispatched before F3; PRE-F4-SECURITY-SPOTCHECK-576 SUPERSEDED. F3 BLOCKED pending security-review-576-v2 verdict. Six post-DEC-182 tail rulings ratified. trajectory-tail →1→0→0→0. |
 | **Standing rules** | User merges ALL PRs on GitHub personally (DEC-173); every PR gets fresh-eyes pr-reviewer pre-merge with POSTED evidence; COMMENTED = approve-equivalent (same-account); implementers hard-forbidden from push/PR/improvise (STOP-and-report). DEC-128 in force. |
 | **Resume command** | /vsdd-factory:next-step |
+
+---
+
+## Archived Checkpoint (displaced by security-fix-reverify burst, 2026-07-17)
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-07-17 (SESSION WRAP — F2 GATE APPROVED (DEC-184); security re-review v1.3.79 COMPLETE: SPEC-CHANGES-REQUIRED; F3 BLOCKED on security fix round + re-verify; spec v1.3.79; BC-INDEX v6.33; holdout frontmatter v1.5.8; trajectory-tail →1→0→0→0). |
+| **Position** | Phase 3 / Feature Mode SOH-ATTACHMENTS-1 (issues #576+#585, DEC-179/DEC-180/DEC-181/DEC-182/DEC-183/DEC-184). **F2 GATE APPROVED (DEC-184, 2026-07-17)** at spec v1.3.79. Security re-review COMPLETE — verdict **SPEC-CHANGES-REQUIRED** (phase-f2-spec-evolution/security-review-576-v2.md). F3 BLOCKED pending security fix round + re-verify + APPROVE. F3 authorized (5 stories S1-S5, STRICT, 1 wave; depends_on S3→S1, S5→S3). Spec v1.3.79; 657 BCs / 100 holdouts / 35 VP; BC-INDEX v6.33; holdout frontmatter v1.5.8. develop @ 56d5126 (v0.6.0-dev.10). |
+| **Convergence counter** | F2 LOOP CLOSED (DEC-184; 40 passes / 37 fix rounds; window p38/p39/p40 CLEAN×3 per DEC-181/DEC-183; full trajectory: 22,21,18,16,10,5,3,5,3,3,2,2,3,9,7,5,5,5,4,6,6,3,3,2,2,3,3,2,1,3,2,1,1,5,1,1,1,0,0,0). F3 loop NOT YET STARTED (criterion: FULL STRICT). |
+| **In flight** | Security re-review v1.3.79 COMPLETE: SPEC-CHANGES-REQUIRED. F3 BLOCKED pending fix round + re-verify. |
+| **Pending human decisions** | NONE until F3 gate. Security fix round is orchestrator-dispatched; no human gate before security-reviewer RE-VERIFY. |
+| **PR queue (human-owned)** | Merge #625 (EJ probe docs, CI green); merge #591 (soak cleared); #574 awaiting contributor rebase + human Actions-run approval; soak calendar #598/#599 eligible 2026-07-16, #612 2026-07-20, #624 2026-07-22. DO NOT close #429. |
+| **Notes** | Pipeline PAUSED at this checkpoint. F2 gate approval DEC-184 STANDS. SEC-576-011 NEW CROSS-CUTTING CONCERN: display-sanitization (CWE-116) display-channel counterpart to CWE-22 — F3 story-writers must allocate to S2 (earliest display consumer per DEC-184 R3.13). Standing rules unchanged (DEC-128/173; user merges all PRs). |
+| **Standing rules** | User merges ALL PRs on GitHub personally (DEC-173); every PR gets fresh-eyes pr-reviewer pre-merge with POSTED evidence; COMMENTED = approve-equivalent (same-account); implementers hard-forbidden from push/PR/improvise (STOP-and-report). DEC-128 in force. |
+| **Resume command** | /vsdd-factory:next-step |

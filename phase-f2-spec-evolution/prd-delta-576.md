@@ -5,7 +5,7 @@ issues: "#576, #585"
 phase: F2
 authored: 2026-07-15
 spec_version_before: 1.3.42
-spec_version_after: 1.3.79
+spec_version_after: 1.3.81
 bc_count_before: 624
 bc_count_after: 657
 holdout_count_before: 88
@@ -751,4 +751,41 @@ Source: GAP-AUDIT-576-001 (gate-audit-576.md). DEC-170 mechanical-mirror precede
 
 **ECHO-BREAKER LIST B (holdout assertion changes): EMPTY.** No holdout BCs or assertions changed in this scoped round.
 
-**BC count at this round: 657 (unchanged). Holdout count: 100 (unchanged). VP count: 35 (unchanged). Spec version: 1.3.79. Both guards exit 0.**
+---
+
+## SEC-576-V2-ROUND — Security Fix Round (2026-07-17, 1.3.79→1.3.80)
+
+Source: `security-review-576-v2.md` (verdict: SPEC-CHANGES-REQUIRED, spec_version_reviewed: 1.3.79). Four findings applied. No new BCs (all changes are clause additions to existing BCs). No new holdouts (findings do not meet the HIGH-impact ASM/R threshold for holdout obligation). No new VPs (findings are implementation-guidance clauses, not new property assertions).
+
+| # | Finding | Severity | Disposition | File | Resolution |
+|---|---------|----------|-------------|------|------------|
+| 1 | SEC-576-009: `?redirect=false` prohibition body clause | LOW (CWE-22) | BODY CLAUSE ADDED | bc-2-issue-read.md | BC-2.7.007 step 2 wire path: `?redirect=false` prohibited clause added inline — "The content URL MUST be issued with no additional query parameters — appending `?redirect=false` changes the server's redirect behavior and invalidates the credential-stripping invariant established by EC-2.7.007-3." |
+| 2 | SEC-576-010: EC-2.7.007-12 single-id overwrite-refuse pre-flight | INFO | NEW EC ADDED | bc-2-issue-read.md | EC-2.7.007-12 added after EC-2.7.007-11 — exit 64 when `--out <PATH>` targets existing regular file without `--force`; pre-HTTP ordering per P32-001; §2.7 taxonomy compliance (ERROR, not hint; no JSON envelope on exit); mirrors batch `--force` semantics. |
+| 3 | SEC-576-008: batch server-ID trust assumption note | INFO | CLARIFYING NOTE ADDED | bc-2-issue-read.md | BC-2.7.010 degenerate-name fallback paragraph: trust assumption note added — batch IDs from `fields.attachment[]` carry no client-side `^[0-9]+$` validation; single-id holds by construction; compromised server outside threat model; defense-in-depth MAY note for implementers. |
+| 4 | SEC-576-011: display-sanitization clause (CWE-116) | MEDIUM | NEW CROSS-CUTTING CLAUSE | bc-2-issue-read.md, bc-3-issue-write.md | Primary clause added to BC-2.7.011 — all server-supplied filenames written to TTY MUST have ASCII control characters 0x00–0x1F and 0x7F replaced with `?`; display-only (RAW in JSON/disk/API); `--no-color` not a substitute; earliest consumer S2; `display_sanitize_filename` helper pattern. Cross-references added: BC-2.7.008 Overwrite behavior (collision-skip warning), BC-2.7.010 degenerate-name warning, BC-3.9.015 step 1 (delete confirmation prompt), BC-3.9.017 step 2 (--replace-existing prompt). |
+
+**ECHO-BREAKER LIST A (spec changes):** bc-2-issue-read.md: BC-2.7.007 step 2 `?redirect=false` body clause (SEC-576-009); EC-2.7.007-12 added (SEC-576-010); BC-2.7.010 server-ID trust assumption note (SEC-576-008); BC-2.7.010 display-sanitization cross-reference (SEC-576-011); BC-2.7.011 display-sanitization primary clause (SEC-576-011); BC-2.7.007/BC-2.7.008/BC-2.7.010/BC-2.7.011 Trace fields updated; frontmatter trace v1.3.80. bc-3-issue-write.md: BC-3.9.015 step 1 display-sanitization cross-reference (SEC-576-011); BC-3.9.017 step 2 display-sanitization cross-reference (SEC-576-011); BC-3.9.015 and BC-3.9.017 Trace fields updated; frontmatter trace v1.3.80. prd-delta-576.md: `spec_version_after` 1.3.79→1.3.80; SEC-576-V2-ROUND dispositions appended. spec-changelog.md: [1.3.80] entry added.
+
+**ECHO-BREAKER LIST B (holdout assertion changes): EMPTY.** No holdout assertions changed in this security fix round.
+
+**BC count at this round: 657 (unchanged). Holdout count: 100 (unchanged). VP count: 35 (unchanged). Spec version: 1.3.80. BC-INDEX version: v6.33 (unchanged — no BC rows modified).**
+
+---
+
+## R43-ROUND — r43 Micro-Fix Round (spec v1.3.80 → v1.3.81)
+
+Source: `consistency-report-576-r43.md` (GAP-R43-001, GAP-R43-002, INFO-R43-001) + `security-review-576-v2-reverify.md` (NEW-576-V3-001, NEW-576-V3-002). Applies 4 surgical fixes; no BC/holdout/VP count changes.
+
+| # | Finding | Severity | Fix type | File(s) | Resolution |
+|---|---------|----------|----------|---------|------------|
+| 1 | GAP-R43-001: BC-INDEX rows stale for 6 BCs modified in v1.3.80 | LOW | BC-INDEX row updates | BC-INDEX.md | BC-2.7.007 row: EC-2.7.007-12 + `?redirect=false` body clause noted; BC-2.7.008 row: SEC-576-011 display-sanitization cross-ref noted; BC-2.7.010 row: SEC-576-008 trust assumption + SEC-576-011 cross-ref noted; BC-2.7.011 row (CRITICAL): SEC-576-011 CWE-116 display-sanitization primary clause added alongside CWE-22 pipeline; BC-3.9.015 row: SEC-576-011 cross-ref in step 1 noted; BC-3.9.017 row: SEC-576-011 cross-ref in step 2 noted; BC-INDEX version bumped v6.33→v6.34. |
+| 2 | GAP-R43-002: BC-2.7.011 display-sanitization primary clause omits S3 from allocation guidance sentence | LOW | BC body edit | bc-2-issue-read.md | Allocation sentence in primary clause expanded: S3 added alongside S4 ("S3 and S4 story-writers must allocate display-sanitization at confirmation prompt call sites"). Folded with NEW-576-V3-001 (INFO, security re-verify). |
+| 3 | NEW-576-V3-001: "Earliest consumer: S2" may understate S1 (BC-2.7.001 list table cells) obligation | INFO (fold) | BC body edit | bc-2-issue-read.md | Earliest consumer corrected S2→S1: BC-2.7.001 list table renders server-supplied filenames and ships with S1 (per Scope table); `display_sanitize_filename` helper therefore required by S1. Allocation guidance updated with S1 explicit table-cell obligation. |
+| 4 | NEW-576-V3-002: Unicode bidi/line-terminator residual scope unstated in BC-2.7.011 | INFO | BC body edit | bc-2-issue-read.md | Scope note appended to display-sanitization primary clause: "this sanitization covers ASCII control characters 0x00–0x1F and 0x7F only; Unicode bidirectional control characters (e.g. U+202E RIGHT-TO-LEFT OVERRIDE, U+2028 LINE SEPARATOR, U+2029 PARAGRAPH SEPARATOR) are outside this sanitization scope — accepted residual (mirrors the INV-1 ASCII `\r`/`\n` only scope in adf.rs)." |
+| 5 | INFO-R43-001: prd-delta-576.md stale closing-count line "Spec version: 1.3.79" | INFO | Cleanup | prd-delta-576.md | Stale duplicate closing-count line removed; correct line 771 (Spec version: 1.3.80) retained as the sole closing-count line for the SEC-576-V2-ROUND. |
+
+**ECHO-BREAKER LIST A (spec changes):** bc-2-issue-read.md: BC-2.7.011 earliest consumer S2→S1 + S3 added to allocation guidance + Unicode bidi out-of-scope scope note; BC-2.7.011 Trace field updated; frontmatter trace v1.3.81 added. BC-INDEX.md: BC-2.7.007/BC-2.7.008/BC-2.7.010/BC-2.7.011/BC-3.9.015/BC-3.9.017 rows synced; index_version v6.33→v6.34; last_updated updated. prd-delta-576.md: stale duplicate closing-count line removed; `spec_version_after` 1.3.80→1.3.81; R43-ROUND dispositions appended. spec-changelog.md: [1.3.81] entry added.
+
+**ECHO-BREAKER LIST B (holdout assertion changes): EMPTY.** No holdout assertions changed in this micro-fix round.
+
+**BC count at this round: 657 (unchanged). Holdout count: 100 (unchanged). VP count: 35 (unchanged). Spec version: 1.3.81. BC-INDEX version: v6.34.**

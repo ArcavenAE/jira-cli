@@ -5707,3 +5707,70 @@ Displaced to make room for SESSION WRAP (2026-07-17) step row per keep-5 rule.
 - RESUME PLAN: comment + Spec version v1.3.77→v1.3.79 + Step 3 updated to cold-start form (security fix round → re-verify → on APPROVE F3)
 
 **Files committed:** `STATE.md`, `cycles/cycle-001/burst-log.md`, `cycles/cycle-001/session-checkpoints.md`.
+
+---
+
+## SOH-ATTACHMENTS-1 SECURITY-FIX-AND-REVERIFY BURST (2026-07-17)
+
+**What happened:** Session resumed after SESSION WRAP (pipeline PAUSED). Worktree health PASS. Security fix round applied all 4 SEC-576 findings to spec v1.3.79→v1.3.80. Security re-verify returned APPROVE-WITH-NOTES (all 4 RESOLVED; 2 INFO: NEW-576-V3-001 folded; NEW-576-V3-002 noted out-of-scope). Consistency r43 GAPS-FOUND (2L+1I) → micro-fix → r44 CONSISTENT. Spec v1.3.80→v1.3.81; BC-INDEX v6.33→v6.34. F3 UNBLOCKED.
+
+**Security fix round details (spec v1.3.79→v1.3.80):**
+- SEC-576-011 (MEDIUM, CWE-116): primary display-sanitization clause added to BC-2.7.011; 4 reciprocal cross-refs in BC-2.7.008/BC-2.7.010/BC-3.9.015/BC-3.9.017.
+- SEC-576-009 (LOW): `?redirect=false` prohibition promoted from Trace-only into BC-2.7.007 step-2 body clause.
+- SEC-576-008 (INFO): batch degenerate-id trust-assumption clarifying note added to BC-2.7.010.
+- SEC-576-010 (INFO): EC-2.7.007-12 single-id overwrite-refuse pre-flight added.
+- Guards exit 0.
+
+**Security re-verify (security-reviewer, fresh context, v1.3.80):**
+- Verdict: APPROVE-WITH-NOTES.
+- All 4 findings RESOLVED. SEC-576-001..007 regression check INTACT.
+- 2 new INFO: NEW-576-V3-001 (S2 earliest-consumer label understates S1 table-cell obligation → folded in v1.3.81 micro-fix per DEC-184 R3.13); NEW-576-V3-002 (Unicode bidi/line-separator residual → out-of-scope scope note added).
+- Report: `phase-f2-spec-evolution/security-review-576-v2-reverify.md`.
+
+**Consistency r43 (scoped, piecewise):**
+- GAPS-FOUND — 2 LOW + 1 INFO.
+- GAP-R43-001: six stale BC-INDEX rows (v6.33 not reflecting the 4 security remediation edits).
+- GAP-R43-002: allocation sentence still read "S2 earliest consumer" after SEC-576-011 fix; corrected to S1 (list-table cells BC-2.7.001; S3+S4 confirmation prompts per DEC-184 R3.13).
+- INFO-R43-001: stale count line in prd-delta removed.
+- All 4 security remediations PASS verbatim. Echo-breaker clean.
+- Report: `phase-f2-spec-evolution/consistency-report-576-r43.md`.
+
+**R43 micro-fix (spec v1.3.80→v1.3.81):**
+- BC-INDEX v6.33→v6.34 (6 rows refreshed).
+- Allocation sentence corrected S2→S1 (NEW-576-V3-001 folded).
+- Unicode bidi out-of-scope scope note added (NEW-576-V3-002; INV-1 precedent style).
+- Stale prd-delta count line removed.
+- Guards exit 0.
+
+**Consistency r44 (scoped confirmation):**
+- CONSISTENT — all r43 gaps CLOSED. No S2 residue. Version surfaces complete.
+- Report: `phase-f2-spec-evolution/consistency-report-576-r44.md`.
+
+**OUTCOME:** security-review-576-v2 SPEC-CHANGES-REQUIRED verdict SATISFIED. F3 UNBLOCKED. F3 dispatch (5 stories S1-S5; STRICT criterion) awaits human gate presentation.
+
+**STATE.md updates:**
+- frontmatter: `pipeline: PAUSED` → `pipeline: IN_PROGRESS`; `timestamp` advanced; `current_step` updated to burst summary.
+- Project Metadata: Last Updated, Current Phase, Next Phase rows updated.
+- Phase Progress: F2 GATE APPROVED (DEC-184) row archived here (below) → new SECURITY-FIX+REVERIFY COMPLETE row added.
+- Current Phase Steps: F2 GATE APPROVED step row archived here (below) → new SECURITY-FIX+REVERIFY COMPLETE step row added.
+- Convergence Status: BC-INDEX version v6.33→v6.34; F2 GATE APPROVED paragraph updated with security-fix-reverify outcome.
+- Session Resume Checkpoint: old checkpoint archived to session-checkpoints.md; new checkpoint with F3 UNBLOCKED position.
+- RESUME PLAN: Step 3 updated from SECURITY-FIX-REQUIRED to F3 GATE PRESENTATION.
+
+**Files committed:** `phase-f2-spec-evolution/prd-delta-576.md`, `phase-f2-spec-evolution/security-review-576-v2-reverify.md`, `phase-f2-spec-evolution/consistency-report-576-r43.md`, `phase-f2-spec-evolution/consistency-report-576-r44.md`, `spec-changelog.md`, `sidecar-learning.md`, `specs/prd/BC-INDEX.md`, `specs/prd/bc-2-issue-read.md`, `specs/prd/bc-3-issue-write.md`, `STATE.md`, `cycles/cycle-001/burst-log.md`, `cycles/cycle-001/session-checkpoints.md`, `cycles/cycle-001/convergence-trajectory.md`.
+
+### Archived Phase Progress row (security-fix-reverify burst)
+
+Displaced to make room for SECURITY-FIX+REVERIFY COMPLETE Phase Progress row per keep-5 rule.
+
+| Phase | Status | Completed | Gate | Notes |
+|-------|--------|-----------|------|-------|
+| **SOH-ATTACHMENTS-1 F2 GATE APPROVED (DEC-184, 2026-07-17, human): F2 spec package APPROVED at v1.3.79; F3 AUTHORIZED (5 stories S1-S5, 1 wave; depends_on S3→S1, S5→S3). Six post-DEC-182 orchestrator tail rulings RATIFIED: R3.13 earliest-consumer gate-mechanics allocation; guards-vs-gates dry-run distinction (EC-3.9.020-7/8); manifest filename=RAW/path=on-disk pairing (P27-001); manifest size=bytes-written uniformly (P31-002); --out local-pre-flights-before-metadata-GET fail-cheap ordering (P32-001); hint-vs-error stderr taxonomy (P25/P27/P30 family). SECURITY UPGRADED: PRE-F4-SECURITY-SPOTCHECK-576 SUPERSEDED — full security re-review v1.3.79 dispatched BEFORE F3 (security-reviewer dispatched; report: phase-f2-spec-evolution/security-review-576-v2.md); F3 BLOCKED pending verdict; APPROVE/APPROVE-WITH-NOTES unblocks; SPEC-CHANGES-REQUIRED triggers fix round + re-verify. F3 convergence criterion: STRICT (3 consecutive zero-finding passes). trajectory-tail →1→0→0→0** | **F2 GATE APPROVED (DEC-184); security re-review IN FLIGHT** | **2026-07-17** | **F3 BLOCKED pending security-review-576-v2 verdict; APPROVE → F3 dispatch.** | BC 657; holdouts 100; VP 35; spec v1.3.79; BC-INDEX v6.33; holdout frontmatter v1.5.8. |
+
+### Archived Current Phase Steps row (security-fix-reverify burst)
+
+Displaced to make room for SECURITY-FIX+REVERIFY COMPLETE step row per keep-5 rule.
+
+| Step | Agent | Status | Output |
+|------|-------|--------|--------|
+| **SOH-ATTACHMENTS-1 F2 GATE APPROVED (DEC-184, 2026-07-17): F2 spec package APPROVED at v1.3.79; F3 AUTHORIZED (5 stories S1-S5, STRICT criterion). Six post-DEC-182 tail rulings RATIFIED. PRE-F4-SECURITY-SPOTCHECK-576 SUPERSEDED: full security re-review v1.3.79 dispatched (security-reviewer; report: phase-f2-spec-evolution/security-review-576-v2.md); F3 BLOCKED pending verdict; APPROVE/APPROVE-WITH-NOTES unblocks; SPEC-CHANGES-REQUIRED triggers fix round + re-verify. trajectory-tail →1→0→0→0** | human + state-manager | COMPLETE — F3 BLOCKED pending security-review-576-v2 | BC 657; holdouts 100; VP 35; spec v1.3.79; BC-INDEX v6.33; holdout frontmatter v1.5.8. |
