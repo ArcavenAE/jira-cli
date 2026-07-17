@@ -5455,3 +5455,41 @@ Displaced to make room for SOH-ATTACHMENTS-1 adversary pass-33 remediation step 
 **Convergence:** Trajectory p1..p33 = 22,21,18,16,10,5,3,5,3,3,2,2,3,9,7,5,5,5,4,6,6,3,3,2,2,3,3,2,1,3,2,1,1. STRICT streak 0/3 (DEC-183). BEHAVIORAL CONVERGENCE MILESTONE: first pass with zero behavioral findings — defect stream has fully exited behavioral content. Next: adversary pass 34 (CLEAN candidate).
 
 **Files committed:** `phase-f2-spec-evolution/prd-delta-576.md`, `sidecar-learning.md`, `spec-changelog.md`, `specs/prd/bc-3-issue-write.md`, `cycles/cycle-001/burst-log.md`, `cycles/cycle-001/lessons.md`, `STATE.md`.
+
+
+---
+
+## SOH-ATTACHMENTS-1 F2 ADVERSARY PASS-34 REMEDIATION BURST (2026-07-17)
+
+### Archived Phase Progress row (adversary-pass-35 remediation burst)
+
+Displaced to make room for SOH-ATTACHMENTS-1 adversary pass-35 Phase Progress row per keep-5 rule.
+
+| Phase | Status | Completed | Gate | Notes |
+|-------|--------|-----------|------|-------|
+| **SOH-ATTACHMENTS-1 F2 ADVERSARY PASS-30 REMEDIATED (2026-07-17, fresh context, blind, v1.3.69; NOT-CLEAN 1M+2L+1I; P30-001 (M, 29-pass-latent cross-shard wiring gap) SEC-576-006 self-heal lived only in BC-X.8.010, never wired into BC-3.9.003 step 1 / BC-3.9.012 taxonomy — two conformant readings diverged on step-1 attachTemporaryFile 403/404; P30-002 (L) pre-deletion summary JSON-mode unclassified → HINT/JSON-suppressed + FULL §3.9 STDERR ENUMERATION (24 entries: errors unconditional / hints with per-clause JSON rule / gate-prompts interactive-only); P30-003 (L) ADR-0017 stale call-site (pre-CONS-576-002) → corrected with annotation; P30-I01 (I) positional shorthand annotation. Fix round 30 all applied; r39 GAP-M-001 (M) BC-INDEX frontmatter bump v6.28→v6.29 missed despite 4 row edits → closed same burst; PER-ROUND CHECKLIST EXTENDED: BC-INDEX frontmatter bump on ANY row modification now standing (sibling of bc-3 frontmatter-trace rule). Spec v1.3.69→v1.3.70; counts 657/100/35 UNCHANGED; BC-INDEX v6.28→v6.29; r39 GAPS-FOUND (1 tracking gap closed same burst; enumeration spot-audit 6/6). STRICT streak 0/3 (DEC-183). trajectory-tail →3→2→1→3. Pass 31 next.** | **ADVERSARY PASS-30 REMEDIATED** | **2026-07-17** | **Adversary pass 31 next.** | BC 657; holdouts 100; VP 35; spec v1.3.70; BC-INDEX v6.29. |
+
+### Archived Current Phase Steps row (adversary-pass-35 remediation burst)
+
+Displaced to make room for SOH-ATTACHMENTS-1 adversary pass-35 remediation step row per keep-5 rule.
+
+| Step | Agent | Status | Output |
+|------|-------|--------|--------|
+| **SOH-ATTACHMENTS-1 F2 ADVERSARY PASS-30 REMEDIATED (2026-07-17): 1M+2L+1I; P30-001 (M, 29-pass-latent cross-shard wiring gap) SEC-576-006 self-heal lived only in BC-X.8.010, never wired into BC-3.9.003 step 1 / BC-3.9.012 taxonomy → wired into both; two conformant readings on step-1 403/404 path now reconciled; P30-002 (L) pre-deletion summary JSON-mode unclassified → HINT/JSON-suppressed + FULL §3.9 STDERR ENUMERATION (24 entries: errors unconditional / hints with per-clause JSON rule / gate-prompts interactive-only) recorded in prd-delta; P30-003 (L) ADR-0017 stale call-site (pre-CONS-576-002) → corrected with annotation; P30-I01 (I) positional shorthand annotation; r39 GAP-M-001 (M) BC-INDEX frontmatter bump v6.28→v6.29 missed despite 4 row edits → closed same burst; PER-ROUND CHECKLIST EXTENDED: BC-INDEX frontmatter bump on ANY row modification now standing (sibling of bc-3 frontmatter-trace rule); spec v1.3.69→v1.3.70; BC 657/holdouts 100/VP 35 UNCHANGED; BC-INDEX v6.28→v6.29; r39 GAPS-FOUND (1 tracking gap closed same burst; enumeration spot-audit 6/6); STRICT streak 0/3 (DEC-183). trajectory-tail →3→2→1→3. Pass 31 next.** | adversary + product-owner + consistency-validator + state-manager | COMPLETE | `phase-f2-spec-evolution/consistency-report-576-r39.md`; BC 657; holdouts 100; VP 35; spec v1.3.70; BC-INDEX v6.29. |
+
+---
+
+## SOH-ATTACHMENTS-1 F2 ADVERSARY PASS-35 REMEDIATION BURST (2026-07-17)
+
+**What happened:** Adversary pass 35 returned NOT-CLEAN — 1 LOW (borderline INFO) + 2 INFO, but ZERO findings in any authoritative surface. The adversary verified all BCs, holdouts, counts, taxonomies, and cross-shard invariants as clean — characterizing the spec as "exceptionally polished." All three findings were confined to the F1 delta-analysis document and the holdout channel assertions.
+
+**Findings:**
+- P35-001 (LOW, borderline INFO): `impact-boundary-576.md` R3.9b (~line 755) bullet "Derive the default output filename (`<sha1>_<sanitized-basename>`) without a separate list call" — stale for single-id download (SHA-1 prefix is batch-only per R3.10 / BC-2.7.010; single-id uses bare sanitized basename). The R3.10 section six lines later already documented the correct behavior; the R3.9b bullet was a retro-annotation miss from the naming ruling (P10/P23 vintage). Fix: PHASE-DOC-RETRO-ANNOTATION note appended inline.
+- P35-002 (INFO): `impact-boundary-576.md` R3.2 (~line 636) and R3.5 (~lines 670-671) — illustrative JSON shapes in F1 doc pre-date the BTreeMap-alphabetical ordering ruling (P19-001). Keys shown out of BTreeMap order without annotation. Fix: inline note added to R3.2 shape; parenthetical cross-refs added to BC-3.9.019 and BC-3.9.020 table rows in R3.5.
+- P35-003 (INFO): Two holdout channel assertions over-permissive vs the output-channel profile discipline. H-NEW-ATTACHMENT-002 Expected bullet 4: "stdout or stderr contains a success message referencing `notes.txt`" — should be stderr-only per BC-2.7.007 profile 3 (nothing on stdout in human mode; all progress/hints go to stderr). H-NEW-ATTACHMENT-004 Expected A bullet 1: "stdout/stderr contains `upload.txt` and `30001`" — should be stdout-only per BC-3.9.001 profile 4 (human echo to stdout). Both tightened. Retroactive P31-001 citation also added to H-NEW-ATTACHMENT-002 Status (spotted during the edit).
+
+**SCOPED VERIFICATION in lieu of full CV:** Annotation/assertion-tightening round — no BC body content changed, no BC-INDEX rows changed, only F1 doc inline annotations and holdout channel specificity. Precedent: burst-29 (one-line deletion), burst-32 (one-sentence ordering pin), burst-33 (footer rebuild). BC-INDEX NOT bumped. Both guards exit 0 (no BC/holdout count changes). Spec v1.3.74→v1.3.75.
+
+**Convergence:** Trajectory p1..p35 = 22,21,18,16,10,5,3,5,3,3,2,2,3,9,7,5,5,5,4,6,6,3,3,2,2,3,3,2,1,3,2,1,1,5,1. STRICT streak 0/3 (DEC-183). Three of the last four fresh adversaries verified all authoritative surfaces clean; residual findings confined to F1-doc annotation coverage and assertion precision. Next: adversary pass 36 (CLEAN candidate).
+
+**Files committed:** `phase-f1-delta-analysis/impact-boundary-576.md`, `phase-f2-spec-evolution/prd-delta-576.md`, `sidecar-learning.md`, `spec-changelog.md`, `specs/prd/holdout-scenarios.md`, `cycles/cycle-001/burst-log.md`, `STATE.md`.

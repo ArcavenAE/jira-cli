@@ -4,7 +4,7 @@ title: "Holdout Scenarios"
 total_holdouts: 100
 # H-NEW-AUTH-002 registered by S-0.07 (Phase 3, 2026-05-07). Wave 0 COMPLETE.
 # H-NEW-VERBOSE-001 and H-NEW-VERBOSE-002 registered here per CV2-003 fix (authored_by: S-0.06).
-version: "1.5.5"
+version: "1.5.6"
 last_updated: 2026-07-17
 source_pass: 3
 trace: |
@@ -24,6 +24,7 @@ trace: |
   - SOH-ATTACHMENTS-1 adversary pass-27 (2026-07-17, P27): H-NEW-ATTACHMENT-003 Call B2 `filename` corrected to RAW Jira name `ok.txt` (pre-sanitization, pre-SHA-1-prefix); discriminating `filename`-vs-`path` assertion added (P27-001); H-NEW-ATTACHMENT-007 overlong-name fixture description corrected (255 bytes = exceeds 214-byte sanitizer cap + 41-byte SHA-1 prefix; was "at the length-cap boundary"); missing length-cap assertion added (on-disk basename after SHA-1 prefix ≤ 214 bytes; P27-002); holdout count unchanged (100)
   - SOH-ATTACHMENTS-1 adversary pass-28 (2026-07-17, P28): H-NEW-ATTACHMENT-009 Expected bullet 4 narrowed — "zero requests to any /rest/servicedeskapi/..." replaced with POST-only assertion: zero requests to POST .../attachTemporaryFile and POST .../request/{key}/attachment; GET /rest/servicedeskapi/servicedesk meta-resolution IS expected to fire (mounted in setup step 3; asserted absent only are the upload POSTs); licensing BC added (BC-3.9.003 step 1 / BC-X.8.010 for the GET; BC-3.9.014 gate for the POST absence); Status updated with P28-002 citation; holdout count unchanged (100)
   - SOH-ATTACHMENTS-1 adversary pass-31 (2026-07-17, P31): H-NEW-ATTACHMENT-002 error-path Expected exit-code tightened — "Exit code != 0 (exit 1 or exit 64)" → "Exit code = 1 (EC-2.7.007-4 mid-stream error; BC-2.7.012 5xx row)" (P31-001); holdout count unchanged (100)
+  - SOH-ATTACHMENTS-1 adversary pass-35 (2026-07-17, P35): H-NEW-ATTACHMENT-002 Expected bullet 4 tightened — "stdout or stderr contains a success message" → "stderr contains a progress/completion message" (BC-2.7.007 profile 3: nothing on stdout in human mode; P35-003); H-NEW-ATTACHMENT-004 Expected A bullet 1 tightened — "stdout/stderr contains" → "stdout contains" (BC-3.9.001 profile 4: human echo to stdout; P35-003); Status lines for both scenarios updated with P35-003 citations; holdout count unchanged (100)
 ---
 
 # Holdout Scenarios — jira-cli
@@ -2126,7 +2127,7 @@ Call B (two attachments):
 - Exit code = 0.
 - `WORK_DIR/notes.txt` exists and its content equals `"hello world\n"` (12 bytes).
 - No `tmp_*` temp file remains in `WORK_DIR` after successful completion (temp renamed away on atomic rename).
-- stdout or stderr contains a success message referencing `notes.txt`.
+- stderr contains a progress/completion message referencing `notes.txt` (BC-2.7.007 profile 3: nothing on stdout in human mode; all progress and hints go to stderr; P35-003).
 
 **Setup (error path)**:
 4. Wiremock mounts `GET /rest/api/3/attachment/10002` returning the attachment metadata: `{"id":"10002","filename":"broken.bin","size":100,"mimeType":"application/octet-stream","content":"<JR_BASE_URL>/rest/api/3/attachment/content/10002"}` (metadata step 1 — must succeed).
@@ -2141,7 +2142,7 @@ Call B (two attachments):
 
 **Why hidden**: The write-to-temp+atomic-rename contract prevents partial files from appearing as complete downloads. A regression that writes directly to the final path would leave corrupt files on error, visible to users but undetectable by a success-only test. The temp-file cleanup assertion is the key signal.
 
-**Status**: MUST-PASS. Pins BC-2.7.007: (1) write-to-temp+atomic-rename on success; (2) temp file cleaned on error (EC-2.7.007-4); (3) no tmp_* temp file remains after error.
+**Status**: MUST-PASS. Pins BC-2.7.007: (1) write-to-temp+atomic-rename on success; (2) temp file cleaned on error (EC-2.7.007-4); (3) no tmp_* temp file remains after error. P31-001 (error-path Expected exit code tightened to exact 1; BC-2.7.012 5xx row); P35-003 (Expected bullet 4 tightened to stderr-only channel assertion per BC-2.7.007 profile 3).
 
 **BC refs**: BC-2.7.007 (primary; two-step wire path: metadata GET then content GET), BC-2.7.007 EC-2.7.007-1 (metadata 404 → canonical not-found), BC-2.7.007 EC-2.7.007-4 (error mid-stream cleanup)
 
@@ -2243,7 +2244,7 @@ Call C (--replace-existing with zero match = idempotent):
 **Action C**: `jr issue attachment upload FOO-2 upload.txt --replace-existing`
 
 **Expected A (MUST-PASS)**:
-- Exit code = 0. `POST /attachments` called with `X-Atlassian-Token: no-check` header. stdout/stderr contains `upload.txt` and `30001`.
+- Exit code = 0. `POST /attachments` called with `X-Atlassian-Token: no-check` header. stdout contains `upload.txt` and `30001` (BC-3.9.001 profile 4: human echo to stdout; P35-003).
 
 **Expected B (MUST-PASS)**:
 - Exit code = 0.
@@ -2262,7 +2263,7 @@ Call C (--replace-existing with zero match = idempotent):
 
 **Why hidden**: The delete-then-upload ordering (B) is the core non-atomic contract of BC-3.9.017 — a regression that uploads before deleting, or skips the delete, would pass exit-code checks. The zero-match silent-idempotent path (C) would be invisible without a negative assertion on the annotation text. The `--yes` requirement on path (B) pins EC-3.9.017-9 (non-interactive match gate) and EC-3.9.017-10 (zero-match no gate).
 
-**Status**: MUST-PASS. Pins BC-3.9.001 (upload + X-Atlassian-Token header), BC-3.9.017 (delete-before-upload ordering + P15-002 gate), BC-3.9.018 (zero-match silent idempotent path).
+**Status**: MUST-PASS. Pins BC-3.9.001 (upload + X-Atlassian-Token header), BC-3.9.017 (delete-before-upload ordering + P15-002 gate), BC-3.9.018 (zero-match silent idempotent path). P35-003 (Expected A bullet 1 tightened to stdout-only channel assertion per BC-3.9.001 profile 4).
 
 **BC refs**: BC-3.9.001 (primary upload), BC-3.9.017 (--replace-existing multi-step), BC-3.9.018 (zero-match path)
 

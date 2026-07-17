@@ -633,7 +633,7 @@ The duration argument uses the existing `src/duration.rs` parser conventions (e.
 
 **`--dry-run` on bulk delete (BC-3.9.010 repaired):**
 
-`--dry-run` with `--older-than` (or when applied to the future `--all` batch-delete variant if that is added): list affected IDs without issuing any DELETE requests. Output: table of `[id, filename, size, created]` rows to stdout; `--output json` shape: `{"dryRun": true, "ids": [str], "attachments": [{id, filename}]}`. No HTTP mutations. Applies only to multi-attachment paths (`--older-than`, future `--all`); `--dry-run` on a single-ID delete is a no-op with a stderr hint ("--dry-run has no effect on single-ID delete; omit the flag").
+`--dry-run` with `--older-than` (or when applied to the future `--all` batch-delete variant if that is added): list affected IDs without issuing any DELETE requests. Output: table of `[id, filename, size, created]` rows to stdout; `--output json` shape: `{"dryRun": true, "ids": [str], "attachments": [{id, filename}]}` **(key ordering in F1 illustrations is illustrative; canonical order is BTreeMap-alphabetical per P19-001 — authoritative shapes in BC-3.9.019/BC-3.9.020; P35-002)**. No HTTP mutations. Applies only to multi-attachment paths (`--older-than`, future `--all`); `--dry-run` on a single-ID delete is a no-op with a stderr hint ("--dry-run has no effect on single-ID delete; omit the flag").
 
 ### R3.3 Delete confirmation gate (ADV-576-P1-004)
 
@@ -667,8 +667,8 @@ The following new BCs are required beyond the ~27 from Rev 2. They extend Sectio
 | BC-3.9.016 | `attachment delete --older-than` always requires `--yes` (no interactive prompt for bulk); missing `--yes` → exit 64; `--dry-run` previews without mutating |
 | BC-3.9.017 | `attachment upload --replace-existing` same-filename lookup: delete ALL entries with matching filename before uploading (OQ-6 ruling: last-write-wins); non-atomic race with concurrent uploads documented in spec (JRACLOUD-96384/-78388); BC MUST NOT assert atomicity |
 | BC-3.9.018 | `attachment upload --replace-existing` when no same-filename attachment exists: upload proceeds without error (idempotent flag) |
-| BC-3.9.019 | `attachment delete --older-than <duration>` duration parsing via `src/duration.rs` conventions; `created` ISO 8601 compared client-side via `chrono`; `--output json` bulk-delete shape: `{"deleted": true, "count": N, "ids": [str]}` |
-| BC-3.9.020 | `attachment delete --dry-run` (with `--older-than` or future `--all` path): lists affected IDs without mutation; `--output json` shape: `{"dryRun": true, "ids": [str], "attachments": [{id, filename}]}`; `--dry-run` on single-ID delete → stderr hint + exit 0 (no-op) |
+| BC-3.9.019 | `attachment delete --older-than <duration>` duration parsing via `src/duration.rs` conventions; `created` ISO 8601 compared client-side via `chrono`; `--output json` bulk-delete shape: `{"deleted": true, "count": N, "ids": [str]}` (illustrative key order; see R3.2 P35-002 note) |
+| BC-3.9.020 | `attachment delete --dry-run` (with `--older-than` or future `--all` path): lists affected IDs without mutation; `--output json` shape: `{"dryRun": true, "ids": [str], "attachments": [{id, filename}]}` (illustrative key order; see R3.2 P35-002 note); `--dry-run` on single-ID delete → stderr hint + exit 0 (no-op) |
 
 **+6 new BCs.** Revised Section 3.9 total: 20 BCs (14 from Rev 2 + 6 new).
 
@@ -752,7 +752,7 @@ BC-3.9.019 specifies a dedicated duration parser for `--older-than` with explici
 #### R3.9b: Single `--id` download pinned to metadata-GET-first (P3-004)
 
 The single-file download flow (`attachment download <KEY> --id <AID>`) is pinned to **metadata-GET-first**: call `get_attachment_metadata(client, aid)` (recorded in R3.7) to retrieve `filename`, `mimeType`, `size`, and `content` URL before streaming the file. This allows the handler to:
-- Derive the default output filename (`<sha1>_<sanitized-basename>`) without a separate list call
+- Derive the default output filename (`<sha1>_<sanitized-basename>`) without a separate list call **[PHASE-DOC-RETRO-ANNOTATION (P35-001): superseded: single-id download uses the BARE sanitized basename — no SHA-1 prefix; SHA-1 prefixing is batch-only per R3.10 / BC-2.7.010; P35-001.]**
 - Emit a useful progress/confirmation line to stderr before the download begins
 
 **No new function needed** — `get_attachment_metadata` from R3.7 is the sole addition. The S2 story plan must invoke `get_attachment_metadata` as the first step of `handle_attachment_download` when `--id` is supplied, then stream via `get_attachment_content`. The revised function call sequence for single `--id` download is: `get_attachment_metadata` → path construction + overwrite check → `get_attachment_content` (streaming write).

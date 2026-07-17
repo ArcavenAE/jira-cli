@@ -7,6 +7,38 @@ project: "jr (jira-cli)"
 
 Track all spec version changes. Most recent version first.
 
+## [1.3.75] - 2026-07-17
+
+### Type: PATCH
+
+### Summary
+
+Adversary pass 35 (P35) fix round — 1 LOW / 2 INFO findings. P35-001: PHASE-DOC-RETRO-ANNOTATION at impact-boundary R3.9b ~line 755 — stale SHA-1 prefix claim for single-id download annotated (single-id uses bare sanitized basename; SHA-1 prefix is batch-only per R3.10 / BC-2.7.010). P35-002: impact-boundary R3.2 (~636) illustrative dry-run JSON shape annotated with BTreeMap-alphabetical key-order caveat (P19-001); R3.5 BC-3.9.019/BC-3.9.020 rows given parenthetical cross-refs. P35-003: holdout H-NEW-ATTACHMENT-002 Expected bullet 4 tightened to stderr-only (BC-2.7.007 profile 3); holdout H-NEW-ATTACHMENT-004 Expected A bullet 1 tightened to stdout-only (BC-3.9.001 profile 4); Status lines updated with P35-003 citations.
+
+### Changed Requirements
+
+- `.factory/phase-f1-delta-analysis/impact-boundary-576.md` (MODIFIED): P35-001 — R3.9b PHASE-DOC-RETRO-ANNOTATION at SHA-1 single-id bullet. P35-002 — R3.2 key-order inline note; R3.5 BC-3.9.019/BC-3.9.020 cross-ref parentheticals.
+- `.factory/specs/prd/holdout-scenarios.md` (MODIFIED): P35-003 — H-NEW-ATTACHMENT-002 Expected bullet 4 stderr-only; H-NEW-ATTACHMENT-004 Expected A bullet 1 stdout-only; Status lines updated; frontmatter trace entry + version 1.5.5→1.5.6.
+- `.factory/phase-f2-spec-evolution/prd-delta-576.md` (MODIFIED): `spec_version_after` 1.3.74→1.3.75; P35 dispositions section appended.
+
+### Impact Assessment
+
+| Artifact | Change Type | Notes |
+|---|---|---|
+| impact-boundary-576.md | Modified | P35-001 R3.9b SHA-1 annotation; P35-002 R3.2 key-order note + R3.5 cross-refs |
+| holdout-scenarios.md | Modified | P35-003 H-NEW-ATTACHMENT-002/004 channel assertions tightened; Status lines updated; v1.5.6 |
+| prd-delta-576.md | Modified | spec_version_after 1.3.75; P35 dispositions appended |
+
+### Count Verification
+
+| Metric | Before | After | Delta |
+|---|---|---|---|
+| BC total | 657 | 657 | 0 |
+| Holdout total | 100 | 100 | 0 |
+| VP total | 35 | 35 | 0 |
+
+---
+
 ## [1.3.74] - 2026-07-17
 
 ### Type: PATCH

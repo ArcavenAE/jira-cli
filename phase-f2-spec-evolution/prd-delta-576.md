@@ -5,7 +5,7 @@ issues: "#576, #585"
 phase: F2
 authored: 2026-07-15
 spec_version_before: 1.3.42
-spec_version_after: 1.3.74
+spec_version_after: 1.3.75
 bc_count_before: 624
 bc_count_after: 657
 holdout_count_before: 88
@@ -629,3 +629,19 @@ Source: Adversary Pass 30. 1 MEDIUM / 2 LOW / 1 INFO finding. Spec version bump:
 **ECHO-BREAKER LIST B (holdout assertion changes): EMPTY.** No holdout BCs or assertions changed this round.
 
 **BC count at this round: 657 (unchanged). Holdout count: 100 (unchanged). VP count: 35 (unchanged). Spec version: 1.3.74. Both guards exit 0.**
+
+---
+
+## P35 Dispositions (adversary pass 35, 2026-07-17) — 1 LOW / 2 INFO
+
+| Finding | Severity | Artifacts | Status | Resolution |
+|---|---|---|---|---|
+| P35-001 (LOW) | LOW | impact-boundary-576.md | APPLIED | R3.9b (~line 755) bullet "Derive the default output filename (`<sha1>_<sanitized-basename>`) without a separate list call" annotated with PHASE-DOC-RETRO-ANNOTATION: "(superseded: single-id download uses the BARE sanitized basename — no SHA-1 prefix; SHA-1 prefixing is batch-only per R3.10 / BC-2.7.010; P35-001)". BCs not touched. |
+| P35-002 (INFO) | INFO | impact-boundary-576.md | APPLIED | R3.2 (~line 636) illustrative `--dry-run` JSON shape: inline note added after the backtick-quoted shape — "(key ordering in F1 illustrations is illustrative; canonical order is BTreeMap-alphabetical per P19-001 — authoritative shapes in BC-3.9.019/BC-3.9.020; P35-002)". R3.5 (~lines 670-671) BC-3.9.019 and BC-3.9.020 table rows: parenthetical cross-ref added to each JSON shape — "(illustrative key order; see R3.2 P35-002 note)". No BC body changes. |
+| P35-003 (INFO) | INFO | holdout-scenarios.md | APPLIED | H-NEW-ATTACHMENT-002 Expected bullet 4: "stdout or stderr contains a success message referencing `notes.txt`." tightened to "stderr contains a progress/completion message referencing `notes.txt` (BC-2.7.007 profile 3: nothing on stdout in human mode; all progress and hints go to stderr; P35-003).". H-NEW-ATTACHMENT-004 Expected A bullet 1: "stdout/stderr contains `upload.txt` and `30001`" tightened to "stdout contains `upload.txt` and `30001` (BC-3.9.001 profile 4: human echo to stdout; P35-003)". Status lines for both scenarios updated with P35-003 citations (plus retroactive P31-001 citation added to H-NEW-ATTACHMENT-002 Status, which was missing from that round). holdout-scenarios.md frontmatter: trace entry v1.5.6 added; version bumped 1.5.5→1.5.6. |
+
+**ECHO-BREAKER LIST A (spec changes):** impact-boundary-576.md: R3.9b PHASE-DOC-RETRO-ANNOTATION added (P35-001); R3.2 BTreeMap key-order inline note added (P35-002); R3.5 BC-3.9.019/BC-3.9.020 rows cross-ref parentheticals added (P35-002). holdout-scenarios.md: H-NEW-ATTACHMENT-002 Expected bullet 4 tightened to stderr-only (P35-003); H-NEW-ATTACHMENT-004 Expected A bullet 1 tightened to stdout-only (P35-003); H-NEW-ATTACHMENT-002 Status updated with P31-001 + P35-003 citations; H-NEW-ATTACHMENT-004 Status updated with P35-003 citation; frontmatter trace entry v1.5.6 added; version bumped 1.5.5→1.5.6. prd-delta-576.md: spec_version_after 1.3.74→1.3.75; P35 dispositions appended. spec-changelog.md: [1.3.75] entry added. BC-INDEX.md: NO row changes (no BC bodies changed this round; impact-boundary and holdout-scenarios changes are documentation-only).
+
+**ECHO-BREAKER LIST B (holdout assertion changes):** H-NEW-ATTACHMENT-002 Expected bullet 4: "stdout or stderr contains a success message referencing `notes.txt`." → "stderr contains a progress/completion message referencing `notes.txt` (BC-2.7.007 profile 3: nothing on stdout in human mode; all progress and hints go to stderr; P35-003)." H-NEW-ATTACHMENT-004 Expected A bullet 1: "Exit code = 0. `POST /attachments` called with `X-Atlassian-Token: no-check` header. stdout/stderr contains `upload.txt` and `30001`." → "Exit code = 0. `POST /attachments` called with `X-Atlassian-Token: no-check` header. stdout contains `upload.txt` and `30001` (BC-3.9.001 profile 4: human echo to stdout; P35-003)."
+
+**BC count at this round: 657 (unchanged). Holdout count: 100 (unchanged). VP count: 35 (unchanged). Spec version: 1.3.75. Both guards exit 0.**
