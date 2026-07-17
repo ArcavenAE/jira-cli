@@ -5663,3 +5663,47 @@ Displaced to make room for SOH-ATTACHMENTS-1 F2 GATE APPROVED step row per keep-
 - RESUME PLAN: NEXT STEP updated to await security-review-576-v2 verdict
 
 **Files committed:** `cycles/cycle-001/burst-log.md`, `STATE.md`.
+
+---
+
+### Archived Phase Progress row (session-wrap burst)
+
+Displaced to make room for SESSION WRAP (2026-07-17) Phase Progress row per keep-5 rule.
+
+| Phase | Status | Completed | Gate | Notes |
+|-------|--------|-----------|------|-------|
+| **SOH-ATTACHMENTS-1 F2 ADVERSARY PASS-38 CLEAN (2026-07-17, fresh context, blind, v1.3.77; CLEAN — FIRST CLEAN PASS of the SOH-ATTACHMENTS-1 F2 loop (38 passes); zero findings above INFO; P38-I1 (I) cosmetic redirect wording parity between BC-2.7.002 and BC-2.7.007 (descriptive of Jira server behavior; no contract impact) CARRIED per DEC-181 precedent (INFO cosmetics carried; no artifact churn mid-window); adversary independently recomputed all counts (guards exit 0), re-verified every zero-request-vs-mount pairing, all gate/guard/EOF branches, full 404/403/413 taxonomy, JSON shape table, CWE-22 pipeline, ADR-0017 alignment, BC-X.8.010 reuse design, all F1/F2 divergences carry retro-annotations — "the package is highly converged." NO fix round; spec v1.3.77 UNCHANGED; BC-INDEX v6.33 UNCHANGED; counts 657/100/35 UNCHANGED; STRICT streak 1/3 (DEC-183). trajectory-tail →1→1→1→0(CLEAN). Pass 39 next (window 2/3; if findings ≥LOW the window resets to 0/3). Carried INFO ledger: +P38-I1.** | **ADVERSARY PASS-38 CLEAN** | **2026-07-17** | **Adversary pass 39 next (window 2/3).** | BC 657; holdouts 100; VP 35; spec v1.3.77; BC-INDEX v6.33. |
+
+### Archived Current Phase Steps row (session-wrap burst)
+
+Displaced to make room for SESSION WRAP (2026-07-17) step row per keep-5 rule.
+
+| Step | Agent | Status | Output |
+|------|-------|--------|--------|
+| **SOH-ATTACHMENTS-1 F2 ADVERSARY PASS-38 CLEAN (2026-07-17): CLEAN — FIRST CLEAN PASS of the SOH-ATTACHMENTS-1 F2 loop (38 passes); zero findings above INFO; P38-I1 (I) cosmetic redirect wording parity BC-2.7.002/BC-2.7.007 CARRIED per DEC-181 (INFO cosmetics; no artifact churn mid-window); adversary independently recomputed all counts (guards exit 0) + re-verified zero-request/mount pairings + gate/guard/EOF branches + 404/403/413 taxonomy + JSON shape table + CWE-22 pipeline + ADR-0017 + BC-X.8.010 reuse design + F1/F2 retro-annotations — "highly converged"; NO fix round; spec v1.3.77/BC-INDEX v6.33/counts 657/100/35 all UNCHANGED; STRICT streak 1/3 (DEC-183). trajectory-tail →1→1→1→0(CLEAN). Pass 39 next (window 2/3).** | adversary + state-manager | COMPLETE | BC 657; holdouts 100; VP 35; spec v1.3.77; BC-INDEX v6.33. |
+
+---
+
+## SOH-ATTACHMENTS-1 SESSION WRAP — FACTORY PAUSED (2026-07-17)
+
+**What happened:** Human /wrap immediately after F2 GATE APPROVED (DEC-184). During the same session, the security re-review of v1.3.79 completed (security-review-576-v2.md). Verdict: SPEC-CHANGES-REQUIRED. Pipeline PAUSED pending security fix round + re-verify before F3 dispatch.
+
+**Security findings (security-review-576-v2.md, SPEC-CHANGES-REQUIRED):**
+- SEC-576-011 (MEDIUM, CWE-116 terminal injection): server-supplied filenames echoed to TTY prompts/output unsanitized; display-sanitization clause required. **Blocks S4.**
+- SEC-576-009 (LOW, `?redirect=false` prohibition): restriction lives only in Trace field → must be promoted to BC-2.7.007 step-2 body clause. **Blocks S2.**
+- SEC-576-008 (INFO): batch degenerate-id trust assumption → clarifying note recommended.
+- SEC-576-010 (INFO): single-id overwrite-refuse needs dedicated EC-2.7.007-12 before S2.
+- All prior SEC-576-001..007: VERIFIED RESOLVED — no regression.
+
+**F2 gate approval (DEC-184) STANDS** — security findings are additive hardening within the approved package.
+
+**Cross-cutting concern:** SEC-576-011 display-sanitization (CWE-116) is a NEW display-channel counterpart to the CWE-22 disk pipeline — F3 story-writers must allocate it (likely S2 shared helper, earliest display consumer).
+
+**STATE.md updates:**
+- frontmatter `pipeline: ACTIVE` → `pipeline: PAUSED`; `current_step` updated to SESSION WRAP + security verdict
+- Phase Progress: ADVERSARY PASS-38 CLEAN archived → SESSION WRAP row added
+- Current Phase Steps: ADVERSARY PASS-38 CLEAN step archived → SESSION WRAP step added
+- Session Resume Checkpoint: archived to session-checkpoints.md; new checkpoint with actual security verdict (SPEC-CHANGES-REQUIRED), ON RESUME instructions (security fix round → re-verify → F3), and SEC-576-011 cross-cutting display-sanitization note
+- RESUME PLAN: comment + Spec version v1.3.77→v1.3.79 + Step 3 updated to cold-start form (security fix round → re-verify → on APPROVE F3)
+
+**Files committed:** `STATE.md`, `cycles/cycle-001/burst-log.md`, `cycles/cycle-001/session-checkpoints.md`.

@@ -1495,3 +1495,21 @@ STRICT convergence. Counters: BC 612, Holdouts 83, Stories 102. develop @ 0d8a8a
 | **Standing rules** | User merges ALL PRs on GitHub personally (DEC-173); every PR gets fresh-eyes pr-reviewer pre-merge with POSTED evidence; COMMENTED = approve-equivalent (same-account); implementers hard-forbidden from push/PR/improvise (STOP-and-report). DEC-128 in force. |
 | **Pending human decisions** | Merge PR #625 (docs/577-ej-probe-closeout; CI 14/14 green; HELD); merge #591 (MERGE-READY); #574 — approve held Actions run + contributor rebase; #598/#599 eligible 2026-07-16; #612 eligible 2026-07-20; #624 eligible 2026-07-22. FOUR orchestrator pattern-extension rulings for human ratification at F2 gate: (1) multi-AID delete → --yes bulk rule (ADV-576-P2-001; encoded in BC-3.9.016 + impact-boundary R3.8); (2) no-destructive-call-before-gate invariant (ADV-576-P2-003; encoded in BC-3.9.017 step 2 + impact-boundary R3.8b); (3) P4-001 bare-basename ruling (research-backed, orchestrator-adopted) — confirm at F2 gate; (4) R3.11 EOF→130 alignment (P5-001; supersedes the P2-era direction — EOF is exit 130, not cancel-exit-0). |
 | **Resume command** | /vsdd-factory:next-step (or new issue intake / maintenance trigger). |
+
+---
+
+### Checkpoint archived: 2026-07-17 — F2 GATE APPROVED (DEC-184) @ v1.3.79; security re-review COMPLETE (SPEC-CHANGES-REQUIRED); F3 authorized but BLOCKED
+
+(Displaced by: SESSION WRAP 2026-07-17 — human /wrap immediately after F2 gate approval; security re-review verdict arrived same session)
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-07-17 (F2 GATE APPROVED DEC-184; security re-review v1.3.79 IN FLIGHT; F3 BLOCKED pending security-review-576-v2 verdict; spec v1.3.79; BC-INDEX v6.33; holdout frontmatter v1.5.8; trajectory-tail →1→0→0→0). |
+| **Position** | Phase 3 / Feature Mode SOH-ATTACHMENTS-1 (issues #576+#585, DEC-179/DEC-180/DEC-181/DEC-182/DEC-183/DEC-184). **F2 GATE APPROVED (DEC-184, 2026-07-17)**. Security re-review v1.3.79 IN FLIGHT (phase-f2-spec-evolution/security-review-576-v2.md); F3 BLOCKED pending verdict. F3 authorized (5 stories S1-S5, STRICT, 1 wave; depends_on S3→S1, S5→S3). Spec v1.3.79; 657 BCs / 100 holdouts / 35 VP; BC-INDEX v6.33; holdout frontmatter v1.5.8. trajectory-tail →1→0→0→0. develop @ 56d5126 (v0.6.0-dev.10). |
+| **Convergence counter** | p1..p40 findings: 22,21,18,16,10,5,3,5,3,3,2,2,3,9,7,5,5,5,4,6,6,3,3,2,2,3,3,2,1,3,2,1,1,5,1,1,1,0,0,0 (40 passes, 37 fix rounds); **F2 STRICT CONVERGED** (window p38/p39/p40 CLEAN×3). F2 loop CLOSED AT GATE (DEC-184). |
+| **In flight** | Security re-review v1.3.79 IN FLIGHT (security-reviewer dispatched; report: phase-f2-spec-evolution/security-review-576-v2.md). F3 BLOCKED pending verdict. On APPROVE/APPROVE-WITH-NOTES: dispatch F3 story decomposition (5 stories S1-S5, STRICT). On SPEC-CHANGES-REQUIRED: fix round + re-verify. |
+| **Pending human decisions (F2 gate docket)** | **NONE — F2 GATE APPROVED (DEC-184)**. All four DEC-184 rulings recorded. Next human decision: security-review-576-v2 verdict (APPROVE unblocks F3; SPEC-CHANGES-REQUIRED triggers fix round). |
+| **PR queue (human-owned)** | Merge #625 (EJ probe docs, CI green); merge #591 (soak cleared); #574 awaiting contributor rebase + human Actions-run approval; soak calendar #598/#599 eligible 2026-07-16, #612 2026-07-20, #624 2026-07-22. DO NOT close #429. |
+| **Notes** | Main-repo untracked `.claude/pr-reviews/` + `.claude/spec-config.json` are session-local, deliberately untracked. Backup `*.backup-*` files in `phase-f2-spec-evolution/` deliberately untracked. Worktree `.worktrees/docs-577-ej-probe` (ea0689b, PR #625) intact pending human merge — cleanup after merge. Standing rules unchanged (DEC-128/173; user merges all PRs). **F2 GATE APPROVED (DEC-184)** — full security re-review dispatched before F3; PRE-F4-SECURITY-SPOTCHECK-576 SUPERSEDED. F3 BLOCKED pending security-review-576-v2 verdict. Six post-DEC-182 tail rulings ratified. trajectory-tail →1→0→0→0. |
+| **Standing rules** | User merges ALL PRs on GitHub personally (DEC-173); every PR gets fresh-eyes pr-reviewer pre-merge with POSTED evidence; COMMENTED = approve-equivalent (same-account); implementers hard-forbidden from push/PR/improvise (STOP-and-report). DEC-128 in force. |
+| **Resume command** | /vsdd-factory:next-step |
