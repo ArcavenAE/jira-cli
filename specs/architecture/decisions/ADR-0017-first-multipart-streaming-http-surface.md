@@ -111,7 +111,7 @@ additional TLS backends or change the `rustls` selection made in ADR-0003.
 **X-Atlassian-Token invariant (upload-path):** Jira's XSRF protection requires
 `X-Atlassian-Token: no-check` on attachment upload endpoints. This is a per-request header
 requirement, not a client-level configuration; it will be set at the call site in
-`src/api/jira/issues.rs` (or a new `attachments.rs`) during Story 3 delivery. It is noted
+`src/api/jira/attachments.rs` during Story 3 delivery (call-site corrected per CONS-576-002, P30-003). It is noted
 here because it is the primary non-obvious invariant of the multipart upload path and must not
 be omitted.
 

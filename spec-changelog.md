@@ -7,6 +7,42 @@ project: "jr (jira-cli)"
 
 Track all spec version changes. Most recent version first.
 
+## [1.3.70] - 2026-07-17
+
+### Type: PATCH
+
+### Summary
+
+Adversary pass 30 (P30) fix round — 1 MEDIUM / 2 LOW / 1 INFO finding. MEDIUM (P30-001): SEC-576-006 self-heal was not wired into the upload BCs — BC-3.9.003 step 1 now references the BC-X.8.010 invalidate+retry-once mechanism for step-1 404/403 before BC-3.9.012 fallthrough; BC-3.9.012 gains a carve-out note with post-retry exit codes per BC-X.8.010 step 4. LOW (P30-002): BC-3.9.019 pre-deletion summary classified as HINT (JSON-suppressed per EC-2.7.008-6; §3.9 STDERR ENUMERATION run — no other unclassified emissions found). LOW (P30-003): ADR-0017 §Rationale stale call-site `src/api/jira/issues.rs` corrected to `src/api/jira/attachments.rs` per CONS-576-002. INFO (P30-I01): BC-3.9.016 CLI flags `<AID>...` annotated as positional 1+ when used, optional under required selector group, bare `delete` → exit 2.
+
+### Changed Requirements
+
+- `.factory/specs/prd/bc-3-issue-write.md` (MODIFIED): P30-001 — BC-3.9.003 step 1 self-heal sentence added; BC-3.9.003 Trace updated; BC-3.9.012 step-1 carve-out note added; BC-3.9.012 Trace updated; P30-002 — BC-3.9.019 pre-deletion summary HINT classification added; BC-3.9.019 Trace updated; P30-I01 — BC-3.9.016 CLI flags `<AID>...` annotated; BC-3.9.016 Trace updated; frontmatter `last_updated` bumped to 2026-07-17; trace entry v1.3.70 added; `_Last updated` line prepended.
+- `.factory/specs/prd/BC-INDEX.md` (MODIFIED): BC-3.9.003, BC-3.9.012, BC-3.9.016, BC-3.9.019 rows synced with P30-001/P30-002/P30-I01 changes.
+- `.factory/specs/architecture/decisions/ADR-0017-first-multipart-streaming-http-surface.md` (MODIFIED): P30-003 — §Rationale call-site corrected to `src/api/jira/attachments.rs`; inline annotation added per CONS-576-002.
+- `.factory/phase-f2-spec-evolution/prd-delta-576.md` (MODIFIED): `spec_version_after` 1.3.69→1.3.70; P30 dispositions section appended including §3.9 STDERR ENUMERATION table.
+
+### Impact Assessment
+
+| Artifact | Change Type | Notes |
+|---|---|---|
+| bc-3-issue-write.md | Modified | P30-001 BC-3.9.003/3.9.012 self-heal wiring; P30-002 BC-3.9.019 HINT classification; P30-I01 BC-3.9.016 CLI flags annotation |
+| BC-INDEX.md | Modified | BC-3.9.003/012/016/019 row sync |
+| ADR-0017 | Modified | Call-site corrected per CONS-576-002 (P30-003) |
+| prd-delta-576.md | Modified | spec_version_after 1.3.70; P30 dispositions + §3.9 STDERR enumeration table |
+
+| Dimension | Value |
+|---|---|
+| BC count | 657 (unchanged) |
+| Holdout count | 100 (unchanged) |
+| VP count | 35 (unchanged) |
+| New BCs | 0 |
+| New VPs | 0 |
+| New Holdouts | 0 |
+| Spec version | 1.3.69→1.3.70 |
+
+---
+
 ## [1.3.69] - 2026-07-17
 
 ### Type: PATCH

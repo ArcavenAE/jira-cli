@@ -6329,3 +6329,53 @@ The same obligation applies to bc-2 (analogously). The pattern that generates th
 
 _Trigger: 3rd occurrence (r37 INFO-NEW-8 + r38 INFO-NEW-9); checklist-standing mitigation per 3rd-occurrence rule._
 _Tagged: [process-gap] [frontmatter-trace] [bc-3] [bc-2] [per-round-checklist] [3rd-occurrence] [checklist-standing] [codified]_
+
+
+---
+
+## SOH-ATTACHMENTS-1 F2 Adversary Pass 30 — Process Lessons (2026-07-17)
+
+### [codified] CROSS-SHARD-INVARIANT-WIRING: A MUST defined in one BC-surface shard that governs behavior in another shard must be cross-referenced FROM the consuming shard's primary BCs
+
+**Observation (P30-001, 2026-07-17):** Adversary pass 30 found a 29-pass-latent wiring gap: SEC-576-006 self-heal ("on `attachTemporaryFile` 403/404, abort the upload phase and delete the resource") was correctly stated in BC-X.8.010 (the security shard), but was never cross-referenced from BC-3.9.003 step 1 or BC-3.9.012 taxonomy (the primary behavioral path for upload in the §3.9 issue-attachment surface). An implementer reading only §3.9 BCs would have no signal to apply the SEC-576-006 self-heal on 403/404. Two conformant readings of step-1 (abort + self-heal vs. continue) diverged and only one was actually required. The gap was latent across 29 adversary passes because the X.8 shard was reviewed in isolation from the §3.9 paths.
+
+**Root cause:** SEC-576-006 was authored in BC-X.8.010 (security BCs) with a MUST that effectively constrained behavior in BC-3.9.003 step 1 (the upload path). The §3.9 BCs were authored as if X.8 invariants were globally visible — but an implementer following §3.9 alone cannot reliably discover cross-shard MUSTs without an explicit pointer. The wiring was implicit (assumed global reachability) rather than explicit (cross-reference FROM the consuming shard).
+
+**Principle (CROSS-SHARD-INVARIANT-WIRING):** A MUST defined in one BC-surface shard (e.g., X.8 security) that MODIFIES behavior specified in another shard (e.g., §3.9 issue-write) MUST be cross-referenced FROM the consuming path's primary BCs. Specifically:
+1. The consuming-path BC (e.g., BC-3.9.003) must include either: (a) a direct inline note citing the invariant by ID (e.g., "per SEC-576-006: on 403/404, abort upload and self-heal the resource"), or (b) a Trace pointer to the governing security/invariant BC.
+2. The consuming-path taxonomy BC (e.g., BC-3.9.012) must enumerate the invariant's behavioral outcome in the relevant classification row.
+3. The governing BC (e.g., BC-X.8.010) may retain the MUST as the authoritative definition; the cross-reference is supplementary, not duplicative.
+
+**Reachability principle:** Reachability applies to invariants, not just holdouts and fixtures. The question "can an implementer reading only §3.9 derive this behavior?" must be asked for every cross-shard MUST. If the answer is no, the cross-reference is missing.
+
+**Detection pattern:** A cross-shard wiring gap is most likely when: (a) a security or invariant shard (X.8, X.9) contains a MUST with a specific step-level behavioral outcome (abort, self-heal, suppress), AND (b) the primary behavioral path shard does not cite that MUST. Sweep: for every MUST in X.8/X.9 that names a specific step or output state in another shard, verify the consuming shard has an explicit cross-reference or inline note.
+
+**Remedy (P30-001):** BC-3.9.003 step 1 received an inline note citing SEC-576-006 self-heal on 403/404. BC-3.9.012 taxonomy received a row entry classifying the 403/404 outcome as ERROR (unconditional) with a Trace to BC-X.8.010/SEC-576-006. The two conformant readings were reconciled — step-1 path is now unambiguous.
+
+**Latency note:** This gap survived 29 adversary passes. The probable reason: passes prior to P25 focused on feature completeness (step enumeration, happy path, edge cases); passes P25-P29 focused on output-channel taxonomy and fixture coherence. Neither lens systematically asked "does every MUST in X.8 have a consuming-shard pointer in §3.9?" This lens — the cross-shard invariant reachability sweep — is now the remedy.
+
+_Trigger: P30-001 (2026-07-17); 29-pass-latent; remedy: BC-3.9.003 step-1 note + BC-3.9.012 taxonomy row wired to SEC-576-006._
+_Tagged: [process-gap] [cross-shard] [invariant-wiring] [reachability] [security-invariant] [bc-3-9] [bc-x-8] [latent-29-pass] [p30] [codified]_
+
+
+---
+
+### [codified] TAXONOMY-CLOSURE-SCOPE: Per-surface output-channel enumerations must cover the FULL delta perimeter, not only the section that produced the triggering finding
+
+**Observation (P30-002, 2026-07-17):** Adversary pass 30 found that the pre-deletion summary line in §3.9 was unclassified in the output-channel taxonomy (HINT vs. ERROR). The P30-002 finding was classified LOW because the taxonomy for §2.7 (attachment list) had already achieved full closure at r35 (all 6 clauses enumerated), but §3.9 (attachment write) had a partial taxonomy: 23 of 24 clauses were classified in the existing record, with the pre-deletion summary line as an unclassified straggler. The closure claim in the spec ("taxonomy NOW CLOSED as fully enumerated set") was accurate for §2.7 but had been tacitly assumed to cover §3.9 as well.
+
+**Root cause:** When taxonomy enumeration work was triggered by a finding in §2.7 (P25-001 / INFO-NEW-6 at r35), the enumeration and closure claim covered the triggering section (§2.7). The §3.9 surface was not enumerated in the same burst because the finding originated in §2.7. The closure claim propagated as if it were global, but it was surface-scoped to §2.7.
+
+**Principle (TAXONOMY-CLOSURE-SCOPE):** Per-surface output-channel enumerations (HINT-VS-ERROR-CHANNEL-TAXONOMY rule) must cover the FULL DELTA PERIMETER of the feature bundle, not only the section that happened to produce the triggering finding. Specifically:
+1. When a taxonomy-closure claim is made for section X (e.g., §2.7), a sibling enumeration MUST be performed for all other sections in the same feature bundle (e.g., §3.9) in the same burst.
+2. The closure claim in spec/docs must be scoped: "§2.7 taxonomy NOW CLOSED" is accurate; "taxonomy closed" (unqualified) is not, unless ALL sections in the feature bundle have been enumerated.
+3. The per-round PO checklist must include: "After any taxonomy-closure claim: enumerate EVERY other output surface in the same feature bundle and verify or record their classification status."
+
+**Scope definition:** A "feature bundle" is the set of BCs grouped under a single feature PRD (e.g., SOH-ATTACHMENTS-1 covers §2.7 attachment list AND §3.9 attachment write). A taxonomy-closure claim applies to the specific section enumerated, not the bundle as a whole, unless all sections in the bundle have been explicitly enumerated.
+
+**Remedy (P30-002):** FULL §3.9 STDERR ENUMERATION (24 entries) was recorded in prd-delta-576.md: errors unconditional (emitted in all modes) / hints with per-clause JSON-suppression rationale / gate-prompts classified interactive-only. The pre-deletion summary line was classified HINT/JSON-suppressed (matching §2.7 "downloaded N of M" ruling). The closure claim for §3.9 is now independently verified.
+
+**Relationship to HINT-VS-ERROR-CHANNEL-TAXONOMY:** HINT-VS-ERROR-CHANNEL-TAXONOMY (P25-001) defines the classification rule. TAXONOMY-CLOSURE-SCOPE defines the perimeter rule: how much must be enumerated before a "closed" claim is valid. The two rules are complementary: (1) every clause needs a classification (HINT-VS-ERROR); (2) every surface in the bundle needs an enumeration (TAXONOMY-CLOSURE-SCOPE).
+
+_Trigger: P30-002 (2026-07-17); §3.9 pre-deletion summary straggler after §2.7 closed at r35; full §3.9 enumeration (24 entries) recorded same burst._
+_Tagged: [process-gap] [taxonomy-closure] [output-channel] [enumeration-scope] [feature-bundle-perimeter] [hint-vs-error] [p30] [codified]_

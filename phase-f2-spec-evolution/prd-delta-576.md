@@ -5,7 +5,7 @@ issues: "#576, #585"
 phase: F2
 authored: 2026-07-15
 spec_version_before: 1.3.42
-spec_version_after: 1.3.69
+spec_version_after: 1.3.70
 bc_count_before: 624
 bc_count_after: 657
 holdout_count_before: 88
@@ -533,3 +533,45 @@ Source: Adversary Pass 29. 1 LOW finding. Spec version bump: 1.3.68 → 1.3.69. 
 | P29-001 (LOW) | LOW | prd-delta-576.md | APPLIED | Stale duplicate closing-summary line deleted from the P28 dispositions section. The line "**BC count at this round: 657 (unchanged). Holdout count: 100 (unchanged). VP count: 35 (unchanged). Spec version: 1.3.67. Both guards exit 0.**" was a leftover from the P27 footer that was not removed when the P28 section was appended; the correct P28 line ("Spec version: 1.3.68") was already present immediately above it. Deleted line is quoted verbatim in the confirmation message. No BC bodies touched; no bc-2/bc-3 frontmatter trace entries owed this round. |
 
 **BC count at this round: 657 (unchanged). Holdout count: 100 (unchanged). VP count: 35 (unchanged). Spec version: 1.3.69. Both guards exit 0.**
+
+## Adversary Pass 30 Fix Round Finding Dispositions
+
+Source: Adversary Pass 30. 1 MEDIUM / 2 LOW / 1 INFO finding. Spec version bump: 1.3.69 → 1.3.70. No new BCs. Holdouts: 100 (unchanged). VPs: 35 (unchanged).
+
+| Finding ID | Severity | File(s) Touched | Status | Change |
+|------------|----------|----------------|--------|--------|
+| P30-001 (MEDIUM) | MEDIUM | bc-3-issue-write.md, BC-INDEX.md | APPLIED | BC-3.9.003 step 1: self-heal cross-reference sentence added — a step-1 404/403 on `POST .../attachTemporaryFile` FIRST triggers the BC-X.8.010 SEC-576-006 self-heal (invalidate `project_meta.json` cache for `(profile, projectKey)` → re-call `get_or_fetch_project_meta` once → re-attempt step 1); only post-retry failure falls through to BC-3.9.012 (post-retry 404 → exit 64; post-retry 403 → exit 1 per BC-X.8.010 step 4); retry is single-attempt. BC-3.9.012: step-1 attachTemporaryFile 403/404 carve-out added before EC-3.9.012-1 — post-retry exit codes quoted verbatim from BC-X.8.010 step 4 (404→exit 64 `"Service desk for <projectKey> not found after refresh."`; 403→exit 1 permission denied); all other codes map on first occurrence without self-heal. BC-3.9.006 "stale-sdId cache is not a root cause here" scoping note verified — it refers to step 2 endpoint keying off `issueKey` not `serviceDeskId`; no contradiction; unchanged. Holdout grep for `attachTemporaryFile` + step-1 404/403: zero scenarios found; no holdout additions this round (S5 live-capture-adjacent coverage noted). BC-3.9.003 and BC-3.9.012 Traces updated. BC-INDEX rows BC-3.9.003 and BC-3.9.012 synced. |
+| P30-002 (LOW) | LOW | bc-3-issue-write.md, BC-INDEX.md | APPLIED | BC-3.9.019 pre-deletion summary `"Deleting N attachment(s) older than <duration> from <KEY>."` classified as **HINT — suppressed in `--output json` mode** (count carried in JSON `"count"` field; per EC-2.7.008-6 hint-vs-error principle; "Human mode only." annotation added). BC-3.9.019 Trace updated. BC-INDEX BC-3.9.019 row synced. §3.9 STDERR ENUMERATION (full round) — see table below. No additional unclassified emissions found beyond BC-3.9.019 pre-deletion summary. |
+| P30-003 (LOW) | LOW | ADR-0017 | APPLIED | §Rationale ~line 114 stale call-site corrected: `src/api/jira/issues.rs` (or a new `attachments.rs`) → `src/api/jira/attachments.rs` (per CONS-576-002 sweep — BC-3.9.x Source fields and impact-boundary §1.1 name `src/api/jira/attachments.rs`; the parenthetical `(or a new attachments.rs)` dropped as superseded). Inline annotation added: "(call-site corrected per CONS-576-002, P30-003)". ADR is append-annotated; no structural ADR content changed. |
+| P30-I01 (INFO) | INFO | bc-3-issue-write.md, BC-INDEX.md | APPLIED | BC-3.9.016 CLI flags line: `<AID>...` positional shorthand annotated — "(positional, 1+ when used — optional under the required selector group; bare `delete` → exit 2 per the clap section; mutually exclusive with --issue/--older-than form)". BC-3.9.016 Trace updated. BC-INDEX BC-3.9.016 row synced. |
+
+**§3.9 STDERR ENUMERATION TABLE (P30-002 round)**
+
+| BC | Emission | Category | JSON-mode behavior | Notes |
+|---|---|---|---|---|
+| BC-3.9.001 | 413: `"Attachment too large: the file exceeds the server-configured limit."` | ERROR | emitted | unconditional |
+| BC-3.9.001 | 400: Jira error body | ERROR | emitted | unconditional |
+| BC-3.9.003/014 | Confirmation gate prompts (3 consumer variants) | GATE-PROMPT | not applicable | interactive-only by construction; non-interactive path exits 64 instead |
+| BC-3.9.003/014 | Non-interactive exit-64 hints (3 variants) | ERROR | emitted | unconditional (exit 64) |
+| BC-3.9.003/014 | `"Upload cancelled."` (interactive cancel branch (b)) | HINT | suppressed | JSON has `{"cancelled":true,"uploaded":false}`; human mode only |
+| BC-3.9.005 | `"--public is only supported on Jira Service Management (JSM) issues."` | ERROR | emitted | unconditional |
+| BC-3.9.006 | `"Temporary attachment IDs may have expired. Try the upload again."` (step-2 failures) | ERROR | emitted | fires on non-zero exits; analogous to per-file failure warnings (EC-2.7.008-6 pattern) |
+| BC-3.9.008/013 | AID validation: `"invalid attachment id: '<VALUE>' (must be numeric)"` | ERROR | emitted | unconditional |
+| BC-3.9.008 | 404: `"Attachment <AID> not found or not accessible."` + Jira body | ERROR | emitted | unconditional |
+| BC-3.9.008/013 | 403, 401, 5xx, network errors | ERROR | emitted | unconditional |
+| BC-3.9.012 | All rows in error-taxonomy table | ERROR | emitted | unconditional (see carve-out for step-1 404/403 added P30-001) |
+| BC-3.9.015 | Gate prompt: `"Delete attachment <filename> (<AID>)? [y/N] "` | GATE-PROMPT | not applicable | interactive-only by construction |
+| BC-3.9.015 | Non-interactive exit-64: `"Use --yes to confirm deletion without a prompt."` | ERROR | emitted | unconditional (exit 64) |
+| BC-3.9.015 | `"Deletion cancelled."` (interactive cancel) | HINT | suppressed | JSON has `{"cancelled":true,"deleted":false}`; human mode only |
+| BC-3.9.015 | Metadata-fetch 404/403/401/5xx/network | ERROR | emitted | unconditional (all fire before gate) |
+| BC-3.9.016 | `"--older-than requires --yes to confirm bulk deletion."` | ERROR | emitted | unconditional (exit 64) |
+| BC-3.9.016 | `"--yes is required to delete multiple attachments without a confirmation prompt."` | ERROR | emitted | unconditional (exit 64) |
+| BC-3.9.017 | Gate prompts (3 consumer variants) | GATE-PROMPT | not applicable | interactive-only by construction |
+| BC-3.9.017 | Non-interactive exit-64 hints (2 sub-variants) | ERROR | emitted | unconditional (exit 64) |
+| BC-3.9.017 | `"Upload cancelled."` (cancel) | HINT | suppressed | JSON has `{"cancelled":true,"uploaded":false}`; human mode only |
+| BC-3.9.019 | `"Deleting N attachment(s) older than <duration> from <KEY>."` | **HINT** | **suppressed** | **FIXED P30-002** — count in JSON `"count"` field; EC-2.7.008-6; human mode only |
+| BC-3.9.019 | `"invalid duration: '<VALUE>'. Use formats like 30m, 2h, 1d, 7d, 2w."` | ERROR | emitted | unconditional (exit 64) |
+| BC-3.9.019 | Malformed-created-timestamp skip warning | ERROR | emitted | fires per-item; operation continues; unconditional (analogous to per-file download warnings) |
+| BC-3.9.020 | `"--dry-run has no effect on single-ID delete; omit the flag."` | HINT | suppressed | explicitly stated: "NO stderr hint in JSON mode" |
+
+**BC count at this round: 657 (unchanged). Holdout count: 100 (unchanged). VP count: 35 (unchanged). Spec version: 1.3.70. Both guards exit 0.**
