@@ -5,7 +5,7 @@ issues: "#576, #585"
 phase: F2
 authored: 2026-07-15
 spec_version_before: 1.3.42
-spec_version_after: 1.3.61
+spec_version_after: 1.3.62
 bc_count_before: 624
 bc_count_after: 657
 holdout_count_before: 88
@@ -405,3 +405,18 @@ Source: Adversary Pass 21. 1 HIGH / 1 MEDIUM / 3 LOW / 1 INFO findings. Spec ver
 | P21-006 (INFO) | INFO | bc-2-issue-read.md, BC-INDEX.md | APPLIED | BC-2.7.012 KEY-404 row: annotation "(batch paths only — `--id` does not server-verify KEY per BC-2.7.007)" added to KEY-404 condition cell. BC-INDEX.md BC-2.7.012 row updated with equivalent annotation. |
 
 **BC count at this round: 657 (unchanged). Holdout count: 100 (+1 H-NEW-ATTACHMENT-012). VP count: 35 (unchanged). Spec version: 1.3.61. Both guards exit 0.**
+
+---
+
+## Adversary Pass 22 Fix Round Finding Dispositions
+
+Source: Adversary Pass 22. 1 MEDIUM / 2 LOW / 1 INFO findings. Spec version bump: 1.3.61 → 1.3.62. No new BCs. Holdouts: 100 (unchanged). VPs: 35 (unchanged).
+
+| Finding ID | Severity | File(s) Touched | Status | Change |
+|------------|----------|----------------|--------|--------|
+| P22-001 (MEDIUM) | MEDIUM | bc-3-issue-write.md, BC-INDEX.md | APPLIED | BC-3.9.003 non-interactive bullet corrected: "exit 64 before any HTTP" → "exit 64 before any servicedeskapi call and before any upload POST (the Step-0 issue GET and project-meta resolution have already run — EC-3.9.003-7 evaluates eligibility first)" (P22-001(a)). BC-3.9.012 table row trigger for "Non-interactive without `--yes` (`--public`)" corrected: "local" → "local (after Step-0 issue GET + meta fetch)" (P22-001(b)). Mechanical sweep of all "before any HTTP" occurrences across `.factory/specs/prd/` and `.factory/phase-f2-spec-evolution/` confirmed: all remaining instances are genuinely pre-HTTP (clap-level conflicts, AID/id validation, file-existence checks, resolution mutual-exclusion, no-fields bail guards — none of which have a preceding mandated GET on their own path); the only instance contradicted by a preceding mandated GET was line 3316 of bc-3-issue-write.md, now corrected (P22-001(c)). H-NEW-ATTACHMENT-008 Setup step 2 and H-NEW-ATTACHMENT-010 Expected line 5 both already assert the pre-gate GETs fire — coherent with corrected phrasing; no changes needed (P22-001(d)). BC-3.9.003 Trace updated (P22-001). BC-INDEX.md BC-3.9.003 and BC-3.9.012 rows updated. |
+| P22-002 (LOW) | LOW | bc-3-issue-write.md, BC-INDEX.md | APPLIED | EC-3.9.016-6 reworded: "proceed to BC-3.9.008 for each AID serially; JSON shape per BC-3.9.010" → "issue the DELETE wire call of BC-3.9.008 for each AID serially; 404 handling per BC-3.9.013 bulk exception (benign skip); JSON shape per BC-3.9.010." Removes the ambiguous "proceed to" phrasing that literally imported single-AID exit-64 semantics; replaces with explicit 404-is-benign-skip reference matching the surrounding bulk-path exception. BC-INDEX.md BC-3.9.016 row updated. |
+| P22-003 (LOW) | LOW | bc-2-issue-read.md, BC-INDEX.md | APPLIED | BC-2.7.012 "Unknown issue key" body prose prepended with batch-only caveat: "**Unknown issue key** (batch paths only — `--all`/`--newest`; the `--id` path does not server-verify KEY per BC-2.7.007):" — aligning the prose with the table row annotation already added in P21-006. BC-INDEX.md BC-2.7.012 row updated. |
+| P22-004 (INFO) | INFO | — | CONFIRMED (no action) | NEW-R4-002 deferral text verified present in prd-delta-576.md (line 226): "ADR count update (27→28) — DEFERRED to state-manager; not assigned to spec-steward". No spec action required this round; drift item remains ledgered for orchestrator at burst close. |
+
+**BC count at this round: 657 (unchanged). Holdout count: 100 (unchanged). VP count: 35 (unchanged). Spec version: 1.3.62. Both guards exit 0.**

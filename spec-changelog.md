@@ -7,6 +7,37 @@ project: "jr (jira-cli)"
 
 Track all spec version changes. Most recent version first.
 
+## [1.3.62] - 2026-07-16
+
+### Type: PATCH
+
+### Summary
+
+Adversary pass 22 (P22) fix round — MEDIUM: BC-3.9.003 non-interactive bullet contradicted its own Step-0 + EC-3.9.003-7 by stating "exit 64 before any HTTP" when the Step-0 issue GET and project-meta resolution have already run at that point; corrected to "exit 64 before any servicedeskapi call and before any upload POST (the Step-0 issue GET and project-meta resolution have already run — EC-3.9.003-7 evaluates eligibility first)"; BC-3.9.012 table trigger column for the non-interactive row corrected from "local" to "local (after Step-0 issue GET + meta fetch)"; mechanical sweep of all "before any HTTP" occurrences confirmed all other instances are genuinely pre-HTTP; H-NEW-ATTACHMENT-008/010 coherent (P22-001); LOW: EC-3.9.016-6 "proceed to BC-3.9.008 for each AID serially" replaced with "issue the DELETE wire call of BC-3.9.008 for each AID serially; 404 handling per BC-3.9.013 bulk exception (benign skip)" to remove ambiguous "proceed to" phrasing that imported single-AID exit-64 semantics into the bulk path (P22-002); BC-2.7.012 body prose "Unknown issue key" sentence prepended with "(batch paths only — `--all`/`--newest`; the `--id` path does not server-verify KEY per BC-2.7.007)" to align prose with the P21-006 table row annotation (P22-003); INFO: NEW-R4-002 deferral text confirmed present in prd-delta-576.md; no action (P22-004).
+
+### Changed Requirements
+
+- `.factory/specs/prd/bc-3-issue-write.md` (MODIFIED): P22-001 — BC-3.9.003 non-interactive mode bullet corrected ("exit 64 before any HTTP" → "exit 64 before any servicedeskapi call and before any upload POST — Step-0 issue GET and project-meta resolution already ran"). BC-3.9.012 table row trigger for non-interactive-no-yes corrected ("local" → "local (after Step-0 issue GET + meta fetch)"). BC-3.9.003 Trace updated (P22-001). Frontmatter trace v1.3.62 entry added. Footer updated (spec v1.3.62). P22-002 — EC-3.9.016-6 reworded: "proceed to BC-3.9.008" → "issue the DELETE wire call of BC-3.9.008"; 404 handling per BC-3.9.013 bulk exception (benign skip) added.
+- `.factory/specs/prd/bc-2-issue-read.md` (MODIFIED): P22-003 — BC-2.7.012 "Unknown issue key" body prose prepended with batch-only caveat. Frontmatter trace v1.3.62 entry added.
+- `.factory/specs/prd/BC-INDEX.md` (MODIFIED): P22-001 — BC-3.9.003 row: non-interactive trigger note added. BC-3.9.012 row: trigger column note added. P22-002 — BC-3.9.016 row: EC-3.9.016-6 404-handling note added. P22-003 — BC-2.7.012 row: body-prose caveat note added. `last_updated`, `index_version` v6.21→v6.22 updated.
+- `.factory/phase-f2-spec-evolution/prd-delta-576.md` (MODIFIED): `spec_version_after` 1.3.61→1.3.62; P22 dispositions section appended.
+
+### Impact Assessment
+
+| Artifact | Change Type | Notes |
+|---|---|---|
+| bc-3-issue-write.md | Modified | BC-3.9.003 non-interactive bullet; BC-3.9.012 trigger column; EC-3.9.016-6 reword |
+| bc-2-issue-read.md | Modified | BC-2.7.012 body prose batch-only caveat |
+| BC-INDEX.md | Modified | BC-3.9.003, BC-3.9.012, BC-3.9.016, BC-2.7.012 rows; index_version v6.22 |
+| prd-delta-576.md | Modified | spec_version_after 1.3.62; P22 dispositions section |
+
+| Dimension | Value |
+|---|---|
+| BC count | 657 (unchanged) |
+| Holdout count | 100 (unchanged) |
+| VP count | 35 (unchanged) |
+| Spec version | 1.3.61→1.3.62 |
+
 ## [1.3.61] - 2026-07-16
 
 ### Type: PATCH

@@ -6136,3 +6136,40 @@ _Tagged: [process-gap] [echo-breaker] [fixture-echo] [list-b] [wire-contract] [c
 
 _Recorded: 2026-07-17. State-manager (adversary-pass-21 remediation burst, TD-VSDD-053)._
 _Tagged: [process-gap] [spec-integrity] [body-ec-contradiction] [mirror-surface] [bulk-404] [destructive-op] [p21] [pre-existing-latent] [high] [codified]_
+
+---
+
+### PHRASE-CLASS-SWEEP-PATTERN [process-gap / convergence]
+
+**Observation (adversary-pass-22, 2026-07-17, P22-001 MEDIUM):** BC-3.9.003 contained the phrase "exit 64 before any HTTP" which was accurate when originally authored but became inaccurate when P14 (Step-0 issue GET) and P16 (project-meta resolution step) added mandatory HTTP calls that precede the non-interactive exit gate. The correctly-phrased siblings (BC-3.9.014 non-interactive trigger and EC-3.9.017-9 Step-2 clause) already used the accurate phrasing "before any servicedeskapi call" — the adversary identified this contrast. The stale phrase survived because "before any HTTP" is a phrase-class that spans multiple BCs and a concept change (Step-0 addition) only invalidated a subset of its instances.
+
+**Pattern: phrase-class sweep (codified this burst):** When a concept change lands that invalidates a phrase-class (e.g., adding Step-0 makes "before any HTTP" stale for guards that fire post-Step-0), grep the phrase class repo-wide and individually disposition every instance:
+- **KEEP:** confirm the instance is genuinely pre-HTTP (no mandated HTTP calls precede it in the flow)
+- **CHANGE:** correct the phrasing to accurately describe the new trigger location
+- **Record both lists in the fix round** so the consistency validator can spot-audit the KEEP dispositions independently
+
+**Validation this burst (CV spot-audit):** All ~25 "before any HTTP" instances were dispositioned (2 changed, 23 KEEP). CV independently spot-audited 8/8 KEEP dispositions and confirmed all were genuinely pre-HTTP. Sweep verified clean on first CV round.
+
+**When to invoke:** Whenever a fix round changes the sequencing of steps (adding a new GET before an existing guard, splitting a step into sub-steps, reordering a step sequence), grep for all phrases that describe the timing of that guard and disposition every instance. The concept change creates a phrase-class that needs full-scope repair.
+
+_Recorded: 2026-07-17. State-manager (adversary-pass-22 remediation burst, TD-VSDD-053)._
+_Tagged: [process-gap] [phrase-class-sweep] [concept-change] [stale-wording] [grep-all-instances] [cv-spot-audit] [p22] [codified]_
+
+---
+
+### CV-FALSE-POSITIVE-CLOSURE-4TH-DATAPOINT [process-gap]
+
+**Observation (r32, 2026-07-17):** Consistency r32 claimed the bc-2 frontmatter P20 trace entry was absent ("PARTIALLY RESOLVED" verdict for INFO-NEW-3). PO (state-manager acting as verifier) quote-verified by re-reading the file at claim time and found the entry present. This is the 4th datapoint in the CV-FALSE-POSITIVE-CLOSURE class, with the same pattern as datapoints 1 and 3: a resolved item carried as open. The root cause identified this burst: the CV was quoting from an earlier in-context read of the file rather than re-reading it at claim verification time. The file had been updated by an INFO-NEW-3 micro-fix in the prior burst, but that update was not reflected in the CV's working context.
+
+**Pattern summary across 4 datapoints:**
+- r6: ADR-count/holdout items claimed resolved when holdout section not updated (open carried as resolved).
+- r9: R8-001 carried forward as open via misquoted citation fragment (resolved-but-misquoted carried as open).
+- r28: INFO-11/12 carried as open when both were burst-17 micro-fixes, intact (resolved carried as open).
+- r32: bc-2 frontmatter P20 trace entry claimed absent; PO re-read found it present (stale in-context read).
+
+**The key reinforcement from r32:** The verbatim-quote requirement established in lesson CV-FALSE-POSITIVE-CLOSURE-3RD-DATAPOINT must include **re-reading the file at claim time**, not quoting from a prior read in the same context. An agent's working context may hold stale reads. The required protocol is: for any closure or carry-forward claim, issue a fresh Read or grep of the target artifact to confirm the current on-disk state, then quote from that fresh read. Quoting from a prior pass's read is insufficient.
+
+**Practical impact:** r32 verdict was CONSISTENT — the false-positive did not change the verdict since INFO-NEW-3 is non-blocking. But the pattern reinforcement is actionable: next dispatch of a consistency validator should include explicit instruction to re-read target artifacts before verifying INFO-item resolution claims.
+
+_Recorded: 2026-07-17. State-manager (adversary-pass-22 remediation burst, TD-VSDD-053)._
+_Tagged: [process-gap] [cv-false-positive-closure] [4th-datapoint] [stale-context-read] [re-read-at-claim-time] [verbatim-quote] [consistency-validator] [engine-side]_

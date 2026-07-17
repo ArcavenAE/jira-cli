@@ -5266,3 +5266,22 @@ Displaced to make room for SOH-ATTACHMENTS-1 adversary pass-21 remediation step 
 | Step | Agent | Status | Output |
 |------|-------|--------|--------|
 | **SOH-ATTACHMENTS-1 F2 ADVERSARY PASS-16 REMEDIATED (2026-07-16): 6 findings (2M/3L/1I); P16-001 (M) error-taxonomy.md §3 contradicted 4 attachment BCs + 413 absent — 4 override rows added; P16-002 (M) R3.13 BC-3.9.014 reallocated S5→S3; P16-003 (L) BC-3.9.003 Step-0 + projectTypeKey pin; P16-004 (L) H-007 fixture aligned; P16-005 (L) BC-3.9.015 taxonomy 403/401/5xx; BC-INDEX micro-fix v6.15→v6.16 (4 rows + INFO-7 retitle); r26 CONSISTENT (8th consecutive zero-action; INFO-7/9/10 resolved); spec v1.3.56; guards green. Pass 17 next.** | adversary + product-owner + consistency-validator + state-manager | COMPLETE | `phase-f2-spec-evolution/consistency-report-576-r26.md`; BC 657; holdouts 98; VP 33; spec v1.3.56. |
+
+
+---
+
+## Archived Phase Progress row (2026-07-17, adversary-pass-22 remediation burst)
+
+Displaced to make room for SOH-ATTACHMENTS-1 F2 ADVERSARY PASS-22 REMEDIATED row per keep-5 rule.
+
+| Phase | Status | Completed | Gate | Notes |
+|-------|--------|-----------|------|-------|
+| **SOH-ATTACHMENTS-1 F2 ADVERSARY PASS-16 REMEDIATED (2026-07-16) — p16 NOT-CLEAN 6 (2M/3L/1I); P16-001 (M) error-taxonomy.md §3 contradicted 4 attachment BCs (404 default exit 1 vs mandated exit 64) + 413 absent — 4 override rows added (list/download/delete two-sub-case/upload-413); P16-002 (M) R3.13 BC-3.9.014 reallocated S5→S3 (gate mechanics ship with earliest consumer; S5 depends_on S3; F3 must encode edge); P16-003 (L) BC-3.9.003 Step-0 issue GET + projectTypeKey source pin; P16-004 (L) H-007 fixture wording aligned; P16-005 (L) BC-3.9.015 metadata-fetch taxonomy 403/401/5xx; R3.14 retro-annotation; BC-INDEX micro-fix v6.15→v6.16 (4 stale index rows + INFO-7 BC-3.9.020 retitle folded); r26 CONSISTENT (8th consecutive zero-action; INFO-7/9/10 all resolved); spec v1.3.56; counts 657/98/33 unchanged; guards green. Pass 17 next.** | **ADVERSARY PASS-16 REMEDIATED** | **2026-07-16** | **Adversary pass 17 next.** | `phase-f2-spec-evolution/consistency-report-576-r26.md`; BC 657; holdouts 98; VP 33; spec v1.3.56. |
+
+### Archived Current Phase Steps row (adversary-pass-22 remediation burst)
+
+Displaced to make room for SOH-ATTACHMENTS-1 adversary pass-22 remediation step row per keep-5 rule.
+
+| Step | Agent | Status | Output |
+|------|-------|--------|--------|
+| **SOH-ATTACHMENTS-1 F2 ADVERSARY PASS-17 REMEDIATED (2026-07-16): 5 findings (1M/4L) + 2I + 3 micro-fixes; P17-001 (M) BC-3.9.014 Source S5→S3 fix-echo (twin-artifact recurrence 8; mechanical-grep dispatch: 5 rows synced in-round); P17-002 (L) function-name drift 4 sites; P17-003 (L) Step-0 double-GET suppression ruling; P17-004 (L) combined non-interactive exit-64 message (deletion + public visibility); P17-005 (L) BC-3.9.007 scope notes (path-c); P17-006/007 (I) JSON-shape table + clap arg-level; BC-INDEX micro-fix v6.16→v6.17 (5 rows); r27 CONSISTENT (9th consecutive zero-action; INFO-7/10/11/12 resolved); spec v1.3.57; guards green. Pass 18 next.** | adversary + product-owner + consistency-validator + state-manager | COMPLETE | `phase-f2-spec-evolution/consistency-report-576-r27.md`; BC 657; holdouts 98; VP 33; spec v1.3.57. |

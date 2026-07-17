@@ -14,6 +14,7 @@ trace: |
   - SOH-ATTACHMENTS-1 adversary pass-19 (2026-07-16): BC-2.7.002 BTreeMap-alphabetical key order clause + example reorder (P19-001); EC-2.7.001-2 JSON-mode filter-count hint clause (P19-002); EC-2.7.007-5 best-effort MUST + tokio ctrl_c implementation note (P19-003); spec v1.3.59
   - SOH-ATTACHMENTS-1 adversary pass-20 (2026-07-16): BC-2.7.007 `--out` unconditional step-1 clause added — step 1 always issued even with `--out`; pre-stream existence validation; one extra GET accepted cost (P20-003); VP-576-004 attachment-object JSON transformation pin added to BC-2.7.002 — `"self"` OMITTED, `"content"` RENAMED to `"contentUrl"` (P20-006); spec v1.3.60
   - SOH-ATTACHMENTS-1 adversary pass-21 (2026-07-16): BC-2.7.012 KEY-404 batch-paths-only annotation — `--id` does not server-verify KEY per BC-2.7.007 (P21-006); spec v1.3.61
+  - SOH-ATTACHMENTS-1 adversary pass-22 (2026-07-16): BC-2.7.012 body prose "Unknown issue key" sentence prepended with batch-only caveat (P22-003); spec v1.3.62
 ---
 
 # BC-2 — Issue Read (list / view / comments / changelog)
@@ -922,7 +923,7 @@ Since step 4 of sanitization already strips `../`, `/`, `\`, `:`, the join will 
 **Source**: `src/cli/issue/attachments.rs::handle_attachment_download` (implementation pending — SOH-ATTACHMENTS-1 Story 2); `src/api/jira/attachments.rs::get_attachment_content` (implementation pending)
 **Subject**: Issue read
 
-**Unknown issue key**: when `<KEY>` does not exist or is inaccessible, `GET /rest/api/3/issue/{key}?fields=attachment` returns 404. Handler exits 64: `"Issue <KEY> not found or not accessible."`
+**Unknown issue key** (batch paths only — `--all`/`--newest`; the `--id` path does not server-verify KEY per BC-2.7.007): when `<KEY>` does not exist or is inaccessible, `GET /rest/api/3/issue/{key}?fields=attachment` returns 404. Handler exits 64: `"Issue <KEY> not found or not accessible."`
 
 **Unknown attachment ID**: when `--id <AID>` references a non-existent attachment, `GET /rest/api/3/attachment/{id}` (metadata step 1, per BC-2.7.007 two-step wire path) returns 404 → handler exits 64: `"Attachment <AID> not found or not accessible."` (canonical not-found string). A 403 response instead exits 1: `"Permission denied: cannot access attachment <AID>."` (403 = exists-but-inaccessible, not missing; consistent with 403 = exit 1 across all attachment operations).
 
@@ -945,7 +946,7 @@ Since step 4 of sanitization already strips `../`, `/`, `\`, `:`, the join will 
 | Permission denied on target directory (EACCES / read-only FS) | 1 | `"Permission denied: cannot write to <dir>"` (single mode; batch mode: per-file fail-soft per BC-2.7.008) |
 | Target directory not writable (other OS write error) | 1 | OS error message surfaced on stderr (single mode; batch mode: per-file fail-soft per BC-2.7.008) |
 
-**Trace**: F2 spec evolution (SOH-ATTACHMENTS-1 2026-07-15; DEC-179 ratified design; research §6 JRACLOUD-96384/-78388 VERIFIED); P21-006 (KEY-404 batch-paths-only annotation — `--id` does not server-verify KEY per BC-2.7.007)
+**Trace**: F2 spec evolution (SOH-ATTACHMENTS-1 2026-07-15; DEC-179 ratified design; research §6 JRACLOUD-96384/-78388 VERIFIED); P21-006 (KEY-404 batch-paths-only annotation — `--id` does not server-verify KEY per BC-2.7.007); P22-003 (body prose "Unknown issue key" sentence prepended with batch-only caveat: batch paths only — `--all`/`--newest`; `--id` does not server-verify KEY per BC-2.7.007)
 
 ---
 
