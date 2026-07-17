@@ -7,6 +7,42 @@ project: "jr (jira-cli)"
 
 Track all spec version changes. Most recent version first.
 
+## [1.3.74] - 2026-07-17
+
+### Type: PATCH
+
+### Summary
+
+Adversary pass 34 (P34) fix round — 2 MEDIUM / 2 LOW / 1 INFO findings. P34-001: PHASE-DOC-RETRO-ANNOTATION at impact-boundary SQ-5/R2.5 exit-code sites (413→exit 64 superseded by shipped BC-3.9.001/BC-3.9.012/error-taxonomy row 102: exit 1). P34-002: Scope table S3+S5 split EC-3.9.017-12 (`--yes` bypass) non-public arm to S3 (VP-576-003), combined arm to S5 (VP-576-005); EC-3.9.017-11 (combined single-prompt) remains S5-realized. P34-003: NEW-R4-002 ADR-count-27→28 deferral marked RESOLVED (was a miscount; actual count 17 incl. ADR-0017; CANONICAL-COUNTS already correct). P34-004: EC-2.7.008-1 JSON-mode clause added (`{"downloaded":[]}`, hint-suppressed); EC-2.7.001-1 unification clarified as STRING-only; EC-2.7.009-4 empty-issue cross-ref added to BC-2.7.009. P34-005: CANONICAL-COUNTS grand-total "+27" corrected to "+33 (=+27+6)".
+
+### Changed Requirements
+
+- `.factory/specs/prd/bc-2-issue-read.md` (MODIFIED): P34-004 — EC-2.7.008-1 JSON-mode clause added; EC-2.7.009-4 empty-issue cross-ref EC added; BC-2.7.008 and BC-2.7.009 Trace fields updated; frontmatter trace entry v1.3.74 added.
+- `.factory/specs/prd/BC-INDEX.md` (MODIFIED): P34-004 — BC-2.7.008 row synced (EC-2.7.008-1 JSON-mode clause); BC-2.7.009 row synced (EC-2.7.009-4 cross-ref); frontmatter last_updated and index_version bumped to v6.32.
+- `.factory/specs/prd/CANONICAL-COUNTS.md` (MODIFIED): P34-005 — grand-total prose "+27" corrected to "+33 (=+27 initial CREATE 2026-07-15 + 6 round-B BC-3.9.015..020)".
+- `.factory/phase-f1-delta-analysis/impact-boundary-576.md` (MODIFIED): P34-001 — PHASE-DOC-RETRO-ANNOTATION added at SQ-5 (~line 281) and R2.5 (~line 538) exit-code sites.
+- `.factory/phase-f2-spec-evolution/prd-delta-576.md` (MODIFIED): P34-002 scope-table split; P34-003 NEW-R4-002 RESOLVED + P22-004 SUPERSEDED; `spec_version_after` 1.3.73→1.3.74; P34 dispositions section appended.
+
+### Impact Assessment
+
+| Artifact | Change Type | Notes |
+|---|---|---|
+| bc-2-issue-read.md | Modified | P34-004 EC-2.7.008-1 JSON-mode clause; EC-2.7.009-4 empty-issue EC; Trace+frontmatter updated |
+| BC-INDEX.md | Modified | P34-004 BC-2.7.008/BC-2.7.009 row sync; frontmatter → v6.32 |
+| CANONICAL-COUNTS.md | Modified | P34-005 grand-total "+27" → "+33 (=+27+6)" |
+| impact-boundary-576.md | Modified | P34-001 PHASE-DOC-RETRO-ANNOTATION at SQ-5/R2.5 exit-code sites |
+| prd-delta-576.md | Modified | P34-002 scope-table split; P34-003 resolutions; spec_version_after 1.3.74; P34 dispositions |
+
+### Count Verification
+
+| Metric | Before | After | Delta |
+|---|---|---|---|
+| BC total | 657 | 657 | 0 |
+| Holdout total | 100 | 100 | 0 |
+| VP total | 35 | 35 | 0 |
+
+---
+
 ## [1.3.73] - 2026-07-17
 
 ### Type: PATCH

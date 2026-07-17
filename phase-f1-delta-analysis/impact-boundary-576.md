@@ -278,7 +278,7 @@ If `--out <PATH>` or `--out-dir <DIR>/<filename>` points to an existing file, do
 
 Jira Cloud's default attachment size limit is 10 MB per file (instance-configurable). The `upload` handler should:
 1. Check file size BEFORE POSTing to provide a user-friendly error rather than waiting for a 413.
-2. Handle a 413 response gracefully: exit 64 with "File exceeds Jira attachment size limit".
+2. Handle a 413 response gracefully: exit 64 with "File exceeds Jira attachment size limit". **[PHASE-DOC-RETRO-ANNOTATION (P34-001): superseded in shipped spec: 413 → exit 1 per BC-3.9.001/BC-3.9.012/error-taxonomy row 102 — the graceful-handling ruling stands, the exit code refined to 1 (server-side error family) in F2; P34-001.]**
 
 **Required decision:** Should the pre-check fetch the instance attachment limit via `/rest/api/2/configuration` (one extra GET per upload) or use a compiled-in safe default (e.g., 10 MB)? The compiled-in default is simpler and avoids an extra API call; the `jr init` command could optionally cache the limit. Document the chosen approach.
 
@@ -535,7 +535,7 @@ Research (P2-8) confirmed that reqwest 0.13.x strips `Authorization`, `Cookie`, 
 
 Original Rev 1 recommendation (compiled-in 10 MB default) is withdrawn. Research (§3a, P2-7) confirmed the cap is site-configurable and sources conflict on the number (low-MB legacy vs. low-GB current admin doc). The correct posture:
 - **No pre-check against a hard-coded cap** — streaming upload via `ReaderStream` means the CLI never buffers the whole file in memory regardless of size
-- **Handle 413 gracefully**: exit 64 with a message like "Attachment rejected: file exceeds this Jira instance's size limit (check site configuration)" — no assumed number
+- **Handle 413 gracefully**: exit 64 with a message like "Attachment rejected: file exceeds this Jira instance's size limit (check site configuration)" — no assumed number **[PHASE-DOC-RETRO-ANNOTATION (P34-001): superseded in shipped spec: 413 → exit 1 per BC-3.9.001/BC-3.9.012/error-taxonomy row 102 — the graceful-handling ruling stands, the exit code refined to 1 (server-side error family) in F2; P34-001.]**
 - The `size` field in `attachment list --output json` metadata is authoritative for `--filter size-max=` comparisons
 
 #### SQ-7 — RATIFIED: `--public` upload confirmation gate

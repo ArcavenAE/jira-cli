@@ -6397,3 +6397,26 @@ _Tagged: [process-gap] [taxonomy-closure] [output-channel] [enumeration-scope] [
 
 _Trigger: P33-001 (2026-07-17); orchestrator declined to downgrade LOW; BEHAVIORAL CONVERGENCE MILESTONE; STRICT streak kept honest at 0/3._
 _Tagged: [convergence] [severity-integrity] [metric-honesty] [strict-streak] [adversary-protocol] [p33] [codified]_
+
+
+---
+
+## SOH-ATTACHMENTS-1 F2 Adversary Pass 34 — Process Lessons (2026-07-17)
+
+### [codified] ADJUDICATION-WRITE-BACK: Decisions resolved in STATE.md must be written back to the artifacts that carry the open claim
+
+**Observation (P34-003, 2026-07-17):** Adversary pass 34 found that prd-delta-576.md still carried a "27→28 DEFERRED" ADR-ledger entry that the pass-22 burst had already resolved. The resolution had been recorded in STATE.md (drift item status updated, decision noted), but the prd-delta artifact — which carried the original "DEFERRED" open claim — was never updated to reflect the adjudication. An adversary reading prd-delta saw a stale open claim.
+
+**Root cause:** When a drift item or decision is resolved and documented in STATE.md, the write-back obligation to the artifact carrying the original claim is implicit, not enforced. The PO's per-round checklist captured spec-changelog + frontmatter-trace + BC-INDEX updates, but did not include "check whether any resolved STATE.md items reference prd-delta/impact-boundary and require write-back."
+
+**Principle (ADJUDICATION-WRITE-BACK):** When a drift item, gate docket entry, or open ADR-ledger claim is resolved/adjudicated and the resolution is recorded in STATE.md, the PO must ALSO write back the resolution to the primary artifact that carries the open claim. Specifically:
+1. prd-delta carrying a "DEFERRED" or "OPEN" ledger entry → update the entry with the resolution and date when adjudicated.
+2. impact-boundary carrying a planning note → retro-annotate with the ruling and outcome.
+3. The burst-close checklist must include: "Check whether any drift-item resolutions or adjudications recorded in STATE.md this burst reference prd-delta/impact-boundary, and apply write-back."
+
+**Write-back class distinction:** This is distinct from the twin-artifact-sweep (TWIN-ARTIFACT-SWEEP covers spec-body changes propagating to BC-INDEX); ADJUDICATION-WRITE-BACK covers resolution records propagating back to artifacts with the original open claim. Both are write-back obligations; they cover different artifact flows.
+
+**Remedy (P34-003):** The "27→28 DEFERRED" ADR-ledger entry in prd-delta-576.md was updated with the pass-22 adjudication outcome and date. The ADJUDICATION-WRITE-BACK class was codified as a drift item and lessons entry.
+
+_Trigger: P34-003 (2026-07-17); prd-delta ADR-ledger write-back miss; new class first instance._
+_Tagged: [process-gap] [write-back] [adjudication] [prd-delta] [state-md] [burst-close-checklist] [p34] [codified]_
