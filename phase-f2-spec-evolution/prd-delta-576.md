@@ -5,7 +5,7 @@ issues: "#576, #585"
 phase: F2
 authored: 2026-07-15
 spec_version_before: 1.3.42
-spec_version_after: 1.3.68
+spec_version_after: 1.3.69
 bc_count_before: 624
 bc_count_after: 657
 holdout_count_before: 88
@@ -522,4 +522,14 @@ Additional contradictions found: **0** (only H-NEW-ATTACHMENT-009 had the P28-00
 
 **BC count at this round: 657 (unchanged). Holdout count: 100 (unchanged). VP count: 35 (unchanged). Spec version: 1.3.68. Both guards exit 0.**
 
-**BC count at this round: 657 (unchanged). Holdout count: 100 (unchanged). VP count: 35 (unchanged). Spec version: 1.3.67. Both guards exit 0.**
+---
+
+## Adversary Pass 29 Fix Round Finding Dispositions
+
+Source: Adversary Pass 29. 1 LOW finding. Spec version bump: 1.3.68 → 1.3.69. No new BCs. Holdouts: 100 (unchanged). VPs: 35 (unchanged).
+
+| Finding ID | Severity | File(s) Touched | Status | Change |
+|------------|----------|----------------|--------|--------|
+| P29-001 (LOW) | LOW | prd-delta-576.md | APPLIED | Stale duplicate closing-summary line deleted from the P28 dispositions section. The line "**BC count at this round: 657 (unchanged). Holdout count: 100 (unchanged). VP count: 35 (unchanged). Spec version: 1.3.67. Both guards exit 0.**" was a leftover from the P27 footer that was not removed when the P28 section was appended; the correct P28 line ("Spec version: 1.3.68") was already present immediately above it. Deleted line is quoted verbatim in the confirmation message. No BC bodies touched; no bc-2/bc-3 frontmatter trace entries owed this round. |
+
+**BC count at this round: 657 (unchanged). Holdout count: 100 (unchanged). VP count: 35 (unchanged). Spec version: 1.3.69. Both guards exit 0.**

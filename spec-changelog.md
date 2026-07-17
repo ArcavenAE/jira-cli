@@ -7,6 +7,36 @@ project: "jr (jira-cli)"
 
 Track all spec version changes. Most recent version first.
 
+## [1.3.69] - 2026-07-17
+
+### Type: PATCH
+
+### Summary
+
+Adversary pass 29 (P29) fix round — 1 LOW finding. LOW (P29-001): prd-delta-576.md P28 dispositions section contained a stale duplicate closing-summary line still reading "Spec version: 1.3.67" — a leftover from the P27 footer not removed when P28 was appended. The correct "Spec version: 1.3.68" line was already present immediately above it. Stale duplicate deleted. No BC bodies touched; no bc-2/bc-3 frontmatter trace entries owed.
+
+### Changed Requirements
+
+- `.factory/phase-f2-spec-evolution/prd-delta-576.md` (MODIFIED): P29-001 — stale duplicate closing-summary line deleted; `spec_version_after` 1.3.68→1.3.69; P29 dispositions section appended.
+
+### Impact Assessment
+
+| Artifact | Change Type | Notes |
+|---|---|---|
+| prd-delta-576.md | Modified | Stale duplicate line deleted (P29-001); spec_version_after 1.3.69; P29 dispositions section |
+
+| Dimension | Value |
+|---|---|
+| BC count | 657 (unchanged) |
+| Holdout count | 100 (unchanged) |
+| VP count | 35 (unchanged) |
+| New BCs | 0 |
+| New VPs | 0 |
+| New Holdouts | 0 |
+| Spec version | 1.3.68→1.3.69 |
+
+---
+
 ## [1.3.68] - 2026-07-17
 
 ### Type: PATCH

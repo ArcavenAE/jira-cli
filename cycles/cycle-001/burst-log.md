@@ -5343,3 +5343,39 @@ Displaced to make room for SOH-ATTACHMENTS-1 adversary pass-26 remediation step 
 **Convergence:** Trajectory p1..p26 = 22,21,18,16,10,5,3,5,3,3,2,2,3,9,7,5,5,5,4,6,6,3,3,2,2,3. STRICT streak 0/3. Two consecutive zero-MEDIUM passes (p25 and p26). Next: adversary pass 27.
 
 **Files committed:** `phase-f2-spec-evolution/consistency-report-576-r36.md` (new), `phase-f2-spec-evolution/prd-delta-576.md`, `phase-f1-delta-analysis/impact-boundary-576.md`, `spec-changelog.md`, `specs/prd/BC-INDEX.md`, `specs/prd/bc-2-issue-read.md`, `specs/prd/bc-3-issue-write.md`, `specs/prd/error-taxonomy.md`, `specs/prd/holdout-scenarios.md`, `sidecar-learning.md`, `STATE.md`.
+
+---
+
+## Archived Phase Progress row (2026-07-17, adversary-pass-29 remediation burst)
+
+Displaced to make room for SOH-ATTACHMENTS-1 F2 ADVERSARY PASS-29 REMEDIATED row per keep-5 rule.
+
+| Phase | Status | Completed | Gate | Notes |
+|-------|--------|-----------|------|-------|
+| **SOH-ATTACHMENTS-1 F2 ADVERSARY PASS-24 REMEDIATED + r34 GAP CLOSED (2026-07-17, fresh context, blind, v1.3.63; leanest pass of the loop — trajectory-tail →6→3→3→2) — 1M+1L; P24-001 (M) BC-3.9.009 over-swept download into curated attachment-object shape, contradicting BC-2.7.002 authority clause (grep-confirmed isolated to one sentence) → narrowed: download explicitly excluded + cross-refs BC-2.7.002 + EC-2.7.007-7; P24-002 (L) VP-576-004 missing story-allocation note (list half S1, upload half S3, full cross-path test S3; S3 depends_on S1; R3.13 earliest-consumer); spec v1.3.64; BC 657 / holdouts 100 / VP 35 UNCHANGED; BC-INDEX v6.23→v6.24; r34 GAPS-FOUND (1 LOW GAP-P24-002-001: VP-576-004 Scope-table note MIS-LANDED in S5 row instead of S3; tracking records claimed S3 (false); behavioral content intact; accuracy-over-tidiness correction applied — mis-landing recorded not erased; INFO-NEW-3 r33 RESOLVED; INFO-NEW-4 bc-2 frontmatter v1.3.64 trace entry added; INFO-NEW-5 Trace citation no action) → GAP CLOSED same burst (S3 row note added; S5 note retained; false tracking claims corrected; bc-2 v1.3.64 trace entry added; guards exit 0). STRICT streak 0/3 (DEC-183). Pass 25 next.** | **ADVERSARY PASS-24 REMEDIATED** | **2026-07-17** | **Adversary pass 25 next.** | `phase-f2-spec-evolution/consistency-report-576-r34.md`; BC 657; holdouts 100; VP 35; spec v1.3.64. |
+
+### Archived Current Phase Steps row (adversary-pass-29 remediation burst)
+
+Displaced to make room for SOH-ATTACHMENTS-1 adversary pass-29 remediation step row per keep-5 rule.
+
+| Step | Agent | Status | Output |
+|------|-------|--------|--------|
+| **SOH-ATTACHMENTS-1 F2 ADVERSARY PASS-24 REMEDIATED + r34 GAP CLOSED (2026-07-17): 1M+1L + r34 1 LOW gap closed same burst; P24-001 (M) BC-3.9.009 download over-swept into curated attachment shape (contradicted BC-2.7.002 authority clause; isolated to one sentence) → narrowed + cross-refs EC-2.7.007-7; P24-002 (L) VP-576-004 missing story-allocation note (list S1, upload S3, cross-path test S3; S3 depends_on S1; R3.13); spec v1.3.64; BC 657/holdouts 100/VP 35 UNCHANGED; BC-INDEX v6.23→v6.24; r34 GAPS-FOUND (1 LOW GAP-P24-002-001 S3-row note mis-landed in S5; accuracy-over-tidiness correction; bc-2 v1.3.64 trace added; guards exit 0); trajectory-tail →6→3→3→2. Pass 25 next.** | adversary + product-owner + consistency-validator + state-manager | COMPLETE | `phase-f2-spec-evolution/consistency-report-576-r34.md`; BC 657; holdouts 100; VP 35; spec v1.3.64. |
+
+
+---
+
+## SOH-ATTACHMENTS-1 F2 ADVERSARY PASS-29 REMEDIATION BURST (2026-07-17)
+
+**What happened:** Adversary pass 29 returned NOT-CLEAN — 1 LOW only (P29-001). The adversary explicitly characterized the pass as "effectively a convergence-grade pass — all canonical spec surfaces (BCs, holdouts, VPs, counts, error-taxonomy, JSON-shape table, ADR) are internally consistent and implementable." Its §2 clean-lens list independently re-verified: mount-vs-assertion coherence across all 15 fixtures, exactly-one-issue-GET accounting, hint-vs-error taxonomy, CWE-22 pipeline, gate/guard distinctions, all counts. Single working-doc cosmetic finding only.
+
+**Findings:**
+- P29-001 (LOW): prd-delta-576.md P28 dispositions section contained a stale duplicate closing-summary line still reading "Spec version: 1.3.67" — a leftover from the P27 footer that was not removed when the P28 section was appended. The correct "Spec version: 1.3.68" line was already present immediately above it. Fix: stale duplicate line deleted. No BC bodies touched; no bc-2/bc-3 frontmatter trace entries owed this round.
+
+**Scoped orchestrator verification (in lieu of full CV):** Rationale: no canonical spec surface changed (single working-doc line deletion); full CV deferred to next fix round or F2 gate audit. Verification performed: grep-confirmed P28 section now closes solely with the 1.3.68 line; two remaining "1.3.67" matches are legitimate (P27's own closing + P29 disposition row quoting the deleted text as record); spec_version_after 1.3.69; [1.3.69] entry present in spec-changelog.md; both guards exit 0.
+
+**S-7.02 observation — no new lesson required:** P29-001 is in the tracking-record family (already documented by PRD-DELTA-DISPOSITIONS-CHECKLIST drift item). No novel defect class; no lessons.md entry owed.
+
+**Convergence:** Trajectory p1..p29 = 22,21,18,16,10,5,3,5,3,3,2,2,3,9,7,5,5,5,4,6,6,3,3,2,2,3,3,2,1. STRICT streak 0/3. Pass 29 is the strongest convergence signal of the loop (single working-doc cosmetic; zero canonical-surface findings). Next: adversary pass 30 — first pass with a realistic genuine-CLEAN shot.
+
+**Files committed:** `phase-f2-spec-evolution/prd-delta-576.md`, `spec-changelog.md`, `sidecar-learning.md`, `STATE.md`.
