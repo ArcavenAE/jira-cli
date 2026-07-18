@@ -3,7 +3,7 @@ document_type: adr
 adr_id: ADR-0017
 status: Accepted
 date: 2026-07-15
-amended: 2026-07-17
+amended: 2026-07-18
 subsystems_affected: ["SS-03", "SS-09"]
 supersedes: null
 superseded_by: null
@@ -16,6 +16,7 @@ related: ["ADR-0001", "ADR-0003"]
 
 **Accepted** (2026-07-15). Gate: DEC-179, item 7 of the F1 SOH-ATTACHMENTS-1 dependency gate.
 **Amended** (2026-07-17): Cargo.toml delivery split across S-576-2 and S-576-3 delivery slots per adversarial finding P1-010, F3 pass 1. See § Decision amendment below.
+**Amended** (2026-07-18): Authorized-dependency clause added for the `sha1` crate (RustCrypto) in the S-576-2 delivery slot; "No new crate" claims scoped to the HTTP surface (reqwest features + tokio-util). See § Authorized Dependencies. Traces P26-001, F3 pass 26.
 
 ## Context
 
@@ -76,8 +77,9 @@ Specifically:
 3. **`tokio-util` direct dependency (`^0.7`, `features = ["io-util"]`)** — promotes the
    already-transitive crate to a direct dependency for `tokio_util::io::ReaderStream`. This
    converts a `tokio::fs::File` (or any `AsyncRead`) into a `Stream<Item = Bytes>` compatible
-   with a reqwest multipart `Part::stream()`. No new crate enters the supply chain — only
-   the version resolution becomes explicit. **Feature note (P18-I2)**: the `io-util` feature
+   with a reqwest multipart `Part::stream()`. No new crate enters the **HTTP supply chain** — only
+   the version resolution becomes explicit. (This claim is scoped to the reqwest/tokio-util HTTP
+   surface; the `sha1` crate authorized for S-576-2 is governed by § Authorized Dependencies.) **Feature note (P18-I2)**: the `io-util` feature
    transitively enables the `io` feature; `io` alone is the minimal feature flag for
    `ReaderStream`. An implementer may declare `features = ["io"]` instead — `io-util` is
    sufficient and is the conservative explicit choice.
@@ -137,7 +139,7 @@ be omitted.
   implementable without a new HTTP client or an incompatible encoding.
 - Large file downloads can be streamed chunk-by-chunk, bounding memory usage to one chunk
   rather than the full file size.
-- No new crate enters the dependency graph; `cargo deny` advisory state is maintained.
+- No new crate enters the **HTTP dependency graph** for this decision's scope (reqwest features + tokio-util promotion); `cargo deny` advisory state is maintained. (The `sha1` crate authorized in § Authorized Dependencies is outside this HTTP-surface scope.)
 - The `tokio-util` version is locked explicitly, eliminating silent transitive drift.
 
 ### Negative / Trade-offs
@@ -162,6 +164,7 @@ both reqwest features + promote tokio-util) is unchanged. Only the delivery slot
 amended. Implementation not yet delivered in either slot.
 
 2026-07-18: P8-003 — stale depends_on parenthetical corrected (S-576-2 depends on S-576-1, not []); Cargo split unchanged.
+2026-07-18: P26-001 — authorized-dependency clause added for the `sha1` crate (RustCrypto); "No new crate" claims scoped to HTTP surface. See § Authorized Dependencies.
 
 ## Alternatives Considered
 
@@ -185,6 +188,34 @@ amended. Implementation not yet delivered in either slot.
   connection pool, and splits the authentication header responsibility across two codepaths.
   The additive reqwest feature approach keeps all HTTP traffic through the single
   `JiraClient`.
+
+## Authorized Dependencies
+
+*(Amended 2026-07-18; traces P26-001, F3 pass 26)*
+
+### `sha1` — RustCrypto SHA-1 digest crate
+
+**Crate:** `sha1` (crates.io: [sha1](https://crates.io/crates/sha1), RustCrypto/hashes monorepo)
+**Version constraint:** `^0.10`
+**License:** MIT OR Apache-2.0 — passes `cargo deny` license policy.
+**Delivery slot:** S-576-2 (earliest consumer; see § Decision above).
+**Triggering requirement:** BC-2.7.010 mandates a 40-hex-character SHA-1 digest prefix on the default output filename for every attachment in a batch download (`jr issue attachments get <KEY>`). No SHA-1 implementation is available in Rust `std` or in any crate already present in `Cargo.toml`/`Cargo.lock` as of v0.6.0-dev.10.
+
+**Transitive footprint:** The `sha1 ^0.10` crate adds `digest` (trait interface shared across RustCrypto) and `cpufeatures` (runtime CPU-capability detection for hardware-accelerated paths on x86/aarch64). Both are small and have no further transitive dependencies of note.
+
+**Non-cryptographic use — SHA-1 collision-resistance is NOT required:**
+SHA-1 is cryptographically broken (practical chosen-prefix collision attacks demonstrated by SHAttered, 2017). This use is **non-cryptographic**: the 40-hex prefix serves as a stable, deterministic, human-readable path component that distinguishes attachments with identical filenames in a single batch. Collision resistance against an adversary is irrelevant — the sole requirement is uniqueness across a typical Jira issue attachment set (typically ≤100 items; attachment IDs are Jira-server-assigned UUIDs). **Do NOT "upgrade" this to SHA-256 or any other algorithm** — doing so would change the 40-hex format, breaking BC-2.7.010's format pin and all downstream tooling relying on the documented path shape. If a future requirement does need cryptographic strength, that warrants a new ADR, not a silent algorithm change here.
+
+**cargo deny obligation:** After `sha1` is added to `Cargo.toml` in the S-576-2 delivery commit, `cargo deny check` must be re-run and reported clean before the PR is merged. Any advisory against the selected `sha1` version must be resolved before merge.
+
+**Selection rationale vs. alternatives:**
+`sha1_smol` (a no-std, single-file SHA-1) was considered. It has fewer transitive dependencies but is less actively maintained and has had fewer security eyes than the RustCrypto ecosystem. Given that `digest` and `cpufeatures` are already likely in the transitive tree via other RustCrypto crates (e.g., `ring` or `sha2` if present), the RustCrypto `sha1` crate is preferred for ecosystem coherence and maintenance assurance.
+
+### Status as of 2026-07-18 (amendment — P26-001, F3 pass 26)
+
+`sha1` (RustCrypto `^0.10`) authorized for S-576-2. The "No new crate" claims in § Decision (tokio-util paragraph) and § Consequences are scoped to the HTTP surface only. The `sha1` dependency for the BC-2.7.010 path-prefix requirement is governed by this authorized-dependency clause, not by those claims. Implementation not yet delivered.
+
+---
 
 ## Source / Origin
 

@@ -7,6 +7,60 @@ project: "jr (jira-cli)"
 
 Track all spec version changes. Most recent version first.
 
+## [1.3.89] - 2026-07-18
+
+### Type: PATCH
+
+### Summary
+
+F3 adversary pass-22 micro-fix round (SOH-ATTACHMENTS-1, spec_version_checked: 1.3.88). Resolves P22-001 (MEDIUM): prd-delta S2 obligation (e) incorrectly assigned the `.cargo/mutants.toml` `examine_globs` entries for `src/cli/issue/attachments.rs` and `src/api/jira/attachments.rs` to the S-576-2 delivery slot (P3-009 ruling). The CWE-116 `display_sanitize_filename` helper (BC-2.7.011, SEC-576-011) is created in S-576-1, one story earlier than the CWE-22 `sanitize_attachment_filename` that P3-009 cited. Under `--in-diff`-scoped mutation testing, a glob absent when S1 merges means S1's CWE-116 helper is never mutation-tested even with `--in-diff`: S1's PR has the function in the diff but no glob; S2's PR has the glob but the function is already merged. Fix: examine_globs primary delivery moved to S-576-1 (add-at-creation, matching the S-577-1 "new CLI handler file → add to mutants.toml at creation" precedent). S2 obligation (e) amended to confirm-present/ADD IF ABSENT (idempotent). S3 obligation (a) reference updated from "moved to S2 per P3-009" to "moved to S1 per P22-001". Full migration chain: S3→S2 per P3-009 → S1 per P22-001. No new BCs, holdouts, or VPs.
+
+### Changed Requirements
+
+- `.factory/phase-f2-spec-evolution/prd-delta-576.md` (MODIFIED): S1 Scope row — new obligation (f) added: add-at-creation for examine_globs entries (P22-001); S2 Scope row — obligation (e) amended to confirm-present/ADD IF ABSENT, primary delivery moved to S1 per P22-001; S3 Scope row — obligation (a) updated from "moved to S2 per P3-009" to "moved to S1 per P22-001"; `spec_version_after` 1.3.88→1.3.89; P22-ROUND dispositions appended.
+
+### Impact Assessment
+
+| Artifact | Change Type | Notes |
+|---|---|---|
+| prd-delta-576.md | Modified | S1 obligation (f) added; S2 obligation (e) amended (idempotent); S3 obligation (a) updated; spec_version_after 1.3.89; P22-ROUND dispositions |
+| BC-INDEX.md | No change | No BC-INDEX row cites the S2 examine_globs delivery slot; v6.36 unchanged |
+
+- BCs: 657 (unchanged)
+- Holdouts: 100 (unchanged)
+- VPs: 35 (unchanged)
+
+---
+
+## [1.3.88] - 2026-07-18
+
+### Type: PATCH
+
+### Summary
+
+P20-002 root cause + INFO three-way divergence micro-fix (SOH-ATTACHMENTS-1, spec_version_checked: 1.3.87). Resolves P20-002 (INFO): attachment BC error-taxonomy tables in BC-3.9.012 and BC-3.9.013 pinned 401 and network stderr strings that diverged from the actual `JrError` rendering. The 401 cell used a backtick form `"Not authenticated. Run \`jr auth login\`."` missing the ` to connect.` tail; the network cell used a colon form `"Could not reach <instance>: <reason>"`. Additionally, bc-2-issue-read.md Error Path Summary used a third (semicolon) form. Source-verified from `src/error.rs:18` (`#[error("Not authenticated. {hint}")]`), `src/api/client.rs:992` (hint: `"Run \"jr auth login\" to connect."`), and `src/error.rs:35` (`#[error("Could not reach {0} — check your connection")]`). Fix: all three sites replaced with loose-substring assertions consistent with the bc-2-issue-read.md 401 row convention, with full literals cited in parentheticals. Exit codes unchanged. BC-INDEX rows verified to not quote stale strings — no index changes. No new BCs, holdouts, or VPs.
+
+### Changed Requirements
+
+- `.factory/specs/prd/bc-3-issue-write.md` (MODIFIED): BC-3.9.012 table 401/network cells corrected to loose-substring form (P20-002); BC-3.9.013 table 401/network cells corrected (P20-002); BC-3.9.012 and BC-3.9.013 Trace fields updated with P20-ROUND citation; frontmatter trace v1.3.88 added; footer P20-ROUND prepended.
+- `.factory/specs/prd/bc-2-issue-read.md` (MODIFIED): Error Path Summary network drop bullet corrected from semicolon form to loose-substring form (P20-002 INFO three-way divergence); frontmatter trace v1.3.88 added; `last_updated` advanced to 2026-07-18.
+- `.factory/phase-f2-spec-evolution/prd-delta-576.md` (MODIFIED): `spec_version_after` 1.3.87→1.3.88; P20-ROUND dispositions appended.
+
+### Impact Assessment
+
+| Artifact | Change Type | Notes |
+|---|---|---|
+| bc-3-issue-write.md | Modified | BC-3.9.012/BC-3.9.013: 401+network table cells corrected; Trace + frontmatter trace updated |
+| bc-2-issue-read.md | Modified | Error Path Summary: network drop bullet corrected; frontmatter trace + last_updated updated |
+| prd-delta-576.md | Modified | P20-ROUND dispositions; spec_version_after 1.3.88 |
+| BC-INDEX.md | No change | BC-3.9.012/BC-3.9.013/BC-2.7.012 rows do not quote the stale strings; v6.36 unchanged |
+
+- BCs: 657 (unchanged)
+- Holdouts: 100 (unchanged)
+- VPs: 35 (unchanged)
+
+---
+
 ## [1.3.87] - 2026-07-18
 
 ### Type: PATCH

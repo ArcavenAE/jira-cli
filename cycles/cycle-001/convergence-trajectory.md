@@ -1784,7 +1784,7 @@ Report: `phase-f2-spec-evolution/consistency-report-576-r44.md`.
 
 ## SOH-ATTACHMENTS-1 F3 Adversary Passes (2026-07-17, ongoing)
 
-Criterion: **STRICT** (3 consecutive zero-finding passes required). Passes run against spec v1.3.81→v1.3.87. All passes fresh-context, blind adversarial review. Stories S-576-1..5 v1.5→v1.11 (AC 11/19/18/15/16).
+Criterion: **STRICT** (3 consecutive zero-finding passes required). Passes run against spec v1.3.81→v1.3.89. All passes fresh-context, blind adversarial review. Stories S-576-1..5 v1.5→v1.18 (AC 11/19/18/16/16; story versions v1.12/v1.18/v1.17/v1.16/v1.17).
 
 | Pass | Date | Total | CRIT | HIGH | MED | LOW | INFO | Counter | Verdict |
 |------|------|-------|------|------|-----|-----|------|---------|---------|
@@ -1800,8 +1800,21 @@ Criterion: **STRICT** (3 consecutive zero-finding passes required). Passes run a
 | p10 | 2026-07-18 | 5 | 0 | 0 | 0 | 5 | 0 | 0/3 | FINDINGS_REMAIN |
 | p11 | 2026-07-18 | 5 | 0 | 0 | 0 | 5 | 0 | 0/3 | FINDINGS_REMAIN |
 | p12 | 2026-07-18 | 5 | 0 | 1 | 1 | 3 | 0 | 0/3 | FINDINGS_REMAIN |
+| p13 | 2026-07-18 | 2 | 0 | 0 | 1 | 1 | 0 | 0/3 | FINDINGS_REMAIN |
+| p14 | 2026-07-18 | 5 | 0 | 0 | 1 | 4 | 0 | 0/3 | FINDINGS_REMAIN |
+| p15 | 2026-07-18 | 2 | 0 | 0 | 1 | 1 | 0 | 0/3 | FINDINGS_REMAIN |
+| p16 | 2026-07-18 | 3 | 0 | 0 | 1 | 2 | 0 | 0/3 | FINDINGS_REMAIN |
+| p17 | 2026-07-18 | 4 | 0 | 0 | 2 | 2 | 0 | 0/3 | FINDINGS_REMAIN |
+| p18 | 2026-07-18 | 2 | 0 | 0 | 1 | 1 | 0 | 0/3 | FINDINGS_REMAIN |
+| p19 | 2026-07-18 | 1 | 0 | 0 | 0 | 1 | 0 | 0/3 | FINDINGS_REMAIN |
+| p20 | 2026-07-18 | 3 | 0 | 0 | 1 | 2 | 0 | 0/3 | FINDINGS_REMAIN |
+| p21 | 2026-07-18 | 1 | 0 | 0 | 0 | 1 | 0 | 0/3 | FINDINGS_REMAIN |
+| p22 | 2026-07-18 | 2 | 0 | 0 | 0 | 2 | 0 | 0/3 | FINDINGS_REMAIN |
+| p23 | 2026-07-18 | 3 | 0 | 0 | 1 | 2 | 0 | 0/3 | FINDINGS_REMAIN |
+| p24 | 2026-07-18 | 1 | 0 | 0 | 1 | 0 | 0 | 0/3 | FINDINGS_REMAIN |
+| p25 | 2026-07-18 | 4 | 0 | 0 | 1 | 3 | 0 | 0/3 | FINDINGS_REMAIN |
 
-Trajectory shorthand (passes 1–12): `27→16→18→11→10→9→8→3→3→5→5→5` — IN PROGRESS; trajectory-tail →3→5→5→5; ceiling LOW-to-HIGH oscillating (p12 1H/1M/3L); STRICT streak 0/3; pass 13 in flight.
+Trajectory shorthand (passes 1–25): `27→16→18→11→10→9→8→3→3→5→5→5→2→5→2→3→4→2→1→3→1→2→3→1→4` — IN PROGRESS; trajectory-tail →2→3→1→4; floor 1-4 findings/pass; ceiling MEDIUM (p24 1M); STRICT streak 0/3; pass 26 in flight.
 
 ---
 
@@ -1910,3 +1923,120 @@ Eleventh adversary pass; plateau at 5 (all LOW). 0 CRIT, 0 HIGH, 0 MEDIUM, 5 LOW
 **Convergence counter:** 0 of 3 (STRICT)
 
 Twelfth adversary pass; ceiling regresses to HIGH — p12 HIGH: BC-3.9.012 upload-error-taxonomy mislabeled in S3 for 11 passes (413/400/5xx/network rows miscategorized + SEC-576-004 CWE-93 multipart CRLF MUST-test uncovered) → fixed round 12 (AC-011 re-anchor + AC-018 added). 0 CRIT, 1 HIGH, 1 MEDIUM, 3 LOW. Spec micro-round within fix-round-12: v1.3.86→v1.3.87 (P12-003 X-Atlassian-Token 403-body hedge — research silent, unverified server string removed). Fix-round-12 applied; 0 open after fix. AC counts: S1 11 / S2 19 / S3 18 / S4 15 / S5 16. STORY-INDEX v1.4.73 (116 stories, stamps 111→116). Process-gap ledger 6 items. Pass 13 in flight.
+
+---
+
+### Pass p13 (2026-07-18)
+
+**Findings:** 2 (0C/0H/1M/1L) — FINDINGS_REMAIN
+**Convergence counter:** 0 of 3 (STRICT)
+
+Thirteenth adversary pass; count drops to 2 — convergence signal after p12 ceiling regression. 0 CRIT, 0 HIGH, 1 MEDIUM, 1 LOW. Fix-round-13 applied; 0 open after fix.
+
+---
+
+### Pass p14 (2026-07-18)
+
+**Findings:** 5 (0C/0H/1M/4L) — FINDINGS_REMAIN
+**Convergence counter:** 0 of 3 (STRICT)
+
+Fourteenth adversary pass; test-name↔trace sync rule standing established (process-gap ledger item added — test function renames must be paired atomically with trace field updates). 0 CRIT, 0 HIGH, 1 MEDIUM, 4 LOW. Fix-round-14 applied; 0 open after fix.
+
+---
+
+### Pass p15 (2026-07-18)
+
+**Findings:** 2 (0C/0H/1M/1L) — FINDINGS_REMAIN
+**Convergence counter:** 0 of 3 (STRICT)
+
+Fifteenth adversary pass; count returns to 2. 0 CRIT, 0 HIGH, 1 MEDIUM, 1 LOW. Fix-round-15 applied; 0 open after fix.
+
+---
+
+### Pass p16 (2026-07-18)
+
+**Findings:** 3 (0C/0H/1M/2L) — FINDINGS_REMAIN
+**Convergence counter:** 0 of 3 (STRICT)
+
+Sixteenth adversary pass; 3 findings. 0 CRIT, 0 HIGH, 1 MEDIUM, 2 LOW. Fix-round-16 applied; 0 open after fix.
+
+---
+
+### Pass p17 (2026-07-18)
+
+**Findings:** 4 (0C/0H/2M/2L) — FINDINGS_REMAIN
+**Convergence counter:** 0 of 3 (STRICT)
+
+Seventeenth adversary pass; bundle-wide test-fn reconciliation sweep (all five stories cross-checked; process-gap item confirmed). 0 CRIT, 0 HIGH, 2 MEDIUM, 2 LOW. Fix-round-17 applied; 0 open after fix.
+
+---
+
+### Pass p18 (2026-07-18)
+
+**Findings:** 2 (0C/0H/1M/1L) — FINDINGS_REMAIN
+**Convergence counter:** 0 of 3 (STRICT)
+
+Eighteenth adversary pass; temp-file scheme MUST-NOT violation fixed (tmp_<random> placed in same directory as target — S3 S4 MUST place under system temp; fixed). Human ruling mid-grind recorded at this checkpoint: CONTINUE STRICT (AskUserQuestion; "Continue STRICT (3 consecutive zeros)" selected). 0 CRIT, 0 HIGH, 1 MEDIUM, 1 LOW. Fix-round-18 applied; 0 open after fix.
+
+---
+
+### Pass p19 (2026-07-18)
+
+**Findings:** 1 (0C/0H/0M/1L) — FINDINGS_REMAIN
+**Convergence counter:** 0 of 3 (STRICT)
+
+Nineteenth adversary pass; minimal 1 LOW finding. 0 CRIT, 0 HIGH, 0 MEDIUM, 1 LOW. Fix-round-19 applied; 0 open after fix.
+
+---
+
+### Pass p20 (2026-07-18)
+
+**Findings:** 3 (0C/0H/1M/2L) — FINDINGS_REMAIN
+**Convergence counter:** 0 of 3 (STRICT)
+
+Twentieth adversary pass; spec micro-round within fix-round-20: v1.3.87→v1.3.88 (P20-002 error-string source-alignment — 401/network loose-substring forms in BC-3.9.012/013 + bc-2 Error Path Summary, three-way network-string divergence resolved). Spec-vs-source string verification at story authoring added to process-gap ledger. 0 CRIT, 0 HIGH, 1 MEDIUM, 2 LOW. Fix-round-20 applied; 0 open after fix.
+
+---
+
+### Pass p21 (2026-07-18)
+
+**Findings:** 1 (0C/0H/0M/1L) — FINDINGS_REMAIN
+**Convergence counter:** 0 of 3 (STRICT)
+
+Twenty-first adversary pass; minimal 1 LOW finding. 0 CRIT, 0 HIGH, 0 MEDIUM, 1 LOW. Fix-round-21 applied; 0 open after fix.
+
+---
+
+### Pass p22 (2026-07-18)
+
+**Findings:** 2 (0C/0H/0M/2L) — FINDINGS_REMAIN
+**Convergence counter:** 0 of 3 (STRICT)
+
+Twenty-second adversary pass; 2 LOW findings (zero MEDIUM+). Spec micro-round within fix-round-22: v1.3.88→v1.3.89 (P22-001 mutants.toml examine_globs primary delivery migrated to S1 slot — chain S3→S2 per P3-009 → S1 per P22-001; CWE-116 both-windows escape rationale tightened). Fix-round-22 applied; 0 open after fix.
+
+---
+
+### Pass p23 (2026-07-18)
+
+**Findings:** 3 (0C/0H/1M/2L) — FINDINGS_REMAIN
+**Convergence counter:** 0 of 3 (STRICT)
+
+Twenty-third adversary pass; module-scaffolding dispatch-arm rows added to S2/S3/S4 (missing AttachmentSubcommand dispatch branches). 0 CRIT, 0 HIGH, 1 MEDIUM, 2 LOW. Fix-round-23 applied; 0 open after fix.
+
+---
+
+### Pass p24 (2026-07-18)
+
+**Findings:** 1 (0C/0H/1M/0L) — FINDINGS_REMAIN
+**Convergence counter:** 0 of 3 (STRICT)
+
+Twenty-fourth adversary pass; foundational S1 scaffolding misnomer: S1 referred to a nonexistent `IssueSubcommand` type (correct: `IssueCommand`) and created a flat-vs-nested `AttachmentSubcommand` contradiction — survived 23 passes undetected. 0 CRIT, 0 HIGH, 1 MEDIUM, 0 LOW. Fix-round-24 applied; 0 open after fix.
+
+---
+
+### Pass p25 (2026-07-18)
+
+**Findings:** 4 (0C/0H/1M/3L) — FINDINGS_REMAIN
+**Convergence counter:** 0 of 3 (STRICT)
+
+Twenty-fifth adversary pass; cross-story compile trap: serialize_attachment_object (S2/S4 name) vs serialize_attachment_curated (S3/S5 name) — two incompatible function names for the same logical operation create a cross-story compile failure if either story is integrated without reconciliation. Component-table symbol-name consistency check added to process-gap ledger (item 8). 0 CRIT, 0 HIGH, 1 MEDIUM, 3 LOW. Fix-round-25 applied; 0 open after fix. AC counts: S1 11 / S2 19 / S3 18 / S4 16 / S5 16. Stories v1.12/v1.18/v1.17/v1.16/v1.17. Process-gap ledger 8 items. Pass 26 in flight.

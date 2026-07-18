@@ -3,7 +3,7 @@ context: bc-2
 title: "Issue Read (list/view/comments/changelog)"
 total_bcs: 106   # cumulative claim (incl. range-collapsed); definitional_count below is individually-bodied headings
 definitional_count: 64   # count of `#### BC-` headings in this file
-last_updated: 2026-07-17
+last_updated: 2026-07-18
 source_pass: 3
 trace: |
   - L2: .factory/specs/domain-spec/bc-02-issue-read.md
@@ -25,6 +25,7 @@ trace: |
   - v1.3.78 — Closing micro-round 1.3.77→1.3.78 (2026-07-17, SOH-ATTACHMENTS-1): BC-2.7.002 `302/303-redirects` parity with BC-2.7.007 (P38-I1); EC-2.7.001-2 N==M clause added — hint fires only when displayed count is reduced (P39-I2); triple blank lines after EC-2.7.008-6 collapsed to one (INFO-1).
   - v1.3.80 — Security fix round SEC-576-v2 (2026-07-17, SOH-ATTACHMENTS-1): BC-2.7.007 step 2 `?redirect=false` prohibition promoted to body clause (SEC-576-009); EC-2.7.007-12 added — single-id overwrite-refuse pre-flight EC (SEC-576-010); BC-2.7.010 server-ID trust assumption note (SEC-576-008); BC-2.7.011 display-sanitization clause for TTY output (SEC-576-011 CWE-116); SEC-576-011 cross-references added to BC-2.7.008 Overwrite behavior and BC-2.7.010 degenerate-name warning; BC-2.7.007/BC-2.7.008/BC-2.7.010/BC-2.7.011 Trace fields updated.
   - v1.3.81 — r43 micro-fix round (2026-07-17, SOH-ATTACHMENTS-1): BC-2.7.011 display-sanitization primary clause corrected — earliest consumer S2→S1 (S1 list table cells ship first; NEW-576-V3-001 fold); S3 added to allocation guidance alongside S4 (GAP-R43-002); Unicode bidi/line-terminator out-of-scope sentence appended (NEW-576-V3-002); BC-2.7.011 Trace updated.
+  - v1.3.88 — P20-ROUND micro-fix (2026-07-18, SOH-ATTACHMENTS-1): 0 new BCs — Error Path Summary network drop bullet corrected from semicolon form `"Could not reach <host>; check your connection"` to loose-substring form consistent with the adjacent 401 row (P20-002 INFO three-way divergence); source: `src/error.rs::JrError::NetworkError` `#[error("Could not reach {0} — check your connection")]` (em-dash, no semicolon/colon); BC count unchanged (64/106)
 ---
 
 # BC-2 — Issue Read (list / view / comments / changelog)
@@ -972,7 +973,7 @@ Since step 4 of sanitization already strips `../`, `/`, `\`, `:`, the join will 
 ## Error Path Summary
 
 All issue-read errors follow the universal pattern (BC-X.3.012):
-- Network drop → exit 1 + `"Could not reach <host>; check your connection"`
+- Network drop → exit 1 + stderr contains "Could not reach" (full literal: `Could not reach <host> — check your connection` — `src/error.rs::JrError::NetworkError`)
 - 401 → exit 2 + `Not authenticated` + `jr auth login`
 - 5xx → exit 1 + `API error (5xx)` + friendly message
 - Never: `panic` in stderr
