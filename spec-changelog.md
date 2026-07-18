@@ -7,6 +7,82 @@ project: "jr (jira-cli)"
 
 Track all spec version changes. Most recent version first.
 
+## [1.3.84] - 2026-07-17
+
+### Type: PATCH
+
+### Summary
+
+F3 adversary pass-6 process-gap resolution (SOH-ATTACHMENTS-1 F3 gate, spec_version_checked: 1.3.83). Resolves 2 [process-gap] findings surfaced by F3 adversary pass 6. P6-004 ([process-gap]): prd-delta-576.md S5 Scope row corrected — the EC-3.9.020-7 `--public` dry-run visibility annotation claim "S3 implements the annotation plumbing keyed on the flag" was stale after P5-011 (which moved the annotation entirely to S5 and introduced the S3 interim-rejection pattern); updated to: S5 owns the annotation end-to-end; S3 defines flags in clap and interim-rejects them (S5 Task 5; traces: P5-011 pass 5 + P6-004 pass 6). P6-009 ([process-gap]): prd-delta-576.md S3 Scope row DECOMPOSITION SEAM note added — licenses the S3 temporary rejection of `--public`/`--internal` (exit 64; verbatim message: `"--public and --internal are not yet supported. JSM visibility will be shipped in a follow-on story."`; mirrors S-577-1 stub pattern; S5 removal obligation; final behavior BC-3.9.002/003/004/005). No new BCs, holdouts, or VPs.
+
+### Changed Requirements
+
+- `.factory/phase-f2-spec-evolution/prd-delta-576.md` (MODIFIED): S5 Scope row EC-3.9.020-7 annotation corrected (P6-004); S3 Scope row DECOMPOSITION SEAM note added (P6-009); `spec_version_after` 1.3.83→1.3.84; P6-ROUND dispositions appended.
+
+### Impact Assessment
+
+| Artifact | Change Type | Notes |
+|---|---|---|
+| prd-delta-576.md | Modified | S3/S5 scope rows (P6-004/P6-009 process-gap amendments); spec_version_after 1.3.84; P6-ROUND dispositions |
+
+- BCs: 657 (unchanged)
+- Holdouts: 100 (unchanged)
+- VPs: 35 (unchanged)
+
+---
+
+## [1.3.83] - 2026-07-17
+
+### Type: PATCH
+
+### Summary
+
+F3 adversary pass-5 process-gap resolution (SOH-ATTACHMENTS-1 F3 gate, spec_version_checked: 1.3.82). Resolves 1 [process-gap] finding surfaced by F3 adversary pass 5. P5-006 ([process-gap]): prd-delta-576.md Scope table amended — S1 CHANGELOG obligation (b) scoped from the bundle-wide entry `feat(issue): attachment list/download/upload/delete subcommand tree (#576)` to the list-scoped entry `feat(issue): attachment list subcommand + JSON output + filters (#576)` with per-story-scoping rationale note (traces: P3-018 + P4-002 + P5-006; rationale: mid-bundle dev release must not advertise unshipped subcommands). S2–S5 CHANGELOG delivery obligations added: each story appends its own scoped CHANGELOG entry — `feat(issue): attachment download subcommand (#576)` (S2), `feat(issue): attachment upload platform POST + --replace-existing (#576)` (S3), `feat(issue): attachment delete subcommand (#576)` (S4), `feat(issue): attachment upload --public/--internal JSM visibility (#576)` (S5). No new BCs, holdouts, or VPs.
+
+### Changed Requirements
+
+- `.factory/phase-f2-spec-evolution/prd-delta-576.md` (MODIFIED): S1 delivery obligation (b) amended (P5-006 per-story CHANGELOG scoping); S2 delivery obligation (f) added (P5-006 scoped entry); S3 delivery obligation (f) added (P5-006 scoped entry); S4 delivery obligation (c) added (P5-006 scoped entry); S5 delivery obligation (c) added (P5-006 scoped entry); `spec_version_after` 1.3.82→1.3.83; P5-ROUND dispositions appended.
+
+### Impact Assessment
+
+| Artifact | Change Type | Notes |
+|---|---|---|
+| prd-delta-576.md | Modified | S1–S5 scope rows (P5-006 per-story CHANGELOG scoping); spec_version_after 1.3.83; P5-ROUND dispositions |
+
+- BCs: 657 (unchanged)
+- Holdouts: 100 (unchanged)
+- VPs: 35 (unchanged)
+
+---
+
+## [1.3.82] - 2026-07-17
+
+### Type: PATCH
+
+### Summary
+
+F3 adversary pass-3 micro-round (SOH-ATTACHMENTS-1 F3 gate, spec_version_checked: 1.3.81). Resolves 3 spec-level gaps surfaced by F3 adversary pass 3. P3-007 (MEDIUM): EC-3.9.020-9 added to BC-3.9.020 establishing the three-category dry-run taxonomy — BC-3.9.012 file pre-checks are "pre-flight checks" (third category, distinct from confirmation gates and eligibility guards) and are NOT suppressed by `--dry-run`; they validate resource paths before any I/O unconditionally. The EC-3.9.020-7/8 narrow eligibility-guard definition (BC-3.9.005 non-JSM + BC-3.9.017 step-0) is unchanged. P3-011 (MEDIUM): EC-3.9.010-5 added to BC-3.9.010 — canonical human-mode message for the bulk-delete all-404 outcome: `"No attachments deleted (all were already removed or not found)."` to stderr; classified HINT (§3.9 taxonomy; JSON-suppressed; exit 0; consistent with EC-2.7.008-6 hint-vs-error principle). P3-009 (MEDIUM): prd-delta-576.md Scope table amended — `.cargo/mutants.toml` `examine_globs` entries for `attachments.rs` moved from S3 delivery obligation to S2 (security-critical `sanitize_attachment_filename` ships with S2; cargo-mutants policy confirms `--in-diff` only narrows within already-scoped files — glob absent at S2 merge means S2 code never mutation-tested; S3 obligation amended to confirm-present/idempotent). No new BCs, holdouts, or VPs.
+
+### Changed Requirements
+
+- `.factory/specs/prd/bc-3-issue-write.md` (MODIFIED): EC-3.9.020-9 added after EC-3.9.020-8 (three-category dry-run taxonomy: pre-flight checks not suppressed; P3-007); EC-3.9.010-5 added after EC-3.9.010-4 (all-404 bulk delete human-mode HINT; P3-011); BC-3.9.010 Trace updated (P3-011); BC-3.9.020 Trace updated (P3-007); frontmatter trace v1.3.82 added; footer updated.
+- `.factory/specs/prd/BC-INDEX.md` (MODIFIED): BC-3.9.010 row updated (EC-3.9.010-5 note; P3-011); BC-3.9.020 row updated (EC-3.9.020-9 three-category taxonomy; P3-007); index_version v6.34→v6.35; last_updated updated.
+- `.factory/phase-f2-spec-evolution/prd-delta-576.md` (MODIFIED): S2 delivery obligation (e) added (examine_globs entries moved to S2; P3-009); S3 delivery obligation (a) amended (confirm-present/idempotent; P3-009); `spec_version_after` 1.3.81→1.3.82; P3-ROUND dispositions appended.
+
+### Impact Assessment
+
+| Artifact | Change Type | Notes |
+|---|---|---|
+| bc-3-issue-write.md | Modified | EC-3.9.020-9 (P3-007) + EC-3.9.010-5 (P3-011) + Trace updates + frontmatter trace + footer |
+| BC-INDEX.md | Modified | BC-3.9.010 and BC-3.9.020 rows; v6.34→v6.35 |
+| prd-delta-576.md | Modified | S2/S3 scope rows (P3-009); spec_version_after 1.3.82; P3-ROUND dispositions |
+
+- BCs: 657 (unchanged)
+- Holdouts: 100 (unchanged)
+- VPs: 35 (unchanged)
+
+---
+
 ## [1.3.81] - 2026-07-17
 
 ### Type: PATCH

@@ -3,6 +3,7 @@ document_type: adr
 adr_id: ADR-0017
 status: Accepted
 date: 2026-07-15
+amended: 2026-07-17
 subsystems_affected: ["SS-03", "SS-09"]
 supersedes: null
 superseded_by: null
@@ -14,6 +15,7 @@ related: ["ADR-0001", "ADR-0003"]
 ## Status
 
 **Accepted** (2026-07-15). Gate: DEC-179, item 7 of the F1 SOH-ATTACHMENTS-1 dependency gate.
+**Amended** (2026-07-17): Cargo.toml delivery split across S-576-2 and S-576-3 delivery slots per adversarial finding P1-010, F3 pass 1. See § Decision amendment below.
 
 ## Context
 
@@ -80,8 +82,20 @@ Specifically:
    `ReaderStream`. An implementer may declare `features = ["io"]` instead — `io-util` is
    sufficient and is the conservative explicit choice.
 
-Cargo.toml is NOT modified by this ADR delivery — the dependency additions are deferred to the
-Story 3 delivery slot per the SOH-ATTACHMENTS-1 wave schedule.
+Cargo.toml delivery is **split across two story slots** per the earliest-consumer principle
+(DEC-184 R3.13; amended 2026-07-17, adversarial finding P1-010, F3 pass 1):
+
+- **S-576-2 delivery slot (earliest consumer):** reqwest `stream` feature only — required by
+  `Response::bytes_stream()` in `get_attachment_content` for streaming large downloads. `tokio-util`
+  is NOT needed for the download path.
+- **S-576-3 delivery slot:** reqwest `multipart` feature + `tokio-util = { version = "^0.7",
+  features = ["io-util"] }` direct dependency — both required for the upload path
+  (`src/api/jira/attachments.rs` multipart form encoding and `ReaderStream` adapter).
+
+The original text deferred all three Cargo.toml changes to Story 3. That was corrected because
+S-576-2 (`depends_on: []`) hard-requires `stream` for OOM-safe streaming (BC-2.7.007) and is
+independent of S-576-3; making S-576-2 wait on S-576-3 would chain download behind upload without
+architectural justification.
 
 ## Rationale
 
@@ -135,10 +149,17 @@ be omitted.
 - `cargo deny` must be re-run after Cargo.toml edits to confirm no advisory or license
   regression from the explicit tokio-util promotion.
 
-### Status as of 2026-07-15
+### Status as of 2026-07-15 (original)
 
-Accepted at the F1 gate (DEC-179 item 7). Cargo.toml changes are deferred to Story 3 of the
-SOH-ATTACHMENTS-1 wave. The decision is binding; the implementation is not yet delivered.
+Accepted at the F1 gate (DEC-179 item 7). Cargo.toml changes were deferred to Story 3 of the
+SOH-ATTACHMENTS-1 wave. The decision was binding; the implementation was not yet delivered.
+
+### Status as of 2026-07-17 (amendment — P1-010, F3 pass 1)
+
+Cargo.toml delivery split: reqwest `stream` feature ships with S-576-2 (earliest consumer);
+reqwest `multipart` + `tokio-util ^0.7 io-util` ship with S-576-3. The core decision (enable
+both reqwest features + promote tokio-util) is unchanged. Only the delivery slot allocation is
+amended. Implementation not yet delivered in either slot.
 
 ## Alternatives Considered
 

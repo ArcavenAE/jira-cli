@@ -1779,3 +1779,64 @@ All r43 gaps CLOSED:
 No S2-earliest-consumer residue found. Version surfaces complete (spec v1.3.81, BC-INDEX v6.34 consistent across frontmatter and body). Guards exit 0.
 
 Report: `phase-f2-spec-evolution/consistency-report-576-r44.md`.
+
+---
+
+## SOH-ATTACHMENTS-1 F3 Adversary Passes (2026-07-17, ongoing)
+
+Criterion: **STRICT** (3 consecutive zero-finding passes required). Passes run against spec v1.3.81→v1.3.83. All passes fresh-context, blind adversarial review. Stories S-576-1..5 v1.5 (AC 11/17/17/15/14).
+
+| Pass | Date | Total | CRIT | HIGH | MED | LOW | INFO | Counter | Verdict |
+|------|------|-------|------|------|-----|-----|------|---------|---------|
+| p1 | 2026-07-17 | 27 | 2 | 11 | 11 | 3 | 0 | 0/3 | FINDINGS_REMAIN |
+| p2 | 2026-07-17 | 16 | 3 | 4 | 6 | 3 | 0 | 0/3 | FINDINGS_REMAIN |
+| p3 | 2026-07-17 | 18 | 0 | 4 | 5 | 9 | 0 | 0/3 | FINDINGS_REMAIN |
+| p4 | 2026-07-17 | 11 | 0 | 0 | 8 | 2 | 1 | 0/3 | FINDINGS_REMAIN |
+| p5 | 2026-07-17 | 10 | 0 | 1 | 2 | 7 | 1 | 0/3 | FINDINGS_REMAIN |
+
+Trajectory shorthand (passes 1–5): `27→16→18→11→10` — IN PROGRESS; trajectory-tail →16→18→11→10; severity ceiling MEDIUM (pass-5 single HIGH); STRICT streak 0/3; pass 6 in flight.
+
+---
+
+### Pass p1 (2026-07-17)
+
+**Findings:** 27 (2C/11H/11M/3L) — FINDINGS_REMAIN
+**Convergence counter:** 0 of 3 (STRICT)
+
+First adversary pass against spec v1.3.81 + stories S-576-1..5 v1.0. 27 findings: 2 CRIT, 11 HIGH, 11 MEDIUM, 3 LOW. Fix-round-1 applied; 0 open after fix.
+
+---
+
+### Pass p2 (2026-07-17)
+
+**Findings:** 16 (3C/4H/6M/3L) — FINDINGS_REMAIN
+**Convergence counter:** 0 of 3 (STRICT)
+
+Second adversary pass. Spec micro-round within fix-round-2: v1.3.81→v1.3.82 (EC-3.9.020-9 + EC-3.9.010-5 + prd-delta mutants S2-slot). 16 findings: 3 CRIT, 4 HIGH, 6 MEDIUM, 3 LOW. Fix-round-2 applied; 0 open after fix.
+
+---
+
+### Pass p3 (2026-07-17)
+
+**Findings:** 18 (0C/4H/5M/9L) — FINDINGS_REMAIN (count regressed — latent)
+**Convergence counter:** 0 of 3 (STRICT)
+
+Third adversary pass; count regressed from 16 to 18 — all new findings latent (not fix-echoes). 0 CRIT, 4 HIGH, 5 MEDIUM, 9 LOW. Fix-round-3 applied; 0 open after fix.
+
+---
+
+### Pass p4 (2026-07-17)
+
+**Findings:** 11 (0C/0H/8M/2L/1I) — FINDINGS_REMAIN
+**Convergence counter:** 0 of 3 (STRICT)
+
+Fourth adversary pass; severity floor improvement — 0 CRIT, 0 HIGH, 8 MEDIUM, 2 LOW, 1 INFO. Fix-round-4 applied; 0 open after fix.
+
+---
+
+### Pass p5 (2026-07-17)
+
+**Findings:** 10 fixable (0C/1H/2M/7L/1I) — FINDINGS_REMAIN
+**Convergence counter:** 0 of 3 (STRICT)
+
+Fifth adversary pass. Spec micro-round within fix-round-5: v1.3.82→v1.3.83 (prd-delta per-story CHANGELOG scoping P5-006). 0 CRIT, 1 HIGH, 2 MEDIUM, 7 LOW, 1 INFO (total 10 fixable). Ceiling MEDIUM (single HIGH). Fix-round-5 applied; 0 open after fix. BC-INDEX v6.34→v6.35 (micro-round r45). PRE-F4-UNICODE-DISPLAY-SANITIZATION obligation registered (human ruling 2026-07-17). Pass 6 in flight.

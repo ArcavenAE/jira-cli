@@ -5774,3 +5774,19 @@ Displaced to make room for SECURITY-FIX+REVERIFY COMPLETE step row per keep-5 ru
 | Step | Agent | Status | Output |
 |------|-------|--------|--------|
 | **SOH-ATTACHMENTS-1 F2 GATE APPROVED (DEC-184, 2026-07-17): F2 spec package APPROVED at v1.3.79; F3 AUTHORIZED (5 stories S1-S5, STRICT criterion). Six post-DEC-182 tail rulings RATIFIED. PRE-F4-SECURITY-SPOTCHECK-576 SUPERSEDED: full security re-review v1.3.79 dispatched (security-reviewer; report: phase-f2-spec-evolution/security-review-576-v2.md); F3 BLOCKED pending verdict; APPROVE/APPROVE-WITH-NOTES unblocks; SPEC-CHANGES-REQUIRED triggers fix round + re-verify. trajectory-tail →1→0→0→0** | human + state-manager | COMPLETE — F3 BLOCKED pending security-review-576-v2 | BC 657; holdouts 100; VP 35; spec v1.3.79; BC-INDEX v6.33; holdout frontmatter v1.5.8. |
+
+### Archived Phase Progress row (F3-round-5-checkpoint burst)
+
+Displaced to make room for SOH-ATTACHMENTS-1 F3 IN PROGRESS CHECKPOINT Phase Progress row per keep-5 rule.
+
+| Phase | Status | Completed | Gate | Notes |
+|-------|--------|-----------|------|-------|
+| **SOH-ATTACHMENTS-1 F2 PRE-GATE SEQUENCE COMPLETE (2026-07-17): closing micro-round v1.3.77→v1.3.78 — 14-item carried-cosmetics ledger dispositioned (8 FOLDED: P38-I1, P39-I1/I2/I3, P40-I1/I2, INFO-1, INFO-NEW-5; 4 ACCEPTED-CARRIED: INFO-2/3/6/15, verified non-load-bearing; 1 N/A: INFO-8; 1 DISPOSITION-ONLY: P40-I3 dry-run path-b/c → F3 test-matrix); guards exit 0. Input-drift CLEAN: 0 DRIFT findings; 3 living bookkeeping hashes bumped (cycles/* burst-log, session-checkpoints, lessons → 3bf79c1); 43 point-in-time snapshots classified intentionally-stale per DEC-170/171/176 precedent; 7 primary gate artifacts verified consistent via guards. Fresh-context pre-gate consistency audit (gate-audit-576.md): GAPS-FOUND 2 LOW + 1 INFO, NONE BLOCKING — GAP-AUDIT-576-001 (delivery obligations not promoted to Scope table) → RESOLVED by SCOPED-ROUND-1; GAP-AUDIT-576-002 (pre-F4 security spot-check BC-3.9.015..020 + CWE-88 AID validation) → recorded as obligation; INFO-AUDIT-576-001 (STATE.md version) → fixed same burst. Scoped-round-1 v1.3.78→v1.3.79: per-story delivery-obligation notes added to all five prd-delta Scope rows (per DEC-170 mechanical-mirror precedent); guards exit 0. FINAL: spec v1.3.79; BC 657/holdouts 100/VP 35; BC-INDEX v6.33; holdout frontmatter v1.5.8. F2 STRICT CONVERGED (p38/p39/p40 CLEAN×3) + pre-gate sequence complete. GATE-READY.** | **pre-gate sequence** | **2026-07-17** | **F2 GATE APPROVED (DEC-184).** | BC 657; holdouts 100; VP 35; spec v1.3.79; BC-INDEX v6.33; holdout frontmatter v1.5.8. |
+
+### Archived Current Phase Steps row (F3-round-5-checkpoint burst)
+
+Displaced to make room for SOH-ATTACHMENTS-1 F3 ADVERSARY PASSES 1-5 COMPLETE step row per keep-5 rule.
+
+| Step | Agent | Status | Output |
+|------|-------|--------|--------|
+| **SOH-ATTACHMENTS-1 F2 PRE-GATE SEQUENCE COMPLETE (2026-07-17): closing micro-round v1.3.77→v1.3.78 (14-item ledger: 8 FOLDED, 4 ACCEPTED-CARRIED, 1 N/A, 1 DISPOSITION-ONLY; guards exit 0); input-drift CLEAN (0 DRIFT; 3 bookkeeping hashes bumped → 3bf79c1; 43 point-in-time snapshots intentionally-stale per DEC-170/171/176); fresh-context pre-gate audit GATE-READY (2 LOW + 1 INFO, NONE BLOCKING — GAP-AUDIT-576-001 resolved by scoped-round-1; GAP-AUDIT-576-002 recorded as PRE-F4 security spot-check obligation; INFO-AUDIT-576-001 fixed); scoped-round-1 v1.3.78→v1.3.79 (per-story delivery-obligation notes added to all five Scope rows, DEC-170 mechanical-mirror precedent; guards exit 0); FINAL PACKAGE: spec v1.3.79; BC 657/holdouts 100/VP 35; BC-INDEX v6.33; holdout frontmatter v1.5.8. GATE-READY.** | pre-gate sequence | COMPLETE | BC 657; holdouts 100; VP 35; spec v1.3.79; BC-INDEX v6.33; holdout frontmatter v1.5.8. |
