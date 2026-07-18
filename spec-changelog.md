@@ -7,6 +7,84 @@ project: "jr (jira-cli)"
 
 Track all spec version changes. Most recent version first.
 
+## [1.3.87] - 2026-07-18
+
+### Type: PATCH
+
+### Summary
+
+F3 adversary pass-12 micro-fix round (SOH-ATTACHMENTS-1 F3 gate, spec_version_checked: 1.3.86). Resolves 1 [medium] finding surfaced by F3 adversary pass 12. P12-003 ([medium]): BC-3.9.001 asserted `HTTP 403 "Websudo required"` as the server response body when the `X-Atlassian-Token: no-check` header is absent. The research file (`.factory/research/issue-576-attachments-api-2026-07-15.md` §1e + §P2-1) documents that the XSRF guard rejects the request but does NOT document any specific 403 body text — neither "Websudo required" nor "XSRF check failed" is attested. Fix: the unverified body string replaced with an explicit hedge stating the exact server 403 body is deployment-specific and not load-bearing; `jr` only guarantees the header is always sent; the test asserts header presence, not the server's 403 body. No new BCs, holdouts, or VPs. BC-INDEX unchanged (BC-3.9.001 row uses "CSRF bypass" without asserting a specific 403 body).
+
+### Changed Requirements
+
+- `.factory/specs/prd/bc-3-issue-write.md` (MODIFIED): BC-3.9.001 body 403 text hedged (P12-003); BC-3.9.001 Trace field updated with §1e+§P2-1 citation and P12-003; frontmatter `last_updated` advanced; frontmatter trace v1.3.87 added; footer prepended.
+- `.factory/phase-f2-spec-evolution/prd-delta-576.md` (MODIFIED): `spec_version_after` 1.3.86→1.3.87; P12-ROUND dispositions appended.
+
+### Impact Assessment
+
+| Artifact | Change Type | Notes |
+|---|---|---|
+| bc-3-issue-write.md | Modified | BC-3.9.001: 403 body text hedged (P12-003); Trace + frontmatter trace updated |
+| prd-delta-576.md | Modified | P12-ROUND dispositions; spec_version_after 1.3.87 |
+
+- BCs: 657 (unchanged)
+- Holdouts: 100 (unchanged)
+- VPs: 35 (unchanged)
+
+---
+
+## [1.3.86] - 2026-07-18
+
+### Type: PATCH
+
+### Summary
+
+F3 adversary pass-11 micro-fix round (SOH-ATTACHMENTS-1 F3 gate, spec_version_checked: 1.3.85). Resolves 1 [gap] finding surfaced by F3 adversary pass 11. P11-005 ([gap]): BC-X.8.010 defined the serviceDeskId resolution chain but omitted the None-result path — a JSM project whose `project.id` matches no ServiceDesk entry in the paginated `GET /rest/servicedeskapi/servicedesk` response. The story layer was asserting exit 64 for this path without spec licensing. Fix: EC-X.8.010-1 added to BC-X.8.010 in cross-cutting.md. The EC specifies: HTTP 200 from the list call + no `projectId` match → exit 64 BEFORE any `attachTemporaryFile` call; canonical message: `"No JSM service desk found for project <KEY>. The project may still be provisioning; verify with \`jr queue list --project <KEY>\`."` (ERROR, unconditional, both human and `--output json` modes). Distinctions: (a) HTTP errors on the list call propagate via existing resolution-chain rules — EC only applies to the 200-but-no-match case; (b) fires after the BC-3.9.005 non-JSM guard (not in play). No stale-heal applies. No new BCs, holdouts, or VPs.
+
+### Changed Requirements
+
+- `.factory/specs/prd/cross-cutting.md` (MODIFIED): EC-X.8.010-1 paragraph added to BC-X.8.010 (P11-005); BC-X.8.010 Trace field updated with P11-005 citation; frontmatter trace entry v1.3.86 added.
+- `.factory/specs/prd/BC-INDEX.md` (MODIFIED): BC-X.8.010 row updated with EC-X.8.010-1 summary (P11-005); `last_updated` advanced; `index_version` v6.35→v6.36.
+- `.factory/phase-f2-spec-evolution/prd-delta-576.md` (MODIFIED): `spec_version_after` 1.3.85→1.3.86; P11-ROUND dispositions appended.
+
+### Impact Assessment
+
+| Artifact | Change Type | Notes |
+|---|---|---|
+| cross-cutting.md | Modified | BC-X.8.010: EC-X.8.010-1 added (P11-005 gap closure); Trace + frontmatter trace updated |
+| BC-INDEX.md | Modified | BC-X.8.010 row synced (EC-X.8.010-1 summary); index_version v6.35→v6.36 |
+| prd-delta-576.md | Modified | P11-ROUND dispositions; spec_version_after 1.3.86 |
+
+- BCs: 657 (unchanged)
+- Holdouts: 100 (unchanged)
+- VPs: 35 (unchanged)
+
+---
+
+## [1.3.85] - 2026-07-17
+
+### Type: PATCH
+
+### Summary
+
+F3 adversary pass-7 process-gap resolution (SOH-ATTACHMENTS-1 F3 gate, spec_version_checked: 1.3.84). Resolves 2 [process-gap] findings surfaced by F3 adversary pass 7. P7-007 ([process-gap]): prd-delta-576.md Scope table CHANGELOG obligation strings for S2–S5 reconciled with story task-block canonical forms — S2(f) `feat(issue): attachment download subcommand (#576)` → `feat(issue): attachment download single/batch/newest + streaming + CWE-22 sanitization (#576)`; S3(f) `feat(issue): attachment upload platform POST + --replace-existing (#576)` → `feat(issue): attachment upload platform POST + --replace-existing + --dry-run path-c (#576)`; S4(c) `feat(issue): attachment delete subcommand (#576)` → `feat(issue): attachment delete single/bulk/older-than + dry-run paths a/b (#576)`; S5(c) `feat(issue): attachment upload --public/--internal JSM visibility (#576)` → `feat(issue): attachment upload --public/--internal JSM visibility + servicedeskapi two-step (#576)`. S1 already reconciled and unchanged. P7-008 ([process-gap]): S5 delivery obligation (d) added — `.cargo/mutants.toml` `examine_globs` entries for `src/api/jsm/attachments.rs` and `src/api/jsm/servicedesks.rs`; both verified absent from `examine_globs` at P7-008 time (only `requests.rs` and `request_types.rs` present in `api/jsm/` scope); same earliest-consumer rationale as S2 obligation (e). No new BCs, holdouts, or VPs.
+
+### Changed Requirements
+
+- `.factory/phase-f2-spec-evolution/prd-delta-576.md` (MODIFIED): S2 delivery obligation (f) CHANGELOG string expanded verbatim (P7-007); S3 delivery obligation (f) CHANGELOG string expanded verbatim (P7-007); S4 delivery obligation (c) CHANGELOG string expanded verbatim (P7-007); S5 delivery obligation (c) CHANGELOG string expanded verbatim (P7-007); S5 delivery obligation (d) added — mutants.toml examine_globs entries for `src/api/jsm/attachments.rs` + `src/api/jsm/servicedesks.rs` (P7-008); `spec_version_after` 1.3.84→1.3.85; P7-ROUND dispositions appended.
+
+### Impact Assessment
+
+| Artifact | Change Type | Notes |
+|---|---|---|
+| prd-delta-576.md | Modified | S2–S5 scope rows (P7-007 CHANGELOG string reconciliation + P7-008 mutants.toml S5 obligation); spec_version_after 1.3.85; P7-ROUND dispositions |
+
+- BCs: 657 (unchanged)
+- Holdouts: 100 (unchanged)
+- VPs: 35 (unchanged)
+
+---
+
 ## [1.3.84] - 2026-07-17
 
 ### Type: PATCH

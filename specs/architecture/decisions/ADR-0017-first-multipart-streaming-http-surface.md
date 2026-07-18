@@ -93,7 +93,7 @@ Cargo.toml delivery is **split across two story slots** per the earliest-consume
   (`src/api/jira/attachments.rs` multipart form encoding and `ReaderStream` adapter).
 
 The original text deferred all three Cargo.toml changes to Story 3. That was corrected because
-S-576-2 (`depends_on: []`) hard-requires `stream` for OOM-safe streaming (BC-2.7.007) and is
+S-576-2 (`depends_on: ["S-576-1"]`; independent of S-576-3) hard-requires `stream` for OOM-safe streaming (BC-2.7.007) and is
 independent of S-576-3; making S-576-2 wait on S-576-3 would chain download behind upload without
 architectural justification.
 
@@ -160,6 +160,8 @@ Cargo.toml delivery split: reqwest `stream` feature ships with S-576-2 (earliest
 reqwest `multipart` + `tokio-util ^0.7 io-util` ship with S-576-3. The core decision (enable
 both reqwest features + promote tokio-util) is unchanged. Only the delivery slot allocation is
 amended. Implementation not yet delivered in either slot.
+
+2026-07-18: P8-003 — stale depends_on parenthetical corrected (S-576-2 depends on S-576-1, not []); Cargo split unchanged.
 
 ## Alternatives Considered
 

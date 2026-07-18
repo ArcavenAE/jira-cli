@@ -1784,7 +1784,7 @@ Report: `phase-f2-spec-evolution/consistency-report-576-r44.md`.
 
 ## SOH-ATTACHMENTS-1 F3 Adversary Passes (2026-07-17, ongoing)
 
-Criterion: **STRICT** (3 consecutive zero-finding passes required). Passes run against spec v1.3.81→v1.3.83. All passes fresh-context, blind adversarial review. Stories S-576-1..5 v1.5 (AC 11/17/17/15/14).
+Criterion: **STRICT** (3 consecutive zero-finding passes required). Passes run against spec v1.3.81→v1.3.87. All passes fresh-context, blind adversarial review. Stories S-576-1..5 v1.5→v1.11 (AC 11/19/18/15/16).
 
 | Pass | Date | Total | CRIT | HIGH | MED | LOW | INFO | Counter | Verdict |
 |------|------|-------|------|------|-----|-----|------|---------|---------|
@@ -1793,8 +1793,15 @@ Criterion: **STRICT** (3 consecutive zero-finding passes required). Passes run a
 | p3 | 2026-07-17 | 18 | 0 | 4 | 5 | 9 | 0 | 0/3 | FINDINGS_REMAIN |
 | p4 | 2026-07-17 | 11 | 0 | 0 | 8 | 2 | 1 | 0/3 | FINDINGS_REMAIN |
 | p5 | 2026-07-17 | 10 | 0 | 1 | 2 | 7 | 1 | 0/3 | FINDINGS_REMAIN |
+| p6 | 2026-07-17 | 9 | 0 | 0 | 4 | 5 | 0 | 0/3 | FINDINGS_REMAIN |
+| p7 | 2026-07-17 | 8 | 0 | 0 | 1 | 7 | 0 | 0/3 | FINDINGS_REMAIN |
+| p8 | 2026-07-18 | 3 | 0 | 0 | 1 | 2 | 0 | 0/3 | FINDINGS_REMAIN |
+| p9 | 2026-07-18 | 3 | 0 | 0 | 1 | 2 | 0 | 0/3 | FINDINGS_REMAIN |
+| p10 | 2026-07-18 | 5 | 0 | 0 | 0 | 5 | 0 | 0/3 | FINDINGS_REMAIN |
+| p11 | 2026-07-18 | 5 | 0 | 0 | 0 | 5 | 0 | 0/3 | FINDINGS_REMAIN |
+| p12 | 2026-07-18 | 5 | 0 | 1 | 1 | 3 | 0 | 0/3 | FINDINGS_REMAIN |
 
-Trajectory shorthand (passes 1–5): `27→16→18→11→10` — IN PROGRESS; trajectory-tail →16→18→11→10; severity ceiling MEDIUM (pass-5 single HIGH); STRICT streak 0/3; pass 6 in flight.
+Trajectory shorthand (passes 1–12): `27→16→18→11→10→9→8→3→3→5→5→5` — IN PROGRESS; trajectory-tail →3→5→5→5; ceiling LOW-to-HIGH oscillating (p12 1H/1M/3L); STRICT streak 0/3; pass 13 in flight.
 
 ---
 
@@ -1840,3 +1847,66 @@ Fourth adversary pass; severity floor improvement — 0 CRIT, 0 HIGH, 8 MEDIUM, 
 **Convergence counter:** 0 of 3 (STRICT)
 
 Fifth adversary pass. Spec micro-round within fix-round-5: v1.3.82→v1.3.83 (prd-delta per-story CHANGELOG scoping P5-006). 0 CRIT, 1 HIGH, 2 MEDIUM, 7 LOW, 1 INFO (total 10 fixable). Ceiling MEDIUM (single HIGH). Fix-round-5 applied; 0 open after fix. BC-INDEX v6.34→v6.35 (micro-round r45). PRE-F4-UNICODE-DISPLAY-SANITIZATION obligation registered (human ruling 2026-07-17). Pass 6 in flight.
+
+---
+
+### Pass p6 (2026-07-17)
+
+**Findings:** 9 (0C/0H/4M/5L) — FINDINGS_REMAIN
+**Convergence counter:** 0 of 3 (STRICT)
+
+Sixth adversary pass; severity ceiling drops to MEDIUM-only. 0 CRIT, 0 HIGH, 4 MEDIUM, 5 LOW. Spec micro-round within fix-round-6: v1.3.83→v1.3.84 (P6-004 S5 annotation ownership + P6-009 S3 DECOMPOSITION SEAM licensing). Fix-round-6 applied; 0 open after fix.
+
+---
+
+### Pass p7 (2026-07-17)
+
+**Findings:** 8 (0C/0H/1M/7L) — FINDINGS_REMAIN
+**Convergence counter:** 0 of 3 (STRICT)
+
+Seventh adversary pass; severity floor continues lowering toward LOW-dominant. 0 CRIT, 0 HIGH, 1 MEDIUM, 7 LOW. Spec micro-round within fix-round-7: v1.3.84→v1.3.85 (P7-007 canonical expanded CHANGELOG strings + P7-008 S5 mutants.toml obligation (d)). Fix-round-7 applied; 0 open after fix.
+
+---
+
+### Pass p8 (2026-07-18)
+
+**Findings:** 3 (0C/0H/1M/2L) — FINDINGS_REMAIN
+**Convergence counter:** 0 of 3 (STRICT)
+
+Eighth adversary pass; strong convergence signal — trajectory dropped from 8 to 3. 0 CRIT, 0 HIGH, 1 MEDIUM, 2 LOW. ADR-0017 P8-003 stale depends_on parenthetical corrected (architect, 2026-07-18). Fix-round-8 applied; 0 open after fix.
+
+---
+
+### Pass p9 (2026-07-18)
+
+**Findings:** 3 (0C/0H/1M/2L) — FINDINGS_REMAIN
+**Convergence counter:** 0 of 3 (STRICT)
+
+Ninth adversary pass; trajectory plateaus at 3. 0 CRIT, 0 HIGH, 1 MEDIUM, 2 LOW. Fix-round-9 applied; 0 open after fix.
+
+---
+
+### Pass p10 (2026-07-18)
+
+**Findings:** 5 (0C/0H/0M/5L) — FINDINGS_REMAIN
+**Convergence counter:** 0 of 3 (STRICT)
+
+Tenth adversary pass; count regressed 3→5 but ceiling drops to LOW-only (0 MEDIUM). 0 CRIT, 0 HIGH, 0 MEDIUM, 5 LOW. Fix-round-10 applied; 0 open after fix.
+
+---
+
+### Pass p11 (2026-07-18)
+
+**Findings:** 5 (0C/0H/0M/5L) — FINDINGS_REMAIN
+**Convergence counter:** 0 of 3 (STRICT)
+
+Eleventh adversary pass; plateau at 5 (all LOW). 0 CRIT, 0 HIGH, 0 MEDIUM, 5 LOW. Holdout_anchors populated on S2-S5 (Group 19 partition verified). Spec micro-round within fix-round-11: v1.3.85→v1.3.86 (P11-005 EC-X.8.010-1 None-serviceDeskId path; BC-INDEX v6.35→v6.36). Fix-round-11 applied; 0 open after fix.
+
+---
+
+### Pass p12 (2026-07-18)
+
+**Findings:** 5 (0C/1H/1M/3L) — FINDINGS_REMAIN
+**Convergence counter:** 0 of 3 (STRICT)
+
+Twelfth adversary pass; ceiling regresses to HIGH — p12 HIGH: BC-3.9.012 upload-error-taxonomy mislabeled in S3 for 11 passes (413/400/5xx/network rows miscategorized + SEC-576-004 CWE-93 multipart CRLF MUST-test uncovered) → fixed round 12 (AC-011 re-anchor + AC-018 added). 0 CRIT, 1 HIGH, 1 MEDIUM, 3 LOW. Spec micro-round within fix-round-12: v1.3.86→v1.3.87 (P12-003 X-Atlassian-Token 403-body hedge — research silent, unverified server string removed). Fix-round-12 applied; 0 open after fix. AC counts: S1 11 / S2 19 / S3 18 / S4 15 / S5 16. STORY-INDEX v1.4.73 (116 stories, stamps 111→116). Process-gap ledger 6 items. Pass 13 in flight.

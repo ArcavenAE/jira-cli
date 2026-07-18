@@ -21,6 +21,7 @@ trace: |
   - SOH-BUGS-1 post-fix micro-BC (2026-07-09): BC-X.1.011 — `-X`/`--method` case-insensitive HTTP method parsing; VP-590-001 registered (issues #590/#582, PR #597)
   - SOH-ATTACHMENTS-1 F2 addition (2026-07-15): BC-X.8.010 — JSM attachment upload resolves serviceDeskId via the EXISTING ProjectMeta cache (`get_or_fetch_project_meta`; `project_meta.json`) — NO new cache file, NO new writer (model-b discussion MOOT); SEC-576-006 self-heal; P6-001/P6-004 correction (DEC-179, issues #576 #585)
   - SOH-ATTACHMENTS-1 adversary pass-37 fix round (2026-07-17): BC-X.8.010 frontmatter description corrected from withdrawn pre-P6 design to reuse design (P37-001b)
+  - SOH-ATTACHMENTS-1 F3 adversary pass-11 fix round (2026-07-18): BC-X.8.010 EC-X.8.010-1 added — service-desk-list no-match None-path exit 64 before step 1 (P11-005; spec v1.3.86)
 ---
 
 # BC-X — Cross-cutting
@@ -735,6 +736,8 @@ When `jr issue attachment upload <KEY> --public` (or `--internal`) needs the `se
 
 The retry is a single-attempt guard — it does not loop.
 
+**EC-X.8.010-1** (service desk list succeeded, but no entry's `projectId` matches `project.id` — `resolve_service_desk_id` returns `None`): When the paginated `GET /rest/servicedeskapi/servicedesk` request SUCCEEDS (HTTP 200) but exhausts all pages without finding any entry where `serviceDesk.projectId == project.id`, `jr` exits 64 BEFORE any `attachTemporaryFile` call, with the canonical message to stderr: `"No JSM service desk found for project <KEY>. The project may still be provisioning; verify with \`jr queue list --project <KEY>\`."` **ERROR** (§3.9 stderr taxonomy — unconditional; emitted in both human and `--output json` modes; this is a fatal pre-step-1 resolution failure, not an HTTP error). **Distinctions**: (a) HTTP errors on the list call itself (5xx, 401, network) propagate via the existing resolution-chain error rules in **Errors** below — this EC only applies when the list request returns HTTP 200 with a paginated response that contains no entry whose `projectId` matches; (b) this EC fires after the `projectTypeKey == "service_desk"` guard already confirmed the project is a JSM project — the BC-3.9.005 non-JSM guard (which fires earlier, at Step 0 before any servicedeskapi call) is therefore NOT in play here. **No stale-heal:** the self-heal sequence in **Stale-ID self-healing** above does NOT apply to this path — there is no previously-cached `serviceDeskId` to invalidate; the resolution chain found no ID to cache. P11-005.
+
 **Scope**: governs `serviceDeskId` resolution for the JSM attachment upload path (`--public`/`--internal`). Other JSM commands (`queue`, `requesttype`, etc.) use the same `get_or_fetch_project_meta` function and `project_meta.json` cache; they are not separately affected by this BC.
 
 **Inputs**: `project_key: &str` (extracted from `fields.project.key` in the issue GET response).
@@ -743,7 +746,7 @@ The retry is a single-attempt guard — it does not loop.
 
 [P6-001/P6-004 correction 2026-07-16 SOH-ATTACHMENTS-1]: rewritten from a bespoke `service_desk_id_<projectKey>.json` cache design (original F2 draft) to REUSE the existing `ProjectMeta` cache via `get_or_fetch_project_meta`. Pre-code-audit original incorrectly described a new cache family and incorrectly stated "match `projectKey`" — the Jira `ServiceDesk` API response field is `projectId`, not `projectKey` (source-verified: `src/types/jsm/servicedesk.rs`). Delivery obligation revised: story S5 implementer reuses existing `read_project_meta` / `write_project_meta`; no new `read/write_service_desk_id_cache` functions to be added.
 
-**Trace**: F2 spec evolution (2026-07-15 SOH-ATTACHMENTS-1, DEC-179); P6-001/P6-004 correction 2026-07-16 (projectId field + reuse get_or_fetch_project_meta + reuse ProjectMeta cache); `src/api/jsm/servicedesks.rs::get_or_fetch_project_meta`; `src/types/jsm/servicedesk.rs::ServiceDesk.project_id`; `src/cache.rs::ProjectMeta`; BC-3.9.003/BC-3.9.004 (caller context); SEC-576-006 (stale-ID self-healing clause)
+**Trace**: F2 spec evolution (2026-07-15 SOH-ATTACHMENTS-1, DEC-179); P6-001/P6-004 correction 2026-07-16 (projectId field + reuse get_or_fetch_project_meta + reuse ProjectMeta cache); `src/api/jsm/servicedesks.rs::get_or_fetch_project_meta`; `src/types/jsm/servicedesk.rs::ServiceDesk.project_id`; `src/cache.rs::ProjectMeta`; BC-3.9.003/BC-3.9.004 (caller context); SEC-576-006 (stale-ID self-healing clause); P11-005 (EC-X.8.010-1 added: service-desk-list no-match None-path exit 64 before step 1; ERROR unconditional both modes; distinct from HTTP errors on list call and BC-3.9.005 non-JSM guard; no stale-heal applies)
 
 ---
 
