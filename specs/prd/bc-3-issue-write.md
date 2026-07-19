@@ -3249,7 +3249,7 @@ Sources: `src/cli/issue/snapshots/jr__cli__issue__json_output__tests__*.snap`; B
 #### BC-3.9.001: Platform `attachment upload` — multipart POST to `/rest/api/3/issue/{key}/attachments`; `X-Atlassian-Token: no-check` mandatory; streaming; no client-side size cap; graceful 413/400
 
 **Confidence**: HIGH
-**Source**: `src/cli/issue/attachments.rs::handle_attachment_upload` (implementation pending — story S3); `src/api/jira/attachments.rs::upload_attachments` (implementation pending — story S3); `tests/attachment_upload.rs` (implementation pending — story S3)
+**Source**: src/cli/issue/attachments.rs::handle_attachment_upload (implementation pending — story S3); src/api/jira/attachments.rs::upload_attachments (implementation pending — story S3); `tests/attachment_upload.rs` (implementation pending — story S3)
 **Subject**: Issue write (attachment upload — platform path)
 
 `jr issue attachment upload <KEY> <FILE>...` issues `POST /rest/api/3/issue/{key}/attachments` with a `multipart/form-data` body. Each file is a separate `file`-named part (the Jira API requires the field name `"file"` — any other name produces a 400). The header `X-Atlassian-Token: no-check` MUST be included on every upload request; Jira's CSRF protection rejects attachment uploads without it (HTTP 403 — XSRF-related rejection; Atlassian's exact body text varies by deployment and is not load-bearing — `jr` only guarantees the `X-Atlassian-Token: no-check` header is always sent; the test asserts header presence, not the server's 403 body). This header is load-bearing.
@@ -3262,7 +3262,7 @@ Multiple files supplied on one invocation are uploaded in a single multipart POS
 
 On HTTP 400 (bad request): exit 1; the Jira error body is surfaced on stderr verbatim (may indicate unsupported MIME type, quota exceeded, malformed part, etc.).
 
-**Retry-interaction for streaming uploads (ADR-0017)**: `reqwest`'s `RequestBuilder::try_clone()` returns `None` for multipart requests containing streamed `ReaderStream` bodies — the stream cursor is not rewindable after a partial send. Consequently, the standard `JiraClient` retry loop does NOT apply to upload requests. Any 429/Retry-After handling for `POST /rest/api/3/issue/{key}/attachments` MUST rebuild the entire multipart request from the file path on each attempt: a fresh `tokio::fs::File::open(path)` and a new `ReaderStream` per retry. A mid-stream 429 is not possible because Jira processes the response only after the full body is received. The upload handler in `src/api/jira/attachments.rs::upload_attachments` must implement its own per-attempt request construction; it MUST NOT delegate retry to the generic `JiraClient` retry wrapper. Detail: ADR-0017.
+**Retry-interaction for streaming uploads (ADR-0017)**: `reqwest`'s `RequestBuilder::try_clone()` returns `None` for multipart requests containing streamed `ReaderStream` bodies — the stream cursor is not rewindable after a partial send. Consequently, the standard `JiraClient` retry loop does NOT apply to upload requests. Any 429/Retry-After handling for `POST /rest/api/3/issue/{key}/attachments` MUST rebuild the entire multipart request from the file path on each attempt: a fresh `tokio::fs::File::open(path)` and a new `ReaderStream` per retry. A mid-stream 429 is not possible because Jira processes the response only after the full body is received. The upload handler in src/api/jira/attachments.rs::upload_attachments must implement its own per-attempt request construction; it MUST NOT delegate retry to the generic `JiraClient` retry wrapper. Detail: ADR-0017.
 
 **File argument form (`allow_hyphen_values`)**: The `<FILE>...` positional arguments carry `allow_hyphen_values = true` (CLAUDE.md convention for write-command free-text inputs). This allows file paths beginning with a dash (e.g., `-file.pdf`) without being misinterpreted as flags. Use `--` before the first `<FILE>` to unambiguously terminate flag parsing when paths start with `--`. Stdin upload via `-` is NOT supported in this slice.
 
@@ -3294,7 +3294,7 @@ Output channel: Profile 4 (Symmetric) — stdout for JSON or success data, stder
 #### BC-3.9.002: Upload to JSM issue with no visibility flag → platform POST, internal by default (safe default; P2-4a confirmed)
 
 **Confidence**: HIGH
-**Source**: `src/cli/issue/attachments.rs::handle_attachment_upload` (implementation pending — story S3)
+**Source**: src/cli/issue/attachments.rs::handle_attachment_upload (implementation pending — story S3)
 **Subject**: Issue write (attachment upload — JSM default path)
 
 When `jr issue attachment upload <KEY> <FILE>...` is issued against a JSM issue key and neither `--public` nor `--internal` is specified, `jr` uses the platform POST endpoint (`POST /rest/api/3/issue/{key}/attachments`) — the same path as BC-3.9.001.
@@ -3315,7 +3315,7 @@ The platform POST path is the default for ALL issue keys regardless of project t
 #### BC-3.9.003: `--public` flag → servicedeskapi two-step (attachTemporaryFile + request attachment) with confirmation gate (DEC-174); `--yes` bypass; non-interactive exit 64
 
 **Confidence**: HIGH
-**Source**: `src/cli/issue/attachments.rs::handle_attachment_upload` (implementation pending — story S5); `src/api/jsm/attachments.rs::attach_temporary_file` (implementation pending — story S5); `src/api/jsm/attachments.rs::post_request_attachment` (implementation pending — story S5); `tests/attachment_upload_jsm.rs` (implementation pending — story S5)
+**Source**: src/cli/issue/attachments.rs::handle_attachment_upload (implementation pending — story S5); src/api/jsm/attachments.rs::attach_temporary_file (implementation pending — story S5); src/api/jsm/attachments.rs::post_request_attachment (implementation pending — story S5); `tests/attachment_upload_jsm.rs` (implementation pending — story S5)
 **Subject**: Issue write (attachment upload — JSM public path)
 
 When `--public` is supplied, `jr issue attachment upload <KEY> <FILE>... --public` routes to the servicedeskapi two-step flow:
@@ -3351,7 +3351,7 @@ Output channel: Profile 4 (Symmetric). On success: human mode echoes "Uploaded N
 #### BC-3.9.004: `--internal` flag → servicedeskapi two-step with `public:false`; no confirmation gate; non-JSM issue = SILENT NO-OP (OQ-9 ruling)
 
 **Confidence**: HIGH
-**Source**: `src/cli/issue/attachments.rs::handle_attachment_upload` (implementation pending — story S5); `src/api/jsm/attachments.rs::post_request_attachment` (implementation pending — story S5)
+**Source**: src/cli/issue/attachments.rs::handle_attachment_upload (implementation pending — story S5); src/api/jsm/attachments.rs::post_request_attachment (implementation pending — story S5)
 **Subject**: Issue write (attachment upload — JSM internal explicit path)
 
 When `--internal` is supplied, `jr` first performs issue existence validation and project type detection (Step 0), then branches based on project type:
@@ -3381,7 +3381,7 @@ When `--internal` is supplied, `jr` first performs issue existence validation an
 #### BC-3.9.005: `--public` on non-JSM issue → exit 64 with actionable message; no servicedeskapi calls
 
 **Confidence**: HIGH
-**Source**: `src/cli/issue/attachments.rs::handle_attachment_upload` (implementation pending — story S5)
+**Source**: src/cli/issue/attachments.rs::handle_attachment_upload (implementation pending — story S5)
 **Subject**: Issue write (attachment upload — --public non-JSM guard)
 
 When `--public` is supplied and the issue is NOT a JSM service desk issue, `jr` exits 64 with a message on stderr. No servicedeskapi calls are issued; no file upload occurs.
@@ -3405,7 +3405,7 @@ The JSM detection mechanism is `projectTypeKey == "service_desk"` (from `Project
 #### BC-3.9.006: temporaryAttachmentId lifecycle (~1 h TTL); second-step failure → generic retry hint; no ID caching or reuse across invocations
 
 **Confidence**: MEDIUM-HIGH
-**Source**: `src/api/jsm/attachments.rs::post_request_attachment` (implementation pending — story S5)
+**Source**: src/api/jsm/attachments.rs::post_request_attachment (implementation pending — story S5)
 **Subject**: Issue write (attachment upload — JSM temp-ID lifecycle)
 
 A `temporaryAttachmentId` obtained from `POST .../attachTemporaryFile` has an approximate 1-hour server-side TTL per Atlassian documentation. `jr` does NOT cache or reuse temporary attachment IDs across invocations; each upload invocation performs both steps (step 1 → step 2) within the same sequential request sequence.
@@ -3433,7 +3433,7 @@ The ~1-hour TTL is informational context for the retry hint wording; `jr` implem
 #### BC-3.9.007: Post-upload echo from server response; platform path uses direct response; servicedeskapi path schema deferred (P2-3c); JSDCLOUD-10841 content-URL ban
 
 **Confidence**: MEDIUM (servicedeskapi response schema unconfirmed; P2-3c deferred)
-**Source**: `src/cli/issue/attachments.rs::handle_attachment_upload` (implementation pending — story S3/S5)
+**Source**: src/cli/issue/attachments.rs::handle_attachment_upload (implementation pending — story S3/S5)
 **Subject**: Issue write (attachment upload — post-upload echo)
 
 After a successful upload, `jr` echoes metadata from the server response directly — no secondary fetch from the issue's `fields.attachment` array is performed.
@@ -3455,7 +3455,7 @@ After a successful upload, `jr` echoes metadata from the server response directl
 #### BC-3.9.008: `attachment delete` → `DELETE /rest/api/3/attachment/{id}`; HTTP 204 = success; 404 = exit 64 + surface Jira body (DEC-168 precedent; mirrors BC-3.5.004)
 
 **Confidence**: HIGH
-**Source**: `src/cli/issue/attachments.rs::handle_attachment_delete` (implementation pending — story S4); `src/api/jira/attachments.rs::delete_attachment` (implementation pending — story S4); `tests/attachment_delete.rs` (implementation pending — story S4)
+**Source**: src/cli/issue/attachments.rs::handle_attachment_delete (implementation pending — story S4); src/api/jira/attachments.rs::delete_attachment (implementation pending — story S4); `tests/attachment_delete.rs` (implementation pending — story S4)
 **Subject**: Issue write (attachment delete)
 
 `jr issue attachment delete <AID>...` issues `DELETE /rest/api/3/attachment/{id}` for each supplied `<AID>`. One or more numeric attachment IDs may be supplied as positional arguments; for a single AID the command issues one DELETE. **OQ-7 ruling (DEC-179)**: the delete command takes only attachment ID(s) as positional arguments — there is NO `<KEY>` argument. The server enforces issue ownership; no client-side KEY validation is performed.
@@ -3480,7 +3480,7 @@ Output channel: Profile 4 (Symmetric) — stdout for success data/JSON, stderr f
 #### BC-3.9.009: `attachment upload --output json` shape — array of attachment objects; `output::render_json` required (#526 invariant)
 
 **Confidence**: HIGH
-**Source**: `src/cli/issue/attachments.rs::handle_attachment_upload` (implementation pending — story S3); `output::render_json` (existing)
+**Source**: src/cli/issue/attachments.rs::handle_attachment_upload (implementation pending — story S3); `output::render_json` (existing)
 **Subject**: Issue write (attachment upload — JSON output shape)
 
 When `--output json` is supplied, `jr issue attachment upload` returns a JSON array where each element represents one successfully uploaded file, sourced from the Jira platform POST response.
@@ -3501,7 +3501,7 @@ The array is pretty-printed via `output::render_json` or `output::print_output` 
 #### BC-3.9.010: `attachment delete --output json` shape — single `{"deleted":true,"id":"<AID>"}` or bulk `{"count":N,"deleted":true,"ids":[...]}`; BTreeMap-ordered keys
 
 **Confidence**: HIGH
-**Source**: `src/cli/issue/attachments.rs::handle_attachment_delete` (implementation pending — story S4); `output::render_json` (existing)
+**Source**: src/cli/issue/attachments.rs::handle_attachment_delete (implementation pending — story S4); `output::render_json` (existing)
 **Subject**: Issue write (attachment delete — JSON output shape)
 
 When `--output json` is supplied, `jr issue attachment delete` returns:
@@ -3555,7 +3555,7 @@ This BC is a **deferred-probe contract**. The response schema from `POST /rest/s
 #### BC-3.9.012: Upload error taxonomy — file-not-found exit 64; 413 actionable message; 401/5xx/network standard exits
 
 **Confidence**: HIGH
-**Source**: `src/cli/issue/attachments.rs::handle_attachment_upload` (implementation pending — story S3/S5); `src/error.rs::JrError` (existing)
+**Source**: src/cli/issue/attachments.rs::handle_attachment_upload (implementation pending — story S3/S5); `src/error.rs::JrError` (existing)
 **Subject**: Issue write (attachment upload — error taxonomy)
 
 Error exits for `jr issue attachment upload`:
@@ -3580,14 +3580,14 @@ Error exits for `jr issue attachment upload`:
 **EC-3.9.012-2** (issue key 404): exit 64; fires before attachment POST.
 **EC-3.9.012-3** (413): exit 1; message does NOT state a numeric size limit.
 
-**Trace**: F2 spec evolution (2026-07-15 SOH-ATTACHMENTS-1, DEC-179); `src/error.rs::JrError` exit-code mapping; P30-001 (step-1 attachTemporaryFile 403/404 carve-out: BC-X.8.010 self-heal first; post-retry exit codes per BC-X.8.010 step 4); P31-003 (step-1 carve-out extended: post-retry 401/5xx/network → BC-X.8.010 step 4; 401 → exit 2; 5xx/network → exit 1 — same universal codes as first-occurrence); P20-ROUND (BC-3.9.012/BC-3.9.013 error-table 401/network cells corrected to loose-substring form: 401 → contains "Not authenticated"+"jr auth login"; network → contains "Could not reach" — full literals from `src/error.rs::JrError` + `src/api/client.rs::send_with_retry`)
+**Trace**: F2 spec evolution (2026-07-15 SOH-ATTACHMENTS-1, DEC-179); `src/error.rs::JrError` exit-code mapping; P30-001 (step-1 attachTemporaryFile 403/404 carve-out: BC-X.8.010 self-heal first; post-retry exit codes per BC-X.8.010 step 4); P31-003 (step-1 carve-out extended: post-retry 401/5xx/network → BC-X.8.010 step 4; 401 → exit 2; 5xx/network → exit 1 — same universal codes as first-occurrence); P20-ROUND (BC-3.9.012/BC-3.9.013 error-table 401/network cells corrected to loose-substring form: 401 → contains "Not authenticated"+"jr auth login"; network → contains "Could not reach" — full literals from `src/error.rs::JrError` + src/api/client.rs::send_with_retry)
 
 ---
 
 #### BC-3.9.013: Delete error taxonomy — AID 404 exit 64 + surface body (DEC-168); 401/403/5xx/network standard exits
 
 **Confidence**: HIGH
-**Source**: `src/cli/issue/attachments.rs::handle_attachment_delete` (implementation pending — story S4); `src/error.rs::JrError` (existing)
+**Source**: src/cli/issue/attachments.rs::handle_attachment_delete (implementation pending — story S4); `src/error.rs::JrError` (existing)
 **Subject**: Issue write (attachment delete — error taxonomy)
 
 Error exits for `jr issue attachment delete`:
@@ -3655,7 +3655,7 @@ The upload confirmation gate uses the DEC-174 interactive-prompt mechanism: `epr
 #### BC-3.9.015: `attachment delete <AID>` interactive confirmation gate — `eprint!+read_line` (DEC-174); non-interactive → exit 64 + `--yes` hint; `--yes` bypasses; cancel shape `{"cancelled":true,"deleted":false}`
 
 **Confidence**: HIGH
-**Source**: `src/cli/issue/attachments.rs::handle_attachment_delete` (implementation pending — story S4)
+**Source**: src/cli/issue/attachments.rs::handle_attachment_delete (implementation pending — story S4)
 **Subject**: Issue write (attachment delete — single-ID confirmation gate)
 
 `jr issue attachment delete <AID>` requires explicit user confirmation before issuing `DELETE /rest/api/3/attachment/{id}`. This mirrors the `comment delete` gate pattern (BC-3.5.002, BC-3.5.003, DEC-174). The gate fires on every single-ID delete; `--yes` is the non-interactive bypass.
@@ -3702,7 +3702,7 @@ All of the above fire BEFORE the confirmation prompt; the gate is never presente
 #### BC-3.9.016: Bulk `attachment delete` always requires `--yes` (no interactive prompt); missing `--yes` → exit 64; three forms: single-AID (BC-3.9.015 gate), multi-AID bulk (`--yes` required), `--issue`/`--older-than` bulk (`--yes` required)
 
 **Confidence**: HIGH
-**Source**: `src/cli/issue/attachments.rs::handle_attachment_delete` (implementation pending — story S4)
+**Source**: src/cli/issue/attachments.rs::handle_attachment_delete (implementation pending — story S4)
 **Subject**: Issue write (attachment delete — bulk --older-than mandatory --yes gate)
 
 `jr issue attachment delete` has three invocation forms: (1) `delete <AID>` (single AID) — governed exclusively by BC-3.9.015's confirmation gate; (2) `delete <AID> <AID>...` (2 or more positional AIDs) — multi-AID bulk form; (3) `delete --issue <KEY> --older-than <duration>` — --older-than bulk form. Both bulk forms (2 and 3) ALWAYS require explicit `--yes` — no interactive prompt is offered. `--yes` is mandatory-explicit for bulk paths (same rationale as bulk operations elsewhere: the scope of a bulk destructive operation must be explicitly acknowledged upfront).
@@ -3749,7 +3749,7 @@ All of the above fire BEFORE the confirmation prompt; the gate is never presente
 #### BC-3.9.017: `attachment upload --replace-existing` — same-filename lookup + delete ALL matching entries; non-atomic race window documented; MUST NOT assert atomicity (JRACLOUD-96384, JRACLOUD-78388)
 
 **Confidence**: HIGH
-**Source**: `src/cli/issue/attachments.rs::handle_attachment_upload` (implementation pending — story S3)
+**Source**: src/cli/issue/attachments.rs::handle_attachment_upload (implementation pending — story S3)
 **Subject**: Issue write (attachment upload — --replace-existing conflict resolution)
 
 `jr issue attachment upload <KEY> <FILE> --replace-existing` performs a delete-then-upload sequence:
@@ -3810,7 +3810,7 @@ The delete → upload sequence is NOT atomic. A concurrent upload between step 2
 #### BC-3.9.018: `attachment upload --replace-existing` with no same-filename match — idempotent plain upload; zero-match is silent; flag accepted as no-op on the delete phase
 
 **Confidence**: HIGH
-**Source**: `src/cli/issue/attachments.rs::handle_attachment_upload` (implementation pending — story S3)
+**Source**: src/cli/issue/attachments.rs::handle_attachment_upload (implementation pending — story S3)
 **Subject**: Issue write (attachment upload — --replace-existing idempotent zero-match path)
 
 When `jr issue attachment upload <KEY> <FILE> --replace-existing` is invoked and the list step (BC-3.9.017 step 1) finds ZERO existing attachments whose filename matches `<FILE>`, the `--replace-existing` flag has no effect on the delete phase. The delete phase is skipped entirely. The upload proceeds identically to a plain `jr issue attachment upload <KEY> <FILE>` invocation (platform path per BC-3.9.001 or JSM path per BC-3.9.003/BC-3.9.004).
@@ -3835,7 +3835,7 @@ When `jr issue attachment upload <KEY> <FILE> --replace-existing` is invoked and
 #### BC-3.9.019: `attachment delete --issue <KEY> --older-than <duration>` — dedicated `parse_age_duration` (d=24h clock-hours, w=7×24h calendar; `src/duration.rs` syntax-style precedent only); ISO 8601 `created` compared client-side via `chrono`; invalid duration → exit 64; `--output json` bulk-delete shape
 
 **Confidence**: HIGH
-**Source**: `src/cli/issue/attachments.rs::handle_attachment_delete` (implementation pending — story S4); `parse_age_duration` (S4 location TBD — `src/cli/issue/attachments.rs` private helper or `src/duration.rs` pub(crate) sibling, per impact-boundary R3.9a)
+**Source**: src/cli/issue/attachments.rs::handle_attachment_delete (implementation pending — story S4); `parse_age_duration` (S4 location TBD — `src/cli/issue/attachments.rs` private helper or `src/duration.rs` pub(crate) sibling, per impact-boundary R3.9a)
 **Subject**: Issue write (attachment delete — --older-than duration parsing + comparison semantics + JSON shape)
 
 `jr issue attachment delete --issue <KEY> --older-than <duration> --yes` selects all attachments on the issue whose `created` timestamp is older than `duration` relative to the invocation time, then issues a `DELETE` for each.
@@ -3874,12 +3874,12 @@ When `jr issue attachment upload <KEY> <FILE> --replace-existing` is invoked and
 #### BC-3.9.020: `attachment --dry-run` (delete multi-path + upload `--replace-existing`) — list affected IDs/files without mutation; `--output json` via `output::render_json`; single-ID delete `--dry-run` = stderr hint + exit 0 (no-op)
 
 **Confidence**: HIGH
-**Source**: `src/cli/issue/attachments.rs::handle_attachment_delete` (implementation pending — story S4); `src/cli/issue/attachments.rs::handle_attachment_upload` (implementation pending — story S3, path c only)
+**Source**: src/cli/issue/attachments.rs::handle_attachment_delete (implementation pending — story S4); src/cli/issue/attachments.rs::handle_attachment_upload (implementation pending — story S3, path c only)
 **Subject**: Issue write (attachment delete + upload --replace-existing — dry-run preview paths)
 
 `upload --dry-run` without `--replace-existing` is rejected by clap (exit 2). `--dry-run` on upload requires `--replace-existing` — the only upload operation with a meaningful preview (no deletes to preview = no point to the dry-run). Enforced at parse time to avoid silent no-op confusion.
 
-`--dry-run` is meaningful on multi-attachment paths: (a) `--older-than` bulk delete — previews which attachments would be deleted; (b) multi-AID bulk delete (`delete <AID>...`) — previews the AID list, with per-AID metadata fan-out (see below); (c) `upload --replace-existing` — previews which existing same-filename attachments would be deleted AND which files would be uploaded, without issuing any `DELETE` or `POST` requests. **`--public` confirmation gate (BC-3.9.014) is SUPPRESSED on path (c)**: `--dry-run` implies no destructive call will be issued; per BC-3.9.017's invariant (no gate fires unless a destructive call is imminent), the `--public` gate does NOT fire on dry-run even when `--public` is supplied. The preview output MUST still note the would-be visibility when `--public` is set: include `"visibility":"public"` on each `wouldUpload` entry in JSON mode, and a `[public]` annotation in human mode. On path (c), the output includes a "would-delete" section (matching existing entries by basename) and a "would-upload" section (the supplied files); JSON shape: `{"dryRun":true,"wouldDelete":[{"filename":"<name>","id":"<AID>"}],"wouldUpload":[{"filename":"<name>"}]}`; when `--public` supplied: `"wouldUpload":[{"filename":"<name>","visibility":"public"}]`; ships with S3 (the --replace-existing story; Source: `src/cli/issue/attachments.rs::handle_attachment_upload` — implementation pending story S3). `--dry-run` does NOT require `--yes` (the operation is read-only; BC-3.9.016 explicitly exempts `--dry-run` from the bulk `--yes` gate).
+`--dry-run` is meaningful on multi-attachment paths: (a) `--older-than` bulk delete — previews which attachments would be deleted; (b) multi-AID bulk delete (`delete <AID>...`) — previews the AID list, with per-AID metadata fan-out (see below); (c) `upload --replace-existing` — previews which existing same-filename attachments would be deleted AND which files would be uploaded, without issuing any `DELETE` or `POST` requests. **`--public` confirmation gate (BC-3.9.014) is SUPPRESSED on path (c)**: `--dry-run` implies no destructive call will be issued; per BC-3.9.017's invariant (no gate fires unless a destructive call is imminent), the `--public` gate does NOT fire on dry-run even when `--public` is supplied. The preview output MUST still note the would-be visibility when `--public` is set: include `"visibility":"public"` on each `wouldUpload` entry in JSON mode, and a `[public]` annotation in human mode. On path (c), the output includes a "would-delete" section (matching existing entries by basename) and a "would-upload" section (the supplied files); JSON shape: `{"dryRun":true,"wouldDelete":[{"filename":"<name>","id":"<AID>"}],"wouldUpload":[{"filename":"<name>"}]}`; when `--public` supplied: `"wouldUpload":[{"filename":"<name>","visibility":"public"}]`; ships with S3 (the --replace-existing story; Source: src/cli/issue/attachments.rs::handle_attachment_upload — implementation pending story S3). `--dry-run` does NOT require `--yes` (the operation is read-only; BC-3.9.016 explicitly exempts `--dry-run` from the bulk `--yes` gate).
 
 **Multi-AID `--dry-run` metadata fan-out (path b)**: **AID validation fires first (P7-001)**: each supplied AID is validated against `^[0-9]+$` before any metadata fetch. An invalid AID (non-numeric, path-traversal-shaped) → exit 64; stderr: `"invalid attachment id: '<VALUE>' (must be numeric)"`; zero HTTP calls issued (even on dry-run — invalid input is rejected before any read-only GET). For valid AIDs: `jr` performs per-AID `GET /rest/api/3/attachment/{id}` metadata fetches (one per supplied AID, serially or concurrently) to populate the filename column in the preview table and the `filename` key in JSON output. These are read-only GET requests permitted in dry-run. A metadata fetch failure for an AID (404, network error, etc.) yields a row with the id and `"(metadata unavailable)"` in the filename column; in JSON mode the row is `{"id":"<AID>"}` (no `"filename"` key when unavailable). The AID is still included in the `ids` array (it was specified by the user; the dry-run preview includes it regardless of metadata availability).
 

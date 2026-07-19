@@ -724,7 +724,7 @@ When `<KEY>` does not exist or the authenticated user lacks Browse Projects perm
 #### BC-2.7.007: `attachment download <KEY> --id <AID>` single-file download; `--out <PATH>` path override
 
 **Confidence**: HIGH
-**Source**: `src/cli/issue/attachments.rs::handle_attachment_download` (implementation pending — SOH-ATTACHMENTS-1 Story 2); `src/api/jira/attachments.rs::get_attachment_content` (implementation pending)
+**Source**: src/cli/issue/attachments.rs::handle_attachment_download (implementation pending — SOH-ATTACHMENTS-1 Story 2); src/api/jira/attachments.rs::get_attachment_content (implementation pending)
 **Subject**: Issue read
 **Output channel profile**: 3 (Mixed) — human mode writes no stdout data (completion hints and errors to stderr); `--output json` writes the download manifest to stdout (EC-2.7.007-7 shape).
 
@@ -789,7 +789,7 @@ On success, a completion hint is emitted to stderr: `"Downloaded: <path> (<size_
 #### BC-2.7.008: `attachment download <KEY> --all` batch download to `--out-dir <DIR>`; default dir is cwd
 
 **Confidence**: HIGH
-**Source**: `src/cli/issue/attachments.rs::handle_attachment_download` (implementation pending — SOH-ATTACHMENTS-1 Story 2)
+**Source**: src/cli/issue/attachments.rs::handle_attachment_download (implementation pending — SOH-ATTACHMENTS-1 Story 2)
 **Subject**: Issue read
 
 `jr issue attachment download <KEY> --all` downloads all attachments on the issue to a directory. Default target is the current working directory; `--out-dir <DIR>` overrides. The handler first fetches the full attachment list (same `GET /rest/api/3/issue/{key}?fields=attachment` call as `attachment list`). **Batch metadata source**: filename, size, and `contentUrl` for each attachment are taken directly from `fields.attachment[]` in this list response for NAMING, filtering, and pre-download purposes; the manifest `size` field is the byte count written to disk per EC-2.7.008-6, NOT the list-reported `fields.attachment[].size` (in normal operation the two coincide since the atomic rename fires only on a complete stream, but written-bytes is authoritative). The per-attachment step-1 `GET /rest/api/3/attachment/{id}` metadata fetch used by single-`--id` download (BC-2.7.007) is SKIPPED on batch paths — that step is only needed on the single-ID path to obtain the canonical filename when no list is available. The handler then issues the streaming step-2 `GET /rest/api/3/attachment/content/{id}` for each attachment (the download step from BC-2.7.007 wire path). H-NEW-ATTACHMENT-003 and H-NEW-ATTACHMENT-007 holdout mock topologies correctly reflect this: they mount only the issue-fetch GET and per-attachment content GETs, not per-attachment metadata GETs. Each file is named using BC-2.7.010 (batch path: `<sha1-of-id>_<sanitized-basename>`) within the target directory.
@@ -824,7 +824,7 @@ On completion a summary hint emits to stderr: `"Downloaded N of M attachments to
 #### BC-2.7.009: `attachment download <KEY> --newest N` — select most-recent N attachments by `created` date, then download
 
 **Confidence**: HIGH
-**Source**: `src/cli/issue/attachments.rs::handle_attachment_download` (implementation pending — SOH-ATTACHMENTS-1 Story 2)
+**Source**: src/cli/issue/attachments.rs::handle_attachment_download (implementation pending — SOH-ATTACHMENTS-1 Story 2)
 **Subject**: Issue read
 
 `jr issue attachment download <KEY> --newest N` downloads at most N attachments, selecting the N most recently created (by `attachment.created` descending). The `created` field is parsed as a `chrono::DateTime<FixedOffset>` before sorting; lexicographic sort MUST NOT be used (consistent with BC-3.9.019 which also mandates `chrono` for `created` comparison). Fixtures typically use the `+0000` offset, but the implementation MUST NOT assume a uniform offset — different attachments on the same issue may carry distinct UTC offsets, making lexicographic comparison incorrect in the general case.
@@ -851,7 +851,7 @@ If the issue has fewer than N attachments after filtering, all available attachm
 #### BC-2.7.010: Default download output path — batch: `<sha1-of-id>_<sanitized-basename>`; single-`--id`: bare sanitized basename; id-as-filename degenerate fallback
 
 **Confidence**: HIGH
-**Source**: `src/cli/issue/attachments.rs::handle_attachment_download` (implementation pending — SOH-ATTACHMENTS-1 Story 2)
+**Source**: src/cli/issue/attachments.rs::handle_attachment_download (implementation pending — SOH-ATTACHMENTS-1 Story 2)
 **Subject**: Issue read
 
 When no `--out <PATH>` is specified, the default output filename depends on the selector used:
@@ -898,7 +898,7 @@ When `--out <PATH>` is supplied on the single-file path (BC-2.7.007), all defaul
 #### BC-2.7.011: Filename sanitization (CWE-22 path traversal mitigation) — `sanitize_attachment_filename(name: &str) -> Option<String>`
 
 **Confidence**: HIGH
-**Source**: `src/cli/issue/attachments.rs::sanitize_attachment_filename` (implementation pending — SOH-ATTACHMENTS-1 Story 2)
+**Source**: src/cli/issue/attachments.rs::sanitize_attachment_filename (implementation pending — SOH-ATTACHMENTS-1 Story 2)
 **Subject**: Issue read (security invariant — applies to all attachment download paths)
 
 The `filename` field in Jira attachment metadata is **attacker-controllable**: any user who can attach to an issue controls this value, and JSM portals accept customer uploads. When this field is used to construct a local path, it MUST be sanitized before use.
@@ -942,7 +942,7 @@ Since step 4 of sanitization already strips `../`, `/`, `\`, `:`, the join will 
 #### BC-2.7.012: `attachment download` on unknown KEY or unknown AID → exit 64 with informative error
 
 **Confidence**: HIGH
-**Source**: `src/cli/issue/attachments.rs::handle_attachment_download` (implementation pending — SOH-ATTACHMENTS-1 Story 2); `src/api/jira/attachments.rs::get_attachment_content` (implementation pending)
+**Source**: src/cli/issue/attachments.rs::handle_attachment_download (implementation pending — SOH-ATTACHMENTS-1 Story 2); src/api/jira/attachments.rs::get_attachment_content (implementation pending)
 **Subject**: Issue read
 
 **Unknown issue key** (batch paths only — `--all`/`--newest`; the `--id` path does not server-verify KEY per BC-2.7.007): when `<KEY>` does not exist or is inaccessible, `GET /rest/api/3/issue/{key}?fields=attachment` returns 404. Handler exits 64: `"Issue <KEY> not found or not accessible."`
