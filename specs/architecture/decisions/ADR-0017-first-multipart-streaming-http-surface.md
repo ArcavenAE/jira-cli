@@ -3,7 +3,7 @@ document_type: adr
 adr_id: ADR-0017
 status: Accepted
 date: 2026-07-15
-amended: 2026-07-18
+amended: 2026-07-19
 subsystems_affected: ["SS-03", "SS-09"]
 supersedes: null
 superseded_by: null
@@ -17,6 +17,7 @@ related: ["ADR-0001", "ADR-0003"]
 **Accepted** (2026-07-15). Gate: DEC-179, item 7 of the F1 SOH-ATTACHMENTS-1 dependency gate.
 **Amended** (2026-07-17): Cargo.toml delivery split across S-576-2 and S-576-3 delivery slots per adversarial finding P1-010, F3 pass 1. See § Decision amendment below.
 **Amended** (2026-07-18): Authorized-dependency clause added for the `sha1` crate (RustCrypto) in the S-576-2 delivery slot; "No new crate" claims scoped to the HTTP surface (reqwest features + tokio-util). See § Authorized Dependencies. Traces P26-001, F3 pass 26.
+**Amended** (2026-07-19): Pre-gate cosmetics — command-name corrected (`attachments get` → `attachment download`); attachment ID type corrected (UUIDs → numeric IDs). Traces carried INFO from F3 passes 26–77.
 
 ## Context
 
@@ -199,12 +200,12 @@ amended. Implementation not yet delivered in either slot.
 **Version constraint:** `^0.10`
 **License:** MIT OR Apache-2.0 — passes `cargo deny` license policy.
 **Delivery slot:** S-576-2 (earliest consumer; see § Decision above).
-**Triggering requirement:** BC-2.7.010 mandates a 40-hex-character SHA-1 digest prefix on the default output filename for every attachment in a batch download (`jr issue attachments get <KEY>`). No SHA-1 implementation is available in Rust `std` or in any crate already present in `Cargo.toml`/`Cargo.lock` as of v0.6.0-dev.10.
+**Triggering requirement:** BC-2.7.010 mandates a 40-hex-character SHA-1 digest prefix on the default output filename for every attachment in a batch download (`jr issue attachment download <KEY>`). No SHA-1 implementation is available in Rust `std` or in any crate already present in `Cargo.toml`/`Cargo.lock` as of v0.6.0-dev.10.
 
 **Transitive footprint:** The `sha1 ^0.10` crate adds `digest` (trait interface shared across RustCrypto) and `cpufeatures` (runtime CPU-capability detection for hardware-accelerated paths on x86/aarch64). Both are small and have no further transitive dependencies of note.
 
 **Non-cryptographic use — SHA-1 collision-resistance is NOT required:**
-SHA-1 is cryptographically broken (practical chosen-prefix collision attacks demonstrated by SHAttered, 2017). This use is **non-cryptographic**: the 40-hex prefix serves as a stable, deterministic, human-readable path component that distinguishes attachments with identical filenames in a single batch. Collision resistance against an adversary is irrelevant — the sole requirement is uniqueness across a typical Jira issue attachment set (typically ≤100 items; attachment IDs are Jira-server-assigned UUIDs). **Do NOT "upgrade" this to SHA-256 or any other algorithm** — doing so would change the 40-hex format, breaking BC-2.7.010's format pin and all downstream tooling relying on the documented path shape. If a future requirement does need cryptographic strength, that warrants a new ADR, not a silent algorithm change here.
+SHA-1 is cryptographically broken (practical chosen-prefix collision attacks demonstrated by SHAttered, 2017). This use is **non-cryptographic**: the 40-hex prefix serves as a stable, deterministic, human-readable path component that distinguishes attachments with identical filenames in a single batch. Collision resistance against an adversary is irrelevant — the sole requirement is uniqueness across a typical Jira issue attachment set (typically ≤100 items; attachment IDs are Jira-server-assigned numeric IDs). **Do NOT "upgrade" this to SHA-256 or any other algorithm** — doing so would change the 40-hex format, breaking BC-2.7.010's format pin and all downstream tooling relying on the documented path shape. If a future requirement does need cryptographic strength, that warrants a new ADR, not a silent algorithm change here.
 
 **cargo deny obligation:** After `sha1` is added to `Cargo.toml` in the S-576-2 delivery commit, `cargo deny check` must be re-run and reported clean before the PR is merged. Any advisory against the selected `sha1` version must be resolved before merge.
 
@@ -214,6 +215,8 @@ SHA-1 is cryptographically broken (practical chosen-prefix collision attacks dem
 ### Status as of 2026-07-18 (amendment — P26-001, F3 pass 26)
 
 `sha1` (RustCrypto `^0.10`) authorized for S-576-2. The "No new crate" claims in § Decision (tokio-util paragraph) and § Consequences are scoped to the HTTP surface only. The `sha1` dependency for the BC-2.7.010 path-prefix requirement is governed by this authorized-dependency clause, not by those claims. Implementation not yet delivered.
+
+**Amendment note (2026-07-19):** 2026-07-19: pre-gate cosmetics — command-name + ID-type corrections; carried INFO from F3 passes 26-77.
 
 ---
 

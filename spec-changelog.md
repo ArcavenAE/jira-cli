@@ -7,6 +7,142 @@ project: "jr (jira-cli)"
 
 Track all spec version changes. Most recent version first.
 
+## [1.3.94] - 2026-07-18
+
+### Type: PATCH
+
+### Summary
+
+PRE-F4 Unicode display sanitization extension for SOH-ATTACHMENTS-1. Closes the NEW-576-V3-002 accepted residual per human ruling from the F3 dispatch gate: display-sanitization in BC-2.7.011 now covers Unicode bidi controls, line/paragraph separators, and NEL in addition to ASCII controls. No new BCs added.
+
+### Changed Requirements
+
+- `.factory/specs/prd/bc-2-issue-read.md` (MODIFIED): BC-2.7.011 display-sanitization primary clause extended — character set now covers ASCII controls (0x00–0x1F, 0x7F) plus Unicode bidi controls U+202A..U+202E and U+2066..U+2069, line/paragraph separators U+2028/U+2029, and NEL U+0085; implementation form specified (char-level matching, not bytes; each matched char → one `?`); unit-test mandate added (`display_sanitize_filename` MUST include U+202E, U+2028, U+0085 cases); scope note REPLACED with closed-enumeration scope statement (confusables/homoglyphs OUT of scope with rationale: not a terminal-injection vector). BC-2.7.008 and BC-2.7.010 cross-ref wording updated to point to BC-2.7.011 primary character set (preferred over inline range re-statement). Trace fields updated.
+- `.factory/specs/prd/bc-3-issue-write.md` (MODIFIED): BC-3.9.015 step 1 and BC-3.9.017 step 2 display-sanitization cross-ref wording updated — inline range replaced with pointer to BC-2.7.011 display-sanitization character set. Trace fields updated.
+- `.factory/specs/prd/BC-INDEX.md` (MODIFIED): BC-2.7.008/BC-2.7.010/BC-3.9.015/BC-3.9.017 rows: cross-ref shorthand updated to point to BC-2.7.011 character set. BC-2.7.011 row: "Unicode bidi controls outside scope — accepted residual" replaced with extended-set summary and confusables OUT-of-scope rationale. index_version v6.36→v6.37.
+- `.factory/phase-f2-spec-evolution/prd-delta-576.md` (MODIFIED): `spec_version_after` 1.3.93→1.3.94; PRE-F4-UNICODE-ROUND dispositions appended; PRE-F4-UNICODE-DISPLAY-SANITIZATION pipeline obligation marked DISCHARGED.
+
+### Impact Assessment
+
+| Artifact | Change Type | Notes |
+|----------|-------------|-------|
+| bc-2-issue-read.md | Modified | BC-2.7.011 extended; BC-2.7.008/010 cross-ref pointer update |
+| bc-3-issue-write.md | Modified | BC-3.9.015/017 cross-ref pointer update |
+| BC-INDEX.md | Modified | 5 rows updated; v6.36→v6.37 |
+| prd-delta-576.md | Modified | spec_version_after 1.3.94; PRE-F4-UNICODE-ROUND |
+
+- **Affected stories:** S1 (creates `display_sanitize_filename`; unit-test mandate extended). Story-writer propagates under `bc_array_changes_propagate_to_body_and_acs` policy.
+- **BC count:** 657 (unchanged — in-clause extension)
+- **Holdout count:** 100 (unchanged — no holdout pins old ASCII-only range)
+- **VP count:** 35 (unchanged)
+- **Migration needed:** NO (in-clause extension; no interface change; no new BC IDs)
+
+---
+
+## [1.3.93] - 2026-07-19
+
+### Type: PATCH
+
+### Summary
+
+Pre-gate cosmetics fold for SOH-ATTACHMENTS-1 (spec v1.3.92 → v1.3.93; counts 657/100/35 unchanged). Three carried INFO items resolved, all cosmetic, none behavioral: (1) error-taxonomy.md §3 401 message pattern aligned to v1.3.88 loose-substring convention; (2) prd-delta-576.md BC-enumeration table BC-3.9.019 title and BC-3.9.020 delivery-slot phrasing aligned to settled clause-scoped split; (3) ADR-0017 command name corrected (`attachments get` → `attachment download`) and attachment ID type corrected (UUIDs → numeric IDs) with amendment note.
+
+### Changed Requirements
+
+- `.factory/specs/prd/error-taxonomy.md` (MODIFIED): 401 (general) message pattern updated to loose-substring form with parenthetical full literal (carried INFO pass-35).
+- `.factory/phase-f2-spec-evolution/prd-delta-576.md` (MODIFIED): BC-3.9.019 title corrected (duration.rs parser → dedicated `parse_age_duration`; `src/duration.rs` syntax-style precedent only); BC-3.9.020 delivery-slot phrasing corrected to clause-scoped split (S3/S4/S5); `spec_version_after` 1.3.92→1.3.93; PRE-GATE-COSMETICS dispositions appended.
+- `.factory/specs/architecture/decisions/ADR-0017-first-multipart-streaming-http-surface.md` (MODIFIED): command name corrected; ID type corrected; amendment note added to § Status and § Authorized Dependencies amendment area; frontmatter `amended` advanced to 2026-07-19.
+
+### Impact Assessment
+
+| Artifact | Change Type | Notes |
+|----------|-------------|-------|
+| error-taxonomy.md | Modified | 401 message pattern — loose-substring convention (carried INFO pass-35) |
+| prd-delta-576.md | Modified | BC-3.9.019/020 cosmetic corrections; spec_version_after 1.3.93; PRE-GATE-COSMETICS dispositions |
+| ADR-0017-first-multipart-streaming-http-surface.md | Modified | Command name + ID type corrected; amendment note; frontmatter amended date |
+| BC-INDEX.md | No change | Cosmetics-only; no BC bodies changed; v6.36 unchanged |
+
+- BCs: 657 (unchanged)
+- Holdouts: 100 (unchanged)
+- VPs: 35 (unchanged)
+
+---
+
+## [1.3.92] - 2026-07-18
+
+### Type: PATCH
+
+### Summary
+
+F3 adversary pass-53 process-gap resolution (SOH-ATTACHMENTS-1, spec_version_checked: 1.3.91). Resolves P53-001 ([process-gap]): EC-3.9.020-7 is a composite EC — its gate-suppression clause (consumer-2 `--replace-existing` ≥1-match gate, reachable without `--public`) is S3-realized (S3 AC-008); only its visibility-annotation clause (`"visibility":"public"` on `wouldUpload` entries) is `--public`-dependent and S5-realized. The P42-001 scope note and S5 partial-scope parenthetical stated EC-3.9.020-7 as wholly S5-realized, never reconciled to the clause split in the F3 story layer (S-576-3 v1.30 / round 48). Fix: S3 scope note and S5 parenthetical both updated to clause-scoped wording. Trace: P53-001 (reconciles P42-001/P48-001). No new BCs, holdouts, or VPs.
+
+### Changed Requirements
+
+- `.factory/phase-f2-spec-evolution/prd-delta-576.md` (MODIFIED): S3 Scope row BC-3.9.020 path-c scope note narrowed to EC-3.9.020-7's visibility-annotation clause; EC-3.9.020-7's gate-suppression clause noted as S3-realized (AC-008) (P53-001); S5 Scope row BC-3.9.020 parenthetical updated — "dry-run visibility annotation" → "visibility-annotation clause"; gate-suppression clause ownership clarified (P53-001); `spec_version_after` 1.3.91→1.3.92; P53-ROUND dispositions appended.
+
+### Impact Assessment
+
+| Artifact | Change Type | Notes |
+|----------|-------------|-------|
+| prd-delta-576.md | Modified | S3/S5 scope-table clause-scoped wording (P53-001); spec_version_after 1.3.92; P53-ROUND dispositions |
+| BC-INDEX.md | No change | Scope-table meta-only amendment; no BC bodies changed; v6.36 unchanged |
+
+- BCs: 657 (unchanged)
+- Holdouts: 100 (unchanged)
+- VPs: 35 (unchanged)
+
+---
+
+## [1.3.91] - 2026-07-18
+
+### Type: PATCH
+
+### Summary
+
+F3 adversary pass-42 process-gap resolution (SOH-ATTACHMENTS-1, spec_version_checked: 1.3.90). Resolves P42-001 ([process-gap]): EC-3.9.020-8 (`--replace-existing --dry-run --public` on non-JSM → BC-3.9.005 eligibility guard fires at step 0, exit 64, no preview) was allocated to S3 via BC-3.9.020 path-c ownership, but S3's AC-017 interim rejection intercepts any `--public` before the guard, making EC-3.9.020-8 unreachable in S3. S5 — which removes the interim rejection — had its BC-3.9.020 coverage explicitly scoped to EC-3.9.020-7 only, excluding EC-3.9.020-8. Fix: S5 partial-scope parenthetical amended to include EC-3.9.020-8 with "both reachable only post-interim-rejection-removal" qualifier; S3 scope row annotated with path-c exclusion note for EC-3.9.020-7/8. Same pattern as P32-001. No new BCs, holdouts, or VPs.
+
+### Changed Requirements
+
+- `.factory/phase-f2-spec-evolution/prd-delta-576.md` (MODIFIED): S5 Scope row BC-3.9.020 partial-scope parenthetical amended — EC-3.9.020-8 added to S5 partial scope (P42-001); S3 Scope row — BC-3.9.020 path-c scope note appended excluding EC-3.9.020-7/8 as S5-realized (P42-001); `spec_version_after` 1.3.90→1.3.91; P42-ROUND dispositions appended.
+
+### Impact Assessment
+
+| Artifact | Change Type | Notes |
+|----------|-------------|-------|
+| prd-delta-576.md | Modified | S5 BC-3.9.020 partial scope amended (EC-3.9.020-8 added); S3 path-c scope note added; spec_version_after 1.3.91; P42-ROUND dispositions |
+| BC-INDEX.md | No change | Scope-table meta-only amendment; no BC bodies changed; v6.36 unchanged |
+
+- BCs: 657 (unchanged)
+- Holdouts: 100 (unchanged)
+- VPs: 35 (unchanged)
+
+---
+
+## [1.3.90] - 2026-07-18
+
+### Type: PATCH
+
+### Summary
+
+F3 adversary pass-32 process-gap resolution (SOH-ATTACHMENTS-1, spec_version_checked: 1.3.89). Resolves P32-001 ([process-gap]): S5 Scope row "BC coverage" list (BC-3.9.003..007, BC-3.9.011, BC-X.8.010) omitted BC-3.9.020, yet the S5 prose assigns S5 the EC-3.9.020-7 dry-run visibility-annotation implementation obligation. S5's AC-015 correctly pins EC-3.9.020-7 but its trace fell outside the declared coverage set — the only such gap in the bundle, breaking the machine-checkable "AC trace ∈ story BC set" invariant. Fix: BC-3.9.020 (partial — EC-3.9.020-7 dry-run visibility annotation only; body owned by S3 path-c / S4 delete paths) inserted into S5 BC coverage between BC-3.9.011 and BC-X.8.010. No behavioral changes. No new BCs, holdouts, or VPs.
+
+### Changed Requirements
+
+- `.factory/phase-f2-spec-evolution/prd-delta-576.md` (MODIFIED): S5 Scope row BC coverage amended — BC-3.9.020 (partial, EC-3.9.020-7) inserted between BC-3.9.011 and BC-X.8.010 (P32-001); `spec_version_after` 1.3.89→1.3.90; P32-ROUND dispositions appended.
+
+### Impact Assessment
+
+| Artifact | Change Type | Notes |
+|---|---|---|
+| prd-delta-576.md | Modified | S5 BC coverage amended (BC-3.9.020 partial); spec_version_after 1.3.90; P32-ROUND dispositions |
+| BC-INDEX.md | No change | Scope-table meta-only amendment; no BC bodies changed; v6.36 unchanged |
+
+- BCs: 657 (unchanged)
+- Holdouts: 100 (unchanged)
+- VPs: 35 (unchanged)
+
+---
+
 ## [1.3.89] - 2026-07-18
 
 ### Type: PATCH

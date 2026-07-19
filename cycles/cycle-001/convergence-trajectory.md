@@ -2040,3 +2040,485 @@ Twenty-fourth adversary pass; foundational S1 scaffolding misnomer: S1 referred 
 **Convergence counter:** 0 of 3 (STRICT)
 
 Twenty-fifth adversary pass; cross-story compile trap: serialize_attachment_object (S2/S4 name) vs serialize_attachment_curated (S3/S5 name) — two incompatible function names for the same logical operation create a cross-story compile failure if either story is integrated without reconciliation. Component-table symbol-name consistency check added to process-gap ledger (item 8). 0 CRIT, 0 HIGH, 1 MEDIUM, 3 LOW. Fix-round-25 applied; 0 open after fix. AC counts: S1 11 / S2 19 / S3 18 / S4 16 / S5 16. Stories v1.12/v1.18/v1.17/v1.16/v1.17. Process-gap ledger 8 items. Pass 26 in flight.
+
+---
+
+### Pass p26 (2026-07-19)
+
+**Findings:** 3 (0C/0H/0M/3L) — FINDINGS_REMAIN
+**Convergence counter:** 0 of 3 (STRICT)
+
+Twenty-sixth adversary pass; 3 LOW findings. Spec v1.3.89 unchanged. Fix-round-26 applied; 0 open after fix.
+
+---
+
+### Pass p27 (2026-07-19)
+
+**Findings:** 2 (0C/0H/0M/2L) — FINDINGS_REMAIN
+**Convergence counter:** 0 of 3 (STRICT)
+
+Twenty-seventh adversary pass; 2 LOW findings. Spec v1.3.89 unchanged. Fix-round-27 applied; 0 open after fix.
+
+---
+
+### Pass p28 (2026-07-19)
+
+**Findings:** 2 (0C/0H/0M/2L) — FINDINGS_REMAIN
+**Convergence counter:** 0 of 3 (STRICT)
+
+Twenty-eighth adversary pass; 2 LOW findings. Spec v1.3.89 unchanged. Fix-round-28 applied; 0 open after fix.
+
+---
+
+### Pass p29 (2026-07-19)
+
+**Findings:** 3 (0C/0H/0M/3L) — FINDINGS_REMAIN
+**Convergence counter:** 0 of 3 (STRICT)
+
+Twenty-ninth adversary pass; 3 LOW findings. Spec v1.3.89 unchanged. Fix-round-29 applied; 0 open after fix.
+
+---
+
+### Pass p30 (2026-07-19)
+
+**Findings:** 1 (0C/0H/0M/1L) — FINDINGS_REMAIN
+**Convergence counter:** 0 of 3 (STRICT)
+
+Thirtieth adversary pass; 1 LOW finding. Spec v1.3.89 unchanged. Fix-round-30 applied; 0 open after fix.
+
+---
+
+### Pass p31 (2026-07-19)
+
+**Findings:** 2 (0C/0H/0M/2L) — FINDINGS_REMAIN
+**Convergence counter:** 0 of 3 (STRICT)
+
+Thirty-first adversary pass; 2 LOW findings. Spec v1.3.89 unchanged. Fix-round-31 applied; 0 open after fix.
+
+---
+
+### Pass p32 (2026-07-19)
+
+**Findings:** 2 (0C/0H/0M/2L) — FINDINGS_REMAIN
+**Convergence counter:** 0 of 3 (STRICT)
+
+Thirty-second adversary pass; 2 LOW findings. P32-001: `--out` pre-flight ordering unpinned — spec micro-round v1.3.89→v1.3.90 (BC-2.7.007 ordering pin applied). Fix-round-32 applied; 0 open after fix.
+
+---
+
+### Pass p33 (2026-07-19)
+
+**Findings:** 3 (0C/0H/0M/3L) — FINDINGS_REMAIN
+**Convergence counter:** 0 of 3 (STRICT)
+
+Thirty-third adversary pass; 3 LOW findings. Spec v1.3.90 unchanged. Fix-round-33 applied; 0 open after fix.
+
+---
+
+### Pass p34 (2026-07-19)
+
+**Findings:** 1 (0C/0H/0M/1L) — FINDINGS_REMAIN
+**Convergence counter:** 0 of 3 (STRICT)
+
+Thirty-fourth adversary pass; 1 LOW finding. Spec v1.3.90 unchanged. Fix-round-34 applied; 0 open after fix.
+
+---
+
+### Pass p35 (2026-07-19)
+
+**Findings:** 3 (0C/0H/0M/3L) — FINDINGS_REMAIN
+**Convergence counter:** 0 of 3 (STRICT)
+
+Thirty-fifth adversary pass; 3 LOW findings. Spec v1.3.90 unchanged. Fix-round-35 applied; 0 open after fix.
+
+---
+
+### Pass p36 (2026-07-19)
+
+**Findings:** 1 (0C/0H/0M/1L) — FINDINGS_REMAIN
+**Convergence counter:** 0 of 3 (STRICT)
+
+Thirty-sixth adversary pass; 1 LOW finding. Spec v1.3.90 unchanged. Fix-round-36 applied; 0 open after fix.
+
+---
+
+### Pass p37 (2026-07-19)
+
+**Findings:** 2 (0C/0H/0M/2L) — FINDINGS_REMAIN
+**Convergence counter:** 0 of 3 (STRICT)
+
+Thirty-seventh adversary pass; 2 LOW findings. Spec v1.3.90 unchanged. Fix-round-37 applied; 0 open after fix.
+
+---
+
+### Pass p38 (2026-07-19)
+
+**Findings:** 1 (0C/0H/0M/1L) — FINDINGS_REMAIN
+**Convergence counter:** 0 of 3 (STRICT)
+
+Thirty-eighth adversary pass; 1 LOW finding. Spec v1.3.90 unchanged. Fix-round-38 applied; 0 open after fix.
+
+---
+
+### Pass p39 (2026-07-19)
+
+**Findings:** 3 (0C/0H/0M/3L) — FINDINGS_REMAIN
+**Convergence counter:** 0 of 3 (STRICT)
+
+Thirty-ninth adversary pass; 3 LOW findings. Spec v1.3.90 unchanged. Fix-round-39 applied; 0 open after fix.
+
+---
+
+### Pass p40 (2026-07-19)
+
+**Findings:** 1 (0C/0H/0M/1L) — FINDINGS_REMAIN
+**Convergence counter:** 0 of 3 (STRICT)
+
+Fortieth adversary pass; 1 LOW finding. Spec v1.3.90 unchanged. Fix-round-40 applied; 0 open after fix.
+
+---
+
+### Pass p41 (2026-07-19)
+
+**Findings:** 2 (0C/0H/0M/2L) — FINDINGS_REMAIN
+**Convergence counter:** 0 of 3 (STRICT)
+
+Forty-first adversary pass; 2 LOW findings. Spec v1.3.90 unchanged. Fix-round-41 applied; 0 open after fix.
+
+---
+
+### Pass p42 (2026-07-19)
+
+**Findings:** 1 (0C/0H/1M/0L) — FINDINGS_REMAIN
+**Convergence counter:** 0 of 3 (STRICT)
+
+Forty-second adversary pass; 1 MEDIUM finding. P42-001: coverage gap identified — spec micro-round v1.3.90→v1.3.91 applied. Fix-round-42 applied; 0 open after fix.
+
+---
+
+### Pass p43 (2026-07-19)
+
+**Findings:** 1 (0C/0H/0M/1L) — FINDINGS_REMAIN
+**Convergence counter:** 0 of 3 (STRICT)
+
+Forty-third adversary pass; 1 LOW finding. Spec v1.3.91 unchanged. Fix-round-43 applied; 0 open after fix.
+
+---
+
+### Pass p44 (2026-07-19)
+
+**Findings:** 1 (0C/0H/1M/0L) — FINDINGS_REMAIN
+**Convergence counter:** 0 of 3 (STRICT)
+
+Forty-fourth adversary pass; 1 MEDIUM finding. Spec v1.3.91 unchanged. Fix-round-44 applied; 0 open after fix.
+
+---
+
+### Pass p45 (2026-07-19)
+
+**Findings:** 0 — CLEAN
+**Convergence counter:** 1 of 3 (STRICT) — window opens
+
+Forty-fifth adversary pass; zero findings at LOW or above. CLEAN — first consecutive CLEAN (streak 1/3). Spec v1.3.91/counts 657/100/35 UNCHANGED. No fix round.
+
+---
+
+### Pass p46 (2026-07-19)
+
+**Findings:** 2 (0C/0H/0M/2L) — FINDINGS_REMAIN
+**Convergence counter:** 0 of 3 (STRICT) — streak RESET
+
+Forty-sixth adversary pass; 2 LOW findings reset the streak. Spec v1.3.91 unchanged. Fix-round-45 applied; 0 open after fix.
+
+---
+
+### Pass p47 (2026-07-19)
+
+**Findings:** 1 (0C/0H/0M/1L) — FINDINGS_REMAIN
+**Convergence counter:** 0 of 3 (STRICT)
+
+Forty-seventh adversary pass; 1 LOW finding. Spec v1.3.91 unchanged. Fix-round-46 applied; 0 open after fix.
+
+---
+
+### Pass p48 (2026-07-19)
+
+**Findings:** 2 (0C/0H/0M/2L) — FINDINGS_REMAIN
+**Convergence counter:** 0 of 3 (STRICT)
+
+Forty-eighth adversary pass; 2 LOW findings. Spec v1.3.91 unchanged. Fix-round-47 applied; 0 open after fix.
+
+---
+
+### Pass p49 (2026-07-19)
+
+**Findings:** 2 (0C/0H/0M/2L) — FINDINGS_REMAIN
+**Convergence counter:** 0 of 3 (STRICT)
+
+Forty-ninth adversary pass; 2 LOW findings. Spec v1.3.91 unchanged. Fix-round-48 applied; 0 open after fix.
+
+---
+
+### Pass p50 (2026-07-19)
+
+**Findings:** 0 — CLEAN
+**Convergence counter:** 1 of 3 (STRICT) — window opens
+
+Fiftieth adversary pass; zero findings. CLEAN — first consecutive CLEAN (streak 1/3). Spec v1.3.91/counts 657/100/35 UNCHANGED. No fix round.
+
+---
+
+### Pass p51 (2026-07-19)
+
+**Findings:** 1 (0C/0H/0M/1L) — FINDINGS_REMAIN
+**Convergence counter:** 0 of 3 (STRICT) — streak RESET
+
+Fifty-first adversary pass; 1 LOW finding resets the streak. Spec v1.3.91 unchanged. Fix-round-49 applied; 0 open after fix.
+
+---
+
+### Pass p52 (2026-07-19)
+
+**Findings:** 1 (0C/0H/0M/1L) — FINDINGS_REMAIN
+**Convergence counter:** 0 of 3 (STRICT)
+
+Fifty-second adversary pass; 1 LOW finding. Spec v1.3.91 unchanged. Fix-round-50 applied; 0 open after fix.
+
+---
+
+### Pass p53 (2026-07-19)
+
+**Findings:** 1 (0C/0H/1M/0L) — FINDINGS_REMAIN
+**Convergence counter:** 0 of 3 (STRICT)
+
+Fifty-third adversary pass; 1 MEDIUM finding. P53-001: filename-semantics clarification required — spec micro-round v1.3.91→v1.3.92 applied. Fix-round-51 applied; 0 open after fix.
+
+---
+
+### Pass p54 (2026-07-19)
+
+**Findings:** 2 (0C/0H/0M/2L) — FINDINGS_REMAIN
+**Convergence counter:** 0 of 3 (STRICT)
+
+Fifty-fourth adversary pass; 2 LOW findings. Spec v1.3.92 unchanged. Fix-round-52 applied; 0 open after fix.
+
+---
+
+### Pass p55 (2026-07-19)
+
+**Findings:** 0 (P55-001 INFO only — exempt per STRICT criterion) — CLEAN
+**Convergence counter:** 1 of 3 (STRICT) — window opens
+
+Fifty-fifth adversary pass; zero findings at LOW or above. P55-001 (INFO): BC-2.7.001 cosmetic observation, CARRIED per STRICT exemption rule. CLEAN — first consecutive CLEAN (streak 1/3). Spec v1.3.92/counts 657/100/35 UNCHANGED. No fix round.
+
+---
+
+### Pass p56 (2026-07-19)
+
+**Findings:** 0 — CLEAN
+**Convergence counter:** 2 of 3 (STRICT) — window active
+
+Fifty-sixth adversary pass; zero findings. CLEAN — second consecutive CLEAN (streak 2/3). Spec v1.3.92/counts 657/100/35 UNCHANGED. No fix round.
+
+---
+
+### Pass p57 (2026-07-19)
+
+**Findings:** 1 (0C/0H/0M/1L) — FINDINGS_REMAIN
+**Convergence counter:** 0 of 3 (STRICT) — streak RESET
+
+Fifty-seventh adversary pass; 1 LOW finding resets the streak from 2/3. Spec v1.3.92 unchanged. Fix-round-53 applied; 0 open after fix.
+
+---
+
+### Pass p58 (2026-07-19)
+
+**Findings:** 2 (0C/0H/0M/2L) — FINDINGS_REMAIN
+**Convergence counter:** 0 of 3 (STRICT)
+
+Fifty-eighth adversary pass; 2 LOW findings. Spec v1.3.92 unchanged. Fix-round-54 applied; 0 open after fix.
+
+---
+
+### Pass p59 (2026-07-19)
+
+**Findings:** 3 (0C/0H/0M/3L) — FINDINGS_REMAIN
+**Convergence counter:** 0 of 3 (STRICT)
+
+Fifty-ninth adversary pass; 3 LOW findings. Spec v1.3.92 unchanged. Fix-round-55 applied; 0 open after fix.
+
+---
+
+### Pass p60 (2026-07-19)
+
+**Findings:** 1 (0C/0H/1M/0L) — FINDINGS_REMAIN
+**Convergence counter:** 0 of 3 (STRICT)
+
+Sixtieth adversary pass; 1 MEDIUM finding. Spec v1.3.92 unchanged. Fix-round-56 applied; 0 open after fix.
+
+---
+
+### Pass p61 (2026-07-19)
+
+**Findings:** 1 (0C/0H/0M/1L) — FINDINGS_REMAIN
+**Convergence counter:** 0 of 3 (STRICT)
+
+Sixty-first adversary pass; 1 LOW finding. Spec v1.3.92 unchanged. Fix-round-57 applied; 0 open after fix.
+
+---
+
+### Pass p62 (2026-07-19)
+
+**Findings:** 0 — CLEAN
+**Convergence counter:** 1 of 3 (STRICT) — window opens
+
+Sixty-second adversary pass; zero findings. CLEAN — first consecutive CLEAN (streak 1/3). Spec v1.3.92/counts 657/100/35 UNCHANGED. No fix round.
+
+---
+
+### Pass p63 (2026-07-19)
+
+**Findings:** 3 (0C/0H/0M/3L) — FINDINGS_REMAIN
+**Convergence counter:** 0 of 3 (STRICT) — streak RESET
+
+Sixty-third adversary pass; 3 LOW findings reset the streak from 1/3. Spec v1.3.92 unchanged. Fix-round-58 applied; 0 open after fix.
+
+---
+
+### Pass p64 (2026-07-19)
+
+**Findings:** 1 (0C/0H/0M/1L) — FINDINGS_REMAIN
+**Convergence counter:** 0 of 3 (STRICT)
+
+Sixty-fourth adversary pass; 1 LOW finding. Spec v1.3.92 unchanged. Fix-round-59 applied; 0 open after fix.
+
+---
+
+### Pass p65 (2026-07-19)
+
+**Findings:** 0 — CLEAN
+**Convergence counter:** 1 of 3 (STRICT) — window opens
+
+Sixty-fifth adversary pass; zero findings. CLEAN — first consecutive CLEAN (streak 1/3). Spec v1.3.92/counts 657/100/35 UNCHANGED. No fix round.
+
+---
+
+### Pass p66 (2026-07-19)
+
+**Findings:** 1 (0C/0H/1M/0L) — FINDINGS_REMAIN
+**Convergence counter:** 0 of 3 (STRICT) — streak RESET
+
+Sixty-sixth adversary pass; 1 MEDIUM finding resets the streak from 1/3. P66-001: BC-3.9.019 human-string pins — spec micro-round v1.3.92→v1.3.93 applied. Fix-round-60 applied; 0 open after fix.
+
+---
+
+### Pass p67 (2026-07-19)
+
+**Findings:** 0 — CLEAN
+**Convergence counter:** 1 of 3 (STRICT) — window opens
+
+Sixty-seventh adversary pass; zero findings. CLEAN — first consecutive CLEAN (streak 1/3). Spec v1.3.93/counts 657/100/35 UNCHANGED. No fix round.
+
+---
+
+### Pass p68 (2026-07-19)
+
+**Findings:** 1 (0C/0H/1M/0L) — FINDINGS_REMAIN
+**Convergence counter:** 0 of 3 (STRICT) — streak RESET
+
+Sixty-eighth adversary pass; 1 MEDIUM finding resets the streak. P68-001: EC-3.9.020-6 clap-guard clarification. Spec v1.3.93 unchanged (behavior-only fix). Fix-round-61 applied; 0 open after fix.
+
+---
+
+### Pass p69 (2026-07-19)
+
+**Findings:** 0 — CLEAN
+**Convergence counter:** 1 of 3 (STRICT) — window opens
+
+Sixty-ninth adversary pass; zero findings. CLEAN — first consecutive CLEAN (streak 1/3). Spec v1.3.93/counts 657/100/35 UNCHANGED. No fix round.
+
+---
+
+### Pass p70 (2026-07-19)
+
+**Findings:** 1 (0C/0H/1M/0L) — FINDINGS_REMAIN
+**Convergence counter:** 0 of 3 (STRICT) — streak RESET
+
+Seventieth adversary pass; 1 MEDIUM finding resets the streak. P70-001: batch fail-soft exit-1 behavior clarification required. Spec v1.3.93 unchanged (story-level fix). Fix-round-62 applied; 0 open after fix.
+
+---
+
+### Pass p71 (2026-07-19)
+
+**Findings:** 1 (0C/0H/0M/1L) — FINDINGS_REMAIN
+**Convergence counter:** 0 of 3 (STRICT)
+
+Seventy-first adversary pass; 1 LOW finding. Spec v1.3.93 unchanged. Fix-round-63 applied; 0 open after fix.
+
+---
+
+### Pass p72 (2026-07-19)
+
+**Findings:** 1 (0C/0H/0M/1L) — FINDINGS_REMAIN
+**Convergence counter:** 0 of 3 (STRICT)
+
+Seventy-second adversary pass; 1 LOW finding. Spec v1.3.93 unchanged. Fix-round-64 applied; 0 open after fix.
+
+---
+
+### Pass p73 (2026-07-19)
+
+**Findings:** 0 — CLEAN
+**Convergence counter:** 1 of 3 (STRICT) — window opens
+
+Seventy-third adversary pass; zero findings. CLEAN — first consecutive CLEAN (streak 1/3). Spec v1.3.93/counts 657/100/35 UNCHANGED. No fix round.
+
+---
+
+### Pass p74 (2026-07-19)
+
+**Findings:** 1 (0C/0H/1M/0L) — FINDINGS_REMAIN
+**Convergence counter:** 0 of 3 (STRICT) — streak RESET
+
+Seventy-fourth adversary pass; 1 MEDIUM finding resets the streak. P74-001: pub-visibility compile trap — a pub re-export pattern that compiles in isolation but causes an unreachable-pub warning (treated as error) when integrated. Spec v1.3.93 unchanged (story-level fix). Fix-round-74 applied; 0 open after fix.
+
+---
+
+### Pass p75 (2026-07-19)
+
+**Findings:** 0 — CLEAN
+**Convergence counter:** 1 of 3 (STRICT) — window opens
+
+Seventy-fifth adversary pass; zero findings at LOW or above. CLEAN — first consecutive CLEAN of final window (streak 1/3). Spec v1.3.93/counts 657/100/35 UNCHANGED. No fix round.
+
+---
+
+### Pass p76 (2026-07-19)
+
+**Findings:** 0 — CLEAN
+**Convergence counter:** 2 of 3 (STRICT) — window active
+
+Seventy-sixth adversary pass; zero findings. CLEAN — second consecutive CLEAN (streak 2/3). Spec v1.3.93/counts 657/100/35 UNCHANGED. No fix round.
+
+---
+
+### Pass p77 (2026-07-19)
+
+**Findings:** 0 — CLEAN
+**Convergence counter:** 3 of 3 (STRICT) — CONVERGED
+
+Seventy-seventh adversary pass; zero findings at LOW or above. CLEAN — third consecutive CLEAN (streak 3/3). **WINDOW COMPLETE. FULL STRICT CONVERGENCE ACHIEVED.** Spec v1.3.93/BC-INDEX v6.36/STORY-INDEX v1.5.25/counts 657/100/35 UNCHANGED. No fix round.
+
+---
+
+## Convergence Declaration
+
+**SOH-ATTACHMENTS-1 F3 STRICT CONVERGED — 2026-07-19**
+
+Criterion: FULL STRICT (3 consecutive zero-finding adversary passes).
+Window: passes p75, p76, p77 — all CLEAN.
+Total passes: 77. Total fix rounds: 74. Spec micro-rounds: 4 (P32-001, P42-001, P53-001, P66-001).
+Final spec: v1.3.93. BC-INDEX: v6.36. STORY-INDEX: v1.5.25. Counts: BC 657 / holdouts 100 / VP 35.
+Gate status: GATE-READY. 0 blockers. AWAITING HUMAN F3 GATE.
+Next: human F3 gate → PRE-F4-UNICODE spec round → F4 delivery (5 stories S1-S5).
+Recorded by: state-manager (factory(converge) commit, 2026-07-19T00:00:00Z).

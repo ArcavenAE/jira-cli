@@ -87,7 +87,7 @@ Source: `src/api/client.rs::extract_error_message`. Corrected from broad pass pe
 |---|---|---|---|
 | 400 | `ApiError(400, extracted_msg)` | 1 | Extracted message or `"Bad request"` |
 | 400 with `resolution` field | `UserError(...)` | 64 | `"Field 'resolution' is required"` → hint: `--resolution`, `jr issue resolutions` |
-| 401 (general) | `NotAuthenticated` | 2 | `"Not authenticated. Run: jr auth login"` |
+| 401 (general) | `NotAuthenticated` | 2 | stderr contains `"Not authenticated"` and `"jr auth login"` (full literal: `Not authenticated. Run "jr auth login" to connect.` — `src/error.rs::JrError` + `src/api/client.rs`) |
 | 401 with scope mismatch | `InsufficientScope` | 2 | `"Insufficient token scope. <details>. Run: jr auth login"` |
 | 403 | `ApiError(403, ...)` | 1 | `"Forbidden"` or extracted body message |
 | 403 — `comment delete/edit/view` | `UserError(...)` | 64 | `"comment not found or permission denied: <KEY>#<ID>"` + Jira body on separate line (BC-3.5.004/BC-3.5.005/BC-3.5.010 override) |
