@@ -1547,3 +1547,21 @@ _Was the active checkpoint after security-fix-reverify burst (2026-07-17) — F3
 | **Notes** | Main-repo untracked `.claude/pr-reviews/` + `.claude/spec-config.json` deliberately untracked. Backup `*.backup-*` files in `phase-f2-spec-evolution/` deliberately untracked. Worktree `.worktrees/docs-577-ej-probe` (ea0689b, PR #625) intact pending human merge — cleanup after merge. No story worktrees created this session (F2 spec-only). Standing rules unchanged (DEC-128/173; user merges all PRs). |
 | **Standing rules** | User merges ALL PRs on GitHub personally (DEC-173); every PR gets fresh-eyes pr-reviewer pre-merge with POSTED evidence; COMMENTED = approve-equivalent (same-account); implementers hard-forbidden from push/PR/improvise (STOP-and-report). DEC-128 in force. |
 | **Resume command** | /vsdd-factory:next-step |
+
+---
+
+## Archived Checkpoint (displaced by session-wrap post-re-verify burst, 2026-07-19)
+
+_Was the active checkpoint after SESSION WRAP burst (2026-07-19) — F3 GATE APPROVED (DEC-185); PRE-F4-UNICODE discharged; pipeline PAUSED with SCOPED RE-VERIFY still pending. Superseded after SCOPED RE-VERIFY DISCHARGED CLEAN (RV-576-001/002, d552e1c4) and confirmed F4 AUTHORIZED, NOT STARTED._
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-07-19 (SESSION WRAP — F3 GATE APPROVED (DEC-185); PRE-F4-UNICODE discharged (spec v1.3.93→v1.3.94; BC-INDEX v6.37; STORY-INDEX v1.5.26); pipeline PAUSED; trajectory-tail →1→0→0→0). |
+| **Position** | Phase 3 / Feature Mode SOH-ATTACHMENTS-1 (issues #576+#585, DEC-179..DEC-185). **F3 GATE APPROVED (DEC-185, 2026-07-19)** at spec v1.3.94. F3 STRICT CONVERGED (77 passes / 74 fix rounds; window p75/p76/p77 CLEAN×3). PRE-F4-UNICODE discharged: spec v1.3.93→v1.3.94 (BC-2.7.011 + BC-INDEX v6.37); story propagation S1-S5 (S1 v1.19/S2 v1.31/S3 v1.39/S4 v1.28/S5 v1.32; STORY-INDEX v1.5.26). Spec v1.3.94; BC 657/holdouts 100/VP 35; BC-INDEX v6.37; STORY-INDEX v1.5.26; AC 80; deps S2/S3/S4←S1, S5←{S3,S4}. develop @ 56d5126 (v0.6.0-dev.10). |
+| **Convergence counter** | F3 STRICT CONVERGED (DEC-185; 77 passes / 74 fix rounds; window p75/p76/p77 CLEAN×3; spec v1.3.83→v1.3.94 incl. Unicode extension). SCOPED ADVERSARY RE-VERIFY pending (v1.3.93→v1.3.94 delta — 19 propagation sites across S1-S5). Full trajectory: `cycles/cycle-001/convergence-trajectory.md`. |
+| **In flight / On resume** | PIPELINE PAUSED. **NEXT: SCOPED ADVERSARY RE-VERIFY of v1.3.93→v1.3.94 Unicode delta (NOT run yet)** — dispatch adversary with scoped review of 19 propagation sites across S1-S5. On CLEAN → F4 delivery dispatch, S-576-1 first (per-story-delivery.md pipeline). Gate-audit carry-forwards: AUDIT-576-002 (--list attachment completeness probe at S1 gate); AUDIT-576-003 (SHA1 sha= cargo-deny check at S2 delivery); AUDIT-576-004 (P2-3c live-capture gate + interim-rejection removal at S5 delivery). |
+| **Pending human decisions** | SCOPED RE-VERIFY result (adversary-dispatch on resume; no human gate until CLEAN verdict). After CLEAN: human dispatch approval for F4 S-576-1 (orchestrator presents via /vsdd-factory:next-step). |
+| **PR queue (human-owned)** | Merge #625 (EJ probe docs, CI green); merge #591 (soak cleared); #574 awaiting contributor rebase + human Actions-run approval; soak calendar: #598/#599 eligible 2026-07-16 (PAST), #612 2026-07-20, #624 2026-07-22. DO NOT close #429. |
+| **Notes** | No stories mid-TDD. No open PRs for SOH-ATTACHMENTS-1 bundle. No factory lock held. Stray worktree `.worktrees/docs-577-ej-probe` (ea0689b, PR #625) pre-exists — cleanup after #625 merge. Process-gap ledger 9 items (S-7.02 disposition owed at cycle close; see `sidecar-learning.md`). Main-repo untracked `.claude/pr-reviews/` + `.claude/spec-config.json` deliberately untracked. Backup `*.backup-*` files in `.factory/` deliberately untracked. |
+| **Standing rules** | User merges ALL PRs on GitHub personally (DEC-173); every PR gets fresh-eyes pr-reviewer pre-merge with POSTED evidence; COMMENTED = approve-equivalent (same-account); implementers hard-forbidden from push/PR/improvise (STOP-and-report). DEC-128 in force. |
+| **Resume command** | /vsdd-factory:next-step |

@@ -5838,3 +5838,13 @@ Displaced to make room for SCOPED RE-VERIFY + fix round + confirm step row per k
 | Step | Agent | Status | Output |
 |------|-------|--------|--------|
 | **SOH-ATTACHMENTS-1 F2 STRICT CONVERGED (2026-07-17): CLEAN — THIRD CONSECUTIVE CLEAN (window p38/p39/p40 CLEAN×3; FULL STRICT CONVERGENCE); zero findings at LOW+; P40-I1 (I) VP-576-003 parenthetical imprecision CARRIED; P40-I2 (I) CWE-88-vs-CWE-22 citation-precision nit CARRIED; P40-I3 (I) optional path-b/path-c dry-run holdout coverage observation CARRIED; adversary source-verified all code claims + all holdout Expected derivable from BC text + all divergences retro-annotated — "exceptionally consistent"; NO fix round; spec v1.3.77/BC-INDEX v6.33/counts 657/100/35 UNCHANGED; trajectory-tail →1→0→0→0. 40 passes / 37 fix rounds. FULL STRICT CONVERGENCE per DEC-181/DEC-183. Pre-gate sequence next (cosmetics fold → input-drift → fresh consistency audit → gate presentation).** | adversary + state-manager | COMPLETE | BC 657; holdouts 100; VP 35; spec v1.3.77; BC-INDEX v6.33. |
+
+---
+
+## SESSION WRAP (2026-07-19, post-re-verify) — Archived Phase Steps row
+
+Displaced to make room for SESSION WRAP (2026-07-19) step row per keep-5 rule.
+
+| Step | Agent | Status | Output |
+|------|-------|--------|--------|
+| **SOH-ATTACHMENTS-1 F3 ADVERSARY PASSES 1-5 COMPLETE (2026-07-17, round-5 snapshot): pass-1 27 findings (2C/11H/11M/3L); fix-round-1; pass-2 16 findings (3C/4H/6M/3L); fix-round-2; pass-3 18 findings (0C/4H/5M/9L, count regressed — latent); fix-round-3; pass-4 11 findings (0C/0H/8M/2L/1I); fix-round-4; pass-5 10 fixable (1H/2M/7L/1I); fix-round-5. Spec v1.3.81→v1.3.83 (2 micro-rounds); BC-INDEX v6.34→v6.35; counts 657/100/35 UNCHANGED. Ceiling MEDIUM (pass-5 H single). STRICT streak 0/3. PRE-F4-UNICODE-DISPLAY-SANITIZATION obligation registered. Pass 6 in flight. trajectory-tail →16→18→11→10** | adversary + state-manager | IN PROGRESS — pass 6 in flight | BC 657; holdouts 100; VP 35; spec v1.3.83; BC-INDEX v6.35. |
