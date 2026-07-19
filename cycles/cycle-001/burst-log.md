@@ -5822,3 +5822,19 @@ Displaced to make room for SOH-ATTACHMENTS-1 F3 ADVERSARY PASSES 26-77 COMPLETE 
 | Step | Agent | Status | Output |
 |------|-------|--------|--------|
 | **SOH-ATTACHMENTS-1 F2 ADVERSARY PASS-39 CLEAN (2026-07-17): CLEAN — SECOND CONSECUTIVE CLEAN (streak 2/3); zero findings at LOW or above; P39-I1 (I) impact-boundary Rev-1 estimate-table subject drift CARRIED (authored-IDs-are-ground-truth caveat); P39-I2 (I) filter-count-hint N==M defined-by-omission CARRIED; P39-I3 (I) H-007 fixture description imprecision CARRIED (assertion satisfiable either way); full verification: counts recomputed (guards exit 0) + VP anchors + allocations + gate/eligibility ordering + EOF branches + per-path HTTP counts + zero-request-vs-mount pairings + CWE-22 pipeline + taxonomy rows + ADR alignment + JSON shapes; NO fix round; spec v1.3.77/BC-INDEX v6.33/counts 657/100/35 all UNCHANGED; STRICT streak 2/3 (DEC-183). trajectory-tail →1→1→0→0. Pass 40 next (WINDOW-CLOSING).** | adversary + state-manager | COMPLETE | BC 657; holdouts 100; VP 35; spec v1.3.77; BC-INDEX v6.33. |
+
+### Archived Phase Progress row (resume-2026-07-19 burst)
+
+Displaced to make room for SOH-ATTACHMENTS-1 SCOPED RE-VERIFY DISCHARGED Phase Progress row per keep-5 rule.
+
+| Phase | Status | Completed | Gate | Notes |
+|-------|--------|-----------|------|-------|
+| **SESSION WRAP (2026-07-17): Human /wrap immediately after F2 GATE APPROVED (DEC-184). Security re-review v1.3.79 COMPLETE — verdict SPEC-CHANGES-REQUIRED: SEC-576-011 (MEDIUM, CWE-116 terminal injection — server-supplied filenames echoed to TTY prompts/output unsanitized; display-sanitization clause required; blocks S4); SEC-576-009 (LOW, ?redirect=false prohibition in Trace only → promote to BC-2.7.007 step-2 body; blocks S2); SEC-576-008 (INFO, batch degenerate-id trust assumption → clarifying note); SEC-576-010 (INFO, single-id overwrite-refuse needs dedicated EC). All SEC-576-001..007 VERIFIED RESOLVED — no regression. F3 BLOCKED pending security fix round + re-verify. DEC-184 F2 gate approval STANDS. SEC-576-011 NEW CROSS-CUTTING CONCERN: display-sanitization (CWE-116) is a display-channel counterpart to CWE-22 disk pipeline — F3 story-writers must allocate it (S2 earliest consumer candidate). trajectory-tail →1→0→0→0** | **SESSION WRAP (PAUSED)** | **2026-07-17** | **Security fix round required (SEC-576-011 + SEC-576-009); then re-verify; on APPROVE → F3 dispatch (5 stories S1-S5, STRICT).** | BC 657; holdouts 100; VP 35; spec v1.3.79; BC-INDEX v6.33. |
+
+### Archived Current Phase Steps row (resume-2026-07-19 burst)
+
+Displaced to make room for SCOPED RE-VERIFY + fix round + confirm step row per keep-5 rule.
+
+| Step | Agent | Status | Output |
+|------|-------|--------|--------|
+| **SOH-ATTACHMENTS-1 F2 STRICT CONVERGED (2026-07-17): CLEAN — THIRD CONSECUTIVE CLEAN (window p38/p39/p40 CLEAN×3; FULL STRICT CONVERGENCE); zero findings at LOW+; P40-I1 (I) VP-576-003 parenthetical imprecision CARRIED; P40-I2 (I) CWE-88-vs-CWE-22 citation-precision nit CARRIED; P40-I3 (I) optional path-b/path-c dry-run holdout coverage observation CARRIED; adversary source-verified all code claims + all holdout Expected derivable from BC text + all divergences retro-annotated — "exceptionally consistent"; NO fix round; spec v1.3.77/BC-INDEX v6.33/counts 657/100/35 UNCHANGED; trajectory-tail →1→0→0→0. 40 passes / 37 fix rounds. FULL STRICT CONVERGENCE per DEC-181/DEC-183. Pre-gate sequence next (cosmetics fold → input-drift → fresh consistency audit → gate presentation).** | adversary + state-manager | COMPLETE | BC 657; holdouts 100; VP 35; spec v1.3.77; BC-INDEX v6.33. |
