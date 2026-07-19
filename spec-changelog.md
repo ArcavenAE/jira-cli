@@ -7,6 +7,58 @@ project: "jr (jira-cli)"
 
 Track all spec version changes. Most recent version first.
 
+## [1.3.96] - 2026-07-19
+
+### Type: PATCH
+
+### Summary
+
+P2-001 ratification micro-round for SOH-ATTACHMENTS-1 Step 4.5 pass-2. Clarifies EC-2.7.001-3 in BC-2.7.001: empty-string (`""`) values for `displayName` or `accountId` are treated as absent for author fallback-chain purposes and fall through to the next link. This ratifies the S1 implementation's defensive display convention — real Jira Cloud never emits empty-string `displayName`, but treating empty strings as absent is better UX than rendering an empty table cell. No new BCs.
+
+### Changed Requirements
+
+- `.factory/specs/prd/bc-2-issue-read.md` (MODIFIED): EC-2.7.001-3 extended — sentence appended: empty-string values treated as absent for fallback-chain purposes; present-but-empty `displayName` or `accountId` falls through to next link (defensive display convention; P2-001 ratification 2026-07-19). BC-2.7.001 Trace field updated. Frontmatter `trace:` block v1.3.96 entry added.
+
+### Impact Assessment
+
+| Artifact | Change Type | Notes |
+|----------|-------------|-------|
+| bc-2-issue-read.md | Modified | EC-2.7.001-3 empty-string fallback-chain clause added (P2-001) |
+
+- **Affected stories:** S1 (implements BC-2.7.001 attachment list table rendering). No story body changes required — ratification aligns spec to existing implementation behavior.
+- **BC count:** 657 (unchanged — in-clause clarification; no new BCs)
+- **Holdout count:** 100 (unchanged)
+- **VP count:** 35 (unchanged)
+- **Migration needed:** NO (spec correction aligning to shipped implementation behavior; no behavioral change)
+
+---
+
+## [1.3.95] - 2026-07-19
+
+### Type: PATCH
+
+### Summary
+
+Adversary pass-1 P1-002 reconciliation for SOH-ATTACHMENTS-1 Step 4.5. Resolves an internal contradiction in BC-2.7.002: the "author mirrors the existing User serde shape / JSON mode is pass-through" claim directly contradicted the authority clause's `self`-omission mandate and VP-576-004's structural-identity test. Ruling: author in JSON is always the curated `{accountId, displayName}` object only (values as-received including null); all other Jira API author sub-object fields (`self`, `avatarUrls`, `accountType`, `timeZone`, `emailAddress`, `active`) MUST NOT appear. The partial-author case now specifies `{"accountId": null, "displayName": null}` instead of raw pass-through.
+
+### Changed Requirements
+
+- `.factory/specs/prd/bc-2-issue-read.md` (MODIFIED): BC-2.7.002 field note (~line 612) rewritten — "mirrors the existing User serde shape" replaced with explicit curated two-field-only statement; BC-2.7.002 null-author clause (~line 619) partial-author sentence replaced — "emits the author object as received from the API … JSON mode is pass-through" replaced with `{"accountId": null, "displayName": null}` curated-form statement; BC-2.7.002 Trace field updated; frontmatter `last_updated` advanced to 2026-07-19; frontmatter `trace:` block v1.3.95 entry added.
+
+### Impact Assessment
+
+| Artifact | Change Type | Notes |
+|----------|-------------|-------|
+| bc-2-issue-read.md | Modified | BC-2.7.002 author-clause contradiction resolved (P1-002) |
+
+- **Affected stories:** S1 (implements BC-2.7.002 attachment list JSON). Story-writer propagates under `bc_array_changes_propagate_to_body_and_acs` policy.
+- **BC count:** 657 (unchanged — in-clause fix; no new BCs)
+- **Holdout count:** 100 (unchanged)
+- **VP count:** 35 (unchanged — VP-576-004 author-shape already tested via self-omission; curated form is the narrower-is-correct direction)
+- **Migration needed:** NO (this is a spec correction for a future implementation; no shipped code is affected)
+
+---
+
 ## [1.3.94] - 2026-07-18
 
 ### Type: PATCH

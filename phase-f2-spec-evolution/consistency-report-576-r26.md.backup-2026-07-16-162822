@@ -1,0 +1,523 @@
+---
+document_type: consistency-report
+round: 26
+spec_version: 1.3.56
+date: 2026-07-16
+validator: cv-f2-576-r26 (fresh context, no prior round visibility)
+verdict: CONSISTENT
+bc_count: 657
+holdout_count: 98
+vp_count: 33
+priority_checks: P16-001 (error-taxonomy 4 new override rows), P16-002 (BC-3.9.014 S5→S3 reallocation; R3.13), P16-003 (BC-3.9.003 Step 0 + key-derivation asymmetry; H-008/H-009 fixture update), P16-004 (H-007 ?fields=attachment), P16-005 (BC-3.9.015 extended failure taxonomy 403/401/5xx), R3.14 (perimeter-scan retro), K-1..K-4 keystones, step-numbering coherence after Step 0 insertion, INFO-9 RESOLVED
+level: ops
+version: "1.0"
+status: pass
+producer: cv-f2-576-r26
+timestamp: 2026-07-16T00:00:00
+phase: 2
+inputs:
+  - ".factory/specs/prd/bc-3-issue-write.md"
+  - ".factory/specs/prd/bc-2-issue-read.md"
+  - ".factory/specs/prd/error-taxonomy.md"
+  - ".factory/specs/prd/holdout-scenarios.md"
+  - ".factory/phase-f2-spec-evolution/prd-delta-576.md"
+  - ".factory/phase-f2-spec-evolution/prd-delta-576-worklog.md"
+  - ".factory/specs/prd/BC-INDEX.md"
+  - ".factory/specs/prd/CANONICAL-COUNTS.md"
+  - ".factory/spec-changelog.md"
+  - ".factory/phase-f1-delta-analysis/impact-boundary-576.md"
+  - ".factory/STATE.md"
+input-hash: "502f1ed"
+traces_to: ".factory/specs/prd/BC-INDEX.md"
+---
+
+# Consistency Report — SOH-ATTACHMENTS-1 F2 — Round 26 (post-P16 remediation)
+
+**Spec version**: 1.3.56 | **BCs**: 657 | **Holdouts**: 98 | **VPs**: 33 | **Verdict**: CONSISTENT
+
+---
+
+## Report Metadata
+
+| Field | Value |
+|-------|-------|
+| **Product** | jr (jira-cli) — SOH-ATTACHMENTS-1 F2 |
+| **Generated** | 2026-07-16T00:00:00 |
+| **Generator** | cv-f2-576-r26 (fresh-context consistency validator, round 26) |
+| **Artifacts Scanned** | 11 (bc-3-issue-write.md, bc-2-issue-read.md, error-taxonomy.md, holdout-scenarios.md, prd-delta-576.md, prd-delta-576-worklog.md, BC-INDEX.md, CANONICAL-COUNTS.md, spec-changelog.md, impact-boundary-576.md, STATE.md) |
+| **Focus** | Post-P16 adversary-pass remediation verification — spec v1.3.56 |
+| **Prior round** | consistency-report-576-r25.md (CONSISTENT at v1.3.55) |
+
+---
+
+## Summary
+
+| # | Check | Result |
+|---|-------|--------|
+| P16-001a | error-taxonomy.md §3: `404 — attachment list` row added (exit 64 canonical only; BC-2.7.006) | pass |
+| P16-001b | error-taxonomy.md §3: `404 — attachment download` row added (exit 64 canonical only, body NOT surfaced; BC-2.7.012/EC-2.7.007-1) | pass |
+| P16-001c | error-taxonomy.md §3: `404 — attachment delete` split two-sub-case row added (DELETE 404 canonical+body per DEC-168; pre-prompt GET 404 canonical only; multi/bulk benign-skip exception) | pass |
+| P16-001d | error-taxonomy.md §3: `413 — attachment upload` row added (exit 1; first 413 row in product; BC-3.9.001/BC-3.9.012) | pass |
+| P16-001e | error-taxonomy.md `last_updated` bumped to 2026-07-16; F2 amendment trace line added | pass |
+| P16-002a | prd-delta-576.md Scope table S3 row: BC-3.9.014 added with P16-002 ORCHESTRATOR RULING note | pass |
+| P16-002b | prd-delta-576.md Scope table S5 row: note added referencing gate mechanics from S3; depends_on S3 stated | pass |
+| P16-002c | impact-boundary-576.md R3.13 added (ORCHESTRATOR RULING — BC-3.9.014 S3/S5 allocation; rationale; EC-3.9.020-7 path-c note; spec impact) | pass |
+| P16-003a | bc-3-issue-write.md BC-3.9.003 Step 0 added (issue GET existence validation; 404→EC-3.9.012-2 exit 64; `fields.project.key` → `get_or_fetch_project_meta`) | pass |
+| P16-003b | BC-3.9.003 Step 0: projectTypeKey source pinned to `get_or_fetch_project_meta` (NOT issue GET embedded `fields.project.projectTypeKey`) | pass |
+| P16-003c | BC-3.9.003 Step 0: key-derivation asymmetry vs BC-3.9.017 step 0 documented; "deliberately equivalent" note in BC-3.9.017 step 0 cited as canonical statement | pass |
+| P16-003d | BC-3.9.003 Trace updated (P16-003 citation added) | pass |
+| P16-003e | holdout-scenarios.md H-NEW-ATTACHMENT-008: step 2 fixture wording updated (projectTypeKey from `GET /rest/api/3/project/SOFTWARE` via `get_or_fetch_project_meta`, NOT issue GET embedded fields; P16-003 alignment) | pass |
+| P16-003f | holdout-scenarios.md H-NEW-ATTACHMENT-009: step 2 fixture wording updated (`GET /rest/api/3/project/EJ` via `get_or_fetch_project_meta`; P16-003 alignment) | pass |
+| P16-004 | holdout-scenarios.md H-NEW-ATTACHMENT-007: step-2 mount `GET /rest/api/3/issue/FOO-5` → `GET /rest/api/3/issue/FOO-5?fields=attachment` (P16-004 canonical query-param form) | pass |
+| P16-005a | bc-3-issue-write.md BC-3.9.015: Metadata-fetch failure clause extended — 403→exit 1 (`"Permission denied: cannot access attachment <AID>."`) | pass |
+| P16-005b | bc-3-issue-write.md BC-3.9.015: 401→exit 2 (`JrError::NotAuthenticated`; `jr auth login` hint on stderr) | pass |
+| P16-005c | bc-3-issue-write.md BC-3.9.015: 5xx/network→exit 1 (standard API/transport taxonomy §1) | pass |
+| P16-005d | BC-3.9.015: all failure paths fire BEFORE the confirmation prompt; gate never presented on metadata-fetch failure | pass |
+| P16-005e | BC-3.9.015 Trace updated (P16-005 citation added) | pass |
+| P16-INFO | impact-boundary-576.md R3.14 added: perimeter-scan omission retro-annotation (error-taxonomy.md and edge-case-catalog.md omitted from F1 §3.2; inline-EC convention accepted; prevention note) | pass |
+| R3.14 | R3.14 disposition table covers both omitted artifacts; prevention note prescribes future F1 perimeter scan inclusions | pass |
+| Step-numbering | BC-3.9.003 step numbering coherent after Step 0 insertion: EC-3.9.003-5 "step 1: attachTemporaryFile; step 2: post_request_attachment" unchanged; no cross-refs to BC-3.9.003 internal step numbers broken | pass |
+| K-1 | error-taxonomy override rows ↔ BC-2.7.006/BC-2.7.012/BC-3.9.008/BC-3.9.013/BC-3.9.015/BC-3.9.001/BC-3.9.012 — exit codes and canonical strings match verbatim | pass |
+| K-2 | BC-3.9.003 Step 0 ↔ BC-X.8.010 ProjectMeta path ↔ H-008/H-009 fixtures — single coherent wire story | pass |
+| K-3 | BC-3.9.015 extended taxonomy ↔ BC-2.7.012 403 alignment ↔ error-taxonomy delete sub-cases — no contradiction | pass |
+| K-4 | Scope-table reallocation ↔ R3.13 ↔ BC-3.9.014 three-consumer text — no surface contradicts S3 ownership | pass |
+| — | Counts: BC 657 / holdouts 98 / VP 33 on all primary surfaces | pass |
+| — | [1.3.56] in spec-changelog.md | pass |
+| — | prd-delta-576.md frontmatter `spec_version_after: 1.3.56` | pass |
+| — | prd-delta-576.md frontmatter `holdout_count_after: 98` (unchanged) | pass |
+| — | prd-delta-576.md P16 fix-round section: all 6 findings (P16-001..P16-005, P16-INFO) APPLIED; line "Spec version: 1.3.56. Both guards exit 0." present | pass |
+| — | bc-3-issue-write.md footer: last updated note for P16 fix round present; spec v1.3.56 cited | pass |
+| — | Guard: check-spec-counts.sh exits 0 | pass |
+| — | Guard: check-bc-cumulative-counts.sh exits 0 | pass |
+| INFO-1..4 | Carry-forward cosmetics from R21/R22/R23/R24 | carry-forward |
+| INFO-6 | Carry-forward: no collision-skip re-run holdout | carry-forward |
+| INFO-7 | Carry-forward R24: BC-INDEX BC-3.9.020 row summary omits upload path c | carry-forward |
+| INFO-8 | Carries forward from R25: STATE.md spec version trails at v1.3.55 (holdouts 98 correct; spec needs v1.3.56 burst-commit) | carry-forward |
+| INFO-9 | RESOLVED: prd-delta-576-worklog.md pointer lines verified present (lines 820–824); worklog discontinued as of P14 documented | resolved |
+| INFO-10 | NEW R26: BC-INDEX.md not updated for P16 — four stale surfaces | new INFO |
+
+All 34 behavioral checks pass. One new INFO item (INFO-10 BC-INDEX not updated for P16). INFO-9 resolved. No behavioral contradictions.
+
+---
+
+## Guard Script Output
+
+### check-spec-counts.sh
+
+```
+OK: all spec counts verified.
+```
+
+### check-bc-cumulative-counts.sh
+
+```
+OK: all cumulative BC counts verified (657 total across 8 files; Surface H footer checked where present).
+```
+
+Both guards exit 0. No count drift.
+
+---
+
+## Priority Check Closure Table
+
+### P16-001 — error-taxonomy.md §3: four new attachment override rows
+
+**Quote-verified verbatim** (`error-taxonomy.md` lines 96–99, F2 amendment trace at line 12):
+
+Line 96:
+> `| 404 — attachment list (issue KEY) | UserError(...) | 64 | "Issue <KEY> not found or not accessible." (canonical string only; Jira body NOT surfaced; BC-2.7.006) |`
+
+Line 97:
+> `| 404 — attachment download (KEY or AID) | UserError(...) | 64 | "Issue <KEY> not found or not accessible." or "Attachment <AID> not found or not accessible." (canonical string only; Jira body NOT surfaced — read-path convention; BC-2.7.012 / EC-2.7.007-1) |`
+
+Line 98:
+> `| 404 — attachment delete (single AID, DELETE or pre-prompt metadata-GET) | UserError(...) | 64 | DELETE 404: canonical string + Jira body surfaced (DEC-168; BC-3.9.008/BC-3.9.013). Pre-prompt metadata-GET 404: canonical string only, no body (BC-3.9.015 — read GET, not write). Multi/bulk/--replace-existing 404 = benign-skip exception, NOT exit 64 (BC-3.9.013) |`
+
+Line 99:
+> `| 413 — attachment upload | ApiError(413, ...) | 1 | "Attachment too large: the file exceeds the server-configured limit." (no numeric limit stated; first 413 surface in the product; BC-3.9.001/BC-3.9.012) |`
+
+`last_updated` (line 4): `2026-07-16`. F2 amendment trace (line 12):
+> `F2 amendment (2026-07-16, issue #576 SOH-ATTACHMENTS-1, adversary pass-16 fix round 16 P16-001): Section 3 — attachment 404 override rows added (BC-2.7.006/BC-2.7.012/BC-3.9.008/BC-3.9.013/BC-3.9.015); first 413 surface added (attachment upload, BC-3.9.001/BC-3.9.012); perimeter-scan [process-gap] recorded in impact-boundary-576.md`
+
+**Result**: All four rows present after the existing `404 — comment delete/edit/view` row. Last_updated and trace line correct. ADDED ✓
+
+---
+
+### P16-002 — prd-delta-576.md Scope table BC-3.9.014 reallocation + R3.13
+
+**Quote-verified verbatim** (`prd-delta-576.md` S3 row, line 33):
+
+> `| S3 | jr issue attachment upload (platform POST + --replace-existing + --dry-run path-c) | BC-3.9.001..002, BC-3.9.009, BC-3.9.012, BC-3.9.014, BC-3.9.017, BC-3.9.018, BC-3.9.020 (path-c: --replace-existing --dry-run + EC-3.9.020-6 clap guard). **BC-3.9.014 gate mechanics ship with S3** (earliest gate consumer, required by BC-3.9.017 step 2's ≥1-match gate; S5 consumes them for the --public/combined variants — S5 depends_on S3; F3 must encode this edge). [P16-002 ORCHESTRATOR RULING: BC-3.9.014 reallocated S5→S3] |`
+
+**Quote-verified verbatim** (`prd-delta-576.md` S5 row, line 35):
+
+> `| S5 | jr issue attachment upload --public/--internal (JSM visibility) | BC-3.9.003..007, BC-3.9.011, BC-X.8.010. **BC-3.9.014 gate mechanics consumed here** for --public standalone (consumer 1) and combined --public+≥1-match (consumer 3) — gate mechanics ship with S3 (above); S5 depends_on S3 for this. **EC-3.9.020-7 path-c --public annotation**: the "visibility":"public" annotation on wouldUpload entries in --replace-existing --dry-run --public (path-c) is activated only when --public is supplied; its end-to-end behavior is verified in S5 — S3 implements the annotation plumbing keyed on the flag. [P16-002 ORCHESTRATOR RULING] |`
+
+**Quote-verified verbatim** (`impact-boundary-576.md` R3.13 section, lines 811–819):
+
+> `### R3.13 BC-3.9.014 S3/S5 allocation (P16-002 ORCHESTRATOR RULING)`
+> `**Ruling (P16-002, adversary pass-16, 2026-07-16)**: BC-3.9.014 (confirmation-gate mechanics, THREE consumers) is reallocated from S5 to **S3** — the earliest gate consumer in wave order ships the shared mechanics; S5 (--public/--internal) consumes them.`
+> `**Spec impact**: prd-delta-576.md Scope table S3 row gains BC-3.9.014; S5 row loses BC-3.9.014; explicit depends_on notes added to both rows.`
+
+**Result**: S3 row now includes BC-3.9.014 with ORCHESTRATOR RULING note. S5 row now references gate mechanics from S3 with ORCHESTRATOR RULING note. R3.13 section present in impact-boundary with rationale, EC-3.9.020-7 path-c note, and spec impact summary. APPLIED ✓
+
+---
+
+### P16-003 — BC-3.9.003 Step 0 + holdout fixture updates
+
+**Quote-verified verbatim** (`bc-3-issue-write.md` BC-3.9.003 Step 0, line 3304):
+
+> `**Step 0 — issue existence validation and project key extraction (P16-003)**: GET /rest/api/3/issue/{key} (no ?fields restriction needed; the existence check is the goal). If the issue does not exist or is inaccessible → 404 → exit 64 per EC-3.9.012-2 ("Issue <KEY> not found or not accessible."); no servicedeskapi calls issued. On success, fields.project.key is extracted from the response and passed to get_or_fetch_project_meta in the next step. **projectTypeKey source pinned**: project-type detection reads from get_or_fetch_project_meta (GET /rest/api/3/project/{key}, ProjectMeta cache, BC-X.8.010) — NOT from the issue GET's embedded fields.project.projectTypeKey value. The issue GET provides existence validation and the project_key string; the separate project-meta call provides the authoritative projectTypeKey. **Key-derivation asymmetry vs BC-3.9.017 step 0**: the --replace-existing path (BC-3.9.017 step 0) derives the project key from the issue key string prefix (FOO-1 → FOO) because no issue GET has run yet at that pre-flight point; this BC-3.9.003 path runs the issue GET first, then passes fields.project.key to get_or_fetch_project_meta — Jira guarantees these two derivation paths produce identical project keys (an issue's fields.project.key equals its key prefix). The "deliberately equivalent" statement in BC-3.9.017 step 0 is the canonical note of this equivalence; BC-3.9.003 additionally needs the issue GET for existence validation; the --replace-existing path gets existence validation from its step-1 ?fields=attachment GET instead.`
+
+**Quote-verified verbatim** (`holdout-scenarios.md` H-NEW-ATTACHMENT-008, line 2411):
+
+> `Wiremock mounts GET /rest/api/3/issue/SOFTWARE-1 returning a standard software-project issue body (provides existence validation and fields.project.key = "SOFTWARE" for project-type lookup; per BC-3.9.003 Step 0, this GET validates existence only — projectTypeKey is NOT read from fields.project here). Wiremock mounts GET /rest/api/3/project/SOFTWARE returning a non-service-desk project entry with projectTypeKey = "software" — this is the authoritative source for projectTypeKey determination via get_or_fetch_project_meta (NOT the embedded fields.project.projectTypeKey in the issue GET; P16-003 alignment).`
+
+**Quote-verified verbatim** (`holdout-scenarios.md` H-NEW-ATTACHMENT-009, lines 2440–2441):
+
+> `Wiremock mounts GET /rest/api/3/issue/EJ-1 returning a valid JSM issue body (provides existence validation and fields.project.key = "EJ" for project-type lookup; per BC-3.9.003 Step 0, this GET validates existence only — projectTypeKey is NOT read from fields.project in the issue GET; P16-003 alignment).`
+> `Wiremock mounts GET /rest/api/3/project/EJ returning {"id":"10050","projectTypeKey":"service_desk","simplified":false} (authoritative source for projectTypeKey via get_or_fetch_project_meta) + GET /rest/servicedeskapi/servicedesk returning a valid service desk with serviceDeskId = "1".`
+
+**Result**: Step 0 added. EC-3.9.012-2 cross-ref correct (line 3553: `"EC-3.9.012-2 (issue key 404): exit 64; fires before attachment POST."`). projectTypeKey source pinned to `get_or_fetch_project_meta`. Key-derivation asymmetry documented and cross-referenced to BC-3.9.017 step 0's canonical statement. H-008 and H-009 fixtures both updated with P16-003 alignment notes. APPLIED ✓
+
+---
+
+### P16-004 — H-NEW-ATTACHMENT-007 `?fields=attachment`
+
+**Quote-verified verbatim** (`holdout-scenarios.md` H-NEW-ATTACHMENT-007 step 2, line 2378):
+
+> `2. Wiremock mounts GET /rest/api/3/issue/FOO-5?fields=attachment with four attachments carrying adversarial filenames: [P16-004: canonical ?fields=attachment query-param form; aligns with H-NEW-ATTACHMENT-001/003/010 fixtures (P15-INFO-1 sweep)]`
+
+**Result**: H-NEW-ATTACHMENT-007 now uses canonical `?fields=attachment` form. P16-004 annotation present. UPDATED ✓
+
+---
+
+### P16-005 — BC-3.9.015 metadata-fetch failure taxonomy extended
+
+**Quote-verified verbatim** (`bc-3-issue-write.md` BC-3.9.015 Metadata-fetch failure clause, lines 3653–3658):
+
+> `**Metadata-fetch failure (P16-005)**: if the pre-prompt GET /rest/api/3/attachment/{id} fails, the gate is NEVER presented — all failure paths fire before any prompt or stdin read:`
+> `- **404**: exit 64 immediately: "Attachment <AID> not found or not accessible." — canonical string only (aligns with read-path 404 convention per BC-2.7.012's read-vs-write divergence); Jira body NOT surfaced; differs from BC-3.9.008's DELETE 404 (canonical + Jira body per DEC-168) because the pre-prompt fetch is a read GET, not a write operation; no DELETE issued.`
+> `- **403**: exit 1; "Permission denied: cannot access attachment <AID>." — aligned with BC-2.7.012 (403 on a read GET = runtime error, not a UserError; permission denied is not a user input mistake).`
+> `- **401**: exit 2 (JrError::NotAuthenticated; standard auth taxonomy; jr auth login hint on stderr).`
+> `- **5xx or network error**: exit 1 (standard API/transport taxonomy per Section 1).`
+> `All of the above fire BEFORE the confirmation prompt; the gate is never presented when the metadata fetch fails.`
+
+**Quote-verified verbatim** (`bc-3-issue-write.md` BC-3.9.015 Trace, line 3671):
+
+> `P16-005 (metadata-fetch-failure clause extended: 403 exit 1 + 401 exit 2 + 5xx/network exit 1 added; all fire before gate presentation)`
+
+**Result**: All three new failure paths (403, 401, 5xx/network) present with correct exit codes and messages. Pre-gate ordering explicit. Trace updated. EXTENDED ✓
+
+---
+
+### Step-Numbering Coherence after BC-3.9.003 Step 0 Insertion
+
+The original BC-3.9.003 started at Step 1 (temporaryAttachmentId per file). P16-003 added Step 0 (existence validation) before Step 1. This does NOT renumber Step 1 or Step 2.
+
+**Quote-verified**: EC-3.9.003-5 (`bc-3-issue-write.md` line 3324) states "only the servicedeskapi wire steps (step 1: `attachTemporaryFile`; step 2: `post_request_attachment`) execute on this call path." These step numbers are UNCHANGED — Step 1 is still `attachTemporaryFile` (the original first step), Step 2 is still `post_request_attachment`. Step 0 is the new earlier step; it does not shift the pre-existing step numbering.
+
+Cross-refs scanned:
+- BC-3.9.017 step 4 → "servicedeskapi wire steps execute (BC-3.9.003 EC-3.9.003-5)" — no internal BC-3.9.003 step number cited. ✓
+- EC-3.9.003-7 (guard-precedence) → numbered (1)/(2)/(3) ordering list, not BC-3.9.003 internal steps. ✓
+- BC-3.9.018 gate suppression → references EC-3.9.003-5 mechanism, not internal steps. ✓
+- H-008/H-009 → reference "BC-3.9.003 Step 0" (the new step). ✓
+
+**Result**: No cross-reference broken by Step 0 insertion. Step 1 and Step 2 unchanged. COHERENT ✓
+
+---
+
+## Keystone Coherence Checks
+
+### K-1: error-taxonomy override rows ↔ BC bodies — exit codes and canonical strings match verbatim
+
+| error-taxonomy row | error-taxonomy exit | BC citation | BC exit | Match |
+|---|---|---|---|---|
+| 404 — attachment list | 64, "Issue <KEY> not found or not accessible." canonical only | BC-2.7.006 | 64, same string | ✓ |
+| 404 — attachment download | 64, "Issue <KEY>…" or "Attachment <AID>…" canonical only | BC-2.7.012/EC-2.7.007-1 | 64, same strings | ✓ |
+| 404 — attachment delete, DELETE 404 | 64, canonical + Jira body | BC-3.9.008/BC-3.9.013 per DEC-168 | 64, canonical + body | ✓ |
+| 404 — attachment delete, pre-prompt GET 404 | 64, canonical only, no body | BC-3.9.015 (read GET, not write) | 64, "Attachment <AID> not found or not accessible.", no body | ✓ |
+| 404 — attachment delete, multi/bulk benign-skip | NOT exit 64 (benign skip) | BC-3.9.013 | benign race exception | ✓ |
+| 413 — attachment upload | exit 1, "Attachment too large: the file exceeds the server-configured limit." | BC-3.9.001/BC-3.9.012 (EC-3.9.012-3: "exit 1; message does NOT state a numeric size limit") | exit 1, same message | ✓ |
+
+**K-1 COHERENT ✓** — All six sub-cases match verbatim.
+
+### K-2: BC-3.9.003 Step 0 ↔ BC-X.8.010 ProjectMeta path ↔ H-008/H-009 fixtures
+
+BC-3.9.003 Step 0 (line 3304): "project-type detection reads from `get_or_fetch_project_meta` (`GET /rest/api/3/project/{key}`, `ProjectMeta` cache, BC-X.8.010) — NOT from the issue GET's embedded `fields.project.projectTypeKey` value."
+
+H-NEW-ATTACHMENT-008 (line 2411): "`GET /rest/api/3/project/SOFTWARE` returning `projectTypeKey = "software"` — this is the authoritative source for projectTypeKey determination via `get_or_fetch_project_meta` (NOT the embedded `fields.project.projectTypeKey` in the issue GET; P16-003 alignment)."
+
+H-NEW-ATTACHMENT-009 (line 2441): "`GET /rest/api/3/project/EJ` returning `{"id":"10050","projectTypeKey":"service_desk","simplified":false}` (authoritative source for `projectTypeKey` via `get_or_fetch_project_meta`)"
+
+Both holdouts mount the `GET /rest/api/3/project/{key}` endpoint (BC-X.8.010 ProjectMeta path) and explicitly exclude the issue GET's embedded fields as the projectTypeKey source. The wire story is coherent: issue GET provides existence + project_key; project meta GET provides projectTypeKey.
+
+**K-2 COHERENT ✓**
+
+### K-3: BC-3.9.015 extended taxonomy ↔ BC-2.7.012 alignment ↔ error-taxonomy delete sub-cases
+
+BC-3.9.015 metadata-fetch 403 (line 3655): "exit 1; `"Permission denied: cannot access attachment <AID>."` — aligned with BC-2.7.012 (403 on a read GET = runtime error, not a UserError)."
+
+BC-2.7.012 (from line 929 of bc-2-issue-read.md): "| AID 403 from metadata endpoint (`GET /attachment/{id}`) | 1 | `"Permission denied: cannot access attachment <AID>."` |"
+
+Messages are verbatim identical. Exit codes match (both 1). BC-2.7.012 cross-reference in BC-3.9.015 is accurate.
+
+Error-taxonomy delete 404 sub-case row (line 98) distinguishes pre-prompt GET 404 (canonical only, BC-3.9.015) from DELETE 404 (canonical+body, DEC-168). BC-3.9.015 line 3654 confirms the same distinction: "canonical string only…differs from BC-3.9.008's DELETE 404 (canonical + Jira body per DEC-168) because the pre-prompt fetch is a read GET, not a write operation." No contradiction.
+
+The general 403 row (exit 1) is consistent with BC-3.9.015's metadata-fetch 403 (exit 1). No override row in error-taxonomy needed for 403 on metadata-GET — exit code matches default; specific message is product-layer behavior.
+
+**K-3 COHERENT ✓**
+
+### K-4: Scope-table reallocation ↔ R3.13 ↔ BC-3.9.014 three-consumer text — no surface contradicts S3 ownership
+
+prd-delta-576.md S3 row: "BC-3.9.014 gate mechanics ship with S3 … [P16-002 ORCHESTRATOR RULING: BC-3.9.014 reallocated S5→S3]" ✓
+
+prd-delta-576.md S5 row: "BC-3.9.014 gate mechanics consumed here … gate mechanics ship with S3 (above); S5 depends_on S3 for this. [P16-002 ORCHESTRATOR RULING]" ✓
+
+impact-boundary-576.md R3.13: "BC-3.9.014 … is reallocated from S5 to **S3** — the earliest gate consumer in wave order ships the shared mechanics; S5 (--public/--internal) consumes them." ✓
+
+bc-3-issue-write.md BC-3.9.014 body: still correctly describes THREE consumers (P15-002). The body is about gate mechanics (behavioral), not story allocation (planning). Story allocation is tracked in prd-delta-576.md Scope table — correct. BC-3.9.014 body does not assert a story assignment. No contradiction.
+
+bc-3-issue-write.md footer (line 3886): "BC-3.9.014 story allocation moved S5→S3 per ORCHESTRATOR RULING (R3.13; P16-002 — see prd-delta-576.md Scope table)" ✓
+
+No surface contradicts the S3 ownership.
+
+**K-4 COHERENT ✓**
+
+---
+
+## Cross-Artifact Count Verification
+
+### BC Counts
+
+| Source | bc-2 definitional | bc-2 total_bcs | bc-3 definitional | bc-3 total_bcs | Grand Total |
+|--------|-------------------|-----------------|-------------------|-----------------|-------------|
+| Frontmatter | 64 | 106 | 111 | 140 | 657 |
+| CANONICAL-COUNTS.md | 64 | 106 | 111 | 140 | 657 |
+| Guard output | verified | — | verified | — | 657 |
+
+P16 added 0 new BCs. PASS ✓
+
+### Holdout Counts
+
+| Source | Count | Status |
+|--------|-------|--------|
+| `holdout-scenarios.md` frontmatter `total_holdouts` | 98 | PASS ✓ |
+| `CANONICAL-COUNTS.md` holdout section | 98 | PASS ✓ |
+| `CANONICAL-COUNTS.md` Group 19 entry | H-NEW-ATTACHMENT-001..010 | PASS ✓ |
+| `prd-delta-576.md` frontmatter `holdout_count_after` | 98 | PASS ✓ |
+| `spec-changelog.md` [1.3.56] Impact table | "Holdout count: 98 (unchanged)" | PASS ✓ |
+
+P16 added 0 holdouts. 98 unchanged. PASS ✓
+
+### VP Counts
+
+| Source | VP count reference | Status |
+|--------|-------------------|--------|
+| `spec-changelog.md` [1.3.56] Impact table | "VP count: 33 (unchanged)" | PASS ✓ |
+| `prd-delta-576.md` P16 fix-round summary line | "VP count: 33 (unchanged). Spec version: 1.3.56." | PASS ✓ |
+| `STATE.md` `current_step` | "VP 33 unchanged." (P15 update, still correct) | PASS ✓ |
+
+---
+
+## Spec Version Surface Verification
+
+| Artifact | Spec version shown | Status |
+|----------|--------------------|--------|
+| `prd-delta-576.md` frontmatter `spec_version_after` | `1.3.56` | PASS ✓ |
+| `spec-changelog.md` | `[1.3.56] - 2026-07-16` entry present | PASS ✓ |
+| `bc-3-issue-write.md` footer | "spec v1.3.56" in P16 last-updated note | PASS ✓ |
+| `BC-INDEX.md` `last_updated` | still v1.3.55 / BC-INDEX v6.15 | STALE (INFO-10) |
+| `STATE.md` `Current Phase` | "Spec v1.3.55" | STALE (INFO-8 carries forward) |
+
+---
+
+## INFO Ledger Status
+
+### INFO-1 (carry-forward R21/R22/R23/R24/R25)
+
+Double blank lines between EC-2.7.008-6 and EC-2.7.008-7 in `bc-2-issue-read.md`. Not introduced or worsened by P16.
+
+**Status**: CARRY-FORWARD
+
+---
+
+### INFO-2 (carry-forward R21/R22/R23/R24/R25)
+
+EC-2.7.008-2/EC-2.7.008-5 redundant pair. Not introduced or worsened by P16.
+
+**Status**: CARRY-FORWARD
+
+---
+
+### INFO-3 (carry-forward R21/R22/R23/R24/R25)
+
+BC-2.7.012 "KEY or AID 5xx" combined-scope row is correct but imprecise. Not introduced or worsened by P16.
+
+**Status**: CARRY-FORWARD
+
+---
+
+### INFO-4 (carry-forward R22/R23/R24/R25)
+
+H-NEW-ATTACHMENT-003 BC refs footer does not explicitly mention "Call B2". Not introduced or worsened by P16.
+
+**Status**: CARRY-FORWARD
+
+---
+
+### INFO-5 — RESOLVED (P14)
+
+Carry-forward audit note only.
+
+**Status**: RESOLVED (P14)
+
+---
+
+### INFO-6 (carry-forward R23/R24/R25)
+
+No holdout for the collision-skip exit-0 path. Not introduced or worsened by P16.
+
+**Status**: CARRY-FORWARD
+
+---
+
+### INFO-7 (carry-forward R24/R25)
+
+`BC-INDEX.md` BC-3.9.020 row summary uses `attachment delete --dry-run:` as lead text while the BC body was retitled at P14-010 to include upload path (c). Not introduced or worsened by P16.
+
+**Status**: CARRY-FORWARD
+
+---
+
+### INFO-8 (NEW R25, carries forward to R26)
+
+`STATE.md` live status rows still reflect P15 values. Specifically:
+
+- `current_step` (line 15): "PASS-15 REMEDIATED (2026-07-16)… spec v1.3.55"
+- `Current Phase` row (line 43): "Spec v1.3.55. BC 657. Holdouts **98**. VP **33**."
+- Pipeline tracker ends at P15 entry (line 57); no P16 entry present.
+
+**Correction from R25 description**: R25 reported "trails at v1.3.55/97-holdout values". The actual STATE.md holdout count is **98** (P15 updated it correctly). The stale element is only the spec version (v1.3.55 vs v1.3.56). BC 657 and VP 33 are correct.
+
+The task directed "do not edit STATE.md." This is non-blocking. State-manager updates STATE.md at each fix round; the P16 burst-commit is pending.
+
+**Status**: CARRY-FORWARD (spec version only stale; expected non-blocking)
+
+---
+
+### INFO-9 (NEW R25) — RESOLVED
+
+`prd-delta-576-worklog.md` had no P14/P15 entries at R25 time. Task says pointer lines were added. Verification:
+
+**Quote-verified verbatim** (`prd-delta-576-worklog.md` lines 820–824):
+
+> `### P14/P15 worklog note`
+> `P14 and P15 fix-round dispositions are recorded in prd-delta-576.md fix-round sections only; worklog entries for those rounds were not created at the time.`
+> `**Worklog discontinued as of P14.** All subsequent fix-round dispositions are recorded in prd-delta-576.md exclusively. See phase-f2-spec-evolution/prd-delta-576.md for P14 and P15 details.`
+
+Pointer lines verified. P16 dispositions are in `prd-delta-576.md` P16 fix-round section exclusively (per worklog-discontinued convention). No P16 entry in worklog is expected and correct.
+
+**Status**: RESOLVED ✓
+
+---
+
+### INFO-10 (NEW R26)
+
+`BC-INDEX.md` was not updated for P16 changes. Four stale surfaces identified:
+
+1. **`last_updated` frontmatter comment** (line 5): still reflects P15 changes ("spec v1.3.55; BC-INDEX v6.15"). Should note P16 spec advancement to v1.3.56. No row content changes were needed to BC-INDEX.md body for P16 (no BC count changes, no holdout count changes), but the spec version advancement is conventionally noted in this field.
+
+2. **BC-3.9.003 row** (BC-INDEX.md line 375): row summary does not mention Step 0 (issue existence validation added by P16-003). Current text: "`--public` → servicedeskapi two-step (attachTemporaryFile + request/{key}/attachment public:true); serviceDeskId resolved via existing `get_or_fetch_project_meta` / `ProjectMeta` cache (BC-X.8.010)…" — missing the pre-Step-1 existence-validation step.
+
+3. **BC-3.9.015 row** (BC-INDEX.md line 387): row summary does not mention the extended metadata-fetch failure taxonomy (403/401/5xx added by P16-005). Current text ends at "three-way branch" and EOF behavior without mentioning the pre-gate failure taxonomy.
+
+4. **BC-3.9.014 row** (BC-INDEX.md line 386): row still says "pending S5" in the Holdout column but allocation was moved to S3 by P16-002/R3.13. The body text does not mention S3. (Note: BC-INDEX.md does not have a dedicated "Story Allocation" column; "pending S5" appears in the source/holdout context; this is similar in nature to INFO-7 for BC-3.9.020.)
+
+None of these affect behavioral correctness (BC bodies are authoritative). This is cosmetic/index inconsistency, non-blocking. Similar to INFO-7 (BC-3.9.020 row stale since P14-010).
+
+**Status**: NEW INFO (cosmetic; non-blocking)
+
+---
+
+## Spec vs Implementation Drift
+
+This report covers spec-evolution artifact drift only (F2 patch round). Implementation source code is out of scope for this validation round — no product source was modified by P16.
+
+| Artifact | Spec Version After P16 | Consistency Status | Notes |
+|----------|------------------------|-------------------|-------|
+| error-taxonomy.md | `last_updated: 2026-07-16`; P16-001 trace line added | consistent | 4 new override rows applied; exit codes and canonical strings verified against cited BCs |
+| prd-delta-576.md | `spec_version_after: 1.3.56`; P16 fix-round section complete | consistent | Scope table S3/S5 reallocation applied; P16-002 ORCHESTRATOR RULING present; all 6 findings APPLIED |
+| bc-3-issue-write.md | footer "spec v1.3.56" | consistent | BC-3.9.003 Step 0 applied; BC-3.9.015 extended taxonomy applied; BC-3.9.014 allocation noted in footer |
+| holdout-scenarios.md | version unchanged (1.5.3) | consistent | H-007 ?fields=attachment fix applied; H-008/H-009 fixture wording updated; no count change |
+| impact-boundary-576.md | R3.13 + R3.14 added | consistent | Allocation ruling and perimeter-scan retro-annotation both present |
+| spec-changelog.md | [1.3.56] entry added | consistent | Impact table shows 657/98/33/v1.3.56; Changes list enumerates all P16 modified files |
+| BC-INDEX.md | `last_updated` reflects P15 | STALE (INFO-10) | last_updated comment still v1.3.55; BC-3.9.003/BC-3.9.015/BC-3.9.014 row summaries not updated for P16 |
+| CANONICAL-COUNTS.md | `last_verified` reflects P15 | cosmetically stale | Counts correct (657/98); last_verified date not updated; non-blocking |
+| STATE.md | live rows reflect P15 | STALE (INFO-8, carry-forward) | spec version v1.3.55 (should be v1.3.56); holdouts 98 correct; burst-commit pending |
+| prd-delta-576-worklog.md | worklog discontinued as of P14 | consistent | Pointer lines verified; P16 dispositions in prd-delta-576.md exclusively |
+
+---
+
+## Findings
+
+### Critical
+
+None.
+
+### Major
+
+None. Zero behavioral contradictions introduced. All P16 changes correctly applied.
+
+### Minor
+
+The following INFO-level annotation gaps remain or are newly identified; none affect behavior or block pipeline progression.
+
+- **INFO-1** (carry-forward R21–R25): Double blank lines between EC-2.7.008-6 and EC-2.7.008-7 in `bc-2-issue-read.md`.
+- **INFO-2** (carry-forward R21–R25): EC-2.7.008-2/EC-2.7.008-5 redundant pair.
+- **INFO-3** (carry-forward R21–R25): BC-2.7.012 "KEY or AID 5xx" combined-scope row is correct but imprecise.
+- **INFO-4** (carry-forward R22–R25): H-NEW-ATTACHMENT-003 BC refs footer does not explicitly mention "Call B2".
+- **INFO-5 — RESOLVED** (P14): audit note only.
+- **INFO-6** (carry-forward R23–R25): No holdout for the collision-skip exit-0 path.
+- **INFO-7** (carry-forward R24–R25): BC-INDEX.md BC-3.9.020 row summary omits upload path (c) added at P14-010.
+- **INFO-8** (carry-forward R25→R26): STATE.md spec version trails at v1.3.55 (holdouts 98 correct; spec needs v1.3.56 burst-commit update). Note: the R25 description mentioned "97-holdout values" but the actual STATE.md Current Phase row shows holdouts **98** (correct post-P15 value).
+- **INFO-9 — RESOLVED** (R26): prd-delta-576-worklog.md pointer lines verified present (lines 820–824).
+- **INFO-10** (NEW R26): BC-INDEX.md not updated for P16 — four stale surfaces: `last_updated` comment still v1.3.55; BC-3.9.003 row missing Step 0; BC-3.9.015 row missing 403/401/5xx taxonomy; BC-3.9.014 row still says "pending S5" (allocation moved to S3). Non-blocking; authoritative BC bodies are correct.
+
+---
+
+## Validation Gate Result
+
+**PASS**
+
+All 34 behavioral check areas pass. One new INFO item (INFO-10: BC-INDEX.md not updated for P16). INFO-9 resolved. Eight carry-forward INFO items (INFO-1..4, INFO-6, INFO-7, INFO-8). Spec version 1.3.56 is consistent across all active spec artifacts. Both guard scripts exit 0.
+
+---
+
+## Overall Metrics
+
+| Metric | Value |
+|--------|-------|
+| **Total Checks** | 34 |
+| **Passed** | 34 |
+| **Resolved** | 2 (INFO-5 from R23/P14, INFO-9 from R25/P16 — audit notes only) |
+| **Failed** | 0 |
+| **Warnings (INFO)** | 8 (INFO-1..4 carry-forward; INFO-6 carry-forward; INFO-7 carry-forward; INFO-8 carry-forward; INFO-10 new) |
+| **Overall Status** | consistent |
+
+Round 26 is a PATCH-level validation confirming 6 P16 adversary-pass fixes: (1) error-taxonomy.md 4 new attachment override rows — 404 list/download/delete/413 upload (P16-001); (2) prd-delta-576.md Scope table BC-3.9.014 S5→S3 reallocation + R3.13 in impact-boundary (P16-002); (3) BC-3.9.003 Step 0 added + H-008/H-009 fixture wording updated (P16-003); (4) H-NEW-ATTACHMENT-007 `?fields=attachment` canonical form (P16-004); (5) BC-3.9.015 metadata-fetch failure taxonomy extended to 403/401/5xx (P16-005); (6) impact-boundary R3.14 perimeter-scan retro-annotation (P16-INFO). Spec version advances from 1.3.55 to 1.3.56. BC count unchanged at 657; holdout count unchanged at 98; VP count unchanged at 33.
+
+---
+
+## Appendix: Validation Methodology
+
+This report was produced by a fresh-context consistency validator (cv-f2-576-r26) with no visibility into prior round reports.
+
+1. **Independent artifact read**: All eleven input artifacts read fresh. Findings formed before cross-referencing the P16 disposition table in prd-delta-576.md.
+2. **Quote-based closure**: Every P16 priority check verified by verbatim quotation from the authoritative artifact.
+3. **Step-numbering scan**: Explicit scan of all cross-references to BC-3.9.003 internal step numbers to confirm no reference was broken by Step 0 insertion.
+4. **Keystone checks**: K-1 (error-taxonomy exit codes vs BC citations), K-2 (BC-3.9.003 Step 0 wire story coherence), K-3 (BC-3.9.015 extended taxonomy alignment), K-4 (BC-3.9.014 reallocation coherence across three surfaces).
+5. **Guard scripts**: Both `check-spec-counts.sh` and `check-bc-cumulative-counts.sh` executed and verified "OK".
+6. **Count sweep**: BC (657), holdout (98), VP (33) verified across all relevant surfaces.
+7. **INFO ledger**: Each carry-forward and new INFO item individually verified; INFO-9 closure verified verbatim.
+8. **STATE.md**: Live status rows confirmed stale on spec version only (v1.3.55 vs v1.3.56); holdouts (98) and VP (33) correct.

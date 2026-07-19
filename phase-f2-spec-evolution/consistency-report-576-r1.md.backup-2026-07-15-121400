@@ -1,0 +1,197 @@
+---
+document_type: consistency-report
+feature: SOH-ATTACHMENTS-1
+issues: "#576, #585"
+phase: F2
+authored: 2026-07-15
+reviewer_role: consistency-validator
+spec_version: 1.3.44
+verdict: GAPS-FOUND
+total_findings: 7
+critical: 0
+medium: 1
+low: 5
+info: 1
+---
+
+# Consistency Report: SOH-ATTACHMENTS-1 F2 Spec Package (spec v1.3.44)
+
+**Review scope**: Fresh-context cross-document consistency check across the post-security-fix
+spec bundle for SOH-ATTACHMENTS-1. Inputs reviewed: BC-2.7.001..012, BC-3.9.001..014,
+BC-X.8.010 (bodies), prd-delta-576.md, security-review-576.md, impact-boundary-576.md
+Revision 2, ADR-0017, BC-INDEX.md, CANONICAL-COUNTS.md, spec-changelog.md.
+
+**Verdict: GAPS-FOUND** — 1 MEDIUM (implementer-visible algorithmic mismatch), 5 LOW
+(source citation drift and stale-status documents), 1 INFO (cosmetic). No CRITICAL or HIGH
+findings. The BC bodies themselves are internally consistent and correctly reflect all 7
+security fixes. All DEC-179 design rulings are correctly implemented in BC text.
+
+---
+
+## Findings Table
+
+| ID | Severity | Check Class | Artifacts | Description |
+|----|----------|------------|-----------|-------------|
+| CONS-576-001 | MEDIUM | (d) index/count drift; (b) security-fix drift | BC-INDEX.md row for BC-2.7.011 vs bc-2-issue-read.md §BC-2.7.011 body | BC-INDEX row for BC-2.7.011 was NOT updated after the v1.3.44 security fixes. The row describes a different sanitization algorithm and wrong length cap. See detail below. |
+| CONS-576-002 | LOW | (e) dangling references; (f) twin-artifact drift | bc-3-issue-write.md BC-3.9.001/.002 Source fields vs impact-boundary-576.md §1.1 classification table | Section 3.9 BC bodies cite `src/cli/issue/interactions.rs` as the CLI handler and `src/api/jira/issues.rs` for the upload function. F1 design places the handler in `src/cli/issue/attachments.rs` (NEW) and the API function in `src/api/jira/attachments.rs` (NEW). Section 2.7 BCs correctly cite `attachments.rs`; Section 3.9 is internally inconsistent with Section 2.7 and the F1 design. |
+| CONS-576-003 | LOW | (e) dangling references | cross-cutting.md BC-X.8.010 Source field vs impact-boundary-576.md §R2.1 | BC-X.8.010 Source cites `src/api/jsm/requests.rs::attach_temporary_file`. F1 impact boundary R2.1 places `attach_temporary_file` in `src/api/jsm/attachments.rs` (NEW file). The function does not exist in `requests.rs` per the F1 design. |
+| CONS-576-004 | LOW | (d) index/count drift | BC-INDEX.md Source column for Section 2.7 rows vs bc-2-issue-read.md BC-2.7.x bodies | BC-INDEX.md Source column for all BC-2.7.x rows says `src/cli/issue/interactions.rs`. The BC-2.7.x bodies (e.g., BC-2.7.001, BC-2.7.011) correctly cite `src/cli/issue/attachments.rs`. BC-INDEX is inconsistent with the BC bodies it summarizes. |
+| CONS-576-005 | LOW | (b) security-fix drift | security-review-576.md status vs prd-delta-576.md §Security Review Finding Dispositions | security-review-576.md still shows `status: draft`, `verdict: SPEC-CHANGES-REQUIRED`, and all 7 findings marked "open — spec change required before S2/S3/S5". prd-delta-576.md records all 7 as "APPLIED" after the v1.3.44 fix round. The security review document was not updated to reflect the resolved state. |
+| CONS-576-006 | LOW | (a) contradiction between BC bodies and ratified design | impact-boundary-576.md §R2.2 vs §OQ-9 within the same document | §R2.2 states "`--public` or `--internal` on a non-JSM issue → exit 64 with clear message." §OQ-9 (a later ruling in the same document) states "`--internal` on non-JSM = silent no-op." BCs implement OQ-9 correctly (BC-3.9.004). The impact boundary document has an internal contradiction: R2.2 was superseded by OQ-9 but R2.2 text was not updated. |
+| CONS-576-007 | INFO | (f) twin-artifact drift | spec-changelog.md §[1.3.43] Impact Assessment vs ADR-0017 status | spec-changelog [1.3.43] Impact Assessment says "ADR-0017 planned (attachment feature design decisions)". ADR-0017 exists on disk with `status: Accepted` and `date: 2026-07-15` — the same date as the [1.3.43] entry. The ADR was created in the same burst but the spec-changelog labels it "planned." |
+
+---
+
+## Detailed Finding Descriptions
+
+### CONS-576-001 — MEDIUM — BC-INDEX row for BC-2.7.011 not updated post-v1.3.44
+
+**Artifacts**: `BC-INDEX.md` row for BC-2.7.011 (line ~230) vs `bc-2-issue-read.md` §BC-2.7.011 body.
+
+The BC-INDEX row description reads:
+
+> "5-step algorithm (basename extraction, pseudo-name `.`/`..` reject, NUL byte reject, char scrub `[^a-zA-Z0-9._-]`→`_`, length cap **200 chars**); containment check (**resolved path must be under out-dir**); naive blacklist INSUFFICIENT — **only `..` traversal matters**"
+
+The BC-2.7.011 body (as of v1.3.44) says:
+
+1. **Char scrub (step 4)**: "replace any remaining `/`, `\`, or `:` in the string with `_`" — only three specific characters, not a broad `[^a-zA-Z0-9._-]` replacement.
+2. **Length cap (step 5)**: "truncate to a maximum of **255 bytes**" — not 200.
+3. **Step 5.5 (SEC-576-007)**: trailing whitespace/dot strip — absent from BC-INDEX row.
+4. **Containment check (SEC-576-002)**: the body now mandates the two-step procedure (`canonicalize(out_dir)` then `starts_with`) and explicitly warns against calling `canonicalize()` on the joined path. The BC-INDEX still says the old "resolved path must be under out-dir" text which is the pre-fix description.
+5. **"only `..` traversal matters"**: the body says "Naive blacklist approaches are INSUFFICIENT: do NOT rely on string-stripping `../` patterns alone — such blacklists are bypassable." The BC-INDEX mischaracterizes this as "only `..` traversal matters."
+
+The BC-INDEX row was updated at v1.3.43 (BC creation) but was not touched during the v1.3.44 security-fix pass. The BC body is authoritative; the BC-INDEX summary is misleading on all five points above. The char-scrub and length-cap discrepancies are the most load-bearing: an implementer reading BC-INDEX will implement a broader scrub and a shorter cap than the BC specifies.
+
+**Also**: the BC-INDEX Source column for BC-2.7.011 says `src/cli/issue/interactions.rs (pending S2)`. The BC body says `src/cli/issue/attachments.rs::sanitize_attachment_filename`. This overlaps with CONS-576-004.
+
+---
+
+### CONS-576-002 — LOW — Section 3.9 BC bodies cite wrong CLI handler and API module files
+
+**Artifacts**: `bc-3-issue-write.md` BC-3.9.001 (and BC-3.9.002) Source fields vs `impact-boundary-576.md` §1.1 classification table.
+
+BC-3.9.001 Source:
+```
+src/cli/issue/interactions.rs::handle_attachment_upload (implementation pending — story S3)
+src/api/jira/issues.rs::upload_attachments (implementation pending — story S3)
+```
+
+F1 impact boundary §1.1 classification:
+- `src/cli/issue/attachments.rs` — **NEW** (handler functions for all attachment operations)
+- `src/api/jira/attachments.rs` — **NEW** (four HTTP call implementations)
+
+`interactions.rs` is the comment CRUD handler (`handle_comment_add`, `handle_comment_delete`, `handle_comment_edit`, `handle_comment_view` — S-577-1..6). Placing attachment handlers there contradicts both the F1 design and CLAUDE.md's description of `interactions.rs`.
+
+`issues.rs` exists but is the search/get/create/edit/list-comments module. The F1 design creates a dedicated `attachments.rs` API module. BC-3.9.001's `issues.rs::upload_attachments` citation does not match any planned function per the F1 design.
+
+Section 2.7 BCs correctly cite `attachments.rs`. The discrepancy between Section 2.7 and Section 3.9 source citations makes Section 3.9 the odd-one-out.
+
+Note: ADR-0017 §Consequences mentions "set at the call site in `src/api/jira/issues.rs` (or a new `attachments.rs`)" — the ADR reflected uncertainty at time of writing. The F1 impact boundary classification table (authoritative) resolves this to `attachments.rs`.
+
+---
+
+### CONS-576-003 — LOW — BC-X.8.010 Source cites `requests.rs` for `attach_temporary_file`
+
+**Artifacts**: `cross-cutting.md` BC-X.8.010 Source field vs `impact-boundary-576.md` §R2.1.
+
+BC-X.8.010 Source:
+```
+src/api/jsm/requests.rs::attach_temporary_file (implementation pending — story S5)
+```
+
+F1 impact boundary R2.1 creates `src/api/jsm/attachments.rs` (NEW) to house `attach_temporary_file` and `attach_to_request`. `src/api/jsm/requests.rs` exists but handles JSM request creation (`handle_jsm_create` path per ADR-0014/CLAUDE.md). Citing `attach_temporary_file` under `requests.rs` contradicts the F1 classification and CLAUDE.md's description of the existing module.
+
+---
+
+### CONS-576-004 — LOW — BC-INDEX Source column for all Section 2.7 rows says `interactions.rs`
+
+**Artifacts**: `BC-INDEX.md` Section 2.7 rows vs `bc-2-issue-read.md` BC-2.7.x bodies.
+
+All twelve Section 2.7 rows in BC-INDEX (BC-2.7.001 through BC-2.7.012) show
+`src/cli/issue/interactions.rs (pending S1)` or `(pending S2)` in the Source column.
+
+The BC-2.7.x bodies consistently cite `src/cli/issue/attachments.rs::handle_attachment_list`,
+`src/cli/issue/attachments.rs::handle_attachment_download`, and
+`src/cli/issue/attachments.rs::sanitize_attachment_filename`. The BC-INDEX was not updated
+to match the BC bodies (or the BC-INDEX was generated with the wrong template before the
+bodies were finalized).
+
+---
+
+### CONS-576-005 — LOW — security-review-576.md status not updated post-v1.3.44 fix application
+
+**Artifacts**: `security-review-576.md` status/verdict/finding status vs `prd-delta-576.md` §Security Review Finding Dispositions.
+
+The security review document retains its original draft state:
+- `status: draft`
+- `verdict: SPEC-CHANGES-REQUIRED`
+- All 7 findings show `"open — spec change required before S2/S3/S5"`
+
+After the v1.3.44 fix round, prd-delta-576.md records all 7 as `APPLIED`. The actual BC text changes are present and correct (verified during this review). The gap is that security-review-576.md was never updated to reflect `status: closed`, `verdict: APPLIED`, and per-finding status changes. Any future reviewer opening the security review document sees a misleading "open" status on all items.
+
+---
+
+### CONS-576-006 — LOW — impact-boundary-576.md §R2.2 contradicts §OQ-9 in same document
+
+**Artifacts**: `impact-boundary-576.md` §R2.2 (line ~454) vs §OQ-9 (line ~591); `bc-3-issue-write.md` BC-3.9.004.
+
+§R2.2 (the design model section) states:
+> "`--public` or `--internal` on a non-JSM issue → exit 64 with clear message: `--public/--internal` requires a Jira Service Management project"
+
+§OQ-9 (the ratified open-questions section, labelled "RATIFIED 2026-07-15") states:
+> "**RATIFIED 2026-07-15** — silent no-op; rationale: a non-JSM issue has no customer portal, so the attachment is already internal by nature."
+
+OQ-9 supersedes R2.2 for `--internal` on non-JSM. BC-3.9.004 correctly implements OQ-9 ("Non-JSM silent no-op"). The BCs are correct. The issue is that §R2.2 in the impact boundary was not struck through or annotated to note the supersession by OQ-9, leaving an apparent contradiction within the same document. Anyone reading R2.2 without reaching OQ-9 will believe `--internal` on non-JSM should exit 64.
+
+---
+
+### CONS-576-007 — INFO — spec-changelog [1.3.43] says "ADR-0017 planned" but ADR-0017 is Accepted
+
+**Artifacts**: `spec-changelog.md` §[1.3.43] Impact Assessment vs `.factory/specs/architecture/decisions/ADR-0017-first-multipart-streaming-http-surface.md`.
+
+The [1.3.43] entry Impact Assessment table says:
+> `ADR reference | DEC-179 (F1 gate approval); ADR-0017 planned (attachment feature design decisions)`
+
+ADR-0017 exists on disk with `status: Accepted` and `date: 2026-07-15` — created in the same burst as the BC additions. The word "planned" is inaccurate; the ADR was created and accepted in the same burst. No functional consequence; cosmetic only.
+
+---
+
+## Positive Consistency Confirmations
+
+The following were checked and found consistent:
+
+- **All 7 security fixes applied correctly in BC bodies**: SEC-576-001 caller note present in BC-2.7.011; SEC-576-002 two-step procedure present in BC-2.7.011; SEC-576-003 EC-2.7.007-3 present in BC-2.7.007; SEC-576-004 multipart encoding note present in BC-3.9.001; SEC-576-005 EC-3.9.001-5 present in BC-3.9.001 AND parallel note present in BC-3.9.003 Step 1; SEC-576-006 stale-ID self-healing clause (4-step procedure) present in BC-X.8.010; SEC-576-007 step 5.5 trailing-whitespace/dot strip present in BC-2.7.011.
+
+- **DEC-179 design rulings vs BC bodies**: All ratified rulings are correctly reflected. Platform-POST default (BC-3.9.001/BC-3.9.002). `--internal` non-JSM = silent no-op / OQ-9 (BC-3.9.004 EC-3.9.004-1). `--public` non-JSM = exit 64 (BC-3.9.005). DEC-174 eprint!+read_line confirmation gate, NOT dialoguer (BC-3.9.014). DEC-168 delete 404 = exit 64 (BC-3.9.008). JSDCLOUD-10841 platform endpoint for downloads (BC-2.7.007). JRACLOUD-97046 no `?redirect=false` (BC-2.7.007). P2-4a internal-by-default (BC-3.9.002). JRACLOUD-96384 match-by-id (BC-2.7.012).
+
+- **BC counts consistent**: CANONICAL-COUNTS.md sum (651) matches BC-INDEX.md `total_bcs` (651) matches sum of per-file frontmatter values (106+134+150+57+32+36+43+93 = 651). Per-file definitional_count values match CANONICAL-COUNTS table. Section 2.7 (12 BCs), Section 3.9 (14 BCs), BC-X.8.010 (1 BC) = 27 new individually-bodied BCs. 624 + 27 = 651.
+
+- **spec-changelog entries vs actual BC changes**: Both [1.3.43] and [1.3.44] entries accurately describe the BC bodies modified and the changes made in each version.
+
+- **Research facts cited by BCs match research document verdicts**: P2-4a (platform POST internal by default) = VERIFIED HIGH in research. JRACLOUD-97046 (no redirect=false) = VERIFIED. JSDCLOUD-10841 (broken links.content) = VERIFIED. GHSA-9857-6MW7-FQ2M (reqwest strips auth on redirect) = VERIFIED. P2-3c (servicedeskapi response schema) = INCONCLUSIVE — correctly marked deferred in BC-3.9.007/BC-3.9.011. P2-8 (cargo deny clean) = VERIFIED.
+
+- **BC-X.8.010 model-b writer pattern**: Correctly follows precedent — swallow disk-write errors with `eprintln!("warning: …")`, return `Ok(())`. Consistent with `write_cmdb_fields_cache` and `write_object_type_attr_cache` patterns per CLAUDE.md.
+
+- **BC-INDEX Section and subsection headers**: Section 2.7 header "(12 BCs: BC-2.7.001..012)" matches 12 bodies. Section 3.9 header "(14 BCs: BC-3.9.001..BC-3.9.014)" matches 14 bodies. BC-X.8.010 in X.8 header "(10 BCs: BC-X.8.001..010)". All consistent.
+
+- **OQ-9 / BC-3.9.004 consistency**: BC-3.9.004 correctly implements OQ-9 (silent no-op for `--internal` on non-JSM). EC-3.9.004-1 explicitly states no servicedeskapi calls on non-JSM.
+
+- **Holdout count**: prd-delta `holdout_count_after: 88` = CANONICAL-COUNTS holdout total 88. Unchanged by F2 additions, consistent.
+
+- **ADR-0017 content vs F1 design**: ADR-0017 decisions (reqwest multipart + stream + tokio-util direct dep) are consistent with F1 impact boundary §R2.4 Cargo.toml additions. ADR-0017 correctly defers Cargo.toml edits to Story 3.
+
+---
+
+## Verdict: GAPS-FOUND
+
+**Blocking before story decomposition**: CONS-576-001 should be resolved before story authoring
+to prevent the story writer from inheriting the wrong sanitization algorithm from BC-INDEX.
+The BC body is correct; the BC-INDEX row needs updating to match.
+
+**Non-blocking but should be tracked**: CONS-576-002, CONS-576-003, CONS-576-004 are
+source-citation drift — they do not affect the behavioral specification but will mislead
+story writers and implementers about which files to create. CONS-576-005 and CONS-576-006
+are stale-status documentation issues. CONS-576-007 is cosmetic.
+
+**No fixes applied in this report**: per task instructions, this report is findings-only.
+All corrections are delegated to the spec author (PO).

@@ -1,0 +1,86 @@
+{
+  "story": "S-576-1",
+  "bundle": "SOH-ATTACHMENTS-1",
+  "issue": "#576",
+  "step": "4.5",
+  "date_converged": "2026-07-19",
+  "converged": true,
+  "criterion": "STRICT",
+  "window": ["pass-2", "pass-3", "pass-4"],
+  "passes_clean": 3,
+  "passes": [
+    {
+      "n": 1,
+      "classification": "FINDINGS",
+      "severity_ceiling": "MEDIUM",
+      "findings_summary": "2 MEDIUM + 3 LOW/INFO. P1-001 (MEDIUM): `?` glob pattern missing from #[cfg(test)] import path in attachment module stubs — incorrect test-isolation boundary. P1-002 (MEDIUM): BC-2.7.002 author-curated-form ruling contradicted by story AC wording — story AC text stated raw Jira filename as the authoritative form, conflicting with the spec's key-semantics clause. P1-003 (LOW): completeness-probe — attachment endpoint coverage claim unverified by research citation; discharged at PR time. P1-004 (LOW): unsanitized displayName/mimeType table cells — system-wide question deferred to phase-5. P1-005/P1-006 (INFO): minor wording nits.",
+      "fix_round": "fix-round-1 (426f02b8): corrected test import glob (P1-001); updated AC wording to match BC-2.7.002 author-curated-form ruling (P1-002); deferred P1-004 to S-576-2; deferred P1-003 to PR-time research citation. Spec bumped v1.3.94→v1.3.95 (P1-002 author-curated-form ruling, BC-2.7.002). Story S-576-1 v1.20→v1.21 (propagation). rustfmt clean (5dfa9bd1)."
+    },
+    {
+      "n": 2,
+      "classification": "NITPICK_ONLY",
+      "severity_ceiling": "LOW",
+      "findings_summary": "P2-001 (LOW): EC-2.7.001-3 empty-string attachment-list response handling — story AC did not pin the empty-array JSON shape; ratified into spec as v1.3.96 rather than suppressed. No MEDIUM or above. Window starts.",
+      "fix_round": "P2-001 ratified into spec v1.3.95→v1.3.96 (EC-2.7.001-3 empty-string ratification). Story S-576-1 v1.21→v1.22 (hash refresh, input-hash d6e6eb3). Commit 5a8bf29b."
+    },
+    {
+      "n": 3,
+      "classification": "NITPICK_ONLY",
+      "severity_ceiling": "LOW",
+      "findings_summary": "P3-001 (LOW): query-projection pin — attachment list test fixture lacked explicit assertion that only the expected JSON projection fields were serialized (no phantom fields). No MEDIUM or above. Window continues (2/3).",
+      "fix_round": "P3-001 discharged via query-projection pin tests (6b422f02). No spec change. Window streak 2/3."
+    },
+    {
+      "n": 4,
+      "classification": "NITPICK_ONLY",
+      "severity_ceiling": "LOW",
+      "findings_summary": "P4-001 (LOW residual): AttachmentObject serde brittleness — struct fields lack #[serde(default)] so any future Jira API addition of optional fields would cause deserialization failures; deferred to S-576-2 delivery (same struct, download story hardens it). P4-002 (observation): 403 ApiError prefix compliant, no action required. No MEDIUM or above. Window complete (3/3). STRICT CONVERGED.",
+      "fix_round": "No fix round. Window 3/3 — STRICT CONVERGED."
+    }
+  ],
+  "residuals": [
+    {
+      "id": "P1-003",
+      "severity": "LOW",
+      "description": "Completeness-probe — attachment endpoint coverage claim unverified by inline research citation.",
+      "disposition": "DISCHARGED at PR time via research citation (probe-research agent, in flight).",
+      "target": "PR gate"
+    },
+    {
+      "id": "P1-004",
+      "severity": "LOW",
+      "description": "Unsanitized displayName/mimeType table cells — Jira API-supplied values rendered directly in table output without sanitization for control characters or injection.",
+      "disposition": "DEFERRED — system-wide display-sanitization question; deferred to phase-5 bundle review. Not story-specific.",
+      "target": "phase-5"
+    },
+    {
+      "id": "P4-001",
+      "severity": "LOW",
+      "description": "AttachmentObject serde brittleness — struct fields lack #[serde(default)]; future Jira API additions of optional fields would cause deserialization failures.",
+      "disposition": "DEFERRED to S-576-2 delivery (same struct; download story hardens it with #[serde(default)] and additional field coverage).",
+      "target": "S-576-2"
+    },
+    {
+      "id": "P4-002",
+      "severity": "observation",
+      "description": "403 ApiError prefix format — adversary noted the prefix wording.",
+      "disposition": "COMPLIANT per existing house pattern. No action required.",
+      "target": "n/a"
+    }
+  ],
+  "human_overrides": 0,
+  "spec_trajectory": "v1.3.94 → v1.3.95 (P1-002 author-curated-form ruling, BC-2.7.002) → v1.3.96 (P2-001 EC-2.7.001-3 empty-string ratification)",
+  "story_trajectory": "v1.20 → v1.21 (propagation) → v1.22 (hash refresh, input-hash d6e6eb3)",
+  "worktree_commits": [
+    "64161657 — stubs",
+    "10e1f044 — RED tests",
+    "5dc1ada7 — impl 14/14",
+    "d33d2cb5 — docs fallout",
+    "74daaee3 — fix-round tests",
+    "426f02b8 — fix round 1 (P1-001/002/006)",
+    "5dfa9bd1 — rustfmt",
+    "5a8bf29b — P2-001 pins",
+    "6b422f02 — P3-001 query-projection pins"
+  ],
+  "suite_result": "2143 passed / 0 failed (pre-fix-round verification); 14/14 attachment_list green; clippy clean; fmt clean"
+}
