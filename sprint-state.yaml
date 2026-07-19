@@ -692,3 +692,93 @@ feature_followup_standalone:
     phase: standard-bug-fix
     f4_delivered_at: "2026-07-09"
     notes: "DELIVERED 2026-07-09. PR #601 squash-merged by human @ 081187ae (DEC-128 honored); issue #589 closes on release. Red Gate verified (commits 1e9c770/614963f): 4 tests FAILED with genuine serde 'missing field id' assertion errors; 56 pre-existing tests green. Green at 86907e5 (4/4 PASS). Full suite 2016/0/93. pr-reviewer APPROVE cycle 1. Fix-PR #602 @ bf3b3382 (clippy 1.97 lints: useless_borrows_in_formatting x2 + question_mark x1 — reactive maintenance, human-approved). CI unblocked post-fix-PR. Step 4.5 STRICT CONVERGED: 7 passes / 4 fix rounds; trajectory 3→4→0→1→0→0→0; window p5/p6/p7 CLEAN×3; zero human overrides. DEC-166. Bundle SOH-BUGS-1 both stories complete."
+
+  - id: S-576-1
+    title: "jr issue attachment list — table + JSON output + client-side filters (issues #576 #585)"
+    status: in-progress
+    pr: null
+    merge_sha: null
+    merged_at: null
+    depends_on: []
+    bc_anchors: [BC-2.7.001, BC-2.7.002, BC-2.7.003, BC-2.7.004, BC-2.7.005, BC-2.7.006]
+    verification_properties: [VP-576-004]
+    holdout_anchors: [H-NEW-ATTACHMENT-001]
+    issue: 576
+    points: 5
+    criticality: HIGH
+    implementation_strategy: tdd
+    tdd_mode: strict
+    phase: F4
+    f3_approved_at: "2026-07-19"
+    dispatched_at: "2026-07-19"
+    notes: "F4 delivery dispatched 2026-07-19 (DEC-185). First story of SOH-ATTACHMENTS-1 bundle; blocks S-576-2/S-576-3/S-576-4. Establishes src/cli/issue/attachments.rs + src/api/jira/attachments.rs scaffolding. Story v1.20 (story-writer ready flip 2026-07-19)."
+
+  - id: S-576-2
+    title: "jr issue attachment download — single/batch/newest, streaming, CWE-22 sanitization (issue #576)"
+    status: pending
+    pr: null
+    merge_sha: null
+    merged_at: null
+    depends_on: [S-576-1]
+    bc_anchors: [BC-2.7.007, BC-2.7.008, BC-2.7.009, BC-2.7.010, BC-2.7.011, BC-2.7.012]
+    verification_properties: [VP-576-001]
+    holdout_anchors: [H-NEW-ATTACHMENT-002, H-NEW-ATTACHMENT-003, H-NEW-ATTACHMENT-007]
+    issue: 576
+    points: 8
+    criticality: HIGH
+    implementation_strategy: tdd
+    tdd_mode: strict
+    phase: F4
+    notes: "Pending S-576-1 merge. ADR-0017 reqwest stream dep. Story v1.32 (story-writer ready flip 2026-07-19)."
+
+  - id: S-576-3
+    title: "jr issue attachment upload — platform POST, --replace-existing, --dry-run (path-c), ADR-0017 Cargo.toml (issue #576)"
+    status: pending
+    pr: null
+    merge_sha: null
+    merged_at: null
+    depends_on: [S-576-1]
+    bc_anchors: [BC-3.9.001, BC-3.9.002, BC-3.9.009, BC-3.9.012, BC-3.9.014, BC-3.9.017, BC-3.9.018, BC-3.9.020]
+    verification_properties: [VP-576-003, VP-576-004]
+    issue: 576
+    points: 13
+    criticality: HIGH
+    implementation_strategy: tdd
+    tdd_mode: strict
+    phase: F4
+    notes: "Pending S-576-1 merge. ADR-0017 Cargo.toml delivery slot (reqwest multipart+stream+tokio-util). Blocks S-576-5. Story v1.41 (story-writer ready flip 2026-07-19)."
+
+  - id: S-576-4
+    title: "jr issue attachment delete — single AID, bulk, --older-than, --dry-run single-AID + bulk (issue #576)"
+    status: pending
+    pr: null
+    merge_sha: null
+    merged_at: null
+    depends_on: [S-576-1]
+    bc_anchors: [BC-3.9.008, BC-3.9.010, BC-3.9.013, BC-3.9.015, BC-3.9.016, BC-3.9.019, BC-3.9.020]
+    verification_properties: [VP-576-002]
+    holdout_anchors: [H-NEW-ATTACHMENT-005, H-NEW-ATTACHMENT-006]
+    issue: 576
+    points: 8
+    criticality: HIGH
+    implementation_strategy: tdd
+    tdd_mode: strict
+    phase: F4
+    notes: "Pending S-576-1 merge. Blocks S-576-5. Story v1.29 (story-writer ready flip 2026-07-19)."
+
+  - id: S-576-5
+    title: "jr issue attachment upload --public/--internal — JSM visibility, servicedeskapi, stale-ID self-heal (issue #576)"
+    status: pending
+    pr: null
+    merge_sha: null
+    merged_at: null
+    depends_on: [S-576-3, S-576-4]
+    bc_anchors: [BC-3.9.003, BC-3.9.004, BC-3.9.005, BC-3.9.006, BC-3.9.007, BC-3.9.011, BC-3.9.020, BC-X.8.010]
+    verification_properties: [VP-576-005]
+    issue: 576
+    points: 13
+    criticality: HIGH
+    implementation_strategy: tdd
+    tdd_mode: strict
+    phase: F4
+    notes: "Pending S-576-3 + S-576-4 merge. Final story of SOH-ATTACHMENTS-1 bundle; closes #576. Story v1.34 (story-writer ready flip 2026-07-19)."
