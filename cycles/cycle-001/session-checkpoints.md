@@ -7,7 +7,7 @@ producer: state-manager
 timestamp: 2026-05-08T00:00:00
 cycle: "cycle-001"
 inputs: [STATE.md]
-input-hash: "3bf79c1"
+input-hash: "038524e"
 traces_to: STATE.md
 ---
 
@@ -1527,5 +1527,23 @@ STRICT convergence. Counters: BC 612, Holdouts 83, Stories 102. develop @ 0d8a8a
 | **Pending human decisions** | NONE until F3 gate. Security fix round is orchestrator-dispatched; no human gate before security-reviewer RE-VERIFY. |
 | **PR queue (human-owned)** | Merge #625 (EJ probe docs, CI green); merge #591 (soak cleared); #574 awaiting contributor rebase + human Actions-run approval; soak calendar #598/#599 eligible 2026-07-16, #612 2026-07-20, #624 2026-07-22. DO NOT close #429. |
 | **Notes** | Pipeline PAUSED at this checkpoint. F2 gate approval DEC-184 STANDS. SEC-576-011 NEW CROSS-CUTTING CONCERN: display-sanitization (CWE-116) display-channel counterpart to CWE-22 — F3 story-writers must allocate to S2 (earliest display consumer per DEC-184 R3.13). Standing rules unchanged (DEC-128/173; user merges all PRs). |
+| **Standing rules** | User merges ALL PRs on GitHub personally (DEC-173); every PR gets fresh-eyes pr-reviewer pre-merge with POSTED evidence; COMMENTED = approve-equivalent (same-account); implementers hard-forbidden from push/PR/improvise (STOP-and-report). DEC-128 in force. |
+| **Resume command** | /vsdd-factory:next-step |
+
+---
+
+## Archived Checkpoint (displaced by session-wrap burst, 2026-07-19)
+
+_Was the active checkpoint after security-fix-reverify burst (2026-07-17) — F3 UNBLOCKED. Superseded after F3 adversary passes 1-77 COMPLETE + F3 STRICT CONVERGED (p75/76/77 CLEAN×3) + F3 GATE APPROVED (DEC-185) + PRE-F4-UNICODE discharged (spec v1.3.93→v1.3.94; session-wrap burst 2026-07-19)._
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-07-17 (SESSION RESUME — security-fix-and-reverify burst COMPLETE; F3 UNBLOCKED; spec v1.3.81; BC-INDEX v6.34; holdout frontmatter v1.5.8; trajectory-tail →1→0→0→0). |
+| **Position** | Phase 3 / Feature Mode SOH-ATTACHMENTS-1 (issues #576+#585, DEC-179/DEC-180/DEC-181/DEC-182/DEC-183/DEC-184). **F2 GATE APPROVED (DEC-184, 2026-07-17)** at spec v1.3.79. Security fix round COMPLETE (v1.3.79→v1.3.81). Security re-verify APPROVE-WITH-NOTES (all 4 RESOLVED). **F3 UNBLOCKED.** F3 authorized (5 stories S1-S5, STRICT, 1 wave; depends_on S3→S1, S5→S3). Spec v1.3.81; 657 BCs / 100 holdouts / 35 VP; BC-INDEX v6.34; holdout frontmatter v1.5.8. develop @ 56d5126 (v0.6.0-dev.10). |
+| **Convergence counter** | F2 LOOP CLOSED (DEC-184; 40 passes / 37 fix rounds). F3 loop NOT YET STARTED (criterion: FULL STRICT). |
+| **In flight / On resume** | F3 UNBLOCKED. **NEXT:** Present F3 dispatch to human (5 stories S1-S5; STRICT). Story S1 = list/metadata; S2 = download + display-sanitization (SEC-576-011 CWE-116 earliest consumer per DEC-184 R3.13); S3 = upload; S4 = delete (blocked on S1); S5 = JSM visibility (blocked on S3). On human gate APPROVE → dispatch story-writer for F3 (STRICT). DEC-184 F2 gate approval STANDS. Spec v1.3.81; BC 657; BC-INDEX v6.34. |
+| **Pending human decisions** | **F3 GATE PRESENTATION** — present F3 package (5 stories S1-S5, depends_on S3→S1, S5→S3, STRICT criterion) for human gate approval. No other blocking decisions. |
+| **PR queue (human-owned)** | Merge #625 (EJ probe docs, CI green); merge #591 (soak cleared); #574 awaiting contributor rebase + human Actions-run approval; soak calendar: #598/#599 eligible 2026-07-16, #612 2026-07-20, #624 2026-07-22. DO NOT close #429. |
+| **Notes** | Main-repo untracked `.claude/pr-reviews/` + `.claude/spec-config.json` deliberately untracked. Backup `*.backup-*` files in `phase-f2-spec-evolution/` deliberately untracked. Worktree `.worktrees/docs-577-ej-probe` (ea0689b, PR #625) intact pending human merge — cleanup after merge. No story worktrees created this session (F2 spec-only). Standing rules unchanged (DEC-128/173; user merges all PRs). |
 | **Standing rules** | User merges ALL PRs on GitHub personally (DEC-173); every PR gets fresh-eyes pr-reviewer pre-merge with POSTED evidence; COMMENTED = approve-equivalent (same-account); implementers hard-forbidden from push/PR/improvise (STOP-and-report). DEC-128 in force. |
 | **Resume command** | /vsdd-factory:next-step |
