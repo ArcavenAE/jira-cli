@@ -717,10 +717,11 @@ feature_followup_standalone:
 
   - id: S-576-2
     title: "jr issue attachment download — single/batch/newest, streaming, CWE-22 sanitization (issue #576)"
-    status: pending
-    pr: null
-    merge_sha: null
-    merged_at: null
+    status: completed
+    pr: 631
+    merge_sha: "efa8b5d9"
+    merged_at: 2026-07-20
+    merged_via: "squash-merge by human (DEC-128 honored)"
     depends_on: [S-576-1]
     bc_anchors: [BC-2.7.007, BC-2.7.008, BC-2.7.009, BC-2.7.010, BC-2.7.011, BC-2.7.012]
     verification_properties: [VP-576-001]
@@ -731,7 +732,8 @@ feature_followup_standalone:
     implementation_strategy: tdd
     tdd_mode: strict
     phase: F4
-    notes: "Pending S-576-1 merge. ADR-0017 reqwest stream dep. Story v1.32 (story-writer ready flip 2026-07-19)."
+    f4_delivered_at: "2026-07-20"
+    notes: "DELIVERED 2026-07-20. PR #631 squash-merged by human @ efa8b5d9 (DEC-128 honored). Red Gate verified (0/22 RED, log committed 7c2aded0). Step 4.5 CONVERGED STRICT (recorded 442de9ab): 12 passes / 9 fix rounds; window p10/p11/p12 (CLEAN×2 + NITPICK_ONLY); zero human overrides. 5 review cycles: B1 clippy; B2 Windows drive-prefix sanitizer bug (real correctness catch); B4/B5 Windows-illegal test fixture chars CR/U+202E→U+007F (portable poison char); cycle-5 delta APPROVE (covered_sha 6d6ea1a9 FRESH). Security APPROVED_WITH_NOTES (0 CRIT/HIGH; 3 LOW accepted incl. SEC-003 att.id deferred). ci.yml mutation timeout: 120→240m (a61367f5, human-approved ×2 timeouts; PG-F4-10 pattern). Final mutation run 29773933464: ALL GREEN, 94% kill (79 caught / 4 missed-equivalent: 481:28, 481:47, 602:32-always-true, 721:24-always-true). Final test surface: 33 integration (tests/attachment_download.rs) + 16 attachment_list + lib 1062. Story v1.39 (mutation-kill sync). Process observations: (a) mutation-budget scaling for large-diff PRs (ci.yml 240m — revisit at wave gate); (b) Windows-runner filename restrictions (CR/U+202E rejected; U+007F is portable poison char). SOH-ATTACHMENTS-1: 2 of 5 delivered."
 
   - id: S-576-3
     title: "jr issue attachment upload — platform POST, --replace-existing, --dry-run (path-c), ADR-0017 Cargo.toml (issue #576)"
