@@ -2,11 +2,11 @@
 document_type: story-index
 phase: phase-2-story-decomposition
 producer: story-writer
-version: "1.5.29"
+version: "1.5.30"
 total_stories: 116
 total_waves: 4
 status: complete
-last_updated: 2026-07-19 (S-576-1 delivered PR #630 @ e33624c1; status in-progress→completed; STORY-INDEX v1.5.28→v1.5.29. Prior: F4 delivery start: S-576-1..5 status draft→ready; S-576-1 in-progress (F4 dispatch 2026-07-19, DEC-185). Story versions bumped by story-writer: S1 v1.19→v1.20, S2 v1.31→v1.32, S3 v1.40→v1.41, S4 v1.28→v1.29, S5 v1.33→v1.34. Prior: 2026-07-18 (SOH-ATTACHMENTS-1 changelog label corrections: RV-576-001 (S-576-3 v1.39→v1.40: propagation-site (3) AC-003/~227 → AC-004/~228) + RV-576-002 (S-576-5 v1.32→v1.33: propagation-site (1) AC-006/~199 → AC-002/~200). Input-hashes unchanged (spec files not touched): S-3: 52b90dc; S-5: 34d90ee. Prior: PRE-F4-UNICODE propagation @ v1.3.94: all 5 stories swept — S-576-1 5 sites (primary: algorithm extended + unit-test mandate + banner discharged), S-576-2/3/4/5 pointer style. S-576-1 v1.18->v1.19, S-576-2 v1.30->v1.31, S-576-3 v1.38->v1.39, S-576-4 v1.27->v1.28, S-576-5 v1.31->v1.32. Hashes: S-1/2: 71f97e7; S-3: 52b90dc; S-4: 632ebe0; S-5: 34d90ee. Prior: pre-gate hash refresh @ v1.3.93.))
+last_updated: 2026-07-19 (v1.3.95/96 propagation sweep: S-576-2 v1.32→v1.33 (no body sites; input-hash f0b3ae8), S-576-3 v1.41→v1.42 (AC-015 VP-576-004 curated-author assertion added; input-hash fce41b3), S-576-4 v1.29→v1.30 (no body sites; input-hash 3be84f7), S-576-5 v1.34→v1.35 (AC-012 author-type note updated; input-hash 6292066); STORY-INDEX v1.5.29→v1.5.30). Prior: 2026-07-19 (S-576-1 delivered PR #630 @ e33624c1; status in-progress→completed; STORY-INDEX v1.5.28→v1.5.29. Prior: F4 delivery start: S-576-1..5 status draft→ready; S-576-1 in-progress (F4 dispatch 2026-07-19, DEC-185). Story versions bumped by story-writer: S1 v1.19→v1.20, S2 v1.31→v1.32, S3 v1.40→v1.41, S4 v1.28→v1.29, S5 v1.33→v1.34. Prior: 2026-07-18 (SOH-ATTACHMENTS-1 changelog label corrections: RV-576-001 (S-576-3 v1.39→v1.40: propagation-site (3) AC-003/~227 → AC-004/~228) + RV-576-002 (S-576-5 v1.32→v1.33: propagation-site (1) AC-006/~199 → AC-002/~200). Input-hashes unchanged (spec files not touched): S-3: 52b90dc; S-5: 34d90ee. Prior: PRE-F4-UNICODE propagation @ v1.3.94: all 5 stories swept — S-576-1 5 sites (primary: algorithm extended + unit-test mandate + banner discharged), S-576-2/3/4/5 pointer style. S-576-1 v1.18->v1.19, S-576-2 v1.30->v1.31, S-576-3 v1.38->v1.39, S-576-4 v1.27->v1.28, S-576-5 v1.31->v1.32. Hashes: S-1/2: 71f97e7; S-3: 52b90dc; S-4: 632ebe0; S-5: 34d90ee. Prior: pre-gate hash refresh @ v1.3.93.))
 activation_head: dea1664
 ---
 
