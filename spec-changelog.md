@@ -7,6 +7,32 @@ project: "jr (jira-cli)"
 
 Track all spec version changes. Most recent version first.
 
+## [1.3.97] - 2026-07-20
+
+### Type: PATCH
+
+### Summary
+
+P8-002 correction micro-round for SOH-ATTACHMENTS-1 Step 4.5 pass-8. Corrects a factually wrong implementation-strategy note in EC-2.7.007-5: the claim that SIGINT cleanup "runs in the existing `tokio::signal::ctrl_c()` select! arm" was never implemented. Reality: `src/main.rs` Ctrl+C handler calls `std::process::exit(130)` directly with no temp-file registry and no pre-exit deletion. Orphaned `tmp_<random-hex>` scratch files are ratified as an accepted best-effort residual (harmless; overwrite-refuse guards the final path only). Cleanup deferred as tracked debt (S-576 bundle deferral). No new BCs.
+
+### Changed Requirements
+
+- `.factory/specs/prd/bc-2-issue-read.md` (MODIFIED): EC-2.7.007-5 implementation-strategy note replaced — erroneous claim of existing cleanup mechanism removed; corrected note describes reality: `std::process::exit(130)` direct call, no registry, no `Drop` invocation, orphaned temps accepted as best-effort residual, deferred to tracked debt. "best-effort MUST" relaxed to "best-effort". BC-2.7.007 Trace field updated. Frontmatter `trace:` block v1.3.97 entry added.
+
+### Impact Assessment
+
+| Artifact | Change Type | Notes |
+|----------|-------------|-------|
+| bc-2-issue-read.md | Modified | EC-2.7.007-5 implementation-strategy note corrected (P8-002) |
+
+- **Affected stories:** S2 (implements `attachment download --id`; SIGINT cleanup was never an S2 AC; no story body changes required).
+- **BC count:** 657 (unchanged — in-clause correction; no new BCs)
+- **Holdout count:** 100 (unchanged)
+- **VP count:** 35 (unchanged — EC-2.7.007-5 is not VP-pinned per existing spec)
+- **Migration needed:** NO (spec correction aligning to real implementation; no shipped code is affected)
+
+---
+
 ## [1.3.96] - 2026-07-19
 
 ### Type: PATCH

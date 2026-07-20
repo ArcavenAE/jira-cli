@@ -1,0 +1,135 @@
+{
+  "story": "S-576-2",
+  "bundle": "SOH-ATTACHMENTS-1",
+  "issue": "#576",
+  "step": "4.5",
+  "date_converged": "2026-07-20",
+  "converged": true,
+  "criterion": "STRICT",
+  "window": ["pass-10", "pass-11", "pass-12"],
+  "passes_clean": 3,
+  "passes": [
+    {
+      "n": 1,
+      "classification": "FINDINGS",
+      "severity_ceiling": "HIGH",
+      "findings_summary": "1H + 6M + 3L + [process-gap]. P1-001 (HIGH): lexicographic-sort BC violation — `jr issue attachment download --all` emitted files in API order, not BC-2.7.008-required BTreeMap-alphabetical (filename) order; Jira ordering is nondeterministic across requests. P1-002..P1-007 (MEDIUM/LOW): canonical-path sanitization gaps, assertion-weakening test defect, --force help-text accuracy, serde residual from P4-001, count-sync nits. [process-gap]: test-weakening (assertion downgrade to allow false-positive pass) flagged for wave-gate codification.",
+      "fix_round": "fix-round-1: lexicographic-sort BTreeMap insertion in download handler (P1-001); canonical error strings hardened (P1-002); test assertion restored to strict form (process-gap); --force help text corrected (P1-003 subset); serde #[serde(default)] hardening from S-576-1 residual P4-001; count updates. Story v1.33 (from v1.32)."
+    },
+    {
+      "n": 2,
+      "classification": "FINDINGS",
+      "severity_ceiling": "MEDIUM",
+      "findings_summary": "1M + O-1 + O-2 + O-3. P2-001 (MEDIUM): canonical string mismatch — error message wording diverged from BC-2.7.012 table row; test pinned the wrong string. O-1 (process-gap): process::exit(1) direct-call in error path instead of JrError routing — flagged as engine-follow-up suggestion JrError::SilentExit. O-2/O-3: count nits.",
+      "fix_round": "fix-round-2: canonical string aligned to BC table row (P2-001); count sync (O-2/O-3). O-1 accepted residual — engine follow-up suggestion. Story v1.34."
+    },
+    {
+      "n": 3,
+      "classification": "FINDINGS",
+      "severity_ceiling": "MEDIUM",
+      "findings_summary": "1M + 2L. P3-001 (MEDIUM): --force help text still imprecise — overwrites-without-confirmation wording did not match BC-2.7.007 overwrite-refuse clause precisely; --force bypasses the refuse, not a general overwrite flag. P3-002/P3-003 (LOW): missing test coverage annotation, minor story count drift.",
+      "fix_round": "fix-round-3: --force help text rewritten to BC-2.7.007-precise wording (P3-001); coverage annotation added; count sync. Story v1.35."
+    },
+    {
+      "n": 4,
+      "classification": "NITPICK_ONLY",
+      "severity_ceiling": "LOW",
+      "findings_summary": "F-P4-001 (LOW residual): serde field annotation residue — one AttachmentObject field still lacked #[serde(default)]; pattern complete after fix. F-P4-002 (LOW): story count for adversarial regression pins understated by 1. No MEDIUM or above. Window starts (1/3).",
+      "fix_round": "fix-round-4: serde annotation completed (F-P4-001); count sync (F-P4-002). Story v1.35 count update."
+    },
+    {
+      "n": 5,
+      "classification": "FINDINGS",
+      "severity_ceiling": "MEDIUM",
+      "findings_summary": "2M. P5-001 (MEDIUM): vacuous cleanup test — test for `--newest` path returned early without asserting the key behavioral invariant (newest-only selection); coverage claim was empty. P5-002 (MEDIUM): None-branch coverage gap — error handling for None return from attachment iterator was present in code but no test exercised it; adversary identified the untested branch via inspection. Window resets.",
+      "fix_round": "fix-round-5: vacuous test replaced with assertion-bearing test (P5-001); None-branch test added (P5-002). Story v1.36 (count +2 integration tests)."
+    },
+    {
+      "n": 6,
+      "classification": "FINDINGS",
+      "severity_ceiling": "MEDIUM",
+      "findings_summary": "1M. P6-001 (MEDIUM): #[allow] suppression violation — a clippy warning had been suppressed with #[allow(clippy::too_many_arguments)] on a handler function without refactoring; CLAUDE.md policy prohibits suppression without refactoring or explicit justification comment. Window resets.",
+      "fix_round": "fix-round-6: refactored handler to accept a struct parameter, eliminating the too_many_arguments violation and removing the #[allow]. Clippy clean. Story v1.36."
+    },
+    {
+      "n": 7,
+      "classification": "FINDINGS",
+      "severity_ceiling": "LOW",
+      "findings_summary": "All LOW. P7-001 (LOW): stale label — DownloadArgs struct renamed in refactor but one in-code comment still referenced the old name `AttachmentDownloadArgs`; test snapshot referenced stale struct name. P7-002 (LOW): visibility modifier on a helper function was pub(crate) where pub(super) was the narrower correct scope per module design.",
+      "fix_round": "fix-round-7: struct-name label corrected in comment and snapshot (P7-001); visibility corrected to pub(super) (P7-002). Story v1.37 (P7-001 struct-name label noted in changelog)."
+    },
+    {
+      "n": 8,
+      "classification": "FINDINGS",
+      "severity_ceiling": "MEDIUM",
+      "findings_summary": "1M + [spec-truth-up]. P8-001 (MEDIUM/CWE-116): success path hint echoed server-supplied filename without routing through display_sanitize_filename — violation of BC-2.7.011 every-call-site obligation and CWE-116 (improper output neutralization). P8-002 (spec-truth-up): EC-2.7.007-5 SIGINT temp-file cleanup note in spec claimed cleanup mechanism existed; adversary found no registry/Drop in main.rs — note was aspirational prose, not implemented reality. Spec change required.",
+      "fix_round": "fix-round-8: success hint sanitized (P8-001, SEC-576-011, CWE-116); spec v1.3.97 (EC-2.7.007-5 corrected to reality — orphaned tmp accepted best-effort residual, tracked debt); story AC-018 extended with DISPLAY-SANITIZATION bullet; Architecture Compliance Rules table extended with future-proofing row. Story v1.36→v1.38 (AC-018 + counts 27→28→29 across sub-rounds 1.36/1.37/1.38)."
+    },
+    {
+      "n": 9,
+      "classification": "FINDINGS",
+      "severity_ceiling": "MEDIUM",
+      "findings_summary": "1M. P9-001 (MEDIUM/CWE-116): rename-error path also echoed sanitized filename in error message but lacked display_sanitize_filename call — same CWE-116 class as P8-001, adjacent sibling path. Window resets.",
+      "fix_round": "fix-round-9: rename-error message path sanitized (P9-001, CWE-116); regression pin test added as 29th integration test (7th adversarial pin). Story v1.38 count update (28→29)."
+    },
+    {
+      "n": 10,
+      "classification": "NITPICK_ONLY",
+      "severity_ceiling": "LOW",
+      "findings_summary": "CLEAN (no findings of any severity). Adversary independently verified: all 29 integration tests, clippy clean, fmt clean, BTreeMap-alphabetical sort, serde hardening, canonical error strings, display-sanitize call sites, #[allow] absence, BC-2.7.011 every-call-site compliance, spec v1.3.97 reality alignment. Window starts (1/3).",
+      "fix_round": "No fix round. Window streak 1/3."
+    },
+    {
+      "n": 11,
+      "classification": "NITPICK_ONLY",
+      "severity_ceiling": "LOW",
+      "findings_summary": "CLEAN (no findings of any severity). Adversary verified: CWE-116 sanitization complete at all output sites, no residual #[allow] suppressions, no stale struct-name references, spec-reality alignment confirmed (EC-2.7.007-5 orphaned-tmp residual documented as tracked debt). Window continues (2/3).",
+      "fix_round": "No fix round. Window streak 2/3."
+    },
+    {
+      "n": 12,
+      "classification": "NITPICK_ONLY",
+      "severity_ceiling": "LOW",
+      "findings_summary": "NITPICK ONLY. Single LOW observation: single-path containment parity — defense-in-depth symmetry between single-id and batch paths could optionally be made more uniform. Adversary noted this is provably unreachable (existing guard prevents the path), defense-in-depth symmetry optional. No action required. Window complete (3/3). STRICT CONVERGED.",
+      "fix_round": "No fix round. Observation deferred as optional parity at S-576-3/4. Window 3/3 — STRICT CONVERGED."
+    }
+  ],
+  "residuals": [
+    {
+      "id": "O-1",
+      "severity": "process-gap",
+      "description": "process::exit(1) direct-call in error path instead of JrError routing — bypasses structured exit-code system.",
+      "disposition": "ACCEPTED engine-follow-up suggestion: JrError::SilentExit variant. Recorded on wave-gate codification list. Not story-blocking.",
+      "target": "wave-gate codification / engine"
+    },
+    {
+      "id": "pass-1-process-gap",
+      "severity": "process-gap",
+      "description": "Test-weakening: story-writer BC-letter pinning convention not codified — adversary found test assertion downgraded to allow false-positive pass.",
+      "disposition": "DEFERRED to wave-gate codification. Story-writer convention: BC-letter assertions must never be weakened to accommodate non-idiomatic code.",
+      "target": "wave-gate codification"
+    },
+    {
+      "id": "P8-002-orphan-temp",
+      "severity": "LOW",
+      "description": "Orphaned tmp_<random-hex> files on SIGINT — no registry/Drop, std::process::exit(130) called directly. Accepted best-effort residual.",
+      "disposition": "SPEC-RECORDED v1.3.97 (EC-2.7.007-5 corrected). Tracked as S-576 bundle debt. No action at S-576-2.",
+      "target": "S-576 bundle tracked debt"
+    },
+    {
+      "id": "P12-containment-parity",
+      "severity": "LOW",
+      "description": "Single-path containment parity — defense-in-depth symmetry between single-id and batch paths optionally improvable; provably unreachable path.",
+      "disposition": "OPTIONAL parity at S-576-3/4. Provably unreachable; existing guard covers it. No blocking action.",
+      "target": "S-576-3/4 optional"
+    }
+  ],
+  "human_overrides": 0,
+  "human_authorizations": 1,
+  "human_authorization_note": "deny.toml cpufeatures skip — AUDIT-576-004/DEC-185 authorization, not an override of adversary verdict.",
+  "spec_trajectory": "v1.3.96 (inherited from S-576-1 delivery) → v1.3.97 (P8-002 EC-2.7.007-5 SIGINT-cleanup note corrected to reality)",
+  "story_trajectory": "v1.33 (fix-round-1 sort+serde) → v1.34 (fix-round-2 canonical string) → v1.35 (fix-round-3 --force help) → v1.36 (fix-round-5/6 coverage+refactor) → v1.37 (fix-round-7 struct-name) → v1.38 (fix-round-8/9 CWE-116 sanitization + AC-018 + counts 27→28→29)",
+  "worktree_head": "8608d916",
+  "suite_result": "attachment_download 29/29; attachment_list 16/16; lib 1059+; clippy clean; fmt clean; deny clean",
+  "hook_watch_item": "factory-dispatcher PostToolUse hook timed out twice (fail-closed) on spec-changelog.md edits — RECURRENCE 2; flagged for session-review."
+}
