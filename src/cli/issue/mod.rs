@@ -115,6 +115,13 @@ pub async fn handle(
             AttachmentSubcommand::List { key, filter } => {
                 attachments::handle_attachment_list(&key, &filter, output_format, client).await
             }
+            // S-576-2: single/batch/newest download + CWE-22 sanitization.
+            // Pass the whole Download variant so handle_attachment_download can
+            // destructure it without exceeding the clippy::too_many_arguments
+            // threshold (mirrors handle_comment_add / handle_comment_edit pattern).
+            sub @ AttachmentSubcommand::Download { .. } => {
+                attachments::handle_attachment_download(sub, output_format, client).await
+            }
         },
     }
 }
