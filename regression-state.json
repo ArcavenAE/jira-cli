@@ -1,1 +1,1 @@
-{"status":"pass","timestamp":"2026-07-19T18:08:50Z","command":"cargo test --test attachment_list 2>&1 | tail -20"}
+{"status":"pass","timestamp":"2026-07-19T21:51:20Z","command":"cargo test --lib 2>&1 | tail -20"}

@@ -695,10 +695,12 @@ feature_followup_standalone:
 
   - id: S-576-1
     title: "jr issue attachment list — table + JSON output + client-side filters (issues #576 #585)"
-    status: in-progress
-    pr: null
-    merge_sha: null
-    merged_at: null
+    status: completed
+    pr: 630
+    merge_sha: "e33624c1"
+    merged_at: "2026-07-19"
+    merged_via: "squash-merge by human (DEC-128 honored)"
+    f4_delivered_at: "2026-07-19"
     depends_on: []
     bc_anchors: [BC-2.7.001, BC-2.7.002, BC-2.7.003, BC-2.7.004, BC-2.7.005, BC-2.7.006]
     verification_properties: [VP-576-004]
@@ -711,7 +713,7 @@ feature_followup_standalone:
     phase: F4
     f3_approved_at: "2026-07-19"
     dispatched_at: "2026-07-19"
-    notes: "F4 delivery dispatched 2026-07-19 (DEC-185). First story of SOH-ATTACHMENTS-1 bundle; blocks S-576-2/S-576-3/S-576-4. Establishes src/cli/issue/attachments.rs + src/api/jira/attachments.rs scaffolding. Story v1.20 (story-writer ready flip 2026-07-19)."
+    notes: "DELIVERED 2026-07-19. PR #630 squash-merged by human @ e33624c1 (DEC-128 honored); closes #585 on release; #576 part 1 of 5. Red Gate verified (14/14 RED). Step 4.5 CONVERGED STRICT: 4 passes / 2 fix rounds; trajectory 2M→0→0→0; window p2/p3/p4 CLEAN×3; zero human overrides. Spec v1.3.96; story v1.22. CI: ci-gate SUCCESS run 29705120305, 15/15 checks; mutation 95% kill (60/63). pr-reviewer APPROVE cycle 2 (covered_sha e906178e). Security review 3 LOW, 0 CRITICAL/HIGH. BC-2.7.001 completeness-probe discharged path (b) CONFIRMED. AUDIT-576-002 S1-half DISCHARGED (doc-citation accepted at merge gate); S5-half (P2-3c servicedeskapi probe) pending at S-576-5. Residuals: P1-004 → phase-5 system-wide; P4-001 AttachmentObject #[serde(default)] → S-576-2 delivery. Worktree .worktrees/S-576-1 removed; local+remote feature branches deleted; develop fast-forwarded @ e33624c1. S-576-2/S-576-3/S-576-4 depends_on [S-576-1] now satisfied — remain pending, dispatchable. S-576-5 waits S-576-3+S-576-4."
 
   - id: S-576-2
     title: "jr issue attachment download — single/batch/newest, streaming, CWE-22 sanitization (issue #576)"
