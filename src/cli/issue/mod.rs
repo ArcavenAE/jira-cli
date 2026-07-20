@@ -1,4 +1,5 @@
 mod assets;
+pub mod attachments;
 mod changelog;
 mod comments;
 mod create;
@@ -19,7 +20,7 @@ pub use format::{format_issue_row, format_issue_rows_public, format_points, issu
 use anyhow::Result;
 
 use crate::api::client::JiraClient;
-use crate::cli::{CommentSubcommand, IssueCommand, OutputFormat};
+use crate::cli::{AttachmentSubcommand, CommentSubcommand, IssueCommand, OutputFormat};
 use crate::config::Config;
 
 /// Handle all issue subcommands.
@@ -110,5 +111,10 @@ pub async fn handle(
         IssueCommand::Assets { key } => {
             assets::handle_issue_assets(&key, output_format, client).await
         }
+        IssueCommand::Attachment { command: sub } => match sub {
+            AttachmentSubcommand::List { key, filter } => {
+                attachments::handle_attachment_list(&key, &filter, output_format, client).await
+            }
+        },
     }
 }
