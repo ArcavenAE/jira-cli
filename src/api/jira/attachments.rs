@@ -162,6 +162,195 @@ impl JiraClient {
         }
     }
 
+    /// Upload one or more files as attachments to a Jira issue (S-576-3; BC-3.9.001).
+    ///
+    /// Issues `POST /rest/api/3/issue/{key}/attachments` with `Content-Type:
+    /// multipart/form-data`. All files are included as separate `"file"`-named parts
+    /// in a single request (EC-3.9.001-2 — one POST regardless of file count).
+    ///
+    /// **MANDATORY:** `X-Atlassian-Token: no-check` header on every request (BC-3.9.001
+    /// invariant — Jira XSRF protection returns an XSRF-related rejection without it,
+    /// regardless of authentication method; ADR-0017).
+    ///
+    /// **ADR-0017 retry constraint:** `Request::try_clone()` returns `None` for multipart
+    /// bodies. Retry MUST rebuild a fresh `tokio::fs::File::open` and a new
+    /// `reqwest::multipart::Form`; do NOT attempt to clone the original request.
+    ///
+    /// Error mapping (BC-3.9.012):
+    /// - 404 → `JrError::UserError` (exit 64): issue not found.
+    /// - 413 → `JrError::ApiError { status: 413 }` (exit 1): file exceeds server-configured limit.
+    /// - 401 (scope mismatch) → `JrError::InsufficientScope` (exit 2): body contains "scope does
+    ///   not match"; handled inline — NOT delegated to the client retry layer.
+    /// - 401 (other) → `JrError::NotAuthenticated` (exit 2): handled inline with login hint.
+    /// - 403 → `JrError::ApiError { status: 403 }` (exit 1): permission denied.
+    /// - 429 (Retry-After ≤ cap) → retry; 429 (Retry-After > cap) → `JrError::ApiError
+    ///   { status: 429 }` (exit 1): rate-limit cap exceeded.
+    /// - 5xx / network → `JrError::ApiError` / `JrError::NetworkError` (exit 1).
+    pub async fn upload_attachments(
+        &self,
+        key: &str,
+        file_paths: &[std::path::PathBuf],
+    ) -> Result<Vec<AttachmentObject>> {
+        use crate::api::rate_limit::{MAX_RETRY_AFTER_SECS, RateLimitInfo};
+        use reqwest::StatusCode;
+        use tokio_util::io::ReaderStream;
+
+        const MAX_RETRIES: u32 = 3;
+        const DEFAULT_RETRY_SECS: u64 = 1;
+        let url = format!("{}/rest/api/3/issue/{}/attachments", self.base_url(), key);
+
+        for attempt in 0..=MAX_RETRIES {
+            // ADR-0017: multipart bodies cannot be cloned; rebuild from fresh file
+            // handles on every retry attempt (Request::try_clone() returns None).
+            let mut form = reqwest::multipart::Form::new();
+            for path in file_paths {
+                let raw_name = path
+                    .file_name()
+                    .map(|n| n.to_string_lossy().into_owned())
+                    .unwrap_or_else(|| path.to_string_lossy().into_owned());
+                // SEC-576-004: strip CR, LF, and NUL from the filename before
+                // embedding in a Content-Disposition header value to prevent
+                // header-injection (CWE-93). These three chars are the only ones
+                // that can break MIME boundary framing or inject a new header line.
+                let safe_name: String = raw_name
+                    .chars()
+                    .map(|c| {
+                        if matches!(c, '\r' | '\n' | '\0') {
+                            '_'
+                        } else {
+                            c
+                        }
+                    })
+                    .collect();
+                let file = tokio::fs::File::open(path).await.map_err(|_| {
+                    JrError::UserError(format!("file not found: {}", path.display()))
+                })?;
+                let body = reqwest::Body::wrap_stream(ReaderStream::new(file));
+                form = form.part(
+                    "file",
+                    reqwest::multipart::Part::stream(body).file_name(safe_name),
+                );
+            }
+
+            let response = self
+                .reqwest_client()
+                .post(&url)
+                .header("Authorization", self.authorization_header())
+                .header("X-Atlassian-Token", "no-check")
+                .multipart(form)
+                .send()
+                .await
+                .map_err(|e| {
+                    let host = e
+                        .url()
+                        .and_then(|u| u.host_str().map(str::to_string))
+                        .unwrap_or_else(|| "Jira".to_string());
+                    JrError::NetworkError(host)
+                })?;
+
+            let status = response.status();
+
+            // 429: rebuild request and retry (ADR-0017 — try_clone returns None for multipart).
+            if status == StatusCode::TOO_MANY_REQUESTS && attempt < MAX_RETRIES {
+                let rate_info = RateLimitInfo::from_headers(response.headers());
+                let delay = rate_info.retry_after_secs.unwrap_or(DEFAULT_RETRY_SECS);
+                if delay > MAX_RETRY_AFTER_SECS {
+                    return Err(JrError::ApiError {
+                        status: 429,
+                        message: format!(
+                            "Rate limited; Retry-After {}s exceeds {}s cap. Rerun later.",
+                            delay, MAX_RETRY_AFTER_SECS
+                        ),
+                    }
+                    .into());
+                }
+                if delay > 0 {
+                    tokio::time::sleep(std::time::Duration::from_secs(delay)).await;
+                }
+                continue;
+            }
+
+            if status == StatusCode::PAYLOAD_TOO_LARGE {
+                return Err(JrError::ApiError {
+                    status: 413,
+                    message: "Attachment too large: the file exceeds the server-configured limit."
+                        .to_string(),
+                }
+                .into());
+            }
+            if status == StatusCode::NOT_FOUND {
+                return Err(JrError::UserError(format!(
+                    "Issue {key} not found or not accessible."
+                ))
+                .into());
+            }
+            if status == StatusCode::UNAUTHORIZED {
+                let body = response.bytes().await.unwrap_or_default();
+                let msg = String::from_utf8_lossy(&body).to_string();
+                if msg.to_ascii_lowercase().contains("scope does not match") {
+                    return Err(JrError::InsufficientScope {
+                        message: msg,
+                        required_scope: None,
+                    }
+                    .into());
+                }
+                return Err(JrError::NotAuthenticated {
+                    hint: "Run \"jr auth login\" to connect.".to_string(),
+                }
+                .into());
+            }
+            if !status.is_success() {
+                let status_u16 = status.as_u16();
+                let body = response.bytes().await.unwrap_or_default();
+                return Err(JrError::ApiError {
+                    status: status_u16,
+                    message: String::from_utf8_lossy(&body).to_string(),
+                }
+                .into());
+            }
+
+            let bytes = response.bytes().await?;
+            return Ok(serde_json::from_slice(&bytes)?);
+        }
+
+        // Unreachable: every loop iteration either returns or continues; the
+        // 429 path cannot continue past attempt == MAX_RETRIES because
+        // `attempt < MAX_RETRIES` is false and the code falls through to the
+        // `!status.is_success()` return above.
+        unreachable!("upload retry loop must return before exhausting iterations");
+    }
+
+    /// Delete a single attachment by ID (S-576-3; BC-3.9.017 / VP-576-003).
+    ///
+    /// Issues `DELETE /rest/api/3/attachment/{id}`.
+    ///
+    /// Used by `--replace-existing` to remove all same-filename attachments before
+    /// re-uploading (JRACLOUD-96384: multiple same-filename attachments may coexist;
+    /// ALL are deleted). VP-576-003: all DELETEs MUST complete before any POST upload
+    /// begins — ordering is enforced by the caller (`replace_existing_attachments`).
+    ///
+    /// Error mapping:
+    /// - 204 → success (`Ok(())`).
+    /// - 403 → `JrError::ApiError { status: 403 }` (exit 1): permission denied.
+    /// - 404 → `JrError::UserError` (exit 64): attachment not found or already deleted.
+    /// - 5xx / network → `JrError::ApiError` / `JrError::NetworkError` (exit 1).
+    pub async fn delete_attachment(&self, attachment_id: &str) -> Result<()> {
+        let path = format!("/rest/api/3/attachment/{}", attachment_id);
+        let result = self.delete(&path).await;
+        match result {
+            Ok(()) => Ok(()),
+            Err(e) => match e.downcast_ref::<JrError>() {
+                Some(JrError::ApiError { status, .. }) if *status == 404 => {
+                    Err(JrError::UserError(format!(
+                        "Attachment {attachment_id} not found or already deleted."
+                    ))
+                    .into())
+                }
+                _ => Err(e),
+            },
+        }
+    }
+
     /// Stream attachment binary content (BC-2.7.007 step 2).
     ///
     /// Issues `GET /rest/api/3/attachment/content/{id}`.
@@ -186,5 +375,98 @@ impl JiraClient {
         // MUST NOT append ?redirect=false (JRACLOUD-97046).
         let path = format!("/rest/api/3/attachment/content/{}", id);
         self.get_raw_response(&path).await
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    // SEC-576-004 / CWE-93 unit pins for the safe_name transformation guard.
+    //
+    // The guard lives inline in `upload_attachments` (~line 211):
+    //   raw_name.chars().map(|c| if matches!(c, '\r' | '\n' | '\0') { '_' } else { c }).collect()
+    //
+    // Mirrored here as a free function so the transformation is testable without
+    // spawning a subprocess or needing a real file on disk.
+    fn safe_name(raw: &str) -> String {
+        raw.chars()
+            .map(|c| {
+                if matches!(c, '\r' | '\n' | '\0') {
+                    '_'
+                } else {
+                    c
+                }
+            })
+            .collect()
+    }
+
+    /// CR (\r) and LF (\n) are each independently mapped to '_'.
+    ///
+    /// This prevents header-line injection via Content-Disposition (CWE-93).
+    /// A filename like "file\r\nX-Injected: hdr" would otherwise split the MIME
+    /// header into two lines, injecting an arbitrary header field.
+    #[test]
+    fn test_sec_576_004_safe_name_crlf_mapped_to_underscore() {
+        // Both \r and \n in one filename → two underscores
+        assert_eq!(
+            safe_name("file\r\nX-Injected: hdr"),
+            "file__X-Injected: hdr"
+        );
+        // Lone \r → single underscore
+        assert_eq!(safe_name("only\r"), "only_");
+        // Lone \n → single underscore
+        assert_eq!(safe_name("only\n"), "only_");
+        // Multiple consecutive newlines
+        assert_eq!(safe_name("a\n\nb"), "a__b");
+    }
+
+    /// NUL byte (\0) is mapped to '_'.
+    ///
+    /// NUL in a Content-Disposition filename can truncate the value in
+    /// C-string-based parsers, silently dropping the rest of the name.
+    #[test]
+    fn test_sec_576_004_safe_name_nul_mapped_to_underscore() {
+        assert_eq!(safe_name("fi\0le"), "fi_le");
+        assert_eq!(safe_name("\0"), "_");
+        assert_eq!(safe_name("a\0b\0c"), "a_b_c");
+    }
+
+    /// Double-quote ('"') is NOT sanitized by safe_name — it passes through unchanged.
+    ///
+    /// SPEC vs IMPL NOTE:
+    /// AC-018 lists double-quote as a potential injection concern for the
+    /// Content-Disposition `filename=` quoted-string parameter. The current guard
+    /// covers only \r, \n, \0 (SEC-576-004 comment: "only chars that can break MIME
+    /// boundary framing or inject a new header line"). A raw '"' in the filename
+    /// affects only the quoted-string boundary, which reqwest's
+    /// `Part::file_name()` encoding is responsible for handling (percent-encoding
+    /// or `filename*` RFC 5987 form). If reqwest emits a raw '"' into
+    /// Content-Disposition without escaping, a filename like `a"b.txt` could
+    /// break the quoted-string parameter; this is a residual risk tracked at
+    /// AC-018 / SEC-576-004.
+    ///
+    /// This test pins the CURRENT behavior (pass-through) as a regression
+    /// anchor. If safe_name is ever extended to cover '"', update this test
+    /// and the integration test in tests/attachment_upload.rs.
+    #[test]
+    fn test_sec_576_004_safe_name_double_quote_not_in_guard() {
+        // '"' is NOT mapped; passes through unchanged.
+        assert_eq!(safe_name("file\"name.txt"), "file\"name.txt");
+        assert_eq!(safe_name("\"leading"), "\"leading");
+        assert_eq!(safe_name("trailing\""), "trailing\"");
+        assert_eq!(safe_name("mid\"dle"), "mid\"dle");
+    }
+
+    /// Benign filenames are unmodified (regression guard — safe_name must not
+    /// corrupt valid filenames).
+    #[test]
+    fn test_sec_576_004_safe_name_normal_filenames_unchanged() {
+        assert_eq!(safe_name("report.pdf"), "report.pdf");
+        assert_eq!(safe_name("file;name.txt"), "file;name.txt");
+        assert_eq!(
+            safe_name("file name with spaces.doc"),
+            "file name with spaces.doc"
+        );
+        assert_eq!(safe_name(""), "");
+        assert_eq!(safe_name("ascii_only-123.tar.gz"), "ascii_only-123.tar.gz");
     }
 }
