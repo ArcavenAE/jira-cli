@@ -1356,6 +1356,500 @@ fn attachment_replace_confirmation_gate(
 }
 
 // ---------------------------------------------------------------------------
+// S-576-4: `jr issue attachment delete` — single-AID + bulk + --older-than + --dry-run
+// ---------------------------------------------------------------------------
+
+/// Handle `jr issue attachment delete` (S-576-4; BC-3.9.008/010/013/015/016/019/020).
+///
+/// Three forms:
+///   (1) Single-AID: AID validation → confirmation gate (BC-3.9.015) → DELETE.
+///   (2) Multi-AID bulk: AID validation → `--yes` required (BC-3.9.016) → sequential DELETEs.
+///   (3) Issue+age: fetch list → `parse_age_duration` → filter → `--yes` required → DELETEs.
+///
+/// **DEC-168 (targeted single-AID 404):** exit 64; stderr MUST BEGIN with the canonical
+/// prefix `"Attachment <AID> not found or not accessible."` then the Jira error body.
+/// **BC-3.9.010 (bulk 404):** BENIGN SKIP — asymmetry from targeted single-AID 404.
+/// **EC-3.9.020-3:** single-AID `--dry-run` — guards active, gate suppressed, no DELETE.
+/// **EC-3.9.020-1/2:** bulk `--dry-run` — guards active, gate suppressed, no DELETE.
+pub async fn handle_attachment_delete(
+    sub: AttachmentSubcommand,
+    output_format: &OutputFormat,
+    client: &JiraClient,
+    no_input: bool,
+) -> anyhow::Result<()> {
+    let is_json = matches!(output_format, OutputFormat::Json);
+
+    let (aids, issue, older_than, yes, dry_run) = match sub {
+        AttachmentSubcommand::Delete {
+            aids,
+            issue,
+            older_than,
+            yes,
+            dry_run,
+        } => (aids, issue, older_than, yes, dry_run),
+        _ => unreachable!("handle_attachment_delete called with non-Delete subcommand"),
+    };
+
+    // -------------------------------------------------------------------
+    // Path A: positional AID(s)
+    // -------------------------------------------------------------------
+    if !aids.is_empty() {
+        // Validate all AIDs first (before any I/O or HTTP)
+        for aid in &aids {
+            if aid.is_empty() || !aid.chars().all(|c| c.is_ascii_digit()) {
+                return Err(JrError::UserError(format!(
+                    "invalid attachment id: '{aid}' (must be numeric)"
+                ))
+                .into());
+            }
+        }
+
+        if aids.len() == 1 {
+            let aid = &aids[0];
+
+            // Single-AID dry-run (EC-3.9.020-3): guards NOT suppressed, gate suppressed.
+            if dry_run {
+                if is_json {
+                    let payload = serde_json::json!({
+                        "attachments": [{"id": aid}],
+                        "dryRun": true,
+                        "ids": [aid]
+                    });
+                    println!("{}", output::render_json(&payload)?);
+                } else {
+                    eprintln!("--dry-run has no effect on single-ID delete; omit the flag.");
+                }
+                return Ok(());
+            }
+
+            // Non-interactive without --yes (BC-3.9.015 EC-3.9.015-3)
+            if no_input && !yes {
+                return Err(JrError::UserError(
+                    "Use --yes to confirm deletion without a prompt.".to_string(),
+                )
+                .into());
+            }
+
+            // Confirmation gate (BC-3.9.015; VP-576-002; DEC-174)
+            if !yes {
+                // Fetch metadata to get the filename for the gate prompt
+                let meta = client.get_attachment_metadata(aid).await?;
+                let filename = meta.filename.as_deref().unwrap_or(aid.as_str());
+                let display_name = display_sanitize_filename(filename);
+
+                let confirmed = attachment_delete_confirmation_gate(&display_name, aid)?;
+                if !confirmed {
+                    if is_json {
+                        let payload = serde_json::json!({
+                            "cancelled": true,
+                            "deleted": false
+                        });
+                        println!("{}", output::render_json(&payload)?);
+                    } else {
+                        eprintln!("Deletion cancelled.");
+                    }
+                    return Ok(());
+                }
+            }
+
+            // Issue the targeted DELETE (DEC-168 on 404)
+            client.delete_attachment_targeted(aid).await?;
+
+            if is_json {
+                let payload = serde_json::json!({"deleted": true, "id": aid});
+                println!("{}", output::render_json(&payload)?);
+            } else {
+                eprintln!("Deleted attachment {aid}.");
+            }
+            return Ok(());
+        }
+
+        // Multi-AID bulk path
+        // --yes required (BC-3.9.016 EC-3.9.016-8); dry-run exempts
+        if !yes && !dry_run {
+            return Err(JrError::UserError(
+                "--yes is required to delete multiple attachments without a confirmation prompt."
+                    .to_string(),
+            )
+            .into());
+        }
+
+        if dry_run {
+            // Bulk dry-run: fan out per-AID metadata GETs to populate filenames
+            // (AC-009 P2-002: GET /rest/api/3/attachment/{id} for each AID).
+            // Metadata failure → {id}-only fallback row; never aborts (dry-run is read-only).
+            let mut attachment_rows: Vec<serde_json::Value> = Vec::new();
+            let ids: Vec<&str> = aids.iter().map(|s| s.as_str()).collect();
+            // Human table rows [ID, Filename, Size, Created] — built alongside JSON rows so
+            // the JSON shape ({filename,id} / {id}-only) remains unchanged (P2-002 pins GREEN).
+            let mut human_rows: Vec<Vec<String>> = Vec::new();
+
+            for aid in &aids {
+                match client.get_attachment_metadata(aid).await {
+                    Ok(meta) => {
+                        let filename = meta.filename.unwrap_or_default();
+                        let size = meta.size;
+                        let created = meta.created.clone().unwrap_or_default();
+                        // BTreeMap key order: filename < id (alphabetical); JSON shape unchanged.
+                        let mut row = std::collections::BTreeMap::new();
+                        row.insert("filename", serde_json::Value::String(filename.clone()));
+                        row.insert("id", serde_json::Value::String(aid.clone()));
+                        attachment_rows.push(serde_json::to_value(row)?);
+                        // Human row: display-sanitized filename (CWE-116), formatted size, created.
+                        human_rows.push(vec![
+                            aid.clone(),
+                            display_sanitize_filename(&filename),
+                            size.map(format_size).unwrap_or_else(|| "-".to_string()),
+                            created,
+                        ]);
+                    }
+                    Err(_) => {
+                        // Metadata unavailable → id-only fallback row (no filename key)
+                        let mut row = std::collections::BTreeMap::new();
+                        row.insert("id", serde_json::Value::String(aid.clone()));
+                        attachment_rows.push(serde_json::to_value(row)?);
+                        // Human fallback row (AC-009 per-row "(metadata unavailable)" marker).
+                        human_rows.push(vec![
+                            aid.clone(),
+                            "(metadata unavailable)".to_string(),
+                            "-".to_string(),
+                            "-".to_string(),
+                        ]);
+                    }
+                }
+            }
+
+            if is_json {
+                let payload = serde_json::json!({
+                    "attachments": attachment_rows,
+                    "dryRun": true,
+                    "ids": ids
+                });
+                println!("{}", output::render_json(&payload)?);
+            } else {
+                // Human mode: AC-009 table [ID, Filename (CWE-116), Size, Created]
+                eprintln!(
+                    "{}",
+                    output::render_table(&["ID", "Filename", "Size", "Created"], &human_rows)
+                );
+                eprintln!(
+                    "{} attachment(s) would be deleted. Run without --dry-run to confirm.",
+                    aids.len()
+                );
+            }
+            return Ok(());
+        }
+
+        // Bulk sequential deletes — 404 is benign skip (BC-3.9.010)
+        let mut deleted_ids: Vec<String> = Vec::new();
+        for aid in &aids {
+            match client.delete_attachment(aid).await {
+                Ok(()) => {
+                    deleted_ids.push(aid.clone());
+                }
+                Err(e) => {
+                    // 404 → benign skip (BC-3.9.010)
+                    if e.chain()
+                        .find_map(|c| c.downcast_ref::<JrError>())
+                        .map(|je| matches!(je, JrError::UserError(msg) if msg.contains("not found or already deleted")))
+                        .unwrap_or(false)
+                    {
+                        // benign 404 skip — continue
+                    } else {
+                        // Non-404 error → abort sequence (BC-3.9.010 EC-3.9.010-4)
+                        return Err(e);
+                    }
+                }
+            }
+        }
+
+        let count = deleted_ids.len();
+        if is_json {
+            let payload = serde_json::json!({
+                "count": count,
+                "deleted": count > 0,
+                "ids": deleted_ids
+            });
+            println!("{}", output::render_json(&payload)?);
+        } else {
+            if count == 0 {
+                eprintln!("No attachments deleted (all were already removed or not found).");
+            } else {
+                for id in &deleted_ids {
+                    eprintln!("Deleted attachment {id}.");
+                }
+            }
+        }
+        return Ok(());
+    }
+
+    // -------------------------------------------------------------------
+    // Path B: --issue KEY --older-than DURATION
+    // -------------------------------------------------------------------
+    let issue_key = issue.expect("clap ensures issue is Some when aids is empty");
+    let age_str = older_than.expect("clap ensures older_than is Some when issue is set");
+
+    // Parse duration (BC-3.9.019 EC-3.9.019-3)
+    let duration = parse_age_duration(&age_str)?;
+
+    // --yes required on bulk paths (BC-3.9.016 EC-3.9.016-1); dry-run exempts
+    if !yes && !dry_run {
+        return Err(JrError::UserError(
+            "--older-than requires --yes to confirm bulk deletion.".to_string(),
+        )
+        .into());
+    }
+
+    // Fetch attachment list
+    let attachments = client.list_attachments(&issue_key).await?;
+
+    // Apply age filter — belt+braces: checked_sub_signed guards against any future
+    // duration magnitude regression that bypasses parse_age_duration's Layer 3 clamp
+    // (P6-001: Utc::now() - duration panics when result precedes NaiveDate::MIN).
+    let cutoff = chrono::Utc::now()
+        .checked_sub_signed(duration)
+        .ok_or_else(|| {
+            JrError::UserError(format!(
+                "invalid duration: '{age_str}'. Use formats like 30m, 2h, 1d, 7d, 2w."
+            ))
+        })?;
+    let selected = filter_attachments_older_than(attachments, cutoff);
+
+    if dry_run {
+        // Dry-run: emit would-delete manifest (no DELETEs)
+        let ids: Vec<&str> = selected.iter().map(|a| a.id.as_str()).collect();
+        let att_objs: Vec<serde_json::Value> = selected
+            .iter()
+            .map(|a| {
+                serde_json::json!({
+                    "filename": a.filename,
+                    "id": a.id
+                })
+            })
+            .collect();
+        if is_json {
+            let payload = serde_json::json!({
+                "attachments": att_objs,
+                "dryRun": true,
+                "ids": ids
+            });
+            println!("{}", output::render_json(&payload)?);
+        } else {
+            let n = selected.len();
+            if n == 0 {
+                eprintln!("No attachments older than {age_str} found on {issue_key}.");
+            } else {
+                // AC-009 human table [ID, Filename (CWE-116), Size, Created]
+                let table_rows: Vec<Vec<String>> = selected
+                    .iter()
+                    .map(|a| {
+                        vec![
+                            a.id.clone(),
+                            display_sanitize_filename(&a.filename),
+                            format_size(a.size),
+                            a.created.clone(),
+                        ]
+                    })
+                    .collect();
+                eprintln!(
+                    "{}",
+                    output::render_table(&["ID", "Filename", "Size", "Created"], &table_rows)
+                );
+                eprintln!("{n} attachment(s) would be deleted. Run without --dry-run to confirm.");
+            }
+        }
+        return Ok(());
+    }
+
+    if selected.is_empty() {
+        if !is_json {
+            eprintln!("No attachments older than {age_str} found on {issue_key}.");
+        } else {
+            let payload = serde_json::json!({"count": 0, "deleted": false, "ids": []});
+            println!("{}", output::render_json(&payload)?);
+        }
+        return Ok(());
+    }
+
+    // Human mode: pre-deletion hint
+    if !is_json {
+        eprintln!(
+            "Deleting {} attachment(s) older than {} from {}.",
+            selected.len(),
+            age_str,
+            issue_key
+        );
+    }
+
+    // Sequential deletes — 404 is benign skip (BC-3.9.010)
+    let mut deleted_ids: Vec<String> = Vec::new();
+    for att in &selected {
+        match client.delete_attachment(&att.id).await {
+            Ok(()) => {
+                deleted_ids.push(att.id.clone());
+            }
+            Err(e) => {
+                if e.chain()
+                    .find_map(|c| c.downcast_ref::<JrError>())
+                    .map(|je| matches!(je, JrError::UserError(msg) if msg.contains("not found or already deleted")))
+                    .unwrap_or(false)
+                {
+                    // benign 404 skip
+                } else {
+                    return Err(e);
+                }
+            }
+        }
+    }
+
+    let count = deleted_ids.len();
+    if is_json {
+        let payload = serde_json::json!({
+            "count": count,
+            "deleted": count > 0,
+            "ids": deleted_ids
+        });
+        println!("{}", output::render_json(&payload)?);
+    } else {
+        eprintln!(
+            "Deleted {} attachment(s) older than {} from {}.",
+            count, age_str, issue_key
+        );
+    }
+    Ok(())
+}
+
+/// Single-AID confirmation gate (BC-3.9.015 step 2; VP-576-002; DEC-174).
+///
+/// Uses `eprint!` (NOT `eprintln!`, NOT `dialoguer`) + `io::stdin().read_line`.
+///
+/// Three-way branch (EC-3.9.015):
+///   - `"y"`/`"yes"` (case-insensitive, after trim) → `Ok(true)` → proceed with DELETE.
+///   - Other non-empty text / empty Enter (`Ok(n ≥ 1)`, buffer `"\n"`) → `Ok(false)` →
+///     caller emits `"Deletion cancelled."` to stderr + exits 0.
+///   - EOF (`read_line` returns `Ok(0)`) / `Err(_)` → `Err(JrError::Interrupted)` → exit 130.
+///
+/// Pre-conditions (caller responsibility):
+///   - AID `^[0-9]+$` validation must fire BEFORE this fn.
+///   - `no_input && !yes` must exit 64 BEFORE this fn is called.
+///   - `yes == true` must bypass this fn entirely.
+///
+/// `filename` is already display-sanitized by the caller (SEC-576-011 / CWE-116).
+fn attachment_delete_confirmation_gate(filename: &str, aid: &str) -> anyhow::Result<bool> {
+    eprint!("Delete attachment {filename} ({aid})? [y/N] ");
+    let _ = std::io::Write::flush(&mut std::io::stderr());
+
+    use std::io::BufRead;
+    let mut line = String::new();
+    match std::io::stdin().lock().read_line(&mut line) {
+        Ok(0) | Err(_) => Err(JrError::Interrupted.into()),
+        Ok(_) => {
+            let trimmed = line.trim();
+            Ok(trimmed.eq_ignore_ascii_case("y") || trimmed.eq_ignore_ascii_case("yes"))
+        }
+    }
+}
+
+/// Filter `attachments` to those whose `created` timestamp is older than `cutoff`
+/// (BC-3.9.019; EC-3.9.019-8).
+///
+/// Pure function — no I/O. Unparseable `created` fields are silently skipped with
+/// a stderr warning; they do NOT abort the call.
+/// `created` is an ISO 8601 string; parsed via `chrono`.
+fn filter_attachments_older_than(
+    attachments: Vec<AttachmentObject>,
+    cutoff: chrono::DateTime<chrono::Utc>,
+) -> Vec<AttachmentObject> {
+    attachments
+        .into_iter()
+        .filter(|att| {
+            match att.created.parse::<chrono::DateTime<chrono::FixedOffset>>() {
+                Ok(created_dt) => {
+                    let created_utc: chrono::DateTime<chrono::Utc> = created_dt.into();
+                    created_utc < cutoff
+                }
+                Err(_) => {
+                    eprintln!(
+                        "warning: could not parse created timestamp {:?} for attachment {}; skipping",
+                        att.created, att.id
+                    );
+                    false
+                }
+            }
+        })
+        .collect()
+}
+
+/// Parse an age-duration string into a `chrono::Duration` (BC-3.9.019; EC-3.9.019-3/8).
+///
+/// Supported suffixes:
+///   `m` = minutes, `h` = hours, `d` = 24 clock-hours (NOT Jira's 8-hour workday),
+///   `w` = 7 × 24 clock-hours.
+///
+/// **EC-3.9.019-8 BOUNDARY PIN:** `parse_age_duration("1d")` MUST equal
+/// `chrono::Duration::hours(24)`. A worklog-style `1d = 8h` is WRONG here.
+///
+/// Invalid / malformed input → `JrError::UserError` with EC-3.9.019-3 canonical message:
+///   `"invalid duration: '<VALUE>'. Use formats like 30m, 2h, 1d, 7d, 2w."`
+///
+/// MUST NOT import or call `src/duration.rs` arithmetic — that module is read for
+/// suffix-convention style only.
+fn parse_age_duration(s: &str) -> anyhow::Result<chrono::Duration> {
+    let canonical_error = || {
+        JrError::UserError(format!(
+            "invalid duration: '{s}'. Use formats like 30m, 2h, 1d, 7d, 2w."
+        ))
+    };
+
+    if s.is_empty() {
+        return Err(canonical_error().into());
+    }
+
+    // Char-aware split: `split_at(len-1)` panics on multi-byte trailing chars
+    // (e.g. "5€" — '€' is 3 UTF-8 bytes). Use `chars().next_back()` instead.
+    // `next_back()` is always Some here — the is_empty guard above already returned.
+    let Some(last_char) = s.chars().next_back() else {
+        return Err(canonical_error().into());
+    };
+    let suffix = &s[s.len() - last_char.len_utf8()..];
+    let digits = &s[..s.len() - last_char.len_utf8()];
+
+    let n: i64 = digits.parse().map_err(|_| canonical_error())?;
+    if n <= 0 {
+        return Err(canonical_error().into());
+    }
+
+    // Three-layer overflow guard (P1-001 + P2-001 + P6-001):
+    // Layer 1 (P1-001): checked_mul prevents i64 multiplication overflow on `n * factor`.
+    // Layer 2 (P2-001): chrono::Duration::try_seconds handles the TimeDelta "panic band"
+    //   ~(i64::MAX/1000, i64::MAX] where Duration::seconds(s) multiplies by MILLIS_PER_SEC
+    //   (1000), overflowing i64 and panicking (confirmed chrono 0.4.45 src/lib.rs:717).
+    //   try_seconds returns None for out-of-bounds values.
+    // Layer 3 (P6-001): MAX_AGE_SECS magnitude clamp rejects durations that pass
+    //   try_seconds but would panic at `Utc::now() - duration` because the resulting
+    //   DateTime falls before chrono::NaiveDate::MIN (~year -262143, ≈-8.34e12 s from
+    //   epoch). 8_000_000_000_000 s (≈253,400 years) leaves a 340e9-second safety margin
+    //   and is far below the try_seconds panic band (~9.2e15 s).
+    const MAX_AGE_SECS: i64 = 8_000_000_000_000;
+
+    let total_secs: i64 = match suffix {
+        "m" => n.checked_mul(60),
+        "h" => n.checked_mul(3_600),
+        "d" => n.checked_mul(24 * 3_600),
+        "w" => n.checked_mul(7 * 24 * 3_600),
+        _ => return Err(canonical_error().into()),
+    }
+    .ok_or_else(canonical_error)?; // Layer 1: checked_mul overflow → canonical error
+
+    if total_secs > MAX_AGE_SECS {
+        return Err(canonical_error().into()); // Layer 3: DateTime-subtraction band
+    }
+
+    chrono::Duration::try_seconds(total_secs) // Layer 2: TimeDelta panic band
+        .ok_or_else(|| canonical_error().into())
+}
+
+// ---------------------------------------------------------------------------
 // Unit tests
 // ---------------------------------------------------------------------------
 
@@ -1934,5 +2428,125 @@ mod tests {
         assert_eq!(sanitize_attachment_filename("\\\\"), Some("__".to_string()));
         #[cfg(windows)]
         assert_eq!(sanitize_attachment_filename("\\\\"), None);
+    }
+
+    // -----------------------------------------------------------------------
+    // S-576-4: parse_age_duration unit tests
+    // -----------------------------------------------------------------------
+
+    /// EC-3.9.019-8 boundary pin (AC-007 / S-576-4).
+    ///
+    /// `parse_age_duration("1d")` MUST equal `chrono::Duration::hours(24)`.
+    /// A worklog-style `1d = 8h` computation is WRONG for this function.
+    ///
+    /// Private helper — integration tests cannot call it; unit test lives here.
+    #[test]
+    fn test_bc_3_9_019_ec_8_parse_age_duration_1d_is_24h() {
+        let result = parse_age_duration("1d").expect("parse_age_duration(\"1d\") must return Ok");
+        assert_eq!(
+            result,
+            chrono::Duration::hours(24),
+            "EC-3.9.019-8: parse_age_duration(\"1d\") must equal chrono::Duration::hours(24) \
+             (24 clock-hours, NOT 8h worklog-day)"
+        );
+    }
+
+    /// Mutation pre-empt: kills the `7` multiplier mutant and the `24` multiplier mutant.
+    /// If either is replaced by 1, this test fails.
+    #[test]
+    fn test_bc_3_9_019_2w_equals_336_hours() {
+        let result = parse_age_duration("2w").expect("parse_age_duration(\"2w\") must return Ok");
+        assert_eq!(
+            result,
+            chrono::Duration::hours(2 * 7 * 24),
+            "parse_age_duration(\"2w\") must equal 2*7*24 = 336 clock-hours; \
+             kills week→day multiplier mutant and day→hour multiplier mutant"
+        );
+    }
+
+    /// Mutation pre-empt: `"0d"` must return Err (zero duration is not a useful filter).
+    /// Kills the `> 0` → `>= 0` boundary mutant.
+    #[test]
+    fn test_bc_3_9_019_0d_is_err() {
+        let result = parse_age_duration("0d");
+        assert!(
+            result.is_err(),
+            "parse_age_duration(\"0d\") must return Err; \
+             kills <=→< boundary mutant on the zero-value guard"
+        );
+        let msg = format!("{}", result.unwrap_err());
+        assert!(
+            msg.contains("invalid duration"),
+            "parse_age_duration(\"0d\") error must contain 'invalid duration'; got: {msg}"
+        );
+    }
+
+    /// Mutation pre-empt: `"30m"` must parse as exactly 30 minutes.
+    #[test]
+    fn test_bc_3_9_019_30m_exact() {
+        let result = parse_age_duration("30m").expect("parse_age_duration(\"30m\") must return Ok");
+        assert_eq!(
+            result,
+            chrono::Duration::minutes(30),
+            "parse_age_duration(\"30m\") must equal chrono::Duration::minutes(30)"
+        );
+    }
+
+    /// Mutation pre-empt: `"2h"` must parse as exactly 2 hours.
+    #[test]
+    fn test_bc_3_9_019_2h_exact() {
+        let result = parse_age_duration("2h").expect("parse_age_duration(\"2h\") must return Ok");
+        assert_eq!(
+            result,
+            chrono::Duration::hours(2),
+            "parse_age_duration(\"2h\") must equal chrono::Duration::hours(2)"
+        );
+    }
+
+    /// P2-001 unit pin: n=1e12 days → 8.64e16 seconds, inside the chrono panic band
+    /// ~(i64::MAX/1000, i64::MAX]. Duration::hours(n*24) calls Duration::seconds(8.64e16)
+    /// which internally multiplies by MILLIS_PER_SEC=1000 → 8.64e19 overflows i64 →
+    /// checked_mul panics. Implementation must use try_hours/try_seconds and map None→Err.
+    #[test]
+    fn test_bc_3_9_019_p2_001_chrono_band_1e12d_is_err() {
+        let result = parse_age_duration("1000000000000d");
+        assert!(
+            result.is_err(),
+            "parse_age_duration(\"1000000000000d\") must return Err (chrono out-of-bounds); \
+             P2-001: must use try_hours/try_seconds to catch the Duration panic band"
+        );
+        let msg = format!("{}", result.unwrap_err());
+        assert!(
+            msg.contains("invalid duration"),
+            "P2-001: error must contain 'invalid duration'; got: {msg}"
+        );
+    }
+
+    /// P6-001 unit pin: n=1e11 days → 8.64e15 seconds.
+    /// try_seconds(8.64e15) succeeds (8.64e15 * MILLIS_PER_SEC = 8.64e18 < i64::MAX 9.22e18),
+    /// but `Utc::now() - duration` panics because the resulting date (~274M years BC) is
+    /// before chrono::NaiveDate::MIN (~year -262144).
+    ///
+    /// If the fix clamps inside parse_age_duration (additional bound check before
+    /// try_seconds), this unit test is the discriminator.
+    /// If the fix lands at the subtraction site (checked_sub_signed), this test remains RED
+    /// and the integration test (attachment_delete.rs P6-001 sub-case) is the sole pin.
+    ///
+    /// Either way, pinning this behavior here ensures the full rejection band is covered
+    /// at the unit level regardless of the implementation approach chosen.
+    #[test]
+    fn test_bc_3_9_019_p6_001_datetime_band_1e11d_is_err() {
+        let result = parse_age_duration("100000000000d");
+        assert!(
+            result.is_err(),
+            "parse_age_duration(\"100000000000d\") must return Err; \
+             P6-001: n=1e11 days → 8.64e15 s passes try_seconds but \
+             Utc::now()-duration panics at the DateTime subtraction site"
+        );
+        let msg = format!("{}", result.unwrap_err());
+        assert!(
+            msg.contains("invalid duration"),
+            "P6-001: error must contain 'invalid duration'; got: {msg}"
+        );
     }
 }

@@ -90,6 +90,11 @@ pub struct AttachmentMetadata {
 
     /// Download URL (the CDN redirect target that reqwest follows automatically).
     pub content: Option<String>,
+
+    /// ISO 8601 timestamp when the attachment was uploaded.
+    /// Optional: absent for older or restricted attachment metadata responses.
+    #[serde(default)]
+    pub created: Option<String>,
 }
 
 // ---------------------------------------------------------------------------
@@ -343,6 +348,41 @@ impl JiraClient {
                 Some(JrError::ApiError { status, .. }) if *status == 404 => {
                     Err(JrError::UserError(format!(
                         "Attachment {attachment_id} not found or already deleted."
+                    ))
+                    .into())
+                }
+                _ => Err(e),
+            },
+        }
+    }
+
+    /// Delete a single attachment by ID — targeted path (S-576-4; BC-3.9.008; DEC-168).
+    ///
+    /// Issues `DELETE /rest/api/3/attachment/{id}`.
+    ///
+    /// **DEC-168 asymmetry from `delete_attachment` (S3 replace path):**
+    /// On 404 this function returns `JrError::UserError` with the canonical prefix
+    /// `"Attachment <id> not found or not accessible."` followed by the raw Jira error
+    /// body on the next line — exit 64 + body surfaced. This differs from
+    /// `delete_attachment` (S3), which maps 404→`"not found or already deleted"` for
+    /// benign-skip replace semantics. Do NOT use this function on bulk paths; use
+    /// `delete_attachment` there so bulk 404 stays a benign skip (BC-3.9.010).
+    ///
+    /// Error mapping:
+    /// - 204 → `Ok(())`.
+    /// - 404 → `JrError::UserError("Attachment <id> not found or not accessible.\n<body>")` (exit 64).
+    /// - 401 → `JrError::NotAuthenticated` (exit 2): handled by client.
+    /// - 403 → `JrError::ApiError { status: 403 }` (exit 1).
+    /// - 5xx / network → `JrError::ApiError` / `JrError::NetworkError` (exit 1).
+    pub async fn delete_attachment_targeted(&self, attachment_id: &str) -> Result<()> {
+        let path = format!("/rest/api/3/attachment/{}", attachment_id);
+        let result = self.delete(&path).await;
+        match result {
+            Ok(()) => Ok(()),
+            Err(e) => match e.downcast_ref::<JrError>() {
+                Some(JrError::ApiError { status, message }) if *status == 404 => {
+                    Err(JrError::UserError(format!(
+                        "Attachment {attachment_id} not found or not accessible.\n{message}"
                     ))
                     .into())
                 }
