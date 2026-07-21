@@ -803,4 +803,4 @@ feature_followup_standalone:
     implementation_strategy: tdd
     tdd_mode: facade
     phase: F4
-    notes: "CONVERGED STRICT 2026-07-21 (10 passes / 7 fix rounds; window p8/p9/p10 CLEAN×3; story v1.7; 2 S-7.01 partial-fix regressions caught at p4). Zero src/ delta. Human gate pending. Depends S1..S5."
+    notes: "CONVERGED STRICT 2026-07-21 (10 passes / 7 fix rounds; window p8/p9/p10 CLEAN×3; story v1.7→v1.9; 2 S-7.01 partial-fix regressions caught at p4). Zero src/ delta. HUMAN GATE APPROVED 2026-07-22 (template conformance v1.9). Queues after S-576-5. Depends S1..S5."
