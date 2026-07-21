@@ -7,7 +7,7 @@ producer: state-manager
 timestamp: 2026-05-08T00:00:00
 cycle: "cycle-001"
 inputs: [STATE.md]
-input-hash: "038524e"
+input-hash: "159bc96"
 traces_to: STATE.md
 ---
 
@@ -1547,6 +1547,24 @@ _Was the active checkpoint after security-fix-reverify burst (2026-07-17) — F3
 | **Notes** | Main-repo untracked `.claude/pr-reviews/` + `.claude/spec-config.json` deliberately untracked. Backup `*.backup-*` files in `phase-f2-spec-evolution/` deliberately untracked. Worktree `.worktrees/docs-577-ej-probe` (ea0689b, PR #625) intact pending human merge — cleanup after merge. No story worktrees created this session (F2 spec-only). Standing rules unchanged (DEC-128/173; user merges all PRs). |
 | **Standing rules** | User merges ALL PRs on GitHub personally (DEC-173); every PR gets fresh-eyes pr-reviewer pre-merge with POSTED evidence; COMMENTED = approve-equivalent (same-account); implementers hard-forbidden from push/PR/improvise (STOP-and-report). DEC-128 in force. |
 | **Resume command** | /vsdd-factory:next-step |
+
+---
+
+## Archived Checkpoint (displaced by S-576-6 story convergence record burst, 2026-07-21)
+
+_Was the active checkpoint after S-576-3 DELIVERED / S-576-4 Step-4.5 CONVERGED STRICT bursts (2026-07-21). Superseded by S-576-6 story CONVERGED STRICT record._
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-07-21 (S-576-3 DELIVERED — PR #635 squash-merged by human @ f2d3b378 (DEC-128 honored); ci-gate 15/15; mutation 97% kill; story v1.45; 29 tests (26+3 CI kill). SOH-ATTACHMENTS-1: 3 of 5. S-576-4 dispatched 2026-07-21. trajectory-tail →2→0→0→0). |
+| **Position** | Phase 3 / Feature Mode SOH-ATTACHMENTS-1 (issues #576+#585, DEC-179..DEC-185). **F3 GATE APPROVED (DEC-185, 2026-07-19)**. **F4 IN PROGRESS** — S-576-1 DELIVERED 2026-07-19; S-576-2 DELIVERED 2026-07-20; S-576-3 DELIVERED 2026-07-21. Spec v1.3.97; BC 657/holdouts 100/VP 35; AC 80; BC-INDEX v6.37; STORY-INDEX v1.5.32; stories S1 v1.22/S2 v1.39/S3 v1.45/S4 v1.29/S5 v1.34. develop @ f2d3b378 (v0.6.0-dev.10). S-576-4 worktree: feat/S-576-4-attachment-delete @ f2d3b378. |
+| **Convergence counter** | F3 STRICT CONVERGED (DEC-185; 77 passes / 74 fix rounds; window p75/p76/p77 CLEAN×3). S-576-1 DELIVERED (4 passes / 2 fix rounds; trajectory-tail →2→0→0→0). S-576-2 DELIVERED (12 passes / 9 fix rounds; window p10/p11/p12 CONVERGED STRICT; trajectory-tail →1→0→0→1). S-576-3 DELIVERED (7 passes / 4 fix rounds; window p5/p6/p7 CLEAN×3; trajectory-tail →2→0→0→0). Full trajectory: `cycles/cycle-001/convergence-trajectory.md`. |
+| **In flight / On resume** | PIPELINE ACTIVE. S-576-3 DELIVERED (PR #635 @ f2d3b378). **S-576-4 IN PROGRESS (dispatched 2026-07-21; feat/S-576-4-attachment-delete @ f2d3b378)**. S-576-5 waits S3+S4. Gate-audit carry-forwards: AUDIT-576-003 count-drift sweep (26→29) at wave gate; AUDIT-576-004 at S5 delivery. AUDIT-576-002 S1-half DISCHARGED. |
+| **Pending human decisions** | #628 soak window check (opened pre-S1; verify soak eligibility before merge). #624 soak ripe 07-22. |
+| **PR queue (human-owned)** | #628 open (ci scorecard guard; soak started 2026-07-19); #624 soak ripe 07-22; #598/#599 soak passed, mergeable; #574 pending rebase; #630 squash-merged 2026-07-19 (S-576-1); #631 squash-merged 2026-07-20 (S-576-2); #635 squash-merged 2026-07-21 (S-576-3). DO NOT close #429. |
+| **Housekeeping candidates** | 4 untracked `.backup-*` files in `.factory/phase-f2-spec-evolution/`; product-repo untracked `.claude/pr-reviews/` + `.claude/spec-config.json`; `CLAUDE_AUTOCOMPACT_PCT_OVERRIDE` missing from `.claude/settings.json`. Stale worktrees `.worktrees/docs-577-ej-probe` + `.worktrees/S-576-2` (PRs merged — safe to remove); `.worktrees/S-576-3` removed. |
+| **Standing rules** | User merges ALL PRs on GitHub personally (DEC-173); every PR gets fresh-eyes pr-reviewer pre-merge with POSTED evidence; COMMENTED = approve-equivalent (same-account); implementers hard-forbidden from push/PR/improvise (STOP-and-report). DEC-128 in force. |
+| **Resume command** | Open fresh session, run /vsdd-factory:next-step → S-576-4 in progress (feat/S-576-4-attachment-delete @ f2d3b378). S-576-5 waits S3+S4. Carry-forwards: AUDIT-576-003 count-drift sweep at wave gate; AUDIT-576-004 at S5 delivery. |
 
 ---
 

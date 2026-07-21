@@ -1,0 +1,113 @@
+{
+  "story": "S-576-6",
+  "step": "story",
+  "criterion": "STRICT",
+  "status": "CONVERGED",
+  "converged_at": "2026-07-21",
+  "total_passes": 10,
+  "fix_rounds": 7,
+  "window": {
+    "passes": ["p8", "p9", "p10"],
+    "verdict": "CLEAN_3"
+  },
+  "human_overrides": 0,
+  "story_version_start": "v1.0",
+  "story_version_at_convergence": "v1.7",
+  "spec_changed": true,
+  "spec_version": "v1.3.98",
+  "spec_delta": "S6-SCOPE-ROUND: prd-delta-576.md S6 delivery-row added + spec_version_after bumped v1.3.97->v1.3.98; committed at 9179ff86",
+  "bc_index_version": "v6.37",
+  "story_index_version": "v1.5.33",
+  "tdd_mode": "facade",
+  "src_delta": false,
+  "human_gate": "pending",
+  "test_functions": [
+    "test_e2e_attachment_platform_roundtrip",
+    "test_e2e_attachment_jsm_no_flag_upload",
+    "test_e2e_attachment_jsm_public_upload",
+    "test_e2e_attachment_jsm_internal_upload"
+  ],
+  "trajectory": [
+    {
+      "pass": 1,
+      "verdict": "FINDINGS",
+      "finding_count": 10,
+      "severity": "5M+5L",
+      "summary": "P1-001(M) download flag form wrong (--id AID); P1-002(M) dead research-file citation; P1-003(M) gate-order contradiction (Architecture Compliance: gate fires before e2e_enabled()); P1-004(M) depends_on missing S-576-1; P1-005(M) AC-010 panic teardown unachievable (Drop-guard mandated); P1-006(L) AC-004 discriminator softened; P1-007(L) Windows-runner rationale corrected; P1-008(L) e2e_cmd()→e2e_harness(); P1-009(L) AC-006 VERIFY-first framing; P1-010(L) AC-003 OQ-9 single-side"
+    },
+    {
+      "pass": 2,
+      "verdict": "FINDINGS",
+      "finding_count": 1,
+      "severity": "1M",
+      "id": "P2-001",
+      "summary": "AC-001 step 1 sweeper-label backstop was false — ES issue must carry --label run_label for CI sweeper JQL; step 9 sweeper claim unsupported without label setup"
+    },
+    {
+      "pass": 3,
+      "verdict": "FINDINGS",
+      "finding_count": 1,
+      "severity": "1M",
+      "id": "P3-001",
+      "summary": "AC-002/003/005 JSM echo-shape overstated vs P2-3c deferrals — contentUrl banned on servicedeskapi (JSDCLOUD-10841); --internal should not cite BC-3.9.009 (explicitly excludes JSM --internal path)"
+    },
+    {
+      "pass": 4,
+      "verdict": "FINDINGS",
+      "finding_count": 2,
+      "severity": "2M",
+      "id": "P4-001,P4-002",
+      "summary": "P4-001(M): partial-fix propagation — Task 6 still used 'OQ-9 asymmetry' phrasing after P3 fix; grep sweep found survivors. P4-002(M): seed_issue arity mismatch — story cited 2-arg form, real helper at tests/e2e_live.rs:530 requires 3 args (h, label, summary)"
+    },
+    {
+      "pass": 5,
+      "verdict": "NITPICK_ONLY",
+      "finding_count": 0,
+      "summary": "P5-001(L) and P5-002(L) applied as nits — pre/post-P2-3c caveats on 4 floor assertions; best_effort_close() reference replacing bare move command; run_label()/seed_issue() canonical helpers. Story v1.5."
+    },
+    {
+      "pass": 6,
+      "verdict": "NITPICK_ONLY",
+      "finding_count": 0,
+      "summary": "Task 4 ordering clarifier added — implementer must write Task-5 skeleton first, then run for live capture; fallback path expected unreachable when S5 discharged. Story v1.6."
+    },
+    {
+      "pass": 7,
+      "verdict": "FINDINGS",
+      "finding_count": 1,
+      "severity": "1M",
+      "id": "P7-001",
+      "summary": "AC-002 step 5 wrong task pointer — 'per AC-006 Task 6' should be 'per AC-006 (Task 4)'; second stale 'Task 6' reference at P2-3c callout block (~107). Total Task N cross-refs audited and verified after fix."
+    },
+    {
+      "pass": 8,
+      "verdict": "CLEAN",
+      "finding_count": 0,
+      "window_progress": "1/3"
+    },
+    {
+      "pass": 9,
+      "verdict": "CLEAN",
+      "finding_count": 0,
+      "window_progress": "2/3"
+    },
+    {
+      "pass": 10,
+      "verdict": "CLEAN",
+      "finding_count": 0,
+      "window_progress": "3/3",
+      "final": true
+    }
+  ],
+  "trajectory_shorthand": "10→1→1→2→0→0→1→0→0→0",
+  "story_changes_per_fix_round": {
+    "round1_post_p1": "v1.1: 10 items — download flag form, dead citation replaced with dated artifact creation, gate-order fixed, depends_on [S-576-1] added, Drop-guard teardown mandated, AC-004 softened, Windows note corrected, e2e_harness(), VERIFY-first AC-006, OQ-9 single-side",
+    "round2_post_p2": "v1.2: sweeper-label backstop corrected — step 1 adds --label run_label; step 9 sweeper claim grounded in label setup; EC-10 updated",
+    "round3_post_p3": "v1.3: JSM echo-shape corrections — contentUrl dropped (JSDCLOUD-10841); --internal uncited from BC-3.9.009; BC-3.9.011+BC-3.9.007 EC-3.9.007-2 cited instead; OQ-9 label removed from AC-003",
+    "round4_post_p4": "v1.4: Task 6 OQ-9 survivor fixed; seed_issue corrected to 3-arg form; AC-003/004 step 2 harmonized to Gate-2 skip wording",
+    "round5_post_p5": "v1.5: pre/post-P2-3c caveats on 4 floor assertions (conditional on AC-006 outcome); best_effort_close() + run_label()/seed_issue() canonical forms",
+    "round6_post_p6": "v1.6: Task 4 ordering clarifier (Task-5 skeleton first, then live capture)",
+    "round7_post_p7": "v1.7: two stale 'Task 6' Task-pointer refs fixed → 'Task 4'; full Task N cross-reference audit passed"
+  },
+  "process_gap_note": "Story-level convergence caught 10 MEDIUM-class defects pre-implementation — including two partial-fix propagation regressions (S-7.01 class). Adversary pass count at story level validates that the story-convergence phase is load-bearing, not ceremonial."
+}

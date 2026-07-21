@@ -788,3 +788,19 @@ feature_followup_standalone:
     tdd_mode: strict
     phase: F4
     notes: "Pending S-576-3 + S-576-4 merge. Final story of SOH-ATTACHMENTS-1 bundle; closes #576. Story v1.34 (story-writer ready flip 2026-07-19)."
+  - id: S-576-6
+    title: "jr issue attachment live-Jira E2E coverage — platform round-trip + JSM visibility + P2-3c probe discharge (issue #576)"
+    status: pending
+    pr: null
+    merge_sha: null
+    merged_at: null
+    depends_on: [S-576-1, S-576-2, S-576-3, S-576-4, S-576-5]
+    bc_anchors: [BC-2.7.001, BC-2.7.002, BC-2.7.007, BC-3.9.001, BC-3.9.002, BC-3.9.003, BC-3.9.004, BC-3.9.007, BC-3.9.008, BC-3.9.009, BC-3.9.010, BC-3.9.011]
+    verification_properties: []
+    issue: 576
+    points: 5
+    criticality: LOW
+    implementation_strategy: tdd
+    tdd_mode: facade
+    phase: F4
+    notes: "CONVERGED STRICT 2026-07-21 (10 passes / 7 fix rounds; window p8/p9/p10 CLEAN×3; story v1.7; 2 S-7.01 partial-fix regressions caught at p4). Zero src/ delta. Human gate pending. Depends S1..S5."

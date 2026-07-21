@@ -7,7 +7,7 @@ producer: state-manager
 timestamp: 2026-05-04T00:00:00
 cycle: "cycle-001"
 inputs: [STATE.md]
-input-hash: "3bf79c1"
+input-hash: "159bc96"
 traces_to: STATE.md
 ---
 
@@ -5848,3 +5848,32 @@ Displaced to make room for SESSION WRAP (2026-07-19) step row per keep-5 rule.
 | Step | Agent | Status | Output |
 |------|-------|--------|--------|
 | **SOH-ATTACHMENTS-1 F3 ADVERSARY PASSES 1-5 COMPLETE (2026-07-17, round-5 snapshot): pass-1 27 findings (2C/11H/11M/3L); fix-round-1; pass-2 16 findings (3C/4H/6M/3L); fix-round-2; pass-3 18 findings (0C/4H/5M/9L, count regressed — latent); fix-round-3; pass-4 11 findings (0C/0H/8M/2L/1I); fix-round-4; pass-5 10 fixable (1H/2M/7L/1I); fix-round-5. Spec v1.3.81→v1.3.83 (2 micro-rounds); BC-INDEX v6.34→v6.35; counts 657/100/35 UNCHANGED. Ceiling MEDIUM (pass-5 H single). STRICT streak 0/3. PRE-F4-UNICODE-DISPLAY-SANITIZATION obligation registered. Pass 6 in flight. trajectory-tail →16→18→11→10** | adversary + state-manager | IN PROGRESS — pass 6 in flight | BC 657; holdouts 100; VP 35; spec v1.3.83; BC-INDEX v6.35. |
+
+---
+
+## S-576-6 story convergence record burst (2026-07-21)
+
+**Burst type:** Story convergence record — factory-artifacts commit only (TD-VSDD-053 single-commit protocol)
+**Files created/updated:** `.factory/cycles/cycle-001/S-576-6/story-convergence-state.json` (new); `.factory/cycles/cycle-001/S-576-6/adversarial-reviews/story-passes.md` (new); `.factory/stories/STORY-INDEX.md` (116→117; v1.5.32→v1.5.33); `.factory/sprint-state.yaml` (S-576-6 registered; pending); `.factory/STATE.md` (frontmatter + Phase Progress + Current Phase Steps + Project Metadata + Session Resume Checkpoint + RESUME PLAN)
+**Spec change:** v1.3.97→v1.3.98 (S6-SCOPE-ROUND; zero new BCs; committed at 9179ff86 prior burst)
+
+### S-576-6 Convergence Summary
+- Story: `jr issue attachment` live-Jira E2E coverage (platform round-trip + JSM visibility + P2-3c probe discharge)
+- tdd_mode: facade (zero src/ delta; all `jr issue attachment` commands ship with S1..S5)
+- Criterion: STRICT (any delta-attributable LOW resets window)
+- 10 adversary passes / 7 fix rounds; window p8/p9/p10 CLEAN×3 — CONVERGED STRICT
+- Story v1.0 → v1.7; spec v1.3.97→v1.3.98
+- Two S-7.01 partial-fix regressions caught at p4 (validates story-level convergence as load-bearing)
+- Human gate: pending
+
+### Archived Phase Progress row (displaced by keep-5 rule; new S-576-6 row added)
+
+| Phase | Status | Completed | Gate | Notes |
+|-------|--------|-----------|------|-------|
+| **S-576-2 Step 4.5 CONVERGED STRICT (2026-07-20): 12 passes / 9 fix rounds; window p10/p11/p12 (p10 CLEAN / p11 CLEAN / p12 NITPICK_ONLY); p1 1H+6M+3L+[pg] (sort violation+canonical strings+serde) → p2 1M (canonical string) → p3 1M (--force help) → p4 N(1/3) → p5 2M (vacuous+None branch) → p6 1M (#[allow] violation) → p7 2L (stale label+visibility) → p8 1M+spec-truth-up (CWE-116 success hint; spec v1.3.97 EC-2.7.007-5 SIGINT-cleanup corrected to reality) → p9 1M (CWE-116 rename error) → p10 CLEAN(1/3) → p11 CLEAN(2/3) → p12 NITPICK_ONLY CONVERGED. Zero human overrides (1 human auth: AUDIT-576-004/DEC-185 deny.toml cpufeatures skip). Residuals: O-1 process::exit (wave-gate), P8-002 orphan-temp (tracked debt), p12 parity optional. Hook-timeout watch: factory-dispatcher PostToolUse ×2 on spec-changelog.md. trajectory-tail →1→0→0→1** | **F4 S-576-2 Step 4.5 CONVERGED** | **2026-07-20** | **Steps 5-9 pending; S-576-3/4/5 pending.** | BC 657; holdouts 100; VP 35; spec v1.3.97; BC-INDEX v6.37; STORY-INDEX v1.5.29. |
+
+### Archived Current Phase Steps row (displaced by keep-5 rule; new S-576-6 step added)
+
+| Step | Agent | Status | Output |
+|------|-------|--------|--------|
+| **S-576-2 Step 4.5 CONVERGED STRICT (2026-07-20): adversary 12 passes / 9 fix rounds; p1 1H+6M+3L+[pg] → p9 1M (CWE-116 rename) → p10 CLEAN(1/3) → p11 CLEAN(2/3) → p12 NITPICK_ONLY CONVERGED. Spec v1.3.96→v1.3.97 (EC-2.7.007-5 SIGINT-cleanup corrected). Story v1.38 (AC-018+29 tests). attachment_download 29/29; attachment_list 16/16; clippy+fmt+deny clean. trajectory-tail →1→0→0→1** | adversary + state-manager | COMPLETE — CONVERGED STRICT | spec v1.3.97; BC-INDEX v6.37; STORY-INDEX v1.5.29. |
