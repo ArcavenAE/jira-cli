@@ -1,1 +1,1 @@
-{"status":"pass","timestamp":"2026-07-21T02:50:51Z","command":"cargo test --test claude_md_citations 2>&1 | tail -8"}
+{"status":"pass","timestamp":"2026-07-21T18:22:12Z","command":"sleep 360 && git -C /Users/zious/Documents/GITHUB/jira-cli/.worktrees/S-576-4 log --oneline 1159d7c5..HEAD && cargo test --test attachment_delete 2>&1 | grep \"^test result\" && cargo test --test attachment_upload 2>&1 | grep \"^test result\" && cargo clippy -- -D warnings 2>&1 | tail -1 && cargo fmt --all -- --check && echo FMT_CLEAN"}

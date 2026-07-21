@@ -7,6 +7,32 @@ project: "jr (jira-cli)"
 
 Track all spec version changes. Most recent version first.
 
+## [1.3.98] - 2026-07-21
+
+### Type: SCOPE
+
+### Summary
+
+S-576-6 E2E attachment coverage scope addition for SOH-ATTACHMENTS-1. Adds a sixth story (S6) to the bundle scope table in `prd-delta-576.md`: live-Jira E2E attachment coverage, delivering after S5, depends_on S1..S5 all merged. Zero `src/` delta — all `jr issue attachment` commands ship with S1..S5; S6 is pure test + optional P2-3c probe discharge. BC corpus UNCHANGED: all S6 test obligations anchor to existing BCs (BC-2.7.001..002, BC-2.7.007, BC-3.9.001..004, BC-3.9.007..011, BC-3.9.008 + BC-3.9.010 as applicable). Teardown obligations documented: ES attachments deleted in-test via BC-3.9.008 (S4 delete); EJ attachments deleted in-test per ADV-022 BC-3.9.011 obligation; EJ JSM requests self-closed via `jsm_self_close` (`docs/specs/jsm-e2e-coverage.md §6.1`). P2-3c probe discharge obligation: if S5 (AUDIT-576-002) did not yet confirm the `POST /rest/servicedeskapi/request/{id}/attachment` response schema, S6 must issue the live probe and update BC-3.9.007 EC-3.9.007-2 + BC-3.9.011.
+
+### Changed Requirements
+
+- `.factory/phase-f2-spec-evolution/prd-delta-576.md` (MODIFIED): S6 row added to bundle scope table; `spec_version_after` 1.3.94→1.3.98; S6-SCOPE-ROUND dispositions section appended.
+
+### Impact Assessment
+
+| Artifact | Change Type | Notes |
+|----------|-------------|-------|
+| prd-delta-576.md | Modified | S6 scope row added; spec_version_after 1.3.94→1.3.98; S6-SCOPE-ROUND appended |
+
+- **Affected stories:** S6 (new story: live-Jira E2E attachment coverage). Story-writer to follow; STORY-INDEX managed by state-manager.
+- **BC count:** 657 (unchanged)
+- **Holdout count:** 100 (unchanged)
+- **VP count:** 35 (unchanged)
+- **Migration needed:** NO (scope addition only; no behavioral changes to existing BCs)
+
+---
+
 ## [1.3.97] - 2026-07-20
 
 ### Type: PATCH

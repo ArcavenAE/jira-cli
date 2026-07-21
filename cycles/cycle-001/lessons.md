@@ -6473,3 +6473,29 @@ _Tagged: [sweep] [assertion-tightening] [holdout] [scenario-scope] [class-exhaus
 
 _Trigger: P37-001 (2026-07-17); prd-delta + cross-cutting still described WITHDRAWN pre-P6 BC-X.8.010 design 31 passes after the correction; materially dangerous doc-drift; write-back/twin-artifact family._
 _Tagged: [process-gap] [write-back] [withdrawn-design] [summary-sweep] [prd-delta] [cross-cutting] [class-exhaustion] [p37] [codified]_
+
+---
+
+### [codified] FALLIBLE-ARITHMETIC-SWEEP: When guarding numeric user input, enumerate ALL downstream fallible operations in a single sweep pass
+
+**Observation (S-576-4 Step 4.5, 2026-07-21):** S-576-4 (`jr issue attachment delete`) required THREE consecutive fix rounds to fully guard a single duration-arithmetic pipeline: (1) P1-001 (pass 1) — i64 multiply overflow in `parse_age_duration` (`age_days * SECS_PER_DAY`); (2) P2-001 (pass 2) — `chrono::TimeDelta::try_seconds` fallibility: the conversion from seconds to a `TimeDelta` can return `None` on out-of-range input, invisible until the P1 guard eliminated the earlier panic; (3) P6-001 (pass 6) — `NaiveDate::checked_sub_signed` panic: the `NaiveDate` subtraction itself can overflow on extreme date inputs, visible only after the P1 and P2 guards were in place. Each fix was correct but addressed only the currently-visible failure point, leaving the next band masked until the prior one was fixed.
+
+**Root cause:** The implementer (and implementer checklist) addressed only the immediately-reported overflow site per fix round, rather than tracing the full arithmetic pipeline from user input to final result and identifying ALL fallible operations at once. Each fallible operation was hidden by the previous one: the i64 multiply panicked before `try_seconds` was reached; `try_seconds` failed before `checked_sub_signed` was reached. The onion structure means a top-down enumeration at fix time would have caught all three.
+
+**Principle (FALLIBLE-ARITHMETIC-SWEEP):** When a fix round addresses a numeric overflow, panic, or fallibility finding in a user-input-driven arithmetic pipeline:
+1. **Enumerate the full pipeline:** Trace from the raw user input value to the final computed result, listing every arithmetic operation, every fallible stdlib/crate call (`try_seconds`, `checked_*`, `saturating_*`, `try_from`, etc.), and every implicit conversion.
+2. **Apply guards to ALL fallible points in one round:** Do not stop at the first fix. Each site that can panic, return `None`/`Err`, or overflow is a candidate for a guard in the SAME fix round — even if it is not currently reachable due to an earlier guard.
+3. **Depth-first, not breadth-first:** Work from the earliest stage (closest to user input) to the latest stage (closest to the final result) to avoid re-encountering each band separately.
+4. **Confirm no residual fallible operations:** After applying guards, re-enumerate the pipeline to confirm no unguarded fallible call remains. Document the sweep result in the story note or commit message.
+
+**Evidence (S-576-4 duration-overflow onion):**
+- Band 1 (i64 multiply): `age_days * SECS_PER_DAY` — fixed P1 (R1)
+- Band 2 (TimeDelta construction): `TimeDelta::try_seconds(seconds)` — fixed P2 (R2), only reachable after R1
+- Band 3 (NaiveDate subtraction): `date.checked_sub_signed(duration)` + `MAX_AGE_SECS` clamp — fixed P6 (R5), only reachable after R1+R2
+
+All three bands were part of the SAME logical computation path. A FALLIBLE-ARITHMETIC-SWEEP at R1 time would have collapsed all three fix rounds into one.
+
+**Scope:** Applies to any fix round that addresses arithmetic on unbounded user-controlled values: ages, durations, offsets, counts, file sizes, timestamps. Common fallible operation classes: integer arithmetic (`*`, `+`, `-`, `<<`, `/`) that can overflow; `try_seconds` / `try_minutes` / `try_hours` (chrono); `checked_add`/`checked_sub`/`checked_mul`; `try_from`/`into` between integer types; date/time arithmetic via `NaiveDate`/`DateTime` subtraction.
+
+_Trigger: S-576-4 Step 4.5 passes 1, 2, 6 (2026-07-21); three-band duration-overflow onion required three separate fix rounds; single FALLIBLE-ARITHMETIC-SWEEP at R1 would have closed all three._
+_Tagged: [process-gap] [arithmetic] [overflow] [fallible-operations] [implementer-checklist] [duration] [s576-4] [codified]_
