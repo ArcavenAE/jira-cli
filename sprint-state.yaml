@@ -737,10 +737,12 @@ feature_followup_standalone:
 
   - id: S-576-3
     title: "jr issue attachment upload — platform POST, --replace-existing, --dry-run (path-c), ADR-0017 Cargo.toml (issue #576)"
-    status: pending
-    pr: null
-    merge_sha: null
-    merged_at: null
+    status: completed
+    pr: 635
+    merge_sha: "f2d3b378"
+    merged_at: "2026-07-21"
+    merged_via: "squash-merge by human (DEC-128 honored)"
+    f4_delivered_at: "2026-07-21"
     depends_on: [S-576-1]
     bc_anchors: [BC-3.9.001, BC-3.9.002, BC-3.9.009, BC-3.9.012, BC-3.9.014, BC-3.9.017, BC-3.9.018, BC-3.9.020]
     verification_properties: [VP-576-003, VP-576-004]
@@ -750,11 +752,11 @@ feature_followup_standalone:
     implementation_strategy: tdd
     tdd_mode: strict
     phase: F4
-    notes: "Pending S-576-1 merge. ADR-0017 Cargo.toml delivery slot (reqwest multipart+stream+tokio-util). Blocks S-576-5. Story v1.41 (story-writer ready flip 2026-07-19)."
+    notes: "DELIVERED 2026-07-21. PR #635 squash-merged by human @ f2d3b378 (DEC-128 honored). Red Gate verified (0/20 RED, log @ 581a8990). Step 4.5 CONVERGED STRICT (recorded 23ea71f3): 7 passes / 4 fix rounds; window p5/p6/p7 CLEAN×3; notable P2-003 HIGH (DELETE-404 abort bug fixed). 29 integration (tests/attachment_upload.rs: 26 + 3 CI kill tests) + 4 safe_name unit; all suites green. Final ci-gate 15/15 green, mutation 97% kill. Story v1.45. Residuals: P3-003 wave-gate (OAuth-bypass; multipart path bypasses blanket-401 auto-refresh). SOH-ATTACHMENTS-1: 3 of 5 delivered. Count-drift note: +3 CI kill tests (ae347e0c) came after story v1.45 26-count — raw shipped count is 29; sweep at wave gate (AUDIT-576-003). S-576-4 dispatched 2026-07-21; S-576-5 pending S3+S4."
 
   - id: S-576-4
     title: "jr issue attachment delete — single AID, bulk, --older-than, --dry-run single-AID + bulk (issue #576)"
-    status: pending
+    status: in-progress
     pr: null
     merge_sha: null
     merged_at: null
@@ -768,7 +770,7 @@ feature_followup_standalone:
     implementation_strategy: tdd
     tdd_mode: strict
     phase: F4
-    notes: "Pending S-576-1 merge. Blocks S-576-5. Story v1.29 (story-writer ready flip 2026-07-19)."
+    notes: "IN PROGRESS — dispatched 2026-07-21. Worktree feat/S-576-4-attachment-delete pre-created @ f2d3b378. Blocks S-576-5. Story v1.29."
 
   - id: S-576-5
     title: "jr issue attachment upload --public/--internal — JSM visibility, servicedeskapi, stale-ID self-heal (issue #576)"
