@@ -1,0 +1,92 @@
+{
+  "story": "S-576-3",
+  "bundle": "SOH-ATTACHMENTS-1",
+  "issue": "#576",
+  "step": "4.5",
+  "date_converged": "2026-07-20",
+  "converged": true,
+  "criterion": "STRICT",
+  "window": ["pass-5", "pass-6", "pass-7"],
+  "passes_clean": 3,
+  "passes": [
+    {
+      "n": 1,
+      "classification": "FINDINGS",
+      "severity_ceiling": "MEDIUM",
+      "findings_summary": "4M + 3L. P1-001 (MEDIUM): gate-prompt canon — confirmation gate prompt wording diverged from BC-3.9.014 canonical form; test had been pinned to the wrong prompt string. P1-002 (MEDIUM): not-a-regular-file branch — is_file() pre-flight check (BC-3.9.001 FILE-not-found) did not distinguish between a missing file and a non-regular-file input (a directory passed as FILE); branch was unexercised and code behavior was undefined. P1-003 (MEDIUM): tautological CWE-93 test — test_sec_576_004_content_disposition_crlf_injection_guard asserted percent-encoding presence in a way that would pass even if raw CRLF passed through; the assertion was not strong enough to demonstrate the invariant. P1-004 (MEDIUM): doc 401-exit discrepancy — inline rustdoc on a handler function described exit-code behavior inconsistent with BC-3.9.012 taxonomy (written as exit 1, spec requires exit 2 for 401). 3L: stale comments, story count nits.",
+      "fix_round": "fix-round-1: gate-prompt string corrected to BC-3.9.014 canonical form (P1-001); is_file() branch added with distinct 'not a regular file' error path and canonical message (P1-002); CWE-93 test assertion hardened to require percent-encoding and explicitly forbid raw CRLF (P1-003); rustdoc corrected to exit 2 taxonomy alignment (P1-004); 3L nits resolved."
+    },
+    {
+      "n": 2,
+      "classification": "FINDINGS",
+      "severity_ceiling": "HIGH",
+      "findings_summary": "1H + 2M. P2-003 (HIGH — real destructive-path bug): DELETE-404 abort-instead-of-benign-skip. When --replace-existing step 1 found a match and issued DELETE but received 404 (attachment deleted between list-step and delete-step), the handler aborted the entire upload with an error. BC-3.9.017 specifies 404 on the delete step is BENIGN and must be treated as a skip (the attachment is already gone; proceed with POST). This was a correctness bug: a 404 race window caused the upload to fail instead of proceeding. P2-001 (MEDIUM): quote-vector coverage gap — double-quote ('\"') in a filename was not covered by the CWE-93/RFC-7230 injection tests; reqwest percent-encodes it but no regression pin existed. P2-002 (MEDIUM): story allow_hyphen_values at 3 live sites — story AC-001, Task 5, and File Structure rows described `allow_hyphen_values = true` on the `<FILE...>` positional, but the shipped code (correctly) omits it; on a multi-value positional allow_hyphen_values causes clap to consume subsequent flags (e.g. --output json) as file path arguments.",
+      "fix_round": "fix-round-2: DELETE-404 treated as benign skip in --replace-existing flow, not abort (P2-003); regression pin test added (test_bc_3_9_017_delete_404_is_benign_skip); double-quote vector test added (#[cfg(unix)], test_ac_018_double_quote_filename_well_formed_content_disposition) for CWE-93 coverage (P2-001); story corrected at 3 sites to document allow_hyphen_values intentionally ABSENT on multi-value positional with rationale (P2-002). Count 20→22. Story v1.43/v1.44."
+    },
+    {
+      "n": 3,
+      "classification": "FINDINGS",
+      "severity_ceiling": "MEDIUM",
+      "findings_summary": "1M + 1L + P3-003 (observation, DEFERRED to wave gate). P3-001 (MEDIUM): count/enumeration drift — story test-count references in 6 locations (Token Budget, budget note, Task 2 body, AC-006, AC-018, File Structure) still showed pre-fix-round-2 count (20) after the worktree had 22 tests; the story understated coverage. 1L: stale rustdoc on attachment API helper referencing an old parameter name after the is_file() branch refactor introduced in fix-round-1. P3-003 (observation, DEFERRED): upload multipart path bypasses JiraClient::send() so OAuth blanket-401 auto-refresh (S-3.03) does not apply to `attachment upload`; BC-3.9.012 401→exit-2 is spec-sanctioned so this is not a per-story defect; adversary flagged it as a wave-gate ruling candidate (implement-refresh-rebuild vs document-as-known-limitation).",
+      "fix_round": "fix-round-3: count sync 20→22 at 6 story sites (Token Budget ~548, budget note ~555, Task 2 ~571, AC-006, AC-018, File Structure ~663) (P3-001); stale rustdoc corrected to current parameter name (1L). P3-003 DEFERRED to wave gate — BC ruling already covers 401→exit-2; not story-blocking. Story v1.44."
+    },
+    {
+      "n": 4,
+      "classification": "FINDINGS",
+      "severity_ceiling": "MEDIUM",
+      "findings_summary": "2M (kill-test round / mutation pre-empt). P4-001 (MEDIUM): rustdoc taxonomy — inline rustdoc on the attachment delete API helper described error-return semantics using internal enum names rather than the user-visible exit codes from BC-3.9.012; a code reader would see inaccurate contract information. P4-002 (MEDIUM): non-404 DELETE coverage gap — kill-test round identified 4 surviving mutations: (1) DELETE-403 abort-vs-skip distinguisher absent (403 must abort, not skip; mutation swapping 403 path to skip-not-abort survived); (2) table dry-run exact-string pins absent (mutation on output format discriminated by key strings survived); (3) uppercase-Y gate acceptance absent (gate must accept both 'y' and 'Y' via eq_ignore_ascii_case; mutation making case-sensitive survived); (4) persistent-429 exhaustion absent (BC-3.9.012 terminal-failure row; mutation skipping retry loop survived).",
+      "fix_round": "fix-round-4 (mutation pre-empt, applied BEFORE CI per S2 lesson): rustdoc corrected to exit-code vocabulary per BC-3.9.012 (P4-001); 4 mutation-kill integration tests added: test_bc_3_9_017_delete_403_aborts_flow (P4-002/1), test_bc_3_9_020_dry_run_table_output_strings (P4-002/2), test_bc_3_9_014_gate_confirm_uppercase_y_proceeds (P4-002/3), test_bc_3_9_001_persistent_429_exhausts_retries (P4-002/4). Count 22→26. Story v1.45."
+    },
+    {
+      "n": 5,
+      "classification": "NITPICK_ONLY",
+      "severity_ceiling": "LOW",
+      "findings_summary": "CLEAN (no findings of any severity). Adversary independently verified: all 26 integration tests present and green, clippy clean, fmt clean, deny clean, BC-3.9.014 gate-prompt canon (P1-001 regression confirmed), DELETE-404 benign-skip path (P2-003 regression pin), double-quote percent-encoding pin (#[cfg(unix)]), allow_hyphen_values story correction at 3 sites, count sync at 6 sites (20→22→26), 4 mutation-kill tests (403-abort / table-dry-run / uppercase-Y / persistent-429). Window starts (1/3).",
+      "fix_round": "No fix round. Window streak 1/3."
+    },
+    {
+      "n": 6,
+      "classification": "NITPICK_ONLY",
+      "severity_ceiling": "LOW",
+      "findings_summary": "CLEAN (no actionable findings within S-576-3 implementation scope). One out-of-perimeter informational note: a doc comment in an adjacent module (not within S-576-3 implementation files) referenced a stale parameter name. Adversary flagged it as informational; orchestrator authorized a targeted one-liner fix (commit d15b7192) without resetting the window per out-of-perimeter precedent. All behavioral surfaces clean. Window continues (2/3).",
+      "fix_round": "Targeted out-of-perimeter one-liner doc-comment fix committed at d15b7192. Window streak 2/3 maintained per out-of-perimeter ruling."
+    },
+    {
+      "n": 7,
+      "classification": "NITPICK_ONLY",
+      "severity_ceiling": "LOW",
+      "findings_summary": "CLEAN (no findings of any severity). Adversary verified: 26 integration tests confirmed present, d15b7192 out-of-perimeter fix confirmed clean, BC-3.9.017 non-atomicity window disposition verified as spec-sanctioned, double-quote Content-Disposition neutralization BC ruling verified (reqwest RFC-7230 percent-encoding correct; #[cfg(unix)] pin present), all 4 mutation-kill pins exercising correct boundary conditions, P3-003 deferral documented correctly in state. Window complete (3/3). STRICT CONVERGED.",
+      "fix_round": "No fix round. Window 3/3 — STRICT CONVERGED."
+    }
+  ],
+  "residuals": [
+    {
+      "id": "P3-003-oauth-refresh-bypass",
+      "severity": "observation",
+      "description": "Upload multipart path bypasses JiraClient::send() so OAuth blanket-401 auto-refresh (S-3.03) does not apply to `attachment upload`. BC-3.9.012 401→exit-2 is spec-sanctioned behavior.",
+      "disposition": "DEFERRED to wave gate — orchestrator must rule: implement-refresh-rebuild vs document-as-known-limitation. Not a per-story defect; BC-3.9.012 already covers 401→exit-2.",
+      "target": "wave-gate"
+    },
+    {
+      "id": "delete-then-post-non-atomicity",
+      "severity": "LOW",
+      "description": "Non-atomic race window for --replace-existing: a new same-named attachment created between step 1 (list) and step 4 (POST) is not deleted. BC-3.9.017-sanctioned expected behavior.",
+      "disposition": "ACCEPTED — BC-3.9.017 documents non-atomicity explicitly. No action at S-576-3.",
+      "target": "spec-documented"
+    },
+    {
+      "id": "double-quote-content-disposition-unix-only",
+      "severity": "LOW",
+      "description": "Double-quote filename Content-Disposition neutralization regression pin is #[cfg(unix)] only. reqwest RFC-7230 percent-encoding covers the case on all platforms; #[cfg(unix)] restriction is a test harness constraint.",
+      "disposition": "ACCEPTED — BC ruling verified; reqwest RFC-7230 escape confirmed correct. #[cfg(unix)] noted in story AC-018.",
+      "target": "accepted-residual"
+    }
+  ],
+  "human_overrides": 0,
+  "human_authorizations": 1,
+  "human_authorization_note": "out-of-perimeter doc-comment fix at d15b7192 (pass-6 burst) — orchestrator authorized one-liner outside S-576-3 implementation scope; behavioral specification clean; window streak maintained per out-of-perimeter precedent.",
+  "spec_trajectory": "bc-3-issue-write.md UNCHANGED at step 4.5 — all spec-side adversary findings were story-level corrections (no BC contract changed)",
+  "story_trajectory": "v1.42 (pre-step-4.5, propagation-sweep state) → v1.43 (allow_hyphen_values ×3 sites correction, P2-002) → v1.44 (count sync 20→22 at 6 sites, P3-001; P2-003 + P2-001 regression pins listed) → v1.45 (count sync 22→26; 4 mutation-kill tests added, P4-002)",
+  "worktree_head": "d15b7192",
+  "suite_result": "attachment_upload 26/26; attachment_download 33/33; attachment_list 16/16; lib 1066+; clippy clean; fmt clean; deny clean"
+}
