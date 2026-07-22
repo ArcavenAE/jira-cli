@@ -4,7 +4,7 @@ level: ops
 version: "2.0"
 status: active
 producer: state-manager
-timestamp: 2026-07-22T00:12:00Z
+timestamp: 2026-07-22T12:01:00Z
 phase: 3
 pipeline: ACTIVE
 inputs: []
@@ -12,21 +12,21 @@ input-hash: "[live-state]"
 traces_to: ""
 project: jira-cli
 mode: brownfield
-current_step: "S-576-6 HUMAN GATE APPROVED 2026-07-22 — story v1.9 ready (template conformance); queues after S-576-5. STORY-INDEX v1.5.33→v1.5.34. S-576-4 PR #638 in flight. trajectory-tail →1→0→0→0. D-chain cite D-27893 latest brownfield"
+current_step: "S-576-4 DELIVERED 2026-07-22 — PR #638 merged @ c28ae940; S-576-5 dispatched (feat/S-576-5-jsm-attachment-visibility @ c28ae940). STORY-INDEX v1.5.34→v1.5.35. trajectory-tail →1→0→0→0. D-chain cite D-27893 latest brownfield"
 maintenance_run: CLOSED
 current_cycle: "cycle-001"
 feature_mode_bundle: SOH-ATTACHMENTS-1
 dtu_required: false
 phase_2_status: APPROVED
 phase_2_approved_at: 2026-05-07
-phase_3_status: IN PROGRESS (SOH-ATTACHMENTS-1 F4, S-576-1 DELIVERED 2026-07-19; S-576-2 DELIVERED 2026-07-20; S-576-3 DELIVERED 2026-07-21 PR #635 @ f2d3b378; S-576-4 step-4.5-converged STRICT 2026-07-21, PR #638 in flight; S-576-5 waits S3+S4; S-576-6 HUMAN GATE APPROVED 2026-07-22 story v1.9 queues after S-576-5)
-activation_head: "f2d3b378"
+phase_3_status: IN PROGRESS (SOH-ATTACHMENTS-1 F4, S-576-1 DELIVERED 2026-07-19; S-576-2 DELIVERED 2026-07-20; S-576-3 DELIVERED 2026-07-21 PR #635 @ f2d3b378; S-576-4 DELIVERED 2026-07-22 PR #638 @ c28ae940; S-576-5 dispatched 2026-07-22; S-576-6 HUMAN GATE APPROVED 2026-07-22 story v1.9 queues after S-576-5)
+activation_head: "c28ae940"
 activation_version: "v0.6.0-dev.10"
 ---
 
 <!--
   STATE.md SIZE BUDGET (per D-421(c)):
-  Hard cap (500 lines) margin from soft-target = 500 - 408 = 92; margin from actual = 500 - 408 = 92 (D-446(c) dual-margin form). 408 lines (wc-l). S-576-6-gate+template burst (2026-07-22): net 0 (gate approval + template conformance v1.9 micro-burst; all changes in-place). Prior: S-576-6-story-converged burst (2026-07-21): net 0.
+  Hard cap (500 lines) margin from soft-target = 500 - 407 = 93; margin from actual = 500 - 407 = 93 (D-446(c) dual-margin form). 407 lines (wc-l). S-576-4-delivery-closeout burst (2026-07-22): net 0 (S-576-4 DELIVERED + S-576-5 dispatched; in-place replacements). Prior: S-576-6-gate+template burst (2026-07-22): net 0.
   Hard cap: 500 lines.
 -->
 

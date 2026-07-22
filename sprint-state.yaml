@@ -756,10 +756,12 @@ feature_followup_standalone:
 
   - id: S-576-4
     title: "jr issue attachment delete — single AID, bulk, --older-than, --dry-run single-AID + bulk (issue #576)"
-    status: in-progress
-    pr: null
-    merge_sha: null
-    merged_at: null
+    status: completed
+    pr: 638
+    merge_sha: "c28ae940"
+    merged_at: "2026-07-22"
+    merged_via: "squash-merge by human (DEC-128 honored)"
+    f4_delivered_at: "2026-07-22"
     depends_on: [S-576-1]
     bc_anchors: [BC-3.9.008, BC-3.9.010, BC-3.9.013, BC-3.9.015, BC-3.9.016, BC-3.9.019, BC-3.9.020]
     verification_properties: [VP-576-002]
@@ -770,11 +772,12 @@ feature_followup_standalone:
     implementation_strategy: tdd
     tdd_mode: strict
     phase: F4
-    notes: "IN PROGRESS — dispatched 2026-07-21. Worktree feat/S-576-4-attachment-delete pre-created @ f2d3b378. Blocks S-576-5. Story v1.29."
+    notes: "DELIVERED 2026-07-22. PR #638 squash-merged by human @ c28ae940 (DEC-128 honored). Red Gate verified (22/24 RED + 2 justified clap-greens; log cef45e49). Step 4.5 CONVERGED STRICT (recorded 9179ff86): 11 passes / 5 fix rounds; window p9/p10/p11 CLEAN×3; catches: 3-band duration-overflow onion (FALLIBLE-ARITHMETIC-SWEEP lesson), empty-AID bypass, AC-009 fan-out. 25 integration + 7 unit tests; ci-gate 15/15 green; mutation PASS first try (~94 min). Security 0 CRIT/HIGH/MED (6 LOW mitigated). pr-reviewer APPROVE cycle 1 (covered_sha b336e8d7). 16/16 ACs. Story v1.34. SOH-ATTACHMENTS-1: 4 of 5 delivered. S-576-5 dispatched 2026-07-22 (feat/S-576-5-jsm-attachment-visibility @ c28ae940). Carry-forwards at S5: AUDIT-576-002 second half (P2-3c servicedeskapi probe), AUDIT-576-003 interim-test removal, AUDIT-576-004 trailing sha1/deny note if any."
 
   - id: S-576-5
     title: "jr issue attachment upload --public/--internal — JSM visibility, servicedeskapi, stale-ID self-heal (issue #576)"
-    status: pending
+    status: in-progress
+    dispatched_at: "2026-07-22"
     pr: null
     merge_sha: null
     merged_at: null
@@ -787,7 +790,7 @@ feature_followup_standalone:
     implementation_strategy: tdd
     tdd_mode: strict
     phase: F4
-    notes: "Pending S-576-3 + S-576-4 merge. Final story of SOH-ATTACHMENTS-1 bundle; closes #576. Story v1.34 (story-writer ready flip 2026-07-19)."
+    notes: "IN PROGRESS — dispatched 2026-07-22. Worktree feat/S-576-5-jsm-attachment-visibility pre-created @ c28ae940. Depends S-576-3 + S-576-4 (both delivered). Final code story of SOH-ATTACHMENTS-1 bundle; closes #576. Story v1.34. Carry-forwards: AUDIT-576-002 second half (P2-3c servicedeskapi probe), AUDIT-576-003 interim-test removal, AUDIT-576-004 trailing sha1/deny note if any."
   - id: S-576-6
     title: "jr issue attachment live-Jira E2E coverage — platform round-trip + JSM visibility + P2-3c probe discharge (issue #576)"
     status: pending
