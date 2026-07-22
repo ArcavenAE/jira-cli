@@ -258,10 +258,11 @@ jobs:
     # NOT a `needs:` of `release`: with the fork gate above, a skipped
     # `attest` would otherwise cascade and skip the fork's entire release.
     permissions:
-      # attest-build-provenance needs all three; none is inherited.
+      # attest-build-provenance needs exactly these two; neither is
+      # inherited. contents: read is NOT needed — the artifact download
+      # goes through the Actions artifacts API, not the repo contents API.
       id-token: write
       attestations: write
-      contents: read
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:

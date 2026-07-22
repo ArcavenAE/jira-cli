@@ -4,6 +4,10 @@ All notable changes to jr will be documented here.
 
 ## [Unreleased]
 
+### Added
+
+- **CI: build provenance attestations for release artifacts (opt-in):** `release.yml` gains an `attest` job that produces a GitHub Artifact Attestation with SLSA build provenance for the `.tar.gz`/`.zip` release archives, verifiable with `gh attestation verify` and natively by mise's `github:` backend. Attestation is created from the built artifacts (parallel to `release`, fanning in from the same `build` job outputs), so it covers the exact bytes users download without a publish-then-attest window. Gated on `vars.ATTESTATIONS_ENABLED` so forks carry it as a no-op. See `docs/specs/fork-friendly-release-ops.md`.
+
 ## [0.6.0-dev.10] - 2026-07-15
 
 ### Breaking Changes
@@ -18,7 +22,6 @@ All notable changes to jr will be documented here.
 
 ### Added
 
-- **CI: build provenance attestations for release artifacts (opt-in):** `release.yml` gains an `attest` job that produces a GitHub Artifact Attestation with SLSA build provenance for the `.tar.gz`/`.zip` release archives, verifiable with `gh attestation verify` and natively by mise's `github:` backend. Attestation is created from the built artifacts (parallel to `release`, fanning in from the same `build` job outputs), so it covers the exact bytes users download without a publish-then-attest window. Gated on `vars.ATTESTATIONS_ENABLED` so forks carry it as a no-op. See `docs/specs/fork-friendly-release-ops.md`.
 - **`jr issue attachment download` — streaming download + CWE-22 path sanitization (S-576-2, #576):**
   `jr issue attachment download KEY --id AID` downloads a single attachment by numeric ID.
   `--all` downloads every attachment to the output directory; `--newest N` downloads the N
