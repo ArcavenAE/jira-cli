@@ -4,11 +4,144 @@ All notable changes to jr will be documented here.
 
 ## [Unreleased]
 
+## [0.6.0-dev.10] - 2026-07-15
+
 ### Breaking Changes
+
+- **`jr issue comment` is now a subcommand group (S-577-1, issue #577):**
+  The flat form `jr issue comment KEY "message"` is no longer valid. Migrate to
+  `jr issue comment add KEY "message"`. Invoking the flat form now exits 2 with a
+  migration hint: `error: use \`jr issue comment add\` instead`.
+  The `add` subcommand accepts the same flags (`--stdin`, `--file`, `--markdown`,
+  `--internal`). New subcommands `delete` (S-577-3), `edit` (body-only, S-577-4), and `view`
+  (S-577-6) are all fully implemented in this release.
 
 ### Added
 
 - **CI: build provenance attestations for release artifacts (opt-in):** `release.yml` gains an `attest` job that produces a GitHub Artifact Attestation with SLSA build provenance for the `.tar.gz`/`.zip` release archives, verifiable with `gh attestation verify` and natively by mise's `github:` backend. Attestation is created from the built artifacts (parallel to `release`, fanning in from the same `build` job outputs), so it covers the exact bytes users download without a publish-then-attest window. Gated on `vars.ATTESTATIONS_ENABLED` so forks carry it as a no-op. See `docs/specs/fork-friendly-release-ops.md`.
+- **`jr issue attachment download` — streaming download + CWE-22 path sanitization (S-576-2, #576):**
+  `jr issue attachment download KEY --id AID` downloads a single attachment by numeric ID.
+  `--all` downloads every attachment to the output directory; `--newest N` downloads the N
+  most-recent by created descending. Output path: bare sanitized filename for single-id; SHA-1
+  prefix (`<40hex>_<name>`) for batch to guarantee NAME_MAX safety (ADV-010, BC-2.7.010).
+  Streaming write uses an atomic temp-file + rename pattern — no partial files on error.
+  CWE-22 mitigation (BC-2.7.011): 5-step disk-path sanitization strips directory components,
+  rejects NUL bytes, scrubs `/\:`, and caps at 214 bytes. Windows device-name escape
+  (`CON`→`_CON`, `NUL`→`_NUL`, etc.) applied at the single-id call site only.
+  Two-step download: Step 1 = `GET /rest/api/3/attachment/{id}` (metadata); Step 2 =
+  `GET /rest/api/3/attachment/content/{id}` — NEVER uses the `content` URL from metadata
+  (JSDCLOUD-10841), NEVER appends `?redirect=false` (JRACLOUD-97046).
+  JSON manifest: `{"downloaded":[{"filename","id","path","size"}]}` — `filename` is the raw
+  Jira-supplied name (P27-001); `size` is bytes-actually-written, not metadata size (P31-002).
+  Batch uses fail-soft semantics: per-file failures emit `warning:` to stderr and continue;
+  partial failure exits 1 after printing the manifest. `--filter` and `--force` flags supported.
+  feat(issue): attachment download single/batch/newest + streaming + CWE-22 sanitization (#576)
+
+- **`jr issue attachment upload` — multipart upload + replace-existing + dry-run (S-576-3, #576):**
+  `jr issue attachment upload KEY FILE [FILE…]` uploads one or more files to an issue via
+  multipart/form-data POST with `X-Atlassian-Token: no-check` (required by Jira's XSRF
+  check on all upload endpoints). Multiple same-name attachments can coexist in Jira
+  (JRACLOUD-96384); `--replace-existing` deletes ALL filename matches BEFORE the new upload
+  (`wouldDelete` set in dry-run). `--yes` skips the interactive confirmation prompt;
+  `--dry-run` previews the operation without mutating state (prints JSON or table).
+  Confirmation prompt reads from stdin via `stdin().lock().read_line()` (BC-3.9.014 gate);
+  non-interactive mode (`--no-input` / non-TTY stdin) requires `--yes` or exits 64.
+  SEC-576-004: `\r`/`\n`/`\0` are stripped from filenames in `Content-Disposition` headers
+  to prevent CRLF/quote injection (CWE-93). ADR-0017 retry constraint: 429 rebuilds the
+  entire multipart form from fresh `tokio::fs::File::open` (multipart bodies are not
+  cloneable via `Request::try_clone()`). 413 → exit 1 with verbatim "Attachment too large"
+  message. `--public`/`--internal` interim-rejected at exit 64 (AC-017; removed at S-576-5).
+  JSON success shape: array of curated attachment objects (identical to `attachment list`
+  shape per VP-576-004). Table: 4-column (Filename / Size / ID / Created).
+  feat(issue): attachment upload platform POST + --replace-existing + --dry-run path-c (#576)
+
+- **`jr issue attachment delete` — single-AID + bulk + --older-than + --dry-run (S-576-4, #576):**
+  `jr issue attachment delete AID [--yes]` deletes a single attachment by numeric ID.
+  Without `--yes`, an interactive gate prompts `"Delete attachment <name> (AID)? [y/N]"`
+  (metadata GET fetches the filename; CWE-116 `display_sanitize_filename` applied to prompt).
+  DEC-168: targeted single-AID 404 → exit 64 + canonical prefix
+  `"Attachment <AID> not found or not accessible."` + Jira error body (surfaced, not silent).
+  Non-interactive mode (`--no-input` or non-TTY stdin) without `--yes` → exit 64
+  `"Use --yes to confirm deletion without a prompt."`. EOF on gate stdin → exit 130.
+  Multi-AID bulk: `jr issue attachment delete AID1 AID2 … --yes` — `--yes` always required
+  for multi-AID. Bulk 404 is a BENIGN SKIP (asymmetry from targeted single-AID 404).
+  Non-404 error on any AID ABORTS the sequence; first deletions stand.
+  Age-based bulk: `jr issue attachment delete --issue KEY --older-than DURATION --yes` fetches
+  the issue's attachment list and deletes those older than the parsed duration. Duration formats:
+  `Nm` (minutes), `Nh` (hours), `Nd` (24 clock-hours), `Nw` (7-day weeks); `1d` = 24h (NOT
+  Jira's 8h workday). Invalid duration → exit 64 canonical error message.
+  `--dry-run` on single-AID: emits hint (human) or `{"attachments":[{"id":"…"}],"dryRun":true,"ids":[…]}`
+  (JSON), no DELETE. `--dry-run` on bulk: read-only (list GET, age filter, NO DELETEs), emits
+  manifest; `--yes` NOT required in dry-run. JSON shapes: single-AID success → `{"deleted":true,"id":"…"}`;
+  bulk success → `{"count":N,"deleted":true/false,"ids":[…]}`; cancel → `{"cancelled":true,"deleted":false}`.
+  feat(issue): attachment delete single/bulk/older-than + dry-run paths a/b (#576)
+
+- **`jr issue attachment list` — table + JSON output + client-side filters (S-576-1, #576):**
+  `jr issue attachment list KEY` lists all attachments on an issue in a six-column table
+  (ID, Filename, Type, Size, Created, Author). `--output json` returns a curated array
+  with keys `{author,contentUrl,created,filename,id,mimeType,size}` (alphabetical BTreeMap
+  order; `"self"` omitted, `"content"` renamed to `"contentUrl"`, `size` is a raw u64).
+  Three client-side filters: `--filter mime=<glob>` (case-insensitive, `*` crosses `/`),
+  `--filter name=<glob>`, `--filter size-max=<bytes>`; multiple `--filter` flags AND-compose.
+  Zero-attachment hint emitted to stderr in human mode only (suppressed in JSON mode per
+  BC-2.7.001 EC-2.7.001-1). Filter-count hint "Showing N of M attachments." fires on stderr
+  in BOTH modes when a filter reduces the count. CWE-116 display-sanitization: bidi/control
+  chars in filenames are replaced with `?` in the Filename column.
+  feat(issue): attachment list subcommand + JSON output + filters (#576)
+
+- **`jr issue comment edit --internal/--public` — visibility flags + public confirmation gate (S-577-5, closes #577):**
+  `--internal` sets `sd.public.comment={internal:true}` on the comment (agent-only
+  on JSM projects); `--public` sets `{internal:false}` (visible to customers).
+  Both use **MERGE semantics**: the PUT `properties` array is merged with existing
+  properties — an unrelated property (e.g. `jr.test.marker`) is not clobbered.
+  A body-only edit (no flag) sends no `"properties"` key; existing visibility is
+  PRESERVED unchanged. `--public` requires confirmation: interactive mode prompts
+  `"Confirm? [y/N]"`; non-interactive exits 64 with a `--yes` hint unless `--yes`
+  is supplied. `--stdin` implies `--no-input` (flag-based, TTY-agnostic). On cancel
+  the JSON path returns `{"cancelled":true,"updated":false}`. JSDCLOUD-6050 hint
+  fires to stderr on either flag (best-effort on JSM; no-op on non-JSM). JSON
+  response includes `changed_fields.jsm_internal: true/false` only when a visibility
+  flag was passed; absent in the default body-only path.
+  `--yes` without `--public` is accepted as a silent no-op (DEC-169 leniency convention — no clap `requires` pairing).
+  This is the last story of bundle SOH-COMMENT-CRUD-1 (wave D).
+
+- **`jr issue comment edit` — body sources + body-only PUT (S-577-4, issue #577):**
+  `jr issue comment edit KEY --id ID [BODY | --file F | --stdin]` updates a comment's
+  body via a body-only PUT request (`{"body": <adf>}` — no `"properties"` key in the
+  default path). Four body sources are supported: positional text, `--file`, `--stdin`,
+  and `--markdown` (modifier). Guards: `--id` charset validation (exit 64),
+  file-not-found → exit 64 (explicit remap, not exit 1), empty/whitespace body → exit 64.
+  `--output json` returns `{changed_fields:{body:<raw-pre-trim>},id,key,updated:true}`.
+  Human mode prints `"Updated comment ID on KEY"` to stderr.
+  404/403 → exit 64 with dual-line preamble + Jira error body surface.
+
+- **`jr issue comment add/delete/edit/view` subcommand group (S-577-1):**
+  `jr issue comment` is now a subcommand group. `add` is fully implemented
+  (replaces the old flat form). `edit` (body-only, S-577-4) and `view` (S-577-6)
+  are also fully implemented in this release. `delete` (S-577-3) is likewise fully
+  implemented (y/N confirmation gate, `--yes` bypass, 404/403 exit 64).
+  Interaction handlers extracted from `workflow.rs` to a new
+  `src/cli/issue/interactions.rs` shard per ADR-0012 / PF-017.
+
+- **`jr issue comment view KEY --id ID` — read a single comment (S-577-6, #577):**
+  `jr issue comment view FOO-1 --id 10001` fetches the comment with
+  `GET /rest/api/3/issue/{key}/comment/{id}?expand=properties` and renders six
+  labeled fields (ID, Author, Created, Updated, JSM internal, Restricted) plus
+  an unlabeled body block rendered via ADF-to-text. The `JSM internal:` field
+  shows `Yes`/`No`/`N/A` from the `sd.public.comment` entity property. The
+  `Restricted:` field uses a 4-rung ladder (role/group value, `id=<identifier>`,
+  `<type>:<value>`, or `None`). `--output json` passes the raw API response
+  through losslessly (`serde_json::Value` passthrough — no typed round-trip that
+  would silently drop extra fields). Invalid `--id` charset exits 64; 404/403
+  exits 64 with Jira's error body surfaced. (Over-deep comment bodies are
+  rejected at the JSON parse layer, exit 1.)
+
+- **CI: BC-body Trace/Source citation guard (Guard 1) (DEC-148):** adds
+  `scripts/check-bc-citation-symbols.sh` (BC-CITE-001; validates `src/` file and symbol
+  citations in `**Trace**:`/`**Source**:` fields of all `bc-*.md` bodies; definition-anchored
+  symbol grep; self-test fixtures; coverage-floor guard) as a step in the `spec-guard` CI job.
+  Prevents the Seam-extraction citation-drift class (DEC-147/148/149).
+  Calibration: measured N=309 citations (304 `.rs` + 5 `.snap`) on factory-artifacts @ 2b09313; FLOOR=231 = floor(0.75 × 309); non-.rs `src/` citations receive file-existence-only validation (tier ii).
 - **CI: mutants-policy citation guard (Guard 2) + examine_globs existence guard (Guard 3) (DEC-150):** adds `scripts/check-cargo-mutants-policy-citations.sh` (validates §Scope function-location bulleted list; CI-MUTANTS-CITE-001; self-test fixtures; SCOPE-EMPTY guard) and `tests/mutants_glob_existence.rs` (validates examine_globs entries resolve to real files; coverage floor; MUTANTS-GLOBS-KEY-MISSING guard).
 
 ### Security
@@ -17,6 +150,26 @@ All notable changes to jr will be documented here.
   in `Error::downcast_mut` present in anyhow < 1.0.103. No behaviour change; `Cargo.lock`-only update.
 
 ### Fixed
+
+- **`jr issue edit --field` no longer crashes on GDPR-era Jira instances where
+  user/group picker fields use `accountId`-only `allowedValues` entries:** `AllowedValue.id`
+  changed from `String` to `Option<String>` so id-absent entries are tolerated silently.
+  If the user targets such an option entry directly, exit 64 with an actionable message
+  is emitted instead of a serde crash. All pre-existing `--field` tests remain green
+  (#589).
+
+- **`jr api -X` / `--method` now accepts case-insensitive HTTP method values:** `DELETE`,
+  `delete`, and `Delete` are all accepted, matching `curl -X` / `gh api -X` convention.
+  Previously clap rejected uppercase inputs with `invalid value 'DELETE'` (#590, #582).
+
+- **ADF code-mark exclusivity — inline-code spans inside bold/superscript no longer emit
+  HTTP-400-rejected ADF (BC-7.2.015, #571):** `push_code` now strips typographic marks at
+  emission via an allowlist filter: `link` and `annotation` co-marks are retained; `strong`,
+  `em`, `strike`, `subsup`, and defensive `underline`/`textColor`/`backgroundColor` are
+  removed. The ADF `code_inline_node` schema forbids typographic marks alongside `code` —
+  without this fix, patterns such as `` **`x`** `` and `` ^`x`^ `` produced ADF that Jira
+  rejected with HTTP 400. The filter operates on a clone of `active_marks` so surrounding
+  non-code text retains its marks unchanged. `adf_to_text` stays read-lenient by design. (#593)
 
 ### Changed
 

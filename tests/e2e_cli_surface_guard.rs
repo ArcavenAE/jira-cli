@@ -112,12 +112,32 @@ const SURFACE: &[(&[&str], &[&str])] = &[
             "--field",
         ],
     ),
-    // issue comment  (--internal added in S-JSM-E2E-1 Scenario 5;
-    //                 --file/--stdin/--markdown added in E2E-HV-2 comment-channels test)
+    // issue comment add  (S-577-1 subcommand refactor: flat form → add/delete/edit/view)
+    //   --internal added in S-JSM-E2E-1 Scenario 5;
+    //   --file/--stdin/--markdown added in E2E-HV-2 comment-channels test
     (
-        &["issue", "comment"],
+        &["issue", "comment", "add"],
         &["--output", "--internal", "--file", "--stdin", "--markdown"],
     ),
+    // issue comment delete (stub — S-577-3; SURFACE row added by S-577-1 AC-007)
+    (&["issue", "comment", "delete"], &["--id", "--yes"]),
+    // issue comment edit (stub — S-577-4/5; SURFACE row added by S-577-1 AC-007)
+    //   --output added in S-577-5 MERGE semantics e2e probe
+    (
+        &["issue", "comment", "edit"],
+        &[
+            "--id",
+            "--file",
+            "--stdin",
+            "--markdown",
+            "--internal",
+            "--public",
+            "--yes",
+            "--output",
+        ],
+    ),
+    // issue comment view (stub — S-577-6; SURFACE row added by S-577-1 AC-007)
+    (&["issue", "comment", "view"], &["--id", "--output"]),
     // issue comments
     (&["issue", "comments"], &["--output"]),
     // issue move  (positional: key + status-name; --resolution added in S-JSM-E2E-3 Scenario 8;
@@ -149,6 +169,39 @@ const SURFACE: &[(&[&str], &[&str])] = &[
     (&["issue", "transitions"], &["--output"]),
     // issue changelog  (positional: key)
     (&["issue", "changelog"], &["--output"]),
+    // issue attachment list  (S-576-1: positional: key; --filter repeatable)
+    (&["issue", "attachment", "list"], &["--filter", "--output"]),
+    // issue attachment download  (S-576-2: positional: key; selectors --id/--all/--newest; path flags --out/--out-dir; --filter/--force; AC-013)
+    (
+        &["issue", "attachment", "download"],
+        &[
+            "--id",
+            "--all",
+            "--newest",
+            "--out",
+            "--out-dir",
+            "--filter",
+            "--force",
+            "--output",
+        ],
+    ),
+    // issue attachment upload  (S-576-3: positional: key + FILE...; --replace-existing/--yes/--dry-run; --public/--internal interim; AC-017)
+    (
+        &["issue", "attachment", "upload"],
+        &[
+            "--replace-existing",
+            "--yes",
+            "--dry-run",
+            "--public",
+            "--internal",
+            "--output",
+        ],
+    ),
+    // issue attachment delete  (S-576-4: positional AID(s) or --issue+--older-than; --yes/--dry-run; --output)
+    (
+        &["issue", "attachment", "delete"],
+        &["--yes", "--dry-run", "--issue", "--older-than", "--output"],
+    ),
     // board list
     (&["board", "list"], &["--output"]),
     // board view
