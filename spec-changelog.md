@@ -7,6 +7,33 @@ project: "jr (jira-cli)"
 
 Track all spec version changes. Most recent version first.
 
+## [1.3.99] - 2026-07-22
+
+### Type: PATCH
+
+### Summary
+
+P2-3c probe obligation SATISFIED for SOH-ATTACHMENTS-1 S-576-5. Three live EJ probe runs confirmed the servicedeskapi response schema: run 29936980027 (AttachmentCreateResultDTO object shape confirmed), run 29940792930 (AttachmentDTO field-level detail: created=object with iso8601 key, id derived from _links.jiraRest tail, contentUrl from _links.content), run 29945857059 (final green — curated-array output shape confirmed end-to-end, 2/2 tests, AID teardown + jsm_self_close verified). BC-3.9.007 and BC-3.9.011 updated from MEDIUM confidence (deferred TBD) to HIGH confidence (confirmed schema). BC count unchanged (657 total / 140 in bc-3 / 35 VPs).
+
+### Changed Requirements
+
+- `.factory/specs/prd/bc-3-issue-write.md` (MODIFIED): BC-3.9.007 Confidence MEDIUM→HIGH; heading updated; body rewritten — servicedeskapi step-2 returns AttachmentCreateResultDTO object; jr extracts `attachments.values[]`; `curate_jsm_attachment_entry` performs defensive field-by-field curation (never `from_value` on typed struct); EC-3.9.007-2 replaced with confirmed AttachmentDTO schema (created=object/iso8601, id from _links.jiraRest tail, contentUrl from _links.content, graceful fallbacks); Trace updated with probe run citations. BC-3.9.011 Confidence MEDIUM→HIGH; heading updated; body replaced with confirmed schema (`[{author,contentUrl,created,filename,id,mimeType,size}]` bare curated array from `AttachmentCreateResultDTO.attachments.values[]`); EC-3.9.011-1 reclassified (confirmed shape replaces placeholder); EC-3.9.011-3 added (no "public" key in output); EJ-teardown obligation reframed as accepted PII-residue risk (LOW). BC-3.9.003 output-channel sentence updated (P2-3c deferred→confirmed). JSON Output Shape Contracts table row updated (attachment upload --public/--internal: TBD→confirmed curated array, probe runs cited). Frontmatter `last_updated` advanced to 2026-07-22; trace v1.3.99 entry added.
+
+### Impact Assessment
+
+| Artifact | Change Type | Notes |
+|----------|-------------|-------|
+| bc-3-issue-write.md | Modified | BC-3.9.007 + BC-3.9.011 Confidence MEDIUM→HIGH; schemas confirmed; table row updated |
+| stories/S-576-5.md | Modified | v1.35→v1.36; AC-007/AC-012/AC-013 updated; Task 6 DISCHARGED; input-hash updated |
+
+- **Affected stories:** S-576-5 (implements BC-3.9.003/004/005/006/007/011/020/BC-X.8.010; story v1.35→v1.36). S-576-6 (E2E coverage: tdd_mode facade; no body change required — P2-3c framing already VERIFY-first; no new test obligations added).
+- **BC count:** 657 (unchanged — confidence updates + body rewrites; no new BCs)
+- **Holdout count:** 100 (unchanged)
+- **VP count:** 35 (unchanged)
+- **Migration needed:** NO (probe confirmed existing implementation is correct; no behavioral changes to shipped BCs)
+
+---
+
 ## [1.3.98] - 2026-07-21
 
 ### Type: SCOPE

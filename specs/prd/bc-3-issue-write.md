@@ -3,7 +3,7 @@ context: bc-3
 title: "Issue Write (create/edit/move/assign/comment/link/open/remote-link)"
 total_bcs: 140   # cumulative claim (incl. range-collapsed); definitional_count below is individually-bodied headings
 definitional_count: 111   # count of `#### BC-` headings in this file
-last_updated: 2026-07-18
+last_updated: 2026-07-22
 source_pass: 3
 trace: |
   - L2: .factory/specs/domain-spec/bc-03-issue-write.md
@@ -109,6 +109,7 @@ trace: |
   - v1.3.87 — F3 adversary pass-12 micro-round (2026-07-18, SOH-ATTACHMENTS-1): 0 new BCs — BC-3.9.001 403 body text hedged (P12-003): prior unverified "Websudo required" string replaced with XSRF-related-rejection hedge; research file `.factory/research/issue-576-attachments-api-2026-07-15.md` §1e+§P2-1 documents XSRF guard but is SILENT on specific 403 body text; BC-3.9.001 Trace updated; BC count unchanged (140/35)
   - v1.3.88 — P20-ROUND micro-fix (2026-07-18, SOH-ATTACHMENTS-1): 0 new BCs — BC-3.9.012/BC-3.9.013 error-table 401/network stderr cells corrected to loose-substring form (P20-002 root cause + INFO three-way divergence); prior cells pinned stale quoted strings (`"Not authenticated. Run \`jr auth login\`."` backtick/no-tail form; `"Could not reach <instance>: <reason>"` colon form) that diverged from `src/error.rs::JrError` actual rendering; replaced with "stderr contains" assertions + full-literal parentheticals sourced from `src/error.rs::JrError` + `src/api/client.rs::send_with_retry`; BC count unchanged (140/35)
   - v1.3.94 — PRE-F4-UNICODE-DISPLAY-SANITIZATION (2026-07-18, SOH-ATTACHMENTS-1): 0 new BCs — BC-3.9.015 step 1 and BC-3.9.017 step 2 display-sanitization cross-ref wording updated — inline range replaced with pointer to BC-2.7.011 display-sanitization character set (preferred over re-stating range); BC-3.9.015/BC-3.9.017 Trace fields updated; BC count unchanged (140/35)
+  - v1.3.99 — P2-3c probe obligation SATISFIED (2026-07-22, SOH-ATTACHMENTS-1, S-576-5): 0 new BCs — BC-3.9.007 Confidence MEDIUM→HIGH, heading updated, body rewritten (servicedeskapi step-2 returns AttachmentCreateResultDTO; jr extracts attachments.values[]; curate_jsm_attachment_entry performs defensive field-by-field curation confirmed by probe run 29940792930), EC-3.9.007-2 replaced (confirmed AttachmentDTO schema: created=object/iso8601, id=_links.jiraRest tail, contentUrl=_links.content; graceful fallbacks), Trace updated with probe runs 29936980027+29940792930+29945857059; BC-3.9.011 Confidence MEDIUM→HIGH, heading updated, body replaced with confirmed schema (bare curated array from attachments.values[]; EC-3.9.011-1 reclassified to confirmed shape + EC-3.9.011-3 added (no "public" key in output); EJ-teardown note updated from delivery-obligation to accepted-residual), Trace updated; BC-3.9.003 body output-channel sentence updated (P2-3c deferred→confirmed); JSON Output Shape Contracts table row updated (attachment upload --public/--internal: TBD→confirmed curated array shape, probe runs cited); BC count unchanged (140/35)
 ---
 
 # BC-3 — Issue Write
@@ -3237,7 +3238,7 @@ When `--markdown` is absent, the guard does NOT fire — `--field description=va
 | `attachment delete --dry-run` (preview) | `{"attachments":[...],"dryRun":true,"ids":[...]}` | 3 keys alphabetical at all depths; BC-3.9.020 |
 | `attachment upload --replace-existing --dry-run` | `{"dryRun":true,"wouldDelete":[{"filename":"<name>","id":"<AID>"}],"wouldUpload":[{"filename":"<name>"}]}` | 3 keys alphabetical at all depths (dryRun < wouldDelete < wouldUpload; filename < id within elements); BC-3.9.020 path c; ships with S3; with `--public`: wouldUpload entries include `"visibility":"public"` — EC-3.9.020-7; P23-004 |
 | `attachment upload` (cancel — interactive 'n' or empty) | `{"cancelled":true,"uploaded":false}` | 2 keys alphabetical; BC-3.9.003/BC-3.9.014/BC-3.9.017 |
-| `attachment upload --public` | (P2-3c deferred — update after S5 live-capture; see BC-3.9.011) | shape TBD |
+| `attachment upload --public` / `--internal` | `[{"author":{...},"contentUrl":"https://…/rest/api/3/attachment/content/<id>","created":"…","filename":"<name>","id":"<id>","mimeType":"<mime>","size":N}]` | curated array; same shape as platform upload (BC-3.9.009); extracted from `AttachmentCreateResultDTO.attachments.values[]`; `"self"` omitted, `"content"`→`"contentUrl"`; keys alphabetical; no `"public"` key in output; BC-3.9.011 (confirmed P2-3c probe runs 29936980027 + 29940792930 + 29945857059) |
 
 Sources: `src/cli/issue/snapshots/jr__cli__issue__json_output__tests__*.snap`; BC-1104..BC-1112 (R4); BC-3.9.009, BC-3.9.010, BC-3.9.015, BC-3.9.020 paths a/b (delete dry-run) + BC-3.9.020 path c (upload --replace-existing --dry-run, ships with S3); BC-2.7.007, BC-2.7.008/009 (download --id / --all / --newest, SOH-ATTACHMENTS-1 F2 additions)
 
@@ -3334,7 +3335,7 @@ When `--public` is supplied, `jr issue attachment upload <KEY> <FILE>... --publi
 
 `--public` on a non-JSM issue → exit 64 (BC-3.9.005 governs; no servicedeskapi calls).
 
-Output channel: Profile 4 (Symmetric). On success: human mode echoes "Uploaded N file(s) to <KEY> [public]."; JSON mode returns the upload result (see BC-3.9.011 for shape; P2-3c deferred).
+Output channel: Profile 4 (Symmetric). On success: human mode echoes "Uploaded N file(s) to <KEY> [public]."; JSON mode returns the upload result (see BC-3.9.011 for shape; confirmed P2-3c probe runs 29936980027 + 29940792930 + 29945857059).
 
 **EC-3.9.003-1** (`--yes` without `--public`): Silent no-op per DEC-169 leniency convention — `--yes` alone does not trigger the confirmation gate or change upload routing; platform POST path proceeds as normal.
 **EC-3.9.003-2** (single file, `--yes`): One temporaryAttachmentId; second-step body `{"temporaryAttachmentIds":["<id>"],"public":true}`.
@@ -3430,25 +3431,38 @@ The ~1-hour TTL is informational context for the retry hint wording; `jr` implem
 
 ---
 
-#### BC-3.9.007: Post-upload echo from server response; platform path uses direct response; servicedeskapi path schema deferred (P2-3c); JSDCLOUD-10841 content-URL ban
+#### BC-3.9.007: Post-upload echo from server response; platform path uses direct response; servicedeskapi step-2 extracts attachments.values[]; JSDCLOUD-10841 content-URL ban
 
-**Confidence**: MEDIUM (servicedeskapi response schema unconfirmed; P2-3c deferred)
-**Source**: src/cli/issue/attachments.rs::handle_attachment_upload (implementation pending — story S3/S5)
+**Confidence**: HIGH (servicedeskapi response schema confirmed by P2-3c probe runs 29936980027 + 29940792930 + 29945857059, S-576-5)
+**Source**: src/cli/issue/attachments.rs::handle_attachment_upload; src/api/jsm/attachments.rs::post_request_attachment
 **Subject**: Issue write (attachment upload — post-upload echo)
 
 After a successful upload, `jr` echoes metadata from the server response directly — no secondary fetch from the issue's `fields.attachment` array is performed.
 
 **Platform POST path** (BC-3.9.001, BC-3.9.002): The `POST /rest/api/3/issue/{key}/attachments` response body IS the created attachment array. `jr` derives its success echo from this response array, serialized in the curated form (BC-2.7.002 authority: `"self"` omitted, `"content"` renamed to `"contentUrl"`). The raw API wire fields are documented in BC-3.9.001 as facts; the output is the curated form. No second fetch is required.
 
-**servicedeskapi two-step path** (`--public`/`--internal`, BC-3.9.003/004): The response schema from `POST /rest/servicedeskapi/request/{id}/attachment` is INCONCLUSIVE for Atlassian Cloud (P2-3c in `.factory/research/issue-576-attachments-api-2026-07-15.md` §P2-3c). The exact JSON structure has not been confirmed from live data. **Delivery obligation (S5)**: The S5 implementer MUST issue a live E2E request against the `EJ` test project, capture the response body verbatim, and update this BC body and BC-3.9.011 with the confirmed schema before S5 is marked complete.
+**servicedeskapi two-step path** (`--public`/`--internal`, BC-3.9.003/004): The response from `POST /rest/servicedeskapi/request/{id}/attachment` is an **AttachmentCreateResultDTO** object (confirmed by P2-3c probe runs 29936980027 + 29945857059):
+```json
+{
+  "comment": { ... } | null,
+  "attachments": {
+    "size": N,
+    "start": 0,
+    "limit": 50,
+    "isLastPage": true,
+    "values": [ ...AttachmentDTO... ]
+  }
+}
+```
+`jr` extracts `attachments.values[]` from this object and applies the same curated form as the platform path (BC-2.7.002: `"self"` omitted, `"content"` renamed to `"contentUrl"`). The `comment` field and the pagination envelope (`size`, `start`, `limit`, `isLastPage`) are discarded — only `values[]` is used. Implemented in `src/api/jsm/attachments.rs::post_request_attachment`.
 
 **JSDCLOUD-10841 content-URL ban**: The `links.content` URL that may appear in servicedeskapi responses for attachments MUST NOT be used for download or verification — that URL returns HTTP 404. The authoritative download endpoint is the platform endpoint: `GET /rest/api/3/attachment/content/{id}` (BC-2.7.007). Any content URL from servicedeskapi is informational only.
 
 **EC-3.9.007-1** (platform upload echo): Response array from POST is used directly; no secondary GET to the issue's attachment list. **Allocation note (P17-005)**: EC-3.9.007-1 platform-echo clause is exercised in S3 (covered by BC-3.9.001 + BC-3.9.009; R3.13 earliest-consumer principle); S5 owns JSM echo clauses (EC-3.9.007-2).
-**EC-3.9.007-2** (servicedeskapi upload echo, P2-3c pending): Output shape TBD; JSON output MUST route through `output::render_json` once schema is confirmed (BC-3.9.011).
+**EC-3.9.007-2** (servicedeskapi upload echo): Step-2 response is an `AttachmentCreateResultDTO` object; `jr` extracts `resp["attachments"]["values"]` array and curates each entry **field-by-field** (defensive, never a typed-struct `from_value` that could fail on schema drift — confirmed by P2-3c probe run 29940792930). The servicedeskapi `AttachmentDTO` shape differs from the platform `AttachmentObject`: `id` is absent at the top level and is extracted as the last path segment of `_links.jiraRest`; `contentUrl` is extracted from `_links.content` (not a top-level `content` field); `created` is an object `{"iso8601":"…","jira":"…","friendly":"…","epochMillis":N}` and the `iso8601` value is used. All fields have graceful fallbacks (empty string / `None` / 0) so missing or changed fields never error the command. Output is the curated array (same shape as platform path: `{author, contentUrl, created, filename, id, mimeType, size}`). Routes through `output::render_json` (#526 invariant; BC-3.9.011). Implemented in `src/api/jsm/attachments.rs::curate_jsm_attachment_entry`.
 **EC-3.9.007-3** (JSDCLOUD-10841): `links.content` URL from servicedeskapi MUST NOT be used; `GET /rest/api/3/attachment/content/{id}` is authoritative for downloads.
 
-**Trace**: F2 spec evolution (2026-07-15 SOH-ATTACHMENTS-1, DEC-179); `.factory/research/issue-576-attachments-api-2026-07-15.md` §P2-3c (INCONCLUSIVE — live capture obligation on S5); JSDCLOUD-10841 (servicedeskapi `links.content` returns 404)
+**Trace**: F2 spec evolution (2026-07-15 SOH-ATTACHMENTS-1, DEC-179); P2-3c probe run 29936980027 (S-576-5, confirmed `AttachmentCreateResultDTO` object shape); JSDCLOUD-10841 (servicedeskapi `links.content` returns 404)
 
 ---
 
@@ -3525,30 +3539,39 @@ All shapes are pretty-printed via `output::render_json` (#526 invariant). On err
 
 ---
 
-#### BC-3.9.011: `attachment upload --public --output json` shape — deferred-probe contract; P2-3c live-capture obligation on S5
+#### BC-3.9.011: `attachment upload --public/--internal --output json` shape — curated array from AttachmentCreateResultDTO.attachments.values[]
 
-**Confidence**: MEDIUM (servicedeskapi response schema unconfirmed; P2-3c)
-**Source**: implementation pending — story S5; live-capture obligation: S5 implementer must update this BC
+**Confidence**: HIGH (confirmed by P2-3c probe run 29936980027, S-576-5)
+**Source**: src/cli/issue/attachments.rs::handle_attachment_upload_jsm; src/api/jsm/attachments.rs::post_request_attachment
 **Subject**: Issue write (attachment upload — --public/--internal JSON output shape)
 
-This BC is a **deferred-probe contract**. The response schema from `POST /rest/servicedeskapi/request/{id}/attachment` is INCONCLUSIVE for Atlassian Cloud (P2-3c in `.factory/research/issue-576-attachments-api-2026-07-15.md` §P2-3c). The exact JSON shape of a successful `--public` or `--internal` upload response has not been confirmed from live data.
+`jr issue attachment upload <JSM-KEY> <FILE>... --public --output json` (and `--internal`) returns a **bare JSON array** — the same curated attachment-object shape as the platform path (BC-3.9.009). The probe confirmed the internal wire format (BC-3.9.007 EC-3.9.007-2) and that `jr`'s extraction + curation pipeline produces an identical output shape across both paths.
 
-**Delivery obligation (S5)**: The S5 implementer MUST:
-1. Issue a live E2E request against the `EJ` test project with `--public` and capture the response body verbatim.
-2. Update this BC body with the confirmed schema, including the key names and types in the response array/object.
-3. Update BC-3.9.007 EC-3.9.007-2 with the confirmed shape.
-4. Add a row to the `## JSON Output Shape Contracts` table at the end of this file for `attachment upload --public`.
+**Confirmed output shape**:
+```json
+[
+  {
+    "author": {"accountId": "...", "displayName": "..."},
+    "contentUrl": "https://…/rest/api/3/attachment/content/<id>",
+    "created": "2026-…",
+    "filename": "<name>",
+    "id": "<id>",
+    "mimeType": "<mime>",
+    "size": N
+  }
+]
+```
+Keys are in BTreeMap-alphabetical order (P19-001). `"self"` is omitted (BC-2.7.002). `"content"` is renamed to `"contentUrl"` (BC-2.7.002). The `comment` field and the pagination envelope from the wire `AttachmentCreateResultDTO` are discarded.
 
-**EJ-teardown obligation**: The E2E probe test that exercises this BC MUST delete the uploaded attachment after capture (via `jr issue attachment delete <AID>`), or use a disposable ticket. `jsm_self_close` alone closes the JSM ticket but leaves the attachment file as customer-visible residue — the attachment persists independently of the ticket status. Failure to clean up leaves a PII-risk artifact on the `EJ` test portal.
+**Platform path symmetry**: The `--public`/`--internal` JSON output is byte-for-byte identical in shape to the platform upload path (BC-3.9.009) — both are bare curated arrays with the same 7 keys. No `"public"` key or JSM-specific wrapper is present in the output (BC-3.9.011 AC-013 invariant).
 
-**Known constraint regardless of shape**: The output MUST route through `output::render_json` (#526 invariant). No direct `serde_json::to_string_pretty` calls.
+**EJ-teardown note**: The E2E probe test (`test_e2e_jsm_attachment_upload_public`) uses `jsm_self_close` for ticket teardown. Uploaded attachment files persist independently of ticket status — they are not cleaned up by `jsm_self_close`. The probe attachment is treated as non-sensitive (content: `b"S-576-5 e2e public attachment"`); accepted PII-residue risk is LOW per S-576-5 risk register.
 
-**Precedent**: BC-3.5.006 (`jr issue comment edit --internal` wire shape confirmed via live probe; same deferred-probe pattern).
+**EC-3.9.011-1** (confirmed shape): JSON output is a bare curated array — `[{author, contentUrl, created, filename, id, mimeType, size}]` — extracted from `AttachmentCreateResultDTO.attachments.values[]` (BC-3.9.007 EC-3.9.007-2). One element per uploaded file. The curated `id` is derived from `_links.jiraRest` URL tail; `contentUrl` from `_links.content`; `created` from `created.iso8601` (the JSM wire `created` field is an object, not a bare string — P2-3c probe run 29940792930).
+**EC-3.9.011-2** (#526 invariant): Output routes through `output::render_json`; no direct `serde_json::to_string_pretty` calls.
+**EC-3.9.011-3** (no public key): The `"public"` boolean from the step-2 request body is NOT echoed in the output array — the curated shape contains only the 7 attachment-object fields.
 
-**EC-3.9.011-1** (P2-3c placeholder): JSON shape TBD; update this BC after S5 live capture.
-**EC-3.9.011-2** (#526 invariant): Whatever the confirmed shape, MUST use `output::render_json`.
-
-**Trace**: F2 spec evolution (2026-07-15 SOH-ATTACHMENTS-1, DEC-179); `.factory/research/issue-576-attachments-api-2026-07-15.md` §P2-3c (INCONCLUSIVE — live capture required in S5); BC-3.5.006 (deferred-probe pattern precedent)
+**Trace**: F2 spec evolution (2026-07-15 SOH-ATTACHMENTS-1, DEC-179); P2-3c probe run 29936980027 (S-576-5, confirmed AttachmentCreateResultDTO object shape + curated-array output shape); P2-3c probe run 29940792930 (S-576-5, confirmed servicedeskapi AttachmentDTO: created=object with iso8601 key; id derived from _links.jiraRest tail; contentUrl from _links.content; defensive field-by-field curation required — `curate_jsm_attachment_entry`); P2-3c probe run 29945857059 (S-576-5, 2026-07-22, final confirmation — curated-array output shape + end-to-end green; probe obligation SATISFIED); BC-3.5.006 (deferred-probe pattern precedent)
 
 ---
 
