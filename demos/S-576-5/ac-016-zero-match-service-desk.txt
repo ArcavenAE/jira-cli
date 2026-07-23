@@ -1,0 +1,42 @@
+=== AC-016: Zero-match service desk → EC-X.8.010-1 exit 64 ===
+
+Test: tests/attachment_jsm.rs::test_ec_x_8_010_1_no_matching_service_desk_exits_64
+
+Scenario:
+  Issue EJ-16 is a JSM project (projectTypeKey = "service_desk") with projectId "10099",
+  but the /rest/servicedeskapi/servicedesk response returns an EMPTY list — no service desk
+  entry has project_id matching "10099". This triggers EC-X.8.010-1.
+
+Wire sequence simulated:
+  GET /rest/api/3/issue/EJ-16                       → 200 (Step 0: project.key = "EJ")
+  GET /rest/api/3/project/EJ                        → 200 (service_desk project, projectId "10099")
+  GET /rest/servicedeskapi/servicedesk              → 200 (empty service desk list — no matching entry)
+  (NO attachTemporaryFile, NO stale-heal — this is pre-step-1 guard failure)
+
+Human mode assertions verified:
+  - exit code == 64
+  - stderr contains "No JSM service desk found for project EJ."  (EC-X.8.010-1 canonical prefix)
+  - stderr contains "The project may still be provisioning"      (EC-X.8.010-1 hint)
+  - stderr contains "jr queue list --project EJ"                (EC-X.8.010-1 verification hint)
+
+JSON mode sub-assertion:
+  Same invocation with --output json
+  - exit code == 64  (same — error path)
+  - stderr contains EC-X.8.010-1 canonical string
+  - stdout is EMPTY (render_json NOT called on this error path)
+
+Note: EC-X.8.010-1 is distinct from BC-3.9.005 (non-JSM guard) and SEC-576-006 (stale-heal
+404/403). This error fires when the project IS JSM but no service desk entry in the list
+matches the project's numeric ID. The stale-heal mechanism does NOT retry on a zero-match
+result from an HTTP-200 empty list (only retries on step-1 404/403).
+
+$ cargo test --test attachment_jsm -- test_ec_x_8_010_1_no_matching_service_desk_exits_64 --nocapture
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.12s
+     Running tests/attachment_jsm.rs (target/debug/deps/attachment_jsm-912d01e312ab5ad3)
+
+running 1 test
+test test_ec_x_8_010_1_no_matching_service_desk_exits_64 ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 28 filtered out; finished in 0.50s
+
+Result: BC-X.8.010 EC-X.8.010-1 — canonical error + hint emitted, exit 64 in both human and JSON mode.

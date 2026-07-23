@@ -776,11 +776,11 @@ feature_followup_standalone:
 
   - id: S-576-5
     title: "jr issue attachment upload --public/--internal — JSM visibility, servicedeskapi, stale-ID self-heal (issue #576)"
-    status: in-progress
+    status: completed
     dispatched_at: "2026-07-22"
-    pr: null
-    merge_sha: null
-    merged_at: null
+    pr: 640
+    merge_sha: "0498e596"
+    merged_at: "2026-07-23T13:32Z"
     depends_on: [S-576-3, S-576-4]
     bc_anchors: [BC-3.9.003, BC-3.9.004, BC-3.9.005, BC-3.9.006, BC-3.9.007, BC-3.9.011, BC-3.9.020, BC-X.8.010]
     verification_properties: [VP-576-005]
@@ -790,7 +790,7 @@ feature_followup_standalone:
     implementation_strategy: tdd
     tdd_mode: strict
     phase: F4
-    notes: "IN PROGRESS — dispatched 2026-07-22. Worktree feat/S-576-5-jsm-attachment-visibility pre-created @ c28ae940. Depends S-576-3 + S-576-4 (both delivered). Final code story of SOH-ATTACHMENTS-1 bundle; closes #576. Story v1.34. Carry-forwards: AUDIT-576-002 second half (P2-3c servicedeskapi probe), AUDIT-576-003 interim-test removal, AUDIT-576-004 trailing sha1/deny note if any."
+    notes: "DELIVERED 2026-07-23. PR #640 squash-merged by human @ 0498e596 (DEC-128 honored). CI 14/14 green (run 29976080877); mutation gate 94% kill (53 caught / 3 missed equivalent sleep(0) survivors). 33 integration tests (attachment_jsm) + 8 unit tests; fresh-eyes pr-reviewer APPROVE cycle 1 (0 blocking); self-approval correctly blocked — human posted approval. P2-3c DISCHARGED (probe runs 29936980027 FAIL→29940792930 FAIL→29945857059 SUCCESS; BC-3.9.007/011 confirmed @ spec v1.3.99). Story v1.45. Issue #576 CLOSED. SOH-ATTACHMENTS-1: 5 of 5 code stories DELIVERED. Worktree + branches cleaned. Residuals → wave gate: AUDIT-576-003 count-drift sweep; AUDIT-576-004; P3-003 OAuth-bypass; P4-006 dry-run human-preview channel; P8-001 step-2 429 no-carve-out; 3 equivalent mutants accepted. S-576-6 now unblocked."
   - id: S-576-6
     title: "jr issue attachment live-Jira E2E coverage — platform round-trip + JSM visibility + P2-3c probe discharge (issue #576)"
     status: pending

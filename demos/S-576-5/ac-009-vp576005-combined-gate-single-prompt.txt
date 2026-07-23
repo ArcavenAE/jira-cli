@@ -1,0 +1,43 @@
+=== AC-009 / VP-576-005: --public --replace-existing combined gate — single prompt only ===
+
+Test: tests/attachment_jsm.rs::test_vp_576_005_combined_gate_single_prompt_fires_once
+
+Scenario:
+  Invocation: jr issue attachment upload EJ-1 attach.txt --public --replace-existing
+  Stdin: "y\n"  (interactive confirm), JR_STDIN_IS_TTY=1
+  EJ-1 already has an attachment named "attach.txt" (id "99001").
+
+VP-576-005 invariant: when both --replace-existing AND --public are supplied, exactly ONE
+combined prompt must fire (consumer 3). Two separate prompts are a UX regression and are
+forbidden by VP-576-005.
+
+Wire sequence simulated:
+  GET /rest/api/3/issue/EJ-1                                            → 200 (Step 0 / issue exists)
+  GET /rest/api/3/project/EJ                                            → 200 (JSM project meta)
+  GET /rest/servicedeskapi/servicedesk                                  → 200 (sdId "42")
+  GET /rest/api/3/issue/EJ-1?fields=attachment   [priority=1]          → 200 (list: "attach.txt" id=99001)
+  (user sees combined gate prompt: "Upload to EJ-1 as customer-visible (public) and replace existing attachment(s):\n  attach.txt (id: 99001)\n  ...\nContinue? [y/N] ")
+  (user types "y")
+  DELETE /rest/api/3/attachment/99001                                   → 204 (.expect(1) — exactly 1 delete)
+  POST /rest/servicedeskapi/servicedesk/42/attachTemporaryFile          → 200 (tmp-vp005)
+  POST /rest/servicedeskapi/request/EJ-1/attachment (body: {public:true}) → 201
+
+Assertions verified:
+  - exit code == 0
+  - DELETE /rest/api/3/attachment/99001 called exactly once (VP-576-003 ordering: DELETE before POST)
+  - step-2 POST body contains "public": true
+  - stderr contains consumer-3 text "and replace existing attachment(s):"  (combined prompt text)
+  - stderr does NOT contain consumer-1 text "Upload attach.txt to EJ-1 as customer-visible"  (single prompt, not two)
+  - VP-576-003 ordering pin: last DELETE request index < first attachTemporaryFile POST index
+    (verified via server.received_requests() ordering assertion — P5-001 adversarial hardening)
+
+$ cargo test --test attachment_jsm -- test_vp_576_005_combined_gate_single_prompt_fires_once --nocapture
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.13s
+     Running tests/attachment_jsm.rs (target/debug/deps/attachment_jsm-912d01e312ab5ad3)
+
+running 1 test
+test test_vp_576_005_combined_gate_single_prompt_fires_once ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 28 filtered out; finished in 0.58s
+
+Result: VP-576-005 single-prompt pin verified; VP-576-003 DELETE-before-POST ordering verified.

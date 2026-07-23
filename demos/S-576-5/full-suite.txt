@@ -1,0 +1,39 @@
+$ cargo test --test attachment_jsm
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.13s
+     Running tests/attachment_jsm.rs (target/debug/deps/attachment_jsm-912d01e312ab5ad3)
+
+running 29 tests
+test test_bc_3_9_003_two_step_attach_temporary_then_request_attachment ... ok
+test test_bc_3_9_007_servicedeskapi_response_shape ... ok
+test test_bc_3_9_014_consumer1_n_gt_3_shows_count ... ok
+test test_bc_3_9_007_step2_bare_array_echo_exits_0_best_effort ... ok
+test test_bc_3_9_004_internal_on_jsm_two_step ... ok
+test test_bc_3_9_004_internal_on_non_jsm_silent_noop_oq9 ... ok
+test test_bc_3_9_003_public_on_non_jsm_exits_64_before_gate ... ok
+test test_bc_3_9_003_public_gate_confirm_proceeds ... ok
+test test_bc_3_9_014_noinput_replace_no_match_uses_consumer1_hint ... ok
+test test_bc_x_8_010_service_desk_id_from_project_meta_projectid_match ... ok
+test test_bc_3_9_014_consumer3_combined_prompt_text ... ok
+test test_bc_3_9_011_public_json_output_shape ... ok
+test test_bc_3_9_014_consumer1_n_le_3_lists_filenames ... ok
+test test_ec_3_9_003_3_multi_file_jsm_upload_two_step_1_posts ... ok
+test test_sec_576_004_jsm_step1_content_disposition_crlf_guard ... ok
+test test_jsm_internal_replace_existing_dry_run_shows_woulddelete ... ok
+test test_bc_x_8_010_jsm_determination_triggers_project_meta_fetch ... ok
+test test_p5_003_consumer2_internal_replace_hostile_server_filename_sanitized ... ok
+test test_p5_003_consumer3_combined_prompt_hostile_server_filename_sanitized ... ok
+test test_jsm_internal_replace_existing_issues_delete_then_two_step ... ok
+test test_bc_3_9_003_public_gate_cancel_exits_0 ... ok
+test test_ec_x_8_010_1_no_matching_service_desk_exits_64 ... ok
+test test_cwe116_jsm_public_gate_sanitizes_hostile_filename ... ok
+test test_bc_3_9_011_internal_json_shape_jsm_vs_non_jsm_asymmetry ... ok
+test test_vp_576_005_combined_gate_single_prompt_fires_once ... ok
+test test_sec_576_006_stale_id_self_heal_invalidate_retry_once ... ok
+test test_jsm_internal_replace_existing_noinput_exits_64_with_hint ... ok
+test test_bc_3_9_020_dry_run_public_visibility_annotation ... ok
+test test_bc_3_9_006_jsm_upload_error_taxonomy ... ok
+
+test result: ok. 29 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.89s
+
+HEAD: b672d33d
+Branch: feat/S-576-5-jsm-attachment-visibility

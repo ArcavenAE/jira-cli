@@ -1,0 +1,56 @@
+=== AC-015: --replace-existing --dry-run --public — visibility annotation in preview + wouldDelete ===
+
+Test: tests/attachment_jsm.rs::test_bc_3_9_020_dry_run_public_visibility_annotation
+
+Scenario (primary — JSON mode):
+  Invocation: jr issue attachment upload EJ-15 dry.txt --replace-existing --dry-run --public --output json
+  EJ-15 is a JSM issue with an existing attachment "dry.txt" (id "AID-01").
+
+Wire sequence simulated:
+  GET /rest/api/3/issue/EJ-15                                               → 200 (Step 0)
+  GET /rest/api/3/project/EJ                                                → 200 (JSM project meta)
+  GET /rest/servicedeskapi/servicedesk                                      → 200 (sdId "42")
+  GET /rest/api/3/issue/EJ-15?fields=attachment   [priority=1]             → 200 (list: "dry.txt" id=AID-01)
+  (NO DELETE, NO step-1 attachTemporaryFile, NO step-2 — dry-run only)
+
+JSON output on stdout (BC-3.9.020 pinned shape):
+  {
+    "dryRun": true,
+    "wouldDelete": [{"filename": "dry.txt", "id": "AID-01"}],
+    "wouldUpload": [{"filename": "dry.txt", "visibility": "public"}]
+  }
+
+Assertions verified (JSON mode):
+  - exit code == 0
+  - stdout parses as valid JSON object
+  - "dryRun" == true
+  - "wouldUpload"[0]["visibility"] == "public"  (EC-3.9.020-7 visibility annotation)
+  - "wouldDelete"[0]["filename"] == "dry.txt" and "wouldDelete"[0]["id"] == "AID-01"
+  - No DELETE or POST to servicedeskapi (zero state-changing calls)
+
+Scenario (secondary — human mode):
+  Invocation: jr issue attachment upload EJ-15 dry.txt --replace-existing --dry-run --public
+  (without --output json)
+
+Assertions verified (human mode):
+  - exit code == 0
+  - stderr contains "[public]" annotation  (EC-3.9.020-7 human-mode visibility marker)
+
+EC-3.9.020-8 guard (also tested in this function):
+  Invocation: jr issue attachment upload DEV-99 dry.txt --replace-existing --dry-run --public
+  DEV-99 is a non-JSM issue.
+  - exit code == 64  (BC-3.9.005 non-JSM guard fires even on dry-run; EC-3.9.020-8: guard
+    is NOT suppressed by --dry-run)
+  - zero list GETs made (guard fires before the attachment list fetch)
+  - stderr contains "--public is only supported on Jira Service Management (JSM) issues."
+
+$ cargo test --test attachment_jsm -- test_bc_3_9_020_dry_run_public_visibility_annotation --nocapture
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.12s
+     Running tests/attachment_jsm.rs (target/debug/deps/attachment_jsm-912d01e312ab5ad3)
+
+running 1 test
+test test_bc_3_9_020_dry_run_public_visibility_annotation ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 28 filtered out; finished in 0.52s
+
+Result: BC-3.9.020 EC-3.9.020-7 visibility annotation + EC-3.9.020-8 guard-not-suppressed-on-dry-run both verified.

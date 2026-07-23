@@ -1,0 +1,60 @@
+=== AC-006 / AC-013: --internal on JSM (two-step, public:false) and --internal on non-JSM (silent no-op OQ-9) ===
+
+Tests:
+  tests/attachment_jsm.rs::test_bc_3_9_004_internal_on_jsm_two_step        (AC-006: JSM path)
+  tests/attachment_jsm.rs::test_bc_3_9_004_internal_on_non_jsm_silent_noop_oq9  (AC-013: non-JSM OQ-9)
+
+--- AC-006 / test_bc_3_9_004_internal_on_jsm_two_step ---
+
+Scenario:
+  Invocation: jr issue attachment upload EJ-5 internal.txt --internal
+  EJ-5 is a JSM issue. No gate fires for --internal (OQ-9: no confirmation required for internal-only uploads).
+
+Wire sequence simulated:
+  GET /rest/api/3/issue/EJ-5                                              → 200 (Step 0)
+  GET /rest/api/3/project/EJ                                              → 200 (JSM project meta)
+  GET /rest/servicedeskapi/servicedesk                                    → 200 (sdId "42")
+  POST /rest/servicedeskapi/servicedesk/42/attachTemporaryFile            → 200 (tmp-internal-001)
+  POST /rest/servicedeskapi/request/EJ-5/attachment (body: {public:false}) → 201  (BC-3.9.004)
+
+Assertions verified:
+  - exit code == 0
+  - step-2 POST body contains "public": false  (BC-3.9.004: --internal sets public=false)
+  - step-2 POST mock .expect(1) verified — exactly one step-2 call
+  - zero interactive gate prompt (no confirmation required for --internal)
+
+--- AC-013 / test_bc_3_9_004_internal_on_non_jsm_silent_noop_oq9 ---
+
+Scenario:
+  Invocation: jr issue attachment upload DEV-1 nonjsm.txt --internal
+  DEV-1 is a non-JSM issue (projectTypeKey = "software").
+  OQ-9 ruling: --internal on non-JSM is a SILENT NO-OP — falls through to the regular
+  platform POST (/rest/api/3/issue/{key}/attachments). No error, no warning, no mention of --internal.
+
+Wire sequence simulated:
+  GET /rest/api/3/issue/DEV-1                          → 200 (Step 0: project.key = "DEV")
+  GET /rest/api/3/project/DEV                          → 200 (software project, not service_desk)
+  POST /rest/api/3/issue/DEV-1/attachments             → 200 (platform upload, regular path)
+  (NO servicedeskapi calls)
+
+Assertions verified:
+  - exit code == 0  (no error on --internal with non-JSM)
+  - stderr does NOT contain "--internal"  (silent no-op, no mention of the flag)
+  - zero calls to servicedeskapi attachTemporaryFile or request/.*/attachment endpoint
+    (verified via server.received_requests() filter on "servicedeskapi" paths)
+
+This is asymmetric from --public: --public on non-JSM exits 64 (customer-visible upload
+requires servicedeskapi); --internal on non-JSM is silent because platform upload is already
+agent-internal by default.
+
+$ cargo test --test attachment_jsm -- test_bc_3_9_004_internal_on_jsm_two_step test_bc_3_9_004_internal_on_non_jsm_silent_noop_oq9 --nocapture
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.14s
+     Running tests/attachment_jsm.rs (target/debug/deps/attachment_jsm-912d01e312ab5ad3)
+
+running 2 tests
+test test_bc_3_9_004_internal_on_jsm_two_step ... ok
+test test_bc_3_9_004_internal_on_non_jsm_silent_noop_oq9 ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 27 filtered out; finished in 0.57s
+
+Result: BC-3.9.004 — JSM two-step with public:false; OQ-9 silent no-op on non-JSM both verified.

@@ -1,0 +1,52 @@
+=== AC-005 / SEC-576-006: Stale service desk ID self-heal — invalidate cache and retry once ===
+
+Test: tests/attachment_jsm.rs::test_sec_576_006_stale_id_self_heal_invalidate_retry_once
+
+Scenario:
+  A stale project_meta.json cache entry for project "EJ" contains serviceDeskId = "OLD-SD"
+  (the cache file is pre-populated by the test to simulate a cached stale sdId with a future
+  fetched_at timestamp so it won't auto-expire). The live service desk list returns sdId "42".
+
+  Step-1 attempt 1 → POST to /servicedesk/OLD-SD/attachTemporaryFile → 404 (stale ID)
+  SEC-576-006 fires: invalidates project_meta.json, re-fetches project meta + service desk list,
+  updates sdId to "42", retries ONCE.
+  Step-1 attempt 2 → POST to /servicedesk/42/attachTemporaryFile → 200 (success)
+
+  Invocation: jr issue attachment upload EJ-4 stale.txt --public --yes
+
+Wire sequence simulated:
+  GET /rest/api/3/issue/EJ-4                                              → 200 (Step 0)
+  (project meta: served from stale cache — no GET fired on first call)
+  POST /rest/servicedeskapi/servicedesk/OLD-SD/attachTemporaryFile        → 404 (triggers stale-heal)
+  GET /rest/api/3/project/EJ                                              → 200 (re-fetch after invalidation)
+  GET /rest/servicedeskapi/servicedesk                                    → 200 (fresh sdId "42")
+  POST /rest/servicedeskapi/servicedesk/42/attachTemporaryFile            → 200 (success)
+  POST /rest/servicedeskapi/request/EJ-4/attachment                      → 201
+
+Assertions verified:
+  - exit code == 0  (stale-heal succeeded on second attempt)
+  - exactly 2 step-1 POST attempts to attachTemporaryFile endpoints (never 3 or more — one-shot only)
+    (verified via server.received_requests() filtering on "attachTemporaryFile" path — stale_healed guard)
+
+SEC-576-006 one-shot guard:
+  The `stale_healed: bool` flag in the handler prevents any further retry after the
+  first heal attempt. If the post-heal step-1 also fails:
+    - 404 → exit 64 "Service desk for EJ not found after refresh."
+    - 401 → exit 2 (NotAuthenticated)
+    - others → exit 1 (propagate as-is)
+  These post-heal failure cases are covered by sub-assertions in test_bc_3_9_006_jsm_upload_error_taxonomy.
+
+Demoability note:
+  This test is fully demoable via wiremock mock server (pre-populated cache + sequential
+  mock responses). No live Jira calls needed.
+
+$ cargo test --test attachment_jsm -- test_sec_576_006_stale_id_self_heal_invalidate_retry_once --nocapture
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.12s
+     Running tests/attachment_jsm.rs (target/debug/deps/attachment_jsm-912d01e312ab5ad3)
+
+running 1 test
+test test_sec_576_006_stale_id_self_heal_invalidate_retry_once ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 28 filtered out; finished in 0.52s
+
+Result: SEC-576-006 — stale-heal fires exactly once, retries with fresh sdId, exits 0.

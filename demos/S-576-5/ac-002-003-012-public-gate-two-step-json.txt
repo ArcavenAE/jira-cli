@@ -1,0 +1,87 @@
+=== AC-002/003/012: --public interactive gate + servicedeskapi two-step + curated JSON output ===
+
+Tests:
+  tests/attachment_jsm.rs::test_bc_3_9_003_public_gate_confirm_proceeds  (AC-002: gate confirm "y" → exit 0)
+  tests/attachment_jsm.rs::test_bc_3_9_003_public_gate_cancel_exits_0    (AC-002: gate cancel Enter → exit 0 + cancelled JSON)
+  tests/attachment_jsm.rs::test_bc_3_9_003_two_step_attach_temporary_then_request_attachment (AC-003: wire sequence)
+  tests/attachment_jsm.rs::test_bc_3_9_011_public_json_output_shape       (AC-012: JSON output shape)
+
+--- AC-002 / test_bc_3_9_003_public_gate_confirm_proceeds ---
+
+Scenario:
+  Invocation: jr issue attachment upload EJ-1 attach.txt --public
+  Stdin: "y\n"  (interactive confirm), JR_STDIN_IS_TTY=1 (forces TTY mode so auto-no-input doesn't fire)
+  EJ-1 is a JSM issue (projectTypeKey = "service_desk").
+
+Wire sequence simulated:
+  GET /rest/api/3/issue/EJ-1                                      → 200 (Step 0)
+  GET /rest/api/3/project/EJ                                      → 200 (JSM project meta, sdId "42")
+  GET /rest/servicedeskapi/servicedesk                            → 200 (sdId "42" for projectId "10099")
+  (user sees gate prompt on stderr: "Upload attach.txt to EJ-1 as customer-visible (public)? [y/N] ")
+  (user types "y")
+  POST /rest/servicedeskapi/servicedesk/42/attachTemporaryFile    → 200 (temporaryAttachmentId "tmp-abc-001")
+  POST /rest/servicedeskapi/request/EJ-1/attachment               → 201 (attachment created, id "20001")
+
+Assertions verified:
+  - exit code == 0
+
+--- AC-002 / test_bc_3_9_003_public_gate_cancel_exits_0 ---
+
+Scenario:
+  Invocation: jr issue attachment upload EJ-2 attach.txt --public
+  Stdin: "\n"  (empty Enter = cancel), JR_STDIN_IS_TTY=1
+
+Assertions verified:
+  - exit code == 0  (cancel is NOT an error)
+  - stderr contains "Upload cancelled."
+  - JSON stdout contains {"cancelled": true, "uploaded": false}
+  - No servicedeskapi calls made (attachTemporaryFile mock .expect(0) verified)
+
+--- AC-003 / test_bc_3_9_003_two_step_attach_temporary_then_request_attachment ---
+
+Scenario:
+  Full two-step wire sequence validated with body matchers.
+  step-2 POST body matcher: {"public": true}
+
+Assertions verified:
+  - exit code == 0
+  - POST /rest/servicedeskapi/servicedesk/42/attachTemporaryFile called with X-Atlassian-Token: no-check
+  - POST /rest/servicedeskapi/request/EJ-3/attachment body contains "public": true (step-2 body pin)
+
+--- AC-012 / test_bc_3_9_011_public_json_output_shape ---
+
+Scenario:
+  Invocation: jr issue attachment upload EJ-9 shape.txt --public --yes --output json
+
+Curated JSON output shape on stdout (bare array per BC-3.9.007/BC-3.9.011):
+  [
+    {
+      "id": "20009",
+      "filename": "shape.txt",
+      "mimeType": "application/octet-stream",
+      "size": 5,
+      "created": "2026-01-01T00:00:00.000Z",
+      "contentUrl": "https://example.atlassian.net/rest/api/3/attachment/content/20009",
+      "author": {"accountId": "user-123", "displayName": "Test User"}
+    }
+  ]
+
+Assertions verified:
+  - exit code == 0
+  - stdout parses as a JSON array
+  - first element contains "id", "filename", "mimeType", "size", "created", "contentUrl", "author"
+  - "author" is an object {accountId, displayName} (not null, not a string)
+
+$ cargo test --test attachment_jsm -- test_bc_3_9_003_public_gate_confirm_proceeds test_bc_3_9_003_public_gate_cancel_exits_0 test_bc_3_9_003_two_step_attach_temporary_then_request_attachment test_bc_3_9_011_public_json_output_shape --nocapture
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.12s
+     Running tests/attachment_jsm.rs (target/debug/deps/attachment_jsm-912d01e312ab5ad3)
+
+running 4 tests
+test test_bc_3_9_003_public_gate_confirm_proceeds ... ok
+test test_bc_3_9_003_public_gate_cancel_exits_0 ... ok
+test test_bc_3_9_003_two_step_attach_temporary_then_request_attachment ... ok
+test test_bc_3_9_011_public_json_output_shape ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 25 filtered out; finished in 0.58s
+
+Result: BC-3.9.003 + BC-3.9.007 + BC-3.9.011 — gate fires, two-step completes, JSON output curated array.

@@ -1,0 +1,31 @@
+=== AC-001: --public on non-JSM issue → exit 64 canonical error (EC-3.9.003-7 guard precedence) ===
+
+Test: tests/attachment_jsm.rs::test_bc_3_9_003_public_on_non_jsm_exits_64_before_gate
+
+Scenario:
+  Invocation: jr issue attachment upload DEV-1 report.pdf --public --yes
+  Issue DEV-1 belongs to project DEV (projectTypeKey = "software", NOT "service_desk").
+  --yes bypasses the interactive gate; the guard fires before the gate.
+
+Wire sequence simulated by wiremock:
+  GET /rest/api/3/issue/DEV-1        → 200  (Step 0: issue exists, project.key = "DEV")
+  GET /rest/api/3/project/DEV        → 200  (project meta: projectTypeKey = "software")
+  (no servicedeskapi call is made)
+
+Assertions verified:
+  - exit code == 64  (BC-3.9.005 canonical error exits 64, not 2 or 1)
+  - stderr contains "--public is only supported on Jira Service Management (JSM) issues."
+    (BC-3.9.005 canonical message, substring-matchable)
+  - EC-3.9.003-7 guard precedence: the non-JSM check fires FIRST even though --yes was
+    supplied (the non-interactive gate check must NOT precede the non-JSM guard)
+
+$ cargo test --test attachment_jsm -- test_bc_3_9_003_public_on_non_jsm_exits_64_before_gate --nocapture
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.12s
+     Running tests/attachment_jsm.rs (target/debug/deps/attachment_jsm-912d01e312ab5ad3)
+
+running 1 test
+test test_bc_3_9_003_public_on_non_jsm_exits_64_before_gate ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 28 filtered out; finished in 0.74s
+
+Result: BC-3.9.003 / BC-3.9.005 — guard fires before gate, canonical message emitted, exit 64.
