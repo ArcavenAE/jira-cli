@@ -24,6 +24,8 @@ use tokio::io::AsyncWriteExt;
 
 use crate::api::client::JiraClient;
 use crate::api::jira::attachments::AttachmentObject;
+use crate::api::jsm::servicedesks::get_or_fetch_project_meta;
+use crate::cache;
 use crate::cli::{AttachmentSubcommand, OutputFormat};
 use crate::error::JrError;
 use crate::output;
@@ -1110,17 +1112,6 @@ pub async fn handle_attachment_upload(
         unreachable!("handle_attachment_upload called with non-Upload variant");
     };
 
-    // AC-017: interim rejection fires BEFORE any file pre-check or HTTP call.
-    // REMOVED-AT-S5: this guard is removed when S-576-5 wires JSM visibility.
-    if public || internal {
-        return Err(JrError::UserError(
-            "--public and --internal are not yet supported. \
-             JSM visibility will be shipped in a follow-on story."
-                .to_string(),
-        )
-        .into());
-    }
-
     // EC-3.9.001-6: stdin '-' is rejected before any HTTP call.
     for path in &file {
         if path.to_str() == Some("-") {
@@ -1144,8 +1135,28 @@ pub async fn handle_attachment_upload(
         }
     }
 
+    // S-576-5: route --public / --internal through the JSM-aware handler.
+    // EC-3.9.003-7: the non-JSM guard fires INSIDE handle_attachment_upload_jsm,
+    // AFTER project meta fetch but BEFORE the gate and BEFORE any dry-run preview.
+    if public || internal {
+        return handle_attachment_upload_jsm(
+            &key,
+            &file,
+            &JsmUploadOpts {
+                replace_existing,
+                yes,
+                dry_run,
+                no_input,
+                public,
+            },
+            output_format,
+            client,
+        )
+        .await;
+    }
+
     if dry_run {
-        return dry_run_upload(&key, &file, replace_existing, output_format, client).await;
+        return dry_run_upload(&key, &file, replace_existing, false, output_format, client).await;
     }
 
     if replace_existing {
@@ -1251,10 +1262,13 @@ async fn replace_existing_attachments(
 ///
 /// The read-only list GET still fires to populate the `wouldDelete` preview array
 /// (mandatory per AC-008 / BC-3.9.020 path-c; only DELETE and POST are suppressed).
+/// EC-3.9.020-7: when `public` is `true`, each `wouldUpload` entry gains
+/// `"visibility":"public"` in JSON mode and `[public]` in human mode.
 async fn dry_run_upload(
     key: &str,
     file_paths: &[std::path::PathBuf],
     replace_existing: bool,
+    public: bool,
     output_format: &OutputFormat,
     client: &JiraClient,
 ) -> anyhow::Result<()> {
@@ -1276,11 +1290,17 @@ async fn dry_run_upload(
         .map(|a| serde_json::json!({"id": a.id, "filename": a.filename}))
         .collect();
 
+    // EC-3.9.020-7: add "visibility":"public" to each wouldUpload entry when public=true.
     let would_upload: Vec<Value> = file_paths
         .iter()
         .filter_map(|p| {
-            p.file_name()
-                .map(|n| serde_json::json!({"filename": n.to_string_lossy()}))
+            p.file_name().map(|n| {
+                if public {
+                    serde_json::json!({"filename": n.to_string_lossy(), "visibility": "public"})
+                } else {
+                    serde_json::json!({"filename": n.to_string_lossy()})
+                }
+            })
         })
         .collect();
 
@@ -1302,7 +1322,12 @@ async fn dry_run_upload(
                     would_delete.len()
                 );
             }
-            println!("Would upload {} file(s).", would_upload.len());
+            // EC-3.9.020-7: [public] annotation when public=true.
+            if public {
+                println!("Would upload {} file(s) [public].", would_upload.len());
+            } else {
+                println!("Would upload {} file(s).", would_upload.len());
+            }
         }
     }
     Ok(())
@@ -1353,6 +1378,378 @@ fn attachment_replace_confirmation_gate(
             Ok(trimmed.eq_ignore_ascii_case("y") || trimmed.eq_ignore_ascii_case("yes"))
         }
     }
+}
+
+// ---------------------------------------------------------------------------
+// S-576-5: JSM visibility helpers and handler
+// ---------------------------------------------------------------------------
+
+/// Interactive `--public` confirmation gate (consumer 1: `--public` only, no replace).
+///
+/// BC-3.9.014 EC-3.9.014-5 prompt format:
+/// - N ≤ 3: `"Upload <f1>, <f2>, <fN> to <KEY> as customer-visible (public)? [y/N] "`
+/// - N > 3: `"Upload <N> files to <KEY> as customer-visible (public)? [y/N] "`
+///
+/// Returns `Ok(true)` → proceed, `Ok(false)` → cancelled,
+/// `Err(JrError::Interrupted)` → EOF/IO error (exit 130).
+fn jsm_public_gate(file_paths: &[std::path::PathBuf], key: &str) -> anyhow::Result<bool> {
+    if file_paths.len() <= 3 {
+        let names: Vec<String> = file_paths
+            .iter()
+            .map(|p| {
+                p.file_name()
+                    .and_then(|n| n.to_str())
+                    .map(display_sanitize_filename)
+                    .unwrap_or_else(|| "<unknown>".to_string())
+            })
+            .collect();
+        eprint!(
+            "Upload {} to {} as customer-visible (public)? [y/N] ",
+            names.join(", "),
+            key
+        );
+    } else {
+        eprint!(
+            "Upload {} files to {} as customer-visible (public)? [y/N] ",
+            file_paths.len(),
+            key
+        );
+    }
+    let _ = std::io::Write::flush(&mut std::io::stderr());
+    use std::io::BufRead;
+    let mut line = String::new();
+    match std::io::stdin().lock().read_line(&mut line) {
+        Ok(0) | Err(_) => Err(JrError::Interrupted.into()),
+        Ok(_) => {
+            let trimmed = line.trim();
+            Ok(trimmed.eq_ignore_ascii_case("y") || trimmed.eq_ignore_ascii_case("yes"))
+        }
+    }
+}
+
+/// Interactive combined gate: `--public` + `--replace-existing` with ≥1 filename match (consumer 3).
+///
+/// BC-3.9.014 prompt format:
+/// `"Upload to <KEY> as customer-visible (public) and replace existing attachment(s):\n"`
+/// followed by `"  <filename> (id: <AID>)\n"` for each match, then `"Continue? [y/N] "`.
+///
+/// VP-576-005: ONE prompt only (not one for replace + one for public).
+///
+/// Returns `Ok(true)` → proceed, `Ok(false)` → cancelled,
+/// `Err(JrError::Interrupted)` → EOF/IO error (exit 130).
+fn jsm_public_combined_gate(key: &str, would_delete: &[AttachmentObject]) -> anyhow::Result<bool> {
+    eprintln!(
+        "Upload to {} as customer-visible (public) and replace existing attachment(s):",
+        key
+    );
+    for att in would_delete {
+        eprintln!(
+            "  {} (id: {})",
+            display_sanitize_filename(&att.filename),
+            att.id
+        );
+    }
+    eprint!("Continue? [y/N] ");
+    let _ = std::io::Write::flush(&mut std::io::stderr());
+    use std::io::BufRead;
+    let mut line = String::new();
+    match std::io::stdin().lock().read_line(&mut line) {
+        Ok(0) | Err(_) => Err(JrError::Interrupted.into()),
+        Ok(_) => {
+            let trimmed = line.trim();
+            Ok(trimmed.eq_ignore_ascii_case("y") || trimmed.eq_ignore_ascii_case("yes"))
+        }
+    }
+}
+
+/// Boolean-flag bundle for `handle_attachment_upload_jsm` (reduces argument count).
+struct JsmUploadOpts {
+    replace_existing: bool,
+    yes: bool,
+    dry_run: bool,
+    no_input: bool,
+    public: bool,
+}
+
+/// JSM-aware upload handler (S-576-5).
+///
+/// Called from `handle_attachment_upload` when `--public` or `--internal` is set.
+///
+/// **EC-3.9.003-7:** the non-JSM project guard fires AFTER project meta fetch but
+/// BEFORE the non-interactive gate and BEFORE any dry-run preview (EC-3.9.020-8).
+///
+/// **OQ-9:** `--internal` on a non-JSM project is a silent no-op — the upload
+/// falls through to the platform path with no warning and no servicedeskapi calls.
+///
+/// **BC-3.9.005:** `--public` on a non-JSM project exits 64.
+///
+/// **SEC-576-006:** a 404/403 from step-1 (`attachTemporaryFile`) triggers a
+/// one-time stale-ID self-heal: invalidate the cache entry, re-resolve sdId, and
+/// retry ONCE.
+///
+/// **VP-576-005:** `--public` + `--replace-existing` (with ≥1 filename match) uses
+/// ONE combined prompt, not two separate prompts.
+///
+/// **VP-576-003:** all DELETEs complete before the first POST.
+async fn handle_attachment_upload_jsm(
+    key: &str,
+    file_paths: &[std::path::PathBuf],
+    opts: &JsmUploadOpts,
+    output_format: &OutputFormat,
+    client: &JiraClient,
+) -> anyhow::Result<()> {
+    let JsmUploadOpts {
+        replace_existing,
+        yes,
+        dry_run,
+        no_input,
+        public,
+    } = *opts;
+    // Derive project key via HTTP (P1-004): GET /rest/api/3/issue/{key}?fields=project.
+    // Validates that the issue exists and returns its project key exactly as Jira knows it.
+    // 404 → JrError::UserError("Issue {key} not found or not accessible.") → exit 64.
+    let project_key = client.get_issue_project_key(key).await?;
+    let project_key = project_key.as_str();
+
+    // Fetch (or read from cache) project metadata for JSM determination.
+    let meta = get_or_fetch_project_meta(client, project_key).await?;
+
+    // EC-3.9.003-7: non-JSM guard fires BEFORE gate and BEFORE dry-run preview.
+    if meta.project_type != "service_desk" {
+        if public {
+            // BC-3.9.005: --public on non-JSM → exit 64.
+            return Err(JrError::UserError(
+                "--public is only supported on Jira Service Management (JSM) issues.".to_string(),
+            )
+            .into());
+        }
+        // OQ-9: --internal on non-JSM → silent no-op, fall through to platform path.
+        if dry_run {
+            return dry_run_upload(
+                key,
+                file_paths,
+                replace_existing,
+                false,
+                output_format,
+                client,
+            )
+            .await;
+        }
+        if replace_existing {
+            return replace_existing_attachments(
+                key,
+                file_paths,
+                yes,
+                no_input,
+                output_format,
+                client,
+            )
+            .await;
+        }
+        let uploaded = client.upload_attachments(key, file_paths).await?;
+        return render_upload_result(&uploaded, output_format);
+    }
+
+    // JSM project: resolve sdId via the canonical resolver (P1-005).
+    // `resolve_service_desk_id` re-reads from cache (hit — just populated above) and
+    // returns the canonical UserError if service_desk_id is None.
+    let sd_id = crate::api::jsm::servicedesks::resolve_service_desk_id(client, project_key).await?;
+
+    // JSM dry-run: preview without step-1/step-2, with visibility annotation.
+    // The non-JSM guard already fired above so EC-3.9.020-8 is satisfied.
+    if dry_run {
+        return dry_run_upload(
+            key,
+            file_paths,
+            replace_existing,
+            public,
+            output_format,
+            client,
+        )
+        .await;
+    }
+
+    // HOISTED: attachment-list fetch runs for BOTH --public and --internal when
+    // replace_existing=true (P4-001: previously inside `if public { }`, silently
+    // skipping DELETEs on the --internal path).
+    //
+    // BC-3.9.014 (P1-007): fetch FIRST so both non-interactive hint and interactive
+    // gate use actual filename-match data.
+    // VP-576-005: ONE combined prompt when --public + --replace-existing + ≥1 match.
+    let to_delete: Vec<AttachmentObject> = if replace_existing {
+        let existing = client.list_attachments(key).await?;
+        let upload_names: std::collections::HashSet<String> = file_paths
+            .iter()
+            .filter_map(|p| p.file_name().map(|n| n.to_string_lossy().into_owned()))
+            .collect();
+        existing
+            .into_iter()
+            .filter(|a| upload_names.contains(&a.filename))
+            .collect()
+    } else {
+        vec![]
+    };
+    let has_replace_matches = !to_delete.is_empty();
+
+    if public {
+        // --public visibility gate: consumer-1 (public-only) or consumer-3 (combined).
+        // Non-interactive path: exit 64 with hint; no gate presented; no DELETEs issued.
+        // Consumer is determined by actual match count (P1-007 fix):
+        // consumer-3 only when replace_existing AND ≥1 match; consumer-1 otherwise.
+        if no_input && !yes {
+            return if replace_existing && has_replace_matches {
+                Err(JrError::UserError(
+                    "Use --yes to confirm uploading as customer-visible (public) and \
+                     deleting existing same-filename attachments."
+                        .to_string(),
+                )
+                .into())
+            } else {
+                Err(JrError::UserError(format!(
+                    "Use --yes to confirm uploading {} file(s) to {} as \
+                     customer-visible, or run interactively.",
+                    file_paths.len(),
+                    key
+                ))
+                .into())
+            };
+        }
+
+        if !yes {
+            let proceed = if replace_existing && has_replace_matches {
+                jsm_public_combined_gate(key, &to_delete)?
+            } else {
+                jsm_public_gate(file_paths, key)?
+            };
+            if !proceed {
+                eprintln!("Upload cancelled.");
+                if let OutputFormat::Json = output_format {
+                    println!(
+                        "{}",
+                        output::render_json(&serde_json::json!({
+                            "cancelled": true,
+                            "uploaded": false
+                        }))?
+                    );
+                }
+                return Ok(());
+            }
+        }
+    } else if replace_existing && has_replace_matches {
+        // --internal + --replace-existing + ≥1 filename match: consumer-2 gate
+        // (BC-3.9.017). No gate when zero matches.
+        if no_input && !yes {
+            return Err(JrError::UserError(
+                "Use --yes to confirm deletion of existing same-filename attachments.".to_string(),
+            )
+            .into());
+        }
+        if !yes {
+            let refs: Vec<&AttachmentObject> = to_delete.iter().collect();
+            let proceed = attachment_replace_confirmation_gate(key, &refs, false)?;
+            if !proceed {
+                eprintln!("Upload cancelled.");
+                if let OutputFormat::Json = output_format {
+                    println!(
+                        "{}",
+                        output::render_json(&serde_json::json!({
+                            "cancelled": true,
+                            "uploaded": false
+                        }))?
+                    );
+                }
+                return Ok(());
+            }
+        }
+    }
+
+    // VP-576-003: all DELETEs complete before the first POST.
+    // Now covers BOTH --public and --internal when has_replace_matches=true (P4-001).
+    if has_replace_matches {
+        for att in &to_delete {
+            match client.delete_attachment(&att.id).await {
+                Ok(()) => {}
+                Err(e) => {
+                    let is_benign = e.downcast_ref::<JrError>().is_some_and(|jr| {
+                        matches!(jr, JrError::UserError(msg) if msg.contains("not found or already deleted"))
+                    });
+                    if !is_benign {
+                        return Err(e);
+                    }
+                }
+            }
+        }
+    }
+
+    // JSM two-step upload.
+    // Step 1: attach each file as a temporary attachment; collect tmpIds.
+    // SEC-576-006: on 404/403 from step-1, invalidate the cache and retry ONCE.
+    let mut current_sd_id = sd_id;
+    let mut stale_healed = false;
+    let mut tmp_ids: Vec<String> = Vec::with_capacity(file_paths.len());
+
+    for path in file_paths {
+        let result =
+            crate::api::jsm::attachments::attach_temporary_file(client, &current_sd_id, path).await;
+
+        let tmp_id = match result {
+            Ok(id) => id,
+            Err(ref e) => {
+                let is_stale = e.downcast_ref::<JrError>().is_some_and(|jr| {
+                    matches!(jr, JrError::ApiError { status, .. } if *status == 404 || *status == 403)
+                });
+                if is_stale && !stale_healed {
+                    stale_healed = true;
+                    cache::invalidate_project_meta_cache(client.profile_name(), project_key);
+                    let fresh_meta = get_or_fetch_project_meta(client, project_key).await?;
+                    match fresh_meta.service_desk_id {
+                        None => {
+                            return Err(JrError::UserError(format!(
+                                "Service desk for {project_key} not found after refresh."
+                            ))
+                            .into());
+                        }
+                        Some(new_id) => {
+                            current_sd_id = new_id;
+                            // P1-001: explicit EC-4 mapping on retry — bare .await? would
+                            // propagate ApiError{status:404} as exit 1 instead of exit 64.
+                            let retry_result = crate::api::jsm::attachments::attach_temporary_file(
+                                client,
+                                &current_sd_id,
+                                path,
+                            )
+                            .await;
+                            match retry_result {
+                                Ok(id) => id,
+                                Err(e) => {
+                                    return match e.downcast::<JrError>() {
+                                        Ok(JrError::ApiError { status: 404, .. }) => {
+                                            Err(JrError::UserError(format!(
+                                                "Service desk for {project_key} not found after refresh."
+                                            ))
+                                            .into())
+                                        }
+                                        // Post-retry 401 arrives as JrError::NotAuthenticated (exit 2); falls through to Ok(other).
+                                        Ok(other) => Err(anyhow::anyhow!(other)),
+                                        Err(other) => Err(other),
+                                    };
+                                }
+                            }
+                        }
+                    }
+                } else {
+                    return Err(result.unwrap_err());
+                }
+            }
+        };
+        tmp_ids.push(tmp_id);
+    }
+
+    // Step 2: publish all tmpIds to the JSM request.
+    let uploaded =
+        crate::api::jsm::attachments::post_request_attachment(client, key, &tmp_ids, public)
+            .await?;
+    render_upload_result(&uploaded, output_format)
 }
 
 // ---------------------------------------------------------------------------
