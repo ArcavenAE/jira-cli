@@ -793,10 +793,12 @@ feature_followup_standalone:
     notes: "DELIVERED 2026-07-23. PR #640 squash-merged by human @ 0498e596 (DEC-128 honored). CI 14/14 green (run 29976080877); mutation gate 94% kill (53 caught / 3 missed equivalent sleep(0) survivors). 33 integration tests (attachment_jsm) + 8 unit tests; fresh-eyes pr-reviewer APPROVE cycle 1 (0 blocking); self-approval correctly blocked — human posted approval. P2-3c DISCHARGED (probe runs 29936980027 FAIL→29940792930 FAIL→29945857059 SUCCESS; BC-3.9.007/011 confirmed @ spec v1.3.99). Story v1.45. Issue #576 CLOSED. SOH-ATTACHMENTS-1: 5 of 5 code stories DELIVERED. Worktree + branches cleaned. Residuals → wave gate: AUDIT-576-003 count-drift sweep; AUDIT-576-004; P3-003 OAuth-bypass; P4-006 dry-run human-preview channel; P8-001 step-2 429 no-carve-out; 3 equivalent mutants accepted. S-576-6 now unblocked."
   - id: S-576-6
     title: "jr issue attachment live-Jira E2E coverage — platform round-trip + JSM visibility + P2-3c probe discharge (issue #576)"
-    status: pending
-    pr: null
-    merge_sha: null
-    merged_at: null
+    status: completed
+    pr: 643
+    merge_sha: "9da03d5b"
+    merged_at: "2026-07-23"
+    merged_via: "squash-merge by human (DEC-128 honored)"
+    f4_delivered_at: "2026-07-23"
     depends_on: [S-576-1, S-576-2, S-576-3, S-576-4, S-576-5]
     bc_anchors: [BC-2.7.001, BC-2.7.002, BC-2.7.007, BC-3.9.001, BC-3.9.002, BC-3.9.003, BC-3.9.004, BC-3.9.007, BC-3.9.008, BC-3.9.009, BC-3.9.010, BC-3.9.011]
     verification_properties: []
@@ -806,4 +808,23 @@ feature_followup_standalone:
     implementation_strategy: tdd
     tdd_mode: facade
     phase: F4
-    notes: "CONVERGED STRICT 2026-07-21 (10 passes / 7 fix rounds; window p8/p9/p10 CLEAN×3; story v1.7→v1.9; 2 S-7.01 partial-fix regressions caught at p4). Zero src/ delta. HUMAN GATE APPROVED 2026-07-22 (template conformance v1.9). Queues after S-576-5. Depends S1..S5."
+    notes: "DELIVERED 2026-07-23. PR #643 squash-merged by human @ 9da03d5b (DEC-128 honored). CI 15/15 green; mutation job 0 mutants (test-only-diff path). Live validation: run 30031724733 (96/97 — found FIX-576-DL bug: integer id in /rest/api/3/attachment/{id} metadata vs string in mocks); run 30041659024 (97/97 GREEN post-fix, rebased). Fresh-eyes APPROVE (0 C/H). Security APPROVE with SEC-S576-6-001 (CWE-703 Drop expect, MEDIUM) accepted as tech debt. Step 4.5 CONVERGED STRICT (8 passes / 5 fix rounds; window p6/p7/p8 CLEAN×3; story v1.9→v1.15). Facade delivery (zero src/ delta): 4 gated E2E tests + AttachmentDropGuard + docs. story v1.16 (delivery record). SOH-ATTACHMENTS-1 BUNDLE COMPLETE (6/6 stories + FIX-576-DL emergent fix). Cycle-closing: PG-576-1/PG-576-2 logged."
+
+  - id: FIX-576-DL
+    title: "fix: attachment download integer-id serde drift (S-576-2 latent, found by S-576-6 live validation)"
+    status: completed
+    pr: 642
+    merge_sha: "7298c035"
+    merged_at: "2026-07-23T20:04Z"
+    merged_via: "squash-merge by human"
+    f4_delivered_at: "2026-07-23"
+    depends_on: []
+    bc_anchors: []
+    verification_properties: []
+    issue: 576
+    points: 1
+    criticality: MEDIUM
+    implementation_strategy: emergent-fix
+    tdd_mode: strict
+    phase: F4
+    notes: "DELIVERED 2026-07-23. PR #642 squash-merged by human @ 7298c035. Emergent fix found by S-576-6 live validation run 30031724733 (96/97 FAIL). Root cause: AttachmentMetadata.id was serde-typed as u64; Jira REST API returns id as integer JSON number in /rest/api/3/attachment/{id} metadata but as string in mocks — latent S-576-2 drift. Fix: string-or-int serde visitor on AttachmentMetadata.id. Mutation gate 100% kill (9/9). develop e2e run 30040606453 green. Preceded S-576-6 merge."

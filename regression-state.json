@@ -1,1 +1,1 @@
-{"status":"pass","timestamp":"2026-07-23T16:54:35Z","command":"cargo test --test e2e_cli_surface_guard 2>&1 | tail -5"}
+{"status":"pass","timestamp":"2026-07-23T20:10:13Z","command":"cd /Users/zious/Documents/GITHUB/jira-cli/.worktrees/S-576-6 && git fetch origin develop --quiet && git rebase origin/develop 2>&1 | tail -2 && git log --oneline -2 && cargo test --test e2e_cli_surface_guard 2>&1 | grep \"test result\""}
