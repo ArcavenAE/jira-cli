@@ -7,6 +7,25 @@ project: "jr (jira-cli)"
 
 Track all spec version changes. Most recent version first.
 
+## [1.3.103] - 2026-07-24
+
+### Type: PATCH
+
+### Summary
+
+FIX-F5-010 Windows CI collision: BC-2.7.012 permission-denied row amended to add `(writing <dest>)` parenthetical; P9-001 reconciliation note added.
+
+### Changed
+
+- `.factory/specs/prd/bc-2-issue-read.md` (MODIFIED): BC-2.7.012 permission-denied error-table row amended — `(writing <dest>)` parenthetical added after `<dir>` in the error prefix string, giving `Permission denied: cannot write to <dir> (writing <dest>): <os_error>. Check directory permissions and try again.`; prefix and remediation hint preserved verbatim; `<dest>` = display-sanitized final destination filename (CWE-116); reconciles BC-2.7.007 P9-001 (rename-failure error must contain the display-sanitized destination filename) which the v1.3.102 shape violated on Windows (rename-to-existing returns `ErrorKind::PermissionDenied` so the permission-denied branch fires on rename; the previous message omitted the filename). One-sentence P9-001 reconciliation note appended to the Disk-write error detection and classification paragraph. BC-2.7.012 Trace updated. BC count unchanged (64/106).
+- `.factory/specs/prd/BC-INDEX.md` (MODIFIED): BC-2.7.012 row updated with v1.3.103 FIX-F5-010 note; permission-denied string corrected; index_version v6.40 → v6.41; last_updated annotation updated.
+
+### BC Count
+
+0 new BCs. Total unchanged: 657 cumulative (BC-INDEX), 64/106 individually-bodied in bc-2-issue-read.md.
+
+---
+
 ## [1.3.99] - 2026-07-22
 
 ### Type: PATCH
