@@ -63,13 +63,15 @@ pub async fn attach_temporary_file(
         .map(|n| n.to_string_lossy().into_owned())
         .unwrap_or_else(|| path.to_string_lossy().into_owned());
 
-    // SEC-576-004 CRLF/NUL/double-quote guard — prevent header-injection in
-    // Content-Disposition. CR/LF/NUL can inject new header lines; '"' can break
-    // the RFC 2616 quoted-string parameter boundary (F5-R1-006, CWE-93).
+    // SEC-576-004 CRLF/NUL/double-quote/backslash guard — prevent header-injection
+    // in Content-Disposition. CR/LF/NUL can inject new header lines; '"' can break
+    // the RFC 2616 quoted-string parameter boundary; '\' is the RFC 2616
+    // quoted-string escape character — a stray '\' lets a parser misread the next
+    // character as an escaped sequence (F5-R1-006, F5-R2-002, CWE-93).
     let safe_name: String = raw_name
         .chars()
         .map(|c| {
-            if matches!(c, '\r' | '\n' | '\0' | '"') {
+            if matches!(c, '\r' | '\n' | '\0' | '"' | '\\') {
                 '_'
             } else {
                 c
@@ -282,9 +284,10 @@ fn curate_jsm_attachment_entry(v: &serde_json::Value) -> AttachmentObject {
 /// - 401 → `JrError::NotAuthenticated` (exit 2) + retry hint
 /// - 403 → `JrError::ApiError { status: 403 }` (exit 1) + retry hint
 /// - Other 4xx → `JrError::UserError` (exit 64) + retry hint
-/// - 5xx / network → `JrError::ApiError` (exit 1) + retry hint
+/// - 5xx → `JrError::ApiError` (exit 1) + retry hint
+/// - transport/network → `JrError::NetworkError` (exit 1, no retry hint)
 ///
-/// Retry hint (canonical, BC-3.9.006):
+/// Retry hint (canonical, BC-3.9.006 — HTTP branches only):
 /// `"Temporary attachment IDs may have expired. Try the upload again."`
 pub async fn post_request_attachment(
     client: &JiraClient,
@@ -398,14 +401,14 @@ mod tests {
     // SEC-576-004 / CWE-93 unit pins for the safe_name transformation guard.
     //
     // The guard lives inline in `attach_temporary_file`:
-    //   raw_name.chars().map(|c| if matches!(c, '\r' | '\n' | '\0' | '"') { '_' } else { c }).collect()
+    //   raw_name.chars().map(|c| if matches!(c, '\r' | '\n' | '\0' | '"' | '\\') { '_' } else { c }).collect()
     //
     // Mirrored here as a free function so the transformation is testable without
     // touching the filesystem (no tokio::fs::File, no actual multipart POST).
     fn safe_name(raw: &str) -> String {
         raw.chars()
             .map(|c| {
-                if matches!(c, '\r' | '\n' | '\0' | '"') {
+                if matches!(c, '\r' | '\n' | '\0' | '"' | '\\') {
                     '_'
                 } else {
                     c
@@ -466,6 +469,37 @@ mod tests {
             safe_name("a\"b\"c"),
             "a_b_c",
             "F5-R1-006 JSM: multiple '\"' must each become '_'"
+        );
+    }
+
+    /// F5-R2-002 (JSM): backslash (`\`) in a filename must be mapped to underscore (`_`)
+    /// by the SEC-576-004 guard in `attach_temporary_file`.
+    ///
+    /// A raw `\` in Content-Disposition `filename=` is the RFC 2616 quoted-string
+    /// escape character — a stray `\` lets a parser misread the next character as
+    /// an escaped sequence (CWE-93). This is the JSM-path twin of
+    /// `test_f5_r2_002_safe_name_backslash_mapped_to_underscore` in
+    /// `src/api/jira/attachments.rs`.
+    ///
+    /// GREEN (FIX-F5-007): guard extended to `matches!(c, '\r' | '\n' | '\0' | '"' | '\\')` —
+    /// `safe_name("file\\name.txt")` now returns `"file_name.txt"` as required.
+    #[test]
+    fn test_f5_r2_002_jsm_safe_name_backslash_mapped_to_underscore() {
+        assert_eq!(
+            safe_name("file\\name.txt"),
+            "file_name.txt",
+            "F5-R2-002 JSM: '\\' must be mapped to '_' in SEC-576-004 guard"
+        );
+        assert_eq!(
+            safe_name("a\\b\\c"),
+            "a_b_c",
+            "F5-R2-002 JSM: multiple '\\' must each become '_'"
+        );
+        // Mixed with other guarded chars.
+        assert_eq!(
+            safe_name("a\\\0b"),
+            "a__b",
+            "F5-R2-002 JSM: '\\' and '\\0' each become '_'"
         );
     }
 

@@ -198,33 +198,32 @@ impl JiraClient {
     /// all `Option` — missing fields (e.g., for deleted attachments) do NOT abort.
     ///
     /// Error mapping (BC-2.7.012):
-    /// - 404 → `JrError::UserError` (exit 64): attachment not found.
+    /// - 404 → `JrError::ApiError { status: 404, message }` (body preserved).
+    ///   **Callers** convert to `JrError::UserError` (exit 64) with call-site-specific
+    ///   formatting per BC-2.7.012 body-surfacing asymmetry (F5-R3-001):
+    ///   - `handle_single_download` (download path): canonical-only, no body.
+    ///   - `handle_attachment_delete` interactive gate (DEC-168): canonical + `\n{body}`.
+    ///   - bulk dry-run `Err(_)` fallback: body irrelevant (id-only row).
     /// - 401 → `JrError::NotAuthenticated` (exit 2): handled by client.
-    /// - 403 → `JrError::ApiError` (exit 1): `"Permission denied: cannot access attachment <id>."`.
+    /// - 403 → `JrError::ApiError { status: 403 }` (exit 1):
+    ///   `"Permission denied: cannot access attachment <id>."`.
     /// - 5xx / network → `JrError::ApiError` / `JrError::NetworkError` (exit 1).
     pub async fn get_attachment_metadata(&self, id: &str) -> Result<AttachmentMetadata> {
         let path = format!("/rest/api/3/attachment/{}", id);
         let result = self.get::<AttachmentMetadata>(&path).await;
         match result {
             Ok(meta) => Ok(meta),
-            Err(e) => match e.downcast_ref::<JrError>() {
-                Some(JrError::ApiError { status, message }) if *status == 404 => Err(
-                    // F5-R1-004: include the Jira error body after the canonical prefix so
-                    // callers surface actionable detail — same shape as delete_attachment_targeted
-                    // (DEC-168). The `..` wildcard previously discarded `message`.
-                    JrError::UserError(format!(
-                        "Attachment {id} not found or not accessible.\n{message}"
-                    ))
-                    .into(),
-                ),
-                Some(JrError::ApiError { status, .. }) if *status == 403 => {
-                    Err(JrError::ApiError {
-                        status: 403,
-                        message: format!("Permission denied: cannot access attachment {id}."),
-                    }
-                    .into())
+            Err(e) => match e.downcast::<JrError>() {
+                Ok(JrError::ApiError { status: 403, .. }) => Err(JrError::ApiError {
+                    status: 403,
+                    message: format!("Permission denied: cannot access attachment {id}."),
                 }
-                _ => Err(e),
+                .into()),
+                // 404: pass through ApiError with raw Jira body intact so call sites
+                // can choose whether to surface the body (DEC-168 delete path) or emit
+                // canonical-only text (download path, BC-2.7.012).
+                Ok(jr_err) => Err(jr_err.into()),
+                Err(other) => Err(other),
             },
         }
     }
@@ -275,15 +274,17 @@ impl JiraClient {
                     .file_name()
                     .map(|n| n.to_string_lossy().into_owned())
                     .unwrap_or_else(|| path.to_string_lossy().into_owned());
-                // SEC-576-004: strip CR, LF, NUL, and double-quote from the filename
-                // before embedding in a Content-Disposition header value to prevent
-                // header-injection (CWE-93). CR/LF/NUL can inject new header lines;
-                // '"' can break the RFC 2616 quoted-string parameter boundary,
-                // allowing subsequent data to be misread as separate header parameters.
+                // SEC-576-004: strip CR, LF, NUL, double-quote, and backslash from the
+                // filename before embedding in a Content-Disposition header value to
+                // prevent header-injection (CWE-93). CR/LF/NUL can inject new header
+                // lines; '"' can break the RFC 2616 quoted-string parameter boundary,
+                // allowing subsequent data to be misread as separate header parameters;
+                // '\' is the RFC 2616 quoted-string escape character — a stray '\' lets
+                // a parser misread the next character as an escaped sequence (CWE-93).
                 let safe_name: String = raw_name
                     .chars()
                     .map(|c| {
-                        if matches!(c, '\r' | '\n' | '\0' | '"') {
+                        if matches!(c, '\r' | '\n' | '\0' | '"' | '\\') {
                             '_'
                         } else {
                             c
@@ -486,14 +487,14 @@ mod tests {
     // SEC-576-004 / CWE-93 unit pins for the safe_name transformation guard.
     //
     // The guard lives inline in `upload_attachments`:
-    //   raw_name.chars().map(|c| if matches!(c, '\r' | '\n' | '\0' | '"') { '_' } else { c }).collect()
+    //   raw_name.chars().map(|c| if matches!(c, '\r' | '\n' | '\0' | '"' | '\\') { '_' } else { c }).collect()
     //
     // Mirrored here as a free function so the transformation is testable without
     // spawning a subprocess or needing a real file on disk.
     fn safe_name(raw: &str) -> String {
         raw.chars()
             .map(|c| {
-                if matches!(c, '\r' | '\n' | '\0' | '"') {
+                if matches!(c, '\r' | '\n' | '\0' | '"' | '\\') {
                     '_'
                 } else {
                     c
@@ -560,6 +561,48 @@ mod tests {
             safe_name("a\"b\"c"),
             "a_b_c",
             "F5-R1-006: multiple '\"' must each become '_'"
+        );
+    }
+
+    /// F5-R2-002: backslash (`\`) in a filename must be mapped to underscore (`_`)
+    /// by the SEC-576-004 guard.
+    ///
+    /// A raw `\` in Content-Disposition `filename=` is the RFC 2616 quoted-string
+    /// escape character — a stray `\` lets a parser misread the next character as
+    /// an escaped sequence, potentially breaking the quoted-string boundary (CWE-93).
+    /// On Windows, `\` is also a path-component separator, so an unguarded `\` in
+    /// a server-supplied filename could smuggle a traversal component into the
+    /// `filename=` value.
+    ///
+    /// GREEN (FIX-F5-007): guard extended to `matches!(c, '\r' | '\n' | '\0' | '"' | '\\')` —
+    /// `safe_name("file\\name.txt")` now returns `"file_name.txt"` as required.
+    #[test]
+    fn test_f5_r2_002_safe_name_backslash_mapped_to_underscore() {
+        assert_eq!(
+            safe_name("file\\name.txt"),
+            "file_name.txt",
+            "F5-R2-002: '\\' must be mapped to '_' in SEC-576-004 guard"
+        );
+        assert_eq!(
+            safe_name("\\leading"),
+            "_leading",
+            "F5-R2-002: leading '\\' must become '_'"
+        );
+        assert_eq!(
+            safe_name("trailing\\"),
+            "trailing_",
+            "F5-R2-002: trailing '\\' must become '_'"
+        );
+        assert_eq!(
+            safe_name("a\\b\\c"),
+            "a_b_c",
+            "F5-R2-002: multiple '\\' must each become '_'"
+        );
+        // Mixed with other guarded chars — all must be replaced.
+        assert_eq!(
+            safe_name("a\\\rb"),
+            "a__b",
+            "F5-R2-002: '\\' and '\\r' each become '_'"
         );
     }
 
