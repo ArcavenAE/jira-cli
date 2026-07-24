@@ -587,6 +587,86 @@ fn batch_path_is_within_dir(
 // S-576-2: private async helpers
 // ---------------------------------------------------------------------------
 
+/// Classify a disk-write `io::Error` into a user-friendly discriminated message.
+///
+/// **BC-2.7.012 v1.3.102** — used by all four I/O sites in `stream_to_file`
+/// (`File::create`, `write_all`, `rename`) so that single-mode (propagate → exit 1)
+/// and batch-mode (per-file fail-soft warning) paths both benefit from one chokepoint.
+///
+/// # Branch mapping
+/// - `StorageFull | QuotaExceeded` →
+///   `"Disk full: not enough space to write <dest>: <os_err>. Free up disk space and try again."`
+/// - `PermissionDenied | ReadOnlyFilesystem` →
+///   `"Permission denied: cannot write to <dir> (writing <dest>): <os_err>. Check directory permissions and try again."`
+/// - `_` (non-exhaustive fallback, **required** because `ErrorKind` is `#[non_exhaustive]`) →
+///   `"Failed to write <dest>: <os_err>."`
+///
+/// # Arguments
+/// - `kind`         — `e.kind()` from the raw `std::io::Error` (call BEFORE any anyhow conversion).
+/// - `dest_display` — final destination path, filename portion display-sanitized (CWE-116).
+/// - `dir_display`  — `final_path.parent()` rendered verbatim (operator-controlled).
+/// - `os_err`       — `e.to_string()` from the raw `std::io::Error` (ends in `(os error N)`).
+fn classify_write_error(
+    kind: std::io::ErrorKind,
+    dest_display: &str,
+    dir_display: &str,
+    os_err: &str,
+) -> String {
+    match kind {
+        std::io::ErrorKind::StorageFull | std::io::ErrorKind::QuotaExceeded => {
+            format!(
+                "Disk full: not enough space to write {dest_display}: {os_err}. \
+                 Free up disk space and try again."
+            )
+        }
+        std::io::ErrorKind::PermissionDenied | std::io::ErrorKind::ReadOnlyFilesystem => {
+            format!(
+                "Permission denied: cannot write to {dir_display} (writing {dest_display}): {os_err}. \
+                 Check directory permissions and try again."
+            )
+        }
+        _ => {
+            format!("Failed to write {dest_display}: {os_err}.")
+        }
+    }
+}
+
+/// Compute the two display strings used in all write-error messages for `final_path`.
+///
+/// Returns `(dir_display, dest_display)` where:
+/// - `dir_display`  — parent directory, rendered verbatim (operator-controlled); falls
+///   back to `"."` when the path has no non-empty parent component.
+/// - `dest_display` — full destination string for error messages: `"<dir>/<file>"` when
+///   a non-empty parent exists, otherwise just the sanitized filename (no leading
+///   path-separator prefix).
+///
+/// The filename portion is run through `display_sanitize_filename` (CWE-116 / BC-2.7.011).
+/// The parent portion is rendered verbatim (operator-controlled; no sanitization applied).
+///
+/// # Mutant-killing contract (FIX-F5-010)
+/// - Non-empty parent path: `dir_display` == the parent (NOT `"."`).
+/// - Bare filename (no parent / empty parent):
+///   - `dir_display` == `"."` (NOT `""`).
+///   - `dest_display` == the filename — no leading path-separator character.
+fn write_error_display_strings(final_path: &std::path::Path) -> (String, String) {
+    let final_fname = final_path
+        .file_name()
+        .map(|n| display_sanitize_filename(&n.to_string_lossy()))
+        .unwrap_or_else(|| display_sanitize_filename(&final_path.to_string_lossy()));
+    let final_dir_display = final_path
+        .parent()
+        .filter(|d| !d.as_os_str().is_empty())
+        .map(|d| d.display().to_string())
+        .unwrap_or_else(|| ".".to_string());
+    let final_dest_display = match final_path.parent() {
+        Some(d) if !d.as_os_str().is_empty() => {
+            format!("{}{}{final_fname}", d.display(), std::path::MAIN_SEPARATOR)
+        }
+        _ => final_fname,
+    };
+    (final_dir_display, final_dest_display)
+}
+
 /// Stream `response` body to `final_path` using an atomic temp-file + rename pattern.
 ///
 /// Temp file: `tmp_<16 random hex digits>` in the SAME directory as `final_path`
@@ -596,6 +676,11 @@ fn batch_path_is_within_dir(
 ///
 /// On ANY error after temp-file creation, the temp file is deleted before returning
 /// the error (cleanup guarantee for BC-2.7.007 EC-2.7.007-4).
+///
+/// **Write-error classification (BC-2.7.012 v1.3.102):** all four I/O sites
+/// (`File::create`, `write_all`, `flush`, `rename`) route through `classify_write_error` to
+/// emit discriminated messages (`Disk full: …`, `Permission denied: …`, generic
+/// fallback) that name the **final destination** (never the internal `tmp_<hex>` path).
 async fn stream_to_file(
     response: reqwest::Response,
     final_path: &std::path::Path,
@@ -607,40 +692,59 @@ async fn stream_to_file(
     let token: u64 = rand::random();
     let tmp_path = parent.join(format!("tmp_{token:016x}"));
 
+    // BC-2.7.012 v1.3.102: pre-compute display strings shared across all four I/O
+    // error sites below. CWE-116 / BC-2.7.011: display-sanitize the server-supplied
+    // filename portion; the operator-controlled parent directory is rendered verbatim.
+    let (final_dir_display, final_dest_display) = write_error_display_strings(final_path);
+
     let result: anyhow::Result<u64> = async {
         let mut file = tokio::fs::File::create(&tmp_path).await.map_err(|e| {
-            anyhow::anyhow!("failed to create temp file {}: {e}", tmp_path.display())
+            let msg = classify_write_error(
+                e.kind(),
+                &final_dest_display,
+                &final_dir_display,
+                &e.to_string(),
+            );
+            anyhow::anyhow!("{msg}")
         })?;
         let mut bytes_written: u64 = 0;
 
         let mut stream = response.bytes_stream();
         while let Some(chunk) = stream.next().await {
             let chunk = chunk.map_err(|e| anyhow::anyhow!("stream error: {e}"))?;
-            file.write_all(&chunk)
-                .await
-                .map_err(|e| anyhow::anyhow!("write error to {}: {e}", tmp_path.display()))?;
+            file.write_all(&chunk).await.map_err(|e| {
+                let msg = classify_write_error(
+                    e.kind(),
+                    &final_dest_display,
+                    &final_dir_display,
+                    &e.to_string(),
+                );
+                anyhow::anyhow!("{msg}")
+            })?;
             bytes_written += chunk.len() as u64;
         }
 
-        file.flush().await?;
+        file.flush().await.map_err(|e| {
+            let msg = classify_write_error(
+                e.kind(),
+                &final_dest_display,
+                &final_dir_display,
+                &e.to_string(),
+            );
+            anyhow::anyhow!("{msg}")
+        })?;
         drop(file);
 
         tokio::fs::rename(&tmp_path, final_path)
             .await
             .map_err(|e| {
-                // BC-2.7.011 / CWE-116: display-sanitize the server-supplied filename
-                // portion; parent directory is operator-controlled and rendered verbatim.
-                let fname = final_path
-                    .file_name()
-                    .map(|n| display_sanitize_filename(&n.to_string_lossy()))
-                    .unwrap_or_else(|| display_sanitize_filename(&final_path.to_string_lossy()));
-                let display = match final_path.parent() {
-                    Some(d) if !d.as_os_str().is_empty() => {
-                        format!("{}{}{fname}", d.display(), std::path::MAIN_SEPARATOR)
-                    }
-                    _ => fname,
-                };
-                anyhow::anyhow!("failed to rename temp to {display}: {e}")
+                let msg = classify_write_error(
+                    e.kind(),
+                    &final_dest_display,
+                    &final_dir_display,
+                    &e.to_string(),
+                );
+                anyhow::anyhow!("{msg}")
             })?;
 
         Ok(bytes_written)
@@ -3141,6 +3245,233 @@ mod tests {
              resolved_dir:  {}",
             final_path.display(),
             non_canonical_base.display()
+        );
+    }
+
+    // ===========================================================================
+    // BC-2.7.012 v1.3.102 — classify_write_error pure classifier unit tests
+    // FIX-F5-010 RED GATE
+    //
+    // These tests call `classify_write_error`, which does NOT yet exist in this
+    // file. They will FAIL TO COMPILE until the implementer adds the function.
+    //
+    // Compile failure IS the RED state — the strongest revert-pin. After the
+    // implementation, all tests in this block must pass without modification.
+    //
+    // Implementer contract (from BC-2.7.012, research doc f5-r5-001):
+    //   fn classify_write_error(
+    //       kind: std::io::ErrorKind,
+    //       dest_display: &str,   // final destination path (display-safe)
+    //       dir_display: &str,    // final_path.parent() verbatim
+    //       os_err: &str,         // std::io::Error::Display of the raw error
+    //   ) -> String
+    //
+    // Branch mapping (non-exhaustive `_ =>` arm REQUIRED — ErrorKind is
+    // `#[non_exhaustive]` and must NOT be exhaustively matched):
+    //   StorageFull | QuotaExceeded  →  "Disk full: not enough space to write <dest>: <os_err>. Free up disk space and try again."
+    //   PermissionDenied | ReadOnlyFilesystem  →  "Permission denied: cannot write to <dir> (writing <dest>): <os_err>. Check directory permissions and try again."
+    //   _ (fallback)  →  "Failed to write <dest>: <os_err>."
+    // ===========================================================================
+
+    #[test]
+    fn test_bc_2_7_012_classify_storage_full_disk_full_prefix() {
+        use std::io::ErrorKind;
+        let os_err = std::io::Error::from(ErrorKind::StorageFull).to_string();
+        let msg = classify_write_error(
+            ErrorKind::StorageFull,
+            "/output/report.pdf",
+            "/output",
+            &os_err,
+        );
+        assert!(
+            msg.starts_with("Disk full: not enough space to write /output/report.pdf:"),
+            "StorageFull must produce \
+             'Disk full: not enough space to write <dest>:' prefix; got: {msg}"
+        );
+        assert!(
+            msg.contains("Free up disk space and try again."),
+            "StorageFull must include remediation hint; got: {msg}"
+        );
+        assert!(
+            msg.contains(&os_err),
+            "StorageFull must include the OS error string '{os_err}'; got: {msg}"
+        );
+    }
+
+    #[test]
+    fn test_bc_2_7_012_classify_quota_exceeded_disk_full_prefix() {
+        use std::io::ErrorKind;
+        let os_err = std::io::Error::from(ErrorKind::QuotaExceeded).to_string();
+        let msg = classify_write_error(
+            ErrorKind::QuotaExceeded,
+            "/output/report.pdf",
+            "/output",
+            &os_err,
+        );
+        assert!(
+            msg.starts_with("Disk full: not enough space to write /output/report.pdf:"),
+            "QuotaExceeded must produce \
+             'Disk full: not enough space to write <dest>:' prefix; got: {msg}"
+        );
+        assert!(
+            msg.contains("Free up disk space and try again."),
+            "QuotaExceeded must include remediation hint; got: {msg}"
+        );
+        assert!(
+            msg.contains(&os_err),
+            "QuotaExceeded must include the OS error string '{os_err}'; got: {msg}"
+        );
+    }
+
+    #[test]
+    fn test_bc_2_7_012_classify_permission_denied_perm_prefix() {
+        use std::io::ErrorKind;
+        let os_err = std::io::Error::from(ErrorKind::PermissionDenied).to_string();
+        let msg = classify_write_error(
+            ErrorKind::PermissionDenied,
+            "/output/report.pdf",
+            "/output",
+            &os_err,
+        );
+        // BC-2.7.012 v1.3.103: parenthetical `(writing <dest>)` added after <dir>.
+        assert!(
+            msg.starts_with("Permission denied: cannot write to /output (writing"),
+            "PermissionDenied must produce \
+             'Permission denied: cannot write to <dir> (writing' prefix; got: {msg}"
+        );
+        assert!(
+            msg.contains("Check directory permissions and try again."),
+            "PermissionDenied must include remediation hint; got: {msg}"
+        );
+        assert!(
+            msg.contains(&os_err),
+            "PermissionDenied must include the OS error string '{os_err}'; got: {msg}"
+        );
+        // BC-2.7.012 v1.3.103 / P9-001: dest_display must appear in message.
+        assert!(
+            msg.contains("/output/report.pdf"),
+            "PermissionDenied must include dest_display '/output/report.pdf'; got: {msg}"
+        );
+    }
+
+    #[test]
+    fn test_bc_2_7_012_classify_read_only_filesystem_perm_prefix() {
+        use std::io::ErrorKind;
+        let os_err = std::io::Error::from(ErrorKind::ReadOnlyFilesystem).to_string();
+        let msg = classify_write_error(
+            ErrorKind::ReadOnlyFilesystem,
+            "/output/report.pdf",
+            "/output",
+            &os_err,
+        );
+        // BC-2.7.012 v1.3.103: parenthetical `(writing <dest>)` added after <dir>.
+        assert!(
+            msg.starts_with("Permission denied: cannot write to /output (writing"),
+            "ReadOnlyFilesystem must produce \
+             'Permission denied: cannot write to <dir> (writing' prefix; got: {msg}"
+        );
+        assert!(
+            msg.contains("Check directory permissions and try again."),
+            "ReadOnlyFilesystem must include remediation hint; got: {msg}"
+        );
+        assert!(
+            msg.contains(&os_err),
+            "ReadOnlyFilesystem must include the OS error string '{os_err}'; got: {msg}"
+        );
+        // BC-2.7.012 v1.3.103 / P9-001: dest_display must appear in message.
+        assert!(
+            msg.contains("/output/report.pdf"),
+            "ReadOnlyFilesystem must include dest_display '/output/report.pdf'; got: {msg}"
+        );
+    }
+
+    #[test]
+    fn test_bc_2_7_012_classify_generic_fallback() {
+        use std::io::ErrorKind;
+        let os_err = std::io::Error::from(ErrorKind::Other).to_string();
+        let msg = classify_write_error(ErrorKind::Other, "/output/report.pdf", "/output", &os_err);
+        assert!(
+            msg.starts_with("Failed to write /output/report.pdf:"),
+            "Generic fallback must produce 'Failed to write <dest>:' prefix; got: {msg}"
+        );
+        assert!(
+            msg.contains(&os_err),
+            "Generic fallback must include the OS error string '{os_err}'; got: {msg}"
+        );
+        assert!(
+            msg.ends_with('.'),
+            "Generic fallback message must end with '.'; got: {msg}"
+        );
+        // Generic fallback must NOT include the discriminated remediation hints.
+        assert!(
+            !msg.contains("Free up disk space"),
+            "Generic fallback must NOT include 'Free up disk space'; got: {msg}"
+        );
+        assert!(
+            !msg.contains("Check directory permissions"),
+            "Generic fallback must NOT include 'Check directory permissions'; got: {msg}"
+        );
+    }
+
+    // FIX-F5-010: write_error_display_strings mutant-killing tests.
+    //
+    // Mutant 1 ("delete ! in stream_to_file", line 668): changes
+    //   `.filter(|d| !d.as_os_str().is_empty())`
+    //   to `.filter(|d| d.as_os_str().is_empty())`.
+    //   - Normal path ("out/dir/file.txt"): non-empty parent is REJECTED by the mutated
+    //     filter (is_empty() → false → filter drops it), so unwrap_or falls to "." — wrong.
+    //   - Bare filename ("file.txt"): empty parent is ACCEPTED by the mutated filter
+    //     (is_empty() → true → filter keeps it), so .map returns "" — wrong.
+    //
+    // Mutant 2 ("replace match guard !d.as_os_str().is_empty() with true", line 672):
+    //   changes `Some(d) if !d.as_os_str().is_empty()` to `Some(d) if true`.
+    //   - Bare filename: Some("") now matches first arm, dest becomes "/" + fname — wrong.
+    //   - Normal path: arm already matched correctly (non-empty parent), no observable change.
+    //
+    // The two tests together kill both mutants by pinning exact output for both cases.
+
+    #[test]
+    fn test_write_error_display_strings_normal_path_kills_mutant1() {
+        // Non-empty parent "out/dir": the filter and guard both pass in correct code.
+        // Mutant 1 (! deleted): filter rejects "out/dir" (not empty) → dir falls to "."
+        // → assertion `dir == "out/dir"` fails, killing the mutant.
+        let path = std::path::Path::new("out/dir/file.txt");
+        let (dir, dest) = write_error_display_strings(path);
+        assert_eq!(
+            dir, "out/dir",
+            "non-empty parent must be used verbatim as dir; mutant 1 would yield '.'"
+        );
+        assert!(
+            dest.starts_with("out/dir"),
+            "dest must start with the parent directory; got: {dest}"
+        );
+        assert!(
+            dest.contains("file.txt"),
+            "dest must contain the filename portion; got: {dest}"
+        );
+    }
+
+    #[test]
+    fn test_write_error_display_strings_bare_filename_kills_both_mutants() {
+        // Bare filename "file.txt": Path::parent() → Some("") (empty component).
+        // Correct: dir=".", dest="file.txt".
+        //
+        // Mutant 1 (! deleted): empty parent is ACCEPTED by mutated filter
+        //   (d.as_os_str().is_empty() → true) → .map returns "" → dir="" ≠ "." → caught.
+        //
+        // Mutant 2 (guard replaced with true): Some("") matches first arm →
+        //   dest = format!("{}{}file.txt", "", MAIN_SEPARATOR) = "/file.txt" on Unix,
+        //   "\file.txt" on Windows — either way dest ≠ "file.txt" → caught.
+        let path = std::path::Path::new("file.txt");
+        let (dir, dest) = write_error_display_strings(path);
+        assert_eq!(
+            dir, ".",
+            "bare filename must fall back to '.'; mutant 1 (! deleted) would yield ''"
+        );
+        assert_eq!(
+            dest, "file.txt",
+            "bare filename dest must be just the filename with no leading separator; \
+             mutant 2 (guard=true) would prepend the path separator"
         );
     }
 }
