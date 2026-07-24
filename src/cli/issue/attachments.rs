@@ -569,7 +569,14 @@ fn batch_path_is_within_dir(
 ) -> std::io::Result<bool> {
     let parent = final_path.parent().unwrap_or(resolved_dir);
     let canonical_parent = parent.canonicalize()?;
-    Ok(canonical_parent.starts_with(resolved_dir))
+    // F5-R3-002: canonicalize resolved_dir before starts_with so that a
+    // non-canonical base (e.g. containing `..` components, or a macOS
+    // `/var` symlink prefix) does not falsely fail the containment test.
+    // If resolved_dir itself cannot be canonicalized (directory does not
+    // exist), ? propagates an Err so the call site's warn-and-skip path
+    // fires (fail-open: the download proceeds with a warning logged).
+    let canonical_dir = resolved_dir.canonicalize()?;
+    Ok(canonical_parent.starts_with(canonical_dir))
 }
 
 // ---------------------------------------------------------------------------
@@ -699,7 +706,19 @@ async fn handle_single_download(
     }
 
     // BC-2.7.007 step 1: fetch attachment metadata.
-    let metadata = client.get_attachment_metadata(id_str).await?;
+    // BC-2.7.012 body-surfacing asymmetry (F5-R3-001): download emits canonical-only;
+    // get_attachment_metadata passes 404 through as ApiError so callers choose the format.
+    let metadata = client.get_attachment_metadata(id_str).await.map_err(|e| {
+        if let Some(JrError::ApiError { status, .. }) = e.downcast_ref::<JrError>() {
+            if *status == 404 {
+                return JrError::UserError(format!(
+                    "Attachment {id_str} not found or not accessible."
+                ))
+                .into();
+            }
+        }
+        e
+    })?;
     let raw_filename = metadata.filename.as_deref().unwrap_or(id_str);
 
     // Determine final output path.
@@ -1870,8 +1889,23 @@ pub async fn handle_attachment_delete(
 
             // Confirmation gate (BC-3.9.015; VP-576-002; DEC-174)
             if !yes {
-                // Fetch metadata to get the filename for the gate prompt
-                let meta = client.get_attachment_metadata(aid).await?;
+                // Fetch metadata to get the filename for the gate prompt.
+                // DEC-168 / BC-2.7.012 body-surfacing asymmetry (F5-R3-001): on 404
+                // the interactive delete path shows canonical prefix + Jira error body
+                // (actionable detail). get_attachment_metadata returns ApiError { 404 }
+                // with body intact; we format it here as canonical + "\n{body}".
+                let meta = client.get_attachment_metadata(aid).await.map_err(|e| {
+                    if let Some(JrError::ApiError { status, message }) = e.downcast_ref::<JrError>()
+                    {
+                        if *status == 404 {
+                            return JrError::UserError(format!(
+                                "Attachment {aid} not found or not accessible.\n{message}"
+                            ))
+                            .into();
+                        }
+                    }
+                    e
+                })?;
                 let filename = meta.filename.as_deref().unwrap_or(aid.as_str());
                 let display_name = display_sanitize_filename(filename);
 
@@ -3037,6 +3071,73 @@ mod tests {
             matches!(result, Ok(false)),
             "batch_path_is_within_dir must return Ok(false) when parent is outside base_dir; \
              got: {result:?}"
+        );
+    }
+
+    // ---------------------------------------------------------------------------
+    // F5-R3-002: batch_path_is_within_dir must accept a non-canonical base dir
+    // ---------------------------------------------------------------------------
+
+    /// F5-R3-002: `batch_path_is_within_dir` must return `Ok(true)` when
+    /// `resolved_dir` is NON-canonical (contains `..` segments) but `final_path`
+    /// is genuinely inside the base directory.
+    ///
+    /// **Current defect:** the function canonicalizes `parent` (via
+    /// `parent.canonicalize()`) but compares the result against `resolved_dir`
+    /// as-is.  When `resolved_dir` is the non-canonical fallback value produced
+    /// by the call-site `unwrap_or_else(|_| base_dir.to_path_buf())` at ~line 887
+    /// (e.g., a path containing `..` segments or a macOS symlinked `/var` prefix
+    /// instead of `/private/var`), `canonical_parent.starts_with(resolved_dir)`
+    /// is `false` even though the path IS contained — so every file in a batch
+    /// download is silently rejected, producing "Downloaded 0 of N" with exit 0.
+    ///
+    /// **Fix direction for implementer:** canonicalize `resolved_dir` inside
+    /// `batch_path_is_within_dir` before the `starts_with` check (or accept
+    /// `Err` + warn when the base itself cannot be canonicalized — either
+    /// approach satisfies the contract).
+    ///
+    /// **RED gate:** `canonical_parent.starts_with(non_canonical_base)` is
+    /// `false` for the `..`-containing path constructed below, so the assertion
+    /// fails until the function is fixed.
+    #[test]
+    fn test_f5_r3_002_batch_path_is_within_dir_accepts_non_canonical_base() {
+        let base = tempfile::tempdir().expect("create tempdir");
+        // Canonicalize to get the true filesystem path (resolves symlinks such
+        // as macOS /var → /private/var).
+        let canonical_base = base
+            .path()
+            .canonicalize()
+            .expect("canonicalize base tempdir");
+
+        // Build a NON-canonical path that refers to the SAME directory by
+        // appending `../<basename>`.  For example:
+        //   canonical:     /private/var/folders/…/T/tmp_abc
+        //   non-canonical: /private/var/folders/…/T/tmp_abc/../tmp_abc
+        //
+        // `Path::starts_with` is component-based and does NOT normalize `..`,
+        // so `canonical_parent.starts_with(non_canonical)` returns `false`
+        // even though the directories are identical — this is the defect.
+        let basename = canonical_base
+            .file_name()
+            .expect("canonical_base has a filename");
+        let non_canonical_base = canonical_base.join("..").join(basename);
+
+        // final_path is a genuine child of the base dir.
+        let final_path = canonical_base.join("safe_attachment_f5r3002.bin");
+
+        let result = batch_path_is_within_dir(&final_path, &non_canonical_base);
+
+        // After the fix this must return Ok(true); currently returns Ok(false)
+        // because canonical_parent (/tmp/…/tmp_abc) does NOT start_with the
+        // non-canonical path (/tmp/…/tmp_abc/../tmp_abc).
+        assert!(
+            matches!(result, Ok(true)),
+            "F5-R3-002 RED: batch_path_is_within_dir must accept a genuine child \
+             even when resolved_dir is non-canonical; got: {result:?}\n\
+             final_path:    {}\n\
+             resolved_dir:  {}",
+            final_path.display(),
+            non_canonical_base.display()
         );
     }
 }
