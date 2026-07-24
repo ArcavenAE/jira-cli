@@ -63,11 +63,13 @@ pub async fn attach_temporary_file(
         .map(|n| n.to_string_lossy().into_owned())
         .unwrap_or_else(|| path.to_string_lossy().into_owned());
 
-    // SEC-576-004 CRLF/NUL guard — prevent header-injection in Content-Disposition.
+    // SEC-576-004 CRLF/NUL/double-quote guard — prevent header-injection in
+    // Content-Disposition. CR/LF/NUL can inject new header lines; '"' can break
+    // the RFC 2616 quoted-string parameter boundary (F5-R1-006, CWE-93).
     let safe_name: String = raw_name
         .chars()
         .map(|c| {
-            if matches!(c, '\r' | '\n' | '\0') {
+            if matches!(c, '\r' | '\n' | '\0' | '"') {
                 '_'
             } else {
                 c
@@ -316,11 +318,10 @@ pub async fn post_request_attachment(
                 .url()
                 .and_then(|u| u.host_str().map(str::to_string))
                 .unwrap_or_else(|| "Jira".to_string());
-            // BC-3.9.006: network errors in step-2 must exit 1 and append RETRY_HINT.
-            JrError::ApiError {
-                status: 0,
-                message: format!("Could not reach {host} — check your connection\n{RETRY_HINT}"),
-            }
+            // F5-R1-007: use canonical NetworkError variant (exit 1), not ApiError{status:0}
+            // (status=0 is not a real HTTP code and leaks implementation noise).
+            // NetworkError format: "Could not reach {host} — check your connection".
+            JrError::NetworkError(host)
         })?;
 
     let status = response.status();
@@ -396,15 +397,15 @@ mod tests {
 
     // SEC-576-004 / CWE-93 unit pins for the safe_name transformation guard.
     //
-    // The guard lives inline in `attach_temporary_file` (~line 67):
-    //   raw_name.chars().map(|c| if matches!(c, '\r' | '\n' | '\0') { '_' } else { c }).collect()
+    // The guard lives inline in `attach_temporary_file`:
+    //   raw_name.chars().map(|c| if matches!(c, '\r' | '\n' | '\0' | '"') { '_' } else { c }).collect()
     //
     // Mirrored here as a free function so the transformation is testable without
     // touching the filesystem (no tokio::fs::File, no actual multipart POST).
     fn safe_name(raw: &str) -> String {
         raw.chars()
             .map(|c| {
-                if matches!(c, '\r' | '\n' | '\0') {
+                if matches!(c, '\r' | '\n' | '\0' | '"') {
                     '_'
                 } else {
                     c
@@ -444,6 +445,30 @@ mod tests {
         assert_eq!(safe_name("a\0b\0c"), "a_b_c");
     }
 
+    /// F5-R1-006 (JSM): double-quote (`"`) in a filename must be mapped to underscore (`_`)
+    /// by the SEC-576-004 guard in `attach_temporary_file` to prevent quoted-string
+    /// parameter injection in Content-Disposition (CWE-93).
+    ///
+    /// RED: current guard only maps `\r`, `\n`, `\0` — not `"`.
+    /// Target: `"` is also mapped to `_`.
+    ///
+    /// When this test turns GREEN, also update
+    /// `test_sec_576_004_safe_name_double_quote_not_in_guard` (if analogous) and
+    /// the JSM integration test in `tests/attachment_jsm.rs`.
+    #[test]
+    fn test_f5_r1_006_jsm_safe_name_double_quote_mapped_to_underscore() {
+        assert_eq!(
+            safe_name("file\"name.txt"),
+            "file_name.txt",
+            "F5-R1-006 JSM: '\"' must be mapped to '_' in SEC-576-004 guard"
+        );
+        assert_eq!(
+            safe_name("a\"b\"c"),
+            "a_b_c",
+            "F5-R1-006 JSM: multiple '\"' must each become '_'"
+        );
+    }
+
     /// Benign filenames are unmodified (regression guard — safe_name must not
     /// corrupt valid filenames, including names with spaces, dots, and Unicode).
     #[test]
@@ -454,12 +479,20 @@ mod tests {
         assert_eq!(safe_name(""), "");
     }
 
-    /// BC-3.9.006: network errors from step-2 (post_request_attachment) must append
-    /// RETRY_HINT — symmetric with 4xx/5xx error branches.
+    /// BC-3.9.006: network errors from step-2 (post_request_attachment) exit 1
+    /// and produce a connectivity error message (F5-R1-007: uses JrError::NetworkError,
+    /// not ApiError{status:0}). RETRY_HINT is no longer embedded in network errors
+    /// (it is still present on 4xx/5xx HTTP error branches). NetworkError format:
+    /// "Could not reach {host} — check your connection".
     /// Uses 127.0.0.1:1 (established no-listener pattern in this codebase) to
-    /// trigger a ECONNREFUSED without requiring a real server.
+    /// trigger ECONNREFUSED without requiring a real server.
+    /// BC-3.9.006 / F5-R1-007: step-2 transport errors use the connectivity message
+    /// ("check your connection"), NOT the expired-ID retry hint.  This test was
+    /// formerly named `test_bc_3_9_006_step2_network_error_appends_retry_hint`; the
+    /// old name was misleading because the retry hint is no longer present on the
+    /// network-error path after F5-R1-007.
     #[tokio::test]
-    async fn test_bc_3_9_006_step2_network_error_appends_retry_hint() {
+    async fn test_bc_3_9_006_step2_network_error_uses_connectivity_message_no_retry_hint() {
         let client = JiraClient::new_for_test(
             "http://127.0.0.1:1".to_string(),
             "Basic dGVzdA==".to_string(),
@@ -470,9 +503,60 @@ mod tests {
             "expected an error when server is unreachable"
         );
         let err_string = format!("{}", result.unwrap_err());
+        // F5-R1-007: NetworkError format is "Could not reach {host} — check your connection".
         assert!(
-            err_string.contains("Temporary attachment IDs may have expired"),
-            "BC-3.9.006: network error must append RETRY_HINT\ngot: {err_string}"
+            err_string.contains("check your connection"),
+            "BC-3.9.006 (updated F5-R1-007): step-2 network error must mention connectivity; \
+             got: {err_string}"
+        );
+        // Confirm the retry hint ("Temporary attachment IDs may have expired") is absent
+        // on the network-error path — it belongs only on HTTP 4xx/5xx branches (F5-R1-007).
+        assert!(
+            !err_string.contains("may have expired"),
+            "BC-3.9.006 (F5-R1-007): retry hint must NOT appear on transport/network errors; \
+             got: {err_string}"
+        );
+    }
+
+    /// F5-R1-007: step-2 network/transport errors from `post_request_attachment`
+    /// must use the codebase-canonical `JrError::NetworkError` variant, NOT the
+    /// spurious `JrError::ApiError { status: 0 }` (status=0 is not a real HTTP
+    /// status; it leaks implementation noise and is inconsistent with how
+    /// `upload_attachments` and `attach_temporary_file` handle transport failures).
+    ///
+    /// The exit code must remain 1 (both `NetworkError` and `ApiError` map to 1
+    /// via `JrError::exit_code()`'s catch-all arm).
+    ///
+    /// Companion to `test_bc_3_9_006_step2_network_error_uses_connectivity_message_no_retry_hint`
+    /// which checks the formatted message; this test checks the error variant type.
+    #[tokio::test]
+    async fn test_f5_r1_007_step2_network_error_uses_canonical_network_error_variant() {
+        use crate::error::JrError;
+
+        let client = JiraClient::new_for_test(
+            "http://127.0.0.1:1".to_string(),
+            "Basic dGVzdA==".to_string(),
+        );
+        let result = post_request_attachment(&client, "EJ-1", &["tmp-123".to_string()], true).await;
+        let err = result.expect_err("network error expected with unreachable server");
+
+        // RED assertion: current code emits "API error (0):" — that must disappear.
+        let err_string = format!("{err}");
+        assert!(
+            !err_string.contains("API error (0):"),
+            "F5-R1-007: step-2 network error must NOT use ApiError{{status:0}} pattern \
+             (status=0 is not a real HTTP code); got: {err_string}"
+        );
+
+        // Positive assertion: error must downcast to JrError::NetworkError.
+        let jr_err = err
+            .downcast_ref::<JrError>()
+            .expect("error must downcast to JrError");
+        assert!(
+            matches!(jr_err, JrError::NetworkError(_)),
+            "F5-R1-007: step-2 transport failure must be JrError::NetworkError, \
+             matching the pattern used by upload_attachments and attach_temporary_file; \
+             got variant: {jr_err:?}"
         );
     }
 

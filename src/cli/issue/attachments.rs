@@ -550,6 +550,28 @@ fn compute_default_output_path(
     }
 }
 
+/// Defense-in-depth containment check for the batch download loop (BC-2.7.011 / F5-R1-001).
+///
+/// Returns `Ok(true)` when the parent directory of `final_path` (after canonicalization)
+/// is equal to or inside `resolved_dir`.  Returns `Ok(false)` when an escape is detected.
+/// Returns `Err` when the parent directory cannot be canonicalized (e.g., it does not yet
+/// exist on disk); the caller treats this as fail-open and emits a warning.
+///
+/// `sanitize_attachment_filename` (VP-576-001 proptest) is the primary containment
+/// authority.  This function is the secondary layer — it fires only if
+/// `compute_default_output_path` ever acquires sub-directory logic that allows a path
+/// component to cross outside `base_dir`.
+///
+/// Extracted as a standalone function to make the rejection branch directly testable.
+fn batch_path_is_within_dir(
+    final_path: &std::path::Path,
+    resolved_dir: &std::path::Path,
+) -> std::io::Result<bool> {
+    let parent = final_path.parent().unwrap_or(resolved_dir);
+    let canonical_parent = parent.canonicalize()?;
+    Ok(canonical_parent.starts_with(resolved_dir))
+}
+
 // ---------------------------------------------------------------------------
 // S-576-2: private async helpers
 // ---------------------------------------------------------------------------
@@ -842,8 +864,11 @@ async fn handle_batch_download(
     // BC-2.7.009 ~830), then truncate to N.
     if let Some(n) = newest_n {
         filtered.sort_by(|a, b| {
-            let parse_dt =
-                |s: &str| chrono::DateTime::parse_from_str(s, "%Y-%m-%dT%H:%M:%S%.3f%z").ok();
+            // RFC 3339 relaxed parser — accepts any fractional-second precision (0, 1, 2, 3,
+            // 4+ digits) and both +HH:MM and +HHMM offset forms, same as the --older-than path.
+            // The previous %.3f format rejected 1-digit and 4-digit fractional seconds, causing
+            // those attachments to sort LAST (None > Some ordering) — F5-R1-002.
+            let parse_dt = |s: &str| s.parse::<chrono::DateTime<chrono::FixedOffset>>().ok();
             match (parse_dt(&a.created), parse_dt(&b.created)) {
                 (Some(a_dt), Some(b_dt)) => b_dt.cmp(&a_dt), // newest first
                 (Some(_), None) => std::cmp::Ordering::Less, // parsed before unparseable
@@ -878,15 +903,31 @@ async fn handle_batch_download(
 
         let final_path = compute_default_output_path(&base_dir, &att.id, &att.filename, true);
 
-        // BC-2.7.011 defense-in-depth: unreachable via API-supplied filenames after sanitization steps 1-5.
-        // Two-step containment check: canonicalize base_dir, then assert joined path starts_with it.
-        if let Some(fname) = final_path.file_name() {
-            if !resolved_dir.join(fname).starts_with(&resolved_dir) {
+        // BC-2.7.011 defense-in-depth: verify the parent directory of final_path equals
+        // (or is inside) resolved_dir. sanitize_attachment_filename (VP-576-001 proptest)
+        // is the primary containment authority; this canonicalized-parent check provides
+        // an additional layer in case compute_default_output_path ever gains sub-directory
+        // logic. The previous check was vacuous: resolved_dir.join(single_component) is
+        // always starts_with resolved_dir because a single path component can never contain
+        // a traversal (F5-R1-001).
+        match batch_path_is_within_dir(&final_path, &resolved_dir) {
+            Ok(true) => {} // contained — proceed normally
+            Ok(false) => {
                 eprintln!(
                     "warning: skipping attachment {} — path escape detected after sanitization.",
                     att.id
                 );
                 continue;
+            }
+            Err(e) => {
+                // Canonicalization failed (e.g., parent directory does not yet exist).
+                // Fail-open: allow the download to proceed, but emit a warning so the
+                // operator can observe that the containment check was skipped (SEC-F5-001).
+                eprintln!(
+                    "warning: containment check skipped for attachment {} \
+                     — could not canonicalize path: {e}.",
+                    att.id
+                );
             }
         }
 
@@ -2944,6 +2985,58 @@ mod tests {
         assert!(
             msg.contains("invalid duration"),
             "P6-001: error must contain 'invalid duration'; got: {msg}"
+        );
+    }
+
+    // ---------------------------------------------------------------------------
+    // batch_path_is_within_dir — containment-rejection unit tests (F5-R1-001 / N2)
+    // ---------------------------------------------------------------------------
+
+    /// Containment check must return `Ok(true)` when the output path is a direct child
+    /// of the base directory (the normal, always-true case for current
+    /// `compute_default_output_path` output).
+    ///
+    /// This is the positive (non-rejection) arm — confirms the helper does not
+    /// false-positive on safe paths.
+    #[test]
+    fn test_batch_path_is_within_dir_accepts_child_path() {
+        let base = tempfile::tempdir().expect("tempdir");
+        let resolved = base.path().canonicalize().expect("canonicalize base");
+
+        // A plain filename inside the base dir — the current code's only output shape.
+        let final_path = resolved.join("abc123_attachment.pdf");
+
+        let result = batch_path_is_within_dir(&final_path, &resolved);
+        assert!(
+            matches!(result, Ok(true)),
+            "batch_path_is_within_dir must return Ok(true) for a direct child of base_dir; \
+             got: {result:?}"
+        );
+    }
+
+    /// Containment check must return `Ok(false)` when the parent of `final_path` is
+    /// OUTSIDE `resolved_dir`.  This is the rejection branch introduced by F5-R1-001.
+    ///
+    /// **Red-when-reverted rationale:** if `batch_path_is_within_dir` is removed (or
+    /// its body is replaced with `return Ok(true);`), this test will either fail to
+    /// compile (missing function) or fail the `Ok(false)` assertion — either outcome
+    /// ensures that reverting the F5-R1-001 repair causes a test failure.
+    #[test]
+    fn test_batch_path_is_within_dir_rejects_path_outside_base() {
+        let base = tempfile::tempdir().expect("tempdir");
+        let escape = tempfile::tempdir().expect("tempdir for escape target");
+
+        let resolved = base.path().canonicalize().expect("canonicalize base");
+
+        // Construct a path whose parent IS the escape directory, not base_dir.
+        // The escape tempdir exists on disk, so canonicalize of its path will succeed.
+        let final_path = escape.path().join("should_not_land_here.txt");
+
+        let result = batch_path_is_within_dir(&final_path, &resolved);
+        assert!(
+            matches!(result, Ok(false)),
+            "batch_path_is_within_dir must return Ok(false) when parent is outside base_dir; \
+             got: {result:?}"
         );
     }
 }
