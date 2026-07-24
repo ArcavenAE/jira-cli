@@ -5877,3 +5877,26 @@ Displaced to make room for SESSION WRAP (2026-07-19) step row per keep-5 rule.
 | Step | Agent | Status | Output |
 |------|-------|--------|--------|
 | **S-576-2 Step 4.5 CONVERGED STRICT (2026-07-20): adversary 12 passes / 9 fix rounds; p1 1H+6M+3L+[pg] → p9 1M (CWE-116 rename) → p10 CLEAN(1/3) → p11 CLEAN(2/3) → p12 NITPICK_ONLY CONVERGED. Spec v1.3.96→v1.3.97 (EC-2.7.007-5 SIGINT-cleanup corrected). Story v1.38 (AC-018+29 tests). attachment_download 29/29; attachment_list 16/16; clippy+fmt+deny clean. trajectory-tail →1→0→0→1** | adversary + state-manager | COMPLETE — CONVERGED STRICT | spec v1.3.97; BC-INDEX v6.37; STORY-INDEX v1.5.29. |
+
+---
+
+## SOH-ATTACHMENTS-1 wave-gate burst (2026-07-23)
+
+**Burst type:** Wave gate closeout — factory-artifacts commit (TD-VSDD-053 single-commit protocol)
+**Files created/updated:** `.factory/cycles/cycle-001/gates/soh-attachments-1-wave-gate.md` (new); `.factory/logs/mutation-report-SOH-ATTACHMENTS-1-jr.md` (new); `.factory/sprint-state.yaml` (SOH-ATTACHMENTS-1-wave-gate block added); `.factory/STATE.md` (frontmatter timestamp + Phase Progress + CPS rows rotated; Drift Items +5 rows updated; Session Resume Checkpoint replaced; RESUME PLAN Step 3 updated); `.factory/cycles/cycle-001/burst-log.md` (archived rows appended); `.factory/cycles/cycle-001/session-checkpoints.md` (old SESSION WRAP checkpoint archived)
+
+### Archived Phase Progress row (displaced by keep-5 rule; new SOH-ATTACHMENTS-1 WAVE GATE PASSED row added)
+
+Displaced to make room for SOH-ATTACHMENTS-1 WAVE GATE PASSED Phase Progress row per keep-5 rule.
+
+| Phase | Status | Completed | Gate | Notes |
+|-------|--------|-----------|------|-------|
+| **S-576-6 Step 4.5 CONVERGED STRICT (2026-07-23): adversary 8 passes / 5 fix rounds; window p6/p7/p8 CLEAN×3. Facade delivery (zero src/ delta): 4 gated E2E tests (platform round-trip; JSM public/internal echo shapes; JSM no-flag) + AttachmentDropGuard unwind-safe teardown + 403 clean-skip guards + doc updates. p1 1M/1L (doc count 11→13; 403 clean-skip gap) → p2 3L (gated/ungated framing; CLAUDE.md enumeration; orphan-window accepted) → p3 1L/2N (inert get(public) assertion restructured; P2-3c-SATISFIED prose harmonized) → p4 1M (gate-population vs name-prefix count: S-577 comment-edit test also gated — 13 gated confirmed by grep) → p5 1L (family-label harmonization) → p6/p7/p8 CLEAN×3 CONVERGED. Story v1.9→v1.15. Spec UNCHANGED. Worktree HEAD bfd9155a (branch feat/S-576-6-attachment-e2e-coverage; suite green; 4 new tests inert offline; clippy --all-targets/fmt/deny clean). Process-gaps logged for cycle close: (1) prose test-counts drift class; (2) implementers running lib-scope clippy instead of --all-targets. trajectory-tail →1→0→0→0** | **F4 S-576-6 Step 4.5 CONVERGED** | **2026-07-23** | **Steps 5-9 next (live CI → PR → merge). Wave gate pending: AUDIT-576-003; P4-006; P8-001.** | BC 657; holdouts 100; VP 35; spec v1.3.99; BC-INDEX v6.37; STORY-INDEX v1.5.39. |
+
+### Archived Current Phase Steps row (displaced by keep-5 rule; new SOH-ATTACHMENTS-1 WAVE GATE PASSED row added)
+
+Displaced to make room for SOH-ATTACHMENTS-1 WAVE GATE PASSED step row per keep-5 rule.
+
+| Step | Agent | Status | Output |
+|------|-------|--------|--------|
+| **S-576-5 Step 4.5 CONVERGED STRICT (2026-07-22): adversary 9 passes / 6 fix rounds; window p7/p8/p9 CLEAN×3; P7-001 adjudicated (EC-X.8.010-1 zero-match guard before dry-run preview = intended, eligibility-guard-precedence parity with EC-3.9.020-8). p1 1H/5M/2L → p2 1H/2M/1L (P2-001 VP-576-005 false-GREEN wiremock FIFO) → p3 2M/2L (P3-001 CWE-116 consumer-1 gate) → p4 1H/2M/2L (P4-001 --internal --replace-existing dropped DELETEs + lying dry-run; consumer-2 gate) → p5 3M/2L test-hardening (VP-576-003 ordering pins; CWE-93 pin; CWE-116 consumer-2/3 pins) → p6 1L (P6-001 best-effort 2xx echo per BC-3.9.007) → p7/p8/p9 CLEAN×3 CONVERGED. Tests 16→29 (attachment_jsm 29/29); story v1.36→v1.42; spec v1.3.99 UNCHANGED; Worktree HEAD b672d33d. Residuals → wave gate: P4-006 dry-run channel; P8-001 step-2 429. trajectory-tail →1→0→0→0** | adversary + state-manager | COMPLETE — CONVERGED STRICT | spec v1.3.99; BC-INDEX v6.37; STORY-INDEX v1.5.37. |

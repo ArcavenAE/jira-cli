@@ -1601,3 +1601,21 @@ _Was the active checkpoint after SOH-ATTACHMENTS-1 BUNDLE CLOSEOUT burst (2026-0
 | **Resume command** | Open fresh session → run `vsdd-factory:factory-worktree-health` → read `.factory/STATE.md` → proceed to SOH-ATTACHMENTS-1 wave gate. Wave gate carry-forwards: AUDIT-576-003 count-drift sweep; AUDIT-576-004; P3-003 OAuth-bypass; P4-006 dry-run stdout channel; P8-001 step-2 429 no-carve-out; SEC-S576-6-001 tech debt disposition. |
 
 ---
+## Archived Checkpoint (displaced by SOH-ATTACHMENTS-1 wave-gate burst, 2026-07-23)
+
+_Was the active checkpoint after SESSION WRAP burst (2026-07-23) — pipeline PAUSED; BUNDLE COMPLETE; wave gate pending. Superseded by WAVE GATE PASSED record._
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-07-23 (SESSION WRAP — human-requested pause after SOH-ATTACHMENTS-1 BUNDLE CLOSEOUT; pipeline PAUSED). |
+| **Position** | Phase 3 / Feature Mode SOH-ATTACHMENTS-1 (issues #576+#585, DEC-179..DEC-185). **BUNDLE COMPLETE** — 6/6 stories + FIX-576-DL emergent fix; PRs #630/631/635/638/640/642/643 all merged; issue #576 CLOSED. develop @ 9da03d5b = activation_head. NEXT STEP: SOH-ATTACHMENTS-1 WAVE GATE. Spec v1.3.99; BC 657/holdouts 100/VP 35; AC 80; BC-INDEX v6.37; STORY-INDEX v1.5.40 (v0.6.0-dev.10). |
+| **Convergence counter** | F3 STRICT CONVERGED (DEC-185; 77 passes / 74 fix rounds). All stories delivered: S-576-1..S-576-6 + FIX-576-DL. No in-flight stories. No open convergence loops. Full trajectory: `cycles/cycle-001/convergence-trajectory.md`. |
+| **In flight / On resume** | PIPELINE PAUSED. No in-flight stories. No open PRs for SOH-ATTACHMENTS-1 bundle. All story worktrees/branches cleaned. Worktree list canonical (main repo + .factory + .reference). **NEXT: `/vsdd-factory:wave-gate`** — SOH-ATTACHMENTS-1 wave gate. |
+| **Wave-gate agenda** | Full-suite validation on develop; adversarial review of wave diff (S-576-1..6 + FIX-576-DL cumulative); holdout evaluation; demo evidence validation; residual ledger disposition: AUDIT-576-003 (count-drift sweep 26→29, S-576-3 delivery); AUDIT-576-004; P3-003 (OAuth-bypass, S-576-3 deferral — BC-3.9.012 spec-sanctioned); P4-006 (upload dry-run human-preview channel stdout, S-576-3 shipped); P8-001 (step-2 429 no-carve-out — BC-3.9.006 spec-level note); SEC-S576-6-001 (CWE-703 Drop expect, MEDIUM — accepted tech debt); PG-576-1 + PG-576-2 (Drift Items — process-gap follow-ups needing stories or engine-side fixes). |
+| **Pending human decisions** | None open. (#628 soak check on resume; #624 soak ripe 07-22.) |
+| **PR queue (human-owned)** | All SOH-ATTACHMENTS-1 PRs merged. Residual open: #628 (ci scorecard guard; soak); #624 soak; #598/#599 soak passed; #574 pending rebase. DO NOT close #429. |
+| **Session advisories** | (a) `CLAUDE_AUTOCOMPACT_PCT_OVERRIDE` missing from `.claude/settings.json` — recommend "70" per ADR-026 §Decision 5. (b) Main repo untracked `.claude/pr-reviews/` + `.claude/spec-config.json` (session artifacts, intentionally uncommitted). (c) Tonight's nightly e2e is the first including the 4 new live attachment tests (S-576-6 facade; gated on `JR_E2E_JSM_PROJECT`) — check run result on resume. |
+| **Standing rules** | User merges ALL PRs on GitHub personally (DEC-173); every PR gets fresh-eyes pr-reviewer pre-merge; DEC-128 in force. |
+| **Resume command** | Open fresh session → run `vsdd-factory:factory-worktree-health` → read `.factory/STATE.md` → run `/vsdd-factory:next-step` (expected: propose wave gate `/vsdd-factory:wave-gate`). |
+
+---

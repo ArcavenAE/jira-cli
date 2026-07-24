@@ -828,3 +828,28 @@ feature_followup_standalone:
     tdd_mode: strict
     phase: F4
     notes: "DELIVERED 2026-07-23. PR #642 squash-merged by human @ 7298c035. Emergent fix found by S-576-6 live validation run 30031724733 (96/97 FAIL). Root cause: AttachmentMetadata.id was serde-typed as u64; Jira REST API returns id as integer JSON number in /rest/api/3/attachment/{id} metadata but as string in mocks — latent S-576-2 drift. Fix: string-or-int serde visitor on AttachmentMetadata.id. Mutation gate 100% kill (9/9). develop e2e run 30040606453 green. Preceded S-576-6 merge."
+
+SOH-ATTACHMENTS-1-wave-gate:
+  bundle: SOH-ATTACHMENTS-1
+  gate_closed_at: "2026-07-23"
+  status: "CLOSED — PASSED"
+  gates:
+    G1_test_suite: "pass — 2319/0/100; clippy -D warnings clean; fmt clean; debug profile (release forbidden by base_url_release_gate #335/SD-002)"
+    G2_dtu_validation: "skip — dtu_required false; no dtu-clones; no DTU-covered modules in wave"
+    G3_adversarial_review: "pass — novelty LOW-MEDIUM, 0 critical, 0 undispositioned high; 2 new wave-scope originations WAVE-576-02 (LOW/MEDIUM) + WAVE-576-05 (LOW)"
+    G4_demo_evidence: "pass — 7 deliverables; S-576-1..4 evidence-reports (11+19+18+16 ACs); S-576-5 INDEX 16/16 ACs; S-576-6 facade live-run; FIX-576-DL fix-PR flow"
+    G5_holdout_eval: "pass — mean 1.00, min critical 1.00; 12/12 MUST-PASS H-NEW-ATTACHMENT-001..012 executed offline vs mock; 0 below 0.60"
+    G6_state_update: "pass — sprint-state + STATE.md updated, factory-artifacts committed"
+  mutation_summary: "S-576-6 facade: 0 mutants (test-only diff), floor vacuously satisfied; strict stories PR-time kill rates: S-576-1 95%, S-576-2 94%, S-576-3 97%, S-576-4 97%, S-576-5 94% (3 equivalent sleep(0) survivors c03868b3 Disposition B), FIX-576-DL 100%; all >= 80% floor"
+  residuals_carried_forward:
+    - "P3-003: OPEN — OAuth bypass widened (WAVE-576-02 adds post_request_attachment JSON POST path)"
+    - "P4-006: OPEN — dry-run preview channel confirmed (WAVE-576-01); target unify stdout/stderr"
+    - "P8-001: OPEN — step-2 429 no-carve-out, low blast radius"
+    - "SEC-S576-6-001: accepted tech debt — CWE-703 Drop expect MEDIUM"
+    - "WAVE-576-05: new tech-debt — per-file stale-heal exit-code inconsistency LOW"
+  process_gaps:
+    - "PG-576-1: prose test-count drift class (OPEN)"
+    - "PG-576-2: clippy-scope gap lib vs --all-targets (OPEN)"
+    - "PG-576-3: wave-gate skill prescribes cargo test --release; incompatible with repos that pin debug-profile test builds (candidate)"
+    - "INFO: holdout fixture underspecification — self/content URL fields underspecified in H-NEW-ATTACHMENT-001-B/004/011 (class candidate)"
+  next_step: "human decision on F5 scoped adversarial refinement dispatch (or ruling that Gate-3 review discharges F5)"
