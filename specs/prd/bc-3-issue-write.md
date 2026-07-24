@@ -3,7 +3,7 @@ context: bc-3
 title: "Issue Write (create/edit/move/assign/comment/link/open/remote-link)"
 total_bcs: 140   # cumulative claim (incl. range-collapsed); definitional_count below is individually-bodied headings
 definitional_count: 111   # count of `#### BC-` headings in this file
-last_updated: 2026-07-22
+last_updated: 2026-07-23
 source_pass: 3
 trace: |
   - L2: .factory/specs/domain-spec/bc-03-issue-write.md
@@ -110,6 +110,7 @@ trace: |
   - v1.3.88 — P20-ROUND micro-fix (2026-07-18, SOH-ATTACHMENTS-1): 0 new BCs — BC-3.9.012/BC-3.9.013 error-table 401/network stderr cells corrected to loose-substring form (P20-002 root cause + INFO three-way divergence); prior cells pinned stale quoted strings (`"Not authenticated. Run \`jr auth login\`."` backtick/no-tail form; `"Could not reach <instance>: <reason>"` colon form) that diverged from `src/error.rs::JrError` actual rendering; replaced with "stderr contains" assertions + full-literal parentheticals sourced from `src/error.rs::JrError` + `src/api/client.rs::send_with_retry`; BC count unchanged (140/35)
   - v1.3.94 — PRE-F4-UNICODE-DISPLAY-SANITIZATION (2026-07-18, SOH-ATTACHMENTS-1): 0 new BCs — BC-3.9.015 step 1 and BC-3.9.017 step 2 display-sanitization cross-ref wording updated — inline range replaced with pointer to BC-2.7.011 display-sanitization character set (preferred over re-stating range); BC-3.9.015/BC-3.9.017 Trace fields updated; BC count unchanged (140/35)
   - v1.3.99 — P2-3c probe obligation SATISFIED (2026-07-22, SOH-ATTACHMENTS-1, S-576-5): 0 new BCs — BC-3.9.007 Confidence MEDIUM→HIGH, heading updated, body rewritten (servicedeskapi step-2 returns AttachmentCreateResultDTO; jr extracts attachments.values[]; curate_jsm_attachment_entry performs defensive field-by-field curation confirmed by probe run 29940792930), EC-3.9.007-2 replaced (confirmed AttachmentDTO schema: created=object/iso8601, id=_links.jiraRest tail, contentUrl=_links.content; graceful fallbacks), Trace updated with probe runs 29936980027+29940792930+29945857059; BC-3.9.011 Confidence MEDIUM→HIGH, heading updated, body replaced with confirmed schema (bare curated array from attachments.values[]; EC-3.9.011-1 reclassified to confirmed shape + EC-3.9.011-3 added (no "public" key in output); EJ-teardown note updated from delivery-obligation to accepted-residual), Trace updated; BC-3.9.003 body output-channel sentence updated (P2-3c deferred→confirmed); JSON Output Shape Contracts table row updated (attachment upload --public/--internal: TBD→confirmed curated array shape, probe runs cited); BC count unchanged (140/35)
+  - v1.3.100 — FIX-F5-006 F5-R1-007 fix round (2026-07-23, SOH-ATTACHMENTS-1): 0 new BCs — BC-3.9.006 step-2 network branch split from 5xx: transport/network errors → `JrError::NetworkError` (exit 1, standard connectivity message `"Could not reach <host> — check your connection"`, no expired-ID retry hint); HTTP 5xx branch unchanged (`JrError::ApiError`, exit 1, retry hint); parity with step-1 transport mapping in BC-3.9.012; EC-3.9.006-6 added (transport/network case); "In both cases" language replaced with explicit HTTP-only retry-hint scope; BC-3.9.006 heading and Trace updated; BC-INDEX BC-3.9.006 row updated; BC count unchanged (140/111)
 ---
 
 # BC-3 — Issue Write
@@ -3403,7 +3404,7 @@ The JSM detection mechanism is `projectTypeKey == "service_desk"` (from `Project
 
 ---
 
-#### BC-3.9.006: temporaryAttachmentId lifecycle (~1 h TTL); second-step failure → generic retry hint; no ID caching or reuse across invocations
+#### BC-3.9.006: temporaryAttachmentId lifecycle (~1 h TTL); step-2 HTTP errors → retry hint; step-2 transport error → NetworkError, no retry hint; no ID caching or reuse
 
 **Confidence**: MEDIUM-HIGH
 **Source**: src/api/jsm/attachments.rs::post_request_attachment (implementation pending — story S5)
@@ -3413,21 +3414,24 @@ A `temporaryAttachmentId` obtained from `POST .../attachTemporaryFile` has an ap
 
 If the second step (`POST .../request/{issueKey}/attachment`) fails AFTER one or more step-1 calls have already succeeded, `jr` MUST NOT attempt to surface, cache, or offer to reuse the orphaned `temporaryAttachmentId`(s). On second-step failure:
 
-- HTTP 4xx (excluding 401 and 403): exit 64 (client error — the plausible causes are an expired `temporaryAttachmentId` (>~1 h TTL) or a malformed request body; the step 2 endpoint keys off `issueKey`, not `serviceDeskId`, so a stale-sdId cache is not a root cause here).
-- HTTP 401: exit 2 (not authenticated — standard house taxonomy per BC-3.9.012; `jr auth login` hint on stderr).
-- HTTP 403: exit 1 (permission denied — standard house taxonomy per BC-3.9.012; Jira error body surfaced).
-- HTTP 5xx: exit 1 (server error).
-- In both cases: stderr appends a generic retry hint: `"Temporary attachment IDs may have expired. Try the upload again."` — no Atlassian response-body error string is pattern-matched (P2-2 finding: Cloud step-2 error strings are undocumented and must not be relied on).
+- HTTP 4xx (excluding 401 and 403): exit 64 (client error — the plausible causes are an expired `temporaryAttachmentId` (>~1 h TTL) or a malformed request body; the step 2 endpoint keys off `issueKey`, not `serviceDeskId`, so a stale-sdId cache is not a root cause here); retry hint on stderr.
+- HTTP 401: exit 2 (not authenticated — standard house taxonomy per BC-3.9.012; `jr auth login` hint on stderr); retry hint on stderr.
+- HTTP 403: exit 1 (permission denied — standard house taxonomy per BC-3.9.012; Jira error body surfaced); retry hint on stderr.
+- HTTP 5xx: exit 1 (`JrError::ApiError`; server error); retry hint on stderr.
+- Transport/network error (connection refused, DNS failure, timeout): exit 1 (`JrError::NetworkError`); stderr: `"Could not reach <host> — check your connection"` (standard connectivity message); **no retry hint** (parity with step-1 transport mapping in BC-3.9.012; a connectivity error indicates network unavailability, not temp-ID expiry).
+
+All HTTP error branches (4xx excl. 401/403, 401, 403, 5xx) append the generic retry hint: `"Temporary attachment IDs may have expired. Try the upload again."` — no Atlassian response-body error string is pattern-matched (P2-2 finding: Cloud step-2 error strings are undocumented and must not be relied on). Transport/network errors do **not** append this hint.
 
 The ~1-hour TTL is informational context for the retry hint wording; `jr` implements no timer, no expiry check, and no proactive re-issue of step 1.
 
 **EC-3.9.006-1** (step-2 400): exit 64; generic retry hint on stderr.
 **EC-3.9.006-4** (step-2 401): exit 2; not-authenticated hint; generic retry hint on stderr.
 **EC-3.9.006-5** (step-2 403): exit 1; Jira error body surfaced; generic retry hint on stderr.
-**EC-3.9.006-2** (step-2 5xx): exit 1; generic retry hint on stderr.
+**EC-3.9.006-2** (step-2 5xx): exit 1 (`JrError::ApiError`); generic retry hint on stderr.
+**EC-3.9.006-6** (step-2 transport/network error): exit 1 (`JrError::NetworkError`); stderr: standard connectivity message (`"Could not reach <host> — check your connection"`); no retry hint; parity with step-1 transport mapping.
 **EC-3.9.006-3** (both steps succeed): no TTL concern; BC-3.9.007 governs post-upload echo.
 
-**Trace**: F2 spec evolution (2026-07-15 SOH-ATTACHMENTS-1, DEC-179); `.factory/research/issue-576-attachments-api-2026-07-15.md` §P2-2 (Cloud step-2 error strings undocumented — do NOT pattern-match)
+**Trace**: F2 spec evolution (2026-07-15 SOH-ATTACHMENTS-1, DEC-179); `.factory/research/issue-576-attachments-api-2026-07-15.md` §P2-2 (Cloud step-2 error strings undocumented — do NOT pattern-match); FIX-F5-006 (2026-07-23, F5-R1-007): step-2 transport branch split from 5xx — transport/network errors → `JrError::NetworkError` (exit 1, standard connectivity message, no expired-ID retry hint), parity with step-1; `tests/attachment_jsm.rs::test_bc_3_9_006_jsm_upload_error_taxonomy` (existing — HTTP branches sub-assertions 6–10); `tests/attachment_jsm.rs::test_bc_3_9_006_step2_network_error_appends_retry_hint` (post-merge addition — worktree fix branch only, not yet on develop); inline unit test test_f5_r1_007_step2_network_error_uses_canonical_network_error_variant in src/api/jsm/attachments.rs (post-merge addition — worktree fix branch only; add backtick citation after merge)
 
 ---
 
