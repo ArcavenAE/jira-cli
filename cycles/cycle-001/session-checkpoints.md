@@ -1619,3 +1619,22 @@ _Was the active checkpoint after SESSION WRAP burst (2026-07-23) — pipeline PA
 | **Resume command** | Open fresh session → run `vsdd-factory:factory-worktree-health` → read `.factory/STATE.md` → run `/vsdd-factory:next-step` (expected: propose wave gate `/vsdd-factory:wave-gate`). |
 
 ---
+
+---
+## Archived Checkpoint (displaced by SOH-ATTACHMENTS-1 F5-converged burst, 2026-07-24)
+
+_Was the active checkpoint after SOH-ATTACHMENTS-1 WAVE GATE PASSED burst (2026-07-23) — wave gate closed; F5 dispatch decision pending. Superseded by F5 CONVERGED STRICT record._
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-07-23 (SOH-ATTACHMENTS-1 WAVE GATE PASSED — 6 gates all PASS/SKIP; gate report: `.factory/cycles/cycle-001/gates/soh-attachments-1-wave-gate.md`). |
+| **Position** | Phase 3 / Feature Mode SOH-ATTACHMENTS-1 (issues #576+#585, DEC-179..DEC-185). **WAVE GATE PASSED**. BUNDLE COMPLETE: 6/6 stories + FIX-576-DL emergent fix; PRs #630/631/635/638/640/642/643 all merged; issue #576 CLOSED. develop @ 9da03d5b = activation_head. **NEXT: F5 scoped adversarial refinement OR human ruling to discharge.** Spec v1.3.99; BC 657/holdouts 100/VP 35; AC 80; BC-INDEX v6.37; STORY-INDEX v1.5.40 (v0.6.0-dev.10). |
+| **Convergence counter** | F3 STRICT CONVERGED (DEC-185; 77 passes / 74 fix rounds). All stories delivered: S-576-1..S-576-6 + FIX-576-DL. WAVE GATE PASSED. G3 adversarial review: 6 findings (0C/0H; 4LOW/2INFO; all dispositioned). Mutation: S-576-6 0 mutants (facade); strict stories 94–90–100% PR-time kill-rate. No in-flight convergence loops. Full trajectory: `cycles/cycle-001/convergence-trajectory.md`. |
+| **In flight / On resume** | PIPELINE ACTIVE. No in-flight stories. All story worktrees/branches cleaned. Worktree list canonical (main repo + .factory + .reference). **NEXT: human decision — F5 scoped adversarial refinement (`/vsdd-factory:adversarial-review`) OR human ruling to discharge F5 obligation.** |
+| **Wave-gate residuals** | WAVE-576-01 (LOW dry-run channel, P4-006 confirmed, orchestrator ruling pending); WAVE-576-02 (LOW/MEDIUM post_request_attachment 401-refresh + status-check, P3-003 widened, orchestrator ruling pending); WAVE-576-05 (LOW stale-heal exit inconsistency, tech-debt); PG-576-3 (process-gap candidate). AUDIT-576-003/004 CLOSED. P8-001 still open (step-2 429 no-carve-out, BC-3.9.006 spec-level note). |
+| **Pending human decisions** | F5 dispatch vs human ruling to discharge. (#628 soak; #624 soak ripe 07-22.) |
+| **PR queue (human-owned)** | All SOH-ATTACHMENTS-1 PRs merged. Residual open: #628 (ci scorecard guard; soak); #624 soak; #598/#599 soak passed; #574 pending rebase. DO NOT close #429. |
+| **Session advisories** | (a) `CLAUDE_AUTOCOMPACT_PCT_OVERRIDE` missing from `.claude/settings.json` — recommend "70" per ADR-026 §Decision 5. (b) Main repo untracked `.claude/pr-reviews/` + `.claude/spec-config.json` (session artifacts, intentionally uncommitted). (c) Nightly e2e now includes 4 new live attachment tests (S-576-6 facade; gated on `JR_E2E_JSM_PROJECT`). |
+| **Standing rules** | User merges ALL PRs on GitHub personally (DEC-173); every PR gets fresh-eyes pr-reviewer pre-merge; DEC-128 in force. |
+| **Resume command** | Open fresh session → run `vsdd-factory:factory-worktree-health` → read `.factory/STATE.md` → present F5 decision via `/vsdd-factory:next-step`. |
+

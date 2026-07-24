@@ -853,3 +853,37 @@ SOH-ATTACHMENTS-1-wave-gate:
     - "PG-576-3: wave-gate skill prescribes cargo test --release; incompatible with repos that pin debug-profile test builds (candidate)"
     - "INFO: holdout fixture underspecification — self/content URL fields underspecified in H-NEW-ATTACHMENT-001-B/004/011 (class candidate)"
   next_step: "human decision on F5 scoped adversarial refinement dispatch (or ruling that Gate-3 review discharges F5)"
+
+SOH-ATTACHMENTS-1-f5-adversarial:
+  bundle: SOH-ATTACHMENTS-1
+  f5_converged_at: "2026-07-24"
+  status: "CONVERGED — STRICT 3/3 CLEAN (pass-12/pass-13/pass-14)"
+  criterion: "STRICT (human ruling 2026-07-23: F5 runs as its own phase; Gate-3 wave review did not discharge it)"
+  rounds: 14
+  fix_prs: 8
+  fix_pr_list:
+    - "#644 FIX-F5-006 @ c33ae7c3 (r1 cluster: containment repair, RFC3339 --newest parser, 404 parity, quote guard, NetworkError taxonomy)"
+    - "#646 FIX-F5-007 @ 31a3dfdb (r2: backslash guard symmetry + rustdoc sync)"
+    - "#647 FIX-F5-008 @ d28a19c5 (r3 HIGH: BC-2.7.012 download-404 canonical-only restoration + containment canonicalization)"
+    - "#648 FIX-F5-009 @ e0f44b98 (r4: docstring accuracy)"
+    - "#649 FIX-F5-010 @ 81c637b9 (r5: research-backed disk-error taxonomy, classify_write_error 4 io sites + tmp-path leak + Windows P9-001)"
+    - "#650 FIX-F5-011 @ 58ef7104 (r6: doc-fallout sync)"
+    - "#651 FIX-F5-012 @ 58d3d079 (r7: EC-3.9.006-7 429 trip-wire pin)"
+    - "#652 FIX-F5-013 @ db207b81 (r11: dead single-mode branch removal + SEC-576-001 consolidation guard)"
+  merge_authority: "human (DEC-173); all 8 PRs human-merged"
+  spec_version_range: "v1.3.99 → v1.3.106"
+  bc_index_version_range: "v6.38 → v6.44"
+  bc_count: "657 (unchanged throughout F5)"
+  develop_sha: "db207b81"
+  residuals_final:
+    - "P3-003: OPEN — OAuth-bypass; multipart path bypasses blanket-401 auto-refresh (backlog)"
+    - "P4-006: OPEN — dry-run preview channel divergence stdout vs stderr (backlog)"
+    - "P8-001: CLOSED — discharged by EC-3.9.006-7 deliberate 429 asymmetry (spec v1.3.105)"
+    - "WAVE-576-05: CLOSED — discharged by EC-X.8.010-2 per-command heal scope DOCUMENT-AS-IS (spec v1.3.106)"
+    - "SEC-S576-6-001: accepted tech debt — CWE-703 Drop expect MEDIUM (carried from wave gate)"
+  enhancement_candidates:
+    - "F5-R10-001: JSM 401 scope-hint parity"
+    - "F5-R14-001: typed sentinel for benign-404"
+    - "F5-R14-003: cancel-message channel symmetry"
+    - "SEC-F5-002: control-char guard completeness LOW"
+  next_step: "human decision on optional F6 targeted hardening (secondary review-tier pass) then F6 delivery"

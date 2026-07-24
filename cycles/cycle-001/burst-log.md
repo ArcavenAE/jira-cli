@@ -5900,3 +5900,30 @@ Displaced to make room for SOH-ATTACHMENTS-1 WAVE GATE PASSED step row per keep-
 | Step | Agent | Status | Output |
 |------|-------|--------|--------|
 | **S-576-5 Step 4.5 CONVERGED STRICT (2026-07-22): adversary 9 passes / 6 fix rounds; window p7/p8/p9 CLEAN×3; P7-001 adjudicated (EC-X.8.010-1 zero-match guard before dry-run preview = intended, eligibility-guard-precedence parity with EC-3.9.020-8). p1 1H/5M/2L → p2 1H/2M/1L (P2-001 VP-576-005 false-GREEN wiremock FIFO) → p3 2M/2L (P3-001 CWE-116 consumer-1 gate) → p4 1H/2M/2L (P4-001 --internal --replace-existing dropped DELETEs + lying dry-run; consumer-2 gate) → p5 3M/2L test-hardening (VP-576-003 ordering pins; CWE-93 pin; CWE-116 consumer-2/3 pins) → p6 1L (P6-001 best-effort 2xx echo per BC-3.9.007) → p7/p8/p9 CLEAN×3 CONVERGED. Tests 16→29 (attachment_jsm 29/29); story v1.36→v1.42; spec v1.3.99 UNCHANGED; Worktree HEAD b672d33d. Residuals → wave gate: P4-006 dry-run channel; P8-001 step-2 429. trajectory-tail →1→0→0→0** | adversary + state-manager | COMPLETE — CONVERGED STRICT | spec v1.3.99; BC-INDEX v6.37; STORY-INDEX v1.5.37. |
+
+---
+
+## SOH-ATTACHMENTS-1 F5-converged burst (2026-07-24)
+
+**Burst type:** F5 scoped adversarial refinement convergence closeout — factory-artifacts commit (TD-VSDD-053 single-commit protocol)
+**Files created:** `.factory/phase-f5-adversarial/SOH-ATTACHMENTS-1/convergence-summary.md` (new); `.factory/phase-f5-adversarial/SOH-ATTACHMENTS-1/round-summaries.md` (new)
+**Files updated:** `.factory/sprint-state.yaml` (SOH-ATTACHMENTS-1-f5-adversarial block added); `.factory/STATE.md` (frontmatter timestamp + current_step + phase_3_status; Phase Progress +1 F5 row; CPS −2+1 rows net −1; Session Resume Checkpoint replaced; RESUME PLAN Steps 2+3 updated); `.factory/cycles/cycle-001/burst-log.md` (archived CPS rows appended); `.factory/cycles/cycle-001/session-checkpoints.md` (old WAVE GATE checkpoint archived)
+
+**F5 data recorded:**
+- Criterion: STRICT (human ruling 2026-07-23)
+- Rounds: 14 / Fix PRs: 8 (#644–#652 all human-merged per DEC-173)
+- Window: r12 CLEAN (1/3) → r13 CLEAN (2/3) → r14 CLEAN (3/3) → CONVERGED 2026-07-24
+- Spec: v1.3.99→v1.3.106; BC-INDEX: v6.38→v6.44; BC count 657 unchanged
+- develop @ db207b81 (PR #652 FIX-F5-013)
+- Key closes: P8-001 CLOSED (EC-3.9.006-7); WAVE-576-05 CLOSED (EC-X.8.010-2 DOCUMENT-AS-IS)
+- Residuals: P3-003 OPEN, P4-006 OPEN; enhancement backlog: F5-R10-001, F5-R14-001, F5-R14-003
+
+### Archived Current Phase Steps rows (displaced by keep-5 rule; new F5 CONVERGED row added)
+
+Displaced to make room for SOH-ATTACHMENTS-1 F5 CONVERGED step row per keep-5 rule.
+
+| Step | Agent | Status | Output |
+|------|-------|--------|--------|
+| **S-576-5 Step 4.5 CONVERGED STRICT (cleanup burst archived): completed 2026-07-22; adversary 9 passes / 6 fix rounds; window p7/p8/p9 CLEAN×3. Story v1.42. Spec v1.3.99; BC-INDEX v6.37.** | adversary + state-manager | COMPLETE — CONVERGED STRICT | spec v1.3.99; BC-INDEX v6.37; STORY-INDEX v1.5.37. |
+| **S-576-5 DELIVERED (2026-07-23): PR #640 squash-merged by human @ 0498e596 (issue #576 CLOSED). CI 14/14 green; mutation 94% kill. 33 integration + 8 unit tests. Story v1.45. SOH-ATTACHMENTS-1: 5 of 5 code stories DELIVERED.** | devops-engineer | DELIVERED | spec v1.3.99; BC-INDEX v6.37; STORY-INDEX v1.5.37. |
+
