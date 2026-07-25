@@ -6499,3 +6499,45 @@ All three bands were part of the SAME logical computation path. A FALLIBLE-ARITH
 
 _Trigger: S-576-4 Step 4.5 passes 1, 2, 6 (2026-07-21); three-band duration-overflow onion required three separate fix rounds; single FALLIBLE-ARITHMETIC-SWEEP at R1 would have closed all three._
 _Tagged: [process-gap] [arithmetic] [overflow] [fallible-operations] [implementer-checklist] [duration] [s576-4] [codified]_
+
+---
+
+### [codified] SHARED-FN-CALLER-AUDIT-ON-FIX: Fix directions touching a shared function must audit every caller's BC anchors before dispatch
+
+**Observation (SOH-ATTACHMENTS-1 F5-R1-004→F5-R3-001, 2026-07-25):** An adversarial review pass (F5-R1) identified a defect in a shared function and issued a fix direction. The fix was dispatched and applied correctly to the function itself. However, the fix introduced a behavioral change observable at multiple call sites. Two of those call sites had BC anchors that described the OLD behavior (the behavior the fix changed). Because the caller BC audit was not performed before dispatch, a subsequent adversarial pass (F5-R3) re-raised the same class of finding — the BCs at the non-primary call sites still described pre-fix semantics. A second fix round was required solely for BC alignment, not for any code defect.
+
+**Root cause:** The fix-direction author and the implementer treated the fix as scoped to the function definition. Neither audited the set of callers to identify which ones had BCs that would need updating as a consequence of the function-level change. The BC drift was not a spec-author error — those BCs were accurate pre-fix. The error was the absence of a caller-BC sweep before dispatch.
+
+**Principle (SHARED-FN-CALLER-AUDIT-ON-FIX):** When a fix direction targets a shared function (a function called from two or more independent call sites in different CLI/API modules):
+1. **Enumerate all callers:** Before writing the fix direction, `grep -r 'fn_name'` across `src/` to find every call site.
+2. **Check each caller's BC anchors:** For each call site, check whether any BC in `.factory/specs/prd/` anchors on the old behavior of that function at that call site. A BC anchored on "function X returns Y" at call site Z is stale if the fix changes what X returns or how it behaves.
+3. **Include BC updates in the same fix direction:** Do not split the fix into "code change" (dispatch 1) and "BC alignment" (dispatch 2). If caller BCs need updating, they are part of the same fix round.
+4. **Document the caller sweep in the fix direction:** List which callers were audited, which had stale BCs, and what the updated BC text should be. This makes the implementer's scope unambiguous.
+
+**Scope:** Applies to any function with 2+ call sites that is not a trivial utility (e.g., a formatting helper with no BC coverage). High-risk shared functions include: API call wrappers, error-mapping helpers, cache read/write helpers, and any function whose return type or error contract is referenced in BCs.
+
+**Evidence:** F5-R1-004 (SOH-ATTACHMENTS-1) fixed `delete_attachment_targeted` return semantics. F5-R3-001 re-raised BC drift at the `handle_attachment_delete` call site because that caller's BC still described pre-fix behavior. The re-raise was preventable by a caller-BC audit before F5-R1 dispatch.
+
+_Trigger: SOH-ATTACHMENTS-1 F5-R1-004 → F5-R3-001 (2026-07-25); shared-function fix caused two-round remediation when caller BC audit was absent at dispatch time._
+_Tagged: [process-gap] [shared-function] [caller-audit] [bc-alignment] [fix-direction] [dispatch] [soh-attachments-1] [codified]_
+
+---
+
+### [codified] HOLDOUT-FIXTURE-COMPLETENESS: Holdout fixtures must include all fields the deserializer requires even when the scenario does not assert them
+
+**Observation (SOH-ATTACHMENTS-1 Gate-5 evaluator fixture-completion note, 2026-07-25):** A holdout scenario test fixture was written to exercise a specific assertion (e.g., public/internal visibility flag on a JSM attachment response). The fixture included only the fields needed to satisfy the assertion predicate — it omitted fields that are required by the serde deserializer for the response type. When the evaluator ran the scenario, it failed not on the assertion but on a deserialization error: a required field was absent from the JSON fixture. The scenario had to be re-authored with a fixture-completion pass before it could evaluate the actual behavioral property.
+
+**Root cause:** Fixture authors focus on the scenario's assertion goal and include only the fields that the assertion checks. They do not cross-reference the serde struct (or the `#[serde(deny_unknown_fields)]` / required-field set) for the response type being mocked. Fields that the deserializer requires but the test does not assert are invisible to the author until a deserialization failure surfaces them at test execution time.
+
+**Principle (HOLDOUT-FIXTURE-COMPLETENESS):** When authoring a holdout scenario fixture (JSON wire-mock body or inline test fixture):
+1. **Start from the serde struct, not the assertion:** Open the serde type that will deserialize the fixture (e.g., `types/jsm/servicedesk.rs::ServiceDesk`, `types/jira/issue.rs::Issue`). Include ALL fields that are NOT `#[serde(default)]` and NOT `Option<T>` — these are required and will cause a deserialization error if absent.
+2. **Optional fields: include when asserted, omit otherwise:** Fields that are `Option<T>` or `#[serde(default)]` may be omitted. Include them only when the assertion checks their value.
+3. **Cross-reference before submission:** Before submitting a new holdout scenario, run a quick structural check: "Does my fixture JSON satisfy the required-field set of the target serde type?" If the target type is not obvious from the scenario description, ask the spec author which serde type deserializes the mocked endpoint.
+4. **For evaluator-authored scenarios:** The evaluator must apply this check before declaring a scenario runnable. A scenario that fails on deserialization is not evaluating the behavioral property — it is evaluating fixture correctness. These are separate concerns.
+
+**Scope:** Applies to all holdout scenarios (`holdout-scenarios/HS-*.md`) that include JSON fixture data, and to all integration test fixtures in `tests/common/fixtures.rs` and inline `wiremock` mock bodies. Does not apply to unit tests that construct typed Rust structs directly (deserialization is bypassed).
+
+**Evidence:** Gate-5 evaluator fixture-completion note, SOH-ATTACHMENTS-1 (2026-07-25): HS-576-NNN scenario fixture omitted a required field in the ServiceDesk response body; scenario failed on deserialization before reaching the behavioral assertion. One fixture-completion pass was required before evaluation could proceed.
+
+_Trigger: SOH-ATTACHMENTS-1 Gate-5 evaluator fixture-completion note (2026-07-25); holdout fixture deserialization failure required a pre-evaluation repair pass._
+_Tagged: [process-gap] [holdout] [fixture] [deserialization] [evaluator] [serde] [soh-attachments-1] [codified]_
