@@ -7,6 +7,63 @@ project: "jr (jira-cli)"
 
 Track all spec version changes. Most recent version first.
 
+## [1.3.106] - 2026-07-24
+
+### Type: PATCH
+
+### Summary
+
+WAVE-576-05/F5-R12-001 DOCUMENT-AS-IS ruling: BC-X.8.010 EC-X.8.010-2 added — multi-file upload second independent step-1 failure after stale-heal already fired propagates raw ApiError exit 1; `stale_healed` per-command-not-per-file scope documented.
+
+### Changed
+
+- `.factory/specs/prd/cross-cutting.md` (MODIFIED): BC-X.8.010 EC-X.8.010-2 added — in a multi-file upload where `stale_healed == true` (heal already consumed by an earlier file in the same command), a subsequent file that receives HTTP 404 or 403 on step 1 is NOT re-healed and propagates as `JrError::ApiError { status: 404 | 403 }` → exit 1; near-unreachable path (after a successful heal the `sdId` is freshly resolved; a second independent stale-404 would require the service desk to be deleted mid-command); DOCUMENT-AS-IS-COMPLETE ruling per WAVE-576-05 human ruling (F5 round 12 SOH-ATTACHMENTS-1); `stale_healed` per-command-not-per-file scope note added to BC body; BC-X.8.010 Trace updated. BC count unchanged (150/84).
+- `.factory/specs/prd/BC-INDEX.md` (MODIFIED): BC-X.8.010 row updated with WAVE-576-05 F5-R12-001 EC-X.8.010-2 note; index_version v6.43 → v6.44; last_updated annotation updated.
+
+### BC Count
+
+0 new BCs. Total unchanged: 657 cumulative (BC-INDEX), 150/84 individually-bodied in cross-cutting.md.
+
+---
+
+## [1.3.105] - 2026-07-24
+
+### Type: PATCH
+
+### Summary
+
+P8-001/F5-R8-001 deliberate-asymmetry note: BC-3.9.006 step-2 HTTP 429 documented as deliberate no-Retry-After carve-out; EC-3.9.006-7 added.
+
+### Changed
+
+- `.factory/specs/prd/bc-3-issue-write.md` (MODIFIED): BC-3.9.006 heading, 4xx bullet, and EC updated — HTTP 429 deliberately falls into the generic 4xx→exit 64 bucket with no Retry-After auto-retry loop, asymmetric with the step-1 `attachTemporaryFile` path (which retries 429 per BC-X.8.010) and the platform upload path (retries 429 via `send_with_retry`); rationale recorded: step-2 is a single small JSON POST issued immediately after step-1 succeeds; a 429 there is rare; ~1 h temp-attachment TTL makes manual re-run safe; blast radius low; carve-out explicitly deferred at SOH-ATTACHMENTS-1 wave gate (P8-001); hint-text imprecision honestly noted (`"Temporary attachment IDs may have expired. Try the upload again."` is inexact for 429 sub-case) — accepted; EC-3.9.006-7 added (429 deliberate-asymmetry sub-case). BC count unchanged (140/111).
+- `.factory/specs/prd/BC-INDEX.md` (MODIFIED): BC-3.9.006 row updated with P8-001/F5-R8-001 deliberate-asymmetry note; heading updated; index_version v6.42 → v6.43; last_updated annotation updated.
+
+### BC Count
+
+0 new BCs. Total unchanged: 657 cumulative (BC-INDEX), 140/111 individually-bodied in bc-3-issue-write.md.
+
+---
+
+## [1.3.104] - 2026-07-24
+
+### Type: PATCH
+
+### Summary
+
+F5-R6-001/F5-R6-002 micro-fix: BC-2.7.012 io-site count corrected three→four (`flush` added, delayed-allocation rationale); mid-stream body-read abort INFO note added.
+
+### Changed
+
+- `.factory/specs/prd/bc-2-issue-read.md` (MODIFIED): BC-2.7.012 disk-write error detection paragraph updated — io-site count corrected from three to four: `flush` added with delayed-allocation rationale (ENOSPC can surface at flush time on Linux ext4 and similar delayed-allocation filesystems where dirty pages are deferred; F5-R6-001); INFO note added for F5-R6-002 mid-stream body-read abort sub-case (`"stream error: {e}"` exit 1) — distinct from the content-GET NetworkError row; accepted wording divergence documented. BC-2.7.012 Trace updated. BC count unchanged (64/106).
+- `.factory/specs/prd/BC-INDEX.md` (MODIFIED): BC-2.7.012 row updated with v1.3.104 F5-R6-001/F5-R6-002 note; index_version v6.41 → v6.42; last_updated annotation updated.
+
+### BC Count
+
+0 new BCs. Total unchanged: 657 cumulative (BC-INDEX), 64/106 individually-bodied in bc-2-issue-read.md.
+
+---
+
 ## [1.3.103] - 2026-07-24
 
 ### Type: PATCH
