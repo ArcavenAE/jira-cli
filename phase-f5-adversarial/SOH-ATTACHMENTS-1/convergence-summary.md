@@ -124,3 +124,58 @@ Discharge pattern: codify accepted edges into spec ECs so fresh adversaries read
 **(c) Loop-exhaust pattern:** Rounds 4-9 findings were predominantly doc-fallout of the loop's own fix commits. Spec-codification of accepted edges (v1.3.105/106) is what broke the rediscovery cycle. Lesson: codify accepted behaviors into EC/spec EARLY to collapse the adversary's finding space.
 
 **(d) Windows CI runner surfaced real cross-platform contract collision:** P9-001 × BC-2.7.012 interaction that no macOS-local gate caught. Windows CI runners provide genuine incremental value for platform-sensitive contracts.
+
+---
+
+## Secondary Review-Tier Pass (Step 7)
+
+**Date:** 2026-07-24
+**Reviewer:** Secondary adversary (fresh context; no prior round artifacts read)
+**Scope:** `src/cli/issue/attachments.rs`, `src/api/jira/attachments.rs`, `src/api/jsm/attachments.rs`, `src/cli/mod.rs` (clap definitions), `tests/attachment_{list,download,upload,delete,jsm}.rs`
+**Delta:** `e33624c1~1..db207b81`
+**Report:** `phase-f5-adversarial/SOH-ATTACHMENTS-1/secondary-review.md`
+
+### Verdict: PASS
+
+| Severity | Count |
+|----------|-------|
+| CRITICAL | 0 |
+| HIGH | 0 |
+| MEDIUM | 0 |
+| LOW | 4 |
+| INFO | 3 |
+| **Total** | **7** |
+
+### Cross-Model Unique Finding
+
+**L2 — safe_name guard duplication** (`src/api/jira/attachments.rs::upload_attachments` + `src/api/jsm/attachments.rs::attach_temporary_file`): The SEC-576-004 CRLF/NUL/double-quote/backslash `Content-Disposition` guard is copy-pasted identically in both upload functions. This guard was extended twice during F5 (r1: added `"`, r2: added `\`), demonstrating the lockstep-update risk. The secondary reviewer independently identified this as the highest-value refactor candidate. **This finding was never raised in 14 primary F5 rounds** — cross-model blind spot confirmed. Refactor candidate: extract to `fn safe_content_disposition_filename(raw: &str) -> String` shared by both call sites.
+
+### Recorded Dissent
+
+**L3 — EC-3.9.006-7 ruling (deliberate 429 no-retry on step-2):** The secondary reviewer disputes the ruling that `post_request_attachment` should not retry on 429. The ADR-0017 multipart-body-not-clonable constraint does not apply to step-2 (it is a simple JSON POST with a trivially-rebuildable `serde_json::json!` body). Under rate limiting, step-1 retries but step-2 fails immediately, leaving dangling temporary attachment IDs that expire on Atlassian's side. The reviewer argues this strengthens the future-enhancement candidacy for STEP2-429-RETRY. Dissent **recorded** but ruling stands (deliberate asymmetry codified in spec v1.3.105 EC-3.9.006-7; no change to primary verdict). This aligns with F5-R9/R8 history where the same asymmetry was observed; the STEP2-429-RETRY enhancement candidate is now ledgered.
+
+### Finding Disposition
+
+| ID | Severity | Disposition |
+|----|----------|-------------|
+| L1 | LOW | New — temp file leaked on Ctrl+C during streaming download. Enhancement candidate. |
+| L2 | LOW | **Cross-model unique** — safe_name guard duplication; refactor candidate SAFE-NAME-GUARD-EXTRACTION. |
+| L3 | LOW | Duplicate of P8-001 (EC-3.9.006-7 deliberate 429 asymmetry) + recorded dissent. Ruling STANDS. Enhancement candidate STEP2-429-RETRY ledgered. |
+| L4 | LOW | Duplicate of SEC-F5-001 (batch_path_is_within_dir fail-open; defense-in-depth; acknowledged). |
+| I1 | INFO | By-design: std::process::exit(1) pattern. No action. |
+| I2 | INFO | Redundant Content-Type header nit. Cosmetic. Enhancement candidate CONTENT-TYPE-HEADER-NIT ledgered. |
+| I3 | INFO | glob_inner recursion note. No action (MIME types are short in practice). |
+
+### Duplicates
+
+- **L4 = SEC-F5-001** (fail-open containment check; acknowledged defense-in-depth residual from F5-R3-002)
+- **L1 = P8-002** (temp file leak on Ctrl+C; carried in enhancement backlog per F5-R14-001 signal)
+
+### Final F5 Verdict
+
+**CONVERGED (primary STRICT ×3 CLEAN + Step-7 secondary review-tier PASS).**
+
+Primary: 14 rounds / 8 fix PRs / window pass-12/pass-13/pass-14 CLEAN×3.
+Secondary (Step 7): PASS — 0 CRITICAL / 0 HIGH / 0 MEDIUM / 4 LOW / 3 INFO; 1 cross-model unique finding (L2, highest refactor value); 1 recorded dissent (L3 EC-3.9.006-7). Both enhancement candidates ledgered as Drift Items.
+
+SOH-ATTACHMENTS-1 F5 is FULLY CLOSED. NEXT: F6 targeted hardening.

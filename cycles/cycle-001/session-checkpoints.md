@@ -1638,3 +1638,23 @@ _Was the active checkpoint after SOH-ATTACHMENTS-1 WAVE GATE PASSED burst (2026-
 | **Standing rules** | User merges ALL PRs on GitHub personally (DEC-173); every PR gets fresh-eyes pr-reviewer pre-merge; DEC-128 in force. |
 | **Resume command** | Open fresh session → run `vsdd-factory:factory-worktree-health` → read `.factory/STATE.md` → present F5 decision via `/vsdd-factory:next-step`. |
 
+
+---
+
+## Archived Checkpoint (displaced by SOH-ATTACHMENTS-1 Step-7-secondary-review burst, 2026-07-24)
+
+_Was the active checkpoint after SOH-ATTACHMENTS-1 F5 SCOPED ADVERSARIAL CONVERGED burst (2026-07-24) — F5 primary convergence complete; Step-7 secondary review pending. Superseded by F5 FULLY CLOSED record._
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-07-24 (SOH-ATTACHMENTS-1 F5 SCOPED ADVERSARIAL CONVERGED STRICT — 14 rounds / 8 fix PRs; window pass-12/pass-13/pass-14 CLEAN×3; develop @ db207b81). |
+| **Position** | Phase 3 / Feature Mode SOH-ATTACHMENTS-1 (issues #576+#585, DEC-179..DEC-185). **F5 CONVERGED STRICT**. develop @ db207b81 (PR #652 FIX-F5-013 squash-merged 2026-07-24). Spec v1.3.106; BC 657/holdouts 100/VP 35; AC 80; BC-INDEX v6.44; STORY-INDEX v1.5.40. **NEXT: human decision — F6 targeted hardening (optional secondary review-tier pass) then proceed to F7 delta convergence.** |
+| **Convergence counter** | F5 STRICT CONVERGED 2026-07-24 (14 rounds / 8 fix PRs #644–#652; window pass-12/pass-13/pass-14 CLEAN×3; spec v1.3.99→v1.3.106; BC-INDEX v6.38→v6.44). F3 STRICT CONVERGED (DEC-185; 77 passes / 74 fix rounds). All stories + FIX-576-DL delivered. Wave gate PASSED 2026-07-23. Full trajectory: `cycles/cycle-001/convergence-trajectory.md`. F5 summary: `phase-f5-adversarial/SOH-ATTACHMENTS-1/convergence-summary.md`. |
+| **In flight / On resume** | PIPELINE ACTIVE. No in-flight stories. All story worktrees/branches cleaned. F5 complete. **NEXT: human decision on optional F6 targeted hardening secondary pass, then F6 (per-story implementation), then F7 delta convergence.** |
+| **F5 residuals** | P3-003 OPEN (OAuth-bypass, backlog); P4-006 OPEN (dry-run channel, backlog); SEC-S576-6-001 accepted tech debt (CWE-703 Drop expect MEDIUM); P8-001 CLOSED (EC-3.9.006-7); WAVE-576-05 CLOSED (EC-X.8.010-2 DOCUMENT-AS-IS). Enhancement backlog: F5-R10-001 (JSM 401 scope-hint parity), F5-R14-001 (typed benign-404 sentinel), F5-R14-003 (cancel-message channel symmetry), SEC-F5-002 (control-char guard completeness LOW). |
+| **Pending human decisions** | F6 targeted hardening optional secondary pass (human decision). (#628 soak; #624 soak.) |
+| **PR queue (human-owned)** | F5 fix PRs #644–#652 all merged (develop @ db207b81). Residual open: #628 (ci scorecard guard; soak); #624 soak; #598/#599 soak passed; #574 pending rebase. DO NOT close #429. |
+| **Session advisories** | (a) `CLAUDE_AUTOCOMPACT_PCT_OVERRIDE` missing from `.claude/settings.json` — recommend "70" per ADR-026 §Decision 5. (b) Main repo untracked `.claude/pr-reviews/` + `.claude/spec-config.json` (session artifacts, intentionally uncommitted). (c) Nightly e2e includes 4 new live attachment tests (S-576-6 facade; gated on `JR_E2E_JSM_PROJECT`). |
+| **Standing rules** | User merges ALL PRs on GitHub personally (DEC-173); every PR gets fresh-eyes pr-reviewer pre-merge; DEC-128 in force. |
+| **Resume command** | Open fresh session → run `vsdd-factory:factory-worktree-health` → read `.factory/STATE.md` → present F6 decision via `/vsdd-factory:next-step`. |
+

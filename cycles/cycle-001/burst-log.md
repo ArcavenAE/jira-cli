@@ -5927,3 +5927,40 @@ Displaced to make room for SOH-ATTACHMENTS-1 F5 CONVERGED step row per keep-5 ru
 | **S-576-5 Step 4.5 CONVERGED STRICT (cleanup burst archived): completed 2026-07-22; adversary 9 passes / 6 fix rounds; window p7/p8/p9 CLEAN×3. Story v1.42. Spec v1.3.99; BC-INDEX v6.37.** | adversary + state-manager | COMPLETE — CONVERGED STRICT | spec v1.3.99; BC-INDEX v6.37; STORY-INDEX v1.5.37. |
 | **S-576-5 DELIVERED (2026-07-23): PR #640 squash-merged by human @ 0498e596 (issue #576 CLOSED). CI 14/14 green; mutation 94% kill. 33 integration + 8 unit tests. Story v1.45. SOH-ATTACHMENTS-1: 5 of 5 code stories DELIVERED.** | devops-engineer | DELIVERED | spec v1.3.99; BC-INDEX v6.37; STORY-INDEX v1.5.37. |
 
+
+---
+
+## Archived Phase Progress + CPS rows (displaced by Step-7-secondary-review burst, 2026-07-24)
+
+_Displaced to make room per keep-5 rule when Step-7 secondary review-tier rows were added._
+
+### Archived Phase Progress row: S-576-5 DELIVERED (oldest row)
+
+| Phase | Status | Completed | Gate | Notes |
+|-------|--------|-----------|------|-------|
+| **S-576-5 DELIVERED (2026-07-23): PR #640 squash-merged by human @ 0498e596 (DEC-128 honored) 2026-07-23T13:32Z; CI 14/14 green (run 29976080877); mutation 94% kill (53/56 — 3 equivalent sleep(0) survivors documented c03868b3; 2 unviable); 33 integration tests (attachment_jsm) + 8 unit tests; fresh-eyes pr-reviewer APPROVE cycle 1 (0 blocking); self-approval correctly blocked — human posted approval. P2-3c DISCHARGED (probe runs 29936980027 FAIL→29940792930 FAIL→29945857059 SUCCESS; BC-3.9.007/011 confirmed @ spec v1.3.99). Worktree + branches cleaned (local + remote deleted; develop pulled to 0498e596). Issue #576 CLOSED. SOH-ATTACHMENTS-1: 5 of 5 code stories DONE. Residuals → wave gate: AUDIT-576-003 count-drift sweep; AUDIT-576-004; P3-003 OAuth-bypass; P4-006 dry-run human-preview channel (stdout); P8-001 step-2 429 no-carve-out; 3 equivalent mutants accepted (documented, not config-exempted). S-576-6 unblocked. trajectory-tail →0→0→0→0** | **S-576-5 DELIVERED** | **2026-07-23** | **#576 CLOSED; S-576-6 NOW DISPATCHING.** | BC 657; holdouts 100; VP 35; spec v1.3.99; BC-INDEX v6.37; STORY-INDEX v1.5.38. |
+
+### Archived Current Phase Steps row: S-576-6 Step 4.5 CONVERGED STRICT (oldest row)
+
+| Step | Agent | Status | Output |
+|------|-------|--------|--------|
+| **S-576-6 Step 4.5 CONVERGED STRICT (2026-07-23): adversary 8 passes / 5 fix rounds; window p6/p7/p8 CLEAN×3; story v1.9→v1.15; tdd_mode facade; spec v1.3.99 UNCHANGED; Worktree HEAD bfd9155a. Process-gaps: prose test-counts drift class; lib-scope clippy instead of --all-targets. trajectory-tail →1→0→0→0** | adversary + state-manager | COMPLETE — CONVERGED STRICT | spec v1.3.99; BC-INDEX v6.37; STORY-INDEX v1.5.39. |
+
+### Step-7 secondary review burst summary (2026-07-24)
+
+**Burst:** SOH-ATTACHMENTS-1 F5 Step-7 secondary review-tier closeout  
+**Agent:** state-manager  
+**Date:** 2026-07-24  
+**Scope:** Fresh-context secondary adversary pass over src/cli/issue/attachments.rs + src/api/jira/attachments.rs + src/api/jsm/attachments.rs + src/cli/mod.rs + attachment test files; delta e33624c1~1..db207b81  
+
+**Verdict:** PASS (0C/0H/0M; 4L/3I)  
+**Cross-model unique:** L2 safe_name CRLF/NUL/`"`/`\` guard copy-pasted in both upload paths (never flagged in 14 primary rounds)  
+**Recorded dissent:** L3 EC-3.9.006-7 no-retry ruling (ADR-0017 does not apply to step-2 JSON POST; ruling stands)  
+**Duplicates:** L1=P8-002, L4=SEC-F5-001  
+**INFO:** I2 redundant Content-Type header; I3 glob recursion note  
+**Enhancement candidates ledgered:** SAFE-NAME-GUARD-EXTRACTION, STEP2-429-RETRY, CONTENT-TYPE-HEADER-NIT  
+
+**F5 FULLY CLOSED.**
+
+**Files updated:** `.factory/phase-f5-adversarial/SOH-ATTACHMENTS-1/convergence-summary.md` (Step-7 section appended); `.factory/STATE.md` (timestamp+banner+Phase Progress+CPS+Drift Items+Session Resume+RESUME PLAN updated via STATE-MANAGER-MONOLITHIC-WRITE-STALL documented workaround); `.factory/cycles/cycle-001/burst-log.md` (this entry); `.factory/cycles/cycle-001/session-checkpoints.md` (old F5-converged checkpoint archived)
+
