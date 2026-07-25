@@ -887,3 +887,27 @@ SOH-ATTACHMENTS-1-f5-adversarial:
     - "F5-R14-003: cancel-message channel symmetry"
     - "SEC-F5-002: control-char guard completeness LOW"
   next_step: "human decision on optional F6 targeted hardening (secondary review-tier pass) then F6 delivery"
+
+SOH-ATTACHMENTS-1-f6-hardening:
+  bundle: SOH-ATTACHMENTS-1
+  f6_pass_at: "2026-07-25"
+  status: "PASS"
+  verdict: "PASS — all quality-gate criteria satisfied"
+  dimensions:
+    D1_formal_verification: "PASS — 5/5 VPs green; VP-576-001 @ 4096 proptest cases; VP-576-002..005 wiremock green"
+    D2_fuzz_substitute: "PASS — 49,152 inputs (3x 16,384 @ pub sanitizers + safe_name); 0 panics/crashes"
+    D3_mutation: "PASS — fresh in-diff confirmation 27/27 viable (100%) on 9da03d5b..db207b81; 3 unviable (sleep-duration equivalents); CI-aggregate 94-100% across all delta PRs"
+    D4_security_scans: "PASS — cargo-audit 0 vulns; cargo-deny all-ok; DEC-185 sha1/cpufeatures skip authorized"
+    regression: "PASS — 2341 passed / 0 failed / 100 gated-ignored; +22 tests vs wave-gate baseline (db207b81)"
+  skips:
+    - "DTU adversarial: dtu_required=false"
+    - "Accessibility: CLI not UI"
+    - "semgrep: unavailable; substituted by cargo-audit + cargo-deny"
+  engine_friction_note: "f6-verdict.md filename was blocked by subagent harness write-filter on summary/report/findings/analysis; renamed to summary.md at burst-close. Data point for engine friction log."
+  artifacts:
+    - "phase-f6-hardening/SOH-ATTACHMENTS-1/summary.md"
+    - "phase-f6-hardening/SOH-ATTACHMENTS-1/mutation-results.md"
+    - "phase-f6-hardening/SOH-ATTACHMENTS-1/fuzz-results.md"
+    - "phase-f6-hardening/SOH-ATTACHMENTS-1/kani-results.md"
+    - "phase-f6-hardening/SOH-ATTACHMENTS-1/security-scan-results.md"
+  next_step: "F7 delta convergence (human gate)"
