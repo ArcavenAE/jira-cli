@@ -5964,3 +5964,34 @@ _Displaced to make room per keep-5 rule when Step-7 secondary review-tier rows w
 
 **Files updated:** `.factory/phase-f5-adversarial/SOH-ATTACHMENTS-1/convergence-summary.md` (Step-7 section appended); `.factory/STATE.md` (timestamp+banner+Phase Progress+CPS+Drift Items+Session Resume+RESUME PLAN updated via STATE-MANAGER-MONOLITHIC-WRITE-STALL documented workaround); `.factory/cycles/cycle-001/burst-log.md` (this entry); `.factory/cycles/cycle-001/session-checkpoints.md` (old F5-converged checkpoint archived)
 
+---
+
+## SOH-ATTACHMENTS-1 F7-APPROVED burst (2026-07-25)
+
+**Burst type:** F7 delta convergence closure — factory-artifacts commit (STATE-MANAGER-MONOLITHIC-WRITE-STALL workaround: /tmp/new_state_f7.md prepared; human-executed cp required)
+**Files created/updated:** `/tmp/new_state_f7.md` (full STATE.md refresh prepared; awaiting human cp); `.factory/cycles/cycle-001/burst-log.md` (archived rows appended + this entry); `.factory/cycles/cycle-001/session-checkpoints.md` (F6 checkpoint archived)
+
+**F7 data recorded:**
+- Decision: DEC-186 (human APPROVED 2026-07-25)
+- 5/5 dimensions PASS: D1 fresh-context audit CLEAN (2 doc-drifts: 1 backfilled CLAUDE.md attachment-lifecycle note; 1 accepted-historical F6 CPS timestamp), D2 input-drift CLEAN, D3 convergence chain F5 STRICT (14r/8 PRs) + Step-7 secondary PASS (0C/0H) + F6 all-4-dims PASS, D4 S-7.02 SATISFIED (PG-576-1/2 ledgered; 3 enhancements ledgered; zero [process-gap] blocking), D5 spec v1.3.106 confirmed
+- Regression: 2341/0; develop @ db207b81 (no source changes since F5)
+- MAXIMUM_VIABLE_REFINEMENT_REACHED
+- Residual routing: P3-003/P4-006/SAFE-NAME-GUARD-EXTRACTION/STEP2-429-RETRY/CONTENT-TYPE-HEADER-NIT all ledger-hold
+- Release v0.6.0-dev.11 authorized
+
+### Archived Phase Progress row (displaced by keep-5 rule; new F7 APPROVED row added)
+
+Displaced to make room for SOH-ATTACHMENTS-1 F7 DELTA CONVERGENCE APPROVED Phase Progress row per keep-5 rule.
+
+| Phase | Status | Completed | Gate | Notes |
+|-------|--------|-----------|------|-------|
+| **SOH-ATTACHMENTS-1 BUNDLE CLOSEOUT (2026-07-23): FIX-576-DL DELIVERED PR #642 @ 7298c035 (string-or-int serde visitor on AttachmentMetadata.id; mutation 100% kill 9/9; e2e run 30040606453; emergent fix found by S-576-6 live validation run 30031724733). S-576-6 DELIVERED PR #643 @ 9da03d5b (facade; CI 15/15 green; mutation 0 mutants test-only-diff; fresh-eyes APPROVE 0 C/H; security APPROVE SEC-S576-6-001 CWE-703 Drop expect MEDIUM accepted as tech debt; story v1.15→v1.16). SOH-ATTACHMENTS-1 BUNDLE COMPLETE: 6/6 stories + 1 emergent fix. STORY-INDEX v1.5.39→v1.5.40. Cycle-close process-gaps: PG-576-1 prose-test-count drift class; PG-576-2 clippy-scope gap (lib vs --all-targets). trajectory-tail →0→0→0→0** | **SOH-ATTACHMENTS-1 BUNDLE COMPLETE** | **2026-07-23** | **Wave gate pending: AUDIT-576-003; AUDIT-576-004; P3-003; P4-006; P8-001; SEC-S576-6-001 tech debt.** | BC 657; holdouts 100; VP 35; spec v1.3.99; BC-INDEX v6.37; STORY-INDEX v1.5.40. |
+
+### Archived Current Phase Steps row (displaced by keep-5 rule; new F7 APPROVED row added)
+
+Displaced to make room for SOH-ATTACHMENTS-1 F7 DELTA CONVERGENCE APPROVED step row per keep-5 rule.
+
+| Step | Agent | Status | Output |
+|------|-------|--------|--------|
+| **SESSION WRAP (2026-07-23): human-requested pause after SOH-ATTACHMENTS-1 BUNDLE CLOSEOUT. Pipeline PAUSED. BUNDLE COMPLETE: 6/6 stories + FIX-576-DL emergent fix; PRs #630/631/635/638/640/642/643 all merged; issue #576 CLOSED. develop @ 9da03d5b = activation_head. NEXT STEP: SOH-ATTACHMENTS-1 WAVE GATE. No in-flight work abandoned. trajectory-tail →0→0→0→0** | state-manager | COMPLETE — PIPELINE PAUSED | STATE.md PAUSED; session-checkpoints.md archived; factory-artifacts committed. |
+
