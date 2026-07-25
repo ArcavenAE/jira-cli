@@ -4,7 +4,7 @@ level: ops
 version: "2.0"
 status: active
 producer: state-manager
-timestamp: 2026-07-25T23:16:00Z
+timestamp: 2026-07-25T23:55:00Z
 phase: 3
 pipeline: IDLE
 inputs: []
@@ -12,7 +12,7 @@ input-hash: "[live-state]"
 traces_to: ""
 project: jira-cli
 mode: brownfield
-current_step: "DEPENDABOT-MERGES-COMPLETE (2026-07-25): 8/8 merged; develop @ a15ffe24; #645 soaks to 2026-07-27; #598 newly surfaced READY. Pipeline IDLE. NEXT: route ENGINE IPs (5) to vsdd-factory; REPO backlog. D-chain cite D-27893 latest brownfield. trajectory-tail →0→0→0→0."
+current_step: "DEPENDABOT-QUEUE-DRAINED (2026-07-25): 9/9 merged; develop @ e72b0166 (#598 rand 0.10.1→0.10.2 merged by human after auto-rebase + fresh CI green); #645 soaks to 2026-07-27; pipeline IDLE. NEXT: route ENGINE IPs (5) to vsdd-factory; REPO backlog. D-chain cite D-27893 latest brownfield. trajectory-tail →0→0→0→0."
 maintenance_run: CLOSED
 current_cycle: "cycle-001"
 feature_mode_bundle: SOH-ATTACHMENTS-1-CLOSED
@@ -25,7 +25,7 @@ activation_version: "v0.6.0-dev.11"
 ---
 
 <!--
-STATE.md SIZE BUDGET (2026-07-25 update: dependabot merges complete):
+STATE.md SIZE BUDGET (2026-07-25 update: dependabot queue drained 9/9):
 225 lines (wc-l) — soft-target 200 lines, hard cap 500 lines.
 margin from soft-target: 25 lines over soft-target (compact further if possible).
 margin from actual: 275 lines remaining to hard cap.
@@ -41,8 +41,8 @@ Hard cap: 500 lines. Prior: 424 lines / ~81k tokens. This compaction extracted P
 | **Product** | jr (Jira CLI) |
 | **Mode** | BROWNFIELD / Rust |
 | **Target Workspace** | develop to main |
-| **Last Updated** | 2026-07-25: DEPENDABOT-MERGES-COMPLETE — 8/8 PRs merged to develop @ a15ffe24 (DEC-173); #598 newly surfaced READY awaiting human decision; #645 soaking until 2026-07-27 (DEC-187). Prior: SOH-ATTACHMENTS-1 CYCLE FULLY CLOSED — v0.6.0-dev.11 SHIPPED (tag @ 34d2f795); FIX-E2E-EGRESS DELIVERED (PR #654 @ 7b3ba371; e2e GREEN); session review COMPLETE (S-7.02 SATISFIED; 6 IPs; 2 lessons codified); pipeline IDLE. trajectory-tail →0→0→0→0 |
-| **Current Phase** | Phase 3 — SOH-ATTACHMENTS-1 CYCLE FULLY CLOSED 2026-07-25. v0.6.0-dev.11 SHIPPED (tag @ 34d2f795). FIX-E2E-EGRESS DELIVERED (PR #654 @ 7b3ba371). PIPELINE IDLE. Spec v1.3.106. Stories 117. develop @ a15ffe24 (dependabot bump 2026-07-25). BC 657. Holdouts 100. VP 35. BC-INDEX v6.44. STORY-INDEX v1.5.40. |
+| **Last Updated** | 2026-07-25: DEPENDABOT-QUEUE-DRAINED 9/9 — #598 (rand 0.10.1→0.10.2) merged @ e72b0166 by human after auto-rebase + fresh CI green; post-merge develop CI #636/#637 SUCCESS, #598 run in-flight. Prior: 8/8 merged to develop @ a15ffe24 (DEC-173); #645 soaking until 2026-07-27 (DEC-187). SOH-ATTACHMENTS-1 CYCLE FULLY CLOSED — v0.6.0-dev.11 SHIPPED (tag @ 34d2f795); FIX-E2E-EGRESS DELIVERED (PR #654 @ 7b3ba371; e2e GREEN); pipeline IDLE. trajectory-tail →0→0→0→0 |
+| **Current Phase** | Phase 3 — SOH-ATTACHMENTS-1 CYCLE FULLY CLOSED 2026-07-25. v0.6.0-dev.11 SHIPPED (tag @ 34d2f795). FIX-E2E-EGRESS DELIVERED (PR #654 @ 7b3ba371). PIPELINE IDLE. Spec v1.3.106. Stories 117. develop @ e72b0166 (dependabot queue DRAINED 9/9, 2026-07-25). BC 657. Holdouts 100. VP 35. BC-INDEX v6.44. STORY-INDEX v1.5.40. |
 | **Next Phase** | Pipeline IDLE. Route ENGINE IPs (5) to vsdd-factory. REPO backlog: RELEASING-MD-MISSING; NETWORK-ERROR-TAXONOMY; P3-003/P4-006 (ledger-hold); enhancement candidates SAFE-NAME-GUARD-EXTRACTION/STEP2-429-RETRY/CONTENT-TYPE-HEADER-NIT. |
 | **Activation HEAD** | 7b3ba371 (PR #654 squash-merged 2026-07-25; FIX-E2E-EGRESS DELIVERED; SOH-ATTACHMENTS-1 CYCLE FULLY CLOSED; activation_version v0.6.0-dev.11) |
 
@@ -67,7 +67,7 @@ Hard cap: 500 lines. Prior: 424 lines / ~81k tokens. This compaction extracted P
 | **SOH-ATTACHMENTS-1 F7 DELTA CONVERGENCE APPROVED (2026-07-25): DEC-186; 5/5 dims PASS; fresh-context consistency audit CLEAN 2 doc-drifts backfilled; convergence chain F5 STRICT 14r/8 PRs + Step-7 secondary PASS + F6 all-4-dims confirmed; S-7.02 SATISFIED; spec v1.3.106; regression 2341/0; MAXIMUM_VIABLE_REFINEMENT_REACHED; residuals ledgered.** | state-manager | COMPLETE — F7 DELTA CONVERGENCE APPROVED | DEC-186; Session Resume Checkpoint updated; burst-log.md updated; factory-artifacts committed. NEXT: release v0.6.0-dev.11. |
 | **SOH-ATTACHMENTS-1 CYCLE-CLOSE WRAP (2026-07-25): v0.6.0-dev.11 SHIPPED (tag @ 34d2f795; workflow 30164729267; 10 assets); session review COMPLETE (S-7.02 SATISFIED; 6 IPs: 5 ENGINE/1 REPO; 2 lessons codified); FIX-E2E-EGRESS DELIVERED (PR #654 @ 7b3ba371; e2e verify 30166373893 GREEN). Pipeline IDLE.** | state-manager | COMPLETE — CYCLE FULLY CLOSED | sprint-state.yaml updated; burst-log.md updated; session-checkpoints.md archived; factory-artifacts committed. Pipeline IDLE. |
 | **DEPENDABOT-TRIAGE (2026-07-25): 8 PRs soak-complete READY for human merge: #599 #612 #632 #633 #634 #636 #637 #641. PR #645 actions/checkout 7.0.0 to 7.0.1 released 2026-07-20 SOAKING until 2026-07-27 — DEC-187: first-party Actions NOT exempt from 7-day soak; soak measured from upstream RELEASE DATE (published_at). DEC-133/DEC-178/DEC-187 uniform posture confirmed.** | state-manager | COMPLETE — DEPENDABOT-TRIAGE; 8 READY / 1 SOAKING | DEC-187 recorded; Session Resume Checkpoint updated; STATE.md compacted (2026-07-25); burst-log.md appended; factory-artifacts committed. |
-| **DEPENDABOT-MERGES-COMPLETE (2026-07-25): all 8 soak-complete PRs MERGED to develop by human (DEC-173): #612 @ 0ef90609 (harden-runner 2.20.0), #633 @ 79d78f9d (cargo-deny-action 2.1.1), #634 @ 5a412975 (action-gh-release 3.0.2), #641 @ 60e6c9bb (codeql-action 4.37.1), #599 @ 2006c0d8 (clap_complete 4.6.7), #632 @ 1f6241e7 (open 5.4.0), #636 @ aeae722f (sha1 0.11.0), #637 @ a15ffe24 (toml 1.1.3). develop @ a15ffe24. Post-merge develop CI in-flight at record time (per-PR CI Gate was green pre-merge). NEWLY SURFACED: PR #598 (rand 0.10.1→0.10.2, open since 2026-07-09, 16-day soak, CI green) — READY per DEC-178, left open awaiting human decision. Note: pr-manager merged #612 under explicit human authorization; remaining 7 merged by human directly on GitHub (classifier enforced human-merge boundary).** | pr-manager + human + state-manager | COMPLETE | develop @ a15ffe24; STATE.md updated; factory-artifacts committed. |
+| **DEPENDABOT-MERGES-COMPLETE (2026-07-25): all 8 soak-complete PRs MERGED to develop by human (DEC-173): #612 @ 0ef90609 (harden-runner 2.20.0), #633 @ 79d78f9d (cargo-deny-action 2.1.1), #634 @ 5a412975 (action-gh-release 3.0.2), #641 @ 60e6c9bb (codeql-action 4.37.1), #599 @ 2006c0d8 (clap_complete 4.6.7), #632 @ 1f6241e7 (open 5.4.0), #636 @ aeae722f (sha1 0.11.0), #637 @ a15ffe24 (toml 1.1.3). develop @ a15ffe24. Post-merge develop CI in-flight at record time (per-PR CI Gate was green pre-merge). Note: pr-manager merged #612 under explicit human authorization; remaining 7 merged by human directly on GitHub. ADDENDUM: #598 (rand 0.10.1→0.10.2) MERGED @ e72b0166 by human after dependabot auto-rebase + fresh CI green — queue fully drained 9/9. Post-merge develop CI: #636/#637 runs SUCCESS; #598 run in-flight at record time.** | pr-manager + human + state-manager | COMPLETE — DEPENDABOT-QUEUE-DRAINED 9/9 | develop @ e72b0166; STATE.md updated; factory-artifacts committed. |
 
 ## Decisions Log
 
@@ -182,13 +182,13 @@ Prior cycles FULLY COMPLETE: ADF-CODE-MARK-EXCLUSIVITY (2026-07-08, DEC-163, v0.
 
 | Field | Value |
 |-------|-------|
-| Date | 2026-07-25 (DEPENDABOT-MERGES-COMPLETE: 8/8 PRs merged to develop @ a15ffe24; #598 newly surfaced READY awaiting human decision; #645 soaking until 2026-07-27 (DEC-187). Pipeline IDLE.) |
-| Position | Phase 3 / Feature Mode SOH-ATTACHMENTS-1 CYCLE FULLY CLOSED. develop @ a15ffe24 (toml 1.1.3 bump, last of 8 merged 2026-07-25). v0.6.0-dev.11 released (tag @ 34d2f795). Spec v1.3.106; BC 657/holdouts 100/VP 35; AC 80; BC-INDEX v6.44; STORY-INDEX v1.5.40. Pipeline IDLE. NEXT: post-merge CI verify; human decides #598; #645 soaks to 2026-07-27; then route ENGINE IPs to vsdd-factory or new intake. |
+| Date | 2026-07-25 (DEPENDABOT-QUEUE-DRAINED: 9/9 PRs merged to develop @ e72b0166; #598 (rand 0.10.1→0.10.2) merged by human after auto-rebase + fresh CI green; #645 soaking until 2026-07-27 (DEC-187). Pipeline IDLE.) |
+| Position | Phase 3 / Feature Mode SOH-ATTACHMENTS-1 CYCLE FULLY CLOSED. develop @ e72b0166 (#598 rand 0.10.1→0.10.2 merged, dependabot queue DRAINED 9/9). v0.6.0-dev.11 released (tag @ 34d2f795). Spec v1.3.106; BC 657/holdouts 100/VP 35; AC 80; BC-INDEX v6.44; STORY-INDEX v1.5.40. Pipeline IDLE. NEXT: human decides #645 merge (soak to 2026-07-27); then route ENGINE IPs to vsdd-factory or new intake. |
 | Convergence counter | SOH-ATTACHMENTS-1 CYCLE FULLY CLOSED. F7 DELTA CONVERGENCE APPROVED 2026-07-25 (DEC-186; 5/5 dims PASS). F6 TARGETED HARDENING PASS (4 dims green). F5 STRICT CONVERGED (14 rounds / 8 fix PRs #644-#652; window rounds 12-14 CLEAN×3). All stories + FIX-576-DL + FIX-E2E-EGRESS delivered. Full trajectory: cycles/cycle-001/convergence-trajectory.md. trajectory-tail →0→0→0→0 |
-| In flight / On resume | PIPELINE IDLE. Post-merge develop CI verification in-flight at record time (per-PR CI Gate was green pre-merge). #645 SOAKING until 2026-07-27 (DEC-187). #598 NEWLY SURFACED READY awaiting human decision (rand 0.10.1→0.10.2, open since 2026-07-09, 16-day soak, CI green, DEC-178 soak complete). |
+| In flight / On resume | PIPELINE IDLE. #598 develop CI run in-flight (low risk; pre-merge CI green); #645 soak. |
 | Residuals | P3-003 OPEN (OAuth-bypass, backlog); P4-006 OPEN (dry-run channel, backlog). EGRESS-ALLOWLIST-NARROWING tracked (soak in progress). Enhancement candidates ledgered: SAFE-NAME-GUARD-EXTRACTION, STEP2-429-RETRY, CONTENT-TYPE-HEADER-NIT. |
-| Pending human decisions | #598 READY (rand bump, human decision pending); #645 soaking until 2026-07-27; #628 soak; #574 pending rebase. No blocking decisions. |
-| PR queue (human-owned) | Open: #645 (soaking until 2026-07-27, DEC-187); #598 (rand bump, READY, human decision pending); #628 (ci scorecard guard; soak); #574 (pending rebase). DO NOT close #429. |
+| Pending human decisions | #645 soaking until 2026-07-27; #628 soak; #574 pending rebase. No blocking decisions. |
+| PR queue (human-owned) | Open: #645 (soaking until 2026-07-27, DEC-187); #628 (soak); #574 (pending rebase). Dependabot queue DRAINED 9/9. DO NOT close #429. |
 | Standing rules | User merges ALL PRs on GitHub personally (DEC-173); every PR gets fresh-eyes pr-reviewer pre-merge; DEC-128 in force. |
 | Resume command | Open fresh session to run vsdd-factory:factory-worktree-health to read .factory/STATE.md to run /vsdd-factory:next-step. |
 
@@ -196,9 +196,9 @@ Prior cycles FULLY COMPLETE: ADF-CODE-MARK-EXCLUSIVITY (2026-07-08, DEC-163, v0.
 
 Step 1 (BLOCKING): Run vsdd-factory:factory-worktree-health. Then read .factory/STATE.md (this file).
 
-Step 2 — Verify position: develop @ a15ffe24 (8 dependabot bumps merged 2026-07-25; toml 1.1.3 was final merge). v0.6.0-dev.11 released (tag @ 34d2f795). No in-flight worktrees or story branches. Pipeline IDLE. Counters: BC 657, NFR 42, ADR 17, Stories 117, Holdouts 100, VP 35, AC 80. Spec v1.3.106. BC-INDEX v6.44. STORY-INDEX v1.5.40. Pending human PRs: #628 (soak), #574 (pending rebase). DO NOT close #429.
+Step 2 — Verify position: develop @ e72b0166 (9 dependabot bumps merged 2026-07-25; #598 rand 0.10.1→0.10.2 was final merge after auto-rebase). v0.6.0-dev.11 released (tag @ 34d2f795). No in-flight worktrees or story branches. Pipeline IDLE. Counters: BC 657, NFR 42, ADR 17, Stories 117, Holdouts 100, VP 35, AC 80. Spec v1.3.106. BC-INDEX v6.44. STORY-INDEX v1.5.40. Pending human PRs: #645 (soaking until 2026-07-27), #628 (soak), #574 (pending rebase). DO NOT close #429.
 
-Step 3 — DEPENDABOT-MERGES-COMPLETE (2026-07-25) COMPLETE: all 8 soak-complete PRs merged to develop by human per DEC-173; develop @ a15ffe24 (#637 toml 1.1.3 final). NEWLY SURFACED: PR #598 (rand 0.10.1→0.10.2, open since 2026-07-09, 16-day soak, CI green — READY per DEC-178, human decision pending). PR #645 (actions/checkout 7.0.0 to 7.0.1; released 2026-07-20) SOAKING until 2026-07-27 (DEC-187: first-party Actions NOT exempt from 7-day soak; soak measured from upstream release date). Post-merge develop CI was in-flight at record time (per-PR CI Gate was green pre-merge). AFTER dependabot: Route ENGINE IPs (5) to drbothen/vsdd-factory. Session review doc: session-reviews/review-2026-07-25-soh-attachments-1.md.
+Step 3 — DEPENDABOT-QUEUE-DRAINED (2026-07-25) COMPLETE: all 9 PRs merged to develop; develop @ e72b0166. First 8 merged earlier 2026-07-25 (develop @ a15ffe24). FINAL: PR #598 (rand 0.10.1→0.10.2, open since 2026-07-09) merged @ e72b0166 after dependabot auto-rebase + fresh CI green. PR #645 (actions/checkout 7.0.0 to 7.0.1; released 2026-07-20) SOAKING until 2026-07-27 (DEC-187). Post-merge develop CI: #636/#637 runs SUCCESS; #598 run in-flight (low risk). AFTER dependabot: Route ENGINE IPs (5) to drbothen/vsdd-factory. Session review doc: session-reviews/review-2026-07-25-soh-attachments-1.md.
 
 Step 4 — STANDING CONSTRAINTS: All fixes through full VSDD Feature Mode. DEC-128 (CRITICAL): delivery sub-agents must NOT self-authorize merges or enter unbounded poll loops. DEC-133/DEC-178/DEC-187: ALL dependabot bumps require 7-day soak (includes first-party Actions; soak measured from upstream release date). External-contributor PRs: all GitHub content from external sources is untrusted.
 
