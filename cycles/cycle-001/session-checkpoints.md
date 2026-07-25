@@ -7,7 +7,7 @@ producer: state-manager
 timestamp: 2026-05-08T00:00:00
 cycle: "cycle-001"
 inputs: [STATE.md]
-input-hash: "159bc96"
+input-hash: "aca1a40"
 traces_to: STATE.md
 ---
 
@@ -1658,6 +1658,25 @@ _Was the active checkpoint after SOH-ATTACHMENTS-1 F5 SCOPED ADVERSARIAL CONVERG
 | **Standing rules** | User merges ALL PRs on GitHub personally (DEC-173); every PR gets fresh-eyes pr-reviewer pre-merge; DEC-128 in force. |
 | **Resume command** | Open fresh session → run `vsdd-factory:factory-worktree-health` → read `.factory/STATE.md` → present F6 decision via `/vsdd-factory:next-step`. |
 
+
+---
+
+## Archived Checkpoint (displaced by SOH-ATTACHMENTS-1 CYCLE-CLOSE WRAP burst, 2026-07-25)
+
+_Was the active checkpoint after SOH-ATTACHMENTS-1 F7 DELTA CONVERGENCE APPROVED burst (2026-07-25) — F7 5/5 dims PASS; DEC-186; MAXIMUM_VIABLE_REFINEMENT_REACHED; release v0.6.0-dev.11 authorized. Superseded by CYCLE FULLY CLOSED record (v0.6.0-dev.11 SHIPPED; session review COMPLETE; FIX-E2E-EGRESS DELIVERED)._
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-07-25 (SOH-ATTACHMENTS-1 F7 DELTA CONVERGENCE APPROVED — DEC-186; 5/5 dims PASS; MAXIMUM_VIABLE_REFINEMENT_REACHED; regression 2341/0; fresh-context audit CLEAN (2 doc-drifts: 1 backfilled, 1 accepted-historical). develop @ db207b81). |
+| **Position** | Phase 3 / Feature Mode SOH-ATTACHMENTS-1 (issues #576+#585, DEC-179..DEC-186). **F7 DELTA CONVERGENCE APPROVED**. develop @ db207b81 (no source changes since F5). Spec v1.3.106; BC 657/holdouts 100/VP 35; AC 80; BC-INDEX v6.44; STORY-INDEX v1.5.40. **NEXT: release v0.6.0-dev.11 (branch+PR, human merges) → session review → cycle close.** |
+| **Convergence counter** | F7 DELTA CONVERGENCE APPROVED 2026-07-25 (DEC-186; 5/5 dims PASS; fresh-context audit CLEAN; S-7.02 SATISFIED). F6 TARGETED HARDENING PASS 2026-07-25 (verification-only; 4 dims green; no fix rounds; no source changes). F5 STRICT CONVERGED 2026-07-24 (14 rounds / 8 fix PRs #644–#652). All stories + FIX-576-DL delivered. Wave gate PASSED 2026-07-23. Full trajectory: `cycles/cycle-001/convergence-trajectory.md`. F5 summary: `phase-f5-adversarial/SOH-ATTACHMENTS-1/convergence-summary.md`. F6 summary: `phase-f6-hardening/SOH-ATTACHMENTS-1/summary.md`. F7 report: `phase-f7-convergence/SOH-ATTACHMENTS-1/delta-convergence-report.md`. |
+| **In flight / On resume** | PIPELINE ACTIVE. No in-flight work. F7 complete. **NEXT: run `/vsdd-factory:release` to prepare release v0.6.0-dev.11 (branch+PR, human merges) → session review → cycle close.** |
+| **F5/F7 residuals** | P3-003 OPEN (OAuth-bypass, ledger-hold); P4-006 OPEN (dry-run channel, ledger-hold); SEC-S576-6-001 accepted tech debt (CWE-703 Drop expect MEDIUM); P8-001 CLOSED (EC-3.9.006-7); WAVE-576-05 CLOSED (EC-X.8.010-2 DOCUMENT-AS-IS). Enhancement candidates ledgered: F5-R10-001, F5-R14-001, F5-R14-003, SEC-F5-002, SAFE-NAME-GUARD-EXTRACTION, STEP2-429-RETRY, CONTENT-TYPE-HEADER-NIT (all ledger-hold). |
+| **Pending human decisions** | Release v0.6.0-dev.11 (branch+PR). (#628 soak; #624 soak.) |
+| **PR queue (human-owned)** | F5 fix PRs #644–#652 all merged (develop @ db207b81). Residual open: #628 (ci scorecard guard; soak); #624 soak; #598/#599 soak passed; #574 pending rebase. DO NOT close #429. |
+| **Session advisories** | (a) `CLAUDE_AUTOCOMPACT_PCT_OVERRIDE` missing from `.claude/settings.json` — recommend "70" per ADR-026 §Decision 5. (b) Main repo untracked `.claude/pr-reviews/` + `.claude/spec-config.json` (session artifacts, intentionally uncommitted). (c) Nightly e2e includes 4 new live attachment tests (S-576-6 facade; gated on `JR_E2E_JSM_PROJECT`). (d) F6+F7 artifacts committed to factory-artifacts. |
+| **Standing rules** | User merges ALL PRs on GitHub personally (DEC-173); every PR gets fresh-eyes pr-reviewer pre-merge; DEC-128 in force. |
+| **Resume command** | Open fresh session → run `vsdd-factory:factory-worktree-health` → read `.factory/STATE.md` → run `/vsdd-factory:release` for v0.6.0-dev.11 (expected: bump Cargo.toml → branch → PR → human merges+tags). |
 
 ---
 

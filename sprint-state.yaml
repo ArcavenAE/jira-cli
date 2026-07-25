@@ -911,3 +911,69 @@ SOH-ATTACHMENTS-1-f6-hardening:
     - "phase-f6-hardening/SOH-ATTACHMENTS-1/kani-results.md"
     - "phase-f6-hardening/SOH-ATTACHMENTS-1/security-scan-results.md"
   next_step: "F7 delta convergence (human gate)"
+
+SOH-ATTACHMENTS-1-f7-convergence:
+  bundle: SOH-ATTACHMENTS-1
+  f7_approved_at: "2026-07-25"
+  status: "APPROVED — DEC-186"
+  dimensions_pass: "5/5"
+  d1_fresh_context: "CLEAN — 2 doc-drifts: 1 backfilled CLAUDE.md attachment-lifecycle note; 1 accepted-historical F6 CPS timestamp"
+  d2_input_drift: "CLEAN"
+  d3_convergence_chain: "F5 STRICT CONVERGED (14r/8 fix PRs #644-#652; window pass-12/13/14 CLEAN×3) + Step-7 secondary PASS (0C/0H/0M) + F6 all-4-dims PASS"
+  d4_s702: "SATISFIED — PG-576-1/2 ledgered; 3 enhancement candidates ledgered; zero [process-gap] blocking"
+  d5_spec: "v1.3.106 confirmed"
+  regression: "2341/0"
+  develop_sha: "db207b81"
+  maximum_viable_refinement_reached: true
+  residuals_routed_to_ledger:
+    - "P3-003: OPEN — OAuth-bypass (backlog)"
+    - "P4-006: OPEN — dry-run channel divergence (backlog)"
+    - "SEC-S576-6-001: accepted tech debt"
+    - "SAFE-NAME-GUARD-EXTRACTION: backlog"
+    - "STEP2-429-RETRY: backlog"
+    - "CONTENT-TYPE-HEADER-NIT: backlog"
+
+SOH-ATTACHMENTS-1-release-v0.6.0-dev.11:
+  bundle: SOH-ATTACHMENTS-1
+  version: "v0.6.0-dev.11"
+  shipped_at: "2026-07-25T16:06Z"
+  tag_sha: "34d2f795"
+  workflow_run: "30164729267"
+  assets: 10
+  develop_sha_at_release: "db207b81"
+  status: "SHIPPED"
+
+SOH-ATTACHMENTS-1-session-review:
+  bundle: SOH-ATTACHMENTS-1
+  review_completed_at: "2026-07-25"
+  review_doc: "session-reviews/review-2026-07-25-soh-attachments-1.md"
+  improvement_proposals_doc: "session-reviews/improvement-proposals-soh-attachments-1.md"
+  improvement_proposals_commit: "67c80576"
+  improvement_proposals_total: 6
+  engine_ips: 5
+  repo_ips: 1
+  s7_02_status: "SATISFIED"
+  lessons_codified: 2
+  status: "COMPLETE"
+
+FIX-E2E-EGRESS:
+  type: emergent-fix
+  fix_id: "FIX-E2E-EGRESS"
+  pr: 654
+  merge_sha: "7b3ba371"
+  shipped_at: "2026-07-25"
+  rca: "harden-runner egress block killed intermittent CDN 302 on attachment content download; 3/4 e2e runs failed; CDN domain (*.amazonaws.com) missing from allow-list in e2e.yml"
+  ci_result: "14/14 green; both reviewers PASS"
+  e2e_verify_run: "30166373893"
+  e2e_result: "GREEN 4m3s"
+  develop_sha: "7b3ba371"
+  status: "DELIVERED + VERIFIED"
+
+SOH-ATTACHMENTS-1-bundle-status:
+  bundle: SOH-ATTACHMENTS-1
+  closed_at: "2026-07-25"
+  status: "CLOSED"
+  final_develop_sha: "7b3ba371"
+  final_version: "v0.6.0-dev.11"
+  stories_delivered: "6/6 + FIX-576-DL + FIX-E2E-EGRESS"
+  notes: "SOH-ATTACHMENTS-1 cycle FULLY CLOSED 2026-07-25. All 6 stories + 2 emergent fixes delivered. F5 STRICT CONVERGED (14r/8 fix PRs). F6 PASS. F7 APPROVED DEC-186. Session review COMPLETE S-7.02 SATISFIED (6 IPs: 5 ENGINE 1 REPO). v0.6.0-dev.11 SHIPPED. FIX-E2E-EGRESS delivered + verified. Pipeline IDLE at steady state."

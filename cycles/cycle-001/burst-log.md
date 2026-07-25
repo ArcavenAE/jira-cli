@@ -7,7 +7,7 @@ producer: state-manager
 timestamp: 2026-05-04T00:00:00
 cycle: "cycle-001"
 inputs: [STATE.md]
-input-hash: "159bc96"
+input-hash: "aca1a40"
 traces_to: STATE.md
 ---
 
@@ -5994,4 +5994,42 @@ Displaced to make room for SOH-ATTACHMENTS-1 F7 DELTA CONVERGENCE APPROVED step 
 | Step | Agent | Status | Output |
 |------|-------|--------|--------|
 | **SESSION WRAP (2026-07-23): human-requested pause after SOH-ATTACHMENTS-1 BUNDLE CLOSEOUT. Pipeline PAUSED. BUNDLE COMPLETE: 6/6 stories + FIX-576-DL emergent fix; PRs #630/631/635/638/640/642/643 all merged; issue #576 CLOSED. develop @ 9da03d5b = activation_head. NEXT STEP: SOH-ATTACHMENTS-1 WAVE GATE. No in-flight work abandoned. trajectory-tail →0→0→0→0** | state-manager | COMPLETE — PIPELINE PAUSED | STATE.md PAUSED; session-checkpoints.md archived; factory-artifacts committed. |
+
+---
+
+## SOH-ATTACHMENTS-1 CYCLE-CLOSE WRAP burst (2026-07-25)
+
+**Burst type:** Cycle close / state wrap — factory-artifacts commit
+**Procedure validation:** First successful use of the full-file-Write STATE.md procedure (user ruling 2026-07-25: Write tool with complete content; both timestamp-advance and structure-coherence hooks passed on first attempt).
+**Files updated:** `.factory/STATE.md` (full file Write — timestamp advanced 09:00Z→18:00Z, Phase Progress +1/-1 rotation, CPS +1/-1 rotation, Drift +3 new items + STATE-MANAGER-MONOLITHIC-WRITE-STALL updated, Convergence +2 lines, Concurrent Cycles +1 row, Session Resume replaced, RESUME PLAN updated, Historical +3 rows; 427 lines); `.factory/sprint-state.yaml` (5 new blocks appended); `.factory/cycles/cycle-001/burst-log.md` (archived rows + this entry); `.factory/cycles/cycle-001/session-checkpoints.md` (F7 DELTA CONVERGENCE APPROVED checkpoint archived)
+
+**Events recorded:**
+- v0.6.0-dev.11 SHIPPED (tag @ 34d2f795; GH pre-release published 2026-07-25T16:06Z; workflow 30164729267 green; 10 assets). develop @ db207b81 at release time.
+- Session review COMPLETE (review-2026-07-25-soh-attachments-1.md + improvement-proposals @ 67c80576; S-7.02 SATISFIED; 6 IPs: 5 ENGINE 1 REPO; 2 lessons codified)
+- FIX-E2E-EGRESS DELIVERED (RCA: harden-runner egress block killed intermittent CDN 302 on attachment content download — 3/4 runs failed; PR #654 @ 7b3ba371; both reviewers PASS; CI 14/14; e2e verify run 30166373893 GREEN 4m3s). develop @ 7b3ba371.
+
+**New ledger items added:**
+- EGRESS-ALLOWLIST-NARROWING (security tracked action: narrow *.amazonaws.com:443 via step-security dashboard after soak; e2e.yml)
+- NETWORK-ERROR-TAXONOMY (backlog candidate: client.rs collapses all reqwest errors to "Could not reach {original-host}" — distinguish timeout/connect/blocked; cost real diagnosis time)
+- E2E-NIGHTLY-ALERTING (session-review proposal: 3-consecutive-failure threshold on nightly e2e)
+
+**STATE-MANAGER-MONOLITHIC-WRITE-STALL:** RESOLVED-BY-PROCEDURE (user ruling 2026-07-25: full-file Write is the sanctioned path; hooks stay active; engine fix IP-576-04 still routes upstream for a native mechanism). Drift Items row updated in STATE.md.
+
+**Sprint-state.yaml blocks appended:** SOH-ATTACHMENTS-1-f7-convergence (APPROVED DEC-186) + SOH-ATTACHMENTS-1-release-v0.6.0-dev.11 (SHIPPED @ 34d2f795) + SOH-ATTACHMENTS-1-session-review (COMPLETE S-7.02 SATISFIED) + FIX-E2E-EGRESS (DELIVERED + VERIFIED PR #654 @ 7b3ba371) + SOH-ATTACHMENTS-1-bundle-status (CLOSED)
+
+### Archived Phase Progress row (displaced by keep-5 rule; new CYCLE CLOSED WRAP row added)
+
+Displaced to make room for SOH-ATTACHMENTS-1 CYCLE FULLY CLOSED Phase Progress row per keep-5 rule (removed oldest: WAVE GATE PASSED 2026-07-23).
+
+| Phase | Status | Completed | Gate | Notes |
+|-------|--------|-----------|------|-------|
+| **SOH-ATTACHMENTS-1 WAVE GATE PASSED (2026-07-23): 6 gates — G1 test-suite PASS (2319 tests, 0 fails, 100% green; debug build — `cargo test --release` prohibited per `base_url_release_gate` const guard); G2 DTU-validation SKIP (no DTU; dtu_required: false); G3 adversarial review PASS (6 findings: WAVE-576-01 LOW dry-run channel divergence; WAVE-576-02 LOW/MEDIUM post_request_attachment bypasses blanket-401 auto-refresh + misses non-200 status check; WAVE-576-03 INFO verified non-defect; WAVE-576-04 INFO serde brittleness residual; WAVE-576-05 LOW per-file stale-heal exit-code inconsistency; WAVE-576-06 INFO holdout assertion precision; all dispositioned); G4 demo-evidence PASS (7/7 demos); G5 holdout evaluation PASS (12/12 MUST-PASS scored 1.00; mean 1.00; H-NEW-ATTACHMENT-001..012); G6 state-update PASS. Mutation: S-576-6 facade control 0 mutants (vacuous pass); strict stories 94–90–100% PR-time kill-rate. Residuals carried: WAVE-576-01 (P4-006 confirmed; orchestrator ruling pending); WAVE-576-02 (P3-003 widened; orchestrator ruling pending); WAVE-576-05 (new tech-debt OPEN); PG-576-3 (process-gap candidate). trajectory-tail →0→0→0→0** | **SOH-ATTACHMENTS-1 WAVE GATE** | **2026-07-23** | **Wave gate PASSED.** | BC 657; holdouts 100; VP 35; spec v1.3.99; BC-INDEX v6.37; STORY-INDEX v1.5.40. |
+
+### Archived Current Phase Steps row (displaced by keep-5 rule; new CYCLE CLOSED WRAP step row added)
+
+Displaced to make room for SOH-ATTACHMENTS-1 CYCLE FULLY CLOSED step row per keep-5 rule (removed oldest: WAVE GATE PASSED step 2026-07-23).
+
+| Step | Agent | Status | Output |
+|------|-------|--------|--------|
+| **SOH-ATTACHMENTS-1 WAVE GATE PASSED (2026-07-23): 6 gates all PASS/SKIP. G1 2319/0/100%; G2 DTU SKIP; G3 adversary 6 findings 0C/0H; G4 demo 7/7; G5 holdout 12/12 mean 1.00; G6 state PASS. Mutation facade 0 mutants; strict stories 94–90–100% PR-time. Residuals: WAVE-576-01/02/05 carried. trajectory-tail →0→0→0→0** | state-manager | COMPLETE — WAVE GATE PASSED | Gate report: cycles/cycle-001/gates/soh-attachments-1-wave-gate.md; sprint-state.yaml updated; STATE.md updated. |
 
