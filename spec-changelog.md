@@ -7,6 +7,23 @@ project: "jr (jira-cli)"
 
 Track all spec version changes. Most recent version first.
 
+## [1.3.125] - 2026-07-26
+
+### Type: PATCH
+
+### Summary
+SOH-DX-1 DEC-188 round-27 adversary-pass corrections (#639): F-27-01 (HIGH): AC-17's `!stderr.contains("cannot be combined with")` relabeled DISCRIMINATING→HYGIENE — BC-3.8.017's string lives only inside `handle_jsm_create` at `jsm_create.rs` ~:160, unreachable without `--request-type` routing through the fork at `create.rs` ~:49; no guard defect (absent/mis-ordered/hoisted) can surface it on this invocation; same structural unreachability class as AC-15. Real discriminating pair stated: (1) positive `stderr.contains("--field is only valid with")` AND (2) `!stderr.contains("Project key")` (DISCRIMINATING — proves guard fires at step 2 before project-key resolution at step 3). F-27-02 (MED): AC-8 `expect(0)` mocks gain Mock ResponseTemplate note — each mock MUST include a `respond_with` clause (e.g. `ResponseTemplate::new(200)`) so the mock compiles; the response body/status are irrelevant; the `expect(0)` count assertion is the operative check. LOW: `~:3047`/`~:3132` "helper semantics at `~:76`" rephrased to "fn at `tests/json_error_shape.rs` ~:63; its `stdout.trim().is_empty()` semantics at ~:76" (disambiguates fn location from semantics line). BC count unchanged (140/111).
+
+### Changed
+- `.factory/specs/prd/bc-3-issue-write.md` (MODIFIED): AC-17 DISCRIMINATING→HYGIENE + real discriminating pair. AC-8 Mock ResponseTemplate note. ~:3047/~:3132 helper cite rephrased. Frontmatter v1.3.125 trace entry prepended. Footer updated to v1.3.125.
+- `.factory/specs/prd/BC-INDEX.md` (MODIFIED): `last_updated` annotation updated to v1.3.125; `index_version` v6.53→v6.54.
+- `.factory/spec-changelog.md` (MODIFIED): [1.3.125] entry added.
+
+### BC Count
+0 new BCs. Total unchanged: 657 cumulative (BC-INDEX), 140/111 individually-bodied in bc-3-issue-write.md.
+
+---
+
 ## [1.3.124] - 2026-07-26
 
 ### Type: PATCH

@@ -6576,3 +6576,49 @@ Displaced to make room for SOH-DX-1 F2 adversary round 26 step row per keep-4 ru
 | Step | Agent | Status | Output |
 |------|-------|--------|--------|
 | **pass-22 adversary — SOH-DX-1 F2 round 22 complete (2026-07-26): 2 findings (0H/2M) + 1 LOW obs CONVERGING (4→2); ZERO HIGHs; novelty MEDIUM-LOW; adversary: 'contract layer appears converged'; ALL KEPT clauses exclusion-form (class-kill); AC-1 presence-only/--no-input notes; EC-2 whitespace variant; spec v1.3.120 [1.3.120]; piecewise CLEAN; 3 guards green. ZERO consecutive CLEAN (need 3 STRICT per DEC-189). NEXT: pass-23.** | adversary (×22) + product-owner (×22) + consistency-validator (×22) + state-manager | IN PROGRESS — F2 adversary grind | spec v1.3.120; BC-INDEX v6.45; STORY-INDEX v1.5.41; convergence-trajectory p99 appended; factory-artifacts committed. |
+
+---
+
+## SOH-DX-1 F2 Adversary Round 27 Burst (2026-07-26)
+
+**Burst type:** F2 adversary fix round 27 (pass-27 / p104)
+
+**Summary:** CONVERGING (6→4); 1 HIGH; novelty MEDIUM→LOW. HIGH: AC-17 relabeled HYGIENE (foreign-handler string unreachable) + real discriminating pair added. MEDs: AC-8 ResponseTemplate compile note; helper-location disambiguation. LOW: S-383 status coherence (completed + contract_superseded_by). 10th process-gap ledgered: foreign-handler-negative heuristic (taxonomy enforced by prose only). Spec v1.3.125 + [1.3.125]. BC-INDEX v6.54. Piecewise CLEAN. 3 guards green.
+
+**Files touched:** .factory/specs/prd/bc-3-issue-write.md, .factory/specs/prd/BC-INDEX.md (v6.53→v6.54), .factory/spec-changelog.md ([1.3.125] entry), .factory/sidecar-learning.md, .factory/stories/S-383-platform-inverse-warnings.md (contract_superseded_by field added)
+
+**Trajectory:** →p104(4). trajectory-tail →3→6→6→4.
+
+**Convergence counter:** 0 of 3 STRICT. NEXT: pass-28 (p105).
+
+### Archived Phase Progress row (displaced by keep-5 rule; new pass-27-adversary row added)
+
+Displaced to make room for SOH-DX-1 F2 adversary round 27 Phase Progress row per keep-5 rule (removed oldest: pass-22 adversary).
+
+| Phase | Status | Completed | Gate | Notes | Finding Progression |
+|-------|--------|-----------|------|-------|---------------------|
+| **pass-22 adversary — SOH-DX-1 F2 fix burst round 22 complete (2026-07-26): 2 findings (0C/0H/2M/0L) + 1 LOW obs CONVERGING (4→2); ZERO HIGHs; ZERO CRITs; novelty MEDIUM-LOW; adversary: 'contract layer appears converged'; both findings citation-anchor collisions in test-rewrite mandates; ALL KEPT clauses rewritten exclusion-form (class-kill); AC-1 presence-only/--no-input notes; EC-2 whitespace variant; spec v1.3.120 + [1.3.120]; piecewise CLEAN; 3 guards green. ZERO consecutive CLEAN (need 3 STRICT per DEC-189). NEXT: pass-23.** | F2 adversary grind in progress | 2026-07-26 | ADVERSARY GRIND — convergence + human gate PENDING. | spec v1.3.120; BC-INDEX v6.45; STORY-INDEX v1.5.41. | →8→8→8→7→6→4→3→7→6→5→6→6→4→2→5→5→4→3→3→5→4→2 |
+
+### Archived Current Phase Steps row (displaced by keep-4 rule; new pass-27-adversary step row added)
+
+Displaced to make room for SOH-DX-1 F2 adversary round 27 step row per keep-4 rule (removed oldest: pass-23 adversary CPS).
+
+| Step | Agent | Status | Output |
+|------|-------|--------|--------|
+| **pass-23 adversary — SOH-DX-1 F2 round 23 complete (2026-07-26): 3 findings (1H/2L) + 1 out-of-delta obs REGRESSION (2→3); HIGH: BC-INDEX index_version field stale by 4 (machine/prose drift, v6.46→v6.50 healed); LOWs: anchor refresh; pub fn directive; out-of-delta: prd/README count drift; novelty LOW (first LOW-novelty pass); 9th process-gap: prd/README.md unguarded count surface; spec v1.3.121 [1.3.121]; piecewise CLEAN; 3 guards green. ZERO consecutive CLEAN (need 3 STRICT per DEC-189). NEXT: pass-24.** | adversary (×23) + product-owner (×23) + consistency-validator (×23) + state-manager | IN PROGRESS — F2 adversary grind | spec v1.3.121; BC-INDEX v6.50; STORY-INDEX v1.5.41; convergence-trajectory p100 appended; burst-log.md appended; factory-artifacts committed. |
+
+### Archived Phase Progress row (displaced by keep-5 rule; new pass-26-adversary row added)
+
+Displaced to make room for SOH-DX-1 F2 adversary round 26 Phase Progress row per keep-5 rule (removed oldest: pass-21 adversary).
+
+| Phase | Status | Completed | Gate | Notes | Finding Progression |
+|-------|--------|-----------|------|-------|---------------------|
+| **pass-21 adversary — SOH-DX-1 F2 fix burst round 21 complete (2026-07-26): 4 findings (0C/1H/3M/0L) + 3 LOW obs CONVERGING (5→4); HIGH: AC-20/21 realizable (project+summary+real stub trio, 'Password Reset' fixture name canonical); MEDs: AC-5 'Created issue' negative genuinely falsifiable; AC-2/7 KEPT clauses added; SSOT completeness caveat; fix-21 also: AC-8 team_field_id precondition; S-383 index status ruled-deliberate; spec v1.3.119 + [1.3.119]; piecewise CLEAN (1 residual in-round); 3 guards green. ZERO consecutive CLEAN (need 3 STRICT per DEC-189). NEXT: pass-22.** | F2 adversary grind in progress | 2026-07-26 | ADVERSARY GRIND — convergence + human gate PENDING. | spec v1.3.119; BC-INDEX v6.45; STORY-INDEX v1.5.41. | →8→8→8→7→6→4→3→7→6→5→6→6→4→2→5→5→4→3→3→5→4 |
+
+### Archived Current Phase Steps row (displaced by keep-4 rule; new pass-26-adversary step row added)
+
+Displaced to make room for SOH-DX-1 F2 adversary round 26 step row per keep-4 rule (removed oldest: pass-22 adversary CPS).
+
+| Step | Agent | Status | Output |
+|------|-------|--------|--------|
+| **pass-22 adversary — SOH-DX-1 F2 round 22 complete (2026-07-26): 2 findings (0H/2M) + 1 LOW obs CONVERGING (4→2); ZERO HIGHs; novelty MEDIUM-LOW; adversary: 'contract layer appears converged'; ALL KEPT clauses exclusion-form (class-kill); AC-1 presence-only/--no-input notes; EC-2 whitespace variant; spec v1.3.120 [1.3.120]; piecewise CLEAN; 3 guards green. ZERO consecutive CLEAN (need 3 STRICT per DEC-189). NEXT: pass-23.** | adversary (×22) + product-owner (×22) + consistency-validator (×22) + state-manager | IN PROGRESS — F2 adversary grind | spec v1.3.120; BC-INDEX v6.45; STORY-INDEX v1.5.41; convergence-trajectory p99 appended; factory-artifacts committed. |

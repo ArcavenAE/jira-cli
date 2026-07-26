@@ -3,8 +3,8 @@ document_type: story
 story_id: "S-383"
 title: "Emit stderr warnings when --field/--on-behalf-of used without --request-type on platform path (closes #383)"
 wave: feature-followup
-status: superseded
-superseded_by: SOH-DX-1 (DEC-188)
+status: completed
+contract_superseded_by: SOH-DX-1 (DEC-188)
 intent: enhancement
 feature_type: backend
 scope: standard
@@ -48,7 +48,7 @@ traces_to: []
 inputs:
   - ".factory/phase-f1-delta-analysis/issue-383/delta-analysis.md"
   - ".factory/specs/prd/bc-3-issue-write.md"
-input-hash: "4c3c82e"
+input-hash: "d911701"
 spec_source: ".factory/phase-f1-delta-analysis/issue-383/delta-analysis.md"
 implementation_strategy: tdd
 module_criticality: HIGH  # src/cli/issue/create.rs — central dispatch for all issue create paths
