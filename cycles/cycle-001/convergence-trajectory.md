@@ -2599,3 +2599,14 @@ Sixth F2 adversary pass (fresh context). HIGH findings: (1) AC-6 vacuity — sam
 Seventh F2 adversary pass (fresh context). HIGH findings: (1) F7-1 CMDB call misplaced in ordering block — spec described the CMDB lookup as part of the Platform-Path Guard Ordering block, but in the actual code (create.rs:239) the call is post-POST/JSON-only context; ordering block corrected in spec, AC-8 expect(0) set honest. MEDIUM findings: (2) F7-2 EC-3.8.012-8 clap exit-2 precedence added (flags-before-subcommand class — clap exits 2 before jr pre-flight code runs; missing from the EC list); (3) F7-3 AC-10/Test Notes updated to parse-stderr-as-JSON per tests/json_error_shape.rs convention (prior form was looser string-match). Process-gap: SOH-DX-1-PG-004 — no CI pin on help-text semantics for flags with exit-code contracts (help text can drift without CI catching it; ledgered 4th process-gap). Fix round 7 dispatched and applied: piecewise CLEAN, 3 guard scripts green.
 
 **Trajectory so far:** p78(8)→p79(8)→p80(8)→p81(7)→p82(6)→p83(4)→p84(3). Delta: 0/0/-1/-1/-2/-1. Finding class narrowing confirmed. NEXT: pass-8 (p85).
+
+---
+
+### Pass p85 (2026-07-25)
+
+**Findings:** 7 (0C/0H/3M/4L) — severity collapsing; count regression 3→7
+**Convergence counter:** 0 of 3 (STRICT) — grind active; PIECEWISE CLEAN after fix round 8
+
+Eighth F2 adversary pass (fresh context). ZERO HIGH and ZERO CRITICAL findings — severity continues collapsing despite count increase. MEDIUM findings: (1) helper promotion to tests/common/fixtures.rs — cross-binary `#[path]` directive is unbuildable in the integration test binary; promote to shared fixture module; (2) AC-9 cwd isolation gap — `find_project_config` walk-up behavior not isolated from test cwd; (3) Platform-Path Guard Ordering SSOT declaration + BC placement text collapsed to block refs (repeated prose). LOW findings (4): changelog EC 1..8 + AC-11 enumeration incomplete; stdout-empty postconditions + AC-1 stdout inversion + json no-prefix scoping; AC-11 TTY-seam test pin missing; BC-3.8.013 AC-3 cross-ref absent. Fix round 8 dispatched and applied: 2 piecewise residuals (fn citation + changelog AC-11) fixed post-main burst; 3 guard scripts green.
+
+**Trajectory so far:** p78(8)→p79(8)→p80(8)→p81(7)→p82(6)→p83(4)→p84(3)→p85(7). Delta: 0/0/-1/-1/-2/-1/+4. Count regression but severity fully collapsed to 0C/0H. trajectory-tail →6→4→3→7. NEXT: pass-9 (p86).
