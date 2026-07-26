@@ -271,7 +271,7 @@ R1/R4 prefix = deepening round that introduced it.
 
 | L3 BC ID | Summary | Pass 3 BC ID | Source | Confidence |
 |---|---|---|---|---|
-| BC-3.3.001 | `issue create` POSTs `/rest/api/3/issue` returning `{"key": "FOO-123"}` (platform path; when `--request-type` absent — see BC-3.8.001) [UPDATED 2026-05-18 issue #288; amended 2026-05-19 issue #383 (stderr now carries BC-3.8.012/013 warnings on platform path); amended 2026-07-25 DEC-188 (BC-3.8.012/013 warn-and-proceed superseded by exit-64 pre-flight guard)] | BC-211 | tests/issue_create_json.rs | HIGH |
+| BC-3.3.001 | `issue create` POSTs `/rest/api/3/issue` returning `{"key": "FOO-123"}` (platform path; when `--request-type` absent — see BC-3.8.001) [UPDATED 2026-05-18 issue #288; amended 2026-05-19 issue #383 (2026-05-19..2026-07-25: stderr carried BC-3.8.012/013 warnings on platform path; superseded by DEC-188 exit-64); amended 2026-07-25 DEC-188 (BC-3.8.012/013 warn-and-proceed superseded by exit-64 pre-flight guard)] | BC-211 | tests/issue_create_json.rs | HIGH |
 | BC-3.3.002 | `issue create` with assignee — uses `search_assignable_users_by_project` (multiProjectSearch) | BC-1064 (R4) | tests/issue_commands.rs:~1024-1082 | HIGH |
 | BC-3.3.003 | `issue create --to me` uses `get_myself()` (no search HTTP) | BC-1065 (R4) | tests/issue_commands.rs:~1084-1127 | HIGH |
 | BC-3.3.004 | `issue create` WITHOUT assignee — body has `{project, issuetype, summary}` ONLY (no assignee key) | BC-1066 (R4) | tests/issue_commands.rs:~1129-1154 | HIGH |

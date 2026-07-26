@@ -2566,3 +2566,14 @@ Third F2 adversary pass. Finding classes: spec-changelog entry gaps, test semant
 Fourth F2 adversary pass. Finding classes narrowed further: zero-HTTP discriminating ACs, spec-changelog completeness, perimeter-doc completeness. Fix round 4 dispatched and applied. Piecewise CLEAN after round 4.
 
 **Trajectory so far:** p78(8)→p79(8)→p80(8)→p81(7). Delta: 0/0/-1. Finding class narrowing confirmed. NEXT: pass-5 (p82).
+
+---
+
+### Pass p82 (2026-07-25)
+
+**Findings:** 6 (2H/4M) + 2 LOW obs + 1 [process-gap]
+**Convergence counter:** 0 of 3 (STRICT) — grind active; PIECEWISE CLEAN after fix round 5
+
+Fifth F2 adversary pass (fresh context). HIGH findings: (1) AC-8 non-discriminating — warn-era build also exits 64 with zero HTTP when project/type/summary absent; no clause forbade old eprintln! warnings surviving alongside new exit-64 error. Fix round 5: AC-8 re-specified (full invocation + stderr substring + expect(0)); removal postconditions written into both BC-3.8.012/013 (warn strings MUST be removed; negative assertion on ACs); EC-3.8.012-5 rewritten (no platform --markdown guard exists); AC-5 sharpened (byte-identical stderr for repeated --field); AC-3 pinned (are/is verb discriminator, containment-trap-free); doc-fallout + mod.rs help strings ~:400/403; AC-10 json error shape pinned; BC-INDEX:274 past-tense scoping fixed. Piecewise consistency: CLEAN (are/is discriminator verified; AC-8 completeness verified; verbatim warn substring match verified; AC-1..10 unique; symbol anchors valid). All 3 guard scripts green. Third process-gap (SOH-DX-1-PG-003): expect(0) ACs must pin would-otherwise-proceed setup + positive stderr assertion (POL-11 false-green class for spec-authored ACs).
+
+**Trajectory so far:** p78(8)→p79(8)→p80(8)→p81(7)→p82(6). Delta: 0/0/-1/-1. Finding class narrowing confirmed. NEXT: pass-6 (p83).

@@ -6183,3 +6183,48 @@ Displaced to make room for SOH-DX-1 F2 adversary rounds 1-4 step row per keep-4 
 | Step | Agent | Status | Output |
 |------|-------|--------|--------|
 | **DEPENDABOT-TRIAGE (2026-07-25): 8 PRs soak-complete READY for human merge: #599 #612 #632 #633 #634 #636 #637 #641. PR #645 actions/checkout 7.0.0 to 7.0.1 released 2026-07-20 SOAKING until 2026-07-27 — DEC-187: first-party Actions NOT exempt from 7-day soak; soak measured from upstream RELEASE DATE (published_at). DEC-133/DEC-178/DEC-187 uniform posture confirmed.** | state-manager | COMPLETE — DEPENDABOT-TRIAGE; 8 READY / 1 SOAKING | DEC-187 recorded; Session Resume Checkpoint updated; STATE.md compacted (2026-07-25); burst-log.md appended; factory-artifacts committed. |
+
+---
+
+## SOH-DX-1 F2 Adversary Round 5 Checkpoint Burst (2026-07-25)
+
+**Triggered by:** Orchestrator F2 adversary grind checkpoint after round 5 (pass-5 complete, fix round 5 applied, piecewise CLEAN). STATE.md updated; factory-artifacts committed.
+
+**Pass-5 findings (6: 2H/4M + 2 LOW obs + 1 [process-gap]):**
+- HIGH: AC-8 non-discriminating (warn-era build exits 64 with zero HTTP absent project/type/summary — not discriminating vs new exit-64)
+- HIGH: No clause forbade old eprintln! warnings surviving alongside new exit-64 error
+- MED: EC-3.8.012-5 no-platform-markdown-guard; AC-5 stderr non-specific; AC-3 containment-trap; AC-10 json error shape; BC-INDEX:274 past-tense; doc-fallout + mod.rs help strings ~:400/403
+- LOW obs×2 + [process-gap]×1
+
+**Fix round 5 applied:**
+- BC-3.8.012/013: AC-8 re-specified (full invocation + stderr substring + expect(0)); removal postconditions (warn strings MUST be removed; negative assertion on ACs)
+- EC-3.8.012-5 rewritten (no platform --markdown guard exists)
+- AC-5 sharpened (byte-identical stderr for repeated --field)
+- AC-3 pinned (are/is verb discriminator, containment-trap-free)
+- doc-fallout + mod.rs help strings ~:400/403
+- AC-10 json error shape pinned
+- BC-INDEX:274 past-tense scoping fixed
+
+**Piecewise consistency:** CLEAN (are/is discriminator verified; AC-8 completeness verified; verbatim warn substring match verified; AC-1..10 unique; symbol anchors valid). All 3 guard scripts green.
+
+**Third process-gap (S-7.02):** SOH-DX-1-PG-003 — expect(0) ACs must pin would-otherwise-proceed setup + positive stderr assertion (POL-11 false-green class for spec-authored ACs).
+
+**Trajectory:** p78(8)→p79(8)→p80(8)→p81(7)→p82(6). Delta: 0/0/-1/-1. Finding class narrowing confirmed.
+
+**Convergence counter:** 0 of 3 STRICT (need 3 consecutive CLEAN). NEXT: pass-6 (p83).
+
+### Archived Phase Progress row (displaced by keep-5 rule; new pass-5-adversary row added)
+
+Displaced to make room for SOH-DX-1 F2 adversary round 5 Phase Progress row per keep-5 rule (removed oldest: SOH-ATTACHMENTS-1 F7 CONVERGENCE APPROVED).
+
+| Phase | Status | Completed | Gate | Notes | Finding Progression |
+|-------|--------|-----------|------|-------|---------------------|
+| **SOH-ATTACHMENTS-1 F7 DELTA CONVERGENCE APPROVED (2026-07-25): DEC-186 human APPROVED; 5/5 dimensions PASS; MAXIMUM_VIABLE_REFINEMENT_REACHED; residuals ledgered. Release v0.6.0-dev.11 authorized.** | F7 convergence APPROVED | 2026-07-25 | PASS; DEC-186 APPROVED; MAXIMUM_VIABLE_REFINEMENT_REACHED. | BC 657; holdouts 100; VP 35; spec v1.3.106; BC-INDEX v6.44. | — |
+
+### Archived Current Phase Steps row (displaced by keep-4 rule; new pass-5-adversary step row added)
+
+Displaced to make room for SOH-DX-1 F2 adversary round 5 step row per keep-4 rule (removed oldest: DEPENDABOT-MERGES-COMPLETE).
+
+| Step | Agent | Status | Output |
+|------|-------|--------|--------|
+| **DEPENDABOT-MERGES-COMPLETE (2026-07-25): all 8 soak-complete PRs MERGED to develop by human (DEC-173): #612 @ 0ef90609 (harden-runner 2.20.0), #633 @ 79d78f9d (cargo-deny-action 2.1.1), #634 @ 5a412975 (action-gh-release 3.0.2), #641 @ 60e6c9bb (codeql-action 4.37.1), #599 @ 2006c0d8 (clap_complete 4.6.7), #632 @ 1f6241e7 (open 5.4.0), #636 @ aeae722f (sha1 0.11.0), #637 @ a15ffe24 (toml 1.1.3). ADDENDUM: #598 (rand 0.10.1→0.10.2) MERGED @ e72b0166 by human after dependabot auto-rebase + fresh CI green — queue fully drained 9/9.** | pr-manager + human + state-manager | COMPLETE — DEPENDABOT-QUEUE-DRAINED 9/9 | develop @ e72b0166; STATE.md updated; factory-artifacts committed. |

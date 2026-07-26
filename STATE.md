@@ -4,7 +4,7 @@ level: ops
 version: "2.0"
 status: active
 producer: state-manager
-timestamp: 2026-07-26T02:25:13Z
+timestamp: 2026-07-25T10:20:00Z
 phase: 3
 pipeline: Feature Mode SOH-DX-1 ACTIVE
 inputs: []
@@ -12,7 +12,7 @@ input-hash: "[live-state]"
 traces_to: ""
 project: jira-cli
 mode: brownfield
-current_step: "SOH-DX-1 F2 ADVERSARY GRIND IN PROGRESS (2026-07-25): 4 rounds complete (pass-1 8F 4H/4M → fix-1 → pass-2 8F 2H/4M/2L → fix-2 → pass-3 8F 2H/5M/1L → fix-3 → pass-4 7F 2H/3M/2L → fix-4 → piecewise CLEAN); finding classes narrowed body-contradictions → perimeter-docs → test-semantics → registry/testability; 31 findings fixed; spec-changelog [1.3.107] registered; BC-3.8.012/013 + delta-analysis + CLAUDE.md + ADR-0014 deliverables all amended; S-383 superseded banner; STORY-INDEX v1.5.41; 2 process-gaps ledgered for cycle close (S-7.02). ZERO consecutive CLEAN; need 3 STRICT. NEXT: pass-5. D-chain cite D-27893. trajectory-tail →8→8→8→7."
+current_step: "SOH-DX-1 F2 ADVERSARY GRIND IN PROGRESS (2026-07-25): 5 rounds complete (pass-1 8F 4H/4M → fix-1 → pass-2 8F 2H/4M/2L → fix-2 → pass-3 8F 2H/5M/1L → fix-3 → pass-4 7F 2H/3M/2L → fix-4 → pass-5 6F 2H/4M → fix-5 → piecewise CLEAN); fix-5: AC-8 re-specified (full invocation + stderr substring + expect(0)); removal postconditions both BCs; EC-3.8.012-5 rewritten; AC-5 sharpened (byte-identical stderr); AC-3 pinned (are/is verb discriminator); doc-fallout + mod.rs help ~:400/403; AC-10 json error shape; BC-INDEX:274 past-tense; piecewise CLEAN (are/is + AC-8 completeness + verbatim warn match verified; 3 guard scripts green); 3 process-gaps ledgered (S-7.02). ZERO consecutive CLEAN; need 3 STRICT. NEXT: pass-6. D-chain cite D-27893. trajectory-tail →8→8→7→6."
 maintenance_run: CLOSED
 current_cycle: "cycle-001"
 feature_mode_bundle: SOH-DX-1-F2-ADVERSARY-GRIND
@@ -25,11 +25,11 @@ activation_version: "v0.6.0-dev.11"
 ---
 
 <!--
-STATE.md SIZE BUDGET (2026-07-26 update: SOH-DX-1 F2 ADVERSARY GRIND IN PROGRESS):
-232 lines (wc-l) — soft-target 200 lines, hard cap 500 lines.
-margin from soft-target: 32 lines over soft-target (compact further if possible).
-margin from actual: 268 lines remaining to hard cap.
-Hard cap: 500 lines. Prior: 231 lines. Net delta: +1 line (PP row rotated: F5-fix-burst archived, pass-4-adversary added; CPS row rotated: DEPENDABOT-TRIAGE archived, pass-4-adversary added; SRC updated; trajectory-tail sites updated).
+STATE.md SIZE BUDGET (2026-07-25 update: SOH-DX-1 F2 ADVERSARY GRIND ROUND 5):
+233 lines (wc-l) — soft-target 200 lines, hard cap 500 lines.
+margin from soft-target: 33 lines over soft-target (compact further if possible).
+margin from actual: 267 lines remaining to hard cap.
+Hard cap: 500 lines. Prior: 232 lines. Net delta: +1 line (PP row rotated: F7-CONVERGENCE archived, pass-5-adversary added; CPS row rotated: DEPENDABOT-MERGES-COMPLETE archived, pass-5-adversary added; drift item SOH-DX-1-PG-003 added; SRC updated; all 5 trajectory-tail sites updated).
 -->
 
 # Pipeline State: jira-cli
@@ -41,33 +41,33 @@ Hard cap: 500 lines. Prior: 231 lines. Net delta: +1 line (PP row rotated: F5-fi
 | **Product** | jr (Jira CLI) |
 | **Mode** | BROWNFIELD / Rust |
 | **Target Workspace** | develop to main |
-| **Last Updated** | 2026-07-25: SOH-DX-1 F2 ADVERSARY GRIND — 4 rounds complete (pass-1 8F→pass-2 8F→pass-3 8F→pass-4 7F; piecewise CLEAN after round 4; 31 findings fixed; spec-changelog [1.3.107] registered; STORY-INDEX v1.5.41; 2 process-gaps ledgered). NEXT: pass-5. trajectory-tail →8→8→8→7. Prior: SOH-DX-1 F2 AUTHORING COMPLETE — BC-3.8.012/013 superseded (warn→pre-flight exit-64); BC-3.3.001 amended; spec v1.3.107; BC-INDEX v6.45; consistency pass-2 CLEAN; S-383 stale flagged. trajectory-tail →0→0→0→0 |
-| **Current Phase** | Feature Mode SOH-DX-1 ACTIVE — F2 ADVERSARY GRIND IN PROGRESS (2026-07-25). Rounds 1-4 complete; trajectory 8→8→8→7; piecewise CLEAN after round 4. ZERO consecutive CLEAN passes (need 3 STRICT). NEXT: pass-5 → continue grind → human gate after STRICT convergence. |
+| **Last Updated** | 2026-07-25: SOH-DX-1 F2 ADVERSARY GRIND — 5 rounds complete (pass-1 8F→pass-2 8F→pass-3 8F→pass-4 7F→pass-5 6F; piecewise CLEAN after round 5; fix-5: AC-8 re-specified (full invocation + stderr + expect(0)); removal postconditions; EC-3.8.012-5 rewritten; piecewise CLEAN; 3rd process-gap (POL-11); 3 guard scripts green). NEXT: pass-6. trajectory-tail →8→8→7→6. Prior: rounds 1-4 complete; 31 findings fixed; spec-changelog [1.3.107]; STORY-INDEX v1.5.41; 2 process-gaps. trajectory-tail →8→8→8→7 |
+| **Current Phase** | Feature Mode SOH-DX-1 ACTIVE — F2 ADVERSARY GRIND IN PROGRESS (2026-07-25). Rounds 1-5 complete; trajectory 8→8→8→7→6; piecewise CLEAN after round 5. ZERO consecutive CLEAN passes (need 3 STRICT). NEXT: pass-6 → continue grind → human gate after STRICT convergence. |
 | **Next Phase** | F2 adversary convergence (3-clean-pass STRICT minimum) → F2 human gate → F3 story decomposition. #645 soaking until 2026-07-27 (DEC-187). ENGINE IPs (5) queued for vsdd-factory after this cycle. |
 | **Activation HEAD** | 7b3ba371 (PR #654 squash-merged 2026-07-25; FIX-E2E-EGRESS DELIVERED; SOH-ATTACHMENTS-1 CYCLE FULLY CLOSED; activation_version v0.6.0-dev.11) |
 
 ## Phase Progress
 
 <!-- Keep last 5 rows only. Archive older rows to cycles/cycle-001/burst-log.md. -->
-<!-- archived rows ledger: see cycles/cycle-001/burst-log.md (2026-07-25 compaction + SOH-DX-1 F1 burst: archived pass-14 adversary row + SOH-DX-1 F2-AUTHORED burst: archived F6 hardening row; F2-ADVERSARY-ROUNDS-1-4 burst: archived F5-fix-burst summary row; D-447(d) fix-burst row re-instated — see burst-log.md) -->
+<!-- archived rows ledger: see cycles/cycle-001/burst-log.md (2026-07-25 compaction + SOH-DX-1 F1 burst: archived pass-14 adversary row + SOH-DX-1 F2-AUTHORED burst: archived F6 hardening row; F2-ADVERSARY-ROUNDS-1-4 burst: archived F5-fix-burst summary row; D-447(d) fix-burst row re-instated; F2-ADVERSARY-ROUND-5 burst: archived F7-CONVERGENCE-APPROVED row — see burst-log.md) -->
 | Phase | Status | Completed | Gate | Notes | Finding Progression |
 |-------|--------|-----------|------|-------|---------------------|
-| **SOH-ATTACHMENTS-1 F7 DELTA CONVERGENCE APPROVED (2026-07-25): DEC-186 human APPROVED; 5/5 dimensions PASS; MAXIMUM_VIABLE_REFINEMENT_REACHED; residuals ledgered. Release v0.6.0-dev.11 authorized.** | F7 convergence APPROVED | 2026-07-25 | PASS; DEC-186 APPROVED; MAXIMUM_VIABLE_REFINEMENT_REACHED. | BC 657; holdouts 100; VP 35; spec v1.3.106; BC-INDEX v6.44. | — |
 | **SOH-ATTACHMENTS-1 CYCLE FULLY CLOSED (2026-07-25): v0.6.0-dev.11 SHIPPED (tag @ 34d2f795); FIX-E2E-EGRESS DELIVERED (PR #654 @ 7b3ba371; e2e GREEN); session review COMPLETE (S-7.02 SATISFIED; 6 IPs); pipeline IDLE.** | CYCLE CLOSED; pipeline IDLE | 2026-07-25 | CYCLE FULLY CLOSED. | BC 657; holdouts 100; VP 35; spec v1.3.106; BC-INDEX v6.44; develop @ 7b3ba371. | — |
 | **SOH-DX-1 INTAKE + F1 APPROVED (2026-07-25): bundle #639+#627+#626 validated (3 probes + research-agent); DEC-188 (flip both --on-behalf-of/--field to exit-64; +MSRV fix; +prose revert; v0.7.0-dev.1 target). Stories: S-639-1 (HIGH/breaking), S-627-1 (LOW), S-626-1 (LOW/MED). BC stays 657.** | F1 APPROVED | 2026-07-25 | PASS; DEC-188; 3-story bundle. | delta-analysis.md at phase-f1-delta/SOH-DX-1/. NEXT: F2 spec evolution. | — |
 | **SOH-DX-1 F2 AUTHORING COMPLETE (2026-07-25): BC-3.8.012/013 superseded (warn→pre-flight exit-64; PRIOR/CURRENT blocks; combined-error in 012; 5 test renames in Trace); BC-3.3.001 amended; BC-INDEX v6.44→v6.45 (section-3.8 'Pre-flight Guards'); spec v1.3.107; BC 657 unchanged; count scripts exit 0; consistency pass-2 CLEAN. S-383 flagged stale for F3.** | F2 AUTHORING COMPLETE | 2026-07-25 | AUTHORING COMPLETE — adversary convergence + human gate PENDING. | spec v1.3.107; BC-INDEX v6.45. | — |
 | **pass-4 adversary — SOH-DX-1 F2 fix burst rounds 1-4 complete (2026-07-25): trajectory 8→8→8→7; 4 fix bursts dispatched and applied; piecewise CLEAN after round 4; 31 findings fixed; finding classes narrowed (body-contradictions → perimeter-docs → test-semantics → registry/testability); spec-changelog [1.3.107] registered; STORY-INDEX v1.5.41; 2 process-gaps ledgered (S-7.02). ZERO consecutive CLEAN (need 3 STRICT). NEXT: pass-5.** | F2 adversary grind in progress | 2026-07-25 | ADVERSARY GRIND — convergence + human gate PENDING. | spec v1.3.107; BC-INDEX v6.45; STORY-INDEX v1.5.41. | →8→8→8→7 |
+| **pass-5 adversary — SOH-DX-1 F2 fix burst round 5 complete (2026-07-25): 6 findings (2H/4M) + 2 LOW obs + 1 [process-gap]; HIGHs: AC-8 non-discriminating (warn-era build exits 64 with zero HTTP; no warn-removal clause); fix-5: AC-8 re-specified (full invocation + stderr substring + expect(0)); removal postconditions both BCs; EC-3.8.012-5 rewritten; AC-5 sharpened (byte-identical stderr); AC-3 pinned (are/is verb discriminator); doc-fallout + mod.rs ~:400/403; AC-10 json error shape; BC-INDEX:274 past-tense; piecewise CLEAN (are/is + AC-8 completeness + verbatim warn match verified; 3 guard scripts green). 3rd process-gap: expect(0) ACs must pin would-otherwise-proceed setup + positive stderr (POL-11 false-green). ZERO consecutive CLEAN (need 3 STRICT). NEXT: pass-6.** | F2 adversary grind in progress | 2026-07-25 | ADVERSARY GRIND — convergence + human gate PENDING. | spec v1.3.107; BC-INDEX v6.45; STORY-INDEX v1.5.41. | →8→8→7→6 |
 
 ## Current Phase Steps
 
 <!-- Keep last 4 rows only. Archive older rows to cycles/cycle-001/burst-log.md. -->
-<!-- archived rows ledger: see cycles/cycle-001/burst-log.md (2026-07-25 compaction + SOH-DX-1 F1 burst: archived F7-delta-convergence CPS row + SOH-DX-1 F2-AUTHORED burst: archived SOH-ATTACHMENTS-1 CYCLE-CLOSE WRAP CPS row + F2-ADVERSARY-ROUNDS-1-4 burst: archived DEPENDABOT-TRIAGE CPS row) -->
+<!-- archived rows ledger: see cycles/cycle-001/burst-log.md (2026-07-25 compaction + SOH-DX-1 F1 burst: archived F7-delta-convergence CPS row + SOH-DX-1 F2-AUTHORED burst: archived SOH-ATTACHMENTS-1 CYCLE-CLOSE WRAP CPS row + F2-ADVERSARY-ROUNDS-1-4 burst: archived DEPENDABOT-TRIAGE CPS row + F2-ADVERSARY-ROUND-5 burst: archived DEPENDABOT-MERGES-COMPLETE CPS row) -->
 | Step | Agent | Status | Output |
 |------|-------|--------|--------|
-| **DEPENDABOT-MERGES-COMPLETE (2026-07-25): all 8 soak-complete PRs MERGED to develop by human (DEC-173): #612 @ 0ef90609 (harden-runner 2.20.0), #633 @ 79d78f9d (cargo-deny-action 2.1.1), #634 @ 5a412975 (action-gh-release 3.0.2), #641 @ 60e6c9bb (codeql-action 4.37.1), #599 @ 2006c0d8 (clap_complete 4.6.7), #632 @ 1f6241e7 (open 5.4.0), #636 @ aeae722f (sha1 0.11.0), #637 @ a15ffe24 (toml 1.1.3). ADDENDUM: #598 (rand 0.10.1→0.10.2) MERGED @ e72b0166 by human after dependabot auto-rebase + fresh CI green — queue fully drained 9/9.** | pr-manager + human + state-manager | COMPLETE — DEPENDABOT-QUEUE-DRAINED 9/9 | develop @ e72b0166; STATE.md updated; factory-artifacts committed. |
 | **SOH-DX-1 INTAKE + F1 APPROVED (2026-07-25): bundle #639+#627+#626 validated (3 probes + research-agent w/ citations); F1 delta analysis at phase-f1-delta/SOH-DX-1/delta-analysis.md; fresh-context consistency audit 2 findings (CLAUDE.md gotcha, test rename) folded; F1 gate APPROVED DEC-188 (flip both flags; +MSRV fix; +prose revert; v0.7.0-dev.1 target). Proposed stories: S-639-1 (HIGH risk, breaking), S-627-1 (LOW), S-626-1 (LOW/MED). BC count stays 657. NEXT: F2 spec evolution (BC-3.8.012/013 supersession).** | 3 validators + research-agent + architect + consistency-validator + state-manager | COMPLETE — F1 APPROVED | delta-analysis.md committed; DEC-188; STATE.md updated. |
 | **SOH-DX-1 F2 AUTHORING COMPLETE (2026-07-25): BC-3.8.012/013 superseded (warn→pre-flight exit-64; PRIOR/CURRENT blocks; combined-error in 012; asymmetry rationale; 5 test renames in Trace); BC-3.3.001 amended; BC-INDEX v6.44→v6.45 (section-3.8 'Pre-flight Guards'); spec v1.3.107; BC 657 unchanged; count scripts exit 0; consistency pass-1 3 MINOR gaps→fixed→pass-2 CLEAN (5 fwd refs deliberate); S-383 flagged stale for F3. NEXT: F2 adversary pass-1.** | product-owner + consistency-validator (×2) + state-manager | COMPLETE — F2 AUTHORED | bc-3-issue-write.md v1.3.107; BC-INDEX.md v6.45; STATE.md updated; factory-artifacts committed. |
 | **pass-4 adversary — SOH-DX-1 F2 fix burst rounds 1-4 complete (2026-07-25): 4 adversary passes (8/8/8/7 findings); 4 fix bursts dispatched and applied; piecewise CLEAN after round 4; 31 findings fixed total; finding classes: body-contradictions → perimeter-docs (ADR-0014/CLAUDE.md) → test-semantics (vacuous AC-4) → registry/testability; spec-changelog [1.3.107] registered; STORY-INDEX v1.5.41 (S-383 superseded banner); 2 process-gaps ledgered for S-7.02. ZERO consecutive CLEAN. NEXT: pass-5.** | adversary (×4) + product-owner (×4) + consistency-validator (×4) + state-manager | IN PROGRESS — F2 adversary grind | spec v1.3.107; BC-INDEX v6.45; STORY-INDEX v1.5.41; convergence-trajectory p78-p81 appended; burst-log.md appended; factory-artifacts committed. |
+| **pass-5 adversary — SOH-DX-1 F2 round 5 complete (2026-07-25): 6 findings (2H/4M) + 2 LOW obs + 1 [process-gap]; HIGHs: AC-8 non-discriminating (warn-era also exits 64 with zero HTTP absent project/type/summary); no warn-removal clause; fix-5: AC-8 re-specified (full invocation + stderr substring + expect(0)); removal postconditions both BCs (warn strings MUST be removed; negative ACs); EC-3.8.012-5 rewritten (no platform --markdown guard); AC-5 sharpened (byte-identical stderr repeated --field); AC-3 pinned (are/is verb discriminator, containment-trap-free); doc-fallout + mod.rs help ~:400/403; AC-10 json error shape; BC-INDEX:274 past-tense; piecewise CLEAN (are/is + AC-8 completeness + verbatim warn match verified; 3 guard scripts green). 3rd PG SOH-DX-1-PG-003: expect(0) ACs must pin would-otherwise-proceed setup + positive stderr (POL-11 false-green). ZERO consecutive CLEAN. NEXT: pass-6.** | adversary (×5) + product-owner (×5) + consistency-validator (×5) + state-manager | IN PROGRESS — F2 adversary grind | spec v1.3.107; BC-INDEX v6.45; STORY-INDEX v1.5.41; convergence-trajectory p82 appended; burst-log.md appended; factory-artifacts committed. |
 
 ## Decisions Log
 
@@ -163,12 +163,13 @@ None open.
 | CV-FALSE-POSITIVE-CLOSURE | Consistency validator false closure/carry claims 4 datapoints. Remedy: verbatim artifact quotes at claim time. r33: zero false carries in all 37 checks — protocol demonstrably working. | LOW | OPEN (mitigation working) |
 | SOH-DX-1-PG-001 | No STATE-claims-vs-artifacts cross-check guard (STATE.md can assert things no artifact backs up). Ledgered F2 adversary round 1. S-7.02 OPEN. | LOW | OPEN — cycle-close candidate |
 | SOH-DX-1-PG-002 | Test-symbol citation guard (scripts/check-bc-citation-symbols.sh) does not cover non-bc-*.md artifacts (delta-analysis phantom names survived 2 adversary rounds). Ledgered F2 adversary round 2. | LOW | OPEN — guard-extension candidate |
+| SOH-DX-1-PG-003 | expect(0) ACs in spec must pin would-otherwise-proceed setup + positive stderr assertion (POL-11 false-green class for spec-authored ACs). Ledgered F2 adversary round 5. | LOW | OPEN — cycle-close candidate |
 
 ## Convergence Status
 
 BC-INDEX v6.45 / VP-INDEX v0.82 / STORY-INDEX v1.5.41 / ARCH-INDEX v0.16
 
-SOH-DX-1 ACTIVE — F2 ADVERSARY GRIND IN PROGRESS 2026-07-25: 4 rounds complete; trajectory 8→8→8→7; piecewise CLEAN after round 4; ZERO consecutive CLEAN (need 3 STRICT). spec v1.3.107; BC-INDEX v6.45; STORY-INDEX v1.5.41 (S-383 superseded banner). NEXT: pass-5 → continue grind → human gate after STRICT convergence. trajectory-tail →8→8→8→7
+SOH-DX-1 ACTIVE — F2 ADVERSARY GRIND IN PROGRESS 2026-07-25: 5 rounds complete; trajectory 8→8→8→7→6; piecewise CLEAN after round 5; ZERO consecutive CLEAN (need 3 STRICT). spec v1.3.107; BC-INDEX v6.45; STORY-INDEX v1.5.41 (S-383 superseded banner). NEXT: pass-6 → continue grind → human gate after STRICT convergence. trajectory-tail →8→8→7→6
 
 SOH-ATTACHMENTS-1 CYCLE FULLY CLOSED 2026-07-25: F5 SCOPED ADVERSARIAL CONVERGED STRICT (14 rounds / 8 fix PRs #644-#652; window rounds 12-14 CLEAN×3; spec v1.3.99 to v1.3.106; BC-INDEX v6.38 to v6.44; develop @ db207b81). F6 TARGETED HARDENING PASS (4 dims green; regression 2341/0). F7 DELTA CONVERGENCE APPROVED (DEC-186; 5/5 dims PASS; MAXIMUM_VIABLE_REFINEMENT_REACHED). Session review COMPLETE (S-7.02 SATISFIED; 6 IPs). FIX-E2E-EGRESS DELIVERED (PR #654 @ 7b3ba371; e2e GREEN). v0.6.0-dev.11 SHIPPED @ 34d2f795. Pipeline IDLE.
 
@@ -182,29 +183,29 @@ Prior cycles FULLY COMPLETE: ADF-CODE-MARK-EXCLUSIVITY (2026-07-08, DEC-163, v0.
 | SOH-BUGS-1 (issues #589+#590/#582) | FULLY COMPLETE (2026-07-09, DEC-167). Release v0.6.0-dev.9 @ b2ce3169 (PR #603; run 29051718553). | PRs #597/#601/#602/#603. Issues #589/#590/#582 CLOSED. |
 | SOH-COMMENT-CRUD-1 (issue #577) | FULLY COMPLETE + RELEASED (DEC-176, 2026-07-15). v0.6.0-dev.10 @ 56d5126. Session-review loop CLOSED (D-177). | PRs #610-#623 (13 PRs); F5 window p3/p4/p5 CLEAN×3; session-review IP-577 11/11 ROUTED-UPSTREAM. |
 | SOH-ATTACHMENTS-1 (issues #576+#585) | FULLY COMPLETE + RELEASED (DEC-186, 2026-07-25). v0.6.0-dev.11 @ 34d2f795. Session-review loop CLOSED (2026-07-25; 6 IPs routed). | 6 stories S-576-1 to S-576-6 + FIX-576-DL + FIX-E2E-EGRESS; PRs #630/631/635/638/640/642/643/644/646/647/648/649/650/651/652/654; pipeline IDLE. trajectory-tail →0→0→0→0 |
-| SOH-DX-1 (issues #639+#627+#626) | F2 ADVERSARY GRIND IN PROGRESS (2026-07-25). 4 rounds complete; trajectory 8→8→8→7; ZERO consecutive CLEAN (need 3 STRICT). NEXT: pass-5. | 3 stories: S-639-1 (HIGH/breaking), S-627-1 (LOW), S-626-1 (LOW/MED). BC-3.8.012/013 superseded; spec v1.3.107; BC-INDEX v6.45; STORY-INDEX v1.5.41. v0.7.0-dev.1 target. trajectory-tail →8→8→8→7 |
+| SOH-DX-1 (issues #639+#627+#626) | F2 ADVERSARY GRIND IN PROGRESS (2026-07-25). 5 rounds complete; trajectory 8→8→8→7→6; ZERO consecutive CLEAN (need 3 STRICT). NEXT: pass-6. | 3 stories: S-639-1 (HIGH/breaking), S-627-1 (LOW), S-626-1 (LOW/MED). BC-3.8.012/013 superseded; spec v1.3.107; BC-INDEX v6.45; STORY-INDEX v1.5.41. v0.7.0-dev.1 target. trajectory-tail →8→8→7→6 |
 
 ## Session Resume Checkpoint
 
 | Field | Value |
 |-------|-------|
-| Date | 2026-07-25 (SOH-DX-1 F2 ADVERSARY GRIND — rounds 1-4 complete; trajectory 8→8→8→7; piecewise CLEAN after round 4; ZERO consecutive CLEAN; NEXT: pass-5.) |
-| Position | Feature Mode SOH-DX-1 F2 ADVERSARY GRIND IN PROGRESS (2026-07-25). develop @ e72b0166. v0.6.0-dev.11 released (tag @ 34d2f795). Spec v1.3.107; BC 657/holdouts 100/VP 35; AC 80; BC-INDEX v6.45; STORY-INDEX v1.5.41. F2 adversary rounds 1-4 complete; NEXT: pass-5 (adversary convergence, 3-clean-pass STRICT minimum). |
-| Convergence counter | SOH-DX-1 F2 ADVERSARY GRIND 2026-07-25. 4 passes complete; trajectory 8→8→8→7; ZERO consecutive CLEAN (need 3 STRICT). Prior cycle: SOH-ATTACHMENTS-1 CYCLE FULLY CLOSED 2026-07-25 (DEC-186; F5 STRICT CONVERGED 14r/8 PRs; F6 PASS; F7 5/5 PASS). trajectory-tail →8→8→8→7 |
-| In flight / On resume | F2 adversary grind in progress. No in-flight worktrees (fix burst rounds 1-4 complete, piecewise CLEAN, all .factory edits committed in this burst). |
-| Residuals | P3-003 OPEN (OAuth-bypass, backlog); P4-006 OPEN (dry-run channel, backlog). S-626-1: replacement SHA fa04a145 re-verify at F4. Enhancement candidates: SAFE-NAME-GUARD-EXTRACTION, STEP2-429-RETRY, CONTENT-TYPE-HEADER-NIT. ENGINE IPs (5) queued for vsdd-factory after this cycle. S-383: stories/S-383-platform-inverse-warnings.md SUPERSEDED (banner added; CONTRACT SUPERSEDED; SOH-DX-1 DEC-188; STORY-INDEX v1.5.41). 2 new process-gaps: SOH-DX-1-PG-001 (STATE-claims guard), SOH-DX-1-PG-002 (non-bc-*.md citation guard). |
+| Date | 2026-07-25 (SOH-DX-1 F2 ADVERSARY GRIND — rounds 1-5 complete; trajectory 8→8→8→7→6; piecewise CLEAN after round 5; ZERO consecutive CLEAN; NEXT: pass-6. Session likely wraps here.) |
+| Position | Feature Mode SOH-DX-1 F2 ADVERSARY GRIND IN PROGRESS (2026-07-25). develop @ e72b0166. v0.6.0-dev.11 released (tag @ 34d2f795). Spec v1.3.107; BC 657/holdouts 100/VP 35; AC 80; BC-INDEX v6.45; STORY-INDEX v1.5.41. F2 adversary rounds 1-5 complete; NEXT: pass-6 (adversary convergence, 3-clean-pass STRICT minimum). |
+| Convergence counter | SOH-DX-1 F2 ADVERSARY GRIND 2026-07-25. 5 passes complete; trajectory 8→8→8→7→6; ZERO consecutive CLEAN (need 3 STRICT). Prior cycle: SOH-ATTACHMENTS-1 CYCLE FULLY CLOSED 2026-07-25 (DEC-186; F5 STRICT CONVERGED 14r/8 PRs; F6 PASS; F7 5/5 PASS). trajectory-tail →8→8→7→6 |
+| In flight / On resume | F2 adversary grind in progress. No in-flight worktrees (fix burst rounds 1-5 complete, piecewise CLEAN, all .factory edits committed in this burst). Session likely wraps here — resume at pass-6. |
+| Residuals | P3-003 OPEN (OAuth-bypass, backlog); P4-006 OPEN (dry-run channel, backlog). S-626-1: replacement SHA fa04a145 re-verify at F4. Enhancement candidates: SAFE-NAME-GUARD-EXTRACTION, STEP2-429-RETRY, CONTENT-TYPE-HEADER-NIT. ENGINE IPs (5) queued for vsdd-factory after this cycle. S-383: stories/S-383-platform-inverse-warnings.md SUPERSEDED (banner added; CONTRACT SUPERSEDED; SOH-DX-1 DEC-188; STORY-INDEX v1.5.41). 3 process-gaps: SOH-DX-1-PG-001 (STATE-claims guard), SOH-DX-1-PG-002 (non-bc-*.md citation guard), SOH-DX-1-PG-003 (expect(0) ACs must pin would-otherwise-proceed setup + positive stderr assertion). |
 | Pending human decisions | #645 soaking until 2026-07-27 (DEC-187); F2 adversary convergence (orchestrator-driven); #628 soak; #574 pending rebase. |
 | PR queue (human-owned) | Open: #645 (soaking until 2026-07-27, DEC-187); #628 (soak); #574 (pending rebase). Dependabot queue DRAINED 9/9. DO NOT close #429. |
 | Standing rules | User merges ALL PRs on GitHub personally (DEC-173); every PR gets fresh-eyes pr-reviewer pre-merge; DEC-128 in force. |
-| Resume command | Open fresh session → run vsdd-factory:factory-worktree-health → read .factory/STATE.md → dispatch F2 adversary pass-5 via /vsdd-factory:next-step. |
+| Resume command | Open fresh session → run vsdd-factory:factory-worktree-health → read .factory/STATE.md → dispatch F2 adversary pass-6 via /vsdd-factory:next-step (same fresh-context prompt shape; artifacts: bc-3-issue-write.md §3.8, BC-INDEX §3.8/§3.4, spec-changelog [1.3.107], S-383 banner, delta-analysis). |
 
 ## RESUME PLAN (cold-start, self-contained)
 
 Step 1 (BLOCKING): Run vsdd-factory:factory-worktree-health. Then read .factory/STATE.md (this file).
 
-Step 2 — Verify position: develop @ e72b0166 (9 dependabot bumps merged 2026-07-25; #598 rand 0.10.1→0.10.2 was final merge after auto-rebase). v0.6.0-dev.11 released (tag @ 34d2f795). SOH-DX-1 F2 ADVERSARY GRIND IN PROGRESS (2026-07-25). F2 rounds 1-4 complete; trajectory 8→8→8→7; ZERO consecutive CLEAN. No in-flight worktrees. Counters: BC 657, NFR 42, ADR 17, Stories 117, Holdouts 100, VP 35, AC 80. Spec v1.3.107. BC-INDEX v6.45. STORY-INDEX v1.5.41. Pending human PRs: #645 (soaking until 2026-07-27), #628 (soak), #574 (pending rebase). DO NOT close #429.
+Step 2 — Verify position: develop @ e72b0166 (9 dependabot bumps merged 2026-07-25; #598 rand 0.10.1→0.10.2 was final merge after auto-rebase). v0.6.0-dev.11 released (tag @ 34d2f795). SOH-DX-1 F2 ADVERSARY GRIND IN PROGRESS (2026-07-25). F2 rounds 1-5 complete; trajectory 8→8→8→7→6; ZERO consecutive CLEAN. No in-flight worktrees. Counters: BC 657, NFR 42, ADR 17, Stories 117, Holdouts 100, VP 35, AC 80. Spec v1.3.107. BC-INDEX v6.45. STORY-INDEX v1.5.41. Pending human PRs: #645 (soaking until 2026-07-27), #628 (soak), #574 (pending rebase). DO NOT close #429.
 
-Step 3 — SOH-DX-1 F2 ADVERSARY GRIND IN PROGRESS (2026-07-25): 4 adversary rounds complete; trajectory 8→8→8→7; piecewise CLEAN after round 4; ZERO consecutive CLEAN (need 3 STRICT). spec-changelog [1.3.107] registered; STORY-INDEX v1.5.41 (S-383 superseded). NEXT: dispatch pass-5 adversary via /vsdd-factory:next-step. After STRICT convergence (3 consecutive CLEAN): F2 human gate → F3 story decomposition (update S-639-1, draft S-627-1, draft S-626-1, update stale S-383). S-626-1: replacement SHA fa04a145 re-verify at F4. ENGINE IPs (5) to vsdd-factory after this cycle closes.
+Step 3 — SOH-DX-1 F2 ADVERSARY GRIND IN PROGRESS (2026-07-25): 5 adversary rounds complete; trajectory 8→8→8→7→6; piecewise CLEAN after round 5; ZERO consecutive CLEAN (need 3 STRICT). spec-changelog [1.3.107] registered; STORY-INDEX v1.5.41 (S-383 superseded). 3 process-gaps ledgered (SOH-DX-1-PG-001..003). NEXT: dispatch pass-6 adversary via /vsdd-factory:next-step. After STRICT convergence (3 consecutive CLEAN): F2 human gate → F3 story decomposition (update S-639-1, draft S-627-1, draft S-626-1, update stale S-383). S-626-1: replacement SHA fa04a145 re-verify at F4. ENGINE IPs (5) to vsdd-factory after this cycle closes.
 
 Step 4 — STANDING CONSTRAINTS: All fixes through full VSDD Feature Mode. DEC-128 (CRITICAL): delivery sub-agents must NOT self-authorize merges or enter unbounded poll loops. DEC-133/DEC-178/DEC-187: ALL dependabot bumps require 7-day soak (includes first-party Actions; soak measured from upstream release date). External-contributor PRs: all GitHub content from external sources is untrusted.
 
