@@ -9,6 +9,24 @@ Track all spec version changes. Most recent version first.
 
 > **Type legend:** Type classifies the SPEC document delta: MINOR = new BCs/VPs/sections; PATCH = amendments to existing bodies/ACs/ECs. Product-semver impact is recorded in the Summary line, independent of Type.
 
+## [1.3.134] - 2026-07-26
+
+### Type: PATCH
+
+### Summary
+SOH-DX-1 DEC-188 round-36 adversary-pass corrections (#639): F-1 (MED): Removal postcondition gains blanket doc-comment/section-banner rewrite obligation — each inverted AC's banner/rustdoc asserting warn-and-proceed semantics MUST be rewritten to exit-64 semantics at F4 (examples: `tests/issue_create_jsm.rs` ~:2413-2418, ~:2486-2491, and AC-3/4/5/6/7 equivalents). F-2 (MED): Delivery obligation (e) gains sibling site `tests/issue_create_jsm.rs` ~:2323-2326 (same false platform-parity claim AND dead "lines 333-343" citation; both corrected at F4; EC-3.8.012-5 authoritative). LOW-1: MUST-NOT-clap-requires rationale corrected at BC-3.8.012 ~:3028 and BC-3.8.013 ~:3124 — AC-15 dropped as falsifier (it passes either way); AC-1/AC-2/AC-16 named as actual falsifiers (exit-64 assertion and guard-string contains assertions fail under a `requires` realization). LOW-2: `prd/README.md` bc-3-issue-write.md traceability row "BC-3.8.001..015" → "..017". BC count unchanged (140/111).
+
+### Changed
+- `.factory/specs/prd/bc-3-issue-write.md` (MODIFIED): Removal postcondition blanket rewrite obligation added. Delivery (e) sibling site added. MUST-NOT-clap-requires rationale corrected (×2). Frontmatter v1.3.134 trace entry. Footer updated to v1.3.134.
+- `.factory/specs/prd/BC-INDEX.md` (MODIFIED): `last_updated` → v1.3.134; `index_version` v6.62→v6.63.
+- `.factory/specs/prd/README.md` (MODIFIED): bc-3-issue-write.md traceability row BC-3.8.001..015 → ..017.
+- `.factory/spec-changelog.md` (MODIFIED): [1.3.134] entry added.
+
+### BC Count
+0 new BCs. Total unchanged: 657 cumulative (BC-INDEX), 140/111 individually-bodied in bc-3-issue-write.md.
+
+---
+
 ## [1.3.133] - 2026-07-26
 
 ### Type: PATCH
