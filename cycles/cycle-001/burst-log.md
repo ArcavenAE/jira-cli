@@ -6415,3 +6415,63 @@ Displaced to make room for SOH-DX-1 F2 adversary round 16 step row per keep-4 ru
 | Step | Agent | Status | Output |
 |------|-------|--------|--------|
 | **pass-12 adversary — SOH-DX-1 F2 round 12 complete (2026-07-26): 6 findings (2H/4M) + 2 LOW + 1 [process-gap] PLATEAU (6→6); HIGHs: AC-12 count-form-only assertion (must assert per-flag separately); AC-8 myself-endpoint mock set (mock must hit /myself endpoint); MEDs: item-(d) citations/:398/:403 + (repeatable) preserved; EC-8 symbol (IssueCommand::Create inline); per-AC output modes pinned; SSOT step 4a stdin read corrected; LOWs: helper doc-comment directive; BC-INDEX "amended" qualifier; [process-gap] SOH-DX-1-PG-006: EC-field symbol citations unguarded by check-bc-citation-symbols.sh (6th process-gap); spec v1.3.110 + [1.3.110]; piecewise CLEAN; 3 guards green. ZERO consecutive CLEAN (need 3 STRICT per DEC-189). NEXT: pass-13.** | adversary (×12) + product-owner (×12) + consistency-validator (×12) + state-manager | IN PROGRESS — F2 adversary grind | spec v1.3.110; BC-INDEX v6.45; STORY-INDEX v1.5.41; convergence-trajectory p89 appended; burst-log.md appended; factory-artifacts committed. |
+
+---
+
+## SOH-DX-1 F2 ADVERSARY GRIND — ROUNDS 17-22 BACKFILL NOTE (2026-07-26)
+
+**Note:** Burst-log recording gap for rounds 17-22. These rounds were executed and STATE.md was updated correctly, but the burst-log append step was omitted in each round. Archived PP and CPS rows for rounds 17-22 are reconstructed below from STATE.md history. Full per-round narrative is captured in convergence-trajectory.md (passes p94-p99).
+
+**Round 17 (pass-13 adversary):** 4 findings (1H/3M); HIGH: F13-01 AC-8 symbol chain multi-line AC citation blind spot; SOH-DX-1-PG-007 ledgered. spec v1.3.111. BC-INDEX v6.45.
+**Round 18 (pass-14 adversary):** 2 findings (0H/2M) + 3 LOW obs CONVERGING (4→2). spec v1.3.112. BC-INDEX v6.45.
+**Round 19 (pass-15 adversary):** 5 findings (1H/3M/1L) + 2 obs REGRESSION (2→5). spec v1.3.113. BC-INDEX v6.45.
+**Round 20 (pass-16 adversary):** 5 findings (2H/2M/1L) PLATEAU (5→5). spec v1.3.114. BC-INDEX v6.45.
+**Round 21 (pass-17 adversary):** 4 findings (2H/2M) + 2 LOW CONVERGING (5→4). spec v1.3.115. BC-INDEX v6.45.
+**Round 22 (pass-18 adversary):** 3 findings (1H/2M) + 2 LOW CONVERGING (4→3). spec v1.3.116. BC-INDEX v6.45.
+
+---
+
+## SOH-DX-1 F2 ADVERSARY GRIND — ROUND 23 BURST (2026-07-26)
+
+**Burst type:** F2 adversary grind + fix round 23 checkpoint
+**Date:** 2026-07-26
+**Agents:** adversary (×23) + product-owner (×23) + consistency-validator (×23) + state-manager
+
+### Summary
+
+Pass-23 adversary (p100, fresh context): 3 findings (0C/1H/0M/2L) + 1 out-of-delta obs. Count up 2→3 (slight regression). 1 HIGH. Novelty LOW — first LOW-novelty pass in the grind. Piecewise CLEAN after fix round 23.
+
+**Pass-23 findings (3: 1H/2L) + 1 out-of-delta obs:**
+- HIGH: BC-INDEX index_version field stale by 4 (machine field vs prose drift — our own bump convention applied version increments to prose labels but not to the machine-readable index_version field; v6.46 vs v6.50)
+- LOW: anchor refresh — several anchors in bc-3-issue-write.md stale after prior fix rounds
+- LOW: pub fn directive stated — specification directive for a public function lacked `pub fn` qualifier
+- OUT-OF-DELTA OBS: prd/README 603-vs-657 count drift (pre-existing; out-of-delta scope)
+
+**Fix round 23 applied:**
+- index_version field healed to v6.50 in BC-INDEX.md
+- Anchors refreshed in bc-3-issue-write.md
+- pub fn qualifier stated in directive
+- prd/README.md BC count repaired opportunistically (DEC-158 precedent)
+- Spec bumped v1.3.121 + changelog [1.3.121] entry added
+- SOH-DX-1-PG-009 ledgered: prd/README.md is an unguarded 9th count surface
+- Piecewise CLEAN after fix round 23; 3 guard scripts green
+
+**Trajectory:** p78(8)→...→p99(2)→p100(3). Count regression (2→3); 1 HIGH; novelty LOW. trajectory-tail →5→4→2→3.
+
+**Convergence counter:** 0 of 3 STRICT (need 3 consecutive CLEAN per DEC-189). NEXT: pass-24 (p101).
+
+### Archived Phase Progress row (displaced by keep-5 rule; new pass-23-adversary row added)
+
+Displaced to make room for SOH-DX-1 F2 adversary round 23 Phase Progress row per keep-5 rule (removed oldest: pass-18 adversary).
+
+| Phase | Status | Completed | Gate | Notes | Finding Progression |
+|-------|--------|-----------|------|-------|---------------------|
+| **pass-18 adversary — SOH-DX-1 F2 fix burst round 18 complete (2026-07-26): 3 findings (0C/1H/2M) + 2 LOW CONVERGING (4→3); HIGH: vacuous-negative DELETE mandates completed (AC-2/4/6); MEDs: AC-4 combined negative; AC-20 JSM-path 013 non-mis-fire pin (surface AC-1..20); LOWs: preamble :2752 qualified; 1 changelog-enumeration residual; spec v1.3.116 + [1.3.116]; piecewise CLEAN; 3 guards green. ZERO consecutive CLEAN (need 3 STRICT per DEC-189). NEXT: pass-19.** | F2 adversary grind in progress | 2026-07-26 | ADVERSARY GRIND — convergence + human gate PENDING. | spec v1.3.116; BC-INDEX v6.45; STORY-INDEX v1.5.41. | →8→8→8→7→6→4→3→7→6→5→6→6→4→2→5→5→4→3 |
+
+### Archived Current Phase Steps row (displaced by keep-4 rule; new pass-23-adversary step row added)
+
+Displaced to make room for SOH-DX-1 F2 adversary round 23 step row per keep-4 rule (removed oldest: pass-19 adversary).
+
+| Step | Agent | Status | Output |
+|------|-------|--------|--------|
+| **pass-19 adversary — SOH-DX-1 F2 round 19 complete (2026-07-26): 3 findings (0H/3M) + 2 LOW obs PLATEAU (3→3); ZERO HIGHs (MEDIUM ceiling first); fixes: AC-21 both-flags JSM success pin (surface AC-1..21); HYGIENE labels; falsifiability rule codified; :3036 section-form (#408); --output json removal mandates AC-1/3/5; AC-17 'cannot be combined with'; spec v1.3.117 [1.3.117]; piecewise CLEAN; 3 guards green. ZERO consecutive CLEAN (need 3 STRICT per DEC-189). NEXT: pass-20.** | adversary (×19) + product-owner (×19) + consistency-validator (×19) + state-manager | IN PROGRESS — F2 adversary grind | spec v1.3.117; BC-INDEX v6.45; STORY-INDEX v1.5.41; convergence-trajectory p96 appended; burst-log.md appended; factory-artifacts committed. |

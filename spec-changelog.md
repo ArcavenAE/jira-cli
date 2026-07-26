@@ -7,6 +7,24 @@ project: "jr (jira-cli)"
 
 Track all spec version changes. Most recent version first.
 
+## [1.3.121] - 2026-07-26
+
+### Type: PATCH
+
+### Summary
+SOH-DX-1 DEC-188 round-23 adversary-pass corrections (#639): F23-01 (HIGH): BC-INDEX.md `index_version` field was stale at v6.45 (prose/changelog showed v6.49); field repaired to v6.50 (this round's touch per convention: v6.49→v6.50; field and prose now consistent). F23-03 (LOW): AC-8 team-resolution line numbers refreshed — `get_org_metadata` `src/api/jira/teams.rs` ~:12 (was ~:19); `list_teams` `src/api/jira/teams.rs` ~:33 (was ~:38); `find_team_field_id` `src/api/jira/fields.rs` ~:26 (was ~:23); all verified against live `pub fn` definitions in source. F23-04 (LOW): promotion directive now states promoted fn is `pub fn` — "promote `assert_json_error_envelope` as `pub fn`" (fixtures.rs convention; both occurrences at BC-3.8.012 and BC-3.8.013 Test Notes updated). F23-02 (out-of-delta, DEC-158 precedent): `prd/README.md` BC count corrected 603→657 in table row and prose; provenance note added to table row ("count maintained by check-bc-cumulative-counts.sh 8 surfaces; README is informational — see BC-INDEX.md"). BC count unchanged (140/111).
+
+### Changed
+- `.factory/specs/prd/BC-INDEX.md` (MODIFIED): `index_version` field v6.45→v6.50; `last_updated` annotation updated to v1.3.121 with round-23 summary; BC-INDEX v6.49→v6.50.
+- `.factory/specs/prd/bc-3-issue-write.md` (MODIFIED): AC-8 line numbers refreshed (~:12/~:33 for teams.rs; ~:26 for fields.rs). Promotion directive in BC-3.8.012 and BC-3.8.013 Test Notes adds `pub fn` qualifier. Frontmatter v1.3.121 trace entry added. Footer updated to v1.3.121.
+- `.factory/specs/prd/README.md` (MODIFIED): BC count 603→657 in table and prose; provenance note appended to table row.
+- `.factory/spec-changelog.md` (MODIFIED): [1.3.121] entry added.
+
+### BC Count
+0 new BCs. Total unchanged: 657 cumulative (BC-INDEX), 140/111 individually-bodied in bc-3-issue-write.md.
+
+---
+
 ## [1.3.120] - 2026-07-26
 
 ### Type: PATCH
