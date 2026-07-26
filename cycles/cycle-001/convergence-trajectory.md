@@ -2688,4 +2688,13 @@ Fifteenth F2 adversary pass (fresh context). Count up 2→5 (regression); 1 HIGH
 
 **Trajectory so far:** p78(8)→p79(8)→p80(8)→p81(7)→p82(6)→p83(4)→p84(3)→p85(7)→p86(6)→p87(5)→p88(6)→p89(6)→p90(4)→p91(2)→p92(5). Delta: 0/0/-1/-1/-2/-1/+4/-1/-1/+1/0/-2/-2/+3. Count regression (2→5); HIGH returns (1). trajectory-tail →6→4→2→5. NEXT: pass-16 (p93).
 
-**Trajectory so far:** p78(8)→p79(8)→p80(8)→p81(7)→p82(6)→p83(4)→p84(3)→p85(7)→p86(6)→p87(5)→p88(6)→p89(6)→p90(4)→p91(2). Delta: 0/0/-1/-1/-2/-1/+4/-1/-1/+1/0/-2/-2. Steepest decay yet; severity fully collapsed (0C/0H); novelty LOW; 2nd consecutive pass zero contradiction-class. trajectory-tail →6→6→4→2. NEXT: pass-15 (p92).
+---
+
+### Pass p93 (2026-07-26)
+
+**Findings:** 5 (0C/2H/2M/1L) — PLATEAU (5→5)
+**Convergence counter:** 0 of 3 (STRICT) — PLATEAU (5→5); 2 HIGHs; grind active; PIECEWISE CLEAN after fix round 16
+
+Sixteenth F2 adversary pass (fresh context). Count holds 5→5 (plateau); 2 HIGHs. HIGH findings: (1) self-contradiction postcondition-wins — spec contained a self-contradiction where postcondition assertions conflicted with setup preconditions; resolved with postcondition-wins rule; regression pins added on AC-1/2/3/5/7; (2) AC-14 --project discrimination + positive 016-substring — AC-14 lacked the --project discrimination note and a positive assertion on the "request type cannot be empty" substring (verified verbatim at jsm_create.rs:146); fix: both added. MEDIUM findings: (1) AC-13/16-19 discrimination notes — ACs 13, 16, 17, 18, and 19 were missing discrimination notes distinguishing their test setup from overlapping ACs; fix: discrimination notes added; (2) trim-predicate citation corrected — trim-predicate in one AC cited the wrong source symbol; fix: citation corrected to accurate symbol. LOW finding: AC-5 [mode: human] annotation — AC-5 was missing the [mode: human] channel annotation; fix: annotation added. Additional fixes: SSOT steps 3 and 4 contained duplicate prompt language; deduplicated; AC-11 re-anchored to correct test location. Spec bumped v1.3.114 + changelog [1.3.114] entry added. Piecewise CLEAN after fix round 16. All 3 guard scripts green.
+
+**Trajectory so far:** p78(8)→p79(8)→p80(8)→p81(7)→p82(6)→p83(4)→p84(3)→p85(7)→p86(6)→p87(5)→p88(6)→p89(6)→p90(4)→p91(2)→p92(5)→p93(5). Delta: 0/0/-1/-1/-2/-1/+4/-1/-1/+1/0/-2/-2/+3/0. Count plateau (5→5); 2 HIGHs; novelty LOW-MED. trajectory-tail →4→2→5→5. NEXT: pass-17 (p94).

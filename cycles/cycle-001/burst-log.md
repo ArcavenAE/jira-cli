@@ -6365,3 +6365,53 @@ Displaced to make room for SOH-DX-1 F2 adversary round 11 step row per keep-4 ru
 | Step | Agent | Status | Output |
 |------|-------|--------|--------|
 | **pass-7 adversary — SOH-DX-1 F2 round 7 complete (2026-07-25): 3 findings (1H/2M) + 1 [process-gap]; HIGH: F7-1 CMDB call misplaced in ordering block (post-POST/JSON-only context; create.rs:239 — ordering corrected; AC-8 expect(0) set honest); MEDs: F7-2 EC-3.8.012-8 clap exit-2 precedence added (flags-before-subcommand class); F7-3 AC-10/Test Notes → parse-stderr-as-JSON per tests/json_error_shape.rs convention; PG-004: no CI pin on help-text semantics for flags with exit-code contracts (ledgered SOH-DX-1-PG-004); fix-7 piecewise CLEAN (3 guard scripts green). ZERO consecutive CLEAN (need 3 STRICT per DEC-189). NEXT: pass-8.** | adversary (×7) + product-owner (×7) + consistency-validator (×7) + state-manager | IN PROGRESS — F2 adversary grind | spec v1.3.107; BC-INDEX v6.45; STORY-INDEX v1.5.41; convergence-trajectory p84 appended; burst-log.md appended; factory-artifacts committed. |
+
+---
+
+## SOH-DX-1 F2 ADVERSARY GRIND — ROUND 16 BURST (2026-07-26)
+
+**Burst type:** F2 adversary grind + fix round 16 checkpoint
+**Date:** 2026-07-26
+**Agents:** adversary (×16) + product-owner (×16) + consistency-validator (×16) + state-manager
+
+### Summary
+
+Pass-16 adversary (p93, fresh context): 5 findings (0C/2H/2M/1L). Count plateau (5→5). 2 HIGHs. Piecewise CLEAN after fix round 16.
+
+**Pass-16 findings (5: 2H/2M/1L):**
+- HIGH: self-contradiction postcondition-wins — spec contained a self-contradiction where postcondition assertions conflicted with setup preconditions; resolved with postcondition-wins rule; regression pins added on AC-1/2/3/5/7
+- HIGH: AC-14 --project discrimination + positive 016-substring — AC-14 lacked the --project discrimination note and a positive assertion on the "request type cannot be empty" substring (verified verbatim at jsm_create.rs:146); fix: both added
+- MED: AC-13/16-19 discrimination notes — ACs 13, 16, 17, 18, and 19 were missing discrimination notes distinguishing their test setup from overlapping ACs; fix: discrimination notes added
+- MED: trim-predicate citation corrected — trim-predicate in one AC cited the wrong source symbol; fix: citation corrected to accurate symbol
+- LOW: AC-5 [mode: human] annotation — AC-5 was missing the [mode: human] channel annotation; fix: annotation added
+
+**Fix round 16 applied:**
+- Self-contradiction resolved: postcondition-wins rule applied; regression pins added on AC-1/2/3/5/7
+- AC-14 --project discrimination note added + positive 016-substring assertion added ("request type cannot be empty" verified verbatim at jsm_create.rs:146)
+- AC-13/16-19 discrimination notes added (distinguishing from overlapping ACs)
+- Trim-predicate citation corrected to accurate source symbol
+- AC-5 [mode: human] channel annotation added
+- SSOT steps 3 and 4 duplicate prompt language deduplicated
+- AC-11 re-anchored to correct test location
+- Spec bumped v1.3.114 + changelog [1.3.114] entry added
+- Piecewise CLEAN after fix round 16; 3 guard scripts green
+
+**Trajectory:** p78(8)→p79(8)→p80(8)→p81(7)→p82(6)→p83(4)→p84(3)→p85(7)→p86(6)→p87(5)→p88(6)→p89(6)→p90(4)→p91(2)→p92(5)→p93(5). Delta: 0/0/-1/-1/-2/-1/+4/-1/-1/+1/0/-2/-2/+3/0.
+
+**Convergence counter:** 0 of 3 STRICT (need 3 consecutive CLEAN per DEC-189). trajectory-tail →4→2→5→5. NEXT: pass-17 (p94).
+
+### Archived Phase Progress row (displaced by keep-5 rule; new pass-16-adversary row added)
+
+Displaced to make room for SOH-DX-1 F2 adversary round 16 Phase Progress row per keep-5 rule (removed oldest: pass-11 adversary).
+
+| Phase | Status | Completed | Gate | Notes | Finding Progression |
+|-------|--------|-----------|------|-------|---------------------|
+| **pass-11 adversary — SOH-DX-1 F2 fix burst round 11 complete (2026-07-26): 6 findings (0C/2H/4M/0L) + 1 [process-gap] REGRESSION (5→6); HIGHs: reporter-claim siblings not trimmed/hedged per citation discipline; vacuity rationale asymmetry stated inconsistently; MEDs: AC-12 dual per-flag assertions (single combined accepted conjunctive false-green); item-(d) first-line-only replacement (sibling occurrences retained old text); AC-17..19 coverage gaps (EC-5/-7/-9 lacked ACs; surface incomplete at AC-1..16); BC-3.4.014 index qualifier missing; [process-gap] SOH-DX-1-PG-005: no changelog Type↔version-component guard (5th process-gap); fix-11: all applied; [1.3.107] Type MINOR→PATCH corrected; spec v1.3.109 + [1.3.109]; piecewise CLEAN; 3 guards green. ZERO consecutive CLEAN (need 3 STRICT per DEC-189). NEXT: pass-12.** | F2 adversary grind in progress | 2026-07-26 | ADVERSARY GRIND — convergence + human gate PENDING. | spec v1.3.109; BC-INDEX v6.45; STORY-INDEX v1.5.41. | →8→8→8→7→6→4→3→7→6→5→6 |
+
+### Archived Current Phase Steps row (displaced by keep-4 rule; new pass-16-adversary step row added)
+
+Displaced to make room for SOH-DX-1 F2 adversary round 16 step row per keep-4 rule (removed oldest: pass-12 adversary).
+
+| Step | Agent | Status | Output |
+|------|-------|--------|--------|
+| **pass-12 adversary — SOH-DX-1 F2 round 12 complete (2026-07-26): 6 findings (2H/4M) + 2 LOW + 1 [process-gap] PLATEAU (6→6); HIGHs: AC-12 count-form-only assertion (must assert per-flag separately); AC-8 myself-endpoint mock set (mock must hit /myself endpoint); MEDs: item-(d) citations/:398/:403 + (repeatable) preserved; EC-8 symbol (IssueCommand::Create inline); per-AC output modes pinned; SSOT step 4a stdin read corrected; LOWs: helper doc-comment directive; BC-INDEX "amended" qualifier; [process-gap] SOH-DX-1-PG-006: EC-field symbol citations unguarded by check-bc-citation-symbols.sh (6th process-gap); spec v1.3.110 + [1.3.110]; piecewise CLEAN; 3 guards green. ZERO consecutive CLEAN (need 3 STRICT per DEC-189). NEXT: pass-13.** | adversary (×12) + product-owner (×12) + consistency-validator (×12) + state-manager | IN PROGRESS — F2 adversary grind | spec v1.3.110; BC-INDEX v6.45; STORY-INDEX v1.5.41; convergence-trajectory p89 appended; burst-log.md appended; factory-artifacts committed. |

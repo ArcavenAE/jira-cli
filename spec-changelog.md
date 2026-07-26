@@ -7,6 +7,17 @@ project: "jr (jira-cli)"
 
 Track all spec version changes. Most recent version first.
 
+## [1.3.114] - 2026-07-26
+
+### Type: PATCH
+
+### Summary
+SOH-DX-1 DEC-188 round-16 adversary-pass corrections (#639): Self-contradiction in AC-3 resolved (postcondition wins — regression pin replaces removal instruction); AC-1/2/5/7 regression pins added; AC-14 false-green fixed (--project PROJ + positive BC-3.8.016 assertion); AC-13/16/17/18/19 per-AC discrimination notes; Outputs/Effects file cite corrected; SSOT steps 3/4 deduped; AC-11 re-anchored to step 3. BC count unchanged (140/111).
+
+### Changed
+- `.factory/specs/prd/bc-3-issue-write.md` (MODIFIED): F16-01: AC-3 "OLD ASSERTION MUST BE REMOVED: !stderr.contains("is ignored on the platform create path")" clause removed; replaced with REGRESSION PIN per Removal postcondition (:3036) — the pin is deliberate (this invocation class previously emitted the old warn string). AC-1, AC-2, AC-5, AC-7 each gain `!stderr.contains("is ignored on the platform create path")` regression pin. F16-02: AC-14 invocation updated to `jr issue create --project PROJ --field a=b --request-type ""`; positive assertion added `stderr.contains("request type cannot be empty")` (BC-3.8.016 canonical error); `--project PROJ` rationale noted (jsm_create.rs project-key resolution at step 0 precedes empty-RT guard at step 1); AC-13/16/17/18/19 each gain per-AC discrimination note (guard fires at step 2 before project-key resolution at step 3; positive stderr assertion discriminates; --project NOT required). F16-03: both Outputs/Effects lines (BC-3.8.012 + BC-3.8.013) corrected — `tests/common/fixtures.rs` ~:76 → `tests/json_error_shape.rs` ~:76 (current site; moves to fixtures.rs upon promotion per F-1 directive). F16-04 (folded into F16-01 AC-5 edit): AC-5 re-tagged [mode: human] (neither invocation uses --output json); note added that "Error: " prefix present in both captures so byte-identity holds. F16-05: SSOT step 3 extended to explicitly include project-key interactive prompt; step 4 deduplicated — "project key (interactive fallback)," removed, now type+summary only; AC-11 discriminator re-anchored from "step 4" to "step 3". Frontmatter version-log v1.3.114 added. BC count unchanged (140/111).
+- `.factory/specs/prd/BC-INDEX.md` (MODIFIED): `last_updated` updated to v1.3.114.
+
 ## [1.3.113] - 2026-07-26
 
 ### Type: PATCH
