@@ -2610,3 +2610,14 @@ Seventh F2 adversary pass (fresh context). HIGH findings: (1) F7-1 CMDB call mis
 Eighth F2 adversary pass (fresh context). ZERO HIGH and ZERO CRITICAL findings — severity continues collapsing despite count increase. MEDIUM findings: (1) helper promotion to tests/common/fixtures.rs — cross-binary `#[path]` directive is unbuildable in the integration test binary; promote to shared fixture module; (2) AC-9 cwd isolation gap — `find_project_config` walk-up behavior not isolated from test cwd; (3) Platform-Path Guard Ordering SSOT declaration + BC placement text collapsed to block refs (repeated prose). LOW findings (4): changelog EC 1..8 + AC-11 enumeration incomplete; stdout-empty postconditions + AC-1 stdout inversion + json no-prefix scoping; AC-11 TTY-seam test pin missing; BC-3.8.013 AC-3 cross-ref absent. Fix round 8 dispatched and applied: 2 piecewise residuals (fn citation + changelog AC-11) fixed post-main burst; 3 guard scripts green.
 
 **Trajectory so far:** p78(8)→p79(8)→p80(8)→p81(7)→p82(6)→p83(4)→p84(3)→p85(7). Delta: 0/0/-1/-1/-2/-1/+4. Count regression but severity fully collapsed to 0C/0H. trajectory-tail →6→4→3→7. NEXT: pass-9 (p86).
+
+---
+
+### Pass p86 (2026-07-26)
+
+**Findings:** 6 (0C/1H/4M/1L)
+**Convergence counter:** 0 of 3 (STRICT) — grind active; PIECEWISE CLEAN after fix round 9
+
+Ninth F2 adversary pass (fresh context). Count down 7→6; HIGH count down 0→1 (one residual HIGH). HIGH finding: AC-5 anchored — previous form was not substrate-anchored (substring each run required before byte-identity assertion — false-green class: a build that never emits the substring would pass vacuously). MEDIUM findings: (1) SSOT off-by-one + phantom description prompt — spec had an off-by-one in the SSOT guard logic and referred to a non-existent description prompt; (2) AC-10 helper location reconciled — helper referenced in AC-10 was in wrong module per post-fix-8 layout; realizability notes added to clarify test-setup expectations; (3) deliverable phasing reconciled — S-639-1 delivery placement (F4 same PR vs F3 separate) was ambiguous in spec; resolved to "S-639-1 delivery (F4) — same PR; F3 checklist" + AC-12 help-language pinned; (4) AC-13..16 EC coverage — four acceptance criteria lacked corresponding error-category entries in the EC table. LOW finding: EC-3.8.012-9 missing (ninth EC entry absent from error-categories table). Additional fixes: BC-3.8.013 Trace field updated to include +AC-4/AC-16 cross-refs; changelog [1.3.107] current-state totals updated to reflect AC-1..16 (16 ACs) and EC 1..9 + 013-1 (10 EC entries). 1 tracking note resolved in-round. Piecewise consistency: CLEAN after fix round 9. All 3 guard scripts green.
+
+**Trajectory so far:** p78(8)→p79(8)→p80(8)→p81(7)→p82(6)→p83(4)→p84(3)→p85(7)→p86(6). Delta: 0/0/-1/-1/-2/-1/+4/-1. Count converging from regression peak; severity remains low. trajectory-tail →4→3→7→6. NEXT: pass-10 (p87).
