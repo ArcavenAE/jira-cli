@@ -9,6 +9,17 @@ Track all spec version changes. Most recent version first.
 
 > **Type legend:** Type classifies the SPEC document delta: MINOR = new BCs/VPs/sections; PATCH = amendments to existing bodies/ACs/ECs. Product-semver impact is recorded in the Summary line, independent of Type.
 
+## [1.3.136] - 2026-07-26
+
+### Type: PATCH
+
+### Summary
+SOH-DX-1 DEC-188 round-38 adversary-pass corrections (#639): F-1 (MED): AC-2, AC-5, and AC-7 DELETE mandates each gain an explicit note that the `write_minimal_config(…)` call is REPLACED (not kept) by the pre-migrated profile-shaped fixture (`write_profile_config`, F3 deliverable) — resolves the KEPT/Precondition contradiction. F-2 (MED, RULING): The conditional remedy tail "(then use `jr issue edit --field` to set fields afterward)" is stripped from BC-3.8.012's single-flag verbatim error string (in the fenced block) and from AC-1's FULL-STRING pin. A **uniform rule** is added to the Asymmetry rationale block: verbatim error strings in `JrError::UserError` MUST contain ONLY unconditional remedies — conditional remedies (those depending on post-creation steps or edit permissions) belong in rationale prose only (CLAUDE.md issue #396 conditionality discipline). The `jr issue edit --field` affordance is already present in the Remedy affordance prose. AC-3's combined-error FULL-STRING pin is clean (no conditional tail). F-3 (MED): EC-3.8.012-10's claim that the guard "deliberately reverses ADR-0014 §42-45" is corrected — §42-45's antecedent is the six platform-only flags (BC-3.8.011 direction, unchanged by DEC-188); the correction cites the four byte-for-byte stability sites only. Delivery obligation (a) revised: "five sites" → "four sites"; §42-45 excluded from amendment with rationale. F-4 (MED, RULING): Delivery obligation (f) added: `docs/specs/issue-create-preflight-guards.md` feature spec authored at F3 per CLAUDE.md ADR-0004 convention. No new ADR required — ADR-0014's dispatch architecture is unchanged; only its byte-for-byte stability claims are amended. F-5 (LOW, uniform rule): REGRESSION-PIN mandate in the Removal postcondition extended from AC-1/2/3/5/7/13/19 to AC-1/2/3/5/7/8/9/10/11/13/17/18/19; uniform rule sentence added ("every AC invoking a guarded flag without `--request-type` carries the pin"); AC-8 both invocations gain the REGRESSION PIN text directly (in-round residual, same version — AC-8 uses guarded flags without `--request-type` and was absent from the mandate list). F-6 (LOW): AC-13 gains a zero-HTTP assertion on an isolated `MockServer` (`received_requests().await.unwrap().is_empty()`, NORMATIVE proof). BC count unchanged (140/111).
+
+### Changed
+- `.factory/specs/prd/bc-3-issue-write.md` (MODIFIED): AC-2/AC-5/AC-7 DELETE mandates gain write_minimal_config REPLACED note. BC-3.8.012 single-flag verbatim string trimmed (fenced block). AC-1 FULL-STRING pin trimmed. Uniform rule added to Asymmetry rationale. EC-3.8.012-10 §42-45 claim corrected. Deliverable (a) five→four sites. Deliverable (f) added. Removal postcondition mandate list extended to 13 ACs (AC-1/2/3/5/7/8/9/10/11/13/17/18/19). AC-8 both invocations gain REGRESSION PIN. AC-13 zero-HTTP assertion added. Frontmatter v1.3.136 trace entry. Footer updated to v1.3.136.
+- `.factory/specs/prd/BC-INDEX.md` (MODIFIED): last_updated updated to v1.3.136 description; index_version v6.64→v6.65.
+
 ## [1.3.135] - 2026-07-26
 
 ### Type: PATCH
