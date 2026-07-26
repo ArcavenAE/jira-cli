@@ -7,6 +7,25 @@ project: "jr (jira-cli)"
 
 Track all spec version changes. Most recent version first.
 
+## [1.3.107] - 2026-07-25
+
+### Type: MINOR
+
+### Summary
+
+SOH-DX-1 DEC-188 amendment (#639): BC-3.8.012 and BC-3.8.013 behavior break — warn-and-proceed (exit 0) superseded by pre-flight `JrError::UserError` exit 64 when `--field`/`--on-behalf-of` are present without `--request-type`; BC-3.8.001 H1 and BC-3.3.001 amendment note qualified with DEC-188 caveat; section 3.8 retitled from "Inverse Warnings" to "Pre-flight Guards"; AC-4 re-specified; asymmetry rationale direction clarified.
+
+### Changed
+
+- `.factory/specs/prd/bc-3-issue-write.md` (MODIFIED): BC-3.8.012 amended — warn-and-proceed (exit 0) → pre-flight `JrError::UserError` exit 64; Platform-Path Guard Ordering block added; EC-3.8.012-1..7 added; AC-4 re-specified (renamed `test_platform_create_without_inverse_flags_emits_no_errors`); AC-8/AC-9 NEW test deliverables added; asymmetry rationale direction corrected (two-direction explicit contrast). BC-3.8.013 amended — same pattern for `--on-behalf-of`; EC-3.8.013-1 added. BC-3.8.001 H1 qualification added "(unless `--field`/`--on-behalf-of` present — exits 64 per BC-3.8.012/013)". BC-3.3.001 amendment notes updated with DEC-188 timeline. Section 3.8 heading retitled to "Pre-flight Guards". BC-3.4.014 precondition DEC-188 qualifier appended. Frontmatter version-log entries added. BC count unchanged (140/111).
+- `.factory/specs/prd/BC-INDEX.md` (MODIFIED): Section 3.8 heading retitled; BC-3.8.001 Summary qualified with DEC-188 caveat; BC-3.8.012/013 rows marked [AMENDED DEC-188 2026-07-25] with new summary; `index_version` v6.44 → v6.45; `last_updated` updated.
+
+### BC Count
+
+0 new BCs. Total unchanged: 657 cumulative (BC-INDEX), 140/111 individually-bodied in bc-3-issue-write.md.
+
+---
+
 ## [1.3.106] - 2026-07-24
 
 ### Type: PATCH

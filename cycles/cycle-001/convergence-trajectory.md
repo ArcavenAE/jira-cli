@@ -2522,3 +2522,47 @@ Final spec: v1.3.93. BC-INDEX: v6.36. STORY-INDEX: v1.5.25. Counts: BC 657 / hol
 Gate status: GATE-READY. 0 blockers. AWAITING HUMAN F3 GATE.
 Next: human F3 gate → PRE-F4-UNICODE spec round → F4 delivery (5 stories S1-S5).
 Recorded by: state-manager (factory(converge) commit, 2026-07-19T00:00:00Z).
+
+---
+
+## SOH-DX-1 F2 Adversary Passes (2026-07-25, ongoing)
+
+Feature cycle SOH-DX-1 (issues #639+#627+#626): pre-flight guard flip (BC-3.8.012/013), platform-path ordering, breaking change v0.7.0-dev.1. STRICT mode. Need 3 consecutive CLEAN passes.
+
+Spec v1.3.107 / BC-INDEX v6.45 / STORY-INDEX v1.5.41 / counts BC 657 / holdouts 100 / VP 35 at start of adversary loop.
+
+### Pass p78 (2026-07-25)
+
+**Findings:** 8 (4H/4M)
+**Convergence counter:** 0 of 3 (STRICT) — grind active
+
+First F2 adversary pass against spec v1.3.107. Finding classes: body contradictions in BC-3.8.012/013 text, missing Platform-Path Guard Ordering, AC-4 vacuous test semantics, delta-analysis phantom symbol names. Fix round 1 dispatched and applied.
+
+---
+
+### Pass p79 (2026-07-25)
+
+**Findings:** 8 (2H/4M/2L)
+**Convergence counter:** 0 of 3 (STRICT) — grind active
+
+Second F2 adversary pass. Finding classes: perimeter doc gaps (ADR-0014/CLAUDE.md deliverables), registry entries, test-naming alignment, zero-HTTP discriminating ACs. Fix round 2 dispatched and applied.
+
+---
+
+### Pass p80 (2026-07-25)
+
+**Findings:** 8 (2H/5M/1L; 1 refuted-in-part by orchestrator empirical check)
+**Convergence counter:** 0 of 3 (STRICT) — grind active
+
+Third F2 adversary pass. Finding classes: spec-changelog entry gaps, test semantics (vacuous AC-4), registry/testability. 1 finding refuted-in-part (orchestrator verified empirically). Fix round 3 dispatched and applied.
+
+---
+
+### Pass p81 (2026-07-25)
+
+**Findings:** 7 (2H/3M/2L)
+**Convergence counter:** 0 of 3 (STRICT) — grind active; PIECEWISE CLEAN after fix round 4
+
+Fourth F2 adversary pass. Finding classes narrowed further: zero-HTTP discriminating ACs, spec-changelog completeness, perimeter-doc completeness. Fix round 4 dispatched and applied. Piecewise CLEAN after round 4.
+
+**Trajectory so far:** p78(8)→p79(8)→p80(8)→p81(7). Delta: 0/0/-1. Finding class narrowing confirmed. NEXT: pass-5 (p82).

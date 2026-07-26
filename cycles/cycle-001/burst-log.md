@@ -6145,3 +6145,41 @@ _D-447(d) requires Phase Progress to contain at least one row with "fix burst". 
 | Phase | Status | Completed | Gate | Notes |
 |-------|--------|-----------|------|-------|
 | **SOH-ATTACHMENTS-1 F6 TARGETED HARDENING PASS (2026-07-25): D1 5/5 VPs green; D2 fuzz-substitute 49152 inputs 0 crashes; D3 mutation 27/27 viable 100%; D4 cargo-audit 0 vulns; regression 2341/0 +22 tests.** | F6 hardening PASS | 2026-07-25 | PASS; all 4 dimensions green. | BC 657; holdouts 100; VP 35; spec v1.3.106; BC-INDEX v6.44. |
+
+---
+
+## SOH-DX-1 F2 Adversary Rounds 1-4 Checkpoint Burst (2026-07-25)
+
+**Triggered by:** Orchestrator F2 adversary grind checkpoint after 4 rounds (pass-1 through pass-4 complete, fix rounds 1-4 applied, piecewise CLEAN after round 4). STATE.md updated; factory-artifacts committed.
+
+**Files touched by adversary fix rounds 1-4 (uncommitted .factory changes committed in this burst):**
+- `phase-f1-delta/SOH-DX-1/delta-analysis.md` — OQ-1 resolved, AC-4/AC-6 corrections, ADR-0014 + Cargo.toml 0.7.0-dev.1 + CHANGELOG deliverables added
+- `phase-f1-delta/SOH-DX-1/affected-files.txt` — updated for F2 amendments
+- `spec-changelog.md` — [1.3.107] entry registered
+- `specs/prd/bc-3-issue-write.md` — BC-3.8.001/012/013 amended; BC-3.3.001 + BC-3.4.014 qualified; Platform-Path Guard Ordering block; EC-3.8.012-1..7 + EC-3.8.013-1; AC-8/AC-9 added; AC-4 rename specified
+- `specs/prd/BC-INDEX.md` — v6.45 (section 3.8 renamed; rows updated)
+- `stories/S-383-platform-inverse-warnings.md` — superseded banner + updated status
+- `stories/STORY-INDEX.md` — v1.5.40→v1.5.41 (S-383 superseded)
+- `sidecar-learning.md` — process-gap lessons from F2 adversary rounds
+
+**Trajectory:** pass-1 (8: 4H/4M) → fix round 1 → pass-2 (8: 2H/4M/2L) → fix round 2 → pass-3 (8: 2H/5M/1L, incl. 1 refuted-in-part) → fix round 3 → pass-4 (7: 2H/3M/2L) → fix round 4 → piecewise CLEAN. Zero consecutive CLEAN passes. Finding classes narrowed: body contradictions → perimeter docs → test semantics → registry/testability.
+
+**Process-gaps ledgered for cycle close (S-7.02):** (1) no STATE-claims-vs-artifacts cross-check guard; (2) test-symbol citation guard doesn't cover non-bc-*.md artifacts (delta-analysis phantom names survived 2 rounds).
+
+**Convergence counter:** 0 of 3 STRICT (need 3 consecutive CLEAN). NEXT: pass-5.
+
+### Archived Phase Progress row (displaced by keep-5 rule; new pass-4-adversary row added)
+
+Displaced to make room for SOH-DX-1 F2 adversary rounds 1-4 Phase Progress row per keep-5 rule (removed oldest: SOH-ATTACHMENTS-1 F5 fix burst summary).
+
+| Phase | Status | Completed | Gate | Notes | Finding Progression |
+|-------|--------|-----------|------|-------|---------------------|
+| **SOH-ATTACHMENTS-1 F5 fix burst summary (2026-07-21 to 2026-07-24): 8 fix bursts dispatched across 14 adversary passes; PRs #644-#652 merged to develop.** | F5 fix burst complete | 2026-07-21 to 2026-07-24 | 8 fix bursts merged. | PRs #644-#652; full burst narratives in cycles/cycle-001/burst-log.md. | — |
+
+### Archived Current Phase Steps row (displaced by keep-4 rule; new pass-4-adversary step row added)
+
+Displaced to make room for SOH-DX-1 F2 adversary rounds 1-4 step row per keep-4 rule (removed oldest: DEPENDABOT-TRIAGE).
+
+| Step | Agent | Status | Output |
+|------|-------|--------|--------|
+| **DEPENDABOT-TRIAGE (2026-07-25): 8 PRs soak-complete READY for human merge: #599 #612 #632 #633 #634 #636 #637 #641. PR #645 actions/checkout 7.0.0 to 7.0.1 released 2026-07-20 SOAKING until 2026-07-27 — DEC-187: first-party Actions NOT exempt from 7-day soak; soak measured from upstream RELEASE DATE (published_at). DEC-133/DEC-178/DEC-187 uniform posture confirmed.** | state-manager | COMPLETE — DEPENDABOT-TRIAGE; 8 READY / 1 SOAKING | DEC-187 recorded; Session Resume Checkpoint updated; STATE.md compacted (2026-07-25); burst-log.md appended; factory-artifacts committed. |

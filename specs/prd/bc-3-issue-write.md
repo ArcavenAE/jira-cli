@@ -14,6 +14,7 @@ trace: |
   - F1d addition (2026-05-18): BC-3.8.010 — --type ignored with warning when --request-type is set (issue #288 adversary pass-01)
   - F1d addition (2026-05-19): BC-3.8.011 — platform-only flags emit stderr warnings on JSM path (issue #288 adversary-pass-01 C-02); H-01 BC-3.8.003 verb aligned "Use"→"Run"
   - F2 addition (2026-05-19): BC-3.8.012..013 — inverse warning symmetry: --field and --on-behalf-of silent-drop on platform path (issue #383)
+  - F2 modified (2026-07-25): BC-3.8.012..013 — DEC-188 amendment: warn-and-proceed (exit 0) superseded by pre-flight JrError::UserError exit 64; BC-3.8.001 H1 qualification added; section retitled to Pre-flight Guards; AC-4 re-specified; asymmetry direction clarified (issue #639)
   - F2 addition (2026-05-19): BC-3.8.014..015 — JSM 401 auth-conditional hints on handle_jsm_create: Basic-auth (is_oauth_auth==false) → API-token hint with InsufficientScope rewrite; OAuth (is_oauth_auth==true) → existing behavior preserved (issue #384; corrected model: gate is is_oauth_auth() alone)
   - F2 addition (2026-05-20): BC-3.8.016 — --request-type "" (empty) exits 64 before partial_match (issue #385)
   - F2 addition (2026-05-20): BC-3.8.017 — --markdown + --field description= conflict rejected at parse-time exit 64 (issue #385)
@@ -113,14 +114,14 @@ trace: |
   - v1.3.100 — FIX-F5-006 F5-R1-007 fix round (2026-07-23, SOH-ATTACHMENTS-1): 0 new BCs — BC-3.9.006 step-2 network branch split from 5xx: transport/network errors → `JrError::NetworkError` (exit 1, standard connectivity message `"Could not reach <host> — check your connection"`, no expired-ID retry hint); HTTP 5xx branch unchanged (`JrError::ApiError`, exit 1, retry hint); parity with step-1 transport mapping in BC-3.9.012; EC-3.9.006-6 added (transport/network case); "In both cases" language replaced with explicit HTTP-only retry-hint scope; BC-3.9.006 heading and Trace updated; BC-INDEX BC-3.9.006 row updated; BC count unchanged (140/111)
   - v1.3.101 — BC-3.9.006 Trace citation refresh post FIX-F5-006/007 merges (2026-07-24, SOH-ATTACHMENTS-1, F5-R3-003): 0 new BCs — BC-3.9.006 Trace updated: stale `tests/attachment_jsm.rs::test_bc_3_9_006_step2_network_error_appends_retry_hint` (pre-rename, wrong file, "not yet on develop" note) and stale `inline unit test test_f5_r1_007_step2_network_error_uses_canonical_network_error_variant in src/api/jsm/attachments.rs` (no backticks, "worktree fix branch only" note) replaced with `src/api/jsm/attachments.rs::tests::test_bc_3_9_006_step2_network_error_uses_connectivity_message_no_retry_hint` (renamed; on develop) and `src/api/jsm/attachments.rs::tests::test_f5_r1_007_step2_network_error_uses_canonical_network_error_variant` (on develop); both tests are inline in `src/api/jsm/attachments.rs`, not in `tests/attachment_jsm.rs`; BC count unchanged (140/111)
   - v1.3.105 — P8-001/F5-R8-001 deliberate-asymmetry note (2026-07-24, SOH-ATTACHMENTS-1): 0 new BCs — BC-3.9.006 heading, 4xx bullet, and EC updated: HTTP 429 deliberately falls into generic 4xx→exit 64 bucket with no Retry-After auto-retry loop, asymmetric with step-1 `attachTemporaryFile` (retries 429 per BC-X.8.010) and platform upload path (retries 429 via `send_with_retry`); rationale recorded: step-2 is a single small JSON POST issued immediately after step-1 succeeds; rare 429 there; ~1 h temp-attachment TTL makes manual re-run safe; blast radius low; carve-out explicitly deferred at SOH-ATTACHMENTS-1 wave gate (P8-001); hint-text imprecision honestly noted (`"Temporary attachment IDs may have expired. Try the upload again."` is inexact for 429 sub-case) — accepted; dedicated 429 arm with Retry-After parsing = candidate future enhancement, not defect; EC-3.9.006-7 added (429 deliberate-asymmetry sub-case); BC count unchanged (140/111)
-  - v1.3.107 — SOH-DX-1 DEC-188 F2 supersession (2026-07-25, #639): 0 new BCs — BC-3.8.012 superseded: warn-and-proceed (exit 0) → pre-flight JrError::UserError exit 64 BEFORE any HTTP; ONE error regardless of --field count; combined error when both --field and --on-behalf-of present without --request-type; BC-3.8.013 superseded: same pattern for --on-behalf-of; asymmetry rationale encoded (self-declared JSM-only flags → exit 64 caller-error; general platform flags → warn-and-degrade); BC-3.3.001 amendment note updated (exit-64 supersedes warn-and-continue); BC-INDEX v6.44→v6.45; spec v1.3.107; BC count unchanged (140/111)
+  - v1.3.107 — SOH-DX-1 DEC-188 F2 amendment (2026-07-25, #639): 0 new BCs — BC-3.8.012 amended (superseded-in-part): warn-and-proceed (exit 0) → pre-flight JrError::UserError exit 64 BEFORE any HTTP; ONE error regardless of --field count; combined error when both --field and --on-behalf-of present without --request-type; BC-3.8.013 amended (superseded-in-part): same pattern for --on-behalf-of; asymmetry rationale encoded (self-declared JSM-only flags → exit 64 caller-error; general platform flags → warn-and-degrade); BC-3.3.001 amendment note updated (exit-64 replaces warn-and-continue); BC-INDEX v6.44→v6.45; spec v1.3.107; BC count unchanged (140/111)
 ---
 
 # BC-3 — Issue Write
 
 140 behavioral contracts across 9 subdomains: Assign (3.1), Move/Transition (3.2),
 Create (3.3), Edit+Open (3.4), Comment (3.5), Links (3.6), Remote links (3.7),
-JSM Request Create + Platform-Path Inverse Warnings + Auth-Conditional 401 Hints (3.8),
+JSM Request Create + Platform-Path Pre-flight Guards + Auth-Conditional 401 Hints (3.8),
 Attachment Write (3.9).
 
 ---
@@ -1109,7 +1110,7 @@ Field echo lines are sorted in **alphabetical field-name order** (matching BC-3.
 
 **Preconditions**:
 - `jr issue create [flags...]` issued without `--output json`.
-- The `--request-type` flag is absent (platform create path; JSM path is governed by BC-3.8.011).
+- The `--request-type` flag is absent (platform create path; JSM path is governed by BC-3.8.011). **[DEC-188 qualifier]** This precondition (exit 0 + field echo) holds only when neither `--field` nor `--on-behalf-of` is present; if either is present without `--request-type`, exit 64 fires per BC-3.8.012/013 before field echo is reached.
 - All field resolution succeeds (team, assignee, story-points field ID).
 - POST 201 received; `issueKey` extracted.
 
@@ -2730,23 +2731,26 @@ In contrast, a **bare** `jr issue comment` with no arguments (`ErrorKind::Missin
 
 ---
 
-### 3.8 JSM Request Create + Platform-Path Inverse Warnings + Auth-Conditional 401 Hints
+### 3.8 JSM Request Create + Platform-Path Pre-flight Guards + Auth-Conditional 401 Hints
 
 17 behavioral contracts covering: (a) `jr issue create --request-type` dispatch to the JSM service desk API
 (BC-3.8.001..009), (b) forward-direction cross-flag warnings when platform-only flags are passed alongside
-`--request-type` (BC-3.8.010..011), (c) inverse-direction cross-flag warnings when JSM-only flags are
-passed on the platform path (BC-3.8.012..013), (d) auth-conditional 401 error hints on the JSM POST
+`--request-type` (BC-3.8.010..011), (c) pre-flight exit-64 guards (`JrError::UserError`, DEC-188) when
+JSM-only flags (`--field`, `--on-behalf-of`) are passed on the platform path without `--request-type`
+(BC-3.8.012..013), (d) auth-conditional 401 error hints on the JSM POST
 path: Basic-auth API-token-expiry hint (BC-3.8.014) and OAuth write-scope hint (BC-3.8.015), gated solely
 by `JiraClient::is_oauth_auth()`, and (e) JSM-path input guards: empty `--request-type` early-exit
 (BC-3.8.016) and `--markdown` + `--field description=` conflict rejection (BC-3.8.017).
 BCs 001..011 require `--request-type` to be set. The platform path (BC-3.3.001) — its POST body,
-JSON response, and exit code — is unchanged when `--request-type` is absent. BCs 012..013 add
-inverse-direction stderr warnings on the platform path (when `--field` / `--on-behalf-of` are
-passed without `--request-type`) without altering POST behavior, response, or exit code.
+JSON response, and exit code — is unchanged when `--request-type` is absent AND no JSM-only flags
+are present. **[AMENDED 2026-07-25 DEC-188]** BCs 012..013 were amended from warn-and-proceed
+(exit 0) to pre-flight `JrError::UserError` (exit 64): when `--field` or `--on-behalf-of` are
+passed without `--request-type`, the guard fires BEFORE any HTTP, BEFORE interactive prompts, and
+BEFORE helper resolution calls (`resolve_team_field`, `resolve_assignee_by_project`).
 
 ---
 
-#### BC-3.8.001: `issue create --request-type <NAME|ID>` dispatches to `POST /rest/servicedeskapi/request`; platform POST body, JSON response, and exit code unchanged when `--request-type` absent
+#### BC-3.8.001: `issue create --request-type <NAME|ID>` dispatches to `POST /rest/servicedeskapi/request`; platform POST body, JSON response, and exit code unchanged when `--request-type` absent (unless `--field`/`--on-behalf-of` present — exits 64 per BC-3.8.012/013)
 
 **Confidence**: HIGH
 **Subject**: Issue write (JSM path)
@@ -2759,6 +2763,8 @@ passed without `--request-type`) without altering POST behavior, response, or ex
 **Confidence**: HIGH
 
 > **[UPDATED 2026-05-19 issue #384]** Errors cross-reference updated: 401 on the JSM POST is auth-conditional; see BC-3.8.009 (auth-conditional gate), which cross-references BC-3.8.014 (Basic-auth: API-token-expiry hint) and BC-3.8.015 (OAuth: existing write-scope hint behavior). No behavioral change — cross-reference refresh only.
+
+> **[AMENDED 2026-07-25 DEC-188]** The Behavior field states "exit code unchanged when `--request-type` is absent." This holds only when neither `--field` nor `--on-behalf-of` is present. When either JSM-only flag is present without `--request-type`, exit 64 fires (BC-3.8.012/013) — the platform POST is not reached and the exit code is 64, not 0.
 
 ---
 
@@ -2953,9 +2959,24 @@ the JSM dispatch path.
 
 ---
 
+#### Platform-Path Guard Ordering — `handle_create` (platform path only)
+
+Short guard-ordering reference for `src/cli/issue/create.rs::handle_create` when `--request-type` is absent. The BC-3.8.012/013 pre-flight guards fire at **step 2**, immediately after the dispatch fork, **before** project-key resolution:
+
+1. **JSM dispatch fork** — `request_type.is_some()` check. If `true`, dispatches to `handle_jsm_create`; steps 2–6 below apply only on the platform (`false`) branch.
+2. **BC-3.8.012/013 pre-flight guards** — `--field`/`--on-behalf-of` present → `JrError::UserError` exit 64. Zero HTTP. No interactive prompts. No project-key resolution has run yet.
+3. **Project-key resolution** — derives project key from `--project` or active-profile config; `--no-input`/non-TTY → exit 64 if unresolvable; interactive → `helpers::prompt_input("Project key")`.
+4. **Interactive prompts** — summary, description, and other optional inputs if not supplied via flags.
+5. **Helper HTTP** — `resolve_team_field`, `resolve_assignee_by_project`, `search_assignable_users_by_project`, `get_or_fetch_cmdb_fields` (CMDB field discovery), etc.
+6. **Platform POST** — `POST /rest/api/3/issue`.
+
+Guard-ordering consequence: `jr issue create --field a=b` with no project configured emits the BC-3.8.012 pre-flight error (step 2), NOT a "project key is required" error (step 3). See EC-3.8.012-4.
+
+---
+
 #### BC-3.8.012: `--field` on platform path without `--request-type` exits 64 pre-flight
 
-> **[SUPERSEDED 2026-07-25 SOH-DX-1 DEC-188 #639]** Prior behavior (warn-and-proceed, exit 0) replaced by pre-flight exit-64. Old contract text preserved below under [PRIOR BEHAVIOR] for audit trail. Breaking change ships v0.7.0-dev.1. Five tests in `tests/issue_create_jsm.rs` inverted from exit-0 to exit-64 (AC-1/AC-2/AC-3/AC-5/AC-7); AC-7 renamed `test_platform_create_malformed_field_without_request_type_exits_64`. New contract in [CURRENT BEHAVIOR] below.
+> **[AMENDED 2026-07-25 SOH-DX-1 DEC-188 #639]** Prior behavior (warn-and-proceed, exit 0) superseded-in-part by pre-flight exit-64. Old contract text preserved below under [PRIOR BEHAVIOR] for audit trail. Breaking change ships v0.7.0-dev.1. Platform-path inverse-flag tests inverted from exit-0 to exit-64 (AC-1/AC-2/AC-3/AC-5/AC-7); renamed ACs enumerated in Trace. New contract in [CURRENT BEHAVIOR] below.
 
 > **[PRIOR BEHAVIOR, superseded 2026-07-25]** When `jr issue create` was invoked WITHOUT `--request-type` but WITH one or more `--field NAME=VALUE` flags, the handler emitted ONE warning to stderr BEFORE the platform POST. Warning string: `"warning: --field is ignored on the platform create path; it only applies with --request-type (JSM service-desk requests). To pass custom fields to a JSM request type, also supply --request-type."` Platform POST then proceeded normally; exit code was 0. A malformed `--field` (no `=`) still emitted one warning and was discarded. When both `--field` and `--on-behalf-of` were present, each warned independently (BC-3.8.013 fired separately).
 
@@ -2967,26 +2988,31 @@ the JSM dispatch path.
 **Subject**: Issue write (platform path cross-flag interaction)
 **Behavior**: When `jr issue create` is invoked WITHOUT `--request-type` but WITH one or
 more `--field NAME=VALUE` flags, the handler MUST return `JrError::UserError` and exit 64
-BEFORE any HTTP is issued. The guard fires on `!field_pairs.is_empty()` — ONE check, ONE
-error, regardless of how many `--field` occurrences are present (idempotent per-flag,
+BEFORE any HTTP is issued. Guard placement: fires immediately after the JSM dispatch fork
+(`request_type.is_some()` check in `handle_create`), BEFORE interactive prompts, and BEFORE
+any helper HTTP calls (`resolve_team_field`, `resolve_assignee_by_project`, `get_or_fetch_cmdb_fields`).
+Zero HTTP of any kind is issued on this error path. The guard fires on `!field_pairs.is_empty()` — ONE check,
+ONE error, regardless of how many `--field` occurrences are present (idempotent per-flag,
 not per-value).
 
 Verbatim error string (single-flag case: `--field` present, `--on-behalf-of` absent):
-`"--field is only valid with --request-type (JSM service-desk requests). Add --request-type <NAME> to submit a JSM request with custom fields, or drop --field."`
+```
+--field is only valid with --request-type (JSM service-desk requests). Add --request-type <NAME> to submit a JSM request with custom fields, or drop --field to create a standard platform issue (then use `jr issue edit --field` to set fields afterward).
+```
 
 **Combined pre-flight error (both `--field` AND `--on-behalf-of` present without `--request-type`):**
 ONE combined `JrError::UserError` fires — not two independent errors. The combined check
 MUST run before the individual `--field`-only check.
 
 Verbatim combined error string:
-`"--field and --on-behalf-of are only valid with --request-type (JSM service-desk requests). Add --request-type <NAME> to use these flags, or drop them."`
+```
+--field and --on-behalf-of are only valid with --request-type (JSM service-desk requests). Add --request-type <NAME> to use these flags, or drop them to create a standard platform issue (then use `jr issue edit --field` for custom fields; --on-behalf-of has no platform equivalent).
+```
 
-**Asymmetry rationale (invariant):** `--field` and `--on-behalf-of` are self-declared
-JSM-only flags — their help text declares JSM purpose and their semantics are undefined
-on the platform path → using them without `--request-type` is a caller error → exit 64.
-This DIFFERS from `--team`/`--points`/`--parent`/`--to`/`--account-id` (BC-3.8.010/011)
-which are general platform flags that the JSM API cannot express → degrade with warning,
-do not reject.
+**Asymmetry rationale (invariant):** Scoped to `jr issue create`. Two distinct guard directions apply:
+- **This BC (JSM-only flags on the platform path, `--request-type` absent):** `--field` and `--on-behalf-of` are self-declared JSM-only flags — their help text declares JSM purpose and semantics undefined on the platform path → caller error → exit 64. `jr issue create --field a=b` (no `--request-type`) → exits 64.
+- **BC-3.8.011 (platform-only flags on the JSM path, `--request-type` present):** `--team`/`--points`/`--parent`/`--to`/`--account-id` are general platform flags that cannot be expressed in the JSM API → degrade with warning (do not reject) when `--request-type` IS set. `jr issue create --team X` (no `--request-type`) → platform path, `--team` handled normally, no warning. (BC-3.8.010 governs `--type` only.)
+Remedy affordance: to create a platform issue and then set custom fields, create the issue first (`jr issue create ...`), then apply fields via `jr issue edit --field`.
 
 When `--field` is absent (clap default: empty Vec), NO error is emitted; the platform
 path proceeds normally, byte-identical to pre-DEC-188 behavior. A malformed `--field`
@@ -2997,7 +3023,16 @@ the JSM path).
 **Inputs**: `--field NAME=VALUE` (one or more) WITHOUT `--request-type`
 **Outputs/Effects**: `JrError::UserError` to stderr; exit 64; NO stdout output; NO HTTP.
 **Errors**: Exit 64 (`JrError::UserError`). No HTTP. No warning-and-proceed.
-**Trace**: `tests/issue_create_jsm.rs` — 5 tests inverted from exit-0 to exit-64:
+**Test Note**: Test assertions use `stderr.contains(...)`, not `==`, to accommodate the "Error: " prefix prepended at the `src/main.rs` error-rendering site. With `--output json`, the error shape `{"error":"<message>","code":64}` is written to **stderr** (not stdout).
+**Edge Cases**:
+- EC-3.8.012-1: `--on-behalf-of ""` (empty string value) WITH `--field` present: the combined-error check in BC-3.8.012 governs (fires first); BC-3.8.013 alone does not fire. (The sub-case `--on-behalf-of ""` WITHOUT `--field` is a BC-3.8.013-only case; see EC-3.8.013-1.)
+- EC-3.8.012-2: `--field` present WITH `--request-type ""` (empty string): routes to the JSM path; BC-3.8.016 (empty RT guard) fires, NOT this guard. This guard fires only when `--request-type` is entirely absent (clap default `None`).
+- EC-3.8.012-3: Malformed `--field` (e.g., `--field bare-name-no-equals`): guard fires on `!field_pairs.is_empty()` BEFORE value parsing. Format validation per BC-3.8.008 applies only on the JSM path and is never reached on this error path.
+- EC-3.8.012-4: `jr issue create --field a=b` with no `--project` and no profile default → BC-3.8.012 pre-flight guard fires at step 2 of the Platform-Path Guard Ordering above, BEFORE project-key resolution (step 3). The user sees the `--field`-is-JSM-only error, NOT a "project key is required" error. The dispatch fork (step 1) → pre-flight guard (step 2) → project resolution (step 3) ordering guarantees this precedence.
+- EC-3.8.012-5: `--markdown --field description=x` WITHOUT `--request-type` → BC-3.8.012 fires (step 2 of `handle_create` platform guard ordering; `--field` is present without `--request-type`). BC-3.8.017's `--markdown` + `--field description=` conflict guard lives inside `handle_jsm_create` (JSM Canonical Guard Ordering step 2) and cannot hoist to the platform path — the JSM path is never entered when `--request-type` is absent. The platform-path `--markdown`-requires-`--description` guard (analogous to JSM step 3) is also never reached.
+- EC-3.8.012-6: Config/auth failures precede the guard entirely — `Config::load_with` and `JiraClient::from_config` run in `src/main.rs` (~:293-295) BEFORE `handle_create` is invoked. Unauthenticated callers exit 2 and misconfigured callers exit 78 before `handle_create` is reached; they never encounter the exit-64 guard. "Pre-flight" in this BC means first-check-inside-handler, not first-possible-failure-overall.
+- EC-3.8.012-7: `--description-stdin` + guarded flag (e.g., `--field a=b`) without `--request-type` → BC-3.8.012 guard fires pre-flight; stdin is NEVER read. Note: non-TTY stdin auto-sets `--no-input` (per `src/main.rs:~112`), so this is the scripted-caller path. A piping producer may see EPIPE; a heredoc input is discarded. This is acceptable, documented behavior — fail-fast on the caller error takes precedence over draining stdin.
+**Trace**: `tests/issue_create_jsm.rs` — platform-path inverse-flag tests invert from exit-0 to exit-64; old→new rename mappings below; `src/cli/issue/create.rs::handle_create` (guard implementation site):
 AC-1 `test_platform_create_field_flag_exits_64_without_request_type` (renamed from
 `test_platform_create_field_flag_emits_warning_without_request_type`);
 AC-2 `test_platform_create_on_behalf_of_flag_exits_64_without_request_type` (renamed from
@@ -3008,21 +3043,22 @@ AC-5 `test_platform_create_field_idempotent_one_error_per_logical_flag` (renamed
 `test_platform_create_field_idempotent_one_warning_per_logical_flag` (line ~2687));
 AC-7 `test_platform_create_malformed_field_without_request_type_exits_64` (renamed from
 `test_platform_create_malformed_field_one_warning_no_exit_64`).
-AC-4 (`test_platform_create_without_inverse_flags_emits_no_new_warnings`) and
-AC-6 (`test_jsm_create_with_field_and_request_type_does_not_fire_bc_3_8_012`) are unchanged.
+AC-4 `test_platform_create_without_inverse_flags_emits_no_errors` (renamed from `test_platform_create_without_inverse_flags_emits_no_new_warnings`) — NOT unchanged post-DEC-188; test body MUST be updated at F3. The original name "`_emits_no_new_warnings`" is stale post-DEC-188 since the assertions now concern absent ERRORS, not absent warnings. Rename per convention `test_<verb>_<subject>_<expected_outcome>`. The original negative assertion `!stderr.contains("--field is ignored")` is now vacuously true (that substring no longer exists anywhere) and provides zero coverage. Updated AC-4 contract: assert exit 0 AND assert `!stderr.contains("--field is only valid with")` AND `!stderr.contains("--on-behalf-of is only valid with")` — absence of the NEW error substrings on the clean path.
+AC-6 (`test_jsm_create_with_field_and_request_type_does_not_fire_bc_3_8_012`) is unchanged.
+AC-8 (NEW) `test_platform_create_field_with_helpers_exits_64_zero_http`: `jr issue create --field a=b --team X --to me` (no `--request-type`) → exit 64; wiremock `expect(0)` on ALL endpoints (team-resolution, assignable-user search, CMDB field discovery, issue POST) — zero-HTTP discriminating proof that the guard fires before any helper HTTP call. S-639-1 F3 story deliverable.
+AC-9 (NEW) `test_platform_create_field_without_project_exits_64_not_project_error`: EC-3.8.012-4 as test — `jr issue create --field a=b` with no `--project` and no profile project default → stderr contains BC-3.8.012 error substring (`"--field is only valid with"`), NOT a "project" error; exit 64. S-639-1 F3 story deliverable.
 S-639-1 F3 story deliverable.
-**Source**: SOH-DX-1 DEC-188 F2 (2026-07-25, #639); supersedes issue #383 F2
-warn-and-proceed behavior. Guard modeled on `src/cli/issue/edit.rs::handle_edit`
-mutual-exclusion block.
+Doc-fallout deliverables (F4 obligations, not in-scope for S-639-1 F3): (a) `docs/adr/0014-jsm-request-type-dispatch.md` "platform path byte-for-byte unchanged" claim (~line 161) — add amendment note at F4 (DEC-188 adds pre-flight guards; claim is now conditional on `--field`/`--on-behalf-of` being absent); (b) `CLAUDE.md:~248` dispatch-fork gotcha "absent → platform path byte-for-byte unchanged" — qualify with DEC-188 pre-flight guards; (c) `Cargo.toml` version bump to 0.7.0-dev.1 (DEC-188 breaking change) + `CHANGELOG.md` `### Breaking Changes` entry citing DEC-188, BC-3.8.012/013, and the `--field`/`--on-behalf-of` exit-64 change.
+**Source**: SOH-DX-1 DEC-188 F2 (2026-07-25, #639); supersedes issue #383 F2 warn-and-proceed behavior.
 **Confidence**: HIGH
 
-[SUPERSEDED 2026-05-19 issue #383 F2 → superseded 2026-07-25 SOH-DX-1 DEC-188 #639]
+[ADDED 2026-05-19 issue #383 F2 → AMENDED 2026-07-25 SOH-DX-1 DEC-188 #639 (warn-and-proceed → pre-flight exit-64)]
 
 ---
 
 #### BC-3.8.013: `--on-behalf-of` on platform path without `--request-type` exits 64 pre-flight
 
-> **[SUPERSEDED 2026-07-25 SOH-DX-1 DEC-188 #639]** Prior behavior (warn-and-proceed, exit 0) replaced by pre-flight exit-64. Old contract text preserved below under [PRIOR BEHAVIOR] for audit trail. Breaking change ships v0.7.0-dev.1. See S-639-1 F3 story for test inversions. New contract in [CURRENT BEHAVIOR] below.
+> **[AMENDED 2026-07-25 SOH-DX-1 DEC-188 #639]** Prior behavior (warn-and-proceed, exit 0) superseded-in-part by pre-flight exit-64. Old contract text preserved below under [PRIOR BEHAVIOR] for audit trail. Breaking change ships v0.7.0-dev.1. See S-639-1 F3 story for test inversions. New contract in [CURRENT BEHAVIOR] below.
 
 > **[PRIOR BEHAVIOR, superseded 2026-07-25]** When `jr issue create` was invoked WITHOUT `--request-type` but WITH `--on-behalf-of <ACCOUNT_ID>`, the handler emitted ONE warning to stderr BEFORE the platform POST. Warning string: `"warning: --on-behalf-of is ignored on the platform create path; it only applies with --request-type (JSM service-desk requests). To raise a request on behalf of another user, also supply --request-type."` Platform POST then proceeded normally; exit code was 0. BC-3.8.012 and BC-3.8.013 fired independently when both flags were present; both warnings appeared on stderr.
 
@@ -3034,21 +3070,23 @@ mutual-exclusion block.
 **Subject**: Issue write (platform path cross-flag interaction)
 **Behavior**: When `jr issue create` is invoked WITHOUT `--request-type` but WITH
 `--on-behalf-of <ACCOUNT_ID>`, the handler MUST return `JrError::UserError` and exit 64
-BEFORE any HTTP is issued. Because `--on-behalf-of` is `Option<String>` (at most one
+BEFORE any HTTP is issued. Guard placement: fires immediately after the JSM dispatch fork
+(`request_type.is_some()` check in `handle_create`), BEFORE interactive prompts, and BEFORE
+any helper HTTP calls (`resolve_team_field`, `resolve_assignee_by_project`, `get_or_fetch_cmdb_fields`).
+Zero HTTP of any kind is issued on this error path. Because `--on-behalf-of` is `Option<String>` (at most one
 occurrence on the command line), idempotency is trivially satisfied — one occurrence
 produces one error.
 
 Verbatim error string (single-flag case: `--on-behalf-of` present, `--field` absent):
-`"--on-behalf-of is only valid with --request-type (JSM service-desk requests). Add --request-type <NAME> to raise a request on behalf of another user, or drop --on-behalf-of."`
+```
+--on-behalf-of is only valid with --request-type (JSM service-desk requests). Add --request-type <NAME> to raise a request on behalf of another user, or drop --on-behalf-of to create a standard platform issue (reporter identity is not settable post-creation via platform).
+```
 
 **Combined pre-flight error (both `--field` AND `--on-behalf-of` present):** The combined
 error is defined and governed by BC-3.8.012. ONE combined error fires; the
 `--on-behalf-of`-only error string above fires ONLY when `--field` is absent.
 
-**Asymmetry rationale (invariant):** Same as BC-3.8.012 — `--on-behalf-of` is a
-self-declared JSM-only flag (help text declares JSM purpose; semantics undefined on
-platform path) → caller error → exit 64. This differs from `--team`/`--points`/`--parent`/
-`--to`/`--account-id` (BC-3.8.010/011) which are general platform flags → warn-and-degrade.
+**Asymmetry rationale (invariant):** Scoped to `jr issue create`. Same two-direction distinction as BC-3.8.012: `--on-behalf-of` is a JSM-only flag on the platform path (absent `--request-type`) → exit 64. `--team`/`--points`/etc. (BC-3.8.011; BC-3.8.010 governs `--type` only) are platform flags on the JSM path (present `--request-type`) → warn-and-degrade; they do NOT warn when used without `--request-type`. See BC-3.8.012 for the full rationale. Remedy affordance: create the issue first; note `--on-behalf-of` has no equivalent in `jr issue edit` — reporter identity must be set at JSM request creation time via `--request-type`.
 
 When `--on-behalf-of` is absent (clap default: None), NO error is emitted; the platform
 path proceeds normally, byte-identical to pre-DEC-188 behavior.
@@ -3056,13 +3094,15 @@ path proceeds normally, byte-identical to pre-DEC-188 behavior.
 **Inputs**: `--on-behalf-of <ACCOUNT_ID>` WITHOUT `--request-type`
 **Outputs/Effects**: `JrError::UserError` to stderr; exit 64; NO stdout output; NO HTTP.
 **Errors**: Exit 64 (`JrError::UserError`). No HTTP. No warning-and-proceed.
-**Trace**: `tests/issue_create_jsm.rs` — AC-2 `test_platform_create_on_behalf_of_flag_exits_64_without_request_type` (renamed from `test_platform_create_on_behalf_of_flag_emits_warning_without_request_type`). S-639-1 F3 story deliverable.
-**Source**: SOH-DX-1 DEC-188 F2 (2026-07-25, #639); supersedes issue #383 F2
-warn-and-proceed behavior. Guard modeled on `src/cli/issue/edit.rs::handle_edit`
-mutual-exclusion block.
+**Test Note**: Test assertions use `stderr.contains(...)`, not `==`, to accommodate the "Error: " prefix prepended at the `src/main.rs` error-rendering site. With `--output json`, the error shape `{"error":"<message>","code":64}` is written to **stderr** (not stdout).
+**Edge Cases**:
+- EC-3.8.013-1: `--on-behalf-of ""` (empty string value) WITHOUT `--field` → BC-3.8.013 fires; an empty value is still a present `Option<String>` and the guard checks `on_behalf_of.is_some()`. Exit 64 with the `--on-behalf-of`-only error string. (When `--field` is ALSO present, the combined check in BC-3.8.012 governs — see EC-3.8.012-1.)
+**Trace**: `tests/issue_create_jsm.rs` — AC-2 `test_platform_create_on_behalf_of_flag_exits_64_without_request_type` (renamed from `test_platform_create_on_behalf_of_flag_emits_warning_without_request_type`); `src/cli/issue/create.rs::handle_create` (guard implementation site). S-639-1 F3 story deliverable.
+Doc-fallout deliverables: same obligations as BC-3.8.012 (ADR-0014 amendment, CLAUDE.md dispatch-fork qualifier, Cargo.toml/CHANGELOG.md breaking-change entry) — `--on-behalf-of` is part of the same DEC-188 breaking change; see BC-3.8.012 Trace for the full deliverables list.
+**Source**: SOH-DX-1 DEC-188 F2 (2026-07-25, #639); supersedes issue #383 F2 warn-and-proceed behavior.
 **Confidence**: HIGH
 
-[SUPERSEDED 2026-05-19 issue #383 F2 → superseded 2026-07-25 SOH-DX-1 DEC-188 #639]
+[ADDED 2026-05-19 issue #383 F2 → AMENDED 2026-07-25 SOH-DX-1 DEC-188 #639 (warn-and-proceed → pre-flight exit-64)]
 
 ---
 
@@ -3167,7 +3207,7 @@ Guards 1 and 2 fire after project-key resolution (step 0) and before `require_se
 **Subject**: Issue write (JSM path — input guard)
 **Behavior**: When `--request-type` is set to the empty string or a whitespace-only string (i.e., the user passes `--request-type ""` or `--request-type "   "`), `handle_jsm_create` MUST detect the empty-or-whitespace-only input AFTER project-key resolution (step 0) but BEFORE `require_service_desk` (step 4). Guard ordering: see the Canonical Guard Ordering for subdomain 3.8 above (this guard is step 1).
 
-Exit code: 64. Stderr contains: `"request type cannot be empty"` (**CANONICAL SOURCE — all duplicate occurrences in prd-delta-385.md, holdout-scenarios.md, and spec-changelog.md MUST be updated together with this copy; cf. JR_* doc-fallout pattern in CLAUDE.md**) (assert via `contains`). No HTTP calls are issued. The guard evaluates `request_type_arg.trim().is_empty()` — it rejects empty-or-whitespace-only values. The un-trimmed value is passed downstream UNCHANGED if the guard does NOT fire; this BC does NOT normalize or trim the value for downstream use. Consequently, non-empty whitespace-padded values (e.g. `--request-type " 5 "`) are OUT OF SCOPE for this BC and are EXPLICITLY DEFERRED out of #385 scope — they pass this guard and the un-trimmed value proceeds to step 6, where `" 5 "` fails the numeric-bypass check (not all-digits) and falls into `partial_match`. The current outcome is a potentially confusing "request type not found" error (because `" 5 "` is unlikely to substring-match any request type name), not a clean exit. This is a KNOWN RESIDUAL edge case — deferred, not benign.
+Exit code: 64. Stderr contains: `"request type cannot be empty"` (**CANONICAL SOURCE — all duplicate occurrences in prd-delta-385.md, holdout-scenarios.md, and this file's frontmatter version log MUST be updated together with this copy; cf. JR_* doc-fallout pattern in CLAUDE.md**) (assert via `contains`). No HTTP calls are issued. The guard evaluates `request_type_arg.trim().is_empty()` — it rejects empty-or-whitespace-only values. The un-trimmed value is passed downstream UNCHANGED if the guard does NOT fire; this BC does NOT normalize or trim the value for downstream use. Consequently, non-empty whitespace-padded values (e.g. `--request-type " 5 "`) are OUT OF SCOPE for this BC and are EXPLICITLY DEFERRED out of #385 scope — they pass this guard and the un-trimmed value proceeds to step 6, where `" 5 "` fails the numeric-bypass check (not all-digits) and falls into `partial_match`. The current outcome is a potentially confusing "request type not found" error (because `" 5 "` is unlikely to substring-match any request type name), not a clean exit. This is a KNOWN RESIDUAL edge case — deferred, not benign.
 **Inputs**: `--request-type ""` or `--request-type "   "` (empty or whitespace-only after trim); whitespace-padded non-empty values are out of scope for this BC.
 **Outputs/Effects**: exit 64; stderr contains "request type cannot be empty" (substring match via `contains` — duplicated from the CANONICAL copy above; update together); stdout empty; no HTTP.
 **Errors**: This BC IS the error contract. No downstream resolution attempted.

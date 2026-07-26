@@ -4,8 +4,10 @@
 # Item 1 — #639 warn→error promotion
 MODIFIED src/cli/issue/create.rs
 MODIFIED tests/issue_create_jsm.rs
-MODIFIED CHANGELOG.md
-MODIFIED CLAUDE.md  # S-288-pr4 dispatch-fork gotcha update (same commit as code change)
+MODIFIED Cargo.toml  # 0.7.0-dev.1 version bump (DEC-188 clause d)
+MODIFIED CHANGELOG.md  # ### Breaking Changes entry under 0.7.0 section
+MODIFIED CLAUDE.md  # CLAUDE.md:~248 S-288-pr4 dispatch-fork gotcha — "byte-for-byte unchanged" stale
+MODIFIED docs/adr/0014-jsm-request-type-dispatch.md  # :~161 same byte-for-byte claim; amendment note (not new ADR)
 
 # Item 2 — #627 PG-365-1 guard regex
 MODIFIED scripts/check-bc-no-numeric-test-counts.sh

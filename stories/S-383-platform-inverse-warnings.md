@@ -3,7 +3,8 @@ document_type: story
 story_id: "S-383"
 title: "Emit stderr warnings when --field/--on-behalf-of used without --request-type on platform path (closes #383)"
 wave: feature-followup
-status: ready
+status: superseded
+superseded_by: SOH-DX-1 (DEC-188)
 intent: enhancement
 feature_type: backend
 scope: standard
@@ -13,17 +14,41 @@ priority: low
 tdd_mode: strict
 estimated_effort: small
 depends_on: []
+blocks: []
 bc_anchors:
   - BC-3.8.012
   - BC-3.8.013
   - BC-3.8.011
   - BC-3.3.001
+behavioral_contracts:
+  - BC-3.8.012
+  - BC-3.8.013
+  - BC-3.8.011
+  - BC-3.3.001
+verification_properties: []
+assumption_validations: []
+risk_mitigations: []
 holdout_anchors: []
 nfr_anchors: []
 adr_refs:
   - ADR-0014
 sd_refs: []
 parent_phase: F3-story-decomposition
+phase: F3-story-decomposition
+cycle: feature-followup
+producer: story-writer
+level: story
+version: "1.0"
+timestamp: 2026-05-19
+epic_id: N/A
+target_module: create
+subsystems: []
+estimated_days: 0.5
+traces_to: []
+inputs:
+  - ".factory/phase-f1-delta-analysis/issue-383/delta-analysis.md"
+  - ".factory/specs/prd/bc-3-issue-write.md"
+input-hash: "4c3c82e"
 spec_source: ".factory/phase-f1-delta-analysis/issue-383/delta-analysis.md"
 implementation_strategy: tdd
 module_criticality: HIGH  # src/cli/issue/create.rs — central dispatch for all issue create paths
@@ -36,7 +61,17 @@ breaking_change: false
 # F3 story produced on human GO after F2 convergence log sealed.
 ---
 
+> **CONTRACT SUPERSEDED (2026-07-25, DEC-188 / SOH-DX-1):** the warn-and-proceed behavior specified by this story's ACs (verbatim warning strings, exit 0) was superseded by pre-flight exit-64 guards — see BC-3.8.012/013 [AMENDED] in specs/prd/bc-3-issue-write.md. This story remains the historical record of the S-383 delivery; do NOT implement from these ACs.
+
 # S-383 — Platform-Path Inverse Warnings: --field and --on-behalf-of
+
+## Narrative
+
+As a `jr issue create` caller who supplies `--field` or `--on-behalf-of` without `--request-type`,
+I want a clear stderr warning that these flags are ignored on the platform path,
+so that I understand my flags are silently dropped and can correct my invocation.
+
+*Historical note: this story's warn-and-proceed contract was superseded by exit-64 enforcement in SOH-DX-1 / DEC-188. See banner above.*
 
 ## Source of Truth
 
@@ -106,6 +141,32 @@ platform branch in `handle_create`, one for `--field` (BC-3.8.012) and one for
   on stderr; the command does NOT exit with code 64. The platform path does NOT parse
   `--field NAME=VALUE` strings (only detects flag presence); format validation (BC-3.8.008) applies
   only on the JSM path.
+
+## Architecture Mapping
+
+| Component | File | Action | Pure/Effectful |
+|-----------|------|--------|---------------|
+| platform-path create guard | `src/cli/issue/create.rs` | Insert 2 `if` warning guards | Effectful (stderr I/O) |
+| platform-inverse test suite | `tests/issue_create_jsm.rs` | Append 7 integration tests | N/A (tests) |
+
+*See Files to Touch section below for exact line numbers.*
+
+## Edge Cases
+
+| ID | Description | Expected Behavior |
+|----|-------------|-------------------|
+| EC-001 | `--field bareflag-no-equals` without `--request-type` (AC-7) | BC-3.8.012 warning fires; exit 0 (no format validation on platform path) |
+| EC-002 | Multiple `--field NAME=VALUE` occurrences (AC-5) | Exactly one warning per logical flag, not per occurrence |
+| EC-003 | `--field` + `--on-behalf-of` both present (AC-3) | Both warnings fire independently; platform POST proceeds |
+
+## Purity Classification
+
+*Historical note — delivered 2026-05-19, PR #390.*
+
+| Layer | Classification | Reason |
+|-------|---------------|--------|
+| `src/cli/issue/create.rs` guard blocks | Effectful | `eprintln!` writes to stderr (I/O) |
+| Warning logic | Pure function of flag presence | No external state; deterministic |
 
 ## Test File Decision
 

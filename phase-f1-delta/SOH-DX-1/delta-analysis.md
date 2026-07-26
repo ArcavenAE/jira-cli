@@ -26,11 +26,13 @@ Bundle of three independent enhancements ratified 2026-07-25 after fresh-context
 | Component | Change Type | Notes |
 |-----------|-------------|-------|
 | `src/cli/issue/create.rs` | MODIFIED | Lines 81–90: `eprintln!` guard block replaced with `return Err(JrError::UserError(...))` pre-flight exits. Guard modeled on `src/cli/issue/edit.rs::handle_edit` mutual-exclusion block. Placement unchanged (BEFORE platform POST, AFTER dispatch fork at line 49). |
-| `tests/issue_create_jsm.rs` | MODIFIED | 5 tests invert: AC-1 (`test_platform_create_field_flag_emits_warning_without_request_type`), AC-2 (`test_platform_create_on_behalf_of_flag_emits_warning_without_request_type`), AC-3 (`test_platform_create_both_inverse_flags_emit_independent_warnings`), AC-5 (`test_platform_create_field_idempotent_one_warning_per_logical_flag`), AC-7 (`test_platform_create_malformed_field_one_warning_no_exit_64` → **MUST BE RENAMED**: post-flip the name `no_exit_64` directly contradicts the new behavior; rename to `test_platform_create_malformed_field_without_request_type_exits_64` following the `test_<verb>_<subject>_<expected_outcome>` convention). All flip from exit-0 assertions to exit-64. AC-4 and AC-6 are unaffected (clean-path and JSM-regression gates). |
-| `CHANGELOG.md` | MODIFIED | `### Breaking Changes` entry required for MINOR→PATCH promotion consideration; confirm SEMVER impact at F2. |
+| `tests/issue_create_jsm.rs` | MODIFIED | 5 tests invert: AC-1 (`test_platform_create_field_flag_emits_warning_without_request_type`), AC-2 (`test_platform_create_on_behalf_of_flag_emits_warning_without_request_type`), AC-3 (`test_platform_create_both_inverse_flags_emit_independent_warnings`), AC-5 (`test_platform_create_field_idempotent_one_warning_per_logical_flag`), AC-7 (`test_platform_create_malformed_field_one_warning_no_exit_64` → **MUST BE RENAMED**: post-flip the name `no_exit_64` directly contradicts the new behavior; rename to `test_platform_create_malformed_field_without_request_type_exits_64` following the `test_<verb>_<subject>_<expected_outcome>` convention). All flip from exit-0 assertions to exit-64. ~~AC-4 unaffected~~ — **AC-4 test BODY must be updated** (adversary pass-3 F-05): `test_platform_create_without_inverse_flags_emits_no_new_warnings` remains exit-0 but its negative assertions become vacuously true post-flip; at F3 add explicit absence-of-new-error-substrings assertions (`"--field is only valid with"` and `"--on-behalf-of is only valid with"` must be absent from stderr on the clean path). AC-6 (`~~`test_jsm_create_field_flag_doesnt_fire_bc3_8_012_on_jsm_path`~~ → `test_jsm_create_with_field_and_request_type_does_not_fire_bc_3_8_012` (pass-4 correction; real symbol at `tests/issue_create_jsm.rs:2748`)`) is genuinely unchanged (JSM dispatch path, no platform guard reached). |
+| `Cargo.toml` | MODIFIED | Version bump to `0.7.0-dev.1` (DEC-188 clause (d): breaking change rides the 0.6→0.7 train bump). Must be in S-639-1's commit. |
+| `CHANGELOG.md` | MODIFIED | `### Breaking Changes` entry under the 0.7.0 section. SEMVER resolved: this is a MINOR bump (DEC-188 clause (d)). |
 | `.factory/specs/prd/bc-3-issue-write.md` (factory-artifacts) | MODIFIED | BC-3.8.012 body superseded: "warning path, not an error path" → "exit-64 pre-flight UserError before any HTTP". BC-3.8.013 body superseded identically. Amendment note at ~line 481 (the `[UPDATED 2026-05-18 issue #288; amended 2026-05-19 issue #383]` block) updated to reflect exit-64 behavior. **No total_bcs change** — supersession amends existing bodies, no new BC numbers. BC count stays at 657. |
 | `.factory/specs/prd/BC-INDEX.md` (factory-artifacts) | MODIFIED | Section 3.8 rows for BC-3.8.012 and BC-3.8.013: summary text updated to reflect "exits 64 pre-flight" behavior. Section header comment updated. |
-| `CLAUDE.md` | MODIFIED | S-288-pr4 dispatch-fork gotcha (currently reads "emits stderr warnings (see BC-3.8.012, BC-3.8.013)") must be updated in the SAME commit as the code change to document the exit-64 pre-flight behavior. Without this, the gotcha implies warn+continue and would silently describe stale behavior. This is a distinct edit from the Item 3 CLAUDE.md change (toolchain masking gotcha); both land on develop but in separate story commits. |
+| `CLAUDE.md` | MODIFIED | S-288-pr4 dispatch-fork gotcha at line 248 (`"absent → platform path byte-for-byte unchanged"`) becomes stale — after #639 the platform path is no longer byte-for-byte unchanged when `--field` or `--on-behalf-of` are present (it exits 64 pre-flight instead). Must be updated in the SAME commit as the code change. Distinct from the Item 3 CLAUDE.md change (toolchain masking gotcha); both land on develop but in separate story commits. |
+| `docs/adr/0014-jsm-request-type-dispatch.md` | MODIFIED | Line 161 carries the same `"byte-for-byte unchanged"` claim about the platform path. Requires an amendment note in the same commit (not a new ADR — see §4 "no new ADR warranted"). |
 
 **Asymmetry rationale to encode in spec:** `--on-behalf-of` and `--field` are self-declared
 JSM-only flags (their semantics are undefined on the platform path and they declare their purpose
@@ -93,10 +95,15 @@ Exact test identifiers in `tests/issue_create_jsm.rs` that assert exit-0 and mus
 4. `test_platform_create_field_idempotent_one_warning_per_logical_flag` (AC-5, line ~2687)
 5. `test_platform_create_malformed_field_one_warning_no_exit_64` (AC-7, line ~2812)
 
-Tests that remain exit-0 (unaffected):
-- `test_platform_create_without_inverse_flags_emits_no_new_warnings` (AC-4) — clean path, no flags
-- `test_jsm_create_field_flag_doesnt_fire_bc3_8_012_on_jsm_path` (AC-6) — JSM dispatch, unaffected
-- `test_jsm_create_without_request_type_uses_platform_path` (AC-002) — no `--field`/`--on-behalf-of`, unaffected
+Tests that remain exit-0:
+- ~~`test_platform_create_without_inverse_flags_emits_no_new_warnings` (AC-4) — unaffected~~ →
+  **exit code stays 0 but test BODY requires update** (adversary pass-3 F-05): negative assertions
+  are vacuously true post-flip; F3 must add assertions that the new error substrings
+  `"--field is only valid with"` and `"--on-behalf-of is only valid with"` are ABSENT from
+  stderr on the clean (no-flag) path. Without this, a regression that emits the error
+  unconditionally would pass AC-4 silently.
+- `~~`test_jsm_create_field_flag_doesnt_fire_bc3_8_012_on_jsm_path`~~ → `test_jsm_create_with_field_and_request_type_does_not_fire_bc_3_8_012` (pass-4 correction; real symbol at `tests/issue_create_jsm.rs:2748`)` (AC-6) — genuinely unchanged; JSM dispatch path never reaches the platform guard.
+- `test_jsm_create_without_request_type_uses_platform_path` (AC-002) — no `--field`/`--on-behalf-of`, unaffected.
 
 ---
 
@@ -156,6 +163,9 @@ scripts will pass because only BC bodies change, not counts.
 **No new ADR warranted.** The guard pattern (hand-rolled `JrError::UserError` exit-64 before
 HTTP) matches the existing mutual-exclusion guard in `edit.rs::handle_edit` (lines ~167–222).
 Inline comment in `create.rs` pointing to the edit.rs model is sufficient documentation.
+**ADR-0014 amendment required** (`docs/adr/0014-jsm-request-type-dispatch.md:~161`): the
+"byte-for-byte unchanged" claim about the platform path becomes false post-#639; add an
+amendment note in the same commit as the code change.
 
 ### Item 2 (S-627-1)
 
@@ -260,9 +270,9 @@ rust-toolchain.toml                    (deliberately NOT changed; stays channel=
 
 ## 7. Open Questions for F1 Gate
 
-1. **SEMVER impact of #639**: is this a MINOR (breaking CLI behavior) or PATCH release? Given
-   exit-code changes qualify as breaking per semver, recommend MINOR bump. Human confirmation
-   needed before CHANGELOG entry is drafted.
+1. ~~**SEMVER impact of #639**~~: RESOLVED — DEC-188 clause (d): breaking change rides the
+   0.6→0.7 train bump; version becomes `0.7.0-dev.1`. `Cargo.toml` bump and
+   `### Breaking Changes` entry are S-639-1 deliverables (see §1 impact table).
 
 2. **Verified SHA for dtolnay/rust-toolchain**: `fa04a145` was identified as a genuine master
    ancestor but the full 40-char SHA must be confirmed before F4. Assign research step to S-626-1.
