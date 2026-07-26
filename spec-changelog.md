@@ -7,6 +7,25 @@ project: "jr (jira-cli)"
 
 Track all spec version changes. Most recent version first.
 
+## [1.3.111] - 2026-07-26
+
+### Type: PATCH
+
+### Summary
+
+SOH-DX-1 DEC-188 round-13 adversary-pass corrections (#639): AC-8 citation corrected (F13-01); AC-11 false-green hardened with explicit MUST NOT preconditions (F13-02); AC-12 whitespace-normalization prescribed before count (F13-03); AC-9 second precondition added (F13-04).
+
+### Changed
+
+- `.factory/specs/prd/bc-3-issue-write.md` (MODIFIED): AC-8: `--to me` symbol chain corrected — `src/cli/issue/helpers.rs::get_myself` (nonexistent) replaced with `src/cli/issue/helpers.rs::resolve_assignee_by_project` (~:436, call at ~:443) → `JiraClient::get_myself` (`src/api/jira/users.rs::get_myself`, ~:19) (F13-01). AC-11: invocation MUST NOT pass `--no-input` (`JR_STDIN_IS_TTY=1` cannot undo an explicit flag per `src/main.rs` ~:103-114) and MUST NOT pass `--project` (else no-prompt fallback also exits 64) added as explicit preconditions; discriminators (stderr substring + expect(0) on all endpoints + no prompt output on stdout) enumerated (F13-02). AC-12: whitespace-normalization step made mandatory before count — collapse all whitespace runs including newlines to single spaces (`split_whitespace().collect::<Vec<_>>().join(" ")` or equivalent), then assert `.matches("requires --request-type").count() == 2`; newline-split failure mode (clap 4 next-line layout) documented (F13-03). AC-9: second precondition added — profile config MUST lack a `project` key; `tests/issue_create_jsm.rs::write_minimal_config` (~:165-173) cited as satisfying fixture (F13-04). Frontmatter version-log v1.3.111 added. BC count unchanged (140/111).
+- `.factory/specs/prd/BC-INDEX.md` (MODIFIED): `last_updated` updated to v1.3.111.
+
+### BC Count
+
+0 new BCs. Total unchanged: 657 cumulative (BC-INDEX), 140/111 individually-bodied in bc-3-issue-write.md.
+
+---
+
 ## [1.3.110] - 2026-07-26
 
 ### Type: PATCH
