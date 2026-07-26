@@ -7,6 +7,23 @@ project: "jr (jira-cli)"
 
 Track all spec version changes. Most recent version first.
 
+## [1.3.116] - 2026-07-26
+
+### Type: PATCH
+
+### Summary
+SOH-DX-1 DEC-188 round-18 adversary-pass corrections (#639): F18-001 (HIGH): vacuous-negative DELETE mandates completed — AC-2 adds DELETE for !stdout.contains("warning: --on-behalf-of is ignored") (~:2551); AC-4 NORMATIVE DELETE mandates for !stderr.contains("--field is ignored") (~:2671) and --on-behalf-of twin (~:2675) replacing advisory vacuity language; AC-6 NORMATIVE DELETE mandate for !stderr.contains("--field is ignored on the platform create path") (~:2799) replacing advisory vacuity language. F18-002 (MED): AC-4 gains third negative !stderr.contains("--field and --on-behalf-of are only valid with") — all three new-error substrings pinned absent on the clean path (mirrors three-negative set AC-6 asserts for JSM path). F18-003 (MED): AC-20 (NEW) test_jsm_create_with_on_behalf_of_and_request_type_does_not_fire_bc_3_8_013 [mode: --output json] added — JSM path non-mis-fire pin for BC-3.8.013 (mirrors AC-6 for BC-3.8.012); AC namespace note range AC-1..19→AC-1..20; BC-3.8.013 Trace updated (range + AC-20 reference). LOW-1: preamble "BCs 001..011 require --request-type" qualified — "BCs 002..011"; BC-3.8.001 governs absent-request-type platform-path case noted. LOW-2: skip (ratified markers confirmed present). BC count unchanged (140/111).
+
+### Changed
+- `.factory/specs/prd/bc-3-issue-write.md` (MODIFIED): F18-001: AC-2 OLD ASSERTIONS block gains (iv) !stdout.contains("warning: --on-behalf-of is ignored") (~:2551) DELETE mandate. AC-4 advisory vacuity language replaced with "OLD ASSERTIONS MUST BE REMOVED" block citing ~:2671 and ~:2675 tilde line references. AC-6 advisory vacuity language replaced with "OLD ASSERTION MUST BE REMOVED" block citing ~:2799. F18-002: AC-4 contract gains third negative !stderr.contains("--field and --on-behalf-of are only valid with"). F18-003: AC-20 body inserted after AC-19, before S-639-1 delivery obligations paragraph. AC namespace note updated AC-1..AC-19 → AC-1..AC-20. BC-3.8.013 Trace: range AC-1..19 → AC-1..20; AC-20 reference appended before `src/cli/issue/create.rs` cite. LOW-1: preamble ~:2752 changed from "BCs 001..011 require `--request-type` to be set" to "BCs 002..011 require `--request-type` to be set; BC-3.8.001 governs the absent-`--request-type` (platform-path) case — post-DEC-188 this includes the exit-64 pre-flight guard when `--field`/`--on-behalf-of` are also present (BC-3.8.012/013)". Frontmatter v1.3.116 trace entry added. Footer updated to v1.3.116.
+- `.factory/specs/prd/BC-INDEX.md` (MODIFIED): `last_updated` annotation updated to v1.3.116 with round-18 correction summary.
+- `.factory/spec-changelog.md` (MODIFIED): [1.3.116] entry added.
+
+### BC Count
+0 new BCs. Total unchanged: 657 cumulative (BC-INDEX), 140/111 individually-bodied in bc-3-issue-write.md.
+
+---
+
 ## [1.3.115] - 2026-07-26
 
 ### Type: PATCH

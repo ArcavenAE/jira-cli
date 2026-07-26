@@ -2287,3 +2287,5 @@ _Tagged: [process-gap] [prd-delta] [dispositions] [per-round-checklist] [cv-chan
 - Session ended at 2026-07-26T08:26:17Z (awaiting /session-review)
 - Session ended at 2026-07-26T09:03:49Z (awaiting /session-review)
 - Session ended at 2026-07-26T09:39:12Z (awaiting /session-review)
+- Session ended at 2026-07-26T10:20:25Z (awaiting /session-review)
+- Session ended at 2026-07-26T10:35:22Z (awaiting /session-review)
