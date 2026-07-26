@@ -7,6 +7,23 @@ project: "jr (jira-cli)"
 
 Track all spec version changes. Most recent version first.
 
+## [1.3.123] - 2026-07-26
+
+### Type: PATCH
+
+### Summary
+SOH-DX-1 DEC-188 round-25 adversary-pass corrections (#639): F25-01 (HIGH): AC-5 DELETE mandate extended — existing 3-field invocation at ~:2712-2717 (e.g. `--field A=1 --field A=2 --field B=3`) added to DELETE mandate (preserving it collapses the n=1 vs n>1 discriminator; must be replaced by two-invocation spec: (i) exactly one `--field`, (ii) exactly two); invocation (i) annotated "(MUST be exactly one `--field`)". F25-02+F25-03 (MED, taxonomy RULING): 3-tier negative-assertion labels encoded in the codified-rule sentence (DISCRIMINATING / FALSIFIABLE-COARSE / HYGIENE); AC-6 combined-string negative HYGIENE→FALSIFIABLE-COARSE; AC-13 single-flag absent pair labeled FALSIFIABLE-COARSE; AC-14 negative labeled DISCRIMINATING; AC-15 negative labeled HYGIENE; AC-16 combined-string negative labeled FALSIFIABLE-COARSE; AC-17 negative labeled DISCRIMINATING; AC-20 combined-string negative HYGIENE→FALSIFIABLE-COARSE. F25-04 (MED): BC-3.3.001 Behavior line corrected — stale `{"key": "FOO-123"}` replaced with accurate description (follow-up `GET /rest/api/3/issue/{key}` returns full issue object + appended `url` field; see `src/cli/issue/create.rs` ~:243-249 and BC-3.4.014 line 1122; applied in prior session burst). LOW-1: AC-2 and AC-7 KEPT clauses gain shorthand-vs-canonical note (shorthand names only the flag under test; canonical invocation per KEPT includes `--project`/`--type`/`--summary`). LOW-2: Preamble ~:2759 "BCs 002..011 require `--request-type`" → "BCs 002..011 and 014..017 (JSM-path contracts) require `--request-type`". BC count unchanged (140/111).
+
+### Changed
+- `.factory/specs/prd/bc-3-issue-write.md` (MODIFIED): AC-5 DELETE mandate + invocation (i) annotation. Taxonomy RULING applied to AC-6/13/14/15/16/17/20. BC-3.3.001 Behavior line corrected. AC-2/AC-7 KEPT shorthand notes. Preamble BCs range updated. Frontmatter v1.3.123 trace entry prepended. Footer updated to v1.3.123.
+- `.factory/specs/prd/BC-INDEX.md` (MODIFIED): `last_updated` annotation updated to v1.3.123; `index_version` v6.51→v6.52.
+- `.factory/spec-changelog.md` (MODIFIED): [1.3.123] entry added.
+
+### BC Count
+0 new BCs. Total unchanged: 657 cumulative (BC-INDEX), 140/111 individually-bodied in bc-3-issue-write.md.
+
+---
+
 ## [1.3.122] - 2026-07-26
 
 ### Type: PATCH
