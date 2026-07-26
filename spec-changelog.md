@@ -7,6 +7,23 @@ project: "jr (jira-cli)"
 
 Track all spec version changes. Most recent version first.
 
+## [1.3.129] - 2026-07-26
+
+### Type: PATCH
+
+### Summary
+SOH-DX-1 DEC-188 round-31 adversary-pass corrections (#639): F31-1 (HIGH): BC-3.3.001 H1 (~:497) and BC-INDEX row 274 both retitled — the stale `{"key": "FOO-123"}` output shape replaced with the accurate follow-up-GET description: "`issue create` POSTs `/rest/api/3/issue`; `--output json` returns created issue object + `url` (follow-up GET); `{key,url,fetch_error}` on fetch failure". Titles are now in sync (H1 authority rule). F31-2 (MED): AC-8 zero-HTTP proof strengthened — `server.received_requests().await.unwrap().is_empty()` added as the NORMATIVE assertion on each isolated `MockServer` (in-repo primitive: `tests/issue_create_json.rs` ~:411); this catches ALL HTTP calls regardless of mock registration, covering unregistered endpoint calls that would 404 silently and pass `expect(0)` alone. Mock (d) `GET /rest/api/3/field` relabeled from `DISCRIMINATING expect(0)` to `DEFENSE-IN-DEPTH` (superseded by `received_requests` as normative proof). Invocation (ii) "discriminating proof" reference updated. All (a)–(e) mocks now explicitly DEFENSE-IN-DEPTH. LOW: SSOT step 7 (~:2996) reworded from "NOT intercepted by the BC-3.8.012/013 guards" → "not reached on the guarded path (the handler returns at step 2)" — the old phrasing admitted a passive reading where both paths reach step 7 but one is intercepted mid-step. BC count unchanged (140/111).
+
+### Changed
+- `.factory/specs/prd/bc-3-issue-write.md` (MODIFIED): F31-1 H1 retitle. F31-2 AC-8 normative assertion + (d) relabel + invocation (ii) update. LOW SSOT step 7 reword. Frontmatter v1.3.129 trace entry prepended. Footer updated to v1.3.129.
+- `.factory/specs/prd/BC-INDEX.md` (MODIFIED): Row 274 title synced to new H1. `last_updated` annotation updated to v1.3.129; `index_version` v6.57→v6.58.
+- `.factory/spec-changelog.md` (MODIFIED): [1.3.129] entry added.
+
+### BC Count
+0 new BCs. Total unchanged: 657 cumulative (BC-INDEX), 140/111 individually-bodied in bc-3-issue-write.md.
+
+---
+
 ## [1.3.128] - 2026-07-26
 
 ### Type: PATCH
