@@ -7,6 +7,23 @@ project: "jr (jira-cli)"
 
 Track all spec version changes. Most recent version first.
 
+## [1.3.120] - 2026-07-26
+
+### Type: PATCH
+
+### Summary
+SOH-DX-1 DEC-188 round-22 adversary-pass corrections (#639): In-round residual: AC-20 RT example name corrected from "password-reset" to `"Password Reset"` — the fixture at `tests/issue_create_jsm.rs` ~:135 registers `"name": "Password Reset"` (space-separated); `partial_match` would not resolve the hyphenated form. MED-1 (KEPT exclusion-form adoption, kills recurring class): every KEPT clause in AC-1/2/3/5/7/18/19 rewritten to "KEPT: everything in the existing test body EXCEPT the items enumerated in the DELETE mandate above"; no independent line ranges. AC-1 gains two notes: guard is presence-only (`!field_pairs.is_empty()` at `src/cli/issue/create.rs` ~:81; existing `NAME=VALUE` form is fine); `--no-input` flag remains if present — deliberate (AC-11 is the TTY-path test; cross-ref). AC-2 gains no-line-range note: old ~:2537 reference collided with the DELETE target range. Obs: EC-3.8.012-2 adds whitespace-only variant — `--request-type "   "` (whitespace-only) routes identically to empty string via trim-guard at `src/cli/issue/jsm_create.rs` ~:145. BC count unchanged (140/111).
+
+### Changed
+- `.factory/specs/prd/bc-3-issue-write.md` (MODIFIED): In-round residual: AC-20 `(e.g. \`password-reset\` per ~:121)` → `(e.g. \`"Password Reset"\` per ~:121, tests/issue_create_jsm.rs ~:135)`. KEPT clauses in AC-1/2/3/5/7/18/19 rewritten to exclusion form. AC-1 notes added (presence-only guard; --no-input deliberate). AC-2 no-line-range note added. EC-3.8.012-2 gains whitespace-only variant with trim-guard cite. Frontmatter v1.3.120 trace entry added. Footer updated to v1.3.120.
+- `.factory/specs/prd/BC-INDEX.md` (MODIFIED): `last_updated` annotation updated to v1.3.120; BC-INDEX v6.48→v6.49.
+- `.factory/spec-changelog.md` (MODIFIED): [1.3.120] entry added.
+
+### BC Count
+0 new BCs. Total unchanged: 657 cumulative (BC-INDEX), 140/111 individually-bodied in bc-3-issue-write.md.
+
+---
+
 ## [1.3.119] - 2026-07-26
 
 ### Type: PATCH
