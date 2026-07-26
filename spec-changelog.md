@@ -7,6 +7,23 @@ project: "jr (jira-cli)"
 
 Track all spec version changes. Most recent version first.
 
+## [1.3.128] - 2026-07-26
+
+### Type: PATCH
+
+### Summary
+SOH-DX-1 DEC-188 round-30 adversary-pass corrections (#639): F30-1 (MED): AC-11 rationale corrected — dialoguer 0.12 `interact_text()` short-circuits (`ErrorKind::NotConnected`) on non-TTY stderr under `assert_cmd`; the project-key prompt label NEVER renders; `JR_STDIN_IS_TTY=1` only suppresses the auto-`--no-input` flip, it does NOT make dialoguer interactive. Three sub-fixes: (1) discriminator (2) rewritten — `!stderr.contains("Project key")` now pins absence of the "Project key is required" ERROR (`create.rs` ~:102-108, ok_or_else after `prompt_input` yields `None`) as guard-before-project-RESOLUTION proof; (2) "fires BEFORE the interactive prompt at step 3" claim deleted from discriminators intro and HYGIENE note; (3) dialoguer "renders prompts to stderr" note replaced with an explicit Non-goal + AC-11 purpose statement: the true dialoguer-interactive branch is untestable without a PTY harness (deliberate non-goal for S-639-1); AC-11's residual unique value is exercising the `JR_STDIN_IS_TTY=1` no-auto-flip path. Obs (folded): AC-12 gains a one-line Coupling note — "`count() == 2` assumes no OTHER flag's help text contains `"requires --request-type"`; revisit if help text grows." BC count unchanged (140/111).
+
+### Changed
+- `.factory/specs/prd/bc-3-issue-write.md` (MODIFIED): F30-1 AC-11 five sub-edits. Obs AC-12 coupling note. Frontmatter v1.3.128 trace entry prepended. Footer updated to v1.3.128.
+- `.factory/specs/prd/BC-INDEX.md` (MODIFIED): `last_updated` annotation updated to v1.3.128; `index_version` v6.56→v6.57.
+- `.factory/spec-changelog.md` (MODIFIED): [1.3.128] entry added.
+
+### BC Count
+0 new BCs. Total unchanged: 657 cumulative (BC-INDEX), 140/111 individually-bodied in bc-3-issue-write.md.
+
+---
+
 ## [1.3.127] - 2026-07-26
 
 ### Type: PATCH
