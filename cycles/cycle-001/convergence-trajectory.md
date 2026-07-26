@@ -2588,3 +2588,14 @@ Fifth F2 adversary pass (fresh context). HIGH findings: (1) AC-8 non-discriminat
 Sixth F2 adversary pass (fresh context). HIGH findings: (1) AC-6 vacuity — same class as AC-4 (fixed in round 4); vacuous test missing would-otherwise-proceed setup; fix round 6: AC-6 re-specified with concrete invocation. MEDIUM findings: ADR-0014 second byte-for-byte site at :60 (dual-cite gap — first site :56 fixed in round 4 but second site :60 missed); AC-5 folding-permission ambiguity removed (wording sharpened to eliminate permissive interpretation); spec-changelog under-enumeration completed (missing entries for fix rounds 5 and 6 backfilled). DEC-189 STRICT criterion codified by human ruling: 3 consecutive CLEAN required; any delta-attributable finding resets the window. Piecewise consistency: CLEAN after fix round 6. All 3 guard scripts green.
 
 **Trajectory so far:** p78(8)→p79(8)→p80(8)→p81(7)→p82(6)→p83(4). Delta: 0/0/-1/-1/-2. Finding class narrowing confirmed. NEXT: pass-7 (p84).
+
+---
+
+### Pass p84 (2026-07-25)
+
+**Findings:** 3 (1H/2M) + 1 [process-gap]
+**Convergence counter:** 0 of 3 (STRICT) — grind active; PIECEWISE CLEAN after fix round 7
+
+Seventh F2 adversary pass (fresh context). HIGH findings: (1) F7-1 CMDB call misplaced in ordering block — spec described the CMDB lookup as part of the Platform-Path Guard Ordering block, but in the actual code (create.rs:239) the call is post-POST/JSON-only context; ordering block corrected in spec, AC-8 expect(0) set honest. MEDIUM findings: (2) F7-2 EC-3.8.012-8 clap exit-2 precedence added (flags-before-subcommand class — clap exits 2 before jr pre-flight code runs; missing from the EC list); (3) F7-3 AC-10/Test Notes updated to parse-stderr-as-JSON per tests/json_error_shape.rs convention (prior form was looser string-match). Process-gap: SOH-DX-1-PG-004 — no CI pin on help-text semantics for flags with exit-code contracts (help text can drift without CI catching it; ledgered 4th process-gap). Fix round 7 dispatched and applied: piecewise CLEAN, 3 guard scripts green.
+
+**Trajectory so far:** p78(8)→p79(8)→p80(8)→p81(7)→p82(6)→p83(4)→p84(3). Delta: 0/0/-1/-1/-2/-1. Finding class narrowing confirmed. NEXT: pass-8 (p85).
