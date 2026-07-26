@@ -7,6 +7,26 @@ project: "jr (jira-cli)"
 
 Track all spec version changes. Most recent version first.
 
+## [1.3.109] - 2026-07-26
+
+### Type: PATCH
+
+### Summary
+
+SOH-DX-1 DEC-188 round-11 adversary-pass corrections (#639): combined error string parenthetical trimmed (F11-01); BC-3.8.013 prose hedged (F11-01); AC-12 dual-assertion re-spec (F11-02); delivery item (d) FIRST-LINE-ONLY (F11-03); vacuity rationale at Removal postcondition (F11-04); AC-17/18/19 added covering EC-3.8.012-5/7/9 (F11-05); BC-INDEX BC-3.4.014 DEC-188 qualifier (F11-06); spec-changelog [1.3.107] Type MINOR→PATCH (process-gap).
+
+### Changed
+
+- `.factory/specs/prd/bc-3-issue-write.md` (MODIFIED): Combined error string parenthetical `(then use \`jr issue edit --field\` for custom fields; --on-behalf-of has no platform equivalent)` removed from fenced block — same citation-discipline class as round-10 BC-3.8.013 single-flag fix (F11-01). BC-3.8.013 asymmetry-rationale prose hedged — "reporter identity must be set at JSM request creation time" replaced with "may be settable after creation via `jr issue edit --field` depending on project permissions (Modify Reporter permission)" (F11-01). AC-12 re-specified to require two per-flag scoped assertions (find `--field` line + find `--on-behalf-of` line, each must contain `"requires --request-type"`); single `contains()` anti-pattern documented (F11-02). Delivery item (d) FIRST-LINE-ONLY replacement clarification added; subsequent doc lines PRESERVED; clap-wrapping note (F11-03). Removal postcondition extended with vacuity-rationale asymmetry sentence: AC-1/2/3/5/7 are regression pins (guard absent on paths that used to fire the warning); AC-4 differs (pins new error substrings instead) (F11-04). AC-17 `test_platform_create_markdown_with_field_exits_64_bc_3_8_012_not_markdown_error` (EC-3.8.012-5); AC-18 `test_platform_create_description_stdin_with_field_exits_64_stdin_not_consumed` (EC-3.8.012-7); AC-19 `test_platform_create_field_empty_value_exits_64_bc_3_8_012` (EC-3.8.012-9) added (F11-05). AC namespace note range updated AC-1..16→AC-1..19; BC-3.8.013 Trace pointer updated to AC-1..19. BC count unchanged (140/111).
+- `.factory/specs/prd/BC-INDEX.md` (MODIFIED): BC-3.4.014 row Summary extended with DEC-188 qualifier matching body text: "Echo fires only when neither `--field` nor `--on-behalf-of` is present without `--request-type`; if either JSM-only flag is present without `--request-type`, exit 64 fires per BC-3.8.012/013 before field echo is reached" (F11-06). `last_updated` updated to v1.3.109.
+- `.factory/spec-changelog.md` (MODIFIED): `[1.3.107]` Type changed MINOR → PATCH; product-breaking-change note ("ships v0.7.0-dev.1") moved into Summary (process-gap fix per dominant patch-component-bump convention).
+
+### BC Count
+
+0 new BCs. Total unchanged: 657 cumulative (BC-INDEX), 140/111 individually-bodied in bc-3-issue-write.md.
+
+---
+
 ## [1.3.108] - 2026-07-26
 
 ### Type: PATCH
@@ -27,11 +47,11 @@ SOH-DX-1 DEC-188 round-10 spec-text corrections (#639): BC-3.8.013 error string 
 
 ## [1.3.107] - 2026-07-25
 
-### Type: MINOR
+### Type: PATCH
 
 ### Summary
 
-SOH-DX-1 DEC-188 amendment (#639): BC-3.8.012 and BC-3.8.013 behavior break — warn-and-proceed (exit 0) superseded by pre-flight `JrError::UserError` exit 64 when `--field`/`--on-behalf-of` are present without `--request-type`; AC-1..16 specified (AC-1..7 inverted/re-specified; AC-8..16 new test deliverables); EC-3.8.012-1..9 + EC-3.8.013-1 added; Platform-Path Guard Ordering SSOT block added; section 3.8 retitled from "Inverse Warnings" to "Pre-flight Guards"; BC-3.8.001/BC-3.3.001 qualified with DEC-188 caveat; delivery phasing corrected (F4 obligations land same PR as code change).
+SOH-DX-1 DEC-188 amendment (#639): BC-3.8.012 and BC-3.8.013 behavior break — warn-and-proceed (exit 0) superseded by pre-flight `JrError::UserError` exit 64 when `--field`/`--on-behalf-of` are present without `--request-type`; product-breaking change; ships v0.7.0-dev.1. AC-1..16 specified (AC-1..7 inverted/re-specified; AC-8..16 new test deliverables); EC-3.8.012-1..9 + EC-3.8.013-1 added; Platform-Path Guard Ordering SSOT block added; section 3.8 retitled from "Inverse Warnings" to "Pre-flight Guards"; BC-3.8.001/BC-3.3.001 qualified with DEC-188 caveat; delivery phasing corrected (F4 obligations land same PR as code change).
 
 ### Changed
 

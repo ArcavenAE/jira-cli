@@ -6313,3 +6313,55 @@ Displaced to make room for SOH-DX-1 F2 adversary round 10 step row per keep-4 ru
 | Step | Agent | Status | Output |
 |------|-------|--------|--------|
 | **pass-6 adversary — SOH-DX-1 F2 round 6 complete (2026-07-25): 4 findings (1H/3M); HIGH: AC-6 vacuity (same class as AC-4 — fixed round 4; vacuous test missing would-otherwise-proceed setup); MEDs: ADR-0014 second byte-for-byte site at :60 (dual-cite gap; first site :56 fixed round 4, second site missed); AC-5 folding-permission ambiguity removed (wording sharpened); spec-changelog under-enumeration completed (missing entries for fix rounds 5 and 6 backfilled); DEC-189 STRICT criterion codified; piecewise CLEAN. ZERO consecutive CLEAN (need 3 STRICT per DEC-189). NEXT: pass-7.** | adversary (×6) + product-owner (×6) + consistency-validator (×6) + state-manager | IN PROGRESS — F2 adversary grind | spec v1.3.107; BC-INDEX v6.45; STORY-INDEX v1.5.41; convergence-trajectory p83 appended; burst-log.md appended; factory-artifacts committed. |
+
+---
+
+## SOH-DX-1 F2 ADVERSARY GRIND — ROUND 11 BURST (2026-07-26)
+
+**Burst type:** F2 adversary grind + fix round 11 checkpoint
+**Date:** 2026-07-26
+**Agents:** adversary (×11) + product-owner (×11) + consistency-validator (×11) + state-manager
+
+### Summary
+
+Pass-11 adversary (p88, fresh context): 6 findings (0C/2H/4M/0L) + 1 [process-gap]. Count regression 5→6 (2 HIGHs return). Piecewise CLEAN after fix round 11.
+
+**Pass-11 findings (6: 2H/4M) + 1 [process-gap]:**
+- HIGH: reporter-claim siblings not trimmed/hedged per citation discipline (unvalidated sibling claims adjacent to validated citations)
+- HIGH: vacuity rationale asymmetry — stated for some ACs but not others in same section; obscures spec intent
+- MED: AC-12 dual per-flag assertions — single combined assertion accepted conjunctive false-green; rewritten as dual per-flag form
+- MED: item-(d) first-line-only replacement — change applied to first occurrence only; sibling occurrences retained old text
+- MED: AC-17..19 coverage gaps — EC-5/-7/-9 lacked corresponding ACs; surface incomplete at AC-1..16, required AC-1..19
+- MED: BC-3.4.014 index qualifier missing — BC-INDEX entry lacked qualifier distinguishing it from adjacent entries
+- [process-gap] SOH-DX-1-PG-005: no changelog Type↔version-component guard (5th process-gap)
+
+**Fix round 11 applied:**
+- Reporter-claim siblings trimmed/hedged (citation discipline)
+- AC-12 rewritten as dual per-flag assertions
+- Item-(d) first-line-only replacement corrected (all occurrences updated)
+- Vacuity rationale asymmetry stated consistently across ACs
+- AC-17..19 added (EC-5/-7/-9 coverage; surface now AC-1..19)
+- BC-3.4.014 index qualifier added
+- Changelog [1.3.107] Type field corrected MINOR→PATCH
+- Spec bumped v1.3.109 + changelog [1.3.109] entry added
+- Piecewise CLEAN after version bump; 3 guard scripts green
+
+**Trajectory:** p78(8)→p79(8)→p80(8)→p81(7)→p82(6)→p83(4)→p84(3)→p85(7)→p86(6)→p87(5)→p88(6). Delta: 0/0/-1/-1/-2/-1/+4/-1/-1/+1.
+
+**Convergence counter:** 0 of 3 STRICT (need 3 consecutive CLEAN per DEC-189). trajectory-tail →7→6→5→6. NEXT: pass-12 (p89).
+
+### Archived Phase Progress row (displaced by keep-5 rule; new pass-11-adversary row added)
+
+Displaced to make room for SOH-DX-1 F2 adversary round 11 Phase Progress row per keep-5 rule (removed oldest: pass-6 adversary).
+
+| Phase | Status | Completed | Gate | Notes | Finding Progression |
+|-------|--------|-----------|------|-------|---------------------|
+| **pass-6 adversary — SOH-DX-1 F2 fix burst round 6 complete (2026-07-25): 4 findings (1H/3M); HIGH: AC-6 vacuity (same class as AC-4, vacuous test — would-otherwise-proceed setup missing); MEDs: ADR-0014 second byte-for-byte cite :60 (dual-cite gap), AC-5 folding-permission ambiguity removed, spec-changelog under-enumeration completed; DEC-189 STRICT criterion codified (human ruling: 3 consecutive CLEAN; any delta-attributable finding resets window); piecewise CLEAN after round 6. ZERO consecutive CLEAN (need 3 STRICT per DEC-189). NEXT: pass-7.** | F2 adversary grind in progress | 2026-07-25 | ADVERSARY GRIND — convergence + human gate PENDING. | spec v1.3.107; BC-INDEX v6.45; STORY-INDEX v1.5.41. | →8→7→6→4 |
+
+### Archived Current Phase Steps row (displaced by keep-4 rule; new pass-11-adversary step row added)
+
+Displaced to make room for SOH-DX-1 F2 adversary round 11 step row per keep-4 rule (removed oldest: pass-7 adversary).
+
+| Step | Agent | Status | Output |
+|------|-------|--------|--------|
+| **pass-7 adversary — SOH-DX-1 F2 round 7 complete (2026-07-25): 3 findings (1H/2M) + 1 [process-gap]; HIGH: F7-1 CMDB call misplaced in ordering block (post-POST/JSON-only context; create.rs:239 — ordering corrected; AC-8 expect(0) set honest); MEDs: F7-2 EC-3.8.012-8 clap exit-2 precedence added (flags-before-subcommand class); F7-3 AC-10/Test Notes → parse-stderr-as-JSON per tests/json_error_shape.rs convention; PG-004: no CI pin on help-text semantics for flags with exit-code contracts (ledgered SOH-DX-1-PG-004); fix-7 piecewise CLEAN (3 guard scripts green). ZERO consecutive CLEAN (need 3 STRICT per DEC-189). NEXT: pass-8.** | adversary (×7) + product-owner (×7) + consistency-validator (×7) + state-manager | IN PROGRESS — F2 adversary grind | spec v1.3.107; BC-INDEX v6.45; STORY-INDEX v1.5.41; convergence-trajectory p84 appended; burst-log.md appended; factory-artifacts committed. |
