@@ -7,6 +7,23 @@ project: "jr (jira-cli)"
 
 Track all spec version changes. Most recent version first.
 
+## [1.3.127] - 2026-07-26
+
+### Type: PATCH
+
+### Summary
+SOH-DX-1 DEC-188 round-29 adversary-pass corrections (#639): F-1 (HIGH): AC-20 and AC-21 both cited BC-3.8.007 for the `raiseOnBehalfOf` passthrough — wrong BC (`--priority`/`--label`). Corrected to BC-3.8.009 (`--on-behalf-of` → `raiseOnBehalfOf` passthrough). F-2 (MED): AC-9's cwd precondition (MUST use `.current_dir(<per-test TempDir>)` — `find_project_config` ~:362 walks ancestor directories; without an isolated cwd an ancestor `.jr.toml` with a `project` key silently supplies a default and degrades discriminating power) propagated to AC-11 and AC-17 — both use `!stderr.contains("Project key")` as a named discriminator on `--project`-less invocations. Obs-1: BC-3.8.013 Behavior rewords `(at most one occurrence on the command line)` → `(repeats accepted by clap, last-wins; contract keys on is_some())` — clap's default Set action accepts repeated flags with last-wins semantics; the contract keys only on presence. Obs-2: BC-3.8.013 Asymmetry rationale gains an Error-string completeness note making explicit that the create-then-edit remedy affordance is deliberately omitted from the error string — it is factually conditional on the Modify Reporter project permission; including it unconditionally would be misleading; the two unconditional remedies (add `--request-type` / drop `--on-behalf-of`) are inline in the string and sufficient. BC count unchanged (140/111).
+
+### Changed
+- `.factory/specs/prd/bc-3-issue-write.md` (MODIFIED): F-1 BC-3.8.007→BC-3.8.009 in AC-20+AC-21. F-2 cwd precondition propagated to AC-11+AC-17. Obs-1 Option<String> reword. Obs-2 error-string completeness note. Frontmatter v1.3.127 trace entry prepended. Footer updated to v1.3.127.
+- `.factory/specs/prd/BC-INDEX.md` (MODIFIED): `last_updated` annotation updated to v1.3.127; `index_version` v6.55→v6.56.
+- `.factory/spec-changelog.md` (MODIFIED): [1.3.127] entry added.
+
+### BC Count
+0 new BCs. Total unchanged: 657 cumulative (BC-INDEX), 140/111 individually-bodied in bc-3-issue-write.md.
+
+---
+
 ## [1.3.126] - 2026-07-26
 
 ### Type: PATCH
