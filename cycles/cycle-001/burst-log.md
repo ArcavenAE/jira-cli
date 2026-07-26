@@ -6622,3 +6622,33 @@ Displaced to make room for SOH-DX-1 F2 adversary round 26 step row per keep-4 ru
 | Step | Agent | Status | Output |
 |------|-------|--------|--------|
 | **pass-22 adversary — SOH-DX-1 F2 round 22 complete (2026-07-26): 2 findings (0H/2M) + 1 LOW obs CONVERGING (4→2); ZERO HIGHs; novelty MEDIUM-LOW; adversary: 'contract layer appears converged'; ALL KEPT clauses exclusion-form (class-kill); AC-1 presence-only/--no-input notes; EC-2 whitespace variant; spec v1.3.120 [1.3.120]; piecewise CLEAN; 3 guards green. ZERO consecutive CLEAN (need 3 STRICT per DEC-189). NEXT: pass-23.** | adversary (×22) + product-owner (×22) + consistency-validator (×22) + state-manager | IN PROGRESS — F2 adversary grind | spec v1.3.120; BC-INDEX v6.45; STORY-INDEX v1.5.41; convergence-trajectory p99 appended; factory-artifacts committed. |
+
+---
+
+## SOH-DX-1 F2 Adversary Round 32 Burst (2026-07-26)
+
+**Burst type:** F2 adversary fix round 32 (pass-32 / p109)
+
+**Summary:** PLATEAU (3→3); ZERO HIGHs; novelty LOW-MEDIUM. MEDs: EC-3.8.012-10 project-type-agnostic guard (ADR-rationale reversal pinned); DISCRIMINATING labels on json-mode stdout predicates AC-2/7/10; AC-16 regression pin + 013 mandate extension. LOW obs (not counted): obligation (e) jsm_create comment fallout EC-5 cite corrected in-round; Behavior step-3 enumeration. Spec v1.3.130 + [1.3.130]. BC-INDEX v6.59. Piecewise: 1 residual (EC mis-cite) fixed in-round then CLEAN. 3 guards green.
+
+**Files touched:** .factory/specs/prd/bc-3-issue-write.md, .factory/specs/prd/BC-INDEX.md (v6.58→v6.59), .factory/spec-changelog.md ([1.3.130] entry)
+
+**Trajectory:** →p109(3). trajectory-tail →2→1→3→3.
+
+**Convergence counter:** 0 of 3 STRICT. NEXT: pass-33 (p110).
+
+### Archived Phase Progress row (displaced by keep-5 rule; new pass-32-adversary row added)
+
+Displaced to make room for SOH-DX-1 F2 adversary round 32 Phase Progress row per keep-5 rule (removed oldest: pass-27 adversary).
+
+| Phase | Status | Completed | Gate | Notes | Finding Progression |
+|-------|--------|-----------|------|-------|---------------------|
+| **pass-27 adversary — SOH-DX-1 F2 fix burst round 27 complete (2026-07-26): 4 findings (0C/1H/2M/1L) + 1 [process-gap] CONVERGING (6→4); HIGH: AC-17 relabeled HYGIENE (foreign-handler string unreachable) + real discriminating pair added; MEDs: AC-8 ResponseTemplate compile note; helper-location disambiguation; LOW: S-383 status coherence (completed + contract_superseded_by); 10th process-gap ledgered: foreign-handler-negative heuristic (taxonomy enforced by prose only); spec v1.3.125 + [1.3.125]; BC-INDEX v6.54; piecewise CLEAN; 3 guards green. ZERO consecutive CLEAN (need 3 STRICT per DEC-189). NEXT: pass-28.** | F2 adversary grind in progress | 2026-07-26 | ADVERSARY GRIND — convergence + human gate PENDING. | spec v1.3.125; BC-INDEX v6.54; STORY-INDEX v1.5.41. | →8→8→8→7→6→4→3→7→6→5→6→6→4→2→5→5→4→3→3→5→4→2→3→3→6→6→4 |
+
+### Archived Current Phase Steps row (displaced by keep-4 rule; new pass-32-adversary step row added)
+
+Displaced to make room for SOH-DX-1 F2 adversary round 32 step row per keep-4 rule (removed oldest: pass-28 adversary CPS).
+
+| Step | Agent | Status | Output |
+|------|-------|--------|--------|
+| **pass-28 adversary — SOH-DX-1 F2 round 28 complete (2026-07-26): 5 findings (0H/2M/3L) + 1 obs REGRESSION (4→5); ZERO HIGHs; novelty LOW; adversary: "spec has effectively converged"; MEDs: MUST-NOT-clap-requires both BCs (F-2 important realization guard); renderer-arm cite; LOWs: Rust-literal pin note; AC-5 rationale corrected; SSOT anchor; AC-4 follow-up-GET note; spec v1.3.126 [1.3.126]; piecewise CLEAN; 3 guards green. ZERO consecutive CLEAN (need 3 STRICT per DEC-189). NEXT: pass-29.** | adversary (×28) + product-owner (×28) + consistency-validator (×28) + state-manager | IN PROGRESS — F2 adversary grind | spec v1.3.126; BC-INDEX v6.55; STORY-INDEX v1.5.41; convergence-trajectory p105 appended; burst-log.md appended; factory-artifacts committed. |

@@ -7,6 +7,23 @@ project: "jr (jira-cli)"
 
 Track all spec version changes. Most recent version first.
 
+## [1.3.130] - 2026-07-26
+
+### Type: PATCH
+
+### Summary
+SOH-DX-1 DEC-188 round-32 adversary-pass corrections (#639): F32-1 (MED): EC-3.8.012-10 added — the guard is PROJECT-TYPE-AGNOSTIC: `--field`/`--on-behalf-of` without `--request-type` exits 64 even when `--project` names a JSM project; guard fires at step 2 before project-type resolution and `require_service_desk`; MUST NOT be gated on project type; deliberately reverses ADR-0014 §42-45 per deliverable (a); BC-3.8.011 direction contrast noted (no conflict — opposite direction, later step). F32-2 (MED): `stdout.trim().is_empty()` labeled DISCRIMINATING in AC-2, AC-7, and AC-10 — in `--output json` mode this is not hygiene: `create.rs` ~:249/:265 prints the created-issue JSON to stdout on the success path; guard-absent would populate stdout; the assertion is falsifiable. F32-3 (MED): AC-16 gains REGRESSION PIN `!stderr.contains("is ignored on the platform create path")` — `--on-behalf-of ""` previously hit the `is_some()` guard at `create.rs` ~:86 and emitted the old warn string; BC-3.8.013 Removal postcondition mandate extended from "AC-2" to "AC-2 and AC-16" with `is_some()` rationale note. O-1 (LOW): Delivery obligation (e) added — `src/cli/issue/jsm_create.rs` ~:171-172 comment falsely claims platform-path `--markdown` guard parity; correct at F4 (no such platform guard; EC-3.8.012-10 authoritative). O-2 (LOW): BC-3.8.012 and BC-3.8.013 Behavior both updated — "BEFORE interactive prompts" → "BEFORE project-key resolution, BEFORE interactive prompts" (two occurrences via replace_all). BC count unchanged (140/111).
+
+### Changed
+- `.factory/specs/prd/bc-3-issue-write.md` (MODIFIED): EC-3.8.012-10. AC-2/7/10 DISCRIMINATING label. AC-16 REGRESSION PIN. BC-3.8.013 Removal postcondition extended. O-1 delivery obligation (e). O-2 both Behavior blocks. Frontmatter v1.3.130 trace entry. Footer updated to v1.3.130.
+- `.factory/specs/prd/BC-INDEX.md` (MODIFIED): `last_updated` → v1.3.130; `index_version` v6.58→v6.59.
+- `.factory/spec-changelog.md` (MODIFIED): [1.3.130] entry added.
+
+### BC Count
+0 new BCs. Total unchanged: 657 cumulative (BC-INDEX), 140/111 individually-bodied in bc-3-issue-write.md.
+
+---
+
 ## [1.3.129] - 2026-07-26
 
 ### Type: PATCH
