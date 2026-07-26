@@ -7,6 +7,23 @@ project: "jr (jira-cli)"
 
 Track all spec version changes. Most recent version first.
 
+## [1.3.119] - 2026-07-26
+
+### Type: PATCH
+
+### Summary
+SOH-DX-1 DEC-188 round-21 adversary-pass corrections (#639): F21-01 (HIGH): AC-20/AC-21 invocations updated to include `--project HELP --summary "test"` — JSM path exits 64 on project-key absence at `jsm_create.rs` ~:124-140 and missing summary at ~:245-257, making exit 0 impossible without them; matches AC-14 precondition pattern. F21-02 (MED): "mount_jsm_create_stubs" (non-existent function) replaced in AC-20+AC-21 with real trio: `mount_project_meta_help` (~:24), `mount_service_desk_list` (~:52), `mount_request_types_password_reset` (~:121), plus request-creation POST stub. F21-03 (MED): AC-5 gains DISCRIMINATING NEGATIVE `!stderr.contains("Created issue")` on EACH invocation (FALSIFIABLE — complete invocations with `mount_platform_create_stubs` make success path reachable). F21-04 (MED): AC-2 and AC-7 each gain KEPT parenthetical (existing `--project/--type/--summary` args + `mount_platform_create_stubs` preserved; only enumerated old assertions removed). LOW-1: SSOT block gains Completeness caveat (type/summary fallbacks ~:119/~:130 and `--markdown`→ADF BC-7.2.012 guard ~:163-169 occur in steps 4–5 and are intentionally elided; EC-3.8.012-5 cross-ref). LOW-2: AC-8 gains Precondition note (`write_minimal_config` sets no `team_field_id`; `helpers.rs::resolve_team_field` ~:43-47 explains why `GET /rest/api/3/field` is first reachable HTTP guard-absent). LOW-3: no change (STORY-INDEX S-383 `completed + [CONTRACT SUPERSEDED]` is deliberate; status preserves delivery history). BC count unchanged (140/111).
+
+### Changed
+- `.factory/specs/prd/bc-3-issue-write.md` (MODIFIED): AC-20 invocation updated to include `--project HELP --summary "test"`; mock setup replaced with real trio (`mount_project_meta_help`, `mount_service_desk_list`, `mount_request_types_password_reset` + POST stub). AC-21 same invocation and mock updates. AC-5 DISCRIMINATING NEGATIVE `!stderr.contains("Created issue")` added on EACH invocation. AC-2 KEPT parenthetical added after OLD ASSERTIONS block. AC-7 KEPT parenthetical added after OLD ASSERTIONS block. SSOT block Completeness caveat paragraph added after guard-ordering-consequence paragraph. AC-8 Precondition note added before `--to me` rationale sentence. Frontmatter v1.3.119 trace entry added. Footer updated to v1.3.119.
+- `.factory/specs/prd/BC-INDEX.md` (MODIFIED): `last_updated` annotation updated to v1.3.119; BC-INDEX v6.47→v6.48.
+- `.factory/spec-changelog.md` (MODIFIED): [1.3.119] entry added.
+
+### BC Count
+0 new BCs. Total unchanged: 657 cumulative (BC-INDEX), 140/111 individually-bodied in bc-3-issue-write.md.
+
+---
+
 ## [1.3.118] - 2026-07-26
 
 ### Type: PATCH
