@@ -9,6 +9,23 @@ Track all spec version changes. Most recent version first.
 
 > **Type legend:** Type classifies the SPEC document delta: MINOR = new BCs/VPs/sections; PATCH = amendments to existing bodies/ACs/ECs. Product-semver impact is recorded in the Summary line, independent of Type.
 
+## [1.3.133] - 2026-07-26
+
+### Type: PATCH
+
+### Summary
+SOH-DX-1 DEC-188 round-35 adversary-pass corrections (#639): F35-1 (MED): fifth ADR-0014 site at ~:159-160 ("No other `jr issue create` invocation is affected.") added; "ALL FOUR" → "ALL FIVE" in guard-ordering mandate. F35-2 (LOW): AC namespace note intra-doc self-cites updated (~:2980→§"Platform-Path Guard Ordering"; ~:3024→§"Verbatim error string (single-flag case)"). F35-3 (LOW): both Test Note promotion directive sites update "~11 pub fn fixtures" → "~29 pub fn fixtures (plus mock_server.rs/yaml.rs siblings)". F35-4 (LOW): REGRESSION PIN added to AC-13 (combined-flag invocation `--on-behalf-of "" --field a=b` previously emitted both old warn strings from old `!field_pairs.is_empty()` at ~:81 and `is_some()` at ~:86) and AC-19 (empty-value `--field a=` previously triggered old `!is_empty()` guard at ~:81); Removal postcondition mandate list extended from AC-1/2/3/5/7 to AC-1/2/3/5/7/13/19. BC count unchanged (140/111).
+
+### Changed
+- `.factory/specs/prd/bc-3-issue-write.md` (MODIFIED): Fifth ADR-0014 site added. Intra-doc self-cites updated to section anchors. Both Test Note promotion directive sites updated. REGRESSION PINs added to AC-13 and AC-19. Removal postcondition mandate list extended. Frontmatter v1.3.133 trace entry. Footer updated to v1.3.133.
+- `.factory/specs/prd/BC-INDEX.md` (MODIFIED): `last_updated` → v1.3.133; `index_version` v6.61→v6.62.
+- `.factory/spec-changelog.md` (MODIFIED): [1.3.133] entry added.
+
+### BC Count
+0 new BCs. Total unchanged: 657 cumulative (BC-INDEX), 140/111 individually-bodied in bc-3-issue-write.md.
+
+---
+
 ## [1.3.132] - 2026-07-26
 
 ### Type: PATCH
