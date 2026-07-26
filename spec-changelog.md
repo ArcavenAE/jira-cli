@@ -7,6 +7,25 @@ project: "jr (jira-cli)"
 
 Track all spec version changes. Most recent version first.
 
+## [1.3.110] - 2026-07-26
+
+### Type: PATCH
+
+### Summary
+
+SOH-DX-1 DEC-188 round-12 adversary-pass corrections (#639): output-mode annotation per AC (F12-05); SSOT step 4a (`--description-stdin` blocking read) added between step 4 and step 5 (F12-06); helper-promotion directive extended with stale doc-comment fix note (LOW-1); BC-INDEX section 3.8 header "superseded"→"amended" (LOW-2).
+
+### Changed
+
+- `.factory/specs/prd/bc-3-issue-write.md` (MODIFIED): AC-1, AC-2, AC-5, AC-7 annotated `[mode: --output json]` (F12-05); AC-3 annotated `[mode: human]` with `stdout MUST be empty (stdout.is_empty())` assertion added to assertion list (F12-05); AC-19 annotated `[mode: human]` with `stdout MUST be empty (stdout.is_empty())` assertion added (F12-05). SSOT Platform-Path Guard Ordering block: step 4a inserted between step 4 and step 5 — `--description-stdin` blocking read via `tokio::task::spawn_blocking` (`src/cli/issue/create.rs::handle_create` ~:132-145); EC-3.8.012-7 guard fires at step 2 so step 4a is unreachable on guarded path (F12-06). Helper-promotion directive in both BC-3.8.012 and BC-3.8.013 Test Notes extended: during promotion of `assert_json_error_envelope` to `tests/common/fixtures.rs`, fix stale doc-comment that claims `{"error":…,"code":…}` key order — correct order is `{"code":…,"error":…}` (BTreeMap alphabetical) (LOW-1). Frontmatter version-log v1.3.110 added. BC count unchanged (140/111).
+- `.factory/specs/prd/BC-INDEX.md` (MODIFIED): Section 3.8 header trailing annotation "superseded"→"amended" to match body `[AMENDED]` markers (LOW-2). `last_updated` updated to v1.3.110.
+
+### BC Count
+
+0 new BCs. Total unchanged: 657 cumulative (BC-INDEX), 140/111 individually-bodied in bc-3-issue-write.md.
+
+---
+
 ## [1.3.109] - 2026-07-26
 
 ### Type: PATCH
