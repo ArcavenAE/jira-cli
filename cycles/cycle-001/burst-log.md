@@ -6228,3 +6228,39 @@ Displaced to make room for SOH-DX-1 F2 adversary round 5 step row per keep-4 rul
 | Step | Agent | Status | Output |
 |------|-------|--------|--------|
 | **DEPENDABOT-MERGES-COMPLETE (2026-07-25): all 8 soak-complete PRs MERGED to develop by human (DEC-173): #612 @ 0ef90609 (harden-runner 2.20.0), #633 @ 79d78f9d (cargo-deny-action 2.1.1), #634 @ 5a412975 (action-gh-release 3.0.2), #641 @ 60e6c9bb (codeql-action 4.37.1), #599 @ 2006c0d8 (clap_complete 4.6.7), #632 @ 1f6241e7 (open 5.4.0), #636 @ aeae722f (sha1 0.11.0), #637 @ a15ffe24 (toml 1.1.3). ADDENDUM: #598 (rand 0.10.1→0.10.2) MERGED @ e72b0166 by human after dependabot auto-rebase + fresh CI green — queue fully drained 9/9.** | pr-manager + human + state-manager | COMPLETE — DEPENDABOT-QUEUE-DRAINED 9/9 | develop @ e72b0166; STATE.md updated; factory-artifacts committed. |
+
+---
+
+## SOH-DX-1 F2 Adversary Round 6 Checkpoint Burst (2026-07-25)
+
+**Triggered by:** Orchestrator F2 adversary grind checkpoint after round 6 (pass-6 complete, fix round 6 applied, piecewise CLEAN). DEC-189 STRICT criterion codified. STATE.md updated; factory-artifacts committed.
+
+**Pass-6 findings (4: 1H/3M):**
+- HIGH: AC-6 vacuity (same class as AC-4 — fixed round 4; vacuous test missing would-otherwise-proceed setup)
+- MED: ADR-0014 second byte-for-byte site at :60 (dual-cite gap; first site :56 fixed round 4, second site missed)
+- MED: AC-5 folding-permission ambiguity removed (wording sharpened to eliminate permissive interpretation)
+- MED: spec-changelog under-enumeration completed (missing entries for fix rounds 5 and 6 backfilled)
+
+**DEC-189 codified:** Human STRICT ruling — 3 consecutive CLEAN adversary passes required; any delta-attributable finding resets the window. Session continues grinding to convergence or context exhaustion (checkpoint after every round).
+
+**Fix round 6 applied:** AC-6 re-specified; ADR-0014 :60 site fixed; AC-5 wording sharpened; spec-changelog entries backfilled. Piecewise CLEAN.
+
+**Trajectory:** p78(8)→p79(8)→p80(8)→p81(7)→p82(6)→p83(4). Delta: 0/0/-1/-1/-2. Finding class narrowing confirmed.
+
+**Convergence counter:** 0 of 3 STRICT (need 3 consecutive CLEAN per DEC-189). NEXT: pass-7 (p84).
+
+### Archived Phase Progress row (displaced by keep-5 rule; new pass-6-adversary row added)
+
+Displaced to make room for SOH-DX-1 F2 adversary round 6 Phase Progress row per keep-5 rule (removed oldest: SOH-ATTACHMENTS-1 CYCLE FULLY CLOSED).
+
+| Phase | Status | Completed | Gate | Notes | Finding Progression |
+|-------|--------|-----------|------|-------|---------------------|
+| **SOH-ATTACHMENTS-1 CYCLE FULLY CLOSED (2026-07-25): v0.6.0-dev.11 SHIPPED (tag @ 34d2f795); FIX-E2E-EGRESS DELIVERED (PR #654 @ 7b3ba371; e2e GREEN); session review COMPLETE (S-7.02 SATISFIED; 6 IPs); pipeline IDLE.** | CYCLE CLOSED; pipeline IDLE | 2026-07-25 | CYCLE FULLY CLOSED. | BC 657; holdouts 100; VP 35; spec v1.3.106; BC-INDEX v6.44; develop @ 7b3ba371. | — |
+
+### Archived Current Phase Steps row (displaced by keep-4 rule; new pass-6-adversary step row added)
+
+Displaced to make room for SOH-DX-1 F2 adversary round 6 step row per keep-4 rule (removed oldest: SOH-DX-1 F1 APPROVED).
+
+| Step | Agent | Status | Output |
+|------|-------|--------|--------|
+| **SOH-DX-1 INTAKE + F1 APPROVED (2026-07-25): bundle #639+#627+#626 validated (3 probes + research-agent w/ citations); F1 delta analysis at phase-f1-delta/SOH-DX-1/delta-analysis.md; fresh-context consistency audit 2 findings (CLAUDE.md gotcha, test rename) folded; F1 gate APPROVED DEC-188 (flip both flags; +MSRV fix; +prose revert; v0.7.0-dev.1 target). Proposed stories: S-639-1 (HIGH risk, breaking), S-627-1 (LOW), S-626-1 (LOW/MED). BC count stays 657. NEXT: F2 spec evolution (BC-3.8.012/013 supersession).** | 3 validators + research-agent + architect + consistency-validator + state-manager | COMPLETE — F1 APPROVED | delta-analysis.md committed; DEC-188; STATE.md updated. |

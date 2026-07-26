@@ -2577,3 +2577,14 @@ Fourth F2 adversary pass. Finding classes narrowed further: zero-HTTP discrimina
 Fifth F2 adversary pass (fresh context). HIGH findings: (1) AC-8 non-discriminating — warn-era build also exits 64 with zero HTTP when project/type/summary absent; no clause forbade old eprintln! warnings surviving alongside new exit-64 error. Fix round 5: AC-8 re-specified (full invocation + stderr substring + expect(0)); removal postconditions written into both BC-3.8.012/013 (warn strings MUST be removed; negative assertion on ACs); EC-3.8.012-5 rewritten (no platform --markdown guard exists); AC-5 sharpened (byte-identical stderr for repeated --field); AC-3 pinned (are/is verb discriminator, containment-trap-free); doc-fallout + mod.rs help strings ~:400/403; AC-10 json error shape pinned; BC-INDEX:274 past-tense scoping fixed. Piecewise consistency: CLEAN (are/is discriminator verified; AC-8 completeness verified; verbatim warn substring match verified; AC-1..10 unique; symbol anchors valid). All 3 guard scripts green. Third process-gap (SOH-DX-1-PG-003): expect(0) ACs must pin would-otherwise-proceed setup + positive stderr assertion (POL-11 false-green class for spec-authored ACs).
 
 **Trajectory so far:** p78(8)→p79(8)→p80(8)→p81(7)→p82(6). Delta: 0/0/-1/-1. Finding class narrowing confirmed. NEXT: pass-6 (p83).
+
+---
+
+### Pass p83 (2026-07-25)
+
+**Findings:** 4 (1H/3M)
+**Convergence counter:** 0 of 3 (STRICT) — grind active; PIECEWISE CLEAN after fix round 6
+
+Sixth F2 adversary pass (fresh context). HIGH findings: (1) AC-6 vacuity — same class as AC-4 (fixed in round 4); vacuous test missing would-otherwise-proceed setup; fix round 6: AC-6 re-specified with concrete invocation. MEDIUM findings: ADR-0014 second byte-for-byte site at :60 (dual-cite gap — first site :56 fixed in round 4 but second site :60 missed); AC-5 folding-permission ambiguity removed (wording sharpened to eliminate permissive interpretation); spec-changelog under-enumeration completed (missing entries for fix rounds 5 and 6 backfilled). DEC-189 STRICT criterion codified by human ruling: 3 consecutive CLEAN required; any delta-attributable finding resets the window. Piecewise consistency: CLEAN after fix round 6. All 3 guard scripts green.
+
+**Trajectory so far:** p78(8)→p79(8)→p80(8)→p81(7)→p82(6)→p83(4). Delta: 0/0/-1/-1/-2. Finding class narrowing confirmed. NEXT: pass-7 (p84).
