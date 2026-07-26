@@ -7,6 +7,23 @@ project: "jr (jira-cli)"
 
 Track all spec version changes. Most recent version first.
 
+## [1.3.126] - 2026-07-26
+
+### Type: PATCH
+
+### Summary
+SOH-DX-1 DEC-188 round-28 adversary-pass corrections (#639): F-1 (MED): AC-1 FULL-STRING pin annotation gains Rust-literal note — backticks are ordinary characters in Rust string literals, write raw (no `\`` escaping); the `\`` in the Markdown source is a display artifact and is NOT valid Rust (E0762 class); verbatim from the fenced block at ~:3024. F-2 (MED): BC-3.8.012 and BC-3.8.013 Behavior sections each gain an Implementation constraint MUST-NOT — the guard MUST NOT be realized via clap `#[arg(requires = "request_type")]` (yields exit 2 pre-handler, violating SSOT step 2, colliding with AC-15's clap-exit-2-precedence pin); MUST be a hand-rolled check inside `handle_create` returning `JrError::UserError`. F-3 (LOW): AC-1 renderer cite extended to "src/main.rs ~:143 — the human-mode (`_ =>`) match arm of the output_format dispatch; the JSON arm (~:134-140) emits no prefix" — aligned with the Test Note. F-4 (LOW): AC-5 anchor rationale corrected — with the guard absent, both invocations SUCCEED and emit identical 'Created issue PROJ-123' stderr (create.rs ~:272); byte-identity alone cannot distinguish success from guard-error; the positive anchor pins which error is compared. F-5 (LOW): AC namespace note SSOT anchor ~:2971 → ~:2980 (heading line). Obs (folded in): AC-4 gains follow-up-GET note — GET /rest/api/3/issue/PROJ-123 (create.rs ~:243) is unstubbed under mount_platform_create_stubs, stderr carries a fetch-warning; AC-4's negatives are unaffected; do NOT add stderr-cleanliness assertions; test-writer may stub if a quiet run is preferred. BC count unchanged (140/111).
+
+### Changed
+- `.factory/specs/prd/bc-3-issue-write.md` (MODIFIED): F-1 AC-1 pin Rust-literal note. F-2 BC-3.8.012+013 MUST-NOT. F-3 AC-1 renderer cite. F-4 AC-5 anchor rationale. F-5 SSOT anchor. Obs AC-4 note. Frontmatter v1.3.126 trace entry prepended. Footer updated to v1.3.126.
+- `.factory/specs/prd/BC-INDEX.md` (MODIFIED): `last_updated` annotation updated to v1.3.126; `index_version` v6.54→v6.55.
+- `.factory/spec-changelog.md` (MODIFIED): [1.3.126] entry added.
+
+### BC Count
+0 new BCs. Total unchanged: 657 cumulative (BC-INDEX), 140/111 individually-bodied in bc-3-issue-write.md.
+
+---
+
 ## [1.3.125] - 2026-07-26
 
 ### Type: PATCH
