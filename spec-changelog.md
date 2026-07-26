@@ -7,6 +7,23 @@ project: "jr (jira-cli)"
 
 Track all spec version changes. Most recent version first.
 
+## [1.3.131] - 2026-07-26
+
+### Type: PATCH
+
+### Summary
+SOH-DX-1 DEC-188 round-33 adversary-pass corrections (#639): F33-1 (MED): AC-3 two single-flag-absence negatives labeled FALSIFIABLE-COARSE — invocation has the respective flag so these catch only the gross defect where the single-flag guard fires instead of the combined guard; non-overlapping error strings (combined uses "are only valid with", single uses "is only valid with"). AC-9 `!stderr.contains("Project key")` labeled DISCRIMINATING — guard fires at step 2 before project-key resolution at step 3, proving guard-before-project-RESOLUTION ordering; `--project` NOT required for this proof. F33-2 (MED): AC-10 invocation completed to would-otherwise-succeed: `jr issue create --project PROJ --type Task --summary "test" --field a=b --output json` + `mount_platform_create_stubs` MUST be called; `stdout.trim().is_empty()` is now genuinely DISCRIMINATING (`create.rs` ~:249/:265 prints the created-issue JSON to stdout on the success path — guard-absent with stubs would populate stdout); pairing note updated to "symmetric twins for the would-otherwise-succeed invocation class". F33-3 (LOW): AC-10 TempDir precondition added (`find_project_config` ancestor-walk hygiene; matches AC-8). F33-4 (LOW): BC-3.8.013 Trace gains AC-8 invocation (ii) note — `received_requests().await.unwrap().is_empty()` zero-HTTP pin for the `--on-behalf-of X` variant on its own isolated `MockServer`. F33-5 (LOW): AC-7 example value `bare-name-no-equals` → `bareflagnoequals` (match KEPT body ~:2845). BC count unchanged (140/111).
+
+### Changed
+- `.factory/specs/prd/bc-3-issue-write.md` (MODIFIED): AC-3 FALSIFIABLE-COARSE labels. AC-9 DISCRIMINATING label. AC-10 would-otherwise-succeed invocation + mount stub obligation + DISCRIMINATING stdout + TempDir precondition + pairing note updated. BC-3.8.013 Trace AC-8 invocation (ii) note. AC-7 example value. Frontmatter v1.3.131 trace entry. Footer updated to v1.3.131.
+- `.factory/specs/prd/BC-INDEX.md` (MODIFIED): `last_updated` → v1.3.131; `index_version` v6.59→v6.60.
+- `.factory/spec-changelog.md` (MODIFIED): [1.3.131] entry added.
+
+### BC Count
+0 new BCs. Total unchanged: 657 cumulative (BC-INDEX), 140/111 individually-bodied in bc-3-issue-write.md.
+
+---
+
 ## [1.3.130] - 2026-07-26
 
 ### Type: PATCH

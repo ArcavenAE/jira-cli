@@ -6652,3 +6652,33 @@ Displaced to make room for SOH-DX-1 F2 adversary round 32 step row per keep-4 ru
 | Step | Agent | Status | Output |
 |------|-------|--------|--------|
 | **pass-28 adversary — SOH-DX-1 F2 round 28 complete (2026-07-26): 5 findings (0H/2M/3L) + 1 obs REGRESSION (4→5); ZERO HIGHs; novelty LOW; adversary: "spec has effectively converged"; MEDs: MUST-NOT-clap-requires both BCs (F-2 important realization guard); renderer-arm cite; LOWs: Rust-literal pin note; AC-5 rationale corrected; SSOT anchor; AC-4 follow-up-GET note; spec v1.3.126 [1.3.126]; piecewise CLEAN; 3 guards green. ZERO consecutive CLEAN (need 3 STRICT per DEC-189). NEXT: pass-29.** | adversary (×28) + product-owner (×28) + consistency-validator (×28) + state-manager | IN PROGRESS — F2 adversary grind | spec v1.3.126; BC-INDEX v6.55; STORY-INDEX v1.5.41; convergence-trajectory p105 appended; burst-log.md appended; factory-artifacts committed. |
+
+---
+
+## SOH-DX-1 F2 Adversary Round 33 Burst (2026-07-26)
+
+**Burst type:** F2 adversary fix round 33 (pass-33 / p110)
+
+**Summary:** CONVERGING (3→2); ZERO HIGHs; ZERO CRITs; novelty LOW-MEDIUM. MEDs: AC-3/AC-9 tier labels (negative-assertion predicates missing DISCRIMINATING labels); AC-10 completed to AC-1's json twin (genuine DISCRIMINATING — json-mode stdout predicate added). In-round fixes: TempDir hygiene (test scaffold lifetime scope clarified); BC-3.8.013 Trace AC-8(ii) citation added; AC-7 example value corrected for json-mode output shape. In-round label sweep: 5 bare FALSIFIABLE labels normalized to DISCRIMINATING across AC-6, AC-20, AC-21 — label taxonomy now complete (zero unlabeled negatives AC-1..21). Spec v1.3.131 + [1.3.131]. BC-INDEX v6.60. Piecewise CLEAN. 3 guards green.
+
+**Files touched:** .factory/specs/prd/bc-3-issue-write.md, .factory/specs/prd/BC-INDEX.md (v6.59→v6.60), .factory/spec-changelog.md ([1.3.131] entry), .factory/sidecar-learning.md
+
+**Trajectory:** →p110(2). trajectory-tail →1→3→3→2.
+
+**Convergence counter:** 0 of 3 STRICT. NEXT: pass-34 (p111).
+
+### Archived Phase Progress row (displaced by keep-5 rule; new pass-33-adversary row added)
+
+Displaced to make room for SOH-DX-1 F2 adversary round 33 Phase Progress row per keep-5 rule (removed oldest: pass-28 adversary).
+
+| Phase | Status | Completed | Gate | Notes | Finding Progression |
+|-------|--------|-----------|------|-------|---------------------|
+| **pass-28 adversary — SOH-DX-1 F2 fix burst round 28 complete (2026-07-26): 5 findings (0C/0H/2M/3L) + 1 obs REGRESSION (4→5); ZERO HIGHs; ZERO CRITs; novelty LOW; adversary: "spec has effectively converged"; MEDs: MUST-NOT-clap-requires both BCs (F-2 important realization guard); renderer-arm cite; LOWs: Rust-literal pin note; AC-5 rationale corrected; SSOT anchor; AC-4 follow-up-GET note; spec v1.3.126 + [1.3.126]; BC-INDEX v6.55; piecewise CLEAN; 3 guards green. ZERO consecutive CLEAN (need 3 STRICT per DEC-189). NEXT: pass-29.** | F2 adversary grind in progress | 2026-07-26 | ADVERSARY GRIND — convergence + human gate PENDING. | spec v1.3.126; BC-INDEX v6.55; STORY-INDEX v1.5.41. | →8→8→8→7→6→4→3→7→6→5→6→6→4→2→5→5→4→3→3→5→4→2→3→3→6→6→4→5 |
+
+### Archived Current Phase Steps row (displaced by keep-4 rule; new pass-33-adversary step row added)
+
+Displaced to make room for SOH-DX-1 F2 adversary round 33 step row per keep-4 rule (removed oldest: pass-29 adversary CPS).
+
+| Step | Agent | Status | Output |
+|------|-------|--------|--------|
+| **pass-29 adversary — SOH-DX-1 F2 round 29 complete (2026-07-26): 2 findings (1H/1M) + 2 obs CONVERGING (5→2); 1 HIGH; novelty LOW-MEDIUM; BC-3.8.009 anchor corrections AC-20/21 (mis-anchor); cwd precondition propagated AC-11/17; clap repeats wording; deliberate-omission note (013 remedy asymmetry); spec v1.3.127 [1.3.127]; BC-INDEX v6.56; piecewise CLEAN; 3 guards green. ZERO consecutive CLEAN (need 3 STRICT per DEC-189). NEXT: pass-30.** | adversary (×29) + product-owner (×29) + consistency-validator (×29) + state-manager | IN PROGRESS — F2 adversary grind | spec v1.3.127; BC-INDEX v6.56; STORY-INDEX v1.5.41; convergence-trajectory p106 appended; burst-log.md appended; factory-artifacts committed. |
