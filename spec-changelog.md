@@ -7,6 +7,23 @@ project: "jr (jira-cli)"
 
 Track all spec version changes. Most recent version first.
 
+## [1.3.118] - 2026-07-26
+
+### Type: PATCH
+
+### Summary
+SOH-DX-1 DEC-188 round-20 adversary-pass corrections (#639): F20-1+F20-2(a) (HIGH, linked): AC-1/AC-3/AC-5/AC-18/AC-19 invocations updated to complete form (`--project PROJ --type Task --summary "test"`) + `mount_platform_create_stubs` KEPT; would-otherwise-succeed falsifiability rationale added per AC; KEPT-note for existing args/stubs (only `--output json` + enumerated old assertions removed); `!stderr.contains("Created issue")` remains DISCRIMINATING NEGATIVE (now genuinely falsifiable). F20-2(b): AC-9 "Created issue" relabeled HYGIENE — projectless BY DESIGN; structurally unreachable in either path; discriminating proof is the project-error-ABSENCE pair. F20-2(c): AC-11 "Created issue" relabeled HYGIENE — bare-MockServer + projectless by design; discriminating proof is the stderr substring triple. F20-2(d): AC-8 mock set relabeled: (d) `GET /rest/api/3/field` DISCRIMINATING expect(0) (first reachable HTTP guard-absent); (a)-(c)+(e) DEFENSE-IN-DEPTH; "Created issue" HYGIENE (isolated MockServer — guard-absent path fails at (d)). F20-4 (MED): AC-8 call-site citation corrected — `resolve_assignee_by_project` call site is `create.rs ~:213`; `helpers.rs ~:443` is `get_myself` inside the fn. F20-5 (MED): EC-3.8.013-2 added — `--on-behalf-of X --request-type ""` routes JSM; BC-3.8.016 fires; BC-3.8.013 MUST NOT fire; mirror of EC-3.8.012-2; AC-14 variant covers class; dedicated AC is deliberate non-goal. BC count unchanged (140/111).
+
+### Changed
+- `.factory/specs/prd/bc-3-issue-write.md` (MODIFIED): AC-1/AC-3/AC-5/AC-18/AC-19 invocation lines updated to `--project PROJ --type Task --summary "test"` complete form + would-otherwise-succeed note + mount_platform_create_stubs MUST-be-called statement + KEPT parenthetical; DISCRIMINATING NEGATIVE `!stderr.contains("Created issue")` gains FALSIFIABLE qualifier. AC-9 `!stderr.contains("Created issue")` relabeled HYGIENE with projectless-BY-DESIGN rationale. AC-11 `!stderr.contains("Created issue")` relabeled HYGIENE with bare-MockServer-projectless rationale. AC-8 mock (a)-(c)+(e) labeled DEFENSE-IN-DEPTH; (d) labeled DISCRIMINATING; "Created issue" relabeled HYGIENE; call site corrected to `create.rs ~:213`. EC-3.8.013-2 inserted after EC-3.8.013-1. Frontmatter v1.3.118 trace entry added. Footer updated to v1.3.118.
+- `.factory/specs/prd/BC-INDEX.md` (MODIFIED): `last_updated` annotation updated to v1.3.118; BC-INDEX v6.46→v6.47.
+- `.factory/spec-changelog.md` (MODIFIED): [1.3.118] entry added.
+
+### BC Count
+0 new BCs. Total unchanged: 657 cumulative (BC-INDEX), 140/111 individually-bodied in bc-3-issue-write.md.
+
+---
+
 ## [1.3.117] - 2026-07-26
 
 ### Type: PATCH
