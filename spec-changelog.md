@@ -7,6 +7,25 @@ project: "jr (jira-cli)"
 
 Track all spec version changes. Most recent version first.
 
+## [1.3.112] - 2026-07-26
+
+### Type: PATCH
+
+### Summary
+
+SOH-DX-1 DEC-188 round-14 adversary-pass corrections (#639): AC-1/AC-2/AC-7 fully re-specified with exit-64 assertions and old-assertion removal mandates (F14-01); AC-11 discriminator set corrected — dialoguer stderr, expect(0) non-discriminating, !stderr.contains("Project key") added (F14-02); Removal postcondition extended for AC-1 stdout vacuity (LOW-1); EC-3.8.012-9 re-scoped to `--field a=` and AC-19 updated (LOW-2); mode annotations completed for AC-4..19 (LOW-3).
+
+### Changed
+
+- `.factory/specs/prd/bc-3-issue-write.md` (MODIFIED): AC-1 fully re-specified: `jr issue create --field a=b --output json` → exit 64; assert stderr JSON via `assert_json_error_envelope`; `error` contains `"--field is only valid with"`; stdout empty; OLD ASSERTIONS removal mandate with tilde cites (~:2465-2469 exit-0, ~:2470-2473 warning-count, ~:2479-2482 stdout-negative) (F14-01). AC-2 fully re-specified: `jr issue create --on-behalf-of X --output json` → exit 64; same envelope + `"--on-behalf-of is only valid with"`; OLD exit-0 assertions (~:2537-2539) removal mandate (F14-01). AC-7 fully re-specified: `jr issue create --field bare-name-no-equals --output json` → exit 64; same envelope + `"--field is only valid with"`; OLD exit-0 (~:2855-2859) + warning-count (~:2860-2866) removal mandates (F14-01). AC-11 discriminators: removed false "no prompt on stdout" claim (dialoguer 0.12 renders to stderr per `src/cli/issue/helpers.rs` ~:224-226); noted `expect(0)` is non-discriminating (guard-absent path also exits 64 with zero HTTP); added `!stderr.contains("Project key")` as required real discriminator (F14-02). Removal postcondition extended: AC-1 prior stdout negative `!stdout.contains("warning: --field is ignored")` at `tests/issue_create_jsm.rs` ~:2479-2482 is vacuously true — DELETE and replace with `stdout.is_empty()` (LOW-1). EC-3.8.012-9 re-scoped from `--field ""` (no `=`, falls into EC-3.8.012-3 malformed class) to `--field a=` (key present, empty VALUE after `=`) — distinct class, guard fires pre-parse identically (LOW-2). AC-19 invocation updated from `--field ""` to `--field a=` with clarifying note (LOW-2). Mode annotations added: AC-4 [mode: --output json], AC-6 [mode: --output json], AC-8 [mode: human], AC-9 [mode: human], AC-11 [mode: human/TTY], AC-12 [mode: human help], AC-13..18 [mode: human] (LOW-3). Frontmatter version-log v1.3.112 added. BC count unchanged (140/111).
+- `.factory/specs/prd/BC-INDEX.md` (MODIFIED): `last_updated` updated to v1.3.112.
+
+### BC Count
+
+0 new BCs. Total unchanged: 657 cumulative (BC-INDEX), 140/111 individually-bodied in bc-3-issue-write.md.
+
+---
+
 ## [1.3.111] - 2026-07-26
 
 ### Type: PATCH
