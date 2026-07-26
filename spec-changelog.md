@@ -7,12 +7,29 @@ project: "jr (jira-cli)"
 
 Track all spec version changes. Most recent version first.
 
+## [1.3.115] - 2026-07-26
+
+### Type: PATCH
+
+### Summary
+SOH-DX-1 DEC-188 round-17 adversary-pass corrections (#639): F17-01: AC-8 MockServer isolation constraint added (MUST NOT call mount_platform_create_stubs; dedicated MockServer with ONLY expect(0) mocks; wiremock 0.6 FIFO rationale — CLAUDE.md §BC-3.9.006); AC-11 same constraint + bare-server recommendation (no handlers needed; expect(0) already non-discriminating). F17-02: AC-1 (iv) stdout.contains("PROJ-123") removal ~:2474-2477 added; AC-2 verbatim-warn removal ~:2542-2545 + PROJ-123 removal ~:2546-2549 added; AC-3 OLD ASSERTIONS block added (exit-0 ~:2609-2613; BC-3.8.012 warn ~:2615-2618; BC-3.8.013 warn ~:2619-2622); AC-5 OLD ASSERTIONS block added (exit-0 ~:2727-2730; .count() form ~:2732-2738). F17-03: AC-1 (ii) description corrected — "warning-count .count() form" → "verbatim contains assertion form; NOT .count()" with .count() cross-ref to AC-5 ~:2732-2738 and AC-7 ~:2860-2866. F17-04: AC-1/3/8/9/11/18/19 each gain DISCRIMINATING NEGATIVE !stderr.contains("Created issue") (BC-3.4.014: success echo fires to stderr not stdout; stdout.trim().is_empty() alone is non-discriminating in human mode); stdout.trim().is_empty() relabeled as hygiene in all affected ACs; AC-11 Required discriminators "two"→"three". LOW-1: BC-INDEX BC-3.8.012/013 rows prepend H1 title verbatim before amendment fragment (per bc_h1_is_title_source_of_truth policy). LOW-2: spec-changelog [1.3.110]–[1.3.114] Summary lines append "(DEC-188 ratified 2026-07-25)"; convention: ratification marker documents the original DEC-188 decision date (2026-07-25) independent of edit dates (all 2026-07-26). BC count unchanged (140/111).
+
+### Changed
+- `.factory/specs/prd/bc-3-issue-write.md` (MODIFIED): F17-01: AC-8 MockServer isolation constraint paragraph added before "S-639-1 F3 story deliverable" — MUST NOT call mount_platform_create_stubs; dedicated MockServer; FIFO rationale. AC-11 MockServer isolation paragraph added — MUST NOT call mount_platform_create_stubs; bare server recommendation; "two"→"three" in Required discriminators preamble. F17-02: AC-1 OLD ASSERTIONS (ii) → (iv) now four items; (iv) adds stdout.contains("PROJ-123") ~:2474-2477 removal. AC-2 OLD ASSERTIONS extended with verbatim-warn ~:2542-2545 + PROJ-123 ~:2546-2549. AC-3 OLD ASSERTIONS block added at end. AC-5 OLD ASSERTIONS block added replacing trailing semicolon; "S-639-1 F3 story deliverable" appended. F17-03: AC-1 (ii) label corrected from "warning-count assertions ... .count() form" to "verbatim warning contains assertion ... form; NOT .count()". F17-04: AC-1/3/8/9/11/18/19 DISCRIMINATING NEGATIVE added; stdout.trim().is_empty() annotated as hygiene. AC-3 stdout hygiene note inserted. AC-18 Normative assertions list extended. AC-19 stdout parenthetical + discriminating negative added. Frontmatter v1.3.115 trace entry added. Footer updated to v1.3.115 with v1.3.114 pushed to Previous.
+- `.factory/specs/prd/BC-INDEX.md` (MODIFIED): LOW-1: BC-3.8.012 row subject prepended with `` `--field` on platform path without `--request-type` exits 64 pre-flight — ``; BC-3.8.013 row subject prepended with `` `--on-behalf-of` on platform path without `--request-type` exits 64 pre-flight — ``. `last_updated` updated to v1.3.115.
+- `.factory/spec-changelog.md` (MODIFIED): LOW-2: [1.3.110]–[1.3.114] Summary lines each append "(DEC-188 ratified 2026-07-25)". [1.3.115] entry added.
+
+### BC Count
+0 new BCs. Total unchanged: 657 cumulative (BC-INDEX), 140/111 individually-bodied in bc-3-issue-write.md.
+
+---
+
 ## [1.3.114] - 2026-07-26
 
 ### Type: PATCH
 
 ### Summary
-SOH-DX-1 DEC-188 round-16 adversary-pass corrections (#639): Self-contradiction in AC-3 resolved (postcondition wins — regression pin replaces removal instruction); AC-1/2/5/7 regression pins added; AC-14 false-green fixed (--project PROJ + positive BC-3.8.016 assertion); AC-13/16/17/18/19 per-AC discrimination notes; Outputs/Effects file cite corrected; SSOT steps 3/4 deduped; AC-11 re-anchored to step 3. BC count unchanged (140/111).
+SOH-DX-1 DEC-188 round-16 adversary-pass corrections (#639): Self-contradiction in AC-3 resolved (postcondition wins — regression pin replaces removal instruction); AC-1/2/5/7 regression pins added; AC-14 false-green fixed (--project PROJ + positive BC-3.8.016 assertion); AC-13/16/17/18/19 per-AC discrimination notes; Outputs/Effects file cite corrected; SSOT steps 3/4 deduped; AC-11 re-anchored to step 3. BC count unchanged (140/111). (DEC-188 ratified 2026-07-25)
 
 ### Changed
 - `.factory/specs/prd/bc-3-issue-write.md` (MODIFIED): F16-01: AC-3 "OLD ASSERTION MUST BE REMOVED: !stderr.contains("is ignored on the platform create path")" clause removed; replaced with REGRESSION PIN per Removal postcondition (:3036) — the pin is deliberate (this invocation class previously emitted the old warn string). AC-1, AC-2, AC-5, AC-7 each gain `!stderr.contains("is ignored on the platform create path")` regression pin. F16-02: AC-14 invocation updated to `jr issue create --project PROJ --field a=b --request-type ""`; positive assertion added `stderr.contains("request type cannot be empty")` (BC-3.8.016 canonical error); `--project PROJ` rationale noted (jsm_create.rs project-key resolution at step 0 precedes empty-RT guard at step 1); AC-13/16/17/18/19 each gain per-AC discrimination note (guard fires at step 2 before project-key resolution at step 3; positive stderr assertion discriminates; --project NOT required). F16-03: both Outputs/Effects lines (BC-3.8.012 + BC-3.8.013) corrected — `tests/common/fixtures.rs` ~:76 → `tests/json_error_shape.rs` ~:76 (current site; moves to fixtures.rs upon promotion per F-1 directive). F16-04 (folded into F16-01 AC-5 edit): AC-5 re-tagged [mode: human] (neither invocation uses --output json); note added that "Error: " prefix present in both captures so byte-identity holds. F16-05: SSOT step 3 extended to explicitly include project-key interactive prompt; step 4 deduplicated — "project key (interactive fallback)," removed, now type+summary only; AC-11 discriminator re-anchored from "step 4" to "step 3". Frontmatter version-log v1.3.114 added. BC count unchanged (140/111).
@@ -23,7 +40,7 @@ SOH-DX-1 DEC-188 round-16 adversary-pass corrections (#639): Self-contradiction 
 ### Type: PATCH
 
 ### Summary
-SOH-DX-1 DEC-188 round-15 adversary-pass corrections (#639): AC-1 re-scoped to human mode; AC-10 annotated json mode with pairing; AC-3 invocation+exit64+removal-pin; Outputs/Effects stdout.trim().is_empty() normative predicate; AC-18 stdin-consumed demoted to non-normative rationale; AC-8 team-resolution endpoints enumerated; BC-3.3.001 H1 DEC-188 qualifier (Obs-1); EC-3.8.012-6 no-AC rationale (Obs-2). BC count unchanged (140/111).
+SOH-DX-1 DEC-188 round-15 adversary-pass corrections (#639): AC-1 re-scoped to human mode; AC-10 annotated json mode with pairing; AC-3 invocation+exit64+removal-pin; Outputs/Effects stdout.trim().is_empty() normative predicate; AC-18 stdin-consumed demoted to non-normative rationale; AC-8 team-resolution endpoints enumerated; BC-3.3.001 H1 DEC-188 qualifier (Obs-1); EC-3.8.012-6 no-AC rationale (Obs-2). BC count unchanged (140/111). (DEC-188 ratified 2026-07-25)
 
 ### Changed
 - `.factory/specs/prd/bc-3-issue-write.md` (MODIFIED): F15-01: AC-1 re-scoped from [mode: --output json] (byte-equivalent to AC-10) to [mode: human]; invocation changed to `jr issue create --field a=b` (no `--output json`); assertions: exit 64 + `stderr.contains("Error: ")` + `stderr.contains("--field is only valid with")` + `stdout.trim().is_empty()`; pairing rationale added (AC-1 human / AC-10 json for same invocation class); OLD ASSERTIONS removal mandate updated to reference `stdout.trim().is_empty()`. AC-10 annotated [mode: --output json]; pairing note added referencing AC-1. F15-02: AC-3 invocation added (`jr issue create --field a=b --on-behalf-of X` no `--request-type`); explicit exit 64 added; OLD ASSERTION removal pin added (`!stderr.contains("is ignored on the platform create path")` — vacuously true post-DEC-188). F15-03: BC-3.8.012 and BC-3.8.013 Outputs/Effects lines updated — "Stdout MUST be empty" → `stdout.trim().is_empty()` normative predicate + promoted helper `tests/common/fixtures.rs` ~:76 reference; all `stdout.is_empty()` occurrences replaced globally with `stdout.trim().is_empty()`. F15-04: AC-18 `stdin NOT consumed` and `assert the process exits promptly` demoted to non-normative rationale — `assert_cmd` has no timeout primitive; normative assertions: exit 64 + `stderr.contains("--field is only valid with")` + `stdout.trim().is_empty()`; `.write_stdin("…")` suffices; hang manifests as test timeout not false-pass. F15-05: AC-8 vague "team-resolution endpoint" replaced with three enumerated `expect(0)` targets: (a) `POST /gateway/api/graphql` (`get_org_metadata`, `src/api/jira/teams.rs` ~:19); (b) `GET /gateway/api/public/teams/v1/org/{orgId}/teams` (`list_teams`, `src/api/jira/teams.rs` ~:38); (c) `GET /rest/api/3/field` (`find_team_field_id`, `src/api/jira/fields.rs` ~:23). Obs-1: BC-3.3.001 H1 updated with DEC-188 qualifier. Obs-2: EC-3.8.012-6 no-AC rationale added. Frontmatter version-log v1.3.113 added. BC count unchanged (140/111).
@@ -35,7 +52,7 @@ SOH-DX-1 DEC-188 round-15 adversary-pass corrections (#639): AC-1 re-scoped to h
 
 ### Summary
 
-SOH-DX-1 DEC-188 round-14 adversary-pass corrections (#639): AC-1/AC-2/AC-7 fully re-specified with exit-64 assertions and old-assertion removal mandates (F14-01); AC-11 discriminator set corrected — dialoguer stderr, expect(0) non-discriminating, !stderr.contains("Project key") added (F14-02); Removal postcondition extended for AC-1 stdout vacuity (LOW-1); EC-3.8.012-9 re-scoped to `--field a=` and AC-19 updated (LOW-2); mode annotations completed for AC-4..19 (LOW-3).
+SOH-DX-1 DEC-188 round-14 adversary-pass corrections (#639): AC-1/AC-2/AC-7 fully re-specified with exit-64 assertions and old-assertion removal mandates (F14-01); AC-11 discriminator set corrected — dialoguer stderr, expect(0) non-discriminating, !stderr.contains("Project key") added (F14-02); Removal postcondition extended for AC-1 stdout vacuity (LOW-1); EC-3.8.012-9 re-scoped to `--field a=` and AC-19 updated (LOW-2); mode annotations completed for AC-4..19 (LOW-3). (DEC-188 ratified 2026-07-25)
 
 ### Changed
 
@@ -54,7 +71,7 @@ SOH-DX-1 DEC-188 round-14 adversary-pass corrections (#639): AC-1/AC-2/AC-7 full
 
 ### Summary
 
-SOH-DX-1 DEC-188 round-13 adversary-pass corrections (#639): AC-8 citation corrected (F13-01); AC-11 false-green hardened with explicit MUST NOT preconditions (F13-02); AC-12 whitespace-normalization prescribed before count (F13-03); AC-9 second precondition added (F13-04).
+SOH-DX-1 DEC-188 round-13 adversary-pass corrections (#639): AC-8 citation corrected (F13-01); AC-11 false-green hardened with explicit MUST NOT preconditions (F13-02); AC-12 whitespace-normalization prescribed before count (F13-03); AC-9 second precondition added (F13-04). (DEC-188 ratified 2026-07-25)
 
 ### Changed
 
@@ -73,7 +90,7 @@ SOH-DX-1 DEC-188 round-13 adversary-pass corrections (#639): AC-8 citation corre
 
 ### Summary
 
-SOH-DX-1 DEC-188 round-12 adversary-pass corrections (#639): output-mode annotation per AC (F12-05); SSOT step 4a (`--description-stdin` blocking read) added between step 4 and step 5 (F12-06); helper-promotion directive extended with stale doc-comment fix note (LOW-1); BC-INDEX section 3.8 header "superseded"→"amended" (LOW-2).
+SOH-DX-1 DEC-188 round-12 adversary-pass corrections (#639): output-mode annotation per AC (F12-05); SSOT step 4a (`--description-stdin` blocking read) added between step 4 and step 5 (F12-06); helper-promotion directive extended with stale doc-comment fix note (LOW-1); BC-INDEX section 3.8 header "superseded"→"amended" (LOW-2). (DEC-188 ratified 2026-07-25)
 
 ### Changed
 
