@@ -7,6 +7,23 @@ project: "jr (jira-cli)"
 
 Track all spec version changes. Most recent version first.
 
+## [1.3.117] - 2026-07-26
+
+### Type: PATCH
+
+### Summary
+SOH-DX-1 DEC-188 round-19 adversary-pass corrections (#639): F-1 (MED): AC-21 (NEW) test_jsm_create_with_both_flags_and_request_type_does_not_fire_guards [mode: --output json] added — JSM path combined non-mis-fire pin (--field a=b --on-behalf-of X --request-type <NAME> → exit 0, all three new-error negatives FALSIFIABLE; the only invocation falsifying the combined guard on the JSM path); AC-6 and AC-20 structurally-unfalsifiable negatives labeled HYGIENE; AC namespace note range AC-1..20→AC-1..21 + SSOT pointer sentence (Platform-Path Guard Ordering SSOT block ~:2971 is authoritative; per-AC step references are informational) + process-gap falsifiability sentence (every negative MUST name the falsifying element); BC-3.8.013 Trace range AC-1..20→AC-1..21 + AC-21 reference added. F-2 (MED): five ':3036' removal-postcondition cites replaced with section-form §"Removal postcondition (single-site, DEC-188)" per #408 citation-form rule. F-3 (MED): --output json arg removal mandates added to AC-1/AC-3/AC-5 existing test invocations (~:2456-2457, ~:2601-2602, ~:2719-2720) so [mode: human] is actually exercised. F-5 (LOW): AC-17 negatives rescoped from bare words ("description", "markdown") to specific BC-3.8.017 rival string "cannot be combined with" (from jsm_create.rs ~:160). BC count unchanged (140/111).
+
+### Changed
+- `.factory/specs/prd/bc-3-issue-write.md` (MODIFIED): F-1: AC-21 body inserted before S-639-1 delivery paragraph; AC-6 and AC-20 structurally-unfalsifiable negatives labeled HYGIENE; AC namespace note updated AC-1..AC-20 → AC-1..AC-21 with SSOT pointer sentence and falsifiability sentence; BC-3.8.013 Trace range AC-1..20→AC-1..21 + AC-21 reference appended before `src/cli/issue/create.rs` cite. F-2: five occurrences of ':3036' replacement-postcondition cites replaced with `§"Removal postcondition (single-site, DEC-188)"` section-form (including the parenthetical variant `(:3036)` in AC-3). F-3: AC-1/AC-3/AC-5 OLD ASSERTIONS blocks each gain a `--output json` removal mandate with tilde line cites (~:2456-2457, ~:2601-2602, ~:2719-2720). F-5: AC-17 !stderr.contains("description") and !stderr.contains("markdown") negatives replaced with !stderr.contains("cannot be combined with"). Frontmatter v1.3.117 trace entry added. Footer updated to v1.3.117 with v1.3.116 pushed to Previous.
+- `.factory/specs/prd/BC-INDEX.md` (MODIFIED): `last_updated` annotation updated to v1.3.117 with round-19 correction summary; BC-INDEX v6.45→v6.46.
+- `.factory/spec-changelog.md` (MODIFIED): [1.3.117] entry added.
+
+### BC Count
+0 new BCs. Total unchanged: 657 cumulative (BC-INDEX), 140/111 individually-bodied in bc-3-issue-write.md.
+
+---
+
 ## [1.3.116] - 2026-07-26
 
 ### Type: PATCH
