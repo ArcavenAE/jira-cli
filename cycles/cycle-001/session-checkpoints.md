@@ -1714,3 +1714,21 @@ _Was the active checkpoint after DEPENDABOT-QUEUE-DRAINED 9/9 (2026-07-25) — p
 | **PR queue (human-owned)** | Open: #645 (soaking until 2026-07-27, DEC-187); #628 (soak); #574 (pending rebase). Dependabot queue DRAINED 9/9. DO NOT close #429. |
 | **Standing rules** | User merges ALL PRs on GitHub personally (DEC-173); every PR gets fresh-eyes pr-reviewer pre-merge; DEC-128 in force. |
 | **Resume command** | Open fresh session to run vsdd-factory:factory-worktree-health to read .factory/STATE.md to run /vsdd-factory:next-step. |
+
+---
+
+## Archived Checkpoint (displaced by SOH-DX-1 F2 AUTHORING COMPLETE burst, 2026-07-25)
+
+_Was the active checkpoint after SOH-DX-1 INTAKE + F1 APPROVED (2026-07-25) — bundle #639+#627+#626 validated; DEC-188; delta-analysis.md committed. Superseded by SOH-DX-1 F2 AUTHORING COMPLETE record._
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-07-25 (SOH-DX-1 INTAKE + F1 APPROVED — DEC-188; 3-story bundle validated; delta-analysis.md committed; #645 soaking until 2026-07-27. NEXT: F2 spec evolution.) |
+| **Position** | Feature Mode SOH-DX-1 F1 APPROVED (DEC-188). develop @ e72b0166 (dependabot queue DRAINED 9/9; #598 rand 0.10.1→0.10.2 final merge). v0.6.0-dev.11 released (tag @ 34d2f795). Spec v1.3.106; BC 657/holdouts 100/VP 35; AC 80; BC-INDEX v6.44; STORY-INDEX v1.5.40. NEXT: F2 spec evolution — BC-3.8.012/013 supersession; S-639-1 (breaking), S-627-1, S-626-1 specs. |
+| **Convergence counter** | SOH-DX-1 F1 APPROVED 2026-07-25 (DEC-188). No adversary passes yet. Prior cycle: SOH-ATTACHMENTS-1 CYCLE FULLY CLOSED 2026-07-25 (DEC-186; F5 STRICT CONVERGED 14r/8 PRs; F6 PASS; F7 5/5 PASS). trajectory-tail →0→0→0→0 |
+| **In flight / On resume** | F1 complete. delta-analysis.md committed. No in-flight worktrees. |
+| **Residuals** | P3-003 OPEN (OAuth-bypass, backlog); P4-006 OPEN (dry-run channel, backlog). S-626-1: replacement SHA fa04a145 re-verify at F4 (rust-toolchain.toml re-pin correctness). Enhancement candidates ledgered: SAFE-NAME-GUARD-EXTRACTION, STEP2-429-RETRY, CONTENT-TYPE-HEADER-NIT. ENGINE IPs (5) queued for vsdd-factory after this cycle. |
+| **Pending human decisions** | #645 soaking until 2026-07-27 (DEC-187); F2 spec evolution dispatch; #628 soak; #574 pending rebase. |
+| **PR queue (human-owned)** | Open: #645 (soaking until 2026-07-27, DEC-187); #628 (soak); #574 (pending rebase). Dependabot queue DRAINED 9/9. DO NOT close #429. |
+| **Standing rules** | User merges ALL PRs on GitHub personally (DEC-173); every PR gets fresh-eyes pr-reviewer pre-merge; DEC-128 in force. |
+| **Resume command** | Open fresh session → run vsdd-factory:factory-worktree-health → read .factory/STATE.md → dispatch F2 spec evolution via /vsdd-factory:next-step. |
