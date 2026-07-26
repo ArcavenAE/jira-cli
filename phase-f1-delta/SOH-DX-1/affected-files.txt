@@ -1,0 +1,26 @@
+# Affected files for SOH-DX-1 — develop branch
+# Format: CHANGE_TYPE path  (NEW | MODIFIED | DEPENDENT)
+
+# Item 1 — #639 warn→error promotion
+MODIFIED src/cli/issue/create.rs
+MODIFIED tests/issue_create_jsm.rs
+MODIFIED CHANGELOG.md
+MODIFIED CLAUDE.md  # S-288-pr4 dispatch-fork gotcha update (same commit as code change)
+
+# Item 2 — #627 PG-365-1 guard regex
+MODIFIED scripts/check-bc-no-numeric-test-counts.sh
+DEPENDENT .github/workflows/ci.yml
+
+# Item 3 — #626 rust-toolchain pins + MSRV
+MODIFIED .github/workflows/ci.yml
+MODIFIED .github/workflows/backfill-release.yml
+MODIFIED .github/workflows/e2e-sweeper.yml
+MODIFIED .github/workflows/e2e.yml
+MODIFIED .github/workflows/release.yml
+MODIFIED .github/workflows/sign-and-publish.yml
+MODIFIED CLAUDE.md
+
+# factory-artifacts branch (separate commit stream)
+# MODIFIED .factory/specs/prd/bc-3-issue-write.md
+# MODIFIED .factory/specs/prd/bc-2-issue-read.md
+# MODIFIED .factory/specs/prd/BC-INDEX.md

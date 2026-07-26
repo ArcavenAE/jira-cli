@@ -1696,3 +1696,21 @@ _Was the active checkpoint after SOH-ATTACHMENTS-1 F6 TARGETED HARDENING PASS bu
 | **Session advisories** | (a) `CLAUDE_AUTOCOMPACT_PCT_OVERRIDE` missing from `.claude/settings.json` — recommend "70" per ADR-026 §Decision 5. (b) Main repo untracked `.claude/pr-reviews/` + `.claude/spec-config.json` (session artifacts, intentionally uncommitted). (c) Nightly e2e includes 4 new live attachment tests (S-576-6 facade; gated on `JR_E2E_JSM_PROJECT`). (d) F6 artifacts committed to factory-artifacts: `.factory/phase-f6-hardening/SOH-ATTACHMENTS-1/summary.md` + siblings. |
 | **Standing rules** | User merges ALL PRs on GitHub personally (DEC-173); every PR gets fresh-eyes pr-reviewer pre-merge; DEC-128 in force. |
 | **Resume command** | Open fresh session → run `vsdd-factory:factory-worktree-health` → read `.factory/STATE.md` → present F7 dispatch via `/vsdd-factory:next-step`. |
+
+---
+
+## Archived Checkpoint (displaced by SOH-DX-1 INTAKE + F1 APPROVED burst, 2026-07-25)
+
+_Was the active checkpoint after DEPENDABOT-QUEUE-DRAINED 9/9 (2026-07-25) — pipeline IDLE post SOH-ATTACHMENTS-1 CYCLE FULLY CLOSED. Superseded by SOH-DX-1 F1 APPROVED record (DEC-188)._
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-07-25 (DEPENDABOT-QUEUE-DRAINED: 9/9 PRs merged to develop @ e72b0166; #598 (rand 0.10.1→0.10.2) merged by human after auto-rebase + fresh CI green; #645 soaking until 2026-07-27 (DEC-187). Pipeline IDLE.) |
+| **Position** | Phase 3 / Feature Mode SOH-ATTACHMENTS-1 CYCLE FULLY CLOSED. develop @ e72b0166 (#598 rand 0.10.1→0.10.2 merged, dependabot queue DRAINED 9/9). v0.6.0-dev.11 released (tag @ 34d2f795). Spec v1.3.106; BC 657/holdouts 100/VP 35; AC 80; BC-INDEX v6.44; STORY-INDEX v1.5.40. Pipeline IDLE. NEXT: human decides #645 merge (soak to 2026-07-27); then route ENGINE IPs to vsdd-factory or new intake. |
+| **Convergence counter** | SOH-ATTACHMENTS-1 CYCLE FULLY CLOSED. F7 DELTA CONVERGENCE APPROVED 2026-07-25 (DEC-186; 5/5 dims PASS). F6 TARGETED HARDENING PASS (4 dims green). F5 STRICT CONVERGED (14 rounds / 8 fix PRs #644-#652; window rounds 12-14 CLEAN×3). All stories + FIX-576-DL + FIX-E2E-EGRESS delivered. Full trajectory: cycles/cycle-001/convergence-trajectory.md. trajectory-tail →0→0→0→0 |
+| **In flight / On resume** | PIPELINE IDLE. #598 develop CI run in-flight (low risk; pre-merge CI green); #645 soak. |
+| **Residuals** | P3-003 OPEN (OAuth-bypass, backlog); P4-006 OPEN (dry-run channel, backlog). EGRESS-ALLOWLIST-NARROWING tracked (soak in progress). Enhancement candidates ledgered: SAFE-NAME-GUARD-EXTRACTION, STEP2-429-RETRY, CONTENT-TYPE-HEADER-NIT. |
+| **Pending human decisions** | #645 soaking until 2026-07-27; #628 soak; #574 pending rebase. No blocking decisions. |
+| **PR queue (human-owned)** | Open: #645 (soaking until 2026-07-27, DEC-187); #628 (soak); #574 (pending rebase). Dependabot queue DRAINED 9/9. DO NOT close #429. |
+| **Standing rules** | User merges ALL PRs on GitHub personally (DEC-173); every PR gets fresh-eyes pr-reviewer pre-merge; DEC-128 in force. |
+| **Resume command** | Open fresh session to run vsdd-factory:factory-worktree-health to read .factory/STATE.md to run /vsdd-factory:next-step. |
