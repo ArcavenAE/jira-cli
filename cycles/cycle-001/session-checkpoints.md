@@ -1732,3 +1732,19 @@ _Was the active checkpoint after SOH-DX-1 INTAKE + F1 APPROVED (2026-07-25) — 
 | **PR queue (human-owned)** | Open: #645 (soaking until 2026-07-27, DEC-187); #628 (soak); #574 (pending rebase). Dependabot queue DRAINED 9/9. DO NOT close #429. |
 | **Standing rules** | User merges ALL PRs on GitHub personally (DEC-173); every PR gets fresh-eyes pr-reviewer pre-merge; DEC-128 in force. |
 | **Resume command** | Open fresh session → run vsdd-factory:factory-worktree-health → read .factory/STATE.md → dispatch F2 spec evolution via /vsdd-factory:next-step. |
+
+---
+
+## Archived checkpoint (replaced by pass-38 NEXT, burst F2-ADVERSARY-ROUND-37)
+
+| Field | Value |
+|-------|-------|
+| Date | 2026-07-26 (SOH-DX-1 F2 ADVERSARY GRIND — rounds 1-36 complete; trajectory ...→3→3→2→3L→1M+3L→2M+2L; 0H/2M/2L; novelty LOW-MEDIUM; piecewise CLEAN after round 36; ZERO consecutive CLEAN; NEXT: pass-37. DEC-189 STRICT criterion in force.) |
+| Position | Feature Mode SOH-DX-1 F2 ADVERSARY GRIND IN PROGRESS (2026-07-26). develop @ e72b0166. v0.6.0-dev.11 released (tag @ 34d2f795). Spec v1.3.134; BC 657/holdouts 100/VP 35; AC 85 (AC-1..21 in S-639-1); BC-INDEX v6.63; STORY-INDEX v1.5.41. F2 adversary rounds 1-36 complete; NEXT: pass-37 (adversary convergence, 3-clean-pass STRICT minimum per DEC-189). 0H/2M/2L; novelty LOW-MEDIUM. |
+| Convergence counter | SOH-DX-1 F2 ADVERSARY GRIND 2026-07-26. 36 passes complete; trajectory ...→3→3→2→3L→1M+3L→2M+2L; 0H/2M/2L; novelty LOW-MEDIUM; ZERO consecutive CLEAN (0/3 STRICT per DEC-189). Prior cycle: SOH-ATTACHMENTS-1 CYCLE FULLY CLOSED 2026-07-25 (DEC-186; F5 STRICT CONVERGED 14r/8 PRs; F6 PASS; F7 5/5 PASS). trajectory-tail →2→3L→1M+3L→2M+2L |
+| In flight / On resume | F2 adversary grind in progress. No in-flight worktrees (fix burst rounds 1-36 complete, piecewise CLEAN, all .factory edits committed in this burst). Resume at pass-37. |
+| Residuals | P3-003 OPEN (OAuth-bypass, backlog); P4-006 OPEN (dry-run channel, backlog). S-626-1: replacement SHA fa04a145 re-verify at F4. Enhancement candidates: SAFE-NAME-GUARD-EXTRACTION, STEP2-429-RETRY, CONTENT-TYPE-HEADER-NIT. ENGINE IPs (5) queued for vsdd-factory after this cycle. S-383: stories/S-383-platform-inverse-warnings.md SUPERSEDED (banner added; CONTRACT SUPERSEDED; SOH-DX-1 DEC-188; contract_superseded_by field added round 27; STORY-INDEX v1.5.41). 10 process-gaps: SOH-DX-1-PG-001..010. |
+| Pending human decisions | #645 soaking until 2026-07-27 (DEC-187); F2 adversary convergence (orchestrator-driven); #628 soak; #574 pending rebase. |
+| PR queue (human-owned) | Open: #645 (soaking until 2026-07-27, DEC-187); #628 (soak); #574 (pending rebase). Dependabot queue DRAINED 9/9. DO NOT close #429. |
+| Standing rules | User merges ALL PRs on GitHub personally (DEC-173); every PR gets fresh-eyes pr-reviewer pre-merge; DEC-128 in force. |
+| Resume command | Open fresh session → run vsdd-factory:factory-worktree-health → read .factory/STATE.md → dispatch F2 adversary pass-37 via /vsdd-factory:next-step (same fresh-context prompt shape; artifacts: bc-3-issue-write.md §3.8, BC-INDEX §3.8/§3.4, spec-changelog [1.3.134], S-383 banner+contract_superseded_by, delta-analysis). DEC-189 STRICT criterion (3 consecutive CLEAN required; any delta-attributable finding resets window). Signal: pass-36 2M+2L (0H/2M/2L; novelty LOW-MEDIUM; 0/3 CLEAN). trajectory-tail →2→3L→1M+3L→2M+2L |

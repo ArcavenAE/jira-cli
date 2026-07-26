@@ -6772,3 +6772,33 @@ Displaced to make room for SOH-DX-1 F2 adversary round 36 step row per keep-4 ru
 | Step | Agent | Status | Output |
 |------|-------|--------|--------|
 | **pass-32 adversary — SOH-DX-1 F2 round 32 complete (2026-07-26): 3 findings (0H/3M) + 2 LOW obs PLATEAU (3→3); ZERO HIGHs; novelty LOW-MEDIUM; EC-3.8.012-10 project-type-agnostic guard (ADR-rationale reversal); DISCRIMINATING labels AC-2/7/10; AC-16 regression pin + 013 mandate extension; Behavior step-3 enumeration; piecewise 1 residual in-round; spec v1.3.130 [1.3.130]; BC-INDEX v6.59; piecewise CLEAN; 3 guards green. ZERO consecutive CLEAN (need 3 STRICT per DEC-189). NEXT: pass-33.** | adversary (×32) + product-owner (×32) + consistency-validator (×32) + state-manager | IN PROGRESS — F2 adversary grind | spec v1.3.130; BC-INDEX v6.59; STORY-INDEX v1.5.41; convergence-trajectory p109 appended; burst-log.md appended; factory-artifacts committed. |
+
+---
+
+## SOH-DX-1 F2 Adversary Round 37 Burst (2026-07-26)
+
+**Burst type:** F2 adversary fix round 37 (pass-37 / p114)
+
+**Summary:** 2H+2L (from 2M+2L); 2 HIGH; ZERO CRITs; ZERO MEDs; 2 LOW; novelty LOW-MEDIUM. New root cause found: config-migration stderr side-channel poisoning envelope-parse ACs + AC-5 byte-identity. HIGH findings: (1) config-migration stderr side-channel poisoning envelope-parse ACs — fixtures using legacy flat config shape triggered auto-migration stderr warning, poisoning AC-2/7/10 envelope-parse assertions and AC-5 byte-identity contract; (2) AC-5 byte-identity violated by config-migration stderr — migration warning fires on first-ever run only (state-changing single-shot), violating byte-identical stderr requirement. Fixes: Config fixture contract (pre-migrated [profiles.default] shape) single-sourced in Test Notes + Preconditions AC-2/5/7/10; key-order language contract-softened (YAML key order not guaranteed by serde; relaxed to assert key presence only); mod-common hygiene extended (shared test helper updated to expose pre-migrated fixture). Spec bumped v1.3.135 + changelog [1.3.135] entry added. BC-INDEX v6.64. Piecewise CLEAN (AC-9 exemption verified unambiguous). 3 guard scripts green.
+
+**Files touched:** .factory/specs/prd/bc-3-issue-write.md, .factory/specs/prd/BC-INDEX.md (v6.63→v6.64), .factory/spec-changelog.md ([1.3.135] entry), .factory/cycles/cycle-001/convergence-trajectory.md (p114 appended), .factory/cycles/cycle-001/burst-log.md (this entry), .factory/STATE.md
+
+**Trajectory:** →p114(2H+2L). trajectory-tail →3L→1M+3L→2M+2L→2H+2L.
+
+**Convergence counter:** 0 of 3 STRICT. NEXT: pass-38 (p115).
+
+### Archived Phase Progress row (displaced by keep-5 rule; new pass-37-adversary row added)
+
+Displaced to make room for SOH-DX-1 F2 adversary round 37 Phase Progress row per keep-5 rule (removed oldest: pass-32 adversary).
+
+| Phase | Status | Completed | Gate | Notes | Finding Progression |
+|-------|--------|-----------|------|-------|---------------------|
+| **pass-32 adversary — SOH-DX-1 F2 fix burst round 32 complete (2026-07-26): 3 findings (0C/0H/3M/0L) + 2 LOW obs PLATEAU (3→3); ZERO HIGHs; ZERO CRITs; novelty LOW-MEDIUM; fixes: EC-3.8.012-10 project-type-agnostic guard (ADR-rationale reversal pinned); DISCRIMINATING labels on json-mode stdout predicates AC-2/7/10; AC-16 regression pin + 013 mandate extension; Behavior step-3 enumeration; piecewise 1 residual in-round CLEAN; spec v1.3.130 + [1.3.130]; BC-INDEX v6.59; 3 guards green. ZERO consecutive CLEAN (need 3 STRICT per DEC-189). NEXT: pass-33.** | F2 adversary grind in progress | 2026-07-26 | ADVERSARY GRIND — convergence + human gate PENDING. | spec v1.3.130; BC-INDEX v6.59; STORY-INDEX v1.5.41. | →8→8→8→7→6→4→3→7→6→5→6→6→4→2→5→5→4→3→3→5→4→2→3→3→6→6→4→5→2→1→3→3 |
+
+### Archived Current Phase Steps row (displaced by keep-4 rule; new pass-37-adversary step row added)
+
+Displaced to make room for SOH-DX-1 F2 adversary round 37 step row per keep-4 rule (removed oldest: pass-33 adversary CPS).
+
+| Step | Agent | Status | Output |
+|------|-------|--------|--------|
+| **pass-33 adversary — SOH-DX-1 F2 round 33 complete (2026-07-26): 2 findings (0H/2M) + 3 obs LOW CONVERGING (3→2); ZERO HIGHs; novelty LOW-MEDIUM; AC-3/AC-9 tier labels; AC-10 json-twin DISCRIMINATING; TempDir hygiene; BC-3.8.013 Trace AC-8(ii); AC-7 example value; label sweep 5 FALSIFIABLE→DISCRIMINATING (AC-6/20/21); label taxonomy complete; spec v1.3.131 [1.3.131]; BC-INDEX v6.60; piecewise CLEAN; 3 guards green. ZERO consecutive CLEAN (need 3 STRICT per DEC-189). NEXT: pass-34.** | adversary (×33) + product-owner (×33) + consistency-validator (×33) + state-manager | IN PROGRESS — F2 adversary grind | spec v1.3.131; BC-INDEX v6.60; STORY-INDEX v1.5.41; convergence-trajectory p110 appended; burst-log.md appended; factory-artifacts committed. |

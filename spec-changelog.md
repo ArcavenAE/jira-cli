@@ -9,6 +9,23 @@ Track all spec version changes. Most recent version first.
 
 > **Type legend:** Type classifies the SPEC document delta: MINOR = new BCs/VPs/sections; PATCH = amendments to existing bodies/ACs/ECs. Product-semver impact is recorded in the Summary line, independent of Type.
 
+## [1.3.135] - 2026-07-26
+
+### Type: PATCH
+
+### Summary
+SOH-DX-1 DEC-188 round-37 adversary-pass corrections (#639): F-1 (HIGH): Both BC-3.8.012 and BC-3.8.013 Test Notes gain a **Config fixture contract** (single source — callers of `assert_json_error_envelope` MUST use a pre-migrated `[profiles.default]`-shaped config fixture; `write_minimal_config`'s legacy `[instance]` shape triggers the one-time `src/config.rs` ~:255-287 "Migrated config to multi-profile layout…" stderr line which poisons the strict JSON parse). AC-2, AC-7, and AC-10 each gain a Precondition note citing this contract. Doc-comment fix mandate softened from "correct to `{"code",…}` (BTreeMap alphabetical)" to "parse, don't match" (unspecified contractually). LOW-2 (folded into F-1 edits): Test Note Hygiene paragraph extended to note that `tests/issue_create_jsm.rs` similarly gains `#[allow(dead_code)] mod common;` — AC-2 and AC-7 import the promoted helper there. F-2 (HIGH): AC-5 gains a Precondition explaining the byte-identity breakage: invocation (i) triggers migration emitting the line, invocation (ii) does not → stderrs diverge; chosen remedy is pre-migrated fixture (consistent with AC-2/7/10; note on separate-TempDir alternative included). LOW-1: Key-order sentence softened at all three sites — both Test Notes and AC-10 — from "BTreeMap serializes alphabetically: `code` before `error`" to "serde_json map behavior (alphabetical by default without `preserve_order`; unspecified contractually — parse fields individually, do not match literal key order)". BC count unchanged (140/111).
+
+### Changed
+- `.factory/specs/prd/bc-3-issue-write.md` (MODIFIED): Config fixture contract added to both Test Notes. AC-2, AC-7, AC-10 Preconditions added. AC-5 Precondition added. Key-order sentence softened at 3 sites. Hygiene paragraph extended (×2). Frontmatter v1.3.135 trace entry. Footer updated to v1.3.135.
+- `.factory/specs/prd/BC-INDEX.md` (MODIFIED): `last_updated` → v1.3.135; `index_version` v6.63→v6.64.
+- `.factory/spec-changelog.md` (MODIFIED): [1.3.135] entry added.
+
+### BC Count
+0 new BCs. Total unchanged: 657 cumulative (BC-INDEX), 140/111 individually-bodied in bc-3-issue-write.md.
+
+---
+
 ## [1.3.134] - 2026-07-26
 
 ### Type: PATCH
