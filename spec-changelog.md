@@ -7,6 +7,23 @@ project: "jr (jira-cli)"
 
 Track all spec version changes. Most recent version first.
 
+## [1.3.124] - 2026-07-26
+
+### Type: PATCH
+
+### Summary
+SOH-DX-1 DEC-188 round-26 adversary-pass corrections (#639): F-1 (MED): AC-1, AC-3, and AC-16 each gain a FULL-STRING pin for their respective verbatim error string — single-source per string; all other ACs use prefix pins only. LOW-2 embedded in AC-1: the "Error: " prefix pin annotated as single-sourced at AC-1 (from `src/main.rs` ~:143 unconditional error renderer; other human-mode ACs deliberately omit it). F-2 (MED): AC-8 split into two sub-invocations each running against a separate isolated MockServer instance — invocation (i) uses `--field a=b` (BC-3.8.012 prefix pin); invocation (ii) uses `--on-behalf-of X` replacing `--field a=b` (BC-3.8.013 prefix pin; same expect(0) mock set (a)–(e)). F-3 (MED): delivery item (d) `--on-behalf-of` first doc line "another user" → "this accountId" (preserves accountId value-format signal from -h; "requires --request-type" wording kept; AC-12 count assertion unaffected). LOW-1: BC-3.3.001 Behavior cite `BC-3.4.014 line 1122` → `BC-3.4.014 ~:1122` (TD-031 tilde citation form rule). LOW-3: AC-2 and AC-7 each gain a note after the `assert_json_error_envelope` reference: helper asserts JSON shape only — the `error` field contains-assertion is written separately at the call site (mirrors AC-10 note (ii)). BC count unchanged (140/111).
+
+### Changed
+- `.factory/specs/prd/bc-3-issue-write.md` (MODIFIED): AC-1/AC-3/AC-16 full-string pins + LOW-2 "Error: " single-source note. AC-8 two-invocation split with invocation (ii). Delivery item (d) first doc line corrected. BC-3.4.014 cite tilde form. AC-2/AC-7 assert_json_error_envelope note. Frontmatter v1.3.124 trace entry prepended. Footer updated to v1.3.124.
+- `.factory/specs/prd/BC-INDEX.md` (MODIFIED): `last_updated` annotation updated to v1.3.124; `index_version` v6.52→v6.53.
+- `.factory/spec-changelog.md` (MODIFIED): [1.3.124] entry added.
+
+### BC Count
+0 new BCs. Total unchanged: 657 cumulative (BC-INDEX), 140/111 individually-bodied in bc-3-issue-write.md.
+
+---
+
 ## [1.3.123] - 2026-07-26
 
 ### Type: PATCH

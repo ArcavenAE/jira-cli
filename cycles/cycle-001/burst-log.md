@@ -6516,3 +6516,63 @@ Displaced to make room for SOH-DX-1 F2 adversary round 24 step row per keep-4 ru
 | Step | Agent | Status | Output |
 |------|-------|--------|--------|
 | **pass-20 adversary — SOH-DX-1 F2 round 20 complete (2026-07-26): 5 findings (2H/3M) REGRESSION (3→5); HIGHs: complete-invocation resolution (AC-1/3/5/18/19; 'Created issue' neg now genuinely falsifiable); AC-8 mock-set honesty (field-discovery=DISCRIMINATING, rest defense-in-depth); MEDs: HYGIENE relabels AC-9/11; AC-8 call-site cite; EC-3.8.013-2; spec v1.3.118 [1.3.118]; piecewise CLEAN; 3 guards green; PG-008 ledgered. ZERO consecutive CLEAN (need 3 STRICT per DEC-189). NEXT: pass-21.** | adversary (×20) + product-owner (×20) + consistency-validator (×20) + state-manager | IN PROGRESS — F2 adversary grind | spec v1.3.118; BC-INDEX v6.45; STORY-INDEX v1.5.41; convergence-trajectory p97 appended; burst-log.md appended; factory-artifacts committed. |
+
+---
+
+## SOH-DX-1 F2 Adversary Round 25 Burst (2026-07-26) — catch-up archival
+
+**Burst type:** F2 adversary fix round 25 (pass-25 / p102)
+
+**Summary:** REGRESSION (3→6); 1 HIGH; three-tier falsifiability taxonomy codified + labels swept (DISCRIMINATING/FALSIFIABLE-COARSE/HYGIENE + REGRESSION PIN as DISCRIMINATING subtype); AC-5 n=1-vs-n>1 discriminator restored (multi-field DELETE invocation added); BC-3.3.001 Behavior corrected (full issue object + url); AC-2/7 canonical-invocation notes; :2759 range fix; in-round residual fixed. Spec v1.3.123 + [1.3.123]. BC-INDEX v6.52. Piecewise CLEAN. 3 guards green.
+
+**Files touched:** .factory/specs/prd/bc-3-issue-write.md, .factory/specs/prd/BC-INDEX.md (v6.51→v6.52), .factory/spec-changelog.md ([1.3.123] entry), .factory/sidecar-learning.md
+
+**Trajectory:** →p102(6). trajectory-tail →2→3→3→6.
+
+**Convergence counter:** 0 of 3 STRICT. NEXT: pass-26 (p103).
+
+### Archived Phase Progress row (displaced by keep-5 rule; new pass-25-adversary row added)
+
+Displaced to make room for SOH-DX-1 F2 adversary round 25 Phase Progress row per keep-5 rule (removed oldest: pass-20 adversary).
+
+| Phase | Status | Completed | Gate | Notes | Finding Progression |
+|-------|--------|-----------|------|-------|---------------------|
+| **pass-20 adversary — SOH-DX-1 F2 fix burst round 20 complete (2026-07-26): 5 findings (0C/2H/3M/0L) REGRESSION (3→5); HIGHs: complete-invocation resolution AC-1/3/5/18/19 ('Created issue' neg now genuinely falsifiable; discrimination condition stated); AC-8 mock-set honesty (field-discovery=DISCRIMINATING, rest defense-in-depth; call-site cite corrected); MEDs: HYGIENE relabels AC-9/11; AC-8 call-site cite; EC-3.8.013-2 added; spec v1.3.118 + [1.3.118]; piecewise CLEAN; 3 guards green; PG-008 ledgered. ZERO consecutive CLEAN (need 3 STRICT per DEC-189). NEXT: pass-21.** | F2 adversary grind in progress | 2026-07-26 | ADVERSARY GRIND — convergence + human gate PENDING. | spec v1.3.118; BC-INDEX v6.45; STORY-INDEX v1.5.41. | →8→8→8→7→6→4→3→7→6→5→6→6→4→2→5→5→4→3→3→5 |
+
+### Archived Current Phase Steps row (displaced by keep-4 rule; new pass-25-adversary step row added)
+
+Displaced to make room for SOH-DX-1 F2 adversary round 25 step row per keep-4 rule (removed oldest: pass-21 adversary CPS).
+
+| Step | Agent | Status | Output |
+|------|-------|--------|--------|
+| **pass-21 adversary — SOH-DX-1 F2 round 21 complete (2026-07-26): 4 findings (1H/3M) + 3 LOW obs CONVERGING (5→4); HIGH: AC-20/21 realizable (project+summary+real stub trio, 'Password Reset' fixture name canonical); MEDs: AC-5 'Created issue' negative genuinely falsifiable; AC-2/7 KEPT clauses added; SSOT completeness caveat; fix-21 also: AC-8 team_field_id precondition; S-383 index status ruled-deliberate; spec v1.3.119 [1.3.119]; piecewise CLEAN; 3 guards green. ZERO consecutive CLEAN (need 3 STRICT per DEC-189). NEXT: pass-22.** | adversary (×21) + product-owner (×21) + consistency-validator (×21) + state-manager | IN PROGRESS — F2 adversary grind | spec v1.3.119; BC-INDEX v6.45; STORY-INDEX v1.5.41; convergence-trajectory p98 appended; burst-log.md appended; factory-artifacts committed. |
+
+---
+
+## SOH-DX-1 F2 Adversary Round 26 Burst (2026-07-26)
+
+**Burst type:** F2 adversary fix round 26 (pass-26 / p103)
+
+**Summary:** PLATEAU (6→6); ZERO HIGHs; ZERO CRITs; novelty LOW-MEDIUM; adversary "spec has largely converged" (two consecutive largely-converged verdicts). MEDs: full-string verbatim pins AC-1/3/16 (remedy tails falsifiable); AC-8 dual-invocation (013 zero-HTTP proof); accountId retained in help line. LOWs: citation form; single-source notes. Spec v1.3.124 + [1.3.124]. BC-INDEX v6.53. Piecewise CLEAN (char-for-char pin match verified). 3 guards green.
+
+**Files touched:** .factory/specs/prd/bc-3-issue-write.md, .factory/specs/prd/BC-INDEX.md (v6.52→v6.53), .factory/spec-changelog.md ([1.3.124] entry), .factory/sidecar-learning.md
+
+**Trajectory:** →p103(6). trajectory-tail →3→3→6→6.
+
+**Convergence counter:** 0 of 3 STRICT. NEXT: pass-27 (p104).
+
+### Archived Phase Progress row (displaced by keep-5 rule; new pass-26-adversary row added)
+
+Displaced to make room for SOH-DX-1 F2 adversary round 26 Phase Progress row per keep-5 rule (removed oldest: pass-21 adversary).
+
+| Phase | Status | Completed | Gate | Notes | Finding Progression |
+|-------|--------|-----------|------|-------|---------------------|
+| **pass-21 adversary — SOH-DX-1 F2 fix burst round 21 complete (2026-07-26): 4 findings (0C/1H/3M/0L) + 3 LOW obs CONVERGING (5→4); HIGH: AC-20/21 realizable (project+summary+real stub trio, 'Password Reset' fixture name canonical); MEDs: AC-5 'Created issue' negative genuinely falsifiable; AC-2/7 KEPT clauses added; SSOT completeness caveat; fix-21 also: AC-8 team_field_id precondition; S-383 index status ruled-deliberate; spec v1.3.119 + [1.3.119]; piecewise CLEAN (1 residual in-round); 3 guards green. ZERO consecutive CLEAN (need 3 STRICT per DEC-189). NEXT: pass-22.** | F2 adversary grind in progress | 2026-07-26 | ADVERSARY GRIND — convergence + human gate PENDING. | spec v1.3.119; BC-INDEX v6.45; STORY-INDEX v1.5.41. | →8→8→8→7→6→4→3→7→6→5→6→6→4→2→5→5→4→3→3→5→4 |
+
+### Archived Current Phase Steps row (displaced by keep-4 rule; new pass-26-adversary step row added)
+
+Displaced to make room for SOH-DX-1 F2 adversary round 26 step row per keep-4 rule (removed oldest: pass-22 adversary CPS).
+
+| Step | Agent | Status | Output |
+|------|-------|--------|--------|
+| **pass-22 adversary — SOH-DX-1 F2 round 22 complete (2026-07-26): 2 findings (0H/2M) + 1 LOW obs CONVERGING (4→2); ZERO HIGHs; novelty MEDIUM-LOW; adversary: 'contract layer appears converged'; ALL KEPT clauses exclusion-form (class-kill); AC-1 presence-only/--no-input notes; EC-2 whitespace variant; spec v1.3.120 [1.3.120]; piecewise CLEAN; 3 guards green. ZERO consecutive CLEAN (need 3 STRICT per DEC-189). NEXT: pass-23.** | adversary (×22) + product-owner (×22) + consistency-validator (×22) + state-manager | IN PROGRESS — F2 adversary grind | spec v1.3.120; BC-INDEX v6.45; STORY-INDEX v1.5.41; convergence-trajectory p99 appended; factory-artifacts committed. |
