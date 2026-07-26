@@ -7,6 +7,25 @@ project: "jr (jira-cli)"
 
 Track all spec version changes. Most recent version first.
 
+> **Type legend:** Type classifies the SPEC document delta: MINOR = new BCs/VPs/sections; PATCH = amendments to existing bodies/ACs/ECs. Product-semver impact is recorded in the Summary line, independent of Type.
+
+## [1.3.132] - 2026-07-26
+
+### Type: PATCH
+
+### Summary
+SOH-DX-1 DEC-188 round-34 adversary-pass corrections (#639): O-1 (LOW): Type legend added to spec-changelog.md header — "Type classifies the SPEC document delta: MINOR = new BCs/VPs/sections; PATCH = amendments to existing bodies/ACs/ECs. Product-semver impact is recorded in the Summary line, independent of Type." O-2 (LOW): Both promotion directive Test Note sites (~:3057/~:3142 in bc-3-issue-write.md) gain `tests/json_error_shape.rs` hygiene note — that file currently has no `mod common;` import; after promotion it gains `#[allow(dead_code)] mod common;` too, because the three re-import sites require `mod common` and ~11 `pub fn` fixtures exposed by the module would trigger clippy `-D warnings` without the attribute (consistent with the 60-file precedent). O-3 (LOW): Delivery obligation (d) mod.rs ~:400 quote completed to FULL `"Duplicate keys use the last value provided. Applies to JSM requests only."` and deletion rule added: the trailing `"Applies to JSM requests only."` sentence on ~:400 is DELETED at F4 (the new first line already carries `"JSM only"`; avoids stating it twice). BC count unchanged (140/111).
+
+### Changed
+- `.factory/specs/prd/bc-3-issue-write.md` (MODIFIED): Both Test Note promotion directive sites gain json_error_shape.rs hygiene note. Delivery (d) full quote + deletion rule. Frontmatter v1.3.132 trace entry. Footer updated to v1.3.132.
+- `.factory/specs/prd/BC-INDEX.md` (MODIFIED): `last_updated` → v1.3.132; `index_version` v6.60→v6.61.
+- `.factory/spec-changelog.md` (MODIFIED): Type legend added to header. [1.3.132] entry added.
+
+### BC Count
+0 new BCs. Total unchanged: 657 cumulative (BC-INDEX), 140/111 individually-bodied in bc-3-issue-write.md.
+
+---
+
 ## [1.3.131] - 2026-07-26
 
 ### Type: PATCH
