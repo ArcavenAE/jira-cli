@@ -6264,3 +6264,52 @@ Displaced to make room for SOH-DX-1 F2 adversary round 6 step row per keep-4 rul
 | Step | Agent | Status | Output |
 |------|-------|--------|--------|
 | **SOH-DX-1 INTAKE + F1 APPROVED (2026-07-25): bundle #639+#627+#626 validated (3 probes + research-agent w/ citations); F1 delta analysis at phase-f1-delta/SOH-DX-1/delta-analysis.md; fresh-context consistency audit 2 findings (CLAUDE.md gotcha, test rename) folded; F1 gate APPROVED DEC-188 (flip both flags; +MSRV fix; +prose revert; v0.7.0-dev.1 target). Proposed stories: S-639-1 (HIGH risk, breaking), S-627-1 (LOW), S-626-1 (LOW/MED). BC count stays 657. NEXT: F2 spec evolution (BC-3.8.012/013 supersession).** | 3 validators + research-agent + architect + consistency-validator + state-manager | COMPLETE — F1 APPROVED | delta-analysis.md committed; DEC-188; STATE.md updated. |
+
+---
+
+## SOH-DX-1 F2 ADVERSARY GRIND — ROUND 10 BURST (2026-07-26)
+
+**Burst type:** F2 adversary grind + fix round 10 checkpoint
+**Date:** 2026-07-26
+**Agents:** adversary (×10) + product-owner (×10) + consistency-validator (×10) + state-manager
+
+### Summary
+
+Pass-10 adversary (p87, fresh context): 5 findings (0C/0H/4M/1L). Zero HIGH second consecutive pass — severity fully collapsed. Count down 6→5 from pass-9.
+
+**Pass-10 findings (5: 0H/4M/1L):**
+- MED: ADR-0014 third stale site at :73-76 (first :56 fixed round 4, second :60 fixed round 6, third :73-76 this round — triple-site exhausted)
+- MED: AC-12 renamed + pinned to verbatim "requires --request-type" help text (AC-12 naming was inconsistent across spec locations)
+- MED: False reporter-edit parenthetical dropped from 013 error string (citation discipline — unvalidated reporter attribution)
+- MED: AC namespace note (S-639-1 targets supersede S-383 same-numbered ACs; S-383 is SUPERSEDED; clarification added)
+- LOW: Helper promotion incomplete — DELETE + re-import at 3 call sites still needed after round 9 partial promotion
+
+**Fix round 10 applied:**
+- ADR-0014 :73-76 third site enumerated
+- AC-12 renamed + verbatim help-text pin ("requires --request-type")
+- Citation parenthetical removed from 013 error string
+- AC namespace clarification note added to S-639-1
+- Helper promotion completed (DELETE + re-import 3 call sites)
+- Piecewise: 1 finding (version-bump convention) → spec bumped v1.3.108 (2026-07-26) PATCH entry; BC-INDEX last_updated
+
+**Piecewise consistency:** CLEAN. 3 guard scripts green.
+
+**Trajectory:** p78(8)→p79(8)→p80(8)→p81(7)→p82(6)→p83(4)→p84(3)→p85(7)→p86(6)→p87(5). Delta: 0/0/-1/-1/-2/-1/+4/-1/-1.
+
+**Convergence counter:** 0 of 3 STRICT (need 3 consecutive CLEAN per DEC-189). NEXT: pass-11 (p88).
+
+### Archived Phase Progress row (displaced by keep-5 rule; new pass-10-adversary row added)
+
+Displaced to make room for SOH-DX-1 F2 adversary round 10 Phase Progress row per keep-5 rule (removed oldest: pass-5 adversary).
+
+| Phase | Status | Completed | Gate | Notes | Finding Progression |
+|-------|--------|-----------|------|-------|---------------------|
+| **pass-5 adversary — SOH-DX-1 F2 fix burst round 5 complete (2026-07-25): 6 findings (2H/4M) + 2 LOW obs + 1 [process-gap]; HIGHs: AC-8 non-discriminating (warn-era build exits 64 with zero HTTP; no warn-removal clause); fix-5: AC-8 re-specified (full invocation + stderr substring + expect(0)); removal postconditions both BCs; EC-3.8.012-5 rewritten; AC-5 sharpened (byte-identical stderr); AC-3 pinned (are/is verb discriminator); doc-fallout + mod.rs ~:400/403; AC-10 json error shape; BC-INDEX:274 past-tense; piecewise CLEAN (are/is + AC-8 completeness + verbatim warn match verified; 3 guard scripts green). 3rd process-gap: expect(0) ACs must pin would-otherwise-proceed setup + positive stderr (POL-11 false-green). ZERO consecutive CLEAN (need 3 STRICT). NEXT: pass-6.** | F2 adversary grind in progress | 2026-07-25 | ADVERSARY GRIND — convergence + human gate PENDING. | spec v1.3.107; BC-INDEX v6.45; STORY-INDEX v1.5.41. | →8→8→7→6 |
+
+### Archived Current Phase Steps row (displaced by keep-4 rule; new pass-10-adversary step row added)
+
+Displaced to make room for SOH-DX-1 F2 adversary round 10 step row per keep-4 rule (removed oldest: pass-6 adversary).
+
+| Step | Agent | Status | Output |
+|------|-------|--------|--------|
+| **pass-6 adversary — SOH-DX-1 F2 round 6 complete (2026-07-25): 4 findings (1H/3M); HIGH: AC-6 vacuity (same class as AC-4 — fixed round 4; vacuous test missing would-otherwise-proceed setup); MEDs: ADR-0014 second byte-for-byte site at :60 (dual-cite gap; first site :56 fixed round 4, second site missed); AC-5 folding-permission ambiguity removed (wording sharpened); spec-changelog under-enumeration completed (missing entries for fix rounds 5 and 6 backfilled); DEC-189 STRICT criterion codified; piecewise CLEAN. ZERO consecutive CLEAN (need 3 STRICT per DEC-189). NEXT: pass-7.** | adversary (×6) + product-owner (×6) + consistency-validator (×6) + state-manager | IN PROGRESS — F2 adversary grind | spec v1.3.107; BC-INDEX v6.45; STORY-INDEX v1.5.41; convergence-trajectory p83 appended; burst-log.md appended; factory-artifacts committed. |

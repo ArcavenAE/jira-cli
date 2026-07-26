@@ -7,6 +7,24 @@ project: "jr (jira-cli)"
 
 Track all spec version changes. Most recent version first.
 
+## [1.3.108] - 2026-07-26
+
+### Type: PATCH
+
+### Summary
+
+SOH-DX-1 DEC-188 round-10 spec-text corrections (#639): BC-3.8.013 error string parenthetical removed; AC-12 renamed + help-text pin; ADR-0014 three-site enumeration; AC namespace note added; `assert_json_error_envelope` promotion directive finalized.
+
+### Changed
+
+- `.factory/specs/prd/bc-3-issue-write.md` (MODIFIED): BC-3.8.013 `--on-behalf-of` error string parenthetical "(reporter identity is not settable post-creation via platform)" removed — factually wrong per CLAUDE.md citation discipline (JIRA edit path exists for settable fields via `--field`); AC-12 renamed from prior wording to `test_platform_create_help_flags_requires_request_type_in_help` + help-text pin hardened to verbatim "requires --request-type" substring (delivery item (d)); ADR-0014 delivery section corrected to explicitly enumerate all 3 amendment sites (~:60, ~:73-76 "Platform path stability guarantee", ~:161); AC namespace note added to BC-3.8.012 Trace and BC-3.8.013 Trace pointer (S-639-1 ACs 1..16 / 2..4/16 supersede S-383 same-numbered ACs — historical, do-not-implement); `assert_json_error_envelope` promotion directive finalized (DELETE original fn from `tests/json_error_shape.rs`; three existing call sites in that file re-import from `tests/common/fixtures.rs`). Frontmatter version-log v1.3.108 added; `last_updated` advanced to 2026-07-26. BC count unchanged (140/111).
+
+### BC Count
+
+0 new BCs. Total unchanged: 657 cumulative (BC-INDEX), 140/111 individually-bodied in bc-3-issue-write.md.
+
+---
+
 ## [1.3.107] - 2026-07-25
 
 ### Type: MINOR
