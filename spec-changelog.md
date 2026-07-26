@@ -7,6 +7,17 @@ project: "jr (jira-cli)"
 
 Track all spec version changes. Most recent version first.
 
+## [1.3.113] - 2026-07-26
+
+### Type: PATCH
+
+### Summary
+SOH-DX-1 DEC-188 round-15 adversary-pass corrections (#639): AC-1 re-scoped to human mode; AC-10 annotated json mode with pairing; AC-3 invocation+exit64+removal-pin; Outputs/Effects stdout.trim().is_empty() normative predicate; AC-18 stdin-consumed demoted to non-normative rationale; AC-8 team-resolution endpoints enumerated; BC-3.3.001 H1 DEC-188 qualifier (Obs-1); EC-3.8.012-6 no-AC rationale (Obs-2). BC count unchanged (140/111).
+
+### Changed
+- `.factory/specs/prd/bc-3-issue-write.md` (MODIFIED): F15-01: AC-1 re-scoped from [mode: --output json] (byte-equivalent to AC-10) to [mode: human]; invocation changed to `jr issue create --field a=b` (no `--output json`); assertions: exit 64 + `stderr.contains("Error: ")` + `stderr.contains("--field is only valid with")` + `stdout.trim().is_empty()`; pairing rationale added (AC-1 human / AC-10 json for same invocation class); OLD ASSERTIONS removal mandate updated to reference `stdout.trim().is_empty()`. AC-10 annotated [mode: --output json]; pairing note added referencing AC-1. F15-02: AC-3 invocation added (`jr issue create --field a=b --on-behalf-of X` no `--request-type`); explicit exit 64 added; OLD ASSERTION removal pin added (`!stderr.contains("is ignored on the platform create path")` — vacuously true post-DEC-188). F15-03: BC-3.8.012 and BC-3.8.013 Outputs/Effects lines updated — "Stdout MUST be empty" → `stdout.trim().is_empty()` normative predicate + promoted helper `tests/common/fixtures.rs` ~:76 reference; all `stdout.is_empty()` occurrences replaced globally with `stdout.trim().is_empty()`. F15-04: AC-18 `stdin NOT consumed` and `assert the process exits promptly` demoted to non-normative rationale — `assert_cmd` has no timeout primitive; normative assertions: exit 64 + `stderr.contains("--field is only valid with")` + `stdout.trim().is_empty()`; `.write_stdin("…")` suffices; hang manifests as test timeout not false-pass. F15-05: AC-8 vague "team-resolution endpoint" replaced with three enumerated `expect(0)` targets: (a) `POST /gateway/api/graphql` (`get_org_metadata`, `src/api/jira/teams.rs` ~:19); (b) `GET /gateway/api/public/teams/v1/org/{orgId}/teams` (`list_teams`, `src/api/jira/teams.rs` ~:38); (c) `GET /rest/api/3/field` (`find_team_field_id`, `src/api/jira/fields.rs` ~:23). Obs-1: BC-3.3.001 H1 updated with DEC-188 qualifier. Obs-2: EC-3.8.012-6 no-AC rationale added. Frontmatter version-log v1.3.113 added. BC count unchanged (140/111).
+- `.factory/specs/prd/BC-INDEX.md` (MODIFIED): `last_updated` updated to v1.3.113.
+
 ## [1.3.112] - 2026-07-26
 
 ### Type: PATCH
