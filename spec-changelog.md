@@ -7,6 +7,23 @@ project: "jr (jira-cli)"
 
 Track all spec version changes. Most recent version first.
 
+## [1.3.122] - 2026-07-26
+
+### Type: PATCH
+
+### Summary
+SOH-DX-1 DEC-188 round-24 adversary-pass corrections (#639): F24-01 (MED): KEPT exclusion clauses deleted from AC-18 and AC-19 — these are NEW tests with no existing body; the clauses were over-applied by round-22's `replace_all`. F24-02 (MED): (a) AC-4 invocation added (`jr issue create --project PROJ --type Task --summary "test" --output json`; `mount_platform_create_stubs` MUST be called; exit 0). (b) Exclusion-form KEPT + "S-639-1 F3 story deliverable" added to AC-4 and AC-6; AC-6 note: `expect(1)` POST stub at ~:2758-2763 is load-bearing and preserved. F24-03 (MED): SSOT header corrected — "complete guard/HTTP ordering" → "guard-relevant ordering (authoritative for step numbering)"; completeness caveat reworded (type/summary exit-64 fallbacks are step 4's failure arms; `--markdown`→ADF conversion runs between step 4a and step 5); AC namespace note SSOT cross-ref updated to match. LOW-1: Fourth ADR-0014 amendment site added to doc-fallout obligation (a): `~:42-45` "Rather than silently dropping these flags or erroring on them before verifying the project is a JSM project at all…" rationale sentence; "three sites" → "four sites"; "ALL THREE" → "ALL FOUR". LOW-2: Fourth stub named explicitly in AC-20 and AC-21: `POST /rest/servicedeskapi/request returning jsm_created_response()` (per `tests/issue_create_jsm.rs` ~:2758-2763). BC count unchanged (140/111).
+
+### Changed
+- `.factory/specs/prd/bc-3-issue-write.md` (MODIFIED): KEPT clauses deleted from AC-18 and AC-19. AC-4 invocation added + KEPT exclusion clause + story deliverable. AC-6 KEPT exclusion clause + story deliverable added (with load-bearing POST stub note). SSOT header updated. Completeness caveat reworded. AC namespace note SSOT cross-ref updated. Doc-fallout obligation (a) fourth ADR-0014 site added. AC-20 and AC-21 fourth stub named. Frontmatter v1.3.122 trace entry added. Footer updated to v1.3.122.
+- `.factory/specs/prd/BC-INDEX.md` (MODIFIED): `last_updated` annotation updated to v1.3.122; `index_version` v6.50→v6.51.
+- `.factory/spec-changelog.md` (MODIFIED): [1.3.122] entry added.
+
+### BC Count
+0 new BCs. Total unchanged: 657 cumulative (BC-INDEX), 140/111 individually-bodied in bc-3-issue-write.md.
+
+---
+
 ## [1.3.121] - 2026-07-26
 
 ### Type: PATCH

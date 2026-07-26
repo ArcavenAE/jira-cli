@@ -6475,3 +6475,44 @@ Displaced to make room for SOH-DX-1 F2 adversary round 23 step row per keep-4 ru
 | Step | Agent | Status | Output |
 |------|-------|--------|--------|
 | **pass-19 adversary — SOH-DX-1 F2 round 19 complete (2026-07-26): 3 findings (0H/3M) + 2 LOW obs PLATEAU (3→3); ZERO HIGHs (MEDIUM ceiling first); fixes: AC-21 both-flags JSM success pin (surface AC-1..21); HYGIENE labels; falsifiability rule codified; :3036 section-form (#408); --output json removal mandates AC-1/3/5; AC-17 'cannot be combined with'; spec v1.3.117 [1.3.117]; piecewise CLEAN; 3 guards green. ZERO consecutive CLEAN (need 3 STRICT per DEC-189). NEXT: pass-20.** | adversary (×19) + product-owner (×19) + consistency-validator (×19) + state-manager | IN PROGRESS — F2 adversary grind | spec v1.3.117; BC-INDEX v6.45; STORY-INDEX v1.5.41; convergence-trajectory p96 appended; burst-log.md appended; factory-artifacts committed. |
+
+---
+
+## SOH-DX-1 F2 ADVERSARY GRIND ROUND 24 (2026-07-26)
+
+**Burst type:** SOH-DX-1 F2 ADVERSARY GRIND — pass-24 + fix round 24
+
+**Agents dispatched:** adversary (pass-24 fresh context) + product-owner (fix round 24) + consistency-validator (piecewise check) + state-manager (STATE.md + artifacts)
+
+**Pass-24 findings:** 3 (0C/0H/3M/0L) + 2 LOW obs. PLATEAU (3→3). Novelty MEDIUM-LOW — all instruction-coherence defects from prior rounds' own edits; behavioral contract verified coherent against code, siblings, index, changelog.
+
+**Fix round 24 applied:**
+- KEPT clauses stripped from NEW ACs 18/19 (exclusion-form class-kill, round-22 mandate not propagated to round-20/21 ACs)
+- AC-4 invocation corrected + KEPT clause rewritten to exclusion-form
+- AC-6 KEPT clause updated to preserve expect(1) POST assertion explicitly
+- SSOT re-scoped + step placements corrected (LOW obs)
+- ADR-0014 fourth site added; AC-20/21 fourth stub made explicit (LOW obs)
+
+**Files touched:** .factory/specs/prd/bc-3-issue-write.md (spec edits), .factory/specs/prd/BC-INDEX.md (v6.50→v6.51), .factory/spec-changelog.md ([1.3.122] entry), .factory/sidecar-learning.md
+
+**Spec:** v1.3.122 + [1.3.122]. BC-INDEX v6.51. Piecewise CLEAN. 3 guards green.
+
+**Trajectory:** p78(8)→...→p100(3)→p101(3). trajectory-tail →4→2→3→3.
+
+**Convergence counter:** 0 of 3 STRICT (need 3 consecutive CLEAN per DEC-189). NEXT: pass-25 (p102).
+
+### Archived Phase Progress row (displaced by keep-5 rule; new pass-24-adversary row added)
+
+Displaced to make room for SOH-DX-1 F2 adversary round 24 Phase Progress row per keep-5 rule (removed oldest: pass-19 adversary).
+
+| Phase | Status | Completed | Gate | Notes | Finding Progression |
+|-------|--------|-----------|------|-------|---------------------|
+| **pass-19 adversary — SOH-DX-1 F2 fix burst round 19 complete (2026-07-26): 3 findings (0C/0H/3M/0L) + 2 LOW obs PLATEAU (3→3); ZERO HIGHs (first pass with MEDIUM severity ceiling); fixes: AC-21 both-flags JSM success pin (surface AC-1..21); HYGIENE labels on unfalsifiable negatives; falsifiability rule codified into namespace note; :3036 cites → section-form (#408 rule); --output json removal mandates AC-1/3/5; AC-17 rescoped to 'cannot be combined with' (verified verbatim); spec v1.3.117 + [1.3.117]; piecewise CLEAN; 3 guards green. ZERO consecutive CLEAN (need 3 STRICT per DEC-189). NEXT: pass-20.** | F2 adversary grind in progress | 2026-07-26 | ADVERSARY GRIND — convergence + human gate PENDING. | spec v1.3.117; BC-INDEX v6.45; STORY-INDEX v1.5.41. | →8→8→8→7→6→4→3→7→6→5→6→6→4→2→5→5→4→3→3 |
+
+### Archived Current Phase Steps row (displaced by keep-4 rule; new pass-24-adversary step row added)
+
+Displaced to make room for SOH-DX-1 F2 adversary round 24 step row per keep-4 rule (removed oldest: pass-20 adversary).
+
+| Step | Agent | Status | Output |
+|------|-------|--------|--------|
+| **pass-20 adversary — SOH-DX-1 F2 round 20 complete (2026-07-26): 5 findings (2H/3M) REGRESSION (3→5); HIGHs: complete-invocation resolution (AC-1/3/5/18/19; 'Created issue' neg now genuinely falsifiable); AC-8 mock-set honesty (field-discovery=DISCRIMINATING, rest defense-in-depth); MEDs: HYGIENE relabels AC-9/11; AC-8 call-site cite; EC-3.8.013-2; spec v1.3.118 [1.3.118]; piecewise CLEAN; 3 guards green; PG-008 ledgered. ZERO consecutive CLEAN (need 3 STRICT per DEC-189). NEXT: pass-21.** | adversary (×20) + product-owner (×20) + consistency-validator (×20) + state-manager | IN PROGRESS — F2 adversary grind | spec v1.3.118; BC-INDEX v6.45; STORY-INDEX v1.5.41; convergence-trajectory p97 appended; burst-log.md appended; factory-artifacts committed. |
