@@ -9,6 +9,22 @@ Track all spec version changes. Most recent version first.
 
 > **Type legend:** Type classifies the SPEC document delta: MINOR = new BCs/VPs/sections; PATCH = amendments to existing bodies/ACs/ECs. Product-semver impact is recorded in the Summary line, independent of Type.
 
+## [1.3.144] - 2026-07-26
+
+### Type: PATCH
+
+### Summary
+SOH-DX-1 DEC-188 round-46 adversary-pass corrections (#639): F46-001 (MED): AC-2 and AC-7 gain the explicit would-otherwise-succeed clause ("invocation is would-otherwise-succeed — `mount_platform_create_stubs` MUST be called so the platform POST can complete if the guard is absent; only a would-otherwise-succeed run makes `stdout.trim().is_empty()` a genuine DISCRIMINATING assertion rather than HYGIENE"), matching the six sibling ACs and closing the drop-the-stub incentive for these two `--output json` mode tests. F46-002 (LOW): both `[CURRENT BEHAVIOR]` Behavior block body-range labels reworded from the "excluded terminal case" phrasing to "BEFORE all pre-POST helper HTTP (steps 3–5) and BEFORE the platform POST (step 6) — see Platform-Path Guard Ordering block above" (replace_all, 2 sites) — kills the "excluded = reachable" misreading. F46-003 (LOW): promotion target for `assert_json_error_envelope` and `write_profile_config` changed from `tests/common/fixtures.rs` to `tests/common/assertions.rs` (new module registered in `tests/common/mod.rs`; keeping `fixtures.rs` pure-JSON); replace_all on all promotion-target path references; convention note "fixtures.rs convention" → "assertions.rs convention" and `pub mod assertions;` in `tests/common/mod.rs` registration note added to both Test Notes (replace_all). BC count unchanged (140/111).
+
+### Changed
+- `.factory/specs/prd/bc-3-issue-write.md` (MODIFIED): AC-2 would-otherwise-succeed clause added (F46-001). AC-7 would-otherwise-succeed clause added (F46-001). Both body-range labels reworded (F46-002, replace_all 2 sites). All `tests/common/fixtures.rs` promotion-target references changed to `tests/common/assertions.rs` (F46-003, replace_all). Convention note and mod.rs registration note updated in both Test Notes (F46-003). Frontmatter v1.3.144 trace entry prepended. Footer updated to v1.3.144.
+- `.factory/specs/prd/BC-INDEX.md` (MODIFIED): `index_version` v6.72→v6.73, `last_updated` updated to v1.3.144 description.
+
+### BC Count
+140/111; 657 cumulative (BC-INDEX)
+
+---
+
 ## [1.3.143] - 2026-07-26
 
 ### Type: PATCH
