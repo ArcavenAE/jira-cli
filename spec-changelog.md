@@ -9,6 +9,23 @@ Track all spec version changes. Most recent version first.
 
 > **Type legend:** Type classifies the SPEC document delta: MINOR = new BCs/VPs/sections; PATCH = amendments to existing bodies/ACs/ECs. Product-semver impact is recorded in the Summary line, independent of Type.
 
+## [1.3.140] - 2026-07-26
+
+### Type: PATCH
+
+### Summary
+SOH-DX-1 DEC-188 round-42 adversary-pass corrections (#639): F42-01 (MED): spec-changelog [1.3.139] entry retroactively gains the missing `### Changed` block (listing `bc-3-issue-write.md`, `BC-INDEX.md`, and `spec-changelog.md`) and the correct two-surface BC Count line ("0 new BCs. Total unchanged: 657 cumulative (BC-INDEX), 140/111 individually-bodied in bc-3-issue-write.md."). [1.3.140] entry carries all four subsections from the start per coordinator sweep directive. O-1 (LOW): mode-agnosticism invariant restored to BOTH `[CURRENT BEHAVIOR]` Behavior blocks in BC-3.8.012 and BC-3.8.013 — sentence "The guard fires regardless of `--no-input` or `--output json` settings (mode affects only the error rendering channel/shape, per the Test Notes)." inserted before the MUST-NOT Implementation constraint at each site. O-2 (LOW): MUST-NOT falsifier enumeration softened at both `[CURRENT BEHAVIOR]` sites — "falsified by AC-1/AC-2/AC-16 (under a `requires` realization, the exit-64 assertion and guard-string contains assertions in those ACs fail; AC-15 is NOT a falsifier — it passes either way)" replaced with "falsified by (non-exhaustively) AC-1/AC-2/AC-16 — any AC asserting the guard string on a guarded-flag invocation falsifies a `requires` realization; AC-15 alone is insensitive (clap exit-2 either way)". BC count unchanged (140/111).
+
+### Changed
+- `.factory/specs/prd/bc-3-issue-write.md` (MODIFIED): Mode-agnosticism invariant added to BC-3.8.012 and BC-3.8.013 [CURRENT BEHAVIOR] Behavior blocks. MUST-NOT falsifier enumeration softened at both sites (replace_all, 2 occurrences). Frontmatter v1.3.140 trace entry. Footer updated to v1.3.140.
+- `.factory/specs/prd/BC-INDEX.md` (MODIFIED): `last_updated` → v1.3.140 description; `index_version` v6.68→v6.69.
+- `.factory/spec-changelog.md` (MODIFIED): [1.3.139] `### Changed` block + correct BC Count added retroactively. [1.3.140] entry added.
+
+### BC Count
+0 new BCs. Total unchanged: 657 cumulative (BC-INDEX), 140/111 individually-bodied in bc-3-issue-write.md.
+
+---
+
 ## [1.3.139] - 2026-07-26
 
 ### Type: PATCH
@@ -16,8 +33,13 @@ Track all spec version changes. Most recent version first.
 ### Summary
 SOH-DX-1 DEC-188 round-41 adversary-pass corrections (#639): F41-01 (MED): AC-13 invocation upgraded to would-otherwise-succeed form — `--project PROJ --type Task --summary "test"` added so the guard-absent path reaches HTTP on the isolated MockServer; Discrimination note updated (would-otherwise-succeed parenthetical replaces "`--project` NOT required"); zero-HTTP rationale updated (`received_requests().is_empty()` is now genuinely NORMATIVE — guard-absent path reaches helper HTTP + POST, making `received_requests()` non-empty; `mount_platform_create_stubs` NOT called). EC-3.8.012-10 "transitively falsified by AC-8/AC-13" claim remains sound for both. F41-02 (MED): AC-1 REGRESSION PIN gains `(DISCRIMINATING subtype)` parenthetical — first use per §"AC namespace note" which requires the subtype label at first use; policy note added (later ACs AC-2/3/5/7/8/9/10/11/13/17/18/19 may keep or drop the parenthetical; both are correct). F41-04 (nit): `write_profile_config` first parameter renamed `dir` → `config_home` at both Config fixture contract sites in both Test Notes — matches `write_minimal_config`'s semantics and prevents a silently-wrong fixture when the implementer follows the signature literally. BC count unchanged (140/111).
 
+### Changed
+- `.factory/specs/prd/bc-3-issue-write.md` (MODIFIED): AC-13 invocation upgraded to would-otherwise-succeed (--project/--type/--summary added); Discrimination note updated; zero-HTTP rationale updated (NORMATIVE). AC-1 REGRESSION PIN gains `(DISCRIMINATING subtype)` at first use + policy note. `write_profile_config` param `dir` → `config_home` at both Config fixture contract sites. Frontmatter v1.3.139 trace entry. Footer updated to v1.3.139.
+- `.factory/specs/prd/BC-INDEX.md` (MODIFIED): `last_updated` → v1.3.139 description; `index_version` v6.67→v6.68.
+- `.factory/spec-changelog.md` (MODIFIED): [1.3.139] entry added.
+
 ### BC Count
-BC count unchanged (140/111).
+0 new BCs. Total unchanged: 657 cumulative (BC-INDEX), 140/111 individually-bodied in bc-3-issue-write.md.
 
 ---
 
