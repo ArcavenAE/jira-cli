@@ -6884,3 +6884,41 @@ Displaced to make room for SOH-DX-1 F2 adversary round 39 step row per keep-4 ru
 | Step | Agent | Status | Output |
 |------|-------|--------|--------|
 | **pass-35 adversary — SOH-DX-1 F2 round 35 complete (2026-07-26): 4 findings (0H/1M/3L) REGRESSION (3L→1M+3L); 1 MEDIUM; novelty LOW-MEDIUM; fifth ADR-0014 stale site enumerated (ALL FIVE); section-anchor self-cites (line-drift class killed); fixture count corrected; REGRESSION PIN extended AC-13/19 (mandate list now 7 ACs); spec v1.3.133 [1.3.133]; BC-INDEX v6.62; piecewise CLEAN; 3 guards green. ZERO consecutive CLEAN; 0/3 STRICT per DEC-189. NEXT: pass-36.** | adversary (×35) + product-owner (×35) + consistency-validator (×35) + state-manager | IN PROGRESS — F2 adversary grind | spec v1.3.133; BC-INDEX v6.62; STORY-INDEX v1.5.41; convergence-trajectory p112 appended; burst-log.md appended; factory-artifacts committed. |
+
+---
+
+## F2-ADVERSARY-ROUND-43 Burst (2026-07-26)
+
+**Burst type:** SOH-DX-1 F2 adversary grind round 43 checkpoint
+**Pass:** p120 (pass-43 adversary + fix burst round 43)
+**Findings:** 2 (0C/0H/2M/0L) + 2 observations — IMPROVEMENT from 1M+2L (3) to 2M (2); novelty LOW-MEDIUM
+**Spec version:** v1.3.141 + [1.3.141]
+**BC-INDEX version:** v6.70
+**Convergence:** 0/3 CLEAN (DEC-189 STRICT)
+
+**Fixes applied:**
+1. AC-11 interactive-path exit-64 + stdout pins — interactive-path branch missing exit-64 coverage and stdout pin assertions; mode-agnosticism falsifier absent; fix: assertions added; falsifier closed
+2. AC-16 TempDir precondition (dual rationale) — single rationale (isolation) replaced with dual rationale (isolation + cleanup)
+3. steps 3–6 reference — two informational observations; no AC changes required; documented for completeness
+
+**Files touched in .factory:** STATE.md; spec-changelog.md; specs/prd/BC-INDEX.md; specs/prd/bc-3-issue-write.md; sidecar-learning.md; cycles/cycle-001/convergence-trajectory.md; cycles/cycle-001/burst-log.md
+
+**Trajectory:** →p120(2M). trajectory-tail →2M→1M+2L→2M.
+
+**Convergence counter:** 0 of 3 STRICT. NEXT: pass-44 (p121).
+
+### Archived Phase Progress row (displaced by keep-5 rule; new pass-43-adversary row added)
+
+Displaced to make room for SOH-DX-1 F2 adversary round 43 Phase Progress row per keep-5 rule (removed oldest: pass-38 adversary).
+
+| Phase | Status | Completed | Gate | Notes | Finding Progression |
+|-------|--------|-----------|------|-------|---------------------|
+| **pass-38 adversary — SOH-DX-1 F2 fix burst round 38 complete (2026-07-26): 6 findings (0C/0H/4M/2L) 4M+2L; ZERO CRITs; ZERO HIGHs; 4 MEDIUM; 2 LOW; novelty LOW-MEDIUM; write_profile_config replacement mandates (conditional tail stripped; unconditional-remedies uniform rule); ADR §42-45 de-scoped (4 sites); deliverable (f) feature spec docs/specs/issue-create-preflight-guards.md (no-ADR rationale); pin mandate structural rule (13 ACs after in-round AC-8 residual); AC-13 zero-HTTP proof; spec v1.3.136 + [1.3.136]; BC-INDEX v6.65; piecewise CLEAN (in-round AC-8 pin); 3 guards green. ZERO consecutive CLEAN; 0/3 STRICT per DEC-189. NEXT: pass-39.** | F2 adversary grind in progress | 2026-07-26 | ADVERSARY GRIND — convergence + human gate PENDING. | spec v1.3.136; BC-INDEX v6.65; STORY-INDEX v1.5.41. | →8→8→8→7→6→4→3→7→6→5→6→6→4→2→5→5→4→3→3→5→4→2→3→3→6→6→4→5→2→1→3→3→2→3L→1M+3L→2M+2L→2H+2L→4M+2L |
+
+### Archived Current Phase Steps row (displaced by keep-4 rule; new pass-43-adversary step row added)
+
+Displaced to make room for SOH-DX-1 F2 adversary round 43 step row per keep-4 rule (removed oldest: pass-39 adversary CPS).
+
+| Step | Agent | Status | Output |
+|------|-------|--------|--------|
+| **pass-39 adversary — SOH-DX-1 F2 round 39 complete (2026-07-26): 3 findings (0H/2M/1L) + 3 obs 2M+1L; ZERO HIGHs; novelty LOW; verdict "converged on substance"; pin rule reachability qualifier + AC-15 exclusion; write_profile_config fully specified (fixtures.rs shape :1959-1966); EC-10 transitive-falsification sentence; changelog/trace/README bookkeeping; spec v1.3.137 [1.3.137]; BC-INDEX v6.66; piecewise CLEAN; 3 guards green. ZERO consecutive CLEAN (need 3 STRICT per DEC-189). NEXT: pass-40.** | adversary (×39) + product-owner (×39) + consistency-validator (×39) + state-manager | IN PROGRESS — F2 adversary grind | spec v1.3.137; BC-INDEX v6.66; STORY-INDEX v1.5.41; convergence-trajectory p116 appended; burst-log.md appended; factory-artifacts committed. |

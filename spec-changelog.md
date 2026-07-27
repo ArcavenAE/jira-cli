@@ -9,6 +9,23 @@ Track all spec version changes. Most recent version first.
 
 > **Type legend:** Type classifies the SPEC document delta: MINOR = new BCs/VPs/sections; PATCH = amendments to existing bodies/ACs/ECs. Product-semver impact is recorded in the Summary line, independent of Type.
 
+## [1.3.141] - 2026-07-26
+
+### Type: PATCH
+
+### Summary
+SOH-DX-1 DEC-188 round-43 adversary-pass corrections (#639): F43-01 (MED): AC-11 Required discriminators count corrected from "these three together" to "these five together"; items (4) and (5) added — (4) exit 64: `cmd.assert().failure().code(64)` (DISCRIMINATING per the mode-agnosticism invariant — "The guard fires regardless of `--no-input` or `--output json` settings"; pins that the TTY/interactive path also exits 64; the test name `_exits_64_before_prompt` mandates this assertion; falsified if the guard returns exit 0 on the interactive path); (5) `stdout.trim().is_empty()` (output-channel hygiene — on the guarded path no success data is emitted to stdout in any mode; consistent with all other human-mode ACs). Closes the only interactive-mode falsifier gap. F43-02 (MED): AC-16 gains **Precondition:** MUST use `.current_dir(<per-test TempDir>)` — `src/config.rs::find_project_config` private walk-up loop (~:362) walks ancestor directories for `.jr.toml`; without isolated `cwd` an ancestor `.jr.toml` with a `project` key silently supplies a default; doubly critical for AC-16: (a) AC-16 is projectless (guard fires at step 2 before project-key resolution), so an inherited default degrades discriminating power; (b) AC-16 is the FULL-STRING single source for the BC-3.8.013 verbatim error string — an ancestor `.jr.toml` with credentials could enable actual HTTP, risking a live Jira mutation. Obs: "steps 3–5" → "steps 3–6" at both `[CURRENT BEHAVIOR]` Behavior block sites (POST is the excluded terminal step; replace_all, 2 occurrences). BC count unchanged (140/111).
+
+### Changed
+- `.factory/specs/prd/bc-3-issue-write.md` (MODIFIED): AC-11 discriminator count + items (4)/(5) added. AC-16 `.current_dir` precondition added. "steps 3–5" → "steps 3–6" at both [CURRENT BEHAVIOR] sites. Frontmatter v1.3.141 trace entry. Footer updated to v1.3.141.
+- `.factory/specs/prd/BC-INDEX.md` (MODIFIED): `last_updated` → v1.3.141 description; `index_version` v6.69→v6.70.
+- `.factory/spec-changelog.md` (MODIFIED): [1.3.141] entry added.
+
+### BC Count
+0 new BCs. Total unchanged: 657 cumulative (BC-INDEX), 140/111 individually-bodied in bc-3-issue-write.md.
+
+---
+
 ## [1.3.140] - 2026-07-26
 
 ### Type: PATCH
