@@ -9,6 +9,23 @@ Track all spec version changes. Most recent version first.
 
 > **Type legend:** Type classifies the SPEC document delta: MINOR = new BCs/VPs/sections; PATCH = amendments to existing bodies/ACs/ECs. Product-semver impact is recorded in the Summary line, independent of Type.
 
+## [1.3.142] - 2026-07-26
+
+### Type: PATCH
+
+### Summary
+SOH-DX-1 DEC-188 round-44 adversary-pass corrections (#639): F44-001 (MED): false Hygiene premise "`tests/json_error_shape.rs` currently has no `mod common;` import" deleted from both Test Note Hygiene sections (replace_all, 2 sites) — the file already has `#[allow(dead_code)] mod common;` at :35-36; only the verified-true `tests/issue_create_jsm.rs` gains statement retained. F44-002 (MED): "the six platform-only flags (BC-3.8.011 direction, unchanged by DEC-188)" corrected to "the six platform-only flags (BC-3.8.010 + BC-3.8.011 directions, unchanged by DEC-188)" at both sites: EC-3.8.012-10 and delivery obligation (a) (replace_all, 2 sites) — BC-3.8.011 owns five flags; `--type` is BC-3.8.010. F44-003 (MED): AC-11 item (4) exit-64 relabeled DISCRIMINATING → HYGIENE with rationale (projectless invocation — guard-absent also exits 64 on project error from `create.rs` ~:102-108; same reasoning as AC-9/AC-17; the exit-code alone cannot distinguish guard exit from project-error exit; items (1)+(2) are the discriminating proof); "Required discriminators (these five together prove...)" intro rephrased to "Required assertions (these five together; items (1)+(2) are the discriminating proof...; items (3)/(4)/(5) are hygiene)". LOW-1: AC-7 KEPT note `--field bare-name-no-equals` → `--field bareflagnoequals` (matches the invocation in AC-7's body and the EC-3.8.012-3 example). LOW-2: both `[CURRENT BEHAVIOR]` Behavior block body-range labels tightened: "steps 3–6" → "steps 3–5 (pre-POST helper HTTP); step 6 (POST) is the excluded terminal case — see SSOT block for the authoritative enumeration" (replace_all, 2 sites). BC count unchanged (140/111).
+
+### Changed
+- `.factory/specs/prd/bc-3-issue-write.md` (MODIFIED): Both Test Note Hygiene sections corrected (F44-001). Both "BC-3.8.011 direction" sites corrected to "BC-3.8.010 + BC-3.8.011 directions" (F44-002). AC-11 item (4) relabeled + intro rephrased (F44-003). AC-7 KEPT note literal unified to bareflagnoequals (LOW-1). Both body-range labels tightened "steps 3–5…step 6 excluded" (LOW-2). Frontmatter v1.3.142 trace entry. Footer updated to v1.3.142.
+- `.factory/specs/prd/BC-INDEX.md` (MODIFIED): `last_updated` → v1.3.142 description; `index_version` v6.70→v6.71.
+- `.factory/spec-changelog.md` (MODIFIED): [1.3.142] entry added.
+
+### BC Count
+0 new BCs. Total unchanged: 657 cumulative (BC-INDEX), 140/111 individually-bodied in bc-3-issue-write.md.
+
+---
+
 ## [1.3.141] - 2026-07-26
 
 ### Type: PATCH
