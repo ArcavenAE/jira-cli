@@ -6930,3 +6930,47 @@ Displaced to make room for SOH-DX-1 F2 SESSION WRAP step row per keep-4 rule (re
 | Step | Agent | Status | Output |
 |------|-------|--------|--------|
 | **pass-42 adversary — SOH-DX-1 F2 round 42 complete (2026-07-26): 3 findings (1M+2L); 1 MEDIUM; 2 LOW; novelty LOW; adversary verdict "The F2 delta has converged" (zero behavioral/ordering/anchoring/falsifiability defects); [1.3.139] Changed block + count line; [1.3.140] full subsections; mode-agnosticism invariant restored both BCs; falsifier enumeration softened; spec v1.3.140 [1.3.140]; BC-INDEX v6.69; piecewise CLEAN; 3 guards green. ZERO consecutive CLEAN (need 3 STRICT per DEC-189). NEXT: pass-43.** | adversary (×42) + product-owner (×42) + consistency-validator (×42) + state-manager | IN PROGRESS — F2 adversary grind | spec v1.3.140; BC-INDEX v6.69; STORY-INDEX v1.5.41; convergence-trajectory p119 appended; burst-log.md appended; factory-artifacts committed. |
+
+---
+
+## REMEDIATION-BURST-2026-07-27 (2026-07-27)
+
+**Burst type:** SOH-DX-1 F2 remediation burst — post-round-46 piecewise consistency check (not an adversary pass; no convergence credit)
+**Pass:** N/A (remediation burst, not an adversary pass; no p-series entry)
+**Findings fixed:** 5 (all LOW) — collateral damage from F46-003 `replace_all` over-propagation
+**Spec version:** v1.3.145 + [1.3.145]
+**BC-INDEX version:** v6.73 (unchanged)
+**Convergence:** 0/3 CLEAN (DEC-189 STRICT) — UNCHANGED; pass-47 VOID ×2 (subagent delivery failure ~32 min combined)
+
+**Fixes applied:**
+1. F1: v1.3.114 version-trail entry in bc-3-issue-write.md frontmatter — first clause restored to `tests/common/fixtures.rs` (was self-contradictory, naming two promotion targets in one sentence)
+2. F2: v1.3.108 version-trail entry — restored to `tests/common/fixtures.rs`
+3. F3: v1.3.137 version-trail entry — restored to `tests/common/fixtures.rs`
+4. F4: spec-changelog [1.3.144] F46-003 scope corrected to "(9 sites: 5 spec body + 3 historical trail entries + 1 footer)" + anachronism note added
+5. F5: bc-3-issue-write.md frontmatter v1.3.144 trail F46-003 clause corrected "(5 sites)" → "(9 sites: …)" — in-round residual of F4; TWIN-ARTIFACT-SWEEP class; folded into v1.3.145 (no v1.3.146 — precedent v1.3.136 F-2 in-round residual)
+
+**Governing principle established:** Version-trail entries are immutable audit records; mechanical `replace_all` must never rewrite historical trail entries. Correcting a factually wrong description of a round's OWN actions is in-scope and not an anachronism (SOH-DX-1-PG-012 datapoint 1).
+
+**Pass-47 adversary — VOID ×2:** Two adversary dispatches both failed to deliver any retrievable output (~32 minutes combined). First dispatch was additionally non-window-eligible — read artifacts still carrying the unfixed F5 defect. Neither counts toward DEC-189. Convergence counter remains 0/3 STRICT. No p124 entry added.
+
+**Files touched in .factory:** sidecar-learning.md; spec-changelog.md; specs/prd/bc-3-issue-write.md; cycles/cycle-001/convergence-trajectory.md (orphaned line 3045 deleted + remediation burst entry appended); cycles/cycle-001/burst-log.md (this entry); STATE.md
+
+**Trajectory:** no p-series entry (remediation burst, not an adversary pass). trajectory-tail →2M→3M+2L→3M→1M+2L unchanged. NEXT: pass-47 (p124) with v1.3.145 artifacts.
+
+**Convergence counter:** 0 of 3 STRICT. NEXT: pass-47 (p124) — dispatch with v1.3.145 artifacts, prompt shape from convergence-trajectory.md p123 entry.
+
+### Archived Phase Progress row (displaced by keep-5 rule; new remediation-burst row added)
+
+Displaced to make room for SOH-DX-1 F2 remediation burst (2026-07-27) Phase Progress row per keep-5 rule (removed oldest: pass-41 adversary).
+
+| Phase | Status | Completed | Gate | Notes | Finding Progression |
+|-------|--------|-----------|------|-------|---------------------|
+| **pass-41 adversary — SOH-DX-1 F2 fix burst round 41 complete (2026-07-26): 2 findings (0C/0H/2M/0L) + 1 process-gap + 1 nit 2M (from 1H+1M); ZERO CRITs; ZERO HIGHs; 2 MEDIUM; ZERO LOWs; novelty LOW-MEDIUM; adversary recommends one more pass then converge (converge-adjacent signal); fixes: AC-13 would-otherwise-succeed invocation (zero-HTTP proof normative); AC-1 first-use subtype parenthetical + policy; config_home param rename; spec v1.3.139 + [1.3.139]; BC-INDEX v6.68; piecewise CLEAN; 3 guards green. ZERO consecutive CLEAN; 0/3 STRICT per DEC-189. NEXT: pass-42.** | F2 adversary grind in progress | 2026-07-26 | ADVERSARY GRIND — convergence + human gate PENDING. | spec v1.3.139; BC-INDEX v6.68; STORY-INDEX v1.5.41. | →8→8→8→7→6→4→3→7→6→5→6→6→4→2→5→5→4→3→3→5→4→2→3→3→6→6→4→5→2→1→3→3→2→3L→1M+3L→2M+2L→2H+2L→4M+2L→2M+1L→1H+1M→2M |
+
+### Archived Current Phase Steps row (displaced by keep-4 rule; new remediation-burst step row added)
+
+Displaced to make room for SOH-DX-1 F2 remediation burst (2026-07-27) step row per keep-4 rule (removed oldest: pass-43 adversary CPS).
+
+| Step | Agent | Status | Output |
+|------|-------|--------|--------|
+| **pass-43 adversary — SOH-DX-1 F2 round 43 complete (2026-07-26): 2 findings (0H/2M/0L) + 2 obs 2M; ZERO HIGHs; novelty LOW-MEDIUM; AC-11 interactive-path exit-64 + stdout pins (mode-agnosticism falsifier closed); AC-16 TempDir precondition (dual rationale); steps 3–6 reference; spec v1.3.141 [1.3.141]; BC-INDEX v6.70; piecewise CLEAN; 3 guards green. ZERO consecutive CLEAN (need 3 STRICT per DEC-189). NEXT: pass-44.** | adversary (×43) + product-owner (×43) + consistency-validator (×43) + state-manager | IN PROGRESS — F2 adversary grind | spec v1.3.141; BC-INDEX v6.70; STORY-INDEX v1.5.41; convergence-trajectory p120 appended; burst-log.md appended; factory-artifacts committed. |

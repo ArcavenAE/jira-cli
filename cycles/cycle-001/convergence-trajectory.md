@@ -3042,4 +3042,28 @@ Ratified intent block (include verbatim in pass-47 dispatch):
 
 **Trajectory so far:** p78(8)→p79(8)→p80(8)→p81(7)→p82(6)→p83(4)→p84(3)→p85(7)→p86(6)→p87(5)→p88(6)→p89(6)→p90(4)→p91(2)→p92(5)→p93(5)→p94(4)→p95(3)→p96(3)→p97(5)→p98(4)→p99(2)→p100(3)→p101(3)→p102(6)→p103(6)→p104(4)→p105(5)→p106(2)→p107(1)→p108(3)→p109(3)→p110(2)→p111(3L)→p112(1M+3L)→p113(2M+2L)→p114(2H+2L)→p115(4M+2L)→p116(2M+1L)→p117(1H+1M)→p118(2M)→p119(1M+2L)→p120(2M)→p121(3M+2L)→p122(3M)→p123(1M+2L). Delta: 0/0/-1/-1/-2/-1/+4/-1/-1/+1/0/-2/-2/+3/0/-1/-1/0/+2/-1/-2/+1/0/+3/0/-2/+1/-3/-1/+2/0/-1/+1/+1/+1/0/+2/-3/-1/+1/+1/-1/+3/-2/-2. Count IMPROVEMENT (3M→1M+2L; total count 3→3; MED count 3→1, LOW count 0→2); ZERO CRITs; ZERO HIGHs; 1 MED; 2 LOWs; novelty LOW (would-otherwise-succeed-clause-AC-2-AC-7 + body-range-label-misreading + promotion-target-path class); third consecutive adversary "Spec has converged" verdict; spec v1.3.144; BC-INDEX v6.73. trajectory-tail →2M→3M+2L→3M→1M+2L. PIPELINE PAUSED 2026-07-26.
 
-**Trajectory so far:** p78(8)→p79(8)→p80(8)→p81(7)→p82(6)→p83(4)→p84(3)→p85(7)→p86(6)→p87(5)→p88(6)→p89(6)→p90(4)→p91(2)→p92(5)→p93(5)→p94(4)→p95(3)→p96(3)→p97(5)→p98(4)→p99(2)→p100(3)→p101(3)→p102(6)→p103(6)→p104(4)→p105(5)→p106(2)→p107(1)→p108(3)→p109(3)→p110(2)→p111(3L)→p112(1M+3L)→p113(2M+2L)→p114(2H+2L)→p115(4M+2L)→p116(2M+1L)→p117(1H+1M)→p118(2M)→p119(1M+2L)→p120(2M)→p121(3M+2L). Delta: 0/0/-1/-1/-2/-1/+4/-1/-1/+1/0/-2/-2/+3/0/-1/-1/0/+2/-1/-2/+1/0/+3/0/-2/+1/-3/-1/+2/0/-1/+1/+1/+1/0/+2/-3/-1/+1/+1/-1/+3. Count INCREASE (2M→3M+2L; total count 2→5; MED count 2→3, LOW count 0→2); ZERO CRITs; ZERO HIGHs; 3 MEDs; 2 LOWs; novelty LOW-MEDIUM (mod-common-false-premise + BC-3.8.010+011-attribution + AC-11-4-HYGIENE-tier-mislabel + literal-unified + range-labels-tightened class); adversary notes "the delta is unusually well-instrumented"; spec v1.3.142; BC-INDEX v6.71. trajectory-tail →2M→1M+2L→2M→3M+2L. NEXT: pass-45 (p122).
+---
+
+### Remediation burst (2026-07-27) — post-p123, pre-p124
+
+**Type:** Spec remediation burst — post-round-46 piecewise consistency check (not an adversary pass; no convergence credit assigned)
+
+**Spec version:** v1.3.145
+**BC-INDEX version:** v6.73 (unchanged)
+**Findings:** 5 (all LOW) — collateral damage from F46-003 `replace_all` sweeping 9 sites when 5 were intended; 3 historical trail entries retroactively falsified
+**Convergence counter:** 0 of 3 STRICT (DEC-189) — UNCHANGED; pass-47 VOID ×2 (subagent delivery failure, ~32 min combined)
+
+**Fixes applied (all LOW):**
+- F1: v1.3.114 version-trail entry in bc-3-issue-write.md frontmatter — first clause restored to `tests/common/fixtures.rs` (was self-contradictory, naming two promotion targets in one sentence)
+- F2: v1.3.108 version-trail entry — restored to `tests/common/fixtures.rs`
+- F3: v1.3.137 version-trail entry — restored to `tests/common/fixtures.rs`
+- F4: spec-changelog [1.3.144] F46-003 scope corrected to "(9 sites: 5 spec body + 3 historical trail entries + 1 footer)" + anachronism note added
+- F5: bc-3-issue-write.md frontmatter v1.3.144 trail F46-003 clause corrected "(5 sites)" → "(9 sites: …)" — in-round residual of F4; TWIN-ARTIFACT-SWEEP class; folded into v1.3.145 (no v1.3.146 — precedent v1.3.136 F-2 in-round residual)
+
+**Governing principle established:** A version-trail entry is an immutable audit record of what was true at that version; mechanical `replace_all` must never rewrite historical trail entries. Corollary: correcting a factually wrong description of a round's OWN actions is in-scope and not an anachronism (SOH-DX-1-PG-012 datapoint 1).
+
+**Piecewise re-verification:** CLEAN, verified twice (consistency-validator + orchestrator direct mechanical check). All 3 guards green: spec-counts OK, cumulative BC counts OK (657 total), citation symbols OK (357 checked). BC-INDEX.md untouched at v6.73.
+
+**Pass-47 adversary — VOID ×2 (no convergence credit):** Two adversary dispatches both failed to deliver any retrievable output (~32 minutes combined). The first dispatch was additionally non-window-eligible because it read artifacts still carrying the unfixed F5 defect. Neither counts toward DEC-189. Convergence counter remains 0/3 STRICT. No p124 entry added.
+
+**Trajectory so far:** p78(8)→p79(8)→p80(8)→p81(7)→p82(6)→p83(4)→p84(3)→p85(7)→p86(6)→p87(5)→p88(6)→p89(6)→p90(4)→p91(2)→p92(5)→p93(5)→p94(4)→p95(3)→p96(3)→p97(5)→p98(4)→p99(2)→p100(3)→p101(3)→p102(6)→p103(6)→p104(4)→p105(5)→p106(2)→p107(1)→p108(3)→p109(3)→p110(2)→p111(3L)→p112(1M+3L)→p113(2M+2L)→p114(2H+2L)→p115(4M+2L)→p116(2M+1L)→p117(1H+1M)→p118(2M)→p119(1M+2L)→p120(2M)→p121(3M+2L)→p122(3M)→p123(1M+2L). [Remediation burst 2026-07-27: F1-F5 all LOW; no adversary pass; convergence counter unchanged]. trajectory-tail →2M→3M+2L→3M→1M+2L. NEXT: pass-47 (p124) — dispatch with v1.3.145 artifacts.
