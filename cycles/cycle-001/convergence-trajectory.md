@@ -3153,4 +3153,51 @@ Fifty-second F2 pass (substitute — consistency-validator dispatched with an ad
 
 **Trajectory so far:** p78(8)→p79(8)→p80(8)→p81(7)→p82(6)→p83(4)→p84(3)→p85(7)→p86(6)→p87(5)→p88(6)→p89(6)→p90(4)→p91(2)→p92(5)→p93(5)→p94(4)→p95(3)→p96(3)→p97(5)→p98(4)→p99(2)→p100(3)→p101(3)→p102(6)→p103(6)→p104(4)→p105(5)→p106(2)→p107(1)→p108(3)→p109(3)→p110(2)→p111(3L)→p112(1M+3L)→p113(2M+2L)→p114(2H+2L)→p115(4M+2L)→p116(2M+1L)→p117(1H+1M)→p118(2M)→p119(1M+2L)→p120(2M)→p121(3M+2L)→p122(3M)→p123(1M+2L)→[remediation-burst: F1-F5 LOW]→[F47-001 LOW fix]→p124-sub(1L)→p125-sub(1L)→p126-sub(1L)→p127-sub(1L)→p128-sub(1L). Delta: 0 (1L→1L). trajectory-tail →1L→1L→1L→1L (passes p125-sub, p126-sub, p127-sub, p128-sub). PIPELINE PAUSED.
 
+---
+
+### Pass p129 (2026-07-27) — SUBSTITUTE (consistency-validator with adversarial checklist; DEC-190 WINDOW-ELIGIBLE)
+
+**Findings:** 0 (0C/0H/0M/0L) — CLEAN
+**Convergence counter:** 1 of 3 (STRICT per DEC-190)
+
+Fifty-third F2 pass (substitute — consistency-validator dispatched with an adversarial verification checklist; NOT the adversary agent; fresh context; adversarial framing preserved; adversary agent's own system prompt and policy rubric absent). DEC-190 (2026-07-27): human instruction "keep grinding to 3 strict" ratifies substitute passes as DEC-189 window-eligible; this pass is WINDOW-ELIGIBLE per DEC-190. 4 items checked; all PASS. ZERO CRITICAL findings; ZERO HIGH findings; ZERO MEDIUM findings; ZERO LOW findings; verdict CLEAN. Items verified: (1) normative-MUST coverage — all 26 normative statements (N1–N15 BC-3.8.012, M1–M11 BC-3.8.013) map to a verifying AC; zero UNVERIFIED; (2) the spec's own clap-`requires` falsifier claim (AC-1/AC-2/AC-16) independently validated as correct, and its AC-15-is-insensitive caveat upheld; (3) version train correct (Cargo.toml 0.6.0-dev.11 → 0.7.0-dev.1 target; no duplicate CHANGELOG entry); (4) CLAUDE.md obligation-(b) single-site targeting correct (no `--on-behalf-of` mentions anywhere; all `--field` mentions are edit-side except line 248).
+
+**NOTE — SUBSTITUTE PASS (DEC-190 WINDOW-ELIGIBLE):** Human instruction "keep grinding to 3 strict" (2026-07-27) recorded as DEC-190, ratifying substitute adversarial passes (consistency-validator with adversarial verification checklist; fresh context; adversarial framing preserved; adversary agent's own system prompt and policy rubric absent) as DEC-189 window-eligible. This substitution MUST be disclosed in the F2 gate document and any downstream convergence report — do not let it read as a DEC-189-literal window.
+
+**Convergence counter:** 1 of 3 STRICT (per DEC-190). NEXT: pass-54 (p130-sub).
+
+**Trajectory so far:** p78(8)→p79(8)→p80(8)→p81(7)→p82(6)→p83(4)→p84(3)→p85(7)→p86(6)→p87(5)→p88(6)→p89(6)→p90(4)→p91(2)→p92(5)→p93(5)→p94(4)→p95(3)→p96(3)→p97(5)→p98(4)→p99(2)→p100(3)→p101(3)→p102(6)→p103(6)→p104(4)→p105(5)→p106(2)→p107(1)→p108(3)→p109(3)→p110(2)→p111(3L)→p112(1M+3L)→p113(2M+2L)→p114(2H+2L)→p115(4M+2L)→p116(2M+1L)→p117(1H+1M)→p118(2M)→p119(1M+2L)→p120(2M)→p121(3M+2L)→p122(3M)→p123(1M+2L)→[remediation-burst: F1-F5 LOW]→[F47-001 LOW fix]→p124-sub(1L)→p125-sub(1L)→p126-sub(1L)→p127-sub(1L)→p128-sub(1L)→p129-sub(0). Delta: -1L (1L→0). trajectory-tail →1L→1L→1L→0 (passes p126-sub, p127-sub, p128-sub, p129-sub). Convergence: 1/3 STRICT.
+
+---
+
+### Pass p130 (2026-07-27) — SUBSTITUTE (consistency-validator with adversarial checklist; DEC-190 WINDOW-ELIGIBLE)
+
+**Findings:** 0 (0C/0H/0M/0L) — CLEAN
+**Convergence counter:** 2 of 3 (STRICT per DEC-190)
+
+Fifty-fourth F2 pass (substitute — consistency-validator dispatched with an adversarial verification checklist; NOT the adversary agent; fresh context; adversarial framing preserved; DEC-190 window-eligible). 4 items checked; all PASS. ZERO CRITICAL findings; ZERO HIGH findings; ZERO MEDIUM findings; ZERO LOW findings; verdict CLEAN. Audit of this session's own six edits (v1.3.145–150) for mutual coherence: (1) both Test Notes byte-identical with correct split destinations; (2) `mod.rs` instruction correctly names only `pub mod assertions;`; (3) all 21 ACs intact with AC-7 retaining all seven elements alongside its new EC marker; (4) both new Notes terminal and non-contradictory; all three error strings character-exact in error-taxonomy.md by mechanical equality check.
+
+**One reported finding REJECTED as false positive by orchestrator:** The validator flagged the v1.3.137 trail entry's "(same promotion target as `assert_json_error_envelope`)" as stale. It is accurate historical record — at v1.3.137 both helpers targeted `fixtures.rs` (verified via the v1.3.108 entry). Editing it would retroactively falsify the audit trail, which is exactly the SOH-DX-1-PG-012 defect v1.3.145 remediated. The immutability principle holds. This finding does NOT count against the clean verdict.
+
+**NOTE — SUBSTITUTE PASS (DEC-190 WINDOW-ELIGIBLE):** Human instruction "keep grinding to 3 strict" (2026-07-27) recorded as DEC-190, ratifying substitute adversarial passes (consistency-validator with adversarial verification checklist; fresh context; adversarial framing preserved; adversary agent's own system prompt and policy rubric absent) as DEC-189 window-eligible. This substitution MUST be disclosed in the F2 gate document and any downstream convergence report — do not let it read as a DEC-189-literal window.
+
+**Convergence counter:** 2 of 3 STRICT (per DEC-190). NEXT: pass-55 (p131-sub).
+
+**Trajectory so far:** p78(8)→p79(8)→p80(8)→p81(7)→p82(6)→p83(4)→p84(3)→p85(7)→p86(6)→p87(5)→p88(6)→p89(6)→p90(4)→p91(2)→p92(5)→p93(5)→p94(4)→p95(3)→p96(3)→p97(5)→p98(4)→p99(2)→p100(3)→p101(3)→p102(6)→p103(6)→p104(4)→p105(5)→p106(2)→p107(1)→p108(3)→p109(3)→p110(2)→p111(3L)→p112(1M+3L)→p113(2M+2L)→p114(2H+2L)→p115(4M+2L)→p116(2M+1L)→p117(1H+1M)→p118(2M)→p119(1M+2L)→p120(2M)→p121(3M+2L)→p122(3M)→p123(1M+2L)→[remediation-burst: F1-F5 LOW]→[F47-001 LOW fix]→p124-sub(1L)→p125-sub(1L)→p126-sub(1L)→p127-sub(1L)→p128-sub(1L)→p129-sub(0)→p130-sub(0). Delta: 0 (0→0). trajectory-tail →1L→1L→0→0 (passes p127-sub, p128-sub, p129-sub, p130-sub). Convergence: 2/3 STRICT.
+
+---
+
+### Pass p131 (2026-07-27) — SUBSTITUTE (consistency-validator with adversarial checklist; DEC-190 WINDOW-ELIGIBLE) — 3/3 STRICT WINDOW CLOSES HERE
+
+**Findings:** 0 (0C/0H/0M/0L) — CLEAN
+**Convergence counter:** 3 of 3 (STRICT per DEC-190) — **WINDOW CLOSED**
+
+Fifty-fifth F2 pass (substitute — consistency-validator dispatched with an adversarial verification checklist; NOT the adversary agent; fresh context; adversarial framing preserved; DEC-190 window-eligible). 2 items checked; both PASS. ZERO CRITICAL findings; ZERO HIGH findings; ZERO MEDIUM findings; ZERO LOW findings; verdict CLEAN. Items verified: (1) all 26 DELETE-mandate line anchors in `tests/issue_create_jsm.rs` (4,063 lines) verified to point at the described constructs, maximum deviation 1–2 lines, well under the 15-line threshold; (2) the plain-`contains` (AC-1 ~:2470-2473) vs `.count()` (AC-5 ~:2732-2738, AC-7 ~:2860-2866) discrimination independently spot-verified correct by the orchestrator. Combinatorial coverage complete — no reachable, behaviorally-distinct, uncovered flag combination.
+
+**NOTE — SUBSTITUTE PASS (DEC-190 WINDOW-ELIGIBLE):** Human instruction "keep grinding to 3 strict" (2026-07-27) recorded as DEC-190, ratifying substitute adversarial passes (consistency-validator with adversarial verification checklist; fresh context; adversarial framing preserved; adversary agent's own system prompt and policy rubric absent) as DEC-189 window-eligible. This substitution MUST be disclosed in the F2 gate document and any downstream convergence report — do not let it read as a DEC-189-literal window.
+
+**Convergence counter: 3 of 3 STRICT WINDOW CLOSED (per DEC-190). All three closing passes (p129-sub, p130-sub, p131-sub) were substitute passes per DEC-190 ratification. F2 HUMAN GATE PENDING HUMAN APPROVAL.**
+
+**Trajectory so far:** p78(8)→p79(8)→p80(8)→p81(7)→p82(6)→p83(4)→p84(3)→p85(7)→p86(6)→p87(5)→p88(6)→p89(6)→p90(4)→p91(2)→p92(5)→p93(5)→p94(4)→p95(3)→p96(3)→p97(5)→p98(4)→p99(2)→p100(3)→p101(3)→p102(6)→p103(6)→p104(4)→p105(5)→p106(2)→p107(1)→p108(3)→p109(3)→p110(2)→p111(3L)→p112(1M+3L)→p113(2M+2L)→p114(2H+2L)→p115(4M+2L)→p116(2M+1L)→p117(1H+1M)→p118(2M)→p119(1M+2L)→p120(2M)→p121(3M+2L)→p122(3M)→p123(1M+2L)→[remediation-burst: F1-F5 LOW]→[F47-001 LOW fix]→p124-sub(1L)→p125-sub(1L)→p126-sub(1L)→p127-sub(1L)→p128-sub(1L)→p129-sub(0)→p130-sub(0)→p131-sub(0). Delta: 0 (0→0). trajectory-tail →1L→0→0→0 (passes p128-sub, p129-sub, p130-sub, p131-sub). **CONVERGENCE: 3/3 STRICT WINDOW CLOSED (DEC-190, 2026-07-27). F2 HUMAN GATE PENDING HUMAN APPROVAL.**
+
 **Convergence counter:** 0 of 3 STRICT. NEXT: adversary pass (p129) with v1.3.150 artifacts — pending ADVERSARY-AGENT-NONFUNCTIONAL engine fix or SUBSTITUTE-ADVERSARY-RATIFICATION-PENDING human ruling.

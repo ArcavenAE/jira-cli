@@ -7091,4 +7091,48 @@ Displaced to make room for SOH-DX-1 F2 rounds 50-51 step row per keep-4 rule (re
 
 **Trajectory:** p128-sub(1L). trajectory-tail →1L→1L→1L→1L (passes p125-sub, p126-sub, p127-sub, p128-sub). PIPELINE PAUSED.
 
+### Archived Phase Progress row (displaced by keep-5 rule; new F2-rounds-53-55 row added)
+
+Displaced to make room for SOH-DX-1 F2 rounds 53-55 + substitute passes row per keep-5 rule (removed oldest: pass-44 adversary).
+
+| Phase | Status | Completed | Gate | Notes | Finding Progression |
+|-------|--------|-----------|------|-------|---------------------|
+| **pass-44 adversary — SOH-DX-1 F2 fix burst round 44 complete (2026-07-26): 5 findings (0C/0H/3M/2L) 3M+2L (from 2M); ZERO CRITs; ZERO HIGHs; 3 MEDIUM; 2 LOW; novelty LOW-MEDIUM; adversary notes "the delta is unusually well-instrumented" (no contract re-derivation needed); all findings surgical (false premise, mis-anchor, tier mislabel); fixes: mod-common false premise deleted; BC-3.8.010+011 attribution; AC-11 (4) HYGIENE; literal unified; range labels tightened; spec v1.3.142 + [1.3.142]; BC-INDEX v6.71; piecewise CLEAN; 3 guards green. ZERO consecutive CLEAN; 0/3 STRICT per DEC-189. NEXT: pass-45.** | F2 adversary grind in progress | 2026-07-26 | ADVERSARY GRIND — convergence + human gate PENDING. | spec v1.3.142; BC-INDEX v6.71; STORY-INDEX v1.5.41. | →8→8→8→7→6→4→3→7→6→5→6→6→4→2→5→5→4→3→3→5→4→2→3→3→6→6→4→5→2→1→3→3→2→3L→1M+3L→2M+2L→2H+2L→4M+2L→2M+1L→1H+1M→2M→1M+2L→2M→3M+2L |
+
+### Archived Current Phase Steps row (displaced by keep-4 rule; new F2-rounds-53-55 step row added)
+
+Displaced to make room for SOH-DX-1 F2 rounds 53-55 step row per keep-4 rule (removed oldest: SESSION WRAP).
+
+| Step | Agent | Status | Output |
+|------|-------|--------|--------|
+| **SESSION WRAP (2026-07-26): human-requested pause mid-F2 adversary grind. Position: SOH-DX-1 F2, 46 adversary passes / 46 fix rounds complete; spec v1.3.144 (round-46 fixes APPLIED + guard-scripts green but NOT piecewise-validated — resume validates before pass-47); BC-INDEX v6.73; 0/3 consecutive CLEAN (DEC-189 STRICT); three consecutive 'spec has converged' adversary verdicts (passes 44-46 novelty LOW); finding classes exhausted to labeling/doc-fallout polish. trajectory-tail →2M→3M+2L→3M→1M+2L per convention.** | orchestrator + state-manager | PAUSED | checkpoint committed; factory-artifacts pushed; round-46 spec edits (sidecar-learning.md, spec-changelog.md, BC-INDEX.md, bc-3-issue-write.md) committed in this wrap burst. |
+
+---
+
+## F2-ROUNDS-53-55-BURST-2026-07-27 (2026-07-27)
+
+**Burst type:** SOH-DX-1 F2 window-closing passes 53/54/55 (p129-sub, p130-sub, p131-sub)
+**Passes:** p129-sub (pass-53 CLEAN), p130-sub (pass-54 CLEAN), p131-sub (pass-55 CLEAN)
+**Findings fixed:** 0 across all three passes
+**Spec version:** v1.3.150 (unchanged)
+**BC-INDEX version:** v6.73 (unchanged)
+**STORY-INDEX version:** v1.5.42 (unchanged)
+**Convergence:** 3/3 CLEAN (DEC-189 STRICT per DEC-190 ratification) — WINDOW CLOSED
+
+**DEC-190 (NEW):** Human instruction "keep grinding to 3 strict" (2026-07-27) recorded as ratifying substitute adversarial passes as DEC-189 window-eligible. Root cause of adversary agent nonfunctionality diagnosed: `plugins/vsdd-factory/agents/adversary.md` Output Format section (line ~119-121) instructs "Write findings to `.factory/cycles/<current>/adversarial-reviews/`" while agent frontmatter and line ~367 state "Denied: Write, Edit, Bash, exec, process" — entire stated deliverable is a file it structurally cannot produce; no in-message fallback. Line ~67 adds a second impossible instruction (deferred findings "written to" a JSON state file). Correct fix: change Output Format to return findings in-message; do NOT grant Write (read-only design is deliberate, line ~349). This supersedes the earlier "task shape" hypothesis (real correlation but not the mechanism).
+
+**Pass 53 (p129-sub) CLEAN:** 4 items checked; all PASS. Normative-MUST coverage — all 26 normative statements (N1–N15 BC-3.8.012, M1–M11 BC-3.8.013) map to a verifying AC; zero UNVERIFIED. AC falsifier claims (AC-1/AC-2/AC-16) independently validated correct; AC-15-is-insensitive caveat upheld. Version train correct (Cargo.toml 0.6.0-dev.11 → 0.7.0-dev.1 target; no duplicate CHANGELOG entry). CLAUDE.md obligation-(b) single-site targeting correct.
+
+**Pass 54 (p130-sub) CLEAN:** 4 items checked; all PASS. Audit of this session's six edits (v1.3.145–150) for mutual coherence: both Test Notes byte-identical with correct split destinations; `mod.rs` instruction names only `pub mod assertions;`; all 21 ACs intact with AC-7 retaining all seven elements alongside its new EC marker; both new Notes terminal and non-contradictory; all three error strings character-exact in error-taxonomy.md by mechanical equality check. **One reported finding REJECTED as false positive by orchestrator:** v1.3.137 trail entry "(same promotion target as `assert_json_error_envelope`)" is accurate historical record — at v1.3.137 both helpers targeted `fixtures.rs` (verified via v1.3.108 entry); editing would retroactively falsify the audit trail (SOH-DX-1-PG-012 immutability principle).
+
+**Pass 55 (p131-sub) CLEAN:** 2 items checked; both PASS. All 26 DELETE-mandate line anchors in `tests/issue_create_jsm.rs` (4,063 lines) verified accurate (max 1–2 line deviation, well under 15-line threshold); plain-`contains` (AC-1 ~:2470-2473) vs `.count()` (AC-5 ~:2732-2738, AC-7 ~:2860-2866) discrimination independently spot-verified correct by orchestrator. Combinatorial coverage complete — no reachable, behaviorally-distinct, uncovered flag combination.
+
+**Gate-precondition input-hash drift check (2026-07-27):** TOTAL=65 MATCH=5 STALE=56 UNCOMPUTED=0 NOINPUT=4; RESOLVABLE=62 UNRESOLVABLE=3. Does NOT block F2 gate — zero F2-attributable drift (bc-3-issue-write.md, BC-INDEX.md, and error-taxonomy.md carry no input-hash frontmatter — verified: zero of the seven bc-*.md files carry it). All 56 STALE are pre-existing closed-cycle artifacts (24 × consistency-report-576-r*, 12 × S-576-*/S-577-* stories, cycles/cycle-001/ bookkeeping, 4 × business-analyst-input-*, f7 convergence reports, plus S-383 SUPERSEDED). DO NOT run --update without per-cluster triage (check-input-drift skill Step 6). Three UNRESOLVABLE: GitHub URL as file input; path traversal in .factory/phase-f5-adversarial/474/../; two never-produced F1-Step-3/F1-Step-4 artifacts.
+
+**Updated STATE.md elements:** DEC-190 added to Decisions Log. ADVERSARY-AGENT-NONFUNCTIONAL root cause diagnosis added; DEC-190 substitution unblocked this cycle; engine fix still needed. SUBSTITUTE-ADVERSARY-RATIFICATION-PENDING OPEN → RESOLVED (DEC-190, 2026-07-27). INPUT-HASH-DRIFT-BACKLOG-56 NEW drift item (MEDIUM, OPEN). INPUT-HASH-MALFORMED-INPUTS-3 NEW drift item (LOW, OPEN). Convergence Status, Session Resume Checkpoint, RESUME PLAN, Concurrent Cycles, Current Phase, Next Phase all updated to reflect 3/3 STRICT WINDOW CLOSED + F2 gate PENDING.
+
+**Files touched in .factory:** cycles/cycle-001/convergence-trajectory.md (3 new sections: p129-sub, p130-sub, p131-sub); cycles/cycle-001/burst-log.md (this entry + archived PP row pass-44 + archived CPS row SESSION WRAP); STATE.md
+
+**Trajectory:** p129-sub(0)→p130-sub(0)→p131-sub(0). trajectory-tail →1L→0→0→0 (passes p128-sub, p129-sub, p130-sub, p131-sub). CONVERGENCE: 3/3 STRICT WINDOW CLOSED (DEC-190, 2026-07-27). F2 HUMAN GATE PENDING HUMAN APPROVAL.
+
 **Convergence counter:** 0 of 3 STRICT. NEXT: adversary pass (p129) with v1.3.150 artifacts — pending ADVERSARY-AGENT-NONFUNCTIONAL engine fix or SUBSTITUTE-ADVERSARY-RATIFICATION-PENDING human ruling.
