@@ -6844,3 +6844,43 @@ Displaced to make room for SOH-DX-1 F2 adversary round 38 step row per keep-4 ru
 | Step | Agent | Status | Output |
 |------|-------|--------|--------|
 | **pass-34 adversary — SOH-DX-1 F2 round 34 complete (2026-07-26): 3 LOW findings (0H/0M/3L) REGRESSION (2→3L); ZERO contract-level defects; first zero-M pass; novelty LOW; changelog Type legend; mod-common hygiene; help-line duplication rule; adversary verdict "Spec has converged"; spec v1.3.132 [1.3.132]; BC-INDEX v6.61; piecewise CLEAN; 3 guards green. ZERO consecutive CLEAN; first zero-M pass — window expected to open on pass-35. NEXT: pass-35.** | adversary (×34) + product-owner (×34) + consistency-validator (×34) + state-manager | IN PROGRESS — F2 adversary grind | spec v1.3.132; BC-INDEX v6.61; STORY-INDEX v1.5.41; convergence-trajectory p111 appended; burst-log.md appended; factory-artifacts committed. |
+
+---
+
+## F2-ADVERSARY-ROUND-39 Burst (2026-07-26)
+
+**Burst type:** SOH-DX-1 F2 adversary grind round 39 checkpoint
+**Pass:** p116 (pass-39 adversary + fix burst round 39)
+**Findings:** 3 (0C/0H/2M/1L) + 3 observations — IMPROVEMENT from 4M+2L (6) to 2M+1L (3); novelty LOW; verdict "converged on substance"
+**Spec version:** v1.3.137 + [1.3.137]
+**BC-INDEX version:** v6.66
+**Convergence:** 0/3 CLEAN (DEC-189 STRICT)
+
+**Fixes applied:**
+1. pin rule reachability qualifier — blanket mandate scoped with reachability qualifier (mandate applies only when AC path is reachable)
+2. AC-15 exclusion from pin mandate list — HYGIENE path with no regression risk removed
+3. write_profile_config fully specified — fixture location (fixtures.rs :1959-1966) and canonical shape cited
+4. EC-10 transitive-falsification sentence added (observation)
+5. changelog/trace/README bookkeeping — [1.3.137] entry, trace fields updated, prd/README.md corrected (observation)
+
+**Files touched in .factory:** STATE.md; spec-changelog.md; specs/prd/BC-INDEX.md; specs/prd/bc-3-issue-write.md; specs/prd/README.md; sidecar-learning.md; cycles/cycle-001/convergence-trajectory.md; cycles/cycle-001/burst-log.md
+
+**Trajectory:** →p116(2M+1L). trajectory-tail →2H+2L→4M+2L→2M+1L.
+
+**Convergence counter:** 0 of 3 STRICT. NEXT: pass-40 (p117).
+
+### Archived Phase Progress row (displaced by keep-5 rule; new pass-39-adversary row added)
+
+Displaced to make room for SOH-DX-1 F2 adversary round 39 Phase Progress row per keep-5 rule (removed oldest: pass-34 adversary).
+
+| Phase | Status | Completed | Gate | Notes | Finding Progression |
+|-------|--------|-----------|------|-------|---------------------|
+| **pass-34 adversary — SOH-DX-1 F2 fix burst round 34 complete (2026-07-26): 3 LOW findings (0C/0H/0M/3L) REGRESSION (2→3L); ZERO contract-level defects; first zero-M pass; novelty LOW; fixes: changelog Type legend; mod-common hygiene; help-line duplication rule; adversary verdict "Spec has converged"; spec v1.3.132 + [1.3.132]; BC-INDEX v6.61; piecewise CLEAN; 3 guards green. ZERO consecutive CLEAN; first zero-M pass — window expected to open on pass-35 (need 3 STRICT per DEC-189). NEXT: pass-35.** | F2 adversary grind in progress | 2026-07-26 | ADVERSARY GRIND — convergence + human gate PENDING. | spec v1.3.132; BC-INDEX v6.61; STORY-INDEX v1.5.41. | →8→8→8→7→6→4→3→7→6→5→6→6→4→2→5→5→4→3→3→5→4→2→3→3→6→6→4→5→2→1→3→3→2→3L |
+
+### Archived Current Phase Steps row (displaced by keep-4 rule; new pass-39-adversary step row added)
+
+Displaced to make room for SOH-DX-1 F2 adversary round 39 step row per keep-4 rule (removed oldest: pass-35 adversary CPS).
+
+| Step | Agent | Status | Output |
+|------|-------|--------|--------|
+| **pass-35 adversary — SOH-DX-1 F2 round 35 complete (2026-07-26): 4 findings (0H/1M/3L) REGRESSION (3L→1M+3L); 1 MEDIUM; novelty LOW-MEDIUM; fifth ADR-0014 stale site enumerated (ALL FIVE); section-anchor self-cites (line-drift class killed); fixture count corrected; REGRESSION PIN extended AC-13/19 (mandate list now 7 ACs); spec v1.3.133 [1.3.133]; BC-INDEX v6.62; piecewise CLEAN; 3 guards green. ZERO consecutive CLEAN; 0/3 STRICT per DEC-189. NEXT: pass-36.** | adversary (×35) + product-owner (×35) + consistency-validator (×35) + state-manager | IN PROGRESS — F2 adversary grind | spec v1.3.133; BC-INDEX v6.62; STORY-INDEX v1.5.41; convergence-trajectory p112 appended; burst-log.md appended; factory-artifacts committed. |

@@ -9,6 +9,24 @@ Track all spec version changes. Most recent version first.
 
 > **Type legend:** Type classifies the SPEC document delta: MINOR = new BCs/VPs/sections; PATCH = amendments to existing bodies/ACs/ECs. Product-semver impact is recorded in the Summary line, independent of Type.
 
+## [1.3.137] - 2026-07-26
+
+### Type: PATCH
+
+### Summary
+SOH-DX-1 DEC-188 round-39 adversary-pass corrections (#639): F-1 (MED): Removal postcondition uniform rule qualified to "every AC that reaches `handle_create` with a guarded flag and no `--request-type`"; AC-15 exclusion added (clap `conflicts_with` exit-2 pre-handler; `handle_create` never entered; guard never evaluated; same carve-out class as AC-16). F-2 (MED): `write_profile_config` specified in both Test Note Config fixture contracts — lives in `tests/common/fixtures.rs` (same promotion target as `assert_json_error_envelope`); signature `write_profile_config(dir: &Path, base_url: &str)`; canonical shape modeled on `tests/issue_create_jsm.rs` ~:1959-1966 (`default_profile = "default"` + `[profiles.default]` block with `url` and `auth_method` fields). F-3 (LOW): EC-3.8.012-10 gains "Transitively falsified by AC-8/AC-13's `received_requests().is_empty()` — any project-type gate would require HTTP; no dedicated AC needed." Obs-1: [1.3.136] changelog entry gains missing `### BC Count` subsection and trailing `---`. Obs-2: Frontmatter trace v1.3.114 moved from wrong position (between v1.3.112 and v1.3.136) to correct descending position (between v1.3.115 and v1.3.113). Obs-3 (opportunistic): README.md bc-3-issue-write.md BC count `(107)` → `(111)` to match `definitional_count`. BC count unchanged (140/111).
+
+### Changed
+- `.factory/specs/prd/bc-3-issue-write.md` (MODIFIED): Removal postcondition uniform rule qualified; AC-15 exclusion added. `write_profile_config` spec added to both Test Note Config fixture contracts. EC-3.8.012-10 transitively-falsified sentence added. Frontmatter trace v1.3.114 repositioned. Frontmatter v1.3.137 trace entry. Footer updated to v1.3.137.
+- `.factory/spec-changelog.md` (MODIFIED): [1.3.136] entry gains `### BC Count` + `---`. [1.3.137] entry added.
+- `.factory/specs/prd/BC-INDEX.md` (MODIFIED): `last_updated` → v1.3.137 description; `index_version` v6.65→v6.66.
+- `.factory/specs/prd/README.md` (MODIFIED): bc-3-issue-write.md BC count `(107)` → `(111)`.
+
+### BC Count
+0 new BCs. Total unchanged: 657 cumulative (BC-INDEX), 140/111 individually-bodied in bc-3-issue-write.md.
+
+---
+
 ## [1.3.136] - 2026-07-26
 
 ### Type: PATCH
@@ -19,6 +37,11 @@ SOH-DX-1 DEC-188 round-38 adversary-pass corrections (#639): F-1 (MED): AC-2, AC
 ### Changed
 - `.factory/specs/prd/bc-3-issue-write.md` (MODIFIED): AC-2/AC-5/AC-7 DELETE mandates gain write_minimal_config REPLACED note. BC-3.8.012 single-flag verbatim string trimmed (fenced block). AC-1 FULL-STRING pin trimmed. Uniform rule added to Asymmetry rationale. EC-3.8.012-10 §42-45 claim corrected. Deliverable (a) five→four sites. Deliverable (f) added. Removal postcondition mandate list extended to 13 ACs (AC-1/2/3/5/7/8/9/10/11/13/17/18/19). AC-8 both invocations gain REGRESSION PIN. AC-13 zero-HTTP assertion added. Frontmatter v1.3.136 trace entry. Footer updated to v1.3.136.
 - `.factory/specs/prd/BC-INDEX.md` (MODIFIED): last_updated updated to v1.3.136 description; index_version v6.64→v6.65.
+
+### BC Count
+0 new BCs. Total unchanged: 657 cumulative (BC-INDEX), 140/111 individually-bodied in bc-3-issue-write.md.
+
+---
 
 ## [1.3.135] - 2026-07-26
 
