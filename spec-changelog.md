@@ -9,6 +9,23 @@ Track all spec version changes. Most recent version first.
 
 > **Type legend:** Type classifies the SPEC document delta: MINOR = new BCs/VPs/sections; PATCH = amendments to existing bodies/ACs/ECs. Product-semver impact is recorded in the Summary line, independent of Type.
 
+## [1.3.143] - 2026-07-26
+
+### Type: PATCH
+
+### Summary
+SOH-DX-1 DEC-188 round-45 adversary-pass corrections (#639): F45-001 (MED): deliverable (e) in the S-639-1 delivery obligations section gains a THIRD stale-parity site — `tests/issue_create_jsm.rs` ~:2373-2374 carries the same false platform-parity claim AND a dead "create.rs lines 333-343" citation (the markdown-requires-description string exists only in `jsm_create.rs` ~:175 + `edit.rs` ~:89); all three sites (jsm_create.rs ~:171-172, tests ~:2323-2326, tests ~:2373-2374) must be corrected at F4. F45-002 (MED): the "Doc-comment and section-banner rewrite obligation" in the BC-3.8.012 Removal postcondition extended to cover the FAMILY-level banner at `tests/issue_create_jsm.rs` ~:2381-2391 — three explicitly enumerated false clauses: (1) "S-383: Platform-path inverse warnings" framing is historical; (2) "Red Gate: all 7 tests MUST fail" — tests PASS post-inversion; (3) "2 eprintln! guards" — both removed by DEC-188. F45-003 (MED): README.md holdout row count corrected from 55 to 100, range extended to include H-NEW-JSM-RT-006, informational caveat added. BC count unchanged (140/111).
+
+### Changed
+- `.factory/specs/prd/bc-3-issue-write.md` (MODIFIED): Deliverable (e) extended with THIRD stale-parity site and corrected "for both" → "for all three sites" (F45-001). Banner-rewrite obligation extended with FAMILY-level banner clause enumerating three false post-DEC-188 claims (F45-002). Frontmatter v1.3.143 trace entry prepended. Footer updated to v1.3.143.
+- `.factory/specs/prd/README.md` (MODIFIED): Holdout row count 55→100, range H-NEW-JSM-RT-001..005→..006, informational caveat added (F45-003).
+- `.factory/specs/prd/BC-INDEX.md` (MODIFIED): `index_version` v6.71→v6.72, `last_updated` updated to v1.3.143 description.
+
+### BC Count
+140/111; 657 cumulative (BC-INDEX)
+
+---
+
 ## [1.3.142] - 2026-07-26
 
 ### Type: PATCH
