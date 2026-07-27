@@ -1,7 +1,7 @@
 ---
 context: error-taxonomy
 title: "Error Taxonomy"
-last_updated: 2026-07-16
+last_updated: 2026-07-27
 source_pass: 3
 trace: |
   - L2: .factory/specs/domain-spec/
@@ -10,6 +10,7 @@ trace: |
   - Source P8: .factory/semport/jira-cli/jira-cli-pass-8-deep-synthesis.md §6.1 (design patterns)
   - F2 amendment (2026-07-11, issue #577 SOH-COMMENT-CRUD-1, adversary pass-44 fix round 47 F-2): Section 3 — comment 403/404 override rows added (UserError exit 64, body surfaced; BC-3.5.004/BC-3.5.005/BC-3.5.010); TD-031 pre-existing violation corrected (volatile line cite replaced with stable symbol anchor src/api/client.rs::extract_error_message); pre-existing table-cell pipe escaped in BC-CITE-001 False-positive risk row
   - F2 amendment (2026-07-16, issue #576 SOH-ATTACHMENTS-1, adversary pass-16 fix round 16 P16-001): Section 3 — attachment 404 override rows added (BC-2.7.006/BC-2.7.012/BC-3.9.008/BC-3.9.013/BC-3.9.015); first 413 surface added (attachment upload, BC-3.9.001/BC-3.9.012); perimeter-scan [process-gap] recorded in impact-boundary-576.md
+  - F2 amendment (2026-07-27, issue #639 SOH-DX-1, F52-001): Section 6 — Issue Commands subsection added; three pre-flight JrError::UserError exit-64 conditions registered (BC-3.8.012: --field without --request-type; BC-3.8.013: --on-behalf-of without --request-type; combined: both flags without --request-type, BC-3.8.012 governs)
 ---
 
 # Error Taxonomy — jira-cli
@@ -181,6 +182,16 @@ Every error message must suggest a next action. Conventions by category:
 | Profile not found in config | `"Profile '<name>' not found. Run: jr auth login"` | 64 |
 | `JR_PROFILE` set to nonexistent profile | same as above | 64 |
 | Multi-profile fields bug (NFR-R-D, MUST-FIX) | After fix: error message must reference `[profiles.<name>]` not deprecated `[fields]` | 64 |
+
+### Issue Commands
+
+Pre-flight `JrError::UserError` conditions for `jr issue create` (DEC-188, BC-3.8.012/BC-3.8.013). All three fire BEFORE any HTTP is issued (zero HTTP on these error paths).
+
+| Condition | Error | Exit Code |
+|---|---|---|
+| `issue create --field` without `--request-type` (BC-3.8.012) | `"--field is only valid with --request-type (JSM service-desk requests). Add --request-type <NAME> to submit a JSM request with custom fields, or drop --field to create a standard platform issue."` | 64 |
+| `issue create --on-behalf-of` without `--request-type` (BC-3.8.013) | `"--on-behalf-of is only valid with --request-type (JSM service-desk requests). Add --request-type <NAME> to raise a request on behalf of another user, or drop --on-behalf-of to create a standard platform issue."` | 64 |
+| `issue create --field` AND `--on-behalf-of` without `--request-type` combined — BC-3.8.012 governs; ONE error fires, not two | `"--field and --on-behalf-of are only valid with --request-type (JSM service-desk requests). Add --request-type <NAME> to use these flags, or drop them to create a standard platform issue."` | 64 |
 
 ---
 

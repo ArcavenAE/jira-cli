@@ -7020,3 +7020,75 @@ Displaced to make room for SOH-DX-1 F2 rounds 47-49 step row per keep-4 rule (re
 | Step | Agent | Status | Output |
 |------|-------|--------|--------|
 | **pass-44 adversary — SOH-DX-1 F2 round 44 complete (2026-07-26): 5 findings (0H/3M/2L); 3 MEDIUM; 2 LOW; novelty LOW-MEDIUM; all surgical (false premise, mis-anchor, tier mislabel); "the delta is unusually well-instrumented" (adversary); mod-common false premise deleted; BC-3.8.010+011 attribution; AC-11 (4) HYGIENE; literal unified; range labels tightened; spec v1.3.142 [1.3.142]; BC-INDEX v6.71; piecewise CLEAN; 3 guards green. ZERO consecutive CLEAN (need 3 STRICT per DEC-189). NEXT: pass-45.** | adversary (×44) + product-owner (×44) + consistency-validator (×44) + state-manager | IN PROGRESS — F2 adversary grind | spec v1.3.142; BC-INDEX v6.71; STORY-INDEX v1.5.41; convergence-trajectory p121 appended; burst-log.md appended; factory-artifacts committed. |
+
+---
+
+## F2-ROUNDS-50-51-BURST-2026-07-27 (2026-07-27)
+
+**Burst type:** SOH-DX-1 F2 fix burst rounds 50-51 + substitute passes 50/51 + F51-002 STATE.md VP-INDEX phantom fix
+**Pass:** p126-sub (pass-50, substitute) and p127-sub (pass-51, substitute)
+**Findings fixed:** 2 (both LOW, both delta-attributable) — F50-001 (story-side), F51-001 (spec v1.3.149) + F51-002 STATE.md bookkeeping fix (MEDIUM, pre-existing)
+**Spec version:** v1.3.149 (via F51-001 + [1.3.149]); STORY-INDEX v1.5.42 (via F50-001)
+**BC-INDEX version:** v6.73 (unchanged throughout)
+**Convergence:** 0/3 CLEAN (DEC-189 STRICT) — UNCHANGED; substitute passes not window-eligible pending human ruling
+
+**Fixes applied:**
+1. F50-001 (LOW, delta-attributable, story-side): `stories/S-383-platform-inverse-warnings.md` `contract_superseded_by` extended from `SOH-DX-1 (DEC-188)` to `"SOH-DX-1 (DEC-188) / S-639-1"`, naming the implementing successor story; banner gained an S-639-1 pointer with the "do NOT implement from these ACs" imperative intact; ACs byte-identical. `STORY-INDEX.md` v1.5.41 → v1.5.42 with S-383 manifest row updated. No spec bump (story-side fix only).
+2. F51-001 (LOW, delta-attributable, v1.3.149): Holdout-scenario and VP coverage documented as a deliberate non-goal via a terminal "Note (coverage non-goal)" in BOTH BC-3.8.012 and BC-3.8.013. Rationale: the 21 ACs cover every observable exit path; both guards are pure pre-flight input validation with no network interaction, unlike BC-3.4.019 (VP-331-003) which needs a project-scoped API lookup. 0 new BCs / 0 new VPs / 0 new holdouts; all VP identifiers in diff are pre-existing references.
+3. F51-002 STATE.md bookkeeping fix (MEDIUM, pre-existing): Convergence Status `VP-INDEX v0.82` corrected to `VPs tracked inline in BC bodies (no index artifact)` — VP-INDEX.md does not exist anywhere in .factory/. STORY-INDEX version in same line corrected v1.5.41 → v1.5.42 (stale after F50-001). SOH-DX-1-PG-001 escalated LOW → MEDIUM with first confirmed phantom-claim datapoint. New drift item VP-INDEX-ARTIFACT-ABSENT added (LOW, OPEN — human decision). PERIMETER-SCAN-OMITS-INDEX-AND-TRACEABILITY updated with pass-52 probe note. F51-002 does NOT reset the convergence window (bookkeeping defect, not spec-delta).
+
+**Substitute passes 50/51:** Two substitute passes (consistency-validator with adversarial verification checklist; NOT the adversary agent; fresh context). Both returned "AC surface has converged, YES" apart from their single LOW findings. NOT ratified as DEC-189 window-eligible — human ruling pending (SUBSTITUTE-ADVERSARY-RATIFICATION-PENDING).
+
+**New drift items added in STATE.md:** VP-INDEX-ARTIFACT-ABSENT (LOW, OPEN — human decision).
+**Updated drift items in STATE.md:** SOH-DX-1-PG-001 escalated LOW → MEDIUM (first confirmed phantom-claim datapoint); PERIMETER-SCAN-OMITS-INDEX-AND-TRACEABILITY (pass-52 probe note added).
+
+**Files touched in .factory:** sidecar-learning.md; spec-changelog.md; specs/prd/bc-3-issue-write.md; stories/S-383-platform-inverse-warnings.md; stories/STORY-INDEX.md; cycles/cycle-001/convergence-trajectory.md (2 new sections: p126-sub, p127-sub); cycles/cycle-001/burst-log.md (this entry); STATE.md
+
+**Trajectory:** p126-sub(1L)→p127-sub(1L). trajectory-tail →1L→1L→1L→1L (passes p124-sub, p125-sub, p126-sub, p127-sub). PIPELINE PAUSED.
+
+**Convergence counter:** 0 of 3 STRICT. NEXT: adversary pass (p128) with v1.3.149 artifacts — pending ADVERSARY-AGENT-NONFUNCTIONAL engine fix or SUBSTITUTE-ADVERSARY-RATIFICATION-PENDING human ruling.
+
+### Archived Phase Progress row (displaced by keep-5 rule; new F2-rounds-50-51 row added)
+
+Displaced to make room for SOH-DX-1 F2 rounds 50-51 + substitute passes row per keep-5 rule (removed oldest: pass-43 adversary).
+
+| Phase | Status | Completed | Gate | Notes | Finding Progression |
+|-------|--------|-----------|------|-------|---------------------|
+| **pass-43 adversary — SOH-DX-1 F2 fix burst round 43 complete (2026-07-26): 2 findings (0C/0H/2M/0L) + 2 obs 2M (from 1M+2L); ZERO CRITs; ZERO HIGHs; 2 MEDIUM; novelty LOW-MEDIUM; fixes: AC-11 interactive-path exit-64 + stdout pins (mode-agnosticism falsifier closed); AC-16 TempDir precondition (dual rationale); steps 3–6 reference; spec v1.3.141 + [1.3.141]; BC-INDEX v6.70; piecewise CLEAN; 3 guards green. ZERO consecutive CLEAN; 0/3 STRICT per DEC-189. NEXT: pass-44.** | F2 adversary grind in progress | 2026-07-26 | ADVERSARY GRIND — convergence + human gate PENDING. | spec v1.3.141; BC-INDEX v6.70; STORY-INDEX v1.5.41. | →8→8→8→7→6→4→3→7→6→5→6→6→4→2→5→5→4→3→3→5→4→2→3→3→6→6→4→5→2→1→3→3→2→3L→1M+3L→2M+2L→2H+2L→4M+2L→2M+1L→1H+1M→2M→1M+2L→2M |
+
+### Archived Current Phase Steps row (displaced by keep-4 rule; new F2-rounds-50-51 step row added)
+
+Displaced to make room for SOH-DX-1 F2 rounds 50-51 step row per keep-4 rule (removed oldest: pass-45 adversary CPS).
+
+| Step | Agent | Status | Output |
+|------|-------|--------|--------|
+| **pass-45 adversary — SOH-DX-1 F2 round 45 complete (2026-07-26): 3 findings (0H/3M/0L) 3M; ZERO HIGHs; novelty LOW; second consecutive "Spec has converged" verdict (all doc-fallout enumeration gaps); third stale-parity site; family-banner rewrite clause; README holdout row repaired; spec v1.3.143 [1.3.143]; BC-INDEX v6.72; piecewise CLEAN; 3 guards green. ZERO consecutive CLEAN (need 3 STRICT per DEC-189). NEXT: pass-46.** | adversary (×45) + product-owner (×45) + consistency-validator (×45) + state-manager | IN PROGRESS — F2 adversary grind | spec v1.3.143; BC-INDEX v6.72; STORY-INDEX v1.5.41; convergence-trajectory p122 appended; burst-log.md appended; factory-artifacts committed. |
+
+---
+
+## F2-ROUND-52-BURST-2026-07-27 (2026-07-27)
+
+**Burst type:** SOH-DX-1 F2 fix burst round 52 + substitute pass 52 (p128-sub)
+**Pass:** p128-sub (pass-52, substitute)
+**Findings fixed:** 1 (LOW, delta-attributable) — F52-001
+**Spec version:** v1.3.150 (via F52-001 + [1.3.150])
+**BC-INDEX version:** v6.73 (unchanged)
+**STORY-INDEX version:** v1.5.42 (unchanged — bumped by F50-001 in prior sub-burst)
+**Convergence:** 0/3 CLEAN (DEC-189 STRICT) — UNCHANGED; substitute pass not window-eligible pending human ruling
+
+**Fixes applied:**
+1. F52-001 (LOW, delta-attributable, v1.3.150): DEC-188 exit-64 error conditions registered in `specs/prd/error-taxonomy.md` — a new `### Issue Commands` subsection added to Section 6 (Domain-Specific Error Messages) following the per-subsection table convention already established for Sprint, Asset, Auth, and Config commands. All three verbatim error strings confirmed character-for-character identical to the fenced blocks in `bc-3-issue-write.md`. A preamble note records that all three are pre-flight `JrError::UserError` conditions with zero HTTP on each error path. Section 6 chosen over Section 3 (per-HTTP-status-code overrides) because the DEC-188 conditions fire before any HTTP is issued. BC count unchanged (140/111).
+
+**Substitute pass 52 (p128-sub):** Consistency-validator with adversarial verification checklist; NOT the adversary agent; fresh context. 3 items checked; 2 PASS / 1 LOW. Pass returned "AC surface has converged, YES" (apart from single LOW F52-001). Zero stale content anywhere — zero "is ignored on the platform create path" and zero warn-and-proceed across all seven sibling PRD artifacts. `edge-case-catalog.md` absence is convention-consistent (it uses a domain-prefixed `EC-ASSET-00x` scheme with zero BC-scoped ECs for any BC). NOT ratified as DEC-189 window-eligible — human ruling pending (SUBSTITUTE-ADVERSARY-RATIFICATION-PENDING).
+
+**Updated drift items in STATE.md:**
+- `SOH-DX-1-PG-001` escalated LOW → MEDIUM: first confirmed phantom-claim datapoint (VP-INDEX.md does not exist; STATE.md Convergence Status asserted `VP-INDEX v0.82` with no backing artifact). Fix applied this burst (Convergence Status corrected to `VPs tracked inline in BC bodies (no index artifact)`).
+- `VP-INDEX-ARTIFACT-ABSENT` NEW drift item added (LOW, OPEN — human decision): VPs tracked inline in BC bodies + holdout-scenarios.md with no index artifact, while BC-INDEX / STORY-INDEX / ARCH-INDEX all exist. STATE.md false version claim corrected this burst.
+- `PERIMETER-SCAN-OMITS-INDEX-AND-TRACEABILITY`: second confirmed instance — pass-52 found `error-taxonomy.md` was missing DEC-188 registration despite BC-3.5.x and BC-3.9.x cycles both registering theirs. Registered in v1.3.150.
+- `TWIN-ARTIFACT-SWEEP`: recurrence 14 → 15 (v1.3.150 required verbatim-string parity across bc-3 and error-taxonomy; verified exact).
+
+**Files touched in .factory:** sidecar-learning.md; spec-changelog.md; specs/prd/bc-3-issue-write.md; specs/prd/error-taxonomy.md; cycles/cycle-001/convergence-trajectory.md (1 new section: p128-sub); cycles/cycle-001/burst-log.md (this entry); STATE.md
+
+**Trajectory:** p128-sub(1L). trajectory-tail →1L→1L→1L→1L (passes p125-sub, p126-sub, p127-sub, p128-sub). PIPELINE PAUSED.
+
+**Convergence counter:** 0 of 3 STRICT. NEXT: adversary pass (p129) with v1.3.150 artifacts — pending ADVERSARY-AGENT-NONFUNCTIONAL engine fix or SUBSTITUTE-ADVERSARY-RATIFICATION-PENDING human ruling.

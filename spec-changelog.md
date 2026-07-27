@@ -9,6 +9,39 @@ Track all spec version changes. Most recent version first.
 
 > **Type legend:** Type classifies the SPEC document delta: MINOR = new BCs/VPs/sections; PATCH = amendments to existing bodies/ACs/ECs. Product-semver impact is recorded in the Summary line, independent of Type.
 
+## [1.3.150] - 2026-07-27
+
+### Type: PATCH
+
+### Summary
+SOH-DX-1 F2 error-taxonomy DEC-188 registration: 1 LOW finding corrected. F52-001 (LOW): `error-taxonomy.md` did not register any of the three DEC-188 pre-flight exit-64 error conditions introduced by BC-3.8.012 and BC-3.8.013 (`jr issue create --field` / `--on-behalf-of` without `--request-type`). This is a missing-registration gap — the file already carries error conditions cross-referenced by BC from the two most recent feature cycles (BC-3.5.x and BC-3.9.x in Section 3), making the absence of these new exit-64 conditions a consistency violation. Fix: a new Issue Commands subsection is added to Section 6 (Domain-Specific Error Messages), following the established per-subsection table convention. All three error strings are quoted verbatim from the bc-3-issue-write.md fenced blocks. A preamble note records that all three are pre-flight `JrError::UserError` conditions with zero HTTP on each error path. Section 6 was chosen over Section 3 because the DEC-188 conditions are not per-HTTP-status-code overrides — they fire before any HTTP is issued; Section 6's domain-specific condition/error/exit-code table pattern is the correct structural home. BC count unchanged (140/111).
+
+### Changed
+- `.factory/specs/prd/error-taxonomy.md` (MODIFIED): Section 6 — new Issue Commands subsection added with three-row table (F52-001). Frontmatter `last_updated` advanced to 2026-07-27. Frontmatter `trace:` gains F2 amendment entry.
+- `.factory/specs/prd/bc-3-issue-write.md` (MODIFIED): v1.3.150 frontmatter trail entry prepended. Footer: v1.3.150 `_Last updated` entry prepended with `Previous update` chain preserved.
+- `.factory/spec-changelog.md` (MODIFIED): [1.3.150] entry prepended.
+
+### BC Count
+0 new BCs. Total unchanged: 657 cumulative (BC-INDEX), 140/111 individually-bodied in bc-3-issue-write.md.
+
+---
+
+## [1.3.149] - 2026-07-27
+
+### Type: PATCH
+
+### Summary
+SOH-DX-1 F2 coverage-rationale non-goal documentation: 1 LOW finding corrected. F51-001 (LOW): holdout-scenario and VP coverage are a deliberate non-goal for BC-3.8.012 and BC-3.8.013 (S-639-1 pre-flight exit-64 guards), but the spec had no note recording that decision. A reader comparing these two BCs to VP-331-003 (BC-3.4.019, cross-project `--type` guard) would see an unexplained asymmetry. Fix: a terminal `**Note (coverage non-goal)**` is added after `**Confidence**: HIGH` in each BC body. The note records that the 21 ACs (AC-1..21) fully cover every observable exit path — exit code, both output modes, all three verbatim error strings, zero-HTTP proof, idempotency, ordering precedence, and JSM-path non-mis-fire — and that pure pre-flight input-validation guards with no network interaction have no integration surface for a holdout scenario to probe. BC-3.4.019's VP is noted for contrast: it requires a project-scoped API lookup, giving it a verification surface these guards lack. BC-3.8.013's note is shorter, cross-referencing BC-3.8.012's primary rationale. No new VP, holdout scenario, or BC is created. BC count unchanged (140/111).
+
+### Changed
+- `.factory/specs/prd/bc-3-issue-write.md` (MODIFIED): BC-3.8.012: `**Note (coverage non-goal)**` paragraph added between `**Confidence**: HIGH` and `[ADDED...]` amendment tag (F51-001). BC-3.8.013: same pattern, shorter cross-reference note (F51-001). Frontmatter v1.3.149 trail entry prepended. Footer: v1.3.149 `_Last updated` entry prepended with `Previous update` chain preserved.
+- `.factory/spec-changelog.md` (MODIFIED): [1.3.149] entry prepended.
+
+### BC Count
+0 new BCs. Total unchanged: 657 cumulative (BC-INDEX), 140/111 individually-bodied in bc-3-issue-write.md.
+
+---
+
 ## [1.3.148] - 2026-07-27
 
 ### Type: PATCH
