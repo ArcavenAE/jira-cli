@@ -9,6 +9,23 @@ Track all spec version changes. Most recent version first.
 
 > **Type legend:** Type classifies the SPEC document delta: MINOR = new BCs/VPs/sections; PATCH = amendments to existing bodies/ACs/ECs. Product-semver impact is recorded in the Summary line, independent of Type.
 
+## [1.3.138] - 2026-07-26
+
+### Type: PATCH
+
+### Summary
+SOH-DX-1 DEC-188 round-40 adversary-pass corrections (#639): F40-001 (HIGH): REGRESSION PIN clause (`!stderr.contains("is ignored on the platform create path")`, DISCRIMINATING subtype, per §"Removal postcondition (single-site, DEC-188)") added to AC-9, AC-10, AC-11, AC-17, and AC-18 bodies — the mandate list (AC-1/2/3/5/7/8/9/10/11/13/17/18/19) is now fully propagated to all 13 AC bodies. AC-19 added to the non-vacuity sentence enumeration (was AC-1/2/3/5/7/8/9/10/11/13/17/18; now includes AC-19 which already had the pin in its body but was missing from the prose enumeration). F40-002 (MED): Definition of "unconditional remedy" added inline to the Uniform rule paragraph in the Asymmetry rationale block: "a remedy is unconditional if it depends only on the user's own invocation — not on project permissions, project type, or post-creation steps. `'Add --request-type <NAME>'` qualifies: the user signaled JSM intent by passing the flag; on a non-JSM project the follow-on BC-3.8.002 error is the correct next guidance, not a misdirection. `'then use jr issue edit --field'` does NOT qualify (permission-dependent post-creation step)." — closes the two-ways reading without changing any verbatim error string. Obs: spec-changelog [1.3.133] F35-1 Summary clause gains bracketed correction note "[superseded by 1.3.136: §42-45 excluded; four sites final]" (historical entry preserved; not falsified). BC count unchanged (140/111).
+
+### Changed
+- `.factory/specs/prd/bc-3-issue-write.md` (MODIFIED): REGRESSION PIN added to AC-9/AC-10/AC-11/AC-17/AC-18 bodies. AC-19 added to non-vacuity sentence enumeration. Definition (unconditional remedy) added to Uniform rule paragraph. Frontmatter v1.3.138 trace entry. Footer updated to v1.3.138.
+- `.factory/specs/prd/BC-INDEX.md` (MODIFIED): `last_updated` → v1.3.138 description; `index_version` v6.66→v6.67.
+- `.factory/spec-changelog.md` (MODIFIED): [1.3.133] F35-1 correction note appended. [1.3.138] entry added.
+
+### BC Count
+0 new BCs. Total unchanged: 657 cumulative (BC-INDEX), 140/111 individually-bodied in bc-3-issue-write.md.
+
+---
+
 ## [1.3.137] - 2026-07-26
 
 ### Type: PATCH
@@ -83,7 +100,7 @@ SOH-DX-1 DEC-188 round-36 adversary-pass corrections (#639): F-1 (MED): Removal 
 ### Type: PATCH
 
 ### Summary
-SOH-DX-1 DEC-188 round-35 adversary-pass corrections (#639): F35-1 (MED): fifth ADR-0014 site at ~:159-160 ("No other `jr issue create` invocation is affected.") added; "ALL FOUR" → "ALL FIVE" in guard-ordering mandate. F35-2 (LOW): AC namespace note intra-doc self-cites updated (~:2980→§"Platform-Path Guard Ordering"; ~:3024→§"Verbatim error string (single-flag case)"). F35-3 (LOW): both Test Note promotion directive sites update "~11 pub fn fixtures" → "~29 pub fn fixtures (plus mock_server.rs/yaml.rs siblings)". F35-4 (LOW): REGRESSION PIN added to AC-13 (combined-flag invocation `--on-behalf-of "" --field a=b` previously emitted both old warn strings from old `!field_pairs.is_empty()` at ~:81 and `is_some()` at ~:86) and AC-19 (empty-value `--field a=` previously triggered old `!is_empty()` guard at ~:81); Removal postcondition mandate list extended from AC-1/2/3/5/7 to AC-1/2/3/5/7/13/19. BC count unchanged (140/111).
+SOH-DX-1 DEC-188 round-35 adversary-pass corrections (#639): F35-1 (MED): fifth ADR-0014 site at ~:159-160 ("No other `jr issue create` invocation is affected.") added; "ALL FOUR" → "ALL FIVE" in guard-ordering mandate [superseded by 1.3.136: §42-45 excluded; four sites final]. F35-2 (LOW): AC namespace note intra-doc self-cites updated (~:2980→§"Platform-Path Guard Ordering"; ~:3024→§"Verbatim error string (single-flag case)"). F35-3 (LOW): both Test Note promotion directive sites update "~11 pub fn fixtures" → "~29 pub fn fixtures (plus mock_server.rs/yaml.rs siblings)". F35-4 (LOW): REGRESSION PIN added to AC-13 (combined-flag invocation `--on-behalf-of "" --field a=b` previously emitted both old warn strings from old `!field_pairs.is_empty()` at ~:81 and `is_some()` at ~:86) and AC-19 (empty-value `--field a=` previously triggered old `!is_empty()` guard at ~:81); Removal postcondition mandate list extended from AC-1/2/3/5/7 to AC-1/2/3/5/7/13/19. BC count unchanged (140/111).
 
 ### Changed
 - `.factory/specs/prd/bc-3-issue-write.md` (MODIFIED): Fifth ADR-0014 site added. Intra-doc self-cites updated to section anchors. Both Test Note promotion directive sites updated. REGRESSION PINs added to AC-13 and AC-19. Removal postcondition mandate list extended. Frontmatter v1.3.133 trace entry. Footer updated to v1.3.133.
