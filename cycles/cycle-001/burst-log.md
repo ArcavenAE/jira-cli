@@ -6974,3 +6974,49 @@ Displaced to make room for SOH-DX-1 F2 remediation burst (2026-07-27) step row p
 | Step | Agent | Status | Output |
 |------|-------|--------|--------|
 | **pass-43 adversary — SOH-DX-1 F2 round 43 complete (2026-07-26): 2 findings (0H/2M/0L) + 2 obs 2M; ZERO HIGHs; novelty LOW-MEDIUM; AC-11 interactive-path exit-64 + stdout pins (mode-agnosticism falsifier closed); AC-16 TempDir precondition (dual rationale); steps 3–6 reference; spec v1.3.141 [1.3.141]; BC-INDEX v6.70; piecewise CLEAN; 3 guards green. ZERO consecutive CLEAN (need 3 STRICT per DEC-189). NEXT: pass-44.** | adversary (×43) + product-owner (×43) + consistency-validator (×43) + state-manager | IN PROGRESS — F2 adversary grind | spec v1.3.141; BC-INDEX v6.70; STORY-INDEX v1.5.41; convergence-trajectory p120 appended; burst-log.md appended; factory-artifacts committed. |
+
+---
+
+## F2-ROUNDS-47-49-BURST-2026-07-27 (2026-07-27)
+
+**Burst type:** SOH-DX-1 F2 fix burst rounds 47-49 + pass-47 VOID ×5 + substitute passes 48/49
+**Pass:** p124-sub (pass-48, substitute) and p125-sub (pass-49, substitute); pass-47 VOID ×5 (no p-series entry)
+**Findings fixed:** 3 (all LOW, all delta-attributable) — F47-001, F48-001, F49-001
+**Spec version:** v1.3.148 (via v1.3.146 + [1.3.146], v1.3.147 + [1.3.147], v1.3.148 + [1.3.148])
+**BC-INDEX version:** v6.73 (unchanged throughout)
+**Convergence:** 0/3 CLEAN (DEC-189 STRICT) — UNCHANGED; substitute passes not window-eligible pending human ruling
+
+**Fixes applied:**
+1. F47-001 (LOW, delta-attributable, v1.3.146): `write_profile_config` destination corrected in both Test Note Config fixture contracts (BC-3.8.012 + BC-3.8.013) — `tests/common/assertions.rs` → `tests/common/fixtures.rs`; "same promotion target" phrase replaced with DIFFERENT-destinations rationale (`write_profile_config` → `tests/common/fixtures.rs`, `assert_json_error_envelope` → `tests/common/assertions.rs`); footer v1.3.137 historical description corrected (4th F46-003 sweep site, missed by v1.3.145); missing v1.3.145 footer entry backfilled.
+2. F48-001 (LOW, delta-attributable, v1.3.147): AC-7 `EC-3.8.012-3 as test —` linkage marker added — the only testable EC among BC-3.8.012/013 lacking the uniform prefix; all 8 sibling ACs with testable ECs carried it; coverage real, traceability annotation missing.
+3. F49-001 (LOW, delta-attributable, v1.3.148): BC-3.8.013 doc-fallout parenthetical corrected — obligation (d) `src/cli/mod.rs` `--on-behalf-of` help-string update added; delegation marked NORMATIVE; enumeration marked non-exhaustive; BC-3.8.012 Trace (a)–(f) declared authoritative binding enumeration.
+
+**Pass-47 adversary — VOID ×5 (cumulative; prior checkpoint recorded ×2, ×3 additional this session):** Five adversary agent dispatches produced zero retrievable output. Variables eliminated: scope (6 artifacts → single ~150-line range), explicit reply-is-deliverable mandate, explicit no-Write-tool framing, model override (opus). ADVERSARY-AGENT-NONFUNCTIONAL drift item added (HIGH — highest-priority engine fix; supersedes other queued engine IPs).
+
+**Substitute passes 48/49:** Two substitute passes (consistency-validator with adversarial verification checklist; NOT the adversary agent; fresh context). Both returned "AC surface has converged, YES" apart from their single LOW finding. NOT ratified as DEC-189 window-eligible — human ruling pending (SUBSTITUTE-ADVERSARY-RATIFICATION-PENDING drift item added, MEDIUM).
+
+**New drift items added in STATE.md:** ADVERSARY-AGENT-NONFUNCTIONAL (HIGH); FOOTER-UPDATE-CONVENTION-MISS (LOW); SUBSTITUTE-ADVERSARY-RATIFICATION-PENDING (MEDIUM).
+
+**Updated drift items in STATE.md:** SOH-DX-1-PG-012 (footer sweep site added — guard gap now covers footers explicitly); AGENT-IDLE-NO-REPORT (diagnosis refined: task-shape discriminator; 7 open-ended analytical dispatches produced zero output; po-r48/po-r49 also idled); TWIN-ARTIFACT-SWEEP (recurrence 13→14: v1.3.146's "same promotion target" phrase propagated to 2 Test Notes + footer).
+
+**Files touched in .factory:** sidecar-learning.md; spec-changelog.md; specs/prd/bc-3-issue-write.md; cycles/cycle-001/convergence-trajectory.md (3 new sections: F47-001+VOID×5, p124-sub, p125-sub); cycles/cycle-001/burst-log.md (this entry); STATE.md
+
+**Trajectory:** p124-sub(1L)→p125-sub(1L). trajectory-tail →3M→1M+2L→1L→1L (passes p122, p123, p124-sub, p125-sub). PIPELINE PAUSED.
+
+**Convergence counter:** 0 of 3 STRICT. NEXT: adversary pass (p126) with v1.3.148 artifacts — pending ADVERSARY-AGENT-NONFUNCTIONAL engine fix or SUBSTITUTE-ADVERSARY-RATIFICATION-PENDING human ruling.
+
+### Archived Phase Progress row (displaced by keep-5 rule; new F2-rounds-47-49 row added)
+
+Displaced to make room for SOH-DX-1 F2 rounds 47-49 + substitute passes row per keep-5 rule (removed oldest: pass-42 adversary).
+
+| Phase | Status | Completed | Gate | Notes | Finding Progression |
+|-------|--------|-----------|------|-------|---------------------|
+| **pass-42 adversary — SOH-DX-1 F2 fix burst round 42 complete (2026-07-26): 3 findings (0C/0H/1M/2L) 1M+2L (from 2M); ZERO CRITs; ZERO HIGHs; 1 MEDIUM; 2 LOW; novelty LOW; adversary verdict "The F2 delta has converged" (zero behavioral/ordering/anchoring/falsifiability defects); fixes: [1.3.139] Changed block + count line; [1.3.140] full subsections; mode-agnosticism invariant restored both BCs; falsifier enumeration softened; spec v1.3.140 + [1.3.140]; BC-INDEX v6.69; piecewise CLEAN; 3 guards green. ZERO consecutive CLEAN; 0/3 STRICT per DEC-189. NEXT: pass-43.** | F2 adversary grind in progress | 2026-07-26 | ADVERSARY GRIND — convergence + human gate PENDING. | spec v1.3.140; BC-INDEX v6.69; STORY-INDEX v1.5.41. | →8→8→8→7→6→4→3→7→6→5→6→6→4→2→5→5→4→3→3→5→4→2→3→3→6→6→4→5→2→1→3→3→2→3L→1M+3L→2M+2L→2H+2L→4M+2L→2M+1L→1H+1M→2M→1M+2L |
+
+### Archived Current Phase Steps row (displaced by keep-4 rule; new F2-rounds-47-49 step row added)
+
+Displaced to make room for SOH-DX-1 F2 rounds 47-49 step row per keep-4 rule (removed oldest: pass-44 adversary CPS).
+
+| Step | Agent | Status | Output |
+|------|-------|--------|--------|
+| **pass-44 adversary — SOH-DX-1 F2 round 44 complete (2026-07-26): 5 findings (0H/3M/2L); 3 MEDIUM; 2 LOW; novelty LOW-MEDIUM; all surgical (false premise, mis-anchor, tier mislabel); "the delta is unusually well-instrumented" (adversary); mod-common false premise deleted; BC-3.8.010+011 attribution; AC-11 (4) HYGIENE; literal unified; range labels tightened; spec v1.3.142 [1.3.142]; BC-INDEX v6.71; piecewise CLEAN; 3 guards green. ZERO consecutive CLEAN (need 3 STRICT per DEC-189). NEXT: pass-45.** | adversary (×44) + product-owner (×44) + consistency-validator (×44) + state-manager | IN PROGRESS — F2 adversary grind | spec v1.3.142; BC-INDEX v6.71; STORY-INDEX v1.5.41; convergence-trajectory p121 appended; burst-log.md appended; factory-artifacts committed. |

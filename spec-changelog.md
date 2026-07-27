@@ -9,6 +9,54 @@ Track all spec version changes. Most recent version first.
 
 > **Type legend:** Type classifies the SPEC document delta: MINOR = new BCs/VPs/sections; PATCH = amendments to existing bodies/ACs/ECs. Product-semver impact is recorded in the Summary line, independent of Type.
 
+## [1.3.148] - 2026-07-27
+
+### Type: PATCH
+
+### Summary
+SOH-DX-1 F2 spec delta BC-3.8.013 doc-fallout enumeration fix: 1 LOW finding corrected. F49-001 (LOW): BC-3.8.013 doc-fallout deliverables sentence corrected — the parenthetical enumerated only three of the six BC-3.8.012 delivery obligations (a)–(f), omitting (d) the `src/cli/mod.rs` `--on-behalf-of` help-string update. Omitting (d) was load-bearing: AC-12 asserts `stdout.matches("requires --request-type").count() == 2` after whitespace normalization, requiring BOTH the `--field` AND `--on-behalf-of` help lines to be updated; an implementer treating the old parenthetical as complete would skip the `--on-behalf-of` update and fail AC-12 with count 1. Fix applies both parts: (1) obligation (d) — `src/cli/mod.rs` `--on-behalf-of` first doc line (~:403) MUST gain substring `"requires --request-type"` (pinned by AC-12) — added to the parenthetical; (2) delegation marked explicitly NORMATIVE and enumeration marked explicitly non-exhaustive, with BC-3.8.012 Trace (a)–(f) declared the authoritative, binding enumeration, preventing the same class of defect if obligations (e)/(f) or a future (g) are similarly omitted. BC count unchanged (140/111).
+
+### Changed
+- `.factory/specs/prd/bc-3-issue-write.md` (MODIFIED): BC-3.8.013 doc-fallout deliverables sentence (line 3165): parenthetical extended with obligation (d) + delegation marked NORMATIVE + enumeration marked non-exhaustive + BC-3.8.012 Trace (a)–(f) declared authoritative (F49-001). Frontmatter v1.3.148 trail entry prepended. Footer: v1.3.148 `_Last updated` entry prepended with `Previous update` chain preserved.
+- `.factory/spec-changelog.md` (MODIFIED): [1.3.148] entry prepended.
+
+### BC Count
+0 new BCs. Total unchanged: 657 cumulative (BC-INDEX), 140/111 individually-bodied in bc-3-issue-write.md.
+
+---
+
+## [1.3.147] - 2026-07-27
+
+### Type: PATCH
+
+### Summary
+SOH-DX-1 F2 spec delta AC-7 EC-3.8.012-3 linkage fix: 1 LOW finding corrected. F48-001 (LOW): `EC-3.8.012-3 as test — ` linkage marker added to AC-7 (`test_platform_create_malformed_field_without_request_type_exits_64`) — the malformed-`--field` case (`--field bareflagnoequals`) was the only testable EC in BC-3.8.012/013 with no explicit AC citation in the uniform `"EC-<id> as test — "` prefix pattern used by AC-9/13/14/15/16/17/18/19. AC-7 semantically covers EC-3.8.012-3: the guard fires on `!field_pairs.is_empty()` before value parsing, so the malformed format does not affect guard activation. Coverage is real; only the traceability linkage was missing. Two non-testable ECs (EC-3.8.012-6 documented non-goal, EC-3.8.012-10 transitively falsified, EC-3.8.013-2 deliberate non-goal) are unchanged. BC count unchanged (140/111).
+
+### Changed
+- `.factory/specs/prd/bc-3-issue-write.md` (MODIFIED): AC-7: `EC-3.8.012-3 as test — ` inserted immediately before the invocation backtick after the `(renamed from …):` clause (F48-001). Frontmatter v1.3.147 trail entry prepended. Footer: v1.3.147 `_Last updated` entry prepended with `Previous update` chain preserved.
+- `.factory/spec-changelog.md` (MODIFIED): [1.3.147] entry prepended.
+
+### BC Count
+0 new BCs. Total unchanged: 657 cumulative (BC-INDEX), 140/111 individually-bodied in bc-3-issue-write.md.
+
+---
+
+## [1.3.146] - 2026-07-27
+
+### Type: PATCH
+
+### Summary
+SOH-DX-1 F2 round-47 write_profile_config-placement fix: 1 LOW finding corrected. F47-001 (LOW): `write_profile_config` destination corrected in both Test Note Config fixture contracts (BC-3.8.012 §"Config fixture contract" and BC-3.8.013 §"Config fixture contract") — changed from `tests/common/assertions.rs` to `tests/common/fixtures.rs`; "same promotion target as `assert_json_error_envelope`" phrase removed and replaced with DIFFERENT-destinations rationale; `fixtures.rs` is the home for non-assertion test fixtures generally, including config writers; F46-003 "pure-JSON" charter narrowed to payload fixtures only — these two helpers have DIFFERENT destinations: `write_profile_config` → `tests/common/fixtures.rs`, `assert_json_error_envelope` → `tests/common/assertions.rs`. Secondary cleanup: footer v1.3.137 historical description corrected (`assertions.rs` → `fixtures.rs` for `write_profile_config`; same F46-003 sweep class, not restored by v1.3.145 which fixed frontmatter trail entries only). BC count unchanged (140/111).
+
+### Changed
+- `.factory/specs/prd/bc-3-issue-write.md` (MODIFIED): BC-3.8.012 Config fixture contract: `write_profile_config` destination `tests/common/assertions.rs` → `tests/common/fixtures.rs`; "same promotion target" phrase replaced with DIFFERENT-destinations rationale (F47-001). BC-3.8.013 Config fixture contract: same fix (F47-001). Footer v1.3.137 description: `tests/common/assertions.rs` → `tests/common/fixtures.rs` for `write_profile_config` (historical-record secondary cleanup). Footer: v1.3.146 + v1.3.145 entries prepended. Frontmatter v1.3.146 trail entry prepended.
+- `.factory/spec-changelog.md` (MODIFIED): [1.3.146] entry prepended.
+
+### BC Count
+0 new BCs. Total unchanged: 657 cumulative (BC-INDEX), 140/111 individually-bodied in bc-3-issue-write.md.
+
+---
+
 ## [1.3.145] - 2026-07-27
 
 ### Type: PATCH

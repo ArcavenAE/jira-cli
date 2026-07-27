@@ -3067,3 +3067,47 @@ Ratified intent block (include verbatim in pass-47 dispatch):
 **Pass-47 adversary — VOID ×2 (no convergence credit):** Two adversary dispatches both failed to deliver any retrievable output (~32 minutes combined). The first dispatch was additionally non-window-eligible because it read artifacts still carrying the unfixed F5 defect. Neither counts toward DEC-189. Convergence counter remains 0/3 STRICT. No p124 entry added.
 
 **Trajectory so far:** p78(8)→p79(8)→p80(8)→p81(7)→p82(6)→p83(4)→p84(3)→p85(7)→p86(6)→p87(5)→p88(6)→p89(6)→p90(4)→p91(2)→p92(5)→p93(5)→p94(4)→p95(3)→p96(3)→p97(5)→p98(4)→p99(2)→p100(3)→p101(3)→p102(6)→p103(6)→p104(4)→p105(5)→p106(2)→p107(1)→p108(3)→p109(3)→p110(2)→p111(3L)→p112(1M+3L)→p113(2M+2L)→p114(2H+2L)→p115(4M+2L)→p116(2M+1L)→p117(1H+1M)→p118(2M)→p119(1M+2L)→p120(2M)→p121(3M+2L)→p122(3M)→p123(1M+2L). [Remediation burst 2026-07-27: F1-F5 all LOW; no adversary pass; convergence counter unchanged]. trajectory-tail →2M→3M+2L→3M→1M+2L. NEXT: pass-47 (p124) — dispatch with v1.3.145 artifacts.
+
+---
+
+### F2 round-47 fix burst + pass-47 VOID ×5 (2026-07-27) — pre-substitute passes
+
+**Type:** F2 fix burst (F47-001) + pass-47 adversary VOID ×5 (no convergence credit)
+**Spec version:** v1.3.146 + [1.3.146]
+**BC-INDEX version:** v6.73 (unchanged)
+**Convergence counter:** 0/3 STRICT (DEC-189) — UNCHANGED
+
+**Round-47 fix (F47-001, LOW, delta-attributable):**
+`write_profile_config` destination corrected in both Test Note Config fixture contracts (BC-3.8.012 and BC-3.8.013) from `tests/common/assertions.rs` to `tests/common/fixtures.rs`; "same promotion target as `assert_json_error_envelope`" phrase replaced with DIFFERENT-destinations rationale (`write_profile_config` → `tests/common/fixtures.rs`, `assert_json_error_envelope` → `tests/common/assertions.rs`); footer v1.3.137 historical description corrected (4th F46-003 sweep site, missed by v1.3.145 which fixed frontmatter trail entries only); missing v1.3.145 footer entry backfilled (FOOTER-UPDATE-CONVENTION-MISS class). Source: direct review during pass-47 process window. Spec bumped v1.3.146 + changelog [1.3.146] entry added. BC-INDEX v6.73 unchanged. All 3 guards green.
+
+**Pass-47 adversary — VOID ×5 (cumulative total; prior checkpoint recorded ×2):** Five adversary agent dispatches produced zero retrievable output total. Variables eliminated across attempts: scope (6 artifacts → single ~150-line range), explicit reply-is-deliverable mandate, explicit no-Write-tool framing, and model override (opus). None delivered. All 5 dispatches non-window-eligible. Convergence counter remains 0/3 STRICT. No p-series entry added. ADVERSARY-AGENT-NONFUNCTIONAL drift item added (HIGH — highest-priority engine fix; supersedes other queued engine IPs).
+
+**Trajectory:** F47-001 fix not assigned p-series (fix burst, not adversary pass). trajectory-tail →2M→3M+2L→3M→1M+2L (unchanged). NEXT: substitute pass-48 (p124) with v1.3.146 artifacts.
+
+---
+
+### Pass p124 (2026-07-27) — SUBSTITUTE (consistency-validator with adversarial checklist; NOT adversary agent)
+
+**Findings:** 1 (0C/0H/0M/1L)
+**Convergence counter:** 0 of 3 (STRICT) — NOT WINDOW-ELIGIBLE (substitute pass; DEC-189 ratification PENDING human ruling; SUBSTITUTE-ADVERSARY-RATIFICATION-PENDING)
+
+Forty-eighth F2 pass (substitute — consistency-validator dispatched with an adversarial verification checklist; NOT the adversary agent; fresh context; adversarial framing preserved; adversary agent's own system prompt and policy rubric absent). Count 1L (from trajectory tail). ZERO CRITICAL findings; ZERO HIGH findings; ZERO MEDIUM findings; 1 LOW finding; novelty LOW; verdict "AC surface has converged, YES" (apart from single LOW). LOW finding (F48-001): AC-7 missing `EC-3.8.012-3 as test —` linkage marker — AC-7 (`test_platform_create_malformed_field_without_request_type_exits_64`, the malformed-`--field` invocation `--field bareflagnoequals`) was the only testable EC among BC-3.8.012/013's EC surface lacking the uniform `"EC-<id> as test — "` prefix; all 8 sibling ACs carrying testable ECs had the prefix; coverage was real (AC-7 semantically covers EC-3.8.012-3: guard fires on `!field_pairs.is_empty()` before value parsing, so the malformed format does not affect guard activation); only traceability linkage was missing; fix: `EC-3.8.012-3 as test — ` marker inserted before the invocation backtick in AC-7 (after the `(renamed from …):` clause). Spec bumped v1.3.147 + changelog [1.3.147] entry added. BC-INDEX v6.73 unchanged. All 3 guards green.
+
+**NOTE — SUBSTITUTE PASS (non-window-eligible pending ruling):** This pass used consistency-validator with an adversarial verification checklist rather than the adversary agent. Fresh context and adversarial framing preserved; the adversary agent's own system prompt and policy rubric were not. Human ruling required on whether such passes can close a DEC-189 window (SUBSTITUTE-ADVERSARY-RATIFICATION-PENDING ledgered). Counter held at 0/3 STRICT pending that ruling. Do NOT retroactively count as convergence credit without explicit human authorization.
+
+**Trajectory so far:** p78(8)→p79(8)→p80(8)→p81(7)→p82(6)→p83(4)→p84(3)→p85(7)→p86(6)→p87(5)→p88(6)→p89(6)→p90(4)→p91(2)→p92(5)→p93(5)→p94(4)→p95(3)→p96(3)→p97(5)→p98(4)→p99(2)→p100(3)→p101(3)→p102(6)→p103(6)→p104(4)→p105(5)→p106(2)→p107(1)→p108(3)→p109(3)→p110(2)→p111(3L)→p112(1M+3L)→p113(2M+2L)→p114(2H+2L)→p115(4M+2L)→p116(2M+1L)→p117(1H+1M)→p118(2M)→p119(1M+2L)→p120(2M)→p121(3M+2L)→p122(3M)→p123(1M+2L)→[remediation-burst: F1-F5 LOW]→[F47-001 LOW fix]→p124-sub(1L). Delta: +1 (1L). trajectory-tail →3M+2L→3M→1M+2L→1L (substitute, non-window-eligible). NEXT: pass-49 (p125 substitute).
+
+---
+
+### Pass p125 (2026-07-27) — SUBSTITUTE (consistency-validator with adversarial checklist; NOT adversary agent)
+
+**Findings:** 1 (0C/0H/0M/1L)
+**Convergence counter:** 0 of 3 (STRICT) — NOT WINDOW-ELIGIBLE (substitute pass; DEC-189 ratification PENDING human ruling; SUBSTITUTE-ADVERSARY-RATIFICATION-PENDING)
+
+Forty-ninth F2 pass (substitute — consistency-validator dispatched with an adversarial verification checklist; NOT the adversary agent; fresh context; adversarial framing preserved; adversary agent's own system prompt and policy rubric absent). Count 1L (from 1L). ZERO CRITICAL findings; ZERO HIGH findings; ZERO MEDIUM findings; 1 LOW finding; novelty LOW; verdict "AC surface has converged, YES" (apart from single LOW). LOW finding (F49-001): BC-3.8.013 doc-fallout deliverables parenthetical enumerated only 3 of 6 delivery obligations (a)–(f) from BC-3.8.012, omitting (d) the `src/cli/mod.rs` `--on-behalf-of` help-string update; load-bearing: AC-12 asserts `stdout.matches("requires --request-type").count() == 2` (after whitespace normalization) requiring BOTH the `--field` AND `--on-behalf-of` help lines to be updated; implementer treating the old parenthetical as complete would skip `--on-behalf-of` and fail AC-12 with count 1; fix: (1) obligation (d) added to parenthetical; (2) delegation marked NORMATIVE explicitly; (3) enumeration marked non-exhaustive; (4) BC-3.8.012 Trace (a)–(f) declared the authoritative binding enumeration, preventing the same omission class for future obligations. Spec bumped v1.3.148 + changelog [1.3.148] entry added. BC-INDEX v6.73 unchanged. All 3 guards green.
+
+**NOTE — SUBSTITUTE PASS (non-window-eligible pending ruling):** This pass used consistency-validator with an adversarial verification checklist rather than the adversary agent. Fresh context and adversarial framing preserved; the adversary agent's own system prompt and policy rubric were not. Human ruling required on whether such passes can close a DEC-189 window (SUBSTITUTE-ADVERSARY-RATIFICATION-PENDING). Counter held at 0/3 STRICT pending that ruling. Do NOT retroactively count as convergence credit without explicit human authorization.
+
+**Trajectory so far:** p78(8)→p79(8)→p80(8)→p81(7)→p82(6)→p83(4)→p84(3)→p85(7)→p86(6)→p87(5)→p88(6)→p89(6)→p90(4)→p91(2)→p92(5)→p93(5)→p94(4)→p95(3)→p96(3)→p97(5)→p98(4)→p99(2)→p100(3)→p101(3)→p102(6)→p103(6)→p104(4)→p105(5)→p106(2)→p107(1)→p108(3)→p109(3)→p110(2)→p111(3L)→p112(1M+3L)→p113(2M+2L)→p114(2H+2L)→p115(4M+2L)→p116(2M+1L)→p117(1H+1M)→p118(2M)→p119(1M+2L)→p120(2M)→p121(3M+2L)→p122(3M)→p123(1M+2L)→[remediation-burst: F1-F5 LOW]→[F47-001 LOW fix]→p124-sub(1L)→p125-sub(1L). Delta: 0 (1L→1L). trajectory-tail →3M→1M+2L→1L→1L (passes p122, p123, p124-sub, p125-sub). PIPELINE PAUSED.
+
+**Convergence counter:** 0 of 3 STRICT. NEXT: adversary pass (p126) with v1.3.148 artifacts — pending ADVERSARY-AGENT-NONFUNCTIONAL engine fix or SUBSTITUTE-ADVERSARY-RATIFICATION-PENDING human ruling.
