@@ -9,6 +9,18 @@ Track all spec version changes. Most recent version first.
 
 > **Type legend:** Type classifies the SPEC document delta: MINOR = new BCs/VPs/sections; PATCH = amendments to existing bodies/ACs/ECs. Product-semver impact is recorded in the Summary line, independent of Type.
 
+## [1.3.139] - 2026-07-26
+
+### Type: PATCH
+
+### Summary
+SOH-DX-1 DEC-188 round-41 adversary-pass corrections (#639): F41-01 (MED): AC-13 invocation upgraded to would-otherwise-succeed form — `--project PROJ --type Task --summary "test"` added so the guard-absent path reaches HTTP on the isolated MockServer; Discrimination note updated (would-otherwise-succeed parenthetical replaces "`--project` NOT required"); zero-HTTP rationale updated (`received_requests().is_empty()` is now genuinely NORMATIVE — guard-absent path reaches helper HTTP + POST, making `received_requests()` non-empty; `mount_platform_create_stubs` NOT called). EC-3.8.012-10 "transitively falsified by AC-8/AC-13" claim remains sound for both. F41-02 (MED): AC-1 REGRESSION PIN gains `(DISCRIMINATING subtype)` parenthetical — first use per §"AC namespace note" which requires the subtype label at first use; policy note added (later ACs AC-2/3/5/7/8/9/10/11/13/17/18/19 may keep or drop the parenthetical; both are correct). F41-04 (nit): `write_profile_config` first parameter renamed `dir` → `config_home` at both Config fixture contract sites in both Test Notes — matches `write_minimal_config`'s semantics and prevents a silently-wrong fixture when the implementer follows the signature literally. BC count unchanged (140/111).
+
+### BC Count
+BC count unchanged (140/111).
+
+---
+
 ## [1.3.138] - 2026-07-26
 
 ### Type: PATCH
