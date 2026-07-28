@@ -36,7 +36,7 @@ the gap between current code and these contracts.
 |------|----------------|--------|--------------|
 | [bc-1-auth-identity.md](bc-1-auth-identity.md) | Auth & Identity | BC-1.*.* (57) | BC-001..024 + BC-025..035 + BC-1140..1178 |
 | [bc-2-issue-read.md](bc-2-issue-read.md) | Issue Read | BC-2.*.* (94) | BC-101..124 + BC-125..150 + BC-1036..1055 |
-| [bc-3-issue-write.md](bc-3-issue-write.md) | Issue Write | BC-3.*.* (111) | BC-201..225 + BC-1056..1081 + BC-3.8.001..017 |
+| [bc-3-issue-write.md](bc-3-issue-write.md) | Issue Write | BC-3.*.* (140) | BC-201..225 + BC-1056..1081 + BC-3.8.001..017 |
 | [bc-4-assets-cmdb.md](bc-4-assets-cmdb.md) | Assets & CMDB | BC-4.*.* (32) | BC-301..315 + BC-316..324 + BC-1136..1137 |
 | [bc-5-boards-sprints.md](bc-5-boards-sprints.md) | Boards & Sprints | BC-5.*.* (35) | BC-401..410 + BC-1138 |
 | [bc-6-config-cache.md](bc-6-config-cache.md) | Configuration & Cache | BC-6.*.* (42) | BC-901..911 + BC-1001..1016 + BC-6.3.001 (NFR-R-D) + BC-6.2.015 (profile-fence) |

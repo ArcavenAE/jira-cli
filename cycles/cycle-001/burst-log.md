@@ -7135,4 +7135,50 @@ Displaced to make room for SOH-DX-1 F2 rounds 53-55 step row per keep-4 rule (re
 
 **Trajectory:** p129-sub(0)→p130-sub(0)→p131-sub(0). trajectory-tail →1L→0→0→0 (passes p128-sub, p129-sub, p130-sub, p131-sub). CONVERGENCE: 3/3 STRICT WINDOW CLOSED (DEC-190, 2026-07-27). F2 HUMAN GATE PENDING HUMAN APPROVAL.
 
+### Archived Phase Progress row (displaced by keep-5 rule; new F2-rounds-56-57 row added)
+
+Displaced to make room for SOH-DX-1 F2 rounds 56-57 + reality-check passes row per keep-5 rule (removed oldest: pass-45 adversary).
+
+| Phase | Status | Completed | Gate | Notes | Finding Progression |
+|-------|--------|-----------|------|-------|---------------------|
+| **pass-45 adversary — SOH-DX-1 F2 fix burst round 45 complete (2026-07-26): 3 findings (0C/0H/3M/0L) 3M (from 3M+2L); ZERO CRITs; ZERO HIGHs; 3 MEDIUM; ZERO LOWs; novelty LOW; second consecutive "Spec has converged" adversary verdict (all doc-fallout enumeration gaps); fixes: third stale-parity site; family-banner rewrite clause; README holdout row repaired; spec v1.3.143 + [1.3.143]; BC-INDEX v6.72; piecewise CLEAN; 3 guards green. ZERO consecutive CLEAN; 0/3 STRICT per DEC-189. NEXT: pass-46.** | F2 adversary grind in progress | 2026-07-26 | ADVERSARY GRIND — convergence + human gate PENDING. | spec v1.3.143; BC-INDEX v6.72; STORY-INDEX v1.5.41. | →8→8→8→7→6→4→3→7→6→5→6→6→4→2→5→5→4→3→3→5→4→2→3→3→6→6→4→5→2→1→3→3→2→3L→1M+3L→2M+2L→2H+2L→4M+2L→2M+1L→1H+1M→2M→1M+2L→2M→3M+2L→3M |
+
+### Archived Current Phase Steps row (displaced by keep-4 rule; new F2-rounds-56-57 step row added)
+
+Displaced to make room for SOH-DX-1 F2 rounds 56-57 step row per keep-4 rule (removed oldest: Remediation burst).
+
+| Step | Agent | Status | Output |
+|------|-------|--------|--------|
+| **Remediation burst (2026-07-27) — post-p123, pre-p124: piecewise check found 5 LOW findings (F46-003 over-propagation); all fixed; spec v1.3.145; BC-INDEX v6.73 unchanged; piecewise CLEAN x2; 3 guards green. Pass-47 VOID x2 (subagent delivery failure ~32 min). 0/3 STRICT convergence (DEC-189). Governing principle: version-trail entries are immutable audit records. NEXT: pass-47 (p124) with v1.3.145 artifacts. trajectory-tail →2M→3M+2L→3M→1M+2L** | consistency-validator + orchestrator + state-manager | COMPLETED | spec v1.3.145; BC-INDEX v6.73; STORY-INDEX v1.5.41; convergence-trajectory remediation-burst entry appended; burst-log.md appended; factory-artifacts committed. |
+
+---
+
+## F2-ROUNDS-56-57-BURST-2026-07-27 (2026-07-27)
+
+**Burst type:** SOH-DX-1 F2 reality-check passes 56/57 (p132-sub, p133-sub) + WINDOW RESET
+**Passes:** p132-sub (pass-56, 1 MEDIUM — F56-001), p133-sub (pass-57, 1 LOW — F57-001)
+**Findings fixed:** 2 (1 MEDIUM F56-001, 1 LOW F57-001)
+**Spec version:** v1.3.151 (via F56-001), v1.3.152 (via F57-001)
+**BC-INDEX version:** v6.73 (unchanged)
+**STORY-INDEX version:** v1.5.42 (unchanged)
+**Convergence:** WINDOW RESET to 0/3 STRICT — both findings delta-attributable; earlier 3/3 window (DEC-190, passes 53-55) INVALIDATED
+
+**Aperture class introduced — REALITY-CHECK:** First use of this aperture class (are the spec's factual assertions about third-party crates and this project's code behavior actually TRUE — verified against cargo registry, Cargo.lock, and actual source). Passes 48–55 used only internal-consistency apertures and produced zero substantive findings. Passes 56–57 opened the reality-check aperture and immediately found 2 substantive defects. APERTURE-CLASS-LESSON codified as new drift item.
+
+**F56-001 (MEDIUM, delta-attributable, v1.3.151):** AC-18's rationale asserted "`assert_cmd` provides no timeout primitive" — FALSE: `assert_cmd` 2.2.2 exposes `pub fn timeout(&mut self, timeout: std::time::Duration) -> &mut Self` at `src/cmd.rs:108`, verified in the cargo registry against `Cargo.lock`. Fix: false premise removed; "process exits promptly" vs "stdin NOT consumed" correctly separated — the former IS testable via `.timeout()`, the latter remains untestable (timeout proves no-hang but not that stdin went unread; no `assert_cmd` primitive observes child stdin consumption). Design decision (ii) recorded explicitly: timeout assertion DECLINED as normative — wall-clock is CI-load-sensitive; adds no discriminating power (cannot distinguish guard-fired-early from guard-absent-but-fast); exit-64 + guard substring already prove step-2 firing. Severity downgraded CRITICAL → MEDIUM by orchestrator (no wrong behavior ships; a false statement of fact under-specified achievable coverage).
+
+**F57-001 (LOW, delta-attributable, v1.3.152):** AC-17 asserted `!stderr.contains("cannot be combined with")` — substring too broad; collides with `src/cli/issue/edit.rs:220` (`"--label cannot be combined with {} in the same call"`, the issue-#396 label/field mutual-exclusion guard). Spec prose claim was CORRECT — BC-3.8.017's own string does live only in `jsm_create.rs:160` — so the orchestrator re-characterized the validator's finding (which would have rewritten accurate prose). No functional impact: zero `edit::` references in `create.rs`, so `edit.rs` is unreachable from `handle_create` and the HYGIENE label stands. Fix: assertion narrowed to `"cannot be combined with \`--markdown\`"` AND annotated with the `edit.rs` collision.
+
+**Updated drift items in STATE.md:**
+- `APERTURE-CLASS-LESSON` NEW drift item (MEDIUM, OPEN — engine/skill-template candidate): internal-consistency review cannot detect false factual claims about the world; F2/F5 adversarial checklists MUST include a reality-check dimension verifying factual assertions about third-party APIs, versions, and existing code behavior.
+- `AC-NEGATIVE-SUBSTRING-SPECIFICITY` NEW drift item (LOW, OPEN — guard-extension candidate): AC negative assertions can pin a contract using a substring shared with unrelated contracts' messages; every AC negative should assert a substring unique to the contract it pins.
+- `TWIN-ARTIFACT-SWEEP` recurrence incremented 15 → 16 (v1.3.151/152 both required sweeps for propagated claims; 2026-07-27 reality-check passes).
+- Convergence counter RESET from 3/3 to 0/3 with cause recorded in all status fields.
+
+**Files touched in .factory:** specs/prd/bc-3-issue-write.md (v1.3.151 + v1.3.152); spec-changelog.md ([1.3.151] + [1.3.152]); cycles/cycle-001/convergence-trajectory.md (2 new sections: p132-sub, p133-sub); cycles/cycle-001/burst-log.md (this entry + archived PP row pass-45 adversary + archived CPS row Remediation burst); STATE.md
+
+**Trajectory:** p132-sub(1M)→p133-sub(1L). trajectory-tail →0→0→1M→1L (passes p130-sub, p131-sub, p132-sub, p133-sub). CONVERGENCE: 0/3 STRICT RESET (2026-07-27). F2 HUMAN GATE NOT READY — WINDOW RESET; resume grinding.
+
+**Convergence counter: 0 of 3 STRICT. NEXT: adversary pass (p134) with v1.3.152 artifacts.**
+
 **Convergence counter:** 0 of 3 STRICT. NEXT: adversary pass (p129) with v1.3.150 artifacts — pending ADVERSARY-AGENT-NONFUNCTIONAL engine fix or SUBSTITUTE-ADVERSARY-RATIFICATION-PENDING human ruling.

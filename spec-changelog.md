@@ -9,6 +9,55 @@ Track all spec version changes. Most recent version first.
 
 > **Type legend:** Type classifies the SPEC document delta: MINOR = new BCs/VPs/sections; PATCH = amendments to existing bodies/ACs/ECs. Product-semver impact is recorded in the Summary line, independent of Type.
 
+## [1.3.153] - 2026-07-27
+
+### Type: PATCH
+
+### Summary
+F60-001 (LOW): README.md `bc-3-issue-write.md` row in the Document Map table reported `(111)` in the "L3 BCs" column, which is `definitional_count` (individually-bodied `#### BC-` headings). All other rows in the column report `total_bcs` (cumulative, including range-collapsed): `bc-1-auth-identity` shows `(57)` matching `total_bcs: 57`; `bc-4-assets-cmdb` shows `(32)` matching `total_bcs: 32`. The `(111)` value was introduced by Obs-3 of the v1.3.137 trail entry which updated `(107)` → `(111)` (correct count of the bodied-heading metric at that point) while carrying forward the inconsistent metric choice. Fix: change `(111)` → `(140)` on README.md line 39 so the column is self-consistent (all rows report `total_bcs`). The bc-3 frontmatter `total_bcs: 140` and `definitional_count: 111` are correct and unchanged; only the README display value is wrong. Three sibling rows are also stale against their own frontmatter (bc-2 `(94)` vs `total_bcs: 106`; bc-5 `(35)` vs `total_bcs: 36`; bc-7 `(90)` vs `total_bcs: 93`) but are out of scope — pre-existing PG-A / DRIFT-README gap; no guard script covers README.md. BC count unchanged (140/111).
+
+### Changed
+- `.factory/specs/prd/README.md` (MODIFIED): bc-3-issue-write.md row "L3 BCs" column `(111)` → `(140)` (F60-001).
+- `.factory/specs/prd/bc-3-issue-write.md` (MODIFIED): v1.3.153 frontmatter trail entry prepended. Footer: v1.3.153 `_Last updated` entry prepended with `Previous update` chain preserved.
+- `.factory/spec-changelog.md` (MODIFIED): [1.3.153] entry prepended.
+
+### BC Count
+0 new BCs. Total unchanged: 657 cumulative (BC-INDEX), 140/111 individually-bodied in bc-3-issue-write.md.
+
+---
+
+## [1.3.152] - 2026-07-27
+
+### Type: PATCH
+
+### Summary
+F57-001 (LOW): AC-17 (`test_platform_create_markdown_with_field_exits_64_bc_3_8_012_not_markdown_error`) negative assertion narrowed from `"cannot be combined with"` to `"cannot be combined with `--markdown`"`. The bare prefix is also present in `src/cli/issue/edit.rs::handle_edit`'s `"--label cannot be combined with"` message — unreachable from `handle_create` today, so no live false-positive, but the broad substring made the assertion mean less than its HYGIENE rationale claimed. Option (a) chosen: narrow the substring so it is unique to BC-3.8.017's message. The HYGIENE label, the existing unreachability rationale, and all other AC-17 assertions (exit 64, `stderr.contains("--field is only valid with")`, `!stderr.contains("Project key")`, `.current_dir`, REGRESSION PIN) are unchanged. Twin-artifact sweep at recurrence 14: `"is ignored on the platform create path"` occurrences in `.factory/stories/S-383-platform-inverse-warnings.md` are POSITIVE assertions (testing presence of old warning — clean); `"only valid with"` occurrences are verbatim error-message prose or unique script-guard strings (clean); `"cannot be combined with"` occurrences in `.factory/stories/S-407-*` and `S-E2E-CLI-GUARD-COVERAGE-1.md` are all `"--label cannot be combined with"` POSITIVE assertions testing edit.rs's guard (clean); `holdout-scenarios.md:812` and `S-385-*` already use the full specific `` `--markdown` `` form (clean). No other hit requires a fix.
+
+### Changed
+- `.factory/specs/prd/bc-3-issue-write.md` (MODIFIED): AC-17 negative assertion narrowed to `` "cannot be combined with `--markdown`" `` with explanatory note (F57-001). Frontmatter v1.3.152 trail entry prepended. Footer: v1.3.152 `_Last updated` entry prepended with `Previous update` chain preserved.
+- `.factory/spec-changelog.md` (MODIFIED): [1.3.152] entry prepended.
+
+### BC Count
+0 new BCs. Total unchanged: 657 cumulative (BC-INDEX), 140/111 individually-bodied in bc-3-issue-write.md.
+
+---
+
+## [1.3.151] - 2026-07-27
+
+### Type: PATCH
+
+### Summary
+F56-001 (MEDIUM): AC-18 non-normative rationale note corrected — the assertion "assert_cmd provides no timeout primitive" was false. assert_cmd 2.2.2 (the version in Cargo.lock) exposes a public `Command::timeout(&mut self, timeout: std::time::Duration) -> &mut Self` method. The fix separates two previously-conflated assertions: (1) "process exits promptly" IS testable via `Command::timeout` — `.timeout(Duration::from_secs(N)).assert().failure()` would fail on a hang; (2) "stdin NOT consumed" is still NOT testable — a timeout proves no hang but does not prove stdin was never read; no assert_cmd primitive observes stdin consumption. Explicit design decision (ii) recorded: the timeout assertion is declined as normative for AC-18 — wall-clock assertions are sensitive to CI load (slow machines, resource contention) and add no discriminating power: the exit-64 + `stderr.contains("--field is only valid with")` pair already proves the guard fired at step 2, before the step-4a blocking read; a timeout cannot distinguish guard-fired-early from guard-absent-but-fast. All normative AC-18 assertions (exit 64, `stderr.contains("--field is only valid with")`, `stdout.trim().is_empty()`, DISCRIMINATING NEGATIVE `!stderr.contains("Created issue")`, REGRESSION PIN) are unchanged. Twin-artifact sweep: the false premise appears in the v1.3.113 historical trail entry (immutable audit record, not touched) and in the AC-18 body (the live occurrence fixed here); no other occurrence found in `.factory/specs/` or `.factory/stories/`.
+
+### Changed
+- `.factory/specs/prd/bc-3-issue-write.md` (MODIFIED): AC-18 non-normative rationale note rewritten — false "no timeout primitive" premise deleted; "process exits promptly" separated as testable; "stdin NOT consumed" kept non-normative on correct grounds; design decision (ii) explicitly recorded (F56-001). Frontmatter v1.3.151 trail entry prepended. Footer: v1.3.151 `_Last updated` entry prepended with `Previous update` chain preserved.
+- `.factory/spec-changelog.md` (MODIFIED): [1.3.151] entry prepended.
+
+### BC Count
+0 new BCs. Total unchanged: 657 cumulative (BC-INDEX), 140/111 individually-bodied in bc-3-issue-write.md.
+
+---
+
 ## [1.3.150] - 2026-07-27
 
 ### Type: PATCH
