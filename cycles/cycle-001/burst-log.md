@@ -7365,3 +7365,61 @@ pass-67 (p142-sub): BROAD UNSTRUCTURED RE-TREAD FINDING — F67-001 LOW + F67-00
 ### Archived CPS row (keep-4 rule: F2 rounds 56-57 → archived; new active set: 58-60, 62-63, 64-66, 67)
 
 | **F2 fix burst rounds 56-57 + reality-check passes 56/57 (2026-07-27): WINDOW RESET to 0/3. F56-001 MEDIUM fix spec v1.3.151 (assert_cmd false premise removed; assertions separated; design decision (ii) DECLINED); F57-001 LOW fix spec v1.3.152 (AC-17 negative-substring narrowed); both delta-attributable; 3/3 window INVALIDATED. APERTURE-CLASS-LESSON codified. BC-INDEX v6.73 unchanged; 3 guards green; 0/3 STRICT (DEC-189/DEC-190). NEXT: adversary pass (p134) with v1.3.152 artifacts.** | consistency-validator (substitute x2) + orchestrator + state-manager | COMPLETED | spec v1.3.152; BC-INDEX v6.73; STORY-INDEX v1.5.42; convergence-trajectory p132-sub/p133-sub appended; burst-log.md appended; factory-artifacts committed. |
+
+
+---
+
+## F2-ROUNDS-68-70-BURST-2026-07-28
+
+**Date:** 2026-07-28
+**Rounds covered:** 68, 69, 70 (p143-sub, p144-sub, pass-70 VOID×3)
+**Spec versions:** v1.3.159 (no change — passes 68/69 produced ZERO FINDINGS; pass-70 VOID)
+**BC-INDEX:** v6.73 (unchanged)
+**STORY-INDEX:** v1.5.42 (unchanged)
+
+### Burst Summary
+
+pass-68 (p143-sub): BROAD UNSTRUCTURED RE-TREAD ZERO FINDINGS (0C/0H/0M/0L); verdict CONVERGED. Window 0/3 → 1/3. ~25 mechanical verifications, ALL correct.
+
+pass-69 (p144-sub): BROAD UNSTRUCTURED RE-TREAD ZERO FINDINGS (0C/0H/0M/0L); verdict CONVERGED. Window 1/3 → 2/3. ~30 mechanical verifications, all correct. ONE UNVERIFIED item self-flagged (wiremock `received_requests()` scope) and resolved out-of-band: VERIFIED CORRECT — `wiremock-0.6.5/src/mock_server/bare_server.rs` records ALL requests unconditionally before mock matching; both zero-HTTP proofs in AC-8 and AC-13 are sound.
+
+pass-70: VOID ×3 (adv-70, adv-70b, adv-70c). Three dispatches produced zero retrievable output despite substantial runtime; each nudged once and did not deliver. Cause: subagent delivery failure. NOT clean, NOT failing. Window stays at 2/3. Running tally this session: 3 of last 6 dispatches void — VOID is now the binding constraint on closing the window. Leaner prompts (68, 69) succeeded; longer prompts (70) failed.
+
+### Per-Pass Findings
+
+**p143-sub (pass-68):** ZERO FINDINGS. 0C/0H/0M/0L. Verdict CONVERGED. Window 1/3.
+
+**p144-sub (pass-69):** ZERO FINDINGS. 0C/0H/0M/0L. Verdict CONVERGED (wiremock UNVERIFIED resolved out-of-band; did not generate a finding). Window 2/3.
+
+**pass-70 (adv-70, adv-70b, adv-70c):** VOID ×3. No findings. Window unchanged at 2/3.
+
+### Drift Items Added
+
+| ID | Severity | Status | Notes |
+|----|----------|--------|-------|
+| ZERO-HTTP-PROOF-VERIFIED | INFO | CLOSED — verified | AC-8 and AC-13's normative zero-HTTP proof depends on wiremock `received_requests()` capturing requests to unregistered paths. Verified against `wiremock-0.6.5/src/mock_server/bare_server.rs`: `handle_request` pushes every incoming request to `received_requests` UNCONDITIONALLY, before `self.mock_set.handle_request(request)` — so unmatched/unregistered-path requests ARE recorded. The spec's claim that it "catches ALL HTTP calls regardless of mock registration" holds; both zero-HTTP proofs are sound. Failure mode safe: recording disabled → method returns `None` → spec's `.unwrap()` panics loudly (not silently passes). Surfaced as UNVERIFIED item in pass-69; resolved by orchestrator against crate source. |
+
+### Drift Items Updated
+
+| ID | Change |
+|----|--------|
+| STRICT-WINDOW-NO-FIXED-POINT | Counter-evidence recorded: passes 68 and 69 BOTH returned ZERO findings at ANY severity — the criterion DOES have a reachable fixed point after sufficient remediation. Earlier hypothesis ("a mature spec always yields some LOW") is now partially refuted. What blocks 3/3 is NOT spec quality — it is subagent delivery failure (pass-70 VOID×3). Item stays OPEN pending human ruling, but framing downgraded from "no reachable fixed point" to "fixed point reachable; closure currently blocked by infrastructure." |
+| AGENT-IDLE-NO-REPORT | pass-70 adds THREE more datapoints (adv-70, adv-70b, adv-70c). Running tally this session: 3 of the last 6 review dispatches produced nothing retrievable. Observed correlation: failed dispatches had longest prompts and runtimes; delivering passes (68, 69) were shorter. Severity stays MEDIUM. VOID is now the binding constraint on closing the DEC-189 window — not spec quality. |
+
+### Files Touched in .factory
+
+cycles/cycle-001/convergence-trajectory.md (3 new sections: p143-sub, p144-sub, pass-70-VOID×3); cycles/cycle-001/burst-log.md (this entry + archived PP row F2 rounds 56-57 + archived CPS row F2 rounds 58-60); STATE.md
+
+### Archived PP row (keep-5 rule: F2 rounds 56-57 → archived; new active set: 58-60, 62-63, 64-66, 67, 68-70)
+
+| Phase | Status | Completed | Gate | Notes | Finding Progression |
+|-------|--------|-----------|------|-------|---------------------|
+| **F2 fix burst rounds 56-57 + reality-check passes 56/57 (2026-07-27): WINDOW RESET to 0/3. F56-001 MEDIUM (assert_cmd false premise removed; assertions separated; design decision (ii) DECLINED) + F57-001 LOW (AC-17 negative-substring narrowed); both delta-attributable; 3/3 window INVALIDATED. APERTURE-CLASS-LESSON codified. spec v1.3.151 + v1.3.152; BC-INDEX v6.73 unchanged; 3 guards green; 0/3 STRICT (DEC-189/DEC-190).** | F2 adversary grind in progress | 2026-07-27 | ADVERSARY GRIND — convergence + human gate PENDING. | spec v1.3.152; BC-INDEX v6.73; STORY-INDEX v1.5.42. | →0→0→1M→1L→1M→1L |
+
+### Archived CPS row (keep-4 rule: F2 rounds 58-60 → archived; new active set: 62-63, 64-66, 67, 68-70)
+
+| Step | Agent | Status | Output |
+|------|-------|--------|--------|
+| **F2 rounds 58-60 + substitute passes 58/59/60 (2026-07-27): p134-sub (pass-58 CLEAN; 6 test-infrastructure claims; window 1/3); p135-sub (pass-59 CLEAN; 7 clap-declaration claims; window 2/3); p136-sub (pass-60 FINDING F60-001 LOW: README.md bc-3 L3 BCs `(111)`→`(140)`; delta-attributable; WINDOW RESET to 0/3); spec v1.3.153; BC-INDEX v6.73 unchanged; 3 guards green; 0/3 STRICT (DEC-189/DEC-190). NEXT: adversary pass (p137) with v1.3.153 artifacts.** | consistency-validator (substitute x3) + orchestrator + state-manager | COMPLETED | spec v1.3.153; BC-INDEX v6.73; STORY-INDEX v1.5.42; convergence-trajectory p134-sub/p135-sub/p136-sub appended; burst-log.md appended; factory-artifacts committed. |
+
+### Convergence counter: **2/3 STRICT**. pass-68 CLEAN (1/3) → pass-69 CLEAN (2/3) → pass-70 VOID ×3 (no credit, no reset). Fixed point IS reachable (counter-evidence from passes 68+69); closure blocked by subagent delivery failure. STRICT-WINDOW-NO-FIXED-POINT downgraded from "no fixed point" to "infrastructure constraint." NEXT: leaner dispatch for pass-71 OR human ruling on convergence criterion.

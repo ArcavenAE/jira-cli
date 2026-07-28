@@ -3440,3 +3440,56 @@ Sixty-sixth F2 pass (substitute — consistency-validator with adversarial verif
 - TWIN-ARTIFACT-SWEEP: recurrence 19→20
 
 NEXT: pass-68 (p143-sub or adversary) with v1.3.159 artifacts.
+
+---
+
+### Pass p143 (2026-07-28) — SUBSTITUTE (broad unstructured re-tread; DEC-190 WINDOW-ELIGIBLE)
+
+**Findings:** 0 (0C/0H/0M/0L) — ZERO FINDINGS; verdict CONVERGED
+**Convergence counter:** 1 of 3 STRICT
+**Window before:** 0/3 STRICT
+**Window after:** 1/3 STRICT
+
+Sixty-eighth F2 pass (substitute — consistency-validator with adversarial verification checklist; NOT the adversary agent; fresh context; adversarial framing preserved; DEC-190 window-eligible). **APERTURE CLASS: BROAD UNSTRUCTURED RE-TREAD** (no prescribed checklist — free to examine anything with Bash). Named ~25 mechanical verifications, ALL correct. Verifications included: `assert_cmd` 2.2.2 `.timeout()` at `src/cmd.rs:108` (confirming the v1.3.151 correction); `assert_json_error_envelope` at `json_error_shape.rs:63` with `stdout.trim().is_empty()` at ~:76; `tests/common/assertions.rs` absent (F3 deliverable); `write_minimal_config` legacy `[instance]` shape at ~:165; `write_profile_config` absent; both old `eprintln!` warn strings at `create.rs` ~:81-89; dispatch fork at `create.rs:49`; NO `--markdown` guard on the platform path (validating EC-3.8.012-5); `edit.rs` ~:89 markdown guard; `jsm_create.rs` ~:160 BC-3.8.017 string and ~:145 empty-RT guard; the false platform-parity comment at `jsm_create.rs` ~:171-172; bidirectional `--to`/`--account-id` `conflicts_with` at `mod.rs` ~:388/391; helper HTTP ordering (`resolve_team_field` before `resolve_assignee_by_project`) underpinning AC-8; `find_team_field_id` at `fields.rs:26`; `get_myself` at `users.rs:19`; `main.rs` ~:143 "Error: " prefix and the no-prefix JSON arm; all four ADR-0014 byte-for-byte sites; `CLAUDE.md:248`; all six old test names; the family banner's three stale clauses at `issue_create_jsm.rs` ~:2380-2391; both dead-citation comments; AC-1's full five-item DELETE mandate; the config migration line at `config.rs:285`.
+
+**ZERO findings.** All ~25 claims held.
+
+**Convergence counter:** 1 of 3 STRICT. NEXT: pass-69 (p144-sub or adversary).
+
+**Trajectory so far:** p78(8)→...→p140-sub(1M+1L)→p141-sub(1L)→p142-sub(2L)→p143-sub(0). trajectory-tail →1M+1L→1L→2L→0 (passes p140-sub, p141-sub, p142-sub, p143-sub). CONVERGENCE: 1/3 STRICT. PIPELINE PAUSED.
+
+---
+
+### Pass p144 (2026-07-28) — SUBSTITUTE (broad unstructured re-tread; DEC-190 WINDOW-ELIGIBLE)
+
+**Findings:** 0 (0C/0H/0M/0L) — ZERO FINDINGS; verdict CONVERGED
+**Convergence counter:** 2 of 3 STRICT
+**Window before:** 1/3 STRICT
+**Window after:** 2/3 STRICT
+
+Sixty-ninth F2 pass (substitute — consistency-validator with adversarial verification checklist; NOT the adversary agent; fresh context; adversarial framing preserved; DEC-190 window-eligible). **APERTURE CLASS: BROAD UNSTRUCTURED RE-TREAD** (no prescribed checklist — free to examine anything with Bash). Named ~30 mechanical verifications, all correct — substantially overlapping pass-68's set plus: `find_project_config` at `config.rs:362`; `JR_STDIN_IS_TTY` at `main.rs:107` with the flip gated on `if !cli.no_input` at ~:103; the pre-migrated profile-config template at `issue_create_jsm.rs` ~:1959-1966; `mount_platform_create_stubs` free-fire registration at ~:2395-2411; verbatim error-string non-overlap confirming AC-3's FALSIFIABLE-COARSE labels. Also independently confirmed the AC-16 Removal-postcondition omission is documented and intentional.
+
+**One UNVERIFIED item self-flagged:** whether wiremock 0.6.5's `received_requests()` records requests to UNREGISTERED paths — the basis for AC-8's and AC-13's normative zero-HTTP proof. **Orchestrator resolved this against the crate source: VERIFIED CORRECT.** In `wiremock-0.6.5/src/mock_server/bare_server.rs`, `handle_request` pushes every incoming request to `received_requests` UNCONDITIONALLY, before `self.mock_set.handle_request(request)` — so unmatched/unregistered-path requests ARE recorded. The spec's claim that it "catches ALL HTTP calls regardless of mock registration" holds; both zero-HTTP proofs are sound. Failure mode is also safe: with recording disabled the method returns `None` and the spec's `.unwrap()` panics loudly rather than silently passing.
+
+**ZERO findings.** All ~30 claims held (wiremock UNVERIFIED item resolved out-of-band; did not generate a finding).
+
+**Convergence counter:** 2 of 3 STRICT. NEXT: pass-70 (adv-70 or p145-sub).
+
+**Trajectory so far:** p78(8)→...→p141-sub(1L)→p142-sub(2L)→p143-sub(0)→p144-sub(0). trajectory-tail →1L→2L→0→0 (passes p141-sub, p142-sub, p143-sub, p144-sub). CONVERGENCE: 2/3 STRICT. PIPELINE PAUSED.
+
+---
+
+### Pass-70 (2026-07-28) — VOID ×3 (adv-70, adv-70b, adv-70c)
+
+**Findings:** N/A — VOID (zero retrievable output)
+**Convergence counter:** 2 of 3 STRICT (no credit, no reset)
+**Window before:** 2/3 STRICT
+**Window after:** 2/3 STRICT (unchanged — VOID does not advance or reset window)
+
+**VOID ×3.** Three consecutive dispatches (adv-70, adv-70b, adv-70c) produced zero retrievable output despite substantial runtime. Each was nudged once and did not deliver a final report. Attempt 3 (adv-70c) used a deliberately leaner prompt with a ~20-call budget, after observing the two failed dispatches had the longest prompts and runtimes while passes 68/69 (which delivered) were shorter. The orchestrator did NOT substitute its own review — not fresh-context after 20+ passes; a self-review cannot legitimately close a fresh-context window.
+
+**Cause: subagent delivery failure.** NOT a clean pass; NOT a failing pass. Window remains at 2/3 — VOID does not credit or reset the counter per task instructions. Running tally this session (AGENT-IDLE-NO-REPORT): 3 of the last 6 review dispatches produced nothing retrievable. VOID is now the binding constraint on closing the DEC-189 window, not spec quality.
+
+**Convergence counter:** 2 of 3 STRICT (unchanged). NEXT: fresh dispatch with leaner prompt or human ruling on STRICT-WINDOW-NO-FIXED-POINT criterion.
+
+**Trajectory so far:** p78(8)→...→p142-sub(2L)→p143-sub(0)→p144-sub(0)→pass-70(VOID×3). trajectory-tail →2L→0→0→VOID×3 (passes p142-sub, p143-sub, p144-sub, pass-70). CONVERGENCE: 2/3 STRICT. PIPELINE PAUSED.
