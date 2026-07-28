@@ -7,13 +7,29 @@ producer: state-manager
 timestamp: 2026-05-08T00:00:00
 cycle: "cycle-001"
 inputs: [STATE.md]
-input-hash: "3024626"
+input-hash: "38f69f6"
 traces_to: STATE.md
 ---
 
 # Archived Session Checkpoints — cycle-001
 
 Superseded checkpoints are archived here when STATE.md is updated with a newer one.
+
+---
+
+## Checkpoint archived 2026-07-28 (PASSES 68+69 CLEAN, counter 2/3 STRICT — superseded by SESSION WRAP /wrap pause)
+
+_Was the active checkpoint after passes 68+69 ZERO FINDINGS (CLEAN; convergence counter 2/3 STRICT) + pass-70 VOID×3 (adv-70, adv-70b, adv-70c; subagent delivery failure; no credit; window stays 2/3). STRICT-WINDOW-NO-FIXED-POINT: fixed point reachable; blocked by infrastructure. spec v1.3.159; BC-INDEX v6.73; STORY-INDEX v1.5.42. Superseded when human-requested /wrap pause recorded pipeline PAUSED and SESSION WRAP checkpoint written._
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-07-28 CHECKPOINT v1.3.159 — PASSES 68+69 CLEAN (counter 2/3). pass-70 VOID×3 (adv-70, adv-70b, adv-70c; subagent delivery failure; no credit; 2/3). STRICT-WINDOW-NO-FIXED-POINT: fixed point reachable; binding constraint is infrastructure. trajectory-tail →2L→0→0→0; F2 human gate NOT READY — window 2/3, need 1 more CLEAN pass OR human criterion-refinement ruling. |
+| **Position** | Feature Mode SOH-DX-1 F2 WINDOW 2/3 STRICT (2026-07-28). origin/develop @ e72b0166 (tip = #598 rand 0.10.1→0.10.2; 9 dependabot merges landed 2026-07-25). Local develop checkout is at 7b3ba371 — 9 commits BEHIND origin/develop (fast-forward needed before F4 code work: `git pull --ff-only`). v0.6.0-dev.11 released (tag @ 34d2f795). Spec v1.3.159; BC 657/holdouts 100/VP 35; AC 85 (AC-1..21 in S-639-1); BC-INDEX v6.73; STORY-INDEX v1.5.42. 70 passes total (46 adversary + remediation burst + 23 substitute passes: 48-69 + 1 VOID pass: 70). NEXT ACTION: dispatch pass-71 with leaner prompt OR human ruling on STRICT-WINDOW-NO-FIXED-POINT criterion. |
+| **Convergence counter** | SOH-DX-1 F2 WINDOW 2/3 STRICT — 2026-07-28. pass-68 ZERO FINDINGS (CLEAN; 1/3); pass-69 ZERO FINDINGS (CLEAN; 2/3); pass-70 VOID×3 (no credit, no reset; 2/3). trajectory-tail →2L→0→0→0 |
+| **In-flight work** | PIPELINE PAUSED. No in-flight worktrees. F2 window 2/3. |
+| **Pending human decisions** | F2 human gate NOT READY (2/3; need 1 more CLEAN pass OR criterion-refinement ruling); PHANTOM-ADR-0017 (author vs retract); VP-INDEX-ARTIFACT-ABSENT; #645 (soak met 2026-07-27); #628 soak; #574 pending rebase. |
+| **develop branch** | Local 7b3ba371 (9 commits BEHIND origin/develop @ e72b0166); no local-only commits. |
+| **Resume command** | Open fresh session → run `/vsdd-factory:next-step` → (1) fast-forward local develop (`git pull --ff-only`); (2) dispatch pass-71 with leaner prompt OR human ruling on STRICT-WINDOW-NO-FIXED-POINT criterion. |
 
 ---
 
