@@ -3294,3 +3294,47 @@ Fifty-seventh F2 pass (substitute — consistency-validator with adversarial ver
 **Convergence counter:** 0 of 3 STRICT. NEXT: pass-58 (p134-sub or adversary).
 
 **Trajectory so far:** p78(8)→p79(8)→p80(8)→p81(7)→p82(6)→p83(4)→p84(3)→p85(7)→p86(6)→p87(5)→p88(6)→p89(6)→p90(4)→p91(2)→p92(5)→p93(5)→p94(4)→p95(3)→p96(3)→p97(5)→p98(4)→p99(2)→p100(3)→p101(3)→p102(6)→p103(6)→p104(4)→p105(5)→p106(2)→p107(1)→p108(3)→p109(3)→p110(2)→p111(3L)→p112(1M+3L)→p113(2M+2L)→p114(2H+2L)→p115(4M+2L)→p116(2M+1L)→p117(1H+1M)→p118(2M)→p119(1M+2L)→p120(2M)→p121(3M+2L)→p122(3M)→p123(1M+2L)→[remediation-burst: F1-F5 LOW]→[F47-001 LOW fix]→p124-sub(1L)→p125-sub(1L)→p126-sub(1L)→p127-sub(1L)→p128-sub(1L)→p129-sub(0)→p130-sub(0)→p131-sub(0)→p132-sub(1M)→p133-sub(1L). Delta: -1M+1L (1M→1L). trajectory-tail →0→0→1M→1L (passes p130-sub, p131-sub, p132-sub, p133-sub). CONVERGENCE: 0/3 STRICT RESET. PIPELINE PAUSED.
+
+---
+
+### Pass p137 (2026-07-28) — SUBSTITUTE (record-keeping integrity audit; DEC-190 WINDOW-ELIGIBLE)
+
+**Findings:** 2 (0C/0H/1M/1L) — F62-001 MEDIUM + F62-002 LOW
+**Convergence counter:** RESET to 0 of 3 (STRICT per DEC-190) — delta-attributable findings; window reset
+
+Sixty-second F2 pass (substitute — consistency-validator with adversarial verification checklist; NOT the adversary agent; fresh context; adversarial framing preserved; DEC-190 window-eligible). **APERTURE CLASS: RECORD-KEEPING INTEGRITY** (spec-changelog completeness, Type-field correctness, BC-INDEX rows, README Supplement Index). 4 items audited. 2 PASS, 2 FINDING. 1 MEDIUM finding; 1 LOW finding; verdict FINDING (not CLEAN).
+
+**Verified claims (PASS, 2/4):** (1) Changelog completeness — 47 entries 1.3.107–1.3.153 with no gaps or duplicates in scope; (2) Type-field correctness — all entries are PATCH, consistent with "0 new BCs"; (3) BC-INDEX §3.4 rows for BC-3.4.014–019 all present and semantically consistent with their bodies.
+
+**F62-001 (MEDIUM, delta-attributable):** `specs/prd/README.md` Supplement Index holdout row showed count `55` but correct value is `100` (total holdout scenarios per `total_holdouts:` frontmatter). Fix: corrected to `100` in spec v1.3.154. The stale `55` figure was pre-SOH-DX-1 and was not updated when holdouts grew. Severity MEDIUM: stale count in a navigational index document potentially misdirects reviewers about holdout coverage.
+
+**F62-002 (LOW, delta-attributable):** Two spec-changelog entries (`[1.3.113]` and `[1.3.114]`) were missing their `### BC Count` sections — present in all sibling entries as a convention, absent here. Fix: both entries gained their `### BC Count` sections (no BC count change; entries updated to record `0 new BCs / unchanged` in v1.3.154).
+
+**NOTE — SUBSTITUTE PASS (DEC-190 WINDOW-ELIGIBLE):** Window was at 0/3 after p136-sub (F60-001 reset). F62-001 and F62-002 are delta-attributable; window remains 0/3. Both fixes applied in spec v1.3.154.
+
+**Convergence counter:** RESET to 0 of 3 STRICT. NEXT: pass-63 (p138-sub).
+
+**Trajectory so far:** p78(8)→p79(8)→p80(8)→p81(7)→p82(6)→p83(4)→p84(3)→p85(7)→p86(6)→p87(5)→p88(6)→p89(6)→p90(4)→p91(2)→p92(5)→p93(5)→p94(4)→p95(3)→p96(3)→p97(5)→p98(4)→p99(2)→p100(3)→p101(3)→p102(6)→p103(6)→p104(4)→p105(5)→p106(2)→p107(1)→p108(3)→p109(3)→p110(2)→p111(3L)→p112(1M+3L)→p113(2M+2L)→p114(2H+2L)→p115(4M+2L)→p116(2M+1L)→p117(1H+1M)→p118(2M)→p119(1M+2L)→p120(2M)→p121(3M+2L)→p122(3M)→p123(1M+2L)→[remediation-burst: F1-F5 LOW]→[F47-001 LOW fix]→p124-sub(1L)→p125-sub(1L)→p126-sub(1L)→p127-sub(1L)→p128-sub(1L)→p129-sub(0)→p130-sub(0)→p131-sub(0)→p132-sub(1M)→p133-sub(1L)→p134-sub(0)→p135-sub(0)→p136-sub(1L)→p137-sub(1M+1L). Delta: +1M (1L→1M+1L). trajectory-tail →0→0→1L→1M+1L (passes p134-sub, p135-sub, p136-sub, p137-sub). CONVERGENCE: 0/3 STRICT RESET — F62-001 MEDIUM + F62-002 LOW delta-attributable.
+
+---
+
+### Pass p138 (2026-07-28) — SUBSTITUTE (unguarded-surface audit; DEC-190 WINDOW-ELIGIBLE) — CLEAN for delta
+
+**Findings:** 1 (0C/0H/0M/1L) — CANONICAL-COUNTS stale ADR locations (PRE-EXISTING, out of scope)
+**Convergence counter:** 1 of 3 STRICT — CLEAN for delta (pre-existing finding; window advances)
+
+Sixty-third F2 pass (substitute — consistency-validator with adversarial verification checklist; NOT the adversary agent; fresh context; adversarial framing preserved; DEC-190 window-eligible). **APERTURE CLASS: UNGUARDED-SURFACE AUDIT** (three surfaces with no guard coverage). 3 items audited. 2 VERIFIED, 1 PRE-EXISTING FINDING (out of scope). ZERO delta-attributable findings; verdict CLEAN for delta.
+
+**Verified claims (2/3):**
+- **Item 1 — BC-INDEX `## Coverage Statistics` (the "9th surface", first mechanical audit): VERIFIED ACCURATE.** All eight cumulative figures sum to 657 matching `total_bcs`; all eight bodied figures sum to 427 matching the Total row; the stated 230 difference is exact; every per-section bodied figure matches the real `#### BC-` heading count (46/64/111/22/18/33/49 across bc-1..bc-7, plus cross-cutting.md at 84 bodied / 150 cumulative). **Calibration note:** this surface has been flagged ten times as a drift risk and has now been mechanically audited for the first time — it is accurate. The recurrence count measured how often the risk was noticed, not how often it drifted. Recommend priority downgrade accordingly.
+- **Item 2 — `error-taxonomy.md` `### Issue Commands` subsection (added v1.3.150): VERIFIED.** All three verbatim error strings character-for-character identical to their `bc-3-issue-write.md` definitions; exit code 64; `JrError::UserError`; all three fire BEFORE any HTTP is issued; combined-governs-one-error rule stated; table structure matches sibling subsections.
+
+**PRE-EXISTING FINDING (Item 3 — CANONICAL-COUNTS stale ADR locations, out of scope):** `CANONICAL-COUNTS.md` §ADRs claims ADR-0007..0013 live in `.factory/architecture/adr/` — that directory does not exist; all ADRs 0001..0016 are in `docs/adr/`. Stale location note. PRE-EXISTING (not SOH-DX-1 delta). Does NOT reset the window; ledgered as `CANONICAL-COUNTS-STALE-ADR-LOCATIONS` (LOW, OPEN — maintenance-sweep candidate).
+
+**Orchestrator-error correction (F63-001 MEDIUM + F63-002 LOW) correcting v1.3.154:** Both README holdout rows introduced in v1.3.154 carried range terminus `H-NEW-JSM-RT-001..006`, but the actual maximum is `H-NEW-JSM-RT-001..007` (7 scenarios in that family). Line 48 had been wrong since v1.3.143; the orchestrator's v1.3.154 instruction propagated the wrong terminus to line 108. Fix: both rows corrected to `..007` in v1.3.155. Line 108 also gained the "informational; canonical count is `total_holdouts:` frontmatter" caveat (line 48 already had it). Additionally, `PHANTOM-ADR-0017` codified: ADR-0017 cited in six files but document does not exist; on-disk count is 16 (ADR-0001..0016).
+
+**NOTE — SUBSTITUTE PASS (DEC-190 WINDOW-ELIGIBLE, CLEAN for delta):** Window was at 0/3 after p137-sub. The sole finding is pre-existing and out-of-scope for the SOH-DX-1 delta — it does NOT reset the window. Window advances to 1/3 STRICT. Reasoning recorded explicitly per orchestrator instruction.
+
+**Convergence counter:** 1 of 3 STRICT. NEXT: pass-64 (p139-sub or adversary).
+
+**Trajectory so far:** p78(8)→p79(8)→p80(8)→p81(7)→p82(6)→p83(4)→p84(3)→p85(7)→p86(6)→p87(5)→p88(6)→p89(6)→p90(4)→p91(2)→p92(5)→p93(5)→p94(4)→p95(3)→p96(3)→p97(5)→p98(4)→p99(2)→p100(3)→p101(3)→p102(6)→p103(6)→p104(4)→p105(5)→p106(2)→p107(1)→p108(3)→p109(3)→p110(2)→p111(3L)→p112(1M+3L)→p113(2M+2L)→p114(2H+2L)→p115(4M+2L)→p116(2M+1L)→p117(1H+1M)→p118(2M)→p119(1M+2L)→p120(2M)→p121(3M+2L)→p122(3M)→p123(1M+2L)→[remediation-burst: F1-F5 LOW]→[F47-001 LOW fix]→p124-sub(1L)→p125-sub(1L)→p126-sub(1L)→p127-sub(1L)→p128-sub(1L)→p129-sub(0)→p130-sub(0)→p131-sub(0)→p132-sub(1M)→p133-sub(1L)→p134-sub(0)→p135-sub(0)→p136-sub(1L)→p137-sub(1M+1L)→p138-sub(1L). Delta: -1M (1M+1L→1L). trajectory-tail →0→1L→1M+1L→1L (passes p135-sub, p136-sub, p137-sub, p138-sub). **CONVERGENCE: 1/3 STRICT — CLEAN for delta (pre-existing finding out of scope; window advances).**

@@ -7227,3 +7227,53 @@ Displaced to make room for SOH-DX-1 F2 rounds 58-60 step row per keep-4 rule (re
 **Trajectory:** p134-sub(0)→p135-sub(0)→p136-sub(1L). trajectory-tail →1L→0→0→1L (passes p133-sub, p134-sub, p135-sub, p136-sub). CONVERGENCE: RESET to 0/3 STRICT (2026-07-27). F2 HUMAN GATE NOT READY — window reset; resume grinding.
 
 **Convergence counter: 0 of 3 STRICT. NEXT: adversary pass (p137) with v1.3.153 artifacts.**
+
+---
+
+## F2-ROUNDS-62-63-BURST-2026-07-28 (2026-07-28)
+
+**Burst type:** SOH-DX-1 F2 passes 62/63 (p137-sub, p138-sub) + record-keeping integrity + unguarded-surface audit
+**Passes:** p137-sub (pass-62, 1M+1L — F62-001 MEDIUM + F62-002 LOW → WINDOW RESET), p138-sub (pass-63, CLEAN for delta — 1 pre-existing finding out of scope → window 1/3)
+**Findings fixed:** 4 (1M F62-001, 1L F62-002, 1M F63-001, 1L F63-002)
+**Spec version:** v1.3.154 (via F62-001 + F62-002), v1.3.155 (via F63-001 + F63-002 — orchestrator-error correction)
+**BC-INDEX version:** v6.73 (unchanged)
+**STORY-INDEX version:** v1.5.42 (unchanged)
+**Convergence:** 1/3 STRICT — pass-63 CLEAN for delta (pre-existing finding out of scope; window advances from 0/3)
+
+**Pass 62 (p137-sub) — FINDING 1M+1L:** Record-keeping integrity audit. 4 items. 2 PASS, 2 FINDING. Changelog completeness (47 entries, no gaps), Type-field correctness (all PATCH), BC-INDEX §3.4 rows (BC-3.4.014–019, present and consistent) all PASS. F62-001 MEDIUM: README.md Supplement Index holdout row count `55`→`100` (stale pre-SOH-DX-1 figure; `total_holdouts:` frontmatter is canonical). F62-002 LOW: two spec-changelog entries `[1.3.113]` and `[1.3.114]` missing `### BC Count` sections. Both fixed in v1.3.154. Window RESET to 0/3 (delta-attributable).
+
+**Pass 63 (p138-sub) — CLEAN for delta:** Unguarded-surface audit. 3 surfaces. 2 VERIFIED, 1 PRE-EXISTING (out of scope). Item 1: BC-INDEX `## Coverage Statistics` (9th surface) FIRST MECHANICAL AUDIT — VERIFIED ACCURATE. All eight cumulative figures sum to 657; all eight bodied figures sum to 427; 230 difference exact; per-section bodied counts match real `#### BC-` heading counts. Item 2: `error-taxonomy.md` `### Issue Commands` subsection (v1.3.150) VERIFIED — all three error strings character-exact, exit 64, pre-flight, combined-governs-one-error. Item 3 PRE-EXISTING (out of scope): CANONICAL-COUNTS §ADRs claims `.factory/architecture/adr/` — that directory does not exist; all ADRs in `docs/adr/`. Ledgered as `CANONICAL-COUNTS-STALE-ADR-LOCATIONS` (LOW, OPEN). Window advances: 1/3 STRICT. Reasoning: sole finding is pre-existing and outside SOH-DX-1 delta scope — does NOT reset the window per DEC-189/DEC-190.
+
+**Orchestrator-error correction v1.3.155 (F63-001 MEDIUM + F63-002 LOW):** v1.3.154's README holdout-count fix introduced wrong terminus `H-NEW-JSM-RT-001..006` in both README rows (line 48 wrong since v1.3.143; line 108 propagated from v1.3.154 orchestrator instruction). Actual maximum is `..007`. Both corrected in v1.3.155. Line 108 also gained the "informational; canonical count is `total_holdouts:` frontmatter" caveat (line 48 already had it). The orchestrator error arose from inferring the range maximum from a confirmed member (`..006` exists) rather than enumerating to find the true maximum — `RANGE-TERMINUS-INFERENCE` process-gap codified.
+
+**New drift items in STATE.md:**
+- `PHANTOM-ADR-0017` NEW (MEDIUM, OPEN — needs human ruling on author-vs-retract): ADR-0017 cited in six real files (`src/api/jira/attachments.rs`, `tests/attachment_upload.rs`, `CHANGELOG.md`, `deny.toml`, `CLAUDE.md`, `docs/specs/attachments.md`) and described in `CANONICAL-COUNTS.md` §ADRs as a real document, but the file does not exist anywhere. On-disk count is 16 (ADR-0001..ADR-0016). Pre-existing; SOH-ATTACHMENTS-1 / S-576-3 origin; outside SOH-DX-1 delta.
+- `CANONICAL-COUNTS-STALE-ADR-LOCATIONS` NEW (LOW, OPEN — maintenance-sweep candidate): `CANONICAL-COUNTS.md` §ADRs claims ADR-0007..0013 live in `.factory/architecture/adr/` — that directory does not exist; all ADRs 0001..0016 are in `docs/adr/`. Stale location note. Pre-existing.
+- `HOLDOUT-H-018-ABSENT` NEW (LOW, OPEN — verify retirement intent): Bare-H holdout scenarios span `H-001..H-047` but only 46 exist — `H-018` is absent. Total (100) is correct and guard-consistent; absence is likely a retired scenario but intent unverified. Range notation is a span, not a per-number assertion.
+- `RANGE-TERMINUS-INFERENCE` NEW [process-gap] (MEDIUM, OPEN — engine/checklist candidate): Any range-notation claim must have its maximum verified by enumeration, never inferred from membership. The v1.3.154 error arose because terminus `..006` was inferred from `H-NEW-JSM-RT-006` existing, rather than established mechanically. Applies to orchestrator dispatches and reviewer checklists alike.
+
+**Updated drift items in STATE.md:**
+- `TWIN-ARTIFACT-SWEEP`: recurrence incremented 16 → 18 (v1.3.154 holdout fix required two-row sweep; v1.3.155 terminus fix required third sweep).
+- `BC-INDEX-9TH-SURFACE`: first mechanical audit result recorded (VERIFIED ACCURATE 2026-07-28); priority downgrade recommended per calibration note — recurrence count measured risk-noticing frequency, not drift frequency; guard-extension still OPEN.
+
+**Files touched in .factory:** specs/prd/README.md (v1.3.154 holdout count `55`→`100`, v1.3.155 terminus `..006`→`..007` both rows + line-108 caveat); specs/prd/bc-3-issue-write.md (v1.3.154 + v1.3.155 trail entries); spec-changelog.md ([1.3.154] + [1.3.155]); cycles/cycle-001/convergence-trajectory.md (2 new sections: p137-sub, p138-sub); cycles/cycle-001/burst-log.md (this entry + archived PP row F2-rounds-47-49 + archived CPS row F2-rounds-50-52); STATE.md
+
+**Trajectory:** p137-sub(1M+1L)→p138-sub(1L). trajectory-tail →0→1L→1M+1L→1L (passes p135-sub, p136-sub, p137-sub, p138-sub). CONVERGENCE: 1/3 STRICT (CLEAN for delta pass-63; pre-existing finding out of scope).
+
+**Convergence counter: 1 of 3 STRICT. NEXT: pass-64 (p139-sub or adversary) with v1.3.155 artifacts.**
+
+### Archived Phase Progress row (displaced by keep-5 rule; new F2-rounds-62-63 row added)
+
+Displaced to make room for SOH-DX-1 F2 rounds 62-63 + passes row per keep-5 rule (removed oldest: F2 rounds 47-49).
+
+| Phase | Status | Completed | Gate | Notes | Finding Progression |
+|-------|--------|-----------|------|-------|---------------------|
+| **F2 rounds 47-49 + substitute passes 48/49 (2026-07-27): pass-47 VOID x5 total (ADVERSARY-AGENT-NONFUNCTIONAL — adversary agent nonfunctional across all 5 attempts); F47-001 LOW fix spec v1.3.146 (write_profile_config destination + footer correction); substitute pass-48 (F48-001 LOW: AC-7 EC linkage) fix spec v1.3.147; substitute pass-49 (F49-001 LOW: BC-3.8.013 obligation-d) fix spec v1.3.148; substitute passes NOT DEC-189 window-eligible pending ratification ruling; BC-INDEX v6.73 unchanged; 3 guards green; ZERO consecutive CLEAN (0/3 STRICT per DEC-189).** | F2 adversary grind in progress | 2026-07-27 | ADVERSARY GRIND — convergence + human gate PENDING. | spec v1.3.148; BC-INDEX v6.73; STORY-INDEX v1.5.41. | →3M→1M+2L→1L→1L |
+
+### Archived Current Phase Steps row (displaced by keep-4 rule; new F2-rounds-62-63 step row added)
+
+Displaced to make room for SOH-DX-1 F2 rounds 62-63 step row per keep-4 rule (removed oldest: F2 rounds 50-52).
+
+| Step | Agent | Status | Output |
+|------|-------|--------|--------|
+| **F2 rounds 50-52 + substitute passes 50/51/52 (2026-07-27): F50-001 story-side (S-383 contract_superseded_by; STORY-INDEX v1.5.42) p126-sub 1L; F51-001 LOW spec v1.3.149 (coverage non-goal Note) + F51-002 STATE.md VP-INDEX phantom FIXED p127-sub 1L; F52-001 LOW spec v1.3.150 (error-taxonomy Section 6 Issue Commands) p128-sub 1L; all substitute passes NOT DEC-189 window-eligible; BC-INDEX v6.73 unchanged; 3 guards green; ZERO consecutive CLEAN (0/3 STRICT per DEC-189).** | consistency-validator (substitute x3) + orchestrator + state-manager | COMPLETED | spec v1.3.150; BC-INDEX v6.73; STORY-INDEX v1.5.42; convergence-trajectory p126-sub/p127-sub/p128-sub appended; burst-log.md appended; factory-artifacts committed. |

@@ -9,6 +9,24 @@ Track all spec version changes. Most recent version first.
 
 > **Type legend:** Type classifies the SPEC document delta: MINOR = new BCs/VPs/sections; PATCH = amendments to existing bodies/ACs/ECs. Product-semver impact is recorded in the Summary line, independent of Type.
 
+## [1.3.155] - 2026-07-27
+
+### Type: PATCH
+
+### Summary
+F63-001 (MEDIUM): README.md both H-NEW-JSM-RT range terminus claims were `..006`; verified maximum in holdout-scenarios.md is H-NEW-JSM-RT-007 (seven scenarios, 001–007); both corrected to `..007`. Line 48 (Files table) has been wrong since v1.3.143 — that pass did not correct it. Line 108 (Supplement Index) was introduced as `..006` by the v1.3.154 orchestrator instruction, which inferred the terminus without verifying against holdout-scenarios.md (orchestrator error). CANONICAL-COUNTS.md line 118 already had `..007` and is the reference that exposed the defect. The v1.3.154 trail and changelog entries are left exactly as written — the correction belongs here, not in a rewrite of history. F63-002 (LOW): Line 108 lacked the informational caveat present on line 48 — `(informational; canonical count is \`total_holdouts:\` frontmatter in holdout-scenarios.md)`. The Holdout-evaluator consumes line 108; the caveat is material because neither row enumerates all 100 scenarios. Fix: add identical caveat to line 108 after the enumeration closing paren. Twin-artifact sweep (recurrence 16): CANONICAL-COUNTS.md `H-NEW-JSM-RT-001..H-NEW-JSM-RT-007` CORRECT; `phase-1-consistency-audit*.md` carry `..005` — HISTORICAL SNAPSHOT, explicitly marked immutable; `STORY-INDEX.md` cycle-3 row carries `..005` and issue-288-pr4-dispatch row carries `..004` — completed-story records, immutable. No other range terminus in `.factory/specs/` or `.factory/stories/` requires a fix. Observation recorded (NOT a fix): H-018 is absent from the H-001..H-047 span (46 of 47 present); total count (100) is correct and guard-consistent; most likely deliberately retired — unverified intent, flagged for a future maintainer to confirm. BC count unchanged (140/111).
+
+### Changed
+- `.factory/specs/prd/README.md` (MODIFIED): Line 48 `H-NEW-JSM-RT-001..006` → `H-NEW-JSM-RT-001..007` (F63-001). Line 108 `H-NEW-JSM-RT-001..006` → `H-NEW-JSM-RT-001..007` + informational caveat appended matching line 48 wording (F63-001 + F63-002).
+- `.factory/specs/prd/bc-3-issue-write.md` (MODIFIED): v1.3.155 frontmatter trail entry prepended. Footer `_Last updated` block updated to v1.3.155.
+- `.factory/spec-changelog.md` (MODIFIED): [1.3.155] entry prepended.
+
+### BC Count
+
+0 new BCs. Total unchanged: 657 cumulative (BC-INDEX), 140/111 individually-bodied in bc-3-issue-write.md.
+
+---
+
 ## [1.3.154] - 2026-07-27
 
 ### Type: PATCH
