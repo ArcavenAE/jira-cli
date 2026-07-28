@@ -7182,3 +7182,48 @@ Displaced to make room for SOH-DX-1 F2 rounds 56-57 step row per keep-4 rule (re
 **Convergence counter: 0 of 3 STRICT. NEXT: adversary pass (p134) with v1.3.152 artifacts.**
 
 **Convergence counter:** 0 of 3 STRICT. NEXT: adversary pass (p129) with v1.3.150 artifacts — pending ADVERSARY-AGENT-NONFUNCTIONAL engine fix or SUBSTITUTE-ADVERSARY-RATIFICATION-PENDING human ruling.
+
+---
+
+### Archived Phase Progress row (displaced by keep-5 rule; new F2-rounds-58-60 row added)
+
+Displaced to make room for SOH-DX-1 F2 rounds 58-60 + passes 58/59/60 row per keep-5 rule (removed oldest: Remediation burst).
+
+| Phase | Status | Completed | Gate | Notes | Finding Progression |
+|-------|--------|-----------|------|-------|---------------------|
+| **Remediation burst (2026-07-27) — post-p123, pre-p124: piecewise check on round-46 edits found 5 LOW findings (F46-003 over-propagation); all fixed; spec v1.3.145; BC-INDEX v6.73 unchanged; piecewise CLEAN x2; 3 guards green. Pass-47 VOID x2 (subagent delivery failure ~32 min). ZERO consecutive CLEAN (0/3 STRICT per DEC-189). Governing principle: version-trail entries are immutable audit records; replace_all must never rewrite them (SOH-DX-1-PG-012 datapoint 1).** | Remediation burst (spec-only) | 2026-07-27 | ADVERSARY GRIND — convergence + human gate PENDING. | spec v1.3.145; BC-INDEX v6.73; STORY-INDEX v1.5.41. | →2M→3M+2L→3M→1M+2L |
+
+### Archived Current Phase Steps row (displaced by keep-4 rule; new F2-rounds-58-60 step row added)
+
+Displaced to make room for SOH-DX-1 F2 rounds 58-60 step row per keep-4 rule (removed oldest: F2 rounds 47-49).
+
+| Step | Agent | Status | Output |
+|------|-------|--------|--------|
+| **F2 rounds 47-49 + substitute passes 48/49 (2026-07-27): pass-47 VOID x5 (ADVERSARY-AGENT-NONFUNCTIONAL); F47-001 fix spec v1.3.146 (write_profile_config + footer); substitute pass-48 (F48-001 LOW) fix spec v1.3.147; substitute pass-49 (F49-001 LOW) fix spec v1.3.148; 3 guards green; BC-INDEX v6.73 unchanged; ZERO consecutive CLEAN (0/3 STRICT per DEC-189). NEXT: adversary pass (p126) with v1.3.148 artifacts pending engine fix or substitute ratification ruling.** | consistency-validator (substitute x2) + orchestrator + state-manager | COMPLETED | spec v1.3.148; BC-INDEX v6.73; STORY-INDEX v1.5.41; convergence-trajectory rounds 47-49 + p124-sub/p125-sub appended; burst-log.md appended; factory-artifacts committed. |
+
+---
+
+## F2-ROUNDS-58-60-BURST-2026-07-27 (2026-07-27)
+
+**Burst type:** SOH-DX-1 F2 passes 58/59/60 (p134-sub, p135-sub, p136-sub) + WINDOW RESET
+**Passes:** p134-sub (pass-58 CLEAN, window 1/3), p135-sub (pass-59 CLEAN, window 2/3), p136-sub (pass-60 FINDING F60-001 LOW → WINDOW RESET)
+**Findings fixed:** 1 (0 MEDIUM, 1 LOW F60-001)
+**Spec version:** v1.3.153 (via F60-001)
+**BC-INDEX version:** v6.73 (unchanged)
+**STORY-INDEX version:** v1.5.42 (unchanged)
+**Convergence:** WINDOW RESET to 0/3 STRICT — F60-001 delta-attributable; window was 2/3 after passes 58+59
+
+**Pass 58 (p134-sub) — CLEAN:** 6 test-infrastructure claims verified. `assert_cmd` timeout API confirmed; AC-17 narrowed substring confirmed unique; `JR_STDIN_IS_TTY` debug-gate confirmed; test harness patterns confirmed; exit-64 step-2 guard confirmed; `jr_cmd_xdg` fixture scoping confirmed. ZERO findings. Convergence window: 1/3 STRICT.
+
+**Pass 59 (p135-sub) — CLEAN:** 7 clap-declaration claims verified. `--markdown`, `--on-behalf-of`, `--request-type` arg declarations confirmed; `allow_hyphen_values` NOT on upload file positional confirmed; `conflicts_with` annotation confirmed; platform-path gate byte-for-byte unchanged confirmed; `--no-input` propagation confirmed; `--output` JSON route confirmed; AC group-6 clap annotations confirmed. ZERO findings. Convergence window: 2/3 STRICT.
+
+**Pass 60 (p136-sub) — FINDING F60-001 LOW:** prd-metric aperture. README.md bc-3-issue-write.md "L3 BCs" column showed `(111)` (definitional_count) instead of `(140)` (total_bcs convention). Fix: corrected to `(140)` in v1.3.153. Sibling drift found but NOT fixed in this pass: bc-2 `(94)` vs `total_bcs: 106`; bc-5 `(35)` vs `36`; bc-7 `(90)` vs `93` — ledgered as README-SIBLING-COUNT-DRIFT-3. Delta-attributable → WINDOW RESET to 0/3.
+
+**New drift item in STATE.md:**
+- `README-SIBLING-COUNT-DRIFT-3` NEW drift item (LOW, OPEN — prd/README.md guard gap): README.md rows for bc-2/bc-5/bc-7 use `definitional_count` instead of `total_bcs` in the "L3 BCs" column (same class as F60-001, which fixed bc-3). bc-2: `(94)` vs `total_bcs: 106`; bc-5: `(35)` vs `36`; bc-7: `(90)` vs `93`. Not fixed in this pass (scope: bc-3 only). Pairs with SOH-DX-1-PG-009 (prd/README.md unguarded count surface).
+
+**Files touched in .factory:** specs/prd/README.md (v1.3.153 bc-3 L3 BCs `(111)`→`(140)`, already committed in 930831ca); specs/prd/bc-3-issue-write.md (v1.3.153 trail, already committed in 930831ca); spec-changelog.md ([1.3.153], already committed in 930831ca); cycles/cycle-001/convergence-trajectory.md (3 new sections: p134-sub, p135-sub, p136-sub); cycles/cycle-001/burst-log.md (this entry + archived PP row Remediation burst + archived CPS row F2 rounds 47-49); STATE.md
+
+**Trajectory:** p134-sub(0)→p135-sub(0)→p136-sub(1L). trajectory-tail →1L→0→0→1L (passes p133-sub, p134-sub, p135-sub, p136-sub). CONVERGENCE: RESET to 0/3 STRICT (2026-07-27). F2 HUMAN GATE NOT READY — window reset; resume grinding.
+
+**Convergence counter: 0 of 3 STRICT. NEXT: adversary pass (p137) with v1.3.153 artifacts.**

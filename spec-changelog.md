@@ -9,6 +9,24 @@ Track all spec version changes. Most recent version first.
 
 > **Type legend:** Type classifies the SPEC document delta: MINOR = new BCs/VPs/sections; PATCH = amendments to existing bodies/ACs/ECs. Product-semver impact is recorded in the Summary line, independent of Type.
 
+## [1.3.154] - 2026-07-27
+
+### Type: PATCH
+
+### Summary
+F62-001 (MEDIUM): Partial-propagation fix — README.md Supplement Index holdout row (line 108) was stale at `55` / `H-NEW-JSM-RT-001..005`. v1.3.143 (F45-003) corrected the Files-table row (line 48) but missed the Supplement Index row. Fix: count `55` → `100`, range terminus `..005` → `..006`. The stale row is the one consumed by the Holdout-evaluator; understating scope by 45 scenarios carries MEDIUM risk. F62-002 (LOW): `[1.3.113]` and `[1.3.114]` changelog entries each lacked a `### BC Count` section; sections added after their respective `### Changed` blocks, matching the `[1.3.112]` structural pattern. Both entries carry 0 new BCs; counts 657/140/111 are unchanged. Twin-artifact sweep (recurrence 15) confirms no other stale holdout count or `H-NEW-JSM-RT` range site in `.factory/specs/` or `.factory/stories/` requires a fix. BC count unchanged (140/111).
+
+### Changed
+- `.factory/specs/prd/README.md` (MODIFIED): Supplement Index holdout row count `55` → `100`; range terminus `H-NEW-JSM-RT-001..005` → `H-NEW-JSM-RT-001..006` (F62-001).
+- `.factory/spec-changelog.md` (MODIFIED): `[1.3.113]` and `[1.3.114]` entries gain `### BC Count` sections (F62-002). `[1.3.154]` entry prepended.
+- `.factory/specs/prd/bc-3-issue-write.md` (MODIFIED): v1.3.154 frontmatter trail entry prepended. Footer `_Last updated` block updated to v1.3.154.
+
+### BC Count
+
+0 new BCs. Total unchanged: 657 cumulative (BC-INDEX), 140/111 individually-bodied in bc-3-issue-write.md.
+
+---
+
 ## [1.3.153] - 2026-07-27
 
 ### Type: PATCH
@@ -677,6 +695,12 @@ SOH-DX-1 DEC-188 round-16 adversary-pass corrections (#639): Self-contradiction 
 - `.factory/specs/prd/bc-3-issue-write.md` (MODIFIED): F16-01: AC-3 "OLD ASSERTION MUST BE REMOVED: !stderr.contains("is ignored on the platform create path")" clause removed; replaced with REGRESSION PIN per Removal postcondition (:3036) — the pin is deliberate (this invocation class previously emitted the old warn string). AC-1, AC-2, AC-5, AC-7 each gain `!stderr.contains("is ignored on the platform create path")` regression pin. F16-02: AC-14 invocation updated to `jr issue create --project PROJ --field a=b --request-type ""`; positive assertion added `stderr.contains("request type cannot be empty")` (BC-3.8.016 canonical error); `--project PROJ` rationale noted (jsm_create.rs project-key resolution at step 0 precedes empty-RT guard at step 1); AC-13/16/17/18/19 each gain per-AC discrimination note (guard fires at step 2 before project-key resolution at step 3; positive stderr assertion discriminates; --project NOT required). F16-03: both Outputs/Effects lines (BC-3.8.012 + BC-3.8.013) corrected — `tests/common/fixtures.rs` ~:76 → `tests/json_error_shape.rs` ~:76 (current site; moves to fixtures.rs upon promotion per F-1 directive). F16-04 (folded into F16-01 AC-5 edit): AC-5 re-tagged [mode: human] (neither invocation uses --output json); note added that "Error: " prefix present in both captures so byte-identity holds. F16-05: SSOT step 3 extended to explicitly include project-key interactive prompt; step 4 deduplicated — "project key (interactive fallback)," removed, now type+summary only; AC-11 discriminator re-anchored from "step 4" to "step 3". Frontmatter version-log v1.3.114 added. BC count unchanged (140/111).
 - `.factory/specs/prd/BC-INDEX.md` (MODIFIED): `last_updated` updated to v1.3.114.
 
+### BC Count
+
+0 new BCs. Total unchanged: 657 cumulative (BC-INDEX), 140/111 individually-bodied in bc-3-issue-write.md.
+
+---
+
 ## [1.3.113] - 2026-07-26
 
 ### Type: PATCH
@@ -687,6 +711,12 @@ SOH-DX-1 DEC-188 round-15 adversary-pass corrections (#639): AC-1 re-scoped to h
 ### Changed
 - `.factory/specs/prd/bc-3-issue-write.md` (MODIFIED): F15-01: AC-1 re-scoped from [mode: --output json] (byte-equivalent to AC-10) to [mode: human]; invocation changed to `jr issue create --field a=b` (no `--output json`); assertions: exit 64 + `stderr.contains("Error: ")` + `stderr.contains("--field is only valid with")` + `stdout.trim().is_empty()`; pairing rationale added (AC-1 human / AC-10 json for same invocation class); OLD ASSERTIONS removal mandate updated to reference `stdout.trim().is_empty()`. AC-10 annotated [mode: --output json]; pairing note added referencing AC-1. F15-02: AC-3 invocation added (`jr issue create --field a=b --on-behalf-of X` no `--request-type`); explicit exit 64 added; OLD ASSERTION removal pin added (`!stderr.contains("is ignored on the platform create path")` — vacuously true post-DEC-188). F15-03: BC-3.8.012 and BC-3.8.013 Outputs/Effects lines updated — "Stdout MUST be empty" → `stdout.trim().is_empty()` normative predicate + promoted helper `tests/common/fixtures.rs` ~:76 reference; all `stdout.is_empty()` occurrences replaced globally with `stdout.trim().is_empty()`. F15-04: AC-18 `stdin NOT consumed` and `assert the process exits promptly` demoted to non-normative rationale — `assert_cmd` has no timeout primitive; normative assertions: exit 64 + `stderr.contains("--field is only valid with")` + `stdout.trim().is_empty()`; `.write_stdin("…")` suffices; hang manifests as test timeout not false-pass. F15-05: AC-8 vague "team-resolution endpoint" replaced with three enumerated `expect(0)` targets: (a) `POST /gateway/api/graphql` (`get_org_metadata`, `src/api/jira/teams.rs` ~:19); (b) `GET /gateway/api/public/teams/v1/org/{orgId}/teams` (`list_teams`, `src/api/jira/teams.rs` ~:38); (c) `GET /rest/api/3/field` (`find_team_field_id`, `src/api/jira/fields.rs` ~:23). Obs-1: BC-3.3.001 H1 updated with DEC-188 qualifier. Obs-2: EC-3.8.012-6 no-AC rationale added. Frontmatter version-log v1.3.113 added. BC count unchanged (140/111).
 - `.factory/specs/prd/BC-INDEX.md` (MODIFIED): `last_updated` updated to v1.3.113.
+
+### BC Count
+
+0 new BCs. Total unchanged: 657 cumulative (BC-INDEX), 140/111 individually-bodied in bc-3-issue-write.md.
+
+---
 
 ## [1.3.112] - 2026-07-26
 

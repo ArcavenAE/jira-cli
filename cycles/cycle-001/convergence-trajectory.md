@@ -3204,6 +3204,59 @@ Fifty-fifth F2 pass (substitute — consistency-validator dispatched with an adv
 
 ---
 
+### Pass p134 (2026-07-27) — SUBSTITUTE (test-infrastructure aperture; DEC-190 WINDOW-ELIGIBLE)
+
+**Findings:** 0 (0C/0H/0M/0L) — CLEAN
+**Convergence counter:** 1 of 3 (STRICT per DEC-190) — CLEAN pass; window opens
+
+Fifty-eighth F2 pass (substitute — consistency-validator with adversarial verification checklist; NOT the adversary agent; fresh context; adversarial framing preserved; DEC-190 window-eligible). **APERTURE CLASS: REALITY-CHECK** (test-infrastructure claims). 6 claims verified. All VERIFIED. ZERO findings; verdict CLEAN.
+
+**Verified claims (6/6):** (1) `assert_cmd` 2.2.2 `pub fn timeout()` at `src/cmd.rs:108` confirmed — v1.3.151 fix premise sound; (2) AC-17 narrowed substring `"cannot be combined with \`--markdown\`"` confirmed unique to `jsm_create.rs:160` — no collision with `edit.rs`; (3) `JR_STDIN_IS_TTY` seam confirmed debug-only via `#[cfg(debug_assertions)]` at `src/main.rs`; (4) `Command::new` test harness confirmed compatible with current assertion chain pattern; (5) exit-64 route in `handle_jsm_create` confirmed at step-2 guard; (6) `jr_cmd_xdg` fixture confirmed scoping `JR_CACHE_DIR` correctly per test isolation contract.
+
+**NOTE — SUBSTITUTE PASS (DEC-190 WINDOW-ELIGIBLE):** CLEAN. Convergence window opens: 1/3 STRICT (per DEC-190 ratification, 2026-07-27).
+
+**Convergence counter:** 1 of 3 STRICT. NEXT: pass-59 (p135-sub).
+
+**Trajectory so far:** p78(8)→p79(8)→p80(8)→p81(7)→p82(6)→p83(4)→p84(3)→p85(7)→p86(6)→p87(5)→p88(6)→p89(6)→p90(4)→p91(2)→p92(5)→p93(5)→p94(4)→p95(3)→p96(3)→p97(5)→p98(4)→p99(2)→p100(3)→p101(3)→p102(6)→p103(6)→p104(4)→p105(5)→p106(2)→p107(1)→p108(3)→p109(3)→p110(2)→p111(3L)→p112(1M+3L)→p113(2M+2L)→p114(2H+2L)→p115(4M+2L)→p116(2M+1L)→p117(1H+1M)→p118(2M)→p119(1M+2L)→p120(2M)→p121(3M+2L)→p122(3M)→p123(1M+2L)→[remediation-burst: F1-F5 LOW]→[F47-001 LOW fix]→p124-sub(1L)→p125-sub(1L)→p126-sub(1L)→p127-sub(1L)→p128-sub(1L)→p129-sub(0)→p130-sub(0)→p131-sub(0)→p132-sub(1M)→p133-sub(1L)→p134-sub(0). Delta: -1L (1L→0). trajectory-tail →0→1M→1L→0 (passes p131-sub, p132-sub, p133-sub, p134-sub). CONVERGENCE: 1/3 STRICT.
+
+---
+
+### Pass p135 (2026-07-27) — SUBSTITUTE (clap-declaration aperture; DEC-190 WINDOW-ELIGIBLE)
+
+**Findings:** 0 (0C/0H/0M/0L) — CLEAN
+**Convergence counter:** 2 of 3 (STRICT per DEC-190) — CLEAN pass; window advances
+
+Fifty-ninth F2 pass (substitute — consistency-validator with adversarial verification checklist; NOT the adversary agent; fresh context; adversarial framing preserved; DEC-190 window-eligible). **APERTURE CLASS: REALITY-CHECK** (clap-declaration claims). 7 claims verified. All VERIFIED. ZERO findings; verdict CLEAN.
+
+**Verified claims (7/7):** (1) `#[arg(long)]` declarations for `--markdown`, `--on-behalf-of`, `--request-type` confirmed in `src/cli/issue/create.rs`; (2) `allow_hyphen_values` NOT set on upload `file` positional confirmed (correct per CLAUDE.md gotcha); (3) `conflicts_with` annotation between `--description` and `--description-stdin` confirmed active; (4) `--request-type` absence → platform path gate confirmed byte-for-byte unchanged; (5) `--no-input` propagation through `handle_create` confirmed reaching `handle_jsm_create`; (6) `--output` enum variant `OutputFormat::Json` confirmed reaching all JSON render paths via `print_output`; (7) all AC group-6 (JSM create flag) clap annotations confirmed present and non-overlapping.
+
+**NOTE — SUBSTITUTE PASS (DEC-190 WINDOW-ELIGIBLE):** CLEAN. Convergence window advances: 2/3 STRICT (per DEC-190 ratification, 2026-07-27).
+
+**Convergence counter:** 2 of 3 STRICT. NEXT: pass-60 (p136-sub).
+
+**Trajectory so far:** p78(8)→p79(8)→p80(8)→p81(7)→p82(6)→p83(4)→p84(3)→p85(7)→p86(6)→p87(5)→p88(6)→p89(6)→p90(4)→p91(2)→p92(5)→p93(5)→p94(4)→p95(3)→p96(3)→p97(5)→p98(4)→p99(2)→p100(3)→p101(3)→p102(6)→p103(6)→p104(4)→p105(5)→p106(2)→p107(1)→p108(3)→p109(3)→p110(2)→p111(3L)→p112(1M+3L)→p113(2M+2L)→p114(2H+2L)→p115(4M+2L)→p116(2M+1L)→p117(1H+1M)→p118(2M)→p119(1M+2L)→p120(2M)→p121(3M+2L)→p122(3M)→p123(1M+2L)→[remediation-burst: F1-F5 LOW]→[F47-001 LOW fix]→p124-sub(1L)→p125-sub(1L)→p126-sub(1L)→p127-sub(1L)→p128-sub(1L)→p129-sub(0)→p130-sub(0)→p131-sub(0)→p132-sub(1M)→p133-sub(1L)→p134-sub(0)→p135-sub(0). Delta: +0 (0→0). trajectory-tail →1M→1L→0→0 (passes p132-sub, p133-sub, p134-sub, p135-sub). CONVERGENCE: 2/3 STRICT.
+
+---
+
+### Pass p136 (2026-07-27) — SUBSTITUTE (prd-metric aperture; DEC-190 WINDOW-ELIGIBLE)
+
+**Findings:** 1 (0C/0H/0M/1L) — F60-001 LOW
+**Convergence counter:** 0 of 3 (STRICT per DEC-190) — delta-attributable finding; WINDOW RESET
+
+Sixtieth F2 pass (substitute — consistency-validator with adversarial verification checklist; NOT the adversary agent; fresh context; adversarial framing preserved; DEC-190 window-eligible). **APERTURE CLASS: REALITY-CHECK** (prd-metric consistency — README.md L3 BCs column vs frontmatter total_bcs). 5 claims verified. 4 VERIFIED, 1 LOW FINDING. ZERO CRITICAL findings; ZERO HIGH findings; ZERO MEDIUM findings; 1 LOW finding; verdict FINDING (not CLEAN).
+
+**Verified claims (4/5):** (1) bc-1-auth-identity.md `(57)` = `total_bcs: 57` (exact match — reference point); (2) bc-4-assets-cmdb.md `(32)` = `total_bcs: 32` (exact match — reference point); (3) bc-6-worklog-team.md column value matches `total_bcs`; (4) bc-3-issue-write.md `total_bcs: 140` and `definitional_count: 111` frontmatter are unchanged by v1.3.153.
+
+**F60-001 (LOW, delta-attributable):** `specs/prd/README.md` line 39 "L3 BCs" column for bc-3-issue-write.md showed `(111)` — this is `definitional_count` (count of BCs defined in bc-3's own namespace), not `total_bcs: 140` (cumulative count including range-collapsed BCs). Convention is `total_bcs` (verified against bc-1/bc-4 as reference points). Fix: column corrected to `(140)` in spec v1.3.153. Sibling drift also found (NOT fixed in this pass — scope was bc-3 only): bc-2 `(94)` vs `total_bcs: 106`; bc-5 `(35)` vs `36`; bc-7 `(90)` vs `93` — ledgered as README-SIBLING-COUNT-DRIFT-3 in STATE.md. BC count unchanged (140/111).
+
+**NOTE — SUBSTITUTE PASS (DEC-190 WINDOW-ELIGIBLE):** Window was at 2/3 after p134-sub+p135-sub. F60-001 is delta-attributable; WINDOW RESET to 0/3.
+
+**Convergence counter:** RESET to 0 of 3 STRICT. NEXT: pass-61 (p137-sub or adversary).
+
+**Trajectory so far:** p78(8)→p79(8)→p80(8)→p81(7)→p82(6)→p83(4)→p84(3)→p85(7)→p86(6)→p87(5)→p88(6)→p89(6)→p90(4)→p91(2)→p92(5)→p93(5)→p94(4)→p95(3)→p96(3)→p97(5)→p98(4)→p99(2)→p100(3)→p101(3)→p102(6)→p103(6)→p104(4)→p105(5)→p106(2)→p107(1)→p108(3)→p109(3)→p110(2)→p111(3L)→p112(1M+3L)→p113(2M+2L)→p114(2H+2L)→p115(4M+2L)→p116(2M+1L)→p117(1H+1M)→p118(2M)→p119(1M+2L)→p120(2M)→p121(3M+2L)→p122(3M)→p123(1M+2L)→[remediation-burst: F1-F5 LOW]→[F47-001 LOW fix]→p124-sub(1L)→p125-sub(1L)→p126-sub(1L)→p127-sub(1L)→p128-sub(1L)→p129-sub(0)→p130-sub(0)→p131-sub(0)→p132-sub(1M)→p133-sub(1L)→p134-sub(0)→p135-sub(0)→p136-sub(1L). Delta: +1L (0→1L). trajectory-tail →1L→0→0→1L (passes p133-sub, p134-sub, p135-sub, p136-sub). **CONVERGENCE: RESET to 0/3 STRICT — F60-001 delta-attributable (window was 2/3). PIPELINE PAUSED.**
+
+---
+
 ### Pass p132 (2026-07-27) — SUBSTITUTE (reality-check aperture; DEC-190 WINDOW-ELIGIBLE) — WINDOW RESET to 0/3
 
 **Findings:** 1 (0C/0H/1M/0L) — F56-001 MEDIUM
