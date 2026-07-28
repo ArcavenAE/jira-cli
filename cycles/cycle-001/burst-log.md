@@ -7423,3 +7423,66 @@ cycles/cycle-001/convergence-trajectory.md (3 new sections: p143-sub, p144-sub, 
 | **F2 rounds 58-60 + substitute passes 58/59/60 (2026-07-27): p134-sub (pass-58 CLEAN; 6 test-infrastructure claims; window 1/3); p135-sub (pass-59 CLEAN; 7 clap-declaration claims; window 2/3); p136-sub (pass-60 FINDING F60-001 LOW: README.md bc-3 L3 BCs `(111)`→`(140)`; delta-attributable; WINDOW RESET to 0/3); spec v1.3.153; BC-INDEX v6.73 unchanged; 3 guards green; 0/3 STRICT (DEC-189/DEC-190). NEXT: adversary pass (p137) with v1.3.153 artifacts.** | consistency-validator (substitute x3) + orchestrator + state-manager | COMPLETED | spec v1.3.153; BC-INDEX v6.73; STORY-INDEX v1.5.42; convergence-trajectory p134-sub/p135-sub/p136-sub appended; burst-log.md appended; factory-artifacts committed. |
 
 ### Convergence counter: **2/3 STRICT**. pass-68 CLEAN (1/3) → pass-69 CLEAN (2/3) → pass-70 VOID ×3 (no credit, no reset). Fixed point IS reachable (counter-evidence from passes 68+69); closure blocked by subagent delivery failure. STRICT-WINDOW-NO-FIXED-POINT downgraded from "no fixed point" to "infrastructure constraint." NEXT: leaner dispatch for pass-71 OR human ruling on convergence criterion.
+
+---
+
+## LEDGER-BURST-2026-07-28 (passes 71-72 + ledger reconciliation)
+
+**Burst type:** Adversary passes 71-72 (DEC-190 substitutes: adv-71, adv-72) + ledger reconciliation
+**Spec version:** v1.3.159 → v1.3.160 (P72-001 HIGH pre-existing fix)
+**Date:** 2026-07-28
+**Convergence window entering burst:** 2/3 STRICT
+**Convergence window leaving burst:** 1/3 (orchestrator read; P71-001 classification PENDING HUMAN RATIFICATION DEC-189; if P71-001 is F3 input, window would be 3/3)
+
+### Pass Summary
+
+**pass-71 (adv-71, DEC-190 substitute; aperture: upstream-completeness / downstream-readiness):** FINDINGS 3 (P71-001 MEDIUM + P71-002 LOW + P71-003 LOW). P71-001 delta-attributable → WINDOW RESET 2/3 → 0/3 (orchestrator read; PENDING HUMAN RATIFICATION DEC-189). Counter-argument: adv-71 framed all three findings as concerning Items 2/3, which deliberately carry no F2 BC content — P71-001 could be classified as F3 input, making window 3/3.
+
+**pass-72 (adv-72, DEC-190 substitute; aperture: reality-check on third-party claims + count surfaces):** FINDINGS 1 (P72-001 HIGH; PRE-EXISTING / out-of-delta; FIXED in spec v1.3.160). P72-001 pre-existing → does NOT reset window. Also independently verified 5 crate claims CORRECT. Confirmed PHANTOM-ADR-0017 is a FALSE POSITIVE.
+
+### Per-Pass Findings
+
+**adv-71 (pass-71):** P71-001 MEDIUM (F1 SHA-pin verification obligation absent from F2 treatments; delta-attributable per orchestrator). P71-002 LOW (bc-3 silent on S-627-1 and S-626-1; F3 story-writer would author one story, miss two). P71-003 LOW (do-not-remove rustup constraint uncrystallized in downstream artifacts). adv-71 also CONFIRMED CLEAN: 17+ F1 obligations and DEC-188 clauses (a)-(d) all present. P71-001 partially discharged out-of-band: full SHA fa04a1451ff1842e2626ccb99004d0195b455a88 verified (real 2026-06-30 commit; ancestor of master confirmed). Window 0/3 (orchestrator read; PENDING HUMAN RATIFICATION).
+
+**adv-72 (pass-72):** P72-001 HIGH pre-existing: EC-3.4.015-4a false `Number::from_f64` claim; provenance e6a44c78 (2026-05-22); FIXED in v1.3.160. 5 third-party crate API claims VERIFIED CORRECT. ADR-0017 DOES exist at `.factory/specs/architecture/decisions/` (PHANTOM-ADR-0017 → CLOSED FALSE POSITIVE). All four guard scripts GREEN post-fix. Window 1/3 (orchestrator read; P72-001 pre-existing, does not reset).
+
+### Ledger Changes
+
+| Item | Change |
+|------|--------|
+| PHANTOM-ADR-0017 | CLOSED — FALSE POSITIVE. ADR-0017 exists at `.factory/specs/architecture/decisions/ADR-0017-first-multipart-streaming-http-surface.md`. CANONICAL-COUNTS "17 ADRs, all present" is CORRECT. Pending author-vs-retract decision WITHDRAWN. |
+| CANONICAL-COUNTS-STALE-ADR-LOCATIONS | CLOSED — FIXED. CANONICAL-COUNTS.md §ADRs corrected per ARCH-INDEX.md:3-5: ADR-0001–0016 in `docs/adr/`, ADR-0017+ in `.factory/specs/architecture/decisions/`. |
+| ADVERSARY-AGENT-NONFUNCTIONAL | CLOSED — MERGED INTO AGENT-IDLE-NO-REPORT. Root cause re-attributed to platform defect GitHub issue #47936 (background subagents terminate mid-work with no result block; 14-30% rate). Route UPSTREAM TO ANTHROPIC. Prior attribution to agent prompt/definition was WRONG. Engine bugs (a)/(b)/(c) real but not the binding cause — see ENGINE-ADVERSARY-TWO-BUGS. |
+| AGENT-IDLE-NO-REPORT (updated) | Platform defect #47936 attribution added. NUDGE-TWICE-BEFORE-VOID standing rule: adv-71 delivered after nudging; never declare VOID until nudged twice. Historical VOID tally likely OVER-COUNTED. |
+| VP-INDEX-ARTIFACT-ABSENT (updated) | Question ANSWERED: VP-INDEX is canonical VSDD artifact (7 engine agents consume it); inline-only tracking is non-conformant. Fold into VSDD-CONFORMANCE-GAP-4-ARTIFACTS bundle. |
+| VSDD-CONFORMANCE-GAP-4-ARTIFACTS (NEW) | MEDIUM. jira-cli lacks 4 canonical VSDD artifacts; structural coverage gap across all 72 F2 passes. Own bundle candidate. |
+| PLUGIN-ACTIVATION-VERSION-DRIFT (NEW) | LOW. activated_plugin_version 1.0.0-rc.20 vs installed 1.0.0-rc.23. |
+| ENGINE-ADVERSARY-TWO-BUGS (NEW) | MEDIUM. Two bugs in adversary.md HEAD source; route to drbothen/vsdd-factory. |
+| NUDGE-TWICE-BEFORE-VOID (NEW) | LOW. Standing rule: nudge twice before declaring VOID. |
+| ORCHESTRATOR-ERROR-INJECTION-RATE (updated) | 4 self-corrections this session: premature 3/3 claim; misattributing missing artifacts to engine over-specification; asserting project agent beside vs. displace plugin agent; over-reading adv-71/adv-72 comparison. |
+
+### Drift Items Closed
+
+| ID | Resolution |
+|----|------------|
+| PHANTOM-ADR-0017 | CLOSED — FALSE POSITIVE (2026-07-28) |
+| CANONICAL-COUNTS-STALE-ADR-LOCATIONS | CLOSED — FIXED (2026-07-28) |
+| ADVERSARY-AGENT-NONFUNCTIONAL | CLOSED — MERGED INTO AGENT-IDLE-NO-REPORT; re-attributed to platform defect #47936 |
+
+### Files Touched in .factory
+
+cycles/cycle-001/convergence-trajectory.md (2 new sections: adv-71, adv-72); cycles/cycle-001/burst-log.md (this entry + archived PP row F2 rounds 58-60 + archived CPS row F2 rounds 64-66); STATE.md; specs/prd/bc-3-issue-write.md (v1.3.160); specs/prd/CANONICAL-COUNTS.md (ADR locations corrected); spec-changelog.md ([1.3.160] entry); sidecar-learning.md; research/adversary-agent-override-validation-2026-07-28.md (new, included in commit)
+
+### Archived PP row (keep-5 rule: F2 rounds 58-60 → archived; new active set: 62-63, 64-66, 67, 68-70, LEDGER-BURST-71-72)
+
+| Phase | Status | Completed | Gate | Notes | Finding Progression |
+|-------|--------|-----------|------|-------|---------------------|
+| **F2 fix burst rounds 58-60 + reality-check/clap/prd-metric passes 58/59/60 (2026-07-27): p134-sub (pass-58 CLEAN; 6 test-infrastructure claims; window 1/3); p135-sub (pass-59 CLEAN; 7 clap-declaration claims; window 2/3); p136-sub (pass-60 FINDING 1 LOW F60-001: README.md bc-3 L3 BCs `(111)`→`(140)`; delta-attributable; WINDOW RESET to 0/3); spec v1.3.153; BC-INDEX v6.73 unchanged; STORY-INDEX v1.5.42; 3 guards green; 0/3 STRICT (DEC-189/DEC-190). NEXT: pass-61.** | F2 adversary grind in progress | 2026-07-27 | ADVERSARY GRIND — convergence + human gate PENDING. | spec v1.3.153; BC-INDEX v6.73; STORY-INDEX v1.5.42. | →0→0→1M→1L→0→0→1L |
+
+### Archived CPS row (keep-4 rule: F2 rounds 64-66 → archived; new active set: 67, 68-70, SESSION WRAP, LEDGER-BURST-71-72)
+
+| Step | Agent | Status | Output |
+|------|-------|--------|--------|
+| **F2 rounds 64-66 + substitute passes 64/65/66 (2026-07-28): p139-sub (pass-64 FINDING F64-001 LOW — F1 E2E scan obligation DISCHARGED; WINDOW RESET 0/3); p140-sub (pass-65 FINDING F65-001 MEDIUM + F65-002 LOW — citation ambiguity + F3 AC guidance; both delta-attributable; WINDOW RESET 0/3); p141-sub (pass-66 BROAD UNSTRUCTURED RE-TREAD FINDING F66-001 LOW — v1.3.142 unpropagated literal rename completed; WINDOW RESET 0/3). UPSTREAM-COMPLETENESS-APERTURE + ORCHESTRATOR-ERROR-INJECTION-RATE codified. spec v1.3.158; BC-INDEX v6.73 unchanged; 3 guards green; 0/3 STRICT (DEC-189/DEC-190). NEXT: pass-67 (p142-sub or adversary) with v1.3.158 artifacts.** | consistency-validator (substitute x3) + orchestrator + state-manager | COMPLETED | spec v1.3.158; BC-INDEX v6.73; STORY-INDEX v1.5.42; convergence-trajectory p139-sub/p140-sub/p141-sub appended; burst-log.md appended; factory-artifacts committed. |
+
+### Convergence counter: **1/3 STRICT (orchestrator read)**. pass-71 (adv-71) FINDINGS 3 (P71-001 MEDIUM+2L; WINDOW RESET 2/3→0/3 orchestrator read; PENDING HUMAN RATIFICATION DEC-189) → pass-72 (adv-72) FINDING 1 pre-existing (P72-001 HIGH; out-of-delta; FIXED v1.3.160; window 0/3→1/3). HUMAN RULING: if P71-001 is F3 input not F2 defect, window is 3/3 STRICT and F2 human gate is ready. NEXT: human ruling on DEC-189 P71-001 classification OR pass-73 with fresh aperture.

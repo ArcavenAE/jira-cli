@@ -9,6 +9,40 @@ Track all spec version changes. Most recent version first.
 
 > **Type legend:** Type classifies the SPEC document delta: MINOR = new BCs/VPs/sections; PATCH = amendments to existing bodies/ACs/ECs. Product-semver impact is recorded in the Summary line, independent of Type.
 
+## [1.3.161] - 2026-07-28
+
+### Type: PATCH
+
+### Summary
+ADR-LOCATION-FIX-001: Three stale-false location claims in the ADRs section of CANONICAL-COUNTS.md corrected. (1) Line ~160 claimed ADR-0001..0006 live in `.reference/jira-cli/docs/adr/` — misleading; `.reference/jira-cli/` is a read-only vendored copy, not the canonical location. (2) Line ~161 claimed ADR-0007..0013 reside in `.factory/architecture/adr/` — false; that directory does not exist (removed DRIFT-S3-003 2026-06-25). (3) The Location convention sentence (line ~169) repeated both false claims. Verified ground truth per ARCH-INDEX.md:3-5 and `.factory/architecture/adr-index.md` header: ADR-0001..0016 ALL reside in `docs/adr/` (with `.factory/architecture/adr-index.md` as their index); ADR-0017+ reside in `.factory/specs/architecture/decisions/`. BC count unchanged (657 total).
+
+### Changed
+- `.factory/specs/prd/CANONICAL-COUNTS.md` (MODIFIED): ADR-LOCATION-FIX-001 — lines 160–161 (false two-bullet split for ADR-0001..0006 / ADR-0007..0013) replaced with a single correct consolidated bullet covering ADR-0001..0016. Location convention sentence corrected to remove `.factory/architecture/adr/` false claim and state all ADR-0001..0016 are in `docs/adr/`.
+- `.factory/spec-changelog.md` (MODIFIED): [1.3.161] entry prepended.
+
+### BC Count
+
+0 new BCs. Total unchanged: 657 cumulative (BC-INDEX), ADR section only.
+
+---
+
+## [1.3.160] - 2026-07-28
+
+### Type: PATCH
+
+### Summary
+P72-001 (HIGH): EC-3.4.015-4a contained a false claim that `serde_json::Number::from_f64(5.0)` serializes as `5`. In reality `Number::from_f64` stores an `N::Float` internal representation and serializes as `5.0`, which would cause an implementer to emit the wrong wire form and fail `tests/issue_edit_field.rs` Test 26 (wiremock `NumericMode::Strict`). The correct mechanism is the explicit f64→i64 narrowing in `src/cli/issue/field_resolve.rs::parsed_number_to_wire_value`: when `fract() == 0.0` AND the value is strictly within i64 bounds, the integer branch `Number::from(parsed as i64)` is taken; otherwise `json!(parsed)` emits the f64 wire form (coherent with EC-3.4.015-4b out-of-range path). An explicit "MUST NOT use `from_f64` for whole numbers" warning is added. The `5e3`→`5000` and `5.5`→`5.5` examples are retained but re-attributed to their true paths. VP-396-010 pin retained. BC count unchanged (140/111).
+
+### Changed
+- `.factory/specs/prd/bc-3-issue-write.md` (MODIFIED): v1.3.160 frontmatter trail entry prepended. EC-3.4.015-4a false-serde_json-claim corrected: `Number::from_f64` mechanism replaced with `parsed_number_to_wire_value` integer-branch description; MUST NOT warning added; `5e3`/`5.5` examples re-attributed. Footer `_Last updated` block updated to v1.3.160.
+- `.factory/spec-changelog.md` (MODIFIED): [1.3.160] entry prepended.
+
+### BC Count
+
+0 new BCs. Total unchanged: 657 cumulative (BC-INDEX), 140/111 individually-bodied in bc-3-issue-write.md.
+
+---
+
 ## [1.3.159] - 2026-07-28
 
 ### Type: PATCH

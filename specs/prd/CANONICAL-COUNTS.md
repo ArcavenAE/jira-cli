@@ -157,8 +157,7 @@ Last reconciled: 2026-05-18 (post-#288 F2 delta; previous reconciliation pre-S-3
 
 **Canonical ADR count: 17** (ADR-0001..ADR-0017; all present, no gaps)
 
-- ADR-0001..0006: source in `.reference/jira-cli/docs/adr/`
-- ADR-0007..0013: in `.factory/architecture/adr/`
+- ADR-0001..0016: reside in `docs/adr/` (index at `.factory/architecture/adr-index.md`; `.reference/jira-cli/docs/adr/` is a read-only vendored copy, not canonical; `.factory/architecture/adr/` was removed, DRIFT-S3-003 resolved 2026-06-25)
 - ADR-0014: JSM request create dispatch fork (issue #288)
 - ADR-0015: Proactive resolution enforcement on done-category transitions (jsm-resolution-required)
 - ADR-0016: Windows Build Target (windows-build F2 2026-06-12)
@@ -166,7 +165,7 @@ Last reconciled: 2026-05-18 (post-#288 F2 delta; previous reconciliation pre-S-3
 - ADR-0002: Superseded by ADR-0006 (still counted — superseded is a valid status)
 - ADR-0013: PKCE deferral for OAuth 2.0 authorization code flow (Phase 1→2 gate, 2026-05-04)
 
-Location convention: ADR-0001..0016 reside in the product repo (`docs/adr/` for ADR-0001..0006 and `.factory/architecture/adr/` for ADR-0007..0016); ADR-0017+ reside in `.factory/specs/architecture/decisions/` per `adr-index.md` header note.
+Location convention: ADR-0001..0016 all reside in `docs/adr/` (with `.factory/architecture/adr-index.md` as their index); ADR-0017+ reside in `.factory/specs/architecture/decisions/` (per ARCH-INDEX.md:3-5 and `adr-index.md` header note).
 
 Verification: count rows in adr-index.md Summary Table (both `[ADR-NNNN]` link rows and plain `ADR-NNNN` rows).
 

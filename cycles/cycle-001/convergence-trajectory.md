@@ -3493,3 +3493,52 @@ Sixty-ninth F2 pass (substitute — consistency-validator with adversarial verif
 **Convergence counter:** 2 of 3 STRICT (unchanged). NEXT: fresh dispatch with leaner prompt or human ruling on STRICT-WINDOW-NO-FIXED-POINT criterion.
 
 **Trajectory so far:** p78(8)→...→p142-sub(2L)→p143-sub(0)→p144-sub(0)→pass-70(VOID×3). trajectory-tail →2L→0→0→VOID×3 (passes p142-sub, p143-sub, p144-sub, pass-70). CONVERGENCE: 2/3 STRICT. PIPELINE PAUSED.
+
+---
+
+### Pass adv-71 (2026-07-28) — SUBSTITUTE (DEC-190 WINDOW-ELIGIBLE; aperture: upstream-completeness / downstream-readiness)
+
+**Findings:** 3 (0C/0H/1M/2L)
+**Convergence counter:** WINDOW RESET 2/3 → 0/3 (ORCHESTRATOR READ; PENDING HUMAN RATIFICATION DEC-189)
+**Window before:** 2/3 STRICT
+**Window after:** 0/3 STRICT (orchestrator read; P71-001 delta-attributable; counter-argument: could be F3 input)
+
+Seventy-first F2 pass (DEC-190 substitute; aperture: upstream-completeness / downstream-readiness). CONFIRMED CLEAN per adv-71 on 17+ F1 obligations and DEC-188 clauses (a)-(d).
+
+**P71-001 (MEDIUM):** F1 `phase-f1-delta/SOH-DX-1/delta-analysis.md` lines 224-226 bind F2 verbatim — "F2 must include the verification step … Substituting an unverified SHA defeats the security purpose of pinning" — and F2 never discharged it; deferred to F4 via a session-checkpoint note (not a spec artifact, not an F3 input). Verified: `bc-3-issue-write.md` contains ZERO S-626/S-627 references; none of S-639-1/S-627-1/S-626-1 exist. DELTA-ATTRIBUTABLE per orchestrator read.
+- Partially discharged out-of-band: full SHA `fa04a1451ff1842e2626ccb99004d0195b455a88` confirmed real (2026-06-30, "Add 1.96.1 patch release"); ancestor of master CONFIRMED (behind_by: 0). Current pin `c93f4f9c67595668add93d3d6895795ce52d8c2d` is real (2026-03-27) but NOT master ancestor — dtolnay/rust-toolchain maintains dozens of version branches; NOT evidence of compromise. RESIDUAL for F3 S-626-1: (a) blocking pre-impl AC with VERIFIED full 40-char SHA; (b) P71-003's do-not-remove constraint naming `sign-and-publish.yml ~:64` + `backfill-release.yml ~:79`; (c) flag MSRV comment accuracy risk if repinning uniformly (ci.yml:70 comments `# 1.85.0` while fa04a145 is "Add 1.96.1 patch release").
+
+**P71-002 (LOW):** bc-3 entirely silent on bundle stories S-627-1 and S-626-1; an F3 story-writer reading only bc-3 would author one story and miss two. Residual for F3 story template.
+
+**P71-003 (LOW):** F1's "do NOT remove the rustup target add steps — they are cross-compilation build requirements, not SHA-pin artifacts" constraint uncrystallized in any downstream artifact. Residual for F3 S-626-1 AC (paired with P71-001 residual).
+
+**COUNTER-ARGUMENT:** adv-71 framed all three findings as concerning Items 2/3, which deliberately carry no F2 BC content — a human could classify P71-001 as an F3 input requirement rather than an F2 defect. If so, window remains 2/3 and pass-72 advances to 3/3 STRICT.
+
+**Convergence counter (orchestrator read):** RESET to 0/3 (P71-001 delta-attributable). PENDING HUMAN RATIFICATION DEC-189.
+
+**Trajectory so far:** p78(8)→...→p143-sub(0)→p144-sub(0)→pass-70(VOID×3)→adv-71(1M+2L). trajectory-tail →0→0→VOID×3→1M+2L. CONVERGENCE: 0/3 STRICT (orchestrator read; PENDING HUMAN RATIFICATION). PIPELINE PAUSED.
+
+NEXT: pass-72 (adv-72).
+
+---
+
+### Pass adv-72 (2026-07-28) — SUBSTITUTE (DEC-190 WINDOW-ELIGIBLE; aperture: reality-check on third-party claims + count surfaces)
+
+**Findings:** 1 (0C/1H/0M/0L) — P72-001 HIGH; PRE-EXISTING / out-of-delta; FIXED in v1.3.160
+**Convergence counter:** 0/3 → 1/3 (orchestrator read; P72-001 pre-existing / out-of-delta, does NOT reset window)
+**Window before:** 0/3 STRICT (orchestrator read; PENDING HUMAN RATIFICATION on pass-71)
+**Window after:** 1/3 STRICT (orchestrator read; P72-001 pre-existing; if P71-001 is F3 input, window is 3/3)
+
+Seventy-second F2 pass (DEC-190 substitute; aperture: reality-check on third-party API claims + count surfaces).
+
+**P72-001 (HIGH; PRE-EXISTING / out-of-delta — FIXED in spec v1.3.160):** `bc-3-issue-write.md` EC-3.4.015-4a contained a FALSE serde_json claim: directed implementers to `Number::from_f64(v)` for integer wire form, which emits `5.0` and would fail passing test `tests/issue_edit_field.rs` Test 26. PROVENANCE: introduced `e6a44c78` (2026-05-22, issue-396 cycle) — OUT OF DELTA for SOH-DX-1. FIXED in spec v1.3.160: corrected to `parsed_number_to_wire_value` integer branch (`Number::from(parsed as i64)` when `fract()==0.0` and within i64 bounds; else `json!(parsed)`); MUST NOT warning added; `5e3`→`5000` and `5.5`→`5.5` re-attributed; VP-396-010 pin retained. All four guard scripts GREEN after fix.
+
+**Also CONFIRMED CORRECT (5 claims):** assert_cmd 2.2.2 `Command::timeout` at `src/cmd.rs:108`; serde_json `preserve_order` off → BTreeMap ordering; wiremock 0.6 FIFO for equal-priority mocks; dialoguer 0.12 non-TTY `Err(NotConnected)`; clap 4 `InvalidSubcommand` omits parent about.
+
+**INDEPENDENT VERIFICATION:** adv-72 confirmed PHANTOM-ADR-0017 is a FALSE POSITIVE — ADR-0017 DOES exist at `.factory/specs/architecture/decisions/ADR-0017-first-multipart-streaming-http-surface.md` (ARCH-INDEX.md:34; status Accepted 2026-07-15). CANONICAL-COUNTS "17 ADRs, all present" claim is CORRECT. Drift item PHANTOM-ADR-0017 → CLOSED FALSE POSITIVE.
+
+**Convergence counter (orchestrator read):** 0/3 → 1/3 (P72-001 pre-existing out-of-delta; does not reset per STRICT criterion). If P71-001 is classified as F3 input (counter-argument), window is 3/3 STRICT and F2 human gate is ready.
+
+**Trajectory so far:** p78(8)→...→p143-sub(0)→p144-sub(0)→adv-71(1M+2L)→adv-72(1H-pre). trajectory-tail →0→0→1M+2L→1H (passes p143-sub, p144-sub, adv-71, adv-72). CONVERGENCE: 1/3 STRICT (orchestrator read; P71-001 classification PENDING HUMAN RATIFICATION DEC-189). PIPELINE PAUSED.
+
+NEXT: human ruling on DEC-189 P71-001 classification (delta-attributable → keep grinding; or F3 input → 3/3 → F2 human gate ready) OR pass-73 with fresh aperture.
