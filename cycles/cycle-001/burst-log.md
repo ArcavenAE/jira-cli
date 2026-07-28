@@ -7327,3 +7327,41 @@ Displaced to make room for SOH-DX-1 F2 rounds 64-66 step row per keep-4 rule (re
 | Step | Agent | Status | Output |
 |------|-------|--------|--------|
 | **F2 rounds 53-55 + substitute passes 53/54/55 (2026-07-27): WINDOW CLOSED 3/3 STRICT per DEC-190. p129-sub CLEAN (4 items); p130-sub CLEAN (4 items; one false-positive REJECTED); p131-sub CLEAN (2 items). DEC-190: human instruction 2026-07-27 ratifies substitute passes as window-eligible. ADVERSARY-AGENT-NONFUNCTIONAL root cause NOT fully determined (6 dispatches; HIGH). Input-hash drift STALE=56 — no F2-attributable drift; does NOT block gate. F2 human gate PENDING HUMAN APPROVAL (SUBSEQUENTLY INVALIDATED by F56-001). spec v1.3.150; BC-INDEX v6.73; STORY-INDEX v1.5.42.** | consistency-validator (substitute x3) + orchestrator + state-manager | COMPLETED | spec v1.3.150; BC-INDEX v6.73; STORY-INDEX v1.5.42; convergence-trajectory p129-sub/p130-sub/p131-sub appended; burst-log.md appended (F2-ROUNDS-53-55 burst + archived PP row pass-44 + archived CPS row SESSION WRAP); STATE.md committed. |
+
+
+---
+
+## F2-ROUNDS-67-BURST-2026-07-28
+
+**Date:** 2026-07-28
+**Rounds covered:** 67 (pass-67 only; p142-sub)
+**Spec versions:** v1.3.158 → v1.3.159
+**BC-INDEX:** v6.73 (unchanged)
+
+### Burst Summary
+
+pass-67 (p142-sub): BROAD UNSTRUCTURED RE-TREAD FINDING — F67-001 LOW + F67-002 LOW; both delta-attributable; WINDOW RESET to 0/3. STRICT-WINDOW-NO-FIXED-POINT codified (MEDIUM). TWIN-ARTIFACT-SWEEP recurrence 19→20.
+
+### Per-Pass Findings
+
+**p142-sub (pass-67):** F67-001 LOW (BC-3.8.012 combined-check ordering sentence broadened to "before BOTH individual single-flag checks (the `--field`-only check and the `--on-behalf-of`-only check)"; BC-3.8.013 defers to BC-3.8.012 — no change there); F67-002 LOW (AC-9/AC-11/AC-16(a)/AC-17 rationale corrected from "degrades discriminating power" to "ancestor-config isolation prevents inherited credentials from enabling a live HTTP escape"; AC-10 deliberately NOT changed — it supplies `--project`/`--type`/`--summary` (would-otherwise-succeed), so inheritance genuinely affects discriminating power; deliberate asymmetry documented). 14 named mechanical verifications all held. Spec v1.3.159.
+
+### Drift Items Added
+
+| ID | Severity | Status | Notes |
+|----|----------|--------|-------|
+| STRICT-WINDOW-NO-FIXED-POINT | MEDIUM | OPEN — human decision on convergence criterion | Three consecutive broad unstructured re-treads (passes 66/67/68-pending) each yielded 1–2 LOW findings; DEC-189 literal criterion ("any delta-attributable finding resets window") has no reachable fixed point at this spec maturity. Last MEDIUM-or-above finding: pass-65. Candidate refinements for human ruling: (a) require N consecutive passes with zero MEDIUM-or-above; (b) require novelty decay; (c) declare MAXIMUM_VIABLE_REFINEMENT per DEC-186 precedent. NOT an orchestrator decision. |
+
+### Drift Items Updated
+
+| ID | Change |
+|----|--------|
+| TWIN-ARTIFACT-SWEEP | Recurrence 19→20: F67-002 required four-AC rationale propagation with deliberate AC-10 exclusion explicitly documented. |
+
+### Archived PP row (keep-5 rule: F2 rounds 53-55 → archived; new active set: 56-57, 58-60, 62-63, 64-66, 67)
+
+| **F2 rounds 53-55 + substitute passes 53/54/55 (2026-07-27): WINDOW CLOSED 3/3 STRICT per DEC-190. p129-sub CLEAN (4 items); p130-sub CLEAN (4 items; one false-positive REJECTED); p131-sub CLEAN (2 items). DEC-190: human instruction 2026-07-27 ratifies substitute passes as window-eligible. ADVERSARY-AGENT-NONFUNCTIONAL root cause NOT fully determined (6 dispatches; HIGH). Input-hash drift STALE=56 — no F2-attributable drift; does NOT block gate. F2 human gate PENDING HUMAN APPROVAL (SUBSEQUENTLY INVALIDATED by F56-001). spec v1.3.150; BC-INDEX v6.73; STORY-INDEX v1.5.42.** | F2 window CLOSED — human gate PENDING (SUBSEQUENTLY INVALIDATED by F56-001) | 2026-07-27 | F2 HUMAN GATE PENDING — SUBSEQUENTLY INVALIDATED by F56-001 (MEDIUM, delta-attributable). | spec v1.3.150; BC-INDEX v6.73; STORY-INDEX v1.5.42. | →1L→0→0→0 |
+
+### Archived CPS row (keep-4 rule: F2 rounds 56-57 → archived; new active set: 58-60, 62-63, 64-66, 67)
+
+| **F2 fix burst rounds 56-57 + reality-check passes 56/57 (2026-07-27): WINDOW RESET to 0/3. F56-001 MEDIUM fix spec v1.3.151 (assert_cmd false premise removed; assertions separated; design decision (ii) DECLINED); F57-001 LOW fix spec v1.3.152 (AC-17 negative-substring narrowed); both delta-attributable; 3/3 window INVALIDATED. APERTURE-CLASS-LESSON codified. BC-INDEX v6.73 unchanged; 3 guards green; 0/3 STRICT (DEC-189/DEC-190). NEXT: adversary pass (p134) with v1.3.152 artifacts.** | consistency-validator (substitute x2) + orchestrator + state-manager | COMPLETED | spec v1.3.152; BC-INDEX v6.73; STORY-INDEX v1.5.42; convergence-trajectory p132-sub/p133-sub appended; burst-log.md appended; factory-artifacts committed. |

@@ -3403,3 +3403,40 @@ Sixty-sixth F2 pass (substitute — consistency-validator with adversarial verif
 **Convergence counter:** RESET to 0 of 3 STRICT. NEXT: pass-67 (p142-sub or adversary).
 
 **Trajectory so far:** p78(8)→p79(8)→p80(8)→p81(7)→p82(6)→p83(4)→p84(3)→p85(7)→p86(6)→p87(5)→p88(6)→p89(6)→p90(4)→p91(2)→p92(5)→p93(5)→p94(4)→p95(3)→p96(3)→p97(5)→p98(4)→p99(2)→p100(3)→p101(3)→p102(6)→p103(6)→p104(4)→p105(5)→p106(2)→p107(1)→p108(3)→p109(3)→p110(2)→p111(3L)→p112(1M+3L)→p113(2M+2L)→p114(2H+2L)→p115(4M+2L)→p116(2M+1L)→p117(1H+1M)→p118(2M)→p119(1M+2L)→p120(2M)→p121(3M+2L)→p122(3M)→p123(1M+2L)→[remediation-burst: F1-F5 LOW]→[F47-001 LOW fix]→p124-sub(1L)→p125-sub(1L)→p126-sub(1L)→p127-sub(1L)→p128-sub(1L)→p129-sub(0)→p130-sub(0)→p131-sub(0)→p132-sub(1M)→p133-sub(1L)→p134-sub(0)→p135-sub(0)→p136-sub(1L)→p137-sub(1M+1L)→p138-sub(1L)→p139-sub(1L)→p140-sub(1M+1L)→p141-sub(1L). Delta: -1M (1M+1L→1L). trajectory-tail →1L→1L→1M+1L→1L (passes p138-sub, p139-sub, p140-sub, p141-sub). **CONVERGENCE: 0/3 STRICT RESET — F66-001 LOW delta-attributable. Broad unstructured re-tread confirms convergence signal: findings remain LOW, no new classes.** PIPELINE PAUSED.
+
+
+---
+
+## p142-sub (pass-67) — 2026-07-28
+
+**Spec version:** v1.3.159
+**Pass type:** BROAD UNSTRUCTURED SUBSTITUTE (2nd consecutive)
+**Verdict:** FINDING — WINDOW RESET
+**Window before:** 0/3 STRICT
+**Window after:** 0/3 STRICT (RESET — delta-attributable findings)
+**Trajectory tail:** →1L→1M+1L→1L→2L
+
+### Findings
+
+| ID | Severity | Description |
+|----|----------|-------------|
+| F67-001 | LOW | BC-3.8.012 combined-check ordering sentence was one-sided — "MUST run before the individual `--field`-only check" constrained ordering only against the `--field`-only check, not the `--on-behalf-of`-only check. An implementation ordering the `--on-behalf-of`-only guard first satisfied the sentence verbatim while violating EC-3.8.012-1. Broadened to "before BOTH individual single-flag checks (the `--field`-only check and the `--on-behalf-of`-only check)". Precision defect only — EC-3.8.012-1 and AC-13 already covered the gap normatively. BC-3.8.013 carries no mirrored statement (defers to BC-3.8.012 as governing BC); no change needed there. |
+| F67-002 | LOW | AC-9, AC-11, AC-16(a), and AC-17 carried a FALSE rationale for their `.current_dir()` preconditions — "degrades discriminating power". All four are projectless AND lack `--type`, so on a guard-absent build with an inherited project key the run fails on missing `--type` before any HTTP; discriminating power is genuinely unaffected by config inheritance. Corrected to the true reason: ancestor-config isolation prevents inherited credentials from enabling a live HTTP escape (hygiene isolation). AC-10 deliberately NOT changed — its invocation supplies `--project`/`--type`/`--summary` (would-otherwise-succeed), so inheritance DOES affect its discriminating power, and its wording ("silently interferes") was never false. Asymmetry explicitly documented — a future reviewer will otherwise flag it as an inconsistency. |
+
+### Verifications (pass-67 named 14 mechanical checks — all held)
+
+- `print_success` is `eprintln!` → `!stderr.contains("Created issue")` is genuinely DISCRIMINATING (verified)
+- `find_team_field_id`-before-`resolve_assignee_by_project` ordering underpinning AC-8 (verified)
+- `config.rs:285` migration line confirming Config fixture contract (verified)
+- v1.3.157 citation fix, ~20 line citations, all four ADR-0014 sites, `CLAUDE.md:248`, serde_json key-ordering, AC labels, AC-15 insensitivity, clap-`requires` prohibition (all verified)
+- `print_success` → `eprintln!` meaning `!stderr.contains("Created issue")` is DISCRIMINATING (verified independently as 1st item in named list)
+
+### Disposition
+
+- F67-001: FIXED in v1.3.159 — BC-3.8.012 ordering sentence broadened to cover both single-flag checks; BC-3.8.013 unchanged (defers to BC-3.8.012)
+- F67-002: FIXED in v1.3.159 — four AC rationale corrections; AC-10 asymmetry explicitly documented
+- WINDOW: RESET to 0/3 (both findings delta-attributable)
+- New drift item: STRICT-WINDOW-NO-FIXED-POINT (MEDIUM)
+- TWIN-ARTIFACT-SWEEP: recurrence 19→20
+
+NEXT: pass-68 (p143-sub or adversary) with v1.3.159 artifacts.
