@@ -7277,3 +7277,53 @@ Displaced to make room for SOH-DX-1 F2 rounds 62-63 step row per keep-4 rule (re
 | Step | Agent | Status | Output |
 |------|-------|--------|--------|
 | **F2 rounds 50-52 + substitute passes 50/51/52 (2026-07-27): F50-001 story-side (S-383 contract_superseded_by; STORY-INDEX v1.5.42) p126-sub 1L; F51-001 LOW spec v1.3.149 (coverage non-goal Note) + F51-002 STATE.md VP-INDEX phantom FIXED p127-sub 1L; F52-001 LOW spec v1.3.150 (error-taxonomy Section 6 Issue Commands) p128-sub 1L; all substitute passes NOT DEC-189 window-eligible; BC-INDEX v6.73 unchanged; 3 guards green; ZERO consecutive CLEAN (0/3 STRICT per DEC-189).** | consistency-validator (substitute x3) + orchestrator + state-manager | COMPLETED | spec v1.3.150; BC-INDEX v6.73; STORY-INDEX v1.5.42; convergence-trajectory p126-sub/p127-sub/p128-sub appended; burst-log.md appended; factory-artifacts committed. |
+
+---
+
+## F2-ROUNDS-64-66-BURST-2026-07-28 (2026-07-28)
+
+**Burst type:** SOH-DX-1 F2 passes 64/65/66 (p139-sub, p140-sub, p141-sub) + upstream-completeness + downstream-readiness + broad unstructured re-tread
+**Passes:** p139-sub (pass-64, 1L — F64-001 LOW → WINDOW RESET), p140-sub (pass-65, 1M+1L — F65-001 MEDIUM + F65-002 LOW → WINDOW RESET), p141-sub (pass-66, 1L — F66-001 LOW → WINDOW RESET)
+**Findings fixed:** 4 (1L F64-001, 1M F65-001, 1L F65-002, 1L F66-001)
+**Spec version:** v1.3.156 (F64-001), v1.3.157 (F65-001 + F65-002), v1.3.158 (F66-001)
+**BC-INDEX version:** v6.73 (unchanged)
+**STORY-INDEX version:** v1.5.42 (unchanged)
+**Convergence:** 0/3 STRICT — all three passes produced delta-attributable findings; window reset each time
+
+**Pass 64 (p139-sub) — FINDING 1L:** Upstream-completeness audit. F64-001 LOW: F1's E2E scan obligation from `phase-f1-delta/SOH-DX-1/delta-analysis.md § "2. Regression Risk Assessment"` had no F2 treatment. Scan performed: 8 `--field` occurrences in `tests/e2e_live.rs` — all are `issue edit --field`, zero `issue create --field`, zero `--on-behalf-of`. No live-run scenario flips to exit-64; no E2E changes at F4. DISCHARGED as delivery item (g) in v1.3.156. F1 row 82 (`tests/issue_create_jsm.rs` "5 tests invert") confirmed fully treated by AC DELETE mandates + Removal postcondition. Aperture insight: internal-consistency review cannot detect this class — only an upstream-completeness audit (every F1 risk mapped to F2 treatment or explicit non-goal) can. `UPSTREAM-COMPLETENESS-APERTURE` codified.
+
+**Pass 65 (p140-sub) — FINDING 1M+1L:** Downstream-readiness audit. 4 items raised; 2 accepted; 2 rejected with reasoning. Overall verdict: F2 IS sufficient for F3. F65-001 MEDIUM (orchestrator-introduced): v1.3.156 item (g) cited bare `delta-analysis.md` line 81 but two files share that name; full-path section-form required; corrected to `phase-f1-delta/SOH-DX-1/delta-analysis.md § "2. Regression Risk Assessment"` in v1.3.157. F65-002 LOW: "verbatim" governs content not line formatting; `stories/S-576-3.md` named as format reference in v1.3.157. Rejected: (i) `create.rs` missing from obligations — FALSE POSITIVE (appears in Behavior/Trace/Removal; obligations block is "same PR" scope); (ii) `tests/common/mod.rs` missing — ACCEPTED-AS-IS (lives in Test Note). `CITATION-FORM-DISCIPLINE` updated (F65-001 orchestrator-introduced recurrence).
+
+**Pass 66 (p141-sub) — FINDING 1L (BROAD UNSTRUCTURED RE-TREAD; verdict CONVERGED 0C/0H/0M/1L):** No prescribed checklist; free to examine anything with Bash. Independently verified 15+ claims (v1.3.157 fix; ~20 src/test citations; ADR-0014 sites; CLAUDE.md:248; serde_json key-ordering; AC labels; `print_success` = eprintln!; clap-requires prohibition). F66-001 LOW: v1.3.142 partial propagation incomplete — two LIVE sites still had `bare-name-no-equals` instead of `bareflagnoequals` (Behavior block EC-3.8.012-3 example + EC-3.8.012-3 "as test" citation body). Fixed in v1.3.158. Three historical sites (v1.3.142/131 trails + footer) deliberately preserved. `TWIN-ARTIFACT-SWEEP` incremented to recurrence 19. Aperture insight: orchestrator injected 2 of 4 findings in rounds 63–66 via imprecise instructions (F63-001 range-terminus inference, F65-001 bare-filename ambiguity) — `ORCHESTRATOR-ERROR-INJECTION-RATE` codified.
+
+**New drift items in STATE.md:**
+- `UPSTREAM-COMPLETENESS-APERTURE` NEW [process-gap] (MEDIUM, OPEN — engine/skill-template candidate): Internal-consistency review cannot detect obligations the upstream phase raised and the downstream phase silently never closed — the spec stays coherent about what it does say. pass-64 found F1's E2E scan obligation completely absent from F2 treatments. Codify: F2/F5 adversarial checklists MUST include an upstream-completeness dimension (every F1 risk and open question mapped to an F2 treatment or explicit non-goal) and a downstream-readiness dimension (does F2 supply what F3's story template requires). Companion to `APERTURE-CLASS-LESSON`.
+- `ORCHESTRATOR-ERROR-INJECTION-RATE` NEW [process-gap] (MEDIUM, OPEN — orchestrator discipline): Two of four findings in rounds 63–66 were defects the orchestrator introduced via imprecise fix instructions: F63-001 (range terminus inferred from a confirmed member rather than enumerated) and F65-001 (bare filename where two files share the name). Both violated rules already in the ledger (RANGE-TERMINUS-INFERENCE and CITATION-FORM-DISCIPLINE). Signal: at this depth the remediation process injects defects at a rate comparable to the review process finding pre-existing ones. Mitigation: fix instructions must enumerate expected post-state counts and name full paths; treat every instruction as reviewable output.
+
+**Updated drift items in STATE.md:**
+- `TWIN-ARTIFACT-SWEEP`: recurrence incremented 18 → 19 (F66-001 was v1.3.142's unpropagated literal rename at two LIVE sites; 2026-07-28).
+- `CITATION-FORM-DISCIPLINE`: F65-001 recurrence recorded; orchestrator-introduced; fix adopted full-path section-form per CLAUDE.md convention (symbol-form / #408).
+- `FACTORY-DISPATCHER-HOOK-TIMEOUT`: additional datapoints from v1.3.156 burst — every Edit triggered fail-closed PostToolUse timeout at ~295ms; edits persisted and were grep-verified each time.
+- `PO-REPORT-FIDELITY`: second datapoint — product-owner burst reported "all three guards pass" having run `check-bc-no-numeric-test-counts.sh` in place of `check-bc-citation-symbols.sh`; both do pass but the report claimed coverage it had not performed.
+
+**Files touched in .factory:** specs/prd/bc-3-issue-write.md (v1.3.156 + v1.3.157 + v1.3.158 trail entries); spec-changelog.md ([1.3.156] + [1.3.157] + [1.3.158]); phase-f1-delta/SOH-DX-1/delta-analysis.md (citation ambiguity in item (g) corrected v1.3.157); cycles/cycle-001/convergence-trajectory.md (3 new sections: p139-sub, p140-sub, p141-sub); cycles/cycle-001/burst-log.md (this entry + archived PP row F2 rounds 50-52 + archived CPS row F2 rounds 53-55); STATE.md
+
+**Trajectory:** p139-sub(1L)→p140-sub(1M+1L)→p141-sub(1L). trajectory-tail →1L→1L→1M+1L→1L (passes p138-sub, p139-sub, p140-sub, p141-sub). CONVERGENCE: 0/3 STRICT RESET (each pass produced delta-attributable finding; window reset each time).
+
+**Convergence counter: 0 of 3 STRICT. NEXT: pass-67 (p142-sub or adversary) with v1.3.158 artifacts.**
+
+### Archived Phase Progress row (displaced by keep-5 rule; new F2-rounds-64-66 row added)
+
+Displaced to make room for SOH-DX-1 F2 rounds 64-66 + passes row per keep-5 rule (removed oldest: F2 rounds 50-52).
+
+| Phase | Status | Completed | Gate | Notes | Finding Progression |
+|-------|--------|-----------|------|-------|---------------------|
+| **F2 rounds 50-52 + substitute passes 50/51/52 (2026-07-27): F50-001 story-side (S-383 contract_superseded_by; STORY-INDEX v1.5.42) p126-sub 1L; F51-001 LOW spec v1.3.149 (coverage non-goal Note) + F51-002 STATE.md VP-INDEX phantom FIXED p127-sub 1L; F52-001 LOW spec v1.3.150 (error-taxonomy Section 6 Issue Commands) p128-sub 1L; all substitute passes NOT DEC-189 window-eligible; BC-INDEX v6.73 unchanged; 3 guards green; ZERO consecutive CLEAN (0/3 STRICT per DEC-189).** | F2 adversary grind in progress | 2026-07-27 | ADVERSARY GRIND — convergence + human gate PENDING. | spec v1.3.150; BC-INDEX v6.73; STORY-INDEX v1.5.42. | →1L→1L→1L→1L |
+
+### Archived Current Phase Steps row (displaced by keep-4 rule; new F2-rounds-64-66 step row added)
+
+Displaced to make room for SOH-DX-1 F2 rounds 64-66 step row per keep-4 rule (removed oldest: F2 rounds 53-55).
+
+| Step | Agent | Status | Output |
+|------|-------|--------|--------|
+| **F2 rounds 53-55 + substitute passes 53/54/55 (2026-07-27): WINDOW CLOSED 3/3 STRICT per DEC-190. p129-sub CLEAN (4 items); p130-sub CLEAN (4 items; one false-positive REJECTED); p131-sub CLEAN (2 items). DEC-190: human instruction 2026-07-27 ratifies substitute passes as window-eligible. ADVERSARY-AGENT-NONFUNCTIONAL root cause NOT fully determined (6 dispatches; HIGH). Input-hash drift STALE=56 — no F2-attributable drift; does NOT block gate. F2 human gate PENDING HUMAN APPROVAL (SUBSEQUENTLY INVALIDATED by F56-001). spec v1.3.150; BC-INDEX v6.73; STORY-INDEX v1.5.42.** | consistency-validator (substitute x3) + orchestrator + state-manager | COMPLETED | spec v1.3.150; BC-INDEX v6.73; STORY-INDEX v1.5.42; convergence-trajectory p129-sub/p130-sub/p131-sub appended; burst-log.md appended (F2-ROUNDS-53-55 burst + archived PP row pass-44 + archived CPS row SESSION WRAP); STATE.md committed. |

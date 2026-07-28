@@ -3338,3 +3338,68 @@ Sixty-third F2 pass (substitute — consistency-validator with adversarial verif
 **Convergence counter:** 1 of 3 STRICT. NEXT: pass-64 (p139-sub or adversary).
 
 **Trajectory so far:** p78(8)→p79(8)→p80(8)→p81(7)→p82(6)→p83(4)→p84(3)→p85(7)→p86(6)→p87(5)→p88(6)→p89(6)→p90(4)→p91(2)→p92(5)→p93(5)→p94(4)→p95(3)→p96(3)→p97(5)→p98(4)→p99(2)→p100(3)→p101(3)→p102(6)→p103(6)→p104(4)→p105(5)→p106(2)→p107(1)→p108(3)→p109(3)→p110(2)→p111(3L)→p112(1M+3L)→p113(2M+2L)→p114(2H+2L)→p115(4M+2L)→p116(2M+1L)→p117(1H+1M)→p118(2M)→p119(1M+2L)→p120(2M)→p121(3M+2L)→p122(3M)→p123(1M+2L)→[remediation-burst: F1-F5 LOW]→[F47-001 LOW fix]→p124-sub(1L)→p125-sub(1L)→p126-sub(1L)→p127-sub(1L)→p128-sub(1L)→p129-sub(0)→p130-sub(0)→p131-sub(0)→p132-sub(1M)→p133-sub(1L)→p134-sub(0)→p135-sub(0)→p136-sub(1L)→p137-sub(1M+1L)→p138-sub(1L). Delta: -1M (1M+1L→1L). trajectory-tail →0→1L→1M+1L→1L (passes p135-sub, p136-sub, p137-sub, p138-sub). **CONVERGENCE: 1/3 STRICT — CLEAN for delta (pre-existing finding out of scope; window advances).**
+
+---
+
+### Pass p139 (2026-07-28) — SUBSTITUTE (upstream-completeness audit; DEC-190 WINDOW-ELIGIBLE)
+
+**Findings:** 1 (0C/0H/0M/1L) — F64-001 LOW
+**Convergence counter:** RESET to 0 of 3 STRICT — delta-attributable finding; window reset
+
+Sixty-fourth F2 pass (substitute — consistency-validator with adversarial verification checklist; NOT the adversary agent; fresh context; adversarial framing preserved; DEC-190 window-eligible). **APERTURE CLASS: UPSTREAM-COMPLETENESS** (F1→F2 upstream completeness audit: every F1 risk and open question mapped to an F2 treatment or explicit non-goal).
+
+**F64-001 (LOW, delta-attributable):** F1's E2E scan obligation had no F2 treatment. F1 (`phase-f1-delta/SOH-DX-1/delta-analysis.md` § "2. Regression Risk Assessment", #639 row) required scanning `tests/e2e_live.rs` for `issue create` invocations carrying `--field`/`--on-behalf-of` without `--request-type`. Scan performed: ZERO found — all 8 `--field` occurrences are `issue edit --field` (live call site approximately line 5111), zero `--on-behalf-of`. Conclusion: no live-run scenario flips to exit-64; no E2E changes at F4. Fix: obligation DISCHARGED as delivery item (g) in spec v1.3.156.
+
+**F1 row 82 confirmed fully treated:** `tests/issue_create_jsm.rs` "5 tests invert… significant rewrite" row confirmed fully treated by the AC DELETE mandates and Removal postcondition. No other untreated F1 risks found.
+
+**Aperture insight — UPSTREAM-COMPLETENESS-APERTURE codified:** This class — completeness against the upstream authority — is undetectable by internal-consistency review, because the spec was perfectly coherent about DEC-188 while simply never mentioning a question F1 asked. Internal-consistency passes cannot catch it; only an explicit upstream-completeness dimension (every F1 risk/open question mapped to F2 treatment or explicit non-goal) can detect it. Companion to `APERTURE-CLASS-LESSON`.
+
+**NOTE — SUBSTITUTE PASS (DEC-190 WINDOW-ELIGIBLE):** Window was at 1/3 (from p138-sub). F64-001 is delta-attributable → window RESET to 0/3.
+
+**Convergence counter:** RESET to 0 of 3 STRICT. NEXT: pass-65 (p140-sub or adversary).
+
+**Trajectory so far:** p78(8)→p79(8)→p80(8)→p81(7)→p82(6)→p83(4)→p84(3)→p85(7)→p86(6)→p87(5)→p88(6)→p89(6)→p90(4)→p91(2)→p92(5)→p93(5)→p94(4)→p95(3)→p96(3)→p97(5)→p98(4)→p99(2)→p100(3)→p101(3)→p102(6)→p103(6)→p104(4)→p105(5)→p106(2)→p107(1)→p108(3)→p109(3)→p110(2)→p111(3L)→p112(1M+3L)→p113(2M+2L)→p114(2H+2L)→p115(4M+2L)→p116(2M+1L)→p117(1H+1M)→p118(2M)→p119(1M+2L)→p120(2M)→p121(3M+2L)→p122(3M)→p123(1M+2L)→[remediation-burst: F1-F5 LOW]→[F47-001 LOW fix]→p124-sub(1L)→p125-sub(1L)→p126-sub(1L)→p127-sub(1L)→p128-sub(1L)→p129-sub(0)→p130-sub(0)→p131-sub(0)→p132-sub(1M)→p133-sub(1L)→p134-sub(0)→p135-sub(0)→p136-sub(1L)→p137-sub(1M+1L)→p138-sub(1L)→p139-sub(1L). Delta: +0 (1L→1L). trajectory-tail →1L→1M+1L→1L→1L (passes p136-sub, p137-sub, p138-sub, p139-sub). CONVERGENCE: 0/3 STRICT RESET — F64-001 LOW delta-attributable.
+
+---
+
+### Pass p140 (2026-07-28) — SUBSTITUTE (F2→F3 downstream readiness audit; DEC-190 WINDOW-ELIGIBLE)
+
+**Findings:** 2 accepted (0C/0H/1M/1L) + 2 rejected — F65-001 MEDIUM + F65-002 LOW accepted
+**Convergence counter:** RESET to 0 of 3 STRICT — both accepted findings delta-attributable
+
+Sixty-fifth F2 pass (substitute — consistency-validator with adversarial verification checklist; NOT the adversary agent; fresh context; adversarial framing preserved; DEC-190 window-eligible). **APERTURE CLASS: DOWNSTREAM READINESS** (F2→F3 readiness: does F2 supply what F3's story template requires for S-639-1 without improvising unratified behavioural scope?). 4 items raised; 2 accepted by orchestrator; 2 rejected with reasoning.
+
+**Overall verdict: F2 IS sufficient for F3 to author S-639-1 without improvising unratified behavioural scope** — all 21 ACs, three verbatim error strings, guard placement, clap-`requires` prohibition, SSOT ordering, helper promotion directives, breaking-change metadata, and obligations (a)–(g) all supplied.
+
+**F65-001 (MEDIUM, delta-attributable; orchestrator-introduced):** v1.3.156 item (g) cited bare `` `delta-analysis.md` line 81 `` but TWO files share that name — `phase-f1-delta/SOH-DX-1/delta-analysis.md:81` is the #639 risk row (correct) while `phase-f1-delta-analysis/delta-analysis.md:81` is unrelated YAML. A reviewer following the bare reference reaches the wrong file. The pointer was ambiguous, not dead — but violates the CLAUDE.md citation convention per #408 (symbol-form / full-path section-form). Fix: citation corrected to `phase-f1-delta/SOH-DX-1/delta-analysis.md § "2. Regression Risk Assessment"` in spec v1.3.157. `CITATION-FORM-DISCIPLINE` drift item updated (orchestrator-introduced recurrence).
+
+**F65-002 (LOW, delta-attributable):** AC-expansion guidance for F3 was ambiguous — "verbatim" was unclear about whether it governed content or line formatting. Clarified: "verbatim" governs content, not line formatting; `stories/S-576-3.md` named as format reference. Fix applied in spec v1.3.157.
+
+**REJECTED findings (orchestrator, with reasoning):**
+(i) "`src/cli/issue/create.rs` missing from obligations (a)–(g)" — FALSE POSITIVE. The block is explicitly "same PR as the code change" and enumerates accompanying work; `create.rs` appears in the Behavior clause, Trace, and Removal postcondition twice each.
+(ii) "`tests/common/mod.rs` registration missing from obligations" — ACCEPTED-AS-IS. It lives in the Test Note where test-infrastructure directives belong; not required in (a)–(g).
+
+**NOTE — SUBSTITUTE PASS (DEC-190 WINDOW-ELIGIBLE):** Window was at 0/3 (reset by F64-001 in p139-sub). F65-001 and F65-002 are delta-attributable; counter remains 0/3.
+
+**Convergence counter:** RESET to 0 of 3 STRICT. NEXT: pass-66 (p141-sub or adversary).
+
+**Trajectory so far:** p78(8)→p79(8)→p80(8)→p81(7)→p82(6)→p83(4)→p84(3)→p85(7)→p86(6)→p87(5)→p88(6)→p89(6)→p90(4)→p91(2)→p92(5)→p93(5)→p94(4)→p95(3)→p96(3)→p97(5)→p98(4)→p99(2)→p100(3)→p101(3)→p102(6)→p103(6)→p104(4)→p105(5)→p106(2)→p107(1)→p108(3)→p109(3)→p110(2)→p111(3L)→p112(1M+3L)→p113(2M+2L)→p114(2H+2L)→p115(4M+2L)→p116(2M+1L)→p117(1H+1M)→p118(2M)→p119(1M+2L)→p120(2M)→p121(3M+2L)→p122(3M)→p123(1M+2L)→[remediation-burst: F1-F5 LOW]→[F47-001 LOW fix]→p124-sub(1L)→p125-sub(1L)→p126-sub(1L)→p127-sub(1L)→p128-sub(1L)→p129-sub(0)→p130-sub(0)→p131-sub(0)→p132-sub(1M)→p133-sub(1L)→p134-sub(0)→p135-sub(0)→p136-sub(1L)→p137-sub(1M+1L)→p138-sub(1L)→p139-sub(1L)→p140-sub(1M+1L). Delta: +1M (1L→1M+1L). trajectory-tail →1M+1L→1L→1L→1M+1L (passes p137-sub, p138-sub, p139-sub, p140-sub). CONVERGENCE: 0/3 STRICT RESET — F65-001 MEDIUM + F65-002 LOW both delta-attributable.
+
+---
+
+### Pass p141 (2026-07-28) — SUBSTITUTE (broad unstructured re-tread; DEC-190 WINDOW-ELIGIBLE)
+
+**Findings:** 1 (0C/0H/0M/1L) — F66-001 LOW; verdict CONVERGED (broad sweep)
+**Convergence counter:** RESET to 0 of 3 STRICT — delta-attributable finding
+
+Sixty-sixth F2 pass (substitute — consistency-validator with adversarial verification checklist; NOT the adversary agent; fresh context; adversarial framing preserved; DEC-190 window-eligible). **APERTURE CLASS: BROAD UNSTRUCTURED RE-TREAD** (no prescribed checklist — free to examine anything, with Bash). Independently verified: v1.3.157 citation fix; ~20 line-number citations across `src/` and `tests/`; all four ADR-0014 amendment sites; `CLAUDE.md:248`; test infrastructure state; serde_json key-ordering reasoning; AC label assignments; AC-15 insensitivity claim; clap-`requires` prohibition; `print_success` is `eprintln!` making `!stderr.contains("Created issue")` genuinely DISCRIMINATING. Reached the same conclusions as prior targeted passes without being directed there.
+
+**F66-001 (LOW, delta-attributable):** Completes v1.3.142's partial propagation. The malformed-`--field` example literal `bare-name-no-equals` → `bareflagnoequals` was propagated to historical sites in v1.3.142 but NOT to the two LIVE sites: (a) Behavior block EC-3.8.012-3 example; (b) EC-3.8.012-3 "as test" citation body. Fix: both LIVE sites updated to `bareflagnoequals` in spec v1.3.158, aligning with AC-7 (which since v1.3.147 explicitly cites "EC-3.8.012-3 as test") and with `tests/issue_create_jsm.rs:2845`. Three historical sites (v1.3.142 trail, v1.3.131 trail, footer Previous-update chain) deliberately preserved. `TWIN-ARTIFACT-SWEEP` incremented to recurrence 19.
+
+**ORCHESTRATOR-ERROR-INJECTION-RATE aperture insight:** Two of four findings in rounds 63–66 were defects the orchestrator introduced via imprecise fix instructions: F63-001 (range terminus inferred from a confirmed member rather than enumerated) and F65-001 (bare filename where two files share the name). Both violated rules already in the ledger (RANGE-TERMINUS-INFERENCE and CITATION-FORM-DISCIPLINE). Signal: at this depth, the remediation process injects defects at a rate comparable to the review process finding pre-existing ones. `ORCHESTRATOR-ERROR-INJECTION-RATE` codified as new drift item.
+
+**NOTE — SUBSTITUTE PASS (DEC-190 WINDOW-ELIGIBLE):** Window was at 0/3 (reset by F65-001 in p140-sub). F66-001 is delta-attributable → counter remains 0/3.
+
+**Convergence counter:** RESET to 0 of 3 STRICT. NEXT: pass-67 (p142-sub or adversary).
+
+**Trajectory so far:** p78(8)→p79(8)→p80(8)→p81(7)→p82(6)→p83(4)→p84(3)→p85(7)→p86(6)→p87(5)→p88(6)→p89(6)→p90(4)→p91(2)→p92(5)→p93(5)→p94(4)→p95(3)→p96(3)→p97(5)→p98(4)→p99(2)→p100(3)→p101(3)→p102(6)→p103(6)→p104(4)→p105(5)→p106(2)→p107(1)→p108(3)→p109(3)→p110(2)→p111(3L)→p112(1M+3L)→p113(2M+2L)→p114(2H+2L)→p115(4M+2L)→p116(2M+1L)→p117(1H+1M)→p118(2M)→p119(1M+2L)→p120(2M)→p121(3M+2L)→p122(3M)→p123(1M+2L)→[remediation-burst: F1-F5 LOW]→[F47-001 LOW fix]→p124-sub(1L)→p125-sub(1L)→p126-sub(1L)→p127-sub(1L)→p128-sub(1L)→p129-sub(0)→p130-sub(0)→p131-sub(0)→p132-sub(1M)→p133-sub(1L)→p134-sub(0)→p135-sub(0)→p136-sub(1L)→p137-sub(1M+1L)→p138-sub(1L)→p139-sub(1L)→p140-sub(1M+1L)→p141-sub(1L). Delta: -1M (1M+1L→1L). trajectory-tail →1L→1L→1M+1L→1L (passes p138-sub, p139-sub, p140-sub, p141-sub). **CONVERGENCE: 0/3 STRICT RESET — F66-001 LOW delta-attributable. Broad unstructured re-tread confirms convergence signal: findings remain LOW, no new classes.** PIPELINE PAUSED.

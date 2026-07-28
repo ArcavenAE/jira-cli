@@ -9,6 +9,74 @@ Track all spec version changes. Most recent version first.
 
 > **Type legend:** Type classifies the SPEC document delta: MINOR = new BCs/VPs/sections; PATCH = amendments to existing bodies/ACs/ECs. Product-semver impact is recorded in the Summary line, independent of Type.
 
+## [1.3.159] - 2026-07-28
+
+### Type: PATCH
+
+### Summary
+F67-001 (LOW, delta-attributable): BC-3.8.012 combined-check ordering sentence was one-sided — "before the individual `--field`-only check" constrained ordering against the `--field`-only check only, not against the `--on-behalf-of`-only check (BC-3.8.013). An implementation ordering the `--on-behalf-of`-only guard first satisfied the sentence verbatim while violating EC-3.8.012-1. Corrected to "before BOTH individual single-flag checks (the `--field`-only check and the `--on-behalf-of`-only check)." BC-3.8.013 carries no mirrored ordering statement (defers to BC-3.8.012 as governing BC; no change required). F67-002 (LOW, delta-attributable): AC-9/AC-11/AC-16/AC-17 `.current_dir()` precondition carried a false rationale — "degrades discriminating power." All four ACs are projectless and lack `--type`; on a guard-absent build with an inherited project key, the run fails on missing `--type` before any HTTP, so discriminating power is not affected by config inheritance. Corrected to the true reason: ancestor-config isolation prevents inherited credentials from enabling a live HTTP escape (hygiene isolation, not a discriminating-power concern). AC-10 is NOT corrected: its invocation supplies `--project`, `--type`, and `--summary` (would-otherwise-succeed); it also does not carry "degrades discriminating power" language. AC-16 part (a) corrected; part (b) (credential HTTP escape) preserved unchanged. BC count unchanged (140/111).
+
+### Changed
+- `.factory/specs/prd/bc-3-issue-write.md` (MODIFIED): v1.3.159 frontmatter trail entry prepended. BC-3.8.012 combined-check ordering sentence broadened to constrain BOTH single-flag checks (F67-001). AC-9 `.current_dir()` rationale corrected from false discriminating-power claim to hygiene-isolation (F67-002). AC-11 `.current_dir()` rationale corrected (F67-002). AC-16 part (a) `.current_dir()` rationale corrected (F67-002). AC-17 `.current_dir()` rationale corrected (F67-002). Footer `_Last updated` block updated to v1.3.159.
+- `.factory/spec-changelog.md` (MODIFIED): [1.3.159] entry prepended.
+
+### BC Count
+
+0 new BCs. Total unchanged: 657 cumulative (BC-INDEX), 140/111 individually-bodied in bc-3-issue-write.md.
+
+---
+
+## [1.3.158] - 2026-07-28
+
+### Type: PATCH
+
+### Summary
+F66-001 (LOW, delta-attributable): BC-3.8.012 Behavior block and EC-3.8.012-3 retained the stale literal `bare-name-no-equals` from before v1.3.142 (F44-003 LOW-1), which renamed the AC-7 KEPT note to `bareflagnoequals` (matching `tests/issue_create_jsm.rs:2845`) but did not propagate to the Behavior block or the EC. This is the canonical partial-propagation class. Two targeted edits: Behavior block example `--field bare-name-no-equals` → `--field bareflagnoequals`; EC-3.8.012-3 example same rename. Three historical records (frontmatter trail v1.3.142 line 138, frontmatter trail v1.3.131 line 149, footer line 4069) deliberately preserved unchanged as immutable audit records of the v1.3.142 rename itself. BC count unchanged (140/111).
+
+### Changed
+- `.factory/specs/prd/bc-3-issue-write.md` (MODIFIED): v1.3.158 frontmatter trail entry prepended. Behavior block (~:3076) `bare-name-no-equals` → `bareflagnoequals`. EC-3.8.012-3 (~:3088) `bare-name-no-equals` → `bareflagnoequals`. Footer `_Last updated` block updated to v1.3.158.
+- `.factory/spec-changelog.md` (MODIFIED): [1.3.158] entry prepended.
+
+### BC Count
+
+0 new BCs. Total unchanged: 657 cumulative (BC-INDEX), 140/111 individually-bodied in bc-3-issue-write.md.
+
+---
+
+## [1.3.157] - 2026-07-28
+
+### Type: PATCH
+
+### Summary
+F65-001 (MEDIUM, delta-attributable): BC-3.8.012 Trace obligation (g) trailing citation was ambiguous — bare `` `delta-analysis.md` line 81 `` (introduced by v1.3.156) matched two files under `.factory/`: `.factory/phase-f1-delta/SOH-DX-1/delta-analysis.md` (correct target, #639 regression-risk row) and `.factory/phase-f1-delta-analysis/delta-analysis.md` (wrong file, different content at line 81). A reviewer following the citation landed on the wrong file. Corrected to full-path section-form per CLAUDE.md citation convention ("prefer symbol-form / never bare `<file>:NN-MM` for new citations"): `.factory/phase-f1-delta/SOH-DX-1/delta-analysis.md § "2. Regression Risk Assessment" (#639 row, `src/cli/issue/create.rs`)`. Recurrence of the CITATION-FORM-DISCIPLINE ledgered drift item. The v1.3.156 frontmatter trail entry and footer `Previous update 2026-07-28 (v1.3.156)` text are left unchanged as immutable historical records. F65-002 (LOW, delta-attributable): BC-3.8.012 Trace AC namespace note gained no F3 expansion-format guidance, creating risk that the 21 compressed single-line ACs would be pasted as-is into S-639-1 instead of being expanded into full story format. Added **F3 story expansion directive**: "verbatim" governs content (invocations, assertions, labels, error strings), not line formatting; `.factory/stories/S-576-3.md` named as the multi-line `### AC-NNN` format reference. BC count unchanged (140/111).
+
+### Changed
+- `.factory/specs/prd/bc-3-issue-write.md` (MODIFIED): v1.3.157 frontmatter trail entry prepended. `last_updated` unchanged (2026-07-28). BC-3.8.012 Trace obligation (g) citation corrected: bare `` `delta-analysis.md` line 81 `` → `.factory/phase-f1-delta/SOH-DX-1/delta-analysis.md § "2. Regression Risk Assessment" (#639 row, `src/cli/issue/create.rs`)` (F65-001). AC namespace note expanded with F3 story expansion directive citing `.factory/stories/S-576-3.md` (F65-002). Footer `_Last updated` block updated to v1.3.157.
+- `.factory/spec-changelog.md` (MODIFIED): [1.3.157] entry prepended.
+
+### BC Count
+
+0 new BCs. Total unchanged: 657 cumulative (BC-INDEX), 140/111 individually-bodied in bc-3-issue-write.md.
+
+---
+
+## [1.3.156] - 2026-07-28
+
+### Type: PATCH
+
+### Summary
+F64-001 (LOW): Delta-attributable F1 action item closed. F1 delta-analysis (`delta-analysis.md` line 81, #639 regression-risk row for `src/cli/issue/create.rs`) required scanning `tests/e2e_live.rs` for `issue create` invocations carrying `--field` or `--on-behalf-of` without `--request-type`; if found, those scenarios would flip to exit-64 in live runs under DEC-188. F2 never recorded a discharge of this obligation. Scan performed: zero such invocations found. All 8 `--field` occurrences in `tests/e2e_live.rs` are `issue edit --field` (live call site ~:5111; remainder are doc-comment and env-var-table references for `JR_E2E_EDIT_FIELD`); zero `--on-behalf-of` occurrences. Conclusion: no live-run scenario flips to exit-64 under DEC-188; no E2E test changes required at F4. Discharge recorded as item (g) appended to the S-639-1 delivery (F4) obligations in BC-3.8.012 Trace, following the (a)–(f) checklist convention. BC count unchanged (140/111).
+
+### Changed
+- `.factory/specs/prd/bc-3-issue-write.md` (MODIFIED): `last_updated` 2026-07-27 → 2026-07-28. v1.3.156 frontmatter trail entry prepended. Item (g) E2E-impact discharge appended to S-639-1 delivery obligations paragraph in BC-3.8.012 Trace (after item (f) `docs/specs/issue-create-preflight-guards.md`, before `**Source**` line). Footer `_Last updated` block updated to v1.3.156.
+- `.factory/spec-changelog.md` (MODIFIED): [1.3.156] entry prepended.
+
+### BC Count
+
+0 new BCs. Total unchanged: 657 cumulative (BC-INDEX), 140/111 individually-bodied in bc-3-issue-write.md.
+
+---
+
 ## [1.3.155] - 2026-07-27
 
 ### Type: PATCH
