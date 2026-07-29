@@ -4,7 +4,7 @@ level: ops
 version: "2.0"
 status: active
 producer: state-manager
-timestamp: 2026-07-29T18:55:20Z
+timestamp: 2026-07-29T21:35:00Z
 phase: 3
 pipeline: PAUSED
 inputs: []
@@ -12,7 +12,7 @@ input-hash: "[live-state]"
 traces_to: ""
 project: jira-cli
 mode: brownfield
-current_step: "SOH-DX-1 F2 CONVERGED 3/3 — AWAITING HUMAN APPROVE/REJECT — D-chain cite D-195. Passes 79(1C-reset)/82(2L)/83(4-reclassified)/84(2L). spec v1.3.167; BC-INDEX v6.75; holdouts 106. trajectory-tail →1→2→4→2."
+current_step: "SOH-DX-1 F3 COMPLETE — F3 HUMAN GATE READY — D-chain cite D-196. F2 APPROVED (DEC-196, 2026-07-29). 3 stories: S-639-1 (BREAKING/v0.7.0-dev.1), S-627-1, S-626-1. AX23-001 PENDING RATIFICATION. spec v1.3.168; STORY-INDEX v1.5.43. trajectory-tail →1→2→4→2."
 trajectory_tail: "→1→2→4→2"
 maintenance_run: CLOSED
 current_cycle: "cycle-001"
@@ -25,9 +25,7 @@ activation_head: "7b3ba371"
 activation_version: "v0.6.0-dev.11"
 ---
 
-<!--
-STATE.md SIZE BUDGET (2026-07-29 SOH-DX-1-F2-CONVERGENCE-BURST): 264 lines (wc-l) — prior: 255 lines; net delta: +9 lines. Soft-target 200 (+64-line margin from soft-target); margin from actual to hard cap 500 = 236 lines.
--->
+<!-- STATE.md SIZE BUDGET (2026-07-29 SOH-DX-1-F3-DECOMP-BURST): 240 lines (wc-l) — prior: 264; delta: -24. Soft-target 200; margin from soft-target = +40; margin from actual to hard cap 500 = 260. Compaction: archived 2 Phase Progress rows, 1 CPS row, 4 Concurrent Cycles rows, Historical Content table, 5 ACCEPTED/MITIGATED/FIXED drift items. -->
 
 # Pipeline State: jira-cli
 
@@ -39,25 +37,25 @@ STATE.md SIZE BUDGET (2026-07-29 SOH-DX-1-F2-CONVERGENCE-BURST): 264 lines (wc-l
 | **Mode** | BROWNFIELD / Rust |
 | **Target Workspace** | develop to main |
 | **trajectory-tail** | →1→2→4→2 (passes 79=1C-reset, 82=2L-1/3, 83=4-reclassified-2/3, 84=2L-CONVERGED-3/3 under DEC-191 at v1.3.166) |
-| **Last Updated** | 2026-07-29: SOH-DX-1-F2-CONVERGENCE-BURST — passes 82/83/84 CLEAN 3/3 under DEC-191; DEC-193/194/195; spec v1.3.167; gate AWAITING HUMAN APPROVE/REJECT. trajectory-tail →1→2→4→2. |
-| **Current Phase** | Feature Mode SOH-DX-1 **F2 CONVERGED 3/3 — AWAITING HUMAN APPROVE/REJECT**. DEC-193 RATIFIED. FOUR GATE DISCLOSURES PRESERVED: (a) DEC-190 substitute basis; (b) pass-77 independence COMPROMISED; (c) AX23-001 PENDING RATIFICATION; (d) .factory/policies.yaml absent. |
-| **Next Phase** | Present four gate disclosures + AX23-001 ratification to human. On approval: F3 story decomposition (update S-639-1, draft S-627-1/S-626-1, update S-383). |
+| **Last Updated** | 2026-07-29: SOH-DX-1-F3-DECOMP-BURST — F2 APPROVED (DEC-196, human 2026-07-29); F3 COMPLETE (S-639-1/S-627-1/S-626-1); F3 HUMAN GATE READY. spec v1.3.168; STORY-INDEX v1.5.43. trajectory-tail →1→2→4→2. |
+| **Current Phase** | Feature Mode SOH-DX-1 **F2 APPROVED (DEC-196, 2026-07-29) + F3 COMPLETE — F3 HUMAN GATE READY**. AX23-001 PENDING RATIFICATION. Boundary violation remediated (F3 agent created product-tree doc; relocated to .factory/phase-f3-incremental-stories/). |
+| **Next Phase** | F3 human gate (S-639-1 BREAKING/v0.7.0-dev.1 requires explicit attention; AX23-001 ratification). On approval: F4 per-story delivery for S-639-1, S-627-1, S-626-1. |
 | **Activation HEAD** | 7b3ba371 (PR #654 squash-merged 2026-07-25; FIX-E2E-EGRESS DELIVERED; SOH-ATTACHMENTS-1 CYCLE FULLY CLOSED; activation_version v0.6.0-dev.11) |
 
 ## Phase Progress
 
-<!-- Archived rows: see cycles/cycle-001/burst-log.md (rounds 67, 68-70; LEDGER-BURST-71-72; DEC-191-BURST; F2-CONVERGENCE-BURST; passes 75-78 + DEC-192 spec fix burst archived SOH-DX-1-F2-CONVERGENCE-BURST 2026-07-29) -->
+<!-- Archived rows: see cycles/cycle-001/burst-log.md (rounds 67, 68-70; LEDGER-BURST-71-72; DEC-191-BURST; F2-CONVERGENCE-BURST; passes 75-78; DEC-192 spec fix burst; F2-CONVERGENCE-BURST final rows archived SOH-DX-1-F3-DECOMP-BURST 2026-07-29) -->
 | Phase | Status | Completed | Gate | Notes | Finding Progression |
 |-------|--------|-----------|------|-------|---------------------|
-| **SOH-DX-1 F2 spec fix burst v1.3.167 (2026-07-29):** Three refinement fixes per DEC-191(c): ADV-P82-LOW-001 (Expected-block citation relocated), README enumeration updated (both bc-3 and bc-X.13 sites), ADV-P84-LOW-001 (delta-analysis.md §6 updated with 3 additional delivery files). No BC changes; holdouts unchanged at 106. All four guard scripts exit 0 post-fix. | FIX BURST COMPLETE | 2026-07-29 | DEC-191(c) ledgered refinements | spec v1.3.167; BC unchanged 657. | refinements only |
-| **SOH-DX-1 F2 adversary passes 79-84 (2026-07-29):** pass-79 CRITICAL (H-NEW-PREFLIGHT-004 permanently unsatisfiable; v1.3.165→v1.3.166 fix; window reset 0/3). passes 80/81 pre-window (pass-81 endorsed CRITICAL — detection-asymmetry lesson). passes 82/83/84 at v1.3.166: CLEAN 3/3 under DEC-191. DEC-193: pass-83 GAPs reclassified (F4/S-626-1). spec v1.3.167 (3 fixes). CONVERGED 3/3. AWAITING GATE APPROVE/REJECT. | CONVERGED 3/3 AWAITING | 2026-07-29 | DEC-193/194/195 recorded | spec v1.3.167; BC-INDEX v6.75; holdouts 106. | →1→2→4→2 |
+| **SOH-DX-1 F2 adversary convergence window (pass-82 / pass-83 / pass-84): CONVERGED 3/3 CLEAN under DEC-191 at spec v1.3.166. F2 APPROVED (DEC-196, 2026-07-29).** | F2 APPROVED — DEC-196 | 2026-07-29 | DEC-196 | Four disclosures: (a) DEC-190 substitute basis — all 84 passes consistency-validator, never adversary agent; (b) pass-77 independence COMPROMISED; (c) AX23-001 OUT-OF-DELTA PENDING RATIFICATION; (d) .factory/policies.yaml absent. | →1→2→4→2 |
+| **SOH-DX-1 F3 story decomposition (2026-07-29):** F2 APPROVED (DEC-196). Three stories created: S-639-1 (BREAKING/21 ACs/v0.7.0-dev.1; H-NEW-PREFLIGHT-001..006), S-627-1 (6 ACs; two-phase delivery), S-626-1 (7 ACs; AC-1 BLOCKING SHA gate). S-383 no change (already superseded). STORY-INDEX v1.5.42→v1.5.43; 117→120 stories. Boundary violation remediated. spec v1.3.168; BC 657; holdouts 106. | F3 COMPLETE — GATE READY | 2026-07-29 | DEC-196 recorded | BREAKING S-639-1 v0.7.0-dev.1; S-627-1 LOW; S-626-1 LOW/MED | F2: →1→2→4→2 |
 
 ## Current Phase Steps
 
-<!-- Archived rows: see cycles/cycle-001/burst-log.md (SESSION-WRAP; LEDGER-BURST-71-72; DEC-191-BURST; F2-CONVERGENCE-BURST; F2-CONVERGENCE-WINDOW-BURST; DEC-192 corrective archived SOH-DX-1-F2-CONVERGENCE-BURST 2026-07-29) -->
+<!-- Archived rows: see cycles/cycle-001/burst-log.md (SESSION-WRAP; LEDGER-BURST-71-72; DEC-191-BURST; F2-CONVERGENCE-BURST; F2-CONVERGENCE-WINDOW-BURST; DEC-192 corrective; F2-CONVERGENCE-BURST final; SOH-DX-1-F3-DECOMP-BURST 2026-07-29) -->
 | Step | Agent | Status | Output |
 |------|-------|--------|--------|
-| **SOH-DX-1-F2-CONVERGENCE-BURST (2026-07-29): passes 79/80/81 pre-window; 82/83/84 CONVERGED 3/3 under DEC-191 on v1.3.166; DEC-193/194/195; spec v1.3.167 (3 fixes); 5 new drift items; 6 updated in-place; 3 resolved to blocking-issues-resolved.md; convergence-trajectory.md/lessons.md/blocking-issues-resolved.md/burst-log.md updated; CRITICAL detection-asymmetry lesson codified.** | state-manager | COMPLETED | spec v1.3.167; BC-INDEX v6.75; factory-artifacts committed and pushed to origin/factory-artifacts. |
+| **SOH-DX-1-F3-DECOMP-BURST (2026-07-29): F2 APPROVED DEC-196; S-639-1 + S-627-1 + S-626-1 created; STORY-INDEX v1.5.43; spec-changelog [1.3.168]; F4 draft relocated; burst-log/blocking-issues-resolved updated; 5 drift items archived; LESSON-F2-WORKTREE-FIRST escalated OPEN; PLATFORM-BASH-CLASSIFIER-OUTAGE added; STATE.md 264→240 lines.** | state-manager | COMPLETED | spec v1.3.168; BC-INDEX v6.75; factory-artifacts committed. |
 
 ## Decisions Log
 
@@ -73,10 +71,11 @@ STATE.md SIZE BUDGET (2026-07-29 SOH-DX-1-F2-CONVERGENCE-BURST): 264 lines (wc-l
 | DEC-188+DEC-189 | DEC-188: SOH-DX-1 F1 GATE APPROVED (3 stories; --on-behalf-of/--field flip to pre-flight exit-64; MSRV false-green fix; v0.6→0.7). DEC-189: F2 STRICT criterion (3 consecutive CLEAN). SUPERSEDED by DEC-191. | Fresh-context audit 2 findings folded; STRICT ruling. | Feature Mode SOH-DX-1 F1+F2 | 2026-07-25 |
 | DEC-190 | SUBSTITUTE-PASS RATIFICATION: human "keep grinding to 3 strict" ratifies consistency-validator dispatches as window-eligible. DEC-190 basis MUST be disclosed at F2 gate. Root cause of ADVERSARY-AGENT-NONFUNCTIONAL re-attributed to platform defect #47936. NUDGE-TWICE-BEFORE-VOID added. | Human ratified substitutes; root cause now platform defect. | Feature Mode SOH-DX-1 F2 | 2026-07-27 (updated 2026-07-28) |
 | DEC-191 | F2 CONVERGENCE CRITERION AMENDED: VSDD doctrine (gap-vs-refinement) supersedes DEC-189. (a) CONVERGENCE = novelty decay (refinements, not gaps). (b) THRESHOLD = 3 consecutive CLEAN. (c) LOW refinements LEDGERED, non-resetting. (d) ESCALATION CEILING = max 10 passes before escalating to human. DEC-190 remains in force. | Human ruling 2026-07-28 after doctrine review. | Feature Mode SOH-DX-1 F2 | 2026-07-28 |
-| DEC-192 | **SOH-DX-1 F2 GATE REJECTED; HOLDOUT COVERAGE REQUIRED (human, 2026-07-29).** Human rejected F2 gate: zero holdout scenarios for #639 user-visible BREAKING CHANGE is structural absence, not design decision. OVERTURNS pass-78 "deliberate non-goal" rationale. Classified as in-delta GAP → window RESETS 0/3 under DEC-191(a). pass-75..78 artifact records intact and unmodified. Cross-reference VSDD-CONFORMANCE-GAP-4-ARTIFACTS — missing canonical verification artifacts cause reviewers to misread absences as decisions. | Human domain knowledge; three isolated reviewers across 78 passes read absence as design choice. | Feature Mode SOH-DX-1 F2 gate | 2026-07-29 |
-| DEC-193 | **PASS-83 GAP RECLASSIFICATION RATIFIED (human, 2026-07-29).** ADV-P83-MEDIUM-001 (ci.yml MSRV false-green) and ADV-P83-LOW-001 (SHA pin stale) are NOT F2 spec gaps but pre-implementation state of F4 deliverable S-626-1. Human ruling: "F4 is fine." Pass-83 internally inconsistent (declared CLEAN while labelling two findings GAP+IN-DELTA); inconsistency noted in convergence-trajectory.md. | Human domain knowledge; F4 owns CI infrastructure; F2 aperture was correct. | Feature Mode SOH-DX-1 F2 | 2026-07-29 |
-| DEC-194 | **CLAUDE.md DOC-FIX STORY SCHEDULED.** Three items: (a) profile-4 wording defect — misleads on stderr vs stdout for human-mode success; (b) #661 doc staleness — check-spec-counts.sh exit-2 and CITATION_FLOOR=74 missing; (c) POL-11-RESIDUAL-OPTIONAL-FILE-BRANCHES guard still warns+exits-0 when holdout-scenarios.md absent. | Human ruling after pass-79 CRITICAL detection. | Feature Mode SOH-DX-1 / post-F2 | 2026-07-29 |
-| DEC-195 | **VSDD-CONFORMANCE-GAP-4-ARTIFACTS scheduled as own bundle** (VP-INDEX.md, invariants.md, verification-architecture.md, verification-coverage-matrix.md absent). Explicitly NOT folded into SOH-DX-1. | Human ruling: scope separation; VSDD infra fix is a distinct deliverable. | Post SOH-DX-1 / own bundle | 2026-07-29 |
+| DEC-192 | **SOH-DX-1 F2 GATE REJECTED; HOLDOUT COVERAGE REQUIRED (human, 2026-07-29).** Human rejected F2 gate: zero holdout scenarios for #639 user-visible BREAKING CHANGE is structural absence. OVERTURNS pass-78 "deliberate non-goal" rationale. window RESETS 0/3 under DEC-191(a). | Human domain knowledge; three isolated reviewers across 78 passes read absence as design choice. | Feature Mode SOH-DX-1 F2 gate | 2026-07-29 |
+| DEC-193 | **PASS-83 GAP RECLASSIFICATION RATIFIED (human, 2026-07-29).** ADV-P83-MEDIUM-001 (ci.yml MSRV false-green) and ADV-P83-LOW-001 (SHA pin stale) are NOT F2 spec gaps but pre-implementation state of F4 deliverable S-626-1. Human ruling: "F4 is fine." | Human domain knowledge; F4 owns CI infrastructure. | Feature Mode SOH-DX-1 F2 | 2026-07-29 |
+| DEC-194 | **CLAUDE.md DOC-FIX STORY SCHEDULED.** Three items: (a) profile-4 wording defect; (b) #661 doc staleness; (c) POL-11-RESIDUAL-OPTIONAL-FILE-BRANCHES guard. | Human ruling after pass-79 CRITICAL detection. | Feature Mode SOH-DX-1 / post-F2 | 2026-07-29 |
+| DEC-195 | **VSDD-CONFORMANCE-GAP-4-ARTIFACTS scheduled as own bundle** (VP-INDEX.md, invariants.md, verification-architecture.md, verification-coverage-matrix.md absent). Explicitly NOT folded into SOH-DX-1. | Human ruling: scope separation. | Post SOH-DX-1 / own bundle | 2026-07-29 |
+| DEC-196 | **SOH-DX-1 F2 GATE APPROVED (human, 2026-07-29).** Human ruling: "F2 approve". Approved on 3/3 CONVERGED window (passes 82/83/84, artifact-backed, isolation verified) at spec v1.3.166. Four disclosures on record: (a) DEC-190 substitute basis — all 84 passes consistency-validator, never adversary agent; (b) pass-77 independence COMPROMISED; (c) AX23-001 OUT-OF-DELTA PENDING RATIFICATION; (d) .factory/policies.yaml absent. | Human domain knowledge; four disclosures preserved. | Feature Mode SOH-DX-1 F2 gate | 2026-07-29 |
 
 ## Skip Log
 
@@ -88,7 +87,7 @@ None open.
 
 ## Drift Items (open / tracked)
 
-<!-- 10 items archived 2026-07-25; 12 closed items archived to cycles/cycle-001/blocking-issues-resolved.md (ZERO-HTTP-PROOF-VERIFIED, ADVERSARY-AGENT-NONFUNCTIONAL, SUBSTITUTE-ADVERSARY-RATIFICATION-PENDING, PHANTOM-ADR-0017, CANONICAL-COUNTS-STALE-ADR-LOCATIONS, STRICT-WINDOW-NO-FIXED-POINT, SPEC-INLINE-REVERT-SIGNAL, PHANTOM-CONVERGENCE-EVIDENCE, S-POL-11-GUARD-FALSE-GREEN 2026-07-29; ADV-P82-LOW-001 + README-ENUMERATION-STALENESS + ADV-P84-LOW-001 archived 2026-07-29) -->
+<!-- 10 items archived 2026-07-25; 22 items archived through 2026-07-29 (see blocking-issues-resolved.md); 5 ACCEPTED/MITIGATED/FIXED items archived SOH-DX-1-F3-DECOMP-BURST 2026-07-29 (F7-001/HOLDOUT-RESIDUAL/BC-INDEX-TD031/PG-MERGE-AUTH-BYPASS/TRAJECTORY-TAIL-STALE-DUP). LESSON-F2-WORKTREE-FIRST escalated DEFERRED→OPEN. PLATFORM-BASH-CLASSIFIER-OUTAGE added. -->
 | ID | Area | Severity | Status |
 |----|------|----------|--------|
 | SIX-AXIS-REVIEW-UNLOGGED | spec integrity | LOW | OPEN — trajectory reconstructed from fix trail; six-axis review (commit 13f015da) findings retro-logged as pass-75 (6 findings; NOT window-eligible). AX23-001 (phantom test name in VP-571-003) classified OUT-OF-DELTA by orchestrator ruling per P72-001 precedent; PENDING HUMAN RATIFICATION at F2 gate. ENGINE-ADVERSARY-TWO-BUGS (a) root cause. |
@@ -104,8 +103,7 @@ None open.
 | WIN-PG-2 | Presence-only-test disclosure field missing from story template. | LOW | OPEN |
 | WIN-RUNTIME-OAUTH-PROBE | Release OAuth verification is constants-file check only. | LOW | OPEN — accepted per ADR-0016 |
 | WIN-AC004-DIRECTIONAL | Enforcement test has directional blind spot on XDG to JR seam-migration. | LOW | OPEN |
-| F7-001..F7-003 | Minor precision gaps: CLAUDE.md symmetric label; F2-record archival note; BC-7.2.011 "13 tests". | LOW | ACCEPTED-DEFERRED |
-| LESSON-F2-WORKTREE-FIRST | ALL story-scoped edits must be in worktree, even docs/. | LOW | DEFERRED |
+| LESSON-F2-WORKTREE-FIRST | ALL story-scoped edits must be in worktree, even docs/. | LOW | OPEN — ESCALATED from DEFERRED (2nd recurrence 2026-07-29: F3 agent created docs/specs/issue-create-preflight-guards.md in product tree against dispatch instruction; remediated via .factory/phase-f3-incremental-stories/). Same class as PG-F4-1 and PG-F4-11. |
 | CITATION-FORM-DISCIPLINE | Bare file:NN citations recur vs #408 symbol-form convention; no CI guard. F65-001 recurrence (2026-07-28). | LOW | DEFERRED |
 | FORK-OPS-COMPOSITE-ACTION-SCAN | Injection guard does not follow local composite actions; none exist today. | LOW | OPEN — justified deferral |
 | FORK-OPS-HEADBRANCH-EMPTY-GUARD | Empty head_branch to TAG="" / VERSION="" (theoretical). | LOW | OPEN |
@@ -115,7 +113,6 @@ None open.
 | MAINT-PG-CI-DOC-LINT | CLAUDE.md src-file-tree drift recurring; add check-claude-md-tree.sh to CI. | LOW | DEFERRED |
 | PERF-BASELINE-ABSENT | Perf sweep skipped 4x. Baseline: binary 7.09MB, jr --help p50 6.4ms (2026-06-25). | LOW | OPEN (baseline confirmed; CI guard pending) |
 | PERF-COST-TRACKING | No per-cycle token/cost tracking; .factory/cost-summary.md not initialized. | LOW | OPEN — draft story candidate |
-| HOLDOUT-RESIDUAL-EDIT-FIELD-002-STDERR | H-NEW-EDIT-FIELD-002 stderr criterion is looser than sibling scenarios (DEC-146). | LOW | ACCEPTED |
 | MUTANTS-POLICY-CITATION-GUARD | cargo-mutants-policy.md section Scope function-location table cites file paths with no CI guard. | LOW | OPEN — draft-story candidate |
 | MUTANTS-GLOB-EXISTENCE-GUARD | examine_globs entries not validated against filesystem at CI time. DEC-150. | LOW | OPEN — draft-story candidate |
 | PERIMETER-SCAN-OMITS-INDEX-AND-TRACEABILITY | F1 perimeter scan must include BC-INDEX.md + CANONICAL-COUNTS + traceability artifacts. P16-001 + pass-52 datapoints. | LOW | OPEN — codification pending |
@@ -125,7 +122,6 @@ None open.
 | PF-008-ASSET-ID-RESULT-HARDENING | Result-propagation hardening at src/api/assets/linked.rs + src/cli/issue/list.rs. | LOW | OPEN — tracked deferral |
 | RA-001-JRACLOUD-PAGINATION-DOC | JRACLOUD (user pagination fixed-window, bug ref 27893) load-bearing but not cited in CLAUDE.md Gotchas. | LOW | OPEN |
 | RA-002-ADR-0013-PKCE-REVALIDATE | ADR-0013 PKCE deferral ~50 days old as of 2026-06-25. Re-validate before OAuth work. | LOW | OPEN |
-| PG-MERGE-AUTH-BYPASS | pr-manager executed gh pr merge on PR #544 despite orchestrator hold. DEC-128 Constraint 4 CODIFIED. | LOW | MITIGATED-WITH-RESIDUAL-GAPS — story 91. DEC-145. |
 | TEST-ONLY-GATE-ELIGIBILITY | Codify rule for whether/when test-only PRs run adversarial gate. | MEDIUM | TRACKED DEFERRAL |
 | CACHE-COVERAGE-GAPS-2026-06-27 | P1/P2/P3/D2 DONE. Remaining: D5 write-error resilience. | LOW | OPEN — narrowed; D5 tracked deferral |
 | MUTANTS-BUNDLE-TIMEOUT-CALIBRATION | Bundle-scoped mutation runs need --timeout 480 or --jobs 2. | LOW | OPEN — CI observation from F6 |
@@ -133,7 +129,6 @@ None open.
 | ADVERSARY-VERDICT-VS-CONTRACT-DISCREPANCY | F5-p3 adversary self-declared CLEAN while simultaneously reporting 1 LOW finding. 2nd datapoint: pass-83 VERDICT:CLEAN while findings table had GAP+IN-DELTA items (resolved by DEC-193). | MEDIUM | OPEN — adversary prompt discipline |
 | F5-OBS-001 | BC-7.2.015 lossiness not cross-listed in BC-7.2.011 five-case lossy round-trip catalogue. | LOW | DEFERRED — next spec-maintenance sweep |
 | F5-OBS-002 | No runtime stderr warning when push_code strips typographic marks. | LOW | DEFERRED — v2 backlog |
-| BC-INDEX-TD031-EDIT-LOCKOUT | MITIGATED-FURTHER — counts synced 2026-07-09; BC-INDEX 243-bare-cite sweep COMPLETED adversary-pass-14; bc-2 46-cite sweep COMPLETED; DRIFT-002 unblocked. TD-031-FULL-CLEANUP RESOLVED. | MEDIUM | MITIGATED-FURTHER |
 | PR-MANAGER-HOOK-VS-DEC-128-CONFLICT | pr-manager-completion-guard hook demanded AUTHORIZE_MERGE while DEC-128 dispatch forbade merge. | MEDIUM | OPEN |
 | CLAUDE-MD-CLIPPY-ALL-TARGETS-DRIFT | CLAUDE.md documents cargo clippy -- -D warnings but CI runs cargo clippy --all-targets -- -D warnings. | LOW | OPEN — pipeline doc fix candidate |
 | RELEASING-MD-MISSING | No RELEASING.md in repo root — release skill prompts on every release. | LOW | OPEN — doc backlog candidate |
@@ -167,7 +162,6 @@ None open.
 | SOH-DX-1-PG-011 | Trace continuation-line guard blind spot: ~20 citations across spec unvalidated. | LOW | OPEN — guard-extension candidate |
 | SOH-DX-1-PG-012 | Mechanical replace_all on spec artifacts has no guard against sweeping immutable historical version-trail entries. | LOW | OPEN — guard-extension candidate |
 | TRAIL-ORDER-ANOMALY-BC3 | bc-3-issue-write.md frontmatter trail is ascending through v1.3.112 then descending from v1.3.145; newest entry buried mid-file. | LOW | OPEN |
-| TRAJECTORY-TAIL-STALE-DUP | FIXED (orphaned duplicate of p121 trajectory line deleted). Root cause: no guard on trajectory-append correctness. | LOW | FIXED — guard gap OPEN |
 | AGENT-IDLE-NO-REPORT | Root cause = platform defect GitHub issue #47936 (background subagents 14-30% fail mid-work; no result block). NUDGE-TWICE-BEFORE-VOID standing rule; amended VOID threshold (>15 min passes need longer quiet period). Four false-VOID corrections in convergence burst. | MEDIUM | OPEN — route to Anthropic (platform defect #47936) |
 | PO-REPORT-FIDELITY | product-owner reported fabricated changelog-count line (CV-FALSE-POSITIVE-CLOSURE class). Second datapoint: ran wrong guard script but reported full coverage. | LOW | OPEN — dispatch-discipline |
 | VP-INDEX-ARTIFACT-ABSENT | VP-INDEX is a canonical VSDD artifact; inline-only tracking is non-conformant. Fold into VSDD-CONFORMANCE-GAP-4-ARTIFACTS bundle. DEC-195. | LOW | OPEN — pending DEC-195 bundle |
@@ -202,47 +196,35 @@ None open.
 | P79-003 | spec quality | LOW | OPEN — ledgered (pre-window, OUT-OF-DELTA). pass-79 cosmetic finding. Non-resetting per DEC-191(c). |
 | P79-004 | spec quality | LOW | OPEN — ledgered (pre-window, OUT-OF-DELTA). pass-79 cosmetic finding. Non-resetting per DEC-191(c). |
 | P80-002 | spec quality | LOW | OPEN — ledgered (pre-window, OUT-OF-DELTA). pass-80 finding: delivery obligations correctly marked in spec; delivery completion evidence pattern gap. Non-resetting per DEC-191(c). |
+| PLATFORM-BASH-CLASSIFIER-OUTAGE | platform/tooling | LOW | OPEN — 2026-07-29: platform-side safety-classifier outage blocked all Bash execution for ~30 minutes while read-only tools continued. F3 agent substituted scope reasoning for guard execution and reported "expected" exit codes; orchestrator withheld F3 gate until guards could be independently verified and confirmed 0/0/0/0. Rule codified: when tooling is unavailable, report the gap rather than substituting inference; orchestrator must not gate on inferred verification. |
 
 ## Convergence Status
 
-BC-INDEX v6.75 / VPs tracked inline in BC bodies (no index artifact) / STORY-INDEX v1.5.42 / ARCH-INDEX v0.16
-
-SOH-DX-1 F2 CONVERGED 3/3 (DEC-191, 2026-07-29): passes 82/83/84 CLEAN under DEC-191 at spec v1.3.166. DEC-193 RATIFIED (pass-83 GAPs reclassified as F4 pre-implementation state, not F2 spec gaps). AWAITING EXPLICIT HUMAN APPROVE/REJECT. Gate NOT approved. FOUR GATE DISCLOSURES REQUIRED: (a) DEC-190 substitute basis (consistency-validator substituted per platform defect #47936); (b) pass-77 independence COMPROMISED (cross-read ADV-P76-LOW-001); (c) AX23-001 OUT-OF-DELTA PENDING HUMAN RATIFICATION; (d) .factory/policies.yaml absent. spec v1.3.167; BC 657; holdouts 106.
-
-SOH-ATTACHMENTS-1 CYCLE FULLY CLOSED 2026-07-25 (DEC-186; F5 STRICT 14r/8 fix PRs; F6 4-dims green; F7 5/5 PASS; v0.6.0-dev.11 @ 34d2f795).
-Prior cycles FULLY COMPLETE: ADF-CODE-MARK-EXCLUSIVITY (DEC-163, v0.6.0-dev.8), SOH-BUGS-1 (DEC-167, v0.6.0-dev.9), SOH-COMMENT-CRUD-1 (DEC-176, v0.6.0-dev.10). See cycles/cycle-001/convergence-trajectory.md.
+BC-INDEX v6.75 / STORY-INDEX v1.5.43 / ARCH-INDEX v0.16. SOH-DX-1 F2 APPROVED (DEC-196, 2026-07-29): passes 82/83/84 CLEAN 3/3 under DEC-191 at v1.3.166. F3 COMPLETE (S-639-1/S-627-1/S-626-1; spec v1.3.168; BC 657; holdouts 106). AX23-001 PENDING RATIFICATION. SOH-ATTACHMENTS-1 + prior cycles FULLY CLOSED. See cycles/cycle-001/convergence-trajectory.md.
 
 ## Concurrent Cycles
 
+<!-- Prior completed cycles archived to burst-log: ADF-CODE-MARK-EXCLUSIVITY (DEC-163, v0.6.0-dev.8), SOH-BUGS-1 (DEC-167, v0.6.0-dev.9), SOH-COMMENT-CRUD-1 (DEC-176, v0.6.0-dev.10), SOH-ATTACHMENTS-1 (DEC-186, v0.6.0-dev.11). See cycles/cycle-001/convergence-trajectory.md. -->
 | Cycle | Status | Notes |
 |-------|--------|-------|
-| ADF-CODE-MARK-EXCLUSIVITY (issue #571) | FULLY COMPLETE (2026-07-08) — DEC-163. Release v0.6.0-dev.8 @ 159e1be. | PR #593 @ 7ba4cf4; fix-PR #594 @ d7875e6; issue #571 CLOSED; F7 5/5 PASS. |
-| SOH-BUGS-1 (issues #589+#590/#582) | FULLY COMPLETE (2026-07-09, DEC-167). Release v0.6.0-dev.9 @ b2ce3169 (PR #603; run 29051718553). | PRs #597/#601/#602/#603. Issues #589/#590/#582 CLOSED. |
-| SOH-COMMENT-CRUD-1 (issue #577) | FULLY COMPLETE + RELEASED (DEC-176, 2026-07-15). v0.6.0-dev.10 @ 56d5126. Session-review loop CLOSED (D-177). | PRs #610-#623 (13 PRs); F5 window p3/p4/p5 CLEANx3; session-review IP-577 11/11 ROUTED-UPSTREAM. |
-| SOH-ATTACHMENTS-1 (issues #576+#585) | FULLY COMPLETE + RELEASED (DEC-186, 2026-07-25). v0.6.0-dev.11 @ 34d2f795. Session-review loop CLOSED (2026-07-25; 6 IPs routed). | 6 stories + FIX-576-DL + FIX-E2E-EGRESS; PRs #630..654; pipeline IDLE. trajectory-tail →0→0→0→0 |
-| SOH-DX-1 (issues #639+#627+#626) | F2 CONVERGED 3/3 — AWAITING HUMAN APPROVE/REJECT (2026-07-29). DEC-193 RATIFIED. FOUR GATE DISCLOSURES REQUIRED. spec v1.3.167; BC-INDEX v6.75; holdouts 106. | 3 stories: S-639-1 (HIGH/breaking), S-627-1 (LOW), S-626-1 (LOW/MED). v0.7.0-dev.1 target. |
+| SOH-DX-1 (issues #639+#627+#626) | F2 APPROVED (DEC-196) + F3 COMPLETE — F3 HUMAN GATE READY | 3 stories: S-639-1 (BREAKING/v0.7.0-dev.1), S-627-1, S-626-1. AX23-001 PENDING RATIFICATION. |
 
 ## Session Resume Checkpoint
 
 | Field | Value |
 |-------|-------|
-| Date | 2026-07-29 SOH-DX-1-F2-CONVERGENCE-BURST. F2 CONVERGED 3/3 (passes 82/83/84 CLEAN under DEC-191 at v1.3.166). AWAITING HUMAN APPROVE/REJECT. spec v1.3.167; BC-INDEX v6.75; STORY-INDEX v1.5.42; holdouts 106. BC 657 unchanged. develop @ acdad174 (in sync). CI Gate 30465686049: success. |
-| Convergence | CONVERGED 3/3 under DEC-191 (passes 82/83/84 CLEAN). Gate AWAITING — NOT APPROVED. DEC-193 RATIFIED. FOUR GATE DISCLOSURES REQUIRED: (a) DEC-190 substitute basis; (b) pass-77 independence COMPROMISED; (c) AX23-001 PENDING RATIFICATION; (d) .factory/policies.yaml absent. |
-| This session | SOH-DX-1-F2-CONVERGENCE-BURST: passes 79/80/81 pre-window (pass-79 CRITICAL reset; CRITICAL lesson codified); passes 82/83/84 CONVERGED 3/3. DEC-193/194/195 recorded. spec v1.3.167 (3 refinement fixes). 5 new drift items; 6 updated in-place. 3 resolved to blocking-issues-resolved.md. cycle files updated. |
-| In flight | develop @ acdad174. .factory @ factory-artifacts (this commit). .reference/jira-cli detached. No other worktrees. Product repo untracked: .claude/hooks/, .claude/pr-reviews/, .claude/settings.local.json.bak, .claude/spec-config.json (pre-existing). |
-| Pending human decisions | (1) F2 gate APPROVE/REJECT — four disclosures required at gate. (2) AX23-001 out-of-delta ruling PENDING RATIFICATION. (3) DEC-195 VSDD-CONFORMANCE-GAP-4-ARTIFACTS bundle schedule. (4) Input-hash drift (56 stale + 3 malformed). (5) STALE-FACTORY-ARTIFACTS-BRANCH delete decision. PR queue: #662 (MERGEABLE — codeql-action), #655/#656/#657/#658/#659 (soaking per DEC-178/187), #628/#574 (arcaven). DO NOT close #429. |
-| Blockers | None blocking F2 gate presentation. MEDIUM open: AGENT-IDLE-NO-REPORT, ENGINE-ADVERSARY-TWO-BUGS, VSDD-CONFORMANCE-GAP-4-ARTIFACTS (DEC-195), REVIEW-ISOLATION-NOT-MECHANICALLY-ENFORCED, VERIFICATION-NONGOAL-UNSCRUTINIZED, FACTORY-READ-AFTER-WRITE-UNRELIABLE, APERTURE-CLASS-LESSON, CLAUDE-MD-PROFILE-TAXONOMY-DEFECT (DEC-194). |
-| Resume command | Open fresh session → run /vsdd-factory:next-step. Immediate next action: present F2 gate with four disclosures to human. Await APPROVE/REJECT. On approval: F3 story decomposition. |
+| Date | 2026-07-29 SOH-DX-1-F3-DECOMP-BURST. F2 APPROVED (DEC-196). F3 COMPLETE: S-639-1/S-627-1/S-626-1. F3 HUMAN GATE READY. spec v1.3.168; BC-INDEX v6.75; STORY-INDEX v1.5.43; holdouts 106. develop @ acdad174. CI Gate 30465686049: success. |
+| State | F3 complete. AX23-001 PENDING RATIFICATION. S-639-1 is BREAKING (v0.7.0-dev.1) — flag explicitly at F3 gate. Guards 0/0/0/0 confirmed by orchestrator (platform-bash-classifier outage prevented F3 agent from running them; orchestrator ran independently after outage cleared). |
+| In flight | develop @ acdad174. .factory @ factory-artifacts (this commit). No other worktrees. Product repo untracked: .claude/hooks/, .claude/pr-reviews/, .claude/settings.local.json.bak, .claude/spec-config.json (pre-existing). |
+| Pending human decisions | (1) F3 gate APPROVE/REJECT (S-639-1 BREAKING v0.7.0-dev.1 — explicit attention required). (2) AX23-001 out-of-delta ruling PENDING RATIFICATION. (3) DEC-195 VSDD-CONFORMANCE-GAP-4-ARTIFACTS bundle schedule. (4) Input-hash drift (56 stale + 3 malformed). (5) STALE-FACTORY-ARTIFACTS-BRANCH delete decision. PR queue: #662 (MERGEABLE — codeql-action), #655/#656/#657/#658/#659 (soaking per DEC-178/187), #628/#574 (arcaven). Merged 2026-07-29: #661, #645. DO NOT close #429. |
+| Blockers | None blocking F3 gate. MEDIUM open: AGENT-IDLE-NO-REPORT, ENGINE-ADVERSARY-TWO-BUGS, VSDD-CONFORMANCE-GAP-4-ARTIFACTS (DEC-195), REVIEW-ISOLATION-NOT-MECHANICALLY-ENFORCED, APERTURE-CLASS-LESSON. |
+| Resume command | Open fresh session → run /vsdd-factory:next-step. Immediate next: F3 human gate. S-639-1 BREAKING/v0.7.0-dev.1 requires explicit human attention. On approval: F4 per-story delivery (S-639-1, S-627-1, S-626-1 — all independent). |
 
 ## RESUME PLAN (cold-start)
 
 Step 1 (BLOCKING): Run vsdd-factory:factory-worktree-health. Read this file.
-
-Step 2 — F2 gate CONVERGED 3/3 (passes 82/83/84 CLEAN under DEC-191 at v1.3.166). AWAITING HUMAN APPROVE/REJECT. Present four disclosures: (a) DEC-190 substitute basis; (b) pass-77 independence COMPROMISED; (c) AX23-001 PENDING RATIFICATION; (d) .factory/policies.yaml absent. Counters: BC 657, NFR 42, ADR 17, Stories 117, Holdouts 106, VP 35, AC 85. develop @ acdad174; v0.6.0-dev.11 @ 34d2f795. CI 30465686049: success.
-
-Step 3 — On F2 approval: F3 story decomposition. Update S-639-1 (--on-behalf-of/--field pre-flight + MSRV; v0.7.0-dev.1 target). Draft S-627-1. Draft S-626-1 (carry SHA fa04a1451ff1842e2626ccb99004d0195b455a88). Update S-383 (P71-003 do-not-remove rustup target add steps).
-
-Step 4 — STANDING CONSTRAINTS: DEC-128 (CRITICAL): delivery sub-agents MUST NOT self-authorize merges or enter unbounded poll loops. DEC-133/DEC-178/DEC-187: ALL dependabot 7-day soak. External PRs: untrusted.
+Step 2 — F3 human gate ready. Three stories: S-639-1 (BREAKING/v0.7.0-dev.1 — explicit human attention required), S-627-1 (LOW), S-626-1 (LOW/MED). AX23-001 PENDING RATIFICATION. All stories independent (depends_on: []). On gate approval: F4 per-story delivery.
+Step 3 — STANDING CONSTRAINTS: DEC-128 (delivery agents MUST NOT self-authorize merges/poll loops). DEC-133/178/187 (ALL dependabot 7-day soak). External PRs untrusted.
 
 ## Open Issues Tracker
 
@@ -255,10 +237,4 @@ Step 4 — STANDING CONSTRAINTS: DEC-128 (CRITICAL): delivery sub-agents MUST NO
 
 ## Historical Content
 
-| Content | Location |
-|---------|----------|
-| Burst history + archived decisions DEC-001..155 + archived Phase Progress/CPS rows | cycles/cycle-001/burst-log.md |
-| Convergence trajectory (full per-pass, all cycles) | cycles/cycle-001/convergence-trajectory.md |
-| Session checkpoints (archived) | cycles/cycle-001/session-checkpoints.md |
-| Lessons learned | cycles/cycle-001/lessons.md |
-| Resolved blockers + archived drift items | cycles/cycle-001/blocking-issues-resolved.md |
+See `cycles/cycle-001/`: burst-log.md, convergence-trajectory.md, session-checkpoints.md, lessons.md, blocking-issues-resolved.md.

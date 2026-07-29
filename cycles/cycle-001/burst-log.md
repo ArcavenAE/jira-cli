@@ -7703,3 +7703,64 @@ F2 gate: CONVERGED 3/3, AWAITING EXPLICIT HUMAN APPROVE/REJECT. NOT yet approved
 
 **trajectory-tail:** →1→2→4→2 (passes 79→82→83→84; length=4).
 
+
+---
+
+## SOH-DX-1-F3-DECOMP-BURST (2026-07-29) — F2 Gate Approval + F3 Story Decomposition
+
+**Burst type:** F3 story decomposition + F2 gate recording + compaction
+**Spec version:** v1.3.167→v1.3.168
+**develop HEAD:** acdad174 (unchanged)
+
+### Archived Phase Progress Rows (compacted from STATE.md)
+
+| Phase | Status | Completed | Gate | Notes | Finding Progression |
+|-------|--------|-----------|------|-------|---------------------|
+| **SOH-DX-1 F2 spec fix burst v1.3.167 (2026-07-29):** Three refinement fixes per DEC-191(c): ADV-P82-LOW-001 (Expected-block citation relocated), README enumeration updated (both bc-3 and bc-X.13 sites), ADV-P84-LOW-001 (delta-analysis.md §6 updated with 3 additional delivery files). No BC changes; holdouts unchanged at 106. All four guard scripts exit 0 post-fix. | FIX BURST COMPLETE | 2026-07-29 | DEC-191(c) ledgered refinements | spec v1.3.167; BC unchanged 657. | refinements only |
+| **SOH-DX-1 F2 adversary passes 79-84 (2026-07-29):** pass-79 CRITICAL (H-NEW-PREFLIGHT-004 permanently unsatisfiable; v1.3.165→v1.3.166 fix; window reset 0/3). passes 80/81 pre-window (pass-81 endorsed CRITICAL — detection-asymmetry lesson). passes 82/83/84 at v1.3.166: CLEAN 3/3 under DEC-191. DEC-193: pass-83 GAPs reclassified (F4/S-626-1). spec v1.3.167 (3 fixes). CONVERGED 3/3. AWAITING GATE APPROVE/REJECT. | CONVERGED 3/3 AWAITING | 2026-07-29 | DEC-193/194/195 recorded | spec v1.3.167; BC-INDEX v6.75; holdouts 106. | →1→2→4→2 |
+
+### Archived Current Phase Steps Row
+
+| Step | Agent | Status | Output |
+|------|-------|--------|--------|
+| **SOH-DX-1-F2-CONVERGENCE-BURST (2026-07-29): passes 79/80/81 pre-window; 82/83/84 CONVERGED 3/3 under DEC-191 on v1.3.166; DEC-193/194/195; spec v1.3.167 (3 fixes); 5 new drift items; 6 updated in-place; 3 resolved to blocking-issues-resolved.md; convergence-trajectory.md/lessons.md/blocking-issues-resolved.md/burst-log.md updated; CRITICAL detection-asymmetry lesson codified.** | state-manager | COMPLETED | spec v1.3.167; BC-INDEX v6.75; factory-artifacts committed and pushed to origin/factory-artifacts. |
+
+### Summary
+
+F2 gate APPROVED (DEC-196, human "F2 approve", 2026-07-29). Four disclosures on record: (a) DEC-190 substitute basis — all 84 passes were consistency-validator, never the adversary agent; (b) pass-77 independence COMPROMISED; (c) AX23-001 out-of-delta PENDING RATIFICATION; (d) .factory/policies.yaml absent.
+
+F3 story decomposition: three stories created. S-639-1 corrected from prior "update" characterization — it is a new story (21 ACs; BREAKING pre-flight exit-64 for --field and --on-behalf-of on `jr issue create` without --request-type; BC-3.8.012/BC-3.8.013; v0.7.0-dev.1; H-NEW-PREFLIGHT-001..006). S-627-1 (6 ACs; check-bc-no-numeric-test-counts.sh regex fix + two-phase delivery). S-626-1 (7 ACs; AC-1 BLOCKING SHA gate; dtolnay/rust-toolchain pin c93f4f9c→fa04a1451ff1842e2626ccb99004d0195b455a88). S-383 unchanged (already status: completed, contract_superseded_by: "SOH-DX-1 (DEC-188) / S-639-1"). Dependency graph: all three independent (depends_on: [], blocks: []).
+
+STORY-INDEX v1.5.42→v1.5.43; total_stories 117→120; feature-followup 82→85. spec-changelog [1.3.168] prepended (0 new BCs; total 657 unchanged; holdouts 106 unchanged).
+
+Boundary violation and remediation: F3 story-authoring agent created `docs/specs/issue-create-preflight-guards.md` in the product tree (against dispatch instruction). File was untracked (nothing committed). Relocated to `.factory/phase-f3-incremental-stories/S-639-1-issue-create-preflight-guards-F4-draft.md` with prepended header marking it NOT the delivered artifact. Product tree verified clean. LESSON-F2-WORKTREE-FIRST escalated DEFERRED→OPEN (2nd recurrence).
+
+Platform-bash-classifier outage (2026-07-29): blocked all Bash execution for ~30 minutes. F3 agent substituted scope reasoning for guard execution and reported "expected" exit codes. Orchestrator withheld F3 gate until guards could be independently run. Guards confirmed 0/0/0/0. New drift item PLATFORM-BASH-CLASSIFIER-OUTAGE added.
+
+Compaction: archived 2 Phase Progress rows, 1 CPS row, 4 completed Concurrent Cycles rows, Historical Content table, 5 ACCEPTED/MITIGATED/FIXED drift items. STATE.md: 264→239 lines.
+
+### Details
+
+| Agent | Task | Output |
+|-------|------|--------|
+| f3-stories (F3 story-authoring agent) | Create S-639-1 / S-627-1 / S-626-1 | Three story files written; STORY-INDEX updated to v1.5.43 (120 stories); spec-changelog [1.3.168] prepended; boundary violation (product-tree doc) created untracked |
+| relocate-f4-draft | Relocate product-tree doc to .factory/ | S-639-1-issue-create-preflight-guards-F4-draft.md moved to .factory/phase-f3-incremental-stories/ with NOT-DELIVERED header |
+| state-manager | STATE.md update + F2 gate recording + compaction | DEC-196; F3 COMPLETE; LESSON-F2-WORKTREE-FIRST OPEN; PLATFORM-BASH-CLASSIFIER-OUTAGE; 5 items archived; 264→239 lines |
+
+**Human decisions recorded:**
+- DEC-196: F2 GATE APPROVED (human "F2 approve")
+
+**Drift items archived to blocking-issues-resolved.md (5):**
+1. F7-001..F7-003 (ACCEPTED-DEFERRED)
+2. HOLDOUT-RESIDUAL-EDIT-FIELD-002-STDERR (ACCEPTED)
+3. BC-INDEX-TD031-EDIT-LOCKOUT (MITIGATED-FURTHER / TD-031-FULL-CLEANUP RESOLVED)
+4. PG-MERGE-AUTH-BYPASS (MITIGATED-WITH-RESIDUAL-GAPS — story 91 tracks residual)
+5. TRAJECTORY-TAIL-STALE-DUP (FIXED — guard gap absorbed into general guard-gap class)
+
+**New drift items (2):**
+1. PLATFORM-BASH-CLASSIFIER-OUTAGE (LOW, OPEN)
+2. LESSON-F2-WORKTREE-FIRST escalated DEFERRED→OPEN (recurrence)
+
+**Worktree state post-burst:** .factory @ factory-artifacts (this commit). develop @ acdad174 (unchanged).
+
+**trajectory-tail:** →1→2→4→2 (unchanged; F3 produced no adversary passes).

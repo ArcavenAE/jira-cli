@@ -9,6 +9,28 @@ Track all spec version changes. Most recent version first.
 
 > **Type legend:** Type classifies the SPEC document delta: MINOR = new BCs/VPs/sections; PATCH = amendments to existing bodies/ACs/ECs. Product-semver impact is recorded in the Summary line, independent of Type.
 
+## [1.3.168] - 2026-07-29
+
+### Type: PATCH
+
+### Summary
+
+SOH-DX-1 F3 story decomposition complete. Three story files created: S-639-1 (BREAKING pre-flight exit-64 promotion of --field and --on-behalf-of on `jr issue create` without --request-type; BC-3.8.012/BC-3.8.013; 21 ACs; H-NEW-PREFLIGHT-001..006; semver 0.6.x→0.7.0-dev.1; closes #639), S-627-1 (check-bc-no-numeric-test-counts.sh regex fix + --self-test seam + factory-artifacts revert of [PENDING-REVERT-S-627-1] markers at Phase 2; 6 ACs; closes #627), S-626-1 (dtolnay/rust-toolchain SHA pin replacement c93f4f9c→fa04a1451ff1842e2626ccb99004d0195b455a88 in 6 workflow files + MSRV false-green fix RUSTUP_TOOLCHAIN env + CLAUDE.md gotcha; AC-1 BLOCKING SHA verification gate; 7 ACs; closes #626). STORY-INDEX bumped v1.5.42→v1.5.43; total_stories 117→120; feature-followup 82→85. S-383 no change (already status: completed, contract_superseded_by: "SOH-DX-1 (DEC-188) / S-639-1", CONTRACT SUPERSEDED banner present). No BC bodies changed. No product source changed.
+
+### Changed
+
+- `.factory/stories/S-639-1.md` (CREATED): F3 story for issue #639 BREAKING pre-flight guard. 21 ACs. input-hash: 1a66002. breaking_change: true. H-NEW-PREFLIGHT-001..006 holdout evidence.
+- `.factory/stories/S-627-1.md` (CREATED): F3 story for issue #627 script regex fix + seam + revert. 6 ACs. input-hash: 9c044b6. Two-phase delivery constraint documented.
+- `.factory/stories/S-626-1.md` (CREATED): F3 story for issue #626 SHA pins + MSRV fix. 7 ACs. input-hash: 0c7614e. AC-1 BLOCKING SHA gate. Do-not-remove constraint for rustup target add steps.
+- `.factory/stories/STORY-INDEX.md` (MODIFIED): v1.5.42→v1.5.43; total_stories 117→120; feature-followup 82→85; 3 manifest rows appended.
+- `.factory/spec-changelog.md` (MODIFIED): [1.3.168] entry prepended.
+
+### BC Count
+
+0 new BCs. Total unchanged: **657** cumulative (BC-INDEX). Holdout count unchanged: **106**.
+
+---
+
 ## [1.3.167] - 2026-07-29
 
 ### Type: PATCH
