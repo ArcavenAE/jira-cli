@@ -1,11 +1,11 @@
 ---
 context: holdout-scenarios
 title: "Holdout Scenarios"
-total_holdouts: 100
+total_holdouts: 106
 # H-NEW-AUTH-002 registered by S-0.07 (Phase 3, 2026-05-07). Wave 0 COMPLETE.
 # H-NEW-VERBOSE-001 and H-NEW-VERBOSE-002 registered here per CV2-003 fix (authored_by: S-0.06).
-version: "1.5.8"
-last_updated: 2026-07-17
+version: "1.5.10"
+last_updated: 2026-07-29
 source_pass: 3
 trace: |
   - L2: .factory/specs/domain-spec/
@@ -27,6 +27,8 @@ trace: |
   - SOH-ATTACHMENTS-1 adversary pass-35 (2026-07-17, P35): H-NEW-ATTACHMENT-002 Expected bullet 4 tightened — "stdout or stderr contains a success message" → "stderr contains a progress/completion message" (BC-2.7.007 profile 3: nothing on stdout in human mode; P35-003); H-NEW-ATTACHMENT-004 Expected A bullet 1 tightened — "stdout/stderr contains" → "stdout contains" (BC-3.9.001 profile 4: human echo to stdout; P35-003); Status lines for both scenarios updated with P35-003 citations; holdout count unchanged (100)
   - SOH-ATTACHMENTS-1 adversary pass-36 (2026-07-17, P36): H-NEW-ATTACHMENT-004 Expected B bullet 4 tightened — "stdout/stderr references the new attachment `30002`" → "stdout references the new attachment `30002`" (BC-3.9.001 profile 4: human echo to stdout; P36-001); H-NEW-ATTACHMENT-004 Status line updated with P36-001 citation; Expected C "stdout/stderr does NOT contain" confirmed as a legitimate two-channel negative assertion — left unchanged; holdout count unchanged (100)
   - SOH-ATTACHMENTS-1 closing micro-round 1.3.77→1.3.78 (2026-07-17, P39-I3): H-NEW-ATTACHMENT-007 id 60004 fixture description corrected — on Unix backslashes are neutralized by step-4 char-scrub (`\`→`_`), not step-1 `file_name()`; assertion unchanged, satisfiable either way (P39-I3); version 1.5.7→1.5.8; holdout count unchanged (100)
+  - SOH-DX-1 adversary precision fix (2026-07-29): H-NEW-PREFLIGHT-004 Expected bullet 3 tightened — "stdout or stderr contains" → "stdout contains" (profile 4: human echo goes to stdout; lineage P35-003/P36-001); version 1.5.9→1.5.10; holdout count unchanged (106)
+  - SOH-DX-1 F2 holdout authoring (2026-07-29, #639): issue create pre-flight guards — 6 new scenarios H-NEW-PREFLIGHT-001..H-NEW-PREFLIGHT-006 (BC-3.8.012: --field alone → exit 64 zero HTTP; BC-3.8.013: --on-behalf-of alone → exit 64 zero HTTP; BC-3.8.012 combined: both flags → combined error ONE fire; BC-3.8.012+013: neither flag → exit 0 regression pin; BC-3.8.012+013: JSM path non-mis-fire; BC-3.8.012: --output json envelope); overrides F51-001 coverage-non-goal rationale per F2 gate human ruling; version 1.5.8→1.5.9; holdout count 100→106
 ---
 
 # Holdout Scenarios — jira-cli
@@ -2565,4 +2567,194 @@ If instead the `GET ?fields=attachment` returned `[]` (zero matches), the flag `
 **Status**: MUST-PASS. Pins BC-3.9.010 EC-3.9.010-4 (bulk 404 = benign-skip; 404'd AID excluded from count/ids; iteration continues) and BC-3.9.013 multi-delete 404 exception (bulk 404 ≠ exit 64; only single-AID targeted delete exits 64 on 404 per BC-3.9.008). P21-001.
 
 **BC refs**: BC-3.9.010 (primary — EC-3.9.010-4 mid-batch 404 benign-skip; JSON output shape `{"count":N,"deleted":true,"ids":[...]}`), BC-3.9.013 (multi-delete 404 exception: bulk 404 silently skipped, not exit 64), BC-3.9.008 (contrast: single-AID targeted delete exits 64 on 404 — intentionally asymmetric)
+
+---
+
+## Group 20: Issue Create Pre-flight Guards — `--field` and `--on-behalf-of` without `--request-type` (H-NEW-PREFLIGHT-001..H-NEW-PREFLIGHT-006)
+
+### H-NEW-PREFLIGHT-001: `issue create --field` without `--request-type` → exit 64 pre-flight; verbatim error; zero HTTP (MUST-PASS)
+
+**NFR source**: BC-3.8.012 (--field pre-flight guard, DEC-188, #639)
+**BC**: BC-3.8.012
+**Authored by**: SOH-DX-1 F2 (2026-07-29, #639)
+
+**Setup**:
+
+1. Wiremock at `JR_BASE_URL`. Config with valid profile at `JR_CONFIG_DIR`.
+2. Wiremock mounts `POST /rest/api/3/issue` with `.expect(0)` — this endpoint MUST NOT be called. Note: the invocation includes `--project PROJ --type Task --summary "test summary"` so that in the absence of the pre-flight guard the command would proceed to attempt a platform create; the `.expect(0)` assertion is the decisive zero-HTTP proof.
+
+**Action**: `jr issue create --project PROJ --type Task --summary "test summary" --field customfield_10015=value --no-input`
+
+**Expected (MUST-PASS)**:
+- Exit code = 64.
+- stderr contains `"--field is only valid with --request-type (JSM service-desk requests). Add --request-type <NAME> to submit a JSM request with custom fields, or drop --field to create a standard platform issue."` (verbatim error string; contains-check to tolerate the human-mode `"Error: "` renderer prefix).
+- stderr does NOT contain `"is ignored on the platform create path"` (proves old warn-and-proceed string is removed post-DEC-188).
+- stdout is empty (`stdout.trim().is_empty()`).
+- `POST /rest/api/3/issue` was NOT called (`.expect(0)` satisfied — zero HTTP).
+
+**Why hidden**: Before the pre-flight guard was added, this exact invocation (on a platform project with appropriate create stubs) would have emitted a warning on stderr and then created the issue (exit 0 + POST called). The only observable evidence that the guard is now present is: exit code 64 (not 0), the verbatim guard-error substring on stderr, and zero POST calls. A regression reverting to warn-and-proceed would exit 0 AND call the POST endpoint — both assertions fail independently.
+
+**Status**: MUST-PASS. Pins BC-3.8.012: `--field` on platform path without `--request-type` → exit 64 pre-flight; verbatim single-flag error string present; zero HTTP (`POST /rest/api/3/issue` not called). SOH-DX-1 F2 2026-07-29; overrides F51-001 coverage-non-goal per F2 gate human ruling.
+
+**BC refs**: BC-3.8.012 (primary; pre-flight `JrError::UserError` single-flag case; DEC-188, #639)
+
+---
+
+### H-NEW-PREFLIGHT-002: `issue create --on-behalf-of` without `--request-type` → exit 64 pre-flight; verbatim error; zero HTTP (MUST-PASS)
+
+**NFR source**: BC-3.8.013 (--on-behalf-of pre-flight guard, DEC-188, #639)
+**BC**: BC-3.8.013
+**Authored by**: SOH-DX-1 F2 (2026-07-29, #639)
+
+**Setup**:
+
+1. Wiremock at `JR_BASE_URL`. Config with valid profile at `JR_CONFIG_DIR`.
+2. Wiremock mounts `POST /rest/api/3/issue` with `.expect(0)` — this endpoint MUST NOT be called. Note: the invocation includes `--project PROJ --type Task --summary "test summary"` so that in the absence of the pre-flight guard the command would proceed to attempt a platform create.
+
+**Action**: `jr issue create --project PROJ --type Task --summary "test summary" --on-behalf-of user@example.com --no-input`
+
+**Expected (MUST-PASS)**:
+- Exit code = 64.
+- stderr contains `"--on-behalf-of is only valid with --request-type (JSM service-desk requests). Add --request-type <NAME> to raise a request on behalf of another user, or drop --on-behalf-of to create a standard platform issue."` (verbatim error string; contains-check to tolerate the human-mode `"Error: "` renderer prefix).
+- stderr does NOT contain `"is ignored on the platform create path"` (proves old warn-and-proceed string is removed post-DEC-188).
+- stdout is empty (`stdout.trim().is_empty()`).
+- `POST /rest/api/3/issue` was NOT called (`.expect(0)` satisfied — zero HTTP).
+
+**Why hidden**: Symmetric to H-NEW-PREFLIGHT-001 but covering the `--on-behalf-of` flag independently. Before the pre-flight guard, this invocation would have emitted a warning and proceeded to create the issue (exit 0 + POST called). The `--on-behalf-of`-only guard path has a distinct verbatim error string from the combined-flag path (governed by BC-3.8.012); this scenario pins the BC-3.8.013 single-flag string exclusively.
+
+**Status**: MUST-PASS. Pins BC-3.8.013: `--on-behalf-of` on platform path without `--request-type` → exit 64 pre-flight; verbatim single-flag error string present; zero HTTP. SOH-DX-1 F2 2026-07-29; overrides F51-001 coverage-non-goal per F2 gate human ruling.
+
+**BC refs**: BC-3.8.013 (primary; pre-flight `JrError::UserError` single-flag case; DEC-188, #639)
+
+---
+
+### H-NEW-PREFLIGHT-003: `issue create --field` AND `--on-behalf-of` together without `--request-type` → exit 64; combined error fires once, not twice; zero HTTP (MUST-PASS)
+
+**NFR source**: BC-3.8.012 (combined pre-flight guard governs when both flags present, DEC-188, #639)
+**BC**: BC-3.8.012
+**Authored by**: SOH-DX-1 F2 (2026-07-29, #639)
+
+**Setup**:
+
+1. Wiremock at `JR_BASE_URL`. Config with valid profile at `JR_CONFIG_DIR`.
+2. Wiremock mounts `POST /rest/api/3/issue` with `.expect(0)` — this endpoint MUST NOT be called.
+
+**Action**: `jr issue create --project PROJ --type Task --summary "test summary" --field customfield_10015=value --on-behalf-of user@example.com --no-input`
+
+**Expected (MUST-PASS)**:
+- Exit code = 64.
+- stderr contains `"--field and --on-behalf-of are only valid with --request-type (JSM service-desk requests). Add --request-type <NAME> to use these flags, or drop them to create a standard platform issue."` (verbatim combined error string; contains-check to tolerate the human-mode `"Error: "` renderer prefix).
+- stderr does NOT contain `"--field is only valid with --request-type"` (single-flag BC-3.8.012 string is absent — combined error fired, not the `--field`-only error; `"--field is only valid"` is non-overlapping with the combined `"--field and --on-behalf-of are only valid"`).
+- stderr does NOT contain `"--on-behalf-of is only valid with --request-type"` (single-flag BC-3.8.013 string is absent — combined error fired, not the `--on-behalf-of`-only error; `"--on-behalf-of is only valid"` is non-overlapping with the combined `"--on-behalf-of are only valid"`).
+- stderr does NOT contain `"is ignored on the platform create path"`.
+- stdout is empty (`stdout.trim().is_empty()`).
+- `POST /rest/api/3/issue` was NOT called (`.expect(0)` satisfied).
+
+**Why hidden**: When both `--field` and `--on-behalf-of` are present without `--request-type`, ONE combined error fires — not two independent single-flag errors. Before the pre-flight guard, both flags independently emitted a warning and the POST proceeded. The specific combined-error string is lexically distinct from both single-flag strings (uses "are only valid" plural and names both flags); its presence proves the combined-check guard ran. The two absent single-flag string assertions are each independently FALSIFIABLE: each has a corresponding guarded flag in the invocation, so if the wrong single-flag guard fired instead of the combined guard, the absent-string assertion would catch it.
+
+**Status**: MUST-PASS. Pins BC-3.8.012 combined-flag case: both `--field` and `--on-behalf-of` without `--request-type` → exit 64; verbatim combined-flag error string present; both single-flag strings absent (ONE error fires, not two); zero HTTP. SOH-DX-1 F2 2026-07-29; overrides F51-001 coverage-non-goal per F2 gate human ruling.
+
+**BC refs**: BC-3.8.012 (primary; combined pre-flight guard governs when both flags present; ONE error fires), BC-3.8.013 (secondary; absent single-flag string confirms combined-guard precedence over BC-3.8.013 single-flag path)
+
+---
+
+### H-NEW-PREFLIGHT-004: `issue create` without `--field` or `--on-behalf-of` → exit 0; issue created normally (BREAKING-CHANGE REGRESSION PIN) (MUST-PASS)
+
+**NFR source**: BC-3.8.012 / BC-3.8.013 (clean path: guard is CONDITIONAL on flag presence; neither flag → no guard fires)
+**BC**: BC-3.8.012
+**Authored by**: SOH-DX-1 F2 (2026-07-29, #639)
+
+**Setup**:
+
+1. Wiremock at `JR_BASE_URL`. Config with valid profile at `JR_CONFIG_DIR`.
+2. Wiremock mounts `POST /rest/api/3/issue` returning HTTP 201 with body:
+   ```json
+   {"id": "10001", "key": "PROJ-42", "self": "<JR_BASE_URL>/rest/api/3/issue/10001"}
+   ```
+3. Wiremock mounts `GET /rest/api/3/issue/PROJ-42` returning HTTP 200 with a minimal issue fixture:
+   ```json
+   {"id": "10001", "key": "PROJ-42", "self": "<JR_BASE_URL>/rest/api/3/issue/10001", "fields": {"summary": "test summary", "status": {"name": "To Do", "statusCategory": {"key": "new", "colorName": "blue-gray"}}, "issuetype": {"name": "Task"}, "project": {"key": "PROJ", "name": "Project", "id": "10000"}}}
+   ```
+
+**Action**: `jr issue create --project PROJ --type Task --summary "test summary" --no-input`
+
+**Expected (MUST-PASS)**:
+- Exit code = 0.
+- `POST /rest/api/3/issue` was called exactly once.
+- stdout contains `"PROJ-42"` (the created issue key returned by the mock; profile 4: human echo goes to stdout).
+- stderr does NOT contain `"--field is only valid with"` (guard did NOT fire for absent `--field`).
+- stderr does NOT contain `"--on-behalf-of is only valid with"` (guard did NOT fire for absent `--on-behalf-of`).
+
+**Why hidden**: This scenario pins the breaking-change regression boundary: the platform-create path MUST remain byte-for-byte unchanged when neither `--field` nor `--on-behalf-of` is supplied. If the pre-flight guard were implemented unconditionally (firing regardless of whether those flags are present), this invocation would also exit 64 and the POST would not be called. The POST call being made (once) and exit code 0 are jointly the decisive signal: a guard that fires unconditionally fails both independently.
+
+**Status**: MUST-PASS. Pins the clean-path invariant (BC-3.8.012 / BC-3.8.013): neither flag present → no guard fires; platform create proceeds normally; issue key returned; exit 0. This is the BREAKING-CHANGE REGRESSION PIN: the DEC-188 behavior change is CONDITIONAL on flag presence, NOT unconditional. SOH-DX-1 F2 2026-07-29.
+
+**BC refs**: BC-3.8.012 (clean path: flag-absent → guard does not fire), BC-3.8.013 (same clean-path invariant), BC-3.3.001 (platform issue create success path)
+
+---
+
+### H-NEW-PREFLIGHT-005: `issue create --field` and `--on-behalf-of` WITH `--request-type` (JSM path) → exit 0; guards do not mis-fire on JSM path (MUST-PASS)
+
+**NFR source**: BC-3.8.012 / BC-3.8.013 (JSM-path non-mis-fire: guards fire on platform path only, NOT when `--request-type` is present)
+**BC**: BC-3.8.012
+**Authored by**: SOH-DX-1 F2 (2026-07-29, #639)
+
+**Setup**:
+
+1. Wiremock at `JR_BASE_URL`. Config with valid profile at `JR_CONFIG_DIR`.
+2. Wiremock mounts `GET /rest/servicedeskapi/servicedesk` returning HTTP 200:
+   ```json
+   {"values": [{"id": "1", "projectKey": "HELP", "projectId": "10000", "projectName": "Help Center"}]}
+   ```
+3. Wiremock mounts `GET /rest/servicedeskapi/servicedesk/1/requesttype` returning HTTP 200:
+   ```json
+   {"isLastPage": true, "values": [{"id": "10", "name": "General Request", "description": "General support request"}]}
+   ```
+4. Wiremock mounts `POST /rest/servicedeskapi/request` with `.expect(1)` returning HTTP 201:
+   ```json
+   {"issueId": "10001", "issueKey": "HELP-1", "currentStatus": {"status": "Waiting for support"}, "_links": {"web": {"href": "<JR_BASE_URL>/browse/HELP-1"}}}
+   ```
+
+**Action**: `jr issue create --project HELP --request-type "General Request" --summary "Need help" --field priority=High --on-behalf-of user@example.com --no-input --output json`
+
+**Expected (MUST-PASS)**:
+- Exit code = 0.
+- `POST /rest/servicedeskapi/request` was called exactly once (`.expect(1)` satisfied).
+- stderr does NOT contain `"--field is only valid with"` (BC-3.8.012 single-flag guard did not fire — DISCRIMINATING: invocation carries `--field`).
+- stderr does NOT contain `"--on-behalf-of is only valid with"` (BC-3.8.013 single-flag guard did not fire — DISCRIMINATING: invocation carries `--on-behalf-of`).
+- stderr does NOT contain `"--field and --on-behalf-of are only valid with"` (combined guard did not fire — DISCRIMINATING: invocation carries both flags).
+- stdout contains `"HELP-1"` (the created JSM request issue key, returned in JSON output).
+
+**Why hidden**: The `--field` and `--on-behalf-of` pre-flight guards fire ONLY on the platform path (when `--request-type` is absent). When `--request-type` is present, the command routes to the JSM path where both flags are valid. If the guard implementation mis-fired on the JSM path (e.g., gating on flag presence without checking the `--request-type` routing condition), this invocation would exit 64 and the `POST /rest/servicedeskapi/request` would not be called, violating the `.expect(1)` assertion. Each of the three absent-error-string assertions is independently DISCRIMINATING: each has a corresponding guarded flag in the invocation, so the assertion is genuinely falsifiable.
+
+**Status**: MUST-PASS. Pins BC-3.8.012 / BC-3.8.013 JSM-path non-mis-fire: `--field` + `--on-behalf-of` + `--request-type` → exit 0; all three guard error strings absent from stderr; JSM POST called once. SOH-DX-1 F2 2026-07-29; overrides F51-001 coverage-non-goal per F2 gate human ruling.
+
+**BC refs**: BC-3.8.012 (JSM-path non-mis-fire — combined guard MUST NOT fire when `--request-type` is present), BC-3.8.013 (same JSM-path non-mis-fire — `--on-behalf-of`-only guard MUST NOT fire), BC-3.8.001 (JSM request creation via `--request-type` routes to servicedeskapi)
+
+---
+
+### H-NEW-PREFLIGHT-006: `issue create --field` without `--request-type`, `--output json` → JSON error envelope on stderr; empty stdout (MUST-PASS)
+
+**NFR source**: BC-3.8.012 (`--output json` mode: error on stderr as JSON envelope; empty stdout; DEC-188, #639)
+**BC**: BC-3.8.012
+**Authored by**: SOH-DX-1 F2 (2026-07-29, #639)
+
+**Setup**:
+
+1. Wiremock at `JR_BASE_URL`. Config with valid pre-migrated profile (`[profiles.default]` shape) at `JR_CONFIG_DIR`. Note: a pre-migrated profile config is required to prevent the one-time config-migration line from appearing on stderr alongside the JSON envelope (which would make the JSON parse fail).
+2. Wiremock mounts `POST /rest/api/3/issue` with `.expect(0)` — this endpoint MUST NOT be called.
+
+**Action**: `jr issue create --project PROJ --type Task --summary "test summary" --field customfield_10015=value --no-input --output json`
+
+**Expected (MUST-PASS)**:
+- Exit code = 64.
+- stdout is empty (`stdout.trim().is_empty()`). This is DISCRIMINATING in `--output json` mode: a successful platform create writes the created-issue JSON to stdout; the guard-absent path would populate stdout.
+- stderr, parsed as a JSON object, has: (a) an `"error"` string field containing `"--field is only valid with --request-type"`; (b) a `"code"` integer field equal to `64`. Note: key order is unspecified — parse fields individually rather than matching literal key order.
+- `POST /rest/api/3/issue` was NOT called (`.expect(0)` satisfied).
+
+**Why hidden**: With `--output json`, the error envelope goes to stderr (not stdout); stdout is reserved for data. A regression that sends the error to stdout, or that writes a success JSON shape to stdout (because the guard is absent), would be caught by the `stdout.trim().is_empty()` assertion. The `"code": 64` field in the JSON envelope is the machine-readable exit-code verification; the `"error"` field substring is the machine-readable error identity. The `stdout.trim().is_empty()` assertion is DISCRIMINATING: without the guard, the success path populates stdout with the created-issue JSON.
+
+**Status**: MUST-PASS. Pins BC-3.8.012 `--output json` mode: `--field` without `--request-type` → exit 64; stdout empty (DISCRIMINATING); stderr JSON envelope `{"error": "...", "code": 64}` with `error` containing the guard string; zero HTTP. SOH-DX-1 F2 2026-07-29; overrides F51-001 coverage-non-goal per F2 gate human ruling.
+
+**BC refs**: BC-3.8.012 (primary; `--output json` mode error envelope; DEC-188, #639), error-taxonomy.md §6 (Issue Commands; `JrError::UserError` JSON shape `{"error":"...","code":64}`)
 

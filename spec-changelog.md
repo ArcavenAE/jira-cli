@@ -9,6 +9,47 @@ Track all spec version changes. Most recent version first.
 
 > **Type legend:** Type classifies the SPEC document delta: MINOR = new BCs/VPs/sections; PATCH = amendments to existing bodies/ACs/ECs. Product-semver impact is recorded in the Summary line, independent of Type.
 
+## [1.3.165] - 2026-07-29
+
+### Type: PATCH
+
+### Summary
+
+SOH-DX-1 adversary precision fix: H-NEW-PREFLIGHT-004 positive two-channel assertion tightened ("stdout or stderr contains `PROJ-42`" → "stdout contains `PROJ-42`"). `jr issue create` uses output-channel profile 4 — human echo of the created key goes to stdout. Lineage: P35-003 (H-NEW-ATTACHMENT-002/004) and P36-001 (H-NEW-ATTACHMENT-004 Expected B). No other Group 20 scenarios had positive two-channel assertions. Holdout count unchanged at 106.
+
+### Changed
+
+- `.factory/specs/prd/holdout-scenarios.md` (MODIFIED): H-NEW-PREFLIGHT-004 Expected bullet 3 tightened; frontmatter `version: "1.5.9"→"1.5.10"`; trace bullet prepended.
+- `.factory/spec-changelog.md` (MODIFIED): [1.3.165] entry prepended.
+
+### BC Count
+
+0 new BCs. Total unchanged: 657 cumulative (BC-INDEX). Holdout count unchanged: 106.
+
+---
+
+## [1.3.164] - 2026-07-29
+
+### Type: MINOR
+
+### Summary
+
+SOH-DX-1 F2 holdout authoring (#639, HIGH, BREAKING, DEC-188): 6 new holdout scenarios (H-NEW-PREFLIGHT-001..H-NEW-PREFLIGHT-006) covering the BC-3.8.012 and BC-3.8.013 pre-flight guards added to `jr issue create`. `--field` and `--on-behalf-of` now exit 64 pre-flight (before any HTTP) when used without `--request-type`. Overrides F51-001 coverage-non-goal per F2 gate human ruling. holdout count 100 → 106; holdout-scenarios.md version 1.5.8 → 1.5.9.
+
+### Changed
+
+- `.factory/specs/prd/holdout-scenarios.md` (MODIFIED): Group 20 appended with H-NEW-PREFLIGHT-001..H-NEW-PREFLIGHT-006; frontmatter `total_holdouts: 100→106`, `version: 1.5.8→1.5.9`, `last_updated: 2026-07-17→2026-07-29`; trace entry added.
+- `.factory/specs/prd/CANONICAL-COUNTS.md` (MODIFIED): holdout total 100→106; expected enumeration updated; Group 20 entry added; Note reconciliation date and count updated.
+- `.factory/specs/prd/README.md` (MODIFIED): holdout count 100→106 in two places (Document Map table row + Supplement Index row).
+- `.factory/specs/prd/bc-3-issue-write.md` (MODIFIED): BC-3.8.012 Trace field updated with H-NEW-PREFLIGHT-001/003/004/005/006; BC-3.8.013 Trace field updated with H-NEW-PREFLIGHT-002/003/004/005; both "Note (coverage non-goal)" updated to acknowledge F2 gate human override; frontmatter v1.3.164 trail entry added; footer `_Last updated` block updated.
+- `.factory/spec-changelog.md` (MODIFIED): [1.3.164] entry prepended.
+
+### BC Count
+
+0 new BCs. Total unchanged: 657 cumulative (BC-INDEX).
+
+---
+
 ## [1.3.163] - 2026-07-28
 
 ### Type: PATCH

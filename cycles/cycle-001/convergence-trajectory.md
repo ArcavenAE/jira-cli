@@ -3644,3 +3644,30 @@ Per VSDD-CONFORMANCE-GAP-4-ARTIFACTS, this verification-adequacy aperture had NE
 **SOH-DX-1 F2 CONVERGED 3/3 under DEC-191, ARTIFACT-BACKED (2026-07-29).** Window = passes 76, 77, 78, all CLEAN, every pass with a findings artifact on disk. This is the material difference from the prior unbacked claim (passes 73/74/73b/74b).
 
 **Trajectory:** adv-72(1H-pre)→p75(6-reconstructed)→p76(1L)→p77(1L)→p78(0). trajectory-tail →1H→6→1L→1L→0. CONVERGENCE: **3/3 STRICT**. F2 HUMAN GATE READY.
+
+---
+
+## DEC-192 META-EVENT: F2 GATE REJECTED — WINDOW RESET 0/3 (2026-07-29)
+
+**Event type:** Human gate rejection — NOT a new adversary pass.
+**Date:** 2026-07-29
+**Decision:** DEC-192
+
+**Verdict:** Human REJECTED the F2 gate. The pass-78 "deliberate non-goal" rationale for zero holdout scenarios covering the #639 user-visible BREAKING CHANGE was overturned. Zero holdout scenarios for a user-visible breaking change is a structural absence (in-delta GAP), not a design decision.
+
+**Impact on convergence window:** Window RESET 0/3 under DEC-191(a). Passes 75-78 artifact records are intact and unmodified — the technical convergence (3/3 STRICT) was reached, but the gate was rejected before approval.
+
+**Remediation:**
+- Six holdout scenarios authored: H-NEW-PREFLIGHT-001..006 (Group 20; 3 MUST-PASS)
+- Holdout count: 100 → 106
+- Spec updated: v1.3.163 → v1.3.165
+- BC count: 657 (unchanged)
+- Exclusion determinations for #627 and #626 explicitly recorded in holdout-scenarios.md
+- PR #661 SQUASH-MERGED (d460701d65ca248556ae5ee8dde8617f531d0b21; S-POL-11-GUARD-FALSE-GREEN cycle CLOSED)
+- PR #645 MERGED (acdad174); develop fast-forwarded to acdad174
+
+**Cross-reference:** VSDD-CONFORMANCE-GAP-4-ARTIFACTS — this event is a concrete datapoint that missing canonical verification artifacts (VP-INDEX.md, invariants.md, verification-architecture.md, verification-coverage-matrix.md) cause reviewers to misread absences as design decisions. Three independent reviewers across 78 passes accepted the absence as intentional; human domain knowledge caught it at the gate.
+
+**Next action:** F2 window REBUILD — dispatch fresh adversary passes against spec v1.3.165 + six new holdout scenarios (H-NEW-PREFLIGHT-001..006) as fresh review surface. FOUR GATE DISCLOSURES preserved for next gate presentation: (a) DEC-190 substitute basis; (b) pass-77 independence COMPROMISED; (c) AX23-001 PENDING RATIFICATION; (d) .factory/policies.yaml absent.
+
+**Trajectory (unchanged):** →6→1→1→0 (no new pass ran; this is a meta-event). Window counter RESET: 0/3.

@@ -7553,3 +7553,73 @@ STATE.md updated to reflect:
 - spec v1.3.163 / BC-INDEX v6.75 / STORY-INDEX v1.5.42 (all unchanged)
 - trajectory-tail →1H→6→1L→1L→0
 
+---
+
+### Archived from STATE.md Phase Progress — DEC-192 corrective burst (2026-07-29)
+
+These rows from prior commit 5c6023da ("SOH-DX-1 F2 CONVERGED 3/3 — F2 HUMAN GATE READY") archived to make room for the DEC-192 gate-rejected + holdout-authoring rows in this burst.
+
+| Phase | Status | Completed | Gate | Notes | Finding Progression |
+|-------|--------|-----------|------|-------|---------------------|
+| **SOH-DX-1 F2 adversary passes 75-78 (2026-07-29):** pass-75 RETRO-LOGGED from spec-changelog fix trail [1.3.161/162/163] (6 findings; NOT window-eligible). pass-76 CLEAN 1 IN-DELTA LOW (ADV-P76-LOW-001; 1/3). pass-77 CLEAN 1 OUT-OF-DELTA LOW (P77-001; independence COMPROMISED; 2/3). pass-78 CLEAN ZERO findings HARD-ISOLATED (3/3 CONVERGED under DEC-191). FOUR GATE DISCLOSURES: (a) DEC-190 substitute; (b) pass-77 independence COMPROMISED; (c) AX23-001 PENDING RATIFICATION; (d) .factory/policies.yaml absent. | ARTIFACT-BACKED CLEAN 3/3 — F2 HUMAN GATE READY | 2026-07-29 | DEC-191: 3/3 STRICT reached | spec v1.3.163; BC-INDEX v6.75; STORY-INDEX v1.5.42. | →6→1→1→0 |
+
+### Archived from STATE.md Current Phase Steps — DEC-192 corrective burst (2026-07-29)
+
+| Step | Agent | Status | Output |
+|------|-------|--------|--------|
+| **F2-CONVERGENCE-WINDOW-BURST (2026-07-29): passes 75-78 ARTIFACT-BACKED CLEAN 3/3 CONVERGED under DEC-191. pass-75 RETRO-LOGGED (6 findings; NOT window-eligible). pass-76/77/78 = CLEANx3 strict window. 5 new drift items. Four gate disclosures recorded. STATE.md + convergence-trajectory.md + burst-log.md + blocking-issues-resolved.md updated.** | state-manager | COMPLETED (superseded by DEC-192 gate rejection) | spec v1.3.163; BC-INDEX v6.75; STORY-INDEX v1.5.42; factory-artifacts committed and pushed to origin/factory-artifacts. |
+
+---
+
+### DEC-192 Corrective Burst — F2 Gate Rejected, Holdout Authoring (2026-07-29)
+
+**Trigger:** Human rejected F2 gate (DEC-192). Zero holdout scenarios for #639 user-visible BREAKING CHANGE classified as in-delta GAP, not design decision. OVERTURNS pass-78 "deliberate non-goal" rationale. Window RESET 0/3 under DEC-191(a).
+
+**Passes 75-78 artifact records: INTACT AND UNMODIFIED.** The technical 3/3 convergence was reached; the gate was rejected before approval. Records preserved for audit trail.
+
+**Holdout authoring completed:**
+- Six scenarios authored: H-NEW-PREFLIGHT-001..006 (Group 20; 3 MUST-PASS)
+- Holdout count: 100 → 106
+- Exclusion determinations for #627 (LOW, not breaking) and #626 (LOW/MED, not user-visible breaking) explicitly recorded in holdout-scenarios.md
+
+**Spec updates:**
+- v1.3.163 → v1.3.165 (two-version bump: holdout scenarios + bc-3 Trace fields + README/CANONICAL-COUNTS sync)
+- BC count: 657 (unchanged)
+- BC-INDEX v6.75 (unchanged)
+- STORY-INDEX v1.5.42 (unchanged)
+- All four guard scripts exit 0
+
+**PRs merged this burst:**
+- PR #661 SQUASH-MERGED (d460701d65ca248556ae5ee8dde8617f531d0b21; 2026-07-29T15:23:34Z): S-POL-11-GUARD-FALSE-GREEN cycle DELIVERED/CLOSED; worktree .worktrees/FIX-GUARD-FALSEGREEN REMOVED; branch fix/guard-false-green deleted
+- PR #645 MERGED (acdad174; 2026-07-29T15:24:18Z): develop fast-forwarded to acdad174; local = origin/develop; in sync
+
+**5 new drift items added:**
+1. POL-11-RESIDUAL-OPTIONAL-FILE-BRANCHES (MEDIUM) — check-spec-counts.sh WARNs+exits 0 when nfr-catalog.md or holdout-scenarios.md absent
+2. POL-11-GUARD-NO-SELFTEST (LOW) — new exit-2 guard has no automated regression test
+3. CHECK-SPEC-COUNTS-SILENT-EXIT1 (LOW) — silent exit 1 on definitional_count grep defeats positive-coverage message
+4. FACTORY-READ-AFTER-WRITE-UNRELIABLE (MEDIUM) — reads immediately after Edit can return stale content; three premature conclusions this session
+5. TRAJECTORY-TAIL-SEVERITY-LOSS (LOW) — hook forces 4-segment tail, dropping HIGH/LOW severity distinction
+
+**3 drift items updated in-place:**
+- STALE-FACTORY-ARTIFACTS-BRANCH: added RECOMMENDATION text ("safe to delete — human decides. Not deleted.")
+- VSDD-CONFORMANCE-GAP-4-ARTIFACTS: added DEC-192 as concrete datapoint
+- REVIEW-ISOLATION-NOT-MECHANICALLY-ENFORCED: softened "read a draft" to note cross-read certain but draft-timing inference uncertain
+
+**1 drift item retraction:**
+- SPEC-CHANGELOG-RESYNC: false 4th recurrence claimed mid-session, retracted; count confirmed at 3
+
+**S-POL-11-GUARD-FALSE-GREEN cycle: CLOSED (PR #661 merged)**
+
+**CI Gate run 30465686049:** success, 11 active jobs passed.
+
+**Worktree state post-burst:** 3 worktrees (main develop @ acdad174, .factory factory-artifacts, .reference/jira-cli detached). No other worktrees.
+
+**PR queue at time of burst:** #662 MERGEABLE (codeql-action 4.37.1→4.37.3); #655/#656/#657/#658/#659 soaking; #628/#574 arcaven. DO NOT close #429.
+
+**Artifacts updated this burst:**
+- .factory/STATE.md (DEC-192 verdict, window RESET 0/3, 5 new drift items, 3 drift updates, DEC-192 in Decisions Log)
+- .factory/cycles/cycle-001/convergence-trajectory.md (DEC-192 meta-event section appended after pass-78)
+- .factory/cycles/cycle-001/burst-log.md (this entry + archival of convergence window rows)
+
+**trajectory-tail:** →6→1→1→0 (unchanged — no new adversary pass ran; this is a meta-event).
+
