@@ -3542,3 +3542,105 @@ Seventy-second F2 pass (DEC-190 substitute; aperture: reality-check on third-par
 **Trajectory so far:** p78(8)→...→p143-sub(0)→p144-sub(0)→adv-71(1M+2L)→adv-72(1H-pre). trajectory-tail →0→0→1M+2L→1H (passes p143-sub, p144-sub, adv-71, adv-72). CONVERGENCE: 1/3 STRICT (orchestrator read; P71-001 classification PENDING HUMAN RATIFICATION DEC-189). PIPELINE PAUSED.
 
 NEXT: human ruling on DEC-189 P71-001 classification (delta-attributable → keep grinding; or F3 input → 3/3 → F2 human gate ready) OR pass-73 with fresh aperture.
+
+---
+
+### Pass adv-75 — SIX-AXIS REVIEW (2026-07-28) — RECONSTRUCTED FROM FIX TRAIL
+
+**Status: RECONSTRUCTED FROM FIX TRAIL (spec-changelog.md [1.3.161]/[1.3.162]/[1.3.163] + commit 13f015da). No findings artifact exists. NOT counted toward the 3/3 convergence window.**
+
+Aperture: six-axis review (AX01: crate API claims; AX02: count surfaces; AX03: test symbol existence; AX04: external reality; AX05: spec internal consistency; AX06: partial-fix regression). This record is reconstructed post-hoc; the six-axis review ran after passes 73b/74b were claimed CLEAN.
+
+**Findings:** 6 (1 GAP/LOW, 1 REFINEMENT/MEDIUM, 4 REFINEMENT/LOW)
+
+| Finding | Type | Severity | In-delta | Fixed In |
+|---------|------|----------|----------|---------|
+| AX23-001 | GAP | LOW | OUT-OF-DELTA (VP-571-003, closed issue-#571 cycle 2026-07-08 — 2.5 weeks before SOH-DX-1 began 2026-07-25) | v1.3.162 |
+| AX-001 | REFINEMENT | MEDIUM | n/a — BC-2.7.001 H1 sync | v1.3.162 |
+| AX-002 | REFINEMENT | LOW | n/a — BC-INDEX Section 1 Subject column removal (6 subsections, 46 rows) | v1.3.162 |
+| P73-001 | REFINEMENT | LOW | n/a — bc-3 pending-revert annotations for bc-3-issue-write.md BC-3.9.001/BC-3.9.003 | v1.3.162 |
+| RS-001 | REFINEMENT | LOW | n/a — BC-INDEX prose header "Master traceability:" dropped stale "→ Subject" tail | v1.3.163 |
+| ADR-LOCATION-FIX-001 | REFINEMENT | LOW | n/a — CANONICAL-COUNTS.md §ADRs two stale location claims corrected | v1.3.161 |
+
+**AX23-001 detail:** Phantom test name `test_bc_7_2_015_ec_6_strong_retained_on_sibling_text_nodes_of_code_span` in VP-571-003 inside `bc-7-output-render.md`. Replaced with real citations: `src/adf.rs::test_bc_7_2_015_mixed_range_surrounding_marks_retained` (~:3061) and `src/adf.rs::test_bc_7_2_015_multi_mark_wrapper_only_code_node_stripped` (~:3090). Both confirmed present by pass-76 reality-check.
+
+**ORCHESTRATOR RULING on AX23-001 (PENDING HUMAN RATIFICATION):** AX23-001 is classified OUT-OF-DELTA; it did NOT reset the convergence window. Basis: VP-571-003 belongs to the ADF-CODE-MARK-EXCLUSIVITY cycle (issue #571, CLOSED 2026-07-08); SOH-DX-1 began 2026-07-25 (~2.5 weeks later). Precedent: P72-001 out-of-delta HIGH did not reset a scoped delta review window. This ruling is SUBJECT TO HUMAN RATIFICATION at the F2 gate.
+
+**Convergence counter:** N/A (reconstructed pass, NOT window-eligible; window count unchanged).
+
+**Trajectory note:** RECONSTRUCTED. NOT window-eligible. trajectory-tail not advanced by this pass.
+
+---
+
+### Pass soh-dx-1-f2-pass-76 (2026-07-29) — SUBSTITUTE (DEC-190 WINDOW-ELIGIBLE; aperture: reality-check)
+
+**Findings:** 1 (0C/0H/0M/1L) — ADV-P76-LOW-001 IN-DELTA REFINEMENT; 0 in-delta GAPs
+**Convergence counter:** 0/3 → 1/3 (CLEAN under DEC-191)
+**Window before:** 0/3 (new window; prior claimed window unbacked per PHANTOM-CONVERGENCE-EVIDENCE)
+**Window after:** 1/3 STRICT under DEC-191
+**Artifact:** `.factory/cycles/cycle-001/adversarial-reviews/soh-dx-1-f2-pass-76.md`
+
+Seventy-sixth F2 pass (DEC-190 substitute; aperture: reality-check — crate APIs, crate versions, existing `src/` behavior, CI/workflow claims, MSRV, SHA pin). First reality-check pass for spec v1.3.163. Independently verified 8 checklist dimensions.
+
+**ADV-P76-LOW-001 (LOW; REFINEMENT; IN-DELTA):** `delta-analysis.md §5e` still reads "F2 must include the verification step…" but SHA `fa04a1451ff1842e2626ccb99004d0195b455a88` was confirmed out-of-band (session-checkpoints.md P71-001) and embedded as blocking AC in S-626-1. One-line fix recommended before F3 (leaving a live "F2 must verify" statement in a gated-complete F2 is the same phantom-obligation class as P71-001).
+
+Notable verifications: AX23-001 repair symbols confirmed present in `src/adf.rs` (lines ~3061, ~3090); all 7 AC test symbols verified in `tests/issue_create_jsm.rs`; all 6 workflow files confirmed using `c93f4f9c`; MSRV three-way disagreement confirmed as documented false-green.
+
+**Convergence counter:** 0/3 → 1/3. ADV-P76-LOW-001 is REFINEMENT/LOW; non-window-resetting under DEC-191(c).
+
+**Trajectory so far:** adv-72(1H-pre)→p75(6-reconstructed)→p76(1L). trajectory-tail →1H→6→1L. CONVERGENCE: 1/3. NEXT: pass-77.
+
+---
+
+### Pass soh-dx-1-f2-pass-77 (2026-07-29) — SUBSTITUTE (DEC-190 WINDOW-ELIGIBLE; aperture: delta-completeness + AC-falsifiability)
+
+**Findings:** 1 (0C/0H/0M/1L) — P77-001 OUT-OF-DELTA REFINEMENT; 0 in-delta GAPs
+**Convergence counter:** 1/3 → 2/3 (CLEAN under DEC-191)
+**Window before:** 1/3 STRICT
+**Window after:** 2/3 STRICT under DEC-191
+**Artifact:** `.factory/cycles/cycle-001/adversarial-reviews/soh-dx-1-f2-pass-77.md`
+**INDEPENDENCE NOTE: COMPROMISED.** Pass-77 read pass-76's intermediate draft (shared adversarial-reviews directory; prompt-level read-ban not mechanically enforced). Finding ID `P76-001` cited in the artifact (pre-rename; canonical name is `ADV-P76-LOW-001`). Substantive work (32-row obligation table, 21-AC falsifiability audit) retained. Pass-77 does NOT count as independent corroboration. First datapoint for REVIEW-ISOLATION-NOT-MECHANICALLY-ENFORCED drift item.
+
+Seventy-seventh F2 pass. Enumerated **32** F1 obligations: 14 DISCHARGED, 15 DEFERRED with explicit story/phase targets, 3 STATE-ONLY, **0 ABSENT**. AC audit: 17 DISCRIMINATING, 2 HYGIENE (AC-15, AC-17 — correctly labeled), 2 DEFERRED/F3 (AC-4, AC-6). No mislabeled ACs found.
+
+**P77-001 (LOW; REFINEMENT; OUT-OF-DELTA):** Three S-626-1 pre-F3 obligations are STATE-ONLY (SHA `fa04a145` blocking AC, do-not-remove constraint, MSRV flag). Expected at F2 before S-626-1 story drafted. No convergence action required; becomes S-626-1 story content at F3.
+
+**Convergence counter:** 1/3 → 2/3. P77-001 is OUT-OF-DELTA REFINEMENT; non-window-resetting.
+
+**Trajectory so far:** adv-72(1H-pre)→p75(6-reconstructed)→p76(1L)→p77(1L). trajectory-tail →1H→6→1L→1L. CONVERGENCE: 2/3. NEXT: pass-78.
+
+---
+
+### Pass soh-dx-1-f2-pass-78 (2026-07-29) — SUBSTITUTE (DEC-190 WINDOW-ELIGIBLE; aperture: verification-adequacy)
+
+**Findings:** 0 — all 9 checklist items CLEAN; ZERO in-delta GAPs; ZERO total findings
+**Convergence counter:** 2/3 → **3/3 — CONVERGENCE REACHED**
+**Window before:** 2/3 STRICT
+**Window after:** 3/3 STRICT under DEC-191 — **CONVERGED**
+**Artifact:** `.factory/cycles/cycle-001/adversarial-reviews/soh-dx-1-f2-pass-78.md`
+**ISOLATION:** HARD-ISOLATED — read-ban on adversarial-reviews/, convergence-trajectory.md, and STATE.md enforced by dispatch constraint. Orchestrator-verified: grep for sibling artifact references returned 0. First fully isolated pass in this window.
+
+Per VSDD-CONFORMANCE-GAP-4-ARTIFACTS, this verification-adequacy aperture had NEVER previously run against this repository (VP-INDEX.md, invariants.md, verification-architecture.md absent). All 9 items CLEAN:
+1. VP Adequacy — deliberate non-goal for S-639-1; 21 ACs absorb all VP-level concerns.
+2. Guard-Behavior Cases — all distinct behavioral cases covered (16 case/AC pairs enumerated in artifact).
+3. Ordering Invariants — AC-8 (zero-HTTP) and AC-9 (project-key ordering) are order-sensitive; would fail at wrong step.
+4. Zero-HTTP Proof Soundness — `received_requests()` in wiremock 0.6.5 captures all requests including unregistered paths; confirmed against existing test evidence.
+5. Regression Protection — AC-4 is non-vacuous (mount stubs + exit-0 + new-string absence); unconditional guard breaks AC-4.
+6. Holdout Coverage — 0 holdout scenarios; deliberate non-goal with adequate justification; pure pre-flight check duplicates ACs exactly.
+7. Mutation Scope — `src/cli/issue/create.rs` in `.cargo/mutants.toml` examine_globs; new guard lines in PR diff; expected near-100% kill rate.
+8. NFR/Error-Taxonomy Registration — all 3 DEC-188 conditions registered in error-taxonomy.md Section 6 (v1.3.150, F52-001). Exit codes correct.
+9. False-Green Sweep — AC-6/AC-20/AC-21 vacuity-to-non-vacuity mandated at F3; no unmarked vacuous assertions.
+
+**CAVEAT (VERIFICATION-NONGOAL-UNSCRUTINIZED):** Pass-78 accepted two "deliberate non-goal" rationales at face value — (i) no VPs, (ii) zero holdout scenarios for a user-visible BREAKING change. Both may be sound, but pass-78 was isolated from STATE.md and could not know these sit inside VSDD-CONFORMANCE-GAP-4-ARTIFACTS. Flagged for human attention at F2 gate.
+
+**GATE DISCLOSURES (must ride F2 gate document):**
+(a) All 78 passes were DEC-190 substitute (consistency-validator, not adversary agent).
+(b) Pass-77 independence compromised (read pass-76 intermediate draft).
+(c) AX23-001 out-of-delta ruling PENDING HUMAN RATIFICATION.
+(d) `.factory/policies.yaml` absent — no project policy rubric auto-loaded.
+
+**Convergence counter:** 3/3 STRICT under DEC-191. PIPELINE READY FOR F2 HUMAN GATE.
+
+**SOH-DX-1 F2 CONVERGED 3/3 under DEC-191, ARTIFACT-BACKED (2026-07-29).** Window = passes 76, 77, 78, all CLEAN, every pass with a findings artifact on disk. This is the material difference from the prior unbacked claim (passes 73/74/73b/74b).
+
+**Trajectory:** adv-72(1H-pre)→p75(6-reconstructed)→p76(1L)→p77(1L)→p78(0). trajectory-tail →1H→6→1L→1L→0. CONVERGENCE: **3/3 STRICT**. F2 HUMAN GATE READY.

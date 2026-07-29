@@ -7,7 +7,7 @@ producer: state-manager
 timestamp: 2026-05-26T00:00:00
 cycle: "cycle-001"
 inputs: [STATE.md]
-input-hash: "37a375d"
+input-hash: "2f1a115"
 traces_to: STATE.md
 ---
 
@@ -318,3 +318,13 @@ Seven drift items confirmed closed during SOH-DX-1 F2 adversary grind and state 
 | CANONICAL-COUNTS-STALE-ADR-LOCATIONS | spec/metadata | CANONICAL-COUNTS.md §ADRs claimed ADR-0007..0013 in `.factory/architecture/adr/` (directory does not exist). Corrected per ARCH-INDEX.md:3-5: ADR-0001..0016 in docs/adr/, ADR-0017+ in .factory/specs/architecture/decisions/. Count of 17 preserved and confirmed correct. | LOW | CLOSED — FIXED (2026-07-28 LEDGER-BURST) | 2026-07-28 |
 | STRICT-WINDOW-NO-FIXED-POINT | process/criterion | DEC-189's zero-findings redefinition of "clean" had no reachable fixed point on a mature spec — the documented cause of the grinding stall (passes 68+69 returned ZERO findings confirming the fixed point was reachable; DEC-189's criterion blocked closure). Root cause: DEC-189 was stricter than VSDD prescribes. | MEDIUM | CLOSED — RESOLVED by DEC-191 (2026-07-28): VSDD gap-vs-refinement criterion adopted; reachable fixed point confirmed | 2026-07-28 |
 | SPEC-INLINE-REVERT-SIGNAL | spec integrity | P73-001 (REFINEMENT, LOW): bc-3-issue-write.md lines ~3427/3484 carry 8a0a2422 hyphenation workarounds with no inline pending-revert-by-S-627-1 marker; the F1 delta-analysis was the sole source of the revert obligation. Fix: carry the revert obligation into the S-627-1 story body. | LOW | CLOSED — DISCHARGED: [PENDING-REVERT-S-627-1] inline annotations added to bc-3-issue-write.md BC-3.9.001 Trace and BC-3.9.003 Trace in spec v1.3.162 (six-axis review remediation) | 2026-07-29 |
+
+---
+
+## Resolved 2026-07-29 — SOH-DX-1 F2 convergence window artifact-backed burst
+
+One drift item closed: the artifact-backed window (passes 76/77/78) supersedes the prior unbacked claim.
+
+| ID | Area | Description | Severity | Status | Resolved Date |
+|----|------|-------------|----------|--------|---------------|
+| PHANTOM-CONVERGENCE-EVIDENCE | spec integrity | STATE.md asserted pass-73/74/73b/74b were appended to convergence-trajectory.md and burst-log.md — VERIFIED FALSE (convergence-trajectory.md terminated at adv-72; zero occurrences of pass-73/74/adv-73/adv-74). F2 convergence claim had no artifact backing. SUPERSEDED by a fully artifact-backed window: passes 76/77/78 each have a findings artifact on disk at .factory/cycles/cycle-001/adversarial-reviews/soh-dx-1-f2-pass-7{6,7,8}.md. The unbacked passes 73/74/73b/74b are NOT counted toward any convergence window; they remain in session-checkpoints.md as historical record only. | MEDIUM | SUPERSEDED / CLOSED — artifact-backed window (76/77/78) replaces the prior unbacked claim | 2026-07-29 |

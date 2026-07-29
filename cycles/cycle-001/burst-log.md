@@ -7517,3 +7517,39 @@ STATE.md updated to reflect:
 - 3 new drift items added: PHANTOM-CONVERGENCE-EVIDENCE (MEDIUM), SIX-AXIS-REVIEW-UNLOGGED (MEDIUM), STALE-FACTORY-ARTIFACTS-BRANCH (LOW)
 - 7 closed drift items archived to blocking-issues-resolved.md
 
+---
+
+### Archived from STATE.md Phase Progress — 2026-07-29 SOH-DX-1 F2 convergence window burst
+
+These four Phase Progress rows archived to make room for the convergence window row.
+
+| Phase | Status | Completed | Gate | Notes | Finding Progression |
+|-------|--------|-----------|------|-------|---------------------|
+| **LEDGER-BURST-2026-07-28 pass-71 + pass-72 + spec fix burst v1.3.159→v1.3.160 (2026-07-28): pass-71 FINDINGS 3 (P71-001 MEDIUM + P71-002/003 LOW; WINDOW RESET 2/3→0/3); pass-72 FINDING 1 (P72-001 HIGH pre-existing; FIXED v1.3.160; window 0/3→1/3). 5 ledger changes. spec v1.3.160; BC-INDEX v6.73; STORY-INDEX v1.5.42; 1/3 STRICT (orchestrator read, PENDING DEC-189 ratification).** | F2 adversary grind in progress | 2026-07-28 | ADVERSARY GRIND — convergence + human gate PENDING (human ruling on P71-001 classification required). | spec v1.3.160; BC-INDEX v6.73; STORY-INDEX v1.5.42. | →0→0→1M+2L→1H |
+| **DEC-191 BURST (2026-07-28): DEC-191 adopted — VSDD convergence criterion replaces DEC-189 (gap-vs-refinement; ceiling 10). Window 1/3 RATIFIED. Passes 68-72 reclassified. DEC-191(d) ceiling exceeded (72 vs max 10) — prescribed next step: F2 human gate decision, NOT additional passes. 4 drift changes applied.** | DEC-191 criterion adoption | 2026-07-28 | DEC-191 ADOPTED — window 1/3 RATIFIED; F2 human gate decision prescribed (DEC-191(d) ceiling exceeded). | spec v1.3.160 (unchanged); BC-INDEX v6.73; STORY-INDEX v1.5.42. | →0→0→1M+2L→1H |
+| **F2 CONVERGENCE BURST (2026-07-28): pass-73/pass-74/pass-73b/pass-74b CLAIMED CLEAN under DEC-191. EVIDENCE UNVERIFIED — convergence-trajectory.md terminates at adv-72 (PHANTOM-CONVERGENCE-EVIDENCE). P73-001 REFINEMENT (bc-3 hyphenation workaround lines lack revert marker; discharged in v1.3.162). Four passes prematurely declared VOID — all four delivered on nudging (AGENT-IDLE-NO-REPORT false-VOID correction). Six-axis review post-convergence (commit 13f015da): 8 findings fixed in v1.3.161/v1.3.163 including AX23-001 GAP (SIX-AXIS-REVIEW-UNLOGGED). spec v1.3.163; BC-INDEX v6.75.** | F2 convergence (CLAIMED — unverified) | 2026-07-28 | F2 GATE BLOCKED — PHANTOM-CONVERGENCE-EVIDENCE + SIX-AXIS-REVIEW-UNLOGGED pending human ruling. | spec v1.3.163; BC-INDEX v6.75; STORY-INDEX v1.5.42. | →0→0→0→0 |
+| pass-73/pass-74/pass-73b/pass-74b — F2 adversary passes (CLAIMED CLEAN 2026-07-28 under DEC-191; DEC-190 substitute basis — all 4 were consistency-validator dispatches; convergence-trajectory.md terminates at adv-72; EVIDENCE UNVERIFIED) | CLAIMED CLEAN (artifact backing absent) | 2026-07-28 | F2 GATE BLOCKED — PHANTOM-CONVERGENCE-EVIDENCE; human ruling required | spec v1.3.163; BC-INDEX v6.75. trajectory-tail →0→0→0→0. | →0→0→0→0 |
+
+### Archived from STATE.md Current Phase Steps — 2026-07-29 SOH-DX-1 F2 convergence window burst
+
+These two CPS rows archived to make room for the convergence window step row.
+
+| Step | Agent | Status | Output |
+|------|-------|--------|--------|
+| **DEC-191 BURST (2026-07-28): DEC-191 adopted — VSDD convergence criterion replaces DEC-189 (gap-vs-refinement; ceiling 10). Window 1/3 RATIFIED. Passes 68-72 reclassified under DEC-191. DEC-191(d) ceiling exceeded (72 vs max 10) — prescribed next step: F2 human gate decision with convergence state disclosed (window 1/3; last GAP at pass-71; 4 LOW ledgered), NOT additional passes. 4 drift changes applied. STATE.md + convergence-trajectory.md + burst-log.md + sidecar-learning.md committed.** | state-manager | COMPLETED | spec v1.3.160 (unchanged); BC-INDEX v6.73; STORY-INDEX v1.5.42; factory-artifacts committed and pushed to origin/factory-artifacts. |
+| **F2 CONVERGENCE BURST (2026-07-28): pass-73/pass-74/pass-73b/pass-74b CLAIMED CLEAN. EVIDENCE UNVERIFIED (PHANTOM-CONVERGENCE-EVIDENCE). P73-001 REFINEMENT ledgered (discharged v1.3.162). FALSE-VOID CORRECTION recorded (4 passes). Six-axis review post-convergence: 8 findings fixed across v1.3.161/162/163 including AX23-001 GAP-tagged (SIX-AXIS-REVIEW-UNLOGGED). F2 GATE BLOCKED pending human ruling.** | adv-73/74/73b/74b (DEC-190 substitutes) + orchestrator + state-manager | GATE BLOCKED | spec v1.3.163; BC-INDEX v6.75; STORY-INDEX v1.5.42; convergence evidence absent from convergence-trajectory.md. |
+
+### SOH-DX-1 F2 Convergence Window — Artifact-Backed Burst (2026-07-29)
+
+STATE.md updated to reflect:
+- SOH-DX-1 F2 CONVERGED 3/3 ARTIFACT-BACKED under DEC-191 (passes 76/77/78 with findings artifacts on disk)
+- pass-75 (six-axis review) RECONSTRUCTED FROM FIX TRAIL (spec-changelog.md [1.3.161]/[1.3.162]/[1.3.163]); NOT counted toward convergence window
+- PHANTOM-CONVERGENCE-EVIDENCE → SUPERSEDED/CLOSED (archived to blocking-issues-resolved.md)
+- SIX-AXIS-REVIEW-UNLOGGED → downgraded to LOW; trajectory reconstructed; residual: reviews can complete without emitting findings artifact
+- 5 new drift items: ADVERSARY-ARTIFACT-WRITE-MITIGATION (LOW), REVIEW-ISOLATION-NOT-MECHANICALLY-ENFORCED (MEDIUM), VERIFICATION-NONGOAL-UNSCRUTINIZED (MEDIUM), ADV-P76-LOW-001 (LOW — ledgered refinement), P77-001 (LOW — ledgered refinement)
+- convergence-trajectory.md: passes 75/76/77/78 appended (pass-75 RECONSTRUCTED section)
+- blocking-issues-resolved.md: PHANTOM-CONVERGENCE-EVIDENCE closure appended
+- Four gate disclosures recorded in Convergence Status and RESUME PLAN
+- spec v1.3.163 / BC-INDEX v6.75 / STORY-INDEX v1.5.42 (all unchanged)
+- trajectory-tail →1H→6→1L→1L→0
+
