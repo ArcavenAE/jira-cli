@@ -7623,3 +7623,83 @@ These rows from prior commit 5c6023da ("SOH-DX-1 F2 CONVERGED 3/3 — F2 HUMAN G
 
 **trajectory-tail:** →6→1→1→0 (unchanged — no new adversary pass ran; this is a meta-event).
 
+---
+
+## Archived Phase Progress rows (from STATE.md DEC-192-BURST and F2-WINDOW-BURST; archived SOH-DX-1-F2-CONVERGENCE-BURST 2026-07-29)
+
+| Phase | Status | Completed | Gate | Notes | Finding Progression |
+|-------|--------|-----------|------|-------|---------------------|
+| **DEC-192 spec fix burst + holdout authoring (2026-07-29):** Human rejected F2 gate — holdout coverage required for #639 BREAKING CHANGE. Six holdouts H-NEW-PREFLIGHT-001..006 authored (Group 20; 3 MUST-PASS); spec v1.3.163→v1.3.165; BC unchanged 657. PR #661 MERGED (d460701d; S-POL-11-GUARD-FALSE-GREEN CLOSED). PR #645 MERGED; develop @ acdad174. Window RESET 0/3. 5 new drift items. convergence-trajectory.md DEC-192 event appended. burst-log.md updated. | GATE REJECTED — spec fix burst COMPLETE | 2026-07-29 | DEC-192: holdout coverage required; window reset | spec v1.3.165; BC-INDEX v6.75; STORY-INDEX v1.5.42. holdouts 100→106. | RESET 0/3 |
+| **SOH-DX-1 F2 adversary passes 75-78 (2026-07-29):** pass-75 RETRO-LOGGED from spec-changelog fix trail [1.3.161/162/163] (6 findings; NOT window-eligible). pass-76 CLEAN 1 IN-DELTA LOW (ADV-P76-LOW-001; 1/3). pass-77 CLEAN 1 OUT-OF-DELTA LOW (P77-001; independence COMPROMISED; 2/3). pass-78 CLEAN ZERO findings HARD-ISOLATED (3/3 CONVERGED under DEC-191). Window reached 3/3, then gate REJECTED (DEC-192). WINDOW RESET 0/3. | ARTIFACT-BACKED CLEAN 3/3 → GATE REJECTED | 2026-07-29 | DEC-192 reset | spec v1.3.163 at time of passes; BC-INDEX v6.75. | →6→1→1→0 |
+
+## Archived Current Phase Steps row (from STATE.md DEC-192-BURST; archived SOH-DX-1-F2-CONVERGENCE-BURST 2026-07-29)
+
+| Step | Agent | Status | Output |
+|------|-------|--------|--------|
+| **DEC-192 CORRECTIVE BURST (2026-07-29): F2 gate REJECTED — holdout coverage required. Six holdouts H-NEW-PREFLIGHT-001..006 authored; spec v1.3.163→v1.3.165; PR #661 MERGED (d460701d; S-POL-11-GUARD-FALSE-GREEN CLOSED); PR #645 MERGED (acdad174); develop @ acdad174. Window RESET 0/3. 5 new drift items; 3 updated in-place. SPEC-CHANGELOG-RESYNC false-4th retracted. convergence-trajectory.md DEC-192 event appended. burst-log.md updated.** | state-manager | COMPLETED | spec v1.3.165; BC-INDEX v6.75; STORY-INDEX v1.5.42; factory-artifacts committed and pushed to origin/factory-artifacts. |
+
+---
+
+## SOH-DX-1-F2-CONVERGENCE-BURST (2026-07-29)
+
+**Agents dispatched:** consistency-validator (passes 79/80/81/82/83/84), state-manager
+**Files touched:** .factory/cycles/cycle-001/adversarial-reviews/soh-dx-1-f2-pass-79..84.md, .factory/cycles/cycle-001/convergence-trajectory.md, .factory/cycles/cycle-001/lessons.md, .factory/cycles/cycle-001/blocking-issues-resolved.md, .factory/cycles/cycle-001/burst-log.md, .factory/STATE.md, .factory/specs/prd/holdout-scenarios.md (v1.5.11→v1.5.12), .factory/specs/prd/bc-3-issue-write.md, .factory/phase-f1-delta/SOH-DX-1/delta-analysis.md, .factory/specs/prd/README.md (both enumeration sites)
+**Versions bumped:** spec v1.3.166→v1.3.167; holdout-scenarios v1.5.11→v1.5.12
+
+### Summary
+
+SOH-DX-1 F2 new window dispatched on spec v1.3.165+. Passes 79/80/81 ran pre-window: pass-79 found CRITICAL (H-NEW-PREFLIGHT-004 permanently unsatisfiable — v1.3.165 incorrectly asserted "stdout contains PROJ-42" when `print_success` uses `eprintln!` → stderr); fixed at v1.3.166. Passes 80/81 ran on v1.3.165 without finding the CRITICAL (pass-81 affirmatively endorsed it). Window reset to 0/3 at v1.3.166.
+
+Passes 82/83/84 (v1.3.166, CLEAN 3/3 under DEC-191): no in-delta GAPs found. Three human rulings: DEC-193 (pass-83 GAP reclassification RATIFIED — ADV-P83-MEDIUM-001 + ADV-P83-LOW-001 are pre-F4 state, not F2 spec gaps); DEC-194 (CLAUDE.md doc-fix story scheduled covering profile-4 wording, #661 staleness, POL-11-RESIDUAL); DEC-195 (VSDD-CONFORMANCE-GAP-4-ARTIFACTS scheduled as own bundle, not inside SOH-DX-1).
+
+Two LOW refinements fixed in spec v1.3.167: ADV-P82-LOW-001 (Expected-block leakage fixed), README enumeration staleness fixed at both sites, ADV-P84-LOW-001 (delta-analysis §6 updated with 3 additional delivery files).
+
+CRITICAL detection asymmetry lesson added to lessons.md: pass-81 endorsed the CRITICAL that pass-79 caught; root cause is CLAUDE.md profile-4 ambiguity. Two-dimension falsification prescription added.
+
+F2 gate: CONVERGED 3/3, AWAITING EXPLICIT HUMAN APPROVE/REJECT. NOT yet approved.
+
+### Details
+
+| Agent | Task | Output |
+|-------|------|--------|
+| consistency-validator (pass-79) | holdout-scenario-quality aperture on v1.3.165 | 1 CRITICAL (ADV-C001-P79-CRITICAL-001: H-NEW-PREFLIGHT-004 permanently unsatisfiable); window reset |
+| consistency-validator (pass-80) | reality-check aperture on v1.3.165 | 2 LOW (P80-001 README enum, P80-002 BC test-name delivery obligation); CLEAN |
+| consistency-validator (pass-81) | delta-completeness + AC-falsifiability on v1.3.165 | 0 findings; CLEAN; BUT endorsed the CRITICAL — detection-asymmetry lesson |
+| state-manager + PO | v1.3.166 CRITICAL fix | H-NEW-PREFLIGHT-004 corrected to stderr; window reset 0/3 |
+| consistency-validator (pass-82) | holdout-falsifiability + channel-correctness on v1.3.166 | 2 LOW (ADV-P82-LOW-001, ADV-P82-LOW-002); CLEAN 1/3 |
+| consistency-validator (pass-83) | emit-site / observable-contract on v1.3.166 | 2 MED + 2 LOW (DEC-193 RATIFIED; reclassified as pre-F4 state); CLEAN 2/3 |
+| consistency-validator (pass-84) | AC-falsification-against-build + delta-completeness on v1.3.166 | 2 LOW (ADV-P84-LOW-001, ADV-P84-LOW-002); CLEAN 3/3 CONVERGED |
+| state-manager | spec v1.3.167 fixes (ADV-P82-LOW-001, README enum, ADV-P84-LOW-001) | holdout-scenarios.md v1.5.12, delta-analysis.md §6 updated, README.md both sites updated |
+| state-manager | STATE.md, convergence-trajectory.md, lessons.md, blocking-issues-resolved.md, burst-log.md | all updated; DEC-193/194/195 recorded; CRITICAL lesson added |
+
+**3 human decisions recorded:**
+- DEC-193: pass-83 GAP reclassification RATIFIED (F4 is fine)
+- DEC-194: CLAUDE.md doc-fix story scheduled
+- DEC-195: VSDD-CONFORMANCE-GAP-4-ARTIFACTS scheduled as own bundle
+
+**New drift items (5):**
+1. CLAUDE-MD-PROFILE-TAXONOMY-DEFECT (MEDIUM, OPEN → DEC-194)
+2. ADV-P83-MEDIUM-001 (LOW, F4 via S-626-1 per DEC-193)
+3. ADV-P83-LOW-001 (LOW, F4 via S-626-1 per DEC-193)
+4. P79-003/P79-004 combined (LOW, OPEN ledgered)
+5. P80-002 (LOW, OPEN ledgered)
+
+**3 resolved/archived to blocking-issues-resolved.md:**
+- ADV-P82-LOW-001 (FIXED v1.3.167 — citation relocated)
+- README-ENUMERATION-STALENESS (FIXED v1.3.167 — both sites updated)
+- ADV-P84-LOW-001 (FIXED v1.3.167 — §6 updated)
+
+**6 drift items updated in-place:**
+- ORCHESTRATOR-ERROR-INJECTION-RATE: new severe datapoint (CRITICAL injection while fixing LOW)
+- APERTURE-CLASS-LESSON: ESCALATED — pass-81 endorsed CRITICAL; two-dimension prescription
+- ADVERSARY-VERDICT-VS-CONTRACT-DISCREPANCY: 2nd datapoint (pass-83)
+- REVIEW-ISOLATION-NOT-MECHANICALLY-ENFORCED: mitigation CONFIRMED EFFECTIVE (4/4 passes clean)
+- ADVERSARY-ARTIFACT-WRITE-MITIGATION: 3 more datapoints (passes 76, 79, 82)
+- FACTORY-READ-AFTER-WRITE-UNRELIABLE: 1 more datapoint (P76-001 → ADV-P76-LOW-001)
+
+**CI Gate run 30465686049:** success (unchanged; no new product code)
+
+**Worktree state post-burst:** .factory @ factory-artifacts (this commit). develop @ acdad174 (unchanged).
+
+**trajectory-tail:** →1→2→4→2 (passes 79→82→83→84; length=4).
+

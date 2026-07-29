@@ -9,6 +9,46 @@ Track all spec version changes. Most recent version first.
 
 > **Type legend:** Type classifies the SPEC document delta: MINOR = new BCs/VPs/sections; PATCH = amendments to existing bodies/ACs/ECs. Product-semver impact is recorded in the Summary line, independent of Type.
 
+## [1.3.167] - 2026-07-29
+
+### Type: PATCH
+
+### Summary
+
+ADV-P82-LOW-001 / ADV-P84-LOW-001 ledger clearance: three LOW refinement findings cleared from the SOH-DX-1 F2 convergence window. (1) H-NEW-PREFLIGHT-004 Expected bullets 3–4 stripped of implementation-detail parentheticals that violated black-box information asymmetry; emit-site citations (`src/output.rs::print_success`, `tests/issue_create_echo.rs`) relocated to the "Why hidden" section where explanatory grounding belongs; BC-3.4.014 moved to the BC-refs metadata line. The observable assertions (stderr contains "Created issue PROJ-42"; stdout is empty in Table mode) are unchanged and correct. (2) README.md Document Map row and Supplement Index row holdout enumeration descriptions updated from stale (ending at H-NEW-JSM-RT-001..007) to match the authoritative CANONICAL-COUNTS.md §Holdout Scenarios enumeration (all 12 groups through H-NEW-PREFLIGHT-001..006). Count 106 is unchanged and correct on both rows. (3) delta-analysis.md §6 affected-files summary extended with three F2 Trace deliverables that were added to BC-3.8.012's Trace field during F2 passes after the original F1 analysis: src/cli/mod.rs (d), src/cli/issue/jsm_create.rs (e), docs/specs/issue-create-preflight-guards.md (f, to-be-created at F4). No BC body, AC, or EC changed. Holdout count unchanged at 106.
+
+### Changed
+
+- `.factory/specs/prd/holdout-scenarios.md` (MODIFIED): H-NEW-PREFLIGHT-004 Expected bullets 3–4 parentheticals removed; "Why hidden" extended with emit-site grounding; BC-3.4.014 added to BC-refs line; frontmatter `version: "1.5.11"→"1.5.12"`; trace bullet appended.
+- `.factory/specs/prd/README.md` (MODIFIED): Document Map row and Supplement Index row holdout enumeration updated to canonical full-group list (Groups 8b–20); count 106 unchanged.
+- `.factory/phase-f1-delta/SOH-DX-1/delta-analysis.md` (MODIFIED): §6 develop branch develop-branch list extended with src/cli/mod.rs, src/cli/issue/jsm_create.rs, docs/specs/issue-create-preflight-guards.md (annotated as F2 Trace deliverables (d)/(e)/(f)).
+- `.factory/spec-changelog.md` (MODIFIED): [1.3.167] entry prepended.
+
+### BC Count
+
+0 new BCs. Total unchanged: **657** cumulative (BC-INDEX). Holdout count unchanged: **106**.
+
+---
+
+## [1.3.166] - 2026-07-29
+
+### Type: PATCH
+
+### Summary
+
+CRITICAL correction of defect introduced at v1.3.165: H-NEW-PREFLIGHT-004 Expected bullet 3 was incorrectly changed to "stdout contains PROJ-42" by v1.3.165, which misapplied attachment-upload profile-4 reasoning (P35-003/P36-001) to `issue create` Table mode without verifying the actual code path. `src/output.rs::print_success` is `eprintln!` (stderr), confirmed by `src/cli/issue/create.rs::handle_create` line 272 and `tests/issue_create_echo.rs` (BC-3.4.014, four stdout-empty assertion sites). The false assertion made H-NEW-PREFLIGHT-004 (MUST-PASS) permanently unsatisfiable, depressing the Phase 4 must-pass gate score. Corrected to: (a) stderr contains "Created issue PROJ-42" (positive, discriminating); (b) stdout.trim().is_empty() (Table-mode stdout-empty invariant). The misleading trace bullet from v1.3.165 is rewritten to record the correction and prevent the false premise from being inherited. Holdout count unchanged at 106.
+
+### Changed
+
+- `.factory/specs/prd/holdout-scenarios.md` (MODIFIED): H-NEW-PREFLIGHT-004 Expected bullet 3 corrected ("stdout contains PROJ-42" → "stderr contains Created issue PROJ-42" + new "stdout.trim().is_empty()" bullet); misleading v1.3.165 trace bullet rewritten to record regression and correction; frontmatter `version: "1.5.10"→"1.5.11"`.
+- `.factory/spec-changelog.md` (MODIFIED): [1.3.166] entry prepended.
+
+### BC Count
+
+0 new BCs. Total unchanged: 657 cumulative (BC-INDEX). Holdout count unchanged: 106.
+
+---
+
 ## [1.3.165] - 2026-07-29
 
 ### Type: PATCH

@@ -3670,4 +3670,104 @@ Per VSDD-CONFORMANCE-GAP-4-ARTIFACTS, this verification-adequacy aperture had NE
 
 **Next action:** F2 window REBUILD — dispatch fresh adversary passes against spec v1.3.165 + six new holdout scenarios (H-NEW-PREFLIGHT-001..006) as fresh review surface. FOUR GATE DISCLOSURES preserved for next gate presentation: (a) DEC-190 substitute basis; (b) pass-77 independence COMPROMISED; (c) AX23-001 PENDING RATIFICATION; (d) .factory/policies.yaml absent.
 
+---
+
+## Pre-Window Passes (post-DEC-192 reset, spec v1.3.165)
+
+Passes 79/80/81 ran after the DEC-192 window reset and before the current window (82/83/84). Their artifacts are on disk but are NOT part of the current 3/3 convergence window. Summaries:
+
+- **Pass 79 (2026-07-29; aperture: holdout-scenario-quality; spec v1.3.165):** 1 CRITICAL — `ADV-C001-P79-CRITICAL-001`: H-NEW-PREFLIGHT-004 Expected bullet 3 incorrectly asserted "stdout contains PROJ-42" when `src/output.rs::print_success` is `eprintln!` (stderr). The v1.3.165 text was permanently unsatisfiable. Also: P79-003/P79-004 (LOW cosmetic edge-case nits). WINDOW NOT ELIGIBLE — CRITICAL resets window to 0/3. Fixed at v1.3.166.
+- **Pass 80 (2026-07-29; aperture: reality-check; spec v1.3.165):** 1 LOW — P80-001 (pre-existing README enumeration staleness); 1 LOW — P80-002 (BC cites F4 rename-target test names — correctly marked delivery obligations). 0 in-delta GAPs. CLEAN under DEC-191. window counter advanced to 1/3 on spec v1.3.165. NOTE: pass-80's aperture asked whether error strings match, NOT which stream they land on — channel correctness was outside aperture.
+- **Pass 81 (2026-07-29; aperture: delta-completeness + AC-falsifiability; spec v1.3.165):** 0 new findings. VERDICT: CLEAN. HOWEVER: pass-81 artifact EXPLICITLY ENDORSED the pass-79 CRITICAL — it wrote "stdout or stderr contains PROJ-42 → stdout contains PROJ-42. Consistent with SYMMETRIC output-channel profile. ✓" — the exact opposite of the CRITICAL. The window was at 2/3 under spec v1.3.165 but the CRITICAL in H-NEW-PREFLIGHT-004 was still present and undetected. Pass-81 represents the detection-asymmetry failure that is the §3 CRITICAL lesson.
+
+Window state after pass-81: 2/3 on spec v1.3.165, but spec v1.3.165 contained a permanently unsatisfiable MUST-PASS assertion. Orchestrator reviewed artifacts cross-pass and identified the defect. Fixed at v1.3.166. Window RESET to 0/3 per DEC-191(a). New window starts at pass-82 on spec v1.3.166.
+
+**Trajectory note:** passes 79/80/81 are NOT window-eligible for the 3/3 convergence gate because pass-79 found a CRITICAL (spec was permanently unsatisfiable; window reset). trajectory-tail anchors at pass-79: →1(CRIT)→2(LOW)→4(2M+2L)→2(LOW) → shorthand →1→2→4→2.
+
+---
+
+### Pass soh-dx-1-f2-pass-82 (2026-07-29) — SUBSTITUTE (DEC-190 WINDOW-ELIGIBLE; aperture: holdout-falsifiability + channel-correctness)
+
+**Findings:** 2 (0C/0H/0M/2L) — ADV-P82-LOW-001 (IN-DELTA REFINEMENT), ADV-P82-LOW-002 (IN-DELTA REFINEMENT); 0 in-delta GAPs
+**Convergence counter:** 0/3 → 1/3 (CLEAN under DEC-191)
+**Window before:** 0/3 (new window; spec v1.3.166 — H-NEW-PREFLIGHT-004 corrected)
+**Window after:** 1/3 STRICT under DEC-191
+**Artifact:** `.factory/cycles/cycle-001/adversarial-reviews/soh-dx-1-f2-pass-82.md`
+**Isolation:** No sibling reviews read; independently verified.
+
+Pass 82 is the first adversarial pass on holdout-falsifiability + channel-correctness aperture for Group 20 (H-NEW-PREFLIGHT-001..006) at spec v1.3.166. Two-way falsifiability table verified for all six scenarios: 001/002/003/006 FAIL against the current warn-and-proceed build (correct — delta-testing); 004/005 do NOT fail (regression/non-mis-fire pins, non-vacuous). ALL six CAN pass against a correct implementation — the [1.3.166] fix resolved the unsatisfiable MUST-PASS. Channel-audit table: all 16 stream assertions verified at emit-site citations. Three DEC-188 error strings byte-identical across bc-3-issue-write.md / error-taxonomy.md / holdout-scenarios.md.
+
+**ADV-P82-LOW-001 (LOW; REFINEMENT; IN-DELTA):** H-NEW-PREFLIGHT-004 Expected bullet 3 contains source-code citations (parenthetical `src/output.rs::print_success` etc.) inside the Expected (observable assertion) block — per aperture item 7, implementation detail in Expected is a defect. Behavioral assertion itself correct. Fix: relocate citations to "Why hidden" section.
+
+**ADV-P82-LOW-002 (LOW; REFINEMENT; IN-DELTA; compounded OUT-OF-DELTA base):** README.md holdout enumeration stale at both sites (Document Map line 48 and Supplement Index line 108). Count (106) correct and authoritative; enumeration description missing Groups 8b–20. Pre-existing staleness compounded by [1.3.164] updating count but not enumeration. THIRD INDEPENDENT FINDING of README enumeration staleness (also found by pass-81, pass-84).
+
+**FIXED at v1.3.167:** ADV-P82-LOW-001 (citation relocated to "Why hidden", BC-3.4.014 moved to BC-refs). ADV-P82-LOW-002 (both README.md sites updated to enumerate through H-NEW-PREFLIGHT-001..006).
+
+**Convergence counter:** 0/3 → 1/3. Both findings are REFINEMENT/LOW; non-window-resetting under DEC-191(c).
+
+**Trajectory so far:** p79(1C-RESET)→p80(2L)→p81(0)→p82(2L). trajectory-tail →1→2→4→2 (tail represents last 4 passes: 79/82/83/84). CONVERGENCE: 1/3. NEXT: pass-83.
+
+---
+
+### Pass soh-dx-1-f2-pass-83 (2026-07-29) — SUBSTITUTE (DEC-190 WINDOW-ELIGIBLE; aperture: emit-site / observable-contract)
+
+**Findings:** 4 (0C/0H/2M/2L) — ADV-P83-MEDIUM-001 + ADV-P83-MEDIUM-002 + ADV-P83-LOW-001 + ADV-P83-LOW-002; 0 in-delta GAPs per VERDICT
+**Convergence counter:** 1/3 → 2/3 (CLEAN under DEC-191)
+**Window before:** 1/3 STRICT
+**Window after:** 2/3 STRICT under DEC-191
+**Artifact:** `.factory/cycles/cycle-001/adversarial-reviews/soh-dx-1-f2-pass-83.md`
+**Isolation:** No sibling reviews read; independently verified.
+**VERDICT NOTE:** Pass-83 declared `VERDICT: CLEAN (no in-delta GAPs)` while its own findings table listed two items (ADV-P83-MEDIUM-001, ADV-P83-LOW-001) with delta-attribution IN-DELTA and classification GAP. Reclassified per DEC-193: these are NOT F2 spec gaps but the pre-implementation state of a correctly-and-completely specified F4 deliverable. Human ruling "F4 is fine" — override RATIFIED. ADVERSARY-VERDICT-VS-CONTRACT-DISCREPANCY second datapoint.
+
+Pass 83 is the first adversarial pass on emit-site / observable-contract aperture at spec v1.3.166. Observable contract table (15 rows) verified all stream assertions at emit sites. Three DEC-188 error strings byte-identical across all four spec surfaces. JSON envelope shape (`{"code":N,"error":"..."}` alphabetical via BTreeMap) confirmed. Guard ordering verified structurally correct: AFTER JSM fork (~:49), BEFORE project-key resolution (~:92), BEFORE HTTP. `ci-gate.needs` complete. Both `rustup target add` steps present.
+
+**ADV-P83-MEDIUM-001 (MEDIUM; classified GAP by pass-83; reclassified by DEC-193 as pre-F4 state):** ci.yml MSRV job invokes `dtolnay/rust-toolchain` with no `with: toolchain:` input → installs stable, not 1.85.0. `# 1.85.0` comment misleading. False-green MSRV check. Root cause documented in delta-analysis.md; mandatory fix in S-626-1 (F3). → F4 S-626-1 per DEC-193.
+
+**ADV-P83-MEDIUM-002 (MEDIUM; REFINEMENT; IN-DELTA):** CLAUDE.md output-channel profile 4 description is ambiguous — "stdout for `--output json`" omits the third path (human-mode success → stderr via `print_success`). Two independent reviewers produced wrong stream assertions from this description (one caused the v1.3.165 CRITICAL). Proposed corrected wording documented in artifact. Scheduled for correction under DEC-194.
+
+**ADV-P83-LOW-001 (LOW; classified GAP by pass-83; reclassified by DEC-193 as pre-F4 state):** `dtolnay/rust-toolchain` SHA pin `c93f4f9c` stale across 4 workflow files; mandated SHA `fa04a1451ff1842e2626ccb99004d0195b455a88` (verified real, 2026-06-30 master ancestor). → F4 S-626-1 per DEC-193.
+
+**ADV-P83-LOW-002 (LOW; REFINEMENT; OUT-OF-DELTA):** CLAUDE.md descriptions of `scripts/check-spec-counts.sh` (missing exit-2 path) and `tests/claude_md_citations.rs` (missing CITATION_FLOOR = 74) stale after #661. Found independently by pass-80 (P80-001) and pass-83. Scheduled under DEC-194.
+
+**Convergence counter:** 1/3 → 2/3. ADV-P83-MEDIUM-002 is REFINEMENT/IN-DELTA (non-resetting). ADV-P83-LOW-002 is OUT-OF-DELTA (non-resetting). ADV-P83-MEDIUM-001 and ADV-P83-LOW-001 reclassified as pre-F4 state (non-resetting per DEC-193).
+
+**Trajectory: →1→2→4→2. CONVERGENCE: 2/3. NEXT: pass-84.**
+
+---
+
+### Pass soh-dx-1-f2-pass-84 (2026-07-29) — SUBSTITUTE (DEC-190 WINDOW-ELIGIBLE; aperture: AC-falsification-against-build + delta-completeness)
+
+**Findings:** 2 (0C/0H/0M/2L) — ADV-P84-LOW-001 (IN-DELTA REFINEMENT), ADV-P84-LOW-002 (OUT-OF-DELTA REFINEMENT); 0 in-delta GAPs
+**Convergence counter:** 2/3 → **3/3 — CONVERGENCE REACHED**
+**Window before:** 2/3 STRICT
+**Window after:** 3/3 STRICT under DEC-191
+**Artifact:** `.factory/cycles/cycle-001/adversarial-reviews/soh-dx-1-f2-pass-84.md`
+**Isolation:** No sibling reviews read; independently verified. Novelty block explicitly records `CONVERGENCE_REACHED — no GAPs found` (omitted literal `VERDICT:` line — minor template non-compliance; substance unambiguous).
+
+Pass 84 is the first adversarial pass on AC-falsification-against-build + delta-completeness aperture at spec v1.3.166. **All 21 ACs satisfiable**: 14 fail against current binary (delta-testing — correct), 7 pass as legitimate regression gates. No AC permanently unsatisfiable at v1.3.166 (v1.3.165 defect corrected). **32 obligations enumerated: 7 DISCHARGED, 20 DEFERRED, 1 NON-GOAL, 0 ABSENT, 0 SPEC-ABSENT.** The orchestrator verified: zero cross-pass references in this artifact (contrast pass-77 which cited "P76-001").
+
+**ADV-P84-LOW-001 (LOW; REFINEMENT; IN-DELTA):** `delta-analysis.md §6` affected-files summary missing 3 F2-added Trace deliverables: `src/cli/mod.rs`, `src/cli/issue/jsm_create.rs`, and `docs/specs/issue-create-preflight-guards.md` (last marked to-be-created at F4). BC-3.8.012 Trace is authoritative for extended scope. **FIXED at v1.3.167:** §6 updated to include all three files.
+
+**ADV-P84-LOW-002 (LOW; REFINEMENT; OUT-OF-DELTA):** README.md holdout enumeration description stale (third independent finding; same root cause as ADV-P82-LOW-002). **FIXED at v1.3.167** (both README.md sites updated).
+
+**Convergence counter:** 2/3 → 3/3 STRICT under DEC-191. PIPELINE READY FOR F2 HUMAN GATE.
+
+**BLOCKING OBJECTION:** DEC-193 reclassified ADV-P83-MEDIUM-001 and ADV-P83-LOW-001 as pre-F4 state. Human ruling "F4 is fine" — override RATIFIED. This clears the blocking objection.
+
+---
+
+## SOH-DX-1 F2 CONVERGENCE DETERMINATION (2026-07-29)
+
+**SOH-DX-1 F2 CONVERGED 3/3 under DEC-191 at spec v1.3.166.** Window = passes 82, 83, 84 — all three CLEAN (no in-delta GAPs), all three artifact-backed, all three independently verified (zero cross-pass references confirmed by orchestrator). DEC-193 ratified the blocking objection override. trajectory-tail →1→2→4→2.
+
+**Gate status: AWAITING EXPLICIT HUMAN APPROVE/REJECT.** Not yet approved.
+
+**FOUR GATE DISCLOSURES (must accompany gate presentation):**
+(a) All passes in this window (82/83/84) were DEC-190 substitute (consistency-validator, not adversary agent).
+(b) Pass-77 independence COMPROMISED (read sibling's draft in prior window).
+(c) AX23-001 out-of-delta ruling PENDING HUMAN RATIFICATION.
+(d) `.factory/policies.yaml` absent — no project policy rubric auto-loaded.
+
+**On approval:** F3 proceeds: S-639-1 (update), S-627-1 (draft), S-626-1 (draft — carrying verified SHA `fa04a1451ff1842e2626ccb99004d0195b455a88` blocking AC, do-not-remove constraint for `rustup target add` steps, MSRV comment-accuracy flag), S-383 (update stale).
+
 **Trajectory (unchanged):** →6→1→1→0 (no new pass ran; this is a meta-event). Window counter RESET: 0/3.

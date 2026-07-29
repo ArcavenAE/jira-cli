@@ -6558,3 +6558,33 @@ _Tagged: [process-gap] [holdout] [fixture] [deserialization] [evaluator] [serde]
 
 _Tagged: [platform-defect] [agent-dispatch] [void-discipline] [soh-dx-1] [f2-adversary-grind] [codified]_
 
+---
+
+### [codified] DETECTION-ASYMMETRY-CRITICAL: Every convergence window MUST test BOTH falsification dimensions — fail-against-current AND pass-against-correct
+
+**Defect (ADV-C001-P79-CRITICAL-001, v1.3.165→v1.3.166):** The orchestrator instructed a "precision fix" at v1.3.165 changing H-NEW-PREFLIGHT-004 Expected bullet 3 from `stdout or stderr contains "PROJ-42"` to `stdout contains "PROJ-42"`, citing CLAUDE.md profile 4 and invoking P35-003/P36-001 as lineage. The original text was correct; the "fix" made a MUST-PASS holdout scenario **permanently unsatisfiable** — failing against both the current binary AND a correctly-implemented one. Ground truth: `src/output.rs::print_success` is `eprintln!` → stderr; `tests/issue_create_echo.rs` (BC-3.4.014) asserts `stdout.is_empty()` in Table mode at four sites. The P35-003/P36-001 precedents concern attachment commands whose echo genuinely reaches stdout — misapplied by over-generalization. Fixed at v1.3.166.
+
+**Detection asymmetry — the core finding:** Three concurrent, independent, isolated reviewers examined the same assertion.
+- **Pass-79 found it CRITICAL.** Pass-79's aperture asked "would this FAIL against the current build?" — it answered YES, and also asked "could this PASS against a correct implementation?" — it answered NO. CRITICAL correctly raised.
+- **Pass-80 never examined channels at all.** Its checklist asked whether error *strings* matched, never which *stream* they land on, despite reading source by construction. MISSED.
+- **Pass-81 actively ENDORSED the defect.** Its artifact explicitly records: `"stdout or stderr contains PROJ-42" → "stdout contains PROJ-42". Consistent with SYMMETRIC output-channel profile. ✓"` — the exact opposite verdict of pass-79. ENDORSED.
+
+So 2 of 3 reviewers missed the CRITICAL, and 1 affirmatively blessed it. The only differentiator was the question asked: pass-79 was explicitly tasked to test "would this fail against the current build AND could it ever pass against a correct implementation?" Passes 80/81 had narrower aperture questions that did not reach channel verification.
+
+**Prescription (actionable, mandatory for future windows):**
+
+> Every convergence window MUST include BOTH falsification dimensions as MANDATORY, NOT optional, for every MUST-PASS assertion:
+> 1. **Would this assertion FAIL against the current (pre-implementation) build?** — tests delta-coverage.
+> 2. **Could this assertion ever PASS against a correct implementation?** — catches permanently-unsatisfiable assertions.
+>
+> Dimension 2 is what catches permanently-unsatisfiable assertions. No adversary pass before pass-82/84 in this project had ever systematically asked it. This also retroactively devalues the earlier 76/77/78 3/3 window: it was CLEAN while DEC-192's holdout gap sat undetected. The window was technically clean, but Dimension 2 was not part of any aperture.
+>
+> Passes that cover Dimension 2 (like passes 82 and 84) MUST be dispatched in every window. An aperture checklist that omits Dimension 2 produces a window that can endorse permanently-unsatisfiable assertions.
+
+**Root cause is documentation, not coincidence:** The same CLAUDE.md profile-4 sentence ("stdout for `--output json`") misled the orchestrator AND pass-81 independently. This is a documentation defect, not two coincidences. Corrected wording scheduled under DEC-194.
+
+**Orchestrator fault acknowledgment:** The CRITICAL was introduced by the orchestrator, not the adversary. The orchestrator claimed to fix a LOW and introduced a CRITICAL. Independent verification of every subagent claim against artifacts is the mitigation that worked (orchestrator verified pass-79's CRITICAL by reading the source files and confirmed it was real before overriding pass-81's endorsement).
+
+_Trigger: ADV-C001-P79-CRITICAL-001 (2026-07-29) — pass-81 endorsed the defect that pass-79 found CRITICAL; orchestrator root-cause analysis confirmed by reading src/output.rs + tests/issue_create_echo.rs; fixed at v1.3.166; two-dimension falsification prescription added to convergence window discipline._
+_Tagged: [spec-defect] [orchestrator-error] [detection-asymmetry] [convergence-window] [falsifiability] [channel-correctness] [soh-dx-1] [f2-adversary-grind] [codified]_
+

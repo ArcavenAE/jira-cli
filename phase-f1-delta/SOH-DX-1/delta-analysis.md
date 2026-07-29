@@ -218,12 +218,25 @@ include cross-compilation targets for musl/windows. After the SHA fix these step
 necessary for cross-compilation; they are NOT a symptom of the broken SHA (they are a build
 requirement). F4 should verify they remain in place and not treat them as fix artifacts.
 
-### 5e. Verified `fa04a145` SHA must be confirmed pre-F4 (Item 3)
+### 5e. Verified `fa04a145` SHA — DISCHARGED at F2 (Item 3)
 
-The human's scope identifies `fa04a145...` as a genuine master-ancestor SHA for
-dtolnay/rust-toolchain. The full SHA has not been confirmed in this analysis — F2 must include
-the verification step (git log on the upstream repo or Perplexity research) before F4 embeds
-it in 6 workflow files. Substituting an unverified SHA defeats the security purpose of pinning.
+**Status: DISCHARGED out-of-band during F2** (recorded in
+`.factory/cycles/cycle-001/session-checkpoints.md` P71-001 and
+`.factory/cycles/cycle-001/convergence-trajectory.md`).
+
+Full 40-character SHA confirmed: `fa04a1451ff1842e2626ccb99004d0195b455a88`, dated 2026-06-30,
+commit title "Add 1.96.1 patch release". Confirmed ancestor of `master` (behind_by: 0).
+
+The currently-pinned SHA `c93f4f9c67595668add93d3d6895795ce52d8c2d` (dated 2026-03-27) is NOT
+a `master` ancestor. This is **not** evidence of compromise — `dtolnay/rust-toolchain` maintains
+dozens of per-version branches, so a non-ancestor pin on a version-branch commit is expected
+behavior there.
+
+**Downstream obligation still stands (F3 deliverable):** S-626-1 must carry a blocking
+pre-implementation acceptance criterion that pins the verified full SHA
+`fa04a1451ff1842e2626ccb99004d0195b455a88` before F4 embeds it in the 6 workflow files.
+This obligation is currently STATE-ONLY (STATE.md carries it) and is expected to become
+S-626-1 story content at F3. Do not remove it.
 
 ---
 
@@ -233,6 +246,8 @@ it in 6 workflow files. Substituting an unverified SHA defeats the security purp
 
 ```
 src/cli/issue/create.rs
+src/cli/mod.rs                                   (F2 Trace deliverable (d) — BC-3.8.012; added post-F1 analysis)
+src/cli/issue/jsm_create.rs                      (F2 Trace deliverable (e) — BC-3.8.012; added post-F1 analysis)
 tests/issue_create_jsm.rs
 CHANGELOG.md
 scripts/check-bc-no-numeric-test-counts.sh
@@ -243,6 +258,7 @@ scripts/check-bc-no-numeric-test-counts.sh
 .github/workflows/release.yml
 .github/workflows/sign-and-publish.yml
 CLAUDE.md
+docs/specs/issue-create-preflight-guards.md      (F2 Trace deliverable (f) — BC-3.8.012; to-be-created at F4; not yet present in the repo)
 ```
 
 ### factory-artifacts branch changes

@@ -4,7 +4,7 @@ title: "Holdout Scenarios"
 total_holdouts: 106
 # H-NEW-AUTH-002 registered by S-0.07 (Phase 3, 2026-05-07). Wave 0 COMPLETE.
 # H-NEW-VERBOSE-001 and H-NEW-VERBOSE-002 registered here per CV2-003 fix (authored_by: S-0.06).
-version: "1.5.10"
+version: "1.5.12"
 last_updated: 2026-07-29
 source_pass: 3
 trace: |
@@ -27,7 +27,8 @@ trace: |
   - SOH-ATTACHMENTS-1 adversary pass-35 (2026-07-17, P35): H-NEW-ATTACHMENT-002 Expected bullet 4 tightened — "stdout or stderr contains a success message" → "stderr contains a progress/completion message" (BC-2.7.007 profile 3: nothing on stdout in human mode; P35-003); H-NEW-ATTACHMENT-004 Expected A bullet 1 tightened — "stdout/stderr contains" → "stdout contains" (BC-3.9.001 profile 4: human echo to stdout; P35-003); Status lines for both scenarios updated with P35-003 citations; holdout count unchanged (100)
   - SOH-ATTACHMENTS-1 adversary pass-36 (2026-07-17, P36): H-NEW-ATTACHMENT-004 Expected B bullet 4 tightened — "stdout/stderr references the new attachment `30002`" → "stdout references the new attachment `30002`" (BC-3.9.001 profile 4: human echo to stdout; P36-001); H-NEW-ATTACHMENT-004 Status line updated with P36-001 citation; Expected C "stdout/stderr does NOT contain" confirmed as a legitimate two-channel negative assertion — left unchanged; holdout count unchanged (100)
   - SOH-ATTACHMENTS-1 closing micro-round 1.3.77→1.3.78 (2026-07-17, P39-I3): H-NEW-ATTACHMENT-007 id 60004 fixture description corrected — on Unix backslashes are neutralized by step-4 char-scrub (`\`→`_`), not step-1 `file_name()`; assertion unchanged, satisfiable either way (P39-I3); version 1.5.7→1.5.8; holdout count unchanged (100)
-  - SOH-DX-1 adversary precision fix (2026-07-29): H-NEW-PREFLIGHT-004 Expected bullet 3 tightened — "stdout or stderr contains" → "stdout contains" (profile 4: human echo goes to stdout; lineage P35-003/P36-001); version 1.5.9→1.5.10; holdout count unchanged (106)
+  - SOH-DX-1 adversary precision fix — DEFECT INTRODUCED THEN CORRECTED (2026-07-29): v1.3.165 incorrectly changed H-NEW-PREFLIGHT-004 Expected bullet 3 to "stdout contains PROJ-42", misapplying attachment-command profile-4 reasoning (P35-003/P36-001) to `issue create` Table mode without verifying `src/output.rs::print_success` (line 46: `eprintln!` → stderr). v1.3.166 corrects to "stderr contains Created issue PROJ-42" + "stdout.trim().is_empty()" — matching `tests/issue_create_echo.rs` BC-3.4.014 four-site assertion. P35-003/P36-001 precedents are valid for attachment upload (where `print_output` writes to stdout in table mode), NOT for `issue create` Table mode (which uses `print_success` → eprintln → stderr); do not over-generalize. version 1.5.10→1.5.11; holdout count unchanged (106)
+  - ADV-P82-LOW-001 ledger clearance (2026-07-29): H-NEW-PREFLIGHT-004 Expected bullets 3–4 stripped of implementation-detail parentheticals (emit-site source citations relocated to "Why hidden"; BC-3.4.014 moved to BC-refs metadata line); README.md Document Map and Supplement Index holdout enumeration rows updated to canonical CANONICAL-COUNTS.md §Holdout Scenarios enumeration (Groups 8b–20, all 12 groups now listed); delta-analysis.md §6 affected-files summary extended with three F2 Trace deliverables added post-F1: src/cli/mod.rs (d), src/cli/issue/jsm_create.rs (e), docs/specs/issue-create-preflight-guards.md (f, to-be-created at F4). spec-changelog.md [1.3.167] prepended. version 1.5.11→1.5.12; holdout count unchanged (106).
   - SOH-DX-1 F2 holdout authoring (2026-07-29, #639): issue create pre-flight guards — 6 new scenarios H-NEW-PREFLIGHT-001..H-NEW-PREFLIGHT-006 (BC-3.8.012: --field alone → exit 64 zero HTTP; BC-3.8.013: --on-behalf-of alone → exit 64 zero HTTP; BC-3.8.012 combined: both flags → combined error ONE fire; BC-3.8.012+013: neither flag → exit 0 regression pin; BC-3.8.012+013: JSM path non-mis-fire; BC-3.8.012: --output json envelope); overrides F51-001 coverage-non-goal rationale per F2 gate human ruling; version 1.5.8→1.5.9; holdout count 100→106
 ---
 
@@ -2681,15 +2682,16 @@ If instead the `GET ?fields=attachment` returned `[]` (zero matches), the flag `
 **Expected (MUST-PASS)**:
 - Exit code = 0.
 - `POST /rest/api/3/issue` was called exactly once.
-- stdout contains `"PROJ-42"` (the created issue key returned by the mock; profile 4: human echo goes to stdout).
+- stderr contains `"Created issue PROJ-42"`.
+- stdout is empty (Table mode carries no data on stdout).
 - stderr does NOT contain `"--field is only valid with"` (guard did NOT fire for absent `--field`).
 - stderr does NOT contain `"--on-behalf-of is only valid with"` (guard did NOT fire for absent `--on-behalf-of`).
 
-**Why hidden**: This scenario pins the breaking-change regression boundary: the platform-create path MUST remain byte-for-byte unchanged when neither `--field` nor `--on-behalf-of` is supplied. If the pre-flight guard were implemented unconditionally (firing regardless of whether those flags are present), this invocation would also exit 64 and the POST would not be called. The POST call being made (once) and exit code 0 are jointly the decisive signal: a guard that fires unconditionally fails both independently.
+**Why hidden**: This scenario pins the breaking-change regression boundary: the platform-create path MUST remain byte-for-byte unchanged when neither `--field` nor `--on-behalf-of` is supplied. If the pre-flight guard were implemented unconditionally (firing regardless of whether those flags are present), this invocation would also exit 64 and the POST would not be called. The POST call being made (once) and exit code 0 are jointly the decisive signal: a guard that fires unconditionally fails both independently. *Emit-site grounding (for reviewers, not the holdout evaluator):* `jr issue create` Table mode emits the success key via `src/output.rs::print_success` (`eprintln!` → stderr, not stdout); BC-3.4.014 and `tests/issue_create_echo.rs` pin the four-site stdout-empty invariant.
 
 **Status**: MUST-PASS. Pins the clean-path invariant (BC-3.8.012 / BC-3.8.013): neither flag present → no guard fires; platform create proceeds normally; issue key returned; exit 0. This is the BREAKING-CHANGE REGRESSION PIN: the DEC-188 behavior change is CONDITIONAL on flag presence, NOT unconditional. SOH-DX-1 F2 2026-07-29.
 
-**BC refs**: BC-3.8.012 (clean path: flag-absent → guard does not fire), BC-3.8.013 (same clean-path invariant), BC-3.3.001 (platform issue create success path)
+**BC refs**: BC-3.8.012 (clean path: flag-absent → guard does not fire), BC-3.8.013 (same clean-path invariant), BC-3.3.001 (platform issue create success path), BC-3.4.014 (Table mode stdout-empty invariant)
 
 ---
 

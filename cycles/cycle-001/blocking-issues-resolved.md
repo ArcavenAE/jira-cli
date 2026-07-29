@@ -7,7 +7,7 @@ producer: state-manager
 timestamp: 2026-05-26T00:00:00
 cycle: "cycle-001"
 inputs: [STATE.md]
-input-hash: "2f1a115"
+input-hash: "1da24b2"
 traces_to: STATE.md
 ---
 
@@ -53,7 +53,7 @@ These rows had Status = RESOLVED / CLOSED in STATE.md and are archived here. The
 | DEFER-383-2 | docs-cleanup — CANONICAL-COUNTS.md change-attribution wording | DROPPED — premise refuted by validation; attribution already present at CANONICAL-COUNTS.md:55/57. Research: `.factory/research/issue-383-deferred-followups-validation.md` | LOW | **DROPPED** | 2026-05-20 |
 | DEFER-383-3 | process-gap — `scripts/check-spec-counts.sh` validates only `definitional_count`, not cumulative `total_bcs` | RESOLVED — delivered as S-392 / PR #393 / issue #392 closed 2026-05-20 | LOW | **RESOLVED** | 2026-05-20 |
 | DRIFT-BC2-PROSE | docs — `bc-2-issue-read.md` frontmatter `total_bcs: 93` vs body preamble "92 behavioral contracts" | bc-2-issue-read.md body preamble corrected 92→93 (AC-5, factory-artifacts 5852a4a); the new DRIFT-002 guard now prevents recurrence of this drift class. | LOW | **RESOLVED-BY-S-392** | 2026-05-20 |
-| DI-E2E-F5-2 | S-E2E-1 F5 LOW deferred: `sprint current` clean-skip only matched "No active sprint" — kanban/simple board would panic. Provisioning assumption was that board must be Scrum. | LOW | **RESOLVED** — FIX-B in S-E2E-2 (PR #434 @ 2ca9fc1, 2026-05-29): sprint_list and sprint_current now detect "simple board" response and emit a clean SKIP log line instead of panicking. | 2026-05-29 |
+| DI-E2E-F5-2 | sprint-correctness | S-E2E-1 F5 LOW deferred: `sprint current` clean-skip only matched "No active sprint" — kanban/simple board would panic. Provisioning assumption was that board must be Scrum. | LOW | **RESOLVED** — FIX-B in S-E2E-2 (PR #434 @ 2ca9fc1, 2026-05-29): sprint_list and sprint_current now detect "simple board" response and emit a clean SKIP log line instead of panicking. | 2026-05-29 |
 
 ---
 
@@ -64,11 +64,11 @@ These rows had Status = RESOLVED / CLOSED / COMPLETE in the Drift Items table an
 | ID | Area | Description | Severity | Status | Resolved Date |
 |----|------|-------------|----------|--------|---------------|
 | DRIFT-E2E-1 | E2E cycle-close: mechanical jr-invocation-vs-clap-tree guard | Recommended in DEC-038 [process-gap]. Shipped via PR #443 (merge c395e27, 2026-05-31): tests/e2e_cli_surface_guard.rs validates 25 jr subcommand paths + ~40 (path,flag) assertions against `jr --help` offline at CI time. Post-merge live e2e run 26722732004 = 57/0 SUCCESS. | LOW | **RESOLVED — shipped PR #443 @ c395e27 (2026-05-31); live 57/0 run 26722732004 (DEC-048).** | 2026-05-31 |
-| OQ-1 | Sprint coverage gap: ES board 1 = "simple board" (team-managed project). `jr sprint` unsupported for team-managed boards; live suite skips sprint tests but passes green. Real sprint coverage needs company-managed Scrum board or jr enhancement. | LOW | **RESOLVED 2026-05-29** — board recreated as company-managed Scrum (id 3); JR_E2E_BOARD_ID updated 1→3; run 26659977426 20/0 sprint tests RUN+PASS (DEC-036). | 2026-05-29 |
-| R-NEW-1 | E2E provisioning: jira-e2e GitHub env + secrets/vars + ES project + board 1 created. | MEDIUM | **COMPLETE 2026-05-29** (DEC-035). | 2026-05-29 |
+| OQ-1 | e2e-sprint-coverage | Sprint coverage gap: ES board 1 = "simple board" (team-managed project). `jr sprint` unsupported for team-managed boards; live suite skips sprint tests but passes green. Real sprint coverage needs company-managed Scrum board or jr enhancement. | LOW | **RESOLVED 2026-05-29** — board recreated as company-managed Scrum (id 3); JR_E2E_BOARD_ID updated 1→3; run 26659977426 20/0 sprint tests RUN+PASS (DEC-036). | 2026-05-29 |
+| R-NEW-1 | e2e-provisioning | E2E provisioning: jira-e2e GitHub env + secrets/vars + ES project + board 1 created. | MEDIUM | **COMPLETE 2026-05-29** (DEC-035). | 2026-05-29 |
 | E2E-PG-1 | mechanical jr-invocation-vs-clap-tree validator (assumed-CLI-surface defect class, ~10x recurrence) | **RESOLVED 2026-05-31** — tests/e2e_cli_surface_guard.rs shipped via PR #443 (merge c395e27; 11/11 CI; live e2e run 26722732004 = 57/0). See DEC-048 + DRIFT-E2E-1. | self-improvement/test-infra | **CLOSED** | 2026-05-31 |
-| DRIFT-E2E-ALT | Gated test `test_e2e_issue_edit_issuetype_multikey_bulk_roundtrip` clean-skips until `JR_E2E_ISSUE_TYPE_ALT` is set in the jira-e2e GitHub Environment AND the E2E project has a 2nd issue type. Live validation of issueType bulk resolution deferred to CI (nightly e2e.yml). Owner: maintainer. Target: next E2E env touch. | LOW | **RESOLVED 2026-06-01** — JR_E2E_ISSUE_TYPE_ALT=Bug set in jira-e2e GitHub Environment (PR #454). Live run 26779732719 = 66/0: test now RUN and PASSES live (DEC-058). | 2026-06-01 |
-| BUG-LABEL-400 | jr `issue edit --label add:/remove:` (single key) sends malformed bulk payload → HTTP 400 on real Jira. Root cause: fabricated editedFieldsInput schema (`labels.labelsAction` + `{"name":..}` items) matches no real Jira schema; wiremock-only coverage never validated live. **RESOLVED by fix chain: #447 (single-key PUT /rest/api/3/issue/{key} update.labels) + #448 (multi-key labelsFields schema) + #449 (integer taskId deserializer) + #450 (numeric issue IDs deserializer). Final live run 26735722804 (develop @ cff86d2) = 61/0 ALL GREEN.** | HIGH | **RESOLVED — fix chain #447-#450 live-green (run 26735722804, 61/0, 2026-06-01)** | 2026-06-01 |
+| DRIFT-E2E-ALT | e2e-issuetype-coverage | Gated test `test_e2e_issue_edit_issuetype_multikey_bulk_roundtrip` clean-skips until `JR_E2E_ISSUE_TYPE_ALT` is set in the jira-e2e GitHub Environment AND the E2E project has a 2nd issue type. Live validation of issueType bulk resolution deferred to CI (nightly e2e.yml). Owner: maintainer. Target: next E2E env touch. | LOW | **RESOLVED 2026-06-01** — JR_E2E_ISSUE_TYPE_ALT=Bug set in jira-e2e GitHub Environment (PR #454). Live run 26779732719 = 66/0: test now RUN and PASSES live (DEC-058). | 2026-06-01 |
+| BUG-LABEL-400 | issue-edit-label | jr `issue edit --label add:/remove:` (single key) sends malformed bulk payload → HTTP 400 on real Jira. Root cause: fabricated editedFieldsInput schema (`labels.labelsAction` + `{"name":..}` items) matches no real Jira schema; wiremock-only coverage never validated live. **RESOLVED by fix chain: #447 (single-key PUT /rest/api/3/issue/{key} update.labels) + #448 (multi-key labelsFields schema) + #449 (integer taskId deserializer) + #450 (numeric issue IDs deserializer). Final live run 26735722804 (develop @ cff86d2) = 61/0 ALL GREEN.** | HIGH | **RESOLVED — fix chain #447-#450 live-green (run 26735722804, 61/0, 2026-06-01)** | 2026-06-01 |
 
 ---
 
@@ -328,3 +328,15 @@ One drift item closed: the artifact-backed window (passes 76/77/78) supersedes t
 | ID | Area | Description | Severity | Status | Resolved Date |
 |----|------|-------------|----------|--------|---------------|
 | PHANTOM-CONVERGENCE-EVIDENCE | spec integrity | STATE.md asserted pass-73/74/73b/74b were appended to convergence-trajectory.md and burst-log.md — VERIFIED FALSE (convergence-trajectory.md terminated at adv-72; zero occurrences of pass-73/74/adv-73/adv-74). F2 convergence claim had no artifact backing. SUPERSEDED by a fully artifact-backed window: passes 76/77/78 each have a findings artifact on disk at .factory/cycles/cycle-001/adversarial-reviews/soh-dx-1-f2-pass-7{6,7,8}.md. The unbacked passes 73/74/73b/74b are NOT counted toward any convergence window; they remain in session-checkpoints.md as historical record only. | MEDIUM | SUPERSEDED / CLOSED — artifact-backed window (76/77/78) replaces the prior unbacked claim | 2026-07-29 |
+
+---
+
+## Resolved 2026-07-29 — SOH-DX-1 F2 convergence window spec v1.3.167 refinement fixes
+
+Three LOW REFINEMENT findings fixed in spec v1.3.167 after passes 82/83/84.
+
+| ID | Area | Description | Severity | Status | Resolved Date |
+|----|------|-------------|----------|--------|---------------|
+| ADV-P82-LOW-001 | spec-fidelity | H-NEW-PREFLIGHT-004 Expected bullet 3 contained source-code citations (parenthetical `src/output.rs::print_success`, `src/cli/issue/create.rs::handle_create`, `tests/issue_create_echo.rs`) inside the Expected (observable assertion) section — implementation detail in Expected violates aperture item 7. Behavioral assertion ("stderr contains 'Created issue PROJ-42'") was correct. Fix: citation relocated to "Why hidden" section; BC-3.4.014 reference moved to BC-refs. Introduced by v1.3.166 orchestrator instruction conflict (orchestrator demanded emit-site citations inside holdout Expected blocks while separately forbidding implementation detail — ADV-P82-LOW-001 was the direct result). | LOW | FIXED — v1.3.167 (citation relocated to "Why hidden") | 2026-07-29 |
+| README-ENUMERATION-STALENESS | spec-fidelity | README.md holdout enumeration description stale at both sites (Document Map line 48 and Supplement Index line 108) — count (106) was correct but enumeration description missing Groups 8b through 20 (12 later groups). Found independently by passes 81, 82, and 84. Pre-existing staleness compounded by [1.3.164] updating count but not enumeration. Both sites now enumerate through H-NEW-PREFLIGHT-001..006. Count (106) unchanged and authoritative. | LOW | FIXED — v1.3.167 (both README.md sites updated; count 106 unchanged) | 2026-07-29 |
+| ADV-P84-LOW-001 | spec-fidelity | `delta-analysis.md §6` affected-files summary missing 3 F2-added Trace deliverables: `src/cli/mod.rs` (help-string update, deliverable (d), pinned by AC-12), `src/cli/issue/jsm_create.rs` (comment correction, deliverable (e)), and `docs/specs/issue-create-preflight-guards.md` (new feature spec, deliverable (f), per ADR-0004 convention, marked to-be-created at F4). BC-3.8.012 Trace is authoritative for extended scope; delta-analysis.md §6 was advisory. | LOW | FIXED — v1.3.167 (§6 updated with all three additional delivery files) | 2026-07-29 |
