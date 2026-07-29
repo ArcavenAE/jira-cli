@@ -6541,3 +6541,20 @@ _Tagged: [process-gap] [shared-function] [caller-audit] [bc-alignment] [fix-dire
 
 _Trigger: SOH-ATTACHMENTS-1 Gate-5 evaluator fixture-completion note (2026-07-25); holdout fixture deserialization failure required a pre-evaluation repair pass._
 _Tagged: [process-gap] [holdout] [fixture] [deserialization] [evaluator] [serde] [soh-attachments-1] [codified]_
+
+---
+
+### [codified] AGENT-IDLE-NO-REPORT — Full Amendment History (compacted from STATE.md 2026-07-29)
+
+**Original finding (F2 adversary round 1):** Discriminator is task shape, not agent type/tool profile/model/scope. All open-ended analytical dispatches ("find any defects") produced zero retrievable output; enumerated-checklist and specified-edit dispatches largely delivered.
+
+**Root cause RE-ATTRIBUTED (2026-07-28 LEDGER-BURST):** Platform defect GitHub issue #47936 — background subagents make 5-40 tool calls, stop mid-work, reported to parent as `<status>completed</status>` with NO `<result>` block; `stop_reason: None`; reproduced at 14-30% of runs; NOT a prompting issue. Route UPSTREAM TO ANTHROPIC. Prior attribution to adversary agent definition was WRONG.
+
+**NUDGE-TWICE-BEFORE-VOID standing rule (2026-07-28):** Never record a dispatch as VOID until nudged twice via SendMessage. Auto-resume retains full conversation history and picks up where the agent stopped. Evidence: adv-71 idled with no report, then delivered a complete 3-finding report after nudging. Historical VOID tally (pass-70 VOID×3 and earlier session) is likely OVER-COUNTED and should be treated as unreliable.
+
+**FALSE-VOID CORRECTION (2026-07-28 F2-CONVERGENCE-BURST):** Four passes (adv-73, adv-74, adv-73b, adv-74b) were each prematurely declared VOID after two nudges; all four then delivered complete reports. adv-73 stated explicitly its sweep "finished before the nudges arrived." Two nudges is NOT sufficient evidence of VOID for long-running analytical passes (15+ minutes). **AMENDED RULE:** require a substantially longer quiet period (or an explicit NO ANALYSIS COMPLETED reply) before recording VOID. The "large structured output causes VOID" hypothesis is REFUTED — pass-74 delivered a full 21-row table. This materially lowers the historical VOID tally's credibility AGAIN (pass-70's VOID×3 may also have been premature).
+
+**Second confirmed datapoint for PHANTOM-CONVERGENCE-EVIDENCE (2026-07-29):** The four passes above (73/74/73b/74b) delivered reports in-session but were never appended to convergence-trajectory.md or burst-log.md. STATE.md asserted their completion but artifacts show no evidence. The SOH-DX-1-PG-001 class (STATE-claims-vs-artifacts) applies here at higher severity.
+
+_Tagged: [platform-defect] [agent-dispatch] [void-discipline] [soh-dx-1] [f2-adversary-grind] [codified]_
+

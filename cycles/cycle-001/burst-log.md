@@ -7486,3 +7486,34 @@ cycles/cycle-001/convergence-trajectory.md (2 new sections: adv-71, adv-72); cyc
 | **F2 rounds 64-66 + substitute passes 64/65/66 (2026-07-28): p139-sub (pass-64 FINDING F64-001 LOW — F1 E2E scan obligation DISCHARGED; WINDOW RESET 0/3); p140-sub (pass-65 FINDING F65-001 MEDIUM + F65-002 LOW — citation ambiguity + F3 AC guidance; both delta-attributable; WINDOW RESET 0/3); p141-sub (pass-66 BROAD UNSTRUCTURED RE-TREAD FINDING F66-001 LOW — v1.3.142 unpropagated literal rename completed; WINDOW RESET 0/3). UPSTREAM-COMPLETENESS-APERTURE + ORCHESTRATOR-ERROR-INJECTION-RATE codified. spec v1.3.158; BC-INDEX v6.73 unchanged; 3 guards green; 0/3 STRICT (DEC-189/DEC-190). NEXT: pass-67 (p142-sub or adversary) with v1.3.158 artifacts.** | consistency-validator (substitute x3) + orchestrator + state-manager | COMPLETED | spec v1.3.158; BC-INDEX v6.73; STORY-INDEX v1.5.42; convergence-trajectory p139-sub/p140-sub/p141-sub appended; burst-log.md appended; factory-artifacts committed. |
 
 ### Convergence counter: **1/3 STRICT (orchestrator read)**. pass-71 (adv-71) FINDINGS 3 (P71-001 MEDIUM+2L; WINDOW RESET 2/3→0/3 orchestrator read; PENDING HUMAN RATIFICATION DEC-189) → pass-72 (adv-72) FINDING 1 pre-existing (P72-001 HIGH; out-of-delta; FIXED v1.3.160; window 0/3→1/3). HUMAN RULING: if P71-001 is F3 input not F2 defect, window is 3/3 STRICT and F2 human gate is ready. NEXT: human ruling on DEC-189 P71-001 classification OR pass-73 with fresh aperture.
+
+---
+
+## STATE.md Compaction Burst — 2026-07-29 (compact-state + factual reconciliation)
+
+### Archived Phase Progress rows (keep-5 rule: rounds 67 + 68-70 → archived; new active set: LEDGER-BURST-71-72, DEC-191-BURST, F2-CONVERGENCE-BURST)
+
+| Phase | Status | Completed | Gate | Notes | Finding Progression |
+|-------|--------|-----------|------|-------|---------------------|
+| **F2 round 67 + substitute pass 67 (2026-07-28): p142-sub (pass-67 BROAD UNSTRUCTURED RE-TREAD FINDING 2L — F67-001 LOW: BC-3.8.012 combined-check ordering sentence broadened; F67-002 LOW: AC-9/AC-11/AC-16(a)/AC-17 rationale corrected to ancestor-config isolation; AC-10 deliberately NOT changed — deliberate asymmetry documented; both delta-attributable; WINDOW RESET 0/3). STRICT-WINDOW-NO-FIXED-POINT codified. TWIN-ARTIFACT-SWEEP 19→20. spec v1.3.159; BC-INDEX v6.73 unchanged; STORY-INDEX v1.5.42; 0/3 STRICT (DEC-189/DEC-190). NEXT: pass-68.** | F2 adversary grind in progress | 2026-07-28 | ADVERSARY GRIND — convergence + human gate PENDING. | spec v1.3.159; BC-INDEX v6.73; STORY-INDEX v1.5.42. | →1L→1M+1L→1L→2L |
+| **F2 rounds 68-70 + substitute passes 68/69 + VOID pass 70 (2026-07-28): p143-sub (pass-68 ZERO FINDINGS; CLEAN; window 1/3); p144-sub (pass-69 ZERO FINDINGS; CLEAN; wiremock UNVERIFIED resolved out-of-band; window 2/3); pass-70 VOID×3 (adv-70, adv-70b, adv-70c; subagent delivery failure; no credit, no reset; window stays 2/3). STRICT-WINDOW-NO-FIXED-POINT: fixed point IS reachable — blocked by infrastructure. ZERO-HTTP-PROOF-VERIFIED CLOSED (INFO). AGENT-IDLE-NO-REPORT: 3/6 dispatches void this session — VOID is now binding constraint. spec v1.3.159 (no change); BC-INDEX v6.73 unchanged; STORY-INDEX v1.5.42; 2/3 STRICT (DEC-189/DEC-190). NEXT: leaner dispatch for pass-71 or human criterion ruling.** | F2 adversary grind in progress | 2026-07-28 | ADVERSARY GRIND — convergence + human gate PENDING. | spec v1.3.159; BC-INDEX v6.73; STORY-INDEX v1.5.42. | →2L→0→0→0 |
+
+### Archived CPS rows (keep-4 rule: SESSION-WRAP + LEDGER-BURST-71-72 → archived; new active set: DEC-191-BURST, F2-CONVERGENCE-BURST)
+
+| Step | Agent | Status | Output |
+|------|-------|--------|--------|
+| **SESSION WRAP (human-requested `/wrap`, 2026-07-28): PIPELINE PAUSED. SOH-DX-1 F2 WINDOW 2/3 STRICT. No in-flight worktrees. spec v1.3.159 (no change); BC-INDEX v6.73 unchanged; STORY-INDEX v1.5.42. 23 substitute adversarial passes (48-70) this session; 27 findings fixed v1.3.145→v1.3.159; 8 factory-artifacts commits pushed. PENDING HUMAN DECISIONS (all UNANSWERED): (1) third-pass gate resolution options a-d; (2) adversary fix path; (3) input-hash drift disposition; (4) PHANTOM-ADR-0017; (5) PR queue #645/#628/#574. NEXT: open fresh session + /vsdd-factory:next-step.** | state-manager | PAUSED | spec v1.3.159; BC-INDEX v6.73; STORY-INDEX v1.5.42; STATE.md + session-checkpoints.md + sidecar-learning.md committed. |
+| **LEDGER-BURST-2026-07-28 passes 71-72 (2026-07-28): adv-71 FINDINGS 3 (P71-001 MEDIUM + P71-002 LOW + P71-003 LOW; orchestrator read WINDOW RESET 2/3→0/3; PENDING HUMAN RATIFICATION DEC-189); adv-72 FINDINGS 1 (P72-001 HIGH pre-existing; FIXED v1.3.160; window 0/3→1/3). 5 ledger changes: PHANTOM-ADR-0017 CLOSED-FP; CANONICAL-COUNTS-STALE-ADR-LOCATIONS CLOSED-FIXED; ADVERSARY-AGENT-NONFUNCTIONAL MERGED-REROUTED; 3 new drift items. spec v1.3.160; BC-INDEX v6.73; STORY-INDEX v1.5.42. Convergence: 1/3 (orchestrator read; PENDING HUMAN RATIFICATION — if P71-001 is F3 input, window=3/3). NEXT: human ruling on DEC-189 P71-001 classification.** | adv-71/adv-72 (DEC-190 substitutes) + orchestrator + state-manager | COMPLETED | spec v1.3.160; BC-INDEX v6.73; STORY-INDEX v1.5.42; convergence-trajectory adv-71/adv-72 appended; burst-log.md appended; factory-artifacts committed. |
+
+### Factual Reconciliation Burst (2026-07-29)
+
+STATE.md updated to reflect:
+- Spec v1.3.163 (six-axis review remediation: 8 findings fixed across v1.3.161/v1.3.162/v1.3.163; commit 13f015da)
+- BC-INDEX v6.75 (index_version verified in frontmatter); BC count unchanged at 657 cumulative
+- New cycle S-POL-11-GUARD-FALSE-GREEN added: PR #661 OPEN, branch fix/guard-false-green @ c13df96b, worktree /Users/zious/Documents/GITHUB/jira-cli/.worktrees/FIX-GUARD-FALSEGREEN, 15/15 CI GREEN, AWAITING HUMAN MERGE per DEC-173
+- develop fast-forward RESOLVED: local develop now at e72b0166, in sync with origin/develop
+- F2 gate status downgraded: 3/3 CLAIMED under DEC-191 — EVIDENCE UNVERIFIED; GATE BLOCKED pending human ruling (PHANTOM-CONVERGENCE-EVIDENCE: convergence passes 73/74/73b/74b have no artifact backing in convergence-trajectory.md or burst-log.md; SIX-AXIS-REVIEW-UNLOGGED: six-axis review ran post-convergence, fixing 8 findings including AX23-001 GAP-tagged)
+- SPEC-INLINE-REVERT-SIGNAL discharged (v1.3.162); moved to blocking-issues-resolved.md
+- 3 new drift items added: PHANTOM-CONVERGENCE-EVIDENCE (MEDIUM), SIX-AXIS-REVIEW-UNLOGGED (MEDIUM), STALE-FACTORY-ARTIFACTS-BRANCH (LOW)
+- 7 closed drift items archived to blocking-issues-resolved.md
+
