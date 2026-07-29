@@ -9,6 +9,47 @@ Track all spec version changes. Most recent version first.
 
 > **Type legend:** Type classifies the SPEC document delta: MINOR = new BCs/VPs/sections; PATCH = amendments to existing bodies/ACs/ECs. Product-semver impact is recorded in the Summary line, independent of Type.
 
+## [1.3.163] - 2026-07-28
+
+### Type: PATCH
+
+### Summary
+
+RS-001 (REFINEMENT, LOW): "Master traceability:" prose header in BC-INDEX.md drops trailing "→ Subject" to match the actual 5-column table schema (Subject column was removed in v1.3.162/AX-002 but the prose header was not updated). 1 site found and fixed; no sibling files under `.factory/specs/prd/` contained the live string outside immutable audit files. BC counts unchanged (657 total).
+
+### Changed
+
+- `.factory/specs/prd/BC-INDEX.md` (MODIFIED): RS-001 — "Master traceability:" prose line (line 22) drops "→ Subject" tail; `index_version` v6.74→v6.75; `last_updated` prepended with RS-001 trail entry.
+- `.factory/spec-changelog.md` (MODIFIED): [1.3.163] entry prepended.
+
+### BC Count
+
+0 new BCs. Total unchanged: 657 cumulative (BC-INDEX).
+
+---
+
+## [1.3.162] - 2026-07-28
+
+### Type: PATCH
+
+### Summary
+
+Four adversarial-review findings fixed (AX23-001 GAP/LOW, AX-001 REFINEMENT/MEDIUM, AX-002 REFINEMENT/LOW, P73-001 REFINEMENT/LOW): (1) VP-571-003 phantom test name replaced with real citation; (2) BC-2.7.001 H1 synced with BC-INDEX; (3) BC-INDEX Section 1 Subject column normalized to 5-column schema; (4) pending-revert annotations added for hyphenation workarounds in BC-3.9.001 and BC-3.9.003. BC counts unchanged (657 total).
+
+### Changed
+
+- `.factory/specs/prd/bc-7-output-render.md` (MODIFIED): AX23-001 — VP-571-003 phantom test name `test_bc_7_2_015_ec_6_strong_retained_on_sibling_text_nodes_of_code_span` replaced with real citation `src/adf.rs::test_bc_7_2_015_mixed_range_surrounding_marks_retained` (confirmed by `/// EC-6 / VP-571-003` tag in src/adf.rs); second name verified existing, converted to symbol form `src/adf.rs::test_bc_7_2_015_multi_mark_wrapper_only_code_node_stripped`; "Suggested test names:" → "Coverage:"; BC-7.2.015 version history table row v1.1.1 added; frontmatter trace entry added; `last_updated` bumped to 2026-07-28.
+- `.factory/specs/prd/bc-2-issue-read.md` (MODIFIED): AX-001 — BC-2.7.001 H1 synced with BC-INDEX: added "renders table:" prefix, added "; output channel profile 2 (stdout data, stderr hints)" suffix; verified against `src/cli/issue/attachments.rs::format_size` (human-formatted table size) and body `**Output channel profile**: 2` field; frontmatter v1.3.162 trail entry prepended; `last_updated` bumped to 2026-07-28.
+- `.factory/specs/prd/BC-INDEX.md` (MODIFIED): AX-002 — Subject column removed from all Section 1 tables (6 subsections, 46 data rows, lossless — **Subject**: fields retained in bc-1-auth-identity.md BC bodies; spot-checked BC-1.1.001/BC-1.2.013/BC-1.3.019 each have `**Subject**: Auth & Identity` in body); `index_version` v6.73→v6.74; `last_updated` bumped to 2026-07-28.
+- `.factory/specs/prd/bc-3-issue-write.md` (MODIFIED): P73-001 — [PENDING-REVERT-S-627-1] inline annotations added to BC-3.9.001 Trace (covers "encoding-test" SEC-576-004 and "wiremock-test" SEC-576-005) and BC-3.9.003 Trace (covers "wiremock-test" SEC-576-005 step-1); frontmatter v1.3.162 trail entry prepended; footer `_Last updated` block updated to v1.3.162.
+- `.factory/spec-changelog.md` (MODIFIED): [1.3.162] entry prepended.
+
+### BC Count
+
+0 new BCs. Total unchanged: 657 cumulative (BC-INDEX); bc-3-issue-write.md 140/111; bc-2-issue-read.md 64/106; bc-7-output-render.md 93/49.
+
+---
+
 ## [1.3.161] - 2026-07-28
 
 ### Type: PATCH

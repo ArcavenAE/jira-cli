@@ -3,7 +3,7 @@ context: bc-2
 title: "Issue Read (list/view/comments/changelog)"
 total_bcs: 106   # cumulative claim (incl. range-collapsed); definitional_count below is individually-bodied headings
 definitional_count: 64   # count of `#### BC-` headings in this file
-last_updated: 2026-07-24
+last_updated: 2026-07-28
 source_pass: 3
 trace: |
   - L2: .factory/specs/domain-spec/bc-02-issue-read.md
@@ -32,6 +32,7 @@ trace: |
   - v1.3.97 — P8-002 correction micro-round (2026-07-20, SOH-ATTACHMENTS-1 Step 4.5 pass-8): 0 new BCs — EC-2.7.007-5 implementation-strategy note corrected: SIGINT temp-file cleanup was NEVER implemented (main.rs ctrl_c arm calls std::process::exit(130) directly; no temp-file registry exists); orphaned tmp_<random-hex> files are an accepted best-effort residual (harmless; deferred as S-576 bundle tracked debt); "best-effort MUST" language relaxed to "best-effort"; BC-2.7.007 Trace updated; BC count unchanged (64/106)
   - v1.3.102 — F5-R5-001 research-backed amendment (2026-07-24): 0 new BCs — BC-2.7.012 disk-write error strings amended to HYBRID shape per `.factory/research/f5-r5-001-disk-error-taxonomy-2026-07-24.md`; three error-table rows updated: (1) disk-full row: `ErrorKind::StorageFull | QuotaExceeded` detection, appends `<os_error>` + "Free up disk space and try again." remediation hint; (2) permission-denied row: `ErrorKind::PermissionDenied | ReadOnlyFilesystem` detection, appends `<os_error>` + "Check directory permissions and try again." hint; (3) generic fallback: changed from "OS error message surfaced" to `Failed to write <dest>: <os_error>.`; detection-and-testing note added: `e.kind()` at all three io sites in `stream_to_file`; `<dest>` = final path (not `tmp_<hex>`), server-supplied filename portion display-sanitized (CWE-116); MSRV-1.85 `ErrorKind` stability confirmed (StorageFull/ReadOnlyFilesystem stable 1.83, QuotaExceeded stable 1.85, PermissionDenied stable 1.0; Windows ERROR_DISK_FULL→StorageFull, ERROR_ACCESS_DENIED→PermissionDenied; no #[cfg] needed); pure classifier fn unit-test mandate (`fn classify_write_error(kind, dest_display, dir_display, os_err) -> String`, non-exhaustive `_ =>` arm); BC count unchanged (64/106)
   - v1.3.103 — FIX-F5-010 Windows CI collision (2026-07-24): 0 new BCs — BC-2.7.012 permission-denied row amended: `(writing <dest>)` parenthetical added after `<dir>` in the error prefix, making the full string `Permission denied: cannot write to <dir> (writing <dest>): <os_error>. Check directory permissions and try again.`; prefix and hint preserved verbatim; `<dest>` = display-sanitized final destination filename (CWE-116); reconciles BC-2.7.007 P9-001 (rename-failure error must contain the display-sanitized destination filename) which the v1.3.102 shape violated on Windows (rename-to-existing returns ErrorKind::PermissionDenied → message omitted filename); P9-001 reconciliation note added to Disk-write error detection and classification paragraph; BC count unchanged (64/106)
+  - v1.3.162 — AX-001 (REFINEMENT, MEDIUM): BC-2.7.001 H1 synced with BC-INDEX (2026-07-28): added "renders table:" prefix (was "table columns —"); added "; output channel profile 2 (stdout data, stderr hints)" suffix; "(human-readable)" was already correct in H1; verified against `src/cli/issue/attachments.rs::format_size` (human-formatted size used in table at line 249/1240; raw `u64` used for JSON per line 307 contrast comment) and `**Output channel profile**: 2` field in BC-2.7.001 body; BC count unchanged (64/106)
   - v1.3.104 — F5-R6-001/F5-R6-002 micro-fix (2026-07-24): 0 new BCs — BC-2.7.012 disk-write detection paragraph: io-site count corrected three→four (add `flush`; delayed-allocation rationale: ENOSPC can surface at flush time on Linux ext4 and similar delayed-allocation filesystems); INFO note added for F5-R6-002 mid-stream body-read abort sub-case (distinct from content-GET NetworkError row; `"stream error: {e}"` exit 1; accepted wording divergence documented); BC-INDEX v6.41→v6.42; BC count unchanged (64/106)
 ---
 
@@ -549,7 +550,7 @@ Attachment Read (2.7).
 
 ### 2.7 Attachment Read
 
-#### BC-2.7.001: `attachment list <KEY>` table columns — id, filename, mimeType, size (human-readable), created, author
+#### BC-2.7.001: `attachment list <KEY>` renders table: id, filename, mimeType, size (human-readable), created, author; output channel profile 2 (stdout data, stderr hints)
 
 **Confidence**: HIGH
 **Source**: `src/cli/issue/attachments.rs::handle_attachment_list` (implementation pending — SOH-ATTACHMENTS-1 Story 1); `src/api/jira/attachments.rs::list_attachments` (implementation pending)

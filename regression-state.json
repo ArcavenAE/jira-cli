@@ -1,1 +1,1 @@
-{"status":"pass","timestamp":"2026-07-25T16:16:45Z","command":"echo \"=== e2e.yml ===\" && cat .github/workflows/e2e.yml 2>/dev/null | grep -nE \"harden|egress|allowed-endpoints|policy|test-threads|include-ignored|cargo test|--test|JR_RUN_E2E|disable-sudo|block\" | head -60"}
+{"status":"pass","timestamp":"2026-07-29T01:12:41Z","command":"cargo test --test claude_md_citations 2>&1 | tail -15"}
