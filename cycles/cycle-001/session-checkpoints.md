@@ -7,7 +7,7 @@ producer: state-manager
 timestamp: 2026-05-08T00:00:00
 cycle: "cycle-001"
 inputs: [STATE.md]
-input-hash: "38f69f6"
+input-hash: "37d780f"
 traces_to: STATE.md
 ---
 
@@ -1782,3 +1782,17 @@ _Was the active checkpoint after SOH-DX-1 F2 ADVERSARY GRIND rounds 1-45 (2026-0
 | PR queue (human-owned) | Open: #645 (soaking until 2026-07-27, DEC-187); #628 (soak); #574 (pending rebase). Dependabot queue DRAINED 9/9. DO NOT close #429. |
 | Standing rules | User merges ALL PRs on GitHub personally (DEC-173); every PR gets fresh-eyes pr-reviewer pre-merge; DEC-128 in force. |
 | Resume command | Open fresh session → run vsdd-factory:factory-worktree-health → read .factory/STATE.md → dispatch F2 adversary pass-46 via /vsdd-factory:next-step (same fresh-context prompt shape; artifacts: bc-3-issue-write.md §3.8, BC-INDEX §3.8/§3.4, spec-changelog [1.3.143], S-383 banner+contract_superseded_by, delta-analysis, docs/specs/issue-create-preflight-guards.md). DEC-189 STRICT criterion (3 consecutive CLEAN required; any delta-attributable finding resets window). Signal: pass-45 3M (0C/0H/3M/0L; novelty LOW; piecewise CLEAN; 0/3 CLEAN). trajectory-tail →1M+2L→2M→3M+2L→3M |
+
+---
+
+<!-- archived from STATE.md Session Resume Checkpoint — 2026-07-28 F2-CONVERGENCE-3-3-BURST -->
+
+| Field | Value |
+|-------|-------|
+| Date | 2026-07-28 F2-CONVERGENCE-3-3-BURST. Feature Mode **SOH-DX-1 phase F2 CONVERGED**. Spec **v1.3.160** (unchanged); changelog through `[1.3.160]`; BC-INDEX v6.73; STORY-INDEX v1.5.42. BC counts unchanged (657 cumulative; bc-3 140/111). All four guard scripts green. develop @ 7b3ba371 local, origin/develop @ e72b0166 — **local develop is 9 commits BEHIND origin (all 2026-07-25 dependabot merges); needs a fast-forward before any F4 code work.** |
+| Convergence | **Convergence counter: 3/3 CONVERGED (DEC-191, 2026-07-28). Over-satisfied at 5/3.** Last finding: P73-001 LOW REFINEMENT (bc-3 hyphenation-workaround lines lack inline revert marker; non-resetting; ledgered as SPEC-INLINE-REVERT-SIGNAL). **F2 HUMAN GATE READY.** All four convergence passes are DEC-190 substitutes — MUST be disclosed at the gate. |
+| This session | 23 substitute adversarial passes (48–70) driven by the orchestrator + 2 DEC-190 substitute passes (adv-71, adv-72) + 4 DEC-190 convergence passes (adv-73/74/73b/74b) for 29 total substitutes; **28 findings found and fixed** across spec **v1.3.145 → v1.3.160** (16 versions; no new spec edits in convergence burst); 10 factory-artifacts commits. P71-001 PARTIALLY DISCHARGED out-of-band: full SHA `fa04a1451ff1842e2626ccb99004d0195b455a88` confirmed real (2026-06-30, "Add 1.96.1 patch release"); ancestor of master CONFIRMED (behind_by: 0). Current pin `c93f4f9c67595668add93d3d6895795ce52d8c2d` is real (2026-03-27) but NOT master ancestor — dtolnay/rust-toolchain maintains dozens of version branches; NOT evidence of compromise. RESIDUAL for F3 S-626-1: (a) blocking pre-impl AC with VERIFIED full 40-char SHA; (b) P71-003's do-not-remove constraint naming `sign-and-publish.yml ~:64` + `backfill-release.yml ~:79`; (c) flag MSRV comment accuracy risk if repinning uniformly (ci.yml:70 comments `# 1.85.0` while fa04a145 is "Add 1.96.1 patch release"). Four false-VOID determinations in convergence burst — AGENT-IDLE-NO-REPORT correction recorded. |
+| In flight | NOTHING. No story worktrees (`.worktrees/` empty), no PRs opened this session, no uncommitted spec work. `.factory/` clean after this commit. Product repo has two PRE-EXISTING untracked paths not created by this session and deliberately not committed: `.claude/pr-reviews/` and `.claude/spec-config.json`. Six new dependabot PRs #655-#660 opened since last wrap. |
+| Pending human decisions | (1) **F2 HUMAN GATE — 3/3 CONVERGED (DEC-191; over-satisfied 5/3).** Human reviews convergence disclosure (window 3/3; DEC-190 substitute basis; P73-001 refinement ledgered; four false-VOID corrections recorded) and decides: approve F3 story decomposition OR order additional passes with explicit new aperture. F3 obligations on approval: S-639-1 (update), S-627-1 (draft with revert obligation from P73-001), S-626-1 (draft with SHA blocking AC, do-not-remove constraint, MSRV flag), S-383 (update stale). (2) **Adversary agent fix path** — re-attributed to platform defect #47936 (route to Anthropic); ENGINE-ADVERSARY-TWO-BUGS routes to drbothen/vsdd-factory. (3) **Input-hash drift disposition** — 56 stale + 3 malformed, pre-existing closed-cycle. (4) **PR queue:** #655-#660 (new dependabot, soaking), #645 (soak met 2026-07-27, eligible to merge), #628 (soak), #574 (conflicting). DO NOT close #429. |
+| Blockers | `AGENT-IDLE-NO-REPORT` (MEDIUM) — root cause re-attributed to platform defect #47936; NUDGE-TWICE-BEFORE-VOID standing rule now in effect; false-VOID correction recorded this burst. `ENGINE-ADVERSARY-TWO-BUGS` (MEDIUM) — two engine bugs route to drbothen/vsdd-factory. `VSDD-CONFORMANCE-GAP-4-ARTIFACTS` (MEDIUM) — four canonical artifacts absent; own bundle candidate. |
+| Resume command | Open fresh session → run `/vsdd-factory:next-step`. It will read STATE.md and continue. Immediate next action: **F2 HUMAN GATE** (3/3 CONVERGED; DEC-190 substitute basis to disclose). Fast-forward local develop first (`git pull --ff-only`; origin/develop @ e72b0166). trajectory-tail →1H→0→0→0→0 |
