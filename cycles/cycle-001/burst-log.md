@@ -7764,3 +7764,62 @@ Compaction: archived 2 Phase Progress rows, 1 CPS row, 4 completed Concurrent Cy
 **Worktree state post-burst:** .factory @ factory-artifacts (this commit). develop @ acdad174 (unchanged).
 
 **trajectory-tail:** →1→2→4→2 (unchanged; F3 produced no adversary passes).
+
+---
+
+## DEC-197-GATE-APPROVAL-RETARGET-BURST (2026-07-29/30) — F3 gate approved (DEC-197, human); version retarget v0.7.0-dev.1→v0.6.0-dev.12 (17 sites, 6 files); DEC-188(d) superseded-by-pointer; spec v1.3.168→v1.3.169; STORY-INDEX v1.5.43→v1.5.44; PG-012 MITIGATED; F4 DELIVERY READY.
+
+**Burst type:** State recording + version retarget propagation  
+**Spec version:** v1.3.169 (was v1.3.168 at burst start)  
+**develop HEAD:** acdad174 (unchanged)
+
+### Archived Phase Progress Rows
+
+| Phase | Status | Completed | Gate | Notes | Finding Progression |
+|-------|--------|-----------|------|-------|---------------------|
+| passes 82/83/84 (F2 convergence window CONVERGED 3/3 CLEAN under DEC-191 at v1.3.166): pass-82=1L(non-reset, IN-DELTA per DEC-191(c)); pass-83=4L(reclassified per DEC-193, non-reset); pass-84=2L(non-reset, CONVERGED 3/3). F2 APPROVED DEC-196. Trajectory →1→2→4→2. | F2 CONVERGED — DEC-196 | 2026-07-29 | DEC-196 | passes 82/83/84 CLEAN 3/3; AX23-001 OUT-OF-DELTA PENDING; pass-77 independence COMPROMISED (DEC-190); .factory/policies.yaml absent. | F2: →1→2→4→2 |
+| SOH-DX-1 F3 COMPLETE (DEC-197 GATE READY): F3 story decomposition complete. 3 stories: S-639-1 (BREAKING/v0.7.0-dev.1, 21 ACs), S-627-1 (6 ACs), S-626-1 (7 ACs). STORY-INDEX v1.5.43 (120 stories). spec-changelog [1.3.168]. Platform-bash-classifier outage (guard verification deferred until Bash restored; worktree-violation remediated). F3 GATE READY for human review. | F3 COMPLETE — GATE READY | 2026-07-29 | HUMAN GATE PENDING | AX23-001 PENDING RATIFICATION. v0.7.0-dev.1 target per DEC-188(d) — SUPERSEDED by DEC-197 to v0.6.0-dev.12. | n/a |
+
+### Archived CPS Row
+
+| Step | Agent | Status | Output |
+|------|-------|--------|--------|
+| **SOH-DX-1-F3-DECOMP-BURST (2026-07-29): F3 story decomposition complete; S-639-1 (21 ACs, BREAKING/v0.7.0-dev.1), S-627-1 (6 ACs), S-626-1 (7 ACs); STORY-INDEX v1.5.43 (120 stories); spec-changelog [1.3.168]; boundary-violation remediated; 2 drift items added; DEC-196 F2 gate. STATE.md: 264→240 lines.** | state-manager | COMPLETED | STORY-INDEX v1.5.43; spec-changelog [1.3.168]; factory-artifacts committed. |
+
+### Summary
+
+Human ruling 2026-07-29: "approve but this can be in v0.6.0-dev12." Recorded as DEC-197. F3 APPROVED; version target for S-639-1 BREAKING change retargeted from v0.7.0-dev.1 to v0.6.0-dev.12. Rationale: v0.6.0 stable never released; 0.6.0-dev.11→dev.12 prerelease counter increment correctly signals breaking under semver.
+
+Retarget sweep: 17 sites across 6 files updated (v0.7.0-dev.1→v0.6.0-dev.12). Files: stories/S-639-1.md (8 sites; story v1.0→v1.1; input-hash 4a987f6), specs/prd/bc-3-issue-write.md (4 sites + footer Last-updated prepended v1.3.169), phase-f1-delta/SOH-DX-1/delta-analysis.md (2 sites + prose updated), phase-f1-delta/SOH-DX-1/affected-files.txt (1 site), stories/STORY-INDEX.md (1 site; v1.5.43→v1.5.44), phase-f3-incremental-stories/S-639-1-issue-create-preflight-guards-F4-draft.md (1 site). Plus spec-changelog.md v1.3.169 entry + sidecar-learning.md update. Zero over-propagation — SOH-DX-1-PG-012 MITIGATION PATTERN CODIFIED (first successful instance in cycle).
+
+DEC-188 row updated: appended "**DEC-188 clause (d) version-target SUPERSEDED by DEC-197** (see DEC-197)" to Decisions Log entry; original DEC-188 historical text preserved intact.
+
+SOH-DX-1-PG-012 status updated: MITIGATED (pattern codified 2026-07-29; CI guard still open).
+
+Phase Progress consolidation: F2-window-pass82-84 row + F3-DECOMP row archived to this burst-log; replaced by single "pass-84 (...)" row starting with "pass-84" per D-435(b) — recording F2+F3 APPROVED state. Net line change: 0. STATE.md: 240→240 lines.
+
+Count-propagation sweep (SOH-DX-1-PG-012 pattern): v0.7.0-dev.1 expected in 17 live sites (confirmed updated); 0 immutable sites expected-unchanged (DEC-188's "v0.6→0.7" language is historical rationale, not a version target reference — correctly NOT retargeted). Zero over-propagation confirmed.
+
+### Details
+
+| Agent | Task | Output |
+|-------|------|--------|
+| state-manager | Write STATE.md with DEC-197, version retarget, Phase Progress consolidation | DEC-197 recorded; 17-site retarget confirmed; DEC-188(d) superseded-by-pointer added; spec v1.3.169; STORY-INDEX v1.5.44; PG-012 MITIGATED; 240 lines |
+| state-manager | Append burst-log.md entry (this entry) | DEC-197-GATE-APPROVAL-RETARGET-BURST archived |
+
+**Human decisions recorded:**
+- DEC-197: F3 GATE APPROVED; BREAKING CHANGE RETARGETED TO v0.6.0-dev.12 (human, 2026-07-29)
+
+**Files touched in retarget sweep (6 + 2 meta):**
+1. .factory/stories/S-639-1.md (8 sites; v1.0→v1.1; input-hash 4a987f6)
+2. .factory/specs/prd/bc-3-issue-write.md (4 sites + footer prepend v1.3.169)
+3. .factory/phase-f1-delta/SOH-DX-1/delta-analysis.md (2 sites + prose)
+4. .factory/phase-f1-delta/SOH-DX-1/affected-files.txt (1 site)
+5. .factory/stories/STORY-INDEX.md (1 site; v1.5.43→v1.5.44)
+6. .factory/phase-f3-incremental-stories/S-639-1-issue-create-preflight-guards-F4-draft.md (1 site)
+7. .factory/spec-changelog.md (v1.3.169 entry added)
+8. .factory/sidecar-learning.md (updated)
+
+**Worktree state post-burst:** .factory @ factory-artifacts (this commit). develop @ acdad174 (unchanged).
+
+**trajectory-tail:** →1→2→4→2 (F2+F3 gate recording; no new adversary passes).

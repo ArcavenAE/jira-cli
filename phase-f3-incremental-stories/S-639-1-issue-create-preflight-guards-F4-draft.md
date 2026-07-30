@@ -13,7 +13,7 @@
 **Status:** Ready for implementation (F4)
 **Issue:** #639
 **Epic:** SOH-DX-1 (DEC-188)
-**Semver impact:** BREAKING — 0.6.x → 0.7.0-dev.1
+**Semver impact:** BREAKING — 0.6.0-dev.11 → 0.6.0-dev.12 (version-retarget ruling 2026-07-29; no train bump; see spec-changelog.md [1.3.169])
 **BC references:** BC-3.8.012, BC-3.8.013
 **Story:** `.factory/stories/S-639-1.md`
 
@@ -35,7 +35,7 @@ warning: --field is ignored without --request-type
 <creates issue successfully>
 ```
 
-**After (v0.7+, pre-flight exit-64):**
+**After (v0.6.0-dev.12, pre-flight exit-64):**
 ```
 $ jr issue create --project PROJ --summary "Task" --field foo=bar
 jr: error: --field is only valid with --request-type (JSM service-desk requests).

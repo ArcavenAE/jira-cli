@@ -9,6 +9,30 @@ Track all spec version changes. Most recent version first.
 
 > **Type legend:** Type classifies the SPEC document delta: MINOR = new BCs/VPs/sections; PATCH = amendments to existing bodies/ACs/ECs. Product-semver impact is recorded in the Summary line, independent of Type.
 
+## [1.3.169] - 2026-07-29
+
+### Type: PATCH
+
+### Summary
+
+Human ruling 2026-07-29: SOH-DX-1 breaking change retargeted to `v0.6.0-dev.12` (supersedes DEC-188 clause (d)'s 0.7-train reasoning). Rationale: stable `v0.6.0` has never been released; the train is `0.6.0-dev.N`; a prerelease counter increment from `0.6.0-dev.11` to `0.6.0-dev.12` correctly signals the breaking change under semver without implying a superseded stable `0.6.0`. Six live `.factory/` files updated: `S-639-1.md` (8 sites; story v1.0→v1.1; input-hash recomputed 4a987f6), `bc-3-issue-write.md` (4 sites + footer `_Last updated` prepended), `delta-analysis.md` (2 sites + 0.7-train-bump and MINOR-bump prose updated to prerelease counter increment), `affected-files.txt` (1 site), `STORY-INDEX.md` (1 site; v1.5.43→v1.5.44), `S-639-1-issue-create-preflight-guards-F4-draft.md` (1 site + v0.7+ label). Immutable historical artifacts (`spec-changelog.md` [1.3.163..168], `convergence-trajectory.md`, adversarial-review files) are UNTOUCHED. The change remains BREAKING; `### Breaking Changes` obligations under BC-3.8.012/013 are unaffected.
+
+### Changed
+
+- `.factory/stories/S-639-1.md` (MODIFIED): version target corrected to `0.6.0-dev.12` at 8 sites; delivery-item (c) prose updated from `left-most-non-zero bump` to `prerelease counter increment`; story `v1.0`→`v1.1`; input-hash updated to `4a987f6`.
+- `.factory/specs/prd/bc-3-issue-write.md` (MODIFIED): version retarget at 4 `[AMENDED 2026-07-25 SOH-DX-1 DEC-188 #639]` banners (~:539, ~:3049, ~:3137, ~:3149); `_Last updated` footer prepended with v1.3.169 entry.
+- `.factory/phase-f1-delta/SOH-DX-1/delta-analysis.md` (MODIFIED): version retarget at 2 sites (~:30, ~:291); `0.6→0.7 train bump` and `MINOR bump` prose updated to `prerelease counter increment` at all 3 affected rows.
+- `.factory/phase-f1-delta/SOH-DX-1/affected-files.txt` (MODIFIED): `Cargo.toml` comment updated with `0.6.0-dev.12` + retarget note.
+- `.factory/stories/STORY-INDEX.md` (MODIFIED): S-639-1 manifest row semver corrected to `0.6.0-dev.11→0.6.0-dev.12` (version-retarget ruling 2026-07-29); STORY-INDEX `v1.5.43`→`v1.5.44`.
+- `.factory/phase-f3-incremental-stories/S-639-1-issue-create-preflight-guards-F4-draft.md` (MODIFIED): Semver impact line and `v0.7+` label updated.
+- `.factory/spec-changelog.md` (MODIFIED): [1.3.169] entry prepended.
+
+### BC Count
+
+0 new BCs. Total unchanged: **657** cumulative (BC-INDEX). Holdout count unchanged: **106**.
+
+---
+
 ## [1.3.168] - 2026-07-29
 
 ### Type: PATCH

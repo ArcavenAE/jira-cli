@@ -4,7 +4,7 @@
 # Item 1 — #639 warn→error promotion
 MODIFIED src/cli/issue/create.rs
 MODIFIED tests/issue_create_jsm.rs
-MODIFIED Cargo.toml  # 0.7.0-dev.1 version bump (DEC-188 clause d)
+MODIFIED Cargo.toml  # 0.6.0-dev.12 version bump (DEC-188 clause d; version-retarget ruling 2026-07-29; see spec-changelog.md [1.3.169])
 MODIFIED CHANGELOG.md  # ### Breaking Changes entry under 0.7.0 section
 MODIFIED CLAUDE.md  # CLAUDE.md:~248 S-288-pr4 dispatch-fork gotcha — "byte-for-byte unchanged" stale
 MODIFIED docs/adr/0014-jsm-request-type-dispatch.md  # :~161 same byte-for-byte claim; amendment note (not new ADR)
