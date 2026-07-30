@@ -4,22 +4,22 @@ level: ops
 version: "1.2"
 status: in-review
 producer: adversary
-timestamp: 2026-07-30T21:15:53Z
+timestamp: 2026-07-30T22:05:26Z
 phase: "5"
-pass: 3
+pass: 4
 inputs: [.factory/stories/S-626-1.md, .github/workflows/ci.yml, src/cli/board.rs, src/cli/issue/list.rs, src/cli/auth/keychain.rs]
 traces_to: .factory/stories/S-626-1.md
-total_findings: 28
-severity_distribution: { CRIT: 0, HIGH: 0, MED: 11, LOW: 10, INFO: 7 }
+total_findings: 33
+severity_distribution: { CRIT: 0, HIGH: 0, MED: 11, LOW: 14, INFO: 8 }
 story: S-626-1
 cycle: cycle-001
-feature_head: 15597e84b0f5e3994c5620edbcf1caf83766d2b7
+feature_head: 64cdb59ba04d7547a3708f1bf643ae5bb5ee6e7b
 pr: 667
 basis: TRUE ADVERSARY AGENT (not a DEC-190 substitute)
 convergence: 0 of 3
 ---
 
-# Adversarial Review Index — S-626-1 (SOH-DX-1) Passes 1 + 2 + 3
+# Adversarial Review Index — S-626-1 (SOH-DX-1) Passes 1 + 2 + 3 + 4
 
 ## Pass 1 Finding Catalog
 
@@ -116,6 +116,36 @@ convergence: 0 of 3
 
 ---
 
+## Pass 4 Finding Catalog
+
+| ID | Severity | Classification | Title | Status | Notes |
+|----|----------|----------------|-------|--------|-------|
+| ADV-P4-LOW-001 | LOW | GAP · in-delta | Three in-tree comments cite a CLAUDE.md gotcha that does not contain the cited constraint; no convention forbids let-chains | FIXED on 4223ea09 | `No let-chains` entry added to CLAUDE.md Conventions; three comments re-pointed at it |
+| ADV-P4-LOW-002 | LOW | GAP · in-delta | ci.yml scope comment's final warning names an unreachable failure mode | FIXED on 4223ea09 | Warning rewritten to accurate "outside MSRV floor's enforceable scope" framing |
+| ADV-P4-LOW-003 | LOW | GAP · spec artifact | Story's Delivery Checklist mandates a CHANGELOG sentence that is false as written; implementation correctly omitted it | ROUTED to .factory/ | Checklist wording amended to be jr-scoped; provenance rule generalised from SHA pins to version pins |
+| ADV-P4-LOW-004 | LOW | REFINEMENT · pre-existing pattern touched in-delta | dtolnay pin trailing comments name a toolchain where every other pin names the action version | ROUTED → S-641-1 | S-641-1 already touches those lines |
+| ADV-P4-INFO-005 | INFO | [process-gap] | Stated let-chain detection method (`grep '&& let'`) misses the let-first form | ROUTED → S-641-1 | Invariant corrected; S-641-1 AC-2 guard must use complete form set |
+
+## Pass 4 Preflight Note
+
+Tuple verified with no mismatch — `git rev-parse HEAD` → `64cdb59ba04d7547a3708f1bf643ae5bb5ee6e7b`, 11 commits over merge-base `acdad17427a057d1e022669303cb80d5f48449c9`; factory HEAD `d0f334d077c15c8de80417e690f90506d5424ce0`. Every tuple element checked out. (Contrast pass 3, where the orchestrator's embedded SHA was fabricated beyond its 8-char prefix.)
+
+## Pass 4 Process Gap
+
+| ID | Description | Status |
+|----|-------------|--------|
+| PG-ADV-P4-VERSION-PIN-RULE | Provenance rule (v1.6: "classifying a pin without reading the pinned artifact is incomplete") was codified for SHA pins. ADV-P4-LOW-003 [process-gap] confirms the rule applies identically to version pins. Generalise rule in story rather than logging a second instance. | RECORDED — generalisation routed to .factory/ via LOW-003 disposition |
+
+## Pass 4 Summary
+
+- **Verdict:** NOT CLEAN — 4 LOW + 1 INFO; zero MEDIUM+; zero code defects
+- **Post-capture routing:** LOW-001/LOW-002 fixed on 4223ea09 (pushed to #667); LOW-003 routed to .factory/ (checklist + provenance rule); LOW-004/INFO-005 routed to S-641-1
+- **Convergence:** 0 of 3 — four passes, four NOT CLEAN; severity ceiling fell MEDIUM → LOW; code defects zero for three rounds
+- **Orchestrator-attributable findings:** 0 of 5 (no fix-round regressions introduced by orchestrator in pass 4)
+- **Detail artifact:** `s-626-1-adversary-pass-4.md`
+
+---
+
 ## Dependency Graph
 
 ```text
@@ -127,6 +157,9 @@ ADV-P2-INFO-001   --sharpens--> ADV-P1-MEDIUM-004
 ADV-P3-MEDIUM-001 --supersedes--> ADV-P1-MEDIUM-002/ADV-P2-MEDIUM-003 root-cause framing
 ADV-P3-MEDIUM-002 --informs--> S-641-1 (re-scoped: comments correct, only present-tense stale)
 ADV-P3-MEDIUM-003 --sharpens--> ADV-P1-MEDIUM-002/ADV-P2-MEDIUM-003 (version-branch finding)
+ADV-P4-LOW-003    --generalises--> ADV-P3-MEDIUM-002/[process-gap] (version pins same as SHA pins)
+ADV-P4-LOW-004    --routed--> S-641-1 (comment convention)
+ADV-P4-INFO-005   --informs--> S-641-1 AC-2 (complete let-chain detection form set)
 [All other findings are independent]
 ```
 
@@ -137,5 +170,6 @@ ADV-P3-MEDIUM-003 --sharpens--> ADV-P1-MEDIUM-002/ADV-P2-MEDIUM-003 (version-bra
 | 1 | NOT CLEAN | 5 (3 GAP, 2 REF) | 5 (3 GAP, 2 REF) | 3 | 1 | RESET |
 | 2 | NOT CLEAN | 3 (3 GAP) | 2 (1 GAP, 1 REF) | 2 | 2 | NOT CLEAN — pass 3 required |
 | 3 | NOT CLEAN | 3 (3 GAP) | 3 (3 REF) | 2 | 2 | NOT CLEAN — 3 passes, 3 layers; round-3 dispositions committed |
+| 4 | NOT CLEAN | 0 | 4 (3 GAP, 1 REF) | 1 | 2 | NOT CLEAN — severity ceiling fell to LOW; zero code defects 3 rounds; round-4 dispositions committed |
 
 **Overall convergence: 0 of 3 (window NOT CLEAN)**

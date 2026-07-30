@@ -7897,3 +7897,10 @@ Changes made:
 **Archived CPS row (POST-ADVERSARY-PERSISTENCE-BURST):**
 
 > **POST-ADVERSARY-PERSISTENCE-BURST (2026-07-30): S-626-1 adversary pass-1 findings captured verbatim — s-626-1-adversary-pass-1.md (203 LOC, 13 findings: 5M+5L+3I) + PG-ADV-DISPATCH-001; ADV-P1-INDEX.md created. 6 pre-fixed on 20d533e4; 4 routed to guard story (guard-story agent concurrent); ADV-P1-LOW-004 routed to metadata correction. Step 4.5 window RESET. ORCHESTRATOR-SKIPPED-POST-ADVERSARY-PERSISTENCE corrective half DONE. First Post-Adversary Persistence in cycle. 240 lines.** | state-manager | COMPLETED | s-626-1-adversary-pass-1.md + ADV-P1-INDEX.md + STATE.md committed to factory-artifacts.
+
+
+## PASS-4-PERSISTENCE-BURST (archived CPS row from STATE.md 2026-07-30)
+
+**Archived CPS row (PASS-3-PERSISTENCE-BURST):**
+
+> **PASS-3-PERSISTENCE-BURST (2026-07-30): S-626-1 adversary pass-3 findings captured verbatim — s-626-1-adversary-pass-3.md (8 findings: 3M+3L+2I + preflight note); ADV-P1-INDEX.md updated to v1.2 (pass-3 section; total_findings 28; MED:11/LOW:10/INFO:7). Convergence 0/3 (NOT CLEAN — root-cause mechanism falsified). Round-3 dispositions: product-repo commit 64cdb59b (MEDIUM-001/LOW-006/INFO-007 in CLAUDE.md+CHANGELOG.md); story v1.5→v1.6 (MEDIUM-001/002/003/LOW-004/005); S-641-1 v0.2→v0.3 re-scoped (ordering gate added). ORCHESTRATOR-ERROR-INJECTION-RATE: 4 new datapoints (fabricated SHA + MEDIUM-002/LOW-004/LOW-005 orchestrator-introduced). STORY-INDEX v1.5.50; spec-changelog [1.3.175]; BC 657; holdouts 106 unchanged. 239 lines.** | state-manager | COMPLETED | s-626-1-adversary-pass-3.md + ADV-P1-INDEX.md + STATE.md committed to factory-artifacts.
