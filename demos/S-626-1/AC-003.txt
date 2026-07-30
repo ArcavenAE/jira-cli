@@ -1,0 +1,41 @@
+$ cd /Users/zious/Documents/GITHUB/jira-cli/.worktrees/S-626-1 && sed -n '58,84p' .github/workflows/ci.yml
+  msrv:
+    name: MSRV (1.85.0)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
+        with:
+          egress-policy: audit
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+      - uses: dtolnay/rust-toolchain@fa04a1451ff1842e2626ccb99004d0195b455a88  # 1.85.0
+        with:
+          toolchain: "1.85.0"
+      - uses: Swatinem/rust-cache@e18b497796c12c097a38f9edb9d0641fb99eee32  # v2
+      # --all-features checks lib + bins only (NOT --all-targets).
+      # wiremock 0.6.5 (a dev-dependency) requires Rust >=1.88; including
+      # --all-targets would pull in tests/benches and fail to compile against
+      # the 1.85.0 MSRV toolchain. --all-features is intentional.
+      - run: cargo check --all-features
+        env:
+          RUSTUP_TOOLCHAIN: "1.85.0"
+
+  deny:
+    name: Deny (licenses + vulnerabilities)
+    runs-on: ubuntu-latest
+
+$ cd /Users/zious/Documents/GITHUB/jira-cli/.worktrees/S-626-1 && RUSTUP_TOOLCHAIN=1.85.0 cargo check --all-features 2>&1
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.19s
+
+---
+
+AC-003 assertions verified:
+  - dtolnay/rust-toolchain action step has with: {toolchain: "1.85.0"} CONFIRMED (ci.yml :72)
+  - cargo check step has env: {RUSTUP_TOOLCHAIN: "1.85.0"} CONFIRMED (ci.yml :80)
+  - Both inputs are on separate steps (action step installs; env override ensures cargo uses it)
+  - RUSTUP_TOOLCHAIN=1.85.0 cargo check --all-features exits clean (exit 0, 0.19s, no errors)
+  - This is the story's headline result: the MSRV claim is now true and the job can prove it
+  - Note: the worktree already has rustc 1.85.0 available via RUSTUP_TOOLCHAIN; cargo check
+    succeeds with no compilation errors, confirming the codebase is compatible with 1.85.0

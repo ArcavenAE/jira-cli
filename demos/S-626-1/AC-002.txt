@@ -1,0 +1,29 @@
+$ cd /Users/zious/Documents/GITHUB/jira-cli/.worktrees/S-626-1 && grep -n "fa04a1451ff1842e2626ccb99004d0195b455a88" .github/workflows/ci.yml .github/workflows/backfill-release.yml .github/workflows/e2e-sweeper.yml .github/workflows/e2e.yml .github/workflows/release.yml .github/workflows/sign-and-publish.yml
+.github/workflows/e2e.yml:80:        uses: dtolnay/rust-toolchain@fa04a1451ff1842e2626ccb99004d0195b455a88  # stable
+.github/workflows/e2e-sweeper.yml:74:        uses: dtolnay/rust-toolchain@fa04a1451ff1842e2626ccb99004d0195b455a88  # stable
+.github/workflows/ci.yml:70:      - uses: dtolnay/rust-toolchain@fa04a1451ff1842e2626ccb99004d0195b455a88  # 1.85.0
+.github/workflows/ci.yml:106:      - uses: dtolnay/rust-toolchain@fa04a1451ff1842e2626ccb99004d0195b455a88  # stable
+.github/workflows/backfill-release.yml:68:        uses: dtolnay/rust-toolchain@fa04a1451ff1842e2626ccb99004d0195b455a88  # stable
+.github/workflows/release.yml:38:        uses: dtolnay/rust-toolchain@fa04a1451ff1842e2626ccb99004d0195b455a88  # stable
+.github/workflows/sign-and-publish.yml:53:        uses: dtolnay/rust-toolchain@fa04a1451ff1842e2626ccb99004d0195b455a88  # stable
+
+$ cd /Users/zious/Documents/GITHUB/jira-cli/.worktrees/S-626-1 && grep -c "fa04a1451ff1842e2626ccb99004d0195b455a88" .github/workflows/ci.yml .github/workflows/backfill-release.yml .github/workflows/e2e-sweeper.yml .github/workflows/e2e.yml .github/workflows/release.yml .github/workflows/sign-and-publish.yml
+.github/workflows/ci.yml:2
+.github/workflows/backfill-release.yml:1
+.github/workflows/e2e-sweeper.yml:1
+.github/workflows/e2e.yml:1
+.github/workflows/release.yml:1
+.github/workflows/sign-and-publish.yml:1
+
+---
+
+AC-002 assertions verified:
+  - 7 total occurrences of the new SHA across 6 files CONFIRMED (ci.yml has 2: msrv job :70 + stable job :106)
+  - ci.yml :70 (msrv job): toolchain input is "1.85.0" (not stable; per AC-3)
+  - ci.yml :106 (stable job): toolchain input is stable
+  - backfill-release.yml :68: toolchain input is stable
+  - e2e-sweeper.yml :74: toolchain input is stable
+  - e2e.yml :80: toolchain input is stable
+  - release.yml :38: toolchain input is stable
+  - sign-and-publish.yml :53: toolchain input is stable
+  - All 6 workflow files have explicit toolchain inputs co-located with the SHA pin

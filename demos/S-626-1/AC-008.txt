@@ -1,0 +1,24 @@
+$ cd /Users/zious/Documents/GITHUB/jira-cli/.worktrees/S-626-1 && grep -n "comfy-table" Cargo.toml
+23:# Ref: .factory/research/msrv-let-chains-comfy-table-2026-07-30.md
+24:comfy-table = "=7.2.1"
+
+$ cd /Users/zious/Documents/GITHUB/jira-cli/.worktrees/S-626-1 && grep -A 2 'name = "comfy-table"' Cargo.lock
+name = "comfy-table"
+version = "7.2.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+
+$ cd /Users/zious/Documents/GITHUB/jira-cli/.worktrees/S-626-1 && RUSTUP_TOOLCHAIN=1.85.0 cargo check --all-features 2>&1
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.19s
+
+---
+
+AC-008 assertions verified:
+  - Cargo.toml pins comfy-table = "=7.2.1" (exact pin, not a caret range) CONFIRMED (line 24)
+  - Cargo.toml has inline comment citing .factory/research/msrv-let-chains-comfy-table-2026-07-30.md CONFIRMED (line 23)
+  - Cargo.lock resolves to version = "7.2.1" CONFIRMED
+  - RUSTUP_TOOLCHAIN=1.85.0 cargo check --all-features exits clean (exit 0) CONFIRMED
+  - The clean result is the acceptance check: the pin ensures comfy-table 7.2.2 (which requires
+    Rust >=1.88.0) is not resolved, restoring genuine MSRV 1.85.0 compliance
+  - Note: comfy-table 7.2.1 declares rust-version = "1.85" in its manifest; 7.2.2 uses let-chains
+    (edition 2024 + compiler >=1.88.0) and deleted the rust-version field, so cargo would have
+    silently resolved to 7.2.2 under a caret range

@@ -1,1 +1,1 @@
-{"status":"pass","timestamp":"2026-07-29T01:12:41Z","command":"cargo test --test claude_md_citations 2>&1 | tail -15"}
+{"status":"pass","timestamp":"2026-07-30T23:02:59Z","command":"cargo test --manifest-path /Users/zious/Documents/GITHUB/jira-cli/.worktrees/S-626-1/Cargo.toml --test '*' 2>&1 | grep -E \"^test result:\" | awk -F'[^0-9]+' '{passed+=$2; failed+=$3; ignored+=$4} END {print \"INTEGRATION: \" passed \" passed; \" failed \" failed; \" ignored \" ignored\"}'; echo \"INT_EXIT:$?\""}

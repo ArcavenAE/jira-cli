@@ -7,7 +7,7 @@ producer: state-manager
 timestamp: 2026-05-08T00:00:00
 cycle: "cycle-001"
 inputs: [STATE.md]
-input-hash: "37d780f"
+input-hash: "766e98d"
 traces_to: STATE.md
 ---
 
@@ -1796,3 +1796,16 @@ _Was the active checkpoint after SOH-DX-1 F2 ADVERSARY GRIND rounds 1-45 (2026-0
 | Pending human decisions | (1) **F2 HUMAN GATE — 3/3 CONVERGED (DEC-191; over-satisfied 5/3).** Human reviews convergence disclosure (window 3/3; DEC-190 substitute basis; P73-001 refinement ledgered; four false-VOID corrections recorded) and decides: approve F3 story decomposition OR order additional passes with explicit new aperture. F3 obligations on approval: S-639-1 (update), S-627-1 (draft with revert obligation from P73-001), S-626-1 (draft with SHA blocking AC, do-not-remove constraint, MSRV flag), S-383 (update stale). (2) **Adversary agent fix path** — re-attributed to platform defect #47936 (route to Anthropic); ENGINE-ADVERSARY-TWO-BUGS routes to drbothen/vsdd-factory. (3) **Input-hash drift disposition** — 56 stale + 3 malformed, pre-existing closed-cycle. (4) **PR queue:** #655-#660 (new dependabot, soaking), #645 (soak met 2026-07-27, eligible to merge), #628 (soak), #574 (conflicting). DO NOT close #429. |
 | Blockers | `AGENT-IDLE-NO-REPORT` (MEDIUM) — root cause re-attributed to platform defect #47936; NUDGE-TWICE-BEFORE-VOID standing rule now in effect; false-VOID correction recorded this burst. `ENGINE-ADVERSARY-TWO-BUGS` (MEDIUM) — two engine bugs route to drbothen/vsdd-factory. `VSDD-CONFORMANCE-GAP-4-ARTIFACTS` (MEDIUM) — four canonical artifacts absent; own bundle candidate. |
 | Resume command | Open fresh session → run `/vsdd-factory:next-step`. It will read STATE.md and continue. Immediate next action: **F2 HUMAN GATE** (3/3 CONVERGED; DEC-190 substitute basis to disclose). Fast-forward local develop first (`git pull --ff-only`; origin/develop @ e72b0166). trajectory-tail →1H→0→0→0→0 |
+
+---
+
+<!-- archived from STATE.md Session Resume Checkpoint — 2026-07-30 PASS-4-PERSISTENCE-BURST -->
+
+| Field | Value |
+|-------|-------|
+| Date | 2026-07-30 PASS-4-PERSISTENCE-BURST. S-626-1 adversary pass-4 captured: 4L+1I; 5 findings. ADV-P1-INDEX.md updated to v1.2 (pass-4; total 33 findings). Convergence 0/3 (NOT CLEAN — zero MEDIUM+; severity ceiling fell to LOW; zero code defects). Round-4 dispositions: product-repo 4223ea09 + .factory/ (LOW-003 checklist) + S-641-1 (LOW-004/INFO-005). ORCHESTRATOR-ERROR-INJECTION-RATE: PASS-4 datapoint (INFO-005 broken-grep; 0 orchestrator-introduced regressions). develop @ acdad174. |
+| State | F3 APPROVED (DEC-197). F4 DELIVERY READY. S-626-1 adversary passes 1+2+3+4 NOT CLEAN — Step 4.5 convergence 0/3; 4 passes (code/spec-artifact/causal-model/doc-convention); round-4 dispositions committed. AX23-001 PENDING RATIFICATION. S-639-1 is BREAKING (v0.6.0-dev.12). Delivery order: S-626-1 first — PENDING HUMAN RATIFICATION. |
+| In flight | develop @ acdad174. .factory @ factory-artifacts (this commit). S-626-1 worktree @ ci/fix-toolchain-sha-msrv (PR #667) @ 4223ea09. s-626-1-adversary-pass-4.md + ADV-P1-INDEX.md committed. No other worktrees. Product repo untracked: .claude/hooks/, .claude/pr-reviews/, .claude/settings.local.json.bak, .claude/spec-config.json (pre-existing). |
+| Pending human decisions | (1) Delivery order ratification (S-626-1 FIRST recommended — PENDING). (2) AX23-001 out-of-delta ruling PENDING RATIFICATION. (3) DEC-195 VSDD-CONFORMANCE-GAP-4-ARTIFACTS bundle schedule. (4) Input-hash drift (56 stale + 3 malformed). (5) STALE-FACTORY-ARTIFACTS-BRANCH delete decision. PR queue: #662 (MERGEABLE), #655/#656/#657/#658/#659 (soaking per DEC-178/187), #628/#574 (arcaven). Merged 2026-07-29: #661, #645. DO NOT close #429. |
+| Blockers | None blocking F4 delivery. MEDIUM open: AGENT-IDLE-NO-REPORT, VSDD-CONFORMANCE-GAP-4-ARTIFACTS (DEC-195), REVIEW-ISOLATION-NOT-MECHANICALLY-ENFORCED, APERTURE-CLASS-LESSON, ORCHESTRATOR-SKIPPED-POST-ADVERSARY-PERSISTENCE (corrective DONE pass-1+2+3+4; procedural-gap stays OPEN). |
+| Resume command | Open fresh session → run /vsdd-factory:next-step. F4 per-story delivery. S-626-1: adversary passes 1+2+3+4 NOT CLEAN (Step 4.5 convergence 0/3) — round-4 dispositions committed (product-repo 4223ea09 + .factory/ LOW-003 + S-641-1 LOW-004/INFO-005); ordering PENDING HUMAN RATIFICATION. Then S-639-1 (BREAKING/v0.6.0-dev.12), S-627-1. AX23-001 pending. |

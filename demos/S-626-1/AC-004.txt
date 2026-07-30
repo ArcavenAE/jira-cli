@@ -1,0 +1,14 @@
+$ cd /Users/zious/Documents/GITHUB/jira-cli/.worktrees/S-626-1 && grep -n "1\.85\.0\|RUSTUP_TOOLCHAIN" .github/workflows/ci.yml
+60:    name: MSRV (1.85.0)
+70:      - uses: dtolnay/rust-toolchain@fa04a1451ff1842e2626ccb99004d0195b455a88  # 1.85.0
+72:          toolchain: "1.85.0"
+77:      # the 1.85.0 MSRV toolchain. --all-features is intentional.
+80:          RUSTUP_TOOLCHAIN: "1.85.0"
+
+---
+
+AC-004 assertions verified:
+  - The comment on the msrv dtolnay/rust-toolchain step reads "# 1.85.0" CONFIRMED (ci.yml :70)
+  - The toolchain input reads "1.85.0" CONFIRMED (ci.yml :72)
+  - Comment and explicit toolchain input agree: both say 1.85.0
+  - The job name also reads "MSRV (1.85.0)" (ci.yml :60), providing triple agreement

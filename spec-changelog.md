@@ -9,6 +9,365 @@ Track all spec version changes. Most recent version first.
 
 > **Type legend:** Type classifies the SPEC document delta: MINOR = new BCs/VPs/sections; PATCH = amendments to existing bodies/ACs/ECs. Product-semver impact is recorded in the Summary line, independent of Type.
 
+## [1.3.176] - 2026-07-30
+
+### Type: PATCH
+
+### Summary
+
+S-626-1 pass-4 adversarial review corrections (LOW-003/INFO-005).
+S-626-1 v1.6→v1.7; S-641-1 v0.3→v0.4. STORY-INDEX v1.5.50→v1.5.51.
+BC count UNCHANGED at **657**. Holdout count UNCHANGED at **106**.
+
+- **LOW-003 (GAP, spec artifact):** The Delivery Checklist mandated a CHANGELOG sentence stating
+  "The behavior of `comfy-table` (table rendering) is unchanged between 7.2.1 and 7.2.2." This
+  is false as an unqualified upstream claim: `comfy-table` 7.2.2 ships two genuine fixes (PR #198):
+  (1) a rendering fix gated on `should_draw_vertical_lines(table)` being false; (2) a LowerBoundary
+  constraint fix. The claim is true for `jr` specifically — `src/output.rs` loads `UTF8_FULL_CONDENSED`
+  whose `┆` sets `VerticalLines`, so `should_draw_vertical_lines(table)` is true and PR #198 is a
+  no-op; `grep -rn "Constraint" src/` returns zero. The checklist item is re-scoped to a jr-scoped
+  rendering analysis (recorded in the story, not propagated to the CHANGELOG). The delivered CHANGELOG
+  correctly includes only "User impact: None…" and omits the false upstream claim. Checklist item
+  marked satisfied as amended.
+  **[process-gap]:** The checklist mandated an unqualified upstream claim without anyone reading
+  the upstream changelog. This is the same shape as the rule codified at v1.6 — "provenance
+  verification that classifies a pin without reading the pinned artifact is incomplete" — which was
+  written for SHA pins and applies identically to version pins. Rather than logging a second
+  near-identical instance, the existing codified rule in S-626-1 Previous Story Intelligence is
+  generalised to cover both SHA pins and version pins.
+
+- **INFO-005 (process-gap, detection method):** The let-chain detection invariant stated across
+  passes — "`grep '&& let'` across `src/` returns nothing" — used a detector that only catches the
+  condition-first form (`if matches!(…) && let Some(x) = …`). It misses the let-first form
+  (`if let Ok(v) = … && !v.is_empty()`), which is exactly what `src/cli/auth/keychain.rs`
+  contained (`grep -c '&& let' keychain.rs` = 0; `grep -cE '^\s+&& ' keychain.rs` = 1). The
+  conclusion holds — all 34 form-B hits in `src/` are plain boolean continuations (verified with
+  the complete form set). Corrected invariant and complete form set (4 patterns) recorded in
+  S-626-1 Previous Story Intelligence. S-641-1 AC-2 annotated: if the guard ever extends to
+  let-chain detection, the complete form set must be used.
+
+- **LOW-004 (REFINEMENT, S-641-1):** All 7 `dtolnay/rust-toolchain` pins carry trailing comments
+  naming a toolchain (`# stable`, `# 1.85.0`) rather than the action version, unlike every other
+  40-char pin in the same files. The opacity this creates (pinned action version unrecoverable from
+  the pin line) is the same opacity that let the 1.85.0-branch SHA masquerade through 84+ passes.
+  No AC covers this; AC-4 validated the convention rather than questioning it. Added as a Problem
+  Statement observation and future-maintenance note in S-641-1.
+
+### Changed
+
+- `.factory/stories/S-626-1.md` (MODIFIED): v1.6→v1.7; Delivery Checklist CHANGELOG item
+  re-scoped (jr-scoped rendering analysis added; false upstream claim removed; marked satisfied
+  as amended); Previous Story Intelligence in-tree-let-chains row extended with INFO-005 complete
+  form set; process-gap row Story label updated + codified rule generalised to cover version pins
+  (Patterns Established + Gotchas Discovered columns); v1.7 entry in risk_mitigations.
+
+- `.factory/stories/S-641-1.md` (MODIFIED): v0.3→v0.4; LOW-004 Problem Statement section added
+  (pin comment convention observation); AC-2 annotated with INFO-005 complete form set note;
+  v0.4 entry in risk_mitigations; input-hash refreshed to f9188ab.
+
+- `.factory/stories/STORY-INDEX.md` (MODIFIED): v1.5.50→v1.5.51; last_updated trail extended.
+
+## [1.3.175] - 2026-07-30
+
+### Type: PATCH
+
+### Summary
+
+S-626-1 pass-3 adversarial review corrections (MEDIUM-001/MEDIUM-002/MEDIUM-003/LOW-004/LOW-005).
+S-626-1 v1.5→v1.6; S-641-1 v0.2→v0.3. STORY-INDEX v1.5.49→v1.5.50.
+BC count UNCHANGED at **657**. Holdout count UNCHANGED at **106**.
+
+- **MEDIUM-001 (inherited):** Defect 2 (Problem Statement) and AC-3 corrected. The false
+  mechanism "the action reads `rust-toolchain.toml`" replaced with the confirmed sequence:
+  (1) `dtolnay/rust-toolchain@c93f4f9c` (the 1.85.0 version branch) installed 1.85.0 as
+  `rustup default`; (2) `cargo check` ran in the repo root; (3) `rust-toolchain.toml` outranks
+  `rustup default` in rustup's precedence chain, so `cargo check` ran under stable — the
+  false-green came entirely from step 3. The action never reads the toml file.
+
+- **MEDIUM-002 (GAP, partial-fix regression):** F4 assessment corrected throughout: root cause
+  is **confirmed** (not unconfirmed). The comments in `sign-and-publish.yml` and
+  `backfill-release.yml` are substantively correct — targets were installed on the 1.85.0
+  toolchain while `cargo build` ran under stable → E0463. What is stale post-fix: with
+  `toolchain: stable` now agreeing with the toml, the steps are idempotent no-ops. Their
+  present-tense "without this step the build fails" is now historical. Pre-implementation
+  blockquote and AC-5 assessment updated. S-641-1 AC-4 re-scoped: preserve causal explanation;
+  re-tense claim as historical; ordering gate added (must not act before S-626-1 v1.6 lands).
+  [process-gap] codified in S-626-1 Previous Story Intelligence: provenance verification that
+  classifies a pin without reading the pinned artifact is incomplete.
+
+- **MEDIUM-003 (GAP):** Defect 1 expanded with two version-branch consequences:
+  (1) SHA substitution is load-bearing — `toolchain` input absent on 1.85.0 version branch,
+  so adding `with: {toolchain: …}` alone would be silently ignored; (2) blast radius bounded —
+  shipped binaries were compiled by stable (toml wins), not by 1.85.0; concrete harm was wasted
+  toolchain install + cross-targets on wrong toolchain + misleading comments, masked by
+  defensive `rustup target add` steps.
+
+- **LOW-004 (REFINEMENT, partial-fix regression):** AC-5 `release.yml` row corrected: no E0463
+  comment in `release.yml` (bare step name only: "Ensure cross-target installed (defensive)");
+  `rustup target add` at ~:45, not ~:43. Pre-implementation blockquote corrected to note the
+  difference between files with E0463 comments (`sign-and-publish.yml`, `backfill-release.yml`)
+  and `release.yml` (no comment). AC-4 aim issue noted: AC-4 audited the already-correct
+  `# 1.85.0` comment; the six `# stable` comments were the inaccurate ones and no AC checked
+  them; they are correct at HEAD (not a code defect).
+
+- **LOW-005 (REFINEMENT, partial-fix regression):** `tests/team_column_parity.rs` reclassified
+  CREATE → MODIFY in File Structure Requirements. File existed on `origin/develop` at 487 lines;
+  this PR appends 108 lines. The authorization under AC-9 / L-002 is unchanged.
+
+### Changed
+
+- `.factory/stories/S-626-1.md` (MODIFIED): v1.5→v1.6; Defect 1 expanded (version-branch
+  consequences: load-bearing SHA swap, blast-radius bound); Defect 2 corrected (confirmed
+  sequence replaces false "action reads toml" mechanism); origin field corrected; AC-3
+  mechanism explanation updated; AC-4 aim issue note added; AC-5 table release.yml row
+  corrected (E0463: no, ~:45); AC-5 assessment updated (root cause confirmed); pre-implementation
+  blockquote corrected (line refs, E0463 distinction); File Structure Requirements
+  CREATE→MODIFY for tests/team_column_parity.rs; process-gap row added to Previous Story
+  Intelligence; v1.6 entry in risk_mitigations.
+
+- `.factory/stories/S-641-1.md` (MODIFIED): v0.2→v0.3; Problem Statement M-003 corrected
+  (confirmed mechanism; re-tense scope; ordering gate); AC-4 re-scoped (preserve causal
+  explanation + re-tense + ordering gate); origin updated; input-hash eef3663; v0.3 entry
+  in risk_mitigations.
+
+- `.factory/stories/STORY-INDEX.md` (MODIFIED): v1.5.49→v1.5.50; last_updated trail extended.
+
+## [1.3.174] - 2026-07-30
+
+### Type: PATCH
+
+### Summary
+
+S-626-1 pass-2 adversarial review corrections (M-001/M-002/M-003/L-002/briefing-correction).
+S-626-1 v1.4→v1.5; S-641-1 v0.1→v0.2. STORY-INDEX v1.5.48→v1.5.49.
+BC count UNCHANGED at **657**. Holdout count UNCHANGED at **106**.
+
+- **M-001 (GAP, MEDIUM):** All 7 occurrences of bare `comfy-table = "7.2.1"` in S-626-1 corrected
+  to exact-pin form `comfy-table = "=7.2.1"`. The bare form is a Cargo caret range resolving to
+  7.2.2, reinstating the bug this story fixed. EC-10 extended to enumerate `"7.2.1"` as a third
+  failure shape. Architecture Mapping and Library & Framework Requirements table updated.
+
+- **M-002 (GAP, MEDIUM):** AC-8 amended to require `issue #626` citation in the `Cargo.toml` pin
+  comment. The original requirement cited `.factory/research/msrv-let-chains-comfy-table-2026-07-30.md`
+  — an internal path that must not appear in a manifest published to crates.io (ruling ADV-P1-LOW-001).
+  Task 7a code block updated: `comfy-table = "=7.2.1"  # pinned: issue #626; 7.2.2 uses let-chains (Rust >=1.88.0)`.
+  The research path is retained as supporting context in Source of Truth and Traces sections.
+
+- **M-003 (GAP, MEDIUM):** F4-only rustup-target-add assessment recorded in preamble and AC-5:
+  KEEP all three steps; root cause unconfirmed. AC-5 extended to enumerate `release.yml` ~:43 as a
+  fourth site (previously only `sign-and-publish.yml` ~:64 and `backfill-release.yml` ~:79 were
+  listed). Comment-rewrite routed to S-641-1 (three adjacent comments assert an unvalidated
+  mechanism — S-641-1 AC-4 added).
+
+- **L-002 (GAP, LOW):** `tests/team_column_parity.rs` (108 lines, commit `b51fc26a`) moved from
+  the `MUST NOT change: tests/` prohibition to an authorized change under AC-9. Added to
+  `files_modified` and `test_files` frontmatter. `CHANGELOG.md` also added to `files_modified`
+  (C-LOW-001 omission corrected). MUST NOT change line narrowed to exclude the authorized test file.
+
+- **Briefing-correction:** AC-9 scope note amended to record that C-LOW-001 described
+  `target_module` as `.github/workflows/ci.yml` — the actual value is `src/cli/`. Field retained
+  for auditability; discrepancy noted in the AC-9 scope change block.
+
+- **S-641-1 v0.1→v0.2:** M-003 scope additions: AC-4 draft (rewrite three workflow comments in
+  `release.yml` ~:43, `sign-and-publish.yml` ~:58, `backfill-release.yml` ~:73 — state observed
+  symptom E0463 + unconfirmed root cause); Problem Statement M-003 entry; `files_modified` extended
+  with three release workflow files; `risk_mitigations` and `origin` updated;
+  `acceptance_criteria_count` 3→4; `input-hash` updated to reflect modified S-626-1.md.
+
+### Changed
+
+- `.factory/stories/S-626-1.md` (MODIFIED): v1.4→v1.5; all 7 bare caret forms → `"=7.2.1"`;
+  AC-8 citation → `issue #626` (ADV-P1-LOW-001); Task 7a code block updated; EC-10 extended;
+  preamble rustup note extended (release.yml fourth site + F4 assessment); AC-5 extended (3-site
+  table + release.yml row + assessment outcome); AC-9 scope note extended (target_module
+  discrepancy C-LOW-001 correction + L-002 test file authorization); Architecture Mapping row
+  updated; Library & Framework Requirements updated; File Structure Requirements table updated
+  (=7.2.1 pin, CHANGELOG.md row, tests/team_column_parity.rs row); MUST NOT change narrowed;
+  frontmatter: version 1.4→1.5, files_modified + test_files extended, risk_mitigations entry added.
+- `.factory/stories/S-641-1.md` (MODIFIED): v0.1→v0.2; M-003 scope (AC-4 draft + Problem
+  Statement section + files_modified + risk_mitigations + origin); acceptance_criteria_count 3→4;
+  input-hash refreshed (c73e986).
+- `.factory/stories/STORY-INDEX.md` (MODIFIED): S-626-1 manifest row updated (v1.5; =7.2.1 pin;
+  files_modified extended; test_files noted; release.yml fourth rustup-target-add site); S-641-1
+  manifest row updated (v0.2; M-003 AC-4 scope); last_updated + version 1.5.48→1.5.49.
+
+## [1.3.173] - 2026-07-30
+
+### Type: PATCH
+
+### Summary
+
+S-626-1 AC-9 table and EC-13 corrected per ADV-L4 (S-626-1 adversarial review finding).
+The `keychain.rs` table row in AC-9 incorrectly stated `(multiple)` occurrences and
+`different shape`. Corrected: one occurrence; same construct class as `board.rs`/`list.rs`
+(both are let-chains with mirrored operand order: `if let Ok(v) = … && !v.is_empty()`
+vs. `if matches!(…) && let Some(…) = …`). EC-13 reworded to reflect that independent
+review is warranted because each site has its own surrounding control flow, not because
+the constructs differ in kind. The Problem Statement and Previous Story Intelligence rows
+are updated to match. S-626-1 version bumped v1.3→v1.4.
+
+New story S-641-1 registered: MSRV floor self-enforcement guards (ADV-M4/M5/L3 + F7
+folded). Scope: (1) `rustc --version` assertion step in ci.yml msrv job so the
+RUSTUP_TOOLCHAIN override is self-enforcing rather than self-documenting; (2)
+`tests/msrv_toolchain_guard.rs` reading `Cargo.toml` `rust-version` as the canonical
+source and verifying all 6+ MSRV declaration sites agree — guard must NOT hard-code
+the version so S-640-1 can raise the floor atomically; (3) dependabot `ignore` entry
+or recorded decision for the comfy-table exact pin to prevent recurring msrv-red PRs.
+S-641-1 blocks S-640-1 (changes every site the guard checks). S-640-1 updated to
+depends_on:[S-626-1,S-641-1] and PrevIntel extended with S-641-1 guard guidance.
+STORY-INDEX v1.5.47→v1.5.48; total_stories 121→122; feature-followup 86→87.
+BC count UNCHANGED at **657**. Holdout count UNCHANGED at **106**.
+
+### Changed
+
+- `.factory/stories/S-626-1.md` (MODIFIED): v1.3→v1.4; AC-9 table row corrected
+  (`keychain.rs`: `(multiple)` → `(one occurrence)`, `different shape` → same construct
+  class with mirrored operand order); EC-13 reworded (justification: own surrounding
+  control flow, not construct-kind difference); Problem Statement keychain description
+  corrected (one occurrence; same construct class); Previous Story Intelligence row
+  updated (same change). risk_mitigations extended with CORRECTION (v1.4) entry.
+- `.factory/stories/S-641-1.md` (CREATED): MSRV floor self-enforcement guards story;
+  v0.1; 3 ACs; 2 pts; depends_on:[S-626-1]; blocks:[S-640-1]; cycle:cycle-SOH-DX-1;
+  input-hash b899ed0.
+- `.factory/stories/S-640-1.md` (MODIFIED): v0.1→v0.2; depends_on extended to include
+  S-641-1; PrevIntel extended with S-641-1 guard row (guard design principle + update
+  guidance for S-640-1 raise).
+- `.factory/stories/STORY-INDEX.md` (MODIFIED): S-626-1 manifest row updated
+  (v1.4, corrected AC-9 table note); S-640-1 manifest row updated (v0.2,
+  depends_on:[S-626-1,S-641-1]); S-641-1 manifest row added (122nd story);
+  total_stories 121→122; feature-followup 86→87; Wave Plan row updated;
+  Final totals updated; version 1.5.47→1.5.48.
+
+## [1.3.172] - 2026-07-30
+
+### Type: PATCH
+
+### Summary
+
+Human ruling 2026-07-30 (third ruling, same day): S-626-1 re-amended from v1.2 to v1.3.
+A further discovery: `jr`'s own source contained 3 in-tree let-chain occurrences that also
+require Rust ≥1.88.0 — `src/cli/board.rs:~232`, `src/cli/issue/list.rs:~524`, and
+`src/cli/auth/keychain.rs` — invisible while the msrv job validated stable. Human ruling:
+rewrite within S-626-1 scope (commit `cc7f6da5`). New AC-9 added covering: the 3 file
+locations, the scope-change warning (S-626-1 is no longer CI-only; Step 4.5 adversarial
+convergence must cover `src/` changes; `feature_type: infrastructure` / `intent: maintenance`
+understates the scope — discrepancy noted, not corrected, for auditability), acceptance check
+(`RUSTUP_TOOLCHAIN=1.85.0 cargo check --all-features` clean), and regression evidence
+(2341 passed/0 failed/100 ignored; clippy clean; fmt clean). All dependent body sections
+updated: Narrative (item 5 added), Problem Statement (Emergent consequence 2 added), Source
+of Truth (in-tree fix note), Delivery Checklist (adversarial review note), Architecture
+Mapping (3 src/ rows), Edge Cases (EC-12/EC-13), Purity Classification (src/ row), Token
+Budget (3 src/ file estimates, total ~34,500), Tasks (Task 7d), Previous Story Intelligence
+(2 new rows: in-tree let-chain fix + inversion note), Architecture Compliance Rules (No
+product logic changes rule superseded), File Structure Requirements (3 src/ files added,
+MUST NOT updated). `files_modified` extended (+3 src/ files). `target_module` updated to
+`src/cli/`. `title` updated to include "in-tree let-chain rewrites". S-640-1 Previous Story
+Intelligence updated: in-tree let-chains already removed by S-626-1 AC-9; wiremock 0.6.5
+requires ≥1.88 (not a blocker for msrv lib+bins scope but relevant); inversion note
+(S-626-1 removes let-chains; S-640-1 collapsible_if fixes add them back). Story v1.2→v1.3;
+input-hash unchanged (2b1b435 — inputs unchanged). STORY-INDEX v1.5.46→v1.5.47.
+BC count UNCHANGED at **657**. Holdout count UNCHANGED at **106**.
+
+### Changed
+
+- `.factory/stories/S-626-1.md` (MODIFIED): v1.2→v1.3; AC-9 added (in-tree let-chain
+  rewrites in 3 src/ files; scope addition by human ruling 2026-07-30; commit cc7f6da5);
+  title/target_module/acceptance_criteria_count(8→9)/risk_mitigations/files_modified updated;
+  Narrative item 5 added; Problem Statement Emergent consequence 2 added; Source of Truth
+  updated; Delivery Checklist adversarial review note added; Architecture Mapping 3 src/ rows
+  added; Edge Cases EC-12/EC-13 added; Purity Classification src/ row added; Token Budget
+  updated (~21,500→~34,500); Task 7d added; Previous Story Intelligence 2 new rows; Architecture
+  Compliance Rules "No product logic changes" superseded; File Structure Requirements 3 src/
+  files added and MUST NOT updated.
+- `.factory/stories/S-640-1.md` (MODIFIED): Previous Story Intelligence extended with: in-tree
+  let-chains already removed by S-626-1 AC-9 (commit cc7f6da5); wiremock 0.6.5 requires ≥1.88
+  note; inversion note (S-626-1 removes let-chains; collapsible_if fixes at 1.88 add them back).
+- `.factory/stories/STORY-INDEX.md` (MODIFIED): S-626-1 manifest row updated (v1.3, 9 ACs,
+  src/ scope); S-640-1 manifest row updated (in-tree let-chains note, inversion, wiremock note);
+  version 1.5.46→1.5.47; last_updated amended.
+
+## [1.3.171] - 2026-07-30
+
+### Type: PATCH
+
+### Summary
+
+Human ruling 2026-07-30 (second ruling, same day): S-626-1 re-amended from v1.1 to v1.2.
+The v1.1 amendment raised the declared MSRV to 1.88 — that approach cascaded into 49
+`collapsible_if` clippy errors across 27 `src/` files (clippy MSRV-aware; at 1.88 it proposes
+let-chains; project policy forbids `#[allow]` suppression). Human ruling: pin `comfy-table` to
+`7.2.1` instead and raise MSRV as dedicated story S-640-1. Amendments to S-626-1: AC-3 and AC-4
+reverted to 1.85.0 target (with amendment note recording the v1.1 attempt and its reason); AC-8
+replaced from MSRV declaration raise (4 sites) with comfy-table 7.2.1 exact pin + deferred MSRV
+note (records that the raise was attempted, triggered 49 errors, deferred to S-640-1, and that
+the pin is the load-bearing element keeping declared MSRV 1.85 genuinely true); AC-6 CLAUDE.md
+gotcha reverted to 1.85.0 references; Narrative item 3 changed to comfy-table pin; Problem
+Statement rewritten (Defect 4 removed, Emergent consequence rewritten, Defect 2 reverted to
+1.85.0); Source of Truth MSRV entry updated; Delivery Checklist updated to dep-pin/non-breaking;
+files_modified: README.md removed (badge stays 1.85), Cargo.lock added; Architecture Mapping
+updated (MSRV raise rows removed, pin row added); Edge Cases EC-8/EC-9 removed, EC-10/EC-11
+added; Library/Framework Rust version reverted to 1.85.0; File Structure updated; Tasks 3/7a/7b/7c/8
+updated; Previous Story Intelligence updated with deferred-not-resolved note; Architecture
+Compliance Rules updated; risk_mitigations updated (REALIZED+RE-SCOPED). New story S-640-1
+registered (draft; raise MSRV 1.85→1.88 + 27-file collapsible_if fixes + comfy-table unpin;
+depends_on:[S-626-1]). Story v1.1→v1.2; input-hash 2b1b435 (unchanged — inputs unchanged).
+STORY-INDEX v1.5.45→v1.5.46; total_stories 120→121; feature-followup 85→86.
+BC count UNCHANGED at **657**. Holdout count UNCHANGED at **106**.
+
+### Changed
+
+- `.factory/stories/S-626-1.md` (MODIFIED): v1.1→v1.2; AC-3 1.88.0→1.85.0 + amendment note;
+  AC-4 1.88.0→1.85.0; AC-6 1.88.0→1.85.0; AC-8 replaced (MSRV raise→comfy-table pin + deferred
+  note); Delivery Checklist: dep-pin/non-breaking; files_modified: -README.md +Cargo.lock;
+  Narrative: item 2 1.85.0, item 3 comfy-table pin; Problem Statement: Defect 2 1.85.0,
+  Emergent consequence rewritten, Defect 4 removed; Source of Truth MSRV updated; Architecture
+  Mapping: MSRV rows removed, pin row added; Edge Cases: EC-8/EC-9 removed, EC-10/EC-11 added;
+  Library 1.85.0 + comfy-table 7.2.1; File Structure: -README.md +Cargo.lock; Tasks 3/7a/7b/7c/8
+  updated; Previous Story Intelligence: deferred-not-resolved note + pin is load-bearing.
+- `.factory/stories/S-640-1.md` (NEW): MSRV 1.85→1.88 raise + 49 collapsible_if fixes across
+  27 src/ files + comfy-table unpin; draft; depends_on:[S-626-1]; story v0.1.
+- `.factory/stories/STORY-INDEX.md` (MODIFIED): S-626-1 manifest row updated (v1.2 re-amendment);
+  S-640-1 manifest row added; version 1.5.45→1.5.46; total_stories 120→121; feature-followup
+  wave-plan 85→86; Final totals updated; Story Manifest Total rows updated.
+
+## [1.3.170] - 2026-07-30
+
+### Type: PATCH
+
+### Summary
+
+Human ruling 2026-07-30: S-626-1 MSRV retargeted from 1.85 to 1.88. The MSRV false-green fix (AC-3)
+was implemented and immediately surfaced a genuine MSRV violation: `comfy-table 7.2.2` uses let-chains,
+which require both `edition = "2024"` and compiler ≥ 1.88.0. Empirical verification across four
+toolchains: E0658 on 1.85.0, 1.86.0, 1.87.0; clean on 1.88.0. `comfy-table 7.2.2` ships no
+`rust-version` manifest field so cargo enforced no constraint; a patch-level dep bump silently raised
+the real minimum. Human ruling: raise declared MSRV to 1.88. Amendments: AC-3 (MSRV job toolchain +
+env) → 1.88.0; AC-4 (comment) → `# 1.88.0`; AC-6 (CLAUDE.md gotcha wording) → 1.88.0; AC-8 added
+(4 declaration sites: Cargo.toml, README.md, ci.yml job name, ci.yml comment); Delivery Checklist
+added (CHANGELOG.md obligation); Previous Story Intelligence row added (MSRV fix working as intended).
+Story v1.0→v1.1; input-hash recomputed 2b1b435; files_modified extended (+Cargo.toml, +README.md).
+STORY-INDEX v1.5.44→v1.5.45. BC count UNCHANGED at **657**. Holdout count UNCHANGED at **106**.
+
+### Changed
+
+- `.factory/stories/S-626-1.md` (MODIFIED): AC-3 1.85.0→1.88.0 (toolchain + RUSTUP_TOOLCHAIN env);
+  AC-4 comment → `# 1.88.0`; AC-6 gotcha guidance → 1.88.0; AC-8 added (MSRV declaration sites:
+  Cargo.toml ~:7, README.md ~:8, ci.yml ~:60 job name, ci.yml ~:70 comment); Delivery Checklist
+  section added (CHANGELOG.md obligation); Previous Story Intelligence: MSRV-retarget row added;
+  Architecture Mapping: 3 MSRV declaration rows added; Edge Cases: EC-8/EC-9 added; Library table
+  updated; File Structure Requirements updated (Cargo.toml + README.md added; MUST NOT list corrected);
+  Task 3 updated; Tasks 7a/7b/7c/8 added; risk_mitigations updated (realized); Narrative item 3 added;
+  Problem Statement Defect 4 added; Source of Truth MSRV updated; story v1.0→v1.1; input-hash 0c7614e→2b1b435.
+- `.factory/stories/STORY-INDEX.md` (MODIFIED): S-626-1 manifest row updated with MSRV retarget
+  summary; STORY-INDEX v1.5.44→v1.5.45.
+- `.factory/spec-changelog.md` (MODIFIED): [1.3.170] entry prepended.
+
+### BC Count
+
+0 new BCs. Total unchanged: **657** cumulative (BC-INDEX). Holdout count unchanged: **106**.
+
+---
+
 ## [1.3.169] - 2026-07-29
 
 ### Type: PATCH

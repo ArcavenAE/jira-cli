@@ -4,7 +4,7 @@ level: ops
 version: "2.0"
 status: active
 producer: state-manager
-timestamp: 2026-07-30T22:12:44Z
+timestamp: 2026-07-30T23:29:33Z
 phase: 3
 pipeline: PAUSED
 inputs: []
@@ -12,11 +12,11 @@ input-hash: "[live-state]"
 traces_to: ""
 project: jira-cli
 mode: brownfield
-current_step: "PASS-4-PERSISTENCE-BURST: S-626-1 adversary pass-4 findings captured verbatim (4L+1I; 5 findings); ADV-P1-INDEX.md updated to v1.2 (pass-4 section; total_findings 33). Convergence 0/3 (NOT CLEAN — 4 LOW + 1 INFO; zero MEDIUM+; zero code defects; severity ceiling fell MEDIUM→LOW). Round-4 dispositions: product-repo commit 4223ea09 (LOW-001/LOW-002); LOW-003/LOW-004/INFO-005 routed to .factory/+S-641-1. ORCHESTRATOR-ERROR-INJECTION-RATE: PASS-4 datapoint (INFO-005 broken-grep method). STORY-INDEX v1.5.50; spec-changelog [1.3.175]; BC 657; holdouts 106 unchanged. D-chain cite D-198 (no new DEC). trajectory-tail →1→2→4→2."
-trajectory_tail: "→1→2→4→2"
+current_step: "SESSION-WRAP-BURST: S-626-1 DELIVERED — PR #667 (ci/fix-toolchain-sha-msrv) open against develop, head 64e2a4bc, 12 commits, MERGEABLE; human merges (DEC-173). Adversary pass-5 NOT CLEAN (2L+1I; 3 findings; all fixed in 64e2a4bc; not yet persisted to adversary-pass-5.md). Step 4.5 = 0/3 under DEC-191 (5 passes all NOT CLEAN; zero code defects last 4; pass-5 = all-residue self-feeding). All uncommitted .factory/ committed. Pipeline PAUSED — human decides: run pass-6 or merge #667. STORY-INDEX v1.5.51; spec-changelog [1.3.175]; BC 657; holdouts 106. D-chain cite D-198. trajectory-tail →7→8→5→3."
+trajectory_tail: "→7→8→5→3"
 maintenance_run: CLOSED
 current_cycle: "cycle-001"
-feature_mode_bundle: SOH-DX-1-F2-ADVERSARY-GRIND
+feature_mode_bundle: SOH-DX-1-F4-DELIVERY
 dtu_required: false
 phase_2_status: APPROVED
 phase_2_approved_at: 2026-05-07
@@ -25,7 +25,7 @@ activation_head: "7b3ba371"
 activation_version: "v0.6.0-dev.11"
 ---
 
-<!-- STATE.md SIZE BUDGET (2026-07-30 PASS-4-PERSISTENCE-BURST): 242 lines (wc-l) — prior: 239; delta: +3. Soft-target 200; margin from soft-target = +42; margin from actual to hard cap 500 = 258. Compaction: archived CPS row (PASS-3-PERSISTENCE-BURST) to burst-log; added CPS row (PASS-4-PERSISTENCE-BURST); updated ORCHESTRATOR-ERROR-INJECTION-RATE (PASS-4 datapoint) + ORCHESTRATOR-SKIPPED-POST-ADVERSARY-PERSISTENCE (pass-4 captured); Convergence Status updated (NOT CLEAN pass-4; convergence 0/3; severity ceiling fell to LOW). -->
+<!-- STATE.md SIZE BUDGET (2026-07-30 SESSION-WRAP-BURST): 240 lines (wc-l) — prior: 242; delta: -2. Soft-target 200; margin from soft-target = +40; margin from actual to hard cap 500 = 260. Compaction: archived pass-84 PP row + PASS-4-PERSISTENCE-BURST CPS row to burst-log; added SESSION-WRAP PP+CPS rows; removed blank between ## Session Resume Checkpoint and table, and between ## RESUME PLAN and Step 1. -->
 
 # Pipeline State: jira-cli
 
@@ -36,25 +36,25 @@ activation_version: "v0.6.0-dev.11"
 | **Product** | jr (Jira CLI) |
 | **Mode** | BROWNFIELD / Rust |
 | **Target Workspace** | develop to main |
-| **trajectory-tail** | →1→2→4→2 (passes 79=1C-reset, 82=2L-1/3, 83=4-reclassified-2/3, 84=2L-CONVERGED-3/3 under DEC-191 at v1.3.166) |
-| **Last Updated** | 2026-07-30: PASS-4-PERSISTENCE-BURST — S-626-1 adversary pass-4 captured (4L+1I; 5 findings); ADV-P1-INDEX.md updated to v1.2 (pass-4; total 33 findings); ORCHESTRATOR-ERROR-INJECTION-RATE PASS-4 datapoint (INFO-005 broken-grep); convergence 0/3 (NOT CLEAN — zero MEDIUM+; severity ceiling fell to LOW); round-4 dispositions: product-repo 4223ea09 + LOW-003/004/INFO-005 routed. STORY-INDEX v1.5.50. trajectory-tail →1→2→4→2. |
-| **Current Phase** | Feature Mode SOH-DX-1 **F3 APPROVED (DEC-197, 2026-07-29) — F4 DELIVERY READY**. S-626-1 adversary: pass-1 NOT CLEAN; pass-2 NOT CLEAN; pass-3 NOT CLEAN (root-cause mechanism falsified; 3 MEDIUMs); pass-4 NOT CLEAN (4 LOW + 1 INFO; zero MEDIUM+; zero code defects; severity ceiling fell MEDIUM→LOW); **convergence 0/3 — Step 4.5 NOT CLEAN** (4 passes, layers: code/spec-artifact/causal-model/doc-convention; round-4 dispositions committed). AX23-001 PENDING RATIFICATION. Version target: v0.6.0-dev.12. Delivery order: S-626-1 first — PENDING HUMAN RATIFICATION. |
-| **Next Phase** | F4 per-story delivery: S-626-1 first (CI trustworthiness; Step 4.5 NOT CLEAN — passes 1+2+3+4 all NOT CLEAN; convergence 0/3; round-4 dispositions committed; ordering PENDING RATIFICATION), then S-639-1 (BREAKING/v0.6.0-dev.12), then S-627-1. AX23-001 ratification also pending. |
+| **trajectory-tail** | →7→8→5→3 (S-626-1 adversary passes P2→P3→P4→P5 findings; Step 4.5 = 0/3 under DEC-191; zero code defects last 4 passes) |
+| **Last Updated** | 2026-07-30: SESSION-WRAP-BURST — S-626-1 DELIVERED; PR #667 open (ci/fix-toolchain-sha-msrv, head 64e2a4bc, 12 commits); adversary pass-5 NOT CLEAN (2L+1I; 3 findings; all fixed 64e2a4bc; not yet persisted); Step 4.5 = 0/3 (5 passes NOT CLEAN; zero code defects last 4; pass-5 = self-feeding residue); all .factory/ burst committed; pipeline PAUSED. STORY-INDEX v1.5.51. trajectory-tail →7→8→5→3. |
+| **Current Phase** | Feature Mode SOH-DX-1 **F4 DELIVERY IN PROGRESS**. F2 APPROVED (DEC-196), F3 APPROVED (DEC-197). **S-626-1 DELIVERED** — PR #667 open, head 64e2a4bc, 12 commits, branch ci/fix-toolchain-sha-msrv; MERGEABLE, human merges (DEC-173). Adversary: 5 passes all NOT CLEAN; pass-5 NOT CLEAN (2L+1I; fixed in 64e2a4bc; NOT YET PERSISTED); Step 4.5 = **0/3 under DEC-191** (zero code defects last 4 passes; severity ceiling LOW; pass-5 all-residue). AX23-001 PENDING RATIFICATION. Human decision: run pass-6 or merge #667. |
+| **Next Phase** | F4: S-626-1 adversary pass-6 (or human decides to merge #667 directly); then S-639-1 (BREAKING/v0.6.0-dev.12), then S-627-1. Neither S-639-1 nor S-627-1 has had an adversary pass — adversary recommended on S-639-1 before merge (BREAKING). AX23-001 PENDING RATIFICATION. |
 | **Activation HEAD** | 7b3ba371 (PR #654 squash-merged 2026-07-25; FIX-E2E-EGRESS DELIVERED; SOH-ATTACHMENTS-1 CYCLE FULLY CLOSED; activation_version v0.6.0-dev.11) |
 
 ## Phase Progress
 
-<!-- Archived rows: see cycles/cycle-001/burst-log.md (rounds 67, 68-70; LEDGER-BURST-71-72; DEC-191-BURST; F2-CONVERGENCE-BURST; passes 75-78; DEC-192 spec fix burst; F2-CONVERGENCE-BURST final rows archived SOH-DX-1-F3-DECOMP-BURST 2026-07-29; F2-CONVERGENCE-BURST final rows archived DEC-197-BURST 2026-07-30; DEC-198-LEDGER rows archived POST-ADVERSARY-PERSISTENCE-BURST 2026-07-30) -->
+<!-- Archived rows: see cycles/cycle-001/burst-log.md (rounds 67, 68-70; LEDGER-BURST-71-72; DEC-191-BURST; F2-CONVERGENCE-BURST; passes 75-78; DEC-192 spec fix burst; F2-CONVERGENCE-BURST final rows archived SOH-DX-1-F3-DECOMP-BURST 2026-07-29; F2-CONVERGENCE-BURST final rows archived DEC-197-BURST 2026-07-30; DEC-198-LEDGER rows archived POST-ADVERSARY-PERSISTENCE-BURST 2026-07-30; pass-84 PP row + PASS-4-PERSISTENCE-BURST CPS archived SESSION-WRAP-BURST 2026-07-30) -->
 | Phase | Status | Completed | Gate | Notes | Finding Progression |
 |-------|--------|-----------|------|-------|---------------------|
-| pass-84 (F2 converged 3/3 CLEAN under DEC-191; F3 APPROVED DEC-197): S-639-1 (BREAKING/v0.6.0-dev.12, 21 ACs), S-627-1 (6 ACs), S-626-1 (7 ACs); retarget 17 sites/6 files/0 over-propagation (PG-012 MITIGATED); spec v1.3.169; STORY-INDEX v1.5.44; BC 657; holdouts 106. F4 DELIVERY READY. | F3 APPROVED — DEC-197 | 2026-07-29 | DEC-197 | Delivery order: S-626-1 first — PENDING HUMAN RATIFICATION. AX23-001 PENDING. DEC-188(d) SUPERSEDED by DEC-197. | F2+F3: →1→2→4→2 |
+| **SESSION-WRAP-BURST (2026-07-30): S-626-1 DELIVERED — PR #667 (ci/fix-toolchain-sha-msrv, head 64e2a4bc, 12 commits, MERGEABLE); adversary pass-5 NOT CLEAN (2L+1I; 3 findings; all fixed in 64e2a4bc; NOT PERSISTED); Step 4.5 = 0/3 (5 passes NOT CLEAN; zero code defects last 4); .factory/ burst committed; pipeline PAUSED.** | PAUSED | 2026-07-30 | — | Human decides: run pass-6 or merge #667. S-640-1/S-641-1 committed. STORY-INDEX v1.5.51. | →7→8→5→3 |
 
 ## Current Phase Steps
 
-<!-- Archived rows: see cycles/cycle-001/burst-log.md (SESSION-WRAP; LEDGER-BURST-71-72; DEC-191-BURST; F2-CONVERGENCE-BURST; F2-CONVERGENCE-WINDOW-BURST; DEC-192 corrective; F2-CONVERGENCE-BURST final; SOH-DX-1-F3-DECOMP-BURST 2026-07-29; DEC-197-GATE-APPROVAL-RETARGET-BURST 2026-07-30; DEC-198-LEDGER-CORRECTION-BURST 2026-07-30; POST-ADVERSARY-PERSISTENCE-BURST 2026-07-30; PASS-2-PERSISTENCE-BURST 2026-07-30; PASS-3-PERSISTENCE-BURST 2026-07-30) -->
+<!-- Archived rows: see cycles/cycle-001/burst-log.md (SESSION-WRAP; LEDGER-BURST-71-72; DEC-191-BURST; F2-CONVERGENCE-BURST; F2-CONVERGENCE-WINDOW-BURST; DEC-192 corrective; F2-CONVERGENCE-BURST final; SOH-DX-1-F3-DECOMP-BURST 2026-07-29; DEC-197-GATE-APPROVAL-RETARGET-BURST 2026-07-30; DEC-198-LEDGER-CORRECTION-BURST 2026-07-30; POST-ADVERSARY-PERSISTENCE-BURST 2026-07-30; PASS-2-PERSISTENCE-BURST 2026-07-30; PASS-3-PERSISTENCE-BURST 2026-07-30; PASS-4-PERSISTENCE-BURST 2026-07-30) -->
 | Step | Agent | Status | Output |
 |------|-------|--------|--------|
-| **PASS-4-PERSISTENCE-BURST (2026-07-30): S-626-1 adversary pass-4 findings captured verbatim — s-626-1-adversary-pass-4.md (5 findings: 4L+1I + preflight note); ADV-P1-INDEX.md updated to v1.2 (pass-4 section; total_findings 33; MED:11/LOW:14/INFO:8). Convergence 0/3 (NOT CLEAN — 4 LOW + 1 INFO; zero MEDIUM+; zero code defects; severity ceiling fell MEDIUM→LOW). Round-4 dispositions: product-repo commit 4223ea09 (LOW-001: CLAUDE.md No-let-chains convention + re-pointed comments; LOW-002: ci.yml unreachable-claim rewrite); LOW-003 routed to .factory/ (checklist jr-scoped + provenance rule generalised); LOW-004+INFO-005 routed to S-641-1. ORCHESTRATOR-ERROR-INJECTION-RATE: PASS-4 datapoint (INFO-005 broken-grep — zero orchestrator-introduced findings). STORY-INDEX v1.5.50; spec-changelog [1.3.175]; BC 657; holdouts 106 unchanged. 242 lines.** | state-manager | COMPLETED | s-626-1-adversary-pass-4.md + ADV-P1-INDEX.md + STATE.md committed to factory-artifacts. |
+| **SESSION-WRAP-BURST (2026-07-30): All uncommitted .factory/ files committed — stories/S-640-1.md (MSRV-raise deferred), S-641-1.md (guard story v0.4); cycles/cycle-001/adversarial-reviews/s-626-1-step45-pass-{a,b,c}.md (3 Step-4.5 convergence artifacts); demos/S-626-1/ (11 demo artifacts: AC-001..009, full-suite.txt, INDEX.md); research/msrv-let-chains-comfy-table-2026-07-30.md; code-delivery/S-626-1/pr-review.md; modified: regression-state.json, sidecar-learning.md, spec-changelog.md, stories/S-626-1.md (v1.7), stories/STORY-INDEX.md (v1.5.51). Session Resume Checkpoint updated + archived to session-checkpoints.md. Pipeline PAUSED. 240 lines.** | state-manager | COMPLETED | All .factory/ burst committed to factory-artifacts; STATE.md updated; prior checkpoint archived to session-checkpoints.md. |
 
 ## Decisions Log
 
@@ -200,7 +200,7 @@ None open.
 
 ## Convergence Status
 
-BC-INDEX v6.75 / STORY-INDEX v1.5.50 / ARCH-INDEX v0.16. SOH-DX-1 F2 APPROVED (DEC-196, 2026-07-29): passes 82/83/84 CLEAN 3/3 at v1.3.166. F3 APPROVED (DEC-197, 2026-07-29): spec v1.3.169; BC 657; holdouts 106. S-626-1 adversary: pass-1 NOT CLEAN (5M+5L+3I, 2026-07-30); pass-2 NOT CLEAN (3M spec-artifact, 2026-07-30); pass-3 NOT CLEAN (3M+3L+2I, root-cause mechanism falsified, 2026-07-30); pass-4 NOT CLEAN (4L+1I, zero MEDIUM+, zero code defects, severity ceiling fell to LOW, 2026-07-30); **convergence 0/3 — 4 passes, layers: code/spec-artifact/causal-model/doc-convention; round-4 dispositions committed**. AX23-001 PENDING RATIFICATION.
+BC-INDEX v6.75 / STORY-INDEX v1.5.51 / ARCH-INDEX v0.16. SOH-DX-1 F2 APPROVED (DEC-196, 2026-07-29): passes 82/83/84 CLEAN 3/3 at v1.3.166. F3 APPROVED (DEC-197, 2026-07-29): spec v1.3.169; BC 657; holdouts 106. S-626-1 adversary: pass-1 NOT CLEAN (5M+5L+3I, 2026-07-30); pass-2 NOT CLEAN (3M spec-artifact, 2026-07-30); pass-3 NOT CLEAN (3M+3L+2I, root-cause mechanism falsified, 2026-07-30); pass-4 NOT CLEAN (4L+1I, zero MEDIUM+, zero code defects, 2026-07-30); pass-5 NOT CLEAN (2L+1I, 3 findings, all-residue, fixed 64e2a4bc, NOT YET PERSISTED, 2026-07-30); **convergence 0/3 — 5 passes; zero code defects last 4; pass-5 self-feeding residue; Step 4.5 NOT CLEAN**. AX23-001 PENDING RATIFICATION.
 
 SOH-ATTACHMENTS-1 + prior cycles FULLY CLOSED. See cycles/cycle-001/convergence-trajectory.md.
 
@@ -209,23 +209,21 @@ SOH-ATTACHMENTS-1 + prior cycles FULLY CLOSED. See cycles/cycle-001/convergence-
 <!-- Prior completed cycles archived to burst-log: ADF-CODE-MARK-EXCLUSIVITY (DEC-163, v0.6.0-dev.8), SOH-BUGS-1 (DEC-167, v0.6.0-dev.9), SOH-COMMENT-CRUD-1 (DEC-176, v0.6.0-dev.10), SOH-ATTACHMENTS-1 (DEC-186, v0.6.0-dev.11). See cycles/cycle-001/convergence-trajectory.md. -->
 | Cycle | Status | Notes |
 |-------|--------|-------|
-| SOH-DX-1 (issues #639+#627+#626) | F3 APPROVED (DEC-197, 2026-07-29) — F4 DELIVERY READY | 3 stories: S-639-1 (BREAKING/v0.6.0-dev.12), S-627-1, S-626-1. S-626-1 adversary passes 1+2+3+4 NOT CLEAN (convergence 0/3; 4 passes; severity ceiling fell to LOW pass-4; round-4 dispositions committed). AX23-001 PENDING RATIFICATION. Delivery order: S-626-1 first (PENDING HUMAN RATIFICATION). |
+| SOH-DX-1 (issues #639+#627+#626) | F4 DELIVERY IN PROGRESS — **S-626-1 DELIVERED** (PR #667, head 64e2a4bc, MERGEABLE) | 3 stories: S-639-1 (BREAKING/v0.6.0-dev.12), S-627-1, S-626-1 (DELIVERED). S-626-1 adversary: 5 passes NOT CLEAN (Step 4.5 = 0/3; zero code defects last 4; pass-5 not persisted; human decides pass-6 or merge). AX23-001 PENDING RATIFICATION. |
 
 ## Session Resume Checkpoint
-
 | Field | Value |
 |-------|-------|
-| Date | 2026-07-30 PASS-4-PERSISTENCE-BURST. S-626-1 adversary pass-4 captured: 4L+1I; 5 findings. ADV-P1-INDEX.md updated to v1.2 (pass-4; total 33 findings). Convergence 0/3 (NOT CLEAN — zero MEDIUM+; severity ceiling fell to LOW; zero code defects). Round-4 dispositions: product-repo 4223ea09 + .factory/ (LOW-003 checklist) + S-641-1 (LOW-004/INFO-005). ORCHESTRATOR-ERROR-INJECTION-RATE: PASS-4 datapoint (INFO-005 broken-grep; 0 orchestrator-introduced regressions). develop @ acdad174. |
-| State | F3 APPROVED (DEC-197). F4 DELIVERY READY. S-626-1 adversary passes 1+2+3+4 NOT CLEAN — Step 4.5 convergence 0/3; 4 passes (code/spec-artifact/causal-model/doc-convention); round-4 dispositions committed. AX23-001 PENDING RATIFICATION. S-639-1 is BREAKING (v0.6.0-dev.12). Delivery order: S-626-1 first — PENDING HUMAN RATIFICATION. |
-| In flight | develop @ acdad174. .factory @ factory-artifacts (this commit). S-626-1 worktree @ ci/fix-toolchain-sha-msrv (PR #667) @ 4223ea09. s-626-1-adversary-pass-4.md + ADV-P1-INDEX.md committed. No other worktrees. Product repo untracked: .claude/hooks/, .claude/pr-reviews/, .claude/settings.local.json.bak, .claude/spec-config.json (pre-existing). |
-| Pending human decisions | (1) Delivery order ratification (S-626-1 FIRST recommended — PENDING). (2) AX23-001 out-of-delta ruling PENDING RATIFICATION. (3) DEC-195 VSDD-CONFORMANCE-GAP-4-ARTIFACTS bundle schedule. (4) Input-hash drift (56 stale + 3 malformed). (5) STALE-FACTORY-ARTIFACTS-BRANCH delete decision. PR queue: #662 (MERGEABLE), #655/#656/#657/#658/#659 (soaking per DEC-178/187), #628/#574 (arcaven). Merged 2026-07-29: #661, #645. DO NOT close #429. |
-| Blockers | None blocking F4 delivery. MEDIUM open: AGENT-IDLE-NO-REPORT, VSDD-CONFORMANCE-GAP-4-ARTIFACTS (DEC-195), REVIEW-ISOLATION-NOT-MECHANICALLY-ENFORCED, APERTURE-CLASS-LESSON, ORCHESTRATOR-SKIPPED-POST-ADVERSARY-PERSISTENCE (corrective DONE pass-1+2+3+4; procedural-gap stays OPEN). |
-| Resume command | Open fresh session → run /vsdd-factory:next-step. F4 per-story delivery. S-626-1: adversary passes 1+2+3+4 NOT CLEAN (Step 4.5 convergence 0/3) — round-4 dispositions committed (product-repo 4223ea09 + .factory/ LOW-003 + S-641-1 LOW-004/INFO-005); ordering PENDING HUMAN RATIFICATION. Then S-639-1 (BREAKING/v0.6.0-dev.12), S-627-1. AX23-001 pending. |
+| Position | Feature Mode SOH-DX-1 F4 delivery. F2 APPROVED (DEC-196), F3 APPROVED (DEC-197). **S-626-1 DELIVERED** — PR #667 open against develop, 12 commits, head 64e2a4bc, branch ci/fix-toolchain-sha-msrv, worktree `.worktrees/S-626-1` clean and pushed. CI Gate SUCCESS at prior head; run on 64e2a4bc may be in flight. **MERGEABLE — human merges (DEC-173). PR #667 NOT merged yet.** |
+| Convergence | S-626-1 Step 4.5 = 0/3 under DEC-191. Five true-adversary passes, all NOT CLEAN, 36 findings total (pass-5 not yet persisted). Trajectory: P1=13f/5M/code-defects; P2=7f/3M/none; P3=8f/3M/none/3-residue; P4=5f/4L/none/2-residue; P5=3f/2L/none/**3/3-residue** (self-feeding). Zero code defects last 4 passes. Pass-5 all-residue: possible breakpoint. |
+| Not yet done | (1) Persist pass-5 findings (LOW-001 CLAUDE.md pointer, LOW-002 deadlock/expiry GAP, INFO-003 overstated modal) to `cycles/cycle-001/adversarial-reviews/s-626-1-adversary-pass-5.md`; update ADV-P1-INDEX.md to 36 total. All three fixed in 64e2a4bc. (2) S-640-1 handoff: on MSRV ≥1.88, delete `No let-chains` from CLAUDE.md Conventions AND in-code comments at `src/cli/board.rs` ~:231, `src/cli/issue/list.rs` ~:523, `src/cli/auth/keychain.rs` ~:50. (3) Record Step 4.5 convergence state formally (0/3, trajectory). |
+| In flight | develop @ 64e2a4bc (PR #667, S-626-1). .factory @ factory-artifacts (this commit). No other open worktrees. Product repo untracked: .claude/hooks/, .claude/pr-reviews/, .claude/settings.local.json.bak, .claude/spec-config.json (pre-existing). |
+| Pending human decisions | (1) Run adversary pass-6 or merge #667 (orchestrator recommends pass-6, then merge regardless — code correct since 20d533e4; pass-5 all-residue suggests breakpoint). (2) AX23-001 out-of-delta ratification (non-blocking). PR queue: #667 (S-626-1, ready), #662 (MERGEABLE), #655–#659 (soaking DEC-178/187), #628/#574 (arcaven). DO NOT close #429. |
+| Resume command | Open fresh session → /vsdd-factory:next-step. Decide pass-6 vs merge #667. Then S-639-1 (BREAKING/v0.6.0-dev.12), S-627-1. Neither has adversary pass yet; S-639-1 BREAKING → adversary recommended before merge. Persist adversary pass-5 findings. AX23-001 pending. |
 
 ## RESUME PLAN (cold-start)
-
 Step 1 (BLOCKING): Run vsdd-factory:factory-worktree-health. Read this file.
-Step 2 — F4 per-story delivery ready. S-626-1 adversary passes 1+2+3+4 NOT CLEAN (Step 4.5 convergence 0/3 — round-4 dispositions committed; ordering PENDING HUMAN RATIFICATION). Then S-639-1 (BREAKING/v0.6.0-dev.12), then S-627-1 (LOW). AX23-001 PENDING RATIFICATION. All stories code-independent (depends_on: []).
+Step 2 — F4 per-story delivery: S-626-1 DELIVERED (PR #667, head 64e2a4bc, MERGEABLE — human decides pass-6 or merge). Then S-639-1 (BREAKING/v0.6.0-dev.12), S-627-1. Neither has adversary pass yet. Persist adversary pass-5 findings. AX23-001 PENDING RATIFICATION.
 Step 3 — STANDING CONSTRAINTS: DEC-128 (delivery agents MUST NOT self-authorize merges/poll loops). DEC-133/178/187 (ALL dependabot 7-day soak). External PRs untrusted.
 
 ## Open Issues Tracker

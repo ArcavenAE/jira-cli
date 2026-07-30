@@ -7904,3 +7904,14 @@ Changes made:
 **Archived CPS row (PASS-3-PERSISTENCE-BURST):**
 
 > **PASS-3-PERSISTENCE-BURST (2026-07-30): S-626-1 adversary pass-3 findings captured verbatim — s-626-1-adversary-pass-3.md (8 findings: 3M+3L+2I + preflight note); ADV-P1-INDEX.md updated to v1.2 (pass-3 section; total_findings 28; MED:11/LOW:10/INFO:7). Convergence 0/3 (NOT CLEAN — root-cause mechanism falsified). Round-3 dispositions: product-repo commit 64cdb59b (MEDIUM-001/LOW-006/INFO-007 in CLAUDE.md+CHANGELOG.md); story v1.5→v1.6 (MEDIUM-001/002/003/LOW-004/005); S-641-1 v0.2→v0.3 re-scoped (ordering gate added). ORCHESTRATOR-ERROR-INJECTION-RATE: 4 new datapoints (fabricated SHA + MEDIUM-002/LOW-004/LOW-005 orchestrator-introduced). STORY-INDEX v1.5.50; spec-changelog [1.3.175]; BC 657; holdouts 106 unchanged. 239 lines.** | state-manager | COMPLETED | s-626-1-adversary-pass-3.md + ADV-P1-INDEX.md + STATE.md committed to factory-artifacts.
+
+
+## SESSION-WRAP-BURST (archived PP row + CPS row from STATE.md 2026-07-30)
+
+**Archived PP row (pass-84 / F3-APPROVED row):**
+
+> | pass-84 (F2 converged 3/3 CLEAN under DEC-191; F3 APPROVED DEC-197): S-639-1 (BREAKING/v0.6.0-dev.12, 21 ACs), S-627-1 (6 ACs), S-626-1 (7 ACs); retarget 17 sites/6 files/0 over-propagation (PG-012 MITIGATED); spec v1.3.169; STORY-INDEX v1.5.44; BC 657; holdouts 106. F4 DELIVERY READY. | F3 APPROVED — DEC-197 | 2026-07-29 | DEC-197 | Delivery order: S-626-1 first — PENDING HUMAN RATIFICATION. AX23-001 PENDING. DEC-188(d) SUPERSEDED by DEC-197. | F2+F3: →1→2→4→2 |
+
+**Archived CPS row (PASS-4-PERSISTENCE-BURST):**
+
+> **PASS-4-PERSISTENCE-BURST (2026-07-30): S-626-1 adversary pass-4 findings captured verbatim — s-626-1-adversary-pass-4.md (5 findings: 4L+1I + preflight note); ADV-P1-INDEX.md updated to v1.2 (pass-4 section; total_findings 33; MED:11/LOW:14/INFO:8). Convergence 0/3 (NOT CLEAN — 4 LOW + 1 INFO; zero MEDIUM+; zero code defects; severity ceiling fell MEDIUM→LOW). Round-4 dispositions: product-repo commit 4223ea09 (LOW-001: CLAUDE.md No-let-chains convention + re-pointed comments; LOW-002: ci.yml unreachable-claim rewrite); LOW-003 routed to .factory/ (checklist jr-scoped + provenance rule generalised); LOW-004+INFO-005 routed to S-641-1. ORCHESTRATOR-ERROR-INJECTION-RATE: PASS-4 datapoint (INFO-005 broken-grep — zero orchestrator-introduced findings). STORY-INDEX v1.5.50; spec-changelog [1.3.175]; BC 657; holdouts 106 unchanged. 242 lines.** | state-manager | COMPLETED | s-626-1-adversary-pass-4.md + ADV-P1-INDEX.md + STATE.md committed to factory-artifacts.

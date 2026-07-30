@@ -1,0 +1,19 @@
+$ cd /Users/zious/Documents/GITHUB/jira-cli/.worktrees/S-626-1 && grep -n "rust-toolchain.toml.*outranks\|RUSTUP_TOOLCHAIN.*env\|false-green\|S-626-1" CLAUDE.md | head -5
+218:- **`rust-toolchain.toml` outranks `dtolnay/rust-toolchain`'s `toolchain` input — MSRV job requires `RUSTUP_TOOLCHAIN` env (S-626-1):** When `rust-toolchain.toml` is present in the working directory (as it is in this repo, with `channel = "stable"`), it overrides `rustup default`, `rustup override`, and the `toolchain` input of the `dtolnay/rust-toolchain` action at the shell level. Result: the MSRV CI job (`ci.yml` msrv job) installed Rust 1.85.0 via the action's `toolchain: "1.85.0"` input but then ran `cargo check` under stable because the toml's `channel = "stable"` re-asserted at process start — a silent false-green. The correct fix is `env: {RUSTUP_TOOLCHAIN: "1.85.0"}` on the `cargo check` step: `RUSTUP_TOOLCHAIN` is a process-level env variable that outranks `rust-toolchain.toml` (it is the highest-precedence override in the rustup precedence chain). Both the `with: {toolchain: "1.85.0"}` input AND the `env: {RUSTUP_TOOLCHAIN: "1.85.0"}` are load-bearing — the action input installs the correct toolchain; the env override ensures `cargo check` uses it. Omitting the env override silently reverts to stable validation.
+
+$ cd /Users/zious/Documents/GITHUB/jira-cli/.worktrees/S-626-1 && sed -n '215,220p' CLAUDE.md
+## Gotchas
+
+- **`rust-toolchain.toml` outranks `dtolnay/rust-toolchain`'s `toolchain` input — MSRV job requires `RUSTUP_TOOLCHAIN` env (S-626-1):** When `rust-toolchain.toml` is present in the working directory (as it is in this repo, with `channel = "stable"`), it overrides `rustup default`, `rustup override`, and the `toolchain` input of the `dtolnay/rust-toolchain` action at the shell level. Result: the MSRV CI job (`ci.yml` msrv job) installed Rust 1.85.0 via the action's `toolchain: "1.85.0"` input but then ran `cargo check` under stable because the toml's `channel = "stable"` re-asserted at process start — a silent false-green. The correct fix is `env: {RUSTUP_TOOLCHAIN: "1.85.0"}` on the `cargo check` step: `RUSTUP_TOOLCHAIN` is a process-level env variable that outranks `rust-toolchain.toml` (it is the highest-precedence override in the rustup precedence chain). Both the `with: {toolchain: "1.85.0"}` input AND the `env: {RUSTUP_TOOLCHAIN: "1.85.0"}` are load-bearing — the action input installs the correct toolchain; the env override ensures `cargo check` uses it. Omitting the env override silently reverts to stable validation.
+- **Windows config/cache paths (BC-6.1.014, BC-6.2.016):** On Windows...
+
+---
+
+AC-006 assertions verified:
+  - CLAUDE.md Gotchas section has new entry at line 218 CONFIRMED
+  - Entry documents: rust-toolchain.toml outranks dtolnay/rust-toolchain toolchain input CONFIRMED
+  - Entry documents: env: {RUSTUP_TOOLCHAIN: "1.85.0"} on cargo check step is required CONFIRMED
+  - Entry documents: RUSTUP_TOOLCHAIN is process-level env, outranks rust-toolchain.toml CONFIRMED
+  - Entry documents: without env override, msrv job silently validates stable (false-green) CONFIRMED
+  - Both version references in entry read "1.85.0" (not 1.88.0) CONFIRMED
+  - Entry added as first item under the "Gotchas" section heading

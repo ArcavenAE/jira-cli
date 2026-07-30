@@ -1,0 +1,47 @@
+$ cd /Users/zious/Documents/GITHUB/jira-cli/.worktrees/S-626-1 && grep -n "E0463\|rustup target add\|Ensure target" .github/workflows/sign-and-publish.yml
+61:      # the build fails with `error[E0463]: can't find crate for 'core'`.
+63:      - name: Ensure target installed (defensive)
+65:        run: rustup target add ${{ matrix.target }}
+
+$ cd /Users/zious/Documents/GITHUB/jira-cli/.worktrees/S-626-1 && sed -n '57,68p' .github/workflows/sign-and-publish.yml
+      # rust-toolchain.toml pins channel = "stable", which overrides the
+      # toolchain dtolnay/rust-toolchain installs above. The target the
+      # action installed sits on the wrong toolchain; without this step
+      # the build fails with `error[E0463]: can't find crate for 'core'`.
+      # Same defensive fix as release.yml.
+      - name: Ensure target installed (defensive)
+        shell: bash
+        run: rustup target add ${{ matrix.target }}
+
+      - uses: Swatinem/rust-cache@e18b497796c12c097a38f9edb9d0641fb99eee32  # v2
+        with:
+
+$ cd /Users/zious/Documents/GITHUB/jira-cli/.worktrees/S-626-1 && grep -n "E0463\|rustup target add\|Ensure target" .github/workflows/backfill-release.yml
+75:      # native (non-cross) builds fail with `error[E0463]: can't find
+77:      - name: Ensure target installed (defensive)
+80:        run: rustup target add ${{ matrix.target }}
+
+$ cd /Users/zious/Documents/GITHUB/jira-cli/.worktrees/S-626-1 && sed -n '72,83p' .github/workflows/backfill-release.yml
+      # rust-toolchain.toml pins channel = "stable", which overrides the
+      # toolchain dtolnay/rust-toolchain installs above. Without this step,
+      # native (non-cross) builds fail with `error[E0463]: can't find
+      # crate for 'core'`. Same defensive fix as release.yml.
+      - name: Ensure target installed (defensive)
+        if: ${{ !matrix.use_cross }}
+        shell: bash
+        run: rustup target add ${{ matrix.target }}
+
+      - name: Install cross
+        if: matrix.use_cross
+
+---
+
+AC-005 assertions verified:
+  - sign-and-publish.yml: "Ensure target installed (defensive)" step PRESENT at :63 CONFIRMED
+  - sign-and-publish.yml: E0463 comment PRESENT at :61 CONFIRMED
+  - sign-and-publish.yml: "rustup target add ${{ matrix.target }}" PRESENT at :65 CONFIRMED
+  - backfill-release.yml: "Ensure target installed (defensive)" step PRESENT at :77 CONFIRMED
+  - backfill-release.yml: E0463 comment PRESENT at :75 CONFIRMED
+  - backfill-release.yml: "rustup target add ${{ matrix.target }}" PRESENT at :80 CONFIRMED
+  - Both E0463 comments and rustup target add steps are UNCHANGED from origin/develop
+  - The do-not-remove constraint (P71-003) is satisfied

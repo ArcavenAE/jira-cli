@@ -1,0 +1,22 @@
+$ cd /Users/zious/Documents/GITHUB/jira-cli/.worktrees/S-626-1 && grep -rc "c93f4f9c" .github/workflows/
+.github/workflows/release.yml:0
+.github/workflows/e2e-sweeper.yml:0
+.github/workflows/e2e.yml:0
+.github/workflows/backfill-release.yml:0
+.github/workflows/scorecards.yml:0
+.github/workflows/sync-upstream.yml:0
+.github/workflows/dependency-review.yml:0
+.github/workflows/ci.yml:0
+.github/workflows/sign-and-publish.yml:0
+.github/workflows/release-gap-fill.yml:0
+
+(grep exits 1 when no matches found — all counts are 0)
+
+---
+
+AC-007 assertions verified:
+  - grep -rc 'c93f4f9c' .github/workflows/ → all files show :0 (zero matches) CONFIRMED
+  - Old SHA c93f4f9c67595668add93d3d6895795ce52d8c2d is absent from ALL workflow files CONFIRMED
+  - Checked all 10 workflow files (including non-S-626-1 files that were never affected)
+  - The 6 targeted files (ci.yml, backfill-release.yml, e2e-sweeper.yml, e2e.yml, release.yml,
+    sign-and-publish.yml) all show 0 matches CONFIRMED

@@ -1,0 +1,40 @@
+--- cargo test (full regression) ---
+$ cd /Users/zious/Documents/GITHUB/jira-cli/.worktrees/S-626-1 && cargo test 2>&1 | grep "test result" | awk '{for(i=1; i<=NF; i++) {if($i == "passed;") passed += $(i-1); if($i == "failed;") failed += $(i-1); if($i == "ignored;") ignored += $(i-1)}} END {print "AGGREGATE: " passed " passed / " failed " failed / " ignored " ignored"}'
+AGGREGATE: 2343 passed / 0 failed / 100 ignored
+
+NOTE: Orchestrator pre-implementation baseline was 2341 passed / 100 ignored (from story v1.3
+scope note, commit cc7f6da5). This run shows 2343 passed — a delta of +2 new tests added by
+commit b51fc26a (test(team-column): board_view_kanban_omits_team_col_when_field_unconfigured
+and issue_list_omits_team_col_when_field_unconfigured). The ignored count matches: 100.
+No failed tests. Discrepancy from stated figure: +2 pass (expected 2341, actual 2343).
+This is not a regression — it is the +2 new AC-9 tests added in the head commit.
+
+--- RUSTUP_TOOLCHAIN=1.85.0 cargo check --all-features ---
+$ cd /Users/zious/Documents/GITHUB/jira-cli/.worktrees/S-626-1 && RUSTUP_TOOLCHAIN=1.85.0 cargo check --all-features 2>&1
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.19s
+
+EXIT: 0 (clean)
+
+--- cargo clippy --all-targets -- -D warnings ---
+$ cd /Users/zious/Documents/GITHUB/jira-cli/.worktrees/S-626-1 && cargo clippy --all-targets -- -D warnings 2>&1 | tail -3
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.22s
+
+EXIT: 0 (clean, zero warnings)
+
+--- cargo fmt --all -- --check ---
+$ cd /Users/zious/Documents/GITHUB/jira-cli/.worktrees/S-626-1 && cargo fmt --all -- --check 2>&1
+(no output)
+
+EXIT: 0 (clean)
+
+--- Summary ---
+cargo test:                    2343 passed / 0 failed / 100 ignored  [PASS]
+RUSTUP_TOOLCHAIN=1.85.0 check: Finished (0.19s), exit 0              [PASS]
+cargo clippy --all-targets:    Finished (0.22s), exit 0              [PASS]
+cargo fmt --check:             No output, exit 0                     [PASS]
+
+Discrepancy from orchestrator-stated baseline: +2 tests (2341→2343). Cause: head commit
+b51fc26a added board_view_kanban_omits_team_col_when_field_unconfigured and
+issue_list_omits_team_col_when_field_unconfigured as AC-9 regression guards. This is
+expected and correct — the story added new tests. No failed tests, no clippy warnings,
+no format violations.

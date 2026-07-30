@@ -1,0 +1,28 @@
+$ grep -A 20 "5e\|DISCHARGED\|fa04a145" /Users/zious/Documents/GITHUB/jira-cli/.factory/phase-f1-delta/SOH-DX-1/delta-analysis.md | grep -A 15 "5e\. Verified"
+### 5e. Verified `fa04a145` SHA — DISCHARGED at F2 (Item 3)
+
+**Status: DISCHARGED out-of-band during F2** (recorded in
+`.factory/cycles/cycle-001/session-checkpoints.md` P71-001 and
+`.factory/cycles/cycle-001/convergence-trajectory.md`).
+
+Full 40-character SHA confirmed: `fa04a1451ff1842e2626ccb99004d0195b455a88`, dated 2026-06-30,
+commit title "Add 1.96.1 patch release". Confirmed ancestor of `master` (behind_by: 0).
+
+The currently-pinned SHA `c93f4f9c67595668add93d3d6895795ce52d8c2d` (dated 2026-03-27) is NOT
+a `master` ancestor. This is **not** evidence of compromise — `dtolnay/rust-toolchain` maintains
+dozens of per-version branches, so a non-ancestor pin on a version-branch commit is expected
+behavior there.
+
+**Downstream obligation still stands (F3 deliverable):** S-626-1 must carry a blocking
+pre-implementation acceptance criterion that pins the verified full SHA
+`fa04a1451ff1842e2626ccb99004d0195b455a88` before F4 embeds it in the 6 workflow files.
+
+---
+
+AC-001 assertions verified:
+  - Replacement SHA: full 40-character form fa04a1451ff1842e2626ccb99004d0195b455a88 CONFIRMED
+  - Commit date: 2026-06-30 CONFIRMED
+  - Commit title: "Add 1.96.1 patch release" CONFIRMED
+  - Status: confirmed master ancestor (behind_by: 0) CONFIRMED
+  - Source: .factory/phase-f1-delta/SOH-DX-1/delta-analysis.md section 5e "DISCHARGED at F2"
+  - The blocking pre-implementation gate is satisfied: SHA was verified before any code was written
