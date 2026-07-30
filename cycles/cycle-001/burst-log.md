@@ -7882,3 +7882,12 @@ Changes made:
 **Worktree state post-burst:** .factory @ factory-artifacts (this commit). develop @ acdad174 (unchanged). S-626-1 worktree @ ci/fix-toolchain-sha-msrv (unchanged).
 
 **trajectory-tail:** →1→2→4→2 (unchanged; no adversary passes in this burst).
+
+---
+
+## POST-ADVERSARY-PERSISTENCE-BURST (archived CPS row from STATE.md 2026-07-30)
+
+**Archived CPS row (DEC-198-LEDGER-CORRECTION-BURST):**
+
+> **DEC-198-LEDGER-CORRECTION-BURST (2026-07-30): ENGINE-ADVERSARY-TWO-BUGS CLOSED-INVALID (both engine-bug claims refuted by orchestrator verification against vsdd-factory source); DEC-190 amended inline (false premise disclosed; adversary was usable; real cause = orchestrator malformed dispatch); ORCHESTRATOR-SKIPPED-POST-ADVERSARY-PERSISTENCE added; AGENT-IDLE-NO-REPORT adversary attribution corrected. 240 lines.** | state-manager | COMPLETED | ENGINE-ADVERSARY-TWO-BUGS archived to blocking-issues-resolved.md; DEC-190 amended inline; factory-artifacts committed.
+
