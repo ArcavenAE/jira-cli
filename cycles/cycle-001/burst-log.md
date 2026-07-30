@@ -7,7 +7,7 @@ producer: state-manager
 timestamp: 2026-05-04T00:00:00
 cycle: "cycle-001"
 inputs: [STATE.md]
-input-hash: "3024626"
+input-hash: "25885ec"
 traces_to: STATE.md
 ---
 
@@ -7823,3 +7823,62 @@ Count-propagation sweep (SOH-DX-1-PG-012 pattern): v0.7.0-dev.1 expected in 17 l
 **Worktree state post-burst:** .factory @ factory-artifacts (this commit). develop @ acdad174 (unchanged).
 
 **trajectory-tail:** →1→2→4→2 (F2+F3 gate recording; no new adversary passes).
+
+---
+
+## DEC-198-LEDGER-CORRECTION-BURST (2026-07-30) — Ledger correction: ENGINE-ADVERSARY-TWO-BUGS CLOSED-INVALID (misdiagnosis); DEC-190 amended inline; ORCHESTRATOR-SKIPPED-POST-ADVERSARY-PERSISTENCE added.
+
+**Burst type:** Ledger correction / record correction
+**Spec version:** v1.3.169 (unchanged)
+**develop HEAD:** acdad174 (unchanged)
+
+### Archived CPS Row
+
+| Step | Agent | Status | Output |
+|------|-------|--------|--------|
+| **DEC-197-GATE-APPROVAL-RETARGET-BURST (2026-07-29/30): F3 GATE APPROVED (DEC-197, human); version retarget to v0.6.0-dev.12 (6 files, 17 sites, 0 over-propagation); DEC-188 clause-(d) superseded-by-pointer added; spec v1.3.168→v1.3.169; STORY-INDEX v1.5.43→v1.5.44; PG-012 MITIGATED (pattern codified 2026-07-29); F4 DELIVERY READY. 240 lines.** | state-manager | COMPLETED | spec v1.3.169; STORY-INDEX v1.5.44; BC 657; factory-artifacts committed. |
+
+### Summary
+
+ENGINE-ADVERSARY-TWO-BUGS was diagnosed during the SOH-DX-1 F2 adversary grind and recorded as two engine bugs in adversary.md. The diagnosis shaped 84 F2 review passes plus 3 S-626-1 Step 4.5 adversary passes: because the adversary was believed non-functional, all passes used the consistency-validator as substitute, and DEC-190 ratified this as window-eligible on that premise.
+
+Orchestrator verification 2026-07-30 against vsdd-factory source refuted both claims:
+
+**Claim (a):** "L121 mandates writing findings to disk while frontmatter grants no Write; L347 contradicts it." REFUTED. adversary.md §Tool Access states read-only profile explicitly. L121 specifies the orchestrator's persistence destination, not an agent action. Confusing wording, but no contradiction.
+
+**Claim (b):** "Partial-Fix Regression Discipline axis requires prior-pass findings that L22 forbids reading." REFUTED. That axis says prior-pass findings are "visible via the convergence report or fix commit" — supplied by the orchestrator in the dispatch prompt. adversary.md §"Accumulate Invariants Across Passes" is explicit: "your prompt must include ALL confirmed invariants from prior passes." No forbidden read required.
+
+**Proposed remedy was actively harmful.** ENGINE-ADVERSARY-TWO-BUGS proposed granting adversary Write access. The SKILL.md records this was explicitly considered and rejected: "Information asymmetry is the mechanism that makes adversarial review effective. If the adversary could write files, it could see its own prior reviews (breaking fresh-context) or modify specs (crossing the builder/reviewer boundary)."
+
+**Real root cause:** orchestrator malformed dispatches — missing invariant list in dispatch prompt; expectation that agent would write files it by design cannot write; Post-Adversary Persistence procedure (adversarial-review SKILL.md §167-178) never executed in this cycle. The agent was usable the whole time.
+
+**Consequence:** DEC-190's rationale was based on a false premise. DEC-190's window-eligibility ruling is NOT retroactively voided (prior windows stand), but the false premise is disclosed and the record corrected. Human ruled 2026-07-30 to dispatch the adversary correctly going forward.
+
+Changes made:
+1. ENGINE-ADVERSARY-TWO-BUGS: archived to blocking-issues-resolved.md as CLOSED-INVALID (misdiagnosis)
+2. DEC-190: amended inline in Decisions Log (premise false; prior windows stand; adversary was usable)
+3. AGENT-IDLE-NO-REPORT: adversary-specific failures re-attributed to malformed dispatch; #47936 evidence base reduced for adversary sessions
+4. ADVERSARY-ARTIFACT-WRITE-MITIGATION: reference updated to adversary.md §Tool Access design constraint (confirmed DEC-198)
+5. SIX-AXIS-REVIEW-UNLOGGED: root cause attribution corrected
+6. ORCHESTRATOR-SKIPPED-POST-ADVERSARY-PERSISTENCE: new MEDIUM/OPEN drift item added
+7. ORCHESTRATOR-ERROR-INJECTION-RATE: largest-blast-radius datapoint added (2026-07-30)
+
+### Details
+
+| Agent | Task | Output |
+|-------|------|--------|
+| state-manager | Write STATE.md with ledger corrections, DEC-190 inline amendment, drift-item updates | ENGINE-ADVERSARY-TWO-BUGS removed; ORCHESTRATOR-SKIPPED added; DEC-190 amended; 240 lines |
+| state-manager | Update blocking-issues-resolved.md (2 entry corrections + ENGINE-ADVERSARY-TWO-BUGS CLOSED-INVALID section) | Archived with full refutation |
+| state-manager | Append burst-log.md entry (this entry) | DEC-198-LEDGER-CORRECTION-BURST archived |
+
+**Human decisions recorded:**
+- Human ruled 2026-07-30 to dispatch adversary correctly and correct the ENGINE-ADVERSARY-TWO-BUGS misdiagnosis record.
+
+**Files touched:**
+1. STATE.md (ENGINE-ADVERSARY-TWO-BUGS removed; DEC-190 amended inline; ORCHESTRATOR-SKIPPED added; AGENT-IDLE updated; ORCHESTRATOR-ERROR-INJECTION-RATE datapoint; 240 lines)
+2. cycles/cycle-001/blocking-issues-resolved.md (ADVERSARY-AGENT-NONFUNCTIONAL + SUBSTITUTE-ADVERSARY-RATIFICATION-PENDING updated; ENGINE-ADVERSARY-TWO-BUGS CLOSED-INVALID section appended)
+3. cycles/cycle-001/burst-log.md (this entry)
+
+**Worktree state post-burst:** .factory @ factory-artifacts (this commit). develop @ acdad174 (unchanged). S-626-1 worktree @ ci/fix-toolchain-sha-msrv (unchanged).
+
+**trajectory-tail:** →1→2→4→2 (unchanged; no adversary passes in this burst).
