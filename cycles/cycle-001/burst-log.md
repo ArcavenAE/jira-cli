@@ -7891,3 +7891,9 @@ Changes made:
 
 > **DEC-198-LEDGER-CORRECTION-BURST (2026-07-30): ENGINE-ADVERSARY-TWO-BUGS CLOSED-INVALID (both engine-bug claims refuted by orchestrator verification against vsdd-factory source); DEC-190 amended inline (false premise disclosed; adversary was usable; real cause = orchestrator malformed dispatch); ORCHESTRATOR-SKIPPED-POST-ADVERSARY-PERSISTENCE added; AGENT-IDLE-NO-REPORT adversary attribution corrected. 240 lines.** | state-manager | COMPLETED | ENGINE-ADVERSARY-TWO-BUGS archived to blocking-issues-resolved.md; DEC-190 amended inline; factory-artifacts committed.
 
+
+## PASS-2-PERSISTENCE-BURST (archived CPS row from STATE.md 2026-07-30)
+
+**Archived CPS row (POST-ADVERSARY-PERSISTENCE-BURST):**
+
+> **POST-ADVERSARY-PERSISTENCE-BURST (2026-07-30): S-626-1 adversary pass-1 findings captured verbatim — s-626-1-adversary-pass-1.md (203 LOC, 13 findings: 5M+5L+3I) + PG-ADV-DISPATCH-001; ADV-P1-INDEX.md created. 6 pre-fixed on 20d533e4; 4 routed to guard story (guard-story agent concurrent); ADV-P1-LOW-004 routed to metadata correction. Step 4.5 window RESET. ORCHESTRATOR-SKIPPED-POST-ADVERSARY-PERSISTENCE corrective half DONE. First Post-Adversary Persistence in cycle. 240 lines.** | state-manager | COMPLETED | s-626-1-adversary-pass-1.md + ADV-P1-INDEX.md + STATE.md committed to factory-artifacts.

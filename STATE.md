@@ -4,7 +4,7 @@ level: ops
 version: "2.0"
 status: active
 producer: state-manager
-timestamp: 2026-07-30T19:17:32Z
+timestamp: 2026-07-30T20:28:01Z
 phase: 3
 pipeline: PAUSED
 inputs: []
@@ -12,7 +12,7 @@ input-hash: "[live-state]"
 traces_to: ""
 project: jira-cli
 mode: brownfield
-current_step: "POST-ADVERSARY-PERSISTENCE-BURST: S-626-1 adversary pass-1 findings captured verbatim (5M+5L+3I+PG-ADV-DISPATCH-001); ADV-P1-INDEX.md created; Step 4.5 window RESET (in-delta GAPs; NOT CLEAN); ORCHESTRATOR-SKIPPED-POST-ADVERSARY-PERSISTENCE corrective half DONE (gap stays OPEN). D-chain cite D-198 (amended). trajectory-tail →1→2→4→2."
+current_step: "PASS-2-PERSISTENCE-BURST: S-626-1 adversary pass-2 findings captured verbatim (3M+2L+2I+2[process-gap]; 7 findings); ADV-P1-INDEX.md updated (pass-2 section). Convergence 0/3 (NOT CLEAN — 3 spec-artifact MEDIUMs). Round-2 dispositions: story v1.4→v1.5 (M-001/M-002/M-003/L-002); commit 15597e84 pushed #667 (L-001+I-002); M-003/I-001 to S-641-1. C-LOW-001 target_module corrected: src/cli/ (not .github/workflows/ci.yml per pass-2 Briefing correction). D-chain cite D-198 (no new DEC). trajectory-tail →1→2→4→2."
 trajectory_tail: "→1→2→4→2"
 maintenance_run: CLOSED
 current_cycle: "cycle-001"
@@ -25,7 +25,7 @@ activation_head: "7b3ba371"
 activation_version: "v0.6.0-dev.11"
 ---
 
-<!-- STATE.md SIZE BUDGET (2026-07-30 POST-ADVERSARY-PERSISTENCE-BURST): 240 lines (wc-l) — prior: 240; delta: 0. Soft-target 200; margin from soft-target = +40; margin from actual to hard cap 500 = 260. Compaction: archived CPS row (DEC-198-LEDGER-CORRECTION-BURST) to burst-log; added CPS row (POST-ADVERSARY-PERSISTENCE-BURST); updated ORCHESTRATOR-SKIPPED-POST-ADVERSARY-PERSISTENCE (corrective DONE); updated Skip Log (S-626-1 adapted-demo); Step 4.5 RESET noted in Convergence Status. -->
+<!-- STATE.md SIZE BUDGET (2026-07-30 PASS-2-PERSISTENCE-BURST): 240 lines (wc-l) — prior: 240; delta: 0. Soft-target 200; margin from soft-target = +40; margin from actual to hard cap 500 = 260. Compaction: archived CPS row (POST-ADVERSARY-PERSISTENCE-BURST) to burst-log; added CPS row (PASS-2-PERSISTENCE-BURST); updated ORCHESTRATOR-SKIPPED-POST-ADVERSARY-PERSISTENCE (pass-2 captured); Convergence Status updated (NOT CLEAN pass-2; convergence 0/3; STORY-INDEX v1.5.49); C-LOW-001 target_module corrected. -->
 
 # Pipeline State: jira-cli
 
@@ -37,9 +37,9 @@ activation_version: "v0.6.0-dev.11"
 | **Mode** | BROWNFIELD / Rust |
 | **Target Workspace** | develop to main |
 | **trajectory-tail** | →1→2→4→2 (passes 79=1C-reset, 82=2L-1/3, 83=4-reclassified-2/3, 84=2L-CONVERGED-3/3 under DEC-191 at v1.3.166) |
-| **Last Updated** | 2026-07-30: POST-ADVERSARY-PERSISTENCE-BURST — S-626-1 adversary pass-1 captured (5M+5L+3I+PG-ADV-DISPATCH-001; 13 findings verbatim); ADV-P1-INDEX.md created; Step 4.5 window RESET on in-delta GAPs; ORCHESTRATOR-SKIPPED-POST-ADVERSARY-PERSISTENCE corrective DONE (gap stays OPEN: 84 prior passes missed). trajectory-tail →1→2→4→2. |
-| **Current Phase** | Feature Mode SOH-DX-1 **F3 APPROVED (DEC-197, 2026-07-29) — F4 DELIVERY READY**. S-626-1 adversary pass-1 captured; **Step 4.5 window RESET** (in-delta GAPs; clean pass required). AX23-001 PENDING RATIFICATION. Version target: v0.6.0-dev.12 (supersedes DEC-188 clause d; DEC-188 text preserved). Delivery order: S-626-1 first — PENDING HUMAN RATIFICATION. |
-| **Next Phase** | F4 per-story delivery: S-626-1 first (CI trustworthiness; Step 4.5 window RESET — fresh confirming pass required; ordering PENDING RATIFICATION), then S-639-1 (BREAKING/v0.6.0-dev.12), then S-627-1. AX23-001 ratification also pending. |
+| **Last Updated** | 2026-07-30: PASS-2-PERSISTENCE-BURST — S-626-1 adversary pass-2 captured (3M+2L+2I; 7 findings + 2 [process-gap]); ADV-P1-INDEX.md updated; convergence 0/3 (NOT CLEAN); round-2 dispositions: story v1.5 + 15597e84 to #667; C-LOW-001 target_module corrected (src/cli/). trajectory-tail →1→2→4→2. |
+| **Current Phase** | Feature Mode SOH-DX-1 **F3 APPROVED (DEC-197, 2026-07-29) — F4 DELIVERY READY**. S-626-1 adversary pass-2 captured; **Step 4.5 NOT CLEAN** (passes 1+2 both NOT CLEAN; convergence 0/3 — 3 MEDIUM spec-artifact GAPs; zero code changes required). AX23-001 PENDING RATIFICATION. Version target: v0.6.0-dev.12. Delivery order: S-626-1 first — PENDING HUMAN RATIFICATION. |
+| **Next Phase** | F4 per-story delivery: S-626-1 first (CI trustworthiness; Step 4.5 NOT CLEAN — passes 1+2 both NOT CLEAN; convergence 0/3; pass-3 required; ordering PENDING RATIFICATION), then S-639-1 (BREAKING/v0.6.0-dev.12), then S-627-1. AX23-001 ratification also pending. |
 | **Activation HEAD** | 7b3ba371 (PR #654 squash-merged 2026-07-25; FIX-E2E-EGRESS DELIVERED; SOH-ATTACHMENTS-1 CYCLE FULLY CLOSED; activation_version v0.6.0-dev.11) |
 
 ## Phase Progress
@@ -51,10 +51,10 @@ activation_version: "v0.6.0-dev.11"
 
 ## Current Phase Steps
 
-<!-- Archived rows: see cycles/cycle-001/burst-log.md (SESSION-WRAP; LEDGER-BURST-71-72; DEC-191-BURST; F2-CONVERGENCE-BURST; F2-CONVERGENCE-WINDOW-BURST; DEC-192 corrective; F2-CONVERGENCE-BURST final; SOH-DX-1-F3-DECOMP-BURST 2026-07-29; DEC-197-GATE-APPROVAL-RETARGET-BURST 2026-07-30; DEC-198-LEDGER-CORRECTION-BURST 2026-07-30) -->
+<!-- Archived rows: see cycles/cycle-001/burst-log.md (SESSION-WRAP; LEDGER-BURST-71-72; DEC-191-BURST; F2-CONVERGENCE-BURST; F2-CONVERGENCE-WINDOW-BURST; DEC-192 corrective; F2-CONVERGENCE-BURST final; SOH-DX-1-F3-DECOMP-BURST 2026-07-29; DEC-197-GATE-APPROVAL-RETARGET-BURST 2026-07-30; DEC-198-LEDGER-CORRECTION-BURST 2026-07-30; POST-ADVERSARY-PERSISTENCE-BURST 2026-07-30) -->
 | Step | Agent | Status | Output |
 |------|-------|--------|--------|
-| **POST-ADVERSARY-PERSISTENCE-BURST (2026-07-30): S-626-1 adversary pass-1 findings captured verbatim — s-626-1-adversary-pass-1.md (203 LOC, 13 findings: 5M+5L+3I) + PG-ADV-DISPATCH-001; ADV-P1-INDEX.md created. 6 pre-fixed on 20d533e4; 4 routed to guard story (guard-story agent concurrent); ADV-P1-LOW-004 routed to metadata correction. Step 4.5 window RESET. ORCHESTRATOR-SKIPPED-POST-ADVERSARY-PERSISTENCE corrective half DONE. First Post-Adversary Persistence in cycle. 240 lines.** | state-manager | COMPLETED | s-626-1-adversary-pass-1.md + ADV-P1-INDEX.md + STATE.md committed to factory-artifacts. |
+| **PASS-2-PERSISTENCE-BURST (2026-07-30): S-626-1 adversary pass-2 findings captured verbatim — s-626-1-adversary-pass-2.md (7 findings: 3M+2L+2I + 2[process-gap]); ADV-P1-INDEX.md updated (pass-2 section). Convergence 0/3 (NOT CLEAN). Round-2 dispositions: M-001/M-002/M-003/L-002 fixed in story v1.5 (STORY-INDEX v1.5.49); L-001+I-002 fixed in 15597e84 (pushed to #667; gates re-verified: 2343/0/100); M-003/I-001 routed to S-641-1. C-LOW-001 target_module corrected: src/cli/ (not .github/workflows/ci.yml). 240 lines.** | state-manager | COMPLETED | s-626-1-adversary-pass-2.md + ADV-P1-INDEX.md + STATE.md committed to factory-artifacts. |
 
 ## Decisions Log
 
@@ -87,7 +87,7 @@ None open.
 
 ## Drift Items (open / tracked)
 
-<!-- 10 items archived 2026-07-25; 22 items archived through 2026-07-29 (see blocking-issues-resolved.md); 5 ACCEPTED/MITIGATED/FIXED items archived SOH-DX-1-F3-DECOMP-BURST 2026-07-29 (F7-001/HOLDOUT-RESIDUAL/BC-INDEX-TD031/PG-MERGE-AUTH-BYPASS/TRAJECTORY-TAIL-STALE-DUP). LESSON-F2-WORKTREE-FIRST escalated DEFERRED→OPEN. PLATFORM-BASH-CLASSIFIER-OUTAGE added. DEC-197-BURST: SOH-DX-1-PG-012 status→MITIGATED (pattern codified 2026-07-29). DEC-198-BURST: ENGINE-ADVERSARY-TWO-BUGS CLOSED-INVALID (archived to blocking-issues-resolved.md); ORCHESTRATOR-SKIPPED-POST-ADVERSARY-PERSISTENCE added. POST-ADVERSARY-PERSISTENCE-BURST: ORCHESTRATOR-SKIPPED-POST-ADVERSARY-PERSISTENCE corrective DONE (procedural-gap stays OPEN). -->
+<!-- 10 items archived 2026-07-25; 22 items archived through 2026-07-29 (see blocking-issues-resolved.md); 5 ACCEPTED/MITIGATED/FIXED items archived SOH-DX-1-F3-DECOMP-BURST 2026-07-29 (F7-001/HOLDOUT-RESIDUAL/BC-INDEX-TD031/PG-MERGE-AUTH-BYPASS/TRAJECTORY-TAIL-STALE-DUP). LESSON-F2-WORKTREE-FIRST escalated DEFERRED→OPEN. PLATFORM-BASH-CLASSIFIER-OUTAGE added. DEC-197-BURST: SOH-DX-1-PG-012 status→MITIGATED (pattern codified 2026-07-29). DEC-198-BURST: ENGINE-ADVERSARY-TWO-BUGS CLOSED-INVALID (archived to blocking-issues-resolved.md); ORCHESTRATOR-SKIPPED-POST-ADVERSARY-PERSISTENCE added. POST-ADVERSARY-PERSISTENCE-BURST: ORCHESTRATOR-SKIPPED-POST-ADVERSARY-PERSISTENCE corrective DONE (procedural-gap stays OPEN). PASS-2-PERSISTENCE-BURST: ORCHESTRATOR-SKIPPED-POST-ADVERSARY-PERSISTENCE updated (pass-2 also captured). -->
 | ID | Area | Severity | Status |
 |----|------|----------|--------|
 | SIX-AXIS-REVIEW-UNLOGGED | spec integrity | LOW | OPEN — trajectory reconstructed from fix trail; six-axis review (commit 13f015da) findings retro-logged as pass-75 (6 findings; NOT window-eligible). AX23-001 (phantom test name in VP-571-003) classified OUT-OF-DELTA by orchestrator ruling per P72-001 precedent; PENDING HUMAN RATIFICATION at F2 gate. Root cause attribution corrected (DEC-198): ENGINE-ADVERSARY-TWO-BUGS CLOSED-INVALID; actual root cause = adversary-pass findings axis never ran (orchestrator malformed dispatch). |
@@ -196,34 +196,34 @@ None open.
 | P79-004 | spec quality | LOW | OPEN — ledgered (pre-window, OUT-OF-DELTA). pass-79 cosmetic finding. Non-resetting per DEC-191(c). |
 | P80-002 | spec quality | LOW | OPEN — ledgered (pre-window, OUT-OF-DELTA). pass-80 finding: delivery obligations correctly marked in spec; delivery completion evidence pattern gap. Non-resetting per DEC-191(c). |
 | PLATFORM-BASH-CLASSIFIER-OUTAGE | platform/tooling | LOW | OPEN — 2026-07-29: platform-side safety-classifier outage blocked all Bash execution for ~30 minutes while read-only tools continued. F3 agent substituted scope reasoning for guard execution and reported "expected" exit codes; orchestrator withheld F3 gate until guards could be independently verified and confirmed 0/0/0/0. Rule codified: when tooling is unavailable, report the gap rather than substituting inference; orchestrator must not gate on inferred verification. |
-| ORCHESTRATOR-SKIPPED-POST-ADVERSARY-PERSISTENCE | adversary process | MEDIUM | OPEN (corrective DONE 2026-07-30) — Post-Adversary Persistence performed for S-626-1 pass-1: s-626-1-adversary-pass-1.md (203 LOC) + ADV-P1-INDEX.md committed to factory-artifacts. Procedural-gap item stays OPEN: 84 prior passes (F2 bundle + S-626-1 Step 4.5 A/B/C) ran without adversary capture. Largest-blast-radius orchestrator error recorded in cycle. |
+| ORCHESTRATOR-SKIPPED-POST-ADVERSARY-PERSISTENCE | adversary process | MEDIUM | OPEN (corrective DONE 2026-07-30) — Post-Adversary Persistence performed: pass-1 (s-626-1-adversary-pass-1.md, 203 LOC) + pass-2 (s-626-1-adversary-pass-2.md, 7 findings: 3M+2L+2I + 2[process-gap]) both committed to factory-artifacts. Procedural-gap stays OPEN: 84 prior passes (F2 bundle + S-626-1 Step 4.5 A/B/C) ran without adversary capture. Largest-blast-radius orchestrator error recorded in cycle. |
 
 ## Convergence Status
 
-BC-INDEX v6.75 / STORY-INDEX v1.5.44 / ARCH-INDEX v0.16. SOH-DX-1 F2 APPROVED (DEC-196, 2026-07-29): passes 82/83/84 CLEAN 3/3 at v1.3.166. F3 APPROVED (DEC-197, 2026-07-29): spec v1.3.169; BC 657; holdouts 106. S-626-1 adversary pass-1 captured 2026-07-30; **Step 4.5 window RESET** (NOT CLEAN — in-delta GAPs; fresh confirming pass required). AX23-001 PENDING RATIFICATION. SOH-ATTACHMENTS-1 + prior cycles FULLY CLOSED. See cycles/cycle-001/convergence-trajectory.md.
+BC-INDEX v6.75 / STORY-INDEX v1.5.49 / ARCH-INDEX v0.16. SOH-DX-1 F2 APPROVED (DEC-196, 2026-07-29): passes 82/83/84 CLEAN 3/3 at v1.3.166. F3 APPROVED (DEC-197, 2026-07-29): spec v1.3.169; BC 657; holdouts 106. S-626-1 adversary: pass-1 NOT CLEAN (5M+5L+3I, 2026-07-30); pass-2 NOT CLEAN (3M spec-artifact, 2026-07-30); **convergence 0/3 — pass-3 required**. AX23-001 PENDING RATIFICATION. SOH-ATTACHMENTS-1 + prior cycles FULLY CLOSED. See cycles/cycle-001/convergence-trajectory.md.
 
 ## Concurrent Cycles
 
 <!-- Prior completed cycles archived to burst-log: ADF-CODE-MARK-EXCLUSIVITY (DEC-163, v0.6.0-dev.8), SOH-BUGS-1 (DEC-167, v0.6.0-dev.9), SOH-COMMENT-CRUD-1 (DEC-176, v0.6.0-dev.10), SOH-ATTACHMENTS-1 (DEC-186, v0.6.0-dev.11). See cycles/cycle-001/convergence-trajectory.md. -->
 | Cycle | Status | Notes |
 |-------|--------|-------|
-| SOH-DX-1 (issues #639+#627+#626) | F3 APPROVED (DEC-197, 2026-07-29) — F4 DELIVERY READY | 3 stories: S-639-1 (BREAKING/v0.6.0-dev.12), S-627-1, S-626-1. S-626-1 adversary pass-1 NOT CLEAN (Step 4.5 RESET). AX23-001 PENDING RATIFICATION. Delivery order: S-626-1 first (PENDING HUMAN RATIFICATION). |
+| SOH-DX-1 (issues #639+#627+#626) | F3 APPROVED (DEC-197, 2026-07-29) — F4 DELIVERY READY | 3 stories: S-639-1 (BREAKING/v0.6.0-dev.12), S-627-1, S-626-1. S-626-1 adversary pass-1+2 NOT CLEAN (convergence 0/3; pass-3 required). AX23-001 PENDING RATIFICATION. Delivery order: S-626-1 first (PENDING HUMAN RATIFICATION). |
 
 ## Session Resume Checkpoint
 
 | Field | Value |
 |-------|-------|
-| Date | 2026-07-30 POST-ADVERSARY-PERSISTENCE-BURST. S-626-1 adversary pass-1 captured: 5M+5L+3I+PG-ADV-DISPATCH-001. ADV-P1-INDEX.md created. Step 4.5 window RESET (NOT CLEAN — in-delta GAPs). ORCHESTRATOR-SKIPPED-POST-ADVERSARY-PERSISTENCE corrective DONE (gap stays OPEN). develop @ acdad174. |
-| State | F3 APPROVED (DEC-197). F4 DELIVERY READY. S-626-1 adversary pass-1 NOT CLEAN — Step 4.5 window RESET; fresh confirming pass required before merge. AX23-001 PENDING RATIFICATION. S-639-1 is BREAKING (v0.6.0-dev.12). Delivery order: S-626-1 first — PENDING HUMAN RATIFICATION. |
-| In flight | develop @ acdad174. .factory @ factory-artifacts (this commit). S-626-1 worktree @ ci/fix-toolchain-sha-msrv (PR #667). s-626-1-adversary-pass-1.md + ADV-P1-INDEX.md committed. No other worktrees. Product repo untracked: .claude/hooks/, .claude/pr-reviews/, .claude/settings.local.json.bak, .claude/spec-config.json (pre-existing). |
+| Date | 2026-07-30 PASS-2-PERSISTENCE-BURST. S-626-1 adversary pass-2 captured: 3M+2L+2I+2[process-gap]. ADV-P1-INDEX.md updated (pass-2). Convergence 0/3 (NOT CLEAN). Round-2 dispositions: story v1.5 (STORY-INDEX v1.5.49) + 15597e84 pushed to #667. C-LOW-001 target_module corrected: src/cli/. develop @ acdad174. |
+| State | F3 APPROVED (DEC-197). F4 DELIVERY READY. S-626-1 adversary pass-1+2 NOT CLEAN — Step 4.5 convergence 0/3; pass-3 required before merge. AX23-001 PENDING RATIFICATION. S-639-1 is BREAKING (v0.6.0-dev.12). Delivery order: S-626-1 first — PENDING HUMAN RATIFICATION. |
+| In flight | develop @ acdad174. .factory @ factory-artifacts (this commit). S-626-1 worktree @ ci/fix-toolchain-sha-msrv (PR #667) @ 15597e84. s-626-1-adversary-pass-2.md + ADV-P1-INDEX.md committed. No other worktrees. Product repo untracked: .claude/hooks/, .claude/pr-reviews/, .claude/settings.local.json.bak, .claude/spec-config.json (pre-existing). |
 | Pending human decisions | (1) Delivery order ratification (S-626-1 FIRST recommended — PENDING). (2) AX23-001 out-of-delta ruling PENDING RATIFICATION. (3) DEC-195 VSDD-CONFORMANCE-GAP-4-ARTIFACTS bundle schedule. (4) Input-hash drift (56 stale + 3 malformed). (5) STALE-FACTORY-ARTIFACTS-BRANCH delete decision. PR queue: #662 (MERGEABLE), #655/#656/#657/#658/#659 (soaking per DEC-178/187), #628/#574 (arcaven). Merged 2026-07-29: #661, #645. DO NOT close #429. |
-| Blockers | None blocking F4 delivery. MEDIUM open: AGENT-IDLE-NO-REPORT, VSDD-CONFORMANCE-GAP-4-ARTIFACTS (DEC-195), REVIEW-ISOLATION-NOT-MECHANICALLY-ENFORCED, APERTURE-CLASS-LESSON, ORCHESTRATOR-SKIPPED-POST-ADVERSARY-PERSISTENCE (corrective DONE; procedural-gap stays OPEN). |
-| Resume command | Open fresh session → run /vsdd-factory:next-step. F4 per-story delivery. S-626-1: adversary pass-1 NOT CLEAN (Step 4.5 window RESET) — fresh confirming pass required; ordering PENDING HUMAN RATIFICATION. Then S-639-1 (BREAKING/v0.6.0-dev.12), S-627-1. AX23-001 pending. |
+| Blockers | None blocking F4 delivery. MEDIUM open: AGENT-IDLE-NO-REPORT, VSDD-CONFORMANCE-GAP-4-ARTIFACTS (DEC-195), REVIEW-ISOLATION-NOT-MECHANICALLY-ENFORCED, APERTURE-CLASS-LESSON, ORCHESTRATOR-SKIPPED-POST-ADVERSARY-PERSISTENCE (corrective DONE pass-1+2; procedural-gap stays OPEN). |
+| Resume command | Open fresh session → run /vsdd-factory:next-step. F4 per-story delivery. S-626-1: adversary pass-1+2 NOT CLEAN (Step 4.5 convergence 0/3) — pass-3 required; ordering PENDING HUMAN RATIFICATION. Then S-639-1 (BREAKING/v0.6.0-dev.12), S-627-1. AX23-001 pending. |
 
 ## RESUME PLAN (cold-start)
 
 Step 1 (BLOCKING): Run vsdd-factory:factory-worktree-health. Read this file.
-Step 2 — F4 per-story delivery ready. S-626-1 adversary pass-1 NOT CLEAN (Step 4.5 window RESET — fresh confirming pass required; ordering PENDING HUMAN RATIFICATION). Then S-639-1 (BREAKING/v0.6.0-dev.12), then S-627-1 (LOW). AX23-001 PENDING RATIFICATION. All stories code-independent (depends_on: []).
+Step 2 — F4 per-story delivery ready. S-626-1 adversary pass-1+2 NOT CLEAN (Step 4.5 convergence 0/3 — pass-3 required; ordering PENDING HUMAN RATIFICATION). Then S-639-1 (BREAKING/v0.6.0-dev.12), then S-627-1 (LOW). AX23-001 PENDING RATIFICATION. All stories code-independent (depends_on: []).
 Step 3 — STANDING CONSTRAINTS: DEC-128 (delivery agents MUST NOT self-authorize merges/poll loops). DEC-133/178/187 (ALL dependabot 7-day soak). External PRs untrusted.
 
 ## Open Issues Tracker
