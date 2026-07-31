@@ -26,7 +26,7 @@ Team column parity (5.3), API layer (5.4).
 #### BC-5.1.001: `client.list_boards(project, type)` GETs `/rest/agile/1.0/board` with query params
 
 **Confidence**: HIGH
-**Source**: `tests/board_commands.rs:111-`; `tests/sprint_commands.rs:23-39`
+**Source**: `tests/board_commands.rs::list_boards_with_project_and_type_filter`; `tests/sprint_commands.rs::mount_prereqs`
 **Subject**: Boards & Sprints
 **Behavior**: Boards filtered by `projectKeyOrId=PROJ` + `type=scrum|kanban`.
 **Trace**: Pass 3 BC-401
@@ -36,7 +36,7 @@ Team column parity (5.3), API layer (5.4).
 #### BC-5.1.002: `board view --limit --all` clap conflict
 
 **Confidence**: HIGH
-**Source**: `tests/board_commands.rs:96-106`; `tests/cli_smoke.rs:300-307`
+**Source**: `tests/board_commands.rs::board_view_limit_and_all_conflict`; `tests/cli_smoke.rs::test_board_view_all_and_limit_conflict`
 **Trace**: Pass 3 BC-408
 
 ---
@@ -44,7 +44,7 @@ Team column parity (5.3), API layer (5.4).
 #### BC-5.1.003: Auto-resolve board: list scrum boards for project, pick first
 
 **Confidence**: HIGH
-**Source**: `tests/sprint_commands.rs:23-61`
+**Source**: `tests/sprint_commands.rs::mount_prereqs`
 **Subject**: Boards & Sprints
 **Behavior**: When no board_id configured, auto-resolves by listing boards and picking the first matching.
 **Trace**: Pass 3 BC-410
@@ -54,7 +54,7 @@ Team column parity (5.3), API layer (5.4).
 #### BC-5.1.004: `client.get_sprint_issues(sprintId, jql, limit, fields)` with `limit=Some(3)` returns 3 issues, `has_more=true`
 
 **Confidence**: HIGH
-**Source**: `tests/board_commands.rs:23-71`
+**Source**: `tests/board_commands.rs::get_sprint_issues_with_limit`
 **Trace**: Pass 3 BC-409
 
 ---
@@ -148,7 +148,7 @@ it entirely.
 #### BC-5.2.001: `sprint list/current` errors on kanban boards with `"Sprint commands are only available for scrum boards"`
 
 **Confidence**: HIGH
-**Source**: `src/cli/sprint.rs:79-86`; inline tests
+**Source**: `src/cli/sprint.rs::resolve_scrum_board`; inline tests
 **Subject**: Boards & Sprints
 **Behavior**: `if board_type != "scrum"` → bail with the literal message. Hard error (not silent degrade).
 **Trace**: Pass 3 BC-402
@@ -158,7 +158,7 @@ it entirely.
 #### BC-5.2.002: `sprint add --sprint ID` and `sprint add --current` are mutually exclusive (clap)
 
 **Confidence**: HIGH
-**Source**: `tests/cli_smoke.rs:116-123`
+**Source**: `tests/cli_smoke.rs::test_sprint_add_sprint_and_current_conflict`
 **Trace**: Pass 3 BC-403
 
 ---
@@ -166,7 +166,7 @@ it entirely.
 #### BC-5.2.003: `sprint add` requires `--sprint` or `--current`
 
 **Confidence**: HIGH
-**Source**: `tests/cli_smoke.rs:126-133`
+**Source**: `tests/cli_smoke.rs::test_sprint_add_requires_sprint_or_current`
 **Trace**: Pass 3 BC-404
 
 ---
@@ -174,7 +174,7 @@ it entirely.
 #### BC-5.2.004: `MAX_SPRINT_ISSUES = 50` caps `sprint add` and `sprint remove`
 
 **Confidence**: MEDIUM
-**Source**: `src/cli/sprint.rs:35-41, 55-61, 107`; inline unit tests
+**Source**: `src/cli/sprint.rs::handle`; `src/cli/sprint.rs::MAX_SPRINT_ISSUES`; inline unit tests
 **Subject**: Boards & Sprints
 **Behavior**: At most 50 issues processed per sprint operation.
 **Trace**: Pass 3 BC-405
@@ -184,7 +184,7 @@ it entirely.
 #### BC-5.2.005: `sprint current` truncates to 30 by default; with `--all` returns full set; under-limit no hint
 
 **Confidence**: HIGH
-**Source**: `tests/sprint_commands.rs:63-180`
+**Source**: `tests/sprint_commands.rs::sprint_current_default_limit_caps_at_30`; `tests/sprint_commands.rs::sprint_current_limit_flag`; `tests/sprint_commands.rs::sprint_current_all_flag_returns_everything`
 **Subject**: Boards & Sprints
 **Behavior**: 35 issues + default → 30 in stdout + stderr `"Showing 30 results"`. With `--all` → 35 + no hint. With 10 issues → no hint.
 **Trace**: Pass 3 BC-406
@@ -194,7 +194,7 @@ it entirely.
 #### BC-5.2.006: `sprint current --all --limit N` clap conflict
 
 **Confidence**: HIGH
-**Source**: `tests/cli_smoke.rs:310-317`
+**Source**: `tests/cli_smoke.rs::test_sprint_current_all_and_limit_conflict`
 **Trace**: Pass 3 BC-407
 
 ---
@@ -222,25 +222,25 @@ it entirely.
 #### BC-5.3.001: Team column appears IFF `team_field_id` configured AND at least one issue has populated team UUID
 
 **Confidence**: HIGH
-**Source**: `tests/team_column_parity.rs:124, 181` (BC-1138a/c)
+**Source**: `tests/team_column_parity.rs::sprint_current_shows_team_column_when_populated`; `tests/team_column_parity.rs::board_view_kanban_shows_team_column_when_populated`
 **Subject**: Boards & Sprints
 **Behavior**: Column gating is conjunctive — both conditions required. Affects `jr sprint current` and `jr board view`.
-**Trace**: Pass 3 BC-1138a (R4)
+**Trace**: Pass 3 BC-1138a/c (R4)
 
 ---
 
 #### BC-5.3.002: Team column omitted when `team_field_id` not configured OR no issue has team UUID
 
 **Confidence**: HIGH
-**Source**: `tests/team_column_parity.rs:220, 284` (BC-1138b/d)
-**Trace**: Pass 3 BC-1138b (R4)
+**Source**: `tests/team_column_parity.rs::sprint_current_omits_team_column_when_field_unconfigured`; `tests/team_column_parity.rs::sprint_current_omits_team_column_when_no_issue_has_team`; `tests/team_column_parity.rs::board_view_kanban_omits_team_column_when_no_issue_has_team`; `tests/team_column_parity.rs::test_board_view_omits_team_column_when_field_unconfigured`; `tests/team_column_parity.rs::test_issue_list_omits_team_column_when_field_unconfigured`
+**Trace**: Pass 3 BC-1138b/d (R4); S-626-1 let-chain rewrite adds `else { Vec::new() }` branch coverage for board view and issue list
 
 ---
 
 #### BC-5.3.003: Team column shows `"UUID (name not cached — run 'jr team list --refresh')"` when cache is stale
 
 **Confidence**: HIGH
-**Source**: `tests/team_column_parity.rs:341` (BC-1138e)
+**Source**: `tests/team_column_parity.rs::sprint_current_falls_back_to_uuid_when_team_not_cached`
 **Trace**: Pass 3 BC-1138e (R4)
 
 ---
@@ -248,7 +248,7 @@ it entirely.
 #### BC-5.3.004: `--output json` preserves team UUID without resolution (no cache lookup)
 
 **Confidence**: HIGH
-**Source**: `tests/team_column_parity.rs:380` (BC-1138f)
+**Source**: `tests/team_column_parity.rs::sprint_current_json_output_keeps_team_uuid_without_resolution`
 **Trace**: Pass 3 BC-1138f (R4)
 
 ---
@@ -258,7 +258,7 @@ it entirely.
 #### BC-5.4.001: `IssueFields::team_id` accepts string-UUID; rejects non-string id (object form without `id` key)
 
 **Confidence**: HIGH
-**Source**: `src/types/jira/issue.rs:101-131`; tests in `issue.rs::tests`; `tests/team_object_shape.rs`
+**Source**: `src/types/jira/issue.rs::IssueFields::team_id`; tests in `src/types/jira/issue.rs::tests`; `tests/team_object_shape.rs`
 **Subject**: Boards & Sprints
 **Behavior**: String UUID → deserialized. Object `{id: "<uuid>"}` → deserialized (object form). Non-string id without proper structure → `None` or Err.
 **Trace**: Pass 3 BC-606

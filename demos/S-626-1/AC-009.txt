@@ -12,10 +12,11 @@ $ git show origin/develop:src/cli/board.rs | sed -n '228,244p'
             .collect();
 
 --- AFTER (src/cli/board.rs on ci/fix-toolchain-sha-msrv, same region) ---
-$ sed -n '228,248p' src/cli/board.rs
-// Team cache read is best-effort for display — a miss falls back to
+$ cd /Users/zious/Documents/GITHUB/jira-cli/.worktrees/S-626-1 && sed -n '228,248p' src/cli/board.rs
+    // Team cache read is best-effort for display — a miss falls back to
     // rendering the raw UUID.
     let client_verbose = client.verbose();
+    // Nested if (not a let-chain): let-chains require Rust >= 1.88 + edition 2024; MSRV is 1.85. See CLAUDE.md Conventions — No let-chains.
     let team_displays: Vec<String> = if matches!(output_format, OutputFormat::Table) {
         if let Some(field_id) = team_field_id {
             let uuids: Vec<Option<String>> = issues
@@ -36,15 +37,29 @@ $ sed -n '228,248p' src/cli/board.rs
                         None => "-".to_string(),
 
 --- Two new AC-9 tests (non-vacuous) ---
-$ cargo test --test team_column_parity -- board_view_kanban_omits_team_col_when_field_unconfigured issue_list_omits_team_col_when_field_unconfigured --nocapture
+
+DEFECT VERIFICATION (F-03): the old recorded command used wrong filter substrings and was a
+false-green generator. Reproduced below — 0 tests run, exit 0:
+
+$ cargo test --test team_column_parity -- board_view_kanban_omits_team_col_when_field_unconfigured issue_list_omits_team_col_when_field_unconfigured --nocapture 2>&1 | tail -6
     Finished `test` profile [unoptimized + debuginfo] target(s) in 0.16s
      Running tests/team_column_parity.rs (target/debug/deps/team_column_parity-a9d933eded9be878)
 
-running 2 tests
-test issue_list_omits_team_col_when_field_unconfigured ... ok
-test board_view_kanban_omits_team_col_when_field_unconfigured ... ok
+running 0 tests
 
-test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 7 filtered out; finished in 0.71s
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 9 filtered out; finished in 0.00s
+
+CORRECT command (actual test function names with test_ prefix):
+
+$ cargo test --test team_column_parity -- test_board_view_omits_team_column_when_field_unconfigured test_issue_list_omits_team_column_when_field_unconfigured --nocapture 2>&1
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 14.92s
+     Running tests/team_column_parity.rs (target/debug/deps/team_column_parity-a9d933eded9be878)
+
+running 2 tests
+test test_issue_list_omits_team_column_when_field_unconfigured ... ok
+test test_board_view_omits_team_column_when_field_unconfigured ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 7 filtered out; finished in 1.22s
 
 ---
 
@@ -53,8 +68,9 @@ AC-009 assertions verified:
   - list.rs: same let-chain pattern REWRITTEN identically CONFIRMED (sed -n '520,540p' src/cli/issue/list.rs shows nested if let)
   - Both rewrites are semantically equivalent: same branch conditions, same early-exit to Vec::new()
     when team_field_id is None; outer Table check and inner field_id check are both preserved
-  - test board_view_kanban_omits_team_col_when_field_unconfigured: PASSES CONFIRMED
-  - test issue_list_omits_team_col_when_field_unconfigured: PASSES CONFIRMED
+  - test test_board_view_omits_team_column_when_field_unconfigured: PASSES CONFIRMED
+  - test test_issue_list_omits_team_column_when_field_unconfigured: PASSES CONFIRMED
+  - Non-vacuousness: running 2 tests (not 0) — filter matches actual function names
 
 NON-VACUOUSNESS of the two tests:
   Each test mounts a wiremock stub returning at least one issue that carries a team UUID in its

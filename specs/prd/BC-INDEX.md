@@ -468,10 +468,10 @@ R1/R4 prefix = deepening round that introduced it.
 
 | L3 BC ID | Summary | Pass 3 BC ID | Source | Confidence |
 |---|---|---|---|---|
-| BC-5.3.001 | Team column appears IFF `team_field_id` configured AND at least one issue has populated team UUID | BC-1138a (R4) | tests/team_column_parity.rs:~124, 181 | HIGH |
-| BC-5.3.002 | Team column omitted when `team_field_id` not configured OR no issue has team UUID | BC-1138b (R4) | tests/team_column_parity.rs:~220, 284 | HIGH |
-| BC-5.3.003 | Team column shows `"UUID (name not cached — run 'jr team list --refresh')"` when cache is stale | BC-1138e (R4) | tests/team_column_parity.rs:~341 | HIGH |
-| BC-5.3.004 | `--output json` preserves team UUID without resolution (no cache lookup) | BC-1138f (R4) | tests/team_column_parity.rs:~380 | HIGH |
+| BC-5.3.001 | Team column appears IFF `team_field_id` configured AND at least one issue has populated team UUID | BC-1138a/c (R4) | tests/team_column_parity.rs::sprint_current_shows_team_column_when_populated | HIGH |
+| BC-5.3.002 | Team column omitted when `team_field_id` not configured OR no issue has team UUID | BC-1138b/d (R4) | tests/team_column_parity.rs::test_board_view_omits_team_column_when_field_unconfigured (S-626-1) | HIGH |
+| BC-5.3.003 | Team column shows `"UUID (name not cached — run 'jr team list --refresh')"` when cache is stale | BC-1138e (R4) | tests/team_column_parity.rs::sprint_current_falls_back_to_uuid_when_team_not_cached | HIGH |
+| BC-5.3.004 | `--output json` preserves team UUID without resolution (no cache lookup) | BC-1138f (R4) | tests/team_column_parity.rs::sprint_current_json_output_keeps_team_uuid_without_resolution | HIGH |
 
 ### 5.4 API Layer (1 BC: BC-5.4.001)
 

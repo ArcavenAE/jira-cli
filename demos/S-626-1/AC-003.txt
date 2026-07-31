@@ -1,4 +1,4 @@
-$ cd /Users/zious/Documents/GITHUB/jira-cli/.worktrees/S-626-1 && sed -n '58,84p' .github/workflows/ci.yml
+$ cd /Users/zious/Documents/GITHUB/jira-cli/.worktrees/S-626-1 && sed -n '58,87p' .github/workflows/ci.yml
   msrv:
     name: MSRV (1.85.0)
     runs-on: ubuntu-latest
@@ -14,28 +14,47 @@ $ cd /Users/zious/Documents/GITHUB/jira-cli/.worktrees/S-626-1 && sed -n '58,84p
         with:
           toolchain: "1.85.0"
       - uses: Swatinem/rust-cache@e18b497796c12c097a38f9edb9d0641fb99eee32  # v2
-      # --all-features checks lib + bins only (NOT --all-targets).
-      # wiremock 0.6.5 (a dev-dependency) requires Rust >=1.88; including
-      # --all-targets would pull in tests/benches and fail to compile against
-      # the 1.85.0 MSRV toolchain. --all-features is intentional.
-      - run: cargo check --all-features
+      # Scope is deliberately lib + bins only (NOT --all-targets): including
+      # --all-targets pulls in dev-dependencies (tests) which cannot compile at
+      # 1.85.0. wiremock (0.6.x) uses let-chains and ships no rust-version field
+      # — the same defect class as comfy-table 7.2.2 — and requires Rust ≥1.88.
+      # The --all-features flag is effectively a no-op (this crate has no
+      # [features] table); it is kept for explicitness. Note: omitting
+      # --all-targets also means inline #[cfg(test)] mod blocks in src/ sit
+      # outside the MSRV floor's enforceable scope; closing this gap would
+      # require dev-dependencies that build at 1.85.0 — a wiremock downgrade-pin
+      # was not evaluated.
+      - run: cargo check --all-features --locked
         env:
           RUSTUP_TOOLCHAIN: "1.85.0"
 
-  deny:
-    name: Deny (licenses + vulnerabilities)
-    runs-on: ubuntu-latest
+--- Toolchain identity proof (run immediately before cargo check) ---
+$ cd /Users/zious/Documents/GITHUB/jira-cli/.worktrees/S-626-1 && RUSTUP_TOOLCHAIN=1.85.0 rustc --version
+rustc 1.85.0 (4d91de4e4 2025-02-17)
 
-$ cd /Users/zious/Documents/GITHUB/jira-cli/.worktrees/S-626-1 && RUSTUP_TOOLCHAIN=1.85.0 cargo check --all-features 2>&1
-    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.19s
+$ cd /Users/zious/Documents/GITHUB/jira-cli/.worktrees/S-626-1 && RUSTUP_TOOLCHAIN=1.85.0 rustup show active-toolchain
+1.85.0-aarch64-apple-darwin (overridden by environment variable RUSTUP_TOOLCHAIN)
+
+--- MSRV check (cargo clean -p jr to produce Compiling line; no source files modified) ---
+$ cd /Users/zious/Documents/GITHUB/jira-cli/.worktrees/S-626-1 && cargo clean -p jr 2>&1
+     Removed 127999 files, 15.6GiB total
+
+$ cd /Users/zious/Documents/GITHUB/jira-cli/.worktrees/S-626-1 && RUSTUP_TOOLCHAIN=1.85.0 cargo check --all-features --locked 2>&1
+   Compiling jr v0.6.0-dev.11 (/Users/zious/Documents/GITHUB/jira-cli/.worktrees/S-626-1)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 4.75s
+
+EXIT: 0 (clean)
 
 ---
 
 AC-003 assertions verified:
-  - dtolnay/rust-toolchain action step has with: {toolchain: "1.85.0"} CONFIRMED (ci.yml :72)
-  - cargo check step has env: {RUSTUP_TOOLCHAIN: "1.85.0"} CONFIRMED (ci.yml :80)
-  - Both inputs are on separate steps (action step installs; env override ensures cargo uses it)
-  - RUSTUP_TOOLCHAIN=1.85.0 cargo check --all-features exits clean (exit 0, 0.19s, no errors)
+  - dtolnay/rust-toolchain action step has with: {toolchain: "1.85.0"} CONFIRMED (ci.yml :70-72)
+  - cargo check step has --locked flag and env: {RUSTUP_TOOLCHAIN: "1.85.0"} CONFIRMED (ci.yml :84-86)
+  - Comment block at ci.yml :74-83 (10 lines) explains --all-targets exclusion rationale
+  - RUSTUP_TOOLCHAIN=1.85.0 rustc --version confirms compiler is "rustc 1.85.0 (4d91de4e4 2025-02-17)"
+  - rustup show active-toolchain confirms override: "1.85.0-aarch64-apple-darwin (overridden by environment variable RUSTUP_TOOLCHAIN)"
+  - Compiling line (not warm Finished-only) proves cargo actually compiled jr against 1.85.0
+  - cargo check --all-features --locked exits clean (exit 0), confirming codebase is compatible with 1.85.0
   - This is the story's headline result: the MSRV claim is now true and the job can prove it
-  - Note: the worktree already has rustc 1.85.0 available via RUSTUP_TOOLCHAIN; cargo check
-    succeeds with no compilation errors, confirming the codebase is compatible with 1.85.0
+  - Note: cargo clean -p jr cleared the build cache (not source files) to force a non-warm run;
+    source files under .worktrees/S-626-1/src/ were not modified (git status remains clean)

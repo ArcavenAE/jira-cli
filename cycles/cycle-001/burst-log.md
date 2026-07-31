@@ -7926,3 +7926,60 @@ Changes made:
 **Archived CPS row (SESSION-WRAP-BURST):**
 
 > | **SESSION-WRAP-BURST (2026-07-30): All uncommitted .factory/ files committed — stories/S-640-1.md (MSRV-raise deferred), S-641-1.md (guard story v0.4); cycles/cycle-001/adversarial-reviews/s-626-1-step45-pass-{a,b,c}.md (3 Step-4.5 convergence artifacts); demos/S-626-1/ (11 demo artifacts: AC-001..009, full-suite.txt, INDEX.md); research/msrv-let-chains-comfy-table-2026-07-30.md; code-delivery/S-626-1/pr-review.md; modified: regression-state.json, sidecar-learning.md, spec-changelog.md, stories/S-626-1.md (v1.7), stories/STORY-INDEX.md (v1.5.51). Session Resume Checkpoint updated + archived to session-checkpoints.md. Pipeline PAUSED. 240 lines.** | state-manager | COMPLETED | All .factory/ burst committed to factory-artifacts; STATE.md updated; prior checkpoint archived to session-checkpoints.md. |
+
+
+## ADV-6-7-8-FIX-BURST (archived PP row + CPS row from STATE.md 2026-07-31)
+
+**Archived PP row (PASS-5-PERSISTENCE-BURST):**
+
+> | **PASS-5-PERSISTENCE-BURST (2026-07-31): s-626-1-adversary-pass-5.md created (RECONSTRUCTED post-hoc from STATE.md + 64e2a4bc diff; 3 findings: 2L+1I; all fixed 64e2a4bc); ADV-P1-INDEX.md v1.3 (total 36 findings; LOW 16; INFO 9); STATE.md updated. All 5 S-626-1 adversary passes now captured. Pipeline PAUSED.** | PAUSED | 2026-07-31 | — | Human decides: run pass-6 or merge #667. Pass-5 = 3/3 all-residue; possible convergence breakpoint. STORY-INDEX v1.5.51. | →7→8→5→3 |
+
+**Archived CPS row (PASS-5-PERSISTENCE-BURST):**
+
+> | **PASS-5-PERSISTENCE-BURST (2026-07-31): s-626-1-adversary-pass-5.md (RECONSTRUCTED; 3 findings: 2L+1I; all fixed 64e2a4bc; input-hash c8e448b) + ADV-P1-INDEX.md (v1.3; total_findings 36; LOW 16; INFO 9) + STATE.md committed to factory-artifacts. All 5 S-626-1 adversary passes captured. Session Resume Checkpoint updated: item (1) (pass-5 persistence) REMOVED (done). Items (2)+(3) remain, renumbered (1)+(2). Prior checkpoint archived to session-checkpoints.md. 240 lines.** | state-manager | COMPLETED | s-626-1-adversary-pass-5.md + ADV-P1-INDEX.md v1.3 + STATE.md committed to factory-artifacts. |
+
+
+## ADV-6-7-8-FIX-BURST NARRATIVE (2026-07-31)
+
+**Burst name:** ADV-6-7-8-FIX-BURST
+**Date:** 2026-07-31
+**Agent:** state-manager (artifact writes); orchestrator (synchronous adversary dispatches)
+
+**Summary:** Three synchronous adversary passes (6, 7, 8) dispatched after three failed background subagent attempts (VOID-6A, VOID-7A, VOID-8A). Fix round applied for all actionable findings from passes 6+7+8. DEC-199..DEC-204 recorded. 5 new drift items. STATE.md updated. Pipeline PAUSED pending ESCALATION REQUIRED ruling on DEC-191(d) ceiling breach (3-pass window would reach pass 11 > ceiling 10).
+
+**Adversary pass artifacts created:**
+- `cycles/cycle-001/adversarial-reviews/s-626-1-adversary-pass-6.md` — DIRECT CAPTURE; CLEAN isolation; 3H+3M+2L+2I = 10 findings; zero code defects; policy rubric ABSENT; input-hash 48f780c
+- `cycles/cycle-001/adversarial-reviews/s-626-1-adversary-pass-7.md` — DIRECT CAPTURE; PARTIAL isolation (broad grep, self-disclosed); 3H+4M+5L+1I = 13 findings (F-13 pre-existing); F-03 UNIQUE stale demo FALSE-GREEN GENERATOR; zero code defects; input-hash af6f563
+- `cycles/cycle-001/adversarial-reviews/s-626-1-adversary-pass-8.md` — DIRECT CAPTURE; PARTIAL isolation (path-only metadata, self-disclosed); 1H+1M+3L+6obs; msrv gap demoted via S-641-1 ACs; zero code defects; input-hash fe9aef2
+
+**ADV-P1-INDEX.md updated:** v1.3→v1.4; passes 6+7+8 sections added; VOID spawns section (VOID-6A/7A/8A); Convergence Trajectory table updated (HIGH column added); 64 total findings (was 36); severity_distribution { CRIT: 0, HIGH: 7, MED: 19, LOW: 26, INFO: 12 }.
+
+**VOID spawns recorded:**
+| Void ID | Intended Pass | Cause | Disposition |
+|---------|---------------|-------|-------------|
+| VOID-6A | Pass 6 (first attempt) | Named background subagent (adv-pass6) — no report delivered | Superseded by synchronous re-dispatch |
+| VOID-7A | Pass 7 (first attempt) | Named background subagent (adv-pass7) — no report delivered | Superseded by synchronous re-dispatch |
+| VOID-8A | Pass 8 (first attempt) | Named background subagent (adv-pass8) — no report delivered | Superseded by synchronous re-dispatch |
+
+**Fix round — .factory/ artifact changes (pre-applied, this commit captures them):**
+- `stories/S-626-1.md` — v1.7→v1.8: bcs:["BC-5.3.001","BC-5.3.002"]; verification_properties:[] with DEC-195 rationale; AC-9 "mutation-detecting"→"regression-detecting integration coverage"; subsystems: ["SS-11"]→["SS-02","SS-09"]
+- `stories/S-627-1.md` — v1.0→v1.1: subsystems: ["SS-11"]→["SS-02","SS-09"]
+- `stories/S-640-1.md` — v0.2→v0.3: subsystems: ["SS-11"]→["SS-02","SS-09"]
+- `stories/S-641-1.md` — v0.4→v0.5: subsystems: ["SS-11"]→["SS-02","SS-09"]
+- `stories/S-576-5.md` — v1.45→v1.46 RETROACTIVE: subsystems: ["SS-11"]→["SS-02","SS-09"]
+- `stories/STORY-INDEX.md` — v1.5.51→v1.5.52: S-641-1 row updated to v0.5
+- `specs/prd/bc-5-boards-sprints.md` — BC-5.3.001..004 Source/Trace converted from line-number to symbol-form citations
+- `specs/domain-spec/bc-02-issue-read.md` — INV-READ-009 restated behaviorally; let-chain prescription removed; MSRV note added
+- `specs/prd/BC-INDEX.md` — BC-5.3.001..004 symbol-form citations applied
+- `demos/S-626-1/` — AC-002.txt, AC-003.txt, AC-009.txt, full-suite.txt, INDEX.md regenerated at HEAD 64e2a4bc with `cargo clean -p jr` cold-cache evidence; `Compiling jr` line confirmed
+- `regression-state.json` — updated
+- `sidecar-learning.md` — updated
+
+**Decisions recorded:** DEC-199..DEC-203 (grouped) + DEC-204 (OPEN QUESTION).
+**New drift items added:** ANCHOR-RESOLUTION-AXIS-NOT-APPLIED, NAMED-BACKGROUND-SUBAGENT-REPORT-LOSS, ORCHESTRATOR-PREMATURE-DEAD-AGENT-CONCLUSION, MSRV-JOB-NO-POSITIVE-COVERAGE, GITLEAKS-NOT-IN-CI-GATE-NEEDS.
+**Drift items updated:** ORCHESTRATOR-SKIPPED-POST-ADVERSARY-PERSISTENCE (passes 6+7+8 captured); REVIEW-ISOLATION-NOT-MECHANICALLY-ENFORCED (passes 6/7/8 isolation results); CITATION-FORM-DISCIPLINE (upgraded DEFERRED→OPEN, pass-6 LOW-002 datapoint); MUTANTS-GLOB-EXISTENCE-GUARD (AC-9 multi-pass confirmation); PLATFORM-BASH-CLASSIFIER-OUTAGE (no new datapoints; kept OPEN).
+
+**Convergence status post-burst:** 0/3. 8 recorded passes all NOT CLEAN (+ 3 VOID not counted). 64 total findings. DEC-191(d) ESCALATION CEILING = 10 passes; a 3-pass window starting now would reach pass 11 — **ESCALATION REQUIRED before any further adversary passes**.
+
+**Pipeline:** PAUSED — awaiting human ruling on DEC-191(d) ceiling breach.
+**STORY-INDEX:** v1.5.52. **trajectory-tail:** →3→10→13→5.

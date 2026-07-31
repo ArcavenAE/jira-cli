@@ -7,7 +7,7 @@ producer: state-manager
 timestamp: 2026-05-08T00:00:00
 cycle: "cycle-001"
 inputs: [STATE.md]
-input-hash: "766e98d"
+input-hash: "8061c05"
 traces_to: STATE.md
 ---
 
@@ -1823,3 +1823,17 @@ _Was the active checkpoint after SOH-DX-1 F2 ADVERSARY GRIND rounds 1-45 (2026-0
 | In flight | develop @ 64e2a4bc (PR #667, S-626-1). .factory @ factory-artifacts (this commit). No other open worktrees. Product repo untracked: .claude/hooks/, .claude/pr-reviews/, .claude/settings.local.json.bak, .claude/spec-config.json (pre-existing). |
 | Pending human decisions | (1) Run adversary pass-6 or merge #667 (orchestrator recommends pass-6, then merge regardless — code correct since 20d533e4; pass-5 all-residue suggests breakpoint). (2) AX23-001 out-of-delta ratification (non-blocking). PR queue: #667 (S-626-1, ready), #662 (MERGEABLE), #655–#659 (soaking DEC-178/187), #628/#574 (arcaven). DO NOT close #429. |
 | Resume command | Open fresh session → /vsdd-factory:next-step. Decide pass-6 vs merge #667. Then S-639-1 (BREAKING/v0.6.0-dev.12), S-627-1. Neither has adversary pass yet; S-639-1 BREAKING → adversary recommended before merge. Persist adversary pass-5 findings. AX23-001 pending. |
+
+---
+
+<!-- archived from STATE.md Session Resume Checkpoint — 2026-07-31 ADV-6-7-8-FIX-BURST -->
+
+| Field | Value |
+|-------|-------|
+| Date | 2026-07-31 PASS-5-PERSISTENCE-BURST checkpoint (superseded by ADV-6-7-8-FIX-BURST). S-626-1 adversary pass-5 captured (RECONSTRUCTED): 3 findings 2L+1I; all fixed in 64e2a4bc. ADV-P1-INDEX.md v1.3 (36 total findings; low 16; info 9). Convergence 0/3 (5 passes NOT CLEAN; zero code defects last 4; pass-5 all-residue self-feeding). Pipeline PAUSED. STORY-INDEX v1.5.51. |
+| Position | Feature Mode SOH-DX-1 F4 delivery. F2 APPROVED (DEC-196), F3 APPROVED (DEC-197). **S-626-1 DELIVERED** — PR #667 open against develop, 12 commits, head 64e2a4bc, branch ci/fix-toolchain-sha-msrv, worktree `.worktrees/S-626-1` clean and pushed. **MERGEABLE — human merges (DEC-173). PR #667 NOT merged yet.** |
+| Convergence | S-626-1 Step 4.5 = 0/3 under DEC-191. Five true-adversary passes, all NOT CLEAN, 36 findings total; pass-5 persisted (RECONSTRUCTED). Trajectory: P1=13f/5M/code-defects; P2=7f/3M/none; P3=8f/3M/none; P4=5f/4L/none; P5=3f/2L/none/**3/3-residue** (self-feeding). Zero code defects last 4 passes. |
+| Not yet done | (1) S-640-1 handoff: on MSRV ≥1.88, delete `No let-chains` from CLAUDE.md Conventions AND in-code comments at `src/cli/board.rs` ~:231, `src/cli/issue/list.rs` ~:523, `src/cli/auth/keychain.rs` ~:50. (2) Record Step 4.5 convergence state formally (0/3, trajectory). |
+| In flight | develop @ 64e2a4bc (PR #667, S-626-1). .factory @ factory-artifacts. No other open worktrees. |
+| Pending human decisions | (1) Run adversary pass-6 or merge #667 (orchestrator recommends pass-6; pass-5 all-residue suggests breakpoint). (2) AX23-001 out-of-delta ratification (non-blocking). PR queue: #667 (ready), #662 (MERGEABLE), #655–#659 (soaking DEC-178/187). DO NOT close #429. |
+| Resume command | Open fresh session → /vsdd-factory:next-step. Decide pass-6 vs merge #667. Persist adversary pass-5 findings first. AX23-001 pending. |
