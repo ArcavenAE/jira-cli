@@ -1,25 +1,25 @@
 ---
 document_type: adversarial-review-index
 level: ops
-version: "1.2"
+version: "1.3"
 status: in-review
 producer: adversary
-timestamp: 2026-07-30T22:05:26Z
+timestamp: 2026-07-31T00:00:00Z
 phase: "5"
-pass: 4
-inputs: [.factory/stories/S-626-1.md, .github/workflows/ci.yml, src/cli/board.rs, src/cli/issue/list.rs, src/cli/auth/keychain.rs]
+pass: 5
+inputs: [.factory/stories/S-626-1.md, .github/workflows/ci.yml, CLAUDE.md, src/cli/board.rs, src/cli/issue/list.rs, src/cli/auth/keychain.rs]
 traces_to: .factory/stories/S-626-1.md
-total_findings: 33
-severity_distribution: { CRIT: 0, HIGH: 0, MED: 11, LOW: 14, INFO: 8 }
+total_findings: 36
+severity_distribution: { CRIT: 0, HIGH: 0, MED: 11, LOW: 16, INFO: 9 }
 story: S-626-1
 cycle: cycle-001
-feature_head: 64cdb59ba04d7547a3708f1bf643ae5bb5ee6e7b
+feature_head: 64e2a4bcde44ec20bc1f64d80eb402ca8aebc406
 pr: 667
 basis: TRUE ADVERSARY AGENT (not a DEC-190 substitute)
 convergence: 0 of 3
 ---
 
-# Adversarial Review Index — S-626-1 (SOH-DX-1) Passes 1 + 2 + 3 + 4
+# Adversarial Review Index — S-626-1 (SOH-DX-1) Passes 1 + 2 + 3 + 4 + 5
 
 ## Pass 1 Finding Catalog
 
@@ -146,6 +146,29 @@ Tuple verified with no mismatch — `git rev-parse HEAD` → `64cdb59ba04d7547a3
 
 ---
 
+## Pass 5 Finding Catalog
+
+| ID | Severity | Classification | Title | Status | Notes |
+|----|----------|----------------|-------|--------|-------|
+| ADV-P5-LOW-001 | LOW | RESIDUE · in-delta (introduced by fix-round commit `4223ea09`) | CLAUDE.md `No let-chains` citation pointer resolves to wrong gotcha | FIXED on 64e2a4bc | Pointer corrected to `ci.yml msrv scope comment`; scope widened to include `tests/` |
+| ADV-P5-LOW-002 | LOW | GAP · in-delta (introduced by fix-round commit `4223ea09`) | `No let-chains` convention has no expiry clause; will deadlock with `No lint suppression` after MSRV raise | FIXED on 64e2a4bc | Expiry clause added: "Temporary — delete when MSRV raised to ≥1.88" |
+| ADV-P5-INFO-003 | INFO | RESIDUE · in-delta (introduced by fix-round commit `4223ea09`) | ci.yml scope warning overstates impossibility with "cannot be closed until…" | FIXED on 64e2a4bc | Modal softened to cost/benefit framing; downgrade-pin acknowledged as unevaluated option |
+
+## Pass 5 Preflight Note
+
+*Not reconstructable.* This artifact is a post-hoc reconstruction (see artifact disclosure in `s-626-1-adversary-pass-5.md`). Pass-5 ran against HEAD `4223ea091ad2c295a086269357b2442399d3b3e8`. The adversary's original preflight checks are not available in the surviving record.
+
+## Pass 5 Summary
+
+- **Verdict:** NOT CLEAN — 2 LOW + 1 INFO; zero MEDIUM+; zero code defects; **3/3 residue (all-residue / self-feeding signature)**
+- **Post-capture routing:** All three fixed in commit `64e2a4bc` (pushed to #667); no spec-artifact or story changes required
+- **Convergence:** 0 of 3 — five passes, five NOT CLEAN; severity ceiling LOW (two consecutive); zero code defects four consecutive passes; pass-5 all-residue is a possible convergence breakpoint
+- **Orchestrator-attributable findings:** 3 of 3 (all three introduced by orchestrator's own `4223ea09` fix-round commit)
+- **Reconstruction disclosure:** POST-HOC artifact — no verbatim adversary transcript; reconstructed from STATE.md + `git show 64e2a4bc`
+- **Detail artifact:** `s-626-1-adversary-pass-5.md`
+
+---
+
 ## Dependency Graph
 
 ```text
@@ -171,5 +194,6 @@ ADV-P4-INFO-005   --informs--> S-641-1 AC-2 (complete let-chain detection form s
 | 2 | NOT CLEAN | 3 (3 GAP) | 2 (1 GAP, 1 REF) | 2 | 2 | NOT CLEAN — pass 3 required |
 | 3 | NOT CLEAN | 3 (3 GAP) | 3 (3 REF) | 2 | 2 | NOT CLEAN — 3 passes, 3 layers; round-3 dispositions committed |
 | 4 | NOT CLEAN | 0 | 4 (3 GAP, 1 REF) | 1 | 2 | NOT CLEAN — severity ceiling fell to LOW; zero code defects 3 rounds; round-4 dispositions committed |
+| 5 | NOT CLEAN | 0 | 2 (1 GAP, 1 RES) | 1 | 0 | NOT CLEAN — **3/3 all-residue (self-feeding)**; zero code defects 4 rounds; possible breakpoint; round-5 dispositions committed (RECONSTRUCTED) |
 
-**Overall convergence: 0 of 3 (window NOT CLEAN)**
+**Overall convergence: 0 of 3 (window NOT CLEAN — pass-5 all-residue signature; human decides pass-6 or merge #667)**

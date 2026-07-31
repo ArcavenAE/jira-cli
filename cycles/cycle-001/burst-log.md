@@ -7915,3 +7915,14 @@ Changes made:
 **Archived CPS row (PASS-4-PERSISTENCE-BURST):**
 
 > **PASS-4-PERSISTENCE-BURST (2026-07-30): S-626-1 adversary pass-4 findings captured verbatim — s-626-1-adversary-pass-4.md (5 findings: 4L+1I + preflight note); ADV-P1-INDEX.md updated to v1.2 (pass-4 section; total_findings 33; MED:11/LOW:14/INFO:8). Convergence 0/3 (NOT CLEAN — 4 LOW + 1 INFO; zero MEDIUM+; zero code defects; severity ceiling fell MEDIUM→LOW). Round-4 dispositions: product-repo commit 4223ea09 (LOW-001: CLAUDE.md No-let-chains convention + re-pointed comments; LOW-002: ci.yml unreachable-claim rewrite); LOW-003 routed to .factory/ (checklist jr-scoped + provenance rule generalised); LOW-004+INFO-005 routed to S-641-1. ORCHESTRATOR-ERROR-INJECTION-RATE: PASS-4 datapoint (INFO-005 broken-grep — zero orchestrator-introduced findings). STORY-INDEX v1.5.50; spec-changelog [1.3.175]; BC 657; holdouts 106 unchanged. 242 lines.** | state-manager | COMPLETED | s-626-1-adversary-pass-4.md + ADV-P1-INDEX.md + STATE.md committed to factory-artifacts.
+
+
+## PASS-5-PERSISTENCE-BURST (archived PP row + CPS row from STATE.md 2026-07-31)
+
+**Archived PP row (SESSION-WRAP-BURST):**
+
+> | **SESSION-WRAP-BURST (2026-07-30): S-626-1 DELIVERED — PR #667 (ci/fix-toolchain-sha-msrv, head 64e2a4bc, 12 commits, MERGEABLE); adversary pass-5 NOT CLEAN (2L+1I; 3 findings; all fixed in 64e2a4bc; NOT PERSISTED); Step 4.5 = 0/3 (5 passes NOT CLEAN; zero code defects last 4); .factory/ burst committed; pipeline PAUSED.** | PAUSED | 2026-07-30 | — | Human decides: run pass-6 or merge #667. S-640-1/S-641-1 committed. STORY-INDEX v1.5.51. | →7→8→5→3 |
+
+**Archived CPS row (SESSION-WRAP-BURST):**
+
+> | **SESSION-WRAP-BURST (2026-07-30): All uncommitted .factory/ files committed — stories/S-640-1.md (MSRV-raise deferred), S-641-1.md (guard story v0.4); cycles/cycle-001/adversarial-reviews/s-626-1-step45-pass-{a,b,c}.md (3 Step-4.5 convergence artifacts); demos/S-626-1/ (11 demo artifacts: AC-001..009, full-suite.txt, INDEX.md); research/msrv-let-chains-comfy-table-2026-07-30.md; code-delivery/S-626-1/pr-review.md; modified: regression-state.json, sidecar-learning.md, spec-changelog.md, stories/S-626-1.md (v1.7), stories/STORY-INDEX.md (v1.5.51). Session Resume Checkpoint updated + archived to session-checkpoints.md. Pipeline PAUSED. 240 lines.** | state-manager | COMPLETED | All .factory/ burst committed to factory-artifacts; STATE.md updated; prior checkpoint archived to session-checkpoints.md. |
