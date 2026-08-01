@@ -1314,10 +1314,13 @@ async fn test_bc_2_7_012_error_taxonomy() {
         s.contains("Could not reach"),
         "network error stderr must contain 'Could not reach' — got: {s}"
     );
-    // Note: ENOSPC and EACCES are documented in BC-2.7.012 but are not deterministically
-    // triggerable in CI. Their canonical strings are:
-    //   ENOSPC → exit 1 + "Disk full: not enough space to write <path>"
-    //   EACCES → exit 1 + "Permission denied: cannot write to <dir>"
+    // ENOSPC: not deterministically triggerable in CI (requires filling a real disk).
+    // Its canonical string is tested at the pure-classifier level inside
+    // src/cli/issue/attachments.rs::tests (test_bc_2_7_012_classify_storage_full_*
+    // and test_bc_2_7_012_classify_quota_exceeded_*).
+    //
+    // EACCES: covered by the dedicated integration test below —
+    // test_bc_2_7_012_eacces_permission_denied_error_message (FIX-F5-010).
 }
 
 // ---------------------------------------------------------------------------
@@ -2594,7 +2597,7 @@ async fn test_bc_2_7_stream_to_file_failure_increments_fail_count() {
     let att_filename = "payload.bin";
 
     // Compute the batch output path: {sha1_hex(att_id)}_{sanitized_filename}.
-    // Mirrors compute_default_output_path(is_batch=true) in src/cli/issue/attachments.rs.
+    // Mirrors compute_default_output_path in src/cli/issue/attachments.rs (batch-only).
     let hash: String = sha1::Sha1::new()
         .chain_update(att_id.as_bytes())
         .finalize()
@@ -3223,5 +3226,593 @@ async fn test_bc_2_7_008_batch_collision_skip_no_force() {
         "collision-skip stderr must match exact canonical format \
          'Skipping <filename>: file already exists. Use --force to overwrite.' \
          (BC-2.7.008 ~797) — got: {stderr}"
+    );
+}
+
+// ---------------------------------------------------------------------------
+// FIX-576-DL — mock-vs-live drift: metadata GET returns integer id on live Cloud
+// ---------------------------------------------------------------------------
+
+/// FIX-576-DL / BC-2.7.007: `GET /rest/api/3/attachment/{id}` returns `"id"` as
+/// an **integer** on live Jira Cloud (e.g. `10008`), while the issue-fields
+/// attachment list endpoint returns string IDs.  The S-576-2 mocks used string
+/// IDs throughout; this test pins the integer-id wire shape so the serde
+/// deserializer is verified against the live-faithful response.
+///
+/// Discovered via S-576-6 live validation run 30031724733:
+/// `Error: invalid type: integer \`10008\`, expected a string at line 1 column 11`
+#[tokio::test]
+async fn test_download_integer_id_in_metadata_succeeds() {
+    let cache = TempDir::new().unwrap();
+    let config = TempDir::new().unwrap();
+    let server = MockServer::start().await;
+
+    // Live-faithful shape: `id` is an INTEGER (not a string).
+    // Before the fix this causes: "invalid type: integer `10008`, expected a string"
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/attachment/10008"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
+            "id": 10008,
+            "filename": "live_doc.pdf",
+            "size": 7,
+            "mimeType": "application/pdf",
+            "content": format!("{}/rest/api/3/attachment/content/10008", server.uri()),
+        })))
+        .mount(&server)
+        .await;
+
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/attachment/content/10008"))
+        .respond_with(ResponseTemplate::new(200).set_body_bytes(b"pdfdata"))
+        .mount(&server)
+        .await;
+
+    let out_dir = TempDir::new().unwrap();
+    let out_path = out_dir.path().join("live_doc.pdf");
+
+    let output = jr_cmd_with_xdg(&server.uri(), cache.path(), config.path())
+        .args([
+            "issue",
+            "attachment",
+            "download",
+            "FOO-1",
+            "--id",
+            "10008",
+            "--out",
+            out_path.to_str().unwrap(),
+        ])
+        .output()
+        .unwrap();
+
+    // RED (before fix): serde error "invalid type: integer `10008`, expected a string"
+    //   → binary exits 1 with an API/parse error.
+    // GREEN (after fix): AttachmentMetadata.id accepts both string and integer forms.
+    assert!(
+        output.status.success(),
+        "download with integer id in metadata must succeed (exit 0) — FIX-576-DL; \
+         stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    assert!(out_path.exists(), "output file must be created");
+    assert_eq!(
+        std::fs::read(&out_path).unwrap(),
+        b"pdfdata",
+        "file content must match mocked body"
+    );
+}
+
+/// FIX-576-DL / BC-2.7.007: `id` as string still works after the fix
+/// (regression guard — existing mocks and the issue-fields list path use strings).
+#[tokio::test]
+async fn test_download_string_id_in_metadata_still_succeeds() {
+    let cache = TempDir::new().unwrap();
+    let config = TempDir::new().unwrap();
+    let server = MockServer::start().await;
+
+    // String id — must continue to work after the deserializer change.
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/attachment/10009"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
+            "id": "10009",
+            "filename": "string_id.txt",
+            "size": 3,
+            "mimeType": "text/plain",
+            "content": format!("{}/rest/api/3/attachment/content/10009", server.uri()),
+        })))
+        .mount(&server)
+        .await;
+
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/attachment/content/10009"))
+        .respond_with(ResponseTemplate::new(200).set_body_bytes(b"txt"))
+        .mount(&server)
+        .await;
+
+    let out_dir = TempDir::new().unwrap();
+    let out_path = out_dir.path().join("string_id.txt");
+
+    let output = jr_cmd_with_xdg(&server.uri(), cache.path(), config.path())
+        .args([
+            "issue",
+            "attachment",
+            "download",
+            "FOO-1",
+            "--id",
+            "10009",
+            "--out",
+            out_path.to_str().unwrap(),
+        ])
+        .output()
+        .unwrap();
+
+    assert!(
+        output.status.success(),
+        "download with string id in metadata must still succeed (exit 0) — regression guard; \
+         stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    assert!(out_path.exists(), "output file must be created");
+    assert_eq!(std::fs::read(&out_path).unwrap(), b"txt");
+}
+
+// ---------------------------------------------------------------------------
+// F5-R1-002: --newest timestamp parser unification
+// ---------------------------------------------------------------------------
+
+/// F5-R1-002: `--newest N` must rank attachments by true chronological order even
+/// when the "newest" attachment's `created` timestamp has a NON-STANDARD number of
+/// fractional-second digits (not 0 or 3).
+///
+/// Bug: `parse_from_str(s, "%Y-%m-%dT%H:%M:%S%.3f%z")` in chrono 0.4 only accepts
+/// EXACTLY 0 or EXACTLY 3 fractional digits. Timestamps with 1, 2, 4, 6, or 9 digits
+/// fail silently (None), so `--newest 1` sorts them LAST (None > Some ordering) and
+/// downloads an OLDER attachment instead of the genuinely newer one.
+///
+/// Target fix: the `--newest` sort path must use the same relaxed parsing as the
+/// `--older-than` path — i.e. `.parse::<DateTime<FixedOffset>>()` (RFC 3339) — which
+/// accepts any number of fractional digits.
+///
+/// Fixture:
+///   A: id="newer001" filename="newer_file.txt" created="2026-07-20T10:00:00.1+0000"
+///      (1 fractional digit — valid RFC 3339, but %.3f fails → sorts LAST in buggy code)
+///   B: id="older001" filename="older_file.txt" created="2026-01-01T08:00:00.000+0000"
+///      (3 fractional digits — %.3f succeeds, RFC 3339 succeeds — genuinely OLDER)
+///
+/// With `--newest 1`, only A must be downloaded; B must be skipped.
+///
+/// RED: current code (%.3f) cannot parse A → A sorts LAST → downloads B (older).
+#[tokio::test]
+async fn test_newest_selects_no_millis_attachment_over_millis_older() {
+    let cache = TempDir::new().unwrap();
+    let config = TempDir::new().unwrap();
+    let server = MockServer::start().await;
+    let out_dir = TempDir::new().unwrap();
+
+    let att_newer = make_attachment(
+        "newer001",
+        "newer_file.txt",
+        "text/plain",
+        14,
+        "2026-07-20T10:00:00.1+0000", // 1 fractional digit — %.3f FAILS, RFC 3339 OK — NEWER
+    );
+    let att_older = make_attachment(
+        "older001",
+        "older_file.txt",
+        "text/plain",
+        14,
+        "2026-01-01T08:00:00.000+0000", // 3 fractional digits — %.3f OK, RFC 3339 OK — OLDER
+    );
+
+    // Issue GET — returns both attachments.
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/issue/NEW-1"))
+        .and(query_param("fields", "attachment"))
+        .respond_with(
+            ResponseTemplate::new(200)
+                .set_body_json(issue_with_attachments("NEW-1", vec![att_newer, att_older])),
+        )
+        .mount(&server)
+        .await;
+
+    // Content GET for attachment A (newer) — returns unique body.
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/attachment/content/newer001"))
+        .respond_with(ResponseTemplate::new(200).set_body_bytes(b"NEWEST_CONTENT"))
+        .mount(&server)
+        .await;
+
+    // Content GET for attachment B (older) — returns unique body.
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/attachment/content/older001"))
+        .respond_with(ResponseTemplate::new(200).set_body_bytes(b"OLDER_CONTENT"))
+        .mount(&server)
+        .await;
+
+    let output = jr_cmd_with_xdg(&server.uri(), cache.path(), config.path())
+        .args([
+            "issue",
+            "attachment",
+            "download",
+            "NEW-1",
+            "--newest",
+            "1",
+            "--out-dir",
+            out_dir.path().to_str().unwrap(),
+        ])
+        .timeout(std::time::Duration::from_secs(10))
+        .output()
+        .unwrap();
+
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert_eq!(
+        output.status.code(),
+        Some(0),
+        "F5-R1-002: --newest 1 must exit 0; got {:?}\nstderr: {stderr}",
+        output.status.code()
+    );
+
+    // Exactly one file must be written.
+    let entries: Vec<_> = std::fs::read_dir(out_dir.path())
+        .unwrap()
+        .filter_map(|e| e.ok())
+        .collect();
+    assert_eq!(
+        entries.len(),
+        1,
+        "F5-R1-002: exactly one file must be written by --newest 1; got {} files\nstderr: {stderr}",
+        entries.len()
+    );
+
+    // The content of the written file must be from the NEWER attachment (A).
+    // RED: current code downloads B (older, parseable) → content "OLDER_CONTENT".
+    // GREEN (fixed): code downloads A (newer, no-millis) → content "NEWEST_CONTENT".
+    let written_content = std::fs::read(entries[0].path()).unwrap();
+    assert_eq!(
+        written_content,
+        b"NEWEST_CONTENT",
+        "F5-R1-002: --newest 1 must download the genuinely newest attachment \
+         (1-digit fractional seconds); got content {:?} — \
+         this fails when %.3f rejects non-0/non-3-digit fractional timestamps \
+         (1-digit, 2-digit, 4-digit etc sort LAST due to None > Some ordering)",
+        String::from_utf8_lossy(&written_content)
+    );
+}
+
+// ---------------------------------------------------------------------------
+// F5-R1-001: Batch traversal security property pin (observable behavior)
+// ---------------------------------------------------------------------------
+
+/// F5-R1-001 observable security property: batch download (`--all`) with a
+/// path-traversal filename (`../../evil.txt`) from the server must write the
+/// file INSIDE `--out-dir`, never outside it.
+///
+/// `sanitize_attachment_filename("../../evil.txt")` returns `Some("evil.txt")`
+/// via `Path::file_name()`, and the batch path then prefixes a SHA-1 of the
+/// attachment ID, producing `<sha1>_evil.txt` safely inside out_dir.
+///
+/// This test pins the END-TO-END observable behavior at the integration level.
+/// The `test_bc_2_7_011_vp576_001_containment_prop` proptest covers the same
+/// invariant at the `sanitize_attachment_filename` function level; this test
+/// complements it by running the full CLI invocation.
+///
+/// Expected: GREEN (the sanitizer is correctly implemented and the batch path
+/// uses it). This is a security-property regression guard, not a RED gate test.
+#[tokio::test]
+async fn test_batch_download_traversal_filename_lands_inside_out_dir() {
+    let cache = TempDir::new().unwrap();
+    let config = TempDir::new().unwrap();
+    let server = MockServer::start().await;
+    let out_dir = TempDir::new().unwrap();
+
+    // Attachment with a traversal filename supplied by the "server".
+    let att = make_attachment(
+        "trav001",
+        "../../evil.txt", // path traversal attempt
+        "text/plain",
+        13,
+        "2026-07-20T10:00:00.000+0000",
+    );
+
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/issue/TRAV-1"))
+        .and(query_param("fields", "attachment"))
+        .respond_with(
+            ResponseTemplate::new(200).set_body_json(issue_with_attachments("TRAV-1", vec![att])),
+        )
+        .mount(&server)
+        .await;
+
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/attachment/content/trav001"))
+        .respond_with(ResponseTemplate::new(200).set_body_bytes(b"traversal content"))
+        .mount(&server)
+        .await;
+
+    let output = jr_cmd_with_xdg(&server.uri(), cache.path(), config.path())
+        .args([
+            "issue",
+            "attachment",
+            "download",
+            "TRAV-1",
+            "--all",
+            "--out-dir",
+            out_dir.path().to_str().unwrap(),
+        ])
+        .timeout(std::time::Duration::from_secs(10))
+        .output()
+        .unwrap();
+
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert_eq!(
+        output.status.code(),
+        Some(0),
+        "F5-R1-001 traversal pin: batch download with traversal filename must exit 0; \
+         got {:?}\nstderr: {stderr}",
+        output.status.code()
+    );
+
+    // Security property: any files written must be inside out_dir (not above it).
+    let resolved_out = out_dir
+        .path()
+        .canonicalize()
+        .unwrap_or_else(|_| out_dir.path().to_path_buf());
+
+    let entries: Vec<_> = std::fs::read_dir(out_dir.path())
+        .unwrap()
+        .filter_map(|e| e.ok())
+        .collect();
+
+    // At least one file must be written (the traversal-named attachment).
+    assert!(
+        !entries.is_empty(),
+        "F5-R1-001 traversal pin: file from traversal-named attachment must land in out_dir; \
+         out_dir is empty\nstderr: {stderr}"
+    );
+
+    // Every written file must be inside out_dir.
+    for entry in &entries {
+        let entry_path = entry.path().canonicalize().unwrap_or_else(|_| entry.path());
+        assert!(
+            entry_path.starts_with(&resolved_out),
+            "F5-R1-001 traversal pin: SECURITY VIOLATION — file escaped out_dir! \
+             file={:?} not inside {:?}",
+            entry_path,
+            resolved_out
+        );
+    }
+
+    // Verify "../../evil.txt" was NOT written outside out_dir.
+    // The parent of out_dir must NOT have gained an "evil.txt" file.
+    let parent = out_dir.path().parent();
+    if let Some(p) = parent {
+        let evil_in_parent = p.join("evil.txt");
+        assert!(
+            !evil_in_parent.exists(),
+            "F5-R1-001 traversal pin: SECURITY VIOLATION — 'evil.txt' escaped to parent dir {:?}",
+            evil_in_parent
+        );
+        let grandparent = p.parent();
+        if let Some(gp) = grandparent {
+            let evil_in_gp = gp.join("evil.txt");
+            assert!(
+                !evil_in_gp.exists(),
+                "F5-R1-001 traversal pin: SECURITY VIOLATION — 'evil.txt' escaped two levels up {:?}",
+                evil_in_gp
+            );
+        }
+    }
+}
+
+// ---------------------------------------------------------------------------
+// F5-R3-001 — BC-2.7.012: download --id 404 must emit canonical string ONLY
+// ---------------------------------------------------------------------------
+
+/// F5-R3-001 / BC-2.7.012: when `jr issue attachment download <KEY> --id <AID>`
+/// encounters a 404 on the metadata GET, stderr MUST contain the canonical
+/// "Attachment {id} not found or not accessible." string and MUST NOT contain
+/// the Jira API error body text.
+///
+/// The delete single-AID path (`delete_attachment_targeted` / `DEC-168`) surfaces
+/// the body intentionally — that is a different operation.  The download path must
+/// not propagate the raw server error body to the user.
+///
+/// **Current defect (F5-R3-001):** `get_attachment_metadata` (introduced in
+/// the F5-R1-004 fix) appends `\n{message}` to the canonical prefix.  This
+/// leaks the Jira error body to the download caller, which should only see the
+/// canonical one-liner.  BC-2.7.012 §"404 body-surfacing asymmetry" requires
+/// body surfacing on DELETE but CANONICAL-ONLY on DOWNLOAD.
+///
+/// **RED gate:** the assertion `!contains(SENTINEL)` fails until
+/// `get_attachment_metadata` stops appending the body and the enrichment is
+/// relocated to the delete call site.
+#[tokio::test]
+async fn test_f5_r3_001_download_id_404_canonical_only_no_jira_body() {
+    // A sentinel string that is unlikely to appear in any other output.
+    // This is the distinctive body text the mock server returns.
+    const SENTINEL: &str = "SENTINEL_F5_R3_001_BODY_MUST_NOT_APPEAR_IN_DOWNLOAD_STDERR";
+
+    let cache = TempDir::new().unwrap();
+    let config = TempDir::new().unwrap();
+    let server = MockServer::start().await;
+    let out_dir = TempDir::new().unwrap();
+
+    // Mount a metadata GET that returns 404 with the sentinel body text.
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/attachment/55555"))
+        .respond_with(ResponseTemplate::new(404).set_body_json(serde_json::json!({
+            "errorMessages": [SENTINEL],
+            "errors": {}
+        })))
+        .expect(1)
+        .mount(&server)
+        .await;
+
+    let out_path = out_dir.path().join("attachment.bin");
+    let output = jr_cmd_with_xdg(&server.uri(), cache.path(), config.path())
+        .args([
+            "issue",
+            "attachment",
+            "download",
+            "FOO-1",
+            "--id",
+            "55555",
+            "--out",
+            out_path.to_str().unwrap(),
+        ])
+        .output()
+        .unwrap();
+
+    let stderr = String::from_utf8_lossy(&output.stderr);
+
+    // (a) Exit code must be 64 (UserError).
+    assert_eq!(
+        output.status.code(),
+        Some(64),
+        "F5-R3-001: download --id 404 must exit 64; got {:?}\nstderr: {stderr}",
+        output.status.code()
+    );
+
+    // (b) Canonical prefix must be present.
+    assert!(
+        stderr.contains("Attachment 55555 not found or not accessible."),
+        "F5-R3-001: download --id 404 stderr must contain canonical \
+         'Attachment 55555 not found or not accessible.'; got: {stderr}"
+    );
+
+    // (c) The Jira API body MUST NOT appear in stderr.
+    //
+    // RED GATE: currently `get_attachment_metadata` appends `\n{message}` to
+    // the canonical prefix (F5-R1-004 fix), so the sentinel leaks into stderr.
+    // This assertion fails until the enrichment is relocated to the delete
+    // call site (the fix for F5-R3-001).
+    assert!(
+        !stderr.contains(SENTINEL),
+        "F5-R3-001 RED: download --id 404 must NOT surface the Jira error body \
+         (BC-2.7.012 canonical-only); sentinel found in stderr: {stderr}"
+    );
+}
+
+// ---------------------------------------------------------------------------
+// FIX-F5-010 — BC-2.7.012 v1.3.104: EACCES permission-denied disk-write error
+// ---------------------------------------------------------------------------
+
+/// BC-2.7.012 v1.3.103 / FIX-F5-010: downloading to a non-writable directory → exit 1
+/// with `Permission denied: cannot write to <dir> (writing <dest>): <os_error>. Check
+/// directory permissions and try again.` AND no `tmp_` leak in stderr.
+///
+/// Unix-only (`chmod 0o555` semantics). Skipped cleanly when running as root
+/// (uid 0) because root bypasses directory permission bits — detected by
+/// probing whether a write into the restricted dir actually fails.
+#[cfg(unix)]
+#[tokio::test]
+async fn test_bc_2_7_012_eacces_permission_denied_error_message() {
+    use std::os::unix::fs::PermissionsExt;
+
+    // Create a directory that will be made non-writable.
+    let restricted = TempDir::new().unwrap();
+    std::fs::set_permissions(restricted.path(), std::fs::Permissions::from_mode(0o555)).unwrap();
+
+    // Root-skip guard: probe whether the restriction actually binds.
+    // Running as root (uid 0) bypasses permission bits → test would not exercise
+    // the EACCES path → skip rather than emit a false GREEN.
+    let probe = restricted.path().join(".probe_f5010");
+    if std::fs::write(&probe, b"").is_ok() {
+        let _ = std::fs::remove_file(&probe);
+        let _ = std::fs::set_permissions(restricted.path(), std::fs::Permissions::from_mode(0o755));
+        eprintln!(
+            "test_bc_2_7_012_eacces_permission_denied_error_message: SKIPPED \
+             (write into 0o555 dir succeeded — running as root)"
+        );
+        return;
+    }
+
+    let cache = TempDir::new().unwrap();
+    let config = TempDir::new().unwrap();
+    let server = MockServer::start().await;
+
+    // Step-1: attachment metadata GET.
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/attachment/77777"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
+            "id": "77777",
+            "filename": "eacces_test.bin",
+            "size": 4,
+            "mimeType": "application/octet-stream",
+            "content": format!("{}/rest/api/3/attachment/content/77777", server.uri()),
+        })))
+        .mount(&server)
+        .await;
+
+    // Step-2: attachment content GET (small body; stream_to_file hits EACCES on
+    // File::create before writing any bytes).
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/attachment/content/77777"))
+        .respond_with(ResponseTemplate::new(200).set_body_bytes(b"data"))
+        .mount(&server)
+        .await;
+
+    let out_path = restricted.path().join("eacces_test.bin");
+    let output = jr_cmd_with_xdg(&server.uri(), cache.path(), config.path())
+        .args([
+            "issue",
+            "attachment",
+            "download",
+            "EACCES-1",
+            "--id",
+            "77777",
+            "--out",
+            out_path.to_str().unwrap(),
+        ])
+        .output()
+        .unwrap();
+
+    // Restore permissions so TempDir::Drop can remove the directory.
+    let _ = std::fs::set_permissions(restricted.path(), std::fs::Permissions::from_mode(0o755));
+
+    let stderr = String::from_utf8_lossy(&output.stderr);
+
+    // (a) Must exit 1 (write failure, not panic / exit 101).
+    assert_eq!(
+        output.status.code(),
+        Some(1),
+        "BC-2.7.012 EACCES: must exit 1; got {:?}\nstderr: {stderr}",
+        output.status.code()
+    );
+
+    // (b) Must contain the "Permission denied: cannot write to" prefix.
+    assert!(
+        stderr.contains("Permission denied: cannot write to "),
+        "BC-2.7.012 EACCES: stderr must contain \
+         'Permission denied: cannot write to '; got: {stderr}"
+    );
+
+    // (c) Must name the FINAL destination parent directory (not the tmp_ path).
+    let dir_str = restricted.path().to_str().unwrap();
+    assert!(
+        stderr.contains(dir_str),
+        "BC-2.7.012 EACCES: stderr must contain the restricted dir path '{dir_str}'; \
+         got: {stderr}"
+    );
+
+    // (d) Must include the remediation hint (BC-2.7.012 table).
+    assert!(
+        stderr.contains("Check directory permissions and try again."),
+        "BC-2.7.012 EACCES: stderr must contain remediation hint \
+         'Check directory permissions and try again.'; got: {stderr}"
+    );
+
+    // (e) Must NOT leak the internal tmp_<hex> path (tmp-path-leak pin).
+    assert!(
+        !stderr.contains("tmp_"),
+        "BC-2.7.012 EACCES: stderr must NOT contain 'tmp_' (internal temp path \
+         must not be surfaced to the user); got: {stderr}"
+    );
+
+    // (f) BC-2.7.012 v1.3.103 shape: dest basename must appear in the `(writing <dest>)`
+    //     parenthetical of the PermissionDenied branch.
+    assert!(
+        stderr.contains("eacces_test.bin"),
+        "BC-2.7.012 v1.3.103 EACCES: stderr must contain dest basename 'eacces_test.bin' \
+         in (writing <dest>) parenthetical; got: {stderr}"
     );
 }

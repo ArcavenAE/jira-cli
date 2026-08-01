@@ -98,6 +98,37 @@ pub async fn get_or_fetch_project_meta(
     Ok(meta)
 }
 
+/// Resolve the JSM serviceDeskId for a project key.
+///
+/// Calls `get_or_fetch_project_meta`, which ALREADY performs
+/// `ServiceDesk.project_id: String` equality match and stores the result in
+/// `ProjectMeta.service_desk_id` (BC-X.8.010).
+///
+/// Returns `Ok(sdId)` when `service_desk_id` is populated.
+/// Returns `Err(JrError::UserError(...))` (exit 64) when the field is `None`
+/// (zero project_id matches — EC-X.8.010-1).
+///
+/// Canonical EC-X.8.010-1 error string:
+/// `"No JSM service desk found for project <KEY>. The project may still be
+///  provisioning; verify with \`jr queue list --project <KEY>\`."`
+///
+/// **Do NOT reuse `require_service_desk`** (P19-001): that function uses a
+/// different error string and fuses the non-JSM guard with sdId resolution —
+/// the attachment flow keeps them separated (EC-3.9.003-7).
+pub async fn resolve_service_desk_id(
+    client: &JiraClient,
+    project_key: &str,
+) -> anyhow::Result<String> {
+    let meta = get_or_fetch_project_meta(client, project_key).await?;
+    meta.service_desk_id.ok_or_else(|| {
+        anyhow::anyhow!(JrError::UserError(format!(
+            "No JSM service desk found for project {project_key}. \
+             The project may still be provisioning; \
+             verify with `jr queue list --project {project_key}`."
+        )))
+    })
+}
+
 /// Require the project to be a JSM service desk. Returns the serviceDeskId or errors.
 ///
 /// `call_site_label` is embedded in the error message to produce caller-specific

@@ -24,6 +24,8 @@ use tokio::io::AsyncWriteExt;
 
 use crate::api::client::JiraClient;
 use crate::api::jira::attachments::AttachmentObject;
+use crate::api::jsm::servicedesks::get_or_fetch_project_meta;
+use crate::cache;
 use crate::cli::{AttachmentSubcommand, OutputFormat};
 use crate::error::JrError;
 use crate::output;
@@ -514,43 +516,152 @@ pub fn sanitize_attachment_filename(name: &str) -> Option<String> {
     Some(stripped.to_string())
 }
 
-/// Compute the default output path for a downloaded attachment (BC-2.7.010).
+/// Compute the default output path for a **batch** downloaded attachment (BC-2.7.010).
 ///
-/// **Batch** (`--all` / `--newest`):
+/// **Batch** (`--all` / `--newest`) only:
 /// `<base_dir>/<sha1_of_id(40 hex)>_<sanitize_attachment_filename(filename) or id>`.
 /// Combined length guaranteed ≤ 255 bytes (41 + 214 = 255 ≤ NAME_MAX; ADV-010).
 /// When `sanitize_attachment_filename` returns `None` (degenerate name), uses
 /// `<sha1_of_id>_<attachment_id>` as the basename.
 ///
-/// **Single** (`--id`):
-/// Bare `sanitize_attachment_filename(filename)` in `base_dir` (no SHA-1 prefix).
-/// When `sanitize_attachment_filename` returns `None`, uses bare `attachment_id`.
+/// # Single-mode path is NOT owned here
+///
+/// Single-mode (`--id`) path construction is INLINE in `handle_single_download` and
+/// includes the SEC-576-001 Windows device-name escape (`_CON`, `_NUL`, …) — do NOT
+/// consolidate it into this fn without moving that escape (F5-R11-001).
 ///
 /// # Arguments
 /// - `base_dir`      — directory for the output file.
 /// - `attachment_id` — numeric attachment ID from the Jira API (trusted per SEC-576-008).
 /// - `filename`      — raw Jira-supplied filename.
-/// - `is_batch`      — `true` → batch path with SHA-1 prefix; `false` → single bare path.
 fn compute_default_output_path(
     base_dir: &std::path::Path,
     attachment_id: &str,
     filename: &str,
-    is_batch: bool,
 ) -> std::path::PathBuf {
     let sanitized =
         sanitize_attachment_filename(filename).unwrap_or_else(|| attachment_id.to_string());
 
-    if is_batch {
-        let hash = sha1_hex(attachment_id);
-        base_dir.join(format!("{hash}_{sanitized}"))
-    } else {
-        base_dir.join(sanitized)
-    }
+    let hash = sha1_hex(attachment_id);
+    base_dir.join(format!("{hash}_{sanitized}"))
+}
+
+/// Defense-in-depth containment check for the batch download loop (BC-2.7.011 / F5-R1-001).
+///
+/// Returns `Ok(true)` when the parent directory of `final_path` (after canonicalization)
+/// is equal to or inside `resolved_dir`.  Returns `Ok(false)` when an escape is detected.
+/// Returns `Err` when the parent directory cannot be canonicalized (e.g., it does not yet
+/// exist on disk); the caller treats this as fail-open and emits a warning.
+///
+/// `sanitize_attachment_filename` (VP-576-001 proptest) is the primary containment
+/// authority.  This function is the secondary layer — it fires only if
+/// `compute_default_output_path` ever acquires sub-directory logic that allows a path
+/// component to cross outside `base_dir`.
+///
+/// Extracted as a standalone function to make the rejection branch directly testable.
+fn batch_path_is_within_dir(
+    final_path: &std::path::Path,
+    resolved_dir: &std::path::Path,
+) -> std::io::Result<bool> {
+    let parent = final_path.parent().unwrap_or(resolved_dir);
+    let canonical_parent = parent.canonicalize()?;
+    // F5-R3-002: canonicalize resolved_dir before starts_with so that the
+    // helper is correct even when called with a non-canonical base (e.g.,
+    // containing `..` components or a macOS `/var` → `/private/var` symlink
+    // prefix).  Via handle_batch_download, resolved_dir is always produced
+    // by base_dir.canonicalize().unwrap_or(base_dir), so a non-canonical
+    // value is not reachable there in practice; this guard provides
+    // defense-in-depth for hypothetical future callers (e.g., if
+    // compute_default_output_path gains sub-directory logic).  If
+    // resolved_dir itself cannot be canonicalized, ? propagates an Err so
+    // the call site's warn-and-skip path fires (fail-open).
+    let canonical_dir = resolved_dir.canonicalize()?;
+    Ok(canonical_parent.starts_with(canonical_dir))
 }
 
 // ---------------------------------------------------------------------------
 // S-576-2: private async helpers
 // ---------------------------------------------------------------------------
+
+/// Classify a disk-write `io::Error` into a user-friendly discriminated message.
+///
+/// **BC-2.7.012 v1.3.104** — used by all four I/O sites in `stream_to_file`
+/// (`File::create`, `write_all`, `flush`, `rename`) so that single-mode (propagate → exit 1)
+/// and batch-mode (per-file fail-soft warning) paths both benefit from one chokepoint.
+///
+/// # Branch mapping
+/// - `StorageFull | QuotaExceeded` →
+///   `"Disk full: not enough space to write <dest>: <os_err>. Free up disk space and try again."`
+/// - `PermissionDenied | ReadOnlyFilesystem` →
+///   `"Permission denied: cannot write to <dir> (writing <dest>): <os_err>. Check directory permissions and try again."`
+/// - `_` (non-exhaustive fallback, **required** because `ErrorKind` is `#[non_exhaustive]`) →
+///   `"Failed to write <dest>: <os_err>."`
+///
+/// # Arguments
+/// - `kind`         — `e.kind()` from the raw `std::io::Error` (call BEFORE any anyhow conversion).
+/// - `dest_display` — final destination path, filename portion display-sanitized (CWE-116).
+/// - `dir_display`  — `final_path.parent()` rendered verbatim (operator-controlled).
+/// - `os_err`       — `e.to_string()` from the raw `std::io::Error` (ends in `(os error N)`).
+fn classify_write_error(
+    kind: std::io::ErrorKind,
+    dest_display: &str,
+    dir_display: &str,
+    os_err: &str,
+) -> String {
+    match kind {
+        std::io::ErrorKind::StorageFull | std::io::ErrorKind::QuotaExceeded => {
+            format!(
+                "Disk full: not enough space to write {dest_display}: {os_err}. \
+                 Free up disk space and try again."
+            )
+        }
+        std::io::ErrorKind::PermissionDenied | std::io::ErrorKind::ReadOnlyFilesystem => {
+            format!(
+                "Permission denied: cannot write to {dir_display} (writing {dest_display}): {os_err}. \
+                 Check directory permissions and try again."
+            )
+        }
+        _ => {
+            format!("Failed to write {dest_display}: {os_err}.")
+        }
+    }
+}
+
+/// Compute the two display strings used in all write-error messages for `final_path`.
+///
+/// Returns `(dir_display, dest_display)` where:
+/// - `dir_display`  — parent directory, rendered verbatim (operator-controlled); falls
+///   back to `"."` when the path has no non-empty parent component.
+/// - `dest_display` — full destination string for error messages: `"<dir>/<file>"` when
+///   a non-empty parent exists, otherwise just the sanitized filename (no leading
+///   path-separator prefix).
+///
+/// The filename portion is run through `display_sanitize_filename` (CWE-116 / BC-2.7.011).
+/// The parent portion is rendered verbatim (operator-controlled; no sanitization applied).
+///
+/// # Mutant-killing contract (FIX-F5-010)
+/// - Non-empty parent path: `dir_display` == the parent (NOT `"."`).
+/// - Bare filename (no parent / empty parent):
+///   - `dir_display` == `"."` (NOT `""`).
+///   - `dest_display` == the filename — no leading path-separator character.
+fn write_error_display_strings(final_path: &std::path::Path) -> (String, String) {
+    let final_fname = final_path
+        .file_name()
+        .map(|n| display_sanitize_filename(&n.to_string_lossy()))
+        .unwrap_or_else(|| display_sanitize_filename(&final_path.to_string_lossy()));
+    let final_dir_display = final_path
+        .parent()
+        .filter(|d| !d.as_os_str().is_empty())
+        .map(|d| d.display().to_string())
+        .unwrap_or_else(|| ".".to_string());
+    let final_dest_display = match final_path.parent() {
+        Some(d) if !d.as_os_str().is_empty() => {
+            format!("{}{}{final_fname}", d.display(), std::path::MAIN_SEPARATOR)
+        }
+        _ => final_fname,
+    };
+    (final_dir_display, final_dest_display)
+}
 
 /// Stream `response` body to `final_path` using an atomic temp-file + rename pattern.
 ///
@@ -561,6 +672,11 @@ fn compute_default_output_path(
 ///
 /// On ANY error after temp-file creation, the temp file is deleted before returning
 /// the error (cleanup guarantee for BC-2.7.007 EC-2.7.007-4).
+///
+/// **Write-error classification (BC-2.7.012 v1.3.104):** all four I/O sites
+/// (`File::create`, `write_all`, `flush`, `rename`) route through `classify_write_error` to
+/// emit discriminated messages (`Disk full: …`, `Permission denied: …`, generic
+/// fallback) that name the **final destination** (never the internal `tmp_<hex>` path).
 async fn stream_to_file(
     response: reqwest::Response,
     final_path: &std::path::Path,
@@ -572,40 +688,59 @@ async fn stream_to_file(
     let token: u64 = rand::random();
     let tmp_path = parent.join(format!("tmp_{token:016x}"));
 
+    // BC-2.7.012 v1.3.104: pre-compute display strings shared across all four I/O
+    // error sites below. CWE-116 / BC-2.7.011: display-sanitize the server-supplied
+    // filename portion; the operator-controlled parent directory is rendered verbatim.
+    let (final_dir_display, final_dest_display) = write_error_display_strings(final_path);
+
     let result: anyhow::Result<u64> = async {
         let mut file = tokio::fs::File::create(&tmp_path).await.map_err(|e| {
-            anyhow::anyhow!("failed to create temp file {}: {e}", tmp_path.display())
+            let msg = classify_write_error(
+                e.kind(),
+                &final_dest_display,
+                &final_dir_display,
+                &e.to_string(),
+            );
+            anyhow::anyhow!("{msg}")
         })?;
         let mut bytes_written: u64 = 0;
 
         let mut stream = response.bytes_stream();
         while let Some(chunk) = stream.next().await {
             let chunk = chunk.map_err(|e| anyhow::anyhow!("stream error: {e}"))?;
-            file.write_all(&chunk)
-                .await
-                .map_err(|e| anyhow::anyhow!("write error to {}: {e}", tmp_path.display()))?;
+            file.write_all(&chunk).await.map_err(|e| {
+                let msg = classify_write_error(
+                    e.kind(),
+                    &final_dest_display,
+                    &final_dir_display,
+                    &e.to_string(),
+                );
+                anyhow::anyhow!("{msg}")
+            })?;
             bytes_written += chunk.len() as u64;
         }
 
-        file.flush().await?;
+        file.flush().await.map_err(|e| {
+            let msg = classify_write_error(
+                e.kind(),
+                &final_dest_display,
+                &final_dir_display,
+                &e.to_string(),
+            );
+            anyhow::anyhow!("{msg}")
+        })?;
         drop(file);
 
         tokio::fs::rename(&tmp_path, final_path)
             .await
             .map_err(|e| {
-                // BC-2.7.011 / CWE-116: display-sanitize the server-supplied filename
-                // portion; parent directory is operator-controlled and rendered verbatim.
-                let fname = final_path
-                    .file_name()
-                    .map(|n| display_sanitize_filename(&n.to_string_lossy()))
-                    .unwrap_or_else(|| display_sanitize_filename(&final_path.to_string_lossy()));
-                let display = match final_path.parent() {
-                    Some(d) if !d.as_os_str().is_empty() => {
-                        format!("{}{}{fname}", d.display(), std::path::MAIN_SEPARATOR)
-                    }
-                    _ => fname,
-                };
-                anyhow::anyhow!("failed to rename temp to {display}: {e}")
+                let msg = classify_write_error(
+                    e.kind(),
+                    &final_dest_display,
+                    &final_dir_display,
+                    &e.to_string(),
+                );
+                anyhow::anyhow!("{msg}")
             })?;
 
         Ok(bytes_written)
@@ -675,7 +810,19 @@ async fn handle_single_download(
     }
 
     // BC-2.7.007 step 1: fetch attachment metadata.
-    let metadata = client.get_attachment_metadata(id_str).await?;
+    // BC-2.7.012 body-surfacing asymmetry (F5-R3-001): download emits canonical-only;
+    // get_attachment_metadata passes 404 through as ApiError so callers choose the format.
+    let metadata = client.get_attachment_metadata(id_str).await.map_err(|e| {
+        if let Some(JrError::ApiError { status, .. }) = e.downcast_ref::<JrError>() {
+            if *status == 404 {
+                return JrError::UserError(format!(
+                    "Attachment {id_str} not found or not accessible."
+                ))
+                .into();
+            }
+        }
+        e
+    })?;
     let raw_filename = metadata.filename.as_deref().unwrap_or(id_str);
 
     // Determine final output path.
@@ -840,8 +987,11 @@ async fn handle_batch_download(
     // BC-2.7.009 ~830), then truncate to N.
     if let Some(n) = newest_n {
         filtered.sort_by(|a, b| {
-            let parse_dt =
-                |s: &str| chrono::DateTime::parse_from_str(s, "%Y-%m-%dT%H:%M:%S%.3f%z").ok();
+            // RFC 3339 relaxed parser — accepts any fractional-second precision (0, 1, 2, 3,
+            // 4+ digits) and both +HH:MM and +HHMM offset forms, same as the --older-than path.
+            // The previous %.3f format rejected 1-digit and 4-digit fractional seconds, causing
+            // those attachments to sort LAST (None > Some ordering) — F5-R1-002.
+            let parse_dt = |s: &str| s.parse::<chrono::DateTime<chrono::FixedOffset>>().ok();
             match (parse_dt(&a.created), parse_dt(&b.created)) {
                 (Some(a_dt), Some(b_dt)) => b_dt.cmp(&a_dt), // newest first
                 (Some(_), None) => std::cmp::Ordering::Less, // parsed before unparseable
@@ -874,17 +1024,33 @@ async fn handle_batch_download(
             );
         }
 
-        let final_path = compute_default_output_path(&base_dir, &att.id, &att.filename, true);
+        let final_path = compute_default_output_path(&base_dir, &att.id, &att.filename);
 
-        // BC-2.7.011 defense-in-depth: unreachable via API-supplied filenames after sanitization steps 1-5.
-        // Two-step containment check: canonicalize base_dir, then assert joined path starts_with it.
-        if let Some(fname) = final_path.file_name() {
-            if !resolved_dir.join(fname).starts_with(&resolved_dir) {
+        // BC-2.7.011 defense-in-depth: verify the parent directory of final_path equals
+        // (or is inside) resolved_dir. sanitize_attachment_filename (VP-576-001 proptest)
+        // is the primary containment authority; this canonicalized-parent check provides
+        // an additional layer in case compute_default_output_path ever gains sub-directory
+        // logic. The previous check was vacuous: resolved_dir.join(single_component) is
+        // always starts_with resolved_dir because a single path component can never contain
+        // a traversal (F5-R1-001).
+        match batch_path_is_within_dir(&final_path, &resolved_dir) {
+            Ok(true) => {} // contained — proceed normally
+            Ok(false) => {
                 eprintln!(
                     "warning: skipping attachment {} — path escape detected after sanitization.",
                     att.id
                 );
                 continue;
+            }
+            Err(e) => {
+                // Canonicalization failed (e.g., parent directory does not yet exist).
+                // Fail-open: allow the download to proceed, but emit a warning so the
+                // operator can observe that the containment check was skipped (SEC-F5-001).
+                eprintln!(
+                    "warning: containment check skipped for attachment {} \
+                     — could not canonicalize path: {e}.",
+                    att.id
+                );
             }
         }
 
@@ -1110,17 +1276,6 @@ pub async fn handle_attachment_upload(
         unreachable!("handle_attachment_upload called with non-Upload variant");
     };
 
-    // AC-017: interim rejection fires BEFORE any file pre-check or HTTP call.
-    // REMOVED-AT-S5: this guard is removed when S-576-5 wires JSM visibility.
-    if public || internal {
-        return Err(JrError::UserError(
-            "--public and --internal are not yet supported. \
-             JSM visibility will be shipped in a follow-on story."
-                .to_string(),
-        )
-        .into());
-    }
-
     // EC-3.9.001-6: stdin '-' is rejected before any HTTP call.
     for path in &file {
         if path.to_str() == Some("-") {
@@ -1144,8 +1299,28 @@ pub async fn handle_attachment_upload(
         }
     }
 
+    // S-576-5: route --public / --internal through the JSM-aware handler.
+    // EC-3.9.003-7: the non-JSM guard fires INSIDE handle_attachment_upload_jsm,
+    // AFTER project meta fetch but BEFORE the gate and BEFORE any dry-run preview.
+    if public || internal {
+        return handle_attachment_upload_jsm(
+            &key,
+            &file,
+            &JsmUploadOpts {
+                replace_existing,
+                yes,
+                dry_run,
+                no_input,
+                public,
+            },
+            output_format,
+            client,
+        )
+        .await;
+    }
+
     if dry_run {
-        return dry_run_upload(&key, &file, replace_existing, output_format, client).await;
+        return dry_run_upload(&key, &file, replace_existing, false, output_format, client).await;
     }
 
     if replace_existing {
@@ -1251,10 +1426,13 @@ async fn replace_existing_attachments(
 ///
 /// The read-only list GET still fires to populate the `wouldDelete` preview array
 /// (mandatory per AC-008 / BC-3.9.020 path-c; only DELETE and POST are suppressed).
+/// EC-3.9.020-7: when `public` is `true`, each `wouldUpload` entry gains
+/// `"visibility":"public"` in JSON mode and `[public]` in human mode.
 async fn dry_run_upload(
     key: &str,
     file_paths: &[std::path::PathBuf],
     replace_existing: bool,
+    public: bool,
     output_format: &OutputFormat,
     client: &JiraClient,
 ) -> anyhow::Result<()> {
@@ -1276,11 +1454,17 @@ async fn dry_run_upload(
         .map(|a| serde_json::json!({"id": a.id, "filename": a.filename}))
         .collect();
 
+    // EC-3.9.020-7: add "visibility":"public" to each wouldUpload entry when public=true.
     let would_upload: Vec<Value> = file_paths
         .iter()
         .filter_map(|p| {
-            p.file_name()
-                .map(|n| serde_json::json!({"filename": n.to_string_lossy()}))
+            p.file_name().map(|n| {
+                if public {
+                    serde_json::json!({"filename": n.to_string_lossy(), "visibility": "public"})
+                } else {
+                    serde_json::json!({"filename": n.to_string_lossy()})
+                }
+            })
         })
         .collect();
 
@@ -1302,7 +1486,12 @@ async fn dry_run_upload(
                     would_delete.len()
                 );
             }
-            println!("Would upload {} file(s).", would_upload.len());
+            // EC-3.9.020-7: [public] annotation when public=true.
+            if public {
+                println!("Would upload {} file(s) [public].", would_upload.len());
+            } else {
+                println!("Would upload {} file(s).", would_upload.len());
+            }
         }
     }
     Ok(())
@@ -1353,6 +1542,378 @@ fn attachment_replace_confirmation_gate(
             Ok(trimmed.eq_ignore_ascii_case("y") || trimmed.eq_ignore_ascii_case("yes"))
         }
     }
+}
+
+// ---------------------------------------------------------------------------
+// S-576-5: JSM visibility helpers and handler
+// ---------------------------------------------------------------------------
+
+/// Interactive `--public` confirmation gate (consumer 1: `--public` only, no replace).
+///
+/// BC-3.9.014 EC-3.9.014-5 prompt format:
+/// - N ≤ 3: `"Upload <f1>, <f2>, <fN> to <KEY> as customer-visible (public)? [y/N] "`
+/// - N > 3: `"Upload <N> files to <KEY> as customer-visible (public)? [y/N] "`
+///
+/// Returns `Ok(true)` → proceed, `Ok(false)` → cancelled,
+/// `Err(JrError::Interrupted)` → EOF/IO error (exit 130).
+fn jsm_public_gate(file_paths: &[std::path::PathBuf], key: &str) -> anyhow::Result<bool> {
+    if file_paths.len() <= 3 {
+        let names: Vec<String> = file_paths
+            .iter()
+            .map(|p| {
+                p.file_name()
+                    .and_then(|n| n.to_str())
+                    .map(display_sanitize_filename)
+                    .unwrap_or_else(|| "<unknown>".to_string())
+            })
+            .collect();
+        eprint!(
+            "Upload {} to {} as customer-visible (public)? [y/N] ",
+            names.join(", "),
+            key
+        );
+    } else {
+        eprint!(
+            "Upload {} files to {} as customer-visible (public)? [y/N] ",
+            file_paths.len(),
+            key
+        );
+    }
+    let _ = std::io::Write::flush(&mut std::io::stderr());
+    use std::io::BufRead;
+    let mut line = String::new();
+    match std::io::stdin().lock().read_line(&mut line) {
+        Ok(0) | Err(_) => Err(JrError::Interrupted.into()),
+        Ok(_) => {
+            let trimmed = line.trim();
+            Ok(trimmed.eq_ignore_ascii_case("y") || trimmed.eq_ignore_ascii_case("yes"))
+        }
+    }
+}
+
+/// Interactive combined gate: `--public` + `--replace-existing` with ≥1 filename match (consumer 3).
+///
+/// BC-3.9.014 prompt format:
+/// `"Upload to <KEY> as customer-visible (public) and replace existing attachment(s):\n"`
+/// followed by `"  <filename> (id: <AID>)\n"` for each match, then `"Continue? [y/N] "`.
+///
+/// VP-576-005: ONE prompt only (not one for replace + one for public).
+///
+/// Returns `Ok(true)` → proceed, `Ok(false)` → cancelled,
+/// `Err(JrError::Interrupted)` → EOF/IO error (exit 130).
+fn jsm_public_combined_gate(key: &str, would_delete: &[AttachmentObject]) -> anyhow::Result<bool> {
+    eprintln!(
+        "Upload to {} as customer-visible (public) and replace existing attachment(s):",
+        key
+    );
+    for att in would_delete {
+        eprintln!(
+            "  {} (id: {})",
+            display_sanitize_filename(&att.filename),
+            att.id
+        );
+    }
+    eprint!("Continue? [y/N] ");
+    let _ = std::io::Write::flush(&mut std::io::stderr());
+    use std::io::BufRead;
+    let mut line = String::new();
+    match std::io::stdin().lock().read_line(&mut line) {
+        Ok(0) | Err(_) => Err(JrError::Interrupted.into()),
+        Ok(_) => {
+            let trimmed = line.trim();
+            Ok(trimmed.eq_ignore_ascii_case("y") || trimmed.eq_ignore_ascii_case("yes"))
+        }
+    }
+}
+
+/// Boolean-flag bundle for `handle_attachment_upload_jsm` (reduces argument count).
+struct JsmUploadOpts {
+    replace_existing: bool,
+    yes: bool,
+    dry_run: bool,
+    no_input: bool,
+    public: bool,
+}
+
+/// JSM-aware upload handler (S-576-5).
+///
+/// Called from `handle_attachment_upload` when `--public` or `--internal` is set.
+///
+/// **EC-3.9.003-7:** the non-JSM project guard fires AFTER project meta fetch but
+/// BEFORE the non-interactive gate and BEFORE any dry-run preview (EC-3.9.020-8).
+///
+/// **OQ-9:** `--internal` on a non-JSM project is a silent no-op — the upload
+/// falls through to the platform path with no warning and no servicedeskapi calls.
+///
+/// **BC-3.9.005:** `--public` on a non-JSM project exits 64.
+///
+/// **SEC-576-006:** a 404/403 from step-1 (`attachTemporaryFile`) triggers a
+/// one-time stale-ID self-heal: invalidate the cache entry, re-resolve sdId, and
+/// retry ONCE.
+///
+/// **VP-576-005:** `--public` + `--replace-existing` (with ≥1 filename match) uses
+/// ONE combined prompt, not two separate prompts.
+///
+/// **VP-576-003:** all DELETEs complete before the first POST.
+async fn handle_attachment_upload_jsm(
+    key: &str,
+    file_paths: &[std::path::PathBuf],
+    opts: &JsmUploadOpts,
+    output_format: &OutputFormat,
+    client: &JiraClient,
+) -> anyhow::Result<()> {
+    let JsmUploadOpts {
+        replace_existing,
+        yes,
+        dry_run,
+        no_input,
+        public,
+    } = *opts;
+    // Derive project key via HTTP (P1-004): GET /rest/api/3/issue/{key}?fields=project.
+    // Validates that the issue exists and returns its project key exactly as Jira knows it.
+    // 404 → JrError::UserError("Issue {key} not found or not accessible.") → exit 64.
+    let project_key = client.get_issue_project_key(key).await?;
+    let project_key = project_key.as_str();
+
+    // Fetch (or read from cache) project metadata for JSM determination.
+    let meta = get_or_fetch_project_meta(client, project_key).await?;
+
+    // EC-3.9.003-7: non-JSM guard fires BEFORE gate and BEFORE dry-run preview.
+    if meta.project_type != "service_desk" {
+        if public {
+            // BC-3.9.005: --public on non-JSM → exit 64.
+            return Err(JrError::UserError(
+                "--public is only supported on Jira Service Management (JSM) issues.".to_string(),
+            )
+            .into());
+        }
+        // OQ-9: --internal on non-JSM → silent no-op, fall through to platform path.
+        if dry_run {
+            return dry_run_upload(
+                key,
+                file_paths,
+                replace_existing,
+                false,
+                output_format,
+                client,
+            )
+            .await;
+        }
+        if replace_existing {
+            return replace_existing_attachments(
+                key,
+                file_paths,
+                yes,
+                no_input,
+                output_format,
+                client,
+            )
+            .await;
+        }
+        let uploaded = client.upload_attachments(key, file_paths).await?;
+        return render_upload_result(&uploaded, output_format);
+    }
+
+    // JSM project: resolve sdId via the canonical resolver (P1-005).
+    // `resolve_service_desk_id` re-reads from cache (hit — just populated above) and
+    // returns the canonical UserError if service_desk_id is None.
+    let sd_id = crate::api::jsm::servicedesks::resolve_service_desk_id(client, project_key).await?;
+
+    // JSM dry-run: preview without step-1/step-2, with visibility annotation.
+    // The non-JSM guard already fired above so EC-3.9.020-8 is satisfied.
+    if dry_run {
+        return dry_run_upload(
+            key,
+            file_paths,
+            replace_existing,
+            public,
+            output_format,
+            client,
+        )
+        .await;
+    }
+
+    // HOISTED: attachment-list fetch runs for BOTH --public and --internal when
+    // replace_existing=true (P4-001: previously inside `if public { }`, silently
+    // skipping DELETEs on the --internal path).
+    //
+    // BC-3.9.014 (P1-007): fetch FIRST so both non-interactive hint and interactive
+    // gate use actual filename-match data.
+    // VP-576-005: ONE combined prompt when --public + --replace-existing + ≥1 match.
+    let to_delete: Vec<AttachmentObject> = if replace_existing {
+        let existing = client.list_attachments(key).await?;
+        let upload_names: std::collections::HashSet<String> = file_paths
+            .iter()
+            .filter_map(|p| p.file_name().map(|n| n.to_string_lossy().into_owned()))
+            .collect();
+        existing
+            .into_iter()
+            .filter(|a| upload_names.contains(&a.filename))
+            .collect()
+    } else {
+        vec![]
+    };
+    let has_replace_matches = !to_delete.is_empty();
+
+    if public {
+        // --public visibility gate: consumer-1 (public-only) or consumer-3 (combined).
+        // Non-interactive path: exit 64 with hint; no gate presented; no DELETEs issued.
+        // Consumer is determined by actual match count (P1-007 fix):
+        // consumer-3 only when replace_existing AND ≥1 match; consumer-1 otherwise.
+        if no_input && !yes {
+            return if replace_existing && has_replace_matches {
+                Err(JrError::UserError(
+                    "Use --yes to confirm uploading as customer-visible (public) and \
+                     deleting existing same-filename attachments."
+                        .to_string(),
+                )
+                .into())
+            } else {
+                Err(JrError::UserError(format!(
+                    "Use --yes to confirm uploading {} file(s) to {} as \
+                     customer-visible, or run interactively.",
+                    file_paths.len(),
+                    key
+                ))
+                .into())
+            };
+        }
+
+        if !yes {
+            let proceed = if replace_existing && has_replace_matches {
+                jsm_public_combined_gate(key, &to_delete)?
+            } else {
+                jsm_public_gate(file_paths, key)?
+            };
+            if !proceed {
+                eprintln!("Upload cancelled.");
+                if let OutputFormat::Json = output_format {
+                    println!(
+                        "{}",
+                        output::render_json(&serde_json::json!({
+                            "cancelled": true,
+                            "uploaded": false
+                        }))?
+                    );
+                }
+                return Ok(());
+            }
+        }
+    } else if replace_existing && has_replace_matches {
+        // --internal + --replace-existing + ≥1 filename match: consumer-2 gate
+        // (BC-3.9.017). No gate when zero matches.
+        if no_input && !yes {
+            return Err(JrError::UserError(
+                "Use --yes to confirm deletion of existing same-filename attachments.".to_string(),
+            )
+            .into());
+        }
+        if !yes {
+            let refs: Vec<&AttachmentObject> = to_delete.iter().collect();
+            let proceed = attachment_replace_confirmation_gate(key, &refs, false)?;
+            if !proceed {
+                eprintln!("Upload cancelled.");
+                if let OutputFormat::Json = output_format {
+                    println!(
+                        "{}",
+                        output::render_json(&serde_json::json!({
+                            "cancelled": true,
+                            "uploaded": false
+                        }))?
+                    );
+                }
+                return Ok(());
+            }
+        }
+    }
+
+    // VP-576-003: all DELETEs complete before the first POST.
+    // Now covers BOTH --public and --internal when has_replace_matches=true (P4-001).
+    if has_replace_matches {
+        for att in &to_delete {
+            match client.delete_attachment(&att.id).await {
+                Ok(()) => {}
+                Err(e) => {
+                    let is_benign = e.downcast_ref::<JrError>().is_some_and(|jr| {
+                        matches!(jr, JrError::UserError(msg) if msg.contains("not found or already deleted"))
+                    });
+                    if !is_benign {
+                        return Err(e);
+                    }
+                }
+            }
+        }
+    }
+
+    // JSM two-step upload.
+    // Step 1: attach each file as a temporary attachment; collect tmpIds.
+    // SEC-576-006: on 404/403 from step-1, invalidate the cache and retry ONCE.
+    let mut current_sd_id = sd_id;
+    let mut stale_healed = false;
+    let mut tmp_ids: Vec<String> = Vec::with_capacity(file_paths.len());
+
+    for path in file_paths {
+        let result =
+            crate::api::jsm::attachments::attach_temporary_file(client, &current_sd_id, path).await;
+
+        let tmp_id = match result {
+            Ok(id) => id,
+            Err(ref e) => {
+                let is_stale = e.downcast_ref::<JrError>().is_some_and(|jr| {
+                    matches!(jr, JrError::ApiError { status, .. } if *status == 404 || *status == 403)
+                });
+                if is_stale && !stale_healed {
+                    stale_healed = true;
+                    cache::invalidate_project_meta_cache(client.profile_name(), project_key);
+                    let fresh_meta = get_or_fetch_project_meta(client, project_key).await?;
+                    match fresh_meta.service_desk_id {
+                        None => {
+                            return Err(JrError::UserError(format!(
+                                "Service desk for {project_key} not found after refresh."
+                            ))
+                            .into());
+                        }
+                        Some(new_id) => {
+                            current_sd_id = new_id;
+                            // P1-001: explicit EC-4 mapping on retry — bare .await? would
+                            // propagate ApiError{status:404} as exit 1 instead of exit 64.
+                            let retry_result = crate::api::jsm::attachments::attach_temporary_file(
+                                client,
+                                &current_sd_id,
+                                path,
+                            )
+                            .await;
+                            match retry_result {
+                                Ok(id) => id,
+                                Err(e) => {
+                                    return match e.downcast::<JrError>() {
+                                        Ok(JrError::ApiError { status: 404, .. }) => {
+                                            Err(JrError::UserError(format!(
+                                                "Service desk for {project_key} not found after refresh."
+                                            ))
+                                            .into())
+                                        }
+                                        // Post-retry 401 arrives as JrError::NotAuthenticated (exit 2); falls through to Ok(other).
+                                        Ok(other) => Err(anyhow::anyhow!(other)),
+                                        Err(other) => Err(other),
+                                    };
+                                }
+                            }
+                        }
+                    }
+                } else {
+                    return Err(result.unwrap_err());
+                }
+            }
+        };
+        tmp_ids.push(tmp_id);
+    }
+
+    // Step 2: publish all tmpIds to the JSM request.
+    let uploaded =
+        crate::api::jsm::attachments::post_request_attachment(client, key, &tmp_ids, public)
+            .await?;
+    render_upload_result(&uploaded, output_format)
 }
 
 // ---------------------------------------------------------------------------
@@ -1432,8 +1993,23 @@ pub async fn handle_attachment_delete(
 
             // Confirmation gate (BC-3.9.015; VP-576-002; DEC-174)
             if !yes {
-                // Fetch metadata to get the filename for the gate prompt
-                let meta = client.get_attachment_metadata(aid).await?;
+                // Fetch metadata to get the filename for the gate prompt.
+                // DEC-168 / BC-2.7.012 body-surfacing asymmetry (F5-R3-001): on 404
+                // the interactive delete path shows canonical prefix + Jira error body
+                // (actionable detail). get_attachment_metadata returns ApiError { 404 }
+                // with body intact; we format it here as canonical + "\n{body}".
+                let meta = client.get_attachment_metadata(aid).await.map_err(|e| {
+                    if let Some(JrError::ApiError { status, message }) = e.downcast_ref::<JrError>()
+                    {
+                        if *status == 404 {
+                            return JrError::UserError(format!(
+                                "Attachment {aid} not found or not accessible.\n{message}"
+                            ))
+                            .into();
+                        }
+                    }
+                    e
+                })?;
                 let filename = meta.filename.as_deref().unwrap_or(aid.as_str());
                 let display_name = display_sanitize_filename(filename);
 
@@ -2547,6 +3123,350 @@ mod tests {
         assert!(
             msg.contains("invalid duration"),
             "P6-001: error must contain 'invalid duration'; got: {msg}"
+        );
+    }
+
+    // ---------------------------------------------------------------------------
+    // batch_path_is_within_dir — containment-rejection unit tests (F5-R1-001 / N2)
+    // ---------------------------------------------------------------------------
+
+    /// Containment check must return `Ok(true)` when the output path is a direct child
+    /// of the base directory (the normal, always-true case for current
+    /// `compute_default_output_path` output).
+    ///
+    /// This is the positive (non-rejection) arm — confirms the helper does not
+    /// false-positive on safe paths.
+    #[test]
+    fn test_batch_path_is_within_dir_accepts_child_path() {
+        let base = tempfile::tempdir().expect("tempdir");
+        let resolved = base.path().canonicalize().expect("canonicalize base");
+
+        // A plain filename inside the base dir — the current code's only output shape.
+        let final_path = resolved.join("abc123_attachment.pdf");
+
+        let result = batch_path_is_within_dir(&final_path, &resolved);
+        assert!(
+            matches!(result, Ok(true)),
+            "batch_path_is_within_dir must return Ok(true) for a direct child of base_dir; \
+             got: {result:?}"
+        );
+    }
+
+    /// Containment check must return `Ok(false)` when the parent of `final_path` is
+    /// OUTSIDE `resolved_dir`.  This is the rejection branch introduced by F5-R1-001.
+    ///
+    /// **Red-when-reverted rationale:** if `batch_path_is_within_dir` is removed (or
+    /// its body is replaced with `return Ok(true);`), this test will either fail to
+    /// compile (missing function) or fail the `Ok(false)` assertion — either outcome
+    /// ensures that reverting the F5-R1-001 repair causes a test failure.
+    #[test]
+    fn test_batch_path_is_within_dir_rejects_path_outside_base() {
+        let base = tempfile::tempdir().expect("tempdir");
+        let escape = tempfile::tempdir().expect("tempdir for escape target");
+
+        let resolved = base.path().canonicalize().expect("canonicalize base");
+
+        // Construct a path whose parent IS the escape directory, not base_dir.
+        // The escape tempdir exists on disk, so canonicalize of its path will succeed.
+        let final_path = escape.path().join("should_not_land_here.txt");
+
+        let result = batch_path_is_within_dir(&final_path, &resolved);
+        assert!(
+            matches!(result, Ok(false)),
+            "batch_path_is_within_dir must return Ok(false) when parent is outside base_dir; \
+             got: {result:?}"
+        );
+    }
+
+    // ---------------------------------------------------------------------------
+    // F5-R3-002: batch_path_is_within_dir must accept a non-canonical base dir
+    // ---------------------------------------------------------------------------
+
+    /// F5-R3-002: `batch_path_is_within_dir` must return `Ok(true)` when
+    /// `resolved_dir` is NON-canonical (contains `..` segments) but `final_path`
+    /// is genuinely inside the base directory.
+    ///
+    /// **Reachability note:** the `Ok(false)` mass-rejection scenario (all files
+    /// skipped) is UNREACHABLE via `handle_batch_download`.  In that caller,
+    /// `resolved_dir` is always `base_dir.canonicalize().unwrap_or(base_dir)` —
+    /// a canonical path when the directory exists — and `final_path.parent()` is
+    /// always `base_dir`, so both `canonicalize()` calls inside
+    /// `batch_path_is_within_dir` succeed and agree.  A non-canonical
+    /// `resolved_dir` cannot arise there in practice; if either `canonicalize()`
+    /// fails, the helper returns `Err` and the call site's warn-and-skip path
+    /// fires (fail-open).
+    ///
+    /// This test exercises the **standalone helper contract** via direct unit
+    /// call — hardening for hypothetical future callers (e.g., if
+    /// `compute_default_output_path` gains sub-directory logic) that might
+    /// supply a non-canonical base path.
+    #[test]
+    fn test_f5_r3_002_batch_path_is_within_dir_accepts_non_canonical_base() {
+        let base = tempfile::tempdir().expect("create tempdir");
+        // Canonicalize to get the true filesystem path (resolves symlinks such
+        // as macOS /var → /private/var).
+        let canonical_base = base
+            .path()
+            .canonicalize()
+            .expect("canonicalize base tempdir");
+
+        // Build a NON-canonical path that refers to the SAME directory by
+        // appending `../<basename>`.  For example:
+        //   canonical:     /private/var/folders/…/T/tmp_abc
+        //   non-canonical: /private/var/folders/…/T/tmp_abc/../tmp_abc
+        //
+        // `Path::starts_with` is component-based and does NOT normalize `..`,
+        // so `canonical_parent.starts_with(non_canonical)` returns `false`
+        // even though the directories are identical — this is the defect.
+        let basename = canonical_base
+            .file_name()
+            .expect("canonical_base has a filename");
+        let non_canonical_base = canonical_base.join("..").join(basename);
+
+        // final_path is a genuine child of the base dir.
+        let final_path = canonical_base.join("safe_attachment_f5r3002.bin");
+
+        let result = batch_path_is_within_dir(&final_path, &non_canonical_base);
+
+        // The F5-R3-002 fix canonicalizes resolved_dir inside
+        // batch_path_is_within_dir before the starts_with check, so
+        // canonical_parent (/tmp/…/tmp_abc) correctly starts_with the
+        // canonicalized resolved_dir even when the input was the
+        // non-canonical path (/tmp/…/tmp_abc/../tmp_abc).
+        assert!(
+            matches!(result, Ok(true)),
+            "F5-R3-002 RED: batch_path_is_within_dir must accept a genuine child \
+             even when resolved_dir is non-canonical; got: {result:?}\n\
+             final_path:    {}\n\
+             resolved_dir:  {}",
+            final_path.display(),
+            non_canonical_base.display()
+        );
+    }
+
+    // ===========================================================================
+    // BC-2.7.012 v1.3.103+ — classify_write_error pure classifier unit tests
+    // GREEN — implemented in FIX-F5-010 / PR #649
+    //
+    // `classify_write_error` is implemented in this file.  These tests pin the
+    // three classifier branches.  The PermissionDenied / ReadOnlyFilesystem
+    // branch uses the v1.3.103 shape that adds the `(writing <dest>)` parenthetical
+    // after `<dir>` — see inline `// BC-2.7.012 v1.3.103` annotations below.
+    //
+    // Function contract (BC-2.7.012, research doc f5-r5-001):
+    //   fn classify_write_error(
+    //       kind: std::io::ErrorKind,
+    //       dest_display: &str,   // final destination path (display-safe)
+    //       dir_display: &str,    // final_path.parent() verbatim
+    //       os_err: &str,         // std::io::Error::Display of the raw error
+    //   ) -> String
+    //
+    // Branch mapping (non-exhaustive `_ =>` arm REQUIRED — ErrorKind is
+    // `#[non_exhaustive]` and must NOT be exhaustively matched):
+    //   StorageFull | QuotaExceeded  →  "Disk full: not enough space to write <dest>: <os_err>. Free up disk space and try again."
+    //   PermissionDenied | ReadOnlyFilesystem  →  "Permission denied: cannot write to <dir> (writing <dest>): <os_err>. Check directory permissions and try again."
+    //   _ (fallback)  →  "Failed to write <dest>: <os_err>."
+    // ===========================================================================
+
+    #[test]
+    fn test_bc_2_7_012_classify_storage_full_disk_full_prefix() {
+        use std::io::ErrorKind;
+        let os_err = std::io::Error::from(ErrorKind::StorageFull).to_string();
+        let msg = classify_write_error(
+            ErrorKind::StorageFull,
+            "/output/report.pdf",
+            "/output",
+            &os_err,
+        );
+        assert!(
+            msg.starts_with("Disk full: not enough space to write /output/report.pdf:"),
+            "StorageFull must produce \
+             'Disk full: not enough space to write <dest>:' prefix; got: {msg}"
+        );
+        assert!(
+            msg.contains("Free up disk space and try again."),
+            "StorageFull must include remediation hint; got: {msg}"
+        );
+        assert!(
+            msg.contains(&os_err),
+            "StorageFull must include the OS error string '{os_err}'; got: {msg}"
+        );
+    }
+
+    #[test]
+    fn test_bc_2_7_012_classify_quota_exceeded_disk_full_prefix() {
+        use std::io::ErrorKind;
+        let os_err = std::io::Error::from(ErrorKind::QuotaExceeded).to_string();
+        let msg = classify_write_error(
+            ErrorKind::QuotaExceeded,
+            "/output/report.pdf",
+            "/output",
+            &os_err,
+        );
+        assert!(
+            msg.starts_with("Disk full: not enough space to write /output/report.pdf:"),
+            "QuotaExceeded must produce \
+             'Disk full: not enough space to write <dest>:' prefix; got: {msg}"
+        );
+        assert!(
+            msg.contains("Free up disk space and try again."),
+            "QuotaExceeded must include remediation hint; got: {msg}"
+        );
+        assert!(
+            msg.contains(&os_err),
+            "QuotaExceeded must include the OS error string '{os_err}'; got: {msg}"
+        );
+    }
+
+    #[test]
+    fn test_bc_2_7_012_classify_permission_denied_perm_prefix() {
+        use std::io::ErrorKind;
+        let os_err = std::io::Error::from(ErrorKind::PermissionDenied).to_string();
+        let msg = classify_write_error(
+            ErrorKind::PermissionDenied,
+            "/output/report.pdf",
+            "/output",
+            &os_err,
+        );
+        // BC-2.7.012 v1.3.103: parenthetical `(writing <dest>)` added after <dir>.
+        assert!(
+            msg.starts_with("Permission denied: cannot write to /output (writing"),
+            "PermissionDenied must produce \
+             'Permission denied: cannot write to <dir> (writing' prefix; got: {msg}"
+        );
+        assert!(
+            msg.contains("Check directory permissions and try again."),
+            "PermissionDenied must include remediation hint; got: {msg}"
+        );
+        assert!(
+            msg.contains(&os_err),
+            "PermissionDenied must include the OS error string '{os_err}'; got: {msg}"
+        );
+        // BC-2.7.012 v1.3.103 / P9-001: dest_display must appear in message.
+        assert!(
+            msg.contains("/output/report.pdf"),
+            "PermissionDenied must include dest_display '/output/report.pdf'; got: {msg}"
+        );
+    }
+
+    #[test]
+    fn test_bc_2_7_012_classify_read_only_filesystem_perm_prefix() {
+        use std::io::ErrorKind;
+        let os_err = std::io::Error::from(ErrorKind::ReadOnlyFilesystem).to_string();
+        let msg = classify_write_error(
+            ErrorKind::ReadOnlyFilesystem,
+            "/output/report.pdf",
+            "/output",
+            &os_err,
+        );
+        // BC-2.7.012 v1.3.103: parenthetical `(writing <dest>)` added after <dir>.
+        assert!(
+            msg.starts_with("Permission denied: cannot write to /output (writing"),
+            "ReadOnlyFilesystem must produce \
+             'Permission denied: cannot write to <dir> (writing' prefix; got: {msg}"
+        );
+        assert!(
+            msg.contains("Check directory permissions and try again."),
+            "ReadOnlyFilesystem must include remediation hint; got: {msg}"
+        );
+        assert!(
+            msg.contains(&os_err),
+            "ReadOnlyFilesystem must include the OS error string '{os_err}'; got: {msg}"
+        );
+        // BC-2.7.012 v1.3.103 / P9-001: dest_display must appear in message.
+        assert!(
+            msg.contains("/output/report.pdf"),
+            "ReadOnlyFilesystem must include dest_display '/output/report.pdf'; got: {msg}"
+        );
+    }
+
+    #[test]
+    fn test_bc_2_7_012_classify_generic_fallback() {
+        use std::io::ErrorKind;
+        let os_err = std::io::Error::from(ErrorKind::Other).to_string();
+        let msg = classify_write_error(ErrorKind::Other, "/output/report.pdf", "/output", &os_err);
+        assert!(
+            msg.starts_with("Failed to write /output/report.pdf:"),
+            "Generic fallback must produce 'Failed to write <dest>:' prefix; got: {msg}"
+        );
+        assert!(
+            msg.contains(&os_err),
+            "Generic fallback must include the OS error string '{os_err}'; got: {msg}"
+        );
+        assert!(
+            msg.ends_with('.'),
+            "Generic fallback message must end with '.'; got: {msg}"
+        );
+        // Generic fallback must NOT include the discriminated remediation hints.
+        assert!(
+            !msg.contains("Free up disk space"),
+            "Generic fallback must NOT include 'Free up disk space'; got: {msg}"
+        );
+        assert!(
+            !msg.contains("Check directory permissions"),
+            "Generic fallback must NOT include 'Check directory permissions'; got: {msg}"
+        );
+    }
+
+    // FIX-F5-010: write_error_display_strings mutant-killing tests.
+    //
+    // Mutant 1 ("delete ! in stream_to_file", line 668): changes
+    //   `.filter(|d| !d.as_os_str().is_empty())`
+    //   to `.filter(|d| d.as_os_str().is_empty())`.
+    //   - Normal path ("out/dir/file.txt"): non-empty parent is REJECTED by the mutated
+    //     filter (is_empty() → false → filter drops it), so unwrap_or falls to "." — wrong.
+    //   - Bare filename ("file.txt"): empty parent is ACCEPTED by the mutated filter
+    //     (is_empty() → true → filter keeps it), so .map returns "" — wrong.
+    //
+    // Mutant 2 ("replace match guard !d.as_os_str().is_empty() with true", line 672):
+    //   changes `Some(d) if !d.as_os_str().is_empty()` to `Some(d) if true`.
+    //   - Bare filename: Some("") now matches first arm, dest becomes "/" + fname — wrong.
+    //   - Normal path: arm already matched correctly (non-empty parent), no observable change.
+    //
+    // The two tests together kill both mutants by pinning exact output for both cases.
+
+    #[test]
+    fn test_write_error_display_strings_normal_path_kills_mutant1() {
+        // Non-empty parent "out/dir": the filter and guard both pass in correct code.
+        // Mutant 1 (! deleted): filter rejects "out/dir" (not empty) → dir falls to "."
+        // → assertion `dir == "out/dir"` fails, killing the mutant.
+        let path = std::path::Path::new("out/dir/file.txt");
+        let (dir, dest) = write_error_display_strings(path);
+        assert_eq!(
+            dir, "out/dir",
+            "non-empty parent must be used verbatim as dir; mutant 1 would yield '.'"
+        );
+        assert!(
+            dest.starts_with("out/dir"),
+            "dest must start with the parent directory; got: {dest}"
+        );
+        assert!(
+            dest.contains("file.txt"),
+            "dest must contain the filename portion; got: {dest}"
+        );
+    }
+
+    #[test]
+    fn test_write_error_display_strings_bare_filename_kills_both_mutants() {
+        // Bare filename "file.txt": Path::parent() → Some("") (empty component).
+        // Correct: dir=".", dest="file.txt".
+        //
+        // Mutant 1 (! deleted): empty parent is ACCEPTED by mutated filter
+        //   (d.as_os_str().is_empty() → true) → .map returns "" → dir="" ≠ "." → caught.
+        //
+        // Mutant 2 (guard replaced with true): Some("") matches first arm →
+        //   dest = format!("{}{}file.txt", "", MAIN_SEPARATOR) = "/file.txt" on Unix,
+        //   "\file.txt" on Windows — either way dest ≠ "file.txt" → caught.
+        let path = std::path::Path::new("file.txt");
+        let (dir, dest) = write_error_display_strings(path);
+        assert_eq!(
+            dir, ".",
+            "bare filename must fall back to '.'; mutant 1 (! deleted) would yield ''"
+        );
+        assert_eq!(
+            dest, "file.txt",
+            "bare filename dest must be just the filename with no leading separator; \
+             mutant 2 (guard=true) would prepend the path separator"
         );
     }
 }

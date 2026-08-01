@@ -15,6 +15,53 @@ use serde::{Deserialize, Serialize};
 use crate::api::client::JiraClient;
 use crate::error::JrError;
 
+// ---------------------------------------------------------------------------
+// FIX-576-DL: accept both string and integer id from attachment metadata GET
+// ---------------------------------------------------------------------------
+
+/// Deserialize a field that may arrive as either a JSON string (`"10008"`) or a
+/// JSON integer (`10008`), coercing both to `String`.
+///
+/// **Why this exists (mock-vs-live drift, run 30031724733):**
+/// `GET /rest/api/3/attachment/{id}` (metadata endpoint) returns `"id"` as an
+/// **integer** on live Jira Cloud, while `GET /rest/api/3/issue/{key}?fields=attachment`
+/// (issue-fields list endpoint) returns `"id"` as a **string**.  The S-576-2 tests
+/// mocked both endpoints with string IDs; this divergence was not discovered until the
+/// first live validation run.  The deserializer accepts either form without breaking
+/// existing string-id mocks or the `AttachmentObject` list path.
+fn deserialize_string_or_int_as_string<'de, D>(deserializer: D) -> Result<String, D::Error>
+where
+    D: serde::Deserializer<'de>,
+{
+    use serde::de::{self, Visitor};
+    struct StringOrIntVisitor;
+
+    impl<'de> Visitor<'de> for StringOrIntVisitor {
+        type Value = String;
+
+        fn expecting(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+            f.write_str("a string or integer attachment id")
+        }
+
+        // Three arms only: serde_json dispatches strings to visit_str (never
+        // visit_string), and valid Jira IDs always fit u64/i64 (u128/i128 are
+        // unreachable and their presence only multiplies mutant targets).
+        fn visit_str<E: de::Error>(self, v: &str) -> Result<String, E> {
+            Ok(v.to_owned())
+        }
+
+        fn visit_u64<E: de::Error>(self, v: u64) -> Result<String, E> {
+            Ok(v.to_string())
+        }
+
+        fn visit_i64<E: de::Error>(self, v: i64) -> Result<String, E> {
+            Ok(v.to_string())
+        }
+    }
+
+    deserializer.deserialize_any(StringOrIntVisitor)
+}
+
 /// A Jira attachment object as returned in `fields.attachment[]`.
 ///
 /// All fields are `pub` — `tests/attachment_upload.rs::test_vp_576_004_*`
@@ -72,9 +119,19 @@ struct IssueAttachmentFields {
 /// All content fields are `Option` for partial-struct tolerance (P26-003):
 /// the Jira attachment metadata endpoint may omit fields for deleted or
 /// restricted attachments; missing fields MUST NOT abort the download.
+///
+/// **`id` wire-type note (FIX-576-DL, run 30031724733):** live Jira Cloud returns
+/// `id` as a JSON **integer** here (e.g. `10008`), while the issue-fields list
+/// endpoint returns it as a **string**.  `deserialize_string_or_int_as_string`
+/// normalises both to `String`; do not remove this attribute.
 #[derive(Debug, Clone, serde::Deserialize)]
 pub struct AttachmentMetadata {
-    /// Attachment ID (always present in practice).
+    /// Attachment ID.
+    ///
+    /// Accepts both JSON string (`"10008"`) and JSON integer (`10008`) —
+    /// live Jira Cloud returns an integer from this endpoint; mocks and the
+    /// issue-fields list path return a string.  See `FIX-576-DL`.
+    #[serde(deserialize_with = "deserialize_string_or_int_as_string")]
     pub id: String,
 
     /// Original filename as stored by Jira.
@@ -141,28 +198,32 @@ impl JiraClient {
     /// all `Option` — missing fields (e.g., for deleted attachments) do NOT abort.
     ///
     /// Error mapping (BC-2.7.012):
-    /// - 404 → `JrError::UserError` (exit 64): attachment not found.
+    /// - 404 → `JrError::ApiError { status: 404, message }` (body preserved).
+    ///   **Callers** convert to `JrError::UserError` (exit 64) with call-site-specific
+    ///   formatting per BC-2.7.012 body-surfacing asymmetry (F5-R3-001):
+    ///   - `handle_single_download` (download path): canonical-only, no body.
+    ///   - `handle_attachment_delete` interactive gate (DEC-168): canonical + `\n{body}`.
+    ///   - bulk dry-run `Err(_)` fallback: body irrelevant (id-only row).
     /// - 401 → `JrError::NotAuthenticated` (exit 2): handled by client.
-    /// - 403 → `JrError::ApiError` (exit 1): `"Permission denied: cannot access attachment <id>."`.
+    /// - 403 → `JrError::ApiError { status: 403 }` (exit 1):
+    ///   `"Permission denied: cannot access attachment <id>."`.
     /// - 5xx / network → `JrError::ApiError` / `JrError::NetworkError` (exit 1).
     pub async fn get_attachment_metadata(&self, id: &str) -> Result<AttachmentMetadata> {
         let path = format!("/rest/api/3/attachment/{}", id);
         let result = self.get::<AttachmentMetadata>(&path).await;
         match result {
             Ok(meta) => Ok(meta),
-            Err(e) => match e.downcast_ref::<JrError>() {
-                Some(JrError::ApiError { status, .. }) if *status == 404 => Err(
-                    JrError::UserError(format!("Attachment {id} not found or not accessible."))
-                        .into(),
-                ),
-                Some(JrError::ApiError { status, .. }) if *status == 403 => {
-                    Err(JrError::ApiError {
-                        status: 403,
-                        message: format!("Permission denied: cannot access attachment {id}."),
-                    }
-                    .into())
+            Err(e) => match e.downcast::<JrError>() {
+                Ok(JrError::ApiError { status: 403, .. }) => Err(JrError::ApiError {
+                    status: 403,
+                    message: format!("Permission denied: cannot access attachment {id}."),
                 }
-                _ => Err(e),
+                .into()),
+                // 404: pass through ApiError with raw Jira body intact so call sites
+                // can choose whether to surface the body (DEC-168 delete path) or emit
+                // canonical-only text (download path, BC-2.7.012).
+                Ok(jr_err) => Err(jr_err.into()),
+                Err(other) => Err(other),
             },
         }
     }
@@ -213,14 +274,17 @@ impl JiraClient {
                     .file_name()
                     .map(|n| n.to_string_lossy().into_owned())
                     .unwrap_or_else(|| path.to_string_lossy().into_owned());
-                // SEC-576-004: strip CR, LF, and NUL from the filename before
-                // embedding in a Content-Disposition header value to prevent
-                // header-injection (CWE-93). These three chars are the only ones
-                // that can break MIME boundary framing or inject a new header line.
+                // SEC-576-004: strip CR, LF, NUL, double-quote, and backslash from the
+                // filename before embedding in a Content-Disposition header value to
+                // prevent header-injection (CWE-93). CR/LF/NUL can inject new header
+                // lines; '"' can break the RFC 2616 quoted-string parameter boundary,
+                // allowing subsequent data to be misread as separate header parameters;
+                // '\' is the RFC 2616 quoted-string escape character — a stray '\' lets
+                // a parser misread the next character as an escaped sequence (CWE-93).
                 let safe_name: String = raw_name
                     .chars()
                     .map(|c| {
-                        if matches!(c, '\r' | '\n' | '\0') {
+                        if matches!(c, '\r' | '\n' | '\0' | '"' | '\\') {
                             '_'
                         } else {
                             c
@@ -422,15 +486,15 @@ impl JiraClient {
 mod tests {
     // SEC-576-004 / CWE-93 unit pins for the safe_name transformation guard.
     //
-    // The guard lives inline in `upload_attachments` (~line 211):
-    //   raw_name.chars().map(|c| if matches!(c, '\r' | '\n' | '\0') { '_' } else { c }).collect()
+    // The guard lives inline in `upload_attachments`:
+    //   raw_name.chars().map(|c| if matches!(c, '\r' | '\n' | '\0' | '"' | '\\') { '_' } else { c }).collect()
     //
     // Mirrored here as a free function so the transformation is testable without
     // spawning a subprocess or needing a real file on disk.
     fn safe_name(raw: &str) -> String {
         raw.chars()
             .map(|c| {
-                if matches!(c, '\r' | '\n' | '\0') {
+                if matches!(c, '\r' | '\n' | '\0' | '"' | '\\') {
                     '_'
                 } else {
                     c
@@ -470,30 +534,76 @@ mod tests {
         assert_eq!(safe_name("a\0b\0c"), "a_b_c");
     }
 
-    /// Double-quote ('"') is NOT sanitized by safe_name — it passes through unchanged.
+    /// Double-quote (`"`) is mapped to `_` by the SEC-576-004 guard.
     ///
-    /// SPEC vs IMPL NOTE:
-    /// AC-018 lists double-quote as a potential injection concern for the
-    /// Content-Disposition `filename=` quoted-string parameter. The current guard
-    /// covers only \r, \n, \0 (SEC-576-004 comment: "only chars that can break MIME
-    /// boundary framing or inject a new header line"). A raw '"' in the filename
-    /// affects only the quoted-string boundary, which reqwest's
-    /// `Part::file_name()` encoding is responsible for handling (percent-encoding
-    /// or `filename*` RFC 5987 form). If reqwest emits a raw '"' into
-    /// Content-Disposition without escaping, a filename like `a"b.txt` could
-    /// break the quoted-string parameter; this is a residual risk tracked at
-    /// AC-018 / SEC-576-004.
-    ///
-    /// This test pins the CURRENT behavior (pass-through) as a regression
-    /// anchor. If safe_name is ever extended to cover '"', update this test
-    /// and the integration test in tests/attachment_upload.rs.
+    /// A raw `"` in Content-Disposition `filename=` breaks the RFC 2616 quoted-string
+    /// parameter boundary, allowing parsers to misread subsequent data as a new header
+    /// parameter (CWE-93). Replaced by `test_f5_r1_006_safe_name_double_quote_mapped_to_underscore`
+    /// (F5-R1-006 fix); the old "pass-through" pin is superseded.
     #[test]
-    fn test_sec_576_004_safe_name_double_quote_not_in_guard() {
-        // '"' is NOT mapped; passes through unchanged.
-        assert_eq!(safe_name("file\"name.txt"), "file\"name.txt");
-        assert_eq!(safe_name("\"leading"), "\"leading");
-        assert_eq!(safe_name("trailing\""), "trailing\"");
-        assert_eq!(safe_name("mid\"dle"), "mid\"dle");
+    fn test_f5_r1_006_safe_name_double_quote_mapped_to_underscore() {
+        assert_eq!(
+            safe_name("file\"name.txt"),
+            "file_name.txt",
+            "F5-R1-006: '\"' must be mapped to '_' in SEC-576-004 guard"
+        );
+        assert_eq!(
+            safe_name("\"leading"),
+            "_leading",
+            "F5-R1-006: leading '\"' must become '_'"
+        );
+        assert_eq!(
+            safe_name("trailing\""),
+            "trailing_",
+            "F5-R1-006: trailing '\"' must become '_'"
+        );
+        assert_eq!(
+            safe_name("a\"b\"c"),
+            "a_b_c",
+            "F5-R1-006: multiple '\"' must each become '_'"
+        );
+    }
+
+    /// F5-R2-002: backslash (`\`) in a filename must be mapped to underscore (`_`)
+    /// by the SEC-576-004 guard.
+    ///
+    /// A raw `\` in Content-Disposition `filename=` is the RFC 2616 quoted-string
+    /// escape character — a stray `\` lets a parser misread the next character as
+    /// an escaped sequence, potentially breaking the quoted-string boundary (CWE-93).
+    /// On Windows, `\` is also a path-component separator, so an unguarded `\` in
+    /// a server-supplied filename could smuggle a traversal component into the
+    /// `filename=` value.
+    ///
+    /// GREEN (FIX-F5-007): guard extended to `matches!(c, '\r' | '\n' | '\0' | '"' | '\\')` —
+    /// `safe_name("file\\name.txt")` now returns `"file_name.txt"` as required.
+    #[test]
+    fn test_f5_r2_002_safe_name_backslash_mapped_to_underscore() {
+        assert_eq!(
+            safe_name("file\\name.txt"),
+            "file_name.txt",
+            "F5-R2-002: '\\' must be mapped to '_' in SEC-576-004 guard"
+        );
+        assert_eq!(
+            safe_name("\\leading"),
+            "_leading",
+            "F5-R2-002: leading '\\' must become '_'"
+        );
+        assert_eq!(
+            safe_name("trailing\\"),
+            "trailing_",
+            "F5-R2-002: trailing '\\' must become '_'"
+        );
+        assert_eq!(
+            safe_name("a\\b\\c"),
+            "a_b_c",
+            "F5-R2-002: multiple '\\' must each become '_'"
+        );
+        // Mixed with other guarded chars — all must be replaced.
+        assert_eq!(
+            safe_name("a\\\rb"),
+            "a__b",
+            "F5-R2-002: '\\' and '\\r' each become '_'"
+        );
     }
 
     /// Benign filenames are unmodified (regression guard — safe_name must not
@@ -508,5 +618,57 @@ mod tests {
         );
         assert_eq!(safe_name(""), "");
         assert_eq!(safe_name("ascii_only-123.tar.gz"), "ascii_only-123.tar.gz");
+    }
+
+    // -----------------------------------------------------------------------
+    // Unit pins for deserialize_string_or_int_as_string (FIX-576-DL)
+    //
+    // These tests deserialize AttachmentMetadata directly and assert the
+    // coerced id VALUE — not just process-level exit codes — so that
+    // body-replacement mutants in visit_str/visit_u64/visit_i64 are killed.
+    // -----------------------------------------------------------------------
+
+    use super::AttachmentMetadata;
+
+    /// Live Jira Cloud returns `"id"` as a JSON integer (e.g. 10008).
+    /// visit_u64 must coerce it to the string "10008".
+    #[test]
+    fn test_fix_576_dl_integer_id_deserializes_to_string() {
+        let meta: AttachmentMetadata =
+            serde_json::from_str(r#"{"id": 10008}"#).expect("should deserialize");
+        assert_eq!(meta.id, "10008");
+    }
+
+    /// String IDs (e.g. from the issue-fields list endpoint) remain unchanged.
+    /// visit_str must return the string as-is.
+    #[test]
+    fn test_fix_576_dl_string_id_deserializes_unchanged() {
+        let meta: AttachmentMetadata =
+            serde_json::from_str(r#"{"id": "10009"}"#).expect("should deserialize");
+        assert_eq!(meta.id, "10009");
+    }
+
+    /// Negative integer IDs are hypothetically valid; visit_i64 must coerce
+    /// them to their string representation.
+    #[test]
+    fn test_fix_576_dl_negative_integer_id_deserializes_to_string() {
+        let meta: AttachmentMetadata =
+            serde_json::from_str(r#"{"id": -1}"#).expect("should deserialize");
+        assert_eq!(meta.id, "-1");
+    }
+
+    /// A non-string, non-integer id (bool) must produce a deserialization
+    /// error whose message cites the expected type from `expecting()`.
+    /// This pins the `expecting()` body: a mutant that empties it produces
+    /// an error message without the expected-type substring, failing here.
+    #[test]
+    fn test_fix_576_dl_bool_id_is_deserialization_error() {
+        let result: Result<AttachmentMetadata, _> = serde_json::from_str(r#"{"id": true}"#);
+        let err = result.expect_err("bool id should fail deserialization");
+        assert!(
+            err.to_string()
+                .contains("a string or integer attachment id"),
+            "error message must cite the expected type from expecting(); got: {err}"
+        );
     }
 }
