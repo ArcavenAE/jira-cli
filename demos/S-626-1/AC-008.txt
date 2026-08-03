@@ -1,4 +1,4 @@
-# Head: 6d73b3ef  Captured: 2026-08-03  Status: re-stamped (Round 6 — head-only; delta 6d73b3ef was test-only; Cargo.toml/Cargo.lock unchanged)
+# Head: 9312f11f  Captured: 2026-08-03  Status: re-stamped (Round 7 — head-only; Cargo.toml/Cargo.lock unchanged by 9312f11f; MSRV check not re-run (ci.yml test step change + tests/ci_gate_completeness.rs; cargo check --all-features omits --all-targets so test-file changes are out of scope))
 
 $ cd /Users/zious/Documents/GITHUB/jira-cli/.worktrees/S-626-1 && grep -n "comfy-table" Cargo.toml
 24:comfy-table = "=7.2.1"

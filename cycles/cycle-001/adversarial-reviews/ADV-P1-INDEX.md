@@ -1,27 +1,27 @@
 ---
 document_type: adversarial-review-index
 level: ops
-version: "1.7"
+version: "1.8"
 status: in-review
 producer: adversary
-timestamp: 2026-08-03T22:00:00Z
+timestamp: 2026-08-03T23:00:00Z
 phase: "5"
-pass: 17
+pass: 18
 inputs: [.factory/stories/S-626-1.md, .factory/stories/S-641-1.md, .factory/stories/S-MAINT-576-HYG-1.md, .factory/stories/STORY-INDEX.md, .github/workflows/ci.yml, CLAUDE.md, src/cli/board.rs, tests/team_column_parity.rs]
 traces_to: .factory/stories/S-626-1.md
-total_findings: 154
-severity_distribution: { CRIT: 0, HIGH: 17, MED: 64, LOW: 61, INFO: 12 }
+total_findings: 164
+severity_distribution: { CRIT: 0, HIGH: 17, MED: 71, LOW: 64, INFO: 12 }
 story: S-626-1
 cycle: cycle-001
-feature_head: 6d73b3ef (fix-round-5 product commit; pass-15 ran against c88374b4)
+feature_head: 9312f11f (fix-round-6 product commit; pass-18 ran against 9312f11f)
 pr: 667
 basis: TRUE ADVERSARY AGENT (not a DEC-190 substitute)
-convergence: 0 of 3 (Step 4.5 window — DEC-199 GRIND to 3/3 CLEAN; DEC-209 ROUND 5 + PASSES 18/19/20 AUTHORIZED; S-626-1 pass-15 NOT CLEAN (window 0/1); passes 16/17 NOT RUN — superseded by round-5 ruling; ZERO HIGH ten consecutive passes; TREND REVERSAL 10→15 findings (8 round-4-attributable); ceiling breach authorized toward 20)
+convergence: 0 of 3 (Step 4.5 window — DEC-199 GRIND to 3/3 CLEAN; DEC-209 ROUND 5 + PASSES 18/19/20 AUTHORIZED; S-626-1 pass-18 NOT CLEAN (window 0/1); passes 16/17 NOT RUN — superseded by round-5 ruling; F-07 FIXED IN-CYCLE 9312f11f (DEC-211); passes 19/20 authorized (DEC-212); ZERO HIGH eleven consecutive passes; ceiling breach authorized toward 20)
 void_spawns: 5 (passes 6/7/8 first-attempt background subagents; pass-9 isolation breach; pass-11 isolation breach)
 not_run: 2 (passes 16/17 — superseded by round-5 ruling per DEC-209; see s-626-1-adversary-pass-16.md and s-626-1-adversary-pass-17.md)
 ---
 
-# Adversarial Review Index — S-626-1 (SOH-DX-1) Passes 1..17
+# Adversarial Review Index — S-626-1 (SOH-DX-1) Passes 1..18
 
 ## Pass 1 Finding Catalog
 
@@ -210,12 +210,13 @@ ADV-P4-INFO-005   --informs--> S-641-1 AC-2 (complete let-chain detection form s
 | 15 | NOT CLEAN | 0 | 6 | 9 | 0 | 0 | NO | WINDOW-ELIGIBLE (isolation CLEAN); ZERO HIGH — tenth consecutive; **TREND REVERSAL 9→15 findings (8 round-4-attributable)**; window 0/1; passes 16/17 NOT RUN per DEC-209 |
 | 16 | NOT RUN | — | — | — | — | — | — | NOT RUN — superseded by round-5 ruling (DEC-209); stub at s-626-1-adversary-pass-16.md |
 | 17 | NOT RUN | — | — | — | — | — | — | NOT RUN — superseded by round-5 ruling (DEC-209); stub at s-626-1-adversary-pass-17.md |
+| 18 | NOT CLEAN | 0 | 7 | 3 | 0 | 1 ([process-gap]) | NO | WINDOW-ELIGIBLE (isolation CLEAN); ZERO HIGH — ELEVENTH consecutive; F-07 FIXED IN-CYCLE 9312f11f (DEC-211); 7 of 10 round-5-attributable; window 0/1 of 18/19/20; passes 19/20 authorized (DEC-212) |
 
-**Overall convergence: 0 of 3 (Step 4.5 — 15 recorded passes + 2 NOT RUN (16/17); 5 VOID [3 dispatch + 2 isolation]; DEC-199: GRIND to 3/3 CLEAN; DEC-209: ROUND 5 + PASSES 18/19/20 AUTHORIZED; S-626-1 pass-15 NOT CLEAN (window 0/1); ZERO HIGH ten consecutive passes; TREND REVERSAL 9→15 (8 round-4-attributable); ceiling breach authorized toward 20)**
+**Overall convergence: 0 of 3 (Step 4.5 — 16 recorded passes + 2 NOT RUN (16/17); 5 VOID [3 dispatch + 2 isolation]; DEC-199: GRIND to 3/3 CLEAN; DEC-209: ROUND 5 + PASSES 18/19/20 AUTHORIZED; S-626-1 pass-18 NOT CLEAN (window 0/1); F-07 FIXED IN-CYCLE 9312f11f (DEC-211); passes 19/20 authorized (DEC-212); ZERO HIGH eleven consecutive passes; ceiling breach authorized toward 20)**
 
-**SEVERITY DECAY RECORDED (THEN REVERSED):** Window 9/10/11 carried 4 HIGH each. Window 12/13/14 carries ZERO HIGH. Pass-15 carries ZERO HIGH but findings rose from 9 to 15 — TREND REVERSAL. 8 of 15 findings are round-4-attributable (6 in newly-written prose, 2 propagation misses). Code is 0-defect across ten consecutive passes (6–15, minus VOID passes 9+11). **THREE CONSECUTIVE REVIEWERS (passes 13, 14, 15) independently prescribed the same mechanical remedy: a STORY-INDEX coherence guard and a BC sub-element citation guard.** Fix round 5 applied; next window at passes 18/19/20.
+**SEVERITY DECAY RECORDED (THEN REVERSED):** Window 9/10/11 carried 4 HIGH each. Window 12/13/14 carries ZERO HIGH. Passes 15 and 18 carry ZERO HIGH but 15 was a TREND REVERSAL (9→15). Pass-18 returned to 10 findings; still NOT CLEAN. Code is 0-defect across eleven consecutive passes (6–15+18, minus VOID passes 9+11). **THREE CONSECUTIVE REVIEWERS (passes 13, 14, 15) independently prescribed the same mechanical remedy: a STORY-INDEX coherence guard and a BC sub-element citation guard.** Fix round 5 applied; pass-18 confirmed 15 of 15 pass-15 findings FIXED but added 10 new findings (7 round-5-attributable). Fix round 6 applied 3 of 10 pass-18 findings; next window at passes 19/20 against head 9312f11f.
 
-**META-PATTERN CONFIRMED FOURTH TIME:** Pass-15 independently re-verified that fix round 4 executed its mechanical mandate essentially perfectly (zero fidelity defects across all transcripts) but failed its class-sweep mandate for the fourth consecutive round. 8 of 15 pass-15 findings are attributable to fix round 4's own prose — 6 newly-introduced plus 2 propagation misses.
+**META-PATTERN CONFIRMED FIFTH TIME:** Pass-18 independently re-verified that fix round 5 executed its mechanical mandate essentially perfectly (zero fidelity defects across all transcripts) but failed sweep-to-class at seven sites. 7 of 10 pass-18 findings are attributable to fix round 5's own prose or partial propagation. **FIRST EVIDENCE OF IMPROVEMENT: round-6's grep-derived file set caught S-640-1 and S-MUTANTS-EXAMINE-GLOBS-1 unprompted, exceeding the orchestrator's supplied table. Codify: fix-round sweep MUST derive file list from grep, not from orchestrator's table.**
 
 **Findings accumulator (running total):**
 - Passes 1–5: 36 total (HIGH: 0, MED: 11, LOW: 16, INFO: 9)
@@ -230,7 +231,8 @@ ADV-P4-INFO-005   --informs--> S-641-1 AC-2 (complete let-chain detection form s
 - Pass 14 adds: +9 (HIGH: 0, MED: 4, LOW: 5, INFO: 0) [WINDOW-ELIGIBLE; ZERO HIGH]
 - Pass 15 adds: +15 (HIGH: 0, MED: 6, LOW: 9, INFO: 0) [WINDOW-ELIGIBLE; ZERO HIGH; TREND REVERSAL]
 - Passes 16/17: +0 (NOT RUN — superseded by round-5 ruling per DEC-209)
-- **Grand total: 154 findings (CRIT: 0, HIGH: 17, MED: 64, LOW: 61, INFO: 12)**
+- Pass 18 adds: +10 (HIGH: 0, MED: 7, LOW: 3, INFO: 0) [WINDOW-ELIGIBLE; ZERO HIGH; F-07 FIXED IN-CYCLE]
+- **Grand total: 164 findings (CRIT: 0, HIGH: 17, MED: 71, LOW: 64, INFO: 12)**
 
 ---
 
@@ -605,3 +607,33 @@ ADV-P7-MED-002    --fixed-by--> bc-02-issue-read.md INV-READ-009 behavioral rest
 ADV-P6-HIGH-003 == ADV-P7-HIGH-002 == ADV-P8-OBS-001 (same gap; pass-8 demoted via S-641-1 ACs)
 [All other pass 6/7/8 findings corroborate or extend prior passes]
 ```
+
+---
+
+## Pass 18 Finding Catalog
+
+| ID | Severity | Classification | Title | Status | Notes |
+|----|----------|----------------|-------|--------|-------|
+| ADV-P18-MED-001 | MEDIUM | GAP · partial-fix-normative-surface | S-MAINT-576-HYG-1 AC-4 still mandates total_stories re-increment that Task 4 was re-scoped to VERIFY | OPEN — pending fix round 7 | Normative surface conflict; AC-4 overrides Task 4 note |
+| ADV-P18-MED-002 | MEDIUM | GAP · sweep-to-class miss | BC-5.3.003 Source field omits new board-view test; AC-9 heading trace omits BC-5.3.003 | OPEN — pending fix round 7 | Fix round 5 swept BC-5.3.002 but missed BC-5.3.003 |
+| ADV-P18-MED-003 | MEDIUM | GAP · sweep-to-class miss | STORY-INDEX S-626-1 row left at v1.10; no BC-5.3.003 anchor recorded | FIXED — fix round 6 (STORY-INDEX v1.5.56; S-626-1 v1.12 backfilled; BC-5.3.003 anchor) | |
+| ADV-P18-MED-004 | MEDIUM | GAP · version-bump omission | Round-5 edits to S-641-1 and S-MAINT-576-HYG-1 not version-bumped; two disjoint change-sets under one version | OPEN — pending fix round 7 | S-641-1 v0.7 carries two disjoint rounds |
+| ADV-P18-MED-005 | MEDIUM | evidence-integrity · orchestrator-authored false justification | Demo clippy/fmt justification "test-only delta, no src/ changes" — false (--all-targets consumes tests/) | FIXED — fix round 6 (demos/ re-stamped at 9312f11f; false justification deleted; genuine re-run output captured) | ORCHESTRATOR-CAUSED |
+| ADV-P18-MED-006 | MEDIUM | GAP · partial-file-list · persistent | S-641-1 files_modified omits Cargo.toml; AC-3 + Architecture Mapping + File Structure Requirements all modify it | OPEN — pending fix round 7 (survived four rounds) | |
+| ADV-P18-MED-007 | MEDIUM | CI-integrity · [process-gap] | ci.yml test job exits 0 when zero tests discovered — no floor asserted (MOST CONSEQUENTIAL) | FIXED IN-CYCLE — product commit 9312f11f (DEC-211) | POL-11; empirically confirmed reachable |
+| ADV-P18-LOW-001 | LOW | GAP · prose-defect · round-5-injected | BC-5.3.003 scope row in S-626-1 claims AC-9 "rewrote" unwrap_or_else — byte-identical except rustfmt re-indentation | OPEN — pending fix round 7 | |
+| ADV-P18-LOW-002 | LOW | GAP · prose-defect · round-5-injected | S-641-1 AC-2 README-badge carve-out unanchored on right — substring match admits MSRV-1.85.3 | OPEN — pending fix round 7 | |
+| ADV-P18-LOW-003 | LOW | evidence-integrity · transcript-fidelity | INDEX.md Per-AC summary row for AC-9 states "2 new tests" — three other sites say three | OPEN — pending fix round 7 | |
+
+## Pass 18 Isolation Note
+
+**CLEAN.** No banned-path file read. No prior adversary pass artifacts accessed. Incidental exposure: banned-path filenames appeared as quoted text INSIDE in-perimeter files; no content read. Self-disclosed.
+
+## Pass 18 Summary
+
+- **Verdict:** NOT CLEAN — 0 HIGH + 7 MEDIUM + 3 LOW; **ZERO HIGH** (ELEVENTH consecutive); zero code defects; F-07 FIXED IN-CYCLE (DEC-211); 7 of 10 round-5-attributable; window 0/1 of 18/19/20
+- **Post-capture routing:** F-07 (MED-007) FIXED IN-CYCLE product commit 9312f11f; F-05 (MED-005) FIXED fix round 6; F-03 (MED-003) FIXED fix round 6; F-01/F-02/F-04/F-06/F-08/F-09/F-10 OPEN — pending fix round 7
+- **Convergence:** 0/3 — window 0/1; passes 19/20 authorized (DEC-212); sweep-to-class failure FIFTH consecutive round; FIRST EVIDENCE OF IMPROVEMENT (grep-derived sweep caught S-640-1 + S-MUTANTS-EXAMINE-GLOBS-1 unprompted)
+- **Detail artifact:** `s-626-1-adversary-pass-18.md`
+
+---

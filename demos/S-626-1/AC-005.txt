@@ -1,4 +1,4 @@
-# Head: 6d73b3ef  Captured: 2026-08-03  Status: re-stamped (Round 6 — head-only; delta 6d73b3ef was test-only; workflow files unchanged)
+# Head: 9312f11f  Captured: 2026-08-03  Status: re-stamped (Round 7 — head-only; sign-and-publish.yml, backfill-release.yml, release.yml unchanged by 9312f11f; all three rustup target add sites unaffected)
 
 $ cd /Users/zious/Documents/GITHUB/jira-cli/.worktrees/S-626-1 && grep -n "E0463\|rustup target add\|Ensure target" .github/workflows/sign-and-publish.yml
 61:      # the build fails with `error[E0463]: can't find crate for 'core'`.

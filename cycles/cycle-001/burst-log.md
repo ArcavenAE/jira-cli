@@ -8175,3 +8175,84 @@ DEC-204 remains UNADJUDICATED. AX23-001 remains PENDING.
 
 **Pipeline:** PAUSED — awaiting S-626-1 passes 18/19/20 on round-5-amended state (head 6d73b3ef).
 **STORY-INDEX:** v1.5.55. **trajectory-tail:** →0→0→0→0 (ZERO HIGH four consecutive: passes 12/13/14/15).
+
+---
+
+## Burst: ADVERSARY-18+FIX-ROUND-6 (2026-08-03)
+
+**Agents dispatched:** adversary (pass-18), state-manager (burst recording)
+**Files touched:**
+- `.factory/cycles/cycle-001/adversarial-reviews/s-626-1-adversary-pass-18.md` (NEW)
+- `.factory/cycles/cycle-001/adversarial-reviews/ADV-P1-INDEX.md` (v1.7→v1.8)
+- `.factory/stories/S-626-1.md` (v1.11→v1.12)
+- `.factory/stories/S-641-1.md` (v0.4→v0.5 — ci.yml line-drift sweep 3 sites)
+- `.factory/stories/S-MAINT-576-HYG-1.md` (STORY-TEMPLATE-DRIFT corrections)
+- `.factory/stories/STORY-INDEX.md` (v1.5.55→v1.5.56)
+- `.factory/demos/S-626-1/` (all 11 artifacts re-stamped to `9312f11f`)
+- `.factory/regression-state.json`
+
+**Versions bumped:**
+- `ADV-P1-INDEX.md` v1.7→v1.8
+- `S-626-1.md` v1.11→v1.12 (S-640-1.md ci.yml line-drift sweep in STORY-INDEX, S-MAINT-576-HYG-1 corrections)
+- `STORY-INDEX.md` v1.5.55→v1.5.56
+
+### Pass-18 Verdict
+
+**NOT CLEAN — 0 HIGH + 7 MEDIUM + 3 LOW; zero code defects; isolation CLEAN; window 0/1 of 18/19/20; ELEVENTH consecutive pass with zero code defects.**
+
+- F-07 (ADV-P18-MED-007): FIXED IN-CYCLE — product commit `9312f11f` adds zero-test floor + POL-11 guard + `tests/ci_gate_completeness.rs::test_verify_test_job_has_zero_test_floor` (DEC-211).
+- F-05 (ADV-P18-MED-005): FIXED — fix round 6 (demos/ genuinely re-run at `9312f11f`; false "test-only delta, no src/ changes" justification deleted).
+- F-03 (ADV-P18-MED-003): FIXED — fix round 6 (STORY-INDEX v1.5.56; S-626-1 row advanced to v1.12 with v1.11 changes backfilled; BC-5.3.003 anchor recorded).
+- F-01, F-02, F-04, F-06, F-08, F-09, F-10: OPEN — pending fix round 7.
+
+### Fix Round 6 Applied (already in worktree; uncommitted at burst start)
+
+**`stories/S-626-1.md`** (v1.11→v1.12) — ci.yml citations swept: `~:70`→`~:109` (msrv dtolnay pin, 5 sites), `~:112`→`~:151` (stable pin, 5 sites); test count 2344→2345 at two ACTIVE evidence sites (historical baselines at 2341/2343 preserved); CORRECTIONS v1.12 added to risk_mitigations.
+
+**`stories/S-641-1.md`** (v0.4→v0.5) — ci.yml citations swept: `~:60`→`~:99` (MSRV job name), `~:70`→`~:109` (toolchain/env) at 3 sites.
+
+**`stories/S-MAINT-576-HYG-1.md`** — STORY-TEMPLATE-DRIFT corrections; CORRECTIONS section added.
+
+**`stories/STORY-INDEX.md`** (v1.5.55→v1.5.56) — S-626-1 row backfilled: v1.11 changes added to row body (was only in last_updated), BC-5.3.003 anchor added; S-640-1 row advanced; S-MAINT-576-HYG-1 row corrections.
+
+**`stories/S-MUTANTS-EXAMINE-GLOBS-1.md`** — ci.yml `~195`→`~259` at 6 sites (grep-derived sweep; NOT in orchestrator's original table — caught by round-6's self-derived file list).
+
+**`demos/S-626-1/`** — F-05 CLOSED: all 11 artifacts re-stamped to `# Head: 9312f11f`; false "no src/ changes" justification deleted; genuine `cargo clippy --all-targets -- -D warnings` and `cargo fmt --all -- --check` re-run at `9312f11f` with real output captured; counts updated to 2345/0-failed/100-ignored across 103 binaries; AC-002/003/004 re-captured for +39 shift; new POL-11 floor-guard positive-path evidence block added.
+
+### Product Commit Recorded
+
+`9312f11f` on branch `ci/fix-toolchain-sha-msrv` — `ci: add zero-test floor + positive-coverage assertion to test job (POL-11)`. PR #667 remains OPEN and UNMERGED. Adds named `run:` step in test job + `tests/ci_gate_completeness.rs::test_verify_test_job_has_zero_test_floor`. Pushed fast-forward. CI re-triggered.
+
+### Decisions Recorded
+
+**DEC-211:** F-07 FIXED IN-CYCLE ON HUMAN RULING — the zero-test floor (ADV-P18-MED-007) was confirmed empirically reachable; floor `> 0` (positive-coverage, not absolute floor, to avoid maintenance burden); guard-proves-the-guard test mandatory. Human ruled fix in-cycle rather than defer to round 7.
+
+**DEC-212:** PASSES 19/20 AUTHORIZED — human authorized passes 19/20 to complete the 18/19/20 window. Continuing AUTHORIZED breach of DEC-191(d) ceiling. No re-baseline.
+
+### Drift Item Updates (ADVERSARY-18+FIX-ROUND-6)
+
+- **ORCHESTRATOR-PROPAGATED-FALSE-JUSTIFICATION** — NEW, HIGH, OPEN: orchestrator authored "test-only delta, no src/ changes" dispatched to demo-recorder; false (--all-targets consumes tests/). Same false-green class the story exists to eliminate, one layer up. Route: PROCESS — mandate: dispatch MUST NOT include non-verified justifications; demo-recorder MUST independently confirm all PASS claims.
+- **TEST-JOB-ZERO-TEST-FLOOR** — NEW, closed in-cycle: ci.yml test job exits 0 on zero test discovery. FIXED IN-CYCLE by 9312f11f (DEC-211). Added for completeness; closed before burst commit.
+- **STORY-TEMPLATE-DRIFT-BLOCKS-EDITS** — NEW, MEDIUM, OPEN: fix-round story edits (S-MAINT-576-HYG-1, S-641-1) failed to version-bump after content edits (ADV-P18-MED-004). Template MUST mandate: any content edit → version bump; STORY-INDEX row update → same-burst.
+- **FIX-ROUND-PARTIAL-PROPAGATION** — UPDATED (fifth consecutive round). Round-6's grep-derived file set EXCEEDED the orchestrator's supplied table, catching `S-640-1` and `S-MUTANTS-EXAMINE-GLOBS-1` unprompted. FIRST EVIDENCE OF IMPROVEMENT. Mitigation codified: sweep MUST derive file list from grep, not orchestrator's list. Remaining open: 7 of 10 pass-18 findings are still round-5-attributable (normalized after fix, just fewer).
+- **FIX-ROUND-INTRODUCES-DEFECTS-IN-NEW-PROSE** — UPDATED: round-5 injected 3 low-severity prose defects (ADV-P18-LOW-001: "rewrote"→"re-indented"; ADV-P18-LOW-002: badge carve-out unanchored; ADV-P18-LOW-003: INDEX.md "2 new tests"→"3 new tests"). Injection rate remains non-zero but all LOW severity this round.
+- **CITATION-GUARD-SRC-ONLY** — UPDATED: pass-18 added BC-5.3.003 Source miss (F-02) and AC-9 heading trace miss (F-02 second item). Scope extension confirmed: guard must cover story→BC sub-element references AND BC Source fields added mid-cycle.
+
+### Convergence Status Post-Burst
+
+0/3. 16 recorded passes (5 VOID: 3 dispatch + 2 isolation); passes 16/17 NOT RUN (superseded by DEC-209); 164 total findings. Pass-18 NOT CLEAN (window 0/1); zero HIGH ELEVENTH consecutive; F-07 FIXED IN-CYCLE 9312f11f. Fix round 6 applied. ADV-P1-INDEX v1.8.
+
+**Pipeline:** PAUSED — awaiting S-626-1 passes 19/20 on round-6-amended state (head 9312f11f).
+**STORY-INDEX:** v1.5.56. **trajectory-tail:** →0→0→0→0 (ZERO HIGH four consecutive: passes 12/13/14/15+18)
+
+### Archived Phase Progress Row (from ADVERSARY-15+FIX-ROUND-5)
+
+| Step | Owner | Entered | Exited | Verdict | Findings |
+|------|-------|---------|--------|---------|----------|
+| ADVERSARY-15+FIX-ROUND-5 | adversary/state-manager | 2026-08-03T22:00Z | 2026-08-03T22:20Z | NOT CLEAN 0H/6M/9L | 154 total; 0/3 window; passes 16/17 NOT RUN |
+
+### Archived Current Phase Steps Row (from ADVERSARY-12-13-14+FIX-ROUND-4)
+
+| Step | Status | Notes |
+|------|--------|-------|
+| ADVERSARY-12-13-14+FIX-ROUND-4 | COMPLETE | window 12/13/14 = 0/3; severity all-LOW; fix round 4 applied; meta-pattern identified; 130 total findings |

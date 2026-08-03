@@ -1876,3 +1876,16 @@ _Was the active checkpoint after SOH-DX-1 F2 ADVERSARY GRIND rounds 1-45 (2026-0
 | In flight | develop @ c88374b4 (PR #667 HELD — DEC-202). .factory @ factory-artifacts (commit 05ff7c2e). No other open worktrees. |
 | Pending human decisions | (1) DEC-207 authorized — grind to passes 15/16/17 confirmed. (2) AX23-001 out-of-delta ratification. (3) DEC-204 UNADJUDICATED. PR queue: #667 (HELD), #662 (MERGEABLE), #655-#659 (soaking), #628/#574. DO NOT close #429. |
 | Resume command | Open fresh session → /vsdd-factory:next-step. Dispatch S-626-1 pass-15 (scoped greps — behavioral corrective verified effective). PR #667 HELD until 3/3 CLEAN window. AX23-001 pending. |
+
+---
+
+## Checkpoint: ADVERSARY-15+FIX-ROUND-5 burst (2026-08-03T22:20:00Z) [ARCHIVED]
+
+| Field | Value |
+|-------|-------|
+| Position | Feature Mode SOH-DX-1 F4 delivery. S-626-1 DELIVERED — PR #667 open, feature HEAD 9312f11f, branch ci/fix-toolchain-sha-msrv. HELD per DEC-202 pending fresh 3-pass window on amended state. Fix round 5 applied 2026-08-03 (S-626-1 v1.11, S-641-1 v0.7 in-version, S-MAINT-576-HYG-1 v1.0, STORY-INDEX v1.5.55, bc-5 Postconditions, demos/ re-stamped to 6d73b3ef). Product commit 6d73b3ef adds BC-5.3.003 test (DEC-210). |
+| Convergence | S-626-1 Step 4.5 = 0/3. 15 recorded passes (5 VOID). passes 16/17 NOT RUN per DEC-209. 154 total findings. Pass-15 NOT CLEAN (window 0/1). ZERO HIGH tenth consecutive. TREND REVERSAL 9→15. DEC-209: PASSES 18/19/20 AUTHORIZED. |
+| Not yet done | (1) Passes 18/19/20 dispatch (head 9312f11f post round-6). (2) S-640-1 handoff. DEC-204 UNADJUDICATED. AX23-001 PENDING. |
+| In flight | develop @ acdad174 (PR #667 OPEN). .factory @ factory-artifacts. |
+| Pending human decisions | DEC-209 authorized — passes 18/19/20 confirmed. DEC-210 BC-5.3.003 declared. AX23-001 pending. DEC-204 UNADJUDICATED. |
+| Resume command | Open fresh session → dispatch S-626-1 pass-18 against head 9312f11f. PR #667 HELD until 3/3 CLEAN window. |

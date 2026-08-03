@@ -2,42 +2,104 @@
 
 Story: Fix rust-toolchain SHA pins + MSRV false-green + comfy-table pin + CLAUDE.md gotcha (closes #626)
 Branch: `ci/fix-toolchain-sha-msrv`
-Head: `6d73b3ef`
+Head: `9312f11f`
 Last full regeneration: 2026-08-03
 
 ## Full Suite
 
 | File | Command | Result |
 |------|---------|--------|
-| `full-suite.txt` | `cargo test` (aggregate) | 2344 passed / 0 failed / 100 ignored |
+| `full-suite.txt` | `cargo test` (aggregate) | 2345 passed / 0 failed / 100 ignored |
 | `full-suite.txt` | `RUSTUP_TOOLCHAIN=1.85.0 cargo check --all-features --locked` | Compiling jr → Finished, exit 0 |
 | `full-suite.txt` | `cargo clippy --all-targets -- -D warnings` | clean (exit 0) |
 | `full-suite.txt` | `cargo fmt --all -- --check` | clean (exit 0) |
+| `full-suite.txt` | Floor guard (POL-11, ci.yml :96) | Check passed: 2345 tests executed across 103 test binaries |
 
-Baseline per story v1.3 scope note was 2341 passed / 100 ignored. This run shows 2344 (+3) because
-delivery commits added three new tests: two AC-9 regression-guard tests (`test_board_view_omits_team_column_when_field_unconfigured`
-and `test_issue_list_omits_team_column_when_field_unconfigured`) plus `test_board_view_falls_back_to_uuid_when_team_not_cached`
-(BC-5.3.003 pin, commit 6d73b3ef). See `full-suite.txt` for full discrepancy note.
+Baseline per story v1.3 scope note was 2341 passed / 100 ignored. This run shows 2345 (+4) because
+delivery commits added four new tests: two AC-9 regression-guard tests (`test_board_view_omits_team_column_when_field_unconfigured`
+and `test_issue_list_omits_team_column_when_field_unconfigured`), `test_board_view_falls_back_to_uuid_when_team_not_cached`
+(BC-5.3.003 pin, commit 6d73b3ef), and `test_verify_test_job_has_zero_test_floor` (POL-11 floor guard, commit 9312f11f).
+See `full-suite.txt` for full discrepancy note.
 
 ## Regeneration Log
 
-All 11 artifacts verified at head `6d73b3ef` (2026-08-03). Each artifact carries its own
+All 11 artifacts verified at head `9312f11f` (2026-08-03). Each artifact carries its own
 per-file `# Head:` stamp. Status per artifact:
 
 | Artifact | Head | Captured | Status | Reason |
 |----------|------|----------|--------|--------|
-| `AC-001.txt` | 6d73b3ef | 2026-08-03 | re-stamped (Round 6) | Head-only; delta 6d73b3ef was test-only; delta-analysis.md content unchanged |
-| `AC-002.txt` | 6d73b3ef | 2026-08-03 | re-stamped (Round 6) | Head-only; delta 6d73b3ef was test-only; .github/workflows/ content unchanged |
-| `AC-003.txt` | 6d73b3ef | 2026-08-03 | re-stamped (Round 6) | Head-only; delta 6d73b3ef was test-only; ci.yml content unchanged |
-| `AC-004.txt` | 6d73b3ef | 2026-08-03 | re-stamped (Round 6) | Head-only; delta 6d73b3ef was test-only; ci.yml content unchanged |
-| `AC-005.txt` | 6d73b3ef | 2026-08-03 | re-stamped (Round 6) | Head-only; delta 6d73b3ef was test-only; all three workflow files unchanged |
-| `AC-006.txt` | 6d73b3ef | 2026-08-03 | re-stamped (Round 6) | Head-only; delta 6d73b3ef was test-only; CLAUDE.md content unchanged |
-| `AC-007.txt` | 6d73b3ef | 2026-08-03 | re-stamped (Round 6) | Head-only; delta 6d73b3ef was test-only; .github/workflows/ content unchanged |
-| `AC-008.txt` | 6d73b3ef | 2026-08-03 | re-stamped (Round 6) | Head-only; delta 6d73b3ef was test-only; Cargo.toml/Cargo.lock unchanged |
-| `AC-009.txt` | 6d73b3ef | 2026-08-03 | re-verified (Round 6) | Filtered test re-run; running 2 tests / 8 filtered out confirmed (suite grew 9→10); BEFORE/AFTER transcripts unchanged |
-| `full-suite.txt` | 6d73b3ef | 2026-08-03 | re-verified (Round 6) | cargo test aggregate re-run; 2344/0/100 confirmed; MSRV/clippy/fmt not re-run (no src/ changes) |
+| `AC-001.txt` | 9312f11f | 2026-08-03 | re-stamped (Round 7) | Head-only; delta-analysis.md unchanged by 9312f11f (ci.yml test step + tests/ci_gate_completeness.rs only) |
+| `AC-002.txt` | 9312f11f | 2026-08-03 | re-captured (Round 7) | ci.yml line numbers shifted +39; SHA locations updated (:70→:109, :112→:151) |
+| `AC-003.txt` | 9312f11f | 2026-08-03 | re-captured (Round 7) | ci.yml line range shifted +39; sed -n '59,86p' → sed -n '98,125p'; B-A+1=28 preserved |
+| `AC-004.txt` | 9312f11f | 2026-08-03 | re-captured (Round 7) | ci.yml line numbers shifted +39; grep output line numbers updated (60→99, 70→109, 72→111, 76→115, 82→121, 86→125) |
+| `AC-005.txt` | 9312f11f | 2026-08-03 | re-stamped (Round 7) | Head-only; sign-and-publish.yml/backfill-release.yml/release.yml unchanged by 9312f11f |
+| `AC-006.txt` | 9312f11f | 2026-08-03 | re-stamped (Round 7) | Head-only; CLAUDE.md unchanged by 9312f11f |
+| `AC-007.txt` | 9312f11f | 2026-08-03 | re-stamped (Round 7) | Head-only; ci.yml changed but AC-7 checks for ABSENCE of c93f4f9c which remains absent |
+| `AC-008.txt` | 9312f11f | 2026-08-03 | re-stamped (Round 7) | Head-only; Cargo.toml/Cargo.lock unchanged; MSRV check not re-run (test-file change outside --all-features scope) |
+| `AC-009.txt` | 9312f11f | 2026-08-03 | re-stamped (Round 7) | Head-only; board.rs/list.rs unchanged; team_column_parity.rs still 10 tests; filtered=8/false-green=10 unchanged |
+| `full-suite.txt` | 9312f11f | 2026-08-03 | re-captured (Round 7) | cargo test re-run: 2345/0/100; clippy+fmt re-run (--all-targets/--all cover tests/ which changed); floor guard evidence added |
 
 **Completeness: 11/11 artifacts verified and stamped. No artifact left with only the global INDEX head stamp.**
+
+## Round-7 Re-stamp (2026-08-03): head 6d73b3ef → 9312f11f
+
+Commit `9312f11f` (`ci: add zero-test floor + positive-coverage assertion to test job (POL-11)`)
+replaced the bare `- run: cargo test --all-features` in the ci.yml `test` job with a multi-line
+named step ("Run tests (zero-test floor, POL-11)") that computes the total tests executed at
+runtime and fails if zero. It also added `test_verify_test_job_has_zero_test_floor` to
+`tests/ci_gate_completeness.rs` to pin that the guard is present.
+
+Files changed: `.github/workflows/ci.yml` (+39 lines in the test job block, shifting all
+subsequent job line numbers by +39) and `tests/ci_gate_completeness.rs` (+1 test function).
+
+**Defects corrected this round:**
+
+**F-05 (HIGH) — false "no src/ changes" justification for skipping clippy/fmt:**
+Prior artifact header and INDEX Regeneration Log stated "MSRV/clippy/fmt not re-run — delta
+was test-only, no src/ changes". This is incorrect: `--all-targets` (clippy) and `--all`
+(fmt) both cover `tests/` files, not just `src/`. Since 9312f11f changed
+`tests/ci_gate_completeness.rs`, both needed re-running. Both were re-run; warm cache results
+(no Compiling line) confirm all targets are clean. The false justification has been deleted.
+Corrected reasoning: MSRV (`cargo check --all-features`) is NOT re-run because it omits
+`--all-targets` — test-file changes are genuinely outside its scope.
+
+**AC-002/003/004 (MEDIUM) — stale ci.yml line numbers (+39 shift):**
+The `test` job grew by 39 lines, shifting the start of the `msrv:` job from :59→:98 and all
+subsequent line references. All three artifacts re-captured with correct line numbers.
+- AC-002: ci.yml dtolnay pins updated (:70→:109, :112→:151)
+- AC-003: sed range updated (sed -n '59,86p' → sed -n '98,125p'); B-A+1=28 preserved
+- AC-004: grep output line numbers updated (60→99, 70→109, 72→111, 76→115, 82→121, 86→125)
+
+**DEFECT 3 — count update:**
+Full suite grew from 2344 → 2345 (+1 test: `test_verify_test_job_has_zero_test_floor`).
+Baseline attribution (2341 from story v1.3 scope note) unchanged.
+
+**DEFECT 4 — floor guard positive-path evidence:**
+Floor guard positive path captured: `Check passed: 2345 tests executed across 103 test binaries`.
+Script replicated locally from ci.yml `:58-96` test job step.
+
+**Re-verification performed:**
+- `cargo test` aggregate re-run at 9312f11f → `2345 passed / 0 failed / 100 ignored`
+- `cargo clippy --all-targets -- -D warnings` re-run at 9312f11f → exit 0 (warm cache, 0.15s)
+- `cargo fmt --all -- --check` re-run at 9312f11f → exit 0 (no output)
+- Floor guard script re-run → `Check passed: 2345 tests executed across 103 test binaries`
+- `cargo test --test team_column_parity` → still `running 10 tests`, all ok (unchanged)
+- Filtered team_column_parity → still `running 2 tests`, 8 filtered out (unchanged)
+- False-green reproduction → still `running 0 tests`, 10 filtered out (unchanged)
+
+**Artifact disposition:**
+- AC-001, AC-005, AC-006, AC-007, AC-008, AC-009: head-stamp only. None of these artifacts'
+  evidence sources (delta-analysis.md, three release workflow files, CLAUDE.md, Cargo.toml/lock,
+  src/cli/board.rs) were changed by 9312f11f.
+- AC-002, AC-003, AC-004: re-captured with correct ci.yml line numbers.
+- full-suite.txt: re-captured — cargo test count updated (2344→2345), clippy+fmt re-run
+  and false justification corrected, floor guard evidence added.
+
+**Round-7 sed range re-check:**
+All `sed -n 'A,Bp'` commands in the pack verified to display exactly B−A+1 lines at head 9312f11f:
+- AC-003: sed '98,125p' → 28 lines ✓ (updated from '59,86p'; 125−98+1=28)
+- AC-005: sed '57,68p' → 12 lines ✓ (unchanged); sed '72,83p' → 12 lines ✓ (unchanged); sed '38,52p' → 15 lines ✓ (unchanged)
+- AC-009 BEFORE: sed '228,244p' → 17 lines ✓ (unchanged); AFTER: sed '228,248p' → 21 lines ✓ (unchanged)
 
 ## Round-6 Re-stamp (2026-08-03): head c88374b4 → 6d73b3ef
 
@@ -196,7 +258,7 @@ correctly suppresses the Team column when the field is unconfigured.
 |----|-------------|-----------|----------------|--------|
 | AC-001 | SHA verification (blocking gate) | `AC-001.txt` | Read delta-analysis.md §5e | PASS |
 | AC-002 | 7 new-SHA occurrences across 6 files | `AC-002.txt` | `grep -n fa04a145` across 6 files | PASS |
-| AC-003 | msrv job: toolchain input + RUSTUP_TOOLCHAIN env | `AC-003.txt` | `sed -n '59,86p' ci.yml` + MSRV check with toolchain identity proof | PASS |
+| AC-003 | msrv job: toolchain input + RUSTUP_TOOLCHAIN env | `AC-003.txt` | `sed -n '98,125p' ci.yml` + MSRV check with toolchain identity proof | PASS |
 | AC-004 | msrv comment accuracy: # 1.85.0 | `AC-004.txt` | `grep -n 1.85.0 ci.yml` | PASS |
 | AC-005 | rustup target add steps preserved | `AC-005.txt` | `grep E0463`/`rustup target add` all three files | PASS |
 | AC-006 | CLAUDE.md gotcha added | `AC-006.txt` | `grep -n rust-toolchain.toml.*outranks CLAUDE.md` | PASS |
@@ -213,7 +275,7 @@ correctly suppresses the Team column when the field is unconfigured.
   Both are jointly load-bearing: the comfy-table pin ensures the dep tree compiles at 1.85.0;
   the in-tree let-chain rewrites (AC-9) ensure jr's own source also compiles at 1.85.0.
 - The 7 SHA occurrences across 6 files reflect ci.yml having two dtolnay/rust-toolchain uses:
-  the msrv job (:70, toolchain "1.85.0") and the coverage job (:112, toolchain "stable").
+  the msrv job (:109, toolchain "1.85.0") and the coverage job (:151, toolchain "stable").
   The test job (:42) uses NO dtolnay/rust-toolchain action.
 - AC-9 test non-vacuousness: `running 2 tests` with correct function names
   `test_board_view_omits_team_column_when_field_unconfigured` and
@@ -229,7 +291,7 @@ correctly suppresses the Team column when the field is unconfigured.
 - The `--all-targets` flag in clippy is intentional and matches project CLAUDE.md convention.
   Note: `cargo check --all-features --locked` in the MSRV check deliberately omits `--all-targets`
   because wiremock (a dev-dependency) requires Rust >=1.88.0; that is the CI comment at
-  ci.yml :74-83 and is correct, not an oversight.
+  ci.yml :113-122 and is correct, not an oversight.
 - rustup toolchain list confirms 1.85.0 available: `1.85.0-aarch64-apple-darwin` listed.
   All MSRV captures show `RUSTUP_TOOLCHAIN=1.85.0 rustup show active-toolchain` →
   `1.85.0-aarch64-apple-darwin (overridden by environment variable RUSTUP_TOOLCHAIN)`.
