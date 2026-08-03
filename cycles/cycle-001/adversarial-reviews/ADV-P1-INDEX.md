@@ -1,26 +1,26 @@
 ---
 document_type: adversarial-review-index
 level: ops
-version: "1.5"
+version: "1.6"
 status: in-review
 producer: adversary
-timestamp: 2026-08-03T02:00:00Z
+timestamp: 2026-08-03T08:30:00Z
 phase: "5"
-pass: 11
+pass: 14
 inputs: [.factory/stories/S-626-1.md, .github/workflows/ci.yml, CLAUDE.md, src/cli/board.rs, src/cli/issue/list.rs, src/cli/auth/keychain.rs]
 traces_to: .factory/stories/S-626-1.md
-total_findings: 110
-severity_distribution: { CRIT: 0, HIGH: 17, MED: 45, LOW: 36, INFO: 12 }
+total_findings: 139
+severity_distribution: { CRIT: 0, HIGH: 17, MED: 58, LOW: 52, INFO: 12 }
 story: S-626-1
 cycle: cycle-001
-feature_head: 64e2a4bcde44ec20bc1f64d80eb402ca8aebc406
+feature_head: c88374b41ee4ea30bc2406e1def90cedf3686275
 pr: 667
 basis: TRUE ADVERSARY AGENT (not a DEC-190 substitute)
-convergence: 0 of 3 (Step 4.5 window — DEC-199 GRIND to 3/3 CLEAN; DEC-205 ceiling breach authorized — grind to 12/13/14)
+convergence: 0 of 3 (Step 4.5 window — DEC-199 GRIND to 3/3 CLEAN; DEC-207 ceiling breach authorized toward 17; window 12/13/14 = 0/3 NOT CLEAN; ZERO HIGH across all three; severity decay 4H→0H confirmed)
 void_spawns: 5 (passes 6/7/8 first-attempt background subagents; pass-9 isolation breach; pass-11 isolation breach)
 ---
 
-# Adversarial Review Index — S-626-1 (SOH-DX-1) Passes 1..11
+# Adversarial Review Index — S-626-1 (SOH-DX-1) Passes 1..14
 
 ## Pass 1 Finding Catalog
 
@@ -203,8 +203,15 @@ ADV-P4-INFO-005   --informs--> S-641-1 AC-2 (complete let-chain detection form s
 | 9 (VOID-9A) | VOID | 4 | 7 | 4 | 0 | 0 | NO | VOID — isolation breach; [Mm]utation-detecting grep leaked STATE.md:119; per DEC-206 findings valid, pass window-ineligible |
 | 10 | NOT CLEAN | 4 | 11 | 3 | 0 | 4 ([pg]) | NO | 0/3 — WINDOW-ELIGIBLE (clean isolation); 5 novel findings; fix-round-partial-propagation meta-pattern; fix round 3 applied |
 | 11 (VOID-11A) | VOID | 2 | 8 | 3 | 0 | 0 | NO | VOID — isolation breach; two root greps leaked STATE.md + spec-changelog.md; per DEC-206 findings valid, pass window-ineligible |
+| 12 | NOT CLEAN | 0 | 5 | 5 | 0 | 0 | NO | WINDOW-ELIGIBLE (clean isolation); ZERO HIGH — severity decay from window 9/10/11 (4H each); window 12/13/14 = 1/3 |
+| 13 | NOT CLEAN | 0 | 4 | 6 | 0 | 0 | NO | WINDOW-ELIGIBLE (clean isolation); ZERO HIGH — second consecutive zero-HIGH; window 12/13/14 = 2/3 |
+| 14 | NOT CLEAN | 0 | 4 | 5 | 0 | 0 | NO | WINDOW-ELIGIBLE (clean isolation); ZERO HIGH — third consecutive zero-HIGH; window 12/13/14 COMPLETE = 0/3 CLEAN |
 
-**Overall convergence: 0 of 3 (Step 4.5 — 11 recorded passes; 5 VOID [3 dispatch + 2 isolation]; DEC-199: GRIND to 3/3 CLEAN; DEC-191(d) ceiling breached; DEC-205: ceiling breach authorized — grind to passes 12/13/14)**
+**Overall convergence: 0 of 3 (Step 4.5 — 14 recorded passes; 5 VOID [3 dispatch + 2 isolation]; DEC-199: GRIND to 3/3 CLEAN; DEC-207: ceiling breach authorized toward 17; window 12/13/14 = 0/3 CLEAN; ZERO HIGH across all three; severity decay 4H→0H confirmed)**
+
+**SEVERITY DECAY RECORDED:** Window 9/10/11 carried 4 HIGH each (isolation issues, but findings valid). Window 12/13/14 carries ZERO HIGH, ceiling MEDIUM across all three passes. Code is 0-defect across nine consecutive passes (6–14, minus VOID passes 9+11). Two passes in window 12/13/14 independently caught and corrected their own broken ampersand-escaped grep patterns before trusting a zero result — GREP-HYGIENE CORRECTIVE VERIFIED EFFECTIVE (3/3 passes cleanly isolated, vs 2/3 breached in prior window).
+
+**META-PATTERN REFINED:** All three passes in window 12/13/14 independently split round 4 the same way: greppable classes FULLY swept; per-artifact re-derivation classes NOT swept; 4 new defects introduced in new prose. Two passes (13 + 14) independently recommended mechanical B−A+1 line-count check and byte-diff for transcript artifacts.
 
 **Findings accumulator (running total):**
 - Passes 1–5: 36 total (HIGH: 0, MED: 11, LOW: 16, INFO: 9)
@@ -214,7 +221,10 @@ ADV-P4-INFO-005   --informs--> S-641-1 AC-2 (complete let-chain detection form s
 - Pass 9 adds: +15 (HIGH: 4, MED: 7, LOW: 4, INFO: 0) [VOID for window; findings counted]
 - Pass 10 adds: +18 (HIGH: 4, MED: 11, LOW: 3, INFO: 0) [WINDOW-ELIGIBLE]
 - Pass 11 adds: +13 (HIGH: 2, MED: 8, LOW: 3, INFO: 0) [VOID for window; findings counted]
-- **Grand total: 110 findings (CRIT: 0, HIGH: 17, MED: 45, LOW: 36, INFO: 12)**
+- Pass 12 adds: +10 (HIGH: 0, MED: 5, LOW: 5, INFO: 0) [WINDOW-ELIGIBLE; ZERO HIGH]
+- Pass 13 adds: +10 (HIGH: 0, MED: 4, LOW: 6, INFO: 0) [WINDOW-ELIGIBLE; ZERO HIGH]
+- Pass 14 adds: +9 (HIGH: 0, MED: 4, LOW: 5, INFO: 0) [WINDOW-ELIGIBLE; ZERO HIGH]
+- **Grand total: 139 findings (CRIT: 0, HIGH: 17, MED: 58, LOW: 52, INFO: 12)**
 
 ---
 
@@ -428,6 +438,91 @@ Five passes are recorded as VOID for window eligibility. Three early background 
 - **Post-capture routing:** All findings → fix round 3 (except MED-006 outer-gate gap; MED-007 ARCH-INDEX tracked); MED-001 tracked as ARCH-INDEX-REGISTRY-COVERAGE-GAP drift item
 - **Convergence:** 0/3 — pass VOID; FIX-ROUND-PARTIAL-PROPAGATION meta-pattern identified and tracked as drift item
 - **Detail artifact:** `s-626-1-adversary-pass-11.md`
+
+---
+
+---
+
+## Pass 12 Finding Catalog
+
+| ID | Severity | Classification | Title | Status | Notes |
+|----|----------|----------------|-------|--------|-------|
+| ADV-P12-MED-001 | MEDIUM | GAP · spec artifact | BC-5.3.001 Behavior claims sprint.rs and board.rs gates are "identical" — sprint.rs adds `!is_kanban` check; gates differ | OPEN — routed to fix round 4 | Unique P12 finding; persists across P13/P14 |
+| ADV-P12-MED-002 | MEDIUM | GAP · spec artifact | S-641-1 AC-2 item 8 lists two incompatible `rustup-toolchain-install-master` patterns; correct form is one | OPEN — routed to fix round 4 (S-641-1 v0.7) | Confirmed P13 LOW-001 |
+| ADV-P12-MED-003 | MEDIUM | GAP · spec artifact | AC-009 BEFORE block claims 10 lines but actual line count is 17 (B−A+1 arithmetic off) | OPEN — routed to fix round 4 | Confirmed P13 LOW-002 via route |
+| ADV-P12-MED-004 | MEDIUM | GAP · spec artifact | AC-009 AFTER block claims 22 lines but actual line count is 21 (B−A+1 arithmetic off) | OPEN — routed to fix round 4 | Confirmed P13 LOW-002 via route |
+| ADV-P12-MED-005 | MEDIUM | GAP · spec artifact | S-576-5 File Structure Requirements table has no SS-04 row despite SS-04 in subsystems: | OPEN — routed to fix round 4 (S-576-5 v1.48) | Confirmed P13 LOW-002 |
+| ADV-P12-LOW-001 | LOW | REFINEMENT · spec artifact | AC-005.txt BEFORE block missing blank-line separator between step groups (first occurrence) | OPEN — routed to fix round 4 | Transcript fidelity class |
+| ADV-P12-LOW-002 | LOW | REFINEMENT · spec artifact | AC-005.txt BEFORE block missing blank-line separator between step groups (second occurrence) | OPEN — routed to fix round 4 | Transcript fidelity class |
+| ADV-P12-LOW-003 | LOW | REFINEMENT · spec artifact | AC-008.txt condition uses ≥ (Unicode ≥) where test code uses >= (ASCII) — byte-mismatch | OPEN — routed to fix round 4 | Transcript fidelity class |
+| ADV-P12-LOW-004 | LOW | REFINEMENT · spec artifact | full-suite.txt attributes test to "Task 7d" but story calls it "Task 7c" | OPEN — routed to fix round 4 | Transcript fidelity class |
+| ADV-P12-LOW-005 | LOW | REFINEMENT · spec artifact | INDEX.md summary says "both files" for a three-file delivery section | OPEN — routed to fix round 4 | Transcript fidelity class |
+
+## Pass 12 Isolation Note
+
+**CLEAN.** All greps scoped to named subdirectories under `.factory/cycles/` or specific file paths. No banned-path content accessed. Two ampersand-escaped grep patterns self-corrected before trusting zero result — grep-hygiene protocol effective.
+
+## Pass 12 Summary
+
+- **Verdict:** NOT CLEAN — 0 HIGH + 5 MEDIUM + 5 LOW; **ZERO HIGH** (severity decay from windows 9/10/11); zero code defects
+- **Post-capture routing:** All 10 findings → fix round 4 (ADV-P1-INDEX → demos/, bc-5, S-641-1, S-576-5, stories/)
+- **Convergence:** 0/3 — window 12/13/14 open; ZERO HIGH; code 0-defect across passes 6–12 minus VOIDs; grep-hygiene corrective verified effective (first clean isolation since window 10)
+- **Detail artifact:** `s-626-1-adversary-pass-12.md`
+
+---
+
+## Pass 13 Finding Catalog
+
+| ID | Severity | Classification | Title | Status | Notes |
+|----|----------|----------------|-------|--------|-------|
+| ADV-P13-MED-001 | MEDIUM | GAP · spec artifact | BC-5.3.001 Source field references only board.rs tests; sprint.rs tests covering the identical-gate claim are absent | OPEN — routed to fix round 4 | Fix-round-partial-propagation shape; sprint.rs Source gap |
+| ADV-P13-MED-002 | MEDIUM | GAP · spec artifact | BC-5.3.003 no-suffix path (bare `jr board`) uncovered by any listed test; AC trace present but no covering test | OPEN — routed to fix round 4 | Unique P13 finding; persists in P14 MED-002 |
+| ADV-P13-MED-003 | MEDIUM | GAP · spec artifact | AC-005 BEFORE block missing third release.yml site — only two of three sites captured | OPEN — routed to fix round 4 | Transcript fidelity class (third-site gap) |
+| ADV-P13-MED-004 | MEDIUM | GAP · spec artifact | S-576 family status drift — 4 story files carry "ready" status while STORY-INDEX carries "completed" for same entries | OPEN — routed to S-MAINT-576-HYG-1 (DEC-208) | S-576 family subsystem pattern; STORY-INDEX drift |
+| ADV-P13-LOW-001 | LOW | REFINEMENT · spec artifact | S-641-1 AC-2 item 8 incompatible patterns (confirmation of P12-MED-002) | OPEN — routed to fix round 4 | Confirmation finding |
+| ADV-P13-LOW-002 | LOW | REFINEMENT · spec artifact | S-576-5 File Structure Requirements table missing SS-04 row (confirmation of P12-MED-005) | OPEN — routed to fix round 4 | Confirmation finding |
+| ADV-P13-LOW-003 | LOW | REFINEMENT · spec artifact | ci.yml citation in S-626-1 at ~:98 (three occurrences) should be ~:112 post-fix-round-3 | OPEN — routed to fix round 4 (S-626-1 v1.10) | Line-drift class |
+| ADV-P13-LOW-004 | LOW | REFINEMENT · spec artifact | sign-and-publish.yml citation in S-626-1 at ~:64 should be ~:65 | OPEN — routed to fix round 4 (S-626-1 v1.10) | Line-drift class |
+| ADV-P13-LOW-005 | LOW | REFINEMENT · spec artifact | backfill-release.yml citation in S-626-1 at ~:79 should be ~:80 | OPEN — routed to fix round 4 (S-626-1 v1.10) | Line-drift class |
+| ADV-P13-LOW-006 | LOW | REFINEMENT · spec artifact | BC-5.3.001 and BC-5.3.003 Source fields missing cli_handler.rs integration test coverage (partial) | OPEN — routed to fix round 4 | Partial-coverage disclosure |
+
+## Pass 13 Isolation Note
+
+**CLEAN.** Grep-hygiene self-correction demonstrated: two patterns with broken ampersand escaping caught and re-issued before trusting results. No banned-path files accessed. VOID-9A/11A pattern NOT repeated — all greps scoped to named subdirectories.
+
+## Pass 13 Summary
+
+- **Verdict:** NOT CLEAN — 0 HIGH + 4 MEDIUM + 6 LOW; **ZERO HIGH** (second consecutive); zero code defects
+- **Post-capture routing:** MED-001..003 → fix round 4 (.factory/ artifacts); MED-004 → S-MAINT-576-HYG-1 (DEC-208); LOW-001..006 → fix round 4
+- **Convergence:** 0/3 — window 12/13/14 = 2/3; ZERO HIGH second consecutive; grep-hygiene corrective confirmed effective
+- **Detail artifact:** `s-626-1-adversary-pass-13.md`
+
+---
+
+## Pass 14 Finding Catalog
+
+| ID | Severity | Classification | Title | Status | Notes |
+|----|----------|----------------|-------|--------|-------|
+| ADV-P14-MED-001 | MEDIUM | GAP · spec artifact | BC-5.3.001 Behavior claims sprint.rs and board.rs gates identical (third independent confirmation) | OPEN — routed to fix round 4 | Three-pass confirmation; see P12-MED-001 |
+| ADV-P14-MED-002 | MEDIUM | GAP · spec artifact | BC-5.3.003 Source field missing symbol citations for no-suffix path tests (confirmation of P13-MED-002) | OPEN — routed to fix round 4 | Fix-round-partial-propagation shape |
+| ADV-P14-MED-003 | MEDIUM | GAP · spec artifact (ACCEPTED) | AC-005 release.yml third site format inconsistency — BEFORE block format differs from first two sites | ACCEPTED — current format accepted as sufficient | Transcript fidelity; accepted inconsistency |
+| ADV-P14-MED-004 | MEDIUM | GAP · spec artifact | S-641-1 AC-2 item 6 partial-version predicate `~^=\d+\.\d+` admits `=7.2` (two-component); should be three-component `~^=\d+\.\d+\.\d+` | OPEN — routed to fix round 4 (S-641-1 v0.7) | Predicate precision gap |
+| ADV-P14-LOW-001 | LOW | REFINEMENT · spec artifact | BC-5.3.001 Source confirms board.rs tests (citation confirmation) | CONFIRMED — no action | Confirmation finding |
+| ADV-P14-LOW-002 | LOW | REFINEMENT · spec artifact | S-626-1 line citations confirmed stale at ~:98/~:64/~:79 (confirmation of P13-LOW-003..005) | CONFIRMED — routed to fix round 4 | Confirmation finding |
+| ADV-P14-LOW-003 | LOW | REFINEMENT · spec artifact | BC-5.3.001 and BC-5.3.003 Source symbols confirmed partially absent (confirmation of P13-LOW-006) | CONFIRMED — routed to fix round 4 | Confirmation finding |
+| ADV-P14-LOW-004 | LOW | REFINEMENT · spec artifact | S-576 family drift routing to S-MAINT-576-HYG-1 confirmed appropriate (DEC-208) | CONFIRMED — DEC-208 routing acknowledged | Confirmation finding |
+| ADV-P14-LOW-005 | LOW | REFINEMENT · spec artifact (ACCEPTED) | Cargo.lock cross-check phrasing in S-641-1 ambiguous between "verify unchanged" and "must regenerate" semantics | ACCEPTED — ambiguity accepted; semantic intent clear from context | Accepted phrasing ambiguity |
+
+## Pass 14 Isolation Note
+
+**CLEAN.** Third consecutive clean isolation. Ampersand-escaped grep patterns verified before use. No banned-path content accessed. Grep-hygiene corrective verified effective across all three passes in window 12/13/14.
+
+## Pass 14 Summary
+
+- **Verdict:** NOT CLEAN — 0 HIGH + 4 MEDIUM + 5 LOW; **ZERO HIGH** (third consecutive); zero code defects; window 12/13/14 COMPLETE = 0/3 CLEAN
+- **Post-capture routing:** MED-001..002 + MED-004 + LOW-002..003 → fix round 4; MED-003/LOW-005 accepted; DEC-208 confirmed; LOW-004 DEC-208 routing acknowledged
+- **Convergence:** 0/3 — window 12/13/14 complete; severity decay 4H→0H confirmed; code 0-defect nine consecutive passes; fix-round-introduces-defects-in-new-prose meta-pattern identified; DEMO-TRANSCRIPT-FIDELITY-NO-MECHANICAL-GUARD new drift item
+- **Detail artifact:** `s-626-1-adversary-pass-14.md`
 
 ---
 

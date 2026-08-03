@@ -1,4 +1,4 @@
-# Head: 64e2a4bc  Captured: 2026-08-03  Status: transcript-fidelity fix (sed range corrected)
+# Head: c88374b4  Captured: 2026-08-03  Status: re-stamped (Round 5 — head-only; delta c88374b4 was test-only; ci.yml content unchanged)
 # Prior artifact used sed -n '58,87p' but showed 28 lines (lines 59-86); line 58 is a blank
 # separator above the msrv job and line 87 is a blank separator below it. Command corrected
 # to sed -n '59,86p' so the command matches the displayed output exactly.

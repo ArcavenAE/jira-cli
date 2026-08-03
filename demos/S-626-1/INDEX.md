@@ -2,7 +2,7 @@
 
 Story: Fix rust-toolchain SHA pins + MSRV false-green + comfy-table pin + CLAUDE.md gotcha (closes #626)
 Branch: `ci/fix-toolchain-sha-msrv`
-Head: `64e2a4bc`
+Head: `c88374b4`
 Last full regeneration: 2026-08-03
 
 ## Full Suite
@@ -20,23 +20,47 @@ and `test_issue_list_omits_team_column_when_field_unconfigured`). See `full-suit
 
 ## Regeneration Log
 
-All 11 artifacts verified at head `64e2a4bc` (2026-08-03). Each artifact carries its own
+All 11 artifacts verified at head `c88374b4` (2026-08-03). Each artifact carries its own
 per-file `# Head:` stamp. Status per artifact:
 
 | Artifact | Head | Captured | Status | Reason |
 |----------|------|----------|--------|--------|
-| `AC-001.txt` | 64e2a4bc | 2026-08-03 | reproduced-clean | Static file check (delta-analysis.md); content unchanged |
-| `AC-002.txt` | 64e2a4bc | 2026-08-03 | reproduced-clean | SHA grep correct; BSD grep ordering non-deterministic (noted in file) |
-| `AC-003.txt` | 64e2a4bc | 2026-08-03 | transcript-fidelity fix | sed range corrected from '58,87p' to '59,86p' — prior showed 28 lines but range 58-87 produces 30 (blank lines at 58, 87 omitted by mistake) |
-| `AC-004.txt` | 64e2a4bc | 2026-08-03 | regenerated | Prior cited non-existent comment text at wrong line numbers; RUSTUP_TOOLCHAIN at :80 (actual :86); comment rewritten in docs commits |
-| `AC-005.txt` | 64e2a4bc | 2026-08-03 | reproduced-clean | grep and sed output match actual files exactly |
-| `AC-006.txt` | 64e2a4bc | 2026-08-03 | regenerated | Prior captured stale gotcha title claiming rust-toolchain.toml overrides `rustup override`; claimed RUSTUP_TOOLCHAIN is "highest-precedence" (incorrect — `+toolchain` ranks above it); line shifted from 218 to 219 |
-| `AC-007.txt` | 64e2a4bc | 2026-08-03 | reproduced-clean | All zeros confirmed |
-| `AC-008.txt` | 64e2a4bc | 2026-08-03 | regenerated | Prior cited prohibited internal factory path (`# Ref: .factory/...`) as CONFIRMED; actual comment is `# See: issue #626.` per ruling ADV-P1-LOW-001; prior also omitted `--locked` and captured warm no-op |
-| `AC-009.txt` | 64e2a4bc | 2026-08-03 | regenerated (coverage claim corrected) | Prior falsely claimed removing the outer OutputFormat::Table check would produce non-empty team_displays; corrected: tests pin only the inner field_id guard, not the outer Table gate |
-| `full-suite.txt` | 64e2a4bc | 2026-08-03 | regenerated | Fresh run; timing values updated; cargo clean output reflects current state |
+| `AC-001.txt` | c88374b4 | 2026-08-03 | re-stamped (Round 5) | Head-only; delta c88374b4 was test-only; delta-analysis.md content unchanged |
+| `AC-002.txt` | c88374b4 | 2026-08-03 | re-stamped (Round 5) | Head-only; delta c88374b4 was test-only; .github/workflows/ content unchanged |
+| `AC-003.txt` | c88374b4 | 2026-08-03 | re-stamped (Round 5) | Head-only; delta c88374b4 was test-only; ci.yml content unchanged |
+| `AC-004.txt` | c88374b4 | 2026-08-03 | re-stamped (Round 5) | Head-only; delta c88374b4 was test-only; ci.yml content unchanged |
+| `AC-005.txt` | c88374b4 | 2026-08-03 | re-stamped (Round 5) | Head-only; delta c88374b4 was test-only; all three workflow files unchanged |
+| `AC-006.txt` | c88374b4 | 2026-08-03 | re-stamped (Round 5) | Head-only; delta c88374b4 was test-only; CLAUDE.md content unchanged |
+| `AC-007.txt` | c88374b4 | 2026-08-03 | re-stamped (Round 5) | Head-only; delta c88374b4 was test-only; .github/workflows/ content unchanged |
+| `AC-008.txt` | c88374b4 | 2026-08-03 | re-stamped (Round 5) | Head-only; delta c88374b4 was test-only; Cargo.toml/Cargo.lock unchanged |
+| `AC-009.txt` | c88374b4 | 2026-08-03 | re-verified (Round 5) | Filtered test re-run; running 2 tests confirmed; src/cli/board.rs unchanged; BEFORE/AFTER transcripts unchanged |
+| `full-suite.txt` | c88374b4 | 2026-08-03 | re-verified (Round 5) | cargo test aggregate re-run; 2343/0/100 confirmed unchanged; MSRV/clippy/fmt not re-run (no src/ changes) |
 
 **Completeness: 11/11 artifacts verified and stamped. No artifact left with only the global INDEX head stamp.**
+
+## Round-5 Re-stamp (2026-08-03): head 64e2a4bc → c88374b4
+
+Commit `c88374b4` (`test: pin BC-5.3.003 no-suffix postcondition on bare-UUID fallback`) added
+`.stdout(predicate::str::contains("name not cached").not())` assertions to two existing tests:
+- `tests/team_column_parity.rs::sprint_current_falls_back_to_uuid_when_team_not_cached`
+- `tests/cli_handler.rs::test_list_team_column_falls_back_to_uuid_when_cache_missing`
+
+No new test functions were added. No `src/` file changed. Delta: +12/−2, test files only.
+
+**Re-verification performed:**
+- `cargo test` aggregate re-run at c88374b4 → `2343 passed / 0 failed / 100 ignored` (unchanged)
+- `cargo test --test team_column_parity -- test_board_view_omits_team_column_when_field_unconfigured test_issue_list_omits_team_column_when_field_unconfigured` re-run → `running 2 tests`, both ok (unchanged)
+
+**Artifact disposition:**
+- AC-001 through AC-008: head-stamp-only re-stamp. None of these artifacts' evidence sources (delta-analysis.md, .github/workflows/, ci.yml, CLAUDE.md, Cargo.toml/lock, src/cli/board.rs) were touched by c88374b4.
+- AC-009: head-stamp + filtered test transcript re-captured (timing changed from 14.92s cold to 0.12s warm cache; running 2 tests result unchanged).
+- full-suite.txt: head-stamp + cargo test section note updated; MSRV/clippy/fmt sections not re-run (test-only delta, no src/ changes; outputs remain valid from 64e2a4bc run).
+
+**Round-4 fidelity fixes confirmed intact:**
+All `sed -n 'A,Bp'` commands in the pack verified to display exactly B−A+1 lines:
+- AC-003: sed '59,86p' → 28 lines ✓
+- AC-005: sed '57,68p' → 12 lines ✓; sed '72,83p' → 12 lines ✓; sed '38,52p' → 15 lines ✓
+- AC-009 BEFORE: sed '228,244p' → 17 lines ✓; AFTER: sed '228,248p' → 21 lines ✓
 
 ## Defects Corrected (Cumulative — All Rounds)
 
@@ -100,6 +124,37 @@ Prior used `sed -n '58,87p'` but displayed 28 lines corresponding to lines 59-86
 is a blank separator and line 87 is a blank separator; both were omitted. Command corrected
 to `sed -n '59,86p'` so command and transcript agree exactly.
 
+**Round 4 (Aug-03) — Mechanical fidelity sweep: five defects corrected across four artifacts:**
+
+**AC-005 (MEDIUM) — sed '57,68p' and '72,83p' both omitted blank separator lines:**
+`sign-and-publish.yml:57` and `backfill-release.yml:72` are blank separator lines. Both sed commands
+produce 12 lines (range size = B−A+1), but the round-3 artifact showed 11 lines for each — the
+initial blank was silently dropped in transcription. Blank lines restored as line 1 of each output.
+
+**AC-005 (HIGH) — release.yml third rustup target add site missing; INDEX.md said "both files":**
+AC-5 (`S-626-1.md:~308-316`) mandates three sites: `sign-and-publish.yml`, `backfill-release.yml`,
+and `release.yml`. The prior artifact covered only the first two and declared P71-003 satisfied.
+`release.yml` at :43/:46 has a bare `rustup target add` step with no E0463 comment (as documented
+in the story's AC-5 table). Evidence added: `grep -n` output + `sed -n '40,52p'` transcript.
+`INDEX.md` command column corrected from "both files" to "all three files".
+
+**AC-008 (MEDIUM) — Unicode ≥ (U+2265) transcribed as ASCII >= in Cargo.toml transcript:**
+`Cargo.toml:19` contains `requires Rust ≥1.88` (U+2265). The round-3 transcript recorded `>=`
+(two ASCII characters). `AC-003.txt:25` correctly preserves `≥` from `ci.yml:77` in the same
+pack — confirming this is an intra-pack transcription inconsistency. Character restored.
+
+**AC-009 (HIGH) — BEFORE sed '228,244p' (17 lines) showed only 10; AFTER sed '228,248p' (21 lines) showed 22:**
+BEFORE: `git show origin/develop:src/cli/board.rs | sed -n '228,244p'` produces 17 lines.
+Artifact showed only 10, stopping at `.collect();` — lines 238-244 (the `if uuids.iter().any` block
+through `.unwrap_or_default();`) were absent. Seven lines restored.
+AFTER: `sed -n '228,248p' src/cli/board.rs` produces 21 lines. Artifact showed 22, ending at
+`None => "-".to_string(),` (board.rs:249, outside the 228-248 range). Extra line removed.
+
+**full-suite.txt (LOW) — "Task 7d states the baseline as 2341" was false after Task 7d was updated to 2343:**
+Round 3 updated Task 7d to 2343. `full-suite.txt:13` still said "The story spec Task 7d states the
+baseline as 2341 passed" — now false. `INDEX.md:17` correctly attributes 2341 to the v1.3 scope note.
+`full-suite.txt` corrected to match: "The story v1.3 scope note (commit cc7f6da5) states the baseline as 2341".
+
 ## Per-AC Evidence
 
 This story has no user-visible behaviour change by design — it is regression evidence proving
@@ -114,7 +169,7 @@ correctly suppresses the Team column when the field is unconfigured.
 | AC-002 | 7 new-SHA occurrences across 6 files | `AC-002.txt` | `grep -n fa04a145` across 6 files | PASS |
 | AC-003 | msrv job: toolchain input + RUSTUP_TOOLCHAIN env | `AC-003.txt` | `sed -n '59,86p' ci.yml` + MSRV check with toolchain identity proof | PASS |
 | AC-004 | msrv comment accuracy: # 1.85.0 | `AC-004.txt` | `grep -n 1.85.0 ci.yml` | PASS |
-| AC-005 | rustup target add steps preserved | `AC-005.txt` | `grep E0463`/`rustup target add` both files | PASS |
+| AC-005 | rustup target add steps preserved | `AC-005.txt` | `grep E0463`/`rustup target add` all three files | PASS |
 | AC-006 | CLAUDE.md gotcha added | `AC-006.txt` | `grep -n rust-toolchain.toml.*outranks CLAUDE.md` | PASS |
 | AC-007 | Old SHA c93f4f9c absent | `AC-007.txt` | `grep -rc c93f4f9c .github/workflows/` → all 0 | PASS |
 | AC-008 | comfy-table pinned to 7.2.1 | `AC-008.txt` | `grep comfy-table Cargo.toml/lock` + MSRV check with Compiling line | PASS |

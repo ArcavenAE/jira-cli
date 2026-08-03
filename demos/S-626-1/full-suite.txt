@@ -1,4 +1,4 @@
-# Head: 64e2a4bc  Captured: 2026-08-03  Status: regenerated
+# Head: c88374b4  Captured: 2026-08-03  Status: re-verified (Round 5 — cargo test aggregate re-run at c88374b4; 2343/0/100 confirmed unchanged; MSRV/clippy/fmt not re-run — delta was test-only, no src/ changes)
 
 --- cargo test (full regression) ---
 $ cd /Users/zious/Documents/GITHUB/jira-cli/.worktrees/S-626-1 && cargo test 2>&1 | grep "test result" | awk '{for(i=1; i<=NF; i++) {if($i == "passed;") passed += $(i-1); if($i == "failed;") failed += $(i-1); if($i == "ignored;") ignored += $(i-1)}} END {print "AGGREGATE: " passed " passed / " failed " failed / " ignored " ignored"}'
@@ -10,7 +10,7 @@ commit b51fc26a (test(team-column): test_board_view_omits_team_column_when_field
 and test_issue_list_omits_team_column_when_field_unconfigured). The ignored count matches: 100.
 No failed tests. Discrepancy from stated figure: +2 pass (expected 2341, actual 2343).
 This is not a regression — it is the +2 new AC-9 tests added in the delivery commits.
-The story spec Task 7d states the baseline as "2341 passed / 0 failed / 100 ignored";
+The story v1.3 scope note (commit cc7f6da5) states the baseline as "2341 passed / 0 failed / 100 ignored";
 the real current count is 2343 because the story itself added 2 new tests. Both are consistent.
 
 --- RUSTUP_TOOLCHAIN=1.85.0 cargo check --all-features --locked (MSRV proof) ---

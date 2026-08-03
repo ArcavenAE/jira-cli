@@ -250,7 +250,7 @@ Categories:
 ### EC-OUT-002: Stale team cache — bare UUID fallback in table view (team column)
 **Boundary**: Issue has team UUID but team name not in cache (`teams.json` absent or no matching entry).
 **Expected**: Table cell shows bare UUID only (e.g., `"team-uuid-orphan"`); no `(name not cached — …)` suffix. The `(name not cached — run 'jr team list --refresh')` hint is ONLY emitted by `jr issue view` (`src/cli/issue/view.rs::handle_view`) — that behavior is owned by BC-2.3.035, not this path.
-**Status**: Covered by BC-5.3.003.
+**Status**: Covered by BC-5.3.003; the no-suffix clause is specifically verified by the `.not()` assertion on the `(name not cached…)` suffix in `tests/team_column_parity.rs::sprint_current_falls_back_to_uuid_when_team_not_cached`.
 
 ### EC-OUT-003: Team column with `--output json` — raw UUID
 **Boundary**: `jr sprint current --output json` with team UUID present.

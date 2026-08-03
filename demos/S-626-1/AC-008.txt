@@ -1,10 +1,10 @@
-# Head: 64e2a4bc  Captured: 2026-08-03  Status: regenerated
+# Head: c88374b4  Captured: 2026-08-03  Status: re-stamped (Round 5 — head-only; delta c88374b4 was test-only; Cargo.toml/Cargo.lock unchanged)
 
 $ cd /Users/zious/Documents/GITHUB/jira-cli/.worktrees/S-626-1 && grep -n "comfy-table" Cargo.toml
 24:comfy-table = "=7.2.1"
 
 $ cd /Users/zious/Documents/GITHUB/jira-cli/.worktrees/S-626-1 && sed -n '19,25p' Cargo.toml
-# Pinned to 7.2.1: 7.2.2 uses let-chains (edition 2024, requires Rust >=1.88) and
+# Pinned to 7.2.1: 7.2.2 uses let-chains (edition 2024, requires Rust ≥1.88) and
 # deleted the rust-version manifest field, so a caret range resolves to an
 # incompatible version without any MSRV enforcement from cargo. Pin holds until
 # MSRV is raised to 1.88 in a dedicated story.

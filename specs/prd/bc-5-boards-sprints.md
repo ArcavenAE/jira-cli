@@ -222,9 +222,9 @@ it entirely.
 #### BC-5.3.001: Team column appears IFF `team_field_id` configured AND at least one issue has populated team UUID
 
 **Confidence**: HIGH
-**Source**: `tests/team_column_parity.rs::sprint_current_shows_team_column_when_populated`; `tests/team_column_parity.rs::board_view_kanban_shows_team_column_when_populated`
+**Source**: `tests/team_column_parity.rs::sprint_current_shows_team_column_when_populated`; `tests/team_column_parity.rs::board_view_kanban_shows_team_column_when_populated`; `tests/cli_handler.rs::test_list_shows_team_column_with_cached_name`
 **Subject**: Boards & Sprints
-**Behavior**: Column gating is conjunctive — both conditions required. Affects `jr sprint current`, `jr board view`, and `jr issue list` (all three call sites use the identical three-level nested-if gate: `OutputFormat::Table` → `team_field_id is Some` → `any uuid is Some`; see `src/cli/board.rs::handle_view` and `src/cli/issue/list.rs::handle_list`).
+**Behavior**: Column gating is conjunctive — both conditions required (Table mode AND configured field AND ≥1 populated UUID). Affects `jr sprint current`, `jr board view`, and `jr issue list`. Implementation form differs by call site: `src/cli/board.rs::handle_view` and `src/cli/issue/list.rs::handle_list` express the three conditions as a three-level nested `if` (outermost: `if matches!(output_format, OutputFormat::Table)` → `if let Some(field_id) = team_field_id` → `if uuids.iter().any(…)`); `src/cli/sprint.rs::handle_current` expresses the Table case as a `match` arm (`OutputFormat::Table => {…}`), with the remaining two conditions as nested `if`s inside that branch.
 **Trace**: Pass 3 BC-1138a/c (R4)
 
 ---
@@ -240,8 +240,8 @@ it entirely.
 #### BC-5.3.003: Team column falls back to bare UUID when team name is not in cache
 
 **Confidence**: HIGH
-**Source**: `tests/team_column_parity.rs::sprint_current_falls_back_to_uuid_when_team_not_cached`
-**Behavior**: When the team UUID has no corresponding entry in `teams.json` (cache miss or empty cache), the table cell shows the raw UUID string only — no parenthetical suffix. Implementation: `team_map.get(uuid).cloned().unwrap_or_else(|| uuid.clone())` in `src/cli/board.rs::handle_view` and `src/cli/issue/list.rs::handle_list`. Cross-reference: the `(name not cached — run 'jr team list --refresh')` hint string is ONLY emitted on the single-issue `jr issue view` path (`src/cli/issue/view.rs:~264,269`) and is exclusively owned by **BC-2.3.035**. Do not attribute that hint string to the Team column table path.
+**Source**: `tests/team_column_parity.rs::sprint_current_falls_back_to_uuid_when_team_not_cached` (no-suffix clause verified by the `.not()` assertion on the `(name not cached…)` suffix in this test; this test reaches `src/cli/sprint.rs::handle_current` only); `tests/cli_handler.rs::test_list_team_column_falls_back_to_uuid_when_cache_missing`
+**Behavior**: When the team UUID has no corresponding entry in `teams.json` (cache miss or empty cache), the table cell shows the raw UUID string only — no parenthetical suffix. Implementation: `team_map.get(uuid).cloned().unwrap_or_else(|| uuid.clone())` in `src/cli/sprint.rs::handle_current`, `src/cli/board.rs::handle_view`, and `src/cli/issue/list.rs::handle_list`. Cross-reference: the `(name not cached — run 'jr team list --refresh')` hint string is ONLY emitted on the single-issue `jr issue view` path (`src/cli/issue/view.rs:~264,269`) and is exclusively owned by **BC-2.3.035**. Do not attribute that hint string to the Team column table path.
 **Trace**: Pass 3 BC-1138e (R4)
 
 ---

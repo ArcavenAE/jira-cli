@@ -8039,3 +8039,86 @@ Changes made:
 
 **Pipeline:** PAUSED — awaiting passes 12/13/14 on amended state (fix round 3 applied).
 **STORY-INDEX:** v1.5.53. **trajectory-tail:** →1→4→4→2.
+
+---
+
+## Burst: ADVERSARY-12-13-14 + FIX-ROUND-4
+
+**Timestamp:** 2026-08-03T09:00:00Z
+**Burst type:** Adversarial review passes + fix round
+**Branch:** ci/fix-toolchain-sha-msrv (PR #667 — OPEN, UNMERGED)
+**Feature HEAD at burst open:** c88374b41ee4ea30bc2406e1def90cedf3686275
+**Factory HEAD before commit:** 2dc29f37 (ADVERSARY-9-10-11+FIX-ROUND-3 burst)
+
+### Adversarial Passes Recorded
+
+**Pass 12** (WINDOW-ELIGIBLE, CLEAN isolation):
+- Verdict: NOT CLEAN — 0 HIGH + 5 MEDIUM + 5 LOW; zero code defects
+- Novel: MED-001 (BC-5.3.001 sprint.rs gates differ), MED-002 (S-641-1 AC-2 item 8 patterns), MED-003/004 (AC-009 line count arithmetic), MED-005 (S-576-5 SS-04 missing row)
+- LOW class: transcript fidelity (AC-005 separators, AC-008 Unicode char, full-suite Task 7c/d, INDEX "both files")
+- Grep-hygiene: two patterns self-corrected before trusting result — CORRECTIVE VERIFIED EFFECTIVE
+
+**Pass 13** (WINDOW-ELIGIBLE, CLEAN isolation):
+- Verdict: NOT CLEAN — 0 HIGH + 4 MEDIUM + 6 LOW; zero code defects
+- Novel: MED-002 (BC-5.3.003 no-suffix uncovered), MED-004 (S-576 family status drift → DEC-208 routing)
+- Confirmation: MED-001 (BC-5.3.001 Source gap), MED-003 (AC-005 third site)
+- LOW: line-drift class (ci.yml ~:98→~:112 ×3, sign-and-publish ~:64→~:65, backfill ~:79→~:80) + Source gap disclosure
+
+**Pass 14** (WINDOW-ELIGIBLE, CLEAN isolation):
+- Verdict: NOT CLEAN — 0 HIGH + 4 MEDIUM + 5 LOW; zero code defects; window 12/13/14 COMPLETE
+- Novel: MED-004 (S-641-1 AC-2 item 6 `^=\d+\.\d+` admits two-component version)
+- Confirmation: MED-001 (BC-5.3.001, third), MED-002 (BC-5.3.003 Source symbols)
+- MED-003/LOW-005 ACCEPTED (format inconsistency, phrasing ambiguity)
+- Two new meta-patterns recommended: mechanical line-count check (B−A+1) + byte-diff for transcripts
+
+**SEVERITY DECAY CONFIRMED:** Window 9/10/11 = 4 HIGH each (VOID passes, findings valid). Window 12/13/14 = ZERO HIGH across all three. Code 0-defect nine consecutive passes (6–14 minus VOID 9+11).
+
+### Fix Round 4 Artifacts Applied
+
+**demos/S-626-1/ (11 files):**
+- AC-001.txt through AC-009.txt — transcript corrections (separators, Unicode char, line counts, attribution)
+- INDEX.md — "both files" → "all three files"; release.yml third-site evidence noted
+- full-suite.txt — Task 7c attribution corrected; test count 2343 confirmed
+- regression-state.json — status update
+
+**specs/prd/bc-5-boards-sprints.md:**
+- BC-5.3.001 Behavior restated: sprint.rs adds `!is_kanban` check; gates NOT identical
+- BC-5.3.003 Source updated with symbol citations
+
+**specs/prd/edge-case-catalog.md:**
+- EC-OUT-002 updated
+
+**stories/S-576-5.md** (v1.47→v1.48): issues.rs row added to File Structure Requirements
+
+**stories/S-626-1.md** (v1.9→v1.10): citation fixes (ci.yml ~:98→~:112 ×3, sign-and-publish ~:64→~:65, backfill ~:79→~:80, Task 4 ranges)
+
+**stories/S-641-1.md** (v0.6→v0.7): AC-2 item 6 predicate `^=\d+\.\d+\.\d+` (three-component), AC-2 item 8 single pattern
+
+**stories/STORY-INDEX.md** (v1.5.53→v1.5.54): all touched rows reconciled; S-MAINT-576-HYG-1 registered
+
+**stories/S-MAINT-576-HYG-1.md** (NEW — 302 lines): draft maintenance story for S-576 family retroactive hygiene (DEC-208)
+
+### Product Commit Recorded
+
+`c88374b41ee4ea30bc2406e1def90cedf3686275` on branch `ci/fix-toolchain-sha-msrv` — PR #667 remains OPEN and UNMERGED. Toolchain SHA + MSRV correction commit. Recorded for adversarial pass input tracking only. No product-tree changes in this burst.
+
+### Decisions Recorded
+
+**DEC-207:** ROUND 4 + PASSES 15/16/17 AUTHORIZED — DEC-191(d) ceiling of 10 was 14 recorded passes ago; window 12/13/14 = 0/3 CLEAN; grind continues to window 15/16/17.
+
+**DEC-208:** S-576 FAMILY DRIFT ROUTED AS S-MAINT-576-HYG-1 — P13-MED-004 status drift (4 stories "ready" vs STORY-INDEX "completed") routed to new maintenance story S-MAINT-576-HYG-1 rather than fix round 4 (not in-delta for S-626-1).
+
+DEC-204 remains UNADJUDICATED.
+
+### Drift Item Updates
+
+- **ORCHESTRATOR-GREP-HYGIENE-INSUFFICIENT** → CORRECTIVE VERIFIED EFFECTIVE (3/3 clean isolation in window 12/13/14; vs 2/3 breached in prior window)
+- **FIX-ROUND-PARTIAL-PROPAGATION** → REFINED: round 4 confirms pattern; greppable classes FULLY swept; per-artifact re-derivation NOT swept; 4 new defects in new prose
+- **S-576-FAMILY-SUBSYSTEM-PATTERN** → ROUTED to S-MAINT-576-HYG-1 (DEC-208)
+- NEW: **FIX-ROUND-INTRODUCES-DEFECTS-IN-NEW-PROSE** — MEDIUM, OPEN: each fix round sweeps greppable classes but introduces ~4 prose defects in newly-written content; mechanical line-count check + byte-diff for transcripts recommended
+- NEW: **DEMO-TRANSCRIPT-FIDELITY-NO-MECHANICAL-GUARD** — MEDIUM, OPEN: no automated verification that demo transcript content (line counts, char encoding, task labels) matches source artifacts; three consecutive windows found this class
+
+**Convergence status post-burst:** 0/3. 14 recorded passes; 5 VOID (3 dispatch + 2 isolation); 9 window-eligible passes; all NOT CLEAN. 139 total findings. DEC-207 authorized continued grinding to passes 15/16/17. PR #667 HELD pending 3-pass CLEAN window.
+
+**Pipeline:** PAUSED — awaiting passes 15/16/17 on amended state (fix round 4 applied).
+**STORY-INDEX:** v1.5.54. **trajectory-tail:** →0→0→0 (ZERO HIGH three consecutive).
