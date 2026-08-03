@@ -1,26 +1,26 @@
 ---
 document_type: adversarial-review-index
 level: ops
-version: "1.4"
+version: "1.5"
 status: in-review
 producer: adversary
-timestamp: 2026-07-31T08:00:00Z
+timestamp: 2026-08-03T02:00:00Z
 phase: "5"
-pass: 8
+pass: 11
 inputs: [.factory/stories/S-626-1.md, .github/workflows/ci.yml, CLAUDE.md, src/cli/board.rs, src/cli/issue/list.rs, src/cli/auth/keychain.rs]
 traces_to: .factory/stories/S-626-1.md
-total_findings: 64
-severity_distribution: { CRIT: 0, HIGH: 7, MED: 19, LOW: 26, INFO: 12 }
+total_findings: 110
+severity_distribution: { CRIT: 0, HIGH: 17, MED: 45, LOW: 36, INFO: 12 }
 story: S-626-1
 cycle: cycle-001
 feature_head: 64e2a4bcde44ec20bc1f64d80eb402ca8aebc406
 pr: 667
 basis: TRUE ADVERSARY AGENT (not a DEC-190 substitute)
-convergence: 0 of 3 (Step 4.5 window — DEC-199 GRIND to 3/3 CLEAN)
-void_spawns: 3 (passes 6/7/8 first-attempt background subagents; re-dispatched synchronously)
+convergence: 0 of 3 (Step 4.5 window — DEC-199 GRIND to 3/3 CLEAN; DEC-205 ceiling breach authorized — grind to 12/13/14)
+void_spawns: 5 (passes 6/7/8 first-attempt background subagents; pass-9 isolation breach; pass-11 isolation breach)
 ---
 
-# Adversarial Review Index — S-626-1 (SOH-DX-1) Passes 1 + 2 + 3 + 4 + 5 + 6 + 7 + 8
+# Adversarial Review Index — S-626-1 (SOH-DX-1) Passes 1..11
 
 ## Pass 1 Finding Catalog
 
@@ -196,35 +196,45 @@ ADV-P4-INFO-005   --informs--> S-641-1 AC-2 (complete let-chain detection form s
 | 3 | NOT CLEAN | 0 | 3 (3 GAP) | 3 (3 REF) | 2 | 2 | NO | NOT CLEAN — 3 passes, 3 layers |
 | 4 | NOT CLEAN | 0 | 0 | 4 (3 GAP, 1 REF) | 1 | 2 | NO | NOT CLEAN — severity ceiling fell to LOW |
 | 5 | NOT CLEAN | 0 | 0 | 2 (1 GAP, 1 RES) | 1 | 0 | NO | NOT CLEAN — **3/3 all-residue (RECONSTRUCTED)** |
-| VOID-6A/7A/8A | N/A — NOT COUNTED | — | — | — | — | — | — | VOID — not window-eligible |
+| VOID-6A/7A/8A | N/A — NOT COUNTED | — | — | — | — | — | — | VOID — not window-eligible (background subagent dispatch failures) |
 | 6 | NOT CLEAN | 3 | 3 | 2 | 2 | 2 | NO | RESET — HIGH findings after fix round; step 4.5 window 0/3 |
 | 7 | NOT CLEAN | 3 | 4 | 5 | 1 | 2 | NO | 0/3 — F-03 UNIQUE: stale demo FALSE-GREEN GENERATOR confirmed and fixed |
 | 8 | NOT CLEAN | 1 | 1 | 3 | 0 | 1 (obs) | NO | 0/3 — fix round applied 2026-07-31; fresh window required on amended state |
+| 9 (VOID-9A) | VOID | 4 | 7 | 4 | 0 | 0 | NO | VOID — isolation breach; [Mm]utation-detecting grep leaked STATE.md:119; per DEC-206 findings valid, pass window-ineligible |
+| 10 | NOT CLEAN | 4 | 11 | 3 | 0 | 4 ([pg]) | NO | 0/3 — WINDOW-ELIGIBLE (clean isolation); 5 novel findings; fix-round-partial-propagation meta-pattern; fix round 3 applied |
+| 11 (VOID-11A) | VOID | 2 | 8 | 3 | 0 | 0 | NO | VOID — isolation breach; two root greps leaked STATE.md + spec-changelog.md; per DEC-206 findings valid, pass window-ineligible |
 
-**Overall convergence: 0 of 3 (Step 4.5 — 8 recorded passes + 3 VOID; DEC-199: GRIND to 3/3 CLEAN; DEC-191(d) ceiling = 10; ceiling breach at 11 if 3-pass window starts now — ESCALATION REQUIRED)**
+**Overall convergence: 0 of 3 (Step 4.5 — 11 recorded passes; 5 VOID [3 dispatch + 2 isolation]; DEC-199: GRIND to 3/3 CLEAN; DEC-191(d) ceiling breached; DEC-205: ceiling breach authorized — grind to passes 12/13/14)**
 
 **Findings accumulator (running total):**
 - Passes 1–5: 36 total (HIGH: 0, MED: 11, LOW: 16, INFO: 9)
 - Pass 6 adds: +10 (HIGH: 3, MED: 3, LOW: 2, INFO: 2)
 - Pass 7 adds: +13 (HIGH: 3, MED: 4, LOW: 5, INFO: 1) [F-13 pre-existing; +1 MED]
 - Pass 8 adds: +5 (HIGH: 1, MED: 1, LOW: 3, INFO: 0) [observations not counted in totals]
-- **Grand total: 64 findings (CRIT: 0, HIGH: 7, MED: 19, LOW: 26, INFO: 12)**
+- Pass 9 adds: +15 (HIGH: 4, MED: 7, LOW: 4, INFO: 0) [VOID for window; findings counted]
+- Pass 10 adds: +18 (HIGH: 4, MED: 11, LOW: 3, INFO: 0) [WINDOW-ELIGIBLE]
+- Pass 11 adds: +13 (HIGH: 2, MED: 8, LOW: 3, INFO: 0) [VOID for window; findings counted]
+- **Grand total: 110 findings (CRIT: 0, HIGH: 17, MED: 45, LOW: 36, INFO: 12)**
 
 ---
 
-## VOID Spawns — Three Background Subagent Dispatches (NOT window-eligible, NOT counted in trajectory)
+## VOID Spawns — Five VOID Passes (NOT window-eligible, NOT counted in trajectory)
 
-Three earlier background adversary spawns (intended to be passes 6, 7, and 8) produced no retrievable output and were superseded by re-dispatched synchronous passes. These are recorded here for audit completeness only.
+Five passes are recorded as VOID for window eligibility. Three early background subagent dispatches (passes 6/7/8 first attempts) produced no retrievable output and were superseded by re-dispatched synchronous passes. Two later passes (9 and 11) had isolation breaches that disqualified them from window eligibility per DEC-206. All five are recorded here for audit completeness only.
 
-**They are NOT window-eligible and NOT counted in the convergence trajectory.** Counting them would inflate the pass count on a bookkeeping artifact.
+**They are NOT window-eligible and NOT counted in the convergence trajectory.**
 
-**Cause:** Named background subagents in this session spawned but never delivered their final report. `TaskList` returned empty. Only unnamed synchronous dispatches returned output reliably. See NAMED-BACKGROUND-SUBAGENT-REPORT-LOSS drift item.
+**Cause (VOID-6A/7A/8A):** Named background subagents spawned but never delivered final reports. `TaskList` returned empty. Only unnamed synchronous dispatches returned output reliably. See NAMED-BACKGROUND-SUBAGENT-REPORT-LOSS drift item.
 
-| Void ID | Intended Pass | Agent Name | Disposition |
-|---------|---------------|------------|-------------|
-| VOID-6A | 6 (first attempt) | adv-pass6 | Named background; no report delivered; superseded by synchronous re-dispatch |
-| VOID-7A | 7 (first attempt) | adv-pass7 | Named background; no report delivered; superseded by synchronous re-dispatch |
-| VOID-8A | 8 (first attempt) | adv-pass8 | Named background; no report delivered; superseded by synchronous re-dispatch |
+**Cause (VOID-9A/11A):** Orchestrator dispatch defect — greps issued at `.factory/` root rather than scoped to named subdirectories. Both passes leaked banned-path content (STATE.md lines and spec-changelog.md). Pass-9 leaked via `[Mm]utation-detecting` pattern match returning STATE.md:119. Pass-11 leaked via two root-level greps returning STATE.md (5 lines) and spec-changelog.md (1 line). Per DEC-206, isolation-breach passes are VOID for window eligibility; findings remain valid for fix-round tracking. Tracked as ORCHESTRATOR-GREP-HYGIENE-INSUFFICIENT drift item.
+
+| Void ID | Intended Pass | Cause | Disposition |
+|---------|---------------|-------|-------------|
+| VOID-6A | 6 (first attempt) | Named background; no report delivered | Superseded by synchronous re-dispatch |
+| VOID-7A | 7 (first attempt) | Named background; no report delivered | Superseded by synchronous re-dispatch |
+| VOID-8A | 8 (first attempt) | Named background; no report delivered | Superseded by synchronous re-dispatch |
+| VOID-9A | 9 | Isolation breach — grep at `.factory/` root leaked STATE.md:119 | Pass findings valid; window-eligibility VOID per DEC-206 |
+| VOID-11A | 11 | Isolation breach — two root greps leaked STATE.md (5 lines) + spec-changelog.md (1 line) | Pass findings valid; window-eligibility VOID per DEC-206 |
 
 **Additional consequence:** The failed background subagents also caused a DUPLICATE dispatch of the product-owner and demo-recorder agents, resulting in two agents concurrently writing the same demo files. Final state verified coherent (`cargo clean` variant won; no interleaving artifacts).
 
@@ -318,6 +328,106 @@ Three earlier background adversary spawns (intended to be passes 6, 7, and 8) pr
 - **Key adjudication:** msrv gap DEMOTED from HIGH to Obs-1 (S-641-1 ACs provide remedy); SS-11 confirmed as MIS-ANCHOR per DEC-200
 - **Convergence:** 0 of 3 — three passes post-scope-decision, all NOT CLEAN; fix round applied; fresh window required
 - **Detail artifact:** `s-626-1-adversary-pass-8.md`
+
+---
+
+## Pass 9 Finding Catalog
+
+| ID | Severity | Classification | Title | Status | Notes |
+|----|----------|----------------|-------|--------|-------|
+| ADV-P9-HIGH-001 | HIGH | GAP · in-delta | S-640-1 subsystems incomplete — only SS-02 listed; target_module: src/ contradicted | FIXED — S-640-1 v0.4 | SS-01..SS-09 with per-subsystem justification |
+| ADV-P9-HIGH-002 | HIGH | GAP · in-delta | S-576-5 subsystems wrong — SS-11 phantom; SS-02/SS-04 missing; target_module self-contradicted | FIXED — S-576-5 v1.47 | SS-02/SS-04 added; SS-03/SS-09 retained (F-02 pass-11 found residual) |
+| ADV-P9-HIGH-003 | HIGH | GAP · in-delta | BC-5.3.003 `Source:` mis-anchors to view.rs; correct owner is INV-READ-009 / list.rs | FIXED — bc-5 + BC-INDEX | BC-5.3.003 retitled; anchor corrected to list.rs (unique P9 finding) |
+| ADV-P9-HIGH-004 | HIGH | GAP · in-delta | Demo AC-008.txt certifies PASS on stale `.factory/research/` reference (AC-8 forbids it) | FIXED — AC-008.txt regenerated | Cold-cache cold-build at HEAD 64e2a4bc |
+| ADV-P9-MED-001 | MEDIUM | GAP · in-delta | AC-006.txt stale; records superseded mechanism claim as CONFIRMED | FIXED — AC-006.txt regenerated | |
+| ADV-P9-MED-002 | MEDIUM | GAP · in-delta | STORY-INDEX S-626-1 row contradicts story file on status and blocks | FIXED — STORY-INDEX v1.5.53 | |
+| ADV-P9-MED-003 | MEDIUM | GAP · in-delta | SS-11 sweep updated subsystems but STORY-INDEX rows for S-640-1/S-576-5 not refreshed | FIXED — STORY-INDEX v1.5.53 | |
+| ADV-P9-MED-004 | MEDIUM | GAP · in-delta | S-626-1 v1.8 "mutation-detecting" persists in File Structure Requirements row | FIXED — S-626-1 v1.9 | |
+| ADV-P9-MED-005 | MEDIUM | GAP · pre-existing | keychain coverage gap — `resolve_credential` rewrite has no test pinning three credential-resolution paths | OPEN | Unique P9 finding; tracked as KEYCHAIN-CREDENTIAL-PATH-UNCOVERED drift item |
+| ADV-P9-MED-006 | MEDIUM | PROCESS-GAP | Citation guard (`check-bc-citation-symbols.sh`) scopes src/ only; .factory/stories/*.md BC citations unvalidated | OPEN | Unique P9 finding; tracked as CITATION-GUARD-SRC-ONLY drift item |
+| ADV-P9-MED-007 | MEDIUM | GAP · in-delta | BC-5.3.001 in bcs: but no AC traces to it; positive path uncovered | FIXED — S-626-1 v1.9 | AC trace added |
+| ADV-P9-LOW-001 | LOW | REFINEMENT · spec artifact | AC-004.txt cites ci.yml line numbers that don't match delivered file | FIXED — AC-004.txt regenerated | |
+| ADV-P9-LOW-002 | LOW | GAP · spec artifact | INDEX.md claims head 64e2a4bc for full artifact set; 6 artifacts not regenerated at that head | FIXED — all 11 artifacts regenerated; Regeneration Log added | |
+| ADV-P9-LOW-003 | LOW | REFINEMENT · spec artifact | INV-READ-009 MSRV note is an un-listed cleanup site not in CLAUDE.md:163 obligation | FIXED — marked self-identifying-temporary | |
+| ADV-P9-LOW-004 | LOW | REFINEMENT · spec artifact | AC-9 and Task 7d state test count 2341; demo shows 2343 | FIXED — S-626-1 v1.9 | 2341→2343 at both sites |
+
+## Pass 9 Isolation Note
+
+**VOID — ORCHESTRATOR DISPATCH DEFECT.** `grep -r "[Mm]utation-detecting" .factory/` at `.factory/` root surfaced STATE.md:119 containing convergence trajectory data. Reviewer had access to banned-path content prior to completing analysis. Per DEC-206, isolation-breach passes are disqualified from step-4.5 window eligibility. Findings remain valid.
+
+## Pass 9 Summary
+
+- **Verdict:** NOT CLEAN — 4 HIGH + 7 MEDIUM + 4 LOW; zero code defects; pass VOID for window
+- **Post-capture routing:** HIGH-001..004 + MED-001..004 + MED-007 + LOW-001..004 → fix round 3 (.factory/ + product-repo); MED-005 (keychain coverage gap) → KEYCHAIN-CREDENTIAL-PATH-UNCOVERED drift item; MED-006 (citation-guard src-only) → CITATION-GUARD-SRC-ONLY drift item
+- **Convergence:** 0/3 — pass VOID for window (isolation breach, DEC-206); 3 unique findings (H-003 BC-5.3.003 mis-anchor; M-005 keychain coverage gap; M-006 citation-guard src-only)
+- **Detail artifact:** `s-626-1-adversary-pass-9.md`
+
+---
+
+## Pass 10 Finding Catalog
+
+| ID | Severity | Classification | Title | Status | Notes |
+|----|----------|----------------|-------|--------|-------|
+| ADV-P10-HIGH-001 | HIGH | GAP · in-delta | AC-008.txt certifies PASS on Cargo.toml state that VIOLATES AC-8 (.factory/research path) | FIXED — AC-008.txt regenerated fix round 3 | |
+| ADV-P10-HIGH-002 | HIGH | GAP · in-delta | AC-006.txt stale; records superseded factually-incorrect precedence text as CONFIRMED | FIXED — AC-006.txt regenerated fix round 3 | |
+| ADV-P10-HIGH-003 | HIGH | GAP · in-delta | S-640-1 subsystems materially incomplete — SS-02 only; target_module: src/ contradicted | FIXED — S-640-1 v0.4 | Third independent confirmation |
+| ADV-P10-HIGH-004 | HIGH | GAP · in-delta | S-576-5 subsystems omit SS-02/SS-04; SS-03 is false anchor; contradicts own target_module | FIXED — S-576-5 v1.47 | Third independent confirmation |
+| ADV-P10-MED-001 | MEDIUM | GAP · in-delta | AC-004.txt cites ci.yml line numbers that don't match delivered file | FIXED — AC-004.txt regenerated | |
+| ADV-P10-MED-002 | MEDIUM | PROCESS-GAP | Demo regeneration has no completeness assertion; INDEX.md claims head for unrefreshed artifacts | FIXED — all 11 artifacts regenerated; Regeneration Log added | Root-cause diagnosis (unique P10 finding) |
+| ADV-P10-MED-003 | MEDIUM | GAP · in-delta | `issue list` test anchored into BC-5 Boards & Sprints; real owner INV-READ-009 | FIXED — re-homed; INV-READ-009 Source updated | |
+| ADV-P10-MED-004 | MEDIUM | GAP · spec artifact | AC-009.txt claims both guard conditions pinned; outer Table-gate mutant survives both tests | FIXED — false coverage claim corrected; outer-gate gap remains open | |
+| ADV-P10-MED-005 | MEDIUM | GAP · spec artifact | STORY-INDEX S-626-1 row contradicts story file on status and blocks; three-way disagreement | FIXED — S-626-1 v1.9 + STORY-INDEX v1.5.53 | |
+| ADV-P10-MED-006 | MEDIUM | GAP · spec artifact | SS-11 sweep bumped S-640-1/S-576-5 but STORY-INDEX rows not refreshed | FIXED — STORY-INDEX v1.5.53 | |
+| ADV-P10-MED-007 | MEDIUM | GAP · spec artifact | v1.8 "mutation-detecting" correction propagated to AC-9 but not File Structure Requirements | FIXED — S-626-1 v1.9 | |
+| ADV-P10-MED-008 | MEDIUM | GAP · spec artifact | BC-5.3.001 in bcs: but no AC traces to it | FIXED — AC trace added | |
+| ADV-P10-MED-009 | MEDIUM | GAP · spec artifact | bc-5 §5.3 header says "(7 contracts)"; BC-INDEX says "(4 BCs)"; count inconsistency | FIXED — §5.3 count removed | Unique P10 finding; guard extension tracked as drift item |
+| ADV-P10-MED-010 | MEDIUM | GAP · spec artifact | S-641-1 AC-1/AC-2 mutually inconsistent on version granularity; AC-2 guard fails on correct tree | FIXED — S-641-1 v0.6 | |
+| ADV-P10-MED-011 | MEDIUM | PROCESS-GAP | SS-09 file set doesn't cover scripts/, tests/, .github/dependabot.yml; S-641-1 exclusivity contradicted | PARTIAL — S-641-1 rationale corrected; ARCH-INDEX extension tracked | Unique P10 finding |
+| ADV-P10-LOW-001 | LOW | REFINEMENT · spec artifact | release.yml MUST-NOT protection cites range that excludes the line it protects | FIXED — S-626-1 v1.9 | Unique P10 finding |
+| ADV-P10-LOW-002 | LOW | REFINEMENT · spec artifact | INV-READ-009 new MSRV note is un-listed cleanup site | FIXED — marked self-identifying-temporary | |
+| ADV-P10-LOW-003 | LOW | REFINEMENT · spec artifact | AC-9 and Task 7d state test-count target as 2341; demo shows 2343 | FIXED — 2341→2343 | Unique P10 finding |
+
+## Pass 10 Isolation Note
+
+**CLEAN.** Every grep scoped to named subdirectory; never `.factory/` root. Three banned-path filenames incidentally visible as quoted text inside in-perimeter files (disclosed). No banned-path content read; all findings independently re-derived from primary artifacts.
+
+## Pass 10 Summary
+
+- **Verdict:** NOT CLEAN — 4 HIGH + 11 MEDIUM + 3 LOW; zero code defects; **WINDOW-ELIGIBLE** (clean isolation); policy rubric ABSENT (baseline applied)
+- **Post-capture routing:** All 18 findings → fix round 3 (except MED-004 outer-gate gap remains open; MED-011 ARCH-INDEX tracked as drift item)
+- **Convergence:** 0/3 — WINDOW-ELIGIBLE; NOT CLEAN; mis-anchoring findings (F-03/F-05/F-06) block convergence unconditionally; 5 novel findings; fix-round-partial-propagation meta-pattern identified
+- **Detail artifact:** `s-626-1-adversary-pass-10.md`
+
+---
+
+## Pass 11 Finding Catalog
+
+| ID | Severity | Classification | Title | Status | Notes |
+|----|----------|----------------|-------|--------|-------|
+| ADV-P11-HIGH-001 | HIGH | GAP · fix-introduced | S-640-1 Task 0 bare-7.2.1 circular gate — spec artifacts contain the forbidden string; gate would block on its own deliverables | FIXED — Task 0 scope corrected; S-641-1 MSRV prose normalized | Unique P11 finding |
+| ADV-P11-HIGH-002 | HIGH | GAP · fix-residual | S-576-5 retains SS-03/SS-09 as false anchors after fix round 3 added SS-02/SS-04 | FIXED — SS-03/SS-09 removed | Fix-round-partial-propagation shape |
+| ADV-P11-MED-001 | MEDIUM | GAP · spec artifact | S-640-1 ARCH-INDEX Task 11 listed as deliverable but SS-11 registry entry still absent | FIXED — tracked as ARCH-INDEX-REGISTRY-COVERAGE-GAP drift item | |
+| ADV-P11-MED-002 | MEDIUM | GAP · fix-residual | BC-5.3.003 BC-INDEX row updated but bc-5 body title not swept; two surfaces disagree | FIXED — bc-5 heading updated | Fix-round-partial-propagation shape |
+| ADV-P11-MED-003 | MEDIUM | GAP · fix-residual | BC-INDEX §5.3 prose description still carries BC-5.3.003 old title post-retitling | FIXED | Fix-round-partial-propagation shape |
+| ADV-P11-MED-004 | MEDIUM | GAP · fix-residual | INV-READ-009 re-anchor applied to origin but cross-subsystem source in BC-5.3.002 not removed | FIXED — source removed from BC-5.3.002 | Fix-round-partial-propagation shape |
+| ADV-P11-MED-005 | MEDIUM | GAP · spec artifact | S-641-1 `blocks:` missing reverse edge to S-640-1 | FIXED — blocks: ["S-640-1"] | Unique P11 finding |
+| ADV-P11-MED-006 | MEDIUM | COVERAGE-GAP | BC-5.3.001 scope extended to `jr issue list` but no positive-path test added (POL-11) | OPEN — outer-gate test added; positive-path gap remains | |
+| ADV-P11-MED-007 | MEDIUM | PROCESS-GAP | ARCH-INDEX SS-09 scope mismatch: tests/ and scripts/ unregistered; S-641-1 rationale still contradicts test_files: | PARTIAL — S-641-1 corrected; ARCH-INDEX extension tracked | |
+| ADV-P11-MED-008 | MEDIUM | GAP · spec artifact | S-627-1 SS-09 best-fit assignment undisclosed in STORY-INDEX row | FIXED — STORY-INDEX disclosure note added | Fix-round-partial-propagation shape |
+| ADV-P11-LOW-001 | LOW | REFINEMENT · spec artifact | release.yml MUST-NOT updated at line 698 but not in blockquote at :101 or STORY-INDEX:500 | FIXED | Fix-round-partial-propagation shape |
+| ADV-P11-LOW-002 | LOW | REFINEMENT · spec artifact | full-suite.txt / AC-009.txt pre-date fix-round-3 test additions; anticipated drift | NOTED — will require re-capture after fix-round-3 PR lands | |
+| ADV-P11-LOW-003 | LOW | REFINEMENT · spec artifact | STORY-INDEX `last_updated:` dates for S-640-1/S-576-5 not refreshed despite version bumps | FIXED | Fix-round-partial-propagation shape |
+
+## Pass 11 Isolation Note
+
+**VOID — ORCHESTRATOR DISPATCH DEFECT.** Two greps issued at `.factory/` root (not scoped to named subdirectory) leaked STATE.md (5 result lines) and spec-changelog.md (1 result line). Per DEC-206, isolation-breach passes are disqualified from step-4.5 window eligibility. Findings remain valid. Meta-pattern noted: 8 of 13 findings are the fix-round-partial-propagation shape.
+
+## Pass 11 Summary
+
+- **Verdict:** NOT CLEAN — 2 HIGH + 8 MEDIUM + 3 LOW; zero code defects; pass VOID for window (isolation breach, DEC-206); 8 of 13 findings are fix-round-partial-propagation shape
+- **Post-capture routing:** All findings → fix round 3 (except MED-006 outer-gate gap; MED-007 ARCH-INDEX tracked); MED-001 tracked as ARCH-INDEX-REGISTRY-COVERAGE-GAP drift item
+- **Convergence:** 0/3 — pass VOID; FIX-ROUND-PARTIAL-PROPAGATION meta-pattern identified and tracked as drift item
+- **Detail artifact:** `s-626-1-adversary-pass-11.md`
 
 ---
 

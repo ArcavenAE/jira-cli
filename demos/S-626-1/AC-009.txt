@@ -1,3 +1,5 @@
+# Head: 64e2a4bc  Captured: 2026-08-03  Status: regenerated (coverage claim corrected)
+
 --- BEFORE (src/cli/board.rs on origin/develop, ~:231-234) ---
 $ git show origin/develop:src/cli/board.rs | sed -n '228,244p'
     // Team cache read is best-effort for display — a miss falls back to
@@ -81,7 +83,43 @@ NON-VACUOUSNESS of the two tests:
   or errored table; it is passing because the rewritten branch correctly returns empty when
   team_field_id is unconfigured even though team UUID data is present in the response.
 
-  A regression that removed the outer OutputFormat::Table check would produce a non-empty
-  team_displays Vec even without a field_id, causing the "Team" column to appear — failing
-  the negative assertion. A regression that skipped the if let entirely and always included
-  the column would also fail. The tests pin both guard conditions.
+CORRECTED COVERAGE CLAIM (prior artifact stated a false detection for the outer Table gate):
+
+  Both tests call write_config_without_team_field, so team_field_id is None. Both tests invoke
+  a command that produces Table-format output (board view / issue list), so
+  matches!(output_format, OutputFormat::Table) is TRUE.
+
+  The rewritten structure is:
+    let team_displays = if matches!(output_format, OutputFormat::Table) {  // outer gate
+        if let Some(field_id) = team_field_id {                             // inner gate
+            // populate team_displays
+        } else {
+            Vec::new()   // fires in tests: team_field_id is None
+        }
+    } else {
+        Vec::new()       // does NOT fire in tests: output is Table
+    };
+
+  WHAT THE TESTS DO PIN (inner guard only):
+    If the inner "if let Some(field_id) = team_field_id" guard were removed and team_displays
+    were always populated regardless of field configuration (e.g., by always running the UUID
+    fetch with a placeholder field_id), then with team UUID data present in the response,
+    team_displays would be non-empty, show_team_col would be true, and the "Team" header would
+    appear — failing the negative assertion. The tests pin the inner guard.
+
+  WHAT THE TESTS DO NOT PIN (outer Table gate):
+    With team_field_id = None, removing the outer matches!(output_format, OutputFormat::Table)
+    check has no effect: the inner else { Vec::new() } still fires because team_field_id is
+    still None. team_displays remains empty. show_team_col remains false. No "Team" column
+    appears. The tests still pass. The outer gate is not independently pinned by either new test.
+
+  PRIOR ARTIFACT'S FALSE CLAIM: "A regression that removed the outer OutputFormat::Table
+    check would produce a non-empty team_displays Vec even without a field_id, causing the
+    'Team' column to appear." This is incorrect: without team_field_id, the inner else branch
+    fires regardless of the outer condition, keeping team_displays empty.
+
+  CONCLUSION: The two tests provide regression coverage for the inner
+  "if let Some(field_id) = team_field_id" guard (the new else { Vec::new() } branch that
+  is the direct product of the S-626-1 let-chain rewrite). They guard against a regression
+  that removes or bypasses the inner field_id gate entirely. They do not independently pin
+  the outer OutputFormat::Table gate.

@@ -1,3 +1,5 @@
+# Head: 64e2a4bc  Captured: 2026-08-03  Status: reproduced-clean
+
 $ cd /Users/zious/Documents/GITHUB/jira-cli/.worktrees/S-626-1 && grep -n "E0463\|rustup target add\|Ensure target" .github/workflows/sign-and-publish.yml
 61:      # the build fails with `error[E0463]: can't find crate for 'core'`.
 63:      - name: Ensure target installed (defensive)

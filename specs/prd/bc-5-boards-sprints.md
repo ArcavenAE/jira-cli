@@ -217,14 +217,14 @@ it entirely.
 
 ---
 
-### 5.3 Team Column Parity (7 contracts)
+### 5.3 Team Column Parity
 
 #### BC-5.3.001: Team column appears IFF `team_field_id` configured AND at least one issue has populated team UUID
 
 **Confidence**: HIGH
 **Source**: `tests/team_column_parity.rs::sprint_current_shows_team_column_when_populated`; `tests/team_column_parity.rs::board_view_kanban_shows_team_column_when_populated`
 **Subject**: Boards & Sprints
-**Behavior**: Column gating is conjunctive — both conditions required. Affects `jr sprint current` and `jr board view`.
+**Behavior**: Column gating is conjunctive — both conditions required. Affects `jr sprint current`, `jr board view`, and `jr issue list` (all three call sites use the identical three-level nested-if gate: `OutputFormat::Table` → `team_field_id is Some` → `any uuid is Some`; see `src/cli/board.rs::handle_view` and `src/cli/issue/list.rs::handle_list`).
 **Trace**: Pass 3 BC-1138a/c (R4)
 
 ---
@@ -237,10 +237,11 @@ it entirely.
 
 ---
 
-#### BC-5.3.003: Team column shows `"UUID (name not cached — run 'jr team list --refresh')"` when cache is stale
+#### BC-5.3.003: Team column falls back to bare UUID when team name is not in cache
 
 **Confidence**: HIGH
 **Source**: `tests/team_column_parity.rs::sprint_current_falls_back_to_uuid_when_team_not_cached`
+**Behavior**: When the team UUID has no corresponding entry in `teams.json` (cache miss or empty cache), the table cell shows the raw UUID string only — no parenthetical suffix. Implementation: `team_map.get(uuid).cloned().unwrap_or_else(|| uuid.clone())` in `src/cli/board.rs::handle_view` and `src/cli/issue/list.rs::handle_list`. Cross-reference: the `(name not cached — run 'jr team list --refresh')` hint string is ONLY emitted on the single-issue `jr issue view` path (`src/cli/issue/view.rs:~264,269`) and is exclusively owned by **BC-2.3.035**. Do not attribute that hint string to the Team column table path.
 **Trace**: Pass 3 BC-1138e (R4)
 
 ---

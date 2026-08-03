@@ -1,3 +1,8 @@
+# Head: 64e2a4bc  Captured: 2026-08-03  Status: reproduced-clean
+# Note: BSD grep file-output order is non-deterministic across invocations on macOS; the
+# file listing order here may differ from a future re-run. Content (SHA, line numbers,
+# counts) is verified correct. The -c command below is stable in argument order.
+
 $ cd /Users/zious/Documents/GITHUB/jira-cli/.worktrees/S-626-1 && grep -n "fa04a1451ff1842e2626ccb99004d0195b455a88" .github/workflows/ci.yml .github/workflows/backfill-release.yml .github/workflows/e2e-sweeper.yml .github/workflows/e2e.yml .github/workflows/release.yml .github/workflows/sign-and-publish.yml
 .github/workflows/ci.yml:70:      - uses: dtolnay/rust-toolchain@fa04a1451ff1842e2626ccb99004d0195b455a88  # 1.85.0
 .github/workflows/ci.yml:112:      - uses: dtolnay/rust-toolchain@fa04a1451ff1842e2626ccb99004d0195b455a88  # stable

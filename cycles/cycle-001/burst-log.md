@@ -7983,3 +7983,59 @@ Changes made:
 
 **Pipeline:** PAUSED — awaiting human ruling on DEC-191(d) ceiling breach.
 **STORY-INDEX:** v1.5.52. **trajectory-tail:** →3→10→13→5.
+
+
+**Archived PP row (ADV-6-7-8-FIX-BURST):**
+
+> | **ADV-6-7-8-FIX-BURST (2026-07-31): adversary pass-6 (CLEAN isolation; 3H+3M+2L+2I), pass-7 (PARTIAL; 3H+4M+5L+1I; F-03 stale-demo), pass-8 (PARTIAL; 1H+1M+3L+6obs) — DIRECT CAPTURE x3; VOID-6A/7A/8A recorded; fix round applied (SS-11 x5 stories; BC/VP anchors; symbol cites; demo regen; INV-READ-009); ADV-P1-INDEX v1.4 (64 findings); DEC-199..DEC-204; 5 drift items; STORY-INDEX v1.5.52. ESCALATION REQUIRED — DEC-191(d) ceiling breach.** | PAUSED | 2026-07-31 | — | Human rules on DEC-191(d) ceiling breach before pass-9. PR #667 HELD (DEC-202). AX23-001 PENDING. | →0→3→3→1 |
+
+**Archived CPS row (ADV-6-7-8-FIX-BURST):**
+
+> | **ADV-6-7-8-FIX-BURST (2026-07-31): pass-6 (3H+3M+2L+2I; input-hash 48f780c) + pass-7 (3H+4M+5L+1I; input-hash af6f563; F-03 stale-demo) + pass-8 (1H+1M+3L+6obs; input-hash fe9aef2) + ADV-P1-INDEX v1.4 (64 total findings) + fix round (.factory/ + pre-applied product-repo changes) + STATE.md committed to factory-artifacts. VOID-6A/7A/8A recorded. DEC-199..DEC-204. 5 drift items. 247 lines.** | state-manager | COMPLETED | passes 6+7+8 + fix round + STATE.md committed to factory-artifacts. ESCALATION REQUIRED before pass-9. |
+
+
+## ADVERSARY-9-10-11+FIX-ROUND-3 NARRATIVE (2026-08-03)
+
+**Burst name:** ADVERSARY-9-10-11+FIX-ROUND-3
+**Date:** 2026-08-03
+**Agent:** state-manager (artifact writes); orchestrator (synchronous adversary dispatches)
+
+**Summary:** Three adversary passes (9/10/11) dispatched after DEC-205 authorized continued grinding past the DEC-191(d) ceiling (passes 12/13/14 target window). Two passes were VOID for window eligibility due to orchestrator dispatch defects (root-level `.factory/` greps leaking banned-path content — DEC-206, ORCHESTRATOR-GREP-HYGIENE-INSUFFICIENT). Pass-10 was WINDOW-ELIGIBLE (clean isolation) but NOT CLEAN (4H+11M+3L). Fix round 3 applied for all actionable findings. New meta-pattern identified: FIX-ROUND-PARTIAL-PROPAGATION (8 of 13 pass-11 findings). DEC-205+206 recorded. 6 new drift items.
+
+**Adversary pass artifacts created:**
+- `cycles/cycle-001/adversarial-reviews/s-626-1-adversary-pass-9.md` — VOID (isolation breach; [Mm]utation-detecting grep leaked STATE.md:119); 4H+7M+4L = 15 findings; zero code defects; 3 unique findings (H-003 BC-5.3.003 mis-anchor; M-005 keychain coverage gap; M-006 citation-guard src-only); input-hash 828aae3
+- `cycles/cycle-001/adversarial-reviews/s-626-1-adversary-pass-10.md` — WINDOW-ELIGIBLE (clean isolation); 4H+11M+3L = 18 findings; zero code defects; 5 unique findings (F-04 demo completeness root-cause; F-08 outer Table-gate mutant; F-09 §5.3 three-way count; F-10 release.yml MUST-NOT range; F-13 2341 stale test count); input-hash f5dc8ba
+- `cycles/cycle-001/adversarial-reviews/s-626-1-adversary-pass-11.md` — VOID (isolation breach; two root greps leaked STATE.md + spec-changelog.md); 2H+8M+3L = 13 findings; zero code defects; 2 unique findings (F-01 S-640-1 Task 0 circular gate; F-05 S-641-1 reverse-edge blocks field); meta-pattern: 8 of 13 findings are fix-round-partial-propagation shape; input-hash f5dc8ba
+
+**ADV-P1-INDEX.md updated:** v1.4→v1.5; passes 9+10+11 catalog sections added; VOID section updated (VOID-9A/11A isolation breaches added); Convergence Trajectory table updated (passes 9/10/11 rows); 110 total findings (was 64); severity_distribution { CRIT: 0, HIGH: 17, MED: 45, LOW: 36, INFO: 12 }; window remains 0/3 (only pass-10 WINDOW-ELIGIBLE, NOT CLEAN).
+
+**VOID isolation breaches recorded:**
+| Void ID | Pass | Cause | Disposition |
+|---------|------|-------|-------------|
+| VOID-9A | 9 | `grep "[Mm]utation-detecting" .factory/` at root leaked STATE.md:119 | Pass findings valid; window-eligibility VOID per DEC-206 |
+| VOID-11A | 11 | Two root-level greps leaked STATE.md (5 lines) + spec-changelog.md (1 line) | Pass findings valid; window-eligibility VOID per DEC-206 |
+
+**Fix round 3 — .factory/ artifact changes:**
+- `demos/S-626-1/AC-001.txt..AC-009.txt` (all 11) — regenerated at HEAD 64e2a4bc with per-artifact head stamps and Regeneration Log
+- `demos/S-626-1/INDEX.md`, `full-suite.txt` — updated
+- `regression-state.json` — {"status":"pass","timestamp":"2026-08-03T13:51:19Z"}
+- `specs/domain-spec/bc-02-issue-read.md` — INV-READ-009 marked self-identifying-temporary
+- `specs/prd/BC-INDEX.md` — BC-5.3.003 summary swept
+- `specs/prd/bc-5-boards-sprints.md` — BC-5.3.003 retitled; BC-5.3.001 scope extended; §5.3 count removed
+- `specs/prd/edge-case-catalog.md` — EC-OUT-002 fixed; pre-existing TD-031 volatile-citation remediated (BC-INDEX-TD031 archived item — REMEDIATED in fix-round-3)
+- `stories/S-576-5.md` v1.46→v1.47 — subsystems corrected (SS-03/SS-09 removed; SS-02/SS-04 kept)
+- `stories/S-626-1.md` v1.8→v1.9 — status/blocks corrected; release.yml line fixed; §5.3 trace corrected
+- `stories/S-640-1.md` v0.3→v0.4 — subsystems expanded SS-01..SS-09; Task 0 gate fixed
+- `stories/S-641-1.md` v0.5→v0.6 — bare pin sites fixed; AC-2 inverted predicate corrected; blocks: ["S-640-1"] added
+- `stories/STORY-INDEX.md` v1.5.52→v1.5.53 — all 5 rows reconciled
+
+**Decisions recorded:** DEC-205 (ceiling breach authorized — grind to passes 12/13/14) + DEC-206 (pass-9+11 VOID declared per isolation breach protocol).
+**New drift items:** ORCHESTRATOR-GREP-HYGIENE-INSUFFICIENT, FIX-ROUND-PARTIAL-PROPAGATION, CITATION-GUARD-SRC-ONLY, ARCH-INDEX-REGISTRY-COVERAGE-GAP, S-576-FAMILY-SUBSYSTEM-PATTERN, KEYCHAIN-CREDENTIAL-PATH-UNCOVERED.
+**Updated drift items:** ORCHESTRATOR-SKIPPED-POST-ADVERSARY-PERSISTENCE (passes 9+10+11 captured); REVIEW-ISOLATION-NOT-MECHANICALLY-ENFORCED (pass-9/11 VOID, pass-10 CLEAN).
+
+**Meta-pattern identified (FIX-ROUND-PARTIAL-PROPAGATION):** 8 of 13 pass-11 findings are the "fix at the flagged site, not at the class" shape. Root cause: fix-round executors correct the specifically-named location a prior review flagged, without independently re-deriving the defect class and sweeping the full corpus. Required remedy: for each finding, characterize the defect class, search corpus for all instances, fix all in one pass. Tracked as HIGH severity drift item.
+
+**Convergence status post-burst:** 0/3. 11 recorded passes; 5 VOID (3 dispatch + 2 isolation); 6 window-eligible (passes 1-8 not VOID, pass-10 WINDOW-ELIGIBLE); all NOT CLEAN. 110 total findings. DEC-205 authorized continued grinding to passes 12/13/14. PR #667 HELD (DEC-202) pending 3-pass CLEAN window.
+
+**Pipeline:** PAUSED — awaiting passes 12/13/14 on amended state (fix round 3 applied).
+**STORY-INDEX:** v1.5.53. **trajectory-tail:** →1→4→4→2.

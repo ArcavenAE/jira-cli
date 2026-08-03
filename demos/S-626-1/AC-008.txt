@@ -1,24 +1,58 @@
+# Head: 64e2a4bc  Captured: 2026-08-03  Status: regenerated
+
 $ cd /Users/zious/Documents/GITHUB/jira-cli/.worktrees/S-626-1 && grep -n "comfy-table" Cargo.toml
-23:# Ref: .factory/research/msrv-let-chains-comfy-table-2026-07-30.md
 24:comfy-table = "=7.2.1"
+
+$ cd /Users/zious/Documents/GITHUB/jira-cli/.worktrees/S-626-1 && sed -n '19,25p' Cargo.toml
+# Pinned to 7.2.1: 7.2.2 uses let-chains (edition 2024, requires Rust >=1.88) and
+# deleted the rust-version manifest field, so a caret range resolves to an
+# incompatible version without any MSRV enforcement from cargo. Pin holds until
+# MSRV is raised to 1.88 in a dedicated story.
+# See: issue #626.
+comfy-table = "=7.2.1"
+dialoguer = "0.12"
 
 $ cd /Users/zious/Documents/GITHUB/jira-cli/.worktrees/S-626-1 && grep -A 2 'name = "comfy-table"' Cargo.lock
 name = "comfy-table"
 version = "7.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 
-$ cd /Users/zious/Documents/GITHUB/jira-cli/.worktrees/S-626-1 && RUSTUP_TOOLCHAIN=1.85.0 cargo check --all-features 2>&1
-    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.19s
+--- Toolchain identity proof (same shell, immediately before cargo check) ---
+$ cd /Users/zious/Documents/GITHUB/jira-cli/.worktrees/S-626-1 && RUSTUP_TOOLCHAIN=1.85.0 rustc --version
+rustc 1.85.0 (4d91de4e4 2025-02-17)
+
+$ cd /Users/zious/Documents/GITHUB/jira-cli/.worktrees/S-626-1 && RUSTUP_TOOLCHAIN=1.85.0 rustup show active-toolchain
+1.85.0-aarch64-apple-darwin (overridden by environment variable RUSTUP_TOOLCHAIN)
+
+--- MSRV acceptance check (cargo clean -p jr to produce Compiling line; no source files modified) ---
+$ cd /Users/zious/Documents/GITHUB/jira-cli/.worktrees/S-626-1 && cargo clean -p jr 2>&1
+     Removed 43426 files, 6.6GiB total
+
+$ cd /Users/zious/Documents/GITHUB/jira-cli/.worktrees/S-626-1 && RUSTUP_TOOLCHAIN=1.85.0 cargo check --all-features --locked 2>&1
+   Compiling jr v0.6.0-dev.11 (/Users/zious/Documents/GITHUB/jira-cli/.worktrees/S-626-1)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 6.34s
+
+EXIT: 0 (clean)
 
 ---
 
 AC-008 assertions verified:
   - Cargo.toml pins comfy-table = "=7.2.1" (exact pin, not a caret range) CONFIRMED (line 24)
-  - Cargo.toml has inline comment citing .factory/research/msrv-let-chains-comfy-table-2026-07-30.md CONFIRMED (line 23)
+  - Pin comment at lines 19-23 reads "# See: issue #626." as the concluding line CONFIRMED
+    (prior artifact incorrectly recorded Cargo.toml:23 as
+    "# Ref: .factory/research/msrv-let-chains-comfy-table-2026-07-30.md" — an internal
+    factory path that must NOT appear in the published manifest per ruling ADV-P1-LOW-001.
+    The delivered file correctly uses "# See: issue #626." as required.)
   - Cargo.lock resolves to version = "7.2.1" CONFIRMED
-  - RUSTUP_TOOLCHAIN=1.85.0 cargo check --all-features exits clean (exit 0) CONFIRMED
-  - The clean result is the acceptance check: the pin ensures comfy-table 7.2.2 (which requires
-    Rust >=1.88.0) is not resolved, restoring genuine MSRV 1.85.0 compliance
-  - Note: comfy-table 7.2.1 declares rust-version = "1.85" in its manifest; 7.2.2 uses let-chains
-    (edition 2024 + compiler >=1.88.0) and deleted the rust-version field, so cargo would have
-    silently resolved to 7.2.2 under a caret range
+  - RUSTUP_TOOLCHAIN=1.85.0 cargo check --all-features --locked exits clean (exit 0) CONFIRMED
+    (prior artifact omitted --locked and captured a warm no-op Finished 0.19s with no
+    toolchain identity; this capture uses --locked, shows toolchain identity, and shows
+    a real Compiling line after cargo clean -p jr)
+  - Compiling line confirms jr was rebuilt under 1.85.0, not a warm no-op
+  - Toolchain identity: rustc 1.85.0 (4d91de4e4 2025-02-17) — overridden by RUSTUP_TOOLCHAIN
+  - The clean result is the acceptance check: with comfy-table pinned to "=7.2.1", cargo
+    check at 1.85.0 passes. Without the pin, 7.2.2 would be resolved and cargo check at
+    1.85.0 would fail (7.2.2 uses let-chains requiring Rust >=1.88.0, edition 2024)
+  - comfy-table 7.2.1 declares rust-version = "1.85" in its manifest; 7.2.2 uses let-chains
+    (edition 2024 + compiler >=1.88.0) and deleted the rust-version field, so cargo would
+    silently resolve to 7.2.2 under a caret range

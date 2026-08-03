@@ -128,7 +128,7 @@ Categories:
 
 ### EC-HTTP-004: Auth header injected on every retry attempt
 **Boundary**: Request retried after 429 backoff.
-**Expected**: Auth header present on retry (injected at `client.rs:195` per retry loop).
+**Expected**: Auth header present on retry (injected by `src/api/client.rs::send_inner` per retry loop).
 **Status**: Covered by BC-X.1.005.
 
 ### EC-HTTP-005: Ctrl+C during API call — graceful exit 130
@@ -247,9 +247,9 @@ Categories:
 **Expected**: Team column omitted (both conditions must be true: configured AND populated).
 **Status**: Covered by BC-5.3.001 and BC-5.3.002; holdout H-043.
 
-### EC-OUT-002: Stale team cache — UUID fallback with hint
-**Boundary**: Issue has team UUID but team name not in cache.
-**Expected**: Shows `"UUID (name not cached — run 'jr team list --refresh')"`.
+### EC-OUT-002: Stale team cache — bare UUID fallback in table view (team column)
+**Boundary**: Issue has team UUID but team name not in cache (`teams.json` absent or no matching entry).
+**Expected**: Table cell shows bare UUID only (e.g., `"team-uuid-orphan"`); no `(name not cached — …)` suffix. The `(name not cached — run 'jr team list --refresh')` hint is ONLY emitted by `jr issue view` (`src/cli/issue/view.rs::handle_view`) — that behavior is owned by BC-2.3.035, not this path.
 **Status**: Covered by BC-5.3.003.
 
 ### EC-OUT-003: Team column with `--output json` — raw UUID

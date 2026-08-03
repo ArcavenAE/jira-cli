@@ -1,3 +1,5 @@
+# Head: 64e2a4bc  Captured: 2026-08-03  Status: regenerated
+
 --- cargo test (full regression) ---
 $ cd /Users/zious/Documents/GITHUB/jira-cli/.worktrees/S-626-1 && cargo test 2>&1 | grep "test result" | awk '{for(i=1; i<=NF; i++) {if($i == "passed;") passed += $(i-1); if($i == "failed;") failed += $(i-1); if($i == "ignored;") ignored += $(i-1)}} END {print "AGGREGATE: " passed " passed / " failed " failed / " ignored " ignored"}'
 AGGREGATE: 2343 passed / 0 failed / 100 ignored
@@ -8,6 +10,8 @@ commit b51fc26a (test(team-column): test_board_view_omits_team_column_when_field
 and test_issue_list_omits_team_column_when_field_unconfigured). The ignored count matches: 100.
 No failed tests. Discrepancy from stated figure: +2 pass (expected 2341, actual 2343).
 This is not a regression — it is the +2 new AC-9 tests added in the delivery commits.
+The story spec Task 7d states the baseline as "2341 passed / 0 failed / 100 ignored";
+the real current count is 2343 because the story itself added 2 new tests. Both are consistent.
 
 --- RUSTUP_TOOLCHAIN=1.85.0 cargo check --all-features --locked (MSRV proof) ---
 $ cd /Users/zious/Documents/GITHUB/jira-cli/.worktrees/S-626-1 && RUSTUP_TOOLCHAIN=1.85.0 rustc --version
@@ -15,10 +19,10 @@ rustc 1.85.0 (4d91de4e4 2025-02-17)
 $ cd /Users/zious/Documents/GITHUB/jira-cli/.worktrees/S-626-1 && RUSTUP_TOOLCHAIN=1.85.0 rustup show active-toolchain
 1.85.0-aarch64-apple-darwin (overridden by environment variable RUSTUP_TOOLCHAIN)
 $ cd /Users/zious/Documents/GITHUB/jira-cli/.worktrees/S-626-1 && cargo clean -p jr 2>&1
-     Removed 127999 files, 15.6GiB total
+     Removed 43426 files, 6.6GiB total
 $ cd /Users/zious/Documents/GITHUB/jira-cli/.worktrees/S-626-1 && RUSTUP_TOOLCHAIN=1.85.0 cargo check --all-features --locked 2>&1
    Compiling jr v0.6.0-dev.11 (/Users/zious/Documents/GITHUB/jira-cli/.worktrees/S-626-1)
-    Finished `dev` profile [unoptimized + debuginfo] target(s) in 4.75s
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 6.34s
 
 EXIT: 0 (clean)
 Toolchain identity: rustc 1.85.0 (4d91de4e4 2025-02-17) — overridden by RUSTUP_TOOLCHAIN env var.
@@ -28,7 +32,7 @@ Source files not modified; cargo clean removed build cache only.
 --- cargo clippy --all-targets -- -D warnings ---
 $ cd /Users/zious/Documents/GITHUB/jira-cli/.worktrees/S-626-1 && cargo clippy --all-targets -- -D warnings 2>&1 | tail -3
    Compiling jr v0.6.0-dev.11 (/Users/zious/Documents/GITHUB/jira-cli/.worktrees/S-626-1)
-    Finished `dev` profile [unoptimized + debuginfo] target(s) in 9.65s
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 9.30s
 
 EXIT: 0 (clean, zero warnings)
 
@@ -40,9 +44,9 @@ EXIT: 0 (clean)
 
 --- Summary ---
 cargo test:                    2343 passed / 0 failed / 100 ignored  [PASS]
-RUSTUP_TOOLCHAIN=1.85.0 check: Compiling jr → Finished (4.75s), exit 0 [PASS]
+RUSTUP_TOOLCHAIN=1.85.0 check: Compiling jr → Finished (6.34s), exit 0 [PASS]
   toolchain identity:          rustc 1.85.0 (4d91de4e4 2025-02-17)   [CONFIRMED]
-cargo clippy --all-targets:    Compiling jr → Finished (9.65s), exit 0 [PASS]
+cargo clippy --all-targets:    Compiling jr → Finished (9.30s), exit 0 [PASS]
 cargo fmt --check:             No output, exit 0                     [PASS]
 
 Discrepancy from orchestrator-stated baseline: +2 tests (2341→2343). Cause: delivery commits

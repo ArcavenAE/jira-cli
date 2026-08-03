@@ -1837,3 +1837,16 @@ _Was the active checkpoint after SOH-DX-1 F2 ADVERSARY GRIND rounds 1-45 (2026-0
 | In flight | develop @ 64e2a4bc (PR #667, S-626-1). .factory @ factory-artifacts. No other open worktrees. |
 | Pending human decisions | (1) Run adversary pass-6 or merge #667 (orchestrator recommends pass-6; pass-5 all-residue suggests breakpoint). (2) AX23-001 out-of-delta ratification (non-blocking). PR queue: #667 (ready), #662 (MERGEABLE), #655–#659 (soaking DEC-178/187). DO NOT close #429. |
 | Resume command | Open fresh session → /vsdd-factory:next-step. Decide pass-6 vs merge #667. Persist adversary pass-5 findings first. AX23-001 pending. |
+
+---
+
+<!-- archived from STATE.md Session Resume Checkpoint — 2026-08-03 ADVERSARY-9-10-11+FIX-ROUND-3 -->
+
+| Field | Value |
+|-------|-------|
+| Position | Feature Mode SOH-DX-1 F4 delivery. F2 APPROVED (DEC-196), F3 APPROVED (DEC-197). **S-626-1 DELIVERED** — PR #667 open, head 64e2a4bc, branch ci/fix-toolchain-sha-msrv. **HELD per DEC-202** pending fresh 3-pass window on amended state. Fix round applied 2026-07-31 (SS-11 anchor x5 stories; BC/VP anchors; symbol cites; demo regen; INV-READ-009). |
+| Convergence | S-626-1 Step 4.5 = 0/3. 8 recorded passes all NOT CLEAN (+ 3 VOID not counted). 64 total findings. Pass-6=3H; pass-7=3H (F-03 stale-demo FALSE-GREEN GENERATOR); pass-8=1H. Fix round applied. DEC-191(d) ceiling = 10; 3-pass window → reach 11 — **ESCALATION REQUIRED**. |
+| Not yet done | (1) Human ruling on DEC-191(d) ceiling breach before any pass-9. (2) S-640-1 handoff: on MSRV ≥1.88, delete `No let-chains` from CLAUDE.md Conventions AND in-code comments at `src/cli/board.rs` ~:231, `src/cli/issue/list.rs` ~:523, `src/cli/auth/keychain.rs` ~:50. |
+| In flight | develop @ 64e2a4bc (PR #667 HELD — DEC-202). .factory @ factory-artifacts (this commit). No other open worktrees. Product repo untracked: .claude/hooks/, .claude/pr-reviews/, .claude/settings.local.json.bak, .claude/spec-config.json (pre-existing). |
+| Pending human decisions | (1) DEC-191(d) ceiling breach ruling: 8 recorded passes; 3-pass window would reach 11 > ceiling 10 — **ESCALATION REQUIRED**. (2) After ruling: pass-9 (first of fresh window on amended state per DEC-202). (3) AX23-001 out-of-delta ratification (non-blocking). PR queue: #667 (HELD — DEC-202), #662 (MERGEABLE), #655-#659 (soaking), #628/#574. DO NOT close #429. |
+| Resume command | Open fresh session → /vsdd-factory:next-step. BLOCKING: human ruling on DEC-191(d) ceiling breach first. After ruling: run pass-9 (fresh 3-pass window on amended state). Then S-639-1 (BREAKING/v0.6.0-dev.12), S-627-1. AX23-001 pending. |

@@ -1,3 +1,5 @@
+# Head: 64e2a4bc  Captured: 2026-08-03  Status: reproduced-clean (static file; unchanged)
+
 $ grep -A 20 "5e\|DISCHARGED\|fa04a145" /Users/zious/Documents/GITHUB/jira-cli/.factory/phase-f1-delta/SOH-DX-1/delta-analysis.md | grep -A 15 "5e\. Verified"
 ### 5e. Verified `fa04a145` SHA — DISCHARGED at F2 (Item 3)
 
