@@ -4,7 +4,7 @@ level: ops
 version: "2.0"
 status: active
 producer: state-manager
-timestamp: 2026-08-03T17:59:47Z
+timestamp: 2026-08-03T20:30:00Z
 phase: 3
 pipeline: PAUSED
 inputs: []
@@ -12,7 +12,7 @@ input-hash: "[live-state]"
 traces_to: ""
 project: jira-cli
 mode: brownfield
-current_step: "ADVERSARY-12-13-14+FIX-ROUND-4 burst 2026-08-03: pass-12 (CLEAN; 0H+5M+5L), pass-13 (CLEAN; 0H+4M+6L), pass-14 (CLEAN; 0H+4M+5L); ADV-P1-INDEX v1.6 (139 findings); fix round 4 (demos/S-626-1/ 11 artifacts, bc-5, edge-case-catalog, S-576-5 v1.48, S-626-1 v1.10, S-641-1 v0.7, STORY-INDEX v1.5.54, S-MAINT-576-HYG-1 new); DEC-207+208; product commit c88374b4. trajectory-tail →2→0→0→0 (P11=2H VOID, P12/13/14=0H ZERO HIGH three consecutive) D-1..D-33 (exhaustive)."
+current_step: "CORRECTIVE-VERDICT-LABEL-AMBIGUITY 2026-08-03: terminology fix — S-626-1 pass-12/13/14 verdict labels corrected from (CLEAN; 0H) shorthand to (NOT CLEAN; 0H; isolation CLEAN) throughout STATE.md; STATE-VERDICT-LABEL-AMBIGUITY + PASS-NUMBERING-COLLIDES-ACROSS-CYCLES drift items added. ADV-P1-INDEX confirmed NOT CLEAN ×3, window 0/3 — no changes needed. No substantive change. Prior step: ADVERSARY-12-13-14+FIX-ROUND-4 (ADV-P1-INDEX v1.6, 139 findings, fix round 4, DEC-207+208, product commit c88374b4). trajectory-tail →2→0→0→0 D-1..D-33 (exhaustive)."
 trajectory_tail: "→2→0→0→0"
 maintenance_run: CLOSED
 current_cycle: "cycle-001"
@@ -25,7 +25,7 @@ activation_head: "7b3ba371"
 activation_version: "v0.6.0-dev.11"
 ---
 
-<!-- STATE.md SIZE BUDGET (2026-08-03 ADVERSARY-12-13-14+FIX-ROUND-4): 258 lines (wc-l) — prior: 255; delta: +3. Soft-target 200; margin from soft-target = +58; margin from actual to hard cap 500 = 242. Compaction: archived ADVERSARY-9-10-11+FIX-ROUND-3 PP row + CPS row to burst-log; added ADVERSARY-12-13-14+FIX-ROUND-4 PP+CPS rows; archived ADVERSARY-9-10-11+FIX-ROUND-3 checkpoint to session-checkpoints.md. Added DEC-207+208. Updated 3 drift items, added 2 new. -->
+<!-- STATE.md SIZE BUDGET (2026-08-03 CORRECTIVE-VERDICT-LABEL-AMBIGUITY): 261 lines (wc-l) — prior: 258; delta: +3. Soft-target 200; margin from soft-target = +61; margin from actual to hard cap 500 = 239. Compaction: none. Added CORRECTIVE-VERDICT-LABEL-AMBIGUITY CPS row (+1). Added STATE-VERDICT-LABEL-AMBIGUITY + PASS-NUMBERING-COLLIDES-ACROSS-CYCLES drift items (+2). Updated REVIEW-ISOLATION-NOT-MECHANICALLY-ENFORCED terminology (isolation CLEAN qualified). -->
 
 # Pipeline State: jira-cli
 
@@ -36,8 +36,8 @@ activation_version: "v0.6.0-dev.11"
 | **Product** | jr (Jira CLI) |
 | **Mode** | BROWNFIELD / Rust |
 | **Target Workspace** | develop to main |
-| **trajectory-tail** | →2→0→0→0 (HIGH findings per pass: P11=2H [VOID], P12=0H [CLEAN], P13=0H [CLEAN], P14=0H [CLEAN]; Step 4.5 = 0/3; 14 recorded passes + 5 VOID; DEC-207: ceiling breach authorized — grind to 15/16/17; SEVERITY DECAY CONFIRMED 4H→0H) |
-| **Last Updated** | trajectory-tail →2→0→0→0 2026-08-03: ADVERSARY-12-13-14+FIX-ROUND-4 — pass-12 (CLEAN; 0H+5M+5L), pass-13 (CLEAN; 0H+4M+6L), pass-14 (CLEAN; 0H+4M+5L); window 12/13/14 COMPLETE = 0/3 NOT CLEAN; ZERO HIGH three consecutive; code 0-defect nine consecutive passes (6–14 minus VOID 9+11); fix round 4 applied (demos/ 11 artifacts, bc-5, S-641-1 v0.7, S-576-5 v1.48, S-626-1 v1.10, STORY-INDEX v1.5.54, S-MAINT-576-HYG-1 new); ADV-P1-INDEX v1.6 (139 findings); DEC-207+208; grep-hygiene corrective VERIFIED EFFECTIVE (3/3 passes cleanly isolated). |
+| **trajectory-tail** | →2→0→0→0 (HIGH findings per pass: P11=2H [VOID], P12=0H [NOT-CLEAN], P13=0H [NOT-CLEAN], P14=0H [NOT-CLEAN]; Step 4.5 = 0/3; 14 recorded passes + 5 VOID; DEC-207: ceiling breach authorized — grind to 15/16/17; SEVERITY DECAY CONFIRMED 4H→0H) |
+| **Last Updated** | trajectory-tail →2→0→0→0 CORRECTIVE-VERDICT-LABEL-AMBIGUITY 2026-08-03: relabeled S-626-1 pass-12 (NOT CLEAN; 0H+5M+5L; isolation CLEAN), S-626-1 pass-13 (NOT CLEAN; 0H+4M+6L; isolation CLEAN), S-626-1 pass-14 (NOT CLEAN; 0H+4M+5L; isolation CLEAN); 2 drift items added. Prior: ADVERSARY-12-13-14+FIX-ROUND-4 2026-08-03 — window 12/13/14 COMPLETE = 0/3 NOT CLEAN; ZERO HIGH three consecutive; code 0-defect nine consecutive passes (6–14 minus VOID 9+11); fix round 4 applied (demos/ 11 artifacts, bc-5, S-641-1 v0.7, S-576-5 v1.48, S-626-1 v1.10, STORY-INDEX v1.5.54, S-MAINT-576-HYG-1 new); ADV-P1-INDEX v1.6 (139 findings); DEC-207+208; grep-hygiene corrective VERIFIED EFFECTIVE (3/3 passes isolation CLEAN). |
 | **Current Phase** | Feature Mode SOH-DX-1 **F4 DELIVERY IN PROGRESS**. F2 APPROVED (DEC-196), F3 APPROVED (DEC-197). **S-626-1 DELIVERED** — PR #667 open, feature HEAD c88374b4, branch ci/fix-toolchain-sha-msrv; **HELD per DEC-202** (fresh 3-pass window required). Adversary: 14 passes recorded; 5 VOID (3 dispatch + 2 isolation); window 12/13/14 COMPLETE = **0/3 NOT CLEAN**; Step 4.5 = **0/3**; DEC-207 CEILING BREACH AUTHORIZED — grind to passes 15/16/17. Fix round 4 applied 2026-08-03. AX23-001 PENDING RATIFICATION. |
 | **Next Phase** | Adversary passes 15/16/17 (fresh window on amended state per DEC-202 + DEC-207). Grep-hygiene corrective verified effective — maintain scoped greps. PR #667 HELD until 3/3 CLEAN window. Then S-639-1 (BREAKING/v0.6.0-dev.12), S-627-1. |
 | **Activation HEAD** | 7b3ba371 (PR #654 squash-merged 2026-07-25; FIX-E2E-EGRESS DELIVERED; SOH-ATTACHMENTS-1 CYCLE FULLY CLOSED; activation_version v0.6.0-dev.11) |
@@ -47,14 +47,15 @@ activation_version: "v0.6.0-dev.11"
 <!-- Archived rows: see cycles/cycle-001/burst-log.md (rounds 67, 68-70; LEDGER-BURST-71-72; DEC-191-BURST; F2-CONVERGENCE-BURST; passes 75-78; DEC-192 spec fix burst; F2-CONVERGENCE-BURST final rows archived SOH-DX-1-F3-DECOMP-BURST 2026-07-29; F2-CONVERGENCE-BURST final rows archived DEC-197-BURST 2026-07-30; DEC-198-LEDGER rows archived POST-ADVERSARY-PERSISTENCE-BURST 2026-07-30; pass-84 PP row + PASS-4-PERSISTENCE-BURST CPS archived SESSION-WRAP-BURST 2026-07-30; SESSION-WRAP-BURST PP row + SESSION-WRAP-BURST CPS archived PASS-5-PERSISTENCE-BURST 2026-07-31; PASS-5-PERSISTENCE-BURST PP row + PASS-5-PERSISTENCE-BURST CPS archived ADV-6-7-8-FIX-BURST 2026-07-31; ADV-6-7-8-FIX-BURST PP row archived ADVERSARY-9-10-11+FIX-ROUND-3 2026-08-03; ADVERSARY-9-10-11+FIX-ROUND-3 PP row archived ADVERSARY-12-13-14+FIX-ROUND-4 2026-08-03) -->
 | Phase | Status | Completed | Gate | Notes | Finding Progression |
 |-------|--------|-----------|------|-------|---------------------|
-| **ADVERSARY-12-13-14+FIX-ROUND-4 (2026-08-03): pass-12 (CLEAN; 0H+5M+5L; grep-hygiene EFFECTIVE), pass-13 (CLEAN; 0H+4M+6L), pass-14 (CLEAN; 0H+4M+5L) — ADV-P1-INDEX v1.6 (139 findings); window 12/13/14 COMPLETE = 0/3 NOT CLEAN; ZERO HIGH three consecutive; fix round 4 applied; DEC-207+208; FIX-ROUND-INTRODUCES-DEFECTS-IN-NEW-PROSE + DEMO-TRANSCRIPT-FIDELITY-NO-MECHANICAL-GUARD new drift items. STORY-INDEX v1.5.54.** | PAUSED | 2026-08-03 | — | Passes 15/16/17 next (maintain scoped greps). PR #667 HELD (DEC-202). AX23-001 PENDING. | →2→0→0→0 |
+| **ADVERSARY-12-13-14+FIX-ROUND-4 (2026-08-03): S-626-1 pass-12 (NOT CLEAN; 0H+5M+5L; isolation CLEAN; grep-hygiene EFFECTIVE), S-626-1 pass-13 (NOT CLEAN; 0H+4M+6L; isolation CLEAN), S-626-1 pass-14 (NOT CLEAN; 0H+4M+5L; isolation CLEAN) — ADV-P1-INDEX v1.6 (139 findings); window 12/13/14 COMPLETE = 0/3 NOT CLEAN; ZERO HIGH three consecutive; fix round 4 applied; DEC-207+208; FIX-ROUND-INTRODUCES-DEFECTS-IN-NEW-PROSE + DEMO-TRANSCRIPT-FIDELITY-NO-MECHANICAL-GUARD new drift items. STORY-INDEX v1.5.54.** | PAUSED | 2026-08-03 | — | Passes 15/16/17 next (maintain scoped greps). PR #667 HELD (DEC-202). AX23-001 PENDING. | →2→0→0→0 |
 
 ## Current Phase Steps
 
 <!-- Archived rows: see cycles/cycle-001/burst-log.md (SESSION-WRAP; LEDGER-BURST-71-72; DEC-191-BURST; F2-CONVERGENCE-BURST; F2-CONVERGENCE-WINDOW-BURST; DEC-192 corrective; F2-CONVERGENCE-BURST final; SOH-DX-1-F3-DECOMP-BURST 2026-07-29; DEC-197-GATE-APPROVAL-RETARGET-BURST 2026-07-30; DEC-198-LEDGER-CORRECTION-BURST 2026-07-30; POST-ADVERSARY-PERSISTENCE-BURST 2026-07-30; PASS-2-PERSISTENCE-BURST 2026-07-30; PASS-3-PERSISTENCE-BURST 2026-07-30; PASS-4-PERSISTENCE-BURST 2026-07-30; SESSION-WRAP-BURST 2026-07-30; PASS-5-PERSISTENCE-BURST 2026-07-31; ADV-6-7-8-FIX-BURST CPS archived ADVERSARY-9-10-11+FIX-ROUND-3 2026-08-03; ADVERSARY-9-10-11+FIX-ROUND-3 CPS archived ADVERSARY-12-13-14+FIX-ROUND-4 2026-08-03) -->
 | Step | Agent | Status | Output |
 |------|-------|--------|--------|
-| **ADVERSARY-12-13-14+FIX-ROUND-4 (2026-08-03): pass-12 (CLEAN; 0H+5M+5L; input-hash addcd09) + pass-13 (CLEAN; 0H+4M+6L; input-hash addcd09) + pass-14 (CLEAN; 0H+4M+5L; input-hash addcd09) + ADV-P1-INDEX v1.6 (139 total findings) + fix round 4 + product commit c88374b4 recorded + STATE.md committed to factory-artifacts. DEC-207+208. 2 new drift items. 258 lines.** | state-manager | COMPLETED | passes 12+13+14 + fix round 4 + STATE.md committed to factory-artifacts. Next: passes 15/16/17 (maintain scoped greps). |
+| **ADVERSARY-12-13-14+FIX-ROUND-4 (2026-08-03): S-626-1 pass-12 (NOT CLEAN; 0H+5M+5L; isolation CLEAN; input-hash addcd09) + S-626-1 pass-13 (NOT CLEAN; 0H+4M+6L; isolation CLEAN; input-hash addcd09) + S-626-1 pass-14 (NOT CLEAN; 0H+4M+5L; isolation CLEAN; input-hash addcd09) + ADV-P1-INDEX v1.6 (139 total findings) + fix round 4 + product commit c88374b4 recorded + STATE.md committed to factory-artifacts. DEC-207+208. 2 new drift items.** | state-manager | COMPLETED | passes 12+13+14 + fix round 4 + STATE.md committed to factory-artifacts. Next: passes 15/16/17 (maintain scoped greps). |
+| **CORRECTIVE-VERDICT-LABEL-AMBIGUITY (2026-08-03): S-626-1 pass-12/13/14 verdict labels corrected from (CLEAN; 0H) shorthand to (NOT CLEAN; 0H; isolation CLEAN) throughout STATE.md. ADV-P1-INDEX confirmed NOT CLEAN ×3, 0/3 window — no changes required. STATE-VERDICT-LABEL-AMBIGUITY + PASS-NUMBERING-COLLIDES-ACROSS-CYCLES drift items added. REVIEW-ISOLATION isolation labels qualified. 261 lines.** | state-manager | COMPLETED | Terminology fix only. No substantive change. Next: S-626-1 passes 15/16/17 (maintain scoped greps). |
 
 ## Decisions Log
 
@@ -93,7 +94,7 @@ None open.
 
 ## Drift Items (open / tracked)
 
-<!-- 10 items archived 2026-07-25; 22 items archived through 2026-07-29 (see blocking-issues-resolved.md); 5 ACCEPTED/MITIGATED/FIXED items archived SOH-DX-1-F3-DECOMP-BURST 2026-07-29. ADVERSARY-9-10-11+FIX-ROUND-3 2026-08-03: 6 new items added. ADVERSARY-12-13-14+FIX-ROUND-4 2026-08-03: ORCHESTRATOR-GREP-HYGIENE-INSUFFICIENT updated (CORRECTIVE VERIFIED EFFECTIVE); FIX-ROUND-PARTIAL-PROPAGATION refined; S-576-FAMILY-SUBSYSTEM-PATTERN updated (ROUTED to S-MAINT-576-HYG-1 DEC-208); REVIEW-ISOLATION-NOT-MECHANICALLY-ENFORCED updated; 2 new items added. -->
+<!-- 10 items archived 2026-07-25; 22 items archived through 2026-07-29 (see blocking-issues-resolved.md); 5 ACCEPTED/MITIGATED/FIXED items archived SOH-DX-1-F3-DECOMP-BURST 2026-07-29. ADVERSARY-9-10-11+FIX-ROUND-3 2026-08-03: 6 new items added. ADVERSARY-12-13-14+FIX-ROUND-4 2026-08-03: ORCHESTRATOR-GREP-HYGIENE-INSUFFICIENT updated (CORRECTIVE VERIFIED EFFECTIVE); FIX-ROUND-PARTIAL-PROPAGATION refined; S-576-FAMILY-SUBSYSTEM-PATTERN updated (ROUTED to S-MAINT-576-HYG-1 DEC-208); REVIEW-ISOLATION-NOT-MECHANICALLY-ENFORCED updated; 2 new items added. CORRECTIVE-VERDICT-LABEL-AMBIGUITY 2026-08-03: REVIEW-ISOLATION-NOT-MECHANICALLY-ENFORCED terminology qualified (isolation CLEAN); 2 new items (STATE-VERDICT-LABEL-AMBIGUITY, PASS-NUMBERING-COLLIDES-ACROSS-CYCLES). -->
 | ID | Area | Severity | Status |
 |----|------|----------|--------|
 | SIX-AXIS-REVIEW-UNLOGGED | spec integrity | LOW | OPEN — AX23-001 PENDING HUMAN RATIFICATION. |
@@ -186,7 +187,7 @@ None open.
 | STATE-WRITE-TIMESTAMP-COMPLIANCE | verify-state-timestamp-refresh blocks STATE.md writes that don't advance timestamp:. | LOW | OPEN — agent-discipline |
 | LOCAL-BASH-WRITE-GUARD-INSTALLED | .claude/hooks/guard-state-bash-write.sh blocks Bash-based writes to STATE.md. | LOW | OPEN — route upstream |
 | ADVERSARY-ARTIFACT-WRITE-MITIGATION | adversary agents have no Write tool by design. Mitigation: orchestrator manually routes artifact writes. 5 datapoints. | LOW | OPEN — route upstream |
-| REVIEW-ISOLATION-NOT-MECHANICALLY-ENFORCED | adversary process | MEDIUM | OPEN — mitigation EFFECTIVE across window 12/13/14 (3/3 CLEAN isolation). Pass-9: VOID-9A; Pass-10: CLEAN; Pass-11: VOID-11A. **Passes 12/13/14: ALL CLEAN (3/3). Grep-hygiene corrective verified effective — two patterns self-corrected before trusting zero result across two passes.** Two VOID passes in window 9-11 — ORCHESTRATOR-GREP-HYGIENE-INSUFFICIENT. No mechanical isolation guard exists; behavioral corrective sufficient for window 12/13/14. |
+| REVIEW-ISOLATION-NOT-MECHANICALLY-ENFORCED | adversary process | MEDIUM | OPEN — mitigation EFFECTIVE across window 12/13/14 (3/3 isolation CLEAN). Pass-9: VOID-9A; Pass-10: isolation CLEAN; Pass-11: VOID-11A. **S-626-1 passes 12/13/14: ALL isolation CLEAN (3/3). Grep-hygiene corrective verified effective — two patterns self-corrected before trusting zero result across two passes.** Two VOID passes in window 9-11 — ORCHESTRATOR-GREP-HYGIENE-INSUFFICIENT. No mechanical isolation guard exists; behavioral corrective sufficient for window 12/13/14. |
 | VERIFICATION-NONGOAL-UNSCRUTINIZED | spec integrity | MEDIUM | OPEN — flagged for F2 gate. Three adversary review axes NEVER ran across 78 F2 passes. |
 | ADV-P76-LOW-001 | spec quality | LOW | OPEN — ledgered (IN-DELTA REFINEMENT). |
 | P77-001 | spec quality | LOW | OPEN — ledgered (OUT-OF-DELTA REFINEMENT). |
@@ -216,6 +217,8 @@ None open.
 | KEYCHAIN-CREDENTIAL-PATH-UNCOVERED | test coverage | MEDIUM | OPEN — ADV-P9-MED-005 unique finding. `src/cli/auth/keychain.rs::resolve_credential` three-path resolution chain has no per-path pin test. Coverage story needed before S-640-1 ships. |
 | FIX-ROUND-INTRODUCES-DEFECTS-IN-NEW-PROSE | spec process | MEDIUM | OPEN — NEW (2026-08-03, window 12/13/14). Each fix round sweeps greppable defect classes but introduces ~4 new defects in newly-written prose (line counts, char encoding, task labels, attribution not re-verified from source). Three consecutive windows independently identified this class. Mechanical remedies: B−A+1 line-count check for transcript BEFORE/AFTER ranges; byte-diff for Unicode chars; structured self-review checklist for all new prose in fix rounds. |
 | DEMO-TRANSCRIPT-FIDELITY-NO-MECHANICAL-GUARD | spec process | MEDIUM | OPEN — NEW (2026-08-03, window 12/13/14). No automated verification that demo transcript content (line counts, char encoding, task labels, attribution) matches source artifacts at the time of capture. Three consecutive windows found transcript-fidelity class. Guard story needed: transcript-validator script that re-derives B−A+1, checks for non-ASCII chars against ASCII source, and verifies task label citations. |
+| STATE-VERDICT-LABEL-AMBIGUITY | state integrity | MEDIUM | OPEN — STATE.md briefly rendered three NOT-CLEAN adversary passes (S-626-1 passes 12/13/14) as "(CLEAN; 0H)" labels, a terminology collision between isolation-clean/zero-HIGH shorthand and the adversary verdict. A resuming session or /next-step could read three "CLEAN" labels and conclude 3/3 window satisfied and Step 4.5 converged. It did not: all three passes were NOT CLEAN and the window is 0/3. Detected by orchestrator on read-back; substantive fields (artifact verdicts, Convergence Status, checkpoint, cycles row) were correct throughout, so no decision was taken on the bad label. Corrected in CORRECTIVE-VERDICT-LABEL-AMBIGUITY burst 2026-08-03. No mechanical guard exists — a validator could assert that any STATE.md pass-label matches its artifact's `verdict:` field. ROUTE upstream to drbothen/vsdd-factory. |
+| PASS-NUMBERING-COLLIDES-ACROSS-CYCLES | state integrity | LOW | OPEN — pass numbers are cycle-scoped but recorded unqualified in STATE.md, so SOH-ATTACHMENTS-1 pass-12/pass-13/pass-14 (CLEANx3, converged 2026-07-24, in phase_3_status) and SOH-DX-1 S-626-1 pass-12/pass-13/pass-14 (all NOT CLEAN, 0/3) coexist with opposite verdicts. Historical text left intact for auditability. Corrective: qualify pass references with their cycle/story (e.g. `S-626-1 pass-12`) going forward; applied in CORRECTIVE-VERDICT-LABEL-AMBIGUITY burst. |
 
 ## Convergence Status
 
@@ -238,11 +241,11 @@ SOH-ATTACHMENTS-1 + prior cycles FULLY CLOSED. See cycles/cycle-001/convergence-
 | Not yet done | (1) Passes 15/16/17 dispatch: maintain scoped greps (ORCHESTRATOR-GREP-HYGIENE-INSUFFICIENT corrective effective — continue). (2) S-640-1 handoff: on MSRV ≥1.88, delete `No let-chains` from CLAUDE.md Conventions AND in-code comments at `src/cli/board.rs` ~:231, `src/cli/issue/list.rs` ~:523, `src/cli/auth/keychain.rs` ~:50. (3) S-MAINT-576-HYG-1 needs review before scheduling. DEC-204 UNADJUDICATED. |
 | In flight | develop @ c88374b4 (PR #667 HELD — DEC-202). .factory @ factory-artifacts (this commit). No other open worktrees. Product repo untracked: .claude/hooks/, .claude/pr-reviews/, .claude/settings.local.json.bak, .claude/spec-config.json (pre-existing). |
 | Pending human decisions | (1) DEC-207 authorized — grind to passes 15/16/17 confirmed. (2) AX23-001 out-of-delta ratification (non-blocking). (3) DEC-204 UNADJUDICATED (DEC-191(d) ceiling ruling). PR queue: #667 (HELD — DEC-202), #662 (MERGEABLE), #655-#659 (soaking), #628/#574. DO NOT close #429. |
-| Resume command | Open fresh session → /vsdd-factory:next-step. Dispatch passes 15/16/17 (scoped greps verified effective). Then S-639-1 (BREAKING/v0.6.0-dev.12), S-627-1 after 3/3 CLEAN window. PR #667 HELD. AX23-001 pending. |
+| Resume command | Open fresh session → /vsdd-factory:next-step. Dispatch S-626-1 passes 15/16/17 (scoped greps verified effective). Then S-639-1 (BREAKING/v0.6.0-dev.12), S-627-1 after 3/3 CLEAN window. PR #667 HELD. AX23-001 pending. |
 
 ## RESUME PLAN (cold-start)
 Step 1 (BLOCKING): Run vsdd-factory:factory-worktree-health. Read this file.
-Step 2 — Dispatch pass-15 (first of target 15/16/17 window on amended state per DEC-207). Maintain scoped greps — behavioral corrective verified effective across window 12/13/14 (3/3 CLEAN). PR #667 HELD until window passes. Then S-639-1 (BREAKING/v0.6.0-dev.12), S-627-1. AX23-001 PENDING. DEC-204 UNADJUDICATED.
+Step 2 — Dispatch S-626-1 pass-15 (first of target 15/16/17 window on amended state per DEC-207). Maintain scoped greps — behavioral corrective verified effective across window 12/13/14 (3/3 isolation CLEAN). PR #667 HELD until window passes. Then S-639-1 (BREAKING/v0.6.0-dev.12), S-627-1. AX23-001 PENDING. DEC-204 UNADJUDICATED.
 
 ## Open Issues Tracker
 
