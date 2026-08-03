@@ -1,4 +1,4 @@
-# Head: c88374b4  Captured: 2026-08-03  Status: re-stamped (Round 5 — head-only; delta c88374b4 was test-only; .github/workflows/ content unchanged)
+# Head: 6d73b3ef  Captured: 2026-08-03  Status: re-stamped (Round 6 — head-only; delta 6d73b3ef was test-only; .github/workflows/ content unchanged)
 
 $ cd /Users/zious/Documents/GITHUB/jira-cli/.worktrees/S-626-1 && grep -rc "c93f4f9c" .github/workflows/
 .github/workflows/release.yml:0

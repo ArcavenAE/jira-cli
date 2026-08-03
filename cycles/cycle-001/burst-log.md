@@ -8122,3 +8122,56 @@ DEC-204 remains UNADJUDICATED.
 
 **Pipeline:** PAUSED — awaiting passes 15/16/17 on amended state (fix round 4 applied).
 **STORY-INDEX:** v1.5.54. **trajectory-tail:** →0→0→0 (ZERO HIGH three consecutive).
+
+---
+
+## Burst: ADVERSARY-15+FIX-ROUND-5 (2026-08-03T22:00:00Z)
+
+**Prior burst SHA:** `05ff7c2e`
+
+### Adversary Pass-15 Persisted
+
+`s-626-1-adversary-pass-15.md` — DIRECT CAPTURE, 15 findings (0H + 6M + 9L), isolation CLEAN, input-hash 9a1a68e. **TREND REVERSAL: findings rose 9→15 (8 of 15 round-4-attributable: 6 in newly-written prose, 2 propagation misses).** Tenth consecutive pass with zero code defects. Mechanical sweep re-verified EFFECTIVE (zero fidelity defects across all transcripts from round 4); class-sweep mandate failed for fourth consecutive round.
+
+**Passes 16 and 17 NOT RUN** — superseded by round-5 ruling (DEC-209). Stubs created at `s-626-1-adversary-pass-16.md` and `s-626-1-adversary-pass-17.md`.
+
+### Fix Round 5 Applied (already in worktree; uncommitted at burst start)
+
+**`specs/prd/bc-5-boards-sprints.md`** — `**Postconditions**` blocks ADDED to BC-5.3.001, BC-5.3.002, BC-5.3.003 (numbered, individually falsifiable); `**Behavior**` field ADDED to BC-5.3.002.
+
+**`stories/S-626-1.md`** (v1.10→v1.11) — `handle_board_view`→`handle_view`; AC-3 contradiction resolved (env-override omission = silent; with: block omission = hard failure, routed-unverified); blockquote `~:73-79`→`~:73-80`; BC-table enrichment moved Title→Scope; BC-5.3.003 ADDED to bcs:/behavioral_contracts:/AC-9 trace (DEC-210); test count 2343→2344. **SECOND-PASS CORRECTION:** v1.11 changelog clause (b) initially contained a FALSE rationale ("line 80 is blank; convention is ~:N+1 for end-of-block") — line 80 is the `run: rustup target add` statement itself. Corrected to true reason before persistence. A false justification for a correct change survives review as if verified.
+
+**`stories/S-641-1.md`** (v0.7 in-version) — `~:73-79`→`~:73-80` at 3 sites; `release.yml ~:43-45`→`~:46` at 2 sites; "fourth"→"third" rustup site at 3 sites; "three-step"→"four-step" algorithm; step-4 quoting aligned; README-badge carve-out added to normalization rule.
+
+**`stories/S-MAINT-576-HYG-1.md`** (v1.0 in-version) — ARCH-INDEX coverage restated (src/, Cargo.toml, build.rs, deny.toml, .github/workflows/; tests//.factory//docs/ explicitly EXCLUDED); SS-03 stated as closed six-file list; `tdd_mode: strict`→`standard`; Task 4 re-scoped to VERIFY.
+
+**`stories/STORY-INDEX.md`** (v1.5.54→v1.5.55) — Wave Plan feature-followup 87→88; "Final totals" 122→123; sum corrected to `7+8+7+10+3+88 = 123`; wave label "maintenance"→"feature-followup"; changelog entries added for v1.5.53→v1.5.54 and v1.5.54→v1.5.55.
+
+**`demos/S-626-1/`** — E0463 count corrected to two-with-asymmetry; INDEX.md sed range corrected `'40,52p'`→`'38,52p'`; nine count-claim sites swept; all 11 artifacts RE-STAMPED to head `6d73b3ef`; full suite re-captured `2344 passed / 0 failed / 100 ignored`; `team_column_parity` `running 10 tests`; derived `filtered out` arithmetic updated (correct-filter 7→8; false-green reproduction 9→10).
+
+### Product Commit Recorded
+
+`6d73b3ef` on branch `ci/fix-toolchain-sha-msrv` — PR #667 remains OPEN and UNMERGED. Adds ONE new test `tests/team_column_parity.rs::test_board_view_falls_back_to_uuid_when_team_not_cached` (BC-5.3.003 pin, closes F-15). Both non-vacuity directions proven. Pushed fast-forward `c88374b4..6d73b3ef`. CI re-triggered.
+
+### Decisions Recorded
+
+**DEC-209:** ROUND 5 + PASSES 18/19/20 AUTHORIZED — human overrode orchestrator's recommendation for a third time, authorizing continued grinding after trend reversal (10→15 findings; 0 code defects on tenth consecutive pass). Passes 16/17 deliberately NOT RUN. Continuing AUTHORIZED breach of DEC-191(d) ceiling of 10, never a re-baseline.
+
+**DEC-210:** BC-5.3.003 DECLARED IN S-626-1 on product-owner recommendation — AC-9's rewrites restructured the exact `unwrap_or_else(|| uuid.clone())` code at the BC-5.3.003 implementation site.
+
+DEC-204 remains UNADJUDICATED. AX23-001 remains PENDING.
+
+### Drift Item Updates (ADVERSARY-15+FIX-ROUND-5)
+
+- **BC-BEHAVIOR-FIELD-SYSTEMIC-ABSENCE** — NEW, MEDIUM, OPEN: 5 further BCs in bc-5-boards-sprints.md (BC-5.1.002, BC-5.1.004, BC-5.2.002, BC-5.2.003, BC-5.2.006) plus BC-5.3.004 lack Behavior fields while carrying Source citations; ~60 of 111 BCs in bc-3-issue-write.md and 5 of 33 in bc-6-config-cache.md likewise. Only the §5.3 instance fixed (in scope). ROUTE as own story.
+- **FIX-ROUND-INTRODUCES-DEFECTS-IN-NEW-PROSE** — round 5 injected 1 (false "line 80 is blank" rationale), caught by orchestrator read-back BEFORE persistence. Round 5 mitigation (mandated self-verification of own prose with quoted source lines; preference for structural over prose fixes) shows measurable improvement, but injection rate not zero.
+- **DEMO-TRANSCRIPT-FIDELITY-NO-MECHANICAL-GUARD** — manual B−A+1 + byte-diff sweep independently VERIFIED EFFECTIVE by pass-15 (zero fidelity defects across the whole pack). Strengthens mechanization case. Still no automated guard; still ROUTED.
+- **FIX-ROUND-PARTIAL-PROPAGATION** (HIGH) — fourth consecutive round to fail class-sweep while succeeding at mechanical. Three independent reviewers (passes 13, 14, 15) prescribed same remedy: STORY-INDEX coherence guard + BC sub-element citation guard. Convergent recommendation recorded explicitly.
+- **CITATION-GUARD-SRC-ONLY** — pass-15 confirmed nothing validates story/test→BC sub-element references (BC-X.Y.NNN postcondition N), which is why F-06 survived. Extend routed scope.
+
+### Convergence Status Post-Burst
+
+0/3. 15 recorded passes (5 VOID: 3 dispatch + 2 isolation); passes 16/17 NOT RUN (superseded by DEC-209); 154 total findings. Pass-15 NOT CLEAN (window 0/1); zero HIGH tenth consecutive; TREND REVERSAL 9→15. Fix round 5 applied; product head 6d73b3ef. ADV-P1-INDEX v1.7.
+
+**Pipeline:** PAUSED — awaiting S-626-1 passes 18/19/20 on round-5-amended state (head 6d73b3ef).
+**STORY-INDEX:** v1.5.55. **trajectory-tail:** →0→0→0→0 (ZERO HIGH four consecutive: passes 12/13/14/15).

@@ -1,26 +1,27 @@
 ---
 document_type: adversarial-review-index
 level: ops
-version: "1.6"
+version: "1.7"
 status: in-review
 producer: adversary
-timestamp: 2026-08-03T08:30:00Z
+timestamp: 2026-08-03T22:00:00Z
 phase: "5"
-pass: 14
-inputs: [.factory/stories/S-626-1.md, .github/workflows/ci.yml, CLAUDE.md, src/cli/board.rs, src/cli/issue/list.rs, src/cli/auth/keychain.rs]
+pass: 17
+inputs: [.factory/stories/S-626-1.md, .factory/stories/S-641-1.md, .factory/stories/S-MAINT-576-HYG-1.md, .factory/stories/STORY-INDEX.md, .github/workflows/ci.yml, CLAUDE.md, src/cli/board.rs, tests/team_column_parity.rs]
 traces_to: .factory/stories/S-626-1.md
-total_findings: 139
-severity_distribution: { CRIT: 0, HIGH: 17, MED: 58, LOW: 52, INFO: 12 }
+total_findings: 154
+severity_distribution: { CRIT: 0, HIGH: 17, MED: 64, LOW: 61, INFO: 12 }
 story: S-626-1
 cycle: cycle-001
-feature_head: c88374b41ee4ea30bc2406e1def90cedf3686275
+feature_head: 6d73b3ef (fix-round-5 product commit; pass-15 ran against c88374b4)
 pr: 667
 basis: TRUE ADVERSARY AGENT (not a DEC-190 substitute)
-convergence: 0 of 3 (Step 4.5 window — DEC-199 GRIND to 3/3 CLEAN; DEC-207 ceiling breach authorized toward 17; window 12/13/14 = 0/3 NOT CLEAN; ZERO HIGH across all three; severity decay 4H→0H confirmed)
+convergence: 0 of 3 (Step 4.5 window — DEC-199 GRIND to 3/3 CLEAN; DEC-209 ROUND 5 + PASSES 18/19/20 AUTHORIZED; S-626-1 pass-15 NOT CLEAN (window 0/1); passes 16/17 NOT RUN — superseded by round-5 ruling; ZERO HIGH ten consecutive passes; TREND REVERSAL 10→15 findings (8 round-4-attributable); ceiling breach authorized toward 20)
 void_spawns: 5 (passes 6/7/8 first-attempt background subagents; pass-9 isolation breach; pass-11 isolation breach)
+not_run: 2 (passes 16/17 — superseded by round-5 ruling per DEC-209; see s-626-1-adversary-pass-16.md and s-626-1-adversary-pass-17.md)
 ---
 
-# Adversarial Review Index — S-626-1 (SOH-DX-1) Passes 1..14
+# Adversarial Review Index — S-626-1 (SOH-DX-1) Passes 1..17
 
 ## Pass 1 Finding Catalog
 
@@ -206,12 +207,15 @@ ADV-P4-INFO-005   --informs--> S-641-1 AC-2 (complete let-chain detection form s
 | 12 | NOT CLEAN | 0 | 5 | 5 | 0 | 0 | NO | WINDOW-ELIGIBLE (clean isolation); ZERO HIGH — severity decay from window 9/10/11 (4H each); window 12/13/14 = 1/3 |
 | 13 | NOT CLEAN | 0 | 4 | 6 | 0 | 0 | NO | WINDOW-ELIGIBLE (clean isolation); ZERO HIGH — second consecutive zero-HIGH; window 12/13/14 = 2/3 |
 | 14 | NOT CLEAN | 0 | 4 | 5 | 0 | 0 | NO | WINDOW-ELIGIBLE (clean isolation); ZERO HIGH — third consecutive zero-HIGH; window 12/13/14 COMPLETE = 0/3 CLEAN |
+| 15 | NOT CLEAN | 0 | 6 | 9 | 0 | 0 | NO | WINDOW-ELIGIBLE (isolation CLEAN); ZERO HIGH — tenth consecutive; **TREND REVERSAL 9→15 findings (8 round-4-attributable)**; window 0/1; passes 16/17 NOT RUN per DEC-209 |
+| 16 | NOT RUN | — | — | — | — | — | — | NOT RUN — superseded by round-5 ruling (DEC-209); stub at s-626-1-adversary-pass-16.md |
+| 17 | NOT RUN | — | — | — | — | — | — | NOT RUN — superseded by round-5 ruling (DEC-209); stub at s-626-1-adversary-pass-17.md |
 
-**Overall convergence: 0 of 3 (Step 4.5 — 14 recorded passes; 5 VOID [3 dispatch + 2 isolation]; DEC-199: GRIND to 3/3 CLEAN; DEC-207: ceiling breach authorized toward 17; window 12/13/14 = 0/3 CLEAN; ZERO HIGH across all three; severity decay 4H→0H confirmed)**
+**Overall convergence: 0 of 3 (Step 4.5 — 15 recorded passes + 2 NOT RUN (16/17); 5 VOID [3 dispatch + 2 isolation]; DEC-199: GRIND to 3/3 CLEAN; DEC-209: ROUND 5 + PASSES 18/19/20 AUTHORIZED; S-626-1 pass-15 NOT CLEAN (window 0/1); ZERO HIGH ten consecutive passes; TREND REVERSAL 9→15 (8 round-4-attributable); ceiling breach authorized toward 20)**
 
-**SEVERITY DECAY RECORDED:** Window 9/10/11 carried 4 HIGH each (isolation issues, but findings valid). Window 12/13/14 carries ZERO HIGH, ceiling MEDIUM across all three passes. Code is 0-defect across nine consecutive passes (6–14, minus VOID passes 9+11). Two passes in window 12/13/14 independently caught and corrected their own broken ampersand-escaped grep patterns before trusting a zero result — GREP-HYGIENE CORRECTIVE VERIFIED EFFECTIVE (3/3 passes cleanly isolated, vs 2/3 breached in prior window).
+**SEVERITY DECAY RECORDED (THEN REVERSED):** Window 9/10/11 carried 4 HIGH each. Window 12/13/14 carries ZERO HIGH. Pass-15 carries ZERO HIGH but findings rose from 9 to 15 — TREND REVERSAL. 8 of 15 findings are round-4-attributable (6 in newly-written prose, 2 propagation misses). Code is 0-defect across ten consecutive passes (6–15, minus VOID passes 9+11). **THREE CONSECUTIVE REVIEWERS (passes 13, 14, 15) independently prescribed the same mechanical remedy: a STORY-INDEX coherence guard and a BC sub-element citation guard.** Fix round 5 applied; next window at passes 18/19/20.
 
-**META-PATTERN REFINED:** All three passes in window 12/13/14 independently split round 4 the same way: greppable classes FULLY swept; per-artifact re-derivation classes NOT swept; 4 new defects introduced in new prose. Two passes (13 + 14) independently recommended mechanical B−A+1 line-count check and byte-diff for transcript artifacts.
+**META-PATTERN CONFIRMED FOURTH TIME:** Pass-15 independently re-verified that fix round 4 executed its mechanical mandate essentially perfectly (zero fidelity defects across all transcripts) but failed its class-sweep mandate for the fourth consecutive round. 8 of 15 pass-15 findings are attributable to fix round 4's own prose — 6 newly-introduced plus 2 propagation misses.
 
 **Findings accumulator (running total):**
 - Passes 1–5: 36 total (HIGH: 0, MED: 11, LOW: 16, INFO: 9)
@@ -224,7 +228,60 @@ ADV-P4-INFO-005   --informs--> S-641-1 AC-2 (complete let-chain detection form s
 - Pass 12 adds: +10 (HIGH: 0, MED: 5, LOW: 5, INFO: 0) [WINDOW-ELIGIBLE; ZERO HIGH]
 - Pass 13 adds: +10 (HIGH: 0, MED: 4, LOW: 6, INFO: 0) [WINDOW-ELIGIBLE; ZERO HIGH]
 - Pass 14 adds: +9 (HIGH: 0, MED: 4, LOW: 5, INFO: 0) [WINDOW-ELIGIBLE; ZERO HIGH]
-- **Grand total: 139 findings (CRIT: 0, HIGH: 17, MED: 58, LOW: 52, INFO: 12)**
+- Pass 15 adds: +15 (HIGH: 0, MED: 6, LOW: 9, INFO: 0) [WINDOW-ELIGIBLE; ZERO HIGH; TREND REVERSAL]
+- Passes 16/17: +0 (NOT RUN — superseded by round-5 ruling per DEC-209)
+- **Grand total: 154 findings (CRIT: 0, HIGH: 17, MED: 64, LOW: 61, INFO: 12)**
+
+---
+
+## Pass 15 Finding Catalog
+
+| ID | Severity | Classification | Title | Status | Notes |
+|----|----------|----------------|-------|--------|-------|
+| ADV-P15-MED-001 | MEDIUM | GAP · fix-introduced | S-626-1 AC-3 claims omitting EITHER with: block OR env override is silent — only env override is | FIXED — fix round 5 (S-626-1 v1.11) | Round-4-introduced |
+| ADV-P15-MED-002 | MEDIUM | GAP · partial-propagation | Blockquote `~:73-79` excludes line 80 (the `run: rustup target add` statement); 4 of 6 sites unfixed | FIXED — fix round 5 (S-626-1 v1.11, S-641-1 v0.7) | Round-4 fixed 2, left 4 |
+| ADV-P15-MED-003 | MEDIUM | MIS-ANCHOR | AC-9 anchor `handle_board_view` — symbol does not exist; correct is `handle_view` | FIXED — fix round 5 (S-626-1 v1.11) | Round-4 wrote correct in BC prose, left story wrong |
+| ADV-P15-MED-004 | MEDIUM | GAP · fix-introduced | STORY-INDEX arithmetic: frontmatter `total_stories: 123` vs body "122"; changelog gap; wave label wrong | FIXED — fix round 5 (STORY-INDEX v1.5.55) | Round-4 updated frontmatter only |
+| ADV-P15-MED-005 | MEDIUM | GAP · spec artifact | S-641-1 AC-2 item 2 three-component normalization rule fails on correct README badge `MSRV-1.85` | FIXED — fix round 5 (S-641-1 v0.7) | Badge carve-out added |
+| ADV-P15-MED-006 | MEDIUM | MIS-ANCHOR · trace-unfalsifiable | AC-9 traces to "BC-5.3.001 postcondition 1" / "BC-5.3.002 postcondition 1" — neither BC had Postconditions block; BC-5.3.002 had no Behavior field | FIXED — fix round 5 (bc-5-boards-sprints.md) | Postconditions + Behavior ADDED to BC-5.3.001/002/003 |
+| ADV-P15-LOW-001 | LOW | REFINEMENT · propagation-miss | STORY-INDEX S-576-5 row "story v1.47" vs file v1.48; S-576-3 v1.45 vs v1.46 | FIXED — fix round 5 (S-MAINT-576-HYG-1 v1.0) | Version row drift |
+| ADV-P15-LOW-002 | LOW | REFINEMENT · fix-introduced | AC-005.txt claimed "All three E0463 comments" — only two exist; release.yml has step at :46 but no comment | FIXED — fix round 5 (demos/) | Round-4-introduced count error |
+| ADV-P15-LOW-003 | LOW | REFINEMENT · fix-introduced | INDEX.md Regeneration Log logged `sed -n '40,52p'` for AC-005 release.yml; artifact uses `'38,52p'` | FIXED — fix round 5 (demos/INDEX.md) | Round-4-introduced sed range mismatch |
+| ADV-P15-LOW-004 | LOW | GAP · fix-introduced | S-MAINT-576-HYG-1 ARCH-INDEX coverage claimed tests/ covered (wrong); omitted Cargo.toml/build.rs/deny.toml | FIXED — fix round 5 (S-MAINT-576-HYG-1 v1.0) | New story authored by round 4 |
+| ADV-P15-LOW-005 | LOW | GAP · fix-introduced | S-MAINT-576-HYG-1 states SS-03 has 8 files; own AC-3 and ARCH-INDEX say 6 | FIXED — fix round 5 (S-MAINT-576-HYG-1 v1.0) | New story internal inconsistency |
+| ADV-P15-LOW-006 | LOW | GAP · fix-introduced | S-MAINT-576-HYG-1 `tdd_mode: strict` with `test_files: []` and MUST-NOT forbidding tests/ — unsatisfiable | FIXED — fix round 5 (S-MAINT-576-HYG-1 v1.0) | `tdd_mode: standard`; MUST-NOT removed |
+| ADV-P15-LOW-007 | LOW | GAP · fix-introduced | S-MAINT-576-HYG-1 Task 4 instructs 122→123 increment already applied by round 4 (double-increment risk) | FIXED — fix round 5 (S-MAINT-576-HYG-1 v1.0) | Task 4 re-scoped to VERIFY |
+| ADV-P15-LOW-008 | LOW | GAP · fix-introduced | S-641-1 AC-2 "three-step" algorithm body enumerates four steps; step 4 missing surrounding quotes | FIXED — fix round 5 (S-641-1 v0.7) | "four-step"; quotes aligned |
+| ADV-P15-LOW-009 | LOW | REFINEMENT · drift | S-626-1 BC-table Title column carries enrichment absent from canonical BC-INDEX row and BC H1 | FIXED — fix round 5 (S-626-1 v1.11) | Enrichment moved Title→Scope |
+| ADV-P15-LOW-010 | LOW | GAP · test-coverage-claim | Test comment at c88374b4 claimed .not() guards board.rs/list.rs/sprint.rs; observes only sprint.rs; board.rs had NO no-suffix pin | FIXED — product commit 6d73b3ef adds `test_board_view_falls_back_to_uuid_when_team_not_cached`; BC-5.3.003 added to S-626-1 (v1.11) | Test count 2343→2344 |
+
+## Pass 15 Isolation Note
+
+**CLEAN.** No banned-path file read. No prior adversary pass artifacts accessed. Incidental exposure: banned-path filenames (`ci.yml:212-214`, `demos/S-626-1/AC-001.txt:7-8`) appeared as quoted text INSIDE in-perimeter files; no content read. Self-disclosed.
+
+## Pass 15 Summary
+
+- **Verdict:** NOT CLEAN — 0 HIGH + 6 MEDIUM + 9 LOW; **ZERO HIGH** (tenth consecutive); zero code defects; **TREND REVERSAL 9→15 findings**; 8 of 15 round-4-attributable
+- **Post-capture routing:** All 15 findings → fix round 5 (bc-5, S-626-1 v1.11, S-641-1 v0.7 in-version, S-MAINT-576-HYG-1 v1.0 in-version, STORY-INDEX v1.5.55, demos/ re-stamped to 6d73b3ef); product commit 6d73b3ef adds BC-5.3.003 test
+- **Convergence:** 0/3 — new window 0/1; passes 16/17 NOT RUN per DEC-209; next window at passes 18/19/20 against head 6d73b3ef
+- **BC-5.3.003 DECLARED IN S-626-1:** on product-owner recommendation, BC-5.3.003 added to bcs:/behavioral_contracts:/AC-9 trace (DEC-210)
+- **Reviewer recommendation (third consecutive):** STORY-INDEX coherence guard and BC sub-element citation guard would have caught F-03, F-04, F-06, F-07, and F-11 mechanically
+- **Detail artifact:** `s-626-1-adversary-pass-15.md`
+
+---
+
+## Passes 16 and 17 — NOT RUN
+
+**Passes 16 and 17 were deliberately NOT RUN.** After pass-15 found 15 findings (trend reversal), the human authorized round 5 and ruled that the next evaluation window should open at passes 18/19/20 against the round-5-amended state. Passes 16 and 17 were superseded before dispatch.
+
+These entries exist to make the numbering gap (15 → 18) explicitly documented, preventing future misreading of the gap as missing or lost artifacts.
+
+| Pass | Status | Reason | Governing Decision |
+|------|--------|--------|-------------------|
+| 16 | NOT RUN | Superseded by round-5 ruling | DEC-209 (ROUND 5 + PASSES 18/19/20 AUTHORIZED) |
+| 17 | NOT RUN | Superseded by round-5 ruling | DEC-209 (ROUND 5 + PASSES 18/19/20 AUTHORIZED) |
+
+**Stub artifacts:** `s-626-1-adversary-pass-16.md`, `s-626-1-adversary-pass-17.md` — NOT window-eligible; NOT counted in convergence trajectory.
 
 ---
 

@@ -1,4 +1,4 @@
-# Head: c88374b4  Captured: 2026-08-03  Status: re-stamped (Round 5 — head-only; delta c88374b4 was test-only; .github/workflows/ content unchanged)
+# Head: 6d73b3ef  Captured: 2026-08-03  Status: re-stamped (Round 6 — head-only; delta 6d73b3ef was test-only; .github/workflows/ content unchanged)
 # Note: BSD grep file-output order is non-deterministic across invocations on macOS; the
 # file listing order here may differ from a future re-run. Content (SHA, line numbers,
 # counts) is verified correct. The -c command below is stable in argument order.

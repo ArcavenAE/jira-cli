@@ -2,41 +2,70 @@
 
 Story: Fix rust-toolchain SHA pins + MSRV false-green + comfy-table pin + CLAUDE.md gotcha (closes #626)
 Branch: `ci/fix-toolchain-sha-msrv`
-Head: `c88374b4`
+Head: `6d73b3ef`
 Last full regeneration: 2026-08-03
 
 ## Full Suite
 
 | File | Command | Result |
 |------|---------|--------|
-| `full-suite.txt` | `cargo test` (aggregate) | 2343 passed / 0 failed / 100 ignored |
+| `full-suite.txt` | `cargo test` (aggregate) | 2344 passed / 0 failed / 100 ignored |
 | `full-suite.txt` | `RUSTUP_TOOLCHAIN=1.85.0 cargo check --all-features --locked` | Compiling jr → Finished, exit 0 |
 | `full-suite.txt` | `cargo clippy --all-targets -- -D warnings` | clean (exit 0) |
 | `full-suite.txt` | `cargo fmt --all -- --check` | clean (exit 0) |
 
-Baseline per story v1.3 scope note was 2341 passed / 100 ignored. This run shows 2343 (+2) because
-delivery commits added two AC-9 regression-guard tests (`test_board_view_omits_team_column_when_field_unconfigured`
-and `test_issue_list_omits_team_column_when_field_unconfigured`). See `full-suite.txt` for full discrepancy note.
+Baseline per story v1.3 scope note was 2341 passed / 100 ignored. This run shows 2344 (+3) because
+delivery commits added three new tests: two AC-9 regression-guard tests (`test_board_view_omits_team_column_when_field_unconfigured`
+and `test_issue_list_omits_team_column_when_field_unconfigured`) plus `test_board_view_falls_back_to_uuid_when_team_not_cached`
+(BC-5.3.003 pin, commit 6d73b3ef). See `full-suite.txt` for full discrepancy note.
 
 ## Regeneration Log
 
-All 11 artifacts verified at head `c88374b4` (2026-08-03). Each artifact carries its own
+All 11 artifacts verified at head `6d73b3ef` (2026-08-03). Each artifact carries its own
 per-file `# Head:` stamp. Status per artifact:
 
 | Artifact | Head | Captured | Status | Reason |
 |----------|------|----------|--------|--------|
-| `AC-001.txt` | c88374b4 | 2026-08-03 | re-stamped (Round 5) | Head-only; delta c88374b4 was test-only; delta-analysis.md content unchanged |
-| `AC-002.txt` | c88374b4 | 2026-08-03 | re-stamped (Round 5) | Head-only; delta c88374b4 was test-only; .github/workflows/ content unchanged |
-| `AC-003.txt` | c88374b4 | 2026-08-03 | re-stamped (Round 5) | Head-only; delta c88374b4 was test-only; ci.yml content unchanged |
-| `AC-004.txt` | c88374b4 | 2026-08-03 | re-stamped (Round 5) | Head-only; delta c88374b4 was test-only; ci.yml content unchanged |
-| `AC-005.txt` | c88374b4 | 2026-08-03 | re-stamped (Round 5) | Head-only; delta c88374b4 was test-only; all three workflow files unchanged |
-| `AC-006.txt` | c88374b4 | 2026-08-03 | re-stamped (Round 5) | Head-only; delta c88374b4 was test-only; CLAUDE.md content unchanged |
-| `AC-007.txt` | c88374b4 | 2026-08-03 | re-stamped (Round 5) | Head-only; delta c88374b4 was test-only; .github/workflows/ content unchanged |
-| `AC-008.txt` | c88374b4 | 2026-08-03 | re-stamped (Round 5) | Head-only; delta c88374b4 was test-only; Cargo.toml/Cargo.lock unchanged |
-| `AC-009.txt` | c88374b4 | 2026-08-03 | re-verified (Round 5) | Filtered test re-run; running 2 tests confirmed; src/cli/board.rs unchanged; BEFORE/AFTER transcripts unchanged |
-| `full-suite.txt` | c88374b4 | 2026-08-03 | re-verified (Round 5) | cargo test aggregate re-run; 2343/0/100 confirmed unchanged; MSRV/clippy/fmt not re-run (no src/ changes) |
+| `AC-001.txt` | 6d73b3ef | 2026-08-03 | re-stamped (Round 6) | Head-only; delta 6d73b3ef was test-only; delta-analysis.md content unchanged |
+| `AC-002.txt` | 6d73b3ef | 2026-08-03 | re-stamped (Round 6) | Head-only; delta 6d73b3ef was test-only; .github/workflows/ content unchanged |
+| `AC-003.txt` | 6d73b3ef | 2026-08-03 | re-stamped (Round 6) | Head-only; delta 6d73b3ef was test-only; ci.yml content unchanged |
+| `AC-004.txt` | 6d73b3ef | 2026-08-03 | re-stamped (Round 6) | Head-only; delta 6d73b3ef was test-only; ci.yml content unchanged |
+| `AC-005.txt` | 6d73b3ef | 2026-08-03 | re-stamped (Round 6) | Head-only; delta 6d73b3ef was test-only; all three workflow files unchanged |
+| `AC-006.txt` | 6d73b3ef | 2026-08-03 | re-stamped (Round 6) | Head-only; delta 6d73b3ef was test-only; CLAUDE.md content unchanged |
+| `AC-007.txt` | 6d73b3ef | 2026-08-03 | re-stamped (Round 6) | Head-only; delta 6d73b3ef was test-only; .github/workflows/ content unchanged |
+| `AC-008.txt` | 6d73b3ef | 2026-08-03 | re-stamped (Round 6) | Head-only; delta 6d73b3ef was test-only; Cargo.toml/Cargo.lock unchanged |
+| `AC-009.txt` | 6d73b3ef | 2026-08-03 | re-verified (Round 6) | Filtered test re-run; running 2 tests / 8 filtered out confirmed (suite grew 9→10); BEFORE/AFTER transcripts unchanged |
+| `full-suite.txt` | 6d73b3ef | 2026-08-03 | re-verified (Round 6) | cargo test aggregate re-run; 2344/0/100 confirmed; MSRV/clippy/fmt not re-run (no src/ changes) |
 
 **Completeness: 11/11 artifacts verified and stamped. No artifact left with only the global INDEX head stamp.**
+
+## Round-6 Re-stamp (2026-08-03): head c88374b4 → 6d73b3ef
+
+Commit `6d73b3ef` (`test: pin board-view UUID fallback render site (BC-5.3.003)`) added one new
+test to `tests/team_column_parity.rs`:
+- `test_board_view_falls_back_to_uuid_when_team_not_cached` — exercises the board-view cache-miss
+  path and asserts positive anchors (Team column, raw UUID) then `.stdout(predicate::str::contains("name not cached").not())`.
+  Also rewrote a comment that had overclaimed which render sites the earlier assertions covered.
+
+No `src/` file changed. Delta: test file only. The suite grew from 9 to 10 tests in `team_column_parity.rs`;
+full suite grew from 2343 to 2344.
+
+**Re-verification performed:**
+- `cargo test` aggregate re-run at 6d73b3ef → `2344 passed / 0 failed / 100 ignored`
+- `cargo test --test team_column_parity` → `running 10 tests`, all ok
+- `cargo test --test team_column_parity -- test_board_view_omits_team_column_when_field_unconfigured test_issue_list_omits_team_column_when_field_unconfigured` → `running 2 tests`, **8 filtered out** (was 7 — suite grew 9→10)
+- False-green reproduction (wrong filter substrings) → `running 0 tests`, **10 filtered out** (was 9 — suite grew 9→10)
+
+**Artifact disposition:**
+- AC-001 through AC-008: head-stamp-only re-stamp. None of these artifacts' evidence sources (delta-analysis.md, .github/workflows/, ci.yml, CLAUDE.md, Cargo.toml/lock, src/cli/board.rs) were touched by 6d73b3ef.
+- AC-009: head-stamp + both filtered-out figures updated (false-green: 9→10; correct filter: 7→8). Running-2-tests result unchanged. BEFORE/AFTER board.rs transcripts unchanged.
+- full-suite.txt: head-stamp + aggregate count updated (2343→2344) + narrative updated to describe three new tests (2341→2344 via the two AC-9 guards plus the new BC-5.3.003 pin).
+
+**Round-5 fidelity fixes confirmed intact:**
+All `sed -n 'A,Bp'` commands in the pack verified to display exactly B−A+1 lines:
+- AC-003: sed '59,86p' → 28 lines ✓
+- AC-005: sed '57,68p' → 12 lines ✓; sed '72,83p' → 12 lines ✓; sed '38,52p' → 15 lines ✓
+- AC-009 BEFORE: sed '228,244p' → 17 lines ✓; AFTER: sed '228,248p' → 21 lines ✓
 
 ## Round-5 Re-stamp (2026-08-03): head 64e2a4bc → c88374b4
 
@@ -135,7 +164,7 @@ initial blank was silently dropped in transcription. Blank lines restored as lin
 AC-5 (`S-626-1.md:~308-316`) mandates three sites: `sign-and-publish.yml`, `backfill-release.yml`,
 and `release.yml`. The prior artifact covered only the first two and declared P71-003 satisfied.
 `release.yml` at :43/:46 has a bare `rustup target add` step with no E0463 comment (as documented
-in the story's AC-5 table). Evidence added: `grep -n` output + `sed -n '40,52p'` transcript.
+in the story's AC-5 table). Evidence added: `grep -n` output + `sed -n '38,52p'` transcript.
 `INDEX.md` command column corrected from "both files" to "all three files".
 
 **AC-008 (MEDIUM) — Unicode ≥ (U+2265) transcribed as ASCII >= in Cargo.toml transcript:**

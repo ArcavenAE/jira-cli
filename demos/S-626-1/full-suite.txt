@@ -1,17 +1,19 @@
-# Head: c88374b4  Captured: 2026-08-03  Status: re-verified (Round 5 — cargo test aggregate re-run at c88374b4; 2343/0/100 confirmed unchanged; MSRV/clippy/fmt not re-run — delta was test-only, no src/ changes)
+# Head: 6d73b3ef  Captured: 2026-08-03  Status: re-verified (Round 6 — cargo test aggregate re-run at 6d73b3ef; 2344/0/100 confirmed; MSRV/clippy/fmt not re-run — delta was test-only, no src/ changes)
 
 --- cargo test (full regression) ---
 $ cd /Users/zious/Documents/GITHUB/jira-cli/.worktrees/S-626-1 && cargo test 2>&1 | grep "test result" | awk '{for(i=1; i<=NF; i++) {if($i == "passed;") passed += $(i-1); if($i == "failed;") failed += $(i-1); if($i == "ignored;") ignored += $(i-1)}} END {print "AGGREGATE: " passed " passed / " failed " failed / " ignored " ignored"}'
-AGGREGATE: 2343 passed / 0 failed / 100 ignored
+AGGREGATE: 2344 passed / 0 failed / 100 ignored
 
 NOTE: Orchestrator pre-implementation baseline was 2341 passed / 100 ignored (from story v1.3
-scope note, commit cc7f6da5). This run shows 2343 passed — a delta of +2 new tests added by
-commit b51fc26a (test(team-column): test_board_view_omits_team_column_when_field_unconfigured
-and test_issue_list_omits_team_column_when_field_unconfigured). The ignored count matches: 100.
-No failed tests. Discrepancy from stated figure: +2 pass (expected 2341, actual 2343).
-This is not a regression — it is the +2 new AC-9 tests added in the delivery commits.
+scope note, commit cc7f6da5). This run shows 2344 passed — a delta of +3 new tests added by:
+  - commit b51fc26a (test(team-column): test_board_view_omits_team_column_when_field_unconfigured
+    and test_issue_list_omits_team_column_when_field_unconfigured — the two AC-9 unconfigured-field tests)
+  - commit 6d73b3ef (test: pin board-view UUID fallback render site (BC-5.3.003) —
+    test_board_view_falls_back_to_uuid_when_team_not_cached)
+The ignored count matches: 100. No failed tests. Discrepancy from stated figure: +3 pass (expected 2341, actual 2344).
+This is not a regression — the story added 3 new tests total (2 AC-9 guards + 1 BC-5.3.003 pin).
 The story v1.3 scope note (commit cc7f6da5) states the baseline as "2341 passed / 0 failed / 100 ignored";
-the real current count is 2343 because the story itself added 2 new tests. Both are consistent.
+the real current count is 2344 because the story itself added 3 new tests. Both are consistent.
 
 --- RUSTUP_TOOLCHAIN=1.85.0 cargo check --all-features --locked (MSRV proof) ---
 $ cd /Users/zious/Documents/GITHUB/jira-cli/.worktrees/S-626-1 && RUSTUP_TOOLCHAIN=1.85.0 rustc --version
@@ -43,14 +45,15 @@ $ cd /Users/zious/Documents/GITHUB/jira-cli/.worktrees/S-626-1 && cargo fmt --al
 EXIT: 0 (clean)
 
 --- Summary ---
-cargo test:                    2343 passed / 0 failed / 100 ignored  [PASS]
+cargo test:                    2344 passed / 0 failed / 100 ignored  [PASS]
 RUSTUP_TOOLCHAIN=1.85.0 check: Compiling jr → Finished (6.34s), exit 0 [PASS]
   toolchain identity:          rustc 1.85.0 (4d91de4e4 2025-02-17)   [CONFIRMED]
 cargo clippy --all-targets:    Compiling jr → Finished (9.30s), exit 0 [PASS]
 cargo fmt --check:             No output, exit 0                     [PASS]
 
-Discrepancy from orchestrator-stated baseline: +2 tests (2341→2343). Cause: delivery commits
+Discrepancy from orchestrator-stated baseline: +3 tests (2341→2344). Cause: delivery commits
 added test_board_view_omits_team_column_when_field_unconfigured and
-test_issue_list_omits_team_column_when_field_unconfigured as AC-9 regression guards. This is
-expected and correct — the story added new tests. No failed tests, no clippy warnings,
-no format violations.
+test_issue_list_omits_team_column_when_field_unconfigured as AC-9 regression guards (+2), then
+commit 6d73b3ef added test_board_view_falls_back_to_uuid_when_team_not_cached as BC-5.3.003
+pin (+1). This is expected and correct — the story added 3 new tests total. No failed tests,
+no clippy warnings, no format violations.

@@ -1,4 +1,4 @@
-# Head: c88374b4  Captured: 2026-08-03  Status: re-verified (Round 5 — filtered test re-run; running 2 tests confirmed; src/cli/board.rs unchanged; BEFORE/AFTER transcripts unchanged)
+# Head: 6d73b3ef  Captured: 2026-08-03  Status: re-verified (Round 6 — filtered test re-run; running 2 tests confirmed; 8 filtered out (suite grew 9→10); src/cli/board.rs unchanged; BEFORE/AFTER transcripts unchanged)
 
 --- BEFORE (src/cli/board.rs on origin/develop, ~:231-234) ---
 $ git show origin/develop:src/cli/board.rs | sed -n '228,244p'
@@ -55,7 +55,7 @@ $ cargo test --test team_column_parity -- board_view_kanban_omits_team_col_when_
 
 running 0 tests
 
-test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 9 filtered out; finished in 0.00s
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 10 filtered out; finished in 0.00s
 
 CORRECT command (actual test function names with test_ prefix):
 
@@ -67,7 +67,7 @@ running 2 tests
 test test_issue_list_omits_team_column_when_field_unconfigured ... ok
 test test_board_view_omits_team_column_when_field_unconfigured ... ok
 
-test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 7 filtered out; finished in 0.65s
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 8 filtered out; finished in 1.26s
 
 ---
 

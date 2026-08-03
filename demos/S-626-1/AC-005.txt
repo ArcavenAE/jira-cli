@@ -1,4 +1,4 @@
-# Head: c88374b4  Captured: 2026-08-03  Status: re-stamped (Round 5 — head-only; delta c88374b4 was test-only; workflow files unchanged)
+# Head: 6d73b3ef  Captured: 2026-08-03  Status: re-stamped (Round 6 — head-only; delta 6d73b3ef was test-only; workflow files unchanged)
 
 $ cd /Users/zious/Documents/GITHUB/jira-cli/.worktrees/S-626-1 && grep -n "E0463\|rustup target add\|Ensure target" .github/workflows/sign-and-publish.yml
 61:      # the build fails with `error[E0463]: can't find crate for 'core'`.
@@ -71,6 +71,7 @@ AC-005 assertions verified:
   - release.yml: "Ensure cross-target installed (defensive)" step PRESENT at :43 CONFIRMED
   - release.yml: "rustup target add ${{ matrix.target }}" PRESENT at :46 CONFIRMED
   - release.yml: NO E0463 comment (bare step name only, as documented in AC-5 story table) CONFIRMED
-  - All three E0463 comments (sign-and-publish.yml, backfill-release.yml) and all three
+  - Both E0463 comments (sign-and-publish.yml:61, backfill-release.yml:75) and all three
     rustup target add steps are UNCHANGED from origin/develop
+    (release.yml:46 has the step but no E0463 comment — asymmetry confirmed at line 73 above)
   - The do-not-remove constraint (P71-003) is satisfied for all three sites

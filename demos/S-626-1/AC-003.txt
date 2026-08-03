@@ -1,4 +1,4 @@
-# Head: c88374b4  Captured: 2026-08-03  Status: re-stamped (Round 5 — head-only; delta c88374b4 was test-only; ci.yml content unchanged)
+# Head: 6d73b3ef  Captured: 2026-08-03  Status: re-stamped (Round 6 — head-only; delta 6d73b3ef was test-only; ci.yml content unchanged)
 # Prior artifact used sed -n '58,87p' but showed 28 lines (lines 59-86); line 58 is a blank
 # separator above the msrv job and line 87 is a blank separator below it. Command corrected
 # to sed -n '59,86p' so the command matches the displayed output exactly.

@@ -15,7 +15,7 @@ trivial_scope: false
 issue: null
 points: 1
 priority: LOW
-tdd_mode: strict
+tdd_mode: standard
 estimated_effort: tiny
 producer: story-writer
 timestamp: "2026-08-03T00:00:00"
@@ -29,7 +29,7 @@ inputs:
   - ".factory/stories/S-576-4.md"
   - ".factory/stories/S-576-5.md"
   - ".factory/stories/S-576-6.md"
-input-hash: "ae997f3"
+input-hash: "211101f"
 traces_to: ".factory/stories/STORY-INDEX.md"
 estimated_days: 0.5
 target_module: ".factory/stories/"
@@ -162,8 +162,8 @@ Note: S-576-5 was already corrected to `["SS-02","SS-04","SS-05","SS-08"]` in v1
 that enforces coherence between STORY-INDEX status/subsystem values and story file
 frontmatter. The `tests/claude_md_citations.rs` guard validates CLAUDE.md file-path
 citations but does not cover STORY-INDEX↔file field coherence. Similarly, the ARCH-INDEX
-registry covers only `src/`, `tests/`, and `.github/workflows/` paths — it declares no
-subsystems for `.factory/` or `docs/` paths. The drift documented by this story is an
+registry covers `src/`, `Cargo.toml`, `build.rs`, `deny.toml`, and `.github/workflows/`
+paths — it declares no subsystems for `tests/`, `.factory/`, or `docs/` paths. The drift documented by this story is an
 example of the class of defect that would be caught by a coherence guard; adding such a
 guard is out of scope for this story but is noted here as a future improvement.
 
@@ -247,10 +247,11 @@ For each of `S-576-1.md`, `S-576-2.md`, `S-576-3.md`, `S-576-4.md`, `S-576-6.md`
 
 - Locate the rows for S-576-1/2/3/4/6 in STORY-INDEX.
 - Update each row's inline subsystem annotation from `SS-03/SS-09` to `SS-02/SS-04`.
-- Register this story (S-MAINT-576-HYG-1) as a new row with `status: draft` and
-  position 123 (total_stories 122→123).
-- Bump STORY-INDEX `total_stories` from 122 to 123.
-- Bump STORY-INDEX `version` by one patch.
+- **VERIFY (do NOT re-increment):** This story's row (S-MAINT-576-HYG-1) was already
+  registered and STORY-INDEX `total_stories` was already bumped to 123 during story
+  creation. Confirm the row exists at position 123 and `total_stories: 123` — do not
+  increment again.
+- Bump STORY-INDEX `version` by one patch (for the subsystem annotation updates).
 
 ### Task 5: Verify no unintended changes
 
@@ -263,7 +264,7 @@ For each of `S-576-1.md`, `S-576-2.md`, `S-576-3.md`, `S-576-4.md`, `S-576-6.md`
 
 | Story | Key Decisions | Patterns Established | Gotchas Discovered |
 |-------|--------------|---------------------|--------------------|
-| S-576-5 (v1.47) | Subsystem re-derivation from File Structure Requirements table was applied to S-576-5 during adversary pass 2026-08-03 — the same method applies here to the other family members. | Subsystem re-derivation method: read the story's File Structure Requirements table, map each file to its owning subsystem per ARCH-INDEX, take the union. | SS-03 ("HTTP Client Core") is frequently mis-anchored as a stand-in for "any API layer code" — it is NOT. SS-03 covers only `src/api/client.rs`, `auth.rs`, and the six sibling HTTP infrastructure files. Story files that modify `src/api/jira/*.rs` or `src/api/jsm/*.rs` belong to SS-04 or SS-05, not SS-03. |
+| S-576-5 (v1.47) | Subsystem re-derivation from File Structure Requirements table was applied to S-576-5 during adversary pass 2026-08-03 — the same method applies here to the other family members. | Subsystem re-derivation method: read the story's File Structure Requirements table, map each file to its owning subsystem per ARCH-INDEX, take the union. | SS-03 ("HTTP Client Core") is frequently mis-anchored as a stand-in for "any API layer code" — it is NOT. SS-03 covers exactly six files: `src/api/client.rs`, `src/api/auth.rs`, `src/api/auth_embedded.rs`, `src/api/pagination.rs`, `src/api/rate_limit.rs`, and `src/api/refresh_coordinator.rs`. Story files that modify `src/api/jira/*.rs` or `src/api/jsm/*.rs` belong to SS-04 or SS-05, not SS-03. |
 | STORY-INDEX v1.5.53 | `delivered` appeared once as a `status:` value (S-576-5). The prior adversary sweep corrected subsystems but did not resolve the `delivered`/`completed` ambiguity — that is settled here. | Terminal lifecycle state for merged stories: `completed`. No intermediate `delivered` state exists in this project's story workflow. | Post-merge status updates to story files are frequently missed because the factory-artifacts `git push` happens separately from the product PR merge. A coherence guard would catch this class of drift automatically. |
 
 ---

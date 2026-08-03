@@ -1863,3 +1863,16 @@ _Was the active checkpoint after SOH-DX-1 F2 ADVERSARY GRIND rounds 1-45 (2026-0
 | In flight | develop @ 64e2a4bc (PR #667 HELD — DEC-202). .factory @ factory-artifacts. No other open worktrees. |
 | Pending human decisions | (1) DEC-205 authorized — grind to passes 12/13/14 confirmed. (2) AX23-001 out-of-delta ratification (non-blocking). PR queue: #667 (HELD — DEC-202), #662 (MERGEABLE), #655-#659 (soaking), #628/#574. DO NOT close #429. |
 | Resume command | Open fresh session → /vsdd-factory:next-step. Fix ORCHESTRATOR-GREP-HYGIENE-INSUFFICIENT before dispatching pass-12. Scope ALL adversary greps to named subdirectories. Then passes 13+14. PR #667 HELD until 3/3 CLEAN window. AX23-001 pending. |
+
+---
+
+## Checkpoint: ADVERSARY-12-13-14+FIX-ROUND-4 + CORRECTIVE-VERDICT-LABEL-AMBIGUITY burst (2026-08-03T20:30:00Z)
+
+| Field | Value |
+|-------|-------|
+| Position | Feature Mode SOH-DX-1 F4 delivery. F2 APPROVED (DEC-196), F3 APPROVED (DEC-197). **S-626-1 DELIVERED** — PR #667 open, feature HEAD c88374b41ee4ea30bc2406e1def90cedf3686275, branch ci/fix-toolchain-sha-msrv. **HELD per DEC-202** pending fresh 3-pass window on amended state. Fix round 4 applied 2026-08-03 (demos/S-626-1/ 11 artifacts corrected; S-626-1 v1.10, S-641-1 v0.7, S-576-5 v1.48; STORY-INDEX v1.5.54; bc-5, edge-case-catalog updated; S-MAINT-576-HYG-1 new draft). Terminology corrected: S-626-1 passes 12/13/14 all NOT CLEAN (not "(CLEAN; 0H)" shorthand). |
+| Convergence | S-626-1 Step 4.5 = 0/3. 14 recorded passes (5 VOID: 3 dispatch + 2 isolation). 139 total findings. Window 12/13/14 COMPLETE = 0/3 NOT CLEAN. ZERO HIGH three consecutive passes. Severity decay 4H→0H confirmed. **DEC-207 authorized: grind to passes 15/16/17.** |
+| Not yet done | (1) Passes 15/16/17 dispatch (maintain scoped greps). (2) S-640-1 handoff: on MSRV ≥1.88, delete `No let-chains` from CLAUDE.md Conventions AND in-code comments at `src/cli/board.rs` ~:231, `src/cli/issue/list.rs` ~:523, `src/cli/auth/keychain.rs` ~:50. (3) S-MAINT-576-HYG-1 needs review before scheduling. DEC-204 UNADJUDICATED. AX23-001 PENDING. |
+| In flight | develop @ c88374b4 (PR #667 HELD — DEC-202). .factory @ factory-artifacts (commit 05ff7c2e). No other open worktrees. |
+| Pending human decisions | (1) DEC-207 authorized — grind to passes 15/16/17 confirmed. (2) AX23-001 out-of-delta ratification. (3) DEC-204 UNADJUDICATED. PR queue: #667 (HELD), #662 (MERGEABLE), #655-#659 (soaking), #628/#574. DO NOT close #429. |
+| Resume command | Open fresh session → /vsdd-factory:next-step. Dispatch S-626-1 pass-15 (scoped greps — behavioral corrective verified effective). PR #667 HELD until 3/3 CLEAN window. AX23-001 pending. |
