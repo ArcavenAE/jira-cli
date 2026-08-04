@@ -1,4 +1,4 @@
-# Head: 14416fd9  Captured: 2026-08-04  Status: re-captured (Round 12 — cargo test re-run at 14416fd9: 2345/0/100 confirmed (no new test functions; 14416fd9 was comment-only in ci.yml); ci_gate_completeness re-run: 8 tests (unchanged); clippy+fmt re-run (ci.yml changed — ci_gate_completeness.rs tests ci.yml, which is in --all-targets scope via tests/; re-run required even for comment-only edits since the test embeds the step body); POL-11 floor guard re-run (Check passed: 2345 tests executed across 103 test binaries — unchanged; operative gate logic unchanged by 14416fd9 comment-only edit); MSRV not re-run (ci.yml is not a Rust source file; cargo check --all-features omits --all-targets))
+# Head: e49230a7  Captured: 2026-08-04  Status: re-captured (Round 13 — cargo test re-run at e49230a7: 2345/0/100 confirmed (no new test functions; e49230a7 changed tests/ci_gate_completeness.rs docstrings only + ci.yml comment text only); ci_gate_completeness re-run: 8 tests (unchanged — no new test functions; only docstring/comment text changed); clippy+fmt re-run (tests/ci_gate_completeness.rs changed — in --all-targets/--all scope; re-run required even for docstring-only changes); POL-11 floor guard re-run (Check passed: 2345 tests executed across 103 test binaries — unchanged; ci.yml operative logic and line numbers unchanged by e49230a7 one-for-one comment edit); MSRV not re-run (tests/ci_gate_completeness.rs has only docstring changes; cargo check --all-features omits --all-targets; ci.yml comment-only edit has no bearing))
 
 --- cargo test (full regression) ---
 $ cd /Users/zious/Documents/GITHUB/jira-cli/.worktrees/S-626-1 && cargo test 2>&1 | grep "test result" | awk '{for(i=1; i<=NF; i++) {if($i == "passed;") passed += $(i-1); if($i == "failed;") failed += $(i-1); if($i == "ignored;") ignored += $(i-1)}} END {print "AGGREGATE: " passed " passed / " failed " failed / " ignored " ignored"}'
@@ -41,46 +41,46 @@ EXIT: 0 (clean)
 Toolchain identity: rustc 1.85.0 (4d91de4e4 2025-02-17) — overridden by RUSTUP_TOOLCHAIN env var.
 Compiling line confirms cargo rebuilt jr under 1.85.0, not a warm no-op.
 Source files not modified; cargo clean removed build cache only.
-NOT re-run at a247a343, 84ab32ac, 7798b1bf, or 14416fd9: all four commits changed ci.yml or
+NOT re-run at a247a343, 84ab32ac, 7798b1bf, 14416fd9, or e49230a7: all five commits changed ci.yml or
 tests/ci_gate_completeness.rs only; cargo check --all-features omits --all-targets,
-so test-file changes are outside its scope; ci.yml is not a Rust source file, so a
-comment-only ci.yml edit also has no bearing on the MSRV check. The MSRV result from
+so test-file changes are outside its scope; ci.yml is not a Rust source file, so
+comment-only ci.yml edits also have no bearing on the MSRV check. The MSRV result from
 the prior run (head c88374b4 or earlier) remains valid.
 
 --- cargo clippy --all-targets -- -D warnings ---
 $ cd /Users/zious/Documents/GITHUB/jira-cli/.worktrees/S-626-1 && cargo clippy --all-targets -- -D warnings 2>&1; echo "EXIT: $?"
-    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.20s
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.17s
 EXIT: 0
 
 EXIT: 0 (clean, zero warnings)
-Re-run at head 14416fd9: commit 14416fd9 changed .github/workflows/ci.yml; tests/ci_gate_completeness.rs
-embeds the ci.yml test job step body verbatim and is in the --all-targets integration-test scope.
-Even a comment-only ci.yml edit requires re-running clippy if the test file references the edited content.
-Warm cache result (0.20s, no Compiling line) — all targets clean at this head.
+Re-run at head e49230a7: commit e49230a7 changed tests/ci_gate_completeness.rs (docstrings, +3 lines)
+and .github/workflows/ci.yml (one-for-one comment edit); tests/ci_gate_completeness.rs is in the
+--all-targets integration-test scope. Re-run required even for docstring-only changes.
+Warm cache result (0.17s, no Compiling line) — all targets clean at this head.
 
 --- cargo fmt --all -- --check ---
 $ cd /Users/zious/Documents/GITHUB/jira-cli/.worktrees/S-626-1 && cargo fmt --all -- --check 2>&1; echo "EXIT: $?"
 EXIT: 0
 
 EXIT: 0 (clean)
-Re-run at head 14416fd9: --all checks all targets including tests/; re-run required for completeness
+Re-run at head e49230a7: --all checks all targets including tests/; re-run required for completeness
 at each new head. No output means no format violations.
 
 --- POL-11 floor guard (positive path) ---
 # Replicates the ci.yml :: test / "Run tests (zero-test floor, POL-11)" step locally.
 # The operative gate logic (CARGO_TERM_COLOR=never, wc -l, -lt 90 binary floor,
-# ci_gate_completeness canary) is UNCHANGED by 14416fd9 — the commit changed only a comment
-# inside the step body (the "wc -l avoids the grep -c no-match trap" comment block, which
-# formerly cited "ci.yml:~415-426" and now cites "ci.yml :: mutants / 'Check kill rate' else branch").
+# ci_gate_completeness canary) is UNCHANGED by e49230a7 — the commit changed only a comment
+# text in ci.yml (one-for-one; no line-count change; examine_globs count comment only)
+# and docstrings in tests/ci_gate_completeness.rs (+3 lines; no operative changes).
 # The GATESCRIPT blocks in the negative paths do not include comments — they contain operative
 # commands only — so they remain verbatim matches to the gate logic. Re-run confirms same output.
 
 $ cd /Users/zious/Documents/GITHUB/jira-cli/.worktrees/S-626-1 && \
-  CARGO_TERM_COLOR=never cargo test --all-features 2>&1 | tee /tmp/cargo_test_out_14416fd9.txt > /dev/null && \
-  total=$(grep -E "^test result: " /tmp/cargo_test_out_14416fd9.txt | grep -Eo "[0-9]+ passed" | awk '{sum += $1} END {print sum+0}') && \
-  binaries=$(grep -E "^test result: " /tmp/cargo_test_out_14416fd9.txt | wc -l | tr -d ' ') && \
+  CARGO_TERM_COLOR=never cargo test --all-features 2>&1 | tee /tmp/cargo_test_out_e49230a7.txt > /dev/null && \
+  total=$(grep -E "^test result: " /tmp/cargo_test_out_e49230a7.txt | grep -Eo "[0-9]+ passed" | awk '{sum += $1} END {print sum+0}') && \
+  binaries=$(grep -E "^test result: " /tmp/cargo_test_out_e49230a7.txt | wc -l | tr -d ' ') && \
   { [ "${binaries}" -lt 90 ] && echo "FAIL (POL-11): only ${binaries} test binaries reported results (floor: 90)." || true; } && \
-  { grep -q "ci_gate_completeness" /tmp/cargo_test_out_14416fd9.txt || echo "FAIL (POL-11): tests/ci_gate_completeness did not run."; } && \
+  { grep -q "ci_gate_completeness" /tmp/cargo_test_out_e49230a7.txt || echo "FAIL (POL-11): tests/ci_gate_completeness did not run."; } && \
   { [ "${total}" -eq 0 ] && echo "FAIL (POL-11): zero tests executed across ${binaries} test binaries." || true; } && \
   echo "Check passed: ${total} tests executed across ${binaries} test binaries"
 Check passed: 2345 tests executed across 103 test binaries
@@ -231,8 +231,8 @@ instrument that the binary floor alone cannot replace.
 cargo test:                    2345 passed / 0 failed / 100 ignored  [PASS]
 RUSTUP_TOOLCHAIN=1.85.0 check: Compiling jr → Finished (6.34s), exit 0 [PASS] (not re-run at 84ab32ac, 7798b1bf, or 14416fd9 — see note above)
   toolchain identity:          rustc 1.85.0 (4d91de4e4 2025-02-17)   [CONFIRMED]
-cargo clippy --all-targets:    Finished (0.20s warm cache), exit 0   [PASS] (re-run at 14416fd9)
-cargo fmt --check:             No output, exit 0                     [PASS] (re-run at 14416fd9)
+cargo clippy --all-targets:    Finished (0.17s warm cache), exit 0   [PASS] (re-run at e49230a7)
+cargo fmt --check:             No output, exit 0                     [PASS] (re-run at e49230a7)
 POL-11 floor guard (positive):  Check passed: 2345 tests executed across 103 test binaries [CONFIRMED]
 POL-11 floor guard (neg-floor): FAIL (POL-11): only 5 test binaries reported results (floor: 90) [CONFIRMED — diagnostic printed, exit 1]
 POL-11 floor guard (neg-canary):FAIL (POL-11): tests/ci_gate_completeness did not run [CONFIRMED — diagnostic printed, exit 1]
@@ -246,5 +246,8 @@ guard (+1). commit a247a343 added no new test functions (assertions expanded, co
 commit 84ab32ac added no new test functions (two assertions re: pipefail bracket added, count unchanged).
 commit 7798b1bf added no new test functions (two assertions tightened re: canary/floor, count unchanged).
 commit 14416fd9 added no new test functions (comment-only ci.yml edit, count unchanged).
+  - commit e49230a7 added NO new test functions; it converted four `ci.yml:~NN` citations in
+    tests/ci_gate_completeness.rs docstrings to structural form (+3 lines; docstring text only).
+    Count remains 2345.
 This is expected and correct — the story added 4 new tests total. No failed tests,
 no clippy warnings, no format violations.

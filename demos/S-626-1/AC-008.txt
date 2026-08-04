@@ -1,4 +1,4 @@
-# Head: 14416fd9  Captured: 2026-08-04  Status: re-stamped (Round 12 — head-only; Cargo.toml/Cargo.lock unchanged by 14416fd9 (ci.yml comment-only); MSRV check not re-run (ci.yml is not a Rust source file; cargo check --all-features omits --all-targets))
+# Head: e49230a7  Captured: 2026-08-04  Status: re-stamped (Round 13 — head-only; Cargo.toml/Cargo.lock unchanged by e49230a7 (ci.yml comment-only + tests/ci_gate_completeness.rs docstrings-only); MSRV check not re-run (tests/ci_gate_completeness.rs has only docstring changes; cargo check --all-features omits --all-targets; ci.yml comment-only edit has no bearing))
 
 $ cd /Users/zious/Documents/GITHUB/jira-cli/.worktrees/S-626-1 && grep -n "comfy-table" Cargo.toml
 24:comfy-table = "=7.2.1"

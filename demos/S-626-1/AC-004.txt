@@ -1,4 +1,4 @@
-# Head: 14416fd9  Captured: 2026-08-04  Status: re-captured (Round 12 — ci.yml shifted +1 by 14416fd9 comment split; all grep line numbers updated)
+# Head: e49230a7  Captured: 2026-08-04  Status: re-stamped (Round 13 — head-only; e49230a7 was NO line-count change in ci.yml (one-for-one comment edit); all grep output line numbers confirmed unchanged; ci.yml grep content at :157/:167/:169/:173/:179/:183 unaffected)
 
 $ cd /Users/zious/Documents/GITHUB/jira-cli/.worktrees/S-626-1 && grep -n "1\.85\.0\|RUSTUP_TOOLCHAIN" .github/workflows/ci.yml
 157:    name: MSRV (1.85.0)

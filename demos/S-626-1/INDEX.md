@@ -2,7 +2,7 @@
 
 Story: Fix rust-toolchain SHA pins + MSRV false-green + comfy-table pin + CLAUDE.md gotcha (closes #626)
 Branch: `ci/fix-toolchain-sha-msrv`
-Head: `14416fd9`
+Head: `e49230a7`
 Last full regeneration: 2026-08-04
 
 ## Full Suite
@@ -23,23 +23,54 @@ See `full-suite.txt` for full discrepancy note.
 
 ## Regeneration Log
 
-All 11 artifacts verified at head `14416fd9` (2026-08-04). Each artifact carries its own
+All 11 artifacts verified at head `e49230a7` (2026-08-04). Each artifact carries its own
 per-file `# Head:` stamp. Status per artifact:
 
 | Artifact | Head | Captured | Status | Reason |
 |----------|------|----------|--------|--------|
-| `AC-001.txt` | 14416fd9 | 2026-08-04 | re-stamped (Round 12) | Head-only; delta-analysis.md unchanged by 14416fd9 (ci.yml comment-only) |
-| `AC-002.txt` | 14416fd9 | 2026-08-04 | re-captured (Round 12) | ci.yml +1 line shift: msrv dtolnay pin :166→:167, coverage dtolnay pin :208→:209 |
-| `AC-003.txt` | 14416fd9 | 2026-08-04 | re-captured (Round 12) | ci.yml +1 line shift: sed range updated '155,182p' → '156,183p' (183−156+1=28 ✓) |
-| `AC-004.txt` | 14416fd9 | 2026-08-04 | re-captured (Round 12) | ci.yml +1 line shift: all grep output line numbers updated (+1 each) |
-| `AC-005.txt` | 14416fd9 | 2026-08-04 | re-stamped (Round 12) | Head-only; sign-and-publish.yml/backfill-release.yml/release.yml unchanged by 14416fd9 |
-| `AC-006.txt` | 14416fd9 | 2026-08-04 | re-stamped (Round 12) | Head-only; CLAUDE.md unchanged by 14416fd9 (ci.yml comment-only) |
-| `AC-007.txt` | 14416fd9 | 2026-08-04 | re-stamped (Round 12) | Head-only; c93f4f9c still absent; ci.yml changed but old SHA was not in ci.yml |
-| `AC-008.txt` | 14416fd9 | 2026-08-04 | re-stamped (Round 12) | Head-only; Cargo.toml/Cargo.lock unchanged by 14416fd9 |
-| `AC-009.txt` | 14416fd9 | 2026-08-04 | re-stamped (Round 12) | Head-only; board.rs/list.rs unchanged; team_column_parity.rs unchanged |
-| `full-suite.txt` | 14416fd9 | 2026-08-04 | re-captured (Round 12) | cargo test re-run: 2345/0/100 (unchanged — no new test functions); clippy (0.20s)+fmt re-run; ci_gate_completeness re-run (8 tests unchanged); floor guard re-run (same output — operative gate logic unchanged by comment-only edit) |
+| `AC-001.txt` | e49230a7 | 2026-08-04 | re-stamped (Round 13) | Head-only; delta-analysis.md unchanged by e49230a7 (ci.yml comment-only + ci_gate_completeness.rs docstrings-only) |
+| `AC-002.txt` | e49230a7 | 2026-08-04 | re-stamped (Round 13) | Head-only; e49230a7 NO line-count change in ci.yml; ci.yml line numbers confirmed unchanged (:167, :209) |
+| `AC-003.txt` | e49230a7 | 2026-08-04 | re-stamped (Round 13) | Head-only; e49230a7 NO line-count change in ci.yml; sed range '156,183p' remains valid (183−156+1=28 ✓) |
+| `AC-004.txt` | e49230a7 | 2026-08-04 | re-stamped (Round 13) | Head-only; e49230a7 NO line-count change in ci.yml; all grep output line numbers confirmed unchanged |
+| `AC-005.txt` | e49230a7 | 2026-08-04 | re-stamped (Round 13) | Head-only; sign-and-publish.yml/backfill-release.yml/release.yml unchanged by e49230a7 |
+| `AC-006.txt` | e49230a7 | 2026-08-04 | re-stamped (Round 13) | Head-only; CLAUDE.md unchanged by e49230a7 |
+| `AC-007.txt` | e49230a7 | 2026-08-04 | re-stamped (Round 13) | Head-only; c93f4f9c still absent; e49230a7 changed ci.yml comment text + ci_gate_completeness.rs docstrings |
+| `AC-008.txt` | e49230a7 | 2026-08-04 | re-stamped (Round 13) | Head-only; Cargo.toml/Cargo.lock unchanged by e49230a7 |
+| `AC-009.txt` | e49230a7 | 2026-08-04 | re-stamped (Round 13) | Head-only; board.rs/list.rs unchanged; team_column_parity.rs unchanged |
+| `full-suite.txt` | e49230a7 | 2026-08-04 | re-captured (Round 13) | cargo test re-run: 2345/0/100 (unchanged — no new test functions; only docstrings changed); clippy (0.17s)+fmt re-run; ci_gate_completeness re-run (8 tests unchanged); floor guard re-run (same output — ci.yml operative logic and line numbers unchanged) |
 
 **Completeness: 11/11 artifacts verified and stamped. No artifact left with only the global INDEX head stamp.**
+
+## Round-13 Re-stamp (2026-08-04): head 14416fd9 → e49230a7
+
+Commit `e49230a7` (`docs(ci): fix stale examine_globs count and convert live ci.yml line citations to structural form`) made two changes:
+
+1. `.github/workflows/ci.yml` — one comment line shortened: a false `17-entry` numeral removed from the examine_globs count comment in the `ci.yml :: mutants` job (actual count is 16). **One-for-one edit: NO line-count change.** All ci.yml line numbers remain identical to `14416fd9`.
+
+2. `tests/ci_gate_completeness.rs` — four live `ci.yml:~NN` citations in docstrings/comments converted to structural form (e.g. `ci.yml:~415-426` → `ci.yml :: mutants / "Check kill rate" else branch`). **+3 lines total (docstring/comment text only; no new test functions, no assertion changes).** Test count remains 2345.
+
+**No line-count change in ci.yml:** Verified by running `grep -n "msrv:\|name: MSRV\|dtolnay\|toolchain: \"1.85.0\"\|RUSTUP_TOOLCHAIN: \"1.85.0\""` — all six markers confirmed at :156/:157/:167/:169/:183/:209 (same as 14416fd9). AC-002, AC-003, and AC-004 content is unchanged.
+
+**17-entry count-claim sweep:** `grep -rn "17-entry\|17 entry\|examine_globs"` across all 11 demo artifacts returned zero hits. No artifact reproduces the retracted false count.
+
+**Re-verification performed:**
+- `cargo test` aggregate re-run at e49230a7 → `2345 passed / 0 failed / 100 ignored`
+- `cargo test --test ci_gate_completeness` → `running 8 tests` (unchanged — no new test functions; only docstring text changed)
+- `cargo clippy --all-targets -- -D warnings` re-run at e49230a7 → exit 0 (warm cache, 0.17s)
+- `cargo fmt --all -- --check` re-run at e49230a7 → exit 0 (no output)
+- Floor guard positive path re-run → `Check passed: 2345 tests executed across 103 test binaries`
+
+**Artifact disposition:**
+- AC-001 through AC-009: head-stamp only. None of these artifacts' evidence sources (delta-analysis.md, six workflow files, CLAUDE.md, Cargo.toml/lock, src/cli/board.rs, team_column_parity.rs) were changed by e49230a7.
+- full-suite.txt: re-captured — cargo test count confirmed 2345; clippy (0.17s)+fmt re-run; ci_gate_completeness confirmed 8 tests; floor guard command updated to `/tmp/cargo_test_out_e49230a7.txt` and re-run (same output); MSRV "NOT re-run" note extended to include e49230a7.
+
+**Round-13 sed range re-check:**
+All `sed -n 'A,Bp'` commands in the pack verified to display exactly B−A+1 lines at head e49230a7:
+- AC-003: sed '156,183p' → 28 lines ✓ (183−156+1=28; unchanged from Round 12 — no ci.yml line shift)
+- AC-005: sed '57,68p' → 12 lines ✓ (unchanged); sed '72,83p' → 12 lines ✓ (unchanged); sed '38,52p' → 15 lines ✓ (unchanged)
+- AC-009 BEFORE: sed '228,244p' → 17 lines ✓ (unchanged); AFTER: sed '228,248p' → 21 lines ✓ (unchanged)
+
+**All three floor-guard captures (positive + both negatives) confirmed intact:** The GATESCRIPT blocks contain only operative commands (no comments), and ci.yml's operative logic is unchanged by e49230a7's one-for-one comment edit. The negative-path GATESCRIPT blocks are verbatim matches to the gate logic.
 
 ## Round-12 Re-stamp (2026-08-04): head 7798b1bf → 14416fd9
 

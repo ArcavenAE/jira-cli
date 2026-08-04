@@ -1,29 +1,29 @@
 ---
 document_type: adversarial-review-index
 level: ops
-version: "2.2"
+version: "2.3"
 status: in-review
 producer: adversary
-timestamp: 2026-08-04T18:30:00Z
+timestamp: 2026-08-04T21:00:00Z
 phase: "5"
-pass: 23
+pass: 26
 inputs: [.factory/stories/S-626-1.md, .factory/stories/S-640-1.md, .factory/stories/S-641-1.md, .factory/stories/S-MUTANTS-EXAMINE-GLOBS-1.md, .factory/stories/STORY-INDEX.md, .github/workflows/ci.yml, tests/ci_gate_completeness.rs, tests/cli_handler.rs, CLAUDE.md, Cargo.toml]
 traces_to: .factory/stories/S-626-1.md
-total_findings: 186
-severity_distribution: { CRIT: 0, HIGH: 19, MED: 82, LOW: 71, INFO: 14 }
+total_findings: 197
+severity_distribution: { CRIT: 0, HIGH: 19, MED: 83, LOW: 77, INFO: 18 }
 story: S-626-1
 cycle: cycle-001
-feature_head: 14416fd9 (fix-round-10 product commit; pass-23 ran against 14416fd9; 14416fd9 closed MED-001 from pass-23; LOW-001 from pass-23 closed in .factory/ spec update; ADV-P21-LOW-003 DEFERRED still open)
+feature_head: e49230a7 (fix-round-11 product commit; passes 24/25/26 ran against 14416fd9 (DEC-223); fix round 11 e49230a7 closed all pass-24/25/26 substantive findings; ADV-P21-LOW-003 DEFERRED still open; ADV-P26-LOW-002 ROUTED pre-existing)
 pr: 667
 basis: TRUE ADVERSARY AGENT (not a DEC-190 substitute)
-convergence: 0 of 3 (Step 4.5 window — DEC-199 GRIND to 3/3 CLEAN; DEC-221 STRICT window passes 23/24/25 CLOSED (pass-23 NOT CLEAN; passes 24/25 NOT DISPATCHED); DEC-223 FRESH STRICT window passes 24/25/26; 20 recorded passes; src/ 0-defect FIFTEENTH consecutive; CI floor SOUND (all seven dimensions); pin 8/8 assertions non-comment-satisfiable; fix round 10 applied 14416fd9; window 23/24/25 CLOSED 0/1; isolation corrective PRE-FLIGHT CHECK VERIFIED EFFECTIVE)
+convergence: 0 of 3 (Step 4.5 window — DEC-199 GRIND to 3/3 CLEAN; window 24/25/26 CLOSED 2/3 (pass-24 CLEAN + pass-25 CLEAN + pass-26 NOT CLEAN; BROKEN); DEC-224 ISOLATION ELIGIBILITY PRINCIPLE ESTABLISHED; 23 recorded passes; src/ 0-defect EIGHTEENTH consecutive; CI floor SOUND (six independent confirmations passes 21-26); fix round 11 applied e49230a7; fresh STRICT window = passes 27/28/29; FIRST CLEAN VERDICTS passes 24+25)
 void_spawns: 6 (passes 6/7/8 first-attempt background subagents; pass-9 isolation breach; pass-11 isolation breach; pass-22 isolation breach)
 not_run: 2 (passes 16/17 — superseded by round-5 ruling per DEC-209; see s-626-1-adversary-pass-16.md and s-626-1-adversary-pass-17.md)
 superseded: 1 (pass-20 — superseded per DEC-216; window 18/19/20 CLOSED 0/2)
-not_dispatched: 6 (passes 22/23 of window 21/22/23 — superseded when pass-21 returned NOT CLEAN; passes 23/24 of window 22/23/24 — superseded when pass-22 returned VOID+NOT CLEAN; passes 24/25 of window 23/24/25 — superseded when pass-23 returned NOT CLEAN; fresh window = passes 24/25/26)
+not_dispatched: 6 (passes 22/23 of window 21/22/23 — superseded when pass-21 returned NOT CLEAN; passes 23/24 of window 22/23/24 — superseded when pass-22 returned VOID+NOT CLEAN; passes 24/25 of window 23/24/25 — superseded when pass-23 returned NOT CLEAN; passes 24/25/26 subsequently dispatched under fresh window DEC-223 and ran)
 ---
 
-# Adversarial Review Index — S-626-1 (SOH-DX-1) Passes 1..23
+# Adversarial Review Index — S-626-1 (SOH-DX-1) Passes 1..26
 
 ## Pass 1 Finding Catalog
 
@@ -218,10 +218,13 @@ ADV-P4-INFO-005   --informs--> S-641-1 AC-2 (complete let-chain detection form s
 | 21 | NOT CLEAN | 0 | 3 | 3 | 1 | 0 | NO | WINDOW-ELIGIBLE (isolation CLEAN); ZERO HIGH — THIRTEENTH consecutive zero-src/-defect; **CI floor AUDITED SOUND (all four dimensions at a247a343)**; recurring pattern: "correct change + false claim alongside it"; window 0/1 of 21/22/23; passes 22/23 NOT DISPATCHED; fix round 8 applied; fresh STRICT window passes 22/23/24 |
 | 22 (VOID-22A) | VOID | 0 | 1 | 2 | 0 | 0 | NO | VOID — isolation breach; root-scoped `.factory/` grep leaked ADV-P1-INDEX.md + passes 9/10/15/18/21; self-disclosed; DEC-220; FOURTEENTH consecutive zero-src/-defect; CI floor AUDITED SOUND (all SEVEN dimensions); window 22/23/24 CLOSED 0/1; fix round 9 applied 7798b1bf; fresh STRICT window passes 23/24/25 |
 | 23 | NOT CLEAN | 0 | 1 | 1 | 0 | 0 | NO | WINDOW-ELIGIBLE (isolation CLEAN — PRE-FLIGHT CHECK corrective VERIFIED EFFECTIVE; first pass under revised corrective); ZERO HIGH — FIFTEENTH consecutive zero-src/-defect; CI floor pin 8/8 assertions non-comment-satisfiable; window 23/24/25 CLOSED 0/1; fix round 10 applied 14416fd9; fresh STRICT window passes 24/25/26 (DEC-223) |
+| 24 | **CLEAN** | 0 | 0 | 1 | 0 | 0 | NO | **FIRST CLEAN VERDICT IN THE CYCLE** — ELIGIBLE (isolation: two self-disclosed deviations; zero banned content surfaced; DEC-224 ISOLATION ELIGIBILITY PRINCIPLE ESTABLISHED); ZERO HIGH — SIXTEENTH consecutive zero-src/-defect; CI floor 8/8 assertions non-comment-satisfiable (fourth independent confirmation); window 24/25/26 = 1/3 |
+| 25 | **CLEAN** | 0 | 0 | 3 | 2 | 0 | NO | **SECOND CONSECUTIVE CLEAN** — ELIGIBLE (isolation: three Globs anchored at whitelisted subdirs); ZERO HIGH — SEVENTEENTH consecutive zero-src/-defect; CI floor 8/8 non-comment-satisfiable (fifth independent confirmation); found three things pass-24 missed; window 24/25/26 = 2/3 |
+| 26 | NOT CLEAN | 0 | 1 | 2 | 2 | 0 | NO | ELIGIBLE (isolation: one deviation returned zero results); ZERO HIGH — EIGHTEENTH consecutive zero-src/-defect; CI floor 8/8 non-comment-satisfiable (sixth independent confirmation); F-02 MED: authorization trail incomplete for tests/team_column_parity.rs (third exception-list file; FIX-ROUND-PARTIAL-PROPAGATION instance); F-04 LOW pre-existing ROUTED; window 24/25/26 BROKEN 2/3; fix round 11 applied e49230a7; fresh STRICT window passes 27/28/29 |
 
-**Overall convergence: 0 of 3 (Step 4.5 — 20 recorded passes + 2 NOT RUN (16/17) + 1 SUPERSEDED (pass-20, DEC-216) + 6 NOT DISPATCHED (passes 22/23 of window 21/22/23; passes 23/24 of window 22/23/24; passes 24/25 of window 23/24/25); 6 VOID [3 dispatch + 3 isolation]; DEC-199: GRIND to 3/3 CLEAN; DEC-221: STRICT window passes 23/24/25 OPENED then CLOSED (pass-23 NOT CLEAN; passes 24/25 NOT DISPATCHED); DEC-223: FRESH STRICT window passes 24/25/26; S-626-1 pass-23 NOT CLEAN (WINDOW-ELIGIBLE; isolation CLEAN); ZERO HIGH — FIFTEENTH consecutive zero-src/-defect; CI floor pin 8/8 assertions non-comment-satisfiable; isolation corrective PRE-FLIGHT CHECK VERIFIED EFFECTIVE; fix round 10 applied 14416fd9; passes 24/25 NOT DISPATCHED; fresh STRICT window passes 24/25/26 not yet dispatched)**
+**Overall convergence: 0 of 3 (Step 4.5 — 23 recorded passes + 2 NOT RUN (16/17) + 1 SUPERSEDED (pass-20, DEC-216) + 6 NOT DISPATCHED (passes 22/23 of window 21/22/23; passes 23/24 of window 22/23/24; passes 24/25 of window 23/24/25 — all 6 historical; passes 24/25/26 subsequently dispatched under fresh window DEC-223); 6 VOID [3 dispatch + 3 isolation]; DEC-199: GRIND to 3/3 CLEAN; DEC-223: window 24/25/26 CLOSED 2/3 (pass-24 CLEAN + pass-25 CLEAN + pass-26 NOT CLEAN; BROKEN); DEC-224: ISOLATION ELIGIBILITY PRINCIPLE ESTABLISHED; FIRST CLEAN VERDICTS: passes 24 and 25; ZERO HIGH — EIGHTEENTH consecutive zero-src/-defect; CI floor pin 8/8 assertions non-comment-satisfiable (six consecutive independent confirmations); fix round 11 applied e49230a7; fresh STRICT window = passes 27/28/29 (0/3, not yet dispatched))**
 
-**SEVERITY DECAY RECORDED (THEN REVERSED, THEN 2H IN WINDOW, THEN ZERO HIGH AGAIN):** Window 9/10/11 carried 4 HIGH each. Window 12/13/14 carries ZERO HIGH. Passes 15 and 18 carry ZERO HIGH but 15 was a TREND REVERSAL (9→15). Pass-19 carries 2 HIGH — the first HIGH findings in the 18/19/20 window — but both are non-src/ defects (CI-as-code + spec scope breach). Pass-21 returns to ZERO HIGH (pass-20 SUPERSEDED). Pass-22 VOID (isolation breach) but ZERO HIGH. Pass-23 ZERO HIGH; isolation CLEAN — first pass under PRE-FLIGHT CHECK corrective. Code is 0-defect across FIFTEEN consecutive passes (6–15+18+19+21+22+23, minus VOID passes 9+11+22). **THREE CONSECUTIVE REVIEWERS (passes 13, 14, 15) independently prescribed the same mechanical remedy: a STORY-INDEX coherence guard and a BC sub-element citation guard.** Fix round 5 applied; pass-18 confirmed 15 of 15 pass-15 findings FIXED but added 10 new findings (7 round-5-attributable). Fix round 7 applied; pass-19 found 10 new findings, 4 of which were REAL CI-AS-CODE DEFECTS in the orchestrator-shipped POL-11 guard. Fix round 8 applied; pass-21 found 7 findings, all documentation/citation-accuracy defects, none in src/. Fix round 9 applied; pass-22 found 3 findings: F-01 MEDIUM (pin prose-satisfiable — canary assertion satisfiable by comment; threshold not bound to variable), F-02/F-03 LOW (demo residue + provenance trail incomplete). CI floor mechanism audited SOUND on all SEVEN dimensions, independently of F-01. Fix round 10 applied; pass-23 found 2 findings: F-01 MEDIUM (stale anchor in ci.yml self-comment — anchor migration omitted workflow self-citations), F-02 LOW (BC-5.3.001 "both conditions" vs three enumerated). Isolation corrective PRE-FLIGHT CHECK VERIFIED EFFECTIVE. Pin 8/8 assertions non-comment-satisfiable (exhaustive table).
+**SEVERITY DECAY RECORDED (THEN REVERSED, THEN 2H IN WINDOW, THEN ZERO HIGH AGAIN, THEN FIRST CLEAN VERDICTS):** Window 9/10/11 carried 4 HIGH each. Window 12/13/14 carries ZERO HIGH. Passes 15 and 18 carry ZERO HIGH but 15 was a TREND REVERSAL (9→15). Pass-19 carries 2 HIGH — the first HIGH findings in the 18/19/20 window — but both are non-src/ defects (CI-as-code + spec scope breach). Pass-21 returns to ZERO HIGH (pass-20 SUPERSEDED). Pass-22 VOID (isolation breach) but ZERO HIGH. Pass-23 ZERO HIGH; isolation CLEAN — first pass under PRE-FLIGHT CHECK corrective. Pass-24 ZERO HIGH; isolation ELIGIBLE; **FIRST CLEAN VERDICT IN THE CYCLE**. Pass-25 ZERO HIGH; isolation ELIGIBLE; **SECOND CONSECUTIVE CLEAN**. Pass-26 ZERO HIGH; isolation ELIGIBLE; NOT CLEAN (1M+2L+2INFO); window BROKEN 2/3. Code is 0-defect across EIGHTEEN consecutive passes (6–15+18+19+21+22+23+24+25+26, minus VOID passes 9+11+22). **THREE CONSECUTIVE REVIEWERS (passes 13, 14, 15) independently prescribed the same mechanical remedy: a STORY-INDEX coherence guard and a BC sub-element citation guard.** Fix round 5 applied; pass-18 confirmed 15 of 15 pass-15 findings FIXED but added 10 new findings (7 round-5-attributable). Fix round 7 applied; pass-19 found 10 new findings, 4 of which were REAL CI-AS-CODE DEFECTS in the orchestrator-shipped POL-11 guard. Fix round 8 applied; pass-21 found 7 findings, all documentation/citation-accuracy defects, none in src/. Fix round 9 applied; pass-22 found 3 findings: F-01 MEDIUM (pin prose-satisfiable), F-02/F-03 LOW (demo residue + provenance trail incomplete). CI floor mechanism audited SOUND on all SEVEN dimensions. Fix round 10 applied; pass-23 found 2 findings: F-01 MEDIUM (stale anchor in ci.yml self-comment), F-02 LOW (BC-5.3.001 "both conditions" vs three). Fix round 11 applied (e49230a7); passes 24/25 CLEAN; pass-26 found 5 findings: F-02 MED (team_column_parity.rs authorization trail incomplete — third exception-list file, FIX-ROUND-PARTIAL-PROPAGATION), F-01/F-04 LOW (count-in-prose + wrong-file mis-anchor pre-existing ROUTED), F-03/F-05 INFO (pass-25 concurrences). **ISOLATION ELIGIBILITY PRINCIPLE (DEC-224) ESTABLISHED:** passes 24/25/26 all ELIGIBLE despite self-disclosed path deviations — rule is contamination prevention, not path-syntax enforcement; key test is whether banned content surfaced.
 
 **META-PATTERN SEVENTH TIME + RECURRING PATTERN NAMED + PIN-PROSE-SATISFIABLE CLASS:** Pass-21 reviewer named the recurring pattern precisely: *"a correct change landed alongside a false claim about it."* Pass-22 refined the class further: a regression pin can have a FALSE-GREEN when a bare `contains()` assertion is satisfied by a COMMENT containing the pinned string rather than the command. The corrective (command-unique form, discrimination proof by removing command while leaving comment) is now encoded as `PIN-ASSERTIONS-PROSE-SATISFIABLE` drift item. **Round-7's anchor-form migration remains CLASS-ELIMINATING for ci.yml citations.** The third isolation breach (pass-22) used the same root-scoped `.factory/` grep mechanism as passes 9 and 11; behavioral corrective effective for 10 consecutive passes (12-21) before this recurrence.
 
@@ -244,7 +247,10 @@ ADV-P4-INFO-005   --informs--> S-641-1 AC-2 (complete let-chain detection form s
 - Pass 21 adds: +7 (HIGH: 0, MED: 3, LOW: 3, INFO: 1) [WINDOW-ELIGIBLE; ZERO HIGH; THIRTEENTH zero-src/-defect; CI floor SOUND; passes 22/23 NOT DISPATCHED]
 - Pass 22 adds: +3 (HIGH: 0, MED: 1, LOW: 2, INFO: 0) [VOID isolation breach; FOURTEENTH zero-src/-defect; CI floor SOUND seven dimensions; window 22/23/24 CLOSED 0/1]
 - Pass 23 adds: +2 (HIGH: 0, MED: 1, LOW: 1, INFO: 0) [WINDOW-ELIGIBLE; isolation CLEAN — PRE-FLIGHT CHECK corrective VERIFIED EFFECTIVE; FIFTEENTH zero-src/-defect; pin 8/8 non-comment-satisfiable; window 23/24/25 CLOSED 0/1]
-- **Grand total: 186 findings (CRIT: 0, HIGH: 19, MED: 82, LOW: 71, INFO: 14)**
+- Pass 24 adds: +1 (HIGH: 0, MED: 0, LOW: 1, INFO: 0) [**CLEAN — FIRST CLEAN VERDICT IN CYCLE**; ELIGIBLE; SIXTEENTH zero-src/-defect; CI floor 8/8 fourth independent confirmation; window 24/25/26 = 1/3]
+- Pass 25 adds: +5 (HIGH: 0, MED: 0, LOW: 3, INFO: 2) [**CLEAN — SECOND CONSECUTIVE**; ELIGIBLE; SEVENTEENTH zero-src/-defect; found three things pass-24 missed; window 24/25/26 = 2/3]
+- Pass 26 adds: +5 (HIGH: 0, MED: 1, LOW: 2, INFO: 2) [NOT CLEAN; ELIGIBLE (deviation returned zero results); EIGHTEENTH zero-src/-defect; F-02 MED authorization trail incomplete; F-04 LOW pre-existing ROUTED; window 24/25/26 BROKEN 2/3]
+- **Grand total: 197 findings (CRIT: 0, HIGH: 19, MED: 83, LOW: 77, INFO: 18)**
 
 ---
 
@@ -752,13 +758,84 @@ Pass-20 was superseded per DEC-216 before dispatch. Window 18/19/20 CLOSED at 0/
 
 ---
 
-## Passes 24/25 — NOT DISPATCHED (Window 23/24/25 Closed)
+## Passes 24/25 — NOT DISPATCHED Within Window 23/24/25 (Historical Record)
 
-Pass-23 (window 23/24/25, DEC-221) returned NOT CLEAN. The window closed at 0/1. Dispatching passes 24/25 within window 23/24/25 would carry no convergence credit. Per DEC-223, the fresh STRICT window is passes 24/25/26. These passes will be dispatched after the ADVERSARY-23+FIX-ROUND-10 burst commit lands on factory-artifacts.
+Pass-23 (window 23/24/25, DEC-221) returned NOT CLEAN. The window closed at 0/1. Passes 24 and 25 were NOT DISPATCHED within the window 23/24/25 context — dispatching them would carry no convergence credit within that window. Per DEC-223, the fresh STRICT window is passes 24/25/26 (against head 14416fd9). **Passes 24/25/26 were subsequently dispatched under the fresh window DEC-223 and all three ran. See pass finding catalogs below.**
 
-| Pass | Status | Reason | Governing Decision |
-|------|--------|--------|-------------------|
-| 24 (of window 23/24/25) | NOT DISPATCHED | Pass-23 NOT CLEAN closed window | DEC-221 + DEC-223 |
-| 25 (of window 23/24/25) | NOT DISPATCHED | Pass-23 NOT CLEAN closed window | DEC-221 + DEC-223 |
+| Pass | Status in window 23/24/25 | Reason | Governing Decision | Subsequent fate |
+|------|---------------------------|--------|--------------------|-----------------|
+| 24 (of window 23/24/25) | NOT DISPATCHED | Pass-23 NOT CLEAN closed window | DEC-221 + DEC-223 | Dispatched as pass-24 of fresh window DEC-223; returned CLEAN |
+| 25 (of window 23/24/25) | NOT DISPATCHED | Pass-23 NOT CLEAN closed window | DEC-221 + DEC-223 | Dispatched as pass-25 of fresh window DEC-223; returned CLEAN |
+
+---
+
+## Pass 24 Finding Catalog (Fresh Window DEC-223: CLEAN — FIRST CLEAN VERDICT)
+
+**Pass-24 is the FIRST CLEAN verdict in the S-626-1 adversary cycle.** ELIGIBLE (two self-disclosed letter-of-rule deviations; zero banned content surfaced). **DEC-224 ISOLATION ELIGIBILITY PRINCIPLE ESTABLISHED.**
+
+| ID | Severity | Classification | Title | Status | Notes |
+|----|----------|----------------|-------|--------|-------|
+| ADV-P24-LOW-001 | LOW | documentation-accuracy / positional-description-error | INDEX.md Round-12 section misstates position of comment changed by 14416fd9 (said between binaries=$(…) and # Restore pipefail; actually before binaries=) | FIXED — fix round 11 (`e49230a7`: INDEX.md positional description corrected) | Load-bearing conclusion (GATESCRIPT needs no re-capture) independently verified TRUE; reviewer declined to escalate |
+
+## Pass 24 Isolation Note
+
+**ELIGIBLE.** Two self-disclosed letter-of-rule deviations: (1) Glob with `.factory` as path but NON-RECURSIVE `demos/S-626-1/*` pattern returning only 11 whitelisted artifacts; (2) repo-root grep where ripgrep's default dotted-directory skip returned only `src/` paths. Zero banned content surfaced in either case. Per DEC-224 ISOLATION ELIGIBILITY PRINCIPLE: ELIGIBLE — rule prevents contamination, not path syntax.
+
+## Pass 24 Summary
+
+- **Verdict:** CLEAN — **FIRST CLEAN VERDICT IN THE CYCLE**; isolation ELIGIBLE; SIXTEENTH consecutive zero-src/-defect pass; 1 LOW documentation finding explicitly declined to escalate
+- **Post-capture routing:** LOW-001 FIXED fix round 11 (`e49230a7`: INDEX.md positional description corrected; re-stamped to `e49230a7`)
+- **Convergence:** window 24/25/26 = 1/3; CI floor 8/8 non-comment-satisfiable (fourth independent confirmation); DEC-224 ISOLATION ELIGIBILITY PRINCIPLE ESTABLISHED
+- **Detail artifact:** `s-626-1-adversary-pass-24.md`
+
+---
+
+## Pass 25 Finding Catalog (Fresh Window DEC-223: CLEAN — SECOND CONSECUTIVE)
+
+**Pass-25 is the SECOND consecutive CLEAN verdict.** ELIGIBLE (three Globs anchored at whitelisted subdirs). Found three things pass-24 missed.
+
+| ID | Severity | Classification | Title | Status | Notes |
+|----|----------|----------------|-------|--------|-------|
+| ADV-P25-LOW-001 | LOW | count-in-prose-drift | ci.yml:109 and mutants_glob_existence.rs:103 claim "17-entry" examine_globs whitelist; actual count is 16 | FIXED — fix round 11 (`e49230a7`: numeral removed from both live sites; three deliberately-retained sites documented) | COUNT-IN-PROSE-DRIFT-CLASS: corrective adopted — remove numeral rather than correct it |
+| ADV-P25-LOW-002 | LOW | stale-line-citation / anchor-migration-gap | Rust pin docstring in ci_gate_completeness.rs still cites ci.yml:~124/ci.yml:~137 after anchor migration; ~137 inverted onto wrong command | FIXED — fix round 11 (`e49230a7`: all four ci.yml:~NN citations in docstrings converted to structural form; ~137 inversion corrected) | Anchor migration stopped at .factory/ boundary in round 10; test docstrings not swept |
+| ADV-P25-LOW-003 | LOW | spec-accuracy / under-enumeration / test-coverage-gap | BC-5.3.001 Postcondition 1 enumerates TWO cell states while code produces THREE (None => "-" in mixed result set absent) | FIXED (spec) — this burst (bc-5-boards-sprints.md PC1 extended to all three states; BC-5.3.002/003/004 swept CLEAN); test ROUTED | MIXED-SET-DASH-ARM-UNPINNED drift item; test coverage DEC-226 |
+| ADV-P25-INFO-001 | INFO | minor-annotation-drift | Stale line-delta annotation in ci_gate_completeness.rs docstring | FIXED — fix round 11 (`e49230a7`) | |
+| ADV-P25-INFO-002 | INFO | minor-count-drift | STORY-INDEX embedded present-tense bracket contradicts authoritative count surfaces | FIXED — fix round 11 (STORY-INDEX v1.5.61) | |
+
+## Pass 25 Isolation Note
+
+**ELIGIBLE.** Three Globs used repo root but with patterns anchored at whitelisted subdirectories. No `.factory/`-root file reachable. Zero banned content surfaced; self-disclosed. Per DEC-224: ELIGIBLE.
+
+## Pass 25 Summary
+
+- **Verdict:** CLEAN — SECOND CONSECUTIVE; isolation ELIGIBLE; SEVENTEENTH consecutive zero-src/-defect pass; 3 LOW + 2 INFO; found three things pass-24 missed; LOW-003 most substantive (BC Postcondition under-enumeration)
+- **Post-capture routing:** LOW-001/002 + INFO-001 FIXED fix round 11 (`e49230a7`); LOW-003 FIXED (spec) this burst + ROUTED (test, DEC-226); INFO-002 FIXED (STORY-INDEX v1.5.61)
+- **Convergence:** window 24/25/26 = 2/3; CI floor 8/8 non-comment-satisfiable (fifth independent confirmation); multi-pass window value concretely demonstrated
+- **Detail artifact:** `s-626-1-adversary-pass-25.md`
+
+---
+
+## Pass 26 Finding Catalog (Fresh Window DEC-223: NOT CLEAN — Window BROKEN 2/3)
+
+**Pass-26 broke the window at 2/3.** ELIGIBLE (one deviation returned zero results). F-02 is the substantive finding (authorization trail for third exception-list file). F-04 is pre-existing ROUTED. Forecast: "Expect the next pass to be clean."
+
+| ID | Severity | Classification | Title | Status | Notes |
+|----|----------|----------------|-------|--------|-------|
+| ADV-P26-LOW-001 | LOW | count-in-prose-drift / independent-confirmation | "17-entry" examine_globs count confirmed stale — independently confirming pass-25 | FIXED — fix round 11 (`e49230a7`; same fix as P25-LOW-001) | Two of three window passes confirmed this finding |
+| ADV-P26-MED-001 | MEDIUM | spec-fidelity / incomplete-audit / partial-propagation | tests/team_column_parity.rs authorization trail names only 1 of 3 commits; line-delta stale (claimed 108; actual 168) | FIXED — fix round 11 (S-626-1 v1.15→v1.16: delta corrected to 168; trail to all 3 commits; STORY-INDEX v1.5.61) | Orchestrator brief wrongly listed 148a9489; story-writer verified and corrected it (self-caught) |
+| ADV-P26-INFO-001 | INFO | stale-line-citation / concurrence | ci_gate_completeness.rs docstring ci.yml:~124/~137 citations — concurring with pass-25 | FIXED — fix round 11 (`e49230a7`; same fix as P25-LOW-002) | |
+| ADV-P26-LOW-002 | LOW | citation-hygiene / wrong-file-mis-anchor / pre-existing | tests/issue_view_errors.rs:142 cites list.rs:947 for string at view.rs:264/269; tests/team_object_shape.rs cites list.rs:983 for call at ~528 | ROUTED — pre-existing, outside S-626-1 diff | WRONG-FILE-MIS-ANCHORS-IN-TESTS drift item; spec layer correct; test comments are unswept siblings |
+| ADV-P26-INFO-002 | INFO | minor-count-drift / concurrence | STORY-INDEX embedded stale count — concurring with pass-25 | FIXED — fix round 11 (STORY-INDEX v1.5.61; same fix as P25-INFO-002) | |
+
+## Pass 26 Isolation Note
+
+**ELIGIBLE.** One self-disclosed deviation: repo-root grep with exclusion pattern returned **"No matches found"** — zero results, no content read. Zero banned content surfaced. Per DEC-224: ELIGIBLE.
+
+## Pass 26 Summary
+
+- **Verdict:** NOT CLEAN — 0 HIGH + 1 MEDIUM + 2 LOW + 2 INFO; ELIGIBLE; EIGHTEENTH consecutive zero-src/-defect pass; window 24/25/26 BROKEN 2/3; F-02 (authorization trail incomplete) closes with fix round 11; F-04 (pre-existing wrong-file mis-anchor) ROUTED
+- **Post-capture routing:** MED-001 + LOW-001 + INFO-001/002 FIXED fix round 11 (`e49230a7`); LOW-002 ROUTED (WRONG-FILE-MIS-ANCHORS-IN-TESTS drift item)
+- **Convergence:** 0/3 — fresh STRICT window = passes 27/28/29 (0/3, not yet dispatched); CI floor 8/8 non-comment-satisfiable (sixth independent confirmation); forecast: next pass CLEAN
+- **Detail artifact:** `s-626-1-adversary-pass-26.md`
 
 ---

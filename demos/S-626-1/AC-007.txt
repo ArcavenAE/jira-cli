@@ -1,4 +1,4 @@
-# Head: 14416fd9  Captured: 2026-08-04  Status: re-stamped (Round 12 — head-only; c93f4f9c remains absent; only ci.yml changed by 14416fd9 (comment-only) and old SHA c93f4f9c was not in ci.yml)
+# Head: e49230a7  Captured: 2026-08-04  Status: re-stamped (Round 13 — head-only; c93f4f9c remains absent; e49230a7 changed only ci.yml comment text + tests/ci_gate_completeness.rs docstrings; old SHA c93f4f9c was not in ci.yml and is not in ci_gate_completeness.rs)
 
 $ cd /Users/zious/Documents/GITHUB/jira-cli/.worktrees/S-626-1 && grep -rc "c93f4f9c" .github/workflows/
 .github/workflows/release.yml:0
