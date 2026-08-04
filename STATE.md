@@ -4,7 +4,7 @@ level: ops
 version: "2.1"
 status: active
 producer: state-manager
-timestamp: 2026-08-04T01:05:00Z
+timestamp: 2026-08-04T02:05:00Z
 phase: 3
 pipeline: PAUSED
 inputs: []
@@ -12,7 +12,7 @@ input-hash: "[live-state]"
 traces_to: ""
 project: jira-cli
 mode: brownfield
-current_step: "ADVERSARY-19+FIX-ROUND-7 2026-08-04: S-626-1 pass-19 NOT CLEAN (2H+6M+1L; isolation CLEAN; TWELFTH consecutive zero-src/-defect; window 0/2 of 18/19/20); FOUR REAL CI-AS-CODE DEFECTS in orchestrator-shipped 9312f11f POL-11 guard; fix round 7 applied (S-626-1 v1.13, S-640-1 v0.6, S-641-1 v0.8, STORY-INDEX v1.5.57, demos/ re-stamped a247a343); DEC-213+214+215; ADV-P1-INDEX v1.9 (174 findings); anchor migration CLASS-ELIMINATING. Prior: ADVERSARY-18+FIX-ROUND-6 2026-08-03. trajectory-tail →0→0→0→2 D-1..D-12 (exhaustive)."
+current_step: "INPUT-HASH-BYPASS-RESOLVED 2026-08-04: bc-02-issue-read.md input-hash bypass marker resolved (product-brief.md removed from inputs:; hash updated to 86f53a7); 2 drift items added; no convergence value altered; awaiting S-626-1 pass-20. Prior: ADVERSARY-19+FIX-ROUND-7 2026-08-04: S-626-1 pass-19 NOT CLEAN (2H+6M+1L; isolation CLEAN; TWELFTH consecutive zero-src/-defect; window 0/2 of 18/19/20); fix round 7 applied; DEC-213+214+215. trajectory-tail →0→0→0→2 D-1..D-12 (exhaustive)."
 trajectory_tail: "→0→0→0→2"
 maintenance_run: CLOSED
 current_cycle: "cycle-001"
@@ -25,7 +25,7 @@ activation_head: "7b3ba371"
 activation_version: "v0.6.0-dev.11"
 ---
 
-<!-- STATE.md SIZE BUDGET (2026-08-04 ADVERSARY-19+FIX-ROUND-7): 277 lines (wc-l) — prior: 270; delta: +7. Soft-target 200; margin from soft-target = +77; margin from actual to hard cap 500 = 223. Compaction: archived ADVERSARY-18+FIX-ROUND-6 PP row to burst-log; archived CORRECTIVE-VERDICT-LABEL-AMBIGUITY CPS row to burst-log; archived ADVERSARY-18+FIX-ROUND-6 session checkpoint to session-checkpoints.md. Added ADVERSARY-19+FIX-ROUND-7 PP row (+0 net); CPS CORRECTIVE archived, ADVERSARY-19 added (+0 net); DEC-213+214+215 (+3); ORCHESTRATOR-SHIPPED-DEFECTIVE-GUARD + ORCHESTRATOR-UNVERIFIED-BREAK-SPECULATION + CI-YML-LINE-CITATION-RIPPLE + FMT-CLIPPY-NO-POSITIVE-COVERAGE (+4 drift items); updated 4 drift items in-place. -->
+<!-- STATE.md SIZE BUDGET (2026-08-04 INPUT-HASH-BYPASS-RESOLVED): 280 lines (wc-l) — prior: 277; delta: +3. Soft-target 200; margin from soft-target = +80; margin from actual to hard cap 500 = 220. New: +1 CPS row (INPUT-HASH-BYPASS-RESOLVED); +2 drift items (INPUT-HASH-BYPASS-MARKERS-SILENTLY-SKIP-VALIDATION MEDIUM, BC-02-INPUT-LINEAGE-IMPRECISE LOW); updated INPUT-HASH-DRIFT-BACKLOG-56 + session checkpoint Position in-place. No convergence value altered. -->
 
 # Pipeline State: jira-cli
 
@@ -57,6 +57,7 @@ activation_version: "v0.6.0-dev.11"
 | **ADVERSARY-15+FIX-ROUND-5 (2026-08-03): S-626-1 pass-15 (NOT CLEAN; 0H+6M+9L; isolation CLEAN; input-hash 9a1a68e; TREND REVERSAL 9→15) + passes 16/17 NOT RUN (DEC-209) + ADV-P1-INDEX v1.7 (154 total findings) + fix round 5 + product commit 6d73b3ef recorded. DEC-209+210. BC-BEHAVIOR-FIELD-SYSTEMIC-ABSENCE new drift item.** | state-manager | COMPLETED | S-626-1 pass-15 + passes 16/17 NOT RUN + fix round 5 + STATE.md committed to factory-artifacts. |
 | **ADVERSARY-18+FIX-ROUND-6 (2026-08-03): S-626-1 pass-18 (NOT CLEAN; 0H+7M+3L; isolation CLEAN; F-07 FIXED IN-CYCLE 9312f11f; DEC-211) + ADV-P1-INDEX v1.8 (164 total findings) + fix round 6 + DEC-212. 3 new drift items.** | state-manager | COMPLETED | S-626-1 pass-18 + fix round 6 + STATE.md committed to factory-artifacts. Next: S-626-1 passes 19/20. |
 | **ADVERSARY-19+FIX-ROUND-7 (2026-08-04): S-626-1 pass-19 (NOT CLEAN; 2H+6M+1L; isolation CLEAN; 4 CI-as-code defects in 9312f11f; DEC-213+214+215) + ADV-P1-INDEX v1.9 (174 total findings) + fix round 7 + anchor migration CLASS-ELIMINATING. 4 new drift items.** | state-manager | COMPLETED | S-626-1 pass-19 + fix round 7 + STATE.md committed to factory-artifacts. Next: S-626-1 pass-20 (head a247a343). |
+| **INPUT-HASH-BYPASS-RESOLVED (2026-08-04): bc-02-issue-read.md input-hash bypass marker resolved; product-brief.md removed from inputs:; hash updated to 86f53a7; class-wide sweep clean; 2 drift items added. No convergence value altered.** | state-manager | COMPLETED | Factory-artifacts committed. Awaiting S-626-1 pass-20. |
 
 ## Decisions Log
 
@@ -102,7 +103,7 @@ None open.
 
 ## Drift Items (open / tracked)
 
-<!-- 10 items archived 2026-07-25; 22 items archived through 2026-07-29 (see blocking-issues-resolved.md); 5 ACCEPTED/MITIGATED/FIXED items archived SOH-DX-1-F3-DECOMP-BURST 2026-07-29. ADVERSARY-9-10-11+FIX-ROUND-3 2026-08-03: 6 new items added. ADVERSARY-12-13-14+FIX-ROUND-4 2026-08-03: ORCHESTRATOR-GREP-HYGIENE-INSUFFICIENT updated; FIX-ROUND-PARTIAL-PROPAGATION refined; S-576-FAMILY-SUBSYSTEM-PATTERN updated (ROUTED DEC-208); REVIEW-ISOLATION-NOT-MECHANICALLY-ENFORCED updated; 2 new items. CORRECTIVE-VERDICT-LABEL-AMBIGUITY 2026-08-03: 2 new items. ADVERSARY-15+FIX-ROUND-5 2026-08-03: BC-BEHAVIOR-FIELD-SYSTEMIC-ABSENCE new item; 4 items updated. ADVERSARY-18+FIX-ROUND-6 2026-08-03: ORCHESTRATOR-PROPAGATED-FALSE-JUSTIFICATION + TEST-JOB-ZERO-TEST-FLOOR (closed in-cycle) + STORY-TEMPLATE-DRIFT-BLOCKS-EDITS new items; FIX-ROUND-PARTIAL-PROPAGATION + FIX-ROUND-INTRODUCES-DEFECTS-IN-NEW-PROSE + CITATION-GUARD-SRC-ONLY updated. ADVERSARY-19+FIX-ROUND-7 2026-08-04: ORCHESTRATOR-SHIPPED-DEFECTIVE-GUARD + ORCHESTRATOR-UNVERIFIED-BREAK-SPECULATION + CI-YML-LINE-CITATION-RIPPLE + FMT-CLIPPY-NO-POSITIVE-COVERAGE new items; FIX-ROUND-PARTIAL-PROPAGATION + FIX-ROUND-INTRODUCES-DEFECTS-IN-NEW-PROSE + STORY-TEMPLATE-DRIFT-BLOCKS-EDITS + DEMO-TRANSCRIPT-FIDELITY-NO-MECHANICAL-GUARD updated. -->
+<!-- 10 items archived 2026-07-25; 22 items archived through 2026-07-29 (see blocking-issues-resolved.md); 5 ACCEPTED/MITIGATED/FIXED items archived SOH-DX-1-F3-DECOMP-BURST 2026-07-29. ADVERSARY-9-10-11+FIX-ROUND-3 2026-08-03: 6 new items added. ADVERSARY-12-13-14+FIX-ROUND-4 2026-08-03: ORCHESTRATOR-GREP-HYGIENE-INSUFFICIENT updated; FIX-ROUND-PARTIAL-PROPAGATION refined; S-576-FAMILY-SUBSYSTEM-PATTERN updated (ROUTED DEC-208); REVIEW-ISOLATION-NOT-MECHANICALLY-ENFORCED updated; 2 new items. CORRECTIVE-VERDICT-LABEL-AMBIGUITY 2026-08-03: 2 new items. ADVERSARY-15+FIX-ROUND-5 2026-08-03: BC-BEHAVIOR-FIELD-SYSTEMIC-ABSENCE new item; 4 items updated. ADVERSARY-18+FIX-ROUND-6 2026-08-03: ORCHESTRATOR-PROPAGATED-FALSE-JUSTIFICATION + TEST-JOB-ZERO-TEST-FLOOR (closed in-cycle) + STORY-TEMPLATE-DRIFT-BLOCKS-EDITS new items; FIX-ROUND-PARTIAL-PROPAGATION + FIX-ROUND-INTRODUCES-DEFECTS-IN-NEW-PROSE + CITATION-GUARD-SRC-ONLY updated. ADVERSARY-19+FIX-ROUND-7 2026-08-04: ORCHESTRATOR-SHIPPED-DEFECTIVE-GUARD + ORCHESTRATOR-UNVERIFIED-BREAK-SPECULATION + CI-YML-LINE-CITATION-RIPPLE + FMT-CLIPPY-NO-POSITIVE-COVERAGE new items; FIX-ROUND-PARTIAL-PROPAGATION + FIX-ROUND-INTRODUCES-DEFECTS-IN-NEW-PROSE + STORY-TEMPLATE-DRIFT-BLOCKS-EDITS + DEMO-TRANSCRIPT-FIDELITY-NO-MECHANICAL-GUARD updated. INPUT-HASH-BYPASS-RESOLVED 2026-08-04: INPUT-HASH-BYPASS-MARKERS-SILENTLY-SKIP-VALIDATION + BC-02-INPUT-LINEAGE-IMPRECISE new items (MEDIUM, LOW); INPUT-HASH-DRIFT-BACKLOG-56 updated. -->
 | ID | Area | Severity | Status |
 |----|------|----------|--------|
 | SIX-AXIS-REVIEW-UNLOGGED | spec integrity | LOW | OPEN — AX23-001 PENDING HUMAN RATIFICATION. |
@@ -180,7 +181,7 @@ None open.
 | AGENT-IDLE-NO-REPORT | platform defect #47936 (background subagents 14-30% fail mid-work). NOTE (DEC-198): adversary-specific failures re-attributed to orchestrator malformed dispatch. | MEDIUM | OPEN — route to Anthropic |
 | PO-REPORT-FIDELITY | product-owner reported fabricated changelog-count line. | LOW | OPEN — dispatch-discipline |
 | VP-INDEX-ARTIFACT-ABSENT | VP-INDEX is canonical VSDD artifact. Fold into VSDD-CONFORMANCE-GAP-4-ARTIFACTS. DEC-195. | LOW | OPEN — pending DEC-195 bundle |
-| INPUT-HASH-DRIFT-BACKLOG-56 | 56 artifacts stale on input-hash across closed cycles. | MEDIUM | OPEN — maintenance-sweep candidate |
+| INPUT-HASH-DRIFT-BACKLOG-56 | 56 artifacts stale on input-hash across closed cycles. | MEDIUM | OPEN — maintenance-sweep candidate. Spec-steward confirmed OPEN and out of scope for this fix; bc-02-issue-read.md resolved separately. |
 | INPUT-HASH-MALFORMED-INPUTS-3 | Three artifacts declare unresolvable inputs. | LOW | OPEN — frontmatter fix candidate |
 | APERTURE-CLASS-LESSON | Internal-consistency review cannot detect false factual claims. Two-dimension falsification prescription codified. | MEDIUM | OPEN — engine/skill-template candidate |
 | AC-NEGATIVE-SUBSTRING-SPECIFICITY | AC negative assertions can pin a contract using a shared substring. | LOW | OPEN — guard-extension candidate |
@@ -235,6 +236,8 @@ None open.
 | ORCHESTRATOR-UNVERIFIED-BREAK-SPECULATION | orchestrator discipline | LOW | OPEN — NEW (2026-08-04). Orchestrator asserted F-03 "would have matched zero lines in CI." CI ran SUCCESS for 9312f11f, refuting the speculation. Record the refutation; do not propagate unverified break claims. |
 | CI-YML-LINE-CITATION-RIPPLE | citation hygiene | MEDIUM | CLOSED-STRUCTURALLY — NEW (2026-08-04). Three measured ripples (+39, +54, cumulative +93 lines) required three sweep rounds. DEC-213 anchor-form migration ends the class for migrated surfaces. Retained as evidence. |
 | FMT-CLIPPY-NO-POSITIVE-COVERAGE | CI integrity | MEDIUM | OPEN — NEW (2026-08-04). fmt and clippy jobs share identical orphaning exposure as test job; neither emits runtime-computed count of what it checked. Routed per DEC-215. |
+| INPUT-HASH-BYPASS-MARKERS-SILENTLY-SKIP-VALIDATION | guard hygiene | MEDIUM | OPEN — `validate-input-hash.sh` (~:79) `exit 0`s unconditionally on sentinel values `[pending-recompute]` and `[live-state]`; any artifact carrying one has no hash verification on subsequent edits indefinitely and silently. One instance (bc-02-issue-read.md) persisted across six adversary passes unflagged. STATE.md legitimately uses `[live-state]` by design; gap is no inventory or expiry for `[pending-recompute]`, which is temporary. ROUTE upstream to drbothen/vsdd-factory. |
+| BC-02-INPUT-LINEAGE-IMPRECISE | spec provenance | LOW | OPEN — bc-02-issue-read.md inputs: now names research/RESEARCH-INDEX.md (real, checkable), but this was not the actual upstream that drove the document's content (derives from brownfield codebase analysis). Drift detection now functions; semantic lineage remains approximate. Disclosed by spec-steward; no better single existing input file identified. |
 
 ## Convergence Status
 
@@ -252,7 +255,7 @@ SOH-ATTACHMENTS-1 + prior cycles FULLY CLOSED. See cycles/cycle-001/convergence-
 ## Session Resume Checkpoint
 | Field | Value |
 |-------|-------|
-| Position | Feature Mode SOH-DX-1 F4 delivery. F2 APPROVED (DEC-196), F3 APPROVED (DEC-197). **S-626-1 DELIVERED** — PR #667 open, feature HEAD a247a343 (product commit `ci: fix inert floor, unreachable diagnostic, colour fragility, under-specified pin (POL-11)`), branch ci/fix-toolchain-sha-msrv. **HELD per DEC-202** pending fresh 3-pass window. Fix round 7 applied 2026-08-04 (S-626-1 v1.13; S-640-1 v0.6; S-641-1 v0.8; STORY-INDEX v1.5.57; demos/ re-stamped to a247a343; anchor migration CLASS-ELIMINATING DEC-213). |
+| Position | Feature Mode SOH-DX-1 F4 delivery. F2 APPROVED (DEC-196), F3 APPROVED (DEC-197). **S-626-1 DELIVERED** — PR #667 open, feature HEAD a247a343 (product commit `ci: fix inert floor, unreachable diagnostic, colour fragility, under-specified pin (POL-11)`), branch ci/fix-toolchain-sha-msrv. **HELD per DEC-202** pending fresh 3-pass window. Fix round 7 applied 2026-08-04 (S-626-1 v1.13; S-640-1 v0.6; S-641-1 v0.8; STORY-INDEX v1.5.57; demos/ re-stamped to a247a343; anchor migration CLASS-ELIMINATING DEC-213). **Input-hash bypass marker in bc-02-issue-read.md RESOLVED 2026-08-04.** |
 | Convergence | S-626-1 Step 4.5 = 0/3. 17 recorded passes (5 VOID: 3 dispatch + 2 isolation) + 2 NOT RUN (passes 16/17, DEC-209). 174 total findings. Pass-19 window 0/2 NOT CLEAN. 2H first in window 18/19/20 — four real CI-as-code defects in 9312f11f, all closed by a247a343. src/ 0-defect TWELFTH consecutive. **DEC-213+214+215 recorded. Pass-20 next (head a247a343).** |
 | Not yet done | (1) S-626-1 pass-20 against head a247a343 (third of window 18/19/20; maintain scoped greps). (2) conform-to-template for S-MUTANTS-EXAMINE-GLOBS-1.md to unblock 4 anchor sites (STORY-TEMPLATE-DRIFT-BLOCKS-EDITS escalated). (3) S-640-1 handoff: on MSRV ≥1.88, delete `No let-chains` from CLAUDE.md Conventions AND in-code comments at `src/cli/board.rs :: handle_view`, `src/cli/issue/list.rs :: handle_list`, `src/cli/auth/keychain.rs :: resolve_credential`. (4) S-MAINT-576-HYG-1 needs scheduling. DEC-204 UNADJUDICATED. AX23-001 PENDING. |
 | In flight | develop @ acdad174 (PR #667 HELD — DEC-202; head a247a343). .factory @ factory-artifacts. Worktree: .worktrees/S-626-1 (branch S-626-1). Product repo untracked: .claude/hooks/, .claude/pr-reviews/, .claude/settings.local.json.bak, .claude/spec-config.json (pre-existing). |

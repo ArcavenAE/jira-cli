@@ -8,8 +8,8 @@ status: approved
 producer: business-analyst
 timestamp: 2026-07-31T00:00:00
 phase: 1a
-inputs: [product-brief.md, research/RESEARCH-INDEX.md]
-input-hash: "[pending-recompute]"
+inputs: [research/RESEARCH-INDEX.md]
+input-hash: "86f53a7"
 snapshot_sha: "dea166471e22eff55974d7675593469b37048c5f"
 traces_to: "README.md"
 source_passes: "Pass 2 broad §2a.2 Jira + §2b.1 + R5 §3.2 (NEW-INV-216..244) + Pass 8 §2.2 BC#2"
