@@ -1,6 +1,9 @@
 ---
 document_type: story
+level: ops
 story_id: "S-MUTANTS-EXAMINE-GLOBS-1"
+epic_id: null
+# epic_id: null — no named epic or bundle exists for this standalone CI-infrastructure story. Added for template compliance 2026-08-04.
 title: "Restore mutation scope: add edit.rs + jsm_create.rs to examine_globs + fix policy-doc citations (DEC-149)"
 wave: feature-followup
 status: draft
@@ -34,14 +37,23 @@ adr_refs: []
 sd_refs: []
 parent_phase: F3-incremental-stories
 spec_source: "docs/specs/cargo-mutants-policy.md §Scope"
+producer: story-writer
+timestamp: "2026-07-02T00:00:00"
+phase: 3
+cycle: null
+# cycle: null — no named cycle; standalone F3 story in feature-followup wave. Added for template compliance 2026-08-04.
+inputs:
+  - "docs/specs/cargo-mutants-policy.md"
+input-hash: "9c370da"
+traces_to: "docs/specs/cargo-mutants-policy.md"
 implementation_strategy: tdd
 module_criticality: LOW
 acceptance_criteria_count: 6
 assumption_validations: []
 risk_mitigations: []
 created: "2026-07-02"
-version: "1.2"
-last_updated: "2026-07-02"
+version: "1.3"
+last_updated: "2026-08-04"
 breaking_change: false
 retroactive: false
 origin: >
@@ -53,6 +65,15 @@ origin: >
   Seam A/B. F1 analysis: .factory/phase-f1-delta-analysis/mutants-examine-globs-2026-07-02-delta.md.
   Intent decision: Option (a) — restore scope.
 changelog:
+  - "1.3 (2026-08-04): Template conformance pass + anchor migration. Added missing frontmatter
+    keys (level, epic_id, producer, timestamp, phase, cycle, inputs, input-hash, traces_to) for
+    template compliance; epic_id and cycle set to null (standalone CI-infrastructure story with no
+    named epic or bundle). Added missing Purity Classification section (N/A — all changes are
+    CI config or documentation, no src/ Rust module created or modified). Renamed section heading
+    'Library and Framework Requirements' to 'Library & Framework Requirements' (& vs and) to
+    match template. Migrated 6 stale ci.yml ~:259 line-number citations to anchor form
+    ci.yml :: mutants / Run mutation tests on PR diff; changelog entry for v1.1 ci.yml:195
+    annotated as historical (line number at v1.1 authoring time; file has since changed)."
   - "1.0 (2026-07-02): Initial F3 story — MUTANTS-EXAMINE-GLOBS-STALE-AFTER-SEAM-B (DEC-149).
     Option (a): add edit.rs (99 mutants) + jsm_create.rs (9 mutants) to examine_globs; fix
     policy-doc function-location citations (SWEEP-WHOLE-TOUCHED-FILE); fix cicd-setup.md
@@ -64,7 +85,7 @@ changelog:
     updated to reflect deferral."
   - "1.1 (2026-07-02): F5 round-1/round-2 amendments (orchestrator-authorized): (1) ci.yml
     comment fix authorized — F5 perimeter lens finding F-1 MED required repointing the stale
-    ci.yml:195 scope comment to policy doc; ci.yml change limited to one comment-line indirection,
+    ci.yml:195 [historical line number at time of v1.1 authoring; file has since changed] scope comment to policy doc; ci.yml change limited to one comment-line indirection,
     no job/step/logic changes; CHANGELOG.md [Unreleased] entry also authorized. (2) AC-003
     deferral documented — .factory/cicd-setup.md lives on factory-artifacts branch; applied
     by state-manager in cycle-close factory-artifacts commit after PR merge. (3) files_modified
@@ -162,7 +183,7 @@ than a BC clause.
 | Story spec (this file) | ~3,500 |
 | `.cargo/mutants.toml` (full file) | ~300 |
 | `docs/specs/cargo-mutants-policy.md` (Scope + CI Integration + changelog sections) | ~3,000 |
-| `.github/workflows/ci.yml` (line ~259 area; comment-only change) | ~500 |
+| `.github/workflows/ci.yml` (ci.yml :: mutants / "Run mutation tests on PR diff" area; comment-only change) | ~500 |
 | `CHANGELOG.md` ([Unreleased] section) | ~300 |
 | F1 delta analysis doc (relevant sections) | ~4,000 |
 | **Total** | **~11,600** |
@@ -193,7 +214,7 @@ Well within 20% agent context window budget. No splitting required.
    add both `edit.rs` and `jsm_create.rs` to the scope description to match the actual post-change
    config. (This task is NOT part of the delivering PR — cicd-setup.md lives on factory-artifacts
    branch. See AC-003 for full deferral details.)
-3a. Read `.github/workflows/ci.yml`. Locate the scope comment near line ~259. Repoint it to
+3a. Read `.github/workflows/ci.yml`. Locate the scope comment in ci.yml :: mutants / "Run mutation tests on PR diff". Repoint it to
     `docs/specs/cargo-mutants-policy.md §Scope` (authorized by F5 round-1 finding F-1 MED). This
     IS part of the delivering PR. Change is limited to the single comment line only.
 4. Read `CLAUDE.md`. Verify the mutation command in §Build & Test and any examine_globs references.
@@ -232,13 +253,13 @@ watch-item is carried forward in AC-006.
 |------|--------|-----------|
 | ci-gate.needs wiring unchanged | DEC-096/DEC-097 | No change to ci-gate composition. The `mutants` job is already in `ci-gate.needs` per S-MUTATION-CI-TIMEOUT-1. Only examine_globs scope changes. |
 | `--in-diff` + examine_globs double-gate | `docs/specs/cargo-mutants-policy.md §CI Integration` | The `--in-diff` flag restricts mutation to changed lines; examine_globs restricts the file set. Together they prevent the global 702-mutant scope from materializing on any individual PR. Zero cost on PRs that do not touch edit.rs or jsm_create.rs. |
-| `.github/workflows/ci.yml` change is comment-line only | `.cargo/mutants.toml` / F5 round-1 (F-1 MED, authorized 2026-07-02) | Timeout ceiling set via `cargo mutants --timeout 240` in `ci.yml` (unchanged). The one authorized ci.yml change is repointing the stale line ~259 scope comment to `docs/specs/cargo-mutants-policy.md §Scope`. No job, step, matrix, or logic changes are permitted. |
+| `.github/workflows/ci.yml` change is comment-line only | `.cargo/mutants.toml` / F5 round-1 (F-1 MED, authorized 2026-07-02) | Timeout ceiling set via `cargo mutants --timeout 240` in `ci.yml` (unchanged). The one authorized ci.yml change is repointing the stale scope comment in ci.yml :: mutants / "Run mutation tests on PR diff" to `docs/specs/cargo-mutants-policy.md §Scope`. No job, step, matrix, or logic changes are permitted. |
 | SWEEP-WHOLE-TOUCHED-FILE-NOT-JUST-TARGET-LINE | DEC-149 (lesson codified) | When correcting citations in `docs/specs/cargo-mutants-policy.md`, scan the ENTIRE file for same-class stale function-location references, not only the identified line 19. F1 analysis found none beyond line 19, but implementer must re-verify at commit time. |
 | `tests/ci_gate_completeness.rs` unchanged | S-MUTATION-CI-TIMEOUT-1 | The exact 8-job set in `test_ci_gate_needs_exactly_the_required_jobs` remains valid. examine_globs changes do not affect ci-gate composition or ci_gate_completeness.rs assertions. |
 
 ---
 
-## Library and Framework Requirements
+## Library & Framework Requirements
 
 | Tool | Version | Constraint |
 |------|---------|-----------|
@@ -254,7 +275,7 @@ No new crate dependencies. No Rust source changes. No Cargo.toml changes.
 |------|-----------------|-------------|
 | `.cargo/mutants.toml` | MODIFY | Add `"src/cli/issue/edit.rs"` and `"src/cli/issue/jsm_create.rs"` to `examine_globs`. Update line 8 comment. |
 | `docs/specs/cargo-mutants-policy.md` | MODIFY | Line ~19: repoint function-location entries. SWEEP-WHOLE-FILE for same-class stale refs. Add changelog entry. |
-| `.github/workflows/ci.yml` | MODIFY (comment-line only) | Repoint stale line ~259 scope comment to `docs/specs/cargo-mutants-policy.md §Scope`. No job/step/logic changes. Authorized: F5 round-1 F-1 MED. |
+| `.github/workflows/ci.yml` | MODIFY (comment-line only) | Repoint stale scope comment in ci.yml :: mutants / "Run mutation tests on PR diff" to `docs/specs/cargo-mutants-policy.md §Scope`. No job/step/logic changes. Authorized: F5 round-1 F-1 MED. |
 | `CHANGELOG.md` | MODIFY | Add [Unreleased] entry: examine_globs scope widened (+edit.rs 99 mutants, +jsm_create.rs 9 mutants). Per CHANGELOG-per-PR hygiene. |
 | `CLAUDE.md` | VERIFY (no change expected) | Read mutation-scope citations; F1 confirmed no stale refs. No change if confirmed. |
 | `.factory/cicd-setup.md` | **DEFERRED** (factory-artifacts branch) | state-manager cycle-close commit post-PR-merge. Line ~76: add edit.rs + jsm_create.rs; remove false pre-Seam-B claim. Line ~45: scope list update. Line ~202: timeout-minutes 60→90 (separate drift item). |
@@ -345,7 +366,7 @@ during implementation, it must be corrected in the same commit as the other chan
 The delivering PR contains changes ONLY to:
 - `.cargo/mutants.toml` (config — examine_globs scope extension)
 - `docs/specs/cargo-mutants-policy.md` (documentation — function-location corrections + changelog entry)
-- `.github/workflows/ci.yml` (comment-line only — repoint stale line ~259 scope comment to policy doc;
+- `.github/workflows/ci.yml` (comment-line only — repoint stale scope comment in ci.yml :: mutants / "Run mutation tests on PR diff" to policy doc;
   authorized by orchestrator 2026-07-02 per F5 round-1 perimeter-lens finding F-1 MED; no job/step/logic changes)
 - `CHANGELOG.md` ([Unreleased] entry per CHANGELOG-per-PR hygiene; authorized)
 - Optionally `CLAUDE.md` (documentation, only if AC-004 finds stale refs)
@@ -421,7 +442,7 @@ they document past state; updating them would create anachronistic rewrites of h
 |-----------|--------|---------------|---------------|
 | `examine_globs` scope config | `.cargo/mutants.toml` | N/A (config) | Adds edit.rs and jsm_create.rs to the mutation file scope; no executable code change |
 | Policy doc §Scope table | `docs/specs/cargo-mutants-policy.md` | N/A (documentation) | Corrects function-location entries; adds changelog entry; SWEEP-WHOLE-TOUCHED-FILE |
-| ci.yml scope comment | `.github/workflows/ci.yml` | N/A (CI config) | Repoints stale line ~259 scope comment to policy doc §Scope (one comment-line only; F5 F-1 MED authorized) |
+| ci.yml scope comment | `.github/workflows/ci.yml` | N/A (CI config) | Repoints stale scope comment in ci.yml :: mutants / "Run mutation tests on PR diff" to policy doc §Scope (one comment-line only; F5 F-1 MED authorized) |
 | Release log | `CHANGELOG.md` | N/A (documentation) | [Unreleased] entry: examine_globs scope widened (+edit.rs + jsm_create.rs) |
 | Scope description | `.factory/cicd-setup.md` | N/A (factory artifact, **DEFERRED**) | state-manager cycle-close factory-artifacts commit post-PR-merge; see AC-003 |
 
@@ -444,6 +465,19 @@ depends on this scope change.
 | EC-003 | F1 delta §3 | PR touches both `adf.rs` (~351 mutants) and `edit.rs` (~99 mutants) | Total ~450 mutants, ~263 min — exceeds 90-min budget; split-PR signal fires; contributor must split PR per policy doc §Absolute Timeout Ceiling | AC-001, AC-006 |
 | EC-004 | MUTANTS-FIRST-SCOPED-PR-CALIBRATION | First code-change PR touching `edit.rs` after this story merges | Non-zero mutant path exercised; --timeout 240 calibration event; if `timeout` outcomes appear, bump --timeout per policy doc | AC-006 |
 | EC-005 | DEC-149 origin | Surviving mutants discovered in edit.rs/jsm_create.rs on first code-change PR | Kill-rate gate may block merge if survivors > 10%; targeted tests or `#[mutants::skip]` with justification required per policy doc; out of scope for this story — see Out of Scope | AC-005 (documented only) |
+
+---
+
+## Purity Classification
+
+All files modified in this story are CI configuration, documentation, or factory artifacts — not production Rust source. The Pure/Effectful classification (which applies to Rust modules with the pure-core / effectful-shell boundary per ADR-0011) is N/A: no `src/` module is created or modified.
+
+| Module | Classification | Justification |
+|--------|---------------|---------------|
+| `.cargo/mutants.toml` | N/A (config) | CI configuration file; not a Rust module |
+| `docs/specs/cargo-mutants-policy.md` | N/A (documentation) | Policy document; not a Rust module |
+| `.github/workflows/ci.yml` | N/A (CI config) | GitHub Actions workflow; not a Rust module |
+| `CHANGELOG.md` | N/A (documentation) | Release log; not a Rust module |
 
 ---
 

@@ -38,8 +38,58 @@ per-file `# Head:` stamp. Status per artifact:
 | `AC-008.txt` | a247a343 | 2026-08-03 | re-stamped (Round 8) | Head-only; Cargo.toml/Cargo.lock unchanged; MSRV check not re-run (ci_gate_completeness.rs change outside --all-features scope) |
 | `AC-009.txt` | a247a343 | 2026-08-03 | re-stamped (Round 8) | Head-only; board.rs/list.rs unchanged; team_column_parity.rs still 10 tests; filtered=8/false-green=10 unchanged |
 | `full-suite.txt` | a247a343 | 2026-08-03 | re-captured (Round 8) | cargo test re-run: 2345/0/100 (unchanged — no new test functions in a247a343); clippy (0.28s)+fmt re-run; floor guard script updated to match new ci.yml :: test step (wc -l, -lt 90, canary, CARGO_TERM_COLOR: never) |
+| `full-suite.txt` | a247a343 | 2026-08-04 | extended (Round 9) | Two negative-path sections added: binary-floor failure (5 binaries, FAIL diagnostic confirmed) and canary failure (95 binaries, no ci_gate_completeness, FAIL diagnostic confirmed). No re-run of positive-path capture. |
 
 **Completeness: 11/11 artifacts verified and stamped. No artifact left with only the global INDEX head stamp.**
+
+## Round-9 Addition (2026-08-04): negative-path evidence for POL-11 zero-test floor
+
+Added two new sections to `full-suite.txt` covering the negative paths for both POL-11
+instruments. No artifact was re-run or re-stamped; all 11 files remain at head `a247a343`.
+
+**Gap closed:** The pack previously recorded only the positive path for the floor guard
+(`Check passed: 2345 tests executed across 103 test binaries`). A reviewer flagged the
+missing negative-path evidence as significant: the defective version of the guard (pre-a247a343)
+had unreachable `FAIL (POL-11)` diagnostics, and the omission of negative-path evidence meant
+that defect went unnoticed through multiple review passes.
+
+**Approach:** The gate logic from `ci.yml :: test / "Run tests (zero-test floor, POL-11)"` was
+driven against synthetic captured logs (explicitly permitted by the task, which states "drive the
+guard logic against synthetic captured logs"). The cargo test line was replaced by pre-populating
+the capture file; all gate logic (set -euo pipefail, set +o pipefail, wc -l pipeline, set -o
+pipefail, if-blocks, echo, exit 1) is verbatim from ci.yml lines 69-151. RUNNER_TEMP substituted
+with /tmp for local execution.
+
+**Negative-path 1 — binary-count floor failure:**
+- Synthetic log: 5 "test result:" lines, 220 passed each → total=1100, binaries=5
+- total=1100 (> 0) proves the old "> 0" predicate would have passed this silently
+- binaries=5 (< 90) fires the new floor check
+- Diagnostic confirmed printed: `FAIL (POL-11): only 5 test binaries reported results (floor: 90).`
+- Exit code: 1
+
+**Negative-path 2 — named canary failure:**
+- Synthetic log: 95 "test result:" lines, 22 passed each → total=2090, binaries=95, no ci_gate_completeness
+- binaries=95 (>= 90) passes the floor check
+- ci_gate_completeness absent → canary fires
+- Diagnostic confirmed printed: `FAIL (POL-11): tests/ci_gate_completeness did not run.`
+- Exit code: 1
+
+**Reachability proof:** Both diagnostics printed before exit 1 under set -euo pipefail. This
+directly demonstrates the corrected step's set +o pipefail + wc -l design: under the old
+set -euo pipefail + grep -c, grep exited 1 on no-match and aborted the step before any echo
+could run — the diagnostic was permanently unreachable. The corrected step is not.
+
+**Worktree status:** `git status --short` in .worktrees/S-626-1 returns empty (no output) —
+no source, test, Cargo, or workflow file was modified.
+
+**Files changed in this round:** `full-suite.txt` only (two new sections added after the
+existing positive-path floor guard section; Summary table extended with two negative-path rows).
+
+**Round-9 sed range re-check:**
+All `sed -n 'A,Bp'` commands in the pack verified to display exactly B−A+1 lines at head a247a343:
+- AC-003: sed '152,179p' → 28 lines ✓ (unchanged; 179−152+1=28)
+- AC-005: sed '57,68p' → 12 lines ✓ (unchanged); sed '72,83p' → 12 lines ✓ (unchanged); sed '38,52p' → 15 lines ✓ (unchanged)
+- AC-009 BEFORE: sed '228,244p' → 17 lines ✓ (unchanged); AFTER: sed '228,248p' → 21 lines ✓ (unchanged)
 
 ## Round-8 Re-stamp (2026-08-03): head 9312f11f → a247a343
 

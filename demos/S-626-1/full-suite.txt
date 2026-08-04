@@ -84,13 +84,152 @@ output. One additional "test result:" line comes from the doc-test target (lib c
 emits a result line without a preceding "Running" line in some configurations.
 Binary count 103 is well above the -lt 90 floor. Named canary ci_gate_completeness is present.
 
+--- POL-11 floor guard (negative path — binary-count floor failure) ---
+# Replicates the ci.yml :: test / "Run tests (zero-test floor, POL-11)" gate logic verbatim.
+# Synthetic capture: 5 "test result:" lines, 220 passed each = 1100 total (total > 0).
+# Scenario: tests/ fully orphaned, only ~5 src/ inline-module binaries running.
+# This is the defect class the prior "> 0" predicate could NOT detect:
+#   - total = 1100 (> 0) → old predicate passes silently
+#   - binaries = 5 (< 90) → new binary-count floor fires
+# The cargo test line is replaced by pre-populating the capture file; all gate logic
+# (set -euo pipefail, set +o pipefail, computations, set -o pipefail, if-blocks) is verbatim.
+
+# Step 1: create synthetic capture (5 test-result lines, 1100 passed total, no ci_gate_completeness)
+$ python3 -c "
+lines = []
+for i in range(5):
+    lines.append('test result: ok. 220 passed; 0 failed; 20 ignored; 0 measured; 0 filtered out; finished in 2.{0}s'.format(i+10))
+print('\n'.join(lines))
+" > /tmp/pol11_floor_fail.txt
+
+# Step 2: verify synthetic file (5 lines, total=1100 proves old > 0 would pass)
+$ grep -c "^test result: " /tmp/pol11_floor_fail.txt
+5
+$ grep -E "^test result: " /tmp/pol11_floor_fail.txt | grep -Eo "[0-9]+ passed" | awk '{sum += $1} END {print sum+0}'
+1100
+
+# Step 3: run verbatim gate logic from ci.yml (RUNNER_TEMP=/tmp, pre-populated file)
+$ bash << 'GATESCRIPT'
+set -euo pipefail
+RUNNER_TEMP=/tmp
+cp /tmp/pol11_floor_fail.txt "$RUNNER_TEMP/cargo_test_out.txt"
+set +o pipefail
+total=$(grep -E "^test result: " "$RUNNER_TEMP/cargo_test_out.txt" \
+  | grep -Eo "[0-9]+ passed" \
+  | awk '{sum += $1} END {print sum+0}')
+binaries=$(grep -E "^test result: " "$RUNNER_TEMP/cargo_test_out.txt" | wc -l | tr -d ' ')
+set -o pipefail
+if [ "${binaries}" -lt 90 ]; then
+  echo "FAIL (POL-11): only ${binaries} test binaries reported results (floor: 90)."
+  echo "Possible causes: autotests=false in Cargo.toml, a [[test]] rename,"
+  echo "a harness misconfiguration, or a mass deletion of test files."
+  exit 1
+fi
+if ! grep -q "ci_gate_completeness" "$RUNNER_TEMP/cargo_test_out.txt"; then
+  echo "FAIL (POL-11): tests/ci_gate_completeness did not run."
+  echo "The binary carrying the CI-gate regression pins was not executed."
+  echo "Possible causes: the file was renamed, autotests=false, or a"
+  echo "[[test]] entry overrides the default target list."
+  exit 1
+fi
+if [ "${total}" -eq 0 ]; then
+  echo "FAIL (POL-11): zero tests executed across ${binaries} test binaries."
+  echo "Possible causes: autotests=false in Cargo.toml, a [[test]] rename,"
+  echo "a harness misconfiguration, or a filter matching no test targets."
+  exit 1
+fi
+echo "Check passed: ${total} tests executed across ${binaries} test binaries"
+GATESCRIPT
+FAIL (POL-11): only 5 test binaries reported results (floor: 90).
+Possible causes: autotests=false in Cargo.toml, a [[test]] rename,
+a harness misconfiguration, or a mass deletion of test files.
+EXIT: 1
+
+DIAGNOSTIC PRINTED: confirmed. The "FAIL (POL-11): only 5 test binaries..." message is
+reachable and printed before exit 1. The old version had this message unreachable under
+set -euo pipefail because grep -c exited 1 on no-match, aborting the step before the echo
+could run. The corrected step uses set +o pipefail + wc -l, allowing the echo to fire.
+Note: total=1100 (well above 0) proves the old "> 0" predicate would have passed this case
+silently — a genuine false-green for the exact defect class POL-11 guards against.
+
+--- POL-11 floor guard (negative path — canary failure) ---
+# Replicates the ci.yml :: test / "Run tests (zero-test floor, POL-11)" gate logic verbatim.
+# Synthetic capture: 95 "test result:" lines, 22 passed each = 2090 total, NO ci_gate_completeness.
+# Scenario: binary count above floor (95 >= 90) but tests/ci_gate_completeness.rs orphaned.
+# This is the self-orphaning defect class the binary floor alone cannot detect:
+#   - binaries = 95 (>= 90) → floor check passes
+#   - no "ci_gate_completeness" in output → named canary fires
+
+# Step 1: create synthetic capture (95 test-result lines, no ci_gate_completeness)
+$ python3 -c "
+lines = []
+for i in range(95):
+    lines.append('')
+    lines.append('running 22 tests')
+    lines.append('test result: ok. 22 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.{0:02d}s'.format(i % 100))
+print('\n'.join(lines))
+" > /tmp/pol11_canary_fail.txt
+
+# Step 2: verify synthetic file (95 test-result lines, ci_gate_completeness absent)
+$ grep -c "^test result: " /tmp/pol11_canary_fail.txt
+95
+$ grep -c "ci_gate_completeness" /tmp/pol11_canary_fail.txt || echo "0 matches (correct)"
+0 matches (correct)
+
+# Step 3: run verbatim gate logic from ci.yml (RUNNER_TEMP=/tmp, pre-populated file)
+$ bash << 'GATESCRIPT'
+set -euo pipefail
+RUNNER_TEMP=/tmp
+cp /tmp/pol11_canary_fail.txt "$RUNNER_TEMP/cargo_test_out.txt"
+set +o pipefail
+total=$(grep -E "^test result: " "$RUNNER_TEMP/cargo_test_out.txt" \
+  | grep -Eo "[0-9]+ passed" \
+  | awk '{sum += $1} END {print sum+0}')
+binaries=$(grep -E "^test result: " "$RUNNER_TEMP/cargo_test_out.txt" | wc -l | tr -d ' ')
+set -o pipefail
+if [ "${binaries}" -lt 90 ]; then
+  echo "FAIL (POL-11): only ${binaries} test binaries reported results (floor: 90)."
+  echo "Possible causes: autotests=false in Cargo.toml, a [[test]] rename,"
+  echo "a harness misconfiguration, or a mass deletion of test files."
+  exit 1
+fi
+if ! grep -q "ci_gate_completeness" "$RUNNER_TEMP/cargo_test_out.txt"; then
+  echo "FAIL (POL-11): tests/ci_gate_completeness did not run."
+  echo "The binary carrying the CI-gate regression pins was not executed."
+  echo "Possible causes: the file was renamed, autotests=false, or a"
+  echo "[[test]] entry overrides the default target list."
+  exit 1
+fi
+if [ "${total}" -eq 0 ]; then
+  echo "FAIL (POL-11): zero tests executed across ${binaries} test binaries."
+  echo "Possible causes: autotests=false in Cargo.toml, a [[test]] rename,"
+  echo "a harness misconfiguration, or a filter matching no test targets."
+  exit 1
+fi
+echo "Check passed: ${total} tests executed across ${binaries} test binaries"
+GATESCRIPT
+FAIL (POL-11): tests/ci_gate_completeness did not run.
+The binary carrying the CI-gate regression pins was not executed.
+Possible causes: the file was renamed, autotests=false, or a
+[[test]] entry overrides the default target list.
+EXIT: 1
+
+DIAGNOSTIC PRINTED: confirmed. The "FAIL (POL-11): tests/ci_gate_completeness did not run."
+message is reachable and printed before exit 1. This is the previously-unreachable message —
+in the defective version, set -euo pipefail + grep -c aborted the step before this echo could
+fire. The corrected step's set +o pipefail + wc -l allows the canary check to reach the echo.
+binaries=95 confirms the floor check passed, proving the canary is a distinct, independent
+instrument that the binary floor alone cannot replace.
+
 --- Summary ---
 cargo test:                    2345 passed / 0 failed / 100 ignored  [PASS]
 RUSTUP_TOOLCHAIN=1.85.0 check: Compiling jr → Finished (6.34s), exit 0 [PASS] (not re-run at a247a343 — see note above)
   toolchain identity:          rustc 1.85.0 (4d91de4e4 2025-02-17)   [CONFIRMED]
 cargo clippy --all-targets:    Finished (0.28s warm cache), exit 0   [PASS] (re-run at a247a343)
 cargo fmt --check:             No output, exit 0                     [PASS] (re-run at a247a343)
-POL-11 floor guard:            Check passed: 2345 tests executed across 103 test binaries [CONFIRMED]
+POL-11 floor guard (positive):  Check passed: 2345 tests executed across 103 test binaries [CONFIRMED]
+POL-11 floor guard (neg-floor): FAIL (POL-11): only 5 test binaries reported results (floor: 90) [CONFIRMED — diagnostic printed, exit 1]
+POL-11 floor guard (neg-canary):FAIL (POL-11): tests/ci_gate_completeness did not run [CONFIRMED — diagnostic printed, exit 1]
 
 Discrepancy from orchestrator-stated baseline: +4 tests (2341→2345). Cause: delivery commits
 added test_board_view_omits_team_column_when_field_unconfigured and
