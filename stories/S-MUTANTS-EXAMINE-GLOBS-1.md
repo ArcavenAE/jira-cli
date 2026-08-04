@@ -79,7 +79,7 @@ drift_items:
 files_modified:
   - .cargo/mutants.toml                  # add edit.rs + jsm_create.rs to examine_globs; update comment
   - docs/specs/cargo-mutants-policy.md   # repoint handle_edit_bulk_labels/fields → edit.rs, handle_jsm_create → jsm_create.rs; update create.rs entry to parse_field_kv only; add changelog entry; SWEEP-WHOLE-TOUCHED-FILE
-  - .github/workflows/ci.yml             # comment-only: repoint stale line ~259 scope comment to policy doc §Scope (authorized by orchestrator, F5 round-1 F-1 MED finding; no job/step/logic changes)
+  - .github/workflows/ci.yml             # comment-only: repoint stale scope comment in ci.yml :: mutants / "Run mutation tests on PR diff" to policy doc §Scope (authorized by orchestrator, F5 round-1 F-1 MED finding; no job/step/logic changes)
   - CHANGELOG.md                         # [Unreleased] entry per CHANGELOG-per-PR hygiene (authorized)
 # deferred_files: .factory/cicd-setup.md — EXPLICITLY DEFERRED (see AC-003). Lives on
 # factory-artifacts branch; fix applied by state-manager in cycle-close commit after PR merge.

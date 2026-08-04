@@ -2,7 +2,7 @@
 
 Story: Fix rust-toolchain SHA pins + MSRV false-green + comfy-table pin + CLAUDE.md gotcha (closes #626)
 Branch: `ci/fix-toolchain-sha-msrv`
-Head: `9312f11f`
+Head: `a247a343`
 Last full regeneration: 2026-08-03
 
 ## Full Suite
@@ -13,7 +13,7 @@ Last full regeneration: 2026-08-03
 | `full-suite.txt` | `RUSTUP_TOOLCHAIN=1.85.0 cargo check --all-features --locked` | Compiling jr → Finished, exit 0 |
 | `full-suite.txt` | `cargo clippy --all-targets -- -D warnings` | clean (exit 0) |
 | `full-suite.txt` | `cargo fmt --all -- --check` | clean (exit 0) |
-| `full-suite.txt` | Floor guard (POL-11, ci.yml :96) | Check passed: 2345 tests executed across 103 test binaries |
+| `full-suite.txt` | Floor guard (POL-11, ci.yml :: test / "Run tests (zero-test floor, POL-11)") | Check passed: 2345 tests executed across 103 test binaries |
 
 Baseline per story v1.3 scope note was 2341 passed / 100 ignored. This run shows 2345 (+4) because
 delivery commits added four new tests: two AC-9 regression-guard tests (`test_board_view_omits_team_column_when_field_unconfigured`
@@ -23,23 +23,93 @@ See `full-suite.txt` for full discrepancy note.
 
 ## Regeneration Log
 
-All 11 artifacts verified at head `9312f11f` (2026-08-03). Each artifact carries its own
+All 11 artifacts verified at head `a247a343` (2026-08-03). Each artifact carries its own
 per-file `# Head:` stamp. Status per artifact:
 
 | Artifact | Head | Captured | Status | Reason |
 |----------|------|----------|--------|--------|
-| `AC-001.txt` | 9312f11f | 2026-08-03 | re-stamped (Round 7) | Head-only; delta-analysis.md unchanged by 9312f11f (ci.yml test step + tests/ci_gate_completeness.rs only) |
-| `AC-002.txt` | 9312f11f | 2026-08-03 | re-captured (Round 7) | ci.yml line numbers shifted +39; SHA locations updated (:70→:109, :112→:151) |
-| `AC-003.txt` | 9312f11f | 2026-08-03 | re-captured (Round 7) | ci.yml line range shifted +39; sed -n '59,86p' → sed -n '98,125p'; B-A+1=28 preserved |
-| `AC-004.txt` | 9312f11f | 2026-08-03 | re-captured (Round 7) | ci.yml line numbers shifted +39; grep output line numbers updated (60→99, 70→109, 72→111, 76→115, 82→121, 86→125) |
-| `AC-005.txt` | 9312f11f | 2026-08-03 | re-stamped (Round 7) | Head-only; sign-and-publish.yml/backfill-release.yml/release.yml unchanged by 9312f11f |
-| `AC-006.txt` | 9312f11f | 2026-08-03 | re-stamped (Round 7) | Head-only; CLAUDE.md unchanged by 9312f11f |
-| `AC-007.txt` | 9312f11f | 2026-08-03 | re-stamped (Round 7) | Head-only; ci.yml changed but AC-7 checks for ABSENCE of c93f4f9c which remains absent |
-| `AC-008.txt` | 9312f11f | 2026-08-03 | re-stamped (Round 7) | Head-only; Cargo.toml/Cargo.lock unchanged; MSRV check not re-run (test-file change outside --all-features scope) |
-| `AC-009.txt` | 9312f11f | 2026-08-03 | re-stamped (Round 7) | Head-only; board.rs/list.rs unchanged; team_column_parity.rs still 10 tests; filtered=8/false-green=10 unchanged |
-| `full-suite.txt` | 9312f11f | 2026-08-03 | re-captured (Round 7) | cargo test re-run: 2345/0/100; clippy+fmt re-run (--all-targets/--all cover tests/ which changed); floor guard evidence added |
+| `AC-001.txt` | a247a343 | 2026-08-03 | re-stamped (Round 8) | Head-only; delta-analysis.md unchanged by a247a343 (ci.yml + ci_gate_completeness.rs only) |
+| `AC-002.txt` | a247a343 | 2026-08-03 | re-captured (Round 8) | ci.yml line numbers shifted +54; SHA locations updated (ci.yml :: msrv :109→:163, ci.yml :: coverage :151→:205) |
+| `AC-003.txt` | a247a343 | 2026-08-03 | re-captured (Round 8) | ci.yml line range shifted +54; sed -n '98,125p' → sed -n '152,179p'; B-A+1=28 preserved |
+| `AC-004.txt` | a247a343 | 2026-08-03 | re-captured (Round 8) | ci.yml line numbers shifted +54; grep output line numbers updated (:99→:153, :109→:163, :111→:165, :115→:169, :121→:175, :125→:179) |
+| `AC-005.txt` | a247a343 | 2026-08-03 | re-stamped (Round 8) | Head-only; sign-and-publish.yml/backfill-release.yml/release.yml unchanged by a247a343 |
+| `AC-006.txt` | a247a343 | 2026-08-03 | re-stamped (Round 8) | Head-only; CLAUDE.md unchanged by a247a343 |
+| `AC-007.txt` | a247a343 | 2026-08-03 | re-stamped (Round 8) | Head-only; ci.yml changed but AC-7 checks for ABSENCE of c93f4f9c which remains absent |
+| `AC-008.txt` | a247a343 | 2026-08-03 | re-stamped (Round 8) | Head-only; Cargo.toml/Cargo.lock unchanged; MSRV check not re-run (ci_gate_completeness.rs change outside --all-features scope) |
+| `AC-009.txt` | a247a343 | 2026-08-03 | re-stamped (Round 8) | Head-only; board.rs/list.rs unchanged; team_column_parity.rs still 10 tests; filtered=8/false-green=10 unchanged |
+| `full-suite.txt` | a247a343 | 2026-08-03 | re-captured (Round 8) | cargo test re-run: 2345/0/100 (unchanged — no new test functions in a247a343); clippy (0.28s)+fmt re-run; floor guard script updated to match new ci.yml :: test step (wc -l, -lt 90, canary, CARGO_TERM_COLOR: never) |
 
 **Completeness: 11/11 artifacts verified and stamped. No artifact left with only the global INDEX head stamp.**
+
+## Round-8 Re-stamp (2026-08-03): head 9312f11f → a247a343
+
+Commit `a247a343` (`ci: fix inert floor, unreachable diagnostic, colour fragility, under-specified pin (POL-11)`)
+corrected four defects in the `ci.yml :: test / "Run tests (zero-test floor, POL-11)"` step
+that commit `9312f11f` had shipped defective:
+
+1. **Inert floor predicate (`> 0` → binary-count floor `-lt 90` + canary):** The prior `> 0`
+   predicate could not detect integration-test orphaning because `cargo test --all-features`
+   also runs src/ inline `#[cfg(test)]` modules (~1,100 tests), keeping total > 0 even when
+   all of `tests/` is orphaned. The corrected step uses TWO instruments: a binary-count floor
+   (`binaries -lt 90`) that catches mass orphaning of `tests/` files, and a named canary
+   (`grep -q "ci_gate_completeness"`) that catches the self-orphaning case where the guard
+   binary itself stops running.
+
+2. **Unreachable diagnostics (`set -euo pipefail` blocking `echo` before `exit 1`):** Under
+   `set -o pipefail`, `grep -c` exits 1 on no-match; that exit propagated through the pipeline
+   and, combined with `set -e`, aborted the step before any `echo "FAIL..."` could print. The
+   corrected step uses `set +o pipefail` scoped to the count-computation section and `wc -l`
+   instead of `grep -c` (which avoids the no-match exit-1 trap). `set -o pipefail` is restored
+   before the gate checks so real I/O errors are still not swallowed.
+
+3. **Colour fragility (`CARGO_TERM_COLOR: never` override added):** The file-level
+   `CARGO_TERM_COLOR: always` caused ANSI escape codes in `"test result:"` lines to silently
+   zero the anchored `grep -E "^test result: "`, making the diagnostic branches unreachable
+   and the step permanently mis-diagnose. The corrected step adds a step-level
+   `env: CARGO_TERM_COLOR: never` override.
+
+4. **Under-specified regression pin:** The prior pin in `test_verify_test_job_has_zero_test_floor`
+   asserted only the `FAIL (POL-11)` message literal. The corrected pin also asserts the
+   binary-count floor (`-lt 90`), the named canary (`ci_gate_completeness`), `exit 1`, the
+   `Check passed:` positive-coverage line, and `CARGO_TERM_COLOR: never`.
+
+Files changed: `.github/workflows/ci.yml` (+54 lines vs 9312f11f head, shifting all subsequent
+job line numbers by +54) and `tests/ci_gate_completeness.rs` (docstring + 5 new assert blocks
+within `test_verify_test_job_has_zero_test_floor`; NO new test functions added).
+
+**No new test functions added:** a247a343 expanded assertions within the existing
+`test_verify_test_job_has_zero_test_floor` function. Test count remains 2345 (confirmed by
+re-run). Binary count remains 103.
+
+**Prose citations migrated to anchor form:** All bare `ci.yml :NNN` references in this INDEX
+and in AC-002/003/004 narrative sections have been migrated to `ci.yml :: <job-id>` form
+(e.g. `ci.yml :: msrv`, `ci.yml :: coverage`, `ci.yml :: test`) to prevent future staling
+from ci.yml line-number shifts. Transcripts retain real line numbers.
+
+**Re-verification performed:**
+- `cargo test` aggregate re-run at a247a343 → `2345 passed / 0 failed / 100 ignored`
+- `cargo clippy --all-targets -- -D warnings` re-run at a247a343 → exit 0 (warm cache, 0.28s)
+- `cargo fmt --all -- --check` re-run at a247a343 → exit 0 (no output)
+- Floor guard script updated and re-run → `Check passed: 2345 tests executed across 103 test binaries`
+- `cargo test --test team_column_parity` → still `running 10 tests`, all ok (unchanged)
+- Filtered team_column_parity → still `running 2 tests`, 8 filtered out (unchanged)
+- False-green reproduction → still `running 0 tests`, 10 filtered out (unchanged)
+
+**Artifact disposition:**
+- AC-001, AC-005, AC-006, AC-007, AC-008, AC-009: head-stamp only. None of these artifacts'
+  evidence sources (delta-analysis.md, three release workflow files, CLAUDE.md, Cargo.toml/lock,
+  src/cli/board.rs) were changed by a247a343.
+- AC-002, AC-003, AC-004: re-captured with correct ci.yml line numbers; prose citations
+  migrated to anchor form in assertions sections.
+- full-suite.txt: re-captured — floor guard script updated to match new ci.yml :: test step
+  (CARGO_TERM_COLOR: never, wc -l, -lt 90 binary floor, ci_gate_completeness canary);
+  clippy timing updated (0.15s→0.28s); cargo test count confirmed 2345 (no new test functions).
+
+**Round-8 sed range re-check:**
+All `sed -n 'A,Bp'` commands in the pack verified to display exactly B−A+1 lines at head a247a343:
+- AC-003: sed '152,179p' → 28 lines ✓ (updated from '98,125p'; 179−152+1=28)
+- AC-005: sed '57,68p' → 12 lines ✓ (unchanged); sed '72,83p' → 12 lines ✓ (unchanged); sed '38,52p' → 15 lines ✓ (unchanged)
+- AC-009 BEFORE: sed '228,244p' → 17 lines ✓ (unchanged); AFTER: sed '228,248p' → 21 lines ✓ (unchanged)
 
 ## Round-7 Re-stamp (2026-08-03): head 6d73b3ef → 9312f11f
 
@@ -258,7 +328,7 @@ correctly suppresses the Team column when the field is unconfigured.
 |----|-------------|-----------|----------------|--------|
 | AC-001 | SHA verification (blocking gate) | `AC-001.txt` | Read delta-analysis.md §5e | PASS |
 | AC-002 | 7 new-SHA occurrences across 6 files | `AC-002.txt` | `grep -n fa04a145` across 6 files | PASS |
-| AC-003 | msrv job: toolchain input + RUSTUP_TOOLCHAIN env | `AC-003.txt` | `sed -n '98,125p' ci.yml` + MSRV check with toolchain identity proof | PASS |
+| AC-003 | msrv job: toolchain input + RUSTUP_TOOLCHAIN env | `AC-003.txt` | `sed -n '152,179p' ci.yml` + MSRV check with toolchain identity proof | PASS |
 | AC-004 | msrv comment accuracy: # 1.85.0 | `AC-004.txt` | `grep -n 1.85.0 ci.yml` | PASS |
 | AC-005 | rustup target add steps preserved | `AC-005.txt` | `grep E0463`/`rustup target add` all three files | PASS |
 | AC-006 | CLAUDE.md gotcha added | `AC-006.txt` | `grep -n rust-toolchain.toml.*outranks CLAUDE.md` | PASS |
@@ -275,8 +345,8 @@ correctly suppresses the Team column when the field is unconfigured.
   Both are jointly load-bearing: the comfy-table pin ensures the dep tree compiles at 1.85.0;
   the in-tree let-chain rewrites (AC-9) ensure jr's own source also compiles at 1.85.0.
 - The 7 SHA occurrences across 6 files reflect ci.yml having two dtolnay/rust-toolchain uses:
-  the msrv job (:109, toolchain "1.85.0") and the coverage job (:151, toolchain "stable").
-  The test job (:42) uses NO dtolnay/rust-toolchain action.
+  `ci.yml :: msrv` (toolchain "1.85.0") and `ci.yml :: coverage` (toolchain "stable").
+  `ci.yml :: test` uses NO dtolnay/rust-toolchain action.
 - AC-9 test non-vacuousness: `running 2 tests` with correct function names
   `test_board_view_omits_team_column_when_field_unconfigured` and
   `test_issue_list_omits_team_column_when_field_unconfigured`. Each test mounts issues with
@@ -290,8 +360,8 @@ correctly suppresses the Team column when the field is unconfigured.
   coverage claim section for full analysis.
 - The `--all-targets` flag in clippy is intentional and matches project CLAUDE.md convention.
   Note: `cargo check --all-features --locked` in the MSRV check deliberately omits `--all-targets`
-  because wiremock (a dev-dependency) requires Rust >=1.88.0; that is the CI comment at
-  ci.yml :113-122 and is correct, not an oversight.
+  because wiremock (a dev-dependency) requires Rust >=1.88.0; that is documented in the CI
+  comment block at `ci.yml :: msrv` and is correct, not an oversight.
 - rustup toolchain list confirms 1.85.0 available: `1.85.0-aarch64-apple-darwin` listed.
   All MSRV captures show `RUSTUP_TOOLCHAIN=1.85.0 rustup show active-toolchain` →
   `1.85.0-aarch64-apple-darwin (overridden by environment variable RUSTUP_TOOLCHAIN)`.

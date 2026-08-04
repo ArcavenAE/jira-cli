@@ -3771,3 +3771,36 @@ Pass 84 is the first adversarial pass on AC-falsification-against-build + delta-
 **On approval:** F3 proceeds: S-639-1 (update), S-627-1 (draft), S-626-1 (draft — carrying verified SHA `fa04a1451ff1842e2626ccb99004d0195b455a88` blocking AC, do-not-remove constraint for `rustup target add` steps, MSRV comment-accuracy flag), S-383 (update stale).
 
 **Trajectory (unchanged):** →6→1→1→0 (no new pass ran; this is a meta-event). Window counter RESET: 0/3.
+
+---
+
+## S-626-1 Pass 19 (2026-08-04)
+
+**Artifact:** `.factory/cycles/cycle-001/adversarial-reviews/s-626-1-adversary-pass-19.md`
+**Isolation:** CLEAN. No banned-path content accessed. Self-disclosed.
+
+Pass-19 ran against head `9312f11f` (the orchestrator-shipped POL-11 guard commit). **Found FOUR REAL CI-AS-CODE DEFECTS** in that guard — all in the `ci.yml` floor script shipped one round earlier. All four closed by product commit `a247a343`. `src/` remains 0-defect (twelfth consecutive pass).
+
+**ADV-P19-HIGH-001 (HIGH; CI-integrity; [process-gap]):** Floor `> 0` is INERT — inline src/ tests (~1,112) keep the count above 0 even when all `tests/` binaries are orphaned. Guard cannot detect its own orphaning. **FIXED a247a343** (binary-count floor `-lt 90` + named canary `ci_gate_completeness`).
+
+**ADV-P19-HIGH-002 (HIGH; spec-fidelity; scope-breach):** `tests/ci_gate_completeness.rs` and `tests/cli_handler.rs` present in PR diff but absent from all four spec surfaces in S-626-1. ORCHESTRATOR-CAUSED. **FIXED fix round 7** (S-626-1 v1.13; DEC-214).
+
+**ADV-P19-MED-001 (MEDIUM; CI-integrity):** `FAIL (POL-11)` diagnostic unreachable under `set -o pipefail` + `set -e`. **FIXED a247a343.**
+
+**ADV-P19-MED-002 (MEDIUM; CI-integrity; fragility):** ANSI codes from file-scope `CARGO_TERM_COLOR: always` would zero anchored regex. LATENT — not a live break (CI ran SUCCESS for `9312f11f`; orchestrator speculation refuted). **FIXED a247a343** (`CARGO_TERM_COLOR: never`).
+
+**ADV-P19-MED-003 (MEDIUM; CI-integrity):** Pin asserts only `contains("FAIL (POL-11)")` — not exit 1, not floor count, not positive-coverage line. **FIXED a247a343.**
+
+**ADV-P19-MED-004 (MEDIUM; spec-process; [process-gap]):** Round-6 sweep missed one site in `S-MUTANTS-EXAMINE-GLOBS-1.md` while correcting seven siblings. **PARTIALLY CLOSED** — 1 site corrected; 4 blocked by template-compliance hook. Needs `conform-to-template` pass.
+
+**ADV-P19-MED-005 (MEDIUM; spec-fidelity):** STORY-INDEX S-641-1 row stale by TWO revisions (v0.6 in row; file at v0.7). **FIXED fix round 7** (STORY-INDEX v1.5.57; S-641-1 v0.8).
+
+**ADV-P19-MED-006 (MEDIUM; CI-integrity; [process-gap]; ROUTED):** `fmt` and `clippy` share identical orphaning exposure as `test` job. Routed per DEC-215. Tracked: FMT-CLIPPY-NO-POSITIVE-COVERAGE.
+
+**ADV-P19-LOW-001 (LOW; spec-fidelity):** S-640-1 cited RUSTUP_TOOLCHAIN 16 lines from actual location. **FIXED fix round 7** (S-640-1 v0.6; DEC-213 anchor form).
+
+**ADV-P19-INFO-001 (INFO):** Demo pack lacked negative-path proof at dispatch. **NOTED** — updated at a247a343.
+
+**Convergence counter:** window 0/2 of 18/19/20. Pass-20 pending (head a247a343).
+
+**Anchor migration (CLASS-ELIMINATING):** DEC-213 introduces `ci.yml :: <job-id>` notation. Three prior citation-ripple sweeps (+39, +54, +93 cumulative) will not recur for migrated surfaces.

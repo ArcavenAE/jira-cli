@@ -1889,3 +1889,16 @@ _Was the active checkpoint after SOH-DX-1 F2 ADVERSARY GRIND rounds 1-45 (2026-0
 | In flight | develop @ acdad174 (PR #667 OPEN). .factory @ factory-artifacts. |
 | Pending human decisions | DEC-209 authorized — passes 18/19/20 confirmed. DEC-210 BC-5.3.003 declared. AX23-001 pending. DEC-204 UNADJUDICATED. |
 | Resume command | Open fresh session → dispatch S-626-1 pass-18 against head 9312f11f. PR #667 HELD until 3/3 CLEAN window. |
+
+---
+
+## Checkpoint: ADVERSARY-18+FIX-ROUND-6 burst (2026-08-03T23:55:00Z) [ARCHIVED]
+
+| Field | Value |
+|-------|-------|
+| Position | Feature Mode SOH-DX-1 F4 delivery. F2 APPROVED (DEC-196), F3 APPROVED (DEC-197). **S-626-1 DELIVERED** — PR #667 open, feature HEAD 9312f11f (product commit `ci: add zero-test floor + positive-coverage assertion to test job (POL-11)`), branch ci/fix-toolchain-sha-msrv. **HELD per DEC-202** pending fresh 3-pass window. Fix round 6 applied 2026-08-03 (S-626-1 v1.12; S-641-1 v0.5; STORY-INDEX v1.5.56; demos/ re-stamped to 9312f11f with 2345 tests; 7 of 10 pass-18 findings pending fix round 7). |
+| Convergence | S-626-1 Step 4.5 = 0/3. 16 recorded passes (5 VOID: 3 dispatch + 2 isolation) + 2 NOT RUN (passes 16/17, DEC-209). 164 total findings. Pass-18 window 0/1 NOT CLEAN. ZERO HIGH eleven consecutive passes. **F-07 FIXED IN-CYCLE 9312f11f (DEC-211).** **DEC-212 authorized: passes 19/20 next.** |
+| Not yet done | (1) S-626-1 passes 19/20 against head 9312f11f (maintain scoped greps; isolation CLEAN behavioral corrective 5/5 passes). (2) S-640-1 handoff: on MSRV ≥1.88, delete `No let-chains` from CLAUDE.md Conventions AND in-code comments at `src/cli/board.rs` ~:231, `src/cli/issue/list.rs` ~:523, `src/cli/auth/keychain.rs` ~:50. (3) S-MAINT-576-HYG-1 needs scheduling. DEC-204 UNADJUDICATED. AX23-001 PENDING. |
+| In flight | develop @ acdad174 (PR #667 HELD — DEC-202). .factory @ factory-artifacts. No other open worktrees. Product repo untracked: .claude/hooks/, .claude/pr-reviews/, .claude/settings.local.json.bak, .claude/spec-config.json (pre-existing). |
+| Pending human decisions | (1) DEC-212 authorized — passes 19/20 confirmed. (2) AX23-001 out-of-delta ratification (non-blocking). (3) DEC-204 UNADJUDICATED (DEC-191(d) ceiling ruling). PR queue: #667 (HELD — DEC-202), #662 (MERGEABLE), #655-#659 (soaking), #628/#574. DO NOT close #429. |
+| Resume command | Open fresh session → /vsdd-factory:next-step. Dispatch S-626-1 pass-19 (head 9312f11f; scoped greps; isolation CLEAN 5/5 passes). ORCHESTRATOR-PROPAGATED-FALSE-JUSTIFICATION new HIGH drift item — dispatch MUST NOT include non-verified justifications. PR #667 HELD. AX23-001 pending. |

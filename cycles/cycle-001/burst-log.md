@@ -8256,3 +8256,78 @@ DEC-204 remains UNADJUDICATED. AX23-001 remains PENDING.
 | Step | Status | Notes |
 |------|--------|-------|
 | ADVERSARY-12-13-14+FIX-ROUND-4 | COMPLETE | window 12/13/14 = 0/3; severity all-LOW; fix round 4 applied; meta-pattern identified; 130 total findings |
+
+---
+
+## ADVERSARY-19+FIX-ROUND-7 burst (2026-08-04T01:00:00Z)
+
+### Pass-19 Verdict
+
+**NOT CLEAN — 2 HIGH + 6 MEDIUM + 1 LOW + 1 INFO; zero src/ code defects; isolation CLEAN; window 0/2 of 18/19/20; TWELFTH consecutive pass with zero src/ code defects. FOUR REAL CI-AS-CODE DEFECTS in orchestrator-shipped POL-11 guard (9312f11f).**
+
+- ADV-P19-HIGH-001 (inert floor): FIXED — fix round 7 (a247a343).
+- ADV-P19-HIGH-002 (scope breach): FIXED — fix round 7 (S-626-1 v1.13; DEC-214).
+- ADV-P19-MED-001 (FAIL unreachable): FIXED — fix round 7 (a247a343).
+- ADV-P19-MED-002 (ANSI fragility): FIXED — fix round 7 (a247a343; speculation refuted).
+- ADV-P19-MED-003 (under-specified pin): FIXED — fix round 7 (a247a343).
+- ADV-P19-MED-004 (sweep miss S-MUTANTS): PARTIALLY CLOSED — template hook block; 1 of 5 sites corrected.
+- ADV-P19-MED-005 (STORY-INDEX S-641-1 stale by TWO): FIXED — fix round 7 (STORY-INDEX v1.5.57; S-641-1 v0.8).
+- ADV-P19-MED-006 (fmt/clippy no positive coverage): ROUTED per DEC-215.
+- ADV-P19-LOW-001 (RUSTUP_TOOLCHAIN 16 lines off): FIXED — fix round 7 (S-640-1 v0.6; DEC-213).
+- ADV-P19-INFO-001 (demo pack no negative proof): NOTED — updated at a247a343.
+
+### Fix Round 7 Applied
+
+**`stories/S-626-1.md`** (v1.12→v1.13) — anchor-form migration for all live ci.yml line citations; F-05 scope breach closed: `tests/ci_gate_completeness.rs` + `tests/cli_handler.rs` declared at all four surfaces (files_modified, test_files, FSR, MUST NOT change exception list); DEC-213+214 recorded.
+
+**`stories/S-640-1.md`** (v0.5→v0.6) — Architecture Mapping + Task 2 anchor migration: `~:99`→`ci.yml :: msrv`, `~:109`→`ci.yml :: msrv`, RUSTUP_TOOLCHAIN split into two distinct step citations.
+
+**`stories/S-641-1.md`** (v0.7→v0.8) — Architecture Mapping anchor migration: `~:msrv job`→`ci.yml :: msrv`; input-hash updated to 4901bbd; files_modified still does NOT include Cargo.toml (ADV-P18-MED-006 still OPEN — survived six rounds).
+
+**`stories/STORY-INDEX.md`** (v1.5.56→v1.5.57) — round-7 anchor migration; S-626-1 row advanced to v1.13; S-640-1 row advanced to v0.6; S-641-1 row corrected (was stale by TWO revisions v0.6→now records v0.8; F-07 CLOSED).
+
+**`stories/S-MUTANTS-EXAMINE-GLOBS-1.md`** — line ~82 anchor-converted (`~:259`→`ci.yml :: mutants / Run mutation tests on PR diff`); remaining 4 body sites (lines ~235/257/348/424) BLOCKED by template-compliance hook (pre-existing template drift: missing cycle/epic_id frontmatter, missing Purity Classification + Library & Framework Requirements sections). File NOT version-bumped. Needs conform-to-template pass.
+
+**`demos/S-626-1/`** — All 11 artifacts re-stamped at head a247a343 (Round 8): AC-002 (pin sites corrected to :163 msrv / :205 coverage, job labels corrected); AC-003 (sed range '98,125p'→'152,179p', B−A+1=28); AC-004 (grep line numbers :153/:163/:165/:169/:175/:179); full-suite.txt (floor script updated: wc -l, -lt 90, canary assertion, CARGO_TERM_COLOR: never; negative proof documented); INDEX.md (prose citations migrated to anchor form; intro says "four new tests"). Counts: 2345 / 0 / 100 across 103 binaries (unchanged — a247a343 expanded assertions within existing test).
+
+### Product Commit Recorded
+
+`a247a343` on branch `ci/fix-toolchain-sha-msrv` — `ci: fix inert floor, unreachable diagnostic, colour fragility, under-specified pin (POL-11)`. PR #667 remains OPEN and UNMERGED. Closes F-01..F-04. Two instruments: binary-count floor `-lt 90` + named canary (`ci_gate_completeness`). Sets `CARGO_TERM_COLOR: never`. All diagnostics reachable. Pin asserts floor, canary, `exit 1`, `Check passed:`. Three proofs executed.
+
+### Decisions Recorded
+
+**DEC-213:** ANCHOR-FORM CITATION MIGRATION AUTHORIZED — `ci.yml :: <job-id> / "<step>"` notation adopted for all live ci.yml citations in story artifacts. Historical records (risk_mitigations changelog, STORY-INDEX "Prior:" chains, delivered-story records) preserved as line numbers (immutable audit trail).
+
+**DEC-214:** F-05 ORCHESTRATOR SCOPE BREACH CLOSED — `tests/ci_gate_completeness.rs` and `tests/cli_handler.rs` were legitimate delivered work; undeclared at all four spec surfaces. Fix: update all four surfaces in S-626-1 v1.13 with exception justifications, rather than reverting the work.
+
+**DEC-215:** F-09 ROUTED, NOT FIXED — `fmt`/`clippy` positive-coverage is a real parallel gap but would be a fourth product-CI change in the same PR cycle. Not authorized this round. Tracked as FMT-CLIPPY-NO-POSITIVE-COVERAGE drift item.
+
+### Drift Item Updates (ADVERSARY-19+FIX-ROUND-7)
+
+- **ORCHESTRATOR-SHIPPED-DEFECTIVE-GUARD** — NEW, HIGH, OPEN: orchestrator shipped inert POL-11 guard (`9312f11f`) with false rationale in both legs, unreachable diagnostic, color fragility (unverified), and under-specified pin. Caught only by adversary pass-19 one round later. Four real CI-as-code defects. Route: PROCESS — orchestrator MUST independently execute negative proof before authorizing any guard commit.
+- **ORCHESTRATOR-UNVERIFIED-BREAK-SPECULATION** — NEW, LOW, OPEN: orchestrator asserted F-03 "would have matched zero lines in CI and aborted the step." CI runs for `9312f11f` completed SUCCESS, refuting the speculation. Speculation was recorded as if confirmed. Record the refutation; do not propagate unverified break claims.
+- **CI-YML-LINE-CITATION-RIPPLE** — NEW, MEDIUM, CLOSED-STRUCTURALLY: three measured ripples (+39, +54, cumulative +93 lines from original) required three sweep rounds. DEC-213 anchor-form migration ends the class for migrated surfaces.
+- **FMT-CLIPPY-NO-POSITIVE-COVERAGE** — NEW, MEDIUM, OPEN: `fmt` and `clippy` jobs share identical orphaning exposure as `test` job; neither emits runtime-computed count of what it checked. Routed per DEC-215.
+- **FIX-ROUND-PARTIAL-PROPAGATION** — UPDATED (SIXTH CONSECUTIVE ROUND). Round-7 anchor migration is CLASS-ELIMINATING (first structural fix rather than another sweep). Prior five rounds: sweep-to-class failures. Round-7: DEC-213 ends ci.yml citation-ripple class for migrated surfaces. Non-ci.yml surfaces remain manually swept.
+- **FIX-ROUND-INTRODUCES-DEFECTS-IN-NEW-PROSE** — UPDATED: round-6 injection was in PRODUCT CODE (not prose this time): 4 real CI-as-code defects (HIGH+MED×3) in the orchestrator-shipped 9312f11f guard. Severity escalation: highest injection severity across six rounds.
+- **STORY-TEMPLATE-DRIFT-BLOCKS-EDITS** — UPDATED: ESCALATED — now demonstrably blocking a correctness fix. Template-compliance hook blocked 4 anchor-migration sites in S-MUTANTS-EXAMINE-GLOBS-1.md. ROUTE conform-to-template for that file before pass-20.
+- **DEMO-TRANSCRIPT-FIDELITY-NO-MECHANICAL-GUARD** — UPDATED: prose citations now anchor-form (DEC-213); only transcripts remain line-number-dependent. Mitigation strengthened.
+
+### Convergence Status Post-Burst
+
+0/3. 17 recorded passes (5 VOID: 3 dispatch + 2 isolation); passes 16/17 NOT RUN (DEC-209); 174 total findings. Pass-19 NOT CLEAN (window 0/2); 2H first in window; TWELFTH consecutive zero-src/-defect. Fix round 7 applied; a247a343 product head. ADV-P1-INDEX v1.9.
+
+**Pipeline:** PAUSED — awaiting S-626-1 pass-20 on round-7-amended state (head a247a343). Also pending: conform-to-template for S-MUTANTS-EXAMINE-GLOBS-1.md (4 blocked anchor sites).
+**STORY-INDEX:** v1.5.57. **trajectory-tail:** →0→0→0→2 (P14=0H, P15=0H, P18=0H, P19=2H)
+
+### Archived Phase Progress Row (from ADVERSARY-18+FIX-ROUND-6)
+
+| Step | Owner | Entered | Exited | Verdict | Findings |
+|------|-------|---------|--------|---------|----------|
+| ADVERSARY-18+FIX-ROUND-6 | adversary/state-manager | 2026-08-03T23:00Z | 2026-08-03T23:55Z | NOT CLEAN 0H/7M/3L | 164 total; 0/3 window 0/1; F-07 FIXED IN-CYCLE 9312f11f; fix round 6 applied |
+
+### Archived Current Phase Steps Row (from CORRECTIVE-VERDICT-LABEL-AMBIGUITY)
+
+| Step | Status | Notes |
+|------|--------|-------|
+| CORRECTIVE-VERDICT-LABEL-AMBIGUITY (2026-08-03) | COMPLETE | Terminology fix only: pass-12/13/14 verdict labels corrected; STATE-VERDICT-LABEL-AMBIGUITY + PASS-NUMBERING-COLLIDES-ACROSS-CYCLES drift items added |

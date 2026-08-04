@@ -1,4 +1,4 @@
-# Head: 9312f11f  Captured: 2026-08-03  Status: re-captured (Round 7 — cargo test re-run at 9312f11f: 2345/0/100 confirmed; clippy+fmt re-run (--all-targets/--all cover tests/ which changed per commit 9312f11f); floor guard evidence added; MSRV not re-run (9312f11f changed ci.yml test step and tests/ci_gate_completeness.rs only; cargo check --all-features omits --all-targets so test-file changes are out of scope))
+# Head: a247a343  Captured: 2026-08-03  Status: re-captured (Round 8 — cargo test re-run at a247a343: 2345/0/100 confirmed (no new test functions; a247a343 expanded assertions within test_verify_test_job_has_zero_test_floor only); clippy+fmt re-run (--all-targets/--all cover tests/ which changed per commit a247a343); POL-11 floor guard script updated to match new ci.yml :: test / "Run tests (zero-test floor, POL-11)" step (wc -l, -lt 90 binary floor, ci_gate_completeness canary, CARGO_TERM_COLOR: never); MSRV not re-run (a247a343 changed ci.yml and tests/ci_gate_completeness.rs only; cargo check --all-features omits --all-targets so test-file changes are out of scope))
 
 --- cargo test (full regression) ---
 $ cd /Users/zious/Documents/GITHUB/jira-cli/.worktrees/S-626-1 && cargo test 2>&1 | grep "test result" | awk '{for(i=1; i<=NF; i++) {if($i == "passed;") passed += $(i-1); if($i == "failed;") failed += $(i-1); if($i == "ignored;") ignored += $(i-1)}} END {print "AGGREGATE: " passed " passed / " failed " failed / " ignored " ignored"}'
@@ -12,6 +12,9 @@ scope note, commit cc7f6da5). This run shows 2345 passed — a delta of +4 new t
     test_board_view_falls_back_to_uuid_when_team_not_cached)
   - commit 9312f11f (ci: add zero-test floor + positive-coverage assertion to test job (POL-11) —
     test_verify_test_job_has_zero_test_floor in tests/ci_gate_completeness.rs)
+  - commit a247a343 added NO new test functions; it expanded the assertions within
+    test_verify_test_job_has_zero_test_floor (instruments 1-4: binary floor, canary, exit 1,
+    Check passed:, CARGO_TERM_COLOR). Count remains 2345.
 The ignored count matches: 100. No failed tests. Discrepancy from stated figure: +4 pass (expected 2341, actual 2345).
 This is not a regression — the story added 4 new tests total (2 AC-9 guards + 1 BC-5.3.003 pin + 1 POL-11 floor guard).
 The story v1.3 scope note (commit cc7f6da5) states the baseline as "2341 passed / 0 failed / 100 ignored";
@@ -32,19 +35,19 @@ EXIT: 0 (clean)
 Toolchain identity: rustc 1.85.0 (4d91de4e4 2025-02-17) — overridden by RUSTUP_TOOLCHAIN env var.
 Compiling line confirms cargo rebuilt jr under 1.85.0, not a warm no-op.
 Source files not modified; cargo clean removed build cache only.
-NOT re-run at 9312f11f: commit 9312f11f changed .github/workflows/ci.yml (test step) and
-tests/ci_gate_completeness.rs only; cargo check --all-features omits --all-targets, so test-file
+NOT re-run at a247a343: commit a247a343 changed .github/workflows/ci.yml (POL-11 step corrections)
+and tests/ci_gate_completeness.rs only; cargo check --all-features omits --all-targets, so test-file
 changes are outside its scope. The MSRV result from the prior run remains valid.
 
 --- cargo clippy --all-targets -- -D warnings ---
 $ cd /Users/zious/Documents/GITHUB/jira-cli/.worktrees/S-626-1 && cargo clippy --all-targets -- -D warnings 2>&1; echo "EXIT: $?"
-    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.15s
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.28s
 EXIT: 0
 
 EXIT: 0 (clean, zero warnings)
-Re-run at head 9312f11f: commit 9312f11f changed tests/ci_gate_completeness.rs; --all-targets
+Re-run at head a247a343: commit a247a343 changed tests/ci_gate_completeness.rs; --all-targets
 lints integration tests (tests/ directory), so the prior "no src/ changes" justification for
-skipping was incorrect and has been removed. Warm cache result (0.15s, no Compiling line) is
+skipping was incorrect and has been removed. Warm cache result (0.28s, no Compiling line) is
 cargo's incremental response when the targets are already compiled and nothing has changed —
 all targets are clean at this head.
 
@@ -53,31 +56,40 @@ $ cd /Users/zious/Documents/GITHUB/jira-cli/.worktrees/S-626-1 && cargo fmt --al
 EXIT: 0
 
 EXIT: 0 (clean)
-Re-run at head 9312f11f: --all checks all targets including tests/; the prior "no src/ changes"
+Re-run at head a247a343: --all checks all targets including tests/; the prior "no src/ changes"
 justification for skipping was incorrect and has been removed. No output means no format violations.
 
 --- POL-11 floor guard (positive path) ---
-# Replicates the ci.yml test job's "Run tests (zero-test floor, POL-11)" step locally.
-# The step writes cargo test output to a temp file, then computes totals from it.
-# "Check passed:" is the runtime-computed positive-coverage assertion required by POL-11.
+# Replicates the ci.yml :: test / "Run tests (zero-test floor, POL-11)" step locally.
+# New at a247a343 vs 9312f11f:
+#   - CARGO_TERM_COLOR=never: prevents ANSI codes in "test result:" lines from silently
+#     zeroing the anchored grep (Defect 3 fix in a247a343).
+#   - binaries uses wc -l: avoids grep -c no-match exit-1 trap (Defect 2 fix in a247a343).
+#   - Two instruments: binary-count floor (-lt 90) AND ci_gate_completeness canary.
+#     The prior "> 0" predicate was inert: src/ inline tests (~1,100) still run when
+#     tests/ is fully orphaned, keeping total > 0. The floor now gates on binary count.
 
 $ cd /Users/zious/Documents/GITHUB/jira-cli/.worktrees/S-626-1 && \
-  cargo test --all-features 2>&1 | tee /tmp/cargo_test_out_9312f11f.txt > /dev/null && \
-  total=$(grep -E "^test result: " /tmp/cargo_test_out_9312f11f.txt | grep -Eo "[0-9]+ passed" | awk '{sum += $1} END {print sum+0}') && \
-  binaries=$(grep -cE "^test result: " /tmp/cargo_test_out_9312f11f.txt || echo 0) && \
-  [ "${total}" -gt 0 ] && echo "Check passed: ${total} tests executed across ${binaries} test binaries"
+  CARGO_TERM_COLOR=never cargo test --all-features 2>&1 | tee /tmp/cargo_test_out_a247a343.txt > /dev/null && \
+  total=$(grep -E "^test result: " /tmp/cargo_test_out_a247a343.txt | grep -Eo "[0-9]+ passed" | awk '{sum += $1} END {print sum+0}') && \
+  binaries=$(grep -E "^test result: " /tmp/cargo_test_out_a247a343.txt | wc -l | tr -d ' ') && \
+  { [ "${binaries}" -lt 90 ] && echo "FAIL (POL-11): only ${binaries} test binaries reported results (floor: 90)." || true; } && \
+  { grep -q "ci_gate_completeness" /tmp/cargo_test_out_a247a343.txt || echo "FAIL (POL-11): tests/ci_gate_completeness did not run."; } && \
+  { [ "${total}" -eq 0 ] && echo "FAIL (POL-11): zero tests executed across ${binaries} test binaries." || true; } && \
+  echo "Check passed: ${total} tests executed across ${binaries} test binaries"
 Check passed: 2345 tests executed across 103 test binaries
 
 Note: 103 "test result:" lines (floor guard's binary count) vs 102 "Running" lines in the same
 output. One additional "test result:" line comes from the doc-test target (lib crate), which
 emits a result line without a preceding "Running" line in some configurations.
+Binary count 103 is well above the -lt 90 floor. Named canary ci_gate_completeness is present.
 
 --- Summary ---
 cargo test:                    2345 passed / 0 failed / 100 ignored  [PASS]
-RUSTUP_TOOLCHAIN=1.85.0 check: Compiling jr → Finished (6.34s), exit 0 [PASS] (not re-run at 9312f11f — see note above)
+RUSTUP_TOOLCHAIN=1.85.0 check: Compiling jr → Finished (6.34s), exit 0 [PASS] (not re-run at a247a343 — see note above)
   toolchain identity:          rustc 1.85.0 (4d91de4e4 2025-02-17)   [CONFIRMED]
-cargo clippy --all-targets:    Finished (0.15s warm cache), exit 0   [PASS] (re-run at 9312f11f)
-cargo fmt --check:             No output, exit 0                     [PASS] (re-run at 9312f11f)
+cargo clippy --all-targets:    Finished (0.28s warm cache), exit 0   [PASS] (re-run at a247a343)
+cargo fmt --check:             No output, exit 0                     [PASS] (re-run at a247a343)
 POL-11 floor guard:            Check passed: 2345 tests executed across 103 test binaries [CONFIRMED]
 
 Discrepancy from orchestrator-stated baseline: +4 tests (2341→2345). Cause: delivery commits
@@ -85,5 +97,6 @@ added test_board_view_omits_team_column_when_field_unconfigured and
 test_issue_list_omits_team_column_when_field_unconfigured as AC-9 regression guards (+2), then
 commit 6d73b3ef added test_board_view_falls_back_to_uuid_when_team_not_cached as BC-5.3.003
 pin (+1), then commit 9312f11f added test_verify_test_job_has_zero_test_floor as POL-11 floor
-guard (+1). This is expected and correct — the story added 4 new tests total. No failed tests,
+guard (+1). commit a247a343 added no new test functions (assertions expanded, count unchanged).
+This is expected and correct — the story added 4 new tests total. No failed tests,
 no clippy warnings, no format violations.

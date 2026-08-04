@@ -1,22 +1,22 @@
 ---
 document_type: adversarial-review-index
 level: ops
-version: "1.8"
+version: "1.9"
 status: in-review
 producer: adversary
-timestamp: 2026-08-03T23:00:00Z
+timestamp: 2026-08-04T01:00:00Z
 phase: "5"
-pass: 18
-inputs: [.factory/stories/S-626-1.md, .factory/stories/S-641-1.md, .factory/stories/S-MAINT-576-HYG-1.md, .factory/stories/STORY-INDEX.md, .github/workflows/ci.yml, CLAUDE.md, src/cli/board.rs, tests/team_column_parity.rs]
+pass: 19
+inputs: [.factory/stories/S-626-1.md, .factory/stories/S-640-1.md, .factory/stories/S-641-1.md, .factory/stories/S-MUTANTS-EXAMINE-GLOBS-1.md, .factory/stories/STORY-INDEX.md, .github/workflows/ci.yml, tests/ci_gate_completeness.rs, tests/cli_handler.rs, CLAUDE.md, Cargo.toml]
 traces_to: .factory/stories/S-626-1.md
-total_findings: 164
-severity_distribution: { CRIT: 0, HIGH: 17, MED: 71, LOW: 64, INFO: 12 }
+total_findings: 174
+severity_distribution: { CRIT: 0, HIGH: 19, MED: 77, LOW: 65, INFO: 13 }
 story: S-626-1
 cycle: cycle-001
-feature_head: 9312f11f (fix-round-6 product commit; pass-18 ran against 9312f11f)
+feature_head: a247a343 (fix-round-7 product commit; pass-19 ran against 9312f11f; a247a343 closed HIGH-001+MED-001/002/003)
 pr: 667
 basis: TRUE ADVERSARY AGENT (not a DEC-190 substitute)
-convergence: 0 of 3 (Step 4.5 window — DEC-199 GRIND to 3/3 CLEAN; DEC-209 ROUND 5 + PASSES 18/19/20 AUTHORIZED; S-626-1 pass-18 NOT CLEAN (window 0/1); passes 16/17 NOT RUN — superseded by round-5 ruling; F-07 FIXED IN-CYCLE 9312f11f (DEC-211); passes 19/20 authorized (DEC-212); ZERO HIGH eleven consecutive passes; ceiling breach authorized toward 20)
+convergence: 0 of 3 (Step 4.5 window — DEC-199 GRIND to 3/3 CLEAN; DEC-209 ROUND 5 + PASSES 18/19/20 AUTHORIZED; DEC-212 PASSES 19/20 AUTHORIZED; S-626-1 pass-19 NOT CLEAN (window 0/2); passes 16/17 NOT RUN — superseded by round-5 ruling; 2H FIRST IN WINDOW 18/19/20 — four REAL CI-AS-CODE DEFECTS in orchestrator-shipped POL-11 guard (all closed by a247a343); src/ 0-defect TWELFTH consecutive; anchor migration ends citation-ripple class; pass-20 pending)
 void_spawns: 5 (passes 6/7/8 first-attempt background subagents; pass-9 isolation breach; pass-11 isolation breach)
 not_run: 2 (passes 16/17 — superseded by round-5 ruling per DEC-209; see s-626-1-adversary-pass-16.md and s-626-1-adversary-pass-17.md)
 ---
@@ -211,12 +211,13 @@ ADV-P4-INFO-005   --informs--> S-641-1 AC-2 (complete let-chain detection form s
 | 16 | NOT RUN | — | — | — | — | — | — | NOT RUN — superseded by round-5 ruling (DEC-209); stub at s-626-1-adversary-pass-16.md |
 | 17 | NOT RUN | — | — | — | — | — | — | NOT RUN — superseded by round-5 ruling (DEC-209); stub at s-626-1-adversary-pass-17.md |
 | 18 | NOT CLEAN | 0 | 7 | 3 | 0 | 1 ([process-gap]) | NO | WINDOW-ELIGIBLE (isolation CLEAN); ZERO HIGH — ELEVENTH consecutive; F-07 FIXED IN-CYCLE 9312f11f (DEC-211); 7 of 10 round-5-attributable; window 0/1 of 18/19/20; passes 19/20 authorized (DEC-212) |
+| 19 | NOT CLEAN | 2 | 6 | 1 | 1 | 1 ([pg]) | NO | WINDOW-ELIGIBLE (isolation CLEAN); 2H — FIRST PASS WITH HIGH IN WINDOW 18/19/20; FOUR REAL CI-AS-CODE DEFECTS in orchestrator-shipped POL-11 guard (HIGH-001+MED-001/002/003 all closed by a247a343); src/ 0-defect TWELFTH consecutive; HIGH-002 scope breach + MED-004/005 closed fix round 7; MED-006 ROUTED DEC-215; window 0/2 of 18/19/20; anchor migration ends citation-ripple class |
 
-**Overall convergence: 0 of 3 (Step 4.5 — 16 recorded passes + 2 NOT RUN (16/17); 5 VOID [3 dispatch + 2 isolation]; DEC-199: GRIND to 3/3 CLEAN; DEC-209: ROUND 5 + PASSES 18/19/20 AUTHORIZED; S-626-1 pass-18 NOT CLEAN (window 0/1); F-07 FIXED IN-CYCLE 9312f11f (DEC-211); passes 19/20 authorized (DEC-212); ZERO HIGH eleven consecutive passes; ceiling breach authorized toward 20)**
+**Overall convergence: 0 of 3 (Step 4.5 — 17 recorded passes + 2 NOT RUN (16/17); 5 VOID [3 dispatch + 2 isolation]; DEC-199: GRIND to 3/3 CLEAN; DEC-209: ROUND 5 + PASSES 18/19/20 AUTHORIZED; DEC-212: PASSES 19/20 AUTHORIZED; S-626-1 pass-19 NOT CLEAN (window 0/2); 2H FIRST IN WINDOW 18/19/20 — four REAL CI-AS-CODE DEFECTS in orchestrator-shipped POL-11 guard (all closed by a247a343); src/ 0-defect TWELFTH consecutive; anchor migration ends citation-ripple class; pass-20 pending)**
 
-**SEVERITY DECAY RECORDED (THEN REVERSED):** Window 9/10/11 carried 4 HIGH each. Window 12/13/14 carries ZERO HIGH. Passes 15 and 18 carry ZERO HIGH but 15 was a TREND REVERSAL (9→15). Pass-18 returned to 10 findings; still NOT CLEAN. Code is 0-defect across eleven consecutive passes (6–15+18, minus VOID passes 9+11). **THREE CONSECUTIVE REVIEWERS (passes 13, 14, 15) independently prescribed the same mechanical remedy: a STORY-INDEX coherence guard and a BC sub-element citation guard.** Fix round 5 applied; pass-18 confirmed 15 of 15 pass-15 findings FIXED but added 10 new findings (7 round-5-attributable). Fix round 6 applied 3 of 10 pass-18 findings; next window at passes 19/20 against head 9312f11f.
+**SEVERITY DECAY RECORDED (THEN REVERSED, THEN 2H IN WINDOW):** Window 9/10/11 carried 4 HIGH each. Window 12/13/14 carries ZERO HIGH. Passes 15 and 18 carry ZERO HIGH but 15 was a TREND REVERSAL (9→15). Pass-19 carries 2 HIGH — the first HIGH findings in the 18/19/20 window — but both are non-src/ defects: HIGH-001 is in the `ci.yml` floor script (orchestrator-shipped POL-11 guard), HIGH-002 is a spec scope breach. Code is 0-defect across TWELVE consecutive passes (6–15+18+19, minus VOID passes 9+11). **THREE CONSECUTIVE REVIEWERS (passes 13, 14, 15) independently prescribed the same mechanical remedy: a STORY-INDEX coherence guard and a BC sub-element citation guard.** Fix round 5 applied; pass-18 confirmed 15 of 15 pass-15 findings FIXED but added 10 new findings (7 round-5-attributable). Fix round 7 applied; pass-19 found 10 new findings, 4 of which were REAL CI-AS-CODE DEFECTS in the orchestrator-shipped POL-11 guard.
 
-**META-PATTERN CONFIRMED FIFTH TIME:** Pass-18 independently re-verified that fix round 5 executed its mechanical mandate essentially perfectly (zero fidelity defects across all transcripts) but failed sweep-to-class at seven sites. 7 of 10 pass-18 findings are attributable to fix round 5's own prose or partial propagation. **FIRST EVIDENCE OF IMPROVEMENT: round-6's grep-derived file set caught S-640-1 and S-MUTANTS-EXAMINE-GLOBS-1 unprompted, exceeding the orchestrator's supplied table. Codify: fix-round sweep MUST derive file list from grep, not from orchestrator's table.**
+**META-PATTERN SIXTH TIME + CLASS ELIMINATION:** Pass-19 independently re-verified that fix round 6 executed its mechanical mandate essentially perfectly but failed sweep-to-class at one site in S-MUTANTS-EXAMINE-GLOBS-1.md (while correcting seven siblings). **Round-7's anchor-form migration is CLASS-ELIMINATING — the first structural fix in six rounds.** `ci.yml :: <job-id>` notation does not drift on line shifts. Three prior citation-ripple sweeps (+39, +54, cumulative +93 lines) will not recur for migrated surfaces. **Codify: DEC-213 anchor-form convention in all future story templates.**
 
 **Findings accumulator (running total):**
 - Passes 1–5: 36 total (HIGH: 0, MED: 11, LOW: 16, INFO: 9)
@@ -635,5 +636,33 @@ ADV-P6-HIGH-003 == ADV-P7-HIGH-002 == ADV-P8-OBS-001 (same gap; pass-8 demoted v
 - **Post-capture routing:** F-07 (MED-007) FIXED IN-CYCLE product commit 9312f11f; F-05 (MED-005) FIXED fix round 6; F-03 (MED-003) FIXED fix round 6; F-01/F-02/F-04/F-06/F-08/F-09/F-10 OPEN — pending fix round 7
 - **Convergence:** 0/3 — window 0/1; passes 19/20 authorized (DEC-212); sweep-to-class failure FIFTH consecutive round; FIRST EVIDENCE OF IMPROVEMENT (grep-derived sweep caught S-640-1 + S-MUTANTS-EXAMINE-GLOBS-1 unprompted)
 - **Detail artifact:** `s-626-1-adversary-pass-18.md`
+
+---
+
+## Pass 19 Finding Catalog
+
+| ID | Severity | Classification | Title | Status | Notes |
+|----|----------|----------------|-------|--------|-------|
+| ADV-P19-HIGH-001 | HIGH | CI-integrity / PROCESS-GAP · [process-gap] | POL-11 floor `> 0` is INERT — inline src/ tests keep total above 0 even when all tests/ binaries orphaned | FIXED — fix round 7 (a247a343: binary-count floor -lt 90 + named canary) | ORCHESTRATOR-CAUSED; 4 of 4 CI-as-code defects in 9312f11f |
+| ADV-P19-HIGH-002 | HIGH | spec-fidelity / scope-breach · orchestrator-authored | tests/ci_gate_completeness.rs and tests/cli_handler.rs in diff; absent from files_modified, test_files, FSR, STORY-INDEX row | FIXED — fix round 7 (S-626-1 v1.13: all four surfaces updated; DEC-214) | ORCHESTRATOR-CAUSED SCOPE BREACH |
+| ADV-P19-MED-001 | MEDIUM | CI-integrity / product-defect | `FAIL (POL-11)` diagnostic UNREACHABLE under set -o pipefail + set -e; binaries var gets two-line value | FIXED — fix round 7 (a247a343: script restructured; diagnostic now reachable) | Part of 4-defect cluster in 9312f11f floor script |
+| ADV-P19-MED-002 | MEDIUM | CI-integrity / fragility | Unhardened text parse under CARGO_TERM_COLOR: always — ANSI codes would zero anchored regex [LATENT — NOT a live break] | FIXED — fix round 7 (a247a343: CARGO_TERM_COLOR: never added to step) | Speculation of confirmed CI breakage refuted (9312f11f CI ran SUCCESS) |
+| ADV-P19-MED-003 | MEDIUM | CI-integrity / under-specified-pin | Pin asserts only contains("FAIL (POL-11)") — not -eq 0, not exit 1, not Check passed: positive-coverage line | FIXED — fix round 7 (a247a343: pin extended to cover floor, canary, exit 1, positive-coverage) | Part of 4-defect cluster in 9312f11f floor script |
+| ADV-P19-MED-004 | MEDIUM | spec-process / PROCESS-GAP · sweep-to-class miss | Round-6 sweep corrected 7 sites in S-MUTANTS-EXAMINE-GLOBS-1.md but missed line ~82 | PARTIALLY CLOSED — 1 site corrected before template-compliance hook blocked; 4 remaining sites BLOCKED; needs conform-to-template | File NOT version-bumped; reported as gap |
+| ADV-P19-MED-005 | MEDIUM | spec-fidelity / version-staleness | STORY-INDEX S-641-1 row reads v0.2→v0.6; file was at v0.7 — stale by TWO revisions | FIXED — fix round 7 (STORY-INDEX v1.5.57; S-641-1 v0.7→v0.8; DEC-F07-CLOSED) | |
+| ADV-P19-MED-006 | MEDIUM | CI-integrity / PROCESS-GAP · [process-gap] | fmt and clippy jobs share identical orphaning exposure as test job; neither emits runtime count | ROUTED per DEC-215 — real parallel gap; not fixed (would be fourth product-CI change) | Tracked as FMT-CLIPPY-NO-POSITIVE-COVERAGE drift item |
+| ADV-P19-LOW-001 | LOW | spec-fidelity / stale-line-cite | S-640-1 cited RUSTUP_TOOLCHAIN ~16 lines from actual location; conflates two distinct steps | FIXED — fix round 7 (S-640-1 v0.5→v0.6: anchor-form migration; two steps cited separately; DEC-213) | |
+| ADV-P19-INFO-001 | INFO | evidence-completeness | Floor negative-path proof absent from demo pack at pass-19 dispatch | NOTED — demo pack updated at a247a343 in fix round 7 | Accepted informational |
+
+## Pass 19 Isolation Note
+
+**CLEAN.** No banned-path file read. No prior adversary pass artifacts accessed. Incidental exposure: banned-path filenames appeared as quoted text INSIDE in-perimeter files; no content read. Self-disclosed.
+
+## Pass 19 Summary
+
+- **Verdict:** NOT CLEAN — 2 HIGH + 6 MEDIUM + 1 LOW + 1 INFO; **TWELFTH zero-src/-defect pass**; FOUR REAL CI-AS-CODE DEFECTS in orchestrator-shipped POL-11 guard (all closed by a247a343); window 0/2 of 18/19/20
+- **Post-capture routing:** HIGH-001+MED-001/002/003 FIXED product commit a247a343; HIGH-002 FIXED fix round 7 (S-626-1 v1.13; DEC-214); MED-005 FIXED fix round 7 (STORY-INDEX v1.5.57; S-641-1 v0.8); LOW-001 FIXED fix round 7 (S-640-1 v0.6; DEC-213); MED-004 PARTIALLY CLOSED (template block); MED-006 ROUTED (DEC-215); INFO-001 NOTED
+- **Convergence:** 0/3 — window 0/2; pass-20 pending (head a247a343); anchor migration CLASS-ELIMINATING (DEC-213); ORCHESTRATOR-SHIPPED-DEFECTIVE-GUARD + ORCHESTRATOR-UNVERIFIED-BREAK-SPECULATION new drift items
+- **Detail artifact:** `s-626-1-adversary-pass-19.md`
 
 ---

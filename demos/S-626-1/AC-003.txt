@@ -1,9 +1,11 @@
-# Head: 9312f11f  Captured: 2026-08-03  Status: re-captured (Round 7 — ci.yml line range shifted +39 by commit 9312f11f; sed -n '59,86p' → sed -n '98,125p'; B-A+1=28 preserved)
+# Head: a247a343  Captured: 2026-08-03  Status: re-captured (Round 8 — ci.yml line range shifted +54 by commit a247a343; sed -n '98,125p' → sed -n '152,179p'; B-A+1=28 preserved)
 # Note: Round 2 corrected sed -n '58,87p' → sed -n '59,86p' (blank separator lines excluded).
-# Round 7 re-derives the range: msrv job now starts at :98 (blank separator at :97),
+# Round 7 re-derives the range: msrv job started at :98 (blank separator at :97),
 # last content line at :125 (blank separator at :126 before deny: at :127). 125-98+1=28 lines.
+# Round 8 re-derives the range: msrv job now starts at :152 (blank separator at :151),
+# last content line at :179 (blank separator at :180 before deny: at :181). 179-152+1=28 lines.
 
-$ cd /Users/zious/Documents/GITHUB/jira-cli/.worktrees/S-626-1 && sed -n '98,125p' .github/workflows/ci.yml
+$ cd /Users/zious/Documents/GITHUB/jira-cli/.worktrees/S-626-1 && sed -n '152,179p' .github/workflows/ci.yml
   msrv:
     name: MSRV (1.85.0)
     runs-on: ubuntu-latest
@@ -53,9 +55,9 @@ EXIT: 0 (clean)
 ---
 
 AC-003 assertions verified:
-  - dtolnay/rust-toolchain action step has with: {toolchain: "1.85.0"} CONFIRMED (ci.yml :109-111)
-  - cargo check step has --locked flag and env: {RUSTUP_TOOLCHAIN: "1.85.0"} CONFIRMED (ci.yml :123-125)
-  - Comment block at ci.yml :113-122 (10 lines) explains --all-targets exclusion rationale
+  - dtolnay/rust-toolchain action step has with: {toolchain: "1.85.0"} CONFIRMED (ci.yml :: msrv)
+  - cargo check step has --locked flag and env: {RUSTUP_TOOLCHAIN: "1.85.0"} CONFIRMED (ci.yml :: msrv)
+  - Comment block at ci.yml :: msrv (10 lines) explains --all-targets exclusion rationale
   - RUSTUP_TOOLCHAIN=1.85.0 rustc --version confirms compiler is "rustc 1.85.0 (4d91de4e4 2025-02-17)"
   - rustup show active-toolchain confirms override: "1.85.0-aarch64-apple-darwin (overridden by environment variable RUSTUP_TOOLCHAIN)"
   - Compiling line (not warm Finished-only) proves cargo actually compiled jr against 1.85.0

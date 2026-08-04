@@ -1,1 +1,1 @@
-{"status":"pass","timestamp":"2026-08-03T22:07:03Z","command":"cargo test --test team_column_parity 2>&1 | tail -3"}
+{"status":"pass","timestamp":"2026-08-04T00:47:52Z","command":"grep -n \"^  test:\\|name: Run tests\\|cargo test --all-features\\|Run tests\" .github/workflows/ci.yml | head -10"}
