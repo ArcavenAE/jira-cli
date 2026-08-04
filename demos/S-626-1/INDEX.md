@@ -2,7 +2,7 @@
 
 Story: Fix rust-toolchain SHA pins + MSRV false-green + comfy-table pin + CLAUDE.md gotcha (closes #626)
 Branch: `ci/fix-toolchain-sha-msrv`
-Head: `7798b1bf`
+Head: `14416fd9`
 Last full regeneration: 2026-08-04
 
 ## Full Suite
@@ -23,23 +23,75 @@ See `full-suite.txt` for full discrepancy note.
 
 ## Regeneration Log
 
-All 11 artifacts verified at head `7798b1bf` (2026-08-04). Each artifact carries its own
+All 11 artifacts verified at head `14416fd9` (2026-08-04). Each artifact carries its own
 per-file `# Head:` stamp. Status per artifact:
 
 | Artifact | Head | Captured | Status | Reason |
 |----------|------|----------|--------|--------|
-| `AC-001.txt` | 7798b1bf | 2026-08-04 | re-stamped (Round 11) | Head-only; delta-analysis.md unchanged by 7798b1bf (ci_gate_completeness.rs only) |
-| `AC-002.txt` | 7798b1bf | 2026-08-04 | re-stamped (Round 11) | Head-only; ci.yml unchanged by 7798b1bf (ci_gate_completeness.rs only) |
-| `AC-003.txt` | 7798b1bf | 2026-08-04 | re-stamped (Round 11) | Head-only; ci.yml unchanged by 7798b1bf; sed -n '155,182p' range still valid |
-| `AC-004.txt` | 7798b1bf | 2026-08-04 | re-stamped (Round 11) | Head-only; ci.yml unchanged by 7798b1bf |
-| `AC-005.txt` | 7798b1bf | 2026-08-04 | re-stamped (Round 11) | Head-only; sign-and-publish.yml/backfill-release.yml/release.yml unchanged by 7798b1bf |
-| `AC-006.txt` | 7798b1bf | 2026-08-04 | re-stamped (Round 11) | Head-only; CLAUDE.md unchanged by 7798b1bf |
-| `AC-007.txt` | 7798b1bf | 2026-08-04 | re-stamped (Round 11) | Head-only; ci.yml unchanged by 7798b1bf; c93f4f9c still absent |
-| `AC-008.txt` | 7798b1bf | 2026-08-04 | re-stamped (Round 11) | Head-only; Cargo.toml/Cargo.lock unchanged by 7798b1bf |
-| `AC-009.txt` | 7798b1bf | 2026-08-04 | re-stamped (Round 11) | Head-only; board.rs/list.rs unchanged; team_column_parity.rs unchanged |
-| `full-suite.txt` | 7798b1bf | 2026-08-04 | re-captured (Round 11) | cargo test re-run: 2345/0/100 (unchanged — no new test functions in 7798b1bf); clippy (0.21s)+fmt re-run; ci_gate_completeness re-run (8 tests unchanged); floor guard unchanged (ci.yml not modified) |
+| `AC-001.txt` | 14416fd9 | 2026-08-04 | re-stamped (Round 12) | Head-only; delta-analysis.md unchanged by 14416fd9 (ci.yml comment-only) |
+| `AC-002.txt` | 14416fd9 | 2026-08-04 | re-captured (Round 12) | ci.yml +1 line shift: msrv dtolnay pin :166→:167, coverage dtolnay pin :208→:209 |
+| `AC-003.txt` | 14416fd9 | 2026-08-04 | re-captured (Round 12) | ci.yml +1 line shift: sed range updated '155,182p' → '156,183p' (183−156+1=28 ✓) |
+| `AC-004.txt` | 14416fd9 | 2026-08-04 | re-captured (Round 12) | ci.yml +1 line shift: all grep output line numbers updated (+1 each) |
+| `AC-005.txt` | 14416fd9 | 2026-08-04 | re-stamped (Round 12) | Head-only; sign-and-publish.yml/backfill-release.yml/release.yml unchanged by 14416fd9 |
+| `AC-006.txt` | 14416fd9 | 2026-08-04 | re-stamped (Round 12) | Head-only; CLAUDE.md unchanged by 14416fd9 (ci.yml comment-only) |
+| `AC-007.txt` | 14416fd9 | 2026-08-04 | re-stamped (Round 12) | Head-only; c93f4f9c still absent; ci.yml changed but old SHA was not in ci.yml |
+| `AC-008.txt` | 14416fd9 | 2026-08-04 | re-stamped (Round 12) | Head-only; Cargo.toml/Cargo.lock unchanged by 14416fd9 |
+| `AC-009.txt` | 14416fd9 | 2026-08-04 | re-stamped (Round 12) | Head-only; board.rs/list.rs unchanged; team_column_parity.rs unchanged |
+| `full-suite.txt` | 14416fd9 | 2026-08-04 | re-captured (Round 12) | cargo test re-run: 2345/0/100 (unchanged — no new test functions); clippy (0.20s)+fmt re-run; ci_gate_completeness re-run (8 tests unchanged); floor guard re-run (same output — operative gate logic unchanged by comment-only edit) |
 
 **Completeness: 11/11 artifacts verified and stamped. No artifact left with only the global INDEX head stamp.**
+
+## Round-12 Re-stamp (2026-08-04): head 7798b1bf → 14416fd9
+
+Commit `14416fd9` (`ci: fix stale self-citation in test job wc -l comment (F-01)`) replaced one
+comment line in `ci.yml :: test / "Run tests (zero-test floor, POL-11)"` with two lines:
+
+The old comment cited `ci.yml:~415-426` as the location of the mutants job F5 fix. That citation
+was a stale line-number anchor pointing at the F2 fix (jq empty/malformed-JSON guard), not the F5
+fix (grep -c exits 1 on empty match). The corrected comment uses structural form per CLAUDE.md #408
+convention: `ci.yml :: mutants / "Check kill rate" else branch — "grep -c '' exits 1 on empty match"`.
+
+Files changed: `.github/workflows/ci.yml` only (+1 line; one comment line → two lines). The change
+is at old ci.yml:93, which shifts everything from old line 94 onward by +1 (new line 95 onward).
+
+**ci.yml :: msrv line number shift (+1 from 7798b1bf):**
+- `msrv:` job id line: :155 → :156
+- `name: MSRV (1.85.0)`: :156 → :157
+- dtolnay/rust-toolchain SHA (msrv): :166 → :167
+- `toolchain: "1.85.0"`: :168 → :169
+- comment line 1 of wiremock-scope block: :172 → :173
+- comment line 2 of wiremock-scope block: :178 → :179
+- `RUSTUP_TOOLCHAIN: "1.85.0"`: :182 → :183
+- dtolnay/rust-toolchain SHA (coverage): :208 → :209
+(Independently verified by running `grep -n "1\.85\.0\|RUSTUP_TOOLCHAIN" ci.yml` and `grep -n fa04a145 ci.yml`.)
+
+**Floor-guard scripts NOT re-captured:** The GATESCRIPT blocks embedded in the positive and both
+negative paths contain only operative commands (set -euo pipefail, tee, set +o pipefail, total=...,
+binaries=..., set -o pipefail, if/echo/exit blocks). The changed comment appears between the
+`binaries=$(grep -E ...)` line and the `# Restore pipefail` comment — it is NOT part of any
+GATESCRIPT block. The operative gate logic is byte-for-byte unchanged by 14416fd9.
+
+**Re-verification performed:**
+- `cargo test` aggregate re-run at 14416fd9 → `2345 passed / 0 failed / 100 ignored`
+- `cargo test --test ci_gate_completeness` → `running 8 tests` (unchanged — no new test functions)
+- `cargo clippy --all-targets -- -D warnings` re-run at 14416fd9 → exit 0 (warm cache, 0.20s)
+- `cargo fmt --all -- --check` re-run at 14416fd9 → exit 0 (no output)
+- Floor guard positive path re-run → `Check passed: 2345 tests executed across 103 test binaries`
+
+**Artifact disposition:**
+- AC-001, AC-005, AC-006, AC-007, AC-008, AC-009: head-stamp only. None of these artifacts'
+  evidence sources (delta-analysis.md, three release workflow files, CLAUDE.md, Cargo.toml/lock,
+  src/cli/board.rs) were changed by 14416fd9.
+- AC-002, AC-003, AC-004: re-captured with correct ci.yml line numbers (+1 shift).
+- full-suite.txt: re-captured — cargo test count confirmed 2345 (no new test functions);
+  clippy (0.20s)+fmt re-run; ci_gate_completeness confirmed 8 tests; floor guard re-run (same output);
+  negative-path GATESCRIPT blocks preserved intact (operative logic unchanged by 14416fd9).
+
+**Round-12 sed range re-check:**
+All `sed -n 'A,Bp'` commands in the pack verified to display exactly B−A+1 lines at head 14416fd9:
+- AC-003: sed '156,183p' → 28 lines ✓ (updated from '155,182p'; 183−156+1=28)
+- AC-005: sed '57,68p' → 12 lines ✓ (unchanged); sed '72,83p' → 12 lines ✓ (unchanged); sed '38,52p' → 15 lines ✓ (unchanged)
+- AC-009 BEFORE: sed '228,244p' → 17 lines ✓ (unchanged); AFTER: sed '228,248p' → 21 lines ✓ (unchanged)
 
 ## Round-11 Re-stamp (2026-08-04): head 84ab32ac → 7798b1bf
 
@@ -491,7 +543,7 @@ correctly suppresses the Team column when the field is unconfigured.
 |----|-------------|-----------|----------------|--------|
 | AC-001 | SHA verification (blocking gate) | `AC-001.txt` | Read delta-analysis.md §5e | PASS |
 | AC-002 | 7 new-SHA occurrences across 6 files | `AC-002.txt` | `grep -n fa04a145` across 6 files | PASS |
-| AC-003 | msrv job: toolchain input + RUSTUP_TOOLCHAIN env | `AC-003.txt` | `sed -n '155,182p' ci.yml` + MSRV check with toolchain identity proof | PASS |
+| AC-003 | msrv job: toolchain input + RUSTUP_TOOLCHAIN env | `AC-003.txt` | `sed -n '156,183p' ci.yml` + MSRV check with toolchain identity proof | PASS |
 | AC-004 | msrv comment accuracy: # 1.85.0 | `AC-004.txt` | `grep -n 1.85.0 ci.yml` | PASS |
 | AC-005 | rustup target add steps preserved | `AC-005.txt` | `grep E0463`/`rustup target add` all three files | PASS |
 | AC-006 | CLAUDE.md gotcha added | `AC-006.txt` | `grep -n rust-toolchain.toml.*outranks CLAUDE.md` | PASS |

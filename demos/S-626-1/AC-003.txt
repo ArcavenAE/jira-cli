@@ -1,4 +1,4 @@
-# Head: 7798b1bf  Captured: 2026-08-04  Status: re-stamped (Round 11 — head-only; ci.yml unchanged by 7798b1bf (ci_gate_completeness.rs only); sed -n '155,182p' range still valid (182−155+1=28 ✓))
+# Head: 14416fd9  Captured: 2026-08-04  Status: re-captured (Round 12 — ci.yml shifted +1 by 14416fd9 comment split; sed range updated '155,182p' → '156,183p' (183−156+1=28 ✓))
 # Note: Round 2 corrected sed -n '58,87p' → sed -n '59,86p' (blank separator lines excluded).
 # Round 7 re-derives the range: msrv job started at :98 (blank separator at :97),
 # last content line at :125 (blank separator at :126 before deny: at :127). 125-98+1=28 lines.
@@ -6,8 +6,10 @@
 # last content line at :179 (blank separator at :180 before deny: at :181). 179-152+1=28 lines.
 # Round 10 re-derives the range: msrv job now starts at :155 (blank separator at :154),
 # last content line at :182 (blank separator at :183 before deny: at :184). 182-155+1=28 lines.
+# Round 12 re-derives the range: msrv job now starts at :156 (blank separator at :155),
+# last content line at :183 (blank separator at :184 before deny: at :185). 183-156+1=28 lines.
 
-$ cd /Users/zious/Documents/GITHUB/jira-cli/.worktrees/S-626-1 && sed -n '155,182p' .github/workflows/ci.yml
+$ cd /Users/zious/Documents/GITHUB/jira-cli/.worktrees/S-626-1 && sed -n '156,183p' .github/workflows/ci.yml
   msrv:
     name: MSRV (1.85.0)
     runs-on: ubuntu-latest

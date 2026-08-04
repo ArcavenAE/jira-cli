@@ -1,4 +1,4 @@
-# Head: 7798b1bf  Captured: 2026-08-04  Status: re-stamped (Round 11 — head-only; sign-and-publish.yml, backfill-release.yml, release.yml unchanged by 7798b1bf (ci_gate_completeness.rs only); all three rustup target add sites unaffected)
+# Head: 14416fd9  Captured: 2026-08-04  Status: re-stamped (Round 12 — head-only; sign-and-publish.yml, backfill-release.yml, release.yml unchanged by 14416fd9 (ci.yml comment-only); all three rustup target add sites unaffected)
 
 $ cd /Users/zious/Documents/GITHUB/jira-cli/.worktrees/S-626-1 && grep -n "E0463\|rustup target add\|Ensure target" .github/workflows/sign-and-publish.yml
 61:      # the build fails with `error[E0463]: can't find crate for 'core'`.

@@ -7,13 +7,28 @@ producer: state-manager
 timestamp: 2026-05-08T00:00:00
 cycle: "cycle-001"
 inputs: [STATE.md]
-input-hash: "8061c05"
+input-hash: "a278849"
 traces_to: STATE.md
 ---
 
 # Archived Session Checkpoints — cycle-001
 
 Superseded checkpoints are archived here when STATE.md is updated with a newer one.
+
+---
+
+## Checkpoint: ADVERSARY-22+FIX-ROUND-9 burst (2026-08-04T10:31:00Z) [ARCHIVED]
+
+_Was the active checkpoint after ADVERSARY-22+FIX-ROUND-9 (pass-22 VOID isolation breach + NOT CLEAN 0H+1M+2L; fix round 9 applied 7798b1bf; DEC-220+221; ADV-P1-INDEX v2.1 184 findings). Superseded when ADVERSARY-23+FIX-ROUND-10 burst updated STATE.md v2.5._
+
+| Field | Value |
+|-------|-------|
+| Position | Feature Mode SOH-DX-1 F4 delivery. F2 APPROVED (DEC-196), F3 APPROVED (DEC-197). **S-626-1 DELIVERED** — PR #667 open, feature HEAD 7798b1bf (product commit closes pass-22 MED-001+LOW-002+LOW-003; pass-21 LOW-003 DEFERRED per DEC-217), branch ci/fix-toolchain-sha-msrv. **HELD per DEC-202** pending fresh 3-pass window. Pass-22 VOID (isolation breach DEC-220) + NOT CLEAN (0H+1M+2L; FOURTEENTH zero-src/-defect; CI floor SOUND seven dim). ADV-P1-INDEX v2.1 (184 findings). **DEC-221: window 22/23/24 CLOSED 0/1 (pass-22 VOID; passes 23/24 NOT DISPATCHED); fresh STRICT window = S-626-1 passes 23/24/25, 0/3, not yet dispatched.** |
+| Convergence | S-626-1 Step 4.5 = 0/3. 19 recorded passes (6 VOID: 3 dispatch + 3 isolation) + 2 NOT RUN (passes 16/17, DEC-209) + pass-20 SUPERSEDED (DEC-216). 184 total findings. Window 22/23/24 CLOSED 0/1. src/ 0-defect FOURTEENTH consecutive. **Fresh STRICT window: passes 23/24/25 against head 7798b1bf. All 3 must return CLEAN (DEC-191(c) conservative reading; DEC-204 UNADJUDICATED).** |
+| Not yet done | (1) S-626-1 passes 23/24/25 STRICT window (DEC-221; head 7798b1bf; scoped greps; all 3 must be CLEAN). (2) S-640-1 handoff. (3) S-MAINT-576-HYG-1 needs scheduling. DEC-204 UNADJUDICATED. AX23-001 PENDING. |
+| In flight | develop @ acdad174 (PR #667 HELD — DEC-202; head 7798b1bf). .factory @ factory-artifacts. Worktree: .worktrees/S-626-1 (branch S-626-1). |
+| Pending human decisions | DEC-221 fulfilled (passes 23/24/25). AX23-001 pending. DEC-204 UNADJUDICATED. PR #667 HELD. |
+| Resume command | Open fresh session → /vsdd-factory:next-step. Dispatch S-626-1 passes 23/24/25 concurrently (head 7798b1bf; DEC-221; scoped greps; all 3 CLEAN for Step 4.5 = 3/3). If any NOT CLEAN: dispatch fix round 10. PR #667 HELD. AX23-001 PENDING. |
 
 ---
 

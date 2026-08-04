@@ -1,1 +1,1 @@
-{"status":"pass","timestamp":"2026-08-04T16:30:27Z","command":"grep -n \"9312f11f\\|84ab32ac\\|7798b1bf\\|v1.14\\|v1.15\\|version:\" /Users/zious/Documents/GITHUB/jira-cli/.factory/stories/S-626-1.md 2>&1 | grep -v \"risk_mitigations\\|CORRECTIONS\\|cargo test\\|evidence\\|Prior\""}
+{"status":"pass","timestamp":"2026-08-04T17:52:22Z","command":"cd /Users/zious/Documents/GITHUB/jira-cli/.worktrees/S-626-1 && cargo test --test ci_gate_completeness 2>&1 | grep \"running\\|test result\""}
