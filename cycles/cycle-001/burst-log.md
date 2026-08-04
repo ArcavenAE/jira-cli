@@ -8398,3 +8398,61 @@ DEC-204 remains UNADJUDICATED. AX23-001 remains PENDING.
 | Step | Status | Notes |
 |------|--------|-------|
 | ADVERSARY-15+FIX-ROUND-5 (2026-08-03): S-626-1 pass-15 (NOT CLEAN; 0H+6M+9L; isolation CLEAN; TREND REVERSAL 9→15) + passes 16/17 NOT RUN (DEC-209) + ADV-P1-INDEX v1.7 (154 total findings) + fix round 5 + product commit 6d73b3ef recorded. DEC-209+210. BC-BEHAVIOR-FIELD-SYSTEMIC-ABSENCE new drift item. | COMPLETED | S-626-1 pass-15 + passes 16/17 NOT RUN + fix round 5 + STATE.md committed to factory-artifacts. |
+
+---
+
+## ADVERSARY-22+FIX-ROUND-9 burst (2026-08-04T10:00:00Z)
+
+### Pass-22 Verdict
+
+**VOID — ISOLATION BREACH (DEC-220). NOT CLEAN — 0 HIGH + 1 MEDIUM + 2 LOW; zero src/ code defects; FOURTEENTH consecutive pass with zero src/ code defects. CI FLOOR MECHANISM AUDITED SOUND on all SEVEN dimensions independently of F-01 pin defect. Root-scoped grep at `.factory/` leaked banned content from ADV-P1-INDEX.md and prior pass files; self-disclosed unprompted; third isolation breach.**
+
+- ADV-P22-MED-001 (prose-satisfiable pin — canary `contains("ci_gate_completeness")` satisfied by COMMENT; threshold `contains("-lt 90")` not bound to `${binaries}`): FIXED — fix round 9 (7798b1bf: canary → `grep -q "ci_gate_completeness"` command form; threshold → `"${binaries}" -lt 90`; discrimination proven).
+- ADV-P22-LOW-002 (two Round-9 residues in demos/S-626-1/INDEX.md: intro head still `a247a343`; Per-AC AC-003 command still `sed -n '152,179p'`): FIXED — fix round 9 (INDEX.md: intro → `7798b1bf`; AC-003 command → `sed -n '155,182p'`).
+- ADV-P22-LOW-003 (authorization trail for `tests/ci_gate_completeness.rs` listed only 2 of 4 commits — missing `84ab32ac` + `7798b1bf`): FIXED — fix round 9 (S-626-1 v1.14→v1.15; STORY-INDEX v1.5.59→v1.5.60: 4-commit trail at FSR row + MUST-NOT exception list + STORY-INDEX row).
+
+### Fix Round 9 Applied
+
+**`tests/ci_gate_completeness.rs`** — two assertions tightened: canary check → `assert!(block.contains("grep -q \"ci_gate_completeness\""))` (discriminates comment form); threshold check → `assert!(block.contains("\"${binaries}\" -lt 90"))` (bound to variable). Product commit `7798b1bf` on branch `ci/fix-toolchain-sha-msrv`.
+
+**`demos/S-626-1/INDEX.md`** — intro head corrected from `a247a343` to `7798b1bf`; Per-AC AC-003 command corrected from `sed -n '152,179p'` to `sed -n '155,182p'`; all 11 artifacts re-stamped to round-11 head. Round-11 re-stamp section added.
+
+**`stories/S-626-1.md`** (v1.14→v1.15) — authorization trail for `tests/ci_gate_completeness.rs` extended from 2 commits (9312f11f + a247a343) to 4 commits (+84ab32ac + 7798b1bf) at FSR row and MUST-NOT exception list.
+
+**`stories/STORY-INDEX.md`** (v1.5.59→v1.5.60) — S-626-1 row authorization trail updated to 4-commit chain.
+
+### Product Commit Recorded
+
+`7798b1bf` on branch `ci/fix-toolchain-sha-msrv` — closes MED-001 + LOW-002 + LOW-003 from pass-22. PR #667 remains OPEN and UNMERGED.
+
+### Decisions Recorded
+
+**DEC-220:** PASS-22 VOIDED FOR ISOLATION BREACH (2026-08-04). S-626-1 pass-22 dispatch used root-scoped grep at `.factory/`; leaked banned content from ADV-P1-INDEX.md and prior pass files (finding IDs, verdicts, finding tallies). Reviewer disclosed the leak verbatim and unprompted. VOID for window eligibility per DEC-206. Third isolation breach; all three self-disclosed unprompted; all three root-scoped `.factory/` grep. Findings valid (1M+2L); all fixed in fix round 9 (7798b1bf). CI floor mechanism SOUND (seven dimensions).
+
+**DEC-221:** FRESH STRICT WINDOW = PASSES 23/24/25 (2026-08-04). Window 22/23/24 CLOSED 0/1 (pass-22 VOID+NOT CLEAN; passes 23/24 NOT DISPATCHED). Fresh STRICT window resets to passes 23/24/25 against feature HEAD 7798b1bf. DEC-191(c) conservative reading applies (DEC-204 UNADJUDICATED). Continuing AUTHORIZED breach of DEC-191(d) ceiling.
+
+### Drift Item Updates (ADVERSARY-22+FIX-ROUND-9)
+
+- **PIN-ASSERTIONS-PROSE-SATISFIABLE** — NEW, MEDIUM, CLOSED (7798b1bf): `assert!(block.contains("ci_gate_completeness"))` canary assertion satisfied by a COMMENT containing "ci_gate_completeness" — not command-unique. Threshold `contains("-lt 90")` not bound to `${binaries}` variable — any literal `-lt 90` string would satisfy. Fixed round 9 (7798b1bf). Class established: prose-satisfiable pin assertions bypass discriminability requirement. Guard integrity class.
+- **REVIEW-ISOLATION-NOT-MECHANICALLY-ENFORCED** — UPDATED (third isolation breach, 2026-08-04). Pass-22 is THIRD root-scoped `.factory/` grep isolation breach (passes 9/11/22); all three self-disclosed unprompted; all three same root cause. BEHAVIORAL corrective INSUFFICIENT — corrective was verified effective for 7/7 passes in windows 12/13/14 + pass-15 + pass-18 + pass-19 + pass-21, but has now failed a third time. Mechanical isolation guard increasingly urgent. ROUTE upstream.
+- **FIX-ROUND-INTRODUCES-DEFECTS-IN-NEW-PROSE** — UPDATED (round 9): round-8 pin contained prose-satisfiable assertion (PIN-ASSERTIONS-PROSE-SATISFIABLE class); caught by pass-22 MED-001; fixed round 9 (7798b1bf). Injection rate monotonically decreasing (round-9 introduced 0 new prose defects — round-9 fix is free of new false claims). EIGHTH consecutive round with a post-fix adversary finding; round-9 is the first round that introduced zero NEW defects.
+- **ORCHESTRATOR-SHIPPED-DEFECTIVE-GUARD** — UPDATED (third iteration same guard, 2026-08-04). Round-8 regression pin was prose-satisfiable (pass-22 MED-001); round-9 correction required. THIRD iteration of POL-11 guard receiving adversary findings: original 9312f11f (4 CI-as-code defects, pass-19); round-8 84ab32ac (prose-satisfiable pin, pass-22); round-9 7798b1bf (correction). PROCESS: orchestrator MUST independently execute negative proof before authorizing any guard commit (three datapoints confirm).
+
+### Convergence Status Post-Burst
+
+0/3. 19 recorded passes (6 VOID: 3 dispatch + 3 isolation) + 2 NOT RUN (passes 16/17, DEC-209) + pass-20 SUPERSEDED (DEC-216); 184 total findings. Pass-22 VOID (isolation breach DEC-220) + NOT CLEAN (window 0/1 of 22/23/24). ZERO HIGH FOURTEENTH consecutive; CI floor SOUND seven dimensions. Fresh STRICT window 23/24/25 (DEC-221). Fix round 9 applied; 7798b1bf product head. ADV-P1-INDEX v2.1. STORY-INDEX v1.5.60.
+
+**Pipeline:** PAUSED — awaiting S-626-1 passes 23/24/25 (DEC-221 fresh STRICT window; head 7798b1bf).
+**STORY-INDEX:** v1.5.60. **trajectory-tail:** →0→2→0→0 (P18=0H, P19=2H, P21=0H, P22=0H[VOID])
+
+### Archived Phase Progress Row (from ADVERSARY-21+FIX-ROUND-8)
+
+| Step | Owner | Entered | Exited | Verdict | Findings |
+|------|-------|---------|--------|---------|----------|
+| ADVERSARY-21+FIX-ROUND-8 | adversary/state-manager | 2026-08-04T08:00Z | 2026-08-04T08:40Z | NOT CLEAN 0H/3M/3L/1I | 181 total; window 21/22/23 CLOSED 0/1; THIRTEENTH zero-src/-defect; all documentation class; fix round 8 applied 84ab32ac; DEC-217+218+219 |
+
+### Archived Current Phase Steps Row (from ADVERSARY-18+FIX-ROUND-6)
+
+| Step | Status | Notes |
+|------|--------|-------|
+| ADVERSARY-18+FIX-ROUND-6 (2026-08-03): S-626-1 pass-18 (NOT CLEAN; 0H+7M+3L; isolation CLEAN; F-07 FIXED IN-CYCLE 9312f11f; DEC-211) + ADV-P1-INDEX v1.8 (164 total findings) + fix round 6 + DEC-212. 3 new drift items. | COMPLETED | S-626-1 pass-18 + fix round 6 + STATE.md committed to factory-artifacts. Next: S-626-1 passes 19/20. |

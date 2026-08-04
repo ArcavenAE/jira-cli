@@ -2,7 +2,7 @@
 
 Story: Fix rust-toolchain SHA pins + MSRV false-green + comfy-table pin + CLAUDE.md gotcha (closes #626)
 Branch: `ci/fix-toolchain-sha-msrv`
-Head: `84ab32ac`
+Head: `7798b1bf`
 Last full regeneration: 2026-08-04
 
 ## Full Suite
@@ -23,23 +23,76 @@ See `full-suite.txt` for full discrepancy note.
 
 ## Regeneration Log
 
-All 11 artifacts verified at head `a247a343` (2026-08-03). Each artifact carries its own
+All 11 artifacts verified at head `7798b1bf` (2026-08-04). Each artifact carries its own
 per-file `# Head:` stamp. Status per artifact:
 
 | Artifact | Head | Captured | Status | Reason |
 |----------|------|----------|--------|--------|
-| `AC-001.txt` | 84ab32ac | 2026-08-04 | re-stamped (Round 10) | Head-only; delta-analysis.md unchanged by 84ab32ac (ci.yml + ci_gate_completeness.rs only) |
-| `AC-002.txt` | 84ab32ac | 2026-08-04 | re-captured (Round 10) | ci.yml line numbers shifted +3; SHA locations updated (ci.yml :: msrv :163→:166, ci.yml :: coverage :205→:208) |
-| `AC-003.txt` | 84ab32ac | 2026-08-04 | re-captured (Round 10) | ci.yml line range shifted +3; sed -n '152,179p' → sed -n '155,182p'; B-A+1=28 preserved |
-| `AC-004.txt` | 84ab32ac | 2026-08-04 | re-captured (Round 10) | ci.yml line numbers shifted +3; grep output line numbers updated (:153→:156, :163→:166, :165→:168, :169→:172, :175→:178, :179→:182) |
-| `AC-005.txt` | 84ab32ac | 2026-08-04 | re-stamped (Round 10) | Head-only; sign-and-publish.yml/backfill-release.yml/release.yml unchanged by 84ab32ac |
-| `AC-006.txt` | 84ab32ac | 2026-08-04 | re-stamped (Round 10) | Head-only; CLAUDE.md unchanged by 84ab32ac |
-| `AC-007.txt` | 84ab32ac | 2026-08-04 | re-stamped (Round 10) | Head-only; ci.yml changed (+3 comment lines) but AC-7 checks for ABSENCE of c93f4f9c which remains absent |
-| `AC-008.txt` | 84ab32ac | 2026-08-04 | re-stamped (Round 10) | Head-only; Cargo.toml/Cargo.lock unchanged; MSRV check not re-run (ci_gate_completeness.rs change outside --all-features scope) |
-| `AC-009.txt` | 84ab32ac | 2026-08-04 | re-stamped (Round 10) | Head-only; board.rs/list.rs unchanged; team_column_parity.rs still 10 tests; filtered=8/false-green=10 unchanged |
-| `full-suite.txt` | 84ab32ac | 2026-08-04 | re-captured (Round 10) | cargo test re-run: 2345/0/100 (unchanged — no new test functions in 84ab32ac); clippy (0.21s)+fmt re-run; floor guard re-run (same output — script logic unchanged, only threshold comment corrected) |
+| `AC-001.txt` | 7798b1bf | 2026-08-04 | re-stamped (Round 11) | Head-only; delta-analysis.md unchanged by 7798b1bf (ci_gate_completeness.rs only) |
+| `AC-002.txt` | 7798b1bf | 2026-08-04 | re-stamped (Round 11) | Head-only; ci.yml unchanged by 7798b1bf (ci_gate_completeness.rs only) |
+| `AC-003.txt` | 7798b1bf | 2026-08-04 | re-stamped (Round 11) | Head-only; ci.yml unchanged by 7798b1bf; sed -n '155,182p' range still valid |
+| `AC-004.txt` | 7798b1bf | 2026-08-04 | re-stamped (Round 11) | Head-only; ci.yml unchanged by 7798b1bf |
+| `AC-005.txt` | 7798b1bf | 2026-08-04 | re-stamped (Round 11) | Head-only; sign-and-publish.yml/backfill-release.yml/release.yml unchanged by 7798b1bf |
+| `AC-006.txt` | 7798b1bf | 2026-08-04 | re-stamped (Round 11) | Head-only; CLAUDE.md unchanged by 7798b1bf |
+| `AC-007.txt` | 7798b1bf | 2026-08-04 | re-stamped (Round 11) | Head-only; ci.yml unchanged by 7798b1bf; c93f4f9c still absent |
+| `AC-008.txt` | 7798b1bf | 2026-08-04 | re-stamped (Round 11) | Head-only; Cargo.toml/Cargo.lock unchanged by 7798b1bf |
+| `AC-009.txt` | 7798b1bf | 2026-08-04 | re-stamped (Round 11) | Head-only; board.rs/list.rs unchanged; team_column_parity.rs unchanged |
+| `full-suite.txt` | 7798b1bf | 2026-08-04 | re-captured (Round 11) | cargo test re-run: 2345/0/100 (unchanged — no new test functions in 7798b1bf); clippy (0.21s)+fmt re-run; ci_gate_completeness re-run (8 tests unchanged); floor guard unchanged (ci.yml not modified) |
 
 **Completeness: 11/11 artifacts verified and stamped. No artifact left with only the global INDEX head stamp.**
+
+## Round-11 Re-stamp (2026-08-04): head 84ab32ac → 7798b1bf
+
+Commit `7798b1bf` (`test(ci-gate): close false-green in POL-11 pin where comment satisfies canary assertion`)
+tightened two assertions within the existing `test_verify_test_job_has_zero_test_floor` function in
+`tests/ci_gate_completeness.rs`:
+
+1. **Canary assertion tightened:** The canary check now asserts the command form `grep -q "ci_gate_completeness"` —
+   previously a looser assertion that a comment containing the word could satisfy.
+2. **Floor threshold tightened:** The floor check now asserts `"${binaries}" -lt 90` — previously a looser
+   form that a comment could satisfy.
+
+Files changed: `tests/ci_gate_completeness.rs` only (two assertions tightened within
+`test_verify_test_job_has_zero_test_floor`; NO new test functions added). `ci.yml` was NOT changed.
+
+**No new test functions added:** 7798b1bf tightened assertions within the existing
+`test_verify_test_job_has_zero_test_floor` function only. Test count remains 2345 (confirmed by
+re-run). ci_gate_completeness count remains 8 (confirmed).
+
+**Re-verification performed:**
+- `cargo test` aggregate re-run at 7798b1bf → `2345 passed / 0 failed / 100 ignored`
+- `cargo test --test ci_gate_completeness` → `running 8 tests` (unchanged — no new test functions)
+- `cargo clippy --all-targets -- -D warnings` re-run at 7798b1bf → exit 0 (warm cache, 0.21s)
+- `cargo fmt --all -- --check` re-run at 7798b1bf → exit 0 (no output)
+- Floor guard: ci.yml unchanged by 7798b1bf; output remains `Check passed: 2345 tests executed across 103 test binaries`
+
+**Artifact disposition:**
+- AC-001 through AC-009: head-stamp only. None of these artifacts' evidence sources (delta-analysis.md,
+  ci.yml, CLAUDE.md, Cargo.toml/lock, src/cli/board.rs, three release workflow files) were changed
+  by 7798b1bf.
+- full-suite.txt: re-captured — cargo test count confirmed 2345 (no new test functions);
+  ci_gate_completeness confirmed 8 tests; clippy (0.21s)+fmt re-run (tests/ci_gate_completeness.rs
+  changed, so --all-targets/--all covers it); floor guard captures preserved intact (ci.yml
+  unchanged by 7798b1bf).
+
+**Floor guard captures preserved intact:** All three floor-guard captures in full-suite.txt
+(positive path, negative-path 1 — binary-count floor failure, negative-path 2 — named canary
+failure) are unchanged. ci.yml was not modified by 7798b1bf.
+
+**Defects corrected this round:**
+- **(a) Stale Round-9 residue at INDEX.md:~26:** The Regeneration Log intro still read "All 11 artifacts
+  verified at head `a247a343` (2026-08-03)" — contradicting the INDEX head (`84ab32ac`), all 11 table
+  rows, the "11/11" line, and all 11 per-file `# Head:` stamps. Fixed to `7798b1bf` (2026-08-04).
+- **(b) Stale Round-9 residue at INDEX.md:~441 (Per-AC Evidence table):** AC-003's recorded command was
+  `sed -n '152,179p' ci.yml` — the pre-84ab32ac range. The Round-10 correction propagated to the
+  narrative (:~33, :~101) and to AC-003.txt, but not to this table. Fixed to `sed -n '155,182p' ci.yml`
+  (182−155+1=28 ✓).
+
+**Round-11 sed range re-check:**
+All `sed -n 'A,Bp'` commands in the pack verified to display exactly B−A+1 lines at head 7798b1bf:
+- AC-003: sed '155,182p' → 28 lines ✓ (182−155+1=28)
+- AC-005: sed '57,68p' → 12 lines ✓ (unchanged); sed '72,83p' → 12 lines ✓ (unchanged); sed '38,52p' → 15 lines ✓ (unchanged)
+- AC-009 BEFORE: sed '228,244p' → 17 lines ✓ (unchanged); AFTER: sed '228,248p' → 21 lines ✓ (unchanged)
 
 ## Round-10 Re-stamp (2026-08-04): head a247a343 → 84ab32ac
 
@@ -438,7 +491,7 @@ correctly suppresses the Team column when the field is unconfigured.
 |----|-------------|-----------|----------------|--------|
 | AC-001 | SHA verification (blocking gate) | `AC-001.txt` | Read delta-analysis.md §5e | PASS |
 | AC-002 | 7 new-SHA occurrences across 6 files | `AC-002.txt` | `grep -n fa04a145` across 6 files | PASS |
-| AC-003 | msrv job: toolchain input + RUSTUP_TOOLCHAIN env | `AC-003.txt` | `sed -n '152,179p' ci.yml` + MSRV check with toolchain identity proof | PASS |
+| AC-003 | msrv job: toolchain input + RUSTUP_TOOLCHAIN env | `AC-003.txt` | `sed -n '155,182p' ci.yml` + MSRV check with toolchain identity proof | PASS |
 | AC-004 | msrv comment accuracy: # 1.85.0 | `AC-004.txt` | `grep -n 1.85.0 ci.yml` | PASS |
 | AC-005 | rustup target add steps preserved | `AC-005.txt` | `grep E0463`/`rustup target add` all three files | PASS |
 | AC-006 | CLAUDE.md gotcha added | `AC-006.txt` | `grep -n rust-toolchain.toml.*outranks CLAUDE.md` | PASS |

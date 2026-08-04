@@ -1,4 +1,4 @@
-# Head: 84ab32ac  Captured: 2026-08-04  Status: re-stamped (Round 10 — head-only; ci.yml changed by 84ab32ac (comment only, +3 lines) but AC-7 checks for ABSENCE of old SHA c93f4f9c; old SHA remains absent from all workflow files)
+# Head: 7798b1bf  Captured: 2026-08-04  Status: re-stamped (Round 11 — head-only; ci.yml unchanged by 7798b1bf (ci_gate_completeness.rs only); AC-7 checks for ABSENCE of old SHA c93f4f9c which remains absent)
 
 $ cd /Users/zious/Documents/GITHUB/jira-cli/.worktrees/S-626-1 && grep -rc "c93f4f9c" .github/workflows/
 .github/workflows/release.yml:0

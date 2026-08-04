@@ -1,4 +1,4 @@
-# Head: 84ab32ac  Captured: 2026-08-04  Status: re-stamped (Round 10 — head-only; src/cli/board.rs unchanged by 84ab32ac (ci.yml + ci_gate_completeness.rs only); team_column_parity.rs unchanged (still 10 tests); filtered=8, false-green=10 both unchanged; BEFORE/AFTER board.rs transcripts unchanged)
+# Head: 7798b1bf  Captured: 2026-08-04  Status: re-stamped (Round 11 — head-only; src/cli/board.rs unchanged by 7798b1bf (ci_gate_completeness.rs only); team_column_parity.rs unchanged (still 10 tests); filtered=8, false-green=10 both unchanged; BEFORE/AFTER board.rs transcripts unchanged)
 
 --- BEFORE (src/cli/board.rs on origin/develop, ~:231-234) ---
 $ git show origin/develop:src/cli/board.rs | sed -n '228,244p'

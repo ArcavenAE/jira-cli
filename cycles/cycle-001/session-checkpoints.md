@@ -1917,3 +1917,18 @@ _Was the active checkpoint after pre-window prep (S-MUTANTS-EXAMINE-GLOBS-1 v1.2
 | In flight | develop @ acdad174 (PR #667 HELD — DEC-202; head a247a343). .factory @ factory-artifacts. Worktree: .worktrees/S-626-1. |
 | Pending human decisions | DEC-216 fulfilled. AX23-001 pending. DEC-204 UNADJUDICATED. PR queue: #667 (HELD), #662 (MERGEABLE), #655-#659 (soaking), #628/#574. |
 | Resume command | Dispatch S-626-1 passes 21/22/23 concurrently (head a247a343; DEC-216; scoped greps; all 3 must return CLEAN). |
+
+---
+
+## Checkpoint: ADVERSARY-21+FIX-ROUND-8 burst (2026-08-04T08:40:00Z) [ARCHIVED]
+
+_Was the active checkpoint after ADVERSARY-21+FIX-ROUND-8 (pass-21 NOT CLEAN 0H+3M+3L+1I; isolation CLEAN; THIRTEENTH zero-src/-defect; fix round 8 applied 84ab32ac; DEC-217+218+219; ADV-P1-INDEX v2.0 181 findings). Superseded when ADVERSARY-22+FIX-ROUND-9 burst updated STATE.md v2.4._
+
+| Field | Value |
+|-------|-------|
+| Position | Feature Mode SOH-DX-1 F4 delivery. F2 APPROVED (DEC-196), F3 APPROVED (DEC-197). **S-626-1 DELIVERED** — PR #667 open, feature HEAD 84ab32ac (product commit closes pass-21 MED-001/002/003+LOW-001/002+INFO-001; LOW-003 DEFERRED per DEC-217), branch ci/fix-toolchain-sha-msrv. **HELD per DEC-202** pending fresh 3-pass window. Pass-21 NOT CLEAN (0H+3M+3L+1I; isolation CLEAN; all documentation class; THIRTEENTH zero-src/-defect). ADV-P1-INDEX v2.0 (181 findings). **DEC-219: window 21/22/23 CLOSED 0/1 (passes 22/23 NOT DISPATCHED); fresh STRICT window = S-626-1 passes 22/23/24, 0/3, not yet dispatched.** |
+| Convergence | S-626-1 Step 4.5 = 0/3. 18 recorded passes (5 VOID: 3 dispatch + 2 isolation) + 2 NOT RUN (passes 16/17, DEC-209) + pass-20 SUPERSEDED (DEC-216). 181 total findings. Window 21/22/23 CLOSED 0/1. src/ 0-defect THIRTEENTH consecutive. **Fresh STRICT window: passes 22/23/24 against head 84ab32ac. All 3 must return CLEAN (DEC-191(c) conservative reading; DEC-204 UNADJUDICATED).** |
+| Not yet done | (1) S-626-1 passes 22/23/24 STRICT window (DEC-219; head 84ab32ac; scoped greps; all 3 must be CLEAN). (2) S-640-1 handoff: on MSRV ≥1.88, delete `No let-chains` from CLAUDE.md Conventions AND in-code comments at `src/cli/board.rs :: handle_view`, `src/cli/issue/list.rs :: handle_list`, `src/cli/auth/keychain.rs :: resolve_credential`. (3) S-MAINT-576-HYG-1 needs scheduling. DEC-204 UNADJUDICATED. AX23-001 PENDING. |
+| In flight | develop @ acdad174 (PR #667 HELD — DEC-202; head 84ab32ac). .factory @ factory-artifacts. Worktree: .worktrees/S-626-1 (branch S-626-1). Product repo untracked: .claude/hooks/, .claude/pr-reviews/, .claude/settings.local.json.bak, .claude/spec-config.json (pre-existing). |
+| Pending human decisions | (1) DEC-219 fulfilled (fresh STRICT window passes 22/23/24). (2) AX23-001 out-of-delta ratification (non-blocking). (3) DEC-204 UNADJUDICATED (DEC-191(d) ceiling ruling). PR queue: #667 (HELD — DEC-202), #662 (MERGEABLE), #655-#659 (soaking), #628/#574. DO NOT close #429. |
+| Resume command | Open fresh session → /vsdd-factory:next-step. Dispatch S-626-1 passes 22/23/24 concurrently (head 84ab32ac; DEC-219; scoped greps; all 3 must return CLEAN for Step 4.5 = 3/3). ORCHESTRATOR-SHIPPED-DEFECTIVE-GUARD HIGH drift item — orchestrator MUST independently execute negative proof before authorizing any guard commit. GUARD-BYPASSED-BY-TOOL-SUBSTITUTION MEDIUM — prefer Write over Edit for factory artifacts when hook validation is required. PR #667 HELD. AX23-001 PENDING. |

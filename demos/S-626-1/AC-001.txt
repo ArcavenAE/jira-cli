@@ -1,4 +1,4 @@
-# Head: 84ab32ac  Captured: 2026-08-04  Status: re-stamped (Round 10 — head-only; delta-analysis.md unchanged by 84ab32ac (ci.yml + ci_gate_completeness.rs only); AC-1 source (.factory/phase-f1-delta/SOH-DX-1/delta-analysis.md) unaffected)
+# Head: 7798b1bf  Captured: 2026-08-04  Status: re-stamped (Round 11 — head-only; delta-analysis.md unchanged by 7798b1bf (ci_gate_completeness.rs only); AC-1 source (.factory/phase-f1-delta/SOH-DX-1/delta-analysis.md) unaffected)
 
 $ grep -A 20 "5e\|DISCHARGED\|fa04a145" /Users/zious/Documents/GITHUB/jira-cli/.factory/phase-f1-delta/SOH-DX-1/delta-analysis.md | grep -A 15 "5e\. Verified"
 ### 5e. Verified `fa04a145` SHA — DISCHARGED at F2 (Item 3)

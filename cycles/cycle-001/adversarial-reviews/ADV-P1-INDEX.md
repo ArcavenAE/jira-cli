@@ -1,26 +1,26 @@
 ---
 document_type: adversarial-review-index
 level: ops
-version: "2.0"
+version: "2.1"
 status: in-review
 producer: adversary
-timestamp: 2026-08-04T08:00:00Z
+timestamp: 2026-08-04T16:00:00Z
 phase: "5"
-pass: 21
+pass: 22
 inputs: [.factory/stories/S-626-1.md, .factory/stories/S-640-1.md, .factory/stories/S-641-1.md, .factory/stories/S-MUTANTS-EXAMINE-GLOBS-1.md, .factory/stories/STORY-INDEX.md, .github/workflows/ci.yml, tests/ci_gate_completeness.rs, tests/cli_handler.rs, CLAUDE.md, Cargo.toml]
 traces_to: .factory/stories/S-626-1.md
-total_findings: 181
-severity_distribution: { CRIT: 0, HIGH: 19, MED: 80, LOW: 68, INFO: 14 }
+total_findings: 184
+severity_distribution: { CRIT: 0, HIGH: 19, MED: 81, LOW: 70, INFO: 14 }
 story: S-626-1
 cycle: cycle-001
-feature_head: 84ab32ac (fix-round-8 product commit; pass-21 ran against a247a343; 84ab32ac closed MED-001/002/003+LOW-001/002+INFO-001; LOW-003 DEFERRED)
+feature_head: 7798b1bf (fix-round-9 product commit; pass-22 ran against 84ab32ac; 7798b1bf closed MED-001+LOW-002/003 from pass-22; F-02 LOW-003 DEFERRED still open)
 pr: 667
 basis: TRUE ADVERSARY AGENT (not a DEC-190 substitute)
-convergence: 0 of 3 (Step 4.5 window — DEC-199 GRIND to 3/3 CLEAN; DEC-216 STRICT window passes 21/22/23 OPENED; S-626-1 pass-21 NOT CLEAN (window 0/1 of 21/22/23); passes 22/23 of window NOT DISPATCHED (superseded by pass-21 NOT CLEAN); DEC-219 FRESH STRICT window passes 22/23/24; 18 recorded passes; src/ 0-defect THIRTEENTH consecutive; CI floor SOUND (all four dimensions); fix round 8 applied 84ab32ac)
-void_spawns: 5 (passes 6/7/8 first-attempt background subagents; pass-9 isolation breach; pass-11 isolation breach)
+convergence: 0 of 3 (Step 4.5 window — DEC-199 GRIND to 3/3 CLEAN; DEC-219 STRICT window passes 22/23/24 CLOSED (pass-22 VOID isolation breach + NOT CLEAN); DEC-221 FRESH STRICT window passes 23/24/25; 19 recorded passes; src/ 0-defect FOURTEENTH consecutive; CI floor SOUND (all seven dimensions); fix round 9 applied 7798b1bf; window 22/23/24 CLOSED 0/1)
+void_spawns: 6 (passes 6/7/8 first-attempt background subagents; pass-9 isolation breach; pass-11 isolation breach; pass-22 isolation breach)
 not_run: 2 (passes 16/17 — superseded by round-5 ruling per DEC-209; see s-626-1-adversary-pass-16.md and s-626-1-adversary-pass-17.md)
 superseded: 1 (pass-20 — superseded per DEC-216; window 18/19/20 CLOSED 0/2)
-not_dispatched: 2 (passes 22/23 of window 21/22/23 — superseded when pass-21 returned NOT CLEAN; fresh window = passes 22/23/24)
+not_dispatched: 4 (passes 22/23 of window 21/22/23 — superseded when pass-21 returned NOT CLEAN; passes 23/24 of window 22/23/24 — superseded when pass-22 returned VOID+NOT CLEAN; fresh window = passes 23/24/25)
 ---
 
 # Adversarial Review Index — S-626-1 (SOH-DX-1) Passes 1..21
@@ -216,12 +216,13 @@ ADV-P4-INFO-005   --informs--> S-641-1 AC-2 (complete let-chain detection form s
 | 19 | NOT CLEAN | 2 | 6 | 1 | 1 | 1 ([pg]) | NO | WINDOW-ELIGIBLE (isolation CLEAN); 2H — FIRST PASS WITH HIGH IN WINDOW 18/19/20; FOUR REAL CI-AS-CODE DEFECTS in orchestrator-shipped POL-11 guard (HIGH-001+MED-001/002/003 all closed by a247a343); src/ 0-defect TWELFTH consecutive; HIGH-002 scope breach + MED-004/005 closed fix round 7; MED-006 ROUTED DEC-215; window 0/2 of 18/19/20; anchor migration ends citation-ripple class |
 | 20 | SUPERSEDED | — | — | — | — | — | — | SUPERSEDED per DEC-216 — window 18/19/20 CLOSED 0/2 (pass-20 not dispatched); new STRICT window opens at passes 21/22/23 |
 | 21 | NOT CLEAN | 0 | 3 | 3 | 1 | 0 | NO | WINDOW-ELIGIBLE (isolation CLEAN); ZERO HIGH — THIRTEENTH consecutive zero-src/-defect; **CI floor AUDITED SOUND (all four dimensions at a247a343)**; recurring pattern: "correct change + false claim alongside it"; window 0/1 of 21/22/23; passes 22/23 NOT DISPATCHED; fix round 8 applied; fresh STRICT window passes 22/23/24 |
+| 22 (VOID-22A) | VOID | 0 | 1 | 2 | 0 | 0 | NO | VOID — isolation breach; root-scoped `.factory/` grep leaked ADV-P1-INDEX.md + passes 9/10/15/18/21; self-disclosed; DEC-220; FOURTEENTH consecutive zero-src/-defect; CI floor AUDITED SOUND (all SEVEN dimensions); window 22/23/24 CLOSED 0/1; fix round 9 applied 7798b1bf; fresh STRICT window passes 23/24/25 |
 
-**Overall convergence: 0 of 3 (Step 4.5 — 18 recorded passes + 2 NOT RUN (16/17) + 1 SUPERSEDED (pass-20, DEC-216) + 2 NOT DISPATCHED (passes 22/23 of window 21/22/23); 5 VOID [3 dispatch + 2 isolation]; DEC-199: GRIND to 3/3 CLEAN; DEC-216: STRICT window passes 21/22/23 OPENED; DEC-219: FRESH STRICT window passes 22/23/24; S-626-1 pass-21 NOT CLEAN (window 0/1 of 21/22/23); ZERO HIGH — THIRTEENTH consecutive zero-src/-defect; CI floor AUDITED SOUND all four dimensions; fix round 8 applied 84ab32ac; passes 22/23 NOT DISPATCHED; fresh STRICT window passes 22/23/24 not yet dispatched)**
+**Overall convergence: 0 of 3 (Step 4.5 — 19 recorded passes + 2 NOT RUN (16/17) + 1 SUPERSEDED (pass-20, DEC-216) + 4 NOT DISPATCHED (passes 22/23 of window 21/22/23; passes 23/24 of window 22/23/24); 6 VOID [3 dispatch + 3 isolation]; DEC-199: GRIND to 3/3 CLEAN; DEC-219: STRICT window passes 22/23/24 OPENED then CLOSED (pass-22 VOID+NOT CLEAN); DEC-221: FRESH STRICT window passes 23/24/25; S-626-1 pass-22 NOT CLEAN (VOID isolation breach, DEC-220); ZERO HIGH — FOURTEENTH consecutive zero-src/-defect; CI floor AUDITED SOUND all seven dimensions; fix round 9 applied 7798b1bf; passes 23/24 NOT DISPATCHED; fresh STRICT window passes 23/24/25 not yet dispatched)**
 
-**SEVERITY DECAY RECORDED (THEN REVERSED, THEN 2H IN WINDOW, THEN ZERO HIGH AGAIN):** Window 9/10/11 carried 4 HIGH each. Window 12/13/14 carries ZERO HIGH. Passes 15 and 18 carry ZERO HIGH but 15 was a TREND REVERSAL (9→15). Pass-19 carries 2 HIGH — the first HIGH findings in the 18/19/20 window — but both are non-src/ defects (CI-as-code + spec scope breach). Pass-21 returns to ZERO HIGH (pass-20 SUPERSEDED). Code is 0-defect across THIRTEEN consecutive passes (6–15+18+19+21, minus VOID passes 9+11). **THREE CONSECUTIVE REVIEWERS (passes 13, 14, 15) independently prescribed the same mechanical remedy: a STORY-INDEX coherence guard and a BC sub-element citation guard.** Fix round 5 applied; pass-18 confirmed 15 of 15 pass-15 findings FIXED but added 10 new findings (7 round-5-attributable). Fix round 7 applied; pass-19 found 10 new findings, 4 of which were REAL CI-AS-CODE DEFECTS in the orchestrator-shipped POL-11 guard. Fix round 8 applied; pass-21 found 7 findings, all documentation/citation-accuracy defects, none in src/.
+**SEVERITY DECAY RECORDED (THEN REVERSED, THEN 2H IN WINDOW, THEN ZERO HIGH AGAIN):** Window 9/10/11 carried 4 HIGH each. Window 12/13/14 carries ZERO HIGH. Passes 15 and 18 carry ZERO HIGH but 15 was a TREND REVERSAL (9→15). Pass-19 carries 2 HIGH — the first HIGH findings in the 18/19/20 window — but both are non-src/ defects (CI-as-code + spec scope breach). Pass-21 returns to ZERO HIGH (pass-20 SUPERSEDED). Pass-22 VOID (isolation breach) but ZERO HIGH. Code is 0-defect across FOURTEEN consecutive passes (6–15+18+19+21+22, minus VOID passes 9+11+22). **THREE CONSECUTIVE REVIEWERS (passes 13, 14, 15) independently prescribed the same mechanical remedy: a STORY-INDEX coherence guard and a BC sub-element citation guard.** Fix round 5 applied; pass-18 confirmed 15 of 15 pass-15 findings FIXED but added 10 new findings (7 round-5-attributable). Fix round 7 applied; pass-19 found 10 new findings, 4 of which were REAL CI-AS-CODE DEFECTS in the orchestrator-shipped POL-11 guard. Fix round 8 applied; pass-21 found 7 findings, all documentation/citation-accuracy defects, none in src/. Fix round 9 applied; pass-22 found 3 findings: F-01 MEDIUM (pin prose-satisfiable — canary assertion satisfiable by comment; threshold not bound to variable), F-02/F-03 LOW (demo residue + provenance trail incomplete). CI floor mechanism audited SOUND on all SEVEN dimensions, independently of F-01.
 
-**META-PATTERN SEVENTH TIME + RECURRING PATTERN NAMED:** Pass-21 reviewer named the recurring pattern precisely: *"a correct change landed alongside a false claim about it."* MED-001/002/003 all fit this shape: round-7 fixes were behaviorally correct but introduced false claims in the accompanying documentation. The symbol-corpus sweep executed in fix round 8 found exactly ONE broken citation in the entire `.factory/stories/` corpus (the F-01 dead symbol), which bounds the practical exposure of the CITATION-GUARD-SRC-ONLY gap far more tightly than previously assumed. **Round-7's anchor-form migration remains CLASS-ELIMINATING for ci.yml citations.** The +3 line shift from fix round 8 affected only demo transcripts, confirming DEC-213's anchor-form migration is working as designed.
+**META-PATTERN SEVENTH TIME + RECURRING PATTERN NAMED + PIN-PROSE-SATISFIABLE CLASS:** Pass-21 reviewer named the recurring pattern precisely: *"a correct change landed alongside a false claim about it."* Pass-22 refined the class further: a regression pin can have a FALSE-GREEN when a bare `contains()` assertion is satisfied by a COMMENT containing the pinned string rather than the command. The corrective (command-unique form, discrimination proof by removing command while leaving comment) is now encoded as `PIN-ASSERTIONS-PROSE-SATISFIABLE` drift item. **Round-7's anchor-form migration remains CLASS-ELIMINATING for ci.yml citations.** The third isolation breach (pass-22) used the same root-scoped `.factory/` grep mechanism as passes 9 and 11; behavioral corrective effective for 10 consecutive passes (12-21) before this recurrence.
 
 **Findings accumulator (running total):**
 - Passes 1–5: 36 total (HIGH: 0, MED: 11, LOW: 16, INFO: 9)
@@ -240,7 +241,8 @@ ADV-P4-INFO-005   --informs--> S-641-1 AC-2 (complete let-chain detection form s
 - Pass 19 adds: +10 (HIGH: 2, MED: 6, LOW: 1, INFO: 1) [WINDOW-ELIGIBLE; 2H FIRST IN WINDOW; four CI-as-code defects all closed by a247a343]
 - Pass 20: +0 (SUPERSEDED — DEC-216; window 18/19/20 CLOSED 0/2)
 - Pass 21 adds: +7 (HIGH: 0, MED: 3, LOW: 3, INFO: 1) [WINDOW-ELIGIBLE; ZERO HIGH; THIRTEENTH zero-src/-defect; CI floor SOUND; passes 22/23 NOT DISPATCHED]
-- **Grand total: 181 findings (CRIT: 0, HIGH: 19, MED: 80, LOW: 68, INFO: 14)**
+- Pass 22 adds: +3 (HIGH: 0, MED: 1, LOW: 2, INFO: 0) [VOID isolation breach; FOURTEENTH zero-src/-defect; CI floor SOUND seven dimensions; window 22/23/24 CLOSED 0/1]
+- **Grand total: 184 findings (CRIT: 0, HIGH: 19, MED: 81, LOW: 70, INFO: 14)**
 
 ---
 
@@ -705,8 +707,36 @@ Pass-20 was superseded per DEC-216 before dispatch. Window 18/19/20 CLOSED at 0/
 
 ---
 
-## Passes 22/23 — NOT DISPATCHED
+## Pass 22 Finding Catalog (VOID — Isolation Breach)
 
-Passes 22/23 of window 21/22/23 (DEC-216) were NOT DISPATCHED. When pass-21 returned NOT CLEAN, the window closed at 0/1 — continuing dispatching passes 22/23 in the same window would carry no convergence credit. Per DEC-219, the fresh STRICT window is passes 22/23/24. These passes will be dispatched after the ADVERSARY-21+FIX-ROUND-8 burst commit lands on factory-artifacts.
+**Pass-22 is VOID for window eligibility per DEC-220.** Findings valid and fixed in round 9 (`7798b1bf`).
+
+| ID | Severity | Classification | Title | Status | Notes |
+|----|----------|----------------|-------|--------|-------|
+| ADV-P22-MED-001 | MEDIUM | guard-integrity / pin-prose-satisfiable | POL-11 canary assertion `contains("ci_gate_completeness")` satisfied by COMMENT — not command-unique; threshold `contains("-lt 90")` not bound to `${binaries}` variable | FIXED — fix round 9 (7798b1bf: canary → `grep -q "ci_gate_completeness"` command form; threshold → `"${binaries}" -lt 90`; discrimination proven) | CI floor mechanism itself SOUND (seven dimensions); defect was in regression pin |
+| ADV-P22-LOW-002 | LOW | spec-fidelity / stale-residue | Two Round-9 residues in INDEX.md: intro head still `a247a343`; Per-AC AC-003 command still `sed -n '152,179p'` | FIXED — fix round 9 (INDEX.md: intro → `7798b1bf`; AC-003 command → `sed -n '155,182p'`) | Three-surface inconsistency: INDEX head vs Regeneration Log intro vs Per-AC table |
+| ADV-P22-LOW-003 | LOW | spec-fidelity / incomplete-audit | S-626-1 FSR + MUST-NOT + STORY-INDEX authorization trail for tests/ci_gate_completeness.rs listed only 2 of 4 commits (missing 84ab32ac + 7798b1bf) | FIXED — fix round 9 (S-626-1 v1.14→v1.15; STORY-INDEX v1.5.59→v1.5.60: 4-commit trail at both body sites + STORY-INDEX row) | Non-blocking (authorization held); incomplete audit record for MUST-NOT exception |
+
+## Pass 22 Isolation Note
+
+**VOID — ORCHESTRATOR DISPATCH DEFECT.** Root-scoped grep at `.factory/` leaked banned content from `ADV-P1-INDEX.md` and `s-626-1-adversary-pass-{9,10,15,18,21}.md`, including prior-pass finding IDs (`ADV-P15-MED-003`), verdicts, and finding tallies. Reviewer disclosed the leak verbatim and unprompted; argued containment (findings derived from primary artifacts BEFORE the grep; leaked material concerned `handle_board_view` and outer-gate coverage, neither cited nor relied on). Per DEC-220, VOID ruling applied on strictest precedent consistent with DEC-206 (passes 9 and 11). Third isolation breach; all three used root-scoped `.factory/` grep; all three self-disclosed unprompted.
+
+## Pass 22 Summary
+
+- **Verdict:** NOT CLEAN — 0 HIGH + 1 MEDIUM + 2 LOW; zero code defects; **VOID for window** (isolation breach, DEC-220); CI floor SOUND (seven dimensions); FOURTEENTH consecutive zero-src/-defect
+- **Post-capture routing:** MED-001 + LOW-002 + LOW-003 FIXED fix round 9 (7798b1bf)
+- **Convergence:** 0/3 — window 22/23/24 CLOSED 0/1 (pass-22 VOID); fresh STRICT window passes 23/24/25 (DEC-221); PIN-ASSERTIONS-PROSE-SATISFIABLE class established
+- **Detail artifact:** `s-626-1-adversary-pass-22.md`
+
+---
+
+## Passes 23/24 — NOT DISPATCHED (Window 22/23/24 Closed)
+
+Pass-22 (window 22/23/24, DEC-219) returned VOID (isolation breach) + NOT CLEAN. The window closed at 0/1. Dispatching passes 23/24 within window 22/23/24 would carry no convergence credit. Per DEC-221, the fresh STRICT window is passes 23/24/25. These passes will be dispatched after the ADVERSARY-22+FIX-ROUND-9 burst commit lands on factory-artifacts.
+
+| Pass | Status | Reason | Governing Decision |
+|------|--------|--------|-------------------|
+| 23 (of window 22/23/24) | NOT DISPATCHED | Pass-22 VOID+NOT CLEAN closed window | DEC-220 + DEC-221 |
+| 24 (of window 22/23/24) | NOT DISPATCHED | Pass-22 VOID+NOT CLEAN closed window | DEC-220 + DEC-221 |
 
 ---
