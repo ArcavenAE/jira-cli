@@ -8456,3 +8456,20 @@ DEC-204 remains UNADJUDICATED. AX23-001 remains PENDING.
 | Step | Status | Notes |
 |------|--------|-------|
 | ADVERSARY-18+FIX-ROUND-6 (2026-08-03): S-626-1 pass-18 (NOT CLEAN; 0H+7M+3L; isolation CLEAN; F-07 FIXED IN-CYCLE 9312f11f; DEC-211) + ADV-P1-INDEX v1.8 (164 total findings) + fix round 6 + DEC-212. 3 new drift items. | COMPLETED | S-626-1 pass-18 + fix round 6 + STATE.md committed to factory-artifacts. Next: S-626-1 passes 19/20. |
+
+## COMPACT-STATE-BURST (archived CPS row from STATE.md 2026-08-04)
+
+**Archived CPS row (ADVERSARY-21+FIX-ROUND-8):**
+
+> | **ADVERSARY-21+FIX-ROUND-8 (2026-08-04): S-626-1 pass-21 (NOT CLEAN; 0H+3M+3L+1I; isolation CLEAN; THIRTEENTH zero-src/-defect; all documentation class; passes 22/23 NOT DISPATCHED) + ADV-P1-INDEX v2.0 (181 total findings) + fix round 8 (84ab32ac) + DEC-217+218+219. 3 new drift items; 5 drift items updated; STORY-TEMPLATE-DRIFT-BLOCKS-EDITS SUPERSEDED.** | state-manager | COMPLETED | S-626-1 pass-21 + fix round 8 + STATE.md committed to factory-artifacts. Next: S-626-1 passes 22/23/24 (DEC-219). |
+
+### Burst Summary
+
+Housekeeping-only STATE.md compaction (human-approved, TD-VSDD-053 single-commit burst protocol). Ran `/vsdd-factory:compact-state`. Extractable-content audit found no live `## Burst N` / `## Pass N` / `## Session Chain Summary` sections, no `adversary_pass_*` frontmatter fields, no resolved Blocking Issues rows, and only ONE Session Resume Checkpoint (the required survivor) — none of these were archivable this round. Phase Progress was already at its 1-row cap (nothing to archive). Current Phase Steps was already at its 5-row cap: added a `COMPACT-STATE-BURST` row and archived the oldest (`ADVERSARY-21+FIX-ROUND-8`, above) to hold the cap — net zero line delta (1 row out, 1 row in). Decisions Log (all DEC-001..226) and Drift Items (145 lines, all OPEN/tracked) were left fully intact — both are outside this skill's Step-4 extraction routing (Decisions Log = "keep all, small/stable"; Drift Items has no defined cycle-file extraction target) and are preservation-locked for a housekeeping burst — this is why STATE.md remains at 300 lines (soft-target 200 not reached). All pipeline facts preserved verbatim: `phase: 3`, `pipeline: PAUSED`, `mode: brownfield`, `current_cycle: cycle-001`, `feature_mode_bundle: SOH-DX-1-F4-DELIVERY`, `activation_head: 7b3ba371`, `trajectory_tail: "→0→0→0→0"`. Step 4.5 remains 0/3; the 23-recorded + 6-VOID + 2-NOT-RUN + pass-20-SUPERSEDED pass ledger, the 197-finding total, and DEC-225's fresh STRICT window (passes 27/28/29 against frozen head e49230a7) are all unchanged. No Drift Items were resolved, closed, or reworded. Also committed 8 pending `sidecar-learning.md` prior-session end markers (20:48:48Z–21:02:51Z, awaiting `/session-review`) in the same atomic commit.
+
+### Convergence Status Post-Burst
+
+Unchanged — this was a pure archival/housekeeping burst, not a state change. Step 4.5 = 0/3. DEC-225 fresh STRICT window (S-626-1 passes 27/28/29, 0/3, NOT dispatched) against feature HEAD e49230a7 (fix round 11) stands. 197 total findings (ADV-P1-INDEX v2.3). PR #667 remains HELD (DEC-202).
+
+**Pipeline:** PAUSED — awaiting S-626-1 passes 27/28/29 (DEC-225 fresh STRICT window; head e49230a7).
+**STORY-INDEX:** v1.5.61 (unchanged). **trajectory-tail:** →0→0→0→0 (unchanged).
