@@ -1,4 +1,4 @@
-# Head: a247a343  Captured: 2026-08-03  Status: re-stamped (Round 8 — head-only; Cargo.toml/Cargo.lock unchanged by a247a343 (ci.yml + ci_gate_completeness.rs only); MSRV check not re-run (cargo check --all-features omits --all-targets so test-file changes are out of scope))
+# Head: 84ab32ac  Captured: 2026-08-04  Status: re-stamped (Round 10 — head-only; Cargo.toml/Cargo.lock unchanged by 84ab32ac (ci.yml + ci_gate_completeness.rs only); MSRV check not re-run (cargo check --all-features omits --all-targets so test-file changes are out of scope))
 
 $ cd /Users/zious/Documents/GITHUB/jira-cli/.worktrees/S-626-1 && grep -n "comfy-table" Cargo.toml
 24:comfy-table = "=7.2.1"

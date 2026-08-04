@@ -1902,3 +1902,18 @@ _Was the active checkpoint after SOH-DX-1 F2 ADVERSARY GRIND rounds 1-45 (2026-0
 | In flight | develop @ acdad174 (PR #667 HELD — DEC-202). .factory @ factory-artifacts. No other open worktrees. Product repo untracked: .claude/hooks/, .claude/pr-reviews/, .claude/settings.local.json.bak, .claude/spec-config.json (pre-existing). |
 | Pending human decisions | (1) DEC-212 authorized — passes 19/20 confirmed. (2) AX23-001 out-of-delta ratification (non-blocking). (3) DEC-204 UNADJUDICATED (DEC-191(d) ceiling ruling). PR queue: #667 (HELD — DEC-202), #662 (MERGEABLE), #655-#659 (soaking), #628/#574. DO NOT close #429. |
 | Resume command | Open fresh session → /vsdd-factory:next-step. Dispatch S-626-1 pass-19 (head 9312f11f; scoped greps; isolation CLEAN 5/5 passes). ORCHESTRATOR-PROPAGATED-FALSE-JUSTIFICATION new HIGH drift item — dispatch MUST NOT include non-verified justifications. PR #667 HELD. AX23-001 pending. |
+
+---
+
+## Checkpoint: PRE-WINDOW-PREP / ADVERSARY-19+FIX-ROUND-7 burst (2026-08-04T04:05:00Z) [ARCHIVED]
+
+_Was the active checkpoint after pre-window prep (S-MUTANTS-EXAMINE-GLOBS-1 v1.2→v1.3 template conformance; demos negative-path evidence added; STORY-INDEX v1.5.58; DEC-216 STRICT window reset passes 21/22/23) + ADVERSARY-19+FIX-ROUND-7 (pass-19 NOT CLEAN 2H+6M+1L; fix round 7 applied; anchor migration CLASS-ELIMINATING DEC-213; DEC-214+215). Superseded when ADVERSARY-21+FIX-ROUND-8 burst updated STATE.md v2.3._
+
+| Field | Value |
+|-------|-------|
+| Position | Feature Mode SOH-DX-1 F4 delivery. F2 APPROVED (DEC-196), F3 APPROVED (DEC-197). **S-626-1 DELIVERED** — PR #667 open, feature HEAD a247a343 (product commit `ci: fix inert floor, unreachable diagnostic, colour fragility, under-specified pin (POL-11)`), branch ci/fix-toolchain-sha-msrv. **HELD per DEC-202** pending fresh 3-pass window. Pre-window prep complete 2026-08-04: S-MUTANTS-EXAMINE-GLOBS-1 v1.2→v1.3 (template conformance + anchor migration; hook unblocked; epic_id/cycle=null with in-frontmatter comments); demos/S-626-1 negative-path evidence added; STORY-INDEX v1.5.57→v1.5.58. **DEC-216: window 18/19/20 CLOSED 0/2 (pass-20 SUPERSEDED); new STRICT window = S-626-1 passes 21/22/23, 0/3, dispatched concurrently.** |
+| Convergence | S-626-1 Step 4.5 = 0/3. 17 recorded passes (5 VOID: 3 dispatch + 2 isolation) + 2 NOT RUN (passes 16/17, DEC-209) + pass-20 SUPERSEDED (DEC-216). 174 total findings. Window 18/19/20 CLOSED 0/2. src/ 0-defect TWELFTH consecutive. **New STRICT window: passes 21/22/23 dispatched concurrently against head a247a343.** |
+| Not yet done | (1) S-626-1 passes 21/22/23 STRICT window. (2) S-640-1 handoff. (3) S-MAINT-576-HYG-1. DEC-204 UNADJUDICATED. AX23-001 PENDING. |
+| In flight | develop @ acdad174 (PR #667 HELD — DEC-202; head a247a343). .factory @ factory-artifacts. Worktree: .worktrees/S-626-1. |
+| Pending human decisions | DEC-216 fulfilled. AX23-001 pending. DEC-204 UNADJUDICATED. PR queue: #667 (HELD), #662 (MERGEABLE), #655-#659 (soaking), #628/#574. |
+| Resume command | Dispatch S-626-1 passes 21/22/23 concurrently (head a247a343; DEC-216; scoped greps; all 3 must return CLEAN). |

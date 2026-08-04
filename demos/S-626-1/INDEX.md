@@ -2,8 +2,8 @@
 
 Story: Fix rust-toolchain SHA pins + MSRV false-green + comfy-table pin + CLAUDE.md gotcha (closes #626)
 Branch: `ci/fix-toolchain-sha-msrv`
-Head: `a247a343`
-Last full regeneration: 2026-08-03
+Head: `84ab32ac`
+Last full regeneration: 2026-08-04
 
 ## Full Suite
 
@@ -28,19 +28,79 @@ per-file `# Head:` stamp. Status per artifact:
 
 | Artifact | Head | Captured | Status | Reason |
 |----------|------|----------|--------|--------|
-| `AC-001.txt` | a247a343 | 2026-08-03 | re-stamped (Round 8) | Head-only; delta-analysis.md unchanged by a247a343 (ci.yml + ci_gate_completeness.rs only) |
-| `AC-002.txt` | a247a343 | 2026-08-03 | re-captured (Round 8) | ci.yml line numbers shifted +54; SHA locations updated (ci.yml :: msrv :109→:163, ci.yml :: coverage :151→:205) |
-| `AC-003.txt` | a247a343 | 2026-08-03 | re-captured (Round 8) | ci.yml line range shifted +54; sed -n '98,125p' → sed -n '152,179p'; B-A+1=28 preserved |
-| `AC-004.txt` | a247a343 | 2026-08-03 | re-captured (Round 8) | ci.yml line numbers shifted +54; grep output line numbers updated (:99→:153, :109→:163, :111→:165, :115→:169, :121→:175, :125→:179) |
-| `AC-005.txt` | a247a343 | 2026-08-03 | re-stamped (Round 8) | Head-only; sign-and-publish.yml/backfill-release.yml/release.yml unchanged by a247a343 |
-| `AC-006.txt` | a247a343 | 2026-08-03 | re-stamped (Round 8) | Head-only; CLAUDE.md unchanged by a247a343 |
-| `AC-007.txt` | a247a343 | 2026-08-03 | re-stamped (Round 8) | Head-only; ci.yml changed but AC-7 checks for ABSENCE of c93f4f9c which remains absent |
-| `AC-008.txt` | a247a343 | 2026-08-03 | re-stamped (Round 8) | Head-only; Cargo.toml/Cargo.lock unchanged; MSRV check not re-run (ci_gate_completeness.rs change outside --all-features scope) |
-| `AC-009.txt` | a247a343 | 2026-08-03 | re-stamped (Round 8) | Head-only; board.rs/list.rs unchanged; team_column_parity.rs still 10 tests; filtered=8/false-green=10 unchanged |
-| `full-suite.txt` | a247a343 | 2026-08-03 | re-captured (Round 8) | cargo test re-run: 2345/0/100 (unchanged — no new test functions in a247a343); clippy (0.28s)+fmt re-run; floor guard script updated to match new ci.yml :: test step (wc -l, -lt 90, canary, CARGO_TERM_COLOR: never) |
-| `full-suite.txt` | a247a343 | 2026-08-04 | extended (Round 9) | Two negative-path sections added: binary-floor failure (5 binaries, FAIL diagnostic confirmed) and canary failure (95 binaries, no ci_gate_completeness, FAIL diagnostic confirmed). No re-run of positive-path capture. |
+| `AC-001.txt` | 84ab32ac | 2026-08-04 | re-stamped (Round 10) | Head-only; delta-analysis.md unchanged by 84ab32ac (ci.yml + ci_gate_completeness.rs only) |
+| `AC-002.txt` | 84ab32ac | 2026-08-04 | re-captured (Round 10) | ci.yml line numbers shifted +3; SHA locations updated (ci.yml :: msrv :163→:166, ci.yml :: coverage :205→:208) |
+| `AC-003.txt` | 84ab32ac | 2026-08-04 | re-captured (Round 10) | ci.yml line range shifted +3; sed -n '152,179p' → sed -n '155,182p'; B-A+1=28 preserved |
+| `AC-004.txt` | 84ab32ac | 2026-08-04 | re-captured (Round 10) | ci.yml line numbers shifted +3; grep output line numbers updated (:153→:156, :163→:166, :165→:168, :169→:172, :175→:178, :179→:182) |
+| `AC-005.txt` | 84ab32ac | 2026-08-04 | re-stamped (Round 10) | Head-only; sign-and-publish.yml/backfill-release.yml/release.yml unchanged by 84ab32ac |
+| `AC-006.txt` | 84ab32ac | 2026-08-04 | re-stamped (Round 10) | Head-only; CLAUDE.md unchanged by 84ab32ac |
+| `AC-007.txt` | 84ab32ac | 2026-08-04 | re-stamped (Round 10) | Head-only; ci.yml changed (+3 comment lines) but AC-7 checks for ABSENCE of c93f4f9c which remains absent |
+| `AC-008.txt` | 84ab32ac | 2026-08-04 | re-stamped (Round 10) | Head-only; Cargo.toml/Cargo.lock unchanged; MSRV check not re-run (ci_gate_completeness.rs change outside --all-features scope) |
+| `AC-009.txt` | 84ab32ac | 2026-08-04 | re-stamped (Round 10) | Head-only; board.rs/list.rs unchanged; team_column_parity.rs still 10 tests; filtered=8/false-green=10 unchanged |
+| `full-suite.txt` | 84ab32ac | 2026-08-04 | re-captured (Round 10) | cargo test re-run: 2345/0/100 (unchanged — no new test functions in 84ab32ac); clippy (0.21s)+fmt re-run; floor guard re-run (same output — script logic unchanged, only threshold comment corrected) |
 
 **Completeness: 11/11 artifacts verified and stamped. No artifact left with only the global INDEX head stamp.**
+
+## Round-10 Re-stamp (2026-08-04): head a247a343 → 84ab32ac
+
+Commit `84ab32ac` (`ci: fix false threshold justification and close pipefail coverage gap (POL-11)`)
+corrected two defects in the `ci.yml :: test / "Run tests (zero-test floor, POL-11)"` step and its
+Rust regression pin:
+
+1. **False threshold justification (comment only, ci.yml +3 lines):** The POL-11 binary-count floor
+   comment at `ci.yml :: test` read `~103 binaries (1 lib + ~54 integration + ~1 doc)`, which sums
+   to approximately 56 — arithmetically broken by a factor of ~2. The corrected comment reads
+   `1 lib + 1 bin + ~100 integration + ~1 doc; 100 = the 104 files in tests/**/*.rs minus the 4
+   tests/common/ module files that are not cargo targets`. The comment grew from 6 to 9 lines,
+   shifting all subsequent ci.yml line numbers by +3.
+
+2. **Pipefail coverage gap (tests/ci_gate_completeness.rs, two new assertions):** The docstring
+   for `test_verify_test_job_has_zero_test_floor` claimed to pin "all operative parts" of the step,
+   but no assertion covered the `set +o pipefail` / `set -o pipefail` bracket. Two assertions were
+   added asserting the bracket exists as standalone lines in the step body.
+
+Files changed: `.github/workflows/ci.yml` (+3 comment lines in test job, shifting subsequent job
+line numbers by +3) and `tests/ci_gate_completeness.rs` (+2 assertions within
+`test_verify_test_job_has_zero_test_floor`; NO new test functions added).
+
+**No new test functions added:** 84ab32ac added only assertions within the existing
+`test_verify_test_job_has_zero_test_floor` function. Test count remains 2345 (confirmed by re-run).
+Binary count remains 103.
+
+**ci.yml :: msrv line number shift (+3 from a247a343):**
+All subsequent job line numbers shifted +3 from the comment growth in the test job:
+- `msrv:` job id line: :152 → :155
+- `name: MSRV (1.85.0)`: :153 → :156
+- dtolnay/rust-toolchain SHA (msrv): :163 → :166
+- `toolchain: "1.85.0"`: :165 → :168
+- comment line 1 of wiremock-scope block: :169 → :172
+- comment line 2 of wiremock-scope block: :175 → :178
+- `RUSTUP_TOOLCHAIN: "1.85.0"`: :179 → :182
+- dtolnay/rust-toolchain SHA (coverage): :205 → :208
+(Independently verified by running `grep -n "1\.85\.0\|RUSTUP_TOOLCHAIN" ci.yml` and `grep -n fa04a145 ci.yml`.)
+
+**Re-verification performed:**
+- `cargo test` aggregate re-run at 84ab32ac → `2345 passed / 0 failed / 100 ignored`
+- `cargo test --test ci_gate_completeness` → `running 8 tests` (unchanged — no new test functions)
+- `cargo clippy --all-targets -- -D warnings` re-run at 84ab32ac → exit 0 (warm cache, 0.21s)
+- `cargo fmt --all -- --check` re-run at 84ab32ac → exit 0 (no output)
+- Floor guard script re-run → `Check passed: 2345 tests executed across 103 test binaries`
+
+**Artifact disposition:**
+- AC-001, AC-005, AC-006, AC-007, AC-008, AC-009: head-stamp only. None of these artifacts'
+  evidence sources (delta-analysis.md, three release workflow files, CLAUDE.md, Cargo.toml/lock,
+  src/cli/board.rs) were changed by 84ab32ac.
+- AC-002, AC-003, AC-004: re-captured with correct ci.yml line numbers (+3 shift).
+- full-suite.txt: re-captured — cargo test count confirmed 2345 (no new test functions);
+  clippy timing updated (0.28s→0.21s); fmt re-run; floor guard script re-run (same output;
+  script logic unchanged, only comment text corrected in ci.yml). Negative-path captures
+  from Round 9 preserved intact (their logic is unchanged by 84ab32ac).
+
+**Round-10 sed range re-check:**
+All `sed -n 'A,Bp'` commands in the pack verified to display exactly B−A+1 lines at head 84ab32ac:
+- AC-003: sed '155,182p' → 28 lines ✓ (updated from '152,179p'; 182−155+1=28)
+- AC-005: sed '57,68p' → 12 lines ✓ (unchanged); sed '72,83p' → 12 lines ✓ (unchanged); sed '38,52p' → 15 lines ✓ (unchanged)
+- AC-009 BEFORE: sed '228,244p' → 17 lines ✓ (unchanged); AFTER: sed '228,248p' → 21 lines ✓ (unchanged)
 
 ## Round-9 Addition (2026-08-04): negative-path evidence for POL-11 zero-test floor
 

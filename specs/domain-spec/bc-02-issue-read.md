@@ -15,13 +15,13 @@ traces_to: "README.md"
 source_passes: "Pass 2 broad §2a.2 Jira + §2b.1 + R5 §3.2 (NEW-INV-216..244) + Pass 8 §2.2 BC#2"
 entity_count: 32
 invariant_count: 28
-bc_count: 94
+bc_count: 106
 risk_level: HIGH
 ---
 
 # BC-02: Issue Read
 
-Covers the read side of the Issue domain: `jr issue list`, `jr issue view`, `jr issue comments`, and `jr issue changelog`. Largest BC by behavioral contract count (92 BCs, ~2,500 LOC).
+Covers the read side of the Issue domain: `jr issue list`, `jr issue view`, `jr issue comments`, and `jr issue changelog`. Contains 106 BCs (~2,500 LOC).
 
 ---
 

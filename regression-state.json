@@ -1,1 +1,1 @@
-{"status":"pass","timestamp":"2026-08-04T00:47:52Z","command":"grep -n \"^  test:\\|name: Run tests\\|cargo test --all-features\\|Run tests\" .github/workflows/ci.yml | head -10"}
+{"status":"pass","timestamp":"2026-08-04T14:50:38Z","command":"cargo test 2>&1 | grep \"^test result: ok\\.\" | sed 's/.*ok\\. //' | awk '{for(i=1;i<=NF;i++){if($i==\"passed;\") p+=$(i-1); if($i==\"failed;\") f+=$(i-1); if($i==\"ignored;\") ig+=$(i-1)}} END {print p \" passed / \" f \" failed / \" ig \" ignored\"}'"}

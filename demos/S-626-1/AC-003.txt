@@ -1,11 +1,13 @@
-# Head: a247a343  Captured: 2026-08-03  Status: re-captured (Round 8 — ci.yml line range shifted +54 by commit a247a343; sed -n '98,125p' → sed -n '152,179p'; B-A+1=28 preserved)
+# Head: 84ab32ac  Captured: 2026-08-04  Status: re-captured (Round 10 — ci.yml line range shifted +3 by commit 84ab32ac; sed -n '152,179p' → sed -n '155,182p'; B-A+1=28 preserved)
 # Note: Round 2 corrected sed -n '58,87p' → sed -n '59,86p' (blank separator lines excluded).
 # Round 7 re-derives the range: msrv job started at :98 (blank separator at :97),
 # last content line at :125 (blank separator at :126 before deny: at :127). 125-98+1=28 lines.
 # Round 8 re-derives the range: msrv job now starts at :152 (blank separator at :151),
 # last content line at :179 (blank separator at :180 before deny: at :181). 179-152+1=28 lines.
+# Round 10 re-derives the range: msrv job now starts at :155 (blank separator at :154),
+# last content line at :182 (blank separator at :183 before deny: at :184). 182-155+1=28 lines.
 
-$ cd /Users/zious/Documents/GITHUB/jira-cli/.worktrees/S-626-1 && sed -n '152,179p' .github/workflows/ci.yml
+$ cd /Users/zious/Documents/GITHUB/jira-cli/.worktrees/S-626-1 && sed -n '155,182p' .github/workflows/ci.yml
   msrv:
     name: MSRV (1.85.0)
     runs-on: ubuntu-latest

@@ -3804,3 +3804,32 @@ Pass-19 ran against head `9312f11f` (the orchestrator-shipped POL-11 guard commi
 **Convergence counter:** window 0/2 of 18/19/20. Pass-20 pending (head a247a343).
 
 **Anchor migration (CLASS-ELIMINATING):** DEC-213 introduces `ci.yml :: <job-id>` notation. Three prior citation-ripple sweeps (+39, +54, +93 cumulative) will not recur for migrated surfaces.
+
+---
+
+## S-626-1 Pass 21 (2026-08-04)
+
+**Artifact:** `.factory/cycles/cycle-001/adversarial-reviews/s-626-1-adversary-pass-21.md`
+**Isolation:** CLEAN. No banned-path content accessed. Self-disclosed.
+
+Pass-21 ran against feature HEAD a247a343 (frozen head per DEC-216 window). Pass-20 was SUPERSEDED per DEC-216; DEC-219 opens fresh STRICT window passes 22/23/24. **Found ZERO HIGH findings.** All 7 findings are documentation/citation-accuracy class — the reviewer named the pattern: *"a correct change landed alongside a false claim about it."* `src/` remains 0-defect — **THIRTEENTH consecutive pass**.
+
+**ADV-P21-MED-001 (MEDIUM; spec-accuracy / false-claim-in-prose):** `tests/ci_gate_completeness.rs` pin names wrong test (`test_ci_gate_named_canary_check` DNE; correct: `test_verify_test_job_has_zero_test_floor`) and wrong job count (9-job wrong; correct: 8-job). **FIXED 84ab32ac.**
+
+**ADV-P21-MED-002 (MEDIUM; spec-accuracy / false-comment):** ci.yml step comment "1 lib + ~54 integration + ~1 doc" sums to 56, not 103 actual test count. Comment injected by fix round 7 immediately stale. **FIXED 84ab32ac.**
+
+**ADV-P21-MED-003 (MEDIUM; spec-accuracy / missing-assertion):** Pin docstring claimed `set +o pipefail` was verified; no assertion existed — claim was aspirational. **FIXED 84ab32ac.**
+
+**ADV-P21-LOW-001 (LOW; spec-fidelity / sweep-miss):** BC-5.3.003 Source field omitted `test_board_view_falls_back_to_uuid_when_team_not_cached`. Pass-18 MED-002 prescribed this sweep; still missed. **FIXED 84ab32ac.**
+
+**ADV-P21-LOW-002 (LOW; spec-fidelity / count-mismatch):** S-626-1 AC-9 heading "adds 2 behavioral contracts"; footer traces 3 BCs. **FIXED 84ab32ac.**
+
+**ADV-P21-LOW-003 (LOW; ci-citation / template-drift):** S-BC-CITATION-GUARD-1.md contains raw `"live ci.yml line 111"` citations. **DEFERRED — DEC-217** (template drift blocks edits; placeholder/stub approach DECLINED per DEC-217).
+
+**ADV-P21-INFO-001 (INFO; spec-accuracy / bc-count-drift):** bc-02-issue-read.md `bc_count: 94` frontmatter and body "92 BCs" both wrong (correct: 106). **FIXED 84ab32ac**; class sweep (DEC-218) found bc-03-issue-write.md also drifted (120→140), fixed simultaneously.
+
+**CI FLOOR AUDITED SOUND (all four dimensions):** binary-count floor (`-lt 90`) reachable; named canary (`test_verify_test_job_has_zero_test_floor`) reachable; `CARGO_TERM_COLOR=never` present; pin asserts floor+canary+exit 1+positive-coverage. Verbatim ci.yml step body confirmed in demo pack.
+
+**Convergence counter:** window 0/1 of 21/22/23 (NOT CLEAN). Passes 22/23 of window NOT DISPATCHED (window moot after NOT CLEAN). DEC-219: fresh STRICT window = passes 22/23/24.
+
+**Trajectory (S-626-1): →0→0→2→0. Window 0/1 of 21/22/23 CLOSED NOT CLEAN. Fresh STRICT window 22/23/24 (DEC-219). NEXT: dispatch passes 22/23/24 against head 84ab32ac.**

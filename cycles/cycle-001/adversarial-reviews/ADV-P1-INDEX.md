@@ -1,27 +1,29 @@
 ---
 document_type: adversarial-review-index
 level: ops
-version: "1.9"
+version: "2.0"
 status: in-review
 producer: adversary
-timestamp: 2026-08-04T01:00:00Z
+timestamp: 2026-08-04T08:00:00Z
 phase: "5"
-pass: 19
+pass: 21
 inputs: [.factory/stories/S-626-1.md, .factory/stories/S-640-1.md, .factory/stories/S-641-1.md, .factory/stories/S-MUTANTS-EXAMINE-GLOBS-1.md, .factory/stories/STORY-INDEX.md, .github/workflows/ci.yml, tests/ci_gate_completeness.rs, tests/cli_handler.rs, CLAUDE.md, Cargo.toml]
 traces_to: .factory/stories/S-626-1.md
-total_findings: 174
-severity_distribution: { CRIT: 0, HIGH: 19, MED: 77, LOW: 65, INFO: 13 }
+total_findings: 181
+severity_distribution: { CRIT: 0, HIGH: 19, MED: 80, LOW: 68, INFO: 14 }
 story: S-626-1
 cycle: cycle-001
-feature_head: a247a343 (fix-round-7 product commit; pass-19 ran against 9312f11f; a247a343 closed HIGH-001+MED-001/002/003)
+feature_head: 84ab32ac (fix-round-8 product commit; pass-21 ran against a247a343; 84ab32ac closed MED-001/002/003+LOW-001/002+INFO-001; LOW-003 DEFERRED)
 pr: 667
 basis: TRUE ADVERSARY AGENT (not a DEC-190 substitute)
-convergence: 0 of 3 (Step 4.5 window — DEC-199 GRIND to 3/3 CLEAN; DEC-209 ROUND 5 + PASSES 18/19/20 AUTHORIZED; DEC-212 PASSES 19/20 AUTHORIZED; S-626-1 pass-19 NOT CLEAN (window 0/2); passes 16/17 NOT RUN — superseded by round-5 ruling; 2H FIRST IN WINDOW 18/19/20 — four REAL CI-AS-CODE DEFECTS in orchestrator-shipped POL-11 guard (all closed by a247a343); src/ 0-defect TWELFTH consecutive; anchor migration ends citation-ripple class; pass-20 pending)
+convergence: 0 of 3 (Step 4.5 window — DEC-199 GRIND to 3/3 CLEAN; DEC-216 STRICT window passes 21/22/23 OPENED; S-626-1 pass-21 NOT CLEAN (window 0/1 of 21/22/23); passes 22/23 of window NOT DISPATCHED (superseded by pass-21 NOT CLEAN); DEC-219 FRESH STRICT window passes 22/23/24; 18 recorded passes; src/ 0-defect THIRTEENTH consecutive; CI floor SOUND (all four dimensions); fix round 8 applied 84ab32ac)
 void_spawns: 5 (passes 6/7/8 first-attempt background subagents; pass-9 isolation breach; pass-11 isolation breach)
 not_run: 2 (passes 16/17 — superseded by round-5 ruling per DEC-209; see s-626-1-adversary-pass-16.md and s-626-1-adversary-pass-17.md)
+superseded: 1 (pass-20 — superseded per DEC-216; window 18/19/20 CLOSED 0/2)
+not_dispatched: 2 (passes 22/23 of window 21/22/23 — superseded when pass-21 returned NOT CLEAN; fresh window = passes 22/23/24)
 ---
 
-# Adversarial Review Index — S-626-1 (SOH-DX-1) Passes 1..18
+# Adversarial Review Index — S-626-1 (SOH-DX-1) Passes 1..21
 
 ## Pass 1 Finding Catalog
 
@@ -212,12 +214,14 @@ ADV-P4-INFO-005   --informs--> S-641-1 AC-2 (complete let-chain detection form s
 | 17 | NOT RUN | — | — | — | — | — | — | NOT RUN — superseded by round-5 ruling (DEC-209); stub at s-626-1-adversary-pass-17.md |
 | 18 | NOT CLEAN | 0 | 7 | 3 | 0 | 1 ([process-gap]) | NO | WINDOW-ELIGIBLE (isolation CLEAN); ZERO HIGH — ELEVENTH consecutive; F-07 FIXED IN-CYCLE 9312f11f (DEC-211); 7 of 10 round-5-attributable; window 0/1 of 18/19/20; passes 19/20 authorized (DEC-212) |
 | 19 | NOT CLEAN | 2 | 6 | 1 | 1 | 1 ([pg]) | NO | WINDOW-ELIGIBLE (isolation CLEAN); 2H — FIRST PASS WITH HIGH IN WINDOW 18/19/20; FOUR REAL CI-AS-CODE DEFECTS in orchestrator-shipped POL-11 guard (HIGH-001+MED-001/002/003 all closed by a247a343); src/ 0-defect TWELFTH consecutive; HIGH-002 scope breach + MED-004/005 closed fix round 7; MED-006 ROUTED DEC-215; window 0/2 of 18/19/20; anchor migration ends citation-ripple class |
+| 20 | SUPERSEDED | — | — | — | — | — | — | SUPERSEDED per DEC-216 — window 18/19/20 CLOSED 0/2 (pass-20 not dispatched); new STRICT window opens at passes 21/22/23 |
+| 21 | NOT CLEAN | 0 | 3 | 3 | 1 | 0 | NO | WINDOW-ELIGIBLE (isolation CLEAN); ZERO HIGH — THIRTEENTH consecutive zero-src/-defect; **CI floor AUDITED SOUND (all four dimensions at a247a343)**; recurring pattern: "correct change + false claim alongside it"; window 0/1 of 21/22/23; passes 22/23 NOT DISPATCHED; fix round 8 applied; fresh STRICT window passes 22/23/24 |
 
-**Overall convergence: 0 of 3 (Step 4.5 — 17 recorded passes + 2 NOT RUN (16/17); 5 VOID [3 dispatch + 2 isolation]; DEC-199: GRIND to 3/3 CLEAN; DEC-209: ROUND 5 + PASSES 18/19/20 AUTHORIZED; DEC-212: PASSES 19/20 AUTHORIZED; S-626-1 pass-19 NOT CLEAN (window 0/2); 2H FIRST IN WINDOW 18/19/20 — four REAL CI-AS-CODE DEFECTS in orchestrator-shipped POL-11 guard (all closed by a247a343); src/ 0-defect TWELFTH consecutive; anchor migration ends citation-ripple class; pass-20 pending)**
+**Overall convergence: 0 of 3 (Step 4.5 — 18 recorded passes + 2 NOT RUN (16/17) + 1 SUPERSEDED (pass-20, DEC-216) + 2 NOT DISPATCHED (passes 22/23 of window 21/22/23); 5 VOID [3 dispatch + 2 isolation]; DEC-199: GRIND to 3/3 CLEAN; DEC-216: STRICT window passes 21/22/23 OPENED; DEC-219: FRESH STRICT window passes 22/23/24; S-626-1 pass-21 NOT CLEAN (window 0/1 of 21/22/23); ZERO HIGH — THIRTEENTH consecutive zero-src/-defect; CI floor AUDITED SOUND all four dimensions; fix round 8 applied 84ab32ac; passes 22/23 NOT DISPATCHED; fresh STRICT window passes 22/23/24 not yet dispatched)**
 
-**SEVERITY DECAY RECORDED (THEN REVERSED, THEN 2H IN WINDOW):** Window 9/10/11 carried 4 HIGH each. Window 12/13/14 carries ZERO HIGH. Passes 15 and 18 carry ZERO HIGH but 15 was a TREND REVERSAL (9→15). Pass-19 carries 2 HIGH — the first HIGH findings in the 18/19/20 window — but both are non-src/ defects: HIGH-001 is in the `ci.yml` floor script (orchestrator-shipped POL-11 guard), HIGH-002 is a spec scope breach. Code is 0-defect across TWELVE consecutive passes (6–15+18+19, minus VOID passes 9+11). **THREE CONSECUTIVE REVIEWERS (passes 13, 14, 15) independently prescribed the same mechanical remedy: a STORY-INDEX coherence guard and a BC sub-element citation guard.** Fix round 5 applied; pass-18 confirmed 15 of 15 pass-15 findings FIXED but added 10 new findings (7 round-5-attributable). Fix round 7 applied; pass-19 found 10 new findings, 4 of which were REAL CI-AS-CODE DEFECTS in the orchestrator-shipped POL-11 guard.
+**SEVERITY DECAY RECORDED (THEN REVERSED, THEN 2H IN WINDOW, THEN ZERO HIGH AGAIN):** Window 9/10/11 carried 4 HIGH each. Window 12/13/14 carries ZERO HIGH. Passes 15 and 18 carry ZERO HIGH but 15 was a TREND REVERSAL (9→15). Pass-19 carries 2 HIGH — the first HIGH findings in the 18/19/20 window — but both are non-src/ defects (CI-as-code + spec scope breach). Pass-21 returns to ZERO HIGH (pass-20 SUPERSEDED). Code is 0-defect across THIRTEEN consecutive passes (6–15+18+19+21, minus VOID passes 9+11). **THREE CONSECUTIVE REVIEWERS (passes 13, 14, 15) independently prescribed the same mechanical remedy: a STORY-INDEX coherence guard and a BC sub-element citation guard.** Fix round 5 applied; pass-18 confirmed 15 of 15 pass-15 findings FIXED but added 10 new findings (7 round-5-attributable). Fix round 7 applied; pass-19 found 10 new findings, 4 of which were REAL CI-AS-CODE DEFECTS in the orchestrator-shipped POL-11 guard. Fix round 8 applied; pass-21 found 7 findings, all documentation/citation-accuracy defects, none in src/.
 
-**META-PATTERN SIXTH TIME + CLASS ELIMINATION:** Pass-19 independently re-verified that fix round 6 executed its mechanical mandate essentially perfectly but failed sweep-to-class at one site in S-MUTANTS-EXAMINE-GLOBS-1.md (while correcting seven siblings). **Round-7's anchor-form migration is CLASS-ELIMINATING — the first structural fix in six rounds.** `ci.yml :: <job-id>` notation does not drift on line shifts. Three prior citation-ripple sweeps (+39, +54, cumulative +93 lines) will not recur for migrated surfaces. **Codify: DEC-213 anchor-form convention in all future story templates.**
+**META-PATTERN SEVENTH TIME + RECURRING PATTERN NAMED:** Pass-21 reviewer named the recurring pattern precisely: *"a correct change landed alongside a false claim about it."* MED-001/002/003 all fit this shape: round-7 fixes were behaviorally correct but introduced false claims in the accompanying documentation. The symbol-corpus sweep executed in fix round 8 found exactly ONE broken citation in the entire `.factory/stories/` corpus (the F-01 dead symbol), which bounds the practical exposure of the CITATION-GUARD-SRC-ONLY gap far more tightly than previously assumed. **Round-7's anchor-form migration remains CLASS-ELIMINATING for ci.yml citations.** The +3 line shift from fix round 8 affected only demo transcripts, confirming DEC-213's anchor-form migration is working as designed.
 
 **Findings accumulator (running total):**
 - Passes 1–5: 36 total (HIGH: 0, MED: 11, LOW: 16, INFO: 9)
@@ -233,7 +237,10 @@ ADV-P4-INFO-005   --informs--> S-641-1 AC-2 (complete let-chain detection form s
 - Pass 15 adds: +15 (HIGH: 0, MED: 6, LOW: 9, INFO: 0) [WINDOW-ELIGIBLE; ZERO HIGH; TREND REVERSAL]
 - Passes 16/17: +0 (NOT RUN — superseded by round-5 ruling per DEC-209)
 - Pass 18 adds: +10 (HIGH: 0, MED: 7, LOW: 3, INFO: 0) [WINDOW-ELIGIBLE; ZERO HIGH; F-07 FIXED IN-CYCLE]
-- **Grand total: 164 findings (CRIT: 0, HIGH: 17, MED: 71, LOW: 64, INFO: 12)**
+- Pass 19 adds: +10 (HIGH: 2, MED: 6, LOW: 1, INFO: 1) [WINDOW-ELIGIBLE; 2H FIRST IN WINDOW; four CI-as-code defects all closed by a247a343]
+- Pass 20: +0 (SUPERSEDED — DEC-216; window 18/19/20 CLOSED 0/2)
+- Pass 21 adds: +7 (HIGH: 0, MED: 3, LOW: 3, INFO: 1) [WINDOW-ELIGIBLE; ZERO HIGH; THIRTEENTH zero-src/-defect; CI floor SOUND; passes 22/23 NOT DISPATCHED]
+- **Grand total: 181 findings (CRIT: 0, HIGH: 19, MED: 80, LOW: 68, INFO: 14)**
 
 ---
 
@@ -664,5 +671,42 @@ ADV-P6-HIGH-003 == ADV-P7-HIGH-002 == ADV-P8-OBS-001 (same gap; pass-8 demoted v
 - **Post-capture routing:** HIGH-001+MED-001/002/003 FIXED product commit a247a343; HIGH-002 FIXED fix round 7 (S-626-1 v1.13; DEC-214); MED-005 FIXED fix round 7 (STORY-INDEX v1.5.57; S-641-1 v0.8); LOW-001 FIXED fix round 7 (S-640-1 v0.6; DEC-213); MED-004 PARTIALLY CLOSED (template block); MED-006 ROUTED (DEC-215); INFO-001 NOTED
 - **Convergence:** 0/3 — window 0/2; pass-20 pending (head a247a343); anchor migration CLASS-ELIMINATING (DEC-213); ORCHESTRATOR-SHIPPED-DEFECTIVE-GUARD + ORCHESTRATOR-UNVERIFIED-BREAK-SPECULATION new drift items
 - **Detail artifact:** `s-626-1-adversary-pass-19.md`
+
+---
+
+## Pass 20 — SUPERSEDED
+
+Pass-20 was superseded per DEC-216 before dispatch. Window 18/19/20 CLOSED at 0/2 (required 3/3 CLEAN). No findings. No artifact. DEC-216 opened fresh STRICT window 21/22/23.
+
+---
+
+## Pass 21 Finding Catalog
+
+| ID | Severity | Classification | Title | Status | Notes |
+|----|----------|----------------|-------|--------|-------|
+| ADV-P21-MED-001 | MEDIUM | spec-accuracy / false-claim-in-prose | tests/ci_gate_completeness.rs pin names wrong test + wrong job count (test_ci_gate_named_canary_check DNE; 9-job wrong, correct 8) | FIXED — fix round 8 (84ab32ac) | "correct change, false claim" pattern |
+| ADV-P21-MED-002 | MEDIUM | spec-accuracy / false-comment | ci.yml step comment "1 lib + ~54 integration + ~1 doc" sums to 56, not 103 actual test count | FIXED — fix round 8 (84ab32ac) | Comment injected by fix round 7 immediately stale |
+| ADV-P21-MED-003 | MEDIUM | spec-accuracy / missing-assertion | Pin docstring claimed `set +o pipefail` was verified; no assert existed — claim was aspirational | FIXED — fix round 8 (84ab32ac) | False docstring; pipefail assertion now present |
+| ADV-P21-LOW-001 | LOW | spec-fidelity / sweep-miss | BC-5.3.003 Source field omits `test_board_view_falls_back_to_uuid_when_team_not_cached` | FIXED — fix round 8 (84ab32ac) | Pass-18 MED-002 prescribed sweep; still missed |
+| ADV-P21-LOW-002 | LOW | spec-fidelity / count-mismatch | S-626-1 AC-9 heading "adds 2 behavioral contracts"; footer traces 3 BCs | FIXED — fix round 8 (84ab32ac) | BC-5.3.003 added between heading and footer authoring |
+| ADV-P21-LOW-003 | LOW | ci-citation / template-drift | S-BC-CITATION-GUARD-1.md contains "live ci.yml line 111" raw line citations | DEFERRED — DEC-217 (template drift blocks edits; placeholder approach DECLINED) | Would require template-compliant full rewrite |
+| ADV-P21-INFO-001 | INFO | spec-accuracy / bc-count-drift | bc-02-issue-read.md `bc_count: 94` frontmatter and body "92 BCs" both wrong (correct: 106) | FIXED — fix round 8 (84ab32ac); class sweep caught bc-03 (120→140) simultaneously | Domain-spec count class; DEC-218 directed sweep |
+
+## Pass 21 Isolation Note
+
+**CLEAN.** No banned-path file read. No prior adversary pass artifacts accessed. Incidental exposure: banned-path filenames appeared as quoted text INSIDE in-perimeter files; no content read. Self-disclosed.
+
+## Pass 21 Summary
+
+- **Verdict:** NOT CLEAN — 0 HIGH + 3 MEDIUM + 3 LOW + 1 INFO; **ZERO HIGH (THIRTEENTH consecutive zero-src/-defect pass)**; all findings documentation/citation-accuracy class; no src/ code defects; window 0/1 of 21/22/23 (DEC-216 window); passes 22/23 NOT DISPATCHED (window moot after NOT CLEAN); DEC-219 fresh STRICT window = passes 22/23/24
+- **Post-capture routing:** MED-001/002/003 + LOW-001/002 + INFO-001 FIXED fix round 8 (84ab32ac); LOW-003 DEFERRED (DEC-217); class sweep (DEC-218) also fixed bc-03 domain-spec count drift
+- **Convergence:** 0/3 — fresh STRICT window 22/23/24 (DEC-219); CI floor SOUND all four dimensions; src/ 0-defect THIRTEENTH consecutive; "correct change, false claim" pattern named by reviewer
+- **Detail artifact:** `s-626-1-adversary-pass-21.md`
+
+---
+
+## Passes 22/23 — NOT DISPATCHED
+
+Passes 22/23 of window 21/22/23 (DEC-216) were NOT DISPATCHED. When pass-21 returned NOT CLEAN, the window closed at 0/1 — continuing dispatching passes 22/23 in the same window would carry no convergence credit. Per DEC-219, the fresh STRICT window is passes 22/23/24. These passes will be dispatched after the ADVERSARY-21+FIX-ROUND-8 burst commit lands on factory-artifacts.
 
 ---

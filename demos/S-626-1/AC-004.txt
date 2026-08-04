@@ -1,26 +1,26 @@
-# Head: a247a343  Captured: 2026-08-03  Status: re-captured (Round 8 — ci.yml line numbers shifted +54 by commit a247a343; grep output line numbers updated (:99→:153, :109→:163, :111→:165, :115→:169, :121→:175, :125→:179))
+# Head: 84ab32ac  Captured: 2026-08-04  Status: re-captured (Round 10 — ci.yml line numbers shifted +3 by commit 84ab32ac; grep output line numbers updated (:153→:156, :163→:166, :165→:168, :169→:172, :175→:178, :179→:182))
 
 $ cd /Users/zious/Documents/GITHUB/jira-cli/.worktrees/S-626-1 && grep -n "1\.85\.0\|RUSTUP_TOOLCHAIN" .github/workflows/ci.yml
-153:    name: MSRV (1.85.0)
-163:      - uses: dtolnay/rust-toolchain@fa04a1451ff1842e2626ccb99004d0195b455a88  # 1.85.0
-165:          toolchain: "1.85.0"
-169:      # 1.85.0. wiremock (0.6.x) uses let-chains and ships no rust-version field
-175:      # require dev-dependencies that build at 1.85.0 — a wiremock downgrade-pin
-179:          RUSTUP_TOOLCHAIN: "1.85.0"
+156:    name: MSRV (1.85.0)
+166:      - uses: dtolnay/rust-toolchain@fa04a1451ff1842e2626ccb99004d0195b455a88  # 1.85.0
+168:          toolchain: "1.85.0"
+172:      # 1.85.0. wiremock (0.6.x) uses let-chains and ships no rust-version field
+178:      # require dev-dependencies that build at 1.85.0 — a wiremock downgrade-pin
+182:          RUSTUP_TOOLCHAIN: "1.85.0"
 
 ---
 
 AC-004 assertions verified:
-  - The comment on the msrv dtolnay/rust-toolchain step reads "# 1.85.0" CONFIRMED (ci.yml :: msrv, :163)
-  - The toolchain input reads "1.85.0" CONFIRMED (ci.yml :: msrv, :165)
+  - The comment on the msrv dtolnay/rust-toolchain step reads "# 1.85.0" CONFIRMED (ci.yml :: msrv, :166)
+  - The toolchain input reads "1.85.0" CONFIRMED (ci.yml :: msrv, :168)
   - Comment and explicit toolchain input agree: both say 1.85.0
-  - The job name also reads "MSRV (1.85.0)" CONFIRMED (ci.yml :: msrv, :153), providing triple agreement
-  - RUSTUP_TOOLCHAIN env on the cargo check step CONFIRMED (ci.yml :: msrv, :179)
-  - Lines :169 and :175 are two comment lines within the 10-line wiremock-scope comment block
+  - The job name also reads "MSRV (1.85.0)" CONFIRMED (ci.yml :: msrv, :156), providing triple agreement
+  - RUSTUP_TOOLCHAIN env on the cargo check step CONFIRMED (ci.yml :: msrv, :182)
+  - Lines :172 and :178 are two comment lines within the 10-line wiremock-scope comment block
     (ci.yml :: msrv) that explains why --all-targets is excluded; they are not separate RUSTUP_TOOLCHAIN
     entries. They reference "1.85.0" as context in the explanation text.
   - Prior artifact recorded wrong comment text ("# the 1.85.0 MSRV toolchain.
     --all-features is intentional." at :77) and wrong env line (:80). The comment block was
     rewritten to the 10-line wiremock-scope version after that recording; RUSTUP_TOOLCHAIN
-    is at :179 (was :125 before the +54 shift from commit a247a343; was :86 before the
-    +39 shift from commit 9312f11f).
+    is at :182 (was :179 before the +3 shift from commit 84ab32ac; was :125 before the
+    +54 shift from commit a247a343; was :86 before the +39 shift from commit 9312f11f).
