@@ -7,13 +7,28 @@ producer: state-manager
 timestamp: 2026-05-08T00:00:00
 cycle: "cycle-001"
 inputs: [STATE.md]
-input-hash: "a278849"
+input-hash: "21ddd82"
 traces_to: STATE.md
 ---
 
 # Archived Session Checkpoints — cycle-001
 
 Superseded checkpoints are archived here when STATE.md is updated with a newer one.
+
+---
+
+## Checkpoint: ADVERSARY-24-25-26+FIX-ROUND-11 burst (2026-08-04T21:15:00Z) [ARCHIVED]
+
+_Was the active checkpoint after ADVERSARY-24-25-26+FIX-ROUND-11 (passes 24/25 CLEAN/ELIGIBLE/FIRST+SECOND; pass-26 NOT CLEAN 0H+1M+2L+2I/ELIGIBLE; window 24/25/26 BROKEN 2/3; DEC-224+225+226; fix round 11 e49230a7; ADV-P1-INDEX v2.3 197 findings; STATE.md v2.6). Superseded when SESSION-WRAP-BURST-2 (human /wrap) updated STATE.md v2.7._
+
+| Field | Value |
+|-------|-------|
+| Position | Feature Mode SOH-DX-1 F4 delivery. F2 APPROVED (DEC-196), F3 APPROVED (DEC-197). **S-626-1 DELIVERED** — PR #667 open, feature HEAD e49230a7 (fix round 11: S-626-1 v1.16 authorization trail corrected; STORY-INDEX v1.5.61; bc-5-boards-sprints.md PC1 three cell states; INDEX.md Round-12 positional fix; ci.yml stale-docstring structural form; 17-entry numeral removed; demos re-stamped), branch ci/fix-toolchain-sha-msrv. **HELD per DEC-202** pending fresh 3-pass window. Passes 24/25 CLEAN (ELIGIBLE; FIRST+SECOND consecutive clean verdicts). Pass-26 NOT CLEAN (0H+1M+2L+2I; ELIGIBLE; P26-MED-001 authorization trail fixed; P26-LOW-002 ROUTED). Window 24/25/26 BROKEN 2/3. ADV-P1-INDEX v2.3 (197 findings). **DEC-225: fresh STRICT window = S-626-1 passes 27/28/29, 0/3, not yet dispatched.** DEC-224 ISOLATION ELIGIBILITY PRINCIPLE established. |
+| Convergence | S-626-1 Step 4.5 = 0/3. 23 recorded passes (6 VOID: 3 dispatch + 3 isolation) + 2 NOT RUN (passes 16/17, DEC-209) + pass-20 SUPERSEDED (DEC-216). 197 total findings. Window 24/25/26 BROKEN 2/3. src/ 0-defect EIGHTEENTH consecutive. **Fresh STRICT window: passes 27/28/29 against head e49230a7. All 3 must return CLEAN (DEC-191(c) conservative reading; DEC-204 UNADJUDICATED).** |
+| Not yet done | (1) S-626-1 passes 27/28/29 STRICT window (DEC-225; head e49230a7; scoped greps with PRE-FLIGHT CHECK; all 3 must be CLEAN). (2) S-640-1 handoff: on MSRV >=1.88, delete `No let-chains` from CLAUDE.md Conventions AND in-code comments. (3) S-MAINT-576-HYG-1 needs scheduling. (4) MIXED-SET-DASH-ARM-UNPINNED test story needed (DEC-226). DEC-204 UNADJUDICATED. AX23-001 PENDING. |
+| In flight | develop @ acdad174 (PR #667 HELD — DEC-202; head e49230a7). .factory @ factory-artifacts. Worktree: .worktrees/S-626-1 (branch S-626-1). Product repo untracked: .claude/hooks/, .claude/pr-reviews/, .claude/settings.local.json.bak, .claude/spec-config.json (pre-existing). |
+| Pending human decisions | (1) DEC-225: fresh STRICT window passes 27/28/29 now ready to dispatch. (2) AX23-001 out-of-delta ratification (non-blocking). (3) DEC-204 UNADJUDICATED (DEC-191(d) ceiling ruling). PR queue: #667 (HELD — DEC-202), #662 (MERGEABLE), #655-#659 (soaking), #628/#574. DO NOT close #429. |
+| Resume command | Open fresh session → /vsdd-factory:next-step. Dispatch S-626-1 passes 27/28/29 concurrently (head e49230a7; DEC-225; scoped greps with PRE-FLIGHT CHECK; all 3 must return CLEAN for Step 4.5 = 3/3). DEC-224 ISOLATION ELIGIBILITY PRINCIPLE: ELIGIBLE (not VOID) when nothing surfaced. ORCHESTRATOR-SHIPPED-DEFECTIVE-GUARD HIGH — six independent sound audits (recommend downgrade if passes 27/28/29 all confirm). PR #667 HELD. AX23-001 PENDING. |
 
 ---
 
