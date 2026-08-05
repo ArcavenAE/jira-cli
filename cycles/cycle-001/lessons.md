@@ -6588,3 +6588,26 @@ So 2 of 3 reviewers missed the CRITICAL, and 1 affirmatively blessed it. The onl
 _Trigger: ADV-C001-P79-CRITICAL-001 (2026-07-29) — pass-81 endorsed the defect that pass-79 found CRITICAL; orchestrator root-cause analysis confirmed by reading src/output.rs + tests/issue_create_echo.rs; fixed at v1.3.166; two-dimension falsification prescription added to convergence window discipline._
 _Tagged: [spec-defect] [orchestrator-error] [detection-asymmetry] [convergence-window] [falsifiability] [channel-correctness] [soh-dx-1] [f2-adversary-grind] [codified]_
 
+---
+
+### [codified] ORCHESTRATOR-DISPOSITION-DRIFTS-FROM-ITEMIZATION: disposition/summary lines must be derived mechanically from the itemized list, not written alongside it
+
+**Pattern (two datapoints, both this session, both self-caught by the orchestrator or a state-manager cross-check against the itemization — never by a downstream reviewer):**
+
+1. **Round 13 (`1cbcc3b8`, 2026-08-05):** The orchestrator's disposition for `ADV-P32-MED-002` read "FIXED r13 (v1.19: AC-3 vehicle, 8-commit trail, CHANGELOG row widened)". The "CHANGELOG row widened" clause was false — round 13's actual fix instructions never included that edit target, so it was never done. The `CHANGELOG.md` File Structure Requirements row stayed at its stale singular form through frozen head `0adcae34`, and three independent adversarial reviewers in window 33/34/35 (`ADV-P33-LOW-002`, `ADV-P34-LOW-002`, `ADV-P35-LOW-001`) each independently caught the same gap the disposition had claimed was closed.
+
+2. **Round 14 (this burst, `7ab5b9d0`, 2026-08-05):** The orchestrator's burst-briefing disposition line for the round-14 INFO tally read "Of 11 INFO: 3 FIXED/partially fixed, 8 OPEN." The itemized per-finding list in the same briefing — the same message — showed only 2 findings as FIXED/PARTIAL (`ADV-P33-INFO-001` partial, `ADV-P34-INFO-001` fixed); the other 9 were OPEN. `2+9=11` and `3+8=11` both sum correctly, which is exactly what let the wrong figure survive being written down — the arithmetic self-check that would normally catch a miscount is blind to this class of error, because it only validates that the parts sum to the whole, not that the parts match the itemized reality. Caught by the executing agent cross-checking the summary line against the itemized list before writing it into a permanent artifact, then confirmed by the orchestrator's own independent recount.
+
+**Root cause, common to both:** the disposition/summary line was composed *by the orchestrator, alongside* the itemized list, rather than *derived from* it. Composing a prose summary from memory or from a mental tally — even moments after enumerating the itemized facts — introduces drift that a same-total arithmetic check cannot detect, because the check validates the sum, not the membership.
+
+**Prescription (actionable, applies to any process — orchestrator dispositions, burst-briefing summary lines, changelog "N entries" declarations — that pairs an itemized list with a rolled-up summary):**
+
+> A disposition or summary line describing "N of M itemized things are in state X" MUST be computed mechanically from the itemized list at the point of writing — by literally counting the rows tagged X — not composed from a running mental tally kept while drafting the list. If a summary line and its itemized list are drafted in the same pass, re-derive the summary by re-scanning the finished list as a distinct, final step, rather than trusting the count accumulated while enumerating.
+>
+> A downstream consumer of the disposition (state-manager, reviewer, or the orchestrator itself on a later pass) should default to recomputing the summary from the itemization when the two are both present and treat any mismatch as a stop-and-report condition (per the standing "do not silently adjust a number that doesn't reconcile" burst directive) — this is what caught datapoint 2 before it was committed.
+
+**Both errors this session were the orchestrator's, not any fix-round agent's or reviewer's** — the first was attributed explicitly in the round-14 burst's CORRECTION record; the second was self-corrected by the orchestrator on the state-manager's flag. Recorded here because the pattern (not the individual instances) is the lesson: two independent recurrences of the same failure mode — disposition drifting from itemization — in one session is enough to codify a rule against it, per this project's standing practice of promoting a second recurrence from "noted" to "codified."
+
+_Trigger: `1cbcc3b8` false "CHANGELOG row widened" disposition clause (round 13, caught by three independent adversary reviewers in window 33/34/35) + round-14 burst-briefing "3 FIXED/8 OPEN" INFO-tally miscount (caught by the state-manager cross-checking the summary against the itemization before commit, confirmed by orchestrator recount) — both 2026-08-05, both S-626-1 Step 4.5. Recorded in the ADVERSARY-33-34-35+FIX-ROUND-14 burst family (`7ab5b9d0` + this follow-up commit)._
+_Tagged: [orchestrator-error] [disposition-drift] [itemization-integrity] [summary-line-hygiene] [soh-dx-1] [step-4.5-grind] [codified]_
+
