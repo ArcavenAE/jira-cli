@@ -1,29 +1,29 @@
 ---
 document_type: adversarial-review-index
 level: ops
-version: "2.5"
+version: "2.6"
 status: in-review
 producer: adversary
-timestamp: 2026-08-05T14:35:00Z
+timestamp: 2026-08-05T16:10:00Z
 phase: "5"
-pass: 32
+pass: 35
 inputs: [.factory/stories/S-626-1.md, .factory/stories/S-640-1.md, .factory/stories/S-641-1.md, .factory/stories/S-MUTANTS-EXAMINE-GLOBS-1.md, .factory/stories/STORY-INDEX.md, .github/workflows/ci.yml, tests/ci_gate_completeness.rs, tests/cli_handler.rs, tests/mutants_glob_existence.rs, CLAUDE.md, Cargo.toml, CHANGELOG.md]
 traces_to: .factory/stories/S-626-1.md
-total_findings: 233
-severity_distribution: { CRIT: 0, HIGH: 19, MED: 87, LOW: 90, INFO: 37 }
+total_findings: 252
+severity_distribution: { CRIT: 0, HIGH: 19, MED: 89, LOW: 96, INFO: 48 }
 story: S-626-1
 cycle: cycle-001
-feature_head: 0adcae34 (fix-round-13 product commit; passes 30/31/32 ran against frozen head 1e696128 (fix round 12); fix round 13 1e696128→c2093a73→0adcae34 closed all pass-30/31/32 substantive findings; branch pushed, PR #667 head now 0adcae34, CI 15/15 green)
+feature_head: d848d9a5 (fix-round-14 product commit; passes 33/34/35 ran against frozen head 0adcae34 (fix round 13); fix round 14 0adcae34→d848d9a5 closed all pass-33/34/35 substantive findings; branch pushed, PR #667 head now d848d9a5, CI 15/15 green)
 pr: 667
 basis: TRUE ADVERSARY AGENT (not a DEC-190 substitute)
-convergence: 0 of 3 (Step 4.5 window — DEC-199 GRIND to 3/3 CLEAN; window 30/31/32 CLOSED 0/3 (pass-30 NOT CLEAN + pass-31 NOT CLEAN + pass-32 NOT CLEAN; BROKEN — worst window of the cycle); DEC-224 ISOLATION ELIGIBILITY PRINCIPLE held — all three ELIGIBLE; 29 recorded passes; src/ 0-defect TWENTIETH consecutive; fix round 13 applied 1e696128→c2093a73→0adcae34; fresh STRICT window = passes 33/34/35 (DEC-228, designated, not yet dispatched))
+convergence: 0 of 3 (Step 4.5 window — DEC-199 GRIND to 3/3 CLEAN; window 33/34/35 CLOSED 0/3 (pass-33 NOT CLEAN + pass-34 NOT CLEAN + pass-35 NOT CLEAN; BROKEN); DEC-224 ISOLATION ELIGIBILITY PRINCIPLE held — all three ELIGIBLE; 32 recorded passes; src/ 0-defect TWENTY-FIRST consecutive; fix round 14 applied 0adcae34→d848d9a5 (two-stage: code, then exhaustive declaration audit, then spec); fresh STRICT window = passes 36/37/38 (DEC-229, designated, not yet dispatched))
 void_spawns: 6 (passes 6/7/8 first-attempt background subagents; pass-9 isolation breach; pass-11 isolation breach; pass-22 isolation breach)
 not_run: 2 (passes 16/17 — superseded by round-5 ruling per DEC-209; see s-626-1-adversary-pass-16.md and s-626-1-adversary-pass-17.md)
 superseded: 1 (pass-20 — superseded per DEC-216; window 18/19/20 CLOSED 0/2)
 not_dispatched: 6 (passes 22/23 of window 21/22/23 — superseded when pass-21 returned NOT CLEAN; passes 23/24 of window 22/23/24 — superseded when pass-22 returned VOID+NOT CLEAN; passes 24/25 of window 23/24/25 — superseded when pass-23 returned NOT CLEAN; passes 24/25/26 subsequently dispatched under fresh window DEC-223 and ran)
 ---
 
-# Adversarial Review Index — S-626-1 (SOH-DX-1) Passes 1..32
+# Adversarial Review Index — S-626-1 (SOH-DX-1) Passes 1..35
 
 ## Pass 1 Finding Catalog
 
@@ -1019,5 +1019,104 @@ Pass-32 closed window 30/31/32 at 0/3, run against frozen head `1e696128` — th
 - **Fix round 13:** applied. Product head `1e696128` → `c2093a73` → `0adcae34` (branch pushed; PR #667 head is now `0adcae34`, CI 15/15 green). Spec side: S-626-1 v1.18→v1.19 (AC-3 verification vehicle + `--locked` correction + hedge discharged; 8-commit authorization trail at both sites; CLAUDE.md Conventions bullet + 3 in-code comments declared; ci.yml scope-rationale block declared; CHANGELOG row widened to 3 entries; test count → 2346, anchored to platform and commit). No tests added, removed, or renamed; independently measured at `0adcae34`: 103 binaries / 2346 passed / 0 failed / 100 ignored.
 - **Disposition:** 3 MEDIUM + 10 LOW all FIXED by round 13. Of 8 INFO: 3 FIXED/RESOLVED (P31-INFO-001, P31-INFO-002, P32-INFO-003), 5 OPEN (P30-INFO-001, P30-INFO-002, P31-INFO-003, P32-INFO-001, P32-INFO-002) — all disclosed limitations or accurately-documented residuals.
 - **Fresh window:** passes 33/34/35 against frozen head `0adcae34` (DEC-228), designated but not yet dispatched, pending human go-ahead. Step 4.5 remains 0/3. PR #667 remains HELD per DEC-202.
+
+---
+
+## CORRECTION to ADV-P32-MED-002 disposition (recorded ADVERSARY-33-34-35+FIX-ROUND-14 burst, 2026-08-05)
+
+**The disposition recorded above for `ADV-P32-MED-002` — "FIXED — fix round 13 (v1.19: AC-3 vehicle, 8-commit trail, CHANGELOG row widened)" — is PARTIALLY FALSE.** The "CHANGELOG row widened" clause did not happen in fix round 13. The orchestrator's round-13 disposition listed it as fixed, but the fix-round-13 instructions never actually included the CHANGELOG File Structure Requirements row as an edit target — it was omitted from the work orchestrated, not merely missed by the agent doing the work. As a direct result, the row still read "Dependency pin entry per Task 7c" (singular) against three delivered CHANGELOG entries all the way through frozen head `0adcae34`, and three independent reviewers in window 33/34/35 (`ADV-P33-LOW-002`, `ADV-P34-LOW-002`, `ADV-P35-LOW-001`) caught the same gap. The row was genuinely widened only in fix round 14 (v1.20), at product commit `d848d9a5`.
+
+**Attribution:** this error belongs to the orchestrator's round-13 disposition-writing, not to any fix-round-13 agent — the agents were never instructed to make the CHANGELOG edit, so they cannot have failed to make it. The `1cbcc3b8` burst commit that recorded the false disposition is NOT rewritten (history is preserved as delivered); this entry is the correcting record and is the current authoritative status for `ADV-P32-MED-002`. The `AC-3 vehicle` and `8-commit trail` clauses of the original `1cbcc3b8` disposition were true and remain uncorrected.
+
+---
+
+## Pass 33 Finding Catalog (Fresh Window DEC-228: NOT CLEAN)
+
+Pass-33 opened window 33/34/35 NOT CLEAN, run against frozen head `0adcae34`. ELIGIBLE per DEC-224. One MEDIUM + two LOW + four INFO findings.
+
+| ID | Severity | Classification | Title | Status | Notes |
+|----|----------|----------------|-------|--------|-------|
+| ADV-P33-MED-001 | MEDIUM | declaration-integrity | `tests/team_column_parity.rs` trail claimed 3 commits (`b51fc26a`+`c88374b4`+`6d73b3ef`); actual 4 — `148a9489` missing. v1.16 asserted "All three branch commits… verified against `git log`" — a false completeness claim. Survived prior audits because `148a9489` is +2/−2 net-zero, so the 487→655 = 168 line arithmetic still balanced | FIXED — fix round 14 (v1.20, 4-commit set at all sites; v1.16 claim corrected as superseded) | |
+| ADV-P33-LOW-001 | LOW | stale-diagnostic | msrv test's first assert message described a `rust-toolchain.toml` fallback that cannot occur at the pinned SHA; contradicted by CLAUDE.md and AC-3 v1.19 | FIXED — fix round 14 (`d848d9a5`) | |
+| ADV-P33-LOW-002 | LOW | undeclared-scope | `CHANGELOG.md` FSR row declares 1 entry; 3 delivered | FIXED — fix round 14 (v1.20) | |
+| ADV-P33-INFO-001 | INFO | verification-coverage | AC-3's third requirement `--locked` had no regression pin; AC-2/4/5/7 likewise unpinned (one-shot delivery criteria, disclosed, not misstated) | PARTIALLY FIXED — fix round 14 (`d848d9a5` pinned `--locked`) | |
+| ADV-P33-INFO-002 | INFO | guard-assertion-precision | 3 of 7 assertions echo/comment-satisfiable; docstring discloses accurately | OPEN — disclosed | |
+| ADV-P33-INFO-003 | INFO | framing | `mutants_glob_existence.rs` docstring described the removed count as one that "would rot"; it had already rotted (16 globs vs stated 11) | OPEN | |
+| ADV-P33-INFO-004 | INFO | symmetry-note | 3 branch commits touched the `src/` files; AC-9 cites only `cc7f6da5`. Story makes no completeness claim for `src/`, so not a defect | OPEN — recorded for symmetry | |
+
+## Pass 33 Isolation Note
+
+**ELIGIBLE.** Reviewer told up front about the ISOLATION-WHITELIST-LEAKS-FINDING-IDS defect and instructed to treat story-changelog finding IDs as scope declarations only. Zero banned content used to bias the review. Per DEC-224: ELIGIBLE.
+
+## Pass 33 Summary
+
+- **Verdict:** NOT CLEAN — 0 HIGH + 1 MEDIUM + 2 LOW + 4 INFO (0 CLOSED, 4 OPEN/PARTIAL); ELIGIBLE; src/ 0-defect TWENTY-FIRST consecutive pass
+- **Post-capture routing:** 3 substantive findings (1 MED + 2 LOW) FIXED fix round 14; 1 INFO PARTIALLY FIXED; 3 INFO OPEN
+- **Convergence:** window 33/34/35 opens NOT CLEAN
+- **Detail artifact:** not yet captured as a standalone file at burst time
+
+---
+
+## Pass 34 Finding Catalog (Fresh Window DEC-228: NOT CLEAN)
+
+Pass-34 continued window 33/34/35 NOT CLEAN, run against frozen head `0adcae34`. ELIGIBLE, same class as pass-33. Three LOW + four INFO findings.
+
+| ID | Severity | Classification | Title | Status | Notes |
+|----|----------|----------------|-------|--------|-------|
+| ADV-P34-LOW-001 | LOW | declaration-integrity | `team_column_parity.rs` trail 3 vs 4; explains the net-zero-arithmetic survival mechanism | FIXED — fix round 14 | Concurs ADV-P33-MED-001 |
+| ADV-P34-LOW-002 | LOW | cross-surface-drift | Architecture Mapping omits `--locked`, the ci.yml msrv scope-rationale comment, the CLAUDE.md Conventions bullet, and the three in-code comments — all declared on FSR/AC surfaces | FIXED — fix round 14 (v1.20) | |
+| ADV-P34-LOW-003 | LOW | missing-regression-pin | `--locked` unpinned; `grep -rn -- '--locked' tests/` returned zero | FIXED — fix round 14 (`d848d9a5`, proven red on removal / green on restore) | |
+| ADV-P34-INFO-001 | INFO | citation-convention | The three S-626-1 CHANGELOG entries cite the story ID but not issue `#626`, unlike comparable prior entries | FIXED — fix round 14 (`d848d9a5`) | |
+| ADV-P34-INFO-002 | INFO | disclosed-limitation | MSRV enforcement excludes `src/` inline `#[cfg(test)]` and `tests/` | OPEN — disclosed | |
+| ADV-P34-INFO-003 | INFO | guard-assertion-precision | 3 of 7 echo-satisfiable, disclosed; load-bearing ones verified by perturbation | OPEN | Concurs ADV-P33-INFO-002 |
+| ADV-P34-INFO-004 | INFO | unverifiable-citation | `ci.yml:60-62` cites "TD-VSDD-057 / prism PR #127" — a cross-project reference resolvable only inside factory artifacts, in a public workflow file | OPEN | |
+
+## Pass 34 Isolation Note
+
+**ELIGIBLE.** Same self-disclosed letter-of-rule deviations as pass-33. Zero banned content used to bias the review. Per DEC-224: ELIGIBLE.
+
+## Pass 34 Summary
+
+- **Verdict:** NOT CLEAN — 0 HIGH + 0 MEDIUM + 3 LOW + 4 INFO (4 FIXED, 3 OPEN); ELIGIBLE; src/ 0-defect TWENTY-FIRST consecutive pass (concurring with pass-33)
+- **Post-capture routing:** 3 LOW + 1 INFO FIXED fix round 14; 3 INFO OPEN
+- **Convergence:** window 33/34/35 remains NOT CLEAN at this point
+- **Detail artifact:** not yet captured as a standalone file at burst time
+
+---
+
+## Pass 35 Finding Catalog (Fresh Window DEC-228: NOT CLEAN — Window CLOSED 0/3)
+
+Pass-35 closed window 33/34/35 at 0/3, run against frozen head `0adcae34`. ELIGIBLE, same class as passes 33/34. One MEDIUM + one LOW + three INFO findings.
+
+| ID | Severity | Classification | Title | Status | Notes |
+|----|----------|----------------|-------|--------|-------|
+| ADV-P35-MED-001 | MEDIUM | declaration-integrity | `team_column_parity.rs` trail 3 vs 4 | FIXED — fix round 14 | Concurs ADV-P33-MED-001, ADV-P34-LOW-001 |
+| ADV-P35-LOW-001 | LOW | undeclared-scope | `CHANGELOG.md` under-declared: entry (1) acknowledged only inside a `risk_mitigations` audit note (a finding record, not a declaration); entry (3) on no surface at all | FIXED — fix round 14 (v1.20) | Concurs ADV-P33-LOW-002 |
+| ADV-P35-INFO-001 | INFO | guard-assertion-precision | 3 of 7 echo-satisfiable, disclosed | OPEN | Concurs ADV-P33-INFO-002/ADV-P34-INFO-003 |
+| ADV-P35-INFO-002 | INFO | pre-existing-slack | `mutants_glob_existence.rs` `FLOOR = 11` vs 16 live globs | OPEN — pre-existing, outside story scope | |
+| ADV-P35-INFO-003 | INFO | `[process-gap]` missing-BC-anchor | AC-3 carries no behavioral-contract anchor; story states this explicitly and routes to team-lead | OPEN — routed | |
+
+## Pass 35 Isolation Note
+
+**ELIGIBLE.** Same self-disclosed letter-of-rule deviations as passes 33/34. Zero banned content used to bias the review. Per DEC-224: ELIGIBLE.
+
+## Pass 35 Summary
+
+- **Verdict:** NOT CLEAN — 0 HIGH + 1 MEDIUM + 1 LOW + 3 INFO (2 FIXED, 3 OPEN); ELIGIBLE; src/ 0-defect TWENTY-FIRST consecutive pass (concurring with passes 33/34); window 33/34/35 CLOSED 0/3
+- **Post-capture routing:** 2 substantive findings (1 MED + 1 LOW) FIXED fix round 14; 3 INFO OPEN
+- **Convergence:** window 33/34/35 CLOSED 0/3 (pass-33 NOT CLEAN; pass-34 NOT CLEAN; pass-35 NOT CLEAN) — window trajectory 24/25/26=2/3 → 27/28/29=1/3 → 30/31/32=0/3 → 33/34/35=0/3
+- **Detail artifact:** not yet captured as a standalone file at burst time
+
+---
+
+## Window 33/34/35 Summary
+
+- **Result:** CLOSED 0/3, BROKEN. Zero CLEAN verdicts. Window trajectory: 24/25/26 = 2/3 → 27/28/29 = 1/3 → 30/31/32 = 0/3 → 33/34/35 = 0/3. Pass-33 NOT CLEAN (1M+2L+4I); pass-34 NOT CLEAN (0M+3L+4I); pass-35 NOT CLEAN (1M+1L+3I). 19 new findings total (0H + 2M + 6L + 11I).
+- **INFO tally:** 11 INFO findings fully itemized. 2 FIXED/PARTIALLY FIXED by fix round 14 (ADV-P33-INFO-001 partial, ADV-P34-INFO-001 fixed); 9 OPEN (ADV-P33-INFO-002/003/004, ADV-P34-INFO-002/003/004, ADV-P35-INFO-001/002/003) as disclosed limitations, pre-existing slack, or routed items. **Reconciliation note:** the burst-briefing disposition text stated "3 FIXED/partially fixed, 8 OPEN" for this tally; per-finding itemization in the three pass tables above supports only 2 FIXED/PARTIALLY FIXED and 9 OPEN (2+9=11 reconciles; 3+8=11 also sums correctly but does not match which specific findings carry a FIXED/PARTIAL status). This entry uses the itemization-derived figures per the "do not adjust a number without reconciling it" burst directive; flagged to team-lead for confirmation.
+- **src/ defects:** zero. src/ 0-defect streak extends to TWENTY-FIRST consecutive pass.
+- **Cross-pass concurrences:** team_column_parity trail P33↔P34↔P35 (all three); CHANGELOG under-declaration P33↔P35; echo-satisfiable assertions P33↔P34↔P35 (all three); `--locked` pin P33↔P34.
+- **Fix round 14 (two-stage: code, then exhaustive declaration audit, then spec):** applied. Product head `0adcae34` → `d848d9a5`, pushed. PR #667 head = `d848d9a5`, CI 15/15 SUCCESS, 0 pending, 0 failed, mergeStateStatus CLEAN (validated on ubuntu/macos/windows). Stage 1 code: added a third assertion to `test_verify_msrv_job_pins_toolchain_and_rustup_toolchain_env` pinning `cargo check --all-features --locked`; reworded the toolchain-pin panic message; added `#626` to the three CHANGELOG entries. No test function added, removed, or renamed; independently measured at `d848d9a5`: 103 binaries / 2346 passed / 0 failed / 100 ignored. Stage 2: a dedicated exhaustive-declaration auditor (no fixing authority) enumerated every declaration surface × all 17 files, re-derived every commit trail from `git log`, measured every recorded number, and resolved every citation — found 7 gaps, 3 of which four consecutive adversarial windows had never surfaced (including two on `STORY-INDEX.md`, outside the adversary review whitelist); it also empirically reproduced the story's central causal claim by compiling comfy-table 7.2.2 in an isolated scratch crate under Rust 1.85.0, hitting the exact `E0658` let-chain error at two sites. Stage 3 spec: S-626-1 v1.19→v1.20 (FIX ROUND 14 entry; AC-3 verification vehicle extended to three assertions + panic-message correction; `ci_gate_completeness.rs` trail → 9 commits; `team_column_parity.rs` trail → 4 commits; v1.16's false completeness claim recorded as superseded; CHANGELOG FSR row + Delivery Checklist expanded to 3 entries; Architecture Mapping gained 6 rows).
+- **Disposition:** 2 MEDIUM + 6 LOW all FIXED by round 14. Of 11 INFO: 2 FIXED/partially fixed, 9 OPEN (all disclosed limitations, pre-existing slack, or routed items) — see Reconciliation note above.
+- **Fresh window:** passes 36/37/38 against frozen head `d848d9a5` (DEC-229), designated but not yet dispatched, pending human go-ahead. Step 4.5 remains 0/3. PR #667 remains HELD per DEC-202.
 
 ---

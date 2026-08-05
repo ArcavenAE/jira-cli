@@ -1,1 +1,1 @@
-{"status":"pass","timestamp":"2026-08-05T14:33:09Z","command":"git rev-parse --short HEAD && CARGO_TERM_COLOR=never cargo test --all-features 2>&1 | grep -E '^test result:' | awk '{p+=$4; f+=$6; i+=$8; n++} END {print \"binaries=\"n\" passed=\"p\" failed=\"f\" ignored=\"i}'"}
+{"status":"pass","timestamp":"2026-08-05T15:25:12Z","command":"cargo test --all-features 2>&1 | tee /private/tmp/claude-501/-Users-zious-Documents-GITHUB-jira-cli/b697a168-e3ad-4f7c-a4e4-a05cec326ba0/scratchpad/cargo_test_out.txt | tail -100"}
