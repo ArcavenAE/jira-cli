@@ -1,1 +1,1 @@
-{"status":"pass","timestamp":"2026-08-05T07:01:16Z","command":"cargo test --test ci_gate_completeness 2>&1 | tail -20; echo \"=== fmt ===\"; cargo fmt --all -- --check; echo \"FMT_EXIT=$?\"; echo \"=== clippy ===\"; cargo clippy --all-targets --all-features -- -D warnings 2>&1 | tail -20"}
+{"status":"pass","timestamp":"2026-08-05T14:33:09Z","command":"git rev-parse --short HEAD && CARGO_TERM_COLOR=never cargo test --all-features 2>&1 | grep -E '^test result:' | awk '{p+=$4; f+=$6; i+=$8; n++} END {print \"binaries=\"n\" passed=\"p\" failed=\"f\" ignored=\"i}'"}
