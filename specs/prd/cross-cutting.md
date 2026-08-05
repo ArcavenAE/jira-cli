@@ -1654,22 +1654,44 @@ passed; the positive-coverage line is the observable proof.
 
 **Verification Properties**:
 - VP-CIGATE-001: Regression pin —
-  `tests/ci_gate_completeness.rs::test_verify_test_job_has_zero_test_floor` asserts against the
-  `test` job's step block, extracted by `extract_job_block` (`tests/common/yaml.rs`) as a raw
-  string slice of the YAML — comment lines included — via plain `str::contains` checks. Two of
-  those assertions are bound to a form that, in the current file, appears only in the operative
-  command — not in any prose comment or diagnostic echo — an incidental property of the current
-  wording, not a structural guarantee the test enforces: the binary-count floor targets
-  `"${binaries}" -lt 90` (variable-bound, not a bare literal threshold), and the named-canary
-  check targets `grep -q "ci_gate_completeness"` (the command form, not the bare substring).
-  Those two are harder (not impossible) to defeat by comment/echo-diagnostic substitution — a
-  comment would have to reproduce the exact command substring verbatim, rather than just the
-  diagnostic prose, to satisfy them.
-  The remaining assertions in the same test (the `FAIL (POL-11)` sentinel, `exit 1`, the
-  `Check passed:` line, `CARGO_TERM_COLOR: never`, and the `set +o`/`set -o pipefail` pair) do not
-  meet even that weaker bar — each is a substring that a comment or echo diagnostic reproducing the
-  same text could also satisfy. No such comment exists in the current file, but that is a property
-  of the current wording, not a structural guarantee the test enforces.
+  `tests/ci_gate_completeness.rs::test_verify_test_job_has_zero_test_floor` makes ten
+  `str::contains` assertions against the `test` job's step block, extracted by
+  `extract_job_block` (`tests/common/yaml.rs`) as a raw string slice of the YAML — comment lines
+  included. Two of the ten are new this round (`"${total}" -eq 0` and `set -euo pipefail\n`) —
+  each closes a demonstrated hole where every one of the previously-existing eight assertions
+  stayed green under a reproduced false-green mutation (deleting the
+  `if [ "${total}" -eq 0 ]; ... fi` block wholesale, and separately weakening
+  `set -euo pipefail` to `set -eu` while feeding a mock `cargo` that exits 101 after printing
+  passing `test result:` lines). The ten assertions are graded by how hard each is to defeat
+  without also breaking the enforcement logic it pins:
+  - **Variable/command-bound** (hardest to defeat — a rename or rewrite that neuters the check
+    also breaks the literal text required): `"${binaries}" -lt 90` (binary-count floor),
+    `"${total}" -eq 0` (zero-test floor), `grep -q "ci_gate_completeness"` (named canary). None
+    of these three forms appears anywhere else in `ci.yml`; a bare `-lt 90` / `-eq 0` /
+    `ci_gate_completeness` substring, by contrast, also appears in this guard's own comments and
+    echo diagnostics and would stay satisfied even after a variable rename neutered the check.
+  - **Exact standalone line** (comment-satisfiable only by a future comment reproducing the
+    identical trailing form — no such comment exists today): `set -euo pipefail\n`,
+    `set +o pipefail\n`, `set -o pipefail\n`. `set -euo pipefail` is the sole mechanism
+    propagating a genuine `cargo test` failure through the `cargo test --all-features 2>&1 | tee
+    ...` pipeline into a failed step; `"set -o pipefail\n"` is not a substring of
+    `"set -euo pipefail\n"`, so these three assertions are independent of one another —
+    dropping any one of the three lines fails exactly that one assertion, not the others.
+  - **Literal substring, weaker still** (a comment or unrelated step could in principle reproduce
+    it): `CARGO_TERM_COLOR: never`.
+  - **Weakest** (also appears inside this guard's own `echo` diagnostics, or — for `exit 1` — is
+    a generic command with no natural variable-binding; a rewrite that preserves the diagnostic
+    strings while gutting the enforcement logic underneath would not be caught by these alone):
+    `FAIL (POL-11)`, `Check passed:`, `exit 1`.
+
+  **Not pinned.** Neither the `cargo test --all-features 2>&1 | tee
+  "$RUNNER_TEMP/cargo_test_out.txt"` invocation itself, nor the `total=`/`binaries=` computation
+  pipelines that derive those variables from the captured output, are asserted against — only
+  their *usages* (`"${total}" -eq 0`, `"${binaries}" -lt 90`) are pinned. A rewrite that drops
+  `--all-features`, changes what output gets captured, or replaces the computation logic with an
+  unconditional `binaries=999; total=999` would satisfy every assertion in this test, including
+  the two added this round. This is a structural limit of a substring-based guard applied to a
+  raw YAML slice, not an oversight the test can close on its own.
 
 **Traceability**:
 - Implementing story: S-626-1 (FIX ROUND 12, v1.17), issue #626

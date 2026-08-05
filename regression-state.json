@@ -1,1 +1,1 @@
-{"status":"pass","timestamp":"2026-08-05T18:05:39Z","command":"CARGO_TERM_COLOR=never cargo test --all-features 2>&1 | tail -60"}
+{"status":"pass","timestamp":"2026-08-05T20:52:40Z","command":"git status --porcelain; echo \"=== SUITE ===\"; CARGO_TERM_COLOR=never cargo test --all-features 2>&1 | grep -E '^test result:' | awk '{p+=$4; f+=$6; n++} END {print \"binaries=\"n\" passed=\"p\" failed=\"f}'; echo \"=== PUSH ===\"; git push origin ci/fix-toolchain-sha-msrv 2>&1 | tail -2; sleep 5; gh pr view 667 --json headRefOid 2>/dev/null | jq -r .headRefOid"}

@@ -1,22 +1,22 @@
 ---
 document_type: adversarial-review-index
 level: ops
-version: "2.8"
+version: "2.9"
 status: in-review
 producer: adversary
-timestamp: 2026-08-05T19:15:00Z
+timestamp: 2026-08-05T20:25:00Z
 phase: "5"
-pass: 41
+pass: 44
 inputs: [.factory/stories/S-626-1.md, .factory/stories/S-640-1.md, .factory/stories/S-641-1.md, .factory/stories/S-MUTANTS-EXAMINE-GLOBS-1.md, .factory/stories/STORY-INDEX.md, .github/workflows/ci.yml, tests/ci_gate_completeness.rs, tests/cli_handler.rs, tests/mutants_glob_existence.rs, CLAUDE.md, Cargo.toml, CHANGELOG.md]
 traces_to: .factory/stories/S-626-1.md
-total_findings: 290
-severity_distribution: { CRIT: 0, HIGH: 19, MED: 89, LOW: 110, INFO: 72 }
+total_findings: 314
+severity_distribution: { CRIT: 0, HIGH: 19, MED: 93, LOW: 117, INFO: 85 }
 story: S-626-1
 cycle: cycle-001
-feature_head: eb0d7cdd (fix-round-16 product commit; passes 39/40/41 ran against frozen head c2d7a215 (fix round 15); fix round 16 c2d7a215→eb0d7cdd closed the pass-39/40 LOW findings (pass-41 was CLEAN); branch pushed, PR #667 head now eb0d7cdd, CI 15/15 SUCCESS, mergeStateStatus CLEAN)
+feature_head: c0b3f5c8 (fix-round-17 product commit; passes 42/43/44 ran against frozen head eb0d7cdd (fix round 16); fix round 17 eb0d7cdd→c0b3f5c8 added two new assertions — `"${total}" -eq 0` and `set -euo pipefail\n` — to test_verify_test_job_has_zero_test_floor, closing two demonstrated false-green holes; branch pushed, PR #667 head now c0b3f5c8, CI 15/15 SUCCESS including Test (windows-latest), mergeStateStatus CLEAN)
 pr: 667
 basis: TRUE ADVERSARY AGENT (not a DEC-190 substitute)
-convergence: 1 of 3 conservative / 3 of 3 lenient (Step 4.5 window — DEC-199 GRIND to 3/3 CLEAN; window 39/40/41 CLOSED 1/3 conservative reading (pass-41 CLEAN), 3/3 lenient reading under DEC-191(c) (pass-39 NOT CLEAN + pass-40 NOT CLEAN, both LOW/INFO-only, zero MEDIUM; pass-41 CLEAN); DEC-204 UNADJUDICATED and now outcome-determining; DEC-224 ISOLATION ELIGIBILITY PRINCIPLE held — all three ELIGIBLE; 38 recorded passes; src/ 0-defect TWENTY-FOURTH consecutive; fix round 16 applied c2d7a215→eb0d7cdd (code, then exhaustive audit, then spec); fresh STRICT window = passes 42/43/44 (DEC-231, designated, not yet dispatched))
+convergence: 0 of 3 (Step 4.5 window — DEC-199 GRIND to 3/3 CLEAN; window 42/43/44 CLOSED 0/3 — all three NOT CLEAN, reversing the six-pass zero-MEDIUM run of windows 36/37/38 and 39/40/41; this window's briefs asked whether anything was unasserted, rather than whether the existing assertions fire correctly, and that shifted inspection frontier immediately surfaced two real, previously-unasserted guard holes (see DECAY-CURVE-MEASURES-QUESTION-EXHAUSTION-NOT-CONVERGENCE drift item); DEC-224 ISOLATION ELIGIBILITY PRINCIPLE held — all three ELIGIBLE; 41 recorded passes; src/ 0-defect TWENTY-SEVENTH consecutive; fix round 17 applied eb0d7cdd→c0b3f5c8 (code, then exhaustive audit — fourth application — then spec); fresh STRICT window = passes 45/46/47 (DEC-232, designated, not yet dispatched))
 void_spawns: 6 (passes 6/7/8 first-attempt background subagents; pass-9 isolation breach; pass-11 isolation breach; pass-22 isolation breach)
 not_run: 2 (passes 16/17 — superseded by round-5 ruling per DEC-209; see s-626-1-adversary-pass-16.md and s-626-1-adversary-pass-17.md)
 superseded: 1 (pass-20 — superseded per DEC-216; window 18/19/20 CLOSED 0/2)
@@ -1304,5 +1304,105 @@ Pass-41 closed window 39/40/41, run against frozen head `c2d7a215`. ELIGIBLE, sa
 - **Disposition:** 3 LOW all FIXED by round 16. Of 12 INFO: 0 FIXED, 12 OPEN (all disclosed limitations, form divergences, or routed process-gaps).
 - **New drift items opened:** LINE-RANGE-CITATIONS-DRIFT-SILENTLY (MEDIUM, `[process-gap]`) — a commit that only expands a comment can shift every subsequent line and silently invalidate an exact-line citation elsewhere in the story, at a distance, with nothing checking it; raised by the human operator after three exhaustive audits and eighteen reviewers had treated individual instances as one-off defects (one reviewer called it "cosmetic"); corrective applied — range/bare-line citations converted to anchor/symbol form; class narrowed, not eliminated. FIX-PASS-CATCHES-MORE-THAN-REVIEW-PASS (INFO) — twice this round a fix agent told to re-scan its own edit found overclaims the review passes had missed; worth generalising into fix-agent briefs.
 - **Fresh window:** passes 42/43/44 against frozen head `eb0d7cdd` (DEC-231), designated but not yet dispatched, pending human go-ahead. Step 4.5 remains 0/3. PR #667 remains HELD per DEC-202.
+
+---
+
+## Pass 42 Finding Catalog (Fresh Window DEC-231: NOT CLEAN — this window reverses the six-pass zero-MEDIUM run)
+
+Pass-42 opened window 42/43/44, run against frozen head `eb0d7cdd`. ELIGIBLE, same self-disclosed letter-of-rule deviations as prior windows; zero banned content used to bias the review. This window's brief asked whether anything was **unasserted** — a different inspection frontier than prior windows' "do the existing assertions fire correctly" — and immediately surfaced a real, previously-unpinned guard hole.
+
+| ID | Severity | Classification | Title | Status | Notes |
+|----|----------|----------------|-------|--------|-------|
+| ADV-P42-MED-001 | MEDIUM | missing-verification-vehicle | `test_verify_test_job_has_zero_test_floor`'s docstring claimed "the assertions below pin all operative parts" — false: the zero-test floor `if [ "${total}" -eq 0 ]` had no assertion. Reviewer deleted the entire block from a scratchpad copy and all 8 assertions stayed green (`FAIL (POL-11)` and `exit 1` still satisfied by the binary-floor and canary branches). Covers BC-X.13.007 Behavior item 3, the only gate item covering "≥90 binaries ran but 0 tests passed" | FIXED r17 (`c0b3f5c8` added `"${total}" -eq 0`, red/green proven; docstring rewritten to enumerate what is and is not pinned) | |
+| ADV-P42-LOW-001 | LOW | asserted-failure-mode-that-does-not-exist | Docstring and `ci.yml` comment claimed "Removing either bracket reintroduces the Defect 2 false-abort class". True for the opening `set +o pipefail`; false for the closing `set -o pipefail`, whose removal is strictly more permissive and never aborts. The "so real I/O errors are not silently swallowed" rationale has no operative effect — nothing after the restore is a pipeline | FIXED r17 (`c0b3f5c8` split the claim in both places) | Concurs P43-LOW-001 |
+| ADV-P42-LOW-002 | LOW | broken-anchor | The v1.22 anchor `§ "Required: needs:"` matched zero occurrences; source text carries a backtick (`` Required: `needs: ``). This was the one citation round 16 converted from a bare line number specifically to make it resolvable; the other three anchors from that conversion were verified unique and do resolve | FIXED r17 (v1.23 corrected; verified 1 occurrence, unique). **Orchestrator-caused** — the orchestrator directed the anchor text and mandated uniqueness verification, then supplied a string that does not exist | |
+| ADV-P42-INFO-001 | INFO | wrong-command-named | `ci.yml` comment said "awk and `wc -l` always exit 0"; the `binaries` pipeline ends in `tr -d ' '`. Conclusion holds | FIXED r17 (`c0b3f5c8`) | |
+| ADV-P42-INFO-002 | INFO | stale-count | msrv guard docstring says "Both asserted strings…"; the test has three assertions since `d848d9a5` | FIXED r17 (`c0b3f5c8` extended to three and classified the third) | |
+| ADV-P42-INFO-003 | INFO | form-divergence | Task 7a specifies an inline trailing comment; delivered is a five-line block comment above the pin. AC-8's substantive requirements met | OPEN | Concurs P43-INFO-002, P44-INFO-003 |
+| ADV-P42-INFO-004 | INFO | `[process-gap]` index-self-contradiction | `STORY-INDEX.md` frontmatter `total_stories: 123` and prose "Final totals: 123" vs manifest footer "Total rows: 122 (matches `total_stories: 122`)" | OPEN — state-manager surface | |
+
+## Pass 42 Isolation Note
+
+**ELIGIBLE.** Same self-disclosed letter-of-rule deviations as prior windows. Zero banned content used to bias the review. Per DEC-224: ELIGIBLE.
+
+## Pass 42 Summary
+
+- **Verdict:** NOT CLEAN — 0 HIGH + 1 MEDIUM + 2 LOW + 4 INFO (5 FIXED [1 MED + 2 LOW + 2 INFO], 2 OPEN); ELIGIBLE; src/ 0-defect TWENTY-FIFTH consecutive pass
+- **Post-capture routing:** 1 MEDIUM + 2 LOW + 2 INFO FIXED fix round 17; 2 INFO OPEN
+- **Convergence:** window 42/43/44 NOT CLEAN at this point — this pass alone reverses the prior six-pass zero-MEDIUM run
+- **Detail artifact:** not yet captured as a standalone file at burst time
+
+---
+
+## Pass 43 Finding Catalog (Fresh Window DEC-231, continued: NOT CLEAN — DEMONSTRATED FALSE-GREEN)
+
+Pass-43 continued window 42/43/44, run against frozen head `eb0d7cdd`. ELIGIBLE, same class as pass-42. Two MEDIUM findings, one of which is a directly reproduced false-green.
+
+| ID | Severity | Classification | Title | Status | Notes |
+|----|----------|----------------|-------|--------|-------|
+| ADV-P43-MED-001 | MEDIUM | DEMONSTRATED FALSE-GREEN | `set -euo pipefail` — the sole mechanism propagating a genuine `cargo test` failure through `… \| tee` — had no assertion. Reviewer proved the consequence: mutate to `set -eu`, and a `cargo test` exiting 101 produces `Check passed: … across 103 test binaries` and step exit 0, with all 8 assertions still passing. This is precisely the false-green class the story exists to close, asserted as closed by AC-10 item 2 and BC-X.13.007's Behavior and Invariants — none of which had a verification vehicle | FIXED r17 (`c0b3f5c8` added `set -euo pipefail\n`; implementer independently reproduced the false-green with a mock `cargo` before fixing, then proved red/green with byte-identical restore) | |
+| ADV-P43-MED-002 | MEDIUM | false-frontmatter-claim | `verification_properties: []` with comment "VP registry absent — not an oversight". `VP-CIGATE-001` exists, was minted by this story (v1.18) and edited by it three times; siblings `S-577-5` and `S-576-5` populate this field under the identical no-registry condition | FIXED r17 (v1.23 → `["VP-CIGATE-001"]`, comment corrected, cited in AC-10's Traces-to) | Concurs P44-MED-001 |
+| ADV-P43-LOW-001 | LOW | asserted-failure-mode | "Removing either bracket" | FIXED r17 | Concurs P42-LOW-001 |
+| ADV-P43-LOW-002 | LOW | stale-count | msrv docstring "Both" vs three assertions; notes the third's comment-satisfiability is a live question the docstring leaves unanswered given the job's 10-line scope comment | FIXED r17 (`c0b3f5c8`) | |
+| ADV-P43-INFO-001 | INFO | bookkeeping | AC-10 "Both proof directions execute cleanly" vs the Delivery Checklist item covering it being unchecked. Reviewer independently confirmed both directions work by replaying the guard's shell logic against real and synthetic output | FIXED r17 (v1.23 reworded to distinguish CI-verified positive path from manually-reproduced negative path) | Concurs P44-LOW-002 |
+| ADV-P43-INFO-002 | INFO | form-divergence | AC-8/Task 7a inline vs block comment | OPEN | |
+| ADV-P43-INFO-003 | INFO | wrong-command-named | `wc -l` vs `tr` | FIXED r17 | |
+| ADV-P43-INFO-004 | INFO | line-wrapped-anchor | The `ci.yml :: mutants § "grep -c '' exits 1 on empty match"` citation is line-wrapped in source so the quoted string is not contiguous; the step name and `else` branch both resolve | OPEN | |
+| ADV-P43-INFO-005 | INFO | isolation-boundary | AC-1/Task 0's `delta-analysis.md`, `input-hash`, `traces_to`, and the reciprocal `depends_on` for `blocks:` all lie outside the whitelist; `cargo mutants --in-diff` not run (AC-9's zero-mutants claim inferred from `examine_globs` exclusion, which entails it) | OPEN — note: `input-hash: "95fbaf9"` was subsequently confirmed by the round-17 audit to match `delta-analysis.md`'s md5sum, closing a blind spot carried since v1.20 | |
+
+## Pass 43 Isolation Note
+
+**ELIGIBLE.** Same self-disclosed letter-of-rule deviations as pass-42. Zero banned content used to bias the review. Per DEC-224: ELIGIBLE.
+
+## Pass 43 Summary
+
+- **Verdict:** NOT CLEAN — 0 HIGH + 2 MEDIUM + 2 LOW + 5 INFO (6 FIXED [2 MED + 2 LOW + 2 INFO], 3 OPEN); ELIGIBLE; src/ 0-defect TWENTY-SIXTH consecutive pass
+- **Post-capture routing:** 2 MEDIUM + 2 LOW + 2 INFO FIXED fix round 17; 3 INFO OPEN
+- **Convergence:** window 42/43/44 NOT CLEAN — second consecutive MEDIUM-bearing pass, including a directly demonstrated false-green
+- **Detail artifact:** not yet captured as a standalone file at burst time
+
+---
+
+## Pass 44 Finding Catalog (Fresh Window DEC-231, closing: NOT CLEAN — Window 42/43/44 CLOSED 0/3)
+
+Pass-44 closed window 42/43/44, run against frozen head `eb0d7cdd`. ELIGIBLE, same class as passes 42/43.
+
+| ID | Severity | Classification | Title | Status | Notes |
+|----|----------|----------------|-------|--------|-------|
+| ADV-P44-MED-001 | MEDIUM | false-frontmatter-claim | `verification_properties: []` | FIXED r17 | Concurs P43-MED-002 |
+| ADV-P44-LOW-001 | LOW | undeclared-mechanism | `shell: bash` and the `2>&1` capture appear on none of the six declaration surfaces. Load-bearing: the `test` job is a 3-OS matrix and GitHub defaults `run:` to pwsh on `windows-latest`, where `set -euo pipefail` is invalid syntax. Impact bounded — removal yields a loud red, not a false-green — hence LOW | FIXED r17 (v1.23 added to AC-10, Task 7e, and the ci.yml FSR row) | |
+| ADV-P44-LOW-002 | LOW | unsupported-provenance | AC-10's negative path records no command, output, commit, or method, while the Delivery Checklist item created to verify it is unchecked — the two surfaces disagree about whether it was ever executed | FIXED r17 (v1.23) | |
+| ADV-P44-LOW-003 | LOW | stale-figures | AC-9/AC-10 cite `2345/2345/2340`; at the frozen head CI reports `2346/2346/2341` across 103 binaries. Three consecutive rounds listed this as an unresolved blind spot | FIXED r17 (v1.23 → `2346/2346/2341`, measured at `c0b3f5c8` with CI 15/15 green including Windows) | |
+| ADV-P44-INFO-001 | INFO | fabricated-quotation | AC-3's `(CLAUDE.md ~:219 — "routed, not verified against action.yml")` presents as a quotation a string that never existed in `CLAUDE.md` — reviewer checked every commit touching it on this branch plus `origin/develop`. It is the story's own v1.11 annotation formatted as a quote. Substantively harmless; the current fact is stated correctly | OPEN | |
+| ADV-P44-INFO-002 | INFO | wording-precision | BC-X.13.007 Behavior item 2 says the canary fails if the binary "did not report results"; the implementation greps for a substring satisfied by cargo's `Running …` line — "was launched", not "emitted a `test result:` line". The two coincide for the targeted orphaning class | OPEN | Concurs P40-INFO-001 (prior window) |
+| ADV-P44-INFO-003 | INFO | form-divergence | Task 7a inline vs block comment | OPEN | Concurs P42-INFO-003, P43-INFO-002 |
+| ADV-P44-INFO-004 | INFO | `[process-gap]` index-self-contradiction | `STORY-INDEX.md` 123 vs 122 | OPEN | Concurs P42-INFO-004 |
+
+## Pass 44 Isolation Note
+
+**ELIGIBLE.** Same self-disclosed letter-of-rule deviations as passes 42/43. Zero banned content used to bias the review. Per DEC-224: ELIGIBLE.
+
+## Pass 44 Summary
+
+- **Verdict:** NOT CLEAN — 0 HIGH + 1 MEDIUM + 3 LOW + 4 INFO (4 FIXED [1 MED + 3 LOW], 4 OPEN); ELIGIBLE; src/ 0-defect TWENTY-SEVENTH consecutive pass
+- **Post-capture routing:** 1 MEDIUM + 3 LOW FIXED fix round 17; 4 INFO OPEN
+- **Convergence:** window 42/43/44 CLOSED — 0/3, all three passes NOT CLEAN
+- **Detail artifact:** not yet captured as a standalone file at burst time
+
+---
+
+## Window 42/43/44 Summary
+
+- **Result:** CLOSED 0/3 — all three passes NOT CLEAN, against frozen head `eb0d7cdd`. This window reverses the six-pass zero-MEDIUM run of windows 36/37/38 and 39/40/41. **Methodological finding (most important of the cycle):** prior windows' briefs asked whether the *existing* assertions fire correctly; this window's brief asked whether anything was **unasserted**. Moving that inspection frontier immediately surfaced two real, previously-unpinned holes (ADV-P42-MED-001, ADV-P43-MED-001 — the latter a directly demonstrated false-green). The decay curve 4→4→3→2→1→0 across the prior six passes measured reviewers exhausting the questions being asked, not the artifact running out of defects. See DECAY-CURVE-MEASURES-QUESTION-EXHAUSTION-NOT-CONVERGENCE drift item.
+- **Finding count:** 24 new findings total, itemized individually above with zero range-collapsed entries: pass-42 = 0H+1M+2L+4I (7); pass-43 = 0H+2M+2L+5I (9); pass-44 = 0H+1M+3L+4I (8); 7+9+8 = 24.
+- **MEDIUM tally:** 4 MEDIUM findings itemized (P42-MED-001, P43-MED-001, P43-MED-002, P44-MED-001), 3 distinct (P43-MED-002 ≡ P44-MED-001, a cross-pass concurrence on the same `verification_properties` gap). All 4 FIXED by fix round 17.
+- **LOW tally:** 7 LOW findings itemized (P42-LOW-001/002, P43-LOW-001/002, P44-LOW-001/002/003), 5 distinct (P42-LOW-001 ≡ P43-LOW-001; P42-LOW-002 ≡ P43-LOW-002). All 7 FIXED by fix round 17.
+- **INFO tally (independently re-derived from the itemization above, not copied from the dispatch brief):** 13 INFO findings itemized. **4 FIXED** (P42-INFO-001, P42-INFO-002, P43-INFO-001, P43-INFO-003), **9 OPEN** (P42-INFO-003, P42-INFO-004, P43-INFO-002, P43-INFO-004, P43-INFO-005, P44-INFO-001, P44-INFO-002, P44-INFO-003, P44-INFO-004). **Disclosure:** the burst dispatch brief stated "5 FIXED, 8 OPEN" for INFO; re-scanning the itemization line-by-line against each row's own Status column gives 4 FIXED / 9 OPEN. Per the standing "use yours and report" instruction, this file records the independently re-derived 4/9 split as authoritative; the discrepancy is noted, not silently corrected without disclosure.
+- **src/ defects:** zero across all three passes. src/ 0-defect streak extends to TWENTY-SEVENTH consecutive pass.
+- **Cross-pass concurrences:** `verification_properties` false-claim P43↔P44 (both MEDIUM); "Removing either bracket" asserted-failure-mode P42↔P43; msrv "Both" stale-count P42↔P43; Task 7a inline-vs-block form divergence P42↔P43↔P44; STORY-INDEX 123-vs-122 self-contradiction P42↔P44; AC-10 proof-direction bookkeeping P43↔P44.
+- **Fix round 17 (code → BC → exhaustive audit → spec).** Stage 1 (code): product head `eb0d7cdd` → `c0b3f5c8`, pushed. PR #667 head = `c0b3f5c8`, CI 15/15 SUCCESS including `Test (windows-latest)`, mergeStateStatus CLEAN. Added two assertions to `test_verify_test_job_has_zero_test_floor` (8→10): `set -euo pipefail\n` and `"${total}" -eq 0`; both verified to occur exactly once in operative position, and `set -o pipefail\n` confirmed not a substring of `set -euo pipefail\n`. Implementer independently reproduced the false-green before fixing (mock `cargo` printing ~103 passing result lines then exiting 101: original → exit 101, no "Check passed"; mutated → exit 0 with `Check passed: 2264 tests executed across 103 test binaries`), then proved both new assertions turn the test RED under mutation with byte-identical restore. Docstring rewritten to grade all ten assertions and explicitly enumerate what is NOT pinned. Corrected the "Removing either bracket", "Both asserted strings", and `wc -l`/`tr` inaccuracies. No test added/removed/renamed. Independently measured at `c0b3f5c8`: 103 binaries / 2346 passed / 0 failed / 100 ignored. Stage 2 (BC): `VP-CIGATE-001` (`specs/prd/cross-cutting.md`) rewritten for ten assertions across four graded tiers (variable/command-bound; exact standalone line; literal substring; weakest), with a separate labelled "Not pinned" paragraph. The agent corrected the orchestrator's arithmetic (brief said 8→9; actual is 8→10, verified by counting `assert!(` at `c0b3f5c8~1` and `c0b3f5c8`). Confirms BC-X.13.007's Behavior item 4 and matching Invariant now have a genuine verification vehicle. A third hole was identified and deliberately not faked: neither the `cargo test --all-features 2>&1 \| tee …` invocation nor the `total=`/`binaries=` computation pipelines are pinned — only their usages — a structural limit of a substring guard over a raw YAML slice, recorded in both the docstring and `VP-CIGATE-001` rather than papered over (candidate follow-up story; see SUBSTRING-GUARD-CANNOT-VERIFY-COMPUTED-VALUES drift item). Stage 3 (exhaustive audit, fourth application): found 8 gaps including one nobody had reported (the File Structure Requirements row's stale "8 assertions total" and its 8-count taxonomy); positively confirmed `input-hash: "95fbaf9"` matches `delta-analysis.md`'s md5sum — a blind spot carried unverified since v1.20; stated its own coverage limits explicitly, including that Tasks 0–6 bodies and the full Edge Cases table were not read this round. Stage 4 (spec): S-626-1 v1.22→v1.23 — `c0b3f5c8` declared (32 refs); `tests/ci_gate_completeness.rs` trail 11→12 commits; POL-11 guard-step trail 6→7 commits; assertion count and taxonomy updated to ten mirroring `VP-CIGATE-001`; `verification_properties: ["VP-CIGATE-001"]`; CI figures → `2346/2346/2341`; `shell: bash` + `2>&1` declared on AC-10, Task 7e, and the `ci.yml` FSR row; AC-10's proof-direction claim reworded to distinguish the CI-verified positive path from the manually-reproduced negative path; the broken anchor corrected and verified unique. STORY-INDEX v1.5.66→v1.5.67.
+- **New drift items opened:** DECAY-CURVE-MEASURES-QUESTION-EXHAUSTION-NOT-CONVERGENCE (HIGH, `[process-gap]`) — a declining finding count is evidence of convergence only if the inspection frontier is held constant; each round's brief was sharpened toward the previous round's findings, so the 4→4→3→2→1→0 decay was partly an artifact of the questions asked, not the artifact's defect density; corrective: deliberately vary the inspection frontier before treating decay as convergence. SUBSTRING-GUARD-CANNOT-VERIFY-COMPUTED-VALUES (MEDIUM) — `test_verify_test_job_has_zero_test_floor` pins the presence of gate expressions but cannot verify the values feeding them are correctly computed; `binaries=999; total=999` would defeat all ten assertions; closing it requires executing the guard script against synthetic cargo output rather than substring-matching YAML; candidate follow-up story.
+- **Existing drift items updated:** ORCHESTRATOR-SHIPPED-DEFECTIVE-GUARD (HIGH) — prior downgrade recommendation WITHDRAWN: twenty-one confirmations verified the assertions which exist fire correctly; none asked what was missing, and two operative parts were unpinned, one reachably (P43-MED-001). The guard is now materially stronger (ten assertions, both holes closed, red/green proven) and its residual limit is documented, but the confirmation count was measuring the wrong property; re-assess only after a window that probes absence returns clean. STORY-FROZEN-HEAD-LAGS-LIVE-HEAD (MEDIUM) — seventh consecutive recurrence; the v1.23 spec agent re-derived HEAD itself and matched `c0b3f5c8`; recommend promoting the re-derive-at-write-time step into the standing fix-round dispatch template. LINE-RANGE-CITATIONS-DRIFT-SILENTLY (MEDIUM) — the round-16 anchor conversion itself produced one broken anchor (`§ "Required: needs:"`, zero matches) alongside three correct ones; fixed in v1.23 and verified unique; anchor conversion must include a resolve-and-uniqueness check on the converted string, not only the ones that happen to work. SHARED-WORKTREE-REVIEWER-CONTAMINATION (HIGH → recommend MEDIUM) — corrective held for a second window; no contamination-derived findings. FRONTMATTER-YAML-PARSEABILITY-UNGUARDED (LOW) — `STORY-INDEX.md`'s frontmatter was found unparseable and fixed (`c7a93fb8`, block-literal scalar, content diffed character-for-character); root cause is structural (`last_updated` accumulates unbounded prose with no schema constraint) so it will recur; candidate follow-up story: CI guard plus a schema constraint on that field. AGENT-BACKGROUND-RUN-DEADLOCK — no occurrence this round. MIXED-SET-DASH-ARM-UNPINNED — unchanged, OPEN per DEC-226.
+- **Fresh window:** passes 45/46/47 against frozen head `c0b3f5c8` (DEC-232), designated but not yet dispatched, pending human go-ahead. Continuing AUTHORIZED breach of DEC-191(d) ceiling. Step 4.5 remains 0/3. PR #667 remains HELD per DEC-202.
 
 ---
