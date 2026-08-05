@@ -2,7 +2,7 @@
 document_type: canonical-counts
 product: jr (jira-cli)
 generated: "2026-05-04"
-last_verified: "2026-07-15 (BC-3.9.015..020 added adversary pass-1 round B; +6 individually-bodied BCs; 657 total; prior: BC-2.7.001..012 + BC-3.9.001..014 + BC-X.8.010 added SOH-ATTACHMENTS-1 F2 DEC-179 issues #576 #585)"
+last_verified: "2026-08-05 (BC-X.13.007 added FIX ROUND 12 S-626-1 issue #626 — `test` job runtime test-execution floor / POL-11; +1 individually-bodied BC; 658 total; prior: BC-3.9.015..020 added adversary pass-1 round B; +6 individually-bodied BCs; 657 total; prior: BC-2.7.001..012 + BC-3.9.001..014 + BC-X.8.010 added SOH-ATTACHMENTS-1 F2 DEC-179 issues #576 #585)"
 ---
 
 # Canonical Counts — jr (jira-cli) L3 PRD
@@ -26,8 +26,8 @@ re-run to verify. Disputes go here first.
 | bc-5-boards-sprints.md | 18 | 18 | YES |
 | bc-6-config-cache.md | 33 | 33 | YES |
 | bc-7-output-render.md | 49 | 49 | YES |
-| cross-cutting.md | 84 | 84 | YES |
-| **Total individually-bodied** | **427** | — | — |
+| cross-cutting.md | 85 | 85 | YES |
+| **Total individually-bodied** | **428** | — | — |
 
 Verification command:
 ```bash
@@ -47,25 +47,27 @@ done
 | bc-5-boards-sprints.md | 36 |
 | bc-6-config-cache.md | 43 |
 | bc-7-output-render.md | 93 |
-| cross-cutting.md | 150 |
-| **Sum** | **657** |
+| cross-cutting.md | 151 |
+| **Sum** | **658** |
 
 ### Grand total
 
-**Canonical grand total: 657** (+33 (=+27 initial CREATE 2026-07-15 + 6 round-B BC-3.9.015..020) BC-2.7.001..012 + BC-3.9.001..014 + BC-X.8.010 added 2026-07-15 via SOH-ATTACHMENTS-1 F2 DEC-179 issues #576 #585; +4 BC-7.4.013-016 added 2026-05-08 via Fix-PR A `28b0f35`; +1 BC-2.6.050 added 2026-05-13 via issue #350; +1 BC-2.6.051 added 2026-05-14 via issue #365; +1 BC-3.4.009 added 2026-05-15 via issue #340 F2; +18 BC-3.8.001..010 + BC-X.12.001..008 added 2026-05-18 via issue #288 F2+F1d; +3 BC-3.8.011..013 added 2026-05-19 via issue #288 F1d + issue #383 F2; +4 BC-3.8.014..015 + BC-X.8.006..007 added 2026-05-19 via issue #384 F2; +2 BC-3.8.016..017 added 2026-05-20 via issue #385 F2; +2 BC-3.4.010..011 added 2026-05-20 via issue #388 F2; +3 BC-3.4.012..014 added 2026-05-21 via issue #398 F2; +3 BC-3.4.015..017 added 2026-05-22 via issue #396 F2; +2 BC-3.4.018..019 added 2026-06-01 via issue #331 F2; +1 BC-3.2.013 added 2026-06-03 via jsm-resolution-required F2; +1 BC-7.2.006 added 2026-06-08 via issue #470 listItem content-model conformance; +2 BC-X.8.008..009 added 2026-06-08 via S-QUEUE-BC-1 queue list/view document-as-is; +1 BC-3.2.014 added 2026-06-08 via fix-bulk-transition-schema bulkTransitionInputs wrapper; +2 BC-7.2.007..008 added 2026-06-08 via issue #474 markdown subsup + heading-attr; +1 BC-7.2.009 added 2026-06-09 via issue #483 GFM alerts → panel; +1 BC-7.2.010 added 2026-06-10 via issue #471 GFM task lists → taskList/taskItem; +3 BC-6.1.014 + BC-6.2.016..017 added 2026-06-12 via windows-build F2; +1 BC-7.2.011 added 2026-06-15 via issue #492 block-HTML hardBreak interior newlines; +1 BC-2.4.043 added 2026-06-17 via Bundle C CR-001 list_comments anti-stall guard; +3 BC-X.13.001..003 added 2026-06-19 via DEAD-CITATION-CI F2 CLAUDE.md citation guard; +1 BC-7.2.012 added 2026-06-24 via SEC-001 ADF recursion depth limit; +2 BC-7.2.013..014 promoted 2026-06-27 range-collapsed→individually-bodied via issues #472 #473 (definitional_count +2, total_bcs unchanged); +1 BC-6.2.018 added 2026-06-27 cache warm-hit no-HTTP invariant; +1 BC-7.3.010 added 2026-06-27 issue #526 json-render invariant + error channel; +3 BC-3.4.020..021 + BC-5.1.005 added 2026-06-30 via BC-subclause-pass F2; +3 BC-X.13.004..006 added 2026-07-05 via CITATION-GUARDS Story B Guard 1 S-BC-CITATION-GUARD-1 issue #102; +1 BC-7.2.015 added 2026-07-07 via ADF-CODE-MARK-EXCLUSIVITY F2 issue #571; +1 BC-X.1.011 added 2026-07-09 via SOH-BUGS-1 post-fix micro-BC DEC-165 -X/--method case-insensitive issues #590/#582 PR #597; +11 BC-3.5.002..BC-3.5.012 added 2026-07-09 via SOH-COMMENT-CRUD-1 F2 DEC-168 comment delete/edit/view + CLI subcommand group issue #577)
+**Canonical grand total: 658** (+1 BC-X.13.007 added 2026-08-05 via FIX ROUND 12 S-626-1 issue #626 — `test` job runtime test-execution floor / POL-11; +33 (=+27 initial CREATE 2026-07-15 + 6 round-B BC-3.9.015..020) BC-2.7.001..012 + BC-3.9.001..014 + BC-X.8.010 added 2026-07-15 via SOH-ATTACHMENTS-1 F2 DEC-179 issues #576 #585; +4 BC-7.4.013-016 added 2026-05-08 via Fix-PR A `28b0f35`; +1 BC-2.6.050 added 2026-05-13 via issue #350; +1 BC-2.6.051 added 2026-05-14 via issue #365; +1 BC-3.4.009 added 2026-05-15 via issue #340 F2; +18 BC-3.8.001..010 + BC-X.12.001..008 added 2026-05-18 via issue #288 F2+F1d; +3 BC-3.8.011..013 added 2026-05-19 via issue #288 F1d + issue #383 F2; +4 BC-3.8.014..015 + BC-X.8.006..007 added 2026-05-19 via issue #384 F2; +2 BC-3.8.016..017 added 2026-05-20 via issue #385 F2; +2 BC-3.4.010..011 added 2026-05-20 via issue #388 F2; +3 BC-3.4.012..014 added 2026-05-21 via issue #398 F2; +3 BC-3.4.015..017 added 2026-05-22 via issue #396 F2; +2 BC-3.4.018..019 added 2026-06-01 via issue #331 F2; +1 BC-3.2.013 added 2026-06-03 via jsm-resolution-required F2; +1 BC-7.2.006 added 2026-06-08 via issue #470 listItem content-model conformance; +2 BC-X.8.008..009 added 2026-06-08 via S-QUEUE-BC-1 queue list/view document-as-is; +1 BC-3.2.014 added 2026-06-08 via fix-bulk-transition-schema bulkTransitionInputs wrapper; +2 BC-7.2.007..008 added 2026-06-08 via issue #474 markdown subsup + heading-attr; +1 BC-7.2.009 added 2026-06-09 via issue #483 GFM alerts → panel; +1 BC-7.2.010 added 2026-06-10 via issue #471 GFM task lists → taskList/taskItem; +3 BC-6.1.014 + BC-6.2.016..017 added 2026-06-12 via windows-build F2; +1 BC-7.2.011 added 2026-06-15 via issue #492 block-HTML hardBreak interior newlines; +1 BC-2.4.043 added 2026-06-17 via Bundle C CR-001 list_comments anti-stall guard; +3 BC-X.13.001..003 added 2026-06-19 via DEAD-CITATION-CI F2 CLAUDE.md citation guard; +1 BC-7.2.012 added 2026-06-24 via SEC-001 ADF recursion depth limit; +2 BC-7.2.013..014 promoted 2026-06-27 range-collapsed→individually-bodied via issues #472 #473 (definitional_count +2, total_bcs unchanged); +1 BC-6.2.018 added 2026-06-27 cache warm-hit no-HTTP invariant; +1 BC-7.3.010 added 2026-06-27 issue #526 json-render invariant + error channel; +3 BC-3.4.020..021 + BC-5.1.005 added 2026-06-30 via BC-subclause-pass F2; +3 BC-X.13.004..006 added 2026-07-05 via CITATION-GUARDS Story B Guard 1 S-BC-CITATION-GUARD-1 issue #102; +1 BC-7.2.015 added 2026-07-07 via ADF-CODE-MARK-EXCLUSIVITY F2 issue #571; +1 BC-X.1.011 added 2026-07-09 via SOH-BUGS-1 post-fix micro-BC DEC-165 -X/--method case-insensitive issues #590/#582 PR #597; +11 BC-3.5.002..BC-3.5.012 added 2026-07-09 via SOH-COMMENT-CRUD-1 F2 DEC-168 comment delete/edit/view + CLI subcommand group issue #577)
 
 _Note: BC-INDEX.md `total_bcs` header was bumped to 651 in v1.3.43 via a sanctioned Python shell edit (TD-031 validate-stable-anchors hook bypassed per the established workaround). CANONICAL-COUNTS.md remains the primary source of truth; TD-031 line-cite violations are tracked separately for cleanup._
 
 Breakdown:
-- 657 = sum of per-file `total_bcs` values (canonical; see per-file table above)
-- 427 of 657 are individually-bodied (have a `#### BC-` heading)
+- 658 = sum of per-file `total_bcs` values (canonical; see per-file table above)
+- 428 of 658 are individually-bodied (have a `#### BC-` heading)
 - 230 are range-collapsed (counted in cumulative claim, no individual heading)
 - BC-X.4.009 (ADV-P1-029) is a `#### BC-` heading in cross-cutting.md; it is
-  included in cross-cutting's `total_bcs: 150` and in the **657 sum**.
+  included in cross-cutting's `total_bcs: 151` and in the **658 sum**.
   It does NOT add +1 beyond the 656.
-  _(Note updated 2026-07-15 SOH-ATTACHMENTS-1 adversary pass-1 round B: 657 total after +6 BCs BC-3.9.015..020; was 651 before round B; was 149/624/623 before BC-X.8.010 — NEW-004 correction)_
+  _(Note updated 2026-08-05 FIX ROUND 12 S-626-1 issue #626: 658 total after +1 BC BC-X.13.007;
+  was 657 before this addition; prior note: 657 total after +6 BCs BC-3.9.015..020 SOH-ATTACHMENTS-1
+  adversary pass-1 round B; was 651 before round B; was 149/624/623 before BC-X.8.010 — NEW-004 correction)_
 
-_Historical note (archived; historical total was 566; current canonical: see Sum row above (624 — historical, now 657 — see per-file table above for current totals)): Passes 10-13 involved a 541/542 count confusion around BC-X.4.009. All 542 claims were corrected to 541 at Pass 13. Subsequent additions (BC-7.4.013-016, BC-2.6.050-051, BC-3.4.009, BC-3.8.001-010, BC-X.12.001-008) brought the total to 566. See git history for the full audit trail._
+_Historical note (archived; historical total was 566; current canonical: see Sum row above (624 — historical, now 658 — see per-file table above for current totals)): Passes 10-13 involved a 541/542 count confusion around BC-X.4.009. All 542 claims were corrected to 541 at Pass 13. Subsequent additions (BC-7.4.013-016, BC-2.6.050-051, BC-3.4.009, BC-3.8.001-010, BC-X.12.001-008) brought the total to 566. See git history for the full audit trail._
 
 ### L2 domain-spec bc_count vs L3 total_bcs alignment (ADV-P17-003)
 

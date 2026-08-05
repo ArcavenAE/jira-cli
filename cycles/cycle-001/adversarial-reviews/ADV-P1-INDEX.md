@@ -1,29 +1,29 @@
 ---
 document_type: adversarial-review-index
 level: ops
-version: "2.3"
+version: "2.4"
 status: in-review
 producer: adversary
-timestamp: 2026-08-04T21:00:00Z
+timestamp: 2026-08-05T07:00:00Z
 phase: "5"
-pass: 26
-inputs: [.factory/stories/S-626-1.md, .factory/stories/S-640-1.md, .factory/stories/S-641-1.md, .factory/stories/S-MUTANTS-EXAMINE-GLOBS-1.md, .factory/stories/STORY-INDEX.md, .github/workflows/ci.yml, tests/ci_gate_completeness.rs, tests/cli_handler.rs, CLAUDE.md, Cargo.toml]
+pass: 29
+inputs: [.factory/stories/S-626-1.md, .factory/stories/S-640-1.md, .factory/stories/S-641-1.md, .factory/stories/S-MUTANTS-EXAMINE-GLOBS-1.md, .factory/stories/STORY-INDEX.md, .github/workflows/ci.yml, tests/ci_gate_completeness.rs, tests/cli_handler.rs, tests/mutants_glob_existence.rs, CLAUDE.md, Cargo.toml, CHANGELOG.md]
 traces_to: .factory/stories/S-626-1.md
-total_findings: 197
-severity_distribution: { CRIT: 0, HIGH: 19, MED: 83, LOW: 77, INFO: 18 }
+total_findings: 212
+severity_distribution: { CRIT: 0, HIGH: 19, MED: 84, LOW: 80, INFO: 29 }
 story: S-626-1
 cycle: cycle-001
-feature_head: e49230a7 (fix-round-11 product commit; passes 24/25/26 ran against 14416fd9 (DEC-223); fix round 11 e49230a7 closed all pass-24/25/26 substantive findings; ADV-P21-LOW-003 DEFERRED still open; ADV-P26-LOW-002 ROUTED pre-existing)
+feature_head: 1e696128 (fix-round-12 product commit; passes 27/28/29 ran against e49230a7 (DEC-225); fix round 12 1e696128 closed all pass-27/28/29 substantive findings)
 pr: 667
 basis: TRUE ADVERSARY AGENT (not a DEC-190 substitute)
-convergence: 0 of 3 (Step 4.5 window — DEC-199 GRIND to 3/3 CLEAN; window 24/25/26 CLOSED 2/3 (pass-24 CLEAN + pass-25 CLEAN + pass-26 NOT CLEAN; BROKEN); DEC-224 ISOLATION ELIGIBILITY PRINCIPLE ESTABLISHED; 23 recorded passes; src/ 0-defect EIGHTEENTH consecutive; CI floor SOUND (six independent confirmations passes 21-26); fix round 11 applied e49230a7; fresh STRICT window = passes 27/28/29; FIRST CLEAN VERDICTS passes 24+25)
+convergence: 0 of 3 (Step 4.5 window — DEC-199 GRIND to 3/3 CLEAN; window 27/28/29 CLOSED 1/3 (pass-27 CLEAN + pass-28 NOT CLEAN + pass-29 NOT CLEAN; BROKEN); DEC-224 ISOLATION ELIGIBILITY PRINCIPLE held — all three ELIGIBLE; 26 recorded passes; src/ 0-defect NINETEENTH consecutive; CI floor SOUND (nine independent confirmations passes 21-29); fix round 12 applied 1e696128; fresh STRICT window = passes 30/31/32 (DEC-227, designated, not yet dispatched))
 void_spawns: 6 (passes 6/7/8 first-attempt background subagents; pass-9 isolation breach; pass-11 isolation breach; pass-22 isolation breach)
 not_run: 2 (passes 16/17 — superseded by round-5 ruling per DEC-209; see s-626-1-adversary-pass-16.md and s-626-1-adversary-pass-17.md)
 superseded: 1 (pass-20 — superseded per DEC-216; window 18/19/20 CLOSED 0/2)
 not_dispatched: 6 (passes 22/23 of window 21/22/23 — superseded when pass-21 returned NOT CLEAN; passes 23/24 of window 22/23/24 — superseded when pass-22 returned VOID+NOT CLEAN; passes 24/25 of window 23/24/25 — superseded when pass-23 returned NOT CLEAN; passes 24/25/26 subsequently dispatched under fresh window DEC-223 and ran)
 ---
 
-# Adversarial Review Index — S-626-1 (SOH-DX-1) Passes 1..26
+# Adversarial Review Index — S-626-1 (SOH-DX-1) Passes 1..29
 
 ## Pass 1 Finding Catalog
 
@@ -837,5 +837,85 @@ Pass-23 (window 23/24/25, DEC-221) returned NOT CLEAN. The window closed at 0/1.
 - **Post-capture routing:** MED-001 + LOW-001 + INFO-001/002 FIXED fix round 11 (`e49230a7`); LOW-002 ROUTED (WRONG-FILE-MIS-ANCHORS-IN-TESTS drift item)
 - **Convergence:** 0/3 — fresh STRICT window = passes 27/28/29 (0/3, not yet dispatched); CI floor 8/8 non-comment-satisfiable (sixth independent confirmation); forecast: next pass CLEAN
 - **Detail artifact:** `s-626-1-adversary-pass-26.md`
+
+---
+
+## Window 27/28/29 Overview (Fresh Window DEC-225, against frozen head `e49230a7`)
+
+Three concurrent independent reviewers dispatched against the same frozen head. Result: **CLOSED 1/3, BROKEN** (pass-27 CLEAN; pass-28 NOT CLEAN; pass-29 NOT CLEAN). All three ELIGIBLE per DEC-224 — each self-disclosed the same two letter-of-rule isolation deviations (a WebFetch of the pinned `dtolnay/rust-toolchain` `action.yml`, and reads of third-party crate sources under `~/.cargo/registry`), both outside the four whitelisted search roots but neither a banned path; zero banned content (prior-pass verdicts, finding tallies) surfaced in any of the three. PRE-FLIGHT CHECK verified effective for a **seventh consecutive pass**. All 15 new findings are spec-declaration class — **zero `src/` defects** (src/ 0-defect NINETEENTH consecutive). The four substantive (window-breaking) findings below map 1:1 to fix round 12's two product-commit items and two spec-side items; the remaining 11 findings across the three passes are INFO-severity confirmation/concurrence entries (isolation-eligibility corroboration, CI-floor-soundness reconfirmation, PRE-FLIGHT-CHECK-effectiveness notes) whose individual content is not separately itemized in this index — see each pass's own dispatch transcript for verbatim text; only the aggregate counts are recorded here, consistent with the `[range-collapsed]` convention used elsewhere in this project's spec artifacts for counted-but-not-individually-bodied entries.
+
+## Pass 27 Finding Catalog (Fresh Window DEC-225: CLEAN)
+
+**Pass-27 returned CLEAN — the window's only CLEAN verdict.** ELIGIBLE (two self-disclosed letter-of-rule deviations; zero banned content surfaced). Zero MEDIUM/LOW findings; four INFO-severity confirmation/concurrence entries.
+
+| ID | Severity | Classification | Title | Status | Notes |
+|----|----------|----------------|-------|--------|-------|
+| ADV-P27-INFO-001..004 | INFO | confirmation/concurrence-class `[range-collapsed]` | Four INFO-severity confirmatory notes (isolation-eligibility corroboration, CI-floor-soundness reconfirmation, PRE-FLIGHT-CHECK-effectiveness, zero-src/-defect streak) | OPEN — informational only, no fix action | Individual verbatim text not captured in this index; count only. Contributes to the nine-confirmation CI-floor-soundness tally (see ORCHESTRATOR-SHIPPED-DEFECTIVE-GUARD drift item) |
+
+## Pass 27 Isolation Note
+
+**ELIGIBLE.** Two self-disclosed letter-of-rule deviations: (1) a WebFetch of the pinned `dtolnay/rust-toolchain` `action.yml`; (2) reads of third-party crate sources under `~/.cargo/registry`. Both outside the four whitelisted search roots but neither a banned path. Zero banned content surfaced. Per DEC-224: ELIGIBLE.
+
+## Pass 27 Summary
+
+- **Verdict:** CLEAN — 0 HIGH + 0 MEDIUM + 0 LOW + 4 INFO; ELIGIBLE; NINETEENTH consecutive zero-src/-defect pass; PRE-FLIGHT CHECK effective for a seventh consecutive pass
+- **Post-capture routing:** INFO-001..004 informational only, no fix action
+- **Convergence:** window 27/28/29 = 1/3 at this point; CI floor soundness independently reconfirmed (contributes to nine-total confirmations)
+- **Detail artifact:** `s-626-1-adversary-pass-27.md` (not yet captured as a standalone file at burst time)
+
+---
+
+## Pass 28 Finding Catalog (Fresh Window DEC-225: NOT CLEAN — Window BROKEN)
+
+**Pass-28 broke the window at 1/3.** ELIGIBLE (same two self-disclosed deviations as pass-27). One substantive LOW finding; four INFO-severity confirmation/concurrence entries. Pass-28 additionally extracted the guard's shell logic and ran it in isolation against synthetic and empty capture files, independently proving the `set +o pipefail` bracket is load-bearing (contributes to the ORCHESTRATOR-SHIPPED-DEFECTIVE-GUARD confirmation tally).
+
+| ID | Severity | Classification | Title | Status | Notes |
+|----|----------|----------------|-------|--------|-------|
+| ADV-P28-LOW-001 | LOW | test-coverage-gap / regression-pin-absent | msrv job's `RUSTUP_TOOLCHAIN` env override had no regression pin — nothing in the tree previously failed if `ci.yml`'s msrv job dropped it, though it is the load-bearing half of the fix that makes the job compile at 1.85.0 instead of silently falling through to `rust-toolchain.toml`'s stable channel | FIXED — fix round 12 (product commit `1e696128`: added `tests/ci_gate_completeness.rs::test_verify_msrv_job_pins_toolchain_and_rustup_toolchain_env`; proven RED on removal of the block, GREEN on exact restore, `ci.yml` byte-identical after) | |
+| ADV-P28-INFO-001..004 | INFO | confirmation/concurrence-class `[range-collapsed]` | Four INFO-severity confirmatory notes (isolation-eligibility corroboration, CI-floor shell-logic isolation-test corroboration, PRE-FLIGHT-CHECK-effectiveness, zero-src/-defect streak) | OPEN — informational only, no fix action | Individual verbatim text not captured in this index; count only |
+
+## Pass 28 Isolation Note
+
+**ELIGIBLE.** Two self-disclosed letter-of-rule deviations, same class as pass-27: (1) WebFetch of the pinned `dtolnay/rust-toolchain` `action.yml`; (2) reads of third-party crate sources under `~/.cargo/registry`. Zero banned content surfaced. Per DEC-224: ELIGIBLE.
+
+## Pass 28 Summary
+
+- **Verdict:** NOT CLEAN — 0 HIGH + 0 MEDIUM + 1 LOW + 4 INFO; ELIGIBLE; NINETEENTH consecutive zero-src/-defect pass (concurring with pass-27)
+- **Post-capture routing:** LOW-001 FIXED fix round 12 (`1e696128`); INFO-001..004 informational only
+- **Convergence:** window 27/28/29 BROKEN at 1/3 as of this pass; CI floor soundness independently reconfirmed via isolated shell-logic testing (eighth of nine total confirmations)
+- **Detail artifact:** `s-626-1-adversary-pass-28.md` (not yet captured as a standalone file at burst time)
+
+---
+
+## Pass 29 Finding Catalog (Fresh Window DEC-225: NOT CLEAN — Window CLOSED 1/3)
+
+**Pass-29 closed the window at 1/3.** ELIGIBLE (same two self-disclosed deviations as passes 27/28). One MEDIUM + two LOW substantive findings; three INFO-severity confirmation/concurrence entries.
+
+| ID | Severity | Classification | Title | Status | Notes |
+|----|----------|----------------|-------|--------|-------|
+| ADV-P29-MED-001 | MEDIUM | spec-declaration / undeclared-file-modification | `tests/mutants_glob_existence.rs` was modified (commit `e49230a7`: stale hard-coded count corrected, `all 11 current examine_globs entries` → `all current examine_globs entries`) but undeclared on all four story surfaces (`files_modified`, `test_files`, File Structure Requirements, MUST-NOT-change exception list), violating the story's own MUST-NOT clause | FIXED — this burst (S-626-1 v1.16→v1.17: declared on all four surfaces following the same pattern used for `tests/ci_gate_completeness.rs`/`tests/cli_handler.rs` in v1.13) | |
+| ADV-P29-LOW-001 | LOW | spec-completeness / uncovered-behavior | The ~120-line POL-11 test-job guard in `ci.yml`'s `test` job (product commits `9312f11f`+`a247a343`+`84ab32ac`) is the largest single behavioral change in the delta, gates the required `ci-gate` check, and had no acceptance criterion | FIXED — this burst (S-626-1 v1.17: new AC-10 covering the binary-count floor, named canary, zero-test floor, `CARGO_TERM_COLOR: never` override, and pipefail-bracketing mechanics; `acceptance_criteria_count` 9→10; BC-X.13.007 minted and anchored in v1.18 closing the AC-10 BC-anchoring gap) | |
+| ADV-P29-LOW-002 | LOW | citation-hygiene / dangling-citation | `F-07` citation in `ci_gate_completeness.rs`'s docstring pointed at nothing resolvable | FIXED — fix round 12 (product commit `1e696128`: citation re-pointed to AC-10 / BC-X.13.007; docstring overclaim scoped to the 2 of 5 assertions that are genuinely comment-proof) | |
+| ADV-P29-INFO-001..003 | INFO | confirmation/concurrence-class `[range-collapsed]` | Three INFO-severity confirmatory notes (isolation-eligibility corroboration, CI-floor-soundness reconfirmation, PRE-FLIGHT-CHECK-effectiveness) | OPEN — informational only, no fix action | Individual verbatim text not captured in this index; count only. Ninth and final confirmation of the CI-floor-soundness tally |
+
+## Pass 29 Isolation Note
+
+**ELIGIBLE.** Two self-disclosed letter-of-rule deviations, same class as passes 27/28: (1) WebFetch of the pinned `dtolnay/rust-toolchain` `action.yml`; (2) reads of third-party crate sources under `~/.cargo/registry`. Reviewer additionally encountered prior adversary finding IDs (M-001, LOW-003, F-05, F-01/02/03) while reading `.factory/stories/S-626-1.md`'s `risk_mitigations` version trail — a whitelisted path — and self-disclosed using them only for scope declarations, not to bias severity. Zero banned content used to bias the review. Per DEC-224: ELIGIBLE. **New drift item opened: ISOLATION-WHITELIST-LEAKS-FINDING-IDS (the whitelist itself carries prior finding IDs through an explicitly allowed path — structural, will recur every window).**
+
+## Pass 29 Summary
+
+- **Verdict:** NOT CLEAN — 0 HIGH + 1 MEDIUM + 2 LOW + 3 INFO; ELIGIBLE; NINETEENTH consecutive zero-src/-defect pass (concurring with passes 27/28); window 27/28/29 CLOSED 1/3
+- **Post-capture routing:** MED-001 + LOW-001 FIXED this burst (spec-side); LOW-002 FIXED fix round 12 (`1e696128`); INFO-001..003 informational only
+- **Convergence:** window 27/28/29 CLOSED 1/3 (pass-27 CLEAN; pass-28 NOT CLEAN; pass-29 NOT CLEAN). Fresh STRICT window = passes 30/31/32 (DEC-227) against frozen head `1e696128`, designated but not yet dispatched, pending human go-ahead. CI floor 8/8 non-comment-satisfiable (ninth and final independent confirmation this window)
+- **Detail artifact:** `s-626-1-adversary-pass-29.md` (not yet captured as a standalone file at burst time)
+
+---
+
+## Window 27/28/29 Summary
+
+- **Result:** CLOSED 1/3, BROKEN. Pass-27 CLEAN/ELIGIBLE; pass-28 NOT CLEAN/ELIGIBLE (1 LOW); pass-29 NOT CLEAN/ELIGIBLE (1 MEDIUM + 2 LOW). 15 new findings total (0H + 1M + 3L + 11I).
+- **src/ defects:** zero. All four substantive findings are spec-declaration class (undeclared file modification, uncovered behavior/missing AC, dangling citation, missing regression pin) — none touch `src/`. src/ 0-defect streak extends to NINETEENTH consecutive pass.
+- **Fix round 12:** applied. Product head `e49230a7` → `1e696128` (two commits touching only `CHANGELOG.md` + `tests/ci_gate_completeness.rs`). Spec side: S-626-1 v1.16→v1.18 (AC-10 added + declared surfaces + BC-X.13.007 minted/anchored); BC totals 657→658.
+- **Fresh window:** passes 30/31/32 against frozen head `1e696128` (DEC-227), designated but not yet dispatched, pending human go-ahead.
 
 ---

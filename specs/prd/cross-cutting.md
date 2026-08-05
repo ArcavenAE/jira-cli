@@ -1,9 +1,9 @@
 ---
 context: bc-x
 title: "Cross-cutting (HTTP client, Runtime, Users, Teams, Worklogs, Projects, Queues, JQL, Partial-match, JSM Request Types, CI Guards)"
-total_bcs: 150   # cumulative claim (incl. range-collapsed); definitional_count below is individually-bodied headings
-definitional_count: 84   # count of `#### BC-` headings in this file
-last_updated: 2026-07-24
+total_bcs: 151   # cumulative claim (incl. range-collapsed); definitional_count below is individually-bodied headings
+definitional_count: 85   # count of `#### BC-` headings in this file
+last_updated: 2026-08-05
 source_pass: 3
 trace: |
   - L2: .factory/specs/domain-spec/cross-cutting.md
@@ -23,11 +23,12 @@ trace: |
   - SOH-ATTACHMENTS-1 adversary pass-37 fix round (2026-07-17): BC-X.8.010 frontmatter description corrected from withdrawn pre-P6 design to reuse design (P37-001b)
   - SOH-ATTACHMENTS-1 F3 adversary pass-11 fix round (2026-07-18): BC-X.8.010 EC-X.8.010-1 added — service-desk-list no-match None-path exit 64 before step 1 (P11-005; spec v1.3.86)
   - WAVE-576-05 DOCUMENT-AS-IS ruling (2026-07-24, F5 round 12): BC-X.8.010 EC-X.8.010-2 added + stale_healed per-command-not-per-file note — multi-file upload second independent step-1 failure after heal already fired propagates raw ApiError exit 1 (near-unreachable path; DOCUMENT-AS-IS-COMPLETE); 0 new BCs; counts unchanged (150/84); spec v1.3.106
+  - FIX ROUND 12 addition (2026-08-05, S-626-1 issue #626): BC-X.13.007 — `test` job runtime test-execution floor (Guard 2): binary-count floor + named-canary check + zero-test floor, gating `ci-gate` against a false-green CI result from zero or near-zero test execution (POL-11); anchors story S-626-1 AC-10
 ---
 
 # BC-X — Cross-cutting
 
-150 behavioral contracts covering: HTTP client (X.1), Pagination (X.2), Error handling (X.3),
+151 behavioral contracts covering: HTTP client (X.1), Pagination (X.2), Error handling (X.3),
 Rate limiting (X.4), Worklogs & duration (X.5), Teams (X.6), Users (X.7), Projects & Queues (X.8),
 JQL utilities (X.9), Partial-match (X.10), Build-time (X.11), JSM Request Types (X.12),
 CI Guards (X.13).
@@ -998,10 +999,13 @@ without `--project`) is superseded; impl + tests already match the aligned form.
 
 ## BC-X.13: CI Guards
 
-6 behavioral contracts covering Guard 0 (`tests/claude_md_citations.rs` — the CLAUDE.md doc-fallout
-guard verifying every file-path citation resolves to a real on-disk file; BC-X.13.001..003) and
+7 behavioral contracts covering Guard 0 (`tests/claude_md_citations.rs` — the CLAUDE.md doc-fallout
+guard verifying every file-path citation resolves to a real on-disk file; BC-X.13.001..003),
 Guard 1 (`scripts/check-bc-citation-symbols.sh` — the bc-*.md Trace/Source file::symbol citation
-guard; BC-X.13.004..006; CITATION-GUARDS Story B, 2026-07-05).
+guard; BC-X.13.004..006; CITATION-GUARDS Story B, 2026-07-05), and Guard 2 (the `test` job's own
+runtime test-execution floor in `.github/workflows/ci.yml` — a false-green CI guard, distinct from
+Guards 0/1 which scan documentation rather than CI's own test-execution proof; BC-X.13.007;
+FIX ROUND 12, S-626-1, 2026-08-05).
 
 ---
 
@@ -1542,6 +1546,128 @@ The `spec-guard` job already mounts the `factory-artifacts` worktree via `git wo
 - Source: `scripts/check-bc-citation-symbols.sh` (new file; CI script — not in `src/`); `.github/workflows/ci.yml` `spec-guard` job (modified)
 
 [NEW 2026-07-05 CITATION-GUARDS Story B S-BC-CITATION-GUARD-1 issue #102] Guard 1 bc-*.md Trace/Source file::symbol citation guard, extending the BC-X.13 CI-guards subsystem established by DEAD-CITATION-CI.
+
+---
+
+#### BC-X.13.007: The `test` job enforces a runtime-computed test-execution floor — CI cannot report success from zero-test or near-zero-test execution, even though `cargo test`'s own exit code alone cannot distinguish "tests ran and passed" from "nothing ran"
+
+**Confidence**: HIGH
+**Subject**: CI guard / `test` job runtime test-execution integrity (POL-11)
+
+**Behavior**: The `test` job's test-execution step (`.github/workflows/ci.yml` `test` job, step
+`Run tests (zero-test floor, POL-11)`) does not treat a zero exit code from
+`cargo test --all-features` as sufficient proof that tests actually ran. It captures the full test
+output, computes two runtime metrics from it — (1) the number of test binaries that reported a
+`test result:` line, and (2) the summed passed-test count across those binaries — and enforces
+three independent gate checks against those metrics before the step (and therefore the job, and
+therefore the required `ci-gate` check) can report success:
+
+1. **Binary-count floor**: the step fails if the number of test binaries that reported results
+   falls below a fixed, non-zero threshold. This defends against mass orphaning of `tests/`
+   integration-test files — a defect class a bare "total passed > 0" predicate cannot catch,
+   because `src/`-inline unit tests keep running (and keep the passed-count positive) even when
+   every `tests/` binary is silently dropped from the build.
+2. **Named-canary check**: the step fails if the specific test binary carrying this guard's own
+   regression pin (`tests/ci_gate_completeness`) did not report results. This defends against the
+   self-orphaning case — the one binary that exists to catch CI-gate regressions stops running
+   while the aggregate binary count stays at or above the floor, a case the binary-count floor
+   alone cannot detect.
+3. **Zero-test floor**: the step fails if the summed passed-test count across all reporting
+   binaries is exactly zero.
+
+A genuine test failure (any non-zero `cargo test` exit code) still fails the step independently of
+these three checks — the floor mechanism is additive to cargo's own pass/fail signal, not a
+replacement for it.
+
+On success, the step emits a runtime-computed, human-readable count of tests executed and binaries
+that ran. Exit code 0 alone is deliberately treated as insufficient evidence that the guard ran and
+passed; the positive-coverage line is the observable proof.
+
+**Preconditions**:
+- The `test` job runs on every push/PR to `develop`/`main` (3-OS matrix) as an existing
+  `ci-gate.needs` member
+- `cargo test --all-features` output is captured in full — untruncated and free of
+  color-escape sequences that would corrupt the runtime metric computation — before the floor
+  checks run
+
+**Postconditions (on success — floor cleared)**:
+- The step exits 0
+- A positive-coverage line naming the runtime-computed test count and binary count is emitted (not
+  merely a bare exit code)
+- The job, and therefore `ci-gate`, proceeds to reflect success
+
+**Postconditions (on failure — any of the three gates trips)**:
+- The step exits non-zero before the job can report success
+- A canonical `FAIL (POL-11): ...` diagnostic identifying which gate tripped (binary-count floor,
+  named canary, or zero-test floor) is emitted, together with a list of plausible causes (e.g. a
+  build-config change that disables default test-target discovery, a test-target rename, mass
+  test-file deletion, or a harness misconfiguration)
+- `ci-gate` is blocked — a CI run that executed zero or near-zero tests cannot reach the required
+  merge-blocking check
+
+**Invariants**:
+- A `cargo test` invocation that runs zero tests exits 0 by default — the floor mechanism exists
+  precisely because cargo's own exit code cannot distinguish "ran and passed" from "nothing ran";
+  the guard's checks are computed from parsed runtime output, not inferred from the exit code alone
+- The floor checks run in addition to, not instead of, cargo's own failure signal — a real test
+  failure still fails the step
+- The named-canary check and the binary-count floor are both required: the binary-count floor
+  alone cannot detect self-orphaning of the one binary that carries this guard's own regression
+  pin, because that binary's removal does not necessarily drop the aggregate binary count below
+  the floor
+- This BC governs the `test` job's own runtime-integrity guard — distinct from BC-X.13.001..006,
+  which govern static citation-checking scripts (`tests/claude_md_citations.rs`,
+  `scripts/check-bc-citation-symbols.sh`) that scan documentation, not CI's own test-execution proof
+
+**Edge Cases**:
+- EC-CIGATE-001: All `tests/*.rs` integration-test files are orphaned (e.g. a build-config change
+  that disables default test-target discovery, or a target-list override) while `src/`-inline
+  `#[cfg(test)]` tests continue running → binary-count floor trips (a bare passed-count predicate
+  would stay positive and mask the defect) → step fails
+- EC-CIGATE-002: Only the binary carrying this guard's own regression pin is renamed or excluded,
+  while the rest of the `tests/` suite is intact and the binary count stays at or above the floor
+  → named-canary check trips → step fails
+- EC-CIGATE-003: A test filter or harness misconfiguration causes every reporting binary to show
+  zero passed tests (binaries run, but none of their tests execute) → zero-test floor trips →
+  step fails
+- EC-CIGATE-004: A genuine test assertion fails → `cargo test`'s own non-zero exit code fails the
+  step independently of the three floor checks (the floor checks are additive, not substitutive)
+- EC-CIGATE-005: A deliberate, legitimate reduction in the number of test binaries (e.g.
+  consolidating several integration-test files into fewer targets) narrows the margin between the
+  current binary count and the floor threshold → the floor threshold is a lower bound, not an
+  exact-match assertion, and requires periodic recalibration when a large legitimate reduction is
+  planned
+
+**Canonical Test Vectors**:
+
+| Scenario | Expected behavior |
+|----------|-------------------|
+| Full suite runs normally; all binaries report results; passed-count > 0 | Step exits 0; positive-coverage line printed with runtime-computed counts |
+| `tests/` fully orphaned (default test-target discovery disabled); `src/`-inline tests still pass | Binary-count floor trips; `FAIL (POL-11): ...`; step exits non-zero |
+| Named-canary binary alone renamed/excluded; rest of `tests/` intact | Named-canary check trips; `FAIL (POL-11): ...`; step exits non-zero |
+| Every reporting binary shows zero passed tests (filter matches nothing) | Zero-test floor trips; `FAIL (POL-11): ...`; step exits non-zero |
+| A real assertion fails inside any test | `cargo test` itself exits non-zero; step fails independently of the floor checks |
+
+**Verification Properties**:
+- VP-CIGATE-001: Regression pin —
+  `tests/ci_gate_completeness.rs::test_verify_test_job_has_zero_test_floor` asserts the `test`
+  job's step contains the `FAIL (POL-11)` error sentinel, the binary-count floor gate bound to its
+  runtime variable (not a bare literal threshold), and the named-canary check bound to its command
+  form (not merely a substring that could also be satisfied by a comment or an echo diagnostic) —
+  so the assertions cannot be satisfied by documentation text alone.
+
+**Traceability**:
+- Implementing story: S-626-1 (FIX ROUND 12, v1.17), issue #626
+- Policy: POL-11 (positive-coverage / false-green CI guard policy; adversary pass-18 finding)
+- Prior art / anti-pattern cited: TD-VSDD-057 / prism PR #127 — ANSI-wrapped output silently
+  zeroing an anchored `grep`, producing a permanent false-red with no diagnostic; the reason this
+  guard's step overrides `CARGO_TERM_COLOR` for itself
+- Source: `.github/workflows/ci.yml` `test` job, step `Run tests (zero-test floor, POL-11)`;
+  `tests/ci_gate_completeness.rs::test_verify_test_job_has_zero_test_floor`
+
+[NEW 2026-08-05 FIX ROUND 12 S-626-1 issue #626] `test` job runtime test-execution floor (Guard 2),
+extending the BC-X.13 CI-guards subsystem established by DEAD-CITATION-CI (Guard 0) and
+CITATION-GUARDS Story B (Guard 1).
 
 ---
 

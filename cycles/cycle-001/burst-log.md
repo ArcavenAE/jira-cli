@@ -8473,3 +8473,24 @@ Unchanged — this was a pure archival/housekeeping burst, not a state change. S
 
 **Pipeline:** PAUSED — awaiting S-626-1 passes 27/28/29 (DEC-225 fresh STRICT window; head e49230a7).
 **STORY-INDEX:** v1.5.61 (unchanged). **trajectory-tail:** →0→0→0→0 (unchanged).
+
+## ADVERSARY-27-28-29+FIX-ROUND-12 (archived rows from STATE.md 2026-08-05)
+
+### Archived Phase Progress Row (from ADVERSARY-24-25-26+FIX-ROUND-11)
+
+| Phase | Status | Completed | Gate | Notes | Finding Progression |
+|-------|--------|-----------|------|-------|---------------------|
+| **ADVERSARY-24-25-26+FIX-ROUND-11 (2026-08-04): S-626-1 passes 24/25/26 (P24 CLEAN/ELIGIBLE/FIRST; P25 CLEAN/ELIGIBLE/SECOND; P26 NOT CLEAN 0H+1M+2L+2I/ELIGIBLE; window 24/25/26 BROKEN 2/3; DEC-224+225+226) — ADV-P1-INDEX v2.3 (197 findings); fix round 11 applied e49230a7; STORY-INDEX v1.5.61.** | PAUSED | 2026-08-04 | — | Window 24/25/26 BROKEN 2/3 (P24+P25 CLEAN; P26 NOT CLEAN). Fresh STRICT window: passes 27/28/29 (DEC-225) against e49230a7. PR #667 HELD (DEC-202). AX23-001 PENDING. | →0→0→0→0 |
+
+### Archived Current Phase Steps Row (from ADVERSARY-22+FIX-ROUND-9)
+
+| Step | Agent | Status | Output |
+|------|-------|--------|--------|
+| **ADVERSARY-22+FIX-ROUND-9 (2026-08-04): S-626-1 pass-22 (VOID — isolation breach; NOT CLEAN 0H+1M+2L; FOURTEENTH zero-src/-defect; CI floor SOUND seven dim; fix round 9 7798b1bf) + ADV-P1-INDEX v2.1 (184 total findings) + DEC-220+221. 1 new drift item (PIN-ASSERTIONS-PROSE-SATISFIABLE MEDIUM CLOSED); 3 drift items updated.** | state-manager | COMPLETED | S-626-1 pass-22 + fix round 9 + STATE.md committed to factory-artifacts. Next: S-626-1 passes 23/24/25 (DEC-221). |
+
+### Burst Summary
+
+**ADVERSARY-27-28-29+FIX-ROUND-12 (2026-08-05):** S-626-1 passes 27 (CLEAN/ELIGIBLE), 28 (NOT CLEAN 0H+0M+1L+4I/ELIGIBLE), 29 (NOT CLEAN 0H+1M+2L+3I/ELIGIBLE) dispatched against frozen head `e49230a7` (DEC-225 window). Window 27/28/29 CLOSED 1/3, BROKEN. All three ELIGIBLE per DEC-224 — each self-disclosed the same two letter-of-rule isolation deviations (WebFetch of the pinned `dtolnay/rust-toolchain` `action.yml`; reads of third-party crate sources under `~/.cargo/registry`); zero banned content surfaced. Pass-29 additionally encountered prior adversary finding IDs while reading `S-626-1.md`'s `risk_mitigations` trail (a whitelisted path) — self-disclosed as scope-declaration use only, not severity bias; new drift item ISOLATION-WHITELIST-LEAKS-FINDING-IDS opened. PRE-FLIGHT CHECK verified effective for a seventh consecutive pass. 15 new findings, all spec-declaration class (zero `src/` defects; src/ 0-defect NINETEENTH consecutive): ADV-P29-MED-001 (`tests/mutants_glob_existence.rs` modified but undeclared on all four story surfaces), ADV-P29-LOW-001 (POL-11 test-job guard had no acceptance criterion), ADV-P28-LOW-001 (msrv job's `RUSTUP_TOOLCHAIN` env had no regression pin), ADV-P29-LOW-002 (dangling `F-07` citation), plus 11 INFO-severity confirmation/concurrence entries. **Fix round 12 applied.** Product head `e49230a7` → `1e696128` (commit touching only `CHANGELOG.md` + `tests/ci_gate_completeness.rs`: new `test_verify_msrv_job_pins_toolchain_and_rustup_toolchain_env` regression test, proven RED/GREEN; `F-07` citation re-pointed to AC-10/BC-X.13.007; docstring overclaim scoped down; `--locked` CHANGELOG line). Spec side: S-626-1 v1.16→v1.17 (`tests/mutants_glob_existence.rs` declared on all four surfaces; new AC-10 covering the POL-11 guard, `acceptance_criteria_count` 9→10; AC-3 extended with `--locked`) → v1.17→v1.18 (product-owner minted BC-X.13.007 in `cross-cutting.md`, closing the AC-10 BC-anchoring gap; BC totals 657→658; AC-10 TODO marker removed). STORY-INDEX v1.5.61→v1.5.62. ADV-P1-INDEX v2.3 (197 findings)→v2.4 (212 findings). **New DEC-227:** fresh STRICT window = passes 30/31/32 against frozen head `1e696128`, designated but not yet dispatched, pending human go-ahead. Three new drift items opened (ISOLATION-WHITELIST-LEAKS-FINDING-IDS MEDIUM, HOOK-REGEX-FALSE-POSITIVE-CLASS MEDIUM, BRIEFING-DERIVED-FROM-DIFFSTAT-MISCLASSIFIES-FILES LOW); four drift items updated (ORCHESTRATOR-SHIPPED-DEFECTIVE-GUARD, REVIEW-ISOLATION-NOT-MECHANICALLY-ENFORCED, ORCHESTRATOR-GREP-HYGIENE-INSUFFICIENT, MIXED-SET-DASH-ARM-UNPINNED — unchanged, still OPEN per DEC-226). Step 4.5 remains 0/3. PR #667 remains HELD (DEC-202).
+
+**Pipeline:** PAUSED — awaiting S-626-1 passes 30/31/32 (DEC-227 fresh STRICT window; head `1e696128`), pending human go-ahead.
+**STORY-INDEX:** v1.5.62. **ADV-P1-INDEX:** v2.4 (212 findings). **trajectory-tail:** →0→0→0→0 (unchanged).
