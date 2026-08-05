@@ -1590,20 +1590,19 @@ passed; the positive-coverage line is the observable proof.
   color-escape sequences that would corrupt the runtime metric computation — before the floor
   checks run
 
-**Postconditions (on success — floor cleared)**:
-- The step exits 0
-- A positive-coverage line naming the runtime-computed test count and binary count is emitted (not
-  merely a bare exit code)
-- The job, and therefore `ci-gate`, proceeds to reflect success
-
-**Postconditions (on failure — any of the three gates trips)**:
-- The step exits non-zero before the job can report success
-- A canonical `FAIL (POL-11): ...` diagnostic identifying which gate tripped (binary-count floor,
-  named canary, or zero-test floor) is emitted, together with a list of plausible causes (e.g. a
-  build-config change that disables default test-target discovery, a test-target rename, mass
-  test-file deletion, or a harness misconfiguration)
-- `ci-gate` is blocked — a CI run that executed zero or near-zero tests cannot reach the required
-  merge-blocking check
+**Postconditions**:
+1. On success (floor cleared): the step exits 0.
+2. On success: a positive-coverage line naming the runtime-computed test count and binary count is
+   emitted (not merely a bare exit code).
+3. On success: the job, and therefore `ci-gate`, proceeds to reflect success.
+4. On failure (any of the three gates trips): the step exits non-zero before the job can report
+   success.
+5. On failure: a canonical `FAIL (POL-11): ...` diagnostic identifying which gate tripped
+   (binary-count floor, named canary, or zero-test floor) is emitted, together with a list of
+   plausible causes (e.g. a build-config change that disables default test-target discovery, a
+   test-target rename, mass test-file deletion, or a harness misconfiguration).
+6. On failure: `ci-gate` is blocked — a CI run that executed zero or near-zero tests cannot reach
+   the required merge-blocking check.
 
 **Invariants**:
 - A `cargo test` invocation that runs zero tests exits 0 by default — the floor mechanism exists

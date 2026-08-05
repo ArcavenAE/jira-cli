@@ -1,29 +1,29 @@
 ---
 document_type: adversarial-review-index
 level: ops
-version: "2.6"
+version: "2.7"
 status: in-review
 producer: adversary
-timestamp: 2026-08-05T16:10:00Z
+timestamp: 2026-08-05T17:20:00Z
 phase: "5"
-pass: 35
+pass: 38
 inputs: [.factory/stories/S-626-1.md, .factory/stories/S-640-1.md, .factory/stories/S-641-1.md, .factory/stories/S-MUTANTS-EXAMINE-GLOBS-1.md, .factory/stories/STORY-INDEX.md, .github/workflows/ci.yml, tests/ci_gate_completeness.rs, tests/cli_handler.rs, tests/mutants_glob_existence.rs, CLAUDE.md, Cargo.toml, CHANGELOG.md]
 traces_to: .factory/stories/S-626-1.md
-total_findings: 252
-severity_distribution: { CRIT: 0, HIGH: 19, MED: 89, LOW: 96, INFO: 48 }
+total_findings: 275
+severity_distribution: { CRIT: 0, HIGH: 19, MED: 89, LOW: 107, INFO: 60 }
 story: S-626-1
 cycle: cycle-001
-feature_head: d848d9a5 (fix-round-14 product commit; passes 33/34/35 ran against frozen head 0adcae34 (fix round 13); fix round 14 0adcae34→d848d9a5 closed all pass-33/34/35 substantive findings; branch pushed, PR #667 head now d848d9a5, CI 15/15 green)
+feature_head: c2d7a215 (fix-round-15 product commit; passes 36/37/38 ran against frozen head d848d9a5 (fix round 14); fix round 15 d848d9a5→c2d7a215 closed all pass-36/37/38 substantive findings; branch pushed, PR #667 head now c2d7a215, CI validated ubuntu/macos/windows)
 pr: 667
 basis: TRUE ADVERSARY AGENT (not a DEC-190 substitute)
-convergence: 0 of 3 (Step 4.5 window — DEC-199 GRIND to 3/3 CLEAN; window 33/34/35 CLOSED 0/3 (pass-33 NOT CLEAN + pass-34 NOT CLEAN + pass-35 NOT CLEAN; BROKEN); DEC-224 ISOLATION ELIGIBILITY PRINCIPLE held — all three ELIGIBLE; 32 recorded passes; src/ 0-defect TWENTY-FIRST consecutive; fix round 14 applied 0adcae34→d848d9a5 (two-stage: code, then exhaustive declaration audit, then spec); fresh STRICT window = passes 36/37/38 (DEC-229, designated, not yet dispatched))
+convergence: 0 of 3 conservative / 3 of 3 lenient (Step 4.5 window — DEC-199 GRIND to 3/3 CLEAN; window 36/37/38 CLOSED 0/3 conservative reading, 3/3 lenient reading under DEC-191(c) (pass-36 NOT CLEAN + pass-37 NOT CLEAN + pass-38 NOT CLEAN, all LOW/INFO-only, zero MEDIUM); DEC-204 UNADJUDICATED and now outcome-determining; DEC-224 ISOLATION ELIGIBILITY PRINCIPLE held — all three ELIGIBLE; 35 recorded passes; src/ 0-defect TWENTY-THIRD consecutive; fix round 15 applied d848d9a5→c2d7a215 (code, then exhaustive audit, then spec); fresh STRICT window = passes 39/40/41 (DEC-230, designated, not yet dispatched))
 void_spawns: 6 (passes 6/7/8 first-attempt background subagents; pass-9 isolation breach; pass-11 isolation breach; pass-22 isolation breach)
 not_run: 2 (passes 16/17 — superseded by round-5 ruling per DEC-209; see s-626-1-adversary-pass-16.md and s-626-1-adversary-pass-17.md)
 superseded: 1 (pass-20 — superseded per DEC-216; window 18/19/20 CLOSED 0/2)
 not_dispatched: 6 (passes 22/23 of window 21/22/23 — superseded when pass-21 returned NOT CLEAN; passes 23/24 of window 22/23/24 — superseded when pass-22 returned VOID+NOT CLEAN; passes 24/25 of window 23/24/25 — superseded when pass-23 returned NOT CLEAN; passes 24/25/26 subsequently dispatched under fresh window DEC-223 and ran)
 ---
 
-# Adversarial Review Index — S-626-1 (SOH-DX-1) Passes 1..35
+# Adversarial Review Index — S-626-1 (SOH-DX-1) Passes 1..38
 
 ## Pass 1 Finding Catalog
 
@@ -1118,5 +1118,102 @@ Pass-35 closed window 33/34/35 at 0/3, run against frozen head `0adcae34`. ELIGI
 - **Fix round 14 (two-stage: code, then exhaustive declaration audit, then spec):** applied. Product head `0adcae34` → `d848d9a5`, pushed. PR #667 head = `d848d9a5`, CI 15/15 SUCCESS, 0 pending, 0 failed, mergeStateStatus CLEAN (validated on ubuntu/macos/windows). Stage 1 code: added a third assertion to `test_verify_msrv_job_pins_toolchain_and_rustup_toolchain_env` pinning `cargo check --all-features --locked`; reworded the toolchain-pin panic message; added `#626` to the three CHANGELOG entries. No test function added, removed, or renamed; independently measured at `d848d9a5`: 103 binaries / 2346 passed / 0 failed / 100 ignored. Stage 2: a dedicated exhaustive-declaration auditor (no fixing authority) enumerated every declaration surface × all 17 files, re-derived every commit trail from `git log`, measured every recorded number, and resolved every citation — found 7 gaps, 3 of which four consecutive adversarial windows had never surfaced (including two on `STORY-INDEX.md`, outside the adversary review whitelist); it also empirically reproduced the story's central causal claim by compiling comfy-table 7.2.2 in an isolated scratch crate under Rust 1.85.0, hitting the exact `E0658` let-chain error at two sites. Stage 3 spec: S-626-1 v1.19→v1.20 (FIX ROUND 14 entry; AC-3 verification vehicle extended to three assertions + panic-message correction; `ci_gate_completeness.rs` trail → 9 commits; `team_column_parity.rs` trail → 4 commits; v1.16's false completeness claim recorded as superseded; CHANGELOG FSR row + Delivery Checklist expanded to 3 entries; Architecture Mapping gained 6 rows).
 - **Disposition:** 2 MEDIUM + 6 LOW all FIXED by round 14. Of 11 INFO: 2 FIXED/partially fixed, 9 OPEN (all disclosed limitations, pre-existing slack, or routed items) — confirmed authoritative per the Reconciliation note above.
 - **Fresh window:** passes 36/37/38 against frozen head `d848d9a5` (DEC-229), designated but not yet dispatched, pending human go-ahead. Step 4.5 remains 0/3. PR #667 remains HELD per DEC-202.
+
+---
+
+## Pass 36 Finding Catalog (Fresh Window DEC-229: NOT CLEAN)
+
+Pass-36 opened window 36/37/38, run against frozen head `d848d9a5`. ELIGIBLE, same class as prior windows. Four LOW + four INFO findings — the first pass in the cycle with zero MEDIUM findings.
+
+| ID | Severity | Classification | Title | Status | Notes |
+|----|----------|----------------|-------|--------|-------|
+| ADV-P36-LOW-001 | LOW | citation-unresolvable | `BC-X.13.007` "postcondition 1" cited at 3 sites; that BC's postconditions are unnumbered/about exit codes — the glossed content is Behavior items 1–3 | FIXED — fix round 15 (v1.21, all sites → `Behavior items 1–3`) | Concurs ADV-P38-LOW-002 |
+| ADV-P36-LOW-002 | LOW | undeclared-scope | `c88374b4` added a `.not()` assertion to pre-existing `team_column_parity.rs::sprint_current_falls_back_to_uuid_when_team_not_cached`, pinning `src/cli/sprint.rs::handle_current`; undeclared on FSR/Architecture Mapping/AC-9/BC-5.3.003 while the identical `cli_handler.rs` change IS declared | FIXED — fix round 15 (v1.21, wording mirrored from canonical BC) | Concurs ADV-P37-LOW-001, ADV-P38-LOW-001 |
+| ADV-P36-LOW-003 | LOW | cross-surface-drift | Tasks section stale on 4 counts: no task covers AC-10; Task 3 omits `--locked`; Task 5 omits the Conventions bullet; Task 7c still singular after round 14's own GAP-4 widened FSR + Delivery Checklist and left it behind | FIXED — fix round 15 (v1.21, plus Task 7d in-code comments — a 5th point found by audit) | |
+| ADV-P36-LOW-004 | LOW | incomplete-enumeration | AC-10/Architecture Mapping/FSR claim the POL-11 guard step came from 3 commits; 5 touched it (`14416fd9`, `e49230a7` comment-only) | FIXED — fix round 15 (v1.21, scoped per-hunk to the step) | Concurs ADV-P37-LOW-002 |
+| ADV-P36-INFO-001 | INFO | imprecision | AC-6 bullet 1 says `rust-toolchain.toml` outranks the action's toolchain input; the input governs *installation*, not selection. Delivered `CLAUDE.md` states the accurate mechanism — the AC text is the inaccurate artifact | OPEN | |
+| ADV-P36-INFO-002 | INFO | citation-form | ci.yml FSR row cites `(~:171-180)` raw line range after v1.13 migrated ci.yml citations to anchor form; accurate at head, cosmetic | OPEN | |
+| ADV-P36-INFO-003 | INFO | cross-surface-drift | Purity Classification lists 4 of 17 files — the identical 6-file gap Architecture Mapping had, fixed in v1.20 and never mirrored here | FIXED — fix round 15 (v1.21, +6 rows) | Orchestrator initially deprioritized as INFO; audit rated MEDIUM and was correct |
+| ADV-P36-INFO-004 | INFO | disclosure | AC-10's count is platform-caveated to macOS; ubuntu/windows figures still anchored to a pre-`1e696128` commit | OPEN — disclosed | |
+
+## Pass 36 Isolation Note
+
+**ELIGIBLE.** Reviewer told up front about the ISOLATION-WHITELIST-LEAKS-FINDING-IDS defect and instructed to treat story-changelog finding IDs as scope declarations only. Zero banned content used to bias the review. Per DEC-224: ELIGIBLE.
+
+## Pass 36 Summary
+
+- **Verdict:** NOT CLEAN — 0 HIGH + 0 MEDIUM + 4 LOW + 4 INFO (2 FIXED, 2 OPEN/disclosed); ELIGIBLE; src/ 0-defect TWENTY-SECOND consecutive pass. First pass in the cycle with zero MEDIUM findings.
+- **Post-capture routing:** 4 LOW + 1 INFO FIXED fix round 15; 3 INFO OPEN
+- **Convergence:** window 36/37/38 opens NOT CLEAN under the conservative DEC-191(c) reading (LOW/INFO-only, zero MEDIUM)
+- **Detail artifact:** not yet captured as a standalone file at burst time
+
+---
+
+## Pass 37 Finding Catalog (Fresh Window DEC-229: NOT CLEAN)
+
+Pass-37 continued window 36/37/38 NOT CLEAN, run against frozen head `d848d9a5`. ELIGIBLE, same class as pass-36. Four LOW + three INFO findings.
+
+| ID | Severity | Classification | Title | Status | Notes |
+|----|----------|----------------|-------|--------|-------|
+| ADV-P37-LOW-001 | LOW | undeclared-scope | sprint-site `.not()` assertion pinning `src/cli/sprint.rs::handle_current` | FIXED — fix round 15 | Concurs ADV-P36-LOW-002, ADV-P38-LOW-001 |
+| ADV-P37-LOW-002 | LOW | incomplete-enumeration | POL-11 guard-step commit count (3 claimed vs 5 actual) | FIXED — fix round 15 | Concurs ADV-P36-LOW-004 |
+| ADV-P37-LOW-003 | LOW | disproven-example | AC-3 + CHANGELOG cite `wiremock` as the `--locked` risk example; `wiremock` is a dev-dependency the msrv job's lib+bins-only `cargo check` never compiles, so it could never be affected | FIXED — fix round 15 (`c2d7a215` CHANGELOG → `dirs`, verified non-dev via `cargo tree`; v1.21 AC-3 + FSR row) | |
+| ADV-P37-LOW-004 | LOW | miscount | Guard docstring says "the remaining three assertions" — the test has 8; 3 were unclassified | FIXED — fix round 15 (`c2d7a215`, reclassified 2 operative-only + 3 echo-satisfiable + 3 newly classified; also corrected an adjacent overclaiming inline comment) | |
+| ADV-P37-INFO-001 | INFO | false-absence-claim | msrv guard docstring said "nothing else in the tree referenced `RUSTUP_TOOLCHAIN`"; `CLAUDE.md` and `CHANGELOG.md` both did | FIXED — fix round 15 (`c2d7a215`, narrowed to "nothing in CI or the test suite asserted on") | Concurs ADV-P38-LOW-003 |
+| ADV-P37-INFO-002 | INFO | declared-deferral | E0463 comments in `sign-and-publish.yml`/`backfill-release.yml` are historically stale in present tense; explicitly assessed and routed to S-641-1 | OPEN — declared deferral | |
+| ADV-P37-INFO-003 | INFO | by-design | `mutants_glob_existence.rs` `FLOOR = 11` vs 16 live globs; a lower bound, correctly left alone | OPEN — pre-existing | |
+
+## Pass 37 Isolation Note
+
+**ELIGIBLE.** Same self-disclosed letter-of-rule deviations as pass-36. Zero banned content used to bias the review. Per DEC-224: ELIGIBLE.
+
+## Pass 37 Summary
+
+- **Verdict:** NOT CLEAN — 0 HIGH + 0 MEDIUM + 4 LOW + 3 INFO (5 FIXED, 2 OPEN); ELIGIBLE; src/ 0-defect TWENTY-SECOND consecutive pass (concurring with pass-36)
+- **Post-capture routing:** 4 LOW + 1 INFO FIXED fix round 15; 2 INFO OPEN
+- **Convergence:** window 36/37/38 remains NOT CLEAN under the conservative reading at this point (LOW/INFO-only, zero MEDIUM)
+- **Detail artifact:** not yet captured as a standalone file at burst time
+
+---
+
+## Pass 38 Finding Catalog (Fresh Window DEC-229: NOT CLEAN — Window CLOSED 0/3 conservative, 3/3 lenient)
+
+Pass-38 closed window 36/37/38, run against frozen head `d848d9a5`. ELIGIBLE, same class as passes 36/37. Three LOW + five INFO findings. Zero MEDIUM across all three passes — the first time severity has decayed to zero MEDIUM for a full window in the cycle.
+
+| ID | Severity | Classification | Title | Status | Notes |
+|----|----------|----------------|-------|--------|-------|
+| ADV-P38-LOW-001 | LOW | undeclared-scope | sprint-site assertion; test's own comment says "This assertion pins the sprint.rs render site" | FIXED — fix round 15 | Concurs ADV-P36-LOW-002, ADV-P37-LOW-001 |
+| ADV-P38-LOW-002 | LOW | citation-unresolvable | `BC-X.13.007` "postcondition 1" plus the story's BC title being a third independent paraphrase matching neither `cross-cutting.md` nor `BC-INDEX.md` | FIXED — fix round 15 (v1.21; title now BC-INDEX canonical per the v1.11 ruling) | Concurs ADV-P36-LOW-001 |
+| ADV-P38-LOW-003 | LOW | false-absence-claim | `RUSTUP_TOOLCHAIN` absence claim | FIXED — fix round 15 (`c2d7a215`) | Concurs ADV-P37-INFO-001 |
+| ADV-P38-INFO-001 | INFO | classification-imprecision | Purity Classification marks the three `src/` files `pure-logic (minimal)` under a "Module" header; those modules do network I/O, cache reads, and env reads. The Justification cell makes clear the classification describes the *rewrites*, not the modules, so intent is recoverable | OPEN | |
+| ADV-P38-INFO-002 | INFO | stale-count | Previous Story Intelligence says "all 34 form-B hits in `src/` are plain boolean continuations"; at the frozen head the count is 26. Entry is version-anchored to v1.7 and its conclusion is independently true — reviewer ran a two-line-aware detector across all of `src/` including inline `#[cfg(test)]` modules and found zero let-chain continuations | OPEN | |
+| ADV-P38-INFO-003 | INFO | `[process-gap]` SHARED-WORKTREE CONTAMINATION | Twice during the pass the shared worktree was transiently mutated by another concurrent reviewer's perturbation probe: (a) a read of `ci.yml` returned `FOO: "1.85.0"` where HEAD has `RUSTUP_TOOLCHAIN: "1.85.0"` — another reviewer mid-restore; (b) `cargo clippy --all-targets --all-features -- -D warnings` returned exit 101 once and exit 0 on immediate re-run against a verified-clean tree. Reviewer self-mitigated by switching all content measurement to `git show HEAD:<path>` blobs and simulating perturbations in a scratchpad | OPEN — new drift item SHARED-WORKTREE-REVIEWER-CONTAMINATION | |
+| ADV-P38-INFO-004 | INFO | unrecorded-provenance | AC-10's "negative path (simulated test-binary orphaning)" asserts a simulation was run but cites no artifact. Reviewer re-derived it independently and it holds — only provenance is unrecorded | OPEN | |
+| ADV-P38-INFO-005 | INFO | isolation-boundary | AC-1's cited source `.factory/phase-f1-delta/SOH-DX-1/delta-analysis.md` is outside the reviewer whitelist, so the "recorded there" clause is unverifiable in-perimeter; reviewer verified the SHA's substance against GitHub instead | OPEN | |
+
+## Pass 38 Isolation Note
+
+**ELIGIBLE.** Same self-disclosed letter-of-rule deviations as passes 36/37, plus a self-mitigated shared-worktree contamination episode (ADV-P38-INFO-003, new SHARED-WORKTREE-REVIEWER-CONTAMINATION drift item). Zero banned content used to bias the review. Per DEC-224: ELIGIBLE.
+
+## Pass 38 Summary
+
+- **Verdict:** NOT CLEAN — 0 HIGH + 0 MEDIUM + 3 LOW + 5 INFO (3 FIXED, 5 OPEN); ELIGIBLE; src/ 0-defect TWENTY-SECOND consecutive pass (concurring with passes 36/37); window 36/37/38 CLOSED 0/3 conservative, 3/3 lenient
+- **Post-capture routing:** 3 LOW FIXED fix round 15; 5 INFO OPEN
+- **Convergence:** window 36/37/38 CLOSED — 0/3 under the DEC-191(c) conservative reading (a NOT CLEAN LOW/INFO-only pass resets), 3/3 under the DEC-191(c) lenient reading (LOW refinements are ledgered, non-resetting). DEC-204 remains UNADJUDICATED and is now outcome-determining for this window.
+- **Detail artifact:** not yet captured as a standalone file at burst time
+
+---
+
+## Window 36/37/38 Summary
+
+- **Result:** CLOSED 0/3 conservative / 3/3 lenient under DEC-191(c) (DEC-204 UNADJUDICATED, now outcome-determining). Severity decayed to zero MEDIUM across all three passes for the first time in the cycle. Window trajectory: 24/25/26 = 2/3 → 27/28/29 = 1/3 → 30/31/32 = 0/3 → 33/34/35 = 0/3 → 36/37/38 = 0/3 conservative / 3/3 lenient. Pass-36 NOT CLEAN (0M+4L+4I); pass-37 NOT CLEAN (0M+4L+3I); pass-38 NOT CLEAN (0M+3L+5I). 23 new findings total (0H + 0M + 11L + 12I).
+- **LOW tally:** 11 LOW findings fully itemized, all 11 FIXED by fix round 15.
+- **INFO tally (RECONCILED):** 12 INFO findings fully itemized. Per-finding itemization above supports 2 FIXED (ADV-P36-INFO-003, ADV-P37-INFO-001) and 10 OPEN. **Reconciliation note:** the burst-briefing disposition text originally stated "4 FIXED (P36-INFO-003, P37-INFO-001, and the two folded into code fixes), 8 OPEN" — the "two folded into code fixes" clause does not correspond to any INFO-severity item marked FIXED in the itemization above; the code-fix-adjacent items (ADV-P37-LOW-003, ADV-P37-LOW-004, ADV-P38-LOW-003) are all LOW severity, already counted in the 11-LOW-all-FIXED tally. This is the same class of summary-line arithmetic error recorded and corrected in the window 33/34/35 burst (see this file's Reconciliation note under Window 33/34/35 Summary, round 14). Per-finding itemization is authoritative: 2 FIXED, 10 OPEN. No individual finding's status was changed — only this summary line was corrected.
+- **src/ defects:** zero. src/ 0-defect streak extends to TWENTY-THIRD consecutive pass.
+- **Cross-pass concurrences:** sprint-site assertion P36↔P37↔P38 (all three); POL-11 enumeration P36↔P37; BC-X.13.007 citation P36↔P38; `RUSTUP_TOOLCHAIN` absence claim P37↔P38.
+- **Fix round 15 (code → exhaustive audit → spec):** applied. Product head `d848d9a5` → `c2d7a215`, pushed. PR #667 head = `c2d7a215`, CI validated on ubuntu/macos/windows. Stage 1 code: CHANGELOG `--locked` rationale example corrected `wiremock` → `dirs` (verified non-dev via `cargo tree --depth 1 -e normal`; `dirs`, `figment`, `urlencoding` all lack `rust-version`); guard docstring assertion classification corrected (8 total: 2 operative-only, 3 echo-satisfiable, 3 newly classified) plus an adjacent overclaiming inline comment; `RUSTUP_TOOLCHAIN` absence claim narrowed. No test added, removed, or renamed; independently measured at `c2d7a215`: 103 binaries / 2346 passed / 0 failed / 100 ignored. Stage 2: a second application of the exhaustive declaration-integrity audit methodology found 11 gaps, 3 new, and read every Task body in full (the prior audit had listed Tasks as enumerated without reading them, and had wrongly assumed `ci.yml` carried no commit claim from its format); identified a structural root cause — the story's "frozen head" has lagged live HEAD by one commit at every audit boundary because it is captured at briefing time rather than re-derived at write time (v1.19 said `0adcae34` vs `d848d9a5`; v1.20 said `d848d9a5` vs `c2d7a215`); self-caught and reported a false positive of its own; one of its two forks never returned, leaving `CLAUDE.md`, the three `src/` files, AC-5 line ranges, and the `ci.yml` scope comment unverified by this pass, stated explicitly under coverage limits. Stage 3 spec: S-626-1 v1.20→v1.21, all 11 gaps applied — `c2d7a215` declared; `ci_gate_completeness.rs` trail extended to 10 commits (re-derived independently via `git log`); POL-11 enumeration → 5; `wiremock` → `dirs` (correct usages deliberately preserved); Purity Classification +6 rows; `BC-X.13.007` → `Behavior items 1–3`; BC title → BC-INDEX canonical; Tasks 3/5/7c/7d fixed; Delivery Checklist gained an AC-10 item; Edge Cases EC-8/EC-9 discontinuity annotated as unexplained (agent searched the story's history, found nothing, declined to invent a reason); agent also caught and fixed a YAML-escaping defect it introduced, validated via `yaml.safe_load`, and recommends a CI frontmatter-parseability check. STORY-INDEX v1.5.64→v1.5.65.
+- **Disposition:** 11 LOW all FIXED by round 15. Of 12 INFO: 2 FIXED, 10 OPEN (all disclosed limitations, pre-existing slack, declared deferrals, or process-gap disclosures) — see Reconciliation note above.
+- **New drift items opened:** SHARED-WORKTREE-REVIEWER-CONTAMINATION (HIGH) — concurrent perturbation testing in a shared worktree can inject false findings into independent reviewers' passes; corrective adopted for all future dispatches (read via `git show HEAD:<path>` blobs, simulate perturbations in a scratchpad, never mutate the shared worktree). STORY-FROZEN-HEAD-LAGS-LIVE-HEAD (MEDIUM) — the story's recorded frozen head has lagged live HEAD by one commit at every audit boundary; corrective applied this round (spec agent re-derived HEAD itself and confirmed `c2d7a215`). FRONTMATTER-YAML-PARSEABILITY-UNGUARDED (LOW) — a story file whose YAML frontmatter is broken by unescaped quotes or literal `\n` in a block scalar still renders correctly as Markdown, so the defect is silent; caught this round only because the spec agent voluntarily round-tripped through `yaml.safe_load`.
+- **Fresh window:** passes 39/40/41 against frozen head `c2d7a215` (DEC-230), designated but not yet dispatched, pending human go-ahead. This is the first window to satisfy the DEC-191(c) reading under the lenient interpretation; DEC-204 remains UNADJUDICATED and is now outcome-determining. Step 4.5 remains 0/3. PR #667 remains HELD per DEC-202.
 
 ---
