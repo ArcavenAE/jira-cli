@@ -1554,6 +1554,62 @@ The `spec-guard` job already mounts the `factory-artifacts` worktree via `git wo
 **Confidence**: HIGH
 **Subject**: CI guard / `test` job runtime test-execution integrity (POL-11)
 
+**Verification status** (per claim group; COVERED = exercised for real by a test or live CI,
+PARTIAL = the claim's text/expression is pinned but the scenario itself is not exercised,
+MANUAL = reproduced once by hand, not by an automated test, NONE = nothing verifies this today,
+deliberately unverified = intentionally not test-covered, with reason. VP-CIGATE-001 below grades
+the twelve individual assertions that pin the guard's own literal text; this block grades the
+claims those assertions serve):
+
+- **Behavior items 1–3** (binary-count floor / named-canary / zero-test floor): PARTIAL — VP-CIGATE-001
+  pins each gate's triggering *expression* (e.g. `"${binaries}" -lt 90`) as a literal/variable-bound
+  substring of `ci.yml`; no test executes the step's script under any of the three triggering
+  scenarios, so a syntactically-present but logically-broken gate would not be caught. Item 2's
+  wording below reflects what the check actually verifies (a launch, not a result).
+- **Precondition 1** (`test` job runs on every push/PR to `develop`/`main`, 3-OS matrix, `ci-gate.needs`
+  member): COVERED — `ci-gate.needs` inclusion of `test` is pinned exactly (set equality) by
+  `test_ci_gate_needs_exactly_the_required_jobs`, and `windows-latest` presence in the `test` job's
+  `strategy.matrix.os` list is pinned by `test_ci_yml_has_windows_latest_in_test_matrix`
+  (`tests/ci_yml_windows_matrix.rs`) — neither is VP-CIGATE-001. Those two assertions do not
+  individually enumerate `ubuntu-latest`/`macos-latest`, but the job runs for real, on all three
+  OSes, on every live CI invocation.
+- **Precondition 2** (cargo does not forward `--color` to libtest, so the anchored grep sees plain
+  ASCII): NONE — confirmed empirically once, by hand (`cargo test 2>&1 | cat -v`); no test would
+  notice if a future cargo/libtest release changed this.
+- **Postconditions 1–3** (success path: step exits 0, positive-coverage line emitted, job/`ci-gate`
+  proceeds): COVERED — this is the path live CI exercises on every push/PR, with the real test suite
+  actually passing; it is not merely a text-pin.
+- **Postconditions 4–6** (failure path: step exits non-zero, `FAIL (POL-11)` diagnostic emitted,
+  `ci-gate` blocked): MANUAL — reproduced once by hand in a scratchpad copy of the script (recorded
+  in the round-17 commit message); no automated test drives the failure branches.
+- **Invariant 1** (`cargo test` with 0 tests exits 0 by default): deliberately unverified —
+  documented upstream cargo behavior; re-proving it here would test cargo, not this repo.
+- **Invariant 2** (floor checks are additive to cargo's own failure signal, via `set -euo pipefail`):
+  PARTIAL — the `set -euo pipefail` text is pinned by VP-CIGATE-001; the causal behavior (a real
+  `cargo test` failure actually failing the step) was reproduced once by hand with a mock `cargo`
+  binary, not by an automated regression test.
+- **Invariant 3** (the binary-count floor and named-canary check are both required — self-orphaning
+  escapes the floor alone): NONE — the reasoning is prose only; no test constructs a scenario where
+  the binary count stays ≥90 while the canary binary is absent.
+- **EC-CIGATE-001** (mass `tests/` orphaning) and **EC-CIGATE-002** (canary self-orphaning): NONE —
+  never reproduced, automated or by hand.
+- **EC-CIGATE-003** (a harness/filter misconfiguration causes genuine zero-passed-tests output at
+  runtime): NONE for the runtime scenario itself. A one-off scratchpad check does exist, but it
+  validates something narrower than EC-CIGATE-003: deleting the `if [ "${total}" -eq 0 ]; ... fi`
+  block from `ci.yml` and re-running VP-CIGATE-001's Rust regression test confirmed that test's
+  other nine (now eleven) assertions stayed green — i.e. it proves the `"${total}" -eq 0` text-pin
+  was a necessary addition to VP-CIGATE-001, not that the zero-test-floor shell logic correctly
+  fires when fed genuine "every binary reports zero passed" `cargo test` output.
+- **EC-CIGATE-004** (a genuine assertion failure propagates via `cargo test`'s own exit code): MANUAL
+  — this one *was* reproduced against the actual shell logic, not just the Rust test: a mock
+  `cargo` binary exiting 101 after printing passing `test result:` lines was fed through the step's
+  script in a scratchpad copy, confirming `set -eu` (pipefail dropped) falls through to `Check
+  passed: ...` while the unmodified `set -euo pipefail` correctly propagates the failure and aborts
+  the step. Still one-off and by hand — no automated regression test drives this scenario.
+- **EC-CIGATE-005** (threshold recalibration on a legitimate binary-count reduction): deliberately
+  unverified — a human process note with no pass/fail outcome, not a testable behavior.
+- **Canonical Test Vectors**: see the table's own "Verified by" column below.
+
 **Behavior**: The `test` job's test-execution step (`.github/workflows/ci.yml` `test` job, step
 `Run tests (zero-test floor, POL-11)`) does not treat a zero exit code from
 `cargo test --all-features` as sufficient proof that tests actually ran. It captures the full test
@@ -1567,11 +1623,15 @@ therefore the required `ci-gate` check) can report success:
    integration-test files — a defect class a bare "total passed > 0" predicate cannot catch,
    because `src/`-inline unit tests keep running (and keep the passed-count positive) even when
    every `tests/` binary is silently dropped from the build.
-2. **Named-canary check**: the step fails if the specific test binary carrying this guard's own
-   regression pin (`tests/ci_gate_completeness`) did not report results. This defends against the
-   self-orphaning case — the one binary that exists to catch CI-gate regressions stops running
-   while the aggregate binary count stays at or above the floor, a case the binary-count floor
-   alone cannot detect.
+2. **Named-canary check**: the step fails if the string `ci_gate_completeness` does not appear
+   anywhere in the captured `cargo test` output. In practice this is satisfied by cargo's own
+   `Running tests/ci_gate_completeness...` announcement line, so the check actually proves the
+   canary binary was *launched* — not that it *reported results*; a binary that starts and then
+   crashes before printing its own `test result:` line would still satisfy this check. This
+   defends against the self-orphaning case — the one binary that carries this guard's own
+   regression pin is dropped from the build entirely (renamed, excluded via `[[test]]`, or
+   `autotests=false`) — while the aggregate binary count stays at or above the floor, a case the
+   binary-count floor alone cannot detect.
 3. **Zero-test floor**: the step fails if the summed passed-test count across all reporting
    binaries is exactly zero.
 
@@ -1644,25 +1704,27 @@ passed; the positive-coverage line is the observable proof.
 
 **Canonical Test Vectors**:
 
-| Scenario | Expected behavior |
-|----------|-------------------|
-| Full suite runs normally; all binaries report results; passed-count > 0 | Step exits 0; positive-coverage line printed with runtime-computed counts |
-| `tests/` fully orphaned (default test-target discovery disabled); `src/`-inline tests still pass | Binary-count floor trips; `FAIL (POL-11): ...`; step exits non-zero |
-| Named-canary binary alone renamed/excluded; rest of `tests/` intact | Named-canary check trips; `FAIL (POL-11): ...`; step exits non-zero |
-| Every reporting binary shows zero passed tests (filter matches nothing) | Zero-test floor trips; `FAIL (POL-11): ...`; step exits non-zero |
-| A real assertion fails inside any test | `cargo test` itself exits non-zero; step fails independently of the floor checks |
+| Scenario | Expected behavior | Verified by |
+|----------|-------------------|-------------|
+| Full suite runs normally; all binaries report results; passed-count > 0 | Step exits 0; positive-coverage line printed with runtime-computed counts | Live CI — this scenario runs, for real, on every push/PR |
+| `tests/` fully orphaned (default test-target discovery disabled); `src/`-inline tests still pass | Binary-count floor trips; `FAIL (POL-11): ...`; step exits non-zero | Not verified — never driven through the script, automated or by hand (EC-CIGATE-001) |
+| Named-canary binary alone renamed/excluded; rest of `tests/` intact | Named-canary check trips; `FAIL (POL-11): ...`; step exits non-zero | Not verified — never driven through the script, automated or by hand (EC-CIGATE-002) |
+| Every reporting binary shows zero passed tests (filter matches nothing) | Zero-test floor trips; `FAIL (POL-11): ...`; step exits non-zero | Not verified as a runtime scenario — the existing scratchpad check only proves the `"${total}" -eq 0` text-pin is necessary, not that this scenario trips it (EC-CIGATE-003) |
+| A real assertion fails inside any test | `cargo test` itself exits non-zero; step fails independently of the floor checks | One-off scratchpad reproduction of the actual shell logic, with a mock `cargo` binary; not automated (EC-CIGATE-004) |
 
 **Verification Properties**:
 - VP-CIGATE-001: Regression pin —
-  `tests/ci_gate_completeness.rs::test_verify_test_job_has_zero_test_floor` makes ten
+  `tests/ci_gate_completeness.rs::test_verify_test_job_has_zero_test_floor` makes twelve
   `str::contains` assertions against the `test` job's step block, extracted by
   `extract_job_block` (`tests/common/yaml.rs`) as a raw string slice of the YAML — comment lines
-  included. Two of the ten are new this round (`"${total}" -eq 0` and `set -euo pipefail\n`) —
-  each closes a demonstrated hole where every one of the previously-existing eight assertions
-  stayed green under a reproduced false-green mutation (deleting the
-  `if [ "${total}" -eq 0 ]; ... fi` block wholesale, and separately weakening
+  included. Two of the twelve (`shell: bash` and the full `cargo test --all-features 2>&1 | tee
+  "$RUNNER_TEMP/cargo_test_out.txt"\n` capture invocation) were added in a later round, on top of
+  the ten described below (themselves including two added the round before that: `"${total}" -eq
+  0` and `set -euo pipefail\n`, each closing a demonstrated hole where every one of the
+  previously-existing eight assertions stayed green under a reproduced false-green mutation —
+  deleting the `if [ "${total}" -eq 0 ]; ... fi` block wholesale, and separately weakening
   `set -euo pipefail` to `set -eu` while feeding a mock `cargo` that exits 101 after printing
-  passing `test result:` lines). The ten assertions are graded by how hard each is to defeat
+  passing `test result:` lines). The twelve assertions are graded by how hard each is to defeat
   without also breaking the enforcement logic it pins:
   - **Variable/command-bound** (hardest to defeat — a rename or rewrite that neuters the check
     also breaks the literal text required): `"${binaries}" -lt 90` (binary-count floor),
@@ -1672,26 +1734,34 @@ passed; the positive-coverage line is the observable proof.
     echo diagnostics and would stay satisfied even after a variable rename neutered the check.
   - **Exact standalone line** (comment-satisfiable only by a future comment reproducing the
     identical trailing form — no such comment exists today): `set -euo pipefail\n`,
-    `set +o pipefail\n`, `set -o pipefail\n`. `set -euo pipefail` is the sole mechanism
-    propagating a genuine `cargo test` failure through the `cargo test --all-features 2>&1 | tee
-    ...` pipeline into a failed step; `"set -o pipefail\n"` is not a substring of
-    `"set -euo pipefail\n"`, so these three assertions are independent of one another —
-    dropping any one of the three lines fails exactly that one assertion, not the others.
+    `set +o pipefail\n`, `set -o pipefail\n`, and the full capture invocation `cargo test
+    --all-features 2>&1 | tee "$RUNNER_TEMP/cargo_test_out.txt"\n`. `set -euo pipefail` is the
+    sole mechanism propagating a genuine `cargo test` failure through the pipeline into a failed
+    step; `"set -o pipefail\n"` is not a substring of `"set -euo pipefail\n"`, so these three
+    assertions are independent of one another — dropping any one of the three lines fails exactly
+    that one assertion, not the others. The capture-invocation assertion is the literal `run:`
+    command itself, occurring exactly once in `ci.yml`; it pins `--all-features` (so
+    `#[cfg(test)]`-gated code is actually exercised) and the `tee` target (the same path the
+    `total=`/`binaries=` computations read back from) — but it does not pin those computation
+    pipelines themselves (see "Not pinned" below).
   - **Literal substring, weaker still** (a comment or unrelated step could in principle reproduce
-    it): `CARGO_TERM_COLOR: never`.
+    it): `CARGO_TERM_COLOR: never`, `shell: bash`. Both are step-level YAML key-value pairs;
+    `shell: bash` occurs exactly once in `ci.yml` today but nothing prevents a future comment
+    from reproducing the string.
   - **Weakest** (also appears inside this guard's own `echo` diagnostics, or — for `exit 1` — is
     a generic command with no natural variable-binding; a rewrite that preserves the diagnostic
     strings while gutting the enforcement logic underneath would not be caught by these alone):
     `FAIL (POL-11)`, `Check passed:`, `exit 1`.
 
-  **Not pinned.** Neither the `cargo test --all-features 2>&1 | tee
-  "$RUNNER_TEMP/cargo_test_out.txt"` invocation itself, nor the `total=`/`binaries=` computation
-  pipelines that derive those variables from the captured output, are asserted against — only
-  their *usages* (`"${total}" -eq 0`, `"${binaries}" -lt 90`) are pinned. A rewrite that drops
-  `--all-features`, changes what output gets captured, or replaces the computation logic with an
-  unconditional `binaries=999; total=999` would satisfy every assertion in this test, including
-  the two added this round. This is a structural limit of a substring-based guard applied to a
-  raw YAML slice, not an oversight the test can close on its own.
+  **Not pinned.** Pinning the full capture-invocation line (added this round) closes part of the
+  previously-open gap — it now catches a rewrite that drops `--all-features` or redirects capture
+  to a different file. What remains unpinned: the `total=`/`binaries=` computation pipelines (the
+  `grep`/`grep -Eo`/`awk` and `grep`/`wc -l`/`tr` chains) that derive those two variables from the
+  captured output — only their *usages* (`"${total}" -eq 0`, `"${binaries}" -lt 90`) are pinned.
+  A rewrite that preserves the capture invocation verbatim but replaces the computation logic with
+  an unconditional `binaries=999; total=999` would satisfy every one of the twelve assertions in
+  this test. This is a structural limit of a substring-based guard applied to a raw YAML slice,
+  not an oversight the test can close on its own.
 
 **Traceability**:
 - Implementing story: S-626-1 (FIX ROUND 12, v1.17), issue #626
