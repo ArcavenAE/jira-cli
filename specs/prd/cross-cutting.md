@@ -1586,9 +1586,14 @@ passed; the positive-coverage line is the observable proof.
 **Preconditions**:
 - The `test` job runs on every push/PR to `develop`/`main` (3-OS matrix) as an existing
   `ci-gate.needs` member
-- `cargo test --all-features` output is captured in full — untruncated and free of
-  color-escape sequences that would corrupt the runtime metric computation — before the floor
-  checks run
+- `cargo test --all-features` output is captured in full — untruncated — before the floor checks
+  run. The runtime metric computation assumes the anchored `test result:` line stays plain ASCII;
+  this holds today because cargo does not forward its own colour preference to the libtest
+  harness — only cargo's own status lines (`Finished`, `Running`) are ANSI-wrapped under
+  `CARGO_TERM_COLOR=always`, confirmed empirically (`cargo test 2>&1 | cat -v`), while the
+  anchored `grep -E "^test result: "` line is not. The step's own `CARGO_TERM_COLOR: never`
+  override is hardening against that assumption changing in a future cargo/libtest release, not
+  a defense against a corruption risk observed today.
 
 **Postconditions**:
 1. On success (floor cleared): the step exits 0.
@@ -1649,11 +1654,22 @@ passed; the positive-coverage line is the observable proof.
 
 **Verification Properties**:
 - VP-CIGATE-001: Regression pin —
-  `tests/ci_gate_completeness.rs::test_verify_test_job_has_zero_test_floor` asserts the `test`
-  job's step contains the `FAIL (POL-11)` error sentinel, the binary-count floor gate bound to its
-  runtime variable (not a bare literal threshold), and the named-canary check bound to its command
-  form (not merely a substring that could also be satisfied by a comment or an echo diagnostic) —
-  so the assertions cannot be satisfied by documentation text alone.
+  `tests/ci_gate_completeness.rs::test_verify_test_job_has_zero_test_floor` asserts against the
+  `test` job's step block, extracted by `extract_job_block` (`tests/common/yaml.rs`) as a raw
+  string slice of the YAML — comment lines included — via plain `str::contains` checks. Two of
+  those assertions are bound to a form that, in the current file, appears only in the operative
+  command — not in any prose comment or diagnostic echo — an incidental property of the current
+  wording, not a structural guarantee the test enforces: the binary-count floor targets
+  `"${binaries}" -lt 90` (variable-bound, not a bare literal threshold), and the named-canary
+  check targets `grep -q "ci_gate_completeness"` (the command form, not the bare substring).
+  Those two are harder (not impossible) to defeat by comment/echo-diagnostic substitution — a
+  comment would have to reproduce the exact command substring verbatim, rather than just the
+  diagnostic prose, to satisfy them.
+  The remaining assertions in the same test (the `FAIL (POL-11)` sentinel, `exit 1`, the
+  `Check passed:` line, `CARGO_TERM_COLOR: never`, and the `set +o`/`set -o pipefail` pair) do not
+  meet even that weaker bar — each is a substring that a comment or echo diagnostic reproducing the
+  same text could also satisfy. No such comment exists in the current file, but that is a property
+  of the current wording, not a structural guarantee the test enforces.
 
 **Traceability**:
 - Implementing story: S-626-1 (FIX ROUND 12, v1.17), issue #626

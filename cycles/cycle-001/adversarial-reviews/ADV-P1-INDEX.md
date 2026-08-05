@@ -1,22 +1,22 @@
 ---
 document_type: adversarial-review-index
 level: ops
-version: "2.7"
+version: "2.8"
 status: in-review
 producer: adversary
-timestamp: 2026-08-05T17:20:00Z
+timestamp: 2026-08-05T19:15:00Z
 phase: "5"
-pass: 38
+pass: 41
 inputs: [.factory/stories/S-626-1.md, .factory/stories/S-640-1.md, .factory/stories/S-641-1.md, .factory/stories/S-MUTANTS-EXAMINE-GLOBS-1.md, .factory/stories/STORY-INDEX.md, .github/workflows/ci.yml, tests/ci_gate_completeness.rs, tests/cli_handler.rs, tests/mutants_glob_existence.rs, CLAUDE.md, Cargo.toml, CHANGELOG.md]
 traces_to: .factory/stories/S-626-1.md
-total_findings: 275
-severity_distribution: { CRIT: 0, HIGH: 19, MED: 89, LOW: 107, INFO: 60 }
+total_findings: 290
+severity_distribution: { CRIT: 0, HIGH: 19, MED: 89, LOW: 110, INFO: 72 }
 story: S-626-1
 cycle: cycle-001
-feature_head: c2d7a215 (fix-round-15 product commit; passes 36/37/38 ran against frozen head d848d9a5 (fix round 14); fix round 15 d848d9a5→c2d7a215 closed all pass-36/37/38 substantive findings; branch pushed, PR #667 head now c2d7a215, CI validated ubuntu/macos/windows)
+feature_head: eb0d7cdd (fix-round-16 product commit; passes 39/40/41 ran against frozen head c2d7a215 (fix round 15); fix round 16 c2d7a215→eb0d7cdd closed the pass-39/40 LOW findings (pass-41 was CLEAN); branch pushed, PR #667 head now eb0d7cdd, CI 15/15 SUCCESS, mergeStateStatus CLEAN)
 pr: 667
 basis: TRUE ADVERSARY AGENT (not a DEC-190 substitute)
-convergence: 0 of 3 conservative / 3 of 3 lenient (Step 4.5 window — DEC-199 GRIND to 3/3 CLEAN; window 36/37/38 CLOSED 0/3 conservative reading, 3/3 lenient reading under DEC-191(c) (pass-36 NOT CLEAN + pass-37 NOT CLEAN + pass-38 NOT CLEAN, all LOW/INFO-only, zero MEDIUM); DEC-204 UNADJUDICATED and now outcome-determining; DEC-224 ISOLATION ELIGIBILITY PRINCIPLE held — all three ELIGIBLE; 35 recorded passes; src/ 0-defect TWENTY-THIRD consecutive; fix round 15 applied d848d9a5→c2d7a215 (code, then exhaustive audit, then spec); fresh STRICT window = passes 39/40/41 (DEC-230, designated, not yet dispatched))
+convergence: 1 of 3 conservative / 3 of 3 lenient (Step 4.5 window — DEC-199 GRIND to 3/3 CLEAN; window 39/40/41 CLOSED 1/3 conservative reading (pass-41 CLEAN), 3/3 lenient reading under DEC-191(c) (pass-39 NOT CLEAN + pass-40 NOT CLEAN, both LOW/INFO-only, zero MEDIUM; pass-41 CLEAN); DEC-204 UNADJUDICATED and now outcome-determining; DEC-224 ISOLATION ELIGIBILITY PRINCIPLE held — all three ELIGIBLE; 38 recorded passes; src/ 0-defect TWENTY-FOURTH consecutive; fix round 16 applied c2d7a215→eb0d7cdd (code, then exhaustive audit, then spec); fresh STRICT window = passes 42/43/44 (DEC-231, designated, not yet dispatched))
 void_spawns: 6 (passes 6/7/8 first-attempt background subagents; pass-9 isolation breach; pass-11 isolation breach; pass-22 isolation breach)
 not_run: 2 (passes 16/17 — superseded by round-5 ruling per DEC-209; see s-626-1-adversary-pass-16.md and s-626-1-adversary-pass-17.md)
 superseded: 1 (pass-20 — superseded per DEC-216; window 18/19/20 CLOSED 0/2)
@@ -1215,5 +1215,94 @@ Pass-38 closed window 36/37/38, run against frozen head `d848d9a5`. ELIGIBLE, sa
 - **Disposition:** 11 LOW all FIXED by round 15. Of 12 INFO: 2 FIXED, 10 OPEN (all disclosed limitations, pre-existing slack, declared deferrals, or process-gap disclosures) — see Reconciliation note above.
 - **New drift items opened:** SHARED-WORKTREE-REVIEWER-CONTAMINATION (HIGH) — concurrent perturbation testing in a shared worktree can inject false findings into independent reviewers' passes; corrective adopted for all future dispatches (read via `git show HEAD:<path>` blobs, simulate perturbations in a scratchpad, never mutate the shared worktree). STORY-FROZEN-HEAD-LAGS-LIVE-HEAD (MEDIUM) — the story's recorded frozen head has lagged live HEAD by one commit at every audit boundary; corrective applied this round (spec agent re-derived HEAD itself and confirmed `c2d7a215`). FRONTMATTER-YAML-PARSEABILITY-UNGUARDED (LOW) — a story file whose YAML frontmatter is broken by unescaped quotes or literal `\n` in a block scalar still renders correctly as Markdown, so the defect is silent; caught this round only because the spec agent voluntarily round-tripped through `yaml.safe_load`.
 - **Fresh window:** passes 39/40/41 against frozen head `c2d7a215` (DEC-230), designated but not yet dispatched, pending human go-ahead. This is the first window to satisfy the DEC-191(c) reading under the lenient interpretation; DEC-204 remains UNADJUDICATED and is now outcome-determining. Step 4.5 remains 0/3. PR #667 remains HELD per DEC-202.
+
+---
+
+## Pass 39 Finding Catalog (Fresh Window DEC-230: NOT CLEAN)
+
+Pass-39 opened window 39/40/41, run against frozen head `c2d7a215`. ELIGIBLE, same class as prior windows. Two LOW + five INFO findings.
+
+| ID | Severity | Classification | Title | Status | Notes |
+|----|----------|----------------|-------|--------|-------|
+| ADV-P39-LOW-001 | LOW | unverified-justification | The `CARGO_TERM_COLOR: never` override is documented on four surfaces as guarding a realized failure mode; empirically it cannot occur. Reviewer ran `CARGO_TERM_COLOR=always cargo test … \| cat -v`: cargo's own `Finished`/`Running` lines are ANSI-wrapped but libtest's `test result:` line is plain ASCII — cargo does not forward colour to the harness, so the anchored grep cannot be zeroed. Asserted as fact in `ci.yml`'s step comment, AC-10 item 1, BC-X.13.007's Preconditions, and the test docstring | FIXED — fix round 16 (`eb0d7cdd` re-tensed `ci.yml`'s step comment + the test docstring; BC-X.13.007 Preconditions reworded; v1.22 fixed AC-10 item 1 and Task 7e item 1) | |
+| ADV-P39-LOW-002 | LOW | misclassification | Purity Classification row 4 classifies the three `src/` files `pure-logic (minimal)`; all three are effectful, and the table's own row 1 classifies workflow YAML `effectful-shell` on weaker grounds | FIXED — fix round 16 (v1.22 → `effectful-io`, justification separating the syntax-only rewrite from the non-pure code being rewritten) | |
+| ADV-P39-INFO-001 | INFO | dead-reference | AC-4's v1.6 coverage-aim note refers to "`ci.yml`'s stable job"; no job named `stable` exists — the `# stable`-commented step is in the `coverage` job. AC-2 and Architecture Mapping use the correct anchor | OPEN | |
+| ADV-P39-INFO-002 | INFO | form-divergence | AC-8 and Task 7a specify an "inline comment"; delivered is a five-line block comment above the pin. Substance fully satisfied (cites `#626`, no `.factory/` path) | OPEN | Concurs ADV-P41-INFO-001 |
+| ADV-P39-INFO-003 | INFO | surface-inconsistency | Delivery Checklist items 1 and 2 remain `[ ]` while item 3 is `[x]`, at a head where both unchecked items are demonstrably satisfiable (reviewer executed both AC-10 proof directions). Pre-merge state is a legitimate reason; the mixed state is still a surface inconsistency | OPEN | |
+| ADV-P39-INFO-004 | INFO | stale-but-truthful | AC-9/AC-10 record the per-platform CI triple `2345/2345/2340`, explicitly caveated as pre-`1e696128`. At the frozen head CI run `31026156032` reports `2346/2346/2341` across 103 binaries — exactly +1, consistent with the caveat. The recorded claim is truthful; the current triple simply is not written down | OPEN | |
+| ADV-P39-INFO-005 | INFO | isolation-boundary | AC-1, `input-hash`, and the "F1 delta analysis §" traces cite `.factory/phase-f1-delta/…`, outside the reviewer whitelist — unverifiable in-perimeter. Reviewer verified the SHA independently against the live action instead | OPEN | Concurs ADV-P38-INFO-005 |
+
+## Pass 39 Isolation Note
+
+**ELIGIBLE.** Reviewer told up front about the ISOLATION-WHITELIST-LEAKS-FINDING-IDS defect and instructed to treat story-changelog finding IDs as scope declarations only. Zero banned content used to bias the review. Per DEC-224: ELIGIBLE.
+
+## Pass 39 Summary
+
+- **Verdict:** NOT CLEAN — 0 HIGH + 0 MEDIUM + 2 LOW + 5 INFO (2 FIXED, 5 OPEN); ELIGIBLE; src/ 0-defect TWENTY-THIRD consecutive pass.
+- **Post-capture routing:** 2 LOW FIXED fix round 16; 5 INFO OPEN
+- **Convergence:** window 39/40/41 opens NOT CLEAN under the conservative DEC-191(c) reading (LOW/INFO-only, zero MEDIUM)
+- **Detail artifact:** not yet captured as a standalone file at burst time
+
+---
+
+## Pass 40 Finding Catalog (Fresh Window DEC-230: NOT CLEAN)
+
+Pass-40 continued window 39/40/41 NOT CLEAN, run against frozen head `c2d7a215`. ELIGIBLE, same class as pass-39. One LOW + four INFO findings.
+
+| ID | Severity | Classification | Title | Status | Notes |
+|----|----------|----------------|-------|--------|-------|
+| ADV-P40-LOW-001 | LOW | certainty-overclaim | The docstring's "TWO of the assertions … can ONLY appear in the operative command, never in a prose comment" and VP-CIGATE-001's "cannot be satisfied by documentation text alone" are structurally false: `extract_job_block` returns a raw YAML slice including comments and every assertion is a plain `str::contains`, so a future comment quoting the floor expression would satisfy it with the operative line deleted. Concrete claims true today; modality wrong. Commit `c2d7a215` had softened the identical claim for the pipefail pair but left the two stronger ones absolute | FIXED — fix round 16 (`eb0d7cdd` softened the docstring + a downstream corollary sentence; VP-CIGATE-001 reworded — two overclaims found there, "immune to" plus a lead-in "can only appear") | |
+| ADV-P40-INFO-001 | INFO | wording-precision | BC-INDEX's title and BC-X.13.007 Behavior item 2 specify the canary must have *"reported results"*; the implementation greps for the substring anywhere in captured output, matching cargo's `Running …` line — a proxy for "ran". AC-10 and the `ci.yml` diagnostic both say "did not run", matching the implementation; only the BC wording overreaches. No practical false-green | OPEN | |
+| ADV-P40-INFO-002 | INFO | drifting-criterion | AC-1 requires confirming "`behind_by: 0`". Verified live: `ahead_by: 0, behind_by: 3` — the commit **is** a master ancestor (`ahead_by: 0` proves it), but `behind_by` increments as master advances, so the criterion as written is already unsatisfiable and will read as a failed check to any re-verifier. Commit date and title match AC-1 exactly | OPEN — suggest stating the durable invariant and marking `behind_by: 0` an F2-time snapshot | |
+| ADV-P40-INFO-003 | INFO | prescriptive-drift | Task 7c and the Delivery Checklist prescribe wording the delivered CHANGELOG omits: the "internal dependency change; not a breaking change" qualifier, and `S-640-1` anonymized to "a dedicated follow-up story" while the same entry cites `S-626-1`. Checklist item marked "satisfied as amended" | OPEN | Concurs ADV-P41-INFO-002 |
+| ADV-P40-INFO-004 | INFO | build-state-anomaly | A full `cargo test --all-features` terminated after 28 of 103 binaries while the shell reported exit 0; a clean re-run produced all 103. Reported as an anomaly per the no-mutation briefing rather than as a finding | OPEN — evidence the shared-worktree corrective is working as intended | |
+
+## Pass 40 Isolation Note
+
+**ELIGIBLE.** Same self-disclosed letter-of-rule deviations as pass-39. Zero banned content used to bias the review. Per DEC-224: ELIGIBLE.
+
+## Pass 40 Summary
+
+- **Verdict:** NOT CLEAN — 0 HIGH + 0 MEDIUM + 1 LOW + 4 INFO (1 FIXED, 4 OPEN); ELIGIBLE; src/ 0-defect TWENTY-THIRD consecutive pass (concurring with pass-39)
+- **Post-capture routing:** 1 LOW FIXED fix round 16; 4 INFO OPEN
+- **Convergence:** window 39/40/41 remains NOT CLEAN under the conservative reading at this point (LOW/INFO-only, zero MEDIUM)
+- **Detail artifact:** not yet captured as a standalone file at burst time
+
+---
+
+## Pass 41 Finding Catalog (Fresh Window DEC-230: CLEAN — Window CLOSED 1/3 conservative, 3/3 lenient)
+
+Pass-41 closed window 39/40/41, run against frozen head `c2d7a215`. ELIGIBLE, same class as passes 39/40. Zero LOW + three INFO findings — the first fully CLEAN pass of the cycle under the conservative DEC-191(c) reading.
+
+| ID | Severity | Classification | Title | Status | Notes |
+|----|----------|----------------|-------|--------|-------|
+| ADV-P41-INFO-001 | INFO | form-divergence | AC-8 requires an "inline" comment; delivered is a five-line block comment preceding the pin. Substantive requirements fully met | OPEN — suggest rewording AC-8 "inline" → "adjacent" | Concurs ADV-P39-INFO-002 |
+| ADV-P41-INFO-002 | INFO | prescriptive-drift | Two declared prose details absent from the delivered comfy-table CHANGELOG entry: the `S-640-1` ID (dropped, though the same entry carries `S-626-1`) and Task 7c's Cause clause placement. Substance delivered in richer form; checklist marked "satisfied as amended" | OPEN | Concurs ADV-P40-INFO-003 |
+| ADV-P41-INFO-003 | INFO | `[process-gap]` review-history-in-spec | AC-10 asserts the pin assertions "were independently audited SOUND across adversary passes 21–26 (six consecutive sound audits; 8/8 PASS each time)" — a claim about prior review-process outcomes, unverifiable from any whitelisted surface, embedding review-ledger state into a spec artifact meant to be independently readable. Reviewer independently verified the underlying *technical* claim (all 8 assertions exist and pass; classification accurate) but not the audit history | OPEN — suggest keeping the technical statement and moving the pass-history attribution to the review ledger | |
+
+## Pass 41 Isolation Note
+
+**ELIGIBLE.** Same self-disclosed letter-of-rule deviations as passes 39/40. Zero banned content used to bias the review. Per DEC-224: ELIGIBLE.
+
+## Pass 41 Summary
+
+- **Verdict:** CLEAN — 0 HIGH + 0 MEDIUM + 0 LOW + 3 INFO (0 FIXED, 3 OPEN); ELIGIBLE; src/ 0-defect TWENTY-FOURTH consecutive pass; first fully CLEAN pass of the cycle under the conservative DEC-191(c) reading.
+- **Post-capture routing:** 3 INFO OPEN (no fix required for a CLEAN verdict)
+- **Convergence:** window 39/40/41 CLOSED — 1/3 under the conservative reading (pass-41 CLEAN), 3/3 under the lenient reading (LOW refinements ledgered, non-resetting, and pass-39/40's LOW findings were both fixed). DEC-204 remains UNADJUDICATED.
+- **Detail artifact:** not yet captured as a standalone file at burst time
+
+---
+
+## Window 39/40/41 Summary
+
+- **Result:** CLOSED 1/3 conservative / 3/3 lenient under DEC-191(c) (DEC-204 UNADJUDICATED, now outcome-determining). Pass-41 is the first fully CLEAN pass of the cycle under the conservative reading. Novelty decay is now measurable and monotonic: LOW counts across the last six passes (36/37/38/39/40/41) = 4 → 4 → 3 → 2 → 1 → 0, with six consecutive passes at 0 HIGH + 0 MEDIUM. Window trajectory: 24/25/26 = 2/3 → 27/28/29 = 1/3 → 30/31/32 = 0/3 → 33/34/35 = 0/3 → 36/37/38 = 0/3 conservative (3/3 lenient) → 39/40/41 = 1/3 conservative (3/3 lenient). Pass-39 NOT CLEAN (0M+2L+5I); pass-40 NOT CLEAN (0M+1L+4I); pass-41 CLEAN (0M+0L+3I). 15 new findings total (0H + 0M + 3L + 12I). DEC-191(a) defines convergence as novelty decay; that has now occurred by that definition, though DEC-204 remains UNADJUDICATED and outcome-determining for whether this window satisfies Step 4.5.
+- **LOW tally:** 3 LOW findings fully itemized, all 3 FIXED by fix round 16.
+- **INFO tally:** 12 INFO findings fully itemized. 0 FIXED, 12 OPEN (all disclosed limitations, form divergences, or routed process-gaps).
+- **src/ defects:** zero. src/ 0-defect streak extends to TWENTY-FOURTH consecutive pass.
+- **Cross-pass concurrences:** AC-8 inline-vs-block form divergence P39↔P41; CHANGELOG prescriptive drift P40↔P41; isolation-boundary P39-INFO-005↔P38-INFO-005 (prior window).
+- **Fix round 16 (code → exhaustive audit → spec):** applied. Product head `c2d7a215` → `eb0d7cdd`, pushed. PR #667 head = `eb0d7cdd`, CI 15/15 SUCCESS, 0 pending, 0 failed, mergeStateStatus CLEAN. Stage 1 code: re-tensed the `CARGO_TERM_COLOR` justification in `ci.yml`'s step comment and the test docstring to defensive framing (override retained as legitimate hardening, not a defense against a realized failure mode); softened the "can ONLY / never" modality plus a downstream corollary sentence the agent found unprompted. No test added, removed, or renamed; independently measured at `eb0d7cdd`: 103 binaries / 2346 passed / 0 failed / 100 ignored. Stage 2: `BC-X.13.007` Preconditions bullet 2 reworded from an asserted corruption risk to a stated assumption; `VP-CIGATE-001` reworded — the agent found and fixed **two** overclaims where the brief reported one; both reproduced the `CARGO_TERM_COLOR` evidence and read `extract_job_block` themselves rather than relying on the brief. Guards exit 0; BC total unchanged at 658. Stage 3 (exhaustive audit, third application): found 6 gaps, two of them new classes, and correctly identified the frozen-head lag as root cause of two others; flagged the test count as its own largest unverified claim rather than assuming it (the orchestrator had measured it independently). Stage 4 (spec): S-626-1 v1.21→v1.22 — `eb0d7cdd` declared (22 refs); `tests/ci_gate_completeness.rs` trail extended 10→11 commits; POL-11 guard-step commit enumeration corrected 5→6 at four sites; AC-10 item 1 and Task 7e item 1 re-tensed; Purity Classification row 4 → `effectful-io`; GAP-C citations converted to anchor/symbol form. STORY-INDEX v1.5.65→v1.5.66.
+- **Disposition:** 3 LOW all FIXED by round 16. Of 12 INFO: 0 FIXED, 12 OPEN (all disclosed limitations, form divergences, or routed process-gaps).
+- **New drift items opened:** LINE-RANGE-CITATIONS-DRIFT-SILENTLY (MEDIUM, `[process-gap]`) — a commit that only expands a comment can shift every subsequent line and silently invalidate an exact-line citation elsewhere in the story, at a distance, with nothing checking it; raised by the human operator after three exhaustive audits and eighteen reviewers had treated individual instances as one-off defects (one reviewer called it "cosmetic"); corrective applied — range/bare-line citations converted to anchor/symbol form; class narrowed, not eliminated. FIX-PASS-CATCHES-MORE-THAN-REVIEW-PASS (INFO) — twice this round a fix agent told to re-scan its own edit found overclaims the review passes had missed; worth generalising into fix-agent briefs.
+- **Fresh window:** passes 42/43/44 against frozen head `eb0d7cdd` (DEC-231), designated but not yet dispatched, pending human go-ahead. Step 4.5 remains 0/3. PR #667 remains HELD per DEC-202.
 
 ---
