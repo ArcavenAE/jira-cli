@@ -24,6 +24,7 @@ trace: |
   - SOH-ATTACHMENTS-1 F3 adversary pass-11 fix round (2026-07-18): BC-X.8.010 EC-X.8.010-1 added — service-desk-list no-match None-path exit 64 before step 1 (P11-005; spec v1.3.86)
   - WAVE-576-05 DOCUMENT-AS-IS ruling (2026-07-24, F5 round 12): BC-X.8.010 EC-X.8.010-2 added + stale_healed per-command-not-per-file note — multi-file upload second independent step-1 failure after heal already fired propagates raw ApiError exit 1 (near-unreachable path; DOCUMENT-AS-IS-COMPLETE); 0 new BCs; counts unchanged (150/84); spec v1.3.106
   - FIX ROUND 12 addition (2026-08-05, S-626-1 issue #626): BC-X.13.007 — `test` job runtime test-execution floor (Guard 2): binary-count floor + named-canary check + zero-test floor, gating `ci-gate` against a false-green CI result from zero or near-zero test execution (POL-11); anchors story S-626-1 AC-10
+  - Round-19 boundary clarification (2026-08-05, S-626-1 issue #626, adversarial passes 45-47, commit `e076e96b`): BC-X.13.007 Invariants gained a bullet distinguishing it from the sibling `ci-gate`/`msrv` job story-AC guards (AC-001/002/003/AC-3/M1/M2) strengthened this round — no BC/VP in this PRD governs those guards; VP-CIGATE-001's twelve assertions and this BC's verification-status grades are unchanged (round 19 did not touch `test_verify_test_job_has_zero_test_floor`); no new BC, no count change (658 total / 85 individually-bodied unchanged in this file)
 ---
 
 # BC-X — Cross-cutting
@@ -1682,6 +1683,26 @@ passed; the positive-coverage line is the observable proof.
 - This BC governs the `test` job's own runtime-integrity guard — distinct from BC-X.13.001..006,
   which govern static citation-checking scripts (`tests/claude_md_citations.rs`,
   `scripts/check-bc-citation-symbols.sh`) that scan documentation, not CI's own test-execution proof
+- This BC also does not govern the `ci-gate` job's own structural / pass-fail-semantics guards
+  (job `name:`/`runs-on:`/job-level `if: always()`; exact eight-job `needs` set; no job-level
+  `if:` key on the seven unconditionally-run `needs` members; step-level
+  `contains(needs.*.result, 'failure'|'cancelled')`; a literal `run: exit 1` body) or the `msrv`
+  job's toolchain-pinning guard (`toolchain: "1.85.0"` + a same-step `RUSTUP_TOOLCHAIN:
+  "1.85.0"` env override + `--locked`). Those are pinned at the S-CIGATE-1 / S-626-1 story-AC
+  layer (AC-001, AC-002, AC-003, AC-3, M1, M2) — by
+  `test_ci_gate_job_exists_with_required_metadata`,
+  `test_ci_gate_needs_exactly_the_required_jobs`,
+  `test_ci_gate_needs_jobs_have_no_event_conditional_if`,
+  `test_ci_gate_pass_fail_semantics_are_structurally_placed`, and
+  `test_verify_msrv_job_pins_toolchain_and_rustup_toolchain_env` — with no corresponding BC or VP
+  registered in this PRD. Round 19 (adversarial passes 45–47, commit `e076e96b`) closed seven
+  guard-strength gaps in those sibling tests (an exact `run: exit 1` body pin; a same-step
+  `RUSTUP_TOOLCHAIN` placement pin for the msrv guard; broadening the no-job-level-`if:` check
+  from a `github.event_name`-substring match to rejecting any job-level `if:` key; a
+  panic-on-missing-`needs:` fix; a rename of a test that had been asserting a shell it never
+  checked; and two stale job-count doc corrections) without touching
+  `test_verify_test_job_has_zero_test_floor` — VP-CIGATE-001's twelve assertions, and every
+  verification-status grade in this BC, are unchanged by round 19.
 
 **Edge Cases**:
 - EC-CIGATE-001: All `tests/*.rs` integration-test files are orphaned (e.g. a build-config change

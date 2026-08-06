@@ -125,7 +125,10 @@ No library changes. This story modifies only YAML and Rust source-text-grep test
 
 `.github/workflows/ci.yml` defines a job with key `ci-gate`, `name: CI Gate`, `runs-on: ubuntu-latest`, `needs: [fmt, clippy, test, msrv, deny, spec-guard]`, and `if: ${{ always() }}`.
 
-Pinned by: `tests/ci_gate_completeness.rs::test_ci_gate_job_exists_with_correct_shell`
+Pinned by: `tests/ci_gate_completeness.rs::test_ci_gate_job_exists_with_required_metadata`
+(formerly `test_ci_gate_job_exists_with_correct_shell` through PR #518; renamed S-626-1 round 19,
+commit `e076e96b` — the old name asserted a `shell:` guarantee the body never checked, only
+name/runs-on/`if:`)
 
 ---
 
@@ -136,7 +139,7 @@ The `ci-gate` job contains a step that exits 1 when `contains(needs.*.result, 'f
 
 The `if: ${{ always() }}` at the job level is load-bearing: without it a failed upstream SKIPS `ci-gate` entirely, which GitHub branch-protection evaluates as SUCCESS — the worst failure mode (broken upstream silently permits merge). This rationale must appear as a comment in the `ci.yml` `ci-gate` job definition or in the step's `name:` field.
 
-Pinned by: `tests/ci_gate_completeness.rs::test_ci_gate_fails_on_failed_or_cancelled_need` (source-text grep on `needs.*.result`, `'failure'`, `'cancelled'`) and `test_ci_gate_job_exists_with_correct_shell` (asserts job-level `if:` contains `always()`)
+Pinned by: `tests/ci_gate_completeness.rs::test_ci_gate_fails_on_failed_or_cancelled_need` (source-text grep on `needs.*.result`, `'failure'`, `'cancelled'`) and `test_ci_gate_job_exists_with_required_metadata` (asserts job-level `if:` contains `always()`; formerly `test_ci_gate_job_exists_with_correct_shell` through PR #518, renamed S-626-1 round 19, commit `e076e96b`)
 Integration gate: `ci-gate` job reports failure (not skip) when an upstream fails on the PR for this story — verified by observing a dry-run or the PR's own CI run.
 
 ---
@@ -159,7 +162,7 @@ Pinned by: `tests/ci_gate_completeness.rs::test_ci_gate_needs_exactly_the_requir
 
 `tests/ci_gate_completeness.rs` exists and contains the following six tests:
 
-1. `test_ci_gate_job_exists_with_correct_shell` — asserts `ci-gate` job exists with `name: CI Gate`, `runs-on: ubuntu-latest`, and job-level `if:` containing `always()`
+1. `test_ci_gate_job_exists_with_required_metadata` (formerly `test_ci_gate_job_exists_with_correct_shell` through PR #518; renamed S-626-1 round 19, commit `e076e96b`) — asserts `ci-gate` job exists with `name: CI Gate`, `runs-on: ubuntu-latest`, and job-level `if:` containing `always()`
 2. `test_ci_gate_needs_exactly_the_required_jobs` — asserts `ci-gate.needs` equals `{fmt, clippy, test, msrv, deny, spec-guard}` (order-insensitive exact match)
 3. `test_ci_gate_excludes_pr_only_jobs` — asserts `security`, `mutants`, and `coverage` are absent from `ci-gate.needs`
 4. `test_ci_gate_fails_on_failed_or_cancelled_need` — asserts the gate step references `needs.*.result`, `'failure'`, and `'cancelled'`
@@ -266,7 +269,7 @@ This AC is marked INFORMATIONAL — it is not a code-gated acceptance criterion 
 
 | # | Test name | File | AC |
 |---|-----------|------|-----|
-| 1 | `test_ci_gate_job_exists_with_correct_shell` | `tests/ci_gate_completeness.rs` | AC-001, AC-002 (`always()` presence) |
+| 1 | `test_ci_gate_job_exists_with_required_metadata` (formerly `test_ci_gate_job_exists_with_correct_shell` through PR #518; renamed S-626-1 round 19, commit `e076e96b`) | `tests/ci_gate_completeness.rs` | AC-001, AC-002 (`always()` presence) |
 | 2 | `test_ci_gate_fails_on_failed_or_cancelled_need` | `tests/ci_gate_completeness.rs` | AC-002 |
 | 3 | `test_ci_gate_needs_exactly_the_required_jobs` | `tests/ci_gate_completeness.rs` | AC-003 (exact-set) |
 | 4 | `test_ci_gate_excludes_pr_only_jobs` | `tests/ci_gate_completeness.rs` | AC-003 (exclusion) |
