@@ -1,7 +1,19 @@
 ---
 document_type: story
+level: ops
 story_id: "S-CIGATE-1"
+epic_id: "none"
 title: "ci.yml `ci-gate` aggregator job as single required status check"
+version: "1.1"
+producer: story-writer
+timestamp: "2026-06-15T00:00:00"
+phase: 3
+cycle: WIN-CI-GATE-AGGREGATOR
+inputs:
+  - ".github/workflows/ci.yml"
+  - "docs/adr/0016-windows-build-target.md"
+input-hash: "e9094ab"
+traces_to: "STATE.md DEC-096/DEC-097/DEC-101"
 wave: feature-followup
 status: draft
 intent: enhancement
@@ -19,6 +31,7 @@ target_module: ci
 subsystems: []
 depends_on: []
 blocks: []
+behavioral_contracts: []
 bc_anchors: []
 bcs: []
 # BC status: no product BCs (CI pipeline change; trace ACs to drift item WIN-CI-GATE-AGGREGATOR + STATE.md DEC-096/DEC-097). BC catalog stays at 597. Do NOT add BCs.
@@ -36,7 +49,7 @@ acceptance_criteria_count: 6
 assumption_validations: []
 risk_mitigations: []
 created: "2026-06-15"
-last_updated: "2026-06-15"
+last_updated: "2026-08-06"
 breaking_change: false
 files_modified:
   - .github/workflows/ci.yml              # ADD ci-gate aggregator job (~20 lines)
@@ -94,14 +107,14 @@ Well within 20% agent context window budget. No splitting required.
 | Rule | Source | Constraint |
 |------|--------|-----------|
 | `if: ${{ always() }}` is load-bearing | F1 delta analysis §4 (Skipped-Job Trap) | The `ci-gate` job MUST carry `if: ${{ always() }}`. Without it, a failed upstream causes `ci-gate` to be SKIPPED (not failed), which GitHub branch-protection evaluates as SUCCESS — the worst failure mode: a broken upstream silently permits merge. |
-| Pass/fail step exits 1 on `failure` or `cancelled` | F1 delta analysis §4 | The gate step MUST exit 1 when `contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled')`. It does NOT reject `skipped` — all six `needs` jobs run unconditionally on both push and PR events, so `skipped` is not possible for them. |
-| PR-only jobs excluded from `needs` | F1 delta analysis §4 | `security` and `mutants` carry `if: github.event_name == 'pull_request'` and emit `skipped` on push events. Including them in `ci-gate.needs` would make every push-triggered `ci-gate` fail. They MUST NOT be in `needs`. |
+| Pass/fail step exits 1 on `failure` or `cancelled` | F1 delta analysis §4 | The gate step MUST exit 1 when `contains(needs.*.result, 'failure')` is true OR `contains(needs.*.result, 'cancelled')` is true. It does NOT reject `skipped` — at authoring time, all six `needs` jobs ran unconditionally on both push and PR events, so `skipped` was not possible for them. **[STALE COUNT — corrected 2026-08-06, S-CIGATE-4]:** `ci-gate.needs` has grown to **eight** jobs (`check-signing-workflow-injection` per `S-FORK-OPS-SIGN-1`; `mutants` per `S-MUTATION-CI-TIMEOUT-1`, added since this story was authored), and `mutants` now DOES report `skipped` on every push by design — see the CORRECTION note on the row immediately below. |
+| PR-only jobs excluded from `needs` | F1 delta analysis §4 | `security` and `mutants` carry `if: github.event_name == 'pull_request'` and emit `skipped` on push events. Including them in `ci-gate.needs` would make every push-triggered `ci-gate` fail. They MUST NOT be in `needs`. **[CORRECTION — 2026-08-06, S-CIGATE-4]:** This row is superseded for `mutants`; see the AC-003 blockquote below for the full correction and rationale. `security` is unaffected — it remains correctly excluded from `needs`. |
 | `spec-guard` IS included in `needs` | Human gate decision (DEC-101) | `spec-guard` has no `if:` guard and runs on both push and PR. The human gate decision promotes it to a blocking check via the aggregator. It MUST be in `ci-gate.needs`. |
 | `name: CI Gate` in job definition | F1 delta analysis §5 | Setting `name: CI Gate` produces the human-readable branch-protection context string `"CI Gate"`. If `name:` is omitted, the context string would be `"ci-gate"`. The branch-protection migration PATCH must use `"CI Gate"` to match. |
 | `coverage` excluded from `needs` | F1 delta analysis §4 | `coverage` uses `fail_ci_if_error: false` on the codecov upload; it is advisory by design. Must NOT be in `needs`. |
 | `fmt` and `deny` stay ubuntu-only | S-WIN-5 AC-008 (existing) | The `fmt` and `deny` jobs are single-leg ubuntu-only. They ARE in `ci-gate.needs`, but their own `runs-on` configuration is untouched by this story. |
 
-## Library and Framework Requirements
+## Library & Framework Requirements (MANDATORY)
 
 No library changes. This story modifies only YAML and Rust source-text-grep test code.
 
@@ -113,7 +126,7 @@ No library changes. This story modifies only YAML and Rust source-text-grep test
 
 | File | Create / Modify | Description |
 |------|----------------|-------------|
-| `.github/workflows/ci.yml` | MODIFY | Append `ci-gate` job at the end of the file. Job definition: `ci-gate:`, `name: CI Gate`, `runs-on: ubuntu-latest`, `needs: [fmt, clippy, test, msrv, deny, spec-guard]`, `if: ${{ always() }}`, one step `name: Fail if any required job failed or was cancelled` with `if: ${{ contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled') }}` and `run: exit 1`. |
+| `.github/workflows/ci.yml` | MODIFY | Append `ci-gate` job at the end of the file. Job definition: `ci-gate:`, `name: CI Gate`, `runs-on: ubuntu-latest`, `needs: [fmt, clippy, test, msrv, deny, spec-guard]`, `if: ${{ always() }}`, one step `name: Fail if any required job failed or was cancelled` with an `if:` that is true when `contains(needs.*.result, 'failure')` OR `contains(needs.*.result, 'cancelled')`, and `run: exit 1`. |
 | `tests/ci_gate_completeness.rs` | CREATE | Hermetic drift-prevention test: parses `.github/workflows/ci.yml`, asserts a job named `ci-gate` exists, asserts `ci-gate.needs` contains exactly `[fmt, clippy, test, msrv, deny, spec-guard]` (order-insensitive). |
 | `CLAUDE.md` | MODIFY | Add one bullet under "Key Decisions" or "Conventions": `ci-gate` is the single required branch-protection status check; new CI jobs that should be required must be added to `ci-gate.needs`, never to branch protection directly. |
 | `docs/adr/0016-windows-build-target.md` | MODIFY | Add one informational sentence in Decision 3 (Add Windows job to `ci.yml`): "`ci-gate` is the required status check for `develop` and `main`; add new mandatory CI jobs to `ci-gate.needs`, not to branch protection directly." |
@@ -135,6 +148,13 @@ name/runs-on/`if:`)
 ### AC-002 — `ci-gate` pass/fail semantics: exits 1 on failure or cancelled; passes when all six succeed
 (traces to WIN-CI-GATE-AGGREGATOR / DEC-096 root-cause mitigation — skipped-job trap avoided)
 
+> **[STALE COUNT — corrected 2026-08-06, S-CIGATE-4]:** "all six succeed" reflects the
+> six-job `needs` list at authoring time. `ci-gate.needs` has since grown to **eight** jobs
+> (`check-signing-workflow-injection` per `S-FORK-OPS-SIGN-1`; `mutants` per
+> `S-MUTATION-CI-TIMEOUT-1`). The title is left as historical record rather than rewritten;
+> see the AC-003 correction below for the substantive change (`mutants` now deliberately
+> tolerates `skipped`, not just `success`, under `S-CIGATE-2`'s fix).
+
 The `ci-gate` job contains a step that exits 1 when `contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled')`. The step carries `if: ${{ contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled') }}` so it is skipped (and the job passes) when all `needs` results are `success`.
 
 The `if: ${{ always() }}` at the job level is load-bearing: without it a failed upstream SKIPS `ci-gate` entirely, which GitHub branch-protection evaluates as SUCCESS — the worst failure mode (broken upstream silently permits merge). This rationale must appear as a comment in the `ci.yml` `ci-gate` job definition or in the step's `name:` field.
@@ -147,13 +167,41 @@ Integration gate: `ci-gate` job reports failure (not skip) when an upstream fail
 ### AC-003 — PR-only jobs (`security`, `mutants`) are NOT in `ci-gate.needs`; `spec-guard` IS included
 (traces to WIN-CI-GATE-AGGREGATOR / DEC-101 — skipped-job trap + spec-guard promotion)
 
+> **CORRECTION (2026-08-06, S-CIGATE-4):** the "`mutants` MUST NOT appear in `ci-gate.needs`"
+> clause below is **superseded by shipped reality and is now obsolete** — not deleted, kept
+> as the historical record of what was believed correct at authoring time (2026-06-15).
+> `mutants` **is required** to remain in `ci-gate.needs`, per `S-MUTATION-CI-TIMEOUT-1`
+> (PR #567, 2026-06-28), which added it to enforce a 90% mutation kill-rate gate on every PR;
+> `tests/ci_gate_completeness.rs::test_mutants_is_in_ci_gate_needs` asserts the literal
+> opposite of this AC's original clause. `S-CIGATE-2-skipped-status-false-green.md`'s
+> approved fix (Option C, PR #671, in-flight on the frozen `fix/ci-gate-skipped-false-green`
+> branch at authoring time of this correction) goes further: it requires `mutants` to keep
+> its job-level `if: github.event_name == 'pull_request'` guard entirely unchanged, and names
+> `mutants` as the sole entry in a new, restrictive `ALLOWED_SKIPS` allowlist inside
+> `scripts/check-ci-gate.sh` — a `skipped` result from `mutants` on push is now a
+> *deliberately tolerated, explicitly named* exception, not an accidental gap.
+>
+> **Why the prohibition is obsolete, not merely overridden:** the original reasoning was
+> correct when written — under the pre-`S-CIGATE-2` inline
+> `contains(needs.*.result, 'failure')`/`contains(needs.*.result, 'cancelled')` condition,
+> there was no mechanism to distinguish a trusted, expected `skipped` (a PR-only job on a
+> push event) from an untrusted one, so including any job that could report `skipped` really
+> would have "poisoned" push-triggered `ci-gate` runs by letting them pass unverified. What
+> changed is not the reasoning but the underlying hazard: `S-CIGATE-2`'s fail-closed evaluator
+> with a restrictive, explicit, per-job allowlist closed exactly that gap, making
+> `mutants`-reports-`skipped` a safe, named, auditable exception instead of an accidental one.
+> `security` is unaffected by this correction and remains correctly excluded from
+> `ci-gate.needs` — only the `mutants` half of this AC's prohibition is obsolete.
+>
+> Full detail: `.factory/stories/S-CIGATE-4-reconcile-ac003-mutants-prohibition.md`.
+
 `security` and `mutants` MUST NOT appear in `ci-gate.needs` (they emit `skipped` on push events, which would poison push-triggered `ci-gate` runs).
 
 `spec-guard` MUST appear in `ci-gate.needs` (it has no `if:` guard, runs on both push and PR, and is promoted to a blocking check by the human gate decision DEC-101).
 
 `coverage` MUST NOT appear in `ci-gate.needs` (advisory by design; `fail_ci_if_error: false`).
 
-Pinned by: `tests/ci_gate_completeness.rs::test_ci_gate_needs_exactly_the_required_jobs` (asserts `needs` is exactly `{fmt, clippy, test, msrv, deny, spec-guard}` — order-insensitive exact match, not a subset check) and `test_ci_gate_excludes_pr_only_jobs` (asserts `security`, `mutants`, `coverage` absent)
+Pinned by: `tests/ci_gate_completeness.rs::test_ci_gate_needs_exactly_the_required_jobs` (asserts `needs` is exactly `{fmt, clippy, test, msrv, deny, spec-guard}` — order-insensitive exact match, not a subset check) and `test_ci_gate_excludes_advisory_and_secret_scan_jobs` (renamed from `test_ci_gate_excludes_pr_only_jobs` by PR #567, commit `3b122a8f`, S-MUTATION-CI-TIMEOUT-1; asserts `security`, `coverage` absent — `mutants` is no longer in this test's exclusion set, per the CORRECTION above)
 
 ---
 
@@ -164,7 +212,7 @@ Pinned by: `tests/ci_gate_completeness.rs::test_ci_gate_needs_exactly_the_requir
 
 1. `test_ci_gate_job_exists_with_required_metadata` (formerly `test_ci_gate_job_exists_with_correct_shell` through PR #518; renamed S-626-1 round 19, commit `e076e96b`) — asserts `ci-gate` job exists with `name: CI Gate`, `runs-on: ubuntu-latest`, and job-level `if:` containing `always()`
 2. `test_ci_gate_needs_exactly_the_required_jobs` — asserts `ci-gate.needs` equals `{fmt, clippy, test, msrv, deny, spec-guard}` (order-insensitive exact match)
-3. `test_ci_gate_excludes_pr_only_jobs` — asserts `security`, `mutants`, and `coverage` are absent from `ci-gate.needs`
+3. `test_ci_gate_excludes_advisory_and_secret_scan_jobs` (renamed from `test_ci_gate_excludes_pr_only_jobs` by PR #567, commit `3b122a8f`, S-MUTATION-CI-TIMEOUT-1) — asserts `security` and `coverage` are absent from `ci-gate.needs`. **[CORRECTION — 2026-08-06, S-CIGATE-4]:** `mutants` is no longer part of this test's exclusion set — see the AC-003 correction above.
 4. `test_ci_gate_fails_on_failed_or_cancelled_need` — asserts the gate step references `needs.*.result`, `'failure'`, and `'cancelled'`
 5. `test_ci_gate_needs_jobs_have_no_event_conditional_if` (M1 hardening) — asserts no job in `ci-gate.needs` carries a job-level `if:` that references `github.event_name`; pins the unconditional-execution invariant; closes the EC-002 drift vector
 6. `test_ci_gate_pass_fail_semantics_are_structurally_placed` (M2 hardening) — asserts `always()` is the job-level `if:` and does NOT contain `contains(needs`; `contains(needs.*.result,'failure'/'cancelled')` is on a step-level `if:`; and a `run:` step exists; prevents always()/contains() transposition reopening the skipped-job trap
@@ -237,7 +285,7 @@ This AC is marked INFORMATIONAL — it is not a code-gated acceptance criterion 
 
 ## Out of Scope (explicit)
 
-- **`security` and `mutants` joining `ci-gate.needs`**: these are PR-only jobs. If they are ever promoted to required, that is a separate story — keep this one minimal.
+- **`security` and `mutants` joining `ci-gate.needs`**: these are PR-only jobs. If they are ever promoted to required, that is a separate story — keep this one minimal. **[CORRECTION — 2026-08-06, S-CIGATE-4]:** for `mutants`, this already happened — `S-MUTATION-CI-TIMEOUT-1` (PR #567) promoted it into `ci-gate.needs`, and `S-CIGATE-2` (PR #671, in-flight) builds its fail-closed fix around `mutants` remaining there. `security` remains out of `ci-gate.needs` and this bullet is accurate for it. See the AC-003 correction above for full detail.
 - **`coverage` joining `ci-gate.needs`**: advisory by design (`fail_ci_if_error: false`).
 - **Any change to the existing `fmt`, `clippy`, `test`, `msrv`, `deny`, `spec-guard` job definitions**: this story only adds the aggregator job.
 - **Removing old required_status_check contexts** before `ci-gate` is confirmed green on develop.
@@ -250,6 +298,15 @@ This AC is marked INFORMATIONAL — it is not a code-gated acceptance criterion 
 |-----------|--------|---------------|---------------|
 | `ci-gate` job | `.github/workflows/ci.yml` | N/A (CI config) | Aggregates upstream job results; reports single stable context to branch protection |
 | `tests/ci_gate_completeness.rs` | `tests/` | Pure (source-text grep) | Hermetic drift-prevention; reads YAML file, makes structural assertions |
+
+---
+
+## Purity Classification
+
+| Module | Classification | Justification |
+|--------|-----------------|----------------|
+| `.github/workflows/ci.yml` `ci-gate` job | effectful-shell (CI config, not Rust) | GitHub Actions YAML — declarative but not pure in the Rust-purity sense; drives real CI side effects (job scheduling, exit codes feeding branch protection) |
+| `tests/ci_gate_completeness.rs` | pure-core | Reads `ci.yml` as a string and asserts on its text content only; no network calls, no script execution, no filesystem writes — fully hermetic and deterministic given a fixed `ci.yml` |
 
 ---
 
@@ -272,7 +329,7 @@ This AC is marked INFORMATIONAL — it is not a code-gated acceptance criterion 
 | 1 | `test_ci_gate_job_exists_with_required_metadata` (formerly `test_ci_gate_job_exists_with_correct_shell` through PR #518; renamed S-626-1 round 19, commit `e076e96b`) | `tests/ci_gate_completeness.rs` | AC-001, AC-002 (`always()` presence) |
 | 2 | `test_ci_gate_fails_on_failed_or_cancelled_need` | `tests/ci_gate_completeness.rs` | AC-002 |
 | 3 | `test_ci_gate_needs_exactly_the_required_jobs` | `tests/ci_gate_completeness.rs` | AC-003 (exact-set) |
-| 4 | `test_ci_gate_excludes_pr_only_jobs` | `tests/ci_gate_completeness.rs` | AC-003 (exclusion) |
+| 4 | `test_ci_gate_excludes_advisory_and_secret_scan_jobs` (renamed from `test_ci_gate_excludes_pr_only_jobs` by PR #567, S-MUTATION-CI-TIMEOUT-1) | `tests/ci_gate_completeness.rs` | AC-003 (exclusion of `security`/`coverage`; `mutants` exclusion superseded — see CORRECTION) |
 | 5 | `test_ci_gate_needs_jobs_have_no_event_conditional_if` | `tests/ci_gate_completeness.rs` | AC-003 / EC-002 hardening (M1) — asserts no job in `ci-gate.needs` carries a job-level `if:` referencing `github.event_name`; pins the unconditional-execution invariant |
 | 6 | `test_ci_gate_pass_fail_semantics_are_structurally_placed` | `tests/ci_gate_completeness.rs` | AC-002 hardening (M2) — asserts `always()` is on the job-level `if:` and does NOT contain `contains(needs`; `contains(needs.*.result,'failure'/'cancelled')` is on a step-level `if:`; a `run:` step exists; prevents always()/contains() transposition reopening the skipped-job trap |
 
