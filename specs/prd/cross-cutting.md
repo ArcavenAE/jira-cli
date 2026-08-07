@@ -27,6 +27,7 @@ trace: |
   - Round-19 boundary clarification (2026-08-05, S-626-1 issue #626, adversarial passes 45-47, commit `e076e96b`): BC-X.13.007 Invariants gained a bullet distinguishing it from the sibling `ci-gate`/`msrv` job story-AC guards (AC-001/002/003/AC-3/M1/M2) strengthened this round — no BC/VP in this PRD governs those guards; VP-CIGATE-001's twelve assertions and this BC's verification-status grades are unchanged (round 19 did not touch `test_verify_test_job_has_zero_test_floor`); no new BC, no count change (658 total / 85 individually-bodied unchanged in this file)
   - Round-20 staleness correction (2026-08-07, S-626-1 issue #626, commits `7f702bf6`/`424d64de`): BC-X.13.007's sibling-guard-list Invariant corrected — the "a literal `run: exit 1` body" guard description was stale (self-flagged in a prior burst report as at risk); `7f702bf6` retired that F-01 assertion as strictly subsumed by `test_ci_gate_pass_fail_semantics_are_structurally_placed`'s M2-i `PINNED_GATE_RUN_LINE` byte-for-byte pin once S-CIGATE-2 replaced the gate step's `run:` body — reworded in place to describe the current guard and to make explicit that coverage was superseded, not dropped; also updated the `EC-002 / M1` test citation from `test_ci_gate_needs_jobs_have_no_event_conditional_if` to its round-20 rename `test_ci_gate_needs_jobs_have_no_job_level_if` (`424d64de`, ADV-P48-LOW-001); no BC/VP text-content change beyond this Invariant bullet, no new BC, no count change (658 total / 85 individually-bodied unchanged in this file)
   - Round-20 staleness correction, part 2 (2026-08-07, S-626-1 issue #626, commits `424d64de`/`177b3727`): BC-X.13.007 Behavior item 2 and the paired Verification-status bullet corrected — both self-flagged in a prior burst report as stale, describing the named-canary check as proving only that the canary binary was *launched*, not that it *reported results* (a binary that crashed or was `#[ignore]`d before printing its own `test result:` line would satisfy the check as described); `424d64de` (ADV-P50-LOW-002) closed exactly this gap by locating the canary's own `test result:` line and requiring a non-zero passed count from it, and `177b3727` made that lookup path-separator-agnostic (`[/\\]`) so it matches `windows-latest`'s backslash `Running` line as well as Unix's forward slash — reworded both sites in place to describe the current two-stage check. The Verification-status bullet also gained an explicit disclosure: `tests/ci_gate_completeness.rs::test_verify_test_job_has_zero_test_floor` (VP-CIGATE-001, still twelve assertions) was NOT extended to pin this strengthened logic or the separator-agnostic match — confirmed against the round-20 diff (touches only the msrv-anchor and job-key-set assertions documented in the Invariants bullet above) and the Windows-fix commit (touches only `ci.yml`); disclosed as unpinned code/spec drift, not silently closed. No new BC, no count change (658 total / 85 individually-bodied unchanged in this file)
+  - Round-20 regression-pin catch-up, closing STRENGTHENED-CANARY-UNPINNED and SPEC-EDGE-CASES-LAG-GUARD-STRENGTHENING (2026-08-07, S-626-1 issue #626, commit `ada50a34`): `test_verify_test_job_has_zero_test_floor` was extended from twelve to fifteen `str::contains` assertions — verified directly (`grep -c "assert!(" ` scoped to the function body). The three new assertions (Instrument 2b's two sub-assertions, `tail -n +"${_canary_running_line}"` and `"${_canary_passed}" -eq 0`; Instrument 2c, the raw-string regex `Running tests[/\\\\]ci_gate_completeness\.rs`) pin the ADV-P50-LOW-002 non-zero-passed strengthening and its path-separator-agnostic lookup that `424d64de`/`177b3727` had left unpinned. Every prior "twelve assertions" / "unpinned code/spec drift" claim in this BC's body (Verification-status intro, Behavior items 1–3 status, the sibling-guard-list Invariant, and VP-CIGATE-001's own description and grading breakdown) is corrected in place to "fifteen assertions" / "now pinned", naming the three new assertions; the two prior dated trace entries above (Round-19, Round-20 part 2) are left as-is — they accurately describe the state at the time they were written. Also closes the previously-flagged edge-case gap: EC-CIGATE-006 added (canary binary launches — satisfying the bare presence check — but its own `test result:` line reports zero passed; distinct from EC-CIGATE-002, where the binary never launches at all) with a matching Verification-status bullet and Canonical Test Vectors row; Postcondition 5 split so the named-canary check's two distinct failure messages (`did not run` vs `ran but reported 0 passed assertions`) are enumerated separately, matching what the step's shell script actually emits (`ci.yml` :: `test` / "Run tests (zero-test floor, POL-11)"). Judgement call: the pre-`177b3727` Windows-separator failure mode (a forward-slash-only pattern hardcoding the passed count to 0 and unconditionally failing every Windows run) was evaluated for its own EC and NOT given one — it is a false-RED guard-implementation-correctness bug (already fixed, now pinned by Instrument 2c), not a target scenario the guard is designed to detect the way EC-CIGATE-001/002/003/006 are; it remains documented in Behavior item 2 and Precondition 1 (3-OS matrix) rather than the Edge Cases catalog. No new BC, no count change (658 total / 85 individually-bodied unchanged in this file)
 ---
 
 # BC-X — Cross-cutting
@@ -1561,7 +1562,7 @@ The `spec-guard` job already mounts the `factory-artifacts` worktree via `git wo
 PARTIAL = the claim's text/expression is pinned but the scenario itself is not exercised,
 MANUAL = reproduced once by hand, not by an automated test, NONE = nothing verifies this today,
 deliberately unverified = intentionally not test-covered, with reason. VP-CIGATE-001 below grades
-the twelve individual assertions that pin the guard's own literal text; this block grades the
+the fifteen individual assertions that pin the guard's own literal text; this block grades the
 claims those assertions serve):
 
 - **Behavior items 1–3** (binary-count floor / named-canary / zero-test floor): PARTIAL — VP-CIGATE-001
@@ -1573,12 +1574,14 @@ claims those assertions serve):
   canary binary's own `test result:` line report a non-zero passed count, located via a
   path-separator-agnostic `[/\\]` match so the lookup succeeds on both Unix and `windows-latest`
   runners (Windows regression fix, commit `177b3727`) — closing the earlier "launched but never
-  reported" gap. Neither the strengthened non-zero-passed gate nor the separator-agnostic match is
-  pinned by `test_verify_test_job_has_zero_test_floor` or any other assertion in
-  `tests/ci_gate_completeness.rs`: confirmed against the round-20 diff, which extends that file's
-  msrv-anchor and job-key-set assertions but adds none for this logic, and against the Windows-fix
-  commit, which touches only `ci.yml`. This is unpinned code/spec drift, not a closed gap —
-  VP-CIGATE-001's twelve assertions remain exactly the set described below.
+  reported" gap. Both the strengthened non-zero-passed gate and the separator-agnostic match are now
+  pinned by `test_verify_test_job_has_zero_test_floor` (commit `ada50a34`): Instrument 2b's two
+  sub-assertions — `tail -n +"${_canary_running_line}"` (scopes the `test result:` lookup to the
+  canary binary's own output, not the first such line anywhere in the capture) and
+  `"${_canary_passed}" -eq 0` (the non-zero-passed gate itself) — pin the ADV-P50-LOW-002
+  strengthening; Instrument 2c (the raw-string regex `Running tests[/\\\\]ci_gate_completeness\.rs`)
+  pins the path-separator-agnostic lookup. This closes the previously-disclosed gap — VP-CIGATE-001's
+  fifteen assertions now cover both, graded in the breakdown below.
 - **Precondition 1** (`test` job runs on every push/PR to `develop`/`main`, 3-OS matrix, `ci-gate.needs`
   member): COVERED — `ci-gate.needs` inclusion of `test` is pinned exactly (set equality) by
   `test_ci_gate_needs_exactly_the_required_jobs`, and `windows-latest` presence in the `test` job's
@@ -1621,6 +1624,13 @@ claims those assertions serve):
   the step. Still one-off and by hand — no automated regression test drives this scenario.
 - **EC-CIGATE-005** (threshold recalibration on a legitimate binary-count reduction): deliberately
   unverified — a human process note with no pass/fail outcome, not a testable behavior.
+- **EC-CIGATE-006** (canary binary launches — satisfying the bare presence check — but its own
+  `test result:` line reports zero passed): NONE for the runtime scenario itself — never
+  reproduced, automated or by hand. The triggering *expression* is pinned by VP-CIGATE-001
+  Instrument 2b (`tail -n +"${_canary_running_line}"`, `"${_canary_passed}" -eq 0`) and Instrument
+  2c (the path-separator-agnostic `Running` line regex), added commit `ada50a34` — same PARTIAL
+  grading shape as Behavior items 1–3 above: the expression is pinned, the runtime scenario is not
+  driven through the script.
 - **Canonical Test Vectors**: see the table's own "Verified by" column below.
 
 **Behavior**: The `test` job's test-execution step (`.github/workflows/ci.yml` `test` job, step
@@ -1681,10 +1691,20 @@ passed; the positive-coverage line is the observable proof.
 3. On success: the job, and therefore `ci-gate`, proceeds to reflect success.
 4. On failure (any of the three gates trips): the step exits non-zero before the job can report
    success.
-5. On failure: a canonical `FAIL (POL-11): ...` diagnostic identifying which gate tripped
-   (binary-count floor, named canary, or zero-test floor) is emitted, together with a list of
-   plausible causes (e.g. a build-config change that disables default test-target discovery, a
-   test-target rename, mass test-file deletion, or a harness misconfiguration).
+5. On failure: a canonical `FAIL (POL-11): ...` diagnostic identifying which gate tripped is
+   emitted, together with a list of plausible causes (e.g. a build-config change that disables
+   default test-target discovery, a test-target rename, mass test-file deletion, or a harness
+   misconfiguration). The named-canary check (item 2) is two sub-checks and emits one of two
+   distinct messages depending on which trips:
+   - `FAIL (POL-11): tests/ci_gate_completeness did not run.` — the bare presence check
+     (Instrument 2) found no `Running tests[/\\]ci_gate_completeness.rs` line at all anywhere in
+     the capture; the binary was never launched (EC-CIGATE-002).
+   - `FAIL (POL-11): tests/ci_gate_completeness ran but reported 0 passed assertions.` — the
+     binary launched (the presence check is satisfied) but its own `test result:` line reported a
+     passed count of zero (Instrument 2b/2c, ADV-P50-LOW-002; EC-CIGATE-006).
+   The binary-count floor and zero-test floor each emit their own single, distinct diagnostic:
+   `FAIL (POL-11): only ${binaries} test binaries reported results (floor: 90).` and
+   `FAIL (POL-11): zero tests executed across ${binaries} test binaries.` respectively.
 6. On failure: `ci-gate` is blocked — a CI run that executed zero or near-zero tests cannot reach
    the required merge-blocking check.
 
@@ -1738,8 +1758,11 @@ passed; the positive-coverage line is the observable proof.
   `github.event_name`-substring match to rejecting any job-level `if:` key; a
   panic-on-missing-`needs:` fix; a rename of a test that had been asserting a shell it never
   checked; and two stale job-count doc corrections) are unaffected by the round-20 retirement.
-  `test_verify_test_job_has_zero_test_floor` — VP-CIGATE-001's twelve assertions, and every
-  verification-status grade in this BC — were touched by neither round 19 nor round 20.
+  `test_verify_test_job_has_zero_test_floor` was untouched by round 19, and by round 20's own
+  `424d64de`/`177b3727` commits — but round 20's later catch-up commit `ada50a34` did extend it,
+  from twelve assertions to fifteen (Instrument 2b/2c), to close the STRENGTHENED-CANARY-UNPINNED
+  gap those two commits had left open; see the Behavior items 1–3 and VP-CIGATE-001 entries above
+  for the current fifteen-assertion state.
 
 **Edge Cases**:
 - EC-CIGATE-001: All `tests/*.rs` integration-test files are orphaned (e.g. a build-config change
@@ -1759,6 +1782,17 @@ passed; the positive-coverage line is the observable proof.
   current binary count and the floor threshold → the floor threshold is a lower bound, not an
   exact-match assertion, and requires periodic recalibration when a large legitimate reduction is
   planned
+- EC-CIGATE-006: The named-canary binary (`ci_gate_completeness`) is launched — cargo prints its
+  `Running tests[/\\]ci_gate_completeness.rs` announcement line, satisfying the bare presence
+  check (Instrument 2) — but its own `test result:` line reports a passed count of zero (e.g.
+  every test in the file is `#[ignore]`d, an env-gate early-returns before any assertion runs, or
+  a test filter matched the binary but excluded every test inside it) → the non-zero-passed gate
+  (Instrument 2b/2c, ADV-P50-LOW-002) trips independently of the presence check → step fails.
+  Distinct from EC-CIGATE-002: EC-CIGATE-002 is the binary ABSENT from the build entirely (no
+  `Running` line at all, so the presence check itself trips); EC-CIGATE-006 is the binary PRESENT
+  and launched but never executing a passing assertion, so the presence check alone is satisfied
+  and only the passed-count gate catches it — the two edge cases trip different sub-checks and
+  emit different diagnostic messages (see Postcondition 5)
 
 **Canonical Test Vectors**:
 
@@ -1766,30 +1800,43 @@ passed; the positive-coverage line is the observable proof.
 |----------|-------------------|-------------|
 | Full suite runs normally; all binaries report results; passed-count > 0 | Step exits 0; positive-coverage line printed with runtime-computed counts | Live CI — this scenario runs, for real, on every push/PR |
 | `tests/` fully orphaned (default test-target discovery disabled); `src/`-inline tests still pass | Binary-count floor trips; `FAIL (POL-11): ...`; step exits non-zero | Not verified — never driven through the script, automated or by hand (EC-CIGATE-001) |
-| Named-canary binary alone renamed/excluded; rest of `tests/` intact | Named-canary check trips; `FAIL (POL-11): ...`; step exits non-zero | Not verified — never driven through the script, automated or by hand (EC-CIGATE-002) |
+| Named-canary binary alone renamed/excluded; rest of `tests/` intact (no `Running` line at all) | Named-canary presence check trips; `FAIL (POL-11): tests/ci_gate_completeness did not run.`; step exits non-zero | Not verified — never driven through the script, automated or by hand (EC-CIGATE-002) |
 | Every reporting binary shows zero passed tests (filter matches nothing) | Zero-test floor trips; `FAIL (POL-11): ...`; step exits non-zero | Not verified as a runtime scenario — the existing scratchpad check only proves the `"${total}" -eq 0` text-pin is necessary, not that this scenario trips it (EC-CIGATE-003) |
 | A real assertion fails inside any test | `cargo test` itself exits non-zero; step fails independently of the floor checks | One-off scratchpad reproduction of the actual shell logic, with a mock `cargo` binary; not automated (EC-CIGATE-004) |
+| Named-canary binary launches (satisfies the presence check) but its own `test result:` line reports 0 passed (e.g. every test `#[ignore]`d) | Non-zero-passed gate trips independently of the presence check; `FAIL (POL-11): tests/ci_gate_completeness ran but reported 0 passed assertions.`; step exits non-zero | Not verified as a runtime scenario — never driven through the script, automated or by hand; the triggering expression is text-pinned by VP-CIGATE-001 Instrument 2b/2c (EC-CIGATE-006) |
 
 **Verification Properties**:
 - VP-CIGATE-001: Regression pin —
-  `tests/ci_gate_completeness.rs::test_verify_test_job_has_zero_test_floor` makes twelve
+  `tests/ci_gate_completeness.rs::test_verify_test_job_has_zero_test_floor` makes fifteen
   `str::contains` assertions against the `test` job's step block, extracted by
   `extract_job_block` (`tests/common/yaml.rs`) as a raw string slice of the YAML — comment lines
-  included. Two of the twelve (`shell: bash` and the full `cargo test --all-features 2>&1 | tee
-  "$RUNNER_TEMP/cargo_test_out.txt"\n` capture invocation) were added in a later round, on top of
-  the ten described below (themselves including two added the round before that: `"${total}" -eq
+  included. Three of the fifteen — Instrument 2b's two sub-assertions (`tail -n
+  +"${_canary_running_line}"` and `"${_canary_passed}" -eq 0`) and Instrument 2c (the raw-string
+  regex `Running tests[/\\\\]ci_gate_completeness\.rs`) — were added in the round-20 catch-up
+  (commit `ada50a34`) to pin the ADV-P50-LOW-002 non-zero-passed strengthening and its
+  path-separator-agnostic lookup (commit `177b3727`) — closing the gap disclosed in the prior
+  round (STRENGTHENED-CANARY-UNPINNED). This is on top of the twelve described below. Two of
+  those twelve (`shell: bash` and the full `cargo test --all-features 2>&1 | tee
+  "$RUNNER_TEMP/cargo_test_out.txt"\n` capture invocation) were added in an earlier round, on top
+  of the ten before that (themselves including two added the round before that: `"${total}" -eq
   0` and `set -euo pipefail\n`, each closing a demonstrated hole where every one of the
   previously-existing eight assertions stayed green under a reproduced false-green mutation —
   deleting the `if [ "${total}" -eq 0 ]; ... fi` block wholesale, and separately weakening
   `set -euo pipefail` to `set -eu` while feeding a mock `cargo` that exits 101 after printing
-  passing `test result:` lines). The twelve assertions are graded by how hard each is to defeat
+  passing `test result:` lines). The fifteen assertions are graded by how hard each is to defeat
   without also breaking the enforcement logic it pins:
-  - **Variable/command-bound** (hardest to defeat — a rename or rewrite that neuters the check
-    also breaks the literal text required): `"${binaries}" -lt 90` (binary-count floor),
-    `"${total}" -eq 0` (zero-test floor), `grep -q "ci_gate_completeness"` (named canary). None
-    of these three forms appears anywhere else in `ci.yml`; a bare `-lt 90` / `-eq 0` /
-    `ci_gate_completeness` substring, by contrast, also appears in this guard's own comments and
-    echo diagnostics and would stay satisfied even after a variable rename neutered the check.
+  - **Variable/command-bound, and unique-pattern** (hardest to defeat — a rename or rewrite that
+    neuters the check also breaks the literal text required): `"${binaries}" -lt 90`
+    (binary-count floor), `"${total}" -eq 0` (zero-test floor), `grep -q "ci_gate_completeness"`
+    (named-canary presence), `tail -n +"${_canary_running_line}"` (scopes the canary's own
+    `test result:` lookup to its own output rather than the first such line anywhere in the
+    capture — round-20 ADV-P50-LOW-002), `"${_canary_passed}" -eq 0` (the non-zero-passed gate
+    itself), and `Running tests[/\\\\]ci_gate_completeness\.rs` (the path-separator-agnostic
+    canary-lookup regex, pinned via a Rust raw string literal so the source reproduces the exact
+    backslash byte sequence). None of these six forms appears anywhere else in `ci.yml`; a bare
+    `-lt 90` / `-eq 0` / `ci_gate_completeness` substring, by contrast, also appears in this
+    guard's own comments and echo diagnostics and would stay satisfied even after a variable
+    rename neutered the check.
   - **Exact standalone line** (comment-satisfiable only by a future comment reproducing the
     identical trailing form — no such comment exists today): `set -euo pipefail\n`,
     `set +o pipefail\n`, `set -o pipefail\n`, and the full capture invocation `cargo test
@@ -1817,7 +1864,7 @@ passed; the positive-coverage line is the observable proof.
   `grep`/`grep -Eo`/`awk` and `grep`/`wc -l`/`tr` chains) that derive those two variables from the
   captured output — only their *usages* (`"${total}" -eq 0`, `"${binaries}" -lt 90`) are pinned.
   A rewrite that preserves the capture invocation verbatim but replaces the computation logic with
-  an unconditional `binaries=999; total=999` would satisfy every one of the twelve assertions in
+  an unconditional `binaries=999; total=999` would satisfy every one of the fifteen assertions in
   this test. This is a structural limit of a substring-based guard applied to a raw YAML slice,
   not an oversight the test can close on its own.
 
