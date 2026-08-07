@@ -6732,3 +6732,33 @@ _Tagged: [convergence-methodology] [frontier-design] [decay-curve] [soh-dx-1] [s
 
 _Trigger: ADVERSARY-51-52-53 (2026-08-07), pass 51 (vacuous-satisfaction frontier) — twenty fix rounds of `ci-gate` hardening left `test`, the `needs` member carrying the actual pass/fail signal, defended only by 15 order-free substring checks._
 _Tagged: [guard-design] [aggregator-vs-aggregated] [anti-neutering] [soh-dx-1] [step-4.5-grind] [codified]_
+
+### [codified] DEFAULT-DENY-BEATS-ENUMERATED-PROHIBITION: one allowlist closed three findings and covers keys nobody named
+
+**Pattern.** PILE-1-GUARD-STRENGTH closed `ADV-P51-HIGH-001` (zero-test-floor satisfiable by `if: false`), `ADV-P51-HIGH-002` (`continue-on-error: true` would neutralize all four `exit 1` gates), and `ADV-P51-MED-002` (env key-set unpinned) with a single mechanism: a default-deny allowlist (`PINNED_TEST_GUARD_STEP_KEYS = ["env","name","run","shell"]`, `PINNED_TEST_GUARD_ENV_KEYS = ["CARGO_TERM_COLOR"]`) checked against the `test` job's POL-11 guard step. The three findings named three specific neutering constructs (`if:`, `continue-on-error:`, an unpinned env key). The fix does not ban any of them by name — it enumerates what IS allowed and rejects everything else. `if:` and `continue-on-error:` are simply absent from the allowlist; a fourth, never-named neutering key (a smuggled `BASH_ENV` sibling) was tested and caught by the same mechanism without a line of code written for it.
+
+**Root cause.** An enumerated-prohibition guard ("ban `if:`, ban `continue-on-error:`") only ever covers the constructs someone thought to name — it is structurally reactive, growing one entry per finding, forever chasing the next unnamed neutering key. A default-deny allowlist inverts the burden: anything not on the small, positively-justified list is rejected, so the guard's coverage is not bounded by the reviewer's imagination. This mirrors `ci-gate`'s own round-11 idiom, which the fix explicitly reused rather than reinventing — the class of fix was already proven, just not yet applied to `test`.
+
+**Prescription (actionable, applies to any guard defending a CI step, config block, or similar bounded surface against an open-ended "don't let X sneak in" class of finding):**
+
+> When a finding names a specific dangerous key/construct on a structured surface (a YAML step, a config section, a parameter set), do not write a check that bans that one key. Ask instead: what is the complete, positively-justified set of keys this surface is allowed to carry? Write the allowlist, default-deny everything else, and RED-prove it against the reported construct plus at least one construct nobody has named yet. If the reported finding is the third or later instance of the same shape (three prior findings each naming a different specific construct on the same surface), that is itself the signal to switch from enumerated prohibition to default-deny — the enumeration is not converging.
+
+**Disposition:** applied and closed in commit `3ad496eb` — one allowlist mechanism, RED-proven against `if: false`, `continue-on-error: true`, and a smuggled `BASH_ENV` sibling (the third of which no finding had named).
+
+_Trigger: PILE-1-GUARD-STRENGTH (2026-08-07) — closing pass 51's HIGH-001/HIGH-002/MED-002 with one default-deny allowlist instead of three named-construct bans, which also caught an unnamed fourth construct for free._
+_Tagged: [guard-design] [default-deny] [anti-neutering] [soh-dx-1] [step-4.5-grind] [codified]_
+
+### [codified] RED-PROOF-SHOULD-EXPOSE-THE-OLD-GUARDS-BLIND-SPOT: the strongest RED proof shows what the previous guard missed
+
+**Pattern.** Closing `ADV-P51-HIGH-003` (`GUARD-MANDATES-ITS-OWN-DEFEAT-TOKEN`) required a RED proof for the new `test_test_job_pipefail_bracket_ordering_is_position_constrained` test. The proof relocated `set +o pipefail` ahead of the `cargo test` capture line — the exact defeat this finding described — and recorded that **the pre-existing presence assertions all stayed GREEN** while only the new ordering test caught the relocation (byte offset 2066 vs 1836). The fact that the old guard's assertions kept passing on a tree the finding itself proved was broken is what makes the new pin's RED proof credible: it is not merely "this new test fires on a bad input," it is "this new test fires on an input the guard family's own existing assertions failed to catch."
+
+**Root cause.** A RED proof that only shows the new test failing on a deliberately broken input answers "does the new assertion fire," not "does the new assertion add coverage the old guard lacked." Those are different claims — a new test can fire on a mutation while overlapping entirely with what an existing test already caught, in which case it adds redundancy, not coverage. The stronger and more diagnostic claim — the one that actually validates a HIGH finding was real and is now closed — is that the *existing* guard suite stayed green on the same mutation. This is the class of check `RED-PROOF-REQUIRES-FOUR-CONDITIONS` (LEGAL, APPLIED, INTENDED, NARROW) does not by itself capture: none of those four conditions require checking sibling-guard behavior on the same mutation.
+
+**Prescription (actionable, applies to any RED proof written to close a guard-strength finding, not just a correctness bug):**
+
+> When RED-proving a new pin added specifically to close a guard-strength gap (as opposed to a plain new-feature test), run the full existing guard/test suite against the same mutation, not just the one new assertion. Record explicitly whether any pre-existing assertion also caught the mutation. If nothing else caught it, that is the strongest possible evidence the finding was real and the fix is load-bearing — record it in the finding's disposition, as this burst did with the byte-offset comparison (2066 vs 1836). If something else DID also catch it, the new assertion may be redundant coverage worth noting rather than a genuine gap closure.
+
+**Disposition:** applied in commit `3ad496eb` — the ordering test's RED proof explicitly compared against the pre-existing presence assertions' behavior on the same mutation and recorded that they stayed GREEN, closing `GUARD-MANDATES-ITS-OWN-DEFEAT-TOKEN` with the sharper form of evidence.
+
+_Trigger: PILE-1-GUARD-STRENGTH (2026-08-07) — the pipefail-ordering RED proof's diagnostic strength came from showing the OLD guard missed the mutation, not merely that the NEW guard caught it._
+_Tagged: [red-proof-discipline] [guard-design] [verification-methodology] [soh-dx-1] [step-4.5-grind] [codified]_
