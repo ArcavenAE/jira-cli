@@ -6762,3 +6762,49 @@ _Tagged: [guard-design] [default-deny] [anti-neutering] [soh-dx-1] [step-4.5-gri
 
 _Trigger: PILE-1-GUARD-STRENGTH (2026-08-07) — the pipefail-ordering RED proof's diagnostic strength came from showing the OLD guard missed the mutation, not merely that the NEW guard caught it._
 _Tagged: [red-proof-discipline] [guard-design] [verification-methodology] [soh-dx-1] [step-4.5-grind] [codified]_
+
+
+### [codified] DISCOVERY-FIRST-BEATS-FIX-THE-REPORTED-LIST: an exhaustive enumeration found four times as many occurrences as review had reported
+
+**Pattern.** Window 51/52/53's adversarial passes reported 18 actionable findings for "pile 2" (2 HIGH + 12 MEDIUM/LOW stale-claim instances, plus some INFO). When CLASS-LEVEL-STALE-CLAIM-SWEEP was authorized to fix pile 2 exhaustively rather than point-by-point, a discovery-first enumeration pass -- grepping every occurrence of the stale claims' underlying facts (gate arity, assertion counts, retired mechanism names) across a perimeter widened to include `docs/specs/` -- found **101 stale occurrences total, 70 of which no review pass had ever named**. Fixing only the 18 reported findings would have corrected roughly 18% of the real surface and left the remaining 82% reading as verified-current, which is arguably worse than leaving it visibly unreviewed.
+
+**Root cause.** Adversarial review passes sample; they do not enumerate. A pass with a fixed time/context budget finds representative instances of a defect class, not the complete set, especially when the same underlying fact (an assertion count, a mechanism description) is restated at many sites across specs, stories, and code comments. Treating "the findings a review reported" as "the complete defect surface" is a category error -- the review's job is to prove the class of defect exists, not to enumerate every instance of it.
+
+**Prescription (actionable, applies whenever a fix is scoped from a list of adversarial findings covering a restated-fact class):**
+
+> Before fixing findings one-by-one, ask whether the underlying fact each finding restates (a count, a mechanism name, a status label) appears anywhere else the review didn't look. If so, do not scope the fix to the reported findings -- run a discovery-first enumeration (grep/search for every restatement of the fact across the full corpus, including any location classes not yet in the correction perimeter) and fix the complete set in one sweep. A review's finding count is a lower bound on the true surface, never an upper bound.
+
+**Disposition:** applied in CLASS-LEVEL-STALE-CLAIM-SWEEP -- discovery-first enumeration found 101 occurrences against 18 reported; all 101 fixed in commit `7f8723a5` plus companion spec/story edits, closing three drift items and updating three more.
+
+_Trigger: CLASS-LEVEL-STALE-CLAIM-SWEEP (2026-08-07) -- human authorized one exhaustive sweep instead of another targeted fix round, and the resulting enumeration ratio (101 vs 18) became the strongest evidence yet for TARGETED-FIX-ROUNDS-DO-NOT-CONVERGE._
+_Tagged: [remediation-strategy] [discovery-first] [correction-perimeter] [soh-dx-1] [step-4.5-grind] [codified]_
+
+### [codified] VERIFICATION-CAN-OVERTURN-THE-INSTRUCTION-THAT-DEMANDED-IT: naive arithmetic in a dispatch instruction was corrected by the verification the instruction itself required
+
+**Pattern.** The orchestrator instructed the product-owner that EC-CIGATE-003's "nine (now eleven)" assertion count would become "seventeen" once the total reached 18, and explicitly told the product-owner to verify this rather than assume it. The naive arithmetic was `18 - 1 = 17` (one assertion, the direct `"${total}" -eq 0` text-pin, targets the deleted block). Verification found **sixteen**, not seventeen: at eighteen total assertions, TWO assertions now target the zero-test-floor block -- the original text-pin plus a new per-branch `exit 1` pin (`ADV-P51-MED-001`'s `extract_if_block`-scoped assertion) added in a prior burst, which the orchestrator's dispatch instruction had not accounted for.
+
+**Root cause.** The orchestrator's instruction was derived from the OLD assertion-count relationship (one assertion per targeted block) without re-deriving it against the CURRENT guard structure, which had grown a second, independent assertion over the same block in an intervening fix round. An instruction that says "verify this" is not itself exempt from being wrong -- it is a hypothesis, not a fact, and the verification step exists precisely to catch cases like this one where the underlying structure changed since the instruction was formed.
+
+**Prescription (actionable, applies to any dispatch instruction that states an expected verification outcome, even when it explicitly asks the recipient to verify):**
+
+> Treat an orchestrator-supplied "expected result, please verify" as a hypothesis with no epistemic privilege over the verification itself. When verification and instruction disagree, the verification wins and the disagreement is worth recording explicitly (not silently reconciled) -- it demonstrates the verification step is doing real work, not rubber-stamping. Re-derive count relationships from the current structure every time, never by incrementing a delta against a remembered baseline that may itself be stale.
+
+**Disposition:** applied in CLASS-LEVEL-STALE-CLAIM-SWEEP -- EC-CIGATE-003's "assertions unaffected by this deletion" count corrected from the instructed seventeen to the verified sixteen, with the disagreement recorded rather than silently reconciled.
+
+_Trigger: CLASS-LEVEL-STALE-CLAIM-SWEEP (2026-08-07) -- the orchestrator's own instruction to the product-owner was overturned by the verification it demanded, closing part of BC-X.13.007's EC-CIGATE-003 gap._
+_Tagged: [verification-discipline] [instruction-fallibility] [bc-x-13-007] [soh-dx-1] [step-4.5-grind] [codified]_
+
+### [codified] PARTIAL-EDITS-ARE-SELECTIVE-CORRECTION-IN-DISGUISE: a mid-edit failure left a story reading as finished while its trails stayed stale
+
+**Pattern.** During CLASS-LEVEL-STALE-CLAIM-SWEEP, an agent working on S-626-1 died mid-edit: the story's version number had already been bumped and a new file (`docs/specs/cargo-mutants-policy.md`) had already been declared in `files_modified`, but the two commit trails (whole-file and step-content scope) were still at their pre-sweep numbers. Read casually, the story looked complete -- version bumped, new file declared -- but the trails were quietly wrong, an instance of exactly the class of defect (`TRAIL-DERIVATION-UNGUARDED`) this same burst was trying to close elsewhere.
+
+**Root cause.** A version bump and a file declaration are cheap, single-field edits that are easy to make atomically. A commit-trail re-derivation is a multi-step operation (re-run `git log`, re-count, re-cite at every surface) that can fail partway through without leaving any visible signal that it's incomplete -- there is no "half-bumped version number" tell, but there is very much a "half-updated trail" state, and it looks identical to a fully-updated one unless someone re-runs the derivation command. This is the same hazard shape as selective correction (fixing some occurrences of a stale claim and not others) but produced by an interrupted single-agent edit rather than a scoping decision.
+
+**Prescription (actionable, applies to any remediation step that touches multiple hand-maintained, mechanically-derivable fields in one file):**
+
+> Never trust a recorded count or trail as evidence of completeness -- re-run the derivation command (`git log --format='%h' <base>..<head> -- <file>`, or equivalent) and diff it against what's recorded, every time, regardless of whether the surrounding edit "looks" finished. A version bump or a new-file declaration is not proof that dependent derived fields were actually re-derived; they can be updated independently and are not a reliable completeness signal for each other.
+
+**Disposition:** identified during CLASS-LEVEL-STALE-CLAIM-SWEEP's v1.29/v1.30 catch-up pass on S-626-1; the partial state was caught and completed before commit. Opened as new drift item `PARTIAL-EDIT-LOOKS-COMPLETE` (MEDIUM, OPEN) -- the mechanical fix is the same one already specified for `TRAIL-DERIVATION-UNGUARDED`: `S-TRAIL-DERIVATION-GUARD-1`'s AC-002/AC-003 already require verifying against the derivation command, not a recorded number.
+
+_Trigger: CLASS-LEVEL-STALE-CLAIM-SWEEP (2026-08-07) -- a mid-edit failure on S-626-1 left version/file-declaration fields updated but commit trails stale, the same hazard shape as the selective-correction defect this burst was closing._
+_Tagged: [remediation-process] [partial-edit] [trail-derivation] [soh-dx-1] [step-4.5-grind] [codified]_

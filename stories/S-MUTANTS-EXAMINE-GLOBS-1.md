@@ -50,10 +50,22 @@ implementation_strategy: tdd
 module_criticality: LOW
 acceptance_criteria_count: 6
 assumption_validations: []
-risk_mitigations: []
+risk_mitigations:
+  - "CORRECTION (v1.4, 2026-08-07, class-level correction sweep): five sites citing a
+     '90-minute' CI budget for `ci.yml :: mutants` corrected to 240 minutes —
+     `timeout-minutes: 240` shipped on develop via commit `efa8b5d9` (2026-07-20), before
+     this story's `last_updated` of 2026-08-04, so the story was already stale when last
+     touched. Corrected: the Scope-classification worst-case-cost sentence; the
+     §Absolute Timeout Ceiling policy-section-topic row (flagging that
+     `docs/specs/cargo-mutants-policy.md`'s own prose still says 90 minutes in several
+     places — that document is out of scope for this story); the MUTANTS-SHARDING-PATH-B
+     interaction note (two mentions); and the Regression Risk table's CI-budget row. The
+     pre-existing note recording the historical `60 → 90` `timeout-minutes` change as a
+     separate prior drift item is unchanged — it is correctly framed as history, not a
+     current-state claim."
 created: "2026-07-02"
-version: "1.3"
-last_updated: "2026-08-04"
+version: "1.4"
+last_updated: "2026-08-07"
 breaking_change: false
 retroactive: false
 origin: >
@@ -134,7 +146,9 @@ PR #533), both policy-doc-only CI-infrastructure stories with empty `bcs:`.
 **Scope classification:** CI-config + doc governance only. No production `src/` change. No test
 change. The mutation gate on the fix PR itself passes via the 0-mutant path (config/doc diff
 generates no code mutants — DEC-144 precedent). Worst-case CI cost increase: +58 min on a
-full-file `edit.rs` PR; +5 min on any `jsm_create.rs` PR — both within the 90-minute budget.
+full-file `edit.rs` PR; +5 min on any `jsm_create.rs` PR — both within the 240-minute budget
+(corrected 2026-08-07 from "90-minute" — `ci.yml :: mutants` ships `timeout-minutes: 240`,
+landed on develop in `efa8b5d9`, 2026-07-20).
 
 ---
 
@@ -172,7 +186,7 @@ than a BC clause.
 |---------------|-------|
 | §Scope | examine_globs list; rationale for each scoped file; function-location table |
 | §CI Integration | --in-diff + examine_globs double-gate; 0-mutant legitimate path; base-ref-drift guard |
-| §Absolute Timeout Ceiling | 90-minute wall-clock budget; split-PR signal at 200+ mutants |
+| §Absolute Timeout Ceiling | 240-minute wall-clock budget (corrected 2026-08-07 — `ci.yml :: mutants` ships `timeout-minutes: 240`, landed `efa8b5d9`, 2026-07-20; NOTE: `docs/specs/cargo-mutants-policy.md`'s own prose still states "90 minutes" in several places as of this read — that document is out of scope for this story to edit; flagged for its own maintenance pass); split-PR signal at 200+ mutants |
 
 ---
 
@@ -393,9 +407,11 @@ on PR #568 at ~34s) is documented in this story and carried forward in the deliv
 
 MUTANTS-SHARDING-PATH-B interaction note: adding ~108 mutants (edit.rs + jsm_create.rs) increases
 total scope from ~594 to ~702 mutants (+18%). This does NOT accelerate the need for Path B — the
-90-minute budget constraint is driven by `adf.rs` alone (351 mutants, ~3.4 hours for a full-file
-PR). Path B trigger condition is unchanged: when a PR produces a `timeout` outcome or the 90-minute
-wall-clock budget is exceeded in practice. No Path B story needs to be opened in parallel.
+240-minute budget (corrected 2026-08-07 from "90-minute" — `ci.yml :: mutants` ships
+`timeout-minutes: 240`, landed `efa8b5d9`, 2026-07-20) constraint is driven by `adf.rs` alone
+(351 mutants, ~3.4 hours for a full-file PR). Path B trigger condition is unchanged: when a PR
+produces a `timeout` outcome or the 240-minute wall-clock budget is exceeded in practice. No
+Path B story needs to be opened in parallel.
 
 ---
 
@@ -405,7 +421,7 @@ wall-clock budget is exceeded in practice. No Path B story needs to be opened in
 |------|------|-----------|
 | PRs not touching edit.rs/jsm_create.rs | NONE | `--in-diff` bounds cost to changed lines; zero new mutants on unrelated PRs |
 | First code-change PR to edit.rs post-merge | LOW-MEDIUM | May surface surviving mutants requiring `#[mutants::skip]` with justification or targeted test strengthening; this is expected and appropriate — the desired behavior of the gate |
-| 90-minute CI budget | LOW | Worst-case full-edit.rs PR (~99 mutants, ~58 min) fits within budget; split-PR signal fires if combined with large adf.rs change (~351+~99=~450 mutants, ~263 min) |
+| 240-minute CI budget (corrected 2026-08-07 from "90-minute" — `ci.yml :: mutants` ships `timeout-minutes: 240`, landed `efa8b5d9`, 2026-07-20) | LOW | Worst-case full-edit.rs PR (~99 mutants, ~58 min) fits within budget; split-PR signal fires if combined with large adf.rs change (~351+~99=~450 mutants, ~263 min — still exceeds the 240-minute budget) |
 | ci-gate false-block | NONE | No changes to ci-gate logic, timeout, or false-green guards |
 | Policy doc / config divergence | NONE | AC-001 + AC-002 are paired; self-verify step 5 confirms consistency before commit |
 

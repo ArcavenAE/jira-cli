@@ -5,7 +5,10 @@ epic_id: "none"
 story_id: "S-CIGATE-2"
 title: "ci-gate skipped-status false-green — a `needs` job reporting `skipped` silently satisfies the sole required branch-protection check"
 wave: feature-followup
-status: draft
+status: done  # v2.1, 2026-08-07: Option C shipped as PR #671 (merged 2026-08-07T00:01:18Z;
+              # scripts/check-ci-gate.sh confirmed present on origin/develop, ci.yml :: ci-gate
+              # and :: spec-guard confirmed invoking it). Corrected from draft; "done" matches
+              # this epic's sibling-story convention (S-CIGATE-1, S-CIGATE-4).
 intent: bug-fix
 feature_type: ci
 mode: feature
@@ -26,7 +29,7 @@ inputs:
   - "live CI run 30465686049 (gh run view, push/develop, 2026-07-29)"
 input-hash: "f8aa18a"
 traces_to: ".github/workflows/ci.yml::ci-gate"
-version: "2.0"
+version: "2.1"
 estimated_effort: standard
 estimated_days: 2.5
 target_module: ci
@@ -69,8 +72,22 @@ risk_mitigations:
      reviewer would read from that job name. See 'Corrections to the Originating Brief(s)'
      and the retired 'Option A'/'Option B' write-ups below (kept for record, not deleted,
      per this repo's decision-record convention) for the full analysis trail."
+  - "REVISION v2.1 (2026-08-07, class-level correction sweep): status corrected draft→done.
+     Option C shipped as PR #671 ('fix(ci-gate): close skipped-status false-green gap in
+     required check (S-CIGATE-2)'), merged to develop at 2026-08-07T00:01:18Z (commit
+     `df203233`), confirmed via `gh pr view 671 --json state,mergedAt` (state: MERGED). Verified
+     directly against `origin/develop`, not assumed from the merge record alone:
+     `scripts/check-ci-gate.sh` exists on `origin/develop` (`git show origin/develop:scripts/check-ci-gate.sh`
+     resolves, doc-header confirms 'S-CIGATE-2 fail-closed `ci-gate` needs-result evaluator');
+     `.github/workflows/ci.yml :: spec-guard` on `origin/develop` invokes it at two sites
+     (`bash scripts/check-ci-gate.sh --self-test` and `echo \"${NEEDS_JSON}\" | bash
+     scripts/check-ci-gate.sh`). No body content in this story was found stale by this pass —
+     every `contains(needs…)` occurrence in the body is a pre-fix problem statement, a
+     rejected-option analysis, or an explicit quotation of S-CIGATE-1's stale text, and is
+     correctly framed as such already; none was edited. `S-CIGATE-1-ci-gate-aggregator.md` is
+     owned by a concurrently-running agent and was not read or touched."
 created: "2026-08-06"
-last_updated: "2026-08-06"
+last_updated: "2026-08-07"
 breaking_change: false
 files_modified:
   - .github/workflows/ci.yml          # MODIFY: ci-gate's step body replaced with a call to scripts/check-ci-gate.sh over toJSON(needs); spec-guard gains two new steps (self-test + real invocation) mirroring the existing check-cargo-mutants-policy-citations/check-bc-citation-symbols self-test pairing pattern. mutants job UNCHANGED.

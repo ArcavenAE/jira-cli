@@ -3,7 +3,7 @@ document_type: story
 story_id: "S-MAINT-DEAD-CITATION-CI"
 title: "Add CLAUDE.md dead-citation CI guard (tests/claude_md_citations.rs + doc-fallout note)"
 wave: feature-followup
-status: draft
+status: delivered
 intent: feature
 feature_type: infrastructure
 mode: feature
@@ -45,11 +45,27 @@ acceptance_criteria_count: 12
 assumption_validations: []
 risk_mitigations: []
 created: "2026-06-19"
-version: "1.0"
-last_updated: "2026-06-19"
+version: "1.2"
+last_updated: "2026-08-07"
 changelog:
   - "1.0 (2026-06-19): Initial draft — originated from 2026-06-19 maintenance sweep MAINT-PG-DEAD-CITATION-CI; BC-X.13.001/002/003 authored in F2 cross-cutting.md."
   - "1.1 (2026-06-19): F3 adversarial + consistency pass — AC-010 (multi-dead-path fixture, F-2 HIGH), AC-011 (extension-filter negatives, F-3 MED), AC-012 (EC-CITE-002 comma + EC-CITE-003 CRLF, F-4 MED); AC-005 grep-as-test replaced by behavioral isolation tests only (F-5 MED); OBS-001 holdout prose 57→60."
+  - "1.2 (2026-08-07, class-level correction sweep): status corrected draft→delivered.
+     `tests/claude_md_citations.rs` ships at develop HEAD (introduced by PR #544, hardened
+     by PR #545 and PR #661) and CLAUDE.md's 'AI Agent Notes' section carries the
+     `tests/claude_md_citations.rs` doc-fallout note per AC-009 — verified directly
+     (`git log --oneline -- tests/claude_md_citations.rs` on `origin/develop` shows all
+     three commits; the file is present in the working tree). Status convention matched to
+     this repo's closest sibling story, `S-BC-CITATION-GUARD-1.md` (another shipped
+     CI-citation-guard story), which uses `status: delivered`. **Flagged, not fixed (out of
+     scope for this correction pass):** this story predates the current story template and
+     is missing several now-mandatory frontmatter keys (`cycle`, `epic_id`, `input-hash`,
+     `inputs`, `level`, `phase`, `producer`, `timestamp`, `traces_to`) and sections
+     (Architecture Mapping, Purity Classification, Token Budget Estimate is present but the
+     validator additionally expects the other two) — a `validate-template-compliance` guard
+     flagged this on save. This is pre-existing template drift unrelated to the stale-status
+     defect this pass was scoped to fix; a full `/vsdd-factory:conform-to-template` pass is
+     a separate, larger task and was not attempted here."
 breaking_change: false
 lineage: []
 drift_items:

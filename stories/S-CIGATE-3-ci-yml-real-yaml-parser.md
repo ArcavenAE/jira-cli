@@ -4,7 +4,7 @@ level: ops
 story_id: "S-CIGATE-3"
 epic_id: "none"
 title: "Replace tests/ci_gate_completeness.rs's line-based YAML extraction with a real YAML parser"
-version: "1.0"
+version: "1.1"
 producer: story-writer
 timestamp: "2026-08-06T00:00:00"
 phase: 3
@@ -59,8 +59,17 @@ risk_mitigations:
      before any Cargo.toml change, because MSRV 1.85 + `cargo deny check` compliance are
      both load-bearing CI gates in this repo and `serde_yaml` (the obvious first guess) is
      unmaintained (see AC-001)."
+  - "CORRECTION (v1.1, 2026-08-07, class-level correction sweep): `.github/workflows/ci.yml`
+     grew from 445 to 675 LOC and `tests/ci_gate_completeness.rs` grew from 750 to 5,214 LOC
+     between this story's authoring (2026-08-06) and develop HEAD `3ad496eb` (2026-08-07) —
+     S-CIGATE-2/PR #671 merged in the interim, and S-626-1's in-flight rounds also landed
+     content on both files. Token Budget Estimate, Story Points and Effort, Purity
+     Classification, and Architecture Mapping corrected in place (see those sections for
+     detail and derivation). `status: draft` is unchanged and correct — the parser refactor
+     itself has not shipped; only the pre-existing file sizes this story measures against
+     had drifted."
 created: "2026-08-06"
-last_updated: "2026-08-06"
+last_updated: "2026-08-07"
 breaking_change: false
 files_modified:
   - tests/ci_gate_completeness.rs   # MODIFY: parse ci.yml once via the chosen approach; assert structure over the parsed tree; retain today's byte-for-byte scalar pins as a SECOND assertion layer over parsed values, not a replacement
@@ -221,12 +230,13 @@ choice implicit in a diff.
 | Parsed-tree structural assertions | `tests/ci_gate_completeness.rs` | pure-core | Reads `ci.yml` as bytes, parses via the chosen YAML approach, and asserts on the resulting tree/values only — no network, no filesystem writes, no `cargo mutants` invocation |
 | Byte-for-byte scalar pins (second layer) | `tests/ci_gate_completeness.rs` | pure-core | Asserts exact string equality on scalar values read out of the parsed tree — hermetic and deterministic given a fixed `ci.yml` |
 | `ci-gate` / `mutants` / `spec-guard` job definitions | `.github/workflows/ci.yml` | effectful-shell (CI config, not Rust) | Unmodified by this story — this story only changes how the job definitions are *asserted against* in tests, not the definitions themselves |
+| `run_check_ci_gate_sh` shell-out helper (pre-existing, added FIX correction 2026-08-07 — previously undeclared here) | `tests/ci_gate_completeness.rs` | effectful (process spawn + pipe I/O) | Added by S-CIGATE-2 / PR #671 (merged 2026-08-07), NOT by this story. Spawns `bash scripts/check-ci-gate.sh` via `std::process::Command`, `#[cfg(unix)]`-gated, called by three tests. This story does not add, remove, or modify it, but its presence means `tests/ci_gate_completeness.rs` as a whole is not uniformly pure-core at head — see the Purity Classification row's correction below |
 
 ## Purity Classification
 
 | Module | Classification | Justification |
 |--------|-----------------|----------------|
-| `tests/ci_gate_completeness.rs` | pure-core | Reads `ci.yml` as a string/bytes and asserts on parsed structure and scalar values only; no network calls, no script execution, no filesystem writes beyond reading the one tracked file — fully hermetic and deterministic given a fixed `ci.yml`, matching this file's existing classification (unchanged by this story) |
+| `tests/ci_gate_completeness.rs` | mixed (corrected from "pure-core", 2026-08-07 — see Justification) | The file is NOT already fully hermetic at head. `run_check_ci_gate_sh` (`#[cfg(unix)]`, added by S-CIGATE-2 / PR #671, merged 2026-08-07) spawns a `bash` subprocess via `std::process::Command::new("bash")` to invoke `scripts/check-ci-gate.sh`, and three `#[cfg(unix)]`-gated tests call it; `run_check_ci_gate_sh` is not hermetic-pure by any definition — it does process spawn plus stdin/stdout/stderr I/O. This story's OWN additions (the parsed-tree structural assertions and scalar pins over `ci.yml`) remain pure-core as described — reads `ci.yml` as a string/bytes and asserts on parsed structure and scalar values only, no network calls, no script execution, no filesystem writes beyond reading the one tracked file — but the file as a whole is mixed, not uniformly hermetic, and this story does not change that (it neither adds nor removes the `run_check_ci_gate_sh` shell-out) |
 | The chosen YAML-parsing dependency (crate or shelled-out interpreter) | pure-core (crate) / effectful-shell (shell-out) | A crate-based parser is a pure, in-process function call (no I/O beyond reading the already-open file). The shell-out alternative (invoking `python3`/PyYAML as a subprocess) would be effectful — this classification difference is itself an input to the AC-001 evaluation, since a pure-core-preserving choice is preferable, all else equal |
 
 ## Token Budget Estimate (MANDATORY)
@@ -234,19 +244,22 @@ choice implicit in a diff.
 | Context Source | Estimated Tokens |
 |-----------------|-------------------|
 | This story spec | ~4,500 |
-| `.github/workflows/ci.yml` (current, 445 LOC) | ~4,800 |
-| `tests/ci_gate_completeness.rs` (develop HEAD, 750 LOC; up to ~3,900 LOC on the not-yet-merged `S-CIGATE-2` branch — re-read at implementation time) | ~9,000–45,000 (wide range depending on merge-time file size) |
+| `.github/workflows/ci.yml` (corrected 2026-08-07: 445 LOC → 675 LOC at develop HEAD `3ad496eb` — S-CIGATE-2/PR #671 and S-626-1's in-flight rounds both landed content since the 445 figure was recorded; re-verified via `wc -l`) | ~7,300 |
+| `tests/ci_gate_completeness.rs` (corrected 2026-08-07: the "develop HEAD, 750 LOC; up to ~3,900 LOC on the not-yet-merged `S-CIGATE-2` branch" framing is stale on two counts — S-CIGATE-2 merged as PR #671 on 2026-08-07, and the file is 5,214 LOC at develop HEAD `3ad496eb`, beyond the previously-anticipated ~3,900 LOC upper bound; re-verified via `wc -l`) | ~60,000 |
 | `S-CIGATE-1` / `S-CIGATE-2` story files (cross-reference for Previous Story Intelligence) | ~5,000 |
 | Candidate YAML crate docs (`saphyr` / `yaml-rust2`) research overhead | ~2,000 |
-| **Total** | **~25,300–61,300** |
+| **Total** | **~78,800 (corrected 2026-08-07, up from ~25,300–61,300)** |
 | Agent context window | 200K (Sonnet) |
-| **Budget usage** | **~13–31%** |
+| **Budget usage** | **~39% (corrected 2026-08-07, up from ~13–31%)** |
 
-At the upper end of the range (if implementation begins before `tests/ci_gate_completeness.rs`
-has been trimmed post-merge), this approaches the 20–30% target ceiling — the implementer
-should re-check actual file size at dispatch time and consider splitting the rewrite (e.g.
-one pass per job-block's assertions) if the file has grown substantially beyond the 3,900 LOC
-observed on the frozen branch.
+**Corrected 2026-08-07:** `tests/ci_gate_completeness.rs` at develop HEAD `3ad496eb` is 5,214
+LOC — already beyond the 3,900 LOC figure this section previously flagged as a ceiling to
+watch for. At ~39% of the 200K Sonnet context window, this story is now ABOVE the 20–30%
+target ceiling this template enforces, not merely "approaching" it. The implementer MUST
+re-check actual file size at dispatch time (it may have grown further) and split the rewrite
+(e.g. one pass per job-block's assertions) rather than attempting it as a single pass — this
+is no longer a conditional recommendation for the upper end of a range, it is the expected
+path given the file's current size.
 
 ## Acceptance Criteria
 
@@ -377,8 +390,10 @@ dispatched until `S-CIGATE-2`'s PR #671 merges to `develop`.**
 
 **8 story points** (standard). Breakdown:
 - Library/approach evaluation (AC-001), documented with rejected-alternative rationale: 2 SP
-- F4 TDD (parse-tree rewrite of ~750–3,900 LOC of assertions depending on merge-time file
-  size, dual-layer byte-pin retention, RED-proof cycle for AC-005): 5 SP
+- F4 TDD (parse-tree rewrite of assertions — file is 5,214 LOC at develop HEAD `3ad496eb`,
+  corrected 2026-08-07 from the "~750–3,900 LOC depending on merge-time file size" estimate,
+  which predated S-CIGATE-2's merge; dual-layer byte-pin retention, RED-proof cycle for
+  AC-005): 5 SP
 - F5/F7 review + CI verification: 1 SP
 
 Risk: MEDIUM — this lands in the same heavily-adversarially-reviewed file
