@@ -4,7 +4,7 @@ level: ops
 story_id: "S-CIGATE-1"
 epic_id: "none"
 title: "ci.yml `ci-gate` aggregator job as single required status check"
-version: "1.1"
+version: "1.2"
 producer: story-writer
 timestamp: "2026-06-15T00:00:00"
 phase: 3
@@ -49,7 +49,7 @@ acceptance_criteria_count: 6
 assumption_validations: []
 risk_mitigations: []
 created: "2026-06-15"
-last_updated: "2026-08-06"
+last_updated: "2026-08-07"
 breaking_change: false
 files_modified:
   - .github/workflows/ci.yml              # ADD ci-gate aggregator job (~20 lines)
@@ -107,7 +107,7 @@ Well within 20% agent context window budget. No splitting required.
 | Rule | Source | Constraint |
 |------|--------|-----------|
 | `if: ${{ always() }}` is load-bearing | F1 delta analysis §4 (Skipped-Job Trap) | The `ci-gate` job MUST carry `if: ${{ always() }}`. Without it, a failed upstream causes `ci-gate` to be SKIPPED (not failed), which GitHub branch-protection evaluates as SUCCESS — the worst failure mode: a broken upstream silently permits merge. |
-| Pass/fail step exits 1 on `failure` or `cancelled` | F1 delta analysis §4 | The gate step MUST exit 1 when `contains(needs.*.result, 'failure')` is true OR `contains(needs.*.result, 'cancelled')` is true. It does NOT reject `skipped` — at authoring time, all six `needs` jobs ran unconditionally on both push and PR events, so `skipped` was not possible for them. **[STALE COUNT — corrected 2026-08-06, S-CIGATE-4]:** `ci-gate.needs` has grown to **eight** jobs (`check-signing-workflow-injection` per `S-FORK-OPS-SIGN-1`; `mutants` per `S-MUTATION-CI-TIMEOUT-1`, added since this story was authored), and `mutants` now DOES report `skipped` on every push by design — see the CORRECTION note on the row immediately below. |
+| Pass/fail step exits 1 on `failure` or `cancelled` | F1 delta analysis §4 | The gate step MUST exit 1 when `contains(needs.*.result, 'failure')` is true OR `contains(needs.*.result, 'cancelled')` is true. It does NOT reject `skipped` — at authoring time, all six `needs` jobs ran unconditionally on both push and PR events, so `skipped` was not possible for them. **[STALE COUNT — corrected 2026-08-06, S-CIGATE-4]:** `ci-gate.needs` has grown to **eight** jobs (`check-signing-workflow-injection` per `S-FORK-OPS-SIGN-1`; `mutants` per `S-MUTATION-CI-TIMEOUT-1`, added since this story was authored), and `mutants` now DOES report `skipped` on every push by design. **[FALSE PREMISE CORRECTED — 2026-08-07, ADV-P49-LOW-001]:** the sentence above is kept verbatim as the historical record of what was true at authoring time (2026-06-15) — it is now FALSE as a claim about the current job set, not merely stale: `mutants` is a member of `needs` and carries a job-level `if: github.event_name == 'pull_request'`, so it genuinely DOES report `skipped` on every push, exactly the condition the sentence above says cannot happen. The pass/fail design still holds today, but for a different, current reason that the sentence above never stated: it does not hold because `skipped` cannot occur — it holds because the mechanism that decides the gate is no longer the inline `contains()` condition described in this row's own title at all. Since `S-CIGATE-2` (PR #671), the `ci-gate` job's step runs `scripts/check-ci-gate.sh::evaluate_needs` (verified against the shipped `.github/workflows/ci.yml :: ci-gate` job on `develop`), a fail-closed evaluator: a job result of `success` passes; `skipped` passes ONLY for a job named in the restrictive `ALLOWED_SKIPS` allowlist declared in that script (currently `mutants` alone); every other value — `failure`, `cancelled`, an unlisted `skipped`, or any result string the evaluator has never seen before — fails via a default `case` arm, not an enumerated list of known-bad values. `mutants` reporting `skipped` on every push is therefore a deliberately tolerated, explicitly named exception (`scripts/check-ci-gate.sh::is_allowed_skip`), not an accidental gap the original reasoning happened to get away with. See AC-003's correction blockquote below for the companion `needs`-membership history, and `scripts/check-ci-gate.sh` directly for the evaluator itself. |
 | PR-only jobs excluded from `needs` | F1 delta analysis §4 | `security` and `mutants` carry `if: github.event_name == 'pull_request'` and emit `skipped` on push events. Including them in `ci-gate.needs` would make every push-triggered `ci-gate` fail. They MUST NOT be in `needs`. **[CORRECTION — 2026-08-06, S-CIGATE-4]:** This row is superseded for `mutants`; see the AC-003 blockquote below for the full correction and rationale. `security` is unaffected — it remains correctly excluded from `needs`. |
 | `spec-guard` IS included in `needs` | Human gate decision (DEC-101) | `spec-guard` has no `if:` guard and runs on both push and PR. The human gate decision promotes it to a blocking check via the aggregator. It MUST be in `ci-gate.needs`. |
 | `name: CI Gate` in job definition | F1 delta analysis §5 | Setting `name: CI Gate` produces the human-readable branch-protection context string `"CI Gate"`. If `name:` is omitted, the context string would be `"ci-gate"`. The branch-protection migration PATCH must use `"CI Gate"` to match. |
@@ -154,6 +154,23 @@ name/runs-on/`if:`)
 > `S-MUTATION-CI-TIMEOUT-1`). The title is left as historical record rather than rewritten;
 > see the AC-003 correction below for the substantive change (`mutants` now deliberately
 > tolerates `skipped`, not just `success`, under `S-CIGATE-2`'s fix).
+>
+> **[FALSE PREMISE CORRECTED — 2026-08-07, ADV-P49-LOW-001]:** the Architecture Compliance
+> Rules table's companion row ("Pass/fail step exits 1 on `failure` or `cancelled`") gave, as
+> its reason `skipped` needed no explicit handling, the claim that "all six `needs` jobs ran
+> unconditionally on both push and PR events, so `skipped` was not possible for them." That
+> claim is FALSE at this head — `mutants` is in `needs` and carries `if:
+> github.event_name == 'pull_request'`, so it DOES report `skipped` on every push, by design.
+> The pass/fail design nonetheless still holds, for a reason not previously stated at either
+> site: since `S-CIGATE-2` (PR #671), the gate no longer decides pass/fail via the inline
+> `contains(needs.*.result, 'failure'/'cancelled')` condition this AC describes — that
+> condition was retired in favor of `scripts/check-ci-gate.sh::evaluate_needs`, a fail-closed
+> evaluator verified against the shipped `.github/workflows/ci.yml :: ci-gate` job on
+> `develop`. It treats `success` as pass; `skipped` as pass ONLY for a job named in its
+> restrictive `ALLOWED_SKIPS` allowlist (`mutants` alone today); and every other value —
+> `failure`, `cancelled`, an unlisted `skipped`, or an unrecognized result string — as fail,
+> via a default arm rather than an enumerated list of known-bad values. See the Architecture
+> Compliance Rules table's matching correction above for the same fix at its origin site.
 
 The `ci-gate` job contains a step that exits 1 when `contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled')`. The step carries `if: ${{ contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled') }}` so it is skipped (and the job passes) when all `needs` results are `success`.
 
