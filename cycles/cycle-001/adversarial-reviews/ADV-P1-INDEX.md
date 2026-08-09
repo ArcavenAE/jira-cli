@@ -1,22 +1,22 @@
 ---
 document_type: adversarial-review-index
 level: ops
-version: "2.12"
+version: "2.13"
 status: in-review
 producer: adversary
-timestamp: 2026-08-07T22:30:00Z
+timestamp: 2026-08-09T19:35:00Z
 phase: "5"
-pass: 53
-inputs: [.factory/stories/S-626-1.md, .factory/stories/S-CIGATE-1-ci-gate-aggregator.md, .factory/stories/S-CIGATE-2-skipped-status-false-green.md, .factory/stories/S-640-1.md, .factory/stories/S-641-1.md, .factory/stories/S-MUTANTS-EXAMINE-GLOBS-1.md, .factory/stories/S-TRAIL-DERIVATION-GUARD-1.md, .factory/stories/STORY-INDEX.md, .factory/specs/prd/cross-cutting.md, .github/workflows/ci.yml, tests/ci_gate_completeness.rs, tests/cli_handler.rs, tests/common/yaml.rs, tests/mutants_glob_existence.rs, docs/specs/cargo-mutants-policy.md, CLAUDE.md, Cargo.toml, CHANGELOG.md, live CI run 30465686049, branch protection API]
+pass: 56
+inputs: [.factory/stories/S-626-1.md, .factory/stories/S-CIGATE-1-ci-gate-aggregator.md, .factory/stories/S-CIGATE-2-skipped-status-false-green.md, .factory/stories/S-640-1.md, .factory/stories/S-641-1.md, .factory/stories/S-MUTANTS-EXAMINE-GLOBS-1.md, .factory/stories/S-TRAIL-DERIVATION-GUARD-1.md, .factory/stories/STORY-INDEX.md, .factory/specs/prd/cross-cutting.md, .github/workflows/ci.yml, tests/ci_gate_completeness.rs, tests/cli_handler.rs, tests/common/yaml.rs, tests/mutants_glob_existence.rs, scripts/check-ci-gate.sh, docs/specs/cargo-mutants-policy.md, CLAUDE.md, Cargo.toml, CHANGELOG.md, live CI run 30465686049, branch protection API, PyYAML 6.0.3 (pass-55 differential), standalone rustc reproductions (pass-56)]
 traces_to: .factory/stories/S-626-1.md
-total_findings: 395
-severity_distribution: { CRIT: 0, HIGH: 28, MED: 118, LOW: 139, INFO: 110 }
+total_findings: 419
+severity_distribution: { CRIT: 0, HIGH: 31, MED: 126, LOW: 146, INFO: 116 }
 story: S-626-1
 cycle: cycle-001
-feature_head: ada50a34 (regression-pin catch-up on fix round 20, unchanged this burst — window 51/52/53 dispatched against this same frozen head, per DEC-242, with concurrency disclosed per the DEC-216 precedent; no fix round applied this burst)
+feature_head: 910b8ab0 (class sweep closing window 54/55/56, DEC-251 — feature branch head advances from `ada50a34`/`0e61a2dc` this burst; no adversarial pass has yet reviewed this new head)
 pr: 667
 basis: TRUE ADVERSARY AGENT (not a DEC-190 substitute)
-convergence: 0 of 3 (Step 4.5 window — DEC-199 GRIND to 3/3 CLEAN; window 51/52/53 CLOSED 0/3 — pass-51 NOT CLEAN (3H+2M+1L+2I), pass-52 NOT CLEAN (0H+7M+2L+2I), pass-53 NOT CLEAN (2H+5M+3L+1I); three deliberately-varied inspection frontiers, human-approved before dispatch per DECAY-CURVE-MEASURES-QUESTION-EXHAUSTION-NOT-CONVERGENCE — (51) vacuous satisfaction, (52) reconciliation seams, (53) spec-to-shipped-behavior; DEC-224 ISOLATION ELIGIBILITY PRINCIPLE held — all three ELIGIBLE, no isolation breaches, no pass read .factory/cycles/; 50 passes now recorded; eighth consecutive window without 3/3 since window 30/31/32; no fix round applied this burst)
+convergence: 0 of 3 (Step 4.5 window — DEC-199 GRIND to 3/3 CLEAN; window 54/55/56 CLOSED 0/3 — pass-54 NOT CLEAN (0H+3M+1L+1I), pass-55 NOT CLEAN (1H+4M+2L+1I), pass-56 NOT CLEAN (2H+1M+4L+4I); three deliberately-varied Family-C inspection frontiers, human-approved before dispatch per DEC-248 (C1 bootstrap trust, C2 differential lexer conformance, C5 falsifiability census) after a documented exhaustion survey found the prior Family-C frontiers (passes 30-41) verbatim repeats; 53 passes now recorded; ninth consecutive window without 3/3 since window 30/31/32; all 24 findings closed same-burst as a single class sweep, commit `910b8ab0` (DEC-251), rather than a fix round against a frozen head — see Window 54/55/56 Summary below. Window 51/52/53's own convergence detail (pass-51/52/53 verdicts, frontiers, isolation notes) is preserved unchanged further down in this file.)
 void_spawns: 6 (passes 6/7/8 first-attempt background subagents; pass-9 isolation breach; pass-11 isolation breach; pass-22 isolation breach)
 not_run: 2 (passes 16/17 — superseded by round-5 ruling per DEC-209; see s-626-1-adversary-pass-16.md and s-626-1-adversary-pass-17.md)
 superseded: 1 (pass-20 — superseded per DEC-216; window 18/19/20 CLOSED 0/2)
@@ -1719,5 +1719,101 @@ Pass-53 closed window 51/52/53, run against frozen head `ada50a34`. ELIGIBLE, di
 - **Existing drift items updated:** `TARGETED-FIX-ROUNDS-DO-NOT-CONVERGE` — independently confirmed by pass 53 with no drift-register access; verbatim root-cause sentence recorded: "Because prior correction rounds were driven by individually-reported findings rather than a sweep of every occurrence, the selective-correction pattern is itself the defect." `CLOSED-STORY-CONTRADICTS-SHIPPED-BEHAVIOR` (reopened last burst) — six further instances this window, two of which assert the logical inverse of shipped behavior. `DECAY-CURVE-MEASURES-QUESTION-EXHAUSTION-NOT-CONVERGENCE` — reinforced a FIFTH time, and this time by construction: three deliberately-varied frontiers each found material no prior frontier had, on a tree that passes 15/15 CI. `SPEC-CITATIONS-UNGUARDED-FOR-TEST-SYMBOLS` — third instance (ADV-P53-MED-002, three dead citations to a round-20-renamed test symbol in `.factory/stories/*.md`), no CI guard validates `tests/`-symbol citations there the way `check-bc-citation-symbols.sh` does for `src/` symbols in BC files; tracked as a process-gap needing a follow-up story or a justified deferral per S-7.02 — recorded as a natural scope extension of the already-drafted `S-TRAIL-DERIVATION-GUARD-1`, not a new independent story.
 - **New decision:** **DEC-242** — WINDOW 51/52/53 CLOSED 0/3 (2026-08-07). Three deliberately-varied inspection frontiers, human-approved before dispatch per the DECAY-CURVE-MEASURES-QUESTION-EXHAUSTION-NOT-CONVERGENCE caution: (51) vacuous satisfaction — can an assertion pass while the property it protects is broken; (52) reconciliation seams — what did merging two stories' edits leave inconsistent; (53) spec→shipped behavior — which spec claims are false at this head. All three NOT CLEAN. 30 findings: 5 HIGH, 14 MEDIUM, 6 LOW, 5 INFO. Step 4.5 remains 0/3.
 - **Cycle-closing checklist (S-7.02) — PARTIALLY APPLIED, pending human ruling.** `SPEC-CITATIONS-UNGUARDED-FOR-TEST-SYMBOLS`'s third instance is tracked as a natural scope extension of `S-TRAIL-DERIVATION-GUARD-1` (satisfies the follow-up-story requirement by extension, not a new story). The two new HIGH drift items (`ANTI-NEUTERING-CONTROLS-STOP-AT-CI-GATE`, `GUARD-MANDATES-ITS-OWN-DEFEAT-TOKEN`) and the fourteen MEDIUM/LOW narrative-drift findings are explicitly NOT authorized for a fix round this burst — the orchestrator's recommendation and the open methodology question (DEC-204) are recorded in STATE.md's Session Resume Checkpoint and Pending Human Decisions, not resolved here.
+
+---
+
+## Pass 54 Finding Catalog (Fresh Window DEC-248, frontier C1: bootstrap trust — dispatched against head `0e61a2dc`)
+
+Pass-54 opened window 54/55/56 against the two guards landed directly this burst (`0e61a2dc`) plus everything already shipped. Frontier: does the guard apparatus's own bootstrapping (its self-tests, fixture counts, and self-referential pins) actually earn the trust the rest of the suite places in it, or does some of that trust rest on an assumption never itself verified.
+
+| ID | Severity | Classification | Title | Status | Notes |
+|----|----------|----------------|-------|--------|-------|
+| ADV-P54-MED-001 | MEDIUM | key-detect-value-reparse-swallow | `0e61a2dc`'s new sibling-workflow guard detects the `name:` key with `extract_key_name_at_indent` but re-reads its value with a bare `strip_prefix`, swallowing a quoted/space-before-colon spelling | CLOSED on `910b8ab0` | DUPLICATE of `ADV-P56-MED-001` (same instance, independently found) — closed together by the class sweep, not as two separate point fixes |
+| ADV-P54-MED-002 | MEDIUM | key-detect-value-reparse-swallow | Guard A's `extract_job_display_name` accepts a raw source-byte comparison for quoted `name:` values instead of routing through the same reject-don't-parse idiom used elsewhere in the file | CLOSED on `910b8ab0` | Twin of `ADV-P55-MED-002` — independently found in a different clone of the same defect class; both closed by the same commit |
+| ADV-P54-MED-003 | MEDIUM | no-fixed-denominator-self-check | This file has no fixed-denominator self-check on its own `#[test]` count (unlike `check-ci-gate.sh --self-test`'s `EXPECTED_FIXTURES`); POL-11's canary only requires a non-zero passed count, so a silently deleted test trips nothing here | CLOSED on `910b8ab0` | Closed by new `EXPECTED_GUARD_TEST_COUNT = 27` + `test_this_file_test_count_matches_expected_denominator` — this finding's own text is quoted verbatim in that test's panic message |
+| ADV-P54-LOW-001 | LOW | review-scope-understated | CLAUDE.md's CI Gate scope summary reads as though `ci.yml` alone is the review surface; `scripts/check-ci-gate.sh` and `tests/ci_gate_completeness.rs` are equally PR-supplied and equally on the decision path | CLOSED on `910b8ab0` | CLAUDE.md gains an explicit "review scope is three files, not one" note |
+| ADV-P54-INFO-001 | INFO | cosmetic | `matrix_needs_members`'s hardcoded `["clippy", "test"]` iteration list will silently miss a third matrix job added later without a code change flagging it | CLOSED on `910b8ab0` | Closed by deriving the iteration list from `ci-gate.needs` directly |
+
+## Pass 54 Isolation Note
+
+**ELIGIBLE.** Fresh window against head `0e61a2dc`; no isolation breach; no read of `.factory/cycles/`.
+
+## Pass 54 Summary
+
+- **Verdict:** NOT CLEAN — 0 HIGH + 3 MEDIUM + 1 LOW + 1 INFO; ELIGIBLE; frontier C1 (bootstrap trust) found the first instance of this window's converged root cause (key-detect/value-reparse swallow), independently from pass-55 and pass-56.
+- **Frontier:** C1 — bootstrap trust: does the guard apparatus's own self-tests and fixed-denominator pins earn the trust placed in them.
+- **Convergence:** window 54/55/56 opens NOT CLEAN.
+
+---
+
+## Pass 55 Finding Catalog (Window 54/55/56, frontier C2: differential lexer conformance — dispatched against head `0e61a2dc`)
+
+Pass-55 ported the file's line-based extractor functions to Python and ran them differentially against PyYAML 6.0.3 over a battery of synthesized YAML fixtures (quoted keys, space-before-colon, flow-style, node properties, non-LF line breaks) — executed, not merely reasoned about from reading the Rust source.
+
+| ID | Severity | Classification | Title | Status | Notes |
+|----|----------|----------------|-------|--------|-------|
+| ADV-P55-HIGH-001 | HIGH | depth-erasing-line-match-false-green | `parse_needs_set` locates the gate job's own `needs:` line via `line.trim()` (no depth anchor); a decoy `needs:`-shaped line planted inside the gate step's own unpinned `with:` block is read as the job's real needs set — verified false-green with seven jobs failing simultaneously | CLOSED on `910b8ab0` | Closed by depth-anchoring via `extract_key_name_at_indent` at indent 4 (new `PINNED_GATE_NEEDS_LINE` / `extract_and_normalize_sole_needs_line`, M2-p) + a hard panic on a duplicate job-level `needs:` key |
+| ADV-P55-MED-001 | MEDIUM | key-detect-value-reparse-swallow | `list_job_ids_in_workflow` matches the `jobs:` anchor and per-job-id detection via line-equality/`endswith(':')` instead of `extract_key_name_at_indent`/`collect_mapping_key_set` — a flow-style job entry is invisible | CLOSED on `910b8ab0` | Both `list_job_ids_in_workflow` and `list_all_ci_yml_job_names` rerouted through the quote-aware matchers |
+| ADV-P55-MED-002 | MEDIUM | key-detect-value-reparse-swallow | Guard B's `os:` value re-read `unwrap_or("")`s an unparseable-but-detected key instead of failing loudly, trivially certifying a matrix as static when the value is actually a block-sequence form | CLOSED on `910b8ab0` | Twin of `ADV-P54-MED-002` — independently found; both closed together. Guard B now reads block-sequence `os:` forms explicitly and panics on anything else unparseable |
+| ADV-P55-MED-003 | MEDIUM | silent-continue-on-disagreement | Guard A's `extract_job_block`-vs-`list_job_ids_in_workflow` disagreement silently `continue`s past the mismatched job instead of failing | CLOSED on `910b8ab0` | Now a hard panic naming the file and job id |
+| ADV-P55-MED-004 | MEDIUM | overstated-key-coverage-claim | CLAUDE.md's round-9 claim that `test_ci_gate_needs_jobs_have_no_job_level_if` matches "ANY job-level `if:` key… regardless of shape or content" overstates KEY-spelling coverage — the underlying match was a bare `line.starts_with("    if:")`, missing `"if":`/`'if':`/`if :` | CLOSED on `910b8ab0` | Both the test and `is_job_level_if_line` rerouted through `extract_key_name_at_indent`; CLAUDE.md's claim corrected in place (this is `ADV-P55-LOW-001`'s CLAUDE.md correction, cross-referenced) |
+| ADV-P55-LOW-001 | LOW | overstated-key-coverage-claim | Same underlying gap as `ADV-P55-MED-004`, filed independently against the CLAUDE.md prose itself rather than the code | CLOSED on `910b8ab0` | DUPLICATE of `ADV-P56-LOW-003` (same instance, independently found in a different clone) |
+| ADV-P55-LOW-002 | LOW | fixture-lacks-discriminating-assertion | `check-ci-gate.sh` fixture 10 (malformed-json) lacks a discriminating 4th-argument substring the way fixture 9 already has, weakening what a fixture-10 regression would actually prove | CLOSED on `910b8ab0` | Fixture 10 gains a discriminating substring matching fixture 9's precedent |
+| ADV-P55-INFO-001 | INFO | cosmetic | `docs/specs/cargo-mutants-policy.md` does not state plainly that `tests/`/`scripts/`/`ci.yml`/`check-ci-gate.sh` are structurally unreachable by any Rust mutation tool | CLOSED on `910b8ab0` | New Scope subsection added |
+
+## Pass 55 Isolation Note
+
+**ELIGIBLE.** Same head as pass-54 (`0e61a2dc`); no isolation breach; no read of `.factory/cycles/`.
+
+## Pass 55 Summary
+
+- **Verdict:** NOT CLEAN — 1 HIGH + 4 MEDIUM + 2 LOW + 1 INFO; ELIGIBLE; frontier C2 (differential lexer conformance, executed via Python ports + PyYAML 6.0.3, not reasoned about from source alone) found an independent live false-green (`ADV-P55-HIGH-001`) in addition to further instances of this window's converged root cause.
+- **Frontier:** C2 — differential lexer conformance: does every line-based extractor in this file agree with a real YAML parser on every reachable spelling.
+- **Convergence:** window 54/55/56 still NOT CLEAN after two passes; one HIGH — a verified false-green, not a guard-strength gap.
+
+---
+
+## Pass 56 Finding Catalog (Window 54/55/56, frontier C5: falsifiability census — dispatched against head `0e61a2dc`)
+
+Pass-56 built standalone `rustc` reproductions of this file's individual extractor functions (no external crates, minimal structurally-faithful excerpts) and ran them directly against hand-crafted YAML spellings, closing the window with the third and largest finding set — confirming, not merely re-asserting, pass-54's and pass-55's shared root-cause diagnosis via independent tooling.
+
+| ID | Severity | Classification | Title | Status | Notes |
+|----|----------|----------------|-------|--------|-------|
+| ADV-P56-HIGH-001 | HIGH | key-detect-value-reparse-swallow | Guard A's `name:` value re-read defeats detection identically to `ADV-P55-HIGH-001`'s needs-line finding, reproduced independently via standalone `rustc` | CLOSED on `910b8ab0` | Panics loudly instead of `?`-propagating `None` on an unparseable-but-detected key |
+| ADV-P56-HIGH-002 | HIGH | key-detect-value-reparse-swallow | Guard B's `os:` value re-read defeats detection identically, reproduced independently via standalone `rustc` | CLOSED on `910b8ab0` | Panics loudly on the same class of unparseable-but-detected key |
+| ADV-P56-MED-001 | MEDIUM | key-detect-value-reparse-swallow | Sibling-workflow guard's `name:` value re-read swallow, reproduced independently via standalone `rustc` | CLOSED on `910b8ab0` | DUPLICATE of `ADV-P54-MED-001` — same instance, independently found; closed together |
+| ADV-P56-LOW-001 | LOW | line-splitting-residual-not-newly-closed | `extract_and_normalize_if_expr`'s `is_job_level_if_line` closure duplicated the same bare-spelling gap `ADV-P55-MED-004`/`ADV-P55-LOW-001` found in the test-level matcher | CLOSED on `910b8ab0` | Closed by the same reroute through `extract_key_name_at_indent` |
+| ADV-P56-LOW-002 | LOW | fixture-lacks-discriminating-assertion | Independently re-found `ADV-P55-LOW-002` (fixture 10 discriminating-assertion gap) via the standalone reproduction harness | CLOSED on `910b8ab0` | Closed together with `ADV-P55-LOW-002` |
+| ADV-P56-LOW-003 | LOW | overstated-key-coverage-claim | Independently re-found the CLAUDE.md overstated-coverage-claim gap | CLOSED on `910b8ab0` | DUPLICATE of `ADV-P55-LOW-001` — same instance, independently found in a different clone |
+| ADV-P56-LOW-004 | LOW | matrix-iteration-list-hardcoded | Independently re-found `ADV-P54-INFO-001`'s hardcoded `["clippy", "test"]` iteration-list gap, assessed LOW rather than INFO by this pass | CLOSED on `910b8ab0` | Closed by `matrix_needs_members`; severity divergence from `ADV-P54-INFO-001` recorded, not reconciled — both entries kept on record as independently assessed |
+| ADV-P56-INFO-001 | INFO | cosmetic | `docs/specs/cargo-mutants-policy.md` Scope gap, independently re-found | CLOSED on `910b8ab0` | Closed together with `ADV-P55-INFO-001` |
+| ADV-P56-INFO-002 | INFO | cosmetic | `check-ci-gate.sh --self-test`'s spec-guard step self-test invocation had two substring checks each independently satisfiable by the step's other two `--self-test` invocations | CLOSED on `910b8ab0` | Closed by new `PINNED_CI_GATE_SELF_TEST_RUN_LINE` byte-pinning the step's own `run:` line |
+| ADV-P56-INFO-003 | INFO | cosmetic | `test_ci_yml_contains_no_non_lf_yaml_line_breaks` scans `ci.yml` only, not the sibling workflow files the round-16-era sibling-workflow guard newly makes reachable | CLOSED on `910b8ab0` | Now scans every sibling workflow file via `list_workflow_files` |
+| ADV-P56-INFO-004 | INFO | falsifiability-census-negative-result | Census of every set-equality pin in the file found no further instance of the key-detect/value-reparse swallow beyond the sites already found by pass-54/55/56 and the three sites `0e61a2dc` itself introduced — the 25 pre-existing extractors are unaffected | CLOSED on `910b8ab0` | Recorded as the census's own closing negative result — what makes the positive findings above credible as a complete class sweep rather than a partial one |
+
+## Pass 56 Isolation Note
+
+**ELIGIBLE.** Same head as pass-54/pass-55 (`0e61a2dc`); no isolation breach; no read of `.factory/cycles/`.
+
+## Pass 56 Summary
+
+- **Verdict:** NOT CLEAN — 2 HIGH + 1 MEDIUM + 4 LOW + 4 INFO; ELIGIBLE; frontier C5 (falsifiability census, executed via standalone `rustc` reproductions) closes window 54/55/56 with independent confirmation of the shared root cause plus a closing negative-result census (`ADV-P56-INFO-004`) that bounds the defect class's actual extent.
+- **Frontier:** C5 — falsifiability census: for every set-equality pin in the file, is there a concrete construction that defeats it, and if not, is that absence itself demonstrated rather than assumed.
+- **Convergence:** window 54/55/56 CLOSED 0/3 — all three passes NOT CLEAN.
+
+---
+
+## Window 54/55/56 Summary
+
+- **Result:** CLOSED 0/3 — pass-54 NOT CLEAN (0H+3M+1L+1I), pass-55 NOT CLEAN (1H+4M+2L+1I), pass-56 NOT CLEAN (2H+1M+4L+4I), against head `0e61a2dc`. Three deliberately-varied Family-C inspection frontiers, human-approved before dispatch per DEC-248 after a documented exhaustion survey found the prior Family-C frontiers (passes 30-41) verbatim repeats: (54) C1 bootstrap trust; (55) C2 differential lexer conformance (executed via Python ports + PyYAML 6.0.3); (56) C5 falsifiability census (executed via standalone `rustc` reproductions). All three ELIGIBLE — no isolation breaches reported; no pass read `.factory/cycles/`. **Ninth consecutive window without 3/3 since window 30/31/32.**
+- **Finding count:** 24 new findings total across the three passes: pass-54 = 0H+3M+1L+1I (5); pass-55 = 1H+4M+2L+1I (8); pass-56 = 2H+1M+4L+4I (11); 5+8+11 = 24. Deduplicates to roughly 16 distinct underlying findings — three explicit dedupe pairs/twins on record: `ADV-P54-MED-001` ≡ `ADV-P56-MED-001`; `ADV-P55-LOW-001` ≡ `ADV-P56-LOW-003`; `ADV-P54-MED-002` and `ADV-P55-MED-002` are twins independently found in different clones of the same underlying defect. **Zero rediscoveries of any finding from passes 1-53.**
+- **HIGH:** 3 — `ADV-P55-HIGH-001` (depth-erasing `needs:` line match, verified false-green with seven jobs failing) and `ADV-P56-HIGH-001`/`ADV-P56-HIGH-002` (Guard A/B value-reread swallows, independently confirmed via standalone `rustc`). **All three are live defects introduced by `0e61a2dc` this same burst, not pre-existing guard-strength gaps** — distinct in kind from prior windows' HIGH findings, which mostly characterized gaps in otherwise-correct guards.
+- **MEDIUM:** 8 itemized (`ADV-P54-MED-001/002/003`; `ADV-P55-MED-001/002/003/004`; `ADV-P56-MED-001`), with the dedupe/twin relationships noted above.
+- **LOW:** 7 itemized (`ADV-P54-LOW-001`; `ADV-P55-LOW-001/002`; `ADV-P56-LOW-001/002/003/004`), including one severity divergence (`ADV-P54-INFO-001` vs. `ADV-P56-LOW-004` — same underlying gap assessed at two different severities by two different passes; both entries kept on record, not reconciled).
+- **INFO:** 6 itemized (`ADV-P54-INFO-001`; `ADV-P55-INFO-001`; `ADV-P56-INFO-001/002/003/004`).
+- **All 24 findings CLOSED on `910b8ab0` — a single class sweep, not 24/16 point fixes.** Root cause: `0e61a2dc` detected a YAML key via the file's own quote/whitespace-aware `extract_key_name_at_indent` matcher, then re-read that key's VALUE via a bare `strip_prefix`/`starts_with`, silently swallowing quoted/space-before-colon spellings — at three new call sites. Fixed by applying the file's own established reject-don't-parse idiom (`Err`/panic, never silent `None`/empty-string) at every new call site. `ADV-P55-HIGH-001`'s independent finding (depth-erasing `.trim()` match on `parse_needs_set`) closed via a new depth-anchored `PINNED_GATE_NEEDS_LINE` pin (M2-p). Every fix RED-proven; CI FINAL 15/15 PASS, mergeStateStatus CLEAN at `910b8ab0`. Full narrative: `cycles/cycle-001/burst-log.md` § "RESUME+WINDOW-54-55-56+CLASS-SWEEP".
+- **New drift items opened:** `DEC-246-OVERCLAIMED-CONFIRMS` (MEDIUM), `SIBLING-WORKFLOW-FRONTIER-UNRETIRED` (MEDIUM), `EXTRACT-JOB-BLOCK-RAW-ANCHOR-WIDENED` (LOW), `DENOMINATOR-GUARD-USES-EXACT-LINE-MATCH` (LOW), `BURST-LOG-DEFEATS-PLAIN-GREP` (LOW), `ADVERSARY-PASSES-27-53-HAVE-NO-DETAIL-FILE` (LOW), plus three process-gap items each closed via an S-7.02 deferral this burst: `MEASUREMENT-METHOD-PRODUCES-FALSE-CLAIM` (MEDIUM), `RED-PROOF-NEEDS-SPELLING-VARIANTS` (HIGH), `RESEARCH-ARTIFACTS-NOT-PERSISTED` (MEDIUM). Full text: STATE.md Drift Items table.
+- **New decisions:** **DEC-248** (frontiers approved), **DEC-249** (DEC-246 research reconstructed, found overclaimed), **DEC-250** (sibling-workflow + zero-leg-matrix guards landed directly), **DEC-251** (window findings closed as class sweep), **DEC-252** (PR #667 hold reaffirmed), **DEC-253** (next priority is S-CIGATE-3, not a tenth window).
+- **Cycle-closing checklist (S-7.02) — SATISFIED.** All three process-gap drift items carry an explicit inline deferral (reason + target) in STATE.md's Drift Items table; none required a new STORY-INDEX entry this burst. No fix round left un-actioned this burst — unlike window 51/52/53, window 54/55/56's entire finding set was closed same-burst by the class sweep.
 
 ---

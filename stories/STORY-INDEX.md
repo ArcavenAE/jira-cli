@@ -2,12 +2,47 @@
 document_type: story-index
 phase: phase-2-story-decomposition
 producer: story-writer
-version: "1.5.76"
+version: "1.5.77"
 total_stories: 127
 total_waves: 4
 status: complete
 last_updated: |-
-  2026-08-08 (RESEARCH-VALIDATION+U1, DEC-246: human-directed external research pass
+  2026-08-09 (RESUME+WINDOW-54-55-56+CLASS-SWEEP): resumed from the COMPACTION checkpoint;
+  reconstructed the missing research/dec-246-github-actions-gating-semantics.md artifact and
+  found the original DEC-246 record OVERCLAIMED (5 CONFIRM / 2 INCONCLUSIVE / 1 split, not
+  8/8 CONFIRM -- DEC-249); landed two guards directly closing the sibling-workflow-exposure
+  and zero-leg-matrix frontiers (0e61a2dc, DEC-250); dispatched and closed adversarial window
+  pass-54/pass-55/pass-56 against three human-approved Family-C frontiers (DEC-248) --
+  CLOSED 0/3, ninth consecutive window without 3/3; 24 new findings (3H/8M/7L/6I, ~16 distinct
+  after dedupe), zero rediscoveries, all converging on one root cause (key-detect/value-reparse
+  swallow introduced by 0e61a2dc) plus one independent live false-green
+  (ADV-P55-HIGH-001, depth-erasing needs: line match). Closed as a single class sweep
+  (910b8ab0, DEC-251; 4 files, +866/-128, CI FINAL 15/15 PASS, mergeStateStatus CLEAN) rather
+  than 16 point fixes. PR #667 remains OPEN, HELD (DEC-202, reaffirmed DEC-252) at new head
+  910b8ab0. Human ruled next priority is S-CIGATE-3 (durable YAML-parser fix), not a tenth
+  window (DEC-253). One story-row version bump, no new stories, total_stories unchanged at
+  127: S-626-1 v1.31->v1.32 (FIX ROUND 27 per the story's own internal counter -- a
+  documentation-catchup round; the two code commits (0e61a2dc, 910b8ab0) already landed on
+  the branch in a prior working session). Counts re-derived not assumed, per this burst's own
+  COUNT-ROWS-NOT-KEYWORD-OCCURRENCES lesson: whole-file commit trail 21->23 commits;
+  step-content trail unchanged at 11 (neither new commit touches ci.yml); branch-unique file
+  set 19->20 (scripts/check-ci-gate.sh newly touched by 910b8ab0); #[test] function count
+  24->27 via this file's own exact-line-match convention (grep -cxE
+  '[[:space:]]*#\[test\]') -- explicitly NOT the same as a plain substring grep -c, which
+  overcounts to 34 due to prose mentions of the string "#[test]" in doc comments added by
+  910b8ab0. Nine new drift items recorded (full text: STATE.md Drift Items table); three are
+  process-gap findings (MEASUREMENT-METHOD-PRODUCES-FALSE-CLAIM, RED-PROOF-NEEDS-SPELLING-VARIANTS,
+  RESEARCH-ARTIFACTS-NOT-PERSISTED), each closed via an explicit S-7.02 deferral (reason +
+  target) recorded inline rather than a new story this burst -- verified, not assumed, that
+  all three carry a target: two have concrete forward targets (S-CIGATE-3; next STORY-INDEX
+  grooming pass) and one takes immediate standing-rule effect rather than a future target.
+  ADV-P1-INDEX.md v2.12->v2.13 (pass 53->56, 395->419 total findings). This state-manager
+  burst was itself a resume of a prior, interrupted state-manager instance that died mid-run
+  on an API error after writing STATE.md but before finishing this file, S-626-1.md,
+  ADV-P1-INDEX.md, burst-log.md, session-checkpoints.md, or lessons.md, and before
+  committing; the resuming instance completed and closed the burst in one atomic commit
+  per the Single-Commit Burst Protocol.
+  Prior (2026-08-08, RESEARCH-VALIDATION+U1, DEC-246): human-directed external research pass
   validated GitHub Actions ci-gate semantics against primary sources -- CONFIRMS on all
   eight questions asked -- then surfaced finding U1: the ci-gate.needs allowlist had
   per-member presence/exclusion checks but no partition guard, so a ninth job added to

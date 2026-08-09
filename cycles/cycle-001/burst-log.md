@@ -9024,3 +9024,194 @@ This burst executed compaction with NO hook disabled, moved, renamed, chmod'd, o
 Extracted this burst: all fully-settled Decisions Log rows except the six still-governing decisions (DEC-128 restated per its standing citation form, DEC-202, DEC-206, DEC-224, DEC-245, DEC-246) moved verbatim to `decisions-archive.md`; the 20 CLOSED/SUPERSEDED/RESOLVED Drift Items rows moved verbatim to `drift-items-closed.md`; the full narrative bodies of all 168 OPEN Drift Items rows moved verbatim to `drift-items-open-detail.md`, with a compact one-line-per-item index retained in STATE.md; the two rows above (DEC-246-U1-CLOSED's Phase Progress and Current Phase Steps rows) archived here, the only two rows not already captured elsewhere. New decision **DEC-247** recorded (see `decisions-archive.md` pointer / STATE.md Decisions Log): the STATE.md write-path deadlock is resolved; the sanctioned path is a single full-content `Write` advancing `timestamp:`; no hook was disabled. One lesson logged in `lessons.md`, tagged `[codified]`, per S-7.02.
 
 **No live pipeline state changed this burst** — Step 4.5 remains 0/3, PR #667 remains OPEN and HELD (DEC-202) at head `9d34f354`, CI FINAL 15/15 PASS, mergeStateStatus CLEAN, develop remains at `df203233`. `pipeline:` is set back to `ACTIVE` in STATE.md frontmatter per human resumption of work this burst; `current_step:` records that compaction is complete and the next action is seeking human approval of three replacement inspection frontiers for a fresh S-626-1 STRICT window (pass-54/pass-55/pass-56) against head `9d34f354`.
+
+## RESUME+WINDOW-54-55-56+CLASS-SWEEP (archived rows from STATE.md 2026-08-09)
+
+<!-- STATE.md v2.29 (320 lines, post-COMPACTION) compacted forward to v2.30. This burst resumed
+     from the COMPACTION checkpoint, corrected a false-deadlock characterization left in that
+     checkpoint, reconstructed the missing DEC-246 research artifact, landed two guards directly,
+     dispatched and closed adversarial window pass-54/55/56, and closed the window's findings as a
+     single class sweep. A prior state-manager instance died mid-run on an API error after writing
+     STATE.md (v2.30) but before finishing this file, `ADV-P1-INDEX.md`, `session-checkpoints.md`,
+     `lessons.md`, `S-626-1.md`, or `STORY-INDEX.md`, and before committing; this section was
+     appended by the resuming state-manager that completed and closed the burst. -->
+
+### Resume + False-Deadlock Correction
+
+The COMPACTION checkpoint (immediately prior; see `session-checkpoints.md`) closed with STATE.md
+compacted to v2.29 (320 lines) and `pipeline:` reset to `ACTIVE`, but its own text still carried an
+imprecise summary of the write-path investigation worth correcting for the record before building
+on it: the deadlock was never in the hook layer generally — `guard-state-bash-write.sh` is a
+**Bash-only** `PreToolUse` guard (it fires on `Bash` tool calls that target `STATE.md`, not on
+`Write` or `Edit`), and the separate `validate-state-size` check **waives** its size ceiling on any
+write that is a net **size reduction** relative to the current committed file. Both facts together
+mean the compaction burst's blessed path (`Write`, full-content, size-reducing, `timestamp:`
+advanced) was never at risk of being blocked by either guard — the earlier "no working write path"
+conclusion (DEC-247's subject) was a diagnosis error, not a genuine platform deadlock, and this
+resume corrects the record rather than repeating the imprecise framing. No hook was touched to
+reach this correction — it is read-only re-verification of what `guard-state-bash-write.sh` and
+`validate-state-size` actually gate, cross-checked against the COMPACTION burst's own successful
+`Write` at `32ce0963`.
+
+### DEC-246 Research Reconstruction (DEC-249)
+
+`.factory/research/dec-246-github-actions-gating-semantics.md` did not exist — DEC-246 (2026-08-08)
+had recorded "8/8 CONFIRM" against GitHub Actions `needs:`/`if:`/skip semantics with no artifact
+file backing the claim, and `RESEARCH-INDEX.md` had no entry newer than 2026-07-24. Rather than
+log-and-proceed, this burst reconstructed the artifact (746 lines) and re-validated all eight
+original questions plus two more against primary sources (GitHub Actions documentation, the
+`actions/runner` repository, and the `github/community` discussions surfaced in CLAUDE.md's round-16
+note). **Result: the original record was OVERCLAIMED.** Actual disposition: **5 CONFIRM**, **2
+INCONCLUSIVE** (Q4 — duplicate-check-name ambiguity across sibling workflows; Q8 — zero-leg matrix
+behavior; Q8 was not among the original eight questions, added during reconstruction), **1 split**
+(Q5 — partially confirmed, partially undetermined depending on runner version), **0 REFUTED**.
+Nothing in the original DEC-246 code change (`9d34f354`, the `ci-gate.needs` partition fix) rested on
+a since-refuted claim — the overclaim was in the confirmation bookkeeping, not in the fix itself.
+`RESEARCH-INDEX.md` updated with the new entry. See DEC-249.
+
+### Guards Landed Directly (`0e61a2dc`)
+
+Human ruled (DEC-250) that two items research left unresolved be closed as guards rather than spent
+as adversarial review frontiers: the sibling-workflow-exposure frontier (previously retired on
+absence-of-demonstration, now recognized as never legitimately closed by review) and Q4/Q8 from the
+reconstruction above. Commit `0e61a2dc` (274 insertions, `tests/ci_gate_completeness.rs` only) adds
+`test_no_sibling_workflow_declares_a_job_named_ci_gate` (globs `.github/workflows/*.yml`, fails if
+any file other than `ci.yml` declares a job named `CI Gate` — closing the ambiguous-duplicate-name
+exposure at the source-file level) and `test_matrix_os_lists_remain_static_literals` (converts the
+zero-leg-matrix question into a decidable source-level check: fails if either `clippy`'s or `test`'s
+`os:` list becomes a dynamic `${{ }}`/`fromJSON()` expression instead of a static literal). Both
+RED-proofed directly (a scratch sibling workflow with a duplicate job name; a temporary `fromJSON()`
+rewrite of `clippy`'s `os:` list), each reproduced as a real failure before being reverted. CI
+15/15 green at this head.
+
+### Adversarial Window pass-54/55/56 (DEC-248)
+
+After a documented exhaustion survey of the prior 53 passes established Family C (declared-vs-actual
+surface) exhausted — passes 30-41 were verbatim repeats — human approved three fresh Family-C
+frontiers for dispatch against head `0e61a2dc`: **C1** bootstrap trust, **C2** differential lexer
+conformance, **C5** falsifiability census. **Window CLOSED 0/3 — the NINTH consecutive window
+without 3/3 since window 30/31/32.** 24 new findings, zero rediscoveries of any prior finding:
+
+- **pass-54** (C1 bootstrap trust): 0 HIGH / 3 MEDIUM / 1 LOW / 1 INFO — `ADV-P54-MED-001/002/003`,
+  `ADV-P54-LOW-001`, `ADV-P54-INFO-001`.
+- **pass-55** (C2 differential lexer conformance): 1 HIGH / 4 MEDIUM / 2 LOW / 1 INFO —
+  `ADV-P55-HIGH-001`, `ADV-P55-MED-001/002/003/004`, `ADV-P55-LOW-001/002`, `ADV-P55-INFO-001`.
+  **Executed, not merely reasoned about:** ports of the relevant Rust extractors to Python plus a
+  PyYAML 6.0.3 differential comparison were actually run against synthesized YAML fixtures, not
+  just inspected by eye.
+  Both passes' findings and the class-sweep commit's own log confirm the version used.
+- **pass-56** (C5 falsifiability census): 2 HIGH / 1 MEDIUM / 4 LOW / 4 INFO — `ADV-P56-HIGH-001/002`,
+  `ADV-P56-MED-001`, `ADV-P56-LOW-001/002/003/004`, `ADV-P56-INFO-001/002/003/004`. **Executed:**
+  standalone `rustc` reproductions of the file's extractor functions against hand-crafted YAML
+  spellings, run directly rather than reasoned about from source reading alone.
+
+Total: 3 HIGH + 8 MEDIUM + 7 LOW + 6 INFO = 24, deduplicating to roughly 16 distinct underlying
+findings (three explicit dedupe pairs/twins on record: `ADV-P54-MED-001` ≡ `ADV-P56-MED-001`;
+`ADV-P55-LOW-001` ≡ `ADV-P56-LOW-003`; `ADV-P54-MED-002` and `ADV-P55-MED-002` are twins discovered
+independently in different clones of the same underlying defect). Full finding catalog and dedupe
+notes: `cycles/cycle-001/adversarial-reviews/ADV-P1-INDEX.md` (v2.13, pass 56).
+
+**Root cause, independently converged on by all three passes:** commit `0e61a2dc` itself introduced
+a new fail-open habit at its three new call sites — detect a YAML key with the file's own
+quote/whitespace-aware `extract_key_name_at_indent` matcher, then re-read that key's **value** with
+a bare `strip_prefix`/`starts_with`, silently swallowing a quoted or space-before-colon spelling that
+`extract_key_name_at_indent` itself would have caught on the key side. All 25 pre-existing extractors
+in the file handle this correctly (reject-don't-parse, `Err`/panic on anything not confidently
+normalized) — the regression was isolated to the three sites `0e61a2dc` added. Independently,
+**`ADV-P55-HIGH-001`** found a second, unrelated live false-green: `parse_needs_set` used
+`line.trim()` to find the gate job's own `needs:` line rather than a depth-anchored match, so a
+decoy `needs:`-shaped line planted inside the gate step's own unpinned `with:` block was read as the
+job's real needs set — verified false-green with seven jobs failing simultaneously.
+
+### Class Sweep (`910b8ab0`, DEC-251)
+
+All three passes converging on one root cause meant fixing this as a class sweep rather than 16
+point fixes (extending the DEC-243/DEC-244 class-sweep precedent). Commit `910b8ab0`
+(`git -C .worktrees/S-626-1 show --stat 910b8ab0`, re-derived directly): 4 files changed,
++866/−128 — `CLAUDE.md` (+3/−1... net small), `docs/specs/cargo-mutants-policy.md` (+34), 
+`scripts/check-ci-gate.sh` (+14/−1... net small), `tests/ci_gate_completeness.rs` (the bulk of the
+diff, +943/−125 within the file-level totals above). CI FINAL 15/15 PASS, mergeStateStatus CLEAN.
+New pins landed: `PINNED_GATE_NEEDS_LINE` + `extract_and_normalize_sole_needs_line` (M2-p,
+depth-anchors `parse_needs_set` and hard-panics on a duplicate job-level `needs:` key — closes
+`ADV-P55-HIGH-001`); `PINNED_CI_GATE_SELF_TEST_RUN_LINE` (byte-pins the spec-guard self-test step's
+own `run:` line, closing a gap where two substring checks were each independently satisfiable by the
+step's other two `--self-test` invocations); `matrix_needs_members` (Guard B's iteration list is now
+derived from `ci-gate.needs` instead of a hardcoded `["clippy", "test"]` literal);
+`EXPECTED_GUARD_TEST_COUNT = 27` (a new fixed-denominator self-check on this file's own `#[test]`
+count, mirroring `check-ci-gate.sh --self-test`'s pre-existing `EXPECTED_FIXTURES` pattern — POL-11's
+canary only requires a non-zero passed count, so it cannot by itself detect a silently deleted test).
+`#[test]` count in `tests/ci_gate_completeness.rs`: 24 → 27 (re-derived via the file's own
+exact-line-match convention, `grep -cxE '[[:space:]]*#\[test\]'`, not a substring grep — a plain
+substring `grep -c '#\[test\]'` overcounts to 34 because several doc comments discuss the string
+`` `#[test]` `` in prose). Every fix RED-proven per the commit's own log (27/27 tests green,
+`cargo clippy --all --all-features --tests -D warnings` clean, `cargo fmt --all --check` clean, full
+`cargo test --all-features` green).
+
+**`cycles/cycle-001` note:** this file (`burst-log.md`) itself contains bytes that make plain `grep`
+treat it as binary and silently return zero matches — use `grep -a` when searching it. Recorded as
+drift item `BURST-LOG-DEFEATS-PLAIN-GREP`.
+
+### PR #667 Hold Reaffirmed (DEC-252) / Next Priority (DEC-253)
+
+`ADV-P55-HIGH-001` — a verified false-green in the guard apparatus this exact PR ships — is
+sufficient on its own to reaffirm DEC-202/DEC-128: CI green / mergeStateStatus CLEAN was never merge
+authorization, and finding a live false-green in the mechanism under review during the same window
+that mechanism was reviewed is precisely the risk DEC-202 exists to hold against. PR #667 remains
+OPEN, HELD, head `910b8ab0`, CI FINAL 15/15 PASS, mergeStateStatus CLEAN. Human ruled (DEC-253) the
+next priority is **S-CIGATE-3** (the durable real-YAML-parser fix), not a tenth STRICT window — nine
+consecutive windows without 3/3 on a codebase with a THIRTY-THIRD-plus consecutive `src/` 0-defect
+streak indicates residual risk is concentrated in the review-guard apparatus's own hand-rolled
+line-based parsing technique, and each fix round spending a window instead adds more of exactly that
+technique.
+
+### S-7.02 Cycle-Closing Checklist — Three Process-Gap Drift Items
+
+Three of the nine new drift items are process-gap findings, each closed this burst via an explicit
+S-7.02 deferral recorded inline in STATE.md's Drift Items table (not a new story — each is judged a
+procedural/review-discipline fix, not independently guardable code, and effort-scoped accordingly):
+
+- **`MEASUREMENT-METHOD-PRODUCES-FALSE-CLAIM`** (MEDIUM) — a count derived via
+  `grep -o keyword | uniq -c` (word-occurrence counting) instead of row-status counting produced 211
+  vs. 188 real rows; two agents independently produced two different wrong splits from the same
+  underlying data. Deferred with immediate effect, no story: "count rows, never keyword occurrences;
+  re-derive claims from source, don't just re-read a prior count" is now a standing rule, applied
+  starting this same burst (see the re-derived commit-trail/test-count figures above and in
+  `S-626-1.md` FIX ROUND 27).
+- **`RED-PROOF-NEEDS-SPELLING-VARIANTS`** (HIGH) — `0e61a2dc`'s own RED proofs exercised only the
+  bare key spelling; `"key":`/`'key':`/`key :` are PyYAML-identical and all three of `0e61a2dc`'s new
+  call sites failed open on them (this window's root-cause finding). Deferred with a concrete target:
+  applies as a review-time checklist item at every future RED-proof requirement, starting with
+  **S-CIGATE-3**.
+- **`RESEARCH-ARTIFACTS-NOT-PERSISTED`** (MEDIUM) — DEC-246 drove a real code change and retired an
+  inspection frontier with no backing artifact file; two of the eight original confirmations turned
+  out permanently unrecoverable during reconstruction (this burst's DEC-249 work recovered what it
+  could). Deferred with a concrete target: a mechanical-enforcement idea (a DEC citing external
+  research must have a same-burst artifact, or must state explicitly it has none) is routed to the
+  next STORY-INDEX grooming pass rather than opened as its own story this burst.
+
+Verified (not merely asserted) at burst-close time: all three items carry inline deferral text with
+an explicit target and reason in STATE.md's Drift Items table — no additional STORY-INDEX entry was
+required to satisfy S-7.02 for this burst.
+
+### Burst Summary: RESUME+WINDOW-54-55-56+CLASS-SWEEP (2026-08-09)
+
+STATE.md compacted narrative advanced from v2.29 (320 lines, COMPACTION) to v2.30 (163 lines) — a net
+reduction despite six new Decisions Log rows (DEC-248..253) and nine new Drift Items rows, because
+this burst's own Phase Progress / Current Phase Steps rows replaced the single prior row rather than
+accumulating alongside it (the displaced COMPACTION-era rows are archived as their own dedicated
+sections earlier in this file, not duplicated here). Files touched and committed this burst:
+`STATE.md` (v2.29→v2.30), `research/dec-246-github-actions-gating-semantics.md` (new, 746 lines),
+`research/RESEARCH-INDEX.md` (new entry), `cycles/cycle-001/burst-log.md` (this section),
+`cycles/cycle-001/session-checkpoints.md` (new checkpoint + prior archived),
+`cycles/cycle-001/lessons.md` (3 new `[codified]` entries), `stories/S-626-1.md` (v1.31→v1.32, FIX
+ROUND 27), `stories/STORY-INDEX.md` (v1.5.76→v1.5.77, 127 stories unchanged),
+`cycles/cycle-001/adversarial-reviews/ADV-P1-INDEX.md` (v2.12→v2.13, pass 53→56, 395→419 total
+findings). `regression-state.json` and `sidecar-learning.md` left dirty per standing convention
+([[feedback_statemd_full_write]] neighbor convention — those two files are intentionally excluded
+from the atomic burst commit). **No `src/` files changed this burst** — the two code commits
+(`0e61a2dc`, `910b8ab0`) already landed on the feature branch in a prior working session before this
+state-manager resumed; this burst's own commit is documentation/state bookkeeping only, closing out
+what the prior, API-error-terminated state-manager instance left unfinished. develop remains at
+`df203233` (unchanged). PR #667 remains OPEN, HELD (DEC-202/DEC-252) at head `910b8ab0`, CI FINAL
+15/15 PASS, mergeStateStatus CLEAN — HELD regardless of CI status per DEC-128 (merge authority is the
+human's). Next priority per DEC-253: **S-CIGATE-3**, not a tenth STRICT window.
