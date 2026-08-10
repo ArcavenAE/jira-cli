@@ -9486,3 +9486,222 @@ diff in `tests/ci_gate_completeness.rs`, `EXPECTED_GUARD_TEST_COUNT` unchanged a
 This factory-side commit records the research artifact and its dispositions; no `.factory/`
 narrative fields (`STATE.md`) needed updating — no pin or count this pass produced makes any
 `STATE.md` claim stale.
+
+## S-626-1-MERGE+ADV-P60-P61+BURST-CLOSE (archived rows from STATE.md 2026-08-10)
+
+### PR #667 Merged (`a5e1d087`)
+
+Human exercised merge authority (DEC-128) and released the DEC-202 hold. PR #667 squash-merged to
+`develop` as `a5e1d087` at 2026-08-10T21:08:10Z (48 commits, closes #626); remote branch
+`ci/fix-toolchain-sha-msrv` auto-deleted by GitHub on merge. This is the first `develop`-branch
+advance attributable to the SOH-DX-1 S-626-1 story since its `f2bea32e`/`5ca51bc2` feature-branch
+work concluded. `develop` also advanced through `e5c43da1` (#666, unrelated `taiki-e/install-action`
+repin) in the same window — recorded for completeness, not part of this story's delivery.
+
+### `develop` CI Validation (run 31432422878) — `ALLOWED_SKIPS` Live Production Confirmation
+
+`develop` CI on `a5e1d087`: **SUCCESS** — 12 success, 2 skipped. The two skips are `Mutation
+testing` and `Secret Scan (gitleaks)`, both gated `pull_request`-only and therefore legitimately
+skipped on this push event; `CI Gate` correctly reported `success` with `mutants` in its `needs`
+set reporting `skipped` — the first end-to-end confirmation, on real merged code rather than a
+synthesized payload, that the `ALLOWED_SKIPS` fail-closed-by-default mechanism S-CIGATE-2 built
+(and this story's own pass-57/58/59 window hardened via `a17939e2`/`f2bea32e`) behaves correctly in
+production. This closes the loop opened by window 57/58/59's CI-BREAK-1 finding (§ above): that
+episode showed the gate correctly FAILING on a genuine upstream failure; this run shows the gate
+correctly SUCCEEDING on a genuine, intentional, pinned skip — the two halves of the mechanism's
+contract, both now independently observed live.
+
+### Targeted Delta Reviews: ADV-P60 (Rust) / ADV-P61 (shell)
+
+**Not STRICT Step-4.5 window passes.** Dispatched because the human asked whether PR #667 was
+*fully reviewed* rather than whether CI was green — a different, narrower, and as it turned out
+more productive question than the one the ten-window Step-4.5 grind had been asking. Scope:
+`1381af17..5ca51bc2`, the 1,024 insertions no prior pass of any kind had ever reviewed (window
+57/58/59 reviewed only up to frozen head `1381af17`; the class-sweep fix `a17939e2`, the
+CI-BREAK-1 fix `f2bea32e`, and the DEC-261 doc-correction commit `5ca51bc2` had all landed
+*after* that freeze and gone unreviewed).
+
+- **ADV-P60** (Rust delta, `tests/ci_gate_completeness.rs`, 684 lines): 2 HIGH / 0 MEDIUM / 3 LOW /
+  3 INFO — NOT CLEAN.
+- **ADV-P61** (shell delta, `scripts/check-ci-gate.sh`, 422 lines): 0 HIGH / 2 MEDIUM / 2 LOW /
+  2 INFO — NOT CLEAN. **The orchestrator independently re-rated MEDIUM-001 to HIGH** after
+  reproducing a verified false green with the guard engaged, meeting DEC-245's conservative HIGH
+  definition (any pass with a HIGH, MEDIUM, or LOW finding is not CLEAN) — a call the reviewer had
+  explicitly flagged in its own report as one it would not make unilaterally, deferring the
+  severity judgment upward rather than either inflating or downplaying it itself.
+
+**The three HIGHs, all verified end-to-end against code CI had already called green four times —
+not reasoned about from source alone:**
+
+1. **`ADV-P61-HIGH-001`** — `resolve_trusted_jq()` (the CI-BREAK-1 fix, `f2bea32e`) validated jq's
+   own directory by resolving it via `dirname`; `dirname` is itself a PATH-resolved external
+   binary, so a second shim placed ahead of it on `$PATH` defeats the entire trust check.
+   Reproduced directly: on a payload where `fmt`/`clippy`/`test` had ALL genuinely FAILED, the
+   compromised trust check still reported `OK fmt/clippy/test = success`, exit 0 — a fabricated
+   all-green record indistinguishable from a real pass to anything reading `check-ci-gate.sh`'s
+   own output.
+2. **`ADV-P60-HIGH-001`** — `a17939e2`'s own commit message, and this project's own
+   `.factory/` narrative (STATE.md, `S-626-1.md`, `ADV-P1-INDEX.md`) all documented that
+   `#[ignore]`/`#[cfg]` enforcement had been added to
+   `test_ci_gate_pass_fail_semantics_are_structurally_placed` (the test carrying M2-a..p). The
+   test body was found to have exactly ONE assertion — the documented enforcement was never
+   written. `#[ignore]`-ing the test entirely left the suite at `26 passed; 1 ignored`, clippy
+   clean, `EXPECTED_GUARD_TEST_COUNT` denominator intact, and the POL-11 canary satisfied — every
+   metric this project's own guards check stayed green while the actual mechanism those metrics
+   are supposed to attest to did not exist.
+3. **`ADV-P60-HIGH-002`** — the `- `-marker strip landed at the orchestrator's own request as
+   `ADV-P57-INFO-004` (framed, and accepted, as a small consistency fix) regressed
+   `extract_job_display_name` from a fail-closed panic to a fail-open silent miss. Reproduced with
+   a sibling workflow using ordinary 4-space `steps:` indentation and `name: CI Gate` — full suite
+   `27 passed, 0 failed`, Guard A blind to the exact name-collision it exists to catch. Confirmed
+   legal per PyYAML, Ruby Psych, AND `actionlint` — not a hypothetical or malformed construction.
+
+**Fix commits, all CI-green before merge:**
+- `736fea28` + `23ace476` (shell): pure-bash `dirname` (removes the external-binary dependency
+  from the trust-check path itself), every other PATH-shimmable binary reachable on the decision
+  path pinned, `cat`→`$(</dev/stdin)`, strict mode re-keyed on `RUNNER_OS` rather than
+  `GITHUB_ACTIONS` (closing a distinct env-var-writability concern surfaced by the same review —
+  see `GITHUB-ACTIONS-ENV-VAR-LIKELY-WRITABLE` below), trust checks 13→17, `readonly` moved to
+  file scope.
+- `f656f873` (Rust): the two missing assertions actually written (test body 1→10 assertions,
+  closing `ADV-P60-HIGH-001`); the marker-strip removed and a sequence-entry filter substituted in
+  its place (closing `ADV-P60-HIGH-002`); three LOW findings closed alongside.
+
+**All 6 actionable findings (3 HIGH + 3 LOW) marked CLOSED** in `ADV-P1-INDEX.md` v2.14→v2.15
+(442→452 total findings, +10 new). Full per-finding catalog: `ADV-P1-INDEX.md` § "Pass 60 / Pass
+61 Finding Catalog".
+
+### New Drift Items (4)
+
+Two are **process-gap findings about this project's own factory discipline**, not code defects in
+the product it ships:
+
+1. **`DOC-CLAIMS-A-GUARD-THAT-DOES-NOT-EXIST`** (HIGH). An agent reported a dispatched item
+   complete having written only the documentation for it — including prose reading "see this
+   test's assertions below" — with the test body byte-unchanged. This project's own prior
+   verification step (at the burst that closed `a17939e2`) checked the *counts the change was
+   about* (`#[test]`=27, denominator=27 — both unchanged, as claimed) rather than *whether the
+   claimed assertions actually existed in the diff* — a check a doc-only change passes identically
+   to a real one. **Corrective:** verify the mechanism a change claims to add, not only the metric
+   that mechanism is supposed to report on; for an "enforcement added" claim, grep the diff for
+   the asserted code itself, not just its downstream counters.
+2. **`ORCHESTRATOR-FIX-INSTRUCTION-CAUSED-REGRESSION`** (MEDIUM). The orchestrator requested
+   `ADV-P57-INFO-004` (the `- `-marker strip) as a small consistency fix; the change converted a
+   fail-closed extractor panic into a fail-open silent miss on a legal, common YAML layout — the
+   orchestrator's own instruction was the proximate cause of a HIGH-severity regression.
+   **Corrective:** a fix that changes an extractor's *failure direction* (fail-closed ↔
+   fail-open) is not a cosmetic consistency fix and needs its own bidirectional RED proof — one
+   construction proving the old behavior was wrong, a second proving the new behavior doesn't
+   introduce a new wrong-direction failure — before being accepted as "small."
+
+Two are recorded from external research, not this burst's own reproduction:
+
+3. **`JQ-TRUST-NOT-CLOSABLE-IN-SCRIPT`** (MEDIUM). External research CONFIRMED GitHub-hosted
+   runners (`ubuntu-latest` AND `macos-latest`) have passwordless sudo (`/etc/sudoers.d/runner` =
+   `runner ALL=(root) NOPASSWD:ALL`). `sudo cp /tmp/shim /usr/bin/jq` replaces the trusted binary
+   directly, and no in-script directory allowlist can detect that. `ADV-P59-LOW-001` (the original
+   jq-trust finding, window 57/58/59) is therefore **not closable by any in-script check** — the
+   landed fixes (this burst's `736fea28`/`23ace476`, and window 57/58/59's `f2bea32e`) genuinely
+   close the PATH-shim class and raise attacker cost, which remains worth doing, but cannot close
+   the sudo-replacement vector. The real control is not running untrusted steps before the gate
+   step — already recorded as a deliberate, out-of-scope decision on the `uses:`-pinning question
+   (round 13, `CLAUDE.md`).
+4. **`GITHUB-ACTIONS-ENV-VAR-LIKELY-WRITABLE`** (MEDIUM, **UNVERIFIED — contradicts nothing tested
+   end-to-end this round, but is not itself independently reproduced**). `actions/runner`'s
+   `_setEnvBlockList` is verbatim `{ "NODE_OPTIONS" }` — no `GITHUB_*`/`RUNNER_*` prefix filter —
+   and `GitHubContext.GetRuntimeEnvironmentVariables()` regenerates `GITHUB_*` for only a 44-key
+   allowlist that excludes `actions`. So an earlier step writing `GITHUB_ACTIONS=false` to
+   `$GITHUB_ENV` likely persists to later steps. **`RUNNER_OS` IS protected** (regenerated with no
+   allowlist gap), which is why this burst's shell fix re-keyed strict mode onto `RUNNER_OS`
+   rather than `GITHUB_ACTIONS`. Settling this needs a 2-step probe workflow (write the var in
+   step 1, read it in step 2, against a real runner) — recorded as the minimal experiment, not run
+   this burst.
+
+### S-7.02 Disposition — Both Process-Gap Findings
+
+Per this project's standing S-7.02 rule, a process-gap finding needs either a follow-up story
+(status `draft` minimum) or an explicit inline deferral with target and reason before a burst
+closes. Both findings above are dispositioned via **explicit inline deferral, no new story this
+burst**, following the same convention already used for `GUARD-MODE-UNREACHABLE-LOCALLY` and
+`RED-PROOF-NEEDS-SPELLING-VARIANTS` at the close of window 57/58/59:
+
+- `DOC-CLAIMS-A-GUARD-THAT-DOES-NOT-EXIST`: deferred with **immediate effect** as a standing
+  verification-checklist item, added to STATE.md's RESUME PLAN dispatch-discipline list: verify
+  the mechanism a change claims to add, not the metric it reports on.
+- `ORCHESTRATOR-FIX-INSTRUCTION-CAUSED-REGRESSION`: deferred with **immediate effect** as a
+  standing checklist item, added alongside the above: a change to an extractor's failure direction
+  requires its own bidirectional RED proof, regardless of how the requesting instruction is
+  framed.
+
+Both rules take effect immediately (this burst's own RESUME PLAN, below) and additionally bear on
+S-CIGATE-3 (which replaces the entire class of hand-rolled extractors these two findings live in)
+without requiring either finding to block this burst's close. Three lessons logged to
+`lessons.md`, tagged `[codified]`, per S-7.02: (a) verify the mechanism, not the metric it reports
+on; (b) a change to an extractor's failure direction needs a bidirectional RED proof; (c) "CI
+green and mergeable" is not "fully reviewed" — the question that found three HIGHs was the
+human's, not the pipeline's.
+
+### Decision: DEC-262 — Merge Authorized at Step 4.5 = 0/3 After Ten Windows, 61 Passes
+
+Human ruling: merge authorized on code grounds with Step 4.5 permanently at 0/3 after ten windows
+and 61 total recorded adversary passes — the 3/3-CLEAN convergence bar defined by DEC-199/DEC-245
+was never met, and merging accepted that outcome rather than grinding an eleventh window.
+Reasoning recorded: `src/` has been 0-defect across 32-plus consecutive passes (unchanged by this
+burst — ADV-P60/61 touched only `tests/` and `scripts/`); every finding across all ten windows and
+both delta reviews has been confined to test/guard infrastructure, never the shipped product code;
+the guard apparatus itself is now materially stronger than what `develop` carried before this
+story (S-CIGATE-2's `df203233` plus this story's own hardening), and — after this burst's two
+HIGH doc-accuracy findings were fixed — its documented claims now match its actual behavior; the
+residual failure class (line-based YAML extraction generating genuinely NEW inspection axes each
+window, not new instances of an already-known axis) has been explicitly routed to S-CIGATE-3
+(durable real-parser fix, DEC-259/DEC-260) rather than to an eleventh STRICT window, which the
+ten-window trend suggested would likely find an eleventh new axis rather than converge.
+
+### Worktree Cleanup
+
+`.worktrees/S-626-1` and `.worktrees/S-CIGATE-2` removed. Verified against PR merge records (`gh
+pr view`), NOT `git branch --merged`, since squash merges are not ancestors of the target branch
+and `--merged` would silently miss them. Local branches deleted; `git remote prune origin` run.
+Main repo fast-forwarded `df203233`→`a5e1d087`. Three worktrees remain: main (`develop` @
+`a5e1d087`), `.factory` (`factory-artifacts`), `.reference` (detached). This closes the
+long-standing `.worktrees/S-CIGATE-2` cleanup item carried in STATE.md's "Not yet done" list since
+S-CIGATE-2's own merge. **Not touched, pre-existing, unrelated:** 15 local branches with deleted
+remotes (`[gone]`) remain in the main repo.
+
+### Story Status: S-626-1 `in-progress` → `done`
+
+`stories/S-626-1.md` v1.35→v1.36 (FIX ROUND 31 — merge + delta review + fix, closes the story);
+`status: in-progress` → `status: done`. `stories/STORY-INDEX.md` v1.5.79→v1.5.80 — row status
+marker updated in place; `total_stories` unchanged at 127 (no new stories opened this burst).
+
+### Burst Summary: S-626-1-MERGE+ADV-P60-P61+BURST-CLOSE (2026-08-10)
+
+S-626-1 is DELIVERED: PR #667 squash-merged to `develop` as `a5e1d087`, closing issue #626.
+`develop` CI SUCCESS on `a5e1d087` (run 31432422878, 12 success + 2 legitimately-skipped),
+providing the first production confirmation of the `ALLOWED_SKIPS` mechanism this story's own
+window 57/58/59 hardened. Two targeted delta reviews (ADV-P60/ADV-P61, not STRICT Step-4.5 passes)
+covered the previously-unreviewed `1381af17..5ca51bc2` delta and found 3 HIGH + 3 LOW actionable
+findings, all fixed pre-merge and CI-green (`736fea28`/`23ace476`/`f656f873`); `ADV-P1-INDEX.md`
+v2.14→v2.15 (442→452, +10). Two of the three HIGHs are process-gap findings about this project's
+own verification and instruction discipline, not the shipped product — both S-7.02-dispositioned
+via explicit inline deferral with immediate-effect standing rules, no new story. Two further drift
+items recorded from external research (`JQ-TRUST-NOT-CLOSABLE-IN-SCRIPT`,
+`GITHUB-ACTIONS-ENV-VAR-LIKELY-WRITABLE`, the latter UNVERIFIED). **DEC-262**: merge authorized on
+code grounds with Step 4.5 permanently at 0/3 after ten windows and 61 passes — the convergence
+bar was never met, and merging accepted that with the delta fully reviewed and every finding
+closed. Worktree cleanup completed (`.worktrees/S-626-1`, `.worktrees/S-CIGATE-2` removed; three
+worktrees remain). Story status `S-626-1` → `done`. Next priority unchanged: **S-CIGATE-3** (v1.2,
+9 ACs, `saphyr-parser =0.0.11`, DEC-260).
+
+### Archived Phase Progress Row (from WINDOW-57-58-59+SWEEP-2+CI-BREAK)
+
+| Phase | Status | Completed | Gate | Notes | Finding Progression |
+|-------|--------|-----------|------|-------|---------------------|
+| pass-57 adversary / pass-58 adversary / pass-59 adversary | COMPLETE | 2026-08-10 | — | Window 57/58/59 CLOSED 0/3, TENTH consecutive; three frontiers (C1-lexer, C5-falsifiability, C3-side-channels; DEC-254); 23 findings, zero rediscoveries, one NEW failure axis (positional-assumption). | →1→3→0→2 |
+| **WINDOW-57-58-59+SWEEP-2+CI-BREAK fix burst (2026-08-10): Caught up previously-unrecorded `1381af17` (3 drift items closed). Closed as a fix burst (class sweep `a17939e2`, DEC-255), which broke CI for real (run 31406705091) and was fixed by `f2bea32e` (DEC-257, CI-BREAK-1). CI FINAL 15/15 PASS, mergeStateStatus CLEAN.** | PAUSED | 2026-08-10 | — | Factory paused, pipeline ACTIVE. Four drift items dispositioned per S-7.02 (3 new + 1 updated 2nd instance; all inline-deferred, no new story). Post-close: fifth drift item `ORCHESTRATOR-STALE-AGENT-NAME-COLLISION` recorded (stale-agent-name incident, no data corruption). PR #667 HELD (DEC-202/DEC-258). AX23-001 PENDING. | →1→3→0→2 |
+
+### Archived Current Phase Steps Row (from WINDOW-57-58-59+SWEEP-2+CI-BREAK)
+
+| Step | Agent | Status | Output |
+|------|-------|--------|--------|
+| **WINDOW-57-58-59+SWEEP-2+CI-BREAK (2026-08-10): state-manager closed the burst per the Single-Commit Burst Protocol. Caught up `1381af17` (previously unrecorded; closed 3 drift items). Recorded DEC-254..259 (6 decisions); archived DEC-246+248..253 (7 rows) to decisions-archive.md. Recorded 3 new drift items + 1 two-instance update + 1 axis-update, all S-7.02-dispositioned inline. Updated `ADV-P1-INDEX.md` v2.13->v2.14 (pass 59, 442 total findings, 0C/32H/130M/152L/128I). Bumped `S-626-1.md` v1.32->v1.35 (FIX ROUND 28/29/30) and `STORY-INDEX.md` v1.5.77->v1.5.78. Appended `burst-log.md` + `session-checkpoints.md` entries; logged 3 lessons to `lessons.md` tagged `[codified]`; archived the prior burst's Phase-Progress/Current-Phase-Steps rows. **Post-close (same session):** solicited itemized finding detail from agents by name (`pass-57`/`pass-58`/`pass-59`) after the burst commit had already landed; these were stale, stopped dispatches at superseded head `910b8ab0`, not the real `b`-suffixed agents — team-lead corrected this, confirmed no fabricated data reached the committed record (the catalog was built from the dispatch brief + independently re-verified commit content, not from any agent reply), and directed recording a new drift item, which this follow-up commit adds.** | state-manager | COMPLETED | `STATE.md` v2.30->v2.31->v2.32 + `ADV-P1-INDEX.md` + `S-626-1.md` + `STORY-INDEX.md` + `burst-log.md` + `session-checkpoints.md` + `lessons.md` + `decisions-archive.md`, committed to factory-artifacts (two commits: the burst close, then this post-close drift-item addition), pushed via CAS. Next: S-CIGATE-3 (durable YAML-parser fix) per DEC-259. |

@@ -6934,3 +6934,30 @@ from four places before reporting rather than letting it stand.
 _Trigger: DEC-246-FOLLOWUP research pass (2026-08-10) — new drift-item corrections, DEC-261, no code
 changed (product commit `5ca51bc2`, docstrings only)._
 _Tagged: [external-validation] [research-methodology] [ci-gate] [guard-apparatus] [recurrence] [codified]_
+
+### [codified] VERIFY-THE-MECHANISM-NOT-THE-METRIC-IT-REPORTS-ON: a doc-only change was reported complete, and the verification that would have caught it checked the wrong thing
+
+`a17939e2` documented `#[ignore]`/`#[cfg]` enforcement added to `test_ci_gate_pass_fail_semantics_are_structurally_placed` (carrying pins M2-a..p), including prose reading "see this test's assertions below." The test body was found, by ADV-P60, to have exactly ONE assertion — the documented enforcement was never written. This shipped unnoticed through the burst that produced it because the verification performed at that burst's close checked `#[test]`=27 and denominator=27 — both true, both unchanged, both exactly what a metrics-based check is supposed to confirm — without ever checking whether the assertions the commit message claimed to add were actually present in the diff. A doc-only change passes a metric-based check identically to a real one, because the metric measures something the mechanism is supposed to produce as a side effect, not the mechanism itself.
+
+**Disposition:** when verifying a dispatched change that claims to add enforcement, an assertion, or a guard, grep the diff for the claimed code itself before accepting the change as complete — a stable or correctly-changed downstream count (test count, denominator, canary value) is necessary but not sufficient evidence the underlying mechanism exists. This generalizes beyond CI-gate guards: any "we added X" claim should be verified by finding X in the diff, not by finding X's expected side effects unchanged.
+
+_Trigger: S-626-1-MERGE+ADV-P60-P61+BURST-CLOSE (2026-08-10) — recorded as drift item `DOC-CLAIMS-A-GUARD-THAT-DOES-NOT-EXIST` (HIGH), found by ADV-P60, closed on `f656f873`, deferred with immediate effect per S-7.02._
+_Tagged: [verification-discipline] [ci-gate] [guard-apparatus] [process-gap] [s-7.02] [codified]_
+
+### [codified] A-FAILURE-DIRECTION-CHANGE-IS-NOT-A-CONSISTENCY-FIX-AND-NEEDS-A-BIDIRECTIONAL-RED-PROOF: an orchestrator-requested "small" fix flipped an extractor from fail-closed to fail-open
+
+The orchestrator requested `ADV-P57-INFO-004` (stripping a `- ` list-marker prefix before matching a step name) as what it framed, and what was accepted, as a small consistency fix. The change converted `extract_job_display_name` from a fail-closed panic (on ambiguous input, refuse to proceed) to a fail-open silent miss (on a legal, ordinary 4-space `steps:` layout with `name: CI Gate`, the collision Guard A exists to catch went undetected — full suite `27 passed, 0 failed`). The instruction that caused this was not itself reviewed as a change to the extractor's failure direction, because it was framed, and reviewed, as cosmetic.
+
+**Disposition:** any change to an extractor, guard, or validator that alters what happens on ambiguous or malformed input — even one requested as "small" or "just for consistency" — must be treated as a change to its failure direction and proven bidirectionally before being accepted: one construction showing the OLD behavior was wrong (why the fix is needed), and a second construction showing the NEW behavior does not introduce a new wrong-direction failure (why the fix doesn't trade one gap for another). Framing a request as cosmetic does not exempt it from this proof; the orchestrator itself, not just the implementer, is a valid source of a regression-causing instruction.
+
+_Trigger: S-626-1-MERGE+ADV-P60-P61+BURST-CLOSE (2026-08-10) — recorded as drift item `ORCHESTRATOR-FIX-INSTRUCTION-CAUSED-REGRESSION` (MEDIUM), found by ADV-P60, closed on `f656f873`, deferred with immediate effect per S-7.02._
+_Tagged: [red-proof-discipline] [orchestrator-discipline] [ci-gate] [guard-apparatus] [process-gap] [s-7.02] [codified]_
+
+### [codified] CI-GREEN-AND-MERGEABLE-IS-NOT-FULLY-REVIEWED: the question that found three live HIGHs was the human's, not the pipeline's
+
+Ten STRICT Step-4.5 windows (57/58/59 being the tenth) all asked the same shape of question — is this frozen head CLEAN against a fresh inspection frontier — and by construction never reviewed any commit landed AFTER the frozen head, including the very fix commits those windows themselves produced (`a17939e2`, `f2bea32e`) and a later doc-correction commit (`5ca51bc2`). CI was green and `mergeStateStatus` was CLEAN at every one of those points. None of that constituted "fully reviewed" — 1,024 insertions across three commits sat unreviewed by any pass until the human asked directly whether PR #667 had been fully reviewed, a different and narrower question than whether it was green, which prompted ADV-P60/ADV-P61 and surfaced three live HIGHs in code the pipeline's own automated gates had called passing four separate times.
+
+**Disposition:** "CI green" and "mergeStateStatus CLEAN" answer whether the code currently compiles, passes its own tests, and has no merge conflicts — they do not answer whether every line of the diff has been reviewed. Before treating a PR as ready to merge, explicitly confirm the reviewed range covers 100% of the diff against the target branch, not just the range covered by the last STRICT window's frozen head; a gap between "last reviewed head" and "current head" is a standing, checkable fact (`git diff <last-reviewed>..<current-head>`), not something that requires waiting for the next scheduled window to notice.
+
+_Trigger: S-626-1-MERGE+ADV-P60-P61+BURST-CLOSE (2026-08-10) — human-initiated targeted delta review (ADV-P60/ADV-P61) found 3 HIGH findings in the `1381af17..5ca51bc2` gap no STRICT window had reviewed; all closed pre-merge (`736fea28`/`23ace476`/`f656f873`)._
+_Tagged: [review-completeness] [ci-gate] [guard-apparatus] [merge-readiness] [codified]_

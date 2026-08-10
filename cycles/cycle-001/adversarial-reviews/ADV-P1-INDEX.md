@@ -1,22 +1,22 @@
 ---
 document_type: adversarial-review-index
 level: ops
-version: "2.14"
-status: in-review
+version: "2.15"
+status: closed-merged
 producer: adversary
-timestamp: 2026-08-10T17:15:00Z
+timestamp: 2026-08-10T21:30:00Z
 phase: "5"
-pass: 59
-inputs: [.factory/stories/S-626-1.md, .factory/stories/S-CIGATE-1-ci-gate-aggregator.md, .factory/stories/S-CIGATE-2-skipped-status-false-green.md, .factory/stories/S-640-1.md, .factory/stories/S-641-1.md, .factory/stories/S-MUTANTS-EXAMINE-GLOBS-1.md, .factory/stories/S-TRAIL-DERIVATION-GUARD-1.md, .factory/stories/STORY-INDEX.md, .factory/specs/prd/cross-cutting.md, .github/workflows/ci.yml, tests/ci_gate_completeness.rs, tests/cli_handler.rs, tests/common/yaml.rs, tests/mutants_glob_existence.rs, scripts/check-ci-gate.sh, docs/specs/cargo-mutants-policy.md, CLAUDE.md, Cargo.toml, CHANGELOG.md, live CI run 30465686049, live CI run 31406705091 (pass-57/58/59 fix-round CI-break), branch protection API, PyYAML 6.0.3 (pass-55 differential), standalone rustc reproductions (pass-56/57), Ruby Psych (pass-57), sibling ci.yml re-indent sweep (pass-57), scratch-tree per-mutation rebuilds (pass-58), 7 mutated ci.yml copies replayed against real pin extractors (pass-59)]
+pass: 61
+inputs: [.factory/stories/S-626-1.md, .factory/stories/S-CIGATE-1-ci-gate-aggregator.md, .factory/stories/S-CIGATE-2-skipped-status-false-green.md, .factory/stories/S-640-1.md, .factory/stories/S-641-1.md, .factory/stories/S-MUTANTS-EXAMINE-GLOBS-1.md, .factory/stories/S-TRAIL-DERIVATION-GUARD-1.md, .factory/stories/STORY-INDEX.md, .factory/specs/prd/cross-cutting.md, .github/workflows/ci.yml, tests/ci_gate_completeness.rs, tests/cli_handler.rs, tests/common/yaml.rs, tests/mutants_glob_existence.rs, scripts/check-ci-gate.sh, docs/specs/cargo-mutants-policy.md, CLAUDE.md, Cargo.toml, CHANGELOG.md, live CI run 30465686049, live CI run 31406705091 (pass-57/58/59 fix-round CI-break), live CI run 31432422878 (develop post-merge), branch protection API, PyYAML 6.0.3 (pass-55 differential), standalone rustc reproductions (pass-56/57), Ruby Psych (pass-57), sibling ci.yml re-indent sweep (pass-57), scratch-tree per-mutation rebuilds (pass-58), 7 mutated ci.yml copies replayed against real pin extractors (pass-59), delta `1381af17..5ca51bc2` (pass-60/61)]
 traces_to: .factory/stories/S-626-1.md
-total_findings: 442
-severity_distribution: { CRIT: 0, HIGH: 32, MED: 130, LOW: 152, INFO: 128 }
+total_findings: 452
+severity_distribution: { CRIT: 0, HIGH: 35, MED: 130, LOW: 155, INFO: 132 }
 story: S-626-1
 cycle: cycle-001
-feature_head: f2bea32e (S-CIGATE-2 CI-BREAK-1 fix, closing the real Test(macos-latest) failure introduced by the pass-57/58/59 class sweep `a17939e2`; feature branch progression this burst: `910b8ab0`→`1381af17`(pass-54/55/56 LOW-residual catch-up, previously unrecorded)→`a17939e2`(pass-57/58/59 class sweep)→`f2bea32e`(CI-BREAK-1 fix); no adversarial pass has yet reviewed `f2bea32e`)
-pr: 667
+feature_head: 5ca51bc2 (last commit reviewed by any adversarial pass before merge; merge commit is `a5e1d087` on `develop`, squash of 48 commits; feature branch progression this burst's review scope: `1381af17`→`a17939e2`(pass-57/58/59 class sweep)→`f2bea32e`(CI-BREAK-1 fix)→`5ca51bc2`(DEC-261 doc corrections, reviewed by pass-60/61)→PR #667 squash-merged to `develop` as `a5e1d087`)
+pr: 667 (MERGED to develop as `a5e1d087` 2026-08-10T21:08:10Z, closes #626; remote branch `ci/fix-toolchain-sha-msrv` auto-deleted)
 basis: TRUE ADVERSARY AGENT (not a DEC-190 substitute)
-convergence: 0 of 3 (Step 4.5 window — DEC-199 GRIND to 3/3 CLEAN; window 57/58/59 CLOSED 0/3 — pass-57 NOT CLEAN (1H+2M+2L+4I), pass-58 NOT CLEAN (0H+2M+3L+3I), pass-59 NOT CLEAN (0H+0M+1L+5I); three deliberately-varied inspection frontiers, human-approved before dispatch per DEC-254 (C1-lexer differential conformance, C5-falsifiability census of the new pins, C3-side-channels — inter-step side channels inside `ci-gate`, a frontier never probed in 56 prior passes) against frozen head `1381af17`; 56 passes now recorded; TENTH consecutive window without 3/3 since window 30/31/32; all 23 findings closed same-burst as a single class sweep, commit `a17939e2` (DEC-255), which itself broke CI (DEC-257, fixed by `f2bea32e`) rather than a fix round against a frozen head — see Window 57/58/59 Summary below. Window 54/55/56's own convergence detail (pass-54/55/56 verdicts, frontiers, isolation notes) is preserved unchanged further down in this file.)
+convergence: 0 of 3 FINAL — Step 4.5 window closed permanently at 0/3 (DEC-262 authorized merge on code grounds without ever reaching 3/3 CLEAN, after ten windows and 61 total adversary passes). Window 57/58/59 CLOSED 0/3 — pass-57 NOT CLEAN (1H+2M+2L+4I), pass-58 NOT CLEAN (0H+2M+3L+3I), pass-59 NOT CLEAN (0H+0M+1L+5I); three deliberately-varied inspection frontiers, human-approved before dispatch per DEC-254 (C1-lexer differential conformance, C5-falsifiability census of the new pins, C3-side-channels — inter-step side channels inside `ci-gate`, a frontier never probed in 56 prior passes) against frozen head `1381af17`; TENTH consecutive window without 3/3 since window 30/31/32; all 23 findings closed same-burst as a single class sweep, commit `a17939e2` (DEC-255), which itself broke CI (DEC-257, fixed by `f2bea32e`) rather than a fix round against a frozen head. **Passes 60/61 (this update) were TARGETED DELTA REVIEWS, not a STRICT Step-4.5 window** — dispatched because the human asked whether #667 was fully reviewed rather than whether CI was green; they covered `1381af17..5ca51bc2` (1,024 insertions no prior pass had seen) and found/closed 3 HIGH + 3 LOW findings pre-merge. Not counted toward Step 4.5's 3/3 window arithmetic. See Passes 60/61 Summary below. Window 54/55/56's own convergence detail (pass-54/55/56 verdicts, frontiers, isolation notes) is preserved unchanged further down in this file.
 void_spawns: 6 (passes 6/7/8 first-attempt background subagents; pass-9 isolation breach; pass-11 isolation breach; pass-22 isolation breach)
 not_run: 2 (passes 16/17 — superseded by round-5 ruling per DEC-209; see s-626-1-adversary-pass-16.md and s-626-1-adversary-pass-17.md)
 superseded: 1 (pass-20 — superseded per DEC-216; window 18/19/20 CLOSED 0/2)
@@ -2036,5 +2036,76 @@ an earlier job) — executed against the real extractor functions, not a descrip
   closed-for-this-instance with the general rule retained as a standing checklist item) in
   STATE.md's Drift Items table; none required a new STORY-INDEX entry this burst. Three lessons
   codified to `cycles/cycle-001/lessons.md`, tagged `[codified]`.
+
+---
+
+## Pass 60 / Pass 61 Finding Catalog (TARGETED DELTA REVIEWS, not a STRICT Step-4.5 window —
+dispatched to answer whether PR #667 was fully reviewed, not whether CI was green; scope
+`1381af17..5ca51bc2`, the 1,024 insertions no prior pass had seen)
+
+Pass-60 reviewed the Rust delta (684 lines: `tests/ci_gate_completeness.rs` changes across
+`a17939e2`/`f2bea32e`/`5ca51bc2`). Pass-61 reviewed the shell delta (422 lines:
+`scripts/check-ci-gate.sh` changes across the same range). Both executed end-to-end reproductions
+against the actual scripts/tests, not source reading alone — matching this file's established
+verification discipline (per-mutation rebuilds, scratch-tree execution, real-extractor replay).
+
+| ID | Severity | Classification | Title | Status | Notes |
+|----|----------|----------------|-------|--------|-------|
+| ADV-P60-HIGH-001 | HIGH | doc-claims-guard-that-does-not-exist | `a17939e2`'s own commit message and STATE.md narrative documented `#[ignore]`/`#[cfg]` enforcement added to `test_ci_gate_pass_fail_semantics_are_structurally_placed` (carrying pins M2-a..p) — the test body was found to have exactly ONE assertion, not the documented set; `#[ignore]`-ing the test left the suite at `26 passed; 1 ignored`, clippy clean, `EXPECTED_GUARD_TEST_COUNT` denominator intact, POL-11 canary satisfied — a guard the file claimed existed did not | CLOSED on `f656f873` | Reproduced directly: prior verification (this project's own orchestrator, at burst-close time) checked the METRIC the mechanism reports on (`#[test]` count = 27, denominator = 27) rather than whether the asserted mechanism itself existed — a doc-only change passes that check identically. Drift item `DOC-CLAIMS-A-GUARD-THAT-DOES-NOT-EXIST` opened (see STATE.md Drift Items) |
+| ADV-P60-HIGH-002 | HIGH | fix-instruction-caused-regression | The `- `-marker strip added at the orchestrator's own request (`ADV-P57-INFO-004`, framed as a small consistency fix) regressed `extract_job_display_name` from a fail-closed panic to a fail-open silent miss; reproduced with a sibling workflow using ordinary 4-space `steps:` indentation and `name: CI Gate` — full suite `27 passed, 0 failed`, Guard A blind to the exact name-collision it exists to catch. Legal per PyYAML, Ruby Psych, AND `actionlint` (not a hypothetical construction) | CLOSED on `f656f873` | The requested change was framed as cosmetic; it silently flipped the extractor's failure direction. Drift item `ORCHESTRATOR-FIX-INSTRUCTION-CAUSED-REGRESSION` opened (see STATE.md Drift Items) |
+| ADV-P60-LOW-001 | LOW | test-infrastructure | One of three LOW findings closed by `f656f873` alongside the two HIGHs above; detail not itemized in the dispatching team-lead's summary — see `f656f873` diff for the specific defect and fix | CLOSED on `f656f873` | Itemized detail not available to this recording pass; closed per team-lead-reported disposition |
+| ADV-P60-LOW-002 | LOW | test-infrastructure | Second of three LOW findings closed by `f656f873`; detail not itemized in the dispatching team-lead's summary — see `f656f873` diff for the specific defect and fix | CLOSED on `f656f873` | Itemized detail not available to this recording pass; closed per team-lead-reported disposition |
+| ADV-P60-LOW-003 | LOW | test-infrastructure | Third of three LOW findings closed by `f656f873`; detail not itemized in the dispatching team-lead's summary — see `f656f873` diff for the specific defect and fix | CLOSED on `f656f873` | Itemized detail not available to this recording pass; closed per team-lead-reported disposition |
+| ADV-P60-INFO-001 | INFO | census | Rust-delta census finding, non-actionable; detail not itemized in the dispatching team-lead's summary | OPEN (informational) | No fix action required |
+| ADV-P60-INFO-002 | INFO | census | Rust-delta census finding, non-actionable; detail not itemized in the dispatching team-lead's summary | OPEN (informational) | No fix action required |
+| ADV-P60-INFO-003 | INFO | census | Rust-delta census finding, non-actionable; detail not itemized in the dispatching team-lead's summary | OPEN (informational) | No fix action required |
+| ADV-P61-HIGH-001 | HIGH | trust-path-not-closable-by-directory-check | `resolve_trusted_jq()` (the CI-BREAK-1 fix, `f2bea32e`) validated jq's directory by resolving it via `dirname` — `dirname` is itself a PATH-resolved binary, so a second shim ahead of it on `$PATH` defeats the whole check. Reproduced: on a payload where `fmt`/`clippy`/`test` all genuinely FAILED, the compromised trust check still reported `OK fmt/clippy/test = success`, exit 0. Originally rated MEDIUM-001 by the reviewer; **the orchestrator independently re-rated it to HIGH** after reproducing the false-green with the guard engaged, meeting DEC-245's HIGH definition — the reviewer had explicitly flagged the call as one it would not make unilaterally | CLOSED on `736fea28`+`23ace476` | Fixed via pure-bash `dirname` (no external binary in the trust-check path) plus pinning every other PATH-shimmable binary reachable on the decision path |
+| ADV-P61-MEDIUM-002 | MEDIUM | test-infrastructure | Second MEDIUM finding from the shell delta; detail not itemized in the dispatching team-lead's summary — folded into the `736fea28`+`23ace476` fix alongside strict-mode re-keying (`RUNNER_OS` not `GITHUB_ACTIONS`), trust-check count 13→17, and `readonly` moved to file scope | CLOSED on `736fea28`+`23ace476` | Itemized detail not available to this recording pass; closed per team-lead-reported disposition |
+| ADV-P61-INFO-001 | INFO | census | Shell-delta census finding, non-actionable; detail not itemized in the dispatching team-lead's summary | OPEN (informational) | No fix action required |
+| ADV-P61-INFO-002 | INFO | census | Shell-delta census finding, non-actionable; detail not itemized in the dispatching team-lead's summary | OPEN (informational) | No fix action required |
+
+**Reconciliation note (raw vs. running total):** the two passes produced 14 raw finding
+observations (P60: 2H/0M/3L/3I = 8; P61: 1H[re-rated]/1M/0L/2I = 4, plus 2 LOW originally reported
+at dispatch-brief severity-tally level that resolve to the same underlying shell-hardening class
+as `ADV-P61-MEDIUM-002` and are not assigned separate IDs here). The running `total_findings`
+counter advances by the team-lead-authoritative delta of **+10** (442→452): 6 actionable
+(HIGH+LOW: `ADV-P60-HIGH-001/002`, `ADV-P60-LOW-001/002/003`, `ADV-P61-HIGH-001`) + 1 new MEDIUM
+(`ADV-P61-MEDIUM-002`) + 3 new INFO census entries, consistent with this file's established
+dedupe/twin convention for close-in-scope delta reviews. Full raw dispatch summary (including any
+sub-item detail not reproduced above) is held by the team-lead orchestrator; this index records
+what was independently confirmed and closed.
+
+## Pass 60 / Pass 61 Isolation Note
+
+**ELIGIBLE.** Reviewed committed range `1381af17..5ca51bc2` on the PR #667 branch, pre-merge; no
+isolation breach reported; no read of `.factory/cycles/`.
+
+## Pass 60 / Pass 61 Summary
+
+- **Verdict:** BOTH NOT CLEAN. Pass-60 (Rust delta): 2 HIGH + 0 MEDIUM + 3 LOW + 3 INFO. Pass-61
+  (shell delta): 0 HIGH + 2 MEDIUM + 2 LOW + 2 INFO at dispatch, re-rated by the orchestrator to
+  1 HIGH + 1 MEDIUM + 2 LOW + 2 INFO after independent end-to-end reproduction of the false green.
+- **Not a Step 4.5 window pass.** These were targeted delta reviews of the specific commit range
+  no prior pass had seen (`1381af17..5ca51bc2`), dispatched off-cycle because the human asked
+  whether #667 was *fully reviewed* — not whether CI was green. Not counted toward Step 4.5's 3/3
+  arithmetic; Step 4.5 remains permanently 0/3 at merge time (DEC-262).
+- **Three HIGHs, all verified end-to-end** (not reasoned about from source alone) against code CI
+  had called green four times — see catalog above. All three fixed pre-merge, all CI-green:
+  `736fea28`+`23ace476` (shell) and `f656f873` (Rust).
+- **All 6 actionable findings (3 HIGH + 3 LOW) CLOSED.** MEDIUM/INFO findings recorded but not all
+  independently itemized by this recording pass — see Reconciliation note above.
+- **Process-gap findings routed to STATE.md Drift Items, not this index's severity ledger:**
+  `ADV-P60-HIGH-001` and `ADV-P60-HIGH-002` are BOTH process-gap findings about the factory's own
+  prior verification/instruction discipline (a doc-only change passing a metric-based check; a
+  requested "consistency fix" flipping an extractor's failure direction) as much as they are code
+  defects — see STATE.md drift items `DOC-CLAIMS-A-GUARD-THAT-DOES-NOT-EXIST` and
+  `ORCHESTRATOR-FIX-INSTRUCTION-CAUSED-REGRESSION`, each S-7.02-dispositioned.
+- **PR #667 MERGED same-burst**, squash commit `a5e1d087` on `develop`, closes #626. `develop` CI
+  on `a5e1d087` (run 31432422878): SUCCESS, 12 success + 2 skipped (`Mutation testing` +
+  `Secret Scan`, both `pull_request`-only) — `CI Gate` correctly reported success with `mutants`
+  skipped, the first production confirmation of the `ALLOWED_SKIPS` mechanism (S-CIGATE-2).
+- **New decision:** **DEC-262** (merge authorized on code grounds with Step 4.5 at 0/3 after ten
+  windows and 61 total adversary passes; convergence bar never met, merge accepted that).
+- **Full narrative:** `cycles/cycle-001/burst-log.md` § "S-626-1-MERGE+ADV-P60-P61+BURST-CLOSE".
 
 ---
