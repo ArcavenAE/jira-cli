@@ -4,6 +4,42 @@ All notable changes to jr will be documented here.
 
 ## [Unreleased]
 
+### Fixed
+
+- **MSRV CI job genuinely validates 1.85.0 (S-626-1, #626, CI correctness):** The `msrv`
+  job in `ci.yml` previously pointed at the tip of dtolnay's `1.85.0` version branch,
+  which hard-codes the toolchain and has no `toolchain` input. The action correctly
+  installed 1.85.0 and set it as `rustup default`, but `cargo check` ran in the repo
+  root where `rust-toolchain.toml` (`channel = "stable"`) outranks `rustup default`
+  in rustup's precedence chain — so the check silently ran under stable (a
+  false-green). The fix replaces the SHA to `fa04a1451ff1842e2626ccb99004d0195b455a88`
+  (a version of the action that declares `toolchain` as a required input), adds
+  `with: {toolchain: "1.85.0"}`, and adds `RUSTUP_TOOLCHAIN: "1.85.0"` to the
+  `cargo check` step — which outranks `rust-toolchain.toml` at process level —
+  making the MSRV check genuine. The `msrv` job's `cargo check` also gained
+  `--locked`, so the gate validates the committed `Cargo.lock` instead of
+  silently re-resolving other and transitive dependencies at check time —
+  a real MSRV risk given dependencies in the checked lib+bins graph (e.g. `dirs`)
+  that ship no `rust-version` manifest field.
+  (The exact `=7.2.1` `comfy-table` pin described below is unaffected either
+  way: an exact-`=` pin cannot re-resolve to a different version regardless
+  of `--locked`.) No user-visible behaviour change.
+
+### Changed
+
+- **`comfy-table` pinned to 7.2.1 (S-626-1, #626):** `comfy-table 7.2.2` uses let-chains
+  (`edition = "2024"`, Rust ≥1.88 required) and deleted its `rust-version` manifest field,
+  so a caret range `"7"` would silently resolve to an incompatible version without cargo
+  enforcing any MSRV constraint. Pinned to `=7.2.1` until the codebase is ready for an
+  MSRV raise to 1.88 (tracked as a dedicated follow-up story). User impact: None for
+  binary users or source-builders on Rust ≥1.85.0.
+
+- **Three in-tree let-chains rewritten to nested `if` blocks (S-626-1, #626, internal):**
+  `src/cli/auth/keychain.rs`, `src/cli/board.rs`, and `src/cli/issue/list.rs` each
+  contained one let-chain that is valid only under Rust ≥1.88 edition 2024. Rewritten as
+  semantically-equivalent nested `if` blocks to restore MSRV 1.85.0 compliance. No
+  user-visible behaviour change.
+
 ## [0.6.0-dev.11] - 2026-07-25
 
 ### Fixed
