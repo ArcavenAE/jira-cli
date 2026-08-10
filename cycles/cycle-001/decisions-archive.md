@@ -1,13 +1,13 @@
 ---
 document_type: decisions-archive
 level: ops
-version: "1.0"
+version: "1.1"
 status: archive
 producer: state-manager
-timestamp: 2026-08-09T00:00:00Z
+timestamp: 2026-08-10T17:15:00Z
 cycle: "cycle-001"
 inputs: [STATE.md]
-input-hash: "[compaction-2026-08-09]"
+input-hash: "71faa6e"
 traces_to: STATE.md
 ---
 
@@ -20,8 +20,11 @@ traces_to: STATE.md
      DEC-202 (PR #667 HELD — extracted as a standalone clause from the combined DEC-199..DEC-203
      row below; the full combined row is preserved verbatim here), DEC-206 (VOID protocol for
      isolation breaches), DEC-224 (isolation eligibility principle), DEC-245 (DEC-204 adjudicated
-     — CLEAN criterion), DEC-246 (U1 closed), and DEC-247 (write-path deadlock resolved, recorded
-     this burst). Every other decision row is archived here verbatim, in original order. -->
+     — CLEAN criterion), DEC-247 (STATE.md write-path deadlock resolved — still cited by the
+     RESUME PLAN section), and DEC-254..DEC-259 (WINDOW-57-58-59+SWEEP-2+CI-BREAK burst,
+     2026-08-10). Every other decision row is archived here verbatim, in original order —
+     including DEC-246/248/249/250/251/252/253, all historical/completed as of this burst and
+     archived here 2026-08-10 to keep STATE.md's live table to only still-governing rows. -->
 
 | ID | Decision | Rationale | Phase | Date |
 |----|----------|-----------|-------|------|
@@ -81,3 +84,10 @@ traces_to: STATE.md
 | DEC-242 | **WINDOW 51/52/53 CLOSED 0/3 (2026-08-07).** Three deliberately-varied inspection frontiers, human-approved before dispatch per the DECAY-CURVE-MEASURES-QUESTION-EXHAUSTION-NOT-CONVERGENCE caution: (51) vacuous satisfaction — can an assertion pass while the property it protects is broken; (52) reconciliation seams — what did merging two stories' edits leave inconsistent; (53) spec→shipped behavior — which spec claims are false at this head. All three NOT CLEAN, all ELIGIBLE (no isolation breaches; no pass read `.factory/cycles/`). 30 findings: 5 HIGH, 14 MEDIUM, 6 LOW, 5 INFO. Step 4.5 remains 0/3. | Fresh STRICT window against `ada50a34`, dispatched per orchestrator-proposed frontiers approved at the close of REGRESSION-PIN+EC+GUARD-STORY. | Feature Mode SOH-DX-1 F4 Step 4.5 | 2026-08-07 |
 | DEC-243 | **PILE 1 CLOSED AS A CLASS, NOT AS INSTANCES (human-authorized, 2026-08-07).** Pass 51's six findings were all instances of `ANTI-NEUTERING-CONTROLS-STOP-AT-CI-GATE`. The fix was mandated as a class sweep rather than six point fixes, explicitly because pass 53 identified selective correction as the project's core methodological defect. Deliberate exclusions (`mutants`, `ci-gate` from the always-run class sweep) carry in-code rationale. | Human ruling: class-sweep fix authorized ahead of DEC-204/pile-2 adjudication, applying pass 53's own root-cause finding to the fix itself. | Feature Mode SOH-DX-1 F4 Step 4.5 | 2026-08-07 |
 | DEC-244 | **EXHAUSTIVE CLASS-LEVEL SWEEP AUTHORIZED IN PLACE OF A TARGETED FIX ROUND (human, 2026-08-07).** Executed discovery-first: an enumeration pass over a perimeter widened to include `docs/specs/` -- never previously in any correction perimeter -- found 101 stale occurrences, 70 of them beyond anything any review had reported. Fixing only the 18 reported findings would have corrected ~18% of the real surface and left the rest reading as verified-current. Discovery-first is the operative lesson, not the corrections themselves. | Human ruling: exhaustive sweep chosen over another targeted round, applying the 101-vs-18 evidence that targeted rounds systematically under-correct. | Feature Mode SOH-DX-1 F4 Step 4.5 | 2026-08-07 |
+| DEC-246 | **U1 CLOSED.** External research validated 8 GitHub Actions gating-semantics questions against primary sources (originally recorded as all CONFIRMS; see DEC-249 for the corrected re-validation), then found U1: a needs-set completeness gap no adversarial pass surfaced in 50 passes. Fixed via `PINNED_GATE_EXCLUDED_JOBS` + two new tests, commit `9d34f354`. | Every pass reasoned within the project's model of GitHub's semantics; none tested the model itself — research closed that blind spot. | Feature Mode SOH-DX-1 F4 Step 4.5 | 2026-08-08 |
+| DEC-248 | **INSPECTION FRONTIERS C1/C2/C5 APPROVED FOR WINDOW 54/55/56.** After a documented exhaustion survey of the prior 53 passes established Family C (declared-vs-actual surface) exhausted (passes 30-41 verbatim repeats), human approved three fresh frontiers: C1 bootstrap trust, C2 differential lexer conformance, C5 falsifiability census. | Frontier variety, not pass count, is what makes a CLEAN verdict meaningful (DECAY-CURVE-MEASURES-QUESTION-EXHAUSTION-NOT-CONVERGENCE). | Feature Mode SOH-DX-1 F4 Step 4.5 | 2026-08-09 |
+| DEC-249 | **DEC-246 RESEARCH ARTIFACT RECONSTRUCTED BEFORE DISPATCH -- FOUND OVERCLAIMED.** Human chose to reconstruct the missing `.factory/research/dec-246-github-actions-gating-semantics.md` artifact rather than log-and-proceed. Re-validation against primary sources found the original DEC-246 record OVERCLAIMED: recorded as 8/8 CONFIRM; actually 5 CONFIRM, 2 INCONCLUSIVE (Q4, Q8 -- Q8 was not among the original eight), 1 split (Q5). Nothing REFUTED. | A code change (`0e61a2dc`) and a retired inspection frontier both rested on an unwritten, now-partially-unrecoverable research trail; reconstructing before spending the next window closes that gap for the two still-recoverable items and documents the two that are not. | Feature Mode SOH-DX-1 F4 Step 4.5 | 2026-08-09 |
+| DEC-250 | **SIBLING-WORKFLOW EXPOSURE FIXED DIRECTLY; Q4/Q8 RESOLVED VIA STATIC-MATRIX ASSERTION.** Human ruled the sibling-workflow exposure (previously retired as an adversarial frontier on absence-of-demonstration) be closed as a guard rather than spent as a review frontier; Q4 (duplicate-check-name ambiguity)/Q8 (zero-leg matrix) resolved with a source-level static-matrix assertion (`test_matrix_os_lists_remain_static_literals`) rather than live throwaway-PR probes. Landed `0e61a2dc`. | Faster, cheaper, and more durable than a live empirical PR probe; converts an undecided platform-semantics question into a structural invariant the codebase already satisfies. | Feature Mode SOH-DX-1 F4 Step 4.5 | 2026-08-09 |
+| DEC-251 | **WINDOW 54/55/56 FINDINGS FIXED AS A CLASS SWEEP, NOT POINT FIXES.** All three passes independently converged on one root cause (key detected via the quote-aware `extract_key_name_at_indent` matcher, then its VALUE re-read via a bare `strip_prefix`/`starts_with`, silently swallowing quoted/space-before-colon spellings) introduced by `0e61a2dc`. Fixed as a single class sweep (`910b8ab0`, 4 files, +866/-128, CI FINAL 15/15 PASS) rather than 16 point fixes. Extends DEC-243/DEC-244 class-sweep precedent. | Point-fixing each finding individually would have left the same swallow-class defect reachable at the next quoted-key spelling; a class sweep closes the shape, not the instance. | Feature Mode SOH-DX-1 F4 Step 4.5 | 2026-08-09 |
+| DEC-252 | **PR #667 HOLD STANDS (DEC-202 REAFFIRMED).** Window 54/55/56 found a verified false-green vector in the guard apparatus this PR ships (ADV-P55-HIGH-001: an unpinned `needs:`-shaped decoy line inside the gate step's own unpinned `with:` block read as the job's own needs set via a depth-erasing `.trim()` match, verified false-green with seven jobs failing). Hold continues under DEC-202/DEC-128 -- CI green / mergeStateStatus CLEAN is not merge authorization. | A live false-green in the exact mechanism under review is precisely the risk DEC-202 exists to hold against. | Feature Mode SOH-DX-1 F4 Step 4.5 | 2026-08-09 |
+| DEC-253 | **NEXT PRIORITY IS S-CIGATE-3, NOT A TENTH WINDOW.** Human ruled the durable YAML-parser fix (S-CIGATE-3) is next, rather than dispatching a tenth STRICT adversarial window. | Nine consecutive windows without 3/3 on a codebase with a THIRTY-THIRD-plus consecutive src/ 0-defect streak indicates residual risk is concentrated in the review-guard apparatus's own hand-rolled-line-parsing technique, not in undiscovered code defects -- each fix round adds more of exactly that technique, making the loop self-sustaining until the technique itself is replaced. | Feature Mode SOH-DX-1 F4 Step 4.5 | 2026-08-09 |

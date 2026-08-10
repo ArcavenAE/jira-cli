@@ -7,7 +7,7 @@ producer: state-manager
 timestamp: 2026-05-07T00:00:00
 cycle: "cycle-001"
 inputs: [STATE.md]
-input-hash: "3bf79c1"
+input-hash: "71faa6e"
 traces_to: STATE.md
 ---
 
@@ -6879,3 +6879,30 @@ Commit `0e61a2dc` (this same burst) RED-proofed its two new guards against the b
 
 _Trigger: RESUME+WINDOW-54-55-56+CLASS-SWEEP (2026-08-09) -- recorded as drift item `RED-PROOF-NEEDS-SPELLING-VARIANTS` (HIGH), the window's own root-cause finding; deferred to S-CIGATE-3 per S-7.02 rather than opened as an independent story this burst._
 _Tagged: [red-proof-discipline] [ci-gate] [guard-apparatus] [spelling-variants] [process-gap] [s-7.02] [codified]_
+
+### [codified] ENV-GATED-GUARD-BRANCH-NEEDS-A-TEST-THAT-FORCES-THE-VARIABLE: `resolve_trusted_jq()`'s strict branch was unreachable from any local run, so its wrong `/usr/bin/jq`-only pin shipped unnoticed until real CI
+
+`a17939e2` introduced `resolve_trusted_jq()` with a soft/strict split: strict enforcement (reject any `jq` outside a trusted directory) only under `GITHUB_ACTIONS=true`, soft otherwise so `--self-test` still runs under any local `jq`. That split was added specifically so local development would not break — and that is exactly what guaranteed the strict branch went unexercised until it ran for real on a GitHub-hosted `macos-latest` runner, where it rejected the real, correct Homebrew `jq` at `/opt/homebrew/bin/jq` because the pin only trusted `/usr/bin/jq` (correct for `ubuntu-latest`, silently wrong for `macos-latest`). This is a distinct class from the existing `LOCAL-VERIFICATION-MISSES-PLATFORM-MATRIX` lesson (round 15): that one was about a platform nobody could test locally at all (Windows). This one is about a MODE — the `GITHUB_ACTIONS=true` branch — that is unreachable from a developer machine by construction, on a platform (macOS) the author's own machine could otherwise test directly.
+
+**Disposition:** any environment-gated branch (soft/strict split, feature flag, CI-only code path) must carry a test that FORCES the gate variable to its "on" state, not just a test that runs under the variable's normal absence. Closed for this instance by `f2bea32e`'s `run_jq_trust_self_test`, which forces `GITHUB_ACTIONS`/`RUNNER_OS` combinations directly rather than relying on a real CI run to exercise them. The general rule is what's recorded here, applied as a standing review-checklist item with immediate effect — not scoped to jq or to this file.
+
+_Trigger: WINDOW-57-58-59+SWEEP-2+CI-BREAK (2026-08-10) — recorded as drift item `GUARD-MODE-UNREACHABLE-LOCALLY` (HIGH, new class), closed for this instance by `f2bea32e`, general rule deferred with immediate effect per S-7.02._
+_Tagged: [environment-gating] [local-test-coverage] [ci-gate] [process-gap] [s-7.02] [codified]_
+
+### [codified] RED-PROOF-NEEDS-BOTH-A-SPELLING-AXIS-AND-A-POSITION-AXIS: `ADV-P57-HIGH-001` showed a RED proof covering every key spelling still misses a hard-coded indent assumption
+
+Window 54/55/56 (2026-08-09) codified `RED-PROOF-NEEDS-SPELLING-VARIANTS`: a RED proof must exercise every PyYAML-equivalent spelling of its target key (`key:`, `"key":`, `'key':`, `key :`), not just the bare form. Window 57/58/59 found that satisfying the spelling axis is not sufficient on its own: `extract_key_name_at_indent`'s hard-coded 4-space job-child indent is a SEPARATE, orthogonal assumption from spelling — a key can be correctly spelled and still invisible to the matcher if the surrounding YAML uses a different (still legal) indent depth. `0e61a2dc`'s own RED proofs for the guards this window found vulnerable exercised only 4-space job bodies; a legal 6-space job body (`ADV-P57-HIGH-001`) bypassed Guard A entirely with the full suite green. Two independently-varying axes were conflated as one until this window separated them.
+
+**Disposition:** a RED proof for any line-based/indent-sensitive extractor must cover BOTH axes independently — every semantically-equivalent spelling of the target key, AND every legal indent depth the surrounding structure could plausibly use (this project's own sweep used 3/6/8-space job bodies) — not just one axis assumed to stand in for the other. Applies as a review-time checklist item at every future RED-proof requirement in this file's class of guard, starting with **S-CIGATE-3**.
+
+_Trigger: WINDOW-57-58-59+SWEEP-2+CI-BREAK (2026-08-10) — recorded as an update to drift item `RED-PROOF-NEEDS-SPELLING-VARIANTS` (now confirmed two-axis, not renamed to avoid losing the citation trail), deferred to S-CIGATE-3 per S-7.02._
+_Tagged: [red-proof-discipline] [ci-gate] [guard-apparatus] [indent-variants] [process-gap] [s-7.02] [codified]_
+
+### [codified] VERIFY-A-MEASUREMENTS-METHOD-BEFORE-REPORTING-IT-EVERY-TIME-NOT-JUST-ONCE: the in-flight jq fix was reported "worse than the break" from a run missing `RUNNER_OS`, hours after the same rule was first logged
+
+`MEASUREMENT-METHOD-PRODUCES-FALSE-CLAIM` was first codified this cycle (window 54/55/56, 2026-08-09) after a `grep -o keyword | uniq -c` word-occurrence count was mistaken for a row-status count. This burst reproduced the same shape a second time, on a different measurement: the CI-BREAK-1 fix was reported as "half-finished, worse than the break" after running `check-ci-gate.sh` with `GITHUB_ACTIONS=true` set but `RUNNER_OS` unset — `resolve_trusted_jq()`'s correct fail-closed behavior on an unrecognized `RUNNER_OS` (reject, per its own design) was read as a new failure rather than the guard doing exactly what it was built to do. Both instances share the same root defect: a measurement was reported without first checking what its own inputs actually were.
+
+**Disposition:** before reporting any measurement's result (a count, a test outcome, a pass/fail verdict), state and verify the exact method/inputs used to produce it — which command, which env vars, which flags — not just the number or verdict itself. This recurred within the same cycle, hours after the first instance's corrective was logged, which is itself the operative finding: writing the rule down once did not make it self-enforcing. Treat this as a standing pre-report checklist item, applied before speaking, not after the fact.
+
+_Trigger: WINDOW-57-58-59+SWEEP-2+CI-BREAK (2026-08-10) — second instance of drift item `MEASUREMENT-METHOD-PRODUCES-FALSE-CLAIM`, updated (not duplicated) with immediate-effect standing-rule disposition reaffirmed per S-7.02._
+_Tagged: [measurement-methodology] [ci-gate] [recurrence] [process-gap] [s-7.02] [codified]_

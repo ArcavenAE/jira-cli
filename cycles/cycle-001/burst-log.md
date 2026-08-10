@@ -7,7 +7,7 @@ producer: state-manager
 timestamp: 2026-05-04T00:00:00
 cycle: "cycle-001"
 inputs: [STATE.md]
-input-hash: "25885ec"
+input-hash: "71faa6e"
 traces_to: STATE.md
 ---
 
@@ -9215,3 +9215,172 @@ what the prior, API-error-terminated state-manager instance left unfinished. dev
 `df203233` (unchanged). PR #667 remains OPEN, HELD (DEC-202/DEC-252) at head `910b8ab0`, CI FINAL
 15/15 PASS, mergeStateStatus CLEAN — HELD regardless of CI status per DEC-128 (merge authority is the
 human's). Next priority per DEC-253: **S-CIGATE-3**, not a tenth STRICT window.
+
+
+## WINDOW-57-58-59+SWEEP-2+CI-BREAK (archived rows from STATE.md 2026-08-10)
+
+### Pre-Window Catch-Up (`1381af17`)
+
+A prior working session landed `1381af17` ("test(ci): close pass-54/55/56 LOW residuals + Guard B
+docstring") before this burst began, closing three items deliberately deferred at the close of
+window 54/55/56 — none yet marked CLOSED in STATE.md or `ADV-P1-INDEX.md`. Closed: drift items
+`EXTRACT-JOB-BLOCK-RAW-ANCHOR-WIDENED` (job-header search now line-anchored, panics on multiple
+line-anchored occurrences), `DENOMINATOR-GUARD-USES-EXACT-LINE-MATCH` (the `#[test]` count guard
+now matches lines whose trimmed text STARTS WITH `#[test]`, closing the same-line evasion), and
+`SIBLING-WORKFLOW-FRONTIER-UNRETIRED` (Guard B's docstring corrected + a new decidable
+source-level assertion that neither matrix job declares an `exclude:` key today). This burst
+catches up the documentation debt: none of the three was previously recorded as closed anywhere
+in `.factory/`.
+
+### Adversarial Window pass-57/58/59 (DEC-254)
+
+Dispatched against frozen head `1381af17`. Three deliberately-varied, human-approved inspection
+frontiers, chosen against the documented exhaustion survey: (57) C1-lexer — differential lexer
+conformance against the code added by `910b8ab0`/`1381af17`, executed by porting the file's
+extractors to Python and cross-checking against PyYAML 6.0.3, Ruby Psych, and `actionlint`,
+verbatim `rustc` reproductions, and a systematic re-indent sweep of all 11 `ci.yml` jobs; (58)
+C5-falsifiability — falsifiability census of the new pins, executed via a scratch tree with
+per-mutation rebuild + `cargo test` + `--self-test`; (59) C3-side-channels — inter-step side
+channels inside `ci-gate`, a frontier never probed in 56 prior passes, executed by replaying the
+real pin extractors against seven mutated `ci.yml` copies.
+
+Result: CLOSED 0/3 — pass-57 NOT CLEAN (1H+2M+2L+4I), pass-58 NOT CLEAN (0H+2M+3L+3I), pass-59 NOT
+CLEAN (0H+0M+1L+5I). 23 findings total, roughly 20 distinct after two dedupe/twin groups. **Tenth
+consecutive window without 3/3 since window 30/31/32.** Central result: `0e61a2dc`/`910b8ab0`
+closed the value-reparse class cleanly (all three passes independently confirmed it fail-closed),
+but `0e61a2dc` also introduced a **second, independent, previously-unprobed failure axis**:
+`extract_key_name_at_indent`'s hard-coded 4-space job-child indent is assumed, never checked.
+`ADV-P57-HIGH-001`: a sibling workflow with a legal 6-space job body carrying `name: CI Gate`
+leaves the suite at 27 passed, 0 failed — Guard A, the sole automated control for the DEC-246
+duplicate-check-name vector, bypassed entirely. Full finding catalogs, isolation notes, and
+per-pass summaries: `cycles/cycle-001/adversarial-reviews/ADV-P1-INDEX.md` (v2.14).
+
+### Class Sweep (`a17939e2`, DEC-255)
+
+All 12 scoped items across the window's 23 findings closed as a single class sweep, not 23 point
+fixes, extending the DEC-243/DEC-244 class-sweep precedent. Two root-cause classes: (1) the
+positional-assumption axis, closed via a new `assert_job_block_uses_4_space_child_indent` wired
+into both Guard A (`extract_job_display_name`) and Guard B (`matrix_needs_members`), RED-proven
+across 3/6/8-space indent variants; (2) a trust-boundary gap in `resolve_trusted_jq()` closing a
+`$GITHUB_PATH`-prepend PATH-shim vector. Every fix RED-proven across BOTH the spelling axis
+(`"x":`/`'x':`/`x :`) AND the indent axis (3/6/8-space job bodies) — closing the gap window
+54/55/56's own root-cause finding (`RED-PROOF-NEEDS-SPELLING-VARIANTS`) had left open on one axis.
+**Deliberately refused:** changing `ci.yml`'s POL-11 canary to a literal exact-count equality
+(`== 27`) — the `test` job runs a 2-OS matrix and 4 of 27 tests are `#[cfg(unix)]`-gated, so a
+literal `27` in the YAML would red every Windows leg on an otherwise-green tree; the implementer
+fixed this Rust-side only (extending the denominator guard to also assert zero `#[ignore]` and
+legitimate `#[cfg(...)]` gating), a correct scope call documented in the commit message and
+recorded here rather than silently overridden. `git show --stat a17939e2`: 3 files changed
+(`scripts/check-ci-gate.sh` +70/-?, `tests/ci_gate_completeness.rs` +539/-?, `tests/common/yaml.rs`
++46/-?), 588 insertions / 67 deletions total. Full test suite: `cargo test --all-features` (0
+FAILED across 103 test-result summaries), `cargo clippy --all --all-features --tests -- -D
+warnings`, `cargo fmt --all -- --check`, `scripts/check-ci-gate.sh --self-test` (13/13) all clean
+— **at commit time**, on the author's local machine; CI itself then found a real, local-only-blind
+gap (see CI-BREAK-1 below).
+
+### CI-BREAK-1 (`f2bea32e`, DEC-257)
+
+Live CI run 31406705091 on `a17939e2`: `Test (macos-latest)` genuinely FAILED — two
+`#[cfg(unix)]` subprocess tests panicked with `Exit code: Some(2) (expected Some(1))`.
+`Test (ubuntu-latest)` and `Test (windows-latest)` were CANCELLED by matrix fail-fast, not
+independently failing (a reader of the raw check list would conclude three platforms broke when
+only one genuinely did — recorded as drift item `MATRIX-FAIL-FAST-MASKS-SCOPE`; confirming this
+required `gh run view --json jobs` annotations, not the check list alone). `CI Gate` correctly
+FAILED downstream of the real upstream failure — the first end-to-end evidence this cycle of the
+gate behaving correctly on a genuine failure rather than a synthesized payload. Root cause:
+`a17939e2`'s own `resolve_trusted_jq()` (the fix for `ADV-P58-LOW-001`) pinned exactly
+`/usr/bin/jq` under `GITHUB_ACTIONS=true` — correct for `ubuntu-latest`, wrong for
+`macos-latest`'s real Homebrew `jq` (`/opt/homebrew/bin/jq` or `/usr/local/bin/jq`). The strict
+branch engages only under `GITHUB_ACTIONS=true`, so no local `--self-test` run ever reached it
+before merging — the exact defect class (`GUARD-MODE-UNREACHABLE-LOCALLY`) that let the wrong pin
+ship unnoticed. Fixed by `f2bea32e`: a per-`RUNNER_OS` trusted-directory allowlist
+(`trusted_jq_dirs_for`/`is_trusted_jq_dir`), fail-closed when `RUNNER_OS` is unset under
+`GITHUB_ACTIONS=true`, plus a new `run_jq_trust_self_test` (13 checks: accept every trusted
+`(RUNNER_OS, dir)` pair plus a live host-adaptive end-to-end call; reject a PATH-prepend shim in
+an untrusted scratch dir and cross-OS/unmodeled-OS predicates; fail-closed on `RUNNER_OS` unset),
+own denominator pin `EXPECTED_JQ_TRUST_CHECKS=13`, separate from the pre-existing
+`EXPECTED_FIXTURES=13`. `git show --stat f2bea32e`: `scripts/check-ci-gate.sh` +373/-25 (1 file).
+**Verified locally this burst, not merely re-read from the commit message:**
+`scripts/check-ci-gate.sh --self-test` run directly → `13/13 jq-trust checks run, 0 mismatch(es)`
++ fixture self-test both PASS; `gh pr view 667 --json state,mergeable,mergeStateStatus,headRefOid`
+confirms `headRefOid f2bea32e…`, `mergeStateStatus CLEAN`, `mergeable MERGEABLE`, `state OPEN`.
+
+**`MEASUREMENT-METHOD-PRODUCES-FALSE-CLAIM`, second instance:** the in-flight jq fix was, at one
+point during this burst, reported as "half-finished, worse than the break" — the orchestrator had
+run `GITHUB_ACTIONS=true` **without** `RUNNER_OS` set, mistaking `resolve_trusted_jq()`'s correct
+fail-closed behavior (rejecting an unrecognized `RUNNER_OS`) for a new breakage. Same shape as the
+first instance (a current artifact, an invalid measurement) — this recurred hours after the first
+instance's corrective was logged, underscoring that the rule ("verify a measurement's method
+before reporting its result") only works if applied before speaking, not just recorded once.
+
+### PR #667 Hold Reaffirmed (DEC-258) / Next Priority (DEC-259)
+
+Hold STANDS under DEC-202/DEC-128 — CI green / mergeStateStatus CLEAN is not merge authorization —
+reaffirmed specifically because `ADV-P57-HIGH-001` verified a live HIGH bypass of Guard A in the
+apparatus this PR ships, independent of the CI-BREAK-1 episode. Human ruled next priority remains
+**S-CIGATE-3** (durable YAML-parser fix), not an eleventh window: three consecutive rounds where
+the hardening commit seeded the next round's findings, and this window proved the class generates
+NEW AXES (positional-assumption, alongside the pre-existing value-reparse axis) rather than only
+new instances of one already-known axis — now an evidence-backed argument, not inference, for
+replacing hand-rolled line-based extraction with a real YAML parser.
+
+### S-7.02 Cycle-Closing Checklist — Four Process-Gap Drift Items
+
+Three new, one updated-second-instance-plus-one-updated-two-axis (five total dispositions),
+handled inline in STATE.md's Drift Items table (not new stories — each judged effort-scoped
+enough for an inline deferral):
+
+- **`GUARD-MODE-UNREACHABLE-LOCALLY`** (HIGH, new class) — an environment-gated guard branch has,
+  by construction, no local test coverage until a test forces the gate variable; the soft/strict
+  split added specifically so local runs would work is exactly what guaranteed the strict branch
+  went unexercised until production. Closed for this instance by `f2bea32e`'s
+  `run_jq_trust_self_test`; the general rule ("any environment-gated branch must carry a test that
+  forces the gate variable") is the drift item, deferred with immediate effect as a standing
+  review-checklist item.
+- **`POSITIONAL-ASSUMPTION-AXIS`** (HIGH) — `extract_key_name_at_indent`'s hard-coded indent is
+  assumed, never checked; second distinct axis of the line-based-extraction defect class. Deferred
+  with a concrete target: **S-CIGATE-3** — both axes (positional-assumption, value-reparse) are
+  eliminated by construction once a real YAML parser replaces hand-rolled extraction; this is now
+  evidence-backed argument for that story, not inference.
+- **`MEASUREMENT-METHOD-PRODUCES-FALSE-CLAIM`** (second instance, MEDIUM, updated not duplicated)
+  — see CI-BREAK-1 above. Standing rule reaffirmed with immediate effect: verify a measurement's
+  method (which env vars were actually set) before reporting its result, every time, not just once
+  after the first instance.
+- **`RED-PROOF-NEEDS-SPELLING-VARIANTS`** (HIGH, updated — now confirmed TWO-AXIS, not just
+  spelling) — `ADV-P57-HIGH-001` proved a RED proof must also cover indent variants (3/6/8-space),
+  not only key-spelling variants. Deferred with a concrete target: applies as a review-time
+  checklist item at every future RED-proof requirement, starting with **S-CIGATE-3**.
+
+Verified (not merely asserted) at burst-close time: all four items carry inline deferral text with
+an explicit target and reason in STATE.md's Drift Items table — no additional STORY-INDEX entry
+was required to satisfy S-7.02 for this burst.
+
+### Burst Summary: WINDOW-57-58-59+SWEEP-2+CI-BREAK (2026-08-10)
+
+STATE.md compacted narrative advanced from v2.30 (163 lines) to v2.31, archiving DEC-246 and
+DEC-248..253 (7 historical/completed rows) to `decisions-archive.md` to make room for six new
+Decisions Log rows (DEC-254..259) at net-neutral or better line count. Files touched and committed
+this burst: `STATE.md` (v2.30→v2.31), `cycles/cycle-001/decisions-archive.md` (append),
+`cycles/cycle-001/adversarial-reviews/ADV-P1-INDEX.md` (v2.13→v2.14, pass 56→59, findings
+419→442), `cycles/cycle-001/burst-log.md` (this section), `cycles/cycle-001/session-checkpoints.md`
+(new checkpoint + prior archived), `cycles/cycle-001/lessons.md` (codified entries), `stories/S-626-1.md`
+(FIX ROUND 28/29/30), `stories/STORY-INDEX.md` (version bump + row append). `regression-state.json`
+and `sidecar-learning.md` left dirty per standing convention
+([[feedback_statemd_full_write]] neighbor convention). Product-branch commit trail this burst:
+`1381af17` (pre-window catch-up, previously unrecorded) → `a17939e2` (class sweep, window
+57/58/59 closure) → `f2bea32e` (CI-BREAK-1 fix). develop remains at `df203233` (unchanged). PR #667
+remains OPEN, HELD (DEC-202/DEC-258) at head `f2bea32e`, CI FINAL 15/15 PASS, mergeStateStatus
+CLEAN — HELD regardless of CI status per DEC-128 (merge authority is the human's). Next priority
+per DEC-259: **S-CIGATE-3**, not an eleventh STRICT window.
+
+### Archived Phase Progress Row (from RESUME+WINDOW-54-55-56+CLASS-SWEEP)
+
+| Phase | Status | Completed | Gate | Notes | Finding Progression |
+|-------|--------|-----------|------|-------|---------------------|
+| **RESUME+WINDOW-54-55-56+CLASS-SWEEP (2026-08-09): DEC-246 research artifact reconstructed (DEC-249, found OVERCLAIMED: 5 CONFIRM/2 INCONCLUSIVE/1 split, not 8/8 CONFIRM). Sibling-workflow-exposure + zero-leg-matrix frontiers closed directly as guards (`0e61a2dc`, DEC-250). Adversarial window pass-54/55/56 (Family C: bootstrap trust, differential lexer conformance, falsifiability census; DEC-248) CLOSED 0/3 -- NINTH consecutive; 24 findings, zero rediscoveries, one converged root cause. Closed as a fix burst (class sweep `910b8ab0`, DEC-251), CI FINAL 15/15 PASS, mergeStateStatus CLEAN. PR #667 HELD (DEC-202/DEC-252) at `910b8ab0`. Next priority S-CIGATE-3, not a tenth window (DEC-253).** | PAUSED | 2026-08-09 | -- | Factory paused, pipeline ACTIVE. Nine new drift items (3 process-gap deferrals per S-7.02, no new story opened this burst -- see Drift Items). PR #667 HELD (DEC-202). AX23-001 PENDING. | →1→3→0→2 |
+
+### Archived Current Phase Steps Row (from RESUME+WINDOW-54-55-56+CLASS-SWEEP)
+
+| Step | Agent | Status | Output |
+|------|-------|--------|--------|
+| **RESUME+WINDOW-54-55-56+CLASS-SWEEP (2026-08-09): state-manager closed the burst per the Single-Commit Burst Protocol. Reconstructed `research/dec-246-github-actions-gating-semantics.md` + updated `RESEARCH-INDEX.md` (DEC-249). Recorded DEC-248..253 (6 decisions). Recorded 9 new drift items, 3 with explicit S-7.02 process-gap deferrals (no new story opened this burst -- effort-scoped justified deferral). Updated `ADV-P1-INDEX.md` v2.12->v2.13 (pass 56, 419 total findings, 0C/31H/126M/146L/116I). Bumped `S-626-1.md` v1.31->v1.32 (FIX ROUND 27) and `STORY-INDEX.md` v1.5.76->v1.5.77. Appended `burst-log.md` + `session-checkpoints.md` entries; logged 1 lesson to `lessons.md` tagged `[codified]`; archived the prior COMPACTION Phase-Progress/Current-Phase-Steps rows.** | state-manager | COMPLETED | `STATE.md` v2.29->v2.30 + `ADV-P1-INDEX.md` + `S-626-1.md` + `STORY-INDEX.md` + `burst-log.md` + `session-checkpoints.md` + `lessons.md` + `research/dec-246-github-actions-gating-semantics.md` + `RESEARCH-INDEX.md`, committed to factory-artifacts in ONE atomic commit, pushed via CAS. Next: S-CIGATE-3 (durable YAML-parser fix) per DEC-253. |

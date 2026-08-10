@@ -1,22 +1,22 @@
 ---
 document_type: adversarial-review-index
 level: ops
-version: "2.13"
+version: "2.14"
 status: in-review
 producer: adversary
-timestamp: 2026-08-09T19:35:00Z
+timestamp: 2026-08-10T17:15:00Z
 phase: "5"
-pass: 56
-inputs: [.factory/stories/S-626-1.md, .factory/stories/S-CIGATE-1-ci-gate-aggregator.md, .factory/stories/S-CIGATE-2-skipped-status-false-green.md, .factory/stories/S-640-1.md, .factory/stories/S-641-1.md, .factory/stories/S-MUTANTS-EXAMINE-GLOBS-1.md, .factory/stories/S-TRAIL-DERIVATION-GUARD-1.md, .factory/stories/STORY-INDEX.md, .factory/specs/prd/cross-cutting.md, .github/workflows/ci.yml, tests/ci_gate_completeness.rs, tests/cli_handler.rs, tests/common/yaml.rs, tests/mutants_glob_existence.rs, scripts/check-ci-gate.sh, docs/specs/cargo-mutants-policy.md, CLAUDE.md, Cargo.toml, CHANGELOG.md, live CI run 30465686049, branch protection API, PyYAML 6.0.3 (pass-55 differential), standalone rustc reproductions (pass-56)]
+pass: 59
+inputs: [.factory/stories/S-626-1.md, .factory/stories/S-CIGATE-1-ci-gate-aggregator.md, .factory/stories/S-CIGATE-2-skipped-status-false-green.md, .factory/stories/S-640-1.md, .factory/stories/S-641-1.md, .factory/stories/S-MUTANTS-EXAMINE-GLOBS-1.md, .factory/stories/S-TRAIL-DERIVATION-GUARD-1.md, .factory/stories/STORY-INDEX.md, .factory/specs/prd/cross-cutting.md, .github/workflows/ci.yml, tests/ci_gate_completeness.rs, tests/cli_handler.rs, tests/common/yaml.rs, tests/mutants_glob_existence.rs, scripts/check-ci-gate.sh, docs/specs/cargo-mutants-policy.md, CLAUDE.md, Cargo.toml, CHANGELOG.md, live CI run 30465686049, live CI run 31406705091 (pass-57/58/59 fix-round CI-break), branch protection API, PyYAML 6.0.3 (pass-55 differential), standalone rustc reproductions (pass-56/57), Ruby Psych (pass-57), sibling ci.yml re-indent sweep (pass-57), scratch-tree per-mutation rebuilds (pass-58), 7 mutated ci.yml copies replayed against real pin extractors (pass-59)]
 traces_to: .factory/stories/S-626-1.md
-total_findings: 419
-severity_distribution: { CRIT: 0, HIGH: 31, MED: 126, LOW: 146, INFO: 116 }
+total_findings: 442
+severity_distribution: { CRIT: 0, HIGH: 32, MED: 130, LOW: 152, INFO: 128 }
 story: S-626-1
 cycle: cycle-001
-feature_head: 910b8ab0 (class sweep closing window 54/55/56, DEC-251 — feature branch head advances from `ada50a34`/`0e61a2dc` this burst; no adversarial pass has yet reviewed this new head)
+feature_head: f2bea32e (S-CIGATE-2 CI-BREAK-1 fix, closing the real Test(macos-latest) failure introduced by the pass-57/58/59 class sweep `a17939e2`; feature branch progression this burst: `910b8ab0`→`1381af17`(pass-54/55/56 LOW-residual catch-up, previously unrecorded)→`a17939e2`(pass-57/58/59 class sweep)→`f2bea32e`(CI-BREAK-1 fix); no adversarial pass has yet reviewed `f2bea32e`)
 pr: 667
 basis: TRUE ADVERSARY AGENT (not a DEC-190 substitute)
-convergence: 0 of 3 (Step 4.5 window — DEC-199 GRIND to 3/3 CLEAN; window 54/55/56 CLOSED 0/3 — pass-54 NOT CLEAN (0H+3M+1L+1I), pass-55 NOT CLEAN (1H+4M+2L+1I), pass-56 NOT CLEAN (2H+1M+4L+4I); three deliberately-varied Family-C inspection frontiers, human-approved before dispatch per DEC-248 (C1 bootstrap trust, C2 differential lexer conformance, C5 falsifiability census) after a documented exhaustion survey found the prior Family-C frontiers (passes 30-41) verbatim repeats; 53 passes now recorded; ninth consecutive window without 3/3 since window 30/31/32; all 24 findings closed same-burst as a single class sweep, commit `910b8ab0` (DEC-251), rather than a fix round against a frozen head — see Window 54/55/56 Summary below. Window 51/52/53's own convergence detail (pass-51/52/53 verdicts, frontiers, isolation notes) is preserved unchanged further down in this file.)
+convergence: 0 of 3 (Step 4.5 window — DEC-199 GRIND to 3/3 CLEAN; window 57/58/59 CLOSED 0/3 — pass-57 NOT CLEAN (1H+2M+2L+4I), pass-58 NOT CLEAN (0H+2M+3L+3I), pass-59 NOT CLEAN (0H+0M+1L+5I); three deliberately-varied inspection frontiers, human-approved before dispatch per DEC-254 (C1-lexer differential conformance, C5-falsifiability census of the new pins, C3-side-channels — inter-step side channels inside `ci-gate`, a frontier never probed in 56 prior passes) against frozen head `1381af17`; 56 passes now recorded; TENTH consecutive window without 3/3 since window 30/31/32; all 23 findings closed same-burst as a single class sweep, commit `a17939e2` (DEC-255), which itself broke CI (DEC-257, fixed by `f2bea32e`) rather than a fix round against a frozen head — see Window 57/58/59 Summary below. Window 54/55/56's own convergence detail (pass-54/55/56 verdicts, frontiers, isolation notes) is preserved unchanged further down in this file.)
 void_spawns: 6 (passes 6/7/8 first-attempt background subagents; pass-9 isolation breach; pass-11 isolation breach; pass-22 isolation breach)
 not_run: 2 (passes 16/17 — superseded by round-5 ruling per DEC-209; see s-626-1-adversary-pass-16.md and s-626-1-adversary-pass-17.md)
 superseded: 1 (pass-20 — superseded per DEC-216; window 18/19/20 CLOSED 0/2)
@@ -1815,5 +1815,226 @@ Pass-56 built standalone `rustc` reproductions of this file's individual extract
 - **New drift items opened:** `DEC-246-OVERCLAIMED-CONFIRMS` (MEDIUM), `SIBLING-WORKFLOW-FRONTIER-UNRETIRED` (MEDIUM), `EXTRACT-JOB-BLOCK-RAW-ANCHOR-WIDENED` (LOW), `DENOMINATOR-GUARD-USES-EXACT-LINE-MATCH` (LOW), `BURST-LOG-DEFEATS-PLAIN-GREP` (LOW), `ADVERSARY-PASSES-27-53-HAVE-NO-DETAIL-FILE` (LOW), plus three process-gap items each closed via an S-7.02 deferral this burst: `MEASUREMENT-METHOD-PRODUCES-FALSE-CLAIM` (MEDIUM), `RED-PROOF-NEEDS-SPELLING-VARIANTS` (HIGH), `RESEARCH-ARTIFACTS-NOT-PERSISTED` (MEDIUM). Full text: STATE.md Drift Items table.
 - **New decisions:** **DEC-248** (frontiers approved), **DEC-249** (DEC-246 research reconstructed, found overclaimed), **DEC-250** (sibling-workflow + zero-leg-matrix guards landed directly), **DEC-251** (window findings closed as class sweep), **DEC-252** (PR #667 hold reaffirmed), **DEC-253** (next priority is S-CIGATE-3, not a tenth window).
 - **Cycle-closing checklist (S-7.02) — SATISFIED.** All three process-gap drift items carry an explicit inline deferral (reason + target) in STATE.md's Drift Items table; none required a new STORY-INDEX entry this burst. No fix round left un-actioned this burst — unlike window 51/52/53, window 54/55/56's entire finding set was closed same-burst by the class sweep.
+
+---
+
+## Pre-Window Catch-Up: `1381af17` (previously unrecorded)
+
+Before window 57/58/59 was dispatched, a prior working session landed `1381af17`
+("test(ci): close pass-54/55/56 LOW residuals + Guard B docstring") closing three items
+deliberately deferred at the close of window 54/55/56 — none of which had yet been marked
+CLOSED in this index or in STATE.md's Drift Items table. Recorded here for the trail, not as a
+new pass: `ADV-P56-INFO-004`'s underlying `extract_job_block` job-header search is now
+line-anchored (a candidate match must start at byte 0 or immediately follow `\n`) and panics on
+multiple line-anchored occurrences instead of silently taking the first — closing drift item
+`EXTRACT-JOB-BLOCK-RAW-ANCHOR-WIDENED`; the `#[test]` count guard now matches lines whose
+trimmed text STARTS WITH `#[test]` rather than lines equal to it, closing the same-line evasion
+`#[test] fn foo() {}` — closing drift item `DENOMINATOR-GUARD-USES-EXACT-LINE-MATCH`; and Guard
+B's docstring is corrected to state precisely that a static literal `os:` list cannot expand to
+zero legs while `strategy.matrix.exclude:` is a second, independent, still-UNVERIFIED path to the
+same question, with a new decidable source-level assertion that neither matrix job declares an
+`exclude:` key today — this is treated as closing drift item `SIBLING-WORKFLOW-FRONTIER-UNRETIRED`
+(the frontier itself is now backed by a source-level assertion rather than resting on
+absence-of-demonstration alone; see DEC-256). All three CLOSED on `1381af17`. Window 57/58/59
+below was dispatched against this head.
+
+---
+
+## Pass 57 Finding Catalog (Window 57/58/59, frontier C1-lexer: differential lexer conformance against the code added by `910b8ab0`/`1381af17` — dispatched against head `1381af17`)
+
+Pass-57 ported this file's line-based extractors to Python and cross-checked them differentially
+against PyYAML 6.0.3, Ruby Psych, and `actionlint`; verbatim Rust was also extracted into
+standalone `rustc` binaries; the full 27-test suite was run against mutated copies; and a
+systematic re-indent sweep was run across all 11 `ci.yml` jobs — executed, not merely reasoned
+about from reading the Rust source.
+
+| ID | Severity | Classification | Title | Status | Notes |
+|----|----------|----------------|-------|--------|-------|
+| ADV-P57-HIGH-001 | HIGH | positional-assumption-axis | `extract_key_name_at_indent`'s hardcoded 4-space job-child indent is assumed, never checked; two new `0e61a2dc`/`910b8ab0`-era consumers (`extract_job_display_name`/Guard A, `matrix_needs_members`/Guard B) treat "no key at the assumed indent" as a valid answer rather than unparseable input — a sibling workflow with a legal 6-space job body carrying `name: CI Gate` leaves the suite at 27 passed, 0 failed, bypassing Guard A entirely (the sole automated control for the DEC-246 duplicate-check-name vector) | CLOSED on `a17939e2` | Closed via new `assert_job_block_uses_4_space_child_indent`, wired into both Guard A and Guard B; RED-proven across 3/6/8-space indent variants, not just the one construction that found it |
+| ADV-P57-MED-001 | MEDIUM | positional-assumption-axis | Guard B (`matrix_needs_members`) defeats detection identically to `ADV-P57-HIGH-001` on a non-4-space matrix-job body — independently found via the same differential-lexer method, a second instance of the same new axis | CLOSED on `a17939e2` | Twin of `ADV-P57-HIGH-001`, different call site; closed by the same `assert_job_block_uses_4_space_child_indent` wiring |
+| ADV-P57-MED-002 | MEDIUM | vacuous-satisfaction | Guard B's matrix-job-count check was `!is_empty()`, not an exact arity pin — losing one of the two matrix jobs (e.g. to a re-indent or a typo'd job id) was invisible to a non-empty check | CLOSED on `a17939e2` | Widened to `PINNED_MATRIX_NEEDS_MEMBER_COUNT`, an exact-arity pin |
+| ADV-P57-LOW-001 | LOW | key-detect-value-reparse-swallow | `extract_job_display_name` compared a job's `name:` value as literal text against the pinned `"CI Gate"` constant without rejecting YAML alias/anchor/tag forms (`*name`/`&name`/`!!str`) first — a node-property-prefixed value could defeat the literal-text comparison | CLOSED on `a17939e2` | Now rejects alias/anchor/tag forms outright instead of comparing their literal text |
+| ADV-P57-LOW-002 | LOW | silent-continue-on-disagreement | `matrix_needs_members`'s `extract_job_block` miss silently excluded the job from the matrix-needs set instead of failing loudly, mirroring the class `ADV-P55-MED-003` closed at a different call site | CLOSED on `a17939e2` | Now panics, matching Guard A's established precedent |
+| ADV-P57-INFO-001 | INFO | differential-lexer-negative-result | Full differential run (Python ports vs. PyYAML 6.0.3, Ruby Psych, `actionlint`) over the file's other ~25 pre-existing extractors found no further instance of the positional-assumption axis beyond the two sites above and the three sites `0e61a2dc` introduced (already closed on `910b8ab0`) | CLOSED on `a17939e2` | Recorded as this pass's own closing negative result, bounding the new axis's extent — mirrors `ADV-P56-INFO-004`'s role for the value-reparse axis |
+| ADV-P57-INFO-002 | INFO | cosmetic | `extract_and_normalize_if_expr` and `extract_and_normalize_sole_needs_line` silently collapsed an unparseable value re-read to `""` → `Ok(None)` instead of `Err`, discovered via the same Python-port differential but distinct from the positional-assumption axis (this is the value-reparse axis, reopened at two more call sites `0e61a2dc`/`910b8ab0` did not reach) | CLOSED on `a17939e2` | DUPLICATE-CLASS of `ADV-P58-LOW-003`/`ADV-P59-LOW-001` — same underlying gap, independently found via three different frontiers/tools; all three closed together |
+| ADV-P57-INFO-003 | INFO | falsifiability-census-negative-result | Systematic re-indent sweep of all 11 `ci.yml` jobs (3/6/8-space child indents, one job at a time) found the positional-assumption axis reachable only via Guard A/Guard B (the two sites above) — no third call site defeated by the sweep | CLOSED on `a17939e2` | Confirms the class sweep's scope claim independently of the Python/PyYAML differential |
+| ADV-P57-INFO-004 | INFO | cosmetic | `docs/specs/cargo-mutants-policy.md` does not yet distinguish the positional-assumption axis from the value-reparse axis in its Scope section, understating that hand-rolled line-based extraction has (at least) two independently-defeatable failure shapes | CLOSED on `a17939e2` | Scope subsection extended |
+
+## Pass 57 Isolation Note
+
+**ELIGIBLE.** Head `1381af17`; no isolation breach; no read of `.factory/cycles/`.
+
+## Pass 57 Summary
+
+- **Verdict:** NOT CLEAN — 1 HIGH + 2 MEDIUM + 2 LOW + 4 INFO; ELIGIBLE; frontier C1-lexer
+  (differential lexer conformance, executed via Python ports cross-checked against PyYAML 6.0.3 +
+  Ruby Psych + `actionlint`, standalone `rustc` reproductions, and a systematic re-indent sweep —
+  not reasoned about from source alone) found a NEW failure axis distinct from every prior
+  window's value-reparse class: a hard-coded, never-validated indent assumption.
+- **Frontier:** C1-lexer — differential lexer conformance: does every line-based extractor in this
+  file agree with a real YAML parser on every reachable indent, not just every reachable spelling.
+- **Convergence:** window 57/58/59 opens NOT CLEAN after one pass; one HIGH — a verified live
+  bypass of Guard A, the DEC-246 duplicate-check-name control.
+
+---
+
+## Pass 58 Finding Catalog (Window 57/58/59, frontier C5-falsifiability: falsifiability census of the pins `0e61a2dc`/`910b8ab0`/`1381af17` added — dispatched against head `1381af17`)
+
+Pass-58 built a scratch tree, applied one mutation at a time, rebuilt, and ran `cargo test` plus
+`scripts/check-ci-gate.sh --self-test` per mutation — executed against a real rebuild each time,
+not inferred from reading the pin definitions.
+
+| ID | Severity | Classification | Title | Status | Notes |
+|----|----------|----------------|-------|--------|-------|
+| ADV-P58-MED-001 | MEDIUM | value-pinned-keys-open | `spec-guard`'s self-test step body was byte-pinned (`PINNED_CI_GATE_SELF_TEST_RUN_LINE`, `910b8ab0`) but the STEP's key set was not — a decoy step with the same `name:` inserted earlier in the job satisfied `find_sole_step_by_name`'s first-match lookup, reading the decoy's (mutated) body instead of the real one, a live per-mutation-rebuild reproduction, not a hypothetical | CLOSED on `a17939e2` | New `PINNED_CI_GATE_SELF_TEST_STEP_KEYS` + `find_sole_step_by_name` now rejects >1 matching step name outright |
+| ADV-P58-MED-002 | MEDIUM | denominator-guard-incomplete | `EXPECTED_GUARD_TEST_COUNT`/`test_this_file_test_count_matches_expected_denominator` pins the `#[test]` attribute COUNT only — a per-mutation rebuild adding `#[ignore]` to an existing test, or gating one behind a non-`#[cfg(unix)]` conditional, left the count (and the suite) green while silently changing what actually runs in CI | CLOSED on `a17939e2` | Denominator guard extended to also assert zero `#[ignore]` attributes and that every `#[cfg(...)]` gating a `#[test]` is the one legitimate form (`#[cfg(unix)]`) |
+| ADV-P58-LOW-001 | LOW | trust-boundary-gap | `resolve_trusted_jq()` (pre-`a17939e2`: no such function existed — this pass's own mutation was prepending a malicious `jq` shim onto `$GITHUB_PATH` ahead of the gate step) had no jq-provenance check at all; a per-mutation rebuild with a `$GITHUB_PATH`-prepended shim drove `check-ci-gate.sh` to a fabricated all-green record undetected | CLOSED on `a17939e2`, hardened on `f2bea32e` (CI-BREAK-1) | `a17939e2` introduced `resolve_trusted_jq()` pinned strictly to `/usr/bin/jq` under `GITHUB_ACTIONS=true` — correct for `ubuntu-latest`, but wrong for `macos-latest`'s real Homebrew `jq`, breaking CI for real (run 31406705091); `f2bea32e` replaced the single-path pin with a per-`RUNNER_OS` trusted-directory allowlist. See CI-BREAK-1 below — this finding's own fix is what broke, and then fixed, CI this burst |
+| ADV-P58-LOW-002 | LOW | anchor-collision | `extract_job_block`'s anchor search was not bounded to at-or-after the top-level `jobs:` key — a per-mutation rebuild adding a top-level sibling key whose value textually collided with a job id (e.g. `on: {push: ...}` colliding with a job literally named `push`) produced a false-red, matching the wrong block | CLOSED on `a17939e2` | Anchor search now bounded to at-or-after `jobs:` |
+| ADV-P58-LOW-003 | LOW | key-detect-value-reparse-swallow | `extract_and_normalize_if_expr`/`extract_and_normalize_sole_needs_line` collapse an unparseable value re-read to `""` → `Ok(None)` instead of `Err`, reproduced via a per-mutation `--self-test` rebuild rather than source reading | CLOSED on `a17939e2` | DUPLICATE-CLASS of `ADV-P57-INFO-002`/`ADV-P59-LOW-001`; all three closed together — now `Err` loudly, naming the likely quoted-key cause |
+| ADV-P58-INFO-001 | INFO | falsifiability-census-negative-result | Per-mutation rebuild census of the remaining pins introduced by `910b8ab0` (M2-n/M2-o/M2-p and the workflow/env key-set pins) found no mutation that defeated them within this pass's mutation budget | CLOSED on `a17939e2` | Recorded as a negative result — these pins remain sound |
+| ADV-P58-INFO-002 | INFO | cosmetic | `check-ci-gate.sh --self-test`'s summary line did not yet distinguish the fixture self-test (`EXPECTED_FIXTURES`) from the (not-yet-existing, pre-`f2bea32e`) jq-trust self-test in its printed denominator, a minor legibility gap surfaced while designing this pass's mutation harness | CLOSED on `f2bea32e` | `f2bea32e` adds a distinct `run_jq_trust_self_test` summary line with its own `EXPECTED_JQ_TRUST_CHECKS=13` denominator, separate from `EXPECTED_FIXTURES=13` |
+| ADV-P58-INFO-003 | INFO | cosmetic | `docs/specs/cargo-mutants-policy.md` Scope section does not state that `scripts/check-ci-gate.sh`'s `GITHUB_ACTIONS=true`-gated strict branches are unreachable by any local `cargo mutants` run or local `--self-test` invocation without explicitly forcing the gate variable | CLOSED on `f2bea32e` | Scope subsection extended; ties directly to drift item `GUARD-MODE-UNREACHABLE-LOCALLY` |
+
+## Pass 58 Isolation Note
+
+**ELIGIBLE.** Head `1381af17`; no isolation breach; no read of `.factory/cycles/`.
+
+## Pass 58 Summary
+
+- **Verdict:** NOT CLEAN — 0 HIGH + 2 MEDIUM + 3 LOW + 3 INFO; ELIGIBLE; frontier C5-falsifiability
+  (falsifiability census, executed via scratch-tree per-mutation rebuilds + `cargo test` +
+  `--self-test`, not reasoned about from the pin definitions alone) found the trust-boundary gap
+  (`ADV-P58-LOW-001`) that later became this burst's real CI break once `a17939e2`'s own fix for
+  it shipped a wrong-for-`macos-latest` pin.
+- **Frontier:** C5-falsifiability — falsifiability census: for every pin `0e61a2dc`/`910b8ab0` and
+  its predecessors added, is there a concrete per-mutation-rebuild construction that defeats it.
+- **Convergence:** window 57/58/59 still NOT CLEAN after two passes; zero HIGH this pass, but the
+  window's cumulative HIGH count (from pass-57) still blocks CLEAN.
+
+---
+
+## Pass 59 Finding Catalog (Window 57/58/59, frontier C3-side-channels: inter-step side channels inside `ci-gate` — a frontier never probed in 56 prior passes — dispatched against head `1381af17`)
+
+Pass-59 replayed this file's real pin extractors (not ports or reproductions) directly against
+seven mutated copies of `ci.yml`, each mutation exercising a distinct inter-step side channel
+(`$GITHUB_ENV`, `$GITHUB_PATH`, `$GITHUB_OUTPUT`, step-`outputs:`, `continue-on-error` at a
+non-gate step, an upstream `uses:` step, and a workflow-level `env:` override reachable only from
+an earlier job) — executed against the real extractor functions, not a description of them.
+
+| ID | Severity | Classification | Title | Status | Notes |
+|----|----------|----------------|-------|--------|-------|
+| ADV-P59-LOW-001 | LOW | key-detect-value-reparse-swallow | M2-a/b/c/d and the `ALLOWED_SKIPS` conditional check matched job-level `if:` lines via a raw `starts_with` rather than `extract_key_name_at_indent` — M2-a's "no `if:` line" diagnostic misfired on a quoted `"if":` key, reproduced by replaying the real extractor against one of the seven mutated `ci.yml` copies | CLOSED on `a17939e2` | DUPLICATE-CLASS of `ADV-P57-INFO-002`/`ADV-P58-LOW-003`; all three closed together. M2-a/b/c/d and the `ALLOWED_SKIPS` check now route through `extract_key_name_at_indent`; M2-d's message now points at M2-l as the operative default-deny backstop |
+| ADV-P59-INFO-001 | INFO | side-channel-census-negative-result | Of the seven inter-step side channels probed, six (`$GITHUB_ENV`, `$GITHUB_OUTPUT`, step-`outputs:`, `continue-on-error` at a non-gate step, the upstream `uses:` steps, and the workflow-level `env:` override) are already closed by round-11/12/13 guards (`PINNED_GATE_JOB_KEYS`/`PINNED_GATE_STEP_KEY_SETS`, the `outputs:`-declaration guard, `continue-on-error` rejection, and the workflow/gate-env key-set pins) — none reopened by this pass's replay | CLOSED (pre-existing guards; no new fix required) | Recorded as this pass's own closing negative result — bounds the side-channel surface actually probed |
+| ADV-P59-INFO-002 | INFO | side-channel-census-finding | The seventh channel, `$GITHUB_PATH`, is the one this window's `ADV-P58-LOW-001` (jq trust-boundary gap) already independently surfaced — pass-59 confirms it via the inter-step-side-channel frontier rather than the falsifiability-census frontier, a second independent route to the same underlying gap | CLOSED on `a17939e2`/`f2bea32e` | DUPLICATE of `ADV-P58-LOW-001` — same instance, independently found via a different frontier; both entries kept on record per this project's dedupe/twin convention, not reconciled into one |
+| ADV-P59-INFO-003 | INFO | cosmetic | `CLAUDE.md`'s S-CIGATE-2 narrative did not yet name inter-step side channels as a class of bypass distinct from the value-reparse and positional-assumption axes this burst found | CLOSED on `f2bea32e`-era CLAUDE.md update | CLAUDE.md gotcha entry extended (see this burst's CLAUDE.md diff) |
+| ADV-P59-INFO-004 | INFO | falsifiability-census-negative-result | The seven mutated `ci.yml` copies were also replayed against `PINNED_GATE_IF_EXPR`, `PINNED_GATE_ENV_KEYS`, and `PINNED_WORKFLOW_ENV_KEYS` (round-11/12 pins) directly, not just described — all three held under every mutation tried | CLOSED (pre-existing guards; no new fix required) | Independent re-confirmation of round-11/12 pins via a fifth distinct tool/method (following Python ports, standalone `rustc`, scratch-tree rebuilds, and now real-extractor replay) |
+| ADV-P59-INFO-005 | INFO | falsifiability-census-negative-result | Census closing note: across all three passes of window 57/58/59 (Python/PyYAML/Psych/actionlint differential, scratch-tree per-mutation rebuilds, and real-extractor replay against mutated `ci.yml` copies), no defeat of any pin was found that is NOT an instance of one of the two named axes (positional-assumption, value-reparse) or the one pre-existing trust-boundary gap (jq) — bounding this window's finding set as complete relative to the three frontiers actually run, not proof no further axis exists | CLOSED (recorded as this window's own closing census) | What makes the window's 23 findings credible as a bounded set rather than a partial one, mirroring `ADV-P56-INFO-004`'s role for window 54/55/56 |
+
+## Pass 59 Isolation Note
+
+**ELIGIBLE.** Head `1381af17`; no isolation breach; no read of `.factory/cycles/`.
+
+## Pass 59 Summary
+
+- **Verdict:** NOT CLEAN — 0 HIGH + 0 MEDIUM + 1 LOW + 5 INFO; ELIGIBLE; frontier C3-side-channels
+  (inter-step side channels inside `ci-gate`, never probed in 56 prior passes, executed via real
+  pin extractors replayed against seven mutated `ci.yml` copies) closes window 57/58/59 with a
+  bounding census rather than a large new finding set — six of seven probed channels were already
+  closed by pre-existing guards; the seventh independently confirms `ADV-P58-LOW-001`.
+- **Frontier:** C3-side-channels — inter-step side channels: can one step in the `ci-gate` job (or
+  an earlier job) influence a later step's outcome or the gate's own record through a channel
+  other than the `needs:`/`if:`/`run:` surface every prior window inspected directly.
+- **Convergence:** window 57/58/59 CLOSED 0/3 — all three passes NOT CLEAN.
+
+---
+
+## Window 57/58/59 Summary
+
+- **Result:** CLOSED 0/3 — pass-57 NOT CLEAN (1H+2M+2L+4I), pass-58 NOT CLEAN (0H+2M+3L+3I),
+  pass-59 NOT CLEAN (0H+0M+1L+5I), against head `1381af17`. Three deliberately-varied inspection
+  frontiers, human-approved before dispatch per DEC-254: (57) C1-lexer — differential lexer
+  conformance against the code added by `910b8ab0`/`1381af17`; (58) C5-falsifiability — census of
+  the new pins; (59) C3-side-channels — inter-step side channels inside `ci-gate`, a frontier
+  never probed in 56 prior passes. All three ELIGIBLE — no isolation breaches reported; no pass
+  read `.factory/cycles/`. **Tenth consecutive window without 3/3 since window 30/31/32.**
+- **Finding count:** 23 new findings total across the three passes: pass-57 = 1H+2M+2L+4I (9);
+  pass-58 = 0H+2M+3L+3I (8); pass-59 = 0H+0M+1L+5I (6); 9+8+6 = 23. Deduplicates to roughly 20
+  distinct underlying findings — one explicit dedupe/twin group on record spanning all three
+  passes (`ADV-P57-INFO-002` ≡ `ADV-P58-LOW-003` ≡ `ADV-P59-LOW-001`, the value-reparse axis
+  reopened at the M2-a/b/c/d and `extract_and_normalize_if_expr`/`sole_needs_line` call sites) and
+  one two-pass twin (`ADV-P58-LOW-001` ≡ `ADV-P59-INFO-002`, the jq trust-boundary gap,
+  independently found via the falsifiability-census and side-channel frontiers). **Zero
+  rediscoveries of any finding from passes 1-56.**
+- **HIGH:** 1 — `ADV-P57-HIGH-001`, a NEW failure axis distinct from every prior window's
+  value-reparse class: `extract_key_name_at_indent`'s hard-coded 4-space job-child indent is
+  assumed, never checked, and a legal 6-space job body bypasses Guard A (the sole automated
+  control for the DEC-246 duplicate-check-name vector) with the full suite green.
+- **MEDIUM:** 4 itemized (`ADV-P57-MED-001/002`; `ADV-P58-MED-001/002`).
+- **LOW:** 6 itemized (`ADV-P57-LOW-001/002`; `ADV-P58-LOW-001/002/003`; `ADV-P59-LOW-001`),
+  including the two dedupe/twin groups noted above.
+- **INFO:** 12 itemized (`ADV-P57-INFO-001/002/003/004`; `ADV-P58-INFO-001/002/003`;
+  `ADV-P59-INFO-001/002/003/004/005`).
+- **All 23 findings CLOSED — 12 scoped items fixed as a single class sweep (`a17939e2`), not 23
+  point fixes.** Root cause: TWO independent new axes, both distinct from window 54/55/56's
+  value-reparse-only diagnosis — (1) a positional-assumption axis (`extract_key_name_at_indent`'s
+  hard-coded indent, never validated) and (2) a trust-boundary gap (no jq provenance check),
+  discovered by frontiers this project had never run before (C1-lexer, C3-side-channels). Every
+  fix RED-proven across BOTH the spelling axis (`"key":`/`'key':`/`key :`) AND the indent axis
+  (3/6/8-space job bodies) — closing the gap `RED-PROOF-NEEDS-SPELLING-VARIANTS` (window
+  54/55/56's own root-cause finding) had left open. **Deliberately NOT fixed:** `a17939e2` refused
+  to change `ci.yml`'s POL-11 canary to an exact-count equality (`EXPECTED_GUARD_TEST_COUNT == 27`
+  as a literal in the workflow itself) — the `test` job runs a 2-OS matrix and 4 of the file's 27
+  tests are `#[cfg(unix)]`-gated, so a literal `27` in the YAML would red every Windows leg on an
+  otherwise-green tree; a Rust-side-only fix (the denominator guard extension, `ADV-P58-MED-002`)
+  was judged correct instead (see DEC-255). Full narrative:
+  `cycles/cycle-001/burst-log.md` § "WINDOW-57-58-59+SWEEP-2+CI-BREAK".
+- **CI-BREAK-1 (real, not synthesized).** `a17939e2`'s own fix for `ADV-P58-LOW-001` (jq
+  trust-boundary gap) shipped `resolve_trusted_jq()` pinned strictly to `/usr/bin/jq` under
+  `GITHUB_ACTIONS=true` — correct for `ubuntu-latest`, wrong for `macos-latest`'s real Homebrew jq
+  (`/opt/homebrew/bin/jq` or `/usr/local/bin/jq`). Live CI run 31406705091 on `a17939e2`:
+  `Test (macos-latest)` genuinely FAILED (two `#[cfg(unix)]` subprocess tests panicked, `Exit
+  code: Some(2) (expected Some(1))`); `Test (ubuntu-latest)` and `Test (windows-latest)` were
+  CANCELLED by matrix fail-fast, not independently failing (drift item
+  `MATRIX-FAIL-FAST-MASKS-SCOPE`); `CI Gate` correctly FAILED downstream of the real upstream
+  failure — the first end-to-end evidence this cycle of the gate behaving correctly on a genuine
+  failure rather than a synthesized payload. Fixed by `f2bea32e`: a per-`RUNNER_OS` trusted
+  directory allowlist (`trusted_jq_dirs_for`/`is_trusted_jq_dir`), fail-closed when `RUNNER_OS` is
+  unset under `GITHUB_ACTIONS=true`, plus a new `run_jq_trust_self_test` (13 checks, own
+  denominator pin `EXPECTED_JQ_TRUST_CHECKS=13`) closing the "guard branch unreachable from a
+  local test run" gap that let the wrong pin ship unnoticed in the first place (drift item
+  `GUARD-MODE-UNREACHABLE-LOCALLY`). Re-verified locally this burst (not merely re-read from the
+  commit message): `scripts/check-ci-gate.sh --self-test` → `13/13 jq-trust checks run, 0
+  mismatch(es)` plus the pre-existing `EXPECTED_FIXTURES=13` fixture self-test, both PASS; `gh pr
+  view 667` confirms `headRefOid f2bea32e…`, `mergeStateStatus CLEAN`, `mergeable MERGEABLE`. See
+  DEC-257 (break) and the CI-BREAK-1 fix-round entry in `S-626-1.md`.
+- **New drift items opened:** `GUARD-MODE-UNREACHABLE-LOCALLY` (HIGH, new class — an
+  environment-gated guard branch has, by construction, no local test coverage until a test forces
+  the gate variable; closed for this instance by `f2bea32e`'s `run_jq_trust_self_test`, the
+  general rule is the drift item), `POSITIONAL-ASSUMPTION-AXIS` (HIGH — second distinct axis of
+  the line-based-extraction defect class, now evidence-backed argument for S-CIGATE-3),
+  `MATRIX-FAIL-FAST-MASKS-SCOPE` (LOW — a reader of the check list would conclude three platforms
+  broke when only one genuinely did). Two existing drift items UPDATED rather than duplicated:
+  `MEASUREMENT-METHOD-PRODUCES-FALSE-CLAIM` (second instance — an in-flight jq fix was
+  mischaracterized as "worse than the break" by running `GITHUB_ACTIONS=true` without `RUNNER_OS`,
+  mistaking correct fail-closed behavior for breakage, hours after the first instance's corrective
+  was logged) and `RED-PROOF-NEEDS-SPELLING-VARIANTS` (now confirmed TWO-AXIS — spelling AND
+  indent variants both required, per `ADV-P57-HIGH-001`). Three prior drift items CLOSED this
+  burst (via the pre-window `1381af17` catch-up, above): `EXTRACT-JOB-BLOCK-RAW-ANCHOR-WIDENED`,
+  `DENOMINATOR-GUARD-USES-EXACT-LINE-MATCH`, `SIBLING-WORKFLOW-FRONTIER-UNRETIRED`. Full text:
+  STATE.md Drift Items table.
+- **New decisions:** **DEC-254** (frontiers C1-lexer/C5-falsifiability/C3-side-channels approved),
+  **DEC-255** (window findings closed as class sweep `a17939e2`, extends DEC-243/244; POL-11
+  exact-count change refused with documented reason), **DEC-256** (sibling-workflow exposure +
+  Q4/Q8 treated as handled via guards, not re-spent as frontiers, extends DEC-250), **DEC-257**
+  (CI-BREAK-1 recorded — real `Test (macos-latest)` failure on `a17939e2`, fixed by `f2bea32e`),
+  **DEC-258** (PR #667 hold STANDS, DEC-202 reaffirmed, after `ADV-P57-HIGH-001`'s verified Guard A
+  bypass), **DEC-259** (next priority remains S-CIGATE-3, not an eleventh window).
+- **Cycle-closing checklist (S-7.02) — SATISFIED.** All four process-gap drift items from this
+  burst (`GUARD-MODE-UNREACHABLE-LOCALLY`, `POSITIONAL-ASSUMPTION-AXIS`,
+  `MEASUREMENT-METHOD-PRODUCES-FALSE-CLAIM` 2nd instance, `RED-PROOF-NEEDS-SPELLING-VARIANTS`
+  two-axis) carry an explicit inline deferral (reason + target — three route to S-CIGATE-3, one is
+  closed-for-this-instance with the general rule retained as a standing checklist item) in
+  STATE.md's Drift Items table; none required a new STORY-INDEX entry this burst. Three lessons
+  codified to `cycles/cycle-001/lessons.md`, tagged `[codified]`.
 
 ---
