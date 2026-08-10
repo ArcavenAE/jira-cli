@@ -7,7 +7,7 @@ producer: state-manager
 timestamp: 2026-05-04T00:00:00
 cycle: "cycle-001"
 inputs: [STATE.md]
-input-hash: "71faa6e"
+input-hash: "3948a91"
 traces_to: STATE.md
 ---
 
@@ -9384,3 +9384,39 @@ per DEC-259: **S-CIGATE-3**, not an eleventh STRICT window.
 | Step | Agent | Status | Output |
 |------|-------|--------|--------|
 | **RESUME+WINDOW-54-55-56+CLASS-SWEEP (2026-08-09): state-manager closed the burst per the Single-Commit Burst Protocol. Reconstructed `research/dec-246-github-actions-gating-semantics.md` + updated `RESEARCH-INDEX.md` (DEC-249). Recorded DEC-248..253 (6 decisions). Recorded 9 new drift items, 3 with explicit S-7.02 process-gap deferrals (no new story opened this burst -- effort-scoped justified deferral). Updated `ADV-P1-INDEX.md` v2.12->v2.13 (pass 56, 419 total findings, 0C/31H/126M/146L/116I). Bumped `S-626-1.md` v1.31->v1.32 (FIX ROUND 27) and `STORY-INDEX.md` v1.5.76->v1.5.77. Appended `burst-log.md` + `session-checkpoints.md` entries; logged 1 lesson to `lessons.md` tagged `[codified]`; archived the prior COMPACTION Phase-Progress/Current-Phase-Steps rows.** | state-manager | COMPLETED | `STATE.md` v2.29->v2.30 + `ADV-P1-INDEX.md` + `S-626-1.md` + `STORY-INDEX.md` + `burst-log.md` + `session-checkpoints.md` + `lessons.md` + `research/dec-246-github-actions-gating-semantics.md` + `RESEARCH-INDEX.md`, committed to factory-artifacts in ONE atomic commit, pushed via CAS. Next: S-CIGATE-3 (durable YAML-parser fix) per DEC-253. |
+
+### Post-Close Correction: ORCHESTRATOR-STALE-AGENT-NAME-COLLISION (2026-08-10, same session)
+
+Immediately after the WINDOW-57-58-59+SWEEP-2+CI-BREAK burst commit (`47b03630`) landed, the
+closing state-manager sought itemized per-finding detail by messaging agents by name: `pass-57`,
+`pass-58`, `pass-59`. All three replied that they were STALE, STOPPED dispatches frozen at
+superseded head `910b8ab0` (two commits stale) — not the real `pass-57b`/`pass-58b`/`pass-59b`
+agents that had produced the window's 23 findings against `1381af17`. Messaging a stopped agent
+WOKE it: `pass-57` and `pass-58` correctly refused and flagged the head mismatch; `pass-59` also
+refused; a fourth, separately-solicited `class-sweep` agent (already completed hours earlier) was
+also woken and died on an API error mid-reply.
+
+**No fabricated data reached the permanent record.** The finding catalog already committed to
+`ADV-P1-INDEX.md`/`STATE.md` in `47b03630` was built from the team-lead's original dispatch brief
+plus independently re-verified commit content (`git show --stat a17939e2`/`f2bea32e`, local
+`scripts/check-ci-gate.sh --self-test` re-runs, `gh pr view 667`) — not from any reply the stale
+agents sent, all of which arrived after the burst commit had already landed and were themselves
+refusals/empty.
+
+Team-lead corrected the state-manager, confirmed the above, and directed recording a new drift
+item: `ORCHESTRATOR-STALE-AGENT-NAME-COLLISION` (MEDIUM). Corrective (team-lead ruling, verbatim
+substance): downstream agents must never resolve inputs by contacting agents by name — the
+orchestrator is the single source of completed results; a stopped/retired agent stays addressable
+under a name that reads as canonical, and messaging it WAKES it, which can either revive
+superseded work (as happened here, caught only because the stopped agents self-noticed the head
+mismatch) or kill an already-completed agent on an API error (as happened to `class-sweep`).
+Re-dispatches under a suffixed name (`pass-59` → `pass-59b`) must retire the prior name rather than
+suffix it. Adjacent to but distinct from the pre-existing `ORCHESTRATOR-CONCURRENT-WRITER-COLLISIONS`
+drift item (that one is about two writers touching the same artifact; this one is about a reader
+soliciting a stale writer that shouldn't be running at all).
+
+Fixed via this follow-up commit: `STATE.md` v2.31→v2.32 (drift item added to the live table,
+`current_step`/Session Resume Checkpoint/RESUME PLAN narrative updated with the standing rule,
+no burst-content rewritten — the closed burst's own record is unchanged and stands). No new
+lesson beyond the drift item's own corrective text was judged necessary — the rule is
+self-contained and does not generalize past "never contact an agent by name for input."
