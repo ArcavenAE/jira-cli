@@ -7,7 +7,7 @@ producer: state-manager
 timestamp: 2026-05-07T00:00:00
 cycle: "cycle-001"
 inputs: [STATE.md]
-input-hash: "71faa6e"
+input-hash: "5a559ee"
 traces_to: STATE.md
 ---
 
@@ -6906,3 +6906,31 @@ _Tagged: [red-proof-discipline] [ci-gate] [guard-apparatus] [indent-variants] [p
 
 _Trigger: WINDOW-57-58-59+SWEEP-2+CI-BREAK (2026-08-10) — second instance of drift item `MEASUREMENT-METHOD-PRODUCES-FALSE-CLAIM`, updated (not duplicated) with immediate-effect standing-rule disposition reaffirmed per S-7.02._
 _Tagged: [measurement-methodology] [ci-gate] [recurrence] [process-gap] [s-7.02] [codified]_
+
+### [codified] EXTERNAL-VALIDATION-CATCHES-WHAT-INTERNAL-REVIEW-CANNOT: two successive external research passes each found the prior record overstated
+
+DEC-249 (2026-08-09) found the original DEC-246 research artifact recorded as 8/8 CONFIRM when
+re-validation against primary sources found 5 CONFIRM, 2 INCONCLUSIVE, 1 split, 0 REFUTE. This
+burst's DEC-261 (2026-08-10) found a second, independent instance one day later: the
+`ZERO-LEG-MATRIX-RESULT-UNDOCUMENTED` drift item's own recorded evidence characterization — quoted
+verbatim into a shipped guard's docstring — did not hold up against the sources it cited. Neither
+overclaim was internal-review-reachable: both survived multiple adversarial windows (up to 59
+passes) because adversarial review reasons *within* the project's model of GitHub's semantics,
+never testing the model itself against primary sources — the same blind spot DEC-246 itself was
+dispatched to close (see U1, DEC-246-U1-CLOSED), reopening one layer down at the record *about* the
+semantics rather than the semantics claims themselves.
+
+**Disposition:** external validation against primary sources belongs in the standing review loop,
+not as a one-off. When a research artifact's finding is quoted verbatim into code (a docstring, a
+comment, an error message), re-validate the citation the next time that surface is touched — do not
+treat a prior CONFIRM as permanently settled. This burst's own research pass modeled the correct
+discipline: it re-fetched pages DEC-246 had already read one day earlier rather than carrying the
+prior finding forward on trust, which is precisely how the REFUTE was caught. The pass's own
+within-pass self-correction is additional evidence the discipline holds when applied: an earlier
+revision recommended widening Guard B to assert no `matrix.exclude:` key, then caught on re-reading
+Guard B's actual source that the assertion already existed, and removed the wrong recommendation
+from four places before reporting rather than letting it stand.
+
+_Trigger: DEC-246-FOLLOWUP research pass (2026-08-10) — new drift-item corrections, DEC-261, no code
+changed (product commit `5ca51bc2`, docstrings only)._
+_Tagged: [external-validation] [research-methodology] [ci-gate] [guard-apparatus] [recurrence] [codified]_

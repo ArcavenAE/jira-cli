@@ -7,7 +7,7 @@ producer: state-manager
 timestamp: 2026-08-09T00:00:00Z
 cycle: "cycle-001"
 inputs: [STATE.md]
-input-hash: "[compaction-2026-08-09]"
+input-hash: "5a559ee"
 traces_to: STATE.md
 ---
 
@@ -40,3 +40,4 @@ traces_to: STATE.md
 | DIAGNOSTIC-INSTRUCTS-REINTRODUCING-THE-DEFECT | spec/doc hygiene | MEDIUM | CLOSED -- FIXED (2026-08-07, CLASS-LEVEL-STALE-CLAIM-SWEEP, commit `7f8723a5`). Both Class-6 assertion messages/comments in the guard suite that instructed reconstructing the retired inline `contains(needs.*.result, ...)` mechanism corrected -- most notably the M2-c panic message in `test_ci_gate_pass_fail_semantics_are_structurally_placed`, which told a maintainer the retired expression must be on a STEP-level `if:` while M2-d ~90 lines below panics if any step-level `if:` exists; now describes the shipped fail-closed `check-ci-gate.sh` design and warns against the step-level move. |
 | DOWNSTREAM-DOCS-EXCLUDED-FROM-CORRECTION-PERIMETER | spec process | MEDIUM | CLOSED -- FIXED (2026-08-07, CLASS-LEVEL-STALE-CLAIM-SWEEP, commit `7f8723a5`). Correction perimeter widened to include `docs/specs/` for the first time; `docs/specs/cargo-mutants-policy.md`'s ten stale occurrences fixed, including the retired false-green stated as its own safety rationale and a 90-minute budget prohibition corrected against the shipped 240-minute `cargo-mutants --timeout`. Perimeter-widening precedent set -- future sweeps should default to including `docs/specs/`, not treat it as out of scope. |
 | ASSERTION-COUNT-CITATIONS-LAG-CODE | spec integrity | MEDIUM | CLOSED -- FIXED (2026-08-07, CLASS-LEVEL-STALE-CLAIM-SWEEP, commit `7f8723a5`). The 15→18 assertion-count change on `test_verify_test_job_has_zero_test_floor` propagated to BC-X.13.007/VP-CIGATE-001 (`cross-cutting.md`, `BC-INDEX.md`) and S-626-1 at all cited sites; gate arity also corrected 3→4 (canary presence and canary passed-count split into separate items). |
+| GITHUB-PATH-UNRECORDED-AT-ROUND-13-SEAM | CI governance | LOW | CLOSED -- OPENED AND CLOSED SAME PASS (2026-08-10, DEC-261, `research/gh-actions-open-semantics-2026-08-10.md`). `CLAUDE.md` round-13 IMPORTANT 2 named only `$GITHUB_ENV` as the cross-step mechanism reachable via `ci-gate`'s two unpinned `uses:` steps (`harden-runner`, `checkout`); `$GITHUB_PATH` is a second, equivalent, documented mechanism at the same seam ("Prepends a directory to the system `PATH` ... available to all subsequent actions in the current job") and nothing recorded it. Confirms the `PATH`->`jq` shim vector (`ADV-P59-LOW-001`) was real, retroactively justifying `f2bea32e`. Fixed by recording `$GITHUB_PATH` alongside `$GITHUB_ENV` in `CLAUDE.md` via product commit `5ca51bc2`. |

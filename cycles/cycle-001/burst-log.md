@@ -7,7 +7,7 @@ producer: state-manager
 timestamp: 2026-05-04T00:00:00
 cycle: "cycle-001"
 inputs: [STATE.md]
-input-hash: "3948a91"
+input-hash: "5a559ee"
 traces_to: STATE.md
 ---
 
@@ -9420,3 +9420,69 @@ Fixed via this follow-up commit: `STATE.md` v2.31→v2.32 (drift item added to t
 no burst-content rewritten — the closed burst's own record is unchanged and stands). No new
 lesson beyond the drift item's own corrective text was judged necessary — the rule is
 self-contained and does not generalize past "never contact an agent by name for input."
+
+### RESEARCH-COMMIT: DEC-246-FOLLOWUP research pass committed + dispositioned (2026-08-10, DEC-261)
+
+Committed `.factory/research/gh-actions-open-semantics-2026-08-10.md` (NEW) and
+`research/RESEARCH-INDEX.md` (index row appended) to `factory-artifacts`. `regression-state.json`
+and `sidecar-learning.md` left dirty per standing convention.
+
+The research pass re-investigated six GitHub Actions semantics questions DEC-246 left INCONCLUSIVE
+or carried as inferred premises under two shipped `ci-gate` guards: 3 CONFIRM, 3 INCONCLUSIVE (2
+REQUIRES-EXECUTION), 2 split, **1 REFUTE**. Dispositioned as DEC-261:
+
+- **REFUTE, recorded as an update to `ZERO-LEG-MATRIX-RESULT-UNDOCUMENTED` (not duplicated):** the
+  item's recorded evidence characterization ("community reports split between `skipped` and
+  `success`") does not hold — no report claims either outcome; the "success" half traces to
+  `community#9141`, read verbatim as a per-step-`if:` workaround (all legs run, every step skips,
+  job legitimately concludes `success`), not a zero-leg matrix. Question reframed in the drift
+  item: is a zero-leg `needs.<job>.result` reachable at all? No shipped guard invalidated.
+- **Guard B's two properties now move in opposite directions.** Property (1) (`os:` has no
+  `${{ }}`/`fromJSON`) is weakened — the only documented zero-evaluation path hard-errors before
+  any step runs (fail-closed, not a false green) — but retained on explicitly weaker grounds
+  (single 2021 forum thread, no staff confirmation; "errored job → `failure`" is itself inferred).
+  Property (2) (no `matrix.exclude:`) is strengthened — a fully-excluding `exclude:` is NOT
+  rejected at parse time and produces a one-leg run that can conclude `success` having done
+  nothing, the actual false-green shape. No code changed; both docstrings corrected in product
+  commit `5ca51bc2`.
+- **Guard A's premise relabelled**, recorded against `DUPLICATE-CHECK-NAME-BEHAVIOR-UNDOCUMENTED`:
+  "duplicate `CI Gate` check names yield a false green" is INFERRED, neither verified nor refuted.
+  Leading hypothesis is last-writer-wins, from a GitHub Staff DevOps Architect's personal blog
+  (SEMI-AUTHORITATIVE SECONDARY, not documentation) and the REST Check Runs API's `filter=latest`
+  affordance. Guard A retained regardless — cheap, decidable, prevents a state GitHub's own docs
+  call ambiguous. The "if a check and a commit status share a name, both must pass" documentation
+  line concerns a check run vs. a **commit status**, not two check runs, and must not be cited as
+  evidence the latter.
+- **New drift item `RUNNER-SOURCE-NOT-AN-ORACLE-FOR-WORKFLOW-PARSING` (MEDIUM):** `actions/runner`'s
+  public source rejects YAML anchors GitHub shipped in production on 2025-09-18 — provably out of
+  sync with the real, closed-source, server-side workflow parser. Any "the runner source shows X,
+  therefore workflows behave X" inference is invalid for parsing-stage questions; the runner source
+  remains authoritative for step-execution-stage questions (e.g. `env:` precedence in
+  `StepsRunner.cs`), which is the asymmetry recorded in `CLAUDE.md` via `5ca51bc2`.
+- **New drift item `GITHUB-PATH-UNRECORDED-AT-ROUND-13-SEAM` (LOW), opened and closed same pass:**
+  `$GITHUB_PATH` is a second, documented, equivalent cross-step mechanism to `$GITHUB_ENV` at
+  `ci-gate`'s two unpinned `uses:` steps — confirming the `PATH`→`jq` shim vector (`ADV-P59-LOW-001`)
+  was real and retroactively justifying `f2bea32e`. Closed by `5ca51bc2` recording it in `CLAUDE.md`.
+- **`NEEDS_JSON` substitution reconfirmed CONFIRMED CLOSED** — a step's own `env:` overriding a
+  variable an earlier step set via `$GITHUB_ENV` is a designed override in `StepsRunner.cs`
+  (`StepEnvironmentOverrides`), not an ordering accident. Caveat recorded: the "variable at the
+  lowest level takes precedence" sentence on the Variables reference page is about configuration
+  variables (org/repo/environment scopes), not `env:` scoping — must not be cited for `env:`.
+- **Four empirical experiments (E1 zero-leg matrix, E2 `exclude:`-to-zero, E3 re-run semantics, E5
+  duplicate check names) specified, all explicitly DEFERRED** — human ruled record corrections now,
+  no experiments this pass. E5 (~30 min, needs branch protection; inverting the completion order
+  between two same-named jobs IS the experiment) is the only one whose result could change a
+  shipped guard's justification. (E4, flow-mapping `jobs:`, was already tracked as
+  `ADV-P55-MED-002` REQUIRES-EXECUTION and is unchanged.)
+- **Research process self-correction recorded as a positive datapoint:** an earlier revision of the
+  research artifact recommended widening Guard B to assert no `matrix.exclude:` key — the artifact's
+  own author caught, on re-reading Guard B's actual source, that Guard B already asserts exactly
+  that (`collect_mapping_key_set` anchored on `matrix:` at 6-space indent), and removed the wrong
+  recommendation from four places before reporting.
+
+Doc corrections (Guard A/B docstrings, `$GITHUB_PATH`, runner-source caveat) already landed on the
+product branch as `5ca51bc2` (on top of `f2bea32e`), verified zero-behavior-change: comment-only
+diff in `tests/ci_gate_completeness.rs`, `EXPECTED_GUARD_TEST_COUNT` unchanged at 27, 27/27 passing.
+This factory-side commit records the research artifact and its dispositions; no `.factory/`
+narrative fields (`STATE.md`) needed updating — no pin or count this pass produced makes any
+`STATE.md` claim stale.
