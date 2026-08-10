@@ -9705,3 +9705,47 @@ worktrees remain). Story status `S-626-1` → `done`. Next priority unchanged: *
 | Step | Agent | Status | Output |
 |------|-------|--------|--------|
 | **WINDOW-57-58-59+SWEEP-2+CI-BREAK (2026-08-10): state-manager closed the burst per the Single-Commit Burst Protocol. Caught up `1381af17` (previously unrecorded; closed 3 drift items). Recorded DEC-254..259 (6 decisions); archived DEC-246+248..253 (7 rows) to decisions-archive.md. Recorded 3 new drift items + 1 two-instance update + 1 axis-update, all S-7.02-dispositioned inline. Updated `ADV-P1-INDEX.md` v2.13->v2.14 (pass 59, 442 total findings, 0C/32H/130M/152L/128I). Bumped `S-626-1.md` v1.32->v1.35 (FIX ROUND 28/29/30) and `STORY-INDEX.md` v1.5.77->v1.5.78. Appended `burst-log.md` + `session-checkpoints.md` entries; logged 3 lessons to `lessons.md` tagged `[codified]`; archived the prior burst's Phase-Progress/Current-Phase-Steps rows. **Post-close (same session):** solicited itemized finding detail from agents by name (`pass-57`/`pass-58`/`pass-59`) after the burst commit had already landed; these were stale, stopped dispatches at superseded head `910b8ab0`, not the real `b`-suffixed agents — team-lead corrected this, confirmed no fabricated data reached the committed record (the catalog was built from the dispatch brief + independently re-verified commit content, not from any agent reply), and directed recording a new drift item, which this follow-up commit adds.** | state-manager | COMPLETED | `STATE.md` v2.30->v2.31->v2.32 + `ADV-P1-INDEX.md` + `S-626-1.md` + `STORY-INDEX.md` + `burst-log.md` + `session-checkpoints.md` + `lessons.md` + `decisions-archive.md`, committed to factory-artifacts (two commits: the burst close, then this post-close drift-item addition), pushed via CAS. Next: S-CIGATE-3 (durable YAML-parser fix) per DEC-259. |
+
+## POST-CLOSE ARITHMETIC CORRECTION (2026-08-10, same-day correction to S-626-1-MERGE+ADV-P60-P61+BURST-CLOSE)
+
+The prior burst's closeout (immediately above) recorded `ADV-P1-INDEX.md` v2.14→v2.15 as
+`442→452 total findings, +10 new, 6 actionable`. That arithmetic was wrong: the team-lead had
+supplied it as an aggregate without actually summing the per-pass severity tallies already
+present in that same commit's own Pass 60/61 catalog (P60 = 2H+0M+3L+3I = 8; P61 = 0H+2M+2L+2I
+= 6 at dispatch, re-rated to 1H+1M+2L+2I after the orchestrator independently confirmed the
+false green with the guard engaged — still 6 findings, only the severity label of one changed).
+8 + 6 = **14**, not 10; 442 + 14 = **456**, not 452.
+
+A downstream agent, dispatched to add itemized per-finding detail to the same table, caught the
+mismatch by arithmetic and did the right thing: it preserved the team-lead's (wrong) authoritative
+numbers rather than silently overriding them, declined to fabricate detail it had not been given
+for the six placeholder rows, and left an explicit reconciliation note flagging the discrepancy.
+That is exactly the correct behavior for a downstream agent that finds a measurement it cannot
+independently verify — flag, don't silently fix, don't fabricate.
+
+This correction burst re-derives the arithmetic by hand (confirmed 8+6=14, 442+14=456) and
+supplies the real per-finding content the original placeholders were missing, cross-checked
+against `scripts/check-ci-gate.sh`'s own in-code citations of these finding IDs (e.g. its
+"S-626-1 ADV-P61-LOW-003" and "S-626-1 ADV-P61-INFO-006" comments — confirming those are the
+real dispatch IDs, not invented by this recording pass). One finding, `ADV-P61-LOW-004`
+(check 13 of `run_jq_trust_self_test` hard-fails `--self-test` on any host whose ambient jq sits
+outside the hardcoded `/usr/bin`/`/bin`/`/usr/local/bin`/`/opt/homebrew/bin` allowlist — nix,
+mise/asdf, `~/.local/bin`, Linux Homebrew), was left by the team-lead as disposition-unconfirmed
+("your call; if you skip it, say why"). This burst resolved it directly against the committed
+code at HEAD `4ee308fb`: (1) read `run_jq_trust_self_test`'s check-13 block in
+`scripts/check-ci-gate.sh` — no allowlist-membership pre-check or skip branch exists before the
+unconditional `record_resolve_check "accept-real-host-jq-in-trusted-dir" ... "pass"` call; (2)
+empirically reproduced by symlinking this machine's real `jq` into a throwaway untrusted
+directory, prepending it to `PATH`, and re-running `bash scripts/check-ci-gate.sh --self-test` —
+real process exit code `1`, `17/17 jq-trust checks run, 1 mismatch(es)`. Verdict: **OPEN**, not
+fixed, recorded honestly rather than assumed closed.
+
+Corrected: `ADV-P1-INDEX.md` v2.15→v2.16 (header `total_findings` 452→456,
+`severity_distribution` {0,35,130,155,132}→{0,35,131,157,133}; all Pass-60/Pass-61 catalog rows;
+the Reconciliation note; the Pass 60/61 Summary). `STATE.md` v2.34→v2.35 (`current_step`
+prepended with a POST-CLOSE ARITHMETIC CORRECTION note; every `452`/`+10`/`6-actionable` citation
+throughout the file corrected to `456`/`+14`/`9-actionable, 8 closed + 1 confirmed OPEN`;
+`MEASUREMENT-METHOD-PRODUCES-FALSE-CLAIM` updated to its THIRD instance). No new story opened;
+this was a same-burst arithmetic correction, not a process change requiring S-7.02 deferral beyond
+recording the drift-item instance. `regression-state.json` and `sidecar-learning.md` intentionally
+left dirty per standing instruction.

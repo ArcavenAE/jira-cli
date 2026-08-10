@@ -1,16 +1,16 @@
 ---
 document_type: adversarial-review-index
 level: ops
-version: "2.15"
+version: "2.16"
 status: closed-merged
 producer: adversary
-timestamp: 2026-08-10T21:30:00Z
+timestamp: 2026-08-10T23:15:00Z
 phase: "5"
 pass: 61
 inputs: [.factory/stories/S-626-1.md, .factory/stories/S-CIGATE-1-ci-gate-aggregator.md, .factory/stories/S-CIGATE-2-skipped-status-false-green.md, .factory/stories/S-640-1.md, .factory/stories/S-641-1.md, .factory/stories/S-MUTANTS-EXAMINE-GLOBS-1.md, .factory/stories/S-TRAIL-DERIVATION-GUARD-1.md, .factory/stories/STORY-INDEX.md, .factory/specs/prd/cross-cutting.md, .github/workflows/ci.yml, tests/ci_gate_completeness.rs, tests/cli_handler.rs, tests/common/yaml.rs, tests/mutants_glob_existence.rs, scripts/check-ci-gate.sh, docs/specs/cargo-mutants-policy.md, CLAUDE.md, Cargo.toml, CHANGELOG.md, live CI run 30465686049, live CI run 31406705091 (pass-57/58/59 fix-round CI-break), live CI run 31432422878 (develop post-merge), branch protection API, PyYAML 6.0.3 (pass-55 differential), standalone rustc reproductions (pass-56/57), Ruby Psych (pass-57), sibling ci.yml re-indent sweep (pass-57), scratch-tree per-mutation rebuilds (pass-58), 7 mutated ci.yml copies replayed against real pin extractors (pass-59), delta `1381af17..5ca51bc2` (pass-60/61)]
 traces_to: .factory/stories/S-626-1.md
-total_findings: 452
-severity_distribution: { CRIT: 0, HIGH: 35, MED: 130, LOW: 155, INFO: 132 }
+total_findings: 456
+severity_distribution: { CRIT: 0, HIGH: 35, MED: 131, LOW: 157, INFO: 133 }
 story: S-626-1
 cycle: cycle-001
 feature_head: 5ca51bc2 (last commit reviewed by any adversarial pass before merge; merge commit is `a5e1d087` on `develop`, squash of 48 commits; feature branch progression this burst's review scope: `1381af17`→`a17939e2`(pass-57/58/59 class sweep)→`f2bea32e`(CI-BREAK-1 fix)→`5ca51bc2`(DEC-261 doc corrections, reviewed by pass-60/61)→PR #667 squash-merged to `develop` as `a5e1d087`)
@@ -2053,27 +2053,40 @@ verification discipline (per-mutation rebuilds, scratch-tree execution, real-ext
 |----|----------|----------------|-------|--------|-------|
 | ADV-P60-HIGH-001 | HIGH | doc-claims-guard-that-does-not-exist | `a17939e2`'s own commit message and STATE.md narrative documented `#[ignore]`/`#[cfg]` enforcement added to `test_ci_gate_pass_fail_semantics_are_structurally_placed` (carrying pins M2-a..p) — the test body was found to have exactly ONE assertion, not the documented set; `#[ignore]`-ing the test left the suite at `26 passed; 1 ignored`, clippy clean, `EXPECTED_GUARD_TEST_COUNT` denominator intact, POL-11 canary satisfied — a guard the file claimed existed did not | CLOSED on `f656f873` | Reproduced directly: prior verification (this project's own orchestrator, at burst-close time) checked the METRIC the mechanism reports on (`#[test]` count = 27, denominator = 27) rather than whether the asserted mechanism itself existed — a doc-only change passes that check identically. Drift item `DOC-CLAIMS-A-GUARD-THAT-DOES-NOT-EXIST` opened (see STATE.md Drift Items) |
 | ADV-P60-HIGH-002 | HIGH | fix-instruction-caused-regression | The `- `-marker strip added at the orchestrator's own request (`ADV-P57-INFO-004`, framed as a small consistency fix) regressed `extract_job_display_name` from a fail-closed panic to a fail-open silent miss; reproduced with a sibling workflow using ordinary 4-space `steps:` indentation and `name: CI Gate` — full suite `27 passed, 0 failed`, Guard A blind to the exact name-collision it exists to catch. Legal per PyYAML, Ruby Psych, AND `actionlint` (not a hypothetical construction) | CLOSED on `f656f873` | The requested change was framed as cosmetic; it silently flipped the extractor's failure direction. Drift item `ORCHESTRATOR-FIX-INSTRUCTION-CAUSED-REGRESSION` opened (see STATE.md Drift Items) |
-| ADV-P60-LOW-001 | LOW | test-infrastructure | One of three LOW findings closed by `f656f873` alongside the two HIGHs above; detail not itemized in the dispatching team-lead's summary — see `f656f873` diff for the specific defect and fix | CLOSED on `f656f873` | Itemized detail not available to this recording pass; closed per team-lead-reported disposition |
-| ADV-P60-LOW-002 | LOW | test-infrastructure | Second of three LOW findings closed by `f656f873`; detail not itemized in the dispatching team-lead's summary — see `f656f873` diff for the specific defect and fix | CLOSED on `f656f873` | Itemized detail not available to this recording pass; closed per team-lead-reported disposition |
-| ADV-P60-LOW-003 | LOW | test-infrastructure | Third of three LOW findings closed by `f656f873`; detail not itemized in the dispatching team-lead's summary — see `f656f873` diff for the specific defect and fix | CLOSED on `f656f873` | Itemized detail not available to this recording pass; closed per team-lead-reported disposition |
-| ADV-P60-INFO-001 | INFO | census | Rust-delta census finding, non-actionable; detail not itemized in the dispatching team-lead's summary | OPEN (informational) | No fix action required |
-| ADV-P60-INFO-002 | INFO | census | Rust-delta census finding, non-actionable; detail not itemized in the dispatching team-lead's summary | OPEN (informational) | No fix action required |
-| ADV-P60-INFO-003 | INFO | census | Rust-delta census finding, non-actionable; detail not itemized in the dispatching team-lead's summary | OPEN (informational) | No fix action required |
-| ADV-P61-HIGH-001 | HIGH | trust-path-not-closable-by-directory-check | `resolve_trusted_jq()` (the CI-BREAK-1 fix, `f2bea32e`) validated jq's directory by resolving it via `dirname` — `dirname` is itself a PATH-resolved binary, so a second shim ahead of it on `$PATH` defeats the whole check. Reproduced: on a payload where `fmt`/`clippy`/`test` all genuinely FAILED, the compromised trust check still reported `OK fmt/clippy/test = success`, exit 0. Originally rated MEDIUM-001 by the reviewer; **the orchestrator independently re-rated it to HIGH** after reproducing the false-green with the guard engaged, meeting DEC-245's HIGH definition — the reviewer had explicitly flagged the call as one it would not make unilaterally | CLOSED on `736fea28`+`23ace476` | Fixed via pure-bash `dirname` (no external binary in the trust-check path) plus pinning every other PATH-shimmable binary reachable on the decision path |
-| ADV-P61-MEDIUM-002 | MEDIUM | test-infrastructure | Second MEDIUM finding from the shell delta; detail not itemized in the dispatching team-lead's summary — folded into the `736fea28`+`23ace476` fix alongside strict-mode re-keying (`RUNNER_OS` not `GITHUB_ACTIONS`), trust-check count 13→17, and `readonly` moved to file scope | CLOSED on `736fea28`+`23ace476` | Itemized detail not available to this recording pass; closed per team-lead-reported disposition |
-| ADV-P61-INFO-001 | INFO | census | Shell-delta census finding, non-actionable; detail not itemized in the dispatching team-lead's summary | OPEN (informational) | No fix action required |
-| ADV-P61-INFO-002 | INFO | census | Shell-delta census finding, non-actionable; detail not itemized in the dispatching team-lead's summary | OPEN (informational) | No fix action required |
+| ADV-P60-LOW-001 | LOW | line-based-extraction-defect | `common::yaml::extract_job_block`'s `jobs:` mapping bound is START-only (`yaml.find("\njobs:\n")`) — no END bound, so a job id colliding with an unrelated same-named 2-space key declared AFTER `jobs:` (e.g. a `push` job vs. `on.push`) still double-anchors; separately, a file where `jobs:` is the literal first line (byte offset 0, no preceding `\n` to match) goes undetected entirely and silently falls through to `unwrap_or(0)` — no bound in either direction. The function's own panic text overclaimed "excluded by construction" | CLOSED on `f656f873` | Verified directly against `tests/common/yaml.rs::extract_job_block`; both gaps (missing end bound, byte-0 `jobs:`) fixed same commit as ADV-P60-LOW-002/003 |
+| ADV-P60-LOW-002 | LOW | doc-attribution-error | Guard B's ~130-line rationale docstring sat BETWEEN `PINNED_MATRIX_NEEDS_MEMBER_COUNT`'s declaration and the `#[test] fn` it actually explains — rustdoc attached the whole docstring to the constant, not the test, leaving the test itself undocumented; a later pass-60-adjacent change to the block above repeated the same misattribution rather than correcting it | CLOSED on `f656f873` | Verified in `tests/ci_gate_completeness.rs` near `PINNED_MATRIX_NEEDS_MEMBER_COUNT`; docstring moved to attach to the constant, Guard B's own rationale now documents the test |
+| ADV-P60-LOW-003 | LOW | misleading-error-message | `find_sole_step_by_name`'s doc comment and both `Err` messages claimed the match was against "the literal line `      - name: {step_name}`, 6-space step-marker indent" — overstated; the code has always been indent-agnostic (`l.trim_start() == name_needle`). Not a false green (actual behavior is STRICTER than the wording implied — matches at ANY indent), but the old wording would send a debugger chasing a nonexistent indent requirement | CLOSED on `f656f873` | Verified in `tests/ci_gate_completeness.rs::find_sole_step_by_name`; doc comment and both `Err` texts corrected to state the actual `trim_start()`-based behavior |
+| ADV-P60-INFO-001 | INFO | census · incidental-coverage | `assert_job_block_uses_4_space_child_indent`'s sweep over all `ci-gate.needs` members is INCIDENTAL — a side effect of Guard B's own loop, not a designed assertion; narrowing that loop later would silently delete the coverage with no test failing | OPEN (informational) | No fix action required; recorded as a standing review-checklist caution |
+| ADV-P60-INFO-002 | INFO | census · deliberate-tradeoff | The same assert false-REDs on any sibling-workflow job with 3/6/8-space children even when that job declares no `CI Gate` name — deliberate reject-don't-parse behavior, cost recorded rather than fixed | OPEN (informational) | No fix action required; documented tradeoff, not a defect |
+| ADV-P60-INFO-003 | INFO | census · process-note | Worktree hygiene: a concurrent agent's uncommitted changes were present in the working tree during this review (expected, given parallel dispatch); the two in-scope files (`tests/ci_gate_completeness.rs`, `tests/common/yaml.rs`) were independently verified byte-identical to `5ca51bc2` throughout the review | OPEN (informational) | No fix action required; isolation confirmed clean |
+| ADV-P61-HIGH-001 | HIGH | trust-path-not-closable-by-directory-check | `resolve_trusted_jq()` (the CI-BREAK-1 fix, `f2bea32e`) validated jq's directory by resolving it via `dirname` — `dirname` is itself a PATH-resolved binary, so a second shim ahead of it on `$PATH` defeats the whole check. Reproduced: on a payload where `fmt`/`clippy`/`test` all genuinely FAILED, the compromised trust check still reported `OK fmt/clippy/test = success`, exit 0. Originally rated MEDIUM-001 by the reviewer; **the orchestrator independently re-rated it to HIGH** after reproducing the false-green with the guard engaged, meeting DEC-245's HIGH definition — the reviewer had explicitly flagged the call as one it would not make unilaterally | CLOSED on `736fea28`+`23ace476` | Fixed via pure-bash `dirname` (no external binary in the trust-check path) plus pinning every other PATH-shimmable binary reachable on the decision path. `resolve_trusted_jq`'s own comment cites this ID verbatim (`scripts/check-ci-gate.sh` ~line 449) |
+| ADV-P61-MEDIUM-002 | MEDIUM | environment-gate-attacker-writable | The guard's strict-mode enable condition (`GITHUB_ACTIONS = "true"`) is environment-controlled and, per follow-up research, very likely attacker-writable from an earlier step in the same job via `$GITHUB_ENV` (no `GITHUB_*`/`RUNNER_*` prefix filter on `actions/runner`'s write blocklist) — unset / `false` / `TRUE` (or a forged `true`) each skip or force the strict branch | CLOSED on `736fea28`+`23ace476` | Re-keyed on `RUNNER_OS` alone, which is CONFIRMED regenerated by the runner's own context machinery every step (no override path found) — verified in `resolve_trusted_jq`'s "WHY RUNNER_OS, NOT GITHUB_ACTIONS" comment block, `scripts/check-ci-gate.sh` ~line 318 |
+| ADV-P61-LOW-003 | LOW | doc-claims-a-check-that-does-not-exist | `resolve_trusted_jq`'s comment claimed "only an absolute, existing path is required" outside strict mode — no such check existed; a relative path like `./jq` from cwd was accepted and executed unconditionally | CLOSED on `736fea28`+`23ace476` | Verified in `scripts/check-ci-gate.sh::resolve_trusted_jq` (~line 338, ~line 410): the absolute+executable check now applies in EVERY mode, making the comment's claim true instead of weakening it to match the gap; regression-pinned by check 15 (`reject-relative-path-jq-regardless-of-mode`) in `run_jq_trust_self_test` |
+| ADV-P61-LOW-004 | LOW | self-test-hard-fails-on-legitimate-host | Check 13 (`accept-real-host-jq-in-trusted-dir`) of `run_jq_trust_self_test` calls `resolve_trusted_jq()` against WHATEVER jq is genuinely first on the running host's own `PATH`, under `GITHUB_ACTIONS=true`/`RUNNER_OS=<host OS>`, and unconditionally asserts the outcome is `pass`. The trusted-directory allowlist (`/usr/bin`, `/bin`, `/usr/local/bin`, `/opt/homebrew/bin`) does not cover a nix profile, mise/asdf shim, `~/.local/bin`, or Linux Homebrew (`/home/linuxbrew/.linuxbrew/bin`) jq install — `--self-test` hard-FAILs on any of those hosts even though the tree itself is correct, reading as a security failure rather than an environment mismatch | **OPEN — verified UNFIXED against the committed code at this HEAD (4ee308fb)** | Verified two ways: (1) direct read of `run_jq_trust_self_test`'s check-13 block (`scripts/check-ci-gate.sh` ~line 945-980) — no allowlist-membership pre-check or skip branch exists before the unconditional `record_resolve_check "accept-real-host-jq-in-trusted-dir" ... "pass"` call; (2) empirical reproduction: symlinked this machine's real `jq` into a throwaway untrusted directory, prepended it to `PATH`, and re-ran `bash scripts/check-ci-gate.sh --self-test` — real process exit code `1`, output `[FAIL] accept-real-host-jq-in-trusted-dir ... (expected=pass, actual=fail:2)` and `17/17 jq-trust checks run, 1 mismatch(es)`. This finding was explicitly flagged by the dispatching team-lead as optional/unconfirmed disposition; this recording pass resolves that flag to OPEN based on direct code verification, not team-lead say-so |
+| ADV-P61-INFO-005 | INFO | pre-existing-fixed-anyway | `main()`'s stdin read used `json="$(cat)"` — `cat` is itself an untrusted PATH binary; a `cat` shim alone (producing a fabricated payload) drove the decision, independent of the jq-trust checks entirely. Pre-existing / outside the `1381af17..5ca51bc2` delta proper, but fixed anyway in the same burst | CLOSED on `736fea28` | Verified: `json="$(</dev/stdin)"` replaces the `cat` invocation; regression-pinned by check 17 (`reject-cat-shim-for-main-stdin-read`) in `run_jq_trust_self_test`, `scripts/check-ci-gate.sh` ~line 689 |
+| ADV-P61-INFO-006 | INFO | shell-scoping-defect | `readonly EXPECTED_JQ_TRUST_CHECKS` (and `EXPECTED_FIXTURES`) were declared from INSIDE `run_self_test()`/`run_jq_trust_self_test()` without `local` — a bare `readonly NAME=val` inside a bash function still creates a GLOBAL readonly variable; a second invocation of either function in the same shell would abort on the second `readonly` assignment under `set -e` | CLOSED on `23ace476` | Verified: both constants moved to file scope (`scripts/check-ci-gate.sh` ~line 88-104), assigned exactly once when the file is parsed regardless of call count |
 
-**Reconciliation note (raw vs. running total):** the two passes produced 14 raw finding
-observations (P60: 2H/0M/3L/3I = 8; P61: 1H[re-rated]/1M/0L/2I = 4, plus 2 LOW originally reported
-at dispatch-brief severity-tally level that resolve to the same underlying shell-hardening class
-as `ADV-P61-MEDIUM-002` and are not assigned separate IDs here). The running `total_findings`
-counter advances by the team-lead-authoritative delta of **+10** (442→452): 6 actionable
-(HIGH+LOW: `ADV-P60-HIGH-001/002`, `ADV-P60-LOW-001/002/003`, `ADV-P61-HIGH-001`) + 1 new MEDIUM
-(`ADV-P61-MEDIUM-002`) + 3 new INFO census entries, consistent with this file's established
-dedupe/twin convention for close-in-scope delta reviews. Full raw dispatch summary (including any
-sub-item detail not reproduced above) is held by the team-lead orchestrator; this index records
-what was independently confirmed and closed.
+**Reconciliation note — CORRECTED (2026-08-10, post-close arithmetic fix; supersedes the
+"+10 (442→452)" note this section previously carried):** the two passes produced **14** raw
+finding observations, not 10. P60 = 2H + 0M + 3L + 3I = 8. P61 = 0H + 2M + 2L + 2I = 6 at
+dispatch (the orchestrator's independent re-rating of `ADV-P61-HIGH-001` from MEDIUM to HIGH
+after reproduction changes its SEVERITY, not the finding COUNT — P61 is still 6 distinct
+findings post-rerate: 1H + 1M + 2L + 2I). 8 + 6 = **14**. The prior recorded delta of +10
+(442→452) undercounted by 4 — specifically, it silently dropped `ADV-P61-LOW-003` and
+`ADV-P61-LOW-004` entirely (0 LOW ever recorded for P61 in the original table, though 2 existed)
+and folded the reconciliation's own arithmetic into a total that didn't sum to its own stated
+parts (see STATE.md Drift Items, `MEASUREMENT-METHOD-PRODUCES-FALSE-CLAIM`, third instance).
+`total_findings` is corrected from **442+10=452 (wrong)** to **442+14=456 (correct)**, and
+`severity_distribution` from `{0,35,130,155,132}` to the arithmetically-verified
+`{CRIT:0, HIGH:35, MED:131, LOW:157, INFO:133}` (0+35+131+157+133 = 456). Of the 14, **9 are
+actionable (non-INFO)**: P60 contributes 5 (2H+3L), P61 contributes 4 (1H+1M+2L). **8 of the 9
+actionable findings are CLOSED**; `ADV-P61-LOW-004` is the sole exception — see its row above,
+verified OPEN against the committed code at this HEAD, not merely left as a placeholder. All ID
+assignments in the catalog above (including the non-sequential-per-severity `ADV-P61-LOW-003`/
+`-LOW-004`/`-INFO-005`/`-INFO-006` numbering) were cross-checked against `scripts/check-ci-gate.sh`'s
+own in-code citations of these IDs (e.g. its "S-626-1 ADV-P61-LOW-003" and "S-626-1
+ADV-P61-INFO-006" comments) rather than invented by this recording pass — the code is the
+authoritative source for which IDs are real.
 
 ## Pass 60 / Pass 61 Isolation Note
 
@@ -2082,9 +2095,11 @@ isolation breach reported; no read of `.factory/cycles/`.
 
 ## Pass 60 / Pass 61 Summary
 
-- **Verdict:** BOTH NOT CLEAN. Pass-60 (Rust delta): 2 HIGH + 0 MEDIUM + 3 LOW + 3 INFO. Pass-61
-  (shell delta): 0 HIGH + 2 MEDIUM + 2 LOW + 2 INFO at dispatch, re-rated by the orchestrator to
-  1 HIGH + 1 MEDIUM + 2 LOW + 2 INFO after independent end-to-end reproduction of the false green.
+- **Verdict:** BOTH NOT CLEAN. Pass-60 (Rust delta): 2 HIGH + 0 MEDIUM + 3 LOW + 3 INFO = 8. Pass-61
+  (shell delta): 0 HIGH + 2 MEDIUM + 2 LOW + 2 INFO = 6 at dispatch, re-rated by the orchestrator to
+  1 HIGH + 1 MEDIUM + 2 LOW + 2 INFO after independent end-to-end reproduction of the false green
+  (still 6 findings — the re-rating changes one finding's severity label, not the count). 8 + 6 =
+  **14 total**, corrected from the originally-recorded 10 (see Reconciliation note above).
 - **Not a Step 4.5 window pass.** These were targeted delta reviews of the specific commit range
   no prior pass had seen (`1381af17..5ca51bc2`), dispatched off-cycle because the human asked
   whether #667 was *fully reviewed* — not whether CI was green. Not counted toward Step 4.5's 3/3
@@ -2092,8 +2107,13 @@ isolation breach reported; no read of `.factory/cycles/`.
 - **Three HIGHs, all verified end-to-end** (not reasoned about from source alone) against code CI
   had called green four times — see catalog above. All three fixed pre-merge, all CI-green:
   `736fea28`+`23ace476` (shell) and `f656f873` (Rust).
-- **All 6 actionable findings (3 HIGH + 3 LOW) CLOSED.** MEDIUM/INFO findings recorded but not all
-  independently itemized by this recording pass — see Reconciliation note above.
+- **8 of 9 actionable findings (5 from P60 + 4 from P61) CLOSED.** `ADV-P61-LOW-004` (check 13 of
+  `run_jq_trust_self_test` hard-fails `--self-test` on any host whose ambient jq sits outside the
+  hardcoded `/usr/bin`, `/bin`, `/usr/local/bin`, `/opt/homebrew/bin` allowlist — nix, mise/asdf,
+  `~/.local/bin`, Linux Homebrew) is confirmed **OPEN** against the committed code at this HEAD
+  (`4ee308fb`), verified both by direct code reading and by empirical reproduction (a real
+  `--self-test` invocation with a shimmed untrusted-directory jq exits 1). 5 INFO findings recorded,
+  all itemized in the catalog above with real content (not placeholders) — see Reconciliation note.
 - **Process-gap findings routed to STATE.md Drift Items, not this index's severity ledger:**
   `ADV-P60-HIGH-001` and `ADV-P60-HIGH-002` are BOTH process-gap findings about the factory's own
   prior verification/instruction discipline (a doc-only change passing a metric-based check; a
