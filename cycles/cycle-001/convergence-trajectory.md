@@ -1,13 +1,13 @@
 ---
 document_type: convergence-trajectory
 level: ops
-version: "1.0"
+version: "1.1"
 status: in-progress
 producer: state-manager
-timestamp: 2026-05-04T00:00:00
+timestamp: 2026-08-11T04:30:00Z
 cycle: "cycle-001"
 inputs: [adversarial-reviews/]
-input-hash: "7e52d32"
+input-hash: "be8a826"
 traces_to: STATE.md
 ---
 
@@ -3833,3 +3833,25 @@ Pass-21 ran against feature HEAD a247a343 (frozen head per DEC-216 window). Pass
 **Convergence counter:** window 0/1 of 21/22/23 (NOT CLEAN). Passes 22/23 of window NOT DISPATCHED (window moot after NOT CLEAN). DEC-219: fresh STRICT window = passes 22/23/24.
 
 **Trajectory (S-626-1): →0→0→2→0. Window 0/1 of 21/22/23 CLOSED NOT CLEAN. Fresh STRICT window 22/23/24 (DEC-219). NEXT: dispatch passes 22/23/24 against head 84ab32ac.**
+
+---
+
+## Post-Merge Convergence Notes (2026-08-10 to 2026-08-11)
+
+<!-- Appended 2026-08-11 by the COMPACT-STATE burst. This file's detailed per-pass trajectory
+     entries stop at pass-21 (2026-08-04); per-pass detail for passes 22-61 plus ADV-P60/ADV-P61/
+     ADV-P675 lives in cycles/cycle-001/adversarial-reviews/ADV-P1-INDEX.md (the file STATE.md's
+     own Convergence Status section already cites as the primary detail source alongside this
+     one). The three paragraphs below are the verbatim "## Convergence Status" narrative for the
+     three most recent closed bursts, extracted out of STATE.md's live table to keep that file
+     lean; STATE.md itself retains only the current burst's one-paragraph status. -->
+
+**S-626-1-MERGE+ADV-P60-P61+BURST-CLOSE (2026-08-10):** PR #667 squash-merged to `develop` as `a5e1d087` (48 commits, closes #626) -- human exercised merge authority (DEC-128), released the DEC-202 hold. `develop` CI on `a5e1d087` (run 31432422878): SUCCESS, 12 success + 2 legitimately-skipped (`Mutation testing` + `Secret Scan`, both `pull_request`-only) -- first production confirmation of the `ALLOWED_SKIPS` mechanism (S-CIGATE-2). Two targeted delta reviews (pass-60 / ADV-P60 Rust delta, pass-61 / ADV-P61 shell delta -- NOT counted toward Step 4.5's window arithmetic) covered `1381af17..5ca51bc2`, the 1,024 insertions no prior pass had seen, and found 9 actionable findings; 8 fixed via fix burst pre-merge and CI-green (3 HIGH + 1 MEDIUM + 4 LOW, `736fea28`/`23ace476`/`f656f873`); 1 LOW (`ADV-P61-LOW-004`) confirmed OPEN, not fixed. `ADV-P1-INDEX.md` v2.14→v2.16 (442→456 total findings, +14 new (corrected)). **DEC-262**: merge authorized on code grounds with Step 4.5 permanently at 0/3 after ten windows and 61 total adversary passes -- the 3/3-CLEAN convergence bar defined by DEC-199/DEC-245 was never met, and merging accepted that outcome. Full trajectory detail: cycles/cycle-001/adversarial-reviews/ADV-P1-INDEX.md.
+
+**SHELL-TRUST-ASSUMPTIONS research pass (2026-08-11):** external validation only, no adversary pass, does not move the trajectory-tail or Step 4.5's 0/3. DEC-263 recorded; zero REFUTE against the merged shell delta; two experiments (E1/E2) remain to fully close Q1b/Q3b.
+
+**PR675-MERGE+ADV-P675-CLOSE (2026-08-11):** PR #675 (`docs(ci-gate): correct trust-layer record to match code (S-626-1)`) squash-merged to `develop` as `d55bedf7` (2026-08-11T01:40:55Z) -- documentation-only, `CLAUDE.md` + `scripts/check-ci-gate.sh`, zero non-comment lines changed. `develop` CI on `d55bedf7` (run 31450052302): SUCCESS, 12 success + 2 legitimately-skipped; `CI Gate` correctly green; `Scorecard`/`E2E (Live Jira)` also passed. A targeted claim-accuracy review (ADV-P675, not a Step-4.5 window; not counted toward Step 4.5's 0/3) found 0H/2M/2L/1I, NOT CLEAN; all 4 actionable findings CLOSED pre-merge (`d2430a8a`). **DEC-264**: reviewing a documentation-only PR found two MEDIUMs, justifying the practice of applying the same claim-accuracy review discipline to record-correction PRs as to code PRs. `ADV-P1-INDEX.md` v2.16→v2.17 (456→461 total findings). This was the session-closing burst before the 2026-08-11 SESSION-WRAP-PAUSE and this COMPACT-STATE burst -- no open PR or review window remains.
+
+BC-INDEX v6.75 / STORY-INDEX v1.5.80 (127 stories) / ARCH-INDEX v0.16 (state as of these bursts). SOH-DX-1 F2 APPROVED (DEC-196, 2026-07-29). F3 APPROVED (DEC-197, 2026-07-29): spec v1.3.169; BC 658 (unchanged); holdouts 106. S-626-1 adversary: 61 Step-4.5-eligible passes (56 STRICT + pass-60/pass-61 targeted delta review) plus ADV-P675 (targeted claim-accuracy review, not Step-4.5-eligible); 461 total findings. **PR #667 MERGED** to `develop` as `a5e1d087`, closes #626 -- DEC-262; its trust-layer record correction **PR #675 also MERGED** as `d55bedf7` -- DEC-264. src/ 0-defect THIRTY-THIRD-plus consecutive as of these bursts.
+
+SOH-ATTACHMENTS-1 + prior cycles FULLY CLOSED (unchanged, see earlier entries in this file).

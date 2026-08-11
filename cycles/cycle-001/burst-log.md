@@ -10008,3 +10008,104 @@ CLOSED (`SUDO-BOUND-UNRECORDED-IN-PROJECT-RECORD`), 2 NEW (`CORRECTION-PR-INTROD
 `cycles/cycle-001/lessons.md`. `regression-state.json`/`sidecar-learning.md` left dirty per
 standing instruction. One atomic commit to `factory-artifacts`, pushed. Next priority unchanged:
 S-CIGATE-3 (durable YAML-parser fix, DEC-259/DEC-260).
+
+## COMPACT-STATE (2026-08-11, human-approved proactive compaction burst)
+
+Human-approved proactive compaction burst, dispatched via `vsdd-factory:compact-state`. Factory
+was PAUSED (`pipeline: PAUSED`, v2.38, 196 lines / 53,412 bytes) with nothing in flight. Purpose:
+extract historical/narrative content that had regrown STATE.md to the 200-line soft target back
+out to `cycles/cycle-001/` files, so the pipeline resumes with S-CIGATE-3 (next priority per
+DEC-259/DEC-260) on a lean STATE.md. No story, spec, or `ADV-P1-INDEX.md` content touched -- pure
+bookkeeping burst, no product code or spec changed.
+
+### Archived Phase Progress Row (from S-626-1-MERGE+ADV-P60-P61+BURST-CLOSE)
+
+| Phase | Status | Completed | Gate | Notes | Finding Progression |
+|-------|--------|-----------|------|-------|---------------------|
+| pass-60 adversary (ADV-P60, Rust delta) / pass-61 adversary (ADV-P61, shell delta) | COMPLETE | 2026-08-10 | -- | Targeted delta reviews (not a Step-4.5 window) of `1381af17..5ca51bc2`; 9 actionable findings; 8 CLOSED pre-merge (3 HIGH + 1 MEDIUM + 4 LOW, via `736fea28`/`23ace476`/`f656f873`), 1 LOW (`ADV-P61-LOW-004`) confirmed OPEN. | →1→3→0→2 (unchanged -- not a window pass) |
+| **S-626-1-MERGE+ADV-P60-P61+BURST-CLOSE fix burst (2026-08-10): PR #667 squash-merged to develop as `a5e1d087` (DEC-128/DEC-262), closing #626, via fix burst (`736fea28`+`23ace476`+`f656f873`). `develop` CI SUCCESS (run 31432422878). Story delivered and MERGED.** | COMPLETE | 2026-08-10 | -- | Factory paused pending next-priority dispatch. Four drift items recorded (2 process-gap, S-7.02-dispositioned inline; 2 external-research). DEC-262 recorded. Worktree cleanup complete. Next: S-CIGATE-3. | →1→3→0→2 |
+
+### Archived Current Phase Steps Row (from S-626-1-MERGE+ADV-P60-P61+BURST-CLOSE)
+
+| Step | Agent | Status | Output |
+|------|-------|--------|--------|
+| **S-626-1-MERGE+ADV-P60-P61+BURST-CLOSE (2026-08-10): state-manager closed the burst per the Single-Commit Burst Protocol. Recorded PR #667 merge to `develop` (`a5e1d087`), `develop` CI validation (run 31432422878, first production `ALLOWED_SKIPS` confirmation), pass-60/pass-61 (ADV-P60/ADV-P61) targeted delta reviews (9 actionable findings, 8 closed via fix burst `736fea28`/`23ace476`/`f656f873`: 3 HIGH + 1 MEDIUM + 4 LOW; 1 LOW `ADV-P61-LOW-004` confirmed OPEN), DEC-262, four drift items (2 process-gap S-7.02-dispositioned inline, 2 external-research), and worktree cleanup. Updated `ADV-P1-INDEX.md` v2.14->v2.16 (pass 61, 456 total findings, 0C/35H/131M/157L/133I; `status`->`closed-merged`; `pr`->MERGED). Bumped `S-626-1.md` v1.35->v1.36 (FIX ROUND 31, `status: in-progress`->`status: done`) and `STORY-INDEX.md` v1.5.79->v1.5.80 (row status marker updated in place). Appended `burst-log.md` + `session-checkpoints.md` entries; logged 3 lessons to `lessons.md` tagged `[codified]`; archived the prior burst's Phase-Progress/Current-Phase-Steps rows. Re-derived (not assumed) `develop` HEAD, worktree list, and gone-branch count via direct `git` commands before writing any narrative claim. | state-manager | COMPLETED | `STATE.md` v2.33->v2.34 + `ADV-P1-INDEX.md` + `S-626-1.md` + `STORY-INDEX.md` + `burst-log.md` + `session-checkpoints.md` + `lessons.md`, committed to factory-artifacts (one atomic commit), pushed via CAS. Next: S-CIGATE-3 (durable YAML-parser fix) per DEC-259. **POST-CLOSE ARITHMETIC CORRECTION (2026-08-10, same day):** `STATE.md` v2.34->v2.35 + `ADV-P1-INDEX.md` v2.15->v2.16, correcting the 442->452/+10/6-actionable arithmetic error above to the verified 442->456/+14/9-actionable (8 closed, 1 OPEN); see current_step correction note. |
+
+### Archived Phase Progress Row (from SHELL-TRUST-ASSUMPTIONS)
+
+| Phase | Status | Completed | Gate | Notes | Finding Progression |
+|-------|--------|-----------|------|-------|---------------------|
+| **SHELL-TRUST-ASSUMPTIONS research pass (2026-08-11): external validation of the 401-line shell-trust layer merged via PR #667. 0 REFUTE.** | COMPLETE | 2026-08-11 | -- | DEC-263 recorded (decisions-archive.md). Three new drift items + one updated. E1/E2 experiments deferred. Doc-only, no code changed. | →1→3→0→2 (unchanged -- not a window pass) |
+
+### Archived Current Phase Steps Row (from SHELL-TRUST-ASSUMPTIONS)
+
+| Step | Agent | Status | Output |
+|------|-------|--------|--------|
+| **SHELL-TRUST-ASSUMPTIONS research pass (2026-08-11): committed `research/ci-gate-shell-trust-assumptions-2026-08-10.md` + `research/RESEARCH-INDEX.md`; recorded DEC-263 (decisions-archive.md) and three new drift items + one update to `GITHUB-ACTIONS-ENV-VAR-LIKELY-WRITABLE` (Drift Items table). Doc-only, no code changed; `regression-state.json`/`sidecar-learning.md` left dirty per standing instruction. | state-manager | COMPLETED | `STATE.md` v2.35->v2.36 + `cycles/cycle-001/decisions-archive.md` (DEC-263) + `research/ci-gate-shell-trust-assumptions-2026-08-10.md` + `research/RESEARCH-INDEX.md`, committed to factory-artifacts (one atomic commit), pushed. Next: S-CIGATE-3 (durable YAML-parser fix) per DEC-259, unchanged. |
+
+### Archived Phase Progress Row (from PR675-MERGE+ADV-P675-CLOSE)
+
+| Phase | Status | Completed | Gate | Notes | Finding Progression |
+|-------|--------|-----------|------|-------|---------------------|
+| **PR675-MERGE+ADV-P675-CLOSE (2026-08-11): PR #675 squash-merged to develop as `d55bedf7` (doc-only S-626-1 trust-layer correction). `develop` CI SUCCESS (run 31450052302). ADV-P675 targeted claim-accuracy review pre-merge, 0H/2M/2L/1I, all 4 actionable CLOSED.** | COMPLETE | 2026-08-11 | -- | DEC-264 recorded. 1 drift item CLOSED (`SUDO-BOUND-UNRECORDED-IN-PROJECT-RECORD`), 2 NEW (`CORRECTION-PR-INTRODUCED-NEW-FALSE-CLAIMS`, `SCOPED-SOURCE-GENERALIZED-THROUGH-CITATION-CHAIN`). `ADV-P1-INDEX.md` v2.16→v2.17 (456→461). Session-closing burst; next: S-CIGATE-3. | →1→3→0→2 (unchanged -- not a window pass) |
+
+### Archived Current Phase Steps Row (from PR675-MERGE+ADV-P675-CLOSE)
+
+| Step | Agent | Status | Output |
+|------|-------|--------|--------|
+| **PR675-MERGE+ADV-P675-CLOSE (2026-08-11): state-manager closed the session per the Single-Commit Burst Protocol. Recorded PR #675 merge to `develop` (`d55bedf7`), `develop` CI validation (run 31450052302), ADV-P675 targeted claim-accuracy review (5 findings: 0H/2M/2L/1I, 4 actionable CLOSED pre-merge via `d2430a8a`), DEC-264, drift-item disposition (1 closed, 2 new), and post-merge state re-derivation. Updated `ADV-P1-INDEX.md` v2.16->v2.17 (pass 61 unchanged, +5 findings via a new `## Pass ADV-P675` section, 456->461 total, severity distribution re-derived by summation). Appended `burst-log.md` + `session-checkpoints.md` entries (session-closing checkpoint); logged 2 lessons to `lessons.md` tagged `[codified]`. Moved `SUDO-BOUND-UNRECORDED-IN-PROJECT-RECORD` to `drift-items-closed.md`. Re-derived (not assumed) `develop` HEAD, remote branch deletion, worktree list, and gone-branch count via direct `git`/`gh` commands before writing any narrative claim. | state-manager | COMPLETED | `STATE.md` v2.36->v2.37 + `ADV-P1-INDEX.md` + `cycles/cycle-001/decisions-archive.md` (DEC-264) + `cycles/cycle-001/drift-items-closed.md` + `burst-log.md` + `session-checkpoints.md` + `lessons.md`, committed to factory-artifacts (one atomic commit), pushed. Next: S-CIGATE-3 (durable YAML-parser fix) per DEC-259, unchanged. |
+
+### Archived Phase Progress Row (from SESSION-WRAP-PAUSE)
+
+| Phase | Status | Completed | Gate | Notes | Finding Progression |
+|-------|--------|-----------|------|-------|---------------------|
+| **SESSION-WRAP-PAUSE (2026-08-11): human-requested session wrap. `pipeline: ACTIVE`→`PAUSED`. No new work -- pure checkpoint burst.** | COMPLETE | 2026-08-11 | -- | Confirmed nothing in flight (re-derived via direct `git` commands). Session Resume Checkpoint fully replaced; prior checkpoint archived verbatim to `session-checkpoints.md`. Next on resume: S-CIGATE-3. | →1→3→0→2 (unchanged -- not a window pass) |
+
+### Archived Current Phase Steps Row (from SESSION-WRAP-PAUSE)
+
+| Step | Agent | Status | Output |
+|------|-------|--------|--------|
+| **SESSION-WRAP-PAUSE (2026-08-11): state-manager closed the session per the Single-Commit Burst Protocol, human-requested wrap (no new work). Set `pipeline: PAUSED`, refreshed `timestamp`, bumped version 2.37->2.38. Confirmed nothing in flight via direct `git` commands on both the product repo (`develop` @ `d55bedf7`, in sync, pre-existing untracked `.claude/*` files unchanged) and `.factory/` (`aa164b7a` prior to this commit, in sync, only the two standing-convention telemetry files dirty). Fully replaced `## Session Resume Checkpoint`; archived the prior checkpoint verbatim to `session-checkpoints.md` under a new `### Archived STATE.md` heading, followed by this burst's own `## Checkpoint: SESSION-WRAP-PAUSE burst` entry. Appended one Phase Progress row and one Current Phase Steps row (this row). No story, spec, or `ADV-P1-INDEX.md` content touched -- pure pause/checkpoint burst. | state-manager | COMPLETED | `STATE.md` v2.37->v2.38 + `cycles/cycle-001/session-checkpoints.md`, committed to factory-artifacts (one atomic commit), pushed. `regression-state.json`/`sidecar-learning.md` left dirty per standing instruction. Next on resume: S-CIGATE-3 (durable YAML-parser fix) per DEC-259, unchanged. |
+
+### Decisions Log rows archived this burst
+
+DEC-202 (SUPERSEDED annotation appended in place to the existing combined DEC-199..DEC-203 row)
+and DEC-254/DEC-255/DEC-256/DEC-257/DEC-258 (window-57/58/59-specific, no longer govern; DEC-258
+additionally annotated SUPERSEDED by DEC-262) moved from STATE.md's live Decisions Log to
+`cycles/cycle-001/decisions-archive.md`. DEC-128, DEC-206, DEC-224, DEC-245, DEC-259, DEC-260, and
+DEC-262 remain in STATE.md's live table -- these still GOVERN current behavior.
+
+### Drift item narrative bodies moved this burst
+
+21 drift-item rows in STATE.md's Drift Items table were carrying full narrative paragraphs inline
+instead of one-line summaries (a violation of the compact-index convention this table has followed
+since the 2026-08-09 COMPACTION burst, accumulated because items are documented in full at the
+burst that introduces them, per the standing note in STATE.md, and were never subsequently
+compacted). All 21 full narrative bodies moved verbatim to
+`cycles/cycle-001/drift-items-open-detail.md` (20 as new rows; `RUNNER-SOURCE-NOT-AN-ORACLE-FOR-
+WORKFLOW-PARSING` already existed there from 2026-08-10, not duplicated). STATE.md's index rows
+were rewritten as true one-liners with a pointer to the detail file. All 21 rows remain present
+in STATE.md's index table -- zero items dropped.
+
+### Convergence Status paragraphs moved this burst
+
+The three most recent closed-burst paragraphs under STATE.md's `## Convergence Status` heading
+(S-626-1-MERGE+ADV-P60-P61+BURST-CLOSE, SHELL-TRUST-ASSUMPTIONS, PR675-MERGE+ADV-P675-CLOSE) were
+moved verbatim to `cycles/cycle-001/convergence-trajectory.md` under a new "## Post-Merge
+Convergence Notes (2026-08-10 to 2026-08-11)" section. STATE.md's `## Convergence Status` section
+now carries only the current (SESSION-WRAP-PAUSE-derived, unchanged this burst) status paragraph
+plus a pointer.
+
+### Burst Summary: COMPACT-STATE (2026-08-11)
+
+Pure bookkeeping burst, no product code or spec touched, factory remains PAUSED. Extracted 5
+Phase-Progress rows + 4 Current-Phase-Steps rows to this file; 6 decision rows (DEC-202 annotation
++ DEC-254..258) to `decisions-archive.md`; 21 drift-item narrative bodies to
+`drift-items-open-detail.md`; 3 Convergence Status paragraphs to `convergence-trajectory.md`.
+STATE.md size before/after measured directly via `wc` (see STATE.md's own SIZE BUDGET comment for
+the exact figures). Files touched: `STATE.md` (v2.38 -> v2.39), `cycles/cycle-001/burst-log.md`
+(this entry), `cycles/cycle-001/decisions-archive.md`, `cycles/cycle-001/drift-items-open-detail.md`,
+`cycles/cycle-001/convergence-trajectory.md`. `regression-state.json`/`sidecar-learning.md` left
+dirty per standing instruction. One atomic commit to `factory-artifacts`, pushed. Next priority
+unchanged: S-CIGATE-3 (durable YAML-parser fix, DEC-259/DEC-260) -- this burst performed no
+pipeline work, it only compacted STATE.md ahead of that dispatch.
