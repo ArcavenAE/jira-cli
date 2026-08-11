@@ -1,22 +1,22 @@
 ---
 document_type: adversarial-review-index
 level: ops
-version: "2.16"
+version: "2.17"
 status: closed-merged
 producer: adversary
-timestamp: 2026-08-10T23:15:00Z
+timestamp: 2026-08-11T02:15:00Z
 phase: "5"
 pass: 61
-inputs: [.factory/stories/S-626-1.md, .factory/stories/S-CIGATE-1-ci-gate-aggregator.md, .factory/stories/S-CIGATE-2-skipped-status-false-green.md, .factory/stories/S-640-1.md, .factory/stories/S-641-1.md, .factory/stories/S-MUTANTS-EXAMINE-GLOBS-1.md, .factory/stories/S-TRAIL-DERIVATION-GUARD-1.md, .factory/stories/STORY-INDEX.md, .factory/specs/prd/cross-cutting.md, .github/workflows/ci.yml, tests/ci_gate_completeness.rs, tests/cli_handler.rs, tests/common/yaml.rs, tests/mutants_glob_existence.rs, scripts/check-ci-gate.sh, docs/specs/cargo-mutants-policy.md, CLAUDE.md, Cargo.toml, CHANGELOG.md, live CI run 30465686049, live CI run 31406705091 (pass-57/58/59 fix-round CI-break), live CI run 31432422878 (develop post-merge), branch protection API, PyYAML 6.0.3 (pass-55 differential), standalone rustc reproductions (pass-56/57), Ruby Psych (pass-57), sibling ci.yml re-indent sweep (pass-57), scratch-tree per-mutation rebuilds (pass-58), 7 mutated ci.yml copies replayed against real pin extractors (pass-59), delta `1381af17..5ca51bc2` (pass-60/61)]
+inputs: [.factory/stories/S-626-1.md, .factory/stories/S-CIGATE-1-ci-gate-aggregator.md, .factory/stories/S-CIGATE-2-skipped-status-false-green.md, .factory/stories/S-640-1.md, .factory/stories/S-641-1.md, .factory/stories/S-MUTANTS-EXAMINE-GLOBS-1.md, .factory/stories/S-TRAIL-DERIVATION-GUARD-1.md, .factory/stories/STORY-INDEX.md, .factory/specs/prd/cross-cutting.md, .github/workflows/ci.yml, tests/ci_gate_completeness.rs, tests/cli_handler.rs, tests/common/yaml.rs, tests/mutants_glob_existence.rs, scripts/check-ci-gate.sh, docs/specs/cargo-mutants-policy.md, CLAUDE.md, Cargo.toml, CHANGELOG.md, live CI run 30465686049, live CI run 31406705091 (pass-57/58/59 fix-round CI-break), live CI run 31432422878 (develop post-merge), live CI run 31450052302 (develop post-PR675-merge), branch protection API, PyYAML 6.0.3 (pass-55 differential), standalone rustc reproductions (pass-56/57), Ruby Psych (pass-57), sibling ci.yml re-indent sweep (pass-57), scratch-tree per-mutation rebuilds (pass-58), 7 mutated ci.yml copies replayed against real pin extractors (pass-59), delta `1381af17..5ca51bc2` (pass-60/61), PR #675 diff `a5e1d087..d55bedf7` (ADV-P675, CLAUDE.md + scripts/check-ci-gate.sh comment/prose only), research/ci-gate-shell-trust-assumptions-2026-08-10.md (ADV-P675 primary-source cross-check)]
 traces_to: .factory/stories/S-626-1.md
-total_findings: 456
-severity_distribution: { CRIT: 0, HIGH: 35, MED: 131, LOW: 157, INFO: 133 }
+total_findings: 461
+severity_distribution: { CRIT: 0, HIGH: 35, MED: 133, LOW: 159, INFO: 134 }
 story: S-626-1
 cycle: cycle-001
 feature_head: 5ca51bc2 (last commit reviewed by any adversarial pass before merge; merge commit is `a5e1d087` on `develop`, squash of 48 commits; feature branch progression this burst's review scope: `1381af17`→`a17939e2`(pass-57/58/59 class sweep)→`f2bea32e`(CI-BREAK-1 fix)→`5ca51bc2`(DEC-261 doc corrections, reviewed by pass-60/61)→PR #667 squash-merged to `develop` as `a5e1d087`)
 pr: 667 (MERGED to develop as `a5e1d087` 2026-08-10T21:08:10Z, closes #626; remote branch `ci/fix-toolchain-sha-msrv` auto-deleted)
 basis: TRUE ADVERSARY AGENT (not a DEC-190 substitute)
-convergence: 0 of 3 FINAL — Step 4.5 window closed permanently at 0/3 (DEC-262 authorized merge on code grounds without ever reaching 3/3 CLEAN, after ten windows and 61 total adversary passes). Window 57/58/59 CLOSED 0/3 — pass-57 NOT CLEAN (1H+2M+2L+4I), pass-58 NOT CLEAN (0H+2M+3L+3I), pass-59 NOT CLEAN (0H+0M+1L+5I); three deliberately-varied inspection frontiers, human-approved before dispatch per DEC-254 (C1-lexer differential conformance, C5-falsifiability census of the new pins, C3-side-channels — inter-step side channels inside `ci-gate`, a frontier never probed in 56 prior passes) against frozen head `1381af17`; TENTH consecutive window without 3/3 since window 30/31/32; all 23 findings closed same-burst as a single class sweep, commit `a17939e2` (DEC-255), which itself broke CI (DEC-257, fixed by `f2bea32e`) rather than a fix round against a frozen head. **Passes 60/61 (this update) were TARGETED DELTA REVIEWS, not a STRICT Step-4.5 window** — dispatched because the human asked whether #667 was fully reviewed rather than whether CI was green; they covered `1381af17..5ca51bc2` (1,024 insertions no prior pass had seen) and found/closed 3 HIGH + 3 LOW findings pre-merge. Not counted toward Step 4.5's 3/3 window arithmetic. See Passes 60/61 Summary below. Window 54/55/56's own convergence detail (pass-54/55/56 verdicts, frontiers, isolation notes) is preserved unchanged further down in this file.
+convergence: 0 of 3 FINAL — Step 4.5 window closed permanently at 0/3 (DEC-262 authorized merge on code grounds without ever reaching 3/3 CLEAN, after ten windows and 61 total adversary passes). Window 57/58/59 CLOSED 0/3 — pass-57 NOT CLEAN (1H+2M+2L+4I), pass-58 NOT CLEAN (0H+2M+3L+3I), pass-59 NOT CLEAN (0H+0M+1L+5I); three deliberately-varied inspection frontiers, human-approved before dispatch per DEC-254 (C1-lexer differential conformance, C5-falsifiability census of the new pins, C3-side-channels — inter-step side channels inside `ci-gate`, a frontier never probed in 56 prior passes) against frozen head `1381af17`; TENTH consecutive window without 3/3 since window 30/31/32; all 23 findings closed same-burst as a single class sweep, commit `a17939e2` (DEC-255), which itself broke CI (DEC-257, fixed by `f2bea32e`) rather than a fix round against a frozen head. **Passes 60/61 (this update) were TARGETED DELTA REVIEWS, not a STRICT Step-4.5 window** — dispatched because the human asked whether #667 was fully reviewed rather than whether CI was green; they covered `1381af17..5ca51bc2` (1,024 insertions no prior pass had seen) and found/closed 3 HIGH + 3 LOW findings pre-merge. Not counted toward Step 4.5's 3/3 window arithmetic. See Passes 60/61 Summary below. **ADV-P675 (2026-08-11) was a further TARGETED CLAIM-ACCURACY REVIEW, also not a Step-4.5 window** — dispatched pre-merge against PR #675 (`a5e1d087..d55bedf7`, doc-only correction of the S-626-1 trust-layer record), on the reasoning that a doc comment IS the operative control for several recorded residuals in this repository. 0H/2M/2L/1I, NOT CLEAN; all 4 actionable findings amended in `d2430a8a` before merge. See Pass ADV-P675 section below. Window 54/55/56's own convergence detail (pass-54/55/56 verdicts, frontiers, isolation notes) is preserved unchanged further down in this file.
 void_spawns: 6 (passes 6/7/8 first-attempt background subagents; pass-9 isolation breach; pass-11 isolation breach; pass-22 isolation breach)
 not_run: 2 (passes 16/17 — superseded by round-5 ruling per DEC-209; see s-626-1-adversary-pass-16.md and s-626-1-adversary-pass-17.md)
 superseded: 1 (pass-20 — superseded per DEC-216; window 18/19/20 CLOSED 0/2)
@@ -2127,5 +2127,65 @@ isolation breach reported; no read of `.factory/cycles/`.
 - **New decision:** **DEC-262** (merge authorized on code grounds with Step 4.5 at 0/3 after ten
   windows and 61 total adversary passes; convergence bar never met, merge accepted that).
 - **Full narrative:** `cycles/cycle-001/burst-log.md` § "S-626-1-MERGE+ADV-P60-P61+BURST-CLOSE".
+
+---
+
+## Pass ADV-P675 — PR #675 Claim-Accuracy Review (TARGETED, not a Step-4.5 window;
+PR #675 is docs-only — `CLAUDE.md` + `scripts/check-ci-gate.sh` comment/prose corrections,
+zero non-comment lines changed, `a5e1d087..d55bedf7`)
+
+Dispatched before merge on the reasoning that in this repository a doc comment IS the operative
+control for several recorded residuals (e.g. `resolve_trusted_jq`'s `HONEST SCOPE` comment, the
+round-13 `uses:`-pinning scope note) — so a false comment is a real defect, not cosmetic drift.
+PR #675 itself was a correction of the S-626-1/DEC-263 trust-layer record to match the shipped
+code from the SHELL-TRUST-ASSUMPTIONS research pass.
+
+| ID | Severity | Classification | Title | Status | Notes |
+|----|----------|----------------|-------|--------|-------|
+| ADV-P675-MEDIUM-001 | MEDIUM | claim-accuracy · false-premise-through-citation-chain | Comment claimed Ubuntu 24.04 is "the first LTS with usrmerge," CONFIRM-labelled against Canonical/Debian docs — false: Ubuntu shipped merged-`/usr` for new installs since 18.10 Cosmic, so 20.04/22.04 LTS were already usrmerged; the cited Rockcraft page does say it, but scoped to Ubuntu as a base system inside rocks/container images, not installations generally | CLOSED on `d2430a8a` | The operative conclusion (one physical directory, no canonicalization) was true and unaffected; the false premise misled toward MORE apparent risk, not less. The error propagated through a citation chain — Rockcraft's scoped claim → the research artifact quoted it correctly but dropped the scope → this PR generalized it further and added a CONFIRM label. Amended by explicit retraction (not silent deletion), so the error cannot be re-derived from the same source; CONFIRM re-anchored to the merged-`/usr`-since-18.10 property. Drift item `SCOPED-SOURCE-GENERALIZED-THROUGH-CITATION-CHAIN` opened (see STATE.md Drift Items) |
+| ADV-P675-MEDIUM-002 | MEDIUM | claim-accuracy · unlabelled-inconclusive-claim | PR asserted as settled fact that `/usr/bin`/`/bin` "require root," unlike the paths above — this is Q1b, INCONCLUSIVE-on-primary-sources / INFERRED per `research/ci-gate-shell-trust-assumptions-2026-08-10.md`, and is the single open question bearing on the decision path | CLOSED on `d2430a8a` | Two aggravating factors: unrequested drift (the dispatch asked only for the `/opt/homebrew/bin` sentence) and internal inconsistency (~70 lines later the same PR correctly labelled lower-stakes claims INFERRED). Amended by labelling only. Drift item `CORRECTION-PR-INTRODUCED-NEW-FALSE-CLAIMS` opened (see STATE.md Drift Items) |
+| ADV-P675-LOW-001 | LOW | citation-fidelity | C# snippet quoting `ScriptHandler.cs` elided the line that BINDS `runtimeContext`, presented as a full quotation — as printed, the inner loop referenced an undeclared identifier, directly under the word "UNCONDITIONALLY" | CLOSED on `d2430a8a` | Amended by restoring the binding line |
+| ADV-P675-LOW-002 | LOW | stale-claim-not-updated | Two untouched comment blocks still claimed strict mode engages on `GITHUB_ACTIONS=true`, contradicting the DEC-263 re-key to `RUNNER_OS` | CLOSED on `d2430a8a` | Pre-existing, not a regression introduced by this PR, but left the file worse than uniformly-stale after the re-key landed elsewhere in the same file |
+
+**Reconciliation note (5th finding, INFO):** the dispatch's own severity tally is 0H/2M/2L/1I = 5,
+and `total_findings` is incremented by 5 accordingly (461, up from 456) — but the dispatch brief
+that produced this recording pass itemized only the four actionable findings above; the INFO
+finding's title and detail were not supplied. Per this project's standing rule against estimating
+what should be derived (`MEASUREMENT-METHOD-PRODUCES-FALSE-CLAIM`, three prior instances), this
+entry records the tally contribution honestly rather than inventing plausible-sounding INFO
+content — `ADV-P675-INFO-001` is reserved but not itemized pending its source detail.
+
+## Pass ADV-P675 Isolation Note
+
+**ELIGIBLE.** Reviewed PR #675's committed diff (`a5e1d087..d55bedf7`) pre-merge; no isolation
+breach reported.
+
+## Pass ADV-P675 Verified-Clean (no finding)
+
+Confirmed correct, no defect: comment detachment (the `ADV-P60-LOW-002` failure mode, checked
+against the assembled file, not the diff); the `CLAUDE.md` sudo sentence (verbatim quote, correct
+placement, correctly refuses the overclaim); the macOS compatibility-not-security framing and its
+scope claim (independently re-verified against `ci.yml`: `ci-gate` and `spec-guard` both
+`ubuntu-latest`); the "second, independent channel" wording; the `ScriptHandler.cs`
+write-ordering citation (confirmed across four primary-source fetches); the "don't cite the docs'
+non-overwrite sentence" note.
+
+## Pass ADV-P675 Summary
+
+- **Verdict:** NOT CLEAN — 0 HIGH + 2 MEDIUM + 2 LOW + 1 INFO = 5. Recommendation: merge with
+  amendments.
+- **Not a Step 4.5 window pass; not counted toward Step 4.5's 3/3 arithmetic** — a targeted
+  claim-accuracy review of a documentation-only PR, dispatched because a doc comment is the
+  operative control for several recorded residuals in this repository.
+- **All 4 actionable findings CLOSED**, amended in `d2430a8a` before merge, independently
+  re-verified in the committed text. 1 INFO finding counted in the tally but not itemized in the
+  dispatch brief — see Reconciliation note above.
+- **PR #675 MERGED same-burst**, squash commit `d55bedf7` on `develop`, 2026-08-11T01:40:55Z.
+  `develop` CI on `d55bedf7` (run 31450052302): SUCCESS, 12 success + 2 legitimately-skipped
+  (`Mutation testing` + `Secret Scan`, both `pull_request`-only); `CI Gate` correctly green.
+  `Scorecard` and `E2E (Live Jira)` also passed on the merge commit.
+- **New decision:** **DEC-264** (PR #675 merged after adversarial claim-accuracy review and four
+  amendments; reviewing a documentation-only PR found two MEDIUMs, justifying the practice).
+- **Full narrative:** `cycles/cycle-001/burst-log.md` § "PR675-MERGE+ADV-P675-CLOSE".
 
 ---

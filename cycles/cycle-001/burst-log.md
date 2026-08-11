@@ -9869,3 +9869,142 @@ Doc-only. Files touched: `research/ci-gate-shell-trust-assumptions-2026-08-10.md
 `research/RESEARCH-INDEX.md`, `cycles/cycle-001/decisions-archive.md` (DEC-263), `STATE.md`
 (v2.35 -> v2.36). One atomic commit to `factory-artifacts`, pushed. Next priority unchanged:
 S-CIGATE-3 (durable YAML-parser fix, DEC-259/DEC-260).
+
+## PR675-MERGE+ADV-P675-CLOSE (2026-08-11, team-lead-dispatched close-out burst)
+
+Team-lead-dispatched close-out burst recording PR #675's merge to `develop` and the pre-merge
+adversarial review that covered it (ADV-P675). PR #675 (`docs(ci-gate): correct trust-layer
+record to match code (S-626-1)`) applied the SHELL-TRUST-ASSUMPTIONS research pass's (DEC-263)
+findings to `CLAUDE.md` and `scripts/check-ci-gate.sh` -- comment/prose text only, zero
+non-comment lines changed, independently re-verified via `git show --stat d55bedf7`.
+
+### PR #675 Merge Record
+
+Squash commit `d55bedf7` on `develop`, 2026-08-11T01:40:55Z, from branch `docs/ci-gate-trust-scope`
+(remote auto-deleted -- confirmed via `git fetch --prune` after an initial stale `ls-remote` read
+still showed it present; refetch, not assumption, settled it). `develop` CI on `d55bedf7` (run
+31450052302): SUCCESS -- 12 success + 2 legitimately-skipped (`Mutation testing` + `Secret Scan
+(gitleaks)`, both `pull_request`-only); `CI Gate` correctly reported success, `mutants` the sole
+allowlisted skip. `Scorecard supply-chain security` and `E2E (Live Jira)` also passed on the
+merge commit.
+
+### ADV-P675 -- Targeted Claim-Accuracy Review (not a Step-4.5 window)
+
+Dispatched pre-merge on the reasoning that in this repository a doc comment IS the operative
+control for several recorded residuals (`resolve_trusted_jq`'s own `HONEST SCOPE` comment, the
+round-13 `uses:`-pinning scope note) -- so a false comment in a PR whose whole purpose is
+correcting the record is a real defect, not cosmetic drift. Result: 0H/2M/2L/1I, NOT CLEAN,
+recommendation merge-with-amendments. All four actionable findings amended in `d2430a8a` before
+merge and independently re-verified in the committed text:
+
+- `ADV-P675-MEDIUM-001` -- the comment claimed Ubuntu 24.04 is "the first LTS with usrmerge,"
+  CONFIRM-labelled against Canonical/Debian docs. False: Ubuntu shipped merged-`/usr` for new
+  installs since 18.10 Cosmic, so 20.04/22.04 LTS were already usrmerged. The cited Rockcraft
+  page does say it, but scoped to Ubuntu as a base system inside rocks/container images, not
+  installations generally -- the error propagated through a citation chain (Rockcraft's scoped
+  claim -> the research artifact quoted it correctly but dropped the scope -> this PR generalized
+  it further and added a CONFIRM label). The operative conclusion (one physical directory, no
+  canonicalization) was true and unaffected; the false premise misled toward MORE apparent risk,
+  not less. Amended by explicit retraction, not silent deletion, so the error cannot be
+  re-derived from the same source; CONFIRM re-anchored to the merged-/usr-since-18.10 property.
+- `ADV-P675-MEDIUM-002` -- the PR asserted as settled fact that `/usr/bin`/`/bin` "require root,"
+  unlike the paths above. That is Q1b, INCONCLUSIVE-on-primary-sources / INFERRED per
+  `research/ci-gate-shell-trust-assumptions-2026-08-10.md`, the single open question bearing on
+  the decision path. Two aggravating factors: unrequested drift (the dispatch asked only for the
+  `/opt/homebrew/bin` sentence) and internal inconsistency (~70 lines later the same PR correctly
+  labelled lower-stakes claims INFERRED). Amended by labelling only.
+- `ADV-P675-LOW-001` -- a C# snippet quoting `ScriptHandler.cs` elided the line that BINDS
+  `runtimeContext`, presented as a full quotation -- as printed, the inner loop referenced an
+  undeclared identifier, directly under the word "UNCONDITIONALLY". Amended by restoring the
+  binding line.
+- `ADV-P675-LOW-002` -- two untouched comment blocks still claimed strict mode engages on
+  `GITHUB_ACTIONS=true`, contradicting the DEC-263 re-key to `RUNNER_OS`. Pre-existing, not a
+  regression introduced by this PR, but left the file worse than uniformly-stale after the re-key
+  landed elsewhere in the same file. Amended.
+
+The 5th finding counted in the severity tally (0H/2M/2L/1I = 5, so `total_findings` moves
+456 -> 461) is INFO and was not itemized with a title or detail in the dispatch brief that
+produced this recording pass. Per this project's standing rule against estimating what should be
+derived (`MEASUREMENT-METHOD-PRODUCES-FALSE-CLAIM`, three prior instances this cycle), it is
+recorded as a tally entry only -- `ADV-P675-INFO-001` reserved, not fabricated with invented
+content.
+
+Verified CLEAN, no finding: comment detachment (checked against the assembled file, not the
+diff); the `CLAUDE.md` sudo sentence (verbatim quote, correct placement, correctly refuses the
+overclaim); the macOS compatibility-not-security framing and its scope claim (independently
+re-verified against `ci.yml`: `ci-gate` line 664 and `spec-guard` line 317 both `ubuntu-latest`);
+the "second, independent channel" wording; the `ScriptHandler.cs` write-ordering citation
+(confirmed across four primary-source fetches); the "don't cite the docs' non-overwrite sentence"
+note.
+
+`ADV-P1-INDEX.md` updated v2.16 -> v2.17: header (`total_findings` 456 -> 461,
+`severity_distribution` `{CRIT:0,HIGH:35,MED:131,LOW:157,INFO:133}` ->
+`{CRIT:0,HIGH:35,MED:133,LOW:159,INFO:134}`, re-derived by summation of the existing distribution
+plus the 0H/2M/2L/1I delta, not assumed) plus a new `## Pass ADV-P675` section (finding catalog,
+5th-finding reconciliation note, isolation/verified-clean note, summary).
+
+### Drift Items: 1 Closed, 2 New
+
+- **CLOSED:** `SUDO-BOUND-UNRECORDED-IN-PROJECT-RECORD` -- recorded 2026-08-11 (DEC-263) as
+  "a follow-up PR is being raised for this; not actioned this pass." That follow-up PR is
+  `d55bedf7`, merged. The sudo bound now lives in `CLAUDE.md` beside the pre-existing
+  knowingly-unpinned `uses:` residual. Row moved from STATE.md's open Drift Items table to
+  `cycles/cycle-001/drift-items-closed.md`.
+- **NEW: `CORRECTION-PR-INTRODUCED-NEW-FALSE-CLAIMS`** (MEDIUM, process-gap). A PR whose sole
+  purpose was correcting inaccurate claims introduced two new ones, including the same overclaim
+  class it existed to fix -- one of them unrequested drift beyond the dispatch. Corrective: a
+  record-correction change needs the same claim-accuracy review as the record it corrects; any
+  claim touching an INCONCLUSIVE/INFERRED item must carry its label explicitly, since unlabelled
+  statements adjacent to labelled ones read as confirmed.
+- **NEW: `SCOPED-SOURCE-GENERALIZED-THROUGH-CITATION-CHAIN`** (LOW, process-gap).
+  `ADV-P675-MEDIUM-001`'s mechanism: a source's scoped claim lost its scope at each hop (source ->
+  research artifact -> code comment), with a confidence label added at the last hop. Corrective:
+  when a citation chain crosses artifacts, re-fetch the original rather than inheriting the
+  quote -- each hop was locally reasonable and the result was false.
+
+Both new items S-7.02-dispositioned inline (explicit deferral, no new STORY-INDEX entry this
+burst) -- both are process-gap lessons about review discipline, not code defects requiring a
+tracked fix.
+
+### Decision: DEC-264
+
+Recorded directly in `cycles/cycle-001/decisions-archive.md` (research/closeout-pass pattern,
+matching DEC-261/DEC-263's precedent -- not added to STATE.md's active Decisions Log table, since
+this PR did not itself change enforcement behavior). PR #675 merged after adversarial
+claim-accuracy review and four amendments; reviewing a documentation-only PR found two MEDIUMs,
+including the same false-premise-through-citation-chain and unlabelled-inconclusiveness classes
+the correction PR existed to fix -- justifying the practice of applying the same review
+discipline to record-correction PRs as to code PRs.
+
+### Post-Merge State (re-derived, not assumed)
+
+`develop` @ `d55bedf7` (advanced from `a5e1d087` via PR #675). Main repo working tree fast-forwarded
+and clean (`git status` -- only pre-existing untracked `.claude/` files, unrelated to this burst).
+Three worktrees unchanged: main (`develop` @ `d55bedf7`), `.factory` (`factory-artifacts`),
+`.reference` (detached). Local branch `docs/ci-gate-trust-scope` shows `[gone]` after
+`git fetch --prune` -- joining, not exempted from, the pre-existing 15-branch stale-`[gone]` set
+(now 16; the general item remains carried forward, not actioned this burst, per standing
+deferral). No factory lock held.
+
+### Lessons Logged (`[codified]`, 2)
+
+1. A correction is itself an operation that can corrupt a record -- MEDIUM-001 and MEDIUM-002 are
+   both defects introduced BY a PR whose only job was fixing prior defects; correcting a record is
+   not exempt from the review discipline applied to the record itself.
+2. A doc-only PR warrants review when doc comments are load-bearing controls -- this repository's
+   `ci-gate` trust apparatus depends on several comments (`HONEST SCOPE`, the round-13 `uses:`
+   scope note) being accurate; a "just docs" PR touching those comments carries the same review
+   stakes as a code change to the mechanism they describe.
+
+### Burst Summary: PR675-MERGE+ADV-P675-CLOSE (2026-08-11)
+
+PR #675 MERGED (`d55bedf7`), `develop` CI SUCCESS (run 31450052302). ADV-P675 targeted
+claim-accuracy review: 0H/2M/2L/1I, all 4 actionable findings CLOSED pre-merge (`d2430a8a`).
+`ADV-P1-INDEX.md` v2.16 -> v2.17 (456 -> 461 total findings). DEC-264 recorded. 1 drift item
+CLOSED (`SUDO-BOUND-UNRECORDED-IN-PROJECT-RECORD`), 2 NEW (`CORRECTION-PR-INTRODUCED-NEW-FALSE-CLAIMS`,
+`SCOPED-SOURCE-GENERALIZED-THROUGH-CITATION-CHAIN`). Files touched: `STATE.md` (v2.36 -> v2.37),
+`cycles/cycle-001/adversarial-reviews/ADV-P1-INDEX.md`, `cycles/cycle-001/decisions-archive.md`
+(DEC-264), `cycles/cycle-001/drift-items-closed.md`, `cycles/cycle-001/session-checkpoints.md`,
+`cycles/cycle-001/lessons.md`. `regression-state.json`/`sidecar-learning.md` left dirty per
+standing instruction. One atomic commit to `factory-artifacts`, pushed. Next priority unchanged:
+S-CIGATE-3 (durable YAML-parser fix, DEC-259/DEC-260).
