@@ -10183,3 +10183,66 @@ is an explicit open item for the human, not something this bookkeeping burst can
 
 Next priority on resume: human merge ruling on `test/ci-gate-real-yaml-parser` (17 commits,
 unpushed), plus the four other open items listed in the new Session Resume Checkpoint below.
+
+## S-CIGATE-3-PUSHED burst (2026-08-11T21:19:29Z)
+
+Human ran `/wrap`. The pipeline was already `PAUSED` (S-CIGATE-3-IMPLEMENTED / COMPACT-STATE
+bursts) — this burst confirms rather than changes that status. Preconditions re-verified:
+`.factory/.git` worktree marker present, `git -C .factory rev-parse --git-dir` succeeds,
+`git -C .factory branch --show-current` = `factory-artifacts`.
+
+**Story branch pushed — human-authorized, in response to a direct question (DEC-266a).**
+
+- `git push -u origin test/ci-gate-real-yaml-parser` succeeded. Upstream now
+  `origin/test/ci-gate-real-yaml-parser`.
+- Re-verified (not copied from the dispatch instruction): `git ls-remote origin
+  refs/heads/test/ci-gate-real-yaml-parser` and `git rev-parse test/ci-gate-real-yaml-parser`
+  both return `aeeebe0147e2cb616c34c6f05b54f135d62dd229` — local HEAD == remote, byte-identical.
+- `git rev-list --count develop..test/ci-gate-real-yaml-parser` re-confirmed = **17** (unchanged
+  from the prior burst's re-derivation; this time the dispatch instruction's own figure also
+  read 17 and matched — no discrepancy found this burst, unlike the prior one).
+- `git -C .worktrees/S-CIGATE-3 status --short` — clean working tree.
+- `gh pr list --head test/ci-gate-real-yaml-parser --json number,title,state` returned `[]` —
+  **NO PR opened.** Merge authority remains the human's (DEC-128); git's push-output "create a
+  PR" link is informational only, not an action taken.
+
+**NO CI ran on the branch — a live gap, recorded as drift.**
+
+- `gh run list --branch test/ci-gate-real-yaml-parser` returned zero rows.
+- `.github/workflows/ci.yml` triggers on `push` only for `develop`/`main`; a `test/`-prefixed
+  branch fires no workflow at all without an open PR — confirmed by inspection, not assumed.
+- Consequence recorded as new drift item `S-CIGATE-3-BRANCH-NEVER-CI-VALIDATED` (HIGH): the
+  17 commits have been validated only locally on macOS. This project has a recorded incident
+  (CI run 31128902318) where six `#[cfg(unix)]`-gated helpers became genuinely dead code and
+  hard-errored under `-D warnings` on a Windows build — a defect class structurally unreachable
+  by local verification alone, and a warning that recurred on every pass of the S-CIGATE-3
+  implementation session without ever being tested against a live CI run. Opening a PR is what
+  would trigger validation; not done this burst.
+
+**Telemetry-file convention break — human ruled LEAVE IT (DEC-266b).**
+
+- `git -C .factory status` confirms `sidecar-learning.md` is dirty again (normal — a live
+  telemetry file). `git -C .factory ls-files | grep -E "regression-state.json|sidecar-learning.md"`
+  confirms both files are tracked, from burst `86ddb331`'s `git add -A` sweep that broke the
+  standing "leave dirty, never commit" convention.
+- Human ruled: leave it, record as drift, do NOT revert — reverting would require a force-push
+  on an already-pushed `factory-artifacts` branch, judged higher risk than the convention break.
+  Recorded as new drift item `TELEMETRY-FILES-COMMIT-LEFT-AS-DRIFT` (LOW).
+
+**Files touched this burst (all in `.factory/`, one atomic commit):**
+
+`STATE.md` (v2.40→v2.41), `cycles/cycle-001/decisions-archive.md` (DEC-266, two human rulings
+this session), `cycles/cycle-001/drift-items-open-detail.md` (2 new rows:
+`S-CIGATE-3-BRANCH-NEVER-CI-VALIDATED`, `TELEMETRY-FILES-COMMIT-LEFT-AS-DRIFT`),
+`cycles/cycle-001/session-checkpoints.md` (archived the S-CIGATE-3-IMPLEMENTED checkpoint,
+appended the new S-CIGATE-3-PUSHED checkpoint), this file (`burst-log.md`). No product code,
+spec, story file, STORY-INDEX, or adversarial-review index touched — this burst added no
+findings and closed none. `.worktrees/S-CIGATE-3` and the story branch were not otherwise
+touched by this burst beyond confirming the push already completed before this burst began.
+`regression-state.json`/`sidecar-learning.md` left dirty per the human ruling above (not
+reverted).
+
+Next priority on resume: human ruling on whether/when to open a PR for
+`test/ci-gate-real-yaml-parser` (this would trigger the CI validation the branch has never had),
+then the merge ruling itself, plus the other open items listed in the new Session Resume
+Checkpoint.
