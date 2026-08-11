@@ -254,6 +254,46 @@ print_allowed_skips() {
 # runs this script on `windows-latest` must add a `Windows` entry here
 # FIRST, deliberately, not discover the gap via another production CI
 # break of the kind this whole function exists to prevent recurring.
+#
+# Linux entries are ONE physical directory under two names, not two
+# independent trust grants (S-626-1 research pass, 2026-08-10; corrected
+# ADV-P675-MEDIUM-001, 2026-08-10 — the original "first LTS with usrmerge"
+# framing was wrong): `/bin` is a symlink to `/usr/bin` on `ubuntu-latest`
+# (Ubuntu 24.04) — `/usr/bin/jq` and `/bin/jq` are the same inode. Ubuntu
+# has shipped merged-`/usr` for new installs since 18.10 Cosmic, so 20.04
+# and 22.04 LTS were ALSO already usrmerged; "24.04 is the first LTS with
+# usrmerge" is false as a general Ubuntu-installations claim — the
+# Rockcraft source for that phrasing scopes it to Ubuntu as a *base system
+# inside rocks/container images*, not installations generally. The
+# operative conclusion (one physical directory, no canonicalization
+# needed) is unaffected: it holds on every LTS the GitHub-hosted runner
+# fleet has offered. CONFIRM against Canonical/Debian docs still applies —
+# to the merged-`/usr`-since-18.10 property, not the retracted "first LTS"
+# claim. No equivalence gap exists for the `/bin` entry to close, and
+# `/bin` is kept only as free, defensive redundancy against a future
+# `PATH` reordering. Do NOT add `realpath`/`readlink` canonicalization to
+# `is_trusted_jq_dir` to "resolve" this — there is nothing to resolve, and
+# doing so would reintroduce an external-binary dependency on the decision
+# path, undoing the point of `736fea28`.
+#
+# macOS entries — read as a COMPATIBILITY assertion, not a security one
+# (S-626-1 research pass, 2026-08-10): `/opt/homebrew/bin` is (INFERRED,
+# high confidence — Homebrew chowns its prefix to the installing user; no
+# primary source states the hosted image's mode bits) owned by `runner`
+# and writable without `sudo`, unlike `/usr/bin`/`/bin` above, whose
+# root-only status rests on the same class of inference (ADV-P675-MEDIUM-002:
+# neither half of this comparison is independently CONFIRMED against a
+# primary source — see `.factory/research/ci-gate-shell-trust-assumptions-2026-08-10.md`
+# Q1b/Q3b). This entry exists solely so the runner's own real Homebrew `jq`
+# (Apple Silicon `macos-latest`) is accepted rather than falsely rejected
+# — see the CI-BREAK-1 comment on `resolve_trusted_jq` below, the
+# production break this entry was added to fix. It provides no meaningful
+# security value on this leg (an earlier step can `cp` a shim there with
+# no privilege escalation) but this is NOT the decision path — `ci-gate`
+# and `spec-guard` both run on `ubuntu-latest`; `/opt/homebrew/bin` is
+# reached only by the `test` job's `macos-latest` leg via the
+# `#[cfg(unix)]` subprocess tests. Do NOT remove this entry — that
+# reproduces CI-BREAK-1 verbatim.
 trusted_jq_dirs_for() {
     case "$1" in
         Linux)
@@ -298,9 +338,22 @@ EOF
 # a PATH/binary-identity vector, not a `run:` line vector, and sits
 # entirely outside every existing byte-pin in that file). CLAUDE.md's
 # round-13 IMPORTANT-2 note previously described this exposure as
-# `$GITHUB_ENV` -> `BASH_ENV` (an environment-variable model); the actual
-# channel is `PATH` -> WHICH BINARY RUNS, a different mechanism no
-# env-surface pin or future YAML-parser rewrite would touch.
+# `$GITHUB_ENV` -> `BASH_ENV` (an environment-variable model); a second,
+# independent channel is `PATH` -> WHICH BINARY RUNS, a different
+# mechanism no env-surface pin or future YAML-parser rewrite would touch.
+# INFERRED, not independently run against a live runner by this pass: the
+# two channels are both live and do not supersede one another — CLAUDE.md's
+# round-12 `env:`-key-set pins (M2-o, workflow-level) read `ci.yml` and so
+# cannot see a `BASH_ENV` value an earlier step writes at runtime via
+# `$GITHUB_ENV`, which still reaches this script's process environment
+# (see the "WHY RUNNER_OS" ordering discussion below for the mechanism).
+# This is not a new exposure — it requires the same earlier-step arbitrary-
+# execution capability that already yields the `sudo cp .../usr/bin/jq`
+# vector in the HONEST SCOPE paragraph below, so it adds nothing to the
+# attacker's reach. It is also narrower than it first looks: a `BASH_ENV`
+# shim defining a `jq` shell FUNCTION rather than a file is independently
+# rejected here regardless — `command -v jq` then returns the bare string
+# `jq`, which the absolute-path check just below refuses.
 #
 # Resolved once per `evaluate_needs` call and reused for every jq
 # invocation inside it (rather than re-resolving per call), so a single
@@ -324,16 +377,45 @@ EOF
 # so an earlier step in the SAME job can very likely overwrite
 # `GITHUB_ACTIONS` to anything it wants (this specific claim is a
 # high-confidence INFERENCE from source reading, not independently run
-# against a live workflow, and it contradicts GitHub's own docs stating
-# `GITHUB_*`/`RUNNER_*` "can't be overwritten" — docs and source disagree
-# here). `RUNNER_OS`, by contrast, is CONFIRMED protected: every
-# `RunnerContext` key, `RUNNER_OS` included, is regenerated from
-# `RunnerContext.GetRuntimeEnvironmentVariables()` with no allowlist gap,
-# so even if an earlier step's `$GITHUB_ENV` write reaches the process
-# environment at all, the runner's own context regeneration overwrites it
-# back to the true value before the next step runs. Keying strict mode on
-# `RUNNER_OS` alone (not `GITHUB_ACTIONS`, and not a mismatch between the
-# two) uses the one signal in this pair that is actually known-trustworthy.
+# against a live workflow). Do NOT lean on GitHub's own docs sentence,
+# "You can't overwrite the value of the default environment variables
+# named `GITHUB_*` and `RUNNER_*`" (Variables reference), as the reason
+# either variable is trustworthy here — that claim is true IN EFFECT for
+# `run:` steps, per the write-ordering mechanism below, but the
+# `$GITHUB_ENV` write-time BLOCKLIST that would make it true by
+# construction is verbatim `{ "NODE_OPTIONS" }`, with no `GITHUB_*`/
+# `RUNNER_*` prefix filter — which is precisely why it does NOT by itself
+# protect `GITHUB_ACTIONS`. Docs and source disagree at the blocklist
+# layer; do not cite the docs sentence as if it settled the question.
+#
+# `RUNNER_OS`, by contrast, IS confirmed protected — and by a stronger,
+# more general mechanism than "regeneration with no allowlist gap" alone
+# (S-626-1 research pass, 2026-08-10, NEWLY-RESEARCHED against primary
+# source): `actions/runner :: src/Runner.Worker/Handlers/ScriptHandler.cs`
+# assembles a `run:` step's process environment by applying runtime
+# contexts — every `RunnerContext` key, `RUNNER_OS` included — LAST, and
+# the write ITSELF is unconditional once that per-context type check
+# passes (ADV-P675-LOW-001: the line below binding `runtimeContext` was
+# previously dropped from this quotation without an elision marker,
+# reading as though the write were unconditional on context TYPE too —
+# it is not; the filter is on which `ExpressionValues` entry qualifies,
+# not on which keys get written once it does):
+#   foreach (var context in ExecutionContext.ExpressionValues)
+#       if (context.Value is IEnvironmentContextData runtimeContext && runtimeContext != null)
+#           foreach (var env in runtimeContext.GetRuntimeEnvironmentVariables())
+#               Environment[env.Key] = env.Value;
+# — a plain assignment, not `TryAdd`, no null guard, no allowlist or
+# denylist on which keys get written. This runs AFTER the inherited
+# global environment (where `$GITHUB_ENV` writes accumulate) and the
+# step's own `env:` are already in place, so it OVERWRITES — not merely
+# "regenerates around" — whatever an earlier step's `$GITHUB_ENV` write,
+# or a workflow/job/step `env:` block, set `RUNNER_OS` to. That is WRITE
+# ORDERING, a stronger property than "no allowlist gap": it defeats
+# `$GITHUB_ENV`, workflow `env:`, job `env:`, AND step `env:`
+# simultaneously, all by the same single mechanism, not one channel at a
+# time. Keying strict mode on `RUNNER_OS` alone (not `GITHUB_ACTIONS`, and
+# not a mismatch between the two) uses the one signal in this pair that is
+# actually known-trustworthy, for this reason.
 #
 # ADV-P61-LOW-003 (fixed, not just documented): this comment previously
 # claimed "only an absolute, existing path is required" outside strict
@@ -380,11 +462,12 @@ EOF
 # for real; `Test (macos-latest)` failed on this false rejection;
 # `CI Gate` correctly failed as a consequence of that failure). Why this
 # was invisible locally before merging: strict mode only engages when
-# `GITHUB_ACTIONS=true`, which is unset on a developer machine by
-# default, so `--self-test` alone never reached this branch — see
-# `run_jq_trust_self_test` below, added specifically to close that gap by
-# exercising the strict branch deterministically regardless of where
-# `--self-test` runs.
+# `RUNNER_OS` is non-empty (ADV-P675-LOW-002, 2026-08-10: corrected from
+# `GITHUB_ACTIONS=true`, stale since the S-626-1 re-key documented above),
+# which is unset on a developer machine by default, so `--self-test` alone
+# never reached this branch — see `run_jq_trust_self_test` below, added
+# specifically to close that gap by exercising the strict branch
+# deterministically regardless of where `--self-test` runs.
 #
 # Why a DIRECTORY ALLOWLIST keyed by $RUNNER_OS, not a denylist of
 # writable locations ($GITHUB_WORKSPACE/$RUNNER_TEMP/$HOME/...): this
@@ -602,12 +685,15 @@ evaluate_needs() {
 
 # ---------------------------------------------------------------------------
 # jq-trust self-test (S-626-1 CI-BREAK-1, real CI run 31406705091 on
-# a17939e2): exercises resolve_trusted_jq's STRICT branch
-# (GITHUB_ACTIONS=true) locally. Without this, the strict directory
-# allowlist branch is unreachable from ANY local or CI `--self-test` run
-# — `run_self_test` above only ever calls evaluate_needs(), which never
-# sets GITHUB_ACTIONS=true itself, so a developer running `--self-test`
-# on a laptop never touches the strict branch at all. That is exactly
+# a17939e2): exercises resolve_trusted_jq's STRICT branch (RUNNER_OS
+# non-empty — ADV-P675-LOW-002, 2026-08-10: corrected from
+# `GITHUB_ACTIONS=true`, stale since the S-626-1 re-key; item 3 below
+# already documented the re-key correctly, making this opening line the
+# odd one out) locally. Without this, the strict directory allowlist
+# branch is unreachable from ANY local or CI `--self-test` run —
+# `run_self_test` above only ever calls evaluate_needs(), which never
+# sets RUNNER_OS itself, so a developer running `--self-test` on a laptop
+# never touches the strict branch at all. That is exactly
 # the defect class that shipped broken: the ORIGINAL single-path pin
 # (`/usr/bin/jq` only) was correct for `ubuntu-latest` but wrong for
 # `macos-latest`'s real Homebrew jq location, and nothing running
@@ -772,6 +858,9 @@ run_jq_trust_self_test() {
     check_trusted_dir "macos-usr-bin-trusted" "macOS" "/usr/bin" "trusted"
     check_trusted_dir "macos-bin-trusted" "macOS" "/bin" "trusted"
     check_trusted_dir "macos-usr-local-bin-trusted" "macOS" "/usr/local/bin" "trusted"
+    # macos-opt-homebrew-bin-trusted: a COMPATIBILITY assertion (CI-BREAK-1
+    # — accepts the runner's real, unprivileged-writable Homebrew jq), not
+    # a security one — see trusted_jq_dirs_for's macOS-branch comment above.
     check_trusted_dir "macos-opt-homebrew-bin-trusted" "macOS" "/opt/homebrew/bin" "trusted"
 
     # --- REJECT: cross-OS and unmodeled-OS predicate checks (7-10) ---
