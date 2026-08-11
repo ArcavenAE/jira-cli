@@ -35,14 +35,48 @@
 //!   - `spec-guard` has no `if:` guard and must be promoted to a blocking
 //!     check (DEC-101).
 //!
-//! Test coverage map (→ S-CIGATE-1 AC):
-//!   test_ci_gate_job_exists_with_correct_shell               → AC-001
+//! Test coverage map (→ S-CIGATE-1 AC — this story's ACs are zero-padded,
+//! e.g. `AC-001`/`AC-002`/`AC-003`; see the SEPARATE S-626-1 table below,
+//! which uses a different story's different, unpadded AC numbering):
+//!   test_ci_gate_job_exists_with_required_metadata           → AC-001
 //!   test_ci_gate_needs_exactly_the_required_jobs             → AC-003
 //!   test_ci_gate_excludes_advisory_and_secret_scan_jobs      → AC-003
 //!   test_mutants_is_in_ci_gate_needs                         → MUTATION-CI-TIMEOUT / AC-003
 //!   test_ci_gate_fails_on_failed_or_cancelled_need           → AC-002 (retargeted, S-CIGATE-2)
-//!   test_ci_gate_needs_jobs_have_no_event_conditional_if     → EC-002 (M1)
+//!   test_ci_gate_needs_jobs_have_no_job_level_if             → EC-002 (M1)
 //!   test_ci_gate_pass_fail_semantics_are_structurally_placed → AC-001/AC-002 (M2, retargeted, S-CIGATE-2)
+//!
+//! Test coverage map (→ S-626-1 AC — ADV-P48-LOW-002, round 20: split out
+//! into its own section. S-626-1 is a SEPARATE story from S-CIGATE-1/2
+//! with its OWN AC numbering; round 19 added the two rows below directly
+//! under the "S-CIGATE-1 AC" header above, which read as though `AC-10`
+//! and `AC-3` belonged to S-CIGATE-1's AC list — they do not, and the two
+//! schemes use different padding conventions by their own source stories
+//! (`.factory/stories/S-CIGATE-1*.md` zero-pads to 3 digits; `AC-1`
+//! .. `AC-10` in `.factory/stories/S-626-1.md` do not pad at all) — so
+//! rows below are NOT renumbered/padded to match the table above; doing so
+//! would misrepresent which story defines the AC):
+//!   test_verify_test_job_has_zero_test_floor                 → AC-10 / BC-X.13.007
+//!   test_verify_msrv_job_pins_toolchain_and_rustup_toolchain_env → AC-3
+//!
+//! ## ADV-P51 (adversarial pass 51) — guard-strength gaps in the `test`
+//! ## job's POL-11 guard step, and one class-wide sweep
+//!
+//! Every anti-neutering control built for `ci-gate` over 20 review rounds
+//! (a step-level `if:` ban, a `continue-on-error` ban, byte-for-byte
+//! value pins, `env:` key-set pins, ordered per-step key sets) was never
+//! propagated to the OTHER jobs in this file — above all `test`, the
+//! `ci-gate.needs` member that carries the entire regression suite. New
+//! test coverage (→ ADV-P51 finding ID):
+//!   test_test_job_guard_step_key_set_and_env_are_pinned → HIGH-001/HIGH-002/MED-002
+//!   test_test_job_pipefail_bracket_ordering_is_position_constrained → HIGH-003
+//!   test_always_run_jobs_have_no_continue_on_error (class sweep, 7 jobs) → HIGH-002
+//!   test_verify_test_job_has_zero_test_floor (per-branch `exit 1`, in place) → MED-001
+//! LOW-001 (a dead-branch rationale in `ci.yml`'s POL-11 guard step,
+//! fail-closed so not a false-green) was fixed as a `ci.yml` comment
+//! correction — no new test, since there is nothing behavioral to pin (see
+//! the corrected comment in `ci.yml :: test` immediately above the
+//! `_canary_running_line=$(...)` assignment).
 //!
 //! ## S-CIGATE-2 (2026-08-06) — skipped-status false-green fix
 //!
@@ -136,50 +170,85 @@ use common::yaml::extract_job_block;
 ///   - a
 ///   - b
 /// ```
-/// Returns `None` if no `needs:` line is found in the block.
+/// Returns `None` if no job-level `needs:` line is found in the block.
+///
+/// S-626-1 pass-55 (ADV-P55-HIGH-001): the original version of this
+/// function applied `line.trim()` to EVERY line in `job_block` and matched
+/// on `trimmed.strip_prefix("needs:")` / `trimmed == "needs:"` — with no
+/// indentation check at all, a `needs:` key nested arbitrarily deep (e.g.
+/// inside a step's `with:` block, or a decoy `env:` value) was
+/// indistinguishable from the job's own job-level `needs:` key. Verified:
+/// planting a decoy `needs: [<all ci-gate.needs members>]` inside the gate
+/// step's `with:` block left the REAL `ci-gate.needs` (a genuinely
+/// different, narrower set) invisible to this function — it returned the
+/// decoy's full membership instead, defeating every one of this function's
+/// six-plus callers from a single read, including
+/// `test_ci_gate_needs_partitions_all_ci_yml_jobs` (the U1 fix). Fixed by
+/// anchoring key detection to `extract_key_name_at_indent(line, 4)` — the
+/// SAME quote/whitespace-aware, depth-exact matcher every other job-level
+/// key check in this file already uses — so a nested decoy is invisible to
+/// this function by construction, not by luck. A SECOND job-level `needs:`
+/// key anywhere in the block is a hard `panic!`, mirroring
+/// `extract_and_normalize_if_expr`'s refusal to silently pick a winner
+/// between two job-level `if:` keys (also invalid YAML — a duplicate
+/// mapping key GitHub Actions/actionlint reject at parse time — but this
+/// checker does not rely on that external validation alone).
 fn parse_needs_set(job_block: &str) -> Option<HashSet<String>> {
+    let lines: Vec<&str> = job_block.lines().collect();
+    let needs_line_indices: Vec<usize> = lines
+        .iter()
+        .enumerate()
+        .filter(|(_, l)| extract_key_name_at_indent(l, 4).as_deref() == Some("needs"))
+        .map(|(i, _)| i)
+        .collect();
+
+    if needs_line_indices.len() > 1 {
+        panic!(
+            "FAIL (S-626-1 pass-55, ADV-P55-HIGH-001): job block contains \
+             {} job-level `needs:` keys at 4-space indent — this checker \
+             refuses to silently pick one. This is ALSO invalid YAML (a \
+             duplicate mapping key) that GitHub Actions and actionlint \
+             both reject at parse time, but this checker will not rely on \
+             that external validation alone.\n\
+             Job block:\n{job_block}",
+            needs_line_indices.len()
+        );
+    }
+
+    let needs_line_idx = needs_line_indices.first().copied()?;
+
     // Try inline-array form first: `needs: [fmt, clippy, ...]`
-    for line in job_block.lines() {
-        let trimmed = line.trim();
-        if let Some(rest) = trimmed.strip_prefix("needs:") {
-            let rest = rest.trim();
-            if rest.starts_with('[') && rest.ends_with(']') {
-                // Inline array: strip brackets, split on `,`, trim each item.
-                let inner = &rest[1..rest.len() - 1];
-                let set: HashSet<String> = inner
-                    .split(',')
-                    .map(|s| s.trim().to_string())
-                    .filter(|s| !s.is_empty())
-                    .collect();
-                return Some(set);
-            }
+    let trimmed = lines[needs_line_idx].trim();
+    if let Some(rest) = trimmed.strip_prefix("needs:") {
+        let rest = rest.trim();
+        if rest.starts_with('[') && rest.ends_with(']') {
+            // Inline array: strip brackets, split on `,`, trim each item.
+            let inner = &rest[1..rest.len() - 1];
+            let set: HashSet<String> = inner
+                .split(',')
+                .map(|s| s.trim().to_string())
+                .filter(|s| !s.is_empty())
+                .collect();
+            return Some(set);
         }
     }
 
-    // Try block-list form: `needs:` on its own line, followed by `  - item` lines.
-    let mut in_needs = false;
+    // Try block-list form: `needs:` on its own line, followed by `  - item`
+    // lines, scanning ONLY from the single job-level `needs:` line found
+    // above (never re-scanning the whole block for a bare `needs:` literal
+    // at any depth).
     let mut set = HashSet::new();
-    for line in job_block.lines() {
+    for line in &lines[needs_line_idx + 1..] {
         let trimmed = line.trim();
-        if trimmed == "needs:" {
-            in_needs = true;
-            continue;
-        }
-        if in_needs {
-            if let Some(item) = trimmed.strip_prefix("- ") {
-                set.insert(item.trim().to_string());
-            } else if !trimmed.is_empty() && !trimmed.starts_with('#') {
-                // Reached a non-list-item non-comment line — end of needs block.
-                break;
-            }
+        if let Some(item) = trimmed.strip_prefix("- ") {
+            set.insert(item.trim().to_string());
+        } else if !trimmed.is_empty() && !trimmed.starts_with('#') {
+            // Reached a non-list-item non-comment line — end of needs block.
+            break;
         }
     }
 
-    if in_needs && !set.is_empty() {
-        Some(set)
-    } else {
-        None
-    }
+    if !set.is_empty() { Some(set) } else { None }
 }
 
 /// List every job name defined anywhere in `.github/workflows/ci.yml`'s
@@ -200,43 +269,227 @@ fn parse_needs_set(job_block: &str) -> Option<HashSet<String>> {
 /// in that order), so scanning to EOF is correct today; the 0-indent
 /// early-return guards against silently mis-scanning if that ever changes.
 ///
-/// `#[cfg(unix)]` (PR #671 review round 15, CI-caught): this helper's only
-/// caller is `test_ci_gate_decision_matches_job_level_if_for_every_needs_member`,
-/// which is itself `#[cfg(unix)]`-gated (the bash shell-outs it performs
-/// don't run on Windows). Gating a TEST to unix does not remove the
-/// HELPERS it alone uses from a Windows build — they still compile there,
-/// now genuinely unused, and `-D warnings` promotes that to a hard clippy
-/// error. `cargo clippy` run 31128902318 caught exactly this on
-/// `windows-latest` (six items, this one included) after thirteen rounds
-/// of macOS-only local review missed it entirely — local verification,
-/// however rigorous, does not cover the platform matrix. Gate the helper
-/// the same way as its only caller, every time.
-#[cfg(unix)]
+/// Portable (NOT `#[cfg(unix)]`-gated): pure string parsing, no subprocess.
+/// Originally gated to unix (PR #671 review round 15, CI-caught) because
+/// its only caller at the time,
+/// `test_ci_gate_decision_matches_job_level_if_for_every_needs_member`, was
+/// itself `#[cfg(unix)]`-gated (the bash shell-outs IT performs don't run
+/// on Windows) — gating a TEST to unix does not remove the HELPERS it
+/// alone uses from a Windows build, so this function stayed compiled-but-
+/// unused there and `-D warnings` promoted that to a hard clippy error
+/// (`cargo clippy` run 31128902318 caught exactly this on
+/// `windows-latest`, six items including this one, after thirteen rounds
+/// of macOS-only local review missed it). S-626-1 (U1) added a second,
+/// portable caller — `test_ci_gate_needs_partitions_all_ci_yml_jobs` —
+/// which does no subprocess work and runs on every platform, so the
+/// `#[cfg(unix)]` gate no longer applies to this function itself (it is no
+/// longer "only used by a unix-gated test"); the unix-only callers below
+/// keep their own gate unchanged. NOTE for future readers: gating a test
+/// still orphans whatever helpers ONLY it uses — always check for other
+/// callers (like this one gained) before assuming a helper's gate should
+/// simply mirror its original caller's.
 fn list_all_ci_yml_job_names(ci: &str) -> Vec<String> {
     let Some(jobs_start) = ci.find("\njobs:\n") else {
         panic!("FAIL: `.github/workflows/ci.yml` has no top-level `jobs:` key.");
     };
     let jobs_section = &ci[jobs_start + 1..];
-    let mut names = Vec::new();
-    for line in jobs_section.lines().skip(1) {
-        if line.is_empty() || line.starts_with(' ') {
-            if line.starts_with("  ") && line.chars().nth(2).map(|c| c != ' ').unwrap_or(false) {
-                let without_comment = line.split('#').next().unwrap_or(line).trim_end();
-                if let Some(name) = without_comment
-                    .strip_prefix("  ")
-                    .and_then(|s| s.strip_suffix(':'))
-                {
-                    if !name.is_empty() {
-                        names.push(name.to_string());
-                    }
-                }
-            }
-            continue;
-        }
-        // A non-empty, 0-indent line: end of the `jobs:` map.
-        break;
-    }
-    names
+    // S-626-1 pass-55, ADV-P55-MED-002: per-job-id detection previously
+    // required the line to END with `:` (`strip_prefix("  ").and_then(|s|
+    // s.strip_suffix(':'))`) — a flow-style job entry (e.g. `gate: {name:
+    // CI Gate, runs-on: ubuntu-latest}`) does not end with `:` at all and
+    // was invisible to this scan, reopening the exact U1 partition gap
+    // this function's own caller (`test_ci_gate_needs_partitions_all_
+    // ci_yml_jobs`) exists to close, by formatting alone. Routed through
+    // `collect_mapping_key_set` — the same quote/whitespace-aware,
+    // comment-and-blank-line-tolerant primitive `extract_gate_env_key_set`
+    // / `extract_workflow_env_key_set` already use for an identical
+    // "collect this mapping's child key set" shape — rather than
+    // reimplementing key detection a third time.
+    let lines: Vec<&str> = jobs_section.lines().skip(1).collect();
+    collect_mapping_key_set(&lines, 0, 2)
+}
+
+/// Cross-platform-safe (NOT `#[cfg(unix)]`-gated) list of `ci-gate.needs`
+/// member job names that are legitimately permitted to report `skipped`.
+///
+/// This is a narrower, portable duplicate of the job-name half of
+/// `PINNED_ALLOWED_SKIP_IF_EXPRESSIONS` (which additionally pins each
+/// job's exact `if:` expression text, byte-for-byte, and is
+/// `#[cfg(unix)]`-gated because every one of its readers shells out to
+/// bash). This constant exists so `always_run_needs_members` below — used
+/// by tests that do NOT need bash and must run on every platform — has a
+/// skip-tolerance list to filter against without depending on a
+/// unix-only pin. Kept in sync manually; today both contain exactly
+/// `["mutants"]`. Drift is caught by
+/// `test_skip_tolerant_needs_members_matches_pinned_if_expressions`
+/// (unix-only, since it reads the unix-gated constant) — see that test's
+/// doc comment for what "drift" means here and why it can't be closed
+/// portably.
+const SKIP_TOLERANT_NEEDS_MEMBERS: &[&str] = &["mutants"];
+
+/// Every `ci-gate.needs` member EXCEPT those in `SKIP_TOLERANT_NEEDS_MEMBERS`
+/// — i.e. every job required to run unconditionally (no job-level `if:`
+/// that could produce anything other than `success`/`failure`/`cancelled`)
+/// on every push and PR.
+///
+/// S-626-1 sweep-to-class fix: `test_ci_gate_needs_jobs_have_no_job_level_if`
+/// and `test_always_run_jobs_have_no_continue_on_error` each used to
+/// hand-maintain their own literal 7-name `required_jobs` array — a sibling
+/// instance of the same "allowlist not tied to the real universe" shape as
+/// the S-626-1 U1 finding, one level down (within `ci-gate.needs`, rather
+/// than across all of `ci.yml`): a job added to `ci-gate.needs` without
+/// also being added to both hardcoded literals would silently escape both
+/// checks. Deriving `required_jobs` from the LIVE `needs:` set here instead
+/// means a newly-added always-run job is automatically covered by both
+/// checks the moment it lands in `ci-gate.needs` — no second edit to
+/// remember. Functionally identical to the two prior hardcoded lists for
+/// today's real `ci.yml` (both were `{fmt, clippy, test, msrv, deny,
+/// spec-guard, check-signing-workflow-injection}`, i.e. `ci-gate.needs`
+/// minus `mutants`) — this is a strict widening of future coverage, never a
+/// narrowing of today's.
+fn always_run_needs_members(ci: &str) -> Vec<String> {
+    let gate_block = extract_job_block(ci, "ci-gate").unwrap_or_else(|| {
+        panic!(
+            "FAIL (RED GATE): `.github/workflows/ci.yml` does not contain a \
+             `ci-gate:` job."
+        )
+    });
+    let needs = parse_needs_set(gate_block).unwrap_or_else(|| {
+        panic!(
+            "FAIL (RED GATE): The `ci-gate` job block does not contain a \
+             `needs:` key.\n\
+             Current ci-gate block:\n{gate_block}"
+        )
+    });
+    let mut always_run: Vec<String> = needs
+        .into_iter()
+        .filter(|j| !SKIP_TOLERANT_NEEDS_MEMBERS.contains(&j.as_str()))
+        .collect();
+    always_run.sort();
+    always_run
+}
+
+/// S-626-1 pass-59 (ADV-P57-HIGH-001 + ADV-P57-MED-001, shared fix — one
+/// root cause, two silent-fail-open call sites): every hardcoded-indent
+/// check in this file (`extract_key_name_at_indent(line, 4)` for job-level
+/// keys, `extract_job_display_name`, `matrix_needs_members`'s `strategy:`
+/// scan, ...) ASSUMES a job's direct children are indented exactly 4
+/// spaces. That assumption is legal, `actionlint`-clean, PyYAML-valid YAML
+/// only by CONVENTION — a job's own children need only be indented
+/// CONSISTENTLY WITH EACH OTHER, not with any other job's indent choice
+/// (the same acknowledged limitation `extract_key_name_at_indent`'s own
+/// doc comment already names). Verified end-to-end (S-626-1 pass-59): a
+/// sibling workflow job body written at 3-, 6-, or 8-space indent left
+/// `extract_key_name_at_indent(l, 4)` returning `None` for EVERY line in
+/// that job's block — not "this job declares no name"/"no strategy", but
+/// "this checker looked at the wrong indent level entirely" — and the
+/// 910b8ab0 class sweep's "key-detect vs. value-reparse swallow" fix does
+/// not help here, because there is no KEY DETECTED to re-read a value
+/// for: the miss happens one step earlier, at indent selection.
+///
+/// This function derives each job block's ACTUAL direct-child indent —
+/// the indentation of the first non-blank, non-comment line after the
+/// job-key line itself — and panics if it is not 4, rather than silently
+/// certifying an unverifiable absence. `assert!`, not a `Result`: every
+/// caller of this function is itself in a "reject, don't parse" context
+/// (a `panic!`/`unwrap_or_else(|| panic!(...))` site), so a bool-returning
+/// helper would just be unwrapped at the call site anyway.
+fn assert_job_block_uses_4_space_child_indent(job_block: &str, caller: &str) {
+    let Some(child_line) = job_block.lines().skip(1).find(|l| {
+        let t = l.trim();
+        !t.is_empty() && !t.starts_with('#')
+    }) else {
+        // No children at all (an empty job block, or a job block that is
+        // ONLY the job-key line) — nothing to verify an indent assumption
+        // against.
+        return;
+    };
+    let indent = child_line.len() - child_line.trim_start().len();
+    assert!(
+        indent == 4,
+        "FAIL ({caller}, S-626-1 pass-59, ADV-P57-HIGH-001/MED-001): this \
+         job block's direct children are indented {indent} spaces, not \
+         the 4-space indent every hardcoded-indent check in this file \
+         assumes. This is legal, `actionlint`-clean, PyYAML-valid YAML (a \
+         job's own children need only be indented CONSISTENTLY WITH EACH \
+         OTHER, not with any other job's indent choice) — but every \
+         `extract_key_name_at_indent(line, 4)` call against this job \
+         block would silently see NO job-level keys at all: not \"this \
+         job declares no name\"/\"no strategy\", but \"this checker looked \
+         at the wrong indent level\". This checker refuses to silently \
+         certify an unverifiable absence — investigate this job's indent \
+         before relying on any indent-4 extraction against it.\n\
+         First child line found: {child_line:?}\n\
+         Job block:\n{job_block}"
+    );
+}
+
+/// Every `ci-gate.needs` member whose job block declares a job-level
+/// `strategy:` key (4-space indent) — i.e. every build-matrix job, derived
+/// from the LIVE `needs:` set rather than a hand-maintained literal.
+///
+/// S-626-1 pass-56 (ADV-P56-LOW-002): Guard B's iteration list used to be
+/// the closed-enumeration literal `["clippy", "test"]` — the exact
+/// "allowlist not tied to the real universe" shape `always_run_needs_
+/// members`'s own doc comment above condemns, one level down (within
+/// `ci-gate.needs`'s matrix-job subset, rather than across all of
+/// `ci-gate.needs`). A future matrix job added to `ci-gate.needs` without
+/// also being added to that literal would silently escape Guard B
+/// entirely — the same class the U1 finding closed one level up. Deriving
+/// this list from the LIVE `needs:` set plus a `strategy:` presence check
+/// means a newly-added matrix job is automatically covered the moment it
+/// lands in `ci-gate.needs`, with no second edit to remember.
+///
+/// S-626-1 pass-59 (ADV-P57-LOW-002): the `extract_job_block(ci, job_id)`
+/// miss branch used to silently `return false` — the exact silent-skip
+/// shape this same commit replaces with a hard panic ~40 lines away in
+/// Guard A's sibling-workflow check
+/// (`test_no_sibling_workflow_declares_a_job_named_ci_gate`). A
+/// `ci-gate.needs` member naming a job that does not actually exist under
+/// `jobs:` is a broken configuration, not "not a matrix job" — panic
+/// loudly instead, matching the Guard A precedent.
+fn matrix_needs_members(ci: &str) -> Vec<String> {
+    let gate_block = extract_job_block(ci, "ci-gate").unwrap_or_else(|| {
+        panic!(
+            "FAIL (RED GATE): `.github/workflows/ci.yml` does not contain a \
+             `ci-gate:` job."
+        )
+    });
+    let needs = parse_needs_set(gate_block).unwrap_or_else(|| {
+        panic!(
+            "FAIL (RED GATE): The `ci-gate` job block does not contain a \
+             `needs:` key.\n\
+             Current ci-gate block:\n{gate_block}"
+        )
+    });
+
+    let mut matrix_jobs: Vec<String> = needs
+        .into_iter()
+        .filter(|job_id| {
+            let job_block = extract_job_block(ci, job_id).unwrap_or_else(|| {
+                panic!(
+                    "FAIL (S-626-1 Guard B, ADV-P57-LOW-002): `ci-gate.needs` \
+                     names job `{job_id}`, but no `{job_id}:` job block \
+                     exists under `jobs:` in ci.yml. This checker refuses \
+                     to silently treat a missing job as \"not a matrix \
+                     job\" — the same silent-skip shape Guard A's \
+                     sibling-workflow check \
+                     (`test_no_sibling_workflow_declares_a_job_named_ci_gate`) \
+                     already refuses via a hard panic. Investigate why \
+                     `ci-gate.needs` names a job that does not exist."
+                )
+            });
+            assert_job_block_uses_4_space_child_indent(
+                job_block,
+                "S-626-1 Guard B, ADV-P57-HIGH-001 (matrix_needs_members)",
+            );
+            job_block
+                .lines()
+                .any(|l| extract_key_name_at_indent(l, 4).as_deref() == Some("strategy"))
+        })
+        .collect();
+    matrix_jobs.sort();
+    matrix_jobs
 }
 
 /// Does `line` declare the YAML key `key` at a job's direct-child level
@@ -320,9 +573,14 @@ fn line_declares_job_level_key(line: &str, key: &str) -> bool {
 /// Anchoring: assertion is made only within the `ci-gate` job block, so
 /// a matching substring in an unrelated job cannot produce a false positive.
 ///
+/// Naming note (F-05): this test asserts `name:`, `runs-on:`, and the
+/// job-level `if: always()` — it makes no assertion about a shell. It was
+/// previously misnamed `..._with_correct_shell`; renamed to describe what it
+/// actually verifies rather than adding an unrelated shell assertion.
+///
 /// RED GATE: `ci-gate` does not exist in ci.yml.  This test FAILS on develop.
 #[test]
-fn test_ci_gate_job_exists_with_correct_shell() {
+fn test_ci_gate_job_exists_with_required_metadata() {
     let ci = read_ci_yml();
     let gate_block = extract_job_block(&ci, "ci-gate").unwrap_or_else(|| {
         panic!(
@@ -371,7 +629,7 @@ fn test_ci_gate_job_exists_with_correct_shell() {
 }
 
 // ---------------------------------------------------------------------------
-// AC-003 — `ci-gate.needs` is exactly the required six-job set
+// AC-003 — `ci-gate.needs` is exactly the required eight-job set
 // ---------------------------------------------------------------------------
 
 /// AC-003 (exact-set check): `ci-gate.needs` must contain exactly the eight
@@ -410,7 +668,8 @@ fn test_ci_gate_needs_exactly_the_required_jobs() {
         panic!(
             "FAIL (RED GATE): The `ci-gate` job block does not contain a \
              `needs:` key.\n\
-             Required: `needs: [fmt, clippy, test, msrv, deny, spec-guard]`\n\
+             Required: `needs: [fmt, clippy, test, msrv, deny, spec-guard, \
+             check-signing-workflow-injection, mutants]`\n\
              Current ci-gate block:\n{gate_block}"
         )
     });
@@ -425,8 +684,14 @@ fn test_ci_gate_needs_exactly_the_required_jobs() {
         "check-signing-workflow-injection",
         // MUTATION-CI-TIMEOUT (2026-06-28): promoted to hard-required.
         // Carries `if: github.event_name == 'pull_request'`; emits `skipped`
-        // on push events — safe because ci-gate checks `failure`/`cancelled`
-        // only.  See delta-analysis §5 and cargo-mutants-policy.md §CI Gate.
+        // on push events — safe ONLY because `mutants` is named in
+        // `scripts/check-ci-gate.sh`'s restrictive `ALLOWED_SKIPS` allowlist
+        // (with a matching `PINNED_ALLOWED_SKIP_IF_EXPRESSIONS` entry in
+        // this file).  Since S-CIGATE-2 an unlisted job's `skipped` result
+        // fails the gate by default (fail-closed) — `ALLOWED_SKIPS`
+        // membership is the mechanism, not "ci-gate checks failure/cancelled
+        // only" (that inline condition was retired).  See delta-analysis §5
+        // and cargo-mutants-policy.md §CI Gate.
         "mutants",
     ]
     .iter()
@@ -451,9 +716,15 @@ fn test_ci_gate_needs_exactly_the_required_jobs() {
         sorted.sort();
         failures.push(format!(
             "Unexpected in ci-gate.needs ({}): {}\n\
-             If a new mandatory CI job was added here, verify it has no \
-             `if: github.event_name == 'pull_request'` guard (PR-only jobs \
-             emit `skipped` on push and would poison the gate), then update \
+             If a new mandatory CI job was added here, verify it either runs \
+             unconditionally (no job-level `if:` that can produce `skipped`) \
+             or, if it legitimately can be skipped (e.g. PR-only), is added \
+             to `scripts/check-ci-gate.sh`'s `ALLOWED_SKIPS` allowlist with \
+             a matching `PINNED_ALLOWED_SKIP_IF_EXPRESSIONS` entry in this \
+             file.  Since S-CIGATE-2, an unlisted job's `skipped` result \
+             fails the gate by default (fail-closed) rather than silently \
+             passing it — so an unreviewed PR-only job here now surfaces as \
+             a newly-red gate on every push, not a false-green.  Then update \
              the expected set in this test.",
             sorted.len(),
             sorted.join(", ")
@@ -483,8 +754,12 @@ fn test_ci_gate_needs_exactly_the_required_jobs() {
 /// `ci-gate.needs`.
 ///
 /// `security` carries `if: github.event_name == 'pull_request'` AND is
-/// further gated by `vars.GITLEAKS_DISABLED`.  Including it would poison
-/// push-triggered `ci-gate` runs (the job emits `skipped` on push).
+/// further gated by `vars.GITLEAKS_DISABLED`.  Including it would FAIL every
+/// push-triggered `ci-gate` run: `security`'s designed-in `skipped` result on
+/// push is not in `scripts/check-ci-gate.sh`'s `ALLOWED_SKIPS` allowlist, and
+/// since S-CIGATE-2 an unlisted `skipped` fails the gate by default
+/// (fail-closed) — not the pre-S-CIGATE-2 silent pass this docstring
+/// previously implied.
 ///
 /// `coverage` uses `fail_ci_if_error: false` on the codecov upload and is
 /// advisory by design.  Including it would let a flaky coverage upload block
@@ -512,7 +787,16 @@ fn test_ci_gate_excludes_advisory_and_secret_scan_jobs() {
         )
     });
 
-    let needs = parse_needs_set(gate_block).unwrap_or_default();
+    let needs = parse_needs_set(gate_block).unwrap_or_else(|| {
+        panic!(
+            "FAIL (RED GATE): The `ci-gate` job block does not contain a \
+             `needs:` key.\n\
+             An empty/absent needs set would otherwise vacuously satisfy \
+             both `!needs.contains(...)` assertions below (F-04) — panic \
+             instead, matching every sibling test in this file.\n\
+             Current ci-gate block:\n{gate_block}"
+        )
+    });
 
     // `security` is gated by `github.event_name == 'pull_request'` AND by
     // `vars.GITLEAKS_DISABLED` — emits `skipped` on push; must not be in needs.
@@ -520,8 +804,14 @@ fn test_ci_gate_excludes_advisory_and_secret_scan_jobs() {
         !needs.contains("security"),
         "FAIL: `security` must NOT be in `ci-gate.needs`.\n\
          The `security` job carries `if: github.event_name == 'pull_request'` \
-         and emits `skipped` on push events.  Including it poisons every \
-         push-triggered `ci-gate` run.\n\
+         and emits `skipped` on push events.  Including it would FAIL every \
+         push-triggered `ci-gate` run: `security`'s `skipped` result is not \
+         in `scripts/check-ci-gate.sh`'s `ALLOWED_SKIPS` allowlist, and an \
+         unlisted `skipped` fails the gate by default (fail-closed, since \
+         S-CIGATE-2).  If `security` legitimately needed to gate merges, the \
+         remedy would be adding it to `ALLOWED_SKIPS` with a matching \
+         `PINNED_ALLOWED_SKIP_IF_EXPRESSIONS` entry — but it is advisory by \
+         design and should stay out of `needs` entirely.\n\
          Current needs: {:?}",
         {
             let mut v: Vec<_> = needs.iter().collect();
@@ -543,6 +833,161 @@ fn test_ci_gate_excludes_advisory_and_secret_scan_jobs() {
             v.sort();
             v
         }
+    );
+}
+
+// ---------------------------------------------------------------------------
+// S-626-1 U1 — `ci-gate.needs` must PARTITION every job in ci.yml
+// ---------------------------------------------------------------------------
+
+/// PINNED, human-reviewed set of `ci.yml` jobs that must NEVER gate merges —
+/// the exclusion half of the S-626-1 U1 partition (see
+/// `test_ci_gate_needs_partitions_all_ci_yml_jobs` immediately below).
+///
+/// Adding a job here is a deliberate, reviewed act (mirroring
+/// `PINNED_ALLOWED_SKIP_IF_EXPRESSIONS`'s convention for the opposite
+/// carve-out): it is a claim that this job must NEVER be required to pass,
+/// under any circumstances, for any future reason — not merely "it isn't
+/// required today." Today's two members and their rationale (carried over
+/// verbatim from `test_ci_gate_excludes_advisory_and_secret_scan_jobs`,
+/// which predates this partition check and remains as a narrower,
+/// faster-to-read diagnostic):
+///   - `security`: PR-only (`if: github.event_name == 'pull_request'`) AND
+///     further gated by `vars.GITLEAKS_DISABLED` — a secret scan that is
+///     advisory by policy, not a merge blocker.
+///   - `coverage`: uses `fail_ci_if_error: false` on the codecov upload —
+///     advisory by design; a flaky coverage upload must not block merges.
+const PINNED_GATE_EXCLUDED_JOBS: &[&str] = &["security", "coverage"];
+
+/// S-626-1 U1 (external research finding): closes the "allowlist with no
+/// default-deny over its universe" gap one level up from the fixes already
+/// applied to `scripts/check-ci-gate.sh`'s per-job RESULT decision
+/// (`ALLOWED_SKIPS` + a default-fail `case` arm — see that script's own
+/// doc comment) and to this file's `if:`/step/env-key pins (`PINNED_GATE_*`,
+/// all set-equality, default-deny). Until this test, NOTHING asserted the
+/// partition at the NEEDS-SET level: `test_ci_gate_needs_exactly_the_required_jobs`
+/// pins `ci-gate.needs` against a hardcoded 8-name literal, and
+/// `test_ci_gate_excludes_advisory_and_secret_scan_jobs` denies exactly two
+/// names (`security`, `coverage`) — between them, a NINTH job added to
+/// `ci.yml` and left out of both `ci-gate.needs` and the exclusion check
+/// was invisible to every existing assertion: both tests stayed green, the
+/// new job was entirely unenforced by the sole required branch-protection
+/// check, and nothing noticed. Same shape as the pre-S-CIGATE-2 defect this
+/// story's sibling tests already fixed at the result-value layer, one
+/// layer up: an allowlist of known-good members with no default-deny over
+/// the universe it's drawn from.
+///
+/// THE FIX: every job actually defined in `ci.yml` (via
+/// `list_all_ci_yml_job_names` — the same candidate-universe source
+/// `test_ci_gate_decision_matches_job_level_if_for_every_needs_member`
+/// already trusts for its own pin-coverage check) must be EITHER a member
+/// of `ci-gate.needs` OR named in the pinned, human-reviewed
+/// `PINNED_GATE_EXCLUDED_JOBS` literal above — a job satisfying neither is
+/// a maintainer's un-reviewed silent gap and fails this test by name,
+/// forcing an explicit choice (add to `needs`, or add to
+/// `PINNED_GATE_EXCLUDED_JOBS` with a rationale) rather than an implicit
+/// one made by omission.
+///
+/// `ci-gate` itself is excluded from the partition explicitly (a job
+/// cannot depend on itself; GitHub Actions would reject a self-referencing
+/// `needs:` at workflow-parse time regardless) — handled by name, not by
+/// falling through the "neither in needs nor excluded" branch by accident.
+///
+/// A job present in BOTH `ci-gate.needs` and `PINNED_GATE_EXCLUDED_JOBS`
+/// simultaneously is also a failure: those two are meant to partition the
+/// universe (every job is in exactly one), and a job claimed by both is a
+/// contradiction a human must resolve, not something this test should
+/// silently prefer one interpretation of.
+///
+/// `list_all_ci_yml_job_names` was previously `#[cfg(unix)]`-gated because
+/// its only caller shelled out to bash on a unix-only test. This test adds
+/// a second, portable caller (no subprocess, pure string parsing), so the
+/// `#[cfg(unix)]` gate was removed from the helper — see its doc comment.
+///
+/// RED PROOF (S-626-1): a dummy job added to `ci.yml` in neither
+/// `ci-gate.needs` nor `PINNED_GATE_EXCLUDED_JOBS` makes this test FAIL,
+/// naming the offending job (verified manually during implementation and
+/// reverted via `git checkout HEAD -- .github/workflows/ci.yml` — not
+/// left as a fixture, since a real edit to the tracked file is the only
+/// way to prove this without a second, out-of-sync copy of ci.yml).
+#[test]
+fn test_ci_gate_needs_partitions_all_ci_yml_jobs() {
+    let ci = read_ci_yml();
+    let gate_block = extract_job_block(&ci, "ci-gate").unwrap_or_else(|| {
+        panic!(
+            "FAIL (RED GATE): `.github/workflows/ci.yml` does not contain a \
+             `ci-gate:` job.\n\
+             Required: append the `ci-gate` aggregator job to ci.yml per \
+             S-CIGATE-1 AC-001 / AC-003."
+        )
+    });
+    let needs = parse_needs_set(gate_block).unwrap_or_else(|| {
+        panic!(
+            "FAIL (RED GATE): The `ci-gate` job block does not contain a \
+             `needs:` key.\n\
+             Current ci-gate block:\n{gate_block}"
+        )
+    });
+
+    let all_jobs = list_all_ci_yml_job_names(&ci);
+    assert!(
+        !all_jobs.is_empty(),
+        "FAIL: `list_all_ci_yml_job_names` returned no jobs at all — the \
+         `jobs:` key scan is broken (or ci.yml itself is malformed), which \
+         would make this test vacuously pass every job it never saw. \
+         Current ci.yml jobs section could not be parsed."
+    );
+
+    let mut both: Vec<&str> = Vec::new();
+    let mut unaccounted: Vec<&str> = Vec::new();
+    for job in &all_jobs {
+        if job == "ci-gate" {
+            // `ci-gate` cannot depend on itself — explicitly excluded from
+            // the partition rather than falling through either branch below
+            // by accident (S-626-1 mandate: "handle that explicitly rather
+            // than by accident").
+            continue;
+        }
+        let in_needs = needs.contains(job);
+        let in_excluded = PINNED_GATE_EXCLUDED_JOBS.contains(&job.as_str());
+        match (in_needs, in_excluded) {
+            (true, true) => both.push(job.as_str()),
+            (false, false) => unaccounted.push(job.as_str()),
+            _ => {}
+        }
+    }
+    both.sort_unstable();
+    unaccounted.sort_unstable();
+
+    assert!(
+        both.is_empty(),
+        "FAIL: the following ci.yml job(s) are claimed by BOTH \
+         `ci-gate.needs` AND `PINNED_GATE_EXCLUDED_JOBS` at once — these \
+         two are meant to partition every job in ci.yml (each job in \
+         exactly one), so a job in both is a contradiction: {both:?}\n\
+         Fix: remove it from whichever side is wrong."
+    );
+
+    assert!(
+        unaccounted.is_empty(),
+        "FAIL (S-626-1 U1): the following ci.yml job(s) are neither in \
+         `ci-gate.needs` NOR in the pinned exclusion list \
+         `PINNED_GATE_EXCLUDED_JOBS` ({PINNED_GATE_EXCLUDED_JOBS:?}): \
+         {unaccounted:?}\n\
+         Every job defined in ci.yml must be a deliberate, reviewed \
+         choice: either\n\
+         \n\
+         1. add it to `ci-gate.needs` (and, if it can legitimately report \
+            `skipped`, to `scripts/check-ci-gate.sh`'s `ALLOWED_SKIPS` \
+            allowlist with a matching `PINNED_ALLOWED_SKIP_IF_EXPRESSIONS` \
+            entry in this file — see `test_ci_gate_needs_exactly_the_required_jobs` \
+            for the exact-set pin to update in the same change), or\n\
+         2. add it to `PINNED_GATE_EXCLUDED_JOBS` above with an in-code \
+            rationale for why it must never gate merges.\n\
+         \n\
+         Leaving a new job out of both silently drops it from enforcement \
+         by the sole required branch-protection check — this test exists \
+         so that omission fails loudly instead."
     );
 }
 
@@ -670,21 +1115,43 @@ fn test_ci_gate_fails_on_failed_or_cancelled_need() {
 }
 
 // ---------------------------------------------------------------------------
-// M1 — needs jobs must run unconditionally (no event-conditional job-level if:)
+// M1 — needs jobs must run unconditionally (no job-level if: key at all)
 // ---------------------------------------------------------------------------
 
 /// M1: For each unconditionally-running job listed in `ci-gate.needs`, assert
-/// that the job's block contains NO job-level `if:` line that references
-/// `github.event_name`.
+/// that the job's block contains NO job-level `if:` key at all.
 ///
 /// Rationale: the existing exact-set test (`test_ci_gate_needs_exactly_the_required_jobs`)
 /// pins WHICH jobs are in `needs`, but not that those jobs run unconditionally.
-/// If a future maintainer adds `if: github.event_name == 'pull_request'` to
-/// e.g. `deny` WITHOUT also adding it to `scripts/check-ci-gate.sh`'s
-/// `ALLOWED_SKIPS`, the gate correctly starts FAILING deny's push-event runs
-/// (S-CIGATE-2 fail-closed default) rather than silently passing — but this
-/// test still exists to catch the drift at review time, before a maintainer
-/// is surprised by a newly-red gate.
+/// If a future maintainer adds a job-level `if:` guard to e.g. `deny` — for
+/// ANY condition, not just `github.event_name` — a false condition makes the
+/// job report `skipped`. Since S-CIGATE-2, `scripts/check-ci-gate.sh`'s
+/// fail-closed `evaluate_needs()` means an unlisted job's `skipped` result
+/// correctly FAILS the gate rather than silently passing it — so the
+/// worst-case consequence of this drift is no longer a false-green merge,
+/// but a newly-red gate that surprises a maintainer at review/CI time rather
+/// than at design time. This test still exists to catch the drift at review
+/// time, before that surprise happens: the required property is "no
+/// job-level `if:` key" on these unconditionally-run jobs — not merely "no
+/// `github.event_name`-referencing job-level `if:` key" — because a job
+/// wrongly reporting `skipped` here also isn't automatically covered by
+/// `scripts/check-ci-gate.sh`'s `ALLOWED_SKIPS` allowlist (which requires an
+/// explicit, human-reviewed opt-in per job).
+///
+/// F-03 (round 19): the prior version of this test matched only single-line
+/// `    if:` lines containing the literal substring `github.event_name`. Two
+/// escapes survived that: (a) a folded/block scalar (`if: >-` with the
+/// expression on continuation lines — a shape YAML permits on any job-level
+/// or step-level `if:`; `ci-gate` itself has no step-level `if:` at all —
+/// see M2-d below, which asserts exactly that) moves the `github.event_name`
+/// substring (or any other condition) off the `if:` line itself; (b) any non-event
+/// conditional (`if: false`, `github.ref == 'refs/heads/main'`,
+/// `vars.X != 'true'`) never contains `github.event_name` in the first place.
+/// Both produce a `skipped` result exactly as hazardous as the
+/// `github.event_name` case. Matching on presence of the `if:` KEY at
+/// job-property indent — regardless of the condition's shape or content —
+/// closes both escapes, because a folded scalar's opening line still starts
+/// with `    if:` even though its condition text lives on continuation lines.
 ///
 /// `mutants` is intentionally excluded from this list: it carries
 /// `if: github.event_name == 'pull_request'` by design (PR-only scope),
@@ -702,22 +1169,39 @@ fn test_ci_gate_fails_on_failed_or_cancelled_need() {
 /// Anchoring: each job's block is extracted via `extract_job_block` before
 /// the assertion is made, so a match in an unrelated job cannot produce a
 /// false positive.
+///
+/// ADV-P48-LOW-001 (round 20): renamed from
+/// `test_ci_gate_needs_jobs_have_no_event_conditional_if`. Round 19's F-03
+/// fix broadened the predicate from "no job-level `if:` referencing
+/// `github.event_name`" to "no job-level `if:` key at all" (see the F-03
+/// docstring above), but the function name was left unchanged — a
+/// maintainer reading only the name could reasonably judge the check
+/// over-reaching for its documented purpose and re-narrow it back to an
+/// event-conditional-only match, silently reopening the two escapes F-03
+/// closed. The name now states the actual predicate.
+///
+/// S-626-1 pass-55 (ADV-P55-LOW-001): "no job-level `if:` key at all"
+/// above describes VALUE-content independence (this check does not care
+/// what the condition says, only that the key exists) — that claim was
+/// always accurate. What was NOT fully accurate, here and in the
+/// corresponding `CLAUDE.md` sentence, was KEY-SPELLING coverage: the
+/// detection itself was a bare `line.starts_with("    if:")`, matching
+/// only that one literal spelling and missing `"if":`, `'if':`, and
+/// `if :` (space before colon) — all PyYAML-identical to the bare
+/// spelling. Fixed by routing detection through
+/// `extract_key_name_at_indent`, the same quote/whitespace-aware matcher
+/// used everywhere else in this file.
 #[test]
-fn test_ci_gate_needs_jobs_have_no_event_conditional_if() {
+fn test_ci_gate_needs_jobs_have_no_job_level_if() {
     let ci = read_ci_yml();
 
-    // The seven jobs that must run unconditionally on every push and PR.
-    // `mutants` is intentionally excluded — it is PR-only by design and
-    // emits `skipped` on push events (ci-gate-safe; see test docstring above).
-    let required_jobs = [
-        "fmt",
-        "clippy",
-        "test",
-        "msrv",
-        "deny",
-        "spec-guard",
-        "check-signing-workflow-injection",
-    ];
+    // Every `ci-gate.needs` member that must run unconditionally on every
+    // push and PR — derived from the live `needs:` set (S-626-1 sweep-to-
+    // class fix; see `always_run_needs_members`'s doc comment), not a
+    // hand-maintained literal. `mutants` is excluded — it is PR-only by
+    // design and emits `skipped` on push events (ci-gate-safe; see test
+    // docstring above).
+    let required_jobs = always_run_needs_members(&ci);
 
     for job_name in &required_jobs {
         let job_block = extract_job_block(&ci, job_name).unwrap_or_else(|| {
@@ -732,27 +1216,42 @@ fn test_ci_gate_needs_jobs_have_no_event_conditional_if() {
         // job key (GitHub Actions YAML convention).  Step-level `if:` blocks
         // are indented 8+ spaces; those are irrelevant to this check.
         //
-        // We detect a job-level if: by looking for lines that start with
-        // exactly four spaces followed by "if:" (with optional trailing space).
+        // We detect a job-level if: KEY via `extract_key_name_at_indent`
+        // (S-626-1 pass-55, ADV-P55-LOW-001) — deliberately NOT filtering
+        // on the condition's content or shape (see F-03 docstring above):
+        // any job-level `if:` key on these seven jobs is hazardous, whether
+        // it's a single-line condition, a folded/block scalar, or references
+        // something other than `github.event_name`. A bare `starts_with("
+        // if:")` used to match ONLY that one spelling, missing `"if":`,
+        // `'if':`, and `if :` (space before colon) — all PyYAML-identical
+        // to the bare spelling, and all recognized by
+        // `extract_key_name_at_indent` already.
         for line in job_block.lines() {
             // Match lines at job-property indent (4 spaces, not 8+).
-            if line.starts_with("    if:")
-                && !line.starts_with("        ")
-                && line.contains("github.event_name")
-            {
+            if extract_key_name_at_indent(line, 4).as_deref() == Some("if") {
                 panic!(
-                    "FAIL (M1): Job `{job_name}` has a job-level `if:` that \
-                     references `github.event_name`:\n\
+                    "FAIL (M1/F-03): Job `{job_name}` has a job-level `if:` \
+                     key:\n\
                      \n  {line}\n\
                      \n\
-                     This makes `{job_name}` skip on push events (it emits \
-                     `skipped`, not `failure`), which silently satisfies \
-                     `ci-gate.needs` and allows broken code to merge.\n\
+                     Any job-level `if:` on this job is hazardous regardless \
+                     of the condition's shape or content: a false condition \
+                     makes `{job_name}` report `skipped` (not `failure`). \
+                     Since `{job_name}` is not in `scripts/check-ci-gate.sh`'s \
+                     `ALLOWED_SKIPS` allowlist, its fail-closed `evaluate_needs()` \
+                     will correctly FAIL the gate on that skip — this is no \
+                     longer a false-green — but only at CI time, surprising a \
+                     maintainer at review time who did not expect this job to \
+                     ever report anything but `success`/`failure`.\n\
                      \n\
                      Fix: either remove the job-level `if:` guard from \
-                     `{job_name}` and use a step-level `if:` instead, or \
-                     remove `{job_name}` from `ci-gate.needs` and update this \
-                     test accordingly."
+                     `{job_name}` and use a step-level `if:` instead, or, if \
+                     the skip is legitimate, add `{job_name}` to \
+                     `ALLOWED_SKIPS` in `scripts/check-ci-gate.sh` with a \
+                     matching entry in this file's \
+                     `PINNED_ALLOWED_SKIP_IF_EXPRESSIONS`, or remove \
+                     `{job_name}` from `ci-gate.needs` and update this test \
+                     accordingly."
                 );
             }
         }
@@ -816,35 +1315,44 @@ fn test_ci_gate_pass_fail_semantics_are_structurally_placed() {
     // contain `contains(needs`.
     //
     // "Job-level" means the `if:` key is a direct child of the job block,
-    // indented 4 spaces from the left margin (GitHub Actions YAML convention).
-    // We stop scanning once we enter the `steps:` section to avoid picking up
-    // step-level `if:` lines.
+    // indented 4 spaces from the left margin (GitHub Actions YAML
+    // convention) — detected via `extract_key_name_at_indent`, the same
+    // quote/whitespace-aware matcher used throughout this file, rather
+    // than a raw `line.starts_with("    if:")`.
+    //
+    // S-626-1 pass-59 (ADV-P58-LOW-003): the prior manual scan (a
+    // hand-rolled `in_steps` flag plus `line.starts_with("    if:")`) was
+    // absence-shaped and fail-open two ways: (1) a quoted key spelling
+    // (`"if":`/`'if':`) or `if :` (space before colon) — all forms
+    // `extract_key_name_at_indent` already recognizes elsewhere in this
+    // file — made this scan report "no job-level `if:` line" even though
+    // one plainly exists: a MISDIAGNOSIS, since M2-m below (which already
+    // routes through `extract_and_normalize_if_expr`'s quote-aware
+    // detection) would have found and evaluated it correctly, but M2-a
+    // fires FIRST and its wrong diagnosis masked M2-m's accurate one
+    // before this test could ever reach it; (2) the `in_steps` bookkeeping
+    // was needed only because a raw `starts_with` has no notion of indent
+    // depth on its own — an exact-indent matcher removes the need for it
+    // entirely, since a step-level `if:` (8-space indent) never satisfies
+    // `extract_key_name_at_indent(line, 4)` regardless of whether the scan
+    // has "entered steps:" yet.
     // -----------------------------------------------------------------------
-    let mut found_job_level_if = false;
-    let mut in_steps = false;
-    let mut job_if_line = String::new();
-
-    for line in gate_block.lines() {
-        // Detect entry into the steps: section (4-space indent).
-        if line.starts_with("    steps:") && !line.starts_with("        ") {
-            in_steps = true;
-        }
-        // A job-level `if:` is at 4-space indent, NOT inside steps.
-        if !in_steps && line.starts_with("    if:") && !line.starts_with("        ") {
-            found_job_level_if = true;
-            job_if_line = line.to_string();
-            break;
-        }
-    }
+    let job_if_line = gate_block
+        .lines()
+        .find(|l| extract_key_name_at_indent(l, 4).as_deref() == Some("if"));
 
     assert!(
-        found_job_level_if,
-        "FAIL (M2-a): The `ci-gate` job block has no job-level `if:` line \
-         (expected at 4-space indent, before `steps:`).\n\
+        job_if_line.is_some(),
+        "FAIL (M2-a): The `ci-gate` job block has no job-level `if:` key \
+         at 4-space indent (checked via the same quote/whitespace-aware \
+         matcher used throughout this file — `if:`, `\"if\":`, `'if':`, \
+         and `if :` are all recognized, so this is not merely a bare-\
+         spelling presence check).\n\
          Required: `    if: ${{{{ always() }}}}` so that ci-gate runs even when \
          upstream jobs fail.\n\
          Current ci-gate block:\n{gate_block}"
     );
+    let job_if_line = job_if_line.unwrap_or_default();
 
     assert!(
         job_if_line.contains("always()"),
@@ -861,12 +1369,21 @@ fn test_ci_gate_pass_fail_semantics_are_structurally_placed() {
     assert!(
         !job_if_line.contains("contains(needs"),
         "FAIL (M2-c): The job-level `if:` in `ci-gate` contains \
-         `contains(needs` — the failure condition is at the WRONG level.\n\
+         `contains(needs` — this is the retired inline condition \
+         S-CIGATE-2 replaced, not merely a misplaced one.\n\
          Found:    {job_if_line}\n\
-         The `contains(needs.*.result, …)` expression must be on a STEP-level \
-         `if:` (inside `steps:`), not the job-level `if:`.  At job level, \
-         only `always()` should appear — placing `contains(needs…)` there \
-         would prevent the job from running when all needs succeed.\n\
+         Under the shipped fail-closed design, the pass/fail decision does \
+         NOT live in any `if:` expression at all — not job-level, and \
+         (per M2-d below) not step-level either. It lives entirely inside \
+         `scripts/check-ci-gate.sh`'s `evaluate_needs()`, invoked from an \
+         UNCONDITIONAL `run:` step whose own exit code is the sole \
+         pass/fail signal (see M2-i/M2-h below). The job-level `if:` must \
+         be exactly `always()` and nothing else — its only job is to make \
+         `ci-gate` run even when upstream jobs fail, not to evaluate \
+         `needs.*.result` itself. Do NOT move `contains(needs…)` to a \
+         step-level `if:` — M2-d fails the suite if any step-level `if:` \
+         exists at all, precisely to prevent reopening the `skipped` \
+         false-green this whole story closed.\n\
          Current ci-gate block:\n{gate_block}"
     );
 
@@ -881,17 +1398,31 @@ fn test_ci_gate_pass_fail_semantics_are_structurally_placed() {
     // code from an UNCONDITIONAL `run:` step — reintroducing a step-level
     // `if:` here would mean some upstream results no longer even reach the
     // script.
+    //
+    // S-626-1 pass-59 (ADV-P58-LOW-003): routed through
+    // `extract_key_name_at_indent(l, 8)` rather than a raw
+    // `l.starts_with("        if:")`, for the same quote-awareness reason
+    // as M2-a above (`"if":`/`'if':`/`if :` are all recognized).
     // -----------------------------------------------------------------------
-    let has_step_level_if = gate_block.lines().any(|l| l.starts_with("        if:"));
+    let has_step_level_if = gate_block
+        .lines()
+        .any(|l| extract_key_name_at_indent(l, 8).as_deref() == Some("if"));
 
     assert!(
         !has_step_level_if,
         "FAIL (M2-d, S-CIGATE-2): The `ci-gate` job block contains a \
-         step-level `if:`. Under Option C, `scripts/check-ci-gate.sh` is \
-         invoked unconditionally and its own exit code IS the pass/fail \
-         signal — no step-level `if:` should gate that invocation (a \
-         reintroduced `if:` here would mean some upstream results never \
-         even reach the script).\n\
+         step-level `if:` key at 8-space indent (checked via the same \
+         quote/whitespace-aware matcher used throughout this file). Under \
+         Option C, `scripts/check-ci-gate.sh` is invoked unconditionally \
+         and its own exit code IS the pass/fail signal — no step-level \
+         `if:` should gate that invocation (a reintroduced `if:` here \
+         would mean some upstream results never even reach the script). \
+         NOTE: M2-l below (the per-step COMPLETE key-set pin,\
+         `PINNED_GATE_STEP_KEY_SETS`) is the OPERATIVE default-deny for a \
+         step-level `if:` in ANY form — even a spelling this presence \
+         check does not recognize would still surface there as an \
+         unexpected `if` key on that step; this assertion is a faster, \
+         more specific diagnostic, not the sole backstop.\n\
          Current ci-gate block:\n{gate_block}"
     );
 
@@ -1193,6 +1724,1275 @@ fn test_ci_gate_pass_fail_semantics_are_structurally_placed() {
          SAME change.\n\
          Current ci-gate block:\n{gate_block}"
     );
+
+    // -----------------------------------------------------------------------
+    // Assertion 11 (M2-p, S-626-1 pass-55, ADV-P55-HIGH-001 part (c)): every
+    // other decision-path text line in this job (the run line, the
+    // NEEDS_JSON payload source, the job's own `if:`) is byte-pinned — the
+    // job's `needs:` line was the one remaining exception, covered only by
+    // `parse_needs_set`'s SET-membership extraction (now depth-anchored
+    // and duplicate-key-safe, see that function's own doc comment) with no
+    // pin on the line's own TEXT. Pin it the same way, closing the last
+    // gap in this run of byte-for-byte decision-path pins.
+    // -----------------------------------------------------------------------
+    let actual_needs_line =
+        extract_and_normalize_sole_needs_line(gate_block).unwrap_or_else(|reason| {
+            panic!(
+                "FAIL (M2-p, S-626-1 pass-55, ADV-P55-HIGH-001): the \
+                 `ci-gate` job's `needs:` line {reason}\n\
+                 Current ci-gate block:\n{gate_block}"
+            )
+        });
+
+    assert_eq!(
+        actual_needs_line, PINNED_GATE_NEEDS_LINE,
+        "FAIL (M2-p, S-626-1 pass-55, ADV-P55-HIGH-001): the `ci-gate` \
+         job's `needs:` value (\"{actual_needs_line}\") does not \
+         byte-match the pinned, human-reviewed literal \
+         (\"{PINNED_GATE_NEEDS_LINE}\"). `needs:` is the entire membership \
+         list `scripts/check-ci-gate.sh` evaluates via `toJSON(needs)` — \
+         every set-based pin in this file (M2-k's job key set included) \
+         still ultimately depends on this one text line. If this is a \
+         deliberate, reviewed change to `ci-gate.needs`, update BOTH \
+         PINNED_GATE_NEEDS_LINE here AND `test_ci_gate_needs_exactly_the_ \
+         required_jobs`'s exact-set pin in the SAME change.\n\
+         Current ci-gate block:\n{gate_block}"
+    );
+
+    // -----------------------------------------------------------------------
+    // ADV-P48-LOW-003 (round 20): re-reviewed this note on its merits per
+    // the round-20 fix-round instructions. Content verdict: ACCURATE — it
+    // correctly states M2-i's `PINNED_GATE_RUN_LINE` byte-for-byte pin
+    // strictly subsumes F-01's narrower `run: exit 1` literal pin (both
+    // are exact-match checks; M2-i additionally catches `|| true`/`| cat`
+    // suffix-tolerance mutants F-01 could not), and it does not leave a
+    // reader thinking coverage was dropped. One framing gap WAS found and
+    // is fixed by this heading: the note previously called itself
+    // "Assertion 4 (F-01, round 19)", the exact same ordinal already used
+    // by the REAL, code-bearing Assertion 4 (M2-i) above at this
+    // function's start — a documentation-only block with no `assert!` of
+    // its own reusing a live assertion's number reads as though a second,
+    // separate numbered check exists here. It doesn't; this block adds no
+    // assertion. Retitled below to make that unambiguous.
+    //
+    // Historical note — F-01 (round 19), SUPERSEDED by S-CIGATE-2, not
+    // reinstated (reconciliation note, PR #667 x #671 merge). NOT a
+    // numbered assertion — no `assert!` follows this comment block; it
+    // exists purely so a future reader doesn't mistake F-01's absence for
+    // a dropped regression guard.
+    //
+    // F-01 originally pinned the `ci-gate` job's `run:` step body to the
+    // exact literal `run: exit 1`, guarding against the same class of
+    // regression M2-g's substring check missed: a body that can never fail
+    // (e.g. `run: echo "gate disabled"`) would make the single required
+    // branch-protection check permanently green regardless of upstream
+    // results, even with every other structural assertion above still
+    // passing.
+    //
+    // Under Option C (S-CIGATE-2), the gate's `run:` step is no longer a
+    // bare `exit 1` — it is the `scripts/check-ci-gate.sh` invocation
+    // (`echo "${{NEEDS_JSON}}" | bash scripts/check-ci-gate.sh`, see the M2
+    // module doc comment's "correct shape" block above), so F-01's literal
+    // `run: exit 1` pin is no longer true of the shipped, authoritative
+    // ci.yml and reinstating it verbatim would make this test permanently
+    // RED against correct code. F-01's actual goal — prevent an
+    // unenforceable/no-op gate body — is already met, and more strongly:
+    // Assertion 4 above (M2-i) pins the run line BYTE-FOR-BYTE against
+    // `PINNED_GATE_RUN_LINE`, which rejects `run: echo "gate disabled"` (or
+    // any other body that isn't the exact pinned invocation) exactly as
+    // F-01 intended, while also catching the narrower `|| true` / `| cat`
+    // suffix-tolerance mutants F-01 itself could not have caught. No
+    // separate `exit 1`-literal assertion is reinstated here.
+}
+
+// ---------------------------------------------------------------------------
+// POL-11 — `test` job must have a zero-test floor
+// ---------------------------------------------------------------------------
+
+/// POL-11: The `test` job step must contain a zero-test floor guard so that
+/// `cargo test` exiting 0 with 0 tests executed does not satisfy the required
+/// branch-protection check.
+///
+/// `cargo test` exits 0 when zero test targets are found or all targets are
+/// filtered out.  Without an explicit floor, a `Cargo.toml` change
+/// (`autotests = false`, a `[[test]]` rename, or a harness misconfiguration)
+/// can orphan all integration-test targets and still green the `test` job —
+/// which is in `ci-gate.needs`.  This is the POL-11 false-green class covered
+/// by story S-626-1 AC-10, anchored to BC-X.13.007 ("The `test` job enforces
+/// a runtime-computed test-execution floor") in
+/// `.factory/specs/prd/cross-cutting.md`.
+///
+/// A passed-count `> 0` floor is insufficient: `cargo test --all-features`
+/// also runs the inline `#[cfg(test)]` modules in `src/` (~1,100 tests at
+/// head), so orphaning every file in `tests/` via `autotests = false` or a
+/// `[[test]]` rename still produces a non-zero total — the `> 0` predicate is
+/// inert against the defect class it claims to catch.  Four gates are
+/// therefore required (promoted from an earlier three-gate framing that kept
+/// the canary's passed-count check nested as "2b" — `ci.yml`'s own POL-11
+/// comment header and this docstring now agree at four top-level gates):
+///   (1) Binary-count floor (`< 90`): catches mass orphaning of tests/ files.
+///       At head ~103 binaries run; orphaning all integration targets drops
+///       this below 90.  The threshold tolerates ~13 legitimate reductions.
+///   (2) Named canary: asserts `tests/ci_gate_completeness` ran, catching the
+///       self-orphaning case where the guard binary itself stops running —
+///       even when the binary count stays above 90.
+///   (3) Named-canary passed-count gate (round 20, ADV-P50-LOW-002): gate
+///       (2) alone proves only that the binary was INVOKED — cargo prints
+///       its "Running ..." line before running anything inside it, so the
+///       substring is present even if every test is `#[ignore]`d or an
+///       env-gate skips the whole suite before any assertion runs.  Round 20
+///       locates the canary's own "test result:" line (scoped forward from
+///       its "Running" line) and requires a non-zero passed count
+///       specifically from it — closing the same fail-open shape as gate
+///       (4) below, but scoped to the one binary carrying every CI-gate
+///       regression pin.  The "Running" lookup is path-separator-agnostic
+///       (`[/\\]` character class) because cargo prints a forward slash on
+///       Unix runners but a backslash on `windows-latest`; a forward-slash-
+///       only pattern silently fails to match on Windows, hardcoding this
+///       gate's passed count to 0 and failing every Windows run
+///       unconditionally regardless of whether the canary ran (CI run
+///       31182605820 on `424d64de`, fixed in `177b3727`).
+///   (4) Zero-test floor (`"${total}" -eq 0`): catches the case where ≥90
+///       binaries (including the canary) report results but zero tests
+///       passed within them — e.g. a global test filter matching nothing.
+///       Neither (1) nor (2) nor (3) detects this scenario: the binary
+///       count and the named binary's presence and passed-count are all
+///       satisfied; only the whole-suite passed-count check catches it.
+///
+/// A fifth mechanism, orthogonal to all four gates above, has to hold for
+/// any of them to run against a genuine result at all: `set -euo pipefail`
+/// at the top of the step is the SOLE mechanism propagating a real `cargo
+/// test` failure through `cargo test --all-features 2>&1 | tee ...` into a
+/// failed step (without `-o pipefail`, `set -e` sees only `tee`'s
+/// always-0 exit status).
+///
+/// Both the `CARGO_TERM_COLOR: never` override (Defect 3 fix) and the
+/// `set +o pipefail` / `set -o pipefail` scoped-disable bracket around the
+/// count computations (Defect 2 fix) are structural parts of the guard too.
+///
+/// **What is pinned below, and what is not.**  An earlier version of this
+/// docstring claimed the assertions below "pin all operative parts" — that
+/// was false.  Gate (3) above (`"${total}" -eq 0`) and the `set -euo
+/// pipefail` line had NO assertion prior to round 17: three independent
+/// reviewers each demonstrated a defeat that left every other assertion in
+/// this test green — deleting the `if [ "${total}" -eq 0 ]; ... fi` block
+/// verbatim, and separately replacing `set -euo pipefail` with `set -eu`
+/// while feeding a mock `cargo` that exits 101 after printing passing "test
+/// result:" lines (which made the step exit 0 and print `Check passed:
+/// ...` despite the simulated failure) — both reproduced in a scratchpad
+/// copy before the fix. The assertions below are graded by how hard they
+/// are to defeat without also breaking the enforcement logic itself.
+/// Eighteen assertions total (twelve added through round 17: `shell: bash`
+/// and the full `cargo test` capture invocation were added in a later pass;
+/// three more added in round 20 — see gate (2b) above — for the
+/// named-canary passed-count gate and its path-separator-agnostic lookup;
+/// net three more added by ADV-P51-MED-001, which replaced the single
+/// generic `exit 1` presence check with four PER-BRANCH pins — see the
+/// updated "exit 1" bullet below):
+///   - **Variable/command-bound** (hardest to defeat: a rename or rewrite
+///     that neuters the check also breaks the literal text this assertion
+///     requires): `"${binaries}" -lt 90`, `"${total}" -eq 0`,
+///     `grep -q "ci_gate_completeness"`, `tail -n +"${_canary_running_line}"`,
+///     `"${_canary_passed}" -eq 0`.  None of these five forms currently
+///     appears anywhere else in `ci.yml` (verified) — a bare
+///     `-lt 90` / `-eq 0` / `ci_gate_completeness` substring, by contrast,
+///     also appears in this guard's own comments and echo diagnostics and
+///     would be satisfied even after the check was neutered by a variable
+///     rename.
+///   - **Exact quoted-literal, appears once** (comment-satisfiable only by a
+///     future comment reproducing the identical quoted form — no such
+///     comment exists today): the path-separator-agnostic regex
+///     `Running tests[/\\]ci_gate_completeness\.rs` (gate (2b)'s Windows
+///     fix; pinned via a Rust raw string literal so the source reproduces
+///     the exact backslash bytes from `ci.yml` without additional escaping).
+///   - **Exact standalone line** (comment-satisfiable only by a future
+///     comment reproducing the identical trailing form — no such comment
+///     exists today): `set -euo pipefail\n`, `set +o pipefail\n`,
+///     `set -o pipefail\n`, and the full capture invocation
+///     `cargo test --all-features 2>&1 | tee "$RUNNER_TEMP/cargo_test_out.txt"\n`.
+///     `"set -o pipefail\n"` is NOT a substring of
+///     `"set -euo pipefail\n"` (the characters after `set -` are `euo`, not
+///     `o`), so these three assertions are independent of one another —
+///     dropping any one of the three lines fails exactly one assertion, not
+///     all three.  This is incidental to the current comment wording, not a
+///     structural guarantee: a future comment line ending exactly with one
+///     of these forms (no trailing text) immediately before the newline
+///     would also satisfy the corresponding assertion.  The capture
+///     invocation is the literal `run:` command itself (not a `with:`/`env:`
+///     key-value pair, and not variable-bound like the tier above) — it
+///     occurs exactly once in the whole of `ci.yml` (verified) and is not
+///     reproduced by any comment today, so it sits in this tier rather than
+///     the weaker one below, even though nothing prevents a future comment
+///     from quoting it verbatim.
+///   - **Literal substring, weaker still** (a comment or unrelated step
+///     could in principle reproduce it): `CARGO_TERM_COLOR: never`,
+///     `shell: bash`.  Both are step-level YAML key-value pairs; `shell:
+///     bash` occurs exactly once in the whole of `ci.yml` (verified) today,
+///     but nothing prevents a future comment from reproducing the string.
+///   - **Weakest** (also appears inside this guard's own `echo`
+///     diagnostics; a rewrite that preserves the diagnostic strings while
+///     gutting the enforcement logic underneath would not be caught by
+///     these alone): `FAIL (POL-11)`, `Check passed:`.
+///   - **Per-branch, scoped** (ADV-P51-MED-001): `exit 1` moved OUT of the
+///     "weakest" tier above — a bare `exit 1` presence check is satisfied
+///     by ANY ONE of the four gate branches retaining it, so mutating a
+///     single branch's `exit 1` to `exit 0` (that branch prints its FAIL
+///     diagnostic, then exits the STEP successfully, skipping the
+///     remaining three gates) went undetected by the old generic check.
+///     `extract_if_block` locates each branch's own `if ... then ... fi`
+///     block by its unique condition line and asserts `exit 1` appears
+///     INSIDE that block specifically, so each of the four gates is now
+///     independently pinned.
+///   - **NOT PINNED — no assertion covers these today:** the `total=`/
+///     `binaries=` computation pipelines (the `grep`/`grep -Eo`/`awk` and
+///     `grep`/`wc -l`/`tr` chains) that produce the values the gates above
+///     test — only their *usages* (`"${total}" -eq 0`,
+///     `"${binaries}" -lt 90`) are pinned, so a rewrite of the computation
+///     logic that leaves those two variables holding a wrong-but-passing
+///     value is undetected as long as the variable names survive.  (The
+///     capture invocation itself — `--all-features` and the `tee` target —
+///     moved out of this bucket into the "Exact standalone line" tier above;
+///     these computation pipelines remain structurally unpinnable by
+///     substring matching, since a wrong-but-passing rewrite can preserve
+///     every substring this test could reasonably assert on.)
+///
+/// Anchoring: assertion is made only within the `test` job block, so a
+/// matching substring in an unrelated job cannot produce a false positive.
+#[test]
+fn test_verify_test_job_has_zero_test_floor() {
+    let ci = read_ci_yml();
+    let test_block = extract_job_block(&ci, "test").unwrap_or_else(|| {
+        panic!(
+            "FAIL: `.github/workflows/ci.yml` does not contain a `test:` job.\n\
+             Required: the `test` job must exist with a zero-test floor guard \
+             (POL-11 / F-07)."
+        )
+    });
+
+    // --- Instrument 0: error sentinel ---
+    // The floor guard emits "FAIL (POL-11)" in all failure branches.
+    // Asserting on its PRESENCE means DELETING the guard's diagnostic text
+    // entirely fails this test.
+    //
+    // ADV-P51-HIGH-001 (correction): a prior version of this comment
+    // claimed "removing the guard entirely fails this test" without
+    // qualification — that reads as though this one instrument covers
+    // every way the guard can stop being enforced. It does not: `if:
+    // false` (HIGH-1) or `continue-on-error: true` (HIGH-2) on the step
+    // SKIPS it (or neutralizes its exit code) without touching a single
+    // byte of this diagnostic text, so Instrument 0 alone stays green
+    // under either attack — verified directly (RED proof, S-626-1
+    // ADV-P51 fix commit). Those two attacks are closed by a SEPARATE,
+    // dedicated test, `test_test_job_guard_step_key_set_and_env_are_pinned`
+    // below, which pins this step's COMPLETE key set (no `if:`, no
+    // `continue-on-error:` beyond the reviewed `env`/`name`/`run`/`shell`
+    // set) the same way `PINNED_GATE_STEP_KEY_SETS` already does for
+    // `ci-gate`'s own steps. Instrument 0 here narrowly proves what its
+    // assertion actually checks: the diagnostic TEXT survives.
+    assert!(
+        test_block.contains("FAIL (POL-11)"),
+        "FAIL (POL-11): The `test` job step does not contain the zero-test \
+         floor guard.\n\
+         Required: the `cargo test` step must count tests executed at runtime \
+         and fail loudly (emitting `FAIL (POL-11): ...`).\n\
+         Removing the floor reopens the false-green class documented in \
+         S-626-1 / F-07: cargo test exits 0 on 0 tests, so the `test` job \
+         passes even when all integration-test targets are orphaned, causing \
+         ci-gate to silently green with ~2000+ regression pins unenforced.\n\
+         Current test job block:\n{test_block}"
+    );
+
+    // --- Instrument 1: binary-count floor ---
+    // Guards against mass orphaning of tests/ files.  The prior "> 0" check
+    // on the passed count was inert because src/ inline tests still run when
+    // tests/ is fully orphaned.  The floor must use a non-trivial threshold
+    // on the *binary count*, not the passed count.
+    //
+    // The assertion targets `"${binaries}" -lt 90` (variable-bound), not the
+    // bare `-lt 90`.  A future edit renaming `binaries` to `total` would keep
+    // bare `-lt 90` present while neutering the floor (`total` is ~2345 tests,
+    // never < 90); this variable-bound form catches that regression.
+    assert!(
+        test_block.contains("\"${binaries}\" -lt 90"),
+        "FAIL (POL-11): The `test` job step does not contain the binary-count \
+         floor using the `binaries` variable (`\"${{binaries}}\" -lt 90`).\n\
+         A '> 0' passed-count predicate is inert: src/ inline tests (~1,100) \
+         still run when tests/ is orphaned, keeping total > 0.  The floor must \
+         gate on the number of test *binaries* (\"${{binaries}}\" -lt 90).\n\
+         Current test job block:\n{test_block}"
+    );
+
+    // --- Instrument 2: named canary ---
+    // Guards the self-orphaning case: the binary carrying this guard and all
+    // CI-gate Rust regression pins stops running.  The binary floor cannot
+    // detect this case when the count stays above 90.
+    //
+    // The assertion targets the command form `grep -q "ci_gate_completeness"`
+    // rather than the bare substring `ci_gate_completeness`.  The bare form
+    // also appears in a YAML comment (ci.yml :: test / "Run tests (zero-test
+    // floor, POL-11)" § "(2) Named canary") and an echo diagnostic
+    // (ci.yml :: test / "Run tests (zero-test floor, POL-11)" § "did not run"
+    // echo); either line satisfies a bare-substring check while leaving the
+    // operative grep command absent.  Only the command line contains
+    // `grep -q "ci_gate_completeness"`.
+    assert!(
+        test_block.contains("grep -q \"ci_gate_completeness\""),
+        "FAIL (POL-11): The `test` job step does not contain the named-canary \
+         command `grep -q \"ci_gate_completeness\"`.\n\
+         Required: grep the captured output for the ci_gate_completeness binary \
+         to detect the self-orphaning case (guard binary renamed, autotests=false,\
+         or [[test]] override).\n\
+         Current test job block:\n{test_block}"
+    );
+
+    // --- Instrument 2b: named-canary passed-count gate (round 20 strengthening) ---
+    // ADV-P50-LOW-002 (round 20): `grep -q "ci_gate_completeness"` above
+    // proves only that the binary was INVOKED — cargo prints its
+    // "Running tests/ci_gate_completeness.rs (...)" line before running
+    // anything inside it, so the substring is present even if every test in
+    // the file is `#[ignore]`d or an env-gate skips the whole suite before
+    // any assertion runs.  That leaves Instrument 2 "satisfied" at 0 passed —
+    // the exact fail-open shape POL-11 exists to close for the whole-suite
+    // floor, just scoped to this one binary.  Round 20 strengthens this by
+    // locating the canary binary's own "test result:" summary line (scoping
+    // forward from its "Running" line, not the first "test result:" line in
+    // the whole capture — a global grep here would find some *other*
+    // binary's result line and could pass even if the canary itself reported
+    // 0) and requiring a non-zero passed count specifically from it.
+    //
+    // Two sub-assertions, mirroring why Instrument 1/3 pin the
+    // variable-bound form rather than a bare `-eq 0`/`-lt 90`: a rename or a
+    // rewrite that neuters the check also breaks the literal text these
+    // assertions require.
+    //
+    // (a) `tail -n +"${_canary_running_line}"` proves the result line is
+    //     scoped to the located binary's own output, not merely "the first
+    //     test result: line anywhere in the file" (which is what the
+    //     pre-round-20 `grep -q` presence check was blind to).  This exact
+    //     form appears once in `ci.yml` today (verified).
+    assert!(
+        test_block.contains("tail -n +\"${_canary_running_line}\""),
+        "FAIL (POL-11): The `test` job step does not scope the canary's \
+         `test result:` line lookup to `tail -n +\"${{_canary_running_line}}\"`.\n\
+         Required: round 20 strengthened the named-canary check (ADV-P50-LOW-002) \
+         to read the RESULT LINE THAT BELONGS TO THE CANARY BINARY ITSELF, not \
+         just the first `test result:` line anywhere in the capture — without \
+         this scoping a global grep could pass on some other binary's result \
+         while the canary itself reported 0 passed.\n\
+         Current test job block:\n{test_block}"
+    );
+    // (b) `"${_canary_passed}" -eq 0` is the gate itself: it fails the step
+    //     when the canary's own scoped result line shows 0 passed — the
+    //     property that closes ADV-P50-LOW-002 (a canary that was invoked
+    //     but never actually ran an assertion, e.g. every test `#[ignore]`d
+    //     or an env-gate early-return).  Reverting this whole Instrument 2b
+    //     block to the pre-round-20 form (a bare `grep -q
+    //     "ci_gate_completeness"` presence check with no passed-count gate)
+    //     removes this string entirely — proven below (RED proof).  This
+    //     exact form appears once in `ci.yml` today (verified).
+    assert!(
+        test_block.contains("\"${_canary_passed}\" -eq 0"),
+        "FAIL (POL-11): The `test` job step does not gate on \
+         `\"${{_canary_passed}}\" -eq 0`.\n\
+         Required: round 20 (ADV-P50-LOW-002) strengthened the named-canary \
+         check from proving the binary was merely INVOKED to proving it \
+         actually EXECUTED at least one passing assertion — reverting to a \
+         bare `grep -q \"ci_gate_completeness\"` presence check reopens the \
+         exact fail-open shape POL-11 exists to close, scoped to the one \
+         binary carrying every CI-gate regression pin.\n\
+         Current test job block:\n{test_block}"
+    );
+
+    // --- Instrument 2c: path-separator-agnostic canary lookup (round 20 Windows fix) ---
+    // `cargo test` prints "Running tests/ci_gate_completeness.rs" on Unix
+    // runners but "Running tests\ci_gate_completeness.rs" (backslash) on
+    // `windows-latest` — the `test` job is a 3-OS matrix.  A forward-slash-only
+    // regex here silently finds no match on Windows, so `_canary_running_line`
+    // is always empty there and `_canary_passed` is hardcoded to `0` by the
+    // `if [ -z "${_canary_running_line}" ]` branch — every Windows run of the
+    // `test` job would fail this gate unconditionally, regardless of whether
+    // the canary actually ran.  This is exactly what broke in CI run
+    // 31182605820 on commit `424d64de` and was fixed in `177b3727` by
+    // widening the regex to a `[/\\\\]` character class matching either
+    // separator.  Reproduced directly (RED proof below): hardcoding the
+    // regex back to a bare forward slash reintroduces the Windows false-red
+    // while leaving Instrument 2b's assertions untouched (they pin the
+    // `_canary_passed`/`tail` machinery around the regex, not the regex
+    // pattern itself) — demonstrating this assertion is independent of, not
+    // a duplicate of, Instrument 2b above.
+    //
+    // Pinned via a raw string literal so the Rust source reproduces the
+    // exact byte sequence from `ci.yml` (four literal backslashes inside the
+    // character class, one literal backslash before the escaped dot)
+    // without the extra escaping a normal string literal would require —
+    // this exact quoted regex appears once in `ci.yml` today (verified).
+    assert!(
+        test_block.contains(r#"Running tests[/\\\\]ci_gate_completeness\.rs"#),
+        "FAIL (POL-11): The `test` job step does not use the path-separator- \
+         agnostic regex `Running tests[/\\\\]ci_gate_completeness\\.rs` to \
+         locate the canary binary's \"Running\" line.\n\
+         Required: cargo prints `Running tests/ci_gate_completeness.rs` on \
+         Unix runners but `Running tests\\ci_gate_completeness.rs` (backslash) \
+         on windows-latest. A forward-slash-only pattern here silently finds \
+         no match on Windows, hardcoding `_canary_passed` to 0 and failing \
+         every Windows run of the `test` job unconditionally (CI run \
+         31182605820 on 424d64de) — this is the \
+         LOCAL-VERIFICATION-MISSES-PLATFORM-MATRIX class documented in \
+         CLAUDE.md.\n\
+         Current test job block:\n{test_block}"
+    );
+
+    // --- Instrument 3: zero-test floor (`total -eq 0`) ---
+    // Distinct from both instruments above: the binary floor and the named
+    // canary both pass when ≥90 binaries (including ci_gate_completeness)
+    // report results but zero tests passed within them (e.g. a global
+    // `--skip` filter, or a harness that reports results without running
+    // any test body).  This is BC-X.13.007 Behavior item 3, and this
+    // assertion is the ONLY gate covering that scenario — proven by
+    // deleting the `if [ "${total}" -eq 0 ]; then ... fi` block wholesale
+    // in a scratchpad copy: every other assertion in this test (including
+    // the binary floor and named canary above) stayed green.
+    //
+    // The assertion targets the variable-bound form `"${total}" -eq 0`, not
+    // a bare `-eq 0`, for the same reason Instrument 1 targets
+    // `"${binaries}" -lt 90` rather than bare `-lt 90`: a bare form would
+    // survive a variable rename that neuters the check.
+    assert!(
+        test_block.contains("\"${total}\" -eq 0"),
+        "FAIL (POL-11): The `test` job step does not contain the zero-test \
+         floor gate using the `total` variable (`\"${{total}}\" -eq 0`).\n\
+         This is the only gate that catches ≥90 test binaries reporting \
+         results while zero tests actually passed (e.g. a global test \
+         filter matching nothing) — the binary-count floor and named canary \
+         both pass in that scenario.\n\
+         Current test job block:\n{test_block}"
+    );
+
+    // --- exit 1 is present, PER BRANCH (ADV-P51-MED-001) ---
+    // A single unqualified `contains("exit 1")` check (the pre-ADV-P51 form
+    // of this instrument) is satisfied by ANY ONE of the four gate
+    // branches below having its own `exit 1` — changing exactly one
+    // branch's `exit 1` to `exit 0` (e.g. the binary-count floor's) makes
+    // that branch print its `FAIL (POL-11)` diagnostic and then exit the
+    // STEP successfully, skipping the three remaining gates entirely,
+    // while every other assertion in this test (including the old generic
+    // `exit 1` check) stayed green — verified directly (RED proof,
+    // S-626-1 ADV-P51 fix commit). Each branch is now pinned
+    // independently via `extract_if_block` (defined below, near the
+    // other line-based extraction helpers), which locates that branch's
+    // own `if ... then ... fi` block and asserts `exit 1` appears INSIDE
+    // it specifically — a mutation to any one branch's exit code fails
+    // exactly that branch's assertion, not a generic shared one.
+    let binary_floor_block = extract_if_block(test_block, "if [ \"${binaries}\" -lt 90 ]; then\n");
+    assert!(
+        binary_floor_block.contains("\n            exit 1\n"),
+        "FAIL (POL-11 / ADV-P51-MED-001): the binary-count floor branch \
+         does not contain its own `exit 1` inside its `if` block.\n\
+         Current branch block:\n{binary_floor_block}"
+    );
+
+    let canary_presence_block = extract_if_block(
+        test_block,
+        "if ! grep -q \"ci_gate_completeness\" \"$RUNNER_TEMP/cargo_test_out.txt\"; then\n",
+    );
+    assert!(
+        canary_presence_block.contains("\n            exit 1\n"),
+        "FAIL (POL-11 / ADV-P51-MED-001): the named-canary presence-gate \
+         branch does not contain its own `exit 1` inside its `if` block.\n\
+         Current branch block:\n{canary_presence_block}"
+    );
+
+    let canary_passed_block =
+        extract_if_block(test_block, "if [ \"${_canary_passed}\" -eq 0 ]; then\n");
+    assert!(
+        canary_passed_block.contains("\n            exit 1\n"),
+        "FAIL (POL-11 / ADV-P51-MED-001): the named-canary passed-count- \
+         gate branch does not contain its own `exit 1` inside its `if` \
+         block.\n\
+         Current branch block:\n{canary_passed_block}"
+    );
+
+    let zero_test_floor_block = extract_if_block(test_block, "if [ \"${total}\" -eq 0 ]; then\n");
+    assert!(
+        zero_test_floor_block.contains("\n            exit 1\n"),
+        "FAIL (POL-11 / ADV-P51-MED-001): the zero-test floor branch does \
+         not contain its own `exit 1` inside its `if` block.\n\
+         Current branch block:\n{zero_test_floor_block}"
+    );
+
+    // --- Positive-coverage line is present ---
+    // POL-11 requires emitting a runtime-computed count to prove tests ran
+    // (exit code alone is insufficient — the count proves the assertions
+    // above were actually evaluated at non-trivial scale).
+    assert!(
+        test_block.contains("Check passed:"),
+        "FAIL (POL-11): The `test` job step does not contain the \
+         `Check passed:` positive-coverage assertion.\n\
+         Required: emit a runtime-computed count so that a reviewer can see \
+         both the guard passed and how many tests ran.\n\
+         Current test job block:\n{test_block}"
+    );
+
+    // --- CARGO_TERM_COLOR: never is present ---
+    // The file-level `env: CARGO_TERM_COLOR: always` is overridden for this
+    // step.  Empirically, cargo does not forward its color preference to
+    // libtest today, so the "test result:" line the grep anchors on is plain
+    // ASCII even without this override — the claimed failure is not
+    // presently reachable.  The override is defensive: it removes the
+    // dependency on that behavior continuing to hold across future
+    // cargo/libtest versions or a differently-configured CI runner, where a
+    // color-wrapped "test result:" line would silently zero the anchored
+    // grep and produce a false-red with no diagnostic.
+    assert!(
+        test_block.contains("CARGO_TERM_COLOR: never"),
+        "FAIL (POL-11): The `test` job step does not override \
+         `CARGO_TERM_COLOR` to `never`.\n\
+         Required: add `env: CARGO_TERM_COLOR: never` to the step so that ANSI \
+         escape codes in libtest output do not break the anchored grep.\n\
+         Current test job block:\n{test_block}"
+    );
+
+    // --- `shell: bash` override is present ---
+    // The `test` job is a 3-OS matrix (ubuntu/macos/windows). GitHub Actions
+    // defaults `run:` steps to `pwsh` on `windows-latest`; the floor guard's
+    // script uses `set -euo pipefail`, `[ ... ]` tests, and `$(...)` command
+    // substitution, none of which are valid pwsh syntax. Without this
+    // override the step would fail outright on the Windows leg with a pwsh
+    // parse error, rather than silently skip the floor — but that failure
+    // would be indistinguishable at a glance from a genuine POL-11 violation
+    // and would block the Windows leg on every run, so the override is
+    // treated as load-bearing rather than something to discover by accident.
+    // `"shell: bash"` appears exactly once in the whole of `ci.yml` (verified),
+    // so this is not comment-satisfiable by any text elsewhere in the file
+    // today.
+    assert!(
+        test_block.contains("shell: bash"),
+        "FAIL (POL-11): The `test` job step does not override `shell: bash`.\n\
+         Required: GitHub Actions defaults `run:` steps to `pwsh` on \
+         `windows-latest`; the floor guard's script (`set -euo pipefail`, \
+         `[ ... ]` tests, `$(...)` substitution) is bash syntax and is \
+         invalid under pwsh. Without this override the step fails outright \
+         on the Windows leg of the 3-OS matrix.\n\
+         Current test job block:\n{test_block}"
+    );
+
+    // --- the exact `cargo test` capture invocation is present ---
+    // Pins the full `run:` command line the rest of this test's gates
+    // depend on: `--all-features` (so `#[cfg(test)]` gated code is actually
+    // exercised) and the `tee` target (`$RUNNER_TEMP/cargo_test_out.txt`,
+    // the same path the `total=`/`binaries=` computations below read back
+    // from). A rewrite that drops `--all-features`, redirects to a
+    // different file, or otherwise changes what gets captured is
+    // undetected by any other assertion in this test — the `total`/
+    // `binaries` gates only check the *values* of those variables, not how
+    // they were populated. This does NOT pin the `total=`/`binaries=`
+    // computation pipelines themselves (the `grep`/`grep -Eo`/`awk` and
+    // `grep`/`wc -l`/`tr` chains) — those remain structurally unpinnable by
+    // substring matching, per the "NOT PINNED" note above.
+    //
+    // The assertion targets the exact standalone line (trailing `\n`), not
+    // a bare `2>&1` substring: `2>&1` occurs exactly once in the whole of
+    // `ci.yml` today, so a bare substring would already be unambiguous, but
+    // the longer command-bound form is chosen anyway because it also pins
+    // `--all-features` and the `tee` target, closing that portion of the
+    // "NOT PINNED" gap in one assertion. `RUNNER_TEMP/cargo_test_out.txt`
+    // alone would be ambiguous — it also appears in the `grep` lines that
+    // read the file back — so the full command line (unique in the file)
+    // is required.
+    assert!(
+        test_block
+            .contains("cargo test --all-features 2>&1 | tee \"$RUNNER_TEMP/cargo_test_out.txt\"\n"),
+        "FAIL (POL-11): The `test` job step does not contain the exact \
+         capture invocation \
+         `cargo test --all-features 2>&1 | tee \"$RUNNER_TEMP/cargo_test_out.txt\"`.\n\
+         Required: `--all-features` ensures feature-gated tests run; the \
+         `tee` target must match the file the `total=`/`binaries=` \
+         computations read back from.\n\
+         Current test job block:\n{test_block}"
+    );
+
+    // --- top-level abort mechanism (`set -euo pipefail`) is present ---
+    // This is the SOLE mechanism that propagates a genuine `cargo test`
+    // failure through `cargo test --all-features 2>&1 | tee ...` into a
+    // failed step.  Without pipefail here, the tee pipeline's exit status is
+    // `tee`'s (always 0), so `set -e` never fires on a failed `cargo test` —
+    // the step falls through to the count computations, which sum whatever
+    // partial "test result:" lines cargo did print, satisfy the binary
+    // floor / canary / zero-test-floor gates, and print `Check passed:` —
+    // an unambiguous false-green.  Reproduced directly: replacing this line
+    // with `set -eu` (dropping `-o pipefail`) and feeding a mock `cargo`
+    // that exits 101 after printing 103 "test result:" lines summing to a
+    // non-zero passed count causes the step to exit 0 and print
+    // `Check passed: ... test binaries` — while the unmutated line correctly
+    // propagates the mock's exit 101.
+    //
+    // The assertion targets the exact whole-line form `set -euo pipefail\n`
+    // rather than a bare `pipefail` substring, and is distinct from (does
+    // not overlap) the `set -o pipefail\n` assertion below: `"set -o
+    // pipefail\n"` is not a substring of `"set -euo pipefail\n"` (the
+    // characters immediately after `set -` are `euo`, not `o`), so a
+    // regression that drops the `-o pipefail` combination into `set -eu`
+    // would fail THIS assertion while the scoping-bracket assertions below
+    // are unaffected (they check a different, later line in the script).
+    assert!(
+        test_block.contains("set -euo pipefail\n"),
+        "FAIL (POL-11): The `test` job step does not open with the command \
+         `set -euo pipefail` as a standalone line.\n\
+         Required: `-o pipefail` is what causes a failed `cargo test` in \
+         `cargo test --all-features 2>&1 | tee ...` to actually fail the \
+         step — without it, `tee`'s (always-0) exit status is what `set -e` \
+         sees, and a genuine test failure silently falls through to the \
+         count computations and prints `Check passed:` (verified false-green \
+         reproduction, S-626-1 round 17).\n\
+         Current test job block:\n{test_block}"
+    );
+
+    // --- pipefail scoping bracket is present ---
+    // The count computations must run under `set +o pipefail` (disabled).
+    // Under set -o pipefail, grep exits 1 on no-match; that exit propagates
+    // through the pipeline and, combined with set -e, aborts the step before
+    // any FAIL (POL-11) diagnostic can print.  Removing the OPENING bracket
+    // (`set +o pipefail`) reintroduces that false-abort class.
+    //
+    // Removing the CLOSING bracket (`set -o pipefail`, the restore) does
+    // NOT reintroduce the same class — it is the opposite failure mode:
+    // pipefail stays disabled, which is strictly more permissive and can
+    // never cause an abort.  The two brackets guard opposite failure modes,
+    // not a shared one.  The restore's stated purpose — so that "real I/O
+    // errors in the gate checks are not silently swallowed" — has no
+    // operative effect today: nothing after the restore is a pipeline (the
+    // gate checks are `[ ... ]` tests, a bare `grep -q`, and `echo`s), so
+    // there is no pipe exit status for pipefail to change the handling of.
+    // It remains defensive hygiene — restoring the step's ambient default
+    // in case a future gate check introduces a pipe — but is not, in the
+    // current file, load-bearing the way the opening bracket is.
+    //
+    // The trailing `\n` in each check is load-bearing: it distinguishes the
+    // standalone command line from the comments that also mention the same
+    // flags (e.g. `# Under set -o pipefail, ...` or
+    // `# set +o pipefail the pipeline exit ...`).  Those comment lines
+    // currently carry additional text after the flag name, so they do not
+    // match the `...\n` form today — but this is an incidental property of
+    // the current comment wording, not a guarantee: a future comment line
+    // ending exactly with `set -o pipefail` (no trailing text) immediately
+    // before the newline would also satisfy this assertion.
+    assert!(
+        test_block.contains("set +o pipefail\n"),
+        "FAIL (POL-11): The `test` job step does not contain the command \
+         `set +o pipefail` as a standalone line.\n\
+         Required: the count computations must run with pipefail disabled so \
+         that grep's no-match exit-1 does not abort the step via `set -e` \
+         before the FAIL (POL-11) diagnostic can print.\n\
+         Current test job block:\n{test_block}"
+    );
+    assert!(
+        test_block.contains("set -o pipefail\n"),
+        "FAIL (POL-11): The `test` job step does not contain the command \
+         `set -o pipefail` as a standalone line (the restoring bracket).\n\
+         Required: pipefail must be re-enabled after the count computations \
+         as defensive hygiene (restoring the step's ambient default) — even \
+         though nothing after it is currently a pipeline, so this has no \
+         operative effect on the gate checks that follow today.\n\
+         Current test job block:\n{test_block}"
+    );
+}
+
+// ---------------------------------------------------------------------------
+// ADV-P51 — guard-strength gaps in the `test` job's POL-11 guard step
+// ---------------------------------------------------------------------------
+//
+// Adversarial pass 51 identified that every anti-neutering control built for
+// `ci-gate` over 20 review rounds (a step-level `if:` ban, a
+// `continue-on-error` ban, a byte-for-byte `run:` line pin, an `env:`
+// key-set pin, ordered per-step key sets) was never propagated to the OTHER
+// jobs in `ci.yml` — above all `test`, the `ci-gate.needs` member that
+// carries the entire regression suite. This section closes that gap for the
+// `test` job's own multi-instrument guard step, reusing the SAME idiom
+// (`PINNED_GATE_STEP_KEY_SETS`/`extract_gate_step_key_sets`,
+// `PINNED_GATE_ENV_KEYS`/`extract_gate_env_key_set`) already proven against
+// `ci-gate` in rounds 11-13, scoped to this one step rather than the whole
+// `test` job.
+//
+// SCOPE (deliberate, documented per the governing mandate — "where you
+// deliberately exclude a job or step from a control, say so in an in-code
+// comment"):
+//   - The step-KEY-SET pin below (`PINNED_TEST_GUARD_STEP_KEYS`) is scoped
+//     to the ONE step carrying the POL-11 guard (`name: Run tests
+//     (zero-test floor, POL-11)`), NOT the whole `test` job. `test` runs a
+//     3-OS matrix and may legitimately need an OS-conditional step in the
+//     future (e.g. a Windows-only setup step) — a blanket step-level `if:`
+//     ban across every step in this job would foreclose that. The reported
+//     attack (ADV-P51-HIGH-001/HIGH-002) targets this ONE step
+//     specifically; closing it there does not require closing the whole
+//     job, and closing the whole job would risk a real false-positive
+//     against a future, legitimate matrix-conditional step.
+//   - `continue-on-error` is separately banned across ALL SEVEN always-run
+//     jobs (`fmt`, `clippy`, `test`, `msrv`, `deny`, `spec-guard`,
+//     `check-signing-workflow-injection` — the same list
+//     `test_ci_gate_needs_jobs_have_no_job_level_if` already uses) by
+//     `test_always_run_jobs_have_no_continue_on_error` below, since
+//     ADV-P51-HIGH-002 named this gap on `msrv`, `spec-guard`, `deny`,
+//     `fmt`, and `clippy` explicitly, in addition to `test`. `mutants` is
+//     deliberately EXCLUDED — it legitimately uses `continue-on-error:
+//     true` (see that job's own in-YAML comment: the "Check kill rate"
+//     step is the sole pass/fail arbiter and must run regardless of
+//     whether "Run mutation tests" exits non-zero) — and `ci-gate` is
+//     deliberately EXCLUDED — already covered by its own dedicated,
+//     narrower M2-j presence-ban in
+//     `test_ci_gate_pass_fail_semantics_are_structurally_placed`.
+//     `security` and `coverage` are not `ci-gate.needs` members (advisory
+//     by design) and are out of scope for the same reason
+//     `test_ci_gate_needs_jobs_have_no_job_level_if` already excludes
+//     them.
+//   - The pipefail-bracket ORDERING constraint (ADV-P51-HIGH-003) and the
+//     per-branch `exit 1` pins (ADV-P51-MED-001, added in place above) are
+//     specific to the `test` job's own POL-11 script shape — no other job
+//     in `ci.yml` has this count-computation/floor-gate pattern — so they
+//     are not generalized to other jobs.
+
+/// ADV-P51-HIGH-001/HIGH-002: the `test` job's POL-11 guard step's
+/// COMPLETE key set, mirroring `PINNED_GATE_STEP_KEY_SETS`'s idiom for
+/// `ci-gate`. Adding `if:` (HIGH-1: makes the step conditionally
+/// skippable — e.g. `if: false` — the job concludes `success`, `ci-gate`
+/// goes green with zero tests run) or `continue-on-error:` (HIGH-2:
+/// neutralizes all four `exit 1` gates AND a genuine `cargo test` failure
+/// — step outcome `failure`, conclusion `success`, job `success`) changes
+/// this set and fails `test_test_job_guard_step_key_set_and_env_are_pinned`
+/// below.
+const PINNED_TEST_GUARD_STEP_KEYS: &[&str] = &["env", "name", "run", "shell"];
+
+/// ADV-P51-MED-002: the `env:` block's COMPLETE key set on the `test`
+/// job's POL-11 guard step, mirroring `PINNED_GATE_ENV_KEYS`'s idiom for
+/// `ci-gate`. A sibling key alongside `CARGO_TERM_COLOR` (e.g. `BASH_ENV`,
+/// sourced by non-interactive bash before the pinned script body runs —
+/// the same mechanism PR #671 review round 12 CRITICAL 2 demonstrated
+/// against `ci-gate`) changes this set and fails the same test.
+const PINNED_TEST_GUARD_ENV_KEYS: &[&str] = &["CARGO_TERM_COLOR"];
+
+/// Locate the `test` job's POL-11 guard step (`name: Run tests (zero-test
+/// floor, POL-11)`, 6-space `- ` marker) within `job_block` and return
+/// `(all lines, start index, end index)` bounding just that step — from
+/// its own `- ` marker up to (but not including) the next 6-space `- `
+/// step marker, or the end of the job block if it is the last step.
+///
+/// Scoped narrowly (unlike `extract_gate_step_key_sets`, which collects
+/// EVERY step in `ci-gate`) because the `test` job's other three steps
+/// (harden-runner, checkout, rust-cache) are not part of ADV-P51's
+/// reported attack surface and are deliberately out of scope for this pin
+/// — see the module-level ADV-P51 scope note above.
+fn extract_test_guard_step_lines(job_block: &str) -> Option<(Vec<&str>, usize, usize)> {
+    let lines: Vec<&str> = job_block.lines().collect();
+    let start = lines
+        .iter()
+        .position(|l| *l == "      - name: Run tests (zero-test floor, POL-11)")?;
+    let end = lines[start + 1..]
+        .iter()
+        .position(|l| l.starts_with("      -"))
+        .map(|i| i + start + 1)
+        .unwrap_or(lines.len());
+    Some((lines, start, end))
+}
+
+/// Extract the sorted, complete key set of the `test` job's POL-11 guard
+/// step (see `extract_test_guard_step_lines`), for comparison against
+/// `PINNED_TEST_GUARD_STEP_KEYS`.
+fn extract_test_guard_step_keys(job_block: &str) -> Vec<String> {
+    let Some((lines, start, end)) = extract_test_guard_step_lines(job_block) else {
+        return Vec::new();
+    };
+    let mut keys: Vec<String> = lines[start..end]
+        .iter()
+        .filter_map(|l| {
+            extract_key_name_at_indent(l, 6).or_else(|| extract_key_name_at_indent(l, 8))
+        })
+        .collect();
+    keys.sort();
+    keys
+}
+
+/// Extract the sorted, complete key set of the `env:` block belonging to
+/// the `test` job's POL-11 guard step (10-space indent — one level deeper
+/// than the step's own 8-space keys), for comparison against
+/// `PINNED_TEST_GUARD_ENV_KEYS`.
+///
+/// Anchored to the `env:` line found WITHIN this one step's own line
+/// range (`start..run_idx`, not the whole job block) — narrower, and
+/// therefore safer against the round-13 IMPORTANT-2 mis-anchoring class,
+/// than `extract_gate_env_key_set`'s whole-job-block backward scan, since
+/// this function cannot see any OTHER step's `env:` block even
+/// transiently.
+fn extract_test_guard_env_key_set(job_block: &str) -> Vec<String> {
+    let Some((lines, start, end)) = extract_test_guard_step_lines(job_block) else {
+        return Vec::new();
+    };
+    let Some(run_rel_idx) = lines[start..end]
+        .iter()
+        .position(|l| extract_key_name_at_indent(l, 8).as_deref() == Some("run"))
+    else {
+        return Vec::new();
+    };
+    let run_idx = start + run_rel_idx;
+    let Some(env_rel_idx) = lines[start..run_idx]
+        .iter()
+        .position(|l| extract_key_name_at_indent(l, 8).as_deref() == Some("env"))
+    else {
+        return Vec::new();
+    };
+    let env_idx = start + env_rel_idx;
+    collect_mapping_key_set(&lines, env_idx + 1, 10)
+}
+
+/// ADV-P51-HIGH-001/HIGH-002/MED-002. RED proof (S-626-1 ADV-P51 fix
+/// commit): adding `if: false` to the guard step, separately adding
+/// `continue-on-error: true` to the guard step, and separately adding a
+/// `BASH_ENV: /tmp/shim.sh` sibling under the guard step's `env:`, were
+/// each verified to fail this test before the pin existed to catch them —
+/// then verified to pass again once `git checkout HEAD --
+/// .github/workflows/ci.yml` restored the unmodified file.
+#[test]
+fn test_test_job_guard_step_key_set_and_env_are_pinned() {
+    let ci = read_ci_yml();
+    let test_block = extract_job_block(&ci, "test").unwrap_or_else(|| {
+        panic!("FAIL: `.github/workflows/ci.yml` does not contain a `test:` job.")
+    });
+
+    let mut expected_step_keys: Vec<String> = PINNED_TEST_GUARD_STEP_KEYS
+        .iter()
+        .map(|s| s.to_string())
+        .collect();
+    expected_step_keys.sort();
+    let actual_step_keys = extract_test_guard_step_keys(test_block);
+    assert!(
+        !actual_step_keys.is_empty(),
+        "FAIL (ADV-P51-HIGH-001/HIGH-002): could not locate the `test` \
+         job's POL-11 guard step at all (expected to find its `- name: \
+         Run tests (zero-test floor, POL-11)` marker at 6-space indent). \
+         Either the step's `name:` value changed, or its structure was \
+         otherwise rewritten — update `extract_test_guard_step_lines` if \
+         this is a deliberate rename.\n\
+         Current test job block:\n{test_block}"
+    );
+    assert_eq!(
+        actual_step_keys, expected_step_keys,
+        "FAIL (ADV-P51-HIGH-001/HIGH-002): the `test` job's POL-11 guard \
+         step's key set does not match the pinned, human-reviewed set \
+         ({PINNED_TEST_GUARD_STEP_KEYS:?}).\n\
+         Any added key (`if:`, `continue-on-error:`, `working-directory:`, \
+         anything not yet imagined) — or a removed one — changes this \
+         set. `if: false` makes the step SKIP silently (job concludes \
+         `success`, `ci-gate` goes green with zero tests run — HIGH-1); \
+         `continue-on-error: true` neutralizes all four `exit 1` gates AND \
+         a genuine `cargo test` failure (HIGH-2). If this is a \
+         deliberate, reviewed change, update `PINNED_TEST_GUARD_STEP_KEYS` \
+         in the same commit.\n\
+         Actual: {actual_step_keys:?}\n\
+         Current test job block:\n{test_block}"
+    );
+
+    let mut expected_env_keys: Vec<String> = PINNED_TEST_GUARD_ENV_KEYS
+        .iter()
+        .map(|s| s.to_string())
+        .collect();
+    expected_env_keys.sort();
+    let actual_env_keys = extract_test_guard_env_key_set(test_block);
+    assert!(
+        !actual_env_keys.is_empty(),
+        "FAIL (ADV-P51-MED-002): could not locate the `env:` block on the \
+         `test` job's POL-11 guard step at all (expected at least \
+         `CARGO_TERM_COLOR`). Either the step was renamed/restructured, or \
+         `env:` was reordered to after `run:` (legal YAML, but this \
+         extractor scans only `env:` lines preceding `run:` within this \
+         step) — update `extract_test_guard_env_key_set` if so.\n\
+         Current test job block:\n{test_block}"
+    );
+    assert_eq!(
+        actual_env_keys, expected_env_keys,
+        "FAIL (ADV-P51-MED-002): the `test` job's POL-11 guard step's \
+         `env:` key set does not match the pinned set \
+         ({PINNED_TEST_GUARD_ENV_KEYS:?}).\n\
+         A sibling key alongside `CARGO_TERM_COLOR` (e.g. `BASH_ENV`, \
+         sourced by non-interactive bash before the pinned script body \
+         runs) is independently exploitable even though the step's own \
+         key set (`env`/`name`/`run`/`shell`) stays unchanged. If this is \
+         a deliberate, reviewed change, update `PINNED_TEST_GUARD_ENV_KEYS` \
+         in the same commit.\n\
+         Actual: {actual_env_keys:?}\n\
+         Current test job block:\n{test_block}"
+    );
+}
+
+/// ADV-P51-HIGH-003 — the highest-impact finding in this pass (fires on
+/// ORDINARY test breakage, not a deliberate bypass). The three `set
+/// [-+]o pipefail` lines pinned by `test_verify_test_job_has_zero_test_floor`
+/// are presence checks only — none of them constrain RELATIVE POSITION.
+/// Moving the existing `set +o pipefail` line up ~13 lines, so it
+/// precedes `cargo test --all-features 2>&1 | tee ...`, makes the `tee`
+/// pipeline's exit status always 0 (`tee`'s own exit code, since pipefail
+/// is already disabled by the time the pipe runs) — `set -e` therefore
+/// never fires on a genuinely failing `cargo test`, and the step falls
+/// through to the count computations, satisfies every floor/canary gate
+/// on whatever partial output cargo printed before failing, and prints
+/// `Check passed:` even though tests failed. Net line count is unchanged
+/// (reads as "consolidated the pipefail bracket" in a diff) and all three
+/// presence checks (`set -euo pipefail\n`, `set +o pipefail\n`, `set -o
+/// pipefail\n`) stay satisfied regardless of WHERE each line sits.
+///
+/// This test closes that gap with a POSITION constraint: the byte offset
+/// of each marker (within the `test` job block) must be strictly
+/// increasing in the required order — `set -euo pipefail` (open) → the
+/// `cargo test` capture line → `set +o pipefail` (disable) → `set -o
+/// pipefail` (restore). `.find()` locates the FIRST occurrence of each
+/// marker, so inserting an EARLIER duplicate of `set +o pipefail` (rather
+/// than moving the original) is caught identically — the earliest
+/// occurrence is what gets compared against the capture line's position.
+///
+/// RED proof (S-626-1 ADV-P51 fix commit): moving `set +o pipefail\n` to
+/// immediately after `set -euo pipefail\n` (before the `cargo test`
+/// capture line) was verified to fail this test before the pin existed,
+/// then verified to pass again once `git checkout HEAD --
+/// .github/workflows/ci.yml` restored the unmodified file.
+#[test]
+fn test_test_job_pipefail_bracket_ordering_is_position_constrained() {
+    let ci = read_ci_yml();
+    let test_block = extract_job_block(&ci, "test").unwrap_or_else(|| {
+        panic!("FAIL: `.github/workflows/ci.yml` does not contain a `test:` job.")
+    });
+
+    let markers: &[(&str, &str)] = &[
+        ("set -euo pipefail (open)", "set -euo pipefail\n"),
+        (
+            "cargo test capture line",
+            "cargo test --all-features 2>&1 | tee \"$RUNNER_TEMP/cargo_test_out.txt\"\n",
+        ),
+        (
+            "set +o pipefail (disable, before count computations)",
+            "set +o pipefail\n",
+        ),
+        ("set -o pipefail (restore)", "set -o pipefail\n"),
+    ];
+
+    let mut offsets: Vec<(&str, usize)> = Vec::with_capacity(markers.len());
+    for (label, marker) in markers {
+        let idx = test_block.find(marker).unwrap_or_else(|| {
+            panic!(
+                "FAIL (ADV-P51-HIGH-003): required marker for '{label}' \
+                 ({marker:?}) was not found in the `test` job's guard \
+                 step.\n\
+                 Current test job block:\n{test_block}"
+            )
+        });
+        offsets.push((label, idx));
+    }
+
+    for pair in offsets.windows(2) {
+        let (prev_label, prev_idx) = pair[0];
+        let (label, idx) = pair[1];
+        assert!(
+            prev_idx < idx,
+            "FAIL (ADV-P51-HIGH-003): pipefail bracket ordering violated \
+             — '{prev_label}' (byte offset {prev_idx}) must appear BEFORE \
+             '{label}' (byte offset {idx}) in the `test` job's guard step, \
+             but it does not.\n\
+             Required order: `set -euo pipefail` → the `cargo test` \
+             capture line → `set +o pipefail` → `set -o pipefail` (the \
+             restore). Moving `set +o pipefail` to precede the `cargo \
+             test` capture line makes the `tee` pipeline's exit status \
+             always 0 (`tee`'s own exit code), so `set -e` never fires on \
+             a genuinely failing test suite — the step falls through to \
+             the count computations, satisfies every floor/canary gate on \
+             whatever partial output cargo printed, and prints `Check \
+             passed:` even though tests failed. This is ADV-P51's \
+             highest-impact finding: it fires on ORDINARY test breakage, \
+             not a deliberate bypass.\n\
+             Current test job block:\n{test_block}"
+        );
+    }
+}
+
+/// ADV-P51-HIGH-002 (class sweep, per the governing mandate — "sweep to
+/// class, do not fix only the reported instances"): `continue-on-error`
+/// has no legitimate use on any of the seven always-run jobs required to
+/// pass unconditionally on every push and PR (the same list
+/// `test_ci_gate_needs_jobs_have_no_job_level_if` uses) — unlike
+/// `mutants`, which legitimately relies on it, and unlike `ci-gate`,
+/// which already has its own dedicated presence-ban
+/// (`test_ci_gate_pass_fail_semantics_are_structurally_placed`'s M2-j).
+/// See the module-level ADV-P51 scope note above for why `mutants` and
+/// `ci-gate` are excluded from this loop.
+///
+/// `continue-on-error: true` on any step in these seven jobs would make a
+/// genuinely failing step (step outcome `failure`) report job conclusion
+/// `success` — silently satisfying `ci-gate.needs` for that job while the
+/// underlying check (format, lint, test, MSRV compile, spec-guard, or the
+/// signing-injection guard) never actually gated anything.
+///
+/// RED proof (S-626-1 ADV-P51 fix commit): adding `continue-on-error:
+/// true` to the `fmt` job's sole step was verified to fail this test
+/// before it existed, then verified to pass again once `git checkout
+/// HEAD -- .github/workflows/ci.yml` restored the unmodified file.
+#[test]
+fn test_always_run_jobs_have_no_continue_on_error() {
+    let ci = read_ci_yml();
+
+    // Derived from the live `needs:` set (S-626-1 sweep-to-class fix; see
+    // `always_run_needs_members`'s doc comment) rather than a hand-
+    // maintained literal — see the module-level ADV-P51 scope note above
+    // for why `mutants` and `ci-gate` are excluded from this loop.
+    let required_jobs = always_run_needs_members(&ci);
+
+    for job_name in &required_jobs {
+        let job_block = extract_job_block(&ci, job_name).unwrap_or_else(|| {
+            panic!(
+                "FAIL: job `{job_name}` (listed in ci-gate.needs) was not \
+                 found in ci.yml. Either the job was renamed or removed — \
+                 update ci-gate.needs and this test together."
+            )
+        });
+        assert!(
+            !job_block.contains("continue-on-error"),
+            "FAIL (ADV-P51-HIGH-002): job `{job_name}` contains \
+             `continue-on-error`, which has no legitimate use on any of \
+             the seven always-run jobs required to pass unconditionally \
+             on every push and PR. `continue-on-error: true` on a failing \
+             step reports job conclusion `success` regardless of that \
+             step's own outcome, silently satisfying `ci-gate.needs` for \
+             this job while the underlying check never actually gated \
+             anything.\n\
+             Current `{job_name}` block:\n{job_block}"
+        );
+    }
+}
+
+/// ADV-P51-MED-001: extract the `if ... then ... fi` block belonging to
+/// `condition_line` (searched as an exact substring, expected to include
+/// its own trailing `\n`) within `job_block`, up to and including its
+/// closing `fi` (10-space indent, matching this guard step's
+/// convention). Panics loudly (not a silent empty return) if either the
+/// condition line or its closing `fi` cannot be found — an extractor
+/// that can silently under-report here would reproduce the exact class
+/// of bug PR #671 review round 13 fixed in `collect_mapping_key_set`
+/// (see that function's doc comment).
+fn extract_if_block<'a>(job_block: &'a str, condition_line: &str) -> &'a str {
+    let start = job_block.find(condition_line).unwrap_or_else(|| {
+        panic!(
+            "FAIL (POL-11 / ADV-P51-MED-001): required condition line \
+             {condition_line:?} was not found in the `test` job's guard \
+             step.\n\
+             Current test job block:\n{job_block}"
+        )
+    });
+    let after = &job_block[start..];
+    let fi_marker = "\n          fi\n";
+    let end = after.find(fi_marker).unwrap_or_else(|| {
+        panic!(
+            "FAIL (POL-11 / ADV-P51-MED-001): no closing `fi` (10-space \
+             indent) found for condition line {condition_line:?} in the \
+             `test` job's guard step.\n\
+             Current test job block:\n{job_block}"
+        )
+    });
+    &after[..end + fi_marker.len()]
+}
+
+// ---------------------------------------------------------------------------
+// S-626-1 AC-3 — `msrv` job genuinely validates 1.85.0
+// ---------------------------------------------------------------------------
+
+/// S-626-1 AC-3: the `msrv` job must genuinely compile at Rust 1.85.0,
+/// not silently fall through to
+/// `rust-toolchain.toml`'s `channel = "stable"`.
+///
+/// `rust-toolchain.toml` outranks `rustup default` in rustup's precedence
+/// chain. The pre-fix `msrv` job pointed at the tip of dtolnay's `1.85.0`
+/// version-branch action, which has no `toolchain` input and only sets
+/// `rustup default` — so `cargo check` silently ran under `stable` in the
+/// repo root, a false-green (documented in this project's CLAUDE.md under
+/// "`rust-toolchain.toml` outranks `rustup default`"). The fix requires
+/// TWO cooperating pieces: (1) `with: {toolchain: "1.85.0"}` on the
+/// `dtolnay/rust-toolchain` step, to install the correct toolchain, and
+/// (2) `env: {RUSTUP_TOOLCHAIN: "1.85.0"}` on the `cargo check` step,
+/// which outranks `rust-toolchain.toml` at process level and is the part
+/// that actually forces the check to run at 1.85.0. Deleting only the
+/// `env:` block is a two-line, silent regression: before this test
+/// existed, nothing else in CI or the test suite *asserted* on
+/// `RUSTUP_TOOLCHAIN` — CLAUDE.md and CHANGELOG.md both mention it in
+/// prose, but documentation references are not guards — so `msrv` would
+/// have kept passing while validating `stable` again.
+///
+/// This test makes THREE assertions, not two. The first two asserted
+/// strings are exact, quote-included forms (`toolchain: "1.85.0"` and
+/// `RUSTUP_TOOLCHAIN: "1.85.0"`) that appear exactly once each in the whole
+/// of `ci.yml`, both in operative `with:`/`env:` key-value position — never
+/// inside a comment. (The bare substring `1.85.0` also appears in the job's
+/// `name:` line, the `dtolnay/rust-toolchain` version-pin comment, and two
+/// scope-rationale comments — which is why the assertions below match the
+/// longer, key-qualified forms rather than the bare version string.)
+///
+/// The third assertion, `cargo check --all-features --locked` (added when
+/// `d848d9a5` pinned `--locked` to close a dependency-drift gap — see the
+/// AC-3 rationale above), is a different shape: it is the literal `run:`
+/// step command itself, not a `with:`/`env:` key-value pair. It also
+/// appears exactly once in the whole of `ci.yml`, in operative position.
+/// The `msrv` job carries a 10-line scope-rationale comment discussing
+/// `--all-targets` and `--all-features` (why the job omits the former and
+/// why the latter is a no-op for this crate) — that comment does NOT
+/// currently reproduce the full concatenated substring
+/// `cargo check --all-features --locked`, so today this assertion is not
+/// comment-satisfiable. That is, as with the `toolchain`/`RUSTUP_TOOLCHAIN`
+/// pair above, an incidental property of the current comment wording, not a
+/// structural guarantee: a future edit to that scope comment that happened
+/// to quote the full command verbatim would satisfy this assertion without
+/// the operative `run:` line needing to match it — this is a live,
+/// unresolved question this docstring does not close, not a claim that it
+/// cannot happen.
+///
+/// Anchoring: assertion is made only within the `msrv` job block, so a
+/// matching substring in an unrelated job (e.g. `coverage`, which pins a
+/// different dtolnay toolchain) cannot produce a false positive.
+#[test]
+fn test_verify_msrv_job_pins_toolchain_and_rustup_toolchain_env() {
+    let ci = read_ci_yml();
+    let msrv_block = extract_job_block(&ci, "msrv").unwrap_or_else(|| {
+        panic!(
+            "FAIL: `.github/workflows/ci.yml` does not contain an `msrv:` job.\n\
+             Required: the `msrv` job must exist and genuinely validate Rust \
+             1.85.0 (S-626-1 AC-3)."
+        )
+    });
+
+    assert!(
+        msrv_block.contains("toolchain: \"1.85.0\""),
+        "FAIL (S-626-1): The `msrv` job does not pin `toolchain: \"1.85.0\"` \
+         on its `dtolnay/rust-toolchain` step.\n\
+         Required: at the pinned SHA (`fa04a1451ff1842e2626ccb99004d0195b455a88`), \
+         `toolchain` is a required input with no default — omitting the `with:` \
+         block does not fall back to `rust-toolchain.toml` or a default; the \
+         action exits 1 with `'toolchain' is a required input`, failing the job \
+         loudly. The genuinely silent revert vector is removal of the \
+         `RUSTUP_TOOLCHAIN` env override on the `cargo check` step (see the next \
+         assertion) — that's what this input's presence guards against staying \
+         meaningful.\n\
+         Current msrv job block:\n{msrv_block}"
+    );
+
+    assert!(
+        msrv_block.contains("RUSTUP_TOOLCHAIN: \"1.85.0\""),
+        "FAIL (S-626-1): The `msrv` job does not set \
+         `RUSTUP_TOOLCHAIN: \"1.85.0\"` as an env override on its \
+         `cargo check` step.\n\
+         Required: `RUSTUP_TOOLCHAIN` outranks `rust-toolchain.toml` \
+         (`channel = \"stable\"`) in rustup's precedence chain. Without this \
+         override, `cargo check` silently validates `stable` instead of \
+         1.85.0 — the exact false-green this job exists to close.\n\
+         Current msrv job block:\n{msrv_block}"
+    );
+
+    assert!(
+        msrv_block.contains("cargo check --all-features --locked"),
+        "FAIL (S-626-1 AC-3): The `msrv` job's `cargo check` step is not \
+         invoked with `--locked`.\n\
+         Required: without `--locked`, `cargo check` is free to re-resolve \
+         other and transitive dependencies against `Cargo.toml` at check \
+         time, decoupling the MSRV check from the exact dependency graph \
+         the rest of CI (and users) actually build against — a silent \
+         drift vector with no other test or CI signal to catch it.\n\
+         Current msrv job block:\n{msrv_block}"
+    );
+
+    // -----------------------------------------------------------------------
+    // F-02 (round 19): pin PLACEMENT, not just whole-block presence.
+    //
+    // The `RUSTUP_TOOLCHAIN: "1.85.0"` assertion above is a whole-block
+    // substring check — it passes as long as that string appears ANYWHERE
+    // in the `msrv` job, including on the WRONG step. Moving the `env:`
+    // block from the `cargo check --all-features --locked` step onto the
+    // `dtolnay/rust-toolchain` step (or any other step) keeps that
+    // assertion green while `cargo check` runs with no `RUSTUP_TOOLCHAIN`
+    // override; `rust-toolchain.toml` (`channel = "stable"`) then wins at
+    // process level, and the job silently validates stable — exactly the
+    // false-green AC-3 exists to close (see this test's own docstring and
+    // CLAUDE.md § "rust-toolchain.toml outranks rustup default").
+    //
+    // Technique: isolate the step slice that starts at the `cargo check
+    // --all-features --locked` anchor and runs to the next step boundary
+    // (a line at the same `      - ` list-item indent used throughout
+    // `steps:` in this file) or end of block — the same indent-based
+    // level-distinction technique `test_ci_gate_pass_fail_semantics_are_structurally_placed`
+    // uses to separate job-level from step-level `if:` keys. Then assert
+    // the env override lives INSIDE that slice, not merely inside the
+    // whole `msrv` block.
+    //
+    // ADV-P48-MED-001 (round 20): the anchor previously used here was the
+    // BARE command substring `cargo check --all-features --locked`, found
+    // via `str::find` (first occurrence in file order). The `msrv` job
+    // carries a ~10-line scope-rationale comment ABOVE the real `run:`
+    // step discussing `--all-targets`/`--all-features` (see this
+    // function's docstring); that comment does not currently reproduce
+    // the full concatenated command string, but nothing structurally
+    // prevents a future edit from quoting it verbatim there for
+    // explanatory purposes. If it did, `find` would anchor on the
+    // COMMENT occurrence (earlier in the file than the real step) instead
+    // of the real `run:` line, and the step-slice sliced from that wrong
+    // anchor would not contain the real step's `env:` block — this test
+    // would then fail RED on a genuinely correct config. That is a
+    // robustness bug, not a false-green: the failure mode is fail-loud on
+    // a false-positive substring match, never fail-silent.
+    //
+    // Fixed by anchoring on the actual YAML STEP SYNTAX rather than just
+    // the command text: `\n      - run: <cmd>` — the exact newline +
+    // 6-space list-item indent + `- run: ` prefix that appears only once
+    // in this file, on the real step line. Every scope comment in this
+    // job is `      #`-prefixed prose (see the comment immediately above
+    // the real step); defeating this anchor would require reproducing the
+    // literal step-declaration syntax `- run: ` character for character —
+    // no longer an accidental substring collision but hand-authored YAML
+    // forgery, the same "code review is the control for hand-crafted
+    // YAML" boundary already documented for the node-property residual in
+    // CLAUDE.md's CI Gate history (round 16). `rfind` (last occurrence)
+    // was considered and rejected: it is still a bare substring match
+    // with no syntactic anchoring, so a comment added AFTER the real step
+    // (nothing prevents that ordering) would defeat it identically —
+    // `rfind` narrows the reachable window without closing the
+    // underlying gap the way anchoring on real step syntax does.
+    // -----------------------------------------------------------------------
+    let cargo_check_anchor = "\n      - run: cargo check --all-features --locked";
+    let anchor_pos = msrv_block.find(cargo_check_anchor).unwrap_or_else(|| {
+        panic!(
+            "FAIL (S-626-1 AC-3 / F-02): could not re-locate the step-line \
+             anchor `{cargo_check_anchor:?}` in the `msrv` job block to \
+             check `RUSTUP_TOOLCHAIN` placement — the assertion immediately \
+             above this one should already have failed.\n\
+             Current msrv job block:\n{msrv_block}"
+        )
+    });
+    // Skip the leading `\n` captured by the anchor so the slice starts on
+    // the `      - run: …` step line itself.
+    let after_anchor = &msrv_block[anchor_pos + 1..];
+    // The next step begins at a line with the `      - ` (6-space + dash)
+    // list-item indent used for every step in this file. Skip past the
+    // anchor's own leading byte before searching so the anchor line itself
+    // is never mistaken for the boundary.
+    let step_end = after_anchor[1..]
+        .find("\n      - ")
+        .map(|p| p + 1)
+        .unwrap_or(after_anchor.len());
+    let cargo_check_step = &after_anchor[..step_end];
+
+    assert!(
+        cargo_check_step.contains("RUSTUP_TOOLCHAIN: \"1.85.0\""),
+        "FAIL (S-626-1 AC-3 / F-02): `RUSTUP_TOOLCHAIN: \"1.85.0\"` is not \
+         on the SAME step as `cargo check --all-features --locked`.\n\
+         `RUSTUP_TOOLCHAIN` outranks `rust-toolchain.toml` at PROCESS level \
+         — it must be an `env:` override on the `cargo check` step itself. \
+         Setting it on any other step (e.g. the `dtolnay/rust-toolchain` \
+         step) only affects that step's own process; `cargo check` would \
+         then run with no override, `rust-toolchain.toml`'s \
+         `channel = \"stable\"` would win, and the job would silently \
+         validate stable again.\n\
+         Step slice inspected (from the `cargo check` anchor to the next \
+         step boundary):\n{cargo_check_step}\n\
+         Full msrv job block:\n{msrv_block}"
+    );
 }
 
 /// PR #671 review round 11, CRITICAL 3 (workflow-level half):
@@ -1364,12 +3164,23 @@ fn test_ci_yml_workflow_level_env_key_set_is_pinned() {
 /// narrower slice" (what this file actually does). That rewrite is out
 /// of scope for this round and is tracked as a follow-up story in that
 /// specific direction — it is not implied closed by this test.
+/// S-626-1 pass-55 (ADV-P55-LOW-002): originally scoped to `ci.yml` alone.
+/// Guard A (`test_no_sibling_workflow_declares_a_job_named_ci_gate`) and
+/// its helpers (`list_job_ids_in_workflow`, `extract_job_display_name`)
+/// now also line-scan every sibling `.github/workflows/*.yml`/`*.yaml`
+/// file — each of those extractors shares the exact same `str::lines()`-
+/// only line-splitting this test exists to guard, but until this fix, no
+/// byte-level scan covered them: a lone CR (or NEL / LINE SEPARATOR /
+/// PARAGRAPH SEPARATOR) smuggled into a sibling workflow file could hide a
+/// `name: CI Gate` job-key from `extract_job_display_name`'s line-based
+/// scan the same way round 14 showed it could hide a key from `ci.yml`'s
+/// own extractors — with no test anywhere in this file able to catch it.
+/// Extended (cheaper than a second, separate test, and `list_workflow_
+/// files` is already a directory walk this file performs elsewhere) to
+/// scan every file `list_workflow_files` enumerates, `ci.yml` included,
+/// rather than leave sibling files as a documented-but-unguarded gap.
 #[test]
 fn test_ci_yml_contains_no_non_lf_yaml_line_breaks() {
-    let path = Path::new(env!("CARGO_MANIFEST_DIR")).join(".github/workflows/ci.yml");
-    let raw = fs::read_to_string(&path)
-        .unwrap_or_else(|e| panic!("Could not read {}: {e}", path.display()));
-
     const FORBIDDEN: &[(char, &str)] = &[
         ('\r', "CR (U+000D)"),
         ('\u{0085}', "NEL (U+0085)"),
@@ -1377,29 +3188,38 @@ fn test_ci_yml_contains_no_non_lf_yaml_line_breaks() {
         ('\u{2029}', "PARAGRAPH SEPARATOR (U+2029)"),
     ];
 
-    for (byte_offset, ch) in raw.char_indices() {
-        if let Some((_, label)) = FORBIDDEN.iter().find(|(forbidden, _)| *forbidden == ch) {
-            panic!(
-                "FAIL (PR #671 review round 14, CRITICAL): \
-                 `.github/workflows/ci.yml` contains a {label} character \
-                 at byte offset {byte_offset}. Every extractor in this \
-                 suite splits on `str::lines()`, which recognizes ONLY \
-                 `\\n` as a line break — but this character is a valid \
-                 YAML line break in its own right (YAML 1.1 `b-char`; \
-                 PyYAML and Ruby Psych/libyaml both honor it) that a real \
-                 YAML parser treats as ending the logical line. A key \
-                 placed after this character, on the same physical text \
-                 line as a preceding key, is INVISIBLE to every line- \
-                 based check in this file simultaneously while a real \
-                 parser sees a normal, separate key — see this test's \
-                 doc comment for three reproduced one-line exploits \
-                 (workflow-env, workflow `defaults:`, and gate-step \
-                 `shell:` smuggling). This is a byte-level tripwire, not \
-                 a general fix for line-based extraction — see the doc \
-                 comment for why a real YAML-parse rewrite is the \
-                 durable fix, tracked as a follow-up story, not this \
-                 test."
-            );
+    for path in list_workflow_files() {
+        let raw = fs::read_to_string(&path)
+            .unwrap_or_else(|e| panic!("Could not read {}: {e}", path.display()));
+
+        for (byte_offset, ch) in raw.char_indices() {
+            if let Some((_, label)) = FORBIDDEN.iter().find(|(forbidden, _)| *forbidden == ch) {
+                panic!(
+                    "FAIL (PR #671 review round 14, CRITICAL; extended to \
+                     sibling workflows S-626-1 pass-55, ADV-P55-LOW-002): \
+                     {} contains a {label} character at byte offset \
+                     {byte_offset}. Every line-based extractor in this \
+                     suite splits on `str::lines()`, which recognizes ONLY \
+                     `\\n` as a line break — but this character is a valid \
+                     YAML line break in its own right (YAML 1.1 `b-char`; \
+                     PyYAML and Ruby Psych/libyaml both honor it) that a \
+                     real YAML parser treats as ending the logical line. A \
+                     key placed after this character, on the same \
+                     physical text line as a preceding key, is INVISIBLE \
+                     to every line-based check in this file simultaneously \
+                     while a real parser sees a normal, separate key — see \
+                     this test's doc comment for three reproduced \
+                     one-line exploits against `ci.yml` (workflow-env, \
+                     workflow `defaults:`, and gate-step `shell:` \
+                     smuggling); the same mechanism applies to Guard A's \
+                     sibling-workflow scan. This is a byte-level tripwire, \
+                     not a general fix for line-based extraction — see the \
+                     doc comment for why a real YAML-parse rewrite is the \
+                     durable fix, tracked as a follow-up story, not this \
+                     test.",
+                    path.display()
+                );
+            }
         }
     }
 }
@@ -1424,13 +3244,15 @@ fn test_ci_yml_contains_no_non_lf_yaml_line_breaks() {
 /// fails closed by default and tolerates `skipped` only for jobs named in
 /// its restrictive `ALLOWED_SKIPS` allowlist.
 ///
-/// RED GATE (S-CIGATE-2, 2026-08-06): as of this commit, `ci-gate`'s step
-/// still uses the retired inline `contains(needs.*.result, ...)` condition
-/// and does not invoke `check-ci-gate.sh` anywhere — this test FAILS until
-/// the Green phase implements AC-001. Proven RED locally: `cargo test
-/// --test ci_gate_completeness
-/// test_ci_gate_step_invokes_check_ci_gate_script_with_needs_json` fails
-/// with the diagnostic below, naming exactly what's missing.
+/// HISTORICAL RED GATE NOTE (S-CIGATE-2, 2026-08-06): at the commit that
+/// introduced this test, `ci-gate`'s step still used the retired inline
+/// `contains(needs.*.result, ...)` condition and did not invoke
+/// `check-ci-gate.sh` anywhere, so this test FAILED until the Green phase
+/// implemented AC-001 in the same story. As of head, the Green phase has
+/// long since landed: `ci-gate`'s step invokes `scripts/check-ci-gate.sh`
+/// fed `toJSON(needs)`, and this test is expected to PASS on every run —
+/// the RED description above documents the TDD history of this test, not
+/// its current expected result.
 ///
 /// Anchoring: assertion is made only within the `ci-gate` job block.
 #[test]
@@ -1515,6 +3337,82 @@ fn test_spec_guard_contains_check_ci_gate_self_test_step() {
          pattern already used in this job for \
          `check-cargo-mutants-policy-citations.sh --self-test` and \
          `check-bc-citation-symbols.sh --self-test`.\n\
+         Current spec-guard block:\n{spec_guard_block}"
+    );
+
+    // S-626-1 pass-54/56 (ADV-P54-MED-001 / ADV-P56-MED-001, dedupe): the
+    // two substring checks above are satisfied by EITHER substring
+    // appearing anywhere in `spec-guard` — including inside one of the
+    // job's TWO OTHER `--self-test` steps, unrelated to `check-ci-gate.sh`
+    // — so they can never independently confirm the check-ci-gate.sh
+    // self-test step specifically executes anything. Byte-pin that step's
+    // OWN `run:` line, anchored to the step named "check-ci-gate self-test
+    // (fixture suite, S-CIGATE-2)".
+    let actual_self_test_run_line = extract_and_normalize_step_run_line_by_name(
+        spec_guard_block,
+        "check-ci-gate self-test (fixture suite, S-CIGATE-2)",
+    )
+    .unwrap_or_else(|reason| {
+        panic!(
+            "FAIL (S-626-1 pass-54, ADV-P54-MED-001): `spec-guard` {reason}\n\
+             Current spec-guard block:\n{spec_guard_block}"
+        )
+    });
+    assert_eq!(
+        actual_self_test_run_line, PINNED_CI_GATE_SELF_TEST_RUN_LINE,
+        "FAIL (S-626-1 pass-54, ADV-P54-MED-001): `spec-guard`'s \
+         check-ci-gate self-test step's `run:` line \
+         (\"{actual_self_test_run_line}\") does not byte-match the pinned, \
+         human-reviewed literal (\"{PINNED_CI_GATE_SELF_TEST_RUN_LINE}\"). \
+         A suffix like `|| true` would silently disable the entire \
+         13-fixture suite's pass/fail signal while leaving both substring \
+         checks above (and `test_always_run_jobs_have_no_continue_on_error`, \
+         which only bans the `continue-on-error` KEY, not a shell-level \
+         suffix) fully satisfied. If this is a deliberate, reviewed \
+         change, update PINNED_CI_GATE_SELF_TEST_RUN_LINE in the SAME \
+         change.\n\
+         Current spec-guard block:\n{spec_guard_block}"
+    );
+
+    // S-626-1 pass-59 (ADV-P58-MED-001): the run-line pin above covers the
+    // step's `run:` VALUE, but nothing previously asserted the step's
+    // KEYS were exactly `{name, run}` — the same "value pinned, keys left
+    // an open enumeration" gap round 11 closed for `ci-gate` itself via
+    // `PINNED_GATE_STEP_KEY_SETS`. Reproduced: `if: false` on this step
+    // (the step silently never runs; job concludes `success`) and `shell:
+    // cat {0}` (the runner `cat`s the run line's script body instead of
+    // executing it) each leave the byte-pinned run-line assertion above,
+    // both substring checks, and `test_always_run_jobs_have_no_continue_
+    // on_error` all satisfied.
+    let actual_self_test_step_keys = extract_step_key_set_by_name(
+        spec_guard_block,
+        "check-ci-gate self-test (fixture suite, S-CIGATE-2)",
+    )
+    .unwrap_or_else(|reason| {
+        panic!(
+            "FAIL (S-626-1 pass-59, ADV-P58-MED-001): `spec-guard` {reason}\n\
+             Current spec-guard block:\n{spec_guard_block}"
+        )
+    });
+    let mut expected_self_test_step_keys: Vec<String> = PINNED_CI_GATE_SELF_TEST_STEP_KEYS
+        .iter()
+        .map(|s| s.to_string())
+        .collect();
+    expected_self_test_step_keys.sort();
+    assert_eq!(
+        actual_self_test_step_keys, expected_self_test_step_keys,
+        "FAIL (S-626-1 pass-59, ADV-P58-MED-001): `spec-guard`'s \
+         check-ci-gate self-test step's key set \
+         ({actual_self_test_step_keys:?}) does not match the pinned set \
+         ({PINNED_CI_GATE_SELF_TEST_STEP_KEYS:?}). An added `if:` \
+         (silently skips the step; job still concludes `success`) or \
+         `shell:` (replaces the run line's interpreter — the same \
+         `shell: cat {{0}}` vector rounds 11/14 already showed defeats a \
+         pinned `run:` line elsewhere in this file) would leave the \
+         byte-pinned run-line value above untouched while neutralizing \
+         the entire 13-fixture self-test suite. If this is a deliberate, \
+         reviewed change, update PINNED_CI_GATE_SELF_TEST_STEP_KEYS in \
+         the SAME change.\n\
          Current spec-guard block:\n{spec_guard_block}"
     );
 
@@ -1761,6 +3659,44 @@ fn test_mutants_job_structure_unchanged_by_cigate2_option_c() {
 const PINNED_ALLOWED_SKIP_IF_EXPRESSIONS: &[(&str, &str)] =
     &[("mutants", "github.event_name == 'pull_request'")];
 
+/// S-626-1 sweep-to-class fix: `SKIP_TOLERANT_NEEDS_MEMBERS` (portable) is a
+/// hand-maintained duplicate of `PINNED_ALLOWED_SKIP_IF_EXPRESSIONS`'s
+/// (`#[cfg(unix)]`-only) job-name set — kept separate rather than derived
+/// from one another because `PINNED_ALLOWED_SKIP_IF_EXPRESSIONS` is
+/// `#[cfg(unix)]`-gated and `SKIP_TOLERANT_NEEDS_MEMBERS` must not be (its
+/// callers run on every platform). Two independent pins for the same
+/// underlying fact can drift silently unless something checks them against
+/// each other — this test is that check. It is itself `#[cfg(unix)]`-gated
+/// (it reads the unix-gated constant), so it cannot close the drift window
+/// on Windows; a divergence would only be caught there indirectly, the
+/// next time someone runs the full suite on a unix runner (which CI does,
+/// via `ubuntu-latest`).
+#[cfg(unix)]
+#[test]
+fn test_skip_tolerant_needs_members_matches_pinned_if_expressions() {
+    let mut from_expressions: Vec<&str> = PINNED_ALLOWED_SKIP_IF_EXPRESSIONS
+        .iter()
+        .map(|(job, _)| *job)
+        .collect();
+    from_expressions.sort_unstable();
+
+    let mut from_portable: Vec<&str> = SKIP_TOLERANT_NEEDS_MEMBERS.to_vec();
+    from_portable.sort_unstable();
+
+    assert_eq!(
+        from_portable, from_expressions,
+        "FAIL: `SKIP_TOLERANT_NEEDS_MEMBERS` ({SKIP_TOLERANT_NEEDS_MEMBERS:?}) \
+         has drifted from the job-name set in \
+         `PINNED_ALLOWED_SKIP_IF_EXPRESSIONS` ({from_expressions:?}). These \
+         two pins name the same set of jobs (those legitimately permitted \
+         to report `skipped` in `ci-gate.needs`) for two different \
+         audiences — a portable one used by cross-platform tests, and a \
+         unix-only one that additionally pins each job's exact `if:` \
+         expression text. Update whichever one is stale in the same change \
+         as whatever added or removed a skip-tolerant job."
+    );
+}
+
 /// Find the byte index of a legitimate YAML comment start in `s`: a `#`
 /// immediately preceded by whitespace (space or tab). Returns `None` if no
 /// such `#` exists — including when `s` contains a `#` that is NOT
@@ -1856,7 +3792,12 @@ fn find_comment_start(s: &str) -> Option<usize> {
 /// judgment call that produced six rounds of predicate bypasses.)
 fn extract_and_normalize_if_expr(job_block: &str) -> Result<Option<String>, String> {
     let lines: Vec<&str> = job_block.lines().collect();
-    let is_job_level_if_line = |l: &&str| l.starts_with("    if:") && !l.starts_with("        ");
+    // S-626-1 pass-55, ADV-P55-LOW-001: routed through
+    // `extract_key_name_at_indent` rather than a bare `starts_with("    if:")`,
+    // which matched only that one spelling and missed `"if":`, `'if':`, and
+    // `if :` (space before colon) — all PyYAML-identical to the bare
+    // spelling.
+    let is_job_level_if_line = |l: &&str| extract_key_name_at_indent(l, 4).as_deref() == Some("if");
 
     // SUGGESTION (PR #671 review round 9): a job block with TWO job-level
     // `if:` keys is a hard `Err`, never "use the first match". Reviewed and
@@ -1886,7 +3827,42 @@ fn extract_and_normalize_if_expr(job_block: &str) -> Result<Option<String>, Stri
     };
 
     let if_line = lines[if_line_idx];
-    let raw = if_line.trim_start().strip_prefix("if:").unwrap_or("");
+    // S-626-1 pass-59 (ADV-P58-LOW-002): the key was detected via
+    // `is_job_level_if_line` (`extract_key_name_at_indent`, quote/
+    // whitespace-aware), but this VALUE re-read used to be a bare
+    // `strip_prefix("if:").unwrap_or("")` — the identical key-detect vs.
+    // value-reparse swallow shape the `910b8ab0` class sweep fixed at the
+    // two OTHER sites in this file that share this exact pattern
+    // (`extract_job_display_name`'s `name:` re-read,
+    // `test_matrix_os_lists_remain_static_literals`'s `os:` re-read). A
+    // quoted key spelling (`"if":`/`'if':`) or `if :` (space before
+    // colon) made `raw` silently collapse to `""`, which then normalizes
+    // to `collapsed.is_empty()` -> `Ok(None)` — INDISTINGUISHABLE from
+    // "this job declares no job-level `if:` key at all" for a job that
+    // plainly has one. Every M2-m-style pin built on this function
+    // compares against `Some(pin)`, so `Ok(None)` still fails LOUDLY
+    // today only as an accident of that comparison shape, not because
+    // this function itself refuses to guess — the same brittleness this
+    // sweep's own rationale (see `extract_job_display_name`'s doc
+    // comment) rejects. Fixed: `Err`, not a silent `Ok(None)`, so the
+    // failure is diagnosable on its own terms rather than merely
+    // happening to also fail a downstream equality check.
+    let Some(raw) = if_line.trim_start().strip_prefix("if:") else {
+        return Err(format!(
+            "has a job-level `if:` key detected via the quote/whitespace-\
+             aware matcher at 4-space indent, but this function's own \
+             value-extraction re-read (a bare `strip_prefix(\"if:\")`) \
+             could not parse the same line — most likely a quoted key \
+             spelling (`\"if\":` / `'if':`) or `if :` (space before \
+             colon), which `extract_key_name_at_indent` recognizes but \
+             this bare re-read does not. Silently collapsing to an empty \
+             string here would make this function return `Ok(None)` — \
+             indistinguishable from \"this job declares no `if:` key at \
+             all\" for a job that plainly has one, defeating every pin \
+             built on this function's result.\n\
+             Offending line: {if_line:?}"
+        ));
+    };
     let raw_value_leading_trimmed = raw.trim_start();
 
     // CRITICAL-1a: reject any YAML block-scalar header.
@@ -2126,6 +4102,244 @@ fn extract_and_normalize_sole_run_line(job_block: &str) -> Result<String, String
 
     if collapsed.is_empty() {
         return Err("has an empty `run:` value.".to_string());
+    }
+
+    Ok(collapsed)
+}
+
+/// PINNED, human-reviewed exact text of the `spec-guard` job's
+/// `check-ci-gate self-test (fixture suite, S-CIGATE-2)` step's `run:`
+/// line (S-626-1 pass-54/56, ADV-P54-MED-001 / ADV-P56-MED-001 — same
+/// finding reported twice, deduped here).
+///
+/// `test_spec_guard_contains_check_ci_gate_self_test_step` (AC-008) used
+/// to check only `spec_guard_block.contains("check-ci-gate.sh") &&
+/// spec_guard_block.contains("--self-test")` — two independent whole-BLOCK
+/// substring checks, satisfied by either substring appearing ANYWHERE in
+/// `spec-guard`, not necessarily on the same line or step. `spec-guard`
+/// contains TWO OTHER `--self-test` invocations (`check-cargo-mutants-
+/// policy-citations.sh --self-test`, `check-bc-citation-symbols.sh
+/// --self-test`), so the `--self-test` conjunct can never fail on its own
+/// — it is trivially satisfied by either of those two, independent of
+/// whether the `check-ci-gate.sh --self-test` step exists at all.
+/// Reproduced: replacing the step's `run:` line with `run: bash
+/// scripts/check-ci-gate.sh --self-test || true` (silently disabling the
+/// entire 13-fixture suite's pass/fail signal) leaves both substring
+/// checks satisfied and `test_always_run_jobs_have_no_continue_on_error`
+/// green too (that test bans the literal `continue-on-error` key, not a
+/// shell-level `|| true` suffix) — the whole regression suite stays green
+/// while the self-test step becomes a permanent no-op.
+const PINNED_CI_GATE_SELF_TEST_RUN_LINE: &str = "bash scripts/check-ci-gate.sh --self-test";
+
+/// PINNED, human-reviewed COMPLETE key set of the `spec-guard` job's
+/// `check-ci-gate self-test (fixture suite, S-CIGATE-2)` step (S-626-1
+/// pass-59, ADV-P58-MED-001). Mirrors `PINNED_GATE_STEP_KEY_SETS`/
+/// `PINNED_TEST_GUARD_STEP_KEYS`'s idiom: `PINNED_CI_GATE_SELF_TEST_RUN_
+/// LINE` (above) pins the `run:` line's VALUE, but nothing previously
+/// asserted the step's KEYS were exactly `{name, run}` — an added
+/// `if: false` or `shell: cat {0}` on this step leaves the run-line pin
+/// (and every substring check in this test) fully satisfied while making
+/// the entire 13-fixture self-test suite silently not run at all (`if:
+/// false`) or run the wrong interpreter entirely (`shell: cat {0}`, the
+/// same custom-shell-template override rounds 11/14 already showed
+/// defeats a pinned `run:` line elsewhere in this file).
+const PINNED_CI_GATE_SELF_TEST_STEP_KEYS: &[&str] = &["name", "run"];
+
+/// Locate the SOLE step in `lines` whose `name:` value is EXACTLY
+/// `step_name` (matched as the trimmed line `- name: {step_name}` —
+/// INDENT-AGNOSTIC: the match is against `l.trim_start()`, so this finds
+/// the step regardless of what indentation its `- name: ...` marker
+/// actually sits at, not only the conventional 6-space step-marker
+/// indent), returning its line index. `Err` if zero or more than one
+/// step matches.
+///
+/// Shared by `extract_and_normalize_step_run_line_by_name` and
+/// `extract_step_key_set_by_name` — factored out (S-626-1 pass-59,
+/// ADV-P58-MED-001) so the duplicate-step-name rejection lives in exactly
+/// one place rather than being reimplemented (and potentially
+/// re-forgotten) at each new by-name step accessor.
+///
+/// **DOC CORRECTION (S-626-1 pass-60, ADV-P60-LOW-003):** this doc
+/// comment and both `Err` messages below previously claimed the match
+/// was against "the literal line `      - name: {step_name}`, 6-space
+/// step-marker indent" — that overstated it. The code has always been
+/// indent-agnostic (`l.trim_start() == name_needle`); the 6-space
+/// figure described this file's one conventional step indent, not an
+/// enforced requirement. This was a misleading-message defect, not a
+/// false green: the function's actual behavior is STRICTER than the
+/// old wording implied (it matches at ANY indent, so an unconventionally-
+/// indented decoy or real step is still found, not silently missed),
+/// but the old wording would have sent a debugger looking for an
+/// indent-related cause that was never the issue.
+fn find_sole_step_by_name(lines: &[&str], step_name: &str) -> Result<usize, String> {
+    let name_needle = format!("- name: {step_name}");
+    let matches: Vec<usize> = lines
+        .iter()
+        .enumerate()
+        .filter(|(_, l)| l.trim_start() == name_needle)
+        .map(|(i, _)| i)
+        .collect();
+    match matches.as_slice() {
+        [] => Err(format!(
+            "has no step with `name: {step_name}` at all (checked, at \
+             any indent, for a line whose trimmed text is exactly \
+             `- name: {step_name}`)."
+        )),
+        [only] => Ok(*only),
+        multiple => Err(format!(
+            "has {} steps named `name: {step_name}` (checked, at any \
+             indent, for a line whose trimmed text is exactly \
+             `- name: {step_name}`) — this checker requires exactly one \
+             so a single pinned literal unambiguously covers it. A \
+             decoy step sharing the real step's name, inserted anywhere \
+             in the job block regardless of its own indentation, would \
+             otherwise silently win a first-match lookup instead of \
+             being flagged as ambiguous.",
+            multiple.len()
+        )),
+    }
+}
+
+/// Extract the sorted, complete key set (6/8-space indent — a step's own
+/// first key, on the `- ` marker line, plus every subsequent step-level
+/// key) of the SOLE step in `job_block` whose `name:` value is EXACTLY
+/// `step_name`, for comparison against `PINNED_CI_GATE_SELF_TEST_STEP_
+/// KEYS`. Mirrors `extract_test_guard_step_keys`'s `indent(6).or_else(
+/// indent(8))` idiom for a step's key set.
+fn extract_step_key_set_by_name(job_block: &str, step_name: &str) -> Result<Vec<String>, String> {
+    let lines: Vec<&str> = job_block.lines().collect();
+    let name_line_idx = find_sole_step_by_name(&lines, step_name)?;
+
+    let next_step_offset = lines[name_line_idx + 1..]
+        .iter()
+        .position(|l| l.starts_with("      -"));
+    let step_end = next_step_offset
+        .map(|off| name_line_idx + 1 + off)
+        .unwrap_or(lines.len());
+
+    let mut keys: Vec<String> = lines[name_line_idx..step_end]
+        .iter()
+        .filter_map(|l| {
+            extract_key_name_at_indent(l, 6).or_else(|| extract_key_name_at_indent(l, 8))
+        })
+        .collect();
+    keys.sort();
+    Ok(keys)
+}
+
+/// Extract and normalize the SOLE `run:` line belonging to the step whose
+/// `name:` value is EXACTLY `step_name` (matched as the literal line
+/// `      - name: {step_name}`, 6-space step-marker indent — the shape
+/// every step in `spec-guard` currently uses) inside `job_block`.
+///
+/// A deliberately separate function from `extract_and_normalize_sole_run_
+/// line` rather than a generalization of it — same precedent that
+/// function's own doc comment cites for staying separate from
+/// `extract_and_normalize_if_expr`: reject-don't-parse normalization is
+/// duplicated, not shared. This function additionally scopes its search
+/// to ONE step (bounded by the next `      -` step marker or EOF) rather
+/// than the whole job block, since `spec-guard` — unlike `ci-gate` — has
+/// many steps and many `run:` lines; `extract_and_normalize_sole_run_
+/// line`'s "exactly one `run:` in the whole block" invariant does not
+/// hold there.
+///
+/// S-626-1 pass-59 (ADV-P58-MED-001): despite the `_sole_` in this
+/// function's name describing the "exactly one `run:` line WITHIN the
+/// matched step" invariant, step-NAME matching itself used to be
+/// `.position(...)` — first match, with NO duplicate-name rejection. A
+/// second, decoy step also named `name: {step_name}` inserted BEFORE the
+/// real one (e.g. a no-op `run: true` step with the identical name) would
+/// silently make this function pin the DECOY's `run:` line instead of the
+/// real step's — the whole 27/27 suite stays green while the check-
+/// ci-gate self-test step (or any future caller) is invisibly bypassed.
+/// Fixed to collect ALL matching `name:` line indices and `Err` on more
+/// than one, mirroring the `needs_line_indices`/`run_line_indices`
+/// multiple-match rejection idiom already used throughout this file
+/// (`parse_needs_set`, `extract_and_normalize_if_expr`, and this same
+/// function's own `run:`-line duplicate check just below).
+fn extract_and_normalize_step_run_line_by_name(
+    job_block: &str,
+    step_name: &str,
+) -> Result<String, String> {
+    let lines: Vec<&str> = job_block.lines().collect();
+    let name_line_idx = find_sole_step_by_name(&lines, step_name)?;
+
+    let next_step_offset = lines[name_line_idx + 1..]
+        .iter()
+        .position(|l| l.starts_with("      -"));
+    let step_end = next_step_offset
+        .map(|off| name_line_idx + 1 + off)
+        .unwrap_or(lines.len());
+    let step_lines = &lines[name_line_idx..step_end];
+
+    let run_line_indices: Vec<usize> = step_lines
+        .iter()
+        .enumerate()
+        .filter(|(_, l)| extract_key_name_at_indent(l, 8).as_deref() == Some("run"))
+        .map(|(i, _)| i)
+        .collect();
+
+    if run_line_indices.is_empty() {
+        return Err(format!(
+            "'s `{step_name}` step has no step-level `run:` line at the \
+             expected 8-space indent."
+        ));
+    }
+    if run_line_indices.len() > 1 {
+        return Err(format!(
+            "'s `{step_name}` step has {} step-level `run:` lines — this \
+             checker requires exactly one so a single pinned literal \
+             unambiguously covers it.",
+            run_line_indices.len()
+        ));
+    }
+    let run_line = step_lines[run_line_indices[0]];
+
+    let raw = run_line.trim_start().strip_prefix("run:").unwrap_or("");
+    let raw_value_leading_trimmed = raw.trim_start();
+
+    if raw_value_leading_trimmed.starts_with('>') || raw_value_leading_trimmed.starts_with('|') {
+        return Err(format!(
+            "'s `{step_name}` step's `run:` value uses a YAML block-scalar \
+             form (\"{}\") — the real command lives on continuation lines \
+             this checker does not read, so it cannot be safely \
+             represented as a single pinned literal.",
+            raw_value_leading_trimmed.trim()
+        ));
+    }
+
+    if let Some(next_line) = step_lines[run_line_indices[0] + 1..].iter().find(|l| {
+        let trimmed = l.trim_start();
+        !trimmed.is_empty() && !trimmed.starts_with('#')
+    }) {
+        let indent = next_line.len() - next_line.trim_start().len();
+        if indent > 8 {
+            return Err(format!(
+                "'s `{step_name}` step's `run:` value appears to continue \
+                 onto a following line (\"{}\", indented {indent} spaces) \
+                 — this cannot be safely represented as a single pinned \
+                 literal.",
+                next_line.trim()
+            ));
+        }
+    }
+
+    let value = match find_comment_start(raw) {
+        Some(idx) => &raw[..idx],
+        None => raw,
+    };
+    if value.contains('#') {
+        return Err(format!(
+            "'s `{step_name}` step's `run:` value contains a `#` that is \
+             not a clearly whitespace-delimited trailing comment \
+             (\"{}\") — this cannot be safely normalized.",
+            raw.trim()
+        ));
+    }
+
+    let collapsed = value.split_whitespace().collect::<Vec<_>>().join(" ");
+    if collapsed.is_empty() {
+        return Err(format!("'s `{step_name}` step has an empty `run:` value."));
     }
 
     Ok(collapsed)
@@ -2450,7 +4664,14 @@ fn extract_and_normalize_sole_run_line(job_block: &str) -> Result<String, String
 /// deeper-structure-only constructions are now verified closed.
 const PINNED_GATE_IF_EXPR: &str = "${{ always() }}";
 const PINNED_GATE_NEEDS_JSON_LINE: &str = "${{ toJSON(needs) }}";
-const PINNED_GATE_JOB_KEYS: &[&str] = &["if", "name", "needs", "runs-on", "steps"];
+// ADV-P50-LOW-003 (round 20): `timeout-minutes` added to `ci-gate` (see
+// ci.yml comment on that job) to match every sibling job's explicit
+// timeout instead of silently inheriting GitHub Actions' 360-minute
+// default. `PINNED_GATE_JOB_KEYS` is a COMPLETE key-set pin (M2-k) —
+// adding a real job-level key without updating this constant in the same
+// change would make the pin fail on genuinely correct config.
+const PINNED_GATE_JOB_KEYS: &[&str] =
+    &["if", "name", "needs", "runs-on", "steps", "timeout-minutes"];
 const PINNED_GATE_STEP_KEY_SETS: &[&[&str]] = &[
     &["name", "uses", "with"],
     &["uses"],
@@ -2696,6 +4917,152 @@ fn extract_and_normalize_sole_needs_json_line(job_block: &str) -> Result<String,
     let collapsed = value.split_whitespace().collect::<Vec<_>>().join(" ");
     if collapsed.is_empty() {
         return Err("has an empty `NEEDS_JSON:` value.".to_string());
+    }
+
+    Ok(collapsed)
+}
+
+/// PINNED, human-reviewed exact text of the `ci-gate` job's own job-level
+/// `needs:` value (S-626-1 pass-55, ADV-P55-HIGH-001 part (c)).
+///
+/// `parse_needs_set` (above) is the SET-membership extractor every other
+/// test in this file relies on; it is now depth-anchored and panics on a
+/// duplicate job-level `needs:` key (parts (a)/(b) of this same finding),
+/// but nothing byte-pins the line's own TEXT the way `PINNED_GATE_RUN_LINE`
+/// and `PINNED_GATE_NEEDS_JSON_LINE` pin theirs. `needs:` is exactly as
+/// load-bearing as those two: it is the entire membership list
+/// `check-ci-gate.sh` evaluates via `toJSON(needs)`, and every set-based
+/// pin in this file is still, ultimately, downstream of one text line. A
+/// byte-for-byte pin here closes the class the same way, rather than
+/// leaving `needs:` as the one job-level key in `PINNED_GATE_JOB_KEYS`
+/// with a presence pin but no value pin.
+const PINNED_GATE_NEEDS_LINE: &str =
+    "[fmt, clippy, test, msrv, deny, spec-guard, check-signing-workflow-injection, mutants]";
+
+/// Extract and normalize the SOLE job-level `needs:` line (4-space indent)
+/// for pinned-literal comparison against `PINNED_GATE_NEEDS_LINE`.
+///
+/// A deliberately separate function from `extract_and_normalize_sole_run_line`
+/// / `_needs_json_line` rather than a generalization of either — same
+/// precedent those two functions' own doc comments cite: reject-don't-parse
+/// normalization is duplicated, not shared, so a bug in one byte-pin
+/// extractor cannot silently widen into another. Only the indent depth (4,
+/// for a job-level key, vs. 8/10 for a step-level or env-child key) and the
+/// key name differ from `extract_and_normalize_sole_needs_json_line`.
+///
+/// Only the inline-array form (`needs: [a, b, c]`) is supported for
+/// pinning — `ci.yml`'s current convention — mirroring `parse_needs_set`'s
+/// own inline-array-first handling. A same-line-empty value (block-list
+/// form) is `Err`, not silently treated as "no pin to check": this checker
+/// refuses to guess at a form it was not built to normalize.
+fn extract_and_normalize_sole_needs_line(job_block: &str) -> Result<String, String> {
+    let lines: Vec<&str> = job_block.lines().collect();
+    let needs_line_indices: Vec<usize> = lines
+        .iter()
+        .enumerate()
+        .filter(|(_, l)| extract_key_name_at_indent(l, 4).as_deref() == Some("needs"))
+        .map(|(i, _)| i)
+        .collect();
+
+    if needs_line_indices.is_empty() {
+        return Err(
+            "has no job-level `needs:` line at 4-space indent — `ci-gate` \
+             must declare which upstream jobs it aggregates."
+                .to_string(),
+        );
+    }
+    if needs_line_indices.len() > 1 {
+        return Err(format!(
+            "has {} job-level `needs:` lines — this checker requires \
+             exactly one so a single pinned literal unambiguously covers \
+             the aggregated job set. This is ALSO invalid YAML (a \
+             duplicate mapping key) that GitHub Actions and actionlint \
+             both reject at parse time; this checker refuses to silently \
+             pick a winner rather than rely on that external validation.",
+            needs_line_indices.len()
+        ));
+    }
+    let idx = needs_line_indices[0];
+
+    let line = lines[idx];
+    // S-626-1 pass-59 (ADV-P57-INFO-003): the key was detected via
+    // `extract_key_name_at_indent` (quote/whitespace-aware), but this
+    // VALUE re-read used to be a bare `strip_prefix("needs:").unwrap_or(
+    // "")` — a quoted key spelling (`"needs":`/`'needs':`) or `needs :`
+    // (space before colon) silently collapsed `raw` to `""`, which then
+    // fell into the `is_empty()` branch below and reported the MISLEADING
+    // message "has an empty same-line `needs:` value ... a block-list \
+    // form ... cannot be safely represented" — actively wrong for a
+    // quoted-key job block, which has neither an empty value nor a
+    // block-list form. Same key-detect vs. value-reparse swallow shape
+    // the `910b8ab0` sweep closed elsewhere; fixed the same way (a loud,
+    // specific `Err` on the re-read itself) rather than leaving a
+    // downstream branch to misdiagnose the symptom.
+    let Some(raw) = line.trim_start().strip_prefix("needs:") else {
+        return Err(format!(
+            "has a job-level `needs:` key detected via the quote/\
+             whitespace-aware matcher at 4-space indent, but this \
+             function's own value-extraction re-read (a bare \
+             `strip_prefix(\"needs:\")`) could not parse the same line — \
+             most likely a quoted key spelling (`\"needs\":` / \
+             `'needs':`) or `needs :` (space before colon), which \
+             `extract_key_name_at_indent` recognizes but this bare \
+             re-read does not.\n\
+             Offending line: {line:?}"
+        ));
+    };
+    let raw_value_leading_trimmed = raw.trim_start();
+
+    if raw_value_leading_trimmed.starts_with('>') || raw_value_leading_trimmed.starts_with('|') {
+        return Err(format!(
+            "uses a YAML block-scalar form (\"{}\") for its `needs:` value \
+             — the real list lives on continuation lines this checker does \
+             not read, so it cannot be safely represented as a single \
+             pinned literal.",
+            raw_value_leading_trimmed.trim()
+        ));
+    }
+
+    if raw_value_leading_trimmed.is_empty() {
+        return Err("has an empty same-line `needs:` value — this checker only \
+             supports the inline-array form (`needs: [a, b, c]`), \
+             `ci.yml`'s current convention; a block-list form (items on \
+             following `- item` lines) cannot be safely represented as a \
+             single pinned literal by this function."
+            .to_string());
+    }
+
+    if let Some(next_line) = lines[idx + 1..].iter().find(|l| {
+        let trimmed = l.trim_start();
+        !trimmed.is_empty() && !trimmed.starts_with('#')
+    }) {
+        let indent = next_line.len() - next_line.trim_start().len();
+        if indent > 4 {
+            return Err(format!(
+                "has a `needs:` value that appears to continue onto a \
+                 following line (\"{}\", indented {indent} spaces) — this \
+                 cannot be safely represented as a single pinned literal.",
+                next_line.trim()
+            ));
+        }
+    }
+
+    let value = match find_comment_start(raw) {
+        Some(i) => &raw[..i],
+        None => raw,
+    };
+    if value.contains('#') {
+        return Err(format!(
+            "has a `needs:` value containing a `#` that is not a clearly \
+             whitespace-delimited trailing comment (\"{}\") — this cannot \
+             be safely normalized.",
+            raw.trim()
+        ));
+    }
+
+    let collapsed = value.split_whitespace().collect::<Vec<_>>().join(" ");
+    if collapsed.is_empty() {
+        return Err("has an empty `needs:` value.".to_string());
     }
 
     Ok(collapsed)
@@ -3781,9 +6148,25 @@ fn test_allowed_skips_members_require_job_level_conditional_in_ci_yml() {
             )
         });
 
+        // S-626-1 pass-59 (ADV-P57-INFO-001): routed through
+        // `extract_key_name_at_indent`, the same quote/whitespace-aware
+        // matcher used throughout this file, rather than a raw
+        // `l.starts_with("    if:")` — this was the THIRD such site the
+        // `910b8ab0` class sweep missed (M2-a/M2-d were the other two;
+        // see `test_ci_gate_pass_fail_semantics_are_structurally_placed`).
+        // Also drops the dead conjunct `&& !l.starts_with("        ")`,
+        // which — as round 10 already noted when removing the same dead
+        // conjunct from `line_declares_job_level_key` — could never be
+        // `false` once the 4-space-prefix check had already matched (no
+        // line can simultaneously start with exactly 4 spaces AND 8
+        // spaces). This test is a faster diagnostic layered on top of the
+        // behavioral closure in
+        // `test_ci_gate_decision_matches_job_level_if_for_every_needs_member`
+        // (see this function's own doc comment) — fail-closed either way,
+        // consistency fix only.
         let has_job_level_if = job_block
             .lines()
-            .any(|l| l.starts_with("    if:") && !l.starts_with("        "));
+            .any(|l| extract_key_name_at_indent(l, 4).as_deref() == Some("if"));
 
         assert!(
             has_job_level_if,
@@ -3883,5 +6266,962 @@ fn test_allowed_skips_has_exactly_three_code_level_references() {
          refactor adds another consumer of ALLOWED_SKIPS), update the \
          expected constant here ONLY after confirming every occurrence is a \
          read, never a widening write."
+    );
+}
+
+// ---------------------------------------------------------------------------
+// S-626-1 — DEC-246 follow-on hardening: sibling-workflow exposure (Guard A)
+// and matrix staticity (Guard B)
+// ---------------------------------------------------------------------------
+//
+// Basis: `.factory/research/dec-246-github-actions-gating-semantics.md`
+// (2026-08-09), specifically §"Sibling-workflow frontier" (Guard A) and
+// the "New material this reconstruction contributes" item 1 (Guard B).
+//
+// KNOWN LIMITATION SHARED BY BOTH GUARDS BELOW (round-16 residual, restated
+// here rather than assumed known): every extractor in this file, including
+// the two new ones added for these guards, is LINE-BASED. A YAML NODE
+// PROPERTY (an anchor `&name` or a tag `!tag`/`!!tag`) prefixing a mapping
+// key on the same physical line defeats line-based key detection with zero
+// non-LF bytes involved and zero line breaks — `extract_key_name_at_indent`
+// stops at the space after `&x`/`!!str`, sees no colon, and returns `None`.
+// Neither guard below closes that residual; both inherit it exactly as
+// every other set-equality pin in this file does. It is tracked as
+// follow-up story S-CIGATE-3 (durable YAML-parser rewrite) — see
+// `CLAUDE.md`'s CI Gate section, "Round 16", for the full record. Do not
+// read either guard below as covering the line-based-lexer-vs-real-parser
+// gap generally; neither does.
+
+/// Read an arbitrary workflow YAML file, applying the same normalization as
+/// `read_ci_yml` (CRLF -> LF, strip a leading BOM) so downstream line-based
+/// scanning behaves identically regardless of which workflow file is read.
+/// A deliberately separate function from `read_ci_yml` (which is hardcoded
+/// to `.github/workflows/ci.yml`) rather than a generalization of it — this
+/// file's established precedent (see `extract_and_normalize_sole_run_line`
+/// vs. `extract_and_normalize_if_expr`) is to duplicate small, load-bearing
+/// normalization logic rather than risk widening a more heavily-relied-on
+/// function's contract.
+fn read_workflow_file(path: &Path) -> String {
+    let raw = fs::read_to_string(path)
+        .unwrap_or_else(|e| panic!("Could not read {}: {e}", path.display()));
+    let raw = raw.strip_prefix('\u{FEFF}').unwrap_or(&raw);
+    raw.replace("\r\n", "\n")
+}
+
+/// Enumerate every `.github/workflows/*.yml` / `*.yaml` file, sorted for
+/// deterministic iteration order.
+///
+/// Glob-based over the directory — deliberately NOT a hardcoded file list.
+/// A hardcoded list would reproduce, one level up, the exact
+/// closed-enumeration defect S-626-1's U1 finding closed for
+/// `ci-gate.needs` (`test_ci_gate_needs_partitions_all_ci_yml_jobs`): a new
+/// sibling workflow file added later would silently sit outside a
+/// hand-maintained list, and this guard exists specifically to prevent
+/// that class of gap for the sibling-workflow-name vector.
+fn list_workflow_files() -> Vec<std::path::PathBuf> {
+    let dir = Path::new(env!("CARGO_MANIFEST_DIR")).join(".github/workflows");
+    let mut files: Vec<std::path::PathBuf> = fs::read_dir(&dir)
+        .unwrap_or_else(|e| panic!("Could not read {}: {e}", dir.display()))
+        .filter_map(|entry| entry.ok())
+        .map(|entry| entry.path())
+        .filter(|p| {
+            matches!(
+                p.extension().and_then(|e| e.to_str()),
+                Some("yml") | Some("yaml")
+            )
+        })
+        .collect();
+    files.sort();
+    files
+}
+
+/// List every job id defined under a workflow file's top-level `jobs:` map.
+///
+/// Deliberately a SEPARATE function from `list_all_ci_yml_job_names` rather
+/// than a generalization of it — same precedent cited on
+/// `read_workflow_file` above. A file with genuinely EMPTY content (or only
+/// whitespace) returns an empty `Vec` rather than panicking — a sibling
+/// workflow file is not on the gate's decision path, so an incidentally
+/// content-free file is a legitimate no-op for Guard A, not a hard
+/// failure.
+///
+/// S-626-1 pass-54 (ADV-P54-MED-002): a file with REAL, non-empty content
+/// but no detectable `jobs:` key is different — that shape is exactly what
+/// a malformed or unusually-formatted (but not empty) sibling workflow
+/// file looks like, and silently returning an empty `Vec` for it would
+/// make Guard A a silent no-op for a file that may genuinely define a job
+/// this checker never got a chance to inspect — the same closed-
+/// enumeration blind spot the U1 finding closed one level up for
+/// `ci-gate.needs`. Panics loudly instead, naming the file. Both the
+/// `jobs:` key itself (0-indent) and each job id under it (2-indent) are
+/// detected via `collect_mapping_key_set` — the same quote/whitespace-
+/// aware, comment-and-blank-line-tolerant primitive
+/// `list_all_ci_yml_job_names` above now also uses — rather than the
+/// original bespoke `strip_prefix("  ").and_then(|s| s.strip_suffix(':'))`
+/// scan, which required the job-id line to END with `:` and was blind to
+/// a flow-style job entry (e.g. `gate: {name: CI Gate, ...}`) for the same
+/// reason ADV-P55-MED-002 fixed in `list_all_ci_yml_job_names`.
+fn list_job_ids_in_workflow(content: &str, path: &Path) -> Vec<String> {
+    if content.trim().is_empty() {
+        return Vec::new();
+    }
+
+    let lines: Vec<&str> = content.lines().collect();
+    let Some(jobs_line_idx) = lines
+        .iter()
+        .position(|l| extract_key_name_at_indent(l, 0).as_deref() == Some("jobs"))
+    else {
+        panic!(
+            "FAIL (S-626-1 pass-54, ADV-P54-MED-002): {} has non-empty \
+             content but no detectable top-level `jobs:` key (checked via \
+             the same quote/whitespace-aware matcher used everywhere else \
+             in this file). A malformed or unusually-formatted sibling \
+             workflow file that genuinely defines jobs would otherwise \
+             silently sit outside Guard A's coverage entirely — the exact \
+             closed-enumeration shape the U1 finding closed one level up \
+             for `ci-gate.needs`. If this file legitimately has no \
+             `jobs:` key at all (e.g. a reusable-workflow fragment with \
+             only top-level metadata), narrow this panic; do not silently \
+             return an empty Vec for a file with real content.",
+            path.display()
+        );
+    };
+
+    collect_mapping_key_set(&lines, jobs_line_idx + 1, 2)
+}
+
+/// Extract a job block's job-level `name:` value (4-space indent), trimmed
+/// and with one layer of matching surrounding quotes stripped. A trailing
+/// YAML comment on the same line is stripped before the quote check, same
+/// convention `extract_job_block` already uses for job-key lines. Returns
+/// `None` if the job block has no job-level `name:` key at all (GitHub then
+/// displays the job id itself as the check name).
+///
+/// Anchored on `extract_key_name_at_indent(line, 4)` so a step-level
+/// `      - name: ...` line (6-space indent, one level deeper) is never
+/// mistaken for the job's own `name:` — the same indent discipline
+/// `extract_job_level_key_set` already relies on for job-level keys
+/// generally.
+///
+/// S-626-1 pass-56 (ADV-P56-HIGH-002 + ADV-P55-MED-003): two distinct
+/// fail-open gaps closed together, both diagnosed as the same root cause
+/// as ADV-P56-HIGH-001 below — detect the key with the quote/whitespace-
+/// aware matcher, then re-read the VALUE with a bare, non-quote-aware
+/// re-parse, silently swallowing the mismatch:
+///   1. (HIGH-002) `line.trim_start().strip_prefix("name:")?` used `?` to
+///      propagate a `None` up through the WHOLE function on ANY line whose
+///      bare re-read didn't match — including a quoted key spelling
+///      (`"name":` / `'name':`) or `name :` (space before colon), both of
+///      which `extract_key_name_at_indent` above already recognizes as
+///      declaring `name`. That `None` is indistinguishable from "this job
+///      declares no `name:` key at all", silently letting a job spelled
+///      that way escape Guard A's sibling-workflow check entirely. Fixed:
+///      `unwrap_or_else` now panics loudly instead, naming the offending
+///      line — this function refuses to guess at a value it detected the
+///      KEY for but cannot safely re-parse.
+///   2. (MED-003) even once the value is reached, comparing its raw SOURCE
+///      bytes against a plain-scalar constant like `"CI Gate"` silently
+///      misses two YAML forms that render to the identical string: a
+///      block-scalar (`name: >-` with the text on continuation lines this
+///      function does not read) and a double-quoted scalar containing a
+///      backslash escape (`"\x43I Gate"` — this function does not
+///      interpret YAML escape sequences). Reject-don't-parse, the same
+///      discipline `extract_and_normalize_if_expr` uses for its `${{ }}`
+///      wrapper: panic rather than guess at folding/escape rules this
+///      checker was never built to interpret.
+///
+/// S-626-1 pass-59 (ADV-P57-HIGH-001): a third gap, one step EARLIER than
+/// either of the two above — this function's `extract_key_name_at_indent
+/// (line, 4)` scan silently finds nothing at all (not a wrong VALUE, no
+/// KEY detected in the first place) when the job body is written at any
+/// indent other than 4 spaces, which is legal, `actionlint`-clean YAML.
+/// Verified: a sibling-workflow job with `name: CI Gate` at 6-space
+/// indent returned `None` here — indistinguishable from "declares no
+/// name" — leaving Guard A's `Some("CI Gate")` comparison silently
+/// unable to catch the exact duplicate-check-name collision it exists to
+/// detect. See `assert_job_block_uses_4_space_child_indent`'s doc comment
+/// for the shared root-cause analysis (also applied to
+/// `matrix_needs_members`).
+fn extract_job_display_name(job_block: &str) -> Option<String> {
+    assert_job_block_uses_4_space_child_indent(
+        job_block,
+        "S-626-1 Guard A, ADV-P57-HIGH-001 (extract_job_display_name)",
+    );
+    for line in job_block.lines() {
+        if extract_key_name_at_indent(line, 4).as_deref() != Some("name") {
+            continue;
+        }
+        // S-626-1 pass-60 (ADV-P60-HIGH-002): a job-level key can never be
+        // a YAML sequence entry — `jobs.<id>` is a mapping, and its own
+        // keys (`name:`, `runs-on:`, `steps:`, ...) are plain mapping
+        // keys, never `- `-prefixed list items. A `- ` marker at this
+        // indent belongs to a SEQUENCE living under an earlier job-level
+        // key — in practice, `steps:` written at the SAME 4-space indent
+        // as the job's own keys, which is ordinary, `actionlint`-clean
+        // YAML (a block sequence may sit at its parent mapping key's
+        // indent, not strictly deeper). `extract_key_name_at_indent`
+        // above deliberately strips a leading `- ` marker so it can ALSO
+        // extract a STEP's first key (see that function's own doc
+        // comment) — which means a 4-space `    - name: Checkout` step
+        // line is indistinguishable from a genuine job-level `name:`
+        // line to that one call alone. The prior revision of this
+        // function leaned into that ambiguity instead of resolving it:
+        // it stripped the SAME marker before its own value re-read
+        // below, so it silently substituted the step's name
+        // (`"Checkout"`) for the job's and returned early — the job's
+        // real, later `name: CI Gate` line was never reached. Verified
+        // directly: a sibling-workflow job with exactly this shape
+        // (4-space `steps:` children, no job-level `name:` before them,
+        // a real `name: CI Gate` after) made Guard A's sibling-duplicate
+        // check return `Some("Checkout")` instead of `Some("CI Gate")`
+        // — 27 passed, 0 failed, silently missing the exact collision
+        // this guard exists to detect.
+        //
+        // The prior doc comment on this branch claimed the reachable
+        // shape was latent because "`jobs.<id>` must be a YAML MAPPING
+        // … a job whose value is a sequence is rejected by GitHub's own
+        // parser" — that is true but answers a different question. The
+        // actual reachable shape is NOT a sequence-valued `jobs.<id>`;
+        // it is this ordinary `steps:`-at-4-space-indent style, which
+        // GitHub accepts every day. Fixed: skip any 4-space line that is
+        // itself a sequence entry, so this loop only ever considers
+        // genuine job-level mapping keys — and the marker strip is
+        // dropped from the value re-read below, so a genuinely
+        // unparseable spelling (a quoted key, `name :` with a space
+        // before the colon, ...) still panics loudly rather than being
+        // silently misread.
+        if line.trim_start().starts_with("- ") {
+            continue;
+        }
+        let after_key = line.trim_start().strip_prefix("name:").unwrap_or_else(|| {
+            panic!(
+                "FAIL (S-626-1 Guard A, ADV-P56-HIGH-002): a job-level \
+                 `name:` key was detected via the quote/whitespace-aware \
+                 matcher at 4-space indent, but this function's own \
+                 value-extraction re-read (a bare `strip_prefix(\"name:\")`) \
+                 could not parse the same line — most likely a quoted key \
+                 spelling (`\"name\":` / `'name':`) or `name :` (space \
+                 before colon), which `extract_key_name_at_indent` \
+                 recognizes but this bare re-read does not. Silently \
+                 returning `None` here would be indistinguishable from \
+                 \"this job declares no name\" and would let a job spelled \
+                 this way escape Guard A's sibling-workflow check \
+                 entirely.\n\
+                 Offending line: {line:?}"
+            )
+        });
+        let value = after_key.trim();
+        let value = value.split('#').next().unwrap_or(value).trim();
+
+        if value.starts_with('>') || value.starts_with('|') {
+            panic!(
+                "FAIL (S-626-1 Guard A, ADV-P55-MED-003): a job-level \
+                 `name:` value uses a YAML block-scalar form (\"{value}\") \
+                 — the real rendered name lives on continuation lines this \
+                 checker does not read, so it cannot be safely compared \
+                 against a plain-scalar constant like `\"CI Gate\"`. This \
+                 checker refuses to guess at block-scalar folding rules \
+                 rather than risk silently missing a spelling of the exact \
+                 same rendered name Guard A exists to catch.\n\
+                 Offending line: {line:?}"
+            );
+        }
+
+        // S-626-1 pass-59 (ADV-P57-LOW-001): a value beginning with `*`
+        // (an alias reference), `&` (an anchor declaration — usually
+        // paired with a `*`-referenced value elsewhere), or `!` (an
+        // explicit YAML tag, e.g. `!!str`) is a node-property form this
+        // checker cannot resolve from this one line alone: an alias's
+        // real text lives at its `&anchor` definition elsewhere in the
+        // file, and a tag does not change the scalar's rendered text but
+        // this checker does not interpret tag semantics to know that.
+        // Verified (PyYAML AND Ruby Psych, independent implementations):
+        // `name: *nm` (with `x-tpl: &nm CI Gate` declared elsewhere) and
+        // `name: !!str CI Gate` both render to the plain string `CI
+        // Gate` — exactly the duplicate-check-name collision Guard A
+        // exists to catch — while comparing the literal text `"*nm"` or
+        // `"!!str CI Gate"` against `"CI Gate"` would silently miss it.
+        // Same class this file's CLAUDE.md documents as "round 16 —
+        // UNGUARDED, code review is the control": this checker refuses to
+        // guess at anchor/alias/tag resolution rather than risk silently
+        // missing a spelling of the identical rendered name.
+        if value.starts_with('*') || value.starts_with('&') || value.starts_with('!') {
+            panic!(
+                "FAIL (S-626-1 Guard A, ADV-P57-LOW-001): a job-level \
+                 `name:` value uses a YAML alias/anchor/tag form \
+                 (\"{value}\") — an alias (`*name`), anchor (`&name`), or \
+                 explicit tag (`!tag`/`!!str`) renders to a string this \
+                 checker cannot resolve from this line alone (an alias's \
+                 real text lives at its `&anchor` definition elsewhere in \
+                 the file; a tag does not change the scalar's rendered \
+                 text, but this checker does not interpret tag semantics \
+                 to know that). This checker refuses to guess at \
+                 anchor/alias/tag resolution rather than risk silently \
+                 missing a spelling of the exact same rendered name Guard \
+                 A exists to catch.\n\
+                 Offending line: {line:?}"
+            );
+        }
+
+        for quote in ['"', '\''] {
+            if let Some(stripped) = value.strip_prefix(quote) {
+                if let Some(stripped) = stripped.strip_suffix(quote) {
+                    if quote == '"' && stripped.contains('\\') {
+                        panic!(
+                            "FAIL (S-626-1 Guard A, ADV-P55-MED-003): a \
+                             job-level `name:` value is a double-quoted \
+                             YAML scalar containing a backslash escape \
+                             (\"{stripped}\") — this checker treats \
+                             double-quoted values as opaque, unescaped \
+                             text and does not interpret YAML escape \
+                             sequences (`\\\"`, `\\x43`, `\\n`, ...), so it \
+                             cannot safely compare this against a \
+                             plain-scalar constant like `\"CI Gate\"` \
+                             without risking a silent miss on an escaped \
+                             spelling of the identical rendered name.\n\
+                             Offending line: {line:?}"
+                        );
+                    }
+                    return Some(stripped.to_string());
+                }
+            }
+        }
+        return Some(value.to_string());
+    }
+    None
+}
+
+/// S-626-1 Guard A (DEC-246 §"Sibling-workflow frontier"): branch
+/// protection matches a required status check by the job's `name:` STRING
+/// ALONE — the workflow FILE that declares the job is not part of the
+/// check's identity. GitHub's own docs state plainly that "[u]sing the
+/// same job name in multiple workflows can cause **ambiguous** status
+/// check results" and instruct keeping job names unique across all
+/// workflows
+/// (<https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-protected-branches/about-protected-branches>,
+/// verified 2026-08-09 — see DEC-246 Q5).
+///
+/// **PREMISE LABEL CORRECTED (S-626-1 research pass, 2026-08-10, Q-D):** the
+/// specific claim that a duplicate `CI Gate` check NAME yields a false
+/// green has been carried since DEC-246 as though established; it must be
+/// labelled **INFERRED — neither verified nor refuted**, not established
+/// fact. What IS confirmed (CONFIRM, primary, per the docs quoted above):
+/// the check name alone is the identity, and the declaring workflow file is
+/// not part of it. What resolution TWO check runs sharing that name
+/// actually get (all-must-pass / last-writer-wins / something else) is
+/// INCONCLUSIVE on primary sources. The leading hypothesis is
+/// **last-writer-wins** (most-recently-updated check run governs the
+/// required-check state), supported only by: a GitHub staff member's
+/// personal blog (Ken Muse, "Creating GitHub Checks",
+/// SEMI-AUTHORITATIVE SECONDARY, not documentation — "If multiple Checks
+/// exist with the same name, only the most recently updated one will be
+/// used for the Status"), and the REST Checks API's `filter=latest`
+/// affordance on "List check runs for a Git reference" (an inference from
+/// an API design choice, not a documented statement about branch
+/// protection resolution). **Precision that must not be lost:** the docs
+/// sentence "[i]f a check and a commit status have the same name, both must
+/// pass when that name is required" concerns a check run vs. a commit
+/// status — two different API objects — and is NOT evidence about two check
+/// runs sharing a name; do not cite it as such. See
+/// `.factory/research/gh-actions-open-semantics-2026-08-10.md` §Q-D.
+///
+/// **This guard is kept regardless of that label.** It is cheap, fully
+/// decidable from the repository alone, needs no live experiment, and
+/// prevents a state GitHub's own documentation instructs maintainers not to
+/// create in the first place ("ambiguous status check results"). Every
+/// existing pin in this file reads `ci.yml` alone (via
+/// `read_ci_yml`/`extract_job_block`) — a job named `CI Gate` declared in
+/// ANY OTHER workflow file is outside every one of those pins BY
+/// CONSTRUCTION, structurally the same blind spot as the workflow-level
+/// `defaults:` vector found in round 11 (see
+/// `common::yaml::extract_job_block`'s doc comment for that precedent).
+///
+/// This test enumerates every `.github/workflows/*.yml`/`*.yaml` file via
+/// `list_workflow_files` (glob-based, not a hardcoded list — see that
+/// function's doc comment) and asserts that no workflow file OTHER than
+/// `ci.yml` declares a job whose `name:` value, after trimming and
+/// unquoting, equals `CI Gate` case-sensitively (GitHub check names are
+/// case-sensitive).
+///
+/// See the module-level "KNOWN LIMITATION SHARED BY BOTH GUARDS" note above
+/// this section — this test is line-based and shares the round-16
+/// node-property residual like every other pin in this file.
+#[test]
+fn test_no_sibling_workflow_declares_a_job_named_ci_gate() {
+    for path in list_workflow_files() {
+        if path.file_name().and_then(|f| f.to_str()) == Some("ci.yml") {
+            continue;
+        }
+
+        let content = read_workflow_file(&path);
+        for job_id in list_job_ids_in_workflow(&content, &path) {
+            // S-626-1 pass-55, ADV-P55-MED-001: `list_job_ids_in_workflow`
+            // detected `job_id` under `jobs:`, but `extract_job_block`
+            // could not anchor to it — its needle requires an EXACT
+            // `  {job_id}:\n` line with no trailing comment (e.g. a
+            // legitimate `  gate:  # comment` job-key spelling, the exact
+            // shape `extract_job_block`'s own doc comment cites as its
+            // motivating example). Two extractors in this file
+            // disagreeing about whether a job exists is a precondition
+            // violation this check refuses to silently paper over by
+            // skipping the job — that silent skip is exactly how a job
+            // spelled with a `name: CI Gate` and a trailing-comment job
+            // key would escape Guard A entirely.
+            let Some(job_block) = extract_job_block(&content, &job_id) else {
+                panic!(
+                    "FAIL (S-626-1 Guard A, ADV-P55-MED-001): {} — \
+                     `list_job_ids_in_workflow` detected job id `{job_id}` \
+                     under `jobs:`, but `extract_job_block` could not \
+                     anchor to it. This checker refuses to silently skip \
+                     a job two of its own extractors disagree about the \
+                     existence of — investigate the job-key line's exact \
+                     spelling (a trailing comment, quoting, or unusual \
+                     whitespace are the likely causes) rather than treat \
+                     this as \"nothing to check\".",
+                    path.display()
+                );
+            };
+            if extract_job_display_name(job_block).as_deref() == Some("CI Gate") {
+                panic!(
+                    "FAIL (S-626-1 Guard A, DEC-246 Sibling-workflow frontier): \
+                     {} declares job `{job_id}` with `name: CI Gate` — the SAME \
+                     required-check name as `.github/workflows/ci.yml`'s \
+                     `ci-gate` job.\n\
+                     \n\
+                     Branch protection matches a required status check by job \
+                     NAME ALONE; the declaring workflow file is not part of the \
+                     check's identity. GitHub's own docs state that using the \
+                     same job name in multiple workflows \"can cause ambiguous \
+                     status check results\" and instruct keeping job names \
+                     unique across all workflows. Every pin in \
+                     tests/ci_gate_completeness.rs reads ci.yml alone — a \
+                     second `CI Gate` check produced by this job sits outside \
+                     every one of those pins by construction.\n\
+                     \n\
+                     Fix: rename this job's `name:` to something other than \
+                     `CI Gate`.",
+                    path.display()
+                );
+            }
+        }
+    }
+}
+
+/// PINNED count of `ci-gate.needs` members that carry a build matrix
+/// (today: `clippy`, `test`). S-626-1 pass-59 (ADV-P57-HIGH-001): an
+/// exact-arity pin, not a mere non-empty check — see
+/// `test_matrix_os_lists_remain_static_literals`'s assertion for why a
+/// non-empty check alone cannot detect losing ONE of several matrix
+/// jobs. Update in the SAME change as any deliberate addition/removal
+/// of a build-matrix job.
+///
+/// S-626-1 pass-60 (ADV-P60-LOW-002): this constant declaration used to
+/// sit BETWEEN Guard B's ~130-line rationale docstring and the
+/// `#[test] fn` it explains — which meant that entire docstring was
+/// actually the rustdoc of THIS `usize` constant, not of the test, and
+/// the test itself had no doc comment of its own (a later pass-60
+/// change to the block above this one, still calling it "the docstring
+/// of Guard B", repeated the same misattribution rather than
+/// correcting it). Moved above the docstring so rustdoc attaches
+/// correctly: this short paragraph documents the constant, and Guard
+/// B's full rationale below documents the test.
+const PINNED_MATRIX_NEEDS_MEMBER_COUNT: usize = 2;
+
+/// S-626-1 Guard B (DEC-246 §Q4 + "New material this reconstruction
+/// contributes" item 1): `ci-gate.needs` includes two matrix jobs, `clippy`
+/// and `test`. What `needs.<job>.result` reports when a matrix job expands
+/// to ZERO legs is UNDOCUMENTED by GitHub — tracked as the open drift item
+/// `ZERO-LEG-MATRIX-RESULT-UNDOCUMENTED`. GitHub's own docs are silent on
+/// matrix-parent -> `needs.result` aggregation entirely.
+///
+/// **CORRECTED CLAIM (S-626-1 research pass, 2026-08-10, Q-A) — REFUTE of
+/// the prior "community reports split" characterization:** an earlier
+/// revision of this docstring stated community reports were "split between
+/// `skipped` (safe) and `success` (a silent false green)". That
+/// characterization does not hold up: no report claiming either outcome for
+/// an actual zero-leg job was found. The two mechanisms that DO exist are
+/// different and neither produces a zero-leg job: (1) a dynamic
+/// `fromJSON()` matrix evaluating to an empty list HARD-ERRORS at strategy
+/// evaluation, before any step runs (`orgs/community#27096`, 2021-06-10,
+/// SECONDARY, no staff reply: `"Matrix vector 'cfg' does not contain any
+/// values"`) — that is fail-CLOSED, not a false green, though whether a
+/// strategy-evaluation-stage error maps to `failure` in `needs` (as opposed
+/// to a step-stage failure) is itself UNVERIFIED, a different lifecycle
+/// stage GitHub does not document; (2) the apparent "success" half traced
+/// to `orgs/community#9141` is, read verbatim, about a *per-step `if:`
+/// workaround* (copying the job-level condition onto every step) that
+/// makes every leg still expand and every step skip, legitimately
+/// concluding `success` — ordinary documented semantics for a job whose
+/// steps all skip, not evidence about a zero-leg matrix at all. So it is
+/// not established that a zero-leg job state is reachable by ANY
+/// construction; property (1) below (no `${{ }}`/`fromJSON` in `os:`) is
+/// kept as defense-in-depth against that unmapped lifecycle edge — a real
+/// but modest justification — not because a "might report `success`"
+/// false-green claim the evidence does not support. Retiring the guard on
+/// the strength of one five-year-old, staff-unconfirmed forum thread would
+/// repeat this cluster's founding mistake in the opposite direction.
+/// See `.factory/research/gh-actions-open-semantics-2026-08-10.md` §Q-A.
+///
+/// DEC-246 established that the reachability question is currently
+/// UNREACHABLE in this file: both matrix jobs use STATIC LITERAL `os:` lists
+/// (`[ubuntu-latest, windows-latest]` and `[ubuntu-latest, macos-latest,
+/// windows-latest]`). The zero-leg case becomes reachable if a future edit
+/// converts one of these to a DYNAMIC matrix (e.g. `fromJSON(...)`) — that
+/// vector is what the assertion below (the `${{ }}` / `fromJSON` check)
+/// exists to catch.
+///
+/// CORRECTED CLAIM (S-626-1 pass-57, `ADV-P56-INFO-001`): an earlier
+/// revision of this docstring claimed "a static literal list cannot ever
+/// evaluate to zero legs" without qualification. That overstates it — a
+/// static literal `os:` list cannot ever EXPAND to zero legs on its own,
+/// but GitHub Actions' `strategy.matrix.exclude:` key can remove
+/// combinations from an already-expanded static list, and a fully-excluded
+/// matrix (every generated combination removed) is a second, independent
+/// path to the same undocumented zero-leg question — orthogonal to
+/// `fromJSON`/`${{ }}` dynamism.
+///
+/// **STRENGTHENED (S-626-1 research pass, 2026-08-10, Q-B) — supersedes the
+/// "UNVERIFIED" note this replaces:** an all-excluding `exclude:` is NOT
+/// rejected at parse time. `orgs/community#179993` (2025-11-19, SECONDARY,
+/// single report, bot-only reply, no staff confirmation), "Matrix exclude
+/// produces an empty matrix.entry instead of skipping the job", reports the
+/// job runs ONCE with matrix variables empty rather than expanding to zero
+/// legs — a degenerate run that CAN conclude `success` having done nothing.
+/// That is precisely the false-green shape this property exists to prevent,
+/// and it is better-evidenced now than "UNVERIFIED" reflected. (One
+/// unasserted secondary mitigation: `clippy`/`test` both use
+/// `runs-on: ${{ matrix.os }}`, and with matrix variables empty `runs-on`
+/// evaluates to the empty string — what that actually does on a real
+/// runner is not established here and is NOT relied on as a safety
+/// property.) See
+/// `.factory/research/gh-actions-open-semantics-2026-08-10.md` §Q-B. Today
+/// neither matrix job declares an `exclude:` key at all (verified, and
+/// pinned by the assertion below) — the `exclude:` vector is CLOSED BY
+/// SOURCE PROPERTY, not by an argument about what `exclude:` can or cannot
+/// produce at runtime.
+///
+/// This test converts the undecidable RUNTIME question ("what does a
+/// zero-leg matrix report to `needs`?") into two decidable SOURCE
+/// properties — far cheaper than a live empirical probe, and correct for
+/// exactly as long as they hold: (1) both `clippy` and `test`'s
+/// `strategy.matrix.os:` value contains neither a `${{ }}` expression nor
+/// a `fromJSON` call, and (2) neither job's `strategy.matrix:` mapping
+/// declares an `exclude:` key at all. Adding an `exclude:` key to either
+/// matrix reopens the zero-leg question this test currently keeps closed —
+/// it must be resolved (see `ZERO-LEG-MATRIX-RESULT-UNDOCUMENTED` above)
+/// before that change lands, not inferred.
+///
+/// See the module-level "KNOWN LIMITATION SHARED BY BOTH GUARDS" note above
+/// this section — this test is line-based and shares the round-16
+/// node-property residual like every other pin in this file.
+#[test]
+fn test_matrix_os_lists_remain_static_literals() {
+    let ci = read_ci_yml();
+
+    // S-626-1 pass-56, ADV-P56-LOW-002: derived from the live `needs:` set
+    // (see `matrix_needs_members`'s doc comment) rather than the prior
+    // hardcoded `["clippy", "test"]` literal.
+    let matrix_job_ids = matrix_needs_members(&ci);
+    // S-626-1 pass-59 (ADV-P57-HIGH-001 arity check): `!is_empty()` only
+    // proves Guard B has SOMETHING to check — losing one of TWO matrix
+    // jobs (today: `clippy`, `test`) is invisible to a non-empty check,
+    // since the set still has ≥1 member either way. Pin the exact count
+    // instead, mirroring every other exact-arity pin in this file (e.g.
+    // `PINNED_GATE_JOB_KEYS`'s set-equality). Update
+    // `PINNED_MATRIX_NEEDS_MEMBER_COUNT` in the SAME change as any
+    // deliberate addition/removal of a build-matrix job.
+    assert_eq!(
+        matrix_job_ids.len(),
+        PINNED_MATRIX_NEEDS_MEMBER_COUNT,
+        "FAIL (S-626-1 Guard B, ADV-P57-HIGH-001): `matrix_needs_members` \
+         returned {} member(s) ({matrix_job_ids:?}), not the pinned count \
+         of {PINNED_MATRIX_NEEDS_MEMBER_COUNT}. A non-empty check alone \
+         cannot detect losing ONE of several matrix jobs (e.g. `clippy` \
+         silently dropping out while `test` remains) — the set would \
+         still be non-empty either way. If `clippy`/`test` (or a future \
+         matrix job) genuinely gained or lost a build matrix, this is \
+         expected; update PINNED_MATRIX_NEEDS_MEMBER_COUNT in the SAME \
+         change. If it fires unexpectedly, `strategy:`'s indent, \
+         `matrix_needs_members`'s `needs:` derivation, or a job's \
+         extracted block may be broken.",
+        matrix_job_ids.len()
+    );
+
+    for job_id in &matrix_job_ids {
+        let job_block = extract_job_block(&ci, job_id)
+            .unwrap_or_else(|| panic!("FAIL: no `{job_id}:` job in ci.yml."));
+
+        let lines: Vec<&str> = job_block.lines().collect();
+        let os_line_idx = lines
+            .iter()
+            .position(|l| extract_key_name_at_indent(l, 8).as_deref() == Some("os"))
+            .unwrap_or_else(|| {
+                panic!(
+                    "FAIL (S-626-1 Guard B): `{job_id}` has no \
+                     `strategy.matrix.os:` line at the expected 8-space \
+                     indent — has this job's matrix shape changed? If `os:` \
+                     moved to a different indent or key name, update this \
+                     test's anchor alongside the ci.yml change."
+                )
+            });
+        let os_line = lines[os_line_idx];
+
+        // ADV-P56-HIGH-001: the key was detected via the quote/whitespace-
+        // aware `extract_key_name_at_indent` above, but this bare
+        // `strip_prefix("os:")` re-read of the SAME line does not
+        // recognize a quoted key spelling (`"os":` / `'os':`) or `os :`
+        // (space before colon). The prior `.unwrap_or("")` silently
+        // collapsed that mismatch to an empty string, and an empty string
+        // trivially satisfies `!"".contains("${{") &&
+        // !"".contains("fromJSON")` — CERTIFYING a dynamic matrix as
+        // static rather than merely missing it. Panic loudly instead: this
+        // checker refuses to guess at a value it detected the KEY for but
+        // cannot safely re-parse.
+        let raw_value = os_line
+            .trim_start()
+            .strip_prefix("os:")
+            .unwrap_or_else(|| {
+                panic!(
+                    "FAIL (S-626-1 Guard B, ADV-P56-HIGH-001): `{job_id}`'s \
+                     `strategy.matrix.os:` key was detected via the \
+                     quote/whitespace-aware matcher at 8-space indent, but \
+                     this checker's own value-extraction re-read (a bare \
+                     `strip_prefix(\"os:\")`) could not parse the same \
+                     line — most likely a quoted key spelling (`\"os\":` / \
+                     `'os':`) or `os :` (space before colon). Silently \
+                     collapsing to an empty string here would make \
+                     `!\"\".contains(\"${{{{\") && \
+                     !\"\".contains(\"fromJSON\")` evaluate TRUE, \
+                     CERTIFYING a dynamic matrix as static rather than \
+                     merely missing it.\n\
+                     Offending line: {os_line:?}"
+                )
+            })
+            .trim();
+
+        // ADV-P55-MED-004: `os:` alone on its own line, with the actual
+        // list on FOLLOWING `- item` block-sequence lines, is legal YAML
+        // and leaves `raw_value` empty here — which, exactly as above,
+        // would trivially (and wrongly) certify the matrix as static
+        // without this checker ever reading the real list. Read the
+        // block-sequence form explicitly rather than let an empty same-
+        // line value fall through unnoticed.
+        let value: std::borrow::Cow<'_, str> = if raw_value.is_empty() {
+            let mut collected: Vec<String> = Vec::new();
+            for line in &lines[os_line_idx + 1..] {
+                let trimmed = line.trim_start();
+                if trimmed.is_empty() || trimmed.starts_with('#') {
+                    continue;
+                }
+                let indent = line.len() - trimmed.len();
+                if indent <= 8 {
+                    break;
+                }
+                let Some(item) = trimmed.strip_prefix("- ") else {
+                    panic!(
+                        "FAIL (S-626-1 Guard B, ADV-P55-MED-004): \
+                         `{job_id}`'s `strategy.matrix.os:` has an empty \
+                         same-line value, and the following indented line \
+                         (\"{line}\") is not a plain `- item` \
+                         block-sequence entry. This checker only supports \
+                         the inline-array (`os: [a, b]`) and plain \
+                         block-sequence (`- a` / `- b`) forms and refuses \
+                         to guess at anything else (e.g. a flow mapping \
+                         per item) rather than risk certifying a dynamic \
+                         matrix as static."
+                    );
+                };
+                collected.push(item.trim().to_string());
+            }
+            if collected.is_empty() {
+                panic!(
+                    "FAIL (S-626-1 Guard B, ADV-P55-MED-004): `{job_id}`'s \
+                     `strategy.matrix.os:` has an empty same-line value and \
+                     no following block-sequence items at all — this \
+                     checker cannot certify a matrix with no discoverable \
+                     `os` list as static."
+                );
+            }
+            std::borrow::Cow::Owned(collected.join(", "))
+        } else {
+            std::borrow::Cow::Borrowed(raw_value)
+        };
+
+        assert!(
+            !value.contains("${{") && !value.contains("fromJSON"),
+            "FAIL (S-626-1 Guard B, DEC-246 §Q4): `{job_id}.strategy.matrix.os` \
+             is no longer a static literal list (found: `{value}`).\n\
+             \n\
+             GitHub does not document what `needs.{job_id}.result` reports \
+             when a DYNAMIC matrix (e.g. `fromJSON(...)`) expands to ZERO \
+             legs — community reports on the general zero-leg-matrix \
+             question are split between `skipped` (safe) and `success` (a \
+             silent false green), and this repository has never verified \
+             which applies here. A static literal `os:` list can never \
+             expand to zero legs, so this question has been provably moot \
+             until now.\n\
+             \n\
+             Before converting `{job_id}`'s matrix to a dynamic form, first \
+             resolve ZERO-LEG-MATRIX-RESULT-UNDOCUMENTED empirically (a \
+             throwaway PR with a matrix that can expand to zero legs, \
+             observed against a real GitHub Actions run) — do not resolve \
+             it by inference, and do not land the conversion in the same \
+             change that would make this newly-reachable question live \
+             without that verification.",
+        );
+
+        // S-626-1 pass-57, ADV-P56-INFO-001 (b): converts the second,
+        // independent zero-leg vector — `strategy.matrix.exclude:` removing
+        // combinations from an otherwise-static list — into the same kind
+        // of decidable source property as the `${{ }}`/`fromJSON` check
+        // above: does `{job_id}.strategy.matrix` declare an `exclude:` key
+        // at all? Scoped to the `matrix:` mapping specifically (not a bare
+        // `job_block.contains("exclude:")`) via `collect_mapping_key_set`
+        // — the same quote/whitespace-aware, comment-and-blank-line-
+        // tolerant primitive used for every other key-set pin in this
+        // file — anchored on the `matrix:` key at 6-space indent (one
+        // level above `os:`'s 8-space indent) so a coincidental
+        // `exclude:` living under a step's `with:` block elsewhere in the
+        // job would not be mistaken for this one.
+        let matrix_line_idx = lines
+            .iter()
+            .position(|l| extract_key_name_at_indent(l, 6).as_deref() == Some("matrix"))
+            .unwrap_or_else(|| {
+                panic!(
+                    "FAIL (S-626-1 Guard B, ADV-P56-INFO-001): `{job_id}` \
+                     has no `strategy.matrix:` line at the expected \
+                     6-space indent, even though it has an `os:` line at \
+                     8-space indent one level deeper — has this job's \
+                     matrix nesting changed? Update this test's anchor \
+                     alongside the ci.yml change."
+                )
+            });
+        let matrix_keys = collect_mapping_key_set(&lines, matrix_line_idx + 1, 8);
+        assert!(
+            !matrix_keys.iter().any(|k| k == "exclude"),
+            "FAIL (S-626-1 Guard B, ADV-P56-INFO-001): \
+             `{job_id}.strategy.matrix` now declares an `exclude:` key.\n\
+             \n\
+             `exclude:` can remove combinations from an otherwise-static \
+             matrix, reopening the same undocumented \
+             ZERO-LEG-MATRIX-RESULT-UNDOCUMENTED question the `${{{{ }}}}`/\
+             `fromJSON` check above exists to guard against — whether \
+             GitHub permits a fully-excluded matrix at all, and if so what \
+             `needs.{job_id}.result` reports for it, is UNVERIFIED. Do not \
+             resolve this by inference: first verify empirically (a \
+             throwaway PR with a matrix that can fully exclude itself, \
+             observed against a real GitHub Actions run) before landing \
+             an `exclude:` on this matrix.",
+        );
+    }
+}
+
+// ---------------------------------------------------------------------------
+// S-626-1 pass-54 — fixed-denominator self-check (ADV-P54-MED-003)
+// ---------------------------------------------------------------------------
+
+/// PINNED count of `#[test]` functions in THIS file.
+///
+/// POL-11's `test` job canary requires only a NON-ZERO passed count from
+/// the `ci_gate_completeness` binary — it says nothing about HOW MANY
+/// tests this binary is supposed to contain. Deleting some number of
+/// `#[test]` functions from this file trips nothing under that guard: the
+/// binary still runs, still reports a non-zero passed count, and the
+/// canary stays green. Mirrors the fixed-denominator pattern already used
+/// by `scripts/check-ci-gate.sh --self-test`'s own `EXPECTED_FIXTURES`,
+/// `scripts/check-bc-citation-symbols.sh`'s, and
+/// `scripts/check-cargo-mutants-policy-citations.sh`'s self-tests — and,
+/// within this file, `test_allowed_skips_has_exactly_three_code_level_
+/// references`'s narrower precedent of counting textual occurrences of a
+/// known-good shape.
+///
+/// UPDATE THIS CONSTANT in the SAME change whenever a `#[test]` fn is
+/// added to or removed from this file. This is a tripwire, not a
+/// mechanism meant to stay in sync automatically — a mismatch is a signal
+/// to look at what changed (a legitimate addition/removal vs. an
+/// accidental deletion), not something to silence by "fixing" the number
+/// without checking why it moved.
+const EXPECTED_GUARD_TEST_COUNT: usize = 27;
+
+/// Coverage note (S-626-1 pass-57, `DENOMINATOR-GUARD-USES-EXACT-LINE-MATCH`):
+/// counts lines whose TRIMMED text STARTS WITH the literal `#[test]`, not
+/// lines EQUAL to it. The prior exact-`==` match was the same shape the
+/// `910b8ab0` class sweep fixed everywhere else in this file (key-detect
+/// vs. value-reparse swallow) — it missed `#[test] fn foo() {}` written on
+/// one line, silently lowering the denominator; that evasion was mitigated
+/// only by `cargo fmt --check` forcing the attribute onto its own line in a
+/// DIFFERENT CI job, not by this guard itself. `starts_with` also counts a
+/// `#[test]` line followed by trailing same-line content (a comment, or —
+/// as just described — the function signature itself).
+///
+/// This is still a literal textual match, not a Rust parser: it does NOT
+/// catch semantically-equivalent-but-differently-spelled forms such as
+/// `#[ test ]` (internal whitespace before the trimmed prefix breaks),
+/// `#[core::prelude::v1::test]` (fully-qualified attribute path), or a
+/// locally aliased/renamed `test` import — none of which occur in this file
+/// today. Verified this change does not move `EXPECTED_GUARD_TEST_COUNT`:
+/// the file's other seven textual occurrences of `#[test]` all live inside
+/// `///` doc comments or a panic-message string literal, and none of those
+/// lines' trimmed text starts with the literal `#[test]`.
+///
+/// S-626-1 pass-59 (ADV-P57-MED-002 ≡ ADV-P58-MED-002, dedupe — same
+/// finding reported twice): `EXPECTED_GUARD_TEST_COUNT` above pins the
+/// `#[test]` ATTRIBUTE count, not ENFORCEMENT. Two distinct ways to make
+/// a test attribute stop running while the count above stays unmoved:
+///   - `#[ignore]`: `cargo test` still reports the binary's overall
+///     result as `ok` (e.g. "26 passed; 1 ignored"), so `ci.yml`'s
+///     POL-11 gate (3) — which only requires a non-zero passed count
+///     from THIS binary (`_canary_passed -eq 0` → FAIL) — is satisfied
+///     by the 26 REMAINING tests.
+///   - `#[cfg(target_os = "haiku")]` (or any predicate false on every
+///     platform this repo actually builds for — `ubuntu-latest` /
+///     `windows-latest` / `macos-latest`, per the `test` job's matrix):
+///     the gated `#[test]` fn does not exist in the compiled binary AT
+///     ALL, on ANY of those platforms, yet the textual attribute is
+///     still present in `include_str!`'s source, so `actual` above is
+///     unaffected.
+///
+/// Either construction, applied to
+/// `test_ci_gate_pass_fail_semantics_are_structurally_placed` — the
+/// single largest concentration of decision-path pins in this file
+/// (M2-a..p) — silently removes that entire test from every CI run while
+/// `EXPECTED_GUARD_TEST_COUNT` and POL-11's canary both stay green.
+///
+/// FIX: assert zero `#[ignore]` attributes anywhere in this file, and
+/// that every `#[cfg(...)]` line immediately preceding a `#[test]` line
+/// is the ONE legitimate form in this file today, `#[cfg(unix)]` (used
+/// by the tests that shell out to bash and therefore cannot exist on
+/// Windows — see `list_all_ci_yml_job_names`'s doc comment for the
+/// "gating a test also orphans its helpers" lesson from PR #671 review
+/// round 15, which this same allowlist must be kept consistent with).
+/// `ci.yml`'s POL-11 gate (3) is NOT changed from `> 0` to an equality
+/// against `EXPECTED_GUARD_TEST_COUNT`: this file's `test` job runs on a
+/// TWO-OS matrix (`ubuntu-latest`, `windows-latest`), and the four
+/// `#[cfg(unix)]`-gated `#[test]` fns in this file genuinely do not
+/// compile on the Windows leg — a literal `27` there would fail every
+/// Windows `test` run even on a fully green tree. That entanglement is
+/// resolved on the Rust side only; see this test's assertions below.
+#[test]
+fn test_this_file_test_count_matches_expected_denominator() {
+    let source = include_str!("ci_gate_completeness.rs");
+    let lines: Vec<&str> = source.lines().collect();
+    let actual = lines
+        .iter()
+        .filter(|l| l.trim().starts_with("#[test]"))
+        .count();
+    assert_eq!(
+        actual, EXPECTED_GUARD_TEST_COUNT,
+        "FAIL (S-626-1 pass-54, ADV-P54-MED-003): this file contains \
+         {actual} `#[test]` functions, but EXPECTED_GUARD_TEST_COUNT pins \
+         {EXPECTED_GUARD_TEST_COUNT}. POL-11's zero-test-floor canary in \
+         `ci.yml :: test` only requires a NON-ZERO passed count from this \
+         binary — it does not know how many tests this file is SUPPOSED \
+         to contain, so silently deleting tests from this file trips \
+         nothing there. If this mismatch is from a deliberate, reviewed \
+         addition or removal of a `#[test]` fn, update \
+         EXPECTED_GUARD_TEST_COUNT in the SAME change. If it is not \
+         deliberate, some `#[test]` fn was lost — find out which one \
+         before changing this constant."
+    );
+
+    // S-626-1 pass-60 (ADV-P60-HIGH-001): the assertion above pins the
+    // TEXTUAL count of `#[test]` attributes — it says nothing about
+    // whether every one of those attributes still actually RUNS. This
+    // doc comment previously claimed (since pass-59) that the two
+    // documented evasions below were resolved "on the Rust side only;
+    // see this test's assertions below" — but until this pass, no such
+    // assertion existed; the function body ended at the `assert_eq!`
+    // above. The two assertions that follow are that missing
+    // enforcement, added in the SAME change as this correction so the
+    // doc comment's claim is finally backed by code, not just prose.
+    //
+    //   - `#[ignore]`: the attribute count above stays unmoved (the
+    //     line still starts with `#[test]`), but `cargo test` reports
+    //     the binary's overall result as `ok` regardless (e.g. "26
+    //     passed; 1 ignored"), and `ci.yml`'s POL-11 canary only
+    //     requires a NON-ZERO passed count from this binary — satisfied
+    //     by the remaining tests. Guarded by the zero-`#[ignore]`
+    //     assertion immediately below.
+    //   - `#[cfg(...)]` with a predicate false on every platform this
+    //     repo actually builds for: the gated `#[test]` fn does not
+    //     exist in the compiled binary AT ALL on any of those
+    //     platforms, yet its textual attribute is still present in
+    //     `include_str!`'s source, so `actual` above is unaffected.
+    //     Guarded by the allowlist assertion below, which accepts only
+    //     the one legitimate form used in this file today,
+    //     `#[cfg(unix)]` (the tests that shell out to bash and
+    //     therefore cannot exist on Windows — see
+    //     `list_all_ci_yml_job_names`'s doc comment for the "gating a
+    //     test also orphans its helpers" lesson from PR #671 review
+    //     round 15, which this allowlist must be kept consistent
+    //     with).
+    let ignore_lines: Vec<usize> = lines
+        .iter()
+        .enumerate()
+        .filter(|(_, l)| l.trim().starts_with("#[ignore"))
+        .map(|(i, _)| i + 1) // 1-based line numbers for the diagnostic.
+        .collect();
+    assert!(
+        ignore_lines.is_empty(),
+        "FAIL (S-626-1 pass-60, ADV-P60-HIGH-001): found `#[ignore]` \
+         attribute(s) at line(s) {ignore_lines:?} in this file. The \
+         `actual == EXPECTED_GUARD_TEST_COUNT` assertion above counts \
+         `#[test]` ATTRIBUTES textually — an `#[ignore]`d test still \
+         carries that attribute, so the count does not move, but the \
+         test never runs. `cargo test` still reports an overall `ok` \
+         result for this binary (e.g. \"26 passed; 1 ignored\"), and \
+         `ci.yml`'s POL-11 zero-test-floor canary only requires a \
+         NON-ZERO passed count — satisfied by the remaining tests. \
+         Remove the `#[ignore]` attribute, or if a test genuinely must \
+         be disabled, that decision needs its own explicit review, not \
+         a silent addition that leaves this guard green."
+    );
+
+    // ADV-P60-HIGH-001, second gap: a `#[cfg(...)]` predicate false on
+    // every platform this repo builds for removes the gated `#[test]`
+    // fn from the compiled binary entirely — invisible to both the
+    // count above and the `#[ignore]` scan above (no `#[ignore]`
+    // attribute is present; the fn is simply absent from that
+    // platform's build). This scan requires that ANY `#[cfg(...)]`
+    // line directly preceding a `#[test]` line be byte-for-byte one of
+    // the allowlisted forms below — reject-don't-parse, the same
+    // discipline this file uses elsewhere (e.g.
+    // `extract_and_normalize_if_expr`) rather than attempt to evaluate
+    // arbitrary `cfg` predicate syntax.
+    const ALLOWED_TEST_CFG_GATES: &[&str] = &["#[cfg(unix)]"];
+    let bad_cfg_gates: Vec<(usize, String)> = lines
+        .iter()
+        .enumerate()
+        .filter(|(_, l)| l.trim().starts_with("#[test]"))
+        .filter_map(|(i, _)| {
+            if i == 0 {
+                return None; // No line above index 0 to inspect.
+            }
+            let prev = lines[i - 1].trim();
+            if prev.starts_with("#[cfg(") && !ALLOWED_TEST_CFG_GATES.contains(&prev) {
+                Some((i + 1, prev.to_string())) // 1-based `#[test]` line number.
+            } else {
+                None
+            }
+        })
+        .collect();
+    assert!(
+        bad_cfg_gates.is_empty(),
+        "FAIL (S-626-1 pass-60, ADV-P60-HIGH-001): found `#[test]` fn(s) \
+         whose immediately preceding line is a `#[cfg(...)]` attribute \
+         NOT in the allowlist {ALLOWED_TEST_CFG_GATES:?}: {bad_cfg_gates:?} \
+         (line number, offending attribute). A `#[cfg(...)]` predicate \
+         false on every platform this repo builds for \
+         (`ubuntu-latest`/`windows-latest`/`macos-latest`, per the \
+         `test` job's matrix) removes the gated `#[test]` fn from the \
+         compiled binary ENTIRELY on every one of those platforms — the \
+         textual `#[test]` count above does not move (the attribute is \
+         still present in source), and there is no `#[ignore]` \
+         attribute for the scan above to catch either. If this is a \
+         deliberate, reviewed new platform-gated test, add its exact \
+         `#[cfg(...)]` spelling to ALLOWED_TEST_CFG_GATES in the SAME \
+         change — and confirm any helper that test alone uses is \
+         gated the same way (PR #671 review round 15's \"gating a test \
+         also orphans its helpers\" lesson)."
     );
 }

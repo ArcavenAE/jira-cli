@@ -54,7 +54,195 @@ jobs:
 
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
       - uses: Swatinem/rust-cache@e18b497796c12c097a38f9edb9d0641fb99eee32  # v2
-      - run: cargo test --all-features
+      - name: Run tests (zero-test floor, POL-11)
+        shell: bash
+        env:
+          # Override file-level CARGO_TERM_COLOR: always for this step only.
+          # The pass/fail logic anchors on "^test result: " with a plain regex.
+          # As of the current cargo/libtest pairing, cargo does not forward its
+          # color preference to libtest, so the "test result: " line is plain
+          # ASCII even under CARGO_TERM_COLOR: always — this override is not
+          # working around a presently-reachable failure. It is defensive: it
+          # removes the dependency on that behavior continuing to hold across
+          # future cargo/libtest versions or a differently-configured CI
+          # runner, where a color-wrapped "test result:" line would silently
+          # zero the anchored grep, making the diagnostic branch unreachable
+          # and producing a false-red with no diagnostic.  POL-11 cites this
+          # exact anti-pattern (TD-VSDD-057 / prism PR #127, where ANSI codes
+          # silently zeroed an anchored regex for 12 converged passes).
+          CARGO_TERM_COLOR: never
+        run: |
+          set -euo pipefail
+          # Tee streams to both the console and a capture file.  pipefail
+          # ensures a non-zero cargo exit propagates through the tee pipe, so
+          # real test failures still fail the step.
+          cargo test --all-features 2>&1 | tee "$RUNNER_TEMP/cargo_test_out.txt"
+
+          # Temporarily disable pipefail for the count computations.
+          # Under set -o pipefail, grep exits 1 on no-match; that exit
+          # propagates through the pipeline and, combined with set -e, aborts
+          # the step before the diagnostic branch can print.  Under
+          # set +o pipefail the pipeline exit is the last command's exit; awk
+          # (ends the total= pipe) and tr (ends the binaries= pipe) always
+          # exit 0, so neither computation can abort.
+          set +o pipefail
+
+          # Sum "N passed" from every "test result:" line (one per test binary
+          # plus doc-tests).  awk initialises sum=0 so empty grep output → 0.
+          total=$(grep -E "^test result: " "$RUNNER_TEMP/cargo_test_out.txt" \
+            | grep -Eo "[0-9]+ passed" \
+            | awk '{sum += $1} END {print sum+0}')
+
+          # Count test binaries that reported results.
+          # wc -l avoids the grep -c no-match trap: grep -c exits 1 on zero
+          # matches while still printing "0", so the prior `|| echo 0` fallback
+          # produced the two-line value "0\n0" that breaks bash arithmetic
+          # (same defect class as the mutants job F5 fix,
+          #  ci.yml :: mutants / "Check kill rate" else branch — "grep -c '' exits 1 on empty match").
+          binaries=$(grep -E "^test result: " "$RUNNER_TEMP/cargo_test_out.txt" | wc -l | tr -d ' ')
+
+          # Restore pipefail after the count computations (defensive
+          # hygiene, not currently load-bearing): nothing below this line is
+          # a pipeline — the gate checks are `[ ... ]` tests, a bare
+          # `grep -q`, and `echo`s — so this restore has no operative effect
+          # on them today.  It exists so pipefail stays the step's ambient
+          # default in case a future gate check introduces a pipe.  Removing
+          # this bracket is the opposite failure mode of removing the
+          # opening `set +o pipefail` above: it leaves pipefail disabled,
+          # which is strictly more permissive and can never cause an abort.
+          set -o pipefail
+
+          # POL-11 zero-test floor — FOUR instruments required.
+          #
+          # A passed-count "> 0" cannot detect integration-test orphaning:
+          # cargo test --all-features also runs the inline #[cfg(test)] modules
+          # in src/ (~1,100 tests at head), so orphaning every file in tests/
+          # via autotests=false or a [[test]] rename still produces total > 0.
+          # The prior "> 0" predicate was inert against the defect class its
+          # own comment claimed to catch.  Partial orphaning is also NOT
+          # covered by cargo-mutants: examine_globs is a whitelist
+          # that excludes board.rs, list.rs, keychain.rs, sprint.rs, config.rs,
+          # output.rs and others; the mutants job is PR-only with --in-diff
+          # scope; a silently-orphaned test binary provides zero coverage
+          # against unchanged code regardless of kill rate.
+          #
+          # (1) Binary-count floor (<90): at head, cargo test produces ~103
+          #     test binaries (1 lib + 1 bin + ~100 integration + ~1 doc;
+          #     100 = the 104 files in tests/**/*.rs minus the 4
+          #     tests/common/ module files that are not cargo targets).
+          #     Orphaning all tests/ files drops this below 90.  The
+          #     threshold tolerates up to ~13 legitimate binary reductions
+          #     without false-alarming (e.g. test-file removals during
+          #     refactors).  Update the threshold when a legitimately large
+          #     reduction is planned.
+          #
+          # (2) Named canary: asserts tests/ci_gate_completeness ran.  This
+          #     catches the self-orphaning case — the binary carrying this guard
+          #     and all CI-gate Rust regression pins stops running — even when
+          #     the binary count stays above 90.  The binary floor alone cannot
+          #     detect this case.
+          #
+          # (3) Named-canary passed-count gate: gate (2) alone proves only
+          #     that tests/ci_gate_completeness was INVOKED, not that any
+          #     assertion inside it actually ran — see the ADV-P50-LOW-002
+          #     comment below, where this gate is implemented.
+          #
+          # (4) Zero-test floor ("${total}" -eq 0): catches the case where
+          #     >=90 binaries (including the canary) report results but zero
+          #     tests passed within them overall — e.g. a global test filter
+          #     matching nothing.  Neither (1) nor (2) nor (3) detects this
+          #     scenario.
+          if [ "${binaries}" -lt 90 ]; then
+            echo "FAIL (POL-11): only ${binaries} test binaries reported results (floor: 90)."
+            echo "Possible causes: autotests=false in Cargo.toml, a [[test]] rename,"
+            echo "a harness misconfiguration, or a mass deletion of test files."
+            exit 1
+          fi
+
+          if ! grep -q "ci_gate_completeness" "$RUNNER_TEMP/cargo_test_out.txt"; then
+            echo "FAIL (POL-11): tests/ci_gate_completeness did not run."
+            echo "The binary carrying the CI-gate regression pins was not executed."
+            echo "Possible causes: the file was renamed, autotests=false, or a"
+            echo "[[test]] entry overrides the default target list."
+            exit 1
+          fi
+
+          # Gate (3), ADV-P50-LOW-002 (round 20): the grep -q check above proves only
+          # that the ci_gate_completeness binary was INVOKED — cargo test
+          # prints "Running tests/ci_gate_completeness.rs (...)" before
+          # running anything inside it, so the substring is present even if
+          # every test in the file is #[ignore]d or an env-gate skips the
+          # whole suite before any assertion runs. That leaves the canary
+          # "satisfied" at 0 passed — the exact same fail-open shape POL-11
+          # exists to close for the whole-suite floor above, just scoped to
+          # this one binary. Strengthen: locate this binary's own
+          # "test result:" summary line (the first one after its "Running"
+          # line) and require a non-zero passed count specifically from it.
+          # Path-separator-agnostic: cargo prints "Running tests/ci_gate_completeness.rs"
+          # on Unix runners but "Running tests\ci_gate_completeness.rs" (backslash) on
+          # windows-latest. A forward-slash-only grep here silently finds no match on
+          # Windows, so this pattern must match either separator (round 20 Windows
+          # regression: CI run 31182605820 on 424d64de).
+          # ADV-P51-LOW-001 (adversarial pass 51): the `if [ -z
+          # "${_canary_running_line}" ]` fallback immediately below is, as
+          # written, UNREACHABLE today — not merely defensive. `set -o
+          # pipefail` was already restored above (see the "Restore
+          # pipefail" comment) before this lookup runs, so if the regex
+          # found no match at all, grep's exit-1 would propagate through
+          # the `| head -1 | cut -d: -f1` pipeline — under pipefail the
+          # pipeline's exit status is the LAST non-zero exit among ALL
+          # stages, not simply the rightmost stage's own exit code, so
+          # grep's 1 survives even though head/cut both exit 0 — and,
+          # combined with `set -e`, abort the whole script at THIS
+          # assignment, before the `if [ -z ... ]` check below is ever
+          # reached. Verified directly: `set -euo pipefail; x=$(grep -nE
+          # "NOPE" <<<"hello" | head -1 | cut -d: -f1); echo "after"`
+          # aborts before printing "after". The round-20 rationale
+          # previously recorded on this fallback ("hardcoding
+          # _canary_passed to 0 and failing every Windows run
+          # unconditionally") described the wrong mechanism: a no-match
+          # regex does not gracefully fall through to `_canary_passed=0`
+          # here — it aborts the script outright with a bash error
+          # instead. Both failure modes still fail the Windows leg (so
+          # this was never a false-green — the job still goes red either
+          # way), but the fallback branch itself cannot execute given the
+          # current pipefail sequencing. Left as-is rather than
+          # restructured to make it reachable: doing so would require
+          # moving the `set -o pipefail` restore to AFTER this lookup — a
+          # genuine CI behavior change, out of scope for a test-side
+          # guard-strength pass.
+          _canary_running_line=$(grep -nE "Running tests[/\\\\]ci_gate_completeness\.rs" \
+            "$RUNNER_TEMP/cargo_test_out.txt" | head -1 | cut -d: -f1)
+          if [ -z "${_canary_running_line}" ]; then
+            _canary_result_line=""
+            _canary_passed=0
+          else
+            _canary_result_line=$(tail -n +"${_canary_running_line}" \
+              "$RUNNER_TEMP/cargo_test_out.txt" | grep -m1 -E "^test result: " || true)
+            _canary_passed=$(echo "${_canary_result_line}" | grep -Eo "[0-9]+ passed" \
+              | grep -Eo "[0-9]+" || true)
+            _canary_passed=${_canary_passed:-0}
+          fi
+          if [ "${_canary_passed}" -eq 0 ]; then
+            echo "FAIL (POL-11): tests/ci_gate_completeness ran but reported 0 passed assertions."
+            echo "Result line found: '${_canary_result_line:-<none>}'."
+            echo "Possible causes: every test in the file is #[ignore]d, an"
+            echo "env-gate early-returns before any assertion runs, or a test"
+            echo "filter matched the binary but excluded every test inside it."
+            exit 1
+          fi
+
+          # Gate (4): the whole-suite zero-test floor.
+          if [ "${total}" -eq 0 ]; then
+            echo "FAIL (POL-11): zero tests executed across ${binaries} test binaries."
+            echo "Possible causes: autotests=false in Cargo.toml, a [[test]] rename,"
+            echo "a harness misconfiguration, or a filter matching no test targets."
+            exit 1
+          fi
+
+          # Positive-coverage assertion (POL-11 requirement: exit code alone is
+          # insufficient — emit a runtime-computed count to prove tests ran).
+          echo "Check passed: ${total} tests executed across ${binaries} test binaries"
 
   msrv:
     name: MSRV (1.85.0)
@@ -67,9 +255,23 @@ jobs:
           egress-policy: audit
 
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
-      - uses: dtolnay/rust-toolchain@c93f4f9c67595668add93d3d6895795ce52d8c2d  # 1.85.0
+      - uses: dtolnay/rust-toolchain@fa04a1451ff1842e2626ccb99004d0195b455a88  # 1.85.0
+        with:
+          toolchain: "1.85.0"
       - uses: Swatinem/rust-cache@e18b497796c12c097a38f9edb9d0641fb99eee32  # v2
-      - run: cargo check --all-features
+      # Scope is deliberately lib + bins only (NOT --all-targets): including
+      # --all-targets pulls in dev-dependencies (tests) which cannot compile at
+      # 1.85.0. wiremock (0.6.x) uses let-chains and ships no rust-version field
+      # — the same defect class as comfy-table 7.2.2 — and requires Rust ≥1.88.
+      # The --all-features flag is effectively a no-op (this crate has no
+      # [features] table); it is kept for explicitness. Note: omitting
+      # --all-targets also means inline #[cfg(test)] mod blocks in src/ sit
+      # outside the MSRV floor's enforceable scope; closing this gap would
+      # require dev-dependencies that build at 1.85.0 — a wiremock downgrade-pin
+      # was not evaluated.
+      - run: cargo check --all-features --locked
+        env:
+          RUSTUP_TOOLCHAIN: "1.85.0"
 
   deny:
     name: Deny (licenses + vulnerabilities)
@@ -95,8 +297,9 @@ jobs:
           egress-policy: audit
 
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
-      - uses: dtolnay/rust-toolchain@c93f4f9c67595668add93d3d6895795ce52d8c2d  # stable
+      - uses: dtolnay/rust-toolchain@fa04a1451ff1842e2626ccb99004d0195b455a88  # stable
         with:
+          toolchain: stable
           components: llvm-tools-preview
       - uses: taiki-e/install-action@065d6a08a14e61e89fb0a4c10eecdbdef39c7d8e  # v2.85.4
         with:
@@ -345,15 +548,34 @@ jobs:
             # Evidence basis: v27 top-level schema confirmed in S-346 Pass 5 F1 refutation
             # (red-gate-log.md §"Pass 5 F1 empirical refutation"); drift guard activates
             # only when the confirmed schema no longer matches.
+            #
+            # ADV-P50-MED-001 (round 20): originally this guard only fired on FULL
+            # drift (_outcomes_len>0 AND total_mutants==0 — every summary key,
+            # including total_mutants, renamed/moved). PARTIAL drift was fail-OPEN:
+            # if a future cargo-mutants version nested caught/missed/timeout/unviable
+            # under a new key while LEAVING total_mutants at the top level non-zero,
+            # _sum_check stayed 0 but total_mutants != 0 — this condition's third
+            # clause (`total_mutants -eq 0`) was false, so the guard did not fire;
+            # control fell through to the non-fatal `::warning::` below (which does
+            # not exit non-zero) and then to `total_outcomes -eq 0` → "OK" → exit 0.
+            # The job went green with real mutants recorded in total_mutants but the
+            # 90% kill-rate gate never evaluated. Fixed by dropping the
+            # `total_mutants -eq 0` requirement: the guard now fires whenever the
+            # reconciled sum is 0 AND there is ANY other evidence mutants existed
+            # (a non-empty .outcomes array, OR a non-zero total_mutants) — covering
+            # both the original full-drift shape and this partial-drift shape, fail-
+            # closed either way.
             _outcomes_len=$(jq '(.outcomes // []) | length' mutants.out/outcomes.json 2>/dev/null || echo 0)
             [[ "${_outcomes_len}" =~ ^[0-9]+$ ]] || _outcomes_len=0
             _sum_check=$((caught + missed + timeout + unviable))
-            if [ "${_outcomes_len}" -gt 0 ] && [ "${_sum_check}" -eq 0 ] && [ "${total_mutants}" -eq 0 ]; then
+            if [ "${_sum_check}" -eq 0 ] && { [ "${_outcomes_len}" -gt 0 ] || [ "${total_mutants}" -ne 0 ]; }; then
               echo "FAIL: outcomes.json schema drift detected."
-              echo "      outcomes.json has ${_outcomes_len} outcome(s) in .outcomes array but all"
-              echo "      top-level summary keys (caught/missed/timeout/unviable/total_mutants) are 0."
+              echo "      outcomes.json has ${_outcomes_len} outcome(s) in .outcomes array and"
+              echo "      total_mutants=${total_mutants}, but all top-level summary keys"
+              echo "      (caught/missed/timeout/unviable) sum to 0."
               echo "      The cargo-mutants output format may have changed (e.g. summary keys"
-              echo "      moved to a nested object). Pin update or schema investigation required."
+              echo "      moved to a nested object) — whether or not total_mutants itself moved."
+              echo "      Pin update or schema investigation required."
               echo "      Pin: .github/workflows/ci.yml cargo-mutants@27"
               exit 1
             fi
@@ -440,7 +662,25 @@ jobs:
   ci-gate:
     name: CI Gate
     runs-on: ubuntu-latest
+    # ADV-P50-LOW-003 (round 20): every other job in this file sets an
+    # explicit timeout-minutes; ci-gate previously did not, silently
+    # inheriting GitHub Actions' 360-minute default. This cannot cause a
+    # false-green (a required check that never completes blocks merge
+    # rather than passing it), so it was imprecision rather than a
+    # security gap — but a hung `check-ci-gate.sh` invocation (e.g. `jq`
+    # or bash hanging on malformed input) would otherwise tie up this
+    # required check for up to 6 hours before GitHub's default kicks in.
+    # 5 minutes matches the other lightweight, no-build aggregator/gate
+    # jobs in this file (fmt, spec-guard, check-signing-workflow-injection).
+    timeout-minutes: 5
     needs: [fmt, clippy, test, msrv, deny, spec-guard, check-signing-workflow-injection, mutants]
+    # S-CIGATE-1 AC-002: `if: ${{ always() }}` is LOAD-BEARING. Without a
+    # job-level `always()` here, a failed upstream job SKIPS `ci-gate`
+    # entirely (GitHub Actions' default `needs` behavior), and GitHub branch
+    # protection evaluates a skipped required check as SUCCESS — silently
+    # permitting a broken PR to merge. `always()` makes `ci-gate` run
+    # regardless of upstream results so its own `run:` step (see below) can
+    # make the real pass/fail decision via `scripts/check-ci-gate.sh`.
     if: ${{ always() }}
     steps:
       - name: Harden the runner (Audit all outbound calls)
