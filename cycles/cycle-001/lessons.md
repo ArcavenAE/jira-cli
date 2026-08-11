@@ -7,7 +7,7 @@ producer: state-manager
 timestamp: 2026-05-07T00:00:00
 cycle: "cycle-001"
 inputs: [STATE.md]
-input-hash: "9f96073"
+input-hash: "3a90c99"
 traces_to: STATE.md
 ---
 
@@ -7003,3 +7003,39 @@ The dispatch reasoning behind ADV-P675 was explicit going in, not discovered aft
 
 _Trigger: PR675-MERGE+ADV-P675-CLOSE burst (2026-08-11) — a review dispatched specifically because a doc-only PR touched load-bearing comments found 2 MEDIUM + 2 LOW real defects, none of which a purely mechanical "diff is comments only, skip review" heuristic would have caught._
 _Tagged: [ci-gate] [review-discipline] [doc-as-control] [process-gap] [codified]_
+
+## S-CIGATE-3-IMPLEMENTED — A False Rationale Can Survive Its Own Correction When the Correction Only Touches the Code Comment (2026-08-11)
+
+`Cargo.toml`'s comment above the `saphyr-parser =0.0.11` pin claimed an unreviewed transitive bump could silently break the `msrv` CI job. That claim was false — `saphyr-parser` is a dev-dependency, and `msrv`'s `cargo check` scope is deliberately lib+bins only — and the orchestrator's own dispatch instruction propagated the false claim into the comment before anyone verified it against the job's actual scope. The comment was later corrected in-branch (commit `80a872e4`, discovered and fixed during the story's own adversarial window), but the story spec file's AC-006 — the very acceptance criterion that motivated the false comment in the first place — still asserts the same false rationale verbatim, because the fix targeted the artifact that was easiest to reach (the code comment an adversary pass was actively reading) rather than the artifact the claim originated in (the story's own AC text).
+
+**Disposition:** correcting a propagated false claim at its most visible instance does not close the claim's origin. When a false rationale is found, trace it back to every artifact that states it — not just the one currently under review — before declaring it fixed. A story's own acceptance criteria are as much a place a false claim can live as any code comment, and are easy to skip because "the code is right now" reads as done.
+
+_Trigger: S-CIGATE-3-IMPLEMENTED burst (2026-08-11) — this burst's own re-derivation (re-reading AC-006 directly, cross-checking `ci.yml`'s `msrv` job scope and `Cargo.toml`'s already-corrected comment) found the story file's AC-006 rationale still false, one hop past where the same false claim had already been fixed once. Recorded as drift item `AC-006-FALSE-RATIONALE-UNCORRECTED`; story text intentionally left unaltered by this burst per explicit orchestrator instruction ("Do NOT alter its ACs")._
+_Tagged: [ci-gate] [s-cigate-3] [claim-accuracy] [spec-integrity] [codified]_
+
+## S-CIGATE-3-IMPLEMENTED — Deleting a Temporary Equivalence Test Without Instructing Citation Cleanup Leaves the Replacement Uncovered (2026-08-11)
+
+The migration to an event-stream YAML model used a temporary `wf_model_equivalence` test to prove the new model byte-equivalent to the legacy line scanner across all 28 job blocks in all 10 workflow files, before the legacy code was deleted. The dispatch instruction that authorized deleting this now-redundant test did not separately instruct cleaning up citations to it, and did not check whether the new `tests/common/wf.rs` module had any tests of its own once the temporary proof was gone — it had none. The gap was caught by the story's own pass-1 adversarial review (MED-001), not by the dispatch or implementation step that created it, and fixed by adding 20 real tests plus an `EXPECTED_WF_TEST_COUNT` tripwire.
+
+**Disposition:** an instruction to delete a temporary proof artifact is incomplete unless it also asks "what does this file's test coverage look like once the proof is gone" — a scaffolding test's disappearance can silently zero out coverage for the very code it was scaffolding, and nothing about "delete the redundant test" surfaces that on its own.
+
+_Trigger: S-CIGATE-3-IMPLEMENTED burst (2026-08-11), reporting pass-1 adversarial finding MED-001 from the story's own delivery session (not found by this bookkeeping burst) — `tests/common/wf.rs` had zero tests of its own after `wf_model_equivalence`'s deletion; fixed by adding 20 tests same session._
+_Tagged: [ci-gate] [s-cigate-3] [test-coverage] [dispatch-instruction] [codified]_
+
+## S-CIGATE-3-IMPLEMENTED — A Downstream Agent Refusing a Stale Measurement Is a Correction to Act On, Not Friction to Route Around (2026-08-11)
+
+The orchestrator asked the technical-writer to record a pin-maintenance measurement table in `CLAUDE.md`, measured at adversarial pass 4 — by the time the request reached the writer, fix burst 7 (dispatched to close pass-4's own findings) had already invalidated the measurement. The technical-writer did not silently substitute a corrected number or write the stale one anyway; it refused the write and reported the staleness back instead.
+
+**Disposition:** this is the same MEASUREMENT-METHOD-PRODUCES-FALSE-CLAIM shape recorded three times already in this cycle (an in-flight jq fix reported "worse than the break"; a window-57/58/59 recurrence; an unsummed finding-count aggregate), but caught one step earlier in the pipeline this time — by the agent asked to write the number down, not by a later verification pass. A downstream agent's refusal to commit a number it can see is stale is exactly the behavior the standing rule ("verify a measurement's method before reporting it, every time") exists to produce; treat such a refusal as the check working, not as an obstacle to push past.
+
+_Trigger: S-CIGATE-3-IMPLEMENTED burst (2026-08-11), reporting an episode from the story's own delivery session (not this bookkeeping burst) — technical-writer refused to record a pass-4 pin-maintenance table after fix-burst-7 invalidated it, reporting the staleness instead of writing the stale figure._
+_Tagged: [ci-gate] [s-cigate-3] [measurement-discipline] [process-gap] [codified]_
+
+## S-CIGATE-3-IMPLEMENTED — The Orchestrator Miscounted Its Own Commit Range, Caught Only By the Receiving Agent's Re-Derivation (2026-08-11)
+
+The dispatch instruction that closed out this session stated the S-CIGATE-3 branch carried "16 commits" between named endpoint SHAs (`8af710f8`..`aeeebe01`). This burst re-derived the count directly (`git rev-list --count develop..test/ci-gate-real-yaml-parser`) and found 17, not 16 — the endpoint SHAs were correct, but the count between them was not independently verified before being asserted. This is the fourth instance in this same closing episode of a claim travelling one hop past where it was actually checked (alongside AC-006's false rationale, the `wf_model_equivalence` citation gap, and the stale pin-maintenance table) — all four originating from the orchestrator, all four caught by the agent one hop downstream re-deriving rather than trusting the figure it was handed.
+
+**Disposition:** a range described by two endpoint SHAs still needs its count independently verified — correct endpoints do not imply a correct count between them, and asserting both together (as this dispatch did) reads as more verified than it was. This session's own closing instruction explicitly asked the receiving agent to re-derive every factual claim rather than copy it forward; this instance demonstrates why that instruction was warranted, including against the instruction's own numbers.
+
+_Trigger: S-CIGATE-3-IMPLEMENTED burst (2026-08-11) — `git rev-list --count develop..test/ci-gate-real-yaml-parser` = 17, correcting the dispatch instruction's claimed 16; corrected figure used throughout this burst's STATE.md/story/index updates._
+_Tagged: [ci-gate] [s-cigate-3] [measurement-discipline] [orchestrator-process] [codified]_

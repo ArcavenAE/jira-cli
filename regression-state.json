@@ -1,1 +1,1 @@
-{"status":"pass","timestamp":"2026-08-05T21:37:16Z","command":"cd /Users/zious/Documents/GITHUB/jira-cli && grep -c 'cargo test --all-features 2>&1 | tee' .factory/stories/STORY-INDEX.md; grep -c 'cargo test --all-features 2>&1 \\\\| tee' .factory/stories/STORY-INDEX.md"}
+{"status":"pass","timestamp":"2026-08-11T20:14:22Z","command":"cd /Users/zious/Documents/GITHUB/jira-cli/.worktrees/S-CIGATE-3\ncargo test --test claude_md_citations 2>&1 | tail -5\ngit status"}

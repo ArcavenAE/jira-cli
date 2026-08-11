@@ -7,7 +7,7 @@ producer: state-manager
 timestamp: 2026-05-04T00:00:00
 cycle: "cycle-001"
 inputs: [STATE.md]
-input-hash: "9f96073"
+input-hash: "3a90c99"
 traces_to: STATE.md
 ---
 
@@ -10109,3 +10109,77 @@ the exact figures). Files touched: `STATE.md` (v2.38 -> v2.39), `cycles/cycle-00
 dirty per standing instruction. One atomic commit to `factory-artifacts`, pushed. Next priority
 unchanged: S-CIGATE-3 (durable YAML-parser fix, DEC-259/DEC-260) -- this burst performed no
 pipeline work, it only compacted STATE.md ahead of that dispatch.
+
+### Archived Phase Progress Row (from COMPACT-STATE burst)
+
+| Phase | Status | Completed | Gate | Notes | Finding Progression |
+|-------|--------|-----------|------|-------|---------------------|
+| **COMPACT-STATE (2026-08-11): proactive STATE.md compaction burst (human-approved). No new work -- pure bookkeeping, factory remains PAUSED.** | COMPLETE | 2026-08-11 | -- | Extracted 3 further Phase-Progress + 4 Current-Phase-Steps rows to burst-log.md; DEC-202 annotation + DEC-254..258 to decisions-archive.md; 21 drift-item narrative bodies to drift-items-open-detail.md; 3 Convergence Status paragraphs to convergence-trajectory.md. STATE.md 196->180 lines (both measured). Next: S-CIGATE-3. | →1→3→0→2 (unchanged -- not a window pass) |
+
+### Archived Current Phase Steps Row (from COMPACT-STATE burst)
+
+| Step | Agent | Status | Output |
+|------|-------|--------|--------|
+| **COMPACT-STATE (2026-08-11): state-manager ran the `vsdd-factory:compact-state` skill per human-approved proactive compaction dispatch. Extracted historical content to `cycles/cycle-001/{burst-log,decisions-archive,drift-items-open-detail,convergence-trajectory}.md` per the content-routing table -- verbatim, zero content dropped. Re-verified every count/SHA cited against a live command rather than copying prior narrative: `wc -l`/`wc -c` on STATE.md pre- and post-compaction, `git -C .factory log -1`/`git -C .factory status --short` for HEAD and working-tree state. No story, spec, or `ADV-P1-INDEX.md` content touched. | state-manager | COMPLETED | `STATE.md` v2.38->v2.39 + `cycles/cycle-001/burst-log.md` + `cycles/cycle-001/decisions-archive.md` + `cycles/cycle-001/drift-items-open-detail.md` + `cycles/cycle-001/convergence-trajectory.md`, committed to factory-artifacts (one atomic commit), pushed. `regression-state.json`/`sidecar-learning.md` left dirty per standing instruction. Next on resume: S-CIGATE-3 (durable YAML-parser fix) per DEC-259, unchanged. |
+
+### Burst Summary: S-CIGATE-3-IMPLEMENTED (2026-08-11)
+
+**Bookkeeping burst only — this state-manager burst records the outcome of a prior sub-session's
+code work; no product code, spec, or test file was touched by this burst itself.** Preconditions
+re-verified: `.factory/.git` worktree marker present, `git -C .factory rev-parse --git-dir`
+succeeds, `git -C .factory branch --show-current` = `factory-artifacts`, in sync with
+`origin/factory-artifacts` before this burst began.
+
+**What was re-derived (not copied) this burst, and what it found:**
+
+- `git -C .factory branch --show-current` / `rev-parse --git-dir` — preconditions confirmed.
+- `git worktree list` — confirmed `.worktrees/S-CIGATE-3` mounted on `test/ci-gate-real-yaml-parser`
+  at `aeeebe01`, branched from `develop` @ `d55bedf7` (`git merge-base develop
+  test/ci-gate-real-yaml-parser` = `d55bedf7` = `git rev-parse develop`).
+- `git rev-list --count develop..test/ci-gate-real-yaml-parser` = **17**, not the dispatched
+  instruction's claimed 16. `git log --oneline develop..test/ci-gate-real-yaml-parser` confirms
+  the endpoint SHAs (`8af710f8` first, `aeeebe01` last) were correctly cited even though the count
+  between them was wrong — a partial-verification pattern (endpoints checked, count assumed)
+  worth naming for future dispatch instructions. **Corrected figure used throughout this burst's
+  STATE.md/story/index updates: 17 commits, `8af710f8`..`aeeebe01`.**
+- The 6-pass S-CIGATE-3 adversarial finding table supplied in the dispatch instruction
+  (4M2L, 2M5L, 1H1M1L, 1M1L, 1M4L, 1M3L) sums to **27** by direct arithmetic
+  (6+7+3+2+5+4=27), not the "29 findings" asserted in the same instruction's prose one
+  paragraph earlier — a second instance, within the same instruction, of a total travelling one
+  hop past its own supporting table. **Corrected figure used throughout: 27 findings, all fixed,
+  0 CLEAN passes.** No per-finding-ID detail was available to this burst beyond the per-pass
+  summary table (no detail artifact file exists for the S-CIGATE-3 window, unlike some of
+  S-626-1's early passes) — the correction is arithmetic-only (re-summing the given table), not a
+  re-derivation from raw finding records this burst does not have access to.
+- `.factory/stories/S-CIGATE-3-ci-yml-real-yaml-parser.md` AC-006 text re-read directly: it
+  still asserts "verified via the existing `msrv` CI job" and "an unreviewed transitive bump
+  could silently break the `msrv` CI job on an unrelated PR." Cross-checked against
+  `.github/workflows/ci.yml`'s `msrv` job (scope comment: lib+bins only, not `--all-targets`)
+  and `Cargo.toml`'s already-corrected `saphyr-parser` comment (commit `80a872e4`, verified via
+  `git show --stat 80a872e4`): the story file's AC-006 rationale is confirmed FALSE — a
+  dev-dependency version bump cannot affect a `cargo check` invocation scoped to lib+bins.
+  Per explicit instruction, the story file's AC text was **not** altered this burst (see task
+  scope below); the false claim is recorded instead as a new Drift Item
+  (`AC-006-FALSE-RATIONALE-UNCORRECTED`).
+
+**Files touched this burst (all in `.factory/`, one atomic commit):**
+
+`STATE.md` (v2.39→v2.40), `stories/S-CIGATE-3-ci-yml-real-yaml-parser.md` (status
+`draft`→`in-progress`, version bump; ACs untouched per instruction), `stories/STORY-INDEX.md`
+(S-CIGATE-3 row updated in place, version bump, `total_stories` unchanged),
+`cycles/cycle-001/adversarial-reviews/ADV-P1-INDEX.md` (new S-CIGATE-3 section, +27 findings,
+461→488, `{CRIT:0,HIGH:36,MED:143,LOW:175,INFO:134}`),
+`cycles/cycle-001/decisions-archive.md` (DEC-265, two human rulings this session), this file
+(`burst-log.md`), `cycles/cycle-001/session-checkpoints.md` (archived the COMPACT-STATE
+checkpoint, appended new one), `cycles/cycle-001/lessons.md` (4 `[codified]` lessons),
+`cycles/cycle-001/drift-items-open-detail.md` (4 new rows:
+`AC-006-FALSE-RATIONALE-UNCORRECTED`, `VALUE-SIDE-ANCHOR-GAP-UNCLOSED`,
+`POLICIES-YAML-NOT-INSTANTIATED`, `RECURRING-DEFECT-RELOCATES-NOT-CLOSES`).
+`regression-state.json`/`sidecar-learning.md` left dirty per standing instruction. Product repo
+worktree (main checkout) and `.worktrees/S-CIGATE-3` were NOT touched by this burst; the story
+branch was NOT pushed; no PR was opened — merge authority remains the human's (DEC-128), and
+the DEC-262-shape ruling (merge on code grounds with the adversarial window never reaching 3/3)
+is an explicit open item for the human, not something this bookkeeping burst can resolve.
+
+Next priority on resume: human merge ruling on `test/ci-gate-real-yaml-parser` (17 commits,
+unpushed), plus the four other open items listed in the new Session Resume Checkpoint below.

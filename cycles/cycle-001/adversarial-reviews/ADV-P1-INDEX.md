@@ -1,16 +1,16 @@
 ---
 document_type: adversarial-review-index
 level: ops
-version: "2.17"
+version: "2.18"
 status: closed-merged
 producer: adversary
-timestamp: 2026-08-11T02:15:00Z
+timestamp: 2026-08-11T06:15:00Z
 phase: "5"
 pass: 61
 inputs: [.factory/stories/S-626-1.md, .factory/stories/S-CIGATE-1-ci-gate-aggregator.md, .factory/stories/S-CIGATE-2-skipped-status-false-green.md, .factory/stories/S-640-1.md, .factory/stories/S-641-1.md, .factory/stories/S-MUTANTS-EXAMINE-GLOBS-1.md, .factory/stories/S-TRAIL-DERIVATION-GUARD-1.md, .factory/stories/STORY-INDEX.md, .factory/specs/prd/cross-cutting.md, .github/workflows/ci.yml, tests/ci_gate_completeness.rs, tests/cli_handler.rs, tests/common/yaml.rs, tests/mutants_glob_existence.rs, scripts/check-ci-gate.sh, docs/specs/cargo-mutants-policy.md, CLAUDE.md, Cargo.toml, CHANGELOG.md, live CI run 30465686049, live CI run 31406705091 (pass-57/58/59 fix-round CI-break), live CI run 31432422878 (develop post-merge), live CI run 31450052302 (develop post-PR675-merge), branch protection API, PyYAML 6.0.3 (pass-55 differential), standalone rustc reproductions (pass-56/57), Ruby Psych (pass-57), sibling ci.yml re-indent sweep (pass-57), scratch-tree per-mutation rebuilds (pass-58), 7 mutated ci.yml copies replayed against real pin extractors (pass-59), delta `1381af17..5ca51bc2` (pass-60/61), PR #675 diff `a5e1d087..d55bedf7` (ADV-P675, CLAUDE.md + scripts/check-ci-gate.sh comment/prose only), research/ci-gate-shell-trust-assumptions-2026-08-10.md (ADV-P675 primary-source cross-check)]
 traces_to: .factory/stories/S-626-1.md
-total_findings: 461
-severity_distribution: { CRIT: 0, HIGH: 35, MED: 133, LOW: 159, INFO: 134 }
+total_findings: 488
+severity_distribution: { CRIT: 0, HIGH: 36, MED: 143, LOW: 175, INFO: 134 }
 story: S-626-1
 cycle: cycle-001
 feature_head: 5ca51bc2 (last commit reviewed by any adversarial pass before merge; merge commit is `a5e1d087` on `develop`, squash of 48 commits; feature branch progression this burst's review scope: `1381af17`→`a17939e2`(pass-57/58/59 class sweep)→`f2bea32e`(CI-BREAK-1 fix)→`5ca51bc2`(DEC-261 doc corrections, reviewed by pass-60/61)→PR #667 squash-merged to `develop` as `a5e1d087`)
@@ -2187,5 +2187,100 @@ non-overwrite sentence" note.
 - **New decision:** **DEC-264** (PR #675 merged after adversarial claim-accuracy review and four
   amendments; reviewing a documentation-only PR found two MEDIUMs, justifying the practice).
 - **Full narrative:** `cycles/cycle-001/burst-log.md` § "PR675-MERGE+ADV-P675-CLOSE".
+
+---
+
+# Adversarial Review Index — S-CIGATE-3 (Feature Mode SOH-DX-1 F4 follow-up) Passes 1..6
+
+<!-- Added 2026-08-11 by the S-CIGATE-3-IMPLEMENTED bookkeeping burst. These 6 passes are a
+     STORY-SCOPED adversarial window for S-CIGATE-3 (durable YAML-parser fix), run during that
+     story's own implementation session on worktree `.worktrees/S-CIGATE-3`, branch
+     `test/ci-gate-real-yaml-parser`. They are DISTINCT from S-626-1's 61 Step-4.5-eligible
+     passes recorded above — not counted toward Step 4.5's 3/3 window arithmetic, not governed
+     by the SOH-DX-1 F4 Step 4.5 process (this is a new, separate story, not a continuation of
+     S-626-1). The same DEC-245 CLEAN criterion (zero HIGH + zero MEDIUM + zero LOW) was applied
+     by human ruling (DEC-265b) for consistency across stories. No per-finding-ID detail file
+     exists for this window (unlike some of S-626-1's early passes); this section's per-pass
+     rows are derived from the closing summary table supplied to this bookkeeping burst, with the
+     per-pass finding COUNTS independently re-verified by direct summation (6+7+3+2+5+4=27) —
+     the closing summary's prose total of "29" did not match its own per-pass table and is NOT
+     used here. See drift item `RECURRING-DEFECT-RELOCATES-NOT-CLOSES` and the four `[codified]`
+     lessons in `lessons.md` for the process findings from this same window. -->
+
+## S-CIGATE-3 Summary
+
+| Field | Value |
+|-------|-------|
+| Story | S-CIGATE-3 (durable YAML-parser fix; `.factory/stories/S-CIGATE-3-ci-yml-real-yaml-parser.md`) |
+| Worktree / branch | `.worktrees/S-CIGATE-3`, `test/ci-gate-real-yaml-parser`, branched from `develop` @ `d55bedf7` |
+| Commits | 17, `8af710f8`..`aeeebe01` (re-derived via `git rev-list --count develop..test/ci-gate-real-yaml-parser`; NOT pushed, no PR opened — DEC-128) |
+| Passes | 6, all NOT CLEAN; window ends PERMANENTLY at 0/3 (no CLEAN pass reached), mirroring the DEC-262 shape |
+| Total findings | 27 (re-derived by direct summation of the per-pass table below; all 27 fixed pre-close) |
+| Severity distribution (this window only) | `{ CRIT: 0, HIGH: 1, MED: 10, LOW: 16, INFO: 0 }` |
+| Basis | TRUE ADVERSARY AGENT, fresh context per pass (no prior-pass visibility) |
+| Convergence | 0 of 3 FINAL — DEC-265b (human ruled to keep running the window past pass-3's HIGH rather than pausing); ends permanently at 0/3 after 6 passes |
+
+## S-CIGATE-3 Per-Pass Findings
+
+| Pass | Verdict | Findings | Frontier | Disposition |
+|------|---------|----------|----------|-------------|
+| ADV-SC3-P1 | NOT CLEAN | 4 MEDIUM + 2 LOW (6) | Parser fidelity + new API root frontier | All 6 FIXED, incl. `wf.rs`'s zero-own-test-coverage gap (MED-001) closed by adding 20 tests |
+| ADV-SC3-P2 | NOT CLEAN | 2 MEDIUM + 5 LOW (7) | The fix commits themselves (self-referential review of pass-1's fixes) | All 7 FIXED |
+| ADV-SC3-P3 | NOT CLEAN | 1 HIGH + 1 MEDIUM + 1 LOW (3) | Historical coverage replay (24 of 27 documented S-626-1-era attacks re-run against the new model) | All 3 FIXED; human ruled to keep running the window rather than pause after this pass's HIGH (DEC-265b) |
+| ADV-SC3-P4 | NOT CLEAN | 1 MEDIUM + 1 LOW (2) | Guard lifecycle, composite attacks, pin-maintenance load | Both FIXED; first instance of the "exactly one step by NAME" defect shape (see class-sweep note below) |
+| ADV-SC3-P5 | NOT CLEAN | 1 MEDIUM + 4 LOW (5) | White-box attacker + previously-unseen YAML | All 5 FIXED; second/third instances of the same defect shape, restated by `run:` KEY then `run:` VALUE |
+| ADV-SC3-P6 | NOT CLEAN | 1 MEDIUM + 3 LOW (4) | Ambiguity discipline + protection asymmetry | All 4 FIXED via a class-level sweep ("the selected step actually RUNS") after the fourth restatement of the same shape — see `RECURRING-DEFECT-RELOCATES-NOT-CLOSES` |
+
+**Arithmetic check:** 6+7+3+2+5+4 = **27**. HIGH: 1 (pass 3 only). MEDIUM: 4+2+1+1+1+1 = 10. LOW:
+2+5+1+1+4+3 = 16. 1+10+16 = 27. Confirms the total above; the dispatch instruction's prose claim
+of "29 findings" did not match its own supplied per-pass table.
+
+## S-CIGATE-3 Notable Findings Closed
+
+- **Round-16 node-property residual** (`&x shell:` / `!!str shell:` prefixing a mapping key) —
+  previously CLAUDE.md-documented as UNGUARDED with code review as the sole control. Closed two
+  independent ways: key-set pins on the new event-stream model, plus a dedicated
+  `find_key_node_properties` check (AC-007).
+- **`POSITIONAL-ASSUMPTION-AXIS`** (HIGH drift item, deferred from S-626-1 window 57/58/59) —
+  closed by construction (tree membership, not indent arithmetic).
+- **`RED-PROOF-NEEDS-SPELLING-VARIANTS`** (HIGH drift item, deferred from S-626-1 window
+  57/58/59) — closed via two-axis (spelling × indent/position) RED proofs across every
+  rewritten guard (AC-008).
+- **`ADV-P55-MED-002`** (flow-style job entries, S-626-1-era finding) — closed by construction.
+- Job-level `defaults: run: shell: cat {0}` — previously unguarded on 5 always-run jobs; now
+  covered.
+- `msrv` job — previously had NO key-set pin of any kind; now pinned at both job and step level.
+- A decoy step could previously silently skip the entire Rust test suite — closed.
+- `if: false` / `shell: cat {0}` on a guard step — closed (4th relocation of the recurring
+  defect shape; see `RECURRING-DEFECT-RELOCATES-NOT-CLOSES`).
+- Duplicate mapping keys, duplicate job ids, and multi-document YAML streams — all now refused
+  by the new event-stream model.
+
+## S-CIGATE-3 Human Rulings This Window
+
+- **DEC-265a:** fix the two pre-existing bypasses (round-16 node-property residual;
+  `POSITIONAL-ASSUMPTION-AXIS`/`RED-PROOF-NEEDS-SPELLING-VARIANTS`) inside this story's own
+  scope rather than deferring them again.
+- **DEC-265b:** keep running the window past pass-3's HIGH finding rather than pausing to
+  re-scope, under the same DEC-245 CLEAN criterion S-626-1's ten windows used.
+
+## S-CIGATE-3 Open Items (human ruling pending, not resolved by this window)
+
+1. AC-006's rationale in the story spec file is FALSE (claims the exact-version pin protects
+   the `msrv` CI job; `msrv` only checks lib+bins, `saphyr-parser` is a dev-dependency) — the
+   `Cargo.toml` comment was corrected in-branch (`80a872e4`); the story file's AC-006 text was
+   not, per explicit instruction to this bookkeeping burst. See drift item
+   `AC-006-FALSE-RATIONALE-UNCORRECTED`.
+2. Value-side anchor gap (`run: &x cmd` — `resolve_value` discards `anchor_id`) — documented,
+   not closed; no exploit constructible against any currently-pinned guard. See drift item
+   `VALUE-SIDE-ANCHOR-GAP-UNCLOSED`.
+3. Whether the `ScalarStyle::Plain` fidelity mandate (an implementer judgment call made under
+   AC-004) should become a formal decision record.
+4. Whether to instantiate `.factory/policies.yaml` — absent in this project; all six passes ran
+   on baseline rubric only. See drift item `POLICIES-YAML-NOT-INSTANTIATED`.
+5. **Merge decision:** the window ended 0/3, never converged — the same DEC-262 shape (merge on
+   code grounds with convergence explicitly unmet) is available as precedent but was NOT
+   exercised by this bookkeeping burst; merge authority is the human's (DEC-128). The story
+   branch remains unpushed with no PR opened.
 
 ---

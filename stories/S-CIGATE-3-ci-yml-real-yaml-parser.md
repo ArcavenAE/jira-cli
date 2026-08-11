@@ -4,19 +4,19 @@ level: ops
 story_id: "S-CIGATE-3"
 epic_id: "none"
 title: "Replace tests/ci_gate_completeness.rs's line-based YAML extraction with a real YAML parser"
-version: "1.2"
+version: "1.3"
 producer: story-writer
-timestamp: "2026-08-06T00:00:00"
+timestamp: "2026-08-11T06:15:00Z"
 phase: 3
 cycle: CIGATE-REAL-YAML-PARSER
 inputs:
   - ".github/workflows/ci.yml"
   - "tests/ci_gate_completeness.rs"
   - "tests/common/yaml.rs"
-input-hash: "cec0ab6"
+input-hash: "8fcd547"
 traces_to: "tests/ci_gate_completeness.rs (residual documented in fix/ci-gate-skipped-false-green commit cf00f2fc); STATE.md Drift Items POSITIONAL-ASSUMPTION-AXIS and RED-PROOF-NEEDS-SPELLING-VARIANTS (both DEFERRED to S-CIGATE-3, window 57/58/59, 2026-08-10)"
 wave: feature-followup
-status: draft
+status: in-progress
 intent: tech-debt
 feature_type: ci
 mode: feature
