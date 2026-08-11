@@ -7,7 +7,7 @@ producer: state-manager
 timestamp: 2026-05-07T00:00:00
 cycle: "cycle-001"
 inputs: [STATE.md]
-input-hash: "5a559ee"
+input-hash: "9f96073"
 traces_to: STATE.md
 ---
 
@@ -6972,3 +6972,14 @@ What went right: a downstream agent dispatched to add itemized per-finding detai
 
 _Trigger: POST-CLOSE ARITHMETIC CORRECTION (2026-08-10, same-day correction to S-626-1-MERGE+ADV-P60-P61+BURST-CLOSE) — a downstream agent's reconciliation note surfaced the mismatch; corrected to `ADV-P1-INDEX.md` v2.16 (456 total findings, +14 new) and `STATE.md` v2.35._
 _Tagged: [measurement-discipline] [orchestrator-discipline] [ci-gate] [process-gap] [s-7.02] [codified]_
+
+## SHELL-TRUST-ASSUMPTIONS Research Pass — Knowing a Guard's True Strength Is as Valuable as Finding It Broken (2026-08-11)
+
+External research (`research/ci-gate-shell-trust-assumptions-2026-08-10.md`, DEC-263) re-validated all six primary assumptions behind the 401 lines of security-relevant shell that merged to `develop` unreviewed via PR #667. The result was zero REFUTE — every assumption held. That is a genuinely different outcome from every prior review pass this cycle, almost all of which existed to report the finding of a real gap.
+
+What the pass produced instead was sharper honesty about a control everyone already knew was imperfect: `resolve_trusted_jq`'s own `HONEST SCOPE` comment already said passwordless sudo defeats the allowlist. This pass confirmed that comment against primary sources (GitHub Docs verbatim, `actions/runner` source) rather than taking it on faith, and went further — it reduced the decision-path trust property to exactly one undocumented fact (`/usr/bin` being root-only on `ubuntu-latest`), named the ~10-minute experiment that would settle it, and found two smaller gaps a purely internal review would not have surfaced: a macOS allowlist entry that trusts a runner-writable directory (contained to a non-decision-path test leg, but worth recording plainly), and a project-record gap where the sudo bound is stated correctly in code but absent from `CLAUDE.md`.
+
+**Disposition:** a review pass that finds nothing wrong is not wasted effort if it converts an assumed property into a measured one, or a vague "this probably isn't fully closable" into a named, dated, ten-minute experiment that would close it. Recording "confirmed, and here is exactly the one thing that would change that" is itself the deliverable — it is what lets a future reader trust the guard's stated scope instead of re-deriving it, and it is what turns "we think this is fine" into "we know exactly what would make this not fine." This complements, not replaces, the standing rule that a REFUTE is a correction to act on — the two are not in tension; a pass with the discipline to report a clean result honestly is also the pass most likely to be believed when it does find something.
+
+_Trigger: SHELL-TRUST-ASSUMPTIONS research pass (2026-08-11, team-lead-dispatched, doc-only) — external validation of the shell-trust layer merged via PR #667 (`736fea28`/`23ace476`), found zero REFUTE against all six primary assumptions but reduced the decision-path trust property to one undocumented permission and named two new drift items plus a project-record gap._
+_Tagged: [ci-gate] [external-validation] [shell-trust] [process-gap] [codified]_

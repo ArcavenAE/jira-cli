@@ -7,7 +7,7 @@ producer: state-manager
 timestamp: 2026-05-04T00:00:00
 cycle: "cycle-001"
 inputs: [STATE.md]
-input-hash: "5a559ee"
+input-hash: "9f96073"
 traces_to: STATE.md
 ---
 
@@ -9749,3 +9749,123 @@ throughout the file corrected to `456`/`+14`/`9-actionable, 8 closed + 1 confirm
 this was a same-burst arithmetic correction, not a process change requiring S-7.02 deferral beyond
 recording the drift-item instance. `regression-state.json` and `sidecar-learning.md` intentionally
 left dirty per standing instruction.
+
+## SHELL-TRUST-ASSUMPTIONS RESEARCH PASS (2026-08-11, doc-only, no code changed)
+
+Team-lead-dispatched, doc-only burst. Committed a research artifact externally validating the
+six primary assumptions underpinning the 401 lines of security-relevant shell that merged to
+`develop` unreviewed via PR #667 (`736fea28`/`23ace476`, part of the S-626-1-MERGE+ADV-P60-P61+
+BURST-CLOSE burst, DEC-262). Zero REFUTE -- no assumption underpinning the merged code was found
+to be false.
+
+### What was committed
+
+- `research/ci-gate-shell-trust-assumptions-2026-08-10.md` (NEW, 896 lines).
+- `research/RESEARCH-INDEX.md` (modified, one new row).
+- `regression-state.json` / `sidecar-learning.md` left dirty per standing convention (not this
+  burst's concern).
+
+### Findings summary
+
+8 CONFIRM, 2 INCONCLUSIVE-on-primary (Q1b `/usr/bin` writability on `ubuntu-latest`, Q3b
+`/opt/homebrew/bin` writability on `macos-latest` -- both labelled INFERRED rather than promoted
+to CONFIRM), 0 REFUTE. Verbatim bottom line from the pass: "the trust property holds on the
+decision path only because `/usr/bin` needs root, and everything else is decoration." Two
+aggravating corrections the pass itself supplies: (1) "needs root" is Q1b, the one primary-source
+gap; (2) GitHub-hosted runners grant passwordless `sudo` (Q1c CONFIRM, GitHub Docs verbatim), so
+the modeled attacker gets root for free -- `sudo cp /tmp/shim /usr/bin/jq` costs one extra word
+and the shim then IS the trusted path. Honest property: the guard raises the cost of forging the
+gate's decision by one word; it closes the cheap, likely-accidental vector and fails closed; it
+cannot stop a determined attacker with earlier-step execution.
+
+Per-question verdicts: Q1a CONFIRM (`jq` is an apt package -> `/usr/bin/jq`) -- Q1b INCONCLUSIVE
+on primary, labelled INFERRED, deliberately not promoted -- Q1c CONFIRM (passwordless sudo,
+GitHub Docs verbatim + `/etc/sudoers.d/runner`) -- Q2 CONFIRM (usrmerge: `/bin` and `/usr/bin` are
+the same inode on Ubuntu 24.04, so the Linux allowlist is one directory under two names, not two)
+-- Q3a CONFIRM (macOS 26 arm64, jq 1.8.2 at `/opt/homebrew/bin/jq`) -- Q3b INCONCLUSIVE on primary
+but four primary links (Homebrew chowns its prefix to the installing user; brew needs no sudo
+post-install; `runner-images`' `install-homebrew.sh` installs brew without sudo; build user is
+`runner`), HIGH confidence on the inference -- Q3c CONFIRM (the macOS allowlist has essentially no
+security value on its own test leg, stated plainly) -- Q4 CONFIRM (`RUNNER_OS` cannot be unset by
+any in-job mechanism) -- Q5 CONFIRM (exact `RUNNER_OS` value domain `Linux`/`Windows`/`macOS`,
+byte-matches the `case` arms; `*)` fail-closed arm confirmed BEHAVIOURALLY via `--self-test`
+17/17, not merely by reading the code) -- Q6 CONFIRM (`$(</dev/stdin)` is a genuine fork-free
+builtin, immune to a `PATH` `cat` shim by construction).
+
+### Q4 -- stronger mechanism than previously recorded for `GITHUB-ACTIONS-ENV-VAR-LIKELY-WRITABLE`
+
+PRIMARY: `actions/runner`, `src/Runner.Worker/Handlers/ScriptHandler.cs` at `main`. A `run:`
+step's process environment is assembled by first populating from the accumulated global
+environment (`$GITHUB_ENV` writes) and the step's own `env:`, THEN applying runtime contexts LAST
+via an unconditional `Environment[env.Key] = env.Value` (not `TryAdd`, not null-guarded, no
+allowlist/denylist/emptiness filter). This defeats every in-job mechanism (`$GITHUB_ENV`,
+workflow/job/step `env:`) at once via write-ORDERING, not merely the "no allowlist gap" reason
+`resolve_trusted_jq`'s own comment cites. Caution recorded: do not cite the GitHub Docs sentence
+"You can't overwrite the value of the default environment variables named `GITHUB_*` and
+`RUNNER_*`" as the mechanism -- the `$GITHUB_ENV` write blocklist in `FileCommandManager.cs` is
+verbatim `{ "NODE_OPTIONS" }` with no `GITHUB_*`/`RUNNER_*` prefix filter; the docs' claim is true
+in EFFECT for `run:` steps but enforced by ordering in `ScriptHandler.cs`, not a write-time
+blocklist. Updated the drift item in place (see STATE.md Drift Items table); `GITHUB_ACTIONS`
+itself remains genuinely unverified (no primary source located either way).
+
+### Q6 -- the one property in the merged delta proven unconditional
+
+`$(</dev/stdin)` was proven fork-free by direct execution: `env -i bash -c 'PATH=/nonexistent;
+j="$(</dev/stdin)"'` exits 0 (the `cat` form exits 127, `command not found`), identical on bash
+3.2.57 and 5.3.9, pipe-safe in the exact gate shape, with a full divergence matrix (empty input
+under `set -euo pipefail`, 2 MB/4 MB, trailing/embedded newlines, NUL, closed stdin) showing zero
+divergence from `cat`. This is the only place in the merged delta where the trust property depends
+on no filesystem permission, no sudo boundary, and no GitHub-side behaviour.
+
+### Adjacent finding (not one of the six questions, recorded for record accuracy)
+
+`resolve_trusted_jq`'s CLAUDE.md-derived comment states the `$GITHUB_ENV` -> `BASH_ENV` channel
+was superseded by the `PATH` -> which-binary-runs channel. It was not superseded; both are live
+and independent. `CLAUDE.md`'s round-12 CRITICAL pins (M2-o, workflow-level env-key-set test) read
+`ci.yml` only -- they cannot see a `BASH_ENV` value an earlier step wrote via `$GITHUB_ENV`, which
+reaches the gate step's process environment through the global-environment path in
+`ScriptHandler.cs` without ever appearing in the YAML. Not an emergency (same arbitrary-execution
+capability the `sudo cp` vector already requires; `resolve_trusted_jq`'s absolute-path check
+independently rejects the narrower shell-function-shadowing variant). Not independently verified
+against a live runner. Fix is a one-sentence comment correction, not code -- not made this pass
+(doc-only convention; left for the follow-up PR alongside `SUDO-BOUND-UNRECORDED-IN-PROJECT-RECORD`).
+
+### New drift items (3) plus one update
+
+- `JQ-TRUST-RESTS-ON-ONE-UNDOCUMENTED-PERMISSION` (MEDIUM, NEW) -- see STATE.md Drift Items table.
+- `MACOS-ALLOWLIST-TRUSTS-WRITABLE-DIR` (LOW, NEW, test-leg only) -- see STATE.md Drift Items table.
+- `SUDO-BOUND-UNRECORDED-IN-PROJECT-RECORD` (LOW, NEW, follow-up PR being raised) -- see STATE.md
+  Drift Items table.
+- `GITHUB-ACTIONS-ENV-VAR-LIKELY-WRITABLE` updated in place with Q4's stronger mechanism -- see
+  STATE.md Drift Items table.
+
+### Decision: DEC-263
+
+Recorded directly in `cycles/cycle-001/decisions-archive.md` (research-pass pattern, matching
+DEC-261's precedent -- not added to STATE.md's active Decisions Log table, since a research-pass
+decision does not itself GOVERN behavior going forward). Disposition: record the corrections now;
+defer the two settling experiments (E1 `/usr/bin` writability on `ubuntu-latest`, E2
+`/opt/homebrew/bin` writability on `macos-latest`, ~10 minutes each, throwaway workflows, neither
+touches `ci.yml`) -- not run this pass.
+
+### Residual review gap (recorded honestly, not closed by this pass)
+
+ADV-P60/ADV-P61 reviewed `1381af17..5ca51bc2`; the three fix commits (`736fea28`, `23ace476`,
+`f656f873` -- 643 insertions) merged UNREVIEWED (DEC-262's own record). This pass externally
+validated the shell portion's ASSUMPTIONS (401 lines) but is NOT a line-by-line adversarial
+review of that shell. The Rust portion of the same unreviewed delta (`ci_gate_completeness.rs`
++234, `common/yaml.rs` +105) remains unreviewed by this pass and is largely slated for replacement
+by S-CIGATE-3.
+
+### Lesson logged (`[codified]`, `lessons.md`)
+
+External validation of a merged-unreviewed delta found zero REFUTE but reduced a 401-line trust
+layer to one undocumented filesystem permission -- knowing a guard's true strength is as valuable
+as finding it broken.
+
+### Burst Summary: SHELL-TRUST-ASSUMPTIONS RESEARCH PASS (2026-08-11)
+
+Doc-only. Files touched: `research/ci-gate-shell-trust-assumptions-2026-08-10.md` (new),
+`research/RESEARCH-INDEX.md`, `cycles/cycle-001/decisions-archive.md` (DEC-263), `STATE.md`
+(v2.35 -> v2.36). One atomic commit to `factory-artifacts`, pushed. Next priority unchanged:
+S-CIGATE-3 (durable YAML-parser fix, DEC-259/DEC-260).
