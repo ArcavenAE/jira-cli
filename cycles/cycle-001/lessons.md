@@ -7,7 +7,7 @@ producer: state-manager
 timestamp: 2026-05-07T00:00:00
 cycle: "cycle-001"
 inputs: [STATE.md]
-input-hash: "3a90c99"
+input-hash: "6661f17"
 traces_to: STATE.md
 ---
 
@@ -7039,3 +7039,12 @@ The dispatch instruction that closed out this session stated the S-CIGATE-3 bran
 
 _Trigger: S-CIGATE-3-IMPLEMENTED burst (2026-08-11) — `git rev-list --count develop..test/ci-gate-real-yaml-parser` = 17, correcting the dispatch instruction's claimed 16; corrected figure used throughout this burst's STATE.md/story/index updates._
 _Tagged: [ci-gate] [s-cigate-3] [measurement-discipline] [orchestrator-process] [codified]_
+
+## S-CIGATE-3-MERGED-CYCLE-CLOSED — A Self-Authored PR's Review Gate and a Coordinating Sub-Agent's Return Contract Both Assumed a Shape the Real Session Didn't Have (2026-08-12)
+
+Two independent process gaps surfaced during PR #680's review lifecycle, both only visible because this was the first S-CIGATE-3-family PR actually opened and reviewed end-to-end (S-CIGATE-2 and S-626-1 had distinct reviewer accounts by circumstance, not by design). First: the factory's PR-review-posted gate is built around a formal GitHub `--approve`/`--request-changes` review state, but GitHub structurally forbids a reviewing account from submitting a formal review state on its own authored PR. Both of PR #680's review cycles produced COMMENT-state verdicts only, and merging necessarily became a human owner/admin action rather than something the gate itself could certify as satisfied — the gate's design assumption (reviewer != author) was never true for a solo-maintainer-authored PR reviewed by the same account's agent identity, and nothing caught this until it was live. Second: pr-manager dispatched a cycle-2 pr-reviewer plus a CI watcher as grandchildren, then returned BLOCKED to the orchestrator without awaiting either result — the orchestrator recovered only by querying CI/gh state directly and re-dispatching a fresh pr-reviewer, rather than by anything pr-manager's own contract guaranteed.
+
+**Disposition:** a gate or dispatch contract's assumptions are only as reliable as the population of prior invocations that exercised them — a review gate never tested against a self-authored PR, and a sub-agent's return contract never tested against its own dispatched grandchildren failing to report, will both look correct right up until the first real session that hits the untested shape. Neither gap blocked delivery here (the orchestrator recovered by querying authoritative state directly in both cases), but recovering ad hoc is not the same as the contract being correct — both are recorded as drift (`VALIDATE-PR-REVIEW-POSTED-ASSUMES-DISTINCT-REVIEWER`, `PR-MANAGER-RETURNS-BLOCKED-WITHOUT-AWAITING-GRANDCHILDREN`) rather than silently absorbed as "it worked out."
+
+_Trigger: S-CIGATE-3-MERGED-CYCLE-CLOSED burst (2026-08-12), S-7.02 cycle-closing checklist — both observations made during PR #680's review lifecycle this session, reported by the orchestrator at cycle-close rather than fixed in-flight (no story opened, both deferred pending human ruling)._
+_Tagged: [ci-gate] [s-cigate-3] [pr-review] [orchestrator-process] [gate-design] [codified]_

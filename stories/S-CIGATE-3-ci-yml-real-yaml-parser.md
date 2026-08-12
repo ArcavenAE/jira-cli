@@ -4,7 +4,7 @@ level: ops
 story_id: "S-CIGATE-3"
 epic_id: "none"
 title: "Replace tests/ci_gate_completeness.rs's line-based YAML extraction with a real YAML parser"
-version: "1.3"
+version: "1.6"
 producer: story-writer
 timestamp: "2026-08-11T06:15:00Z"
 phase: 3
@@ -13,10 +13,10 @@ inputs:
   - ".github/workflows/ci.yml"
   - "tests/ci_gate_completeness.rs"
   - "tests/common/yaml.rs"
-input-hash: "8fcd547"
+input-hash: "2cca2f1"
 traces_to: "tests/ci_gate_completeness.rs (residual documented in fix/ci-gate-skipped-false-green commit cf00f2fc); STATE.md Drift Items POSITIONAL-ASSUMPTION-AXIS and RED-PROOF-NEEDS-SPELLING-VARIANTS (both DEFERRED to S-CIGATE-3, window 57/58/59, 2026-08-10)"
 wave: feature-followup
-status: in-progress
+status: done
 intent: tech-debt
 feature_type: ci
 mode: feature
@@ -86,16 +86,54 @@ risk_mitigations:
      folded in here only as further evidence for the flat, non-decaying finding-rate argument
      in Problem Statement, not as an open item requiring its own AC; the interim patch is
      superseded, not undone, by this story's structural fix)."
+  - "CORRECTION (v1.4, 2026-08-11, drift item AC-006-FALSE-RATIONALE-UNCORRECTED / adversarial
+     observation O-1): AC-006 and its supporting passages (Risks section, Architecture
+     Compliance Rules table, Library & Framework Requirements table, File Structure
+     Requirements table, files_modified comment) previously justified the
+     `saphyr-parser = \"=0.0.11\"` exact-version pin by claiming it protects the `msrv` CI job
+     from a silent transitive bump (e.g. 'an unreviewed transitive bump could silently break
+     the msrv CI job'). This was FALSE: `saphyr-parser` is a `[dev-dependencies]` crate used
+     only in `tests/`, and the `msrv` job's `cargo check` is scoped to lib + bins only —
+     inline `#[cfg(test)]` modules in `src/` and integration tests in `tests/` are both outside
+     its enforceable scope (see CLAUDE.md's \"No let-chains\" bullet and the `ci.yml` msrv scope
+     comment) — and the `test` job, which does compile `tests/`, runs on stable, not 1.85. No
+     CI job in this repo would catch a `saphyr-parser` MSRV violation. Corrected in place: the
+     pin's TRUE primary rationale is `saphyr-parser` being a `0.0.x` release with no semver
+     guarantee (a `0.0.x` bump can be breaking by convention); the MSRV-1.85-zero-headroom fact
+     remains true and is retained, but is now stated as a compatibility fact that must hold at
+     author/implementation time, confirmed manually by the implementer (e.g. building `--tests`
+     under the pinned 1.85 toolchain), not something any CI job enforces. No AC numbering,
+     acceptance semantics beyond this rationale, or verification-table checks were changed —
+     this is a rationale-accuracy correction only."
+  - "CORRECTION (v1.5, 2026-08-11, adversarial pass 2 finding, MEDIUM): the v1.4 correction
+     above fixed AC-006's prose and the Architecture Compliance Rules / Library & Framework
+     Requirements / File Structure Requirements tables to state that the `msrv` CI job does NOT
+     verify `saphyr-parser`'s MSRV-1.85 compatibility, but left row 6 of the Test Coverage
+     Summary table still crediting `CI (\`deny\`, \`msrv\` jobs)` as the verifier — a direct
+     internal contradiction of the corrected AC-006 prose in the same document. Corrected in
+     place: row 6 now states the `cargo deny check` half is CI-verified (unchanged, true) and
+     the MSRV-1.85 build-compatibility half is confirmed MANUALLY by the implementer, explicitly
+     NOT by the `msrv` CI job. No other row/cell in any table was found to still credit `msrv`
+     (or any CI job) with verifying this fact — checked by grep across the full file. No AC
+     numbering, acceptance semantics, behavioral_contracts, or status were changed."
+  - "CORRECTION (v1.6, 2026-08-11, adversarial pass 3 finding, INFO): 'sole dependency
+     arraydeque' corrected — saphyr-parser also depends on thiserror (already present as a
+     direct dependency of this crate and already covered by deny.toml's existing thiserror v2
+     bans.skip), so nothing net-new enters the graph via thiserror and the net-new crate count
+     remains 2 (saphyr-parser + arraydeque). Corrected in the files_modified Cargo.lock
+     comment, Parser Decision § Dependency facts, Library & Framework Requirements CHOSEN row,
+     and File Structure Requirements Cargo.lock row. No AC numbering, acceptance semantics,
+     behavioral_contracts, or status were changed."
 created: "2026-08-06"
-last_updated: "2026-08-10"
+last_updated: "2026-08-12"
 breaking_change: false
 files_modified:
   - tests/ci_gate_completeness.rs   # MODIFY: parse ci.yml once via saphyr-parser's event stream; assert structure over the parsed event data; retain today's byte-for-byte scalar pins as a SECOND assertion layer over parsed values, not a replacement
   - tests/common/yaml.rs            # MODIFY: replace extract_job_block/extract_key_name_at_indent/collect_mapping_key_set and siblings with event-stream-backed equivalents; shared helper module for both this file's callers
   - Cargo.toml                      # MODIFY (dev-dependencies): add `saphyr-parser = "=0.0.11"` (exact pin, not a caret range — see AC-006 for why)
-  - Cargo.lock                      # MODIFY: lockfile update — adds exactly 2 crates (saphyr-parser + its sole dependency, arraydeque)
+  - Cargo.lock                      # MODIFY: lockfile update — adds exactly 2 net-new crates (saphyr-parser + arraydeque); saphyr-parser also depends on thiserror 2.x, already a direct dependency of this crate and already covered by deny.toml's existing thiserror v2 bans.skip, so nothing net-new enters the graph via thiserror
   - deny.toml                       # NOT expected to require a change (probe finding: saphyr-parser 0.0.11 passes all four `cargo deny check` categories — licenses/bans/advisories/sources — as a normal dependency); MODIFY only if a future `cargo deny check` run at implementation time disagrees with this probe result
-  - CLAUDE.md                       # MODIFY: document the saphyr-parser event-stream-only decision, the MSRV-1.85-zero-headroom pin rationale, and the "byte pins are a second layer, not the only layer" convention under the existing ci-gate bullet
+  - CLAUDE.md                       # MODIFY: document the saphyr-parser event-stream-only decision, the 0.0.x-no-semver-guarantee exact-version-pin rationale (MSRV-1.85-zero-headroom noted as an author-time compatibility fact, NOT CI-enforced), and the "byte pins are a second layer, not the only layer" convention under the existing ci-gate bullet
 ---
 
 # S-CIGATE-3 — Replace Line-Based YAML Extraction with a Real YAML Parser
@@ -286,23 +324,38 @@ MUST survive this rewrite as an independent second layer, unconditionally. See A
 - Passes all four `cargo deny check` categories (licenses, bans, advisories, sources) **even
   as an ordinary (non-dev) dependency** — there is headroom if this crate is ever promoted out
   of `tests/` in a future story.
-- Adds exactly 2 crates to the dependency tree: itself, plus its sole dependency `arraydeque`.
+- Adds exactly 2 NET-NEW crates to the dependency graph: itself, plus `arraydeque`. `saphyr-parser`
+  also depends on `thiserror 2.x`, but that is already a direct dependency of this crate (already
+  covered by `deny.toml`'s existing `thiserror` v2 `bans.skip`), so it introduces nothing new and
+  `cargo deny check` is unaffected.
 - License: `MIT OR Apache-2.0`.
 - Actively maintained (verified at evaluation time, not assumed).
 
 ### Risks and mitigations
 
-- **MSRV is exactly 1.85.0 for `saphyr-parser` 0.0.11 — zero headroom** against this repo's
-  pinned MSRV 1.85 (`rust-toolchain.toml`, the required `msrv` CI job). Mitigation: pin the
-  EXACT version `=0.0.11` (not a caret range) in `Cargo.toml`, so a transitive patch bump cannot
-  silently raise the floor out from under CI; treat any future version bump as a reviewed
-  change, not an automatic `cargo update`. Note for context (not required for this story): a
-  separate `status: draft` story, `S-640-1`, already plans to raise the repo's declared MSRV
-  floor from 1.85 to 1.88, which — if it ships first — removes this zero-headroom risk
-  entirely; this story does not depend on `S-640-1` and must work correctly under the MSRV
-  1.85 floor as it stands today.
 - **`0.0.x` version — no semver guarantee** from the crate's own versioning scheme (a `0.0.x`
-  bump can be breaking by convention). Same mitigation as above: the exact `=0.0.11` pin.
+  bump can be breaking by convention). **This is the primary reason for the exact `=0.0.11`
+  pin:** it prevents an unreviewed transitive bump from silently changing parser behavior the
+  guards depend on. Mitigation: pin the EXACT version `=0.0.11` (not a caret range) in
+  `Cargo.toml`; treat any future version bump as a reviewed change, not an automatic
+  `cargo update`.
+- **MSRV is exactly 1.85.0 for `saphyr-parser` 0.0.11 — zero headroom** against this repo's
+  pinned MSRV 1.85 (`rust-toolchain.toml`). **This is a compatibility FACT that must hold at
+  author/implementation time — it is NOT something any CI job in this repo enforces.**
+  `saphyr-parser` is a `[dev-dependencies]` crate used only in `tests/`, and the `msrv` job's
+  `cargo check` is scoped to lib + bins only — inline `#[cfg(test)]` modules in `src/` and
+  integration tests in `tests/` are both outside its enforceable scope (see CLAUDE.md's "No
+  let-chains" bullet and the `ci.yml` msrv scope comment); the `test` job, which does compile
+  `tests/`, runs on stable, not 1.85. So neither existing CI job would catch a `saphyr-parser`
+  MSRV violation — the implementer must confirm compilation under the pinned 1.85 toolchain
+  manually (e.g. `rustup run 1.85.0 cargo check --tests`) as part of AC-006, not rely on CI to
+  catch a violation. The exact-version pin adopted above for the `0.0.x` reason incidentally
+  also freezes this compatibility fact in place, but that is a side effect of the pin, not a
+  CI-protection mechanism. Note for context (not required for this story): a separate
+  `status: draft` story, `S-640-1`, already plans to raise the repo's declared MSRV floor from
+  1.85 to 1.88, which — if it ships first — removes this zero-headroom risk entirely; this
+  story does not depend on `S-640-1` and must work correctly under the MSRV 1.85 floor as it
+  stands today.
 - **Pre-vetted fallback, recorded for the record (not the chosen path):** `yaml-rust2` 0.11.0 —
   exposes an identical low-level event API, so migration would be mechanical if `saphyr-parser`
   became untenable; MSRV 1.65 (much more headroom); passes `cargo deny check`; but is
@@ -338,7 +391,7 @@ story's motivating defect._
 | Event stream only — `saphyr::Yaml` forbidden | Parser Decision (RESOLVED 2026-08-10) | No code added by this story constructs a `saphyr::Yaml`/`YamlLoader` document; only `saphyr_parser::Parser`/`Event` are used. The high-level API silently collapses duplicate keys, erases quote style, and resolves aliases — exactly the signal AC-007/AC-008's guards need to see. See AC-002. |
 | Byte pins are a second layer, not deleted | Brief instruction; `cf00f2fc` rationale | Every existing byte-for-byte scalar pin (`run:` step bodies, `if:` expression strings) is retained and re-anchored to read its input from an `Event::Scalar`'s text, not from a fresh substring/line search. |
 | Non-LF line-break byte scan is a third layer, not subsumed | Parser Decision (RESOLVED 2026-08-10); round 14 | `test_ci_yml_contains_no_non_lf_yaml_line_breaks` is retained unconditionally — `saphyr-parser` (YAML 1.2) does not treat NEL/LS/PS as line breaks, so the parser does not close that part of the round-14 gap. See AC-005. |
-| MSRV 1.85.0 compliance, zero headroom | `CLAUDE.md` Build & Test; `Cargo.toml::rust-version` | `saphyr-parser` 0.0.11's own MSRV is exactly 1.85.0 — any new crate dependency (test-scoped or otherwise) MUST compile under the pinned 1.85 toolchain (`rust-toolchain.toml`); verified by the existing `msrv` CI job, not a new one. Pinned via `=0.0.11` exact-version syntax. |
+| MSRV 1.85.0 compatibility, zero headroom (author-time fact, NOT CI-enforced) | `CLAUDE.md` Build & Test; `Cargo.toml::rust-version` | `saphyr-parser` 0.0.11's own MSRV is exactly 1.85.0 — it MUST compile under the pinned 1.85 toolchain (`rust-toolchain.toml`) at author/implementation time. This is NOT verified by the existing `msrv` CI job: `saphyr-parser` is a `[dev-dependencies]` crate used only in `tests/`, and the `msrv` job's `cargo check` is scoped to lib + bins only (`tests/` is outside its enforceable scope, per CLAUDE.md); the `test` job, which does compile `tests/`, runs on stable, not 1.85. The implementer confirms this manually (e.g. building `--tests` under the pinned 1.85 toolchain) as part of AC-006. Pinned via `=0.0.11` exact-version syntax — primarily because `saphyr-parser` is a `0.0.x` release with no semver guarantee (see Parser Decision § Risks), with the MSRV fact as a secondary, related reason the same pin happens to freeze. |
 | `cargo deny check` compliance | `CLAUDE.md` Build & Test | Any new crate dependency MUST pass `cargo deny check` (license + vulnerability audit) with zero new advisories/license violations, or ships with an explicit, justified `deny.toml` allow/skip entry. Probe finding: `saphyr-parser` 0.0.11 passes as-is, no `deny.toml` change expected. |
 | No change to `ci-gate`'s runtime evaluator | Scope boundary (this story vs. S-CIGATE-2) | `scripts/check-ci-gate.sh` (S-CIGATE-2/PR #671) evaluates `toJSON(needs)` at CI **runtime** — it does not parse `ci.yml` itself and is unaffected by this story. This story is scoped entirely to the **static test-time** assertions in `tests/ci_gate_completeness.rs`. |
 
@@ -352,7 +405,7 @@ rejected; the implementer does not re-run this evaluation.
 | Candidate | Disposition |
 |-----------|-------------|
 | `serde_yaml` | REJECTED. Officially unmaintained (author archived the repo). |
-| **`saphyr-parser` (event-stream API only) `=0.0.11`** | **CHOSEN.** MSRV 1.85.0 exactly (zero headroom, mitigated by the exact-version pin — see Parser Decision § Risks); passes `cargo deny check` as an ordinary dependency; MIT OR Apache-2.0; adds only 2 crates (itself + `arraydeque`); actively maintained; event stream exposes duplicate keys, quote style, unresolved aliases, anchor/tag metadata, and byte spans — exactly the access pattern this story's guards need. The crate's higher-level `saphyr::Yaml` API is a SEPARATE, FORBIDDEN option (see Parser Decision § "Why the high-level API is forbidden") — it silently collapses duplicate keys, erases quote style, and resolves aliases, defeating the guards it would be used to build. |
+| **`saphyr-parser` (event-stream API only) `=0.0.11`** | **CHOSEN.** `0.0.x` release with no semver guarantee — the primary reason for the exact-version pin (see Parser Decision § Risks). MSRV 1.85.0 exactly — zero headroom at author time, a compatibility fact confirmed manually by the implementer, NOT something CI enforces for this dev-dependency (the `msrv` job's scope excludes `tests/`; see Parser Decision § Risks and Architecture Compliance Rules); passes `cargo deny check` as an ordinary dependency; MIT OR Apache-2.0; adds 2 net-new crates (itself + `arraydeque`) — its other dependency, `thiserror`, is already present and `deny.toml`-covered; actively maintained; event stream exposes duplicate keys, quote style, unresolved aliases, anchor/tag metadata, and byte spans — exactly the access pattern this story's guards need. The crate's higher-level `saphyr::Yaml` API is a SEPARATE, FORBIDDEN option (see Parser Decision § "Why the high-level API is forbidden") — it silently collapses duplicate keys, erases quote style, and resolves aliases, defeating the guards it would be used to build. |
 | `yaml-rust2` `0.11.0` | REJECTED as primary, RECORDED as pre-vetted fallback. Identical low-level event API to `saphyr-parser` (mechanical migration if ever needed); MSRV 1.65 (far more headroom); passes `cargo deny check`; maintenance-only per its own maintainers' stated policy — not chosen while `saphyr-parser` remains actively maintained. |
 | Shell out to PyYAML (or Ruby Psych) | REJECTED. Precedent exists in this repo (`scripts/check-signing-workflow-injection.sh`, `scripts/check-ci-gate.sh` are both already shelled-out-to from CI), but a Rust dev-dependency keeps `tests/ci_gate_completeness.rs` hermetic (no `python3`/PyYAML availability assumption on `ubuntu-latest`/`windows-latest`, no new supply-chain surface, no deviation from this repo's "hermetic, no network, no external process" `tests/` convention) at negligible MSRV/deny cost. |
 
@@ -367,8 +420,8 @@ durably recorded here.
 |------|----------------|--------------|
 | `tests/ci_gate_completeness.rs` | MODIFY | Replace `read_ci_yml()`'s line-based consumers with a single `saphyr-parser` event-stream parse; rewrite structural assertions (job existence, `needs:` set membership, `if:` presence, duplicate-key detection) to query the parsed event data; retain byte-for-byte scalar pins as a second layer over event `Scalar` values. |
 | `tests/common/yaml.rs` | MODIFY | Replace `extract_job_block`/`extract_key_name_at_indent`/`collect_mapping_key_set` and siblings with event-stream-backed equivalents (job-block lookup by tree membership, not line-anchored substring search; key-set collection by walking mapping-scoped events, not indent-column arithmetic). |
-| `Cargo.toml` | MODIFY | Add `saphyr-parser = "=0.0.11"` under `[dev-dependencies]` — exact pin, not a caret range (see Parser Decision § Risks: MSRV 1.85.0 zero headroom + `0.0.x` no-semver-guarantee). |
-| `Cargo.lock` | MODIFY | Lockfile update — adds exactly 2 crates (`saphyr-parser` + `arraydeque`). |
+| `Cargo.toml` | MODIFY | Add `saphyr-parser = "=0.0.11"` under `[dev-dependencies]` — exact pin, not a caret range (see Parser Decision § Risks: primarily the `0.0.x` no-semver-guarantee; MSRV 1.85.0 zero headroom is a related author-time compatibility fact, not CI-enforced). |
+| `Cargo.lock` | MODIFY | Lockfile update — adds exactly 2 net-new crates (`saphyr-parser` + `arraydeque`); its other dep `thiserror` is already present and `deny.toml`-covered. |
 | `deny.toml` | NOT expected (conditional only) | Probe finding: `saphyr-parser` 0.0.11 passes all four `cargo deny check` categories as an ordinary dependency. MODIFY only if a fresh `cargo deny check` run at implementation time disagrees with this probe result. |
 | `CLAUDE.md` | MODIFY | Extend the existing `ci-gate` Conventions bullet (or add a sibling bullet) documenting: `tests/ci_gate_completeness.rs` asserts over a real `saphyr-parser` event stream (never the crate's high-level `saphyr::Yaml` API), with byte-for-byte scalar pins as a second, non-exclusive layer, and the round-14 non-LF-line-break byte scan retained as an independent third layer (YAML-1.2 NEL/LS/PS gap) — so a future contributor extending this file does not reintroduce line-based extraction or assume the parser alone covers everything the byte scans cover. |
 
@@ -470,12 +523,22 @@ byte scan").
 
 `cargo deny check` exits 0 with `saphyr-parser = "=0.0.11"` present (per the probe finding, no
 `deny.toml` change is expected — see File Structure Requirements), and `cargo build`/`cargo
-test` succeed under the pinned 1.85 toolchain (verified via the existing `msrv` CI job — no new
-CI job is required). The `Cargo.toml` entry uses the exact-version pin `"=0.0.11"`, not a caret
-range — a caret range is a failing implementation of this AC even if it happens to resolve to
-0.0.11 today, because MSRV 1.85.0 is `saphyr-parser` 0.0.11's exact floor with zero headroom
-(Parser Decision § Risks) and an unreviewed transitive bump could silently break the `msrv` CI
-job on an unrelated PR.
+test` succeed under the pinned 1.85 toolchain, confirmed manually by the implementer (e.g.
+`rustup run 1.85.0 cargo build --tests` / `cargo test`). **This is not, and cannot be, verified
+by the existing `msrv` CI job, and no new CI job is required or expected to close this gap:**
+`saphyr-parser` is a `[dev-dependencies]` crate used only in `tests/`, and the `msrv` job's
+`cargo check` is scoped to lib + bins only — inline `#[cfg(test)]` modules in `src/` and
+integration tests in `tests/` are both outside its enforceable scope (see CLAUDE.md's "No
+let-chains" bullet and the `ci.yml` msrv scope comment); the `test` job, which does compile
+`tests/`, runs on stable, not 1.85. The `Cargo.toml` entry uses the exact-version pin
+`"=0.0.11"`, not a caret range — a caret range is a failing implementation of this AC even if it
+happens to resolve to 0.0.11 today. The primary reason for the exact pin is that `saphyr-parser`
+is a `0.0.x` release with no semver guarantee (a `0.0.x` bump can be breaking by convention), so
+an unreviewed transitive bump could silently change parser behavior the guards depend on. MSRV
+1.85.0 being `saphyr-parser` 0.0.11's exact floor with zero headroom (Parser Decision § Risks)
+is a related compatibility fact that the exact pin also happens to freeze in place — but that
+fact is not, and cannot be, enforced by any CI job in this repo today, since neither `msrv` nor
+`test` compiles this dev-dependency under the 1.85 toolchain.
 
 ### AC-007 — The round-16 node-properties defeat case from `cf00f2fc` is caught, via event-level anchor/tag exposure
 
@@ -545,7 +608,7 @@ deleted, renamed without a documented reason, or weakened to make the rewrite pa
 | 3 | `ci.yml` parses successfully via the `saphyr-parser` event stream exactly once; job existence / `needs:` set membership assertions query parsed event data, not line position | `tests/ci_gate_completeness.rs`, `tests/common/yaml.rs` | AC-003 |
 | 4 | Every pre-existing byte-for-byte scalar pin still asserts its exact string, now sourced from `Event::Scalar` | `tests/ci_gate_completeness.rs` | AC-004 |
 | 5 | `test_ci_yml_contains_no_non_lf_yaml_line_breaks` (or direct successor) still present and passing, independent of the parser rewrite | `tests/ci_gate_completeness.rs` | AC-005 |
-| 6 | `cargo deny check` exits 0 with `saphyr-parser = "=0.0.11"` present; `cargo build`/`cargo test` succeed under MSRV 1.85 | CI (`deny`, `msrv` jobs) | AC-006 |
+| 6 | `cargo deny check` exits 0 with `saphyr-parser = "=0.0.11"` present (CI-verified); `cargo build --tests`/`cargo test` succeed under the pinned 1.85 toolchain, confirmed MANUALLY by the implementer — NOT verified by the `msrv` CI job, which is scoped to lib + bins only and does not compile `tests/` (see AC-006) | CI (`deny` job) + manual implementer confirmation (NOT `msrv` job) | AC-006 |
 | 7 | Node-properties payloads (`&x shell: cat {0}` AND `!!str shell: cat {0}`) against a local/temporary `ci.yml` copy each fail at least one rewritten assertion; proven RED-then-fixed for both forms | `tests/ci_gate_completeness.rs` (test-local fixture, not the tracked file) | AC-007 |
 | 8 | For every rewritten guard: RED proof across 4 spelling variants (`key:`/`"key":`/`'key':`/`key :`) AND 3 indent variants (3/6/8-space job bodies) | `tests/ci_gate_completeness.rs` (test-local fixtures) | AC-008 |
 | 9 | `cargo test --test ci_gate_completeness` exits 0 against the tracked `ci.yml`; no test functions silently removed; `cargo clippy`/`cargo fmt` clean | `tests/ci_gate_completeness.rs` | AC-009 |
@@ -620,3 +683,11 @@ hardened; a rewrite that accidentally narrows coverage during the event-stream m
 be a regression in the single most scrutinized test file in this repo. Mitigated by AC-004's
 explicit "retain every existing pin" requirement, AC-005's explicit "byte scan is not
 subsumed" requirement, and AC-009's full-suite regression check.
+
+## Close-Out (2026-08-12, S-CIGATE-3-MERGED-CYCLE-CLOSED)
+
+Delivered and squash-merged to `develop` as **PR #680** (`3df77a54`, mergedAt
+2026-08-12T16:00:05Z, human owner/admin merge per DEC-268); post-implementation adversarial
+finding `B-1` (pr-reviewer cycle 1, value-side YAML node-property coverage gap vs AC-004) was
+independently verified REAL-but-INERT and fixed pre-merge (`dc4909b2`, 6 new RED-proven
+`test_b1_*` tests); all 9 acceptance criteria satisfied. `status: done`.

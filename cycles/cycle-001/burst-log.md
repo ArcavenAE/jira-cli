@@ -7,7 +7,7 @@ producer: state-manager
 timestamp: 2026-05-04T00:00:00
 cycle: "cycle-001"
 inputs: [STATE.md]
-input-hash: "828da0d"
+input-hash: "6661f17"
 traces_to: STATE.md
 ---
 
@@ -10445,3 +10445,85 @@ Next priority on resume: human performs the owner/admin squash-merge of PR #680 
 factory then runs post-merge cleanup (worktree + branch removal), commits the AC-006 story
 correction (closing `AC-006-FALSE-RATIONALE-UNCORRECTED` / `AC-006-CORRECTION-DRAFTED-
 UNCOMMITTED`), and records the closed S-CIGATE-3 cycle.
+
+## S-CIGATE-3-MERGED-CYCLE-CLOSED (2026-08-12)
+
+Continues directly from the S-CIGATE-3-PR680-CONVERGED-AWAITING-MERGE burst above, same
+session. The human executed the owner/admin action that burst was awaiting.
+
+**Merge:** PR #680 squash-merged into `develop` as merge commit **`3df77a54`** (full:
+`3df77a541d9d707e8e4bd4805c5369c4a14569d0`), mergedAt 2026-08-12T16:00:05Z, subject
+`test(ci-gate): replace line-based YAML extraction with real event-stream parser (S-CIGATE-3)
+(#680)`. Per DEC-268 ("You merge; I prep + follow up"). `origin/develop` and local `develop`
+both fast-forwarded to `3df77a54` (previous tip `d55bedf7`) — verified live via `gh pr view
+680` and `git log`.
+
+**Post-merge cleanup (complete):**
+- `.worktrees/S-CIGATE-3` worktree git-deregistered and removed. Residual ignored-only build
+  artifacts `rm -rf`'d; the tree was clean at `dc4909b2` before removal — no tracked or
+  uncommitted source was lost.
+- Local branch `test/ci-gate-real-yaml-parser` deleted.
+- Stale `origin/test/ci-gate-real-yaml-parser` remote-tracking ref pruned.
+- GitHub auto-deleted the remote branch on merge (standard repo setting).
+- `git worktree list` now shows exactly three worktrees: main (`develop`), `.factory`
+  (`factory-artifacts`), `.reference` (detached) — matches the pre-S-CIGATE-3 baseline.
+
+**Story completion:** this burst's single atomic commit includes the AC-006 correction that
+was left drafted-but-uncommitted by the S-CIGATE-3-WIP-VERIFIED burst
+(`stories/S-CIGATE-3-ci-yml-real-yaml-parser.md`, v1.3→v1.6 — three `CORRECTION` frontmatter
+entries fixing the false "verified via the `msrv` CI job" rationale with the correct
+0.0.x-no-semver-guarantee justification, plus a table-row contradiction fix and a "sole
+dependency" overclaim fix). The draft was reviewed this burst and found sound before
+committing. Additionally: `status: in-progress` → `status: done`, `last_updated` →
+2026-08-12, and a one-line Close-Out section appended to the story body recording delivery as
+PR #680 (`3df77a54`), finding `B-1` REAL-but-INERT and fixed pre-merge (`dc4909b2`), all 9 ACs
+satisfied. No AC numbering, acceptance semantics, or BCs were altered (story has none).
+`stories/STORY-INDEX.md` (v1.5.81→v1.5.82) S-CIGATE-3 row updated in place to reflect the
+done status and merge facts; `total_stories` left unchanged at 127 (denominator audit remains
+a separately-tracked, unreconciled drift item, not attempted this burst).
+
+**Drift closed this burst:** `AC-006-FALSE-RATIONALE-UNCORRECTED` and
+`AC-006-CORRECTION-DRAFTED-UNCOMMITTED` (both → `drift-items-closed.md`) — the drafted
+correction is now in the committed record, not merely draft form.
+
+**Drift opened this burst (2 new, both LOW, DEFERRED, S-7.02 cycle-closing checklist):**
+- `PR-MANAGER-RETURNS-BLOCKED-WITHOUT-AWAITING-GRANDCHILDREN` — pr-manager dispatched a
+  cycle-2 pr-reviewer plus a CI watcher as grandchildren, then returned BLOCKED to the
+  orchestrator without awaiting either result. The orchestrator recovered by querying CI/gh
+  state directly and re-dispatching a fresh pr-reviewer. No story opened; deferred pending
+  human ruling on whether pr-manager's dispatch/return contract should require awaiting
+  grandchildren.
+- `VALIDATE-PR-REVIEW-POSTED-ASSUMES-DISTINCT-REVIEWER` — the factory's PR-review-posted gate
+  is designed around a formal `--approve`/`--request-changes` GitHub review state, which
+  GitHub structurally disallows when the reviewer is also the PR's author (PR #680's exact
+  shape). COMMENT-state was the only obtainable verdict both cycles; merge necessarily became
+  a human owner/admin action rather than something the gate itself could certify. No story
+  opened; deferred pending a human ruling on whether the gate should accept COMMENT-state
+  verdicts when reviewer==author, or the factory should use a distinct review identity.
+
+**DEC-269 recorded** (archived directly, same pattern as DEC-263–268): the merge-completion
+event — PR #680 squash-merged as `3df77a54`, post-merge cleanup complete, S-CIGATE-3 cycle
+closed. See `decisions-archive.md`.
+
+**Factory status: PAUSED. S-CIGATE-3 CYCLE CLOSED.** trajectory-tail →1→3→0→2 unchanged
+(S-CIGATE-3 remained story-scoped work throughout, never a SOH-DX-1 Step-4.5 window; its own
+6-pass adversarial window is unchanged, still ended PERMANENTLY at 0/3, DEC-265, not reopened
+by the merge). No product BCs touched by this factory-artifacts burst — the merge itself was
+a human GitHub action; this burst records the outcome.
+
+**Files touched this burst (all committed in ONE atomic commit, per the Single-Commit Burst
+Protocol):** `STATE.md` (v2.43→v2.44), this file (`burst-log.md`),
+`cycles/cycle-001/session-checkpoints.md` (appended the new checkpoint, archived the prior
+live one verbatim), `cycles/cycle-001/decisions-archive.md` (DEC-269 appended directly),
+`cycles/cycle-001/drift-items-open-detail.md` (2 rows removed — closed; 2 new LOW rows
+added), `cycles/cycle-001/drift-items-closed.md` (2 rows appended),
+`cycles/cycle-001/lessons.md` (1 lesson appended),
+`stories/S-CIGATE-3-ci-yml-real-yaml-parser.md` (v1.3→v1.6 correction committed, status→done,
+close-out note added), `stories/STORY-INDEX.md` (v1.5.81→v1.5.82, S-CIGATE-3 row updated).
+Left exactly as found, unrelated to this burst: `regression-state.json`, `sidecar-learning.md`
+(standing telemetry-file convention, DEC-266b), and untracked `.claude/` product-repo files.
+
+Next priority on resume: S-639-1 (BREAKING/v0.6.0-dev.12), S-627-1,
+S-TRAIL-DERIVATION-GUARD-1, AX23-001 ratification, STORY-INDEX denominator/status-drift
+reconciliation audits, and the other previously-listed pending items (see STATE.md Next
+Phase / RESUME PLAN). S-CIGATE-3 requires no further action.
