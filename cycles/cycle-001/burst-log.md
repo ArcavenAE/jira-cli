@@ -10527,3 +10527,144 @@ Next priority on resume: S-639-1 (BREAKING/v0.6.0-dev.12), S-627-1,
 S-TRAIL-DERIVATION-GUARD-1, AX23-001 ratification, STORY-INDEX denominator/status-drift
 reconciliation audits, and the other previously-listed pending items (see STATE.md Next
 Phase / RESUME PLAN). S-CIGATE-3 requires no further action.
+
+## S-639-1-F4-DELIVERED-PR681-CONVERGED-AWAITING-MERGE (2026-08-12)
+
+Continues directly from the S-CIGATE-3-MERGED-CYCLE-CLOSED burst above, same session. Human
+authorized "proceed" (recorded as **DEC-270**) on the next listed SOH-DX-1 priority,
+**S-639-1** — BREAKING pre-flight exit-64 guard promotion for `--field`/`--on-behalf-of` on
+`jr issue create`'s platform path without `--request-type` (closes #639, DEC-188, BCs
+BC-3.8.012/013 [AMENDED] + BC-3.3.001; ships v0.6.0-dev.12). Worktree `.worktrees/S-639-1`,
+branch `feat/issue-create-preflight-guards`, branched off `develop` @ `3df77a54`.
+
+**TDD flow (Red Gate → Green → fix rounds):**
+- test-writer: Red Gate, 15 failing + 6 positive-control tests, commit `8a8f3917`.
+- implementer: guard implementation + delivery docs to green, commits `729e26c0` / `eff08a31`
+  / `64e247bd`. Full suite green, clippy/fmt clean.
+- doc-numbering fix: `4b0fb2c7` (closes ADV-S639-P6-LOW-001, see below).
+- AC-11 regression-pin restoration: `4bfa0c21` (closes ADV-S639-P2-M01, see below). This is
+  PR #681's final head commit.
+
+**Per-story adversarial convergence — 5 fresh-context passes, baseline rubric (no
+`policies.yaml` on this project — see standing drift item `POLICIES-YAML-NOT-INSTANTIATED`):**
+- Pass 1: NOT-CLEAN — 1 LOW (`ADV-S639-P6-LOW-001`): the new feature spec
+  (`docs/specs/issue-create-preflight-guards.md`) disagreed with the BC-SSOT on step
+  numbering. Fixed `4b0fb2c7`.
+- Pass 2: NOT-CLEAN — 1 MEDIUM (`ADV-S639-P2-M01`): AC-11 dropped its BC-3.8.012 regression
+  pin during transcription — a real BC↔story-body contradiction, not a style nit. Fixed in
+  the test suite (`4bfa0c21`) and in the story body (`stories/S-639-1.md` v1.1→v1.2, commit
+  `a7314189`, already committed prior to this burst).
+- Passes 3, 4, 5: ALL CLEAN (0 HIGH / 0 MEDIUM / 0 LOW). **Convergence achieved** — 3
+  consecutive CLEAN passes. `src/` 0-defect across all 5 passes.
+- Finding trajectory this story: 1→1→0→0→0.
+
+**Demo evidence:** `.factory/demos/S-639-1/` — 4 VHS recordings (GIF + WebM + `.tape` source
+each) plus a plain-text `demo-transcript.md` backup and an `INDEX.md` cross-reference. AC-001
+(`--field` alone, exit 64), AC-002 (`--on-behalf-of` alone, exit 64), AC-003 (both flags
+combined, ONE combined error, exit 64), AC-004 positive control (`--field` **with**
+`--request-type`, guard does NOT fire, routes to the JSM dispatch fork and fails on network
+unreachability instead — exit 1, proving the guard is scoped to the platform path only). All
+captures run against fake/isolated config (`JR_CONFIG_DIR`/`JR_CACHE_DIR` scratch dirs,
+unroutable `JR_BASE_URL`, dummy `JR_AUTH_HEADER`) — no real Jira instance, org ID, or
+credentials involved.
+
+**PR #681 OPENED** — `https://github.com/Zious11/jira-cli/pull/681`, base `develop`, head
+`4bfa0c21`, title `feat(create)!: exit 64 pre-flight for --field/--on-behalf-of without
+--request-type (#639)`.
+
+**CI run `31625361114`:** all real jobs GREEN, including `CI Gate` (the sole required check),
+`Clippy (ubuntu-latest)`, `Clippy (windows-latest)`, `Test (ubuntu-latest)`,
+`Test (macos-latest)`, `Test (windows-latest)`, MSRV, Deny, Coverage, Mutation testing, Spec
+Guards, Signing guard, dependency-review. `Secret Scan (gitleaks)` FAILED on a **transient**
+binary-download error ("socket hang up" fetching `gitleaks_8.24.3_linux_x64.tar.gz`) — not a
+secret finding, not a code defect, and not the required check (`gitleaks` sits outside
+`ci-gate.needs`, per the standing `SECRET-SCAN-NOT-A-MERGE-BLOCKER` drift item — `CI Gate`
+passed regardless). A re-run was triggered and was in progress at burst time.
+
+**pr-reviewer: APPROVE** at `4bfa0c21`. Independent PR-diff review (different lens from the 5
+adversarial passes), all 14 changed files reviewed, zero BLOCKING/WARNING/NIT findings.
+Verdict written to `.factory/code-delivery/S-639-1/pr-review.md` and posted to PR #681 as a
+COMMENT (not a formal APPROVE state — reviewer identity == PR author, the same structural gap
+PR #680 hit, tracked as `VALIDATE-PR-REVIEW-POSTED-ASSUMES-DISTINCT-REVIEWER`). The APPROVE
+verdict itself is authoritative per the review document; only the GitHub review *state* is
+constrained.
+
+**Merge NOT executed — human authority (DEC-128).** Standing decision: merge itself is a
+separate, still-pending human action, not conflated with DEC-270's "proceed" authorization
+(which covered picking up and driving the story's delivery only).
+
+**Drift recurred this burst (2, both previously LOW, both DEFERRED):**
+- `PR-MANAGER-RETURNS-BLOCKED-WITHOUT-AWAITING-GRANDCHILDREN` — same shape as PR #680's
+  lifecycle recurred during PR #681's; orchestrator again recovered by querying `gh` directly.
+- `VALIDATE-PR-REVIEW-POSTED-ASSUMES-DISTINCT-REVIEWER` — PR #681 hit the identical
+  reviewer==author COMMENT-state gap.
+
+**Drift opened this burst (1 new, LOW, DEFERRED):**
+- `GITLEAKS-ACTION-FLAKY-BINARY-DOWNLOAD` — the gitleaks-action's binary download is a
+  transient CI failure point (observed once, this burst); a re-run clears it. Consider a
+  retry wrapper or a cached binary if it recurs.
+
+**DEC-270 recorded** (archived directly, same pattern as DEC-263–269): the human's "proceed"
+authorization that let the orchestrator pick up S-639-1 and drive its delivery through TDD,
+adversarial convergence, demo recording, and PR review — explicitly scoped to NOT include
+merge authorization. See `decisions-archive.md`.
+
+**Factory status: PAUSED. PR #681 CONVERGED, AWAITING HUMAN MERGE** (pending only the gitleaks
+re-run going green). trajectory-tail →1→3→0→2 unchanged (S-639-1 is story-scoped work under
+SOH-DX-1, not a Step-4.5 window). No STORY-INDEX change, no story-status flip this burst —
+same precedent as the PR680-CONVERGED-AWAITING-MERGE burst: status changes wait for the merge
+event itself.
+
+**Archived from STATE.md this burst (superseded rows, retained here verbatim):**
+
+*Phase Progress row (superseded):*
+> | **S-CIGATE-3-MERGED-CYCLE-CLOSED (2026-08-12): human squash-merged PR #680 into `develop`
+> as `3df77a54` (DEC-268); post-merge cleanup complete; drafted AC-006 correction committed,
+> story flipped to `status: done`. CYCLE CLOSED.** | COMPLETE | 2026-08-12 | -- | Drift
+> `AC-006-FALSE-RATIONALE-UNCORRECTED`/`AC-006-CORRECTION-DRAFTED-UNCOMMITTED` CLOSED. Two new
+> LOW process-observation drift items recorded, DEFERRED. DEC-269 recorded. | (S-CIGATE-3
+> cycle close, not Step 4.5 -- trajectory-tail unchanged →1→3→0→2) |
+
+*Current Phase Steps row (superseded):*
+> | **S-CIGATE-3-MERGED-CYCLE-CLOSED (2026-08-12): state-manager ran the Single-Commit Burst
+> Protocol (TD-VSDD-053, `vsdd-factory:state-burst` skill) to record: (1) human owner/admin
+> squash-merge of PR #680 into `develop` as `3df77a54` (DEC-268); (2) `develop`/`origin/develop`
+> fast-forwarded, previous tip `d55bedf7`; (3) post-merge worktree removal
+> (`.worktrees/S-CIGATE-3`) and branch cleanup (local + remote-tracking); (4) this burst's own
+> commit includes the previously-drafted, now-reviewed AC-006 story correction (v1.3->v1.6)
+> plus the story's `status: in-progress`->`status: done` flip and close-out note; (5)
+> `STORY-INDEX.md` S-CIGATE-3 row status updated to done; (6) two drift items closed
+> (`AC-006-FALSE-RATIONALE-UNCORRECTED`, `AC-006-CORRECTION-DRAFTED-UNCOMMITTED`) and two new
+> LOW process-observation drift items recorded/deferred; (7) DEC-269 recorded for the
+> merge-completion event. All merge/cleanup facts re-stated as reported/verified live this
+> session, not independently re-run by state-manager. | state-manager | COMPLETED | `STATE.md`
+> v2.43->v2.44, `stories/S-CIGATE-3-ci-yml-real-yaml-parser.md` (v1.3->v1.6, status->done,
+> committed this burst), `stories/STORY-INDEX.md` (v1.5.82, S-CIGATE-3 row status->done),
+> `cycles/cycle-001/{burst-log,session-checkpoints,decisions-archive,drift-items-open-detail,
+> drift-items-closed,lessons}.md` updated (DEC-269 new; 2 drift rows closed/moved; 2 new LOW
+> drift rows added; 1 lesson appended), all committed to factory-artifacts in ONE atomic
+> commit (Single-Commit Burst Protocol, no Stage-2 backfill, no SHA placeholder), pushed via
+> CAS. `regression-state.json`, `sidecar-learning.md`, and untracked `code-delivery/S-CIGATE-3/`
+> left exactly as found, per standing instruction -- this burst staged only the files it
+> itself touched, not `git add -A`. |
+
+**Files touched this burst (all committed in ONE atomic commit, per the Single-Commit Burst
+Protocol):** `STATE.md` (v2.44→v2.45), this file (`burst-log.md`, appended this section
+including the two archived rows above),
+`cycles/cycle-001/session-checkpoints.md` (appended the new checkpoint, archived the prior
+live one verbatim), `cycles/cycle-001/decisions-archive.md` (DEC-270 appended directly),
+`cycles/cycle-001/drift-items-open-detail.md` (2 rows annotated RECURRED, 1 new LOW row
+added), `cycles/cycle-001/convergence-trajectory.md` (new paragraph appended),
+`cycles/cycle-001/adversarial-reviews/ADV-P1-INDEX.md` (new `§ S-639-1` section appended, 5
+passes indexed). Plus, newly committed session artifacts produced this session but not yet in
+`factory-artifacts`: `demos/S-639-1/` (4 VHS clips + transcript + `INDEX.md`) and
+`code-delivery/S-639-1/pr-review.md` (pr-reviewer APPROVE verdict). Left exactly as found,
+unrelated to this burst: `regression-state.json`, `sidecar-learning.md` (standing
+telemetry-file convention, DEC-266b), untracked `code-delivery/S-CIGATE-3/`, and untracked
+`.claude/` product-repo files. `stories/S-639-1.md` was already committed prior to this burst
+(`a7314189`, v1.2) and is not re-touched.
+
+Next priority on resume: human merge ruling on PR #681 (pending only the gitleaks re-run); then
+S-627-1, S-TRAIL-DERIVATION-GUARD-1, AX23-001 ratification, STORY-INDEX denominator/status-drift
+reconciliation audits, and the other previously-listed pending items (see STATE.md Next Phase /
+RESUME PLAN).

@@ -2283,4 +2283,72 @@ of "29 findings" did not match its own supplied per-pass table.
    exercised by this bookkeeping burst; merge authority is the human's (DEC-128). The story
    branch remains unpushed with no PR opened.
 
+# Adversarial Review Index — S-639-1 (Feature Mode SOH-DX-1 F4 follow-up) Passes 1..5
+
+<!-- Added 2026-08-12 by the S-639-1-F4-DELIVERED-PR681-CONVERGED-AWAITING-MERGE bookkeeping
+     burst. These 5 passes are a STORY-SCOPED adversarial window for S-639-1 (BREAKING
+     pre-flight exit-64 guard promotion for --field/--on-behalf-of without --request-type on
+     the jr issue create platform path), run during that story's own implementation session on
+     worktree `.worktrees/S-639-1`, branch `feat/issue-create-preflight-guards`. DISTINCT from
+     S-626-1's 61 Step-4.5-eligible passes and from S-CIGATE-3's 6-pass window above — not
+     counted toward Step 4.5's 3/3 window arithmetic. The same DEC-245 CLEAN criterion (zero
+     HIGH + zero MEDIUM + zero LOW) was applied by convention, consistent with S-CIGATE-3
+     (DEC-265b). Unlike S-CIGATE-3, this window DID reach convergence: 3 consecutive CLEAN
+     passes (3/4/5). No per-finding-ID detail file exists beyond the two finding IDs supplied
+     to this bookkeeping burst; both are re-stated here as reported (not independently
+     re-derived by state-manager). -->
+
+## S-639-1 Summary
+
+| Field | Value |
+|-------|-------|
+| Story | S-639-1 (BREAKING pre-flight exit-64 guard for `--field`/`--on-behalf-of` without `--request-type`; `.factory/stories/S-639-1.md`) |
+| Worktree / branch | `.worktrees/S-639-1`, `feat/issue-create-preflight-guards`, branched from `develop` @ `3df77a54` |
+| Commits | Red Gate `8a8f3917` → green `729e26c0`/`eff08a31`/`64e247bd` → doc fix `4b0fb2c7` → AC-11 regression-pin restoration `4bfa0c21` (PR #681 head) |
+| Passes | 5; passes 1/2 NOT CLEAN (fixed), passes 3/4/5 ALL CLEAN — **CONVERGED** |
+| Total findings | 2 (1 LOW + 1 MEDIUM), both fixed |
+| Severity distribution (this window only) | `{ CRIT: 0, HIGH: 0, MED: 1, LOW: 1, INFO: 0 }` |
+| Basis | TRUE ADVERSARY AGENT, fresh context per pass (no prior-pass visibility); baseline rubric — `.factory/policies.yaml` absent (see `POLICIES-YAML-NOT-INSTANTIATED`) |
+| Convergence | **3 of 3 — CONVERGED** (passes 3, 4, 5 all CLEAN). First story-scoped window this cycle to reach 3/3, unlike S-626-1's Step 4.5 (permanently 0/3, DEC-262) and S-CIGATE-3's own window (permanently 0/3, DEC-265) |
+
+## S-639-1 Per-Pass Findings
+
+| Pass | Verdict | Findings | Frontier | Disposition |
+|------|---------|----------|----------|-------------|
+| Pass 1 | NOT CLEAN | 1 LOW (`ADV-S639-P6-LOW-001`) | Feature-spec vs BC-SSOT consistency | Feature spec (`docs/specs/issue-create-preflight-guards.md`) step-numbering disagreed with the BC-SSOT; FIXED `4b0fb2c7` |
+| Pass 2 | NOT CLEAN | 1 MEDIUM (`ADV-S639-P2-M01`) | BC↔story-body↔test transcription consistency | AC-11 dropped its BC-3.8.012 regression pin during transcription — a real contradiction, not a style nit; FIXED in test `4bfa0c21` + story `a7314189` v1.2 |
+| Pass 3 | CLEAN | 0 | — | No findings |
+| Pass 4 | CLEAN | 0 | — | No findings |
+| Pass 5 | CLEAN | 0 | — | No findings |
+
+**Arithmetic check:** 1+1+0+0+0 = **2**. LOW: 1 (pass 1). MEDIUM: 1 (pass 2). 1+1 = 2, matches
+the total above. `src/` 0-defect across all 5 passes (both findings were spec/test-side, never
+product code).
+
+## S-639-1 Notable Findings Closed
+
+- Feature-spec step-numbering drift against the BC-SSOT (`ADV-S639-P6-LOW-001`) — corrected so
+  the newly-created `docs/specs/issue-create-preflight-guards.md` agrees with
+  `bc-3-issue-write.md` on AC/step ordering.
+- AC-11 BC-3.8.012 regression-pin omission (`ADV-S639-P2-M01`) — the story body's AC-11 text had
+  silently dropped the requirement that the old S-383 warn-and-proceed stderr string
+  (`"is ignored on the platform create path"`) must NOT appear anywhere in the new guard's
+  output; restored in both the test suite and the story body, closing a real spec↔test drift
+  before it could ship undetected.
+
+## S-639-1 Human Rulings This Window
+
+- None required beyond the standing DEC-270 "proceed" authorization — both findings were
+  fixed without escalation, and the window reached CLEAN×3 without needing a DEC-265b-style
+  "keep running past a HIGH" ruling (no HIGH ever surfaced in this window).
+
+## S-639-1 Open Items (human ruling pending, not resolved by this window)
+
+1. **Merge decision:** PR #681 is CONVERGED (5-pass adversarial window 3/3 CLEAN + pr-reviewer
+   APPROVE), unlike S-CIGATE-3's DEC-262-shape precedent (merge accepted despite non-convergence)
+   — this PR reaches the DEC-199/DEC-245 3/3-CLEAN bar cleanly. Merge itself remains the human's
+   to execute (DEC-128); not exercised by this bookkeeping burst, pending only the transient
+   gitleaks CI re-run going green.
+2. `GITLEAKS-ACTION-FLAKY-BINARY-DOWNLOAD` — new LOW drift item this window; not story-blocking.
+
 ---
