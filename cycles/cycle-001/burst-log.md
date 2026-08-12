@@ -7,7 +7,7 @@ producer: state-manager
 timestamp: 2026-05-04T00:00:00
 cycle: "cycle-001"
 inputs: [STATE.md]
-input-hash: "3a90c99"
+input-hash: "996d7cb"
 traces_to: STATE.md
 ---
 
@@ -10246,3 +10246,108 @@ Next priority on resume: human ruling on whether/when to open a PR for
 `test/ci-gate-real-yaml-parser` (this would trigger the CI validation the branch has never had),
 then the merge ruling itself, plus the other open items listed in the new Session Resume
 Checkpoint.
+
+### Archived Current Phase Steps row (from S-CIGATE-3-PUSHED)
+
+| Step | Agent | Status | Output |
+|------|-------|--------|--------|
+| S-CIGATE-3-PUSHED (2026-08-11): state-manager ran the Single-Commit Burst Protocol (TD-VSDD-053, `vsdd-factory:state-burst` skill) to record: (1) human `/wrap` confirming the already-PAUSED pipeline; (2) `git push -u origin test/ci-gate-real-yaml-parser` (human-authorized, explicit) succeeded, upstream now `origin/test/ci-gate-real-yaml-parser`, local HEAD == remote == `aeeebe0147e2cb616c34c6f05b54f135d62dd229`; (3) re-verified 17 commits ahead of `develop` via `git rev-list --count`; (4) confirmed via `gh pr list --head test/ci-gate-real-yaml-parser` that NO PR is open; (5) confirmed via `gh run list --branch test/ci-gate-real-yaml-parser` that NO CI ran on this branch (push-only trigger scoped to develop/main); (6) reconfirmed via `git -C .factory status`/`ls-files` that `sidecar-learning.md` is dirty again (normal) and both telemetry files remain tracked from the `86ddb331` `git add -A` sweep, left as-is per human ruling. | state-manager | COMPLETED | `STATE.md` v2.40->v2.41, `cycles/cycle-001/{burst-log,session-checkpoints,decisions-archive,drift-items-open-detail}.md` appended (DEC-266; drift items `S-CIGATE-3-BRANCH-NEVER-CI-VALIDATED` + `TELEMETRY-FILES-COMMIT-LEFT-AS-DRIFT`), all committed to factory-artifacts in ONE atomic commit (Single-Commit Burst Protocol, no Stage-2 backfill, no SHA placeholder), pushed via CAS. No product code, spec, story file, or STORY-INDEX touched. `.worktrees/S-CIGATE-3` and the story branch untouched by this burst beyond confirming the push already completed before this burst began. `regression-state.json`/`sidecar-learning.md` left dirty per the human ruling above (not reverted). |
+
+## S-CIGATE-3-WIP-VERIFIED burst (2026-08-12T13:56:04Z)
+
+Session resumed 2026-08-12. `factory-worktree-health` ran BLOCKING and returned PASS —
+`.factory/` worktree in-sync with `origin/factory-artifacts`; story worktree `.worktrees/S-CIGATE-3`
+healthy. Preconditions re-verified: `.factory/.git` worktree marker present,
+`git -C .factory rev-parse --git-dir` succeeds, `git -C .factory branch --show-current` =
+`factory-artifacts`.
+
+**RECONCILIATION — the filesystem was AHEAD of the last recorded state.** The prior burst
+(S-CIGATE-3-PUSHED, v2.41) recorded the branch pushed to `origin` at `aeeebe01`, 17 commits
+ahead of `develop`, adversarial window "ended [PERMANENTLY at 0/3]." Re-verified this burst via
+`git log --oneline -8` and `git rev-list --count` in `.worktrees/S-CIGATE-3`: the session had
+continued after that `/wrap` — the worktree was found at `d32f9f67`, **4 unrecorded, unpushed
+commits beyond `aeeebe01`** (ADV pass-2/5/6 fixes: `99f53383` positive regression coverage for
+`find_key_node_properties`, `dfc69662` vacuity guards on always-run-needs sibling loops plus
+stale test-count doc fixes, `bc86d4ce` bound last-job span to jobs-mapping end (not EOF),
+`d32f9f67` stale `wf.rs` test-count doc fix) **plus uncommitted WIP**: a new
+`test_ac_008_guards_are_key_spelling_and_indent_agnostic` (~165 lines) in
+`tests/ci_gate_completeness.rs` (AC-008 two-axis spelling×indent guard-agnosticism proof) and a
+~6-line `CLAUDE.md` ci-gate doc edit. This burst reconciles that gap. Note: the prior record's
+claim that S-CIGATE-3's adversarial window "ended PERMANENTLY at 0/3" was accurate as of its own
+verification but behind actual work that continued afterward — passes/fixes continued past that
+recording; this burst records the reconciliation factually without overclaiming the window's
+current disposition (the window itself is not reopened or re-scored by this burst — no new
+adversarial pass ran).
+
+**Human decision this session (DEC-267):** on resume, human chose "finish + verify the WIP
+first" — verify then commit, but do NOT push and do NOT open a PR; hold for human review.
+Merge/PR authority remains the human's (DEC-128); PR-opening and merge remain separable pending
+decisions, unchanged in kind from DEC-266a's push-without-PR precedent.
+
+**Verification (implementer, in-worktree) — all PASSED:**
+
+- `cargo test --test ci_gate_completeness` = **58/58 PASS**, including the new AC-008 test.
+- Full `cargo test` = PASS, no regressions.
+- `cargo clippy --all-targets -- -D warnings` = PASS, after an in-scope fix of 5
+  `clippy::doc_lazy_continuation` errors in the new AC-008 test's doc comment (one blank line
+  inserted to separate the doc-comment paragraph from its continuation).
+- `cargo fmt --all -- --check` = clean.
+- Round-15's `#[cfg(unix)]` dead-code class (six helpers orphaned on a Windows build when their
+  sole `#[cfg(unix)]`-gated test caller doesn't exist there — see `S-626-1` history) was checked
+  against this diff and does **not** apply: the diff adds only doc comments plus one new
+  always-run `#[test]` fn, no new `#[cfg(unix)]`-gated helpers.
+- A real Windows `clippy`/`cargo test` build was **NOT** run — not locally reproducible on
+  macOS. This is the same category of residual `S-CIGATE-3-BRANCH-NEVER-CI-VALIDATED` already
+  tracks; it is not closed by this burst's local verification.
+
+**WIP committed as `73a117cb`** — `test(ci-gate): add AC-008 two-axis (spelling×indent)
+guard-agnosticism proof (S-CIGATE-3)`. Working tree of `.worktrees/S-CIGATE-3` now CLEAN
+(re-verified via `git status --short`, empty output). Branch `test/ci-gate-real-yaml-parser`
+HEAD = `73a117cb`, **5 commits ahead** of `origin/test/ci-gate-real-yaml-parser` (still
+`aeeebe01`, UNPUSHED — re-verified via `git fetch origin test/ci-gate-real-yaml-parser` +
+`git rev-parse origin/test/ci-gate-real-yaml-parser` + `git rev-list --count`), **22 commits
+ahead** of `origin/develop`. **NOT pushed, NO PR opened** — consistent with DEC-267; not
+re-confirmed via a fresh `gh pr list` call this burst (no new PR-related action occurred that
+would change that fact from the prior burst's confirmation).
+
+**Drift discovered this burst, not part of the dispatch instruction:** during pre-burst hygiene
+(`git -C .factory status`), `.factory/stories/S-CIGATE-3-ci-yml-real-yaml-parser.md` was found
+modified in the working tree — an uncommitted, unstaged local edit (`version: "1.3"` →
+`"1.6"`, three new `CORRECTION` frontmatter entries) that appears to substantively fix
+`AC-006-FALSE-RATIONALE-UNCORRECTED`. Per the skill's pre-burst-hygiene rule ("pre-existing
+modifications must not contaminate the burst commit"), this file was **left untouched** — not
+staged, not committed, not reverted — and is out of scope for this burst's atomic commit.
+Recorded as new drift item `AC-006-CORRECTION-DRAFTED-UNCOMMITTED` (MEDIUM); see
+`drift-items-open-detail.md`. `regression-state.json`/`sidecar-learning.md` also left dirty per
+the standing (if-broken, still-documented) convention.
+
+**Drift updated:** `S-CIGATE-3-BRANCH-NEVER-CI-VALIDATED` (HIGH) strengthened — the branch now
+carries 5 unpushed commits atop the 17 already-pushed-but-never-CI'd commits (22 total), all
+validated only locally on macOS; `origin` remains at `aeeebe01` so even the pushed portion has
+never triggered CI (push-only trigger, no PR). Full detail: `drift-items-open-detail.md`.
+
+**Factory remains PAUSED.** trajectory-tail →1→3→0→2 (unchanged — this is S-CIGATE-3
+story-scoped work, not a SOH-DX-1 Step-4.5 window). No product BCs touched, no STORY-INDEX
+change. No new adversarial pass ran this burst; S-CIGATE-3's own 6-pass window remains ended at
+0/3 (DEC-265), unchanged in count.
+
+**Files touched this burst (all in `.factory/`, one atomic commit):**
+
+`STATE.md` (v2.41→v2.42), `cycles/cycle-001/decisions-archive.md` (DEC-267), this file
+(`burst-log.md`), `cycles/cycle-001/session-checkpoints.md` (archived the S-CIGATE-3-PUSHED
+checkpoint, appended the new S-CIGATE-3-WIP-VERIFIED checkpoint),
+`cycles/cycle-001/drift-items-open-detail.md` (1 new row `AC-006-CORRECTION-DRAFTED-UNCOMMITTED`,
+1 row strengthened `S-CIGATE-3-BRANCH-NEVER-CI-VALIDATED`). Product code was NOT touched by this
+*bookkeeping* burst — the verification and the `73a117cb` commit were performed in the
+`.worktrees/S-CIGATE-3` story worktree, on the story branch, as instructed work distinct from
+this factory-artifacts burst; this state-manager burst only records that outcome.
+`.factory/stories/S-CIGATE-3-ci-yml-real-yaml-parser.md` left dirty/uncommitted (see drift item
+above, not this burst's to resolve). `regression-state.json`/`sidecar-learning.md` left dirty
+per standing convention.
+
+Next priority on resume: (1) whether/when to push the 5 unpushed commits to `origin`; (2)
+whether/when to open a PR for `test/ci-gate-real-yaml-parser` (triggers first-ever CI); (3)
+S-CIGATE-3 merge ruling once CI has run; (4) review and decide on the uncommitted AC-006
+correction draft (`AC-006-CORRECTION-DRAFTED-UNCOMMITTED`) sitting in the `.factory/` story
+file; plus the remaining lower-priority items carried forward unchanged in the new Session
+Resume Checkpoint.
