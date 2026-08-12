@@ -1,7 +1,7 @@
 ---
 document_type: adversarial-review-index
 level: ops
-version: "2.18"
+version: "2.19"
 status: closed-merged
 producer: adversary
 timestamp: 2026-08-11T06:15:00Z
@@ -9,8 +9,8 @@ phase: "5"
 pass: 61
 inputs: [.factory/stories/S-626-1.md, .factory/stories/S-CIGATE-1-ci-gate-aggregator.md, .factory/stories/S-CIGATE-2-skipped-status-false-green.md, .factory/stories/S-640-1.md, .factory/stories/S-641-1.md, .factory/stories/S-MUTANTS-EXAMINE-GLOBS-1.md, .factory/stories/S-TRAIL-DERIVATION-GUARD-1.md, .factory/stories/STORY-INDEX.md, .factory/specs/prd/cross-cutting.md, .github/workflows/ci.yml, tests/ci_gate_completeness.rs, tests/cli_handler.rs, tests/common/yaml.rs, tests/mutants_glob_existence.rs, scripts/check-ci-gate.sh, docs/specs/cargo-mutants-policy.md, CLAUDE.md, Cargo.toml, CHANGELOG.md, live CI run 30465686049, live CI run 31406705091 (pass-57/58/59 fix-round CI-break), live CI run 31432422878 (develop post-merge), live CI run 31450052302 (develop post-PR675-merge), branch protection API, PyYAML 6.0.3 (pass-55 differential), standalone rustc reproductions (pass-56/57), Ruby Psych (pass-57), sibling ci.yml re-indent sweep (pass-57), scratch-tree per-mutation rebuilds (pass-58), 7 mutated ci.yml copies replayed against real pin extractors (pass-59), delta `1381af17..5ca51bc2` (pass-60/61), PR #675 diff `a5e1d087..d55bedf7` (ADV-P675, CLAUDE.md + scripts/check-ci-gate.sh comment/prose only), research/ci-gate-shell-trust-assumptions-2026-08-10.md (ADV-P675 primary-source cross-check)]
 traces_to: .factory/stories/S-626-1.md
-total_findings: 488
-severity_distribution: { CRIT: 0, HIGH: 36, MED: 143, LOW: 175, INFO: 134 }
+total_findings: 493
+severity_distribution: { CRIT: 0, HIGH: 36, MED: 145, LOW: 178, INFO: 134 }
 story: S-626-1
 cycle: cycle-001
 feature_head: 5ca51bc2 (last commit reviewed by any adversarial pass before merge; merge commit is `a5e1d087` on `develop`, squash of 48 commits; feature branch progression this burst's review scope: `1381af17`→`a17939e2`(pass-57/58/59 class sweep)→`f2bea32e`(CI-BREAK-1 fix)→`5ca51bc2`(DEC-261 doc corrections, reviewed by pass-60/61)→PR #667 squash-merged to `develop` as `a5e1d087`)
@@ -2355,5 +2355,84 @@ product code).
 
 **S-639-1 CYCLE CLOSED.** No further adversarial activity expected against this window; see
 `STATE.md` DEC-271 and `cycles/cycle-001/decisions-archive.md` for the merge-completion record.
+
+---
+
+## S-627-1 Summary
+
+**Note on the frontmatter `total_findings`/`severity_distribution` fields above:** those fields
+had drifted — still reading `488` after the S-639-1-MERGED-CYCLE-CLOSED burst despite that
+burst's own prose (both in `STATE.md` and this file's S-639-1 section) claiming a combined
+total of `493` (a +5 delta against S-639-1's own documented +2 finding count). This burst
+re-derived the correct combined total directly from each section's own stated arithmetic
+(488 baseline covering S-626-1 + S-CIGATE-3, + S-639-1's genuine 2 findings = 490, + S-627-1's
+genuine 3 findings below = 493) and corrected the frontmatter to `493` / `{ HIGH: 36, MED: 145,
+LOW: 178, INFO: 134 }` rather than propagating either the stale `488` or the previously-claimed
+but arithmetically unsupported `493`-via-+5. Flagged here rather than silently fixed, per this
+project's own `MEASUREMENT-METHOD-PRODUCES-FALSE-CLAIM` standing rule (verify an aggregate's
+derivation before reporting it); not further audited beyond this one field.
+
+| Field | Value |
+|-------|-------|
+| Story | S-627-1 (`check-bc-no-numeric-test-counts.sh` false-positive regex fix + `--self-test`/`--bc-dir` seam + two-phase factory-artifacts revert; `.factory/stories/S-627-1.md`) |
+| Worktree / branch | `.worktrees/S-627-1`, `fix/bc-numeric-count-guard-regex`, branched from `develop` @ `facdcb46` |
+| Commits | `edfcefaa` (initial regex fix + self-test seam) → fixes `fc2019a9` (script) + `e6e6f23d` (story) (PR #682 head) |
+| Passes | 4; pass 1 NOT CLEAN (fixed), passes 2/3/4 ALL CLEAN — **CONVERGED** |
+| Total findings | 3 (1 MEDIUM + 2 LOW), all fixed |
+| Severity distribution (this window only) | `{ CRIT: 0, HIGH: 0, MED: 1, LOW: 2, INFO: 0 }` |
+| Basis | TRUE ADVERSARY AGENT, fresh context per pass (no prior-pass visibility); baseline rubric — `.factory/policies.yaml` absent (see `POLICIES-YAML-NOT-INSTANTIATED`) |
+| Convergence | **3 of 3 — CONVERGED** (passes 2, 3, 4 all CLEAN). Third consecutive story-scoped window this cycle to reach 3/3 (after S-639-1), unlike S-626-1's Step 4.5 (permanently 0/3, DEC-262) and S-CIGATE-3's own window (permanently 0/3, DEC-265) |
+
+## S-627-1 Per-Pass Findings
+
+| Pass | Verdict | Findings | Frontier | Disposition |
+|------|---------|----------|----------|-------------|
+| Pass 1 | NOT CLEAN | 1 MEDIUM (`ADV-S627-P1-MED-001`) + 2 LOW (`ADV-S627-P1-LOW-001`, `ADV-S627-P1-LOW-002`) | I/O-error exit-code fidelity; regex boundary completeness; spec/impl EC-9 consistency | MEDIUM: I/O-error path false-greened via pipefail masking the rightmost command's exit status, compounded by a `return` inside a `$(...)` command substitution silently discarding the propagated status — genuinely reachable, not theoretical. LOW-001: left-boundary negative character class omitted `_` (underscore-adjacent digit runs could still false-positive/negative at the margin). LOW-002: story's own EC-9 wording ("completes without violations") contradicted the implemented fail-closed exit-2 behavior for an empty/no-BC-files `--bc-dir`. All three FIXED: `fc2019a9` (script — split into two separate command substitutions removing the pipe entirely, exit-2 propagation restored and verified via `chmod 000` reproduction, `_` added to the boundary class, hardened discriminating negative fixtures) + `e6e6f23d` (story — EC-9 reconciled to fail-closed exit 2 matching the script's own header definition, plus a Phase-2 note flagging the 3rd `[PENDING-REVERT-S-627-1]` marker occurrence for reconciliation) |
+| Pass 2 | CLEAN | 0 | — | No findings |
+| Pass 3 | CLEAN | 0 | — | No findings |
+| Pass 4 | CLEAN | 0 | — | No findings |
+
+**Arithmetic check:** 1(MED)+2(LOW)+0+0+0 = **3**, matches the total above. `src/`/product-code
+not in scope for this story (script-only change) — no defect-streak claim applies here (this
+story never touched `src/`).
+
+## S-627-1 Notable Findings Closed
+
+- I/O-error false-green via pipefail masking (`ADV-S627-P1-MED-001`) — the highest-value finding
+  of this window: an I/O error reading a BC file (e.g. permission denied) was silently absorbed
+  by two compounding mechanisms (pipefail reporting only the rightmost command's exit status in
+  a pipe, and a `return` statement inside a `$(...)` command substitution that cannot propagate
+  outward) rather than surfacing as the documented exit-2 "I/O error" case — a guard that
+  silently passes on a read failure is a false-green exactly like several other findings this
+  cycle's adversarial windows have surfaced in guard-apparatus code (`GUARD-MODE-UNREACHABLE-LOCALLY`,
+  `DOC-CLAIMS-A-GUARD-THAT-DOES-NOT-EXIST`). Reproduced independently by the pr-reviewer via
+  `chmod 000` on a fixture BC file, confirming genuine exit 2 post-fix.
+- EC-9 spec/impl contradiction (`ADV-S627-P1-LOW-002`) — the story's own edge-case table
+  disagreed with what the (correct) implementation actually did; corrected in the spec rather
+  than the code, since the fail-closed exit-2 behavior was the right call (a guard scanning zero
+  files should not silently report a clean pass).
+
+## S-627-1 Human Rulings This Window
+
+- None required — the single MEDIUM finding was fixed without escalation, and the window
+  reached CLEAN×3 without needing a DEC-265b-style "keep running past a HIGH" ruling (no HIGH
+  ever surfaced in this window).
+
+## S-627-1 Open Items (as resolved at cycle close, S-627-1-MERGED-BOTH-PHASES-CYCLE-CLOSED, 2026-08-12)
+
+1. **Merge decision — RESOLVED.** PR #682 squash-merged to `develop` as `c3edf216` (human
+   owner/admin merge per DEC-128/DEC-272), closing #627. Reached the DEC-199/DEC-245 3/3-CLEAN
+   bar cleanly before merge (same shape as S-639-1, unlike S-CIGATE-3's DEC-262-shape precedent).
+2. **Phase 2 (factory-artifacts revert) — RESOLVED.** Committed separately by product-owner as
+   `27bf96aa`, hard-sequenced after Phase 1 per this story's own two-phase delivery constraint.
+   Verification all green post-revert (see `STATE.md` DEC-272 for the full verification list).
+3. `GITLEAKS-ACTION-FLAKY-BINARY-DOWNLOAD` — did NOT recur on this PR's CI run. Drift item
+   remains OPEN/LOW (single confirmed occurrence overall) per its own disposition in
+   `drift-items-open-detail.md`.
+
+**S-627-1 CYCLE CLOSED — BOTH PHASES COMPLETE.** **This completes the SOH-DX-1 bundle:** all
+three bundle stories (S-626-1, S-639-1, S-627-1) are now DELIVERED AND MERGED. No further
+adversarial activity expected against this window; see `STATE.md` DEC-272 and
+`cycles/cycle-001/decisions-archive.md` for the merge-completion record.
 
 ---

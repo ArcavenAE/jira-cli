@@ -10737,3 +10737,111 @@ left exactly as found, per standing instruction.
 Next priority on resume: **S-627-1**, then S-TRAIL-DERIVATION-GUARD-1, AX23-001 ratification,
 STORY-INDEX denominator/status-drift reconciliation audits, and the other previously-listed
 pending items (see STATE.md Next Phase / RESUME PLAN).
+
+## S-627-1-MERGED-BOTH-PHASES-CYCLE-CLOSED burst (2026-08-12)
+
+*Phase Progress row (superseded):*
+> | **S-639-1-MERGED-CYCLE-CLOSED (2026-08-12): human squash-merged PR #681 into `develop` as
+> `facdcb46` (DEC-271), closing #639; post-merge cleanup complete; story flipped to
+> `status: done`. CYCLE CLOSED.** | COMPLETE | 2026-08-12 | -- | Two recurring LOW drift items
+> + one new LOW (gitleaks flake, cleared on re-run) reconfirmed with existing DEFERRED
+> dispositions. DEC-271 recorded. | 1→1→0→0→0 (S-639-1 story-scoped window; SOH-DX-1
+> trajectory-tail →1→3→0→2 unchanged) |
+
+*Current Phase Steps row (superseded):*
+> | **S-639-1-MERGED-CYCLE-CLOSED (2026-08-12): state-manager ran the Single-Commit Burst
+> Protocol (TD-VSDD-053, `vsdd-factory:state-burst` skill) to record: (1) human owner/admin
+> squash-merge of PR #681 into `develop` as `facdcb46` (DEC-271), closing #639; (2)
+> `develop`/`origin/develop` fast-forwarded, previous tip `3df77a54`; (3) post-merge worktree
+> removal (`.worktrees/S-639-1`) and branch cleanup (local + remote-tracking); (4)
+> `stories/S-639-1.md` `status: ready`->`status: done` flip (v1.2->v1.3) with Close-Out
+> section; (5) `STORY-INDEX.md` S-639-1 row status updated to done (v1.5.82->v1.5.83); (6)
+> three process-observation drift items (2 recurring, 1 new) reconfirmed with existing
+> DEFERRED dispositions intact -- no story auto-opened; (7) DEC-271 recorded for the
+> merge-completion event. All merge/cleanup facts re-stated as reported/verified live this
+> session, not independently re-run by state-manager. | state-manager | COMPLETED | `STATE.md`
+> v2.45->v2.46, `stories/S-639-1.md` (v1.2->v1.3, status->done, committed this burst),
+> `stories/STORY-INDEX.md` (v1.5.83, S-639-1 row status->done),
+> `cycles/cycle-001/{burst-log,session-checkpoints,decisions-archive,convergence-trajectory,
+> adversarial-reviews/ADV-P1-INDEX}.md` updated (DEC-271 new; S-639-1 merge-resolution
+> recorded), all committed to factory-artifacts in ONE atomic commit (Single-Commit Burst
+> Protocol, no Stage-2 backfill, no SHA placeholder), pushed via CAS. A separate prior commit
+> this burst housekept pre-existing unrelated modifications (`regression-state.json`,
+> `sidecar-learning.md`, untracked `code-delivery/S-CIGATE-3/`) so they would not contaminate
+> this burst's atomic commit. |
+
+**Facts verified live this session (2026-08-12), CYCLE CLOSE-OUT:** S-627-1 delivered in two
+phases. **Phase 1** (script fix): worktree `.worktrees/S-627-1`, branch
+`fix/bc-numeric-count-guard-regex`, off `develop` @ `facdcb46`. Regex fix + `--self-test`/
+`--bc-dir` seam implemented (`edfcefaa`). 4-pass story-scoped adversarial window: pass 1
+NOT-CLEAN (1 MEDIUM `ADV-S627-P1-MED-001` -- I/O-error false-green via pipefail masking +
+subshell `return`; 2 LOW -- boundary character-class gap, EC-9 spec/impl contradiction), fixed
+via `fc2019a9` (script) + `e6e6f23d` (story); passes 2/3/4 ALL CLEAN -- CONVERGED 3/3.
+`src/` not touched (script-only). pr-reviewer APPROVE at `fc2019a9` (COMMENT-state,
+reviewer==author -- `.factory/code-delivery/S-627-1/pr-review.md`). CI 15/15 GREEN incl. CI
+Gate, Spec Guards, both Windows legs, gitleaks (no flake this run). PR #682 SQUASH-MERGED into
+`develop` by human owner/admin action -- merge commit `c3edf216881f80dc9608bb12e276056ae6af1ed3`,
+subject "fix(spec-guard): correct BC numeric-test-count regex + exit-2 on I/O error (closes
+#627, Phase 1) (#682)". `origin/develop`/local `develop` fast-forwarded from `facdcb46`.
+**Phase 2** (factory-artifacts revert): already committed separately by product-owner as
+`27bf96aa` (`.factory/specs/prd/bc-3-issue-write.md` -- reverted BC-3.9.001/BC-3.9.003
+Trace-field hyphenation workarounds, removed both `[PENDING-REVERT-S-627-1]` inline markers,
+reconciled the 3rd historical-footer occurrence with an appended changelog clause;
+`bc-2-issue-read.md` needed no change -- zero markers present, the story's Task 5 target set
+was a superset of what actually required reverting). Verification all green post-revert:
+`check-bc-no-numeric-test-counts.sh` exit 0 against the un-hyphenated prose, `check-spec-counts.sh`
+exit 0, `check-bc-cumulative-counts.sh` exit 0 (658 BCs total, 8 files, unchanged), `grep -rc
+PENDING-REVERT-S-627-1 .factory/specs/prd/` -> 0 live markers. Post-merge cleanup: `.worktrees/S-627-1`
+removed; local branch `fix/bc-numeric-count-guard-regex` deleted; stale remote-tracking ref
+pruned; GitHub auto-deleted the remote branch. `git worktree list` now shows only main (`develop`
+@ `c3edf216`), `.factory` (`factory-artifacts`), `.reference` (detached).
+
+**This completes the SOH-DX-1 bundle:** all three bundle stories (S-626-1 `a5e1d087`, S-639-1
+`facdcb46`, S-627-1 `c3edf216`) are now DELIVERED AND MERGED.
+
+**Process observations (S-7.02 cycle-closing checklist):** `PR-MANAGER-RETURNS-BLOCKED-WITHOUT-AWAITING-GRANDCHILDREN`
+recurred a THIRD time this session (on PR #682); orchestrator again recovered by querying `gh`
+directly -- three occurrences now strongly evidence a systemic pr-manager dispatch/return-contract
+defect, flagged for a follow-up-story ruling (not auto-opened). `VALIDATE-PR-REVIEW-POSTED-ASSUMES-DISTINCT-REVIEWER`
+recurred a third time (PR #682, same reviewer==author cause). NEW LOW item
+`FACTORY-DISPATCHER-POSTTOOLUSE-HOOK-TIMEOUT` recorded: product-owner's Phase-2 edits and this
+very burst's own edits to cycle-001 artifacts repeatedly tripped `factory-dispatcher … fail-closed:
+plugin timed out` (blocking_plugins including `validate-factory-path-root`,
+`validate-input-hash`, `validate-template-compliance`) even though every edit applied correctly
+and all downstream guard scripts passed clean -- reads as an infra timeout flake on the
+dispatcher's own execution budget, not a real content-validation failure. `GITLEAKS-ACTION-FLAKY-BINARY-DOWNLOAD`
+did NOT recur on PR #682's CI run (noted for the record; disposition unchanged, single
+confirmed occurrence overall).
+
+**`ADV-P1-INDEX.md` frontmatter correction:** `total_findings`/`severity_distribution` had
+drifted (stale at `488` despite two prior bursts' prose claiming `493`, a +5 delta against
+S-639-1's own documented +2-finding arithmetic). Re-derived directly from each section's own
+stated arithmetic this burst: `488` (S-626-1 + S-CIGATE-3 baseline) + `2` (S-639-1's genuine
+finding count) + `3` (S-627-1's genuine finding count) = **493**, corrected in the frontmatter
+(`{ HIGH: 36, MED: 145, LOW: 178, INFO: 134 }`). Flagged in-file rather than silently fixed, per
+`MEASUREMENT-METHOD-PRODUCES-FALSE-CLAIM`.
+
+**Files touched this burst (all committed in ONE atomic commit, per the Single-Commit Burst
+Protocol):** `STATE.md` (v2.46→v2.47), this file (`burst-log.md`, appended this section
+including the two archived rows above), `cycles/cycle-001/session-checkpoints.md` (appended the
+archived S-639-1-MERGED-CYCLE-CLOSED checkpoint, new live checkpoint written into `STATE.md`),
+`cycles/cycle-001/decisions-archive.md` (DEC-272 appended directly),
+`cycles/cycle-001/convergence-trajectory.md` (new closing paragraph appended),
+`cycles/cycle-001/drift-items-open-detail.md` (2 rows reconfirmed RECURRED AGAIN, 1 row noted
+did-not-recur, 1 new LOW row added), `cycles/cycle-001/adversarial-reviews/ADV-P1-INDEX.md`
+(frontmatter corrected, new `§ S-627-1` section appended), `stories/S-627-1.md` (v1.2->v1.3,
+`status`->`done`, Close-Out section appended, input-hash refreshed via
+`compute-input-hash --update`), `stories/STORY-INDEX.md` (v1.5.83->v1.5.84, S-627-1 row
+status->done), plus the previously-untracked `code-delivery/S-627-1/pr-review.md`
+(pr-reviewer APPROVE verdict for PR #682, newly committed). `regression-state.json`,
+`sidecar-learning.md` (standing telemetry-file convention, DEC-266b) left exactly as found,
+untouched by this burst. Untracked `.claude/` product-repo files left exactly as found, per
+standing instruction. `.factory/specs/prd/bc-3-issue-write.md` (Phase 2 revert) was already
+committed prior to this burst (`27bf96aa`, by product-owner) and is not re-touched by this
+burst -- only cited.
+
+Next priority on resume (SOH-DX-1 bundle now COMPLETE): S-TRAIL-DERIVATION-GUARD-1, AX23-001
+ratification, STORY-INDEX denominator + status-drift reconciliation audits, ruling on the three
+process-gap items above, deferred config rulings (2nd required CI check, gitleaks/enforce_admins/
+`strict: false`), E1/E2 experiments, telemetry-file convention restoration (see STATE.md Next
+Phase / RESUME PLAN).
