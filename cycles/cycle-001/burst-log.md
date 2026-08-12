@@ -7,7 +7,7 @@ producer: state-manager
 timestamp: 2026-05-04T00:00:00
 cycle: "cycle-001"
 inputs: [STATE.md]
-input-hash: "6661f17"
+input-hash: "4dc0ea5"
 traces_to: STATE.md
 ---
 
@@ -10668,3 +10668,72 @@ Next priority on resume: human merge ruling on PR #681 (pending only the gitleak
 S-627-1, S-TRAIL-DERIVATION-GUARD-1, AX23-001 ratification, STORY-INDEX denominator/status-drift
 reconciliation audits, and the other previously-listed pending items (see STATE.md Next Phase /
 RESUME PLAN).
+
+## S-639-1-MERGED-CYCLE-CLOSED burst (2026-08-12)
+
+*Phase Progress row (superseded):*
+> | **S-639-1-F4-DELIVERED-PR681-CONVERGED-AWAITING-MERGE (2026-08-12): TDD delivery complete; 5-pass
+> story-scoped adversarial window CONVERGED 3/3 CLEAN; demos recorded; PR #681 opened,
+> pr-reviewer APPROVE at `4bfa0c21`; CI green modulo a transient gitleaks re-run in progress.**
+> | COMPLETE | 2026-08-12 | -- | Merge awaiting human action (DEC-128). New DEC-270 recorded
+> (pickup authorization only). One new LOW drift item (gitleaks flake); two recurring LOW items
+> re-annotated. | 1→1→0→0→0 (S-639-1 story-scoped window; SOH-DX-1 trajectory-tail →1→3→0→2
+> unchanged) |
+
+*Current Phase Steps row (superseded):*
+> | **S-639-1-F4-DELIVERED-PR681-CONVERGED-AWAITING-MERGE (2026-08-12): state-manager ran the
+> Single-Commit Burst Protocol (TD-VSDD-053, `vsdd-factory:state-burst` skill) to record: (1)
+> S-639-1 TDD delivery complete (Red Gate `8a8f3917` -> green `729e26c0`/`eff08a31`/`64e247bd` ->
+> `4b0fb2c7` -> `4bfa0c21`); (2) 5-pass story-scoped adversarial window, CONVERGED 3/3 CLEAN
+> (passes 3/4/5), 2 findings fixed in passes 1/2, new `§ S-639-1` section in `ADV-P1-INDEX.md`;
+> (3) demo evidence at `demos/S-639-1/` (4 VHS clips + transcript + INDEX) committed; (4) PR #681
+> opened, CI run `31625361114` green modulo a transient gitleaks flake, pr-reviewer APPROVE
+> verdict (`code-delivery/S-639-1/pr-review.md`) committed; (5) DEC-270 recorded (archived
+> directly) for the pickup/delivery authorization, explicitly excluding the still-pending merge
+> decision; (6) two recurring LOW drift items annotated RECURRED, one new LOW drift item
+> (`GITLEAKS-ACTION-FLAKY-BINARY-DOWNLOAD`) added. All delivery/CI/review facts re-stated as
+> reported/verified live this session, not independently re-run by state-manager. |
+> state-manager | COMPLETED | `STATE.md` v2.44->v2.45,
+> `cycles/cycle-001/{burst-log,session-checkpoints,decisions-archive,drift-items-open-detail,
+> convergence-trajectory,adversarial-reviews/ADV-P1-INDEX}.md` updated (DEC-270 new; 1 new LOW
+> drift row, 2 rows annotated RECURRED; S-639-1 5-pass window indexed), plus newly committed
+> session artifacts `demos/S-639-1/` (4 VHS clips + transcript + INDEX.md) and
+> `code-delivery/S-639-1/pr-review.md`, all committed to factory-artifacts in ONE atomic commit
+> (Single-Commit Burst Protocol, no Stage-2 backfill, no SHA placeholder), pushed via CAS.
+> `regression-state.json`, `sidecar-learning.md`, and untracked `code-delivery/S-CIGATE-3/` left
+> exactly as found, per standing instruction. `stories/S-639-1.md` already committed prior to
+> this burst (`a7314189`, v1.2) -- not re-touched (status flip deferred to the merge event, same
+> precedent as S-CIGATE-3). |
+
+**Facts verified live this session (2026-08-12), CYCLE CLOSE-OUT:** PR #681 SQUASH-MERGED into
+`develop` — merge commit `facdcb468ec61279a51445cdb654effb48e35505`, mergedAt
+2026-08-12T18:34:36Z, subject "feat(create)!: exit 64 pre-flight for --field/--on-behalf-of
+without --request-type (#639) (#681)". Human performed the owner/admin merge (self-authored-PR
+limitation blocked a formal factory APPROVE, same structural gap as S-CIGATE-3). `origin/develop`
+and local `develop` both now `facdcb46` (local fast-forwarded from `3df77a54`, verified). Issue
+#639 CLOSED by the merge (`gh issue view 639` → CLOSED). Post-merge cleanup: `.worktrees/S-639-1`
+removed (clean tree, direct `git worktree remove`); local branch
+`feat/issue-create-preflight-guards` deleted; stale remote-tracking ref pruned; GitHub
+auto-deleted the remote branch. `git worktree list` now shows only main (`develop` @ `facdcb46`),
+`.factory` (`factory-artifacts`), `.reference` (detached). The gitleaks "Secret Scan" transient
+binary-download flake ("socket hang up") cleared on re-run (24s); final CI state was 15/15 GREEN
+incl. CI Gate before merge.
+
+**Files touched this burst (all committed in ONE atomic commit, per the Single-Commit Burst
+Protocol):** `STATE.md` (v2.45→v2.46), this file (`burst-log.md`, appended this section including
+the two archived rows above), `cycles/cycle-001/session-checkpoints.md` (appended the archived
+S-639-1-F4-DELIVERED-PR681-CONVERGED-AWAITING-MERGE checkpoint, new live checkpoint written into
+`STATE.md`), `cycles/cycle-001/decisions-archive.md` (DEC-271 appended directly),
+`cycles/cycle-001/convergence-trajectory.md` (new closing paragraph appended),
+`cycles/cycle-001/adversarial-reviews/ADV-P1-INDEX.md` (`§ S-639-1 Open Items` updated to reflect
+merge resolution), `stories/S-639-1.md` (v1.2→v1.3, `status`→`done`, Close-Out section appended),
+`stories/STORY-INDEX.md` (v1.5.82→v1.5.83, S-639-1 row status→done). A separate, prior commit
+this burst (`84e11748`) housekept pre-existing unrelated modifications
+(`regression-state.json`, `sidecar-learning.md`, untracked `code-delivery/S-CIGATE-3/`
+review artifacts) so they would not contaminate this burst's atomic commit — left in their
+housekept state, not otherwise touched by this burst. Untracked `.claude/` product-repo files
+left exactly as found, per standing instruction.
+
+Next priority on resume: **S-627-1**, then S-TRAIL-DERIVATION-GUARD-1, AX23-001 ratification,
+STORY-INDEX denominator/status-drift reconciliation audits, and the other previously-listed
+pending items (see STATE.md Next Phase / RESUME PLAN).

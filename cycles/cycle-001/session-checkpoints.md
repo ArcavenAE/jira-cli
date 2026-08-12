@@ -7,7 +7,7 @@ producer: state-manager
 timestamp: 2026-05-08T00:00:00
 cycle: "cycle-001"
 inputs: [STATE.md]
-input-hash: "6661f17"
+input-hash: "4dc0ea5"
 traces_to: STATE.md
 ---
 
@@ -2266,3 +2266,12 @@ below for full detail.
 | Closing note | This burst's own factory-artifacts commit includes the AC-006 story correction and status flip, as explicitly instructed — the merge itself, and all post-merge git cleanup (worktree/branch removal), were verified live this session (`gh pr view 680`, `git log`, `git worktree list`, `git branch`) rather than assumed. Every write to this file used the `Write` tool with a single full-content write, per the standing DEC-247 convention. |
 | Closing note (source) | See `cycles/cycle-001/burst-log.md` and `cycles/cycle-001/session-checkpoints.md` for the full narrative this checkpoint condenses. |
 | Resume command | Open a fresh session in this project and run `/vsdd-factory:next-step`. It reads `STATE.md` and picks up at the next-priority list (S-639-1 / S-627-1 / S-TRAIL-DERIVATION-GUARD-1 / AX23-001, etc.) since S-CIGATE-3 is fully closed. |
+
+## Checkpoint: S-639-1-F4-DELIVERED-PR681-CONVERGED-AWAITING-MERGE burst, archived by S-639-1-MERGED-CYCLE-CLOSED (2026-08-12)
+
+| Field | Value |
+|-------|-------|
+| Position | Feature Mode SOH-DX-1, phase F4. S-639-1-F4-DELIVERED-PR681-CONVERGED-AWAITING-MERGE burst, continuing directly from S-CIGATE-3-MERGED-CYCLE-CLOSED, same session. Factory PAUSED. trajectory-tail →1→3→0→2 unchanged. S-639-1 (BREAKING pre-flight exit-64 guard, closes #639, DEC-188) delivered end-to-end on worktree `.worktrees/S-639-1`, branch `feat/issue-create-preflight-guards`, off `develop` @ `3df77a54`. TDD: Red Gate `8a8f3917` → green `729e26c0`/`eff08a31`/`64e247bd` → `4b0fb2c7` → `4bfa0c21`. 5-pass story-scoped adversarial window CONVERGED 3/3 CLEAN. Demo evidence at `demos/S-639-1/`. PR #681 OPENED, CI green modulo a transient gitleaks flake, pr-reviewer APPROVE at `4bfa0c21` (COMMENT-state, reviewer==author). Merge NOT executed — human authority (DEC-128). |
+| Convergence | S-639-1's 5-pass window CONVERGED 3/3 CLEAN (passes 3/4/5), trajectory 1→1→0→0→0. SOH-DX-1's Step 4.5 remains PERMANENTLY at 0/3, unaffected. `ADV-P1-INDEX.md` combined total 488→493. `src/` 0-defect streak intact. |
+| Pending human decisions / next steps | (1) Merge ruling on PR #681. (2) S-627-1. (3) S-TRAIL-DERIVATION-GUARD-1. (4) AX23-001 ratification. (5) STORY-INDEX denominator/status-drift audits. (6) `.factory/policies.yaml` instantiation ruling. (7) Second independent required CI check. (8) Gitleaks/enforce_admins/`strict: false` config ruling. (9) Perimeter extension. (10) `S-MAINT-CR-008`. (11) E1/E2 experiments. (12) Telemetry-file convention restoration. (13) Two recurring LOW process-observation drift items. |
+| Resolution (superseding burst) | **RESOLVED 2026-08-12, S-639-1-MERGED-CYCLE-CLOSED:** human squash-merged PR #681 into `develop` as `facdcb46`, closing #639. See that checkpoint (live in `STATE.md`) for the full closing narrative. |

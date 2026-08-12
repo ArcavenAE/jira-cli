@@ -2342,13 +2342,18 @@ product code).
   fixed without escalation, and the window reached CLEAN×3 without needing a DEC-265b-style
   "keep running past a HIGH" ruling (no HIGH ever surfaced in this window).
 
-## S-639-1 Open Items (human ruling pending, not resolved by this window)
+## S-639-1 Open Items (as resolved at cycle close, S-639-1-MERGED-CYCLE-CLOSED, 2026-08-12)
 
-1. **Merge decision:** PR #681 is CONVERGED (5-pass adversarial window 3/3 CLEAN + pr-reviewer
-   APPROVE), unlike S-CIGATE-3's DEC-262-shape precedent (merge accepted despite non-convergence)
-   — this PR reaches the DEC-199/DEC-245 3/3-CLEAN bar cleanly. Merge itself remains the human's
-   to execute (DEC-128); not exercised by this bookkeeping burst, pending only the transient
-   gitleaks CI re-run going green.
-2. `GITLEAKS-ACTION-FLAKY-BINARY-DOWNLOAD` — new LOW drift item this window; not story-blocking.
+1. **Merge decision — RESOLVED.** PR #681 squash-merged to `develop` as `facdcb46` (mergedAt
+   2026-08-12T18:34:36Z, human owner/admin merge per DEC-128/DEC-271), closing #639. Reached
+   the DEC-199/DEC-245 3/3-CLEAN bar cleanly before merge (unlike S-CIGATE-3's DEC-262-shape
+   precedent, which merged without ever reaching 3/3).
+2. `GITLEAKS-ACTION-FLAKY-BINARY-DOWNLOAD` — the earlier transient failure cleared on re-run;
+   final CI state was 15/15 GREEN including CI Gate before merge. Drift item remains OPEN/LOW
+   (single occurrence, not yet worth a dedicated fix story) per its own disposition in
+   `drift-items-open-detail.md`.
+
+**S-639-1 CYCLE CLOSED.** No further adversarial activity expected against this window; see
+`STATE.md` DEC-271 and `cycles/cycle-001/decisions-archive.md` for the merge-completion record.
 
 ---
