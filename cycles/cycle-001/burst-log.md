@@ -7,7 +7,7 @@ producer: state-manager
 timestamp: 2026-05-04T00:00:00
 cycle: "cycle-001"
 inputs: [STATE.md]
-input-hash: "996d7cb"
+input-hash: "828da0d"
 traces_to: STATE.md
 ---
 
@@ -10351,3 +10351,97 @@ S-CIGATE-3 merge ruling once CI has run; (4) review and decide on the uncommitte
 correction draft (`AC-006-CORRECTION-DRAFTED-UNCOMMITTED`) sitting in the `.factory/` story
 file; plus the remaining lower-priority items carried forward unchanged in the new Session
 Resume Checkpoint.
+
+## Burst: S-CIGATE-3-PR680-CONVERGED-AWAITING-MERGE (2026-08-12)
+
+Continues directly from S-CIGATE-3-WIP-VERIFIED above. Same session. Human authorized
+"proceed" after the WIP-verify burst closed: pr-manager fast-forward-pushed
+`test/ci-gate-real-yaml-parser` (closing the 5-commit push gap recorded above) and opened
+**PR #680** — `https://github.com/Zious11/jira-cli/pull/680`, base `develop`, head
+`test/ci-gate-real-yaml-parser`. This is the branch's **first-ever CI exposure** — every
+prior commit (22 total) had been validated only locally on macOS per
+`S-CIGATE-3-BRANCH-NEVER-CI-VALIDATED`.
+
+**CI run 1 (31607024649):** 15/15 GREEN, including both Windows legs (`Clippy
+(windows-latest)`, `Test (windows-latest)`); security review clean.
+
+**pr-reviewer cycle 1: REQUEST_CHANGES.** One blocking finding, `B-1`: the event-stream
+migration's 5 scalar byte-pins (`if:`, `run:`, step `run:` by name, `NEEDS_JSON:`, `needs:`)
+remained blind to a VALUE-side YAML node property (anchor/tag) — a coverage regression
+relative to `develop`'s prior line-based pins, contradicting AC-004 ("no pin weakened").
+
+**Human ruling: "verify the finding independently first."** A fresh-context independent
+verifier reproduced `B-1` empirically: REAL but INERT regression — all 5 pins miss the
+value-side construction on the branch, all 5 catch it on `develop`; NOT exploitable, because
+every pin still hard-rejects `Value::Alias` (a genuinely different payload still fails on
+text mismatch). `B-1` == the already-known LOW drift item `VALUE-SIDE-ANCHOR-GAP-UNCLOSED`
+(`ADV-SC3-P2-LOW-004`); its "no exploit constructible" claim HOLDS. Categorically different
+from the round-16 KEY-side `&x shell:` bypass (already closed).
+
+**Human ruling: "fix it, then re-review."** Implementer TDD-fixed `B-1`: in
+`tests/common/wf.rs`, `Value::Scalar` gained `has_anchor`; `resolve_value` now captures the
+VALUE-side `anchor_id`; `job_level_value_span` returns a `NodeProperty` outcome for an
+anchor/tag on the `needs:` composite. All 5 scalar pins now reject value-side node
+properties; `needs:` gained its first-ever tag check. Six new `test_b1_*` tests, each
+RED-proven before the fix; `EXPECTED_GUARD_TEST_COUNT` moved 32→38. Committed `dc4909b2`
+(`fix(ci-gate): reject value-side node properties on the 5 scalar pins, close AC-004
+regression (S-CIGATE-3, B-1)`), fast-forward-pushed to PR #680.
+
+**CI run 2 (31613336203) on `dc4909b2`:** 15/15 GREEN, including `Clippy (windows-latest)`
+and `Test (windows-latest)` (8m46s), `CI Gate`, MSRV, Deny, Coverage, gitleaks, spec guards,
+mutation testing. `mergeStateStatus: CLEAN`.
+
+**pr-reviewer cycle 2: APPROVE** at `dc4909b2`. `B-1` independently re-verified a second way
+(neutering the fix fails all 6 `test_b1_*` tests; restoring it passes 64/64 — a
+non-tautological check), no false-positive against the real `ci.yml`, AC-004 now literally
+satisfied, no new findings. Verdict written to
+`.factory/code-delivery/S-CIGATE-3/pr-review-cycle2.md` and posted to PR #680 as a COMMENT.
+
+**Reviewer-identity limitation (recorded, not a defect):** the reviewing GitHub account
+(`Zious`) IS the PR author, so GitHub structurally rejects a formal `--approve`/
+`--request-changes` review state on this PR — both cycle verdicts are COMMENT-state only.
+Consequence: merging PR #680 requires an owner/admin action by the human (branch protection
+requires code-owner approval on `develop`; admins bypass).
+
+**Branch state:** HEAD `dc4909b2`, working tree clean, 23 commits ahead of `origin/develop`,
+local == origin (pushed). **NOT merged.**
+
+**Drift closed this burst:**
+- `S-CIGATE-3-BRANCH-NEVER-CI-VALIDATED` (was HIGH) — **RESOLVED/CLOSED.** The branch is now
+  CI-validated across the full platform matrix, twice (both runs 15/15 GREEN incl. Windows).
+  Moved to `drift-items-closed.md`.
+- `VALUE-SIDE-ANCHOR-GAP-UNCLOSED` (LOW) / `ADV-SC3-P2-LOW-004` — **CLOSED** by `dc4909b2`:
+  all 5 scalar pins now reject value-side anchor/tag; the in-code doc comment documenting the
+  gap was updated to reflect closure. Moved to `drift-items-closed.md`.
+
+**Drift unchanged (still OPEN, deliberately deferred):** `AC-006-FALSE-RATIONALE-UNCORRECTED`
+/ `AC-006-CORRECTION-DRAFTED-UNCOMMITTED` — the drafted story-file correction remains
+uncommitted this burst too, per explicit instruction: not this burst's to resolve, deferred
+to the post-merge follow-up.
+
+**Standing human decision recorded as DEC-268 (not acted on):** "You merge; I prep + follow
+up" — the human will perform the owner/admin squash-merge of PR #680 on GitHub; the factory
+then runs post-merge cleanup (worktree + branch removal), commits the AC-006 story
+correction, and records the closed cycle. The factory does **not** execute the merge itself
+(DEC-128 upheld). See `decisions-archive.md` for the full DEC-268 entry.
+
+**Factory status: PAUSED. PR #680 CONVERGED, AWAITING HUMAN MERGE.** trajectory-tail
+→1→3→0→2 unchanged (S-CIGATE-3 remains story-scoped work, not a SOH-DX-1 Step-4.5 window; its
+own 6-pass adversarial window is unchanged, still ended PERMANENTLY at 0/3, DEC-265, not
+reopened by PR-cycle review). No product BCs touched. No STORY-INDEX change.
+
+**Files touched this burst (all in `.factory/`, one atomic commit):** `STATE.md`
+(v2.42→v2.43), this file (`burst-log.md`), `cycles/cycle-001/session-checkpoints.md`
+(appended the new checkpoint), `cycles/cycle-001/decisions-archive.md` (DEC-268 appended
+directly — historical record of a completed session ruling, not a standing constraint, same
+pattern as DEC-263–267), `cycles/cycle-001/drift-items-open-detail.md` (2 rows removed —
+closed), `cycles/cycle-001/drift-items-closed.md` (2 rows appended). Per explicit dispatch
+instruction, this burst deliberately did **not** touch: product code, the story branch, the
+`.worktrees/S-CIGATE-3` worktree, or the pre-existing uncommitted `.factory/` story-file/
+telemetry dirt (`stories/S-CIGATE-3-ci-yml-real-yaml-parser.md`, `regression-state.json`,
+`sidecar-learning.md`, untracked `code-delivery/S-CIGATE-3/`) — all left exactly as found.
+
+Next priority on resume: human performs the owner/admin squash-merge of PR #680 on GitHub;
+factory then runs post-merge cleanup (worktree + branch removal), commits the AC-006 story
+correction (closing `AC-006-FALSE-RATIONALE-UNCORRECTED` / `AC-006-CORRECTION-DRAFTED-
+UNCOMMITTED`), and records the closed S-CIGATE-3 cycle.
