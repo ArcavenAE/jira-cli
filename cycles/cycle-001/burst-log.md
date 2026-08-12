@@ -10845,3 +10845,90 @@ ratification, STORY-INDEX denominator + status-drift reconciliation audits, ruli
 process-gap items above, deferred config rulings (2nd required CI check, gitleaks/enforce_admins/
 `strict: false`), E1/E2 experiments, telemetry-file convention restoration (see STATE.md Next
 Phase / RESUME PLAN).
+
+## SESSION-WRAP-PAUSE burst (2026-08-12)
+
+*Phase Progress row (superseded):*
+> | **S-627-1-MERGED-BOTH-PHASES-CYCLE-CLOSED (2026-08-12): human squash-merged PR #682 into
+> `develop` as `c3edf216` (DEC-272), closing #627 (Phase 1); Phase 2 revert `27bf96aa`
+> (product-owner). SOH-DX-1 BUNDLE COMPLETE.** | COMPLETE | 2026-08-12 | -- | 2 recurring LOW
+> items RECURRED AGAIN (3rd time); 1 new LOW (`FACTORY-DISPATCHER-POSTTOOLUSE-HOOK-TIMEOUT`); 1
+> LOW noted did-not-recur (gitleaks). `ADV-P1-INDEX.md` total corrected 488->493. DEC-272
+> recorded. | 1→0→0→0 (S-627-1 story-scoped window; SOH-DX-1 trajectory-tail →1→3→0→2 unchanged) |
+
+*Current Phase Steps row (superseded):*
+> | **S-627-1-MERGED-BOTH-PHASES-CYCLE-CLOSED (2026-08-12): state-manager ran the Single-Commit
+> Burst Protocol (TD-VSDD-053, `vsdd-factory:state-burst` skill) to record: (1) human owner/admin
+> squash-merge of PR #682 into `develop` as `c3edf216` (DEC-272), closing #627 (Phase 1); (2)
+> `develop`/`origin/develop` fast-forwarded, previous tip `facdcb46`; (3) post-merge worktree
+> removal (`.worktrees/S-627-1`) and branch cleanup (local + remote-tracking); (4) Phase 2
+> factory-artifacts revert already committed separately as `27bf96aa` by product-owner -- cited,
+> not re-touched; (5) `stories/S-627-1.md` `status: ready`->`status: done` flip (v1.2->v1.3) with
+> Close-Out section; (6) `STORY-INDEX.md` S-627-1 row status updated to done (v1.5.83->v1.5.84);
+> (7) SOH-DX-1 bundle-completion milestone recorded (S-626-1 + S-639-1 + S-627-1 all delivered
+> and merged); (8) three process-observation drift items (2 recurring RECURRED AGAIN, 1 new, 1
+> noted did-not-recur) recorded; (9) `ADV-P1-INDEX.md` frontmatter `total_findings` corrected
+> 488->493 (flagged, not silently fixed); (10) DEC-272 recorded for the merge-completion +
+> bundle-completion event. All merge/cleanup facts re-stated as reported/verified live this
+> session, not independently re-run by state-manager. | state-manager | COMPLETED | `STATE.md`
+> v2.46->v2.47, `stories/S-627-1.md` (v1.2->v1.3, status->done, input-hash refreshed, committed
+> this burst), `stories/STORY-INDEX.md` (v1.5.84, S-627-1 row status->done),
+> `cycles/cycle-001/{burst-log,session-checkpoints,decisions-archive,convergence-trajectory,
+> drift-items-open-detail,adversarial-reviews/ADV-P1-INDEX}.md` updated (DEC-272 new; S-627-1
+> merge-resolution + bundle-completion recorded), plus newly committed
+> `code-delivery/S-627-1/pr-review.md` (pr-reviewer APPROVE verdict for PR #682), all committed
+> to factory-artifacts in ONE atomic commit (Single-Commit Burst Protocol, no Stage-2 backfill,
+> no SHA placeholder), pushed via CAS. `regression-state.json`, `sidecar-learning.md`, and
+> untracked `.claude/` left exactly as found, per standing instruction.
+> `.factory/specs/prd/bc-3-issue-write.md` (Phase 2 revert) already committed prior to this
+> burst (`27bf96aa`) -- not re-touched, only cited. |
+
+**Trigger:** the human ran `/wrap` to pause the factory for session clear. This is a bookkeeping
+pause-confirmation burst only -- no product code, spec, or story content changed. Pipeline was
+already `pipeline: PAUSED` (v2.47, set at the S-627-1-MERGED-BOTH-PHASES-CYCLE-CLOSED close-out);
+this burst confirms rather than changes that state.
+
+**Session accomplishments (2026-08-12, highly productive session):** THREE stories delivered and
+merged to `develop`, each through full independent verification, adversarial convergence, green
+CI, and an explicit human merge:
+- **S-CIGATE-3** (PR #680, `3df77a54`) -- durable real-YAML-parser CI-gate hardening; inert
+  value-side regression (`B-1`) found on first real CI/review, verified inert, fixed pre-merge.
+- **S-639-1** (PR #681, `facdcb46`, closes #639) -- BREAKING pre-flight exit-64 guards for
+  `--field`/`--on-behalf-of` without `--request-type`, v0.6.0-dev.12; 5-pass story-scoped
+  adversarial window CONVERGED 3/3 CLEAN.
+- **S-627-1** (PR #682, `c3edf216`, closes #627) -- `check-bc-no-numeric-test-counts.sh`
+  false-positive regex fix + I/O-error exit-2 hardening + `--self-test` seam; TWO-PHASE delivery
+  (Phase 2 BC-hyphenation revert `27bf96aa` verified green); 4-pass window CONVERGED 3/3 CLEAN.
+
+**MILESTONE: SOH-DX-1 bundle COMPLETE** -- all three named bundle issues (#626, #639, #627) are
+now delivered and merged (#626 in a prior session; #639 and #627 this session).
+
+**Current position:** Feature Mode SOH-DX-1, phase F4, FACTORY PAUSED. `develop` @ `c3edf216`.
+No story worktrees active (all cleaned up). No in-flight sub-agents, no PRs awaiting
+review/CI, no adversarial loop mid-flight. Nothing half-done. The only dirty files are the
+standing-convention `.factory/` telemetry files (`regression-state.json`, `sidecar-learning.md`,
+DEC-266b) and pre-existing untracked `.claude/` tooling files -- explicitly NOT abandoned work.
+
+**Issue-closure audit (performed this burst):** `gh issue view 639` and `gh issue view 627` both
+confirm CLOSED, auto-closed on merge (default branch is `develop`, both PR bodies carried
+`closes #NNN`). No addressed-but-still-open issues found. S-CIGATE-3 had no associated GitHub
+issue (test-hardening story, not issue-tracked).
+
+**Files touched this burst (all committed in ONE atomic commit, per the Single-Commit Burst
+Protocol):** `STATE.md` (v2.47→v2.48; frontmatter `current_step` rewritten to a concise
+pause-confirmation form pointing back to this section for full S-627-1 narrative, per the
+STATE.md content-routing rule -- net line-count reduction), this file (`burst-log.md`, appended
+this section including the two archived rows above), `cycles/cycle-001/session-checkpoints.md`
+(appended the archived S-627-1-MERGED-BOTH-PHASES-CYCLE-CLOSED checkpoint verbatim; new live
+checkpoint written into `STATE.md`). No decisions/drift/convergence-trajectory/ADV-P1-INDEX
+files touched (nothing new to record on any of those axes this burst). `regression-state.json`,
+`sidecar-learning.md`, and untracked `.claude/` left exactly as found, per standing instruction.
+
+Next priority on resume: **S-TRAIL-DERIVATION-GUARD-1** (P2/draft, status unresolved), then
+AX23-001 ratification, STORY-INDEX denominator (127) + status-drift reconciliation audits, and
+-- flagged for a human ruling on whether to open self-improvement follow-up stories -- the
+recurring process gaps `PR-MANAGER-RETURNS-BLOCKED-WITHOUT-AWAITING-GRANDCHILDREN` (3
+occurrences this session), `VALIDATE-PR-REVIEW-POSTED-ASSUMES-DISTINCT-REVIEWER` (3
+occurrences), and the new `FACTORY-DISPATCHER-POSTTOOLUSE-HOOK-TIMEOUT` (LOW); plus the deferred
+config rulings (2nd required CI check, gitleaks/enforce_admins/`strict: false`), E1/E2
+experiments, and telemetry-file convention restoration (see STATE.md Next Phase / RESUME PLAN).
