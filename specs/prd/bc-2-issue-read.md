@@ -1,11 +1,14 @@
 ---
 context: bc-2
 title: "Issue Read (list/view/comments/changelog)"
-total_bcs: 106   # cumulative claim (incl. range-collapsed); definitional_count below is individually-bodied headings
-definitional_count: 64   # count of `#### BC-` headings in this file
-last_updated: 2026-07-28
+total_bcs: 108   # cumulative claim (incl. range-collapsed); definitional_count below is individually-bodied headings
+definitional_count: 66   # count of `#### BC-` headings in this file
+last_updated: 2026-08-13
 source_pass: 3
 trace: |
+  - v1.3.177 — F2 spec evolution (2026-08-13, issue #668, duedate feature): BC-2.2.028 AMENDED (search_issues default fields list 16→17, `duedate` inserted after `updated`/before `resolution`); BC-2.3.036 AMENDED (get_issue field enumeration gains `duedate`, dedicated date-only semantics documented, named-field-not-flatten confirmed); BC-2.2.032 NEW (`issue list --duedate` opt-in column, position/formatter/empty-rendering policy); BC-2.3.039 NEW (`issue view` always-on Due Date row, position/formatter/empty-rendering policy); BC count 106→108 (64→66 individually-bodied); BC-INDEX v6.75→v6.76.
+  - v1.3.177 fix-round — scoped adversarial review (2026-08-13, issue #668) found 1 HIGH + 6 MEDIUM + 2 LOW real findings, all fixed same-day, no BC count change: F1 (HIGH) BC-2.3.039 hallucinated a `Resolution` row precedent that does not exist in `handle_view` — corrected to `Created`/`Updated` only; F2 (MED) BC-2.2.032 parse-failure warning corrected to name the real `log_parse_failure_once` chokepoint, its `--verbose` gating, and the resulting `format_issue_row`/`format_issue_rows_public` signature change (new `verbose: bool` param) as a normative part of the BC; F3 (MED) BC-2.2.032 gained a Scope clause naming `board.rs`/`queue.rs`/`sprint.rs` as other callers of the shared row/header builders that do NOT gain the column; F4 (MED) `cross-cutting.md` BC-X.8.009 amended — its stale 3-arg `issue_table_headers` citation and unconditional "same column set as `jr issue list`" claim corrected against BC-2.2.032; F5 (MED) BC-2.3.039's "raw JSON passthrough" claim corrected to "typed struct serialization via `output::render_json`," with the two conditions (`BASE_ISSUE_FIELDS` request + no `skip_serializing_if`) stated explicitly; F6 (MED) BC-2.3.039's citation for the request-field-list amendment corrected from BC-2.3.036 to BC-2.2.028 (the BC that actually amends `BASE_ISSUE_FIELDS`); F7 (MED) BC-2.2.032 gained an explicit JSON-mode clause (`--duedate` has no effect on `--output json` shape); F8 (MED) BC-2.2.032's `--points` precedent citation corrected to distinguish "same code mechanism" from "same contracted behavior" (BC-2.2.021/022 do not themselves contract column-rendering); F9 (LOW) Column-set backfill deferral note reworded with a normativity caveat (BC-2.2.032's Column position clause is now the sole written column-list contract); F10 (LOW) both BCs gained a defensive `Some("")`-treated-as-`-` empty-string clause. F11 (BC-ID near-miss collision across subsystems, e.g. BC-2.2.032/BC-2.3.032) and F12 (a physical mis-placement of BC-2.2.032 between BC-2.2.028 and BC-2.2.029, now corrected to sit after BC-2.2.031) — F12 fixed as a drafting-error correction (BC-2.2.032 moved to its correct sequential position); F11 is a pre-existing file-wide numbering-convention property (also present at BC-2.4.043/BC-2.5.043) and is not fixed by this delta.
+  - v1.3.179 fix-round — human-directed formatter simplification (2026-08-13, issue #668): BC-2.2.032 and BC-2.3.039 both simplified from a `chrono::NaiveDate` parse-then-reformat round-trip (plus its `log_parse_failure_once`/`--verbose`-gated warning and the resulting `verbose: bool` signature-change mandate on `format_issue_row`/`format_issue_rows_public`) down to VERBATIM string display — Jira already returns `duedate` as `YYYY-MM-DD`, so the round-trip was pure overhead for input Jira never emits. All parse/reformat/warning/verbose-threading machinery removed from both BC bodies; replaced with a shared trivial render-string-or-dash helper (`None`/`Some("")` → `-`, else verbatim). Blast radius reduced from a 4-call-site signature change (`board.rs`/`queue.rs`/`sprint.rs`/`list.rs`, threading `verbose: bool`) to the single, already-scoped opt-in Due Date column parameter. No BC IDs changed, no count change (still 108/66).
   - L2: .factory/specs/domain-spec/bc-02-issue-read.md
   - Source broad: .factory/semport/jira-cli/jira-cli-pass-3-behavioral-contracts.md §2.2
   - Source R1: .factory/semport/jira-cli/jira-cli-pass-3-deep-r1.md §3.2
@@ -38,7 +41,7 @@ trace: |
 
 # BC-2 — Issue Read (list / view / comments / changelog)
 
-106 behavioral contracts across 7 subdomains: JQL composition (2.1), Issue list
+108 behavioral contracts across 7 subdomains: JQL composition (2.1), Issue list
 behavior (2.2), Issue view (2.3), Comments (2.4), Changelog (2.5), API layer (2.6),
 Attachment Read (2.7).
 
@@ -314,13 +317,16 @@ Attachment Read (2.7).
 
 ---
 
-#### BC-2.2.028: `search_issues` default fields list: 16 fields in EXACT order
+#### BC-2.2.028: `search_issues` default fields list: 17 fields in EXACT order
 
 **Confidence**: HIGH
 **Source**: `tests/issue_commands.rs:~967-1022`
 **Subject**: Issue read
-**Behavior**: `summary, status, issuetype, priority, assignee, reporter, project, description, created, updated, resolution, components, fixVersions, labels, parent, issuelinks`. Body partial-JSON match asserts EXACT array.
-**Trace**: Pass 3 BC-1063 (R4)
+**Behavior**: `summary, status, issuetype, priority, assignee, reporter, project, description, created, updated, duedate, resolution, components, fixVersions, labels, parent, issuelinks`. Body partial-JSON match asserts EXACT array.
+
+> **[AMENDED 2026-08-13 F2 issue #668]** Field count changed 16 → 17: `duedate` added to `BASE_ISSUE_FIELDS` (`src/api/jira/issues.rs`), positioned immediately after `updated` and before `resolution` — grouped with the other two date-bearing fields (`created`, `updated`). `BASE_ISSUE_FIELDS` is the single shared field-request constant consumed by BOTH `search_issues` (this BC) and `get_issue` (BC-2.3.036), so one array edit satisfies both contracts simultaneously. Prior 16-field array (superseded): `summary, status, issuetype, priority, assignee, reporter, project, description, created, updated, resolution, components, fixVersions, labels, parent, issuelinks`. Source test `tests/issue_commands.rs::test_search_issues_includes_labels_parent_issuelinks` (exact-array `body_partial_json` assertion) MUST be updated in lockstep with the array literal in F4 — this is a MANDATORY test update (array-length mismatch otherwise), not merely at-risk, per F1 delta analysis (`.factory/feature-delta/668-duedate/delta-analysis.md`).
+
+**Trace**: Pass 3 BC-1063 (R4); F2 issue #668 (2026-08-13) — `duedate` field added
 
 ---
 
@@ -347,6 +353,31 @@ Attachment Read (2.7).
 **Source**: `tests/issue_commands.rs:~337-386`
 **Behavior**: Returns `u64`. Zero and 42 boundary cases tested. Server error → Err.
 **Trace**: Pass 3 BC-1050 (R4)
+
+---
+
+#### BC-2.2.032: `issue list --duedate` opts in a Due Date column (`YYYY-MM-DD`, `-` when unset)
+
+**Confidence**: HIGH
+**Source**: `src/cli/issue/list.rs::handle_list`; `src/cli/issue/format.rs::format_issue_row`/`issue_table_headers` (implementation pending F4 — issue #668)
+**Subject**: Issue read
+**Behavior**: New CLI flag `--duedate` (boolean, default off) on `jr issue list`, an opt-in column following the SAME code mechanism `format_issue_row`/`issue_table_headers` already use for the Points column: a new optional parameter, gated on the flag, added to the row-builder and header-builder col-count logic. This is the same mechanism the Points column uses (config-gated via `sp_field_id: Option<&str>`), NOT the same CONTRACT — BC-2.2.021/BC-2.2.022 contract the `--points` flag's config-resolution and request-field-injection behavior, not the column-rendering consequence itself; no existing BC states "an opt-in flag renders an optional table column" as its own contract. **This BC is the first to state that column-rendering consequence explicitly** (closing part of the gap named in the Column-set backfill note below). Due Date is explicitly NOT an always-on column (contrast with `issue view`'s always-on Due Date row, BC-2.3.039). When `--duedate` is set, the table gains a "Due Date" column populated from `IssueFields.duedate` (BC-2.3.036); when absent, the column is omitted entirely.
+
+**Scope — `issue list` only**: `format_issue_row` and `issue_table_headers` have OTHER call sites beyond `list.rs::handle_list` — `board.rs::handle_view`, `queue.rs::handle_view` (twice), and `sprint.rs::handle_current` all call one or both functions (`src/cli/issue/format.rs` is a shared module). This BC governs the `issue list` column set ONLY. `board view`/`queue view`/`sprint current` do NOT gain a `--duedate` flag or a Due Date column under this BC; their call sites pass the new Due Date parameter as absent/`None`/`false`, matching how they already pass `None`/`false` for Points/Team/Assets today. A call site the implementer forgets to update is a compile error (new required parameter on a shared function), not a silent bug. `cross-cutting.md`'s BC-X.8.009 (`jr queue view`) is cross-referenced separately (see its own amendment) since its body makes an explicit "same column set as `jr issue list`" claim that this BC's addition falsifies unless BC-X.8.009 is also corrected.
+
+**Column position**: `Key, Type, Status, Priority, [Due Date], [Points], Assignee, [Team], [Assets], Summary` — Due Date is inserted immediately after Priority and before Points. Rationale: Due Date and Priority are both triage-relevant single-value fields best read together near the front of the row; Team/Assets remain enrichment columns anchored just before Summary (unchanged). This resolves F1 Open Question #2 — implementer MUST follow this exact ordering, not an alternative placement.
+
+**Rendering (SIMPLIFIED, human-directed, 2026-08-13)**: the Due Date column displays `IssueFields.duedate`'s string value **VERBATIM** — no parser, no reformatter, no round-trip. Jira already returns `duedate` as date-only `YYYY-MM-DD`; reformatting it would produce a byte-identical string, so the parse-then-reformat step is pure overhead and is explicitly NOT implemented. This is a deliberate, human-approved simplification of an earlier draft of this BC (which specified a `chrono::NaiveDate::parse_from_str` round-trip formatter with a parse-failure fallback and warning — that machinery is removed; see the fix-round changelog entry for the full rationale). Explicitly NOT `format_comment_date` (the existing `Created`/`Updated` formatter) — that formatter genuinely parses RFC3339 datetime strings and reformats them (`"%Y-%m-%d %H:%M"`); `duedate` requires no such transformation and gets no formatter at all, verbatim string display only.
+
+**Empty rendering**: `-` (single dash) when `IssueFields.duedate` is `None` OR `Some("")` (empty string; Jira itself never emits this — defensive-only, mirroring the EC-2.7.001-3 empty-string-treated-as-absent convention) — matches the `Created`/`Updated`/`Points` convention already used in this exact row-builder family, explicitly NOT the `(none)` convention used for `Reporter`/`Labels` in `issue view`'s detail table. This resolves F1 Open Question #3 for the list-column half. Implementation is a single `is_none_or(str::is_empty)`-style check before emitting the string verbatim — no parser is involved in this check.
+
+**JSON mode**: `--duedate` has NO effect on `issue list --output json`. `duedate` is unconditionally present in the JSON output once BC-2.2.028's field-list amendment lands, regardless of whether `--duedate` was passed — the flag gates ONLY the human table column. `--duedate --output json` is a silent no-op with respect to JSON shape (no warning; not an error — same non-error treatment `--points`/`--assets`/`--team` already receive when combined with `--output json`).
+
+**Relationship to `issue view`'s Due Date row (BC-2.3.039)**: both consume the same `IssueFields.duedate: Option<String>` field and the SAME trivial render-string-or-dash helper — a single shared function, not duplicated per call site, mirroring how `format_comment_date` is already shared between the `Created`/`Updated` rows in `view.rs`. This shared helper is explicitly NOT a parsing formatter (no `chrono` dependency, no date-shape validation) and explicitly NOT `format_comment_date` — it exists solely because two call sites need the identical `None`/empty-string → `-` else-verbatim logic, not because the value needs any transformation.
+
+**Column-set backfill note (F1 Open Question #7 disposition)**: no BC in this file enumerates `issue list`'s full table column set (Key/Type/Status/Priority/[Points]/Assignee/[Team]/[Assets]/Summary) as a contract in its own right — only this BC and the pre-existing row-builder code define it implicitly. **Disposition: DEFERRED, with a normativity caveat.** This BC's Column position clause is, by necessity, now the only WRITTEN contract that states the full ordered column list — it is normative for Due Date's placement within that list, but is NOT a retroactive backfill contract for the pre-existing columns' own behavior (their config/warning semantics remain contracted elsewhere: BC-2.2.021/022 for Points, BC-2.1.016/017 for Assets). A future standalone column-set BC, if written, supersedes this clause's column-list enumeration without needing to touch Due Date's own policy. Tracked as pre-existing spec debt, not a blocker for this feature.
+
+**Trace**: F2 spec evolution (issue #668, 2026-08-13); precedent mechanism BC-2.2.021/BC-2.2.022 (`--points` config/warning contract — mechanism precedent only, see Behavior clause for the contract-scope correction); precedent BC-2.1.016/BC-2.1.017 (`--assets` opt-in column); `.factory/feature-delta/668-duedate/delta-analysis.md` Open Questions #1, #2, #3, #7; adversarial F2 review (2026-08-13) F2/F3/F7/F8/F9/F10 corrections; human-directed simplification fix-round (2026-08-13) — parse/reformat/verbose machinery removed, verbatim-display + shared trivial helper substituted
 
 ---
 
@@ -386,12 +417,15 @@ Attachment Read (2.7).
 
 ---
 
-#### BC-2.3.036: `get_issue` deserializes: created, updated, reporter, resolution, components, fix_versions (all nullable)
+#### BC-2.3.036: `get_issue` deserializes: created, updated, duedate, reporter, resolution, components, fix_versions (all nullable)
 
 **Confidence**: HIGH
 **Source**: `tests/issue_commands.rs:~526-577, 579-607`
-**Behavior**: Full fixture: all fields present. Minimal fixture: all return `None` (NOT panic). RFC3339+0000 timestamps, camelCase JSON paths.
-**Trace**: Pass 3 BC-1053, BC-1054 (R4)
+**Behavior**: Full fixture: all fields present. Minimal fixture: all return `None` (NOT panic). `created`/`updated` are RFC3339+0000 timestamps; `duedate` is a bare `YYYY-MM-DD` date string with no time component — Jira's wire field name `duedate` matches the Rust field name verbatim (no `#[serde(rename)]` needed). `IssueFields.duedate: Option<String>` is a NAMED struct field (not routed through the `#[serde(flatten)] extra` catch-all map), matching the existing `created`/`updated`/`reporter` precedent established by issue #59 — a named field is required anyway for the human-render path's `issue.fields.duedate.as_deref()` access (BC-2.2.032, BC-2.3.039).
+
+> **[AMENDED 2026-08-13 F2 issue #668]** `duedate` added to the enumerated field set. Prior enumeration (superseded): created, updated, reporter, resolution, components, fix_versions (all nullable). Recommended test extension (not a new BC/VP — ordinary coverage): `tests/issue_commands.rs::get_issue_includes_standard_fields` and `::get_issue_null_standard_fields` should gain `duedate` present/absent assertions mirroring the issue #59 present/absent pair; `tests/common/fixtures.rs::issue_response_with_standard_fields` is the shared fixture extension point.
+
+**Trace**: Pass 3 BC-1053, BC-1054 (R4); F2 issue #668 (2026-08-13) — `duedate` field added
 
 ---
 
@@ -408,6 +442,25 @@ Attachment Read (2.7).
 **Confidence**: HIGH
 **Source**: `src/types/jira/issue.rs:~83-85`
 **Trace**: Pass 3 BC-124
+
+---
+
+#### BC-2.3.039: `issue view` always shows a "Due Date" detail row (`YYYY-MM-DD`, `-` when unset)
+
+**Confidence**: HIGH
+**Source**: `src/cli/issue/view.rs::handle_view` (Table arm; implementation pending F4 — issue #668)
+**Subject**: Issue read
+**Behavior**: `jr issue view <key>` (human/table output) ALWAYS renders a "Due Date" row in the detail table — unconditional, like `Created`/`Updated`, NOT opt-in (contrast with the `issue list` column, BC-2.2.032, which IS opt-in via `--duedate`; a single-issue detail view has no width pressure, matching the existing `Created`/`Updated` precedent already in this same `rows` vec). Sourced from `IssueFields.duedate` (BC-2.3.036). **Correction**: an earlier draft of this BC cited `Resolution` as a third always-on-row precedent alongside `Created`/`Updated` — `handle_view` has no Resolution row (`grep -c Resolution src/cli/issue/view.rs` = 0; `resolution` is fetched and deserialized but never rendered in the table). The precedent is `Created`/`Updated` only.
+
+**Row position**: inserted immediately after the `Updated` row and before the `Project` row — grouping the three date-bearing rows (`Created`, `Updated`, `Due Date`) together, mirroring `handle_view`'s existing adjacency of `Created`/`Updated`.
+
+**Rendering (SIMPLIFIED, human-directed, 2026-08-13)**: `IssueFields.duedate`'s string value is displayed **VERBATIM** — no parser, no reformatter. Jira already returns `duedate` as date-only `YYYY-MM-DD`; a parse-then-reformat round-trip would produce a byte-identical string, so it is not implemented (deliberate simplification of an earlier draft of this BC; see the fix-round changelog entry). Uses the SAME shared trivial render-string-or-dash helper introduced by BC-2.2.032 (one function, not duplicated per call site) — explicitly NOT `format_comment_date` (the existing `Created`/`Updated` formatter, which genuinely parses and reformats RFC3339 datetimes) and explicitly NOT a parsing formatter of any kind.
+
+**Empty rendering**: `-` (single dash) when `IssueFields.duedate` is `None` OR `Some("")` (empty string; defensive-only, Jira never emits this — mirrors BC-2.2.032's identical clause) — matches the existing `Created`/`Updated` convention in this exact `rows` vec, explicitly NOT the `(none)` convention used for `Reporter`/`Labels`/`Parent`/`Links` rows in the same table. This resolves F1 Open Question #3 for the detail-view half; combined with BC-2.2.032's independent convergence on `-` for the list-column half, the empty-value convention for Due Date is now uniform across both human-render surfaces.
+
+**JSON output (corrected)**: unaffected by this BC, but NOT because JSON output is "raw passthrough" — `issue view --output json` serializes the TYPED `Issue`/`IssueFields` struct via `output::render_json` (`src/cli/issue/view.rs`: `render_json(&issue)`), not the raw Jira response body. `duedate` surfaces there because (a) `BASE_ISSUE_FIELDS` requests it from Jira — that amendment is contracted by **BC-2.2.028**, not BC-2.3.036 (BC-2.3.036 contracts `get_issue`'s DEserialization of the response Jira sends back, which is a consequence of BC-2.2.028's request-field change, not the request change itself; `get_issue` and `search_issues` share the one `BASE_ISSUE_FIELDS` constant per BC-2.2.028's amendment note) — and (b) `IssueFields.duedate` is a plain `Option<String>` field with no `#[serde(skip_serializing_if)]` attribute, matching the existing `created`/`updated` fields' serialization behavior (serializes as JSON `null` when `None`, never omitted). Both conditions must hold for the JSON path to work; this BC does not introduce a renderer change (see JSON-render-invariant confirmation below), but "no renderer change" is not the same claim as "raw passthrough."
+
+**Trace**: F2 spec evolution (issue #668, 2026-08-13); precedent: `Created`/`Updated` rows in `handle_view`; `.factory/feature-delta/668-duedate/delta-analysis.md` Open Questions #3, #4; adversarial F2 review (2026-08-13) F1/F5/F6 corrections; human-directed simplification fix-round (2026-08-13) — parse/reformat machinery removed, verbatim-display substituted
 
 ---
 
@@ -992,4 +1045,4 @@ All issue-read errors follow the universal pattern (BC-X.3.012):
 
 Pass 3 sources: `tests/issue_list_errors.rs`, `tests/issue_view_errors.rs`, `tests/comments.rs`
 
-## Total BCs in this file: 64 individually-bodied (cumulative 106 incl. range-collapsed; see BC-INDEX.md)
+## Total BCs in this file: 66 individually-bodied (cumulative 108 incl. range-collapsed; see BC-INDEX.md)

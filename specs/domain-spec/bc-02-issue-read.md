@@ -9,19 +9,19 @@ producer: business-analyst
 timestamp: 2026-07-31T00:00:00
 phase: 1a
 inputs: [research/RESEARCH-INDEX.md]
-input-hash: "86f53a7"
+input-hash: "602a762"
 snapshot_sha: "dea166471e22eff55974d7675593469b37048c5f"
 traces_to: "README.md"
 source_passes: "Pass 2 broad §2a.2 Jira + §2b.1 + R5 §3.2 (NEW-INV-216..244) + Pass 8 §2.2 BC#2"
 entity_count: 32
 invariant_count: 28
-bc_count: 106
+bc_count: 108
 risk_level: HIGH
 ---
 
 # BC-02: Issue Read
 
-Covers the read side of the Issue domain: `jr issue list`, `jr issue view`, `jr issue comments`, and `jr issue changelog`. Contains 106 BCs (~2,500 LOC).
+Covers the read side of the Issue domain: `jr issue list`, `jr issue view`, `jr issue comments`, and `jr issue changelog`. Contains 108 BCs (~2,500 LOC).
 
 ---
 

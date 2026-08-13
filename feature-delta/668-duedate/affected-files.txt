@@ -1,0 +1,32 @@
+# Delta Analysis — GitHub issue #668 (duedate surfacing)
+# Format: STATUS<TAB>path<TAB>notes
+# STATUS: NEW | MODIFIED | DEPENDENT
+
+MODIFIED	src/api/jira/issues.rs	BASE_ISSUE_FIELDS const: add "duedate" literal (shared by get_issue + search_issues)
+MODIFIED	src/types/jira/issue.rs	IssueFields: likely add named `duedate: Option<String>` field (TBD F2, see Open Questions #5)
+MODIFIED	src/cli/issue/view.rs	handle_view Table arm: add Due Date row near Created/Updated
+MODIFIED	src/cli/issue/format.rs	format_issue_row / issue_table_headers: extend with optional Due Date column
+MODIFIED	src/cli/issue/list.rs	handle_list: wire Due Date column visibility (TBD F2/F3, see Open Questions #1-2)
+DEPENDENT	src/cli/issue/mod.rs	Re-exports format_issue_row/issue_table_headers; signature changes propagate as compile errors only
+DEPENDENT	tests/issue_commands.rs	MANDATORY update: test_search_issues_includes_labels_parent_issuelinks (exact-array body_partial_json); RECOMMENDED extend: get_issue_includes_standard_fields, get_issue_null_standard_fields
+DEPENDENT	tests/common/fixtures.rs	issue_response_with_standard_fields: natural extension point for a "duedate" fixture key
+DEPENDENT	tests/issue_read_holdouts.rs	Risk-zone: exercises get_issue response shape
+DEPENDENT	tests/issue_view_errors.rs	Risk-zone: exercises issue view error paths
+DEPENDENT	tests/boards_sprints_holdouts.rs	Risk-zone: list path via board/sprint JQL (search_issues)
+DEPENDENT	tests/issue_list_assets.rs	Risk-zone: issue list table column composition (assets)
+DEPENDENT	tests/team_column_parity.rs	Risk-zone: issue list table column composition (team)
+DEPENDENT	tests/cache_warm_hit.rs	Risk-zone: issue list / no-HTTP invariant checks
+DEPENDENT	tests/all_flag_behavior.rs	Risk-zone: issue list --all flag interaction with table rendering
+DEPENDENT	tests/multi_profile_fields.rs	Risk-zone: per-profile field id resolution touching issue list/view
+DEPENDENT	tests/rate_limit_cap_tests.rs	Risk-zone: search path retry/backoff (BASE_ISSUE_FIELDS request shape)
+DEPENDENT	tests/search_issue_keys.rs	Low relevance: separate keys-only search path (fields:["key"]), listed for completeness only
+DEPENDENT	tests/e2e_live.rs	Gated (#[ignore], JR_RUN_E2E); not run in CI by default
+
+# Explicitly NOT changed (regression baseline) — see delta-analysis.md "Files NOT Changed" for rationale
+# src/output.rs, src/adf.rs, src/cache.rs, src/config.rs, src/api/client.rs, src/api/auth*.rs,
+# src/api/refresh_coordinator.rs, src/api/rate_limit.rs, src/api/pagination.rs,
+# src/cli/issue/{comments,interactions,workflow,links,assets,changelog,field_resolve,attachments,json_output}.rs,
+# src/cli/issue/{create,edit,jsm_create}.rs,
+# src/cli/{board,sprint,worklog,team,user,project,queue,requesttype,api}.rs,
+# src/cli/assets/*, src/cli/auth/*, src/api/assets/*, src/api/jsm/*, src/types/{assets,jsm}/*,
+# .github/workflows/ci.yml

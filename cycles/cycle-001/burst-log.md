@@ -7,7 +7,7 @@ producer: state-manager
 timestamp: 2026-05-04T00:00:00
 cycle: "cycle-001"
 inputs: [STATE.md]
-input-hash: "490bcb1"
+input-hash: "3a2106e"
 traces_to: STATE.md
 ---
 
@@ -11064,3 +11064,50 @@ Next priority on resume (unchanged by this session's release work): **S-TRAIL-DE
 status-drift reconciliation audits, and the standing threads listed above (DEC for #574 once
 merged, 3 held dependabot PRs re-triage in 1–2 weeks, external PRs #574/#628 awaiting
 contributor). Resume command: `/vsdd-factory:next-step`.
+
+## S-668-1-REGISTERED (2026-08-13)
+
+**Archived from STATE.md (Phase Progress + Current Phase Steps), superseded this burst by the
+new S-668-1-REGISTERED row:**
+
+Phase Progress row (SESSION-WRAP-PAUSE, 2026-08-13): human ran `/wrap` a second time this pause
+window. SOH-DX-1 F4 position CONFIRMED unchanged. Session's release activity recorded: v0.6.0
+STABLE shipped (`93d422fd`), develop opened at 0.7.0-dev.1. Status COMPLETE, gate --,
+finding-progression →1→3→0→2 (unchanged).
+
+Current Phase Steps row (SESSION-WRAP-PAUSE, 2026-08-13): state-manager ran the Single-Commit
+Burst Protocol to record a release-facts bookkeeping burst triggered by the human's second
+`/wrap` this pause window. SOH-DX-1 feature-pipeline position CONFIRMED unchanged (F4,
+S-TRAIL-DERIVATION-GUARD-1 still next). Recorded v0.6.0 STABLE release, post-release
+reconciliation, 7 dependabot merges, dev.12 prerelease, 2 external-PR reviews, 3 new drift
+items, activation markers, refreshed checkpoint. Output: `STATE.md` v2.48→v2.49, cycle files
+updated, all committed to factory-artifacts in ONE atomic commit, pushed via CAS.
+
+**This burst's own work (2026-08-13, state-manager, dispatched by orchestrator):** registered
+`S-668-1` (new, separate Feature Mode cycle for GitHub issue #668 — surface Jira `duedate` in
+`jr issue view`/`jr issue list`, JSON fields + human-readable output) in `STORY-INDEX.md`
+(v1.5.84→v1.5.85, `total_stories` 127→128, new row appended to the Feature Followup table under
+Story Manifest). F1 delta analysis, F2 spec evolution (spec v1.3.177→v1.3.179, BC-INDEX
+v6.75→v6.76, BC count 658→660/106→108 cumulative in bc-2-issue-read.md, 64→66 individually-bodied;
+BC-2.2.028 AMENDED, BC-2.3.036 AMENDED, BC-2.2.032 NEW, BC-2.3.039 NEW), and F3 story
+decomposition (S-668-1, 16 ACs, 5 pts) all independently confirmed COMPLETE and guard-green
+(`scripts/check-spec-counts.sh` + `scripts/check-bc-cumulative-counts.sh` both exit 0 at time of
+this burst). Story `status: draft`→`ready` — Spec-First Gate (S-7.01) verified satisfied
+directly against the story file and `bc-2-issue-read.md`, not assumed from the dispatch
+instruction: `behavioral_contracts:`/`bcs:` frontmatter non-empty with 4 canonical
+`BC-\d+\.\d{2}\.\d{3}`-form IDs, all four confirmed FINAL (no draft/pending markers in the BC
+file, spec at v1.3.179 after a same-day fix-round closing 1 HIGH + 6 MEDIUM + 2 LOW findings plus
+a human-directed formatter simplification), and bidirectional AC↔BC trace independently verified
+by grep — all 16 ACs (AC-1..AC-16) carry a `*Traces to*:` BC citation, and all 4 BCs are each
+cited by ≥1 AC. No BC/AC/spec content modified this burst (registration only). `STATE.md`
+`pipeline: PAUSED`→`ACTIVE`; `feature_mode_bundle: SOH-DX-1-F4-DELIVERY`→`668-DUEDATE-F4-DELIVERY`
+(SOH-DX-1 remains COMPLETE/shipped/paused as its own row in Concurrent Cycles, untouched by this
+burst — this is a new, separate cycle, not a SOH-DX-1 story). `total_stories` 127→128 propagated
+to STATE.md's own citations (BC-INDEX v6.75→v6.76, STORY-INDEX v1.5.84→v1.5.85 lines) to satisfy
+the `validate-count-propagation` hook. `STORY-INDEX-DENOMINATOR-UNRECONCILED` drift item updated
+127→128 (disposition unchanged — still no full-file row-count audit run; that remains a separate,
+larger reconciliation task, out of scope for this registration burst). Next: F4 TDD implementation
+for S-668-1 (test-writer → implementer, standard per-story delivery workflow), independent of and
+concurrent with SOH-DX-1's paused position (S-TRAIL-DERIVATION-GUARD-1 remains next there,
+unchanged). `regression-state.json`, `sidecar-learning.md`, and untracked `.claude/` left exactly
+as found, per standing instruction.

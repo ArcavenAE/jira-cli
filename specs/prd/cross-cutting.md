@@ -706,8 +706,8 @@ This is the canonical pinnable string for `test_require_service_desk_oauth_401_s
 4. `reorder_by_queue_position(search_result.issues, &keys)` — re-orders the batch-fetched issues to match the original queue key ordering. Issues present in the queue keys but absent from the search result (e.g., permission-denied) are silently omitted (issues absent from the `search_issues` result are never present in the returned vec — `reorder_by_queue_position` only reorders the issues search actually returned; it neither synthesizes nor drops missing keys).
 
 **Output (both resolution paths):**
-- **Table output** (default): standard issue table using `issue_table_headers(false, false, false)` and `format_issue_rows_public(&issues)`. Same column set as `jr issue list`.
-- **JSON output** (`--output json`): JSON array of full `Issue` objects (each has `key` + `fields`). NOT Queue objects. Empty array `[]` is a valid success state (queue exists, zero issues or all silently omitted).
+- **Table output** (default): standard issue table using `issue_table_headers(...)` and `format_issue_rows_public(&issues)`. **[AMENDED 2026-08-13 F2 issue #668]** Prior text pinned a literal 3-positional-arg call, `issue_table_headers(false, false, false)`, and claimed "Same column set as `jr issue list`" unconditionally. Both are now qualified: `jr issue list --duedate` (BC-2.2.032) adds a 4th, opt-in Due Date column to `issue_table_headers`/`format_issue_row`'s signature; `jr queue view` does NOT gain a `--duedate` flag under BC-2.2.032 (see that BC's Scope clause) and continues to omit the Due Date column unconditionally — passing the new parameter as absent/`false` at this call site. The column set is therefore the SAME as `jr issue list`'s DEFAULT (no `--duedate`) column set, not `jr issue list`'s column set unconditionally; `jr queue view` has no equivalent of `--duedate` and cannot be made to show the column via any flag.
+- **JSON output** (`--output json`): JSON array of full `Issue` objects (each has `key` + `fields`). NOT Queue objects. Empty array `[]` is a valid success state (queue exists, zero issues or all silently omitted). `duedate` is present in `fields` here too (unconditional, per BC-2.2.028/BC-2.3.036), since this path also flows through the shared `Issue`/`IssueFields` struct and `BASE_ISSUE_FIELDS` request list — no separate contract needed, noted for completeness.
 
 **Requires JSM service desk project**: delegated to `require_service_desk` in the shared `handle` dispatcher before `handle_view` is entered (BC-X.8.004).
 
@@ -718,6 +718,8 @@ This is the canonical pinnable string for `test_require_service_desk_oauth_401_s
 **Source**: S-QUEUE-BC-1 document-as-is; `src/cli/queue.rs::handle_view`; `src/cli/queue.rs::resolve_queue_by_name`; `src/api/jsm/queues.rs::get_queue_issue_keys`; `src/cli/mod.rs::DEFAULT_LIMIT`
 
 [NEW 2026-06-08 S-QUEUE-BC-1] Closes traceability orphan: `jr queue view` was implemented but had no individually-bodied BC. Document-as-is: no aspirational behavior — all details verified against source and test files.
+
+[AMENDED 2026-08-13 F2 issue #668, adversarial review finding F4] Output/Table-output bullet corrected: the literal 3-arg `issue_table_headers(false, false, false)` citation and the unconditional "Same column set as `jr issue list`" claim are both qualified against `jr issue list`'s new opt-in `--duedate` column (BC-2.2.032) — `jr queue view` does not gain that flag and continues to omit the Due Date column unconditionally.
 
 ---
 

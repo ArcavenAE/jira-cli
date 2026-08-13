@@ -9,6 +9,200 @@ Track all spec version changes. Most recent version first.
 
 > **Type legend:** Type classifies the SPEC document delta: MINOR = new BCs/VPs/sections; PATCH = amendments to existing bodies/ACs/ECs. Product-semver impact is recorded in the Summary line, independent of Type.
 
+## [1.3.179] - 2026-08-13
+
+### Type: PATCH
+
+### Summary
+
+Human-directed simplification fix-round on the [1.3.177]/[1.3.178] duedate delta (issue #668).
+The human reviewed the F2 spec and decided the Due Date formatter was over-engineered: Jira's
+`duedate` field arrives already as `YYYY-MM-DD`, so a parse-then-reformat round-trip
+(`chrono::NaiveDate::parse_from_str` → re-emit `"%Y-%m-%d"`) produces a byte-identical string —
+pure overhead for input Jira never emits. BC-2.2.032 and BC-2.3.039 revised to display
+`IssueFields.duedate` VERBATIM instead. BC count UNCHANGED at **660** — same 4 BC IDs
+(BC-2.2.028, BC-2.2.032, BC-2.3.036, BC-2.3.039), simplified bodies only.
+
+### Changed Requirements
+
+- `bc-2-issue-read.md` (AMENDED): BC-2.2.032 — Rendering clause replaced (verbatim string
+  display, no parser/formatter); entire "Parse-failure warning" clause REMOVED (no parse step,
+  no warning); the `verbose: bool` signature-change mandate on `format_issue_row`/
+  `format_issue_rows_public` REMOVED — the only new parameter threaded through the shared
+  row/header builders is the opt-in Due Date column gate itself (same `Option<&str>`/`bool`-style
+  shape as Points/Team/Assets, none of which require verbose plumbing); Empty rendering clause
+  simplified (single `is_none_or(str::is_empty)`-style check, no parser involved); Relationship-to-
+  BC-2.3.039 clause reworded — shared helper is explicitly a trivial render-string-or-dash
+  function, not a parsing formatter. BC-2.3.039 — same simplification: Rendering clause replaced
+  with verbatim display via the same shared trivial helper; Empty rendering clause updated to
+  match BC-2.2.032's `None`/`Some("")` → `-` check. Column position, opt-in-flag behavior,
+  JSON-mode clause, and all other unrelated clauses in both BCs are UNCHANGED.
+
+### Impact Assessment
+
+| Artifact | Change Type | Notes |
+|----------|-------------|-------|
+| `.factory/specs/prd/bc-2-issue-read.md` | MODIFIED | BC-2.2.032 and BC-2.3.039 bodies simplified (Rendering + Empty-rendering + Relationship clauses); BC-2.2.032's Parse-failure-warning clause deleted outright; frontmatter trace entry added. No frontmatter count fields changed (still `total_bcs: 108`, `definitional_count: 66`) — this is a body-only simplification, not a BC addition/removal. |
+| `.factory/spec-changelog.md` | MODIFIED | [1.3.179] entry prepended. |
+
+**Blast-radius reduction (the operative consequence for F3/F4):** the prior draft required
+threading a new `verbose: bool` parameter through `format_issue_row`, `format_issue_rows_public`,
+and all FOUR of their call sites (`list.rs`, `board.rs`, `queue.rs`, `sprint.rs`) to support a
+parse-failure warning that can now never fire (there is no parse step). The simplified contract
+requires only the single, already-scoped opt-in Due Date column parameter — the same shape as the
+existing Points/Team/Assets parameters, with zero new cross-cutting plumbing. No source code was
+written or modified in this pass (product-owner has no `exec`/`process` tool access).
+
+### BC Count
+
+0 new BCs, 0 removed. Total unchanged: 660 cumulative (BC-INDEX). BC-2.2.032 and BC-2.3.039
+bodies simplified in place — same IDs, same H1 titles, same table-row summaries in BC-INDEX.md
+(no index update required — BC-INDEX.md's one-line summaries were never formatter-specific).
+
+### Feature Request Link
+
+- https://github.com/Zious11/jira-cli/issues/668
+- Human decision recorded in this session: simplify the Due Date formatter to verbatim display
+  (Jira's `duedate` is already `YYYY-MM-DD`; parse-then-reformat is pure overhead)
+
+---
+
+## [1.3.178] - 2026-08-13
+
+### Type: PATCH
+
+### Summary
+
+Scoped adversarial review fix-round on the [1.3.177] duedate delta (issue #668). Fresh-context
+adversary reviewed BC-2.2.028, BC-2.2.032, BC-2.3.036, BC-2.3.039 plus the two claimed-unaffected
+JSON-render-invariant BCs and found 1 HIGH + 6 MEDIUM + 2 LOW real findings (plus 1 cosmetic).
+All fixed same-day. BC count UNCHANGED at **660**.
+
+- **F1 (HIGH):** BC-2.3.039 cited a nonexistent `Resolution` row as an always-on-row precedent
+  alongside `Created`/`Updated` — `handle_view` has no Resolution row (`resolution` is fetched
+  and deserialized but never rendered). Corrected to `Created`/`Updated` only.
+- **F2 (MEDIUM):** BC-2.2.032's parse-failure warning description was generic ("stderr warning")
+  and omitted that the real mechanism (`log_parse_failure_once`) only fires under `--verbose`,
+  and that `format_issue_row`/`format_issue_rows_public` currently take no `verbose` parameter —
+  implementing the warning REQUIRES a signature change. Now stated as a normative part of the BC.
+- **F3 (MEDIUM):** BC-2.2.032's Source field cited only 2 call sites for the shared row/header
+  builders; `board.rs::handle_view`, `queue.rs::handle_view` (×2), and `sprint.rs::handle_current`
+  are additional real callers (verified by grep against `src/`). Added a Scope clause stating this
+  BC governs `issue list` only; those call sites do not gain the flag or column.
+- **F4 (MEDIUM):** `cross-cutting.md` BC-X.8.009 (`jr queue view`) pins a stale literal
+  `issue_table_headers(false, false, false)` 3-arg call and claims "Same column set as
+  `jr issue list`" unconditionally — both go stale once BC-2.2.032's 4th column param ships.
+  Amended with a qualifying clause.
+- **F5 (MEDIUM):** BC-2.3.039 claimed `issue view --output json` is "raw JSON passthrough" — it
+  is not; `view.rs` serializes the TYPED `Issue`/`IssueFields` struct via `output::render_json`.
+  Corrected, with the two real conditions (`BASE_ISSUE_FIELDS` request + no
+  `skip_serializing_if`) stated explicitly.
+- **F6 (MEDIUM):** BC-2.3.039 attributed the `BASE_ISSUE_FIELDS` request-field amendment to
+  BC-2.3.036 (which contracts DEserialization only); corrected to cite BC-2.2.028 (which actually
+  amends the shared request-field constant).
+- **F7 (MEDIUM):** BC-2.2.032 had no JSON-mode clause, leaving it ambiguous whether `--duedate`
+  affects `issue list --output json` shape. Added: no effect: `duedate` is unconditionally
+  present in JSON regardless of the flag.
+- **F8 (MEDIUM):** BC-2.2.032's `--points` precedent citation (BC-2.2.021/BC-2.2.022) implied
+  those BCs contract column-rendering; they contract config-resolution/warning and request-field
+  injection only. Reworded to distinguish "same code mechanism" from "same contracted behavior."
+- **F9 (LOW):** Column-set backfill deferral note reworded with a normativity caveat — BC-2.2.032's
+  Column position clause is now the sole WRITTEN column-list contract, pending a future backfill.
+- **F10 (LOW):** Added a defensive empty-string clause to both BC-2.2.032 and BC-2.3.039 — a
+  present-but-empty `Some("")` value renders `-` directly (checked before the parse attempt), not
+  only `None`.
+- **Also fixed (drafting error, found via F12 cross-check during triage, not itself an adversary
+  finding number):** BC-2.2.032 was physically misplaced between BC-2.2.028 and BC-2.2.029 in the
+  source file (an editing-tool insertion-point error) instead of after BC-2.2.031. Corrected —
+  the BC body/content was not otherwise affected by the relocation.
+- **Noted, not fixed (F11, pre-existing convention property):** BC ID near-miss collisions across
+  subsystems (e.g. `BC-2.2.032`/`BC-2.3.032`, `BC-2.3.039`/`BC-2.4.039`) are a property of this
+  file's existing per-subsystem NNN-counter convention (already present at `BC-2.4.043`/
+  `BC-2.5.043` pre-delta) — flagged for the spec steward, not a defect introduced by this delta.
+
+### Changed
+
+- `.factory/specs/prd/bc-2-issue-read.md` (MODIFIED): BC-2.2.032 relocated to its correct
+  sequential position (after BC-2.2.031); BC-2.2.032 body extended with Scope, corrected
+  parse-failure-warning, JSON-mode, and empty-string clauses, and a reworded backfill-deferral
+  note; BC-2.3.039 body corrected (Resolution citation removed, JSON-output claim corrected,
+  citation redirected to BC-2.2.028, empty-string clause added); frontmatter trace entry added
+  documenting the fix-round.
+- `.factory/specs/prd/cross-cutting.md` (MODIFIED): BC-X.8.009 Table-output bullet amended —
+  stale 3-arg citation and unconditional "same column set" claim qualified against BC-2.2.032;
+  Trace/body amendment note added.
+- `.factory/spec-changelog.md` (MODIFIED): [1.3.178] entry prepended.
+
+### BC Count
+
+0 new BCs. Total unchanged: 660 cumulative (BC-INDEX). All 4 delta BCs amended in place for
+correctness; no frontmatter/count-surface changes required (verified via
+`check-spec-counts.sh` + `check-bc-cumulative-counts.sh`, both green post-fix).
+
+### Feature Request Link
+
+- https://github.com/Zious11/jira-cli/issues/668
+- F1 delta analysis: `.factory/feature-delta/668-duedate/delta-analysis.md`
+- Adversarial review (fresh-context, scoped): findings F1-F12 as enumerated above
+
+---
+
+## [1.3.177] - 2026-08-13
+
+### Type: MINOR
+
+### Summary
+
+F2 spec evolution for GitHub issue #668 (Feature Mode, delta update): surface Jira's
+`duedate` field in `jr issue view`/`jr issue list`, both JSON and human-readable output.
+Amends `BASE_ISSUE_FIELDS`/`get_issue` field-enumeration BCs (16→17 fields, `duedate`
+added) and allocates 2 new BCs for the human-render half: an always-on "Due Date" row in
+`issue view` (BC-2.3.039) and an opt-in `--duedate` column in `issue list` (BC-2.2.032).
+JSON-render-invariant BCs (BC-7.1.001/BC-7.3.010) confirmed unaffected — `duedate` flows
+through the existing render path with zero renderer change. BC count 658 → 660
+(BC-INDEX); bc-2-issue-read.md 106 → 108 cumulative (64 → 66 individually-bodied).
+
+### Changed Requirements
+
+- `bc-2-issue-read.md` (AMENDED): BC-2.2.028 — `search_issues` default fields list
+  16 → 17, `duedate` inserted after `updated`/before `resolution`; prior 16-field array
+  recorded inline per amendment convention. BC-2.3.036 — `get_issue` field enumeration
+  gains `duedate` (date-only `YYYY-MM-DD`, distinct from `created`/`updated` RFC3339
+  semantics); named-struct-field-not-flatten-extra design decision confirmed and recorded.
+- `bc-2-issue-read.md` (NEW): BC-2.2.032 — `issue list --duedate` opts in a Due Date
+  column (position: after Priority, before Points; empty → `-`; dedicated date-only
+  formatter, not `format_comment_date`). BC-2.3.039 — `issue view` always shows a Due
+  Date detail row (position: after Updated, before Project; same formatter and empty
+  convention as BC-2.2.032). Column-set backfill (F1 Open Question #7) explicitly
+  DEFERRED — not blocking this feature.
+
+### Impact Assessment
+
+| Artifact | Change Type | Notes |
+|----------|-------------|-------|
+| `.factory/specs/prd/bc-2-issue-read.md` | MODIFIED | 2 BCs amended (BC-2.2.028, BC-2.3.036), 2 BCs added (BC-2.2.032, BC-2.3.039); frontmatter `total_bcs` 106→108, `definitional_count` 64→66; body preamble + footer updated; trace entry added |
+| `.factory/specs/prd/BC-INDEX.md` | MODIFIED | Frontmatter `total_bcs` 658→660, `index_version` v6.75→v6.76; Section 2 header + `sections:` line updated to 108/66; subsection 2.2 header 14→15 BCs (range BC-2.2.018..032); subsection 2.3 header 7→8 BCs (range BC-2.3.032..039); table rows updated/added for all 4 BCs |
+| `.factory/specs/prd/CANONICAL-COUNTS.md` | MODIFIED | Per-file definitional-count table (bc-2 64→66, total 428→430); per-file total_bcs table (bc-2 106→108, Sum 658→660); grand-total prose 658→660; breakdown note updated; L2 alignment table row updated (106→108) |
+| `.factory/specs/domain-spec/bc-02-issue-read.md` | MODIFIED | `bc_count` frontmatter 106→108 (ADV-P17-003 L2/L3 alignment); body preamble "106 BCs"→"108 BCs"; input-hash refreshed |
+| `.factory/spec-changelog.md` | MODIFIED | [1.3.177] entry prepended |
+
+**BC bodies for BC-2.2.032/BC-2.3.039 are AMENDED-SPEC ONLY** — no source code was
+written or modified in this pass (product-owner has no `exec`/`process` tool access and
+does not touch `src/`). Implementation is scoped to F3 (story decomposition) → F4
+(delta implementation).
+
+### BC Count
+
++2 new BCs (BC-2.2.032, BC-2.3.039). Total: 658 → 660 cumulative (BC-INDEX). 2 BCs
+amended in place (BC-2.2.028, BC-2.3.036) — no count change from amendments.
+
+### Feature Request Link
+
+- https://github.com/Zious11/jira-cli/issues/668
+- F1 delta analysis: `.factory/feature-delta/668-duedate/delta-analysis.md`
+
+---
+
 ## [1.3.176] - 2026-07-30
 
 ### Type: PATCH
