@@ -1,7 +1,36 @@
-# affected-files.txt — fork-ops-signing-hardening (2026-06-18)
+# affected-files.txt — bucket1-defects (issues #692, #663, #693, #694) (2026-08-13)
 # Format: <change-type> <file>
 # Change types: MODIFIED, NEW
+# Grouped by issue; see delta-analysis.md for full per-issue rationale.
 
-MODIFIED .github/workflows/sign-and-publish.yml
-MODIFIED .github/workflows/backfill-release.yml
-MODIFIED docs/specs/fork-friendly-release-ops.md
+# --- #692: issue edit --dry-run stdin/ADF preview ---
+MODIFIED src/cli/issue/edit.rs
+MODIFIED .factory/specs/prd/bc-3-issue-write.md
+MODIFIED tests/issue_edit_echo.rs
+
+# --- #663: auth switch --profile guard ---
+MODIFIED src/main.rs
+MODIFIED .factory/specs/prd/bc-1-auth-identity.md
+MODIFIED CLAUDE.md
+MODIFIED tests/auth_profiles.rs
+
+# --- #693: queue view custom-field passthrough ---
+MODIFIED src/cli/queue.rs
+MODIFIED .factory/specs/prd/cross-cutting.md
+MODIFIED tests/queue.rs
+
+# --- #694: attachment help-text/doc-comment sync (docs-only) ---
+MODIFIED src/cli/mod.rs
+MODIFIED .factory/specs/prd/bc-2-issue-read.md
+
+# --- Regression baseline (NOT changed) — see delta-analysis.md "Files NOT Changed" ---
+# src/adf.rs
+# src/cli/auth/switch.rs
+# src/config.rs
+# src/api/jsm/queues.rs
+# src/types/jsm/queue.rs
+# src/api/jira/issues.rs
+# src/cli/issue/format.rs
+# src/cli/issue/attachments.rs
+# tests/attachment_download.rs, tests/attachment_list.rs, tests/attachment_upload.rs, tests/attachment_delete.rs, tests/attachment_jsm.rs
+# tests/adf_recursion_depth.rs (live path unaffected; dry-run sibling test is NEW, added to issue_edit_echo.rs or a new file)

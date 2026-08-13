@@ -11198,3 +11198,75 @@ verbatim to `session-checkpoints.md`). No Decisions Log, Drift Items, Skip Log, 
 or Open Issues Tracker changes — nothing in those tables changed this burst. SOH-DX-1's own
 records are untouched. `regression-state.json`, `sidecar-learning.md`, and untracked `.claude/`
 left exactly as found, per standing instruction.
+
+## BUCKET1-DEFECTS-F1-COMPLETE (2026-08-13)
+
+**This burst's own work (2026-08-13, state-manager, Single-Commit Burst Protocol, dispatched
+by the orchestrator after F1 delta analysis for a new open-issue triage bundle completed and
+was human-approved at the Step-7 gate):** registers a THIRD concurrent Feature Mode cycle,
+`bucket1-defects` (open-issue triage Bucket #1), alongside the PAUSED SOH-DX-1 bundle and the
+CLOSED 668-duedate cycle. Mode: BROWNFIELD Feature Mode. Route: **Full F1-F7 bundle**
+(human-directed, corroborated independently in `delta-analysis.md` §Step 4b: three of the four
+issues touch BC bodies, ruling out both quick-dev and a bug-fix-only F2/F3 skip), covering four
+independent, file-disjoint issues:
+
+- **#692** -- `jr issue edit --dry-run` never reads stdin, so `--description-stdin` ADF
+  conversion cannot be previewed. Reverses **BC-3.4.021 Invariant 3** (currently asserts the
+  placeholder is "correct... not a bug"). Classified **enhancement** (behavior-change reversing
+  a ratified decision, not a plain bug fix).
+- **#663** -- `jr auth switch --profile` is a confusing no-op that also produces a third,
+  inconsistent usage string. Classified **enhancement** (adds a new rejection guard; current
+  behavior is spec-silent on the confusion, not spec-violating).
+- **#693** -- `jr queue view` discards queue-endpoint custom fields (`QueueIssueKey` retains
+  only `key`), then re-fetches a fixed field set that never includes them. Classified
+  **bug-fix** (documented `Queue.fields` capability silently dropped).
+- **#694** -- Attachment subcommand help text / doc comments are stale (parent `about` string
+  undersells four subcommands; batch-download filename-scheme doc gap). Docs-only, no behavior
+  change -- underlying BCs already assert the true behavior.
+
+**Research phase COMPLETE:** four research briefs produced (`.factory/research/bucket1-{692,
+663,693,694}-dry-run-stdin... etc.-2026-08-13.md`), each independently cross-verified against
+`develop` tip (`1a298e24`) rather than taken on the reporter's word; #663 additionally
+cross-checked clap mechanism claims via Context7 (`/clap-rs/clap`) + Perplexity. Issue text
+throughout treated as untrusted input per standing convention -- no embedded instruction
+executed, no code claim taken unverified.
+
+**F1 delta analysis COMPLETE and HUMAN-APPROVED 2026-08-13** (scope approved as-is at the
+Step-7 gate, no descope). architect produced the impact-boundary cross-check
+(`bucket1-impact-boundary.md`) -- fresh-eyes re-verification against `develop`, not taken on
+the briefs' word; business-analyst produced the delta analysis (`delta-analysis.md`) with
+intent/trivial/severity classification and the consolidated affected-files inventory
+(`affected-files.txt` -- 11 files total across the four issues, all MODIFIED, zero NEW, zero
+cross-issue file overlap).
+
+**Bundle BC delta (planned for F2, not yet applied):** 1 BC reversal (BC-3.4.021 Invariant 3,
+`bc-3-issue-write.md`), 1 new BC (auth switch `--profile` guard, in `bc-1-auth-identity.md`),
+2 amendments (BC-1.2.018, BC-X.8.009), 1 changelog-only note (#694, no BC body change).
+
+**PENDING DECISION recorded this burst (DEC-274, PROPOSED/PENDING -- to be formalized as an
+explicit superseding DEC at the F2 gate, not a silent amend):** #692 reverses the spec-locked
+BC-3.4.021 Invariant 3. Human ruled 2026-08-13: reverse it, **FIX-ONLY** (no standalone
+`jr adf render` primitive -- architect independently concurred this is genuinely out of scope,
+would require its own BC cluster), ADF preview surfaced in a **NEW additive JSON field**
+(`plannedChanges.descriptionAdf`), keeping `plannedChanges.description` raw per #398/BC-3.4.013
+(confirmed un-disturbed). No existing test pins the old placeholder behavior -- the prior
+behavior was spec-text-only, so this is a clean reversal with no regression-test conflict.
+
+**Classification (all four):** backend/CLI, all **INTERNAL** (no new modules, no new CLI
+surface, no architecture change -- confirmed independently by both research-agent and
+architect). No HIGH-risk modules; security-reviewer NOT mandatory for any of the four stories.
+No cross-issue logic coupling -- all four are file-disjoint (`affected-files.txt` confirms zero
+overlap), parallel-worktree-safe, no forced merge order required. UX/a11y/browser-e2e skipped
+bundle-wide (CLI-only surfaces).
+
+**`STATE.md`** `pipeline: PAUSED`->`ACTIVE` (bucket1-defects now in flight);
+`feature_mode_bundle: 668-DUEDATE-COMPLETE`->`BUCKET1-DEFECTS-F1-COMPLETE`; `version`
+2.52->2.53; `timestamp` refreshed. New `DEC-274` recorded (PENDING/PROPOSED). Four new rows
+added to Open Issues Tracker (#692, #663, #693, #694). New Concurrent Cycles row for
+`bucket1-defects`. SOH-DX-1's own paused position (`S-TRAIL-DERIVATION-GUARD-1` next, F4) is
+UNCHANGED and UNTOUCHED by this burst; the CLOSED 668-duedate cycle is likewise untouched.
+`activation_head`/`activation_version` unchanged -- no new merge this burst (spec/research
+artifacts only, no code touched). All committed to factory-artifacts in ONE atomic commit
+(Single-Commit Burst Protocol, no Stage-2 backfill, no SHA placeholder), pushed via CAS.
+`regression-state.json`, `sidecar-learning.md`, and untracked `.claude/` left exactly as found,
+per standing instruction.
