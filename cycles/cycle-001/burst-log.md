@@ -7,7 +7,7 @@ producer: state-manager
 timestamp: 2026-05-04T00:00:00
 cycle: "cycle-001"
 inputs: [STATE.md]
-input-hash: "3a2106e"
+input-hash: "bdb6eed"
 traces_to: STATE.md
 ---
 
@@ -11111,3 +11111,57 @@ for S-668-1 (test-writer → implementer, standard per-story delivery workflow),
 concurrent with SOH-DX-1's paused position (S-TRAIL-DERIVATION-GUARD-1 remains next there,
 unchanged). `regression-state.json`, `sidecar-learning.md`, and untracked `.claude/` left exactly
 as found, per standing instruction.
+
+---
+
+## S-668-1-MERGED-CYCLE-CLOSED (2026-08-13)
+
+**This burst's own work (2026-08-13, state-manager, Single-Commit Burst Protocol, dispatched by
+the orchestrator to close the #668 feature cycle):** S-668-1 (surface Jira `duedate` in
+`jr issue view`/`jr issue list`, JSON `.fields.duedate` + human-readable output) delivered
+end-to-end through the full VSDD Feature Mode pipeline F1–F7 and MERGED. `PR #691` squash-merged
+by human owner/admin action into `develop` as `1a298e24` (2026-08-13T17:37:11Z), **closing #668**;
+`develop` fast-forwarded from `9411e9a5` (0.7.0-dev.1 line, unreleased). Spec remained sealed at
+v1.3.179 for the whole implementation window — no BC/code discrepancy surfaced, all four BCs
+(BC-2.2.028, BC-2.2.032, BC-2.3.036, BC-2.3.039) guard-green throughout
+(`scripts/check-spec-counts.sh` + `scripts/check-bc-cumulative-counts.sh` both exit 0,
+independently re-verified this burst). Step 4.5 per-story adversarial: **CONVERGED 3/3 CLEAN** —
+8 total fresh-context passes across 3 windows, severity decay MED→LOW→zero; every finding across
+all 8 passes was test-coverage completeness (missing edge-case assertions in the new-code test
+suite), never a production defect — `src/` was spec-faithful throughout the entire window.
+security-reviewer: PASS, no actionable findings (duedate verbatim render carries the same
+disclosure/injection posture as the pre-existing summary/status/assignee fields — no new attack
+surface). pr-reviewer: APPROVE. CI: all 15 checks green including CI Gate. 8 VHS demo recordings
+captured at `.factory/demos/S-668-1/` covering the 16 ACs. Post-merge cleanup complete:
+`.worktrees/S-668-1` removed, local branch `feat/668-duedate` deleted, remote-tracking ref
+pruned, GitHub auto-deleted the remote branch (all independently verified this burst via
+`git worktree list`, `git branch`, `gh pr view 691`).
+
+**STORY-INDEX.md** updated: `S-668-1` row `status: draft→ready→done`, PR #691/`1a298e24`/closes
+#668 cited; `version` v1.5.85→v1.5.86; `last_updated` narrative entry prepended (prior
+S-668-1-REGISTERED entry preserved as `Prior:`). `total_stories` unchanged at 128 (existing row
+closed, no new story). **`S-668-1-duedate-issue-view-list.md`** frontmatter `status: ready→done`,
+`version` 1.1→1.2, Close-Out section appended (mirrors the S-627-1/S-639-1 Close-Out convention).
+
+**Cycle-closing checklist (S-7.02) — process-gap disposition:** one process-gap finding was
+raised during Step 4.5 (INFO-tagged): the orchestrator's adversary dispatch prompts for this
+cycle did not embed the `(worktree-abs-path, feature-HEAD-SHA, story-id, canonical-repo-root)`
+perimeter identity-tuple. Independently assessed this burst, not merely recorded as reported: all
+8 passes proceeded and converged correctly regardless, because paths were unambiguous throughout
+(single active worktree, no concurrent story delivery contending for the same paths) — no
+cross-story or cross-worktree contamination risk actually materialized. **Disposed as a JUSTIFIED
+DEFERRAL** (severity LOW, new drift item `S668-STEP45-DISPATCH-MISSING-IDENTITY-TUPLE`): this is
+a `vsdd-factory` engine-level orchestrator-prompt-wiring polish item, not a `jira-cli` product
+defect — routed to the engine's own self-improvement backlog, no follow-up story opened in this
+project. Full detail: `cycles/cycle-001/drift-items-open-detail.md`.
+
+**`STATE.md`** `pipeline: ACTIVE`→`PAUSED` (668-duedate cycle now COMPLETE, no active feature-mode
+work remaining in either concurrent cycle); `feature_mode_bundle: 668-DUEDATE-F4-DELIVERY`→
+`668-DUEDATE-COMPLETE`; `activation_head: 93d422fd`→`1a298e24` (develop's new merged tip, per
+explicit orchestrator instruction — `activation_version` remains `v0.6.0`, the last formally
+tagged release; `develop` itself is unreleased 0.7.0-dev.x). New `DEC-273` recorded (cycle-close
+ruling). SOH-DX-1's own paused position (`S-TRAIL-DERIVATION-GUARD-1` next, unchanged) is
+UNTOUCHED by this burst — it remains the standing next-priority once a human directs further
+work. All committed to factory-artifacts in ONE atomic commit (Single-Commit Burst Protocol, no
+Stage-2 backfill, no SHA placeholder), pushed via CAS. `regression-state.json`,
+`sidecar-learning.md`, and untracked `.claude/` left exactly as found, per standing instruction.

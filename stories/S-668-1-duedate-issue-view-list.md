@@ -5,7 +5,7 @@ epic_id: "none"
 story_id: "S-668-1"
 title: "Surface Jira duedate in issue view/list (JSON fields + issue view Due Date row + issue list --duedate column)"
 wave: feature-followup
-status: ready
+status: done
 intent: enhancement
 feature_type: backend
 mode: feature
@@ -54,7 +54,7 @@ acceptance_criteria_count: 16
 assumption_validations: []
 risk_mitigations: []
 created: "2026-08-13"
-version: "1.1"
+version: "1.2"
 last_updated: "2026-08-13"
 breaking_change: false
 retroactive: false
@@ -658,4 +658,40 @@ during implementation to the orchestrator rather than re-editing the BC file).
   `duedate`'s addition would break.
 - This story has NO upstream story dependencies (`depends_on: []`) — it is a
   leaf enhancement on existing, already-shipped read paths (`get_issue`,
-  `search_issues`, `handle_view`, `handle_list`).
+  search_issues`, `handle_view`, `handle_list`).
+
+---
+
+## Close-Out (v1.2, 2026-08-13)
+
+**DELIVERED AND MERGED.**
+
+- Implemented on worktree `.worktrees/S-668-1`, branch `feat/668-duedate`, full VSDD
+  Feature Mode pipeline F1–F7. Spec sealed at v1.3.179 (BC-2.2.028 + BC-2.3.036 AMENDED,
+  BC-2.2.032 + BC-2.3.039 NEW; all four guard-green throughout implementation, no
+  BC/code discrepancy surfaced).
+- Step 4.5 per-story adversarial: CONVERGED 3/3 CLEAN — 8 total fresh-context passes
+  across 3 windows, severity decay MED→LOW→zero. Every finding across all 8 passes was
+  test-coverage completeness (missing edge-case assertions), never a production defect —
+  `src/` was spec-faithful throughout the entire window.
+  security-reviewer: PASS, no actionable findings (duedate verbatim render carries the
+  same posture as the existing summary/status/assignee fields — no new injection or
+  disclosure surface). pr-reviewer: APPROVE.
+- CI: all 15 checks green, including CI Gate. 8 VHS demo recordings captured at
+  `.factory/demos/S-668-1/` covering the 16 ACs.
+- PR #691 squash-merged by human owner/admin action into `develop` as `1a298e24`
+  (2026-08-13T17:37:11Z), **closing #668**; `develop` fast-forwarded from `9411e9a5`
+  (0.7.0-dev.x line, unreleased).
+- Post-merge cleanup complete: `.worktrees/S-668-1` removed, local branch
+  `feat/668-duedate` deleted, remote-tracking ref pruned, GitHub auto-deleted the
+  remote branch.
+- One process-gap finding was raised during Step 4.5 (INFO-tagged): the orchestrator's
+  adversary dispatch prompts did not embed the `(worktree-abs-path, feature-HEAD-SHA,
+  story-id, canonical-repo-root)` perimeter identity-tuple; all 8 passes proceeded and
+  converged correctly regardless because paths were unambiguous this cycle. Recorded as
+  a JUSTIFIED DEFERRAL (severity LOW) — this is a `vsdd-factory` engine
+  orchestrator-prompt-wiring improvement, not a `jr` product defect. Full detail:
+  `STATE.md` Drift Items table and `cycles/cycle-001/drift-items-open-detail.md`.
+
+Full detail: `STATE.md`, `cycles/cycle-001/burst-log.md` § S-668-1-MERGED-CYCLE-CLOSED,
+`cycles/cycle-001/convergence-trajectory.md`.
