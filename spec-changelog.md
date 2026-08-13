@@ -9,6 +9,141 @@ Track all spec version changes. Most recent version first.
 
 > **Type legend:** Type classifies the SPEC document delta: MINOR = new BCs/VPs/sections; PATCH = amendments to existing bodies/ACs/ECs. Product-semver impact is recorded in the Summary line, independent of Type.
 
+## [1.3.180] - 2026-08-13
+
+### Type: MINOR
+
+### Summary
+
+F2 spec evolution for the bucket1-defects bundle (Feature Mode, delta update; 4 independent,
+file-disjoint issues bundled into one F1-F7 cycle): #692 (`issue edit --dry-run` never reads
+stdin, so `--description-stdin` ADF conversion could not be previewed), #663 (`auth switch
+--profile` is a confusing silent no-op), #693 (`queue view` discards queue-configured custom
+fields), #694 (attachment subcommand help-text sync, docs-only). Mints 1 new BC (BC-1.2.047)
+and amends 3 existing BC bodies (BC-3.4.021, BC-1.2.018, BC-X.8.009); #694 adds a frontmatter
+changelog note only, no BC body touched. Per the Type legend above ("MINOR = new
+BCs/VPs/sections; PATCH = amendments to existing bodies/ACs/ECs"), the single new BC
+(BC-1.2.047) is sufficient on its own to classify this whole entry MINOR, even though 3 of the
+4 changes are body-only amendments — same rule applied at [1.3.164] (SOH-DX-1/DEC-188 breaking
+pre-flight exit-64 promotion, classified MINOR because it minted new holdouts/BCs) and
+[1.3.177] (issue #668, 2 new BCs + 2 amendments, MINOR). See "Version bump rationale" below for
+the fuller MAJOR-vs-MINOR discussion this bundle specifically required. (Adversary passes 1-5
+against the BC-body delta fixed 13 real findings across `bc-3-issue-write.md`,
+`bc-1-auth-identity.md`, and `cross-cutting.md` — see each file's own frontmatter `trace:`/
+body `**Trace**:` fields for the itemized list; this changelog entry's own self-citation of the
+Type legend was corrected from a volatile line number to a stable positional reference,
+adversary pass-5 INFO-1.)
+
+### Changed Requirements
+
+- `bc-3-issue-write.md` (AMENDED, REVERSAL under DEC-274): BC-3.4.021 — Invariant 3 REVERSED:
+  `--dry-run --description-stdin` now reads stdin and renders ADF (`adf::markdown_to_adf` /
+  `adf::text_to_adf`, mirroring the live path), where it previously emitted a fixed placeholder
+  and never read stdin (asserted "correct, not a bug" pre-DEC-274). New additive
+  `plannedChanges.descriptionAdf` field (nested inside `plannedChanges`, preserving the
+  "exactly three top-level keys" postcondition); `plannedChanges.description` UNCHANGED —
+  continues to carry the raw stdin string verbatim (BC-3.4.013/#398 raw-input invariant
+  preserved, zero edit to that BC's body). New Postconditions-Common item 6 (stdin read + ADF
+  conversion is read-only, no new HTTP call; `markdown_to_adf` `Err` — e.g. the `MAX_ADF_DEPTH`
+  depth guard, BC-7.2.012 — now exits 64 before any dry-run output, consistent with the
+  pre-existing "dry-run does not suppress exit-64 resolution errors" invariant). EC-3.4.021-6
+  rewritten; EC-3.4.021-15/-16 added. New Invariant 6 (no `--file` flag on `issue edit`,
+  correcting an inaccurate assumption in the original bug report). Pre-DEC-274 text retained
+  verbatim in a "Previous version" block for audit trail.
+- `bc-1-auth-identity.md` (AMENDED): BC-1.2.018 — retitled and carved out `auth switch` as the
+  explicit exception to global `--profile` propagation (previously stated unconditionally).
+  Pre-#663 text retained verbatim in a "Previous version" block.
+- `bc-1-auth-identity.md` (NEW): BC-1.2.047 — `auth switch --profile <X>` rejected with exit
+  64; guard fires in `src/main.rs`'s `AuthCommand::Switch` arm BEFORE `Config::load_with`;
+  standard `--output json` `{"error","code":64}` envelope (#526 invariant). Explicitly out of
+  scope (human-ruled): clap `conflicts_with` belt-and-suspenders (unreliable for `global = true`
+  args, clap #5335/#5358) and full usage-string unification (universal, unavoidable clap
+  behavior).
+- `cross-cutting.md` (AMENDED, additive): BC-X.8.009 — Issue fetch pipeline step 3 now passes
+  the resolved `Queue`'s declared `fields[]` (filtered to drop `issuekey` and any
+  `BASE_ISSUE_FIELDS` member) as `extra_fields` to `search_issues`, surfacing queue-configured
+  custom fields in `--output json` (via `IssueFields`'s pre-existing `#[serde(flatten)] extra`
+  mechanism). Table output explicitly unchanged (no new column; issue #575 tracks that
+  separately). New "Rejected alternative" paragraph documents why rendering directly from the
+  queue endpoint's own `fields` (skipping `search_issues`) was considered and rejected. `--id`
+  path's one extra `list_queues` call (vs. the `<name>` path's zero extra calls) stated
+  explicitly. Pre-#693 text retained verbatim in a "Previous version" block.
+- `bc-2-issue-read.md` (CHANGELOG-ONLY, no BC body change): one frontmatter trace line (v1.3.180
+  internal file-local version, distinct from this spec-changelog's own [1.3.180]) recording the
+  issue #694 help-text sync — the underlying BCs (BC-2.7.010, BC-2.7.008/BC-2.7.009) already
+  specified the true behavior correctly; this was a pure `src/cli/mod.rs` doc-comment fix with
+  no spec drift to correct.
+
+### Version bump rationale (MAJOR vs MINOR, per team-lead request)
+
+Two of the four issues are genuinely BREAKING changes to previously-ratified CLI behavior, not
+mere clarifications: (a) #663 changes `auth switch --profile <X>` from a silently-accepted
+no-op (exit 0) to a hard rejection (exit 64) — a script that happened to pass `--profile` to
+`auth switch` before will now fail differently; (b) #692 reverses BC-3.4.021 Invariant 3, which
+had explicitly pinned the old placeholder behavior as "correct… not a bug" — any automation
+asserting on the literal placeholder string (`"<from stdin — not yet read in dry-run>"`) will
+observe a different value after this change. Both are real product-behavior breaks warranting
+`Breaking:` entries in the product's own `CHANGELOG.md` at release (NOT edited by this pass —
+flagged for the release step per team-lead instruction).
+
+For THIS file's version axis, however, the choice is MINOR, not MAJOR, for two independent
+reasons: (1) this file's own Type legend (stated once at the top of this file, above every
+dated entry) defines the axis purely by SPEC-DOCUMENT
+shape — "MINOR = new BCs/VPs/sections; PATCH = amendments to existing bodies/ACs/ECs" — with no
+MAJOR criterion defined at all; the sole historical MAJOR entry ([1.0.0]) was the initial
+660-BC corpus import, a foundational/whole-corpus event this bundle is not. (2) Direct
+precedent: [1.3.164] recorded a structurally identical situation — a BREAKING pre-flight
+exit-64 promotion (SOH-DX-1/DEC-188, issue #639: `--field`/`--on-behalf-of` on `issue create`
+went from silently-accepted to exit-64-rejected) — and was classified MINOR, because it minted
+new holdout scenarios (the spec-document criterion), not because the underlying product change
+was non-breaking. This bundle mints exactly one new BC (BC-1.2.047), which is sufficient under
+the same rule to classify the whole entry MINOR. MAJOR would only be warranted here if this
+file's convention tied Type to PRODUCT-semver breaking-ness, which it explicitly does not (see
+the Type legend's second sentence: "Product-semver impact is recorded in the Summary line,
+independent of Type").
+
+### Impact Assessment
+
+| Artifact | Change Type | Notes |
+|----------|-------------|-------|
+| `.factory/specs/prd/bc-3-issue-write.md` | MODIFIED | BC-3.4.021 amended (reversal under DEC-274); frontmatter trace entry added; `total_bcs`/`definitional_count` UNCHANGED (111 individually-bodied — amend-in-place, no new heading) |
+| `.factory/specs/prd/bc-1-auth-identity.md` | MODIFIED | BC-1.2.018 amended; BC-1.2.047 added; frontmatter `total_bcs` 57→58, `definitional_count` 46→47; body preamble updated; trace entry added |
+| `.factory/specs/prd/cross-cutting.md` | MODIFIED | BC-X.8.009 amended; frontmatter trace entry added; `total_bcs`/`definitional_count` UNCHANGED (85 individually-bodied — amend-in-place, no new heading) |
+| `.factory/specs/prd/bc-2-issue-read.md` | MODIFIED | Frontmatter trace entry added only (v1.3.180 internal file-local marker); `total_bcs`/`definitional_count` UNCHANGED (66/108) |
+| `.factory/specs/prd/BC-INDEX.md` | **PENDING — NOT touched by this pass** | Per team-lead instruction, the state-manager updates cumulative indexes (BC-INDEX.md, CANONICAL-COUNTS.md) LAST, after this delta's version bumps are final. When applied: `total_bcs` 660→661 (+1, BC-1.2.047); subsection 1.2 header count +1; BC-1.2.018/BC-3.4.021/BC-X.8.009 amendment rows need no count change but their summary text should be checked for staleness. |
+| `.factory/specs/prd/CANONICAL-COUNTS.md` | **PENDING — NOT touched by this pass** | Same state-manager ordering constraint; per-file definitional-count table needs bc-1 46→47, Sum 428→429; per-file total_bcs table needs bc-1 57→58, Sum 660→661. |
+| `.factory/phase-f2-spec-evolution/prd-delta-bucket1-defects.md` | NEW | Full PRD delta narrative for this bundle. |
+| `.factory/spec-changelog.md` | MODIFIED | [1.3.180] entry prepended. |
+
+`scripts/check-spec-counts.sh` exits 0 across all 7 `bc-*.md` files after this pass (verified).
+`scripts/check-bc-cumulative-counts.sh` was deliberately NOT run — it depends on the pending
+BC-INDEX.md/CANONICAL-COUNTS.md updates above and is explicitly out of scope for this pass per
+team-lead instruction. No source code was written or modified in this pass (product-owner has
+no `exec`/`process` tool access and does not touch `src/`); implementation is scoped to F3
+(story decomposition) → F4 (delta implementation).
+
+### BC Count
+
++1 new BC (BC-1.2.047). 3 BCs amended in place (BC-3.4.021, BC-1.2.018, BC-X.8.009) — no count
+change from amendments. 0 BCs removed. Cumulative total will become 660 → 661 once the
+state-manager applies the pending BC-INDEX.md/CANONICAL-COUNTS.md update (not applied by this
+pass).
+
+### Feature Request Link
+
+- https://github.com/Zious11/jira-cli/issues/692
+- https://github.com/Zious11/jira-cli/issues/663
+- https://github.com/Zious11/jira-cli/issues/693
+- https://github.com/Zious11/jira-cli/issues/694
+- F1 delta analysis: `.factory/phase-f1-delta-analysis/delta-analysis.md`
+- Research briefs: `.factory/research/bucket1-692-dry-run-stdin-2026-08-13.md`,
+  `.factory/research/bucket1-663-auth-switch-profile-2026-08-13.md`,
+  `.factory/research/bucket1-693-queue-view-fields-2026-08-13.md`,
+  `.factory/research/bucket1-694-attachment-docs-2026-08-13.md`
+- DEC-274 (supersedes BC-3.4.021 Invariant 3; STATE.md record owned by state-manager)
+
+---
+
 ## [1.3.179] - 2026-08-13
 
 ### Type: PATCH

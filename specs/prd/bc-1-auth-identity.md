@@ -1,11 +1,12 @@
 ---
 context: bc-1
 title: "Auth & Identity"
-total_bcs: 57   # cumulative claim (incl. range-collapsed); definitional_count below is individually-bodied headings
-definitional_count: 46   # count of `#### BC-` headings in this file
-last_updated: 2026-05-18
+total_bcs: 58   # cumulative claim (incl. range-collapsed); definitional_count below is individually-bodied headings
+definitional_count: 47   # count of `#### BC-` headings in this file
+last_updated: 2026-08-13
 source_pass: 3
 trace: |
+  - F2 spec evolution, bucket1-defects bundle (2026-08-13, issue #663): BC-1.2.018 AMENDED — carves out `auth switch` as the explicit exception to global `--profile` propagation (previous unqualified text retained inline for audit trail); BC-1.2.047 NEW — `auth switch --profile <X>` rejected with exit 64 (guard fires in `src/main.rs` before `Config::load_with`; standard `--output json` error envelope). BC count 57→58 (46→47 individually-bodied). See `.factory/research/bucket1-663-auth-switch-profile-2026-08-13.md`.
   - L2: .factory/specs/domain-spec/bc-01-auth-identity.md
   - Source broad: .factory/semport/jira-cli/jira-cli-pass-3-behavioral-contracts.md §2.1
   - Source R1: .factory/semport/jira-cli/jira-cli-pass-3-deep-r1.md §3.1
@@ -14,7 +15,7 @@ trace: |
 
 # BC-1 — Auth & Identity
 
-57 behavioral contracts across 6 subdomains: OAuth flow (1.1), Profile management (1.2),
+58 behavioral contracts across 6 subdomains: OAuth flow (1.1), Profile management (1.2),
 Embedded OAuth app (1.3), Token keychain (1.4), OAuth state machine (1.5), Auth error handling (1.6).
 
 ---
@@ -209,13 +210,62 @@ Embedded OAuth app (1.3), Token keychain (1.4), OAuth state machine (1.5), Auth 
 
 ---
 
-#### BC-1.2.018: Global `--profile` propagates to all auth subcommands via subcmd.profile.or(cli.profile)
+#### BC-1.2.018: Global `--profile` propagates to all auth subcommands EXCEPT `auth switch` (rejected, exit 64) — composed via `subcmd.profile.or(cli.profile)` for Login/Status/Refresh/Logout, passed through directly for List/Remove
+
+**STATUS: UPDATED (2026-08-13, issue #663)** — carves out `auth switch` as an explicit exception to the propagation rule this BC previously stated unconditionally. Previous (pre-#663) version retained below for audit trail.
 
 **Confidence**: HIGH
-**Source**: `tests/auth_profiles.rs:~188`
+**Source**: `tests/auth_profiles.rs:~188`; `src/main.rs` (`AuthCommand::Switch` guard, new — see BC-1.2.047; `AuthCommand::List`/`Remove` dispatch arms, pre-existing, unaffected)
 **Subject**: Auth & Identity
-**Behavior**: Round-10 regression fix. main.rs now composes `subcmd.profile.or(cli.profile)`.
-**Trace**: Pass 3 BC-030 (R1)
+**Behavior**: Round-10 regression fix. `main.rs` composes `subcmd.profile.or(cli.profile)` for `AuthCommand::Login`, `Status`, `Refresh`, and `Logout` — each of these four declares its own subcommand-level `profile: Option<String>` field to compose with. **[CLARIFIED 2026-08-13, adversary pass-1 LOW-2]** `AuthCommand::List` and `AuthCommand::Remove` have NO subcommand-level `profile` field at all — for these two, `cli.profile.as_deref()` is passed straight through with no `.or()` step (there is nothing else to compose against). They still HONOR the global `--profile` flag, via this simpler direct-pass-through mechanism rather than the four-way `.or()` composer. **`auth switch` is the sole exception to "the global flag has effect at all"**: it also has no subcommand-level `profile` field, but as of issue #663 the global `--profile` flag is REJECTED outright (exit 64) rather than passed through — see BC-1.2.047 for the full rejection contract. Do not read "sole exception" as implying `List`/`Remove` ignore `--profile` — they honor it; only `Switch` rejects it.
+
+**Previous version (superseded by issue #663, retained for audit trail):**
+> **Behavior**: Round-10 regression fix. main.rs now composes `subcmd.profile.or(cli.profile)`.
+>
+> (Unqualified — no `auth switch` carve-out. Pre-#663, `--profile` was silently accepted on `auth switch` and had no effect on the switch target, its only side effect being an extra existence-check constraint inside `Config::load_with`. See research brief `.factory/research/bucket1-663-auth-switch-profile-2026-08-13.md` §1.4 for the confirmed no-op mechanism this reversed-to-rejection replaces.)
+
+**Trace**: Pass 3 BC-030 (R1); F2 amended (2026-08-13, issue #663) — `auth switch` carve-out; see BC-1.2.047; F2 adversary pass-1 fix round (2026-08-13, LOW-2) — title/Behavior clarified so `List`/`Remove`'s direct-pass-through propagation is not misread as unaffected-by-omission; `Switch` remains the only subcommand where `--profile` is rejected rather than honored
+
+---
+
+#### BC-1.2.047: `auth switch --profile <X>` is rejected with exit 64 — the switch target is the positional `<NAME>` only
+
+**Confidence**: HIGH
+**Source**: `src/main.rs` (`AuthCommand::Switch` dispatch arm, guard fires before `Config::load_with`); `src/cli/auth/switch.rs::handle_switch`; research brief `.factory/research/bucket1-663-auth-switch-profile-2026-08-13.md`
+**Subject**: Auth & Identity
+**Origin**: NEW (issue #663)
+
+**Description**: `auth switch` takes its target profile from the required positional `<NAME>` only — it has no subcommand-level `profile: Option<String>` field (unlike `Login`/`Status`/`Refresh`/`Logout`, each of which composes `subcmd.profile.or(cli.profile)` per BC-1.2.018). Before #663, the GLOBAL `--profile` flag (declared `global = true` on `Cli`, propagated by clap to every subcommand including `auth switch`) was silently accepted but had no effect on the switch target — its only observable side effect was forcing `Config::load_with`'s active-profile-existence check to additionally validate the flag's value, producing the confusing `jr auth switch --profile X X` incantation the issue reports. This BC replaces that silent no-op with an explicit rejection.
+
+**Preconditions**:
+1. `jr auth switch <NAME>` is invoked with the global `--profile` flag also supplied (`jr auth switch --profile <X> <NAME>`, in either flag/positional order).
+
+**Postconditions**:
+1. The guard fires in `src/main.rs`, in the `AuthCommand::Switch` dispatch arm, BEFORE `Config::load_with` is called — so a nonexistent `--profile` value does NOT first trip `Config::load_with`'s active-profile existence-check side effect. The rejection is unconditional on `cli.profile.is_some()`, independent of whether `<X>` or `<NAME>` name real profiles.
+2. Exit code 64 (`JrError::UserError`).
+3. **Human mode** (stderr): `--profile is not valid for 'auth switch'. The profile to activate is the positional argument. Try: jr auth switch <NAME>` — a fixed constant string, no value interpolation.
+4. **`--output json`**: the standard `{"error": "<message>", "code": 64}` envelope (per the #526 JSON render invariant — no bespoke formatter; this flows through the same central error handler as every other exit-64 `UserError` in `jr`).
+5. No config read/write and no keychain access occurs — the guard fires before any of `handle_switch`'s three steps (`Config::load_with`, `handle_switch_in_memory`, `config.save_global()`).
+
+**Invariants**:
+1. This guard is `Switch`-only. `AuthCommand::Login`/`Status`/`Refresh`/`Logout` are unaffected — each continues to compose `subcmd.profile.or(cli.profile)` exactly as BC-1.2.018 (amended) describes. `AuthCommand::List`/`Remove` are also unaffected — they continue to pass `cli.profile.as_deref()` straight through with no `.or()` composition (BC-1.2.018's LOW-2 clarification): `--profile` remains fully honored on both, never rejected.
+2. The positional `<NAME>` remains the sole way to specify the switch target; this BC does not change `handle_switch_in_memory`'s write logic. BC-1.1.003's unknown-profile exit-64 path is unaffected — it fires on a bad positional; this BC fires on a supplied `--profile` flag regardless of positional validity.
+
+**Edge Cases**:
+- EC-1.2.047-1: `jr auth switch --profile foo foo` (both real profiles — the "confusing incantation" the issue reports) → still exits 64; the flag is rejected regardless of whether its value coincides with the positional or names a real profile.
+- EC-1.2.047-2: `jr auth switch --profile bogus realprofile` → exits 64 on the `--profile` guard, NOT on a "bogus profile does not exist" message — the guard fires before any profile-existence check is reachable.
+- EC-1.2.047-3: `jr auth switch realprofile --profile bogus` (flag supplied after the positional) → same exit-64 rejection; clap's global-arg parsing accepts either order, and the guard is order-independent (checks `cli.profile.is_some()`, not argument position).
+- EC-1.2.047-4 (adversary pass-1 MEDIUM-2 — guard keys ONLY on the `--profile` FLAG, never on the resolved active profile / `JR_PROFILE` / config default): `JR_PROFILE=sandbox jr auth switch realprofile` (the global `--profile` FLAG is absent — only the `JR_PROFILE` environment variable is set) → NOT rejected; the guard checks `cli.profile.is_some()` only, which reflects solely whether the `--profile` CLI flag was passed, and is `None`/false regardless of `JR_PROFILE`, `config.default_profile`, or any other stage of the profile-resolution precedence chain (BC-1.1.007). The switch proceeds normally to `handle_switch_in_memory("realprofile")`, exit 0 on success. This is load-bearing for the direnv-scoped-sandbox workflow (CLAUDE.md: "combine with direnv to scope a repo to a sandbox site") — a directory-scoped `JR_PROFILE` export must not make `auth switch` unusable in that directory. Only an explicit `--profile` (or `--profile=X`) token on the command line trips the guard; `JR_PROFILE`, `.envrc`, and `config.toml`'s `default_profile` are all inert with respect to this guard by construction (`cli.profile` is populated exclusively from clap parsing the `--profile` argument — CLAUDE.md's documented precedence chain "flag > env > config > default" describes ACTIVE-PROFILE RESOLUTION, a separate concern from this guard's flag-presence check).
+- EC-1.2.047-5 (NEW, adversary pass-4 INFO — syntactically-INVALID `--profile` value pre-empts this BC's guard): `jr auth switch --profile 'in!valid' realprofile` → still exits 64, but via a DIFFERENT, EARLIER check than this BC's guard: `config::validate_profile_name` (`src/config.rs`, called unconditionally from `run()` — `src/main.rs`, at the very top of `run()`, whenever `cli.profile.is_some()` — BEFORE the `match cli.command` dispatch that contains the `AuthCommand::Switch` arm this BC's guard lives in) rejects any `--profile` value containing characters outside `[a-zA-Z0-9_-]` with stderr `"Profile name contains invalid characters (use a-z, 0-9, -, _)"` — NOT this BC's `"--profile is not valid for 'auth switch'…"` message. Both paths exit 64 and both are triggered by the mere presence of `--profile` on `auth switch`, but the STDERR TEXT differs depending on whether the supplied value is syntactically valid: a syntactically-valid value (e.g. `--profile foo`) reaches this BC's Switch-arm guard and gets the "not valid for 'auth switch'" message (BC-1.2.047 Postcondition 3); a syntactically-INVALID value (e.g. `--profile 'in!valid'`) never reaches the Switch-arm guard at all — `validate_profile_name` rejects it first, with the charset message. Both exit-64 paths are correct and unambiguous once this ordering is understood; a test asserting the WRONG message for a charset-invalid `--profile` value on `auth switch` would be testing the wrong layer.
+
+**Explicitly out of scope** (research brief §3, human-ruled): clap `conflicts_with = "profile"` as a belt-and-suspenders second layer — dropped from scope entirely; documented unreliable for `global = true` args (clap issues #5335, #5358) and incomplete for the flag-without-positional case, so it is not pursued even as a secondary defense. Usage-string full unification (`<NAME>` vs `[OPTIONS] <NAME>` vs the pre-#663 promoted third form) is accepted as universal, unavoidable clap behavior (inherent to `--help` vs missing-required-arg usage rendering) and is NOT pursued via `override_usage`.
+
+**Verification Properties**:
+- VP-663-001: `jr auth switch --profile foo foo` (both existing profiles) → exit 64; stderr contains `"--profile is not valid for 'auth switch'"`; no config file write (mtime unchanged); no keychain access.
+- VP-663-002 (**[CORRECTED, adversary pass-3 HIGH-1]**): `jr auth switch --profile foo foo --output json` → exit 64; **stdout is EMPTY**; **stderr** parses as JSON; parsed object keys == `{"error", "code"}`; `code == 64`. Channel-separation invariant (#526), source-verified: `src/main.rs`'s error-exit handler uses `eprintln!` for the `OutputFormat::Json` arm — the envelope is never written to stdout. **Previous version (original F2 delta pass, INCORRECT from authoring, retained for audit trail — do NOT re-implement):** "stdout parses as JSON; parsed object keys == {\"error\", \"code\"}" — this VP was written with the wrong channel from its initial authoring (not a pass-2 regression — BC-1.2.047 Postcondition 4 itself was always channel-agnostic and correct); pass-3 (fresh context, source-verified against `src/main.rs` and `tests/common/assertions.rs::assert_json_error_envelope`) is the first pass to catch and correct it.
+- VP-663-003 (adversary pass-1 MEDIUM-2, pins EC-1.2.047-4): with `JR_PROFILE=sandbox` set in the environment and NO `--profile` flag on the command line, `jr auth switch realprofile` → exit 0; `[profiles.default].default_profile` (or the config's active-profile pointer) is updated to `realprofile`; the exit-64 guard does NOT fire. Negative-space companion to VP-663-001/002: confirms the guard is flag-presence-gated, not resolved-profile-gated.
+
+**Trace**: F2 spec evolution (2026-08-13, issue #663); research brief `.factory/research/bucket1-663-auth-switch-profile-2026-08-13.md` §3 Option 3 (recommended), §4; cross-reference BC-1.2.018 (amended sibling), BC-1.1.003 (unaffected sibling — unknown-profile positional path), BC-7.4.014 (unaffected — success-shape BC, this BC covers only the error path); F2 adversary pass-1 fix round (2026-08-13): EC-1.2.047-4 + VP-663-003 added (MEDIUM-2 — guard keys on the `--profile` flag only, never `JR_PROFILE`/config default, protecting the direnv-scoped-sandbox workflow); BC-1.2.018 title/Behavior clarified re: List/Remove propagation mechanism (LOW-2); F2 adversary pass-3 fix round (2026-08-13, fresh context): VP-663-002 corrected — it had the JSON error envelope on stdout since its original authoring; source-verified (`src/main.rs`'s error-exit handler, `tests/common/assertions.rs::assert_json_error_envelope`) that the envelope is on stderr, stdout empty, matching Postcondition 4's channel-agnostic wording, which was correct all along (HIGH-1); F2 adversary pass-4 fix round (2026-08-13): EC-1.2.047-5 added — pins that `config::validate_profile_name` (`src/main.rs`'s `run()`, before command dispatch) rejects a syntactically-invalid `--profile` value with the charset message BEFORE this BC's Switch-arm guard is ever reached, so a charset-invalid value never surfaces this BC's "not valid for 'auth switch'" message (INFO, source-verified against `src/config.rs::validate_profile_name`)
 
 ---
 
