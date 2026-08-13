@@ -13,7 +13,9 @@ fn jr() -> Command {
     // migration unexpectedly or make assertions about empty profiles
     // fail. Pinning the list here so future JR_* additions don't
     // silently re-introduce flakiness on dev machines.
-    cmd.env_remove("JR_PROFILE")
+    cmd.env_remove("JR_CONFIG_DIR")
+        .env_remove("JR_CACHE_DIR")
+        .env_remove("JR_PROFILE")
         .env_remove("JR_DEFAULT_PROFILE")
         .env_remove("JR_INSTANCE_URL")
         .env_remove("JR_INSTANCE_AUTH_METHOD")
@@ -43,6 +45,7 @@ fn fresh_config_dir() -> (TempDir, std::path::PathBuf) {
 fn auth_switch_unknown_profile_exits_64() {
     let (dir, _path) = fresh_config_dir();
     jr().env("XDG_CONFIG_HOME", dir.path())
+        .env("JR_CONFIG_DIR", dir.path().join("jr"))
         .args(["auth", "switch", "ghost"])
         .assert()
         .failure()
@@ -53,6 +56,7 @@ fn auth_switch_unknown_profile_exits_64() {
 fn auth_list_shows_no_profiles_for_fresh_install() {
     let (dir, _path) = fresh_config_dir();
     jr().env("XDG_CONFIG_HOME", dir.path())
+        .env("JR_CONFIG_DIR", dir.path().join("jr"))
         .args(["auth", "list", "--output", "json"])
         .assert()
         .success()
@@ -68,6 +72,7 @@ fn auth_list_shows_no_profiles_for_fresh_install() {
 fn auth_status_fresh_install_no_profiles_succeeds() {
     let (dir, _path) = fresh_config_dir(); // no config.toml written
     jr().env("XDG_CONFIG_HOME", dir.path())
+        .env("JR_CONFIG_DIR", dir.path().join("jr"))
         .args(["auth", "status"])
         .assert()
         .success()
@@ -88,6 +93,7 @@ auth_method = "api_token"
     )
     .unwrap();
     jr().env("XDG_CONFIG_HOME", dir.path())
+        .env("JR_CONFIG_DIR", dir.path().join("jr"))
         .args(["auth", "status", "--profile", "ghost"])
         .assert()
         .failure()
@@ -110,6 +116,7 @@ auth_method = "api_token"
     .unwrap();
 
     jr().env("XDG_CONFIG_HOME", dir.path())
+        .env("JR_CONFIG_DIR", dir.path().join("jr"))
         .args(["auth", "logout", "--profile", "ghost"])
         .assert()
         .failure()
@@ -132,6 +139,7 @@ auth_method = "api_token"
     .unwrap();
 
     jr().env("XDG_CONFIG_HOME", dir.path())
+        .env("JR_CONFIG_DIR", dir.path().join("jr"))
         .args(["auth", "remove", "default", "--no-input"])
         .assert()
         .failure()
@@ -158,6 +166,7 @@ url = "https://from-flag.example"
 
     let out = jr()
         .env("XDG_CONFIG_HOME", dir.path())
+        .env("JR_CONFIG_DIR", dir.path().join("jr"))
         .env("JR_PROFILE", "from-env")
         .args(["--profile", "from-flag", "auth", "list", "--output", "json"])
         .output()
@@ -190,8 +199,18 @@ url = "https://from-flag.example"
 /// because each handler reloaded config internally and only saw the
 /// subcommand-level `--profile`. main.rs now composes an effective profile
 /// (`subcmd.profile.or(cli.profile)`) so the global flag propagates.
+///
+/// Gated behind `JR_RUN_KEYRING_TESTS=1` because `auth status` reaches
+/// `load_api_token()` → `keyring::Entry::get_password()`, which can block
+/// under Keychain contention on macOS or hang on Linux CI without a
+/// secret-service daemon (#526-F6-KEYRING-GATE).
 #[test]
+#[ignore = "requires keyring backend; set JR_RUN_KEYRING_TESTS=1 to run"]
 fn global_profile_flag_targets_auth_status() {
+    if std::env::var("JR_RUN_KEYRING_TESTS").as_deref() != Ok("1") {
+        eprintln!("SKIP: set JR_RUN_KEYRING_TESTS=1 to run keychain tests");
+        return;
+    }
     let (dir, path) = fresh_config_dir();
     std::fs::write(
         &path,
@@ -211,6 +230,7 @@ auth_method = "api_token"
     // Status output must reflect sandbox, not default.
     let out = jr()
         .env("XDG_CONFIG_HOME", dir.path())
+        .env("JR_CONFIG_DIR", dir.path().join("jr"))
         .args(["--profile", "sandbox", "auth", "status"])
         .output()
         .unwrap();
@@ -230,6 +250,162 @@ auth_method = "api_token"
     );
 }
 
+/// Ungated substitute coverage for the global-`--profile`→subcommand fallback
+/// fork in `src/main.rs` (the `effective_profile = subcmd.profile.or_else(||
+/// cli.profile.clone())` branch in `AuthCommand::Status`).
+///
+/// # Why this test exists
+///
+/// `global_profile_flag_targets_auth_status` (above) was keyring-gated in
+/// `#526-F6-KEYRING-GATE` because `auth status` against an existing profile
+/// reaches `load_api_token()` → `keyring::Entry::get_password()`, which can
+/// block on CI without a secret-service daemon. That left the global-flag
+/// propagation path with ZERO default-CI coverage.
+///
+/// This test recovers that coverage without touching the keychain by exploiting
+/// the strict active-profile-existence guard in `Config::load_with` (called as
+/// the first statement in `src/cli/auth/status.rs::status()`). When
+/// `Config::load_with(Some("ghost"))` is invoked, `load_inner(strict=true)`
+/// checks whether the resolved active profile exists in `[profiles]`; because
+/// `"ghost"` is absent, it returns `JrError::UserError("unknown profile: …")`
+/// before any credential probe occurs. The `contains_key` guard inside
+/// `status.rs` is a redundant second backstop for the explicit `--profile` path
+/// but is never reached here — the config-load boundary fires first.
+///
+/// If the global `--profile ghost` flag were dropped (not propagated from
+/// `cli.profile` into `effective_profile`), the active profile would fall back
+/// to `"default"` (which exists in the test config), `Config::load_with` would
+/// succeed, the status handler would proceed to the keyring probe, and the
+/// process would exit with a different code — NOT 64. Therefore exit 64 proves
+/// the global flag was propagated all the way into `Config::load_with`.
+#[test]
+fn test_global_profile_flag_propagates_to_auth_status_unknown_profile_exits_64() {
+    let (dir, path) = fresh_config_dir();
+    std::fs::write(
+        &path,
+        r#"
+default_profile = "default"
+[profiles.default]
+url = "https://default.example"
+auth_method = "api_token"
+[profiles.sandbox]
+url = "https://sandbox.example"
+auth_method = "api_token"
+"#,
+    )
+    .unwrap();
+
+    // Global `--profile ghost` positioned BEFORE the subcommand — this is the
+    // fork that main.rs::run() handles with `effective_profile =
+    // profile.or_else(|| cli.profile.clone())` for AuthCommand::Status.
+    // "ghost" is NOT in [profiles], so the unknown-profile guard in status.rs
+    // fires before any keyring probe and exits 64.
+    jr().env("XDG_CONFIG_HOME", dir.path())
+        .env("JR_CONFIG_DIR", dir.path().join("jr"))
+        .args(["--profile", "ghost", "auth", "status"])
+        .assert()
+        .failure()
+        .code(64)
+        .stderr(predicates::str::contains("unknown profile"));
+}
+
+/// Ungated coverage for the global-`--profile`→subcommand fallback in
+/// `src/main.rs` for `AuthCommand::Logout`.
+///
+/// Mirrors `test_global_profile_flag_propagates_to_auth_status_unknown_profile_exits_64`.
+/// `handle_logout` calls `Config::load_with(Some("ghost"))` (strict load) first,
+/// which surfaces "unknown profile: ghost" before any keyring probe. Exit 64 proves
+/// that `main.rs` composed `effective_profile = profile.or_else(|| cli.profile.clone())`
+/// and passed it to `handle_logout` — if the global flag were dropped the active
+/// profile "default" would succeed the load and the exit code would differ.
+#[test]
+fn test_global_profile_flag_propagates_to_auth_logout_unknown_profile_exits_64() {
+    let (dir, path) = fresh_config_dir();
+    std::fs::write(
+        &path,
+        r#"
+default_profile = "default"
+[profiles.default]
+url = "https://default.example"
+auth_method = "api_token"
+"#,
+    )
+    .unwrap();
+
+    jr().env("XDG_CONFIG_HOME", dir.path())
+        .env("JR_CONFIG_DIR", dir.path().join("jr"))
+        .args(["--profile", "ghost", "auth", "logout"])
+        .assert()
+        .failure()
+        .code(64)
+        .stderr(predicates::str::contains("unknown profile"));
+}
+
+/// Ungated coverage for the global-`--profile`→subcommand fallback in
+/// `src/main.rs` for `AuthCommand::Refresh`.
+///
+/// `refresh_credentials` calls `Config::load_with(Some("ghost"))` (strict load)
+/// as its first statement, which surfaces "unknown profile: ghost" before any
+/// credential access. Exit 64 proves global `--profile` reached `refresh_credentials`.
+#[test]
+fn test_global_profile_flag_propagates_to_auth_refresh_unknown_profile_exits_64() {
+    let (dir, path) = fresh_config_dir();
+    std::fs::write(
+        &path,
+        r#"
+default_profile = "default"
+[profiles.default]
+url = "https://default.example"
+auth_method = "api_token"
+"#,
+    )
+    .unwrap();
+
+    jr().env("XDG_CONFIG_HOME", dir.path())
+        .env("JR_CONFIG_DIR", dir.path().join("jr"))
+        .args(["--profile", "ghost", "auth", "refresh", "--no-input"])
+        .assert()
+        .failure()
+        .code(64)
+        .stderr(predicates::str::contains("unknown profile"));
+}
+
+/// Ungated coverage for the global-`--profile`→subcommand fallback in
+/// `src/main.rs` for `AuthCommand::Login`.
+///
+/// Unlike logout/refresh, `handle_login` uses `Config::load_lenient_with`
+/// (it must create new profiles), so the "unknown profile" path is not
+/// triggered here. Instead this test uses `--no-input` without `--url` to
+/// hit `prepare_login_target`'s "--url required" guard (exit 64), which is
+/// reached ONLY when `effective_profile` is propagated and the target profile
+/// (ghost) has no URL configured. If the global flag were dropped, the fallback
+/// active profile "default" already has a URL, so the guard would not fire and
+/// exit 0.
+#[test]
+fn test_global_profile_flag_propagates_to_auth_login_no_url_exits_64() {
+    let (dir, path) = fresh_config_dir();
+    std::fs::write(
+        &path,
+        r#"
+default_profile = "default"
+[profiles.default]
+url = "https://default.example"
+auth_method = "api_token"
+"#,
+    )
+    .unwrap();
+
+    // ghost is not in [profiles]; no --url; --no-input cannot prompt → exit 64
+    // "--url required when the target profile has no URL configured"
+    jr().env("XDG_CONFIG_HOME", dir.path())
+        .env("JR_CONFIG_DIR", dir.path().join("jr"))
+        .args(["--profile", "ghost", "auth", "login", "--no-input"])
+        .assert()
+        .failure()
+        .code(64)
+        .stderr(predicates::str::contains("--url required"));
+}
+
 /// Regression: round-4's unified active-profile existence check at
 /// `Config::load` time broke `jr auth login --profile newprof --url ...`
 /// because the profile didn't exist yet. `handle_login` now uses
@@ -241,7 +417,8 @@ auth_method = "api_token"
 #[test]
 #[ignore = "requires keyring backend; set JR_RUN_KEYRING_TESTS=1 to run"]
 fn auth_login_creates_new_profile_with_url() {
-    if std::env::var("JR_RUN_KEYRING_TESTS").is_err() {
+    if std::env::var("JR_RUN_KEYRING_TESTS").as_deref() != Ok("1") {
+        eprintln!("SKIP: set JR_RUN_KEYRING_TESTS=1 to run keychain tests");
         return;
     }
     let (dir, path) = fresh_config_dir();
@@ -259,6 +436,7 @@ auth_method = "api_token"
     // login --profile newprof should succeed and create the profile,
     // even though newprof isn't in [profiles] yet at load time.
     jr().env("XDG_CONFIG_HOME", dir.path())
+        .env("JR_CONFIG_DIR", dir.path().join("jr"))
         .env("JR_EMAIL", "user@example.com")
         .env("JR_API_TOKEN", "token-value")
         .args([
@@ -290,7 +468,8 @@ auth_method = "api_token"
 #[test]
 #[ignore = "requires keyring backend; set JR_RUN_KEYRING_TESTS=1 to run"]
 fn auth_login_with_jr_profile_pointing_to_unrelated_profile_still_creates_target() {
-    if std::env::var("JR_RUN_KEYRING_TESTS").is_err() {
+    if std::env::var("JR_RUN_KEYRING_TESTS").as_deref() != Ok("1") {
+        eprintln!("SKIP: set JR_RUN_KEYRING_TESTS=1 to run keychain tests");
         return;
     }
     let (dir, path) = fresh_config_dir();
@@ -313,6 +492,7 @@ auth_method = "api_token"
     Command::cargo_bin("jr")
         .unwrap()
         .env("XDG_CONFIG_HOME", dir.path())
+        .env("JR_CONFIG_DIR", dir.path().join("jr"))
         .env("JR_PROFILE", "ghost")
         .env("JR_EMAIL", "user@example.com")
         .env("JR_API_TOKEN", "token-value")

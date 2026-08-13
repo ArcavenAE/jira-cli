@@ -32,7 +32,56 @@ curl -fsSL https://raw.githubusercontent.com/Zious11/jira-cli/main/install.sh | 
 To install a specific version:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Zious11/jira-cli/main/install.sh | sh -s -- v0.3.0
+curl -fsSL https://raw.githubusercontent.com/Zious11/jira-cli/main/install.sh | sh -s -- v0.5.0
+```
+
+### Install with mise
+
+If you manage tool versions with [mise](https://mise.jdx.dev/), you can pin
+`jr` alongside the rest of your project's tools:
+
+```bash
+mise use github:Zious11/jira-cli@latest
+```
+
+Replace `Zious11` with a fork's owner if you install from a downstream
+distribution that publishes its own signed releases.
+
+mise's `github:` backend auto-selects the release asset matching your OS
+and architecture and extracts the `jr` binary (assuming
+[`mise activate`](https://mise.jdx.dev/getting-started.html) is set up in
+your shell profile, this puts `jr` on your `PATH`). Once releases ship
+GitHub Artifact Attestations (planned — see
+[#574](https://github.com/Zious11/jira-cli/pull/574)), mise verifies them
+natively without invoking `gh` or `slsa-verifier`.
+
+To track prerelease builds cut from `develop` (currently `v*-dev.*`), opt
+in per-tool in your `mise.toml`:
+
+```toml
+[tools]
+"github:Zious11/jira-cli" = { version = "latest", prerelease = true }
+```
+
+Windows users need `prerelease = true` for now: the current stable
+(`v0.5.0`) shipped without a Windows asset, so a plain `@latest` resolves
+to a release with no matching download until a Windows binary lands on a
+stable tag (planned for `v0.6.0`).
+
+If mise-installed `jr` refuses to launch on macOS with a Gatekeeper
+warning, clear the quarantine attribute. When mise is active in your
+shell, `mise which jr` resolves the shim:
+
+```bash
+xattr -d com.apple.quarantine "$(mise which jr)"
+```
+
+If mise is not yet active in this shell, `mise which jr` prints nothing —
+resolve the install directory directly instead, which does not require
+activation:
+
+```bash
+xattr -d com.apple.quarantine "$(mise where 'github:Zious11/jira-cli')/jr"
 ```
 
 ### From source
@@ -182,10 +231,10 @@ jr issue move JSM-42 Done --resolution Fixed
 jr worklog add KEY-123 2h -m "Fixed the auth bug"
 
 # Add a comment (public reply by default)
-jr issue comment KEY-123 "Deployed to staging"
+jr issue comment add KEY-123 "Deployed to staging"
 
 # Add an internal-only comment on a JSM issue (agents see it, customers don't)
-jr issue comment JSM-42 "customer is on the paid plan — prioritizing" --internal
+jr issue comment add JSM-42 "customer is on the paid plan — prioritizing" --internal
 ```
 
 ## Commands
@@ -209,7 +258,10 @@ jr issue comment JSM-42 "customer is on the paid plan — prioritizing" --intern
 | `jr issue transitions KEY` | List available transitions |
 | `jr issue resolutions` | List instance-scoped resolution values (cached 7 days; `--refresh` to bust). Discover what to pass to `--resolution` on `jr issue move`. |
 | `jr issue assign KEY` | Assign to self (or `--to USER`, `--unassign`) |
-| `jr issue comment KEY "msg"` | Add a comment (`--stdin`, `--file`, `--markdown`, `--internal` for JSM agent-only notes) |
+| `jr issue comment add KEY "msg"` | Add a comment (`--stdin`, `--file`, `--markdown`, `--internal` for JSM agent-only notes) |
+| `jr issue comment delete KEY --id ID` | Delete a comment by ID (`--yes` to skip y/N confirmation) |
+| `jr issue comment edit KEY --id ID "msg"` | Edit a comment body (`--stdin`, `--file`, `--markdown`; `--internal`/`--public` visibility; `--yes` to skip confirmation) |
+| `jr issue comment view KEY --id ID` | View a single comment by ID (shows JSM visibility and restriction fields) |
 | `jr issue comments KEY` | List comments (`--limit N`; JSM issues show a Visibility column: External / Internal) |
 | `jr issue open KEY` | Open in browser (`--url-only` for scripts) |
 | `jr issue link KEY1 KEY2` | Link two issues (`--type blocks`, defaults to Relates) |
@@ -217,6 +269,8 @@ jr issue comment JSM-42 "customer is on the paid plan — prioritizing" --intern
 | `jr issue link-types` | List available link types |
 | `jr issue remote-link KEY --url URL` | Attach a Confluence page or web URL (`--title` optional, defaults to URL) |
 | `jr issue assets KEY`          | Show assets linked to an issue                |
+| `jr issue attachment list KEY` | List attachments on an issue (`--filter mime=`, `--filter name=`, `--filter size-max=`) |
+| `jr issue changelog KEY` | Show the audit history (change log) for an issue |
 | `jr board list` | List boards (`--project`, `--type scrum\|kanban`) |
 | `jr board view --board 42` | Show current board issues (`--board` or config, `--limit`/`--all`) |
 | `jr sprint list --board 42` | List sprints (`--board` or config or auto-discover, scrum only) |
@@ -233,12 +287,15 @@ jr issue comment JSM-42 "customer is on the paid plan — prioritizing" --intern
 | `jr assets schemas`             | List object schemas in the workspace           |
 | `jr assets types [--schema]`    | List object types (all or filtered by schema)  |
 | `jr assets schema <TYPE>`       | Show attributes for an object type (partial match) |
+| `jr api <PATH>` | API passthrough — make an authenticated request to any Jira REST endpoint (`--method`, `--body`, `--output json`) |
 | `jr team list` | List available teams (`--refresh` to force update) |
 | `jr user search <query>` | Search users by display name or email (`--limit`/`--all`) |
 | `jr user list --project FOO` | List users assignable to a project (`--limit`/`--all`) |
 | `jr user view <accountId>` | Look up a single user by accountId |
 | `jr project list` | List accessible projects (`--type`, `--limit`/`--all`) |
 | `jr project fields --project FOO` | Show valid issue types, priorities, statuses, and asset custom fields |
+| `jr requesttype list` | List JSM request types for the project's service desk (7d cache) |
+| `jr requesttype fields <NAME\|ID>` | Show fields for a request type (partial name match or numeric ID) |
 | `jr completion bash\|zsh\|fish` | Generate shell completions |
 
 ## Global Flags
@@ -250,7 +307,8 @@ jr issue comment JSM-42 "customer is on the paid plan — prioritizing" --intern
 | `--profile NAME` | Override the active profile for this invocation (precedence: this flag > `JR_PROFILE` env > `default_profile` in config > `"default"`) |
 | `--no-color` | Disable colored output (also respects `NO_COLOR` env) |
 | `--no-input` | Disable interactive prompts (auto-enabled in pipes/scripts) |
-| `--verbose` | Show HTTP request/response details |
+| `--verbose` | Show HTTP method + URL per request (header-only since v0.6 / SD-003; does NOT print bodies) |
+| `--verbose-bodies` | Also print request/response bodies to stderr (add `--verbose` to also log method+URL per request; emits a PII warning — bodies contain accountIds, emails, and ADF content) |
 
 ## Configuration
 
@@ -331,7 +389,7 @@ new layout starts using `~/.cache/jr/v1/<profile>/`.
 # AI agent workflow example
 jr issue view KEY-123 --output json          # Get full context
 jr issue move KEY-123 "In Progress"          # Start work
-echo "Fixed the bug" | jr issue comment KEY-123 --stdin  # Add comment
+echo "Fixed the bug" | jr issue comment add KEY-123 --stdin  # Add comment
 jr issue move KEY-123 "Done"                 # Complete
 ```
 
@@ -357,6 +415,7 @@ jr completion fish | source
 | 2 | Authentication error |
 | 64 | Usage error (bad arguments) |
 | 78 | Configuration error |
+| 124 | Timeout / deadline exceeded |
 | 130 | Interrupted (Ctrl+C) |
 
 ## License

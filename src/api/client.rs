@@ -140,7 +140,7 @@ impl JiraClient {
     /// Create a client for integration testing. This is **not** gated behind
     /// `#[cfg(test)]` so that integration tests in `tests/` can use it.
     pub fn new_for_test(base_url: String, auth_header: String) -> Self {
-        let assets_base_url = Some(format!("{}/jsm/assets", &base_url));
+        let assets_base_url = Some(format!("{}/jsm/assets", base_url));
         Self {
             client: Client::new(),
             instance_url: base_url.clone(),
@@ -163,7 +163,7 @@ impl JiraClient {
     /// This is **not** gated behind `#[cfg(test)]` so that integration tests in
     /// `tests/` can use it (mirrors the gating pattern of `new_for_test`).
     pub fn new_for_test_with_profile(base_url: String, auth_header: String, profile: &str) -> Self {
-        let assets_base_url = Some(format!("{}/jsm/assets", &base_url));
+        let assets_base_url = Some(format!("{}/jsm/assets", base_url));
         Self {
             client: Client::new(),
             instance_url: base_url.clone(),
@@ -231,6 +231,25 @@ impl JiraClient {
         self.auth_header.starts_with("Bearer ")
     }
 
+    /// Raw `reqwest::Client` accessor for multipart upload (ADR-0017).
+    ///
+    /// `pub(crate)` — not for use outside this crate. Required because
+    /// `Request::try_clone()` returns `None` for multipart bodies — upload
+    /// must build and send requests directly rather than via `send()`.
+    /// Call site: `src/api/jira/attachments.rs::upload_attachments`.
+    pub(crate) fn reqwest_client(&self) -> &reqwest::Client {
+        &self.client
+    }
+
+    /// `Authorization` header value accessor for multipart upload (ADR-0017).
+    ///
+    /// `pub(crate)` — not for use outside this crate. Required because upload
+    /// builds requests directly (bypassing `send()`) due to the multipart
+    /// body-clone constraint. Call site: `src/api/jira/attachments.rs::upload_attachments`.
+    pub(crate) fn authorization_header(&self) -> &str {
+        &self.auth_header
+    }
+
     /// Read a response body as raw bytes, optionally printing it to stderr
     /// when `--verbose-bodies` is enabled. Returns the bytes for deserialization.
     ///
@@ -263,6 +282,25 @@ impl JiraClient {
         let response = self.send(request).await?;
         let bytes = self.collect_response_body(response).await?;
         Ok(serde_json::from_slice(&bytes)?)
+    }
+
+    /// Perform a raw GET request and return the `Response` without deserializing.
+    ///
+    /// Used by streaming binary endpoints such as attachment content download
+    /// (BC-2.7.007 step 2 / ADR-0017 reqwest `stream` feature).  The caller is
+    /// responsible for consuming `response.bytes_stream()`.
+    ///
+    /// `Authorization` and `Cookie` headers are stripped by reqwest on cross-host
+    /// redirects (GHSA-9857-6MW7-FQ2M) — this is CORRECT CDN behaviour; the caller
+    /// MUST NOT fight it.  `?redirect=false` MUST NOT be appended to the path
+    /// (JRACLOUD-97046).
+    ///
+    /// Returns `Ok(Response)` for 2xx (including after redirect following).
+    /// Returns `Err` for 4xx/5xx or network failures (mapped via `send_inner`).
+    pub(crate) async fn get_raw_response(&self, path: &str) -> anyhow::Result<reqwest::Response> {
+        let url = format!("{}{}", self.base_url, path);
+        let request = self.client.get(&url);
+        self.send(request).await
     }
 
     /// Deadline-aware GET-and-deserialize for callers with a wall-clock budget.

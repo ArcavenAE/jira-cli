@@ -7,8 +7,11 @@
 #   v*-rc.*       → rc       (jr-rc formula, signs release binaries)
 #   v*.*.* (no -) → stable   (jr formula, signs release binaries)
 #
-# Isolated: gracefully skips if SIGNING_ENABLED != 'true' or secrets are missing.
-# Safe to merge upstream — all steps are gated on fork-only conditions.
+# OPT-IN: every job is gated on repository variables. With SIGNING_ENABLED
+# unset (the default), this workflow is a no-op — no Apple Developer Program
+# setup, secrets, or tap repo are required to host it. Downstream forks that
+# publish signed builds set the variables/secrets listed in
+# docs/specs/fork-friendly-release-ops.md.
 name: Sign & Publish
 
 on:
@@ -38,20 +41,30 @@ jobs:
             arch: amd64
     steps:
       - name: Harden the runner (Audit all outbound calls)
-        uses: step-security/harden-runner@a5ad31d6a139d249332a2605b85202e8c0b78450 # v2.19.1
+        uses: step-security/harden-runner@b09bb98e06d4d774595224525879c09bc6e98c40 # v2.20.1
         with:
           egress-policy: audit
 
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
           persist-credentials: false
 
       - name: Install Rust
-        uses: dtolnay/rust-toolchain@29eef336d9b2848a0b548edc03f92a220660cdb8 # stable
+        uses: dtolnay/rust-toolchain@6c977a6ca4077a0ceb28ffbe03f59d46e9ac8772  # stable
         with:
+          toolchain: stable
           targets: ${{ matrix.target }}
 
-      - uses: step-security/rust-cache@851174d9a2fdc03e0896e02844dcc61d81dd7851 # v2.9.1
+      # rust-toolchain.toml pins channel = "stable", which overrides the
+      # toolchain dtolnay/rust-toolchain installs above. The target the
+      # action installed sits on the wrong toolchain; without this step
+      # the build fails with `error[E0463]: can't find crate for 'core'`.
+      # Same defensive fix as release.yml.
+      - name: Ensure target installed (defensive)
+        shell: bash
+        run: rustup target add ${{ matrix.target }}
+
+      - uses: Swatinem/rust-cache@e18b497796c12c097a38f9edb9d0641fb99eee32  # v2
         with:
           key: ${{ matrix.target }}
 
@@ -110,7 +123,7 @@ jobs:
         run: cp target/${{ matrix.target }}/release/jr jr-a-darwin-${{ matrix.arch }}
 
       - name: Upload artifact
-        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7
         with:
           name: alpha-${{ matrix.arch }}
           path: jr-a-darwin-${{ matrix.arch }}
@@ -128,34 +141,81 @@ jobs:
       tag: ${{ steps.meta.outputs.tag }}
     steps:
       - name: Harden the runner (Audit all outbound calls)
-        uses: step-security/harden-runner@a5ad31d6a139d249332a2605b85202e8c0b78450 # v2.19.1
+        uses: step-security/harden-runner@b09bb98e06d4d774595224525879c09bc6e98c40 # v2.20.1
         with:
           egress-policy: audit
 
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
           persist-credentials: false
 
       - name: Generate alpha version
         id: meta
+        env:
+          COMMIT_SHA: ${{ github.sha }}
+          GH_TOKEN: ${{ github.token }}
         run: |
+          # Atomic alpha-tag reservation via GitHub API (no TOCTOU race).
+          # Spec: docs/specs/fork-friendly-release-ops.md § "Atomic alpha-tag creation"
+          # Step 1: inputs bound from env: above (CWE-77 rule).
+
+          # Step 2: compute seed hint (starting point only — correctness does NOT
+          # depend on its accuracy; the atomic reservation loop is the sole guarantor).
           DATE=$(date -u +%Y%m%d)
-          # Count existing tags today (more reliable than releases)
           EXISTING=$(git ls-remote --tags origin "refs/tags/alpha-${DATE}.*" | wc -l | tr -d ' ')
           SEQ=$((EXISTING + 1))
-          TAG="alpha-${DATE}.${SEQ}"
-          VERSION="${TAG}"
+
+          # Steps 3 + 4: atomic reservation with bounded retry.
+          # HTTP 201 → reserved. HTTP 422 → ref exists, increment SEQ and retry.
+          # Any other non-zero exit → fatal (exit 1 with diagnostic).
+          # MAX_ATTEMPTS=10 (includes first attempt in step 3).
+          # NEVER re-count remote tags on retry — increment from just-rejected SEQ only.
+          MAX_ATTEMPTS=10
+          ATTEMPT=1
+          TAG=""
+          GH_API_ERR_FILE=$(mktemp)
+          trap 'rm -f "$GH_API_ERR_FILE"' EXIT
+
+          while [ "$ATTEMPT" -le "$MAX_ATTEMPTS" ]; do
+            CANDIDATE="alpha-${DATE}.${SEQ}"
+            echo "Attempt ${ATTEMPT}/${MAX_ATTEMPTS}: reserving tag ${CANDIDATE}..."
+            if gh api --method POST \
+              "/repos/${{ github.repository }}/git/refs" \
+              -f "ref=refs/tags/${CANDIDATE}" \
+              -f "sha=${COMMIT_SHA}" \
+              2>"$GH_API_ERR_FILE"; then
+              # HTTP 201 — reservation succeeded
+              TAG="$CANDIDATE"
+              echo "Reserved tag: $TAG"
+              break
+            else
+              ERR_BODY=$(cat "$GH_API_ERR_FILE")
+              # gh CLI exits non-zero for both 422 (already exists) and other errors.
+              # Distinguish 422 by the "already exists" message in the error body.
+              if echo "$ERR_BODY" | grep -qi "already exists\|Reference already exists"; then
+                echo "Tag ${CANDIDATE} already exists (HTTP 422), incrementing SEQ..."
+                SEQ=$((SEQ + 1))
+                ATTEMPT=$((ATTEMPT + 1))
+              else
+                echo "::error::Fatal error reserving tag ${CANDIDATE}: ${ERR_BODY}"
+                exit 1
+              fi
+            fi
+          done
+
+          # Step 4 exhaustion — silent success and || true are PROHIBITED on exhaustion.
+          if [ -z "$TAG" ]; then
+            echo "::error::alpha tag reservation failed after ${MAX_ATTEMPTS} attempts — burst contention ceiling exceeded; retry when concurrent workflow runs settle"
+            exit 1
+          fi
+
+          # Step 5: export reserved name.
           echo "tag=$TAG" >> "$GITHUB_OUTPUT"
-          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "version=$TAG" >> "$GITHUB_OUTPUT"
           echo "Alpha release: $TAG"
 
-          # Clean up any stale release/tag with the same name
-          gh release delete "$TAG" --cleanup-tag --yes 2>/dev/null || true
-        env:
-          GH_TOKEN: ${{ github.token }}
-
       - name: Download alpha binaries
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c  # v8
         with:
           merge-multiple: true
 
@@ -197,14 +257,21 @@ jobs:
         env:
           APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
           APPLE_INSTALLER_IDENTITY: ${{ secrets.APPLE_INSTALLER_IDENTITY }}
+          RELEASE_VERSION: ${{ steps.meta.outputs.version }}
         run: |
-          VERSION="${{ steps.meta.outputs.version }}"
+          VERSION="$RELEASE_VERSION"
           chmod +x scripts/create-app.sh scripts/create-dmg.sh scripts/create-pkg.sh
 
           for arch in arm64 amd64; do
             ./scripts/create-app.sh "jr-a-darwin-${arch}" "$VERSION" .
             codesign --force --deep --options runtime --sign "$APPLE_SIGNING_IDENTITY" --timestamp Jr.app
             ./scripts/create-dmg.sh Jr.app "$VERSION" "jr-a-${arch}.dmg"
+            # Sign the DMG container itself. Required for stapler to attach a
+            # Gatekeeper-recognized notarization ticket, and routes the
+            # notarytool submission through Apple's fast path (signed-image
+            # validation) instead of the slow "discovery" path that hangs at
+            # pre-submission under burst load (observed in run 27797831466).
+            codesign --force --sign "$APPLE_SIGNING_IDENTITY" --timestamp "jr-a-${arch}.dmg"
             ./scripts/create-pkg.sh "jr-a-darwin-${arch}" "$VERSION" "$APPLE_INSTALLER_IDENTITY" "jr-a-${arch}.pkg"
             rm -rf Jr.app
           done
@@ -225,6 +292,59 @@ jobs:
             xcrun stapler staple "$ARTIFACT"
           done
 
+      - name: Verify signatures (Gatekeeper + codesign)
+        run: |
+          set -eo pipefail
+          CS_OUT=$(mktemp)
+          SPCTL_OUT=$(mktemp)
+          trap 'rm -f "$CS_OUT" "$SPCTL_OUT"' EXIT
+          # Bare Mach-O binaries: stapler can't attach to a bare binary
+          # (Apple TN3147), so `spctl --assess --type execute` would
+          # report "Unnotarized Developer ID". Verify the load-bearing
+          # properties directly via codesign: Developer ID Application
+          # identity, stable Team Identifier, and hardened runtime flag.
+          for BIN in jr-a-darwin-arm64 jr-a-darwin-amd64; do
+            echo "::group::Verify $BIN"
+            codesign -dvv "$BIN" 2>&1 | tee "$CS_OUT"
+            # GHA log-masks the leaf cert CN (it matches APPLE_SIGNING_IDENTITY
+            # secret), so `Authority=Developer ID Application: ...` becomes
+            # `Authority=***`. Anchor instead on the intermediate cert in the
+            # Developer ID chain, which is a public Apple CA name and never
+            # masked. Its presence proves the chain.
+            grep -q "^Authority=Developer ID Certification Authority$" "$CS_OUT" \
+              || { echo "::error::$BIN missing Developer ID chain (intermediate CA)"; exit 1; }
+            # TeamIdentifier value matches APPLE_NOTARIZATION_TEAM_ID and is
+            # masked to "***" — accept either a real team-id format or the
+            # masked marker, but reject "not set" (the ad-hoc sentinel).
+            grep -qE "^TeamIdentifier=([A-Z0-9]{6,}|\*+)$" "$CS_OUT" \
+              || { echo "::error::$BIN: TeamIdentifier missing, ad-hoc, or unexpected format"; exit 1; }
+            grep -qE "^CodeDirectory.*flags=0x[0-9a-f]+\(.*runtime.*\)" "$CS_OUT" \
+              || { echo "::error::$BIN missing hardened runtime (--options runtime) flag"; exit 1; }
+            echo "::endgroup::"
+          done
+          # Stapled containers: spctl --assess returns "accepted
+          # source=Notarized Developer ID" when signed + notarized +
+          # stapled. .pkg → --type install; .dmg → --type open.
+          for PKG in jr-a-arm64.pkg jr-a-amd64.pkg; do
+            echo "::group::Verify $PKG"
+            spctl --assess --type install --verbose=4 "$PKG" 2>&1 | tee "$SPCTL_OUT"
+            grep -q "source=Notarized Developer ID" "$SPCTL_OUT" \
+              || { echo "::error::$PKG not notarized (spctl source unexpected)"; exit 1; }
+            echo "::endgroup::"
+          done
+          # `spctl --assess --type open` on a notarized .dmg returns
+          # "rejected: source=Insufficient Context" on macOS 15+ — Gatekeeper
+          # assesses the *mounted* contents, not the .dmg file. `stapler
+          # validate` is the canonical check: it verifies the notarization
+          # ticket is locally attached to the .dmg and references a valid
+          # Apple notarization record. Non-zero exit on missing/invalid
+          # staple fails the step.
+          for DMG in jr-a-arm64.dmg jr-a-amd64.dmg; do
+            echo "::group::Verify $DMG"
+            xcrun stapler validate "$DMG"
+            echo "::endgroup::"
+          done
+
       - name: Generate checksums
         run: |
           for f in jr-a-darwin-arm64 jr-a-darwin-amd64 jr-a-arm64.pkg jr-a-amd64.pkg jr-a-arm64.dmg jr-a-amd64.dmg; do
@@ -234,17 +354,26 @@ jobs:
       - name: Create alpha release
         env:
           GH_TOKEN: ${{ github.token }}
+          HOMEBREW_TAP_REPO: ${{ vars.HOMEBREW_TAP_REPO }}
+          RELEASE_TAG: ${{ steps.meta.outputs.tag }}
         run: |
-          TAG="${{ steps.meta.outputs.tag }}"
+          TAG="$RELEASE_TAG"
+
+          BINARY_LINE="download below"
+          if [ -n "$HOMEBREW_TAP_REPO" ]; then
+            TAP_SHORT="${HOMEBREW_TAP_REPO#*/}"
+            TAP_NAME="${HOMEBREW_TAP_REPO%%/*}/${TAP_SHORT#homebrew-}"
+            BINARY_LINE="\`brew install ${TAP_NAME}/jr-a\` or download below"
+          fi
+
+          NOTES="**Channel:** alpha (develop branch)
+          **Binary:** ${BINARY_LINE}
+          **Commit:** ${{ github.sha }}
+          **Signed:** Apple Developer ID (notarized)"
+
           gh release create "$TAG" \
             --title "jr-a $TAG" \
-            --notes "$(cat <<'NOTES'
-          **Channel:** alpha (develop branch)
-          **Binary:** \`brew install arcavenae/tap/jr-a\` or download below
-          **Commit:** ${{ github.sha }}
-          **Signed:** Apple Developer ID (notarized)
-          NOTES
-          )" \
+            --notes "$NOTES" \
             --prerelease \
             jr-a-darwin-arm64 \
             jr-a-darwin-amd64 \
@@ -261,44 +390,53 @@ jobs:
   alpha-homebrew:
     name: Alpha Update Homebrew Tap
     needs: alpha-sign
-    if: needs.alpha-sign.result == 'success'
+    if: needs.alpha-sign.result == 'success' && vars.HOMEBREW_TAP_REPO != ''
     permissions:
       contents: write
     runs-on: ubuntu-latest
     steps:
       - name: Harden the runner (Audit all outbound calls)
-        uses: step-security/harden-runner@a5ad31d6a139d249332a2605b85202e8c0b78450 # v2.19.1
+        uses: step-security/harden-runner@b09bb98e06d4d774595224525879c09bc6e98c40 # v2.20.1
         with:
           egress-policy: audit
 
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
           persist-credentials: false
 
       - name: Download signed binaries from release
         env:
           GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ needs.alpha-sign.outputs.tag }}
         run: |
-          TAG="${{ needs.alpha-sign.outputs.tag }}"
+          TAG="$RELEASE_TAG"
           gh release download "$TAG" --pattern "jr-a-darwin-arm64" --dir .
           gh release download "$TAG" --pattern "jr-a-darwin-amd64" --dir .
 
       - name: Update alpha formula
         env:
           HOMEBREW_TAP_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+          HOMEBREW_TAP_REPO: ${{ vars.HOMEBREW_TAP_REPO }}
+          RELEASE_VERSION: ${{ needs.alpha-sign.outputs.version }}
+          RELEASE_TAG: ${{ needs.alpha-sign.outputs.tag }}
         run: |
-          VERSION="${{ needs.alpha-sign.outputs.version }}"
-          TAG="${{ needs.alpha-sign.outputs.tag }}"
+          VERSION="$RELEASE_VERSION"
+          TAG="$RELEASE_TAG"
+
+          TAP_SHORT="${HOMEBREW_TAP_REPO#*/}"
+          TAP_NAME="${HOMEBREW_TAP_REPO%%/*}/${TAP_SHORT#homebrew-}"
 
           SHA256_ARM64=$(shasum -a 256 jr-a-darwin-arm64 | cut -d' ' -f1)
           SHA256_AMD64=$(shasum -a 256 jr-a-darwin-amd64 | cut -d' ' -f1)
 
-          git clone "https://x-access-token:${HOMEBREW_TAP_TOKEN}@github.com/arcavenae/homebrew-tap.git" homebrew-tap-repo
+          git clone "https://x-access-token:${HOMEBREW_TAP_TOKEN}@github.com/${HOMEBREW_TAP_REPO}.git" homebrew-tap-repo
           cd homebrew-tap-repo
 
           mkdir -p Formula
           cp ../Formula/jr-a.rb Formula/jr-a.rb
 
+          sed -i "s|REPO_PLACEHOLDER|${GITHUB_REPOSITORY}|g" Formula/jr-a.rb
+          sed -i "s|TAP_PLACEHOLDER|${TAP_NAME}|g" Formula/jr-a.rb
           sed -i "s/VERSION_PLACEHOLDER/$VERSION/g" Formula/jr-a.rb
           sed -i "s/TAG_PLACEHOLDER/$TAG/g" Formula/jr-a.rb
           sed -i "s/SHA256_ARM64_PLACEHOLDER/$SHA256_ARM64/g" Formula/jr-a.rb
@@ -330,18 +468,20 @@ jobs:
       channel: ${{ steps.meta.outputs.channel }}
     steps:
       - name: Harden the runner (Audit all outbound calls)
-        uses: step-security/harden-runner@a5ad31d6a139d249332a2605b85202e8c0b78450 # v2.19.1
+        uses: step-security/harden-runner@b09bb98e06d4d774595224525879c09bc6e98c40 # v2.20.1
         with:
           egress-policy: audit
 
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
           persist-credentials: false
 
       - name: Extract release metadata
         id: meta
+        env:
+          HEAD_BRANCH: ${{ github.event.workflow_run.head_branch }}
         run: |
-          TAG="${{ github.event.workflow_run.head_branch }}"
+          TAG="$HEAD_BRANCH"
           VERSION="${TAG#v}"
           echo "tag=$TAG" >> "$GITHUB_OUTPUT"
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
@@ -363,8 +503,9 @@ jobs:
       - name: Download release binaries
         env:
           GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ steps.meta.outputs.tag }}
         run: |
-          TAG="${{ steps.meta.outputs.tag }}"
+          TAG="$RELEASE_TAG"
           for target in x86_64-apple-darwin aarch64-apple-darwin; do
             ASSET="jr-${TAG}-${target}.tar.gz"
             echo "Downloading $ASSET..."
@@ -412,14 +553,21 @@ jobs:
         env:
           APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
           APPLE_INSTALLER_IDENTITY: ${{ secrets.APPLE_INSTALLER_IDENTITY }}
+          RELEASE_VERSION: ${{ steps.meta.outputs.version }}
         run: |
-          VERSION="${{ steps.meta.outputs.version }}"
+          VERSION="$RELEASE_VERSION"
           chmod +x scripts/create-app.sh scripts/create-dmg.sh scripts/create-pkg.sh
 
           for arch in arm64 amd64; do
             ./scripts/create-app.sh "jr-darwin-${arch}" "$VERSION" .
             codesign --force --deep --options runtime --sign "$APPLE_SIGNING_IDENTITY" --timestamp Jr.app
             ./scripts/create-dmg.sh Jr.app "$VERSION" "jr-${arch}.dmg"
+            # Sign the DMG container itself. Required for stapler to attach a
+            # Gatekeeper-recognized notarization ticket, and routes the
+            # notarytool submission through Apple's fast path (signed-image
+            # validation) instead of the slow "discovery" path that hangs at
+            # pre-submission under burst load.
+            codesign --force --sign "$APPLE_SIGNING_IDENTITY" --timestamp "jr-${arch}.dmg"
             ./scripts/create-pkg.sh "jr-darwin-${arch}" "$VERSION" "$APPLE_INSTALLER_IDENTITY" "jr-${arch}.pkg"
             rm -rf Jr.app
           done
@@ -440,6 +588,59 @@ jobs:
             xcrun stapler staple "$ARTIFACT"
           done
 
+      - name: Verify signatures (Gatekeeper + codesign)
+        run: |
+          set -eo pipefail
+          CS_OUT=$(mktemp)
+          SPCTL_OUT=$(mktemp)
+          trap 'rm -f "$CS_OUT" "$SPCTL_OUT"' EXIT
+          # Bare Mach-O binaries: stapler can't attach to a bare binary
+          # (Apple TN3147), so `spctl --assess --type execute` would
+          # report "Unnotarized Developer ID". Verify the load-bearing
+          # properties directly via codesign: Developer ID Application
+          # identity, stable Team Identifier, and hardened runtime flag.
+          for BIN in jr-darwin-arm64 jr-darwin-amd64; do
+            echo "::group::Verify $BIN"
+            codesign -dvv "$BIN" 2>&1 | tee "$CS_OUT"
+            # GHA log-masks the leaf cert CN (it matches APPLE_SIGNING_IDENTITY
+            # secret), so `Authority=Developer ID Application: ...` becomes
+            # `Authority=***`. Anchor instead on the intermediate cert in the
+            # Developer ID chain, which is a public Apple CA name and never
+            # masked. Its presence proves the chain.
+            grep -q "^Authority=Developer ID Certification Authority$" "$CS_OUT" \
+              || { echo "::error::$BIN missing Developer ID chain (intermediate CA)"; exit 1; }
+            # TeamIdentifier value matches APPLE_NOTARIZATION_TEAM_ID and is
+            # masked to "***" — accept either a real team-id format or the
+            # masked marker, but reject "not set" (the ad-hoc sentinel).
+            grep -qE "^TeamIdentifier=([A-Z0-9]{6,}|\*+)$" "$CS_OUT" \
+              || { echo "::error::$BIN: TeamIdentifier missing, ad-hoc, or unexpected format"; exit 1; }
+            grep -qE "^CodeDirectory.*flags=0x[0-9a-f]+\(.*runtime.*\)" "$CS_OUT" \
+              || { echo "::error::$BIN missing hardened runtime (--options runtime) flag"; exit 1; }
+            echo "::endgroup::"
+          done
+          # Stapled containers: spctl --assess returns "accepted
+          # source=Notarized Developer ID" when signed + notarized +
+          # stapled. .pkg → --type install; .dmg → --type open.
+          for PKG in jr-arm64.pkg jr-amd64.pkg; do
+            echo "::group::Verify $PKG"
+            spctl --assess --type install --verbose=4 "$PKG" 2>&1 | tee "$SPCTL_OUT"
+            grep -q "source=Notarized Developer ID" "$SPCTL_OUT" \
+              || { echo "::error::$PKG not notarized (spctl source unexpected)"; exit 1; }
+            echo "::endgroup::"
+          done
+          # `spctl --assess --type open` on a notarized .dmg returns
+          # "rejected: source=Insufficient Context" on macOS 15+ — Gatekeeper
+          # assesses the *mounted* contents, not the .dmg file. `stapler
+          # validate` is the canonical check: it verifies the notarization
+          # ticket is locally attached to the .dmg and references a valid
+          # Apple notarization record. Non-zero exit on missing/invalid
+          # staple fails the step.
+          for DMG in jr-arm64.dmg jr-amd64.dmg; do
+            echo "::group::Verify $DMG"
+            xcrun stapler validate "$DMG"
+            echo "::endgroup::"
+          done
+
       - name: Generate checksums
         run: |
           for f in jr-darwin-arm64 jr-darwin-amd64 jr-arm64.pkg jr-amd64.pkg jr-arm64.dmg jr-amd64.dmg; do
@@ -449,8 +650,9 @@ jobs:
       - name: Upload signed artifacts to release
         env:
           GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ steps.meta.outputs.tag }}
         run: |
-          TAG="${{ steps.meta.outputs.tag }}"
+          TAG="$RELEASE_TAG"
           gh release upload "$TAG" \
             jr-darwin-arm64 \
             jr-darwin-amd64 \
@@ -464,9 +666,12 @@ jobs:
       - name: Update release title and notes
         env:
           GH_TOKEN: ${{ github.token }}
+          HOMEBREW_TAP_REPO: ${{ vars.HOMEBREW_TAP_REPO }}
+          RELEASE_TAG: ${{ steps.meta.outputs.tag }}
+          RELEASE_CHANNEL: ${{ steps.meta.outputs.channel }}
         run: |
-          TAG="${{ steps.meta.outputs.tag }}"
-          CHANNEL="${{ steps.meta.outputs.channel }}"
+          TAG="$RELEASE_TAG"
+          CHANNEL="$RELEASE_CHANNEL"
 
           # Map channel to formula name
           case "$CHANNEL" in
@@ -477,19 +682,23 @@ jobs:
             *)      FORMULA="jr" ;;
           esac
 
+          BINARY_LINE="download below"
+          if [ -n "$HOMEBREW_TAP_REPO" ]; then
+            TAP_SHORT="${HOMEBREW_TAP_REPO#*/}"
+            TAP_NAME="${HOMEBREW_TAP_REPO%%/*}/${TAP_SHORT#homebrew-}"
+            BINARY_LINE="\`brew install ${TAP_NAME}/${FORMULA}\` or download below"
+          fi
+
           # Get existing release notes
           EXISTING_NOTES=$(gh release view "$TAG" --json body --jq '.body')
 
           # Append signing info
-          NOTES=$(cat <<ENOTES
-          ${EXISTING_NOTES}
+          NOTES="${EXISTING_NOTES}
 
           ---
           **Channel:** ${CHANNEL}
-          **Binary:** \`brew install arcavenae/tap/${FORMULA}\` or download below
-          **Signed:** Apple Developer ID (notarized)
-          ENOTES
-          )
+          **Binary:** ${BINARY_LINE}
+          **Signed:** Apple Developer ID (notarized)"
 
           gh release edit "$TAG" \
             --title "${FORMULA} ${TAG}" \
@@ -505,35 +714,41 @@ jobs:
     if: >-
       needs.stable-sign.result == 'success'
       && needs.stable-sign.outputs.channel != 'unknown'
+      && vars.HOMEBREW_TAP_REPO != ''
     permissions:
       contents: write
     runs-on: ubuntu-latest
     steps:
       - name: Harden the runner (Audit all outbound calls)
-        uses: step-security/harden-runner@a5ad31d6a139d249332a2605b85202e8c0b78450 # v2.19.1
+        uses: step-security/harden-runner@b09bb98e06d4d774595224525879c09bc6e98c40 # v2.20.1
         with:
           egress-policy: audit
 
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
           persist-credentials: false
 
       - name: Download signed binaries from release
         env:
           GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ needs.stable-sign.outputs.tag }}
         run: |
-          TAG="${{ needs.stable-sign.outputs.tag }}"
+          TAG="$RELEASE_TAG"
           gh release download "$TAG" --pattern "jr-darwin-arm64" --dir .
           gh release download "$TAG" --pattern "jr-darwin-amd64" --dir .
 
       - name: Update formula for channel
         env:
           HOMEBREW_TAP_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+          HOMEBREW_TAP_REPO: ${{ vars.HOMEBREW_TAP_REPO }}
+          RELEASE_VERSION: ${{ needs.stable-sign.outputs.version }}
+          RELEASE_TAG: ${{ needs.stable-sign.outputs.tag }}
+          RELEASE_CHANNEL: ${{ needs.stable-sign.outputs.channel }}
         run: |
           set -euo pipefail
-          VERSION="${{ needs.stable-sign.outputs.version }}"
-          TAG="${{ needs.stable-sign.outputs.tag }}"
-          CHANNEL="${{ needs.stable-sign.outputs.channel }}"
+          VERSION="$RELEASE_VERSION"
+          TAG="$RELEASE_TAG"
+          CHANNEL="$RELEASE_CHANNEL"
 
           # Map channel to formula name
           case "$CHANNEL" in
@@ -544,15 +759,20 @@ jobs:
             *)      echo "Unknown channel: $CHANNEL, skipping"; exit 0 ;;
           esac
 
+          TAP_SHORT="${HOMEBREW_TAP_REPO#*/}"
+          TAP_NAME="${HOMEBREW_TAP_REPO%%/*}/${TAP_SHORT#homebrew-}"
+
           SHA256_ARM64=$(shasum -a 256 jr-darwin-arm64 | cut -d' ' -f1)
           SHA256_AMD64=$(shasum -a 256 jr-darwin-amd64 | cut -d' ' -f1)
 
-          git clone "https://x-access-token:${HOMEBREW_TAP_TOKEN}@github.com/arcavenae/homebrew-tap.git" homebrew-tap-repo
+          git clone "https://x-access-token:${HOMEBREW_TAP_TOKEN}@github.com/${HOMEBREW_TAP_REPO}.git" homebrew-tap-repo
           cd homebrew-tap-repo
 
           mkdir -p Formula
           cp "../Formula/${FORMULA}.rb" "Formula/${FORMULA}.rb"
 
+          sed -i "s|REPO_PLACEHOLDER|${GITHUB_REPOSITORY}|g" "Formula/${FORMULA}.rb"
+          sed -i "s|TAP_PLACEHOLDER|${TAP_NAME}|g" "Formula/${FORMULA}.rb"
           sed -i "s/VERSION_PLACEHOLDER/$VERSION/g" "Formula/${FORMULA}.rb"
           sed -i "s/TAG_PLACEHOLDER/$TAG/g" "Formula/${FORMULA}.rb"
           sed -i "s/SHA256_ARM64_PLACEHOLDER/$SHA256_ARM64/g" "Formula/${FORMULA}.rb"

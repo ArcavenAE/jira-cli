@@ -46,7 +46,9 @@ fn jr_cmd_with_xdg(
     cmd.env("JR_BASE_URL", server_uri)
         .env("JR_AUTH_HEADER", "Basic dGVzdDp0ZXN0")
         .env("XDG_CACHE_HOME", cache_dir)
+        .env("JR_CACHE_DIR", cache_dir.join("jr"))
         .env("XDG_CONFIG_HOME", config_dir)
+        .env("JR_CONFIG_DIR", config_dir.join("jr"))
         .arg("--no-input")
         .arg("--output")
         .arg("table");
@@ -726,6 +728,7 @@ async fn test_handler_list_asset_name_resolves_to_key() {
         .env("JR_BASE_URL", server.uri())
         .env("JR_AUTH_HEADER", "Basic dGVzdDp0ZXN0")
         .env("XDG_CACHE_HOME", cache_dir.path())
+        .env("JR_CACHE_DIR", cache_dir.path().join("jr"))
         .args([
             "issue",
             "list",
@@ -775,6 +778,7 @@ async fn test_handler_list_asset_name_no_match_errors() {
         .env("JR_BASE_URL", server.uri())
         .env("JR_AUTH_HEADER", "Basic dGVzdDp0ZXN0")
         .env("XDG_CACHE_HOME", cache_dir.path())
+        .env("JR_CACHE_DIR", cache_dir.path().join("jr"))
         .args([
             "issue",
             "list",
@@ -864,6 +868,7 @@ async fn test_handler_list_asset_key_passthrough_skips_assets_api() {
         .env("JR_BASE_URL", server.uri())
         .env("JR_AUTH_HEADER", "Basic dGVzdDp0ZXN0")
         .env("XDG_CACHE_HOME", cache_dir.path())
+        .env("JR_CACHE_DIR", cache_dir.path().join("jr"))
         .args([
             "issue",
             "list",
@@ -904,6 +909,7 @@ async fn test_handler_comment_internal_flag_adds_property() {
         .args([
             "issue",
             "comment",
+            "add",
             "HELP-42",
             "Internal note",
             "--internal",
@@ -932,7 +938,14 @@ async fn test_handler_comment_without_internal_omits_property() {
         .unwrap()
         .env("JR_BASE_URL", server.uri())
         .env("JR_AUTH_HEADER", "Basic dGVzdDp0ZXN0")
-        .args(["issue", "comment", "HELP-42", "External note", "--no-input"])
+        .args([
+            "issue",
+            "comment",
+            "add",
+            "HELP-42",
+            "External note",
+            "--no-input",
+        ])
         .assert()
         .success();
 }
@@ -1112,6 +1125,65 @@ async fn test_handler_api_put_with_method_flag() {
             "-d",
             r#"{"accountId":"abc-123"}"#,
         ])
+        .assert()
+        .success();
+}
+
+/// VP-590-001: uppercase DELETE is rejected by clap before fix (exit 2, not dispatched).
+/// Red Gate: this test MUST FAIL until `ignore_case = true` is added to `--method` in
+/// `src/cli/mod.rs`.
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn test_parse_api_method_uppercase_delete_dispatches_http_delete() {
+    let server = MockServer::start().await;
+
+    Mock::given(method("DELETE"))
+        .and(path("/rest/api/3/issue/PROJ-1"))
+        .respond_with(ResponseTemplate::new(204))
+        .expect(1)
+        .mount(&server)
+        .await;
+
+    jr_api_cmd(&server.uri())
+        .args(["api", "/rest/api/3/issue/PROJ-1", "-X", "DELETE"])
+        .assert()
+        .success();
+}
+
+/// VP-590-001 regression guard: lowercase delete is the pre-existing happy path and must
+/// continue to work both before and after the fix.
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn test_parse_api_method_lowercase_delete_dispatches_http_delete() {
+    let server = MockServer::start().await;
+
+    Mock::given(method("DELETE"))
+        .and(path("/rest/api/3/issue/PROJ-1"))
+        .respond_with(ResponseTemplate::new(204))
+        .expect(1)
+        .mount(&server)
+        .await;
+
+    jr_api_cmd(&server.uri())
+        .args(["api", "/rest/api/3/issue/PROJ-1", "-X", "delete"])
+        .assert()
+        .success();
+}
+
+/// VP-590-001: mixed-case Delete is rejected by clap before fix (exit 2, not dispatched).
+/// Red Gate: this test MUST FAIL until `ignore_case = true` is added to `--method` in
+/// `src/cli/mod.rs`.
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn test_parse_api_method_mixedcase_delete_dispatches_http_delete() {
+    let server = MockServer::start().await;
+
+    Mock::given(method("DELETE"))
+        .and(path("/rest/api/3/issue/PROJ-1"))
+        .respond_with(ResponseTemplate::new(204))
+        .expect(1)
+        .mount(&server)
+        .await;
+
+    jr_api_cmd(&server.uri())
+        .args(["api", "/rest/api/3/issue/PROJ-1", "-X", "Delete"])
         .assert()
         .success();
 }
@@ -2108,7 +2180,11 @@ async fn test_list_team_column_falls_back_to_uuid_when_cache_missing() {
         .assert()
         .success()
         .stdout(predicate::str::contains("Team")) // column header (summary has no "Team")
-        .stdout(predicate::str::contains("team-uuid-unknown")); // raw UUID fallback
+        .stdout(predicate::str::contains("team-uuid-unknown")) // raw UUID fallback
+        // BC-5.3.003 postcondition: bare UUID only — no parenthetical suffix.
+        // The suffix "(name not cached — run 'jr team list --refresh')" belongs
+        // exclusively to the single-issue view path (BC-2.3.035, src/cli/issue/view.rs).
+        .stdout(predicate::str::contains("name not cached").not());
 }
 
 /// Team column is omitted when no issue in the result has a populated team,

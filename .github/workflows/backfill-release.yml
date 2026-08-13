@@ -1,9 +1,13 @@
 # Backfill Release — build, release, sign, and publish for an existing tag.
 #
-# Use this to create full signed releases for tags that existed before
-# the signing pipeline was in place. Trigger once per tag via workflow_dispatch.
+# Use this to create full releases for tags that predate release.yml (or the
+# signing pipeline). Trigger once per tag via workflow_dispatch, or let
+# release-gap-fill.yml dispatch it automatically.
 #
-# LOCAL-ONLY: listed in .github/local-workflows.txt, not from upstream.
+# OPT-IN signing: the sign and homebrew jobs are gated on repository
+# variables (SIGNING_ENABLED, HOMEBREW_TAP_REPO) and skip cleanly when
+# unset. Without them this workflow still backfills unsigned releases.
+# See docs/specs/fork-friendly-release-ops.md.
 name: Backfill Release
 
 on:
@@ -34,6 +38,7 @@ jobs:
   build:
     name: Build ${{ matrix.target }}
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
     strategy:
       matrix:
         include:
@@ -46,27 +51,40 @@ jobs:
           - target: aarch64-unknown-linux-gnu
             os: ubuntu-latest
             use_cross: true
+          - target: x86_64-pc-windows-msvc
+            os: windows-latest
     steps:
       - name: Harden the runner (Audit all outbound calls)
-        uses: step-security/harden-runner@a5ad31d6a139d249332a2605b85202e8c0b78450 # v2.19.1
+        uses: step-security/harden-runner@b09bb98e06d4d774595224525879c09bc6e98c40 # v2.20.1
         with:
           egress-policy: audit
 
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
           ref: ${{ inputs.tag }}
           persist-credentials: false
 
       - name: Install Rust
-        uses: dtolnay/rust-toolchain@29eef336d9b2848a0b548edc03f92a220660cdb8 # stable
+        uses: dtolnay/rust-toolchain@6c977a6ca4077a0ceb28ffbe03f59d46e9ac8772  # stable
         with:
+          toolchain: stable
           targets: ${{ matrix.target }}
+
+      # rust-toolchain.toml pins channel = "stable", which overrides the
+      # toolchain dtolnay/rust-toolchain installs above. Without this step,
+      # native (non-cross) builds fail with `error[E0463]: can't find
+      # crate for 'core'`. Same defensive fix as release.yml.
+      - name: Ensure target installed (defensive)
+        if: ${{ !matrix.use_cross }}
+        shell: bash
+        run: rustup target add ${{ matrix.target }}
 
       - name: Install cross
         if: matrix.use_cross
         run: cargo install cross --git https://github.com/cross-rs/cross
 
       - name: Build
+        shell: bash
         env:
           JR_BUILD_OAUTH_CLIENT_ID: ${{ secrets.OAUTH_CLIENT_ID }}
           JR_BUILD_OAUTH_CLIENT_SECRET: ${{ secrets.OAUTH_CLIENT_SECRET }}
@@ -79,22 +97,83 @@ jobs:
           fi
 
       - name: Package
+        if: runner.os != 'Windows'
+        shell: bash
+        env:
+          RELEASE_TAG: ${{ inputs.tag }}
         run: |
           cd target/${{ matrix.target }}/release
-          tar czf ../../../jr-${{ inputs.tag }}-${{ matrix.target }}.tar.gz jr
+          tar czf "../../../jr-${RELEASE_TAG}-${{ matrix.target }}.tar.gz" jr
           cd ../../..
           if command -v sha256sum &>/dev/null; then
-            sha256sum jr-${{ inputs.tag }}-${{ matrix.target }}.tar.gz > jr-${{ inputs.tag }}-${{ matrix.target }}.tar.gz.sha256
+            sha256sum "jr-${RELEASE_TAG}-${{ matrix.target }}.tar.gz" > "jr-${RELEASE_TAG}-${{ matrix.target }}.tar.gz.sha256"
           else
-            shasum -a 256 jr-${{ inputs.tag }}-${{ matrix.target }}.tar.gz > jr-${{ inputs.tag }}-${{ matrix.target }}.tar.gz.sha256
+            shasum -a 256 "jr-${RELEASE_TAG}-${{ matrix.target }}.tar.gz" > "jr-${RELEASE_TAG}-${{ matrix.target }}.tar.gz.sha256"
           fi
 
+      - name: Package (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        env:
+          RELEASE_TAG: ${{ inputs.tag }}
+        run: Compress-Archive -Path "target/${{ matrix.target }}/release/jr.exe" -DestinationPath "jr-${env:RELEASE_TAG}-${{ matrix.target }}.zip"
+
+      - name: Checksum (Windows)
+        if: runner.os == 'Windows'
+        shell: bash
+        env:
+          RELEASE_TAG: ${{ inputs.tag }}
+        run: sha256sum "jr-${RELEASE_TAG}-${{ matrix.target }}.zip" > "jr-${RELEASE_TAG}-${{ matrix.target }}.zip.sha256"
+
+      - name: Smoke test (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'   # Catches Set-Location failure (directory missing)
+          Set-Location "target/${{ matrix.target }}/release"
+          # Use `.\jr.exe` (explicit current-directory prefix) — PowerShell does NOT
+          # search CWD for executables without it, unlike cmd.exe.
+          # NOTE: $ErrorActionPreference does NOT catch non-zero exit from native
+          # executables in PS7; the explicit LASTEXITCODE check below is load-bearing.
+          .\jr.exe --version
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Embedded OAuth verification (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        env:
+          # Pass the secret-presence flag in via env so the PowerShell check below
+          # can short-circuit cleanly. Forks (where Actions secrets aren't
+          # available) get OAUTH_CLIENT_ID == '' here, so we skip the smoke.
+          HAS_EMBED_SECRETS: ${{ (secrets.OAUTH_CLIENT_ID != '' && secrets.OAUTH_CLIENT_SECRET != '') && 'yes' || 'no' }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          if ($env:HAS_EMBED_SECRETS -ne 'yes') {
+            Write-Host "Skipping embedded-creds smoke: OAUTH_CLIENT_ID/_SECRET not configured."
+            Write-Host "(Fork build, or upstream secrets are missing — release will ship the unbranded BYO binary.)"
+            exit 0
+          }
+          $f = Get-ChildItem -Path "target/${{ matrix.target }}/release/build" `
+                -Filter 'embedded_oauth.rs' -Recurse | Select-Object -First 1
+          if (-not $f) { Write-Error 'embedded_oauth.rs not found at expected build output path'; exit 1 }
+          $content = Get-Content $f.FullName -Raw
+          if ($content -match 'EMBEDDED_ID\s*:\s*Option.*=\s*None') {
+            Write-Error 'embedded_oauth.rs has EMBEDDED_ID = None — build.rs did not see JR_BUILD_OAUTH_CLIENT_ID'
+            exit 1
+          }
+          if ($content -match 'EMBEDDED_SECRET_XOR\s*:\s*Option.*=\s*None') {
+            Write-Error 'embedded_oauth.rs has EMBEDDED_SECRET_XOR = None — build.rs did not see JR_BUILD_OAUTH_CLIENT_SECRET'
+            exit 1
+          }
+          Write-Host "embedded_oauth.rs at $($f.FullName) has populated constants"
+
       - name: Upload artifact
-        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7
         with:
           name: jr-${{ matrix.target }}
           path: |
             jr-*.tar.gz
+            jr-*.zip
             jr-*.sha256
 
   # ---------------------------------------------------------------------------
@@ -108,34 +187,50 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Harden the runner (Audit all outbound calls)
-        uses: step-security/harden-runner@a5ad31d6a139d249332a2605b85202e8c0b78450 # v2.19.1
+        uses: step-security/harden-runner@b09bb98e06d4d774595224525879c09bc6e98c40 # v2.20.1
         with:
           egress-policy: audit
 
-      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c  # v8
         with:
           merge-multiple: true
 
       - name: Create or update GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ inputs.tag }}
         run: |
-          TAG="${{ inputs.tag }}"
+          TAG="$RELEASE_TAG"
           PRERELEASE=""
           if [[ "$TAG" == *-* ]]; then
             PRERELEASE="--prerelease"
           fi
 
-          # Delete existing release if present (keeps the tag)
-          gh release delete "$TAG" --yes --repo "${{ github.repository }}" 2>/dev/null || true
-
-          gh release create "$TAG" \
-            --repo "${{ github.repository }}" \
-            --title "$TAG" \
-            --generate-notes \
-            $PRERELEASE \
-            jr-*.tar.gz \
-            jr-*.sha256
+          if gh release view "$TAG" --repo "${{ github.repository }}" >/dev/null 2>&1; then
+            # Release already exists — upload/replace assets without touching notes or flags
+            DRAFT_STATUS=$(gh release view "$TAG" \
+              --repo "${{ github.repository }}" \
+              --json isDraft --jq '.isDraft')
+            if [ "$DRAFT_STATUS" = "true" ]; then
+              echo "::warning::Release $TAG is a draft. Uploading assets but NOT publishing — curator must manually publish."
+            fi
+            gh release upload "$TAG" \
+              --repo "${{ github.repository }}" \
+              --clobber \
+              jr-*.tar.gz \
+              jr-*.zip \
+              jr-*.sha256
+          else
+            # No release yet — safe to create with auto-generated notes
+            gh release create "$TAG" \
+              --repo "${{ github.repository }}" \
+              --title "$TAG" \
+              --generate-notes \
+              $PRERELEASE \
+              jr-*.tar.gz \
+              jr-*.zip \
+              jr-*.sha256
+          fi
 
   # ---------------------------------------------------------------------------
   # Sign — same as sign-and-publish.yml stable channel
@@ -152,27 +247,30 @@ jobs:
       version: ${{ steps.meta.outputs.version }}
     steps:
       - name: Harden the runner (Audit all outbound calls)
-        uses: step-security/harden-runner@a5ad31d6a139d249332a2605b85202e8c0b78450 # v2.19.1
+        uses: step-security/harden-runner@b09bb98e06d4d774595224525879c09bc6e98c40 # v2.20.1
         with:
           egress-policy: audit
 
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
           ref: develop  # need packaging scripts from develop, not the old tag
           persist-credentials: false
 
       - name: Extract version
         id: meta
+        env:
+          RELEASE_TAG: ${{ inputs.tag }}
         run: |
-          TAG="${{ inputs.tag }}"
+          TAG="$RELEASE_TAG"
           VERSION="${TAG#v}"
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
 
       - name: Download release binaries
         env:
           GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ inputs.tag }}
         run: |
-          TAG="${{ inputs.tag }}"
+          TAG="$RELEASE_TAG"
           for target in x86_64-apple-darwin aarch64-apple-darwin; do
             ASSET="jr-${TAG}-${target}.tar.gz"
             echo "Downloading $ASSET..."
@@ -220,14 +318,21 @@ jobs:
         env:
           APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
           APPLE_INSTALLER_IDENTITY: ${{ secrets.APPLE_INSTALLER_IDENTITY }}
+          RELEASE_VERSION: ${{ steps.meta.outputs.version }}
         run: |
-          VERSION="${{ steps.meta.outputs.version }}"
+          VERSION="$RELEASE_VERSION"
           chmod +x scripts/create-app.sh scripts/create-dmg.sh scripts/create-pkg.sh
 
           for arch in arm64 amd64; do
             ./scripts/create-app.sh "jr-darwin-${arch}" "$VERSION" .
             codesign --force --deep --options runtime --sign "$APPLE_SIGNING_IDENTITY" --timestamp Jr.app
             ./scripts/create-dmg.sh Jr.app "$VERSION" "jr-${arch}.dmg"
+            # Sign the DMG container itself. Required for stapler to attach a
+            # Gatekeeper-recognized notarization ticket, and routes the
+            # notarytool submission through Apple's fast path (signed-image
+            # validation) instead of the slow "discovery" path that hangs at
+            # pre-submission under burst load.
+            codesign --force --sign "$APPLE_SIGNING_IDENTITY" --timestamp "jr-${arch}.dmg"
             ./scripts/create-pkg.sh "jr-darwin-${arch}" "$VERSION" "$APPLE_INSTALLER_IDENTITY" "jr-${arch}.pkg"
             rm -rf Jr.app
           done
@@ -248,6 +353,59 @@ jobs:
             xcrun stapler staple "$ARTIFACT"
           done
 
+      - name: Verify signatures (Gatekeeper + codesign)
+        run: |
+          set -eo pipefail
+          CS_OUT=$(mktemp)
+          SPCTL_OUT=$(mktemp)
+          trap 'rm -f "$CS_OUT" "$SPCTL_OUT"' EXIT
+          # Bare Mach-O binaries: stapler can't attach to a bare binary
+          # (Apple TN3147), so `spctl --assess --type execute` would
+          # report "Unnotarized Developer ID". Verify the load-bearing
+          # properties directly via codesign: Developer ID Application
+          # identity, stable Team Identifier, and hardened runtime flag.
+          for BIN in jr-darwin-arm64 jr-darwin-amd64; do
+            echo "::group::Verify $BIN"
+            codesign -dvv "$BIN" 2>&1 | tee "$CS_OUT"
+            # GHA log-masks the leaf cert CN (it matches APPLE_SIGNING_IDENTITY
+            # secret), so `Authority=Developer ID Application: ...` becomes
+            # `Authority=***`. Anchor instead on the intermediate cert in the
+            # Developer ID chain, which is a public Apple CA name and never
+            # masked. Its presence proves the chain.
+            grep -q "^Authority=Developer ID Certification Authority$" "$CS_OUT" \
+              || { echo "::error::$BIN missing Developer ID chain (intermediate CA)"; exit 1; }
+            # TeamIdentifier value matches APPLE_NOTARIZATION_TEAM_ID and is
+            # masked to "***" — accept either a real team-id format or the
+            # masked marker, but reject "not set" (the ad-hoc sentinel).
+            grep -qE "^TeamIdentifier=([A-Z0-9]{6,}|\*+)$" "$CS_OUT" \
+              || { echo "::error::$BIN: TeamIdentifier missing, ad-hoc, or unexpected format"; exit 1; }
+            grep -qE "^CodeDirectory.*flags=0x[0-9a-f]+\(.*runtime.*\)" "$CS_OUT" \
+              || { echo "::error::$BIN missing hardened runtime (--options runtime) flag"; exit 1; }
+            echo "::endgroup::"
+          done
+          # Stapled containers: spctl --assess returns "accepted
+          # source=Notarized Developer ID" when signed + notarized +
+          # stapled. .pkg → --type install; .dmg → --type open.
+          for PKG in jr-arm64.pkg jr-amd64.pkg; do
+            echo "::group::Verify $PKG"
+            spctl --assess --type install --verbose=4 "$PKG" 2>&1 | tee "$SPCTL_OUT"
+            grep -q "source=Notarized Developer ID" "$SPCTL_OUT" \
+              || { echo "::error::$PKG not notarized (spctl source unexpected)"; exit 1; }
+            echo "::endgroup::"
+          done
+          # `spctl --assess --type open` on a notarized .dmg returns
+          # "rejected: source=Insufficient Context" on macOS 15+ — Gatekeeper
+          # assesses the *mounted* contents, not the .dmg file. `stapler
+          # validate` is the canonical check: it verifies the notarization
+          # ticket is locally attached to the .dmg and references a valid
+          # Apple notarization record. Non-zero exit on missing/invalid
+          # staple fails the step.
+          for DMG in jr-arm64.dmg jr-amd64.dmg; do
+            echo "::group::Verify $DMG"
+            xcrun stapler validate "$DMG"
+            echo "::endgroup::"
+          done
+
       - name: Generate checksums
         run: |
           for f in jr-darwin-arm64 jr-darwin-amd64 jr-arm64.pkg jr-amd64.pkg jr-arm64.dmg jr-amd64.dmg; do
@@ -257,8 +415,9 @@ jobs:
       - name: Upload signed artifacts to release
         env:
           GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ inputs.tag }}
         run: |
-          TAG="${{ inputs.tag }}"
+          TAG="$RELEASE_TAG"
           gh release upload "$TAG" \
             jr-darwin-arm64 \
             jr-darwin-amd64 \
@@ -279,17 +438,17 @@ jobs:
   homebrew:
     name: Update Homebrew Tap
     needs: sign
-    if: needs.sign.result == 'success' && inputs.update_homebrew == true
+    if: needs.sign.result == 'success' && inputs.update_homebrew == true && vars.HOMEBREW_TAP_REPO != ''
     permissions:
       contents: write
     runs-on: ubuntu-latest
     steps:
       - name: Harden the runner (Audit all outbound calls)
-        uses: step-security/harden-runner@a5ad31d6a139d249332a2605b85202e8c0b78450 # v2.19.1
+        uses: step-security/harden-runner@b09bb98e06d4d774595224525879c09bc6e98c40 # v2.20.1
         with:
           egress-policy: audit
 
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
           ref: develop  # need Formula/jr.rb template from develop
           persist-credentials: false
@@ -297,27 +456,36 @@ jobs:
       - name: Download signed binaries from release
         env:
           GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ inputs.tag }}
         run: |
-          TAG="${{ inputs.tag }}"
+          TAG="$RELEASE_TAG"
           gh release download "$TAG" --pattern "jr-darwin-arm64" --dir .
           gh release download "$TAG" --pattern "jr-darwin-amd64" --dir .
 
       - name: Update stable formula
         env:
           HOMEBREW_TAP_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+          HOMEBREW_TAP_REPO: ${{ vars.HOMEBREW_TAP_REPO }}
+          RELEASE_VERSION: ${{ needs.sign.outputs.version }}
+          RELEASE_TAG: ${{ inputs.tag }}
         run: |
-          VERSION="${{ needs.sign.outputs.version }}"
-          TAG="${{ inputs.tag }}"
+          VERSION="$RELEASE_VERSION"
+          TAG="$RELEASE_TAG"
+
+          TAP_SHORT="${HOMEBREW_TAP_REPO#*/}"
+          TAP_NAME="${HOMEBREW_TAP_REPO%%/*}/${TAP_SHORT#homebrew-}"
 
           SHA256_ARM64=$(shasum -a 256 jr-darwin-arm64 | cut -d' ' -f1)
           SHA256_AMD64=$(shasum -a 256 jr-darwin-amd64 | cut -d' ' -f1)
 
-          git clone "https://x-access-token:${HOMEBREW_TAP_TOKEN}@github.com/arcavenae/homebrew-tap.git" homebrew-tap-repo
+          git clone "https://x-access-token:${HOMEBREW_TAP_TOKEN}@github.com/${HOMEBREW_TAP_REPO}.git" homebrew-tap-repo
           cd homebrew-tap-repo
 
           mkdir -p Formula
           cp ../Formula/jr.rb Formula/jr.rb
 
+          sed -i "s|REPO_PLACEHOLDER|${GITHUB_REPOSITORY}|g" Formula/jr.rb
+          sed -i "s|TAP_PLACEHOLDER|${TAP_NAME}|g" Formula/jr.rb
           sed -i "s/VERSION_PLACEHOLDER/$VERSION/g" Formula/jr.rb
           sed -i "s/TAG_PLACEHOLDER/$TAG/g" Formula/jr.rb
           sed -i "s/SHA256_ARM64_PLACEHOLDER/$SHA256_ARM64/g" Formula/jr.rb

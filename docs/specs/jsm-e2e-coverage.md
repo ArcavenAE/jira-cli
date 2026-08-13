@@ -46,8 +46,8 @@ This feature is zero-`src/`. All JSM commands already exist:
 |---------|----------------|
 | `jr queue list/view` | `src/cli/queue.rs` + `src/api/jsm/queues.rs` |
 | `jr requesttype list/fields` | `src/cli/requesttype.rs` + `src/api/jsm/request_types.rs` |
-| `jr issue create --request-type` | `src/cli/issue/create.rs::handle_jsm_create` + `src/api/jsm/requests.rs` |
-| `jr issue comment --internal` | `src/cli/issue/workflow.rs` + `src/api/jira/issues.rs::add_comment` |
+| `jr issue create --request-type` | `src/cli/issue/jsm_create.rs::handle_jsm_create` + `src/api/jsm/requests.rs` |
+| `jr issue comment add --internal` | `src/cli/issue/interactions.rs::handle_comment_add` + `src/api/jira/issues.rs::add_comment` |
 | `jr issue comments --output json` | `src/cli/issue/comments.rs` (serializes `properties[]` including `sd.public.comment`) |
 | `jr issue move` | existing platform transitions path |
 | `require_service_desk` guard | `src/api/jsm/servicedesks.rs` |
@@ -175,7 +175,7 @@ Discovery pattern:
    positive integers); if not numeric for any reason → skip with a warning.
 5. Use this id string as the `--request-type <id>` argument. Because the string is
    all-ASCII-digit, `handle_jsm_create` takes the numeric-bypass path
-   (`src/cli/issue/create.rs`: `if request_type_arg.chars().all(|c| c.is_ascii_digit())`)
+   (`src/cli/issue/jsm_create.rs`: `if request_type_arg.chars().all(|c| c.is_ascii_digit())`)
    and skips name resolution — the most robust path.
 
 The requesttype list test is declared before the create and fields tests in `e2e_live.rs`.

@@ -15,24 +15,27 @@ jobs:
     timeout-minutes: 5
     steps:
       - name: Harden the runner (Audit all outbound calls)
-        uses: step-security/harden-runner@9af89fc71515a100421586dfdb3dc9c984fbf411 # v2.19.4
+        uses: step-security/harden-runner@b09bb98e06d4d774595224525879c09bc6e98c40 # v2.20.1
         with:
           egress-policy: audit
 
-      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10  # v6
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
       - run: cargo fmt --all -- --check
 
   clippy:
     name: Clippy
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     timeout-minutes: 15
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
     steps:
       - name: Harden the runner (Audit all outbound calls)
-        uses: step-security/harden-runner@9af89fc71515a100421586dfdb3dc9c984fbf411 # v2.19.4
+        uses: step-security/harden-runner@b09bb98e06d4d774595224525879c09bc6e98c40 # v2.20.1
         with:
           egress-policy: audit
 
-      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10  # v6
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
       - uses: Swatinem/rust-cache@e18b497796c12c097a38f9edb9d0641fb99eee32  # v2
       - run: cargo clippy --all --all-features --tests -- -D warnings
 
@@ -42,16 +45,204 @@ jobs:
     timeout-minutes: 30
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-latest]
+        os: [ubuntu-latest, macos-latest, windows-latest]
     steps:
       - name: Harden the runner (Audit all outbound calls)
-        uses: step-security/harden-runner@9af89fc71515a100421586dfdb3dc9c984fbf411 # v2.19.4
+        uses: step-security/harden-runner@b09bb98e06d4d774595224525879c09bc6e98c40 # v2.20.1
         with:
           egress-policy: audit
 
-      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10  # v6
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
       - uses: Swatinem/rust-cache@e18b497796c12c097a38f9edb9d0641fb99eee32  # v2
-      - run: cargo test --all-features
+      - name: Run tests (zero-test floor, POL-11)
+        shell: bash
+        env:
+          # Override file-level CARGO_TERM_COLOR: always for this step only.
+          # The pass/fail logic anchors on "^test result: " with a plain regex.
+          # As of the current cargo/libtest pairing, cargo does not forward its
+          # color preference to libtest, so the "test result: " line is plain
+          # ASCII even under CARGO_TERM_COLOR: always — this override is not
+          # working around a presently-reachable failure. It is defensive: it
+          # removes the dependency on that behavior continuing to hold across
+          # future cargo/libtest versions or a differently-configured CI
+          # runner, where a color-wrapped "test result:" line would silently
+          # zero the anchored grep, making the diagnostic branch unreachable
+          # and producing a false-red with no diagnostic.  POL-11 cites this
+          # exact anti-pattern (TD-VSDD-057 / prism PR #127, where ANSI codes
+          # silently zeroed an anchored regex for 12 converged passes).
+          CARGO_TERM_COLOR: never
+        run: |
+          set -euo pipefail
+          # Tee streams to both the console and a capture file.  pipefail
+          # ensures a non-zero cargo exit propagates through the tee pipe, so
+          # real test failures still fail the step.
+          cargo test --all-features 2>&1 | tee "$RUNNER_TEMP/cargo_test_out.txt"
+
+          # Temporarily disable pipefail for the count computations.
+          # Under set -o pipefail, grep exits 1 on no-match; that exit
+          # propagates through the pipeline and, combined with set -e, aborts
+          # the step before the diagnostic branch can print.  Under
+          # set +o pipefail the pipeline exit is the last command's exit; awk
+          # (ends the total= pipe) and tr (ends the binaries= pipe) always
+          # exit 0, so neither computation can abort.
+          set +o pipefail
+
+          # Sum "N passed" from every "test result:" line (one per test binary
+          # plus doc-tests).  awk initialises sum=0 so empty grep output → 0.
+          total=$(grep -E "^test result: " "$RUNNER_TEMP/cargo_test_out.txt" \
+            | grep -Eo "[0-9]+ passed" \
+            | awk '{sum += $1} END {print sum+0}')
+
+          # Count test binaries that reported results.
+          # wc -l avoids the grep -c no-match trap: grep -c exits 1 on zero
+          # matches while still printing "0", so the prior `|| echo 0` fallback
+          # produced the two-line value "0\n0" that breaks bash arithmetic
+          # (same defect class as the mutants job F5 fix,
+          #  ci.yml :: mutants / "Check kill rate" else branch — "grep -c '' exits 1 on empty match").
+          binaries=$(grep -E "^test result: " "$RUNNER_TEMP/cargo_test_out.txt" | wc -l | tr -d ' ')
+
+          # Restore pipefail after the count computations (defensive
+          # hygiene, not currently load-bearing): nothing below this line is
+          # a pipeline — the gate checks are `[ ... ]` tests, a bare
+          # `grep -q`, and `echo`s — so this restore has no operative effect
+          # on them today.  It exists so pipefail stays the step's ambient
+          # default in case a future gate check introduces a pipe.  Removing
+          # this bracket is the opposite failure mode of removing the
+          # opening `set +o pipefail` above: it leaves pipefail disabled,
+          # which is strictly more permissive and can never cause an abort.
+          set -o pipefail
+
+          # POL-11 zero-test floor — FOUR instruments required.
+          #
+          # A passed-count "> 0" cannot detect integration-test orphaning:
+          # cargo test --all-features also runs the inline #[cfg(test)] modules
+          # in src/ (~1,100 tests at head), so orphaning every file in tests/
+          # via autotests=false or a [[test]] rename still produces total > 0.
+          # The prior "> 0" predicate was inert against the defect class its
+          # own comment claimed to catch.  Partial orphaning is also NOT
+          # covered by cargo-mutants: examine_globs is a whitelist
+          # that excludes board.rs, list.rs, keychain.rs, sprint.rs, config.rs,
+          # output.rs and others; the mutants job is PR-only with --in-diff
+          # scope; a silently-orphaned test binary provides zero coverage
+          # against unchanged code regardless of kill rate.
+          #
+          # (1) Binary-count floor (<90): at head, cargo test produces ~103
+          #     test binaries (1 lib + 1 bin + ~100 integration + ~1 doc;
+          #     100 = the 104 files in tests/**/*.rs minus the 4
+          #     tests/common/ module files that are not cargo targets).
+          #     Orphaning all tests/ files drops this below 90.  The
+          #     threshold tolerates up to ~13 legitimate binary reductions
+          #     without false-alarming (e.g. test-file removals during
+          #     refactors).  Update the threshold when a legitimately large
+          #     reduction is planned.
+          #
+          # (2) Named canary: asserts tests/ci_gate_completeness ran.  This
+          #     catches the self-orphaning case — the binary carrying this guard
+          #     and all CI-gate Rust regression pins stops running — even when
+          #     the binary count stays above 90.  The binary floor alone cannot
+          #     detect this case.
+          #
+          # (3) Named-canary passed-count gate: gate (2) alone proves only
+          #     that tests/ci_gate_completeness was INVOKED, not that any
+          #     assertion inside it actually ran — see the ADV-P50-LOW-002
+          #     comment below, where this gate is implemented.
+          #
+          # (4) Zero-test floor ("${total}" -eq 0): catches the case where
+          #     >=90 binaries (including the canary) report results but zero
+          #     tests passed within them overall — e.g. a global test filter
+          #     matching nothing.  Neither (1) nor (2) nor (3) detects this
+          #     scenario.
+          if [ "${binaries}" -lt 90 ]; then
+            echo "FAIL (POL-11): only ${binaries} test binaries reported results (floor: 90)."
+            echo "Possible causes: autotests=false in Cargo.toml, a [[test]] rename,"
+            echo "a harness misconfiguration, or a mass deletion of test files."
+            exit 1
+          fi
+
+          if ! grep -q "ci_gate_completeness" "$RUNNER_TEMP/cargo_test_out.txt"; then
+            echo "FAIL (POL-11): tests/ci_gate_completeness did not run."
+            echo "The binary carrying the CI-gate regression pins was not executed."
+            echo "Possible causes: the file was renamed, autotests=false, or a"
+            echo "[[test]] entry overrides the default target list."
+            exit 1
+          fi
+
+          # Gate (3), ADV-P50-LOW-002 (round 20): the grep -q check above proves only
+          # that the ci_gate_completeness binary was INVOKED — cargo test
+          # prints "Running tests/ci_gate_completeness.rs (...)" before
+          # running anything inside it, so the substring is present even if
+          # every test in the file is #[ignore]d or an env-gate skips the
+          # whole suite before any assertion runs. That leaves the canary
+          # "satisfied" at 0 passed — the exact same fail-open shape POL-11
+          # exists to close for the whole-suite floor above, just scoped to
+          # this one binary. Strengthen: locate this binary's own
+          # "test result:" summary line (the first one after its "Running"
+          # line) and require a non-zero passed count specifically from it.
+          # Path-separator-agnostic: cargo prints "Running tests/ci_gate_completeness.rs"
+          # on Unix runners but "Running tests\ci_gate_completeness.rs" (backslash) on
+          # windows-latest. A forward-slash-only grep here silently finds no match on
+          # Windows, so this pattern must match either separator (round 20 Windows
+          # regression: CI run 31182605820 on 424d64de).
+          # ADV-P51-LOW-001 (adversarial pass 51): the `if [ -z
+          # "${_canary_running_line}" ]` fallback immediately below is, as
+          # written, UNREACHABLE today — not merely defensive. `set -o
+          # pipefail` was already restored above (see the "Restore
+          # pipefail" comment) before this lookup runs, so if the regex
+          # found no match at all, grep's exit-1 would propagate through
+          # the `| head -1 | cut -d: -f1` pipeline — under pipefail the
+          # pipeline's exit status is the LAST non-zero exit among ALL
+          # stages, not simply the rightmost stage's own exit code, so
+          # grep's 1 survives even though head/cut both exit 0 — and,
+          # combined with `set -e`, abort the whole script at THIS
+          # assignment, before the `if [ -z ... ]` check below is ever
+          # reached. Verified directly: `set -euo pipefail; x=$(grep -nE
+          # "NOPE" <<<"hello" | head -1 | cut -d: -f1); echo "after"`
+          # aborts before printing "after". The round-20 rationale
+          # previously recorded on this fallback ("hardcoding
+          # _canary_passed to 0 and failing every Windows run
+          # unconditionally") described the wrong mechanism: a no-match
+          # regex does not gracefully fall through to `_canary_passed=0`
+          # here — it aborts the script outright with a bash error
+          # instead. Both failure modes still fail the Windows leg (so
+          # this was never a false-green — the job still goes red either
+          # way), but the fallback branch itself cannot execute given the
+          # current pipefail sequencing. Left as-is rather than
+          # restructured to make it reachable: doing so would require
+          # moving the `set -o pipefail` restore to AFTER this lookup — a
+          # genuine CI behavior change, out of scope for a test-side
+          # guard-strength pass.
+          _canary_running_line=$(grep -nE "Running tests[/\\\\]ci_gate_completeness\.rs" \
+            "$RUNNER_TEMP/cargo_test_out.txt" | head -1 | cut -d: -f1)
+          if [ -z "${_canary_running_line}" ]; then
+            _canary_result_line=""
+            _canary_passed=0
+          else
+            _canary_result_line=$(tail -n +"${_canary_running_line}" \
+              "$RUNNER_TEMP/cargo_test_out.txt" | grep -m1 -E "^test result: " || true)
+            _canary_passed=$(echo "${_canary_result_line}" | grep -Eo "[0-9]+ passed" \
+              | grep -Eo "[0-9]+" || true)
+            _canary_passed=${_canary_passed:-0}
+          fi
+          if [ "${_canary_passed}" -eq 0 ]; then
+            echo "FAIL (POL-11): tests/ci_gate_completeness ran but reported 0 passed assertions."
+            echo "Result line found: '${_canary_result_line:-<none>}'."
+            echo "Possible causes: every test in the file is #[ignore]d, an"
+            echo "env-gate early-returns before any assertion runs, or a test"
+            echo "filter matched the binary but excluded every test inside it."
+            exit 1
+          fi
+
+          # Gate (4): the whole-suite zero-test floor.
+          if [ "${total}" -eq 0 ]; then
+            echo "FAIL (POL-11): zero tests executed across ${binaries} test binaries."
+            echo "Possible causes: autotests=false in Cargo.toml, a [[test]] rename,"
+            echo "a harness misconfiguration, or a filter matching no test targets."
+            exit 1
+          fi
+
+          # Positive-coverage assertion (POL-11 requirement: exit code alone is
+          # insufficient — emit a runtime-computed count to prove tests ran).
+          echo "Check passed: ${total} tests executed across ${binaries} test binaries"
 
   msrv:
     name: MSRV (1.85.0)
@@ -59,14 +250,28 @@ jobs:
     timeout-minutes: 15
     steps:
       - name: Harden the runner (Audit all outbound calls)
-        uses: step-security/harden-runner@9af89fc71515a100421586dfdb3dc9c984fbf411 # v2.19.4
+        uses: step-security/harden-runner@b09bb98e06d4d774595224525879c09bc6e98c40 # v2.20.1
         with:
           egress-policy: audit
 
-      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10  # v6
-      - uses: dtolnay/rust-toolchain@c93f4f9c67595668add93d3d6895795ce52d8c2d  # 1.85.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+      - uses: dtolnay/rust-toolchain@6c977a6ca4077a0ceb28ffbe03f59d46e9ac8772  # 1.85.0
+        with:
+          toolchain: "1.85.0"
       - uses: Swatinem/rust-cache@e18b497796c12c097a38f9edb9d0641fb99eee32  # v2
-      - run: cargo check --all-features
+      # Scope is deliberately lib + bins only (NOT --all-targets): including
+      # --all-targets pulls in dev-dependencies (tests) which cannot compile at
+      # 1.85.0. wiremock (0.6.x) uses let-chains and ships no rust-version field
+      # — the same defect class as comfy-table 7.2.2 — and requires Rust ≥1.88.
+      # The --all-features flag is effectively a no-op (this crate has no
+      # [features] table); it is kept for explicitness. Note: omitting
+      # --all-targets also means inline #[cfg(test)] mod blocks in src/ sit
+      # outside the MSRV floor's enforceable scope; closing this gap would
+      # require dev-dependencies that build at 1.85.0 — a wiremock downgrade-pin
+      # was not evaluated.
+      - run: cargo check --all-features --locked
+        env:
+          RUSTUP_TOOLCHAIN: "1.85.0"
 
   deny:
     name: Deny (licenses + vulnerabilities)
@@ -74,12 +279,12 @@ jobs:
     timeout-minutes: 10
     steps:
       - name: Harden the runner (Audit all outbound calls)
-        uses: step-security/harden-runner@9af89fc71515a100421586dfdb3dc9c984fbf411 # v2.19.4
+        uses: step-security/harden-runner@b09bb98e06d4d774595224525879c09bc6e98c40 # v2.20.1
         with:
           egress-policy: audit
 
-      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10  # v6
-      - uses: EmbarkStudios/cargo-deny-action@bb137d7af7e4fb67e5f82a49c4fce4fad40782fe  # v2
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+      - uses: EmbarkStudios/cargo-deny-action@3c6349835b2b7b196a839186cb8b78e02f7b5f25  # v2
 
   coverage:
     name: Coverage
@@ -87,29 +292,37 @@ jobs:
     timeout-minutes: 30
     steps:
       - name: Harden the runner (Audit all outbound calls)
-        uses: step-security/harden-runner@9af89fc71515a100421586dfdb3dc9c984fbf411 # v2.19.4
+        uses: step-security/harden-runner@b09bb98e06d4d774595224525879c09bc6e98c40 # v2.20.1
         with:
           egress-policy: audit
 
-      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10  # v6
-      - uses: dtolnay/rust-toolchain@c93f4f9c67595668add93d3d6895795ce52d8c2d  # stable
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+      - uses: dtolnay/rust-toolchain@6c977a6ca4077a0ceb28ffbe03f59d46e9ac8772  # stable
         with:
+          toolchain: stable
           components: llvm-tools-preview
-      - uses: taiki-e/install-action@e5de28abeb52d916c5e5875d54b21a9e738b61ec  # cargo-llvm-cov
+      - uses: taiki-e/install-action@cb33e69fad06166ca28a42b2575e4dadabf62ee8  # v2.85.8
+        with:
+          tool: cargo-llvm-cov
       - uses: Swatinem/rust-cache@e18b497796c12c097a38f9edb9d0641fb99eee32  # v2
       - run: cargo llvm-cov --all-features --workspace --lcov --output-path lcov.info
-      - uses: codecov/codecov-action@e79a6962e0d4c0c17b229090214935d2e33f8354  # v6
+      - uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f  # v6
         with:
           files: lcov.info
           token: ${{ secrets.CODECOV_TOKEN }}
           fail_ci_if_error: false
 
   spec-guard:
-    name: Spec Guards (BC counts + no numeric test counts)
+    name: Spec Guards (BC counts, numeric-count lint, citation checks, mutants policy scope)
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10  # v6
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@b09bb98e06d4d774595224525879c09bc6e98c40 # v2.20.1
+        with:
+          egress-policy: audit
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
       - name: Fetch factory-artifacts branch (.factory/specs/prd/)
         run: |
           git fetch origin factory-artifacts
@@ -122,6 +335,19 @@ jobs:
         run: bash tests/spec-count-fixtures/run-tests.sh
       - name: check-bc-cumulative-counts (DRIFT-002)
         run: bash scripts/check-bc-cumulative-counts.sh
+      - name: check-cargo-mutants-policy-citations self-test (Guard 2)
+        run: bash scripts/check-cargo-mutants-policy-citations.sh --self-test
+      - name: check-cargo-mutants-policy-citations (Guard 2, DEC-150)
+        run: bash scripts/check-cargo-mutants-policy-citations.sh
+
+      - name: check-bc-citation-symbols self-test (BC-CITE-001)
+        run: bash scripts/check-bc-citation-symbols.sh --self-test
+
+      - name: check-bc-citation-symbols (BC-CITE-001)
+        run: bash scripts/check-bc-citation-symbols.sh
+
+      - name: check-ci-gate self-test (fixture suite, S-CIGATE-2)
+        run: bash scripts/check-ci-gate.sh --self-test
 
   security:
     name: Secret Scan (gitleaks)
@@ -129,14 +355,19 @@ jobs:
     timeout-minutes: 10
     permissions:
       contents: read
-    if: github.event_name == 'pull_request'
+    # gitleaks-action v2+ requires an org license for some commercial use
+    # cases. Default behavior is unchanged (runs on every PR); a fork that
+    # can't or doesn't want to obtain a license opts out by setting the
+    # GITLEAKS_DISABLED repository variable to 'true'. Forks that opt out
+    # should rely on org-level secret scanning or an alternative scanner.
+    if: github.event_name == 'pull_request' && vars.GITLEAKS_DISABLED != 'true'
     steps:
       - name: Harden the runner (Audit all outbound calls)
-        uses: step-security/harden-runner@9af89fc71515a100421586dfdb3dc9c984fbf411 # v2.19.4
+        uses: step-security/harden-runner@b09bb98e06d4d774595224525879c09bc6e98c40 # v2.20.1
         with:
           egress-policy: audit
 
-      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10  # v6
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
           fetch-depth: 0
       - name: Run gitleaks
@@ -147,42 +378,87 @@ jobs:
   mutants:
     name: Mutation testing
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 240
     # PR-only — mutation testing is too slow for every push to develop/main.
     # --in-diff keeps per-PR cost bounded to changed lines only.
     if: github.event_name == 'pull_request'
     steps:
-      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10  # v6
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@b09bb98e06d4d774595224525879c09bc6e98c40 # v2.20.1
+        with:
+          egress-policy: audit
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
           # Need full history so `git diff origin/<base_ref>...HEAD` can resolve the
           # base ref (used by --in-diff to scope mutation testing to changed lines).
           fetch-depth: 0
-      - uses: taiki-e/install-action@aae1387a167f5eee4267fe2946da57ae49a68770  # cargo-mutants
+      - uses: taiki-e/install-action@cb33e69fad06166ca28a42b2575e4dadabf62ee8  # v2.85.8
+        with:
+          # Pin to cargo-mutants major v27 to protect the required gate's schema/exit-code
+          # assumptions: v27 outcomes.json top-level summary keys
+          # (caught/missed/timeout/unviable/total_mutants), exit-code mapping
+          # (0=all-caught-or-no-mutants, non-zero=survivors/harness-error), and
+          # --timeout semantics. A silent major-version bump could change these and produce
+          # a false-green or false-red without any code change in this repo.
+          # Evidence basis: v27 schema verified top-level in S-346 Pass 5 F1 refutation
+          # (.factory/cycles/cycle-001/S-346/implementation/red-gate-log.md §"Pass 5 F1
+          # empirical refutation") + timeout/exit-code semantics confirmed in
+          # .factory/research/cargo-mutants-timeout-keys-verification-2026-06-28.md
+          tool: cargo-mutants@27
       - uses: Swatinem/rust-cache@e18b497796c12c097a38f9edb9d0641fb99eee32  # v2
       - name: Run mutation tests on PR diff
         id: run-mutants
         # --in-diff scopes to lines changed vs origin/<base_ref> (the merge target).
-        # .cargo/mutants.toml further scopes to bulk + create modules.
+        # .cargo/mutants.toml further scopes to the modules listed in docs/specs/cargo-mutants-policy.md §Scope.
         # Use runner.temp + run_id to avoid /tmp race conditions on concurrent jobs.
         # continue-on-error: true so the Check-kill-rate step (the sole pass/fail
         # arbiter) always runs even when cargo-mutants exits non-zero on missed mutants.
+        # --timeout 240: absolute per-mutant test ceiling. Value derived from measured
+        # ubuntu-latest baseline of 133-145s (5 green develop runs, 2026-06-28); with
+        # ~20% runner variance worst-case ~174s, 240s gives ~38% headroom. Old assumed
+        # ~90s baseline was materially wrong.
+        # See docs/specs/cargo-mutants-policy.md §Timeout Parameters.
         continue-on-error: true
         run: |
           DIFF_FILE="${{ runner.temp }}/pr-${{ github.run_id }}.diff"
-          git diff origin/${{ github.base_ref }}...HEAD > "${DIFF_FILE}"
-          cargo mutants --in-diff "${DIFF_FILE}" --jobs 4
+          # F-4: append || true so a base-ref resolution failure (git diff exits non-zero)
+          # does not abort this step before OVERALL_DIFF_LINES is exported to GITHUB_ENV.
+          # Without || true, set -eo pipefail aborts here → run_outcome=failure +
+          # outcomes.json absent → "harness crash" message in Check kill rate (mislabeled).
+          # With || true: DIFF_FILE is created empty (shell opens it before git runs),
+          # OVERALL_DIFF_LINES=0, cargo-mutants runs with an empty diff (0 mutants, exits 0),
+          # run_outcome=success + outcomes.json absent + OVERALL_DIFF_LINES=0 → precise
+          # "base-ref drift / empty diff" FAIL in Check kill rate. No false-GREEN: an empty
+          # diff still FAILs via the drift branch. The harness-crash branch is preserved for
+          # true cargo-mutants failures (run_outcome=failure + outcomes.json absent).
+          git diff origin/${{ github.base_ref }}...HEAD > "${DIFF_FILE}" || true
+
+          # F-3 (corrected, F5 fix): base-ref drift guard uses the OVERALL diff size,
+          # not per-file scoped line count. Real base-ref drift produces an EMPTY diff
+          # while a legitimate comment-only or non-scoped-file edit produces a non-empty
+          # diff that yields 0 mutants — both cases must be handled correctly.
+          # OVERALL_DIFF_LINES is computed here for the "Check kill rate" step.
+          OVERALL_DIFF_LINES=$(wc -l < "${DIFF_FILE}" | tr -d ' ')
+          echo "Overall diff lines: ${OVERALL_DIFF_LINES}"
+          echo "OVERALL_DIFF_LINES=${OVERALL_DIFF_LINES}" >> "${GITHUB_ENV}"
+
+          cargo mutants --in-diff "${DIFF_FILE}" --jobs 4 --timeout 240
       - name: Check kill rate
         # if: always() ensures this step runs regardless of whether Run-mutation-tests
         # exited non-zero. This step is the sole pass/fail arbiter for the mutants job.
         # The 90% kill-rate threshold lives here (not in .cargo/mutants.toml) for
         # CI-artifact visibility.
-        # Pass 4 gate logic: distinguish harness crash from zero-mutant clean PR using
-        # steps.run-mutants.outcome + mutants.out/outcomes.json presence. Then enforce
-        # 90% kill-rate target on (caught + missed + timeout) — timeouts count as
-        # survived per cargo-mutants v27 convention.
+        # Pass 4 gate logic (F5 corrected): distinguish harness crash from zero-mutant
+        # clean PR using steps.run-mutants.outcome + mutants.out/outcomes.json presence.
+        # Then enforce 90% kill-rate target on (caught + missed + timeout) — timeouts
+        # count as survived per cargo-mutants v27 convention.
+        # F5 fix: absent-outcomes.json + success → FAIL only when overall diff is EMPTY
+        # (genuine base-ref drift). A non-empty diff that yields 0 mutants is a
+        # legitimate comment-only, docs-only, or non-scoped-file PR — MUST PASS.
         if: always()
         run: |
-          # Pass 4 F1 fix — distinguish harness crash from zero-mutants clean PR.
+          # Pass 4 F1 fix + F5 correction — distinguish harness crash from zero-mutant run.
           #
           # cargo-mutants exit codes (v27):
           #   0 → all mutants caught OR no mutants generated
@@ -193,7 +469,9 @@ jobs:
           # matrix lets us distinguish:
           #
           #   outcome=success + outcomes.json present  → 100% caught (gate passes)
-          #   outcome=success + outcomes.json absent   → 0 mutants generated (clean PR — pass)
+          #   outcome=success + outcomes.json absent   → 0 mutants generated:
+          #     OVERALL_DIFF_LINES == 0 → FAIL (base-ref drift — empty diff)
+          #     OVERALL_DIFF_LINES  > 0 → PASS (comment-only/docs-only/non-scoped PR)
           #   outcome=failure + outcomes.json present  → missed/timeout (enforce 90% gate)
           #   outcome=failure + outcomes.json absent   → harness crash (FAIL)
 
@@ -202,7 +480,20 @@ jobs:
 
           if [ ! -f mutants.out/outcomes.json ]; then
             if [ "$run_outcome" = "success" ]; then
-              echo "OK: cargo-mutants exited 0 with no outcomes.json — 0 mutants generated from PR diff (clean/docs-only/out-of-scope)."
+              # F-3 corrected (F5 fix): base-ref drift is detected by an EMPTY overall
+              # diff, not by scoped-file line count. A non-empty diff that produces 0
+              # mutants is a LEGITIMATE outcome — the PR may touch only comments,
+              # whitespace, docs, or non-scoped files. Only an empty DIFF_FILE while the
+              # PR claims to have changes is a drift signal (base-ref resolved wrong).
+              if [ "${OVERALL_DIFF_LINES:-0}" -eq 0 ]; then
+                echo "FAIL: cargo-mutants exited 0 with no outcomes.json AND overall diff is EMPTY."
+                echo "      Possible base-ref drift (git diff origin/<base_ref>...HEAD produced an"
+                echo "      empty file, suggesting --in-diff resolved against the wrong base)."
+                echo "      Re-run the job, or check that the branch is up-to-date with its base."
+                exit 1
+              fi
+              echo "OK: 0 mutants — non-empty diff produced no mutable lines in examine_globs files"
+              echo "    (comment-only, whitespace, docs-only, or non-scoped-file PR)."
               exit 0
             else
               echo "FAIL: cargo-mutants exited non-zero AND outcomes.json missing — harness crash."
@@ -229,6 +520,70 @@ jobs:
             missed=$(jq '.missed // 0' mutants.out/outcomes.json)
             timeout=$(jq '.timeout // 0' mutants.out/outcomes.json)
             unviable=$(jq '.unviable // 0' mutants.out/outcomes.json)
+            # M-2 reconciliation: compare sum of known categories against total_mutants
+            # field (v27+). If a future cargo-mutants version adds a new outcome category,
+            # those mutants would fall outside our denominator — producing a silent false-
+            # green. This warning does NOT hard-fail (avoids coupling the required gate to
+            # an unverified future schema), but makes the discrepancy visible in job logs.
+            total_mutants=$(jq '.total_mutants // 0' mutants.out/outcomes.json)
+
+            # H-2: integer validation — guard each jq-extracted field against a
+            # non-integer value (future schema change emitting string/float/object would
+            # survive `// 0` then break `$(( ))` under set -e → false-RED). Coerce to 0
+            # on any non-integer; normal integer case is unchanged.
+            [[ "${caught}"       =~ ^[0-9]+$ ]] || caught=0
+            [[ "${missed}"       =~ ^[0-9]+$ ]] || missed=0
+            [[ "${timeout}"      =~ ^[0-9]+$ ]] || timeout=0
+            [[ "${unviable}"     =~ ^[0-9]+$ ]] || unviable=0
+            [[ "${total_mutants}" =~ ^[0-9]+$ ]] || total_mutants=0
+
+            # H-1: runtime schema-drift guard — detect when outcomes.json is valid JSON
+            # with a non-empty .outcomes array BUT all top-level summary keys parsed as 0.
+            # This is the fingerprint of a schema change that moved summary keys (e.g. into
+            # a nested "summary" object): the `// 0` fallbacks all fire silently, giving
+            # caught=missed=timeout=unviable=0 → total_outcomes=0 → PASS (false-green).
+            # A genuine 0-mutant run produces NO outcomes.json, so it never reaches this
+            # branch. A genuine all-unviable run has non-zero unviable. A genuine empty
+            # .outcomes array means no mutants were scored → not drift.
+            # Evidence basis: v27 top-level schema confirmed in S-346 Pass 5 F1 refutation
+            # (red-gate-log.md §"Pass 5 F1 empirical refutation"); drift guard activates
+            # only when the confirmed schema no longer matches.
+            #
+            # ADV-P50-MED-001 (round 20): originally this guard only fired on FULL
+            # drift (_outcomes_len>0 AND total_mutants==0 — every summary key,
+            # including total_mutants, renamed/moved). PARTIAL drift was fail-OPEN:
+            # if a future cargo-mutants version nested caught/missed/timeout/unviable
+            # under a new key while LEAVING total_mutants at the top level non-zero,
+            # _sum_check stayed 0 but total_mutants != 0 — this condition's third
+            # clause (`total_mutants -eq 0`) was false, so the guard did not fire;
+            # control fell through to the non-fatal `::warning::` below (which does
+            # not exit non-zero) and then to `total_outcomes -eq 0` → "OK" → exit 0.
+            # The job went green with real mutants recorded in total_mutants but the
+            # 90% kill-rate gate never evaluated. Fixed by dropping the
+            # `total_mutants -eq 0` requirement: the guard now fires whenever the
+            # reconciled sum is 0 AND there is ANY other evidence mutants existed
+            # (a non-empty .outcomes array, OR a non-zero total_mutants) — covering
+            # both the original full-drift shape and this partial-drift shape, fail-
+            # closed either way.
+            _outcomes_len=$(jq '(.outcomes // []) | length' mutants.out/outcomes.json 2>/dev/null || echo 0)
+            [[ "${_outcomes_len}" =~ ^[0-9]+$ ]] || _outcomes_len=0
+            _sum_check=$((caught + missed + timeout + unviable))
+            if [ "${_sum_check}" -eq 0 ] && { [ "${_outcomes_len}" -gt 0 ] || [ "${total_mutants}" -ne 0 ]; }; then
+              echo "FAIL: outcomes.json schema drift detected."
+              echo "      outcomes.json has ${_outcomes_len} outcome(s) in .outcomes array and"
+              echo "      total_mutants=${total_mutants}, but all top-level summary keys"
+              echo "      (caught/missed/timeout/unviable) sum to 0."
+              echo "      The cargo-mutants output format may have changed (e.g. summary keys"
+              echo "      moved to a nested object) — whether or not total_mutants itself moved."
+              echo "      Pin update or schema investigation required."
+              echo "      Pin: .github/workflows/ci.yml cargo-mutants@27"
+              exit 1
+            fi
+
+            if [ "${total_mutants}" -ne 0 ] && [ "${_sum_check}" -ne "${total_mutants}" ]; then
+              echo "::warning::Schema mismatch: total_mutants=${total_mutants} but caught+missed+timeout+unviable=${_sum_check}. An unrecognized outcome category may exist in this version of cargo-mutants. Kill-rate denominator may be understated."
+              echo "WARNING: total_mutants=${total_mutants} != sum of known categories ${_sum_check}. Check cargo-mutants release notes for new outcome types."
+            fi
           else
             # F5 fix: wc -l prints "0" cleanly on empty file with exit 0; grep -c '' exits 1
             # on empty match, triggering `|| echo 0` and producing newline-embedded "0\n0"
@@ -285,3 +640,57 @@ jobs:
           fi
 
           echo "OK: cargo-mutants gate passed (kill rate ${kill_rate}% ≥ 90%)."
+
+  check-signing-workflow-injection:
+    name: Signing Workflow Injection Guard
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@b09bb98e06d4d774595224525879c09bc6e98c40 # v2.20.1
+        with:
+          egress-policy: audit
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+
+      - name: Run injection guard (YAML-aware)
+        run: bash scripts/check-signing-workflow-injection.sh
+
+      - name: Run injection guard negative fixture self-test
+        run: bash scripts/check-signing-workflow-injection.sh --self-test
+
+  ci-gate:
+    name: CI Gate
+    runs-on: ubuntu-latest
+    # ADV-P50-LOW-003 (round 20): every other job in this file sets an
+    # explicit timeout-minutes; ci-gate previously did not, silently
+    # inheriting GitHub Actions' 360-minute default. This cannot cause a
+    # false-green (a required check that never completes blocks merge
+    # rather than passing it), so it was imprecision rather than a
+    # security gap — but a hung `check-ci-gate.sh` invocation (e.g. `jq`
+    # or bash hanging on malformed input) would otherwise tie up this
+    # required check for up to 6 hours before GitHub's default kicks in.
+    # 5 minutes matches the other lightweight, no-build aggregator/gate
+    # jobs in this file (fmt, spec-guard, check-signing-workflow-injection).
+    timeout-minutes: 5
+    needs: [fmt, clippy, test, msrv, deny, spec-guard, check-signing-workflow-injection, mutants]
+    # S-CIGATE-1 AC-002: `if: ${{ always() }}` is LOAD-BEARING. Without a
+    # job-level `always()` here, a failed upstream job SKIPS `ci-gate`
+    # entirely (GitHub Actions' default `needs` behavior), and GitHub branch
+    # protection evaluates a skipped required check as SUCCESS — silently
+    # permitting a broken PR to merge. `always()` makes `ci-gate` run
+    # regardless of upstream results so its own `run:` step (see below) can
+    # make the real pass/fail decision via `scripts/check-ci-gate.sh`.
+    if: ${{ always() }}
+    steps:
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@b09bb98e06d4d774595224525879c09bc6e98c40 # v2.20.1
+        with:
+          egress-policy: audit
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+
+      - name: Evaluate required job results (S-CIGATE-2, fail-closed)
+        env:
+          NEEDS_JSON: ${{ toJSON(needs) }}
+        run: echo "${NEEDS_JSON}" | bash scripts/check-ci-gate.sh
